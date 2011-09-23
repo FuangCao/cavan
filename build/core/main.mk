@@ -17,6 +17,7 @@ BUILD_TYPE = release
 endif
 endif
 
+CAVAN_ROOT = $(shell pwd)
 OUT_DIR = out
 LIB_DIR = lib
 APP_DIR = app
@@ -55,7 +56,7 @@ ASFLAGS +=	$(CFLAGS) -D__ASM__
 
 ifeq ("$(findstring release,$(BUILD_TYPE))","")
 ifeq ("$(findstring static,$(BUILD_TYPE))","")
-LOCAL_LDFLAGS += -Wl,-rpath,$(TARGET_LIB)
+LOCAL_LDFLAGS += -Wl,-rpath,$(CAVAN_ROOT)/$(TARGET_LIB)
 else
 LOCAL_LDFLAGS += -static
 endif
@@ -103,13 +104,14 @@ MAKEFLAGS += --no-print-directory
 endif
 
 $(info ============================================================)
+$(info CAVAN_ROOT = $(CAVAN_ROOT))
 $(info ARCH = $(ARCH))
 $(info CROSS_COMPILE = $(CROSS_COMPILE))
 $(info BUILD_TYPE = $(BUILD_TYPE))
 $(info ============================================================)
 
 export CC LD AR CFLAGS LDFLAGS
-export OUT_DIR LIB_DIR APP_DIR INCLUDE_DIR BUILD_DIR BUILD_CORE
+export CAVAN_ROOT OUT_DIR LIB_DIR APP_DIR INCLUDE_DIR BUILD_DIR BUILD_CORE
 export TARGET_DIR TARGET_LIB TARGET_ELF TARGET_APP
 export LIB_DEPEND APP_DEPEND ELF_DEPEND
 export TARGET_OBJ TARGET_LIBA TARGET_LIBSO
