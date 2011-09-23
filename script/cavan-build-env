@@ -1,0 +1,81 @@
+#!/bin/bash
+
+LOG_FILE_PATH="/tmp/cavan-build-env.log"
+
+function get_file_abs_dirname()
+{
+	cd $(dirname $0) && pwd
+}
+
+function get_file_abs_path()
+{
+	echo $(get_file_abs_dirname $0)/$(basename $0)
+}
+
+function show_usage()
+{
+	echo "cavan-build-env [target_dir] type"
+}
+
+function build_env()
+{
+	local source_file
+
+	: > ${LOG_FILE_PATH}
+
+	cd $1 || return 1
+	for sub in `ls`
+	do
+		[ -d "${sub}" ] || continue
+
+		echo "sub = ${sub}"
+		source_files=$(cd ${sub} && ls *.[chsS])
+		echo "source_files = ${source_files}"
+
+		for fn in ${source_files}
+		do
+			cp ${sub}/${fn} /tmp -av || return 1
+		done
+		
+		rm ${sub} -rfv || return 1
+
+
+		${CAVAN_MAKE} $2 ${sub}
+
+		for fn in ${source_files}
+		do
+			cp /tmp/${fn} ${sub} -av || return 1
+		done
+
+		make -C ${sub} clean && make -C ${sub} || echo ${sub} >> ${LOG_FILE_PATH}
+	done
+	
+}
+
+CMD_ABS_DIR="$(get_file_abs_dirname $0)"
+CMD_ABS_PATH="${CMD_ABS_DIR}/$(basename $0)"
+CAVAN_MAKE="${CMD_ABS_DIR}/cavan-make"
+
+if [[ "$#" -gt "1" ]]
+then
+	if [ -d "$1" ]
+	then
+		TARGET_DIR="$1"
+		BUILD_TYPE="$2"
+	else
+		TARGET_DIR="$2"
+		BUILD_TYPE="$1"
+	fi
+elif [[ "$#" = "1" ]]
+then
+	TARGET_DIR="."
+	BUILD_TYPE="$1"
+else
+	show_usage
+	exit 1
+fi
+
+echo "TARGET_DIR  = ${TARGET_DIR}"
+echo "BUILD_TYPE = ${BUILD_TYPE}"
+
+build_env ${TARGET_DIR} ${BUILD_TYPE} || echo -e "\033[31mError"

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+PORT="8888"
+
+if [ "$1" ]
+then
+	BASE_PATH="$1"
+else
+	BASE_PATH="${HOME}/git"
+fi
+
+mkdir ${BASE_PATH} -p || exit 1
+
+echo "BASE_PATH = ${BASE_PATH}"
+
+`git --exec-path`/git-daemon --verbose --port=${PORT} --export-all --enable=receive-pack --enable=upload-pack --enable=upload-archive --base-path=${BASE_PATH}

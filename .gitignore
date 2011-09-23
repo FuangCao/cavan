@@ -1,0 +1,11 @@
+.*
+*.a
+*.o
+*.so
+*.out
+*.rej
+*.orig
+!.gitignore
+/out
+/tags
+/cscope*

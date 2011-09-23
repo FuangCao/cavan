@@ -1,0 +1,43 @@
+MakeFile:
+	findstring
+	origin
+	call
+	subset
+	filter
+	filter-out
+	if
+	dir
+	dot-target
+	squote
+	sort
+	strip
+	errorcd
+	error
+	warning
+	value
+	origin
+	eval
+	$(wildcard /cavan/lib/arm/lib*.so) => all lib*.so file 
+	$(notdir /cavan/lib/arm/libcavan.so) => libcavan.so
+	$(patsubst lib%.so,-l%,libcavan.so) => -lcavan
+	$(dir /1/2/3/4) => /1/2/3/
+	A = B && $(eval $(A) = 100) => B = 100
+	$(subst a,b,123abc) => 123bbc
+	$(word 2,a b c d e f) => b
+	$(words a b c d e f) => 6
+	$(firstword a b c d e f) => a
+	$(wordlist 2,5,a b c d e f) => b c d e
+	$(basename aa.so) => aa
+	$(suffix aa.so) => .so
+	$(addprefix -I,/cavan/inclde) => -I/cavan/include
+	$(addsuffix lib,cavan.so) => libcavan.so
+	$(join a b c d,e f g h) => ae bf cg dh
+	$(if 1,aa,bb) => aa
+	$(if ,aa,bb) => bb
+	$(foreach fn,1 2 3 4 5,$(shell echo $(fn))) => 1\n2\n3\n4\n5
+	$(filter-out 22,11 22 33 44) => 11 33 44
+	$(filter 11 22,11 22 33 44 22) => 11 22 22
+
+	define ... endef
+	ifdef ... endif
+	ifdef ... else ... endif

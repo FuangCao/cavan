@@ -1,0 +1,59 @@
+#!/bin/bash
+
+[ "$1" ] ||
+{
+	echo "argument error"
+	exit 1
+}
+
+function adjust_system()
+{
+	[ -f "$1" ] || return 1
+
+	${CAVAN_MOUNT_TO} $1 /mnt/system || return 1
+	rm /mnt/system/{app/AdobeAndroid.apk,vendor/app} -rfv
+	${CAVAN_UNMOUNT_FROM} /mnt/system
+	
+}
+
+function adjust_userdata()
+{
+	[ -f "$1" ] || return 1
+
+	${CAVAN_RESIZE} $1 200M || return 1
+	${CAVAN_MOUNT_TO} $1 /mnt/data || return 1
+	mkdir /mnt/data/app -p
+	cp /project/application/android/app/*.apk /mnt/data/app -av
+	${CAVAN_UNMOUNT_FROM} /mnt/data
+}
+
+function get_file_abs_dir()
+{
+	cd `dirname $0` && pwd
+}
+
+TARGET_DIR="$1"
+CMD_ABS_DIR=`get_file_abs_dir $0`
+CMD_ABS_PATH=${CMD_ABS_DIR}/`basename $0`
+CAVAN_ABS_PATH=`dirname ${CMD_ABS_DIR}`
+CAVAN_BIN_PATH="${CAVAN_ABS_PATH}/bin"
+
+CAVAN_RAMDISK="${CAVAN_BIN_PATH}/cavan-ramdisk"
+CAVAN_SWAN_UPGRADE="${CAVAN_BIN_PATH}/cavan-swan_upgrade"
+CAVAN_RESIZE="${CAVAN_BIN_PATH}/cavan-resize"
+CAVAN_MOUNT_TO="${CAVAN_BIN_PATH}/cavan-mount_to"
+CAVAN_UNMOUNT_FROM="${CAVAN_BIN_PATH}/cavan-umount_from"
+CAVAN_RAMDISK="${CAVAN_BIN_PATH}/cavan-ramdisk"
+
+cp /project/rootfs/images/resource.img ${TARGET_DIR}/resource.img -anv || exit 1
+[ -f "${TARGET_DIR}/u-boot.bin" ] && dd if=${TARGET_DIR}/u-boot.bin of=${TARGET_DIR}/u-boot-no-padding.bin bs=1k skip=1 || exit 1
+make -C ${CAVAN_ABS_PATH}/app/swan_upgrade/header clean && make -C ${CAVAN_ABS_PATH}/app/swan_upgrade/header || exit 1
+cp ${CAVAN_ABS_PATH}/app/swan_upgrade/header/header.bin ${TARGET_DIR}/header.bin || exit 1
+[ -f  "${TARGET_DIR}/ramdisk.img" ] && ${CAVAN_RAMDISK} ${TARGET_DIR}/ramdisk.img ${TARGET_DIR}/uramdisk.img || exit 1
+${CAVAN_RAMDISK} /project/rootfs/upgrade ${TARGET_DIR}/busybox.img || exit 1
+
+adjust_system ${TARGET_DIR}/system.img
+adjust_userdata ${TARGET_DIR}/userdata.img
+
+shift
+${CAVAN_SWAN_UPGRADE} -cf ${TARGET_DIR}/upgrade.swan -d ${TARGET_DIR} $* || exit 1

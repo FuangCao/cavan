@@ -1,0 +1,57 @@
+#!/bin/bash
+
+KERMITRC_DIR=/tmp/kermit
+
+function create_kermitrc()
+{
+cat > $2 << EOF
+set line 	$1
+set speed 	115200
+set carrier-watch off
+set handshake 	none
+set flow-control 	none
+robust
+set file type 	bin
+set file name 	lit
+set rec pack 	1000
+set send pack 	1000
+set window 	5
+EOF
+}
+
+function excute_kermit()
+{
+	[ "$1" ] ||
+	{
+		echo "No series device find"
+		return 1
+	}
+
+	echo "Target Device Is \"$1\""
+
+	mkdir -p ${KERMITRC_DIR} || return 1
+	local kermitrc_path="${KERMITRC_DIR}/`basename $1`" || return 1
+	create_kermitrc $1 ${kermitrc_path}
+	kermit ${kermitrc_path} -E
+	rm ${kermitrc_path} -rfv
+
+	return 0
+}
+
+function get_device()
+{
+	for dev in $*
+	do
+		[ -f "${KERMITRC_DIR}/`basename ${dev}`" ] && continue
+		[ -c "${dev}" ] &&
+		{
+			echo "${dev}"
+			return 0
+		}
+	done
+
+	return 1
+}
+
+DEVICE=`get_device /dev/ttyUSB$1 /dev/ttyUSB*`
+excute_kermit ${DEVICE} || exit 1

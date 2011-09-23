@@ -1,0 +1,216 @@
+#pragma once
+
+// Fuang.Cao <cavan.cfa@gmail.com> Wed Sep  7 09:54:06 CST 2011
+
+#include <linux/usbdevice_fs.h>
+#include <pthread.h>
+
+#define CAVAN_USB_DEBUG	0
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 20)
+#include <linux/usb/ch9.h>
+#else
+#include <linux/usb_ch9.h>
+#endif
+
+#ifndef USB_MAXENDPOINTS
+#define USB_MAXENDPOINTS			32
+#endif
+#define USB_DEVICE_DIR				"/dev/bus/usb"
+#define CAVAN_USB_MAX_DATA_LENGTH	4096
+
+struct cavan_usb_interface_descriptor
+{
+	struct usb_interface_descriptor if_desc;
+	struct usb_endpoint_descriptor ep_descs[USB_MAXENDPOINTS];
+};
+
+struct cavan_usb_descriptor
+{
+	int fd;
+	int if_count, if_curr;
+	int epin_curr, epout_curr;
+	char serial[256];
+	char dev_path[256];
+
+	pthread_mutex_t lock;
+	pthread_t thread_notify;
+	pthread_cond_t notify_read, notify_write;
+	struct usbdevfs_urb urb_read, urb_write;
+
+	struct usb_device_descriptor dev_desc;
+	struct usb_config_descriptor cfg_descs[10];
+	struct cavan_usb_interface_descriptor if_descs[10];
+};
+
+enum cavan_usb_package_type
+{
+	CAVAN_UMSG_UNKNOWN,
+	CAVAN_UMSG_DATA_STREAM,
+	CAVAN_UMSG_WRITE_FILE,
+	CAVAN_UMSG_READ_FILE,
+	CAVAN_UMSG_ACK,
+	CAVAN_UMSG_ERROR,
+};
+
+#pragma pack(1)
+struct cavan_usb_data_option
+{
+	u32 blk_num;
+	u32 data_length;
+	u32 data_check;
+};
+
+struct cavan_usb_ack_option
+{
+	u32 blk_num;
+};
+
+struct cavan_usb_error_option
+{
+	u32 err_no;
+};
+
+struct cavan_usb_message
+{
+	u32 op_code;
+	u32 op_check;
+
+	union
+	{
+		struct cavan_usb_data_option data_opt;
+		struct cavan_usb_ack_option ack_opt;
+		struct cavan_usb_error_option err_opt;
+	};
+};
+
+struct cavan_usb_file_descriptor
+{
+	u32 bs;
+	u32 seek;
+	u32 count;
+	struct stat st;
+	u8 pathname[1024];
+};
+
+struct cavan_usb_package
+{
+	struct cavan_usb_message msg;
+
+	union
+	{
+		struct cavan_usb_file_descriptor file_desc;
+		u8 data[CAVAN_USB_MAX_DATA_LENGTH];
+	};
+};
+#pragma pack()
+
+int dump_cavan_usb_descriptor(const void *buff, struct cavan_usb_descriptor *desc, size_t length);
+int fusb_read_cavan_descriptor(int fd, struct cavan_usb_descriptor *desc);
+int usb_read_cavan_descriptor(const char *dev_path, struct cavan_usb_descriptor *desc);
+
+const char *usb_endpoint_xfertype_tostring(const struct usb_endpoint_descriptor *desc);
+void show_usb_device_descriptor(const struct usb_device_descriptor *desc);
+void show_usb_config_descriptor(const struct usb_config_descriptor *desc);
+void show_usb_interface_descriptor(const struct usb_interface_descriptor *desc);
+void show_usb_endpoint_descriptor(const struct usb_endpoint_descriptor *desc);
+void show_cavan_usb_descriptor(const struct cavan_usb_descriptor *desc);
+
+int cavan_usb_init(const char *dev_path, struct cavan_usb_descriptor *desc);
+int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *desc);
+void cavan_usb_uninit(struct cavan_usb_descriptor *desc);
+int cavan_usb_bluk_rw(struct cavan_usb_descriptor *desc, void *buff, size_t length, int read);
+int cavan_usb_bluk_read(struct cavan_usb_descriptor *desc, void *buff, size_t length);
+int cavan_usb_bluk_write(struct cavan_usb_descriptor *desc, const void *buff, size_t length);
+
+int cavan_usb_read_message(struct cavan_usb_descriptor *desc, struct cavan_usb_message *msg);
+ssize_t cavan_usb_read_data_package(struct cavan_usb_descriptor *desc, struct cavan_usb_package *pkg);
+ssize_t cavan_usb_write_data_package(struct cavan_usb_descriptor *desc, struct cavan_usb_package *pkg);
+ssize_t cavan_usb_read_data(struct cavan_usb_descriptor *desc, void *buff, size_t size);
+ssize_t cavan_usb_write_data(struct cavan_usb_descriptor *desc, const void *buff, size_t size);
+ssize_t cavan_adb_read_data(int fd_adb, void *buff, size_t size);
+ssize_t cavan_adb_write_data(int fd_adb, const void *buff, size_t size);
+
+static inline int is_usb_device_descriptor(const struct usb_device_descriptor *desc)
+{
+	return desc->bDescriptorType == USB_DT_DEVICE && desc->bLength == USB_DT_DEVICE_SIZE;
+}
+
+static inline int is_usb_config_descriptor(const struct usb_config_descriptor *desc)
+{
+	return desc->bDescriptorType == USB_DT_CONFIG && desc->bLength == USB_DT_CONFIG_SIZE;
+}
+
+static inline int is_usb_interface_descriptor(const struct usb_interface_descriptor *desc)
+{
+	return desc->bDescriptorType == USB_DT_INTERFACE &&  desc->bLength == USB_DT_INTERFACE_SIZE;
+}
+
+static inline int is_usb_endpoint_descriptor(const struct usb_endpoint_descriptor *desc)
+{
+	return desc->bDescriptorType == USB_DT_ENDPOINT && desc->bLength == USB_DT_ENDPOINT_SIZE;
+}
+
+static inline int is_usb_string_descriptor(const struct usb_string_descriptor *desc)
+{
+	return desc->bDescriptorType == USB_DT_STRING;
+}
+
+static inline void usb_set_operation_code(struct cavan_usb_message *msg, u16 op_code)
+{
+	msg->op_code = op_code;
+	msg->op_check = op_code ^ 0xFFFF;
+}
+
+static inline int usb_invalid_operation_code(struct cavan_usb_message *msg)
+{
+	return (msg->op_code ^ msg->op_check) != 0xFFFF;
+}
+
+static inline int cavan_usb_discard_urb(int fd, struct usbdevfs_urb *urb)
+{
+	return ioctl(fd, USBDEVFS_DISCARDURB, urb);
+}
+
+static inline int cavan_usb_write_message(struct cavan_usb_descriptor *desc, struct cavan_usb_message *msg)
+{
+	return cavan_usb_bluk_write(desc, msg, sizeof(*msg));
+}
+
+static inline int cavan_adb_read_message(int fd_adb, struct cavan_usb_message *msg)
+{
+	ssize_t readlen;
+
+	readlen = read(fd_adb, msg, sizeof(*msg));
+	if (readlen < 0)
+	{
+		return readlen;
+	}
+
+	return usb_invalid_operation_code(msg) ? -EINVAL : 0;
+}
+
+static inline int cavan_adb_write_message(int fd_adb, struct cavan_usb_message *msg)
+{
+	return write(fd_adb, msg, sizeof(*msg));
+}
+
+static inline void cavan_cond_signal(pthread_cond_t *cond, pthread_mutex_t *mutex)
+{
+	pthread_mutex_lock(mutex);
+	pthread_cond_signal(cond);
+	pthread_mutex_unlock(mutex);
+}
+
+static inline void cavan_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+{
+	pthread_mutex_lock(mutex);
+	pthread_cond_wait(cond, mutex);
+	pthread_mutex_unlock(mutex);
+}
+
+static inline void cavan_cond_broadcast(pthread_cond_t *cond)
+{
+	pthread_cond_broadcast(cond);
+}
+
