@@ -3,7 +3,7 @@
 #include <cavan.h>
 #include <cavan/ext2.h>
 
-void show_usage(void)
+static void show_usage(void)
 {
 	println("Usage:");
 	println("ext2 -rRlL pathname device");

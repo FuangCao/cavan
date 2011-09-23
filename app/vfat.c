@@ -4,7 +4,7 @@
 #include <cavan/text.h>
 #include <cavan/vfat.h>
 
-void show_usage(void)
+static void show_usage(void)
 {
 	println("Usage:");
 	println("vfat -rRlL pathname device");
