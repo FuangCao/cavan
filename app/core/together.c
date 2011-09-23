@@ -8,7 +8,7 @@
 struct cavan_command_map
 {
 	const char *name;
-	int (*function)(int argc, char *argv[]);
+	int (*main_func)(int argc, char *argv[]);
 };
 
 const struct cavan_command_map cmd_map_table[] =
@@ -16,7 +16,7 @@ const struct cavan_command_map cmd_map_table[] =
 #include <cavan_map.h>
 };
 
-static void print_comand_table(const struct cavan_command_map *p, size_t size)
+static void print_command_table(const struct cavan_command_map *p, size_t size)
 {
 	const struct cavan_command_map *p_end;
 	char buff[MB(1)], *buff_p;
@@ -91,14 +91,14 @@ int main(int argc, char *argv[])
 
 	if (argc < 2)
 	{
-		print_comand_table(cmd_map_table, ARRAY_SIZE(cmd_map_table));
+		print_command_table(cmd_map_table, ARRAY_SIZE(cmd_map_table));
 		return -1;
 	}
 
 	p = match_command(cmd_map_table, cmd_map_table + ARRAY_SIZE(cmd_map_table), argv[1]);
 	if (p)
 	{
-		return p->function(argc - 1, argv + 1);
+		return p->main_func(argc - 1, argv + 1);
 	}
 
 	print_maybe_command(cmd_map_table, cmd_map_table + ARRAY_SIZE(cmd_map_table), argv[1]);
