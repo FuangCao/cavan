@@ -53,7 +53,8 @@ struct swan_package_info
 	u32 mkfs_mask;
 	u32 board_type;
 	u32 upgrade_flags;
-	char reserved[100];
+	struct swan_emmc_partition_table part_table;
+	char reserved[80];
 };
 
 struct swan_file_info

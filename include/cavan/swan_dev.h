@@ -26,7 +26,19 @@ struct swan_machine
 	char name[1024];
 };
 
-int swan_sfdisk(struct partition_desc *desc);
+struct swan_emmc_partition_table
+{
+	u32 system_size;
+	u32 recovery_size;
+	u32 userdata_size;
+	u32 cache_size;
+	u32 vendor_size;
+};
+
+void show_swan_emmc_partation_table(struct swan_emmc_partition_table *part_table);
+void get_default_emmc_partition_table(struct swan_emmc_partition_table *part_table);
+int fix_emmc_partition_table(struct swan_emmc_partition_table *part_table);
+int swan_sfdisk(struct partition_desc *dev_desc, struct swan_emmc_partition_table *part_table);
 int swan_mkfs(struct partition_desc *dev_desc, struct partition_desc *part_descs, int count);
 int swan_copy(const char *cache_file);
 int destroy_environment(const char *dev_path);

@@ -26,6 +26,7 @@ u32 swan_package_flags = 0;
 enum swan_image_type swan_exclude_images[16];
 int swan_exclude_image_count;
 int swan_need_shrink = 1;
+struct swan_emmc_partition_table swan_emmc_part_table;
 
 struct swan_image_info swan_images[] =
 {
@@ -626,7 +627,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 			.type = FS_EXT3,
 		},
 	};
-	struct partition_desc emmc_desc =
+	struct partition_desc emmc_dev_desc =
 	{
 		.major = 179,
 		.minor = FIRST_MINOR,
@@ -687,7 +688,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 		strncpy(part_descs[0].label, pkg_info.volume, sizeof(part_descs[0].label));
 	}
 
-	ret = swan_sfdisk(&emmc_desc);
+	ret = swan_sfdisk(&emmc_dev_desc, &swan_emmc_part_table);
 	if (ret < 0)
 	{
 		error_msg("swan_sfdisk");
@@ -709,7 +710,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 		}
 	}
 
-	ret = swan_mkfs(&emmc_desc, part_descs, ARRAY_SIZE(part_descs));
+	ret = swan_mkfs(&emmc_dev_desc, part_descs, ARRAY_SIZE(part_descs));
 	if (ret < 0)
 	{
 		error_msg("swan_mkfs");
@@ -794,7 +795,7 @@ int fupgrade_simple(int pkg_fd)
 			.type = FS_EXT3,
 		},
 	};
-	struct partition_desc emmc_desc =
+	struct partition_desc emmc_dev_desc =
 	{
 		.major = 179,
 		.minor = FIRST_MINOR,
@@ -845,7 +846,7 @@ int fupgrade_simple(int pkg_fd)
 		}
 	}
 
-	ret = swan_mkfs(&emmc_desc, part_descs, ARRAY_SIZE(part_descs));
+	ret = swan_mkfs(&emmc_dev_desc, part_descs, ARRAY_SIZE(part_descs));
 	if (ret < 0)
 	{
 		error_msg("swan_mkfs");

@@ -23,6 +23,11 @@ define build_libo_file
 $(Q)$(LD) -o $@ -r $^
 endef
 
+define modify_file
+@echo [TC] $@
+@touch $@
+endef
+
 define build_obj_depend
 $(eval obj-dir = $(dir $@))
 @for action in $(foreach fn,$^,$(basename $(obj-dir)$(notdir $(fn))).o:$(fn)); \

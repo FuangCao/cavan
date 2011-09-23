@@ -83,6 +83,7 @@ extern u32 swan_package_flags;
 extern enum swan_image_type swan_exclude_images[];
 extern int swan_exclude_image_count;
 extern int swan_need_shrink;
+extern struct swan_emmc_partition_descriptor swan_emmc_part_desc;
 
 int is_skip_image(enum swan_image_type type, enum swan_image_type *types, size_t count);
 int package(const char *pkg_name, const char *dir_name);

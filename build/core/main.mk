@@ -58,16 +58,15 @@ ifeq ("$(findstring release,$(BUILD_TYPE))","")
 ifeq ("$(findstring static,$(BUILD_TYPE))","")
 LOCAL_LDFLAGS += -Wl,-rpath,$(CAVAN_ROOT)/$(TARGET_LIB)
 else
+ELF_DEPEND_LIB = $(TARGET_LIBA)
 LOCAL_LDFLAGS += -static
 endif
 LOCAL_LDFLAGS += -L$(TARGET_LIB) -l$(CAVAN_NAME)
 else
 LDFLAGS += $(TARGET_OBJ)
+ELF_DEPEND_LIB = $(TARGET_OBJ)
 endif
 LDFLAGS := -s $(LOCAL_LDFLAGS) $(LDFLAGS)
-
-LIB_SOURCE = $(wildcard lib/*.c)
-APP_SOURCE  = $(wildcard app/*.c)
 
 ifeq ("$(origin APP)","command line")
 ifeq ("$(wildcard $(APP)/cavan.mk)","$(APP)/cavan.mk")
@@ -98,6 +97,7 @@ ELF_OBJECT = $(patsubst %.c,$(TARGET_ELF)/%,$(notdir $(APP_SOURCE)))
 else
 ELF_OBJECT = $(patsubst %.c,$(TARGET_ELF)/$(ELF_PREFIX)-%,$(notdir $(APP_SOURCE)))
 endif
+HEADER_FILES = $(wildcard $(INCLUDE_DIR)/cavan/*.h) $(INCLUDE_DIR)/cavan.h
 
 ifeq ("$(Q)","@")
 MAKEFLAGS += --no-print-directory
@@ -115,7 +115,7 @@ export CAVAN_ROOT OUT_DIR LIB_DIR APP_DIR INCLUDE_DIR BUILD_DIR BUILD_CORE
 export TARGET_DIR TARGET_LIB TARGET_ELF TARGET_APP
 export LIB_DEPEND APP_DEPEND ELF_DEPEND
 export TARGET_OBJ TARGET_LIBA TARGET_LIBSO
-export LIB_SOURCE LIB_OBJECT APP_SOURCE APP_OBJECT ELF_OBJECT
+export LIB_SOURCE LIB_OBJECT APP_SOURCE APP_OBJECT ELF_OBJECT HEADER_FILES
 export APPS_MAKEFILE LIBS_MAKEFILE DEFINES_MAKEFILE
 
 all: app
@@ -135,6 +135,12 @@ $(APP_DEPEND): $(APP_SOURCE)
 $(ELF_DEPEND): $(APP_SOURCE)
 	$(call build_elf_depend,$(TARGET_APP),$(ELF_PREFIX))
 
+$(APP_SOURCE): $(HEADER_FILES) $(ELF_DEPEND_LIB)
+	$(call modify_file)
+
+$(LIB_SOURCE): $(HEADER_FILES)
+	$(call modify_file)
+
 $(TARGET_LIB) $(TARGET_ELF) $(TARGET_APP): $(TARGET_DIR)
 	$(Q)mkdir $@ -pv
 
@@ -144,11 +150,20 @@ $(TARGET_DIR): $(OUT_DIR)
 $(OUT_DIR):
 	$(Q)mkdir $@ -pv
 
-clean:
+clean clean_bin:
 	$(Q)rm $(TARGET_ELF) -rf
 
-distclean:
+clean_app:
+	$(Q)rm $(TARGET_APP) -rf
+
+clean_lib:
+	$(Q)rm $(TARGET_LIB) -rf
+
+clean_all:
 	$(Q)rm $(TARGET_DIR) -rf
+
+distclean:
+	$(Q)rm $(OUT_DIR) -rf
 
 .PHONY: lib app $(APP_DEPEND) $(LIB_DEPEND) $(ELF_DEPEND)
 

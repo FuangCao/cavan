@@ -8,28 +8,80 @@
 #include <cavan/image.h>
 #include <cavan/parse.h>
 
-int swan_sfdisk(struct partition_desc *desc)
+void show_swan_emmc_partation_table(struct swan_emmc_partition_table *part_table)
+{
+	println("system = %dMB", part_table->system_size);
+	println("recovery = %dMB", part_table->recovery_size);
+	println("userdata = %dMB", part_table->userdata_size);
+	println("cache = %dMB", part_table->cache_size);
+	println("vendor = %dMB", part_table->vendor_size);
+}
+
+void get_default_emmc_partition_table(struct swan_emmc_partition_table *part_table)
+{
+	part_table->system_size = SYSTEM_SIZE;
+	part_table->recovery_size = RECOVERY_SIZE;
+	part_table->userdata_size = USERDATA_SIZE;
+	part_table->cache_size = CACHE_SIZE;
+}
+
+int fix_emmc_partition_table(struct swan_emmc_partition_table *part_table)
+{
+	int ret = 0;
+
+	if (part_table->system_size == 0)
+	{
+		ret++;
+		warning_msg("system partition size is zero");
+		part_table->system_size = SYSTEM_SIZE;
+	}
+
+	if (part_table->recovery_size == 0)
+	{
+		ret++;
+		warning_msg("recovery partition size is zero");
+		part_table->recovery_size = RECOVERY_SIZE;
+	}
+
+	if (part_table->userdata_size == 0)
+	{
+		ret++;
+		warning_msg("userdata partition size is zero");
+		part_table->userdata_size = USERDATA_SIZE;
+	}
+
+	if (part_table->cache_size == 0)
+	{
+		ret++;
+		warning_msg("cache partition size is zero");
+		part_table->cache_size = CACHE_SIZE;
+	}
+
+	return ret;
+}
+
+int swan_sfdisk(struct partition_desc *dev_desc, struct swan_emmc_partition_table *part_table)
 {
 	u64 total_size;
 	int vfat_size, expand_size;
 	int ret;
 
-	ret = partition_test(desc);
+	ret = partition_test(dev_desc);
 	if (ret < 0)
 	{
 		return ret;
 	}
 
-	umount_device(desc->path, MNT_DETACH);
+	umount_device(dev_desc->path, MNT_DETACH);
 
-	ret = cavan_dd("/dev/zero", desc->path, 0, 0, 512);
+	ret = cavan_dd("/dev/zero", dev_desc->path, 0, 0, 512);
 	if (ret < 0)
 	{
 		error_msg("cavan_dd");
 		return ret;
 	}
 
-	ret = get_device_size(desc->path, &total_size);
+	ret = get_device_size(dev_desc->path, &total_size);
 	if (ret < 0)
 	{
 		error_msg("get_device_size");
@@ -38,11 +90,33 @@ int swan_sfdisk(struct partition_desc *desc)
 
 	println("Total Size = %s", size2text(total_size));
 
-	expand_size = USERDATA_SIZE + CACHE_SIZE;
-	vfat_size = BM(total_size) - SYSTEM_SIZE - expand_size - RECOVERY_SIZE;
+	total_size = BM(total_size);
 
-	ret = system_command("sfdisk %s -uM -f << EOF\n,%d,L\n,%d,L,*\n,%d,E\n,,L\n,%d,L\n,,L\nEOF\n", \
-		desc->path, vfat_size, SYSTEM_SIZE, expand_size, USERDATA_SIZE);
+	ret = fix_emmc_partition_table(part_table);
+	if (ret)
+	{
+		warning_msg("some partition size is zero");
+	}
+
+	if (part_table->system_size + part_table->recovery_size + part_table->userdata_size + part_table->cache_size + part_table->vendor_size > total_size)
+	{
+		get_default_emmc_partition_table(part_table);
+	}
+
+	expand_size = part_table->userdata_size + part_table->cache_size + part_table->vendor_size;
+	vfat_size = total_size - part_table->system_size - expand_size - part_table->recovery_size;
+
+	if (part_table->vendor_size)
+	{
+		ret = system_command("sfdisk %s -uM -f << EOF\n,%d,L\n,%d,L,*\n,%d,E\n,,L\n,%d,L\n,%d,L\n,,L\nEOF\n", \
+			dev_desc->path, vfat_size, part_table->system_size, expand_size, part_table->userdata_size, part_table->cache_size);
+	}
+	else
+	{
+		ret = system_command("sfdisk %s -uM -f << EOF\n,%d,L\n,%d,L,*\n,%d,E\n,,L\n,%d,L\n,,L\nEOF\n", \
+			dev_desc->path, vfat_size, part_table->system_size, expand_size, part_table->userdata_size);
+	}
+
 	if (ret < 0)
 	{
 		print_error("sfdisk");
@@ -50,14 +124,14 @@ int swan_sfdisk(struct partition_desc *desc)
 	}
 
 	ret = system_command("sfdisk %s -uM -N1 -f << EOF\n%d,%d,\nEOF\n", \
-		desc->path, BOOT_SIZE, vfat_size - BOOT_SIZE);
+		dev_desc->path, BOOT_SIZE, vfat_size - BOOT_SIZE);
 	if (ret < 0)
 	{
 		print_error("sfdisk");
 		return ret;
 	}
 
-	ret = reread_part_table_retry(desc->path, 100);
+	ret = reread_part_table_retry(dev_desc->path, 100);
 	if (ret < 0)
 	{
 		error_msg("reread_part_table_retry");
