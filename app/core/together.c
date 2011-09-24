@@ -3,7 +3,7 @@
 // Create date: 2011-09-24 03:01:54
 
 #include <cavan.h>
-#include <cavan_cmd.h>
+#include <cavan_map.h>
 
 struct cavan_command_map
 {
@@ -13,7 +13,7 @@ struct cavan_command_map
 
 const struct cavan_command_map cmd_map_table[] =
 {
-#include <cavan_map.h>
+#include <cavan_map.c>
 };
 
 static void print_command_table(const struct cavan_command_map *p, size_t size)

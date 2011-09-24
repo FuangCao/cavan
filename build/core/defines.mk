@@ -4,8 +4,8 @@ $(Q)$(CC) $(CFLAGS) -o $@ -c $^
 endef
 
 define build_elf_file
-@echo "[CC] $^ => $@"
-$(Q)$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+@echo "[LD] $^ => $@"
+$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 endef
 
 define build_liba_file
@@ -14,7 +14,7 @@ $(Q)$(AR) cur $@ $^
 endef
 
 define build_libso_file
-@echo "[CC] $^ => $@"
+@echo "[LD] $^ => $@"
 $(Q)$(CC) -fPIC -shared -o $@ $^
 endef
 
@@ -38,7 +38,11 @@ define make_directory
 @mkdir $@ -p
 endef
 
-define build_obj_depend
+define source_to_object
+$(patsubst %.c,$1/%.o,$(notdir $2))
+endef
+
+define generate_obj_depend
 @echo "Automatically Generate $@"
 $(eval obj-dir = $(dir $@))
 @for action in $(foreach fn,$^,$(basename $(obj-dir)$(notdir $(fn))).o:$(fn)); \
@@ -49,7 +53,7 @@ do \
 done > $@
 endef
 
-define build_elf_depend
+define generate_elf_depend
 @echo "Automatically Generate $@"
 $(eval elf-dir = $(dir $@))
 $(if $2,$(eval elf-dir := $(elf-dir)$2-))
@@ -61,37 +65,50 @@ do \
 done > $@
 endef
 
-define app_to_cavan_source
+define generate_cavan_source
 @echo "Automatically Generate $@"
-$(eval cavan-main = do_cavan_$(basename $(notdir $@)))
+$(eval cavan-main = $(CAVAN_MAIN_FUNC_PREFIX)$(basename $(notdir $@)))
 @sed	-e 's/^\s*int\s\+main\s*(\(.*\))\s*$$/int $(cavan-main)(\1)/g' \
 		-e	's/^\s*void\s\+main\s*(\(.*\))\s*$$/int $(cavan-main)(\1)/g' \
 		$(filter %/$(notdir $@),$^) > $@
 endef
 
-define build_cavan_source_depend
+define generate_src_depend
 @echo "Automatically Generate $@"
 $(eval cavan-dir = $(dir $@))
 @for action in $(foreach fn,$^,$(cavan-dir)$(notdir $(fn)):$(fn)); \
 do \
 	echo $${action}; \
-	echo '	$$(call app_to_cavan_source)'; \
+	echo '	$$(call generate_cavan_source)'; \
 	echo; \
 done > $@
 endef
 
-define build_cavan_depend
+define generate_cavan_obj_depend
 @echo "Automatically Generate $@"
-@: > $1
-@echo "#pragma once" > $2
-@echo >> $2
-$(eval cavan-dir = $(dir $@))
-@for fn in $(basename $(notdir $^)); \
+$(eval obj-dir = $(dir $@))
+@for action in $(foreach fn,$1,$(basename $(obj-dir)$(notdir $(fn))).o:$(fn)); \
 do \
-	echo $(cavan-dir)$${fn}.o:$(cavan-dir)$${fn}.c; \
+	echo $${action}; \
 	echo '	$$(call build_object_file)'; \
 	echo; \
-	echo "{\"$${fn}\", do_cavan_$${fn}}," >> $1; \
-	echo "int do_cavan_$${fn}(int argc, char *argv[]);" >> $2; \
 done > $@
+endef
+
+define generate_map_source
+@echo "Automatically Generate $@"
+@for fn in $(basename $(notdir $^)); \
+do \
+	echo "{\"$${fn}\", $(CAVAN_MAIN_FUNC_PREFIX)$${fn}},"; \
+done > $@
+endef
+
+define generate_map_header
+@echo "Automatically Generate $@"
+@echo '#pragma once' > $@
+@echo >> $@
+@for fn in $(basename $(notdir $^)); \
+do \
+	echo "int $(CAVAN_MAIN_FUNC_PREFIX)$${fn}(int argc, char *argv[]);"; \
+done >> $@
 endef

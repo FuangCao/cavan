@@ -1,13 +1,16 @@
+include $(DEFINES_MAKEFILE)
+
+LIB_OBJECT = $(call source_to_object,$(OUT_LIB),$(LIB_SOURCE))
+
 all: $(TARGET_LIBA) $(TARGET_LIBSO)
 
-$(TARGET_LIBA): $(TARGET_OBJ)
+$(TARGET_LIBA): $(TARGET_LIB_OBJ)
 	$(call build_liba_file)
 
-$(TARGET_LIBSO): $(TARGET_OBJ)
+$(TARGET_LIBSO): $(TARGET_LIB_OBJ)
 	$(call build_libso_file)
 
-$(TARGET_OBJ): $(LIB_OBJECT)
+$(TARGET_LIB_OBJ): $(LIB_OBJECT)
 	$(call build_libo_file)
 
 include $(LIB_DEPEND)
-include $(DEFINES_MAKEFILE)
