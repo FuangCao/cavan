@@ -20,6 +20,7 @@ $(TARGET_CAVAN_OBJ): $(CAVAN_OBJECT)
 	$(call build_libo_file)
 
 $(APP_CORE_SOURCE): $(CAVAN_MAP_C) $(CAVAN_MAP_H)
+	$(call touch_file)
 
 $(CAVAN_MAP_C): $(APP_SOURCE)
 	$(call generate_map_source)

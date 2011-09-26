@@ -126,13 +126,13 @@ export APPS_MAKEFILE LIBS_MAKEFILE DEFINES_MAKEFILE TOGETHER_MAKEFILE
 all: app
 
 app: $(OUT_APP) $(OUT_ELF) $(APP_DEPEND) $(ELF_DEPEND) $(APP_DEPEND_LIB)
-	$(Q)make -f $(APPS_MAKEFILE)
+	$(Q)+make -f $(APPS_MAKEFILE)
 
 lib $(APP_DEPEND_LIB): $(OUT_LIB) $(LIB_DEPEND)
-	$(Q)make -f $(LIBS_MAKEFILE) $@
+	$(Q)+make -f $(LIBS_MAKEFILE) $@
 
 one join together cavan: $(OUT_CAVAN) $(CAVAN_SOURCE_DEPEND) $(CAVAN_DEPEND) $(APP_DEPEND_LIB)
-	$(Q)make -f $(TOGETHER_MAKEFILE)
+	$(Q)+make -f $(TOGETHER_MAKEFILE)
 
 $(CAVAN_DEPEND): $(APP_SOURCE) $(APP_CORE_SOURCE)
 	$(call generate_cavan_obj_depend,$(CAVAN_SOURCE))

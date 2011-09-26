@@ -9,9 +9,7 @@ struct progress_bar_body
 {
 	char head;
 	char content1[HALF_LENGTH];
-	char space1;
-	char percent[5];
-	char space2;
+	char percent[6];
 	char content2[HALF_LENGTH];
 	char tail;
 };

@@ -31,6 +31,7 @@ enum swan_image_type
 	SWAN_IMAGE_COUNT,
 };
 
+#pragma pack(1)
 struct swan_image_info
 {
 	u32 major;
@@ -64,6 +65,7 @@ struct swan_file_info
 	char md5sum[36];
 	char check_pattern[16];
 };
+#pragma pack()
 
 static inline ssize_t write_file_info(int pkg_fd, struct swan_file_info *file_p)
 {

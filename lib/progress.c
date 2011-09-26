@@ -17,8 +17,8 @@ static int update_percent(struct progress_bar *bar)
 	}
 
 	bar->percent = percent;
-	sprintf(bar->body.percent, "%d%%", percent);
-	bar->body.space2 = ' ';
+	sprintf(bar->body.percent, " %d%%", percent);
+	bar->body.percent[5] = ' ';
 
 	return 1;
 }
@@ -93,9 +93,7 @@ void progress_bar_init(struct progress_bar *bar, u64 total)
 	bar->length = -1;
 
 	body->head = '[';
-	body->space1 = ' ';
 	memset(body->percent, 0, sizeof(body->percent));
-	body->space2 = ' ';
 	body->tail = ']';
 
 	progress_bar_update(bar);
