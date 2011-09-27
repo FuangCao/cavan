@@ -26,7 +26,14 @@ u32 swan_package_flags = 0;
 enum swan_image_type swan_exclude_images[16];
 int swan_exclude_image_count;
 int swan_need_shrink = 1;
-struct swan_emmc_partition_table swan_emmc_part_table;
+struct swan_emmc_partition_table swan_emmc_part_table =
+{
+	.system_size = SYSTEM_SIZE,
+	.recovery_size = RECOVERY_SIZE,
+	.userdata_size = USERDATA_SIZE,
+	.cache_size = CACHE_SIZE,
+	.vendor_size = 0,
+};
 
 struct swan_image_info swan_images[] =
 {
@@ -1102,7 +1109,7 @@ u32 swan_read_version(const char *system_dev)
 
 	buff[readlen] = 0;
 
-	return text2value(buff, 16);
+	return text2value_unsigned(buff, NULL, 16);
 }
 
 ssize_t swan_write_version(const char *system_mnt_point, u32 version)

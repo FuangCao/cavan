@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 
 		case 's':
 		case 'S':
-			length = text2size(optarg);
+			length = text2size(optarg, NULL);
 			break;
 
 		default:

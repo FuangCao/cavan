@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
 	assert(argc == 2);
 
-	voltage = text2value(argv[1], 10);
+	voltage = text2value_unsigned(argv[1], NULL, 10);
 
 	printf("Voltage = %d, Level = %d\n", voltage, (voltage - MIN_VOLTAGE) * 100 / (MAX_VOLTAGE - MIN_VOLTAGE));
 

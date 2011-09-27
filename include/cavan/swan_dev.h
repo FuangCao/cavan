@@ -4,9 +4,13 @@
 
 #define BOOT_SIZE				36
 #define SYSTEM_SIZE				256
+#define SYSTEM_MIN_SIZE			256
 #define RECOVERY_SIZE			32
+#define RECOVERY_MIN_SIZE		16
 #define USERDATA_SIZE			512
+#define USERDATA_MIN_SIZE		128
 #define CACHE_SIZE				128
+#define CACHE_MIN_SIZE			64
 
 #define LINUX_PARTITION_TYPE	"ext3"
 #define EMMC_VFAT_DEFAULT_LABEL	""

@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 
 	memset(mbs.disk_part_tables, 0, 64);
 
-	start_sec = sector_cylinder_lalignment(text2size(argv[2]) / sec_size, &geo);
+	start_sec = sector_cylinder_lalignment(text2size(argv[2], NULL) / sec_size, &geo);
 
 	println("start_sec = %d(sector)", start_sec);
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
 	for (i = 0, j = 3; i < 4 && j < argc; i++, j++)
 	{
-		part_secs = sector_cylinder_alignment_auto(text2size(argv[j]) / sec_size, &geo);
+		part_secs = sector_cylinder_alignment_auto(text2size(argv[j], NULL) / sec_size, &geo);
 
 		println("partition start address = %d(sector), size = %d(sector)", start_sec, part_secs);
 

@@ -160,7 +160,7 @@ int partition_test(struct partition_desc *part_desc);
 int partition_change_label(struct partition_desc *part_desc);
 int partition_change_label_auto(struct partition_desc *part_desc);
 int partition_mkfs(struct partition_desc *part_desc);
-void partition_desc_show(struct partition_desc *part_desc);
+void show_partition_desc(struct partition_desc *part_desc);
 ssize_t __partition_read_label(const char *dev_path, const char *read_cmd, char *buff, size_t buff_len);
 ssize_t partition_read_label(struct partition_desc *part_desc);
 ssize_t partition_read_label_auto(const char *dev_path, char *buff, size_t size);

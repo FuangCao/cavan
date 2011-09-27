@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 					break;
 
 				case 1:
-					port = text2value(optarg, 10);
+					port = text2value(optarg, NULL, 10);
 					break;
 
 				case 'h':

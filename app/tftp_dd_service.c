@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
 		{
 		case 'p':
 		case 'P':
-			server_port = text2value(optarg, 10);
+			server_port = text2value(optarg, NULL, 10);
 			break;
 
 		case 'd':

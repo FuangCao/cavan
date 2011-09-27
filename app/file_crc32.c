@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		ret = file_ncrc32(argv[1], text2size(argv[2]), &crc);
+		ret = file_ncrc32(argv[1], text2size(argv[2], NULL), &crc);
 		if (ret < 0)
 		{
 			error_msg("file_ncrc32");

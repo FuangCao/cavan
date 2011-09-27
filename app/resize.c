@@ -30,10 +30,10 @@ int main(int argc, char *argv[])
 	switch (argv[2][0])
 	{
 	case '+':
-		size = st.st_size + text2size(argv[2] + 1);
+		size = st.st_size + text2size(argv[2] + 1, NULL);
 		break;
 	case '-':
-		size = text2size(argv[2] + 1);
+		size = text2size(argv[2] + 1, NULL);
 		if (size >= st.st_size)
 		{
 			size = 0;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		}
 		break;
 	case '0' ... '9':
-		size = text2size(argv[2]);
+		size = text2size(argv[2], NULL);
 		break;
 	default:
 		error_msg("argument error");

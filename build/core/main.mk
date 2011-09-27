@@ -43,6 +43,7 @@ CAVAN_NAME = cavan
 TARGET_LIB_OBJ = $(OUT_LIB)/lib$(CAVAN_NAME).o
 TARGET_LIBA = $(OUT_LIB)/lib$(CAVAN_NAME).a
 TARGET_LIBSO = $(OUT_LIB)/lib$(CAVAN_NAME).so
+TARGET_LIB_ALL = $(TARGET_LIB_OBJ) $(TARGET_LIBA) $(TARGET_LIBSO)
 
 APPS_MAKEFILE = $(BUILD_CORE)/application.mk
 LIBS_MAKEFILE = $(BUILD_CORE)/library.mk
@@ -125,32 +126,21 @@ export APPS_MAKEFILE LIBS_MAKEFILE DEFINES_MAKEFILE TOGETHER_MAKEFILE
 
 all: app
 
-app: $(OUT_APP) $(OUT_ELF) $(APP_DEPEND) $(ELF_DEPEND) $(APP_DEPEND_LIB)
+app: $(OUT_APP) $(OUT_ELF) $(APP_DEPEND_LIB) $(APP_SOURCE)
+	$(call generate_obj_depend,$(APP_DEPEND),$(APP_SOURCE))
+	$(call generate_elf_depend,$(ELF_DEPEND),$(OUT_APP),$(APP_SOURCE))
 	$(Q)+make -f $(APPS_MAKEFILE)
 
-lib $(APP_DEPEND_LIB): $(OUT_LIB) $(LIB_DEPEND)
+lib: $(TARGET_LIB_ALL)
+
+$(TARGET_LIB_ALL): $(OUT_LIB) $(LIB_SOURCE)
+	$(call generate_obj_depend,$(LIB_DEPEND),$(LIB_SOURCE))
 	$(Q)+make -f $(LIBS_MAKEFILE) $@
 
-one join together cavan: $(OUT_CAVAN) $(CAVAN_SOURCE_DEPEND) $(CAVAN_DEPEND) $(APP_DEPEND_LIB)
+one join together cavan: $(OUT_CAVAN) $(APP_DEPEND_LIB)
+	$(call generate_src_depend,$(CAVAN_SOURCE_DEPEND),$(APP_SOURCE))
+	$(call generate_cavan_obj_depend,$(CAVAN_DEPEND),$(CAVAN_SOURCE))
 	$(Q)+make -f $(TOGETHER_MAKEFILE)
-
-$(CAVAN_DEPEND): $(APP_SOURCE) $(APP_CORE_SOURCE)
-	$(call generate_cavan_obj_depend,$(CAVAN_SOURCE))
-
-$(CAVAN_SOURCE_DEPEND): $(APP_SOURCE)
-	$(call generate_src_depend)
-
-$(LIB_DEPEND): $(LIB_SOURCE)
-	$(call generate_obj_depend)
-
-$(APP_DEPEND): $(APP_SOURCE)
-	$(call generate_obj_depend)
-
-$(ELF_DEPEND): $(APP_SOURCE)
-	$(call generate_elf_depend,$(OUT_APP),$(ELF_PREFIX))
-
-$(APP_SOURCE) $(LIB_SOURCE): $(HEADER_FILES)
-	$(call touch_file)
 
 $(OUT_LIB) $(OUT_ELF) $(OUT_APP) $(OUT_CAVAN): $(TARGET_OUT)
 	$(call make_directory)
@@ -178,7 +168,5 @@ clean-all:
 
 distclean:
 	$(call remove_file,$(OUT_DIR))
-
-.PHONY: lib app $(APP_DEPEND) $(LIB_DEPEND) $(ELF_DEPEND) $(CAVAN_DEPEND) $(CAVAN_SOURCE_DEPEND)
 
 include $(DEFINES_MAKEFILE)

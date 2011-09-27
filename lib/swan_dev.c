@@ -29,32 +29,32 @@ int fix_emmc_partition_table(struct swan_emmc_partition_table *part_table)
 {
 	int ret = 0;
 
-	if (part_table->system_size == 0)
+	if (part_table->system_size < SYSTEM_MIN_SIZE)
 	{
 		ret++;
-		warning_msg("system partition size is zero");
+		warning_msg("system partition size is too small");
 		part_table->system_size = SYSTEM_SIZE;
 	}
 
-	if (part_table->recovery_size == 0)
+	if (part_table->recovery_size < RECOVERY_MIN_SIZE)
 	{
 		ret++;
-		warning_msg("recovery partition size is zero");
-		part_table->recovery_size = RECOVERY_SIZE;
+		warning_msg("recovery partition size is too small");
+		part_table->recovery_size = RECOVERY_MIN_SIZE;
 	}
 
-	if (part_table->userdata_size == 0)
+	if (part_table->userdata_size < USERDATA_MIN_SIZE)
 	{
 		ret++;
-		warning_msg("userdata partition size is zero");
-		part_table->userdata_size = USERDATA_SIZE;
+		warning_msg("userdata partition size is too small");
+		part_table->userdata_size = USERDATA_MIN_SIZE;
 	}
 
-	if (part_table->cache_size == 0)
+	if (part_table->cache_size < CACHE_MIN_SIZE)
 	{
 		ret++;
-		warning_msg("cache partition size is zero");
-		part_table->cache_size = CACHE_SIZE;
+		warning_msg("cache partition size is too small");
+		part_table->cache_size = CACHE_MIN_SIZE;
 	}
 
 	return ret;
@@ -95,7 +95,7 @@ int swan_sfdisk(struct partition_desc *dev_desc, struct swan_emmc_partition_tabl
 	ret = fix_emmc_partition_table(part_table);
 	if (ret)
 	{
-		warning_msg("some partition size is zero");
+		warning_msg("some partition size is invalid");
 	}
 
 	if (part_table->system_size + part_table->recovery_size + part_table->userdata_size + part_table->cache_size + part_table->vendor_size > total_size)
@@ -353,7 +353,7 @@ int set_brightness_shadow(int brightness, int step, u32 msec)
 
 	buff[readlen] = 0;
 
-	current_brightness = text2value(buff, 10);
+	current_brightness = text2value_unsigned(buff, NULL, 10);
 
 	if (current_brightness > brightness)
 	{

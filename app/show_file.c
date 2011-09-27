@@ -4,9 +4,14 @@
 
 int main(int argc, char *argv[])
 {
-	assert(argc == 3);
+	assert (argc > 1);
 
-	file_show(argv[1], text2size(argv[2]));
-
-	return 0;
+	if (argc < 3)
+	{
+		return file_show(argv[1], 0);
+	}
+	else
+	{
+		return file_show(argv[1], text2size(argv[2], NULL));
+	}
 }

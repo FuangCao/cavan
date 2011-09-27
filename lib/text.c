@@ -602,185 +602,357 @@ int char2value(char c)
 	}
 }
 
-s64 text2value(const char *text, int base)
+int prefix2base(const char *prefix, const char **prefix_ret)
 {
-	s64 value;
-	int tmp;
-	int symbol;
+	int base;
 
-	if (text == NULL)
+	if (*prefix != '0')
 	{
+		return -EINVAL;
+	}
+
+	switch (prefix[1])
+	{
+	case 'b':
+	case 'B':
+		prefix += 2;
+		base = 2;
+		break;
+
+	case 'd':
+	case 'D':
+		prefix += 2;
+		base = 10;
+		break;
+
+	case 'x':
+	case 'X':
+		prefix += 2;
+		base = 16;
+		break;
+
+	case '0' ... '7':
+		prefix += 1;
+		base = 8;
+		break;
+
+	case 0:
+		return 0;
+
+	default:
+		return -EINVAL;
+	}
+
+	if (prefix_ret)
+	{
+		*prefix_ret = prefix;
+	}
+
+	return base;
+}
+
+u64 text2value_unsigned(const char *text, const char **text_ret, int base)
+{
+	u64 value;
+	int tmp;
+
+	if (text == NULL || (tmp = prefix2base(text, &text)) == 0)
+	{
+		if (text_ret)
+		{
+			*text_ret = text;
+		}
 		return 0;
 	}
 
-	if (*text == '-')
+	if (tmp > 0)
 	{
-		symbol = -1;
-		text++;
+		base = tmp;
 	}
-	else
+	else if (base < 1)
 	{
-		symbol = 1;
-	}
-
-	if (*text == '0')
-	{
-		text++;
-		switch (text[0])
-		{
-		case 'x':
-		case 'X':
-			base = 16;
-			text++;
-			break;
-
-		case 'b':
-		case 'B':
-			base = 2;
-			text++;
-			break;
-
-		case 'd':
-		case 'D':
-			base = 10;
-			text++;
-			break;
-
-		default:
-			base = 8;
-		}
+		base = 10;
 	}
 
 	for (value = 0; *text; text++)
 	{
 		tmp = char2value(*text);
-		if (tmp < 0)
+		if (tmp > base)
 		{
-			continue;
+			break;
 		}
 
-		if (tmp < base)
-		{
-			value = value * base + tmp;
-		}
+		value = value * base + tmp;
 	}
 
-	return value * symbol;
+	if (text_ret)
+	{
+		*text_ret = text;
+	}
+
+	return value;
 }
 
-char *__value2text(u64 value, char *buff, int size, char fill, int flag)
+s64 text2value(const char *text, const char **text_ret, int base)
 {
-	int i = 0;
-	char tmp_buff[100];
-	int base = flag & 0xFF;
-
-	if (fill == 0)
+	if (text == NULL)
 	{
-		fill = '0';
+		if (text_ret)
+		{
+			*text_ret = NULL;
+		}
+		return 0;
 	}
 
-	switch (base)
+	if (*text == '-')
 	{
-		case 2:
-			if (flag & FLAG_PREFIX)
-			{
-				*buff++ = '0';
-				*buff++ = 'B';
-			}
-
-			while (value)
-			{
-				tmp_buff[i++] = (value & 1) + '0';
-				value >>= 1;
-			}
-			break;
-
-		case 8:
-			if (flag & FLAG_PREFIX)
-			{
-				*buff++ = '0';
-			}
-
-			while (value)
-			{
-				tmp_buff[i++] = (value & 7) + '0';
-				value >>= 3;
-			}
-			break;
-
-		case 16:
-			if (flag & FLAG_PREFIX)
-			{
-				*buff++ = '0';
-				*buff++ = 'x';
-			}
-
-			while (value)
-			{
-				tmp_buff[i++] = value2char(value & 0x0F);
-				value >>= 4;
-			}
-			break;
-
-		default:
-			if (base > (10 + 26))
-			{
-				error_msg("Base Is Too Big");
-				return 0;
-			}
-
-			if (flag & FLAG_SIGNED)
-			{
-				s64 svalue = *(s64 *)&value;
-
-				if (svalue < 0)
-				{
-					*buff++ = '-';
-					svalue = -svalue;
-				}
-
-				while (svalue)
-				{
-					tmp_buff[i++] = value2char(svalue % base);
-					svalue /= base;
-				}
-			}
-			else while (value)
-			{
-				tmp_buff[i++] = value2char(value % base);
-				value /= base;
-			}
-
-			break;
+		return -text2value_unsigned(text + 1, text_ret, base);
 	}
 
-	if (i == 0 && size <= 0)
+	return text2value_unsigned(text, text_ret, base);
+}
+
+void text_reverse_simple(char *start, char *end)
+{
+	char tmp;
+
+	while (start < end)
 	{
-		*buff++ = fill;
+		tmp = *start;
+		*start = *end;
+		*end = tmp;
+
+		start++;
+		end--;
 	}
+}
 
-	while (i < size)
+void text_reverse1(char *p1, char *p2)
+{
+	if (p1 < p2)
 	{
-		*buff++ = fill;
-		size--;
+		text_reverse_simple(p1, p2);
 	}
-
-	size += i;
-
-	while (i)
+	else if (p1 > p2)
 	{
-		*buff++ = tmp_buff[--i];
+		text_reverse_simple(p2, p1);
 	}
+}
 
-	while (size < 0)
+void text_reverse2(char *text, size_t size)
+{
+	text_reverse_simple(text, text + size - 1);
+}
+
+void text_reverse3(char *text)
+{
+	text_reverse2(text, text_len(text));
+}
+
+char *reverse_value2text_base2(u64 value, char *buff, size_t size)
+{
+	char *buff_end;
+
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 1)
 	{
-		*buff++ = ' ';
-		size++;
+		*buff = (value & 0x01) + '0';
 	}
 
 	*buff = 0;
 
 	return buff;
+}
+
+char *reverse_value2text_base4(u64 value, char *buff, size_t size)
+{
+	char *buff_end;
+
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 2)
+	{
+		*buff = (value & 0x03) + '0';
+	}
+
+	*buff = 0;
+
+	return buff;
+}
+
+char *reverse_value2text_base8(u64 value, char *buff, size_t size)
+{
+	char *buff_end;
+
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 3)
+	{
+		*buff = (value & 0x07) + '0';
+	}
+
+	*buff = 0;
+
+	return buff;
+}
+
+char *reverse_value2text_base16(u64 value, char *buff, size_t size)
+{
+	char *buff_end;
+
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 4)
+	{
+		*buff = value2char(value & 0x0F);
+	}
+
+	*buff = 0;
+
+	return buff;
+}
+
+char *reverse_value2text_base32(u64 value, char *buff, size_t size)
+{
+	char *buff_end;
+
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 5)
+	{
+		*buff = value2char(value & 0x1F);
+	}
+
+	*buff = 0;
+
+	return buff;
+}
+
+char *reverse_value2text_all(u64 value, char *buff, size_t size, int base)
+{
+	char *buff_end;
+
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value /= base)
+	{
+		*buff = value2char(value % base);
+	}
+
+	*buff = 0;
+
+	return buff;
+}
+
+char *simple_value2text_reverse(u64 value, char *buff, size_t size, int base)
+{
+
+	switch (base)
+	{
+	case 2:
+		return reverse_value2text_base2(value, buff, size);
+
+	case 4:
+		return reverse_value2text_base4(value, buff, size);
+
+	case 8:
+		return reverse_value2text_base8(value, buff, size);
+
+	case 16:
+		return reverse_value2text_base16(value, buff, size);
+
+	case 32:
+		return reverse_value2text_base32(value, buff, size);
+
+	default:
+		return reverse_value2text_all(value, buff, size, base);
+	}
+}
+
+char *simple_value2text_unsigned(u64 value, char *buff, size_t size, int base)
+{
+	char *tail;
+
+	tail = simple_value2text_reverse(value, buff, size, base);
+	text_reverse_simple(buff, tail - 1);
+
+	return tail;
+}
+
+char *simple_value2text(s64 value, char *buff, size_t size, int base)
+{
+	if (value < 0 && base == 10)
+	{
+		*buff = '-';
+		return simple_value2text_unsigned(-value, buff + 1, size - 1, 10);
+	}
+
+	return simple_value2text_unsigned(value, buff, size, base);
+}
+
+char *base2prefix(int base, char *prefix)
+{
+	switch (base)
+	{
+	case 2:
+		*(u16 *)prefix = 0x4230;
+		prefix += 2;
+		break;
+
+	case 8:
+		*prefix++ = '0';
+		break;
+
+	case 10:
+		*(u16 *)prefix = 0x4430;
+		prefix += 2;
+		break;
+
+	case 16:
+		*(u16 *)prefix = 0x7830;
+		prefix += 2;
+		break;
+	}
+
+	*prefix = 0;
+
+	return prefix;
+}
+
+char *__value2text(s64 value, char *text, int size, char fill, int flag)
+{
+	char buff[128], *tail;
+	int base;
+
+	base = flag & 0xFF;
+	if (base == 10 && value < 0 && (flag & FLAG_SIGNED))
+	{
+		*text++ = '-';
+		tail = simple_value2text_reverse(-value, buff, sizeof(buff), 10);
+	}
+	else
+	{
+		tail = simple_value2text_reverse(value, buff, sizeof(buff), base);
+	}
+
+	if (flag & FLAG_PREFIX)
+	{
+		text = base2prefix(base, text);
+	}
+
+	size -= (tail - buff);
+	if (size > 0)
+	{
+		char *text_end;
+
+		if (fill == 0)
+		{
+			fill = '0';
+		}
+
+		for (text_end = text + size; text < text_end; text++)
+		{
+			*text = fill;
+		}
+	}
+
+	for (tail--; tail >= buff; text++, tail--)
+	{
+		*text = *tail;
+	}
+
+	*text = 0;
+
+	return text;
 }
 
 char *value2text(u64 value, int flag)
@@ -792,60 +964,70 @@ char *value2text(u64 value, int flag)
 	return buff;
 }
 
-static const char *__text2size(const char *text, u64 *size)
+u64 text2size_single(const char *text, const char **text_ret)
 {
-	u64 tmp_size = 0;
-	int offset;
+	u64 size;
 
-	while (text[0] >= '0' && text[0] <= '9')
-	{
-		tmp_size *= 10;
-		tmp_size += *text++ - '0';
-	}
+	size = text2value_unsigned(text, &text, 10);
 
-	switch (text[0])
+	switch (*text)
 	{
 	case 't':
 	case 'T':
-		offset = 40;
+		size <<= 40;
 		break;
 	case 'g':
 	case 'G':
-		offset = 30;
+		size <<= 30;
 		break;
 	case 'm':
 	case 'M':
-		offset = 20;
+		size <<= 20;
 		break;
 	case 'k':
 	case 'K':
-		offset = 10;
+		size <<= 10;
 		break;
-	case 0:
-		text--;
 	case 'b':
 	case 'B':
-		offset = 0;
+	case 0:
 		break;
 	default:
-		error_msg("illegal character \'%c\'", text[0]);
-		size[0] = 0;
-		return NULL;
+		error_msg("illegal character \'%c\'", *text);
 	}
 
-	size[0] = tmp_size << offset;
+	if (*text)
+	{
+		text++;
+	}
 
-	return text + 1;
+	if (text_ret)
+	{
+		*text_ret = text;
+	}
+
+	return size;
 }
 
-u64 text2size(const char *text)
+u64 text2size(const char *text, const char **text_ret)
 {
-	u64 size = 0, tmp_size;
+	u64 size;
 
-	while (text && text[0])
+	if (text == NULL)
 	{
-		text = __text2size(text, &tmp_size);
-		size += tmp_size;
+		return 0;
+	}
+
+	size = 0;
+
+	while (*text)
+	{
+		size += text2size_single(text, &text);
+	}
+
+	if (text_ret)
+	{
+		*text_ret = text;
 	}
 
 	return size;
@@ -864,35 +1046,35 @@ char *__size2text(u64 size, char *buff)
 	tmp = (size >> 40) & 0x3FF;
 	if (tmp)
 	{
-		buff = __value2text(tmp, buff, 0, 0, 10);
+		buff = simple_value2text(tmp, buff, size, 10);
 		*buff++ = 'T';
 	}
 
 	tmp = (size >> 30) & 0x3FF;
 	if (tmp)
 	{
-		buff = __value2text(tmp, buff, 0, 0, 10);
+		buff = simple_value2text(tmp, buff, size, 10);
 		*buff++ = 'G';
 	}
 
 	tmp = (size >> 20) & 0x3FF;
 	if (tmp)
 	{
-		buff = __value2text(tmp, buff, 0, 0, 10);
+		buff = simple_value2text(tmp, buff, size, 10);
 		*buff++ = 'M';
 	}
 
 	tmp = (size >> 10) & 0x3FF;
 	if (tmp)
 	{
-		buff = __value2text(tmp, buff, 0, 0, 10);
+		buff = simple_value2text(tmp, buff, size, 10);
 		*buff++ = 'k';
 	}
 
 	tmp = size & 0x3FF;
 	if (tmp)
 	{
-		buff = __value2text(tmp, buff, 0, 0, 10);
+		buff = simple_value2text(tmp, buff, size, 10);
 	}
 
 out_return:
@@ -904,7 +1086,7 @@ out_return:
 
 char *size2text(u64 size)
 {
-	static char buff[100];
+	static char buff[128];
 
 	__size2text(size, buff);
 
@@ -1985,4 +2167,54 @@ char *mac_address_tostring(const void *mac, size_t maclen)
 	__mac_address_tostring(mac, maclen, buff);
 
 	return buff;
+}
+
+int text_is_number(const char *text)
+{
+	while (IS_NUMBER(*text))
+	{
+		text++;
+	}
+
+	return *text == 0;
+}
+
+int text_is_float(const char *text)
+{
+	while (IS_FLOAT(*text))
+	{
+		text++;
+	}
+
+	return *text == 0;
+}
+
+int text_is_uppercase(const char *text)
+{
+	while (IS_UPPERCASE(*text))
+	{
+		text++;
+	}
+
+	return *text == 0;
+}
+
+int text_is_lowercase(const char *text)
+{
+	while (IS_LOWERCASE(*text))
+	{
+		text++;
+	}
+
+	return *text == 0;
+}
+
+int text_is_letter(const char *text)
+{
+	while (IS_LETTER(*text))
+	{
+		text++;
+	}
+
+	return *text == 0;
 }

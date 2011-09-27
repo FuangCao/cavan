@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 				break;
 
 			case 1:
-				port = text2value(optarg, 10);
+				port = text2value(optarg, NULL, 10);
 				break;
 
 			case 'r':
@@ -108,45 +108,85 @@ int main(int argc, char *argv[])
 
 	for (i = optind; i < argc; i++)
 	{
+		char *p;
+
 		parse_parameter(argv[i]);
 
-		if (strcmp(para_option, "if") == 0)
+		c = para_option[0];
+		p = para_option + 1;
+
+		switch (c)
 		{
-			strcpy(input_file, para_value);
-		}
-		else if (strcmp(para_option, "of") == 0)
-		{
-			strcpy(output_file, para_value);
-		}
-		else if (strcmp(para_option, "bs") == 0)
-		{
-			bs = text2size(para_value);
-		}
-		else if (strcmp(para_option, "ip") == 0)
-		{
-			strcpy(ip_address, para_value);
-		}
-		else if (strcmp(para_option, "port") == 0)
-		{
-			port = text2value(para_value, 10);
-		}
-		else if (strcmp(para_option, "seek") == 0)
-		{
-			seek = text2size(para_value);
-		}
-		else if (strcmp(para_option, "skip") == 0)
-		{
-			skip = text2size(para_value);
-		}
-		else if (strcmp(para_option, "count") == 0)
-		{
-			count = text2size(para_value);
-		}
-		else
-		{
-			error_msg("unknown option \"%s\"", para_option);
-			show_usage();
-			return -EINVAL;
+		case 'i':
+			if (strcmp(p, "f") == 0)
+			{
+				strcpy(input_file, para_value);
+			}
+			else if (strcmp(p, "p") == 0)
+			{
+				strcpy(ip_address, para_value);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		case 'o':
+			if (strcmp(p, "f") == 0)
+			{
+				strcpy(output_file, para_value);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		case 'b':
+			if (strcmp(p, "s") == 0)
+			{
+				bs = text2size(para_value, NULL);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		case 'p':
+			if (strcmp(p, "ort") == 0)
+			{
+				port = text2value(para_value, NULL, 10);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		case 's':
+			if (strcmp(p, "kip") == 0)
+			{
+				skip = text2size(para_value, NULL);
+			}
+			else if (strcmp(p, "eek") == 0)
+			{
+				seek = text2size(para_value, NULL);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		case 'c':
+			if (strcmp(p, "ount") == 0)
+			{
+				count = text2size(para_value, NULL);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		default:
+			goto out_unknown_option;
 		}
 	}
 
@@ -164,4 +204,9 @@ int main(int argc, char *argv[])
 	}
 
 	return 0;
+
+out_unknown_option:
+	error_msg("unknown option \"%s\"", para_option);
+	show_usage();
+	return -EINVAL;
 }

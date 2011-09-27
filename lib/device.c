@@ -1192,8 +1192,6 @@ struct filesystem_desc *get_fsdesc_by_type(enum filesystem_type type)
 		}
 	}
 
-	error_msg("unknown filesystem");
-
 	return NULL;
 }
 
@@ -1359,7 +1357,7 @@ int partition_change_label_auto(struct partition_desc *part_desc)
 	return -1;
 }
 
-void partition_desc_show(struct partition_desc *part_desc)
+void show_partition_desc(struct partition_desc *part_desc)
 {
 	const struct filesystem_desc *fsdesc;
 
@@ -1386,7 +1384,7 @@ int partition_mkfs(struct partition_desc *part_desc)
 	int ret;
 	struct filesystem_desc *fs_desc;
 
-	partition_desc_show(part_desc);
+	show_partition_desc(part_desc);
 
 	ret = partition_test(part_desc);
 	if (ret < 0)
@@ -1905,4 +1903,3 @@ int get_device_statfs(const char *devpath, const char *fstype, struct statfs *st
 
 	return ret;
 }
-

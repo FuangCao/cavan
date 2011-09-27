@@ -42,29 +42,6 @@ define source_to_object
 $(patsubst %.c,$1/%.o,$(notdir $2))
 endef
 
-define generate_obj_depend
-@echo "Automatically Generate $@"
-$(eval obj-dir = $(dir $@))
-@for action in $(foreach fn,$^,$(basename $(obj-dir)$(notdir $(fn))).o:$(fn)); \
-do \
-	echo $${action}; \
-	echo '	$$(call build_object_file)'; \
-	echo; \
-done > $@
-endef
-
-define generate_elf_depend
-@echo "Automatically Generate $@"
-$(eval elf-dir = $(dir $@))
-$(if $2,$(eval elf-dir := $(elf-dir)$2-))
-@for action in $(foreach fn,$(basename $(notdir $^)),$(elf-dir)$(fn):$1/$(fn).o); \
-do \
-	echo $${action}; \
-	echo '	$$(call build_elf_file)'; \
-	echo; \
-done > $@
-endef
-
 define generate_cavan_source
 @echo "Automatically Generate $@"
 $(eval cavan-main = $(CAVAN_MAIN_FUNC_PREFIX)$(basename $(notdir $@)))
@@ -73,26 +50,49 @@ $(eval cavan-main = $(CAVAN_MAIN_FUNC_PREFIX)$(basename $(notdir $@)))
 		$(filter %/$(notdir $@),$^) > $@
 endef
 
-define generate_src_depend
-@echo "Automatically Generate $@"
-$(eval cavan-dir = $(dir $@))
-@for action in $(foreach fn,$^,$(cavan-dir)$(notdir $(fn)):$(fn)); \
-do \
-	echo $${action}; \
-	echo '	$$(call generate_cavan_source)'; \
-	echo; \
-done > $@
-endef
-
-define generate_cavan_obj_depend
-@echo "Automatically Generate $@"
-$(eval obj-dir = $(dir $@))
-@for action in $(foreach fn,$1,$(basename $(obj-dir)$(notdir $(fn))).o:$(fn)); \
+define generate_obj_depend
+@echo "Automatically Generate $1"
+$(eval obj-dir = $(dir $1))
+@for action in $(foreach fn,$2,$(basename $(obj-dir)$(notdir $(fn))).o:$(fn)); \
 do \
 	echo $${action}; \
 	echo '	$$(call build_object_file)'; \
 	echo; \
-done > $@
+done > $1
+endef
+
+define generate_elf_depend
+@echo "Automatically Generate $1"
+$(eval elf-dir = $(dir $1))
+$(if $(ELF_PREFIX),$(eval elf-dir := $(elf-dir)$(ELF_PREFIX)-))
+@for action in $(foreach fn,$(basename $(notdir $3)),$(elf-dir)$(fn):$2/$(fn).o); \
+do \
+	echo $${action}; \
+	echo '	$$(call build_elf_file)'; \
+	echo; \
+done > $1
+endef
+
+define generate_src_depend
+@echo "Automatically Generate $1"
+$(eval cavan-dir = $(dir $1))
+@for action in $(foreach fn,$2,$(cavan-dir)$(notdir $(fn)):$(fn)); \
+do \
+	echo $${action}; \
+	echo '	$$(call generate_cavan_source)'; \
+	echo; \
+done > $1
+endef
+
+define generate_cavan_obj_depend
+@echo "Automatically Generate $1"
+$(eval obj-dir = $(dir $1))
+@for action in $(foreach fn,$2,$(basename $(obj-dir)$(notdir $(fn))).o:$(fn)); \
+do \
+	echo $${action}; \
+	echo '	$$(call build_object_file)'; \
+	echo; \
+done > $1
 endef
 
 define generate_map_source

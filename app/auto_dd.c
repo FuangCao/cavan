@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 		{
 		case 'd':
 		case 'D':
-			delay = text2value(optarg, 10);
+			delay = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		default:

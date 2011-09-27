@@ -15,36 +15,71 @@ int main(int argc, char *argv[])
 
 	for (i = 1; i < argc; i++)
 	{
+		char c, *p;
+
 		parse_parameter(argv[i]);
 
-		if (strcmp(para_option, "if") == 0)
+		c = para_option[0];
+		p = para_option + 1;
+
+		switch (c)
 		{
-			strcpy(input_file, para_value);
-		}
-		else if (strcmp(para_option, "of") == 0)
-		{
-			strcpy(output_file, para_value);
-		}
-		else if (strcmp(para_option, "bs") == 0)
-		{
-			bs = text2size(para_value);
-		}
-		else if (strcmp(para_option, "seek") == 0)
-		{
-			seek = text2size(para_value);
-		}
-		else if (strcmp(para_option, "skip") == 0)
-		{
-			skip = text2size(para_value);
-		}
-		else if (strcmp(para_option, "count") == 0)
-		{
-			count = text2size(para_value);
-		}
-		else
-		{
-			error_msg("unknown option \"%s\"", para_option);
-			return -1;
+		case 'i':
+			if (strcmp(p, "f") == 0)
+			{
+				strcpy(input_file, para_value);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		case 'o':
+			if (strcmp(p, "f") == 0)
+			{
+				strcpy(output_file, para_value);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		case 'b':
+			if (strcmp(p, "s") == 0)
+			{
+				bs = text2size(para_value, NULL);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		case 's':
+			if (strcmp(p, "kip") == 0)
+			{
+				skip = text2size(para_value, NULL);
+			}
+			else if (strcmp(p, "eek") == 0)
+			{
+				seek = text2size(para_value, NULL);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		case 'c':
+			if (strcmp(p, "ount") == 0)
+			{
+				count = text2size(para_value, NULL);
+			}
+			else
+			{
+				goto out_unknown_option;
+			}
+			break;
+		default:
+			goto out_unknown_option;
 		}
 	}
 
@@ -55,5 +90,9 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	return ret;
+	return 0;
+
+out_unknown_option:
+	error_msg("unknown option \"%s\"", para_option);
+	return -EINVAL;
 }

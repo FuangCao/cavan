@@ -70,11 +70,29 @@ char *text_dup(const char *text);
 char *text_tok(char *text, const char *delim);
 
 int char2value(char c);
-s64 text2value(const char *text, int base);
-char *__value2text(u64 value, char *buff, int size, char fill, int flag);
+int prefix2base(const char *prefix, const char **prefix_ret);
+u64 text2value_unsigned(const char *text, const char **text_ret, int base);
+s64 text2value(const char *text, const char **text_ret, int base);
+
+void text_reverse_simple(char *start, char *end);
+void text_reverse1(char *p1, char *p2);
+void text_reverse2(char *text, size_t size);
+void text_reverse3(char *text);
+
+char *reverse_value2text_base2(u64 value, char *buff, size_t size);
+char *reverse_value2text_base4(u64 value, char *buff, size_t size);
+char *reverse_value2text_base8(u64 value, char *buff, size_t size);
+char *reverse_value2text_base16(u64 value, char *buff, size_t size);
+char *reverse_value2text_base32(u64 value, char *buff, size_t size);
+char *reverse_value2text_all(u64 value, char *buff, size_t size, int base);
+char *simple_value2text_reverse(u64 value, char *buff, size_t size, int base);
+char *simple_value2text_unsigned(u64 value, char *buff, size_t size, int base);
+char *simple_value2text(s64 value, char *buff, size_t size, int base);
+
+char *__value2text(s64 value, char *text, int size, char fill, int flag);
 char *value2text(u64 value, int flag);
 
-u64 text2size(const char *text);
+u64 text2size(const char *text, const char **text_ret);
 char *__size2text(u64 size, char *buff);
 char *size2text(u64 size);
 
@@ -147,6 +165,12 @@ __printf_format_45__ ssize_t buff_command_path2(const char *path, char *buff, si
 
 void *__mac_address_tostring(const void *mac, size_t maclen, void *buff);
 char *mac_address_tostring(const void *mac, size_t maclen);
+
+int text_is_number(const char *text);
+int text_is_float(const char *text);
+int text_is_uppercase(const char *text);
+int text_is_lowercase(const char *text);
+int text_is_letter(const char *text);
 
 // ============================================================
 
