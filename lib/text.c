@@ -1033,6 +1033,23 @@ u64 text2size(const char *text, const char **text_ret)
 	return size;
 }
 
+u64 text2size_mb(const char *text)
+{
+	if (text == NULL)
+	{
+		return 0;
+	}
+
+	if (text_is_number(text))
+	{
+		return text2value_unsigned(text, NULL, 10);
+	}
+	else
+	{
+		return text2size(text, NULL) >> 20;
+	}
+}
+
 char *__size2text(u64 size, char *buff)
 {
 	u64 tmp;

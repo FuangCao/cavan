@@ -223,6 +223,13 @@ int package(const char *pkg_name, const char *dir_name)
 	int i;
 	char tmp_path[1024], *name_p;
 
+	ret = fix_emmc_partition_table(&swan_emmc_part_table);
+	if (ret < 0)
+	{
+		pr_red_info("swan partition table is invalid");
+		return ret;
+	}
+
 	name_p = text_path_cat(tmp_path, dir_name, NULL);
 
 	if (swan_machine_type == SWAN_BOARD_UNKNOWN)
@@ -320,6 +327,7 @@ int package(const char *pkg_name, const char *dir_name)
 	pkg_info.mkfs_mask = swan_mkfs_mask;
 	pkg_info.board_type = swan_machine_type;
 	pkg_info.upgrade_flags = swan_upgrade_flags;
+	pkg_info.part_table = swan_emmc_part_table;
 
 	show_package_info(&pkg_info);
 
@@ -624,7 +632,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 			.minor = FIRST_MINOR + 5,
 			.path = EMMC_DEVICE "p5",
 			.label = "data",
-			.type = FS_EXT3,
+			.type = FS_EXT4,
 		},
 		{
 			.major = 179,
@@ -632,6 +640,13 @@ int upgrade(const char *pkg_name, const char *dir_name)
 			.path = EMMC_DEVICE "p6",
 			.label = "cache",
 			.type = FS_EXT3,
+		},
+		{
+			.major = 179,
+			.minor = FIRST_MINOR + 7,
+			.path = EMMC_DEVICE "p7",
+			.label = "vendor",
+			.type = FS_EXT4,
 		},
 	};
 	struct partition_desc emmc_dev_desc =
@@ -643,7 +658,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 	u32 mkfs_mask_tmp;
 	u32 mkfs_mask_table[] =
 	{
-		MKFS_MASK_VFAT, MKFS_MASK_USERDATA, MKFS_MASK_CACHE,
+		MKFS_MASK_VFAT, MKFS_MASK_USERDATA, MKFS_MASK_CACHE, MKFS_MASK_VENDOR
 	};
 
 	open_console(SWAN_CONSOLE_DEVICE);
@@ -695,7 +710,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 		strncpy(part_descs[0].label, pkg_info.volume, sizeof(part_descs[0].label));
 	}
 
-	ret = swan_sfdisk(&emmc_dev_desc, &swan_emmc_part_table);
+	ret = swan_sfdisk(&emmc_dev_desc, &pkg_info.part_table);
 	if (ret < 0)
 	{
 		error_msg("swan_sfdisk");
@@ -717,7 +732,15 @@ int upgrade(const char *pkg_name, const char *dir_name)
 		}
 	}
 
-	ret = swan_mkfs(&emmc_dev_desc, part_descs, ARRAY_SIZE(part_descs));
+	if (pkg_info.part_table.vendor_size)
+	{
+		ret = swan_mkfs(&emmc_dev_desc, part_descs, ARRAY_SIZE(part_descs));
+	}
+	else
+	{
+		ret = swan_mkfs(&emmc_dev_desc, part_descs, ARRAY_SIZE(part_descs) - 1);
+	}
+
 	if (ret < 0)
 	{
 		error_msg("swan_mkfs");
@@ -994,6 +1017,10 @@ enum swan_board_type get_swan_board_type_by_build_prop(const char *build_prop)
 			{
 				return SWAN_BOARD_I600;
 			}
+			else if (text_rhcmp(p->value, "I700") == 0 || text_rhcmp(p->value, "i700") == 0)
+			{
+				return SWAN_BOARD_I700;
+			}
 			else
 			{
 				return SWAN_BOARD_UNKNOWN;
@@ -1067,6 +1094,9 @@ const char *get_resource_name_by_board_type(enum swan_board_type type)
 	case SWAN_BOARD_I600:
 		return I600_RESOURCE_NAME;
 
+	case SWAN_BOARD_I700:
+		return I700_RESOURCE_NAME;
+
 	default:
 		return RESOURCE_IMAGE_NAME;
 	}
@@ -1081,6 +1111,9 @@ const char *get_logo_name_by_board_type(enum swan_board_type type)
 
 	case SWAN_BOARD_I600:
 		return I600_LOGO_NAME;
+
+	case SWAN_BOARD_I700:
+		return I700_LOGO_NAME;
 
 	default:
 		return SWAN_LOGO_NAME;

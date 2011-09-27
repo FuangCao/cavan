@@ -93,6 +93,7 @@ char *__value2text(s64 value, char *text, int size, char fill, int flag);
 char *value2text(u64 value, int flag);
 
 u64 text2size(const char *text, const char **text_ret);
+u64 text2size_mb(const char *text);
 char *__size2text(u64 size, char *buff);
 char *size2text(u64 size);
 

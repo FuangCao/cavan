@@ -37,6 +37,8 @@ void show_package_info(struct swan_package_info *pkg_p)
 	println("resource_size = %s", size2text(pkg_p->resource_size));
 	println("crc32 = 0x%08x", pkg_p->crc32);
 	println("board type = %s", swan_board_type_tostring(pkg_p->board_type));
+	pr_bold_info("partition table:");
+	show_swan_emmc_partation_table(&pkg_p->part_table);
 }
 
 int read_file_info(int pkg_fd, struct swan_file_info *file_p)

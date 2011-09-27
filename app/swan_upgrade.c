@@ -10,9 +10,10 @@ static void show_usage(void)
 	println("swan_upgrade -c [-f output_file] [-d file_dir]");
 	println("swan_upgrade -x [-f upgrade_file] [-d output_dir]");
 	println("--help");
-	println("--label, --volume: specify vfat partition volume label");
+	println("-l, -L, --label, --volume: specify vfat partition volume label");
 	println("--i200, --I200: set machine to i200");
 	println("--i600, --I600: set machine to i600");
+	println("--i700, --I700: set machine to i700");
 	println("--type: i200, i600");
 	println("--wipe-vfat: no, yes, 0, 1");
 	println("--wipe-data: no, yes, 0, 1");
@@ -20,6 +21,11 @@ static void show_usage(void)
 	println("--check-version: no, yes, 0, 1");
 	println("--shrink, --resize: no, yes, 0, 1");
 	println("--skip, --exclude: exclude some images");
+	println("-2, --part-system: system partition size MB");
+	println("-4, --part-recovery: recovery partition size MB");
+	println("-5, --part-userdata, --part-data: userdata partition size MB");
+	println("-6, --part-cache: cache partition size MB");
+	println("-7, --part-vendor: vendor partition size MB");
 }
 
 int main(int argc, char *argv[])
@@ -35,13 +41,13 @@ int main(int argc, char *argv[])
 			.name = "label",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 0,
+			.val = 'l',
 		},
 		{
 			.name = "volume",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 0,
+			.val = 'l',
 		},
 		{
 			.name = "i200",
@@ -66,6 +72,18 @@ int main(int argc, char *argv[])
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 2,
+		},
+		{
+			.name = "i700",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 0,
+		},
+		{
+			.name = "I700",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 0,
 		},
 		{
 			.name = "modem",
@@ -134,6 +152,42 @@ int main(int argc, char *argv[])
 			.val = 'h',
 		},
 		{
+			.name = "part-system",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '2',
+		},
+		{
+			.name = "part-recovery",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '4',
+		},
+		{
+			.name = "part-userdata",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '5',
+		},
+		{
+			.name = "part-data",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '5',
+		},
+		{
+			.name = "part-cache",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '6',
+		},
+		{
+			.name = "part-vendor",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '7',
+		},
+		{
 		},
 	};
 
@@ -156,13 +210,18 @@ int main(int argc, char *argv[])
 	file_path[0] = 0;
 	handle = NULL;
 
-	while ((c = getopt_long(argc, argv, "vVcCuUxXSsf:F:d:D:hHt:T:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVcCuUxXSsl:L:f:F:d:D:hHt:T:2:4:5:6:7:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
-		case 0:
+		case 'l':
+		case 'L':
 			strcpy(swan_vfat_volume, optarg);
 			println("new label is: %s", optarg);
+			break;
+
+		case 0:
+			swan_machine_type = SWAN_BOARD_I700;
 			break;
 
 		case 1:
@@ -268,6 +327,10 @@ int main(int argc, char *argv[])
 			{
 				swan_machine_type = SWAN_BOARD_I600;
 			}
+			else if (text_rhcmp(optarg, "i700") == 0 || text_rhcmp(optarg, "I700") == 0)
+			{
+				swan_machine_type = SWAN_BOARD_I700;
+			}
 			else
 			{
 				swan_machine_type = SWAN_BOARD_UNKNOWN;
@@ -313,6 +376,26 @@ int main(int argc, char *argv[])
 		case 'H':
 			show_usage();
 			return 0;
+
+		case '2':
+			swan_emmc_part_table.system_size = text2size_mb(optarg);
+			break;
+
+		case '4':
+			swan_emmc_part_table.recovery_size = text2size_mb(optarg);
+			break;
+
+		case '5':
+			swan_emmc_part_table.userdata_size = text2size_mb(optarg);
+			break;
+
+		case '6':
+			swan_emmc_part_table.cache_size = text2size_mb(optarg);
+			break;
+
+		case '7':
+			swan_emmc_part_table.vendor_size = text2size_mb(optarg);
+			break;
 
 		default:
 			error_msg("Unknown option %c", c);

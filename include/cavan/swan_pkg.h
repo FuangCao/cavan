@@ -13,6 +13,7 @@
 #define MKFS_MASK_VFAT				(1 << 0)
 #define MKFS_MASK_USERDATA			(1 << 1)
 #define MKFS_MASK_CACHE				(1 << 2)
+#define MKFS_MASK_VENDOR			(1 << 3)
 
 #define UPGRADE_FLAG_CHECK_VERSION	(1 << 0)
 

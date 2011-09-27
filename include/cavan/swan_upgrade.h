@@ -33,6 +33,7 @@
 #define RESOURCE_IMAGE_NAME		"resource.img"
 #define I200_RESOURCE_NAME		"resource-i200.img"
 #define I600_RESOURCE_NAME		"resource-i600.img"
+#define I700_RESOURCE_NAME		"resource-i700.img"
 #define MODEM_RESOURCE_NAME		"resource-modem.img"
 #define RESOURCE_IMAGE_PATH		"/tmp/" RESOURCE_IMAGE_NAME
 #define BMP_PATH				"/media"
@@ -41,6 +42,7 @@
 #define SWAN_LOGO_NAME			"logo.bmp"
 #define I200_LOGO_NAME			"logo-i200.bmp"
 #define I600_LOGO_NAME			"logo-i600.bmp"
+#define I700_LOGO_NAME			"logo-i700.bmp"
 
 #define SWAN_CONSOLE_DEVICE		"/dev/tty0"
 #define SWAN_KPD_NAME			"mxckpd"

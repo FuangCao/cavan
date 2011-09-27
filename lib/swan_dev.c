@@ -405,6 +405,10 @@ static struct swan_machine swan_machine_table[] =
 		.type = SWAN_BOARD_I600,
 		.name = "Eavoo MX51 Swan Board",
 	},
+	{
+		.type = SWAN_BOARD_I700,
+		.name = "I7xx Serials Boards",
+	},
 };
 
 int swan_board_name_to_type(const char *name)

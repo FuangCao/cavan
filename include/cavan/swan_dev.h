@@ -22,6 +22,7 @@ enum swan_board_type
 	SWAN_BOARD_UNKNOWN,
 	SWAN_BOARD_I200,
 	SWAN_BOARD_I600,
+	SWAN_BOARD_I700,
 };
 
 struct swan_machine

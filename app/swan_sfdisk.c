@@ -8,23 +8,6 @@ static void show_usage(void)
 	println("Usage:");
 }
 
-static u64 local_text2size_mb(const char *text)
-{
-	if (text == NULL)
-	{
-		return 0;
-	}
-
-	if (text_is_number(text))
-	{
-		return text2value_unsigned(text, NULL, 10);
-	}
-	else
-	{
-		return text2size(text, NULL) >> 20;
-	}
-}
-
 int main(int argc, char *argv[])
 {
 	int ret;
@@ -107,13 +90,13 @@ int main(int argc, char *argv[])
 		case '2':
 		case 's':
 		case 'S':
-			part_table.system_size = local_text2size_mb(optarg);
+			part_table.system_size = text2size_mb(optarg);
 			break;
 
 		case '4':
 		case 'r':
 		case 'R':
-			part_table.recovery_size = local_text2size_mb(optarg);
+			part_table.recovery_size = text2size_mb(optarg);
 			break;
 
 		case '5':
@@ -121,19 +104,19 @@ int main(int argc, char *argv[])
 		case 'U':
 		case 'd':
 		case 'D':
-			part_table.userdata_size = local_text2size_mb(optarg);
+			part_table.userdata_size = text2size_mb(optarg);
 			break;
 
 		case '6':
 		case 'c':
 		case 'C':
-			part_table.cache_size = local_text2size_mb(optarg);
+			part_table.cache_size = text2size_mb(optarg);
 			break;
 
 		case '7':
 		case 'v':
 		case 'V':
-			part_table.vendor_size = local_text2size_mb(optarg);
+			part_table.vendor_size = text2size_mb(optarg);
 			break;
 
 		default:
