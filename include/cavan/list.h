@@ -56,3 +56,5 @@ void double_link_traversal(struct double_link *link, void (*handle)(struct doubl
 struct double_link_node *double_link_find(struct double_link *link, void *data, int (*match)(struct double_link_node *node, void *data));
 void double_link_delete_node(struct double_link_node *node);
 
+int array_has_element(int element, const int a[], size_t size);
+

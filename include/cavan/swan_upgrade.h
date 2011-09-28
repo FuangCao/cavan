@@ -44,6 +44,11 @@
 #define I600_LOGO_NAME			"logo-i600.bmp"
 #define I700_LOGO_NAME			"logo-i700.bmp"
 
+#define SWAN_BUSYBOX_NAME		"busybox.img"
+#define I200_BUSYBOX_NAME		"busybox.img"
+#define I600_BUSYBOX_NAME		"busybox.img"
+#define I700_BUSYBOX_NAME		"busybox-i700.img"
+
 #define SWAN_CONSOLE_DEVICE		"/dev/tty0"
 #define SWAN_KPD_NAME			"mxckpd"
 #define SWAN_KPD_DEVICE			"/dev/input/event0"
@@ -87,7 +92,6 @@ extern int swan_exclude_image_count;
 extern int swan_need_shrink;
 extern struct swan_emmc_partition_table swan_emmc_part_table;
 
-int is_skip_image(enum swan_image_type type, enum swan_image_type *types, size_t count);
 int package(const char *pkg_name, const char *dir_name);
 int unpack(const char *pkg_name, const char *dir_name);
 int upgrade(const char *pkg_name, const char *dir_name);
@@ -103,6 +107,7 @@ struct swan_image_info *get_swan_image_info_by_type(enum swan_image_type type);
 
 const char *get_resource_name_by_board_type(enum swan_board_type type);
 const char *get_logo_name_by_board_type(enum swan_board_type type);
+const char *get_busybox_name_by_board_type(enum swan_board_type type);
 
 u32 swan_read_version(const char *system_dev);
 ssize_t swan_write_version(const char *system_mnt_point, u32 version);

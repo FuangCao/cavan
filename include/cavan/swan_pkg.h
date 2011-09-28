@@ -29,6 +29,7 @@ enum swan_image_type
 	SWAN_IMAGE_SYSTEM,
 	SWAN_IMAGE_RECOVERY,
 	SWAN_IMAGE_USERDATA,
+	SWAN_IMAGE_VENDOR,
 	SWAN_IMAGE_COUNT,
 };
 
@@ -100,7 +101,7 @@ int write_resource_image(int pkg_fd, struct swan_package_info *pkg_p, const char
 int read_image_info(int pkg_fd, struct swan_image_info *img_p);
 int swan_shrink_image(const char *dirname, struct swan_image_info *img_p);
 int read_simple_image(int pkg_fd, int img_fd, off_t size, off_t offset);
-int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info *img_p);
+int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info *img_p, struct swan_emmc_partition_table *part_table);
 
 int swan_read_md5sum(int pkg_fd, char *md5sum);
 int swan_write_md5sum(int pkg_fd, char *md5sum);

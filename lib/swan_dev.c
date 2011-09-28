@@ -17,6 +17,23 @@ void show_swan_emmc_partation_table(struct swan_emmc_partition_table *part_table
 	println("vendor = %dMB", part_table->vendor_size);
 }
 
+ssize_t get_partition_size_by_type(enum swan_image_type type, struct swan_emmc_partition_table *part_table)
+{
+	switch (type)
+	{
+	case SWAN_IMAGE_SYSTEM:
+		return part_table->system_size;
+	case SWAN_IMAGE_RECOVERY:
+		return part_table->recovery_size;
+	case SWAN_IMAGE_USERDATA:
+		return part_table->userdata_size;
+	case SWAN_IMAGE_VENDOR:
+		return part_table->vendor_size;
+	default:
+		return -EINVAL;
+	}
+}
+
 void get_default_emmc_partition_table(struct swan_emmc_partition_table *part_table)
 {
 	part_table->system_size = SYSTEM_SIZE;
@@ -33,7 +50,7 @@ int fix_emmc_partition_table(struct swan_emmc_partition_table *part_table)
 	{
 		ret++;
 		warning_msg("system partition size is too small");
-		part_table->system_size = SYSTEM_SIZE;
+		part_table->system_size = SYSTEM_MIN_SIZE;
 	}
 
 	if (part_table->recovery_size < RECOVERY_MIN_SIZE)
@@ -334,7 +351,7 @@ int set_brightness_shadow(int brightness, int step, u32 msec)
 	char buff[32];
 	int ret;
 	ssize_t readlen;
-	int current_brightness;
+	u32 current_brightness;
 
 	fd = open(BRIGHTNESS_PATH, O_RDWR | O_SYNC | O_BINARY);
 	if (fd < 0)
@@ -354,8 +371,6 @@ int set_brightness_shadow(int brightness, int step, u32 msec)
 	buff[readlen] = 0;
 
 	current_brightness = text2value_unsigned(buff, NULL, 10);
-
-	println("current_brightness = %d", current_brightness);
 
 	if (current_brightness > brightness)
 	{

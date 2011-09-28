@@ -52,8 +52,8 @@ int ffile_copy_simple(int src_fd, int dest_fd);
 int file_copy(const char *src_file, const char *dest_file, int flags);
 int file_append(const char *file_src, const char *file_dest);
 
-ssize_t ffile_get_size(int fd);
-ssize_t file_get_size(const char *filepath);
+off_t ffile_get_size(int fd);
+off_t file_get_size(const char *filepath);
 
 int ffile_ncopy(int src_fd, int dest_fd, size_t size);
 int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size);

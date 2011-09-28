@@ -371,12 +371,13 @@ int swan_shrink_image(const char *dirname, struct swan_image_info *img_p)
 	return image_shrink(img_path);
 }
 
-int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info *img_p)
+int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info *img_p, struct swan_emmc_partition_table *part_table)
 {
 	int ret;
 	int img_fd;
 	struct stat st;
 	char img_path[1024];
+	ssize_t part_size;
 
 	text_path_cat(img_path, dir_name, img_p->filename);
 
@@ -397,6 +398,16 @@ int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info 
 	println("image path = %s", img_path);
 
 	img_p->length = st.st_size;
+
+	part_size = get_partition_size_by_type(img_p->type, part_table);
+	if (part_size >= 0 && img_p->length > MB(part_size))
+	{
+		pr_red_info("partition size = %dMB", part_size);
+		pr_red_info("image size = %s", size2text(img_p->length));
+		pr_red_info("image size > partition size, please adjust image or partition size");
+		ret = -EINVAL;
+		goto out_close_img;
+	}
 
 	ret = ffile_crc32_back(img_fd, &img_p->crc32);
 	if (ret < 0)
@@ -643,9 +654,12 @@ enum swan_image_type get_swan_image_type_by_name(const char *filename)
 	{
 		return SWAN_IMAGE_USERDATA;
 	}
+	else if (text_cmp(filename, "vendor.img") == 0 || text_cmp(filename, "vendor") == 0)
+	{
+		return SWAN_IMAGE_VENDOR;
+	}
 	else
 	{
 		return SWAN_IMAGE_UNKNOWN;
 	}
 }
-

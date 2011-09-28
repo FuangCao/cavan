@@ -1,5 +1,25 @@
+CAVAN_NAME = cavan
+DEPEND_NAME = depend.mk
+
+CAVAN_ROOT = $(shell pwd)
+OUT_DIR = out
+LIB_DIR = lib
+APP_DIR = app
+INCLUDE_DIR = include
+BUILD_DIR = build
+BUILD_CORE = $(BUILD_DIR)/core
+APP_CORE = $(APP_DIR)/core
+CONFIG_FILE_PATH = $(OUT_DIR)/config
+
+ifeq ("$(wildcard $(CONFIG_FILE_PATH))","$(CONFIG_FILE_PATH)")
+include $(CONFIG_FILE_PATH)
+endif
+
 ifeq ("$(ARCH)","")
 ARCH = x86
+endif
+
+ifeq ("$(ARCH)","x86")
 CROSS_COMPILE =
 else
 ifeq ("$(ARCH)","arm")
@@ -17,33 +37,39 @@ BUILD_TYPE = release
 endif
 endif
 
-CAVAN_ROOT = $(shell pwd)
-OUT_DIR = out
-LIB_DIR = lib
-APP_DIR = app
-INCLUDE_DIR = include
-BUILD_DIR = build
-BUILD_CORE = $(BUILD_DIR)/core
-APP_CORE = $(APP_DIR)/core
-
 TARGET_OUT = $(OUT_DIR)/$(ARCH)
 OUT_LIB = $(TARGET_OUT)/lib
-OUT_ELF = $(TARGET_OUT)/bin
+TARGET_LIB_OBJ = $(OUT_LIB)/lib$(CAVAN_NAME).o
+TARGET_LIBA = $(OUT_LIB)/lib$(CAVAN_NAME).a
+TARGET_LIBSO = $(OUT_LIB)/lib$(CAVAN_NAME).so
+TARGET_LIB_ALL = $(TARGET_LIB_OBJ) $(TARGET_LIBA) $(TARGET_LIBSO)
+
+ifeq ("$(findstring release,$(BUILD_TYPE))","")
+ifeq ("$(findstring static,$(BUILD_TYPE))","")
+BUILD_TYPE = dynamically
+LOCAL_LDFLAGS += -Wl,-rpath,$(CAVAN_ROOT)/$(OUT_LIB)
+APP_DEPEND_LIB = $(TARGET_LIBSO)
+else
+BUILD_TYPE = static
+LOCAL_LDFLAGS += -static
+APP_DEPEND_LIB = $(TARGET_LIBA)
+endif
+LOCAL_LDFLAGS += -L$(OUT_LIB) -l$(CAVAN_NAME)
+else
+BUILD_TYPE = release
+LOCAL_LDFLAGS += $(TARGET_LIB_OBJ)
+APP_DEPEND_LIB = $(TARGET_LIB_OBJ)
+endif
+
+OUT_ELF = $(TARGET_OUT)/$(BUILD_TYPE)
 OUT_APP = $(TARGET_OUT)/app
 OUT_CAVAN = $(TARGET_OUT)/cavan
 
-DEPEND_NAME = depend.mk
 LIB_DEPEND = $(OUT_LIB)/$(DEPEND_NAME)
 APP_DEPEND = $(OUT_APP)/$(DEPEND_NAME)
 ELF_DEPEND = $(OUT_ELF)/$(DEPEND_NAME)
 CAVAN_DEPEND = $(OUT_CAVAN)/$(DEPEND_NAME)
 CAVAN_SOURCE_DEPEND = $(OUT_CAVAN)/source_$(DEPEND_NAME)
-
-CAVAN_NAME = cavan
-TARGET_LIB_OBJ = $(OUT_LIB)/lib$(CAVAN_NAME).o
-TARGET_LIBA = $(OUT_LIB)/lib$(CAVAN_NAME).a
-TARGET_LIBSO = $(OUT_LIB)/lib$(CAVAN_NAME).so
-TARGET_LIB_ALL = $(TARGET_LIB_OBJ) $(TARGET_LIBA) $(TARGET_LIBSO)
 
 APPS_MAKEFILE = $(BUILD_CORE)/application.mk
 LIBS_MAKEFILE = $(BUILD_CORE)/library.mk
@@ -60,42 +86,17 @@ CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wno-trigraphs \
 			-fno-strict-aliasing -g -O2 \
 			-I$(INCLUDE_DIR) -I. -DARCH=$(ARCH)
 ASFLAGS +=	$(CFLAGS) -D__ASM__
-LDFLAGS += -s
+LDFLAGS := -s $(LOCAL_LDFLAGS) $(LDFLAGS)
 
-ifeq ("$(findstring release,$(BUILD_TYPE))","")
-ifeq ("$(findstring static,$(BUILD_TYPE))","")
-LOCAL_LDFLAGS += -Wl,-rpath,$(CAVAN_ROOT)/$(OUT_LIB)
-APP_DEPEND_LIB = $(TARGET_LIBSO)
-else
-LOCAL_LDFLAGS += -static
-APP_DEPEND_LIB = $(TARGET_LIBA)
+CAVAN_MAKE_PATHS = $(foreach path,$(APP) $(LIB),$(if $(wildcard $(path)/$(CAVAN_NAME).mk),$(path)))
+$(info CAVAN_MAKE_PATHS = $(CAVAN_MAKE_PATHS))
+ifneq ("$(strip $(CAVAN_MAKE_PATHS))","")
+include $(foreach path,$(CAVAN_MAKE_PATHS),$(path)/$(CAVAN_NAME).mk)
+APP_SOURCE += $(foreach path,$(CAVAN_MAKE_PATHS),$(foreach fn,$(source-app),$(if $(wildcard $(path)/$(fn)),$(path)/$(fn))))
+LIB_SOURCE += $(foreach path,$(CAVAN_MAKE_PATHS),$(foreach fn,$(source-lib),$(if $(wildcard $(path)/$(fn)),$(path)/$(fn))))
 endif
-LOCAL_LDFLAGS += -L$(OUT_LIB) -l$(CAVAN_NAME)
-else
-LOCAL_LDFLAGS += $(TARGET_LIB_OBJ)
-APP_DEPEND_LIB = $(TARGET_LIB_OBJ)
-endif
-LDFLAGS := $(LOCAL_LDFLAGS) $(LDFLAGS)
-
-ifeq ("$(origin APP)","command line")
-ifeq ("$(wildcard $(APP)/cavan.mk)","$(APP)/cavan.mk")
-include $(APP)/cavan.mk
-APP_SOURCE += $(addprefix $(APP)/,$(source-app))
-LIB_SOURCE += $(addprefix $(APP)/,$(source-lib))
-else
-APP_SOURCE += $(wildcard $(APP)/*.c)
-endif
-endif
-
-ifeq ("$(origin LIB)","command line")
-ifeq ("$(wildcard $(LIB)/cavan.mk)","$(LIB)/cavan.mk")
-include $(LIB)/cavan.mk
-APP_SOURCE += $(addprefix $(LIB)/,$(source-app))
-LIB_SOURCE += $(addprefix $(LIB)/,$(source-lib))
-else
-LIB_SOURCE += $(wildcard $(LIB)/*.c)
-endif
-endif
+APP_SOURCE += $(foreach path,$(filter-out $(CAVAN_MAKE_PATHS),$(APP)),$(wildcard $(path)/*.c))
+LIB_SOURCE += $(foreach path,$(filter-out $(CAVAN_MAKE_PATHS),$(LIB)),$(wildcard $(path)/*.c))
 
 LIB_SOURCE += $(wildcard $(LIB_DIR)/*.c)
 APP_SOURCE  += $(wildcard $(APP_DIR)/*.c)
@@ -116,6 +117,7 @@ $(info CROSS_COMPILE = $(CROSS_COMPILE))
 $(info BUILD_TYPE = $(BUILD_TYPE))
 $(info ============================================================)
 
+export BUILD_TYPE CROSS_COMPILE ARCH ELF_PREFIX Q
 export CC LD AR CFLAGS LDFLAGS
 export CAVAN_ROOT OUT_DIR LIB_DIR APP_DIR INCLUDE_DIR BUILD_DIR BUILD_CORE
 export TARGET_OUT OUT_LIB OUT_ELF OUT_APP OUT_CAVAN
@@ -125,6 +127,7 @@ export LIB_SOURCE APP_SOURCE HEADER_FILES CAVAN_SOURCE APP_CORE_SOURCE
 export APPS_MAKEFILE LIBS_MAKEFILE DEFINES_MAKEFILE TOGETHER_MAKEFILE
 
 all: app
+	$(call write_config,$(CONFIG_FILE_PATH))
 
 app: $(OUT_APP) $(OUT_ELF) $(APP_DEPEND_LIB) $(APP_SOURCE)
 	$(call generate_obj_depend,$(APP_DEPEND),$(APP_SOURCE))

@@ -274,3 +274,17 @@ struct double_link_node *double_link_find(struct double_link *link, void *data, 
 	return NULL;
 }
 
+int array_has_element(int element, const int a[], size_t size)
+{
+	const int *a_end;
+
+	for (a_end = a + size; a < a_end; a++)
+	{
+		if (*a == element)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}

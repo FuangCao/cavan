@@ -1377,6 +1377,8 @@ void show_partition_desc(struct partition_desc *part_desc)
 	{
 		println("type = %s", fsdesc->name);
 	}
+
+	print_sep(60);
 }
 
 int partition_mkfs(struct partition_desc *part_desc)

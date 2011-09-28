@@ -460,7 +460,7 @@ int file_copy(const char *src_file, const char *dest_file, int flags)
 	return ret;
 }
 
-ssize_t ffile_get_size(int fd)
+off_t ffile_get_size(int fd)
 {
 	int ret;
 	struct stat st;
@@ -475,7 +475,7 @@ ssize_t ffile_get_size(int fd)
 	return st.st_size;
 }
 
-ssize_t file_get_size(const char *filepath)
+off_t file_get_size(const char *filepath)
 {
 	int ret;
 	struct stat st;

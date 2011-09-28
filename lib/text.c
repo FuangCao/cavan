@@ -611,36 +611,38 @@ int prefix2base(const char *prefix, const char **prefix_ret)
 		return -EINVAL;
 	}
 
-	switch (prefix[1])
+	prefix++;
+
+	switch (*prefix)
 	{
 	case 'b':
 	case 'B':
-		prefix += 2;
+		prefix++;
 		base = 2;
 		break;
 
 	case 'd':
 	case 'D':
-		prefix += 2;
+		prefix++;
 		base = 10;
 		break;
 
 	case 'x':
 	case 'X':
-		prefix += 2;
+		prefix++;
 		base = 16;
 		break;
 
 	case '0' ... '7':
-		prefix += 1;
 		base = 8;
 		break;
 
 	case 0:
-		return 0;
+		base = 0;
+		break;
 
 	default:
-		return -EINVAL;
+		base = -EINVAL;
 	}
 
 	if (prefix_ret)
@@ -677,7 +679,7 @@ u64 text2value_unsigned(const char *text, const char **text_ret, int base)
 	for (value = 0; *text; text++)
 	{
 		tmp = char2value(*text);
-		if (tmp > base)
+		if (tmp < 0 || tmp > base)
 		{
 			break;
 		}

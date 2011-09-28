@@ -17,6 +17,7 @@
 #include <cavan/event.h>
 #include <cavan/image.h>
 #include <cavan/parse.h>
+#include <cavan/list.h>
 
 char swan_vfat_volume[128] = EMMC_VFAT_DEFAULT_LABEL;
 u32 swan_mkfs_mask = MKFS_MASK_USERDATA | MKFS_MASK_CACHE;
@@ -37,6 +38,14 @@ struct swan_emmc_partition_table swan_emmc_part_table =
 
 struct swan_image_info swan_images[] =
 {
+	{
+		.major = 179,
+		.minor = FIRST_MINOR + 7,
+		.offset = 0,
+		.type = SWAN_IMAGE_VENDOR,
+		.filename = "vendor.img",
+		.device_path = EMMC_DEVICE "p7",
+	},
 	{
 		.major = 179,
 		.minor = FIRST_MINOR + 5,
@@ -220,15 +229,15 @@ int package(const char *pkg_name, const char *dir_name)
 	int pkg_fd;
 	struct swan_package_info pkg_info;
 	struct swan_file_info file_info;
-	int i;
 	char tmp_path[1024], *name_p;
-
-	ret = fix_emmc_partition_table(&swan_emmc_part_table);
-	if (ret < 0)
+	int shrink_image_table[] =
 	{
-		pr_red_info("swan partition table is invalid");
-		return ret;
-	}
+		SWAN_IMAGE_SYSTEM,
+		SWAN_IMAGE_RECOVERY,
+		SWAN_IMAGE_USERDATA,
+		SWAN_IMAGE_VENDOR,
+	};
+	struct swan_image_info *p, *p_end;
 
 	name_p = text_path_cat(tmp_path, dir_name, NULL);
 
@@ -250,6 +259,12 @@ int package(const char *pkg_name, const char *dir_name)
 		if (img_info)
 		{
 			text_copy(img_info->filename, get_logo_name_by_board_type(swan_machine_type));
+		}
+
+		img_info = get_swan_image_info_by_type(SWAN_IMAGE_BUSYBOX);
+		if (img_info)
+		{
+			text_copy(img_info->filename, get_busybox_name_by_board_type(swan_machine_type));
 		}
 	}
 
@@ -285,19 +300,19 @@ int package(const char *pkg_name, const char *dir_name)
 
 	pkg_info.image_count = 0;
 
-	for (i = 0; i < ARRAY_SIZE(swan_images); i++)
+	for (p = swan_images, p_end = p + ARRAY_SIZE(swan_images); p < p_end; p++)
 	{
-		text_copy(name_p, swan_images[i].filename);
+		text_copy(name_p, p->filename);
 
-		if (is_skip_image(swan_images[i].type, swan_exclude_images, swan_exclude_image_count) || file_test(tmp_path, "r") < 0)
+		if (array_has_element(p->type, (int *)swan_exclude_images, swan_exclude_image_count) || file_test(tmp_path, "r") < 0)
 		{
 			println_cyan("exclude image \"%s\"", tmp_path);
 			continue;
 		}
 
-		if (i < 3 && swan_need_shrink)
+		if (swan_need_shrink && array_has_element(p->type, shrink_image_table, ARRAY_SIZE(shrink_image_table)))
 		{
-			ret = swan_shrink_image(dir_name, swan_images + i);
+			ret = swan_shrink_image(dir_name, p);
 			if (ret < 0)
 			{
 				error_msg("image_shrink");
@@ -305,7 +320,7 @@ int package(const char *pkg_name, const char *dir_name)
 			}
 		}
 
-		ret = write_simple_image(pkg_fd, dir_name, swan_images + i);
+		ret = write_simple_image(pkg_fd, dir_name, p, &swan_emmc_part_table);
 		if (ret < 0)
 		{
 			error_msg("write_image");
@@ -480,21 +495,6 @@ static int open_dest_device(struct swan_image_info *img_info)
 	return open(TEMP_DEVICE_PATH, O_RDWR | O_SYNC | O_BINARY);
 }
 
-int is_skip_image(enum swan_image_type type, enum swan_image_type *types, size_t count)
-{
-	enum swan_image_type *end;
-
-	for (end = types + count; types < end; types++)
-	{
-		if (type == *types)
-		{
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
 static int write2emmc(int pkg_fd, int img_count, int retry_count, enum swan_image_type *skip_types, size_t skip_img_count)
 {
 	int ret;
@@ -513,7 +513,7 @@ static int write2emmc(int pkg_fd, int img_count, int retry_count, enum swan_imag
 			return ret;
 		}
 
-		if (is_skip_image(img_info.type, skip_types, skip_img_count))
+		if (array_has_element(img_info.type, (int *)skip_types, skip_img_count))
 		{
 			ret = lseek(pkg_fd, img_info.length, SEEK_CUR);
 			if (ret < 0)
@@ -1114,6 +1114,24 @@ const char *get_logo_name_by_board_type(enum swan_board_type type)
 
 	case SWAN_BOARD_I700:
 		return I700_LOGO_NAME;
+
+	default:
+		return SWAN_LOGO_NAME;
+	}
+}
+
+const char *get_busybox_name_by_board_type(enum swan_board_type type)
+{
+	switch (type)
+	{
+	case SWAN_BOARD_I200:
+		return I200_BUSYBOX_NAME;
+
+	case SWAN_BOARD_I600:
+		return I600_BUSYBOX_NAME;
+
+	case SWAN_BOARD_I700:
+		return I700_BUSYBOX_NAME;
 
 	default:
 		return SWAN_LOGO_NAME;

@@ -4,7 +4,7 @@
 
 #define BOOT_SIZE				36
 #define SYSTEM_SIZE				256
-#define SYSTEM_MIN_SIZE			256
+#define SYSTEM_MIN_SIZE			128
 #define RECOVERY_SIZE			32
 #define RECOVERY_MIN_SIZE		16
 #define USERDATA_SIZE			512
@@ -40,7 +40,10 @@ struct swan_emmc_partition_table
 	u32 vendor_size;
 };
 
+enum swan_image_type;
+
 void show_swan_emmc_partation_table(struct swan_emmc_partition_table *part_table);
+ssize_t get_partition_size_by_type(enum swan_image_type type, struct swan_emmc_partition_table *part_table);
 void get_default_emmc_partition_table(struct swan_emmc_partition_table *part_table);
 int fix_emmc_partition_table(struct swan_emmc_partition_table *part_table);
 int swan_sfdisk(struct partition_desc *dev_desc, struct swan_emmc_partition_table *part_table);

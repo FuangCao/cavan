@@ -7,6 +7,4 @@ ELF_PREFIX = cavan
 Q = @
 LDFLAGS = -lpthread
 
-export BUILD_TYPE CROSS_COMPILE ARCH ELF_PREFIX Q
-
 include build/core/main.mk

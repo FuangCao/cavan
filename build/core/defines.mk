@@ -112,3 +112,13 @@ do \
 	echo "int $(CAVAN_MAIN_FUNC_PREFIX)$${fn}(int argc, char *argv[]);"; \
 done >> $@
 endef
+
+define write_config
+@{ \
+	echo "ARCH = $(ARCH)"; \
+	echo "CROSS_COMPILE = $(CROSS_COMPILE)"; \
+	echo "BUILD_TYPE = $(BUILD_TYPE)"; \
+	echo "APP = $(APP)"; \
+	echo "LIB = $(LIB)"; \
+} > $1
+endef
