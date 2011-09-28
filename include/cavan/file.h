@@ -59,6 +59,7 @@ int ffile_ncopy(int src_fd, int dest_fd, size_t size);
 int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size);
 int file_ncopy(const char *src_file, const char *dest_file, size_t size, int flags);
 
+int vtry_to_open(int flags, va_list ap);
 int try_to_open(int flags, ...);
 
 int ffile_writeto(int fd, const void *buff, size_t size, off_t offset);

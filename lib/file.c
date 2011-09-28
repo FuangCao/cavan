@@ -690,24 +690,29 @@ int file_ncopy(const char *src_file, const char *dest_file, size_t size, int fla
 	return ret;
 }
 
-static int __try_to_open(int flags, va_list tmp_args)
+int vtry_to_open(int flags, va_list ap)
 {
-	int fd = -1;
-
-	while (tmp_args)
+	while (1)
 	{
-		println("open file \"%s\"", *(char **)tmp_args);
+		int fd;
+		const char *filename;
 
-		fd = open(*(char **)tmp_args, flags);
-		if (fd >= 0)
+		filename = va_arg(ap, const char *);
+		if (filename == NULL)
 		{
-			break;
+			return -ENOENT;
 		}
 
-		tmp_args += 4;
+		println("open file \"%s\"", filename);
+
+		fd = open(filename, flags);
+		if (fd >= 0)
+		{
+			return fd;
+		}
 	}
 
-	return fd;
+	return -1;
 }
 
 int try_to_open(int flags, ...)
@@ -716,7 +721,7 @@ int try_to_open(int flags, ...)
 	va_list ap;
 
 	va_start(ap, flags);
-	ret = __try_to_open(flags, ap);
+	ret = vtry_to_open(flags, ap);
 	va_end(ap);
 
 	return ret;

@@ -194,9 +194,9 @@ int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_ino
 	ssize_t readlen;
 	struct ext2_directory_entry dir_entry;
 	off_t seek_value;
-	char path_temp[1024], *p, *q, *end_p;
+	char path_temp[1024], *p, *q;
 
-	end_p = text_copy(path_temp, pathname);
+	text_copy(path_temp, pathname);
 	p = q = path_temp;
 	dir_entry.inode = 2;
 	dir_entry.file_type = EXT_FILE_TYPE_DIRECTORY;
