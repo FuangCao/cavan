@@ -4,6 +4,21 @@
 #include <cavan/swan_pkg.h>
 #include <cavan/swan_dev.h>
 
+enum swan_upgrade_option
+{
+	SWAN_UPGRADE_OPTION_I200,
+	SWAN_UPGRADE_OPTION_MODEM,
+	SWAN_UPGRADE_OPTION_I600,
+	SWAN_UPGRADE_OPTION_I700,
+	SWAN_UPGRADE_OPTION_WIPE_VFAT,
+	SWAN_UPGRADE_OPTION_WIPE_DATA,
+	SWAN_UPGRADE_OPTION_WIPE_CACHE,
+	SWAN_UPGRADE_OPTION_WIPE_VENDOR,
+	SWAN_UPGRADE_OPTION_CHECK_VERSION,
+	SWAN_UPGRADE_OPTION_RESIZE,
+	SWAN_UPGRADE_OPTION_EXCLUDE,
+};
+
 static void show_usage(void)
 {
 	println("Usage:");
@@ -14,18 +29,19 @@ static void show_usage(void)
 	println("--i200, --I200: set machine to i200");
 	println("--i600, --I600: set machine to i600");
 	println("--i700, --I700: set machine to i700");
-	println("--type: i200, i600");
+	println("-t, --type: i200, i600, i700");
 	println("--wipe-vfat: no, yes, 0, 1");
 	println("--wipe-data: no, yes, 0, 1");
 	println("--wipe-cache: no, yes, 0, 1");
+	println("--wipe-vendor: no, yes, 0, 1");
 	println("--check-version: no, yes, 0, 1");
 	println("--shrink, --resize: no, yes, 0, 1");
 	println("--skip, --exclude: exclude some images");
-	println("-2, --part-system: system partition size MB");
-	println("-4, --part-recovery: recovery partition size MB");
-	println("-5, --part-userdata, --part-data: userdata partition size MB");
-	println("-6, --part-cache: cache partition size MB");
-	println("-7, --part-vendor: vendor partition size MB");
+	println("-2, --ps, --part-system: system partition size");
+	println("-4, --pr, --part-recovery: recovery partition size");
+	println("-5, --pu, --pd, --part-userdata, --part-data: userdata partition size");
+	println("-6, --pc, --part-cache: cache partition size");
+	println("-7, --pv, --part-vendor: vendor partition size");
 }
 
 int main(int argc, char *argv[])
@@ -38,6 +54,102 @@ int main(int argc, char *argv[])
 	struct option long_option[] =
 	{
 		{
+			.name = "i200",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_I200,
+		},
+		{
+			.name = "I200",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_I200,
+		},
+		{
+			.name = "i600",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_I600,
+		},
+		{
+			.name = "I600",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_I600,
+		},
+		{
+			.name = "i700",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_I700,
+		},
+		{
+			.name = "I700",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_I700,
+		},
+		{
+			.name = "modem",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_MODEM,
+		},
+		{
+			.name = "wipe-vfat",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_WIPE_VFAT,
+		},
+		{
+			.name = "wipe-data",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_WIPE_DATA,
+		},
+		{
+			.name = "wipe-cache",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_WIPE_CACHE,
+		},
+		{
+			.name = "wipe-vendor",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_WIPE_VENDOR,
+		},
+		{
+			.name = "check-version",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_CHECK_VERSION,
+		},
+		{
+			.name = "exclude",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_EXCLUDE,
+		},
+		{
+			.name = "skip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_EXCLUDE,
+		},
+		{
+			.name = "resize",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_RESIZE,
+		},
+		{
+			.name = "shrink",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = SWAN_UPGRADE_OPTION_RESIZE,
+		},
+		{
 			.name = "label",
 			.has_arg = required_argument,
 			.flag = NULL,
@@ -48,96 +160,6 @@ int main(int argc, char *argv[])
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'l',
-		},
-		{
-			.name = "i200",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 1,
-		},
-		{
-			.name = "I200",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 1,
-		},
-		{
-			.name = "i600",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 2,
-		},
-		{
-			.name = "I600",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 2,
-		},
-		{
-			.name = "i700",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 0,
-		},
-		{
-			.name = "I700",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 0,
-		},
-		{
-			.name = "modem",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 3,
-		},
-		{
-			.name = "wipe-vfat",
-			.has_arg = optional_argument,
-			.flag = NULL,
-			.val = 4,
-		},
-		{
-			.name = "wipe-data",
-			.has_arg = optional_argument,
-			.flag = NULL,
-			.val = 5,
-		},
-		{
-			.name = "wipe-cache",
-			.has_arg = optional_argument,
-			.flag = NULL,
-			.val = 6,
-		},
-		{
-			.name = "check-version",
-			.has_arg = optional_argument,
-			.flag = NULL,
-			.val = 7,
-		},
-		{
-			.name = "exclude",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 8,
-		},
-		{
-			.name = "skip",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 8,
-		},
-		{
-			.name = "resize",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 9,
-		},
-		{
-			.name = "shrink",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 9,
 		},
 		{
 			.name = "type",
@@ -158,7 +180,19 @@ int main(int argc, char *argv[])
 			.val = '2',
 		},
 		{
+			.name = "ps",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '2',
+		},
+		{
 			.name = "part-recovery",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '4',
+		},
+		{
+			.name = "pr",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = '4',
@@ -170,7 +204,19 @@ int main(int argc, char *argv[])
 			.val = '5',
 		},
 		{
+			.name = "pu",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '5',
+		},
+		{
 			.name = "part-data",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '5',
+		},
+		{
+			.name = "pd",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = '5',
@@ -182,7 +228,19 @@ int main(int argc, char *argv[])
 			.val = '6',
 		},
 		{
+			.name = "pc",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '6',
+		},
+		{
 			.name = "part-vendor",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = '7',
+		},
+		{
+			.name = "pv",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = '7',
@@ -220,24 +278,24 @@ int main(int argc, char *argv[])
 			println("new label is: %s", optarg);
 			break;
 
-		case 0:
-			swan_machine_type = SWAN_BOARD_I700;
-			break;
-
-		case 1:
+		case SWAN_UPGRADE_OPTION_I200:
 			swan_machine_type = SWAN_BOARD_I200;
 			break;
 
-		case 2:
+		case SWAN_UPGRADE_OPTION_I600:
 			swan_machine_type = SWAN_BOARD_I600;
 			break;
 
-		case 3:
+		case SWAN_UPGRADE_OPTION_MODEM:
 			swan_machine_type = SWAN_BOARD_I200;
 			swan_package_flags |= SWAN_FLAGS_MODEM_UPGRADE;
 			break;
 
-		case 4:
+		case SWAN_UPGRADE_OPTION_I700:
+			swan_machine_type = SWAN_BOARD_I700;
+			break;
+
+		case SWAN_UPGRADE_OPTION_WIPE_VFAT:
 			if (text_bool_value(optarg))
 			{
 				println_blue("Format VFAT partition");
@@ -250,7 +308,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 
-		case 5:
+		case SWAN_UPGRADE_OPTION_WIPE_DATA:
 			if (text_bool_value(optarg))
 			{
 				println_blue("Format userdata partition");
@@ -264,7 +322,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 
-		case 6:
+		case SWAN_UPGRADE_OPTION_WIPE_CACHE:
 			if (text_bool_value(optarg))
 			{
 				println_blue("Format cache partition");
@@ -277,7 +335,20 @@ int main(int argc, char *argv[])
 			}
 			break;
 
-		case 7:
+		case SWAN_UPGRADE_OPTION_WIPE_VENDOR:
+			if (text_bool_value(optarg))
+			{
+				println_blue("Format vendor partition");
+				swan_mkfs_mask |= MKFS_MASK_VENDOR;
+			}
+			else
+			{
+				println_blue("Don't format vendor partition");
+				swan_mkfs_mask &= ~MKFS_MASK_VENDOR;
+			}
+			break;
+
+		case SWAN_UPGRADE_OPTION_CHECK_VERSION:
 			if (text_bool_value(optarg))
 			{
 				println_blue("Open version check");
@@ -290,7 +361,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 
-		case 8:
+		case SWAN_UPGRADE_OPTION_EXCLUDE:
 			swan_exclude_images[swan_exclude_image_count] = get_swan_image_type_by_name(optarg);
 			if (swan_exclude_images[swan_exclude_image_count] == SWAN_IMAGE_UNKNOWN)
 			{
@@ -304,7 +375,7 @@ int main(int argc, char *argv[])
 			println_blue("Exclude image: \"%s\"", optarg);
 			break;
 
-		case 9:
+		case SWAN_UPGRADE_OPTION_RESIZE:
 			if (text_bool_value(optarg))
 			{
 				println_blue("Don't shrink images when package");

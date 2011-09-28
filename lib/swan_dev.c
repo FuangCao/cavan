@@ -355,6 +355,8 @@ int set_brightness_shadow(int brightness, int step, u32 msec)
 
 	current_brightness = text2value_unsigned(buff, NULL, 10);
 
+	println("current_brightness = %d", current_brightness);
+
 	if (current_brightness > brightness)
 	{
 		ret = fset_brightness_shadow_decrease(fd, current_brightness, brightness, step, msec);
