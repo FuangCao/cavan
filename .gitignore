@@ -5,6 +5,7 @@
 *.out
 *.rej
 *.orig
+/*.patch
 !.gitignore
 /out
 /tags

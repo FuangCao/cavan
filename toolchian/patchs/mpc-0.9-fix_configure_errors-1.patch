@@ -1,0 +1,32 @@
+Submitted by: DJ Lucas (dj_at_linuxfromscratch_dot_org)
+Date: 2011-03-12
+Initial Package Version: 0.9
+Upstream Status: Not applicable
+Origin: http://lists.gforge.inria.fr/pipermail/mpc-discuss/2011-March/000848.html
+Description: Fixes configure error if CFLAGS or CC are set in the environment.
+             Upstream fixed in autotools scripts, this patches configure
+             directly to avoid the need of autotools in chapter 5.
+
+diff -Naur mpc-0.9-orig/configure mpc-0.9/configure
+--- mpc-0.9-orig/configure	2011-02-21 04:12:02.000000000 -0600
++++ mpc-0.9/configure	2011-04-10 23:12:34.000000000 -0500
+@@ -4069,8 +4069,7 @@
+ fi
+ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+ 
+-if test -z "$user_redefine_cc" ; then
+-   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for grep that handles long lines and -e" >&5
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for grep that handles long lines and -e" >&5
+ $as_echo_n "checking for grep that handles long lines and -e... " >&6; }
+ if test "${ac_cv_path_GREP+set}" = set; then :
+   $as_echo_n "(cached) " >&6
+@@ -4489,9 +4488,6 @@
+    fi
+ 
+ 
+-fi
+-
+-
+ case $host in
+   *-*-cygwin* | *-*-mingw* | *-*-pw32* | *-*-os2*)
+ 
