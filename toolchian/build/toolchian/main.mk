@@ -36,17 +36,6 @@ MAKEFILE_HEADER = $(BUILD_TOOLCHIAN)/$(HEADER_NAME).mk
 
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
 
-$(info ============================================================)
-$(info CAVAN_BUILD_ARCH = $(CAVAN_BUILD_ARCH))
-$(info CAVAN_BUILD_PLAT = $(CAVAN_BUILD_PLAT))
-$(info CAVAN_TARGET_ARCH = $(CAVAN_TARGET_ARCH))
-$(info CAVAN_TARGET_PLAT = $(CAVAN_TARGET_PLAT))
-$(info CPU_BINUTILS_OPTION = $(CPU_BINUTILS_OPTION))
-$(info CPU_GCC_OPTION = $(CPU_GCC_OPTION))
-$(info PACKAGE_PATH = $(PACKAGE_PATH))
-$(info KERNEL_VERSION = $(KERNEL_VERSION))
-$(info ============================================================)
-
 include $(MAKEFILE_DEFINES)
 
 define decompression_glibc

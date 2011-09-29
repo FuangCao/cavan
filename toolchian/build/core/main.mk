@@ -29,15 +29,29 @@ MAKEFILE_DEFINES = $(BUILD_CORE)/defines.mk
 MAKEFILE_HOST_RULE = $(BUILD_UTILS)/rule.mk
 MAKEFILE_TOOLCHIAN_RULE = $(BUILD_TOOLCHIAN)/rule.mk
 
-
-PATH := $(SYSROOT_PATH)/bin:$(SYSROOT_PATH)/bin:$(SYSROOT_PATH)/usr/bin:$(SYSROOT_PATH)/usr/sbin:$(SYSROOT_PATH)/usr/local/bin:$(SYSROOT_PATH)/usr/local/sbin:$(PATH)
-PATH := $(UTILS_PATH)/bin:$(UTILS_PATH)/bin:$(UTILS_PATH)/usr/bin:$(UTILS_PATH)/usr/sbin:$(UTILS_PATH)/usr/local/bin:$(UTILS_PATH)/usr/local/sbin:$(PATH)
+PATH := $(PATH):$(SYSROOT_PATH)/bin:$(SYSROOT_PATH)/bin:$(SYSROOT_PATH)/usr/bin:$(SYSROOT_PATH)/usr/sbin:$(SYSROOT_PATH)/usr/local/bin:$(SYSROOT_PATH)/usr/local/sbin
+PATH := $(PATH):$(UTILS_PATH)/bin:$(UTILS_PATH)/bin:$(UTILS_PATH)/usr/bin:$(UTILS_PATH)/usr/sbin:$(UTILS_PATH)/usr/local/bin:$(UTILS_PATH)/usr/local/sbin
 
 export ROOT_PATH PACKAGE_PATH BUILD_PATH PATCH_PATH
 export SRC_PATH SYSROOT_PATH UTILS_PATH DECOMP_PATH MARK_PATH PATH OUT_PATH
 export BUILD_CORE BUILD_TOOLCHIAN BUILD_UTILS
 export MARK_TOOLCHIAN MARK_UTILS
 export MAKEFILE_DEFINES MAKEFILE_HOST_RULE MAKEFILE_TARGET_RULE MAKEFILE_TOOLCHIAN_RULE
+
+$(info ============================================================)
+$(info CAVAN_BUILD_ARCH = $(CAVAN_BUILD_ARCH))
+$(info CAVAN_BUILD_PLAT = $(CAVAN_BUILD_PLAT))
+$(info CAVAN_TARGET_ARCH = $(CAVAN_TARGET_ARCH))
+$(info CAVAN_TARGET_PLAT = $(CAVAN_TARGET_PLAT))
+$(info CPU_BINUTILS_OPTION = $(CPU_BINUTILS_OPTION))
+$(info CPU_GCC_OPTION = $(CPU_GCC_OPTION))
+$(info KERNEL_VERSION = $(KERNEL_VERSION))
+$(info BINUTILS_VERSION = $(BINUTILS_VERSION))
+$(info GCC_VERSION = $(GCC_VERSION))
+$(info GLIBC_VERSION = $(GLIBC_VERSION))
+$(info PACKAGE_PATH = $(PACKAGE_PATH))
+$(info PATCH_PATH = $(PATCH_PATH))
+$(info ============================================================)
 
 include $(MAKEFILE_DEFINES)
 
