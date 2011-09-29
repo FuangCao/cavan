@@ -60,6 +60,9 @@
 #define pr_bold_info(fmt, args ...) \
 	println("\033[1m" fmt "\033[0m", ##args)
 
+#define pr_pos_info() \
+	println("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
+
 #define pr_red_pos() \
 	pr_red_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
 

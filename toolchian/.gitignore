@@ -1,0 +1,8 @@
+.*
+*.out
+*.rej
+*.orig
+*.patch
+!.gitignore
+/work
+/package

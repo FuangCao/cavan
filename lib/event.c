@@ -567,11 +567,13 @@ ssize_t open_event_devices(struct pollfd *event_fds, size_t max_count, int flags
 	char tmp_path[1024], *p;
 	char dev_name[1024];
 
+	pr_bold_pos();
+
 	p = text_copy(tmp_path, "/dev/input/event");
 
 	for (i = 0, count = 0; i < max_count; i++)
 	{
-		__value2text(i, p, 0, 0, 10);
+		simple_value2text_unsigned(i, p, sizeof(tmp_path), 10);
 
 		event_fds[count].fd = open(tmp_path, flags);
 		if (event_fds[count].fd < 0)

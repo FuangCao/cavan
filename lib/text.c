@@ -837,6 +837,11 @@ char *reverse_value2text_all(u64 value, char *buff, size_t size, int base)
 
 char *simple_value2text_reverse(u64 value, char *buff, size_t size, int base)
 {
+	if (value == 0)
+	{
+		*(u16 *)buff = 0x0030;
+		return buff + 1;
+	}
 
 	switch (base)
 	{

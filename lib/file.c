@@ -2255,13 +2255,15 @@ int file_find_and_open(const char *prefix, char *last_path, int start, int end, 
 
 	while (start <= end)
 	{
-		__value2text(start, p, 0, 0, 10);
+		simple_value2text_unsigned(start, p, sizeof(tmp_path), 10);
 
 		fd = open(p_bak, flags);
 		if (fd >= 0)
 		{
 			return fd;
 		}
+
+		start++;
 	}
 
 	return -ENOENT;
