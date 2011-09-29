@@ -14,7 +14,7 @@ endef
 
 define apply_patchs
 cd $2 && \
-for fn in $(wildcard $(PATCHS_PATH)/$1*.patch); \
+for fn in $(wildcard $(PATCH_PATH)/$1*.patch); \
 do \
 	echo "Apply patch $${fn} => $2"; \
 	patch -Np1 -i $${fn}; \
