@@ -1,28 +1,34 @@
 CAVAN_BUILD_ARCH = $(shell uname -m)
 CAVAN_BUILD_PLAT = $(shell gcc -dumpmachine)
 CAVAN_TARGET_ARCH = arm
-CAVAN_TARGET_PLAT = arm-cavan-linux-gnueabi
+CAVAN_TARGET_PLAT = $(CAVAN_TARGET_ARCH)-cavan-linux-gnueabi
 COMPANY_MAIN_PAGE = http://wwww.cavan.com
 
-CPU_BINUTILS_OPTION =
-# --with-float=soft
-CPU_GCC_OPTION = --with-arch=armv7-a --with-tune=cortex-a8
-# --with-float=soft
-Q = @
+ifeq ($(CAVAN_TARGET_ARCH),arm)
+  CPU_BINUTILS_OPTION =
+  # --with-float=soft
+  CPU_GCC_OPTION = --with-arch=armv7-a --with-tune=cortex-a8
+  # --with-float=soft
+endif
 
-GMP_VERSION = 5.0.2
-MPFR_VERSION = 3.0.1
-MPC_VERSION = 0.9
-GAWK_VERSION = 4.0.0
+Q = @
 
 BINUTILS_VERSION = 2.21.1a
 GCC_VERSION = 4.6.1
 GLIBC_VERSION = 2.13
 KERNEL_VERSION = 3.0.4
 
+GMP_VERSION = 5.0.2
+MPFR_VERSION = 3.0.1
+MPC_VERSION = 0.9
+
+DOWNLOAD_TYPES = tar.xz tar.bz2 tar.gz
+FORCE_DECOMPRESSION = no
+
 export CAVAN_TARGET_ARCH CAVAN_TARGET_PLAT CAVAN_BUILD_ARCH CAVAN_BUILD_PLAT COMPANY_MAIN_PAGE
 export CPU_BINUTILS_OPTION CPU_GCC_OPTION Q
-export GMP_VERSION MPFR_VERSION MPC_VERSION GAWK_VERSION
 export BINUTILS_VERSION GCC_VERSION GLIBC_VERSION KERNEL_VERSION KERNEL_VERSION
+export GMP_VERSION MPFR_VERSION MPC_VERSION
+export DOWNLOAD_TYPES FORCE_DECOMPRESSION
 
 include build/core/main.mk

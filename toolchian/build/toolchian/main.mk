@@ -17,7 +17,6 @@ SRC_GMP = $(SRC_TOOLCHIAN)/$(GMP_NAME)
 SRC_MPFR = $(SRC_TOOLCHIAN)/$(MPFR_NAME)
 SRC_MPC = $(SRC_TOOLCHIAN)/$(MPC_NAME)
 
-OUT_TOOLCHIAN = $(OUT_PATH)/toolchian
 OUT_BINUTILS = $(OUT_TOOLCHIAN)/$(BINUTILS_NAME)
 OUT_GCC1 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-1
 OUT_GCC2 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-2
@@ -34,6 +33,14 @@ MAKEFILE_GCC = $(BUILD_TOOLCHIAN)/$(GCC_NAME).mk
 MAKEFILE_GLIBC = $(BUILD_TOOLCHIAN)/$(GLIBC_NAME).mk
 MAKEFILE_HEADER = $(BUILD_TOOLCHIAN)/$(HEADER_NAME).mk
 
+GCC_URL = http://ftp.gnu.org/gnu/gcc
+GLIBC_URL = http://ftp.gnu.org/gnu/glibc
+BINUTILS_URL = http://ftp.gnu.org/gnu/binutils
+GMP_URL = http://ftp.gnu.org/gnu/gmp
+MPFR_URL = http://ftp.gnu.org/gnu/mpfr
+MPC_URL = http://www.multiprecision.org/mpc/download
+KERNEL_URL =
+
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
 
 include $(MAKEFILE_DEFINES)
@@ -41,8 +48,8 @@ include $(MAKEFILE_DEFINES)
 define decompression_glibc
 if ! test -d "$(SRC_GLIBC)"; \
 then \
-	$(call simple_decompression_file,$(GLIBC_NAME),$(SRC_GLIBC)); \
-	$(call simple_decompression_file,$(GLIBC_PORTS_NAME),$(SRC_GLIBC)/ports); \
+	$(call simple_decompression_file,$(GLIBC_NAME),$(SRC_GLIBC),$(GLIBC_URL)); \
+	$(call simple_decompression_file,$(GLIBC_PORTS_NAME),$(SRC_GLIBC)/ports,$(GLIBC_URL)); \
 	$(call apply_patchs,$(GLIBC_NAME),$(SRC_GLIBC)); \
 fi
 endef
@@ -50,10 +57,10 @@ endef
 define decompression_gcc
 if ! test -d $(SRC_GCC); \
 then \
-	$(call simple_decompression_file,$(GCC_NAME),$(SRC_GCC)); \
-	$(call simple_decompression_file,$(GMP_NAME),$(SRC_GCC)/gmp); \
-	$(call simple_decompression_file,$(MPFR_NAME),$(SRC_GCC)/mpfr); \
-	$(call simple_decompression_file,$(MPC_NAME),$(SRC_GCC)/mpc); \
+	$(call simple_decompression_file,$(GCC_NAME),$(SRC_GCC),$(GCC_URL)); \
+	$(call simple_decompression_file,$(GMP_NAME),$(SRC_GCC)/gmp,$(GMP_URL)); \
+	$(call simple_decompression_file,$(MPFR_NAME),$(SRC_GCC)/mpfr,$(MPFR_URL)); \
+	$(call simple_decompression_file,$(MPC_NAME),$(SRC_GCC)/mpc,$(MPC_URL)); \
 	$(call apply_patchs,$(GCC_NAME),$(SRC_GCC)); \
 	sed -i 's,\s*\(const\s\+char\s\+pkgversion_string.*=\).*;\s*$$,\1 "From $(COMPANY_MAIN_PAGE) ";,g' $(SRC_GCC)/gcc/version.c; \
 fi
@@ -81,13 +88,13 @@ $(MARK_GCC1): $(MARK_BINUTILS)
 	$(call generate_mark)
 
 $(MARK_BINUTILS): $(MARK_HEADER)
-	$(call decompression_file,$(SRC_BINUTILS))
+	$(call decompression_file,$(SRC_BINUTILS),$(BINUTILS_URL))
 	$(call remake_directory,$(OUT_BINUTILS))
 	$(Q)+make -C $(OUT_BINUTILS) -f $(MAKEFILE_BINUTILS)
 	$(call generate_mark)
 
 $(MARK_HEADER):
-	$(call decompression_file,$(SRC_KERNEL))
+	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 	$(call generate_mark)
 
