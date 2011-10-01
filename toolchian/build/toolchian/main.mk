@@ -8,14 +8,13 @@ GMP_NAME = gmp-$(GMP_VERSION)
 MPFR_NAME = mpfr-$(MPFR_VERSION)
 MPC_NAME = mpc-$(MPC_VERSION)
 
-SRC_TOOLCHIAN = $(SRC_PATH)/toolchian
-SRC_BINUTILS = $(SRC_TOOLCHIAN)/$(BINUTILS_NAME)
-SRC_GCC = $(SRC_TOOLCHIAN)/$(GCC_NAME)
-SRC_GLIBC = $(SRC_TOOLCHIAN)/$(GLIBC_NAME)
-SRC_KERNEL = $(SRC_TOOLCHIAN)/$(KERNEL_NAME)
-SRC_GMP = $(SRC_TOOLCHIAN)/$(GMP_NAME)
-SRC_MPFR = $(SRC_TOOLCHIAN)/$(MPFR_NAME)
-SRC_MPC = $(SRC_TOOLCHIAN)/$(MPC_NAME)
+SRC_BINUTILS = $(SRC_PATH)/$(BINUTILS_NAME)
+SRC_GCC = $(SRC_PATH)/$(GCC_NAME)
+SRC_GLIBC = $(SRC_PATH)/$(GLIBC_NAME)
+SRC_KERNEL = $(SRC_PATH)/$(KERNEL_NAME)
+SRC_GMP = $(SRC_PATH)/$(GMP_NAME)
+SRC_MPFR = $(SRC_PATH)/$(MPFR_NAME)
+SRC_MPC = $(SRC_PATH)/$(MPC_NAME)
 
 OUT_BINUTILS = $(OUT_TOOLCHIAN)/$(BINUTILS_NAME)
 OUT_GCC1 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-1
@@ -32,6 +31,7 @@ MAKEFILE_BINUTILS = $(BUILD_TOOLCHIAN)/$(BINUTILS_NAME).mk
 MAKEFILE_GCC = $(BUILD_TOOLCHIAN)/$(GCC_NAME).mk
 MAKEFILE_GLIBC = $(BUILD_TOOLCHIAN)/$(GLIBC_NAME).mk
 MAKEFILE_HEADER = $(BUILD_TOOLCHIAN)/$(HEADER_NAME).mk
+MAKEFILE_TOOLCHIAN_RULE = $(BUILD_TOOLCHIAN)/rule.mk
 
 GCC_URL = http://ftp.gnu.org/gnu/gcc
 GLIBC_URL = http://ftp.gnu.org/gnu/glibc
@@ -42,6 +42,7 @@ MPC_URL = http://www.multiprecision.org/mpc/download
 KERNEL_URL =
 
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
+export MAKEFILE_TOOLCHIAN_RULE
 
 include $(MAKEFILE_DEFINES)
 
@@ -66,8 +67,12 @@ then \
 fi
 endef
 
-all: build_env $(MARK_GCC2)
-	$(Q)echo "Toolchian build successfull"
+all: $(MARK_TOOLCHIAN_READY)
+	$(Q)echo "Toolchian compile successfull"
+
+$(MARK_TOOLCHIAN_READY): $(MARK_GCC2)
+	$(Q)sed 's/\<__packed\>/__attribute__ ((__packed__))/g' $(SYSROOT_PATH)/usr/include/mtd/ubi-user.h -i
+	$(call generate_mark)
 
 $(MARK_GCC2): $(MARK_GLIBC)
 	$(call decompression_gcc)
@@ -97,8 +102,3 @@ $(MARK_HEADER):
 	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 	$(call generate_mark)
-
-build_env:
-	$(Q)mkdir $(SRC_TOOLCHIAN) $(OUT_TOOLCHIAN) -pv
-
-.PHONY: build_env

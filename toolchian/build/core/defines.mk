@@ -1,6 +1,6 @@
 define simple_decompression_file
 temp_decomp="$(DECOMP_PATH)/$1"; \
-file_list="$(wildcard $(PACKAGE_PATH)/$1*.tar.*)"; \
+file_list="$(wildcard $(PACKAGE_PATH)/$1.tar.*)"; \
 [ -n "$${file_list}" ] || \
 { \
 	cd $(DOWNLOAD_PATH); \
@@ -62,12 +62,20 @@ endef
 
 define install_application
 $(eval app-name = $(notdir $@))
-$(eval src-path = $(SRC_UTILS)/$(app-name))
+$(eval src-path = $(SRC_PATH)/$(app-name))
 $(call decompression_file,$(src-path),$2)
-$(eval out-path = $(OUT_UTILS)/$(app-name))
+$(eval out-path = $3/$(app-name))
 $(call remake_directory,$(out-path))
 cd $(out-path) && $(src-path)/configure $1
 +make -C $(out-path)
-+make -C $(out-path) DESTDIR=$(UTILS_PATH) install
++make -C $(out-path) DESTDIR="$4" install
 $(call generate_mark)
+endef
+
+define install_utils
+$(call install_application,$1,$2,$(OUT_UTILS),$(UTILS_PATH))
+endef
+
+define install_library
+$(call install_application,$1,$2,$(OUT_LIBRARY),$(SYSROOT_PATH))
 endef

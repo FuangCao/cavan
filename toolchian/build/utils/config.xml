@@ -2,5 +2,4 @@
 	<package name="gawk" version="4.0.0" url="http://ftp.gnu.org/gnu/gawk" config="--prefix=/usr" depend=""/>
 	<package name="mpfr" version="3.0.1" url="http://ftp.gnu.org/gnu/mpfr" config="--prefix=/usr --with-gmp=$(UTILS_PATH)/usr" depend="gmp"/>
 	<package name="gmp" version="5.0.2" url="http://ftp.gnu.org/gnu/gmp" config="--prefix=/usr" depend=""/>
-	<package name="mpc" version="0.9" url="http://www.multiprecision.org/mpc/download" config="--prefix=/usr --with-mpfr=$(UTILS_PATH)/usr --with-gmp=$(UTILS_PATH)/usr" depend="mpfr gmp"/>
 </packages>

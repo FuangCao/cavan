@@ -1,0 +1,5 @@
+include $(MAKEFILE_DEFINES) $(VERSION_MK) $(NAME_MK)
+
+all: $(PACKAGES_ALL)
+
+include $(DEPEND_MK)
