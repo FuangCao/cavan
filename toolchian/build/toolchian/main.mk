@@ -63,7 +63,7 @@ then \
 	$(call simple_decompression_file,$(MPFR_NAME),$(SRC_GCC)/mpfr,$(MPFR_URL)); \
 	$(call simple_decompression_file,$(MPC_NAME),$(SRC_GCC)/mpc,$(MPC_URL)); \
 	$(call apply_patchs,$(GCC_NAME),$(SRC_GCC)); \
-	sed -i 's,\s*\(const\s\+char\s\+pkgversion_string.*=\).*;\s*$$,\1 "[$(COMPANY_MAIN_PAGE)] ";,g' $(SRC_GCC)/gcc/version.c; \
+	sed -i 's,\s*\(const\s\+char\s\+pkgversion_string.*=\).*;\s*$$,\1 "[$(PACKAGE_VERSION_STRING)] ";,g' $(SRC_GCC)/gcc/version.c; \
 fi
 endef
 
