@@ -1,5 +1,5 @@
 <packages>
-	<package name="zlib" version="1.2.5" url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)" config="--prefix=$(UTILS_PATH)/usr" depend=""/>
+	<package name="zlib" version="1.2.5" url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)" config="--prefix=$(UTILS_PATH)/usr --shared" depend=""/>
 	<package name="gawk" version="4.0.0" url="http://ftp.gnu.org/gnu/gawk" config="--prefix=$(UTILS_PATH)/usr" depend=""/>
 	<package name="mpc" version="0.9" url="http://www.multiprecision.org/mpc/download" config="--prefix=$(UTILS_PATH)/usr --with-gmp=$(UTILS_PATH)/usr --with-mpfr=$(UTILS_PATH)/usr" depend="mpfr"/>
 

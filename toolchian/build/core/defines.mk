@@ -4,12 +4,20 @@ file_list="$(wildcard $(PACKAGE_PATH)/$1.tar.*)"; \
 [ -n "$${file_list}" ] || \
 { \
 	cd $(DOWNLOAD_PATH); \
-	for type in $(DOWNLOAD_TYPES); \
-	do \
-		file_list="$1.$${type}"; \
-		[ -f "$${file_list}" ] || wget "$3/$${file_list}" && break; \
-		rm $${file_list} -rf; \
-	done; \
+	case "$3" in \
+		*.tar.*) \
+			file_list=$(notdir $3); \
+			test -f $${file_list} || wget $3; \
+			;; \
+		*) \
+			for type in $(DOWNLOAD_TYPES); \
+			do \
+				file_list="$1.$${type}"; \
+				[ -f "$${file_list}" ] || wget "$3/$${file_list}" && break; \
+				rm $${file_list} -rf; \
+			done; \
+			;; \
+	esac; \
 }; \
 for pkg in $${file_list}; \
 do \
@@ -65,9 +73,16 @@ $(eval app-name = $(notdir $@))
 $(eval src-path = $(SRC_PATH)/$(app-name))
 rm $(src-path) -rf
 $(call decompression_file,$(src-path),$2)
-cd $(src-path) && ./configure $1
-+make -C $(src-path)
-+make -C $(src-path) install
+$(eval makefile-path = $(BUILD_UTILS)/$(app-name).mk)
+if test -f $(makefile-path); \
+then \
+	make -C $(src-path) -f $(makefile-path); \
+else \
+	cd $(src-path) && \
+	./configure $1 && \
+	make -j4 && \
+	make install; \
+fi
 $(call generate_mark)
 endef
 
@@ -76,8 +91,15 @@ $(eval app-name = $(notdir $@))
 $(eval src-path = $(SRC_PATH)/$(app-name))
 rm $(src-path) -rf
 $(call decompression_file,$(src-path),$2)
-cd $(src-path) && ./configure $1 --host=$(CAVAN_TARGET_PLAT)
-+make -C $(src-path)
-+make -C $(src-path) DESTDIR="$(SYSROOT_PATH)" install
+$(eval makefile-path = $(BUILD_LIBRARY)/$(app-name).mk)
+if test -f $(makefile-path); \
+then \
+	make -C $(src-path) -f $(makefile-path); \
+else \
+	cd $(src-path) && \
+	./configure $1 --host=$(CAVAN_TARGET_PLAT) && \
+	make -j4 && \
+	make DESTDIR="$(SYSROOT_PATH)" install; \
+fi
 $(call generate_mark)
 endef
