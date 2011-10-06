@@ -1,0 +1,3 @@
+<packages>
+	<package name="udev" version="172" config="--disable-gudev --disable-udev-acl" url="" depend="pciids"/>
+</packages>

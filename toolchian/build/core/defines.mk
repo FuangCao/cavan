@@ -1,6 +1,6 @@
 define simple_decompression_file
 temp_decomp="$(DECOMP_PATH)/$1"; \
-file_list="$(wildcard $(PACKAGE_PATH)/$1.tar.*)"; \
+file_list="$(wildcard $(PACKAGE_PATH)/$1.tar.* $(DOWNLOAD_PATH)/$1.tar.*)"; \
 [ -n "$${file_list}" ] || \
 { \
 	cd $(DOWNLOAD_PATH); \
@@ -13,7 +13,7 @@ file_list="$(wildcard $(PACKAGE_PATH)/$1.tar.*)"; \
 			for type in $(DOWNLOAD_TYPES); \
 			do \
 				file_list="$1.$${type}"; \
-				[ -f "$${file_list}" ] || wget "$3/$${file_list}" && break; \
+				wget "$3/$${file_list}" && break; \
 				rm $${file_list} -rf; \
 			done; \
 			;; \
@@ -97,7 +97,7 @@ then \
 	make -C $(src-path) -f $(makefile-path); \
 else \
 	cd $(src-path) && \
-	./configure $1 --host=$(CAVAN_TARGET_PLAT) && \
+	./configure $1 --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_TARGET_PLAT) --target=$(CAVAN_TARGET_PLAT) && \
 	make -j4 && \
 	make DESTDIR="$(SYSROOT_PATH)" install; \
 fi

@@ -3,6 +3,6 @@
 	<package name="ncurses" version="5.9" config="--prefix=/usr" url="http://ftp.gnu.org/gnu/ncurses" depend=""/>
 	<package name="acl" version="2.2.49" config="--prefix=/usr" url="http://mirrors.zerg.biz/nongnu/acl/$(ACL_NAME).src.tar.gz" depend="attr"/>
 	<package name="attr" version="2.4.46" config="--prefix=/usr" url="http://mirrors.zerg.biz/nongnu/attr/$(ATTR_NAME).src.tar.gz" depend=""/>
-
-	<package name="gobject-introspection" version="0.6.14" config="--prefix=/usr" url="http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/0.6" depend=""/>
+	<package name="libffi" version="3.0.9" config="--prefix=/usr" url="ftp://sourceware.org/pub/libffi" depend=""/>
+	<package name="libusb" version="1.0.8" config="--prefix=/usr" url="http://ncu.dl.sourceforge.net/project/libusb/libusb-1.0/$(LIBUSB_NAME)" depend=""/>
 </packages>
