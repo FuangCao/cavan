@@ -1,3 +1,3 @@
 <packages>
-	<package name="ncurses" version="5.9" config="--prefix=/usr --host=$(CAVAN_TARGET_PLAT)" url="http://ftp.gnu.org/gnu/ncurses" depend=""/>
+	<package name="ncurses" version="5.9" config="--prefix=/usr" url="http://ftp.gnu.org/gnu/ncurses" depend=""/>
 </packages>

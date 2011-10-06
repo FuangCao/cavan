@@ -2,7 +2,7 @@ CAVAN_BUILD_ARCH = $(shell uname -m)
 CAVAN_BUILD_PLAT = $(shell gcc -dumpmachine)
 CAVAN_TARGET_ARCH = arm
 CAVAN_TARGET_PLAT = $(CAVAN_TARGET_ARCH)-cavan-linux-gnueabi
-COMPANY_MAIN_PAGE = http://wwww.cavan.com
+COMPANY_MAIN_PAGE = Fuang.cao <cavan.cfa@gmail.com>
 
 ifeq ($(CAVAN_TARGET_ARCH),arm)
   CPU_BINUTILS_OPTION =

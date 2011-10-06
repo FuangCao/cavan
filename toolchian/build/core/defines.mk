@@ -60,22 +60,24 @@ rm $1 -rf
 mkdir $1 -pv
 endef
 
-define install_application
+define install_utils
 $(eval app-name = $(notdir $@))
 $(eval src-path = $(SRC_PATH)/$(app-name))
+rm $(src-path) -rf
 $(call decompression_file,$(src-path),$2)
-$(eval out-path = $3/$(app-name))
-$(call remake_directory,$(out-path))
-cd $(out-path) && $(src-path)/configure $1
-+make -C $(out-path)
-+make -C $(out-path) DESTDIR="$4" install
+cd $(src-path) && ./configure $1
++make -C $(src-path)
++make -C $(src-path) install
 $(call generate_mark)
 endef
 
-define install_utils
-$(call install_application,$1,$2,$(OUT_UTILS),$(UTILS_PATH))
-endef
-
 define install_library
-$(call install_application,$1,$2,$(OUT_LIBRARY),$(SYSROOT_PATH))
+$(eval app-name = $(notdir $@))
+$(eval src-path = $(SRC_PATH)/$(app-name))
+rm $(src-path) -rf
+$(call decompression_file,$(src-path),$2)
+cd $(src-path) && ./configure $1 --host=$(CAVAN_TARGET_PLAT)
++make -C $(src-path)
++make -C $(src-path) DESTDIR="$(SYSROOT_PATH)" install
+$(call generate_mark)
 endef

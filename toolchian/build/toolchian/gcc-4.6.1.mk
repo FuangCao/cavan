@@ -4,6 +4,9 @@ GCC_COMMON_OPTION = $(CPU_GCC_OPTION) \
 					--host=$(CAVAN_BUILD_PLAT) \
 					--target=$(CAVAN_TARGET_PLAT) \
 					--with-sysroot=$(SYSROOT_PATH)
+					--with-gmp=$(UTILS_PATH)/usr \
+					--with-mpfr=$(UTILS_PATH)/usr \
+					--with-mpc=$(UTILS_PATH)/usr
 
 GCC_OPTION1 =		$(GCC_COMMON_OPTION) \
 					--disable-nls \

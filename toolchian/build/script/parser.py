@@ -30,15 +30,15 @@ def GenerateMakeFile():
 	InstallFunction = None
 
 	for opt in opts:
-		if opt[0] == "-n" or opt[0] == "-N" or opt[0] == "--name":
+		if opt[0] in ["-n", "-N", "--name"]:
 			NameMakefilePath = opt[1]
-		elif opt[0] == "-d" or opt[0] == "-D" or opt[0] == "--depend":
+		elif opt[0] in ["-d", "-D", "--depend"]:
 			DependMakefilePath = opt[1]
-		elif opt[0] == "-v" or opt[0] == "-V" or opt[0] == "--version":
+		elif opt[0] in ["-v", "-V", "--version"]:
 			VersionMakefilePath = opt[1]
-		elif opt[0] == "-m" or opt[0] == "-M" or opt[0] == "--markdir":
+		elif opt[0] in ["-m", "-M", "--markdir"]:
 			MarkDir = opt[1]
-		elif opt[0] == "-f" or opt[0] == "-F" or opt[0] == "--function":
+		elif opt[0] in ["-f", "-F", "--function"]:
 			InstallFunction = opt[1]
 		else:
 			print "unknown option: " + opt[0]
