@@ -5,4 +5,5 @@
 	<package name="attr" version="2.4.46" config="--prefix=/usr" url="http://mirrors.zerg.biz/nongnu/attr/$(ATTR_NAME).src.tar.gz" depend=""/>
 	<package name="libffi" version="3.0.9" config="--prefix=/usr" url="ftp://sourceware.org/pub/libffi" depend=""/>
 	<package name="libusb" version="1.0.8" config="--prefix=/usr" url="http://ncu.dl.sourceforge.net/project/libusb/libusb-1.0/$(LIBUSB_NAME)" depend=""/>
+	<package name="glib" version="2.28.8" config="--prefix=/usr" url="http://ftp.gnome.org/pub/gnome/sources/glib/2.28" depend=""/>
 </packages>

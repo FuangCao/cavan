@@ -68,6 +68,16 @@ rm $1 -rf
 mkdir $1 -pv
 endef
 
+define install_to_sysroot
+@echo "Install sysroot package"
+make DESTDIR="$(SYSROOT_PATH)" install
+endef
+
+define install_to_rootfs
+@echo "Install rootfs package"
+make DESTDIR="$(ROOTFS_PATH)" install
+endef
+
 define install_utils
 $(eval app-name = $(notdir $@))
 $(eval src-path = $(SRC_PATH)/$(app-name))
@@ -97,9 +107,27 @@ then \
 	make -C $(src-path) -f $(makefile-path); \
 else \
 	cd $(src-path) && \
-	./configure $1 --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_TARGET_PLAT) --target=$(CAVAN_TARGET_PLAT) && \
+	./configure $(LIBRARY_COMMON_CONFIG) $1 && \
 	make -j4 && \
 	make DESTDIR="$(SYSROOT_PATH)" install; \
+fi
+$(call generate_mark)
+endef
+
+define install_rootfs
+$(eval app-name = $(notdir $@))
+$(eval src-path = $(SRC_PATH)/$(app-name))
+rm $(src-path) -rf
+$(call decompression_file,$(src-path),$2)
+$(eval makefile-path = $(BUILD_ROOTFS)/$(app-name).mk)
+if test -f $(makefile-path); \
+then \
+	make -C $(src-path) -f $(makefile-path); \
+else \
+	cd $(src-path) && \
+	./configure $(ROOTFS_COMMON_CONFIG) $1 && \
+	make -j4 && \
+	make DESTDIR="$(ROOTFS_PATH)" install; \
 fi
 $(call generate_mark)
 endef

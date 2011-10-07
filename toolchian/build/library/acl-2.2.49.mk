@@ -1,5 +1,5 @@
 all:
-	./configure --prefix=$(SYSROOT_PATH)/usr --host=$(CAVAN_TARGET_PLAT)
+	./configure $(LIBRARY_COMMON_CONFIG) --prefix=$(SYSROOT_PATH)/usr
 	make -j4
 	make install-dev
 	make install-lib

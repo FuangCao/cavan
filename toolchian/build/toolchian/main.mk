@@ -39,7 +39,7 @@ BINUTILS_URL = http://ftp.gnu.org/gnu/binutils
 GMP_URL = http://ftp.gnu.org/gnu/gmp
 MPFR_URL = http://ftp.gnu.org/gnu/mpfr
 MPC_URL = http://www.multiprecision.org/mpc/download
-KERNEL_URL =
+KERNEL_URL = http://down1.chinaunix.net/distfiles/$(KERNEL_NAME).tar.bz2
 
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
 export MAKEFILE_TOOLCHIAN_RULE

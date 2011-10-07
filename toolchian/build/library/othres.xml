@@ -1,0 +1,3 @@
+<packages>
+	<package name="usbutils" version="0.80" config="--prefix=/usr" url="http://down1.chinaunix.net/distfiles/usbutils-0.80.tar.gz" depend=""/>
+</packages>
