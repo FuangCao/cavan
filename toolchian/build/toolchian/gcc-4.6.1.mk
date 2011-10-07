@@ -48,7 +48,7 @@ $(GCC_NAME)-1:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION1)
 	$(Q)+make
 	$(Q)+make DESTDIR=$(SYSROOT_PATH) install
-	$(Q)ln -vs libgcc.a `$(CAVAN_TARGET_PLAT)-gcc -print-libgcc-file-name | sed 's/libgcc/&_eh/'`
+	$(Q)ln -vsf libgcc.a $$($(CAVAN_TARGET_PLAT)-gcc -print-libgcc-file-name | sed 's/libgcc/&_eh/')
 
 $(GCC_NAME)-2:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION2)
