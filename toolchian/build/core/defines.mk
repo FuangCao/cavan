@@ -3,7 +3,7 @@ endef
 
 define simple_decompression_file
 temp_decomp="$(DECOMP_PATH)/$1"; \
-file_list="$(strip $(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.$(type) $(DOWNLOAD_PATH)/$1.$(type))))"; \
+file_list="$(strip $(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.*$(type) $(DOWNLOAD_PATH)/$1.*$(type))))"; \
 [ -n "$${file_list}" ] || \
 { \
 	cd $(DOWNLOAD_PATH); \
@@ -91,6 +91,16 @@ endef
 define install_to_rootfs
 @echo "Install rootfs package"
 make DESTDIR="$(ROOTFS_PATH)" install
+endef
+
+define install_to_utils
+@echo "Install utils package"
+make DESTDIR="$(UTILS_PATH)" install
+endef
+
+define install_to_emulator
+@echo "Install emulator package"
+make DESTDIR="$(EMULATOR_PATH)" install
 endef
 
 define install_utils

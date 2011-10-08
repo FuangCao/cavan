@@ -24,7 +24,7 @@ MPFR_VERSION = 3.0.1
 MPC_VERSION = 0.9
 
 DOWNLOAD_TYPES = tar.xz tar.bz2 tar.gz
-PACKAGE_TYPES = $(DOWNLOAD_TYPES) tar tar.zip zip rar
+PACKAGE_TYPES = $(DOWNLOAD_TYPES) tar zip rar
 HOST_APPS = zlib1g-dev xz-utils python-dev libffi-dev m4 gawk gettext libglib2.0-dev
 FORCE_DECOMPRESSION = no
 
