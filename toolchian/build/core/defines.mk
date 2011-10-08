@@ -103,11 +103,6 @@ define install_to_rootfs
 make DESTDIR="$(ROOTFS_PATH)" install
 endef
 
-define install_to_utils
-@echo "Install utils package"
-make DESTDIR="$(UTILS_PATH)" install
-endef
-
 define install_to_emulator
 @echo "Install emulator package"
 make DESTDIR="$(EMULATOR_PATH)" install

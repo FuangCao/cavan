@@ -1,5 +1,3 @@
-include $(MAKEFILE_DEFINES)
-
 all:
 	PKG_CONFIG_LIBDIR=$(UTILS_PATH)/usr/lib/pkgconfig \
 	./configure \
@@ -8,5 +6,4 @@ all:
 	--cc='$(CAVAN_BUILD_PLAT)-gcc -I$(UTILS_PATH)/usr/include -L$(UTILS_PATH)/usr/lib' \
 	--disable-kvm
 	make -j4
-	$(call install_to_utils)
-
+	make install

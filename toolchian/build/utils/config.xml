@@ -64,13 +64,18 @@
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="gobject-introspection" version="1.30.0" depend="glib"
-	         url="http://ftp.acc.umu.se/pub/gnome/sources/gobject-introspection/1.30"
+	<package name="libusb" version="1.0.8" depend=""
+			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-1.0/$(LIBUSB_NAME)"
+	         config="--prefix=$(UTILS_PATH)/usr">
+	</package>
+
+	<package name="usbutils" version="0.80" depend="libusb"
+	         url="http://down1.chinaunix.net/distfiles"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="usbutils" version="0.80" depend=""
-	         url="http://down1.chinaunix.net/distfiles"
+	<package name="gobject-introspection" version="1.30.0" depend="glib"
+	         url="http://ftp.acc.umu.se/pub/gnome/sources/gobject-introspection/1.30"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 </packages>
