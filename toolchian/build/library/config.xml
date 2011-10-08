@@ -29,8 +29,8 @@
 	         config="--prefix=/usr">
 	</package>
 
-	<package name="glib" version="2.28.8" depend=""
-			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.28"
+	<package name="glib" version="2.30.0" depend=""
+			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"
 	         config="--prefix=/usr">
 	</package>
 </packages>

@@ -44,8 +44,8 @@
 			 config="--prefix=$(UTILS_PATH)/usr --enable-shared --enable-static">
 	</package>
 
-	<package name="glib" version="2.28.8" depend=""
-			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.28"
+	<package name="glib" version="2.30.0" depend=""
+			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"
 	         config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
@@ -61,6 +61,16 @@
 
 	<package name="libtool" version="2.4" depend=""
 	         url="http://ftp.gnu.org/gnu/libtool"
+			 config="--prefix=$(UTILS_PATH)/usr">
+	</package>
+
+	<package name="gobject-introspection" version="1.30.0" depend="glib"
+	         url="http://ftp.acc.umu.se/pub/gnome/sources/gobject-introspection/1.30"
+			 config="--prefix=$(UTILS_PATH)/usr">
+	</package>
+
+	<package name="usbutils" version="0.80" depend=""
+	         url="http://down1.chinaunix.net/distfiles"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 </packages>
