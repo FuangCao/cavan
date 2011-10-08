@@ -1,11 +1,14 @@
+define decompression_all_file
+endef
+
 define simple_decompression_file
 temp_decomp="$(DECOMP_PATH)/$1"; \
-file_list="$(wildcard $(PACKAGE_PATH)/$1.tar.* $(DOWNLOAD_PATH)/$1.tar.*)"; \
+file_list="$(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.$(type) $(DOWNLOAD_PATH)/$1.$(type)))"; \
 [ -n "$${file_list}" ] || \
 { \
 	cd $(DOWNLOAD_PATH); \
 	case "$3" in \
-		*.tar.*) \
+		*.rar | *.zip | *.bz2 | *.gz | *.xz) \
 			file_list=$(notdir $3); \
 			test -f $${file_list} || wget $3; \
 			;; \
@@ -13,7 +16,7 @@ file_list="$(wildcard $(PACKAGE_PATH)/$1.tar.* $(DOWNLOAD_PATH)/$1.tar.*)"; \
 			for type in $(DOWNLOAD_TYPES); \
 			do \
 				file_list="$1.$${type}"; \
-				wget "$3/$${file_list}" && break; \
+				wget -t 2 "$3/$${file_list}" && break; \
 				rm $${file_list} -rf; \
 			done; \
 			;; \
@@ -21,14 +24,25 @@ file_list="$(wildcard $(PACKAGE_PATH)/$1.tar.* $(DOWNLOAD_PATH)/$1.tar.*)"; \
 }; \
 for pkg in $${file_list}; \
 do \
-	rm $${temp_decomp} -rf; \
-	mkdir $${temp_decomp} -pv; \
 	echo "Decompression $${pkg} => $${temp_decomp}"; \
-	tar -xf $${pkg} -C $${temp_decomp} && break; \
-done; \
-rm $2 -rf; \
-mv $${temp_decomp}/* $2; \
-rm $${temp_decomp} -rf
+	rm $${temp_decomp} -rf && mkdir $${temp_decomp} -pv && cd $${temp_decomp} || continue; \
+	while test -f $${pkg}; \
+	do \
+		case "$${pkg}" in \
+			*.tar.bz2) tar --use-compress-program bzip2 -xf $${pkg};; \
+			*.tar.gz) tar --use-compress-program gzip -xf $${pkg};; \
+			*.tar.xz) tar --use-compress-program xz -xf $${pkg};; \
+			*.zip) unzip -o $${pkg};; \
+			*.rar) rar x -o+ $${pkg};; \
+			*) tar -xvf $${pkg};; \
+		esac; \
+		for pkg in *; \
+		do \
+			[ -d "$${pkg}" ] && break; \
+		done; \
+	done; \
+	test -d "$${pkg}" && rm $2 -rf && mv $${pkg} $2 && break; \
+done
 endef
 
 define apply_patchs
