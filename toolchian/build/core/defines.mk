@@ -3,7 +3,7 @@ endef
 
 define simple_decompression_file
 temp_decomp="$(DECOMP_PATH)/$1"; \
-file_list="$(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.$(type) $(DOWNLOAD_PATH)/$1.$(type)))"; \
+file_list="$(strip $(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.$(type) $(DOWNLOAD_PATH)/$1.$(type))))"; \
 [ -n "$${file_list}" ] || \
 { \
 	cd $(DOWNLOAD_PATH); \
@@ -21,6 +21,7 @@ file_list="$(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.$(type)
 			done; \
 			;; \
 	esac; \
+	file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
 }; \
 for pkg in $${file_list}; \
 do \
