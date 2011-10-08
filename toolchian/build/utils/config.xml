@@ -58,4 +58,9 @@
 	         url="http://cgit.freedesktop.org/sbox2/snapshot"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
+
+	<package name="libtool" version="2.4" depend=""
+	         url="http://ftp.gnu.org/gnu/libtool"
+			 config="--prefix=$(UTILS_PATH)/usr">
+	</package>
 </packages>
