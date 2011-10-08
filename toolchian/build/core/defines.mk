@@ -9,19 +9,28 @@ file_list="$(strip $(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1
 	cd $(DOWNLOAD_PATH); \
 	case "$3" in \
 		*.rar | *.zip | *.bz2 | *.gz | *.xz) \
-			file_list=$(notdir $3); \
-			test -f $${file_list} || wget $3; \
+			file_list="$(notdir $3)"; \
+			if test -f "$(PACKAGE_PATH)/$${file_list}"; \
+			then \
+				file_list="$(PACKAGE_PATH)/$${file_list}"; \
+			else \
+				test -f "$${file_list}" || $(DOWNLOAD_COMMAND) $3; \
+				file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
+			fi; \
 			;; \
 		*) \
 			for type in $(DOWNLOAD_TYPES); \
 			do \
 				file_list="$1.$${type}"; \
-				wget -t 2 "$3/$${file_list}" && break; \
+				$(DOWNLOAD_COMMAND) "$3/$${file_list}" && \
+				{ \
+					file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
+					break; \
+				}; \
 				rm $${file_list} -rf; \
 			done; \
 			;; \
 	esac; \
-	file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
 }; \
 for pkg in $${file_list}; \
 do \
@@ -35,14 +44,15 @@ do \
 			*.tar.xz) tar --use-compress-program xz -xf $${pkg};; \
 			*.zip) unzip -o $${pkg};; \
 			*.rar) rar x -o+ $${pkg};; \
-			*) tar -xvf $${pkg};; \
+			*) tar -xf $${pkg};; \
 		esac; \
 		for pkg in *; \
 		do \
 			[ -d "$${pkg}" ] && break; \
 		done; \
 	done; \
-	test -d "$${pkg}" && rm $2 -rf && mv $${pkg} $2 && break; \
+	test -d "$${pkg}" && rm $2 -rf && mv $${pkg} $2 -v && break; \
+	rm $${temp_decomp} -rf; \
 done
 endef
 

@@ -1,11 +1,39 @@
 <packages>
-	<package name="udev" version="172" config="--prefix=/ --disable-gudev --disable-udev-acl --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)" url="http://ncu.dl.sourceforge.net/project/buluoos/0.3/src" depend="pciids"/>
-	<package name="pciids" version="0.1" config="" url="http://vorner.ucw.cz/download/pciids_$(PCIIDS_VERSION).tar.bz2" depend=""/>
-	<package name="coreutils" version="8.5" config="--prefix=/" url="http://ftp.gnu.org/gnu/coreutils" depend=""/>
-	<package name="bash" version="4.1" config="--prefix=/" url="http://ftp.gnu.org/gnu/bash" depend=""/>
-	<package name="vim" version="7.3" config="--prefix=/usr" url="ftp://ftp.vim.org/pub/vim/unix" depend=""/>
-	<package name="util-linux-ng" version="2.18" config="--prefix=/ --enable-arch --enable-partx --enable-write" url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src" depend=""/>
-	<package name="lrzsz" version="0.12.20" config="" url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz" depend=""/>
-	<package name="e2fsprogs" version="1.41.14" config="--prefix=/" url="http://ncu.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/$(E2FSPROGS_VERSION)" depend=""/>
-	<package name="dosfstools" version="3.0.5" config="--prefix=/" url="http://down1.chinaunix.net/distfiles/$(DOSFSTOOLS_NAME).tar.bz2" depend=""/>
+	<package name="udev" version="172" depend="pciids"
+	         config="--prefix=/ --disable-gudev --disable-udev-acl --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)"
+			 url="http://ncu.dl.sourceforge.net/project/buluoos/0.3/src">
+	</package>
+
+	<package name="pciids" version="0.1" depend=""
+	         config="" url="http://vorner.ucw.cz/download/pciids_$(PCIIDS_VERSION).tar.bz2">
+	</package>
+
+	<package name="coreutils" version="8.5" depend="" config="--prefix=/"
+	         url="http://ftp.gnu.org/gnu/coreutils">
+	</package>
+
+	<package name="bash" version="4.1" depend="" config="--prefix=/"
+	         url="http://ftp.gnu.org/gnu/bash">
+	</package>
+
+	<package name="vim" version="7.3" depend="" config="--prefix=/usr"
+	         url="ftp://ftp.vim.org/pub/vim/unix">
+	</package>
+
+	<package name="util-linux-ng" depend="" version="2.18"
+	         config="--prefix=/ --enable-arch --enable-partx --enable-write"
+			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">
+	</package>
+
+	<package name="lrzsz" version="0.12.20" depend="" config=""
+	         url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz">
+	</package>
+
+	<package name="e2fsprogs" version="1.41.14" depend="" config="--prefix=/"
+	         url="http://ncu.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/$(E2FSPROGS_VERSION)">
+	</package>
+
+	<package name="dosfstools" version="3.0.5" depend="" config="--prefix=/"
+	         url="http://down1.chinaunix.net/distfiles/$(DOSFSTOOLS_NAME).tar.bz2">
+	</package>
 </packages>

@@ -1,9 +1,36 @@
 <packages>
-	<package name="zlib" version="1.2.5" url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)" config="--prefix=/usr" depend=""/>
-	<package name="ncurses" version="5.9" config="--prefix=/usr" url="http://ftp.gnu.org/gnu/ncurses" depend=""/>
-	<package name="acl" version="2.2.49" config="--prefix=/usr" url="http://mirrors.zerg.biz/nongnu/acl/$(ACL_NAME).src.tar.gz" depend="attr"/>
-	<package name="attr" version="2.4.46" config="--prefix=/usr" url="http://mirrors.zerg.biz/nongnu/attr/$(ATTR_NAME).src.tar.gz" depend=""/>
-	<package name="libffi" version="3.0.9" config="--prefix=/usr" url="ftp://sourceware.org/pub/libffi" depend=""/>
-	<package name="libusb" version="1.0.8" config="--prefix=/usr" url="http://ncu.dl.sourceforge.net/project/libusb/libusb-1.0/$(LIBUSB_NAME)" depend=""/>
-	<package name="glib" version="2.28.8" config="--prefix=/usr" url="http://ftp.gnome.org/pub/gnome/sources/glib/2.28" depend=""/>
+	<package name="zlib" version="1.2.5" depend=""
+	         url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="ncurses" version="5.9" depend=""
+			 url="http://ftp.gnu.org/gnu/ncurses"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="acl" version="2.2.49" depend="attr"
+			 url="http://mirrors.zerg.biz/nongnu/acl/$(ACL_NAME).src.tar.gz"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="attr" version="2.4.46" depend=""
+			 url="http://mirrors.zerg.biz/nongnu/attr/$(ATTR_NAME).src.tar.gz"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="libffi" version="3.0.9" depend=""
+			 url="ftp://sourceware.org/pub/libffi"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="libusb" version="1.0.8" depend=""
+			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-1.0/$(LIBUSB_NAME)"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="glib" version="2.28.8" depend=""
+			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.28"
+	         config="--prefix=/usr">
+	</package>
 </packages>
