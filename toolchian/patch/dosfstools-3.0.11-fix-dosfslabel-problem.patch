@@ -1,0 +1,94 @@
+From 28e55a384bf5b7ed73ccbdc425bfdfe9bc068e69 Mon Sep 17 00:00:00 2001
+From: fuang.cao <cavan.cfa@gmail.com>
+Date: Sun, 9 Oct 2011 19:05:21 +0800
+Subject: [PATCH] fix dosfslabel problem
+
+Signed-off-by: fuang.cao <cavan.cfa@gmail.com>
+---
+ src/boot.c |   67 ++++++++++++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 45 insertions(+), 22 deletions(-)
+
+diff --git a/src/boot.c b/src/boot.c
+index 8848efe..1f6fc30 100644
+--- a/src/boot.c
++++ b/src/boot.c
+@@ -455,31 +455,54 @@ static void write_boot_label(DOS_FS *fs, char *label)
+ static loff_t find_volume_de(DOS_FS *fs, DIR_ENT *de)
+ {
+     unsigned long cluster;
+-    loff_t offset;
+-    int i;
++    loff_t offset, offset_end, offset_free = 0;
++
++    if (fs->root_cluster)
++	{
++		for (cluster = fs->root_cluster; cluster != 0 && cluster != -1; cluster = next_cluster(fs, cluster))
++		{
++		    for (offset = cluster_start(fs, cluster), offset_end = offset + fs->cluster_size; offset < offset_end; offset += sizeof(DIR_ENT))
++			{
++				fs_read(offset, sizeof(DIR_ENT), de);
++
++				if (de->name[0] == 0 || ((de->attr & 0x3F) != 0x0F && (de->attr & ATTR_VOLUME)))
++				{
++				    return offset;
++				}
++
++				if (de->name[0] == 0xE5)
++				{
++					offset_free = offset;
++				}
++		    }
++		}
++    }
++	else
++	{
++		for (offset = fs->root_start, offset_end = offset + sizeof(DIR_ENT) * fs->root_entries; offset < offset_end; offset += sizeof(DIR_ENT))
++		{
++		    fs_read(offset, sizeof(DIR_ENT), de);
++
++			if (de->name[0] == 0 || ((de->attr & 0x3F) != 0x0F && (de->attr & ATTR_VOLUME)))
++			{
++				return offset;
++			}
++
++			if (de->name[0] == 0xE5)
++			{
++				offset_free = offset;
++			}
++		}
++    }
+ 
+-    if (fs->root_cluster) {
+-	for (cluster = fs->root_cluster;
+-	     cluster != 0 && cluster != -1;
+-	     cluster = next_cluster(fs, cluster)) {
+-	    offset = cluster_start(fs, cluster);
+-	    for (i = 0; i * sizeof(DIR_ENT) < fs->cluster_size; i++) {
+-		fs_read(offset, sizeof(DIR_ENT), de);
+-		if (de->attr & ATTR_VOLUME)
+-		    return offset;
+-		offset += sizeof(DIR_ENT);
+-	    }
+-	}
+-    } else {
+-	for (i = 0; i < fs->root_entries; i++) {
+-	    offset = fs->root_start + i * sizeof(DIR_ENT);
+-	    fs_read(offset, sizeof(DIR_ENT), de);
+-	    if (de->attr & ATTR_VOLUME)
+-		return offset;
++	if (offset_free == 0)
++	{
++		return 0;
+ 	}
+-    }
+ 
+-    return 0;
++	fs_read(offset_free, sizeof(DIR_ENT), de);
++
++    return offset_free;
+ }
+ 
+ static void write_volume_label(DOS_FS *fs, char *label)
+-- 
+1.7.4.1
+
