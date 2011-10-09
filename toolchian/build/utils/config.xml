@@ -14,7 +14,7 @@
 	         config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="zlib" version="1.2.5" depend=""
+	<package name="zlib" version="1.2.5" depend="m4"
 	         url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)"
 			 config="--prefix=$(UTILS_PATH)/usr --shared">
 	</package>
@@ -29,12 +29,12 @@
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="gettext" version="0.18.1.1" depend=""
+	<package name="gettext" version="0.18.1.1" depend="m4"
 	         url="http://ftp.gnu.org/pub/gnu/gettext"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="qemu" version="0.15.0" depend="SDL glib"
+	<package name="qemu" version="0.15.0" depend="SDL glib zlib"
 	         url="http://wiki.qemu.org/download"
 	         config="--prefix=$(UTILS_PATH)/usr
 			         --target-list=$(CAVAN_TARGET_ARCH)-softmmu,$(CAVAN_TARGET_ARCH)-linux-user
@@ -42,22 +42,22 @@
 					 --disable-kvm">
 	</package>
 
-	<package name="SDL" version="1.2.14" depend=""
+	<package name="SDL" version="1.2.14" depend="m4"
 	         url="http://www.libsdl.org/release"
 			 config="--prefix=$(UTILS_PATH)/usr --enable-shared --enable-static">
 	</package>
 
-	<package name="libffi" version="3.0.9" depend=""
+	<package name="libffi" version="3.0.9" depend="m4"
 			 url="ftp://sourceware.org/pub/libffi"
 	         config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="glib" version="2.30.0" depend="libffi"
+	<package name="glib" version="2.30.0" depend="libffi gettext"
 			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"
-	         config="--prefix=$(UTILS_PATH)/usr">
+	         config="--prefix=$(UTILS_PATH)/usr --with-sysroot=$(UTILS_PATH)">
 	</package>
 
-	<package name="autoconf" version="2.68" depend=""
+	<package name="autoconf" version="2.68" depend="m4"
 	         url="http://ftp.gnu.org/gnu/autoconf"
 			 config="--prefix=$(UTILS_PATH)/usr --enable-static --enable-shared">
 	</package>
@@ -67,23 +67,28 @@
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="libtool" version="2.4" depend=""
+	<package name="libtool" version="2.4" depend="m4"
 	         url="http://ftp.gnu.org/gnu/libtool"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="libusb" version="1.0.8" depend=""
-			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-1.0/$(LIBUSB_NAME)"
+	<package name="libusb" version="0.1.12" depend="m4"
+			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz"
 	         config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="usbutils" version="0.84" depend="libusb"
+	<package name="usbutils" version="0.80" depend="libusb"
 	         url="http://down1.chinaunix.net/distfiles"
+			 config="--prefix=$(UTILS_PATH)/usr CFLAGS='-I$(UTILS_PATH)/usr/include'">
+	</package>
+
+	<package name="Python" version="2.7.2" depend="m4"
+	         url="http://www.python.org/ftp/python/$(PYTHON_VERSION)"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="gobject-introspection" version="1.30.0" depend="glib"
+	<package name="gobject-introspection" version="1.30.0" depend="glib Python"
 	         url="http://ftp.acc.umu.se/pub/gnome/sources/gobject-introspection/1.30"
-			 config="--prefix=$(UTILS_PATH)/usr --disable-tests --with-sysroot=$(UTILS_PATH)">
+			 config="--prefix=$(UTILS_PATH)/usr --disable-tests --with-sysroot=$(UTILS_PATH) PYTHON=$(UTILS_PATH)/usr/bin/python">
 	</package>
 </packages>

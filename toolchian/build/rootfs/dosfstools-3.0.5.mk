@@ -1,5 +1,5 @@
 include $(MAKEFILE_DEFINES)
 
 all:
-	make CC=$(CAVAN_TARGET_PLAT)-gcc
-	make DESTDIR=$(ROOTFS_PATH) PREFIX=/ install
+	+make CC=$(CAVAN_TARGET_PLAT)-gcc
+	+make DESTDIR=$(ROOTFS_PATH) PREFIX=/ install

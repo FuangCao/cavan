@@ -5,5 +5,5 @@ all:
 	glib_cv_uscore=yes \
 	ac_cv_func_posix_getpwuid_r=yes \
 	./configure $(LIBRARY_COMMON_CONFIG) --prefix=/usr --with-sysroot=$(SYSROOT_PATH)
-	make -j4
+	+make
 	$(call install_to_sysroot)

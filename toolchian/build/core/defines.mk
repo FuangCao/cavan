@@ -67,7 +67,7 @@ endef
 
 define decompression_file
 $(eval pkg_name = $(notdir $1))
-if [ ! -d "$1" -o "$(FORCE_DECOMPRESSION)" = "force" ]; \
+if [ ! -d "$1" -o "$(FORCE_DECOMPRESSION)" = "yes" ]; \
 then \
 	$(call simple_decompression_file,$(pkg_name),$1,$2); \
 	$(call apply_patchs,$(pkg_name),$1); \
@@ -114,13 +114,13 @@ $(eval src-path = $(SRC_PATH)/$(app-name))
 rm $(src-path) -rf
 $(call decompression_file,$(src-path),$2)
 $(eval makefile-path = $(BUILD_UTILS)/$(app-name).mk)
-if test -f $(makefile-path); \
++if test -f $(makefile-path); \
 then \
 	make -C $(src-path) -f $(makefile-path); \
 else \
 	cd $(src-path) && \
 	./configure $1 && \
-	make -j4 && \
+	make && \
 	make install; \
 fi
 $(call generate_mark)
@@ -132,13 +132,13 @@ $(eval src-path = $(SRC_PATH)/$(app-name))
 rm $(src-path) -rf
 $(call decompression_file,$(src-path),$2)
 $(eval makefile-path = $(BUILD_LIBRARY)/$(app-name).mk)
-if test -f $(makefile-path); \
++if test -f $(makefile-path); \
 then \
 	make -C $(src-path) -f $(makefile-path); \
 else \
 	cd $(src-path) && \
 	./configure $(LIBRARY_COMMON_CONFIG) $1 && \
-	make -j4 && \
+	make && \
 	make DESTDIR="$(SYSROOT_PATH)" install; \
 fi
 $(call generate_mark)
@@ -150,13 +150,13 @@ $(eval src-path = $(SRC_PATH)/$(app-name))
 rm $(src-path) -rf
 $(call decompression_file,$(src-path),$2)
 $(eval makefile-path = $(BUILD_ROOTFS)/$(app-name).mk)
-if test -f $(makefile-path); \
++if test -f $(makefile-path); \
 then \
 	make -C $(src-path) -f $(makefile-path); \
 else \
 	cd $(src-path) && \
 	./configure $(ROOTFS_COMMON_CONFIG) $1 && \
-	make -j4 && \
+	make && \
 	make DESTDIR="$(ROOTFS_PATH)" install; \
 fi
 $(call generate_mark)

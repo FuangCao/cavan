@@ -12,5 +12,5 @@ all:
 	vim_cv_tty_group=world \
 	STRIP=$(CAVAN_TARGET_PLAT)-strip \
 	./configure $(ROOTFS_COMMON_CONFIG) --prefix=/usr  --with-tlib=ncurses
-	make -j4
+	+make
 	$(call install_to_rootfs)

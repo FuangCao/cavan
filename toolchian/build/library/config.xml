@@ -24,13 +24,13 @@
 	         config="--prefix=/usr">
 	</package>
 
-	<package name="libusb" version="1.0.8" depend=""
-			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-1.0/$(LIBUSB_NAME)"
+	<package name="libusb" version="0.1.12" depend=""
+			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz"
 	         config="--prefix=/usr">
 	</package>
 
 	<package name="glib" version="2.30.0" depend=""
 			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"
-	         config="--prefix=/usr">
+	         config="--prefix=/usr CFLAGS='-I$(SYSROOT_PATH)/usr/include'">
 	</package>
 </packages>
