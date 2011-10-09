@@ -62,7 +62,12 @@
 			 config="--prefix=$(UTILS_PATH)/usr --enable-static --enable-shared">
 	</package>
 
-	<package name="sbox2" version="2.0" depend="autoconf"
+	<package name="automake" version="1.11.1" depend="m4"
+	         url="ftp://ftp.gnu.org/gnu/automake"
+			 config="--prefix=$(UTILS_PATH)/usr">
+	</package>
+
+	<package name="sbox2" version="2.0" depend="autoconf automake"
 	         url="http://cgit.freedesktop.org/sbox2/snapshot"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
