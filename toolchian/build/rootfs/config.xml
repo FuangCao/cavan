@@ -1,6 +1,6 @@
 <packages>
 	<package name="udev" version="172" depend="pciids"
-	         config="--prefix=/ --disable-extras --disable-gudev --disable-udev-acl --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)"
+	         config="--prefix=/ --disable-extras --disable-gudev --disable-udev-acl --disable-introspection --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)"
 			 url="http://ncu.dl.sourceforge.net/project/buluoos/0.3/src">
 	</package>
 

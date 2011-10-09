@@ -77,7 +77,7 @@
 	         config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="usbutils" version="0.80" depend="libusb"
+	<package name="usbutils" version="0.84" depend="libusb"
 	         url="http://down1.chinaunix.net/distfiles"
 			 config="--prefix=$(UTILS_PATH)/usr CFLAGS='-I$(UTILS_PATH)/usr/include'">
 	</package>
