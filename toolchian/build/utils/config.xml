@@ -36,7 +36,10 @@
 
 	<package name="qemu" version="0.15.0" depend="SDL glib"
 	         url="http://wiki.qemu.org/download"
-	         config="--prefix=$(UTILS_PATH)/usr">
+	         config="--prefix=$(UTILS_PATH)/usr
+			         --target-list=$(CAVAN_TARGET_ARCH)-softmmu,$(CAVAN_TARGET_ARCH)-linux-user
+					 --cc='$(CAVAN_BUILD_PLAT)-gcc -I$(UTILS_PATH)/usr/include -L$(UTILS_PATH)/usr/lib'
+					 --disable-kvm">
 	</package>
 
 	<package name="SDL" version="1.2.14" depend=""
@@ -44,14 +47,19 @@
 			 config="--prefix=$(UTILS_PATH)/usr --enable-shared --enable-static">
 	</package>
 
-	<package name="glib" version="2.30.0" depend=""
+	<package name="libffi" version="3.0.9" depend=""
+			 url="ftp://sourceware.org/pub/libffi"
+	         config="--prefix=$(UTILS_PATH)/usr">
+	</package>
+
+	<package name="glib" version="2.30.0" depend="libffi"
 			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"
 	         config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
 	<package name="autoconf" version="2.68" depend=""
 	         url="http://ftp.gnu.org/gnu/autoconf"
-			 config="--prefix=$(UTILS_PATH)/usr">
+			 config="--prefix=$(UTILS_PATH)/usr --enable-static --enable-shared">
 	</package>
 
 	<package name="sbox2" version="2.0" depend="autoconf"
@@ -69,13 +77,13 @@
 	         config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
-	<package name="usbutils" version="0.80" depend="libusb"
+	<package name="usbutils" version="0.84" depend="libusb"
 	         url="http://down1.chinaunix.net/distfiles"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
 
 	<package name="gobject-introspection" version="1.30.0" depend="glib"
 	         url="http://ftp.acc.umu.se/pub/gnome/sources/gobject-introspection/1.30"
-			 config="--prefix=$(UTILS_PATH)/usr">
+			 config="--prefix=$(UTILS_PATH)/usr --disable-tests --with-sysroot=$(UTILS_PATH)">
 	</package>
 </packages>

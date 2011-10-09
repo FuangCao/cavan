@@ -5,6 +5,10 @@ XML_CONFIG = $(BUILD_ROOTFS)/config.xml
 
 LIBRARY_MARK = $(MARK_ROOTFS)/library
 
+PKG_CONFIG_LIBDIR = $(SYSROOT_PATH)/usr/lib/pkgconfig
+
+export PKG_CONFIG_LIBDIR
+
 include $(MAKEFILE_DEFINES)
 
 all: $(MARK_ROOTFS_READY)

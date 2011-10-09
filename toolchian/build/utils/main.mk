@@ -9,6 +9,10 @@ XZ_URL = http://tukaani.org/xz
 XZ_CONFIG = --prefix=$(UTILS_PATH)/usr
 XZ_MARK = $(MARK_UTILS)/$(XZ_NAME)
 
+PKG_CONFIG_LIBDIR = $(UTILS_PATH)/usr/lib/pkgconfig
+
+export PKG_CONFIG_LIBDIR
+
 include $(MAKEFILE_DEFINES)
 
 all: $(MARK_UTILS_READY)
