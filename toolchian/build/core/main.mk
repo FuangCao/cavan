@@ -122,6 +122,9 @@ $(MARK_UTILS_READY): build_env
 	$(Q)+make -f $(MAKEFILE_UTILS)
 
 clean:
+	$(Q)rm $(DECOMP_PATH) $(SRC_PATH) $(OUT_PATH) -rfv
+
+distclean:
 	$(Q)rm $(WORK_PATH) -rfv
 
 build_env:
