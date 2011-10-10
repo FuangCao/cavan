@@ -1,5 +1,6 @@
 <packages>
-	<package name="bash" version="4.1" depend="" config="--prefix=/"
+	<package name="bash" version="4.1" depend=""
+	         config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 	         url="http://ftp.gnu.org/gnu/bash">
 	</package>
 

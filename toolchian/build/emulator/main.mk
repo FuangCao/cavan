@@ -16,10 +16,11 @@ all: $(MARK_EMULATOR_READY)
 $(MARK_EMULATOR_READY): $(SB2_INIT_MARK)
 	$(Q)python $(PYTHON_PARSER) -m $(MARK_EMULATOR) -f install_emulator -v $(MAKEFILE_VERSIONS) -n $(MAKEFILE_NAMES) -d $(MAKEFILE_DEPENDS) $(XML_CONFIG)
 	$(Q)+make -f $(MAKEFILE_INSTALL) VERSION_MK=$(MAKEFILE_VERSIONS) NAME_MK=$(MAKEFILE_NAMES) DEPEND_MK=$(MAKEFILE_DEPENDS)
+	$(Q)ln -vsf bash $(EMULATOR_PATH)/bin/bash
 	$(call generate_mark)
 
 $(SB2_INIT_MARK):
-	$(Q)mkdir $(EMULATOR_PATH)/usr -pv
+	$(Q)cd $(EMULATOR_PATH) && mkdir bin sbin root home tmp proc sys dev etc usr/bin usr/sbin -pv && ln -vsf bash bin/sh -vsf
 	$(Q)cp $(SYSROOT_PATH)/lib $(EMULATOR_PATH) -av
 	$(Q)cp $(SYSROOT_PATH)/usr/lib $(SYSROOT_PATH)/usr/$(CAVAN_TARGET_PLAT)/lib $(EMULATOR_PATH)/usr -av
 	$(Q)cp $(SYSROOT_PATH)/usr/include $(SYSROOT_PATH)/usr/$(CAVAN_TARGET_PLAT)/include $(EMULATOR_PATH)/usr -av

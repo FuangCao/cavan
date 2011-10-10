@@ -137,7 +137,7 @@ $(call install_application,$2,$(BUILD_ROOTFS),sb2 ./configure $1 && sb2 make && 
 endef
 
 define install_emulator
-$(call install_application,$2,$(BUILD_EMULATOR),sb2 ./configure $1 && sb2 make && sb2 make DESTDIR="$(EMULATOR_PATH)" install)
+$(call install_application,$2,$(BUILD_EMULATOR),sb2 ./configure $1 && sb2 make && sb2 -m install make install)
 endef
 
 define copy_shared_library

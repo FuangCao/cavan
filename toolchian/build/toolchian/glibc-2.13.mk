@@ -3,7 +3,7 @@ GLIBC_OPTION =	--prefix=/usr \
 				--host=$(CAVAN_TARGET_PLAT) \
 				--disable-profile \
 				--enable-add-ons \
-				--enable-kernel=$(KERNEL_VERSION) \
+				--enable-kernel=$(LOWEST_KERNEL_VERSION) \
 				--with-tls \
 				--with-__thread \
 				--with-binutils=$(SYSROOT_PATH)/usr \

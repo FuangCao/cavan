@@ -12,7 +12,7 @@ GLIBC_OPTION =	--prefix=/usr \
 				--disable-profile \
 				--enable-add-ons \
 				--with-tls \
-				--enable-kernel=$(KERNEL_VERSION) \
+				--enable-kernel=$(LOWEST_KERNEL_VERSION) \
 				--with-__thread \
 				--with-binutils=$(SYSROOT_PATH)/usr/bin \
 				--with-headers=$(SYSROOT_PATH)/usr/include \
