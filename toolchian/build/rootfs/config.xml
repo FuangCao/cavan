@@ -1,5 +1,45 @@
 <packages>
-	<package name="udev" version="172" depend="pciids"
+	<package name="bash" version="4.1" depend=""
+	         config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
+	         url="http://ftp.gnu.org/gnu/bash">
+	</package>
+
+	<package name="zlib" version="1.2.5" depend="bash"
+	         url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="ncurses" version="5.9" depend="bash"
+			 url="http://ftp.gnu.org/gnu/ncurses"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="acl" version="2.2.49" depend="attr"
+			 url="http://mirrors.zerg.biz/nongnu/acl/$(ACL_NAME).src.tar.gz"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="attr" version="2.4.46" depend="bash"
+			 url="http://mirrors.zerg.biz/nongnu/attr/$(ATTR_NAME).src.tar.gz"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="libffi" version="3.0.9" depend="bash"
+			 url="ftp://sourceware.org/pub/libffi"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="libusb" version="0.1.12" depend="bash"
+			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz"
+	         config="--prefix=/usr">
+	</package>
+
+	<package name="usbutils" version="0.84" depend="libusb"
+	         url="http://down1.chinaunix.net/distfiles"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="udev" version="172" depend="pciids usbutils acl libffi"
 	         config="--prefix=/ --disable-extras --disable-gudev --disable-udev-acl --disable-introspection --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)"
 			 url="http://ncu.dl.sourceforge.net/project/buluoos/0.3/src">
 	</package>
@@ -12,33 +52,29 @@
 	         url="http://ftp.gnu.org/gnu/coreutils">
 	</package>
 
-	<package name="bash" version="4.1" depend="" config="--prefix=/"
-	         url="http://ftp.gnu.org/gnu/bash">
-	</package>
-
-	<package name="vim" version="7.3" depend=""
+	<package name="vim" version="7.3" depend="bash"
 	         config="--prefix=/usr --with-tlib=ncurses"
 	         url="ftp://ftp.vim.org/pub/vim/unix">
 	</package>
 
-	<package name="util-linux-ng" depend="" version="2.18"
+	<package name="util-linux-ng" version="2.18" depend="bash"
 	         config="--prefix=/ --enable-arch --enable-partx --enable-write"
 			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">
 	</package>
 
-	<package name="lrzsz" version="0.12.20" depend="" config=""
+	<package name="lrzsz" version="0.12.20" depend="bash" config=""
 	         url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz">
 	</package>
 
-	<package name="e2fsprogs" version="1.41.14" depend="" config="--prefix=/"
+	<package name="e2fsprogs" version="1.41.14" depend="bash" config="--prefix=/"
 	         url="http://ncu.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/$(E2FSPROGS_VERSION)">
 	</package>
 
-	<package name="dosfstools" version="3.0.11" depend="" config="--prefix=/"
+	<package name="dosfstools" version="3.0.11" depend="bash" config="--prefix=/"
 	         url="http://fossies.org/linux/misc">
 	</package>
 
-	<package name="busybox" version="1.19.2" depend="" config="--prefix=/"
+	<package name="busybox" version="1.19.2" depend="bash" config="--prefix=/"
 	         url="http://busybox.net/downloads">
 	</package>
 </packages>

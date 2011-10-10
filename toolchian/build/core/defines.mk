@@ -98,16 +98,6 @@ define install_to_sysroot
 make DESTDIR="$(SYSROOT_PATH)" install
 endef
 
-define install_to_rootfs
-@echo "Install rootfs package"
-sb2 ake DESTDIR="$(ROOTFS_PATH)" install
-endef
-
-define install_to_emulator
-@echo "Install emulator package"
-sb2 make DESTDIR="$(EMULATOR_PATH)" install
-endef
-
 define install_application
 $(eval app-name = $(notdir $@))
 $(eval app-basename = $(firstword $(subst -, ,$(app-name))))
@@ -128,16 +118,8 @@ define install_utils
 $(call install_application,$2,$(BUILD_UTILS),./configure $1 && make && make install)
 endef
 
-define install_library
-$(call install_application,$2,$(BUILD_LIBRARY),./configure $1 $(LIBRARY_COMMON_CONFIG) && make && make DESTDIR="$(SYSROOT_PATH)" install)
-endef
-
 define install_rootfs
 $(call install_application,$2,$(BUILD_ROOTFS),sb2 ./configure $1 && sb2 make && sb2 make DESTDIR="$(ROOTFS_PATH)" install)
-endef
-
-define install_emulator
-$(call install_application,$2,$(BUILD_EMULATOR),sb2 ./configure $1 && sb2 make && sb2 -m install make install)
 endef
 
 define copy_shared_library
