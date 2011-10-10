@@ -114,7 +114,7 @@ $(call install_application,$2,$(BUILD_UTILS),./configure $1 && make && make inst
 endef
 
 define install_rootfs
-$(call install_application,$2,$(BUILD_ROOTFS),sb2 ./configure $1 && sb2 make && sb2 make DESTDIR="$(ROOTFS_PATH)" install)
+$(call install_application,$2,$(BUILD_ROOTFS),sb2 ./configure $1 && sb2 make && sb2 -m install make install)
 endef
 
 define copy_shared_library

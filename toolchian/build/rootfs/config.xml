@@ -14,16 +14,6 @@
 	         config="--prefix=/usr">
 	</package>
 
-	<package name="acl" version="2.2.49" depend="attr"
-			 url="http://mirrors.zerg.biz/nongnu/acl/$(ACL_NAME).src.tar.gz"
-	         config="--prefix=/usr">
-	</package>
-
-	<package name="attr" version="2.4.46" depend="bash"
-			 url="http://mirrors.zerg.biz/nongnu/attr/$(ATTR_NAME).src.tar.gz"
-	         config="--prefix=/usr">
-	</package>
-
 	<package name="libffi" version="3.0.9" depend="bash"
 			 url="ftp://sourceware.org/pub/libffi"
 	         config="--prefix=/usr">
@@ -43,7 +33,7 @@
 	         url="http://busybox.net/downloads">
 	</package>
 
-	<package name="udev" version="172" depend="pciids usbutils acl libffi"
+	<package name="udev" version="172" depend="pciids usbutils libffi"
 	         config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc --disable-extras --disable-gudev --disable-udev-acl --disable-introspection --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)"
 			 url="http://ncu.dl.sourceforge.net/project/buluoos/0.3/src">
 	</package>
@@ -78,7 +68,7 @@
 	         url="http://download.savannah.gnu.org/releases/sysvinit">
 	</package>
 
-	<package name="coreutils" version="8.4" depend="" config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
+	<package name="coreutils" version="8.13" depend="" config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 	         url="http://ftp.gnu.org/gnu/coreutils">
 	</package>
 </packages>
