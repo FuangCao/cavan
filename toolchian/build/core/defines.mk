@@ -141,6 +141,5 @@ $(call install_application,$2,$(BUILD_EMULATOR),sb2 ./configure $1 && sb2 make &
 endef
 
 define copy_shared_library
-cp $1/*.so $2 -av
-cp $1/*.so.* $2 -av
+cp $1/*.so* $2 -av
 endef

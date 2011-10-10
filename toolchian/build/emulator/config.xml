@@ -37,9 +37,4 @@
 	         url="http://down1.chinaunix.net/distfiles"
 			 config="--prefix=/usr">
 	</package>
-
-	<package name="glib" version="2.30.0" depend=""
-			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"
-	         config="--prefix=/usr CFLAGS='-I$(SYSROOT_PATH)/usr/include'">
-	</package>
 </packages>
