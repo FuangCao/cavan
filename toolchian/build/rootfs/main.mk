@@ -21,8 +21,7 @@ $(MARK_ROOTFS_READY): $(LIBRARY_MARK)
 
 $(LIBRARY_MARK):
 	$(Q)cd $(ROOTFS_PATH) && mkdir lib usr/lib -p
-	$(Q)cp $(SYSROOT_PATH)/lib/*.so $(ROOTFS_PATH)/lib -av
-	$(Q)cp $(SYSROOT_PATH)/lib/*.so.* $(ROOTFS_PATH)/lib -av
-	$(Q)cp $(SYSROOT_PATH)/usr/lib/*.so $(ROOTFS_PATH)/usr/lib -av
-	$(Q)cp $(SYSROOT_PATH)/usr/lib/*.so.* $(ROOTFS_PATH)/usr/lib -av
+	$(call copy_shared_library,$(SYSROOT_PATH)/lib,$(ROOTFS_PATH)/lib)
+	$(call copy_shared_library,$(SYSROOT_PATH)/usr/lib,$(ROOTFS_PATH)/usr/lib)
+	$(call copy_shared_library,$(SYSROOT_PATH)/usr/$(CAVAN_TARGET_PLAT)/lib,$(ROOTFS_PATH)/lib)
 	$(call generate_mark)

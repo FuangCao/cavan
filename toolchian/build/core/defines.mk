@@ -108,56 +108,35 @@ define install_to_emulator
 make DESTDIR="$(EMULATOR_PATH)" install
 endef
 
-define install_utils
+define install_application
 $(eval app-name = $(notdir $@))
+$(eval app-basename = $(firstword $(subst -, ,$(app-name))))
 $(eval src-path = $(SRC_PATH)/$(app-name))
 rm $(src-path) -rf
-$(call decompression_file,$(src-path),$2)
-$(eval makefile-path = $(BUILD_UTILS)/$(app-name).mk)
-+if test -f $(makefile-path); \
+$(call decompression_file,$(src-path),$1)
+$(eval makefile-path = $(firstword $(wildcard $2/$(app-name).mk $2/$(app-basename).mk)))
++if test -n "$(makefile-path)"; \
 then \
 	make -C $(src-path) -f $(makefile-path); \
 else \
-	cd $(src-path) && \
-	./configure $1 && \
-	make && \
-	make install; \
+	cd $(src-path) && $3; \
 fi
 $(call generate_mark)
+endef
+
+define install_utils
+$(call install_application,$2,$(BUILD_UTILS),./configure $1 && make && make install)
 endef
 
 define install_library
-$(eval app-name = $(notdir $@))
-$(eval src-path = $(SRC_PATH)/$(app-name))
-rm $(src-path) -rf
-$(call decompression_file,$(src-path),$2)
-$(eval makefile-path = $(BUILD_LIBRARY)/$(app-name).mk)
-+if test -f $(makefile-path); \
-then \
-	make -C $(src-path) -f $(makefile-path); \
-else \
-	cd $(src-path) && \
-	./configure $(LIBRARY_COMMON_CONFIG) $1 && \
-	make && \
-	make DESTDIR="$(SYSROOT_PATH)" install; \
-fi
-$(call generate_mark)
+$(call install_application,$2,$(BUILD_LIBRARY),./configure $1 $(LIBRARY_COMMON_CONFIG) && make && make DESTDIR="$(SYSROOT_PATH)" install)
 endef
 
 define install_rootfs
-$(eval app-name = $(notdir $@))
-$(eval src-path = $(SRC_PATH)/$(app-name))
-rm $(src-path) -rf
-$(call decompression_file,$(src-path),$2)
-$(eval makefile-path = $(BUILD_ROOTFS)/$(app-name).mk)
-+if test -f $(makefile-path); \
-then \
-	make -C $(src-path) -f $(makefile-path); \
-else \
-	cd $(src-path) && \
-	./configure $(ROOTFS_COMMON_CONFIG) $1 && \
-	make && \
-	make DESTDIR="$(ROOTFS_PATH)" install; \
-fi
-$(call generate_mark)
+$(call install_application,$2,$(BUILD_ROOTFS),./configure $1 $(ROOTFS_COMMON_CONFIG) && make && make DESTDIR="$(ROOTFS_PATH)" install)
+endef
+
+define copy_shared_library
+cp $1/*.so $2 -av
+cp $1/*.so.* $2 -av
 endef

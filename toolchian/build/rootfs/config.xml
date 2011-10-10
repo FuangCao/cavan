@@ -36,4 +36,8 @@
 	<package name="dosfstools" version="3.0.11" depend="" config="--prefix=/"
 	         url="http://fossies.org/linux/misc">
 	</package>
+
+	<package name="busybox" version="1.19.2" depend="" config="--prefix=/"
+	         url="http://busybox.net/downloads">
+	</package>
 </packages>
