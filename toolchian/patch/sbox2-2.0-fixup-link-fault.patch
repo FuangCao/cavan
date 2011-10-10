@@ -1,0 +1,35 @@
+From 764420e10c099a63e460b8b363998bda6a01f3b0 Mon Sep 17 00:00:00 2001
+From: "Fuang.Cao" <cavan.cfa@gmail.com>
+Date: Mon, 10 Oct 2011 22:06:35 +0800
+Subject: [PATCH] fixup link fault
+
+Signed-off-by: Fuang.Cao <cavan.cfa@gmail.com>
+---
+ utils/Makefile |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/utils/Makefile b/utils/Makefile
+index cf9b6c4..6f715d3 100644
+--- a/utils/Makefile
++++ b/utils/Makefile
+@@ -6,7 +6,7 @@ $(D)/sb2-show: CFLAGS := $(CFLAGS) -Wall -W -Werror \
+ 		-I$(SRCDIR)/include
+ 
+ $(D)/sb2-show.o: preload/exported.h
+-$(D)/sb2-show: preload/libsb2.$(SHLIBEXT) $(D)/sb2-show.o
++$(D)/sb2-show: $(D)/sb2-show.o preload/libsb2.$(SHLIBEXT)
+ 	$(MKOUTPUTDIR)
+ 	$(P)LD
+ 	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+@@ -25,7 +25,7 @@ $(D)/sb2-interp-wrapper: CFLAGS := $(CFLAGS) -Wall -W -Werror \
+ 		-I$(SRCDIR)/preload -Ipreload/ $(PROTOTYPEWARNINGS) \
+ 		-I$(SRCDIR)/include
+ 
+-$(D)/sb2-interp-wrapper: preload/libsb2.$(SHLIBEXT) $(D)/sb2-interp-wrapper.o
++$(D)/sb2-interp-wrapper: $(D)/sb2-interp-wrapper.o preload/libsb2.$(SHLIBEXT)
+ 	$(MKOUTPUTDIR)
+ 	$(P)LD
+ 	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ -ldl
+-- 
+1.7.5.4
+

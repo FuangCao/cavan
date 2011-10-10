@@ -17,7 +17,7 @@ BINUTILS_VERSION = 2.21.1a
 GCC_VERSION = 4.6.1
 GLIBC_VERSION = 2.13
 KERNEL_VERSION = 3.0.4
-LOWEST_KERNEL_VERSION = 2.6.17
+LOWEST_KERNEL_VERSION = 2.6.15
 
 GMP_VERSION = 5.0.2
 MPFR_VERSION = 3.0.1
@@ -25,7 +25,7 @@ MPC_VERSION = 0.9
 
 DOWNLOAD_TYPES = tar.xz tar.bz2 tar.gz
 PACKAGE_TYPES = $(DOWNLOAD_TYPES) tar zip rar
-HOST_APPS = zlib1g-dev xz-utils python-dev libffi-dev m4 gawk gettext libglib2.0-dev
+HOST_APPS = zlib1g-dev xz-utils python-dev libffi-dev m4 gawk gettext libglib2.0-dev gcc g++
 FORCE_DECOMPRESSION = no
 
 DOWNLOAD_WAY = wget

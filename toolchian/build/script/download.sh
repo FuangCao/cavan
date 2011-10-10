@@ -4,7 +4,7 @@ TEMP_DOWNLOAD_PATH="/tmp"
 
 function wget_download()
 {
-	wget -P ${TEMP_DOWNLOAD_PATH} -t 2 $1 || return 1
+	wget -P ${TEMP_DOWNLOAD_PATH} -t 5 -w 10 -c $1 || return 1
 
 	return 0
 }

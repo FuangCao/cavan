@@ -39,6 +39,10 @@
 			 config="--prefix=/usr">
 	</package>
 
+	<package name="busybox" version="1.19.2" depend="bash" config="--prefix=/"
+	         url="http://busybox.net/downloads">
+	</package>
+
 	<package name="udev" version="172" depend="pciids usbutils acl libffi"
 	         config="--prefix=/ --disable-extras --disable-gudev --disable-udev-acl --disable-introspection --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)"
 			 url="http://ncu.dl.sourceforge.net/project/buluoos/0.3/src">
@@ -46,10 +50,6 @@
 
 	<package name="pciids" version="0.1" depend=""
 	         config="" url="http://vorner.ucw.cz/download/pciids_$(PCIIDS_VERSION).tar.bz2">
-	</package>
-
-	<package name="coreutils" version="8.5" depend="" config="--prefix=/"
-	         url="http://ftp.gnu.org/gnu/coreutils">
 	</package>
 
 	<package name="vim" version="7.3" depend="bash"
@@ -74,7 +74,11 @@
 	         url="http://fossies.org/linux/misc">
 	</package>
 
-	<package name="busybox" version="1.19.2" depend="bash" config="--prefix=/"
-	         url="http://busybox.net/downloads">
+	<package name="sysvinit" version="2.88dsf" depend="bash" config="--prefix=/"
+	         url="http://download.savannah.gnu.org/releases/sysvinit">
+	</package>
+
+	<package name="coreutils" version="8.5" depend="" config="--prefix=/"
+	         url="http://ftp.gnu.org/gnu/coreutils">
 	</package>
 </packages>

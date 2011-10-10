@@ -91,4 +91,9 @@
 	         url="http://www.python.org/ftp/python/$(PYTHON_VERSION)"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
+
+	<package name="gperf" version="3.0.4" depend="m4"
+	         url="http://ftp.gnu.org/gnu/gperf"
+			 config="--prefix=$(UTILS_PATH)/usr">
+	</package>
 </packages>

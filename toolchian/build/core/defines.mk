@@ -93,11 +93,6 @@ rm $1 -rf
 mkdir $1 -pv
 endef
 
-define install_to_sysroot
-@echo "Install sysroot package"
-make DESTDIR="$(SYSROOT_PATH)" install
-endef
-
 define install_application
 $(eval app-name = $(notdir $@))
 $(eval app-basename = $(firstword $(subst -, ,$(app-name))))
