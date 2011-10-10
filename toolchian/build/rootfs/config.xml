@@ -39,12 +39,12 @@
 			 config="--prefix=/usr">
 	</package>
 
-	<package name="busybox" version="1.19.2" depend="bash" config="--prefix=/"
+	<package name="busybox" version="1.19.2" depend="bash" config=""
 	         url="http://busybox.net/downloads">
 	</package>
 
 	<package name="udev" version="172" depend="pciids usbutils acl libffi"
-	         config="--prefix=/ --disable-extras --disable-gudev --disable-udev-acl --disable-introspection --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)"
+	         config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc --disable-extras --disable-gudev --disable-udev-acl --disable-introspection --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)"
 			 url="http://ncu.dl.sourceforge.net/project/buluoos/0.3/src">
 	</package>
 
@@ -52,13 +52,13 @@
 	         config="" url="http://vorner.ucw.cz/download/pciids_$(PCIIDS_VERSION).tar.bz2">
 	</package>
 
-	<package name="vim" version="7.3" depend="bash"
+	<package name="vim" version="7.3" depend="bash ncurses"
 	         config="--prefix=/usr --with-tlib=ncurses"
 	         url="ftp://ftp.vim.org/pub/vim/unix">
 	</package>
 
 	<package name="util-linux-ng" version="2.18" depend="bash"
-	         config="--prefix=/ --enable-arch --enable-partx --enable-write"
+	         config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc --enable-login-utils --enable-login-chown-vcs --with-fsprobe=builtin --without-pam --disable-require-password --disable-wall"
 			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">
 	</package>
 
@@ -66,19 +66,19 @@
 	         url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz">
 	</package>
 
-	<package name="e2fsprogs" version="1.41.14" depend="bash" config="--prefix=/"
+	<package name="e2fsprogs" version="1.41.14" depend="bash" config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 	         url="http://ncu.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/$(E2FSPROGS_VERSION)">
 	</package>
 
-	<package name="dosfstools" version="3.0.11" depend="bash" config="--prefix=/"
+	<package name="dosfstools" version="3.0.11" depend="bash" config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 	         url="http://fossies.org/linux/misc">
 	</package>
 
-	<package name="sysvinit" version="2.88dsf" depend="bash" config="--prefix=/"
+	<package name="sysvinit" version="2.88dsf" depend="bash" config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 	         url="http://download.savannah.gnu.org/releases/sysvinit">
 	</package>
 
-	<package name="coreutils" version="8.5" depend="" config="--prefix=/"
+	<package name="coreutils" version="8.4" depend="" config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 	         url="http://ftp.gnu.org/gnu/coreutils">
 	</package>
 </packages>
