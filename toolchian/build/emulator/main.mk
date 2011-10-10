@@ -20,9 +20,9 @@ $(MARK_EMULATOR_READY): $(SB2_INIT_MARK)
 
 $(SB2_INIT_MARK):
 	$(Q)mkdir $(EMULATOR_PATH)/usr -pv
-	$(Q)cp $(SYSROOT_PATH)/lib $(EMULATOR_PATH) -a
-	$(Q)cp $(SYSROOT_PATH)/usr/lib $(SYSROOT_PATH)/usr/$(CAVAN_TARGET_PLAT)/lib $(EMULATOR_PATH)/usr -a
-	$(Q)cp $(SYSROOT_PATH)/usr/include $(SYSROOT_PATH)/usr/$(CAVAN_TARGET_PLAT)/include $(EMULATOR_PATH)/usr -a
+	$(Q)cp $(SYSROOT_PATH)/lib $(EMULATOR_PATH) -av
+	$(Q)cp $(SYSROOT_PATH)/usr/lib $(SYSROOT_PATH)/usr/$(CAVAN_TARGET_PLAT)/lib $(EMULATOR_PATH)/usr -av
+	$(Q)cp $(SYSROOT_PATH)/usr/include $(SYSROOT_PATH)/usr/$(CAVAN_TARGET_PLAT)/include $(EMULATOR_PATH)/usr -av
 	$(eval SB2_LIBTOOL_PACKAGE = $(firstword $(wildcard $(DOWNLOAD_PATH)/$(SB2_LIBTOOL_NAME).tar.gz $(PACKAGE_PATH)/$(SB2_LIBTOOL_NAME).tar.gz)))
 	$(Q)test -n "$(SB2_LIBTOOL_PACKAGE)" && rm $(SB2_CONFIG_PATH) -rf && mkdir $(SB2_CONFIG_PATH) -pv && cp $(SB2_LIBTOOL_PACKAGE) $(SB2_CONFIG_PATH) -av
 	$(Q)cd $(EMULATOR_PATH) && sb2-init -c qemu-$(CAVAN_TARGET_ARCH) $(CAVAN_TARGET_PLAT) $(CAVAN_TARGET_PLAT)-gcc

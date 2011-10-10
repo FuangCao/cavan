@@ -100,12 +100,12 @@ endef
 
 define install_to_rootfs
 @echo "Install rootfs package"
-make DESTDIR="$(ROOTFS_PATH)" install
+sb2 ake DESTDIR="$(ROOTFS_PATH)" install
 endef
 
 define install_to_emulator
 @echo "Install emulator package"
-make DESTDIR="$(EMULATOR_PATH)" install
+sb2 make DESTDIR="$(EMULATOR_PATH)" install
 endef
 
 define install_application
@@ -133,11 +133,11 @@ $(call install_application,$2,$(BUILD_LIBRARY),./configure $1 $(LIBRARY_COMMON_C
 endef
 
 define install_rootfs
-$(call install_application,$2,$(BUILD_ROOTFS),./configure $1 $(ROOTFS_COMMON_CONFIG) && make && make DESTDIR="$(ROOTFS_PATH)" install)
+$(call install_application,$2,$(BUILD_ROOTFS),sb2 ./configure $1 && sb2 make && sb2 make DESTDIR="$(ROOTFS_PATH)" install)
 endef
 
 define install_emulator
-$(call install_application,$2,$(BUILD_EMULATOR),sb2 ./configure $1 && sb2 make && sb2 -m install make install)
+$(call install_application,$2,$(BUILD_EMULATOR),sb2 ./configure $1 && sb2 make && sb2 make DESTDIR="$(EMULATOR_PATH)" install)
 endef
 
 define copy_shared_library

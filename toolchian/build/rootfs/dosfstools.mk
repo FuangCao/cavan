@@ -1,3 +1,3 @@
 all:
-	+make CC=$(CAVAN_TARGET_PLAT)-gcc
-	+make DESTDIR=$(ROOTFS_PATH) PREFIX=/ install
+	+sb2 make CC=gcc
+	+sb2 make DESTDIR=$(ROOTFS_PATH) PREFIX=/ install

@@ -1,6 +1,5 @@
+BUSYBOX_OPTION = CONFIG_PREFIX=$(ROOTFS_PATH)
+
 all:
-	make defconfig
-	sed 's/\s*\(CONFIG_CROSS_COMPILER_PREFIX\)\s*=.*/\1="$(CAVAN_TARGET_PLAT)-"/g' .config -i
-	+make
-	make install
-	cp _install/* $(ROOTFS_PATH) -anv
+	+sb2 make $(BUSYBOX_OPTION) defconfig
+	+sb2 make $(BUSYBOX_OPTION) install
