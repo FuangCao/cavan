@@ -86,9 +86,4 @@
 	         url="http://www.python.org/ftp/python/$(PYTHON_VERSION)"
 			 config="--prefix=$(UTILS_PATH)/usr">
 	</package>
-
-	<package name="gobject-introspection" version="1.30.0" depend="glib Python"
-	         url="http://ftp.acc.umu.se/pub/gnome/sources/gobject-introspection/1.30"
-			 config="--prefix=$(UTILS_PATH)/usr --disable-tests PYTHON=$(UTILS_PATH)/usr/bin/python">
-	</package>
 </packages>
