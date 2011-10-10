@@ -1,0 +1,26 @@
+From 55480704939d1b8f022aafb69312dfa85e34f049 Mon Sep 17 00:00:00 2001
+From: "Fuang.Cao" <cavan.cfa@gmail.com>
+Date: Tue, 11 Oct 2011 03:02:02 +0800
+Subject: [PATCH] fix config fault
+
+Signed-off-by: Fuang.Cao <cavan.cfa@gmail.com>
+---
+ configure |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/configure b/configure
+index 3d9467c..c51f2c6 100755
+--- a/configure
++++ b/configure
+@@ -22044,7 +22044,7 @@ _ACEOF
+   ac_status=$?
+   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+   test $ac_status = 0; } && test -s conftest$ac_exeext; then
+-            (./conftest
++            (
+              result=$?
+              if test $result != 0 && test $result != 77; then result=1; fi
+              exit $result
+-- 
+1.7.5.4
+
