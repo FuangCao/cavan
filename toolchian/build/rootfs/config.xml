@@ -1,11 +1,11 @@
 <packages>
-	<package name="busybox" version="1.19.2" depend="" config=""
-			 url="http://busybox.net/downloads">
-	</package>
-
-	<package name="bash" version="4.2" depend="busybox"
+	<package name="bash" version="4.2" depend=""
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ftp.gnu.org/gnu/bash">
+	</package>
+
+	<package name="busybox" version="1.19.2" depend="" config=""
+			 url="http://busybox.net/downloads">
 	</package>
 
 	<package name="zlib" version="1.2.5" depend=""
@@ -33,7 +33,7 @@
 	         url="http://down1.chinaunix.net/distfiles">
 	</package>
 
-	<package name="udev" version="172" depend="pciids usbutils libffi busybox"
+	<package name="udev" version="172" depend="pciids usbutils libffi"
 			 url="http://ncu.dl.sourceforge.net/project/buluoos/0.3/src"
 	         config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc --disable-gudev --disable-udev-acl --disable-introspection --with-pci-ids-path=$(SRC_PATH)/$(PCIIDS_NAME)">
 	</package>
@@ -42,37 +42,37 @@
 			 url="http://vorner.ucw.cz/download/pciids_$(PCIIDS_VERSION).tar.bz2">
 	</package>
 
-	<package name="vim" version="7.3" depend="ncurses busybox"
+	<package name="vim" version="7.3" depend="ncurses"
 			 config="--prefix=/usr --with-tlib=ncurses"
 			 url="ftp://ftp.vim.org/pub/vim/unix">
 	</package>
 
-	<package name="util-linux-ng" version="2.18" depend="ncurses busybox"
+	<package name="util-linux-ng" version="2.18" depend="ncurses"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc --enable-login-utils --enable-login-chown-vcs --with-fsprobe=builtin --without-pam --disable-require-password --disable-wall"
 			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">
 	</package>
 
-	<package name="lrzsz" version="0.12.20" depend="busybox"
+	<package name="lrzsz" version="0.12.20" depend=""
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz">
 	</package>
 
-	<package name="e2fsprogs" version="1.41.14" depend="busybox"
+	<package name="e2fsprogs" version="1.41.14" depend=""
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ncu.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/$(E2FSPROGS_VERSION)">
 	</package>
 
-	<package name="dosfstools" version="3.0.11" depend="busybox"
+	<package name="dosfstools" version="3.0.11" depend=""
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://fossies.org/linux/misc">
 	</package>
 
-	<package name="sysvinit" version="2.88dsf" depend="busybox"
+	<package name="sysvinit" version="2.88dsf" depend=""
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://download.savannah.gnu.org/releases/sysvinit">
 	</package>
 
-	<package name="coreutils" version="8.13" depend="busybox"
+	<package name="coreutils" version="8.13" depend=""
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ftp.gnu.org/gnu/coreutils">
 	</package>
