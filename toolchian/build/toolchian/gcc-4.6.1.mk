@@ -1,7 +1,7 @@
 GCC_COMMON_OPTION = $(CPU_GCC_OPTION) \
 					--prefix=/usr \
 					--build=$(CAVAN_BUILD_PLAT) \
-					--host=$(CAVAN_BUILD_PLAT) \
+					--host=$(CAVAN_HOST_PLAT) \
 					--target=$(CAVAN_TARGET_PLAT) \
 					--with-sysroot=$(SYSROOT_PATH)
 					--with-gmp=$(UTILS_PATH)/usr \

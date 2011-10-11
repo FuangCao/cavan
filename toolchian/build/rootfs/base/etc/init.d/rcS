@@ -1,8 +1,10 @@
 #!/bin/bash
 
+echo
 echo "============================================================"
-echo "/etc/init.d/rcS Start"
+echo "=> /etc/init.d/rcS Start"
 echo "============================================================"
+echo
 
 mount -t proc none /proc
 mount -t sysfs none /sys
@@ -26,7 +28,3 @@ alias ls='ls --color'
 alias la='ls -A'
 alias ll='ls -alF'
 alias grep='grep --color'
-
-echo "============================================================"
-echo "/etc/init.d/rcS End"
-echo "============================================================"

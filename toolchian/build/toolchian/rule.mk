@@ -1,4 +1,4 @@
-COMMON_OPTION = --prefix=/usr --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_BUILD_PLAT) --target=$(CAVAN_TARGET_PLAT)
+COMMON_OPTION = --prefix=/usr --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT)
 
 all:
 	$(Q)$(SRC)/configure $(OPT) $(COMMON_OPTION)
