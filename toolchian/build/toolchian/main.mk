@@ -44,6 +44,15 @@ KERNEL_URL = http://down1.chinaunix.net/distfiles/$(KERNEL_NAME).tar.bz2
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
 export MAKEFILE_TOOLCHIAN_RULE
 
+$(info ============================================================)
+$(info CAVAN_HOST_ARCH = $(CAVAN_HOST_ARCH))
+$(info CAVAN_HOST_PLAT = $(CAVAN_HOST_PLAT))
+$(info SYSROOT_PATH = $(SYSROOT_PATH))
+$(info OUT_TOOLCHIAN = $(OUT_TOOLCHIAN))
+$(info MARK_TOOLCHIAN = $(MARK_TOOLCHIAN))
+$(info MARK_TOOLCHIAN_READY = $(MARK_TOOLCHIAN_READY))
+$(info ============================================================)
+
 include $(MAKEFILE_DEFINES)
 
 define decompression_glibc
