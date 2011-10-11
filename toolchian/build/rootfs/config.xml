@@ -1,5 +1,5 @@
 <packages>
-	<package name="bash" version="4.1" depend=""
+	<package name="bash" version="4.2" depend=""
 	         config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 	         url="http://ftp.gnu.org/gnu/bash">
 	</package>
@@ -52,7 +52,8 @@
 			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">
 	</package>
 
-	<package name="lrzsz" version="0.12.20" depend="bash" config=""
+	<package name="lrzsz" version="0.12.20" depend="bash"
+	         config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 	         url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz">
 	</package>
 

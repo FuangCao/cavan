@@ -16,6 +16,7 @@ ca:12345:ctrlaltdel:/sbin/shutdown -t1 -a -r now
 
 su:S016:once:/sbin/sulogin
 
+0:2345:respawn:/sbin/agetty ttymxc0 115200
 1:2345:respawn:/sbin/agetty tty1 9600
 2:2345:respawn:/sbin/agetty tty2 9600
 3:2345:respawn:/sbin/agetty tty3 9600
