@@ -12,12 +12,14 @@ DECOMP_PATH = $(WORK_PATH)/decomp
 MARK_PATH = $(WORK_PATH)/mark
 OUT_PATH = $(WORK_PATH)/out
 
-SYSROOT_PATH = $(WORK_PATH)/sysroot/$(CAVAN_HOST_ARCH)-$(CAVAN_TARGET_ARCH)
+TOOLCHIAN_NAME = $(CAVAN_HOST_ARCH)-$(CAVAN_TARGET_ARCH)
+SYSROOT_PREFIX = $(WORK_PATH)/sysroot
+SYSROOT_PATH = $(SYSROOT_PREFIX)/$(TOOLCHIAN_NAME)
 ROOTFS_PATH = $(WORK_PATH)/rootfs/$(CAVAN_TARGET_ARCH)
-OUT_TOOLCHIAN = $(OUT_PATH)/toolchian/$(CAVAN_HOST_ARCH)-$(CAVAN_TARGET_ARCH)
+OUT_TOOLCHIAN = $(OUT_PATH)/toolchian/$(TOOLCHIAN_NAME)
 OUT_ROOTFS = $(OUT_PATH)/rootfs/$(CAVAN_TARGET_ARCH)
 OUT_UTILS = $(OUT_PATH)/utils
-MARK_TOOLCHIAN = $(MARK_PATH)/toolchian/$(CAVAN_HOST_ARCH)-$(CAVAN_TARGET_ARCH)
+MARK_TOOLCHIAN = $(MARK_PATH)/toolchian/$(TOOLCHIAN_NAME)
 MARK_ROOTFS = $(MARK_PATH)/rootfs/$(CAVAN_TARGET_ARCH)
 MARK_UTILS = $(MARK_PATH)/utils
 
@@ -41,9 +43,13 @@ BASH_DOWNLOAD = ${SCRIPT_PATH}/download.sh
 
 MARK_HOST_APPS = $(MARK_UTILS)/environment
 
-SYSROOT_APPS = $(SYSROOT_PATH)/bin:$(SYSROOT_PATH)/bin:$(SYSROOT_PATH)/usr/bin:$(SYSROOT_PATH)/usr/sbin:$(SYSROOT_PATH)/usr/local/bin:$(SYSROOT_PATH)/usr/local/sbin
-UTILS_APPS = $(UTILS_PATH)/bin:$(UTILS_PATH)/bin:$(UTILS_PATH)/usr/bin:$(UTILS_PATH)/usr/sbin:$(UTILS_PATH)/usr/local/bin:$(UTILS_PATH)/usr/local/sbin
-PATH := $(SYSROOT_APPS):$(UTILS_APPS):$(PATH)
+define set_path
+PATH := $1/usr/local/sbin:$1/usr/local/bin:$1/usr/sbin:$1/usr/bin:$1/sbin:$1/bin:$(PATH)
+endef
+
+$(eval $(call set_path,$(UTILS_PATH)))
+$(eval $(call set_path,$(SYSROOT_PREFIX)/$(CAVAN_BUILD_ARCH)-$(CAVAN_BUILD_ARCH)))
+$(eval $(call set_path,$(SYSROOT_PREFIX)/$(CAVAN_BUILD_ARCH)-$(CAVAN_TARGET_ARCH)))
 
 DOWNLOAD_COMMAND = bash $(BASH_DOWNLOAD)
 
