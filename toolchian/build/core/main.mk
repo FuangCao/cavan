@@ -107,7 +107,7 @@ distclean:
 build_env:
 	$(Q)if test -L $(WORK_PATH) -o ! -d $(WORK_PATH); \
 	then \
-		rm $(WORK_PATH) && mkdir $(WORK_PATH) -pv; \
+		rm $(WORK_PATH) -rfv  && mkdir $(WORK_PATH) -pv; \
 	fi
 	$(Q)mkdir $(SRC_PATH) $(SYSROOT_PATH) $(UTILS_PATH) $(OUT_UTILS) $(OUT_TOOLCHIAN) $(OUT_ROOTFS) $(DECOMP_PATH) $(DOWNLOAD_PATH) -pv
 	$(Q)mkdir $(MARK_TOOLCHIAN) $(MARK_ROOTFS) $(MARK_UTILS) -pv
