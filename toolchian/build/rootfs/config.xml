@@ -47,7 +47,7 @@
 			 url="ftp://ftp.vim.org/pub/vim/unix">
 	</package>
 
-	<package name="util-linux-ng" version="2.18" depend="busybox"
+	<package name="util-linux-ng" version="2.18" depend="ncurses busybox"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc --enable-login-utils --enable-login-chown-vcs --with-fsprobe=builtin --without-pam --disable-require-password --disable-wall"
 			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">
 	</package>
