@@ -6,7 +6,7 @@ XML_CONFIG = $(BUILD_UTILS)/config.xml
 XZ_VERSION = 5.0.3
 XZ_NAME = xz-$(XZ_VERSION)
 XZ_URL = http://tukaani.org/xz
-XZ_CONFIG = --prefix=$(UTILS_PATH)/usr
+XZ_CONFIG =
 XZ_MARK = $(MARK_UTILS)/$(XZ_NAME)
 
 PKG_CONFIG_LIBDIR = $(UTILS_PATH)/usr/lib/pkgconfig

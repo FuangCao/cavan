@@ -110,7 +110,7 @@ $(call generate_mark)
 endef
 
 define install_utils
-$(call install_application,$2,$(BUILD_UTILS),./configure $1 && make && make install)
+$(call install_application,$2,$(BUILD_UTILS),./configure $(UTILS_COMMON_CONFIG) $1 && make && make install)
 endef
 
 define install_rootfs

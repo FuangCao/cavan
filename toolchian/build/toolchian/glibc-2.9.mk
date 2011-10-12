@@ -6,10 +6,10 @@ GLIBC_OPTION =	--prefix=/usr \
 				--enable-kernel=$(LOWEST_KERNEL_VERSION) \
 				--with-tls \
 				--with-__thread \
-				--with-binutils=$(SYSROOT_PATH)/usr \
-				--with-headers=$(SYSROOT_PATH)/usr/include
+				--with-binutils=$(TOOLCHIAN_PATH)/usr \
+				--with-headers=$(TOOLCHIAN_PATH)/usr/include
 
-GLIBC_CONFIGPARMS = "install_root=$(SYSROOT_PATH)"
+GLIBC_CONFIGPARMS = "install_root=$(TOOLCHIAN_PATH)"
 
 all:
 	$(Q)echo "$(GLIBC_CONFIGPARMS)" > configparms

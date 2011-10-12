@@ -41,12 +41,16 @@ MPFR_URL = http://ftp.gnu.org/gnu/mpfr
 MPC_URL = http://www.multiprecision.org/mpc/download
 KERNEL_URL = http://down1.chinaunix.net/distfiles/$(KERNEL_NAME).tar.bz2
 
+SYSROOT_PATH = $(TOOLCHIAN_PATH)/$(CAVAN_TARGET_PLAT)/sysroot
+
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
 export MAKEFILE_TOOLCHIAN_RULE
+export SYSROOT_PATH
 
 $(info ============================================================)
 $(info CAVAN_HOST_ARCH = $(CAVAN_HOST_ARCH))
 $(info CAVAN_HOST_PLAT = $(CAVAN_HOST_PLAT))
+$(info TOOLCHIAN_PATH = $(TOOLCHIAN_PATH))
 $(info SYSROOT_PATH = $(SYSROOT_PATH))
 $(info OUT_TOOLCHIAN = $(OUT_TOOLCHIAN))
 $(info MARK_TOOLCHIAN = $(MARK_TOOLCHIAN))
@@ -89,6 +93,7 @@ $(MARK_GCC2): $(MARK_GLIBC)
 	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) $(GCC_NAME)-2
 	$(call generate_mark)
 
+ifeq ($(MARK_TOOLCHIAN_READY),$(MARK_TOOLCHIAN_BT_READY))
 $(MARK_GLIBC): $(MARK_GCC1)
 	$(call decompression_glibc,$(SRC_GLIBC))
 	$(call remake_directory,$(OUT_GLIBC))
@@ -100,6 +105,11 @@ $(MARK_GCC1): $(MARK_BINUTILS)
 	$(call remake_directory,$(OUT_GCC1))
 	$(Q)+make -C $(OUT_GCC1) -f $(MAKEFILE_GCC) $(GCC_NAME)-1
 	$(call generate_mark)
+else
+$(MARK_GLIBC): $(MARK_BINUTILS)
+	$(Q)echo "Nothing to be done"
+	$(call generate_mark)
+endif
 
 $(MARK_BINUTILS): $(MARK_HEADER)
 	$(call decompression_file,$(SRC_BINUTILS),$(BINUTILS_URL))
@@ -108,6 +118,12 @@ $(MARK_BINUTILS): $(MARK_HEADER)
 	$(call generate_mark)
 
 $(MARK_HEADER):
+ifeq ($(MARK_TOOLCHIAN_READY),$(MARK_TOOLCHIAN_BT_READY))
 	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
+else
+	$(Q)rm $(SYSROOT_PATH) -rfv
+	$(Q)mkdir $(dir $(SYSROOT_PATH)) -pv
+	$(Q)cp $(SYSROOT_BT_PATH) $(SYSROOT_PATH) -av
+endif
 	$(call generate_mark)
