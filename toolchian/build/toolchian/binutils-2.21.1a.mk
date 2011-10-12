@@ -1,4 +1,8 @@
 BINUTILS_OPTION =	$(CPU_BINUTILS_OPTION) \
+					--prefix=$(TOOLCHIAN_PATH) \
+					--build=$(CAVAN_BUILD_PLAT) \
+					--host=$(CAVAN_HOST_PLAT) \
+					--target=$(CAVAN_TARGET_PLAT) \
 					--with-sysroot=$(SYSROOT_PATH) \
 					--with-mpfr=$(UTILS_PATH)/usr \
 					--with-gmp=$(UTILS_PATH)/usr \
@@ -7,5 +11,7 @@ BINUTILS_OPTION =	$(CPU_BINUTILS_OPTION) \
 					--disable-mutilib
 
 all:
-	$(Q)+make -f $(MAKEFILE_TOOLCHIAN_RULE) OPT="$(BINUTILS_OPTION)" SRC="$(SRC_BINUTILS)"
+	$(Q)$(SRC_BINUTILS)/configure $(BINUTILS_OPTION)
+	$(Q)+make
+	$(Q)+make install
 	$(Q)cp $(SRC_BINUTILS)/include/libiberty.h $(SYSROOT_PATH)/usr/include -av

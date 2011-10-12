@@ -1,5 +1,5 @@
 GCC_COMMON_OPTION = $(CPU_GCC_OPTION) \
-					--prefix= \
+					--prefix=$(TOOLCHIAN_PATH) \
 					--build=$(CAVAN_BUILD_PLAT) \
 					--host=$(CAVAN_HOST_PLAT) \
 					--target=$(CAVAN_TARGET_PLAT) \
@@ -44,10 +44,10 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 $(GCC_NAME)-1:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION1)
 	$(Q)+make
-	$(Q)+make DESTDIR="$(TOOLCHIAN_PATH)" install
+	$(Q)+make install
 	$(Q)ln -vsf libgcc.a $$($(CAVAN_TARGET_PLAT)-gcc -print-libgcc-file-name | sed 's/libgcc/&_eh/')
 
 $(GCC_NAME)-2:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION2)
 	$(Q)+make AS_FOR_TARGET="$(CAVAN_TARGET_PLAT)-as" LD_FOR_TARGET="$(CAVAN_TARGET_PLAT)-ld"
-	$(Q)+make DESTDIR="$(TOOLCHIAN_PATH)" install
+	$(Q)+make install
