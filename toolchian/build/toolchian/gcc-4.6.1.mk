@@ -35,9 +35,14 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--disable-libstdcxx-pch \
 					--disable-bootstrap \
 					--disable-libgomp \
-					--with-system-zlib \
 					--without-ppl \
 					--without-cloog
+
+ifeq ($(CAVAN_HOST_PLAT),$(CAVAN_BUILD_PLAT))
+GCC_OPTION2 += --with-system-zlib
+else
+GCC_OPTION2 += --disable-target-zlib
+endif
 
 $(GCC_NAME)-pase1:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION1)

@@ -92,7 +92,7 @@ $(MARK_GCC2): $(MARK_GLIBC)
 	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) $(GCC_NAME)-pase2
 	$(call generate_mark)
 
-ifeq ($(MARK_TOOLCHIAN_READY),$(MARK_TOOLCHIAN_BT_READY))
+ifeq ($(CAVAN_HOST_PLAT),$(CAVAN_BUILD_PLAT))
 $(MARK_GLIBC): $(MARK_GCC1)
 	$(call decompression_glibc,$(SRC_GLIBC))
 	$(call remake_directory,$(OUT_GLIBC))
@@ -117,7 +117,7 @@ $(MARK_BINUTILS): $(MARK_HEADER)
 	$(call generate_mark)
 
 $(MARK_HEADER):
-ifeq ($(MARK_TOOLCHIAN_READY),$(MARK_TOOLCHIAN_BT_READY))
+ifeq ($(CAVAN_HOST_PLAT),$(CAVAN_BUILD_PLAT))
 	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 else
