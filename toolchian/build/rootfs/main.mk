@@ -22,7 +22,8 @@ $(MARK_ROOTFS_READY): $(SB2_INIT_MARK)
 $(SB2_INIT_MARK):
 	$(Q)rm $(ROOTFS_PATH) -rf && mkdir $(ROOTFS_PATH) -pv && cp $(ROOTFS_BASE)/* $(ROOTFS_PATH) -av
 	$(Q)cd $(ROOTFS_PATH) && mkdir bin sbin root home tmp proc sys dev etc usr/bin usr/sbin -pv && ln -vsf bash bin/sh
-	$(Q)cp $(SYSROOT_BT_PATH)/* $(dir $(SYSROOT_BT_PATH))/lib $(ROOTFS_PATH) -av
+	$(Q)cp $(SYSROOT_BT_PATH)/* $(TOOLCHIAN_BT_PATH)/$(CAVAN_TARGET_PLAT)/lib $(ROOTFS_PATH) -av
+	$(Q)cp $(TOOLCHIAN_BT_PATH)/$(CAVAN_TARGET_PLAT)/include $(ROOTFS_PATH)/usr -av
 	$(eval SB2_LIBTOOL_PACKAGE = $(firstword $(wildcard $(DOWNLOAD_PATH)/$(SB2_LIBTOOL_NAME).tar.gz $(PACKAGE_PATH)/$(SB2_LIBTOOL_NAME).tar.gz)))
 	$(Q)test -n "$(SB2_LIBTOOL_PACKAGE)" && rm $(SB2_CONFIG_PATH) -rf && mkdir $(SB2_CONFIG_PATH) -pv && cp $(SB2_LIBTOOL_PACKAGE) $(SB2_CONFIG_PATH) -av
 	$(Q)cd $(ROOTFS_PATH) && sb2-init -c qemu-$(CAVAN_TARGET_ARCH) $(CAVAN_TARGET_PLAT) $(CAVAN_TARGET_PLAT)-gcc

@@ -1,9 +1,4 @@
-BINUTILS_OPTION =	$(CPU_BINUTILS_OPTION) \
-					--prefix=$(TOOLCHIAN_PATH) \
-					--build=$(CAVAN_BUILD_PLAT) \
-					--host=$(CAVAN_HOST_PLAT) \
-					--target=$(CAVAN_TARGET_PLAT) \
-					--with-sysroot=$(SYSROOT_PATH) \
+BINUTILS_OPTION =	$(CPU_BINUTILS_OPTION) $(TOOLCHIAN_COMMON_CONFIG) \
 					--with-mpfr=$(UTILS_PATH)/usr \
 					--with-gmp=$(UTILS_PATH)/usr \
 					--disable-nls \

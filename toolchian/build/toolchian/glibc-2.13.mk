@@ -6,7 +6,7 @@ GLIBC_OPTION =	--prefix=/usr \
 				--enable-kernel=$(LOWEST_KERNEL_VERSION) \
 				--with-tls \
 				--with-__thread \
-				--with-binutils=$(TOOLCHIAN_BT_PATH) \
+				--with-binutils=$(TOOLCHIAN_PATH) \
 				--with-headers=$(SYSROOT_PATH)/usr/include
 
 GLIBC_CONFIGPARMS = "install_root=$(SYSROOT_PATH)"

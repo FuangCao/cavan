@@ -17,13 +17,13 @@ SRC_MPFR = $(SRC_PATH)/$(MPFR_NAME)
 SRC_MPC = $(SRC_PATH)/$(MPC_NAME)
 
 OUT_BINUTILS = $(OUT_TOOLCHIAN)/$(BINUTILS_NAME)
-OUT_GCC1 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-1
-OUT_GCC2 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-2
+OUT_GCC1 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-pase1
+OUT_GCC2 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-pase2
 OUT_GLIBC = $(OUT_TOOLCHIAN)/$(GLIBC_NAME)
 
 MARK_BINUTILS = $(MARK_TOOLCHIAN)/$(BINUTILS_NAME)
-MARK_GCC1 = $(MARK_TOOLCHIAN)/$(GCC_NAME)-1
-MARK_GCC2 = $(MARK_TOOLCHIAN)/$(GCC_NAME)-2
+MARK_GCC1 = $(MARK_TOOLCHIAN)/$(GCC_NAME)-pase1
+MARK_GCC2 = $(MARK_TOOLCHIAN)/$(GCC_NAME)-pase2
 MARK_GLIBC = $(MARK_TOOLCHIAN)/$(GLIBC_NAME)
 MARK_HEADER = $(MARK_TOOLCHIAN)/$(HEADER_NAME)
 
@@ -31,7 +31,6 @@ MAKEFILE_BINUTILS = $(BUILD_TOOLCHIAN)/$(BINUTILS_NAME).mk
 MAKEFILE_GCC = $(BUILD_TOOLCHIAN)/$(GCC_NAME).mk
 MAKEFILE_GLIBC = $(BUILD_TOOLCHIAN)/$(GLIBC_NAME).mk
 MAKEFILE_HEADER = $(BUILD_TOOLCHIAN)/$(HEADER_NAME).mk
-MAKEFILE_TOOLCHIAN_RULE = $(BUILD_TOOLCHIAN)/rule.mk
 
 GCC_URL = http://ftp.gnu.org/gnu/gcc
 GLIBC_URL = http://ftp.gnu.org/gnu/glibc
@@ -41,11 +40,11 @@ MPFR_URL = http://ftp.gnu.org/gnu/mpfr
 MPC_URL = http://www.multiprecision.org/mpc/download
 KERNEL_URL = http://down1.chinaunix.net/distfiles/$(KERNEL_NAME).tar.bz2
 
-SYSROOT_PATH = $(TOOLCHIAN_PATH)/$(CAVAN_TARGET_PLAT)/sysroot
+SYSROOT_PATH = $(TOOLCHIAN_PATH)/sysroot
+TOOLCHIAN_COMMON_CONFIG = --prefix=$(TOOLCHIAN_PATH) --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT) --with-sysroot=$(SYSROOT_PATH)
 
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
-export MAKEFILE_TOOLCHIAN_RULE
-export SYSROOT_PATH
+export SYSROOT_PATH TOOLCHIAN_COMMON_CONFIG
 
 $(info ============================================================)
 $(info CAVAN_HOST_ARCH = $(CAVAN_HOST_ARCH))
@@ -90,7 +89,7 @@ $(MARK_TOOLCHIAN_READY): $(MARK_GCC2)
 $(MARK_GCC2): $(MARK_GLIBC)
 	$(call decompression_gcc)
 	$(call remake_directory,$(OUT_GCC2))
-	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) $(GCC_NAME)-2
+	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) $(GCC_NAME)-pase2
 	$(call generate_mark)
 
 ifeq ($(MARK_TOOLCHIAN_READY),$(MARK_TOOLCHIAN_BT_READY))
@@ -103,7 +102,7 @@ $(MARK_GLIBC): $(MARK_GCC1)
 $(MARK_GCC1): $(MARK_BINUTILS)
 	$(call decompression_gcc)
 	$(call remake_directory,$(OUT_GCC1))
-	$(Q)+make -C $(OUT_GCC1) -f $(MAKEFILE_GCC) $(GCC_NAME)-1
+	$(Q)+make -C $(OUT_GCC1) -f $(MAKEFILE_GCC) $(GCC_NAME)-pase1
 	$(call generate_mark)
 else
 $(MARK_GLIBC): $(MARK_BINUTILS)
@@ -123,7 +122,6 @@ ifeq ($(MARK_TOOLCHIAN_READY),$(MARK_TOOLCHIAN_BT_READY))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 else
 	$(Q)rm $(SYSROOT_PATH) -rfv
-	$(Q)mkdir $(dir $(SYSROOT_PATH)) -pv
 	$(Q)cp $(SYSROOT_BT_PATH) $(SYSROOT_PATH) -av
 endif
 	$(call generate_mark)
