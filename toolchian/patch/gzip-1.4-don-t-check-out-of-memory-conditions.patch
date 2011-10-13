@@ -1,0 +1,26 @@
+From 0efa314767ea33874beb318b8d3da8576131d3a7 Mon Sep 17 00:00:00 2001
+From: fuang.cao <cavan.cfa@gmail.com>
+Date: Thu, 13 Oct 2011 12:07:08 +0800
+Subject: [PATCH] don't check out-of-memory conditions
+
+Signed-off-by: fuang.cao <cavan.cfa@gmail.com>
+---
+ configure |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/configure b/configure
+index 2cf1128..32f4a56 100755
+--- a/configure
++++ b/configure
+@@ -9456,7 +9456,7 @@ _ACEOF
+   ac_status=$?
+   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+   test $ac_status = 0; } && test -s conftest$ac_exeext; then
+-            (./conftest
++            (
+              result=$?
+              if test $result != 0 && test $result != 77; then result=1; fi
+              exit $result
+-- 
+1.7.4.1
+

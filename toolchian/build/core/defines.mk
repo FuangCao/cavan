@@ -99,6 +99,7 @@ $(eval app-basename = $(firstword $(subst -, ,$(app-name))))
 $(eval src-path = $(SRC_PATH)/$(app-name))
 rm $(src-path) -rf
 $(call decompression_file,$(src-path),$1)
+test -f "$(src-path)/configure" && sed 's#^\s*(./conftest\s*$$#(#g' $(src-path)/configure -i || echo "No configure script"
 $(eval makefile-path = $(firstword $(wildcard $2/$(app-name).mk $2/$(app-basename).mk)))
 +if test -n "$(makefile-path)"; \
 then \
