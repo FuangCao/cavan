@@ -38,11 +38,6 @@
 	         url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)">
 	</package>
 
-	<package name="glib" version="2.30.0" depend="libffi"
-			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"
-			 config="--prefix=/usr">
-	</package>
-
 	<package name="ncurses" version="5.9" depend="libtool"
 	         config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/ncurses">
@@ -78,7 +73,7 @@
 	</package>
 
 	<package name="util-linux-ng" version="2.18" depend="ncurses"
-			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc --enable-login-utils --enable-init --enable-kill --enable-reset --enable-write
+			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc --enable-login-utils --enable-init --enable-kill --enable-reset
 					 --enable-login-chown-vcs --with-fsprobe=builtin --without-pam --disable-require-password --disable-wall"
 			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">
 	</package>
@@ -183,33 +178,13 @@
 			 config="--prefix=/usr">
 	</package>
 
-	<package name="perl" version="5.14.2" depend="libtool"
-			 url="http://www.cpan.org/src/5.0"
-			 config="--prefix=/usr">
-	</package>
-
 	<package name="mpg123" version="1.13.4" depend="libtool"
 			 url="http://ncu.dl.sourceforge.net/project/mpg123/mpg123/$(MPG123_VERSION)"
 			 config="--prefix=/usr">
 	</package>
 
-	<package name="mplayer" version="export-snapshot" depend="ffmpeg"
-			 url="http://mplayerhq.hu/MPlayer/releases"
-			 config="--prefix=/usr">
-	</package>
-
 	<package name="ffmpeg" version="0.8.5" depend="libtool"
 			 url="http://ffmpeg.org/releases"
-			 config="--prefix=/usr">
-	</package>
-
-	<package name="fbv" version="1.0b" depend="jpegsrc"
-			 url="http://s-tech.elsat.net.pl/fbv/fbv-1.0b.tar.gz"
-			 config="--prefix=/usr">
-	</package>
-
-	<package name="jpegsrc" version="v8b" depend="libtool"
-			 url="http://www.ijg.org/files"
 			 config="--prefix=/usr">
 	</package>
 
@@ -220,6 +195,11 @@
 
 	<package name="sudo" version="1.8.2" depend="libtool"
 			 url="http://www.sudo.ws/sudo/dist"
+			 config="--prefix=/usr --without-pam">
+	</package>
+
+	<package name="unrar" version="3.4.3" depend="libtool"
+			 url="http://www.rarlab.com/rar_CN/unrarsrc-3.4.3.tar.gz"
 			 config="--prefix=/usr">
 	</package>
 
@@ -227,4 +207,49 @@
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ftp.gnu.org/gnu/coreutils">
 	</package>
+
+	<package name="fbv" version="1.0b" depend="jpegsrc giflib libungif libpng tiff"
+			 url="http://s-tech.elsat.net.pl/fbv/fbv-1.0b.tar.gz"
+			 config="--prefix=/usr --libs='-lz\ -ljpeg\ -lpng\ -lgif\ -lungif'">
+	</package>
+
+	<package name="jpegsrc" version="v8b" depend="libtool"
+			 url="http://www.ijg.org/files/jpegsrc.v8b.tar.gz"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="giflib" version="4.1.6" depend=""
+			 url="http://ncu.dl.sourceforge.net/project/giflib/giflib%204.x/$(GIFLIB_NAME)"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="libungif" version="4.1.4" depend=""
+			 url="http://ncu.dl.sourceforge.net/project/giflib/libungif%204.x/$(LIBUNGIT_NAME)"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="libpng" version="1.2.46" depend=""
+			 url="http://ncu.dl.sourceforge.net/project/libpng/libpng12/$(LIBPNG_VERSION)"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="tiff" version="3.8.2" depend=""
+			 url="http://dl.maptools.org/dl/libtiff"
+			 config="--prefix=/usr">
+	</package>
+
+	<other name="glib" version="2.30.0" depend="libffi"
+			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"
+			 config="--prefix=/usr --disable-threads">
+	</other>
+
+	<other name="perl" version="5.14.2" depend="libtool"
+			 url="http://www.cpan.org/src/5.0"
+			 config="--prefix=/usr">
+	</other>
+
+	<other name="mplayer" version="export-snapshot" depend="ffmpeg"
+			 url="http://mplayerhq.hu/MPlayer/releases"
+			 config="--prefix=/usr">
+	</other>
 </packages>
