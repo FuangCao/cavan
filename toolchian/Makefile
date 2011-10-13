@@ -26,7 +26,7 @@ MPC_VERSION = 0.9
 
 DOWNLOAD_TYPES = tar.xz tar.bz2 tar.gz
 PACKAGE_TYPES = $(DOWNLOAD_TYPES) tar zip rar
-HOST_APPS = zlib1g-dev xz-utils python-dev libffi-dev m4 gawk gettext libglib2.0-dev gcc g++
+HOST_APPS = zlib1g-dev xz-utils python-dev libffi-dev m4 gawk gettext libglib2.0-dev gcc g++ libncurses5-dev
 FORCE_DECOMPRESSION = no
 
 DOWNLOAD_WAY = wget

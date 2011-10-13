@@ -1,103 +1,95 @@
 <packages>
-	<package name="gawk" version="4.0.0" depend=""
-			 url="http://ftp.gnu.org/gnu/gawk"
-			 config="">
+	<package name="gawk" version="4.0.0" depend="" config=""
+			 url="http://ftp.gnu.org/gnu/gawk">
 	</package>
 
-	<package name="m4" version="1.4.16" depend="gawk"
-			 url="http://ftp.gnu.org/gnu/m4"
-			 config="">
+	<package name="m4" version="1.4.16" depend="gawk" config=""
+			 url="http://ftp.gnu.org/gnu/m4">
 	</package>
 
-	<package name="autoconf" version="2.68" depend="m4"
-			 url="http://ftp.gnu.org/gnu/autoconf"
-			 config="">
+	<package name="autoconf" version="2.68" depend="m4" config=""
+			 url="http://ftp.gnu.org/gnu/autoconf">
 	</package>
 
-	<package name="automake" version="1.11.1" depend="autoconf"
-			 url="ftp://ftp.gnu.org/gnu/automake"
-			 config="">
+	<package name="automake" version="1.11.1" depend="autoconf" config=""
+			 url="ftp://ftp.gnu.org/gnu/automake">
 	</package>
 
-	<package name="gperf" version="3.0.4" depend="automake"
-			 url="http://ftp.gnu.org/gnu/gperf"
-			 config="">
+	<package name="gperf" version="3.0.4" depend="automake" config=""
+			 url="http://ftp.gnu.org/gnu/gperf">
 	</package>
 
-	<package name="gettext" version="0.18.1.1" depend="gperf"
-			 url="http://ftp.gnu.org/pub/gnu/gettext"
-			 config="">
+	<package name="gettext" version="0.18.1.1" depend="gperf" config=""
+			 url="http://ftp.gnu.org/pub/gnu/gettext">
 	</package>
 
-	<package name="texinfo" version="4.13a" depend="gettext"
-			 url="http://ftp.gnu.org/gnu/texinfo"
-			 config="">
+	<package name="ncurses" version="5.9" depend="gettext" config=""
+			 url="http://ftp.gnu.org/gnu/ncurses">
 	</package>
 
-	<package name="Python" version="2.7.2" depend="texinfo"
-			 url="http://www.python.org/ftp/python/$(PYTHON_VERSION)"
-			 config="">
+	<package name="texinfo" version="4.13a" depend="ncurses"
+			 config="--with-libncurses-prefix=$(UTILS_PATH)/usr"
+			 url="http://ftp.gnu.org/gnu/texinfo">
 	</package>
 
-	<package name="libtool" version="2.4" depend="Python"
-			 url="http://ftp.gnu.org/gnu/libtool"
-			 config="">
+	<package name="Python" version="2.7.2" depend="texinfo" config=""
+			 url="http://www.python.org/ftp/python/$(PYTHON_VERSION)">
+	</package>
+
+	<package name="libtool" version="2.4" depend="Python" config=""
+			 url="http://ftp.gnu.org/gnu/libtool">
 	</package>
 
 	<package name="mpc" version="0.9" depend="mpfr"
-			 url="http://www.multiprecision.org/mpc/download"
-			 config="--with-gmp=$(UTILS_PATH)/usr --with-mpfr=$(UTILS_PATH)/usr">
+			 config="--with-gmp=$(UTILS_PATH)/usr --with-mpfr=$(UTILS_PATH)/usr"
+			 url="http://www.multiprecision.org/mpc/download">
 	</package>
 
 	<package name="mpfr" version="3.0.1" depend="gmp"
-			 url="http://ftp.gnu.org/gnu/mpfr"
-			 config="--with-gmp=$(UTILS_PATH)/usr">
+			 config="--with-gmp=$(UTILS_PATH)/usr"
+			 url="http://ftp.gnu.org/gnu/mpfr">
 	</package>
 
-	<package name="gmp" version="5.0.2" depend="libtool"
-			 url="http://ftp.gnu.org/gnu/gmp"
-			 config="">
+	<package name="gmp" version="5.0.2" depend="libtool" config=""
+			 url="http://ftp.gnu.org/gnu/gmp">
 	</package>
 
 	<package name="zlib" version="1.2.5" depend="libtool"
-			 url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)"
-			 config="--shared">
+			 config="--shared"
+			 url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)">
 	</package>
 
 	<package name="qemu" version="0.15.0" depend="zlib SDL glib"
-			 url="http://wiki.qemu.org/download"
 			 config="--target-list=$(CAVAN_TARGET_ARCH)-softmmu,$(CAVAN_TARGET_ARCH)-linux-user
 					 --cc='$(CAVAN_BUILD_PLAT)-gcc -I$(UTILS_PATH)/usr/include -L$(UTILS_PATH)/usr/lib'
-					 --disable-kvm">
+					 --disable-kvm"
+			 url="http://wiki.qemu.org/download">
 	</package>
 
 	<package name="SDL" version="1.2.14" depend="libtool"
-			 url="http://www.libsdl.org/release"
-			 config="--enable-shared --enable-static">
+			 config="--enable-shared --enable-static"
+			 url="http://www.libsdl.org/release">
 	</package>
 
-	<package name="libffi" version="3.0.9" depend="libtool"
-			 url="ftp://sourceware.org/pub/libffi"
-			 config="">
+	<package name="libffi" version="3.0.9" depend="libtool" config=""
+			 url="ftp://sourceware.org/pub/libffi">
 	</package>
 
 	<package name="glib" version="2.30.0" depend="libffi gettext"
-			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"
-			 config="--with-sysroot=$(UTILS_PATH)">
+			 config="--with-sysroot=$(UTILS_PATH)"
+			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30">
 	</package>
 
-	<package name="sbox2" version="2.0" depend="libtool"
-			 url="http://cgit.freedesktop.org/sbox2/snapshot"
-			 config="">
+	<package name="sbox2" version="2.0" depend="libtool" config=""
+			 url="http://cgit.freedesktop.org/sbox2/snapshot">
 	</package>
 
-	<package name="libusb" version="0.1.12" depend="libtool"
-			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz"
-			 config="">
+	<package name="libusb" version="0.1.12" depend="libtool" config=""
+			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz">
 	</package>
 
 	<package name="usbutils" version="0.84" depend="libusb"
-			 url="http://down1.chinaunix.net/distfiles"
-			 config="CFLAGS='-I$(UTILS_PATH)/usr/include'">
+			 config="CFLAGS='-I$(UTILS_PATH)/usr/include'"
+			 url="http://down1.chinaunix.net/distfiles">
 	</package>
 </packages>
