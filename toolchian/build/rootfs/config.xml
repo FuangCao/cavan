@@ -208,7 +208,7 @@
 			 url="http://ftp.gnu.org/gnu/coreutils">
 	</package>
 
-	<package name="fbv" version="1.0b" depend="jpegsrc giflib libungif libpng tiff"
+	<package name="fbv" version="1.0b" depend="jpegsrc giflib libungif libpng tiff zlib"
 			 url="http://s-tech.elsat.net.pl/fbv/fbv-1.0b.tar.gz"
 			 config="--prefix=/usr --libs='-lz\ -ljpeg\ -lpng\ -lgif\ -lungif'">
 	</package>
@@ -218,23 +218,73 @@
 			 config="--prefix=/usr">
 	</package>
 
-	<package name="giflib" version="4.1.6" depend=""
+	<package name="giflib" version="4.1.6" depend="libtool"
 			 url="http://ncu.dl.sourceforge.net/project/giflib/giflib%204.x/$(GIFLIB_NAME)"
 			 config="--prefix=/usr">
 	</package>
 
-	<package name="libungif" version="4.1.4" depend=""
+	<package name="libungif" version="4.1.4" depend="libtool"
 			 url="http://ncu.dl.sourceforge.net/project/giflib/libungif%204.x/$(LIBUNGIT_NAME)"
 			 config="--prefix=/usr">
 	</package>
 
-	<package name="libpng" version="1.2.46" depend=""
+	<package name="libpng" version="1.2.46" depend="libtool"
 			 url="http://ncu.dl.sourceforge.net/project/libpng/libpng12/$(LIBPNG_VERSION)"
 			 config="--prefix=/usr">
 	</package>
 
-	<package name="tiff" version="3.8.2" depend=""
+	<package name="tiff" version="3.8.2" depend="libtool"
 			 url="http://dl.maptools.org/dl/libtiff"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="mplayer" version="export-snapshot" depend="libpng zlib SDL freetype DirectFB libmad faad2"
+			 url="http://mplayerhq.hu/MPlayer/releases"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="SDL" version="1.2.14" depend="esound"
+			 url="http://www.libsdl.org/release"
+			 config="--prefix=/usr --enable-shared --enable-static">
+	</package>
+
+	<package name="esound" version="0.2.41" depend="audiofile"
+			 url="http://ftp.acc.umu.se/pub/GNOME/sources/esound/0.2"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="audiofile" version="0.3.1" depend="alsa-utils"
+			 url="http://www.68k.org/~michael/audiofile"
+			 config="--prefix=/usr LIBS='-lstdc++'">
+	</package>
+
+	<package name="alsa-utils" version="1.0.9a" depend="alsa-lib"
+			 url="ftp://ftp.alsa-project.org/pub/utils"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="alsa-lib" version="1.0.9" depend="libtool"
+			 url="ftp://ftp.alsa-project.org/pub/lib"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="freetype" version="2.4.6" depend="libtool"
+			 url="http://mirror.yongbok.net/nongnu/freetype"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="DirectFB" version="1.5.3" depend="libtool"
+			 url="http://www.directfb.org/downloads/Core/DirectFB-1.5"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="libmad" version="0.15.1b" depend="libtool"
+			 url="http://ncu.dl.sourceforge.net/project/mad/libmad/$(LIBMAD_VERSION)"
+			 config="--prefix=/usr">
+	</package>
+
+	<package name="faad2" version="2.7" depend="libtool"
+			 url="http://ncu.dl.sourceforge.net/project/faac/faad2-src/$(FAAD2_NAME)"
 			 config="--prefix=/usr">
 	</package>
 
@@ -245,11 +295,6 @@
 
 	<other name="perl" version="5.14.2" depend="libtool"
 			 url="http://www.cpan.org/src/5.0"
-			 config="--prefix=/usr">
-	</other>
-
-	<other name="mplayer" version="export-snapshot" depend="ffmpeg"
-			 url="http://mplayerhq.hu/MPlayer/releases"
 			 config="--prefix=/usr">
 	</other>
 </packages>

@@ -1,0 +1,114 @@
+From bf1bffa3503fc8b0dd2647a87a38474177747d39 Mon Sep 17 00:00:00 2001
+From: "Fuang.Cao" <cavan.cfa@gmail.com>
+Date: Thu, 13 Oct 2011 19:35:42 +0800
+Subject: [PATCH] remove unused variable
+
+Signed-off-by: Fuang.Cao <cavan.cfa@gmail.com>
+---
+ libaudiofile/AIFF.cpp |   16 ++++++++--------
+ libaudiofile/WAVE.cpp |   16 ++++++++--------
+ 2 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/libaudiofile/AIFF.cpp b/libaudiofile/AIFF.cpp
+index c32d5a9..5e0d535 100644
+--- a/libaudiofile/AIFF.cpp
++++ b/libaudiofile/AIFF.cpp
+@@ -477,11 +477,11 @@ status AIFFFile::readInit(AFfilesetup setup)
+ 	uint32_t type, size, formtype;
+ 
+ 	bool hasCOMM = false;
+-	bool hasFVER = false;
++	// bool hasFVER = false;
+ 	bool hasSSND = false;
+-	bool hasMARK = false;
+-	bool hasINST = false;
+-	bool hasAESD = false;
++	// bool hasMARK = false;
++	// bool hasINST = false;
++	// bool hasAESD = false;
+ 
+ 	fh->seek(0, File::SeekFromBeginning);
+ 
+@@ -533,22 +533,22 @@ status AIFFFile::readInit(AFfilesetup setup)
+ 		}
+ 		else if (chunkid == "FVER")
+ 		{
+-			hasFVER = true;
++			// hasFVER = true;
+ 			parseFVER(chunkid, chunksize);
+ 		}
+ 		else if (chunkid == "INST")
+ 		{
+-			hasINST = true;
++			// hasINST = true;
+ 			parseINST(chunkid, chunksize);
+ 		}
+ 		else if (chunkid == "MARK")
+ 		{
+-			hasMARK = true;
++			// hasMARK = true;
+ 			parseMARK(chunkid, chunksize);
+ 		}
+ 		else if (chunkid == "AESD")
+ 		{
+-			hasAESD = true;
++			// hasAESD = true;
+ 			parseAESD(chunkid, chunksize);
+ 		}
+ 		else if (chunkid == "NAME" ||
+diff --git a/libaudiofile/WAVE.cpp b/libaudiofile/WAVE.cpp
+index c542093..31e4f04 100644
+--- a/libaudiofile/WAVE.cpp
++++ b/libaudiofile/WAVE.cpp
+@@ -711,11 +711,11 @@ status WAVEFile::readInit(AFfilesetup setup)
+ 
+ 	bool hasFormat = false;
+ 	bool hasData = false;
+-	bool hasCue = false;
+-	bool hasList = false;
+-	bool hasPlayList = false;
++	// bool hasCue = false;
++	// bool hasList = false;
++	// bool hasPlayList = false;
+ 	bool hasFrameCount = false;
+-	bool hasINST = false;
++	// bool hasINST = false;
+ 
+ 	instruments = NULL;
+ 	instrumentCount = 0;
+@@ -796,28 +796,28 @@ status WAVEFile::readInit(AFfilesetup setup)
+ 		}
+ 		else if (chunkid == "cue ")
+ 		{
+-			hasCue = true;
++			// hasCue = true;
+ 			result = parseCues(chunkid, chunksize);
+ 			if (result == AF_FAIL)
+ 				return AF_FAIL;
+ 		}
+ 		else if (chunkid == "LIST" || chunkid == "list")
+ 		{
+-			hasList = true;
++			// hasList = true;
+ 			result = parseList(chunkid, chunksize);
+ 			if (result == AF_FAIL)
+ 				return AF_FAIL;
+ 		}
+ 		else if (chunkid == "INST")
+ 		{
+-			hasINST = true;
++			// hasINST = true;
+ 			result = parseInstrument(chunkid, chunksize);
+ 			if (result == AF_FAIL)
+ 				return AF_FAIL;
+ 		}
+ 		else if (chunkid == "plst")
+ 		{
+-			hasPlayList = true;
++			// hasPlayList = true;
+ 			result = parsePlayList(chunkid, chunksize);
+ 			if (result == AF_FAIL)
+ 				return AF_FAIL;
+-- 
+1.7.6.1
+
