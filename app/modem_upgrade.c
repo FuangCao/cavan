@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <cavan/file.h>
 #include <cavan/swan_upgrade.h>
+#include <pthread.h>
 
 #define STRING_LIST_MAX_LEN			MB(1)
 #define STRING_LIST_NAME			"StringList.strings"
@@ -279,12 +280,23 @@ static int modem_if_need_upgrade(const char *dirname, int retry)
 #endif
 }
 
+void *set_usb_power_handle(void *data)
+{
+	while (1)
+	{
+		set_usb_power();
+		sleep(2);
+	}
+
+	return NULL;
+}
+
 static int upgrade_modem(const char *resource)
 {
-	int i;
 	int ret;
 	char update_wizard[1024];
 	pid_t pid;
+	pthread_t usb_thread;
 
 	text_path_cat(update_wizard, resource, UPDATE_WIZARD_NAME);
 
@@ -322,10 +334,7 @@ static int upgrade_modem(const char *resource)
 		}
 	}
 
-	for (i = 0; i < 100 && set_usb_power() == 0 && kill(pid, 0); i++)
-	{
-		sleep(2);
-	}
+	pthread_create(&usb_thread, NULL, set_usb_power_handle, NULL);
 
 	waitpid(pid, &ret, 0);
     if (!WIFEXITED(ret) || WEXITSTATUS(ret) != 0)
