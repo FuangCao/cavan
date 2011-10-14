@@ -14,7 +14,7 @@
 	</package>
 
 	<package name="libtool" version="2.4" depend="pkgconfig"
-			 config="--prefix=/usr"
+			 config="--prefix=/usr --enable-ltdl-install"
 			 url="http://ftp.gnu.org/gnu/libtool">
 	</package>
 
@@ -188,7 +188,7 @@
 			 url="http://ncu.dl.sourceforge.net/project/mpg123/mpg123/$(MPG123_VERSION)">
 	</package>
 
-	<package name="ffmpeg" version="0.8.5" depend="libtool"
+	<package name="ffmpeg" version="snapshot" depend="libtool"
 			 config="--prefix=/usr"
 			 url="http://ffmpeg.org/releases">
 	</package>
@@ -249,7 +249,7 @@
 	</package>
 
 	<package name="alsa-utils" version="1.0.24.2" depend="alsa-lib"
-			 config="--prefix=/usr --with-curses=ncurses"
+			 config="--prefix=/usr --with-curses=ncurses --disable-xmlto"
 			 url="ftp://ftp.alsa-project.org/pub/utils">
 	</package>
 
@@ -263,8 +263,38 @@
 			 url="http://mirror.yongbok.net/nongnu/freetype">
 	</package>
 
-	<package name="DirectFB" version="1.5.3" depend="libtool"
+	<package name="SDL" version="1.2.14" depend="esound"
+			 config="--prefix=/usr --enable-shared --enable-static"
+			 url="http://www.libsdl.org/release">
+	</package>
+
+	<package name="LibVNCServer" version="0.9.8.1" depend="SDL"
+			 config="--prefix=/usr --with-sdl-config=$(ROOTFS_PATH)/usr"
+			 url="http://ncu.dl.sourceforge.net/project/libvncserver/libvncserver/$(LIBVNCSERVER_VERSION)">
+	</package>
+
+	<package name="sysfsutils" version="2.1.0" depend="libtool"
 			 config="--prefix=/usr"
+			 url="http://ncu.dl.sourceforge.net/project/linux-diag/sysfsutils/$(SYSFSUTILS_VERSION)">
+	</package>
+
+	<package name="lcms" version="1.19" depend="libtool"
+			 config="--prefix=/usr"
+			 url="http://ncu.dl.sourceforge.net/project/lcms/lcms/$(LCMS_VERSION)">
+	</package>
+
+	<package name="libmng" version="1.0.10" depend="lcms"
+			 config="--prefix=/usr"
+			 url="http://ncu.dl.sourceforge.net/project/libmng/libmng-devel/$(LIBMNG_VERSION)">
+	</package>
+
+	<package name="tslib" version="1.0" depend="libtool"
+			 config="--prefix=/usr"
+			 url="http://download.berlios.de/tslib">
+	</package>
+
+	<package name="DirectFB" version="1.5.3" depend="LibVNCServer sysfsutils libmng tslib zlib"
+			 config="--prefix=/usr LIBS='-lstdc++\ -lz'"
 			 url="http://www.directfb.org/downloads/Core/DirectFB-1.5">
 	</package>
 
@@ -279,16 +309,11 @@
 	</package>
 
 	<package name="esound" version="0.2.41" depend="audiofile"
-			 config="--prefix=/usr"
+			 config="--prefix=/usr LIBS='-lstdc++'"
 			 url="http://ftp.acc.umu.se/pub/GNOME/sources/esound/0.2">
 	</package>
 
-	<package name="SDL" version="1.2.14" depend="esound"
-			 config="--prefix=/usr --enable-shared --enable-static"
-			 url="http://www.libsdl.org/release">
-	</package>
-
-	<package name="mplayer" version="export-snapshot" depend="libpng zlib SDL freetype DirectFB libmad faad2"
+	<package name="mplayer" version="export-snapshot" depend="libpng zlib freetype DirectFB libmad faad2"
 			 config="--prefix=/usr"
 			 url="http://mplayerhq.hu/MPlayer/releases">
 	</package>

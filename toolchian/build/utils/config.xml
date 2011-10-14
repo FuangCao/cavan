@@ -20,7 +20,11 @@
 	</package>
 
 	<package name="gettext" version="0.18.1.1" depend="gperf" config=""
-			 url="http://ftp.gnu.org/pub/gnu/gettext">>
+			 url="http://ftp.gnu.org/pub/gnu/gettext">
+	</package>
+
+	<package name="texlive" version="20110705" depend="" config=""
+			 url="http://mirror.neu.edu.cn/CTAN/systems/texlive/Source/texlive-20110705-source.tar.xz">
 	</package>
 
 	<package name="ncurses" version="5.9" depend="gettext" config=""
@@ -91,9 +95,5 @@
 	<package name="usbutils" version="0.84" depend="libusb"
 			 config="CFLAGS='-I$(UTILS_PATH)/usr/include'"
 			 url="http://down1.chinaunix.net/distfiles">
-	</package>
-
-	<package name="xmlto" version="0.0.20" depend="libtool" config=""
-			 url="http://cyberelk.net/tim/data/xmlto/stable">
 	</package>
 </packages>
