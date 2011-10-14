@@ -115,7 +115,7 @@ $(call install_application,$2,$(BUILD_UTILS),./configure $(UTILS_COMMON_CONFIG) 
 endef
 
 define install_rootfs
-$(call install_application,$2,$(BUILD_ROOTFS),sb2 ./configure $1 && sb2 make && sb2 -m install make install)
+$(call install_application,$2,$(BUILD_ROOTFS),CFLAGS="-fPIC" sb2 ./configure $1 && sb2 make && sb2 -m install make install)
 endef
 
 define copy_shared_library

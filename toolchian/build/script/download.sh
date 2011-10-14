@@ -18,18 +18,27 @@ function tftp_download()
 
 function download_main()
 {
-	local pkg_name
+	local pkg_name pkg_path
 
-	pkg_name=$(basename $1)
+	pkg_name="$(basename $1)"
+	pkg_path="${TEMP_DOWNLOAD_PATH}/${pkg_name}"
 
 	if [ "${DOWNLOAD_WAY}" = "tftp" ]
 	then
-		tftp_download ${SERVER_SOURCE}/${pkg_name} || return 1
+		tftp_download ${SERVER_SOURCE}/${pkg_name} ||
+		{
+			rm ${pkg_path} -rfv
+			return 1
+		}
 	else
-		wget_download $1 || return 1
+		wget_download $1 ||
+		{
+			rm ${pkg_path} -rfv
+			return 1
+		}
 	fi
 
-	mv ${TEMP_DOWNLOAD_PATH}/${pkg_name} . -v || return 1
+	mv ${pkg_path} . -v || return 1
 
 	return 0
 }
