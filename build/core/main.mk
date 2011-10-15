@@ -9,11 +9,6 @@ INCLUDE_DIR = include
 BUILD_DIR = build
 BUILD_CORE = $(BUILD_DIR)/core
 APP_CORE = $(APP_DIR)/core
-CONFIG_FILE_PATH = $(OUT_DIR)/config
-
-ifeq ("$(wildcard $(CONFIG_FILE_PATH))","$(CONFIG_FILE_PATH)")
-  include $(CONFIG_FILE_PATH)
-endif
 
 ifeq ("$(ARCH)","")
   ARCH = x86
@@ -88,14 +83,20 @@ CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wno-trigraphs \
 ASFLAGS +=	$(CFLAGS) -D__ASM__
 LDFLAGS := -s $(LOCAL_LDFLAGS) $(LDFLAGS)
 
-CAVAN_MAKE_PATHS = $(foreach path,$(APP) $(LIB),$(if $(wildcard $(path)/$(CAVAN_NAME).mk),$(path)))
-ifneq ("$(strip $(CAVAN_MAKE_PATHS))","")
-  include $(foreach path,$(CAVAN_MAKE_PATHS),$(path)/$(CAVAN_NAME).mk)
-  APP_SOURCE += $(foreach path,$(CAVAN_MAKE_PATHS),$(foreach fn,$(source-app),$(if $(wildcard $(path)/$(fn)),$(path)/$(fn))))
-  LIB_SOURCE += $(foreach path,$(CAVAN_MAKE_PATHS),$(foreach fn,$(source-lib),$(if $(wildcard $(path)/$(fn)),$(path)/$(fn))))
+define import_extra_code
+ifeq ($(wildcard $1/cavan.mk),)
+  $(eval $2 += $(wildcard $1/*.c))
+else
+  source-app =
+  source-lib =
+  include $1/cavan.mk
+  APP_SOURCE += $(addprefix $1/,$(source-app))
+  LIB_SOURCE += $(addprefix $1/,$(source-lib))
 endif
-APP_SOURCE += $(foreach path,$(filter-out $(CAVAN_MAKE_PATHS),$(APP)),$(wildcard $(path)/*.c))
-LIB_SOURCE += $(foreach path,$(filter-out $(CAVAN_MAKE_PATHS),$(LIB)),$(wildcard $(path)/*.c))
+endef
+
+$(foreach path,$(APP),$(eval $(call import_extra_code,$(path),APP_SOURCE)))
+$(foreach path,$(LIB),$(eval $(call import_extra_code,$(path),LIB_SOURCE)))
 
 LIB_SOURCE += $(wildcard $(LIB_DIR)/*.c)
 APP_SOURCE  += $(wildcard $(APP_DIR)/*.c)
@@ -128,7 +129,7 @@ export APPS_MAKEFILE LIBS_MAKEFILE DEFINES_MAKEFILE TOGETHER_MAKEFILE
 include $(DEFINES_MAKEFILE)
 
 all: app
-	$(call write_config,$(CONFIG_FILE_PATH))
+	$(Q)echo "Compile is OK"
 
 app: $(OUT_APP) $(OUT_ELF) $(APP_DEPEND_LIB) $(APP_SOURCE)
 	$(call generate_obj_depend,$(APP_DEPEND),$(APP_SOURCE))
