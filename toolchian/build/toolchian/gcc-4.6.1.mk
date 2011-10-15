@@ -1,7 +1,4 @@
 GCC_COMMON_OPTION = $(CPU_GCC_OPTION) $(TOOLCHIAN_COMMON_CONFIG)
-#					--with-gmp=$(UTILS_PATH)/usr \
-#					--with-mpfr=$(UTILS_PATH)/usr \
-#					--with-mpc=$(UTILS_PATH)/usr
 
 GCC_OPTION1 =		$(GCC_COMMON_OPTION) \
 					--disable-nls \
@@ -35,14 +32,9 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--disable-libstdcxx-pch \
 					--disable-bootstrap \
 					--disable-libgomp \
+					--with-system-zlib \
 					--without-ppl \
 					--without-cloog
-
-ifeq ($(CAVAN_HOST_PLAT),$(CAVAN_BUILD_PLAT))
-GCC_OPTION2 += --with-system-zlib
-else
-GCC_OPTION2 += --disable-target-zlib
-endif
 
 $(GCC_NAME)-pase1:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION1)
@@ -51,6 +43,10 @@ $(GCC_NAME)-pase1:
 	$(Q)ln -vsf libgcc.a $$($(CAVAN_TARGET_PLAT)-gcc -print-libgcc-file-name | sed 's/libgcc/&_eh/')
 
 $(GCC_NAME)-pase2:
+ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
+	$(Q)CFLAGS="-I$(UTILS_PATH)/usr/include" LDFLAGS="-L$(UTILS_PATH)/usr/lib" $(SRC_GCC)/configure $(GCC_OPTION2)
+else
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION2)
+endif
 	$(Q)+make AS_FOR_TARGET="$(CAVAN_TARGET_PLAT)-as" LD_FOR_TARGET="$(CAVAN_TARGET_PLAT)-ld"
 	$(Q)+make install

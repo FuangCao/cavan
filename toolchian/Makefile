@@ -26,13 +26,15 @@ MPC_VERSION = 0.9
 
 DOWNLOAD_TYPES = tar.xz tar.bz2 tar.gz
 PACKAGE_TYPES = $(DOWNLOAD_TYPES) tar zip rar
-HOST_APPS = zlib1g-dev xz-utils python-dev libffi-dev m4 gawk gettext libglib2.0-dev gcc g++ libncurses5-dev
+HOST_APPS = xz-utils m4 gawk gettext gcc g++
 FORCE_DECOMPRESSION = no
 
 DOWNLOAD_WAY = wget
 SERVER_IP = 192.168.0.144
 SERVER_PORT = 8888
 SERVER_SOURCE = /work/source
+
+APT_GET = sudo apt-get install
 
 export CAVAN_TARGET_ARCH CAVAN_TARGET_PLAT CAVAN_BUILD_ARCH CAVAN_BUILD_PLAT
 export PACKAGE_VERSION_STRING
@@ -41,5 +43,6 @@ export BINUTILS_VERSION GCC_VERSION GLIBC_VERSION KERNEL_VERSION KERNEL_VERSION 
 export GMP_VERSION MPFR_VERSION MPC_VERSION
 export DOWNLOAD_TYPES FORCE_DECOMPRESSION PACKAGE_TYPES
 export DOWNLOAD_WAY SERVER_IP SERVER_PORT SERVER_SOURCE
+export APT_GET
 
 include build/core/main.mk

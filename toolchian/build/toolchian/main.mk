@@ -1,3 +1,17 @@
+ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
+CAVAN_HOST_PLAT = $(CAVAN_BUILD_PLAT)
+TOOLCHIAN_PATH = $(TOOLCHIAN_BT_PATH)
+OUT_TOOLCHIAN = $(OUT_TOOLCHIAN_BT)
+MARK_TOOLCHIAN = $(MARK_TOOLCHIAN_BT)
+MARK_TOOLCHIAN_READY = $(MARK_TOOLCHIAN_BT_READY)
+else
+CAVAN_HOST_PLAT = $(CAVAN_TARGET_PLAT)
+TOOLCHIAN_PATH = $(TOOLCHIAN_TT_PATH)
+OUT_TOOLCHIAN = $(OUT_TOOLCHIAN_TT)
+MARK_TOOLCHIAN = $(MARK_TOOLCHIAN_TT)
+MARK_TOOLCHIAN_READY = $(MARK_TOOLCHIAN_TT_READY)
+endif
+
 BINUTILS_NAME = binutils-$(BINUTILS_VERSION)
 GCC_NAME = gcc-$(GCC_VERSION)
 HEADER_NAME = header
@@ -31,6 +45,7 @@ MAKEFILE_BINUTILS = $(BUILD_TOOLCHIAN)/$(BINUTILS_NAME).mk
 MAKEFILE_GCC = $(BUILD_TOOLCHIAN)/$(GCC_NAME).mk
 MAKEFILE_GLIBC = $(BUILD_TOOLCHIAN)/$(GLIBC_NAME).mk
 MAKEFILE_HEADER = $(BUILD_TOOLCHIAN)/$(HEADER_NAME).mk
+XML_CONFIG = $(BUILD_TOOLCHIAN)/config.xml
 
 GCC_URL = http://ftp.gnu.org/gnu/gcc
 GLIBC_URL = http://ftp.gnu.org/gnu/glibc
@@ -42,9 +57,12 @@ KERNEL_URL = http://down1.chinaunix.net/distfiles/$(KERNEL_NAME).tar.bz2
 
 SYSROOT_PATH = $(TOOLCHIAN_PATH)/sysroot
 TOOLCHIAN_COMMON_CONFIG = --prefix=$(TOOLCHIAN_PATH) --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT) --with-sysroot=$(SYSROOT_PATH)
+LIBRARY_COMMON_CONFIG = --prefix=/usr --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_TARGET_PLAT)
 
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
-export SYSROOT_PATH TOOLCHIAN_COMMON_CONFIG
+export SYSROOT_PATH TOOLCHIAN_COMMON_CONFIG LIBRARY_COMMON_CONFIG
+export CAVAN_HOST_ARCH CAVAN_HOST_PLAT
+export TOOLCHIAN_PATH OUT_TOOLCHIAN MARK_TOOLCHIAN MARK_TOOLCHIAN_READY
 
 $(info ============================================================)
 $(info CAVAN_HOST_ARCH = $(CAVAN_HOST_ARCH))
@@ -83,8 +101,16 @@ all: $(MARK_TOOLCHIAN_READY)
 	$(Q)echo "Toolchian compile successfull"
 
 $(MARK_TOOLCHIAN_READY): $(MARK_GCC2)
+	$(Q)cd $(TOOLCHIAN_PATH)/bin && for tool in $(CAVAN_TARGET_PLAT)-*; \
+	do \
+		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-linux$${tool##$(CAVAN_TARGET_PLAT)}"; \
+	done
+ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 	$(Q)sed 's/\<__packed\>/__attribute__ ((__packed__))/g' $(SYSROOT_PATH)/usr/include/mtd/ubi-user.h -i
+	$(call auto_make,install_library,$(MARK_TOOLCHIAN),$(OUT_TOOLCHIAN),$(XML_CONFIG))
+else
 	$(call generate_mark)
+endif
 
 $(MARK_GCC2): $(MARK_GLIBC)
 	$(call decompression_gcc)
@@ -92,7 +118,7 @@ $(MARK_GCC2): $(MARK_GLIBC)
 	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) $(GCC_NAME)-pase2
 	$(call generate_mark)
 
-ifeq ($(CAVAN_HOST_PLAT),$(CAVAN_BUILD_PLAT))
+ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 $(MARK_GLIBC): $(MARK_GCC1)
 	$(call decompression_glibc,$(SRC_GLIBC))
 	$(call remake_directory,$(OUT_GLIBC))
@@ -117,7 +143,7 @@ $(MARK_BINUTILS): $(MARK_HEADER)
 	$(call generate_mark)
 
 $(MARK_HEADER):
-ifeq ($(CAVAN_HOST_PLAT),$(CAVAN_BUILD_PLAT))
+ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 else

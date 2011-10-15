@@ -94,18 +94,18 @@ mkdir $1 -pv
 endef
 
 define install_application
-$(eval app-name = $(notdir $@))
-$(eval app-basename = $(firstword $(subst -, ,$(app-name))))
-$(eval src-path = $(SRC_PATH)/$(app-name))
-rm $(src-path) -rf
-$(call decompression_file,$(src-path),$1)
-test -f "$(src-path)/configure" && sed 's#^\s*(./conftest\s*$$#(#g' $(src-path)/configure -i || echo "No configure script"
-$(eval makefile-path = $(firstword $(wildcard $2/$(app-name).mk $2/$(app-basename).mk)))
+$(eval export PACKAGE_NAME = $(notdir $@))
+$(eval export PACKAGE_BASENAME = $(firstword $(subst -, ,$(PACKAGE_NAME))))
+$(eval export PACKAGE_SOURCE = $(SRC_PATH)/$(PACKAGE_NAME))
+rm $(PACKAGE_SOURCE) -rf
+$(call decompression_file,$(PACKAGE_SOURCE),$1)
+test -f "$(PACKAGE_SOURCE)/configure" && sed 's#^\s*(./conftest\s*$$#(#g' $(PACKAGE_SOURCE)/configure -i || echo "No configure script"
+$(eval makefile-path = $(firstword $(wildcard $2/$(PACKAGE_NAME).mk $2/$(PACKAGE_BASENAME)*.mk)))
 +if test -n "$(makefile-path)"; \
 then \
-	make -C $(src-path) -f $(makefile-path); \
+	make -C $(PACKAGE_SOURCE) -f $(makefile-path); \
 else \
-	cd $(src-path) && $3; \
+	cd $(PACKAGE_SOURCE) && $3; \
 fi
 $(call generate_mark)
 endef
@@ -114,10 +114,16 @@ define install_utils
 $(call install_application,$2,$(BUILD_UTILS),./configure $(UTILS_COMMON_CONFIG) $1 && make && make install)
 endef
 
+define install_library
+$(call install_application,$2,$(BUILD_TOOLCHIAN),./configure $(LIBRARY_COMMON_CONFIG) $1 && make && make DESTDIR="$(ROOTFS_PATH)" install)
+endef
+
 define install_rootfs
 $(call install_application,$2,$(BUILD_ROOTFS),CFLAGS="-fPIC" sb2 ./configure $1 && sb2 make && sb2 -m install make install)
 endef
 
-define copy_shared_library
-cp $1/*.so* $2 -av
+define auto_make
+python $(PYTHON_PARSER) -f $1 -m $2 -o $3 $4
++make -f $(MAKEFILE_DEFINES) -f $3/name.mk -f $3/depend.mk
+$(call generate_mark)
 endef

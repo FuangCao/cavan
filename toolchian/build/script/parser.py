@@ -6,15 +6,15 @@ from xml.dom.minidom import parse
 def ShowUsage():
 	print "Usage:"
 	print "config option xml file path"
+	print "-o, -O, --outout: file output directory"
 	print "-n, -N, --name: name.mk output path"
-	print "-v, -V, --version: version.mk output path"
 	print "-d, -D, --depend: depend.mk output path"
 	print "-m, -M, --depend: mark path"
 	print "-f, -F, --depend: install function"
 
 def GenerateMakeFile():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "n:N:d:D:v:V:m:M:f:F:", ["name=", "depend=", "version=", "markdir=", "function="])
+		opts, args = getopt.getopt(sys.argv[1:], "n:N:d:D:v:V:m:M:f:F:o:O:", ["name=", "depend=", "markdir=", "function=", "output="])
 	except:
 		ShowUsage()
 		sys.exit(-1)
@@ -24,7 +24,6 @@ def GenerateMakeFile():
 		return -1
 
 	NameMakefilePath = None
-	VersionMakefilePath = None
 	DependMakefilePath = None
 	MarkDir = None
 	InstallFunction = None
@@ -34,12 +33,13 @@ def GenerateMakeFile():
 			NameMakefilePath = opt[1]
 		elif opt[0] in ["-d", "-D", "--depend"]:
 			DependMakefilePath = opt[1]
-		elif opt[0] in ["-v", "-V", "--version"]:
-			VersionMakefilePath = opt[1]
 		elif opt[0] in ["-m", "-M", "--markdir"]:
 			MarkDir = opt[1]
 		elif opt[0] in ["-f", "-F", "--function"]:
 			InstallFunction = opt[1]
+		elif opt[0] in ["-o", "-O", "--output"]:
+			NameMakefilePath = opt[1] + "/name.mk"
+			DependMakefilePath = opt[1] + "/depend.mk"
 		else:
 			print "unknown option: " + opt[0]
 			return -1
@@ -50,12 +50,11 @@ def GenerateMakeFile():
 		print "parse file \"" + args[0] + "\" failed"
 		return -1
 
-	if NameMakefilePath == None or VersionMakefilePath == None or DependMakefilePath == None or MarkDir == None or InstallFunction == None:
+	if NameMakefilePath == None or DependMakefilePath == None or MarkDir == None or InstallFunction == None:
 		ShowUsage()
 		return -1
 
 	listAppNames = []
-	listAppVersions = []
 	listAppDepends = []
 
 	for tagPackage in tagPackages[0].getElementsByTagName("package"):
@@ -65,8 +64,7 @@ def GenerateMakeFile():
 		lastname = prefix + "NAME"
 		lastversion = prefix + "VERSION"
 
-		listAppVersions.append(lastversion + " = " + version + "\n")
-
+		listAppNames.append(lastversion + " = " + version + "\n")
 		listAppNames.append(lastname + " = " + name + "-$(" + lastversion + ")\n")
 		listAppNames.append(prefix + "MARK = " + MarkDir + "/$(" + lastname + ")\n")
 		listAppNames.append(prefix + "URL = " + tagPackage.getAttribute("url") + "\n")
@@ -82,26 +80,20 @@ def GenerateMakeFile():
 		listAppDepends.append("$(" + prefix + "MARK): " + "$(" + prefix + "DEPEND)\n")
 		listAppDepends.append("\t$(call " + InstallFunction + ",$(" + prefix + "CONFIG),$(" + prefix + "URL))\n\n")
 
+	listAppNames.append("all: $(PACKAGES_ALL)")
+
 	try:
 		fd = open(NameMakefilePath, "w")
 	except:
-		print "failed to open file"
+		print "failed to open file \"" + NameMakefilePath + "\""
 		return -1
 	fd.writelines(listAppNames)
 	fd.close()
 
 	try:
-		fd = open(VersionMakefilePath, "w")
-	except:
-		print "failed to open file"
-		return -1
-	fd.writelines(listAppVersions)
-	fd.close()
-
-	try:
 		fd = open(DependMakefilePath, "w")
 	except:
-		print "failed to open file"
+		print "failed to open file \"" + DependMakefilePath + "\""
 		return -1
 	fd.writelines(listAppDepends)
 	fd.close()

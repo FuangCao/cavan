@@ -1,6 +1,3 @@
-MAKEFILE_VERSIONS = $(OUT_ROOTFS)/version.mk
-MAKEFILE_NAMES = $(OUT_ROOTFS)/name.mk
-MAKEFILE_DEPENDS = $(OUT_ROOTFS)/depend.mk
 XML_CONFIG = $(BUILD_ROOTFS)/config.xml
 
 SB2_LIBTOOL_VERSION = 1.5.26
@@ -15,9 +12,7 @@ all: $(MARK_ROOTFS_READY)
 	$(Q)echo "ROOTFS compile successfull"
 
 $(MARK_ROOTFS_READY): $(SB2_INIT_MARK)
-	$(Q)python $(PYTHON_PARSER) -m $(MARK_ROOTFS) -f install_rootfs -v $(MAKEFILE_VERSIONS) -n $(MAKEFILE_NAMES) -d $(MAKEFILE_DEPENDS) $(XML_CONFIG)
-	$(Q)+make -f $(MAKEFILE_INSTALL) VERSION_MK=$(MAKEFILE_VERSIONS) NAME_MK=$(MAKEFILE_NAMES) DEPEND_MK=$(MAKEFILE_DEPENDS)
-	$(call generate_mark)
+	$(call auto_make,install_rootfs,$(MARK_ROOTFS),$(OUT_ROOTFS),$(XML_CONFIG))
 
 $(SB2_INIT_MARK):
 	$(Q)rm $(ROOTFS_PATH) -rf && mkdir $(ROOTFS_PATH) -pv && cp $(ROOTFS_BASE)/* $(ROOTFS_PATH) -av
