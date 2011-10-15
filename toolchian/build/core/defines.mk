@@ -127,3 +127,12 @@ python $(PYTHON_PARSER) -f $1 -m $2 -o $3 $4
 +make -f $(MAKEFILE_DEFINES) -f $3/name.mk -f $3/depend.mk
 $(call generate_mark)
 endef
+
+define remove_files
+@for fn in $1; \
+do \
+	echo -n "Remove $${fn} ... "; \
+	rm $${fn} -rf; \
+	echo "OK"; \
+done
+endef
