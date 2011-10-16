@@ -13,14 +13,9 @@
 			 url="http://pkgconfig.freedesktop.org/releases">
 	</package>
 
-	<package name="libtool" version="2.4" depend="pkgconfig"
+	<package name="libtool" version="2.4" depend="bash"
 			 config="--prefix=/usr --enable-ltdl-install"
 			 url="http://ftp.gnu.org/gnu/libtool">
-	</package>
-
-	<package name="gettext" version="0.18.1.1" depend="libtool"
-			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/pub/gnu/gettext">>
 	</package>
 
 	<package name="texinfo" version="4.13a" depend="ncurses"
@@ -38,27 +33,27 @@
 			 url="http://ftp.gnu.org/gnu/mpfr">
 	</package>
 
-	<package name="gmp" version="5.0.2" depend="libtool"
+	<package name="gmp" version="5.0.2" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/gmp">
 	</package>
 
-	<package name="zlib" version="1.2.5" depend="libtool"
+	<package name="zlib" version="1.2.5" depend="bash"
 			 config="--prefix=/usr"
 	         url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)">>
 	</package>
 
-	<package name="ncurses" version="5.9" depend="libtool"
+	<package name="ncurses" version="5.9" depend="bash"
 	         config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/ncurses">>
 	</package>
 
-	<package name="libffi" version="3.0.9" depend="libtool"
+	<package name="libffi" version="3.0.9" depend="bash"
 	         config="--prefix=/usr"
 			 url="ftp://sourceware.org/pub/libffi">>
 	</package>
 
-	<package name="libusb" version="0.1.12" depend="libtool"
+	<package name="libusb" version="0.1.12" depend="bash"
 	         config="--prefix=/usr"
 			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz">>
 	</package>
@@ -88,152 +83,152 @@
 			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">>
 	</package>
 
-	<package name="lrzsz" version="0.12.20" depend="libtool"
+	<package name="lrzsz" version="0.12.20" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz">>
 	</package>
 
-	<package name="e2fsprogs" version="1.41.14" depend="libtool"
+	<package name="e2fsprogs" version="1.41.14" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ncu.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/$(E2FSPROGS_VERSION)">>
 	</package>
 
-	<package name="dosfstools" version="3.0.11" depend="libtool"
+	<package name="dosfstools" version="3.0.11" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://fossies.org/linux/misc">>
 	</package>
 
-	<package name="sysvinit" version="2.88dsf" depend="libtool"
+	<package name="sysvinit" version="2.88dsf" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://download.savannah.gnu.org/releases/sysvinit">>
 	</package>
 
-	<package name="grep" version="2.9" depend="libtool"
+	<package name="grep" version="2.9" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/grep">>
 	</package>
 
-	<package name="tar" version="1.26" depend="libtool"
+	<package name="tar" version="1.26" depend="bash"
 			 config="FORCE_UNSAFE_CONFIGURE=1 --prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/tar">>
 	</package>
 
-	<package name="gzip" version="1.4" depend="libtool"
+	<package name="gzip" version="1.4" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/gzip">>
 	</package>
 
-	<package name="xz" version="5.0.3" depend="libtool"
+	<package name="xz" version="5.0.3" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://tukaani.org/xz">>
 	</package>
 
-	<package name="bzip2" version="1.0.6" depend="libtool"
+	<package name="bzip2" version="1.0.6" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://bzip.org/$(BZIP2_VERSION)">>
 	</package>
 
-	<package name="sed" version="4.2" depend="libtool"
+	<package name="sed" version="4.2" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ftp.gnu.org/gnu/sed">>
 	</package>
 
-	<package name="gawk" version="4.0.0" depend="libtool"
+	<package name="gawk" version="4.0.0" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/gawk">>
 	</package>
 
-	<package name="module-init-tools" version="3.9" depend="libtool"
+	<package name="module-init-tools" version="3.9" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ftp.ntu.edu.tw/linux/utils/kernel/module-init-tools">>
 	</package>
 
-	<package name="findutils" version="4.4.2" depend="libtool"
+	<package name="findutils" version="4.4.2" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/findutils">>
 	</package>
 
-	<package name="make" version="3.82" depend="libtool"
+	<package name="make" version="3.82" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/make">>
 	</package>
 
-	<package name="m4" version="1.4.16" depend="libtool"
+	<package name="m4" version="1.4.16" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/m4">
 	</package>
 
-	<package name="autoconf" version="2.68" depend="libtool"
+	<package name="autoconf" version="2.68" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/autoconf">
 	</package>
 
-	<package name="automake" version="1.11.1" depend="libtool"
+	<package name="automake" version="1.11.1" depend="bash"
 			 config="--prefix=/usr"
 			 url="ftp://ftp.gnu.org/gnu/automake">
 	</package>
 
-	<package name="gperf" version="3.0.4" depend="libtool"
+	<package name="gperf" version="3.0.4" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.gnu.org/gnu/gperf">
 	</package>
 
-	<package name="Python" version="2.7.2" depend="libtool"
+	<package name="Python" version="2.7.2" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://www.python.org/ftp/python/$(PYTHON_VERSION)">
 	</package>
 
-	<package name="mpg123" version="1.13.4" depend="libtool"
+	<package name="mpg123" version="1.13.4" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ncu.dl.sourceforge.net/project/mpg123/mpg123/$(MPG123_VERSION)">
 	</package>
 
-	<package name="ffmpeg" version="snapshot" depend="libtool"
+	<package name="ffmpeg" version="snapshot" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ffmpeg.org/releases">
 	</package>
 
-	<package name="debianutils" version="4.0.4" depend="libtool"
+	<package name="debianutils" version="4.0.4" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ftp.de.debian.org/debian/pool/main/d/debianutils/debianutils_4.0.4.tar.gz">
 	</package>
 
-	<package name="sudo" version="1.8.2" depend="libtool"
+	<package name="sudo" version="1.8.2" depend="bash"
 			 config="--prefix=/usr --without-pam"
 			 url="http://www.sudo.ws/sudo/dist">
 	</package>
 
-	<package name="unrar" version="3.4.3" depend="libtool"
+	<package name="unrar" version="3.4.3" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://www.rarlab.com/rar_CN/unrarsrc-3.4.3.tar.gz">
 	</package>
 
-	<package name="coreutils" version="8.13" depend="libtool"
+	<package name="coreutils" version="8.13" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://ftp.gnu.org/gnu/coreutils">>
 	</package>
 
-	<package name="jpegsrc" version="v8b" depend="libtool"
+	<package name="jpegsrc" version="v8b" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://www.ijg.org/files/jpegsrc.v8b.tar.gz">
 	</package>
 
-	<package name="giflib" version="4.1.6" depend="libtool"
+	<package name="giflib" version="4.1.6" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ncu.dl.sourceforge.net/project/giflib/giflib%204.x/$(GIFLIB_NAME)">
 	</package>
 
-	<package name="libungif" version="4.1.4" depend="libtool"
+	<package name="libungif" version="4.1.4" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ncu.dl.sourceforge.net/project/giflib/libungif%204.x/$(LIBUNGIT_NAME)">
 	</package>
 
-	<package name="libpng" version="1.2.46" depend="libtool"
+	<package name="libpng" version="1.2.46" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ncu.dl.sourceforge.net/project/libpng/libpng12/$(LIBPNG_VERSION)">
 	</package>
 
-	<package name="tiff" version="3.8.2" depend="libtool"
+	<package name="tiff" version="3.8.2" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://dl.maptools.org/dl/libtiff">
 	</package>
@@ -243,7 +238,7 @@
 			 url="http://s-tech.elsat.net.pl/fbv/fbv-1.0b.tar.gz">
 	</package>
 
-	<package name="alsa-lib" version="1.0.24.1" depend="libtool"
+	<package name="alsa-lib" version="1.0.24.1" depend="bash"
 			 config="--prefix=/usr"
 			 url="ftp://ftp.alsa-project.org/pub/lib">
 	</package>
@@ -273,12 +268,12 @@
 			 url="http://ncu.dl.sourceforge.net/project/libvncserver/libvncserver/$(LIBVNCSERVER_VERSION)">
 	</package>
 
-	<package name="sysfsutils" version="2.1.0" depend="libtool"
+	<package name="sysfsutils" version="2.1.0" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ncu.dl.sourceforge.net/project/linux-diag/sysfsutils/$(SYSFSUTILS_VERSION)">
 	</package>
 
-	<package name="lcms" version="1.19" depend="libtool"
+	<package name="lcms" version="1.19" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ncu.dl.sourceforge.net/project/lcms/lcms/$(LCMS_VERSION)">
 	</package>
@@ -288,7 +283,7 @@
 			 url="http://ncu.dl.sourceforge.net/project/libmng/libmng-devel/$(LIBMNG_VERSION)">
 	</package>
 
-	<package name="tslib" version="1.0" depend="libtool"
+	<package name="tslib" version="1.0" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://download.berlios.de/tslib">
 	</package>
@@ -298,12 +293,12 @@
 			 url="http://www.directfb.org/downloads/Core/DirectFB-1.5">
 	</package>
 
-	<package name="libmad" version="0.15.1b" depend="libtool"
+	<package name="libmad" version="0.15.1b" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ncu.dl.sourceforge.net/project/mad/libmad/$(LIBMAD_VERSION)">
 	</package>
 
-	<package name="faad2" version="2.7" depend="libtool"
+	<package name="faad2" version="2.7" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://ncu.dl.sourceforge.net/project/faac/faad2-src/$(FAAD2_NAME)">
 	</package>
@@ -323,8 +318,13 @@
 			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30">
 	</other>
 
-	<other name="perl" version="5.14.2" depend="libtool"
+	<other name="perl" version="5.14.2" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://www.cpan.org/src/5.0">
+	</other>
+
+	<other name="gettext" version="0.18.1.1" depend="bash"
+			 config="--prefix=/usr"
+			 url="http://ftp.gnu.org/pub/gnu/gettext">>
 	</other>
 </packages>
