@@ -102,6 +102,10 @@ toolchian-tt: $(MARK_TOOLCHIAN_TT_READY)
 rootfs: $(MARK_ROOTFS_READY)
 	$(Q)echo "$@ compile successfull"
 
+rootfs-public:
+	$(Q)sudo mknod $(ROOTFS_PATH)/dev/console c 5 1
+	$(Q)sudo chown root:root $(ROOTFS_PATH) -R
+
 utils: $(MARK_UTILS_READY)
 	$(Q)echo "$@ compile successfull"
 

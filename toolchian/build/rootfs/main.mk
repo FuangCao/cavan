@@ -9,6 +9,8 @@ ROOTFS_BASE = $(BUILD_ROOTFS)/base
 include $(MAKEFILE_DEFINES)
 
 all: $(MARK_ROOTFS_READY)
+	$(Q)ln -vsf vim $(ROOTFS_PATH)/usr/bin/vi
+	$(Q)chmod 0440 $(ROOTFS_PATH)/etc/sudoers
 	$(Q)echo "ROOTFS compile successfull"
 
 $(MARK_ROOTFS_READY): $(SB2_INIT_MARK)
@@ -18,8 +20,6 @@ $(SB2_INIT_MARK):
 	$(Q)rm $(ROOTFS_PATH) -rf && mkdir $(ROOTFS_PATH) -pv && cp $(ROOTFS_BASE)/* $(ROOTFS_PATH) -av
 	$(Q)cd $(ROOTFS_PATH) && mkdir bin sbin root home/cavan lib usr/lib libexec tmp proc sys dev etc usr/bin usr/sbin var/run -pv
 	$(Q)ln -vsf bash $(ROOTFS_PATH)/bin/sh
-	$(Q)ln -vsf vim $(ROOTFS_PATH)/usr/bin/vi
-	$(Q)test "$$(id -u)" = "0" && mknod $(ROOTFS_PATH)/dev/console c 5 1 || echo "No permision mknod"
 	$(Q)cp $(SYSROOT_BT_PATH)/* $(TOOLCHIAN_BT_PATH)/$(CAVAN_TARGET_PLAT)/lib $(ROOTFS_PATH) -av
 	$(Q)cp $(TOOLCHIAN_BT_PATH)/$(CAVAN_TARGET_PLAT)/include $(ROOTFS_PATH)/usr -av
 	$(eval SB2_LIBTOOL_PACKAGE = $(firstword $(wildcard $(DOWNLOAD_PATH)/$(SB2_LIBTOOL_NAME).tar.gz $(PACKAGE_PATH)/$(SB2_LIBTOOL_NAME).tar.gz)))
