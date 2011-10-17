@@ -323,14 +323,14 @@
 			 url="http://procps.sourceforge.net">
 	</package>
 
+	<package name="perl" version="5.14.2" depend="bash"
+			 config="--prefix=/usr"
+			 url="http://www.cpan.org/src/5.0">
+	</package>
+
 	<other name="glib" version="2.30.0" depend="libffi"
 			 config="--prefix=/usr --disable-threads"
 			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30">
-	</other>
-
-	<other name="perl" version="5.14.2" depend="bash"
-			 config="--prefix=/usr"
-			 url="http://www.cpan.org/src/5.0">
 	</other>
 
 	<other name="gettext" version="0.18.1.1" depend="bash"
