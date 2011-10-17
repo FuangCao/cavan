@@ -8,9 +8,4 @@
 	         config=""
 			 url="http://ftp.gnu.org/gnu/ncurses">
 	</package>
-
-	<package name="file" version="5.09" depend="zlib"
-	         config=""
-			 url="ftp://ftp.astron.com/pub/file">
-	</package>
 </packages>
