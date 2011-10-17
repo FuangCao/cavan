@@ -1,11 +1,11 @@
 <packages>
 	<package name="bash" version="4.2" depend=""
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://ftp.gnu.org/gnu/bash">>
+			 url="http://ftp.gnu.org/gnu/bash">
 	</package>
 
 	<package name="busybox" version="1.19.2" depend="bash" config=""
-			 url="http://busybox.net/downloads">>
+			 url="http://busybox.net/downloads">
 	</package>
 
 	<package name="pkgconfig" version="0.18" depend="bash"
@@ -40,27 +40,27 @@
 
 	<package name="zlib" version="1.2.5" depend="bash"
 			 config="--prefix=/usr"
-	         url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)">>
+	         url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)">
 	</package>
 
 	<package name="ncurses" version="5.9" depend="bash"
 	         config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/ncurses">>
+			 url="http://ftp.gnu.org/gnu/ncurses">
 	</package>
 
 	<package name="libffi" version="3.0.9" depend="bash"
 	         config="--prefix=/usr"
-			 url="ftp://sourceware.org/pub/libffi">>
+			 url="ftp://sourceware.org/pub/libffi">
 	</package>
 
 	<package name="libusb" version="0.1.12" depend="bash"
 	         config="--prefix=/usr"
-			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz">>
+			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz">
 	</package>
 
 	<package name="usbutils" version="0.84" depend="libusb"
 			 config="--prefix=/usr"
-	         url="http://down1.chinaunix.net/distfiles">>
+	         url="http://down1.chinaunix.net/distfiles">
 	</package>
 
 	<package name="udev" version="172" depend="pciids usbutils libffi"
@@ -69,88 +69,88 @@
 	</package>
 
 	<package name="pciids" version="0.1" depend="" config=""
-			 url="http://vorner.ucw.cz/download/pciids_$(PCIIDS_VERSION).tar.bz2">>
+			 url="http://vorner.ucw.cz/download/pciids_$(PCIIDS_VERSION).tar.bz2">
 	</package>
 
 	<package name="vim" version="7.3" depend="ncurses"
 			 config="--prefix=/usr --with-tlib=ncurses"
-			 url="ftp://ftp.vim.org/pub/vim/unix">>
+			 url="ftp://ftp.vim.org/pub/vim/unix">
 	</package>
 
 	<package name="util-linux-ng" version="2.18" depend="ncurses"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc --enable-login-utils --enable-init --enable-kill --enable-reset
 					 --enable-login-chown-vcs --with-fsprobe=builtin --without-pam --disable-require-password --disable-wall"
-			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">>
+			 url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src">
 	</package>
 
 	<package name="lrzsz" version="0.12.20" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz">>
+			 url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz">
 	</package>
 
 	<package name="e2fsprogs" version="1.41.14" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://ncu.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/$(E2FSPROGS_VERSION)">>
+			 url="http://ncu.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/$(E2FSPROGS_VERSION)">
 	</package>
 
 	<package name="dosfstools" version="3.0.11" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://fossies.org/linux/misc">>
+			 url="http://fossies.org/linux/misc">
 	</package>
 
 	<package name="sysvinit" version="2.88dsf" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://download.savannah.gnu.org/releases/sysvinit">>
+			 url="http://download.savannah.gnu.org/releases/sysvinit">
 	</package>
 
 	<package name="grep" version="2.9" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/grep">>
+			 url="http://ftp.gnu.org/gnu/grep">
 	</package>
 
 	<package name="tar" version="1.26" depend="bash"
 			 config="FORCE_UNSAFE_CONFIGURE=1 --prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/tar">>
+			 url="http://ftp.gnu.org/gnu/tar">
 	</package>
 
 	<package name="gzip" version="1.4" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/gzip">>
+			 url="http://ftp.gnu.org/gnu/gzip">
 	</package>
 
 	<package name="xz" version="5.0.3" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://tukaani.org/xz">>
+			 url="http://tukaani.org/xz">
 	</package>
 
 	<package name="bzip2" version="1.0.6" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://bzip.org/$(BZIP2_VERSION)">>
+			 url="http://bzip.org/$(BZIP2_VERSION)">
 	</package>
 
 	<package name="sed" version="4.2" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://ftp.gnu.org/gnu/sed">>
+			 url="http://ftp.gnu.org/gnu/sed">
 	</package>
 
 	<package name="gawk" version="4.0.0" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/gawk">>
+			 url="http://ftp.gnu.org/gnu/gawk">
 	</package>
 
 	<package name="module-init-tools" version="3.9" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://ftp.ntu.edu.tw/linux/utils/kernel/module-init-tools">>
+			 url="http://ftp.ntu.edu.tw/linux/utils/kernel/module-init-tools">
 	</package>
 
 	<package name="findutils" version="4.4.2" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/findutils">>
+			 url="http://ftp.gnu.org/gnu/findutils">
 	</package>
 
 	<package name="make" version="3.82" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/make">>
+			 url="http://ftp.gnu.org/gnu/make">
 	</package>
 
 	<package name="m4" version="1.4.16" depend="bash"
@@ -205,7 +205,7 @@
 
 	<package name="coreutils" version="8.13" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://ftp.gnu.org/gnu/coreutils">>
+			 url="http://ftp.gnu.org/gnu/coreutils">
 	</package>
 
 	<package name="jpegsrc" version="v8b" depend="bash"
@@ -325,6 +325,6 @@
 
 	<other name="gettext" version="0.18.1.1" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/pub/gnu/gettext">>
+			 url="http://ftp.gnu.org/pub/gnu/gettext">
 	</other>
 </packages>

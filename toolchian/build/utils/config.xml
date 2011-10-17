@@ -48,11 +48,12 @@
 	</package>
 
 	<package name="mpfr" version="3.0.1" depend="gmp"
-			 config="--with-gmp=$(UTILS_PATH)/usr"
+			 config="--with-gmp=$(UTILS_PATH)/usr --enable-thread-safe"
 			 url="http://ftp.gnu.org/gnu/mpfr">
 	</package>
 
-	<package name="gmp" version="5.0.2" depend="libtool" config=""
+	<package name="gmp" version="5.0.2" depend="libtool"
+			 config="--enable-cxx --enable-mpbsd"
 			 url="http://ftp.gnu.org/gnu/gmp">
 	</package>
 

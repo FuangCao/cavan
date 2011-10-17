@@ -31,13 +31,13 @@ SRC_MPFR = $(SRC_PATH)/$(MPFR_NAME)
 SRC_MPC = $(SRC_PATH)/$(MPC_NAME)
 
 OUT_BINUTILS = $(OUT_TOOLCHIAN)/$(BINUTILS_NAME)
-OUT_GCC1 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-pase1
-OUT_GCC2 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-pase2
+OUT_GCC1 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-stage1
+OUT_GCC2 = $(OUT_TOOLCHIAN)/$(GCC_NAME)-stage2
 OUT_GLIBC = $(OUT_TOOLCHIAN)/$(GLIBC_NAME)
 
 MARK_BINUTILS = $(MARK_TOOLCHIAN)/$(BINUTILS_NAME)
-MARK_GCC1 = $(MARK_TOOLCHIAN)/$(GCC_NAME)-pase1
-MARK_GCC2 = $(MARK_TOOLCHIAN)/$(GCC_NAME)-pase2
+MARK_GCC1 = $(MARK_TOOLCHIAN)/$(GCC_NAME)-stage1
+MARK_GCC2 = $(MARK_TOOLCHIAN)/$(GCC_NAME)-stage2
 MARK_GLIBC = $(MARK_TOOLCHIAN)/$(GLIBC_NAME)
 MARK_HEADER = $(MARK_TOOLCHIAN)/$(HEADER_NAME)
 
@@ -115,7 +115,7 @@ endif
 $(MARK_GCC2): $(MARK_GLIBC)
 	$(call decompression_gcc)
 	$(call remake_directory,$(OUT_GCC2))
-	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) $(GCC_NAME)-pase2
+	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) $(GCC_NAME)-stage2
 	$(call generate_mark)
 
 ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
@@ -128,7 +128,7 @@ $(MARK_GLIBC): $(MARK_GCC1)
 $(MARK_GCC1): $(MARK_BINUTILS)
 	$(call decompression_gcc)
 	$(call remake_directory,$(OUT_GCC1))
-	$(Q)+make -C $(OUT_GCC1) -f $(MAKEFILE_GCC) $(GCC_NAME)-pase1
+	$(Q)+make -C $(OUT_GCC1) -f $(MAKEFILE_GCC) $(GCC_NAME)-stage1
 	$(call generate_mark)
 else
 $(MARK_GLIBC): $(MARK_BINUTILS)

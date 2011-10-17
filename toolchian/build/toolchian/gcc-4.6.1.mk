@@ -32,21 +32,16 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--disable-libstdcxx-pch \
 					--disable-bootstrap \
 					--disable-libgomp \
-					--with-system-zlib \
 					--without-ppl \
 					--without-cloog
 
-$(GCC_NAME)-pase1:
+$(GCC_NAME)-stage1:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION1)
 	$(Q)+make
 	$(Q)+make install
 	$(Q)ln -vsf libgcc.a $$($(CAVAN_TARGET_PLAT)-gcc -print-libgcc-file-name | sed 's/libgcc/&_eh/')
 
-$(GCC_NAME)-pase2:
-ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
-	$(Q)CFLAGS="-I$(UTILS_PATH)/usr/include" LDFLAGS="-L$(UTILS_PATH)/usr/lib" $(SRC_GCC)/configure $(GCC_OPTION2)
-else
+$(GCC_NAME)-stage2:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION2)
-endif
 	$(Q)+make AS_FOR_TARGET="$(CAVAN_TARGET_PLAT)-as" LD_FOR_TARGET="$(CAVAN_TARGET_PLAT)-ld"
 	$(Q)+make install
