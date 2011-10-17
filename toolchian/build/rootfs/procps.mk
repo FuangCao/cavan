@@ -1,3 +1,3 @@
 all:
 	$(Q)+sb2 make CC=gcc
-	$(Q)+sb2 make install
+	$(Q)+sb2 -m install make install
