@@ -313,6 +313,16 @@
 			 url="http://mplayerhq.hu/MPlayer/releases">
 	</package>
 
+	<package name="file" version="5.09" depend="bash"
+			 config="--prefix=/usr"
+			 url="ftp://ftp.astron.com/pub/file">
+	</package>
+
+	<package name="procps" version="3.2.8" depend="bash"
+			 config="--prefix=/usr"
+			 url="http://procps.sourceforge.net">
+	</package>
+
 	<other name="glib" version="2.30.0" depend="libffi"
 			 config="--prefix=/usr --disable-threads"
 			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30">

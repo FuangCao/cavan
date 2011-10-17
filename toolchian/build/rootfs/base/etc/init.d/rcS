@@ -2,9 +2,7 @@
 
 echo
 echo "*****************************"
-echo "** Welcome to Cavan Linux  **"
-echo "** cavan.cfa@gmail.com     **"
-echo "** fuang.cao@eavoo.com     **"
+echo "*  Welcome to Cavan Linux   *"
 echo "*****************************"
 echo
 
@@ -22,3 +20,6 @@ done < /proc/partitions
 
 udevd --daemon
 udevadm trigger
+
+mkdir /etc -pv
+cp /proc/mounts /etc/mtab

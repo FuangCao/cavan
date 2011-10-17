@@ -1,6 +1,3 @@
-define decompression_all_file
-endef
-
 define simple_decompression_file
 temp_decomp="$(DECOMP_PATH)/$1"; \
 file_list="$(strip $(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.*$(type) $(DOWNLOAD_PATH)/$1.*$(type))))"; \
@@ -79,18 +76,18 @@ $(wildcard $(PACKAGE_PATH)/$1*)
 endef
 
 define generate_mark
-echo "Generate Mark $@"
-echo "$@" > $@
+$(Q)echo "Generate Mark $@"
+$(Q)echo "$@" > $@
 endef
 
 define print_action
-echo "Action \"$@\""
+$(Q)echo "Action \"$@\""
 endef
 
 define remake_directory
-echo "Remake Directory $1"
-rm $1 -rf
-mkdir $1 -pv
+$(Q)echo "Remake Directory $1"
+$(Q)rm $1 -rf
+$(Q)mkdir $1 -pv
 endef
 
 define install_application
@@ -123,16 +120,22 @@ $(call install_application,$2,$(BUILD_ROOTFS),CFLAGS="-fPIC" sb2 ./configure $1 
 endef
 
 define auto_make
-python $(PYTHON_PARSER) -f $1 -m $2 -o $3 $4
-+make -f $(MAKEFILE_DEFINES) -f $3/name.mk -f $3/depend.mk
+$(Q)python $(PYTHON_PARSER) -f $1 -m $2 -o $3 $4
+$(Q)+make -f $(MAKEFILE_DEFINES) -f $3/name.mk -f $3/depend.mk
 $(call generate_mark)
 endef
 
 define remove_files
-@for fn in $1; \
+$(Q)for fn in $1; \
 do \
 	echo -n "Remove $${fn} ... "; \
 	rm $${fn} -rf; \
 	echo "OK"; \
 done
+endef
+
+define remake_device_node
+$(Q)echo "Remake device node $1"
+$(Q)rm $1 -rf
+$(Q)sudo mknod $1 $2 $3 $4
 endef
