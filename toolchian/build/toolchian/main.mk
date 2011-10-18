@@ -53,7 +53,7 @@ BINUTILS_URL = http://ftp.gnu.org/gnu/binutils
 GMP_URL = http://ftp.gnu.org/gnu/gmp
 MPFR_URL = http://ftp.gnu.org/gnu/mpfr
 MPC_URL = http://www.multiprecision.org/mpc/download
-KERNEL_URL = http://down1.chinaunix.net/distfiles/$(KERNEL_NAME).tar.bz2
+KERNEL_URL = http://www.kernel.org/pub/linux/kernel/v3.0
 
 SYSROOT_PATH = $(TOOLCHIAN_PATH)/sysroot
 TOOLCHIAN_COMMON_CONFIG = --prefix=$(TOOLCHIAN_PATH) --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT) --with-sysroot=$(SYSROOT_PATH)
