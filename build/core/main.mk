@@ -1,7 +1,9 @@
 CAVAN_NAME = cavan
 DEPEND_NAME = depend.mk
-
 CAVAN_ROOT = $(shell pwd)
+CAVAN_BUILD_ARCH = $(shell uname -m)
+CAVAN_BUILD_PLAT = $(shell gcc -dumpmachine)
+
 OUT_DIR = out
 LIB_DIR = lib
 APP_DIR = app
@@ -11,17 +13,21 @@ BUILD_CORE = $(BUILD_DIR)/core
 APP_CORE = $(APP_DIR)/core
 
 ifeq ("$(ARCH)","")
-  ARCH = x86
+  ARCH = $(CAVAN_BUILD_ARCH)
 endif
 
-ifeq ("$(ARCH)","x86")
-  CROSS_COMPILE =
+ifeq ("$(ARCH)","$(CAVAN_BUILD_ARCH)")
+  CROSS_COMPILE = $(CAVAN_BUILD_PLAT)-
 else
-  ifeq ("$(ARCH)","arm")
+ifeq ("$(ARCH)","arm")
     ifeq ("$(CROSS_COMPILE)","")
       CROSS_COMPILE = arm-linux-
     endif
-  endif
+else
+ifeq ("$(ARCH)","x86")
+  CROSS_COMPILE =
+endif
+endif
 endif
 
 ifeq ("$(origin BT)","command line")
