@@ -100,8 +100,8 @@ static int swan_adb_client(const char *dev_path)
 	struct cavan_usb_descriptor desc;
 	struct pollfd event_fds[32];
 	int count;
-	struct cavan_usb_package pkg;
 	ssize_t readlen, writelen;
+	struct input_event event_buff[32];
 
 	pr_bold_pos();
 
@@ -124,20 +124,16 @@ static int swan_adb_client(const char *dev_path)
 		goto out_usb_uninit;
 	}
 
-	usb_set_operation_code(&pkg.msg, CAVAN_UMSG_DATA_STREAM);
-
 	while (1)
 	{
-		readlen = poll_event_devices(event_fds, count, pkg.data, sizeof(pkg.data));
+		readlen = poll_event_devices(event_fds, count, event_buff,  sizeof(event_buff));
 		if (readlen < 0)
 		{
 			print_error("poll_event_devices");
 			break;
 		}
 
-		pkg.msg.data_opt.data_length = readlen;
-
-		writelen = cavan_usb_write_data_package(&desc, &pkg);
+		writelen = cavan_usb_write_data(&desc, event_buff, readlen);
 		if (writelen < 0)
 		{
 			print_error("cavan_usb_bluk_write");

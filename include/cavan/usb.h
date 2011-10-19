@@ -54,6 +54,13 @@ enum cavan_usb_package_type
 };
 
 #pragma pack(1)
+struct cavan_usb_data_header
+{
+	u16 data_length;
+	u16 data_check;
+};
+
+#if 0
 struct cavan_usb_data_option
 {
 	u32 blk_num;
@@ -103,6 +110,7 @@ struct cavan_usb_package
 		u8 data[CAVAN_USB_MAX_DATA_LENGTH];
 	};
 };
+#endif
 #pragma pack()
 
 int dump_cavan_usb_descriptor(const void *buff, struct cavan_usb_descriptor *desc, size_t length);
@@ -123,9 +131,6 @@ int cavan_usb_bluk_rw(struct cavan_usb_descriptor *desc, void *buff, size_t leng
 int cavan_usb_bluk_read(struct cavan_usb_descriptor *desc, void *buff, size_t length);
 int cavan_usb_bluk_write(struct cavan_usb_descriptor *desc, const void *buff, size_t length);
 
-int cavan_usb_read_message(struct cavan_usb_descriptor *desc, struct cavan_usb_message *msg);
-ssize_t cavan_usb_read_data_package(struct cavan_usb_descriptor *desc, struct cavan_usb_package *pkg);
-ssize_t cavan_usb_write_data_package(struct cavan_usb_descriptor *desc, struct cavan_usb_package *pkg);
 ssize_t cavan_usb_read_data(struct cavan_usb_descriptor *desc, void *buff, size_t size);
 ssize_t cavan_usb_write_data(struct cavan_usb_descriptor *desc, const void *buff, size_t size);
 ssize_t cavan_adb_read_data(int fd_adb, void *buff, size_t size);
@@ -154,45 +159,6 @@ static inline int is_usb_endpoint_descriptor(const struct usb_endpoint_descripto
 static inline int is_usb_string_descriptor(const struct usb_string_descriptor *desc)
 {
 	return desc->bDescriptorType == USB_DT_STRING;
-}
-
-static inline void usb_set_operation_code(struct cavan_usb_message *msg, u16 op_code)
-{
-	msg->op_code = op_code;
-	msg->op_check = op_code ^ 0xFFFF;
-}
-
-static inline int usb_invalid_operation_code(struct cavan_usb_message *msg)
-{
-	return (msg->op_code ^ msg->op_check) != 0xFFFF;
-}
-
-static inline int cavan_usb_discard_urb(int fd, struct usbdevfs_urb *urb)
-{
-	return ioctl(fd, USBDEVFS_DISCARDURB, urb);
-}
-
-static inline int cavan_usb_write_message(struct cavan_usb_descriptor *desc, struct cavan_usb_message *msg)
-{
-	return cavan_usb_bluk_write(desc, msg, sizeof(*msg));
-}
-
-static inline int cavan_adb_read_message(int fd_adb, struct cavan_usb_message *msg)
-{
-	ssize_t readlen;
-
-	readlen = read(fd_adb, msg, sizeof(*msg));
-	if (readlen < 0)
-	{
-		return readlen;
-	}
-
-	return usb_invalid_operation_code(msg) ? -EINVAL : 0;
-}
-
-static inline int cavan_adb_write_message(int fd_adb, struct cavan_usb_message *msg)
-{
-	return write(fd_adb, msg, sizeof(*msg));
 }
 
 static inline void cavan_cond_signal(pthread_cond_t *cond, pthread_mutex_t *mutex)

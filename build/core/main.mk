@@ -2,7 +2,6 @@ CAVAN_NAME = cavan
 DEPEND_NAME = depend.mk
 CAVAN_ROOT = $(shell pwd)
 CAVAN_BUILD_ARCH = $(shell uname -m)
-CAVAN_BUILD_PLAT = $(shell gcc -dumpmachine)
 
 OUT_DIR = out
 LIB_DIR = lib
@@ -17,7 +16,7 @@ ifeq ("$(ARCH)","")
 endif
 
 ifeq ("$(ARCH)","$(CAVAN_BUILD_ARCH)")
-  CROSS_COMPILE = $(CAVAN_BUILD_PLAT)-
+  CROSS_COMPILE =
 else
 ifeq ("$(ARCH)","arm")
     ifeq ("$(CROSS_COMPILE)","")

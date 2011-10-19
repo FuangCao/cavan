@@ -565,84 +565,41 @@ out_close_dir1:
 	return ret;
 }
 
-int cavan_usb_read_message(struct cavan_usb_descriptor *desc, struct cavan_usb_message *msg)
-{
-	ssize_t readlen;
-
-	readlen = cavan_usb_bluk_read(desc, msg, sizeof(*msg));
-	if (readlen < 0)
-	{
-		return readlen;
-	}
-
-	if (usb_invalid_operation_code(msg))
-	{
-		pr_bold_pos();
-		cavan_usb_discard_urb(desc->fd, &desc->urb_read);
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-ssize_t cavan_usb_read_data_package(struct cavan_usb_descriptor *desc, struct cavan_usb_package *pkg)
-{
-	ssize_t readlen;
-
-	readlen = cavan_usb_read_message(desc, &pkg->msg);
-	if (readlen < 0 || pkg->msg.data_opt.data_length == 0)
-	{
-		return readlen;
-	}
-
-	return cavan_usb_bluk_read(desc, pkg->data, pkg->msg.data_opt.data_length);
-}
-
-ssize_t cavan_usb_write_data_package(struct cavan_usb_descriptor *desc, struct cavan_usb_package *pkg)
-{
-	ssize_t writelen;
-
-	writelen = cavan_usb_write_message(desc, &pkg->msg);
-	if (writelen < 0)
-	{
-		return writelen;
-	}
-
-	return cavan_usb_bluk_write(desc, pkg->data, pkg->msg.data_opt.data_length);
-}
-
 ssize_t cavan_usb_read_data(struct cavan_usb_descriptor *desc, void *buff, size_t size)
 {
 	ssize_t readlen;
-	struct cavan_usb_message msg;
+	struct cavan_usb_data_header hdr;
 
-	readlen = cavan_usb_read_message(desc, &msg);
-	if (readlen < 0)
+	readlen = cavan_usb_bluk_read(desc, &hdr, sizeof(hdr));
+	if (readlen < sizeof(hdr))
 	{
-		return readlen;
+		pr_red_pos();
+		return readlen < 0 ? readlen : -ENOMEDIUM;
 	}
 
-	if (msg.op_code != CAVAN_UMSG_DATA_STREAM)
+	if ((hdr.data_length ^ hdr.data_check) != 0xFFFF)
 	{
 		pr_bold_pos();
 		return -EINVAL;
 	}
 
-	return cavan_usb_bluk_read(desc, buff, msg.data_opt.data_length);
+	return cavan_usb_bluk_read(desc, buff, hdr.data_length);
 }
 
 ssize_t cavan_usb_write_data(struct cavan_usb_descriptor *desc, const void *buff, size_t size)
 {
 	ssize_t writelen;
-	struct cavan_usb_message msg;
-
-	usb_set_operation_code(&msg, CAVAN_UMSG_DATA_STREAM);
-	msg.data_opt.data_length = size;
-
-	writelen = cavan_usb_write_message(desc, &msg);
-	if (writelen < 0)
+	struct cavan_usb_data_header hdr =
 	{
-		return writelen;
+		.data_length = size,
+		.data_check = ~size
+	};
+
+	writelen = cavan_usb_bluk_write(desc, &hdr, sizeof(hdr));
+	if (writelen < sizeof(hdr))
+	{
+		pr_red_pos();
+		return writelen < 0 ? writelen : -ENOMEDIUM;
 	}
 
 	return cavan_usb_bluk_write(desc, buff, size);
@@ -651,34 +608,38 @@ ssize_t cavan_usb_write_data(struct cavan_usb_descriptor *desc, const void *buff
 ssize_t cavan_adb_read_data(int fd_adb, void *buff, size_t size)
 {
 	ssize_t readlen;
-	struct cavan_usb_message msg;
+	struct cavan_usb_data_header hdr;
 
-	readlen = cavan_adb_read_message(fd_adb, &msg);
-	if (readlen < 0)
+	readlen = read(fd_adb, &hdr, sizeof(hdr));
+	if (readlen < sizeof(hdr))
 	{
-		return readlen;
+		pr_red_pos();
+		return readlen < 0 ? readlen : -ENOMEDIUM;
 	}
 
-	if (msg.op_code != CAVAN_UMSG_DATA_STREAM)
+	if ((hdr.data_length ^ hdr.data_check) != 0xFFFF)
 	{
+		pr_red_pos();
 		return -EINVAL;
 	}
 
-	return read(fd_adb, buff, msg.data_opt.data_length);
+	return read(fd_adb, buff, hdr.data_length);
 }
 
 ssize_t cavan_adb_write_data(int fd_adb, const void *buff, size_t size)
 {
 	ssize_t writelen;
-	struct cavan_usb_message msg;
-
-	usb_set_operation_code(&msg, CAVAN_UMSG_DATA_STREAM);
-	msg.data_opt.data_length = size;
-
-	writelen = cavan_adb_write_message(fd_adb, &msg);
-	if (writelen < 0)
+	struct cavan_usb_data_header hdr =
 	{
-		return writelen;
+		.data_length = size,
+		.data_check = ~size
+	};
+
+	writelen = write(fd_adb, &hdr, sizeof(hdr));
+	if (writelen < sizeof(hdr))
+	{
+		pr_red_pos();
+		return writelen < 0 ? writelen : -ENOMEDIUM;
 	}
 
 	return write(fd_adb, buff, size);
