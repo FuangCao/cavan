@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
 	cftp_client_handle = NULL;
 
-	while ((c = getopt_long(argc, argv, "rRwWvVhH", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "rRgGsSpPwWvVhH", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -62,11 +62,17 @@ int main(int argc, char *argv[])
 
 		case 'r':
 		case 'R':
+		case 'g':
+		case 'G':
 			cftp_client_handle = cftp_client_receive_file;
 			break;
 
 		case 'w':
 		case 'W':
+		case 's':
+		case 'S':
+		case 'p':
+		case 'P':
 			cftp_client_handle = cftp_client_send_file;
 			break;
 
