@@ -16,7 +16,7 @@
 #include <pthread.h>
 #include <cavan/event.h>
 #include <cavan/image.h>
-#include <cavan/parse.h>
+#include <cavan/parser.h>
 #include <cavan/list.h>
 
 char swan_vfat_volume[128] = EMMC_VFAT_DEFAULT_LABEL;

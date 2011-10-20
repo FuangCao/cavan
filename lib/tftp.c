@@ -361,7 +361,7 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 	union tftp_pkg pkg;
 	u16 blk_num;
 
-	fd = open(file_out, O_CREAT | O_WRONLY | O_SYNC | O_TRUNC | O_BINARY, 0777);
+	fd = open(file_out, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, 0777);
 	if (fd < 0)
 	{
 		print_error("open file \"%s\" failed", file_out);
@@ -443,7 +443,6 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 			}
 
 			print_char('.');
-			fsync(fd);
 
 			blk_num++;
 
@@ -452,7 +451,6 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 				println(" Receive data complete");
 				send_ack_pkg(sockfd, blk_num, &remote_addr);
 				ret = 0;
-				fsync(fd);
 				goto out_success;
 			}
 
@@ -787,7 +785,7 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 		return sockfd;
 	}
 
-	fd = open(file_out, O_CREAT | O_WRONLY | O_TRUNC | O_SYNC | O_BINARY, 0777);
+	fd = open(file_out, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, 0777);
 	if (fd < 0)
 	{
 		print_error("open file \"%s\" failed", file_out);
@@ -826,7 +824,6 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 			send_ack_pkg(sockfd, blk_num, remote_addr);
 			println(" Receive data complete");
 			ret = 0;
-			fsync(fd);
 			break;
 		}
 
@@ -868,7 +865,6 @@ lable_send_ack:
 			blk_num++;
 
 			print_char('.');
-			fsync(fd);
 			break;
 
 		case TFTP_ERROR:
@@ -1057,7 +1053,7 @@ int write_response_to(FILE *fp, const char *file_out)
 	ssize_t writelen;
 	char buff[MAX_BUFF_LEN];
 
-	fd_out = open(file_out, O_WRONLY | O_CREAT | O_SYNC | O_TRUNC, 0777);
+	fd_out = open(file_out, O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	if (fd_out < 0)
 	{
 		print_error("open file \"%s\" failed", file_out);

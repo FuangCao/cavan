@@ -638,7 +638,7 @@ ssize_t cavan_adb_write_data(int fd_adb, const void *buff, size_t size)
 	writelen = write(fd_adb, &hdr, sizeof(hdr));
 	if (writelen < sizeof(hdr))
 	{
-		pr_red_pos();
+		print_error("write");
 		return writelen < 0 ? writelen : -ENOMEDIUM;
 	}
 

@@ -3,7 +3,7 @@
 #include <cavan.h>
 #include <cavan/uevent.h>
 #include <cavan/text.h>
-#include <cavan/parse.h>
+#include <cavan/parser.h>
 
 int uevent_init(struct uevent_desc *desc)
 {

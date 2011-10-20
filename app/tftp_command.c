@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <cavan/tftp.h>
 #include <cavan/text.h>
-#include <cavan/parse.h>
+#include <cavan/parser.h>
 
 static void show_usage(void)
 {

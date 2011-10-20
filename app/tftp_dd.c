@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include <cavan/tftp.h>
 #include <cavan/progress.h>
-#include <cavan/parse.h>
+#include <cavan/parser.h>
 #include <cavan/text.h>
 #include <cavan/file.h>
 #include <cavan/device.h>

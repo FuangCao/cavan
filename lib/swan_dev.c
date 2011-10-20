@@ -6,7 +6,7 @@
 #include <cavan/dd.h>
 #include <cavan/device.h>
 #include <cavan/image.h>
-#include <cavan/parse.h>
+#include <cavan/parser.h>
 
 void show_swan_emmc_partation_table(struct swan_emmc_partition_table *part_table)
 {

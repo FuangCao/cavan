@@ -1,6 +1,6 @@
 #include <cavan.h>
 #include <cavan/dd.h>
-#include <cavan/parse.h>
+#include <cavan/parser.h>
 #include <cavan/text.h>
 
 int main(int argc, char *argv[])

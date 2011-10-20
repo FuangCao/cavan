@@ -248,11 +248,11 @@ void show_ip_header(struct ip_header *hdr, int simple)
 
 void show_tcp_header(struct tcp_header *hdr)
 {
-	println("src_port = %d", ntohs(hdr-> src_port));
-	println("dest_port = %d", ntohs(hdr-> dest_port));
-	println("sequence = %d", ntohl(hdr-> sequence));
-	println("sck_sequence = %d", ntohl(hdr-> sck_sequence));
-	println("window_size = %d", ntohs(hdr-> window_size));
+	println("src_port = %d", ntohs(hdr->src_port));
+	println("dest_port = %d", ntohs(hdr->dest_port));
+	println("sequence = %d", ntohl(hdr->sequence));
+	println("sck_sequence = %d", ntohl(hdr->sck_sequence));
+	println("window_size = %d", ntohs(hdr->window_size));
 	println("reserve = %d", hdr->reserve);
 	println("TCP_URG = %d", hdr->TCP_URG);
 	println("TCP_ACK = %d", hdr->TCP_ACK);
@@ -260,27 +260,27 @@ void show_tcp_header(struct tcp_header *hdr)
 	println("TCP_RST = %d", hdr->TCP_RST);
 	println("TCP_SYN = %d", hdr->TCP_SYN);
 	println("TCP_FIN = %d", hdr->TCP_FIN);
-	println("checksum = 0x%04x", ntohs(hdr-> checksum));
-	println("urgent_pointer = %d", ntohs(hdr-> urgent_pointer));
+	println("checksum = 0x%04x", ntohs(hdr->checksum));
+	println("urgent_pointer = %d", ntohs(hdr->urgent_pointer));
 }
 
 void show_udp_header(struct udp_header *hdr)
 {
-	println("src_port = %d", ntohs(hdr-> src_port));
-	println("dest_port = %d", ntohs(hdr-> dest_port));
-	println("udp_length = %d", ntohs(hdr-> udp_length));
-	println("udp_checksum = 0x%04x", hdr-> udp_checksum);
+	println("src_port = %d", ntohs(hdr->src_port));
+	println("dest_port = %d", ntohs(hdr->dest_port));
+	println("udp_length = %d", ntohs(hdr->udp_length));
+	println("udp_checksum = 0x%04x", hdr->udp_checksum);
 }
 
 void show_arp_header(struct arp_header *hdr, int simple)
 {
 	if (simple == 0)
 	{
-		println("hardware_type = %d", ntohs(hdr-> hardware_type));
-		println("protocol_type = %d", ntohs(hdr-> protocol_type));
-		println("hardware_addrlen = %d", hdr-> hardware_addrlen);
-		println("protocol_addrlen = %d", hdr-> protocol_addrlen);
-		println("op_code = %d", ntohs(hdr-> op_code));
+		println("hardware_type = %d", ntohs(hdr->hardware_type));
+		println("protocol_type = %d", ntohs(hdr->protocol_type));
+		println("hardware_addrlen = %d", hdr->hardware_addrlen);
+		println("protocol_addrlen = %d", hdr->protocol_addrlen);
+		println("op_code = %d", ntohs(hdr->op_code));
 	}
 
 	println("src_mac = %s", mac_address_tostring(hdr->src_mac, sizeof(hdr->src_mac)));

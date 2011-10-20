@@ -5,8 +5,6 @@
 #include <cavan/usb.h>
 #include <sys/wait.h>
 
-#define DEVICE_ADB_ENABLE_PATH	"/dev/android_adb_enable"
-#define DEVICE_ADB_PATH			"/dev/android_adb"
 #define DEVICE_SWAN_VK_DATA		"/sys/devices/platform/swan_vk.0/data"
 
 #define FILE_CREATE_DATE "Thu Sep  8 15:06:15 CST 2011"

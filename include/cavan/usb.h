@@ -4,20 +4,22 @@
 
 #include <linux/usbdevice_fs.h>
 #include <pthread.h>
-
-#define CAVAN_USB_DEBUG	0
-
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 20)
 #include <linux/usb/ch9.h>
 #else
 #include <linux/usb_ch9.h>
 #endif
 
+#define CAVAN_USB_DEBUG				0
+#define CAVAN_USB_MAX_XFER_SIZE		4096
+
 #ifndef USB_MAXENDPOINTS
 #define USB_MAXENDPOINTS			32
 #endif
 #define USB_DEVICE_DIR				"/dev/bus/usb"
-#define CAVAN_USB_MAX_DATA_LENGTH	4096
+
+#define DEVICE_ADB_ENABLE_PATH	"/dev/android_adb_enable"
+#define DEVICE_ADB_PATH			"/dev/android_adb"
 
 struct cavan_usb_interface_descriptor
 {

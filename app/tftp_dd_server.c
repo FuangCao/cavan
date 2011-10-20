@@ -11,7 +11,7 @@
 #include <cavan/file.h>
 #include <cavan/device.h>
 #include <semaphore.h>
-#include <cavan/parse.h>
+#include <cavan/parser.h>
 
 static int handle_read_request(struct tftp_request *req_p)
 {
