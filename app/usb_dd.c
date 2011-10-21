@@ -169,6 +169,8 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
+	system_command("killall adb");
+
 	ret = cavan_find_usb_device(NULL, &usb_desc);
 	if (ret < 0)
 	{

@@ -2,6 +2,7 @@
 
 #include <cavan.h>
 #include <cavan/cftp.h>
+#include <sys/wait.h>
 
 #define FILE_CREATE_DATE "2011-10-20 14:01:11"
 
@@ -35,6 +36,8 @@ int main(int argc, char *argv[])
 	int fd_adb_en, fd_adb;
 	const char *adb_dev_enable_path;
 	const char *adb_dev_path;
+	pid_t pid;
+	int status;
 
 	adb_dev_enable_path = DEVICE_ADB_ENABLE_PATH;
 	adb_dev_path = DEVICE_ADB_PATH;
@@ -59,6 +62,21 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 	}
+
+	pid = fork();
+	if (pid == 0)
+	{
+		execl("/system/bin/setprop", "setprop", "persist.service.adb.enable", "0", NULL);
+	}
+
+	waitpid(pid, &status, 0);
+	if (WIFEXITED(status) == 0 || WEXITSTATUS(status) != 0)
+	{
+		error_msg("close adb server failed");
+		return -1;
+	}
+
+	sleep(1);
 
 	fd_adb_en = open(adb_dev_enable_path, O_RDWR);
 	if (fd_adb_en < 0)

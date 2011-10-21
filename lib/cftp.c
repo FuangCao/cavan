@@ -138,7 +138,7 @@ static ssize_t cftp_send_error_message(struct cftp_descriptor *desc, struct cftp
 	sendlen = vsprintf(msg->message, fmt, ap) + sizeof(*msg) + 1;
 	va_end(ap);
 
-	return cftp_send_data_retry(desc, msg, sendlen, desc->retry_count);
+	return cftp_send_data(desc, msg, sendlen);
 }
 
 static ssize_t cftp_send_ack_message(struct cftp_descriptor *desc, struct cftp_ack_message *msg, u16 blk_num, int retry)
