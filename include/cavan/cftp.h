@@ -15,6 +15,8 @@ struct cftp_file_request
 	u16 type;
 	u32 size;
 	u32 offset;
+	u32 st_mode;
+	u32 st_rdev;
 	char filename[0];
 };
 
@@ -38,6 +40,12 @@ struct cftp_error_message
 	char message[0];
 };
 
+struct cftp_command_request
+{
+	u16 type;
+	char command[0];
+};
+
 union cftp_message
 {
 	struct
@@ -46,6 +54,7 @@ union cftp_message
 		u8 data[CFTP_MIN_PACKAGE_LENGTH - 2];
 	};
 	struct cftp_file_request file_req;
+	struct cftp_command_request cmd_req;
 	struct cftp_data_package data_pkg;
 	struct cftp_ack_message ack_msg;
 	struct cftp_error_message err_msg;
@@ -59,6 +68,7 @@ enum cftp_package_type
 	CFTP_PACKAGE_FILE_WRITE,
 	CFTP_PACKAGE_DATA,
 	CFTP_PACKAGE_ACK,
+	CFTP_PACKAGE_COMMAND,
 	CFTP_PACKAGE_ERROR,
 };
 
@@ -89,7 +99,7 @@ struct cftp_udp_link_descriptor
 void cftp_descriptor_init(struct cftp_descriptor *desc);
 int cftp_client_receive_file(struct cftp_descriptor *desc, const char *file_in, u32 offset_in, const char *file_out, u32 offset_out, size_t size);
 int cftp_client_send_file(struct cftp_descriptor *desc, const char *file_in, u32 offset_in, const char *file_out, u32 offset_out, size_t size);
-int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename, u32 offset, size_t size);
+int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename, mode_t mode, u32 offset, size_t size);
 int cftp_server_send_file(struct cftp_descriptor *desc, const char *filename, u32 offset, size_t size);
 void *cftp_service_heandle(void *data);
 
