@@ -7,6 +7,7 @@ CAVAN_MAP_H = $(OUT_CAVAN)/cavan_map.h
 CFLAGS += -I$(OUT_CAVAN)
 
 CAVAN_OBJECT = $(call source_to_object,$(OUT_CAVAN),$(CAVAN_SOURCE))
+APP_CORE_OBJECT = $(call source_to_object,$(OUT_CAVAN),$(APP_CORE_SOURCE))
 
 TARGET_CAVAN_ELF = $(OUT_CAVAN)/$(CAVAN_NAME)
 TARGET_CAVAN_OBJ = $(TARGET_CAVAN_ELF).o
@@ -20,7 +21,6 @@ $(TARGET_CAVAN_OBJ): $(CAVAN_OBJECT)
 	$(call build_libo_file)
 
 $(APP_CORE_SOURCE): $(CAVAN_MAP_C) $(CAVAN_MAP_H)
-	$(call touch_file)
 
 $(CAVAN_MAP_C): $(APP_SOURCE)
 	$(call generate_map_source)
@@ -31,4 +31,4 @@ $(CAVAN_MAP_H): $(APP_SOURCE)
 include $(CAVAN_DEPEND)
 include $(CAVAN_SOURCE_DEPEND)
 
-.PHONY: $(CAVAN_MAP_C) $(CAVAN_MAP_H)
+.PHONY: $(CAVAN_MAP_C) $(CAVAN_MAP_H) $(APP_CORE_OBJECT)
