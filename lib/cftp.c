@@ -230,8 +230,8 @@ int cftp_client_receive_file(struct cftp_descriptor *desc, const char *file_in, 
 	}
 
 	println("Remote@%s => Local@%s", file_in, file_out);
-	println("seek = %s", size2text(offset_in));
-	println("skip = %s", size2text(offset_out));
+	println("seek = %s", size2text(offset_out));
+	println("skip = %s", size2text(offset_in));
 	println("size = %s", size2text(size));
 
 	blk_num = 0;
@@ -504,8 +504,8 @@ int cftp_client_send_file(struct cftp_descriptor *desc, const char *file_in, u32
 		goto out_free_data_msg;
 	}
 
-	println("seek = %s", size2text(offset_in));
-	println("skip = %s", size2text(offset_out));
+	println("seek = %s", size2text(offset_out));
+	println("skip = %s", size2text(offset_in));
 	println("size = %s", size2text(size));
 
 	blk_num = 0;
