@@ -1,0 +1,290 @@
+#!/bin/bash
+
+FILE_FSTAB="/etc/fstab"
+FILE_MOUNTS="/proc/mounts"
+FILE_BASHRC="/etc/bash.bashrc"
+FILE_GROUP="/etc/group"
+FILE_EXPORTS="/etc/exports"
+FILE_SAMBA_CONFIG="/etc/samba/smb.conf"
+FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
+
+CAVAN_PATH="/cavan"
+
+CPAN_PATH="/mnt/sda1"
+DPAN_PATH="/mnt/sda5"
+EPAN_PATH="/mnt/sda6"
+FPAN_PATH="/mnt/sda7"
+GPAN_PATH="/mnt/sda8"
+UBUNTU_PATH="${DPAN_PATH}/ubuntu"
+UBUNTU_HOME="${UBUNTU_PATH}/home"
+
+NFS_RW_CONFIG="*(rw,sync,no_subtree_check)"
+NFS_RO_CONFIG="*(ro,sync,no_subtree_check)"
+
+function file_asb_directory()
+{
+	cd $(dirname $1) && pwd
+}
+
+CMD_ABS_DIR="$(file_asb_directory $0)"
+CMD_ABS_PATH="${command_abs_directory}/$(basename $0)"
+CORE_PATH="${CMD_ABS_DIR}/core"
+FILE_APP_CONFIG="${CORE_PATH}/applications.cfg"
+
+source /etc/lsb-release
+source ${CORE_PATH}/file.sh
+source ${CORE_PATH}/device.sh
+source ${CORE_PATH}/stdio.sh
+
+LOCAL_UBUNTU="${UBUNTU_PATH}-${DISTRIB_RELEASE}"
+
+function mount_disk()
+{
+	local mount_point disk
+
+	cd /dev || return 1
+
+	if [ "$1" ]
+	then
+		disk="$1"
+	else
+		disk="sda"
+	fi
+
+	for dev in ${disk}*
+	do
+		mount_point="/mnt/${dev}"
+
+		umount_directory ${mount_point}
+		mkdir ${mount_point} -pv
+		mount ${dev} ${mount_point} ||
+		{
+			rmdir ${mount_point}
+			continue
+		}
+
+		grep "${mount_point}" ${FILE_FSTAB} ||
+		{
+			echo "/dev/${dev} ${mount_point} auto errors=remount-ro 0 0" >> ${FILE_FSTAB}
+		}
+	done
+}
+
+function create_mount_points()
+{
+	mkdir /mnt -pv
+	cd /mnt || return 1
+
+	for index in 1 2 3 4 5 6 7 8
+	do
+		mkdir upan${index} -pv
+		mkdir img${index} -pv
+		mkdir net${index} -pv
+	done
+}
+
+function create_symlinks()
+{
+	cavan_symlink ${CPAN_PATH} /cpan || return 1
+	cavan_symlink ${DPAN_PATH} /dpan || return 1
+	cavan_symlink ${EPAN_PATH} /epan || return 1
+	cavan_symlink ${FPAN_PATH} /fpan || return 1
+	cavan_symlink ${GPAN_PATH} /gpan || return 1
+	cavan_symlink ${UBUNTU_PATH} /ubuntu || return 1
+	cavan_symlink ${UBUNTU_PATH}/cavan /cavan || return 1
+	cavan_symlink ${UBUNTU_PATH}/work /work || return 1
+	cavan_symlink ${UBUNTU_PATH}/git /git || return 1
+	cavan_symlink ${EPAN_PATH}/source /source || return 1
+}
+
+function config_bashrc()
+{
+	local bashrc bashrcs
+
+	bashrcs="$(find /home -name ".bashrc")"
+
+	[ -z "${bashrcs}" ] && return 0
+
+	for bashrc in ${bashrcs}
+	do
+		cp ${bashrc} ${FILE_BASHRC} -av
+		mv ${bashrc} ${bashrc}.bak
+	done
+
+	mv /root/.bashrc /root/.bashrc.bak
+
+	sed -i ${FILE_BASHRC} \
+		-e 's,^\s*#\s*\(force_color_prompt=yes\),\1,g'
+
+	cat >> ${FILE_BASHRC} << EOF
+if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+    . /etc/bash_completion
+fi
+
+alias vi='vim -O'
+
+export HOST_ARCH="$(uname -m)"
+export HOST_PLAT="$(gcc -dumpmachine)"
+export CAVAN_PATH="${CAVAN_PATH}"
+export TARGET_ARCH="arm"
+export TARGET_PLAT="\${TARGET_ARCH}-cavan-linux-gnueabi"
+export CAVAN_WORK="\${HOME}/\${TARGET_PLAT}"
+export UTILS_PATH="\${CAVAN_WORK}/utils"
+export TOOLCHIAN_PATH="\${CAVAN_WORK}/toolchian/\${HOST_ARCH}-\${TARGET_ARCH}"
+export CAVAN_BIN="\${CAVAN_PATH}/out/\${HOST_ARCH}/dynamically"
+export PATH="\${UTILS_PATH}/usr/bin:\${TOOLCHIAN_PATH}/bin:\${CAVAN_BIN}:\${PATH}"
+EOF
+}
+
+function config_group()
+{
+	sed 's/\(.*:\)\s*$/\1cavan/g' ${FILE_GROUP} -i
+}
+
+function config_nfs()
+{
+	for exp in /
+	do
+		echo "${exp} ${NFS_RO_CONFIG}"
+	done >> ${FILE_EXPORTS}
+
+	for exp in /tmp /cpan /dpan /epan /fpan /gpan
+	do
+		echo "${exp} ${NFS_RW_CONFIG}"
+	done >> ${FILE_EXPORTS}
+
+	service nfs-kernel-server restart
+}
+
+function config_samba()
+{
+	cat >> ${FILE_SAMBA_CONFIG} << EOF
+[rootfs]
+   comment = ${DISTRIB_ID}-${DISTRIB_RELEASE}
+   browseable = yes
+   path = /
+   guest ok = yes
+   read only = no
+   create mask = 0777
+EOF
+
+	service smbd restart
+}
+
+function config_single_home()
+{
+	echo "HOME = $1"
+
+	cd $1 || return 1
+
+	for dir in Desktop Documents Downloads Music Pictures .stardict .VirtualBox
+	do
+		cavan_symlink ${UBUNTU_HOME}/${dir} ${dir} || return 1
+	done
+}
+
+function config_home()
+{
+	for home in /root /home/cavan
+	do
+		config_single_home ${home} || return 1
+	done
+}
+
+function config_aptget()
+{
+	local var_path etc_path
+
+	LOCAL_UBUNTU="${UBUNTU_PATH}/${DISTRIB_RELEASE}"
+	var_path="${LOCAL_UBUNTU}/var"
+	etc_path="${LOCAL_UBUNTU}/etc"
+
+	cavan_symlink ${etc_path}/apt /etc/apt || return 1
+	cavan_symlink ${var_path}/cache/apt /var/cache/apt || return 1
+
+}
+
+function config_git()
+{
+	git config --global user.name Fuang.Cao || return 1
+	git config --global user.email cavan.cfa@gmail.com || return 1
+
+	for cmd in branch  interactive ui diff grep status
+	do
+		git config --global color.${cmd} auto || return 1
+	done
+
+	cat > ${FILE_GIT_DAEMON_RUN} << EOF
+#!/bin/sh
+
+exec 2>&1
+echo 'git-daemon starting.'
+exec chpst -ugitdaemon \
+  "$(git --exec-path)"/git-daemon --verbose --export-all --enable=receive-pack --enable=upload-pack --enable=upload-archive --base-path=/git
+EOF
+}
+
+function install_applications()
+{
+	apt-get update || return 1
+
+	while read line
+	do
+		echo "line = ${line}"
+		for app in ${line}
+		do
+			case "${app}" in
+				*\#*)
+					echo "skip ${app}"
+					break
+					;;
+				*)
+					pr_title "Install application ${app}"
+					apt-get install ${apt} -y || return 1
+					;;
+			esac
+		done
+	done < ${FILE_APP_CONFIG}
+}
+
+function install_debin_packages()
+{
+	for pkg in ${LOCAL_UBUNTU}/debs/*.deb
+	do
+		pr_title "Install debin package ${pkg}"
+		dpkg -i ${pkg} || return 0
+	done
+}
+
+function config_stardict()
+{
+	cd /usr/share/stardict/dic || return 1
+
+	for dic in ${UBUNTU_PATH}/app/stardict/*.tar.*
+	do
+		pr_title "Install stardict ${dic}"
+		tar -xf ${dic} || return 1
+	done
+}
+
+pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
+
+for func in mount_disk create_mount_points create_symlinks config_bashrc config_group \
+	config_aptget install_applications install_debin_packages \
+	config_nfs config_samba config_home config_git config_stardict
+do
+	if cavan_has_mark ${func}
+	then
+		pr_green_info "${func} is already completed"
+	else
+		pr_title "Start ${func}"
+		if ${func}
+		then
+			cavan_create_mark ${func}
+			pr_green_info "${func} successfull"
+		else
+			pr_red_info "${func} failed"
+			exit 1
+		fi
+	fi
+done 2>/dev/null
