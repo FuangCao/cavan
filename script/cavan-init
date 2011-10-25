@@ -131,7 +131,7 @@ export TARGET_PLAT="\${TARGET_ARCH}-cavan-linux-gnueabi"
 export CAVAN_WORK="\${HOME}/\${TARGET_PLAT}"
 export UTILS_PATH="\${CAVAN_WORK}/utils"
 export TOOLCHIAN_PATH="\${CAVAN_WORK}/toolchian/\${HOST_ARCH}-\${TARGET_ARCH}"
-export CAVAN_BIN="\${CAVAN_PATH}/out/\${HOST_ARCH}/dynamically"
+export CAVAN_BIN="\${CAVAN_PATH}/out/\${HOST_ARCH}/dynamically:\${CAVAN_PATH}/script"
 export PATH="\${UTILS_PATH}/usr/bin:\${TOOLCHIAN_PATH}/bin:\${CAVAN_BIN}:\${PATH}"
 EOF
 }
