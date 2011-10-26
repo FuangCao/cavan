@@ -123,16 +123,19 @@ fi
 
 alias vi='vim -O'
 
-export HOST_ARCH="$(uname -m)"
-export HOST_PLAT="$(gcc -dumpmachine)"
+HOST_ARCH="$(uname -m)"
+HOST_PLAT="$(gcc -dumpmachine)"
+TARGET_ARCH="arm"
+TARGET_PLAT="\${TARGET_ARCH}-cavan-linux-gnueabi"
+
 export CAVAN_PATH="${CAVAN_PATH}"
-export TARGET_ARCH="arm"
-export TARGET_PLAT="\${TARGET_ARCH}-cavan-linux-gnueabi"
 export CAVAN_WORK="\${HOME}/\${TARGET_PLAT}"
 export UTILS_PATH="\${CAVAN_WORK}/utils"
 export TOOLCHIAN_PATH="\${CAVAN_WORK}/toolchian/\${HOST_ARCH}-\${TARGET_ARCH}"
 export CAVAN_BIN="\${CAVAN_PATH}/out/\${HOST_ARCH}/dynamically:\${CAVAN_PATH}/script"
 export PATH="\${UTILS_PATH}/usr/bin:\${TOOLCHIAN_PATH}/bin:\${CAVAN_BIN}:\${PATH}"
+
+unset HOST_ARCH HOST_PLAT TARGET_ARCH TARGET_PLAT
 EOF
 }
 
@@ -230,7 +233,6 @@ function install_applications()
 
 	while read line
 	do
-		echo "line = ${line}"
 		for app in ${line}
 		do
 			case "${app}" in
@@ -240,7 +242,7 @@ function install_applications()
 					;;
 				*)
 					pr_title "Install application ${app}"
-					apt-get install ${apt} -y || return 1
+					apt-get -y --install-suggests install ${app} || return 1
 					;;
 			esac
 		done
