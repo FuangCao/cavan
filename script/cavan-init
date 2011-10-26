@@ -122,6 +122,12 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 
 alias vi='vim -O'
+alias va='vi *.[chsS]'
+alias vh='vi *.h'
+alias vc='vi *.c'
+alias vs='vi *.[sS]'
+alias vm='vi [Mm]akefile'
+alias mkconfig='make menuconfig'
 
 HOST_ARCH="$(uname -m)"
 HOST_PLAT="$(gcc -dumpmachine)"
