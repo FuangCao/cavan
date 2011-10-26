@@ -1057,7 +1057,7 @@ u64 text2size_mb(const char *text)
 	}
 }
 
-char *__size2text(u64 size, char *buff)
+char *__size2text(u64 size, char *buff, size_t buff_len)
 {
 	u64 tmp;
 
@@ -1070,35 +1070,35 @@ char *__size2text(u64 size, char *buff)
 	tmp = (size >> 40) & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, size, 10);
+		buff = simple_value2text(tmp, buff, buff_len, 10);
 		*buff++ = 'T';
 	}
 
 	tmp = (size >> 30) & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, size, 10);
+		buff = simple_value2text(tmp, buff, buff_len, 10);
 		*buff++ = 'G';
 	}
 
 	tmp = (size >> 20) & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, size, 10);
+		buff = simple_value2text(tmp, buff, buff_len, 10);
 		*buff++ = 'M';
 	}
 
 	tmp = (size >> 10) & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, size, 10);
+		buff = simple_value2text(tmp, buff, buff_len, 10);
 		*buff++ = 'k';
 	}
 
 	tmp = size & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, size, 10);
+		buff = simple_value2text(tmp, buff, buff_len, 10);
 	}
 
 out_return:
@@ -1112,7 +1112,7 @@ char *size2text(u64 size)
 {
 	static char buff[128];
 
-	__size2text(size, buff);
+	__size2text(size, buff, sizeof(buff));
 
 	return buff;
 }

@@ -94,7 +94,7 @@ char *value2text(u64 value, int flag);
 
 u64 text2size(const char *text, const char **text_ret);
 u64 text2size_mb(const char *text);
-char *__size2text(u64 size, char *buff);
+char *__size2text(u64 size, char *buff, size_t buff_len);
 char *size2text(u64 size);
 
 char *__text_basename(char *buff, const char *path);
