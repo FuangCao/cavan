@@ -11,7 +11,7 @@ ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const
 		ssize_t sendlen;
 		int ret;
 
-		sendlen = sendto(sockfd, buff, len, 0, (const struct sockaddr *)remote_addr, sizeof(*remote_addr));
+		sendlen = inet_sendto(sockfd, buff, len, 0, remote_addr);
 		if (sendlen < 0)
 		{
 			print_error("send data failed");
@@ -45,7 +45,7 @@ ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buf
 		return sendlen;
 	}
 
-	return recvfrom(sockfd, recv_buff, recvlen, 0, (struct sockaddr *)remote_addr, addr_len);
+	return inet_recvfrom(sockfd, recv_buff, recvlen, 0, remote_addr, addr_len);
 }
 
 ssize_t select_receive(int sockfd, long timeout, void *buff, size_t bufflen, struct sockaddr_in *remote_addr, socklen_t *addr_len)
@@ -58,7 +58,7 @@ ssize_t select_receive(int sockfd, long timeout, void *buff, size_t bufflen, str
 		return ret;
 	}
 
-	return ret ? recvfrom(sockfd, buff, bufflen, 0, (struct sockaddr *)remote_addr, addr_len) : -1;
+	return ret ? inet_recvfrom(sockfd, buff, bufflen, 0, remote_addr, addr_len) : -1;
 }
 
 ssize_t recvform_noblock(int sockfd, long timeout, void *buff, size_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len)
@@ -71,7 +71,7 @@ ssize_t recvform_noblock(int sockfd, long timeout, void *buff, size_t recvlen, s
 		return -ETIMEDOUT;
 	}
 
-	return recvfrom(sockfd, buff, recvlen, 0, (struct sockaddr *)remote_addr, addr_len);
+	return inet_recvfrom(sockfd, buff, recvlen, 0, remote_addr, addr_len);
 }
 
 const char *mac_protocol_type_tostring(int type)
@@ -455,4 +455,90 @@ u16 udp_checksum(struct ip_header *ip_hdr)
 	checksum += checksum16((u16 *)udp_hdr, ntohs(udp_hdr->udp_length));
 
 	return ~((checksum + (checksum >> 16)) & 0xFFFF);
+}
+
+void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip_address, u16 port)
+{
+	addr->sin_family = AF_INET;
+	addr->sin_port = htons(port);
+	addr->sin_addr.s_addr = ip_address ? inet_addr(ip_address) : htonl(INADDR_ANY);
+}
+
+int inet_create_tcp_link(const char *ip_address, u16 port)
+{
+	int ret;
+	int sockfd;
+	struct sockaddr_in addr;
+
+	sockfd = inet_socket(SOCK_STREAM);
+	if (sockfd < 0)
+	{
+		print_error("socket");
+		return sockfd;
+	}
+
+	inet_sockaddr_init(&addr, ip_address, port);
+
+	ret = inet_connect(sockfd, &addr);
+	if (ret < 0)
+	{
+		print_error("connect to %s[%d]", ip_address, port);
+		close(sockfd);
+		return ret;
+	}
+
+	return sockfd;
+}
+
+int inet_create_service(int type, u16 port)
+{
+	int ret;
+	int sockfd;
+	struct sockaddr_in addr;
+
+	sockfd = inet_socket(type);
+	if (sockfd < 0)
+	{
+		print_error("socket");
+		return sockfd;
+	}
+
+	inet_sockaddr_init(&addr, NULL, port);
+
+	ret = inet_bind(sockfd, &addr);
+	if (ret < 0)
+	{
+		print_error("bind to port %d failed", port);
+		close(sockfd);
+		return ret;
+	}
+
+	return sockfd;
+}
+
+int inet_create_tcp_service(u16 port)
+{
+	int ret;
+	int sockfd;
+
+	sockfd = inet_create_service(SOCK_STREAM, port);
+	if (sockfd < 0)
+	{
+		return sockfd;
+	}
+
+	ret = listen(sockfd, 0);
+	if (ret < 0)
+	{
+		print_error("listen to port %d failed", port);
+		close(sockfd);
+		return ret;
+	}
+
+	return sockfd;
+}
+
+void inet_show_sockaddr(const struct sockaddr_in *addr)
+{
+	println("IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
 }

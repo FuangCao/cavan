@@ -6,7 +6,7 @@
 #include <cavan/dd.h>
 #include <cavan/file.h>
 #include <cavan/text.h>
-#include <cavan/network.h>
+#include <cavan/tftp.h>
 #include <cavan/image.h>
 
 static void show_usage(void)

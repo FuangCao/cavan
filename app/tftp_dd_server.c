@@ -1,9 +1,6 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Mar 31 12:05:55 CST 2011
 
 #include <cavan.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <pthread.h>
 #include <cavan/tftp.h>
 #include <cavan/progress.h>
@@ -68,7 +65,7 @@ static void *service_handle(void *arg)
 	{
 		println("Service %d ready", index);
 
-		ret = recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), 0, (struct sockaddr *)&req.client_addr, &addr_len);
+		ret = inet_recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), 0, &req.client_addr, &addr_len);
 		if (ret < 0)
 		{
 			print_error("Receive request failed");
@@ -148,7 +145,6 @@ int main(int argc, char *argv[])
 	int ret;
 	int i;
 	int sockfd;
-	struct sockaddr_in server_addr;
 	pthread_t newthreads[TFTP_MAX_LINK_COUNT - 1];
 	u16 server_port = TFTP_DEFAULT_PORT;
 	struct option long_options[] =
@@ -206,22 +202,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_create_udp_service(server_port);
 	if (sockfd < 0)
 	{
 		print_error("create socket failed");
 		return sockfd;
-	}
-
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	server_addr.sin_port = htons(server_port);
-
-	ret = bind(sockfd, (const struct sockaddr *)&server_addr, sizeof(server_addr));
-	if (ret < 0)
-	{
-		print_error("Bind socket failed");
-		goto out_close_socket;
 	}
 
 	println("Bind socket to port \"%d\" success", server_port);

@@ -2,13 +2,14 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Apr 21 10:08:25 CST 2011
 
-#include <bits/sockaddr.h>
 #include <sys/socket.h>
+#include <bits/sockaddr.h>
 #include <linux/netlink.h>
 #include <linux/if.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
-#include <cavan/tftp.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #define NETWORK_TIMEOUT_VALUE	5
 #define NETWORK_RETRY_COUNT		5
@@ -175,4 +176,49 @@ int cavan_route_table_delete_by_mac(struct cavan_route_table *table, u8 *mac);
 int cavan_route_table_delete_by_ip(struct cavan_route_table *table, u32 ip);
 
 u16 udp_checksum(struct ip_header *ip_hdr);
+
+void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip_address, u16 port);
+int inet_create_tcp_link(const char *ip_address, u16 port);
+int inet_create_service(int type, u16 port);
+int inet_create_tcp_service(u16 port);
+void inet_show_sockaddr(const struct sockaddr_in *addr);
+
+static inline int inet_socket(int type)
+{
+	return socket(AF_INET, type, 0);
+}
+
+static inline int inet_bind(int sockfd, const struct sockaddr_in *addr)
+{
+	return bind(sockfd, (const struct sockaddr *)addr, sizeof(*addr));
+}
+
+static inline int inet_connect(int sockfd, const struct sockaddr_in *addr)
+{
+	return connect(sockfd, (const struct sockaddr *)addr, sizeof(*addr));
+}
+
+static inline int inet_accept(int sockfd, struct sockaddr_in *addr, socklen_t *addrlen)
+{
+	*addrlen = sizeof(struct sockaddr_in);
+
+	return accept(sockfd, (struct sockaddr *)addr, addrlen);
+}
+
+static inline ssize_t inet_sendto(int sockfd, const void *buff, size_t size, int flags, const struct sockaddr_in *addr)
+{
+	return sendto(sockfd, buff, size, flags, (const struct sockaddr *)addr, sizeof(*addr));
+}
+
+static inline ssize_t inet_recvfrom(int sockfd, void *buff, size_t size, int flags, struct sockaddr_in *addr, socklen_t *addrlen)
+{
+	*addrlen = sizeof(struct sockaddr_in);
+
+	return recvfrom(sockfd, buff, size, flags, (struct sockaddr *)addr, addrlen);
+}
+
+static inline int inet_create_udp_service(u16 port)
+{
+	return inet_create_service(SOCK_DGRAM, port);
+}
 

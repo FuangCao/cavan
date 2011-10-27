@@ -18,7 +18,7 @@ static ssize_t send_error_pkg(int sockfd, int err_code, const char *err_msg, con
 	err_pkg.err_code = htons(err_code);
 	strcpy(err_pkg.err_msg, err_msg);
 
-	return sendto(sockfd, &err_pkg, strlen(err_pkg.err_msg) + 5, 0, (const struct sockaddr *)remote_addr, sizeof(*remote_addr));
+	return inet_sendto(sockfd, &err_pkg, strlen(err_pkg.err_msg) + 5, 0, remote_addr);
 }
 
 static void show_error_msg_pkg(const struct tftp_error_pkg *err_pkg_p)
@@ -39,7 +39,7 @@ static ssize_t send_ack_pkg(int sockfd, u16 blk_num, const struct sockaddr_in *r
 	ack_pkg.op_code = htons(TFTP_ACK);
 	ack_pkg.blk_num = htons(blk_num);
 
-	return sendto(sockfd, &ack_pkg, sizeof(ack_pkg), 0, (const struct sockaddr *)remote_addr, sizeof(*remote_addr));
+	return inet_sendto(sockfd, &ack_pkg, sizeof(ack_pkg), 0, remote_addr);
 }
 
 static ssize_t send_ack_nosocket(u16 blk_num, const struct sockaddr_in *remote_addr)
@@ -47,7 +47,7 @@ static ssize_t send_ack_nosocket(u16 blk_num, const struct sockaddr_in *remote_a
 	int sockfd;
 	ssize_t sendlen;
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		print_error("create socket failed");
@@ -131,7 +131,7 @@ int send_mkdir_request(const char *ip_address, u16 port, const char *pathname, m
 	struct sockaddr_in remote_addr;
 	socklen_t remote_addr_len;
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		print_error("create socket failed");
@@ -142,10 +142,7 @@ int send_mkdir_request(const char *ip_address, u16 port, const char *pathname, m
 	pkg.mkdir.mode = mode;
 	strcpy(pkg.mkdir.pathname, pathname);
 
-	remote_addr.sin_addr.s_addr = inet_addr(ip_address);
-	remote_addr.sin_family = AF_INET;
-	remote_addr.sin_port = htons(port);
-	remote_addr_len = sizeof(remote_addr);
+	inet_sockaddr_init(&remote_addr, ip_address, port);
 
 	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pathname) + 1 + MEMBER_OFFSET(struct tftp_mkdir_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
 	if (recvlen < 0)
@@ -171,7 +168,7 @@ int vsend_command_request(const char *ip_address, u16 port, const char *command,
 	struct sockaddr_in remote_addr;
 	socklen_t remote_addr_len;
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		print_error("create socket failed");
@@ -181,10 +178,7 @@ int vsend_command_request(const char *ip_address, u16 port, const char *command,
 	pkg.command.op_code = htons(TFTP_COMMAND_REQ);
 	vsprintf(pkg.command.command, command, ap);
 
-	remote_addr.sin_addr.s_addr = inet_addr(ip_address);
-	remote_addr.sin_family = AF_INET;
-	remote_addr.sin_port = htons(port);
-	remote_addr_len = sizeof(remote_addr);
+	inet_sockaddr_init(&remote_addr, ip_address, port);
 
 	println("Send command \"%s\"", pkg.command.command);
 
@@ -263,7 +257,7 @@ int send_mknode_request(const char *ip_address, u16 port, const char *pathname, 
 	struct sockaddr_in remote_addr;
 	socklen_t remote_addr_len;
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		print_error("create socket failed");
@@ -275,10 +269,7 @@ int send_mknode_request(const char *ip_address, u16 port, const char *pathname, 
 	pkg.mknode.dev = dev;
 	strcpy(pkg.mknode.pathname, pathname);
 
-	remote_addr.sin_addr.s_addr = inet_addr(ip_address);
-	remote_addr.sin_family = AF_INET;
-	remote_addr.sin_port = htons(port);
-	remote_addr_len = sizeof(remote_addr);
+	inet_sockaddr_init(&remote_addr, ip_address, port);
 
 	println("Request mknode %s", pathname);
 
@@ -321,7 +312,7 @@ int send_symlink_request(const char *ip_address, u16 port, const char *file_in, 
 	link[newpath_len] = 0;
 	println("symlink = %s, newpath_len = %d", pkg.symlink.pathname + oldpath_len + 1, newpath_len);
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		print_error("create socket failed");
@@ -331,10 +322,7 @@ int send_symlink_request(const char *ip_address, u16 port, const char *file_in, 
 	pkg.symlink.op_code = htons(TFTP_SYMLINK_REQ);
 	strcpy(pkg.symlink.pathname, file_out);
 
-	remote_addr.sin_addr.s_addr = inet_addr(ip_address);
-	remote_addr.sin_family = AF_INET;
-	remote_addr.sin_port = htons(port);
-	remote_addr_len = sizeof(remote_addr);
+	inet_sockaddr_init(&remote_addr, ip_address, port);
 
 	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, oldpath_len + newpath_len + 2 + MEMBER_OFFSET(struct tftp_symlink_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
 	if (recvlen < 0)
@@ -378,7 +366,7 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 		}
 	}
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		print_error("Can't create socket");
@@ -386,10 +374,7 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 		goto out_close_fd;
 	}
 
-	remote_addr.sin_addr.s_addr = inet_addr(ip_address);
-	remote_addr.sin_family = AF_INET;
-	remote_addr.sin_port = htons(port);
-	remote_addr_len = sizeof(remote_addr);
+	inet_sockaddr_init(&remote_addr, ip_address, port);
 
 	if (offset_in || size)
 	{
@@ -416,7 +401,7 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 
 	while (1)
 	{
-		recvlen = recvfrom(sockfd, &pkg, sizeof(pkg), 0, (struct sockaddr *)&remote_addr, &remote_addr_len);
+		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), 0, &remote_addr, &remote_addr_len);
 		if (recvlen < 0)
 		{
 			print_error("receive data timeout");
@@ -551,7 +536,7 @@ int tftp_client_send_file(const char *ip_address, u16 port, const char *file_in,
 		size -= offset_in;
 	}
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		print_error("Can't create socket");
@@ -559,9 +544,7 @@ int tftp_client_send_file(const char *ip_address, u16 port, const char *file_in,
 		goto out_close_fd;
 	}
 
-	remote_addr.sin_addr.s_addr = inet_addr(ip_address);
-	remote_addr.sin_family = AF_INET;
-	remote_addr.sin_port = htons(port);
+	inet_sockaddr_init(&remote_addr, ip_address, port);
 
 	if (offset_out || size)
 	{
@@ -591,7 +574,7 @@ int tftp_client_send_file(const char *ip_address, u16 port, const char *file_in,
 
 	while (1)
 	{
-		recvlen = recvfrom(sockfd, &pkg, sizeof(pkg), 0, (struct sockaddr *)&remote_addr, &remote_addr_len);
+		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), 0, &remote_addr, &remote_addr_len);
 		if (recvlen < 0)
 		{
 			print_error("receive data failed");
@@ -778,7 +761,7 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 
 	println("Handle write request filename = %s, mode = %s", file_out, file_mode);
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		print_error("create socket failed");
@@ -836,7 +819,7 @@ lable_send_ack:
 			goto out_close_fd;
 		}
 
-		recvlen = recvfrom(sockfd, &pkg, sizeof(pkg), 0, (struct sockaddr *)remote_addr, &remote_addr_len);
+		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), 0, remote_addr, &remote_addr_len);
 		if (recvlen < 0)
 		{
 			print_error("receive data failed");
@@ -903,7 +886,7 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 
 	println("Handle read request filename = %s, mode = %s", file_in, file_mode);
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		print_error("create socket failed");

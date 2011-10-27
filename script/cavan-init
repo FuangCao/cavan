@@ -94,6 +94,7 @@ function create_symlinks()
 	cavan_symlink ${UBUNTU_PATH}/cavan /cavan || return 1
 	cavan_symlink ${UBUNTU_PATH}/work /work || return 1
 	cavan_symlink ${UBUNTU_PATH}/git /git || return 1
+	cavan_symlink ${UBUNTU_PATH}/book /book || return 1
 	cavan_symlink ${EPAN_PATH}/source /source || return 1
 }
 
@@ -182,13 +183,11 @@ EOF
 
 function config_single_home()
 {
-	echo "HOME = $1"
-
 	cd $1 || return 1
 
-	for dir in Desktop Documents Downloads Music Pictures .stardict .VirtualBox
+	for dir in Desktop Documents Downloads Music Pictures .stardict .VirtualBox VirtualBox\ VMs
 	do
-		cavan_symlink ${UBUNTU_HOME}/${dir} ${dir} || return 1
+		cavan_symlink "${UBUNTU_HOME}/${dir}" "${dir}" || return 1
 	done
 }
 

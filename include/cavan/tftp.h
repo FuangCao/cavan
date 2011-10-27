@@ -1,8 +1,6 @@
 #pragma once
 
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
+#include <cavan/network.h>
 
 #define TFTP_DEFAULT_PORT	8888
 #define TFTP_DATA_LEN		KB(63)
