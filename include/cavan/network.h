@@ -178,10 +178,15 @@ int cavan_route_table_delete_by_ip(struct cavan_route_table *table, u32 ip);
 u16 udp_checksum(struct ip_header *ip_hdr);
 
 void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip_address, u16 port);
-int inet_create_tcp_link(const char *ip_address, u16 port);
+int inet_create_tcp_link1(struct sockaddr_in *addr);
+int inet_create_tcp_link2(const char *ip_address, u16 port);
 int inet_create_service(int type, u16 port);
 int inet_create_tcp_service(u16 port);
 void inet_show_sockaddr(const struct sockaddr_in *addr);
+
+ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int timeout);
+ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen, int timeout);
+ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size);
 
 static inline int inet_socket(int type)
 {
@@ -205,20 +210,30 @@ static inline int inet_accept(int sockfd, struct sockaddr_in *addr, socklen_t *a
 	return accept(sockfd, (struct sockaddr *)addr, addrlen);
 }
 
-static inline ssize_t inet_sendto(int sockfd, const void *buff, size_t size, int flags, const struct sockaddr_in *addr)
+static inline ssize_t inet_sendto(int sockfd, const void *buff, size_t size, const struct sockaddr_in *addr)
 {
-	return sendto(sockfd, buff, size, flags, (const struct sockaddr *)addr, sizeof(*addr));
+	return sendto(sockfd, buff, size, 0, (const struct sockaddr *)addr, sizeof(*addr));
 }
 
-static inline ssize_t inet_recvfrom(int sockfd, void *buff, size_t size, int flags, struct sockaddr_in *addr, socklen_t *addrlen)
+static inline ssize_t inet_recvfrom(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen)
 {
 	*addrlen = sizeof(struct sockaddr_in);
 
-	return recvfrom(sockfd, buff, size, flags, (struct sockaddr *)addr, addrlen);
+	return recvfrom(sockfd, buff, size, 0, (struct sockaddr *)addr, addrlen);
 }
 
 static inline int inet_create_udp_service(u16 port)
 {
 	return inet_create_service(SOCK_DGRAM, port);
+}
+
+static inline ssize_t inet_send_text(int sockfd, const char *text)
+{
+	return send(sockfd, text, text_len(text), 0);
+}
+
+static inline ssize_t inet_send_text_to(int sockfd, const char *text, const struct sockaddr_in *addr)
+{
+	return inet_sendto(sockfd, text, text_len(text), addr);
 }
 

@@ -2269,3 +2269,21 @@ int file_find_and_open(const char *prefix, char *last_path, int start, int end, 
 	return -ENOENT;
 }
 
+int file_poll(int fd, short events, int timeout)
+{
+	int ret;
+	struct pollfd pfd =
+	{
+		.fd = fd,
+		.events = events,
+	};
+
+	ret = poll(&pfd, 1, timeout);
+	if (ret < 0)
+	{
+		print_error("poll");
+		return ret;
+	}
+
+	return pfd.revents;
+}

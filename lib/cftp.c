@@ -994,14 +994,14 @@ ssize_t cftp_udp_receive_data(void *data, void *buff, size_t size)
 {
 	struct cftp_udp_link_descriptor *link = data;
 
-	return inet_recvfrom(link->sockfd, buff, size, 0, &link->client_addr, &link->addrlen);
+	return inet_recvfrom(link->sockfd, buff, size, &link->client_addr, &link->addrlen);
 }
 
 ssize_t cftp_udp_send_data(void *data, const void *buff, size_t size)
 {
 	struct cftp_udp_link_descriptor *link = data;
 
-	return inet_sendto(link->sockfd, buff, size, 0, &link->client_addr);
+	return inet_sendto(link->sockfd, buff, size, &link->client_addr);
 }
 
 ssize_t cftp_usb_receive_data(void *data, void *buff, size_t size)

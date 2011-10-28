@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cavan/text.h>
+#include <poll.h>
 
 #define MAX_BUFFER_LEN				MB(1)
 
@@ -117,6 +118,7 @@ int file_replace_line_simple(const char *file_path, const char *prefix, off_t pr
 int file_stat(const char *file_name, struct stat *st);
 int file_lstat(const char *file_name, struct stat *st);
 int file_select_read(int fd, long timeout);
+int file_poll(int fd, short events, int timeout);
 
 u32 mem_checksum32_simple(const void *mem, size_t count);
 u16 mem_checksum16_simple(const void *mem, size_t count);
@@ -339,5 +341,15 @@ static inline int access_rwx(const char *filename)
 static inline int is_dot_name(const char *filename)
 {
 	return text_cmp(filename, ".") == 0 || text_cmp(filename, "..") == 0;
+}
+
+static inline int file_poll_read(int fd, int timeout)
+{
+	return file_poll(fd, POLLIN, timeout);
+}
+
+static inline int file_poll_write(int fd, int timeout)
+{
+	return file_poll(fd, POLLOUT, timeout);
 }
 

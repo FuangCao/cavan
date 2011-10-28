@@ -18,7 +18,7 @@ static ssize_t send_error_pkg(int sockfd, int err_code, const char *err_msg, con
 	err_pkg.err_code = htons(err_code);
 	strcpy(err_pkg.err_msg, err_msg);
 
-	return inet_sendto(sockfd, &err_pkg, strlen(err_pkg.err_msg) + 5, 0, remote_addr);
+	return inet_sendto(sockfd, &err_pkg, strlen(err_pkg.err_msg) + 5, remote_addr);
 }
 
 static void show_error_msg_pkg(const struct tftp_error_pkg *err_pkg_p)
@@ -39,7 +39,7 @@ static ssize_t send_ack_pkg(int sockfd, u16 blk_num, const struct sockaddr_in *r
 	ack_pkg.op_code = htons(TFTP_ACK);
 	ack_pkg.blk_num = htons(blk_num);
 
-	return inet_sendto(sockfd, &ack_pkg, sizeof(ack_pkg), 0, remote_addr);
+	return inet_sendto(sockfd, &ack_pkg, sizeof(ack_pkg), remote_addr);
 }
 
 static ssize_t send_ack_nosocket(u16 blk_num, const struct sockaddr_in *remote_addr)
@@ -401,7 +401,7 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 
 	while (1)
 	{
-		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), 0, &remote_addr, &remote_addr_len);
+		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
 		if (recvlen < 0)
 		{
 			print_error("receive data timeout");
@@ -574,7 +574,7 @@ int tftp_client_send_file(const char *ip_address, u16 port, const char *file_in,
 
 	while (1)
 	{
-		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), 0, &remote_addr, &remote_addr_len);
+		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
 		if (recvlen < 0)
 		{
 			print_error("receive data failed");
@@ -819,7 +819,7 @@ lable_send_ack:
 			goto out_close_fd;
 		}
 
-		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), 0, remote_addr, &remote_addr_len);
+		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), remote_addr, &remote_addr_len);
 		if (recvlen < 0)
 		{
 			print_error("receive data failed");

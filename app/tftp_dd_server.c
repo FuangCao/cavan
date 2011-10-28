@@ -65,7 +65,7 @@ static void *service_handle(void *arg)
 	{
 		println("Service %d ready", index);
 
-		ret = inet_recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), 0, &req.client_addr, &addr_len);
+		ret = inet_recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), &req.client_addr, &addr_len);
 		if (ret < 0)
 		{
 			print_error("Receive request failed");
