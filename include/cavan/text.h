@@ -173,6 +173,8 @@ int text_is_uppercase(const char *text);
 int text_is_lowercase(const char *text);
 int text_is_letter(const char *text);
 
+char *text_replace_char(const char *src, char *dest, char c_src, char c_dest);
+
 // ============================================================
 
 static inline char *text_kmp_find(const char *buff, const char *sub)

@@ -10,11 +10,13 @@
 #include <linux/if_ether.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/time.h>
 
 #define NETWORK_TIMEOUT_VALUE	5
 #define NETWORK_RETRY_COUNT		5
 #define ROUTE_TABLE_SIZE		16
 #define MAC_ADDRESS_LEN			6
+#define CAVAN_LISTEN_BACKLOG	32
 
 #pragma pack(1)
 struct mac_header
@@ -178,7 +180,7 @@ int cavan_route_table_delete_by_ip(struct cavan_route_table *table, u32 ip);
 u16 udp_checksum(struct ip_header *ip_hdr);
 
 void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip_address, u16 port);
-int inet_create_tcp_link1(struct sockaddr_in *addr);
+int inet_create_tcp_link1(const struct sockaddr_in *addr);
 int inet_create_tcp_link2(const char *ip_address, u16 port);
 int inet_create_service(int type, u16 port);
 int inet_create_tcp_service(u16 port);
@@ -187,6 +189,14 @@ void inet_show_sockaddr(const struct sockaddr_in *addr);
 ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int timeout);
 ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen, int timeout);
 ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size);
+
+u32 get_rand_value(void);
+int inet_bind_rand(int sockfd, int retry);
+
+int inet_tcp_send_file1(int sockfd, int fd);
+int inet_tcp_send_file2(int sockfd, const char *filename);
+int inet_tcp_receive_file1(int sockfd, int fd);
+int inet_tcp_receive_file2(int sockfd, const char *filename);
 
 static inline int inet_socket(int type)
 {
@@ -235,5 +245,20 @@ static inline ssize_t inet_send_text(int sockfd, const char *text)
 static inline ssize_t inet_send_text_to(int sockfd, const char *text, const struct sockaddr_in *addr)
 {
 	return inet_sendto(sockfd, text, text_len(text), addr);
+}
+
+static inline int inet_listen(int sockfd)
+{
+	return listen(sockfd, CAVAN_LISTEN_BACKLOG);
+}
+
+static inline ssize_t inet_send(int sockfd, const void *buff, size_t size)
+{
+	return send(sockfd, buff, size, MSG_NOSIGNAL);
+}
+
+static inline ssize_t inet_recv(int sockfd, void *buff, size_t size)
+{
+	return recv(sockfd, buff, size, MSG_NOSIGNAL);
 }
 

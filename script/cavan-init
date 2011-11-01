@@ -274,12 +274,17 @@ function config_stardict()
 	done
 }
 
+function config_others()
+{
+	mkdir /temp -pv
+}
+
 pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 
 for func in mount_disk create_mount_points create_symlinks \
 	config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_stardict \
-	config_bashrc config_group
+	config_bashrc config_group config_others
 do
 	if cavan_has_mark ${func}
 	then

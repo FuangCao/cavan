@@ -53,5 +53,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	return ftp_service_run(8888, 1);
+	assert(argc - optind > 0);
+
+	return ftp_service_run(text2value_unsigned(argv[optind], NULL, 10), 10);
 }

@@ -53,5 +53,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	return ftp_client_run("127.0.0.1", 8888);
+	assert(argc - optind > 0);
+
+	return ftp_client_run("192.168.0.144", text2value_unsigned(argv[optind], NULL, 10));
 }

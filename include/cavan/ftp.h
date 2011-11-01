@@ -6,6 +6,7 @@
 
 #define FTP_DATA_PORT		20
 #define FTP_COLTROL_PORT	21
+#define CAVAN_FTP_ROOT_DIR	"/"
 
 enum cavan_ftp_state
 {

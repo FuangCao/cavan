@@ -464,7 +464,7 @@ void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip_address, u16 po
 	addr->sin_addr.s_addr = ip_address ? inet_addr(ip_address) : htonl(INADDR_ANY);
 }
 
-int inet_create_tcp_link1(struct sockaddr_in *addr)
+int inet_create_tcp_link1(const struct sockaddr_in *addr)
 {
 	int ret;
 	int sockfd;
@@ -519,6 +519,8 @@ int inet_create_service(int type, u16 port)
 		return ret;
 	}
 
+	println("port = %d", ntohs(addr.sin_port));
+
 	return sockfd;
 }
 
@@ -533,7 +535,7 @@ int inet_create_tcp_service(u16 port)
 		return sockfd;
 	}
 
-	ret = listen(sockfd, 0);
+	ret = inet_listen(sockfd);
 	if (ret < 0)
 	{
 		print_error("listen to port %d failed", port);
@@ -560,7 +562,7 @@ ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int timeout)
 		return ret;
 	}
 
-	return (ret & POLLIN) ? recv(sockfd, buff, size, 0) : 0;
+	return (ret & POLLIN) ? inet_recv(sockfd, buff, size) : 0;
 }
 
 ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen, int timeout)
@@ -589,9 +591,140 @@ ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size)
 		return sockfd;
 	}
 
-	sendlen = send(sockfd, buff, size, 0);
+	sendlen = inet_send(sockfd, buff, size);
 
 	close(sockfd);
 
 	return sendlen;
+}
+
+u32 get_rand_value(void)
+{
+	static int seeded;
+
+	if (seeded == 0)
+	{
+		struct timeval tv;
+
+		gettimeofday(&tv, NULL);
+		srand(tv.tv_usec);
+		seeded = 1;
+	}
+
+	return rand();
+}
+
+int inet_bind_rand(int sockfd, int retry)
+{
+	int ret;
+	struct sockaddr_in addr;
+
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	do {
+		addr.sin_port = get_rand_value() & 0xFFFF;
+
+		ret = inet_bind(sockfd, &addr);
+	} while (ret < 0 && retry--);
+
+	return ret < 0 ? ret : ntohs(addr.sin_port);
+}
+
+int inet_tcp_send_file1(int sockfd, int fd)
+{
+	ssize_t readlen, sendlen;
+	char buff[1024];
+
+	while (1)
+	{
+		readlen = read(fd, buff, sizeof(buff));
+		if (readlen < 0)
+		{
+			print_error("read");
+			return readlen;
+		}
+
+		if (readlen == 0)
+		{
+			break;
+		}
+
+		sendlen = inet_send(sockfd, buff, readlen);
+		if (sendlen < 0)
+		{
+			print_error("inet_send");
+			return sendlen;
+		}
+	}
+
+	return 0;
+}
+
+int inet_tcp_send_file2(int sockfd, const char *filename)
+{
+	int ret;
+	int fd;
+
+	fd = open(filename, O_RDONLY);
+	if (fd < 0)
+	{
+		print_error("open file %s failed", filename);
+		return fd;
+	}
+
+	ret = inet_tcp_send_file1(sockfd, fd);
+
+	close(fd);
+
+	return ret;
+}
+
+int inet_tcp_receive_file1(int sockfd, int fd)
+{
+	ssize_t recvlen, writelen;
+	char buff[1024];
+
+	while (1)
+	{
+		recvlen = inet_recv(sockfd, buff, sizeof(buff));
+		if (recvlen < 0)
+		{
+			print_error("inet_recv");
+			return recvlen;
+		}
+
+		if (recvlen == 0)
+		{
+			break;
+		}
+
+		writelen = write(fd, buff, recvlen);
+		if (writelen < 0)
+		{
+			print_error("write");
+			return writelen;
+		}
+	}
+
+	return 0;
+}
+
+int inet_tcp_receive_file2(int sockfd, const char *filename)
+{
+	int ret;
+	int fd;
+
+	fd = open(filename, O_WRONLY | O_CREAT, 0777);
+	if (fd < 0)
+	{
+		print_error("open file %s failed", filename);
+		return fd;
+	}
+
+	ret = inet_tcp_receive_file1(sockfd, fd);
+
+	close(fd);
+
+	return ret;
 }

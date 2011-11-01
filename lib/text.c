@@ -2242,3 +2242,19 @@ int text_is_letter(const char *text)
 
 	return *text == 0;
 }
+
+char *text_replace_char(const char *src, char *dest, char c_src, char c_dest)
+{
+	while (*src)
+	{
+
+		*dest = (*src == c_src) ? c_dest : *src;
+
+		src++;
+		dest++;
+	}
+
+	*dest = 0;
+
+	return dest;
+}
