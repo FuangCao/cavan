@@ -23,6 +23,9 @@ struct cavan_ftp_descriptor
 	int data_sockfd;
 };
 
+char *ftp_file_stat_tostring(const char *filepath, char *text);
+char *ftp_list_directory(const char *dirpath, char *text);
+
 int ftp_service_run(u16 port, int count);
 int ftp_client_run(const char *ip_address, u16 port);
 

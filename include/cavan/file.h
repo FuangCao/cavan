@@ -156,6 +156,11 @@ __printf_format_23__ ssize_t file_printf(const char *filename, const char *fmt, 
 
 int file_find_and_open(const char *prefix, char *last_path, int start, int end, int flags);
 
+char file_type_to_char(mode_t mode);
+char *file_permition_tostring(mode_t mode, char *text);
+const char *month_tostring(int month);
+const char *week_tostring(int week);
+
 // ============================================================
 
 static inline int file_open_ro(const char *file_path)

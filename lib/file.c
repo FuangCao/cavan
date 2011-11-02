@@ -2287,3 +2287,77 @@ int file_poll(int fd, short events, int timeout)
 
 	return pfd.revents;
 }
+
+char file_type_to_char(mode_t mode)
+{
+	switch (mode & S_IFMT)
+	{
+	case S_IFBLK:
+		return 'b';
+
+	case S_IFCHR:
+		return 'c';
+
+	case S_IFDIR:
+		return 'd';
+
+	case S_IFIFO:
+		return 'f';
+
+	case S_IFLNK:
+		return 'l';
+
+	default:
+		return '-';
+	}
+}
+
+char *file_permition_tostring(mode_t mode, char *text)
+{
+	int i;
+	u32 shift;
+	const char *permition_table = "rwx";
+
+	shift = 1 << 8;
+
+	while (shift)
+	{
+		for (i = 0; i < 3; i++, shift >>= 1, text++)
+		{
+			if (mode & shift)
+			{
+				*text = permition_table[i];
+			}
+			else
+			{
+				*text = '-';
+			}
+		}
+	}
+
+	return text;
+}
+
+const char *month_tostring(int month)
+{
+	const char *month_table[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+	if (month >= 0 && month < ARRAY_SIZE(month_table))
+	{
+		return month_table[month];
+	}
+
+	return "Unknown";
+}
+
+const char *week_tostring(int week)
+{
+	const char *week_table[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+
+	if (week >= 0 && week < ARRAY_SIZE(week_table))
+	{
+		return week_table[week];
+	}
+
+	return "Unknown";
+}
