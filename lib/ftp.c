@@ -232,6 +232,10 @@ char *ftp_list_directory1(const char *dirpath, char *text)
 		text_copy(name_p, ep->d_name);
 
 		text = ftp_file_stat_tostring(tmp_path, text);
+		if (text == NULL)
+		{
+			return NULL;
+		}
 		*text++ = ' ';
 		text = text_copy(text, ep->d_name);
 		*text++ = '\n';
