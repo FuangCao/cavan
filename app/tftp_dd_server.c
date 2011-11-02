@@ -46,6 +46,7 @@ static int handle_write_request(struct tftp_request *req_p)
 
 static pthread_mutex_t tftp_mutex;
 static int service_count = 0;
+
 static void *service_handle(void *arg)
 {
 	int ret;

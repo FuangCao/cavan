@@ -4,6 +4,9 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
+char ftp_root_path[1024] = "/";
+char ftp_netdev_name[32] = "eth0";
+
 static inline int ftp_check_socket(int sockfd, const struct sockaddr_in *addr)
 {
 	return sockfd < 0 ? inet_create_tcp_link1(addr) : sockfd;
@@ -417,7 +420,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	int fd;
 	struct ifreq ifr;
 
-	text_copy(ifr.ifr_ifrn.ifrn_name, "eth0");
+	text_copy(ifr.ifr_ifrn.ifrn_name, ftp_netdev_name);
 
 	ret = ioctl(sockfd, SIOCGIFADDR, &ifr);
 	if (ret < 0)
@@ -440,7 +443,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	pasv_port = 0;
 
 	reply = "231 User login successfull";
-	text_copy(curr_path, CAVAN_FTP_ROOT_DIR);
+	text_copy(curr_path, ftp_root_path);
 
 	while (1)
 	{
@@ -540,7 +543,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		case 0x20445743:
 			if (recvlen < 7)
 			{
-				text_copy(curr_path, CAVAN_FTP_ROOT_DIR);
+				text_copy(curr_path, ftp_root_path);
 			}
 			else
 			{
@@ -766,21 +769,33 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	return -1;
 }
 
+static pthread_mutex_t ftp_mutex = PTHREAD_MUTEX_INITIALIZER;
+static int service_count;
+
 void *ftp_service_handle(void *data)
 {
 	struct sockaddr_in client_addr;
 	socklen_t addrlen;
 	int sockfd;
 	struct cavan_ftp_descriptor *desc = data;
+	int index;
+
+	pthread_mutex_lock(&ftp_mutex);
+	index = service_count++;
+	pthread_mutex_unlock(&ftp_mutex);
 
 	while (1)
 	{
+		pr_bold_info("Ftp service %d ready", index);
+
 		sockfd = inet_accept(desc->ctrl_sockfd, &client_addr, &addrlen);
 		if (sockfd < 0)
 		{
 			print_error("inet_accept");
 			return NULL;
 		}
+
+		pr_bold_info("Ftp service %d active", index);
 
 		inet_show_sockaddr(&client_addr);
 		ftp_service_cmdline(desc, sockfd, &client_addr);
@@ -791,23 +806,15 @@ void *ftp_service_handle(void *data)
 	return NULL;
 }
 
-static struct cavan_ftp_descriptor ftp_desc;
-
-void ftp_server_stop_handle(int signum)
-{
-	pr_bold_pos();
-
-	close(ftp_desc.ctrl_sockfd);
-	close(ftp_desc.data_sockfd);
-
-	exit(-1);
-}
-
 int ftp_service_run(u16 port, int count)
 {
 	int i;
 	int ret;
 	pthread_t services[count - 1];
+	struct cavan_ftp_descriptor ftp_desc;
+
+	pr_bold_info("Device = %s, Port = %d, Daemon count = %d", ftp_netdev_name, port, count);
+	pr_bold_info("Ftp root path = %s", ftp_root_path);
 
 	ftp_desc.ctrl_sockfd = inet_create_tcp_service(port);
 	if (ftp_desc.ctrl_sockfd < 0)
@@ -815,10 +822,6 @@ int ftp_service_run(u16 port, int count)
 		error_msg("inet_create_tcp_service");
 		return ftp_desc.ctrl_sockfd;
 	}
-
-	ftp_desc.data_sockfd = -1;
-
-	signal(SIGINT, ftp_server_stop_handle);
 
 	for (i = count - 1; i >= 0; i--)
 	{

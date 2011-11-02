@@ -519,8 +519,6 @@ int inet_create_service(int type, u16 port)
 		return ret;
 	}
 
-	println("port = %d", ntohs(addr.sin_port));
-
 	return sockfd;
 }
 

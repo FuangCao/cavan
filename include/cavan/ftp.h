@@ -4,9 +4,8 @@
 
 #include <cavan/network.h>
 
-#define FTP_DATA_PORT		20
-#define FTP_COLTROL_PORT	21
-#define CAVAN_FTP_ROOT_DIR	"/"
+#define FTP_DATA_PORT	20
+#define FTP_CTRL_PORT	21
 
 enum cavan_ftp_state
 {
@@ -22,6 +21,9 @@ struct cavan_ftp_descriptor
 	int ctrl_sockfd;
 	int data_sockfd;
 };
+
+extern char ftp_root_path[];
+extern char ftp_netdev_name[];
 
 char *ftp_file_stat_tostring(const char *filepath, char *text);
 char *ftp_list_directory(const char *dirpath, char *text);

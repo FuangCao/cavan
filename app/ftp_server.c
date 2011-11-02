@@ -29,10 +29,39 @@ int main(int argc, char *argv[])
 			.val = 'v',
 		},
 		{
+			.name = "dev",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'd',
+		},
+		{
+			.name = "root",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'r',
+		},
+		{
+			.name = "port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p',
+		},
+		{
+			.name = "count",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'c',
+		},
+		{
 		},
 	};
+	u16 port;
+	int count;
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
+	port = FTP_CTRL_PORT;
+	count = 10;
+
+	while ((c = getopt_long(argc, argv, "vVhHdDpPcCrR", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -47,13 +76,36 @@ int main(int argc, char *argv[])
 			show_usage();
 			return 0;
 
+		case 'd':
+		case 'D':
+			text_copy(ftp_netdev_name, optarg);
+			break;
+
+		case 'r':
+		case 'R':
+			text_copy(ftp_root_path, optarg);
+			break;
+
+		case 'p':
+		case 'P':
+			port = text2value_unsigned(argv[optind], NULL, 10);
+			break;
+
+		case 'c':
+		case 'C':
+			count = text2value_unsigned(argv[optind], NULL, 10);
+			break;
+
 		default:
 			show_usage();
 			return -EINVAL;
 		}
 	}
 
-	assert(argc - optind > 0);
+	if (argc > optind && port == FTP_CTRL_PORT)
+	{
+		port = text2value_unsigned(argv[optind], NULL, 10);
+	}
 
-	return ftp_service_run(text2value_unsigned(argv[optind], NULL, 10), 10);
+	return ftp_service_run(port, count);
 }
