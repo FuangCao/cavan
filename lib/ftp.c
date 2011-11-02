@@ -200,8 +200,8 @@ char *ftp_file_stat_tostring(const char *filepath, char *text)
 	ret = stat(filepath, &st);
 	if (ret < 0)
 	{
-		print_error("stat");
-		return NULL;
+		print_error("stat %s", filepath);
+		return text;
 	}
 
 	*text++ = file_type_to_char(st.st_mode);
