@@ -190,7 +190,10 @@ static char *ftp_file_time_tostring(const time_t *time, char *text)
 {
 	struct tm ti;
 
-	localtime_r(time, &ti);
+	if (localtime_r(time, &ti) == NULL)
+	{
+		mem_set8(&ti, 0, sizeof(ti));
+	}
 
 	return text + sprintf(text, "%s %02d %02d:%02d", month_tostring(ti.tm_mon), ti.tm_mday, ti.tm_hour, ti.tm_mday);
 }
@@ -449,7 +452,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	{
 		if (reply)
 		{
-			sendlen = ftp_send_text(sockfd, "%s.\r\n", reply);
+			sendlen = ftp_send_text(sockfd, "%s\r\n", reply);
 			if (sendlen < 0)
 			{
 				print_error("inet_send_text");
@@ -474,7 +477,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		/* quit */
 		case 0x74697571:
 		case 0x54495551:
-			ftp_send_text(sockfd, "221 Goodbye.\r\n");
+			ftp_send_text(sockfd, "221 Goodbye\r\n");
 			return 0;
 
 		/* user */
@@ -577,7 +580,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 				continue;
 			}
 
-			sendlen = ftp_send_text(sockfd, "150 List directory complete.\r\n");
+			sendlen = ftp_send_text(sockfd, "150 List directory complete\r\n");
 			if (sendlen < 0)
 			{
 				print_error("ftp_send_text");
@@ -619,7 +622,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 				continue;
 			}
 
-			sendlen = ftp_send_text(sockfd, "125 Starting transfer.\r\n");
+			sendlen = ftp_send_text(sockfd, "125 Starting transfer\r\n");
 			if (sendlen < 0)
 			{
 				error_msg("ftp_send_text");
@@ -649,7 +652,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 				continue;
 			}
 
-			sendlen = ftp_send_text(sockfd, "125 Starting transfer.\r\n");
+			sendlen = ftp_send_text(sockfd, "125 Starting transfer\r\n");
 			if (sendlen < 0)
 			{
 				error_msg("ftp_send_text");
@@ -687,7 +690,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 				continue;
 			}
 
-			sendlen = ftp_send_text(sockfd, "227 Entering Passive Mode (%s,%d,%d).\r\n", host_ip, (ret >> 8) & 0xFF, ret & 0xFF);
+			sendlen = ftp_send_text(sockfd, "227 Entering Passive Mode (%s,%d,%d)\r\n", host_ip, (ret >> 8) & 0xFF, ret & 0xFF);
 			if (sendlen < 0)
 			{
 				print_error("ftp_send_text");
@@ -751,6 +754,30 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			else
 			{
 				reply = "200 MKD command complete";
+			}
+			break;
+
+		/* mdtm */
+		case 0x6d74646d:
+		case 0x4d54444d:
+			ret = stat(ftp_get_abs_path(curr_path, buff + 5, abs_path), &st);
+			if (ret < 0)
+			{
+				sprintf(rep_buff, "550 get file stat failed: %s", strerror(errno));
+			}
+			else
+			{
+				struct tm ti;
+
+				if (localtime_r(&st.st_atime, &ti) == NULL)
+				{
+					sprintf(rep_buff, "550 get localtime failed: %s", strerror(errno));
+				}
+				else
+				{
+					sprintf(rep_buff, "213 %04d%02d%02d%02d%02d%02d", \
+						ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec);
+				}
 			}
 			break;
 
