@@ -27,7 +27,7 @@ function file_asb_directory()
 }
 
 CMD_ABS_DIR="$(file_asb_directory $0)"
-CMD_ABS_PATH="${command_abs_directory}/$(basename $0)"
+CMD_ABS_PATH="${CMD_ABS_DIR}/$(basename $0)"
 CORE_PATH="${CMD_ABS_DIR}/core"
 FILE_APP_CONFIG="${CORE_PATH}/applications.cfg"
 
@@ -88,14 +88,15 @@ function create_symlinks()
 	cavan_symlink ${CPAN_PATH} /cpan || return 1
 	cavan_symlink ${DPAN_PATH} /dpan || return 1
 	cavan_symlink ${EPAN_PATH} /epan || return 1
+	cavan_symlink ${EPAN_PATH}/source /source || return 1
 	cavan_symlink ${FPAN_PATH} /fpan || return 1
 	cavan_symlink ${GPAN_PATH} /gpan || return 1
 	cavan_symlink ${UBUNTU_PATH} /ubuntu || return 1
-	cavan_symlink ${UBUNTU_PATH}/cavan /cavan || return 1
-	cavan_symlink ${UBUNTU_PATH}/work /work || return 1
-	cavan_symlink ${UBUNTU_PATH}/git /git || return 1
-	cavan_symlink ${UBUNTU_PATH}/book /book || return 1
-	cavan_symlink ${EPAN_PATH}/source /source || return 1
+
+	for dir in cavan work git book project tools app
+	do
+		cavan_symlink ${UBUNTU_PATH}/${dir} /${dir} || return 1
+	done
 }
 
 function config_bashrc()
@@ -214,12 +215,22 @@ function config_aptget()
 
 function config_git()
 {
-	git config --global user.name Fuang.Cao || return 1
-	git config --global user.email cavan.cfa@gmail.com || return 1
+	local CMD_GIT_CONFIG="git config --global"
+
+	${CMD_GIT_CONFIG} user.name Fuang.Cao || return 1
+	${CMD_GIT_CONFIG} user.email cavan.cfa@gmail.com || return 1
 
 	for cmd in branch  interactive ui diff grep status
 	do
-		git config --global color.${cmd} auto || return 1
+		${CMD_GIT_CONFIG} color.${cmd} auto || return 1
+	done
+
+	for home in /home/*
+	do
+		local user="$(basename ${home})"
+
+		cp /root/.gitconfig ${home}/.gitconfig -av || return 1
+		chown ${user}:${user} ${home}/.gitconfig -v
 	done
 
 	cat > ${FILE_GIT_DAEMON_RUN} << EOF
@@ -280,6 +291,13 @@ function config_others()
 }
 
 pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
+
+[ "$(id -u)" = "0" ] ||
+{
+	pr_red_info "Only root user can run ${CMD_ABS_PATH}"
+
+	exit 1
+}
 
 for func in mount_disk create_mount_points create_symlinks \
 	config_aptget install_applications install_debin_packages \
