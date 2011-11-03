@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
 		{
 		},
 	};
+	const char *server_ip;
+	u16 server_port;
 
 	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
 	{
@@ -53,7 +55,24 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	assert(argc - optind > 0);
+	argv += optind;
 
-	return ftp_client_run("192.168.0.144", text2value_unsigned(argv[optind], NULL, 10));
+	switch (argc - optind)
+	{
+	case 0:
+		server_ip = "127.0.0.1";
+		server_port = FTP_CTRL_PORT;
+		break;
+
+	case 1:
+		server_ip = argv[0];
+		server_port = FTP_CTRL_PORT;
+		break;
+
+	default:
+		server_ip = argv[0];
+		server_port = text2value_unsigned(argv[1], NULL, 10);
+	}
+
+	return ftp_client_run(server_ip, server_port);
 }

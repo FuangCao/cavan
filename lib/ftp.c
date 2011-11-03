@@ -206,13 +206,13 @@ char *ftp_file_stat_tostring(const char *filepath, char *text)
 	ret = stat(filepath, &st);
 	if (ret < 0)
 	{
-		print_error("stat %s", filepath);
-		return text;
+		print_error("get file %s stat", filepath);
+		mem_set8(&st, 0, sizeof(st));
 	}
 
 	*text++ = file_type_to_char(st.st_mode);
 	text = file_permition_tostring(st.st_mode, text);
-	text += sprintf(text, " %lld %lld %lld %lld ", (u64)st.st_nlink, (u64)st.st_uid, (u64)st.st_gid, (u64)st.st_size);
+	text += sprintf(text, " %-5lld %-5lld %-5lld %-10lld ", (u64)st.st_nlink, (u64)st.st_uid, (u64)st.st_gid, (u64)st.st_size);
 	text = ftp_file_time_tostring(&st.st_mtime, text);
 
 	return text;
@@ -409,7 +409,7 @@ char *ftp_get_abs_path(const char *curr_path, const char *path, char *abs_path)
 int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct sockaddr_in *addr)
 {
 	ssize_t sendlen, recvlen;
-	char buff[1024], rep_buff[1024];
+	char cmd_buff[1024], rep_buff[1024], *cmd_arg;
 	char list_buff[1024 * 1024], *list_p;
 	char abs_path[1024], curr_path[1024];
 	char host_ip[32];
@@ -433,7 +433,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	}
 
 	text_replace_char(inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr), host_ip, '.', ',');
-	pr_bold_info("Host IP = %s", host_ip);
+	pr_bold_info("HOST IP = %s", host_ip);
 
 	ret = ftp_service_login(sockfd);
 	if (ret <= 0)
@@ -460,19 +460,25 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			}
 		}
 
-		recvlen = ftp_receive_timeout(sockfd, buff, sizeof(buff));
+		recvlen = ftp_receive_timeout(sockfd, cmd_buff, sizeof(cmd_buff));
 		if (recvlen < 0)
 		{
 			error_msg("ftp_receive_timeout");
 			return recvlen;
 		}
 
-		buff[recvlen - 2] = 0;
+		cmd_buff[recvlen - 2] = 0;
 		reply = rep_buff;
 
-		println("command[%d] = %s", recvlen, buff);
+		for (cmd_arg = cmd_buff; *cmd_arg && !is_empty_character(*cmd_arg); cmd_arg++);
+		while (is_empty_character(*cmd_arg))
+		{
+			cmd_arg++;
+		}
 
-		switch (*(u32 *)buff)
+		println("command[%d] = %s", recvlen, cmd_buff);
+
+		switch (*(u32 *)cmd_buff)
 		{
 		/* quit */
 		case 0x74697571:
@@ -498,7 +504,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		{
 			int temp[6];
 
-			ret = sscanf(buff + 5, "%d,%d,%d,%d,%d,%d", temp, temp + 1, temp + 2, temp + 3, temp + 4, temp + 5);
+			ret = sscanf(cmd_arg, "%d,%d,%d,%d,%d,%d", temp, temp + 1, temp + 2, temp + 3, temp + 4, temp + 5);
 			if (ret == 6)
 			{
 				addr->sin_addr.s_addr = temp[3] << 24 | temp[2] << 16 | temp[1] << 8 | temp[0];
@@ -532,7 +538,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		case 0x65707974:
 		case 0x45505954:
 			reply = "220 TYPE commnd complete";
-			file_type = buff[5];
+			file_type = cmd_buff[5];
 			break;
 
 		/* syst */
@@ -544,13 +550,13 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		/* cwd */
 		case 0x20647763:
 		case 0x20445743:
-			if (recvlen < 7)
+			if (*cmd_arg)
 			{
-				text_copy(curr_path, ftp_root_path);
+				ftp_get_abs_path(curr_path, cmd_arg, curr_path);
 			}
 			else
 			{
-				ftp_get_abs_path(curr_path, buff + 4, curr_path);
+				text_copy(curr_path, ftp_root_path);
 			}
 
 			reply = "250 CWD commnd complete";
@@ -565,13 +571,13 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 				continue;
 			}
 
-			if (recvlen == 6)
+			if (*cmd_arg)
 			{
-				list_p = ftp_list_directory1(curr_path, list_buff);
+				list_p = ftp_list_directory1(ftp_get_abs_path(curr_path, cmd_arg, abs_path), list_buff);
 			}
 			else
 			{
-				list_p = ftp_list_directory1(ftp_get_abs_path(curr_path, buff + 5, abs_path), list_buff);
+				list_p = ftp_list_directory1(curr_path, list_buff);
 			}
 
 			if (list_p == NULL)
@@ -602,7 +608,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		/* size */
 		case 0x657a6973:
 		case 0x455a4953:
-			if (recvlen < 6 || stat(ftp_get_abs_path(curr_path, buff + 5, abs_path), &st))
+			if (*cmd_arg == 0 || stat(ftp_get_abs_path(curr_path, cmd_arg, abs_path), &st))
 			{
 				sprintf(rep_buff, "550 get file size failed: %s", strerror(errno));
 			}
@@ -615,7 +621,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		/* retr */
 		case 0x72746572:
 		case 0x52544552:
-			fd = open(ftp_get_abs_path(curr_path, buff + 5, abs_path), O_RDONLY);
+			fd = open(ftp_get_abs_path(curr_path, cmd_arg, abs_path), O_RDONLY);
 			if (fd < 0)
 			{
 				reply = "550 Open file failed";
@@ -645,7 +651,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		/* stor */
 		case 0x726f7473:
 		case 0x524f5453:
-			fd = open(ftp_get_abs_path(curr_path, buff + 5, abs_path), O_WRONLY | O_CREAT, 0777);
+			fd = open(ftp_get_abs_path(curr_path, cmd_arg, abs_path), O_WRONLY | O_CREAT, 0777);
 			if (fd < 0)
 			{
 				reply = "550 Open file failed";
@@ -718,10 +724,10 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		/* dele */
 		case 0x656c6564:
 		case 0x454c4544:
-			ret = remove(ftp_get_abs_path(curr_path, buff + 5, abs_path));
+			ret = remove(ftp_get_abs_path(curr_path, cmd_arg, abs_path));
 			if (ret < 0)
 			{
-				sprintf(rep_buff, "550 remove %s failed: %s", buff + 5, strerror(errno));
+				sprintf(rep_buff, "550 remove %s failed: %s", cmd_arg, strerror(errno));
 			}
 			else
 			{
@@ -732,10 +738,10 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		/* rmd */
 		case 0x20646d72:
 		case 0x20444d52:
-			ret = rmdir(ftp_get_abs_path(curr_path, buff + 4, abs_path));
+			ret = rmdir(ftp_get_abs_path(curr_path, cmd_arg, abs_path));
 			if (ret < 0)
 			{
-				sprintf(rep_buff, "550 remove %s failed: %s", buff + 5, strerror(errno));
+				sprintf(rep_buff, "550 remove %s failed: %s", cmd_arg, strerror(errno));
 			}
 			else
 			{
@@ -746,10 +752,10 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		/* mkd */
 		case 0x20646b6d:
 		case 0x20444b4d:
-			ret = mkdir(ftp_get_abs_path(curr_path, buff + 4, abs_path), 0777);
+			ret = mkdir(ftp_get_abs_path(curr_path, cmd_arg, abs_path), 0777);
 			if (ret < 0)
 			{
-				sprintf(rep_buff, "550 create directory %s failed: %s", buff + 4, strerror(errno));
+				sprintf(rep_buff, "550 create directory %s failed: %s", cmd_arg, strerror(errno));
 			}
 			else
 			{
@@ -760,7 +766,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		/* mdtm */
 		case 0x6d74646d:
 		case 0x4d54444d:
-			ret = stat(ftp_get_abs_path(curr_path, buff + 5, abs_path), &st);
+			ret = stat(ftp_get_abs_path(curr_path, cmd_arg, abs_path), &st);
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 get file stat failed: %s", strerror(errno));
@@ -788,7 +794,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			break;
 
 		default:
-			pr_red_info("unsupport command: %s", buff);
+			pr_red_info("unsupport command: %s", cmd_buff);
 			reply = "500 Unknown command";
 		}
 	}
@@ -1004,6 +1010,8 @@ int ftp_client_run(const char *ip_address, u16 port)
 	char buff[1024], *p;
 	ssize_t sendlen, recvlen;
 	int ret;
+
+	pr_bold_info("IP = %s, Port = %d", ip_address, port);
 
 	sockfd = inet_create_tcp_link2(ip_address, port);
 	if (sockfd < 0)
