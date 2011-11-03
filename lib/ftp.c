@@ -207,7 +207,7 @@ char *ftp_file_stat_tostring(const char *filepath, char *text)
 	if (ret < 0)
 	{
 		print_error("get file %s stat", filepath);
-		mem_set8(&st, 0, sizeof(st));
+		return NULL;
 	}
 
 	*text++ = file_type_to_char(st.st_mode);
@@ -223,6 +223,7 @@ char *ftp_list_directory1(const char *dirpath, char *text)
 	DIR *dp;
 	struct dirent *ep;
 	char tmp_path[1024], *name_p;
+	char *text_p;
 
 	dp = opendir(dirpath);
 	if (dp == NULL)
@@ -237,11 +238,12 @@ char *ftp_list_directory1(const char *dirpath, char *text)
 	{
 		text_copy(name_p, ep->d_name);
 
-		text = ftp_file_stat_tostring(tmp_path, text);
-		if (text == NULL)
+		text_p = ftp_file_stat_tostring(tmp_path, text);
+		if (text_p == NULL)
 		{
-			return NULL;
+			continue;
 		}
+		text = text_p;
 		*text++ = ' ';
 		text = text_copy(text, ep->d_name);
 		*text++ = '\n';
@@ -819,7 +821,7 @@ void *ftp_service_handle(void *data)
 
 	while (1)
 	{
-		pr_bold_info("Ftp service %d ready", index);
+		println("FTP service %d ready", index);
 
 		sockfd = inet_accept(desc->ctrl_sockfd, &client_addr, &addrlen);
 		if (sockfd < 0)
@@ -828,7 +830,7 @@ void *ftp_service_handle(void *data)
 			return NULL;
 		}
 
-		pr_bold_info("Ftp service %d active", index);
+		println("FTP service %d active", index);
 
 		inet_show_sockaddr(&client_addr);
 		ftp_service_cmdline(desc, sockfd, &client_addr);
@@ -847,7 +849,7 @@ int ftp_service_run(u16 port, int count)
 	struct cavan_ftp_descriptor ftp_desc;
 
 	pr_bold_info("Device = %s, Port = %d, Daemon count = %d", ftp_netdev_name, port, count);
-	pr_bold_info("Ftp root path = %s", ftp_root_path);
+	pr_bold_info("FTP Root Path = %s", ftp_root_path);
 
 	ftp_desc.ctrl_sockfd = inet_create_tcp_service(port);
 	if (ftp_desc.ctrl_sockfd < 0)
