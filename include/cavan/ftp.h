@@ -20,6 +20,7 @@ struct cavan_ftp_descriptor
 {
 	int ctrl_sockfd;
 	int data_sockfd;
+	char ip_addr[32];
 };
 
 extern char ftp_root_path[];

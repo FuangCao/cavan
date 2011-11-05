@@ -18,6 +18,8 @@
 #define MAC_ADDRESS_LEN			6
 #define CAVAN_LISTEN_BACKLOG	32
 
+#define SYS_NET_DIRECTORY		"/sys/class/net"
+
 #pragma pack(1)
 struct mac_header
 {
@@ -197,6 +199,8 @@ int inet_tcp_send_file1(int sockfd, int fd);
 int inet_tcp_send_file2(int sockfd, const char *filename);
 int inet_tcp_receive_file1(int sockfd, int fd);
 int inet_tcp_receive_file2(int sockfd, const char *filename);
+
+int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_addr);
 
 static inline int inet_socket(int type)
 {

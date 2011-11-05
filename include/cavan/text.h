@@ -134,6 +134,7 @@ char *text_get_line(const char *text, char *buff, int index);
 int text_version_cmp(const char *v1, const char *v2, char sep);
 
 int text_has_char(const char *text, char c);
+char *text_skip_char(const char *text, char c);
 char *text_skip_chars(const char *text, const char *chars);
 
 char *text_to_uppercase(const char *src, char *dest);

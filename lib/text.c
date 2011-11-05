@@ -1922,7 +1922,7 @@ char *text_path_cat(char *pathname, const char *dirname, const char *basename)
 
 	if (basename)
 	{
-		return text_copy(pathname + 2, basename);
+		return text_copy(pathname + 2, text_skip_char(basename, '/'));
 	}
 
 	pathname[2] = 0;
@@ -2070,6 +2070,16 @@ int text_has_char(const char *text, char c)
 	}
 
 	return 0;
+}
+
+char *text_skip_char(const char *text, char c)
+{
+	while (*text == c)
+	{
+		text++;
+	}
+
+	return (char *)text;
 }
 
 char *text_skip_chars(const char *text, const char *chars)

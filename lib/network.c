@@ -726,3 +726,22 @@ int inet_tcp_receive_file2(int sockfd, const char *filename)
 
 	return ret;
 }
+
+int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_addr)
+{
+	int ret;
+	struct ifreq ifr;
+
+	text_copy(ifr.ifr_ifrn.ifrn_name, devname);
+
+	ret = ioctl(sockfd, SIOCGIFADDR, &ifr);
+	if (ret < 0)
+	{
+		print_error("get deivce %s sockaddr", devname);
+		return ret;
+	}
+
+	*sin_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
+
+	return 0;
+}
