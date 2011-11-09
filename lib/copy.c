@@ -196,3 +196,32 @@ int copy_main(const char *src, const char *dest)
 
 	return file_copy_main(src, dest_path);
 }
+
+int move_auto(const char *srcpath, const char *destpath)
+{
+	int ret;
+	char tmppath[1024];
+
+	if (file_is_directory(destpath))
+	{
+		char *p;
+
+		p = text_path_cat(tmppath, destpath, NULL);
+		__text_basename(p, srcpath);
+
+		destpath = tmppath;
+	}
+
+	if (rename(srcpath, destpath) == 0)
+	{
+		return 0;
+	}
+
+	ret = file_copy_main(srcpath, destpath);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	return remove_auto(srcpath);
+}

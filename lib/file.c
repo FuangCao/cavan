@@ -2427,3 +2427,31 @@ int remove_auto(const char *pathname)
 
 	return S_ISDIR(st.st_mode) ? remove_directory(pathname) : remove(pathname);
 }
+
+int file_type_test(const char *pathname, mode_t type)
+{
+	int ret;
+	struct stat st;
+
+	ret = file_lstat(pathname, &st);
+	if (ret < 0)
+	{
+		return 0;
+	}
+
+	return (st.st_mode & S_IFMT) == type;
+}
+
+int fd_type_test(int fd, mode_t type)
+{
+	int ret;
+	struct stat st;
+
+	ret = fstat(fd, &st);
+	if (ret < 0)
+	{
+		return 0;
+	}
+
+	return (st.st_mode & S_IFMT) == type;
+}

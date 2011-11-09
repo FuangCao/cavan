@@ -164,6 +164,9 @@ const char *week_tostring(int week);
 int remove_directory(const char *pathname);
 int remove_auto(const char *pathname);
 
+int file_type_test(const char *pathname, mode_t type);
+int fd_type_test(int fd, mode_t type);
+
 // ============================================================
 
 static inline int file_open_ro(const char *file_path)
@@ -354,5 +357,75 @@ static inline int file_poll_read(int fd, int timeout)
 static inline int file_poll_write(int fd, int timeout)
 {
 	return file_poll(fd, POLLOUT, timeout);
+}
+
+static inline int file_is_file(const char *pathname)
+{
+	return file_type_test(pathname, S_IFREG);
+}
+
+static inline int file_is_directory(const char *pathname)
+{
+	return file_type_test(pathname, S_IFDIR);
+}
+
+static inline int file_is_symlink(const char *pathname)
+{
+	return file_type_test(pathname, S_IFLNK);
+}
+
+static inline int file_is_char_dev(const char *pathname)
+{
+	return file_type_test(pathname, S_IFCHR);
+}
+
+static inline int file_is_block_dev(const char *pathname)
+{
+	return file_type_test(pathname, S_IFBLK);
+}
+
+static inline int file_is_socket(const char *pathname)
+{
+	return file_type_test(pathname, S_IFSOCK);
+}
+
+static inline int file_is_fifo(const char *pathname)
+{
+	return file_type_test(pathname, S_IFIFO);
+}
+
+static inline int fd_is_file(int fd)
+{
+	return fd_type_test(fd, S_IFREG);
+}
+
+static inline int fd_is_directory(int fd)
+{
+	return fd_type_test(fd, S_IFDIR);
+}
+
+static inline int fd_is_symlink(int fd)
+{
+	return fd_type_test(fd, S_IFLNK);
+}
+
+static inline int fd_is_char_dev(int fd)
+{
+	return fd_type_test(fd, S_IFCHR);
+}
+
+static inline int fd_is_block_dev(int fd)
+{
+	return fd_type_test(fd, S_IFBLK);
+}
+
+static inline int fd_is_socket(int fd)
+{
+	return fd_type_test(fd, S_IFSOCK);
+}
+
+static inline int fd_is_fifo(int fd)
+{
+	return fd_type_test(fd, S_IFIFO);
 }
 
