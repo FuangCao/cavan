@@ -120,6 +120,8 @@ $(info CAVAN_ROOT = $(CAVAN_ROOT))
 $(info ARCH = $(ARCH))
 $(info CROSS_COMPILE = $(CROSS_COMPILE))
 $(info BUILD_TYPE = $(BUILD_TYPE))
+$(info CFLAGS = $(CFLAGS))
+$(info LDFLAGS = $(LDFLAGS))
 $(info ============================================================)
 
 export BUILD_TYPE CROSS_COMPILE ARCH ELF_PREFIX Q

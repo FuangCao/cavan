@@ -330,7 +330,7 @@ static int cftp_client_send_directory(struct cftp_descriptor *desc, const char *
 
 	while ((entry = readdir(dp)))
 	{
-		if (is_dot_name(entry->d_name))
+		if (text_is_dot_name(entry->d_name))
 		{
 			continue;
 		}

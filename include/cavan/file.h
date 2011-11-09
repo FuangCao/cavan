@@ -161,6 +161,9 @@ char *file_permition_tostring(mode_t mode, char *text);
 const char *month_tostring(int month);
 const char *week_tostring(int week);
 
+int remove_directory(const char *pathname);
+int remove_auto(const char *pathname);
+
 // ============================================================
 
 static inline int file_open_ro(const char *file_path)
@@ -341,11 +344,6 @@ static inline int access_rw(const char *filename)
 static inline int access_rwx(const char *filename)
 {
 	return access(filename, R_OK | W_OK | X_OK);
-}
-
-static inline int is_dot_name(const char *filename)
-{
-	return text_cmp(filename, ".") == 0 || text_cmp(filename, "..") == 0;
 }
 
 static inline int file_poll_read(int fd, int timeout)

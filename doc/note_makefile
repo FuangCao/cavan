@@ -41,3 +41,6 @@ MakeFile:
 	define ... endef
 	ifdef ... endif
 	ifdef ... else ... endif
+
+	MAKECMDGOALS
+	MAKEFLAGS

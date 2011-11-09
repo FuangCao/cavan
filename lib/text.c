@@ -2268,3 +2268,20 @@ char *text_replace_char(const char *src, char *dest, char c_src, char c_dest)
 
 	return dest;
 }
+
+int text_is_dot_name(const char *filename)
+{
+	if (*filename != '.')
+	{
+		return 0;
+	}
+
+	filename++;
+
+	if (*filename == 0)
+	{
+		return 1;
+	}
+
+	return filename[0] == '.' && filename[1] == 0;
+}

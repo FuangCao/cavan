@@ -519,7 +519,7 @@ int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *des
 
 	while ((dt = readdir(dir1)))
 	{
-		if (is_dot_name(dt->d_name))
+		if (text_is_dot_name(dt->d_name))
 		{
 			continue;
 		}
@@ -537,7 +537,7 @@ int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *des
 
 		while ((dt = readdir(dir2)))
 		{
-			if (is_dot_name(dt->d_name))
+			if (text_is_dot_name(dt->d_name))
 			{
 				continue;
 			}

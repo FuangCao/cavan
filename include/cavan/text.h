@@ -175,6 +175,7 @@ int text_is_lowercase(const char *text);
 int text_is_letter(const char *text);
 
 char *text_replace_char(const char *src, char *dest, char c_src, char c_dest);
+int text_is_dot_name(const char *filename);
 
 // ============================================================
 

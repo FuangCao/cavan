@@ -2361,3 +2361,69 @@ const char *week_tostring(int week)
 
 	return "Unknown";
 }
+
+int remove_directory(const char *pathname)
+{
+	int ret;
+	char tmppath[1024], *name_p;
+	DIR *dp;
+	struct dirent *en;
+
+	dp = opendir(pathname);
+	if (dp == NULL)
+	{
+		print_error("opendir %s failed", pathname);
+		return -ENOENT;
+	}
+
+	name_p = text_path_cat(tmppath, pathname, NULL);
+
+	while ((en = readdir(dp)))
+	{
+		if (text_is_dot_name(en->d_name))
+		{
+			continue;
+		}
+
+		text_copy(name_p, en->d_name);
+
+		if (en->d_type == DT_DIR)
+		{
+			ret = remove_directory(tmppath);
+		}
+		else
+		{
+			println("remove file \"%s\"", tmppath);
+			ret = remove(tmppath);
+		}
+
+		if (ret < 0)
+		{
+			print_error("delete %s failed", tmppath);
+			goto out_close_dp;
+		}
+	}
+
+	println("remove directory \"%s\"", pathname);
+	ret = rmdir(pathname);
+
+out_close_dp:
+	closedir(dp);
+
+	return ret;
+}
+
+int remove_auto(const char *pathname)
+{
+	int ret;
+	struct stat st;
+
+	ret = lstat(pathname, &st);
+	if (ret < 0)
+	{
+		print_error("get file %s stat failed", pathname);
+		return ret;
+	}
+
+	return S_ISDIR(st.st_mode) ? remove_directory(pathname) : remove(pathname);
+}
