@@ -407,8 +407,8 @@ int cftp_client_send_file(struct cftp_descriptor *desc, const char *file_in, u32
 	size_t max_xfer_length, max_data_length;
 	struct progress_bar bar;
 
-	ret = lstat(file_in, &st);
-	if ((ret = lstat(file_in, &st)) < 0 && (ret = file_stat(file_in, &st)) < 0)
+	ret = file_lstat(file_in, &st);
+	if (ret < 0)
 	{
 		error_msg("fstat");
 		return ret;

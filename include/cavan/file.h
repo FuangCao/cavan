@@ -116,7 +116,6 @@ ssize_t ffile_read(int fd, void *buff, size_t size);
 
 int file_replace_line_simple(const char *file_path, const char *prefix, off_t prefix_size, const char *new_line, off_t new_line_size);
 int file_stat(const char *file_name, struct stat *st);
-int file_lstat(const char *file_name, struct stat *st);
 int file_select_read(int fd, long timeout);
 int file_poll(int fd, short events, int timeout);
 
@@ -427,5 +426,15 @@ static inline int fd_is_socket(int fd)
 static inline int fd_is_fifo(int fd)
 {
 	return fd_type_test(fd, S_IFIFO);
+}
+
+static inline int file_stat2(const char *filename, struct stat *st)
+{
+	return stat(filename, st) < 0 ? file_stat(filename, st) : 0;
+}
+
+static inline int file_lstat(const char *filename, struct stat *st)
+{
+	return lstat(filename, st) < 0 ? file_stat(filename, st) : 0;
 }
 

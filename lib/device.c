@@ -571,7 +571,7 @@ int mount_to(const char *mnt_dev, const char *mnt_point, const char *fstype, con
 
 	println("%s [mount]-> %s", mnt_dev, mnt_point);
 
-	if (stat(mnt_dev, &st) < 0 && file_stat(mnt_dev, &st) < 0)
+	if (file_stat2(mnt_dev, &st) < 0)
 	{
 		ret =  libc_mount_to(mnt_dev, mnt_point, fstype, 0, data);
 		goto label_check;

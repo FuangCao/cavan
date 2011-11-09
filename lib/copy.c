@@ -39,7 +39,8 @@ int file_copy_main(const char *src, const char *dest)
 	int ret;
 	struct stat st;
 
-	if ((ret = lstat(src, &st)) < 0 && (ret = file_stat(src, &st)) < 0)
+	ret = file_lstat(src, &st);
+	if (ret < 0)
 	{
 		error_msg("file_lstat");
 		return ret;
@@ -81,7 +82,8 @@ int directory_copy_only(const char *src, const char *dest)
 	int ret;
 	struct stat st;
 
-	if ((ret = stat(src, &st)) < 0 && (ret = file_stat(src, &st)) < 0)
+	ret = file_stat2(src, &st);
+	if (ret < 0)
 	{
 		return ret;
 	}
@@ -200,17 +202,34 @@ int copy_main(const char *src, const char *dest)
 int move_auto(const char *srcpath, const char *destpath)
 {
 	int ret;
-	char tmppath[1024];
+	char tmppath[1024], *p;
+	struct stat st;
 
-	if (file_is_directory(destpath))
+	ret = file_stat(destpath, &st);
+	if (ret < 0)
 	{
-		char *p;
+		goto label_start_move;
+	}
 
+	switch (st.st_mode & S_IFMT)
+	{
+	case S_IFDIR:
 		p = text_path_cat(tmppath, destpath, NULL);
 		__text_basename(p, srcpath);
-
 		destpath = tmppath;
+		break;
+
+	default:
+		ret = remove(destpath);
+		if (ret < 0)
+		{
+			print_error("remove %s failed", destpath);
+			return ret;
+		}
 	}
+
+label_start_move:
+	println("Move %s => %s", srcpath, destpath);
 
 	if (rename(srcpath, destpath) == 0)
 	{

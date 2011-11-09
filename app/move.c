@@ -66,6 +66,8 @@ int main(int argc, char *argv[])
 			error_msg("move %s => %s falied", argv[optind], argv[argc]);
 			return ret;
 		}
+
+		optind++;
 	}
 
 	return 0;

@@ -81,7 +81,8 @@ static int check_image_crc(const char *dev_name, const char *img_name)
 	int ret;
 	struct stat st;
 
-	if ((ret = stat(img_name, &st)) < 0 && (ret = file_stat(img_name, &st)) < 0)
+	ret = file_stat2(img_name, &st);
+	if (ret < 0)
 	{
 		print_error("stat");
 		return ret;

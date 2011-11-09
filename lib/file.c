@@ -480,7 +480,8 @@ off_t file_get_size(const char *filepath)
 	int ret;
 	struct stat st;
 
-	if ((ret = stat(filepath, &st)) < 0 && (ret = file_stat(filepath, &st)) < 0)
+	ret = file_stat2(filepath, &st);
+	if (ret < 0)
 	{
 		print_error("file_stat \"%s\"", filepath);
 		return 0;
@@ -1429,25 +1430,6 @@ int file_stat(const char *file_name, struct stat *st)
 	return ret;
 }
 
-int file_lstat(const char *file_name, struct stat *st)
-{
-	int ret;
-
-	ret = lstat(file_name, st);
-	if (ret == 0)
-	{
-		return 0;
-	}
-
-	ret = file_stat(file_name, st);
-	if (ret < 0)
-	{
-		return ret;
-	}
-
-	return 0;
-}
-
 int mode_test(mode_t mode, char type)
 {
 	switch (mode & S_IFMT)
@@ -2083,12 +2065,12 @@ int file_newly_cmp(const char *file1, const char *file2)
 {
 	struct stat st1, st2;
 
-	if (stat(file1, &st1) < 0 && file_stat(file1, &st1) < 0)
+	if (file_stat2(file1, &st1) < 0)
 	{
 		return -1;
 	}
 
-	if (stat(file2, &st2) < 0 && file_stat(file2, &st2) < 0)
+	if (file_stat2(file2, &st2) < 0)
 	{
 		return 1;
 	}
