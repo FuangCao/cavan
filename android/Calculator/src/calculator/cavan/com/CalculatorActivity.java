@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
@@ -48,14 +49,14 @@ public class CalculatorActivity extends Activity
 	private TextWatcher mTextWatcherPart;
 
 	private boolean mEventPending = false;
-	
+
 	private long mTotalValue;
 	private long mPartValue;
-	
+
 	private void SetKeyStates(int base)
 	{
 		int i;
-		
+
 		if (base > mButtonKeys.length)
 		{
 			base = mButtonKeys.length;
@@ -65,7 +66,7 @@ public class CalculatorActivity extends Activity
 		{
 			mButtonKeys[i].setEnabled(true);
 		}
-		
+
 		for (base = mButtonKeys.length; i < base; i++)
 		{
 			mButtonKeys[i].setEnabled(false);
@@ -100,7 +101,7 @@ public class CalculatorActivity extends Activity
 		for (int i = 0; i < length; i++)
 		{
 			int temp = CharToValue(string.charAt(i));
-			
+
 			if (temp > base || temp < 0)
 			{
 				return 0;
@@ -148,12 +149,12 @@ public class CalculatorActivity extends Activity
 	{
 		return (char) (value < 10 ? value + '0' : value - 10 + 'A');
 	};
-	
+
 	private int ValueToStringBits(long value, char buff[], int bits)
 	{
 		int mask;
 		int i;
-		
+
 		if (bits == 0)
 		{
 			return 0;
@@ -168,15 +169,25 @@ public class CalculatorActivity extends Activity
 
 		return i / bits;
 	}
-	
+
 	private int ValueToStringBase(long value, char buff[], int base)
 	{
 		int length;
-		
-		for (length = 0; value > 0; length++)
+		double db_value;
+
+		if (value < 0)
 		{
-			buff[length] = ValueToChar(value % base);
-			value /= base;
+			db_value = (value & 0x7FFFFFFF) + 2147483648.0;
+		}
+		else
+		{
+			db_value = value;
+		}
+
+		for (length = 0; db_value >= 1; length++)
+		{
+			buff[length] = ValueToChar((long) (db_value % base));
+			db_value /= base;
 		}
 
 		return length;
@@ -192,19 +203,19 @@ public class CalculatorActivity extends Activity
 		case 2:
 			length = ValueToStringBits(value, buff, 1);
 			break;
-		
+
 		case 4:
 			length = ValueToStringBits(value, buff, 2);
 			break;
-		
+
 		case 8:
 			length = ValueToStringBits(value, buff, 3);
 			break;
-		
+
 		case 16:
 			length = ValueToStringBits(value, buff, 4);
 			break;
-			
+
 		case 32:
 			length = ValueToStringBits(value, buff, 5);
 			break;
@@ -252,7 +263,7 @@ public class CalculatorActivity extends Activity
 
 	private long GetPartValue(long value, int start, int length) {
 		long tmp_value = 0;
-		
+
 		for (int i = 0; i < length; i++)
 		{
 			if ((value & (1 << (start + i))) != 0)
@@ -270,7 +281,7 @@ public class CalculatorActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		
+
 		LinearLayout layoutRoot = (LinearLayout) findViewById(R.id.linearLayout1);
 
 		mEditTextTotal = (EditText) findViewById(R.id.editText1);
@@ -316,7 +327,7 @@ public class CalculatorActivity extends Activity
 		mEditTextTotal.addTextChangedListener(mTextWatcherTotal);
 		mEditTextTotal.setOnFocusChangeListener(new OnFocusChangeListener()
 		{
-			
+
 			@Override
 			public void onFocusChange(View v, boolean hasFocus)
 			{
@@ -370,7 +381,7 @@ public class CalculatorActivity extends Activity
 		mEditTextPart.addTextChangedListener(mTextWatcherPart);
 		mEditTextPart.setOnFocusChangeListener(new OnFocusChangeListener()
 		{
-			
+
 			@Override
 			public void onFocusChange(View v, boolean hasFocus)
 			{
@@ -381,10 +392,10 @@ public class CalculatorActivity extends Activity
 				}
 			}
 		});
-		
+
 		OnClickListener buttonListener = new OnClickListener()
 		{
-			
+
 			@Override
 			public void onClick(View v)
 			{
@@ -452,14 +463,14 @@ public class CalculatorActivity extends Activity
 
 		buttonListener = new OnClickListener()
 		{
-			
+
 			@Override
 			public void onClick(View v)
 			{
 				// TODO Auto-generated method stub
 				Button button = (Button) v;
 				EditText editText = (EditText) getCurrentFocus();
-				
+
 				editText.getText().insert(editText.getSelectionStart(), button.getText());
 			}
 		};
@@ -770,7 +781,7 @@ public class CalculatorActivity extends Activity
 				mSpinnerBaseTotal.setSelection(mBaseTotal - 2);
 			}
 		});
-		
+
 		mSpinnerBasePart = (Spinner) findViewById(R.id.spinner2);
 		mSpinnerBasePart.setAdapter(adapter);
 		mSpinnerBasePart.setSelection(mBasePart - 2);
@@ -786,7 +797,7 @@ public class CalculatorActivity extends Activity
 				{
 					return;
 				}
-				
+
 				mEventPending = true;
 
 				mBasePart = mSpinnerBasePart.getSelectedItemPosition() + 2;
@@ -796,7 +807,7 @@ public class CalculatorActivity extends Activity
 				{
 					SetKeyStates(mBasePart);
 				}
-				
+
 				mEventPending = false;
 			}
 
@@ -811,7 +822,7 @@ public class CalculatorActivity extends Activity
 		mEditTextShift = (EditText) findViewById(R.id.editText3);
 		mEditTextShift.setOnFocusChangeListener(new OnFocusChangeListener()
 		{
-			
+
 			@Override
 			public void onFocusChange(View v, boolean hasFocus)
 			{
@@ -823,11 +834,11 @@ public class CalculatorActivity extends Activity
 			}
 		});
 		mEditTextShift.setSelection(mEditTextShift.length());
-		
+
 		mButtonLeft = (Button) findViewById(R.id.button1);
 		mButtonLeft.setOnClickListener(new OnClickListener()
 		{
-			
+
 			@Override
 			public void onClick(View v)
 			{
@@ -837,32 +848,32 @@ public class CalculatorActivity extends Activity
 				UpdateTextViewTotalText(mTotalValue << shift);
 			}
 		});
-		
+
 		mButtonRight = (Button) findViewById(R.id.button2);
 		mButtonRight.setOnClickListener(new OnClickListener()
 		{
-			
+
 			@Override
 			public void onClick(View v)
 			{
 				// TODO Auto-generated method stub
 				long shift = StringToValue(mEditTextShift.getText().toString(), 10);
-				
-				UpdateTextViewTotalText(mTotalValue >> shift);
+
+				UpdateTextViewTotalText((mTotalValue >> shift) & 0x7FFFFFFF);
 			}
 		});
-		
+
 		mButtonDel = (Button) findViewById(R.id.button3);
 		mButtonDel.setOnClickListener(new OnClickListener()
 		{
-			
+
 			@Override
 			public void onClick(View v)
 			{
 				// TODO Auto-generated method stub
 				EditText editText = (EditText) getCurrentFocus();
 				int select = editText.getSelectionEnd();
-				
+
 				if (select > 0)
 				{
 					editText.getText().delete(select - 1, select);
@@ -873,13 +884,13 @@ public class CalculatorActivity extends Activity
 		mButtonClr = (Button) findViewById(R.id.button4);
 		mButtonClr.setOnClickListener(new OnClickListener()
 		{
-			
+
 			@Override
 			public void onClick(View v)
 			{
 				// TODO Auto-generated method stub
 				EditText editText = (EditText) getCurrentFocus();
-				
+
 				editText.setText("");
 			}
 		});
