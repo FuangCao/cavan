@@ -84,6 +84,12 @@ struct mount_table
 	char option[256];
 };
 
+struct mtd_descriptor
+{
+	int fd;
+	size_t erase_size;
+};
+
 void visual_usleep(u32 usec);
 void visual_msleep(u32 msec);
 void visual_ssleep(u32 sec);
