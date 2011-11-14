@@ -2285,3 +2285,20 @@ int text_is_dot_name(const char *filename)
 
 	return filename[0] == '.' && filename[1] == 0;
 }
+
+int text_isnot_dot_name(const char *filename)
+{
+	if (*filename != '.')
+	{
+		return 1;
+	}
+
+	filename++;
+
+	if (*filename == 0)
+	{
+		return 0;
+	}
+
+	return filename[0] != '.' || filename[1] != 0;
+}

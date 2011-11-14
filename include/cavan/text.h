@@ -55,11 +55,6 @@ int text_ltcmp(const char *text1, const char *text2);
 int text_rtcmp(const char *text1, const char *text2);
 int text_ncmp(const char *text1, const char *text2, size_t size);
 
-static inline char *text_trans(char *text)
-{
-	return text_ntrans(text, text_len(text));
-}
-
 void *text_set8(u8 *text, u8 value, size_t count);
 void *text_set16(u16 *text, u16 value, size_t count);
 void *text_set32(u32 *text, u32 value, size_t count);
@@ -176,8 +171,14 @@ int text_is_letter(const char *text);
 
 char *text_replace_char(const char *src, char *dest, char c_src, char c_dest);
 int text_is_dot_name(const char *filename);
+int text_isnot_dot_name(const char *filename);
 
 // ============================================================
+
+static inline char *text_trans(char *text)
+{
+	return text_ntrans(text, text_len(text));
+}
 
 static inline char *text_kmp_find(const char *buff, const char *sub)
 {

@@ -36,7 +36,7 @@
 #define msleep(msec)	usleep((msec) * 1000)
 #define ssleep(sec)		msleep((sec) * 1000)
 
-#define ARRAY_SIZE(a)	(sizeof(a) / sizeof(a[0]))
+#define ARRAY_SIZE(a)	(sizeof(a) / sizeof((a)[0]))
 #define KB(a)			((a) << 10)
 #define BK(a)			((a) >> 10)
 #define MB(a)			((a) << 20)

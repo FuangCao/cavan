@@ -166,6 +166,8 @@ int remove_auto(const char *pathname);
 int file_type_test(const char *pathname, mode_t type);
 int fd_type_test(int fd, mode_t type);
 
+int scan_directory(const char *dirpath, void *buff, size_t size1, size_t size2);
+
 // ============================================================
 
 static inline int file_open_ro(const char *file_path)

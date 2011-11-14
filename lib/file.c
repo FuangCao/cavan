@@ -2437,3 +2437,67 @@ int fd_type_test(int fd, mode_t type)
 
 	return (st.st_mode & S_IFMT) == type;
 }
+
+static size_t fscan_directory1(DIR *dp, void *buff, size_t size)
+{
+	void *buff_end;
+	struct dirent *en;
+
+	buff_end = buff + size;
+	size = 0;
+
+	while (buff < buff_end && (en = readdir(dp)))
+	{
+		if (text_is_dot_name(en->d_name))
+		{
+			continue;
+		}
+
+		buff = text_copy(buff, en->d_name) + 1;
+		size++;
+	}
+
+	return size;
+}
+
+static size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2)
+{
+	void *buff_end;
+	struct dirent *en;
+
+	buff_end = buff + (size1 * size2);
+	size1 = 0;
+
+	while (buff < buff_end && (en = readdir(dp)))
+	{
+		if (text_is_dot_name(en->d_name))
+		{
+			continue;
+		}
+
+		text_ncopy(buff, en->d_name, size2);
+
+		buff += size2;
+		size1++;
+	}
+
+	return size1;
+}
+
+int scan_directory(const char *dirpath, void *buff, size_t size1, size_t size2)
+{
+	DIR *dp;
+
+	dp = opendir(dirpath);
+	if (dp == NULL)
+	{
+		print_error("opendir %s failed", dirpath);
+		return -1;
+	}
+
+	size1 = size2 ? fscan_directory2(dp, buff, size1, size2) : fscan_directory1(dp, buff, size1);
+
+	closedir(dp);
+
+	return size1;
+}
