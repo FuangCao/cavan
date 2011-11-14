@@ -2438,7 +2438,7 @@ int fd_type_test(int fd, mode_t type)
 	return (st.st_mode & S_IFMT) == type;
 }
 
-static size_t fscan_directory1(DIR *dp, void *buff, size_t size)
+size_t fscan_directory1(DIR *dp, void *buff, size_t size)
 {
 	void *buff_end;
 	struct dirent *en;
@@ -2460,7 +2460,7 @@ static size_t fscan_directory1(DIR *dp, void *buff, size_t size)
 	return size;
 }
 
-static size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2)
+size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2)
 {
 	void *buff_end;
 	struct dirent *en;

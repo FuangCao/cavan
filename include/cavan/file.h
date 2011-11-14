@@ -166,6 +166,8 @@ int remove_auto(const char *pathname);
 int file_type_test(const char *pathname, mode_t type);
 int fd_type_test(int fd, mode_t type);
 
+size_t fscan_directory1(DIR *dp, void *buff, size_t size);
+size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2);
 int scan_directory(const char *dirpath, void *buff, size_t size1, size_t size2);
 
 // ============================================================
