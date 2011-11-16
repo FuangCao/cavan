@@ -173,6 +173,11 @@ char *text_replace_char(const char *src, char *dest, char c_src, char c_dest);
 int text_is_dot_name(const char *filename);
 int text_isnot_dot_name(const char *filename);
 
+size_t text_split_by_char(const char *text, char sep, void *buff, size_t size1, size_t size2);
+char *text_join_by_char(char *text[], size_t size1, char sep, void *buff, size_t size2);
+size_t text_split_by_text(const char *text, const char *sep, void *buff, size_t size1, size_t size2);
+char *text_join_by_text(char *text[], size_t size1, const char *sep, void *buff, size_t size2);
+
 // ============================================================
 
 static inline char *text_trans(char *text)

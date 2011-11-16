@@ -2302,3 +2302,104 @@ int text_isnot_dot_name(const char *filename)
 
 	return filename[0] != '.' || filename[1] != 0;
 }
+
+size_t text_split_by_char(const char *text, char sep, void *buff, size_t size1, size_t size2)
+{
+	void *buff_end;
+	char *p;
+
+	for (p = buff, buff_end = buff + (size1 * size2), size1 = 1; *text && buff < buff_end; text++)
+	{
+		if (*text == sep)
+		{
+			*p = 0;
+			buff += size2;
+			p = buff;
+			size1++;
+		}
+		else
+		{
+			*p++ = *text;
+		}
+	}
+
+	*p = 0;
+
+	return size1;
+}
+
+char *text_join_by_char(char *text[], size_t size1, char sep, void *buff, size_t size2)
+{
+	void *buff_end;
+	char **text_last;
+
+	for (buff_end = buff + size2, text_last = text + (size1 - 1); buff < buff_end; text++)
+	{
+		buff = text_copy(buff, *text);
+
+		if (text < text_last)
+		{
+			*(char *)buff++ = sep;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return buff;
+}
+
+size_t text_split_by_text(const char *text, const char *sep, void *buff, size_t size1, size_t size2)
+{
+	void *buff_end;
+	char *p;
+	size_t sep_len;
+	const char *text_end;
+
+	sep_len = text_len(sep);
+	text_end = text + text_len(text);
+
+	for (buff_end = buff + (size1 * size2), size1 = 0; buff < buff_end && text < text_end; size1++)
+	{
+		p = mem_kmp_find(text, sep, text_end - text, sep_len);
+		if (p == NULL)
+		{
+			break;
+		}
+
+		mem_copy(buff, text, p - text);
+		buff += size2;
+		text = p + sep_len;
+	}
+
+	if (text < text_end)
+	{
+		text_copy(buff, text);
+		return size1 + 1;
+	}
+
+	return size1;
+}
+
+char *text_join_by_text(char *text[], size_t size1, const char *sep, void *buff, size_t size2)
+{
+	void *buff_end;
+	char **text_last;
+
+	for (buff_end = buff + size2, text_last = text + (size1 - 1); buff < buff_end; text++)
+	{
+		buff = text_copy(buff, *text);
+
+		if (text < text_last)
+		{
+			buff = text_copy(buff, sep);
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return buff;
+}
