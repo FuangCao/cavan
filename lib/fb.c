@@ -179,6 +179,20 @@ int cavan_fb_draw_point(struct cavan_fb_descriptor *desc, int x, int y, u32 colo
 	return 0;
 }
 
+static void cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b)
+{
+	if (x1 == x2)
+	{
+		*a = 0;
+	}
+	else
+	{
+		*a = ((double)(y2 - y1)) / (x2 - x1);
+	}
+
+	*b = y1 - *a * x1;
+}
+
 static int cavan_fb_draw_line_horizon(struct cavan_fb_descriptor *desc, int x1, int y1, int x2, int y2, u32 color)
 {
 	double a, b;
@@ -190,16 +204,7 @@ static int cavan_fb_draw_line_horizon(struct cavan_fb_descriptor *desc, int x1, 
 		return -1;
 	}
 
-	if (x1 == x2)
-	{
-		a = 0;
-	}
-	else
-	{
-		a = ((double)(y2 - y1)) / (x2 - x1);
-	}
-
-	b = y1 - a * x1;
+	cavan_build_line_equation(x1, y1, x2, y2, &a, &b);
 
 	if (x1 < x2)
 	{
@@ -232,16 +237,7 @@ static int cavan_fb_draw_line_vertical(struct cavan_fb_descriptor *desc, int x1,
 		return -1;
 	}
 
-	if (y1 == y2)
-	{
-		a = 0;
-	}
-	else
-	{
-		a = ((double)(x2 - x1)) / (y2 - y1);
-	}
-
-	b = x1 - a * y1;
+	cavan_build_line_equation(y1, x1, y2, x2, &a, &b);
 
 	if (y1 < y2)
 	{
@@ -552,4 +548,134 @@ int cavan_fb_draw_polygon(struct cavan_fb_descriptor *desc, struct cavan_point *
 	}
 
 	return cavan_fb_draw_line(desc, points[0].x, points[0].y, points[count].x, points[count].y, color);
+}
+
+int max3i(int a, int b, int c)
+{
+	if (b > a)
+	{
+		a = b;
+	}
+
+	return c > a ? c : a;
+}
+
+int min3i(int a, int b, int c)
+{
+	if (b < a)
+	{
+		a = b;
+	}
+
+	return c < a ? c : a;
+}
+
+void show_cavan_points(const struct cavan_point *points, size_t size)
+{
+	const struct cavan_point *end;
+
+	for (end = points + size; points < end; points++)
+	{
+		println("[%d, %d]", points->x, points->y);
+	}
+}
+
+void cavan_point_sort_x(struct cavan_point *start, struct cavan_point *end)
+{
+	struct cavan_point mid, *start_bak, *end_bak;
+
+	if (start >= end)
+	{
+		return;
+	}
+
+	mid = *start;
+	start_bak = start;
+	end_bak = end;
+
+	while (1)
+	{
+		for (; start < end && mid.x < end->x; end--);
+		if (start < end)
+		{
+			*start++ = *end;
+		}
+		else
+		{
+			break;
+		}
+
+		for (; start < end && mid.x > start->x; start++);
+		if (start < 0)
+		{
+			*end-- = *start;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	*start = mid;
+
+	if (start_bak < start)
+	{
+		cavan_point_sort_x(start_bak, start - 1);
+	}
+
+	if (end_bak > end)
+	{
+		cavan_point_sort_x(end + 1, end_bak);
+	}
+}
+
+static int cavan_fb_fill_triangle_half(struct cavan_fb_descriptor *desc, int left, int right, double a1, double b1, double a2, double b2, u32 color)
+{
+	int min, max;
+	void (*draw_point_handle)(struct cavan_fb_descriptor *, int, int, u32);
+
+	draw_point_handle = cavan_fb_get_draw_point_function(desc);
+	if (draw_point_handle == NULL)
+	{
+		return -1;
+	}
+
+	while (left <= right)
+	{
+		min = a1 * left + b1;
+		max = a2 * left + b2;
+
+		while (min <= max)
+		{
+			draw_point_handle(desc, left, min, color);
+			min++;
+		}
+
+		left++;
+	}
+
+	return 0;
+}
+
+int cavan_fb_fill_triangle(struct cavan_fb_descriptor *desc, struct cavan_point *points, u32 color)
+{
+	double a[3], b[3];
+
+	cavan_point_sort_x(points, points + 2);
+	cavan_build_line_equation(points[0].x, points[0].y, points[1].x, points[1].y, a, b);
+	cavan_build_line_equation(points[2].x, points[2].y, points[1].x, points[1].y, a + 1, b + 1);
+	cavan_build_line_equation(points[0].x, points[0].y, points[2].x, points[2].y, a + 2, b + 2);
+
+	if (points[1].y < points[2].y)
+	{
+		cavan_fb_fill_triangle_half(desc, points[0].x, points[1].x, a[0], b[0], a[2], b[2], color);
+		cavan_fb_fill_triangle_half(desc, points[1].x, points[2].x, a[1], b[1], a[2], b[2], color);
+	}
+	else
+	{
+		cavan_fb_fill_triangle_half(desc, points[0].x, points[1].x, a[2], b[2], a[0], b[0], color);
+		cavan_fb_fill_triangle_half(desc, points[1].x, points[2].x, a[2], b[2], a[1], b[1], color);
+	}
+
+	return 0;
 }
