@@ -451,7 +451,7 @@ void __print_error(const char *fmt, ...)
 	}
 	else
 	{
-		println("%s: %s", buff, strerror(errno));
+		println("%s: %s[%d]", buff, strerror(errno), errno);
 	}
 }
 

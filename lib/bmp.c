@@ -2,6 +2,7 @@
 #include <linux/fb.h>
 #include <cavan/bmp.h>
 #include <cavan/file.h>
+#include <cavan/fb.h>
 
 void show_file_header(struct file_header *file_hdr)
 {
@@ -25,37 +26,6 @@ void show_info_header(struct info_header *info_hdr)
 	println("info_hdr->y_pels_per_meter = %d", info_hdr->y_pels_per_meter);
 	println("info_hdr->clr_used = %d", info_hdr->clr_used);
 	println("info_hdr->clr_important = %d", info_hdr->clr_important);
-}
-
-void show_fb_bitfield(struct fb_bitfield *field, const char *msg)
-{
-	print_sep(60);
-	if (msg)
-	{
-		print_string(msg);
-	}
-	println("field->offset = %d", field->offset);
-	println("field->length = %d", field->length);
-	println("field->msb_right = %d", field->msb_right);
-}
-
-void show_fb_var_info(struct fb_var_screeninfo *var)
-{
-	print_sep(60);
-	println("var->xres = %d", var->xres);
-	println("var->yres = %d", var->yres);
-	println("var->bits_per_pixel = %d", var->bits_per_pixel);
-	show_fb_bitfield(&var->red, "red fb_bitfield:");
-	show_fb_bitfield(&var->green, "green fb_bitfield:");
-	show_fb_bitfield(&var->blue, "blue fb_bitfield:");
-	show_fb_bitfield(&var->transp, "transp fb_bitfield:");
-}
-
-void show_fb_fix_info(struct fb_fix_screeninfo *fix)
-{
-	print_sep(60);
-	println("smem_start = 0x%08lx", fix->smem_start);
-	println("smem_len = 0x%08x", fix->smem_len);
 }
 
 int read_file_header(int fd, struct file_header *file_hdr)

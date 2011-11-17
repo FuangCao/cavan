@@ -5,6 +5,6 @@ BUILD_TYPE = dynamically
 # CROSS_COMPILE =
 ELF_PREFIX = cavan
 Q = @
-LDFLAGS = -lpthread
+LDFLAGS = -lpthread -lm
 
 include build/core/main.mk

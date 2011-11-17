@@ -59,9 +59,6 @@ struct pixel8888
 int bmp_view(const char *file_name, const char *fb_name);
 void show_file_header(struct file_header *file_hdr);
 void show_info_header(struct info_header *info_hdr);
-void show_fb_bitfield(struct fb_bitfield *field, const char *msg);
-void show_fb_var_info(struct fb_var_screeninfo *var);
-void show_fb_fix_info(struct fb_fix_screeninfo *fix);
 int read_file_header(int fd, struct file_header *file_hdr);
 int read_info_header(int fd, struct info_header *info_hdr);
 
