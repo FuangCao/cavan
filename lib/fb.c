@@ -39,7 +39,8 @@ void show_fb_fix_info(struct fb_fix_screeninfo *fix)
 void cavan_fb_bitfield2element(struct fb_bitfield *field, struct cavan_color_element *emt)
 {
 	emt->offset = field->offset;
-	emt->mask = ((1 << field->length) - 1) << emt->offset;
+	emt->max = (1 << field->length) - 1;
+	emt->mask = emt->max << emt->offset;
 	emt->index = emt->offset >> 3;
 }
 
@@ -529,4 +530,26 @@ int cavan_fb_fill_ellipse(struct cavan_fb_descriptor *desc, int x, int y, int wi
 	}
 
 	return 0;
+}
+
+int cavan_fb_draw_polygon(struct cavan_fb_descriptor *desc, struct cavan_point *points, size_t count, u32 color)
+{
+	int i;
+	int ret;
+
+	if (count < 3)
+	{
+		return -EINVAL;
+	}
+
+	for (i = 0, count--; i < count; i++)
+	{
+		ret = cavan_fb_draw_line(desc, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, color);
+		if (ret < 0)
+		{
+			return ret;
+		}
+	}
+
+	return cavan_fb_draw_line(desc, points[0].x, points[0].y, points[count].x, points[count].y, color);
 }

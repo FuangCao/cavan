@@ -4,11 +4,18 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-11-16 15:48:51
 
+struct cavan_point
+{
+	u32 x;
+	u32 y;
+};
+
 struct cavan_color_element
 {
 	u32 offset;
 	u32 mask;
-	int index;
+	u16 max;
+	u16 index;
 };
 
 struct cavan_fb_descriptor
@@ -40,9 +47,15 @@ int cavan_fb_draw_circle(struct cavan_fb_descriptor *desc, int x, int y, int r, 
 int cavan_fb_fill_circle(struct cavan_fb_descriptor *desc, int x, int y, int r, u32 color);
 int cavan_fb_draw_ellipse(struct cavan_fb_descriptor *desc, int x, int y, int width, int height, u32 color);
 int cavan_fb_fill_ellipse(struct cavan_fb_descriptor *desc, int x, int y, int width, int height, u32 color);
+int cavan_fb_draw_polygon(struct cavan_fb_descriptor *desc, struct cavan_point *points, size_t count, u32 color);
 
 static inline u32 cavan_fb_build_color(struct cavan_fb_descriptor *desc, u32 red, u32 green, u32 blue)
 {
 	return ((red << desc->red.offset) & desc->red.mask) | ((green << desc->green.offset) & desc->green.mask) | ((blue << desc->blue.offset) & desc->blue.mask);
+}
+
+static inline u32 cavan_fb_build_color3f(struct cavan_fb_descriptor *desc, float red, float green, float blue)
+{
+	return cavan_fb_build_color(desc, red * desc->red.max, green * desc->green.max, blue * desc->blue.max);
 }
 
