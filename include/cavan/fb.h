@@ -41,7 +41,7 @@ int cavan_fb_fill_circle(struct cavan_fb_descriptor *desc, int x, int y, int r, 
 int cavan_fb_draw_ellipse(struct cavan_fb_descriptor *desc, int x, int y, int width, int height, u32 color);
 int cavan_fb_fill_ellipse(struct cavan_fb_descriptor *desc, int x, int y, int width, int height, u32 color);
 
-u32 cavan_fb_build_color(struct cavan_fb_descriptor *desc, u32 red, u32 green, u32 blue)
+static inline u32 cavan_fb_build_color(struct cavan_fb_descriptor *desc, u32 red, u32 green, u32 blue)
 {
 	return ((red << desc->red.offset) & desc->red.mask) | ((green << desc->green.offset) & desc->green.mask) | ((blue << desc->blue.offset) & desc->blue.mask);
 }
