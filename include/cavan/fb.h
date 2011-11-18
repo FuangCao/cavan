@@ -49,6 +49,7 @@ int cavan_fb_draw_ellipse(struct cavan_fb_descriptor *desc, int x, int y, int wi
 int cavan_fb_fill_ellipse(struct cavan_fb_descriptor *desc, int x, int y, int width, int height, u32 color);
 int cavan_fb_draw_polygon(struct cavan_fb_descriptor *desc, struct cavan_point *points, size_t count, u32 color);
 int cavan_fb_fill_triangle(struct cavan_fb_descriptor *desc, struct cavan_point *points, u32 color);
+int cavan_fb_fill_polygon(struct cavan_fb_descriptor *desc, struct cavan_point *points, size_t count, u32 color);
 
 void cavan_point_sort_x(struct cavan_point *start, struct cavan_point *end);
 void show_cavan_points(const struct cavan_point *points, size_t size);

@@ -679,3 +679,31 @@ int cavan_fb_fill_triangle(struct cavan_fb_descriptor *desc, struct cavan_point 
 
 	return 0;
 }
+
+int cavan_fb_fill_polygon(struct cavan_fb_descriptor *desc, struct cavan_point *points, size_t count, u32 color)
+{
+	int ret;
+	struct cavan_point *p, *p_end;
+	struct cavan_point point_buff[3];
+
+	if (count < 3)
+	{
+		return -EINVAL;
+	}
+
+
+	for (p = points + 1, p_end = p + count - 2; p < p_end; p++)
+	{
+		point_buff[0] = points[0];
+		point_buff[1] = p[0];
+		point_buff[2] = p[1];
+
+		ret = cavan_fb_fill_triangle(desc, point_buff, color);
+		if (ret < 0)
+		{
+			return ret;
+		}
+	}
+
+	return 0;
+}
