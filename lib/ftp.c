@@ -559,6 +559,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 				continue;
 			}
 
+#if 0
 			if (*cmd_arg)
 			{
 				list_p = ftp_list_directory1(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path), list_buff);
@@ -567,6 +568,9 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			{
 				list_p = ftp_list_directory1(curr_path, list_buff);
 			}
+#else
+			list_p = ftp_list_directory1(curr_path, list_buff);
+#endif
 
 			if (list_p == NULL)
 			{
