@@ -44,7 +44,7 @@ void cavan_bitfield2element(struct fb_bitfield *field, struct cavan_color_elemen
 	emt->index = emt->offset >> 3;
 }
 
-int cavan_init(struct cavan_screen_descriptor *desc, const char *fbpath)
+int cavan_fb_init(struct cavan_screen_descriptor *desc, const char *fbpath)
 {
 	int ret;
 	int fb;
@@ -111,7 +111,7 @@ out_close_fb:
 	return ret;
 }
 
-void cavan_uninit(struct cavan_screen_descriptor *desc)
+void cavan_fb_uninit(struct cavan_screen_descriptor *desc)
 {
 	munmap(desc->fb_base, desc->fix_info.smem_len);
 	close(desc->fb);
@@ -225,14 +225,19 @@ int cavan_draw_point(struct cavan_screen_descriptor *desc, int x, int y, u32 col
 
 static int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b)
 {
-	if (x1 == x2)
+	int x_diff;
+
+	// println("x1 = %d, y1 = %d, x2 = %d, y2 = %d", x1, y1, x2, y2);
+
+	x_diff = x2 - x1;
+	if (x_diff > -5 && x_diff < 5)
 	{
 		*a = 0;
 		*b = 0;
 		return -EINVAL;
 	}
 
-	*a = ((double)(y2 - y1)) / (x2 - x1);
+	*a = ((double)(y2 - y1)) / x_diff;
 	*b = y1 - *a * x1;
 
 	return 0;
@@ -706,7 +711,7 @@ void cavan_point_sort_x(struct cavan_point *start, struct cavan_point *end)
 
 	while (1)
 	{
-		for (; start < end && mid.x < end->x; end--);
+		for (; start < end && mid.x <= end->x; end--);
 		if (start < end)
 		{
 			*start++ = *end;
@@ -716,8 +721,8 @@ void cavan_point_sort_x(struct cavan_point *start, struct cavan_point *end)
 			break;
 		}
 
-		for (; start < end && mid.x > start->x; start++);
-		if (start < 0)
+		for (; start < end && mid.x >= start->x; start++);
+		if (start < end)
 		{
 			*end-- = *start;
 		}
@@ -746,13 +751,22 @@ static int cavan_fill_triangle_half(struct cavan_screen_descriptor *desc, int le
 	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
 	u32 color;
 
+	// println("left = %d, right = %d", left, right);
+	// println("a1 = %lf, b1 = %lf, a2 = %lf, b2 = %lf", a1, b1, a2, b2);
+
+	min = left - right;
+	if (min > -5 && min < 5)
+	{
+		return 0;
+	}
+
 	draw_point_handle = cavan_get_draw_point_function(desc);
 	if (draw_point_handle == NULL)
 	{
 		return -1;
 	}
 
-	color = desc->bordercolor;
+	color = desc->foreground;
 
 	while (left <= right)
 	{
@@ -776,6 +790,7 @@ int cavan_fill_triangle(struct cavan_screen_descriptor *desc, struct cavan_point
 	double a[3], b[3];
 
 	cavan_point_sort_x(points, points + 2);
+
 	cavan_build_line_equation(points[0].x, points[0].y, points[1].x, points[1].y, a, b);
 	cavan_build_line_equation(points[2].x, points[2].y, points[1].x, points[1].y, a + 1, b + 1);
 	cavan_build_line_equation(points[0].x, points[0].y, points[2].x, points[2].y, a + 2, b + 2);
@@ -783,7 +798,7 @@ int cavan_fill_triangle(struct cavan_screen_descriptor *desc, struct cavan_point
 	if (points[1].y < points[2].y)
 	{
 		cavan_fill_triangle_half(desc, points[0].x, points[1].x, a[0], b[0], a[2], b[2]);
-		cavan_fill_triangle_half(desc, points[1].x, points[2].x, a[1], b[1], a[2], b[2]);
+		cavan_fill_triangle_half(desc, points[1].x, points[2].x, a[2], b[2], a[1], b[1]);
 	}
 	else
 	{
@@ -898,7 +913,7 @@ int cavan_draw_polygon_standard2(struct cavan_screen_descriptor *desc, size_t co
 	return 0;
 }
 
-int cavan_calculate_cross_point(int x1, int x2, double a1, double b1, double a2, double b2, struct cavan_point *point)
+int cavan_calculate_line_cross_point(int x1, int x2, double a1, double b1, double a2, double b2, struct cavan_point *point)
 {
 	if (a1 == a2)
 	{
@@ -924,23 +939,16 @@ int cavan_calculate_cross_point(int x1, int x2, double a1, double b1, double a2,
 	return 0;
 }
 
-int cavan_fill_polygon_standard2(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+int cavan_calculate_polygo_cross_points(struct cavan_point *points, struct cavan_point *cross_points, size_t count)
 {
-	int ret;
 	int i;
-	struct cavan_point points[count], *p0, *p1, *p2, *p3;
-	struct cavan_point cross_points[count];
+	int ret;
+	struct cavan_point *p0, *p1, *p2, *p3;
 	double a1, a2, b1, b2;
 
 	if (count < 5)
 	{
-		return cavan_fill_polygon_standard(desc, count, x, y, r, rotation);
-	}
-
-	ret = cavan_build_polygon_points(desc, points, count, x, y, r, rotation);
-	if (ret < 0)
-	{
-		return ret;
+		return -EINVAL;
 	}
 
 	for (i = 0; i < count; i++)
@@ -953,17 +961,49 @@ int cavan_fill_polygon_standard2(struct cavan_screen_descriptor *desc, size_t co
 		p3 = points + (i + 3) % count;
 		cavan_build_line_equation(p1->x, p1->y, p3->x, p3->y, &a2, &b2);
 
-		ret = cavan_calculate_cross_point(p0->x, p1->x, a1, b1, a2, b2, cross_points + i);
+		ret = cavan_calculate_line_cross_point(p0->x, p1->x, a1, b1, a2, b2, cross_points + i);
 		if (ret < 0)
 		{
 			return ret;
 		}
 	}
 
-	show_cavan_points(points, count);
+	return 0;
+}
 
-	cavan_draw_polygon(desc, points, count);
-	cavan_draw_polygon(desc, cross_points, count);
+int cavan_fill_polygon_standard2(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+{
+	int ret;
+	int i;
+	struct cavan_point points[count];
+	struct cavan_point cross_points[count];
+	struct cavan_point triangle_points[3];
+
+	if (count < 5)
+	{
+		return cavan_fill_polygon_standard(desc, count, x, y, r, rotation);
+	}
+
+	ret = cavan_build_polygon_points(desc, points, count, x, y, r, rotation);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	ret = cavan_calculate_polygo_cross_points(points, cross_points, count);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	for (i = 0; i < count; i++)
+	{
+		triangle_points[0] = cross_points[i];
+		triangle_points[1] = cross_points[(i + 1) % count];
+		triangle_points[2] = points[(i + 2) % count];
+
+		cavan_fill_triangle(desc, triangle_points);
+	}
 
 	return 0;
 }
@@ -989,6 +1029,46 @@ int cavan_draw_polygon_standard3(struct cavan_screen_descriptor *desc, size_t co
 		{
 			return ret;
 		}
+	}
+
+	return 0;
+}
+
+int cavan_fill_polygon_standard3(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+{
+	int ret;
+	int i;
+	struct cavan_point points[count];
+	struct cavan_point cross_points[count];
+
+	if (count < 5)
+	{
+		return cavan_fill_polygon_standard(desc, count, x, y, r, rotation);
+	}
+
+	ret = cavan_build_polygon_points(desc, points, count, x, y, r, rotation);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	ret = cavan_calculate_polygo_cross_points(points, cross_points, count);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	cavan_fill_polygon(desc, cross_points, count);
+
+	for (i = 0; i < count; i++)
+	{
+		struct cavan_point triangle_points[3];
+
+		triangle_points[0] = cross_points[i];
+		triangle_points[1] = cross_points[(i + 1) % count];
+		triangle_points[2] = points[(i + 2) % count];
+
+		cavan_fill_triangle(desc, triangle_points);
 	}
 
 	return 0;

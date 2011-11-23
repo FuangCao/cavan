@@ -45,8 +45,8 @@ void show_fb_bitfield(struct fb_bitfield *field, const char *msg);
 void show_fb_var_info(struct fb_var_screeninfo *var);
 void show_fb_fix_info(struct fb_fix_screeninfo *fix);
 
-int cavan_init(struct cavan_screen_descriptor *desc, const char *fbpath);
-void cavan_uninit(struct cavan_screen_descriptor *desc);
+int cavan_fb_init(struct cavan_screen_descriptor *desc, const char *fbpath);
+void cavan_fb_uninit(struct cavan_screen_descriptor *desc);
 int cavan_draw_point(struct cavan_screen_descriptor *desc, int x, int y, u32 color);
 int cavan_draw_line(struct cavan_screen_descriptor *desc, int x1, int y1, int x2, int y2);
 int cavan_draw_rect(struct cavan_screen_descriptor *desc, int left, int top, int width, int height);
@@ -63,6 +63,7 @@ int cavan_fill_polygon_standard(struct cavan_screen_descriptor *desc, size_t cou
 int cavan_draw_polygon_standard2(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation);
 int cavan_fill_polygon_standard2(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation);
 int cavan_draw_polygon_standard3(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation);
+int cavan_fill_polygon_standard3(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation);
 int cavan_draw_polygon_standard4(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation);
 
 void cavan_point_sort_x(struct cavan_point *start, struct cavan_point *end);
