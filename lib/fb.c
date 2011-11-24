@@ -117,6 +117,11 @@ void cavan_fb_uninit(struct cavan_screen_descriptor *desc)
 	close(desc->fb);
 }
 
+void cavan_fb_clear(struct cavan_screen_descriptor *desc)
+{
+	mem_set32(desc->fb_base, desc->background, desc->xres * desc->yres * desc->bpp);
+}
+
 static inline void cavan_draw_point8(struct cavan_screen_descriptor * desc,int x, int y, u32 color)
 {
 	u8 *p1, *p2, *end1, *end2;
@@ -745,20 +750,14 @@ void cavan_point_sort_x(struct cavan_point *start, struct cavan_point *end)
 	}
 }
 
-static int cavan_fill_triangle_half(struct cavan_screen_descriptor *desc, int left, int right, double a1, double b1, double a2, double b2)
+static int cavan_fill_triangle_half(struct cavan_screen_descriptor *desc, struct cavan_point *p1, struct cavan_point *p2, double a1, double b1, double a2, double b2)
 {
-	int min, max;
+	int left, right, top, bottom;
 	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
 	u32 color;
 
 	// println("left = %d, right = %d", left, right);
 	// println("a1 = %lf, b1 = %lf, a2 = %lf, b2 = %lf", a1, b1, a2, b2);
-
-	min = left - right;
-	if (min > -5 && min < 5)
-	{
-		return 0;
-	}
 
 	draw_point_handle = cavan_get_draw_point_function(desc);
 	if (draw_point_handle == NULL)
@@ -766,17 +765,47 @@ static int cavan_fill_triangle_half(struct cavan_screen_descriptor *desc, int le
 		return -1;
 	}
 
+	left = p1->x;
+	right = p2->x;
 	color = desc->foreground;
+
+	if ((a1 == 0 && b1 == 0) || (a2 == 0 && b2 == 0))
+	{
+		if (p1->y < p2->y)
+		{
+			top = p1->y;
+			bottom = p2->y;
+		}
+		else
+		{
+			top = p2->y;
+			bottom = p1->y;
+		}
+
+		while (left <= right)
+		{
+			int i;
+
+			for (i = top; i <= bottom; i++)
+			{
+				cavan_draw_point(desc, left, i, color);
+			}
+
+			left++;
+		}
+
+		return 0;
+	}
 
 	while (left <= right)
 	{
-		min = a1 * left + b1;
-		max = a2 * left + b2;
+		top = a1 * left + b1;
+		bottom = a2 * left + b2;
 
-		while (min <= max)
+		while (top <= bottom)
 		{
-			draw_point_handle(desc, left, min, color);
-			min++;
+			draw_point_handle(desc, left, top, color);
+			top++;
 		}
 
 		left++;
@@ -788,22 +817,55 @@ static int cavan_fill_triangle_half(struct cavan_screen_descriptor *desc, int le
 int cavan_fill_triangle(struct cavan_screen_descriptor *desc, struct cavan_point *points)
 {
 	double a[3], b[3];
+	struct cavan_point *p0, *p1, *p2;
 
-	cavan_point_sort_x(points, points + 2);
-
-	cavan_build_line_equation(points[0].x, points[0].y, points[1].x, points[1].y, a, b);
-	cavan_build_line_equation(points[2].x, points[2].y, points[1].x, points[1].y, a + 1, b + 1);
-	cavan_build_line_equation(points[0].x, points[0].y, points[2].x, points[2].y, a + 2, b + 2);
-
-	if (points[1].y < points[2].y)
+	if (points[0].x < points[1].x)
 	{
-		cavan_fill_triangle_half(desc, points[0].x, points[1].x, a[0], b[0], a[2], b[2]);
-		cavan_fill_triangle_half(desc, points[1].x, points[2].x, a[2], b[2], a[1], b[1]);
+		p0 = points;
+		p1 = points + 1;
 	}
 	else
 	{
-		cavan_fill_triangle_half(desc, points[0].x, points[1].x, a[2], b[2], a[0], b[0]);
-		cavan_fill_triangle_half(desc, points[1].x, points[2].x, a[2], b[2], a[1], b[1]);
+		p0 = points + 1;
+		p1 = points;
+	}
+
+	if (points[2].x < p0->x)
+	{
+		p2 = p1;
+		p1 = p0;
+		p0 = points + 2;
+	}
+	else if (points[2].x < p1->x)
+	{
+		p2 = p1;
+		p1 = points + 2;
+	}
+	else
+	{
+		p2 = points + 2;
+	}
+
+	cavan_build_line_equation(p0->x, p0->y, p1->x, p1->y, a, b);
+	cavan_build_line_equation(p0->x, p0->y, p2->x, p2->y, a + 1, b + 1);
+	cavan_build_line_equation(p2->x, p2->y, p1->x, p1->y, a + 2, b + 2);
+
+	if (a[1] == 0 && b[1] == 0)
+	{
+		return -EINVAL;
+	}
+
+	if (p1->y < (p1->x * a[1] + b[1]))
+	{
+		// pr_bold_pos();
+		cavan_fill_triangle_half(desc, p0, p1, a[0], b[0], a[1], b[1]);
+		cavan_fill_triangle_half(desc, p1, p2, a[2], b[2], a[1], b[1]);
+	}
+	else
+	{
+		// pr_bold_pos();
+		cavan_fill_triangle_half(desc, p0, p1, a[1], b[1], a[0], b[0]);
+		cavan_fill_triangle_half(desc, p1, p2, a[1], b[1], a[2], b[2]);
 	}
 
 	return 0;
