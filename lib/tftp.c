@@ -32,17 +32,27 @@ static void show_error_msg_pkg(const struct tftp_error_pkg *err_pkg_p)
 	println("err_code = %d, err_msg = %s", ntohs(err_pkg_p->err_code), err_pkg_p->err_msg);
 }
 
-static ssize_t send_ack_pkg(int sockfd, u16 blk_num, const struct sockaddr_in *remote_addr)
+static ssize_t send_ack_pkg(int sockfd, u16 blk_num, const struct sockaddr_in *remote_addr, int times)
 {
+	int ret;
 	struct tftp_ack_pkg ack_pkg;
 
 	ack_pkg.op_code = htons(TFTP_ACK);
 	ack_pkg.blk_num = htons(blk_num);
 
-	return inet_sendto(sockfd, &ack_pkg, sizeof(ack_pkg), remote_addr);
+	while (times--)
+	{
+		ret = inet_sendto(sockfd, &ack_pkg, sizeof(ack_pkg), remote_addr);
+		if (ret < 0)
+		{
+			return ret;
+		}
+	}
+
+	return 0;
 }
 
-static ssize_t send_ack_nosocket(u16 blk_num, const struct sockaddr_in *remote_addr)
+static ssize_t send_ack_nosocket(u16 blk_num, const struct sockaddr_in *remote_addr, int times)
 {
 	int sockfd;
 	ssize_t sendlen;
@@ -54,7 +64,7 @@ static ssize_t send_ack_nosocket(u16 blk_num, const struct sockaddr_in *remote_a
 		return sockfd;
 	}
 
-	sendlen = send_ack_pkg(sockfd, blk_num, remote_addr);
+	sendlen = send_ack_pkg(sockfd, blk_num, remote_addr, times);
 
 	close(sockfd);
 
@@ -434,7 +444,7 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 			if (writelen < TFTP_DATA_LEN)
 			{
 				println(" Receive data complete");
-				send_ack_pkg(sockfd, blk_num, &remote_addr);
+				send_ack_pkg(sockfd, blk_num, &remote_addr, TFTP_LAST_ACK_TIMES);
 				ret = 0;
 				goto out_success;
 			}
@@ -804,7 +814,7 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 	{
 		if (writelen < TFTP_DATA_LEN)
 		{
-			send_ack_pkg(sockfd, blk_num, remote_addr);
+			send_ack_pkg(sockfd, blk_num, remote_addr, TFTP_LAST_ACK_TIMES);
 			println(" Receive data complete");
 			ret = 0;
 			break;
@@ -1019,11 +1029,11 @@ int tftp_mkdir(struct tftp_mkdir_pkg *mkdir_pkg_p, const struct sockaddr_in *rem
 	if (ret < 0 && errno != EEXIST)
 	{
 		print_error("create directory failed");
-		send_ack_nosocket(1, remote_addr);
+		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return ret;
 	}
 
-	send_ack_nosocket(0, remote_addr);
+	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
 	return 0;
 }
@@ -1079,17 +1089,17 @@ int tftp_command(struct tftp_command_pkg *command_pkg_p, const struct sockaddr_i
 {
 	int ret;
 
-	send_ack_nosocket(0, remote_addr);
+	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
 	ret = system_command("%s | tee %s", command_pkg_p->command, TFTP_COMMAND_LOG_FILE);
 	if (ret < 0)
 	{
 		print_error("Excute command \"%s\" failed", command_pkg_p->command);
-		send_ack_nosocket(1, remote_addr);
+		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return -1;
 	}
 
-	send_ack_nosocket(0, remote_addr);
+	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
 	return 0;
 }
@@ -1098,17 +1108,17 @@ int tftp_command_pipe(struct tftp_command_pkg *command_pkg_p, const struct socka
 {
 	FILE *fp;
 
-	send_ack_nosocket(0, remote_addr);
+	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
 	fp = pipe_command_verbose(command_pkg_p->command);
 	if (fp == NULL || write_response_to(fp, TFTP_COMMAND_LOG_FILE) < 0)
 	{
 		print_error("Excute command \"%s\" failed", command_pkg_p->command);
-		send_ack_nosocket(1, remote_addr);
+		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return -1;
 	}
 
-	send_ack_nosocket(0, remote_addr);
+	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
 	return 0;
 }
@@ -1127,11 +1137,11 @@ int tftp_mknode(struct tftp_mknode_pkg *mknode_pkg_p, const struct sockaddr_in *
 	if (ret < 0)
 	{
 		print_error("create mknode failed");
-		send_ack_nosocket(1, remote_addr);
+		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return ret;
 	}
 
-	send_ack_nosocket(0, remote_addr);
+	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
 	return 0;
 }
@@ -1148,11 +1158,11 @@ int tftp_symlink(struct tftp_symlink_pkg *symlink_pkg_p, const struct sockaddr_i
 	if (ret < 0)
 	{
 		print_error("create symlink failed");
-		send_ack_nosocket(1, remote_addr);
+		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return ret;
 	}
 
-	send_ack_nosocket(0, remote_addr);
+	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
 	return 0;
 }
