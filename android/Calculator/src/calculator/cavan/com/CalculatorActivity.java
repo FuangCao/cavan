@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
@@ -261,7 +260,8 @@ public class CalculatorActivity extends Activity
 		mEditTextTotal.setSelection(mEditTextTotal.length());
 	}
 
-	private long GetPartValue(long value, int start, int length) {
+	private long GetPartValue(long value, int start, int length)
+	{
 		long tmp_value = 0;
 
 		for (int i = 0; i < length; i++)
@@ -315,8 +315,7 @@ public class CalculatorActivity extends Activity
 
 				mEventPending = true;
 
-				mTotalValue = StringToValue(mEditTextTotal.getText().toString(),
-						mBaseTotal);
+				mTotalValue = StringToValue(mEditTextTotal.getText().toString(), mBaseTotal);
 
 				ValueToBits(mTotalValue, 0, 32);
 				UpdateTextViewPartText();
@@ -324,6 +323,7 @@ public class CalculatorActivity extends Activity
 				mEventPending = false;
 			}
 		};
+
 		mEditTextTotal.addTextChangedListener(mTextWatcherTotal);
 		mEditTextTotal.setOnFocusChangeListener(new OnFocusChangeListener()
 		{
@@ -378,6 +378,7 @@ public class CalculatorActivity extends Activity
 				mEventPending = false;
 			}
 		};
+
 		mEditTextPart.addTextChangedListener(mTextWatcherPart);
 		mEditTextPart.setOnFocusChangeListener(new OnFocusChangeListener()
 		{
@@ -425,6 +426,7 @@ public class CalculatorActivity extends Activity
 				mEventPending = false;
 			}
 		};
+
 		LayoutParams layoutParams = new LinearLayout.LayoutParams(
 				LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 1);
 
@@ -456,7 +458,12 @@ public class CalculatorActivity extends Activity
 			layoutRoot.addView(linearLayoutValue);
 		}
 
-		String stringKeys[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
+		String stringKeys[] =
+		{
+			"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+			"A", "B", "C", "D", "E", "F"
+		};
+
 		mButtonKeys = new Button[stringKeys.length];
 		final int lines = 2;
 		final int keys_per_line = stringKeys.length / lines;
@@ -468,10 +475,15 @@ public class CalculatorActivity extends Activity
 			public void onClick(View v)
 			{
 				// TODO Auto-generated method stub
-				Button button = (Button) v;
-				EditText editText = (EditText) getCurrentFocus();
+				View currView = getCurrentFocus();
 
-				editText.getText().insert(editText.getSelectionStart(), button.getText());
+				if (currView instanceof EditText)
+				{
+					Button button = (Button) v;
+					EditText editText = (EditText) currView;
+
+					editText.getText().insert(editText.getSelectionStart(), button.getText());
+				}
 			}
 		};
 
@@ -871,12 +883,17 @@ public class CalculatorActivity extends Activity
 			public void onClick(View v)
 			{
 				// TODO Auto-generated method stub
-				EditText editText = (EditText) getCurrentFocus();
-				int select = editText.getSelectionEnd();
+				View currView = getCurrentFocus();
 
-				if (select > 0)
+				if (currView instanceof EditText)
 				{
-					editText.getText().delete(select - 1, select);
+					EditText editText = (EditText) currView;
+					int select = editText.getSelectionEnd();
+
+					if (select > 0)
+					{
+						editText.getText().delete(select - 1, select);
+					}
 				}
 			}
 		});
@@ -889,9 +906,14 @@ public class CalculatorActivity extends Activity
 			public void onClick(View v)
 			{
 				// TODO Auto-generated method stub
-				EditText editText = (EditText) getCurrentFocus();
+				View currView = getCurrentFocus();
 
-				editText.setText("");
+				if (currView instanceof EditText)
+				{
+					EditText editText = (EditText) currView;
+
+					editText.setText("");
+				}
 			}
 		});
 
