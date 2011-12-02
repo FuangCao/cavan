@@ -71,4 +71,3 @@ void *list_queue_get_tail_data(struct list_queue *queue)
 
 	return queue->buffer[(queue->tail + 1) % queue->max_count];
 }
-

@@ -1166,4 +1166,3 @@ int tftp_symlink(struct tftp_symlink_pkg *symlink_pkg_p, const struct sockaddr_i
 
 	return 0;
 }
-

@@ -468,4 +468,3 @@ void *memory_stack_get_top(struct memory_stack *stack, void *mem, size_t *size)
 
 	return memory_stack_node_get(stack->buffer + stack->top - 1, mem, size);
 }
-
