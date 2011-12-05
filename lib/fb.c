@@ -44,6 +44,70 @@ void cavan_bitfield2element(struct fb_bitfield *field, struct cavan_color_elemen
 	emt->index = emt->offset >> 3;
 }
 
+static void cavan_draw_point8(struct cavan_screen_descriptor * desc,int x, int y, u32 color)
+{
+	u8 *p1, *p2, *end1, *end2;
+
+	p1 = ((u8 *)desc->fb_base) + y * desc->xres + x;
+
+	for (end1 = p1 + (desc->xres * desc->bordersize); p1 < end1; p1 += desc->xres)
+	{
+		for (p2 = p1, end2 = p2 + desc->bordersize; p2 < end2; p2++)
+		{
+			*p2 = color;
+		}
+	}
+}
+
+static void cavan_draw_point16(struct cavan_screen_descriptor * desc,int x, int y, u32 color)
+{
+	u16 *p1, *p2, *end1, *end2;
+
+	p1 = ((u16 *)desc->fb_base) + y * desc->xres + x;
+
+	for (end1 = p1 + (desc->xres * desc->bordersize); p1 < end1; p1 += desc->xres)
+	{
+		for (p2 = p1, end2 = p2 + desc->bordersize; p2 < end2; p2++)
+		{
+			*p2 = color;
+		}
+	}
+}
+
+static void cavan_draw_point24(struct cavan_screen_descriptor *desc, int x, int y, u32 color)
+{
+	u8 *p1, *p2, *end1, *end2;
+	int line_size;
+
+	p1 = ((u8 *)desc->fb_base) + (y * desc->xres + x) * 3;
+	line_size = desc->xres * 3;
+
+	for (end1 = p1 + (line_size * desc->bordersize); p1 < end1; p1 += line_size)
+	{
+		for (p2 = p1, end2 = p2 + desc->bordersize * 3; p2 < end2; p2 += 3)
+		{
+			p2[desc->red.index] = (color & desc->red.mask) >> desc->red.offset;
+			p2[desc->green.index] = (color & desc->green.mask) >> desc->green.offset;
+			p2[desc->blue.index] = (color & desc->blue.mask) >> desc->blue.offset;
+		}
+	}
+}
+
+static void cavan_draw_point32(struct cavan_screen_descriptor * desc, int x, int y, u32 color)
+{
+	u32 *p1, *p2, *end1, *end2;
+
+	p1 = ((u32 *)desc->fb_base) + y * desc->xres + x;
+
+	for (end1 = p1 + (desc->xres * desc->bordersize); p1 < end1; p1 += desc->xres)
+	{
+		for (p2 = p1, end2 = p2 + desc->bordersize; p2 < end2; p2++)
+		{
+			*p2 = color;
+		}
+	}
+}
+
 int cavan_fb_init(struct cavan_screen_descriptor *desc, const char *fbpath)
 {
 	int ret;
@@ -72,6 +136,35 @@ int cavan_fb_init(struct cavan_screen_descriptor *desc, const char *fbpath)
 
 	show_fb_var_info(&desc->var_info);
 
+	desc->xres = desc->var_info.xres;
+	desc->yres = desc->var_info.yres;
+
+	switch (desc->var_info.bits_per_pixel)
+	{
+	case 8:
+		desc->line_size = desc->xres;
+		desc->draw_point = cavan_draw_point8;
+		break;
+	case 16:
+		desc->line_size = desc->xres * 2;
+		desc->draw_point = cavan_draw_point16;
+		break;
+	case 24:
+		desc->line_size = desc->xres * 3;
+		desc->draw_point = cavan_draw_point24;
+		break;
+	case 32:
+		desc->line_size = desc->xres * 4;
+		desc->draw_point = cavan_draw_point32;
+		break;
+	default:
+		error_msg("unsported bits_per_pixel: %d", desc->var_info.bits_per_pixel);
+		ret = -EINVAL;
+		goto out_close_fb;
+	}
+
+	desc->fb_size = desc->line_size * desc->yres;
+
 	ret = ioctl(fb, FBIOGET_FSCREENINFO, &desc->fix_info);
 	if (ret < 0)
 	{
@@ -88,10 +181,6 @@ int cavan_fb_init(struct cavan_screen_descriptor *desc, const char *fbpath)
 		ret = -1;
 		goto out_close_fb;
 	}
-
-	desc->xres = desc->var_info.xres;
-	desc->yres = desc->var_info.yres;
-	desc->bpp = desc->var_info.bits_per_pixel >> 3;
 
 	cavan_bitfield2element(&desc->var_info.red, &desc->red);
 	cavan_bitfield2element(&desc->var_info.green, &desc->green);
@@ -119,113 +208,7 @@ void cavan_fb_uninit(struct cavan_screen_descriptor *desc)
 
 void cavan_fb_clear(struct cavan_screen_descriptor *desc)
 {
-	mem_set32(desc->fb_base, desc->background, desc->xres * desc->yres * desc->bpp);
-}
-
-static inline void cavan_draw_point8(struct cavan_screen_descriptor * desc,int x, int y, u32 color)
-{
-	u8 *p1, *p2, *end1, *end2;
-
-	p1 = ((u8 *)desc->fb_base) + y * desc->xres + x;
-
-	for (end1 = p1 + (desc->xres * desc->bordersize); p1 < end1; p1 += desc->xres)
-	{
-		for (p2 = p1, end2 = p2 + desc->bordersize; p2 < end2; p2++)
-		{
-			*p2 = color;
-		}
-	}
-}
-
-static inline void cavan_draw_point16(struct cavan_screen_descriptor * desc,int x, int y, u32 color)
-{
-	u16 *p1, *p2, *end1, *end2;
-
-	p1 = ((u16 *)desc->fb_base) + y * desc->xres + x;
-
-	for (end1 = p1 + (desc->xres * desc->bordersize); p1 < end1; p1 += desc->xres)
-	{
-		for (p2 = p1, end2 = p2 + desc->bordersize; p2 < end2; p2++)
-		{
-			*p2 = color;
-		}
-	}
-}
-
-static inline void cavan_draw_point24(struct cavan_screen_descriptor *desc, int x, int y, u32 color)
-{
-	u8 *p1, *p2, *end1, *end2;
-	int line_size;
-
-	p1 = ((u8 *)desc->fb_base) + (y * desc->xres + x) * 3;
-	line_size = desc->xres * 3;
-
-	for (end1 = p1 + (line_size * desc->bordersize); p1 < end1; p1 += line_size)
-	{
-		for (p2 = p1, end2 = p2 + desc->bordersize * 3; p2 < end2; p2 += 3)
-		{
-			p2[desc->red.index] = (color & desc->red.mask) >> desc->red.offset;
-			p2[desc->green.index] = (color & desc->green.mask) >> desc->green.offset;
-			p2[desc->blue.index] = (color & desc->blue.mask) >> desc->blue.offset;
-		}
-	}
-}
-
-static inline void cavan_draw_point32(struct cavan_screen_descriptor * desc, int x, int y, u32 color)
-{
-	u32 *p1, *p2, *end1, *end2;
-
-	p1 = ((u32 *)desc->fb_base) + y * desc->xres + x;
-
-	for (end1 = p1 + (desc->xres * desc->bordersize); p1 < end1; p1 += desc->xres)
-	{
-		for (p2 = p1, end2 = p2 + desc->bordersize; p2 < end2; p2++)
-		{
-			*p2 = color;
-		}
-	}
-}
-
-void *cavan_get_draw_point_function(struct cavan_screen_descriptor *desc)
-{
-	void (*cavan_draw_point_handle_table[])(struct cavan_screen_descriptor *, int, int, u32) =
-	{
-		cavan_draw_point8, cavan_draw_point16, cavan_draw_point24, cavan_draw_point32
-	};
-
-	if (desc->bpp > 0 && desc->bpp <= ARRAY_SIZE(cavan_draw_point_handle_table))
-	{
-		return cavan_draw_point_handle_table[desc->bpp - 1];
-	}
-
-	return NULL;
-}
-
-int cavan_draw_point(struct cavan_screen_descriptor *desc, int x, int y, u32 color)
-{
-	switch (desc->bpp)
-	{
-	case 1:
-		cavan_draw_point8(desc, x, y, color);
-		break;
-
-	case 2:
-		cavan_draw_point16(desc, x, y, color);
-		break;
-
-	case 3:
-		cavan_draw_point24(desc, x, y, color);
-		break;
-
-	case 4:
-		cavan_draw_point32(desc, x, y, color);
-		break;
-
-	default:
-		return -1;
-	}
-
-	return 0;
+	mem_set32(desc->fb_base, desc->background, desc->fb_size);
 }
 
 static int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b)
@@ -254,12 +237,7 @@ static int cavan_draw_line_horizon(struct cavan_screen_descriptor *desc, int x1,
 	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
 	u32 color;
 
-	draw_point_handle = cavan_get_draw_point_function(desc);
-	if (draw_point_handle == NULL)
-	{
-		return -1;
-	}
-
+	draw_point_handle = desc->draw_point;
 	color = desc->bordercolor;
 
 	if (x1 == x2)
@@ -312,12 +290,7 @@ static int cavan_draw_line_vertical(struct cavan_screen_descriptor *desc, int x1
 	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
 	u32 color;
 
-	draw_point_handle = cavan_get_draw_point_function(desc);
-	if (draw_point_handle == NULL)
-	{
-		return -1;
-	}
-
+	draw_point_handle = desc->draw_point;
 	color = desc->bordercolor;
 
 	if (y1 == y2)
@@ -403,12 +376,7 @@ int cavan_draw_rect(struct cavan_screen_descriptor *desc, int left, int top, int
 		return -EINVAL;
 	}
 
-	draw_point_handle = cavan_get_draw_point_function(desc);
-	if (draw_point_handle == NULL)
-	{
-		return -1;
-	}
-
+	draw_point_handle = desc->draw_point;
 	color = desc->bordercolor;
 
 	for (i = left; i <= right; i++)
@@ -446,12 +414,7 @@ int cavan_fill_rect(struct cavan_screen_descriptor *desc, int left, int top, int
 		return -EINVAL;
 	}
 
-	draw_point_handle = cavan_get_draw_point_function(desc);
-	if (draw_point_handle == NULL)
-	{
-		return -1;
-	}
-
+	draw_point_handle = desc->draw_point;
 	color = desc->foreground;
 
 	for (y = top; y <= bottom; y++)
@@ -478,12 +441,7 @@ int cavan_draw_circle(struct cavan_screen_descriptor *desc, int x, int y, int r)
 		return -EINVAL;
 	}
 
-	draw_point_handle = cavan_get_draw_point_function(desc);
-	if (draw_point_handle == NULL)
-	{
-		return -1;
-	}
-
+	draw_point_handle = desc->draw_point;
 	rr = r * r;
 	color = desc->bordercolor;
 
@@ -518,12 +476,7 @@ int cavan_fill_circle(struct cavan_screen_descriptor *desc, int x, int y, int r)
 		return -EINVAL;
 	}
 
-	draw_point_handle = cavan_get_draw_point_function(desc);
-	if (draw_point_handle == NULL)
-	{
-		return -1;
-	}
-
+	draw_point_handle = desc->draw_point;
 	rr = r * r;
 	color = desc->foreground;
 
@@ -565,13 +518,7 @@ int cavan_draw_ellipse(struct cavan_screen_descriptor *desc, int x, int y, int w
 
 	aa *= aa;
 	bb *= bb;
-
-	draw_point_handle = cavan_get_draw_point_function(desc);
-	if (draw_point_handle == NULL)
-	{
-		return -1;
-	}
-
+	draw_point_handle = desc->draw_point;
 	color = desc->bordercolor;
 
 	for (i = width >> 1; i >= 0; i--)
@@ -615,13 +562,7 @@ int cavan_fill_ellipse(struct cavan_screen_descriptor *desc, int x, int y, int w
 
 	aa *= aa;
 	bb *= bb;
-
-	draw_point_handle = cavan_get_draw_point_function(desc);
-	if (draw_point_handle == NULL)
-	{
-		return -1;
-	}
-
+	draw_point_handle = desc->draw_point;
 	color = desc->foreground;
 
 	for (i = width >> 1; i >= 0; i--)
@@ -759,12 +700,7 @@ static int cavan_fill_triangle_half(struct cavan_screen_descriptor *desc, struct
 	// println("left = %d, right = %d", left, right);
 	// println("a1 = %lf, b1 = %lf, a2 = %lf, b2 = %lf", a1, b1, a2, b2);
 
-	draw_point_handle = cavan_get_draw_point_function(desc);
-	if (draw_point_handle == NULL)
-	{
-		return -1;
-	}
-
+	draw_point_handle = desc->draw_point;
 	left = p1->x;
 	right = p2->x;
 	color = desc->foreground;

@@ -28,7 +28,8 @@ struct cavan_screen_descriptor
 	void *fb_base;
 	int xres;
 	int yres;
-	int bpp;
+	size_t line_size;
+	size_t fb_size;
 	u32 background;
 	u32 foreground;
 	u32 bordercolor;
@@ -39,6 +40,8 @@ struct cavan_screen_descriptor
 	struct cavan_color_element green;
 	struct cavan_color_element blue;
 	struct cavan_color_element transp;
+
+	void (*draw_point)(struct cavan_screen_descriptor *, int x, int y, u32 color);
 };
 
 void show_fb_bitfield(struct fb_bitfield *field, const char *msg);
@@ -48,7 +51,6 @@ void show_fb_fix_info(struct fb_fix_screeninfo *fix);
 int cavan_fb_init(struct cavan_screen_descriptor *desc, const char *fbpath);
 void cavan_fb_uninit(struct cavan_screen_descriptor *desc);
 void cavan_fb_clear(struct cavan_screen_descriptor *desc);
-int cavan_draw_point(struct cavan_screen_descriptor *desc, int x, int y, u32 color);
 int cavan_draw_line(struct cavan_screen_descriptor *desc, int x1, int y1, int x2, int y2);
 int cavan_draw_rect(struct cavan_screen_descriptor *desc, int left, int top, int width, int height);
 int cavan_fill_rect(struct cavan_screen_descriptor *desc, int left, int top, int width, int height);
@@ -69,6 +71,11 @@ int cavan_draw_polygon_standard4(struct cavan_screen_descriptor *desc, size_t co
 
 void cavan_point_sort_x(struct cavan_point *start, struct cavan_point *end);
 void show_cavan_points(const struct cavan_point *points, size_t size);
+
+static inline void cavan_draw_point(struct cavan_screen_descriptor *desc, int x, int y, u32 color)
+{
+	return desc->draw_point(desc, x, y, color);
+}
 
 static inline u32 cavan_build_color(struct cavan_screen_descriptor *desc, u32 red, u32 green, u32 blue)
 {
