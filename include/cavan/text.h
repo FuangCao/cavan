@@ -124,6 +124,7 @@ char *__text_delete_char(const char *text_in, char *text_out, char c);
 char *__text_delete_sub(const char *text_in, char *text_out, const char *sub, const size_t sublen);
 
 void *mem_kmp_find(const void *mem, const void *sub, size_t memlen, size_t sublen);
+char *text_find_next_line(const char *text);
 char *text_find_line(const char *text, int index);
 char *text_get_line(const char *text, char *buff, int index);
 int text_version_cmp(const char *v1, const char *v2, char sep);

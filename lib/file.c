@@ -776,7 +776,7 @@ ssize_t ffile_write(int fd, const void *buff, size_t size)
 	return buff - buff_bak;
 }
 
-int ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
+ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
 {
 	if (offset > 0)
 	{
@@ -793,7 +793,7 @@ int ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
 	return ffile_write(fd, buff, size);
 }
 
-int file_writeto(const char *file_name, const void *buff, size_t size, off_t offset, int flags)
+ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t offset, int flags)
 {
 	ssize_t writelen;
 	int fd;
@@ -835,9 +835,9 @@ ssize_t ffile_readfrom(int fd, void *buff, size_t size, off_t offset)
 	return ffile_read(fd, buff, size);
 }
 
-int file_readfrom(const char *file_name, void *buff, size_t size, off_t offset, int flags)
+ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offset, int flags)
 {
-	int ret;
+	ssize_t readlen;
 	int fd;
 
 #ifdef DEBUG
@@ -853,11 +853,11 @@ int file_readfrom(const char *file_name, void *buff, size_t size, off_t offset, 
 		return -1;
 	}
 
-	ret = ffile_readfrom(fd, buff, size, offset);
+	readlen = ffile_readfrom(fd, buff, size, offset);
 
 	close(fd);
 
-	return ret;
+	return readlen;
 }
 
 int file_test_read(const char *filename)

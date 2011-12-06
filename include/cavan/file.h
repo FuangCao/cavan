@@ -63,11 +63,11 @@ int file_ncopy(const char *src_file, const char *dest_file, size_t size, int fla
 int vtry_to_open(int flags, va_list ap);
 int try_to_open(int flags, ...);
 
-int ffile_writeto(int fd, const void *buff, size_t size, off_t offset);
-int ffile_readfrom(int fd, void *buff, size_t size, off_t offset);
+ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset);
+ssize_t ffile_readfrom(int fd, void *buff, size_t size, off_t offset);
 
-int file_writeto(const char *file_name, const void *buff, size_t size, off_t offset, int flags);
-int file_readfrom(const char *file_name, void *buff, size_t size, off_t offset, int flags);
+ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t offset, int flags);
+ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offset, int flags);
 
 int file_test_read(const char *filename);
 

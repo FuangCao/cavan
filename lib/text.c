@@ -1988,16 +1988,27 @@ char *__text_delete_sub(const char *text_in, char *text_out, const char *sub, co
 	return text_bak;
 }
 
+char *text_find_next_line(const char *text)
+{
+	do {
+		if (*text == 0)
+		{
+			return NULL;
+		}
+	} while (*text++ != '\n');
+
+	return (char *)text;
+}
+
 char *text_find_line(const char *text, int index)
 {
 	while (index > 0)
 	{
-		do {
-			if (*text == 0)
-			{
-				return NULL;
-			}
-		} while (*text++ != '\n');
+		text = text_find_next_line(text);
+		if (text == NULL)
+		{
+			return NULL;
+		}
 
 		index--;
 	}
