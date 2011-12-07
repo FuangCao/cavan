@@ -5,6 +5,15 @@
 
 #define FILE_CREATE_DATE "2011-12-06 19:11:21"
 
+enum cavan_mtd_action
+{
+	CAVAN_MTD_ACTION_NONE,
+	CAVAN_MTD_ACTION_ERASE,
+	CAVAN_MTD_ACTION_READ,
+	CAVAN_MTD_ACTION_WRITE,
+	CAVAN_MTD_ACTION_LIST,
+};
+
 static void show_usage(void)
 {
 	println("Usage:");
@@ -29,13 +38,36 @@ int main(int argc, char *argv[])
 			.val = 'v',
 		},
 		{
+			.name = "erase",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'e',
+		},
+		{
+			.name = "write",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'w',
+		},
+		{
+			.name = "read",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'r',
+		},
+		{
 		},
 	};
 	int ret;
 	struct cavan_mtd_descriptor desc;
 	struct mtd_partition_descriptor *part;
+	enum cavan_mtd_action action;
+	char partname[64];
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
+	action = CAVAN_MTD_ACTION_NONE;
+	partname[0] = 0;
+
+	while ((c = getopt_long(argc, argv, "vVhHlLw:W:e:E:r:R:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -50,13 +82,34 @@ int main(int argc, char *argv[])
 			show_usage();
 			return 0;
 
+		case 'r':
+		case 'R':
+			action = CAVAN_MTD_ACTION_READ;
+			text_copy(partname, optarg);
+			break;
+
+		case 'w':
+		case 'W':
+			action = CAVAN_MTD_ACTION_WRITE;
+			text_copy(partname, optarg);
+			break;
+
+		case 'e':
+		case 'E':
+			action = CAVAN_MTD_ACTION_ERASE;
+			text_copy(partname, optarg);
+			break;
+
+		case 'l':
+		case 'L':
+			action = CAVAN_MTD_ACTION_LIST;
+			break;
+
 		default:
 			show_usage();
 			return -EINVAL;
 		}
 	}
-
-	assert(argc - optind > 0);
 
 	ret = cavan_mtd_init(&desc, NULL);
 	if (ret < 0)
@@ -65,25 +118,60 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	part = cavan_mtd_find_partition_by_name(&desc, argv[optind]);
+	if (action == CAVAN_MTD_ACTION_LIST)
+	{
+		cavan_mtd_show_parts_info(desc.part_infos, desc.part_count);
+		ret = 0;
+		goto out_mtd_uninit;
+	}
+
+	if (partname[0] == 0)
+	{
+		pr_red_info("Please input mtd partition name");
+		ret = -EINVAL;
+		goto out_mtd_uninit;
+	}
+
+	part = cavan_mtd_open_partition2(&desc, partname, O_RDWR);
 	if (part == NULL)
 	{
-		error_msg("cavan_mtd_find_partition_by_name");
-		ret = -ENOENT;
+		error_msg("cavan_mtd_open_partition2");
+		ret = -1;
 		goto out_mtd_uninit;
 	}
 
-	cavan_show_mtd_partition(part);
+	cavan_mtd_show_parts_info(part->part_info, 1);
 
-	ret = cavan_mtd_erase_partition(part);
-	if (ret < 0)
+	switch (action)
 	{
-		error_msg("cavan_mtd_erase_partition");
-		goto out_mtd_uninit;
+	case CAVAN_MTD_ACTION_ERASE:
+		ret = cavan_mtd_erase_partition(part);
+		break;
+
+	case CAVAN_MTD_ACTION_READ:
+		ret = 0;
+		break;
+
+	case CAVAN_MTD_ACTION_WRITE:
+		if (optind < argc)
+		{
+			ret = cavan_mtd_write_partition2(part, argv[optind]);
+		}
+		else
+		{
+			pr_red_info("Please input filename");
+			ret = -EINVAL;
+		}
+		break;
+
+	default:
+		pr_red_info("unknown action");
+		ret = -EINVAL;
+		goto out_close_part;
 	}
 
-	ret = 0;
-
+out_close_part:
+	cavan_mtd_close_partition(part);
 out_mtd_uninit:
 	cavan_mtd_uninit(&desc);
 
