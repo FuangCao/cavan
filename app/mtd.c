@@ -17,6 +17,10 @@ enum cavan_mtd_action
 static void show_usage(void)
 {
 	println("Usage:");
+	println("mtd -l [partition]");
+	println("mtd -e partition");
+	println("mtd -r partition file");
+	println("mtd -w partition file");
 }
 
 int main(int argc, char *argv[])
@@ -54,6 +58,12 @@ int main(int argc, char *argv[])
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'r',
+		},
+		{
+			.name = "list",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'l',
 		},
 		{
 		},
@@ -120,14 +130,31 @@ int main(int argc, char *argv[])
 
 	if (action == CAVAN_MTD_ACTION_LIST)
 	{
-		cavan_mtd_show_parts_info(desc.part_infos, desc.part_count);
+		if (optind < argc)
+		{
+			struct mtd_partition_info *info;
+
+			info = cavan_mtd_get_partition_info_by_name(&desc, argv[optind]);
+			if (info == NULL)
+			{
+				error_msg("cavan_mtd_get_partition_info_by_name");
+				ret = -1;
+				goto out_mtd_uninit;
+			}
+
+			cavan_mtd_show_parts_info(info, 1);
+		}
+		else
+		{
+			cavan_mtd_show_parts_info(desc.part_infos, desc.part_count);
+		}
 		ret = 0;
 		goto out_mtd_uninit;
 	}
 
 	if (partname[0] == 0)
 	{
-		pr_red_info("Please input mtd partition name");
+		show_usage();
 		ret = -EINVAL;
 		goto out_mtd_uninit;
 	}

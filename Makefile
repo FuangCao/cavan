@@ -1,6 +1,7 @@
 BUILD_TYPE = dynamically
 # BUILD_TYPE = release
 # BUILD_TYPE = static
+BUILD_ENTRY = app
 # ARCH =
 # CROSS_COMPILE =
 ELF_PREFIX = cavan

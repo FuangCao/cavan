@@ -11,6 +11,12 @@ BUILD_DIR = build
 BUILD_CORE = $(BUILD_DIR)/core
 APP_CORE = $(APP_DIR)/core
 
+CONFIG_FILE_PATH = .config
+
+ifneq ($(wildcard $(CONFIG_FILE_PATH)),)
+include $(CONFIG_FILE_PATH)
+endif
+
 ifeq ("$(ARCH)","")
   ARCH = $(CAVAN_BUILD_ARCH)
 endif
@@ -135,7 +141,7 @@ export APPS_MAKEFILE LIBS_MAKEFILE DEFINES_MAKEFILE TOGETHER_MAKEFILE
 
 include $(DEFINES_MAKEFILE)
 
-all: app
+all: $(BUILD_ENTRY)
 	$(Q)echo "Compile is OK"
 
 app: $(OUT_APP) $(OUT_ELF) $(APP_DEPEND_LIB) $(APP_SOURCE)
@@ -153,6 +159,14 @@ one join together cavan: $(OUT_CAVAN) $(APP_DEPEND_LIB)
 	$(call generate_src_depend,$(CAVAN_SOURCE_DEPEND),$(APP_SOURCE))
 	$(call generate_cavan_obj_depend,$(CAVAN_DEPEND),$(CAVAN_SOURCE))
 	$(Q)+make -f $(TOGETHER_MAKEFILE)
+
+config:
+	$(Q){ \
+		echo "ARCH = $(ARCH)"; \
+		echo "CROSS_COMPILE = $(CROSS_COMPILE)"; \
+		echo "BUILD_ENTRY = $(BUILD_ENTRY)"; \
+		echo BUILD_TYPE = $(BUILD_TYPE); \
+	} > $(CONFIG_FILE_PATH)
 
 $(OUT_LIB) $(OUT_ELF) $(OUT_APP) $(OUT_CAVAN): $(TARGET_OUT)
 	$(call make_directory)
