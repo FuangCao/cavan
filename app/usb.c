@@ -114,6 +114,8 @@ static int swan_adb_client(const char *dev_path)
 
 	pr_bold_info("usb device path = %s", desc.dev_path);
 	pr_bold_info("usb device serial = %s", desc.serial);
+	pr_bold_info("idProduct = 0x%04x", desc.dev_desc.idProduct);
+	pr_bold_info("idVendor = 0x%04x", desc.dev_desc.idVendor);
 
 	count = open_event_devices(event_fds, ARRAY_SIZE(event_fds), O_RDONLY);
 	if (count <= 0)

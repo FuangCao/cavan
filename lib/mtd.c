@@ -11,9 +11,9 @@ void cavan_mtd_show_parts_info(const struct mtd_partition_info *parts, size_t si
 
 	for (part_end = parts + size; parts < part_end; parts++)
 	{
-		print("%-16s%02d ", parts->name, parts->index);
-		print("%-6s ", size2text(parts->erase_size));
-		println("%s", size2text(parts->size));
+		print("name = \"%s\", index = %02d, ", parts->name, parts->index);
+		print("erase_size = %s, ", size2text(parts->erase_size));
+		println("total_size = %s", size2text(parts->size));
 	}
 }
 
@@ -38,7 +38,7 @@ int cavan_load_mtd_table(struct cavan_mtd_descriptor *desc, const char *mtd_tabl
 	}
 
 	buff[readlen] = 0;
-	p = text_find_line(buff, 2);
+	p = text_find_line(buff, 1);
 	info = desc->part_infos;
 	info_end = info + NELEM(desc->part_infos);
 

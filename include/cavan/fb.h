@@ -104,7 +104,7 @@ static inline void cavan_set_foreground(struct cavan_screen_descriptor *desc, u3
 
 static inline void cavan_set_foreground3f(struct cavan_screen_descriptor *desc, float red, float green, float blue)
 {
-	desc->foreground= cavan_build_color3f(desc, red, green, blue);
+	desc->foreground = cavan_build_color3f(desc, red, green, blue);
 }
 
 static inline void cavan_set_bordercolor(struct cavan_screen_descriptor *desc, u32 red, u32 green, u32 blue)
