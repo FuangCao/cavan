@@ -1,0 +1,4 @@
+ARCH = $(shell uname -m)
+CROSS_COMPILE =
+BUILD_ENTRY = cavan
+BUILD_TYPE = static

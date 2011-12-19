@@ -1,0 +1,4 @@
+ARCH = arm
+CROSS_COMPILE = arm-linux-
+BUILD_ENTRY = cavan
+BUILD_TYPE = dynamically

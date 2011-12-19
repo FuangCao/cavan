@@ -1,0 +1,4 @@
+ARCH = $(shell uname -m)
+CROSS_COMPILE =
+BUILD_ENTRY = app
+BUILD_TYPE = static

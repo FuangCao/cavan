@@ -6,6 +6,7 @@ CAVAN_BUILD_ARCH = $(shell uname -m)
 OUT_DIR = out
 LIB_DIR = lib
 APP_DIR = app
+CONFIG_DIR = config
 INCLUDE_DIR = include
 BUILD_DIR = build
 BUILD_CORE = $(BUILD_DIR)/core
@@ -117,6 +118,8 @@ HEADER_FILES = $(wildcard $(INCLUDE_DIR)/cavan/*.h) $(INCLUDE_DIR)/cavan.h
 CAVAN_SOURCE = $(addprefix $(OUT_CAVAN)/,$(notdir $(APP_SOURCE)))
 CAVAN_SOURCE += $(APP_CORE_SOURCE)
 
+CAVAN_CONFIGS = $(notdir $(wildcard config/*))
+
 ifeq ("$(Q)","@")
   MAKEFLAGS += --no-print-directory
 endif
@@ -159,6 +162,9 @@ one join together cavan: $(OUT_CAVAN) $(APP_DEPEND_LIB)
 	$(call generate_src_depend,$(CAVAN_SOURCE_DEPEND),$(APP_SOURCE))
 	$(call generate_cavan_obj_depend,$(CAVAN_DEPEND),$(CAVAN_SOURCE))
 	$(Q)+make -f $(TOGETHER_MAKEFILE)
+
+$(CAVAN_CONFIGS):
+	$(Q)cp $(CONFIG_DIR)/$@ $(CONFIG_FILE_PATH)
 
 config:
 	$(Q){ \
