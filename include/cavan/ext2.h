@@ -138,9 +138,9 @@ void show_ext2_super_block(struct ext2_super_block *super_block);
 void show_ext2_group_desc(struct ext2_group_desc *gdt);
 void show_ext2_desc(struct ext2_desc *desc);
 int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_inode *inode);
-int __ext2_list_directory(struct ext2_desc *desc, struct ext2_inode *inode);
+int ext2_list_directory_base(struct ext2_desc *desc, struct ext2_inode *inode);
 int ext2_list_directory(struct ext2_desc *desc, const char *pathname);
-ssize_t __ext2_read_file(struct ext2_desc *desc, struct ext2_inode *inode, void *buff, size_t size);
+ssize_t ext2_read_file_base(struct ext2_desc *desc, struct ext2_inode *inode, void *buff, size_t size);
 ssize_t ext2_read_file(struct ext2_desc *desc, const char *pathname, void *buff, size_t size);
 
 static inline int ext2_read_super_block(struct ext2_desc *desc, struct ext2_super_block *super_block)

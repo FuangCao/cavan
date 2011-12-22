@@ -266,7 +266,7 @@ int text2double(const char *text, const char *text_end, double *result_last)
 	return 0;
 }
 
-int __simple_calculator(const char *formula, const char *formula_end, double *result_last)
+int simple_calculator_base(const char *formula, const char *formula_end, double *result_last)
 {
 	int ret;
 	const char *formula_tmp;
@@ -308,7 +308,7 @@ int __simple_calculator(const char *formula, const char *formula_end, double *re
 		case '[':
 		case '{':
 			formula_tmp = get_bracket_pair(formula, formula_end);
-			ret = __simple_calculator(formula + 1, formula_tmp, &result_tmp);
+			ret = simple_calculator_base(formula + 1, formula_tmp, &result_tmp);
 			if (ret < 0)
 			{
 				error_msg("__simple_calculator");
@@ -437,7 +437,7 @@ int simple_calculator(const char *formula, double *result_last)
 		return ret;
 	}
 
-	ret = __simple_calculator(formula, formula_end, result_last);
+	ret = simple_calculator_base(formula, formula_end, result_last);
 	if(ret < 0)
 	{
 		error_msg("__simple_calculator");

@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 
 	if (file_test(argv[argc], "b") == 0)
 	{
-		if (__get_partition_mount_point(argv[argc], dest_path, sizeof(dest_path)) == NULL)
+		if (get_partition_mount_point_base(argv[argc], dest_path, sizeof(dest_path)) == NULL)
 		{
 			text_copy(dest_path, TEMP_MOUNT_POINT);
 

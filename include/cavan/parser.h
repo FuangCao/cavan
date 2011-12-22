@@ -17,7 +17,7 @@ extern char para_option[128];
 extern char para_value[128];
 
 char *get_parameter(char *argument, char *parameter);
-void __parse_parameter(const char *parameter, char *option, char *value);
+void parse_parameter_base(const char *parameter, char *option, char *value);
 
 struct buffer *malloc_buffer(int size);
 void free_buffer(struct buffer *buff);
@@ -37,6 +37,6 @@ ssize_t parse_config_file2(const char *filepath, size_t max_size, char sep, stru
 
 static inline void parse_parameter(const char *parameter)
 {
-	__parse_parameter(parameter, para_option, para_value);
+	parse_parameter_base(parameter, para_option, para_value);
 }
 

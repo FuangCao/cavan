@@ -6,7 +6,7 @@
 
 char *get_bracket_pair(const char *formula, const char *formula_end);
 int check_bracket_match_pair(const char *formula, const char *formula_end);
-int __simple_calculator(const char *formula, const char *formula_end, double *result_last);
+int simple_calculator_base(const char *formula, const char *formula_end, double *result_last);
 int simple_calculator(const char *formula, double *result_last);
 int text2double(const char *text, const char *text_end, double *result_last);
 

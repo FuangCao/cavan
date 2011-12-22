@@ -1,3 +1,10 @@
+enum
+{
+	LOCAL_COMMAND_OPTION_UNKNOWN,
+	LOCAL_COMMAND_OPTION_HELP,
+	LOCAL_COMMAND_OPTION_VERSION,
+};
+
 static void show_usage(void)
 {
 	println("Usage:");
@@ -13,13 +20,13 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = 'h',
+			.val = LOCAL_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = 'v',
+			.val = LOCAL_COMMAND_OPTION_VERSION,
 		},
 		{
 		},
@@ -31,12 +38,14 @@ int main(int argc, char *argv[])
 		{
 		case 'v':
 		case 'V':
+		case LOCAL_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':
 		case 'H':
+		case LOCAL_COMMAND_OPTION_HELP:
 			show_usage();
 			return 0;
 

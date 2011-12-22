@@ -71,7 +71,7 @@ int fcavan_dd(int fd_in, int fd_out, off_t offset_in, off_t offset_out, off_t le
 	return ret;
 }
 
-int __cavan_dd(const char *file_in, const char *file_out, off_t offset_in, off_t offset_out, off_t length, int flags)
+int cavan_dd_base(const char *file_in, const char *file_out, off_t offset_in, off_t offset_out, off_t length, int flags)
 {
 	int fd_in, fd_out;
 	int ret;

@@ -1171,7 +1171,7 @@ ssize_t swan_write_version(const char *system_mnt_point, u32 version)
 
 	text_path_cat(version_file, system_mnt_point, SWAN_VERSION_PATH);
 
-	writelen = __value2text(version, buff, 0, 0, 16) - buff;
+	writelen = value2text_base(version, buff, 0, 0, 16) - buff;
 	writelen = file_writeto(version_file, buff, writelen, 0, O_TRUNC);
 	if (writelen < 0)
 	{

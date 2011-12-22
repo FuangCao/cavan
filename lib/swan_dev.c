@@ -194,7 +194,7 @@ int swan_mkfs(struct partition_desc *dev_desc, struct partition_desc *part_descs
 	return 0;
 }
 
-static int __swan_copy(const char *dev_path, const char *cache_file)
+static int swan_copy_base(const char *dev_path, const char *cache_file)
 {
 	int ret;
 
@@ -224,7 +224,7 @@ int swan_copy(const char *cache_file)
 
 	for (i = 0; i < ARRAY_SIZE(dev_list); i++)
 	{
-		ret = __swan_copy(dev_list[i], cache_file);
+		ret = swan_copy_base(dev_list[i], cache_file);
 		if (ret >= 0)
 		{
 			return 0;
@@ -306,7 +306,7 @@ int fset_brightness_shadow_increase(int fd, int current, int target, int step, u
 	{
 		current += step;
 
-		writelen = __value2text(current, buff, 0, 0, 10) - buff;
+		writelen = value2text_base(current, buff, 0, 0, 10) - buff;
 		writelen = write(fd, buff, writelen);
 		if (writelen < 0)
 		{
@@ -316,7 +316,7 @@ int fset_brightness_shadow_increase(int fd, int current, int target, int step, u
 		msleep(msec);
 	}
 
-	writelen = __value2text(target, buff, 0, 0, 10) - buff;
+	writelen = value2text_base(target, buff, 0, 0, 10) - buff;
 
 	return write(fd, buff, writelen);
 }
@@ -330,7 +330,7 @@ int fset_brightness_shadow_decrease(int fd, int current, int target, int step, u
 	{
 		current -= step;
 
-		writelen = __value2text(current, buff, 0, 0, 10) - buff;
+		writelen = value2text_base(current, buff, 0, 0, 10) - buff;
 		writelen = write(fd, buff, writelen);
 		if (writelen < 0)
 		{
@@ -340,7 +340,7 @@ int fset_brightness_shadow_decrease(int fd, int current, int target, int step, u
 		msleep(msec);
 	}
 
-	writelen = __value2text(target, buff, 0, 0, 10) - buff;
+	writelen = value2text_base(target, buff, 0, 0, 10) - buff;
 
 	return write(fd, buff, writelen);
 }

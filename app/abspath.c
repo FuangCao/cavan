@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
 	assert(argc == 2);
 
-	if (__to_abs_path(argv[1], buff, sizeof(buff)) == NULL)
+	if (to_abs_path_base(argv[1], buff, sizeof(buff)) == NULL)
 	{
 		return -EFAULT;
 	}

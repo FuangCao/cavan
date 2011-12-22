@@ -30,6 +30,7 @@
 #define mem_set mem_set8
 
 void *mem_copy(void *dest, const void *src, size_t size);
+void *mem_copy2(void *dest, const void *src, const void *src_end);
 
 void *mem_copy16(void *dest, const void *src, size_t size);
 void *mem_copy32(void *dest, const void *src, size_t size);
@@ -41,11 +42,11 @@ void *mem_set64(void *mem, int value, size_t size);
 
 void bits_set(void *mem, int start, int end, u32 value);
 
-void mem_build_kmp_array(const void *sub, off_t *step, const size_t size);
-void *__mem_kmp_find(const void *mem, const void *sub, const size_t memlen, const size_t sublen, const off_t *step);
+void mem_build_kmp_array(const void *sub, int *step, const size_t size);
+void *mem_kmp_find_base(const void *mem, const void *mem_end, const void *sub, const size_t sublen, const int *step);
 void *mem_kmp_find(const void *mem, const void *sub, const size_t memlen, const size_t sublen);
 
-size_t __mem_delete_char(const void *mem_in, void *mem_out, const size_t size, const char c);
+size_t mem_delete_char_base(const void *mem_in, void *mem_out, const size_t size, const char c);
 
 void number_swap8(u8 *num1, u8 *num2);
 void number_swap16(u16 *num1, u16 *num2);
@@ -73,6 +74,6 @@ static inline void mem_set8(void *mem, int value, size_t size)
 
 static inline size_t mem_delete_char(void *mem, const size_t size, const char c)
 {
-	return __mem_delete_char(mem, mem, size, c);
+	return mem_delete_char_base(mem, mem, size, c);
 }
 

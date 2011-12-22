@@ -56,7 +56,7 @@ enum image_type path_to_image_type(const char *img_path)
 {
 	char image_name[64];
 
-	__text_basename(image_name, img_path);
+	text_basename_base(image_name, img_path);
 
 	if (text_cmp(image_name, "u-boot.bin") == 0)
 	{
@@ -280,7 +280,7 @@ int dump_ramdisk(const char *ramdisk_path, const char *ramdisk_dir)
 	int ret;
 	char abs_ramdisk_path[1024];
 
-	__to_abs_path(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
+	to_abs_path_base(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
 
 	ret = system_command("rm %s -rfv && mkdir %s", ramdisk_dir, ramdisk_dir);
 	if (ret < 0)
@@ -332,7 +332,7 @@ int create_ramdisk(const char *ramdisk_dir, const char *ramdisk_path)
 		return ret;
 	}
 
-	__to_abs_path(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
+	to_abs_path_base(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
 
 	ret = chdir_backup(ramdisk_dir);
 	if (ret < 0)
@@ -357,7 +357,7 @@ int create_uramdisk(const char *ramdisk_dir, const char *uramdisk_path)
 	int ret;
 	char abs_uramdisk_path[1024];
 
-	__to_abs_path(uramdisk_path, abs_uramdisk_path, sizeof(abs_uramdisk_path));
+	to_abs_path_base(uramdisk_path, abs_uramdisk_path, sizeof(abs_uramdisk_path));
 
 	ret = create_ramdisk(ramdisk_dir, TEMP_RAMDISK_PATH);
 	if (ret < 0)
@@ -388,12 +388,12 @@ int image_is(const char *img_path, const char *type)
 
 int uboot2uboot_np(const char *uboot_path, const char *uboot_np_path)
 {
-	return __cavan_dd(uboot_path, uboot_np_path, UBOOT_PADDING_SIZE, 0, 0, O_TRUNC);
+	return cavan_dd_base(uboot_path, uboot_np_path, UBOOT_PADDING_SIZE, 0, 0, O_TRUNC);
 }
 
 int uboot_np2uboot(const char *uboot_np_path, const char *uboot_path)
 {
-	return __cavan_dd(uboot_np_path, uboot_path, 0, UBOOT_PADDING_SIZE, 0, O_TRUNC);
+	return cavan_dd_base(uboot_np_path, uboot_path, 0, UBOOT_PADDING_SIZE, 0, O_TRUNC);
 }
 
 int burn_uboot(const char *uboot_path, const char *dev_path)
@@ -417,7 +417,7 @@ int zImage2uImage(const char *zImage_path, const char *uImage_path)
 
 int uImage2zImage(const char *uImage_path, const char *zImage_path)
 {
-	return __cavan_dd(uImage_path, zImage_path, UIMAGE_HEADER_SIZE, 0, 0, O_TRUNC);
+	return cavan_dd_base(uImage_path, zImage_path, UIMAGE_HEADER_SIZE, 0, 0, O_TRUNC);
 }
 
 int burn_uImage(const char *uImage_path, const char *dev_path)
@@ -602,11 +602,11 @@ int get_uramdisk(const char *dev_path, const char *file_path, int busybox)
 {
 	if (busybox)
 	{
-		return __cavan_dd(dev_path, file_path, BUSYBOX_OFFSET, 0, BUSYBOX_MAX_SIZE, O_TRUNC);
+		return cavan_dd_base(dev_path, file_path, BUSYBOX_OFFSET, 0, BUSYBOX_MAX_SIZE, O_TRUNC);
 	}
 	else
 	{
-		return __cavan_dd(dev_path, file_path, RAMDISK_OFFSET, 0, RAMDISK_MAX_SIZE, O_TRUNC);
+		return cavan_dd_base(dev_path, file_path, RAMDISK_OFFSET, 0, RAMDISK_MAX_SIZE, O_TRUNC);
 	}
 }
 

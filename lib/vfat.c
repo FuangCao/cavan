@@ -42,7 +42,7 @@ const char *fat_type_to_string(enum fat_type type)
 	return "unknown";
 }
 
-void __get_volume_label(char *dest, const void *src)
+void get_volume_label_base(char *dest, const void *src)
 {
 	dest = mem_copy(dest, src, 11);
 
@@ -61,11 +61,11 @@ void get_fat_volume_label(struct fat_info *info_p, char *volume)
 
 	if (info_p->type == FAT32)
 	{
-		__get_volume_label(volume, dbr->tail32.volume_label);
+		get_volume_label_base(volume, dbr->tail32.volume_label);
 	}
 	else
 	{
-		__get_volume_label(volume, dbr->tail16.volume_label);
+		get_volume_label_base(volume, dbr->tail16.volume_label);
 	}
 }
 
@@ -375,7 +375,7 @@ static char *copy_name(char *dest, const char *src, size_t size)
 	return dest;
 }
 
-static char *__build_long_name(struct fat_long_directory *dir_p, char *buff)
+static char *build_long_name_base(struct fat_long_directory *dir_p, char *buff)
 {
 	buff = copy_name(buff, (char *)dir_p->name1, 10);
 	buff = copy_name(buff, (char *)dir_p->name2, 12);
@@ -389,7 +389,7 @@ static struct fat_long_directory *build_long_name(struct fat_long_directory *dir
 
 	for (p = dir_p + count - 1; p >= dir_p; p--)
 	{
-		buff = __build_long_name(p, buff);
+		buff = build_long_name_base(p, buff);
 	}
 
 	*buff = 0;
@@ -444,7 +444,7 @@ ssize_t load_directory(struct fat_info *info_p, u32 cluster_index, struct fat_so
 			}
 			else if (p->attribute & ATTR_VOLUME_ID)
 			{
-				__get_volume_label(soft_dirs[count].name, p->name);
+				get_volume_label_base(soft_dirs[count].name, p->name);
 			}
 			else
 			{
@@ -551,7 +551,7 @@ int fat16_root_find(struct fat_info *info_p, const char *filename, struct fat_di
 		}
 		else if (IS_VOLUME_LABEL(desc_curr))
 		{
-			__get_volume_label(name_temp, desc_curr->name);
+			get_volume_label_base(name_temp, desc_curr->name);
 		}
 		else
 		{
@@ -598,7 +598,7 @@ ssize_t fat16_load_root_directory(struct fat_info *info_p, struct fat_soft_direc
 		}
 		else if (IS_VOLUME_LABEL(desc_curr))
 		{
-			__get_volume_label(soft_dirs[count].name, desc_curr->name);
+			get_volume_label_base(soft_dirs[count].name, desc_curr->name);
 		}
 		else
 		{
@@ -748,7 +748,7 @@ int find_path2_simple(struct fat_info *info_p, u32 cluster_index, const char *fi
 			}
 			else if (IS_VOLUME_LABEL(desc_curr))
 			{
-				__get_volume_label(name_curr, desc_curr->name);
+				get_volume_label_base(name_curr, desc_curr->name);
 			}
 			else
 			{
@@ -864,7 +864,7 @@ int fat16_print_root(struct fat_info *info_p)
 		}
 		else if (IS_VOLUME_LABEL(desc_curr))
 		{
-			__get_volume_label(name_temp, desc_curr->name);
+			get_volume_label_base(name_temp, desc_curr->name);
 		}
 		else
 		{
@@ -929,7 +929,7 @@ int print_directory(struct fat_info *info_p, u32 cluster_index)
 			}
 			else if (IS_VOLUME_LABEL(desc_curr))
 			{
-				__get_volume_label(name_curr, desc_curr->name);
+				get_volume_label_base(name_curr, desc_curr->name);
 			}
 			else
 			{

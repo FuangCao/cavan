@@ -124,7 +124,7 @@ int can_mount(const char *mnt_dev, const char *fstype);
 int cavan_mkdir(const char *dir_path);
 
 int partition_is_mounted(const char *source, const char *target);
-int __device_is_mounted(const char *dev_abs_path);
+int device_is_mounted_base(const char *dev_abs_path);
 int device_is_mounted(const char *dev_path);
 
 int simple_ioctl(const char *dev_path, int request);
@@ -167,7 +167,7 @@ int partition_change_label(struct partition_desc *part_desc);
 int partition_change_label_auto(struct partition_desc *part_desc);
 int partition_mkfs(struct partition_desc *part_desc);
 void show_partition_desc(struct partition_desc *part_desc);
-ssize_t __partition_read_label(const char *dev_path, const char *read_cmd, char *buff, size_t buff_len);
+ssize_t partition_read_label_base(const char *dev_path, const char *read_cmd, char *buff, size_t buff_len);
 ssize_t partition_read_label(struct partition_desc *part_desc);
 ssize_t partition_read_label_auto(const char *dev_path, char *buff, size_t size);
 
@@ -175,14 +175,14 @@ void show_mount_table(struct mount_table *mtab);
 
 ssize_t parse_mount_table(const char *buff, size_t buff_size, struct mount_table *mtab, size_t mtab_size);
 ssize_t read_mount_table(struct mount_table *mtab, size_t size);
-void __print_mount_table(struct mount_table *mtab, size_t size);
+void print_mount_table_base(struct mount_table *mtab, size_t size);
 int print_mount_table(void);
 const char *find_mount_table_item(const char *mounts, const char *item);
-const char *__find_mount_table(const char *mounts, struct mount_table *mtab, const char *text);
+const char *find_mount_table_base(const char *mounts, struct mount_table *mtab, const char *text);
 int find_mount_table(struct mount_table *mtab, const char *text);
-char *__get_mount_source(const char *target, char *buff, size_t size);
+char *get_mount_source_base(const char *target, char *buff, size_t size);
 char *get_mount_source(const char *target);
-char *__get_mount_target(const char *source, char *buff, size_t size);
+char *get_mount_target_base(const char *source, char *buff, size_t size);
 char *get_mount_target(const char *source);
 
 int loop_get_fd(const char *filename, char *loop_path, u64 offset);
@@ -258,9 +258,9 @@ static inline int freread_part_table(int dev_fd)
 	return fsimple_ioctl(dev_fd, BLKRRPART);
 }
 
-static inline char *__get_partition_mount_point(const char *devpath, char *buff, size_t size)
+static inline char *get_partition_mount_point_base(const char *devpath, char *buff, size_t size)
 {
-	return __get_mount_target(devpath, buff, size);
+	return get_mount_target_base(devpath, buff, size);
 }
 
 static inline char *get_partition_mount_point(const char *devpath)

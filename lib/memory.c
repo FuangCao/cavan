@@ -15,6 +15,16 @@ void *mem_copy(void *dest, const void *src, size_t size)
 	return dest;
 }
 
+void *mem_copy2(void *dest, const void *src, const void *src_end)
+{
+	while (src < src_end)
+	{
+		*(char *)dest++ = *(const char *)src++;
+	}
+
+	return dest;
+}
+
 void *mem_copy16(void *dest, const void *src, size_t size)
 {
 	void *end_dest;
@@ -183,7 +193,7 @@ void bits_set(void *mem, int start, int end, u32 value)
 	}
 }
 
-void mem_build_kmp_array(const void *sub, off_t *step, const size_t size)
+void mem_build_kmp_array(const void *sub, int *step, const size_t size)
 {
 	int i, j, k;
 
@@ -221,47 +231,46 @@ void mem_build_kmp_array(const void *sub, off_t *step, const size_t size)
 	}
 }
 
-void *__mem_kmp_find(const void *mem, const void *sub, const size_t memlen, const size_t sublen, const off_t *step)
+void *mem_kmp_find_base(const void *mem, const void *mem_end, const void *sub, const size_t sublen, const int *step)
 {
-	int i, j;
+	int i = 0;
 
-	i = j = 0;
-	while (i < memlen && j < sublen)
+	while (mem < mem_end && i < sublen)
 	{
-		if (((char *)mem)[i] == ((char *)sub)[j])
+		if (*(char *)mem == ((char *)sub)[i])
 		{
+			mem++;
 			i++;
-			j++;
 		}
-		else if (step[j] == -1)
+		else if (step[i] == -1)
 		{
-			i++;
-			j = 0;
+			mem++;
+			i = 0;
 		}
 		else
 		{
-			j = step[j];
+			i = step[i];
 		}
 	}
 
-	if (j < sublen)
+	if (i < sublen)
 	{
 		return NULL;
 	}
 
-	return (void *)(mem + i - sublen);
+	return (void *)(mem - sublen);
 }
 
 void *mem_kmp_find(const void *mem, const void *sub, const size_t memlen, const size_t sublen)
 {
-	off_t step[sublen];
+	int step[sublen];
 
 	mem_build_kmp_array(sub, step, sublen);
 
-	return __mem_kmp_find(mem, sub, memlen, sublen, step);
+	return mem_kmp_find_base(mem, mem + memlen, sub, sublen, step);
 }
 
-size_t __mem_delete_char(const void *mem_in, void *mem_out, const size_t size, const char c)
+size_t mem_delete_char_base(const void *mem_in, void *mem_out, const size_t size, const char c)
 {
 	const void *mem_end;
 	void *mem_bak;

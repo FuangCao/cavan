@@ -215,7 +215,7 @@ int move_auto(const char *srcpath, const char *destpath)
 	{
 	case S_IFDIR:
 		p = text_path_cat(tmppath, destpath, NULL);
-		__text_basename(p, srcpath);
+		text_basename_base(p, srcpath);
 		destpath = tmppath;
 		break;
 

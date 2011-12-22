@@ -26,7 +26,7 @@ char *get_parameter(char *argument, char *parameter)
 	return argument;
 }
 
-void __parse_parameter(const char *parameter, char *option, char *value)
+void parse_parameter_base(const char *parameter, char *option, char *value)
 {
 	value[0] = '\0';
 

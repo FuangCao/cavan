@@ -78,7 +78,7 @@
 #define show_value(val) \
 	println(#val " = %d", val)
 
-#define __show_valueh(val, len) \
+#define show_valueh_base(val, len) \
 	println(#val " = 0x%0" len "x", val)
 
 #define show_valueh(val) \
@@ -86,16 +86,16 @@
 		switch (sizeof(val)) \
 		{ \
 		case 8: \
-			__show_value(val, "16"); \
+			show_value_base(val, "16"); \
 			break; \
 		case 4: \
-			__show_value(val, "8"); \
+			show_value_base(val, "8"); \
 			break; \
 		case 2: \
-			__show_value(val, "4"); \
+			show_value_base(val, "4"); \
 			break; \
 		default: \
-			__show_value(val, "2"); \
+			show_value_base(val, "2"); \
 		} \
 	} while (0)
 
@@ -176,7 +176,7 @@ __printf_format_23__ void println_to_row(int row, const char *fmt, ...);
 __printf_format_23__ void println_to_col(int col, const char *fmt, ...);
 __printf_format_20__ void vprint_color_text(int color, const char *fmt, va_list ap);
 __printf_format_23__ void print_color_text(int color, const char *fmt, ...);
-__printf_format_12__ void __print_error(const char *fmt, ...);
+__printf_format_12__ void print_error_base(const char *fmt, ...);
 
 extern char *size2text(u64 size);
 

@@ -284,7 +284,7 @@ label_find_next_path:
 	return 0;
 }
 
-int __ext2_list_directory(struct ext2_desc *desc, struct ext2_inode *inode)
+int ext2_list_directory_base(struct ext2_desc *desc, struct ext2_inode *inode)
 {
 	int i;
 	int block_count;
@@ -345,10 +345,10 @@ int ext2_list_directory(struct ext2_desc *desc, const char *pathname)
 		ERROR_RETURN(ENOTDIR);
 	}
 
-	return __ext2_list_directory(desc, &inode);
+	return ext2_list_directory_base(desc, &inode);
 }
 
-ssize_t __ext2_read_file(struct ext2_desc *desc, struct ext2_inode *inode, void *buff, size_t size)
+ssize_t ext2_read_file_base(struct ext2_desc *desc, struct ext2_inode *inode, void *buff, size_t size)
 {
 	int i;
 	int block_count;
@@ -409,6 +409,6 @@ ssize_t ext2_read_file(struct ext2_desc *desc, const char *pathname, void *buff,
 		ERROR_RETURN(EISDIR);
 	}
 
-	return __ext2_read_file(desc, &inode, buff, size);
+	return ext2_read_file_base(desc, &inode, buff, size);
 }
 

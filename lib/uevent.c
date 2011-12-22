@@ -94,7 +94,7 @@ int get_device_uevent(struct uevent_desc *desc, const char *actions[], const cha
 
 			if (text_lhcmp(typename, p) == 0)
 			{
-				__parse_parameter(p, option, devtype);
+				parse_parameter_base(p, option, devtype);
 
 				if (devname[0])
 				{
@@ -103,7 +103,7 @@ int get_device_uevent(struct uevent_desc *desc, const char *actions[], const cha
 			}
 			else if (text_lhcmp("DEVNAME", p) == 0)
 			{
-				__parse_parameter(p, option, devname);
+				parse_parameter_base(p, option, devname);
 
 				if (devtype[0])
 				{

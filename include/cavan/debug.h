@@ -20,7 +20,7 @@
 	do { \
 		set_console_font_simple(FONT_RED_FOREGROUND); \
 		position_msg(); \
-		__print_error(fmt, ##arg); \
+		print_error_base(fmt, ##arg); \
 		set_default_font(); \
 	} while (0)
 

@@ -436,7 +436,7 @@ void print_mem(const void *mem, int size)
 	print_char('\n');
 }
 
-void __print_error(const char *fmt, ...)
+void print_error_base(const char *fmt, ...)
 {
 	va_list ap;
 	char buff[1024];

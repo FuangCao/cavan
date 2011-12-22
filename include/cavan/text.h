@@ -17,7 +17,7 @@
 
 #define value_trans(value) \
 	({ \
-		__typeof(value) __tmp = value; \
+		typeof_base(value) __tmp = value; \
 		text_ntrans((char *)&__tmp, sizeof(__tmp)); \
 		__tmp = __tmp; \
 	})
@@ -84,44 +84,44 @@ char *simple_value2text_reverse(u64 value, char *buff, size_t size, int base);
 char *simple_value2text_unsigned(u64 value, char *buff, size_t size, int base);
 char *simple_value2text(s64 value, char *buff, size_t size, int base);
 
-char *__value2text(s64 value, char *text, int size, char fill, int flag);
+char *value2text_base(s64 value, char *text, int size, char fill, int flag);
 char *value2text(u64 value, int flag);
 
 u64 text2size(const char *text, const char **text_ret);
 u64 text2size_mb(const char *text);
-char *__size2text(u64 size, char *buff, size_t buff_len);
+char *size2text_base(u64 size, char *buff, size_t buff_len);
 char *size2text(u64 size);
 
-char *__text_basename(char *buff, const char *path);
+char *text_basename_base(char *buff, const char *path);
 char *text_basename(const char *path);
 
-char *__text_dirname(char *buff, const char *path);
+char *text_dirname_base(char *buff, const char *path);
 char *text_dirname(const char *path);
 
-char *__get_ntext(const char *src, char *dest, int start, int count);
+char *get_ntext_base(const char *src, char *dest, int start, int count);
 char *get_ntext(const char *src, int start, int count);
 char *text_header(const char *text, int count);
-char *__get_text_region(const char *src, char *dest, int start, int end);
+char *get_text_region_base(const char *src, char *dest, int start, int end);
 char *get_text_region(const char *src, int start, int end);
 
 void system_sync(void);
 
-char *__mem2text(const void *mem, char *buff, int size);
+char *mem2text_base(const void *mem, char *buff, int size);
 char *mem2text(const void *mem, int size);
 
-char *__to_abs_path(const char *rel_path, char *abs_path, size_t size);
+char *to_abs_path_base(const char *rel_path, char *abs_path, size_t size);
 char *to_abs_path(const char *rel_path);
-char *__to_abs_path_directory(const char *rel_path, char *abs_path, size_t size);
+char *to_abs_path_directory_base(const char *rel_path, char *abs_path, size_t size);
 char *to_abs_directory(const char *rel_path);
-char *__to_abs_path2(const char *rel_path, char *abs_path, size_t size);
+char *to_abs_path2_base(const char *rel_path, char *abs_path, size_t size);
 char *to_abs_path2(const char *rel_path);
-char *__prettify_pathname(const char *src_path, char *dest_path, size_t size);
+char *prettify_pathname_base(const char *src_path, char *dest_path, size_t size);
 char *prettify_pathname(const char *src_path);
 
 char *text_path_cat(char *pathname, const char *dirname, const char *basename);
 
-char *__text_delete_char(const char *text_in, char *text_out, char c);
-char *__text_delete_sub(const char *text_in, char *text_out, const char *sub, const size_t sublen);
+char *text_delete_char_base(const char *text_in, char *text_out, char c);
+char *text_delete_sub_base(const char *text_in, char *text_out, const char *sub, const size_t sublen);
 
 void *mem_kmp_find(const void *mem, const void *sub, size_t memlen, size_t sublen);
 char *text_find_next_line(const char *text);
@@ -144,6 +144,8 @@ int text_bool_value(const char *text);
 __printf_format_20__ char *vformat_text (char *buff, const char *fmt, va_list args);
 __printf_format_12__ char *format_text(const char *fmt, ...);
 
+int system_command_simple(const char *command);
+
 __printf_format_10__ int vsystem_command(const char *command, va_list ap);
 __printf_format_12__ int system_command(const char *command, ...);
 __printf_format_23__ int system_command_retry(int count, const char *command, ...);
@@ -161,7 +163,7 @@ __printf_format_34__ ssize_t buff_command2(char *buff, size_t bufflen, const cha
 __printf_format_23__ char *buff_command_path(const char *path, const char *command, ...);
 __printf_format_45__ ssize_t buff_command_path2(const char *path, char *buff, size_t bufflen, const char *command, ...);
 
-void *__mac_address_tostring(const void *mac, size_t maclen, void *buff);
+void *mac_address_tostring_base(const void *mac, size_t maclen, void *buff);
 char *mac_address_tostring(const void *mac, size_t maclen);
 
 int text_is_number(const char *text);
@@ -170,7 +172,9 @@ int text_is_uppercase(const char *text);
 int text_is_lowercase(const char *text);
 int text_is_letter(const char *text);
 
-char *text_replace_char(const char *src, char *dest, char c_src, char c_dest);
+char *text_replace_char(char *text, char c_src, char c_dest);
+char *text_replace_char2(const char *src, char *dest, char c_src, char c_dest);
+char *text_replace_text_base(const char *text_old, char *text_new, const char *src, size_t srclen, const char *dest);
 int text_is_dot_name(const char *filename);
 int text_isnot_dot_name(const char *filename);
 
@@ -193,12 +197,12 @@ static inline char *text_kmp_find(const char *buff, const char *sub)
 
 static inline char *text_delete_char(char *text, char c)
 {
-	return __text_delete_char(text, text, c);
+	return text_delete_char_base(text, text, c);
 }
 
 static inline char *text_delete_sub(char *text, const char *sub)
 {
-	return __text_delete_sub(text, text, sub, text_len(sub));
+	return text_delete_sub_base(text, text, sub, text_len(sub));
 }
 
 static inline char value2char(int index)
@@ -224,5 +228,10 @@ static inline char char2uppercase(char c)
 static inline char char2lowercase(char c)
 {
 	return IS_UPPERCASE(c) ? c - 'A' + 'a' : c;
+}
+
+static inline char *text_replace_text(const char *text_old, char *text_new, const char *src, const char *dest)
+{
+	return text_replace_text_base(text_old, text_new, src, text_len(src), dest);
 }
 

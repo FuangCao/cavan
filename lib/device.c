@@ -105,7 +105,7 @@ int umount_partition(const char *dev_path, int flags)
 	ssize_t readlen;
 	char abs_path[1024];
 
-	if (__to_abs_path2(dev_path, abs_path, sizeof(abs_path)) == NULL)
+	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL)
 	{
 		ERROR_RETURN(ENOENT);
 	}
@@ -159,7 +159,7 @@ int umount_by_key_text(const char *key_text, int flags)
 		struct mount_table mtab;
 		int ret;
 
-		p = __find_mount_table(p, &mtab, key_text);
+		p = find_mount_table_base(p, &mtab, key_text);
 		if (p == NULL)
 		{
 			break;
@@ -189,7 +189,7 @@ int umount_by_key_text(const char *key_text, int flags)
 	return 0;
 }
 
-int __device_is_mounted(const char *dev_abs_path)
+int device_is_mounted_base(const char *dev_abs_path)
 {
 	ssize_t readlen;
 	struct mount_table mtab[100], *p, *end_p;
@@ -216,13 +216,13 @@ int device_is_mounted(const char *dev_path)
 {
 	char abs_path[1024];
 
-	if (__to_abs_path2(dev_path, abs_path, sizeof(abs_path)) == NULL)
+	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL)
 	{
 		error_msg("path \"%s\" do't exist", dev_path);
 		ERROR_RETURN(ENOENT);
 	}
 
-	return __device_is_mounted(abs_path);
+	return device_is_mounted_base(abs_path);
 }
 
 int umount_device(const char *dev_path, int flags)
@@ -231,7 +231,7 @@ int umount_device(const char *dev_path, int flags)
 	char abs_path[1024];
 	struct mount_table mtab[100], *p, *end_p;
 
-	if (__to_abs_path2(dev_path, abs_path, sizeof(abs_path)) == NULL)
+	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL)
 	{
 		error_msg("path \"%s\" do't exist", dev_path);
 		ERROR_RETURN(ENOENT);
@@ -257,7 +257,7 @@ int umount_device(const char *dev_path, int flags)
 		}
 	}
 
-	return __device_is_mounted(abs_path) ? -EFAULT : 0;
+	return device_is_mounted_base(abs_path) ? -EFAULT : 0;
 }
 
 int umount_abs_path(const char *abs_path, int flags)
@@ -285,7 +285,7 @@ int umount_abs_path(const char *abs_path, int flags)
 		}
 	}
 
-	return __device_is_mounted(abs_path) ? -EFAULT : 0;
+	return device_is_mounted_base(abs_path) ? -EFAULT : 0;
 }
 
 int umount_main(const char *pathname, int flags)
@@ -301,7 +301,7 @@ int umount_main(const char *pathname, int flags)
 			sprintf(abs_path, "/dev/%s", pathname);
 		}
 	}
-	else if (__to_abs_path2(pathname, abs_path, sizeof(abs_path)) == NULL)
+	else if (to_abs_path2_base(pathname, abs_path, sizeof(abs_path)) == NULL)
 	{
 		error_msg("path \"%s\" do't exist", pathname);
 		ERROR_RETURN(ENOENT);
@@ -470,7 +470,7 @@ int partition_is_mounted(const char *source, const char *target)
 {
 	char mnt_point[1024];
 
-	if (__to_abs_path2(target, mnt_point, sizeof(mnt_point)) == NULL)
+	if (to_abs_path2_base(target, mnt_point, sizeof(mnt_point)) == NULL)
 	{
 		return 0;
 	}
@@ -614,7 +614,7 @@ int mount_main(const char *mnt_dev, const char *mnt_point, const char *fstype, c
 		ret = partition_read_label_auto(mnt_dev, part_label, sizeof(part_label));
 		if (ret < 0 || part_label[0] == 0)
 		{
-			__text_basename(text_copy(target, "/mnt/"), mnt_dev);
+			text_basename_base(text_copy(target, "/mnt/"), mnt_dev);
 		}
 		else
 		{
@@ -1267,7 +1267,7 @@ int partition_test(struct partition_desc *part_desc)
 	return file_test_read(part_desc->path);
 }
 
-ssize_t __partition_read_label(const char *dev_path, const char *read_cmd, char *buff, size_t buff_len)
+ssize_t partition_read_label_base(const char *dev_path, const char *read_cmd, char *buff, size_t buff_len)
 {
 	ssize_t readlen;
 
@@ -1293,7 +1293,7 @@ ssize_t partition_read_label(struct partition_desc *part_desc)
 		ERROR_RETURN(EINVAL);
 	}
 
-	return __partition_read_label(part_desc->path, fsdesc->label_cmd, part_desc->label, sizeof(part_desc->label));
+	return partition_read_label_base(part_desc->path, fsdesc->label_cmd, part_desc->label, sizeof(part_desc->label));
 }
 
 ssize_t partition_read_label_auto(const char *dev_path, char *buff, size_t buff_len)
@@ -1305,7 +1305,7 @@ ssize_t partition_read_label_auto(const char *dev_path, char *buff, size_t buff_
 	{
 		ssize_t readlen;
 
-		readlen = __partition_read_label(dev_path, label_cmds[i], buff, buff_len);
+		readlen = partition_read_label_base(dev_path, label_cmds[i], buff, buff_len);
 		if (readlen >= 0)
 		{
 			return readlen;
@@ -1526,7 +1526,7 @@ ssize_t read_mount_table(struct mount_table *mtab, size_t size)
 	return parse_mount_table(buff, readlen, mtab, size);
 }
 
-void __print_mount_table(struct mount_table *mtab, size_t size)
+void print_mount_table_base(struct mount_table *mtab, size_t size)
 {
 	struct mount_table *p, *end_p;
 
@@ -1548,7 +1548,7 @@ int print_mount_table(void)
 		return readlen;
 	}
 
-	__print_mount_table(mtab, readlen);
+	print_mount_table_base(mtab, readlen);
 
 	return 0;
 }
@@ -1571,7 +1571,7 @@ const char *find_mount_table_item(const char *mounts, const char *item)
 	return p + 1;
 }
 
-const char *__find_mount_table(const char *mounts, struct mount_table *mtab, const char *text)
+const char *find_mount_table_base(const char *mounts, struct mount_table *mtab, const char *text)
 {
 	const char *p;
 	int ret;
@@ -1604,16 +1604,16 @@ int find_mount_table(struct mount_table *mtab, const char *text)
 
 	mounts[readlen] = 0;
 
-	return __find_mount_table(mounts, mtab, text) ? 0 : -ENODATA;
+	return find_mount_table_base(mounts, mtab, text) ? 0 : -ENODATA;
 }
 
-char *__get_mount_source(const char *target, char *buff, size_t size)
+char *get_mount_source_base(const char *target, char *buff, size_t size)
 {
 	struct mount_table mtab[100], *p, *end_p;
 	ssize_t mtab_size;
 	char target_abs[1024];
 
-	if (__to_abs_path_directory(target, target_abs, sizeof(target_abs)) == NULL)
+	if (to_abs_path_directory_base(target, target_abs, sizeof(target_abs)) == NULL)
 	{
 		return NULL;
 	}
@@ -1644,7 +1644,7 @@ char *get_mount_source(const char *target)
 {
 	static char buff[1024];
 
-	if (__get_mount_source(target, buff, sizeof(buff)) == NULL)
+	if (get_mount_source_base(target, buff, sizeof(buff)) == NULL)
 	{
 		buff[0] = 0;
 	}
@@ -1652,13 +1652,13 @@ char *get_mount_source(const char *target)
 	return buff;
 }
 
-char *__get_mount_target(const char *source, char *buff, size_t size)
+char *get_mount_target_base(const char *source, char *buff, size_t size)
 {
 	struct mount_table mtab[100], *p, *end_p;
 	ssize_t mtab_size;
 	char source_abs[1024];
 
-	if (__to_abs_path2(source, source_abs, sizeof(source_abs)) == NULL)
+	if (to_abs_path2_base(source, source_abs, sizeof(source_abs)) == NULL)
 	{
 		return NULL;
 	}
@@ -1689,7 +1689,7 @@ char *get_mount_target(const char *source)
 {
 	static char buff[1024];
 
-	if (__get_mount_target(source, buff, sizeof(buff)) == NULL)
+	if (get_mount_target_base(source, buff, sizeof(buff)) == NULL)
 	{
 		buff[0] = 0;
 	}
@@ -1705,7 +1705,7 @@ int loop_get_fd(const char *filename, char *loop_path, u64 offset)
 	char *p;
 	char file_abs_path[1024];
 
-	if (__to_abs_path2(filename, file_abs_path, sizeof(file_abs_path)) == NULL)
+	if (to_abs_path2_base(filename, file_abs_path, sizeof(file_abs_path)) == NULL)
 	{
 		ERROR_RETURN(ENOENT);
 	}
@@ -1716,7 +1716,7 @@ int loop_get_fd(const char *filename, char *loop_path, u64 offset)
 	{
 		struct loop_info64 loopinfo;
 
-		__value2text(i, p, 0, 0, 10);
+		value2text_base(i, p, 0, 0, 10);
 
 #ifdef DEBUG
 		println("loop_dev = %s", loop_path);
@@ -1837,7 +1837,7 @@ int device_is_mmc(const char *dev_path)
 {
 	char dev_name[64];
 
-	__text_basename(dev_name, dev_path);
+	text_basename_base(dev_name, dev_path);
 
 	return text_lhcmp("mmcblk", dev_name) == 0;
 }
@@ -1888,7 +1888,7 @@ int get_device_statfs(const char *devpath, const char *fstype, struct statfs *st
 	int ret;
 	char mnt_point[1024];
 
-	if (__get_mount_target(devpath, mnt_point, sizeof(mnt_point)))
+	if (get_mount_target_base(devpath, mnt_point, sizeof(mnt_point)))
 	{
 		return statfs(mnt_point, stfs);
 	}

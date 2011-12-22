@@ -915,7 +915,7 @@ char *base2prefix(int base, char *prefix)
 	return prefix;
 }
 
-char *__value2text(s64 value, char *text, int size, char fill, int flag)
+char *value2text_base(s64 value, char *text, int size, char fill, int flag)
 {
 	char buff[128], *tail;
 	int base;
@@ -966,7 +966,7 @@ char *value2text(u64 value, int flag)
 {
 	static char buff[100];
 
-	__value2text(value, buff, 0, 0, flag);
+	value2text_base(value, buff, 0, 0, flag);
 
 	return buff;
 }
@@ -1057,7 +1057,7 @@ u64 text2size_mb(const char *text)
 	}
 }
 
-char *__size2text(u64 size, char *buff, size_t buff_len)
+char *size2text_base(u64 size, char *buff, size_t buff_len)
 {
 	u64 tmp;
 
@@ -1112,7 +1112,7 @@ char *size2text(u64 size)
 {
 	static char buff[128];
 
-	__size2text(size, buff, sizeof(buff));
+	size2text_base(size, buff, sizeof(buff));
 
 	return buff;
 }
@@ -1200,34 +1200,34 @@ start_parse:
 
 			case 'b':
 			case 'B':
-				buff = __value2text(get_argument(args, arg_len), buff, text_len * symbol, fill, 2 | FLAG_PREFIX);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 2 | FLAG_PREFIX);
 				break;
 
 			case 'o':
 			case 'O':
-				buff = __value2text(get_argument(args, arg_len), buff, text_len * symbol, fill, 8 | FLAG_PREFIX);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 8 | FLAG_PREFIX);
 				break;
 
 			case 'u':
 			case 'U':
-				buff = __value2text(get_argument(args, arg_len), buff, text_len * symbol, fill, 10 | FLAG_PREFIX);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 10 | FLAG_PREFIX);
 				break;
 
 			case 'd':
 			case 'D':
 			case 'i':
 			case 'I':
-				buff = __value2text(get_argument(args, arg_len), buff, text_len * symbol, fill, 10 | FLAG_SIGNED);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 10 | FLAG_SIGNED);
 				break;
 
 			case 'p':
 			case 'P':
-				buff = __value2text(get_argument(args, arg_len), buff, text_len * symbol, fill, 16 | FLAG_PREFIX);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 16 | FLAG_PREFIX);
 				break;
 
 			case 'x':
 			case 'X':
-				buff = __value2text(get_argument(args, arg_len), buff, text_len * symbol, fill, 16);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 16);
 				break;
 
 			case 'c':
@@ -1283,7 +1283,7 @@ char *format_text(const char *fmt, ...)
 	return buff;
 }
 
-char *__text_basename(char *buff, const char *path)
+char *text_basename_base(char *buff, const char *path)
 {
 	const char *first, *last;
 
@@ -1329,12 +1329,12 @@ char *text_basename(const char *path)
 {
 	static char buff[MAX_PATH_LEN];
 
-	__text_basename(buff, path);
+	text_basename_base(buff, path);
 
 	return buff;
 }
 
-char *__text_dirname(char *buff, const char *path)
+char *text_dirname_base(char *buff, const char *path)
 {
 	const char *last;
 
@@ -1372,13 +1372,13 @@ char *text_dirname(const char *path)
 {
 	static char buff[MAX_PATH_LEN];
 
-	__text_dirname(buff, path);
+	text_dirname_base(buff, path);
 
 	return buff;
 }
 
 #if 0
-static int __symbol_match(char c1, char c2)
+static int symbol_match_base(char c1, char c2)
 {
 	return 0;
 }
@@ -1390,7 +1390,7 @@ static int symbol_match(char c1, char c2)
 		return 1;
 	}
 
-	return __symbol_match(c1, c2) || __symbol_match(c2, c1);
+	return symbol_match_base(c1, c2) || symbol_match_base(c2, c1);
 }
 #endif
 
@@ -1418,7 +1418,7 @@ int text_match(const char *text1, const char *text2)
 	return 0;
 }
 
-char *__get_ntext(const char *src, char *dest, int start, int count)
+char *get_ntext_base(const char *src, char *dest, int start, int count)
 {
 	const char *src_end;
 
@@ -1437,7 +1437,7 @@ char *get_ntext(const char *src, int start, int count)
 {
 	static char buff[1024];
 
-	__get_ntext(src, buff, start, count)[0] = 0;
+	get_ntext_base(src, buff, start, count)[0] = 0;
 
 	return buff;
 }
@@ -1447,9 +1447,9 @@ char *text_header(const char *text, int count)
 	return get_ntext(text, 0, count);
 }
 
-char *__get_text_region(const char *src, char *dest, int start, int end)
+char *get_text_region_base(const char *src, char *dest, int start, int end)
 {
-	return __get_ntext(src, dest, start, end - start + 1);
+	return get_ntext_base(src, dest, start, end - start + 1);
 }
 
 char *get_text_region(const char *src, int start, int end)
@@ -1610,47 +1610,59 @@ ssize_t buff_command_path2(const char *path, char *buff, size_t bufflen, const c
 	return readlen;
 }
 
+int system_command_simple(const char *command)
+{
+	int ret;
+
+	println("excute command \"%s\"", command);
+	ret = system(command);
+	if (ret == 0)
+	{
+		system_sync();
+	}
+	else
+	{
+		println("\"%s\" faild", command);
+	}
+
+	return ret;
+}
+
 int vsystem_command(const char *command, va_list ap)
 {
 	int ret;
 	char buff[1024];
 
 	vsprintf(buff, command, ap);
-	println("excute command \"%s\"", buff);
-	ret = system(buff);
+	ret = system_command_simple(buff);
 	if (ret == 0)
 	{
 		goto out_sync;
 	}
 
-	println("\"%s\" faild", buff);
 	if (WEXITSTATUS(ret) != 127)
 	{
 		return -1;
 	}
 
 	vsprintf(text_copy(buff, "PATH=" DEFAULT_PATH_VALUE ":${PATH}; "), command, ap);
-	println("excute command \"%s\"", buff);
-	ret = system(buff);
+	ret = system_command_simple(buff);
 	if (ret == 0)
 	{
 		goto out_sync;
 	}
 
-	println("\"%s\" faild", buff);
 	if (WEXITSTATUS(ret) != 127)
 	{
 		return -1;
 	}
 
 	vsprintf(text_copy(buff, "/bin/busybox "), command, ap);
-	println("excute command \"%s\"", buff);
-	ret = system(buff);
+	ret = system_command_simple(buff);
 	if (ret == 0)
 	{
 		goto out_sync;
 	}
-	println("\"%s\" faild", buff);
 
 	return -1;
 
@@ -1698,7 +1710,7 @@ int system_command_path(const char *path, const char *command, ...)
 	return ret;
 }
 
-char *__mem2text(const void *mem, char *buff, int size)
+char *mem2text_base(const void *mem, char *buff, int size)
 {
 	const uchar *p, *endp;
 
@@ -1707,7 +1719,7 @@ char *__mem2text(const void *mem, char *buff, int size)
 
 	while (p < endp)
 	{
-		buff = __value2text(*p++, buff, 2, 0, 16);
+		buff = value2text_base(*p++, buff, 2, 0, 16);
 	}
 
 	buff[0] = 0;
@@ -1719,7 +1731,7 @@ char *mem2text(const void *mem, int size)
 {
 	static char buff[1024];
 
-	__mem2text(mem, buff, size);
+	mem2text_base(mem, buff, size);
 
 	return buff;
 }
@@ -1740,9 +1752,9 @@ void system_sync(void)
 	}
 }
 
-char *__to_abs_path(const char *rel_path, char *abs_path, size_t size)
+char *to_abs_path_base(const char *rel_path, char *abs_path, size_t size)
 {
-	__prettify_pathname(rel_path, abs_path, size);
+	prettify_pathname_base(rel_path, abs_path, size);
 
 	return abs_path;
 }
@@ -1751,12 +1763,12 @@ char *to_abs_path(const char *rel_path)
 {
 	static char buff[1024];
 
-	__to_abs_path(rel_path, buff, sizeof(buff));
+	to_abs_path_base(rel_path, buff, sizeof(buff));
 
 	return buff;
 }
 
-char *__to_abs_path_directory(const char *rel_path, char *abs_path, size_t size)
+char *to_abs_path_directory_base(const char *rel_path, char *abs_path, size_t size)
 {
 	int ret;
 
@@ -1780,7 +1792,7 @@ char *to_abs_directory(const char *rel_path)
 {
 	static char buff[1024];
 
-	if (__to_abs_path_directory(rel_path, buff, sizeof(buff)) == NULL)
+	if (to_abs_path_directory_base(rel_path, buff, sizeof(buff)) == NULL)
 	{
 		buff[0] = 0;
 	}
@@ -1788,19 +1800,19 @@ char *to_abs_directory(const char *rel_path)
 	return buff;
 }
 
-char *__to_abs_path2(const char *rel_path, char *abs_path, size_t size)
+char *to_abs_path2_base(const char *rel_path, char *abs_path, size_t size)
 {
 	char *p;
 	char dir_path[1024];
 
 	if (file_test(rel_path, "d") == 0)
 	{
-		return __to_abs_path_directory(rel_path, abs_path, size);
+		return to_abs_path_directory_base(rel_path, abs_path, size);
 	}
 
-	__text_dirname(dir_path, rel_path);
+	text_dirname_base(dir_path, rel_path);
 
-	if (__to_abs_path_directory(dir_path, abs_path, size) == NULL)
+	if (to_abs_path_directory_base(dir_path, abs_path, size) == NULL)
 	{
 		return NULL;
 	}
@@ -1809,7 +1821,7 @@ char *__to_abs_path2(const char *rel_path, char *abs_path, size_t size)
 
 	*p++ = '/';
 
-	__text_basename(p, rel_path);
+	text_basename_base(p, rel_path);
 
 	return abs_path;
 }
@@ -1818,7 +1830,7 @@ char *to_abs_path2(const char *rel_path)
 {
 	static char buff[1024];
 
-	if (__to_abs_path2(rel_path, buff, sizeof(buff)) == NULL)
+	if (to_abs_path2_base(rel_path, buff, sizeof(buff)) == NULL)
 	{
 		buff[0] = 0;
 	}
@@ -1826,7 +1838,7 @@ char *to_abs_path2(const char *rel_path)
 	return buff;
 }
 
-char *__prettify_pathname(const char *src_path, char *dest_path, size_t size)
+char *prettify_pathname_base(const char *src_path, char *dest_path, size_t size)
 {
 	char *dest_bak, *src_temp, *src_end;
 	char temp_path[1024];
@@ -1904,7 +1916,7 @@ char *prettify_pathname(const char *src_path)
 {
 	static char buff[1024];
 
-	__prettify_pathname(src_path, buff, sizeof(buff));
+	prettify_pathname_base(src_path, buff, sizeof(buff));
 
 	return buff;
 }
@@ -1930,7 +1942,7 @@ char *text_path_cat(char *pathname, const char *dirname, const char *basename)
 	return pathname + 2;
 }
 
-char *__text_delete_char(const char *text_in, char *text_out, char c)
+char *text_delete_char_base(const char *text_in, char *text_out, char c)
 {
 	char *text_bak;
 
@@ -1952,10 +1964,10 @@ char *__text_delete_char(const char *text_in, char *text_out, char c)
 	return text_bak;
 }
 
-char *__text_delete_sub(const char *text_in, char *text_out, const char *sub, const size_t sublen)
+char *text_delete_sub_base(const char *text_in, char *text_out, const char *sub, const size_t sublen)
 {
 	char *text_bak;
-	off_t step[sublen];
+	int step[sublen];
 
 	text_bak = text_out;
 	mem_build_kmp_array(sub, step, sublen);
@@ -1964,7 +1976,7 @@ char *__text_delete_sub(const char *text_in, char *text_out, const char *sub, co
 	{
 		char *text_tmp;
 
-		text_tmp = __mem_kmp_find(text_in, sub, text_len(text_in), sublen, step);
+		text_tmp = mem_kmp_find_base(text_in, text_in + text_len(text_in), sub, sublen, step);
 		if (text_tmp == NULL)
 		{
 			break;
@@ -2192,7 +2204,7 @@ int text_bool_value(const char *text)
 	return 0;
 }
 
-void *__mac_address_tostring(const void *mac, size_t maclen, void *buff)
+void *mac_address_tostring_base(const void *mac, size_t maclen, void *buff)
 {
 	char *p;
 	const void *mac_end;
@@ -2209,7 +2221,7 @@ char *mac_address_tostring(const void *mac, size_t maclen)
 {
 	static char buff[20];
 
-	__mac_address_tostring(mac, maclen, buff);
+	mac_address_tostring_base(mac, maclen, buff);
 
 	return buff;
 }
@@ -2264,7 +2276,22 @@ int text_is_letter(const char *text)
 	return *text == 0;
 }
 
-char *text_replace_char(const char *src, char *dest, char c_src, char c_dest)
+char *text_replace_char(char *text, char c_src, char c_dest)
+{
+	char *text_bak;
+
+	for (text_bak = text; *text; text++)
+	{
+		if (*text == c_src)
+		{
+			*text = c_dest;
+		}
+	}
+
+	return text_bak;
+}
+
+char *text_replace_char2(const char *src, char *dest, char c_src, char c_dest)
 {
 	while (*src)
 	{
@@ -2278,6 +2305,35 @@ char *text_replace_char(const char *src, char *dest, char c_src, char c_dest)
 	*dest = 0;
 
 	return dest;
+}
+
+char *text_replace_text_base(const char *text_old, char *text_new, const char *src, size_t srclen, const char *dest)
+{
+	int steps[srclen];
+	const char *old_end, *p;
+
+	mem_build_kmp_array(src, steps, srclen);
+	old_end = text_old + text_len(text_old);
+
+	while (text_old < old_end)
+	{
+		p = mem_kmp_find_base(text_old, old_end, src, srclen, steps);
+		if (p == NULL)
+		{
+			text_new = mem_copy2(text_new, text_old, old_end);
+			break;
+		}
+		else
+		{
+			text_new = mem_copy2(text_new, text_old, p);
+			text_new = text_copy(text_new, dest);
+			text_old = p + srclen;
+		}
+	}
+
+	*text_new = 0;
+
+	return text_new;
 }
 
 int text_is_dot_name(const char *filename)

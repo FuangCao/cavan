@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 	{
 		int ret;
 
-		__text_basename(p_name, argv[i]);
+		text_basename_base(p_name, argv[i]);
 
 		ret = cftp_client_handle(&cftp_desc, argv[i], 0, temp_name, 0, 0);
 		if (ret < 0)

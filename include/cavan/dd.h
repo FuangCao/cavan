@@ -11,12 +11,12 @@ struct dd_desc
 };
 
 int fcavan_dd(int fd_in, int fd_out, off_t offset_in, off_t offset_out, off_t length, off_t size);
-int __cavan_dd(const char *file_in, const char *file_out, off_t offset_in, off_t offset_out, off_t length, int flags);
+int cavan_dd_base(const char *file_in, const char *file_out, off_t offset_in, off_t offset_out, off_t length, int flags);
 int cavan_dds(struct dd_desc *descs, size_t count);
 
 static inline int cavan_dd(const char *file_in, const char *file_out, off_t offset_in, off_t offset_out, off_t length)
 {
-	return __cavan_dd(file_in, file_out, offset_in, offset_out, length, 0);
+	return cavan_dd_base(file_in, file_out, offset_in, offset_out, length, 0);
 }
 
 static inline int cavan_dd2(struct dd_desc *desc)

@@ -853,7 +853,7 @@ int ftp_service_run(u16 port, int count)
 		goto out_close_ctrl_sockfd;
 	}
 
-	text_replace_char(inet_ntoa(addr.sin_addr), ftp_desc.ip_addr, '.', ',');
+	text_replace_char2(inet_ntoa(addr.sin_addr), ftp_desc.ip_addr, '.', ',');
 
 	pr_bold_info("FTP Root Path = %s, Services = %d", ftp_root_path, count);
 	pr_bold_info("Device = %s, IP = %s, Port = %d", ftp_netdev_name, ftp_desc.ip_addr, port);
@@ -951,7 +951,7 @@ int ftp_client_receive_file(int ctrl_sockfd, const char *ip_address, u16 port)
 	}
 
 	p = text_copy(buff, "PORT ");
-	p = text_replace_char(ip_address, p, '.', ',');
+	p = text_replace_char2(ip_address, p, '.', ',');
 	p += sprintf(p, ",%d,%d\r\n", port >> 8, port & 0xFF);
 
 	recvlen = ftp_send_command_retry(ctrl_sockfd, buff, p - buff, buff, sizeof(buff), 5);

@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 	{
 		int ret;
 
-		__text_basename(p_name, argv[i]);
+		text_basename_base(p_name, argv[i]);
 
 		ret = tftp_handle(ip_address, port, argv[i], temp_name);
 		if (ret < 0)

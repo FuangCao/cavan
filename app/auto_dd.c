@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	if (__to_abs_path_directory(argv[optind], dir_path, sizeof(dir_path)) == NULL)
+	if (to_abs_path_directory_base(argv[optind], dir_path, sizeof(dir_path)) == NULL)
 	{
 		error_msg("directory \"%s\" do't exist", argv[1]);
 		return -ENOENT;

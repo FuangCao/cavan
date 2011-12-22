@@ -500,7 +500,7 @@ int mkdir_all(const char *pathname)
 		return 0;
 	}
 
-	__text_dirname(dir_name, pathname);
+	text_dirname_base(dir_name, pathname);
 	ret = mkdir_all(dir_name);
 	if (ret < 0)
 	{
@@ -1991,7 +1991,7 @@ int file_set_loop(const char *filename, char *loop_path, u64 offset)
 	}
 
 	mem_set8(&loopinfo, 0, sizeof(loopinfo));
-	if (__to_abs_path2(filename, (char *)loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL)
+	if (to_abs_path2_base(filename, (char *)loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL)
 	{
 		ret = -ENOENT;
 		goto out_close_loop;
