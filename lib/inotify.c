@@ -45,7 +45,7 @@ void cavan_inotify_uninit(struct cavan_inotify_descriptor *desc)
 	}
 }
 
-int cavan_inotify_register_watch(struct cavan_inotify_descriptor *desc, const char *pathname, int (*handle)(const char *, struct inotify_event *, void *), uint32_t mask, void *data)
+int cavan_inotify_register_watch(struct cavan_inotify_descriptor *desc, const char *pathname, uint32_t mask, void *data)
 {
 	int wd;
 	struct cavan_inotify_watch *p;
@@ -54,12 +54,6 @@ int cavan_inotify_register_watch(struct cavan_inotify_descriptor *desc, const ch
 	{
 		error_msg("Too match watch");
 		return -EFAULT;
-	}
-
-	if (handle == NULL)
-	{
-		error_msg("handle == NULL");
-		return -EINVAL;
 	}
 
 	if (pathname == NULL || *pathname == 0)
@@ -79,7 +73,6 @@ int cavan_inotify_register_watch(struct cavan_inotify_descriptor *desc, const ch
 
 	p->wd = wd;
 	p->data = data;
-	p->handle = handle;
 	text_copy(p->pathname, pathname);
 	desc->watch_count++;
 
@@ -105,27 +98,34 @@ int cavan_inotify_unregister_watch(struct cavan_inotify_descriptor *desc, const 
 	return -ENOENT;
 }
 
-static int cavan_inotify_handle_event(struct inotify_event *event, struct cavan_inotify_watch *watchs, size_t count)
+struct cavan_inotify_watch *cavan_inotify_find_watch(int wd, struct cavan_inotify_watch *watchs, size_t count)
 {
 	struct cavan_inotify_watch *watch_end;
 
 	for (watch_end = watchs + count; watchs < watch_end; watchs++)
 	{
-		if (event->wd == watchs->wd)
+		if (wd == watchs->wd)
 		{
-			return watchs->handle(watchs->pathname, event, watchs->data);
+			return watchs;
 		}
 	}
 
-	return -ENOENT;
+	return NULL;
 }
 
-int cavan_inotify_event_loop(struct cavan_inotify_descriptor *desc)
+int cavan_inotify_event_loop(struct cavan_inotify_descriptor *desc, int (*handle)(const char *pathname, struct inotify_event *event, void *data))
 {
 	int fd;
 	char buff[(sizeof(struct inotify_event) + 256) * 10];
-	void *p, *p_end;
 	ssize_t readlen;
+	struct inotify_event *p, *p_end;
+	struct cavan_inotify_watch *watch;
+
+	if (handle == NULL)
+	{
+		error_msg("handle == NULL");
+		return -EINVAL;
+	}
 
 	if (desc->watch_count <= 0)
 	{
@@ -144,14 +144,18 @@ int cavan_inotify_event_loop(struct cavan_inotify_descriptor *desc)
 			return readlen;
 		}
 
-		p = buff;
-		p_end = buff + readlen;
+		p = (struct inotify_event *)buff;
+		p_end = (struct inotify_event *)(buff + readlen);
 
 		while (p < p_end)
 		{
-			cavan_inotify_handle_event(p, desc->watchs, NELEM(desc->watchs));
+			watch = cavan_inotify_find_watch(p->wd, desc->watchs, NELEM(desc->watchs));
+			if (watch)
+			{
+				handle(watch->pathname, p, watch->data);
+			}
 
-			p += sizeof(struct inotify_event) + ((struct inotify_event *)p)->len;
+			p = (void *)(p + 1) + p->len;
 		}
 	}
 

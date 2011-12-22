@@ -25,7 +25,7 @@ static int cavan_inotify_event_handle(const char *pathname, struct inotify_event
 
 	text_replace_text(data, command, "{}", pathname);
 
-	if (system_command_simple(command) == 0)
+	if (system(command) == 0)
 	{
 		return 0;
 	}
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 
 	while (optind < argc)
 	{
-		ret = cavan_inotify_register_watch(&desc, argv[optind], cavan_inotify_event_handle, IN_CLOSE_WRITE, command);
+		ret = cavan_inotify_register_watch(&desc, argv[optind], IN_CLOSE_WRITE, command);
 		if (ret < 0)
 		{
 			error_msg("cavan_inotify_register_watch");
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 		optind++;
 	}
 
-	ret = cavan_inotify_event_loop(&desc);
+	ret = cavan_inotify_event_loop(&desc, cavan_inotify_event_handle);
 
 out_inotify_uninit:
 	cavan_inotify_uninit(&desc);
