@@ -115,7 +115,7 @@ static int run_client_thead(const char *data_path)
 	int fd_data, fd_adb_en;
 	struct swan_vn_client_data client_data;
 	pthread_t thread_send, thread_recv;
-	
+
 	fd_adb_en = open(DEVICE_ADB_ENABLE_PATH, O_RDWR);
 	if (fd_adb_en < 0)
 	{

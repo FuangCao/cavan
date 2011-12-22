@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 		case LOCAL_COMMAND_OPTION_COMMAND:
 			text_copy(command, optarg);
 			break;
-			
+
 
 		default:
 			show_usage();
