@@ -124,6 +124,7 @@ char *text_delete_char_base(const char *text_in, char *text_out, char c);
 char *text_delete_sub_base(const char *text_in, char *text_out, const char *sub, const size_t sublen);
 
 void *mem_kmp_find(const void *mem, const void *sub, size_t memlen, size_t sublen);
+int mem_kmp_find_all(const void *mem, const void *sub, size_t memlen, size_t sublen, void **results, size_t size);
 char *text_find_next_line(const char *text);
 char *text_find_line(const char *text, int index);
 char *text_get_line(const char *text, char *buff, int index);
@@ -193,6 +194,11 @@ static inline char *text_trans(char *text)
 static inline char *text_kmp_find(const char *buff, const char *sub)
 {
 	return mem_kmp_find(buff, sub, text_len(buff), text_len(sub));
+}
+
+static inline int text_kmp_find_all(const char *buff, const char *sub, char **results, size_t size)
+{
+	return mem_kmp_find_all(buff, sub, text_len(buff), text_len(sub), (void **)results, size);
 }
 
 static inline char *text_delete_char(char *text, char c)

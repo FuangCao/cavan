@@ -193,11 +193,11 @@ void bits_set(void *mem, int start, int end, u32 value)
 	}
 }
 
-void mem_build_kmp_array(const void *sub, int *step, const size_t size)
+void mem_build_kmp_array(const void *sub, int *steps, const size_t size)
 {
 	int i, j, k;
 
-	for (i = 1, step[0] = -1; i < size; i++)
+	for (i = 1, steps[0] = -1; i < size; i++)
 	{
 		j = 1;
 		k = 0;
@@ -209,29 +209,29 @@ void mem_build_kmp_array(const void *sub, int *step, const size_t size)
 				j++;
 				k++;
 			}
-			else if (step[k] == -1)
+			else if (steps[k] == -1)
 			{
 				j++;
 				k = 0;
 			}
 			else
 			{
-				k = step[k];
+				k = steps[k];
 			}
 		}
 
 		if (((char *)sub)[k] == ((char *)sub)[i])
 		{
-			step[i] = step[k];
+			steps[i] = steps[k];
 		}
 		else
 		{
-			step[i] = k;
+			steps[i] = k;
 		}
 	}
 }
 
-void *mem_kmp_find_base(const void *mem, const void *mem_end, const void *sub, const size_t sublen, const int *step)
+void *mem_kmp_find_base(const void *mem, const void *mem_end, const void *sub, size_t sublen, const int *steps)
 {
 	int i = 0;
 
@@ -242,14 +242,14 @@ void *mem_kmp_find_base(const void *mem, const void *mem_end, const void *sub, c
 			mem++;
 			i++;
 		}
-		else if (step[i] == -1)
+		else if (steps[i] == -1)
 		{
 			mem++;
 			i = 0;
 		}
 		else
 		{
-			i = step[i];
+			i = steps[i];
 		}
 	}
 
@@ -263,11 +263,38 @@ void *mem_kmp_find_base(const void *mem, const void *mem_end, const void *sub, c
 
 void *mem_kmp_find(const void *mem, const void *sub, const size_t memlen, const size_t sublen)
 {
-	int step[sublen];
+	int steps[sublen];
 
-	mem_build_kmp_array(sub, step, sublen);
+	mem_build_kmp_array(sub, steps, sublen);
 
-	return mem_kmp_find_base(mem, mem + memlen, sub, sublen, step);
+	return mem_kmp_find_base(mem, mem + memlen, sub, sublen, steps);
+}
+
+int mem_kmp_find_all(const void *mem, const void *sub, size_t memlen, size_t sublen, void **results, size_t size)
+{
+	int steps[sublen];
+	void **result_bak, **result_end;
+	const void *mem_end;
+
+	mem_build_kmp_array(sub, steps, sublen);
+	result_bak = results;
+	result_end = results + size;
+	mem_end = mem + memlen;
+
+	while (results < result_end)
+	{
+		mem = mem_kmp_find_base(mem, mem_end, sub, sublen, steps);
+		if (mem == NULL)
+		{
+			break;
+		}
+
+		*results = (void *)mem;
+		mem += sublen;
+		results++;
+	}
+
+	return results - result_bak;
 }
 
 size_t mem_delete_char_base(const void *mem_in, void *mem_out, const size_t size, const char c)

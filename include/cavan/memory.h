@@ -42,9 +42,10 @@ void *mem_set64(void *mem, int value, size_t size);
 
 void bits_set(void *mem, int start, int end, u32 value);
 
-void mem_build_kmp_array(const void *sub, int *step, const size_t size);
-void *mem_kmp_find_base(const void *mem, const void *mem_end, const void *sub, const size_t sublen, const int *step);
+void mem_build_kmp_array(const void *sub, int *steps, const size_t size);
+void *mem_kmp_find_base(const void *mem, const void *mem_end, const void *sub, const size_t sublen, const int *steps);
 void *mem_kmp_find(const void *mem, const void *sub, const size_t memlen, const size_t sublen);
+int mem_kmp_find_all(const void *mem, const void *sub, size_t memlen, size_t sublen, void **results, size_t size);
 
 size_t mem_delete_char_base(const void *mem_in, void *mem_out, const size_t size, const char c);
 
