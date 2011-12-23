@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mtd/mtd-user.h>
+
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-12-06 18:20:47
 
 #define FILE_PROC_MTD				"/proc/mtd"
@@ -21,6 +23,7 @@ struct mtd_partition_info
 struct mtd_partition_descriptor
 {
 	int fd;
+	struct mtd_info_user user_info;
 	struct mtd_partition_info *part_info;
 };
 
@@ -37,6 +40,7 @@ int cavan_mtd_init(struct cavan_mtd_descriptor *desc, const char *mtd_table);
 void cavan_mtd_uninit(struct cavan_mtd_descriptor *desc);
 struct mtd_partition_info *cavan_mtd_get_partition_info_by_name(struct cavan_mtd_descriptor *desc, const char *partname);
 int cavan_mtd_open(struct mtd_partition_info *part, int flags);
+int mtd_open_char_device(int index, int flags);
 struct mtd_partition_descriptor *cavan_mtd_open_partition2(struct cavan_mtd_descriptor *desc, const char *partname, int flags);
 void cavan_mtd_close_partition(struct mtd_partition_descriptor *desc);
 int cavan_mtd_erase_blocks(struct mtd_partition_descriptor *desc, int start, int count);
@@ -48,4 +52,7 @@ int cavan_mtd_write_partition2(struct mtd_partition_descriptor *desc, const char
 int cavan_mtd_write_partition3(struct mtd_partition_info *info, const char *filename);
 int cavan_mtd_write_partition4(struct cavan_mtd_descriptor *desc, const char *partname, const char *filename);
 int cavan_mtd_write_partition5(const char *partname, const char *filename);
+
+int cavan_mtd_write_image1(struct mtd_partition_descriptor *desc, int fd);
+int cavan_mtd_write_image2(struct mtd_partition_descriptor *desc, const char *imagename);
 

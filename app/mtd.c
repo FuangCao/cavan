@@ -12,6 +12,7 @@ enum cavan_mtd_action
 	CAVAN_MTD_ACTION_READ,
 	CAVAN_MTD_ACTION_WRITE,
 	CAVAN_MTD_ACTION_LIST,
+	CAVAN_MTD_ACTION_IMAGE,
 };
 
 static void show_usage(void)
@@ -21,6 +22,7 @@ static void show_usage(void)
 	println("mtd -e partition");
 	println("mtd -r partition file");
 	println("mtd -w partition file");
+	println("mtd -i partition image");
 }
 
 int main(int argc, char *argv[])
@@ -66,6 +68,12 @@ int main(int argc, char *argv[])
 			.val = 'l',
 		},
 		{
+			.name = "image",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'i',
+		},
+		{
 		},
 	};
 	int ret;
@@ -77,7 +85,7 @@ int main(int argc, char *argv[])
 	action = CAVAN_MTD_ACTION_NONE;
 	partname[0] = 0;
 
-	while ((c = getopt_long(argc, argv, "vVhHlLw:W:e:E:r:R:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHlLw:W:e:E:r:R:i:I:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -113,6 +121,12 @@ int main(int argc, char *argv[])
 		case 'l':
 		case 'L':
 			action = CAVAN_MTD_ACTION_LIST;
+			break;
+
+		case 'i':
+		case 'I':
+			action = CAVAN_MTD_ACTION_IMAGE;
+			text_copy(partname, optarg);
 			break;
 
 		default:
@@ -183,6 +197,18 @@ int main(int argc, char *argv[])
 		if (optind < argc)
 		{
 			ret = cavan_mtd_write_partition2(part, argv[optind]);
+		}
+		else
+		{
+			pr_red_info("Please input filename");
+			ret = -EINVAL;
+		}
+		break;
+
+	case CAVAN_MTD_ACTION_IMAGE:
+		if (optind < argc)
+		{
+			ret = cavan_mtd_write_image2(part, argv[optind]);
 		}
 		else
 		{

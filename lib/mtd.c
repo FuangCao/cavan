@@ -1,7 +1,6 @@
 #include <cavan.h>
 #include <cavan/mtd.h>
 #include <cavan/file.h>
-#include <mtd/mtd-user.h>
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-12-06 18:20:47
 
@@ -129,17 +128,35 @@ void cavan_mtd_free_partition_descriptor(struct mtd_partition_descriptor *desc)
 	}
 }
 
+int mtd_open_char_device(int index, int flags)
+{
+	int i;
+	int fd;
+	char buff[1024];
+	const char *mtd_char_dirs[] = {"/dev", "/dev/mtd"};
+	for (i = 0; i < NELEM(mtd_char_dirs); i++)
+	{
+		sprintf(buff, "%s/mtd%d", mtd_char_dirs[i], index);
+		fd = open(buff, flags);
+		if (fd >= 0)
+		{
+			println("MTD char device is: %s", buff);
+			return fd;
+		}
+	}
+
+	return -ENOENT;
+}
+
 struct mtd_partition_descriptor *cavan_mtd_open_partition(struct mtd_partition_info *info, int flags)
 {
 	int fd;
-	char buff[1024];
 	struct mtd_partition_descriptor *desc;
 
-	sprintf(buff, "/dev/mtd/mtd%d", info->index);
-	fd = open(buff, flags);
+	fd = mtd_open_char_device(info->index, flags);
 	if (fd < 0)
 	{
-		print_error("open device %s", buff);
+		print_error("mtd_open_char_device");
 		return NULL;
 	}
 
@@ -150,11 +167,19 @@ struct mtd_partition_descriptor *cavan_mtd_open_partition(struct mtd_partition_i
 		goto out_close_fd;
 	}
 
+	if (ioctl(fd, MEMGETINFO, &desc->user_info) < 0)
+	{
+		print_error("ioctl MEMGETINFO");
+		goto out_free_desc;
+	}
+
 	desc->fd = fd;
 	desc->part_info = info;
 
 	return desc;
 
+out_free_desc:
+	cavan_mtd_free_partition_descriptor(desc);
 out_close_fd:
 	close(fd);
 
@@ -415,6 +440,70 @@ int cavan_mtd_write_partition5(const char *partname, const char *filename)
 	ret = cavan_mtd_write_partition4(&desc, partname, filename);
 
 	cavan_mtd_uninit(&desc);
+
+	return ret;
+}
+
+void cavan_mtd_show_info_user(struct mtd_info_user *info)
+{
+	println("type = %d", info->type);
+	println("flags = 0x%08x", info->flags);
+	println("size = %s", size2text(info->size));
+	println("erasesize = %s", size2text(info->erasesize));
+	println("writesize = %s", size2text(info->writesize));
+	println("oobsize = %s", size2text(info->oobsize));
+	println("ecctype = %d", info->ecctype);
+	println("eccsize = %s", size2text(info->eccsize));
+}
+
+int cavan_mtd_write_image1(struct mtd_partition_descriptor *desc, int fd)
+{
+	ssize_t readlen, writelen;
+	struct mtd_partition_info *info = desc->part_info;
+	char buff[info->erase_size + 16];
+
+	cavan_mtd_show_info_user(&desc->user_info);
+
+	while (1)
+	{
+		readlen = read(fd, buff, sizeof(buff));
+		if (readlen < 0)
+		{
+			print_error("read");
+			return readlen;
+		}
+
+		if (readlen == 0)
+		{
+			return 0;
+		}
+
+		writelen = cavan_mtd_write_block(desc, buff);
+		if (writelen < 0)
+		{
+			error_msg("cavan_mtd_write_block");
+			return writelen;
+		}
+	}
+
+	return 0;
+}
+
+int cavan_mtd_write_image2(struct mtd_partition_descriptor *desc, const char *imagename)
+{
+	int ret;
+	int fd;
+
+	fd = open(imagename, O_RDONLY);
+	if (fd < 0)
+	{
+		print_error("open file %s", imagename);
+		return fd;
+	}
+
+	ret = cavan_mtd_write_image1(desc, fd);
+
+	close(fd);
 
 	return ret;
 }
