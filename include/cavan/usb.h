@@ -129,9 +129,14 @@ void show_cavan_usb_descriptor(const struct cavan_usb_descriptor *desc);
 int cavan_usb_init(const char *dev_path, struct cavan_usb_descriptor *desc);
 int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *desc);
 void cavan_usb_uninit(struct cavan_usb_descriptor *desc);
+
 int cavan_usb_bluk_rw(struct cavan_usb_descriptor *desc, void *buff, size_t length, int read);
 int cavan_usb_bluk_read(struct cavan_usb_descriptor *desc, void *buff, size_t length);
 int cavan_usb_bluk_write(struct cavan_usb_descriptor *desc, const void *buff, size_t length);
+
+int cavan_usb_bluk_xfer(struct cavan_usb_descriptor *desc, void *buff, size_t length, int ep);
+int cavan_usb_bluk_read2(struct cavan_usb_descriptor *desc, void *buff, size_t length);
+int cavan_usb_bluk_write2(struct cavan_usb_descriptor *desc, const void *buff, size_t length);
 
 ssize_t cavan_usb_read_data(struct cavan_usb_descriptor *desc, void *buff, size_t size);
 ssize_t cavan_usb_write_data(struct cavan_usb_descriptor *desc, const void *buff, size_t size);

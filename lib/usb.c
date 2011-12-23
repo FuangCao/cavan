@@ -495,6 +495,40 @@ int cavan_usb_bluk_write(struct cavan_usb_descriptor *desc, const void *buff, si
 	return cavan_usb_bluk_rw(desc, (void *)buff, length, 0);
 }
 
+int cavan_usb_bluk_xfer(struct cavan_usb_descriptor *desc, void *buff, size_t length, int ep)
+{
+	int fd = desc->fd;
+	struct usbdevfs_bulktransfer bulk =
+	{
+		.ep = ep,
+		.len = length,
+		.timeout = 0,
+		.data = buff
+	};
+
+	return ioctl(fd, USBDEVFS_BULK, &bulk);
+}
+
+int cavan_usb_bluk_read2(struct cavan_usb_descriptor *desc, void *buff, size_t length)
+{
+	if (desc == NULL || desc->epin_curr < 0)
+	{
+		return -EINVAL;
+	}
+
+	return cavan_usb_bluk_xfer(desc, buff, length, desc->epin_curr);
+}
+
+int cavan_usb_bluk_write2(struct cavan_usb_descriptor *desc, const void *buff, size_t length)
+{
+	if (desc == NULL || desc->epout_curr < 0)
+	{
+		return -EINVAL;
+	}
+
+	return cavan_usb_bluk_xfer(desc, (void *)buff, length, desc->epout_curr);
+}
+
 int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *desc)
 {
 	int ret;
