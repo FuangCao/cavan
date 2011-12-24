@@ -1,4 +1,4 @@
 ARCH = arm
 CROSS_COMPILE = arm-linux-
 BUILD_ENTRY = app
-BUILD_TYPE = dynamically
+BUILD_TYPE = debug
