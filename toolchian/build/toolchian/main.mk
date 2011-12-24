@@ -47,7 +47,7 @@ MAKEFILE_GLIBC = $(BUILD_TOOLCHIAN)/$(GLIBC_NAME).mk
 MAKEFILE_HEADER = $(BUILD_TOOLCHIAN)/$(HEADER_NAME).mk
 XML_CONFIG = $(BUILD_TOOLCHIAN)/config.xml
 
-GCC_URL = http://ftp.gnu.org/gnu/gcc
+GCC_URL = http://ftp.gnu.org/gnu/gcc/$(GCC_NAME)
 GLIBC_URL = http://ftp.gnu.org/gnu/glibc
 BINUTILS_URL = http://ftp.gnu.org/gnu/binutils
 GMP_URL = http://ftp.gnu.org/gnu/gmp

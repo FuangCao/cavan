@@ -1,11 +1,7 @@
-BUILD_TYPE = dynamically
-# BUILD_TYPE = release
-# BUILD_TYPE = static
+ARCH = host
+CROSS_COMPILE =
+BUILD_TYPE = debug
 BUILD_ENTRY = app
-# ARCH =
-# CROSS_COMPILE =
-ELF_PREFIX = cavan
 Q = @
-LDFLAGS = -lpthread -lm
 
-include build/core/main.mk
+include build/core/main2.mk
