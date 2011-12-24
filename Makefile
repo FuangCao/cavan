@@ -3,5 +3,6 @@ CROSS_COMPILE =
 BUILD_TYPE = debug
 BUILD_ENTRY = app
 Q = @
+BUILD_MAIN = main
 
-include build/core/main2.mk
+include build/core/$(BUILD_MAIN).mk
