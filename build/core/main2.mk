@@ -1,4 +1,4 @@
-ROOT_PATH = $(PWD)
+ROOT_PATH = $(shell pwd)
 CAVAN_NAME = cavan
 APP_PATH = app
 LIB_PATH = lib
@@ -11,12 +11,12 @@ OUT_APP = $(OUT_PATH)/app
 OUT_BIN = $(OUT_PATH)/bin
 OUT_CAVAN = $(OUT_PATH)/cavan
 
-CC = $(Q)echo "[CC]\t$@ <= $^"; $(CROSS_COMPILE)gcc
-LD = $(Q)echo "[LD]\t$@ <= $^"; $(CROSS_COMPILE)ld
-AR = $(Q)echo "[AR]\t$@ <= $^"; $(CROSS_COMPILE)ar
+CC = $(Q)$(CROSS_COMPILE)gcc
+LD = $(Q)$(CROSS_COMPILE)ld
+AR = $(Q)$(CROSS_COMPILE)ar
 MKDIR = $(Q)mkdir -p
 RM = $(Q)rm -rf
-SED = $(Q)echo "[SED]\t$@ <= $^"; sed
+SED = $(Q)sed
 FOR = $(Q)for
 
 CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wno-trigraphs \
@@ -26,18 +26,58 @@ CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wno-trigraphs \
 ASFLAGS +=	$(CFLAGS) -D__ASM__
 LDFLAGS += -lm -lpthread
 
+ifeq ("$(Q)","@")
+  MAKEFLAGS += --no-print-directory
+endif
+
 define file_path_convert
-$(patsubst $(1)/%$(2),$(3)%$(4),$(wildcard $(1)/*$(2)))
+$(patsubst %.c,$(2)%$(3),$(notdir $(1)))
 endef
 
-LIB_OBJ_FILES = $(call file_path_convert,$(LIB_PATH),.c,$(OUT_LIB)/,.o)
+define load_cavan_make
+$(eval source-app =)
+$(eval source-lib =)
+$(eval include $(1)/cavan.mk)
+$(eval APP_SRC_FILES += $(addprefix $(1)/,$(source-app)))
+$(eval LIB_SRC_FILES += $(addprefix $(1)/,$(source-lib)))
+endef
+
+define find_source_files
+$(if $(wildcard $(1)/cavan.mk),$(call load_cavan_make,$(1)),$(eval $(2) += $(wildcard $(1)/*.c)))
+endef
+
+define build_app_action
+$(call find_source_files,$(1),APP_SRC_FILES)
+
+$(OUT_APP)/%.o: $(1)/%.c
+	@echo "[CC]\t$$@ <= $$^"
+	$(CC) $(CFLAGS) -o $$@ -c $$^
+
+$(OUT_CAVAN)/%.c: $(1)/%.c
+	@echo "[SED]\t$$^ => $$@"
+	$$(eval main-name = $$(patsubst $(1)/%.c,do_cavan_%,$$^))
+	$(SED)	-e "s/^\s*int\s\+main\s*\((.*)\)\s*$$$$/int $$(main-name)\1/g" \
+			$$^ > $$@
+endef
+
+define build_lib_action
+$(call find_source_files,$(1),LIB_SRC_FILES)
+
+$(OUT_LIB)/%.o: $(1)/%.c
+	@echo "[CC]\t$$@ <= $$^"
+	$(CC) $(CFLAGS) -fPIC -o $$@ -c $$^
+endef
+
+$(foreach app,$(APP) $(APP_PATH),$(eval $(call build_app_action,$(app))))
+$(foreach lib,$(LIB) $(LIB_PATH),$(eval $(call build_lib_action,$(lib))))
+
+LIB_OBJ_FILES = $(call file_path_convert,$(LIB_SRC_FILES),$(OUT_LIB)/,.o)
 TARGET_LIBO = $(OUT_LIB)/$(CAVAN_NAME).o
 TARGET_LIBSO = $(OUT_LIB)/lib$(CAVAN_NAME).so
 TARGET_LIBA = $(OUT_LIB)/lib$(CAVAN_NAME).a
 
-APP_FILENAMES = $(call file_path_convert,$(APP_PATH),.c)
-APP_OBJ_FILES = $(patsubst %,$(OUT_APP)/%.o,$(APP_FILENAMES))
-TARGET_BINS = $(addprefix $(OUT_BIN)/$(CAVAN_NAME)-,$(APP_FILENAMES))
+APP_OBJ_FILES = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_APP)/,.o)
+TARGET_BINS = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_BIN)/cavan-)
 ifeq ($(BUILD_TYPE),debug)
 CFLAGS += -DCAVAN_DEBUG
 BIN_DEPENDS = $(TARGET_LIBSO)  
@@ -61,8 +101,9 @@ endif
 endif
 endif
 
-CAVAN_SRC_FILES = $(patsubst %,$(OUT_CAVAN)/%.c,$(APP_FILENAMES))
-APP_CORE_OBJ_FILES = $(call file_path_convert,$(APP_CORE_PATH),.c,$(OUT_CAVAN)/,.o)
+CAVAN_SRC_FILES = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_CAVAN)/,.c)
+APP_CORE_SRC_FILES = $(wildcard $(APP_CORE_PATH)/*.c)
+APP_CORE_OBJ_FILES = $(call file_path_convert,$(APP_CORE_SRC_FILES),$(OUT_CAVAN)/,.o)
 CAVAN_OBJ_FILES = $(CAVAN_SRC_FILES:%.c=%.o) $(APP_CORE_OBJ_FILES)
 CAVAN_MAP_HEADER = $(OUT_CAVAN)/cavan_map.h
 CAVAN_MAP_SOURCE = $(OUT_CAVAN)/cavan_map.c
@@ -74,10 +115,8 @@ all: $(BUILD_ENTRY)
 app: build_env $(BIN_DEPENDS) $(TARGET_BINS)
 
 $(OUT_BIN)/$(CAVAN_NAME)-%: $(OUT_APP)/%.o $(APP_DEPENDS)
+	@echo "[LD]\t$@ <= $<"
 	$(CC) -o $@ $< $(LDFLAGS) $(APP_LDFLAGS) $(LDFLAGS)
-
-$(OUT_APP)/%.o: $(APP_PATH)/%.c
-	$(CC) $(CFLAGS) -o $@ -c $^
 
 lib: build_env $(TARGET_LIBA) $(TARGET_LIBSO)
 
@@ -86,32 +125,25 @@ liba: build_env $(TARGET_LIBA)
 libso: build_env $(TARGET_LIBSO)
 
 $(TARGET_LIBA): $(TARGET_LIBO)
+	@echo "[AR]\t$@ <= $^"
 	$(AR) cur $@ $^
 
 $(TARGET_LIBSO): $(TARGET_LIBO)
+	@echo "[LD]\t$@ <= $^"
 	$(CC) -shared -o $@ $^
 
 $(TARGET_LIBO): $(LIB_OBJ_FILES)
+	@echo "[LD]\t$@ <= $^"
 	$(LD) -o $@ -r $^
-
-$(OUT_LIB)/%.o: $(LIB_PATH)/%.c
-	$(CC) $(CFLAGS) -fPIC -o $@ -c $^
 
 cavan: build_env $(BIN_DEPENDS) $(TARGET_CAVAN)
 
 $(TARGET_CAVAN): $(CAVAN_OBJ_FILES) $(APP_DEPENDS)
+	@echo "[LD]\t$@ <= $^"
 	$(CC) -o $@ $^ $(APP_LDFLAGS) $(LDFLAGS)
 
-$(OUT_CAVAN)/%.o: $(OUT_CAVAN)/%.c
-	$(CC) $(CFLAGS) -o $@ -c $^
-
-$(OUT_CAVAN)/%.c: $(APP_PATH)/%.c
-	$(eval main-name = $(patsubst $(APP_PATH)/%.c,do_cavan_%,$^))
-	$(SED)	-e "s/^\s*void\s\+main\s*(\(.*\))\s*$$/void $(main-name)(\1)/g" \
-			-e "s/^\s*int\s\+main\s*(\(.*\))\s*$$/int $(main-name)(\1)/g" \
-			$^ > $@
-
 $(OUT_CAVAN)/%.o: $(APP_CORE_PATH)/%.c $(CAVAN_MAP_HEADER) $(CAVAN_MAP_SOURCE)
+	@echo "[CC]\t$@ <= $<"
 	$(CC) $(CFLAGS) $(CAVAN_CFLAGS) -o $@ -c $<
 
 $(CAVAN_MAP_HEADER): $(CAVAN_SRC_FILES)

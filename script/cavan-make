@@ -104,13 +104,13 @@ source-${FILE_TYPE} += $2.c
 EOF
 
 cat > Makefile << EOF
-# ${FILE_HEADER}
-# ${AUTHOR_INFO}
+CAVAN_PATH = ${CAVAN_ABS_PATH}
 
-CAVAN_ROOT = ${CAVAN_ABS_PATH}
-MAKE_TYPE = ${MAKE_TYPE}
+all:
+	@+make -C \$(CAVAN_PATH) ${MAKE_TYPE}=${PWD} ${FILE_TYPE}
 
-include \$(CAVAN_ROOT)/build/core/rule.mk
+%:
+	@+make -C \$(CAVAN_PATH) ${MAKE_TYPE}=${PWD} \$@
 EOF
 }
 
