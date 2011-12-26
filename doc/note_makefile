@@ -44,3 +44,31 @@ MakeFile:
 
 	MAKECMDGOALS
 	MAKEFLAGS
+
+	.PHONY
+	.PRECIOUS
+	.SECONDARY
+
+	$@
+	$%
+	$*
+	$^
+	$<
+	$+
+	$|
+	$?
+
+	$(@D)
+	$(@F)
+	$(*D)
+	$(*F)
+	$(^D)
+	$(^F)
+	$(<D)
+	$(<F)
+	$(+D)
+	$(+F)
+	$(%D)
+	$(%F)
+	$(?D)
+	$(?F)
