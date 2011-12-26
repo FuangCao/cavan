@@ -32,6 +32,10 @@ ifeq ("$(Q)","@")
 MAKEFLAGS += --no-print-directory
 endif
 
+define filter_last_words
+$(wordlist 1,$(shell expr $(words $(2)) - $(1)),$(2))
+endef
+
 define file_path_convert
 $(patsubst %.c,$(2)%$(3),$(notdir $(1)))
 endef
@@ -136,7 +140,7 @@ $(TARGET_CAVAN): $(CAVAN_OBJ_FILES) $(APP_DEPENDS)
 	$(eval modify-files = $(filter-out $(APP_DEPENDS),$?))
 	@test -z "$(modify-files)" || \
 	{ \
-		obj_files="$(filter-out $(APP_DEPENDS),$^)"; \
+		obj_files="$(call filter_last_words,1,$^)"; \
 		echo "[LD]\t$@ <= $${obj_files}"; \
 		$(CC) -o $@ $${obj_files} $(APP_LDFLAGS) $(LDFLAGS); \
 	}
@@ -148,7 +152,7 @@ $(OUT_BIN)/$(CAVAN_NAME)-%: $(OUT_APP)/%.o $(APP_DEPENDS)
 	$(Q)$(CC) -o $@ $< $(APP_LDFLAGS) $(LDFLAGS)
 
 $(TARGET_CAVAN): $(CAVAN_OBJ_FILES) $(APP_DEPENDS)
-	$(eval obj-files = $(filter-out $(APP_DEPENDS),$^))
+	$(eval obj-files = $(call filter_last_words,1,$^))
 	@echo "[LD]\t$@ <= $(obj-files)"
 	$(Q)$(CC) -o $@ $(obj-files) $(APP_LDFLAGS) $(LDFLAGS)
 endif
