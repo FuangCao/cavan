@@ -2,6 +2,7 @@ ROOT_PATH = $(shell pwd)
 CAVAN_NAME = cavan
 APP_PATH = app
 LIB_PATH = lib
+BUILD_PATH = build
 INCLUDE_PATH = $(ROOT_PATH)/include
 APP_CORE_PATH = $(APP_PATH)/core
 MAKEFILE_CAVAN = $(CAVAN_NAME).mk
@@ -12,11 +13,10 @@ OUT_APP = $(OUT_PATH)/app
 OUT_CAVAN = $(OUT_PATH)/$(CAVAN_NAME)
 OUT_BIN = $(OUT_PATH)/$(BUILD_TYPE)
 
-APP_MARK = $(OUT_APP)/mark
-
 CC = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)ld
 AR = $(CROSS_COMPILE)ar
+STRIP = $(CROSS_COMPILE)strip
 RM = rm -rf
 MAKE = +make
 MKDIR = mkdir -p
@@ -32,45 +32,7 @@ ifeq ("$(Q)","@")
 MAKEFLAGS += --no-print-directory
 endif
 
-define filter_last_words
-$(wordlist 1,$(shell expr $(words $(2)) - $(1)),$(2))
-endef
-
-define file_path_convert
-$(patsubst %.c,$(2)%$(3),$(notdir $(1)))
-endef
-
-define load_cavan_make
-$(eval source-app =)
-$(eval source-lib =)
-$(eval include $(1)/$(MAKEFILE_CAVAN))
-$(eval APP_SRC_FILES += $(addprefix $(1)/,$(source-app)))
-$(eval LIB_SRC_FILES += $(addprefix $(1)/,$(source-lib)))
-endef
-
-define find_source_files
-$(if $(wildcard $(1)/$(MAKEFILE_CAVAN)),$(call load_cavan_make,$(1)),$(eval $(2) += $(wildcard $(1)/*.c)))
-endef
-
-define build_app_action
-$(call find_source_files,$(1),APP_SRC_FILES)
-$$(OUT_APP)/%.o: $(1)/%.c
-	@echo "[CC]\t$$< => $$@"
-	$$(Q)$$(CC) $$(CFLAGS) -o $$@ -c $$<
-$$(OUT_CAVAN)/%.c: $(1)/%.c
-	@echo "[GEN]\t$$< => $$@"
-	$$(eval main-name = do_cavan_$$*)
-	@sed	-e "s/^\s*int\s\+main\s*\((.*)\)/int $$(main-name)\1/g" \
-			-e "s/^\s*void\s\+main\s*\((.*)\)/void $$(main-name)\1/g" \
-			$$< > $$@
-endef
-
-define build_lib_action
-$(call find_source_files,$(1),LIB_SRC_FILES)
-$$(OUT_LIB)/%.o: $(1)/%.c
-	@echo "[CC]\t$$< => $$@"
-	$$(Q)$$(CC) $$(CFLAGS) -fPIC -o $$@ -c $$<
-endef
+include $(BUILD_PATH)/core/defines2.mk
 
 $(foreach app,$(APP) $(APP_PATH),$(eval $(call build_app_action,$(app))))
 $(foreach lib,$(LIB) $(LIB_PATH),$(eval $(call build_lib_action,$(lib))))
@@ -82,18 +44,14 @@ TARGET_LIBA = $(OUT_LIB)/lib$(CAVAN_NAME).a
 
 APP_OBJ_FILES = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_APP)/,.o)
 TARGET_BINS = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_BIN)/$(CAVAN_NAME)-)
-ifeq ($(BUILD_TYPE),debug)
-CFLAGS += -DCAVAN_DEBUG
-APP_DEPENDS = $(TARGET_LIBSO)
+ifeq "$(BUILD_TYPE)" "debug"
 APP_LDFLAGS += -L$(ROOT_PATH)/$(OUT_LIB) -Wl,-rpath,$(ROOT_PATH)/$(OUT_LIB) -l$(CAVAN_NAME)
 else
-ifeq ($(BUILD_TYPE),static)
-CFLAGS += -DCAVAN_STATIC
+ifeq "$(BUILD_TYPE)" "static"
 APP_DEPENDS = $(TARGET_LIBA)
 APP_LDFLAGS += -static -L$(OUT_LIB) -l$(CAVAN_NAME)
 else
-ifeq ($(BUILD_TYPE),release)
-CFLAGS += -DCAVAN_RELEASE
+ifeq "$(BUILD_TYPE)" "release"
 APP_DEPENDS = $(TARGET_LIBO)
 APP_LDFLAGS += $(TARGET_LIBO)
 else
@@ -121,61 +79,42 @@ liba: $(TARGET_LIBA)
 
 libso: $(TARGET_LIBSO)
 
-cavan: $(TARGET_CAVAN)
-
 ifeq ($(BUILD_TYPE),debug)
-app: $(APP_MARK)
+app: $(TARGET_LIBSO)
+	$(Q)$(MAKE) app-base
 
-$(APP_MARK): $(APP_OBJ_FILES) $(APP_DEPENDS)
-	@for app in $(basename $(filter-out $(notdir $(APP_DEPENDS)),$(?F))); \
-	do \
-		src="$(OUT_APP)/$${app}.o"; \
-		dest="$(OUT_BIN)/$(CAVAN_NAME)-$${app}"; \
-		echo "[LD]\t$${src} => $${dest}"; \
-		$(CC) -o $${dest} $${src} $(APP_LDFLAGS) $(LDFLAGS); \
-	done
-	@echo "$?" > $@
+app-base: $(TARGET_BINS)
 
-$(TARGET_CAVAN): $(CAVAN_OBJ_FILES) $(APP_DEPENDS)
-	$(eval modify-files = $(filter-out $(APP_DEPENDS),$?))
-	@test -z "$(modify-files)" || \
-	{ \
-		obj_files="$(call filter_last_words,1,$^)"; \
-		echo "[LD]\t$@ <= $${obj_files}"; \
-		$(CC) -o $@ $${obj_files} $(APP_LDFLAGS) $(LDFLAGS); \
-	}
+cavan: $(TARGET_LIBO)
+	$(Q)$(MAKE) cavan-base
+
+cavan-base: $(TARGET_CAVAN)
 else
 app: $(TARGET_BINS)
 
-$(OUT_BIN)/$(CAVAN_NAME)-%: $(OUT_APP)/%.o $(APP_DEPENDS)
-	@echo "[LD]\t$< => $@"
-	$(Q)$(CC) -o $@ $< $(APP_LDFLAGS) $(LDFLAGS)
-
-$(TARGET_CAVAN): $(CAVAN_OBJ_FILES) $(APP_DEPENDS)
-	$(eval obj-files = $(call filter_last_words,1,$^))
-	@echo "[LD]\t$@ <= $(obj-files)"
-	$(Q)$(CC) -o $@ $(obj-files) $(APP_LDFLAGS) $(LDFLAGS)
+cavan: $(TARGET_CAVAN)
 endif
 
+$(OUT_BIN)/$(CAVAN_NAME)-%: $(OUT_APP)/%.o $(APP_DEPENDS)
+	$(call link_excuteable,$@,$<)
+
+$(TARGET_CAVAN): $(CAVAN_OBJ_FILES) $(APP_DEPENDS)
+	$(call link_excuteable,$@,$(filter-out $(APP_DEPENDS),$^))
+
 $(TARGET_LIBA): $(TARGET_LIBO)
-	@echo "[AR]\t$@ <= $^"
-	$(Q)$(AR) cur $@ $^
+	$(call link_static_library,$@,$^)
 
 $(TARGET_LIBSO): $(TARGET_LIBO)
-	@echo "[LD]\t$@ <= $^"
-	$(Q)$(CC) -shared -o $@ $^
+	$(call link_shared_library,$@,$^)
 
 $(TARGET_LIBO): $(LIB_OBJ_FILES)
-	@echo "[LD]\t$@ <= $^"
-	$(Q)$(LD) -o $@ -r $^
+	$(call link_object_file,$@,$^)
 
 $(OUT_CAVAN)/%.o: $(APP_CORE_PATH)/%.c $(CAVAN_MAP_HEADER) $(CAVAN_MAP_SOURCE)
-	@echo "[CC]\t$< => $@"
-	$(Q)$(CC) $(CFLAGS) $(CAVAN_CFLAGS) -o $@ -c $<
+	$(call compile_file,$@,$<,$(CAVAN_CFLAGS))
 
 $(OUT_CAVAN)/%.o: $(OUT_CAVAN)/%.c
-	@echo "[CC]\t$^ => $@"
-	$(Q)$(CC) $(CFLAGS) $(CAVAN_CFLAGS) -o $@ -c $^
+	$(call compile_file,$@,$<,$(CAVAN_CFLAGS))
 
 $(CAVAN_MAP_HEADER): $(CAVAN_SRC_FILES)
 	@echo "[GEN]\t$@ <= $^"
