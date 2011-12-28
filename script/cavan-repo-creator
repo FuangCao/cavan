@@ -1,0 +1,180 @@
+#!/usr/bin/python
+
+"""exec" python -E $0 $@
+#"""
+
+import sys, os, os.path
+from xml.dom.minidom import parse
+from getopt import getopt
+
+server_url = ""
+git_branch = ""
+git_remote = ""
+manifest_dom = None
+tagManifet = None
+tagRemote = None
+tagDefault = None
+repo_projects = {}
+
+def pr_red_info(message):
+	print "\033[31m%s!\033[0m" % message
+
+def pr_green_info(message):
+	print "\033[32m%s\033[0m" % message
+
+def pr_bold_info(message):
+	print "\033[1m%s\033[0m" % message
+
+def show_usage():
+	pr_bold_info("Usage: %s <-s input -o output> [options] default.xml" % sys.argv[0])
+	print "-s, -S, --source: source file directory"
+	print "-o, -O, --output: git repo root directory"
+	print "-u, -U, --url: target git server url"
+	print "-b, -B, --branch: create new branch"
+
+def parse_xml(manifest):
+	global manifest_dom, tagManifet, tagRemote, tagDefault
+	global git_branch, git_remote, server_url, repo_projects
+
+	manifest_dom = parse(manifest)
+	if manifest_dom ==  None:
+		return -1
+
+	tagManifet = manifest_dom.getElementsByTagName("manifest").item(0)
+	if tagManifet == None:
+		pr_red_info("No manifet tag found")
+		return -1
+
+	tagRemote = tagManifet.getElementsByTagName("remote").item(0)
+	if tagRemote == None:
+		pr_red_info("No remote tag found")
+
+	server_url = tagRemote.getAttribute("fetch");
+
+	tagDefault = tagManifet.getElementsByTagName("default").item(0)
+	if tagDefault == None:
+		pr_red_info("No default tag found")
+		return -1
+
+	git_branch = tagDefault.getAttribute("revision")
+	git_remote = tagDefault.getAttribute("remote")
+	
+	for project in tagManifet.getElementsByTagName("project"):
+		name = project.getAttribute("name")
+		path = project.getAttribute("path");
+		if name == "" or path == "":
+			pr_red_info("No name or path attribute found")
+		repo_projects[name] = path
+
+	return 0
+
+def remove_force(path):
+	if os.path.isdir(path):
+		for name in os.listdir(path):
+			remove_force("%s/%s" % (path, name))
+		os.rmdir(path)
+	elif os.path.exists(path):
+		os.remove(path)
+
+def git_init(source, target):
+	pr_bold_info("%s => %s" % (source, target))
+
+	if not os.path.isdir(target):
+		remove_force(target)
+
+		if os.system("mkdir %s -p && cd %s && git init --bare --shared" % (target, target)) != 0:
+			return -1
+
+	os.chdir(source)
+
+	if not os.path.isdir(".git"):
+		if os.system("git init && git add . -f") != 0:
+			return -1
+
+		if os.system("git commit -asm \"Add all files to git repo\"") != 0:
+			return -1
+
+	os.system("git branch %s" % git_branch)
+
+	if os.system("git push %s %s" % (target, git_branch)) != 0:
+		return -1
+
+	return 0
+
+def create_manifest_git(target):
+	global tagRemote, tagDefault
+
+	temp_source = "/tmp/manifest"
+
+	remove_force(temp_source)
+	os.makedirs(temp_source)
+
+	tagRemote.setAttribute("fetch", "%s/" % server_url.rstrip(" /"))
+	tagDefault.setAttribute("revision", git_branch)
+
+	try:
+		fd = file("%s/default.xml" % temp_source, "w")
+	except:
+		pr_red_info("Open %s/default.xml failed" % temp_source)
+		return -1
+
+	fd.write(manifest_dom.toprettyxml('\t', ''))
+	fd.close()
+
+	remove_force(target)
+
+	return git_init(temp_source, target)
+
+def create_repo():
+	global repo_projects, server_url, git_branch
+
+	try:
+		opts, args = getopt(sys.argv[1:], "s:S:o:O:u:U:b:B:", ["source=", "output=", "url=", "branch="])
+	except:
+		show_usage()
+		return -1
+
+	if len(args) < 1:
+		show_usage()
+		return -1
+
+	source_root = ""
+	dest_root = ""
+
+	if parse_xml(args[0]) < 0:
+		pr_red_info("parse xml file %s failed" % manifest)
+		return -1
+
+	for opt in opts:
+		if opt[0] in ["-s", "-S", "--source"]:
+			source_root = opt[1].rstrip(" /")
+		elif opt[0] in ["-o", "-O", "--output"]:
+			dest_root = opt[1].rstrip(" /")
+		elif opt[0] in ["-u", "-U", "--url"]:
+			server_url = opt[1].strip()
+		elif opt[0] in ["-b", "-B", "--branch"]:
+			git_branch = opt[1].strip()
+		else:
+			pr_red_info("unknown option %s" % opt)
+			show_usage()
+			return -1
+
+	if source_root == "" or dest_root == "" or server_url == "" or git_branch == "":
+		pr_red_info("Too a few argument")
+		show_usage()
+		return -1
+
+	if create_manifest_git("%s/platform/manifest.git" % dest_root) < 0:
+		return -1
+
+	for name in repo_projects:
+		if git_init("%s/%s" % (source_root, repo_projects[name]), "%s/%s.git" % (dest_root, name)) < 0:
+			return -1
+
+	return 0
+
+if __name__ == "__main__":
+	if create_repo() < 0:
+		pr_red_info("Failed")
+	else:
+		pr_green_info("OK")
