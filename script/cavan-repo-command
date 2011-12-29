@@ -18,7 +18,7 @@ def pr_bold_info(message):
 def show_usage():
 	pr_bold_info("%s command" % os.path.basename(sys.argv[0]))
 
-def execute_repo_command_raw(command_raw):
+def execute_repo_command(command_raw):
 	dom = parse(".repo/manifest.xml")
 	tagManifest = dom.getElementsByTagName("manifest").item(0)
 	root_path = os.path.abspath(".")
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 	if len(sys.argv) < 2:
 		show_usage()
 	else:
-		if execute_repo_command_raw(" ".join(sys.argv[1:])) < 0:
+		if execute_repo_command(" ".join(sys.argv[1:])) < 0:
 			pr_red_info("Failed")
 		else:
 			pr_green_info("OK")
