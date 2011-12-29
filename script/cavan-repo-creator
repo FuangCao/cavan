@@ -210,7 +210,7 @@ def create_repo():
 		if name == "" or path == "":
 			pr_red_info("No name or path attribute found")
 			return -1
-		if git_init(os.path.join(source_root, path), os.path.join(dest_root, name)) < 0:
+		if git_init(os.path.join(source_root, path), "%s/%s.git" % (dest_root, name)) < 0:
 			pr_red_info("init git repo %s failed" % name)
 			return -1
 
