@@ -1,3 +1,7 @@
+ARCH ?= host
+BUILD_TYPE ?= debug
+BUILD_ENTRY ?= app
+
 ROOT_PATH = $(shell pwd)
 CAVAN_NAME = cavan
 APP_PATH = app
@@ -44,20 +48,24 @@ TARGET_LIBA = $(OUT_LIB)/lib$(CAVAN_NAME).a
 
 APP_OBJ_FILES = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_APP)/,.o)
 TARGET_BINS = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_BIN)/$(CAVAN_NAME)-)
+
+ifeq "$(filter debug static release,$(BUILD_TYPE))" ""
+$(warning this project can only build as: debug static release)
+$(error unknown BUILD_TYPE = \"$(BUILD_TYPE)\")
+endif
+
 ifeq "$(BUILD_TYPE)" "debug"
 APP_LDFLAGS += -L$(ROOT_PATH)/$(OUT_LIB) -Wl,-rpath,$(ROOT_PATH)/$(OUT_LIB) -l$(CAVAN_NAME)
-else
+endif
+
 ifeq "$(BUILD_TYPE)" "static"
 APP_DEPENDS = $(TARGET_LIBA)
 APP_LDFLAGS += -static -L$(OUT_LIB) -l$(CAVAN_NAME)
-else
+endif
+
 ifeq "$(BUILD_TYPE)" "release"
 APP_DEPENDS = $(TARGET_LIBO)
 APP_LDFLAGS += $(TARGET_LIBO)
-else
-$(error unknown build type: $(BUILD_TYPE))
-endif
-endif
 endif
 
 CAVAN_SRC_FILES = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_CAVAN)/,.c)
@@ -94,6 +102,15 @@ app: $(TARGET_BINS)
 
 cavan: $(TARGET_CAVAN)
 endif
+
+Debug debug:
+	$(Q)$(MAKE) BUILD_TYPE=debug
+
+Release release:
+	$(Q)$(MAKE) BUILD_TYPE=release
+
+Static static:
+	$(Q)$(MAKE) BUILD_TYPE=static
 
 $(OUT_BIN)/$(CAVAN_NAME)-%: $(OUT_APP)/%.o $(APP_DEPENDS)
 	$(call link_excuteable,$@,$<)

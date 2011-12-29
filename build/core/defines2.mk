@@ -12,18 +12,18 @@ $(Q)$(CC) -c $(CFLAGS) $(3) -o $(1) $(2)
 endef
 
 define strip_file
-$(Q)$(STRIP) $(1)
+$(Q)$(STRIP) -s $(1)
 endef
 
 define link_excuteable
 @echo "[LD]\t$(1) <= $(2)"
 $(Q)$(CC) -o $(1) $(2) $(APP_LDFLAGS) $(LDFLAGS)
+$(call strip_file,$(1))
 endef
 
 define link_static_library
 @echo "[AR]\t$(1) <= $(2)"
 $(Q)$(AR) cur $(1) $(2)
-$(call strip_file,$(1))
 endef
 
 define link_shared_library
