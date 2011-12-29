@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/bin/sh
 
 """exec" python -E $0 $@
 #"""
@@ -25,7 +25,7 @@ def pr_bold_info(message):
 	print "\033[1m%s\033[0m" % message
 
 def show_usage():
-	pr_bold_info("Usage: %s [options] output" % sys.argv[0])
+	pr_bold_info("Usage: %s [options] output" % os.path.basename(sys.argv[0]))
 	print "-i, -I, --input: source file directory"
 	print "-o, -O, --output: git repo root directory"
 	print "-u, -U, --url: target git server url"
