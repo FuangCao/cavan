@@ -1,0 +1,236 @@
+#!/usr/bin/python
+
+import sys, os, os.path
+from xml.dom.minidom import parse
+from getopt import getopt
+
+def pr_red_info(message):
+	print "\033[31m%s\033[0m" % message
+	
+def pr_green_info(message):
+	print "\033[32m%s\033[0m" % message
+
+def pr_blue_info(message):
+	print "\033[34m%s\033[0m" % message
+	
+def pr_bold_info(message):
+	print "\033[1m%s\033[0m" % message
+
+def system_command(command):
+	pr_blue_info(command)
+	if os.system(command) == 0:
+		return 0
+	return -1
+
+def show_usage():
+	command_name = os.path.basename(sys.argv[0])
+	pr_bold_info("Usage %s:" % command_name)
+	print "%s init [options] target" % command_name
+	print "-u, -U, --url: server url"
+	print "-i, -I, -s, -S, --input, --source: source path"
+	print "-b, -B, --branch: git branch"
+	print "-r, -R, --remote: git remote"
+	print "-m, -M, --manifest: manifest.xml path"
+
+class RepoServer:
+	def __init__(self):
+		self.mDomManifest = None
+		self.mGitBranch = ""
+		self.mRemoteName = ""
+		self.mServerUrl = ""
+		self.mSourcePath = ""
+		self.mTargetPath = ""
+
+	def SetRemoteName(self, name):
+		self.mTagRemote.setAttribute("name", name)
+		self.mTagDefault.setAttribute("remote", name)
+
+	def GetRemoteName(self):
+		return self.mTagRemote.getAttribute("name")
+
+	def SetServerUrl(self, url):
+		self.mTagRemote.setAttribute("fetch", url.rstrip("/"))
+
+	def GetServerUrl(self):
+		return self.mTagRemote.getAttribute("fetch").rstrip("/")
+
+	def SetGitBranch(self, branch):
+		self.mTagDefault.setAttribute("revision", branch)
+
+	def GetGitBranch(self):
+		return self.mTagDefault.getAttribute("revision")
+
+	def GetProjects(self):
+		return self.mTagManifest.getElementsByTagName("project")
+
+	def SetXmlManifest(self, xml):
+		dom = parse(xml)
+		manifest = dom.getElementsByTagName("manifest").item(0)
+
+		self.mTagRemote = manifest.getElementsByTagName("remote").item(0)
+		self.mTagDefault = manifest.getElementsByTagName("default").item(0)
+
+		if self.mRemoteName == "":
+			self.mRemoteName = self.GetRemoteName()
+		else:
+			self.SetRemoteName(self.mRemoteName)
+
+		if self.mServerUrl == "":
+			self.mServerUrl = self.GetServerUrl()
+		else:
+			self.SetServerUrl(self.mServerUrl)
+
+		if self.mGitBranch == "":
+			self.mGitBranch = self.GetGitBranch()
+		else:
+			self.SetGitBranch(self.mGitBranch)
+
+		self.mTagManifest = manifest
+		self.mDomManifest = dom
+
+	def SetSourcePath(self, pathname):
+		self.mSourcePath = os.path.abspath(pathname).rstrip("/")
+
+	def SetTargetPath(self, pathname):
+		self.mTargetPath = os.path.abspath(pathname).rstrip("/")
+
+	def WriteManifestTo(self, xml):
+		fd = file(xml, "w")
+		fd.write(self.mDomManifest.toprettyxml('\t', ''))
+		fd.close()
+
+	def RemoveAuto(self, pathname):
+		if os.path.isdir(pathname):
+			for fn in os.listdir(pathname):
+				self.RemoveAuto(os.path.join(pathname, fn))
+			os.rmdir(pathname)
+		elif os.path.exists(pathname):
+			os.remove(pathname)
+
+	def MakeDirAuto(self, pathname):
+		if not os.path.isdir(pathname):
+			self.MakeDirAuto(os.path.dirname(pathname))
+			os.mkdir(pathname)
+
+	def ReMakeDirAuto(self, pathname):
+		self.RemoveAuto(pathname)
+		self.MakeDirAuto(pathname)
+
+	def CreateEmptyGitRepo(self, abspath):
+		self.ReMakeDirAuto(abspath)
+		os.chdir(abspath)
+		if system_command("git init --bare --shared") < 0:
+			return -1
+		return 0
+
+	def PushGitRepoTo(self, source, dest):
+		pr_green_info("%s => %s" % (source, dest))
+		if self.CreateEmptyGitRepo(dest) < 0:
+			return -1
+
+		os.chdir(source)
+		if not os.path.isdir(".git"):
+			if system_command("git init && git add . -f") < 0:
+				return -1
+			if system_command("git commit -asm \"Add all file to git repo\"") < 0:
+				return -1
+		system_command("git branch %s" % self.mGitBranch)
+		if system_command("git push %s %s" % (dest, self.mGitBranch)) < 0:
+			return -1
+		return 0
+
+	def CreateManifestRepo(self, tempdir):
+		self.ReMakeDirAuto(tempdir)
+		self.SetServerUrl(self.mServerUrl)
+		self.SetRemoteName(self.mRemoteName)
+		self.SetGitBranch(self.mGitBranch)
+		self.WriteManifestTo(os.path.join(tempdir, "default.xml"))
+		return self.PushGitRepoTo(tempdir, "%s/platform/manifest.git" % self.mTargetPath)
+
+
+	def CreateRepoServer(self):
+		if self.mTargetPath == "":
+			pr_red_info("Output path = %s" % self.mTargetPath)
+			return -1
+
+		if self.mSourcePath == "":
+			self.SetSourcePath(".")
+
+		if self.mDomManifest == None:
+			self.SetXmlManifest(os.path.join(self.mSourcePath, ".repo/manifest.xml"))
+
+		if self.CreateManifestRepo("/tmp/manifest") < 0:
+			return -1
+
+		for project in self.GetProjects():
+			name = project.getAttribute("name")
+			path = project.getAttribute("path")
+			if name == "" or path == "":
+				pr_red_info("No name or path attribute found")
+				return -1
+			if self.PushGitRepoTo(os.path.join(self.mSourcePath, path), "%s/%s.git" % (self.mTargetPath, name)) < 0:
+				return -1
+		return 0
+
+	def RepoServerInit(self, argv):
+		opts, args = getopt(argv, "u:U:I:i:s:S:b:B:r:R:m:M", ["url=", "input=", "source=", "branch=", "remote=", "manifest="])
+
+		for opt in opts:
+			if opt[0] in ["-u", "-U", "--url"]:
+				self.mServerUrl = opt[1].rstrip("/")
+			elif opt[0] in ["-i", "-I", "-s", "-S", "--input", "--source"]:
+				self.SetSourcePath(opt[1])
+			elif opt[0] in ["-b", "-B", "--branch"]:
+				self.mGitBranch = opt[1]
+			elif opt[0] in ["-r", "-R", "--remote"]:
+				self.mRemoteName = opt[1]
+			elif opt[0] in ["-m", "-M", "--manifest"]:
+				self.SetXmlManifest(opt[1])
+			else:
+				pr_red_info("unknown option %s" % opt[0])
+				show_usage()
+				return -1
+
+		if len(args) != 1:
+			show_usage()
+			return -1
+
+		self.SetTargetPath(args[0])
+
+		return self.CreateRepoServer()
+
+	def RepoCommand(self, argv):
+		self.SetSourcePath(".")
+		xml = os.path.join(self.mSourcePath, ".repo/manifest.xml")
+		if self.SetXmlManifest(xml) < 0:
+			return -1
+		command_raw = " ".join(argv)
+		for project in self.GetProjects():
+			name = project.getAttribute("name")
+			path = project.getAttribute("path")
+			if name == "" or path == "":
+				pr_red_info("No name or path attribute found")
+				return -1
+			pr_green_info("project = %s" % path)
+
+		return 0
+
+if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		show_usage()
+		ret = -1
+	else:
+		server = RepoServer()
+		sub_command = sys.argv[1]
+		if sub_command == "init":
+			ret = server.RepoServerInit(sys.argv[2:])
+		elif sub_command == "command":
+			ret = server.RepoCommand(sys.argv[2:])
+		else:
+			pr_red_info("unknown sub command")
+			show_usage()
+			ret = -1
+	if ret < 0:
+		pr_red_info("Failed")
+	else:
+		pr_green_info("OK")
