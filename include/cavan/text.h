@@ -184,6 +184,8 @@ char *text_join_by_char(char *text[], size_t size1, char sep, void *buff, size_t
 size_t text_split_by_text(const char *text, const char *sep, void *buff, size_t size1, size_t size2);
 char *text_join_by_text(char *text[], size_t size1, const char *sep, void *buff, size_t size2);
 
+int text_array_find(const char *text, char *buff[], int size);
+
 // ============================================================
 
 static inline char *text_trans(char *text)

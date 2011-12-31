@@ -5,7 +5,7 @@
 #define DEFAULT_CONSOLE_DEVICE	"/dev/tty0"
 
 #define FONT_DEFAULT			0	//set all attributes to their defaults
-#define FONT_BOLD 				1	//set bold
+#define FONT_BOLD				1	//set bold
 
 #define FONT_BLACK_FOREGROUND	30	//set black foreground
 #define FONT_RED_FOREGROUND		31	//set red foreground
@@ -139,11 +139,12 @@ int set_tty_mode(int fd, int mode);
 int has_char(long sec, long usec);
 int timeout_getchar(long sec, long usec);
 
-void print_ntext(const char *text, int size);
-void print_title(const char *title, char sep, int size);
-void print_sep(int size);
+void print_ntext(const char *text, size_t size);
+void print_buffer(const char *buff, size_t size);
+void print_title(const char *title, char sep, size_t size);
+void print_sep(size_t size);
 
-void print_mem(const void *mem, int size);
+void print_mem(const void *mem, size_t size);
 
 
 int show_file(const char *dev_name, u64 start, u64 size);

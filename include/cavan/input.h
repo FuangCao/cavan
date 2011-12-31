@@ -53,7 +53,7 @@ struct input_absinfo {
 
 struct keycode_table_entry {
 	__u32 keycode;		/* e.g. KEY_A */
-	__u32 index;            /* Index for the given scan/key table, on EVIOCGKEYCODEBIG */
+	__u32 index;			/* Index for the given scan/key table, on EVIOCGKEYCODEBIG */
 	__u32 len;		/* Length of the scancode */
 	__u32 reserved[2];	/* Reserved for future usage */
 	char *scancode;		/* scancode, in machine-endian */

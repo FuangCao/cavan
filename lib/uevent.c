@@ -20,7 +20,7 @@ int uevent_init(struct uevent_desc *desc)
 	}
 
 	buffsize = KB(64);
-    ret = setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffsize, sizeof(buffsize));
+	ret = setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffsize, sizeof(buffsize));
 	if (ret < 0)
 	{
 		print_error("setsockopt");
@@ -54,70 +54,130 @@ void uevent_uninit(struct uevent_desc *desc)
 	close(desc->sockfd);
 }
 
-int get_device_uevent(struct uevent_desc *desc, const char *actions[], const char *typename, const char *type, char *devname)
+size_t uevent_split_base(const char *event, size_t event_len, char *props[], size_t size)
 {
+	size_t count = 0;
+	const char *event_end = event + event_len;
+
+	while (event < event_end && count < size)
+	{
+		if (IS_LETTER(*event))
+		{
+			props[count++] = (char *)event;
+		}
+
+		while (*event++);
+	}
+
+	return count;
+}
+
+char *uevent_get_property_base(char *props[], int prop_count, const char *prefix, char *buff)
+{
+	for (prop_count--; prop_count >= 0; prop_count--)
+	{
+		if (text_lhcmp(prefix, props[prop_count]) == 0)
+		{
+			text_copy(buff, props[prop_count] + text_len(prefix));
+
+			return buff;
+		}
+	}
+
+	return NULL;
+}
+
+int uevent_match_base(char *props[], int prop_count, struct uevent_filter *filter)
+{
+	int count;
+
+	for (prop_count--, count = filter->count; prop_count >= 0; prop_count--)
+	{
+		if (text_array_find(props[prop_count], filter->props, filter->count) >= 0)
+		{
+			if (--count == 0)
+			{
+				return 0;
+			}
+		}
+	}
+
+	return -1;
+}
+
+int get_device_uevent(struct uevent_desc *desc, struct uevent_filter *filters, size_t size)
+{
+	int ret;
 	int sockfd = desc->sockfd;
+	struct uevent_filter *p, *p_end;
+
+	p_end = filters + size;
 
 	while (1)
 	{
-		int i;
-		int ret;
-		char recvbuff[1024], *p, *end_p;
-		char option[32], devtype[32];
-
-		ret = recv(sockfd, recvbuff, sizeof(recvbuff), 0);
+		ret = recv(sockfd, desc->buff, sizeof(desc->buff), 0);
 		if (ret < 0)
 		{
 			print_error("recv");
 			return ret;
 		}
 
-		for (i = 0; actions[i] && text_lhcmp(actions[i], recvbuff); i++);
+		desc->buff[ret] = 0;
+		desc->prop_count = uevent_split_base(desc->buff, ret, desc->props, NELEM(desc->props));
 
-		if (actions[i] == NULL)
+		for (p = filters; p < p_end; p++)
 		{
-			continue;
-		}
-
-		p = recvbuff;
-		end_p = recvbuff + ret;
-		devtype[0] = devname[0] = 0;
-
-		while (1)
-		{
-			while (*p++);
-
-			if (p >= end_p)
+			if (uevent_match_base(desc->props, desc->prop_count, p) == 0)
 			{
-				break;
-			}
-
-			if (text_lhcmp(typename, p) == 0)
-			{
-				parse_parameter_base(p, option, devtype);
-
-				if (devname[0])
-				{
-					break;
-				}
-			}
-			else if (text_lhcmp("DEVNAME", p) == 0)
-			{
-				parse_parameter_base(p, option, devname);
-
-				if (devtype[0])
-				{
-					break;
-				}
+				return 0;
 			}
 		}
-
-		if (devname[0] == 0 || text_cmp(type, devtype))
-		{
-			continue;
-		}
-
-		return 0;
 	}
+
+	return -1;
 }
 
+int get_disk_add_uevent(struct uevent_desc *desc)
+{
+	struct uevent_filter filter =
+	{
+		.props =
+		{
+			"ACTION=add",
+			"DEVTYPE=disk",
+		},
+		.count = 2,
+	};
+
+	return get_device_uevent(desc, &filter, 1);
+}
+
+int get_partition_add_uevent(struct uevent_desc *desc)
+{
+	struct uevent_filter filter =
+	{
+		.props =
+		{
+			"ACTION=add",
+			"DEVTYPE=partition",
+		},
+		.count = 2,
+	};
+
+	return get_device_uevent(desc, &filter, 1);
+}
+
+int get_block_device_remove_uevent(struct uevent_desc *desc)
+{
+	struct uevent_filter filter =
+	{
+		.props =
+		{
+			"ACTION=remove",
+			"SUBSYSTEM=block",
+		},
+		.count = 2,
+	};
+
+	return get_device_uevent(desc, &filter, 1);
+}

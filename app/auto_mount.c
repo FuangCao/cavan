@@ -19,16 +19,24 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
-		char devname[64], devpath[32];
+		char devpath[1024];
 
-		ret = get_partition_add_uevent(&udesc, devname);
+		ret = get_partition_add_uevent(&udesc);
 		if (ret < 0)
 		{
 			error_msg("get_partition_add_uevent");
 			break;
 		}
 
-		text_path_cat(devpath, "/dev", devname);
+		if (uevent_get_propery_devname(&udesc, devpath) == NULL)
+		{
+			continue;
+		}
+
+		if (file_test(devpath, "b") < 0)
+		{
+			continue;
+		}
 
 		println("partition \"%s\" added", devpath);
 

@@ -2470,3 +2470,16 @@ char *text_join_by_text(char *text[], size_t size1, const char *sep, void *buff,
 
 	return buff;
 }
+
+int text_array_find(const char *text, char *buff[], int size)
+{
+	for (size--; size >= 0; size--)
+	{
+		if (text_cmp(text, buff[size]) == 0)
+		{
+			return size;
+		}
+	}
+
+	return -1;
+}

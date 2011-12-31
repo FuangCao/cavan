@@ -177,23 +177,26 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
-		char devname[64], devpath[1024];
+		char devpath[1024];
 
-		ret = get_disk_add_uevent(&udesc, devname);
+		ret = get_disk_add_uevent(&udesc);
 		if (ret < 0)
 		{
 			error_msg("get_disk_add_uevent");
 			break;
 		}
 
-		text_path_cat(devpath, "/dev", devname);
-
-		println("disk \"%s\" added", devpath);
-
-		if (file_wait(devpath, "b", 10) < 0)
+		if (uevent_get_propery_devname(&udesc, devpath) == NULL)
 		{
 			continue;
 		}
+
+		if (file_test(devpath, "b") < 0)
+		{
+			continue;
+		}
+
+		println("disk \"%s\" added", devpath);
 
 		visual_ssleep(delay);
 
@@ -201,7 +204,7 @@ int main(int argc, char *argv[])
 
 		for (p = descs; p < end_p; p++)
 		{
-			mem_copy(p->out + 5, devname, 3);
+			mem_copy(p->out + 5, devpath + 5, 3);
 
 			if (file_test(p->out, "b") < 0)
 			{

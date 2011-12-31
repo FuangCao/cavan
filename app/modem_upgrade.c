@@ -337,11 +337,11 @@ static int upgrade_modem(const char *resource)
 	pthread_create(&usb_thread, NULL, set_usb_power_handle, NULL);
 
 	waitpid(pid, &ret, 0);
-    if (!WIFEXITED(ret) || WEXITSTATUS(ret) != 0)
+	if (!WIFEXITED(ret) || WEXITSTATUS(ret) != 0)
 	{
 		error_msg("upgrade modem failed");
 		return -1;
-    }
+	}
 
 	return 0;
 }

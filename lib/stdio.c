@@ -176,7 +176,7 @@ char *sprintln(char *buff, const char *fmt, ...)
 	return buff;
 }
 
-void print_ntext(const char *text, int size)
+void print_ntext(const char *text, size_t size)
 {
 	if (console_fp)
 	{
@@ -186,6 +186,13 @@ void print_ntext(const char *text, int size)
 
 	fwrite(text, 1, size, stdout);
 	fflush(stdout);
+}
+
+void print_buffer(const char *buff, size_t size)
+{
+	print("buff = ");
+	print_ntext(buff, size);
+	print_char('\n');
 }
 
 void vprint(const char *fmt, va_list ap)
@@ -307,7 +314,7 @@ void print_color_text(int color, const char *fmt, ...)
 	va_end(ap);
 }
 
-void print_sep(int size)
+void print_sep(size_t size)
 {
 	char buff[size + 1];
 
@@ -398,7 +405,7 @@ out_close_fd:
 	return ret;
 }
 
-void print_title(const char *title, char sep, int size)
+void print_title(const char *title, char sep, size_t size)
 {
 	int i;
 
@@ -424,13 +431,13 @@ void print_title(const char *title, char sep, int size)
 	print_char('\n');
 }
 
-void print_mem(const void *mem, int size)
+void print_mem(const void *mem, size_t size)
 {
 	const char *p, *endp;
 
 	for (p = mem, endp = p + size; p < endp; p++)
 	{
-		println("%02x", *p);
+		print("%02x", *p);
 	}
 
 	print_char('\n');

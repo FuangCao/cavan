@@ -172,23 +172,26 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
-		char diskname[64], diskpath[1024];
+		char diskpath[1024];
 
-		ret = get_disk_add_uevent(&udesc, diskname);
+		ret = get_disk_add_uevent(&udesc);
 		if (ret < 0)
 		{
 			error_msg("get_disk_add_uevent");
 			break;
 		}
 
-		text_path_cat(diskpath, "/dev", diskname);
-
-		println("disk \"%s\" inserted", diskpath);
-
-		if (file_wait(diskpath, "b", 10) < 0)
+		if (uevent_get_propery_devname(&udesc, diskpath) == NULL)
 		{
 			continue;
 		}
+
+		if (file_test(diskpath, "b") < 0)
+		{
+			continue;
+		}
+
+		println("disk \"%s\" inserted", diskpath);
 
 		if (delay)
 		{
@@ -204,7 +207,7 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
-			mem_copy(p->out + 5, diskname, 3);
+			mem_copy(p->out + 5, diskpath + 5, 3);
 
 			if (file_test(p->out, "b") < 0)
 			{
