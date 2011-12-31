@@ -1,0 +1,128 @@
+#!/bin/sh
+
+"""exec" python -E $0 $@
+#"""
+
+import sys, os
+import pygtk
+pygtk.require('2.0')
+from gtk import *
+
+class MainWin:
+	mConfigs = {}
+
+	def __init__(self):
+		self.mCommandPath = sys.argv[0]
+		self.mCavanPath = os.path.dirname(self.mCommandPath)
+
+		win = Window(WINDOW_TOPLEVEL)
+		self.mMainWin = win
+		win.set_border_width(10)
+		win.set_title("Cavan configure")
+		win.resize(380, 100)
+		win.connect("destroy", self.OnWinDestroy)
+
+		vbox = VBox(False, 2)
+		win.add(vbox)
+
+		combo_style = EXPAND | FILL
+
+		frame = Frame("Build Option")
+		vbox.pack_start(frame, False, False, 10)
+
+		table = Table(3, 2, False)
+		frame.add(table)
+
+		table.attach(Label("Architecture:"), 0, 1, 0, 1, 0, 0, 5, 5)
+		combo = combo_box_new_text()
+		combo.append_text("host")
+		combo.append_text("arm")
+		combo.append_text("x86")
+		combo.set_active(0)
+		combo.connect("changed", self.ArchChanged)
+		table.attach(combo, 1, 2, 0, 1, combo_style, combo_style, 5, 5)
+		self.mComboArch = combo
+
+		table.attach(Label("Toolchian:"), 0, 1, 1, 2, combo_style, combo_style, 5, 5)
+		combo = combo_box_entry_new_text()
+		entry = combo.get_child()
+		combo.append_text("none")
+		combo.append_text("arm-linux-")
+		combo.append_text("arm-cavan-linux-gnueabi-")
+		combo.append_text("arm-none-linux-gnueabi-")
+		combo.set_active(0)
+		self.mComboCrossCompile = combo
+		table.attach(combo, 1, 2, 1, 2, combo_style, combo_style, 5, 5)
+
+		table.attach(Label("Build Type:"), 0, 1, 2, 3, combo_style, combo_style, 5, 5)
+		combo = combo_box_new_text()
+		combo.append_text("debug")
+		combo.append_text("release")
+		combo.append_text("static")
+		combo.set_active(0)
+		self.mComboBuildType = combo
+		table.attach(combo, 1, 2, 2, 3, combo_style, combo_style, 5, 5)
+
+		hbox = HBox(False, 0)
+		vbox.pack_start(hbox, False, False, 0)
+
+		button = Button("Build")
+		button.set_size_request(100, 30)
+		button.connect("clicked", self.OnBuildClicked)
+		hbox.pack_start(button, True, False, 0)
+
+		button = Button("Cancel")
+		button.set_size_request(100, 30)
+		button.connect("clicked", self.OnCancelClicked)
+		hbox.pack_start(button, True, False, 0)
+
+		separator = HSeparator()
+		vbox.pack_start(separator, False, True, 10)
+
+		win.show_all()
+		
+	def GenMakefile(self):
+		lines = []
+		lines.append("ARCH = %s\n" % self.mComboArch.get_active_text())
+
+		cross_compile = self.mComboCrossCompile.get_active_text()
+		if cross_compile == "none":
+			cross_compile = ""
+		lines.append("CROSS_COMPILE = %s\n" % cross_compile)
+
+		lines.append("BUILD_TYPE = %s\n" % self.mComboBuildType.get_active_text())
+		lines.append("Q = @\n")
+		lines.append("BUILD_ENTRY = app\n")
+		lines.append("\ninclude build/core/main2.mk")
+
+
+		if len(sys.argv) > 1:
+			makefile_path = sys.argv[1]
+		else:
+			makefile_path = os.path.join(self.mCavanPath, "Makefile")
+
+		print "Writing file %s" % makefile_path
+
+		fd = file(makefile_path, "w")
+		fd.writelines(lines)
+		fd.close()
+		main_quit()
+
+	def OnBuildClicked(self, widget, data = None):
+		self.GenMakefile()
+
+	def OnCancelClicked(self, widget, data = None):
+		main_quit()
+
+	def OnWinDestroy(self, widget, data = None):
+		main_quit()
+
+	def ArchChanged(self, widget):
+		self.mConfigs["ARCH"] = widget.get_active_text().lower()
+
+	def MainLoop(self):
+		main()
+
+if __name__ == "__main__":
+	win = MainWin()
+	win.MainLoop()
