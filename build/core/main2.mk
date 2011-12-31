@@ -51,7 +51,7 @@ TARGET_BINS = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_BIN)/$(CAVAN_NAME)
 
 ifeq "$(filter debug static release,$(BUILD_TYPE))" ""
 $(warning this project can only build as: debug static release)
-$(error unknown BUILD_TYPE = \"$(BUILD_TYPE)\")
+$(error unknown BUILD_TYPE = "$(BUILD_TYPE)")
 endif
 
 ifeq "$(BUILD_TYPE)" "debug"
