@@ -17,7 +17,7 @@ def pr_bold_info(message):
 	print "\033[1m%s\033[0m" % message
 
 def system_command(command):
-	pr_blue_info(command)
+	pr_bold_info("Executing command `%s'" % command)
 	if os.system(command) == 0:
 		return 0
 	return -1
@@ -49,6 +49,8 @@ class RepoServer:
 		return self.mTagRemote.getAttribute("name")
 
 	def SetServerUrl(self, url):
+		if url == "":
+			url = ".."
 		self.mTagRemote.setAttribute("fetch", url.rstrip("/"))
 
 	def GetServerUrl(self):
@@ -63,7 +65,7 @@ class RepoServer:
 	def GetProjects(self):
 		return self.mTagManifest.getElementsByTagName("project")
 
-	def SetXmlManifest(self, xml):
+	def ParseXmlManifest(self, xml):
 		dom = parse(xml)
 		manifest = dom.getElementsByTagName("manifest").item(0)
 
@@ -87,6 +89,8 @@ class RepoServer:
 
 		self.mTagManifest = manifest
 		self.mDomManifest = dom
+
+		return 0
 
 	def SetSourcePath(self, pathname):
 		self.mSourcePath = os.path.abspath(pathname).rstrip("/")
@@ -147,7 +151,6 @@ class RepoServer:
 		self.WriteManifestTo(os.path.join(tempdir, "default.xml"))
 		return self.PushGitRepoTo(tempdir, "%s/platform/manifest.git" % self.mTargetPath)
 
-
 	def CreateRepoServer(self):
 		if self.mTargetPath == "":
 			pr_red_info("Output path = %s" % self.mTargetPath)
@@ -157,7 +160,7 @@ class RepoServer:
 			self.SetSourcePath(".")
 
 		if self.mDomManifest == None:
-			self.SetXmlManifest(os.path.join(self.mSourcePath, ".repo/manifest.xml"))
+			self.ParseXmlManifest(os.path.join(self.mSourcePath, ".repo/manifest.xml"))
 
 		if self.CreateManifestRepo("/tmp/manifest") < 0:
 			return -1
@@ -185,7 +188,7 @@ class RepoServer:
 			elif opt[0] in ["-r", "-R", "--remote"]:
 				self.mRemoteName = opt[1]
 			elif opt[0] in ["-m", "-M", "--manifest"]:
-				self.SetXmlManifest(opt[1])
+				self.ParseXmlManifest(opt[1])
 			else:
 				pr_red_info("unknown option %s" % opt[0])
 				show_usage()
@@ -202,7 +205,8 @@ class RepoServer:
 	def RepoCommand(self, argv):
 		self.SetSourcePath(".")
 		xml = os.path.join(self.mSourcePath, ".repo/manifest.xml")
-		if self.SetXmlManifest(xml) < 0:
+		if self.ParseXmlManifest(xml) < 0:
+			pr_red_info("parse xml %s failed" % xml)
 			return -1
 		command_raw = " ".join(argv)
 		for project in self.GetProjects():
@@ -211,14 +215,18 @@ class RepoServer:
 			if name == "" or path == "":
 				pr_red_info("No name or path attribute found")
 				return -1
-			pr_green_info("project = %s" % path)
+			pr_bold_info("Entering directory `%s'" % path)
+			os.chdir(os.path.join(self.mSourcePath, path))
+			command = command_raw.replace("{name}", name).replace("{path}", path)
+			if system_command(command) < 0:
+				return -1
 
 		return 0
 
 if __name__ == "__main__":
 	if len(sys.argv) < 2:
 		show_usage()
-		ret = -1
+		sys.exit(-1)
 	else:
 		server = RepoServer()
 		sub_command = sys.argv[1]
@@ -229,8 +237,9 @@ if __name__ == "__main__":
 		else:
 			pr_red_info("unknown sub command")
 			show_usage()
-			ret = -1
+			sys.exit(-1)
 	if ret < 0:
 		pr_red_info("Failed")
+		sys.exit(-1)
 	else:
 		pr_green_info("OK")
