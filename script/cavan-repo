@@ -31,9 +31,11 @@ def show_usage():
 	print "-b, -B, --branch: git branch"
 	print "-r, -R, --remote: git remote"
 	print "-m, -M, --manifest: manifest.xml path"
+	print "-f, -F, --force: force remove target git repo if it exists"
 
 class RepoServer:
 	def __init__(self):
+		self.mForce = False
 		self.mDomManifest = None
 		self.mGitBranch = ""
 		self.mRemoteName = ""
@@ -120,16 +122,20 @@ class RepoServer:
 		self.RemoveAuto(pathname)
 		self.MakeDirAuto(pathname)
 
-	def CreateEmptyGitRepo(self, abspath):
-		self.ReMakeDirAuto(abspath)
-		os.chdir(abspath)
-		if system_command("git init --bare --shared") < 0:
-			return -1
+	def CreateEmptyGitRepo(self, abspath, force):
+		if force or not os.path.isdir(abspath):
+			self.ReMakeDirAuto(abspath)
+			os.chdir(abspath)
+			if system_command("git init --bare --shared") < 0:
+				return -1
+		fd = file(os.path.join(abspath, "HEAD"), "w")
+		fd.write("ref: refs/heads/%s" % self.mGitBranch)
+		fd.close()
 		return 0
 
-	def PushGitRepoTo(self, source, dest):
+	def PushGitRepoTo(self, source, dest, force):
 		pr_green_info("%s => %s" % (source, dest))
-		if self.CreateEmptyGitRepo(dest) < 0:
+		if self.CreateEmptyGitRepo(dest, force) < 0:
 			return -1
 
 		os.chdir(source)
@@ -149,7 +155,7 @@ class RepoServer:
 		self.SetRemoteName(self.mRemoteName)
 		self.SetGitBranch(self.mGitBranch)
 		self.WriteManifestTo(os.path.join(tempdir, "default.xml"))
-		return self.PushGitRepoTo(tempdir, "%s/platform/manifest.git" % self.mTargetPath)
+		return self.PushGitRepoTo(tempdir, "%s/platform/manifest.git" % self.mTargetPath, True)
 
 	def CreateRepoServer(self):
 		if self.mTargetPath == "":
@@ -171,12 +177,12 @@ class RepoServer:
 			if name == "" or path == "":
 				pr_red_info("No name or path attribute found")
 				return -1
-			if self.PushGitRepoTo(os.path.join(self.mSourcePath, path), "%s/%s.git" % (self.mTargetPath, name)) < 0:
+			if self.PushGitRepoTo(os.path.join(self.mSourcePath, path), "%s/%s.git" % (self.mTargetPath, name), self.mForce) < 0:
 				return -1
 		return 0
 
 	def RepoServerInit(self, argv):
-		opts, args = getopt(argv, "u:U:I:i:s:S:b:B:r:R:m:M", ["url=", "input=", "source=", "branch=", "remote=", "manifest="])
+		opts, args = getopt(argv, "u:U:I:i:s:S:b:B:r:R:m:M:fF", ["url=", "input=", "source=", "branch=", "remote=", "manifest=", "--force"])
 
 		for opt in opts:
 			if opt[0] in ["-u", "-U", "--url"]:
@@ -189,6 +195,8 @@ class RepoServer:
 				self.mRemoteName = opt[1]
 			elif opt[0] in ["-m", "-M", "--manifest"]:
 				self.ParseXmlManifest(opt[1])
+			elif opt[0] in ["-f", "-F", "--force"]:
+				self.mForce = True
 			else:
 				pr_red_info("unknown option %s" % opt[0])
 				show_usage()
