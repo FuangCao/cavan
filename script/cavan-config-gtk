@@ -9,8 +9,6 @@ import gtk
 
 class MainWin:
 	def __init__(self):
-		self.mCommandPath = sys.argv[0]
-		self.mCavanPath = os.path.dirname(self.mCommandPath)
 		self.mEventLock = False
 
 		win = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -23,8 +21,8 @@ class MainWin:
 		vbox = gtk.VBox(False, 2)
 		win.add(vbox)
 
-		frame = gtk.Frame("Build Option")
-		vbox.pack_start(frame, False, False, 10)
+		frame = gtk.Frame("General Option")
+		vbox.pack_start(frame, False, False, 0)
 
 		table = gtk.Table(4, 2, False)
 		frame.add(table)
@@ -71,6 +69,22 @@ class MainWin:
 		self.mComboBuildEntry = combo
 		table.attach(combo, 1, 2, 3, 4, combo_style, combo_style, 5, 5)
 
+		frame = gtk.Frame("Compile Option")
+		vbox.pack_start(frame, False, False, 10)
+
+		table = gtk.Table(2, 2, False)
+		frame.add(table)
+
+		table.attach(gtk.Label("CFLAGS:"), 0, 1, 0, 1, combo_style, combo_style, 5, 5)
+		entry = gtk.Entry()
+		self.mEntryCflags = entry
+		table.attach(entry, 1, 2, 0, 1, combo_style, combo_style, 5, 5)
+
+		table.attach(gtk.Label("LDFLAGS:"), 0, 1, 1, 2, combo_style, combo_style, 5, 5)
+		entry = gtk.Entry()
+		self.mEntryLdflags = entry
+		table.attach(entry, 1, 2, 1, 2, combo_style, combo_style, 5, 5)
+
 		hbox = gtk.HBox(False, 0)
 		vbox.pack_start(hbox, False, False, 0)
 
@@ -88,6 +102,10 @@ class MainWin:
 		vbox.pack_start(separator, False, True, 10)
 
 		win.show_all()
+
+	def GetCavanRoot(self):
+		script_path = os.path.dirname(sys.argv[0])
+		return os.path.dirname(script_path)
 
 	def GenMakefile(self):
 		lines = []
@@ -109,13 +127,15 @@ class MainWin:
 
 		lines.append("BUILD_TYPE = %s\n" % self.mComboBuildType.get_active_text())
 		lines.append("BUILD_ENTRY = %s\n" % build_entry)
+		lines.append("CFLAGS = %s\n" % self.mEntryCflags.get_text())
+		lines.append("LDFLAGS = %s\n" % self.mEntryLdflags.get_text())
 		lines.append("Q = @\n")
 		lines.append("\ninclude build/core/main2.mk")
 
 		if len(sys.argv) > 1:
 			makefile_path = sys.argv[1]
 		else:
-			makefile_path = os.path.join(self.mCavanPath, "Makefile")
+			makefile_path = os.path.join(self.GetCavanRoot(), "Makefile")
 
 		print "Writing file %s" % makefile_path
 
