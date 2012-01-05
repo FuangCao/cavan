@@ -4,21 +4,22 @@
  * Date: Tue Jan  3 15:37:38 CST 2012
  */
 
+#include <stdlib.h>
 #include "kconfig.h"
 
-void ncurses_fill_line(WINDOW *win, int x, int y, int width, int attr, chtype ch)
+void ncurses_fill_character(WINDOW *win, chtype ch, size_t count)
 {
-	int right;
-
-	wattrset(win, attr);
-	wmove(win, y, x);
-
-	for (right = x + width; x < right; x++)
+	while (count--)
 	{
 		waddch(win, ch);
 	}
+}
 
-	wrefresh(win);
+void ncurses_fill_line(WINDOW *win, int x, int y, int width, int attr, chtype ch)
+{
+	wattrset(win, attr);
+	wmove(win, y, x);
+	ncurses_fill_character(win, ch, width);
 }
 
 void ncurses_fill_column(WINDOW *win, int x, int y, int height, int attr, chtype ch)
@@ -32,8 +33,6 @@ void ncurses_fill_column(WINDOW *win, int x, int y, int height, int attr, chtype
 		wmove(win, y, x);
 		waddch(win, ch);
 	}
-
-	wrefresh(win);
 }
 
 void ncurses_fill_rectangle(WINDOW *win, int x, int y, int width, int height, int attr, chtype ch)
@@ -51,8 +50,6 @@ void ncurses_fill_rectangle(WINDOW *win, int x, int y, int width, int height, in
 			waddch(win, ch);
 		}
 	}
-
-	wrefresh(win);
 }
 
 void ncurses_draw_rectangle(WINDOW *win, int x, int y, int width, int height, int attr1, int attr2)
@@ -66,27 +63,46 @@ void ncurses_draw_rectangle(WINDOW *win, int x, int y, int width, int height, in
 	ncurses_fill_column(win, x + width - 1, y + 1, height - 2, attr2, ACS_VLINE);
 	mvwaddch(win, y, x + width - 1, ACS_URCORNER);
 	mvwaddch(win, y + height - 1, x + width - 1, ACS_LRCORNER);
-
-	wrefresh(win);
 }
 
-void ncurses_set_title(WINDOW *win, const char *title, int attr1, int attr2)
+void ncurses_init(void)
 {
-	int width = getmaxx(win);
-	int length = strlen(title);
+	initscr();
+	cbreak();
+	noecho();
 
-	if (length + 4 < width)
+	start_color();
+	init_pair(KCONFIG_COLOR_WHITE_WHITE, COLOR_WHITE, COLOR_WHITE);
+	init_pair(KCONFIG_COLOR_WHITE_BLACK, COLOR_BLACK, COLOR_WHITE);
+	init_pair(KCONFIG_COLOR_WHITE_RED, COLOR_RED, COLOR_WHITE);
+	init_pair(KCONFIG_COLOR_WHITE_YELLOW, COLOR_YELLOW, COLOR_WHITE);
+	init_pair(KCONFIG_COLOR_WHITE_BLUE, COLOR_BLUE, COLOR_WHITE);
+	init_pair(KCONFIG_COLOR_BLUE_WHITE, COLOR_WHITE, COLOR_BLUE);
+	init_pair(KCONFIG_COLOR_BLUE_BLACK, COLOR_BLACK, COLOR_BLUE);
+	init_pair(KCONFIG_COLOR_BLUE_YELLOW, COLOR_YELLOW, COLOR_BLUE);
+	init_pair(KCONFIG_COLOR_BLACK_BLACK, COLOR_BLACK, COLOR_BLACK);
+
+	keypad(stdscr, TRUE);
+	ncurses_fill_rectangle(stdscr, 0, 0, COLS, LINES, COLOR_PAIR(KCONFIG_COLOR_BLUE_WHITE), ' ');
+}
+
+void ncurses_set_title(WINDOW *win, int x, int y, int width, const char *title, int attr1, int attr2)
+{
+	int length = strlen(title) + 2;
+
+	ncurses_fill_line(win, x, y, width, attr1, ACS_HLINE);
+
+	if (length > width)
 	{
-		int x = (width - length) >> 1;
-
-		ncurses_fill_line(win, 1, 0, width - 2, attr1, ACS_HLINE);
-
-		wattrset(win, attr2);
-		wmove(win, 0, x);
-		waddch(win, ' ');
-		waddstr(win, title);
-		waddch(win, ' ');
+		return;
 	}
+
+	x = (width - length) >> 1;
+	wattrset(win, attr2);
+	wmove(win, 0, x);
+	waddch(win, ' ');
+	waddstr(win, title);
+	waddch(win, ' ');
 }
 
 void ncurses_draw_border(WINDOW *win, const char *title, int attr1, int attr2, int attr3)
@@ -100,19 +116,7 @@ void ncurses_draw_border(WINDOW *win, const char *title, int attr1, int attr2, i
 
 	if (title)
 	{
-		int lenght = strlen(title);
-
-		if (lenght < width)
-		{
-			int x = (width - lenght - 2) >> 1;
-
-			wattrset(win, attr3);
-			wmove(win, 0, x);
-			waddch(win, ' ');
-			waddstr(win, title);
-			waddch(win, ' ');
-			wrefresh(win);
-		}
+		ncurses_set_title(win, 1, 0, width - 2, title, attr1, attr3);
 	}
 }
 
@@ -125,8 +129,6 @@ void ncurses_draw_separate(WINDOW *win, int y, int width, int attrs[])
 
 	wattrset(win, attrs[1]);
 	mvwaddch(win, y, width - 1, ACS_RTEE);
-
-	wrefresh(win);
 }
 
 int ncurses_print_text(WINDOW *win, int x, int y, int width, const char *text, int attr)
@@ -140,7 +142,6 @@ int ncurses_print_text(WINDOW *win, int x, int y, int width, const char *text, i
 	if (length < width)
 	{
 		mvwaddstr(win, y, (width - length) >> 1, text);
-		wrefresh(win);
 		return y;
 	}
 
@@ -151,12 +152,10 @@ int ncurses_print_text(WINDOW *win, int x, int y, int width, const char *text, i
 		y++;
 	}
 
-	wrefresh(win);
-
 	return y;
 }
 
-WINDOW *ncurses_new_window(WINDOW *orig, int x, int y, int width, int height, const char *title, const char *prompt, int attrs[], size_t attr_count)
+WINDOW *ncurses_new_window(WINDOW *orig, int x, int y, int width, int height, const char *title, int attrs[], size_t attr_count)
 {
 	WINDOW *win;
 
@@ -187,12 +186,6 @@ WINDOW *ncurses_new_window(WINDOW *orig, int x, int y, int width, int height, co
 	ncurses_fill_rectangle(win, 1, 1, width - 2, height - 2, attrs[0], ' ');
 	ncurses_draw_border(win, title, attrs[0], attrs[1], attrs[2]);
 
-	if (prompt)
-	{
-		ncurses_print_text(win, 2, 1, width - 4, prompt, attrs[1]);
-		ncurses_draw_separate(win, getcury(win) + 1, width, attrs);
-	}
-
 	keypad(win, TRUE);
 
 	return win;
@@ -210,8 +203,6 @@ void ncurses_draw_button(WINDOW *win, int x, int y, const char *text, int attr1,
 	waddstr(win, text + 1);
 	wattrset(win, attr1);
 	waddstr(win, " >");
-
-	wrefresh(win);
 }
 
 void ncurses_draw_buttons(WINDOW *win, int y, int width, const char *texts[], size_t count, int selected)
@@ -242,14 +233,12 @@ void ncurses_draw_buttons(WINDOW *win, int y, int width, const char *texts[], si
 	}
 
 	wmove(win, y, sx);
-
-	wrefresh(win);
 }
 
 int ncurses_show_message_box(int width, int height, const char *prompt, const char *buttons[], size_t count)
 {
 	int x, y;
-	int select;
+	int state;
 	WINDOW *win;
 	int attrs[] =
 	{
@@ -259,6 +248,8 @@ int ncurses_show_message_box(int width, int height, const char *prompt, const ch
 		COLOR_PAIR(KCONFIG_COLOR_BLACK_BLACK),
 	};
 
+	ncurses_init();
+
 	if (width < 1 || height < 1 || width > COLS || height > LINES)
 	{
 		return -1;
@@ -267,34 +258,44 @@ int ncurses_show_message_box(int width, int height, const char *prompt, const ch
 	x = (COLS - width) >> 1;
 	y = (LINES - height) >> 1;
 
-	win = ncurses_new_window(NULL, x, y, width, height, NULL, prompt, attrs, NELEM(attrs));
+	win = ncurses_new_window(NULL, x, y, width, height, NULL, attrs, NELEM(attrs));
 	if (win == NULL)
 	{
 		return -1;
 	}
 
-	select = 0;
+	if (prompt)
+	{
+		y = ncurses_print_text(win, 2, 1, width - 4, prompt, attrs[1]);
+		ncurses_draw_separate(win, y + 1, width, attrs);
+	}
+
+	state = 0;
+	wrefresh(stdscr);
 
 	while (1)
 	{
-		ncurses_draw_buttons(win, 3, width - 2, buttons, count, select);
+		ncurses_draw_buttons(win, 3, width - 2, buttons, count, state);
+		wrefresh(win);
 
 		switch (wgetch(win))
 		{
-		case KEY_LEFT:
+		case KEY_UP:
 		case KEY_TAB:
-			select--;
-			if (select < 0)
+		case KEY_LEFT:
+			state--;
+			if (state < 0)
 			{
-				select = count - 1;
+				state = count - 1;
 			}
 			break;
 
+		case KEY_DOWN:
 		case KEY_RIGHT:
-			select++;
-			if (select >= count)
+			state++;
+			if (state >= count)
 			{
-				select = 0;
+				state = 0;
 			}
 			break;
 
@@ -312,7 +313,7 @@ int ncurses_show_message_box(int width, int height, const char *prompt, const ch
 
 		case '\n':
 			delwin(win);
-			return select;
+			return state;
 
 		case KEY_ESC:
 			delwin(win);
@@ -333,12 +334,26 @@ int ncurses_show_yes_no_dialog(int width, int height, const char *prompt)
 	return ncurses_show_message_box(width, height, prompt, buttons, NELEM(buttons));
 }
 
-void ncurses_draw_menu_item(WINDOW *win, int x, int y, int width, struct ncurses_menu_item *item, int current)
+// ================================================================================
+
+const char *kconfig_state_tostring(enum kconfig_state state)
+{
+	switch (state)
+	{
+	case KCONFIG_STATE_SELECTED:
+		return "[*]";
+	case KCONFIG_STATE_DESELED:
+		return "[ ]";
+	default:
+		return "[-]";
+	}
+}
+
+void ncurses_draw_menu_item_base(WINDOW *win, struct kconfig_menu_item *item, int selected)
 {
 	int attr1, attr2;
-	char buff[1024];
 
-	if (current)
+	if (selected)
 	{
 		attr1 = COLOR_PAIR(KCONFIG_COLOR_BLUE_WHITE);
 		attr2 = COLOR_PAIR(KCONFIG_COLOR_BLUE_YELLOW);
@@ -350,29 +365,118 @@ void ncurses_draw_menu_item(WINDOW *win, int x, int y, int width, struct ncurses
 	}
 
 	wattrset(win, attr1);
-	wmove(win, y, x);
-	sprintf(buff, "[%c]   ", item->select);
-	waddstr(win, buff);
+	wmove(win, item->y, item->x);
+	waddstr(win, kconfig_state_tostring(item->state));
+	ncurses_fill_character(win, ' ', (item->level << 1) + 1);
 	wattrset(win, attr2);
 	waddch(win, item->text[0]);
 	wattrset(win, attr1);
-	waddnstr(win, item->text + 1, width - 8);
+	waddnstr(win, item->text + 1, item->width - 8);
 }
 
-void ncurses_draw_menu(WINDOW *win, int x, int y, int width, int height, struct ncurses_menu_item items[], size_t count, int current)
+void ncurses_draw_menu_base(WINDOW *win, struct kconfig_menu_descriptor *desc, int y, int level, struct cavan_list_node *head)
 {
-	int i;
-	int bottom;
+	struct cavan_list_node *node;
+	struct kconfig_menu_item *item;
 
-	for (i = 0, bottom = y + height; i < count && y < bottom; i++, y++)
+	if (head == NULL)
 	{
-		ncurses_draw_menu_item(win, x, y, width, items + i, i == current);
+		return;
 	}
 
-	wrefresh(win);
+	for (node = head; ; node = node->next)
+	{
+		item = list_node_to_menu_item(node);
+
+		item->x = desc->x;
+		item->y = y;
+		item->level = level;
+		item->width = desc->width;
+		ncurses_draw_menu_item_base(win, item, 0);
+
+		if (item->state != KCONFIG_STATE_DESELED)
+		{
+			ncurses_draw_menu_base(win, desc, y + 1, level + 1, item->child);
+		}
+
+		if (node->next == head)
+		{
+			break;
+		}
+
+		y = getcury(win) + 1;
+	}
 }
 
-int ncurses_show_menu_box(const char *title, const char *prompt, struct ncurses_menu_item items[], size_t count)
+struct kconfig_menu_item *list_node_to_menu_item(struct cavan_list_node *node)
+{
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	return GET_STRUCT_POINTER(struct kconfig_menu_item, list_node, node);
+}
+
+void ncurses_draw_menu(WINDOW *win, struct kconfig_menu_descriptor *desc)
+{
+	ncurses_fill_rectangle(win, desc->x, desc->y, desc->width, desc->height, COLOR_PAIR(KCONFIG_COLOR_WHITE_WHITE), ' ');
+	ncurses_draw_menu_base(win, desc, desc->y, 0, desc->head);
+}
+
+struct kconfig_menu_item *kconfig_menu_get_next_item(struct kconfig_menu_item *curr_item)
+{
+	struct cavan_list_node *node;
+
+	if (curr_item->state != KCONFIG_STATE_DESELED && curr_item->child)
+	{
+		node = curr_item->child;
+	}
+	else if (curr_item->list_node.next == curr_item->head && curr_item->parent)
+	{
+		node = curr_item->parent->next;
+	}
+	else
+	{
+		node = curr_item->list_node.next;
+	}
+
+	return list_node_to_menu_item(node);
+}
+
+struct kconfig_menu_item *kconfig_menu_get_prev_item(struct kconfig_menu_item *curr_item)
+{
+	struct cavan_list_node *node;
+
+	if (curr_item->head == &curr_item->list_node && curr_item->parent)
+	{
+		node = curr_item->parent;
+	}
+	else
+	{
+		struct kconfig_menu_item *item;
+
+		node = curr_item->list_node.prev;
+		item = list_node_to_menu_item(node);
+
+		if (item->state != KCONFIG_STATE_DESELED && item->child)
+		{
+			item = list_node_to_menu_item(item->child->prev);
+
+			while (item->child)
+			{
+				item = list_node_to_menu_item(item->child);
+			}
+		}
+
+		return item;
+	}
+
+	return list_node_to_menu_item(node);
+}
+
+
+int ncurses_show_menu_box(struct kconfig_menu_descriptor *desc)
 {
 	WINDOW *win;
 	int attrs[] =
@@ -382,45 +486,62 @@ int ncurses_show_menu_box(const char *title, const char *prompt, struct ncurses_
 		COLOR_PAIR(KCONFIG_COLOR_WHITE_BLUE),
 		COLOR_PAIR(KCONFIG_COLOR_BLACK_BLACK),
 	};
-	int current;
-	int x, y, width;
+	struct kconfig_menu_item *curr_item;
+	int width, height, y;
+	int need_update;
 
-	win = ncurses_new_window(NULL, 1, 1, COLS - 4, LINES - 4, title, prompt, attrs, NELEM(attrs));
+	ncurses_init();
+
+	width = COLS - 4;
+	height = LINES - 4;
+
+	win = ncurses_new_window(NULL, 1, 1, width, height, desc->title, attrs, NELEM(attrs));
 	if (win == NULL)
 	{
 		return -1;
 	}
 
-	ncurses_draw_rectangle(win, 2, 4, getmaxx(win) - 4, getmaxy(win) - 8, attrs[1], attrs[0]);
+	if (desc->prompt)
+	{
+		y = ncurses_print_text(win, 2, 2, width - 4, desc->prompt, attrs[1]);
+		ncurses_draw_separate(win, y + 2, width, attrs);
+	}
 
-	current = 0;
-	x = COLS / 3;
-	y = 8;
-	width = getmaxx(win) - x - 4;
-	ncurses_draw_menu(win, x, y, width, getmaxy(win) - y - 8, items, count, current);
+	y = getcury(win) + 1;
+	ncurses_draw_rectangle(win, 2, y, width - 4, height - y - 2, attrs[1], attrs[0]);
+
+	desc->x = width / 3;
+	desc->y = y + 2;
+	desc->width = width - desc->x - 4;
+	desc->height = height - desc->y - 4;
+
+	curr_item = list_node_to_menu_item(desc->head);
+
+	wrefresh(stdscr);
+	need_update = 1;
 
 	while (1)
 	{
+		if (need_update && curr_item->child)
+		{
+			ncurses_draw_menu(win, desc);
+			need_update = 0;
+		}
+
+		ncurses_draw_menu_item_base(win, curr_item, 1);
+		wmove(win, curr_item->y, curr_item->x + 1);
+		wrefresh(win);
+
 		switch (wgetch(win))
 		{
 		case KEY_UP:
-			ncurses_draw_menu_item(win, x, y + current, width, items + current, 0);
-			current--;
-			if (current < 0)
-			{
-				current = count - 1;
-			}
-			ncurses_draw_menu_item(win, x, y + current, width, items + current, 1);
+			ncurses_draw_menu_item_base(win, curr_item, 0);
+			curr_item = kconfig_menu_get_prev_item(curr_item);
 			break;
 
 		case KEY_DOWN:
-			ncurses_draw_menu_item(win, x, y + current, width, items + current, 0);
-			current++;
-			if (current >= count)
-			{
-				current = 0;
-			}
-			ncurses_draw_menu_item(win, x, y + current, width, items  + current, 1);
+			ncurses_draw_menu_item_base(win, curr_item, 0);
+			curr_item = kconfig_menu_get_next_item(curr_item);
 			break;
 
 		case KEY_ESC:
@@ -428,55 +549,96 @@ int ncurses_show_menu_box(const char *title, const char *prompt, struct ncurses_
 			return -1;
 
 		case 'n':
-			items[current].select = ' ';
-			ncurses_draw_menu_item(win, x, y + current, width, items  + current, 1);
+			curr_item->state = KCONFIG_STATE_DESELED;
+			need_update = 1;
 			break;
 
 		case 'y':
-			items[current].select = '*';
-			ncurses_draw_menu_item(win, x, y + current, width, items  + current, 1);
+			curr_item->state = KCONFIG_STATE_SELECTED;
+			need_update = 1;
 			break;
 
 		case ' ':
-			if (items[current].select == '*')
+			if (curr_item->state == KCONFIG_STATE_SELECTED)
 			{
-				items[current].select = ' ';
+				curr_item->state = KCONFIG_STATE_DESELED;
 			}
 			else
 			{
-				items[current].select = '*';
+				curr_item->state = KCONFIG_STATE_SELECTED;
 			}
-			ncurses_draw_menu_item(win, x, y + current, width, items  + current, 1);
+			need_update = 1;
 			break;
 
 		case '\n':
 			delwin(win);
-			return current;
+			return 0;
 		}
 	}
 
 	return 0;
 }
 
-void ncurses_init(void)
+void kconfig_menu_init(struct kconfig_menu_descriptor *desc)
 {
-	initscr();
-	cbreak();
-	noecho();
+	desc->head = NULL;
+}
 
-	start_color();
-	init_pair(KCONFIG_COLOR_WHITE_WHITE, COLOR_WHITE, COLOR_WHITE);
-	init_pair(KCONFIG_COLOR_WHITE_BLACK, COLOR_BLACK, COLOR_WHITE);
-	init_pair(KCONFIG_COLOR_WHITE_RED, COLOR_RED, COLOR_WHITE);
-	init_pair(KCONFIG_COLOR_WHITE_YELLOW, COLOR_YELLOW, COLOR_WHITE);
-	init_pair(KCONFIG_COLOR_WHITE_BLUE, COLOR_BLUE, COLOR_WHITE);
-	init_pair(KCONFIG_COLOR_BLUE_WHITE, COLOR_WHITE, COLOR_BLUE);
-	init_pair(KCONFIG_COLOR_BLUE_BLACK, COLOR_BLACK, COLOR_BLUE);
-	init_pair(KCONFIG_COLOR_BLUE_YELLOW, COLOR_YELLOW, COLOR_BLUE);
-	init_pair(KCONFIG_COLOR_BLACK_BLACK, COLOR_BLACK, COLOR_BLACK);
+void kconfig_menu_item_init(struct kconfig_menu_item *item, const char *text)
+{
+	if (text)
+	{
+		strcpy(item->text, text);
+	}
 
-	keypad(stdscr, TRUE);
-	ncurses_fill_rectangle(stdscr, 0, 0, COLS, LINES, COLOR_PAIR(KCONFIG_COLOR_BLUE_WHITE), ' ');
+	item->child = NULL;
+}
 
-	wrefresh(stdscr);
+struct kconfig_menu_item *kconfig_menu_new_item(const char *text)
+{
+	struct kconfig_menu_item *item;
+
+	item = malloc(sizeof(*item));
+	if (item == NULL)
+	{
+		return NULL;
+	}
+
+	kconfig_menu_item_init(item, text);
+
+	return item;
+}
+
+void kconfig_menu_add_item(struct kconfig_menu_descriptor *desc, struct kconfig_menu_item *item)
+{
+	item->parent = NULL;
+
+	if (desc->head == NULL)
+	{
+		desc->head = &item->list_node;
+		cavan_list_head_init(&item->list_node);
+	}
+	else
+	{
+		cavan_list_append_node(desc->head, &item->list_node);
+	}
+
+	item->head = desc->head;
+}
+
+void kconfig_menu_add_child(struct kconfig_menu_item *item, struct kconfig_menu_item *child)
+{
+	child->parent = &item->list_node;
+
+	if (item->child == NULL)
+	{
+		item->child = &child->list_node;
+		cavan_list_head_init(&child->list_node);
+	}
+	else
+	{
+		cavan_list_append_node(item->child, &child->list_node);
+	}
+
+	child->head = item->child;
 }

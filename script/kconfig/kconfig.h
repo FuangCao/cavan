@@ -9,9 +9,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <ncurses.h>
+#include "list.h"
 
 #define ARRAY_SIZE(a) \
 	(sizeof(a) / sizeof((a)[0]))
+
+#define STRUCT_MEMBER_OFFSET(type, member) \
+	((void *)&((type *)0)->member)
+
+#define GET_STRUCT_POINTER(type, member, addr) \
+	((type *)((void *)(addr) - STRUCT_MEMBER_OFFSET(type, member)))
 
 #define NELEM		ARRAY_SIZE
 #define KEY_ESC		27
@@ -31,10 +38,33 @@ enum kconfig_color
 	KCONFIG_COLOR_BLACK_BLACK,
 };
 
-struct ncurses_menu_item
+enum kconfig_state
 {
-	char select;
-	const char *text;
+	KCONFIG_STATE_UNKNOWN,
+	KCONFIG_STATE_DESELED,
+	KCONFIG_STATE_SELECTED,
+};
+
+struct kconfig_menu_item
+{
+	int x, y;
+	int width;
+	int level;
+	int state;
+	char text[1024];
+	struct cavan_list_node list_node;
+	struct cavan_list_node *head;
+	struct cavan_list_node *child;
+	struct cavan_list_node *parent;
+};
+
+struct kconfig_menu_descriptor
+{
+	int x, y;
+	int width, height;
+	char title[1024];
+	char prompt[1024];
+	struct cavan_list_node *head;
 };
 
 // void ncurses_fill_line(WINDOW *win, int x, int y, int width, int attr, chtype ch);
@@ -49,4 +79,12 @@ struct ncurses_menu_item
 // int ncurses_show_message_box(int width, int height, const char *prompt, const char *buttons[], size_t count);
 void ncurses_init(void);
 int ncurses_show_yes_no_dialog(int width, int height, const char *prompt);
-int ncurses_show_menu_box(const char *title, const char *prompt, struct ncurses_menu_item items[], size_t count);
+int ncurses_show_menu_box(struct kconfig_menu_descriptor *desc);
+void kconfig_menu_init(struct kconfig_menu_descriptor *desc);
+void kconfig_menu_item_init(struct kconfig_menu_item *item, const char *text);
+struct kconfig_menu_item *kconfig_menu_new_item(const char *text);
+void kconfig_menu_add_item(struct kconfig_menu_descriptor *desc, struct kconfig_menu_item *item);
+void kconfig_menu_add_child(struct kconfig_menu_item *item, struct kconfig_menu_item *child);
+void ncurses_draw_menu_base(WINDOW *win, struct kconfig_menu_descriptor *desc, int y, int level, struct cavan_list_node *head);
+void ncurses_draw_menu(WINDOW *win, struct kconfig_menu_descriptor *desc);
+struct kconfig_menu_item *list_node_to_menu_item(struct cavan_list_node *node);
