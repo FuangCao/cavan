@@ -53,9 +53,8 @@ struct kconfig_menu_item
 	int state;
 	char text[1024];
 	struct cavan_list_node list_node;
-	struct cavan_list_node *head;
-	struct cavan_list_node *child;
-	struct cavan_list_node *parent;
+	struct kconfig_menu_item *child;
+	struct kconfig_menu_item *parent;
 };
 
 struct kconfig_menu_descriptor
