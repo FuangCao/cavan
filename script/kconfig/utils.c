@@ -620,7 +620,7 @@ void kconfig_menu_add_item(struct kconfig_menu_descriptor *desc, struct kconfig_
 	}
 	else
 	{
-		cavan_list_append_node(desc->head, &item->list_node);
+		cavan_list_append(desc->head, &item->list_node);
 	}
 
 	item->head = desc->head;
@@ -637,7 +637,7 @@ void kconfig_menu_add_child(struct kconfig_menu_item *item, struct kconfig_menu_
 	}
 	else
 	{
-		cavan_list_append_node(item->child, &child->list_node);
+		cavan_list_append(item->child, &child->list_node);
 	}
 
 	child->head = item->child;
