@@ -1,0 +1,4 @@
+./script/cavan-autogen
+./configure --prefix=/usr
+make
+make install
