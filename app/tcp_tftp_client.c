@@ -1,9 +1,13 @@
-// Fuang.Cao <cavan.cfa@gmail.com> 2011-12-23 16:52:20
+/*
+ * Author: Fuang.Cao
+ * Email: cavan.cfa@gmail.com
+ * Date: Sat Jan 14 14:09:55 CST 2012
+ */
 
 #include <cavan.h>
-#include <cavan/ecc.h>
+#include <cavan/tcp_tftp.h>
 
-#define FILE_CREATE_DATE "2011-12-23 16:52:20"
+#define FILE_CREATE_DATE "2012-01-14 14:09:55"
 
 enum
 {
@@ -38,7 +42,6 @@ int main(int argc, char *argv[])
 		{
 		},
 	};
-	u8 ecc_table[256];
 
 	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
 	{
@@ -63,7 +66,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	cavan_ecc_show_ecc_table(cavan_ecc_build_ecc_table(ecc_table, NELEM(ecc_table)), NELEM(ecc_table));
+	assert(argc == 3);
 
-	return 0;
+	return tcp_tftp_send_file(argv[1], argv[2], "127.0.0.1", 8888);
 }
