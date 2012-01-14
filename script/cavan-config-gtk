@@ -92,6 +92,7 @@ class MainWin:
 		button.set_size_request(100, 30)
 		button.connect("clicked", self.OnBuildClicked)
 		hbox.pack_start(button, True, False, 0)
+		button.grab_focus()
 
 		button = gtk.Button("Cancel")
 		button.set_size_request(100, 30)
