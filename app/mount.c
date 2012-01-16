@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 
 	if (ret < 0)
 	{
-		error_msg("mount deivce \"%s\" failed", argv[0]);
+		print_error("mount deivce \"%s\" failed", argv[0]);
 		return ret;
 	}
 

@@ -315,23 +315,28 @@ int umount_main(const char *pathname, int flags)
 int umount_all1(char *devs[], size_t count, int flags)
 {
 	int i;
-	int ret;
+	int ret, ret_tmp;
 
-	for (i = 0; i < count; i++)
+	for (i = 0, ret = 0; i < count; i++)
 	{
 		if (devs[i] == NULL)
 		{
 			continue;
 		}
 
-		ret = umount_main(devs[i], flags);
-		if (ret < 0)
+		ret_tmp = umount_main(devs[i], flags);
+		if (ret_tmp < 0)
 		{
-			return ret;
+			if (errno == EPERM)
+			{
+				return ret_tmp;
+			}
+
+			ret = ret_tmp;
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 int umount_all2(char *devs[], int flags)
@@ -594,9 +599,9 @@ int mount_to(const char *mnt_dev, const char *mnt_point, const char *fstype, con
 	}
 
 label_check:
-	if (ret >= 0)
+	if (ret >= 0 || errno == EPERM)
 	{
-		return 0;
+		return ret;
 	}
 
 	return system_mount(mnt_dev, mnt_point, data);
