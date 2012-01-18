@@ -194,7 +194,7 @@ int text2double(const char *text, const char *text_end, double *result_last)
 		return 0;
 	}
 
-	if (*text == '0')
+	if (text[0] == '0' && text[1] != '.')
 	{
 		text++;
 
@@ -253,7 +253,7 @@ int text2double(const char *text, const char *text_end, double *result_last)
 		value = char2value(*text);
 		if (value < 0 || value >= base)
 		{
-			error_msg("char2value");
+			error_msg("invalid charector '%c`", *text);
 			return -EINVAL;
 		}
 
@@ -429,6 +429,8 @@ int simple_calculator(const char *formula, double *result_last)
 {
 	int ret;
 	const char *formula_end = formula + text_len(formula);
+
+	println("formula = %s", formula);
 
 	ret = check_bracket_match_pair(formula, formula_end);
 	if (ret < 0)
