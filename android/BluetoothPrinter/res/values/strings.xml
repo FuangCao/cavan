@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, BluetoothPrinterActivity!</string>
+    <string name="app_name">BluetoothPrinter</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="refresh">Refresh</string>
+    <string name="print">Print</string>
+
+</resources>
