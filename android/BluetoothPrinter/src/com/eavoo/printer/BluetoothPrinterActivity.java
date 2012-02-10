@@ -187,7 +187,9 @@ public class BluetoothPrinterActivity extends Activity
 					return;
 				}
 
-				CavanMessage("Start service successfully");
+				BppObexTransport bppObexTransport = new BppObexTransport(mBluetoothDevice);
+				JobBasePrinter jobBasePrinter = new JobBasePrinter(BluetoothPrinterActivity.this, bppObexTransport);
+				jobBasePrinter.start();
 			}
 		});
 

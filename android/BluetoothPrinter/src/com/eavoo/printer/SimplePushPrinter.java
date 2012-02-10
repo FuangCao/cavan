@@ -20,165 +20,21 @@ import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-public class SimplePushPrinter extends Thread
+public class SimplePushPrinter extends BppBase
 {
-    private static final String TAG = "Bpp ObexClient";
-	private WakeLock mWakeLock;
-	private Context mContext;
-	private BppObexTransport mTransport;
-	private ClientSession mObexClientSession;
-	private String mFilePathName = "/mnt/sdcard/test.jpg";
+	private static final String TAG = "SimplePushPrinter";
+	// private String mFilePathName = "/mnt/sdcard/test.jpg";
+	// private String mFilePathName = "/mnt/sdcard/BPP_SPEC_V12r00.pdf";
+	private String mFilePathName = "/mnt/sdcard/init.txt";
 	private String mFileMimeType = null;
 
-	private String ByteArrayToHexString(byte[] bs)
+    public SimplePushPrinter(Context context, BppObexTransport transport)
 	{
-		if (bs == null)
-		{
-			return "";
-		}
-
-		StringBuilder stringBuilder = new StringBuilder();
-
-		for (byte b : bs)
-		{
-			if ((b & 0xF0) == 0)
-			{
-				stringBuilder.append("0");
-			}
-
-			stringBuilder.append(Integer.toHexString((b >> 4) & 0x0F) + Integer.toHexString(b & 0x0F));
-		}
-
-		return stringBuilder.toString();
+		super(context, transport);
+		// TODO Auto-generated constructor stub
 	}
 
-	private void CavanLog(String message)
-	{
-		Log.v("Cavan SimplePushPrinter", "\033[1m" + message + "\033[0m");
-	}
-
-	private void CavanLog(byte[] bs)
-	{
-		CavanLog(ByteArrayToHexString(bs));
-	}
-
-	public SimplePushPrinter(Context context, BppObexTransport transport)
-	{
-		CavanLog("Create PrintThread");
-		PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
-		this.mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
-
-		this.mContext = context;
-		this.mTransport = transport;
-	}
-
-	private boolean connect()
-	{
-		CavanLog("Create ClientSession with transport " + mTransport.toString());
-
-		try
-		{
-			CavanLog("Connect to printer");
-			mTransport.connect();
-			CavanLog("Create OBEX client session");
-			mObexClientSession = new ClientSession(mTransport);
-		}
-		catch (IOException e1)
-		{
-			CavanLog("OBEX session create error");
-			return false;
-		}
-
-		HeaderSet hsRequest = new HeaderSet();
-
-		hsRequest.setHeader(HeaderSet.TARGET, BppObexTransport.UUID_DPS);
-
-		try
-		{
-			Log.d(TAG, "Connect to OBEX session");
-			HeaderSet hsResponse = mObexClientSession.connect(hsRequest);
-			CavanLog("ResponseCode = " + hsResponse.getResponseCode());
-
-			byte[] headerWho = (byte[]) hsResponse.getHeader(HeaderSet.WHO);
-			if (headerWho != null)
-			{
-				CavanLog("HeaderWho:");
-				CavanLog(headerWho);
-			}
-
-			if (hsResponse.mConnectionID == null)
-			{
-				CavanLog("mConnectionID == null");
-			}
-			else
-			{
-				CavanLog(hsResponse.mConnectionID);
-			}
-
-			if (hsResponse.getResponseCode() == ResponseCodes.OBEX_HTTP_OK)
-			{
-				return true;
-			}
-		} catch (IOException e) {
-			CavanLog("OBEX session connect error");
-		}
-
-		try {
-			mTransport.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return false;
-	}
-
-	private void disconnect()
-	{
-		CavanLog("disconnect");
-
-		if (mObexClientSession != null)
-		{
-			try {
-				mObexClientSession.disconnect(null);
-				mObexClientSession.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
-		if (mTransport != null)
-		{
-			try {
-				mTransport.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private String GetFileMimeTypeByName(String pathname)
-	{
-            String extension, type;
-
-            int dotIndex = pathname.lastIndexOf(".");
-            if (dotIndex < 0)
-            {
-            	extension = "txt";
-            }
-            else
-            {
-            	extension = pathname.substring(dotIndex + 1).toLowerCase();
-            }
-
-            MimeTypeMap map = MimeTypeMap.getSingleton();
-
-            return map.getMimeTypeFromExtension(extension);
-	}
-
-	private boolean PrintContent()
+	public boolean PrintFile()
 	{
 		File file = new File(mFilePathName);
 		long fileLength = file.length();
@@ -206,10 +62,20 @@ public class SimplePushPrinter extends Thread
 			mFileMimeType = GetFileMimeTypeByName(mFilePathName);
 		}
 
-		CavanLog("mimetype = " + mFileMimeType);
-
-		reqHeaderSet.setHeader(HeaderSet.TYPE, "mFileMimeType");
+		reqHeaderSet.setHeader(HeaderSet.TYPE, mFileMimeType);
 		reqHeaderSet.setHeader(HeaderSet.LENGTH, fileLength);
+
+		try
+		{
+			CavanLog("NAME = " + reqHeaderSet.getHeader(HeaderSet.NAME));
+			CavanLog("TYPE = " + reqHeaderSet.getHeader(HeaderSet.TYPE));
+			CavanLog("LENGTH = " + reqHeaderSet.getHeader(HeaderSet.LENGTH));
+		}
+		catch (IOException e2)
+		{
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 
 		ClientOperation clientOperation;
 		try {
@@ -438,7 +304,7 @@ public class SimplePushPrinter extends Thread
 			return;
 		}
 
-		if (PrintContent())
+		if (PrintFile())
 		{
 			CavanLog("Print complete");
 		}
