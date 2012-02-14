@@ -23,84 +23,56 @@ import android.webkit.MimeTypeMap;
 public class SimplePushPrinter extends BppBase
 {
 	private static final String TAG = "SimplePushPrinter";
-	// private String mFilePathName = "/mnt/sdcard/test.jpg";
-	// private String mFilePathName = "/mnt/sdcard/BPP_SPEC_V12r00.pdf";
-	private String mFilePathName = "/mnt/sdcard/init.txt";
-	private String mFileMimeType = null;
 
     public SimplePushPrinter(Context context, BppObexTransport transport)
 	{
-		super(context, transport);
+		super(context, transport, BppObexTransport.UUID_DPS);
 		// TODO Auto-generated constructor stub
 	}
 
-	public boolean PrintFile()
+	public boolean PrintFile() throws IOException
 	{
-		File file = new File(mFilePathName);
+		File file = new File(mFilePath);
 		long fileLength = file.length();
 
 		if (fileLength == 0)
 		{
-			CavanLog("File " + mFilePathName + " don't exist");
+			CavanLog("File " + mFilePath + " don't exist");
 			return false;
 		}
 
 		HeaderSet reqHeaderSet = new HeaderSet();
 
-		int index = mFilePathName.lastIndexOf('/');
+		int index = mFilePath.lastIndexOf('/');
 		if (index < 0)
 		{
-			reqHeaderSet.setHeader(HeaderSet.NAME, mFilePathName);
+			reqHeaderSet.setHeader(HeaderSet.NAME, mFilePath);
 		}
 		else
 		{
-			reqHeaderSet.setHeader(HeaderSet.NAME, mFilePathName.substring(index + 1));
+			reqHeaderSet.setHeader(HeaderSet.NAME, mFilePath.substring(index + 1));
 		}
 
-		if (mFileMimeType == null)
+		if (mFileType == null)
 		{
-			mFileMimeType = GetFileMimeTypeByName(mFilePathName);
+			mFileType = GetFileMimeTypeByName(mFileType);
 		}
 
-		reqHeaderSet.setHeader(HeaderSet.TYPE, mFileMimeType);
+		reqHeaderSet.setHeader(HeaderSet.TYPE, mFileType);
 		reqHeaderSet.setHeader(HeaderSet.LENGTH, fileLength);
 
-		try
-		{
-			CavanLog("NAME = " + reqHeaderSet.getHeader(HeaderSet.NAME));
-			CavanLog("TYPE = " + reqHeaderSet.getHeader(HeaderSet.TYPE));
-			CavanLog("LENGTH = " + reqHeaderSet.getHeader(HeaderSet.LENGTH));
-		}
-		catch (IOException e2)
-		{
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
+		CavanLog("NAME = " + reqHeaderSet.getHeader(HeaderSet.NAME));
+		CavanLog("TYPE = " + reqHeaderSet.getHeader(HeaderSet.TYPE));
+		CavanLog("LENGTH = " + reqHeaderSet.getHeader(HeaderSet.LENGTH));
 
-		ClientOperation clientOperation;
-		try {
-			clientOperation = (ClientOperation) mObexClientSession.put(reqHeaderSet);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			clientOperation = null;
-		}
-
+		ClientOperation clientOperation = (ClientOperation) mObexClientSession.put(reqHeaderSet);
 		if (clientOperation == null)
 		{
 			CavanLog("clientOperation == null");
 			return false;
 		}
 
-		OutputStream obexOutputStream;
-		try {
-			obexOutputStream = clientOperation.openOutputStream();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			obexOutputStream = null;
-		}
-
+		OutputStream obexOutputStream = clientOperation.openOutputStream();
 		if (obexOutputStream == null)
 		{
 			CavanLog("obexOutputStream == null");
@@ -113,72 +85,17 @@ public class SimplePushPrinter extends BppBase
 			return false;
 		}
 
-		InputStream obexInputStream;
-		try {
-			obexInputStream = clientOperation.openInputStream();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			obexInputStream = null;
-		}
-
+		InputStream obexInputStream = clientOperation.openInputStream();
 		if (obexInputStream == null)
 		{
 			CavanLog("obexInputStream == null");
-
-			try {
-				obexOutputStream.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			try {
-				clientOperation.abort();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			obexOutputStream.close();
+			clientOperation.abort();
 
 			return false;
 		}
 
-		FileInputStream fileInputStream;
-		try {
-			fileInputStream = new FileInputStream(file);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			fileInputStream = null;
-		}
-
-		if (fileInputStream == null)
-		{
-			CavanLog("fileInputStream == null");
-
-			try {
-				obexInputStream.close();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
-			try {
-				obexOutputStream.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			try {
-				clientOperation.abort();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return false;
-		}
-
+		FileInputStream fileInputStream = new FileInputStream(file);
 		BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
 		int obexMaxPackageSize = clientOperation.getMaxPacketSize();
 		byte[] buff = new byte[obexMaxPackageSize];
@@ -189,15 +106,7 @@ public class SimplePushPrinter extends BppBase
 
 		while (fileLength != 0)
 		{
-			int sendLength;
-
-			try {
-				sendLength = bufferedInputStream.read(buff);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				sendLength = -1;
-			}
+			int sendLength = bufferedInputStream.read(buff);
 
 			CavanLog("readLength = " + sendLength);
 
@@ -207,24 +116,9 @@ public class SimplePushPrinter extends BppBase
 				break;
 			}
 
-			try {
-				obexOutputStream.write(buff, 0, sendLength);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				boolResult = false;
-				break;
-			}
+			obexOutputStream.write(buff, 0, sendLength);
 
-			int responseCode;
-			try {
-				responseCode = clientOperation.getResponseCode();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				boolResult = false;
-				break;
-			}
+			int responseCode = clientOperation.getResponseCode();
 
 			CavanLog("responseCode = " + responseCode);
 
@@ -240,81 +134,40 @@ public class SimplePushPrinter extends BppBase
 			CavanLog("sendLength = " + sendLength + ", fileLength = " + fileLength);
 		}
 
-		try {
-			bufferedInputStream.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		bufferedInputStream.close();
+		obexInputStream.close();
+		fileInputStream.close();
+		obexOutputStream.close();
 
-		try {
-			obexInputStream.close();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		if (boolResult)
+		{
+			clientOperation.close();
 		}
-
-		try {
-			fileInputStream.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		try {
-			obexOutputStream.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		try {
-			if (boolResult)
-			{
-				clientOperation.close();
-			}
-			else
-			{
+		else
+		{
 				clientOperation.abort();
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 
 		return boolResult;
 	}
 
 	@Override
-	public void run()
+	public boolean BppObexRun()
 	{
-		Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-
-		CavanLog("Printer thread running");
-
-		mWakeLock.acquire();
-
-		if (connect())
+		try
 		{
-			CavanLog("Connect successfully");
+			if (PrintFile())
+			{
+				CavanLog("Print complete");
+				return true;
+			}
 		}
-		else
+		catch (IOException e)
 		{
-			CavanLog("Connect failed");
-			return;
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-		if (PrintFile())
-		{
-			CavanLog("Print complete");
-		}
-		else
-		{
-			CavanLog("Print failed");
-		}
-
-		disconnect();
-
-		mWakeLock.release();
+		return false;
 	}
 }

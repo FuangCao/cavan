@@ -1,13 +1,22 @@
 package com.eavoo.printer;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 import javax.obex.ClientSession;
 import javax.obex.HeaderSet;
 import javax.obex.ResponseCodes;
 
+import com.sun.pdfview.PDFFile;
+import com.sun.pdfview.PDFPage;
+
 import android.content.Context;
 import android.os.PowerManager;
+import android.os.Process;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -15,10 +24,41 @@ import android.webkit.MimeTypeMap;
 public class BppBase extends Thread
 {
 	private static final String TAG = "BppBase";
-	private BppObexTransport mTransport;
+	private byte[] mUuid;
+	protected BppObexTransport mTransport;
 	protected ClientSession mObexClientSession;
 	protected WakeLock mWakeLock;
-	private Context mContext;
+	protected Context mContext;
+	// protected String mFilePath = "/mnt/sdcard/test.jpg";
+	// protected String mFilePath = "/mnt/sdcard/BPP_SPEC_V12r00.pdf";
+	protected String mFilePath = "/mnt/sdcard/printer.xml";
+	protected String mFileType = "text/plain";
+
+	/**
+	public byte[] PdfToJpeg(int pageIndex) throws IOException
+	{
+		File file = new File(mFilePath);
+		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+		FileChannel channel = randomAccessFile.getChannel();
+		ByteBuffer byteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+		PDFFile pdfFile = new PDFFile(byteBuffer);
+
+		PDFPage page = pdfFile.getPage(pageIndex);
+		int width = (int) page.getWidth();
+		int height = (int) page.getHeight();
+
+		Image image = page.getImage(width, height, new Rectangle(width, height), null, true, true);
+		BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		bufferedImage.getGraphics().drawImage(image, 0, 0, width, height, null);
+
+		ByteArrayOutputStream jpegOutputStream = new ByteArrayOutputStream();
+		JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(jpegOutputStream);
+		encoder.encode(bufferedImage);
+		jpegOutputStream.close();
+
+		return jpegOutputStream.toByteArray();
+	}
+	*/
 
 	public String ByteArrayToHexString(byte[] bs)
 	{
@@ -52,7 +92,7 @@ public class BppBase extends Thread
 		CavanLog(ByteArrayToHexString(bs));
 	}
 
-	public BppBase(Context context, BppObexTransport transport)
+	public BppBase(Context context, BppObexTransport transport, byte[] uuid)
 	{
 		CavanLog("Create PrintThread");
 		PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
@@ -60,92 +100,83 @@ public class BppBase extends Thread
 
 		this.mContext = context;
 		this.mTransport = transport;
+		this.mUuid = uuid;
 	}
 
-	public boolean connect()
+	public boolean connect() throws IOException
 	{
 		CavanLog("Create ClientSession with transport " + mTransport.toString());
 
-		try
+		CavanLog("Connect to printer");
+		mTransport.connect();
+		CavanLog("Create OBEX client session");
+		mObexClientSession = new ClientSession(mTransport);
+		if (mObexClientSession == null)
 		{
-			CavanLog("Connect to printer");
-			mTransport.connect();
-			CavanLog("Create OBEX client session");
-			mObexClientSession = new ClientSession(mTransport);
-		}
-		catch (IOException e1)
-		{
-			CavanLog("OBEX session create error");
+			CavanLog("mObexClientSession == null");
 			return false;
 		}
 
 		HeaderSet hsRequest = new HeaderSet();
 
-		hsRequest.setHeader(HeaderSet.TARGET, BppObexTransport.UUID_DPS);
-
-		try
+		if (mUuid != null)
 		{
-			Log.d(TAG, "Connect to OBEX session");
-			HeaderSet hsResponse = mObexClientSession.connect(hsRequest);
-			CavanLog("ResponseCode = " + hsResponse.getResponseCode());
-
-			byte[] headerWho = (byte[]) hsResponse.getHeader(HeaderSet.WHO);
-			if (headerWho != null)
-			{
-				CavanLog("HeaderWho:");
-				CavanLog(headerWho);
-			}
-
-			if (hsResponse.mConnectionID == null)
-			{
-				CavanLog("mConnectionID == null");
-			}
-			else
-			{
-				CavanLog(hsResponse.mConnectionID);
-			}
-
-			if (hsResponse.getResponseCode() == ResponseCodes.OBEX_HTTP_OK)
-			{
-				return true;
-			}
-		} catch (IOException e) {
-			CavanLog("OBEX session connect error");
+			hsRequest.setHeader(HeaderSet.TARGET, mUuid);
 		}
 
-		try {
-			mTransport.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		Log.d(TAG, "Connect to OBEX session");
+		HeaderSet hsResponse = mObexClientSession.connect(hsRequest);
+		CavanLog("ResponseCode = " + hsResponse.getResponseCode());
+
+		byte[] headerWho = (byte[]) hsResponse.getHeader(HeaderSet.WHO);
+		if (headerWho != null)
+		{
+			CavanLog("HeaderWho:");
+			CavanLog(headerWho);
 		}
+
+		if (hsResponse.mConnectionID == null)
+		{
+			CavanLog("mConnectionID == null");
+		}
+		else
+		{
+			CavanLog(hsResponse.mConnectionID);
+		}
+
+		if (hsResponse.getResponseCode() == ResponseCodes.OBEX_HTTP_OK)
+		{
+			return true;
+		}
+
+		mTransport.close();
 
 		return false;
 	}
 
-	public void disconnect()
+	public byte[] getmUuid()
+	{
+		return mUuid;
+	}
+
+	public void setmUuid(byte[] mUuid)
+	{
+		this.mUuid = mUuid;
+	}
+
+	public void disconnect() throws IOException
 	{
 		CavanLog("disconnect");
 
 		if (mObexClientSession != null)
 		{
-			try {
-				mObexClientSession.disconnect(null);
-				mObexClientSession.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			mObexClientSession.disconnect(null);
+			mObexClientSession.close();
 		}
 
 		if (mTransport != null)
 		{
-			try {
-				mTransport.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			mTransport.close();
 		}
 	}
 
@@ -166,5 +197,62 @@ public class BppBase extends Thread
             MimeTypeMap map = MimeTypeMap.getSingleton();
 
             return map.getMimeTypeFromExtension(extension);
+	}
+
+	public boolean BppObexRun()
+	{
+		CavanLog("BppObexRun No implementation");
+
+		return false;
+	}
+
+	@Override
+	public void run()
+	{
+		Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+
+		CavanLog("Bpp Soap request running");
+
+		mWakeLock.acquire();
+
+		try
+		{
+			if (connect())
+			{
+				CavanLog("Connect successfully");
+			}
+			else
+			{
+				CavanLog("Connect failed");
+				return;
+			}
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+
+		if (BppObexRun())
+		{
+			CavanLog("Print complete");
+		}
+		else
+		{
+			CavanLog("Print failed");
+		}
+
+		try
+		{
+			disconnect();
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		mWakeLock.release();
 	}
 }
