@@ -1,8 +1,6 @@
 package com.eavoo.printer;
 
-import java.io.File;
 import java.io.IOException;
-
 import javax.obex.ApplicationParameter;
 import javax.obex.HeaderSet;
 import javax.xml.parsers.ParserConfigurationException;
@@ -11,10 +9,10 @@ import android.content.Context;
 
 public class JobBasePrinter extends BppBase
 {
-	private static final byte AppTagOffset = 1;
-	private static final byte AppTagCount = 2;
+	// private static final byte AppTagOffset = 1;
+	// private static final byte AppTagCount = 2;
 	private static final byte AppTagJobId = 3;
-	private static final byte AppTagFileSize = 4;
+	// private static final byte AppTagFileSize = 4;
 
 	public JobBasePrinter(Context context, BppObexTransport transport, String filename, String filetype)
 	{

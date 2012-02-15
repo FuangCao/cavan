@@ -12,11 +12,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import android.util.Log;
 
 public class BppSoapRequest
 {
-	private static final String TAG = "CavanBppSoapRequest";
 	protected BppBase mBppBase;
 	private String mAction;
 	private String mBody;

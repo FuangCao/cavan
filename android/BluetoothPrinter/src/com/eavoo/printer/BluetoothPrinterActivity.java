@@ -1,33 +1,10 @@
 package com.eavoo.printer;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.UUID;
-
-import javax.obex.ClientOperation;
-import javax.obex.ClientSession;
-import javax.obex.HeaderSet;
-import javax.obex.ObexTransport;
-import javax.obex.ResponseCodes;
-
 import android.app.Activity;
-import android.app.AlertDialog.Builder;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.os.Process;
 import android.os.Bundle;
-import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -44,7 +21,6 @@ import android.widget.Toast;
 public class BluetoothPrinterActivity extends Activity
 {
 	/** Called when the activity is first created. */
-	private static final String TAG = "Cavan";
 	private String mFileName = "/mnt/sdcard/printer.xml";
 
 	private BluetoothAdapter mBluetoothAdapter;
@@ -57,41 +33,8 @@ public class BluetoothPrinterActivity extends Activity
 	private TextView mTextViewStatus;
 	private EditText mEditTextFilePath;
 
-	private String ByteArrayToHexString(byte[] bs)
-	{
-		if (bs == null)
-		{
-			return "";
-		}
-
-		StringBuilder stringBuilder = new StringBuilder();
-
-		for (byte b : bs)
-		{
-			if ((b & 0xF0) == 0)
-			{
-				stringBuilder.append("0");
-			}
-
-			stringBuilder.append(Integer.toHexString((b >> 4) & 0x0F) + Integer.toHexString(b & 0x0F));
-		}
-
-		return stringBuilder.toString();
-	}
-
-	private void CavanLog(String message)
-	{
-		Log.v("Cavan", "\033[1m" + message + "\033[0m");
-	}
-
-	private void CavanLog(byte[] bs)
-	{
-		CavanLog(ByteArrayToHexString(bs));
-	}
-
 	private void CavanMessage(String message)
 	{
-		mTextViewStatus.append(ByteArrayToHexString("12345678".getBytes()) + "\n");
 		mTextViewStatus.append(message + "\n");
 		Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 	}

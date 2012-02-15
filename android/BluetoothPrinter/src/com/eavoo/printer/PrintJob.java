@@ -1,11 +1,7 @@
 package com.eavoo.printer;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-
-import javax.obex.ApplicationParameter;
-import javax.obex.HeaderSet;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 

@@ -5,8 +5,6 @@ import android.content.Context;
 
 public class SimplePushPrinter extends BppBase
 {
-	private static final String TAG = "SimplePushPrinter";
-
     public SimplePushPrinter(Context context, BppObexTransport transport, String filename, String filetype)
 	{
 		super(context, transport, filename, filetype);

@@ -22,7 +22,7 @@ public class BppBase extends Thread
 	private static final String TAG = "BppBase";
 	protected BppObexTransport mTransport;
 	private WakeLock mWakeLock;
-	private Context mContext;
+	// private Context mContext;
 	private String mFileName;
 	private String mFileType;
 
@@ -72,7 +72,7 @@ public class BppBase extends Thread
 		PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
 		this.mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
 
-		this.mContext = context;
+		// this.mContext = context;
 		this.mTransport = transport;
 		this.mFileName = filename;
 		this.mFileType = filetype;
