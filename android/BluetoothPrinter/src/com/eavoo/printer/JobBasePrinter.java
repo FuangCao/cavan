@@ -1,36 +1,44 @@
 package com.eavoo.printer;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 
-import javax.obex.ClientOperation;
-import javax.obex.ClientSession;
+import javax.obex.ApplicationParameter;
 import javax.obex.HeaderSet;
-import javax.obex.ResponseCodes;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.xml.sax.SAXException;
-
 import android.content.Context;
-import android.os.PowerManager;
-import android.os.Process;
-import android.os.PowerManager.WakeLock;
-import android.util.Log;
 
 public class JobBasePrinter extends BppBase
 {
-	public JobBasePrinter(Context context, BppObexTransport transport)
+	private static final byte AppTagOffset = 1;
+	private static final byte AppTagCount = 2;
+	private static final byte AppTagJobId = 3;
+	private static final byte AppTagFileSize = 4;
+
+	public JobBasePrinter(Context context, BppObexTransport transport, String filename, String filetype)
 	{
-		super(context, transport, null);
-		// TODO Auto-generated constructor stub
+		super(context, transport, filename, filetype);
+	}
+
+	public static byte[] IntegerToByteArray(int value)
+	{
+		byte[] bs =
+		{
+			(byte) ((value >> 24) & 0xFF),
+			(byte) ((value >> 16) & 0xFF),
+			(byte) ((value >> 8) & 0xFF),
+			(byte) (value & 0xFF),
+		};
+
+		return bs;
 	}
 
 	private PrintJob CreateJob()
 	{
-		PrintJob printJob = new PrintJob(mObexClientSession);
+		PrintJob printJob = new PrintJob(this);
+
+		printJob.setDocumentFormat(getFileType());
 
 		boolean ret = false;
 		try
@@ -58,18 +66,58 @@ public class JobBasePrinter extends BppBase
 			return null;
 		}
 
-		CavanLog("JobId = " + printJob.getJobId());
-		CavanLog("OperationStatus = " + printJob.getOperationStatus());
-
 		return printJob;
+	}
+
+	public void GetPrinterAttributes()
+	{
+		BppSoapRequest request = new BppSoapRequest(this);
+
+		request.setAttributes("GetPrinterAttributes", null, null);
+		request.SendTo();
+	}
+
+	public boolean SendDocument(PrintJob job)
+	{
+		ApplicationParameter parameter = new ApplicationParameter();
+		parameter.addAPPHeader(AppTagJobId, (byte) 4, IntegerToByteArray(job.getJobId()));
+
+		HeaderSet headerSet = new HeaderSet();
+		headerSet.setHeader(HeaderSet.APPLICATION_PARAMETER, parameter.getAPPparam());
+
+		try
+		{
+			return PutFile(UUID_DPS, headerSet);
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return false;
 	}
 
 	@Override
 	public boolean BppObexRun()
 	{
 		PrintJob job = CreateJob();
+		if (job == null)
+		{
+			return false;
+		}
 
-		job.CancelJob();
+		CavanLog("JobId = " + job.getJobId());
+		CavanLog(String.format("OperationStatus = 0x%04x", job.getOperationStatus()));
+
+		job.GetJobAttributes();
+
+		if (SendDocument(job) == false)
+		{
+			job.CancelJob();
+		}
+
+		// GetPrinterAttributes();
 
 		return true;
 	}

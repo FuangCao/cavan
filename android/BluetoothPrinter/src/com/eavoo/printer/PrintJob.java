@@ -1,13 +1,12 @@
 package com.eavoo.printer;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-import javax.obex.ClientSession;
+import javax.obex.ApplicationParameter;
+import javax.obex.HeaderSet;
 import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 public class PrintJob extends BppSoapRequest
@@ -15,20 +14,20 @@ public class PrintJob extends BppSoapRequest
 	private int mCopies = 1;
 	private int mNumberUp = 1;
 	private int mJobId;
-	private String mOperationStatus;
+	private short mOperationStatus;
 	private boolean mCancelOnLostLink = true;
 	private String mJobName = "MyJob";
 	private String mJobOriginatingUserName = "mailto:MyEmail";
-	private String mDocumentFormat = "application/PostScript:3";
+	private String mDocumentFormat = "text/plain";
 	private String mSides = "one-sided";
 	private String mOrientationRequested = "portrait";
-	private String mMediaSize = "iso_a4_210x297mm";
-	private String mMediaType = "cardstock";
-	private String mPrintQuality = "normal";
+	private String mMediaSize = "iso_a4_105x148mm";
+	private String mMediaType = "envelope";
+	private String mPrintQuality = "high";
 
-	public PrintJob(ClientSession session)
+	public PrintJob(BppBase base)
 	{
-		super(session, "CreateJob");
+		super(base);
 	}
 
 	public int getJobId()
@@ -41,12 +40,12 @@ public class PrintJob extends BppSoapRequest
 		this.mJobId = mJobId;
 	}
 
-	public String getOperationStatus()
+	public short getOperationStatus()
 	{
 		return mOperationStatus;
 	}
 
-	public void setOperationStatus(String mOperationStatus)
+	public void setOperationStatus(short mOperationStatus)
 	{
 		this.mOperationStatus = mOperationStatus;
 	}
@@ -182,50 +181,41 @@ public class PrintJob extends BppSoapRequest
 
 	public boolean CreateJob() throws IOException, ParserConfigurationException, SAXException
 	{
-		setBody(BuildBody());
+		setAttributes("CreateJob", BuildBody(), null);
 
-		boolean ret = SendToPrinter();
-		if (ret == false)
-		{
-			return ret;
-		}
-
-		Element elementAction = ParseSoapResponse("CreateJobResponse");
-		if (elementAction == null)
+		if (SendTo() == false)
 		{
 			return false;
 		}
 
-		HashMap<String, String> map = getResponseAttributes(elementAction);
+		HashMap<String, String> map = getResponseAttributes("CreateJobResponse");
 		if (map == null)
 		{
 			return false;
 		}
 
-		mJobId = new Integer(map.get("JobId"));
-		mOperationStatus = map.get("OperationStatus");
+		mJobId = Integer.decode(map.get("JobId"));
+		mOperationStatus = Short.decode(map.get("OperationStatus"));
 
 		return true;
 	}
 
 	public boolean CancelJob()
 	{
-		setAction("CancelJob");
-		setBody("<JobId>" + mJobId + "</JobId>");
-		setHttpHeader(null);
+		setAttributes("CancelJob", "<JobId>" + mJobId + "</JobId>", null);
 
-		boolean ret = false;
+		return SendTo();
+	}
 
-		try
+	public HashMap<String, String> GetJobAttributes()
+	{
+		setAttributes("GetJobAttributes", "<JobId>" + mJobId + "</JobId>", null);
+
+		if (SendTo() == false)
 		{
-			ret = SendToPrinter();
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return null;
 		}
 
-		return ret;
+		return getResponseAttributes("GetJobAttributesResponse");
 	}
 }

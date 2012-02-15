@@ -4,6 +4,14 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
+    <EditText
+        android:id="@+id/editText1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <requestFocus />
+    </EditText>
+
     <LinearLayout
         android:id="@+id/linearLayout1"
         android:layout_width="match_parent"

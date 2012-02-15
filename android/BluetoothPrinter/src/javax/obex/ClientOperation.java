@@ -39,8 +39,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.ByteArrayOutputStream;
 
-import android.util.Log;
-
 /**
  * This class implements the <code>Operation</code> interface. It will read and
  * write data via puts and gets.
@@ -475,9 +473,6 @@ public final class ClientOperation implements Operation, BaseStream {
 
             byte[] body = mPrivateOutput.readBytes(bodyLength);
 
-            // if (body != null)
-            //	Log.v("sendRequest", "Body = \n" + new String(body));
-
             /*
              * Since this is a put request if the final bit is set or
              * the output stream is closed we need to send the 0x49
@@ -591,8 +586,6 @@ public final class ClientOperation implements Operation, BaseStream {
      */
     public synchronized boolean continueOperation(boolean sendEmpty, boolean inStream)
             throws IOException {
-
-    	Log.v("Cavan", "continueOperation");
 
         if (mGetOperation) {
             if ((inStream) && (!mOperationDone)) {

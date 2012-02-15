@@ -1,19 +1,15 @@
 package com.eavoo.printer;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-
+import java.io.InputStream;
+import java.io.OutputStream;
+import javax.obex.ClientOperation;
 import javax.obex.ClientSession;
 import javax.obex.HeaderSet;
 import javax.obex.ResponseCodes;
-
-import com.sun.pdfview.PDFFile;
-import com.sun.pdfview.PDFPage;
-
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.Process;
@@ -24,15 +20,83 @@ import android.webkit.MimeTypeMap;
 public class BppBase extends Thread
 {
 	private static final String TAG = "BppBase";
-	private byte[] mUuid;
 	protected BppObexTransport mTransport;
-	protected ClientSession mObexClientSession;
-	protected WakeLock mWakeLock;
-	protected Context mContext;
-	// protected String mFilePath = "/mnt/sdcard/test.jpg";
-	// protected String mFilePath = "/mnt/sdcard/BPP_SPEC_V12r00.pdf";
-	protected String mFilePath = "/mnt/sdcard/printer.xml";
-	protected String mFileType = "text/plain";
+	private WakeLock mWakeLock;
+	private Context mContext;
+	private String mFileName;
+	private String mFileType;
+
+	public static final byte[] UUID_DPS =
+	{
+		0x00, 0x00, 0x11, 0x18, 0x00, 0x00, 0x10, 0x00,
+		(byte) 0x80, 0x00, 0x00, (byte) 0x80, 0x5F, (byte) 0x9B, 0x34, (byte) 0xFB
+	};
+
+	public static final byte[] UUID_PBR =
+	{
+		0x00, 0x00, 0x11, 0x19, 0x00, 0x00, 0x10, 0x00,
+		(byte) 0x80, 0x00, 0x00, (byte) 0x80, 0x5F, (byte) 0x9B, 0x34, (byte) 0xFB
+	};
+
+	public static final byte[] UUID_REF_OBJ =
+	{
+		0x00, 0x00, 0x11, 0x20, 0x00, 0x00, 0x10, 0x00,
+		(byte) 0x80, 0x00, 0x00, (byte) 0x80, 0x5F, (byte) 0x9B, 0x34, (byte) 0xFB
+	};
+
+	public static final byte[] UUID_URI_REF_OBJ =
+	{
+		0x00, 0x00, 0x11, 0x21, 0x00, 0x00, 0x10, 0x00,
+		(byte) 0x80, 0x00, 0x00, (byte) 0x80, 0x5F, (byte) 0x9B, 0x34, (byte) 0xFB
+	};
+
+	public static final byte[] UUID_STS =
+	{
+		0x00, 0x00, 0x11, 0x23, 0x00, 0x00, 0x10, 0x00,
+		(byte) 0x80, 0x00, 0x00, (byte) 0x80, 0x5F, (byte) 0x9B, 0x34, (byte) 0xFB
+	};
+
+	public void CavanLog(String message)
+	{
+		Log.v("Cavan", "\033[1m" + message + "\033[0m");
+	}
+
+	public void CavanLog(byte[] bs)
+	{
+		CavanLog(ByteArrayToHexString(bs));
+	}
+
+	public BppBase(Context context, BppObexTransport transport, String filename, String filetype)
+	{
+		CavanLog("Create PrintThread");
+		PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
+		this.mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+
+		this.mContext = context;
+		this.mTransport = transport;
+		this.mFileName = filename;
+		this.mFileType = filetype;
+	}
+
+	public String getFileName()
+	{
+		return mFileName;
+	}
+
+	public void setFileName(String mFileName)
+	{
+		this.mFileName = mFileName;
+	}
+
+	public String getFileType()
+	{
+		return mFileType == null ?  GetFileMimeTypeByName(mFileName) : mFileType;
+	}
+
+	public void setFileType(String mFileType)
+	{
+		this.mFileType = mFileType;
+	}
 
 	/**
 	public byte[] PdfToJpeg(int pageIndex) throws IOException
@@ -82,50 +146,19 @@ public class BppBase extends Thread
 		return stringBuilder.toString();
 	}
 
-	public void CavanLog(String message)
-	{
-		Log.v("Cavan", "\033[1m" + message + "\033[0m");
-	}
-
-	public void CavanLog(byte[] bs)
-	{
-		CavanLog(ByteArrayToHexString(bs));
-	}
-
-	public BppBase(Context context, BppObexTransport transport, byte[] uuid)
-	{
-		CavanLog("Create PrintThread");
-		PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
-		this.mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
-
-		this.mContext = context;
-		this.mTransport = transport;
-		this.mUuid = uuid;
-	}
-
-	public boolean connect() throws IOException
+	public ClientSession connect(byte[] uuid) throws IOException
 	{
 		CavanLog("Create ClientSession with transport " + mTransport.toString());
-
-		CavanLog("Connect to printer");
-		mTransport.connect();
-		CavanLog("Create OBEX client session");
-		mObexClientSession = new ClientSession(mTransport);
-		if (mObexClientSession == null)
-		{
-			CavanLog("mObexClientSession == null");
-			return false;
-		}
-
+		ClientSession session = new ClientSession(mTransport);
 		HeaderSet hsRequest = new HeaderSet();
 
-		if (mUuid != null)
+		if (uuid != null)
 		{
-			hsRequest.setHeader(HeaderSet.TARGET, mUuid);
+			hsRequest.setHeader(HeaderSet.TARGET, uuid);
 		}
 
-		Log.d(TAG, "Connect to OBEX session");
-		HeaderSet hsResponse = mObexClientSession.connect(hsRequest);
+		CavanLog("Connect to OBEX session");
+		HeaderSet hsResponse = session.connect(hsRequest);
 		CavanLog("ResponseCode = " + hsResponse.getResponseCode());
 
 		byte[] headerWho = (byte[]) hsResponse.getHeader(HeaderSet.WHO);
@@ -144,59 +177,39 @@ public class BppBase extends Thread
 			CavanLog(hsResponse.mConnectionID);
 		}
 
-		if (hsResponse.getResponseCode() == ResponseCodes.OBEX_HTTP_OK)
-		{
-			return true;
-		}
-
-		mTransport.close();
-
-		return false;
+		return hsResponse.getResponseCode() == ResponseCodes.OBEX_HTTP_OK ? session : null;
 	}
 
-	public byte[] getmUuid()
-	{
-		return mUuid;
-	}
-
-	public void setmUuid(byte[] mUuid)
-	{
-		this.mUuid = mUuid;
-	}
-
-	public void disconnect() throws IOException
+	public void disconnect(ClientSession session) throws IOException
 	{
 		CavanLog("disconnect");
 
-		if (mObexClientSession != null)
-		{
-			mObexClientSession.disconnect(null);
-			mObexClientSession.close();
-		}
-
-		if (mTransport != null)
-		{
-			mTransport.close();
-		}
+		session.disconnect(null);
+		session.close();
 	}
 
 	public String GetFileMimeTypeByName(String pathname)
 	{
-            String extension;
+        String extension;
 
-            int dotIndex = pathname.lastIndexOf(".");
-            if (dotIndex < 0)
-            {
-            	extension = "txt";
-            }
-            else
-            {
-            	extension = pathname.substring(dotIndex + 1).toLowerCase();
-            }
+        if (pathname == null)
+        {
+			return null;
+        }
 
-            MimeTypeMap map = MimeTypeMap.getSingleton();
+        int dotIndex = pathname.lastIndexOf(".");
+        if (dotIndex < 0)
+        {
+			extension = "txt";
+        }
+        else
+        {
+			extension = pathname.substring(dotIndex + 1).toLowerCase();
+        }
 
-            return map.getMimeTypeFromExtension(extension);
+		MimeTypeMap map = MimeTypeMap.getSingleton();
+
+        return map.getMimeTypeFromExtension(extension);
 	}
 
 	public boolean BppObexRun()
@@ -204,6 +217,194 @@ public class BppBase extends Thread
 		CavanLog("BppObexRun No implementation");
 
 		return false;
+	}
+
+	public String FileBaseName(String filename)
+	{
+		int index = mFileName.lastIndexOf('/');
+		if (index < 0)
+		{
+			return filename;
+		}
+
+		return filename.substring(index + 1);
+	}
+
+	public boolean PutFile(byte[] uuid, HeaderSet headerSet) throws IOException
+	{
+		if (mFileName == null)
+		{
+			return false;
+		}
+
+		File file = new File(mFileName);
+		long fileLength = file.length();
+
+		if (fileLength == 0)
+		{
+			CavanLog("File " + mFileName + " don't exist");
+			return false;
+		}
+
+		if (headerSet == null)
+		{
+			headerSet = new HeaderSet();
+		}
+
+		headerSet.setHeader(HeaderSet.NAME, FileBaseName(mFileName));
+		CavanLog("NAME = " + headerSet.getHeader(HeaderSet.NAME));
+		headerSet.setHeader(HeaderSet.LENGTH, fileLength);
+		CavanLog("LENGTH = " + headerSet.getHeader(HeaderSet.LENGTH));
+		headerSet.setHeader(HeaderSet.TYPE, getFileType());
+		CavanLog("TYPE = " + headerSet.getHeader(HeaderSet.TYPE));
+
+
+		ClientSession session = connect(uuid);
+		if (session == null)
+		{
+			return false;
+		}
+
+		ClientOperation clientOperation = (ClientOperation) session.put(headerSet);
+		if (clientOperation == null)
+		{
+			CavanLog("clientOperation == null");
+			disconnect(session);
+			return false;
+		}
+
+		OutputStream obexOutputStream = clientOperation.openOutputStream();
+		if (obexOutputStream == null)
+		{
+			CavanLog("obexOutputStream == null");
+			clientOperation.abort();
+			disconnect(session);
+			return false;
+		}
+
+		InputStream obexInputStream = clientOperation.openInputStream();
+		if (obexInputStream == null)
+		{
+			CavanLog("obexInputStream == null");
+			obexOutputStream.close();
+			clientOperation.abort();
+			disconnect(session);
+			return false;
+		}
+
+		FileInputStream fileInputStream = new FileInputStream(file);
+		BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+		int obexMaxPackageSize = clientOperation.getMaxPacketSize();
+		byte[] buff = new byte[obexMaxPackageSize];
+
+		boolean boolResult = true;
+
+		CavanLog("Start send file");
+
+		while (fileLength != 0)
+		{
+			int sendLength = bufferedInputStream.read(buff);
+
+			if (sendLength < 0)
+			{
+				boolResult = false;
+				break;
+			}
+
+			obexOutputStream.write(buff, 0, sendLength);
+
+			int responseCode = clientOperation.getResponseCode();
+			if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
+			{
+				CavanLog("responseCode = " + responseCode);
+				CavanLog("responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
+				boolResult = false;
+				break;
+			}
+
+			fileLength -= sendLength;
+		}
+
+		bufferedInputStream.close();
+		obexInputStream.close();
+		fileInputStream.close();
+		obexOutputStream.close();
+
+		if (boolResult)
+		{
+			clientOperation.close();
+		}
+		else
+		{
+			clientOperation.abort();
+		}
+
+		disconnect(session);
+
+		return boolResult;
+	}
+
+	public byte[] GetByteArray(byte[] request, HeaderSet headerSet, byte[] uuid) throws IOException
+	{
+		Log.v("GetByteArray", "Request = \n" + new String(request));
+		ClientSession session = connect(uuid);
+		if (session == null)
+		{
+			return null;
+		}
+
+		ClientOperation operation = (ClientOperation) session.get(headerSet);
+		CavanLog("Get operation complete");
+
+		OutputStream outputStream = operation.openOutputStream();
+		CavanLog("Open OutputStream complete");
+		outputStream.write(request);
+		CavanLog("Write data complete");
+		outputStream.close();
+
+		int responseCode = operation.getResponseCode();
+		if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
+		{
+			CavanLog("responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
+			return null;
+		}
+
+		int length = (int) operation.getLength();
+		CavanLog("length = " + length);
+		if (length <= 0)
+		{
+			return null;
+		}
+
+		InputStream inputStream = operation.openInputStream();
+		CavanLog("Open InputStream complete");
+		byte[] response = new byte[length];
+		inputStream.read(response);
+		inputStream.close();
+
+		CavanLog("Response Content = \n" + new String(response));
+
+		return response;
+	}
+
+	public byte[] SendSoapRequest(byte[] request)
+	{
+		HeaderSet reqHeaderSet = new HeaderSet();
+		reqHeaderSet.setHeader(HeaderSet.TYPE, "x-obex/bt-SOAP");
+
+		try
+		{
+			byte[] response = GetByteArray(request, reqHeaderSet, null);
+
+			return response;
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	@Override
@@ -217,20 +418,13 @@ public class BppBase extends Thread
 
 		try
 		{
-			if (connect())
-			{
-				CavanLog("Connect successfully");
-			}
-			else
-			{
-				CavanLog("Connect failed");
-				return;
-			}
+			CavanLog("Connect to printer");
+			mTransport.connect();
 		}
-		catch (IOException e)
+		catch (IOException e1)
 		{
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 			return;
 		}
 
@@ -245,7 +439,7 @@ public class BppBase extends Thread
 
 		try
 		{
-			disconnect();
+			mTransport.close();
 		}
 		catch (IOException e)
 		{

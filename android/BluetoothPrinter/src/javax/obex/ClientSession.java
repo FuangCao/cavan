@@ -37,8 +37,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import android.util.Log;
-
 /**
  * This class in an implementation of the OBEX ClientSession.
  * @hide
@@ -409,7 +407,6 @@ public final class ClientSession extends ObexSession {
      */
     public boolean sendRequest(int opCode, byte[] head, HeaderSet header,
             PrivateInputStream privateInput) throws IOException {
-    	// Log.v("sendRequest", "opCode = " + opCode);
         //check header length with local max size
         if (head != null) {
             if ((head.length + 3) > ObexHelper.MAX_PACKET_SIZE_INT) {
@@ -438,9 +435,6 @@ public final class ClientSession extends ObexSession {
         header.responseCode = mInput.read();
 
         int length = ((mInput.read() << 8) | (mInput.read()));
-
-        Log.v("sendRequest", "header.responseCode = " + header.responseCode);
-        Log.v("sendRequest", "response length = " + length);
 
         if (length > ObexHelper.MAX_PACKET_SIZE_INT) {
             throw new IOException("Packet received exceeds packet size limit");
@@ -485,7 +479,6 @@ public final class ClientSession extends ObexSession {
             byte[] body = ObexHelper.updateHeaderSet(header, data);
             if ((privateInput != null) && (body != null)) {
                 privateInput.writeBytes(body, 1);
-                // Log.v("SendRequest", "response body = \n" + new String(body));
             }
 
             if (header.mConnectionID != null) {

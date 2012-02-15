@@ -32,6 +32,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -44,7 +45,7 @@ public class BluetoothPrinterActivity extends Activity
 {
 	/** Called when the activity is first created. */
 	private static final String TAG = "Cavan";
-
+	private String mFileName = "/mnt/sdcard/printer.xml";
 
 	private BluetoothAdapter mBluetoothAdapter;
 	private Button mButtonStart;
@@ -54,6 +55,7 @@ public class BluetoothPrinterActivity extends Activity
 	private BluetoothDevice mBluetoothDevice;
 	private Button mButtonPrinter;
 	private TextView mTextViewStatus;
+	private EditText mEditTextFilePath;
 
 	private String ByteArrayToHexString(byte[] bs)
 	{
@@ -173,6 +175,7 @@ public class BluetoothPrinterActivity extends Activity
 		mButtonRefresh = (Button) findViewById(R.id.button3);
 		mButtonPrinter = (Button) findViewById(R.id.button4);
 		mTextViewStatus = (TextView) findViewById(R.id.textView1);
+		mEditTextFilePath = (EditText) findViewById(R.id.editText1);
 
 		mButtonStart.setOnClickListener(new OnClickListener()
 		{
@@ -188,7 +191,12 @@ public class BluetoothPrinterActivity extends Activity
 				}
 
 				BppObexTransport bppObexTransport = new BppObexTransport(mBluetoothDevice);
-				JobBasePrinter jobBasePrinter = new JobBasePrinter(BluetoothPrinterActivity.this, bppObexTransport);
+				mFileName = mEditTextFilePath.getText().toString();
+				if (mFileName == "")
+				{
+					CavanMessage("Please input file path");
+				}
+				JobBasePrinter jobBasePrinter = new JobBasePrinter(BluetoothPrinterActivity.this, bppObexTransport, mFileName, null);
 				jobBasePrinter.start();
 			}
 		});
@@ -231,9 +239,11 @@ public class BluetoothPrinterActivity extends Activity
 				CavanMessage("Start Printing");
 
 				BppObexTransport bppObexTransport = new BppObexTransport(mBluetoothDevice);
-				SimplePushPrinter printer = new SimplePushPrinter(BluetoothPrinterActivity.this, bppObexTransport);
+				SimplePushPrinter printer = new SimplePushPrinter(BluetoothPrinterActivity.this, bppObexTransport, mFileName, null);
 				printer.start();
 			}
 		});
+
+		mEditTextFilePath.setText(mFileName);
 	}
 }

@@ -2,37 +2,26 @@ package com.eavoo.printer;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
-
-import javax.obex.ClientOperation;
-import javax.obex.ClientSession;
-import javax.obex.HeaderSet;
-import javax.obex.ResponseCodes;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import android.content.Context;
-import android.os.Process;
 import android.util.Log;
 
 public class BppSoapRequest
 {
 	private static final String TAG = "CavanBppSoapRequest";
+	protected BppBase mBppBase;
 	private String mAction;
 	private String mBody;
 	private String mHttpHeader;
 	private byte[] mResponse;
-	private ClientSession mObexClientSession;
 	private Document mDocument;
 	private Element mElementBody;
 	private Element mElementEnvelope;
@@ -67,17 +56,26 @@ public class BppSoapRequest
 		this.mBody = body;
 	}
 
-	public BppSoapRequest(ClientSession session, String action, String body)
+	public BppSoapRequest(BppBase base)
 	{
-		this.mObexClientSession = session;
-		this.mAction = action;
-		this.mBody = body;
-		this.mHttpHeader = null;
+		this.mBppBase = base;
 	}
 
-	public BppSoapRequest(ClientSession session, String action)
+	public byte[] getResponse()
 	{
-		this(session, action, null);
+		return mResponse;
+	}
+
+	public void setResponse(byte[] response)
+	{
+		this.mResponse = response;
+	}
+
+	public void setAttributes(String action, String body, String header)
+	{
+		this.mAction = action;
+		this.mBody = body;
+		this.mHttpHeader = header;
 	}
 
 	public byte[] toByteArray()
@@ -97,7 +95,7 @@ public class BppSoapRequest
 		builderBody.append("</s:Envelope>");
 
 		StringBuilder builderHeader = new StringBuilder();
-		builderHeader.append("CONTENT-LENGTH: " + builderBody.length() + "\r\n");
+		builderHeader.append(String.format("CONTENT-LENGTH: %8d\r\n", builderBody.length()));
 		if (mHttpHeader != null)
 		{
 			builderHeader.append(mHttpHeader + "\r\n");
@@ -108,59 +106,18 @@ public class BppSoapRequest
 
 		String soapContent = builderHeader.toString() + "\r\n\r\n" + builderBody.toString();
 
-		Log.v(TAG, "Soap Content = \n" + soapContent);
-
 		return soapContent.getBytes();
 	}
 
-	public boolean SendToPrinter() throws IOException
+	public boolean SendTo()
 	{
-		HeaderSet reqHeaderSet = new HeaderSet();
-
-		reqHeaderSet.setHeader(HeaderSet.TYPE, "x-obex/bt-SOAP");
-		ClientOperation clientOperation = (ClientOperation) mObexClientSession.get(reqHeaderSet);
-
-		Log.v(TAG, "Get operation complete");
-
-		OutputStream outputStream = clientOperation.openOutputStream();
-		Log.v(TAG, "Open OutputStream complete");
-
-		outputStream.write(toByteArray());
-		Log.v(TAG, "Write data complete");
-		outputStream.close();
-
-		int responseCode = clientOperation.getResponseCode();
-
-		if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
+		mResponse = mBppBase.SendSoapRequest(toByteArray());
+		if (mResponse == null)
 		{
-			Log.v(TAG, "responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
 			return false;
 		}
 
-		InputStream inputStream = clientOperation.openInputStream();
-		Log.v(TAG, "Open InputStream complete");
-
-		long length = clientOperation.getLength();
-		Log.v(TAG, "length = " + length);
-
-		mResponse = new byte[(int) length];
-
-		inputStream.read(mResponse);
-		inputStream.close();
-
-		Log.v(TAG, "Response Content = \n" + new String(mResponse));
-
 		return true;
-	}
-
-	public byte[] getResponse()
-	{
-		return mResponse;
-	}
-
-	public void setResponse(byte[] response)
-	{
-		this.mResponse = response;
 	}
 
 	public Element ParseSoapResponse(String action) throws ParserConfigurationException, SAXException, IOException
@@ -200,5 +157,37 @@ public class BppSoapRequest
 		}
 
 		return map;
+	}
+
+	public HashMap<String, String> getResponseAttributes(String action)
+	{
+		Element elementAction = null;
+
+		try
+		{
+			elementAction = ParseSoapResponse(action);
+		}
+		catch (ParserConfigurationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (SAXException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		if (elementAction == null)
+		{
+			return null;
+		}
+
+		return getResponseAttributes(elementAction);
 	}
 }
