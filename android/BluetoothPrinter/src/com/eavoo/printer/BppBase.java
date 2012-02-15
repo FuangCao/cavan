@@ -1,15 +1,29 @@
 package com.eavoo.printer;
 
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+
 import javax.obex.ClientOperation;
 import javax.obex.ClientSession;
 import javax.obex.HeaderSet;
 import javax.obex.ResponseCodes;
+
+import com.sun.image.codec.jpeg.JPEGCodec;
+import com.sun.image.codec.jpeg.JPEGImageEncoder;
+import com.sun.pdfview.PDFFile;
+import com.sun.pdfview.PDFPage;
+
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.Process;
@@ -98,20 +112,19 @@ public class BppBase extends Thread
 		this.mFileType = mFileType;
 	}
 
-	/**
 	public byte[] PdfToJpeg(int pageIndex) throws IOException
 	{
-		File file = new File(mFilePath);
+		File file = new File(mFileName);
 		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
 		FileChannel channel = randomAccessFile.getChannel();
 		ByteBuffer byteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
 		PDFFile pdfFile = new PDFFile(byteBuffer);
 
 		PDFPage page = pdfFile.getPage(pageIndex);
-		int width = (int) page.getWidth();
-		int height = (int) page.getHeight();
+		int width = (int) page.getWidth() * 4;
+		int height = (int) page.getHeight() * 4;
 
-		Image image = page.getImage(width, height, new Rectangle(width, height), null, true, true);
+		Image image = page.getImage(width, height, page.getPageBox(), null, true, true);
 		BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		bufferedImage.getGraphics().drawImage(image, 0, 0, width, height, null);
 
@@ -122,7 +135,6 @@ public class BppBase extends Thread
 
 		return jpegOutputStream.toByteArray();
 	}
-	*/
 
 	public String ByteArrayToHexString(byte[] bs)
 	{
@@ -258,7 +270,6 @@ public class BppBase extends Thread
 		headerSet.setHeader(HeaderSet.TYPE, getFileType());
 		CavanLog("TYPE = " + headerSet.getHeader(HeaderSet.TYPE));
 
-
 		ClientSession session = connect(uuid);
 		if (session == null)
 		{
@@ -382,7 +393,7 @@ public class BppBase extends Thread
 		inputStream.read(response);
 		inputStream.close();
 
-		CavanLog("Response Content = \n" + new String(response));
+		Log.v("Cavan", "Response Content = \n" + new String(response));
 
 		return response;
 	}

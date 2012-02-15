@@ -115,7 +115,7 @@ public class JobBasePrinter extends BppBase
 			job.CancelJob();
 		}
 
-		// GetPrinterAttributes();
+		GetPrinterAttributes();
 
 		return true;
 	}
