@@ -3,9 +3,8 @@
 
     <string name="hello">Hello World, BluetoothPrinterActivity!</string>
     <string name="app_name">BluetoothPrinter</string>
-    <string name="start">JobBasePrint</string>
-    <string name="stop">Stop</string>
+    <string name="print1">JobBasePrint</string>
+    <string name="print2">SimplePushPrint</string>
     <string name="refresh">Refresh</string>
-    <string name="print">SimplePush</string>
 
 </resources>

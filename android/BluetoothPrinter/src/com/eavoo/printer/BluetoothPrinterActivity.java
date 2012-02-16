@@ -24,12 +24,11 @@ public class BluetoothPrinterActivity extends Activity
 	private String mFileName = "/mnt/sdcard/printer.txt";
 
 	private BluetoothAdapter mBluetoothAdapter;
-	private Button mButtonStart;
-	private Button mButtonStop;
+	private Button mButtonJobBasePrint;
 	private Button mButtonRefresh;
 	private LinearLayout mLayoutDevices;
 	private BluetoothDevice mBluetoothDevice;
-	private Button mButtonPrinter;
+	private Button mButtonSimplePushPrint;
 	private TextView mTextViewStatus;
 	private EditText mEditTextFilePath;
 
@@ -104,6 +103,18 @@ public class BluetoothPrinterActivity extends Activity
 		return true;
 	}
 
+	public boolean updateFileName()
+	{
+		mFileName = mEditTextFilePath.getText().toString();
+		if (mFileName == "")
+		{
+			CavanMessage("Please input file path");
+			return false;
+		}
+
+		return true;
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -113,14 +124,13 @@ public class BluetoothPrinterActivity extends Activity
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
 		mLayoutDevices = (LinearLayout) findViewById(R.id.linearLayout1);
-		mButtonStart = (Button) findViewById(R.id.button1);
-		mButtonStop = (Button) findViewById(R.id.button2);
+		mButtonJobBasePrint = (Button) findViewById(R.id.button1);
+		mButtonSimplePushPrint = (Button) findViewById(R.id.button2);
 		mButtonRefresh = (Button) findViewById(R.id.button3);
-		mButtonPrinter = (Button) findViewById(R.id.button4);
 		mTextViewStatus = (TextView) findViewById(R.id.textView1);
 		mEditTextFilePath = (EditText) findViewById(R.id.editText1);
 
-		mButtonStart.setOnClickListener(new OnClickListener()
+		mButtonJobBasePrint.setOnClickListener(new OnClickListener()
 		{
 
 			@Override
@@ -134,24 +144,11 @@ public class BluetoothPrinterActivity extends Activity
 				}
 
 				BppObexTransport bppObexTransport = new BppObexTransport(mBluetoothDevice);
-				mFileName = mEditTextFilePath.getText().toString();
-				if (mFileName == "")
+				if (updateFileName())
 				{
-					CavanMessage("Please input file path");
+					JobBasePrinter jobBasePrinter = new JobBasePrinter(BluetoothPrinterActivity.this, bppObexTransport, mFileName, null);
+					jobBasePrinter.start();
 				}
-				JobBasePrinter jobBasePrinter = new JobBasePrinter(BluetoothPrinterActivity.this, bppObexTransport, mFileName, null);
-				jobBasePrinter.start();
-			}
-		});
-
-		mButtonStop.setOnClickListener(new OnClickListener()
-		{
-
-			@Override
-			public void onClick(View v)
-			{
-				// TODO Auto-generated method stub
-				CavanMessage("Stop service");
 			}
 		});
 
@@ -167,7 +164,7 @@ public class BluetoothPrinterActivity extends Activity
 			}
 		});
 
-		mButtonPrinter.setOnClickListener(new OnClickListener()
+		mButtonSimplePushPrint.setOnClickListener(new OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
@@ -182,8 +179,11 @@ public class BluetoothPrinterActivity extends Activity
 				CavanMessage("Start Printing");
 
 				BppObexTransport bppObexTransport = new BppObexTransport(mBluetoothDevice);
-				SimplePushPrinter printer = new SimplePushPrinter(BluetoothPrinterActivity.this, bppObexTransport, mFileName, null);
-				printer.start();
+				if (updateFileName())
+				{
+					SimplePushPrinter printer = new SimplePushPrinter(BluetoothPrinterActivity.this, bppObexTransport, mFileName, null);
+					printer.start();
+				}
 			}
 		});
 
