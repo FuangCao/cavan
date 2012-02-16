@@ -1,9 +1,9 @@
 package com.eavoo.printer;
 
 import java.awt.Image;
-import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,17 +13,14 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-
 import javax.obex.ClientOperation;
 import javax.obex.ClientSession;
 import javax.obex.HeaderSet;
 import javax.obex.ResponseCodes;
-
 import com.sun.image.codec.jpeg.JPEGCodec;
 import com.sun.image.codec.jpeg.JPEGImageEncoder;
 import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
-
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.Process;
@@ -104,7 +101,7 @@ public class BppBase extends Thread
 
 	public String getFileType()
 	{
-		return mFileType == null ?  GetFileMimeTypeByName(mFileName) : mFileType;
+		return mFileType == null ? GetFileMimeTypeByName(mFileName) : mFileType;
 	}
 
 	public void setFileType(String mFileType)
@@ -112,14 +109,8 @@ public class BppBase extends Thread
 		this.mFileType = mFileType;
 	}
 
-	public byte[] PdfToJpeg(int pageIndex) throws IOException
+	public byte[] PdfToJpeg(PDFFile pdfFile, int pageIndex) throws IOException
 	{
-		File file = new File(mFileName);
-		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
-		FileChannel channel = randomAccessFile.getChannel();
-		ByteBuffer byteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-		PDFFile pdfFile = new PDFFile(byteBuffer);
-
 		PDFPage page = pdfFile.getPage(pageIndex);
 		int width = (int) page.getWidth() * 4;
 		int height = (int) page.getHeight() * 4;
@@ -134,6 +125,16 @@ public class BppBase extends Thread
 		jpegOutputStream.close();
 
 		return jpegOutputStream.toByteArray();
+	}
+
+	public PDFFile OpenPdfFile(String filename) throws IOException
+	{
+		File file = new File(filename);
+		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+		FileChannel channel = randomAccessFile.getChannel();
+		ByteBuffer byteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+
+		return new PDFFile(byteBuffer);
 	}
 
 	public String ByteArrayToHexString(byte[] bs)
@@ -200,28 +201,27 @@ public class BppBase extends Thread
 		session.close();
 	}
 
+	public String GetFileExtension(String pathname)
+	{
+        int dotIndex = pathname.lastIndexOf(".");
+        if (dotIndex < 0)
+        {
+			return "txt";
+        }
+
+		return pathname.substring(dotIndex + 1).toLowerCase();
+	}
+
 	public String GetFileMimeTypeByName(String pathname)
 	{
-        String extension;
-
         if (pathname == null)
         {
 			return null;
         }
 
-        int dotIndex = pathname.lastIndexOf(".");
-        if (dotIndex < 0)
-        {
-			extension = "txt";
-        }
-        else
-        {
-			extension = pathname.substring(dotIndex + 1).toLowerCase();
-        }
-
 		MimeTypeMap map = MimeTypeMap.getSingleton();
 
-        return map.getMimeTypeFromExtension(extension);
+        return map.getMimeTypeFromExtension(GetFileExtension(pathname));
 	}
 
 	public boolean BppObexRun()
@@ -233,7 +233,7 @@ public class BppBase extends Thread
 
 	public String FileBaseName(String filename)
 	{
-		int index = mFileName.lastIndexOf('/');
+		int index = filename.lastIndexOf('/');
 		if (index < 0)
 		{
 			return filename;
@@ -242,34 +242,8 @@ public class BppBase extends Thread
 		return filename.substring(index + 1);
 	}
 
-	public boolean PutFile(byte[] uuid, HeaderSet headerSet) throws IOException
+	public boolean PutFile(InputStream inputStream, HeaderSet headerSet, byte[] uuid) throws IOException
 	{
-		if (mFileName == null)
-		{
-			return false;
-		}
-
-		File file = new File(mFileName);
-		long fileLength = file.length();
-
-		if (fileLength == 0)
-		{
-			CavanLog("File " + mFileName + " don't exist");
-			return false;
-		}
-
-		if (headerSet == null)
-		{
-			headerSet = new HeaderSet();
-		}
-
-		headerSet.setHeader(HeaderSet.NAME, FileBaseName(mFileName));
-		CavanLog("NAME = " + headerSet.getHeader(HeaderSet.NAME));
-		headerSet.setHeader(HeaderSet.LENGTH, fileLength);
-		CavanLog("LENGTH = " + headerSet.getHeader(HeaderSet.LENGTH));
-		headerSet.setHeader(HeaderSet.TYPE, getFileType());
-		CavanLog("TYPE = " + headerSet.getHeader(HeaderSet.TYPE));
-
 		ClientSession session = connect(uuid);
 		if (session == null)
 		{
@@ -303,8 +277,7 @@ public class BppBase extends Thread
 			return false;
 		}
 
-		FileInputStream fileInputStream = new FileInputStream(file);
-		BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+		BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 		int obexMaxPackageSize = clientOperation.getMaxPacketSize();
 		byte[] buff = new byte[obexMaxPackageSize];
 
@@ -312,17 +285,16 @@ public class BppBase extends Thread
 
 		CavanLog("Start send file");
 
-		while (fileLength != 0)
+		while (true)
 		{
-			int sendLength = bufferedInputStream.read(buff);
-
-			if (sendLength < 0)
+			int readLen = bufferedInputStream.read(buff);
+			if (readLen <= 0)
 			{
-				boolResult = false;
+				CavanLog("Send file complete");
 				break;
 			}
 
-			obexOutputStream.write(buff, 0, sendLength);
+			obexOutputStream.write(buff, 0, readLen);
 
 			int responseCode = clientOperation.getResponseCode();
 			if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
@@ -332,13 +304,10 @@ public class BppBase extends Thread
 				boolResult = false;
 				break;
 			}
-
-			fileLength -= sendLength;
 		}
 
 		bufferedInputStream.close();
 		obexInputStream.close();
-		fileInputStream.close();
 		obexOutputStream.close();
 
 		if (boolResult)
@@ -353,6 +322,60 @@ public class BppBase extends Thread
 		disconnect(session);
 
 		return boolResult;
+	}
+
+	public boolean PutFile(String filename, String filetype, HeaderSet headerSet, byte[] uuid) throws IOException
+	{
+		if (filename == null)
+		{
+			return false;
+		}
+
+		File file = new File(filename);
+		long size = file.length();
+
+		if (size <= 0)
+		{
+			CavanLog("File " + filename + " don't exist");
+			return false;
+		}
+
+		if (headerSet == null)
+		{
+			headerSet = new HeaderSet();
+		}
+
+		headerSet.setHeader(HeaderSet.NAME, FileBaseName(filename));
+		CavanLog("NAME = " + headerSet.getHeader(HeaderSet.NAME));
+		headerSet.setHeader(HeaderSet.LENGTH, size);
+		CavanLog("LENGTH = " + headerSet.getHeader(HeaderSet.LENGTH));
+
+		if (filetype == null)
+		{
+			filetype = GetFileMimeTypeByName(filename);
+		}
+		headerSet.setHeader(HeaderSet.TYPE, filetype);
+		CavanLog("TYPE = " + headerSet.getHeader(HeaderSet.TYPE));
+
+		FileInputStream inputStream = new FileInputStream(file);
+		boolean ret = PutFile(new FileInputStream(file), headerSet, uuid);
+		inputStream.close();
+
+		return ret;
+	}
+
+	public boolean PutByteArray(byte[] uuid, HeaderSet headerSet, byte[] data) throws IOException
+	{
+		if (headerSet == null)
+		{
+			headerSet = new HeaderSet();
+		}
+
+		headerSet.setHeader(HeaderSet.LENGTH, data.length);
+
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+
+		return PutFile(inputStream, headerSet, uuid);
 	}
 
 	public byte[] GetByteArray(byte[] request, HeaderSet headerSet, byte[] uuid) throws IOException

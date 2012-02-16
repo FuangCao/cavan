@@ -21,7 +21,7 @@ import android.widget.Toast;
 public class BluetoothPrinterActivity extends Activity
 {
 	/** Called when the activity is first created. */
-	private String mFileName = "/mnt/sdcard/printer.xml";
+	private String mFileName = "/mnt/sdcard/printer.txt";
 
 	private BluetoothAdapter mBluetoothAdapter;
 	private Button mButtonStart;

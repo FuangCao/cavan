@@ -2,11 +2,19 @@ package com.eavoo.printer;
 
 import java.io.IOException;
 import java.util.HashMap;
+
+import javax.obex.ApplicationParameter;
+import javax.obex.HeaderSet;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
 public class PrintJob extends BppSoapRequest
 {
+	private static final byte AppTagOffset = 1;
+	private static final byte AppTagCount = 2;
+	private static final byte AppTagJobId = 3;
+	private static final byte AppTagFileSize = 4;
+
 	private int mCopies = 1;
 	private int mNumberUp = 1;
 	private int mJobId;
@@ -21,9 +29,10 @@ public class PrintJob extends BppSoapRequest
 	private String mMediaType = "envelope";
 	private String mPrintQuality = "high";
 
-	public PrintJob(BppBase base)
+	public PrintJob(BppBase base, String format)
 	{
 		super(base);
+		this.mDocumentFormat = format;
 	}
 
 	public int getJobId()
@@ -213,5 +222,54 @@ public class PrintJob extends BppSoapRequest
 		}
 
 		return getResponseAttributes("GetJobAttributesResponse");
+	}
+
+	public static byte[] IntegerToByteArray(int value)
+	{
+		byte[] bs =
+		{
+			(byte) ((value >> 24) & 0xFF),
+			(byte) ((value >> 16) & 0xFF),
+			(byte) ((value >> 8) & 0xFF),
+			(byte) (value & 0xFF),
+		};
+
+		return bs;
+	}
+
+	public byte[] buildApplicationParameter()
+	{
+		ApplicationParameter parameter = new ApplicationParameter();
+		parameter.addAPPHeader(AppTagJobId, (byte) 4, IntegerToByteArray(mJobId));
+
+		return parameter.getAPPparam();
+	}
+
+	public byte[] buildApplicationParameter(int offset, int count, int size)
+	{
+		ApplicationParameter parameter = new ApplicationParameter();
+
+		parameter.addAPPHeader(AppTagOffset, (byte) 4, IntegerToByteArray(offset));
+		parameter.addAPPHeader(AppTagCount, (byte) 4, IntegerToByteArray(count));
+		parameter.addAPPHeader(AppTagJobId, (byte) 4, IntegerToByteArray(mJobId));
+		parameter.addAPPHeader(AppTagFileSize, (byte) 4, IntegerToByteArray(size));
+
+		return parameter.getAPPparam();
+	}
+
+	public HeaderSet buildHeaderSet(int offset, int count, int size)
+	{
+		HeaderSet headerSet = new HeaderSet();
+		headerSet.setHeader(HeaderSet.APPLICATION_PARAMETER, buildApplicationParameter(offset, count, size));
+
+		return headerSet;
+	}
+
+	public HeaderSet buildHeaderSet()
+	{
+		HeaderSet headerSet = new HeaderSet();
+		headerSet.setHeader(HeaderSet.APPLICATION_PARAMETER, buildApplicationParameter());
+
+		return headerSet;
 	}
 }

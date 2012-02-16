@@ -15,7 +15,7 @@ public class SimplePushPrinter extends BppBase
 	{
 		try
 		{
-			if (PutFile(UUID_DPS, null))
+			if (PutFile(getFileName(), getFileType(), null, UUID_DPS))
 			{
 				return true;
 			}
