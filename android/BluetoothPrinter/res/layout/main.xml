@@ -4,41 +4,52 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <EditText
-        android:id="@+id/editText1"
+    <LinearLayout
+        android:id="@+id/main_linearLayout3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
-        <requestFocus />
-    </EditText>
+        <EditText
+            android:id="@+id/main_editText1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/main_button4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Browse" />
+
+    </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout1"
+        android:id="@+id/main_linearLayout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" >
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/main_linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
         <Button
-            android:id="@+id/button1"
+            android:id="@+id/main_button1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/print1" android:layout_weight="1"/>
 
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/main_button2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/print2" />
 
         <Button
-            android:id="@+id/button3"
+            android:id="@+id/main_button3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -46,7 +57,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/main_textView1"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical" android:scrollbarStyle="outsideOverlay" android:autoText="true"/>

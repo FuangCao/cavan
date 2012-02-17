@@ -6,6 +6,7 @@
 *.rej
 *.orig
 *.files
+*.log
 /*.patch
 !.gitignore
 /out

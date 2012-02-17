@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -20,9 +22,6 @@ import android.widget.Toast;
 
 public class BluetoothPrinterActivity extends Activity
 {
-	/** Called when the activity is first created. */
-	private String mFileName = "/mnt/sdcard/printer.txt";
-
 	private BluetoothAdapter mBluetoothAdapter;
 	private Button mButtonJobBasePrint;
 	private Button mButtonRefresh;
@@ -31,6 +30,7 @@ public class BluetoothPrinterActivity extends Activity
 	private Button mButtonSimplePushPrint;
 	private TextView mTextViewStatus;
 	private EditText mEditTextFilePath;
+	private Button mButtonBrowse;
 
 	private void CavanMessage(String message)
 	{
@@ -103,16 +103,9 @@ public class BluetoothPrinterActivity extends Activity
 		return true;
 	}
 
-	public boolean updateFileName()
+	public String getFileName()
 	{
-		mFileName = mEditTextFilePath.getText().toString();
-		if (mFileName == "")
-		{
-			CavanMessage("Please input file path");
-			return false;
-		}
-
-		return true;
+		return mEditTextFilePath.getText().toString();
 	}
 
 	@Override
@@ -123,12 +116,13 @@ public class BluetoothPrinterActivity extends Activity
 
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-		mLayoutDevices = (LinearLayout) findViewById(R.id.linearLayout1);
-		mButtonJobBasePrint = (Button) findViewById(R.id.button1);
-		mButtonSimplePushPrint = (Button) findViewById(R.id.button2);
-		mButtonRefresh = (Button) findViewById(R.id.button3);
-		mTextViewStatus = (TextView) findViewById(R.id.textView1);
-		mEditTextFilePath = (EditText) findViewById(R.id.editText1);
+		mLayoutDevices = (LinearLayout) findViewById(R.id.main_linearLayout1);
+		mButtonJobBasePrint = (Button) findViewById(R.id.main_button1);
+		mButtonSimplePushPrint = (Button) findViewById(R.id.main_button2);
+		mButtonRefresh = (Button) findViewById(R.id.main_button3);
+		mTextViewStatus = (TextView) findViewById(R.id.main_textView1);
+		mEditTextFilePath = (EditText) findViewById(R.id.main_editText1);
+		mButtonBrowse = (Button) findViewById(R.id.main_button4);
 
 		mButtonJobBasePrint.setOnClickListener(new OnClickListener()
 		{
@@ -144,11 +138,8 @@ public class BluetoothPrinterActivity extends Activity
 				}
 
 				BppObexTransport bppObexTransport = new BppObexTransport(mBluetoothDevice);
-				if (updateFileName())
-				{
-					JobBasePrinter jobBasePrinter = new JobBasePrinter(BluetoothPrinterActivity.this, bppObexTransport, mFileName, null);
-					jobBasePrinter.start();
-				}
+				JobBasePrinter jobBasePrinter = new JobBasePrinter(BluetoothPrinterActivity.this, bppObexTransport, getFileName(), null);
+				jobBasePrinter.start();
 			}
 		});
 
@@ -179,14 +170,39 @@ public class BluetoothPrinterActivity extends Activity
 				CavanMessage("Start Printing");
 
 				BppObexTransport bppObexTransport = new BppObexTransport(mBluetoothDevice);
-				if (updateFileName())
-				{
-					SimplePushPrinter printer = new SimplePushPrinter(BluetoothPrinterActivity.this, bppObexTransport, mFileName, null);
-					printer.start();
-				}
+				SimplePushPrinter printer = new SimplePushPrinter(BluetoothPrinterActivity.this, bppObexTransport, getFileName(), null);
+				printer.start();
 			}
 		});
 
-		mEditTextFilePath.setText(mFileName);
+		mButtonBrowse.setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				Intent intent = new Intent(Intent.ACTION_VIEW);
+				intent.setClass(getApplicationContext(), FileBrowserActivity.class);
+				startActivityForResult(intent, 0);
+			}
+		});
+
+		ListBluetoothDevices();
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		switch (requestCode)
+		{
+		case 0:
+			if (data != null)
+			{
+				mEditTextFilePath.setText(data.getStringExtra("pathname"));
+			}
+			break;
+
+		default:
+			Log.v("Cavan", "unknown requestCode = " + requestCode);
+		}
 	}
 }

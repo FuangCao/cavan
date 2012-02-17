@@ -17,18 +17,18 @@
 package android.security;
 
 /**
- * Provides the SHA-1 hash encyption.
+ * Provides the MD5 hash encryption.
  */
-public class Sha1MessageDigest extends MessageDigest
+public class Md5MessageDigest extends MessageDigest
 {
     // ptr to native context
-    private int mNativeSha1Context;
-
-    public Sha1MessageDigest()
+    private int mNativeMd5Context;
+    
+    public Md5MessageDigest()
     {
         init();
     }
-
+    
     public byte[] digest(byte[] input)
     {
         update(input);

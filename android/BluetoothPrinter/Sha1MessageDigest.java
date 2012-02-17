@@ -23,12 +23,12 @@ public class Sha1MessageDigest extends MessageDigest
 {
     // ptr to native context
     private int mNativeSha1Context;
-
+    
     public Sha1MessageDigest()
     {
         init();
     }
-
+    
     public byte[] digest(byte[] input)
     {
         update(input);
