@@ -53,38 +53,38 @@ public class PatternType1 extends PDFPattern {
     /** paint types */
     public static final int PAINT_COLORED = 1;
     public static final int PAINT_UNCOLORED = 2;
-
+   
     /** tiling types */
     public static final int TILE_CONSTANT = 1;
     public static final int TILE_NODISTORT = 2;
     public static final int TILE_FASTER = 3;
-
+    
     /** the resources used by the image we will tile */
     private HashMap<String,PDFObject> resources;
-
+    
     /** the paint type (colored or uncolored) */
     private int paintType;
-
+    
     /** the tiling type (constant, no distort or faster) */
     private int tilingType;
-
+    
     /** the bounding box of the tile, in tile space */
     private Rectangle2D bbox;
-
+    
     /** the horiztonal tile spacing, in tile space */
     private int xStep;
-
+    
     /** the vertical spacing, in tile space */
     private int yStep;
-
+    
     /** the stream data */
     private byte[] data;
-
+    
     /** Creates a new instance of PatternType1 */
     public PatternType1() {
         super(1);    
     }
-
+    
     /**
      * Parse the pattern from the PDFObject
      *
@@ -93,17 +93,17 @@ public class PatternType1 extends PDFPattern {
     protected void parse(PDFObject patternObj, Map rsrc) throws IOException
     {
         data = patternObj.getStream();
-
+        
         resources = patternObj.getDictRef("Resources").getDictionary();
         paintType = patternObj.getDictRef("PaintType").getIntValue();
         tilingType = patternObj.getDictRef("TilingType").getIntValue();
 
         bbox = PDFFile.parseNormalisedRectangle(patternObj.getDictRef("BBox"));
-
+        
         xStep = patternObj.getDictRef("XStep").getIntValue();
         yStep = patternObj.getDictRef("YStep").getIntValue();
     }
-
+    
     /** 
      * Create a PDFPaint from this pattern and set of components.  
      * This creates a buffered image of this pattern using
@@ -122,16 +122,16 @@ public class PatternType1 extends PDFPattern {
                                                     getXStep(),
                                                     getYStep());
         //anchor = getTransform().createTransformedShape(anchor).getBounds2D();
-
+        
         // now create a page bounded by the pattern's user space size
         final PDFPage page = new PDFPage(getBBox(), 0);
-
+        
         // set the base paint if there is one
         if (basePaint != null) {
             page.addFillPaint(basePaint);
             page.addStrokePaint(basePaint);
         }
-
+        
         // undo the page's transform to user space
         /*
         AffineTransform xform =
@@ -139,14 +139,14 @@ public class PatternType1 extends PDFPattern {
             //new AffineTransform(1, 0, 0, -1, 0, getBBox().getHeight());
         page.addXform(xform);
         */
-
+        
         // now parse the pattern contents
         PDFParser prc = new PDFParser(page, data, getResources());
         prc.go(true);
-
+        
         int width = (int) getBBox().getWidth();
         int height = (int) getBBox().getHeight();
-
+        
         // get actual image
         Paint paint = new Paint() {
             public PaintContext createContext(ColorModel cm, 
@@ -161,79 +161,79 @@ public class PatternType1 extends PDFPattern {
                                                            false, 
                                                            Transparency.TRANSLUCENT,
                                                            DataBuffer.TYPE_BYTE);
-
+           
                 Rectangle2D devBBox = 
                     xform.createTransformedShape(getBBox()).getBounds2D();
-
+                
                 double[] steps = new double[] { getXStep(), getYStep() };
                 xform.deltaTransform(steps, 0, steps, 0, 1);
-
+                
                 int width = (int) Math.ceil(devBBox.getWidth());
                 int height = (int) Math.ceil(devBBox.getHeight());
-
+                
                 BufferedImage img = (BufferedImage) page.getImage(width, height,  
                                                                   null, null, 
                                                                   false, true);
-
+                                                                  
                 return new Type1PaintContext(model, devBBox, 
                                              (float) steps[0],
                                              (float) steps[1],
                                              img.getData());
             }
-
+            
             public int getTransparency() {
                 return Transparency.TRANSLUCENT;
             }
         };
-
-
+                                            
+        
         return new TilingPatternPaint(paint, this);
     }
-
+    
     /** get the associated resources */
     public HashMap<String,PDFObject> getResources() {
         return resources;
     }
-
+    
     /** get the paint type */
     public int getPaintType() {
         return paintType;
     }
-
+    
     /** get the tiling type */
     public int getTilingType() {
         return tilingType;
     }
-
+    
     /** get the bounding box */
     public Rectangle2D getBBox() {
         return bbox;
     }
-
+    
     /** get the x step */
     public int getXStep() {
         return xStep;
     }
-
+    
     /** get the y step */
     public int getYStep() {
         return yStep;
     }
-
+    
     /** 
      * This class overrides PDFPaint to paint in the pattern coordinate space
      */
     class TilingPatternPaint extends PDFPaint {
         /** the pattern to paint */
         private PatternType1 pattern;
-
+        
         /** Create a tiling pattern paint */
         public TilingPatternPaint(Paint paint, PatternType1 pattern) {
             super (paint);
-
+            
             this.pattern = pattern;
         }
-
+        
         /**
          * fill a path with the paint, and record the dirty area.
          * @param state the current graphics state
@@ -247,15 +247,15 @@ public class PatternType1 extends PDFPattern {
             // first transform s into device space
             AffineTransform at = g.getTransform();
             Shape xformed = s.createTransformedShape(at);
-
+                                    
             // push the graphics state so we can restore it
             state.push();
-
+            
             // set the transform to be the inital transform concatentated
             // with the pattern matrix
             state.setTransform(state.getInitialTransform());
             state.transform(pattern.getTransform());
-
+            
             // now figure out where the shape should be
             try {
                 at = state.getTransform().createInverse();
@@ -263,20 +263,20 @@ public class PatternType1 extends PDFPattern {
                 // oh well (?)
             }
             xformed = at.createTransformedShape(xformed);
-
+            
             // set the paint and draw the xformed shape
             g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
             g.setPaint(getPaint());
             g.fill(xformed);
-
+            
             // restore the graphics state
             state.pop();
-
+            
             // return the area changed
             return s.createTransformedShape(g.getTransform()).getBounds2D();
         }
     }
-
+    
     /** 
      * A simple paint context that uses an existing raster in device
      * space to generate pixels
@@ -284,19 +284,19 @@ public class PatternType1 extends PDFPattern {
     class Type1PaintContext implements PaintContext {
         /** the color model */
         private ColorModel colorModel;
-
+        
         /** the anchor box */
         private Rectangle2D bbox;
-
+        
         /** the x offset */
         private float xstep;
-
+        
         /** the y offset */
         private float ystep;
-
+        
         /** the image data, as a raster in device coordinates */
         private Raster data;
-
+        
         /**
          * Create a paint context
          */
@@ -309,71 +309,71 @@ public class PatternType1 extends PDFPattern {
             this.ystep = ystep;
             this.data = data;
         }
-
+        
         public void dispose() {
             colorModel = null;
             bbox = null;
             data = null;
         }
-
+        
         public ColorModel getColorModel() {
             return colorModel;
         }
-
+        
         public Raster getRaster(int x, int y, int w, int h) {
             ColorSpace cs = getColorModel().getColorSpace();
-
+       
             int numComponents = cs.getNumComponents();
-
+  
             // all the data, plus alpha channel
             int[] imgData = new int[w * h * (numComponents + 1)];
-
+  
 	    // the x and y step, as ints	
             int useXStep = (int) Math.ceil(Math.abs(xstep));
 	    int useYStep = (int) Math.ceil(Math.abs(ystep));
-
+         
             // a completely transparent pixel (alpha of 0)
             int[] emptyPixel = new int[numComponents + 1];
             int[] usePixel = new int[numComponents + 1];
-
+       
             // for each device coordinate
             for (int j = 0; j < h; j++) {
                 for (int i = 0; i < w; i ++) {
                     // figure out what pixel we are at relative to the image
                     int xloc = (x + i) - (int) Math.ceil(bbox.getX());
                     int yloc = (y + j) - (int) Math.ceil(bbox.getY());
-
+                    
                     xloc %= useXStep;
                     yloc %= useYStep;
-
+                    
                     if (xloc < 0) {
                         xloc = useXStep + xloc;
                     }
                     if (yloc < 0) {
                         yloc = useYStep + yloc;
                     }
-
+                    
                     int[] pixel = emptyPixel;
-
+                
                     // check if we are inside the image
                     if (xloc < data.getWidth() &&
                         yloc < data.getHeight()) {
                         pixel = data.getPixel(xloc, yloc, usePixel); 
                     } 
-
+                            
                     int base = (j * w + i) * (numComponents + 1);
                     for (int c = 0; c < pixel.length; c++) {
                         imgData[base + c] = pixel[c];
                     }
                 }
             }
-
+            
             WritableRaster raster =
                 getColorModel().createCompatibleWritableRaster(w, h);
             raster.setPixels(0, 0, w, h, imgData);
-
+          
             Raster child = raster.createTranslatedChild(x, y);
-
+      
             return child;
         }
     }

@@ -29,64 +29,64 @@ import java.util.Date;
  * @author  jkaplan
  */
 public class HeadTable extends TrueTypeTable {
-
+    
     /** Holds value of property version. */
     private int version;
-
+    
     /** Holds value of property fontRevision. */
     private int fontRevision;
-
+    
     /** Holds value of property checksumAdjustment. */
     private int checksumAdjustment;
-
+    
     /** Holds value of property magicNumber. */
     private int magicNumber;
-
+    
     /** Holds value of property flags. */
     private short flags;
-
+    
     /** Holds value of property unitsPerEm. */
     private short unitsPerEm;
-
+    
     /** Holds value of property created. */
     private long created;
-
+    
     /** Holds value of property modified. */
     private long modified;
-
+    
     /** Holds value of property xMin. */
     private short xMin;
-
+    
     /** Holds value of property yMin. */
     private short yMin;
-
+    
     /** Holds value of property xMax. */
     private short xMax;
-
+    
     /** Holds value of property yMax. */
     private short yMax;
-
+    
     /** Holds value of property macStyle. */
     private short macStyle;
-
+    
     /** Holds value of property lowestRecPPem. */
     private short lowestRecPPem;
-
+    
     /** Holds value of property fontDirectionHint. */
     private short fontDirectionHint;
-
+    
     /** Holds value of property indexToLocFormat. */
     private short indexToLocFormat;
-
+    
     /** Holds value of property glyphDataFormat. */
     private short glyphDataFormat;
-
+    
     /** Creates a new instance of HeadTable 
      * Makes up reasonable(?) defaults for all values
      */
     protected HeadTable() {
         super(TrueTypeTable.HEAD_TABLE);
-
+        
         setVersion(0x10000);
         setFontRevision(0x10000);
         setChecksumAdjustment(0);
@@ -105,7 +105,7 @@ public class HeadTable extends TrueTypeTable {
         setIndexToLocFormat((short) 0);
         setGlyphDataFormat((short) 0);
     }
-
+    
     /**
      * Parse the data before it is set
      */
@@ -131,13 +131,13 @@ public class HeadTable extends TrueTypeTable {
         setIndexToLocFormat(data.getShort());
         setGlyphDataFormat(data.getShort());
     }
-
+    
     /**
      * Get the data we have stored
      */
     public ByteBuffer getData() {
         ByteBuffer buf = ByteBuffer.allocate(getLength());
-
+        
         buf.putInt(getVersion());
         buf.putInt(getFontRevision());
         buf.putInt(getChecksumAdjustment());
@@ -155,20 +155,20 @@ public class HeadTable extends TrueTypeTable {
         buf.putShort(getFontDirectionHint());
         buf.putShort(getIndexToLocFormat());
         buf.putShort(getGlyphDataFormat());
-
+    
         // reset the position to the start of the buffer
         buf.flip();
-
+        
         return buf;
     }
-
+    
     /**
      * Get the length of this table
      */
     public int getLength() {
         return 54;
     }
-
+    
     /** Getter for property version.
      * @return Value of property version.
      *
@@ -176,7 +176,7 @@ public class HeadTable extends TrueTypeTable {
     public int getVersion() {
         return version;
     }
-
+    
     /** Getter for property fontRevision.
      * @return Value of property fontRevision.
      *
@@ -184,7 +184,7 @@ public class HeadTable extends TrueTypeTable {
     public int getFontRevision() {
         return this.fontRevision;
     }
-
+    
     /** Getter for property checksumAdjustment.
      * @return Value of property checksumAdjustment.
      *
@@ -192,7 +192,7 @@ public class HeadTable extends TrueTypeTable {
     public int getChecksumAdjustment() {
         return this.checksumAdjustment;
     }
-
+    
     /** Getter for property magicNumber.
      * @return Value of property magicNumber.
      *
@@ -200,7 +200,7 @@ public class HeadTable extends TrueTypeTable {
     public int getMagicNumber() {
         return this.magicNumber;
     }
-
+    
     /** Getter for property flags.
      * @return Value of property flags.
      *
@@ -208,7 +208,7 @@ public class HeadTable extends TrueTypeTable {
     public short getFlags() {
         return this.flags;
     }
-
+    
     /** Getter for property unitsPerEm.
      * @return Value of property unitsPerEm.
      *
@@ -216,7 +216,7 @@ public class HeadTable extends TrueTypeTable {
     public short getUnitsPerEm() {
         return this.unitsPerEm;
     }
-
+    
     /** Getter for property created.
      * @return Value of property created.
      *
@@ -224,7 +224,7 @@ public class HeadTable extends TrueTypeTable {
     public long getCreated() {
         return this.created;
     }
-
+    
     /** Getter for property modified.
      * @return Value of property modified.
      *
@@ -232,7 +232,7 @@ public class HeadTable extends TrueTypeTable {
     public long getModified() {
         return this.modified;
     }
-
+    
     /** Getter for property xMin.
      * @return Value of property xMin.
      *
@@ -240,7 +240,7 @@ public class HeadTable extends TrueTypeTable {
     public short getXMin() {
         return this.xMin;
     }
-
+    
     /** Getter for property yMin.
      * @return Value of property yMin.
      *
@@ -248,7 +248,7 @@ public class HeadTable extends TrueTypeTable {
     public short getYMin() {
         return this.yMin;
     }
-
+    
     /** Getter for property xMax.
      * @return Value of property xMax.
      *
@@ -256,7 +256,7 @@ public class HeadTable extends TrueTypeTable {
     public short getXMax() {
         return this.xMax;
     }
-
+    
     /** Getter for property yMax.
      * @return Value of property yMax.
      *
@@ -264,7 +264,7 @@ public class HeadTable extends TrueTypeTable {
     public short getYMax() {
         return this.yMax;
     }
-
+    
     /** Getter for property macStyle.
      * @return Value of property macStyle.
      *
@@ -272,7 +272,7 @@ public class HeadTable extends TrueTypeTable {
     public short getMacStyle() {
         return this.macStyle;
     }
-
+    
     /** Getter for property lowestRecPPem.
      * @return Value of property lowestRecPPem.
      *
@@ -280,7 +280,7 @@ public class HeadTable extends TrueTypeTable {
     public short getLowestRecPPem() {
         return this.lowestRecPPem;
     }
-
+    
     /** Getter for property fontDirectionHint.
      * @return Value of property fontDirectionHint.
      *
@@ -288,7 +288,7 @@ public class HeadTable extends TrueTypeTable {
     public short getFontDirectionHint() {
         return this.fontDirectionHint;
     }
-
+    
     /** Getter for property indexToLocFormat.
      * @return Value of property indexToLocFormat.
      *
@@ -296,7 +296,7 @@ public class HeadTable extends TrueTypeTable {
     public short getIndexToLocFormat() {
         return this.indexToLocFormat;
     }
-
+    
     /** Getter for property glyphDataFormat.
      * @return Value of property glyphDataFormat.
      *
@@ -304,7 +304,7 @@ public class HeadTable extends TrueTypeTable {
     public short getGlyphDataFormat() {
         return this.glyphDataFormat;
     }
-
+    
     /** Setter for property XMax.
      * @param xMax New value of property XMax.
      *
@@ -312,7 +312,7 @@ public class HeadTable extends TrueTypeTable {
     public void setXMax(short xMax) {
         this.xMax = xMax;
     }
-
+    
     /** Setter for property XMin.
      * @param xMin New value of property XMin.
      *
@@ -320,7 +320,7 @@ public class HeadTable extends TrueTypeTable {
     public void setXMin(short xMin) {
         this.xMin = xMin;
     }
-
+    
     /** Setter for property YMax.
      * @param yMax New value of property YMax.
      *
@@ -328,7 +328,7 @@ public class HeadTable extends TrueTypeTable {
     public void setYMax(short yMax) {
         this.yMax = yMax;
     }
-
+    
     /** Setter for property YMin.
      * @param yMin New value of property YMin.
      *
@@ -336,7 +336,7 @@ public class HeadTable extends TrueTypeTable {
     public void setYMin(short yMin) {
         this.yMin = yMin;
     }
-
+    
     /** Setter for property checksumAdjustment.
      * @param checksumAdjustment New value of property checksumAdjustment.
      *
@@ -344,7 +344,7 @@ public class HeadTable extends TrueTypeTable {
     public void setChecksumAdjustment(int checksumAdjustment) {
         this.checksumAdjustment = checksumAdjustment;
     }
-
+    
     /** Setter for property created.
      * @param created New value of property created.
      *
@@ -352,7 +352,7 @@ public class HeadTable extends TrueTypeTable {
     public void setCreated(long created) {
         this.created = created;
     }
-
+    
     /** Setter for property flags.
      * @param flags New value of property flags.
      *
@@ -360,7 +360,7 @@ public class HeadTable extends TrueTypeTable {
     public void setFlags(short flags) {
         this.flags = flags;
     }
-
+    
     /** Setter for property fontDirectionHint.
      * @param fontDirectionHint New value of property fontDirectionHint.
      *
@@ -368,7 +368,7 @@ public class HeadTable extends TrueTypeTable {
     public void setFontDirectionHint(short fontDirectionHint) {
         this.fontDirectionHint = fontDirectionHint;
     }
-
+    
     /** Setter for property fontRevision.
      * @param fontRevision New value of property fontRevision.
      *
@@ -376,7 +376,7 @@ public class HeadTable extends TrueTypeTable {
     public void setFontRevision(int fontRevision) {
         this.fontRevision = fontRevision;
     }
-
+    
     /** Setter for property glyphDataFormat.
      * @param glyphDataFormat New value of property glyphDataFormat.
      *
@@ -384,7 +384,7 @@ public class HeadTable extends TrueTypeTable {
     public void setGlyphDataFormat(short glyphDataFormat) {
         this.glyphDataFormat = glyphDataFormat;
     }
-
+    
     /** Setter for property indexToLocFormat.
      * @param indexToLocFormat New value of property indexToLocFormat.
      *
@@ -392,7 +392,7 @@ public class HeadTable extends TrueTypeTable {
     public void setIndexToLocFormat(short indexToLocFormat) {
         this.indexToLocFormat = indexToLocFormat;
     }
-
+    
     /** Setter for property lowestRecPPem.
      * @param lowestRecPPem New value of property lowestRecPPem.
      *
@@ -400,7 +400,7 @@ public class HeadTable extends TrueTypeTable {
     public void setLowestRecPPem(short lowestRecPPem) {
         this.lowestRecPPem = lowestRecPPem;
     }
-
+    
     /** Setter for property macStyle.
      * @param macStyle New value of property macStyle.
      *
@@ -408,7 +408,7 @@ public class HeadTable extends TrueTypeTable {
     public void setMacStyle(short macStyle) {
         this.macStyle = macStyle;
     }
-
+    
     /** Setter for property magicNumber.
      * @param magicNumber New value of property magicNumber.
      *
@@ -416,7 +416,7 @@ public class HeadTable extends TrueTypeTable {
     public void setMagicNumber(int magicNumber) {
         this.magicNumber = magicNumber;
     }
-
+    
     /** Setter for property modified.
      * @param modified New value of property modified.
      *
@@ -424,7 +424,7 @@ public class HeadTable extends TrueTypeTable {
     public void setModified(long modified) {
         this.modified = modified;
     }
-
+    
     /** Setter for property unitsPerEm.
      * @param unitsPerEm New value of property unitsPerEm.
      *
@@ -432,7 +432,7 @@ public class HeadTable extends TrueTypeTable {
     public void setUnitsPerEm(short unitsPerEm) {
         this.unitsPerEm = unitsPerEm;
     }
-
+    
     /** Setter for property version.
      * @param version New value of property version.
      *
@@ -440,14 +440,14 @@ public class HeadTable extends TrueTypeTable {
     public void setVersion(int version) {
         this.version = version;
     }
-
+    
     /**
      * Create a pretty string
      */
     public String toString() {
         StringBuffer buf = new StringBuffer();
         String indent = "    ";
-
+        
         buf.append(indent + "Version          : " + Integer.toHexString(getVersion()) + "\n");
         buf.append(indent + "Revision         : " + Integer.toHexString(getFontRevision()) + "\n");
         buf.append(indent + "ChecksumAdj      : " + Integer.toHexString(getChecksumAdjustment()) + "\n");
@@ -465,7 +465,7 @@ public class HeadTable extends TrueTypeTable {
         buf.append(indent + "FontDirectionHint: " + getFontDirectionHint() + "\n");
         buf.append(indent + "IndexToLocFormat : " + getIndexToLocFormat() + "\n");
         buf.append(indent + "GlyphDataFormat  : " + getGlyphDataFormat() + "\n");
-
+    
         return buf.toString();
     }
 }

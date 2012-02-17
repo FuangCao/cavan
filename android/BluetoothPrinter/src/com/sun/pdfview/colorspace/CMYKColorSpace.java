@@ -87,7 +87,7 @@ public class CMYKColorSpace extends ColorSpace {
     @Override public String getName(int idx) {
 	return "CMYK";
     }
-
+    
     /**
      * the type of this color space (TYPE_CMYK)
      */

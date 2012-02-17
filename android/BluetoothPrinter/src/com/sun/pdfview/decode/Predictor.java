@@ -36,19 +36,19 @@ public abstract class Predictor {
     /** well known algorithms */
     public static final int TIFF = 0;
     public static final int PNG = 1;
-
+    
     /** the algorithm to use */
     private int algorithm;
-
+    
     /** the number of colors per sample */
     private int colors = 1;
-
+    
     /** the number of bits per color component */
     private int bpc = 8;
-
+    
     /** the number of columns per row */
     private int columns = 1;
-
+    
     /** 
      * Create an instance of a predictor.  Use <code>getPredictor()</code>
      * instead of this.
@@ -56,14 +56,14 @@ public abstract class Predictor {
     protected Predictor(int algorithm) {
         this.algorithm = algorithm;
     }
-
+    
     /**
      * Actually perform this algorithm on decoded image data.
      * Subclasses must implement this method
      */
     public abstract ByteBuffer unpredict(ByteBuffer imageData)
         throws IOException;
-
+    
     /**
      * Get an instance of a predictor
      *
@@ -79,7 +79,7 @@ public abstract class Predictor {
             return null;
         }
         int algorithm = algorithmObj.getIntValue();
-
+    
         // create the predictor object
         Predictor predictor = null;
         switch (algorithm) {
@@ -100,29 +100,29 @@ public abstract class Predictor {
             default:
                 throw new PDFParseException("Unknown predictor: " + algorithm);
         }
-
+        
         // read the colors (optional)
         PDFObject colorsObj = params.getDictRef("Colors");
         if (colorsObj != null) {
             predictor.setColors(colorsObj.getIntValue());
         }
-
+        
         // read the bits per component (optional)
         PDFObject bpcObj = params.getDictRef("BitsPerComponent");
         if (bpcObj != null) {
             predictor.setBitsPerComponent(bpcObj.getIntValue());
         }
-
+        
         // read the columns (optional)
         PDFObject columnsObj = params.getDictRef("Columns");
         if (columnsObj != null) {
             predictor.setColumns(columnsObj.getIntValue());
         }
-
+        
         // all set
         return predictor;
     }
-
+    
     /**
      * Get the algorithm in use
      *
@@ -131,42 +131,42 @@ public abstract class Predictor {
     public int getAlgorithm() {
         return algorithm;
     }
-
+    
     /**
      * Get the number of colors per sample
      */
     public int getColors() {
         return colors;
     }
-
+    
     /**
      * Set the number of colors per sample
      */
     protected void setColors(int colors) {
         this.colors = colors;
     }
-
+    
     /**
      * Get the number of bits per color component
      */
     public int getBitsPerComponent() {
         return bpc;
     }
-
+    
     /**
      * Set the number of bits per color component
      */
     public void setBitsPerComponent(int bpc) {
         this.bpc = bpc;
     }
-
+    
     /**
      * Get the number of columns
      */
     public int getColumns() {
         return columns;
     }
-
+    
     /**
      * Set the number of columns
      */

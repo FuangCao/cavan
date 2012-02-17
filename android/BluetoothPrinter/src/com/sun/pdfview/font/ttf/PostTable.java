@@ -29,64 +29,64 @@ import java.nio.ByteBuffer;
  * @author  jkaplan
  */
 public class PostTable extends TrueTypeTable {
-
+    
     /** Holds value of property format. */
     private int format;
-
+    
     /** Holds value of property italicAngle. */
     private int italicAngle;
-
+    
     /** Holds value of property underlinePosition. */
     private short underlinePosition;
-
+    
     /** Holds value of property underlineThickness. */
     private short underlineThickness;
-
+    
     /** Holds value of property isFixedPitch. */
     private short isFixedPitch;
-
+    
     /** Holds value of property minMemType42. */
     private int minMemType42;
-
+    
     /** Holds value of property maxMemType42. */
     private int maxMemType42;
-
+    
     /** Holds value of property minMemType1. */
     private int minMemType1;
-
+    
     /** Holds value of property maxMemType1. */
     private int maxMemType1;
-
+    
     /** A map which character values to names and vice versa */
     private PostMap nameMap;
-
+      
     /** Creates a new instance of PostTable */
     protected PostTable() {
         super (TrueTypeTable.POST_TABLE);
-
+        
         nameMap = new PostMap();
     }
-
+      
     /**
      * Map a character name to a glyphNameIndex
      */
     public short getGlyphNameIndex(String name) {
         return nameMap.getCharIndex(name);
     }
-
+    
     /** 
      * Map a character code to a glyphIndex name
      */
     public String getGlyphName(char c) {
         return nameMap.getCharName(c);
     }
-
+    
     /** get the data in this map as a ByteBuffer */
     public ByteBuffer getData() {
         int size = getLength();
-
+        
         ByteBuffer buf = ByteBuffer.allocate(size);
-
+        
         // write the header
         buf.putInt(getFormat());
         buf.putInt(getItalicAngle());
@@ -98,16 +98,16 @@ public class PostTable extends TrueTypeTable {
         buf.putInt(getMaxMemType42());
         buf.putInt(getMinMemType1());
         buf.putInt(getMaxMemType1());
-
+        
         // now write the table
         buf.put(nameMap.getData());
-
+        
         // reset the start pointer
         buf.flip();
-
+        
         return buf;
     }
-
+    
     /** Initialize this structure from a ByteBuffer */
     public void setData(ByteBuffer data) {
         setFormat(data.getInt());
@@ -120,7 +120,7 @@ public class PostTable extends TrueTypeTable {
         setMaxMemType42(data.getInt());
         setMinMemType1(data.getInt());
         setMaxMemType1(data.getInt());
-
+        
         // create the map, based on the type
         switch (format) {
             case 0x10000:
@@ -139,11 +139,11 @@ public class PostTable extends TrueTypeTable {
                                    Integer.toHexString(format));
                 break;
         }
-
+        
         // fill in the data in the map
         nameMap.setData(data);
     }
-
+    
     /**
      * Get the length of this table
      */
@@ -152,10 +152,10 @@ public class PostTable extends TrueTypeTable {
         if (nameMap != null) {
             size += nameMap.getLength();
         }
-
+        
         return size;
     }
-
+    
     /** Getter for property format.
      * @return Value of property format.
      *
@@ -163,7 +163,7 @@ public class PostTable extends TrueTypeTable {
     public int getFormat() {
         return this.format;
     }
-
+    
     /** Setter for property format.
      * @param format New value of property format.
      *
@@ -171,7 +171,7 @@ public class PostTable extends TrueTypeTable {
     public void setFormat(int format) {
         this.format = format;
     }
-
+    
     /** Getter for property italicAngle.
      * @return Value of property italicAngle.
      *
@@ -179,7 +179,7 @@ public class PostTable extends TrueTypeTable {
     public int getItalicAngle() {
         return this.italicAngle;
     }
-
+    
     /** Setter for property italicAngle.
      * @param italicAngle New value of property italicAngle.
      *
@@ -187,7 +187,7 @@ public class PostTable extends TrueTypeTable {
     public void setItalicAngle(int italicAngle) {
         this.italicAngle = italicAngle;
     }
-
+    
     /** Getter for property underlinePosition.
      * @return Value of property underlinePosition.
      *
@@ -195,7 +195,7 @@ public class PostTable extends TrueTypeTable {
     public short getUnderlinePosition() {
         return this.underlinePosition;
     }
-
+    
     /** Setter for property underlinePosition.
      * @param underlinePosition New value of property underlinePosition.
      *
@@ -203,7 +203,7 @@ public class PostTable extends TrueTypeTable {
     public void setUnderlinePosition(short underlinePosition) {
         this.underlinePosition = underlinePosition;
     }
-
+    
     /** Getter for property underlineThickness.
      * @return Value of property underlineThickness.
      *
@@ -211,7 +211,7 @@ public class PostTable extends TrueTypeTable {
     public short getUnderlineThickness() {
         return this.underlineThickness;
     }
-
+    
     /** Setter for property underlineThickness.
      * @param underlineThickness New value of property underlineThickness.
      *
@@ -219,7 +219,7 @@ public class PostTable extends TrueTypeTable {
     public void setUnderlineThickness(short underlineThickness) {
         this.underlineThickness = underlineThickness;
     }
-
+    
     /** Getter for property isFixedPitch.
      * @return Value of property isFixedPitch.
      *
@@ -227,7 +227,7 @@ public class PostTable extends TrueTypeTable {
     public short getIsFixedPitch() {
         return this.isFixedPitch;
     }
-
+    
     /** Setter for property isFixedPitch.
      * @param isFixedPitch New value of property isFixedPitch.
      *
@@ -235,7 +235,7 @@ public class PostTable extends TrueTypeTable {
     public void setIsFixedPitch(short isFixedPitch) {
         this.isFixedPitch = isFixedPitch;
     }
-
+    
     /** Getter for property minMemType42.
      * @return Value of property minMemType42.
      *
@@ -243,7 +243,7 @@ public class PostTable extends TrueTypeTable {
     public int getMinMemType42() {
         return this.minMemType42;
     }
-
+    
     /** Setter for property minMemType42.
      * @param minMemType42 New value of property minMemType42.
      *
@@ -251,7 +251,7 @@ public class PostTable extends TrueTypeTable {
     public void setMinMemType42(int minMemType42) {
         this.minMemType42 = minMemType42;
     }
-
+    
     /** Getter for property maxMemType42.
      * @return Value of property maxMemType42.
      *
@@ -259,7 +259,7 @@ public class PostTable extends TrueTypeTable {
     public int getMaxMemType42() {
         return this.maxMemType42;
     }
-
+    
     /** Setter for property maxMemType42.
      * @param maxMemType42 New value of property maxMemType42.
      *
@@ -267,7 +267,7 @@ public class PostTable extends TrueTypeTable {
     public void setMaxMemType42(int maxMemType42) {
         this.maxMemType42 = maxMemType42;
     }
-
+    
     /** Getter for property minMemType1.
      * @return Value of property minMemType1.
      *
@@ -275,7 +275,7 @@ public class PostTable extends TrueTypeTable {
     public int getMinMemType1() {
         return this.minMemType1;
     }
-
+    
     /** Setter for property minMemType1.
      * @param minMemType1 New value of property minMemType1.
      *
@@ -283,7 +283,7 @@ public class PostTable extends TrueTypeTable {
     public void setMinMemType1(int minMemType1) {
         this.minMemType1 = minMemType1;
     }
-
+    
     /** Getter for property maxMemType1.
      * @return Value of property maxMemType1.
      *
@@ -291,7 +291,7 @@ public class PostTable extends TrueTypeTable {
     public int getMaxMemType1() {
         return this.maxMemType1;
     }
-
+    
     /** Setter for property maxMemType1.
      * @param maxMemType1 New value of property maxMemType1.
      *
@@ -299,36 +299,36 @@ public class PostTable extends TrueTypeTable {
     public void setMaxMemType1(int maxMemType1) {
         this.maxMemType1 = maxMemType1;
     }
-
+    
     /** An empty post map */
     class PostMap {
         /** map a name to a character index */
         short getCharIndex(String charName) {
             return (short) 0;
         }
-
+        
         /** name a character index to a name */
         String getCharName(char charIndex) {
             return null;
         }
-
+        
         /** get the length of the data in this map */
         int getLength() {
             return 0;
         }
-
+        
         /** get the data in this map as a ByteBuffer */
         ByteBuffer getData() {
             return ByteBuffer.allocate(0);
         }
-
+        
         /** set the data in this map from a ByteBuffer */
         void setData(ByteBuffer data) {
             // do nothing
             return;
         }
     }
-
+    
     /** A Format 0 post map */
     class PostMapFormat0 extends PostMap {
         /** the glyph names in standard Macintosh ordering */
@@ -367,7 +367,7 @@ public class PostTable extends TrueTypeTable {
 /* 248 */   "Gbreve", "gbreve", "Idotaccent", "Scedilla", "scedilla", "Cacute", "cacute", "Ccaron",
 /* 256 */   "ccaron", "dcroat"
         };
-
+        
         /** map a name to a character index */
         short getCharIndex(String charName) {
             for (int i = 0; i < stdNames.length; i++) {
@@ -375,45 +375,45 @@ public class PostTable extends TrueTypeTable {
                     return (short) i;
                 }
             }
-
+            
             return (short) 0;
         }
-
+        
         /** name a character index to a name */
         String getCharName(char charIndex) {
             return stdNames[charIndex];
         }
-
+        
         /** get the length of the data in this map */
         int getLength() {
             return 0;
         }
-
+        
         /** get the data in this map as a ByteBuffer */
         ByteBuffer getData() {
             return ByteBuffer.allocate(0);
         }
-
+        
         /** set the data in this map from a ByteBuffer */
         void setData(ByteBuffer data) {
             // do nothing
             return;
         }
     }
-
+ 
     /** an extension to handle format 2 post maps */
     class PostMapFormat2 extends PostMapFormat0 {
         /** the glyph name index */
         short[] glyphNameIndex;
-
+        
         /** the glyph names */
         String[] glyphNames;
-
+    
         /** Map a character name to an index */
         short getCharIndex(String charName) {
             // find the index of this character name
             short idx = -1;
-
+            
             // first try the local names map
             for (int i = 0; i < glyphNames.length; i++) {
                 if (charName.equals(glyphNames[i])) {
@@ -422,103 +422,103 @@ public class PostTable extends TrueTypeTable {
                     break;
                 }
             }
-
+                    
             // if that doesn't work, try the standard names
             if (idx == -1) {
                 idx = super.getCharIndex(charName);
             }
-
+            
             // now get the entry in the index
             for (int c = 0; c < glyphNameIndex.length; c++) {
                 if (glyphNameIndex[c] == idx) {
                     return (short) c;
                 }
             }
-
+            
             // not found
             return (short) 0;
         }
-
+        
         /** Map an index to a character name */
         String getCharName(char charIndex) {
             if (charIndex >= stdNames.length) {
                 return glyphNames[charIndex - stdNames.length];
             }
-
+            
             return super.getCharName(charIndex);
         }
-
+        
         /** get the length of this class's data */
         int getLength() {
             // the size of the header plus the table of mappings
             int size = 2 + (2 * glyphNameIndex.length);
-
+            
             // the size of each string -- note the extra byte for a pascal
             // string
             for (int i = 0; i < glyphNames.length; i++) {
                 size += glyphNames[i].length() + 1;
             }
-
+            
             return size;
         }
-
+        
         /** get the data in this map as a byte array */
         ByteBuffer getData() {
             ByteBuffer buf = ByteBuffer.allocate(getLength());
-
+            
             // write the number of glyphs
             buf.putShort((short) glyphNameIndex.length);
-
+            
             // write the name indices
             for (int i = 0; i < glyphNameIndex.length; i++) {
                 buf.putShort(glyphNameIndex[i]);
             }
-
+            
             // write the names as pascal strings
             for (int i = 0; i < glyphNames.length; i++) {
                 buf.put((byte) glyphNames[i].length());
                 buf.put(glyphNames[i].getBytes());
             }
-
+            
             // reset the start pointer
             buf.flip();
-
+            
             return buf;
         }
-
+        
         /** set the contents of this map from a ByteBuffer */
         void setData(ByteBuffer data) {
             short numGlyphs = data.getShort();
             glyphNameIndex = new short[numGlyphs];
-
+            
             // the highest glyph index seen so far
             int maxGlyph = 257;
             for (int i = 0; i < numGlyphs; i++) {
                 glyphNameIndex[i] = data.getShort();
-
+                    
                 // see if this is the highest glyph
                 if (glyphNameIndex[i] > maxGlyph) {
                     maxGlyph = glyphNameIndex[i];
                 }
             }
-
+                
             // subtract off the default glyphs
             maxGlyph -= 257;
-
+            
             // read in any additional names
             glyphNames = new String[maxGlyph];
-
+                
             // read each name from a pascal string
             // the length is stored in the first byte, followed by
             // the data
             for (int i = 0; i < maxGlyph; i++) {
                 // size in the first byte
                 byte size = data.get();
-
+                        
                 // then the data
                 byte[] stringData = new byte[size];
                 data.get(stringData);
-
+                        
                 glyphNames[i] = new String(stringData);
             }
         }

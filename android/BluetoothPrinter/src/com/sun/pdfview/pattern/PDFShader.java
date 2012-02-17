@@ -74,7 +74,7 @@ import com.sun.pdfview.colorspace.PDFColorSpace;
  * described in the relevant sections below.</p>
  */
 public abstract class PDFShader {
-
+    
     public final static int             FUNCTION_SHADING = 1;
     public final static int             AXIAL_SHADING = 2;
     public final static int             RADIAL_SHADING = 3;
@@ -85,22 +85,22 @@ public abstract class PDFShader {
 
     /** the type of the shading (1 through 7)*/
     private int type;
-
+    
     /** the colorspace */
     private PDFColorSpace colorSpace;
-
+    
     /** the background color */
     private PDFPaint background;
-
+    
     /** the bounding box of the pattern */
     private Rectangle2D bbox;
-
+    
     /** Creates a new instance of PDFShader */
     protected PDFShader(int type) {
         this.type = type;
     }
-
-
+    
+    
     /**
      * Parse a pdf shader into a shader object
      */
@@ -112,20 +112,20 @@ public abstract class PDFShader {
         if (shader != null) {
             return shader;
         }
-
+        
         // read the type (required)
         PDFObject typeObj = shaderObj.getDictRef("ShadingType");
         if (typeObj == null) {
             throw new PDFParseException("No shader type defined!");
         }
         int type = typeObj.getIntValue();
-
+        
         // create the shader
         switch (type) {
             case AXIAL_SHADING:
                 shader = new ShaderType2();
                 break;
-
+    
             case FUNCTION_SHADING:
             case RADIAL_SHADING:
             case FREE_FORM_SHADING:
@@ -135,7 +135,7 @@ public abstract class PDFShader {
             default:    
                 throw new PDFParseException("Unsupported shader type: " + type);
         }
-
+        
         // read the color space (required)
         PDFObject csObj = shaderObj.getDictRef("ColorSpace");
         if (csObj == null) {
@@ -143,7 +143,7 @@ public abstract class PDFShader {
         }
         PDFColorSpace cs = PDFColorSpace.getColorSpace(csObj, resources);
         shader.setColorSpace(cs);
-
+        
         // read the background color (optional)
         PDFObject bgObj = shaderObj.getDictRef("Background");
         if (bgObj != null) {
@@ -155,29 +155,29 @@ public abstract class PDFShader {
             PDFPaint paint = cs.getPaint(bgArray);
             shader.setBackground(paint);          
         }
-
+        
         // read the bounding box (optional)
         PDFObject bboxObj = shaderObj.getDictRef("BBox");
         if (bboxObj != null) {
             shader.setBBox(PDFFile.parseNormalisedRectangle(bboxObj));
         }
-
+        
         // parse the shader-specific attributes
         shader.parse(shaderObj);
-
+        
         // set the cache
         shaderObj.setCache(shader);
-
+        
         return shader;
     }
-
+    
     /**
      * Get the type
      */
     public int getType() {
         return type;
     }
-
+    
     /** 
      * Get the color space
      */
@@ -191,40 +191,40 @@ public abstract class PDFShader {
     protected void setColorSpace(PDFColorSpace colorSpace) {
         this.colorSpace = colorSpace;
     }
-
+    
     /** 
      * Get the background color
      */
     public PDFPaint getBackground() {
         return background;
     }
-
+    
     /**
      * Set the background color
      */
     protected void setBackground(PDFPaint background) {
         this.background = background;
     }
-
+    
     /**
      * Get the bounding box
      */
     public Rectangle2D getBBox() {
         return bbox;
     }
-
+    
     /**
      * Set the bounding box
      */
     protected void setBBox(Rectangle2D bbox) {
         this.bbox = bbox;
     }
-
+    
     /**
      * Parse the shader-specific data
      */
     public abstract void parse(PDFObject shareObj) throws IOException;
-
+    
     /**
      * Returns paint that represents the selected shader
      */

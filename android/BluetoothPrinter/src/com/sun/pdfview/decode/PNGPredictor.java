@@ -37,7 +37,7 @@ public class PNGPredictor extends Predictor {
     public PNGPredictor() {
         super (PNG);
     }
-
+    
     /**
      * Undo data based on the png algorithm
      */
@@ -45,22 +45,22 @@ public class PNGPredictor extends Predictor {
         throws IOException
     {
         List<byte[]> rows = new ArrayList<byte[]>();
-
+        
         byte[] curLine = null;
         byte[] prevLine = null;
-
+        
         // get the number of bytes per row
         int rowSize = getColumns() * getColors() * getBitsPerComponent();
         rowSize = (int) Math.ceil(rowSize / 8.0);
-
+        
         while(imageData.remaining() >= rowSize + 1) {
             // the first byte determines the algorithm
             int algorithm = (int) (imageData.get() & 0xff);
-
+            
             // read the rest of the line
             curLine = new byte[rowSize];
             imageData.get(curLine);
-
+            
             // use the algorithm, Luke
             switch (algorithm) {
                 case 0:
@@ -79,25 +79,25 @@ public class PNGPredictor extends Predictor {
                     doPaethLine(curLine, prevLine);
                     break;
             }
-
+            
             rows.add(curLine);
             prevLine = curLine;
         }
-
+        
         // turn into byte array
         ByteBuffer outBuf = ByteBuffer.allocate(rows.size() * rowSize);
         for (Iterator i = rows.iterator(); i.hasNext();) {
             outBuf.put((byte[]) i.next());
         }
-
+        
         // reset start pointer
         outBuf.flip();
-
+        
         // return
         return outBuf;
-
+        
     }
-
+    
     /**
      * Return the value of the Sub algorithm on the line (compare bytes to
      * the previous byte of the same color on this line).
@@ -105,7 +105,7 @@ public class PNGPredictor extends Predictor {
     protected void doSubLine(byte[] curLine) {
         // get the number of bytes per sample
         int sub = (int) Math.ceil((getBitsPerComponent() * getColors()) / 8.0); 
-
+        
         for (int i = 0; i < curLine.length; i++) {
             int prevIdx = i - sub;
             if (prevIdx >= 0) {
@@ -113,7 +113,7 @@ public class PNGPredictor extends Predictor {
             }
         }
     }
-
+    
     /**
      * Return the value of the up algorithm on the line (compare bytes to
      * the same byte in the previous line)
@@ -123,12 +123,12 @@ public class PNGPredictor extends Predictor {
             // do nothing if this is the first line
             return;
         }
-
+        
         for (int i = 0; i < curLine.length; i++) {
             curLine[i] += prevLine[i];
         }
     }
-
+    
     /**
      * Return the value of the average algorithm on the line (compare
      * bytes to the average of the previous byte of the same color and 
@@ -137,27 +137,27 @@ public class PNGPredictor extends Predictor {
     protected void doAverageLine(byte[] curLine, byte[] prevLine) {
          // get the number of bytes per sample
         int sub = (int) Math.ceil((getBitsPerComponent() * getColors()) / 8.0); 
-
+        
         for (int i = 0; i < curLine.length; i++) {
             int raw = 0;
             int prior = 0;
-
+            
             // get the last value of this color
             int prevIdx = i - sub;
             if (prevIdx >= 0) {
                 raw = curLine[prevIdx] & 0xff;
             }
-
+            
             // get the value on the previous line
             if (prevLine != null) {
                 prior = prevLine[i] & 0xff;
             }
-
+            
             // add the average
             curLine[i] += (byte) Math.floor((raw + prior) / 2);
         }      
     }
-
+    
      /**
      * Return the value of the average algorithm on the line (compare
      * bytes to the average of the previous byte of the same color and 
@@ -166,32 +166,32 @@ public class PNGPredictor extends Predictor {
     protected void doPaethLine(byte[] curLine, byte[] prevLine) {
          // get the number of bytes per sample
         int sub = (int) Math.ceil((getBitsPerComponent() * getColors()) / 8.0); 
-
+        
         for (int i = 0; i < curLine.length; i++) {
             int left = 0;
             int up = 0;
             int upLeft = 0;
-
+            
             // get the last value of this color
             int prevIdx = i - sub;
             if (prevIdx >= 0) {
                 left = curLine[prevIdx] & 0xff;
             }
-
+            
             // get the value on the previous line
             if (prevLine != null) {
                 up = prevLine[i] & 0xff;
             }
-
+            
             if (prevIdx > 0 && prevLine != null) {
                 upLeft = prevLine[prevIdx] & 0xff;
             }
-
+            
             // add the average
             curLine[i] += (byte) paeth(left, up, upLeft);
         }      
     }
-
+    
     /**
      * The paeth algorithm
      */
@@ -200,7 +200,7 @@ public class PNGPredictor extends Predictor {
         int pa = Math.abs(p - left);
         int pb = Math.abs(p - up);
         int pc = Math.abs(p - upLeft);
-
+        
         if ((pa <= pb) && (pa <= pc)) {
             return left;
         } else if (pb <= pc) {
@@ -209,5 +209,5 @@ public class PNGPredictor extends Predictor {
             return upLeft;
         }
     }
-
+    
 }

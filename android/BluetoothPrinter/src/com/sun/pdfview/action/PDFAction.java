@@ -32,15 +32,15 @@ import com.sun.pdfview.PDFParseException;
 public class PDFAction {
     /** the type of this action */
     private String type;
-
+    
     /** the next action or array of actions */
     private PDFObject next;
-
+    
     /** Creates a new instance of PDFAction */
     public PDFAction(String type) {
         this.type = type;
     }
-
+    
     /**
      * Get an action of the appropriate type from a PDFObject
      *
@@ -55,7 +55,7 @@ public class PDFAction {
         if (typeObj == null) {
             throw new PDFParseException("No action type in object: " + obj);
         }
-
+        
         // create the action based on the type
         PDFAction action = null;
         String type = typeObj.getStringValue();
@@ -65,36 +65,36 @@ public class PDFAction {
             /** [JK FIXME: Implement other action types! ] */
             throw new PDFParseException("Unknown Action type: " + type);
         }
-
+        
         // figure out if there is a next action
         PDFObject nextObj = obj.getDictRef("Next");
         if (nextObj != null) {
             action.setNext(nextObj);
         }
-
+        
         // return the action
         return action;
     }
-
+    
     /**
      * Get the type of this action
      */
     public String getType() {
         return type;
     }
-
+    
     /**
      * Get the next action or array of actions
      */
     public PDFObject getNext() {
         return next;
     }
-
+    
     /**
      * Set the next action or array of actions
      */
     public void setNext(PDFObject next) {
         this.next = next;
     }
-
+    
 }

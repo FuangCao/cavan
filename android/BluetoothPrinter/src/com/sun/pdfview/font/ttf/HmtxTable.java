@@ -32,10 +32,10 @@ import java.util.Arrays;
 public class HmtxTable extends TrueTypeTable {
     /** advance widths for any glyphs that have one */
     short advanceWidths[];
-
+    
     /** left side bearings for each glyph */
     short leftSideBearings[];
-
+    
     /** Creates a new instance of HmtxTable */
     protected HmtxTable(TrueTypeFont ttf) {
         super (TrueTypeTable.HMTX_TABLE);
@@ -44,14 +44,14 @@ public class HmtxTable extends TrueTypeTable {
         // in the case of subsetted fonts produced by some pdf generators
         MaxpTable maxp = (MaxpTable) ttf.getTable("maxp");
         int numGlyphs = maxp.getNumGlyphs();
-
+        
         HheaTable hhea = (HheaTable) ttf.getTable("hhea");
         int numOfLongHorMetrics = hhea.getNumOfLongHorMetrics();
-
+        
         advanceWidths = new short[numOfLongHorMetrics];
         leftSideBearings = new short[numGlyphs]; 
     }
-
+    
     /** get the advance of a given glyph */
     public short getAdvance(int glyphID) {
         if (glyphID < advanceWidths.length) {
@@ -60,33 +60,33 @@ public class HmtxTable extends TrueTypeTable {
             return advanceWidths[advanceWidths.length - 1];
         }
     }
-
+      
     /** get the left side bearing of a given glyph */
     public short getLeftSideBearing(int glyphID) {
         return leftSideBearings[glyphID];
     }
-
+    
     /** get the data in this map as a ByteBuffer */
     public ByteBuffer getData() {
         int size = getLength();
-
+        
         ByteBuffer buf = ByteBuffer.allocate(size);
-
+        
         // write the metrics
         for (int i = 0; i < leftSideBearings.length; i++) {
             if (i < advanceWidths.length) {
                 buf.putShort(advanceWidths[i]);
             }
-
+            
             buf.putShort(leftSideBearings[i]);
         }
-
+        
         // reset the start pointer
         buf.flip();
-
+        
         return buf;
     }
-
+    
     /** Initialize this structure from a ByteBuffer */
     public void setData(ByteBuffer data) {
         // some PDF writers subset the font but don't update the number of glyphs in the maxp table,
@@ -101,7 +101,7 @@ public class HmtxTable extends TrueTypeTable {
             if (i < advanceWidths.length) {
                 advanceWidths[i] = data.getShort();
             }
-
+            
             leftSideBearings[i] = data.getShort();
         }
         // initialise the remaining advanceWidths and leftSideBearings to 0
@@ -112,7 +112,7 @@ public class HmtxTable extends TrueTypeTable {
             Arrays.fill(leftSideBearings, i, leftSideBearings.length-1, (short) 0);
         }
     }
-
+    
     /**
      * Get the length of this table
      */

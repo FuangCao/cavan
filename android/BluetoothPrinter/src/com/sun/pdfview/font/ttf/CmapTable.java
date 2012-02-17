@@ -34,24 +34,24 @@ import java.util.TreeMap;
  * @author  jkaplan
  */
 public class CmapTable extends TrueTypeTable {
-
+    
     /** Holds value of property version. */
     private short version;
-
+    
     /**
      * Holds the CMap subtables, sorted properly
      */
     private SortedMap<CmapSubtable,CMap> subtables;
-
+    
     /** Creates a new instance of CmapTable */
     protected CmapTable() {
         super(TrueTypeTable.CMAP_TABLE);
-
+        
         setVersion((short) 0x0);
-
+    
         subtables = Collections.synchronizedSortedMap(new TreeMap<CmapSubtable,CMap>());
     }
-
+    
       /**
      * Add a CMap
      */
@@ -60,7 +60,7 @@ public class CmapTable extends TrueTypeTable {
         CmapSubtable key = new CmapSubtable(platformID, platformSpecificID);
         subtables.put(key, cMap);
     }
-
+    
     /**
      * Get a CMap by platform and specific ID
      */
@@ -68,19 +68,19 @@ public class CmapTable extends TrueTypeTable {
         CmapSubtable key = new CmapSubtable(platformID, platformSpecificID);
         return (CMap) subtables.get(key);
     }
-
+    
     /**
      * Get all CMaps
      */
     public CMap[] getCMaps() {
         Collection<CMap> c = subtables.values();
         CMap[] maps = new CMap[c.size()];
-
+        
         c.toArray(maps);
-
+        
         return maps;
     }
-
+    
     /**
      * Remove a CMap
      */
@@ -88,26 +88,26 @@ public class CmapTable extends TrueTypeTable {
         CmapSubtable key = new CmapSubtable(platformID, platformSpecificID);
         subtables.remove(key);
     }
-
+    
     @Override public void setData(ByteBuffer data) {
         setVersion(data.getShort());
-
+        
         short numberSubtables = data.getShort();
-
+        
         for (int i = 0; i < numberSubtables; i++) {
             short platformID = data.getShort();
             short platformSpecificID = data.getShort();
             int offset = data.getInt();
-
+            
             data.mark();
-
+            
             // get the position from the start of this buffer 
             data.position(offset);
-
+            
             ByteBuffer mapData = data.slice();
-
+            
             data.reset();
-
+            
             try {
                 CMap cMap = CMap.getMap(mapData);
                 if (cMap != null) {
@@ -121,63 +121,63 @@ public class CmapTable extends TrueTypeTable {
             }
         }
     }
-
+    
     @Override public ByteBuffer getData() {
         ByteBuffer buf = ByteBuffer.allocate(getLength());
-
+    
         // write the table header
         buf.putShort(getVersion());
         buf.putShort((short) subtables.size());
-
+        
         // the current offset to write to, starts at the end of the
         // subtables
         int curOffset = 4 + (subtables.size() * 8);
-
+        
         // write the subtables
         for (Iterator i = subtables.keySet().iterator(); i.hasNext();) {
             CmapSubtable cms = (CmapSubtable) i.next();
             CMap map = (CMap) subtables.get(cms);
-
+            
             buf.putShort(cms.platformID);
             buf.putShort(cms.platformSpecificID);
             buf.putInt(curOffset);
-
+            
             curOffset += map.getLength();
         }
-
+        
         // write the tables
         for (Iterator i = subtables.values().iterator(); i.hasNext();) {
             CMap map = (CMap) i.next();
             buf.put(map.getData());
         }
-
+        
         // reset the position to the start of the buffer
         buf.flip();
-
+        
         return buf;
     }
-
+    
     /**
      * Get the size of the table, in bytes
      */
     @Override public int getLength() {
         // start with the size of the fixed data
         int length = 4;
-
+       
         // add the size of the subtables 
         length += subtables.size() * 8;
-
+        
         // add the size of the dynamic data
         for (Iterator i = subtables.values().iterator(); i.hasNext();) {     
             // add the size of the subtable data
             CMap map = (CMap) i.next();
             length += map.getLength();
         }
-
+    
         return length;
     }
-
-
+    
+    
     /** Getter for property version.
      * @return Value of property version.
      *
@@ -185,7 +185,7 @@ public class CmapTable extends TrueTypeTable {
     public short getVersion() {
         return this.version;
     }
-
+    
     /** Setter for property version.
      * @param version New value of property version.
      *
@@ -200,40 +200,40 @@ public class CmapTable extends TrueTypeTable {
     public short getNumberSubtables() {
         return (short) subtables.size();
     }
-
+    
     /** Print a pretty string */
     @Override public String toString() {
         StringBuffer buf = new StringBuffer();
         String indent = "    ";
-
+    
         buf.append(indent + "Version: " + this.getVersion() + "\n");
         buf.append(indent + "NumMaps: " + this.getNumberSubtables() + "\n");
-
+        
         for (Iterator i = subtables.keySet().iterator(); i.hasNext();) {
             CmapSubtable key = (CmapSubtable) i.next();
-
+            
             buf.append(indent + "Map: platformID: " + key.platformID +
                        " PlatformSpecificID: " + key.platformSpecificID + "\n");
-
+            
             CMap map = (CMap) subtables.get(key);
-
+            
             buf.append(map.toString());
         }
-
+        
         return buf.toString();
     }
-
+    
     class CmapSubtable implements Comparable {
         /**
          * The platformID for this subtable
          */
         short platformID;
-
+        
         /**
          * The platform-specific id
          */
         short platformSpecificID;
-
+        
         /** 
          * Create a Cmap subtable
          */
@@ -241,14 +241,14 @@ public class CmapTable extends TrueTypeTable {
             this.platformID = platformID;
             this.platformSpecificID = platformSpecificID;
         }
-
+            
         /**
          * Compare two subtables
          */
         @Override public boolean equals(Object obj) {
             return (compareTo(obj) == 0);
         }
-
+        
         /**
          * Sort ascending by platform ID and then specific ID
          */
@@ -256,7 +256,7 @@ public class CmapTable extends TrueTypeTable {
             if (!(obj instanceof CmapSubtable)) {
                 return -1;
             }
-
+            
             CmapSubtable cms = (CmapSubtable) obj;
             if (platformID < cms.platformID) {
                 return -1;
@@ -273,5 +273,5 @@ public class CmapTable extends TrueTypeTable {
             }
         }
     }
-
+    
 }

@@ -1172,7 +1172,7 @@ public class PDFFile {
 
             final int lastObjNum = objNumStart + numEntries;
             ensureXrefEntriesCapacity(lastObjNum + 1);
-
+            
 
             consumeWhitespace(fileBuf);
 
@@ -1371,7 +1371,7 @@ public class PDFFile {
                 }
             }
         }
-
+        
         return processTrailerDict(xrefStream, true, followPrev);
 
     }

@@ -132,5 +132,5 @@ public class LabColor extends ColorSpace {
     public float[] toCIEXYZ(float[] colorvalue) {
 	return new float[3];
     }
-
+    
 }

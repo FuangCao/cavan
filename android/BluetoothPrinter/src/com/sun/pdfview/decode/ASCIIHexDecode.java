@@ -35,7 +35,7 @@ import com.sun.pdfview.PDFFile;
  */
 public class ASCIIHexDecode {
     private ByteBuffer buf;
-
+    
     /**
      * initialize the decoder with an array of bytes in ASCIIHex format
      */
@@ -52,7 +52,7 @@ public class ASCIIHexDecode {
         // end of the stream
         while (buf.remaining() > 0) {
             int c = (int) buf.get();
-
+        
             // see if we found a useful character
             if (!PDFFile.isWhiteSpace((char) c)) {
                 if (c >= '0' && c <= '9') {
@@ -68,12 +68,12 @@ public class ASCIIHexDecode {
                     throw new PDFParseException("Bad character " + c + 
                                                 "in ASCIIHex decode");
                 }
-
+                
                 // return the useful character
                 return c;
             }
         }
-
+        
         // end of stream reached
 	throw new PDFParseException("Short stream in ASCIIHex decode");
     }
@@ -85,14 +85,14 @@ public class ASCIIHexDecode {
     private ByteBuffer decode() throws PDFParseException {
         // start at the beginning of the buffer
         buf.rewind();
-
+        
         // allocate the output buffer
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
+        
         while (true) {
 	    int first = readHexDigit();
 	    int second = readHexDigit();
-
+	    
             if (first == -1) {
                 break;
 	    } else if (second == -1) {
@@ -102,7 +102,7 @@ public class ASCIIHexDecode {
                 baos.write((byte) ((first << 4) + second));
 	    }
 	}
-
+        
         return ByteBuffer.wrap(baos.toByteArray());
     }
 

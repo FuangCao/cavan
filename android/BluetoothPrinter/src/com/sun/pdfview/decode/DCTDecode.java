@@ -79,19 +79,19 @@ public class DCTDecode {
     {
 	//	System.out.println("DCTDecode image info: "+params);
         buf.rewind();
-
+        
         // copy the data into a byte array required by createimage
         byte[] ary = new byte[buf.remaining()];
         buf.get(ary);
-
+        
         // wait for the image to get drawn
 	Image img= Toolkit.getDefaultToolkit().createImage(ary);
 	MyTracker mt= new MyTracker(img);
 	mt.waitForAll();
-
+        
         // the default components per pixel is 3
         int numComponents = 3;
-
+        
         // see if we have a colorspace
         try {
             PDFObject csObj = dict.getDictRef("ColorSpace");
@@ -103,8 +103,8 @@ public class DCTDecode {
         } catch (IOException ioe) {
             // oh well
         }
-
-
+        
+        
         // figure out the type
         int type = BufferedImage.TYPE_INT_RGB;
         if (numComponents == 1) {
@@ -112,16 +112,16 @@ public class DCTDecode {
         } else if (numComponents == 4) {
             type = BufferedImage.TYPE_INT_ARGB;
         }
-
+        
         // create a buffered image
         BufferedImage bimg = new BufferedImage(img.getWidth(null),
 					       img.getHeight(null),
 					       type);
         Graphics bg= bimg.getGraphics();
-
+        
         // draw the image onto it
 	bg.drawImage(img, 0, 0, null);
-
+        
 	byte[] output = null;
 
         // incidentally, there's a bit of an optimisation we could apply here,
@@ -137,7 +137,7 @@ public class DCTDecode {
             // read back the data
             DataBufferInt db = (DataBufferInt) bimg.getData().getDataBuffer();
             int[] data = db.getData();
-
+        
             output = new byte[data.length*3];
             for (int i=0; i<data.length; i++) {
                 output[i*3]= (byte)(data[i]>>16);
@@ -151,7 +151,7 @@ public class DCTDecode {
             // read back the data
             DataBufferInt db = (DataBufferInt) bimg.getData().getDataBuffer();
             int[] data = db.getData();
-
+        
             output = new byte[data.length*4];
             for (int i=0; i<data.length; i++) {
                 output[i*4]= (byte)(data[i]>>24);
@@ -160,7 +160,7 @@ public class DCTDecode {
                 output[i*4+3]= (byte)(data[i]);
             }
         }
-
+        
 	//	System.out.println("Translated data");
 	return ByteBuffer.wrap(output);
     }
@@ -172,7 +172,7 @@ public class DCTDecode {
  */
 class MyTracker implements ImageObserver {
     boolean done= false;
-
+    
     /**
      * create a new MyTracker that watches this image.  The image
      * will start loading immediately.
@@ -180,7 +180,7 @@ class MyTracker implements ImageObserver {
     public MyTracker(Image img) {
 	img.getWidth(this);
     }
-
+    
     /**
      * More information has come in about the image.
      */
@@ -195,7 +195,7 @@ class MyTracker implements ImageObserver {
 	}
 	return true;
     }
-
+    
     /**
      * Wait until the image is done, then return.
      */

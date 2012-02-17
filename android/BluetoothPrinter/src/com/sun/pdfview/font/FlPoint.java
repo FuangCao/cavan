@@ -40,7 +40,7 @@ public class FlPoint {
      * used in Type1CFont.java.
      */
     public boolean open= false;
-
+    
     /** reset the values to (0,0) and closed */
     public final void reset() {
 	x= 0;

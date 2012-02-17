@@ -41,14 +41,14 @@ public class CalRGBColor extends ColorSpace {
     private static final float[] xyzToSRGB = { 3.24071f, -0.969258f,  0.0556352f,
                                               -1.53726f,  1.87599f,  -0.203996f,   
                                               -0.498571f, 0.0415557f, 1.05707f };   
-
+                                               
     private static final float[] xyzToRGB = {  2.04148f, -0.969258f,  0.0134455f,  
                                               -0.564977f, 1.87599f,  -0.118373f,   
                                               -0.344713f, 0.0415557f, 1.01527f }; 
 
     float[] scale;
     float[] max;
-
+    
     float white[]= {1f, 1f, 1f};
     float black[]= {0, 0, 0};
     float matrix[]= {1f, 0, 0, 0, 1f, 0, 0, 0, 1f};
@@ -56,7 +56,7 @@ public class CalRGBColor extends ColorSpace {
 
     static ColorSpace rgbCS= ColorSpace.getInstance(ColorSpace.CS_sRGB);
     static ColorSpace cieCS= ColorSpace.getInstance(ColorSpace.CS_CIEXYZ);
-
+    
     /**
      * Create a new Calibrated RGB color space object, given the
      * description in a PDF dictionary.
@@ -70,12 +70,12 @@ public class CalRGBColor extends ColorSpace {
 	// BlackPoint [a b c]
 	// Gamma a
 	super(CS_sRGB, 3);
-
+        
         // find out what what is according to the CIE color space
         // note that this is not reflexive (i.e. passing this value
         // into toRGB does not get you (1.0, 1.0, 1.0) back)
         // cieWhite = cieCS.fromRGB(new float[] { 1.0f, 1.0f, 1.0f } );
-
+      
         PDFObject ary= obj.getDictRef("WhitePoint");
 	if (ary!=null) {
 	    for(int i=0; i<3; i++) {
@@ -100,21 +100,21 @@ public class CalRGBColor extends ColorSpace {
 		matrix[i]= ary.getAt(i).getFloatValue();
 	    }
 	}
-
+        
         // create a scale matrix relative to the 50 CIE color space.
         // see http://www.brucelindbloom.com/Eqn_RGB_XYZ_Matrix.html
         // we use the Von Kries cone response domain
         float[] cieWhite = rgbCS.toCIEXYZ(new float[] { 1f, 1f, 1f });
-
+     
         float[] sourceWhite = matrixMult(white, vonKriesM, 3);
         float[] destWhite = matrixMult(cieWhite,  vonKriesM, 3);
-
+        
         scale = new float[] { destWhite[0] / sourceWhite[0], 0, 0,
                               0, destWhite[1] / sourceWhite[1], 0,
                               0, 0, destWhite[2] / sourceWhite[2] };
         scale = matrixMult(vonKriesM, scale, 3);
         scale = matrixMult(scale, vonKriesMinv, 3);
-
+    
         max = matrixMult(white, scale, 3);
         max = ciexyzToSRGB(max);
     }
@@ -138,29 +138,29 @@ public class CalRGBColor extends ColorSpace {
 	    float a = (float)Math.pow(comp[0], gamma[0]);
 	    float b = (float)Math.pow(comp[1], gamma[1]);
 	    float c = (float)Math.pow(comp[2], gamma[2]);
-
+	    
             // now multiply by the matrix to get X, Y and Z values
             float[] xyz = new float[] {
 		matrix[0]*a + matrix[3]*b + matrix[6]*c,
 		matrix[1]*a + matrix[4]*b + matrix[7]*c,
 		matrix[2]*a + matrix[5]*b + matrix[8]*c};
-
+                     
             // now scale the xyz values
             xyz = matrixMult(xyz, scale, 3);
-
+            
             // convert to RGB
             float[] rgb = ciexyzToSRGB(xyz);
-
+            
             // cheat -- scale based on max
             for (int i = 0; i < rgb.length; i++) {
                 rgb[i] = FunctionType0.interpolate(rgb[i], 0, max[i], 0, 1);
-
+            
                 // sometimes we get off a little bit due to precision loss
                 if (rgb[i] > 1.0) {
                     rgb[i] = 1.0f;
                 }
             }
-
+            
             return rgb;
 	} else {
 	    return black;
@@ -172,25 +172,25 @@ public class CalRGBColor extends ColorSpace {
      */
     private float[] ciexyzToSRGB(float[] xyz) {
           float[] rgb = matrixMult(xyz, xyzToSRGB, 3);
-
+          
           for (int i = 0; i < rgb.length; i++) {
               if (rgb[i] < 0.0) {
                   rgb[i] = 0f;
               } else if (rgb[i] > 1.0) {
                   rgb[i] = 1f;
               }
-
+              
               if (rgb[i] < 0.003928) {
                   rgb[i] *= 12.92;
               } else {
                   rgb[i] = (float) ((Math.pow(rgb[i], 1.0 / 2.4) * 1.055) - 0.055);
               }
           }
-
+          
           //float[] rgb = cieCS.toRGB(xyz);
           return rgb;
     }
-
+    
     /**
      * convert from RGB to Calibrated RGB.  NOT IMPLEMENTED
      */
@@ -218,7 +218,7 @@ public class CalRGBColor extends ColorSpace {
     public float[] toCIEXYZ(float[] colorvalue) {
 	return new float[3];
     }
-
+    
     /**
      * Slowly multiply two matrices
      *
@@ -230,9 +230,9 @@ public class CalRGBColor extends ColorSpace {
     float[] matrixMult(float[] a, float[] b, int len) {
         int rows = a.length / len;
         int cols = b.length / len;
-
+        
         float[] out = new float[rows * cols];
-
+        
         for (int i = 0; i < rows; i++) {
             for (int k = 0; k < cols; k++) {
                 for (int j = 0; j < len; j++) {
@@ -240,7 +240,7 @@ public class CalRGBColor extends ColorSpace {
                 }
             }
         }
-
+        
         return out;
     }
 }

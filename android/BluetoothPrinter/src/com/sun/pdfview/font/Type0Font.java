@@ -32,33 +32,33 @@ import com.sun.pdfview.PDFObject;
  * @author  Jonathan Kaplan
  */
 public class Type0Font extends PDFFont {
-
+   
     /**
      * The decendant fonts, indexed by font number from the CMAP
      */
     PDFFont[] fonts;
-
+        
     /** Creates a new instance of Type0Font */
     public Type0Font(String baseFont, PDFObject fontObj,
                      PDFFontDescriptor descriptor) throws IOException {
         super (baseFont, descriptor);
-
+                         
         PDFObject[] descendantFonts = fontObj.getDictRef("DescendantFonts").getArray();
-
+        
         fonts = new PDFFont[descendantFonts.length];
-
+        
         for (int i = 0; i < descendantFonts.length; i++) {
             fonts[i] = PDFFont.getFont(descendantFonts[i], null);
         }
     }
-
+    
     /** 
      * Get a descendant font of this font by fontId
      */
     public PDFFont getDescendantFont(int fontID) {
         return fonts[fontID];
     }
-
+    
     /**
      * Get a character from the first font in the descendant fonts array
      */

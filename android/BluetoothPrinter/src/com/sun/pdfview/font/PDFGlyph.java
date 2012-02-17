@@ -35,19 +35,19 @@ import com.sun.pdfview.PDFShapeCmd;
 public class PDFGlyph {
     /** the character code of this glyph */
     private char src;
-
+    
     /** the name of this glyph */
     private String name;
-
+    
     /** the advance from this glyph */
     private Point2D advance;
-
+    
     /** the shape represented by this glyph (for all fonts but type 3) */
     private GeneralPath shape;
-
+    
     /** the PDFPage storing this glyph's commands (for type 3 fonts) */
     private PDFPage page;
-
+    
     /** Creates a new instance of PDFGlyph based on a shape */
     public PDFGlyph(char src, String name, GeneralPath shape, 
                     Point2D.Float advance) {
@@ -56,7 +56,7 @@ public class PDFGlyph {
         this.src = src;
         this.name = name;
     }
-
+    
     /** Creates a new instance of PDFGlyph based on a page */
     public PDFGlyph(char src, String name, PDFPage page, Point2D advance) {
         this.page = page;
@@ -64,27 +64,27 @@ public class PDFGlyph {
         this.src = src;
         this.name = name;
     }
-
+       
     /** Get the character code of this glyph */
     public char getChar() {
         return src;
     }
-
+    
     /** Get the name of this glyph */
     public String getName() {
         return name;
     }
-
+    
     /** Get the shape of this glyph */
     public GeneralPath getShape() {
         return shape;
     }
-
+    
     /** Get the PDFPage for a type3 font glyph */
     public PDFPage getPage() {
         return page;
     }
-
+    
     /** Add commands for this glyph to a page */
     public Point2D addCommands(PDFPage cmds, AffineTransform transform, int mode) {
         if (shape != null) {
@@ -93,7 +93,7 @@ public class PDFGlyph {
         } else if (page != null) {
             cmds.addCommands(page, transform);
         }
-
+    
         return advance;
     }
 

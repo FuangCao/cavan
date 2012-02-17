@@ -73,7 +73,7 @@ public class CalGrayColor extends ColorSpace {
     public CalGrayColor() {
         super(TYPE_GRAY, 1);
     }
-
+    
     /**
      * get the number of components (1).
      */
@@ -127,5 +127,5 @@ public class CalGrayColor extends ColorSpace {
     public float[] toCIEXYZ(float[] colorvalue) {
 	return new float[3];
     }
-
+    
 }

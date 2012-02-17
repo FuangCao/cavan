@@ -36,17 +36,17 @@ import com.sun.pdfview.pattern.PDFPattern;
  */
 public class PatternSpace extends PDFColorSpace {
     private PDFColorSpace base;
-
+    
     public PatternSpace() {
 	super(null);
     }
-
+    
     /**
      * Create a pattern space with the given color space as a base
      */
     public PatternSpace(PDFColorSpace base) {
         super(null);
-
+        
         this.base = base;
     }
 
@@ -56,7 +56,7 @@ public class PatternSpace extends PDFColorSpace {
     public PDFColorSpace getBase() {
         return base;
     }
-
+    
     /**
      * Get the number of components we want
      */
@@ -80,7 +80,7 @@ public class PatternSpace extends PDFColorSpace {
         throw new IllegalArgumentException("Pattern spaces require a pattern " +
             "name!");
     }
-
+    
     /**
      * Get the paint representing a pattern, optionally with the given
      * base paint.
@@ -93,17 +93,17 @@ public class PatternSpace extends PDFColorSpace {
         throws IOException
     {
         PDFPaint basePaint = null;
-
+        
         if (getBase() != null) {
             basePaint = getBase().getPaint(components);
         }
-
+        
         PDFPattern pattern = (PDFPattern) patternObj.getCache();
         if (pattern == null) {
             pattern = PDFPattern.getPattern(patternObj, resources);
             patternObj.setCache(pattern);
         }
-
+      
         return pattern.getPaint(basePaint);
     }
 }

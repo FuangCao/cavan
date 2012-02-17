@@ -36,10 +36,10 @@ public abstract class PDFCMap {
      * A cache of known CMaps by name
      */
     private static HashMap<String, PDFCMap> cache;
-
+    
     /** Creates a new instance of CMap */
     protected PDFCMap() {}
-
+    
     /**
      * Get a CMap, given a PDF object containing one of the following:
      *  a string name of a known CMap
@@ -54,7 +54,7 @@ public abstract class PDFCMap {
             throw new IOException("CMap type not Name or Stream!");
         }
     }
-
+       
     /**
      * Get a CMap, given a string name
      */
@@ -62,20 +62,20 @@ public abstract class PDFCMap {
         if (cache == null) {
             populateCache();
         }
-
+        
         if (!cache.containsKey(mapName)) {
             throw new IOException("Unknown CMap: " + mapName);
         }
-
+            
         return (PDFCMap) cache.get(mapName);
     }
-
+    
     /**
      * Populate the cache with well-known types
      */
     protected static void populateCache() {
         cache = new HashMap<String, PDFCMap>();
-
+    
         // add the Identity-H map
         cache.put("Identity-H", new PDFCMap() {
             public char map(char src) {
@@ -83,24 +83,24 @@ public abstract class PDFCMap {
             }
         });
     }
-
+    
     /**
      * Parse a CMap from a CMap stream
      */
     protected static PDFCMap parseCMap(PDFObject map) throws IOException {
         throw new IOException("Parsing CMap Files Unsupported!");
     }
-
+    
     /**
      * Map a given source character to a destination character
      */
     public abstract char map(char src);
-
+    
     /**
      * Get the font number assoicated with a given source character
      */
     public int getFontID(char src) {
         return 0;
     }
-
+    
 }

@@ -23,12 +23,12 @@ public class Md5MessageDigest extends MessageDigest
 {
     // ptr to native context
     private int mNativeMd5Context;
-
+    
     public Md5MessageDigest()
     {
         init();
     }
-
+    
     public byte[] digest(byte[] input)
     {
         update(input);

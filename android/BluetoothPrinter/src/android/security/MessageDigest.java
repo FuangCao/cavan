@@ -40,20 +40,20 @@ public abstract class MessageDigest
         if (algorithm == null) {
             return null;
         }
-
+        
         if (algorithm.equals("SHA-1")) {
             return new Sha1MessageDigest();
         }
         else if (algorithm.equals("MD5")) {
             return new Md5MessageDigest();
         }
-
+        
         throw new NoSuchAlgorithmException();
     }
-
+    
     public abstract void update(byte[] input);    
     public abstract byte[] digest();
-
+    
     /**
      * Produces a message digest for the given input.
      * 

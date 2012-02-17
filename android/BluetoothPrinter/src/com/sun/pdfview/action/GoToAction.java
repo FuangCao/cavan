@@ -33,7 +33,7 @@ import com.sun.pdfview.PDFParseException;
 public class GoToAction extends PDFAction {
     /** the destination to go to */
     private PDFDestination dest;
-
+    
     /** 
      * Creates a new instance of GoToAction from an object
      *
@@ -41,26 +41,26 @@ public class GoToAction extends PDFAction {
      */
     public GoToAction(PDFObject obj, PDFObject root) throws IOException {
         super("GoTo");
-
+        
         // find the destination
         PDFObject destObj = obj.getDictRef("D");
         if (destObj == null) {
             throw new PDFParseException("No destination in GoTo action " + obj);
         }
-
+        
         // parse it
         dest = PDFDestination.getDestination(destObj, root);
     }
-
+    
     /**
      * Create a new GoToAction from a destination
      */
     public GoToAction(PDFDestination dest) {
         super("GoTo");
-
+    
         this.dest = dest;
     }
-
+      
     /**
      * Get the destination this action refers to
      */

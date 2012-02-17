@@ -29,24 +29,24 @@ import java.nio.ByteBuffer;
 public class LocaTable extends TrueTypeTable {
     /** if true, the table stores glyphs in long format */
     private boolean isLong;
-
+    
     /** the offsets themselves */
     private int offsets[];
-
+    
     /** Creates a new instance of HmtxTable */
     protected LocaTable(TrueTypeFont ttf) {
         super (TrueTypeTable.LOCA_TABLE);
-
+    
         MaxpTable maxp = (MaxpTable) ttf.getTable("maxp");
         int numGlyphs = maxp.getNumGlyphs();
-
+        
         HeadTable head = (HeadTable) ttf.getTable("head");
         short format = head.getIndexToLocFormat();
         isLong = (format == 1);
-
+        
         offsets = new int[numGlyphs + 1]; 
     }
-
+    
     /** 
      * get the offset, in bytes, of a given glyph from the start of
      * the glyph table
@@ -54,14 +54,14 @@ public class LocaTable extends TrueTypeTable {
     public int getOffset(int glyphID) {
         return offsets[glyphID];
     }
-
+      
     /** 
      * get the size, in bytes, of the given glyph 
      */
     public int getSize(int glyphID) {
         return offsets[glyphID + 1] - offsets[glyphID];
     }
-
+    
     /**
      * Return true if the glyphs arte in long (int) format, or
      * false if they are in short (short) format
@@ -69,14 +69,14 @@ public class LocaTable extends TrueTypeTable {
     public boolean isLongFormat() {
         return isLong;
     }
-
-
+    
+   
     /** get the data in this map as a ByteBuffer */
     public ByteBuffer getData() {
         int size = getLength();
-
+        
         ByteBuffer buf = ByteBuffer.allocate(size);
-
+        
         // write the offsets
         for (int i = 0; i < offsets.length; i++) {
             if (isLongFormat()) {
@@ -85,13 +85,13 @@ public class LocaTable extends TrueTypeTable {
                 buf.putShort((short) (offsets[i] / 2));
             }
         }
-
+        
         // reset the start pointer
         buf.flip();
-
+        
         return buf;
     }
-
+    
     /** Initialize this structure from a ByteBuffer */
     public void setData(ByteBuffer data) {
         for (int i = 0; i < offsets.length; i++) {
@@ -102,7 +102,7 @@ public class LocaTable extends TrueTypeTable {
             }
         }
     }
-
+    
     /**
      * Get the length of this table
      */

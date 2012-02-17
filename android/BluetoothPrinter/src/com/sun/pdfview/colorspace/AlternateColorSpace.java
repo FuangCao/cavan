@@ -34,18 +34,18 @@ import com.sun.pdfview.function.PDFFunction;
 public class AlternateColorSpace extends PDFColorSpace {
     /** The alternate color space */
     private PDFColorSpace alternate;
-
+    
     /** The function */
     private PDFFunction function;
-
+    
     /** Creates a new instance of AlternateColorSpace */
     public AlternateColorSpace(PDFColorSpace alternate, PDFFunction function) {
         super(null);
-
+        
         this.alternate = alternate;
         this.function = function;
     }
-
+    
     /**
      * get the number of components expected in the getPaint command
      */
@@ -70,15 +70,15 @@ public class AlternateColorSpace extends PDFColorSpace {
             // translate values using function
             components = function.calculate(components);
         }
-
+        
         return alternate.getPaint(components);
     }
-
+    
     /**
      * get the original Java ColorSpace.
      */
     @Override public ColorSpace getColorSpace() {
 	return alternate.getColorSpace();
     }
-
+    
 }

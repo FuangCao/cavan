@@ -40,7 +40,7 @@ public class PDFXrefEntry {
     static PDFXrefEntry toBodyObject(int generation, int offset) {
         return new PDFXrefEntry(Type.OBJ_IN_BODY, generation, offset, null);
     }
-
+    
     static PDFXrefEntry toStreamObject(PDFXref stream, int index) {
         // stream objects will always have generation 0
         return new PDFXrefEntry(Type.OBJ_IN_STREAM, 0, index, stream);

@@ -32,24 +32,24 @@ public class GlyfTable extends TrueTypeTable {
      * glyph object (parsed)
      */
     private Object[] glyphs;
-
+    
     /**
      * The glyph location table
      */
     private LocaTable loca;
-
+    
     /** Creates a new instance of HmtxTable */
     protected GlyfTable(TrueTypeFont ttf) {
         super (TrueTypeTable.GLYF_TABLE);
-
+    
         loca = (LocaTable) ttf.getTable("loca");
-
+        
         MaxpTable maxp = (MaxpTable) ttf.getTable("maxp");
         int numGlyphs = maxp.getNumGlyphs();
-
+        
         glyphs = new Object[numGlyphs]; 
     }
-
+  
     /**
      * Get the glyph at a given index, parsing it as needed
      */
@@ -58,23 +58,23 @@ public class GlyfTable extends TrueTypeTable {
         if (o == null) {
             return null;
         }
-
+        
         if (o instanceof ByteBuffer) {
             Glyf g = Glyf.getGlyf((ByteBuffer) o);
             glyphs[index] = g;
-
+            
             return g;
         } else {
             return (Glyf) o;
         }
     }
-
+  
     /** get the data in this map as a ByteBuffer */
     public ByteBuffer getData() {
         int size = getLength();
-
+        
         ByteBuffer buf = ByteBuffer.allocate(size);
-
+        
         // write the offsets
         for (int i = 0; i < glyphs.length; i++) {
             Object o = glyphs[i];
@@ -88,69 +88,69 @@ public class GlyfTable extends TrueTypeTable {
             } else {
                 glyfData = ((Glyf) o).getData();
             }
-
+            
             glyfData.rewind();
             buf.put(glyfData);
             glyfData.flip();
         }
-
+        
         // reset the start pointer
         buf.flip();
-
+        
         return buf;
     }
-
+    
     /** Initialize this structure from a ByteBuffer */
     public void setData(ByteBuffer data) {
         for (int i = 0; i < glyphs.length; i++) {
             int location = loca.getOffset(i);
             int length = loca.getSize(i);
-
+            
             if (length == 0) {
                 // undefined glyph
                 continue;
             }
-
+            
             data.position(location);
             ByteBuffer glyfData = data.slice();
             glyfData.limit(length);
-
+            
             glyphs[i] = glyfData;
         }
     }
-
+    
     /**
      * Get the length of this table
      */
     public int getLength() {
         int length = 0;
-
+        
         for (int i = 0; i < glyphs.length; i++) {
             Object o = glyphs[i];
             if (o == null) {
                 continue;
             }
-
+            
             if (o instanceof ByteBuffer) {
                 length += ((ByteBuffer) o).remaining();
             } else {
                 length += ((Glyf) o).getLength();
             }
         }
-
+        
         return length;
     }
-
+    
     /**
      * Create a pretty String
      */
     public String toString() {
         StringBuffer buf = new StringBuffer();
         String indent = "    ";
-
+     
         buf.append(indent + "Glyf Table: (" + glyphs.length + " glyphs)\n");
         buf.append(indent + "  Glyf 0: " + getGlyph(0));
-
+        
         return buf.toString();
     }
 }

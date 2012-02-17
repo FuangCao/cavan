@@ -128,7 +128,7 @@ public class FunctionType3 extends PDFFunction {
         if (domainObj == null) {
             throw new PDFParseException("domain required for function type 3!");
         }
-
+        
         // read the Bounds array (required)
         PDFObject boundsObj = obj.getDictRef("Bounds");
         if (boundsObj == null) {

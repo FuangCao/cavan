@@ -34,46 +34,46 @@ import com.sun.pdfview.PDFPaint;
 public class MaskColorSpace extends ColorSpace {
     /** The paint to paint in.  Note this cannot be a pattern or gradient. */
     private PDFPaint paint;
-
+    
     /** Creates a new instance of PaintColorSpace */
     public MaskColorSpace(PDFPaint paint) {
         super (TYPE_RGB, 1);
-
+        
         this.paint = paint;
     }
-
+    
     public float[] fromCIEXYZ(float[] colorvalue) {
         float x = colorvalue[0];
         float y = colorvalue[1];
         float z = colorvalue[2];
-
+        
         float[] mask = new float[1];
-
+        
         if (Math.round(x) > 0 || Math.round(y) > 0 || Math.round(z) > 0) {
             mask[0] = 1;
         } else {
             mask[0] = 0; 
         }
-
+        
         return mask;
     }
-
+    
     public float[] fromRGB(float[] rgbvalue) {
         float r = rgbvalue[0];
         float g = rgbvalue[1];
         float b = rgbvalue[2];
-
+        
         float[] mask = new float[1];
-
+        
         if (Math.round(r) > 0 || Math.round(g) > 0 || Math.round(b) > 0) {
             mask[0] = 1;
         } else {
             mask[0] = 0; 
         }
-
+        
         return mask;
     }
-
+    
     ColorSpace cie = ColorSpace.getInstance(ColorSpace.CS_CIEXYZ);
     float[] prev1= cie.fromRGB(toRGB(new float[] {1.0f}));
     float[] prev0= cie.fromRGB(toRGB(new float[] {0.0f}));
@@ -88,7 +88,7 @@ public class MaskColorSpace extends ColorSpace {
 	    return cie.fromRGB(toRGB(colorvalue));
 	}
     }
-
+    
     public float[] toRGB(float[] colorvalue) {
         return ((Color) paint.getPaint()).getRGBColorComponents(null);
     }
@@ -96,5 +96,5 @@ public class MaskColorSpace extends ColorSpace {
     @Override public int getNumComponents() {
 	return 1;
     }
-
+    
 }
