@@ -59,7 +59,7 @@ public class JobBasePrinter extends BppBase
 			job.CancelJob();
 		}
 
-		return false;
+		return true;
 	}
 
 	public boolean PrintPdfFile(String filename) throws IOException, ParserConfigurationException, SAXException

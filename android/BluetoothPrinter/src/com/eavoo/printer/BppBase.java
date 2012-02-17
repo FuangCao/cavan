@@ -196,14 +196,6 @@ public class BppBase extends Thread
 		return hsResponse.getResponseCode() == ResponseCodes.OBEX_HTTP_OK ? session : null;
 	}
 
-	public void disconnect(ClientSession session) throws IOException
-	{
-		CavanLog("disconnect");
-
-		session.disconnect(null);
-		session.close();
-	}
-
 	public String GetFileExtension(String pathname)
 	{
         int dotIndex = pathname.lastIndexOf(".");
@@ -257,7 +249,6 @@ public class BppBase extends Thread
 		if (clientOperation == null)
 		{
 			CavanLog("clientOperation == null");
-			disconnect(session);
 			return false;
 		}
 
@@ -266,7 +257,6 @@ public class BppBase extends Thread
 		{
 			CavanLog("obexOutputStream == null");
 			clientOperation.abort();
-			disconnect(session);
 			return false;
 		}
 
@@ -276,7 +266,6 @@ public class BppBase extends Thread
 			CavanLog("obexInputStream == null");
 			obexOutputStream.close();
 			clientOperation.abort();
-			disconnect(session);
 			return false;
 		}
 
@@ -317,12 +306,6 @@ public class BppBase extends Thread
 		{
 			clientOperation.close();
 		}
-		else
-		{
-			clientOperation.abort();
-		}
-
-		disconnect(session);
 
 		return boolResult;
 	}
