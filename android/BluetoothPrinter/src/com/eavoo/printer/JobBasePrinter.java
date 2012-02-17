@@ -57,6 +57,7 @@ public class JobBasePrinter extends BppBase
 		if (SendDocument(job, filename) == false)
 		{
 			job.CancelJob();
+			return false;
 		}
 
 		return true;
@@ -114,7 +115,7 @@ public class JobBasePrinter extends BppBase
 			CavanLog("Send page " + i + " complete");
 		}
 
-		return true;
+		return ret;
 	}
 
 	@Override
