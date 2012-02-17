@@ -44,7 +44,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sun.pdfview.*;
+import com.sun.pdfview.PDFFile;
+import com.sun.pdfview.PDFObject;
+import com.sun.pdfview.PDFPage;
+import com.sun.pdfview.PDFPaint;
+import com.sun.pdfview.PDFParser;
+import com.sun.pdfview.PDFRenderer;
 
 /**
  * A type 1 (tiling) pattern

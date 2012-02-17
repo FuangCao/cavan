@@ -23,11 +23,17 @@ package com.sun.pdfview;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import com.sun.pdfview.decode.PDFDecoder;
-import com.sun.pdfview.decrypt.PDFDecrypter;
 import com.sun.pdfview.decrypt.IdentityDecrypter;
+import com.sun.pdfview.decrypt.PDFDecrypter;
 
 /**
  * a class encapsulating all the possibilities of content for

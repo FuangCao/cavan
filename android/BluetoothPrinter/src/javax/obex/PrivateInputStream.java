@@ -32,8 +32,8 @@
 
 package javax.obex;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * This object provides an input stream to the Operation objects used in this

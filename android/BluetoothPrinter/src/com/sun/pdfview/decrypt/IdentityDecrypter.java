@@ -19,10 +19,10 @@
 
 package com.sun.pdfview.decrypt;
 
+import java.nio.ByteBuffer;
+
 import com.sun.pdfview.PDFObject;
 import com.sun.pdfview.PDFParseException;
-
-import java.nio.ByteBuffer;
 
 /**
  * Performs identity decryption; that is, inputs aren't encrypted and

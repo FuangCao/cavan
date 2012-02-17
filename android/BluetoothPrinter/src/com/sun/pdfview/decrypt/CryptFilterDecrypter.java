@@ -19,11 +19,11 @@
 
 package com.sun.pdfview.decrypt;
 
-import com.sun.pdfview.PDFObject;
-import com.sun.pdfview.PDFParseException;
-
 import java.nio.ByteBuffer;
 import java.util.Map;
+
+import com.sun.pdfview.PDFObject;
+import com.sun.pdfview.PDFParseException;
 
 /**
  * Implements Version 4 standard decryption, whereby the Encrypt dictionary

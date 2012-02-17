@@ -1,11 +1,15 @@
 package com.eavoo.printer;
 
 import java.io.IOException;
+
 import javax.obex.HeaderSet;
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.xml.sax.SAXException;
-import com.sun.pdfview.PDFFile;
+
 import android.content.Context;
+
+import com.sun.pdfview.PDFFile;
 
 public class JobBasePrinter extends BppBase
 {

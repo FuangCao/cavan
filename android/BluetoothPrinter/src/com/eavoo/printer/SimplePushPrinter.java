@@ -1,6 +1,7 @@
 package com.eavoo.printer;
 
 import java.io.IOException;
+
 import android.content.Context;
 
 public class SimplePushPrinter extends BppBase

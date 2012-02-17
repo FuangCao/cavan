@@ -24,9 +24,9 @@ package com.sun.pdfview.decode;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
+import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFObject;
 import com.sun.pdfview.PDFParseException;
-import com.sun.pdfview.PDFFile;
 
 /**
  * decode an array of hex nybbles into a byte array

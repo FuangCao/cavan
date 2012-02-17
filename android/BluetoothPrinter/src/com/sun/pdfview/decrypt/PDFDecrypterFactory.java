@@ -19,13 +19,13 @@
 
 package com.sun.pdfview.decrypt;
 
-import com.sun.pdfview.PDFObject;
-import com.sun.pdfview.PDFParseException;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import com.sun.pdfview.PDFObject;
+import com.sun.pdfview.PDFParseException;
 
 /**
  * Produces a {@link PDFDecrypter} for documents given a (possibly non-existent)

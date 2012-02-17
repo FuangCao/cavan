@@ -34,8 +34,8 @@ package javax.obex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Calendar;
 import java.security.SecureRandom;
+import java.util.Calendar;
 
 /**
  * This class implements the javax.obex.HeaderSet interface for OBEX over

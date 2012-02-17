@@ -20,12 +20,31 @@
  */
 package com.sun.pdfview;
 
-import com.sun.pdfview.colorspace.IndexedColor;
-import com.sun.pdfview.colorspace.PDFColorSpace;
-import com.sun.pdfview.colorspace.YCCKColorSpace;
-import com.sun.pdfview.decode.PDFDecoder;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Node;
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.Transparency;
+import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorConvertOp;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferInt;
+import java.awt.image.IndexColorModel;
+import java.awt.image.MultiPixelPackedSampleModel;
+import java.awt.image.PackedColorModel;
+import java.awt.image.PixelInterleavedSampleModel;
+import java.awt.image.Raster;
+import java.awt.image.RasterFormatException;
+import java.awt.image.SampleModel;
+import java.awt.image.WritableRaster;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
@@ -33,15 +52,14 @@ import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataFormatImpl;
-import java.awt.*;
-import java.awt.color.ColorSpace;
-import java.awt.color.ICC_ColorSpace;
-import java.awt.image.*;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.Node;
+
+import com.sun.pdfview.colorspace.IndexedColor;
+import com.sun.pdfview.colorspace.PDFColorSpace;
+import com.sun.pdfview.colorspace.YCCKColorSpace;
+import com.sun.pdfview.decode.PDFDecoder;
 
 /**
  * Encapsulates a PDF Image

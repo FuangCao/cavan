@@ -32,11 +32,11 @@
 
 package javax.obex;
 
-import android.util.Log;
-
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+
+import android.util.Log;
 
 /**
  * This class in an implementation of the OBEX ServerSession.

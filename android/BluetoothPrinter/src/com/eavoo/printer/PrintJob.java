@@ -6,6 +6,7 @@ import java.util.HashMap;
 import javax.obex.ApplicationParameter;
 import javax.obex.HeaderSet;
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.xml.sax.SAXException;
 
 public class PrintJob extends BppSoapRequest

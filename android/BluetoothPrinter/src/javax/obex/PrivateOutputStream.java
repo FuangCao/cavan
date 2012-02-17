@@ -32,9 +32,9 @@
 
 package javax.obex;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.ByteArrayOutputStream;
 
 /**
  * This object provides an output stream to the Operation objects used in this

@@ -11,12 +11,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.RadioButton;
-import android.widget.TextView;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -30,7 +30,6 @@ public class BluetoothPrinterActivity extends Activity
 	private Button mButtonSimplePushPrint;
 	private TextView mTextViewStatus;
 	private EditText mEditTextFilePath;
-	private Button mButtonBrowse;
 
 	private void CavanMessage(String message)
 	{
@@ -122,7 +121,6 @@ public class BluetoothPrinterActivity extends Activity
 		mButtonRefresh = (Button) findViewById(R.id.main_button3);
 		mTextViewStatus = (TextView) findViewById(R.id.main_textView1);
 		mEditTextFilePath = (EditText) findViewById(R.id.main_editText1);
-		mButtonBrowse = (Button) findViewById(R.id.main_button4);
 
 		mButtonJobBasePrint.setOnClickListener(new OnClickListener()
 		{
@@ -175,7 +173,7 @@ public class BluetoothPrinterActivity extends Activity
 			}
 		});
 
-		mButtonBrowse.setOnClickListener(new OnClickListener()
+		mEditTextFilePath.setOnClickListener(new OnClickListener()
 		{
 			@Override
 			public void onClick(View v)

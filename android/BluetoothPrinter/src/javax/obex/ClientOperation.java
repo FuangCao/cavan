@@ -32,12 +32,12 @@
 
 package javax.obex;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.ByteArrayOutputStream;
 
 /**
  * This class implements the <code>Operation</code> interface. It will read and

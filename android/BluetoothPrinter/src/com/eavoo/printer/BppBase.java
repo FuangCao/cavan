@@ -13,20 +13,23 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+
 import javax.obex.ClientOperation;
 import javax.obex.ClientSession;
 import javax.obex.HeaderSet;
 import javax.obex.ResponseCodes;
+
+import android.content.Context;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+import android.os.Process;
+import android.util.Log;
+import android.webkit.MimeTypeMap;
+
 import com.sun.image.codec.jpeg.JPEGCodec;
 import com.sun.image.codec.jpeg.JPEGImageEncoder;
 import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
-import android.content.Context;
-import android.os.PowerManager;
-import android.os.Process;
-import android.os.PowerManager.WakeLock;
-import android.util.Log;
-import android.webkit.MimeTypeMap;
 
 public class BppBase extends Thread
 {

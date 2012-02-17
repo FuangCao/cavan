@@ -32,14 +32,14 @@
 
 package javax.obex;
 
-import android.security.Md5MessageDigest;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+
+import android.security.Md5MessageDigest;
 
 /**
  * This class defines a set of helper methods for the implementation of Obex.

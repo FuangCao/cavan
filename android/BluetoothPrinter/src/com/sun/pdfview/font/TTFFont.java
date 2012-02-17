@@ -25,14 +25,22 @@ import java.awt.geom.GeneralPath;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Collection;
-import java.util.Collections;
 
 import com.sun.pdfview.PDFObject;
-import com.sun.pdfview.font.ttf.*;
+import com.sun.pdfview.font.ttf.AdobeGlyphList;
+import com.sun.pdfview.font.ttf.CMap;
+import com.sun.pdfview.font.ttf.CmapTable;
+import com.sun.pdfview.font.ttf.Glyf;
+import com.sun.pdfview.font.ttf.GlyfCompound;
+import com.sun.pdfview.font.ttf.GlyfSimple;
+import com.sun.pdfview.font.ttf.GlyfTable;
+import com.sun.pdfview.font.ttf.HeadTable;
+import com.sun.pdfview.font.ttf.HmtxTable;
+import com.sun.pdfview.font.ttf.PostTable;
+import com.sun.pdfview.font.ttf.TrueTypeFont;
 
 /**
  * A true-type font

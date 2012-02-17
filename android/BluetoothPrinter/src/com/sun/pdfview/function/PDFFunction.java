@@ -20,10 +20,10 @@
  */
 package com.sun.pdfview.function;
 
+import java.io.IOException;
+
 import com.sun.pdfview.PDFObject;
 import com.sun.pdfview.PDFParseException;
-
-import java.io.IOException;
 
 /**
  * <p>PDF Functions are defined in the reference as Section 3.9.</p>

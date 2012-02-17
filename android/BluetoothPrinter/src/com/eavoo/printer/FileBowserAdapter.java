@@ -1,15 +1,12 @@
 package com.eavoo.printer;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import android.content.Context;
-import android.sax.RootElement;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;

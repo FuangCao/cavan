@@ -4,24 +4,15 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <LinearLayout
-        android:id="@+id/main_linearLayout3"
+    <EditText
+        android:id="@+id/main_editText1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:editable="false"
+        android:singleLine="true" >
 
-        <EditText
-            android:id="@+id/main_editText1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        <Button
-            android:id="@+id/main_button4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Browse" />
-
-    </LinearLayout>
+        <requestFocus />
+    </EditText>
 
     <LinearLayout
         android:id="@+id/main_linearLayout1"

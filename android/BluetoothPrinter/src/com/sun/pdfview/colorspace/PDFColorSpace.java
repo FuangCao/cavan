@@ -20,20 +20,18 @@
  */
 package com.sun.pdfview.colorspace;
 
-import com.sun.pdfview.PDFObject;
-import com.sun.pdfview.PDFPaint;
-import com.sun.pdfview.PDFParseException;
-import com.sun.pdfview.function.PDFFunction;
-
 import java.awt.Color;
 import java.awt.color.ColorSpace;
 import java.awt.color.ICC_ColorSpace;
 import java.awt.color.ICC_Profile;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-
 import java.util.Map;
+
+import com.sun.pdfview.PDFObject;
+import com.sun.pdfview.PDFPaint;
+import com.sun.pdfview.PDFParseException;
+import com.sun.pdfview.function.PDFFunction;
 
 
 /**

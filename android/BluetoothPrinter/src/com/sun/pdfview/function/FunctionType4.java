@@ -22,7 +22,8 @@ package com.sun.pdfview.function;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
 
 import com.sun.pdfview.PDFObject;
 import com.sun.pdfview.PDFParseException;

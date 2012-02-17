@@ -20,10 +20,10 @@
  */
 package com.sun.pdfview;
 
+import static java.awt.geom.Path2D.WIND_EVEN_ODD;
+
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
-import static java.awt.geom.GeneralPath.WIND_EVEN_ODD;
-import static java.awt.geom.GeneralPath.WIND_NON_ZERO;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
@@ -37,7 +37,6 @@ import java.util.Stack;
 
 import com.sun.pdfview.colorspace.PDFColorSpace;
 import com.sun.pdfview.colorspace.PatternSpace;
-import com.sun.pdfview.decode.PDFDecoder;
 import com.sun.pdfview.font.PDFFont;
 import com.sun.pdfview.pattern.PDFShader;
 

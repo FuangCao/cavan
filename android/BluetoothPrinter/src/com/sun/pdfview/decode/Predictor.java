@@ -21,9 +21,8 @@
 
 package com.sun.pdfview.decode;
 
-import java.nio.ByteBuffer;
-
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.sun.pdfview.PDFObject;
 import com.sun.pdfview.PDFParseException;

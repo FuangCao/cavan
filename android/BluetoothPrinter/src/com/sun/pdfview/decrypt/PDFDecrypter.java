@@ -19,11 +19,11 @@
 
 package com.sun.pdfview.decrypt;
 
+import java.nio.ByteBuffer;
+
 import com.sun.pdfview.PDFObject;
 import com.sun.pdfview.PDFParseException;
 import com.sun.pdfview.PDFStringUtil;
-
-import java.nio.ByteBuffer;
 
 /**
  * A decrypter decrypts streams and strings in a PDF document. {@link
