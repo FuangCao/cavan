@@ -121,7 +121,7 @@ public class BppSoapRequest
 
 		return true;
 	}
-	
+
 	public boolean SendRequest(String action, String body, String header)
 	{
 		setAttributes(action, body, header);
@@ -202,7 +202,7 @@ public class BppSoapRequest
 	public String getElementContent(Element parent, String name)
 	{
 		Element element  = (Element) parent.getElementsByTagName(name).item(0);
-		
+
 		return element.getTextContent();
 	}
 

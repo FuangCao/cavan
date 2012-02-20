@@ -16,12 +16,29 @@ public class JobBasePrinter extends BluetoothBasePrinter
 		super(context, transport, job);
 	}
 
-	public void GetPrinterAttributes()
+	public BluetoothPrinterAttribute GetPrinterAttributes()
 	{
-		BppSoapRequest request = new BppSoapRequest(this);
+		BluetoothPrinterAttribute attribute = new BluetoothPrinterAttribute(this);
 
-		request.setAttributes("GetPrinterAttributes", null, null);
-		request.SendTo();
+		try
+		{
+			attribute.update();
+			return attribute;
+		}
+		catch (ParserConfigurationException e)
+		{
+			e.printStackTrace();
+		}
+		catch (SAXException e)
+		{
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	public boolean SendDocument() throws IOException
@@ -80,8 +97,6 @@ public class JobBasePrinter extends BluetoothBasePrinter
 		{
 			e.printStackTrace();
 		}
-
-		GetPrinterAttributes();
 
 		return ret;
 	}

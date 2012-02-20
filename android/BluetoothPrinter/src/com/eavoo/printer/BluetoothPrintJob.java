@@ -206,7 +206,7 @@ public class BluetoothPrintJob
 	{
 		return AppTagFileSize;
 	}
-	
+
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
@@ -289,13 +289,13 @@ public class BluetoothPrintJob
 		{
 			return false;
 		}
-		
+
 		mJobId = Integer.decode(map.get("JobId"));
 		mOperationStatus = Short.decode(map.get("OperationStatus"));
-		
+
 		return true;
 	}
-	
+
 	public boolean cancel()
 	{
 		BppSoapRequest request = new BppSoapRequest(mPrinter);

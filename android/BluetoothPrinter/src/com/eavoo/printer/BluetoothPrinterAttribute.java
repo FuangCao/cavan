@@ -8,9 +8,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-public class PrinterAttribute extends BppSoapRequest
+public class BluetoothPrinterAttribute extends BppSoapRequest
 {
-	public PrinterAttribute(BluetoothBasePrinter printer)
+	public BluetoothPrinterAttribute(BluetoothBasePrinter printer)
 	{
 		super(printer);
 	}

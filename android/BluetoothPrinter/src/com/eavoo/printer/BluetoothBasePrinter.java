@@ -25,6 +25,7 @@ public class BluetoothBasePrinter extends Thread
 	protected BppObexTransport mTransport;
 	private WakeLock mWakeLock;
 	protected BluetoothPrintJob mPrintJob;
+	private Runnable mRunnable;
 	// private Context mContext;
 
 	public static final byte[] UUID_DPS =
@@ -77,7 +78,7 @@ public class BluetoothBasePrinter extends Thread
 		this.mTransport = transport;
 		this.mPrintJob = job;
 	}
-	
+
 	public String getFileName()
 	{
 		return mPrintJob.getFileName();
@@ -332,7 +333,7 @@ public class BluetoothBasePrinter extends Thread
 
 		return null;
 	}
-	
+
 	public boolean BluetoothPrinterRun()
 	{
 		CavanLog("BluetoothPrinterRun No implementation");
@@ -360,13 +361,20 @@ public class BluetoothBasePrinter extends Thread
 			return;
 		}
 
-		if (BluetoothPrinterRun())
+		if (mRunnable == null)
 		{
-			CavanLog("Print complete");
+			if (BluetoothPrinterRun())
+			{
+				CavanLog("Print complete");
+			}
+			else
+			{
+				CavanLog("Print failed");
+			}
 		}
 		else
 		{
-			CavanLog("Print failed");
+			mRunnable.run();
 		}
 
 		try
