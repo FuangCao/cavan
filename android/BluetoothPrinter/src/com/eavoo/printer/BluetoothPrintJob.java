@@ -1,15 +1,13 @@
 package com.eavoo.printer;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 import javax.obex.ApplicationParameter;
 import javax.obex.HeaderSet;
-import javax.xml.parsers.ParserConfigurationException;
 
-import org.xml.sax.SAXException;
+import android.webkit.MimeTypeMap;
 
-public class PrintJob extends BppSoapRequest
+public class BluetoothPrintJob
 {
 	private static final byte AppTagOffset = 1;
 	private static final byte AppTagCount = 2;
@@ -21,19 +19,50 @@ public class PrintJob extends BppSoapRequest
 	private int mJobId;
 	private short mOperationStatus;
 	private boolean mCancelOnLostLink = true;
+	private String mFileName;
 	private String mJobName = "MyJob";
 	private String mJobOriginatingUserName = "mailto:MyEmail";
-	private String mDocumentFormat = "text/plain";
+	private String mDocumentFormat;
 	private String mSides = "one-sided";
 	private String mOrientationRequested = "portrait";
 	private String mMediaSize = "iso_a4_105x148mm";
 	private String mMediaType = "envelope";
 	private String mPrintQuality = "high";
+	private BluetoothBasePrinter mPrinter;
 
-	public PrintJob(BppBase base, String format)
+	public void setPrinter(BluetoothBasePrinter printer)
 	{
-		super(base);
-		this.mDocumentFormat = format;
+		this.mPrinter = printer;
+	}
+
+	public String getFileName()
+	{
+		return mFileName;
+	}
+
+	public void setFileName(String mFileName)
+	{
+		this.mFileName = mFileName;
+	}
+
+	public int getCopies()
+	{
+		return mCopies;
+	}
+
+	public void setCopies(int mCopies)
+	{
+		this.mCopies = mCopies;
+	}
+
+	public int getNumberUp()
+	{
+		return mNumberUp;
+	}
+
+	public void setNumberUp(int mNumberUp)
+	{
+		this.mNumberUp = mNumberUp;
 	}
 
 	public int getJobId()
@@ -54,6 +83,16 @@ public class PrintJob extends BppSoapRequest
 	public void setOperationStatus(short mOperationStatus)
 	{
 		this.mOperationStatus = mOperationStatus;
+	}
+
+	public boolean ismCancelOnLostLink()
+	{
+		return mCancelOnLostLink;
+	}
+
+	public void setCancelOnLostLink(boolean mCancelOnLostLink)
+	{
+		this.mCancelOnLostLink = mCancelOnLostLink;
 	}
 
 	public String getJobName()
@@ -78,22 +117,24 @@ public class PrintJob extends BppSoapRequest
 
 	public String getDocumentFormat()
 	{
+		if (mDocumentFormat == null)
+		{
+			return GetFileMimeTypeByName(mFileName);
+		}
+
 		return mDocumentFormat;
 	}
 
 	public void setDocumentFormat(String mDocumentFormat)
 	{
-		this.mDocumentFormat = mDocumentFormat;
-	}
-
-	public int getCopies()
-	{
-		return mCopies;
-	}
-
-	public void setCopies(int mCopies)
-	{
-		this.mCopies = mCopies;
+		if (mDocumentFormat == null)
+		{
+			this.mDocumentFormat = GetFileMimeTypeByName(mFileName);
+		}
+		else
+		{
+			this.mDocumentFormat = mDocumentFormat;
+		}
 	}
 
 	public String getSides()
@@ -104,16 +145,6 @@ public class PrintJob extends BppSoapRequest
 	public void setSides(String mSides)
 	{
 		this.mSides = mSides;
-	}
-
-	public int getNumberUp()
-	{
-		return mNumberUp;
-	}
-
-	public void setNumberUp(int mNumberUp)
-	{
-		this.mNumberUp = mNumberUp;
 	}
 
 	public String getOrientationRequested()
@@ -156,17 +187,27 @@ public class PrintJob extends BppSoapRequest
 		this.mPrintQuality = mPrintQuality;
 	}
 
-	public boolean ismCancelOnLostLink()
+	public static byte getApptagoffset()
 	{
-		return mCancelOnLostLink;
+		return AppTagOffset;
 	}
 
-	public void setCancelOnLostLink(boolean mCancelOnLostLink)
+	public static byte getApptagcount()
 	{
-		this.mCancelOnLostLink = mCancelOnLostLink;
+		return AppTagCount;
 	}
 
-	private String BuildBody()
+	public static byte getApptagjobid()
+	{
+		return AppTagJobId;
+	}
+
+	public static byte getApptagfilesize()
+	{
+		return AppTagFileSize;
+	}
+	
+	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
 
@@ -175,7 +216,7 @@ public class PrintJob extends BppSoapRequest
 		builder.append("<CancelOnLostLink>" + mCancelOnLostLink + "</CancelOnLostLink>\r\n");
 		builder.append("<JobName>" + mJobName + "</JobName>\r\n");
 		builder.append("<JobOriginatingUserName>" + mJobOriginatingUserName + "</JobOriginatingUserName>\r\n");
-		builder.append("<DocumentFormat>" + mDocumentFormat + "</DocumentFormat>\r\n");
+		builder.append("<DocumentFormat>" + getDocumentFormat() + "</DocumentFormat>\r\n");
 		builder.append("<Sides>" + mSides + "</Sides>\r\n");
 		builder.append("<OrientationRequested>" + mOrientationRequested + "</OrientationRequested>\r\n");
 		builder.append("<MediaSize>" + mMediaSize + "</MediaSize>\r\n");
@@ -183,46 +224,6 @@ public class PrintJob extends BppSoapRequest
 		builder.append("<PrintQuality>" + mPrintQuality + "</PrintQuality>");
 
 		return builder.toString();
-	}
-
-	public boolean CreateJob() throws IOException, ParserConfigurationException, SAXException
-	{
-		setAttributes("CreateJob", BuildBody(), null);
-
-		if (SendTo() == false)
-		{
-			return false;
-		}
-
-		HashMap<String, String> map = getResponseAttributes("CreateJobResponse");
-		if (map == null)
-		{
-			return false;
-		}
-
-		mJobId = Integer.decode(map.get("JobId"));
-		mOperationStatus = Short.decode(map.get("OperationStatus"));
-
-		return true;
-	}
-
-	public boolean CancelJob()
-	{
-		setAttributes("CancelJob", "<JobId>" + mJobId + "</JobId>", null);
-
-		return SendTo();
-	}
-
-	public HashMap<String, String> GetJobAttributes()
-	{
-		setAttributes("GetJobAttributes", "<JobId>" + mJobId + "</JobId>", null);
-
-		if (SendTo() == false)
-		{
-			return null;
-		}
-
-		return getResponseAttributes("GetJobAttributesResponse");
 	}
 
 	public static byte[] IntegerToByteArray(int value)
@@ -272,5 +273,82 @@ public class PrintJob extends BppSoapRequest
 		headerSet.setHeader(HeaderSet.APPLICATION_PARAMETER, buildApplicationParameter());
 
 		return headerSet;
+	}
+
+	public boolean create(BluetoothBasePrinter printer)
+	{
+		mPrinter = printer;
+		BppSoapRequest request = new BppSoapRequest(mPrinter);
+		if (request.SendRequest("CreateJob", toString(), null) == false)
+		{
+			return false;
+		}
+
+		HashMap<String, String> map = request.getResponseAttributes("CreateJobResponse");
+		if (map == null)
+		{
+			return false;
+		}
+		
+		mJobId = Integer.decode(map.get("JobId"));
+		mOperationStatus = Short.decode(map.get("OperationStatus"));
+		
+		return true;
+	}
+	
+	public boolean cancel()
+	{
+		BppSoapRequest request = new BppSoapRequest(mPrinter);
+		if (request.SendRequest("CancelJob", "<JobId>" + mJobId + "</JobId>", null) == false)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public HashMap<String, String> getAttributes()
+	{
+		BppSoapRequest request = new BppSoapRequest(mPrinter);
+		if (request.SendRequest("GetJobAttributes", "<JobId>" + mJobId + "</JobId>", null) == false)
+		{
+			return null;
+		}
+
+		return request.getResponseAttributes("GetJobAttributesResponse");
+	}
+
+	public static String FileBaseName(String filename)
+	{
+		int index = filename.lastIndexOf('/');
+		if (index < 0)
+		{
+			return filename;
+		}
+
+		return filename.substring(index + 1);
+	}
+
+	public static String GetFileExtension(String pathname)
+	{
+        int dotIndex = pathname.lastIndexOf(".");
+        if (dotIndex < 0)
+        {
+			return "txt";
+        }
+
+		return pathname.substring(dotIndex + 1).toLowerCase();
+	}
+
+	public static String GetFileMimeTypeByName(String pathname)
+	{
+        if (pathname == null)
+        {
+			return null;
+        }
+
+		MimeTypeMap map = MimeTypeMap.getSingleton();
+
+        return map.getMimeTypeFromExtension(GetFileExtension(pathname));
 	}
 }

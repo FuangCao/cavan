@@ -1,16 +1,19 @@
 package com.eavoo.printer;
 
 import java.io.IOException;
+
 import javax.obex.HeaderSet;
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.xml.sax.SAXException;
+
 import android.content.Context;
 
-public class JobBasePrinter extends BppBase
+public class JobBasePrinter extends BluetoothBasePrinter
 {
-	public JobBasePrinter(Context context, BppObexTransport transport, String filename, String filetype)
+	public JobBasePrinter(Context context, BppObexTransport transport, BluetoothPrintJob job)
 	{
-		super(context, transport, filename, filetype);
+		super(context, transport, job);
 	}
 
 	public void GetPrinterAttributes()
@@ -21,37 +24,31 @@ public class JobBasePrinter extends BppBase
 		request.SendTo();
 	}
 
-	public boolean SendDocument(PrintJob job, String filename) throws IOException
+	public boolean SendDocument() throws IOException
 	{
-		return PutFile(filename, null, job.buildHeaderSet(), UUID_DPS);
+		return PutFile(mPrintJob.getFileName(), null, mPrintJob.buildHeaderSet(), UUID_DPS);
 	}
 
-	public boolean SendDocument(PrintJob job, byte[] data, HeaderSet headerSet) throws IOException
+	public boolean SendDocument(BluetoothPrintJob job, byte[] data, HeaderSet headerSet) throws IOException
 	{
 		return PutByteArray(UUID_DPS, headerSet, data);
 	}
 
-	public boolean PrintFile(String filename, String filetype) throws IOException, ParserConfigurationException, SAXException
+	public boolean PrintFile() throws IOException, ParserConfigurationException, SAXException
 	{
-		if (filetype == null)
-		{
-			filetype = GetFileMimeTypeByName(filename);
-		}
-
-		PrintJob job = new PrintJob(this, filetype);
-		if (job.CreateJob() == false)
+		if (mPrintJob.create(this) == false)
 		{
 			return false;
 		}
 
-		CavanLog("JobId = " + job.getJobId());
-		CavanLog(String.format("OperationStatus = 0x%04x", job.getOperationStatus()));
+		CavanLog("JobId = " + mPrintJob.getJobId());
+		CavanLog(String.format("OperationStatus = 0x%04x", mPrintJob.getOperationStatus()));
 
-		job.GetJobAttributes();
+		mPrintJob.getAttributes();
 
-		if (SendDocument(job, filename) == false)
+		if (SendDocument() == false)
 		{
-			job.CancelJob();
+			mPrintJob.cancel();
 			return false;
 		}
 
@@ -59,9 +56,9 @@ public class JobBasePrinter extends BppBase
 	}
 
 	@Override
-	public boolean BppObexRun()
+	public boolean BluetoothPrinterRun()
 	{
-		String extension = GetFileExtension(getFileName());
+		String extension = BluetoothPrintJob.GetFileExtension(getFileName());
 
 		CavanLog("File extension = \"" + extension + "\"");
 
@@ -69,21 +66,18 @@ public class JobBasePrinter extends BppBase
 
 		try
 		{
-			ret = PrintFile(getFileName(), getFileType());
+			ret = PrintFile();
 		}
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		catch (ParserConfigurationException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		catch (SAXException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

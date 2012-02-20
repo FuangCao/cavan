@@ -5,6 +5,7 @@ import java.io.File;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -21,6 +22,46 @@ public class FileBrowserActivity extends Activity
 	private TextView mTextViewPath;
 	private Button mButtonBack;
 	private Button mButtonSelect;
+
+	private OnClickListener mOnClickListener = new OnClickListener()
+	{
+		@Override
+		public void onClick(View v)
+		{
+			switch (v.getId())
+			{
+			case R.id.browser_button1:
+				finish(mTextViewPath.getText().toString());
+				break;
+
+			case R.id.browser_button2:
+				mFileBowserAdapter.backParentDirectory();
+				showPath();
+				break;
+
+			default:
+				Log.e("Cavan", "unknown onClick id");
+			}
+		}
+	};
+
+	private OnItemClickListener mOnItemClickListener = new OnItemClickListener()
+	{
+		@Override
+		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
+		{
+			File file = (File) mFileBowserAdapter.getItem(arg2);
+			if (file.isDirectory())
+			{
+				mFileBowserAdapter.setCurrentDirectory(file);
+				showPath(file);
+			}
+			else
+			{
+				finish(file.getAbsolutePath());
+			}
+		}
+	};
 
 	private void showPath(File file)
 	{
@@ -42,7 +83,6 @@ public class FileBrowserActivity extends Activity
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
-		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.browser);
 
@@ -53,43 +93,9 @@ public class FileBrowserActivity extends Activity
 
 		mFileBowserAdapter = new FileBowserAdapter(this, mRootDirectory);
 		mListViewBrowser.setAdapter(mFileBowserAdapter);
-		mListViewBrowser.setOnItemClickListener(new OnItemClickListener()
-		{
-			@Override
-			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
-			{
-				// TODO Auto-generated method stub
-				File file = (File) mFileBowserAdapter.getItem(arg2);
-				if (file.isDirectory())
-				{
-					mFileBowserAdapter.setCurrentDirectory(file);
-					showPath(file);
-				}
-				else
-				{
-					finish(file.getAbsolutePath());
-				}
-			}
-		});
+		mListViewBrowser.setOnItemClickListener(mOnItemClickListener);
 		showPath();
-
-		mButtonBack.setOnClickListener(new OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				mFileBowserAdapter.backParentDirectory();
-				showPath();
-			}
-		});
-
-		mButtonSelect.setOnClickListener(new OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				finish(mTextViewPath.getText().toString());
-			}
-		});
+		mButtonBack.setOnClickListener(mOnClickListener);
+		mButtonSelect.setOnClickListener(mOnClickListener);
 	}
 }

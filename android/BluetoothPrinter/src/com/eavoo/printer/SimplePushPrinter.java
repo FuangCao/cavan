@@ -4,15 +4,15 @@ import java.io.IOException;
 
 import android.content.Context;
 
-public class SimplePushPrinter extends BppBase
+public class SimplePushPrinter extends BluetoothBasePrinter
 {
-    public SimplePushPrinter(Context context, BppObexTransport transport, String filename, String filetype)
+    public SimplePushPrinter(Context context, BppObexTransport transport, BluetoothPrintJob job)
 	{
-		super(context, transport, filename, filetype);
+		super(context, transport, job);
 	}
 
 	@Override
-	public boolean BppObexRun()
+	public boolean BluetoothPrinterRun()
 	{
 		try
 		{
@@ -23,7 +23,6 @@ public class SimplePushPrinter extends BppBase
 		}
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

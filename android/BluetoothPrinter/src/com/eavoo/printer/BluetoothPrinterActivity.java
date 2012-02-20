@@ -3,9 +3,12 @@ package com.eavoo.printer;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -19,9 +22,11 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.eavoo.printer.BluetoothPrintService.BluetoothPrintBinder;
 
 public class BluetoothPrinterActivity extends Activity
 {
+	private BluetoothPrintService mBluetoothPrintService;
 	private BluetoothAdapter mBluetoothAdapter;
 	private Button mButtonJobBasePrint;
 	private Button mButtonRefresh;
@@ -30,6 +35,71 @@ public class BluetoothPrinterActivity extends Activity
 	private Button mButtonSimplePushPrint;
 	private TextView mTextViewStatus;
 	private EditText mEditTextFilePath;
+	private BluetoothPrintJob mPrintJob = new BluetoothPrintJob();
+
+	private ServiceConnection mServiceConnection = new ServiceConnection()
+	{
+		@Override
+		public void onServiceDisconnected(ComponentName name)
+		{
+			Log.v("Cavan", "onServiceDisconnected");
+			mBluetoothPrintService = null;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service)
+		{
+			Log.v("Cavan", "onServiceConnected");
+			BluetoothPrintBinder binder = (BluetoothPrintBinder) service;
+			mBluetoothPrintService = binder.getService();
+		}
+	};
+
+	private OnClickListener mOnClickListener = new OnClickListener()
+	{
+		@Override
+		public void onClick(View v)
+		{
+			switch (v.getId())
+			{
+			case R.id.main_button1:
+				if (mBluetoothDevice == null)
+				{
+					CavanMessage("Please select a bluetooth device");
+					return;
+				}
+
+				mPrintJob.setFileName(getFileName());
+				mBluetoothPrintService.JobBasePrint(mBluetoothDevice, mPrintJob);
+				break;
+
+			case R.id.main_button2:
+				if (mBluetoothDevice == null)
+				{
+					CavanMessage("Please select a bluetooth device");
+					return;
+				}
+
+				mPrintJob.setFileName(getFileName());
+				mBluetoothPrintService.SimplePushPrint(mBluetoothDevice, mPrintJob);
+				break;
+
+			case R.id.main_button3:
+				mTextViewStatus.setText("");
+				ListBluetoothDevices();
+				break;
+
+			case R.id.main_editText1:
+				Intent intent = new Intent(Intent.ACTION_VIEW);
+				intent.setClass(getApplicationContext(), FileBrowserActivity.class);
+				startActivityForResult(intent, 0);
+				break;
+
+			default:
+				CavanMessage("unknown onclick event");
+			}
+		}
+	};
 
 	private void CavanMessage(String message)
 	{
@@ -44,7 +114,6 @@ public class BluetoothPrinterActivity extends Activity
 		public CavanRadioButton(Context context, BluetoothDevice device)
 		{
 			super(context);
-			// TODO Auto-generated constructor stub
 			mBluetoothDevice = device;
 			setText(mBluetoothDevice.getName());
 		}
@@ -73,18 +142,17 @@ public class BluetoothPrinterActivity extends Activity
 		}
 
 		RadioGroup radioGroup = new RadioGroup(this);
+		CavanRadioButton radioButton = null;
 
 		for (BluetoothDevice bluetoothDevice : mBluetoothAdapter.getBondedDevices())
 		{
-			CavanRadioButton radioButton = new CavanRadioButton(this, bluetoothDevice);
+			radioButton = new CavanRadioButton(this, bluetoothDevice);
 
 			radioButton.setOnCheckedChangeListener(new OnCheckedChangeListener()
 			{
-
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
 				{
-					// TODO Auto-generated method stub
 					if (buttonView instanceof CavanRadioButton && isChecked)
 					{
 						CavanRadioButton radioButton = (CavanRadioButton) buttonView;
@@ -95,6 +163,11 @@ public class BluetoothPrinterActivity extends Activity
 			});
 
 			radioGroup.addView(radioButton);
+		}
+
+		if (radioButton != null)
+		{
+			radioButton.setChecked(true);
 		}
 
 		mLayoutDevices.addView(radioGroup);
@@ -122,69 +195,15 @@ public class BluetoothPrinterActivity extends Activity
 		mTextViewStatus = (TextView) findViewById(R.id.main_textView1);
 		mEditTextFilePath = (EditText) findViewById(R.id.main_editText1);
 
-		mButtonJobBasePrint.setOnClickListener(new OnClickListener()
-		{
-
-			@Override
-			public void onClick(View v)
-			{
-				// TODO Auto-generated method stub
-				if (mBluetoothDevice == null)
-				{
-					CavanMessage("Please select a bluetooth device");
-					return;
-				}
-
-				BppObexTransport bppObexTransport = new BppObexTransport(mBluetoothDevice);
-				JobBasePrinter jobBasePrinter = new JobBasePrinter(BluetoothPrinterActivity.this, bppObexTransport, getFileName(), null);
-				jobBasePrinter.start();
-			}
-		});
-
-		mButtonRefresh.setOnClickListener(new OnClickListener()
-		{
-
-			@Override
-			public void onClick(View v)
-			{
-				// TODO Auto-generated method stub
-				mTextViewStatus.setText("");
-				ListBluetoothDevices();
-			}
-		});
-
-		mButtonSimplePushPrint.setOnClickListener(new OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				// TODO Auto-generated method stub
-				if (mBluetoothDevice == null)
-				{
-					CavanMessage("Please select a bluetooth device");
-					return;
-				}
-
-				CavanMessage("Start Printing");
-
-				BppObexTransport bppObexTransport = new BppObexTransport(mBluetoothDevice);
-				SimplePushPrinter printer = new SimplePushPrinter(BluetoothPrinterActivity.this, bppObexTransport, getFileName(), null);
-				printer.start();
-			}
-		});
-
-		mEditTextFilePath.setOnClickListener(new OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				Intent intent = new Intent(Intent.ACTION_VIEW);
-				intent.setClass(getApplicationContext(), FileBrowserActivity.class);
-				startActivityForResult(intent, 0);
-			}
-		});
+		mButtonJobBasePrint.setOnClickListener(mOnClickListener);
+		mButtonRefresh.setOnClickListener(mOnClickListener);
+		mButtonSimplePushPrint.setOnClickListener(mOnClickListener);
+		mEditTextFilePath.setOnClickListener(mOnClickListener);
 
 		ListBluetoothDevices();
+
+		Intent service = new Intent(this, BluetoothPrintService.class);
+		bindService(service, mServiceConnection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override

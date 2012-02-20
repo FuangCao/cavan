@@ -18,16 +18,14 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.Process;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
 
-public class BppBase extends Thread
+public class BluetoothBasePrinter extends Thread
 {
 	private static final String TAG = "BppBase";
 	protected BppObexTransport mTransport;
 	private WakeLock mWakeLock;
+	protected BluetoothPrintJob mPrintJob;
 	// private Context mContext;
-	private String mFileName;
-	private String mFileType;
 
 	public static final byte[] UUID_DPS =
 	{
@@ -69,36 +67,25 @@ public class BppBase extends Thread
 		CavanLog(ByteArrayToHexString(bs));
 	}
 
-	public BppBase(Context context, BppObexTransport transport, String filename, String filetype)
+	public BluetoothBasePrinter(Context context, BppObexTransport transport, BluetoothPrintJob job)
 	{
-		CavanLog("Create PrintThread");
+		CavanLog("Create BppBasePrinter");
 		PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
 		this.mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
 
 		// this.mContext = context;
 		this.mTransport = transport;
-		this.mFileName = filename;
-		this.mFileType = filetype;
+		this.mPrintJob = job;
 	}
-
+	
 	public String getFileName()
 	{
-		return mFileName;
-	}
-
-	public void setFileName(String mFileName)
-	{
-		this.mFileName = mFileName;
+		return mPrintJob.getFileName();
 	}
 
 	public String getFileType()
 	{
-		return mFileType == null ? GetFileMimeTypeByName(mFileName) : mFileType;
-	}
-
-	public void setFileType(String mFileType)
-	{
-		this.mFileType = mFileType;
+		return mPrintJob.getDocumentFormat();
 	}
 
 	public String ByteArrayToHexString(byte[] bs)
@@ -155,47 +142,6 @@ public class BppBase extends Thread
 		}
 
 		return hsResponse.getResponseCode() == ResponseCodes.OBEX_HTTP_OK ? session : null;
-	}
-
-	public String GetFileExtension(String pathname)
-	{
-        int dotIndex = pathname.lastIndexOf(".");
-        if (dotIndex < 0)
-        {
-			return "txt";
-        }
-
-		return pathname.substring(dotIndex + 1).toLowerCase();
-	}
-
-	public String GetFileMimeTypeByName(String pathname)
-	{
-        if (pathname == null)
-        {
-			return null;
-        }
-
-		MimeTypeMap map = MimeTypeMap.getSingleton();
-
-        return map.getMimeTypeFromExtension(GetFileExtension(pathname));
-	}
-
-	public boolean BppObexRun()
-	{
-		CavanLog("BppObexRun No implementation");
-
-		return false;
-	}
-
-	public String FileBaseName(String filename)
-	{
-		int index = filename.lastIndexOf('/');
-		if (index < 0)
-		{
-			return filename;
-		}
-
-		return filename.substring(index + 1);
 	}
 
 	public boolean PutFile(InputStream inputStream, HeaderSet headerSet, byte[] uuid) throws IOException
@@ -292,14 +238,14 @@ public class BppBase extends Thread
 			headerSet = new HeaderSet();
 		}
 
-		headerSet.setHeader(HeaderSet.NAME, FileBaseName(filename));
+		headerSet.setHeader(HeaderSet.NAME, BluetoothPrintJob.FileBaseName(filename));
 		CavanLog("NAME = " + headerSet.getHeader(HeaderSet.NAME));
 		headerSet.setHeader(HeaderSet.LENGTH, size);
 		CavanLog("LENGTH = " + headerSet.getHeader(HeaderSet.LENGTH));
 
 		if (filetype == null)
 		{
-			filetype = GetFileMimeTypeByName(filename);
+			filetype = BluetoothPrintJob.GetFileMimeTypeByName(filename);
 		}
 		headerSet.setHeader(HeaderSet.TYPE, filetype);
 		CavanLog("TYPE = " + headerSet.getHeader(HeaderSet.TYPE));
@@ -381,11 +327,17 @@ public class BppBase extends Thread
 		}
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		return null;
+	}
+	
+	public boolean BluetoothPrinterRun()
+	{
+		CavanLog("BluetoothPrinterRun No implementation");
+
+		return false;
 	}
 
 	@Override
@@ -404,12 +356,11 @@ public class BppBase extends Thread
 		}
 		catch (IOException e1)
 		{
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 			return;
 		}
 
-		if (BppObexRun())
+		if (BluetoothPrinterRun())
 		{
 			CavanLog("Print complete");
 		}
@@ -424,7 +375,6 @@ public class BppBase extends Thread
 		}
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

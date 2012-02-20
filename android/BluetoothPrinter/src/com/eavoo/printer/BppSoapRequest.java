@@ -2,7 +2,9 @@ package com.eavoo.printer;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,7 +19,7 @@ import org.xml.sax.SAXException;
 
 public class BppSoapRequest
 {
-	protected BppBase mBppBase;
+	protected BluetoothBasePrinter mPrinter;
 	private String mAction;
 	private String mBody;
 	private String mHttpHeader;
@@ -56,9 +58,9 @@ public class BppSoapRequest
 		this.mBody = body;
 	}
 
-	public BppSoapRequest(BppBase base)
+	public BppSoapRequest(BluetoothBasePrinter printer)
 	{
-		this.mBppBase = base;
+		this.mPrinter = printer;
 	}
 
 	public byte[] getResponse()
@@ -111,13 +113,19 @@ public class BppSoapRequest
 
 	public boolean SendTo()
 	{
-		mResponse = mBppBase.SendSoapRequest(toByteArray());
+		mResponse = mPrinter.SendSoapRequest(toByteArray());
 		if (mResponse == null)
 		{
 			return false;
 		}
 
 		return true;
+	}
+	
+	public boolean SendRequest(String action, String body, String header)
+	{
+		setAttributes(action, body, header);
+		return SendTo();
 	}
 
 	public Element ParseSoapResponse(String action) throws ParserConfigurationException, SAXException, IOException
@@ -189,5 +197,53 @@ public class BppSoapRequest
 		}
 
 		return getResponseAttributes(elementAction);
+	}
+
+	public String getElementContent(Element parent, String name)
+	{
+		Element element  = (Element) parent.getElementsByTagName(name).item(0);
+		
+		return element.getTextContent();
+	}
+
+	public int getElementContentInt(Element parent, String name)
+	{
+		return Integer.decode(getElementContent(parent, name));
+	}
+
+	public boolean getElementContentBoolean(Element parent, String name)
+	{
+		return Boolean.parseBoolean(getElementContent(parent, name).toLowerCase());
+	}
+
+	public List<String> getElementContents(Element parent, String tag, String attr)
+	{
+		Element element = (Element) parent.getElementsByTagName(tag).item(0);
+		if (element == null)
+		{
+			return null;
+		}
+
+		NodeList nodes = element.getElementsByTagName(attr);
+		ArrayList<String> list = new ArrayList<String>();
+
+		for (int i = 0; ; i++)
+		{
+			Node node = nodes.item(i);
+			if (node == null)
+			{
+				break;
+			}
+
+			if (node.getNodeType() != Node.ELEMENT_NODE)
+			{
+				continue;
+			}
+
+			element = (Element) node;
+			list.add(element.getTextContent());
+		}
+
+		return list;
 	}
 }
