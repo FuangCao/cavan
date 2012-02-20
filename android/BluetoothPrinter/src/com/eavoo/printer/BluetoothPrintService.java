@@ -4,6 +4,8 @@ import android.app.Service;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -43,22 +45,50 @@ public class BluetoothPrintService extends Service
 		return new BluetoothPrintBinder();
 	}
 
-	public boolean SimplePushPrint(BluetoothDevice device, BluetoothPrintJob job)
+	public boolean SimplePushPrint(Handler handler, BluetoothDevice device, BluetoothPrintJob job)
 	{
 		CavanLog("Start SimplePushPrint");
 		BppObexTransport transport = new BppObexTransport(device);
-		SimplePushPrinter printer = new SimplePushPrinter(this, transport, job);
+		SimplePushPrinter printer = new SimplePushPrinter(this, handler, transport, job);
 		printer.start();
 
 		return true;
 	}
 
-	public boolean JobBasePrint(BluetoothDevice device, BluetoothPrintJob job)
+	public boolean JobBasePrint(Handler handler, BluetoothDevice device, BluetoothPrintJob job)
 	{
 		BppObexTransport transport = new BppObexTransport(device);
-		JobBasePrinter printer = new JobBasePrinter(this, transport, job);
+		JobBasePrinter printer = new JobBasePrinter(this, handler, transport, job);
 		printer.start();
 
 		return true;
+	}
+
+	public boolean GetPrinterAttribute(Handler handler, BluetoothDevice device)
+	{
+		BppObexTransport transport = new BppObexTransport(device);
+		JobBasePrinter printer = new JobBasePrinter(this, handler, transport, null)
+		{
+			@Override
+			public boolean BluetoothPrinterRun()
+			{
+				BluetoothPrinterAttribute attribute = GetPrinterAttributes();
+				if (attribute == null)
+				{
+					SendMessage(BluetoothBasePrinter.BPP_MSG_GET_PRINTER_ATTRIBUTE_COMPLETE, -1, null);
+				}
+				else
+				{
+					Bundle data = new Bundle();
+					data.putSerializable("PrinterAttribute", attribute);
+					SendMessage(BluetoothBasePrinter.BPP_MSG_GET_PRINTER_ATTRIBUTE_COMPLETE, 0, data);
+				}
+
+				return true;
+			}
+		};
+		printer.start();
+
+		return false;
 	}
 }

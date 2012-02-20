@@ -14,6 +14,9 @@ import javax.obex.HeaderSet;
 import javax.obex.ResponseCodes;
 
 import android.content.Context;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.Process;
@@ -25,8 +28,12 @@ public class BluetoothBasePrinter extends Thread
 	protected BppObexTransport mTransport;
 	private WakeLock mWakeLock;
 	protected BluetoothPrintJob mPrintJob;
-	private Runnable mRunnable;
-	// private Context mContext;
+	private Context mContext;
+	private Handler mHandler;
+
+	public static final int BPP_MSG_JOB_BASE_PRINT_COMPLETE = 0;
+	public static final int BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE = 1;
+	public static final int BPP_MSG_GET_PRINTER_ATTRIBUTE_COMPLETE = 2;
 
 	public static final byte[] UUID_DPS =
 	{
@@ -68,13 +75,15 @@ public class BluetoothBasePrinter extends Thread
 		CavanLog(ByteArrayToHexString(bs));
 	}
 
-	public BluetoothBasePrinter(Context context, BppObexTransport transport, BluetoothPrintJob job)
+	public BluetoothBasePrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
 	{
 		CavanLog("Create BppBasePrinter");
-		PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
+		this.mContext = context;
+		PowerManager pm = (PowerManager)mContext.getSystemService(Context.POWER_SERVICE);
 		this.mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
 
-		// this.mContext = context;
+
+		this.mHandler = handler;
 		this.mTransport = transport;
 		this.mPrintJob = job;
 	}
@@ -341,6 +350,18 @@ public class BluetoothBasePrinter extends Thread
 		return false;
 	}
 
+	public void SendMessage(int what, int arg1, Bundle data)
+	{
+		Message message = Message.obtain(mHandler);
+		message.what = what;
+		message.arg1 = arg1;
+		if (data != null)
+		{
+			message.setData(data);
+		}
+		message.sendToTarget();
+	}
+
 	@Override
 	public void run()
 	{
@@ -361,20 +382,13 @@ public class BluetoothBasePrinter extends Thread
 			return;
 		}
 
-		if (mRunnable == null)
+		if (BluetoothPrinterRun())
 		{
-			if (BluetoothPrinterRun())
-			{
-				CavanLog("Print complete");
-			}
-			else
-			{
-				CavanLog("Print failed");
-			}
+			CavanLog("Print complete");
 		}
 		else
 		{
-			mRunnable.run();
+			CavanLog("Print failed");
 		}
 
 		try

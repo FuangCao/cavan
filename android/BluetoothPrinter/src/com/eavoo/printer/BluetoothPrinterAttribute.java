@@ -1,6 +1,7 @@
 package com.eavoo.printer;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -8,8 +9,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-public class BluetoothPrinterAttribute extends BppSoapRequest
+public class BluetoothPrinterAttribute extends BppSoapRequest implements Serializable
 {
+	private static final long serialVersionUID = 1L;
+
 	public BluetoothPrinterAttribute(BluetoothBasePrinter printer)
 	{
 		super(printer);

@@ -8,12 +8,13 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
 import android.content.Context;
+import android.os.Handler;
 
 public class JobBasePrinter extends BluetoothBasePrinter
 {
-	public JobBasePrinter(Context context, BppObexTransport transport, BluetoothPrintJob job)
+	public JobBasePrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
 	{
-		super(context, transport, job);
+		super(context, handler, transport, job);
 	}
 
 	public BluetoothPrinterAttribute GetPrinterAttributes()
@@ -96,6 +97,15 @@ public class JobBasePrinter extends BluetoothBasePrinter
 		catch (SAXException e)
 		{
 			e.printStackTrace();
+		}
+
+		if (ret)
+		{
+			SendMessage(BPP_MSG_JOB_BASE_PRINT_COMPLETE, 0, null);
+		}
+		else
+		{
+			SendMessage(BPP_MSG_JOB_BASE_PRINT_COMPLETE, -1, null);
 		}
 
 		return ret;

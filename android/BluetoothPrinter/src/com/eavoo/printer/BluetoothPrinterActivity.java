@@ -8,7 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -70,7 +72,7 @@ public class BluetoothPrinterActivity extends Activity
 				}
 
 				mPrintJob.setFileName(getFileName());
-				mBluetoothPrintService.JobBasePrint(mBluetoothDevice, mPrintJob);
+				mBluetoothPrintService.JobBasePrint(mHandler, mBluetoothDevice, mPrintJob);
 				break;
 
 			case R.id.main_button2:
@@ -81,12 +83,16 @@ public class BluetoothPrinterActivity extends Activity
 				}
 
 				mPrintJob.setFileName(getFileName());
-				mBluetoothPrintService.SimplePushPrint(mBluetoothDevice, mPrintJob);
+				mBluetoothPrintService.SimplePushPrint(mHandler, mBluetoothDevice, mPrintJob);
 				break;
 
 			case R.id.main_button3:
 				mTextViewStatus.setText("");
 				ListBluetoothDevices();
+				if (mBluetoothDevice != null)
+				{
+					mBluetoothPrintService.GetPrinterAttribute(mHandler, mBluetoothDevice);
+				}
 				break;
 
 			case R.id.main_editText1:
@@ -97,6 +103,58 @@ public class BluetoothPrinterActivity extends Activity
 
 			default:
 				CavanMessage("unknown onclick event");
+			}
+		}
+	};
+
+	private Handler mHandler = new Handler()
+	{
+		@Override
+		public void handleMessage(Message msg)
+		{
+			switch (msg.what)
+			{
+			case BluetoothBasePrinter.BPP_MSG_GET_PRINTER_ATTRIBUTE_COMPLETE:
+				if (msg.arg1 < 0)
+				{
+					CavanMessage("get printer attribute failed");
+				}
+				else
+				{
+					CavanMessage("get printer attribute complete");
+					Bundle data = msg.getData();
+					BluetoothPrinterAttribute attribute = (BluetoothPrinterAttribute) data.getSerializable("PrinterAttribute");
+					if (attribute != null)
+					{
+						ShowPrinterAttribute(attribute);
+					}
+				}
+				break;
+
+			case BluetoothBasePrinter.BPP_MSG_JOB_BASE_PRINT_COMPLETE:
+				if (msg.arg1 < 0)
+				{
+					CavanMessage("job base print failed");
+				}
+				else
+				{
+					CavanMessage("job base print complete");
+				}
+				break;
+
+			case BluetoothBasePrinter.BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE:
+				if (msg.arg1 < 0)
+				{
+					CavanMessage("simple push print failed");
+				}
+				else
+				{
+					CavanMessage("simple push print complete");
+				}
+				break;
+
+			default:
+				CavanMessage("unknown message = " + msg.what);
 			}
 		}
 	};
@@ -122,6 +180,15 @@ public class BluetoothPrinterActivity extends Activity
 		{
 			return mBluetoothDevice;
 		}
+	}
+
+	private void ShowPrinterAttribute(BluetoothPrinterAttribute attribute)
+	{
+		mTextViewStatus.append("PrinterName = " + attribute.getPrinterName() + "\n");
+		mTextViewStatus.append("BasicTextPageHeight = " + attribute.getBasicTextPageHeight() + "\n");
+		mTextViewStatus.append("BasicTextPageWidth = " + attribute.getBasicTextPageWidth() + "\n");
+		mTextViewStatus.append("PrinterState = " + attribute.getPrinterState() + "\n");
+		mTextViewStatus.append("PrinterStateReasons = " + attribute.getPrinterStateReasons() + "\n");
 	}
 
 	private boolean ListBluetoothDevices()
