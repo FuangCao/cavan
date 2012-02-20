@@ -5,7 +5,6 @@ import java.io.File;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -16,18 +15,12 @@ import android.widget.TextView;
 
 public class FileBrowserActivity extends Activity
 {
-	private static final String TAG = "FileBrowserActivity";
 	private static final String mRootDirectory = "/sdcard";
 	private ListView mListViewBrowser;
 	private FileBowserAdapter mFileBowserAdapter;
 	private TextView mTextViewPath;
 	private Button mButtonBack;
 	private Button mButtonSelect;
-
-	private void CavanLog(String msg)
-	{
-		Log.v(TAG, msg);
-	}
 
 	private void showPath(File file)
 	{

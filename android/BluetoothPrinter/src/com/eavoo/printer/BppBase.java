@@ -1,18 +1,12 @@
 package com.eavoo.printer;
 
-import java.awt.Image;
-import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 
 import javax.obex.ClientOperation;
 import javax.obex.ClientSession;
@@ -25,11 +19,6 @@ import android.os.PowerManager.WakeLock;
 import android.os.Process;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
-
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
-import com.sun.pdfview.PDFFile;
-import com.sun.pdfview.PDFPage;
 
 public class BppBase extends Thread
 {
@@ -110,34 +99,6 @@ public class BppBase extends Thread
 	public void setFileType(String mFileType)
 	{
 		this.mFileType = mFileType;
-	}
-
-	public byte[] PdfToJpeg(PDFFile pdfFile, int pageIndex) throws IOException
-	{
-		PDFPage page = pdfFile.getPage(pageIndex);
-		int width = (int) page.getWidth() * 4;
-		int height = (int) page.getHeight() * 4;
-
-		Image image = page.getImage(width, height, page.getPageBox(), null, true, true);
-		BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		bufferedImage.getGraphics().drawImage(image, 0, 0, width, height, null);
-
-		ByteArrayOutputStream jpegOutputStream = new ByteArrayOutputStream();
-		JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(jpegOutputStream);
-		encoder.encode(bufferedImage);
-		jpegOutputStream.close();
-
-		return jpegOutputStream.toByteArray();
-	}
-
-	public PDFFile OpenPdfFile(String filename) throws IOException
-	{
-		File file = new File(filename);
-		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
-		FileChannel channel = randomAccessFile.getChannel();
-		ByteBuffer byteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-
-		return new PDFFile(byteBuffer);
 	}
 
 	public String ByteArrayToHexString(byte[] bs)

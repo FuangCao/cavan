@@ -1,15 +1,10 @@
 package com.eavoo.printer;
 
 import java.io.IOException;
-
 import javax.obex.HeaderSet;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.xml.sax.SAXException;
-
 import android.content.Context;
-
-import com.sun.pdfview.PDFFile;
 
 public class JobBasePrinter extends BppBase
 {
@@ -63,61 +58,6 @@ public class JobBasePrinter extends BppBase
 		return true;
 	}
 
-	public boolean PrintPdfFile(String filename) throws IOException, ParserConfigurationException, SAXException
-	{
-		final String filetype = "image/jpeg";
-		PrintJob job = new PrintJob(this, filetype);
-		PDFFile pdfFile = OpenPdfFile(filename);
-		if (pdfFile == null)
-		{
-			return false;
-		}
-
-		int pageCount = pdfFile.getNumPages();
-		if (pageCount <= 0)
-		{
-			return false;
-		}
-
-		CavanLog("PDF Page Count = " + pageCount);
-
-		HeaderSet headerSet = new HeaderSet();
-		headerSet.setHeader(HeaderSet.TYPE, filetype);
-
-		boolean ret = true;
-		for (int i = 0; i < pageCount; i++)
-		{
-			CavanLog("Start print page " + i);
-
-			byte[] buff = PdfToJpeg(pdfFile, i);
-
-			if (buff == null)
-			{
-				ret = false;
-				break;
-			}
-
-			ret = job.CreateJob();
-			if (ret == false)
-			{
-				break;
-			}
-
-			headerSet.setHeader(HeaderSet.APPLICATION_PARAMETER, job.buildApplicationParameter());
-
-			ret = SendDocument(job, buff, headerSet);
-			if (ret == false)
-			{
-				job.CancelJob();
-				break;
-			}
-
-			CavanLog("Send page " + i + " complete");
-		}
-
-		return ret;
-	}
-
 	@Override
 	public boolean BppObexRun()
 	{
@@ -129,16 +69,7 @@ public class JobBasePrinter extends BppBase
 
 		try
 		{
-			if (extension.equals("pdf"))
-			{
-				CavanLog("Print PDF File");
-				ret = PrintPdfFile(getFileName());
-			}
-			else
-			{
-				CavanLog("Print Other File");
-				ret = PrintFile(getFileName(), getFileType());
-			}
+			ret = PrintFile(getFileName(), getFileType());
 		}
 		catch (IOException e)
 		{
