@@ -5,6 +5,7 @@ import java.util.HashMap;
 import javax.obex.ApplicationParameter;
 import javax.obex.HeaderSet;
 
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 public class BluetoothPrintJob
@@ -17,7 +18,7 @@ public class BluetoothPrintJob
 	private int mCopies = 1;
 	private int mNumberUp = 1;
 	private int mJobId;
-	private short mOperationStatus;
+	private int mOperationStatus;
 	private boolean mCancelOnLostLink = true;
 	private String mFileName;
 	private String mJobName = "MyJob";
@@ -29,6 +30,12 @@ public class BluetoothPrintJob
 	private String mMediaType = "envelope";
 	private String mPrintQuality = "high";
 	private BluetoothBasePrinter mPrinter;
+
+	private String mJobState;
+	private String mPrinterState;
+	private String mPrinterStateReasons;
+	private int mJobMediaSheetsCompleted;
+	private int mNumberOfInterveningJobs;
 
 	public void setPrinter(BluetoothBasePrinter printer)
 	{
@@ -75,12 +82,12 @@ public class BluetoothPrintJob
 		this.mJobId = mJobId;
 	}
 
-	public short getOperationStatus()
+	public int getOperationStatus()
 	{
 		return mOperationStatus;
 	}
 
-	public void setOperationStatus(short mOperationStatus)
+	public void setOperationStatus(int mOperationStatus)
 	{
 		this.mOperationStatus = mOperationStatus;
 	}
@@ -207,6 +214,56 @@ public class BluetoothPrintJob
 		return AppTagFileSize;
 	}
 
+	public String getJobState()
+	{
+		return mJobState;
+	}
+
+	public void setJobState(String mJobState)
+	{
+		this.mJobState = mJobState;
+	}
+
+	public String getPrinterState()
+	{
+		return mPrinterState;
+	}
+
+	public void setPrinterState(String mPrinterState)
+	{
+		this.mPrinterState = mPrinterState;
+	}
+
+	public String getPrinterStateReasons()
+	{
+		return mPrinterStateReasons;
+	}
+
+	public void setPrinterStateReasons(String mPrinterStateReasons)
+	{
+		this.mPrinterStateReasons = mPrinterStateReasons;
+	}
+
+	public int getJobMediaSheetsCompleted()
+	{
+		return mJobMediaSheetsCompleted;
+	}
+
+	public void setJobMediaSheetsCompleted(int mJobMediaSheetsCompleted)
+	{
+		this.mJobMediaSheetsCompleted = mJobMediaSheetsCompleted;
+	}
+
+	public int getNumberOfInterveningJobs()
+	{
+		return mNumberOfInterveningJobs;
+	}
+
+	public void setNumberOfInterveningJobs(int mNumberOfInterveningJobs)
+	{
+		this.mNumberOfInterveningJobs = mNumberOfInterveningJobs;
+	}
+
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
@@ -307,15 +364,58 @@ public class BluetoothPrintJob
 		return true;
 	}
 
-	public HashMap<String, String> getAttributes()
+	public boolean getEvent()
+	{
+		BppSoapRequest request = new BppSoapRequest(mPrinter);
+		if (request.SendRequest("GetEvent", "<JobId>" + mJobId + "</JobId>", null) == false)
+		{
+			return false;
+		}
+
+		HashMap<String, String> map = request.getResponseAttributes("GetEventResponse");
+		if (map == null)
+		{
+			return false;
+		}
+
+		mJobState = map.get("JobState");
+		mPrinterState = map.get("PrinterState");
+		mPrinterStateReasons = map.get("PrinterStateReasons");
+		mOperationStatus = Integer.decode(map.get("OperationStatus"));
+
+		Log.v("getEvent", "mJobState = " + mJobState);
+		Log.v("getEvent", "mPrinterState = " + mPrinterState);
+		Log.v("getEvent", "mPrinterStateReasons = " + mPrinterStateReasons);
+		Log.v("getEvent", "mOperationStatus = " + mOperationStatus);
+
+		return true;
+	}
+
+	public boolean getAttributes()
 	{
 		BppSoapRequest request = new BppSoapRequest(mPrinter);
 		if (request.SendRequest("GetJobAttributes", "<JobId>" + mJobId + "</JobId>", null) == false)
 		{
-			return null;
+			return false;
 		}
 
-		return request.getResponseAttributes("GetJobAttributesResponse");
+		HashMap<String, String> map = request.getResponseAttributes("GetJobAttributesResponse");
+		if (map == null)
+		{
+			return false;
+		}
+
+		mJobState = map.get("JobState");
+		mJobMediaSheetsCompleted = Integer.decode(map.get("JobMediaSheetsCompleted"));
+		mNumberOfInterveningJobs = Integer.decode(map.get("NumberOfInterveningJobs"));
+		mOperationStatus = Integer.decode(map.get("OperationStatus"));
+
+		Log.v("getAttributes", "mJobState = " + mJobState);
+		Log.v("getAttributes", "mJobMediaSheetsCompleted = " + mJobMediaSheetsCompleted);
+		Log.v("getAttributes", "mNumberOfInterveningJobs = " + mNumberOfInterveningJobs);
+		Log.v("getAttributes", "mOperationStatus = " + mOperationStatus);
+
+		return true;
 	}
 
 	public static String FileBaseName(String filename)

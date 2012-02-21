@@ -24,7 +24,8 @@ import android.util.Log;
 
 public class BluetoothBasePrinter extends Thread
 {
-	private static final String TAG = "BppBase";
+	private static final String TAG = "BluetoothBasePrinter";
+	private static boolean DEBUG = false;
 	protected BppObexTransport mTransport;
 	private WakeLock mWakeLock;
 	protected BluetoothPrintJob mPrintJob;
@@ -67,23 +68,12 @@ public class BluetoothBasePrinter extends Thread
 		(byte) 0x80, 0x00, 0x00, (byte) 0x80, 0x5F, (byte) 0x9B, 0x34, (byte) 0xFB
 	};
 
-	public void CavanLog(String message)
-	{
-		Log.v("Cavan", "\033[1m" + message + "\033[0m");
-	}
-
-	public void CavanLog(byte[] bs)
-	{
-		CavanLog(ByteArrayToHexString(bs));
-	}
-
 	public BluetoothBasePrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
 	{
-		CavanLog("Create BppBasePrinter");
+		Log.v(TAG, "Create BppBasePrinter");
 		this.mContext = context;
 		PowerManager pm = (PowerManager)mContext.getSystemService(Context.POWER_SERVICE);
 		this.mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
-
 
 		this.mHandler = handler;
 		this.mTransport = transport;
@@ -124,7 +114,7 @@ public class BluetoothBasePrinter extends Thread
 
 	public ClientSession connect(byte[] uuid) throws IOException
 	{
-		CavanLog("Create ClientSession with transport " + mTransport.toString());
+		Log.v(TAG, "Create ClientSession with transport " + mTransport.toString());
 		ClientSession session = new ClientSession(mTransport);
 		HeaderSet hsRequest = new HeaderSet();
 
@@ -133,24 +123,23 @@ public class BluetoothBasePrinter extends Thread
 			hsRequest.setHeader(HeaderSet.TARGET, uuid);
 		}
 
-		CavanLog("Connect to OBEX session");
+		Log.v(TAG, "Connect to OBEX session");
 		HeaderSet hsResponse = session.connect(hsRequest);
-		CavanLog("ResponseCode = " + hsResponse.getResponseCode());
+		Log.v(TAG, "ResponseCode = " + hsResponse.getResponseCode());
 
 		byte[] headerWho = (byte[]) hsResponse.getHeader(HeaderSet.WHO);
 		if (headerWho != null)
 		{
-			CavanLog("HeaderWho:");
-			CavanLog(headerWho);
+			Log.v(TAG, "HeaderWho:\n" + ByteArrayToHexString(headerWho));
 		}
 
 		if (hsResponse.mConnectionID == null)
 		{
-			CavanLog("mConnectionID == null");
+			Log.v(TAG, "mConnectionID == null");
 		}
 		else
 		{
-			CavanLog(hsResponse.mConnectionID);
+			Log.v(TAG, "mConnectionID:\n" + ByteArrayToHexString(hsResponse.mConnectionID));
 		}
 
 		return hsResponse.getResponseCode() == ResponseCodes.OBEX_HTTP_OK ? session : null;
@@ -167,14 +156,14 @@ public class BluetoothBasePrinter extends Thread
 		ClientOperation clientOperation = (ClientOperation) session.put(headerSet);
 		if (clientOperation == null)
 		{
-			CavanLog("clientOperation == null");
+			Log.e(TAG, "clientOperation == null");
 			return false;
 		}
 
 		OutputStream obexOutputStream = clientOperation.openOutputStream();
 		if (obexOutputStream == null)
 		{
-			CavanLog("obexOutputStream == null");
+			Log.e(TAG, "obexOutputStream == null");
 			clientOperation.abort();
 			return false;
 		}
@@ -182,7 +171,7 @@ public class BluetoothBasePrinter extends Thread
 		InputStream obexInputStream = clientOperation.openInputStream();
 		if (obexInputStream == null)
 		{
-			CavanLog("obexInputStream == null");
+			Log.e(TAG, "obexInputStream == null");
 			obexOutputStream.close();
 			clientOperation.abort();
 			return false;
@@ -194,14 +183,14 @@ public class BluetoothBasePrinter extends Thread
 
 		boolean boolResult = true;
 
-		CavanLog("Start send file");
+		Log.v(TAG, "Start send file");
 
 		while (true)
 		{
 			int readLen = bufferedInputStream.read(buff);
 			if (readLen <= 0)
 			{
-				CavanLog("Send file complete");
+				Log.v(TAG, "Send file complete");
 				break;
 			}
 
@@ -210,8 +199,8 @@ public class BluetoothBasePrinter extends Thread
 			int responseCode = clientOperation.getResponseCode();
 			if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
 			{
-				CavanLog("responseCode = " + responseCode);
-				CavanLog("responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
+				Log.e(TAG, "responseCode = " + responseCode);
+				Log.e(TAG, "responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
 				boolResult = false;
 				break;
 			}
@@ -241,7 +230,7 @@ public class BluetoothBasePrinter extends Thread
 
 		if (size <= 0)
 		{
-			CavanLog("File " + filename + " don't exist");
+			Log.e(TAG, "File " + filename + " don't exist");
 			return false;
 		}
 
@@ -251,16 +240,16 @@ public class BluetoothBasePrinter extends Thread
 		}
 
 		headerSet.setHeader(HeaderSet.NAME, BluetoothPrintJob.FileBaseName(filename));
-		CavanLog("NAME = " + headerSet.getHeader(HeaderSet.NAME));
+		Log.v(TAG, "NAME = " + headerSet.getHeader(HeaderSet.NAME));
 		headerSet.setHeader(HeaderSet.LENGTH, size);
-		CavanLog("LENGTH = " + headerSet.getHeader(HeaderSet.LENGTH));
+		Log.v(TAG, "LENGTH = " + headerSet.getHeader(HeaderSet.LENGTH));
 
 		if (filetype == null)
 		{
 			filetype = BluetoothPrintJob.GetFileMimeTypeByName(filename);
 		}
 		headerSet.setHeader(HeaderSet.TYPE, filetype);
-		CavanLog("TYPE = " + headerSet.getHeader(HeaderSet.TYPE));
+		Log.v(TAG, "TYPE = " + headerSet.getHeader(HeaderSet.TYPE));
 
 		FileInputStream inputStream = new FileInputStream(file);
 		boolean ret = PutFile(new FileInputStream(file), headerSet, uuid);
@@ -285,7 +274,11 @@ public class BluetoothBasePrinter extends Thread
 
 	public byte[] GetByteArray(byte[] request, HeaderSet headerSet, byte[] uuid) throws IOException
 	{
-		Log.v("GetByteArray", "Request = \n" + new String(request));
+		if (DEBUG)
+		{
+			Log.v(TAG, "Request = \n" + new String(request));
+		}
+
 		ClientSession session = connect(uuid);
 		if (session == null)
 		{
@@ -293,35 +286,38 @@ public class BluetoothBasePrinter extends Thread
 		}
 
 		ClientOperation operation = (ClientOperation) session.get(headerSet);
-		CavanLog("Get operation complete");
+		Log.v(TAG, "Get operation complete");
 
 		OutputStream outputStream = operation.openOutputStream();
-		CavanLog("Open OutputStream complete");
+		Log.v(TAG, "Open OutputStream complete");
 		outputStream.write(request);
-		CavanLog("Write data complete");
+		Log.v(TAG, "Write data complete");
 		outputStream.close();
 
 		int responseCode = operation.getResponseCode();
 		if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
 		{
-			CavanLog("responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
+			Log.e(TAG, "responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
 			return null;
 		}
 
 		int length = (int) operation.getLength();
-		CavanLog("length = " + length);
+		Log.v(TAG, "length = " + length);
 		if (length <= 0)
 		{
 			return null;
 		}
 
 		InputStream inputStream = operation.openInputStream();
-		CavanLog("Open InputStream complete");
+		Log.v(TAG, "Open InputStream complete");
 		byte[] response = new byte[length];
 		inputStream.read(response);
 		inputStream.close();
 
-		Log.v("Cavan", "Response Content = \n" + new String(response));
+		if (DEBUG)
+		{
+			Log.v(TAG, "Response Content = \n" + new String(response));
+		}
 
 		return response;
 	}
@@ -347,7 +343,7 @@ public class BluetoothBasePrinter extends Thread
 
 	public boolean BluetoothPrinterRun()
 	{
-		CavanLog("BluetoothPrinterRun No implementation");
+		Log.e(TAG, "BluetoothPrinterRun No implementation");
 
 		return false;
 	}
@@ -380,13 +376,13 @@ public class BluetoothBasePrinter extends Thread
 	{
 		Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
 
-		CavanLog("Bpp Soap request running");
+		Log.v(TAG, "Bpp Soap request running");
 
 		mWakeLock.acquire();
 
 		try
 		{
-			CavanLog("Connect to printer");
+			Log.v(TAG, "Connect to printer");
 			mTransport.connect();
 		}
 		catch (IOException e1)
@@ -398,11 +394,11 @@ public class BluetoothBasePrinter extends Thread
 
 		if (BluetoothPrinterRun())
 		{
-			CavanLog("Print complete");
+			Log.v(TAG, "Print complete");
 		}
 		else
 		{
-			CavanLog("Print failed");
+			Log.v(TAG, "Print failed");
 		}
 
 		try

@@ -9,9 +9,12 @@ import org.xml.sax.SAXException;
 
 import android.content.Context;
 import android.os.Handler;
+import android.util.Log;
 
 public class JobBasePrinter extends BluetoothBasePrinter
 {
+	private static final String TAG = "JobBasePrinter";
+
 	public JobBasePrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
 	{
 		super(context, handler, transport, job);
@@ -52,6 +55,34 @@ public class JobBasePrinter extends BluetoothBasePrinter
 		return PutByteArray(UUID_DPS, headerSet, data);
 	}
 
+	public boolean WaitPrintComplete()
+	{
+		while (true)
+		{
+			if (mPrintJob.getAttributes() == false)
+			{
+				return false;
+			}
+
+			if (mPrintJob.getJobState().equals("completed"))
+			{
+				break;
+			}
+
+			try
+			{
+				sleep(1000);
+			}
+			catch (InterruptedException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		return true;
+	}
+
 	public boolean PrintFile() throws IOException, ParserConfigurationException, SAXException
 	{
 		if (mPrintJob.create(this) == false)
@@ -59,8 +90,8 @@ public class JobBasePrinter extends BluetoothBasePrinter
 			return false;
 		}
 
-		CavanLog("JobId = " + mPrintJob.getJobId());
-		CavanLog(String.format("OperationStatus = 0x%04x", mPrintJob.getOperationStatus()));
+		Log.v(TAG, "JobId = " + mPrintJob.getJobId());
+		Log.v(TAG, String.format("OperationStatus = 0x%04x", mPrintJob.getOperationStatus()));
 
 		mPrintJob.getAttributes();
 
@@ -70,7 +101,7 @@ public class JobBasePrinter extends BluetoothBasePrinter
 			return false;
 		}
 
-		return true;
+		return WaitPrintComplete();
 	}
 
 	@Override
@@ -78,7 +109,7 @@ public class JobBasePrinter extends BluetoothBasePrinter
 	{
 		String extension = BluetoothPrintJob.GetFileExtension(getFileName());
 
-		CavanLog("File extension = \"" + extension + "\"");
+		Log.v(TAG, "File extension = \"" + extension + "\"");
 
 		boolean ret = false;
 
