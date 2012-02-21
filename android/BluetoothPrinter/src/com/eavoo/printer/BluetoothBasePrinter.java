@@ -34,6 +34,8 @@ public class BluetoothBasePrinter extends Thread
 	public static final int BPP_MSG_JOB_BASE_PRINT_COMPLETE = 0;
 	public static final int BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE = 1;
 	public static final int BPP_MSG_GET_PRINTER_ATTRIBUTE_COMPLETE = 2;
+	public static final int BPP_MSG_GET_PRINTER_ATTRIBUTE_REQUEST = 3;
+	public static final int BPP_MSG_CONNECT_FAILED = 4;
 
 	public static final byte[] UUID_DPS =
 	{
@@ -350,7 +352,7 @@ public class BluetoothBasePrinter extends Thread
 		return false;
 	}
 
-	public void SendMessage(int what, int arg1, Bundle data)
+	private Message BuildMessage(int what, int arg1, Bundle data)
 	{
 		Message message = Message.obtain(mHandler);
 		message.what = what;
@@ -359,7 +361,18 @@ public class BluetoothBasePrinter extends Thread
 		{
 			message.setData(data);
 		}
-		message.sendToTarget();
+
+		return message;
+	}
+
+	public void SendMessage(int what, int arg1, Bundle data)
+	{
+		BuildMessage(what, arg1, data).sendToTarget();
+	}
+
+	public void SendMessageDelay(int what, int arg1, Bundle data, long delayMillis)
+	{
+		mHandler.sendMessageDelayed(BuildMessage(what, arg1, data), delayMillis);
 	}
 
 	@Override
@@ -379,6 +392,7 @@ public class BluetoothBasePrinter extends Thread
 		catch (IOException e1)
 		{
 			e1.printStackTrace();
+			SendMessage(BPP_MSG_CONNECT_FAILED, -1, null);
 			return;
 		}
 

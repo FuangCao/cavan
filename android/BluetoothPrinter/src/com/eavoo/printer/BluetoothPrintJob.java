@@ -25,7 +25,7 @@ public class BluetoothPrintJob
 	private String mDocumentFormat;
 	private String mSides = "one-sided";
 	private String mOrientationRequested = "portrait";
-	private String mMediaSize = "iso_a4_105x148mm";
+	private String mMediaSize = "iso_a4_210x297mm";
 	private String mMediaType = "envelope";
 	private String mPrintQuality = "high";
 	private BluetoothBasePrinter mPrinter;

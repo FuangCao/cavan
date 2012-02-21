@@ -44,7 +44,7 @@ public class JobBasePrinter extends BluetoothBasePrinter
 
 	public boolean SendDocument() throws IOException
 	{
-		return PutFile(mPrintJob.getFileName(), null, mPrintJob.buildHeaderSet(), UUID_DPS);
+		return PutFile(mPrintJob.getFileName(), mPrintJob.getDocumentFormat(), mPrintJob.buildHeaderSet(), UUID_DPS);
 	}
 
 	public boolean SendDocument(BluetoothPrintJob job, byte[] data, HeaderSet headerSet) throws IOException

@@ -4,43 +4,84 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
+	<TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/file_path" />
     <EditText
-        android:id="@+id/main_editText1"
+        android:id="@+id/main_editText_pathname"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:editable="false"
-        android:singleLine="true" >
-
+        android:singleLine="true" android:longClickable="false">
         <requestFocus />
     </EditText>
 
-    <LinearLayout
-        android:id="@+id/main_linearLayout1"
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical" >
-    </LinearLayout>
+        android:text="@string/bluetooth_printer" />
+    <RadioGroup
+        android:id="@+id/main_radioGroup_device"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+   </RadioGroup>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/docment_formate" />
+   <Spinner
+       android:id="@+id/main_spinner_file_type"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content" />
+
+   <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/media_type" />
+   <Spinner
+       android:id="@+id/main_spinner_media_type"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content" />
+
+   <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/media_size" />
+   <Spinner
+       android:id="@+id/main_spinner_media_size"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content" />
+
+   <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/print_quality" />
+   <Spinner
+       android:id="@+id/main_spinner_print_quality"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content" />
 
     <LinearLayout
-        android:id="@+id/main_linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
         <Button
-            android:id="@+id/main_button1"
+            android:id="@+id/main_button_job_print"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/print1" android:layout_weight="1"/>
+            android:text="@string/job_print" android:layout_weight="1"/>
 
         <Button
-            android:id="@+id/main_button2"
+            android:id="@+id/main_button_simple_print"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/print2" />
+            android:text="@string/simple_print" />
 
         <Button
-            android:id="@+id/main_button3"
+            android:id="@+id/main_button_refresh"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -48,9 +89,9 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/main_textView1"
+        android:id="@+id/main_textView_status"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical" android:scrollbarStyle="outsideOverlay" android:autoText="true"/>
+        android:layout_height="wrap_content"
+        android:singleLine="true" />
 
 </LinearLayout>

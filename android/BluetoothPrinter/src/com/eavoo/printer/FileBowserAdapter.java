@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import android.content.Context;
+import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -16,17 +17,35 @@ import android.widget.TextView;
 
 public class FileBowserAdapter extends BaseAdapter
 {
-	private String mRootDirectory;
+	private static final String mRootDirectory = "/";
+	private static final String mDefaultDirectory = "/sdcard";
 	private File mCurrentDirectory;
 	private List<File> mFileList;
 	private Context mContext;
 
-	public FileBowserAdapter(Context context, String rootPath)
+	public FileBowserAdapter(Context context, Uri uri)
 	{
 		this.mContext = context;
-		this.mRootDirectory = rootPath;
 
-		this.mCurrentDirectory = new File(mRootDirectory);
+		String currPath = null;
+		if (uri != null)
+		{
+			currPath = uri.getPath();
+		}
+
+		if (currPath == null || currPath.isEmpty())
+		{
+			mCurrentDirectory = new File(mDefaultDirectory);
+		}
+		else
+		{
+			mCurrentDirectory = new File(currPath);
+			if (mCurrentDirectory.isDirectory() == false)
+			{
+				mCurrentDirectory = mCurrentDirectory.getParentFile();
+			}
+		}
+
 		setCurrentDirectory(mCurrentDirectory);
 	}
 

@@ -16,12 +16,10 @@ import android.widget.TextView;
 
 public class FileBrowserActivity extends Activity
 {
-	private static final String mRootDirectory = "/sdcard";
 	private ListView mListViewBrowser;
 	private FileBowserAdapter mFileBowserAdapter;
 	private TextView mTextViewPath;
 	private Button mButtonBack;
-	private Button mButtonSelect;
 
 	private OnClickListener mOnClickListener = new OnClickListener()
 	{
@@ -30,11 +28,7 @@ public class FileBrowserActivity extends Activity
 		{
 			switch (v.getId())
 			{
-			case R.id.browser_button1:
-				finish(mTextViewPath.getText().toString());
-				break;
-
-			case R.id.browser_button2:
+			case R.id.browser_button_back:
 				mFileBowserAdapter.backParentDirectory();
 				showPath();
 				break;
@@ -86,16 +80,14 @@ public class FileBrowserActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.browser);
 
-		mTextViewPath = (TextView) findViewById(R.id.browser_textView1);
-		mButtonSelect = (Button) findViewById(R.id.browser_button1);
-		mButtonBack = (Button) findViewById(R.id.browser_button2);
-		mListViewBrowser = (ListView) findViewById(R.id.browser_listView1);
+		mTextViewPath = (TextView) findViewById(R.id.browser_textView_pathname);
+		mButtonBack = (Button) findViewById(R.id.browser_button_back);
+		mListViewBrowser = (ListView) findViewById(R.id.browser_listView_files);
 
-		mFileBowserAdapter = new FileBowserAdapter(this, mRootDirectory);
+		mFileBowserAdapter = new FileBowserAdapter(this, getIntent().getData());
 		mListViewBrowser.setAdapter(mFileBowserAdapter);
 		mListViewBrowser.setOnItemClickListener(mOnItemClickListener);
 		showPath();
 		mButtonBack.setOnClickListener(mOnClickListener);
-		mButtonSelect.setOnClickListener(mOnClickListener);
 	}
 }
