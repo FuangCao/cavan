@@ -51,11 +51,15 @@ public class BluetoothPrinterActivity extends Activity
 
 	private BluetoothPrintService mBluetoothPrintService;
 	private BluetoothAdapter mBluetoothAdapter;
+
 	private Button mButtonJobBasePrint;
+	private Button mButtonSimplePushPrint;
 	private Button mButtonRefresh;
+	private Button mButtonPrintScan;
+
 	private RadioGroup mRadioGroupDevice;
 	private BluetoothDevice mBluetoothDevice;
-	private Button mButtonSimplePushPrint;
+
 	private TextView mTextViewStatus;
 	private EditText mEditTextFilePath;
 	private BluetoothPrintJob mPrintJob = new BluetoothPrintJob();
@@ -87,7 +91,7 @@ public class BluetoothPrinterActivity extends Activity
 			Log.v("Cavan", "onServiceConnected");
 			BluetoothPrintBinder binder = (BluetoothPrintBinder) service;
 			mBluetoothPrintService = binder.getService();
-			ListBluetoothDevices();
+			listBluetoothDevices();
 		}
 	};
 
@@ -188,6 +192,12 @@ public class BluetoothPrinterActivity extends Activity
 
 	private boolean getPrinterAttribute()
 	{
+		if (mBluetoothDevice == null)
+		{
+			showAlertDialogYes("Please select a bluetooth device");
+			return false;
+		}
+
 		if (mBluetoothPrintService == null)
 		{
 			Message message = Message.obtain(mHandler);
@@ -273,8 +283,11 @@ public class BluetoothPrinterActivity extends Activity
 				break;
 
 			case R.id.main_button_refresh:
-				mTextViewStatus.setText("Refresh bluetooth device list");
-				ListBluetoothDevices();
+				getPrinterAttribute();
+				break;
+
+			case R.id.main_button_printer_scan:
+				listBluetoothDevices();
 				break;
 
 			case R.id.main_editText_pathname:
@@ -469,31 +482,39 @@ public class BluetoothPrinterActivity extends Activity
 		mSpinnerPrintQuality.setSelection(mAdapterPrintQuality.indexOf(mPrintJob.getPrintQuality()));
 	}
 
-	private boolean ListBluetoothDevices()
+	private boolean listBluetoothDevices()
 	{
+		mTextViewStatus.setText("list bluetooth devices");
+
 		mBluetoothDevice = null;
 
 		if (mBluetoothAdapter == null)
 		{
-			CavanMessage("getDefaultAdapter failed");
+			showAlertDialogYes("getDefaultAdapter failed");
 			return false;
 		}
 
 		if (mBluetoothAdapter.isEnabled() == false)
 		{
-			CavanMessage("BluetoothAdapter is disabled");
+			showAlertDialogYes("BluetoothAdapter is disabled");
 			return false;
 		}
 
 		mRadioGroupDevice.removeAllViews();
+		CavanRadioButton radioButton = null;
 
 		for (BluetoothDevice bluetoothDevice : mBluetoothAdapter.getBondedDevices())
 		{
-			CavanRadioButton radioButton = new CavanRadioButton(this, bluetoothDevice);
+			radioButton = new CavanRadioButton(this, bluetoothDevice);
 
 			radioButton.setOnCheckedChangeListener(mOnCheckedChangeListener);
 
 			mRadioGroupDevice.addView(radioButton);
+		}
+
+		if (radioButton == null)
+		{
+			showAlertDialogYes("No bluetooth device is paired");
 		}
 
 		return true;
@@ -518,6 +539,9 @@ public class BluetoothPrinterActivity extends Activity
 
 		mButtonRefresh = (Button) findViewById(R.id.main_button_refresh);
 		mButtonRefresh.setOnClickListener(mOnClickListener);
+
+		mButtonPrintScan = (Button) findViewById(R.id.main_button_printer_scan);
+		mButtonPrintScan.setOnClickListener(mOnClickListener);
 
 		mTextViewStatus = (TextView) findViewById(R.id.main_textView_status);
 		mEditTextFilePath = (EditText) findViewById(R.id.main_editText_pathname);

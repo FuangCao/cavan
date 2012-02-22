@@ -86,6 +86,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/refresh" />
+
+        <Button
+            android:id="@+id/main_button_printer_scan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/printer_scan" />
     </LinearLayout>
 
     <TextView

@@ -14,5 +14,6 @@
     <string name="print_quality">Print Quality:</string>
     <string name="file_path">File Pathname:</string>
     <string name="bluetooth_printer">Bluetooth Printers:</string>
+    <string name="printer_scan">Scan</string>
 
 </resources>
