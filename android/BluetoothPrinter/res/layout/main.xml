@@ -7,7 +7,7 @@
 	<TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/file_path" />
+        android:text="@string/file_path"/>
     <EditText
         android:id="@+id/main_editText_pathname"
         android:layout_width="match_parent"

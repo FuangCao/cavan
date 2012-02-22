@@ -431,10 +431,15 @@ public class BluetoothPrintJob
 
 	public static String GetFileExtension(String pathname)
 	{
+		if (pathname == null)
+		{
+			return null;
+		}
+
         int dotIndex = pathname.lastIndexOf(".");
         if (dotIndex < 0)
         {
-			return "txt";
+			return null;
         }
 
 		return pathname.substring(dotIndex + 1).toLowerCase();

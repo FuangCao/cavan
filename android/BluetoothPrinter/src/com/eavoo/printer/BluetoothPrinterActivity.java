@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
@@ -19,6 +23,7 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -39,6 +44,11 @@ import com.eavoo.printer.BluetoothPrintService.BluetoothPrintBinder;
 
 public class BluetoothPrinterActivity extends Activity
 {
+	private static final int DIALOG_PROGRESS_ID = 0;
+	private static final int DIALOG_ALERT_YES_ID = 1;
+
+	private static final String TAG = "BluetoothPrinterActivity";
+
 	private BluetoothPrintService mBluetoothPrintService;
 	private BluetoothAdapter mBluetoothAdapter;
 	private Button mButtonJobBasePrint;
@@ -57,6 +67,10 @@ public class BluetoothPrinterActivity extends Activity
 	private StringListAdapter mAdapterMediaSize = new StringListAdapter(this);
 	private Spinner mSpinnerPrintQuality;
 	private StringListAdapter mAdapterPrintQuality = new StringListAdapter(this);
+	private ProgressDialog mProgressDialog;
+	private boolean mProgressDialogRunning = false;
+	private AlertDialog mAlertDialogYes;
+	private TextView mTextViewlertDialogYes;
 
 	private ServiceConnection mServiceConnection = new ServiceConnection()
 	{
@@ -77,6 +91,172 @@ public class BluetoothPrinterActivity extends Activity
 		}
 	};
 
+	@Override
+	protected Dialog onCreateDialog(int id, Bundle bundle)
+	{
+		String message = bundle.getString("message");
+		if (message == null)
+		{
+			Log.e(TAG, "message == null");
+			return null;
+		}
+
+		switch (id)
+		{
+		case DIALOG_PROGRESS_ID:
+			mProgressDialog = new ProgressDialog(this);
+			mProgressDialog.setMessage(message);
+			mProgressDialog.setCancelable(false);
+			return mProgressDialog;
+
+		case DIALOG_ALERT_YES_ID:
+			mTextViewlertDialogYes = new TextView(this);
+			mTextViewlertDialogYes.setText(message);
+			mTextViewlertDialogYes.setTextSize(18);
+			mTextViewlertDialogYes.setHeight(50);
+			mTextViewlertDialogYes.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
+			{
+				@Override
+				public void onClick(DialogInterface dialog, int which)
+				{
+					Log.v(TAG, "DialogInterface.OnClickListener");
+				}
+			});
+
+			builder.setView(mTextViewlertDialogYes);
+			mAlertDialogYes = builder.create();
+			mAlertDialogYes.setCancelable(false);
+
+			return mAlertDialogYes;
+		}
+
+		return null;
+	}
+
+	private Bundle buileBundle(String message)
+	{
+		Bundle bundle = new Bundle();
+		bundle.putString("message", message);
+
+		return bundle;
+	}
+
+	private void showProgressDialog(String message)
+	{
+		if (mProgressDialog != null)
+		{
+			if (mProgressDialogRunning)
+			{
+				dismissDialog(DIALOG_PROGRESS_ID);
+			}
+
+			mProgressDialog.setMessage(message);
+			showDialog(DIALOG_PROGRESS_ID);
+		}
+		else
+		{
+			showDialog(DIALOG_PROGRESS_ID, buileBundle(message));
+		}
+
+		mProgressDialogRunning = true;
+	}
+
+	private void closeProgressDialog()
+	{
+		if (mProgressDialogRunning)
+		{
+			dismissDialog(DIALOG_PROGRESS_ID);
+			mProgressDialogRunning = false;
+		}
+	}
+
+	private void showAlertDialogYes(String message)
+	{
+		if (mAlertDialogYes != null)
+		{
+			mTextViewlertDialogYes.setText(message);
+			showDialog(DIALOG_ALERT_YES_ID);
+		}
+		else
+		{
+			showDialog(DIALOG_ALERT_YES_ID, buileBundle(message));
+		}
+	}
+
+	private boolean getPrinterAttribute()
+	{
+		if (mBluetoothPrintService == null)
+		{
+			Message message = Message.obtain(mHandler);
+			message.what = BluetoothBasePrinter.BPP_MSG_GET_PRINTER_ATTRIBUTE_REQUEST;
+			mHandler.sendMessageDelayed(message, 1000);
+			CavanMessage("mBluetoothPrintService is null");
+			return false;
+		}
+
+		showProgressDialog(String.format("Get %s's Attribute ...", mBluetoothDevice.getName()));
+		mBluetoothPrintService.GetPrinterAttribute(mHandler, mBluetoothDevice);
+
+		return true;
+	}
+
+	private String checkBluetoothPrint()
+	{
+		if (mBluetoothDevice == null)
+		{
+			showAlertDialogYes("Please select a bluetooth device");
+			return null;
+		}
+
+		if (mBluetoothPrintService == null)
+		{
+			showAlertDialogYes("Bluetooth print service is not ready, please retry");
+			return null;
+		}
+
+		String filename = mPrintJob.getFileName();
+		if (filename == null || filename.isEmpty())
+		{
+			showAlertDialogYes("Please select a file");
+			return null;
+		}
+
+		return filename;
+	}
+
+	private boolean JobBasePrint()
+	{
+		String filename = checkBluetoothPrint();
+		if (filename == null)
+		{
+			return false;
+		}
+
+		String message = String.format("JobBasePrint %s ...", filename);
+		mTextViewStatus.setText(message);
+		showProgressDialog(message);
+
+		return mBluetoothPrintService.JobBasePrint(mHandler, mBluetoothDevice, mPrintJob);
+	}
+
+	private boolean SimplePushPrint()
+	{
+		String filename = checkBluetoothPrint();
+		if (filename == null)
+		{
+			return false;
+		}
+
+		String message = String.format("JobBasePrint %s ...", filename);
+		mTextViewStatus.setText(message);
+		showProgressDialog(message);
+
+		return mBluetoothPrintService.SimplePushPrint(mHandler, mBluetoothDevice, mPrintJob);
+	}
+
 	private OnClickListener mOnClickListener = new OnClickListener()
 	{
 		@Override
@@ -85,39 +265,11 @@ public class BluetoothPrinterActivity extends Activity
 			switch (v.getId())
 			{
 			case R.id.main_button_job_print:
-				if (mBluetoothDevice == null)
-				{
-					CavanMessage("Please select a bluetooth device");
-					return;
-				}
-
-				if (mBluetoothPrintService != null)
-				{
-					mPrintJob.setFileName(getFileName());
-					mBluetoothPrintService.JobBasePrint(mHandler, mBluetoothDevice, mPrintJob);
-				}
-				else
-				{
-					CavanMessage("mBluetoothPrintService is null");
-				}
+				JobBasePrint();
 				break;
 
 			case R.id.main_button_simple_print:
-				if (mBluetoothDevice == null)
-				{
-					CavanMessage("Please select a bluetooth device");
-					return;
-				}
-
-				if (mBluetoothPrintService != null)
-				{
-					mPrintJob.setFileName(getFileName());
-					mBluetoothPrintService.SimplePushPrint(mHandler, mBluetoothDevice, mPrintJob);
-				}
-				else
-				{
-					CavanMessage("mBluetoothPrintService is null");
-				}
+				SimplePushPrint();
 				break;
 
 			case R.id.main_button_refresh:
@@ -137,23 +289,6 @@ public class BluetoothPrinterActivity extends Activity
 		}
 	};
 
-	private boolean GetPrinterAttribute()
-	{
-		if (mBluetoothPrintService == null)
-		{
-			Message message = Message.obtain(mHandler);
-			message.what = BluetoothBasePrinter.BPP_MSG_GET_PRINTER_ATTRIBUTE_REQUEST;
-			mHandler.sendMessageDelayed(message, 1000);
-			CavanMessage("mBluetoothPrintService is null");
-			return false;
-		}
-		else
-		{
-			mBluetoothPrintService.GetPrinterAttribute(mHandler, mBluetoothDevice);
-			return true;
-		}
-	}
-
 	private OnCheckedChangeListener mOnCheckedChangeListener = new OnCheckedChangeListener()
 	{
 		@Override
@@ -164,7 +299,7 @@ public class BluetoothPrinterActivity extends Activity
 				CavanRadioButton radioButton = (CavanRadioButton) buttonView;
 
 				mBluetoothDevice = radioButton.getblBluetoothDevice();
-				GetPrinterAttribute();
+				getPrinterAttribute();
 			}
 		}
 	};
@@ -234,13 +369,15 @@ public class BluetoothPrinterActivity extends Activity
 		@Override
 		public void handleMessage(Message msg)
 		{
+			closeProgressDialog();
+
 			switch (msg.what)
 			{
 			case BluetoothBasePrinter.BPP_MSG_GET_PRINTER_ATTRIBUTE_COMPLETE:
 				if (msg.arg1 < 0)
 				{
 					CavanMessage("get printer attribute failed");
-					GetPrinterAttribute();
+					getPrinterAttribute();
 				}
 				else
 				{
@@ -257,24 +394,22 @@ public class BluetoothPrinterActivity extends Activity
 			case BluetoothBasePrinter.BPP_MSG_JOB_BASE_PRINT_COMPLETE:
 				if (msg.arg1 < 0)
 				{
-					CavanMessage("job base print failed");
-					GetPrinterAttribute();
+					showAlertDialogYes("job base print failed!");
 				}
 				else
 				{
-					CavanMessage("job base print complete");
+					showAlertDialogYes("job base print complete");
 				}
 				break;
 
 			case BluetoothBasePrinter.BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE:
 				if (msg.arg1 < 0)
 				{
-					CavanMessage("simple push print failed");
-					GetPrinterAttribute();
+					showAlertDialogYes("simple push print failed!");
 				}
 				else
 				{
-					CavanMessage("simple push print complete");
+					showAlertDialogYes("simple push print complete");
 				}
 				break;
 
@@ -284,7 +419,7 @@ public class BluetoothPrinterActivity extends Activity
 
 			case BluetoothBasePrinter.BPP_MSG_GET_PRINTER_ATTRIBUTE_REQUEST:
 				CavanMessage("Get print attribute request");
-				GetPrinterAttribute();
+				getPrinterAttribute();
 				break;
 
 			default:
@@ -297,6 +432,7 @@ public class BluetoothPrinterActivity extends Activity
 	{
 		Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 		mTextViewStatus.setText(message);
+		Log.v("Cavan", message);
 	}
 
 	class CavanRadioButton extends RadioButton
@@ -350,28 +486,17 @@ public class BluetoothPrinterActivity extends Activity
 		}
 
 		mRadioGroupDevice.removeAllViews();
-		CavanRadioButton radioButton = null;
 
 		for (BluetoothDevice bluetoothDevice : mBluetoothAdapter.getBondedDevices())
 		{
-			radioButton = new CavanRadioButton(this, bluetoothDevice);
+			CavanRadioButton radioButton = new CavanRadioButton(this, bluetoothDevice);
 
 			radioButton.setOnCheckedChangeListener(mOnCheckedChangeListener);
 
 			mRadioGroupDevice.addView(radioButton);
 		}
 
-		if (radioButton != null)
-		{
-			radioButton.setChecked(true);
-		}
-
 		return true;
-	}
-
-	public String getFileName()
-	{
-		return mEditTextFilePath.getText().toString();
 	}
 
 	@Override
