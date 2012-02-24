@@ -10,6 +10,8 @@ import android.webkit.MimeTypeMap;
 
 public class BluetoothPrintJob
 {
+	private static final String TAG = "BluetoothPrintJob";
+
 	private static final byte AppTagOffset = 1;
 	private static final byte AppTagCount = 2;
 	private static final byte AppTagJobId = 3;
@@ -266,8 +268,10 @@ public class BluetoothPrintJob
 
 	public String toString()
 	{
-		StringBuilder builder = new StringBuilder();
+		Log.v(TAG, "FileName = " + mFileName);
+		Log.v(TAG, "DocumentFormat = " + getDocumentFormat());
 
+		StringBuilder builder = new StringBuilder();
 		builder.append("<Copies>" + mCopies + "</Copies>\r\n");
 		builder.append("<NumberUp>" + mNumberUp + "</NumberUp>\r\n");
 		builder.append("<CancelOnLostLink>" + mCancelOnLostLink + "</CancelOnLostLink>\r\n");
@@ -349,6 +353,9 @@ public class BluetoothPrintJob
 
 		mJobId = Integer.decode(map.get("JobId"));
 		mOperationStatus = Short.decode(map.get("OperationStatus"));
+
+		Log.v(TAG, "JobId = " + mJobId);
+		Log.v(TAG, String.format("OperationStatus = 0x%04x", mOperationStatus));
 
 		return true;
 	}

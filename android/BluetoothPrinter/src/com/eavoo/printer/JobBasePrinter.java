@@ -1,6 +1,7 @@
 package com.eavoo.printer;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.obex.HeaderSet;
 import javax.xml.parsers.ParserConfigurationException;
@@ -9,10 +10,10 @@ import org.xml.sax.SAXException;
 
 import android.content.Context;
 import android.os.Handler;
-import android.util.Log;
 
 public class JobBasePrinter extends BluetoothBasePrinter
 {
+	@SuppressWarnings("unused")
 	private static final String TAG = "JobBasePrinter";
 
 	public JobBasePrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
@@ -48,6 +49,11 @@ public class JobBasePrinter extends BluetoothBasePrinter
 	public boolean SendDocument() throws IOException
 	{
 		return PutFile(mPrintJob.getFileName(), mPrintJob.getDocumentFormat(), mPrintJob.buildHeaderSet(), UUID_DPS);
+	}
+
+	public boolean SendDocument(InputStream inputStream) throws IOException
+	{
+		return PutFile(inputStream, mPrintJob.buildHeaderSet(), UUID_DPS);
 	}
 
 	public boolean SendDocument(BluetoothPrintJob job, byte[] data, HeaderSet headerSet) throws IOException
@@ -89,9 +95,6 @@ public class JobBasePrinter extends BluetoothBasePrinter
 			return false;
 		}
 
-		Log.v(TAG, "JobId = " + mPrintJob.getJobId());
-		Log.v(TAG, String.format("OperationStatus = 0x%04x", mPrintJob.getOperationStatus()));
-
 		mPrintJob.getAttributes();
 
 		if (SendDocument() == false)
@@ -106,10 +109,6 @@ public class JobBasePrinter extends BluetoothBasePrinter
 	@Override
 	public boolean BluetoothPrinterRun()
 	{
-		String extension = BluetoothPrintJob.GetFileExtension(getFileName());
-
-		Log.v(TAG, "File extension = \"" + extension + "\"");
-
 		boolean ret = false;
 
 		try

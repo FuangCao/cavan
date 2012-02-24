@@ -1,5 +1,10 @@
 package com.eavoo.printer;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +19,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -48,6 +54,11 @@ public class BluetoothPrinterActivity extends Activity
 	private static final int DIALOG_ALERT_YES_ID = 1;
 
 	private static final String TAG = "BluetoothPrinterActivity";
+
+	private String mCacheFilePgmPath;
+	private String mCacheFileJpegPath;
+	private String mBinaryFilePdfdraw;
+	private String mBinaryFilePnmtojpeg;
 
 	private BluetoothPrintService mBluetoothPrintService;
 	private BluetoothAdapter mBluetoothAdapter;
@@ -520,11 +531,100 @@ public class BluetoothPrinterActivity extends Activity
 		return true;
 	}
 
+	public void StreamCopy(InputStream inputStream, OutputStream outputStream) throws IOException
+	{
+		byte[] buff = new byte[1024];
+		int readlen;
+
+		while (true)
+		{
+			readlen = inputStream.read(buff);
+			if (readlen < 0)
+			{
+				break;
+			}
+
+			outputStream.write(buff, 0, readlen);
+		}
+	}
+
+	private void readBinaryFromAssets(AssetManager manager, String parent, final String command) throws IOException
+	{
+		Log.v(TAG, "command = " + command);
+
+		InputStream inputStream = manager.open("bin/" + command);
+		File file = new File(parent + "/" + command);
+		if (inputStream.available() == file.length())
+		{
+			Log.v(TAG, "file is exist, continue");
+			return;
+		}
+		FileOutputStream outputStream = new FileOutputStream(file);
+		StreamCopy(inputStream, outputStream);
+		inputStream.close();
+		outputStream.close();
+		file.setExecutable(true);
+	}
+
+	private void readBinaryFromAssets() throws IOException
+	{
+		Context context = getApplicationContext();
+		AssetManager manager = context.getAssets();
+		String parent = context.getDir("bin", Context.MODE_PRIVATE).getPath();
+
+		mBinaryFilePdfdraw = parent + "/pdfdraw";
+		readBinaryFromAssets(manager, parent, "pdfdraw");
+
+		mBinaryFilePnmtojpeg = parent + "/pnmtojpeg";
+		readBinaryFromAssets(manager, parent, "pnmtojpeg");
+
+		String cache = context.getCacheDir().getPath();
+		mCacheFilePgmPath = cache + "/temp.pgm";
+		mCacheFileJpegPath = cache + "/temp.jpg";
+	}
+
+	public boolean PdfToJpeg(String filename, int page) throws IOException, InterruptedException
+	{
+		Process process;
+		InputStream inputStream;
+
+		String command = String.format("%s -o %s -r 300 %s %d", mBinaryFilePdfdraw, mCacheFilePgmPath, filename, page);
+		Log.v(TAG, "command = " + command);
+		process = Runtime.getRuntime().exec(command);
+		process.waitFor();
+		if (process.exitValue() != 0)
+		{
+			Log.e(TAG, "process.exitValue() = " + process.exitValue());
+			return false;
+		}
+
+		command = String.format("%s %s", mBinaryFilePnmtojpeg, mCacheFilePgmPath);
+		Log.v(TAG, "command = " + command);
+		process = Runtime.getRuntime().exec(command);
+		inputStream = process.getInputStream();
+		File file = new File(mCacheFileJpegPath);
+		FileOutputStream outputStream = new FileOutputStream(file);
+		StreamCopy(inputStream, outputStream);
+		inputStream.close();
+		outputStream.close();
+
+		return true;
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+
+		try
+		{
+			readBinaryFromAssets();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 
 		Intent service = new Intent(this, BluetoothPrintService.class);
 		bindService(service, mServiceConnection, Context.BIND_AUTO_CREATE);
