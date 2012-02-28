@@ -55,10 +55,7 @@ public class BluetoothPrinterActivity extends Activity
 
 	private static final String TAG = "BluetoothPrinterActivity";
 
-	private String mCacheFilePgmPath;
-	private String mCacheFileJpegPath;
-	private String mBinaryFilePdfdraw;
-	private String mBinaryFilePnmtojpeg;
+	private String mBinaryFilePdfToJpeg;
 
 	private BluetoothPrintService mBluetoothPrintService;
 	private BluetoothAdapter mBluetoothAdapter;
@@ -102,6 +99,7 @@ public class BluetoothPrinterActivity extends Activity
 			Log.v("Cavan", "onServiceConnected");
 			BluetoothPrintBinder binder = (BluetoothPrintBinder) service;
 			mBluetoothPrintService = binder.getService();
+			mBluetoothPrintService.setBluetoothPrinterActivity(BluetoothPrinterActivity.this);
 			listBluetoothDevices();
 		}
 	};
@@ -219,7 +217,7 @@ public class BluetoothPrinterActivity extends Activity
 		}
 
 		showProgressDialog(String.format("Get %s's Attribute ...", mBluetoothDevice.getName()));
-		mBluetoothPrintService.GetPrinterAttribute(mHandler, mBluetoothDevice);
+		mBluetoothPrintService.GetPrinterAttribute();
 
 		return true;
 	}
@@ -260,7 +258,7 @@ public class BluetoothPrinterActivity extends Activity
 		mTextViewStatus.setText(message);
 		showProgressDialog(message);
 
-		return mBluetoothPrintService.JobBasePrint(mHandler, mBluetoothDevice, mPrintJob);
+		return mBluetoothPrintService.JobBasePrint();
 	}
 
 	private boolean SimplePushPrint()
@@ -275,7 +273,7 @@ public class BluetoothPrinterActivity extends Activity
 		mTextViewStatus.setText(message);
 		showProgressDialog(message);
 
-		return mBluetoothPrintService.SimplePushPrint(mHandler, mBluetoothDevice, mPrintJob);
+		return mBluetoothPrintService.SimplePushPrint();
 	}
 
 	private OnClickListener mOnClickListener = new OnClickListener()
@@ -572,43 +570,8 @@ public class BluetoothPrinterActivity extends Activity
 		AssetManager manager = context.getAssets();
 		String parent = context.getDir("bin", Context.MODE_PRIVATE).getPath();
 
-		mBinaryFilePdfdraw = parent + "/pdfdraw";
-		readBinaryFromAssets(manager, parent, "pdfdraw");
-
-		mBinaryFilePnmtojpeg = parent + "/pnmtojpeg";
-		readBinaryFromAssets(manager, parent, "pnmtojpeg");
-
-		String cache = context.getCacheDir().getPath();
-		mCacheFilePgmPath = cache + "/temp.pgm";
-		mCacheFileJpegPath = cache + "/temp.jpg";
-	}
-
-	public boolean PdfToJpeg(String filename, int page) throws IOException, InterruptedException
-	{
-		Process process;
-		InputStream inputStream;
-
-		String command = String.format("%s -o %s -r 300 %s %d", mBinaryFilePdfdraw, mCacheFilePgmPath, filename, page);
-		Log.v(TAG, "command = " + command);
-		process = Runtime.getRuntime().exec(command);
-		process.waitFor();
-		if (process.exitValue() != 0)
-		{
-			Log.e(TAG, "process.exitValue() = " + process.exitValue());
-			return false;
-		}
-
-		command = String.format("%s %s", mBinaryFilePnmtojpeg, mCacheFilePgmPath);
-		Log.v(TAG, "command = " + command);
-		process = Runtime.getRuntime().exec(command);
-		inputStream = process.getInputStream();
-		File file = new File(mCacheFileJpegPath);
-		FileOutputStream outputStream = new FileOutputStream(file);
-		StreamCopy(inputStream, outputStream);
-		inputStream.close();
-		outputStream.close();
-
-		return true;
+		mBinaryFilePdfToJpeg = parent + "/pdf2jpeg";
+		readBinaryFromAssets(manager, parent, "pdf2jpeg");
 	}
 
 	@Override
@@ -682,6 +645,71 @@ public class BluetoothPrinterActivity extends Activity
 		default:
 			Log.v("Cavan", "unknown requestCode = " + requestCode);
 		}
+	}
+
+	public BluetoothPrintJob getPrintJob()
+	{
+		return mPrintJob;
+	}
+
+	public BluetoothDevice getBluetoothDevice()
+	{
+		return mBluetoothDevice;
+	}
+
+	public Handler getHandler()
+	{
+		return mHandler;
+	}
+
+	public File Pdf2Jpeg(String pdfpath, int page, String jpgname) throws IOException, InterruptedException
+	{
+		File file = new File(getCacheDir() + "/" + jpgname);
+		FileOutputStream outputStream = new FileOutputStream(file);
+
+		String command = String.format("%s %s %d", mBinaryFilePdfToJpeg, pdfpath, page);
+		Log.v(TAG, "command = " + command);
+
+		Process process = Runtime.getRuntime().exec(command);
+		InputStream inputStream = process.getInputStream();
+
+		StreamCopy(inputStream, outputStream);
+		inputStream.close();
+		outputStream.close();
+
+		process.waitFor();
+		if (process.exitValue() != 0)
+		{
+			Log.v(TAG, "process.exitValue() = " + process.exitValue());
+			return null;
+		}
+
+		return file;
+	}
+
+	public int getPdfPageCount(String pdfpath) throws IOException, InterruptedException
+	{
+		String command = String.format("%s %s", mBinaryFilePdfToJpeg, pdfpath);
+		Log.v(TAG, "command = " + command);
+		Process process = Runtime.getRuntime().exec(command);
+		process.waitFor();
+		if (process.exitValue() != 0)
+		{
+			return -1;
+		}
+
+		InputStream inputStream = process.getInputStream();
+		int length = inputStream.available();
+		if (length <= 0)
+		{
+			Log.e(TAG, "inputStream.available() = " + length);
+			return -1;
+		}
+
+		byte[] buff = new byte[length];
+		inputStream.read(buff);
+
+		return Integer.decode(new String(buff));
 	}
 }
 

@@ -15,21 +15,26 @@ public class SimplePushPrinter extends BluetoothBasePrinter
 	@Override
 	public boolean BluetoothPrinterRun()
 	{
+		boolean ret;
+
 		try
 		{
-			if (PutFile(getFileName(), getFileType(), null, UUID_DPS))
-			{
-				SendMessage(BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE, 0, null);
-				return true;
-			}
+			ret = PutFile(getFileName(), getFileType(), null, UUID_DPS);
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
+			ret = false;
 		}
 
-		SendMessage(BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE, -1, null);
+		if (ret == false || WaitPrinterReady(5000) == false)
+		{
+			SendMessage(BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE, -1, null);
+			return false;
+		}
 
-		return false;
+		SendMessage(BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE, 0, null);
+
+		return true;
 	}
 }

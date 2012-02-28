@@ -425,6 +425,11 @@ public class BluetoothPrintJob
 		return true;
 	}
 
+	public String getFileExtension()
+	{
+		return GetFileExtension(mFileName);
+	}
+
 	public static String FileBaseName(String filename)
 	{
 		int index = filename.lastIndexOf('/');
@@ -452,6 +457,18 @@ public class BluetoothPrintJob
 		return pathname.substring(dotIndex + 1).toLowerCase();
 	}
 
+	public static String GetFileMimeTypeByExtension(String extension)
+	{
+		if (extension == null)
+		{
+			return null;
+		}
+
+		MimeTypeMap map = MimeTypeMap.getSingleton();
+
+        return map.getMimeTypeFromExtension(extension);
+	}
+
 	public static String GetFileMimeTypeByName(String pathname)
 	{
         if (pathname == null)
@@ -459,8 +476,6 @@ public class BluetoothPrintJob
 			return null;
         }
 
-		MimeTypeMap map = MimeTypeMap.getSingleton();
-
-        return map.getMimeTypeFromExtension(GetFileExtension(pathname));
+		return GetFileMimeTypeByExtension(GetFileExtension(pathname));
 	}
 }

@@ -25,25 +25,7 @@ public class JobBasePrinter extends BluetoothBasePrinter
 	{
 		BluetoothPrinterAttribute attribute = new BluetoothPrinterAttribute(this);
 
-		try
-		{
-			attribute.update();
-			return attribute;
-		}
-		catch (ParserConfigurationException e)
-		{
-			e.printStackTrace();
-		}
-		catch (SAXException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-
-		return null;
+		return attribute.update() ? attribute : null;
 	}
 
 	public boolean SendDocument() throws IOException
@@ -53,18 +35,30 @@ public class JobBasePrinter extends BluetoothBasePrinter
 
 	public boolean SendDocument(InputStream inputStream) throws IOException
 	{
-		return PutFile(inputStream, mPrintJob.buildHeaderSet(), UUID_DPS);
+		HeaderSet headerSet = mPrintJob.buildHeaderSet();
+		headerSet.setHeader(HeaderSet.TYPE, getFileType());
+
+		return PutFile(inputStream, headerSet, UUID_DPS);
 	}
 
-	public boolean SendDocument(BluetoothPrintJob job, byte[] data, HeaderSet headerSet) throws IOException
+	public boolean SendDocument(byte[] data, HeaderSet headerSet) throws IOException
 	{
 		return PutByteArray(UUID_DPS, headerSet, data);
 	}
 
-	public boolean WaitPrintComplete()
+	public boolean WaitJobComplete(long interval)
 	{
 		while (true)
 		{
+			try
+			{
+				sleep(interval);
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+
 			if (mPrintJob.getAttributes() == false)
 			{
 				return false;
@@ -73,15 +67,6 @@ public class JobBasePrinter extends BluetoothBasePrinter
 			if (mPrintJob.getJobState().equals("completed"))
 			{
 				break;
-			}
-
-			try
-			{
-				sleep(2000);
-			}
-			catch (InterruptedException e)
-			{
-				e.printStackTrace();
 			}
 		}
 
@@ -103,7 +88,25 @@ public class JobBasePrinter extends BluetoothBasePrinter
 			return false;
 		}
 
-		return WaitPrintComplete();
+		return WaitPrinterReady(5000);
+	}
+
+	public boolean PrintFile(InputStream inputStream) throws IOException
+	{
+		if (mPrintJob.create(this) == false)
+		{
+			return false;
+		}
+
+		mPrintJob.getAttributes();
+
+		if (SendDocument(inputStream) == false)
+		{
+			mPrintJob.cancel();
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override

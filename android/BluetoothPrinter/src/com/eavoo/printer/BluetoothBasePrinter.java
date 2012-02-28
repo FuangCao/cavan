@@ -19,7 +19,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.os.Process;
 import android.util.Log;
 
 public class BluetoothBasePrinter extends Thread
@@ -70,7 +69,7 @@ public class BluetoothBasePrinter extends Thread
 
 	public BluetoothBasePrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
 	{
-		Log.v(TAG, "Create BppBasePrinter");
+		DebugLog("Create BppBasePrinter");
 		this.mContext = context;
 		PowerManager pm = (PowerManager)mContext.getSystemService(Context.POWER_SERVICE);
 		this.mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
@@ -78,6 +77,24 @@ public class BluetoothBasePrinter extends Thread
 		this.mHandler = handler;
 		this.mTransport = transport;
 		this.mPrintJob = job;
+	}
+
+	public void CavanLog(String message)
+	{
+		Log.v(TAG, message);
+	}
+
+	public void DebugLog(String message)
+	{
+		if (DEBUG)
+		{
+			Log.d(TAG, message);
+		}
+	}
+
+	public void ErrorLog(String message)
+	{
+		Log.e(TAG, message);
 	}
 
 	public String getFileName()
@@ -114,7 +131,7 @@ public class BluetoothBasePrinter extends Thread
 
 	public ClientSession connect(byte[] uuid) throws IOException
 	{
-		Log.v(TAG, "Create ClientSession with transport " + mTransport.toString());
+		DebugLog("Create ClientSession with transport " + mTransport.toString());
 		ClientSession session = new ClientSession(mTransport);
 		HeaderSet hsRequest = new HeaderSet();
 
@@ -123,23 +140,23 @@ public class BluetoothBasePrinter extends Thread
 			hsRequest.setHeader(HeaderSet.TARGET, uuid);
 		}
 
-		Log.v(TAG, "Connect to OBEX session");
+		DebugLog("Connect to OBEX session");
 		HeaderSet hsResponse = session.connect(hsRequest);
-		Log.v(TAG, "ResponseCode = " + hsResponse.getResponseCode());
+		DebugLog("ResponseCode = " + hsResponse.getResponseCode());
 
 		byte[] headerWho = (byte[]) hsResponse.getHeader(HeaderSet.WHO);
 		if (headerWho != null)
 		{
-			Log.v(TAG, "HeaderWho:\n" + ByteArrayToHexString(headerWho));
+			DebugLog("HeaderWho:\n" + ByteArrayToHexString(headerWho));
 		}
 
 		if (hsResponse.mConnectionID == null)
 		{
-			Log.v(TAG, "mConnectionID == null");
+			DebugLog("mConnectionID == null");
 		}
 		else
 		{
-			Log.v(TAG, "mConnectionID:\n" + ByteArrayToHexString(hsResponse.mConnectionID));
+			DebugLog("mConnectionID:\n" + ByteArrayToHexString(hsResponse.mConnectionID));
 		}
 
 		return hsResponse.getResponseCode() == ResponseCodes.OBEX_HTTP_OK ? session : null;
@@ -156,14 +173,14 @@ public class BluetoothBasePrinter extends Thread
 		ClientOperation clientOperation = (ClientOperation) session.put(headerSet);
 		if (clientOperation == null)
 		{
-			Log.e(TAG, "clientOperation == null");
+			ErrorLog("clientOperation == null");
 			return false;
 		}
 
 		OutputStream obexOutputStream = clientOperation.openOutputStream();
 		if (obexOutputStream == null)
 		{
-			Log.e(TAG, "obexOutputStream == null");
+			ErrorLog("obexOutputStream == null");
 			clientOperation.abort();
 			return false;
 		}
@@ -171,7 +188,7 @@ public class BluetoothBasePrinter extends Thread
 		InputStream obexInputStream = clientOperation.openInputStream();
 		if (obexInputStream == null)
 		{
-			Log.e(TAG, "obexInputStream == null");
+			ErrorLog("obexInputStream == null");
 			obexOutputStream.close();
 			clientOperation.abort();
 			return false;
@@ -183,14 +200,14 @@ public class BluetoothBasePrinter extends Thread
 
 		boolean boolResult = true;
 
-		Log.v(TAG, "Start send file");
+		CavanLog("Start send file");
 
 		while (true)
 		{
 			int readLen = bufferedInputStream.read(buff);
 			if (readLen <= 0)
 			{
-				Log.v(TAG, "Send file complete");
+				CavanLog("Send file complete");
 				break;
 			}
 
@@ -199,8 +216,8 @@ public class BluetoothBasePrinter extends Thread
 			int responseCode = clientOperation.getResponseCode();
 			if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
 			{
-				Log.e(TAG, "responseCode = " + responseCode);
-				Log.e(TAG, "responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
+				ErrorLog("responseCode = " + responseCode);
+				ErrorLog("responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
 				boolResult = false;
 				break;
 			}
@@ -230,7 +247,7 @@ public class BluetoothBasePrinter extends Thread
 
 		if (size <= 0)
 		{
-			Log.e(TAG, "File " + filename + " don't exist");
+			ErrorLog("File " + filename + " don't exist");
 			return false;
 		}
 
@@ -240,22 +257,48 @@ public class BluetoothBasePrinter extends Thread
 		}
 
 		headerSet.setHeader(HeaderSet.NAME, BluetoothPrintJob.FileBaseName(filename));
-		Log.v(TAG, "NAME = " + headerSet.getHeader(HeaderSet.NAME));
+		DebugLog("NAME = " + headerSet.getHeader(HeaderSet.NAME));
 		headerSet.setHeader(HeaderSet.LENGTH, size);
-		Log.v(TAG, "LENGTH = " + headerSet.getHeader(HeaderSet.LENGTH));
+		DebugLog("LENGTH = " + headerSet.getHeader(HeaderSet.LENGTH));
 
 		if (filetype == null)
 		{
 			filetype = BluetoothPrintJob.GetFileMimeTypeByName(filename);
 		}
 		headerSet.setHeader(HeaderSet.TYPE, filetype);
-		Log.v(TAG, "TYPE = " + headerSet.getHeader(HeaderSet.TYPE));
+		DebugLog("TYPE = " + headerSet.getHeader(HeaderSet.TYPE));
 
 		FileInputStream inputStream = new FileInputStream(file);
 		boolean ret = PutFile(new FileInputStream(file), headerSet, uuid);
 		inputStream.close();
 
 		return ret;
+	}
+
+	public boolean PutCommanOutput(String command, HeaderSet headerSet, byte[] uuid) throws InterruptedException, IOException
+	{
+		DebugLog("command = " + command);
+		Process process = Runtime.getRuntime().exec(command);
+
+		InputStream inputStream = process.getInputStream();
+		DebugLog("inputStream.available() = " + inputStream.available());
+		boolean ret = PutFile(inputStream, headerSet, uuid);
+		inputStream.close();
+
+		if (ret == false)
+		{
+			process.destroy();
+			return false;
+		}
+
+		process.waitFor();
+		if (process.exitValue() != 0)
+		{
+			ErrorLog("process.exitValue() = " + process.exitValue());
+			return false;
+		}
+
+		return true;
 	}
 
 	public boolean PutByteArray(byte[] uuid, HeaderSet headerSet, byte[] data) throws IOException
@@ -274,10 +317,7 @@ public class BluetoothBasePrinter extends Thread
 
 	public byte[] GetByteArray(byte[] request, HeaderSet headerSet, byte[] uuid) throws IOException
 	{
-		if (DEBUG)
-		{
-			Log.v(TAG, "Request = \n" + new String(request));
-		}
+		DebugLog("Request = \n" + new String(request));
 
 		ClientSession session = connect(uuid);
 		if (session == null)
@@ -286,38 +326,37 @@ public class BluetoothBasePrinter extends Thread
 		}
 
 		ClientOperation operation = (ClientOperation) session.get(headerSet);
-		Log.v(TAG, "Get operation complete");
+		DebugLog("Get operation complete");
 
 		OutputStream outputStream = operation.openOutputStream();
-		Log.v(TAG, "Open OutputStream complete");
+		DebugLog("Open OutputStream complete");
 		outputStream.write(request);
-		Log.v(TAG, "Write data complete");
+		DebugLog("Write data complete");
 		outputStream.close();
 
 		int responseCode = operation.getResponseCode();
 		if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
 		{
-			Log.e(TAG, "responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
+			ErrorLog("responseCode = " + responseCode);
+			ErrorLog("responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
 			return null;
 		}
 
 		int length = (int) operation.getLength();
-		Log.v(TAG, "length = " + length);
+		DebugLog("length = " + length);
 		if (length <= 0)
 		{
+			ErrorLog("length <= 0");
 			return null;
 		}
 
 		InputStream inputStream = operation.openInputStream();
-		Log.v(TAG, "Open InputStream complete");
+		DebugLog("Open InputStream complete");
 		byte[] response = new byte[length];
 		inputStream.read(response);
 		inputStream.close();
 
-		if (DEBUG)
-		{
-			Log.v(TAG, "Response Content = \n" + new String(response));
-		}
+		DebugLog("Response Content = \n" + new String(response));
 
 		return response;
 	}
@@ -343,7 +382,7 @@ public class BluetoothBasePrinter extends Thread
 
 	public boolean BluetoothPrinterRun()
 	{
-		Log.e(TAG, "BluetoothPrinterRun No implementation");
+		ErrorLog("BluetoothPrinterRun No implementation");
 
 		return false;
 	}
@@ -371,18 +410,65 @@ public class BluetoothBasePrinter extends Thread
 		mHandler.sendMessageDelayed(BuildMessage(what, arg1, data), delayMillis);
 	}
 
+	public boolean WaitPrinterReady(long interval)
+	{
+		DebugLog("WaitPrinterReady");
+
+		BluetoothPrinterAttribute attribute = new BluetoothPrinterAttribute(this);
+		attribute.setBody(attribute.buildBody("PrinterState", "PrinterStateReasons"));
+
+		while (true)
+		{
+			try
+			{
+				sleep(interval);
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+
+			if (attribute.updateSimple() == false)
+			{
+				continue;
+			}
+
+			String state = attribute.getPrinterState();
+			String reasons = attribute.getPrinterStateReasons();
+
+			Log.v(TAG, "getPrinterState = " + state);
+			Log.v(TAG, "getPrinterStateReasons = " + reasons);
+
+			if (state.equals("processing"))
+			{
+				continue;
+			}
+
+			if (state.equals("idle"))
+			{
+				CavanLog("Printer is ready");
+				return true;
+			}
+			else
+			{
+				CavanLog("Printer is stoped");
+				return false;
+			}
+		}
+	}
+
 	@Override
 	public void run()
 	{
-		Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+		// Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
 
-		Log.v(TAG, "Bpp Soap request running");
+		DebugLog("Bpp Soap request running");
 
 		mWakeLock.acquire();
 
 		try
 		{
-			Log.v(TAG, "Connect to printer");
+			DebugLog("Connect to printer");
 			mTransport.connect();
 		}
 		catch (IOException e1)
@@ -394,11 +480,11 @@ public class BluetoothBasePrinter extends Thread
 
 		if (BluetoothPrinterRun())
 		{
-			Log.v(TAG, "Print complete");
+			DebugLog("Print complete");
 		}
 		else
 		{
-			Log.v(TAG, "Print failed");
+			DebugLog("Print failed");
 		}
 
 		try

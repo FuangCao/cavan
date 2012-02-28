@@ -16,6 +16,7 @@ public class BluetoothPrinterAttribute extends BppSoapRequest implements Seriali
 	public BluetoothPrinterAttribute(BluetoothBasePrinter printer)
 	{
 		super(printer);
+		setAttributes("GetPrinterAttributes", null, null);
 	}
 
 	private String mPrinterName;
@@ -235,43 +236,88 @@ public class BluetoothPrinterAttribute extends BppSoapRequest implements Seriali
 			return false;
 		}
 
-		mPrinterName = getElementContent(xml, "PrinterName");
-		mPrinterLocation = getElementContent(xml, "PrinterLocation");
-		mPrinterState = getElementContent(xml, "PrinterState");
-		mPrinterStateReasons = getElementContent(xml, "PrinterStateReasons");
-		mDocumentFormatsSupported = getElementContents(xml, "DocumentFormatsSupported", "DocumentFormat");
-		mColorSupported = getElementContentBoolean(xml, "ColorSupported");
-		mMaxCopiesSupported = getElementContentInt(xml, "MaxCopiesSupported");
-		mSidesSupported = getElementContents(xml, "SidesSupported", "SidesSupported");
-		mNumberUpSupported = getElementContentInt(xml, "NumberUpSupported");
-		mOrientationsSupported = getElementContents(xml, "OrientationsSupported", "Orientation");
-		mMediaSizesSupported = getElementContents(xml, "MediaSizesSupported", "MediaSize");
-		mMediaTypesSupported = getElementContents(xml, "MediaTypesSupported", "MediaType");
-		mPrintQualitySupported = getElementContents(xml, "PrintQualitySupported", "PrintQuality");
-		mQueuedJobCount = getElementContentInt(xml, "QueuedJobCount");
-		mImageFormatsSupported = getElementContents(xml, "ImageFormatsSupported", "ImageFormat");
-		mBasicTextPageWidth = getElementContentInt(xml, "BasicTextPageWidth");
-		mBasicTextPageHeight = getElementContentInt(xml, "BasicTextPageHeight");
-		mPrinterGeneralCurrentOperator = getElementContent(xml, "PrinterGeneralCurrentOperator");
-		mOperationStatus = getElementContentInt(xml, "OperationStatus");
+		mPrinterName = getElementContent(xml, "PrinterName", mPrinterName);
+		mPrinterLocation = getElementContent(xml, "PrinterLocation", mPrinterLocation);
+		mPrinterState = getElementContent(xml, "PrinterState", mPrinterState);
+		mPrinterStateReasons = getElementContent(xml, "PrinterStateReasons", mPrinterStateReasons);
+		mDocumentFormatsSupported = getElementContents(xml, "DocumentFormatsSupported", "DocumentFormat", mDocumentFormatsSupported);
+		mColorSupported = getElementContentBoolean(xml, "ColorSupported", mColorSupported);
+		mMaxCopiesSupported = getElementContentInt(xml, "MaxCopiesSupported", mMaxCopiesSupported);
+		mSidesSupported = getElementContents(xml, "SidesSupported", "SidesSupported", mSidesSupported);
+		mNumberUpSupported = getElementContentInt(xml, "NumberUpSupported", mNumberUpSupported);
+		mOrientationsSupported = getElementContents(xml, "OrientationsSupported", "Orientation", mOrientationsSupported);
+		mMediaSizesSupported = getElementContents(xml, "MediaSizesSupported", "MediaSize", mMediaSizesSupported);
+		mMediaTypesSupported = getElementContents(xml, "MediaTypesSupported", "MediaType", mMediaTypesSupported);
+		mPrintQualitySupported = getElementContents(xml, "PrintQualitySupported", "PrintQuality", mPrintQualitySupported);
+		mQueuedJobCount = getElementContentInt(xml, "QueuedJobCount", mQueuedJobCount);
+		mImageFormatsSupported = getElementContents(xml, "ImageFormatsSupported", "ImageFormat", mImageFormatsSupported);
+		mBasicTextPageWidth = getElementContentInt(xml, "BasicTextPageWidth", mBasicTextPageWidth);
+		mBasicTextPageHeight = getElementContentInt(xml, "BasicTextPageHeight", mBasicTextPageHeight);
+		mPrinterGeneralCurrentOperator = getElementContent(xml, "PrinterGeneralCurrentOperator", mPrinterGeneralCurrentOperator);
+		mOperationStatus = getElementContentInt(xml, "OperationStatus", mOperationStatus);
 
 		return true;
 	}
 
-	public boolean update() throws ParserConfigurationException, SAXException, IOException
+	public String buildBody(String ... attrs)
 	{
-		setAttributes("GetPrinterAttributes", null, null);
+		if (attrs == null || attrs.length <= 0)
+		{
+			return null;
+		}
+
+		StringBuilder builder = new StringBuilder();
+		builder.append("<RequestedPrinterAttributes>\r\n");
+
+		for (String string : attrs)
+		{
+			builder.append("<PrinterAttribute>" + string + "</PrinterAttribute>\r\n");
+		}
+
+		builder.append("</RequestedPrinterAttributes>");
+
+		return builder.toString();
+	}
+
+	public boolean updateSimple()
+	{
 		if (SendTo() == false)
 		{
 			return false;
 		}
 
-		Element element = ParseSoapResponse("GetPrinterAttributesResponse");
+		Element element;
+		try
+		{
+			element = ParseSoapResponse("GetPrinterAttributesResponse");
+		}
+		catch (ParserConfigurationException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+		catch (SAXException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+
 		if (element == null)
 		{
 			return false;
 		}
 
 		return parse(element);
+	}
+
+	public boolean update(String ... attrs)
+	{
+		setBody(buildBody(attrs));
+		return updateSimple();
 	}
 }

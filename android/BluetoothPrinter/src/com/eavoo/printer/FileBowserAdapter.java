@@ -1,7 +1,7 @@
 package com.eavoo.printer;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -20,6 +20,7 @@ public class FileBowserAdapter extends BaseAdapter
 	private static final String mRootDirectory = "/";
 	private static final String mDefaultDirectory = "/sdcard";
 	private File mCurrentDirectory;
+	private File mParentDirectory;
 	private List<File> mFileList;
 	private Context mContext;
 
@@ -56,15 +57,16 @@ public class FileBowserAdapter extends BaseAdapter
 
 	public void setCurrentDirectory(File directory)
 	{
+		mFileList = new ArrayList<File>();
 		File[] files = directory.listFiles();
-		if (files == null)
+		if (files != null)
 		{
-			mFileList = Collections.emptyList();
+			for (File file : files)
+			{
+				mFileList.add(file);
+			}
 		}
-		else
-		{
-			mFileList = Arrays.asList(files);
-		}
+
 		Collections.sort(mFileList, new Comparator<File>()
 		{
 			@Override
@@ -79,7 +81,13 @@ public class FileBowserAdapter extends BaseAdapter
 			}
 		});
 
-		this.mCurrentDirectory = directory;
+		mCurrentDirectory = directory;
+		mParentDirectory = mCurrentDirectory.getParentFile();
+		if (mParentDirectory != null)
+		{
+			mFileList.add(0, mParentDirectory);
+		}
+
 		notifyDataSetInvalidated();
 	}
 
@@ -98,46 +106,53 @@ public class FileBowserAdapter extends BaseAdapter
 	@Override
 	public int getCount()
 	{
-		// TODO Auto-generated method stub
 		return mFileList.size();
 	}
 
 	@Override
 	public Object getItem(int arg0)
 	{
-		// TODO Auto-generated method stub
 		return mFileList.get(arg0);
 	}
 
 	@Override
 	public long getItemId(int position)
 	{
-		// TODO Auto-generated method stub
 		return position;
 	}
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
-		// TODO Auto-generated method stub
 		File file = mFileList.get(position);
+		if (file == null)
+		{
+			return null;
+		}
 
 		LinearLayout layout = new LinearLayout(mContext);
-		ImageView imageView = new ImageView(mContext);
 
-		if (file.isDirectory())
+		ImageView imageView = new ImageView(mContext);
+		layout.addView(imageView);
+
+		TextView textView = new TextView(mContext);
+		layout.addView(textView);
+
+		if (file == mParentDirectory)
+		{
+			imageView.setImageResource(R.drawable.arrowup);
+			textView.setText(file.getAbsolutePath());
+		}
+		else if (file.isDirectory())
 		{
 			imageView.setImageResource(R.drawable.folderopen);
+			textView.setText(file.getName());
 		}
 		else
 		{
 			imageView.setImageResource(R.drawable.book);
+			textView.setText(file.getName());
 		}
-		layout.addView(imageView);
-
-		TextView textView = new TextView(mContext);
-		textView.setText(file.getName());
-		layout.addView(textView);
 
 		return layout;
 	}

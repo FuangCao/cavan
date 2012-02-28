@@ -199,32 +199,49 @@ public class BppSoapRequest
 		return getResponseAttributes(elementAction);
 	}
 
-	public String getElementContent(Element parent, String name)
+	public String getElementContent(Element parent, String name, String defvalue)
 	{
 		Element element  = (Element) parent.getElementsByTagName(name).item(0);
 
-		return element.getTextContent();
+		return element == null ? defvalue : element.getTextContent();
 	}
 
-	public int getElementContentInt(Element parent, String name)
+	public int getElementContentInt(Element parent, String name, int defvalue)
 	{
-		return Integer.decode(getElementContent(parent, name));
+		String string = getElementContent(parent, name, null);
+		if (string == null)
+		{
+			return defvalue;
+		}
+
+		return Integer.decode(string);
 	}
 
-	public boolean getElementContentBoolean(Element parent, String name)
+	public boolean getElementContentBoolean(Element parent, String name, boolean defvalue)
 	{
-		return Boolean.parseBoolean(getElementContent(parent, name).toLowerCase());
+		String string = getElementContent(parent, name, null);
+		if (string == null)
+		{
+			return defvalue;
+		}
+
+		return Boolean.parseBoolean(string.toLowerCase());
 	}
 
-	public List<String> getElementContents(Element parent, String tag, String attr)
+	public List<String> getElementContents(Element parent, String tag, String attr, List<String> defvalue)
 	{
 		Element element = (Element) parent.getElementsByTagName(tag).item(0);
 		if (element == null)
 		{
-			return null;
+			return defvalue;
 		}
 
 		NodeList nodes = element.getElementsByTagName(attr);
+		if (nodes == null)
+		{
+			return defvalue;
+		}
+
 		ArrayList<String> list = new ArrayList<String>();
 
 		for (int i = 0; ; i++)
