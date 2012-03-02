@@ -1,6 +1,7 @@
 package com.eavoo.printer;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,12 +18,42 @@ import android.widget.TextView;
 
 public class FileBowserAdapter extends BaseAdapter
 {
+	private static final String[] SupportFileExtensions =
+	{
+		".jpg",
+		".txt",
+		".pdf",
+	};
+
 	private static final String mRootDirectory = "/";
 	private static final String mDefaultDirectory = "/sdcard";
+
 	private File mCurrentDirectory;
 	private File mParentDirectory;
 	private List<File> mFileList;
 	private Context mContext;
+
+	private FileFilter mFileFilter = new FileFilter()
+	{
+		@Override
+		public boolean accept(File pathname)
+		{
+			if (pathname.isDirectory())
+			{
+				return true;
+			}
+
+			for (String extension : SupportFileExtensions)
+			{
+				if (pathname.getName().endsWith(extension))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+	};
 
 	public FileBowserAdapter(Context context, Uri uri)
 	{
@@ -58,7 +89,7 @@ public class FileBowserAdapter extends BaseAdapter
 	public void setCurrentDirectory(File directory)
 	{
 		mFileList = new ArrayList<File>();
-		File[] files = directory.listFiles();
+		File[] files = directory.listFiles(mFileFilter);
 		if (files != null)
 		{
 			for (File file : files)

@@ -84,6 +84,10 @@ public class BluetoothPrinterActivity extends Activity
 	private AlertDialog mAlertDialogYes;
 	private TextView mTextViewlertDialogYes;
 
+	private Spinner mSpinnerPageStart;
+	private Spinner mSpinnerPageEnd;
+	private PageBaseAdapter mPageBaseAdapter = new PageBaseAdapter();
+
 	private ServiceConnection mServiceConnection = new ServiceConnection()
 	{
 		@Override
@@ -243,6 +247,12 @@ public class BluetoothPrinterActivity extends Activity
 			return null;
 		}
 
+		if (mPrintJob.getPageStart() > mPrintJob.getPageEnd())
+		{
+			showAlertDialogYes("start page > end page");
+			return null;
+		}
+
 		return filename;
 	}
 
@@ -269,7 +279,7 @@ public class BluetoothPrinterActivity extends Activity
 			return false;
 		}
 
-		String message = String.format("JobBasePrint %s ...", filename);
+		String message = String.format("SimplePushPrint %s ...", filename);
 		mTextViewStatus.setText(message);
 		showProgressDialog(message);
 
@@ -326,7 +336,7 @@ public class BluetoothPrinterActivity extends Activity
 		}
 	};
 
-	private TextWatcher mTextWatcher = new TextWatcher()
+	private TextWatcher mTextWatcherFileName = new TextWatcher()
 	{
 		@Override
 		public void onTextChanged(CharSequence s, int start, int before, int count)
@@ -338,6 +348,22 @@ public class BluetoothPrinterActivity extends Activity
 			if (index >= 0)
 			{
 				mSpinnerFileType.setSelection(index);
+			}
+
+			if (pathname.endsWith(".pdf"))
+			{
+				try
+				{
+					mPageBaseAdapter.setPageCount(getPdfPageCount(pathname));
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+				catch (InterruptedException e)
+				{
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -377,6 +403,14 @@ public class BluetoothPrinterActivity extends Activity
 			case R.id.main_spinner_print_quality:
 				mPrintJob.setPrintQuality(text);
 				break;
+
+			case R.id.main_spinner_page_start:
+				mPrintJob.setPageStart(Integer.decode(text));
+				break;
+
+			case R.id.main_spinner_page_end:
+				mPrintJob.setPageEnd(Integer.decode(text));
+				break;
 			}
 		}
 
@@ -391,11 +425,12 @@ public class BluetoothPrinterActivity extends Activity
 		@Override
 		public void handleMessage(Message msg)
 		{
-			closeProgressDialog();
+			Bundle bundle;
 
 			switch (msg.what)
 			{
 			case BluetoothBasePrinter.BPP_MSG_GET_PRINTER_ATTRIBUTE_COMPLETE:
+				closeProgressDialog();
 				if (msg.arg1 < 0)
 				{
 					CavanMessage("get printer attribute failed");
@@ -414,6 +449,7 @@ public class BluetoothPrinterActivity extends Activity
 				break;
 
 			case BluetoothBasePrinter.BPP_MSG_JOB_BASE_PRINT_COMPLETE:
+				closeProgressDialog();
 				if (msg.arg1 < 0)
 				{
 					showAlertDialogYes("job base print failed!");
@@ -425,6 +461,7 @@ public class BluetoothPrinterActivity extends Activity
 				break;
 
 			case BluetoothBasePrinter.BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE:
+				closeProgressDialog();
 				if (msg.arg1 < 0)
 				{
 					showAlertDialogYes("simple push print failed!");
@@ -436,12 +473,29 @@ public class BluetoothPrinterActivity extends Activity
 				break;
 
 			case BluetoothBasePrinter.BPP_MSG_CONNECT_FAILED:
+				closeProgressDialog();
 				CavanMessage("Create connect failed");
 				break;
 
 			case BluetoothBasePrinter.BPP_MSG_GET_PRINTER_ATTRIBUTE_REQUEST:
 				CavanMessage("Get print attribute request");
 				getPrinterAttribute();
+				break;
+
+			case BluetoothBasePrinter.BPP_MSG_SET_PROGRESS_MESSAGE:
+				bundle = msg.getData();
+				if (mProgressDialog != null && bundle != null)
+				{
+					mProgressDialog.setMessage(bundle.getString("message"));
+				}
+				break;
+
+			case BluetoothBasePrinter.BPP_MSG_SET_PROGRESS_TITLE:
+				bundle = msg.getData();
+				if (mProgressDialog != null && bundle != null)
+				{
+					mProgressDialog.setTitle(bundle.getString("message"));
+				}
 				break;
 
 			default:
@@ -609,7 +663,7 @@ public class BluetoothPrinterActivity extends Activity
 		mTextViewStatus = (TextView) findViewById(R.id.main_textView_status);
 		mEditTextFilePath = (EditText) findViewById(R.id.main_editText_pathname);
 		mEditTextFilePath.setOnClickListener(mOnClickListener);
-		mEditTextFilePath.addTextChangedListener(mTextWatcher);
+		mEditTextFilePath.addTextChangedListener(mTextWatcherFileName);
 
 		mRadioGroupDevice = (RadioGroup) findViewById(R.id.main_radioGroup_device);
 
@@ -628,6 +682,14 @@ public class BluetoothPrinterActivity extends Activity
 		mSpinnerPrintQuality = (Spinner) findViewById(R.id.main_spinner_print_quality);
 		mSpinnerPrintQuality.setAdapter(mAdapterPrintQuality);
 		mSpinnerPrintQuality.setOnItemSelectedListener(mOnItemSelectedListener);
+
+		mSpinnerPageStart = (Spinner) findViewById(R.id.main_spinner_page_start);
+		mSpinnerPageStart.setOnItemSelectedListener(mOnItemSelectedListener);
+		mSpinnerPageStart.setAdapter(mPageBaseAdapter);
+
+		mSpinnerPageEnd = (Spinner) findViewById(R.id.main_spinner_page_end);
+		mSpinnerPageEnd.setOnItemSelectedListener(mOnItemSelectedListener);
+		mSpinnerPageEnd.setAdapter(mPageBaseAdapter);
 	}
 
 	@Override
@@ -662,16 +724,16 @@ public class BluetoothPrinterActivity extends Activity
 		return mHandler;
 	}
 
-	public File Pdf2Jpeg(String pdfpath, int page, String jpgname) throws IOException, InterruptedException
+	public String Pdf2Jpeg(String pdfpath, int page, String jpgname) throws IOException, InterruptedException
 	{
-		File file = new File(getCacheDir() + "/" + jpgname);
-		FileOutputStream outputStream = new FileOutputStream(file);
-
 		String command = String.format("%s %s %d", mBinaryFilePdfToJpeg, pdfpath, page);
 		Log.v(TAG, "command = " + command);
 
 		Process process = Runtime.getRuntime().exec(command);
 		InputStream inputStream = process.getInputStream();
+
+		File file = new File(getCacheDir() + "/" + jpgname);
+		FileOutputStream outputStream = new FileOutputStream(file);
 
 		StreamCopy(inputStream, outputStream);
 		inputStream.close();
@@ -684,7 +746,7 @@ public class BluetoothPrinterActivity extends Activity
 			return null;
 		}
 
-		return file;
+		return file.getPath();
 	}
 
 	public int getPdfPageCount(String pdfpath) throws IOException, InterruptedException
@@ -695,6 +757,7 @@ public class BluetoothPrinterActivity extends Activity
 		process.waitFor();
 		if (process.exitValue() != 0)
 		{
+			Log.e(TAG, "getPdfPageCount failed!");
 			return -1;
 		}
 
@@ -710,6 +773,46 @@ public class BluetoothPrinterActivity extends Activity
 		inputStream.read(buff);
 
 		return Integer.decode(new String(buff));
+	}
+
+	class PageBaseAdapter extends BaseAdapter
+	{
+		private int mPageCount = 1;
+
+		public void setPageCount(int count)
+		{
+			mPageCount = count < 0 ? 1 : count;
+			notifyDataSetChanged();
+		}
+
+		@Override
+		public int getCount()
+		{
+			return mPageCount;
+		}
+
+		@Override
+		public Object getItem(int position)
+		{
+			return null;
+		}
+
+		@Override
+		public long getItemId(int position)
+		{
+			return 0;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent)
+		{
+			TextView view = new TextView(getApplicationContext());
+			view.setText(Integer.toString(position));
+			view.setTextSize(18);
+			view.setTextColor(Color.BLACK);
+
+			return view;
+		}
 	}
 }
 

@@ -7,7 +7,7 @@ import android.os.Handler;
 
 public class SimplePushPrinter extends BluetoothBasePrinter
 {
-    public SimplePushPrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
+	public SimplePushPrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
 	{
 		super(context, handler, transport, job);
 	}
@@ -29,11 +29,11 @@ public class SimplePushPrinter extends BluetoothBasePrinter
 
 		if (ret == false || WaitPrinterReady(5000) == false)
 		{
-			SendMessage(BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE, -1, null);
+			SendMessage(BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE, -1);
 			return false;
 		}
 
-		SendMessage(BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE, 0, null);
+		SendMessage(BPP_MSG_SIMPLE_PUSH_PRINT_COMPLETE, 0);
 
 		return true;
 	}

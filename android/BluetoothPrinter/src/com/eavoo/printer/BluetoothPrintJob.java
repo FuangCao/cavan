@@ -17,6 +17,8 @@ public class BluetoothPrintJob
 	private static final byte AppTagJobId = 3;
 	private static final byte AppTagFileSize = 4;
 
+	private int mPageStart;
+	private int mPageEnd;
 	private int mCopies = 1;
 	private int mNumberUp = 1;
 	private int mJobId;
@@ -38,6 +40,26 @@ public class BluetoothPrintJob
 	private String mPrinterStateReasons;
 	private int mJobMediaSheetsCompleted;
 	private int mNumberOfInterveningJobs;
+
+	public void setPageStart(int page)
+	{
+		this.mPageStart = page;
+	}
+
+	public int getPageStart()
+	{
+		return mPageStart;
+	}
+
+	public void setPageEnd(int page)
+	{
+		this.mPageEnd = page;
+	}
+
+	public int getPageEnd()
+	{
+		return mPageEnd;
+	}
 
 	public void setPrinter(BluetoothBasePrinter printer)
 	{
@@ -448,11 +470,11 @@ public class BluetoothPrintJob
 			return null;
 		}
 
-        int dotIndex = pathname.lastIndexOf(".");
-        if (dotIndex < 0)
-        {
+		int dotIndex = pathname.lastIndexOf(".");
+		if (dotIndex < 0)
+		{
 			return null;
-        }
+		}
 
 		return pathname.substring(dotIndex + 1).toLowerCase();
 	}
@@ -466,15 +488,15 @@ public class BluetoothPrintJob
 
 		MimeTypeMap map = MimeTypeMap.getSingleton();
 
-        return map.getMimeTypeFromExtension(extension);
+		return map.getMimeTypeFromExtension(extension);
 	}
 
 	public static String GetFileMimeTypeByName(String pathname)
 	{
-        if (pathname == null)
-        {
+		if (pathname == null)
+		{
 			return null;
-        }
+		}
 
 		return GetFileMimeTypeByExtension(GetFileExtension(pathname));
 	}

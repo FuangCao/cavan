@@ -36,6 +36,8 @@ public class BluetoothBasePrinter extends Thread
 	public static final int BPP_MSG_GET_PRINTER_ATTRIBUTE_COMPLETE = 2;
 	public static final int BPP_MSG_GET_PRINTER_ATTRIBUTE_REQUEST = 3;
 	public static final int BPP_MSG_CONNECT_FAILED = 4;
+	public static final int BPP_MSG_SET_PROGRESS_MESSAGE = 5;
+	public static final int BPP_MSG_SET_PROGRESS_TITLE = 6;
 
 	public static final byte[] UUID_DPS =
 	{
@@ -200,14 +202,14 @@ public class BluetoothBasePrinter extends Thread
 
 		boolean boolResult = true;
 
-		CavanLog("Start send file");
+		int filesize = inputStream.available();
 
 		while (true)
 		{
 			int readLen = bufferedInputStream.read(buff);
 			if (readLen <= 0)
 			{
-				CavanLog("Send file complete");
+				setProgressMessage("Send file complete");
 				break;
 			}
 
@@ -221,6 +223,9 @@ public class BluetoothBasePrinter extends Thread
 				boolResult = false;
 				break;
 			}
+
+			filesize -= readLen;
+			setProgressMessage(String.format("Send file to printer\nremain = %dkB", filesize >> 10));
 		}
 
 		bufferedInputStream.close();
@@ -368,7 +373,7 @@ public class BluetoothBasePrinter extends Thread
 
 		try
 		{
-			byte[] response = GetByteArray(request, reqHeaderSet, null);
+			byte[] response = GetByteArray(request, reqHeaderSet, UUID_DPS);
 
 			return response;
 		}
@@ -387,7 +392,7 @@ public class BluetoothBasePrinter extends Thread
 		return false;
 	}
 
-	private Message BuildMessage(int what, int arg1, Bundle data)
+	public Message BuildMessage(int what, int arg1, Bundle data)
 	{
 		Message message = Message.obtain(mHandler);
 		message.what = what;
@@ -400,9 +405,19 @@ public class BluetoothBasePrinter extends Thread
 		return message;
 	}
 
-	public void SendMessage(int what, int arg1, Bundle data)
+	public void SendMessage(int what, int arg1)
 	{
-		BuildMessage(what, arg1, data).sendToTarget();
+		BuildMessage(what, arg1, null).sendToTarget();
+	}
+
+	public void setProgressMessage(String message)
+	{
+		SendMessage(BPP_MSG_SET_PROGRESS_MESSAGE, 0, message);
+	}
+
+	public void setProgressTitle(String message)
+	{
+		SendMessage(BPP_MSG_SET_PROGRESS_TITLE, 0, message);
 	}
 
 	public void SendMessageDelay(int what, int arg1, Bundle data, long delayMillis)
@@ -410,14 +425,31 @@ public class BluetoothBasePrinter extends Thread
 		mHandler.sendMessageDelayed(BuildMessage(what, arg1, data), delayMillis);
 	}
 
+	public void SendMessage(int what, int arg1, String message)
+	{
+		Bundle bundle;
+
+		if (message != null)
+		{
+			bundle = new Bundle();
+			bundle.putString("message", message);
+		}
+		else
+		{
+			bundle = null;
+		}
+
+		BuildMessage(what, arg1, bundle).sendToTarget();
+	}
+
 	public boolean WaitPrinterReady(long interval)
 	{
-		DebugLog("WaitPrinterReady");
+		setProgressMessage("Wait Printer Ready");
 
 		BluetoothPrinterAttribute attribute = new BluetoothPrinterAttribute(this);
 		attribute.setBody(attribute.buildBody("PrinterState", "PrinterStateReasons"));
 
-		while (true)
+		for (int i = 0; i < 50; i++)
 		{
 			try
 			{
@@ -436,8 +468,7 @@ public class BluetoothBasePrinter extends Thread
 			String state = attribute.getPrinterState();
 			String reasons = attribute.getPrinterStateReasons();
 
-			Log.v(TAG, "getPrinterState = " + state);
-			Log.v(TAG, "getPrinterStateReasons = " + reasons);
+			setProgressMessage(String.format("PrinterState = %s\nPrinterStateReasons = %s\ncount = %d", state, reasons, i));
 
 			if (state.equals("processing"))
 			{
@@ -455,6 +486,8 @@ public class BluetoothBasePrinter extends Thread
 				return false;
 			}
 		}
+
+		return false;
 	}
 
 	@Override
@@ -474,7 +507,7 @@ public class BluetoothBasePrinter extends Thread
 		catch (IOException e1)
 		{
 			e1.printStackTrace();
-			SendMessage(BPP_MSG_CONNECT_FAILED, -1, null);
+			SendMessage(BPP_MSG_CONNECT_FAILED, -1);
 			return;
 		}
 

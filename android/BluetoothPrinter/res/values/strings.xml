@@ -15,5 +15,7 @@
     <string name="file_path">File Pathname:</string>
     <string name="bluetooth_printer">Bluetooth Printers:</string>
     <string name="printer_scan">Scan</string>
+    <string name="start_page">Start Page:</string>
+    <string name="end_page">End Page:</string>
 
 </resources>

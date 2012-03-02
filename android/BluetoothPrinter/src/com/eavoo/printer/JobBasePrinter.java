@@ -28,9 +28,9 @@ public class JobBasePrinter extends BluetoothBasePrinter
 		return attribute.update() ? attribute : null;
 	}
 
-	public boolean SendDocument() throws IOException
+	public boolean SendDocument(String filename) throws IOException
 	{
-		return PutFile(mPrintJob.getFileName(), mPrintJob.getDocumentFormat(), mPrintJob.buildHeaderSet(), UUID_DPS);
+		return PutFile(filename, mPrintJob.getDocumentFormat(), mPrintJob.buildHeaderSet(), UUID_DPS);
 	}
 
 	public boolean SendDocument(InputStream inputStream) throws IOException
@@ -73,8 +73,10 @@ public class JobBasePrinter extends BluetoothBasePrinter
 		return true;
 	}
 
-	public boolean PrintFile() throws IOException, ParserConfigurationException, SAXException
+	public boolean PrintFile(String filename) throws IOException, ParserConfigurationException, SAXException
 	{
+		setProgressMessage("Create print job");
+
 		if (mPrintJob.create(this) == false)
 		{
 			return false;
@@ -82,7 +84,7 @@ public class JobBasePrinter extends BluetoothBasePrinter
 
 		mPrintJob.getAttributes();
 
-		if (SendDocument() == false)
+		if (SendDocument(filename) == false)
 		{
 			mPrintJob.cancel();
 			return false;
@@ -116,7 +118,7 @@ public class JobBasePrinter extends BluetoothBasePrinter
 
 		try
 		{
-			ret = PrintFile();
+			ret = PrintFile(mPrintJob.getFileName());
 		}
 		catch (IOException e)
 		{
@@ -133,11 +135,11 @@ public class JobBasePrinter extends BluetoothBasePrinter
 
 		if (ret)
 		{
-			SendMessage(BPP_MSG_JOB_BASE_PRINT_COMPLETE, 0, null);
+			SendMessage(BPP_MSG_JOB_BASE_PRINT_COMPLETE, 0);
 		}
 		else
 		{
-			SendMessage(BPP_MSG_JOB_BASE_PRINT_COMPLETE, -1, null);
+			SendMessage(BPP_MSG_JOB_BASE_PRINT_COMPLETE, -1);
 		}
 
 		return ret;
