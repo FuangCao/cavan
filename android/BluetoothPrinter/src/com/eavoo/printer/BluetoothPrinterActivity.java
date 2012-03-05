@@ -55,7 +55,7 @@ public class BluetoothPrinterActivity extends Activity
 
 	private static final String TAG = "BluetoothPrinterActivity";
 
-	private String mBinaryFilePdfToJpeg;
+	private String mBinaryFilePdfOps;
 
 	private BluetoothPrintService mBluetoothPrintService;
 	private BluetoothAdapter mBluetoothAdapter;
@@ -624,8 +624,8 @@ public class BluetoothPrinterActivity extends Activity
 		AssetManager manager = context.getAssets();
 		String parent = context.getDir("bin", Context.MODE_PRIVATE).getPath();
 
-		mBinaryFilePdfToJpeg = parent + "/pdf2jpeg";
-		readBinaryFromAssets(manager, parent, "pdf2jpeg");
+		mBinaryFilePdfOps = parent + "/pdfops";
+		readBinaryFromAssets(manager, parent, "pdfops");
 	}
 
 	@Override
@@ -726,14 +726,22 @@ public class BluetoothPrinterActivity extends Activity
 
 	public String Pdf2Jpeg(String pdfpath, int page, String jpgname) throws IOException, InterruptedException
 	{
-		String command = String.format("%s %s %d", mBinaryFilePdfToJpeg, pdfpath, page);
-		Log.v(TAG, "command = " + command);
+		StringBuilder builder = new StringBuilder();
 
-		Process process = Runtime.getRuntime().exec(command);
+		builder.append(pdfpath);
+		builder.append("\n");
+		builder.append(page);
+		builder.append("\n");
+		builder.append(jpgname);
+
+		Process process = Runtime.getRuntime().exec(mBinaryFilePdfOps + " pdf2jpeg");
+		OutputStream outputStream = process.getOutputStream();
+		outputStream.write(builder.toString().getBytes());
+		outputStream.close();
+
 		InputStream inputStream = process.getInputStream();
-
 		File file = new File(getCacheDir() + "/" + jpgname);
-		FileOutputStream outputStream = new FileOutputStream(file);
+		outputStream = new FileOutputStream(file);
 
 		StreamCopy(inputStream, outputStream);
 		inputStream.close();
@@ -751,9 +759,11 @@ public class BluetoothPrinterActivity extends Activity
 
 	public int getPdfPageCount(String pdfpath) throws IOException, InterruptedException
 	{
-		String command = String.format("%s %s", mBinaryFilePdfToJpeg, pdfpath);
-		Log.v(TAG, "command = " + command);
-		Process process = Runtime.getRuntime().exec(command);
+		Process process = Runtime.getRuntime().exec(mBinaryFilePdfOps + " page_count");
+		OutputStream outputStream = process.getOutputStream();
+		outputStream.write(pdfpath.getBytes());
+		outputStream.close();
+
 		process.waitFor();
 		if (process.exitValue() != 0)
 		{

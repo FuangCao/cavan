@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.UUID;
 
 import javax.obex.ClientOperation;
 import javax.obex.ClientSession;
@@ -68,6 +69,57 @@ public class BluetoothBasePrinter extends Thread
 		0x00, 0x00, 0x11, 0x23, 0x00, 0x00, 0x10, 0x00,
 		(byte) 0x80, 0x00, 0x00, (byte) 0x80, 0x5F, (byte) 0x9B, 0x34, (byte) 0xFB
 	};
+
+	public static String ByteToString(byte b)
+	{
+		StringBuilder builder = new StringBuilder();
+
+		for (int i = 4; i >= 0; i -= 4)
+		{
+			int temp = (b >> i) & 0x0F;
+
+			if (temp < 10)
+			{
+				builder.append((char) ('0' + temp));
+			}
+			else
+			{
+				builder.append((char) ('A' - 10 + temp));
+			}
+		}
+
+		return builder.toString();
+	}
+
+	public static String ByteArrayToString(byte[] bs, int start, int length)
+	{
+		StringBuilder builder = new StringBuilder();
+
+		for (int end = start + length; start < end; start++)
+		{
+			builder.append(ByteToString(bs[start]));
+		}
+
+		return builder.toString();
+	}
+
+	public static String ByteArrayToString(byte[] bs)
+	{
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(ByteArrayToString(bs, 0, 4) + "-");
+		builder.append(ByteArrayToString(bs, 4, 2) + "-");
+		builder.append(ByteArrayToString(bs, 6, 2) + "-");
+		builder.append(ByteArrayToString(bs, 8, 2) + "-");
+		builder.append(ByteArrayToString(bs, 10, 6));
+
+		return builder.toString();
+	}
+
+	public static UUID ByteArrayToUUID(byte[] bs)
+	{
+		return UUID.fromString(ByteArrayToString(bs));
+	}
 
 	public BluetoothBasePrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
 	{
@@ -366,14 +418,26 @@ public class BluetoothBasePrinter extends Thread
 		return response;
 	}
 
+	public byte[] getPrinterServiceUuid(UUID uuidTransport, byte[] uuidService)
+	{
+		if (mTransport.getPrinterUuid() == uuidTransport)
+		{
+			return null;
+		}
+
+		return uuidService;
+	}
+
 	public byte[] SendSoapRequest(byte[] request)
 	{
 		HeaderSet reqHeaderSet = new HeaderSet();
 		reqHeaderSet.setHeader(HeaderSet.TYPE, "x-obex/bt-SOAP");
 
+		byte[] uuid = getPrinterServiceUuid(BppObexTransport.uuidDirectPrinting, UUID_DPS);
+
 		try
 		{
-			byte[] response = GetByteArray(request, reqHeaderSet, UUID_DPS);
+			byte[] response = GetByteArray(request, reqHeaderSet, uuid);
 
 			return response;
 		}

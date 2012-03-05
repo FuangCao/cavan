@@ -14,16 +14,13 @@ import android.bluetooth.BluetoothSocket;
 
 public class BppObexTransport implements ObexTransport
 {
-	private static final UUID[] mUuidsBPP =
-	{
-		UUID.fromString("00001118-0000-1000-8000-00805F9B34FB"),
-		UUID.fromString("00001123-0000-1000-8000-00805F9B34FB"),
-		UUID.fromString("00001119-0000-1000-8000-00805F9B34FB"),
-		UUID.fromString("00001120-0000-1000-8000-00805F9B34FB"),
-		UUID.fromString("00001121-0000-1000-8000-00805F9B34FB"),
-	};
+	public static final UUID uuidDirectPrinting  = UUID.fromString("00001118-0000-1000-8000-00805F9B34FB");
+	public static final UUID uuidReferencePrinting = UUID.fromString("00001119-0000-1000-8000-00805F9B34FB");
+	public static final UUID uuidDirectPrintingReferenceObjectsService = UUID.fromString("00001120-0000-1000-8000-00805F9B34FB");
+	public static final UUID uuidReflectedUI = UUID.fromString("00001121-0000-1000-8000-00805F9B34FB");
+	public static final UUID uuidPrintingStatus = UUID.fromString("00001123-0000-1000-8000-00805F9B34FB");
 
-	private static UUID mServerUuid;
+	private static UUID mPrinterUuid;
 	private BluetoothSocket mBluetoothSocket;
 	private boolean mConnected = false;
 	private BluetoothDevice mBluetoothDevice;
@@ -31,7 +28,7 @@ public class BppObexTransport implements ObexTransport
 	public BppObexTransport(BluetoothDevice device, UUID uuid)
 	{
 		this.mBluetoothDevice = device;
-		BppObexTransport.mServerUuid = uuid;
+		BppObexTransport.mPrinterUuid = uuid;
 	}
 
 	public BppObexTransport(BluetoothDevice device)
@@ -64,42 +61,46 @@ public class BppObexTransport implements ObexTransport
 		return mBluetoothSocket.getOutputStream();
 	}
 
-	private boolean connect(UUID uuid)
+	private UUID connect(UUID... uuids)
 	{
-		try
+		for (UUID uuid : uuids)
 		{
-			mBluetoothSocket = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(uuid);
-			mBluetoothSocket.connect();
-			return true;
-		}
-		catch (IOException e) {}
+			if (uuid == null)
+			{
+				continue;
+			}
 
-		return false;
+			try
+			{
+				mBluetoothSocket = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(uuid);
+				mBluetoothSocket.connect();
+				return uuid;
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
+
+		return null;
 	}
 
 	public void connect() throws IOException
 	{
-		if (mServerUuid != null)
+		UUID uuid = connect(mPrinterUuid, uuidDirectPrinting, uuidPrintingStatus, uuidReferencePrinting, uuidReflectedUI);
+		if (uuid == null)
 		{
-			mConnected = connect(mServerUuid);
-			if (mConnected)
-			{
-				return;
-			}
+			mConnected = false;
+			throw new IOException();
 		}
 
-		for (UUID uuid : mUuidsBPP)
-		{
-			mConnected = connect(uuid);
-			if (mConnected)
-			{
-				mServerUuid = uuid;
-				return;
-			}
-		}
+		mPrinterUuid = uuid;
+		mConnected = true;
+	}
 
-		mConnected = false;
-		throw new IOException();
+	public UUID getPrinterUuid()
+	{
+		return mPrinterUuid;
 	}
 
 	public void create() throws IOException

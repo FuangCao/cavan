@@ -30,7 +30,9 @@ public class JobBasePrinter extends BluetoothBasePrinter
 
 	public boolean SendDocument(String filename) throws IOException
 	{
-		return PutFile(filename, mPrintJob.getDocumentFormat(), mPrintJob.buildHeaderSet(), UUID_DPS);
+		byte[] uuid = getPrinterServiceUuid(BppObexTransport.uuidDirectPrinting, UUID_DPS);
+
+		return PutFile(filename, mPrintJob.getDocumentFormat(), mPrintJob.buildHeaderSet(), uuid);
 	}
 
 	public boolean SendDocument(InputStream inputStream) throws IOException
@@ -38,12 +40,16 @@ public class JobBasePrinter extends BluetoothBasePrinter
 		HeaderSet headerSet = mPrintJob.buildHeaderSet();
 		headerSet.setHeader(HeaderSet.TYPE, getFileType());
 
-		return PutFile(inputStream, headerSet, UUID_DPS);
+		byte[] uuid = getPrinterServiceUuid(BppObexTransport.uuidDirectPrinting, UUID_DPS);
+
+		return PutFile(inputStream, headerSet, uuid);
 	}
 
 	public boolean SendDocument(byte[] data, HeaderSet headerSet) throws IOException
 	{
-		return PutByteArray(UUID_DPS, headerSet, data);
+		byte[] uuid = getPrinterServiceUuid(BppObexTransport.uuidDirectPrinting, UUID_DPS);
+
+		return PutByteArray(uuid, headerSet, data);
 	}
 
 	public boolean WaitJobComplete(long interval)

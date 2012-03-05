@@ -16,10 +16,11 @@ public class SimplePushPrinter extends BluetoothBasePrinter
 	public boolean BluetoothPrinterRun()
 	{
 		boolean ret;
+		byte[] uuid = getPrinterServiceUuid(BppObexTransport.uuidDirectPrinting, UUID_DPS);
 
 		try
 		{
-			ret = PutFile(getFileName(), getFileType(), null, UUID_DPS);
+			ret = PutFile(getFileName(), getFileType(), null, uuid);
 		}
 		catch (IOException e)
 		{

@@ -73,6 +73,8 @@ public class BluetoothPrintService extends Service
 		{
 			setProgressMessage(String.format("Print PDF file, start = %d, end = %d", start, end));
 
+			byte[] uuid = getPrinterServiceUuid(BppObexTransport.uuidDirectPrinting, UUID_DPS);
+
 			while (start <= end)
 			{
 				String jpgpath;
@@ -99,7 +101,7 @@ public class BluetoothPrintService extends Service
 					return false;
 				}
 
-				if (PutFile(jpgpath, BluetoothPrintJob.GetFileMimeTypeByName(jpgpath), null, UUID_DPS) == false)
+				if (PutFile(jpgpath, BluetoothPrintJob.GetFileMimeTypeByName(jpgpath), null, uuid) == false)
 				{
 					return false;
 				}
