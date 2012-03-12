@@ -435,9 +435,9 @@ public class BluetoothPrintJob
 		}
 
 		mJobState = map.get("JobState");
-		mJobMediaSheetsCompleted = Integer.decode(map.get("JobMediaSheetsCompleted"));
-		mNumberOfInterveningJobs = Integer.decode(map.get("NumberOfInterveningJobs"));
-		mOperationStatus = Integer.decode(map.get("OperationStatus"));
+		mJobMediaSheetsCompleted = BluetoothBasePrinter.getIntegerAttribute(map, "JobMediaSheetsCompleted");
+		mNumberOfInterveningJobs = BluetoothBasePrinter.getIntegerAttribute(map, "NumberOfInterveningJobs");
+		mOperationStatus = BluetoothBasePrinter.getIntegerAttribute(map, "OperationStatus");
 
 		Log.v("getAttributes", "mJobState = " + mJobState);
 		Log.v("getAttributes", "mJobMediaSheetsCompleted = " + mJobMediaSheetsCompleted);

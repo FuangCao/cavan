@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.UUID;
 
 import javax.obex.ClientOperation;
@@ -119,6 +120,19 @@ public class BluetoothBasePrinter extends Thread
 	public static UUID ByteArrayToUUID(byte[] bs)
 	{
 		return UUID.fromString(ByteArrayToString(bs));
+	}
+
+	public static int getIntegerAttribute(HashMap<String, String>map, String key)
+	{
+		String attr = map.get(key);
+
+		if (attr == null)
+		{
+			Log.v(TAG, "Attribute " + key + " is empty");
+			return 0;
+		}
+
+		return Integer.decode(attr);
 	}
 
 	public BluetoothBasePrinter(Context context, Handler handler, BppObexTransport transport, BluetoothPrintJob job)
@@ -255,19 +269,24 @@ public class BluetoothBasePrinter extends Thread
 		boolean boolResult = true;
 
 		int filesize = inputStream.available();
+		int responseCode;
 
 		while (true)
 		{
 			int readLen = bufferedInputStream.read(buff);
 			if (readLen <= 0)
 			{
-				setProgressMessage("Send file complete");
 				break;
 			}
 
 			obexOutputStream.write(buff, 0, readLen);
 
-			int responseCode = clientOperation.getResponseCode();
+			if (readLen < buff.length)
+			{
+				break;
+			}
+
+			responseCode = clientOperation.getResponseCode();
 			if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
 			{
 				ErrorLog("responseCode = " + responseCode);
@@ -284,8 +303,17 @@ public class BluetoothBasePrinter extends Thread
 		obexInputStream.close();
 		obexOutputStream.close();
 
+		responseCode = clientOperation.getResponseCode();
+		if (responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK)
+		{
+			ErrorLog("responseCode = " + responseCode);
+			ErrorLog("responseCode != ResponseCodes.OBEX_HTTP_CONTINUE && responseCode != ResponseCodes.OBEX_HTTP_OK");
+			boolResult = false;
+		}
+
 		if (boolResult)
 		{
+			setProgressMessage("Send file complete");
 			clientOperation.close();
 		}
 
@@ -492,6 +520,8 @@ public class BluetoothBasePrinter extends Thread
 	public void SendMessage(int what, int arg1, String message)
 	{
 		Bundle bundle;
+
+		DebugLog(message);
 
 		if (message != null)
 		{
