@@ -194,7 +194,7 @@ function config_single_home()
 
 function config_home()
 {
-	for home in /root /home/cavan
+	for home in /root /home/*
 	do
 		config_single_home ${home} || return 1
 	done

@@ -29,11 +29,20 @@ function read_choise()
 	done
 }
 
-make menuconfig || exit 1
+if [ "$1" ]
+then
+KERNEL_PATH=$1
+else
+KERNEL_PATH=${PWD}
+fi
+
+MAKE="make -C ${KERNEL_PATH}"
+
+${MAKE} menuconfig || exit 1
 read_choise "Do you want to compile the kernel" "Y" || exit 0
-make || exit 1
+${MAKE} || exit 1
 read_choise "Do you want to install the kernel" "Y" || exit 0
-sudo make modules_install || exit 1
-sudo make install || exit 1
-read_choise "Do you want to restart the computer" "Y" || exit 0
+sudo ${MAKE} modules_install || exit 1
+sudo ${MAKE} install || exit 1
+read_choise "Do you want to restart the computer" "N" || exit 0
 sudo reboot

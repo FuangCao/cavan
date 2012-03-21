@@ -8,7 +8,7 @@ function cavan_symlink()
 
 	if [ -L "$2" ]
 	then
-		rm $2 || return 1
+		rm "$2" || return 1
 	elif [ -d "$2" ]
 	then
 		if [ -d "$1" ]
