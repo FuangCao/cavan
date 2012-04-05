@@ -3,105 +3,15 @@
 // Create date: 2011-09-24 03:01:54
 
 #include <cavan.h>
+#include <cavan/command.h>
 #include <cavan_map.h>
-
-struct cavan_command_map
-{
-	const char *name;
-	int (*main_func)(int argc, char *argv[]);
-};
 
 const struct cavan_command_map cmd_map_table[] =
 {
 #include <cavan_map.c>
 };
 
-static void print_command_table(const struct cavan_command_map *p, size_t size)
-{
-	const struct cavan_command_map *p_end;
-	char buff[MB(1)], *buff_p;
-
-	if (size == 0)
-	{
-		return;
-	}
-
-	pr_bold_info("Available command is:");
-
-	for (p_end = p + size, buff_p = buff; p < p_end; p++)
-	{
-		buff_p += sprintf(buff_p, "%s, ", p->name);
-	}
-
-	*(buff_p - 2) = 0;
-
-	print_string(buff);
-}
-
-static const struct cavan_command_map *find_command(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname, size_t size)
-{
-	while (p < p_end && text_ncmp(cmdname, p->name, size))
-	{
-		p++;
-	}
-
-	return p < p_end ? p : NULL;
-}
-
-static void print_maybe_command(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname)
-{
-	int size;
-	const struct cavan_command_map *p_match;
-	char buff[MB(1)], *buff_p;
-
-	for (size = text_len(cmdname); size && ((p_match = find_command(p, p_end, cmdname, size))) == NULL; size--);
-
-	if (size == 0)
-	{
-		pr_red_info("No such command");
-		return;
-	}
-
-	pr_bold_info("This command maybe:");
-
-	buff_p = buff;
-
-	do {
-		buff_p += sprintf(buff_p, "%s, ", p_match->name);
-	} while ((p_match = find_command(p_match + 1, p_end, cmdname, size)));
-
-	*(buff_p - 2) = 0;
-
-	print_string(buff);
-}
-
-static const struct cavan_command_map *match_command(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname)
-{
-	while (p < p_end && text_cmp(cmdname, p->name))
-	{
-		p++;
-	}
-
-	return p < p_end ? p : NULL;
-}
-
 int main(int argc, char *argv[])
 {
-	const struct cavan_command_map *p;
-
-	if (argc < 2)
-	{
-		print_command_table(cmd_map_table, ARRAY_SIZE(cmd_map_table));
-		return -1;
-	}
-
-	p = match_command(cmd_map_table, cmd_map_table + ARRAY_SIZE(cmd_map_table), argv[1]);
-	if (p)
-	{
-		return p->main_func(argc - 1, argv + 1);
-	}
-
-	print_maybe_command(cmd_map_table, cmd_map_table + ARRAY_SIZE(cmd_map_table), argv[1]);
-
-	return -1;
+	return find_and_exec_command(cmd_map_table, ARRAY_SIZE(cmd_map_table), argc, argv);
 }

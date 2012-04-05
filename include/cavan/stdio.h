@@ -48,32 +48,53 @@
 #define println_cyan(fmt, arg ...)		print_color_text(FONT_CYAN_FOREGROUND, fmt, ##arg)
 #define println_white(fmt, arg ...)		print_color_text(FONT_WHITE_FOREGROUND, fmt, ##arg)
 
+#define CAVAN_COLOR_STAND				"\033[0m"
+#define CAVAN_COLOR_BOLD				"\033[1m"
+#define CAVAN_COLOR_RED					"\033[31m"
+#define CAVAN_COLOR_GREEN				"\033[32m"
+#define CAVAN_COLOR_BLUE				"\033[34m"
+
+#define pr_std_info(fmt, args ...) \
+	printf("%s[%d]: " fmt "\n", __FUNCTION__, __LINE__, ##args)
+
+#define pr_color_info(color, fmt, args ...) \
+	pr_std_info(color fmt CAVAN_COLOR_STAND, ##args)
+
 #define pr_red_info(fmt, args ...) \
-	println("\033[31m" fmt "\033[0m", ##args)
+	pr_color_info(CAVAN_COLOR_RED, fmt, ##args)
 
 #define pr_green_info(fmt, args ...) \
-	println("\033[32m" fmt "\033[0m", ##args)
+	pr_color_info(CAVAN_COLOR_GREEN, fmt, ##args)
 
 #define pr_blue_info(fmt, args ...) \
-	println("\033[34m" fmt "\033[0m", ##args)
+	pr_color_info(CAVAN_COLOR_BLUE, fmt, ##args)
 
 #define pr_bold_info(fmt, args ...) \
-	println("\033[1m" fmt "\033[0m", ##args)
+	pr_color_info(CAVAN_COLOR_BOLD, fmt, ##args)
+
+#define pr_std_pos(fmt) \
+	printf(fmt "\n", __FILE__, __FUNCTION__, __LINE__)
 
 #define pr_pos_info() \
-	println("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
+	pr_std_pos("%s => %s[%d]")
+
+#define pr_color_pos(color) \
+	pr_std_pos(color "%s => %s[%d]" CAVAN_COLOR_STAND)
 
 #define pr_red_pos() \
-	pr_red_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
+	pr_color_pos(CAVAN_COLOR_RED);
 
 #define pr_green_pos() \
-	pr_green_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
+	pr_color_pos(CAVAN_COLOR_GREEN);
 
 #define pr_blue_pos() \
-	pr_blue_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
+	pr_color_pos(CAVAN_COLOR_BLUE);
 
 #define pr_bold_pos() \
-	pr_bold_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
+	pr_color_pos(CAVAN_COLOR_BOLD);
+
+#define pr_date_info(name) \
+	printf(CAVAN_COLOR_GREEN "Cavan %s Build Date: %s %s" CAVAN_COLOR_STAND, name, __DATE__, __TIME__);
 
 #define show_value(val) \
 	println(#val " = %d", val)

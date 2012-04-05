@@ -87,13 +87,13 @@ liba: $(TARGET_LIBA)
 
 libso: $(TARGET_LIBSO)
 
-ifeq ($(BUILD_TYPE),debug)
+ifeq "$(BUILD_TYPE)" "debug"
 app: $(TARGET_LIBSO) $(APP_OBJ_FILES)
 	$(Q)$(MAKE) app-base
 
 app-base: $(TARGET_BINS)
 
-cavan: $(TARGET_LIBO) $(CAVAN_OBJ_FILES)
+cavan: $(TARGET_LIBSO) $(CAVAN_OBJ_FILES)
 	$(Q)$(MAKE) cavan-base
 
 cavan-base: $(TARGET_CAVAN)
