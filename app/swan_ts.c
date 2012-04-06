@@ -27,6 +27,34 @@ static struct cavan_command_map cmd_map[] =
 		.main_func = swan_ts_write_registers_main,
 	},
 	{
+		.name = "read_data",
+		.main_func = swan_ts_read_data_main,
+	},
+	{
+		.name = "poll_data",
+		.main_func = swan_ts_poll_data_main,
+	},
+	{
+		.name = "write_data",
+		.main_func = swan_ts_write_data_main,
+	},
+	{
+		.name = "get_address",
+		.main_func = swan_ts_get_client_address_main,
+	},
+	{
+		.name = "set_address",
+		.main_func = swan_ts_set_client_address_main,
+	},
+	{
+		.name = "test_client",
+		.main_func = swan_ts_test_client_main,
+	},
+	{
+		.name = "detect_clients",
+		.main_func = swan_ts_detect_clients_main,
+	},
+	{
 		.name = "ft5406_upgrade",
 		.main_func = ft5406_firmware_upgrade_main,
 	}

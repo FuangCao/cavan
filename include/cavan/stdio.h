@@ -55,7 +55,7 @@
 #define CAVAN_COLOR_BLUE				"\033[34m"
 
 #define pr_std_info(fmt, args ...) \
-	printf("%s[%d]: " fmt "\n", __FUNCTION__, __LINE__, ##args)
+	printf(fmt "\n", ##args)
 
 #define pr_color_info(color, fmt, args ...) \
 	pr_std_info(color fmt CAVAN_COLOR_STAND, ##args)

@@ -10,7 +10,7 @@
 #include <cavan/dd.h>
 #include <cavan/swan_dev.h>
 #include <cavan/swan_mac.h>
-#include <cavan/swan_tsc.h>
+#include <cavan/swan_ts.h>
 #include <cavan/swan_pkg.h>
 #include <sys/reboot.h>
 #include <pthread.h>
@@ -781,7 +781,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 	}
 
 out_upgrade_success:
-	touch_screen_calibration();
+	swan_ts_calibration(NULL);
 
 	right_msg("Upgrade Successed");
 	swan_show_picture("success", 1);
@@ -904,7 +904,7 @@ int fupgrade_simple(int pkg_fd)
 		return ret;
 	}
 
-	touch_screen_calibration();
+	swan_ts_calibration(NULL);
 
 	ret = destroy_environment(EMMC_DEVICE);
 	if (ret < 0)

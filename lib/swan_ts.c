@@ -6,6 +6,7 @@
 
 #include <cavan.h>
 #include <cavan/swan_ts.h>
+#include <cavan/event.h>
 
 int swan_ts_open_misc_device(const char *devpath)
 {
@@ -25,6 +26,33 @@ int swan_ts_open_misc_device(const char *devpath)
 	return fd;
 }
 
+int swan_ts_input_calibration(const char *devname)
+{
+	int ret;
+	struct event_desc desc;
+
+	if (devname == NULL)
+	{
+		devname = SWAN_TS_DEVICE_NAME;
+	}
+
+	ret = event_init_by_name(&desc, devname);
+	if (ret < 0)
+	{
+		pr_red_info("No input event named \"%s\"", devname);
+		return ret;
+	}
+
+	pr_std_info("Device \"%s\" is named \"%s\"", desc.dev_path, devname);
+	pr_bold_info("Calibration, don't touch the screen");
+
+	ret = ioctl(desc.fd, SWAN_TS_INPUT_IOCTL_CALIBRATION);
+
+	event_uninit(&desc);
+
+	return ret;
+}
+
 int swan_ts_calibration(const char *devpath)
 {
 	int fd;
@@ -33,10 +61,22 @@ int swan_ts_calibration(const char *devpath)
 	fd = swan_ts_open_misc_device(devpath);
 	if (fd < 0)
 	{
-		return fd;
+		pr_bold_info("Retry use input calibration");
+		return swan_ts_input_calibration(devpath);
 	}
 
 	ret = ioctl(fd, SWAN_TS_IOCTL_CALIBRATION);
+
+	close(fd);
+
+	return ret;
+}
+
+int swan_ts_calication_main(int argc, char *argv[])
+{
+	int ret;
+
+	ret = swan_ts_calibration(argc > 1 ? argv[1] : NULL);
 	if (ret < 0)
 	{
 		pr_red_info("Failed");
@@ -46,14 +86,7 @@ int swan_ts_calibration(const char *devpath)
 		pr_green_info("OK");
 	}
 
-	close(fd);
-
 	return ret;
-}
-
-int swan_ts_calication_main(int argc, char *argv[])
-{
-	return swan_ts_calibration(argc > 1 ? argv[1] : NULL);
 }
 
 int swan_ts_read_registers_fd(int fd, u16 addr, void *buff, size_t size)
@@ -65,7 +98,7 @@ int swan_ts_read_registers_fd(int fd, u16 addr, void *buff, size_t size)
 		.data = buff
 	};
 
-	return ioctl(fd, SWAN_TS_IOCTL_READ_I2C, &req);
+	return ioctl(fd, SWAN_TS_IOCTL_READ_REGISTERS, &req);
 }
 
 int swan_ts_read_registers(const char *devpath, u16 addr, void *buff, size_t size)
@@ -177,6 +210,121 @@ out_free_buff:
 	return ret;
 }
 
+int swan_ts_read_data_fd(int fd, void *buff, size_t size)
+{
+	struct swan_ts_i2c_request req =
+	{
+		.offset = 0,
+		.size = size,
+		.data = buff
+	};
+
+	return ioctl(fd, SWAN_TS_IOCTL_READ_DATA, &req);
+}
+
+int swan_ts_read_data(const char *devpath, void *buff, size_t size)
+{
+	int fd;
+	int ret;
+
+	fd = swan_ts_open_misc_device(devpath);
+	if (fd < 0)
+	{
+		return fd;
+	}
+
+	ret = swan_ts_read_data_fd(fd, buff, size);
+
+	close(fd);
+
+	return ret;
+}
+
+int swan_ts_read_data_main(int argc, char *argv[])
+{
+	int ret;
+	u16 count;
+	char *buff;
+
+	count = argc > 1 ? text2value_unsigned(argv[1], NULL, 10) : 1;
+
+	buff = malloc(count);
+	if (buff == NULL)
+	{
+		pr_red_info("malloc");
+		return -ENOMEM;
+	}
+
+	println("count = %d", count);
+
+	ret = swan_ts_read_data(NULL, buff, count);
+	if (ret < 0)
+	{
+		pr_red_info("swan_ts_read_data");
+		goto out_free_buff;
+	}
+
+	print_mem(buff, count);
+
+out_free_buff:
+	free(buff);
+
+	return ret;
+}
+
+int swan_ts_poll_data_main(int argc, char *argv[])
+{
+	int ret;
+	u16 count;
+	u32 timeout;
+	int fd;
+	char *buff;
+	const char *devpath;
+
+	assert(argc > 1);
+
+	count = text2value_unsigned(argv[1], NULL, 10);
+	timeout = argc > 2 ? text2value_unsigned(argv[2], NULL, 10) : 200;
+	devpath = argc > 3 ? argv[3] : SWAN_TS_MISC_DEVICE;
+
+	println("count = %d, timeout = %d, devpath = %s", count, timeout, devpath);
+
+	buff = malloc(count);
+	if (buff == NULL)
+	{
+		pr_red_info("malloc");
+		return -ENOMEM;
+	}
+
+	fd = swan_ts_open_misc_device(devpath);
+	if (fd < 0)
+	{
+		pr_red_info("swan_ts_open_misc_device");
+		ret = fd;
+		goto out_free_buff;
+	}
+
+	while (1)
+	{
+		msleep(timeout);
+
+		ret = swan_ts_read_data_fd(fd, buff, count);
+		if (ret < 0)
+		{
+			continue;
+		}
+
+		print_mem(buff, count);
+	}
+
+	close(fd);
+
+out_free_buff:
+	free(buff);
+
+	return ret;
+}
+
 int swan_ts_write_registers_fd(int fd, u16 addr, const void *buff, size_t size)
 {
 	struct swan_ts_i2c_request req =
@@ -186,7 +334,7 @@ int swan_ts_write_registers_fd(int fd, u16 addr, const void *buff, size_t size)
 		.data = (void *)buff
 	};
 
-	return ioctl(fd, SWAN_TS_IOCTL_WRITE_I2C, &req);
+	return ioctl(fd, SWAN_TS_IOCTL_WRITE_REGISTERS, &req);
 }
 
 int swan_ts_write_registers(const char *devpath, u16 addr, const void *buff, size_t size)
@@ -244,6 +392,229 @@ int swan_ts_write_registers_main(int argc, char *argv[])
 	free(buff);
 
 	return ret;
+}
+
+int swan_ts_write_data_fd(int fd, const void *buff, size_t size)
+{
+	struct swan_ts_i2c_request req =
+	{
+		.offset = 0,
+		.size = size,
+		.data = (void *)buff
+	};
+
+	return ioctl(fd, SWAN_TS_IOCTL_WRITE_DATA, &req);
+}
+
+int swan_ts_write_data(const char *devpath, const void *buff, size_t size)
+{
+	int fd;
+	int ret;
+
+	fd = swan_ts_open_misc_device(devpath);
+	if (fd < 0)
+	{
+		return fd;
+	}
+
+	ret = swan_ts_write_data_fd(fd, buff, size);
+
+	close(fd);
+
+	return ret;
+}
+
+int swan_ts_write_data_main(int argc, char *argv[])
+{
+	int i;
+	int ret;
+	char *buff;
+	u16 count;
+
+	assert(argc > 1);
+
+	count = argc - 1;
+
+	buff = malloc(count);
+
+	for (i = 0; i < count; i++)
+	{
+		buff[i] = text2value_unsigned(argv[i + 1], NULL, 10);
+	}
+
+	println("count = %d", count);
+	println("The data is:");
+	print_mem(buff, count);
+
+	ret = swan_ts_write_data(NULL, buff, count);
+	if (ret < 0)
+	{
+		pr_red_info("Failed");
+	}
+	else
+	{
+		pr_green_info("OK");
+	}
+
+	free(buff);
+
+	return ret;
+}
+
+int swan_ts_get_client_address(const char *devpath, u16 *addr)
+{
+	int fd;
+
+	fd = swan_ts_open_misc_device(devpath);
+	if (fd < 0)
+	{
+		return fd;
+	}
+
+	return swan_ts_get_client_address_fd(fd, addr);
+}
+
+int swan_ts_get_client_address_main(int argc, char *argv[])
+{
+	int ret;
+	u16 addr;
+
+	ret = swan_ts_get_client_address(argc > 1 ? argv[1] : NULL, &addr);
+	if (ret < 0)
+	{
+		pr_red_info("swan_ts_get_client_address");
+		return ret;
+	}
+
+	pr_bold_info("Client address = %d = 0x%04x", addr, addr);
+
+	return 0;
+}
+
+int swan_ts_set_client_address(const char *devpath, u16 addr)
+{
+	int fd;
+
+	fd = swan_ts_open_misc_device(devpath);
+	if (fd < 0)
+	{
+		return fd;
+	}
+
+	return swan_ts_set_client_address_fd(fd, addr);
+}
+
+int swan_ts_set_client_address_main(int argc, char *argv[])
+{
+	u16 addr;
+
+	assert(argc > 1);
+
+	addr = text2value_unsigned(argv[1], NULL, 10);
+
+	println("Client address = %d = 0x%04x", addr, addr);
+
+	return swan_ts_set_client_address(argc > 2 ? argv[2] : NULL, addr);
+}
+
+int swan_ts_detect_clients_fd(int fd, u16 start, u16 end)
+{
+	u32 args;
+
+	if (start > end)
+	{
+		u16 temp;
+
+		temp = start;
+		start = end;
+		end = temp;
+	}
+
+	println("Start = %d = 0x%04x, End = %d = 0x%04x", start, start, end, end);
+	args = start << 16 | end;
+
+	return ioctl(fd, SWAN_TS_IOCTL_DETECT_CLIENT, &args);
+}
+
+int swan_ts_detect_clients(const char *devpath, u16 start, u16 end)
+{
+	int ret;
+	int fd;
+
+	fd = swan_ts_open_misc_device(devpath);
+	if (fd < 0)
+	{
+		return fd;
+	}
+
+	ret = swan_ts_detect_clients_fd(fd, start, end);
+
+	close(fd);
+
+	return ret;
+}
+
+int swan_ts_detect_clients_main(int argc, char *argv[])
+{
+	u16 start;
+	u16 end;
+
+	start = argc > 1 ? text2value_unsigned(argv[1], NULL, 10) : 1;
+	end = argc > 2 ? text2value_unsigned(argv[2], NULL, 10) : 0x7F;
+
+	return swan_ts_detect_clients(argc > 3 ? argv[3] : NULL, start, end);
+}
+
+int swan_ts_test_client_fd(int fd, u16 addr)
+{
+	int ret;
+
+	println("Test client %d = 0x%04x", addr, addr);
+
+	ret = ioctl(fd, SWAN_TS_IOCTL_TEST_CLIENT, &addr);
+	if (ret < 0)
+	{
+		pr_red_info("Failed");
+	}
+	else
+	{
+		pr_green_info("OK");
+	}
+
+	return ret;
+}
+
+int swan_ts_test_client(const char *devpath, u16 addr)
+{
+	int ret;
+	int fd;
+
+	fd = swan_ts_open_misc_device(devpath);
+	if (fd < 0)
+	{
+		return fd;
+	}
+
+	ret = swan_ts_test_client_fd(fd, addr);
+
+	close(fd);
+
+	return ret;
+}
+
+int swan_ts_test_client_main(int argc, char *argv[])
+{
+	int i;
+	u16 addr;
+
+	for (i = 1; i < argc; i++)
+	{
+		addr = text2value_unsigned(argv[i], NULL, 10);
+
+		swan_ts_test_client(NULL, addr);
+	}
+
+	return 0;
 }
 
 int ft5406_firmware_upgrade_main(int argc, char *argv[])
