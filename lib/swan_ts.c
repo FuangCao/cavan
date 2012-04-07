@@ -8,7 +8,7 @@
 #include <cavan/swan_ts.h>
 #include <cavan/event.h>
 
-int swan_ts_open_misc_device(const char *devpath)
+int swan_ts_open_misc_device(const char *devpath, int flags)
 {
 	int fd;
 
@@ -17,7 +17,7 @@ int swan_ts_open_misc_device(const char *devpath)
 		devpath = SWAN_TS_MISC_DEVICE;
 	}
 
-	fd = open(devpath, 0);
+	fd = open(devpath, flags);
 	if (fd < 0)
 	{
 		pr_red_info("Open device \"%s\" failed", devpath);
@@ -58,7 +58,7 @@ int swan_ts_calibration(const char *devpath)
 	int fd;
 	int ret;
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		pr_bold_info("Retry use input calibration");
@@ -106,7 +106,7 @@ int swan_ts_read_registers(const char *devpath, u16 addr, void *buff, size_t siz
 	int fd;
 	int ret;
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		return fd;
@@ -181,7 +181,7 @@ int swan_ts_poll_registers_main(int argc, char *argv[])
 		return -ENOMEM;
 	}
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		pr_red_info("swan_ts_open_misc_device");
@@ -227,7 +227,7 @@ int swan_ts_read_data(const char *devpath, void *buff, size_t size)
 	int fd;
 	int ret;
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		return fd;
@@ -296,7 +296,7 @@ int swan_ts_poll_data_main(int argc, char *argv[])
 		return -ENOMEM;
 	}
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		pr_red_info("swan_ts_open_misc_device");
@@ -342,7 +342,7 @@ int swan_ts_write_registers(const char *devpath, u16 addr, const void *buff, siz
 	int fd;
 	int ret;
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		return fd;
@@ -411,7 +411,7 @@ int swan_ts_write_data(const char *devpath, const void *buff, size_t size)
 	int fd;
 	int ret;
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		return fd;
@@ -465,7 +465,7 @@ int swan_ts_get_client_address(const char *devpath, u16 *addr)
 {
 	int fd;
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		return fd;
@@ -495,7 +495,7 @@ int swan_ts_set_client_address(const char *devpath, u16 addr)
 {
 	int fd;
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		return fd;
@@ -541,7 +541,7 @@ int swan_ts_detect_clients(const char *devpath, u16 start, u16 end)
 	int ret;
 	int fd;
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		return fd;
@@ -589,7 +589,7 @@ int swan_ts_test_client(const char *devpath, u16 addr)
 	int ret;
 	int fd;
 
-	fd = swan_ts_open_misc_device(devpath);
+	fd = swan_ts_open_misc_device(devpath, 0);
 	if (fd < 0)
 	{
 		return fd;
@@ -617,7 +617,163 @@ int swan_ts_test_client_main(int argc, char *argv[])
 	return 0;
 }
 
+int ft5406_parse_app_file(const char *cfgpath, char *buff, size_t size)
+{
+	ssize_t readlen;
+	char *text_buff, *p, *p_end;
+	char *buff_bak, *buff_end;
+	u8 value;
+
+	readlen = file_get_size(cfgpath);
+	if (readlen < 0)
+	{
+		pr_red_info("file_get_size %s", cfgpath);
+		return readlen;
+	}
+
+	text_buff = malloc(readlen);
+	if (text_buff == NULL)
+	{
+		pr_red_info("malloc");
+		return -ENOMEM;
+	}
+
+	readlen = file_read(cfgpath, text_buff, readlen);
+	if (readlen < 0)
+	{
+		pr_red_info("file_read %s", cfgpath);
+		free(text_buff);
+		return readlen;
+	}
+
+	buff_bak = buff;
+	buff_end = buff + size;
+
+	for (p = text_buff, p_end = p + readlen; p < p_end; p++)
+	{
+		if (*p != 'x' && *p != 'X')
+		{
+			continue;
+		}
+
+		for (value = 0, p++; p < p_end; p++)
+		{
+			int temp;
+
+			temp = char2value(*p);
+			if (temp > 15 || temp < 0)
+			{
+				break;
+			}
+
+			value = value << 4 | temp;
+		}
+
+		if (buff < buff_end)
+		{
+			*buff++ = value;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	free(text_buff);
+
+	return buff - buff_bak;
+}
+
+int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
+{
+	int ret;
+	char buff[KB(50)];
+	ssize_t writelen, bufflen;
+
+	bufflen = ft5406_parse_app_file(cfgpath, buff, sizeof(buff));
+	if (bufflen < 0)
+	{
+		pr_red_info("ft5406_parse_app_file");
+		return bufflen;
+	}
+
+	println("bufflen = %d", bufflen);
+
+	ret = ft5406_upgrade_start(dev_fd);
+	if (ret < 0)
+	{
+		pr_red_info("ft5406_upgrade_start");
+		return ret;
+	}
+
+	ret = ft5406_erase_app(dev_fd);
+	if (ret < 0)
+	{
+		pr_red_info("ft5406_erase_app");
+		return ret;
+	}
+
+	writelen = write(dev_fd, buff, bufflen - 6);
+	if (writelen < 0)
+	{
+		pr_red_info("write");
+		return writelen;
+	}
+
+	ret = lseek(dev_fd, 0x6FFA, SEEK_SET);
+	if (ret < 0)
+	{
+		pr_red_info("lseek");
+		return ret;
+	}
+
+	writelen = write(dev_fd, buff + writelen, 6);
+	if (writelen < 0)
+	{
+		pr_red_info("write");
+		return writelen;
+	}
+
+	return ft5406_upgrade_finish(dev_fd);
+}
+
+int ft5406_firmware_upgrade(const char *devpath, const char *cfgpath)
+{
+	int dev_fd;
+	int ret;
+
+	dev_fd = swan_ts_open_misc_device(devpath, O_WRONLY);
+	if (dev_fd < 0)
+	{
+		return dev_fd;
+	}
+
+	ret = ft5406_firmware_upgrade_fd(dev_fd, cfgpath);
+
+	close(dev_fd);
+
+	return ret;
+}
+
 int ft5406_firmware_upgrade_main(int argc, char *argv[])
 {
-	return 0;
+	int ret;
+	const char *cfgpath, *devpath;
+
+	assert(argc > 1);
+
+	cfgpath = argv[1];
+	devpath = argc > 2 ? argv[2] : NULL;
+
+	ret = ft5406_firmware_upgrade(devpath, cfgpath);
+	if (ret < 0)
+	{
+		pr_red_info("Failed");
+	}
+	else
+	{
+		pr_green_info("OK");
+	}
+
+	return ret;
 }

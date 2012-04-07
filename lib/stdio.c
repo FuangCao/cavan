@@ -433,7 +433,7 @@ void print_title(const char *title, char sep, size_t size)
 
 void print_mem(const void *mem, size_t size)
 {
-	const char *p, *endp;
+	const u8 *p, *endp;
 
 	for (p = mem, endp = p + size; p < endp; p++)
 	{

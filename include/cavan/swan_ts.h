@@ -54,7 +54,15 @@ enum swan_ts_ioctl_type
 #define SWAN_TS_IOCTL_TEST_CLIENT			SWAN_TS_CORE_IOW(0x08, u16)
 #define SWAN_TS_IOCTL_DETECT_CLIENT			SWAN_TS_CORE_IOW(0x09, u32)
 
-int swan_ts_open_misc_device(const char *devpath);
+#define FT5406_IOCTL_UPGRADE_START			SWAN_TS_DEVICE_IO(0x01)
+#define FT5406_IOCTL_UPGRADE_FINISH			SWAN_TS_DEVICE_IO(0x02)
+#define FT5406_IOCTL_ERASE_APP_CONFIG		SWAN_TS_DEVICE_IO(0x03)
+#define FT5406_IOCTL_ERASE_APP				SWAN_TS_DEVICE_IO(0x04)
+#define FT5406_IOCTL_ERASE_CONFIG			SWAN_TS_DEVICE_IO(0x05)
+#define FT5406_IOCTL_ERASE_PARAM			SWAN_TS_DEVICE_IO(0x06)
+#define FT5406_IOCTL_READ_CHECKSUM			SWAN_TS_DEVICE_IOR(0x07, u8)
+
+int swan_ts_open_misc_device(const char *devpath, int flags);
 
 int swan_ts_input_calibration(const char *devname);
 int swan_ts_calibration(const char *devpath);
@@ -102,5 +110,40 @@ static inline int swan_ts_get_client_address_fd(int fd, u16 *addr)
 static inline int swan_ts_set_client_address_fd(int fd, u16 addr)
 {
 	return ioctl(fd, SWAN_TS_IOCTL_SET_CLIENT_ADDRESS, &addr);
+}
+
+static inline int ft5406_upgrade_start(int fd)
+{
+	return ioctl(fd, FT5406_IOCTL_UPGRADE_START);
+}
+
+static inline int ft5406_upgrade_finish(int fd)
+{
+	return ioctl(fd, FT5406_IOCTL_UPGRADE_FINISH);
+}
+
+static inline int ft5406_erase_app_and_config(int fd)
+{
+	return ioctl(fd, FT5406_IOCTL_ERASE_APP_CONFIG);
+}
+
+static inline int ft5406_erase_app(int fd)
+{
+	return ioctl(fd, FT5406_IOCTL_ERASE_APP);
+}
+
+static inline int ft5406_erase_config(int fd)
+{
+	return ioctl(fd, FT5406_IOCTL_ERASE_CONFIG);
+}
+
+static inline int ft5406_erase_param(int fd)
+{
+	return ioctl(fd, FT5406_IOCTL_ERASE_PARAM);
+}
+
+static inline int ft5406_read_checksum(int fd, u8 *checksum)
+{
+	return ioctl(fd, FT5406_IOCTL_READ_CHECKSUM, checksum);
 }
 
