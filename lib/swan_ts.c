@@ -684,14 +684,39 @@ int ft5406_parse_app_file(const char *cfgpath, char *buff, size_t size)
 	return buff - buff_bak;
 }
 
+u8 ft5406_calculate_checksum(const void *buff, size_t size)
+{
+	const void *buff_end;
+	u8 checksum;
+
+	for (buff_end = buff + size, checksum = 0; buff < buff_end; buff++)
+	{
+		checksum ^= *(u8 *)buff;
+	}
+
+	return checksum;
+}
+
+int ft5406_firmware_write_last_data(int fd, const void *buff, size_t size)
+{
+	struct ft5406_firmware_data_package pkg =
+	{
+		.size = size,
+		.data = (void *)buff
+	};
+
+	return ioctl(fd, FT5406_IOCTL_SINGLE_WRITE, &pkg);
+}
+
 int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
 {
 	int ret;
-	char buff[KB(50)];
+	char buff[KB(50)] ;
 	ssize_t writelen, bufflen;
+	u8 checksum[2];
 
-	bufflen = ft5406_parse_app_file(cfgpath, buff, sizeof(buff));
-	if (bufflen < 0)
+	bufflen = ft5406_parse_app_file(cfgpath, buff, sizeof(buff)) - 2;
+	if (bufflen < 6)
 	{
 		pr_red_info("ft5406_parse_app_file");
 		return bufflen;
@@ -699,7 +724,7 @@ int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
 
 	println("bufflen = %d", bufflen);
 
-	ret = ft5406_upgrade_start(dev_fd);
+	ret = ft5406_upgrade_enter(dev_fd);
 	if (ret < 0)
 	{
 		pr_red_info("ft5406_upgrade_start");
@@ -720,18 +745,28 @@ int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
 		return writelen;
 	}
 
-	ret = lseek(dev_fd, 0x6FFA, SEEK_SET);
+	writelen = ft5406_firmware_write_last_data(dev_fd, buff + writelen, 6);
+	if (writelen < 0)
+	{
+		pr_red_info("ft5406_firmware_write_last_data");
+		return writelen;
+	}
+
+	ret = ft5406_read_checksum(dev_fd, checksum);
 	if (ret < 0)
 	{
-		pr_red_info("lseek");
+		pr_red_info("ft5406_read_checksum");
 		return ret;
 	}
 
-	writelen = write(dev_fd, buff + writelen, 6);
-	if (writelen < 0)
+	checksum[1] = ft5406_calculate_checksum(buff, bufflen);
+
+	pr_bold_info("Source checksum = 0x%02x, Dest checksum = 0x%02x", checksum[1], checksum[0]);
+
+	if (checksum[0] != checksum[1])
 	{
-		pr_red_info("write");
-		return writelen;
+		pr_red_info("Checksum do't match");
+		return -EFAULT;
 	}
 
 	return ft5406_upgrade_finish(dev_fd);

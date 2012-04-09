@@ -195,7 +195,7 @@ static char *ftp_file_time_tostring(const time_t *time, char *text)
 		mem_set8(&ti, 0, sizeof(ti));
 	}
 
-	return text + sprintf(text, "%s %02d %02d:%02d", month_tostring(ti.tm_mon), ti.tm_mday, ti.tm_hour, ti.tm_mday);
+	return text + sprintf(text, "%s %02d %02d:%02d", month_tostring(ti.tm_mon), ti.tm_mday, ti.tm_hour, ti.tm_min);
 }
 
 char *ftp_file_stat_tostring(const char *filepath, char *text)
@@ -595,6 +595,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			{
 				reply = "226 List send complete";
 			}
+
 			break;
 
 		/* size */

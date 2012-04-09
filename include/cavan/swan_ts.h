@@ -25,6 +25,12 @@ enum swan_ts_ioctl_type
 	SWAN_TS_IOCTL_TYPE_OTHER
 };
 
+struct ft5406_firmware_data_package
+{
+	u32 size;
+	void *data;
+};
+
 #define SWAN_TS_CORE_IO(nr) \
 	_IO(SWAN_TS_IOCTL_TYPE_CORE, nr)
 
@@ -54,13 +60,15 @@ enum swan_ts_ioctl_type
 #define SWAN_TS_IOCTL_TEST_CLIENT			SWAN_TS_CORE_IOW(0x08, u16)
 #define SWAN_TS_IOCTL_DETECT_CLIENT			SWAN_TS_CORE_IOW(0x09, u32)
 
-#define FT5406_IOCTL_UPGRADE_START			SWAN_TS_DEVICE_IO(0x01)
-#define FT5406_IOCTL_UPGRADE_FINISH			SWAN_TS_DEVICE_IO(0x02)
-#define FT5406_IOCTL_ERASE_APP_CONFIG		SWAN_TS_DEVICE_IO(0x03)
-#define FT5406_IOCTL_ERASE_APP				SWAN_TS_DEVICE_IO(0x04)
-#define FT5406_IOCTL_ERASE_CONFIG			SWAN_TS_DEVICE_IO(0x05)
-#define FT5406_IOCTL_ERASE_PARAM			SWAN_TS_DEVICE_IO(0x06)
-#define FT5406_IOCTL_READ_CHECKSUM			SWAN_TS_DEVICE_IOR(0x07, u8)
+#define FT5406_IOCTL_UPGRADE_ENTER		SWAN_TS_DEVICE_IO(0x01)
+#define FT5406_IOCTL_UPGRADE_FINISH		SWAN_TS_DEVICE_IO(0x02)
+#define FT5406_IOCTL_ERASE_APP_CONFIG	SWAN_TS_DEVICE_IO(0x03)
+#define FT5406_IOCTL_ERASE_APP			SWAN_TS_DEVICE_IO(0x04)
+#define FT5406_IOCTL_ERASE_CONFIG		SWAN_TS_DEVICE_IO(0x05)
+#define FT5406_IOCTL_ERASE_PARAM		SWAN_TS_DEVICE_IO(0x06)
+#define FT5406_IOCTL_READ_CHECKSUM		SWAN_TS_DEVICE_IOR(0x07, u8)
+#define FT5406_IOCTL_UPGRADE_APP		SWAN_TS_DEVICE_IOW(0x08, struct ft5406_firmware_data_package)
+#define FT5406_IOCTL_SINGLE_WRITE		SWAN_TS_DEVICE_IOW(0x09, struct ft5406_firmware_data_package)
 
 int swan_ts_open_misc_device(const char *devpath, int flags);
 
@@ -112,9 +120,9 @@ static inline int swan_ts_set_client_address_fd(int fd, u16 addr)
 	return ioctl(fd, SWAN_TS_IOCTL_SET_CLIENT_ADDRESS, &addr);
 }
 
-static inline int ft5406_upgrade_start(int fd)
+static inline int ft5406_upgrade_enter(int fd)
 {
-	return ioctl(fd, FT5406_IOCTL_UPGRADE_START);
+	return ioctl(fd, FT5406_IOCTL_UPGRADE_ENTER);
 }
 
 static inline int ft5406_upgrade_finish(int fd)

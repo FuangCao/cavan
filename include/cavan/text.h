@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#define PRINT_BUFFER_LEN	KB(2)
+#define PRINT_BUFFER_LEN	MB(1)
 #define FLAG_SIGNED			(1 << 9)
 #define FLAG_PREFIX			(1 << 10)
 
