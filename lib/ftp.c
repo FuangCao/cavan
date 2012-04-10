@@ -595,7 +595,6 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			{
 				reply = "226 List send complete";
 			}
-
 			break;
 
 		/* size */

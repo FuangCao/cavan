@@ -74,41 +74,33 @@ int swan_ts_open_misc_device(const char *devpath, int flags);
 
 int swan_ts_input_calibration(const char *devname);
 int swan_ts_calibration(const char *devpath);
-int swan_ts_calication_main(int argc, char *argv[]);
 
 int swan_ts_read_registers_fd(int fd, u16 addr, void *buff, size_t size);
 int swan_ts_read_registers(const char *devpath, u16 addr, void *buff, size_t size);
-int swan_ts_read_registers_main(int argc, char *argv[]);
-int swan_ts_poll_registers_main(int argc, char *argv[]);
 
 int swan_ts_read_data_fd(int fd, void *buff, size_t size);
 int swan_ts_read_data(const char *devpath, void *buff, size_t size);
-int swan_ts_read_data_main(int argc, char *argv[]);
-int swan_ts_poll_data_main(int argc, char *argv[]);
 
 int swan_ts_write_registers_fd(int fd, u16 addr, const void *buff, size_t size);
 int swan_ts_write_registers(const char *devpath, u16 addr, const void *buff, size_t size);
-int swan_ts_write_registers_main(int argc, char *argv[]);
 
 int swan_ts_write_data_fd(int fd, const void *buff, size_t size);
 int swan_ts_write_data(const char *devpath, const void *buff, size_t size);
-int swan_ts_write_data_main(int argc, char *argv[]);
 
 int swan_ts_get_client_address(const char *devpath, u16 *addr);
-int swan_ts_get_client_address_main(int argc, char *argv[]);
-
 int swan_ts_set_client_address(const char *devpath, u16 addr);
-int swan_ts_set_client_address_main(int argc, char *argv[]);
 
 int swan_ts_detect_clients_fd(int fd, u16 start, u16 end);
 int swan_ts_detect_clients(const char *devpath, u16 start, u16 end);
-int swan_ts_detect_clients_main(int argc, char *argv[]);
 
 int swan_ts_test_client_fd(int fd, u16 addr);
 int swan_ts_test_client(const char *devpath, u16 addr);
-int swan_ts_test_client_main(int argc, char *argv[]);
 
-int ft5406_firmware_upgrade_main(int argc, char *argv[]);
+int ft5406_parse_app_file(const char *cfgpath, char *buff, size_t size);
+u8 ft5406_calculate_checksum(const void *buff, size_t size);
+int ft5406_firmware_write_last_data(int fd, const void *buff, size_t size);
+int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath);
+int ft5406_firmware_upgrade(const char *devpath, const char *cfgpath);
 
 static inline int swan_ts_get_client_address_fd(int fd, u16 *addr)
 {

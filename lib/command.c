@@ -49,7 +49,7 @@ void print_maybe_command(const struct cavan_command_map *p, const struct cavan_c
 
 	if (size == 0)
 	{
-		pr_red_info("No such command");
+		pr_red_info("`%s' No such command", cmdname);
 		return;
 	}
 

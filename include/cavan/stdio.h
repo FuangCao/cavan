@@ -102,6 +102,9 @@
 #define show_valueh_base(val, len) \
 	println(#val " = 0x%0" len "x", val)
 
+#define pr_result_info(ret) \
+	((ret) < 0 ? pr_red_info("Failed") : pr_green_info("OK"))
+
 #define show_valueh(val) \
 	do { \
 		switch (sizeof(val)) \

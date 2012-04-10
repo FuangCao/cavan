@@ -13,5 +13,5 @@ const struct cavan_command_map cmd_map_table[] =
 
 int main(int argc, char *argv[])
 {
-	return find_and_exec_command(cmd_map_table, ARRAY_SIZE(cmd_map_table), argc, argv);
+	return FIND_EXEC_COMMAND(cmd_map_table);
 }
