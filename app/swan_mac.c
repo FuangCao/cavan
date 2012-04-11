@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 	int ret;
 	const char *system_mnt_point = SYSTEM_MNT_POINT;
 
-	ret = mount_to(EMMC_DEVICE "/p2", system_mnt_point, "ext4", NULL);
+	ret = mount_to(EMMC_DEVICE "p2", system_mnt_point, "ext4", NULL);
 	if (ret < 0)
 	{
 		error_msg("mount system device");
