@@ -1,6 +1,6 @@
 #include <cavan.h>
 #include <cavan/ftp.h>
-#include <pthread.h>
+#include <cavan/service.h>
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
@@ -794,50 +794,42 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	return -1;
 }
 
-static pthread_mutex_t ftp_mutex = PTHREAD_MUTEX_INITIALIZER;
-static int service_count;
-
-void *ftp_service_handle(void *data)
+int ftp_service_handle(int index, void *data)
 {
 	struct sockaddr_in client_addr;
 	socklen_t addrlen;
 	int sockfd;
 	struct cavan_ftp_descriptor *desc = data;
-	int index;
 
-	pthread_mutex_lock(&ftp_mutex);
-	index = service_count++;
-	pthread_mutex_unlock(&ftp_mutex);
-
-	while (1)
+	sockfd = inet_accept(desc->ctrl_sockfd, &client_addr, &addrlen);
+	if (sockfd < 0)
 	{
-		println("FTP service %d ready", index);
-
-		sockfd = inet_accept(desc->ctrl_sockfd, &client_addr, &addrlen);
-		if (sockfd < 0)
-		{
-			print_error("inet_accept");
-			return NULL;
-		}
-
-		println("FTP service %d active", index);
-
-		inet_show_sockaddr(&client_addr);
-		ftp_service_cmdline(desc, sockfd, &client_addr);
-
-		close(sockfd);
+		print_error("inet_accept");
+		return sockfd;
 	}
 
-	return NULL;
+	inet_show_sockaddr(&client_addr);
+	ftp_service_cmdline(desc, sockfd, &client_addr);
+
+	close(sockfd);
+
+	return 0;
 }
 
 int ftp_service_run(u16 port, int count)
 {
-	int i;
 	int ret;
-	pthread_t services[count - 1];
 	struct cavan_ftp_descriptor ftp_desc;
 	struct sockaddr_in addr;
+	struct cavan_service_description service_desc =
+	{
+		.name = "FTP",
+		.daemon_count = count,
+		.as_daemon = 0,
+		.show_verbose = 0,
+		.data = (void *)&ftp_desc,
+		.handler = ftp_service_handle
+	};
 
 	ftp_desc.ctrl_sockfd = inet_create_tcp_service(port);
 	if (ftp_desc.ctrl_sockfd < 0)
@@ -858,24 +850,8 @@ int ftp_service_run(u16 port, int count)
 	pr_bold_info("FTP Root Path = %s, Services = %d", ftp_root_path, count);
 	pr_bold_info("Device = %s, IP = %s, Port = %d", ftp_netdev_name, ftp_desc.ip_addr, port);
 
-	for (i = count - 1; i >= 0; i--)
-	{
-		ret = pthread_create(services + i, NULL, ftp_service_handle, (void *)&ftp_desc);
-		if (ret < 0)
-		{
-			print_error("pthread_create");
-			goto out_close_ctrl_sockfd;
-		}
-	}
-
-	ftp_service_handle((void *)&ftp_desc);
-
-	for (i = count - 1; i >= 0; i--)
-	{
-		pthread_join(services[i], NULL);
-	}
-
-	ret = 0;
+	ret = cavan_service_run(&service_desc);
+	cavan_service_stop(&service_desc);
 
 out_close_ctrl_sockfd:
 	close(ftp_desc.ctrl_sockfd);

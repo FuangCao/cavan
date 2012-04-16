@@ -55,11 +55,8 @@ int main(int argc, char *argv[])
 		{
 		},
 	};
-	u16 port;
-	int count;
-
-	port = FTP_CTRL_PORT;
-	count = 10;
+	u16 port = FTP_CTRL_PORT;
+	int count = FTP_DAEMON_COUNT;
 
 	while ((c = getopt_long(argc, argv, "vVhHdDpPcCrR", long_option, &option_index)) != EOF)
 	{

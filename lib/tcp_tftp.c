@@ -5,11 +5,9 @@
  */
 
 #include <cavan.h>
-#include <pthread.h>
 #include <cavan/file.h>
 #include <cavan/tcp_tftp.h>
-
-static pthread_mutex_t tcp_tftp_mutex = PTHREAD_MUTEX_INITIALIZER;
+#include <cavan/service.h>
 
 static int tcp_tftp_send_ack(int sockfd, struct stat *st)
 {
@@ -158,48 +156,40 @@ static int tcp_tftp_server_handle_request(int sockfd)
 	return 0;
 }
 
-static void *tcp_tftp_daemon_handle(void *data)
+static int tcp_tftp_daemon_handle(int index, void *data)
 {
-	static int daemon_count = 0;
-	int service_index;
 	int server_sockfd, client_sockfd;
 	struct sockaddr_in addr;
 	socklen_t addrlen;
 
-	pthread_mutex_lock(&tcp_tftp_mutex);
-	service_index = daemon_count++;
-	pthread_mutex_unlock(&tcp_tftp_mutex);
-
 	server_sockfd = (int)data;
 
-	while (1)
+	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
+	if (client_sockfd < 0)
 	{
-		pr_bold_info("TCP TFTP service %d ready", service_index);
-
-		client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
-		if (client_sockfd < 0)
-		{
-			print_error("inet_accept");
-			break;
-		}
-
-		pr_bold_info("TCP TFTP service %d running", service_index);
-		pr_bold_info("IP = %s, port = %d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
-		tcp_tftp_server_handle_request(client_sockfd);
-		close(client_sockfd);
+		print_error("inet_accept");
+		return client_sockfd;
 	}
 
-	pr_red_info("TCP TFTP service %d exite", service_index);
+	pr_bold_info("IP = %s, port = %d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+	tcp_tftp_server_handle_request(client_sockfd);
+	close(client_sockfd);
 
-	return NULL;
+	return 0;
 }
 
 int tcp_tftp_service_run(u16 port)
 {
-	int i;
 	int ret;
 	int sockfd;
-	pthread_t threads[TCP_TFTP_DAEMON_COUNT - 1];
+	struct cavan_service_description desc =
+	{
+		.name = "TCP_TFTP",
+		.daemon_count = TCP_TFTP_DAEMON_COUNT,
+		.as_daemon = 0,
+		.show_verbose = 0,
+		.handler = tcp_tftp_daemon_handle
+	};
 
 	sockfd = inet_create_tcp_service(port);
 	if (sockfd < 0)
@@ -208,27 +198,11 @@ int tcp_tftp_service_run(u16 port)
 		return sockfd;
 	}
 
-	for (i = 0; i < NELEM(threads); i++)
-	{
-		ret = pthread_create(threads + i, NULL, tcp_tftp_daemon_handle, (void *)sockfd);
-		if (ret < 0)
-		{
-			print_error("pthread_create");
-			goto out_close_sockfd;
-		}
-	}
-
-	tcp_tftp_daemon_handle((void *)sockfd);
-
-	for (i = 0; i < NELEM(threads); i++)
-	{
-		pthread_join(threads[i], NULL);
-	}
-
-out_close_sockfd:
+	ret = cavan_service_run(&desc);
+	cavan_service_stop(&desc);
 	close(sockfd);
 
-	return -1;
+	return ret;
 }
 
 void show_tcp_tftp_error_message(struct tcp_tftp_error_message *msg)

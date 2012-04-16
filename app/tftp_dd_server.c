@@ -1,7 +1,6 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Mar 31 12:05:55 CST 2011
 
 #include <cavan.h>
-#include <pthread.h>
 #include <cavan/tftp.h>
 #include <cavan/progress.h>
 #include <cavan/text.h>
@@ -9,6 +8,7 @@
 #include <cavan/device.h>
 #include <semaphore.h>
 #include <cavan/parser.h>
+#include <cavan/service.h>
 
 static int handle_read_request(struct tftp_request *req_p)
 {
@@ -44,109 +44,97 @@ static int handle_write_request(struct tftp_request *req_p)
 	return ret;
 }
 
-static pthread_mutex_t tftp_mutex;
-static int service_count = 0;
-
-static void *service_handle(void *arg)
+static int service_handle(int index, void *data)
 {
 	int ret;
-	int sockfd = (int)arg;
+	int sockfd = (int)data;
 	union tftp_pkg pkg;
 	struct tftp_request_pkg *req_pkg_p = (void *)&pkg;
 	struct tftp_dd_request_pkg *dd_req_pkg_p = (void *)&pkg;
 	struct tftp_request req;
 	socklen_t addr_len = sizeof(struct sockaddr_in);
-	int index;
 
-	pthread_mutex_lock(&tftp_mutex);
-	index = ++service_count;
-	pthread_mutex_unlock(&tftp_mutex);
-
-	while (1)
+	ret = inet_recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), &req.client_addr, &addr_len);
+	if (ret < 0)
 	{
-		println("Service %d ready", index);
-
-		ret = inet_recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), &req.client_addr, &addr_len);
-		if (ret < 0)
-		{
-			print_error("Receive request failed");
-			return NULL;
-		}
-
-		println("Received a request client IP = %s, client port = %d",
-			inet_ntoa(req.client_addr.sin_addr), ntohs(req.client_addr.sin_port));
-		println("Service index = %d", index);
-
-		switch (ntohs(req_pkg_p->op_code))
-		{
-		case TFTP_RRQ:
-			println("=> General read request");
-			strcpy(req.filename, req_pkg_p->filename);
-			strcpy(req.file_mode, req_pkg_p->filename + strlen(req_pkg_p->filename) + 1);
-			req.offset = 0;
-			req.size = 0;
-			handle_read_request(&req);
-			break;
-
-		case TFTP_DD_RRQ:
-			println("=> DD read request");
-			strcpy(req.filename, dd_req_pkg_p->filename);
-			strcpy(req.file_mode, dd_req_pkg_p->filename + strlen(dd_req_pkg_p->filename) + 1);
-			req.offset = ntohl(dd_req_pkg_p->offset);
-			req.size = ntohl(dd_req_pkg_p->size);
-			handle_read_request(&req);
-			break;
-
-		case TFTP_WRQ:
-			println("=> General write request");
-			strcpy(req.filename, req_pkg_p->filename);
-			strcpy(req.file_mode, req_pkg_p->filename + strlen(req_pkg_p->filename) + 1);
-			req.offset = 0;
-			req.size = 0;
-			handle_write_request(&req);
-			break;
-
-		case TFTP_DD_WRQ:
-			println("=> DD write request");
-			strcpy(req.filename, dd_req_pkg_p->filename);
-			strcpy(req.file_mode, dd_req_pkg_p->filename + strlen(dd_req_pkg_p->filename) + 1);
-			req.offset = ntohl(dd_req_pkg_p->offset);
-			req.size = ntohl(dd_req_pkg_p->size);
-			handle_write_request(&req);
-			break;
-
-		case TFTP_MKDIR_REQ:
-			println("=> mkdir request");
-			tftp_mkdir(&pkg.mkdir, &req.client_addr);
-			break;
-
-		case TFTP_MKNODE_REQ:
-			println("=> mknode request");
-			tftp_mknode(&pkg.mknode, &req.client_addr);
-			break;
-
-		case TFTP_SYMLINK_REQ:
-			println("=> symlink request");
-			tftp_symlink(&pkg.symlink, &req.client_addr);
-			break;
-
-		case TFTP_COMMAND_REQ:
-			println("=> command request");
-			tftp_command(&pkg.command, &req.client_addr);
-			break;
-
-		default:
-			warning_msg("unknown operation code");
-		}
+		print_error("Receive request failed");
+		return ret;
 	}
+
+	println("Received a request client IP = %s, client port = %d",
+		inet_ntoa(req.client_addr.sin_addr), ntohs(req.client_addr.sin_port));
+	println("Service index = %d", index);
+
+	switch (ntohs(req_pkg_p->op_code))
+	{
+	case TFTP_RRQ:
+		println("=> General read request");
+		strcpy(req.filename, req_pkg_p->filename);
+		strcpy(req.file_mode, req_pkg_p->filename + strlen(req_pkg_p->filename) + 1);
+		req.offset = 0;
+		req.size = 0;
+		handle_read_request(&req);
+		break;
+
+	case TFTP_DD_RRQ:
+		println("=> DD read request");
+		strcpy(req.filename, dd_req_pkg_p->filename);
+		strcpy(req.file_mode, dd_req_pkg_p->filename + strlen(dd_req_pkg_p->filename) + 1);
+		req.offset = ntohl(dd_req_pkg_p->offset);
+		req.size = ntohl(dd_req_pkg_p->size);
+		handle_read_request(&req);
+		break;
+
+	case TFTP_WRQ:
+		println("=> General write request");
+		strcpy(req.filename, req_pkg_p->filename);
+		strcpy(req.file_mode, req_pkg_p->filename + strlen(req_pkg_p->filename) + 1);
+		req.offset = 0;
+		req.size = 0;
+		handle_write_request(&req);
+		break;
+
+	case TFTP_DD_WRQ:
+		println("=> DD write request");
+		strcpy(req.filename, dd_req_pkg_p->filename);
+		strcpy(req.file_mode, dd_req_pkg_p->filename + strlen(dd_req_pkg_p->filename) + 1);
+		req.offset = ntohl(dd_req_pkg_p->offset);
+		req.size = ntohl(dd_req_pkg_p->size);
+		handle_write_request(&req);
+		break;
+
+	case TFTP_MKDIR_REQ:
+		println("=> mkdir request");
+		tftp_mkdir(&pkg.mkdir, &req.client_addr);
+		break;
+
+	case TFTP_MKNODE_REQ:
+		println("=> mknode request");
+		tftp_mknode(&pkg.mknode, &req.client_addr);
+		break;
+
+	case TFTP_SYMLINK_REQ:
+		println("=> symlink request");
+		tftp_symlink(&pkg.symlink, &req.client_addr);
+		break;
+
+	case TFTP_COMMAND_REQ:
+		println("=> command request");
+		tftp_command(&pkg.command, &req.client_addr);
+		break;
+
+	default:
+		warning_msg("unknown operation code");
+		return -EINVAL;
+	}
+
+	return 0;
 }
 
 int main(int argc, char *argv[])
 {
 	int ret;
-	int i;
 	int sockfd;
-	pthread_t newthreads[TFTP_MAX_LINK_COUNT - 1];
 	u16 server_port = TFTP_DEFAULT_PORT;
 	struct option long_options[] =
 	{
@@ -173,10 +161,14 @@ int main(int argc, char *argv[])
 	};
 	int c;
 	int option_index;
-	int as_daemon, show_verbose;
-
-	as_daemon = 0;
-	show_verbose = 0;
+	struct cavan_service_description desc =
+	{
+		.name = "TFTP_DD",
+		.daemon_count = TFTP_MAX_LINK_COUNT,
+		.as_daemon = 0,
+		.show_verbose = 0,
+		.handler = service_handle
+	};
 
 	while ((c = getopt_long(argc, argv, "p:P:dDvV", long_options, &option_index)) != EOF)
 	{
@@ -189,12 +181,12 @@ int main(int argc, char *argv[])
 
 		case 'd':
 		case 'D':
-			as_daemon = 1;
+			desc.as_daemon = 1;
 			break;
 
 		case 'v':
 		case 'V':
-			show_verbose = 1;
+			desc.show_verbose = 1;
 			break;
 
 		default:
@@ -212,36 +204,10 @@ int main(int argc, char *argv[])
 
 	println("Bind socket to port \"%d\" success", server_port);
 
-	if (as_daemon)
-	{
-		ret = daemon(0, show_verbose);
-		if (ret < 0)
-		{
-			print_error("daemon");
-			goto out_close_socket;
-		}
-	}
-
-	pthread_mutex_init(&tftp_mutex, NULL);
-
-	for (i = 0; i < ARRAY_SIZE(newthreads); i++)
-	{
-		ret = pthread_create(newthreads + i, NULL, service_handle, (void *)sockfd);
-		if (ret < 0)
-		{
-			error_msg("create thread %d failed", i);
-		}
-	}
-
-	service_handle((void *)sockfd);
-
-	for (i = 0; i < ARRAY_SIZE(newthreads); i++)
-	{
-		pthread_join(newthreads[i], NULL);
-	}
-
-	ret = 0;
-out_close_socket:
+	desc.data = (void *)sockfd;
+	ret = cavan_service_run(&desc);
+	cavan_service_stop(&desc);
 	close(sockfd);
+
 	return ret;
 }

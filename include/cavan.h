@@ -22,6 +22,7 @@
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <pthread.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>

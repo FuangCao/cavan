@@ -4,8 +4,9 @@
 
 #include <cavan/network.h>
 
-#define FTP_DATA_PORT	20
-#define FTP_CTRL_PORT	21
+#define FTP_DATA_PORT		20
+#define FTP_CTRL_PORT		21
+#define FTP_DAEMON_COUNT	10
 
 enum cavan_ftp_state
 {
