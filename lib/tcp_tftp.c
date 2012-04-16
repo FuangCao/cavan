@@ -26,7 +26,7 @@ static void tcp_tftp_show_response(struct tcp_tftp_response_package *res)
 	}
 }
 
-static int tcp_tftp_send_response(int sockfd, int code, const char *fmt, ...)
+static int __printf_format_34__ tcp_tftp_send_response(int sockfd, int code, const char *fmt, ...)
 {
 	struct tcp_tftp_package pkg;
 	int ret;
@@ -169,7 +169,7 @@ static int tcp_tftp_handle_read_request(int sockfd, struct tcp_tftp_file_request
 	if (mode == 0)
 	{
 		ret = -EFAULT;
-		tcp_tftp_send_response(sockfd, ret, "[Server] Get file `' mode failed", req->filename);
+		tcp_tftp_send_response(sockfd, ret, "[Server] Get file `%s' mode failed", req->filename);
 		goto out_close_fd;
 	}
 

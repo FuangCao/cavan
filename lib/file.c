@@ -2503,3 +2503,22 @@ int scan_directory(const char *dirpath, void *buff, size_t size1, size_t size2)
 
 	return size1;
 }
+
+int file_open_format(int flags, mode_t mode, const char *fmt, ...)
+{
+	int fd;
+	char buff[1024];
+	va_list ap;
+
+	va_start(ap, fmt);
+	vsprintf(buff, fmt, ap);
+	va_end(ap);
+
+	fd = open(buff, flags, mode);
+	if (fd < 0)
+	{
+		print_error("Open file `%s' failed", buff);
+	}
+
+	return fd;
+}

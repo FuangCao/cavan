@@ -152,6 +152,7 @@ __printf_format_20__ ssize_t ffile_vprintf(int fd, const char *fmt, va_list ap);
 __printf_format_23__ ssize_t ffile_prinf(int fd, const char *fmt, ...);
 __printf_format_20__ ssize_t file_vprintf(const char *filename, const char *fmt, va_list ap);
 __printf_format_23__ ssize_t file_printf(const char *filename, const char *fmt, ...);
+__printf_format_34__ int file_open_format(int flags, mode_t mode, const char *fmt, ...);
 
 int file_find_and_open(const char *prefix, char *last_path, int start, int end, int flags);
 
