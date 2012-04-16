@@ -30,8 +30,19 @@ static int cavan_draw_rect_main(int argc, char *argv[])
 	width = text2value_unsigned(argv[3], NULL, 10);
 	height = text2value_unsigned(argv[4], NULL, 10);
 
-	ret = cavan_draw_rect(&desc, left, top, width, height);
-	pr_result_info(ret);
+	if (strcmp(argv[0], "draw_rect") == 0)
+	{
+		ret = cavan_draw_rect(&desc, left, top, width, height);
+	}
+	else
+	{
+		ret = cavan_fill_rect(&desc, left, top, width, height);
+	}
+
+	if (ret < 0)
+	{
+		pr_red_info("Failed");
+	}
 
 	cavan_fb_uninit(&desc);
 
@@ -41,6 +52,7 @@ static int cavan_draw_rect_main(int argc, char *argv[])
 static struct cavan_command_map cmd_map[] =
 {
 	{"draw_rect", cavan_draw_rect_main},
+	{"fill_rect", cavan_draw_rect_main},
 };
 
 int main(int argc, char *argv[])
