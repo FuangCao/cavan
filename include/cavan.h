@@ -46,6 +46,9 @@
 #define GB(a)			((a) << 30)
 #define BG(a)			((a) >> 30)
 
+#define POINTER_ASSIGN_CASE(dest, src) \
+	((dest) = (typeof(dest))(src))
+
 #define MEMBER_OFFSET(type, member) \
 	((int)&((type *)0)->member)
 

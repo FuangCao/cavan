@@ -6,6 +6,7 @@
 
 #include <cavan.h>
 #include <cavan/tcp_tftp.h>
+#include <cavan/parser.h>
 
 #define FILE_CREATE_DATE "2012-01-14 14:09:55"
 
@@ -40,10 +41,30 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_VERSION,
 		},
 		{
+			.name = "ip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'i',
+		},
+		{
+			.name = "port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p',
+		},
+		{
 		},
 	};
+	int i;
+	char ip[16] = "127.0.0.1";
+	u16 port = TCP_TFTP_SERVER_PORT;
+	char src_file[1024], dest_file[1024];
+	off_t bs, seek, skip, count;
+	int (*handler)(const char *, u16, const char *, off_t, const char *, off_t, off_t);
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
+	handler = NULL;
+
+	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrR", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -60,13 +81,129 @@ int main(int argc, char *argv[])
 			show_usage();
 			return 0;
 
+		case 'i':
+		case 'I':
+			text_copy(ip, optarg);
+			break;
+
+		case 'p':
+		case 'P':
+			port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'w':
+		case 'W':
+		case 's':
+		case 'S':
+			handler = tcp_tftp_send_file;
+			break;
+
+		case 'r':
+		case 'R':
+			handler = tcp_tftp_receive_file;
+			break;
+
 		default:
 			show_usage();
 			return -EINVAL;
 		}
 	}
 
-	assert(argc == 3);
+	if (handler == NULL)
+	{
+		pr_red_info("Please select action type");
+		return -EINVAL;
+	}
 
-	return tcp_tftp_send_file(argv[1], argv[2], "127.0.0.1", 8888);
+	src_file[0] = dest_file[0] = 0;
+	bs = 1;
+	count = seek = skip = 0;
+
+	for (i = optind; i < argc; i++)
+	{
+		char c, *p;
+
+		parse_parameter(argv[i]);
+
+		c = para_option[0];
+		p = para_option + 1;
+
+		switch (c)
+		{
+		case 'i':
+			if (text_cmp(p, "f") == 0)
+			{
+				text_copy(src_file, para_value);
+			}
+			else if (text_cmp(p, "p") == 0)
+			{
+				text_copy(ip, para_value);
+			}
+			else
+			{
+				goto label__unknown_option;
+			}
+			break;
+
+		case 'o':
+			if (text_cmp(p, "f") == 0)
+			{
+				text_copy(dest_file, para_value);
+				break;
+			}
+			goto label__unknown_option;
+
+		case 'b':
+			if (text_cmp(p, "s") == 0)
+			{
+				bs = text2size(para_value, NULL);
+				break;
+			}
+			goto label__unknown_option;
+				
+		case 's':
+			if (text_cmp(p, "kip") == 0)
+			{
+				skip = text2size(para_value, NULL);
+			}
+			else if (text_cmp(p, "eek") == 0)
+			{
+				seek = text2size(para_value, NULL);
+			}
+			else
+			{
+				goto label__unknown_option;
+			}
+			break;
+				
+		case 'c':
+			if (text_cmp(p, "ount") == 0)
+			{
+				count = text2size(para_value, NULL);
+				break;
+			}
+			goto label__unknown_option;
+
+		case 'p':
+			if (text_cmp(p, "ort") == 0)
+			{
+				port = text2value_unsigned(para_value, NULL, 10);
+				break;
+			}
+			goto label__unknown_option;
+
+		default:
+label__unknown_option:
+			pr_red_info("unknown option `%s'", para_option);
+			return -EINVAL;
+		}
+	}
+
+	if (src_file[0] == 0 || dest_file[0] == 0)
+	{
+		pr_red_info("Please input src_file and dest_file");
+		return -EINVAL;
+	}
+
+	return handler(ip, port, src_file, skip * bs, dest_file, seek * bs, count * bs);
 }

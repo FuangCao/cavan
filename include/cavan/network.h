@@ -266,3 +266,10 @@ static inline ssize_t inet_recv(int sockfd, void *buff, size_t size)
 	return recv(sockfd, buff, size, MSG_NOSIGNAL);
 }
 
+static inline void inet_close_tcp_socket(int sockfd)
+{
+	fsync(sockfd);
+	shutdown(sockfd, SHUT_RDWR);
+	close(sockfd);
+}
+

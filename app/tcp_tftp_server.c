@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
 		{
 		},
 	};
+	u16 port;
 
 	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
 	{
@@ -66,5 +67,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	return tcp_tftp_service_run(TCP_TFTP_SERVER_PORT);
+	port = argc > 1 ? text2value_unsigned(argv[1], NULL, 10) : TCP_TFTP_SERVER_PORT;
+
+	return tcp_tftp_service_run(port);
 }

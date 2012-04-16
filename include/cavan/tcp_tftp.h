@@ -9,55 +9,44 @@
 #include <cavan.h>
 #include <cavan/network.h>
 
-#define TCP_TFTP_SERVER_PORT	8888
-#define TCP_TFTP_MAX_SEND_SIZE	1024
-#define TCP_TFTP_DAEMON_COUNT	10
-#define TCP_TFTP_TIMEOUT		5000
+#define TCP_TFTP_SERVER_PORT		8888
+#define TCP_TFTP_DAEMON_COUNT		10
+#define TCP_TFTP_TIMEOUT			5000
 
 enum tcp_tftp_package_type
 {
-	TCP_TFTP_REQ_READ,
-	TCP_TFTP_REQ_WRITE,
-	TCP_TFTP_EVENT_ACK,
-	TCP_TFTP_EVENT_ERROR,
+	TCP_TFTP_WRITE,
+	TCP_TFTP_READ,
+	TCP_TFTP_RESPONSE,
+	TCP_TFTP_PACKAGE_COUNT
 };
 
-#pragma pack(1)
-struct tcp_tftp_write_request
+struct tcp_tftp_response_package
 {
-	u16 pkg_type;
-	struct stat st;
-	char pathname[1024];
-};
-
-struct tcp_tftp_read_request
-{
-	u16 pkg_type;
-	char pathname[1024];
-};
-
-struct tcp_tftp_ack
-{
-	u16 pkg_type;
-	struct stat st;
-};
-
-struct tcp_tftp_error_message
-{
-	u16 pkg_type;
-	u32 err_code;
+	int code;
 	char message[1024];
 };
 
-union tcp_tftp_package
+struct tcp_tftp_file_request
 {
-	u16 pkg_type;
-	struct tcp_tftp_read_request read_req;
-	struct tcp_tftp_write_request write_req;
-	struct tcp_tftp_ack ack;
-	struct tcp_tftp_error_message err_msg;
+	off_t offset;
+	off_t size;
+	mode_t mode;
+	char filename[512];
 };
-#pragma pack()
+
+struct tcp_tftp_package
+{
+	u32 type;
+
+	union
+	{
+		struct tcp_tftp_response_package res_pkg;
+		struct tcp_tftp_file_request file_req;
+		char data[1024];
+	};
+};
 
 int tcp_tftp_service_run(u16 port);
-int tcp_tftp_send_file(const char *inpath, const char *outpath, const char *ip, u16 port);
+int tcp_tftp_send_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size);
+int tcp_tftp_receive_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size);

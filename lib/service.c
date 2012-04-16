@@ -26,7 +26,6 @@ static void *cavan_service_handler(void *data)
 		if (ret < 0)
 		{
 			pr_red_info("%s daemon %d fault", desc->name, index);
-			sleep(1);
 		}
 		else
 		{
@@ -51,8 +50,12 @@ int cavan_service_run(struct cavan_service_description *desc)
 	}
 
 	count = desc->daemon_count - 1;
-
 	threads = (pthread_t *)malloc(sizeof(pthread_t) * count);
+	if (threads == NULL)
+	{
+		pr_red_info("malloc");
+		return -ENOMEM;
+	}
 
 	ret = pthread_mutex_init(&desc->mutex_lock, NULL);
 	if (ret < 0)
