@@ -5,7 +5,7 @@
  */
 
 #include <cavan.h>
-#include <cavan/tcp_tftp.h>
+#include <cavan/tcp_dd.h>
 
 #define FILE_CREATE_DATE "2012-01-14 14:09:50"
 
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	port = argc > 1 ? text2value_unsigned(argv[1], NULL, 10) : TCP_TFTP_SERVER_PORT;
+	port = argc > 1 ? text2value_unsigned(argv[1], NULL, 10) : TCP_DD_SERVER_PORT;
 
-	return tcp_tftp_service_run(port);
+	return tcp_dd_service_run(port);
 }

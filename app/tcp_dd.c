@@ -5,7 +5,7 @@
  */
 
 #include <cavan.h>
-#include <cavan/tcp_tftp.h>
+#include <cavan/tcp_dd.h>
 #include <cavan/parser.h>
 
 #define FILE_CREATE_DATE "2012-01-14 14:09:55"
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	};
 	int i;
 	char ip[16] = "127.0.0.1";
-	u16 port = TCP_TFTP_SERVER_PORT;
+	u16 port = TCP_DD_SERVER_PORT;
 	char src_file[1024], dest_file[1024];
 	off_t bs, seek, skip, count;
 	int (*handler)(const char *, u16, const char *, off_t, const char *, off_t, off_t);
@@ -95,12 +95,12 @@ int main(int argc, char *argv[])
 		case 'W':
 		case 's':
 		case 'S':
-			handler = tcp_tftp_send_file;
+			handler = tcp_dd_send_file;
 			break;
 
 		case 'r':
 		case 'R':
-			handler = tcp_tftp_receive_file;
+			handler = tcp_dd_receive_file;
 			break;
 
 		default:

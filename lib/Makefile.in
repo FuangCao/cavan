@@ -59,7 +59,7 @@ am_libcavan_a_OBJECTS = bmp.$(OBJEXT) cache.$(OBJEXT) \
 	queue.$(OBJEXT) rle.$(OBJEXT) service.$(OBJEXT) sort.$(OBJEXT) \
 	stack.$(OBJEXT) stdio.$(OBJEXT) swan_dev.$(OBJEXT) \
 	swan_mac.$(OBJEXT) swan_pkg.$(OBJEXT) swan_ts.$(OBJEXT) \
-	swan_upgrade.$(OBJEXT) tcp_tftp.$(OBJEXT) text.$(OBJEXT) \
+	swan_upgrade.$(OBJEXT) tcp_dd.$(OBJEXT) text.$(OBJEXT) \
 	tftp.$(OBJEXT) tree.$(OBJEXT) uevent.$(OBJEXT) usb.$(OBJEXT) \
 	vfat.$(OBJEXT)
 libcavan_a_OBJECTS = $(am_libcavan_a_OBJECTS)
@@ -166,7 +166,7 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 noinst_LIBRARIES = libcavan.a
-libcavan_a_SOURCES = bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c ecc.c event.c ext2.c fb.c file.c ftp.c image.c inotify.c list.c memory.c mtd.c net_bridge.c network.c parser.c progress.c queue.c rle.c service.c sort.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c tcp_tftp.c text.c tftp.c tree.c uevent.c usb.c vfat.c
+libcavan_a_SOURCES = bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c ecc.c event.c ext2.c fb.c file.c ftp.c image.c inotify.c list.c memory.c mtd.c net_bridge.c network.c parser.c progress.c queue.c rle.c service.c sort.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c tcp_dd.c text.c tftp.c tree.c uevent.c usb.c vfat.c
 all: all-am
 
 .SUFFIXES:
@@ -249,7 +249,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_pkg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_ts.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_upgrade.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_tftp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/text.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tftp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tree.Po@am__quote@

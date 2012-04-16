@@ -6,10 +6,10 @@
 
 #include <cavan.h>
 #include <cavan/file.h>
-#include <cavan/tcp_tftp.h>
+#include <cavan/tcp_dd.h>
 #include <cavan/service.h>
 
-static void tcp_tftp_show_response(struct tcp_tftp_response_package *res)
+static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
 	if (res->message[0] == 0)
 	{
@@ -26,12 +26,12 @@ static void tcp_tftp_show_response(struct tcp_tftp_response_package *res)
 	}
 }
 
-static int __printf_format_34__ tcp_tftp_send_response(int sockfd, int code, const char *fmt, ...)
+static int __printf_format_34__ tcp_dd_send_response(int sockfd, int code, const char *fmt, ...)
 {
-	struct tcp_tftp_package pkg;
+	struct tcp_dd_package pkg;
 	int ret;
 
-	pkg.type = TCP_TFTP_RESPONSE;
+	pkg.type = TCP_DD_RESPONSE;
 	pkg.body.res_pkg.code = code;
 
 	if (fmt == NULL)
@@ -48,16 +48,16 @@ static int __printf_format_34__ tcp_tftp_send_response(int sockfd, int code, con
 		va_end(ap);
 	}
 
-	tcp_tftp_show_response(&pkg.body.res_pkg);
+	tcp_dd_show_response(&pkg.body.res_pkg);
 
 	return inet_send(sockfd, &pkg, sizeof(pkg.type) + sizeof(pkg.body.res_pkg.code) + ret);
 }
 
-static int tcp_tftp_send_read_request(int sockfd, const char *filename, off_t offset, off_t size, struct tcp_tftp_package *pkg)
+static int tcp_dd_send_read_request(int sockfd, const char *filename, off_t offset, off_t size, struct tcp_dd_package *pkg)
 {
 	int ret;
 
-	pkg->type = TCP_TFTP_READ;
+	pkg->type = TCP_DD_READ;
 	pkg->body.file_req.offset = offset;
 	pkg->body.file_req.size = size;
 	ret = text_copy(pkg->body.file_req.filename, filename) - (char *)&pkg + 1;
@@ -78,11 +78,11 @@ static int tcp_tftp_send_read_request(int sockfd, const char *filename, off_t of
 
 	switch (pkg->type)
 	{
-	case TCP_TFTP_RESPONSE:
-		tcp_tftp_show_response(&pkg->body.res_pkg);
+	case TCP_DD_RESPONSE:
+		tcp_dd_show_response(&pkg->body.res_pkg);
 		return -pkg->body.res_pkg.code;
 
-	case TCP_TFTP_WRITE:
+	case TCP_DD_WRITE:
 		return 0;
 
 	default:
@@ -90,12 +90,12 @@ static int tcp_tftp_send_read_request(int sockfd, const char *filename, off_t of
 	}
 }
 
-static int tcp_tftp_send_write_request(int sockfd, const char *filename, off_t offset, off_t size, mode_t mode)
+static int tcp_dd_send_write_request(int sockfd, const char *filename, off_t offset, off_t size, mode_t mode)
 {
 	int ret;
-	struct tcp_tftp_package pkg;
+	struct tcp_dd_package pkg;
 
-	pkg.type = TCP_TFTP_WRITE;
+	pkg.type = TCP_DD_WRITE;
 	pkg.body.file_req.offset = offset;
 	pkg.body.file_req.size = size;
 	pkg.body.file_req.mode = mode;
@@ -115,9 +115,9 @@ static int tcp_tftp_send_write_request(int sockfd, const char *filename, off_t o
 		return ret;
 	}
 
-	if (pkg.type == TCP_TFTP_RESPONSE)
+	if (pkg.type == TCP_DD_RESPONSE)
 	{
-		tcp_tftp_show_response(&pkg.body.res_pkg);
+		tcp_dd_show_response(&pkg.body.res_pkg);
 		return pkg.body.res_pkg.code;
 	}
 	else
@@ -126,7 +126,7 @@ static int tcp_tftp_send_write_request(int sockfd, const char *filename, off_t o
 	}
 }
 
-static int tcp_tftp_handle_read_request(int sockfd, struct tcp_tftp_file_request *req)
+static int tcp_dd_handle_read_request(int sockfd, struct tcp_dd_file_request *req)
 {
 	int fd;
 	int ret;
@@ -136,7 +136,7 @@ static int tcp_tftp_handle_read_request(int sockfd, struct tcp_tftp_file_request
 	fd = open(req->filename, O_RDONLY);
 	if (fd < 0)
 	{
-		tcp_tftp_send_response(sockfd, fd, "[Server] Open file `%s' failed", req->filename);
+		tcp_dd_send_response(sockfd, fd, "[Server] Open file `%s' failed", req->filename);
 		return fd;
 	}
 
@@ -152,14 +152,14 @@ static int tcp_tftp_handle_read_request(int sockfd, struct tcp_tftp_file_request
 	if (size < req->offset)
 	{
 		ret = -EINVAL;
-		tcp_tftp_send_response(sockfd, ret, "[Server] No data to be sent");
+		tcp_dd_send_response(sockfd, ret, "[Server] No data to be sent");
 		goto out_close_fd;
 	}
 
 	ret = lseek(fd, req->offset, SEEK_SET);
 	if (ret < 0)
 	{
-		tcp_tftp_send_response(sockfd, ret, "[Server] Seek file `%s' failed", req->filename);
+		tcp_dd_send_response(sockfd, ret, "[Server] Seek file `%s' failed", req->filename);
 		goto out_close_fd;
 	}
 
@@ -169,14 +169,14 @@ static int tcp_tftp_handle_read_request(int sockfd, struct tcp_tftp_file_request
 	if (mode == 0)
 	{
 		ret = -EFAULT;
-		tcp_tftp_send_response(sockfd, ret, "[Server] Get file `%s' mode failed", req->filename);
+		tcp_dd_send_response(sockfd, ret, "[Server] Get file `%s' mode failed", req->filename);
 		goto out_close_fd;
 	}
 
-	ret = tcp_tftp_send_write_request(sockfd, req->filename, req->offset, size, mode);
+	ret = tcp_dd_send_write_request(sockfd, req->filename, req->offset, size, mode);
 	if (ret < 0)
 	{
-		pr_red_info("tcp_tftp_send_write_request");
+		pr_red_info("tcp_dd_send_write_request");
 		return ret;
 	}
 
@@ -191,7 +191,7 @@ out_close_fd:
 	return ret;
 }
 
-static int tcp_tftp_handle_write_request(int sockfd, struct tcp_tftp_file_request *req)
+static int tcp_dd_handle_write_request(int sockfd, struct tcp_dd_file_request *req)
 {
 	int fd;
 	int ret;
@@ -199,21 +199,21 @@ static int tcp_tftp_handle_write_request(int sockfd, struct tcp_tftp_file_reques
 	fd = open(req->filename, O_WRONLY | O_CREAT, req->mode);
 	if (fd < 0)
 	{
-		tcp_tftp_send_response(sockfd, fd, "[Server] Open file `%s' failed", req->filename);
+		tcp_dd_send_response(sockfd, fd, "[Server] Open file `%s' failed", req->filename);
 		return fd;
 	}
 
 	ret = lseek(fd, req->offset, SEEK_SET);
 	if (ret < 0)
 	{
-		tcp_tftp_send_response(sockfd, ret, "[Server] Seek file failed");
+		tcp_dd_send_response(sockfd, ret, "[Server] Seek file failed");
 		goto out_close_fd;
 	}
 
-	ret = tcp_tftp_send_response(sockfd, 0, "[Server] Start receive file");
+	ret = tcp_dd_send_response(sockfd, 0, "[Server] Start receive file");
 	if (ret < 0)
 	{
-		pr_red_info("tcp_tftp_send_response");
+		pr_red_info("tcp_dd_send_response");
 		return ret;
 	}
 
@@ -228,10 +228,10 @@ out_close_fd:
 	return ret;
 }
 
-static int tcp_tftp_handle_request(int sockfd)
+static int tcp_dd_handle_request(int sockfd)
 {
 	int ret;
-	struct tcp_tftp_package pkg;
+	struct tcp_dd_package pkg;
 
 	ret = inet_recv(sockfd, &pkg, sizeof(pkg));
 	if (ret < 0)
@@ -242,14 +242,14 @@ static int tcp_tftp_handle_request(int sockfd)
 
 	switch (pkg.type)
 	{
-	case TCP_TFTP_READ:
-		pr_bold_info("TCP_TFTP_READ");
-		ret = tcp_tftp_handle_read_request(sockfd, &pkg.body.file_req);
+	case TCP_DD_READ:
+		pr_bold_info("TCP_DD_READ");
+		ret = tcp_dd_handle_read_request(sockfd, &pkg.body.file_req);
 		break;
 
-	case TCP_TFTP_WRITE:
-		pr_bold_info("TCP_TFTP_WRITE");
-		ret = tcp_tftp_handle_write_request(sockfd, &pkg.body.file_req);
+	case TCP_DD_WRITE:
+		pr_bold_info("TCP_DD_WRITE");
+		ret = tcp_dd_handle_write_request(sockfd, &pkg.body.file_req);
 		break;
 
 	default:
@@ -260,7 +260,7 @@ static int tcp_tftp_handle_request(int sockfd)
 	return ret;
 }
 
-static int tcp_tftp_daemon_handle(int index, void *data)
+static int tcp_dd_daemon_handle(int index, void *data)
 {
 	int ret;
 	int server_sockfd, client_sockfd;
@@ -277,24 +277,24 @@ static int tcp_tftp_daemon_handle(int index, void *data)
 	}
 
 	pr_bold_info("IP = %s, port = %d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
-	ret = tcp_tftp_handle_request(client_sockfd);
+	ret = tcp_dd_handle_request(client_sockfd);
 	msleep(100);
 	inet_close_tcp_socket(client_sockfd);
 
 	return ret;
 }
 
-int tcp_tftp_service_run(u16 port)
+int tcp_dd_service_run(u16 port)
 {
 	int ret;
 	int sockfd;
 	struct cavan_service_description desc =
 	{
-		.name = "TCP_TFTP",
-		.daemon_count = TCP_TFTP_DAEMON_COUNT,
+		.name = "TCP_DD",
+		.daemon_count = TCP_DD_DAEMON_COUNT,
 		.as_daemon = 0,
 		.show_verbose = 0,
-		.handler = tcp_tftp_daemon_handle
+		.handler = tcp_dd_daemon_handle
 	};
 
 	sockfd = inet_create_tcp_service(port);
@@ -314,7 +314,7 @@ int tcp_tftp_service_run(u16 port)
 	return ret;
 }
 
-int tcp_tftp_send_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size)
+int tcp_dd_send_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size)
 {
 	int sockfd;
 	int fd;
@@ -378,10 +378,10 @@ int tcp_tftp_send_file(const char *ip, u16 port, const char *src_file, off_t src
 		goto out_close_fd;
 	}
 
-	ret = tcp_tftp_send_write_request(sockfd, dest_file, dest_offset, size, st.st_mode);
+	ret = tcp_dd_send_write_request(sockfd, dest_file, dest_offset, size, st.st_mode);
 	if (ret < 0)
 	{
-		pr_red_info("tcp_tftp_send_write_request2");
+		pr_red_info("tcp_dd_send_write_request2");
 		goto out_close_sockfd;
 	}
 
@@ -398,12 +398,12 @@ out_close_fd:
 	return ret;
 }
 
-int tcp_tftp_receive_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size)
+int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size)
 {
 	int fd;
 	int sockfd;
 	int ret;
-	struct tcp_tftp_package pkg;
+	struct tcp_dd_package pkg;
 
 	if (src_file == NULL && dest_file == NULL)
 	{
@@ -428,17 +428,17 @@ int tcp_tftp_receive_file(const char *ip, u16 port, const char *src_file, off_t 
 		return sockfd;
 	}
 
-	ret = tcp_tftp_send_read_request(sockfd, src_file, src_offset, size, &pkg);
+	ret = tcp_dd_send_read_request(sockfd, src_file, src_offset, size, &pkg);
 	if (ret < 0)
 	{
-		pr_red_info("tcp_tftp_send_read_request");
+		pr_red_info("tcp_dd_send_read_request");
 		goto out_close_sockfd;
 	}
 
 	fd = open(dest_file, O_WRONLY | O_CREAT, pkg.body.file_req.mode);
 	if (fd < 0)
 	{
-		tcp_tftp_send_response(sockfd, fd, "[Client] Open file `%s' failed", dest_file);
+		tcp_dd_send_response(sockfd, fd, "[Client] Open file `%s' failed", dest_file);
 		goto out_close_sockfd;
 	}
 
@@ -450,14 +450,14 @@ int tcp_tftp_receive_file(const char *ip, u16 port, const char *src_file, off_t 
 	ret = lseek(fd, dest_offset, SEEK_SET);
 	if (ret < 0)
 	{
-		tcp_tftp_send_response(sockfd, ret, "[Client] Seek file `%s' failed", dest_file);
+		tcp_dd_send_response(sockfd, ret, "[Client] Seek file `%s' failed", dest_file);
 		goto out_close_fd;
 	}
 
-	ret = tcp_tftp_send_response(sockfd, 0, "[Client] Start receive file");
+	ret = tcp_dd_send_response(sockfd, 0, "[Client] Start receive file");
 	if (ret < 0)
 	{
-		pr_red_info("tcp_tftp_send_response");
+		pr_red_info("tcp_dd_send_response");
 		goto out_close_fd;
 	}
 
