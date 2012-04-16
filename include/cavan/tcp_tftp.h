@@ -35,16 +35,16 @@ struct tcp_tftp_file_request
 	char filename[512];
 };
 
+union tcp_tftp_body
+{
+	struct tcp_tftp_response_package res_pkg;
+	struct tcp_tftp_file_request file_req;
+};
+
 struct tcp_tftp_package
 {
 	u32 type;
-
-	union
-	{
-		struct tcp_tftp_response_package res_pkg;
-		struct tcp_tftp_file_request file_req;
-		char data[1024];
-	};
+	union tcp_tftp_body body;
 };
 
 int tcp_tftp_service_run(u16 port);

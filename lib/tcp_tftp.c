@@ -28,19 +28,15 @@ static void tcp_tftp_show_response(struct tcp_tftp_response_package *res)
 
 static int tcp_tftp_send_response(int sockfd, int code, const char *fmt, ...)
 {
-	struct tcp_tftp_package pkg =
-	{
-		.type = TCP_TFTP_RESPONSE,
-		.res_pkg =
-		{
-			.code = code
-		}
-	};
+	struct tcp_tftp_package pkg;
 	int ret;
+
+	pkg.type = TCP_TFTP_RESPONSE;
+	pkg.body.res_pkg.code = code;
 
 	if (fmt == NULL)
 	{
-		pkg.res_pkg.message[0] = 0;
+		pkg.body.res_pkg.message[0] = 0;
 		ret = 1;
 	}
 	else
@@ -48,13 +44,13 @@ static int tcp_tftp_send_response(int sockfd, int code, const char *fmt, ...)
 		va_list ap;
 
 		va_start(ap, fmt);
-		ret = vsprintf(pkg.res_pkg.message, fmt, ap) + 1;
+		ret = vsprintf(pkg.body.res_pkg.message, fmt, ap) + 1;
 		va_end(ap);
 	}
 
-	tcp_tftp_show_response(&pkg.res_pkg);
+	tcp_tftp_show_response(&pkg.body.res_pkg);
 
-	return inet_send(sockfd, &pkg, sizeof(pkg.type) + sizeof(pkg.res_pkg) + ret);
+	return inet_send(sockfd, &pkg, sizeof(pkg.type) + sizeof(pkg.body.res_pkg.code) + ret);
 }
 
 static int tcp_tftp_send_read_request(int sockfd, const char *filename, off_t offset, off_t size, struct tcp_tftp_package *pkg)
@@ -62,11 +58,11 @@ static int tcp_tftp_send_read_request(int sockfd, const char *filename, off_t of
 	int ret;
 
 	pkg->type = TCP_TFTP_READ;
-	pkg->file_req.offset = offset;
-	pkg->file_req.size = size;
-	ret = text_copy(pkg->file_req.filename, filename) - pkg->file_req.filename + 1;
+	pkg->body.file_req.offset = offset;
+	pkg->body.file_req.size = size;
+	ret = text_copy(pkg->body.file_req.filename, filename) - (char *)&pkg + 1;
 
-	ret = inet_send(sockfd, pkg, sizeof(pkg->type) + sizeof(pkg->file_req) + ret);
+	ret = inet_send(sockfd, pkg, ret);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
@@ -83,8 +79,8 @@ static int tcp_tftp_send_read_request(int sockfd, const char *filename, off_t of
 	switch (pkg->type)
 	{
 	case TCP_TFTP_RESPONSE:
-		tcp_tftp_show_response(&pkg->res_pkg);
-		return -pkg->res_pkg.code;
+		tcp_tftp_show_response(&pkg->body.res_pkg);
+		return -pkg->body.res_pkg.code;
 
 	case TCP_TFTP_WRITE:
 		return 0;
@@ -97,19 +93,15 @@ static int tcp_tftp_send_read_request(int sockfd, const char *filename, off_t of
 static int tcp_tftp_send_write_request(int sockfd, const char *filename, off_t offset, off_t size, mode_t mode)
 {
 	int ret;
-	struct tcp_tftp_package pkg =
-	{
-		.type = TCP_TFTP_WRITE,
-		.file_req =
-		{
-			.offset = offset,
-			.size = size,
-			.mode = mode
-		}
-	};
+	struct tcp_tftp_package pkg;
 
-	ret = text_copy(pkg.file_req.filename, filename) - pkg.file_req.filename + 1;
-	ret = inet_send(sockfd, &pkg, sizeof(pkg.type) + sizeof(pkg.file_req) + ret);
+	pkg.type = TCP_TFTP_WRITE;
+	pkg.body.file_req.offset = offset;
+	pkg.body.file_req.size = size;
+	pkg.body.file_req.mode = mode;
+
+	ret = text_copy(pkg.body.file_req.filename, filename) - (char *)&pkg + 1;
+	ret = inet_send(sockfd, &pkg, ret);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
@@ -125,8 +117,8 @@ static int tcp_tftp_send_write_request(int sockfd, const char *filename, off_t o
 
 	if (pkg.type == TCP_TFTP_RESPONSE)
 	{
-		tcp_tftp_show_response(&pkg.res_pkg);
-		return pkg.res_pkg.code;
+		tcp_tftp_show_response(&pkg.body.res_pkg);
+		return pkg.body.res_pkg.code;
 	}
 	else
 	{
@@ -252,12 +244,12 @@ static int tcp_tftp_handle_request(int sockfd)
 	{
 	case TCP_TFTP_READ:
 		pr_bold_info("TCP_TFTP_READ");
-		ret = tcp_tftp_handle_read_request(sockfd, &pkg.file_req);
+		ret = tcp_tftp_handle_read_request(sockfd, &pkg.body.file_req);
 		break;
 
 	case TCP_TFTP_WRITE:
 		pr_bold_info("TCP_TFTP_WRITE");
-		ret = tcp_tftp_handle_write_request(sockfd, &pkg.file_req);
+		ret = tcp_tftp_handle_write_request(sockfd, &pkg.body.file_req);
 		break;
 
 	default:
@@ -443,7 +435,7 @@ int tcp_tftp_receive_file(const char *ip, u16 port, const char *src_file, off_t 
 		goto out_close_sockfd;
 	}
 
-	fd = open(dest_file, O_WRONLY | O_CREAT, pkg.file_req.mode);
+	fd = open(dest_file, O_WRONLY | O_CREAT, pkg.body.file_req.mode);
 	if (fd < 0)
 	{
 		tcp_tftp_send_response(sockfd, fd, "[Client] Open file `%s' failed", dest_file);
@@ -452,7 +444,7 @@ int tcp_tftp_receive_file(const char *ip, u16 port, const char *src_file, off_t 
 
 	if (size == 0)
 	{
-		size = pkg.file_req.size;
+		size = pkg.body.file_req.size;
 	}
 
 	ret = lseek(fd, dest_offset, SEEK_SET);
