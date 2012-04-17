@@ -115,9 +115,7 @@ int main(int argc, char *argv[])
 
 	assert(argc - optind > 1);
 
-	argc--;
-	pname = text_copy(dest_file, argv[argc]);
-	*pname = '/';
+	pname = text_path_cat(dest_file, argv[--argc], NULL);
 
 	for (i = optind; i < argc; i++)
 	{

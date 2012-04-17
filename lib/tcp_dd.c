@@ -180,9 +180,9 @@ static int tcp_dd_handle_read_request(int sockfd, struct tcp_dd_file_request *re
 		return ret;
 	}
 
-	pr_bold_info("filename = %s", req->filename);
-	pr_bold_info("offset = %s", size2text(req->offset));
-	pr_bold_info("size = %s", size2text(size));
+	println("filename = %s", req->filename);
+	println("offset = %s", size2text(req->offset));
+	println("size = %s", size2text(size));
 	ret = ffile_ncopy(fd, sockfd, size);
 
 out_close_fd:
@@ -217,9 +217,9 @@ static int tcp_dd_handle_write_request(int sockfd, struct tcp_dd_file_request *r
 		return ret;
 	}
 
-	pr_bold_info("filename = %s", req->filename);
-	pr_bold_info("offset = %s", size2text(req->offset));
-	pr_bold_info("size = %s", size2text(req->size));
+	println("filename = %s", req->filename);
+	println("offset = %s", size2text(req->offset));
+	println("size = %s", size2text(req->size));
 	ret = ffile_ncopy(sockfd, fd, req->size);
 
 out_close_fd:
@@ -385,9 +385,9 @@ int tcp_dd_send_file(const char *ip, u16 port, const char *src_file, off_t src_o
 		goto out_close_sockfd;
 	}
 
-	pr_bold_info("filename = %s", src_file);
-	pr_bold_info("offset = %s", size2text(src_offset));
-	pr_bold_info("size = %s", size2text(size));
+	println("filename = %s", src_file);
+	println("offset = %s", size2text(src_offset));
+	println("size = %s", size2text(size));
 	ret = ffile_ncopy(fd, sockfd, size);
 
 out_close_sockfd:
@@ -461,9 +461,9 @@ int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t sr
 		goto out_close_fd;
 	}
 
-	pr_bold_info("filename = %s", dest_file);
-	pr_bold_info("offset = %s", size2text(dest_offset));
-	pr_bold_info("size = %s", size2text(size));
+	println("filename = %s", dest_file);
+	println("offset = %s", size2text(dest_offset));
+	println("size = %s", size2text(size));
 	ret = ffile_ncopy(sockfd, fd, size);
 
 out_close_fd:
