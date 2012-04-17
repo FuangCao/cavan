@@ -1,0 +1,55 @@
+#!/bin/bash
+
+function read_select()
+{
+	local opts opt index input
+
+	while :
+	do
+		index=0
+		for opt in $*
+		do
+			echo "${index}. ${opt}"
+			opts[${index}]=${opt}
+			let index++
+		done
+		echo -n "Please input your select: "
+		read input
+		[ "${input}" ] || input=0
+		[ "${input}" -lt "${index}" ] && [ "${input}" -ge "0" ] &&
+		{
+			SELECT=${opts[${input}]}
+			break
+		}
+	done
+}
+
+if [ "$1" ]
+then
+TARGET_MAKEFILE=$1
+else
+TARGET_MAKEFILE=Makefile
+fi
+
+read_select host arm x86
+ARCH=${SELECT}
+read_select none arm-linux- arm-cavan-linux-gnueabi- arm-none-linux-gnueabi-
+CROSS_COMPILE=${SELECT}
+read_select debug release static
+BUILD_TYPE=${SELECT}
+read_select app lib cavan
+BUILD_ENTRY=${SELECT}
+
+[ "${CROSS_COMPILE}" = "none" ] && CROSS_COMPILE=""
+
+cat > ${TARGET_MAKEFILE} << EOF
+ARCH = ${ARCH}
+CROSS_COMPILE = ${CROSS_COMPILE}
+BUILD_TYPE = ${BUILD_TYPE}
+BUILD_ENTRY = ${BUILD_ENTRY}
+CFLAGS =
+LDFLAGS =
+Q = @
+
+include build/core/main2.mk
+EOF
