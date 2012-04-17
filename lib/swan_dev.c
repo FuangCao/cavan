@@ -7,6 +7,7 @@
 #include <cavan/device.h>
 #include <cavan/image.h>
 #include <cavan/parser.h>
+#include <sys/utsname.h>
 
 void show_swan_emmc_partation_table(struct swan_emmc_partition_table *part_table)
 {
@@ -500,6 +501,46 @@ int swan_board_type_check(int pkg_type)
 	if (pkg_type != board_type)
 	{
 		ERROR_RETURN(EINVAL);
+	}
+
+	return 0;
+}
+
+int swan_check_emmc_device(void)
+{
+	if (access_e("/dev/mmcblk1") == 0 || access_e("/dev/mmcblk0p2") == 0)
+	{
+		return 0;
+	}
+
+	if (access_e("/dev/block/mmcblk1") == 0 || access_e("/dev/block/mmcblk0p2") == 0)
+	{
+		return 0;
+	}
+
+	pr_red_info("EMMC device maby bad!");
+
+	return -ENOENT;
+}
+
+int swan_check_uname(void)
+{
+	int ret;
+	struct utsname uts;
+
+	ret = uname(&uts);
+	if (ret < 0)
+	{
+		pr_blue_info("get utsname failed");
+		return 0;
+	}
+
+	println("%s %s %s %s %s", uts.sysname, uts.nodename, uts.release, uts.version, uts.machine);
+
+	if (text_cmp("Linux", uts.sysname) || text_lhcmp("arm", uts.machine))
+	{
+		pr_red_info("This machine is not arm linux");
+		return -EFAULT;
 	}
 
 	return 0;

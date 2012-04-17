@@ -63,4 +63,6 @@ int swan_board_name_to_type(const char *name);
 const char *swan_board_type_tostring(enum swan_board_type type);
 enum swan_board_type get_swan_board_type(void);
 int swan_board_type_check(int pkg_type);
+int swan_check_emmc_device(void);
+int swan_check_uname(void);
 

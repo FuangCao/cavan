@@ -661,7 +661,20 @@ int upgrade(const char *pkg_name, const char *dir_name)
 		MKFS_MASK_VFAT, MKFS_MASK_USERDATA, MKFS_MASK_CACHE, MKFS_MASK_VENDOR
 	};
 
+	ret = swan_check_uname();
+	if (ret < 0)
+	{
+		return ret;
+	}
+
 	open_console(SWAN_CONSOLE_DEVICE);
+
+	ret = swan_check_emmc_device();
+	if (ret < 0)
+	{
+		swan_show_picture("upgrade", 0);
+		return ret;
+	}
 
 	ret = swan_check_md5sum(pkg_name);
 	if (ret < 0)
@@ -924,6 +937,19 @@ int upgrade_simple(const char *pkg_name, const char *dir_name)
 	int ret;
 	int pkg_fd;
 
+	ret = swan_check_uname();
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	ret = swan_check_emmc_device();
+	if (ret < 0)
+	{
+		swan_show_picture("upgrade", 0);
+		return ret;
+	}
+
 	ret = swan_check_md5sum(pkg_name);
 	if (ret < 0)
 	{
@@ -950,7 +976,20 @@ int auto_upgrade(const char *pkg_name)
 	int pkg_fd;
 	struct swan_file_info file_info;
 
+	ret = swan_check_uname();
+	if (ret < 0)
+	{
+		return ret;
+	}
+
 	open_console(SWAN_CONSOLE_DEVICE);
+
+	ret = swan_check_emmc_device();
+	if (ret < 0)
+	{
+		swan_show_picture("upgrade", 0);
+		return ret;
+	}
 
 	if (pkg_name == NULL || file_test(pkg_name, "f") < 0)
 	{

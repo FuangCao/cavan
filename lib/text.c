@@ -1637,7 +1637,7 @@ int vsystem_command(const char *command, va_list ap)
 	ret = system_command_simple(buff);
 	if (ret == 0)
 	{
-		goto out_sync;
+		return 0;
 	}
 
 	if (WEXITSTATUS(ret) != 127)
@@ -1649,7 +1649,7 @@ int vsystem_command(const char *command, va_list ap)
 	ret = system_command_simple(buff);
 	if (ret == 0)
 	{
-		goto out_sync;
+		return 0;
 	}
 
 	if (WEXITSTATUS(ret) != 127)
@@ -1661,15 +1661,10 @@ int vsystem_command(const char *command, va_list ap)
 	ret = system_command_simple(buff);
 	if (ret == 0)
 	{
-		goto out_sync;
+		return 0;
 	}
 
 	return -1;
-
-out_sync:
-	system_sync();
-
-	return ret;
 }
 
 int system_command_retry(int count, const char *command, ...)
