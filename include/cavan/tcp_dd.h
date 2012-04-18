@@ -24,6 +24,7 @@ enum tcp_dd_package_type
 struct tcp_dd_response_package
 {
 	int code;
+	int number;
 	char message[1024];
 };
 
@@ -32,7 +33,7 @@ struct tcp_dd_file_request
 	off_t offset;
 	off_t size;
 	mode_t mode;
-	char filename[512];
+	char filename[1024];
 };
 
 union tcp_dd_body

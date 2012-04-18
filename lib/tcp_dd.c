@@ -8,6 +8,7 @@
 #include <cavan/file.h>
 #include <cavan/tcp_dd.h>
 #include <cavan/service.h>
+#include <cavan/device.h>
 
 static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
@@ -18,7 +19,14 @@ static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 
 	if (res->code < 0)
 	{
-		pr_red_info("%s [%s]", res->message, strerror(-res->code));
+		if (res->number)
+		{
+			pr_red_info("%s [%s]", res->message, strerror(res->number));
+		}
+		else
+		{
+			pr_red_info("%s", res->message);
+		}
 	}
 	else
 	{
@@ -33,6 +41,7 @@ static int __printf_format_34__ tcp_dd_send_response(int sockfd, int code, const
 
 	pkg.type = TCP_DD_RESPONSE;
 	pkg.body.res_pkg.code = code;
+	pkg.body.res_pkg.number = errno;
 
 	if (fmt == NULL)
 	{
@@ -50,7 +59,7 @@ static int __printf_format_34__ tcp_dd_send_response(int sockfd, int code, const
 
 	tcp_dd_show_response(&pkg.body.res_pkg);
 
-	return inet_send(sockfd, &pkg, sizeof(pkg.type) + sizeof(pkg.body.res_pkg.code) + ret);
+	return inet_send(sockfd, &pkg, sizeof(pkg.type) + (sizeof(int) * 2) + ret);
 }
 
 static int tcp_dd_send_read_request(int sockfd, const char *filename, off_t offset, off_t size, struct tcp_dd_package *pkg)
@@ -196,7 +205,12 @@ static int tcp_dd_handle_write_request(int sockfd, struct tcp_dd_file_request *r
 	int fd;
 	int ret;
 
-	fd = open(req->filename, O_WRONLY | O_CREAT, req->mode);
+	if (file_test(req->filename, "b") == 0)
+	{
+		umount_device(req->filename, MNT_DETACH);
+	}
+
+	fd = open(req->filename, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, req->mode);
 	if (fd < 0)
 	{
 		tcp_dd_send_response(sockfd, fd, "[Server] Open file `%s' failed", req->filename);
@@ -421,6 +435,11 @@ int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t sr
 		dest_file = src_file;
 	}
 
+	if (file_test(dest_file, "b") == 0)
+	{
+		umount_device(dest_file, MNT_DETACH);
+	}
+
 	sockfd = inet_create_tcp_link2(ip, port);
 	if (sockfd < 0)
 	{
@@ -435,7 +454,7 @@ int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t sr
 		goto out_close_sockfd;
 	}
 
-	fd = open(dest_file, O_WRONLY | O_CREAT, pkg.body.file_req.mode);
+	fd = open(dest_file, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, pkg.body.file_req.mode);
 	if (fd < 0)
 	{
 		tcp_dd_send_response(sockfd, fd, "[Client] Open file `%s' failed", dest_file);
