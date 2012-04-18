@@ -42,20 +42,20 @@ bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
 	cavan-tftp_copy$(EXEEXT) cavan-tftp_command$(EXEEXT) \
 	cavan-tftp_auto_dd$(EXEEXT) cavan-textlen$(EXEEXT) \
 	cavan-tcp_dd_server$(EXEEXT) cavan-tcp_dd$(EXEEXT) \
-	cavan-system_init$(EXEEXT) cavan-swan_vn$(EXEEXT) \
-	cavan-swan_vk$(EXEEXT) cavan-swan_upgrade$(EXEEXT) \
-	cavan-swan_ts$(EXEEXT) cavan-swan_sfdisk$(EXEEXT) \
-	cavan-swan_mkfs$(EXEEXT) cavan-swan_md5$(EXEEXT) \
-	cavan-swan_mac$(EXEEXT) cavan-swan_ipu$(EXEEXT) \
-	cavan-swan_fac$(EXEEXT) cavan-swan_emmc$(EXEEXT) \
-	cavan-swan_check$(EXEEXT) cavan-super_upgrade$(EXEEXT) \
-	cavan-shrink$(EXEEXT) cavan-show_file$(EXEEXT) \
-	cavan-screen$(EXEEXT) cavan-rle$(EXEEXT) cavan-resize$(EXEEXT) \
-	cavan-remove$(EXEEXT) cavan-ramdisk$(EXEEXT) \
-	cavan-poll_event$(EXEEXT) cavan-part_table$(EXEEXT) \
-	cavan-part_show$(EXEEXT) cavan-part_probe$(EXEEXT) \
-	cavan-net_monitor$(EXEEXT) cavan-mtd$(EXEEXT) \
-	cavan-move$(EXEEXT) cavan-mount$(EXEEXT) \
+	cavan-tcp_copy$(EXEEXT) cavan-system_init$(EXEEXT) \
+	cavan-swan_vn$(EXEEXT) cavan-swan_vk$(EXEEXT) \
+	cavan-swan_upgrade$(EXEEXT) cavan-swan_ts$(EXEEXT) \
+	cavan-swan_sfdisk$(EXEEXT) cavan-swan_mkfs$(EXEEXT) \
+	cavan-swan_md5$(EXEEXT) cavan-swan_mac$(EXEEXT) \
+	cavan-swan_ipu$(EXEEXT) cavan-swan_fac$(EXEEXT) \
+	cavan-swan_emmc$(EXEEXT) cavan-swan_check$(EXEEXT) \
+	cavan-super_upgrade$(EXEEXT) cavan-shrink$(EXEEXT) \
+	cavan-show_file$(EXEEXT) cavan-screen$(EXEEXT) \
+	cavan-rle$(EXEEXT) cavan-resize$(EXEEXT) cavan-remove$(EXEEXT) \
+	cavan-ramdisk$(EXEEXT) cavan-poll_event$(EXEEXT) \
+	cavan-part_table$(EXEEXT) cavan-part_show$(EXEEXT) \
+	cavan-part_probe$(EXEEXT) cavan-net_monitor$(EXEEXT) \
+	cavan-mtd$(EXEEXT) cavan-move$(EXEEXT) cavan-mount$(EXEEXT) \
 	cavan-modem_upgrade$(EXEEXT) cavan-mksdcard$(EXEEXT) \
 	cavan-mknp$(EXEEXT) cavan-inotify$(EXEEXT) \
 	cavan-image_dd$(EXEEXT) cavan-git_daemon$(EXEEXT) \
@@ -266,6 +266,9 @@ cavan_swan_vn_LDADD = $(LDADD)
 am_cavan_system_init_OBJECTS = system_init.$(OBJEXT)
 cavan_system_init_OBJECTS = $(am_cavan_system_init_OBJECTS)
 cavan_system_init_LDADD = $(LDADD)
+am_cavan_tcp_copy_OBJECTS = tcp_copy.$(OBJEXT)
+cavan_tcp_copy_OBJECTS = $(am_cavan_tcp_copy_OBJECTS)
+cavan_tcp_copy_LDADD = $(LDADD)
 am_cavan_tcp_dd_OBJECTS = tcp_dd.$(OBJEXT)
 cavan_tcp_dd_OBJECTS = $(am_cavan_tcp_dd_OBJECTS)
 cavan_tcp_dd_LDADD = $(LDADD)
@@ -352,14 +355,15 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_swan_sfdisk_SOURCES) $(cavan_swan_ts_SOURCES) \
 	$(cavan_swan_upgrade_SOURCES) $(cavan_swan_vk_SOURCES) \
 	$(cavan_swan_vn_SOURCES) $(cavan_system_init_SOURCES) \
-	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
-	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
-	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
-	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
-	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
-	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
-	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
-	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES)
+	$(cavan_tcp_copy_SOURCES) $(cavan_tcp_dd_SOURCES) \
+	$(cavan_tcp_dd_server_SOURCES) $(cavan_textlen_SOURCES) \
+	$(cavan_tftp_auto_dd_SOURCES) $(cavan_tftp_command_SOURCES) \
+	$(cavan_tftp_copy_SOURCES) $(cavan_tftp_dd_SOURCES) \
+	$(cavan_tftp_dd_server_SOURCES) $(cavan_touch_SOURCES) \
+	$(cavan_tty_mode_SOURCES) $(cavan_umount_SOURCES) \
+	$(cavan_usb_SOURCES) $(cavan_usb_copy_SOURCES) \
+	$(cavan_usb_dd_SOURCES) $(cavan_usb_dd_server_SOURCES) \
+	$(cavan_vfat_SOURCES)
 DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_auto_mount_SOURCES) $(cavan_battery_SOURCES) \
 	$(cavan_battery_level_SOURCES) $(cavan_bdata_SOURCES) \
@@ -390,14 +394,15 @@ DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_swan_sfdisk_SOURCES) $(cavan_swan_ts_SOURCES) \
 	$(cavan_swan_upgrade_SOURCES) $(cavan_swan_vk_SOURCES) \
 	$(cavan_swan_vn_SOURCES) $(cavan_system_init_SOURCES) \
-	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
-	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
-	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
-	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
-	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
-	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
-	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
-	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES)
+	$(cavan_tcp_copy_SOURCES) $(cavan_tcp_dd_SOURCES) \
+	$(cavan_tcp_dd_server_SOURCES) $(cavan_textlen_SOURCES) \
+	$(cavan_tftp_auto_dd_SOURCES) $(cavan_tftp_command_SOURCES) \
+	$(cavan_tftp_copy_SOURCES) $(cavan_tftp_dd_SOURCES) \
+	$(cavan_tftp_dd_server_SOURCES) $(cavan_touch_SOURCES) \
+	$(cavan_tty_mode_SOURCES) $(cavan_umount_SOURCES) \
+	$(cavan_usb_SOURCES) $(cavan_usb_copy_SOURCES) \
+	$(cavan_usb_dd_SOURCES) $(cavan_usb_dd_server_SOURCES) \
+	$(cavan_vfat_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -551,6 +556,7 @@ cavan_swan_upgrade_SOURCES = swan_upgrade.c
 cavan_swan_vk_SOURCES = swan_vk.c
 cavan_swan_vn_SOURCES = swan_vn.c
 cavan_system_init_SOURCES = system_init.c
+cavan_tcp_copy_SOURCES = tcp_copy.c
 cavan_tcp_dd_SOURCES = tcp_dd.c
 cavan_tcp_dd_server_SOURCES = tcp_dd_server.c
 cavan_textlen_SOURCES = textlen.c
@@ -821,6 +827,9 @@ cavan-swan_vn$(EXEEXT): $(cavan_swan_vn_OBJECTS) $(cavan_swan_vn_DEPENDENCIES)
 cavan-system_init$(EXEEXT): $(cavan_system_init_OBJECTS) $(cavan_system_init_DEPENDENCIES) 
 	@rm -f cavan-system_init$(EXEEXT)
 	$(LINK) $(cavan_system_init_OBJECTS) $(cavan_system_init_LDADD) $(LIBS)
+cavan-tcp_copy$(EXEEXT): $(cavan_tcp_copy_OBJECTS) $(cavan_tcp_copy_DEPENDENCIES) 
+	@rm -f cavan-tcp_copy$(EXEEXT)
+	$(LINK) $(cavan_tcp_copy_OBJECTS) $(cavan_tcp_copy_LDADD) $(LIBS)
 cavan-tcp_dd$(EXEEXT): $(cavan_tcp_dd_OBJECTS) $(cavan_tcp_dd_DEPENDENCIES) 
 	@rm -f cavan-tcp_dd$(EXEEXT)
 	$(LINK) $(cavan_tcp_dd_OBJECTS) $(cavan_tcp_dd_LDADD) $(LIBS)
@@ -937,6 +946,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_vk.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_vn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/system_init.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_copy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_dd_server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/textlen.Po@am__quote@
