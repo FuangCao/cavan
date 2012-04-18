@@ -49,7 +49,6 @@ function build_env()
 
 		make -C ${sub} clean && make -C ${sub} || echo ${sub} >> ${LOG_FILE_PATH}
 	done
-	
 }
 
 CMD_ABS_DIR="$(get_file_abs_dirname $0)"

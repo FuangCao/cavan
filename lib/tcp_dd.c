@@ -80,7 +80,7 @@ static int tcp_dd_send_read_request(int sockfd, const char *filename, off_t offs
 	{
 	case TCP_DD_RESPONSE:
 		tcp_dd_show_response(&pkg->body.res_pkg);
-		return -pkg->body.res_pkg.code;
+		return pkg->body.res_pkg.code;
 
 	case TCP_DD_WRITE:
 		return 0;

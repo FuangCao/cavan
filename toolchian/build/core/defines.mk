@@ -139,3 +139,7 @@ $(Q)echo "Remake device node $1"
 $(Q)rm $1 -rf
 $(Q)sudo mknod $1 $2 $3 $4
 endef
+
+define find_makefile
+$(word 1,$(wildcard $1))
+endef
