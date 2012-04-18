@@ -35,13 +35,13 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--without-ppl \
 					--without-cloog
 
-$(GCC_NAME)-stage1:
+stage1:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION1)
 	$(Q)+make
 	$(Q)+make install
 	$(Q)ln -vsf libgcc.a $$($(CAVAN_TARGET_PLAT)-gcc -print-libgcc-file-name | sed 's/libgcc/&_eh/')
 
-$(GCC_NAME)-stage2:
+stage2:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION2)
 	$(Q)+make AS_FOR_TARGET="$(CAVAN_TARGET_PLAT)-as" LD_FOR_TARGET="$(CAVAN_TARGET_PLAT)-ld"
 	$(Q)+make install

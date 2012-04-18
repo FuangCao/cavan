@@ -19,9 +19,11 @@ def show_usage():
 	pr_bold_info("%s command" % os.path.basename(sys.argv[0]))
 
 def execute_repo_command(command_raw):
-	dom = parse(".repo/manifest.xml")
-	tagManifest = dom.getElementsByTagName("manifest").item(0)
 	root_path = os.path.abspath(".")
+	os.chdir(os.path.join(root_path, ".repo/manifests"))
+	os.system("git pull")
+	dom = parse(os.path.join(root_path, ".repo/manifest.xml"))
+	tagManifest = dom.getElementsByTagName("manifest").item(0)
 	for project in tagManifest.getElementsByTagName("project"):
 		path = project.getAttribute("path")
 		name = project.getAttribute("name")

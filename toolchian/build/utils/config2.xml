@@ -1,39 +1,5 @@
 <packages>
-	<package name="gawk" version="4.0.0" depend="" config=""
-			 url="http://ftp.gnu.org/gnu/gawk">
-	</package>
-
-	<package name="m4" version="1.4.16" depend="gawk" config=""
-			 url="http://ftp.gnu.org/gnu/m4">
-	</package>
-
-	<package name="autoconf" version="2.68" depend="m4" config=""
-			 url="http://ftp.gnu.org/gnu/autoconf">
-	</package>
-
-	<package name="automake" version="1.11.1" depend="autoconf" config=""
-			 url="ftp://ftp.gnu.org/gnu/automake">
-	</package>
-
-	<package name="gperf" version="3.0.4" depend="automake" config=""
-			 url="http://ftp.gnu.org/gnu/gperf">
-	</package>
-
-	<package name="gettext" version="0.18.1.1" depend="gperf" config=""
-			 url="http://ftp.gnu.org/pub/gnu/gettext">
-	</package>
-
-	<package name="ncurses" version="5.9" depend="gettext"
-			 config="--enable-pc-files"
-			 url="http://ftp.gnu.org/gnu/ncurses">
-	</package>
-
-	<package name="texinfo" version="4.13a" depend="ncurses"
-			 config="LDFLAGS=-L$(UTILS_PATH)/usr/lib"
-			 url="http://ftp.gnu.org/gnu/texinfo">
-	</package>
-
-	<package name="Python" version="2.7.2" depend="texinfo"
+	<package name="Python" version="2.7.2" depend=""
 			 config="CFLAGS=-I$(UTILS_PATH)/usr/include/ncurses LDFLAGS=-L$(UTILS_PATH)/usr/lib"
 			 url="http://www.python.org/ftp/python/$(PYTHON_VERSION)">
 	</package>

@@ -41,7 +41,7 @@ MARK_GCC2 = $(MARK_TOOLCHIAN)/$(GCC_NAME)-stage2
 MARK_GLIBC = $(MARK_TOOLCHIAN)/$(GLIBC_NAME)
 MARK_HEADER = $(MARK_TOOLCHIAN)/$(HEADER_NAME)
 
-MAKEFILE_BINUTIL = $(call find_makefile,$(BUILD_TOOLCHIAN)/$(BINUTILS_NAME).mk $(BUILD_TOOLCHIAN)/binutils.mk)
+MAKEFILE_BINUTILS = $(call find_makefile,$(BUILD_TOOLCHIAN)/$(BINUTILS_NAME).mk $(BUILD_TOOLCHIAN)/binutils.mk)
 MAKEFILE_GCC = $(call find_makefile,$(BUILD_TOOLCHIAN)/$(GCC_NAME).mk $(BUILD_TOOLCHIAN)/gcc.mk)
 MAKEFILE_GLIBC = $(call find_makefile,$(BUILD_TOOLCHIAN)/$(GLIBC_NAME).mk $(BUILD_TOOLCHIAN)/glibc.mk)
 MAKEFILE_HEADER = $(BUILD_TOOLCHIAN)/$(HEADER_NAME).mk
@@ -93,6 +93,9 @@ then \
 	$(call simple_decompression_file,$(MPFR_NAME),$(SRC_GCC)/mpfr,$(MPFR_URL)); \
 	$(call simple_decompression_file,$(MPC_NAME),$(SRC_GCC)/mpc,$(MPC_URL)); \
 	$(call apply_patchs,$(GCC_NAME),$(SRC_GCC)); \
+	$(call apply_patchs,$(GMP_NAME),$(SRC_GCC)/gmp); \
+	$(call apply_patchs,$(MPFR_NAME),$(SRC_GCC)/mpfr); \
+	$(call apply_patchs,$(MPC_NAME),$(SRC_GCC)/mpc); \
 	sed -i 's,\s*\(const\s\+char\s\+pkgversion_string.*=\).*;\s*$$,\1 "[$(PACKAGE_VERSION_STRING)] ";,g' $(SRC_GCC)/gcc/version.c; \
 fi
 endef
@@ -115,7 +118,7 @@ endif
 $(MARK_GCC2): $(MARK_GLIBC)
 	$(call decompression_gcc)
 	$(call remake_directory,$(OUT_GCC2))
-	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) $(GCC_NAME)-stage2
+	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) stage2
 	$(call generate_mark)
 
 ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
@@ -128,7 +131,7 @@ $(MARK_GLIBC): $(MARK_GCC1)
 $(MARK_GCC1): $(MARK_BINUTILS)
 	$(call decompression_gcc)
 	$(call remake_directory,$(OUT_GCC1))
-	$(Q)+make -C $(OUT_GCC1) -f $(MAKEFILE_GCC) $(GCC_NAME)-stage1
+	$(Q)+make -C $(OUT_GCC1) -f $(MAKEFILE_GCC) stage1
 	$(call generate_mark)
 else
 $(MARK_GLIBC): $(MARK_BINUTILS)
