@@ -459,6 +459,7 @@ u16 udp_checksum(struct ip_header *ip_hdr)
 
 void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port)
 {
+	println("IP = %s, port = %d", ip ? ip : "INADDR_ANY", port);
 	addr->sin_family = AF_INET;
 	addr->sin_port = htons(port);
 	addr->sin_addr.s_addr = ip ? inet_addr(ip) : htonl(INADDR_ANY);
