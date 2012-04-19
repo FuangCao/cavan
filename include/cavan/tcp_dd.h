@@ -9,7 +9,7 @@
 #include <cavan.h>
 #include <cavan/network.h>
 
-#define TCP_DD_SERVER_PORT		8888
+#define TCP_DD_DEFAULT_PORT		8888
 #define TCP_DD_DAEMON_COUNT		10
 #define TCP_DD_TIMEOUT			5000
 

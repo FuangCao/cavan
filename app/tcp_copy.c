@@ -55,12 +55,13 @@ int main(int argc, char *argv[])
 		},
 	};
 	int i;
-	char ip[16] = "127.0.0.1";
-	u16 port = TCP_DD_SERVER_PORT;
+	char ip[16];
+	u16 port = 0;
 	char dest_file[1024], *pname;
 	int (*handler)(const char *, u16, const char *, off_t, const char *, off_t, off_t);
 
 	handler = NULL;
+	ip[0] = 0;
 
 	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrR", long_option, &option_index)) != EOF)
 	{
@@ -114,6 +115,16 @@ int main(int argc, char *argv[])
 	}
 
 	assert(argc - optind > 1);
+
+	if (ip[0] == 0)
+	{
+		cavan_get_server_ip(ip);
+	}
+
+	if (port == 0)
+	{
+		port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	}
 
 	pname = text_path_cat(dest_file, argv[--argc], NULL);
 

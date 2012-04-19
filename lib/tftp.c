@@ -132,7 +132,7 @@ static int check_ack(const struct tftp_ack_pkg *ack_pkg_p, u16 blk_num)
 	return 0;
 }
 
-int send_mkdir_request(const char *ip_address, u16 port, const char *pathname, mode_t mode)
+int send_mkdir_request(const char *ip, u16 port, const char *pathname, mode_t mode)
 {
 	int sockfd;
 	int ret;
@@ -152,7 +152,7 @@ int send_mkdir_request(const char *ip_address, u16 port, const char *pathname, m
 	pkg.mkdir.mode = mode;
 	strcpy(pkg.mkdir.pathname, pathname);
 
-	inet_sockaddr_init(&remote_addr, ip_address, port);
+	inet_sockaddr_init(&remote_addr, ip, port);
 
 	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pathname) + 1 + MEMBER_OFFSET(struct tftp_mkdir_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
 	if (recvlen < 0)
@@ -169,7 +169,7 @@ out_close_socket:
 	return ret;
 }
 
-int vsend_command_request(const char *ip_address, u16 port, const char *command, va_list ap)
+int vsend_command_request(const char *ip, u16 port, const char *command, va_list ap)
 {
 	int sockfd;
 	int ret;
@@ -188,7 +188,7 @@ int vsend_command_request(const char *ip_address, u16 port, const char *command,
 	pkg.command.op_code = htons(TFTP_COMMAND_REQ);
 	vsprintf(pkg.command.command, command, ap);
 
-	inet_sockaddr_init(&remote_addr, ip_address, port);
+	inet_sockaddr_init(&remote_addr, ip, port);
 
 	println("Send command \"%s\"", pkg.command.command);
 
@@ -219,29 +219,29 @@ out_close_socket:
 	return ret;
 }
 
-int send_command_request(const char *ip_address, u16 port, const char *command, ...)
+int send_command_request(const char *ip, u16 port, const char *command, ...)
 {
 	int ret;
 	va_list ap;
 
 	va_start(ap, command);
-	ret = vsend_command_request(ip_address, port, command, ap);
+	ret = vsend_command_request(ip, port, command, ap);
 	va_end(ap);
 
 	return ret;
 }
 
-int send_command_request_show(const char *ip_address, u16 port, const char *command, ...)
+int send_command_request_show(const char *ip, u16 port, const char *command, ...)
 {
 	int cmd_ret, ret;
 	va_list ap;
 	const char *log_path = TFTP_COMMAND_LOG_FILE;
 
 	va_start(ap, command);
-	cmd_ret = vsend_command_request(ip_address, port, command, ap);
+	cmd_ret = vsend_command_request(ip, port, command, ap);
 	va_end(ap);
 
-	ret = tftp_client_receive_all(ip_address, port, log_path, log_path);
+	ret = tftp_client_receive_all(ip, port, log_path, log_path);
 	if (ret < 0)
 	{
 		error_msg("receive command response failed");
@@ -258,7 +258,7 @@ int send_command_request_show(const char *ip_address, u16 port, const char *comm
 	return cmd_ret;
 }
 
-int send_mknode_request(const char *ip_address, u16 port, const char *pathname, mode_t mode, dev_t dev)
+int send_mknode_request(const char *ip, u16 port, const char *pathname, mode_t mode, dev_t dev)
 {
 	int sockfd;
 	int ret;
@@ -279,7 +279,7 @@ int send_mknode_request(const char *ip_address, u16 port, const char *pathname, 
 	pkg.mknode.dev = dev;
 	strcpy(pkg.mknode.pathname, pathname);
 
-	inet_sockaddr_init(&remote_addr, ip_address, port);
+	inet_sockaddr_init(&remote_addr, ip, port);
 
 	println("Request mknode %s", pathname);
 
@@ -298,7 +298,7 @@ out_close_socket:
 	return ret;
 }
 
-int send_symlink_request(const char *ip_address, u16 port, const char *file_in, const char *file_out)
+int send_symlink_request(const char *ip, u16 port, const char *file_in, const char *file_out)
 {
 	int sockfd;
 	int ret;
@@ -332,7 +332,7 @@ int send_symlink_request(const char *ip_address, u16 port, const char *file_in, 
 	pkg.symlink.op_code = htons(TFTP_SYMLINK_REQ);
 	strcpy(pkg.symlink.pathname, file_out);
 
-	inet_sockaddr_init(&remote_addr, ip_address, port);
+	inet_sockaddr_init(&remote_addr, ip, port);
 
 	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, oldpath_len + newpath_len + 2 + MEMBER_OFFSET(struct tftp_symlink_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
 	if (recvlen < 0)
@@ -349,7 +349,7 @@ out_close_socket:
 	return ret;
 }
 
-int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_in, const char *file_out, u32 offset_in, u32 offset_out, u32 size)
+int tftp_client_receive_file(const char *ip, u16 port, const char *file_in, const char *file_out, u32 offset_in, u32 offset_out, u32 size)
 {
 	int sockfd, fd;
 	int ret;
@@ -384,7 +384,7 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 		goto out_close_fd;
 	}
 
-	inet_sockaddr_init(&remote_addr, ip_address, port);
+	inet_sockaddr_init(&remote_addr, ip, port);
 
 	if (offset_in || size)
 	{
@@ -405,7 +405,7 @@ int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_
 	println("skip = %s", size2text(offset_in));
 	println("seek = %s", size2text(offset_out));
 	println("size = %s", size2text(size));
-	println("%s @ %d : %s => %s", ip_address, port, file_in, file_out);
+	println("%s @ %d : %s => %s", ip, port, file_in, file_out);
 
 	blk_num = 1;
 
@@ -483,7 +483,7 @@ out_close_fd:
 	return ret;
 }
 
-int tftp_client_receive_all(const char *ip_address, u16 port, const char *file_in, const char *file_out)
+int tftp_client_receive_all(const char *ip, u16 port, const char *file_in, const char *file_out)
 {
 	char temp_name[512];
 
@@ -493,10 +493,10 @@ int tftp_client_receive_all(const char *ip_address, u16 port, const char *file_i
 		file_out = temp_name;
 	}
 
-	return tftp_client_receive_file(ip_address, port, file_in, file_out, 0, 0, 0);
+	return tftp_client_receive_file(ip, port, file_in, file_out, 0, 0, 0);
 }
 
-int tftp_client_send_file(const char *ip_address, u16 port, const char *file_in, const char *file_out, u32 offset_in, u32 offset_out, u32 size)
+int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const char *file_out, u32 offset_in, u32 offset_out, u32 size)
 {
 	int sockfd, fd;
 	int ret;
@@ -554,7 +554,7 @@ int tftp_client_send_file(const char *ip_address, u16 port, const char *file_in,
 		goto out_close_fd;
 	}
 
-	inet_sockaddr_init(&remote_addr, ip_address, port);
+	inet_sockaddr_init(&remote_addr, ip, port);
 
 	if (offset_out || size)
 	{
@@ -575,7 +575,7 @@ int tftp_client_send_file(const char *ip_address, u16 port, const char *file_in,
 	println("skip = %s", size2text(offset_in));
 	println("seek = %s", size2text(offset_out));
 	println("size = %s", size2text(size));
-	println("%s => %s @ %d : %s", file_in, ip_address, port, file_out);
+	println("%s => %s @ %d : %s", file_in, ip, port, file_out);
 
 	blk_num = 0;
 	readlen = TFTP_DATA_LEN;
@@ -658,7 +658,7 @@ out_close_fd:
 	return ret;
 }
 
-int tftp_client_send_directory(const char *ip_address, u16 port, const char *dir_in, const char *dir_out)
+int tftp_client_send_directory(const char *ip, u16 port, const char *dir_in, const char *dir_out)
 {
 	int ret;
 	DIR *src_dir;
@@ -673,7 +673,7 @@ int tftp_client_send_directory(const char *ip_address, u16 port, const char *dir
 		return -1;
 	}
 
-	ret = send_mkdir_request(ip_address, port, dir_out, 0777);
+	ret = send_mkdir_request(ip, port, dir_out, 0777);
 	if (ret < 0)
 	{
 		error_msg("send directory request failed");
@@ -709,7 +709,7 @@ int tftp_client_send_directory(const char *ip_address, u16 port, const char *dir
 		text_copy(p_in, dt->d_name);
 		text_copy(p_out, dt->d_name);
 
-		ret = tftp_client_send_all(ip_address, port, temp_name_in, temp_name_out);
+		ret = tftp_client_send_all(ip, port, temp_name_in, temp_name_out);
 		if (ret < 0)
 		{
 			error_msg("tftp_client_send_all failed");
@@ -726,7 +726,7 @@ out_close_dir:
 
 }
 
-int tftp_client_send_all(const char *ip_address, u16 port, const char *file_in, const char *file_out)
+int tftp_client_send_all(const char *ip, u16 port, const char *file_in, const char *file_out)
 {
 	int ret;
 	struct stat st;
@@ -742,16 +742,16 @@ int tftp_client_send_all(const char *ip_address, u16 port, const char *file_in, 
 	{
 	case S_IFBLK:
 	case S_IFCHR:
-		return send_mknode_request(ip_address, port, file_out, st.st_mode, st.st_rdev);
+		return send_mknode_request(ip, port, file_out, st.st_mode, st.st_rdev);
 
 	case S_IFLNK:
-		return send_symlink_request(ip_address, port, file_in, file_out);
+		return send_symlink_request(ip, port, file_in, file_out);
 
 	case S_IFDIR:
-		return tftp_client_send_directory(ip_address, port, file_in, file_out);
+		return tftp_client_send_directory(ip, port, file_in, file_out);
 
 	case S_IFREG:
-		return tftp_client_send_file(ip_address, port, file_in, file_out, 0, 0, 0);
+		return tftp_client_send_file(ip, port, file_in, file_out, 0, 0, 0);
 
 	default:
 		error_msg("unknown file type");

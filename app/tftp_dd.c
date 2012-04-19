@@ -15,8 +15,8 @@
 static void show_usage(void)
 {
 	println("Usage:");
-	println("tftp_dd [--ip=ip_address] [--port=port] -w if=local_file of=remote_file");
-	println("tftp_dd [--ip=ip_address] [--port=port] -r if=remote_file of=local_file");
+	println("tftp_dd [--ip=ip] [--port=port] -w if=local_file of=remote_file");
+	println("tftp_dd [--ip=ip] [--port=port] -r if=remote_file of=local_file");
 }
 
 int main(int argc, char *argv[])
@@ -24,8 +24,8 @@ int main(int argc, char *argv[])
 	int i;
 	int c;
 	int ret;
-	char ip_address[20];
-	u16 port = TFTP_DEFAULT_PORT;
+	char ip[20];
+	u16 port = 0;
 	char input_file[128];
 	char output_file[128];
 	u32 bs = 1, seek = 0, skip = 0, count = 0;
@@ -49,7 +49,8 @@ int main(int argc, char *argv[])
 		},
 	};
 
-	ip_address[0] = 0;
+	ip[0] = 0;
+	port = 0;
 	handle = NULL;
 
 	while ((c = getopt_long(argc, argv, "rRgGwWsSpPhH", long_options, &option_index)) != EOF)
@@ -57,7 +58,7 @@ int main(int argc, char *argv[])
 		switch (c)
 		{
 			case 0:
-				strcpy(ip_address, optarg);
+				strcpy(ip, optarg);
 				break;
 
 			case 1:
@@ -98,9 +99,14 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	if (ip_address[0] == 0)
+	if (ip[0] == 0)
 	{
-		strcpy(ip_address, TFTP_DEFAULT_IP);
+		cavan_get_server_ip(ip);
+	}
+
+	if (port == 0)
+	{
+		port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
 	input_file[0] = 0;
@@ -124,7 +130,7 @@ int main(int argc, char *argv[])
 			}
 			else if (strcmp(p, "p") == 0)
 			{
-				strcpy(ip_address, para_value);
+				strcpy(ip, para_value);
 			}
 			else
 			{
@@ -196,7 +202,7 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	ret = handle(ip_address, port, input_file, output_file, skip * bs, seek * bs, count * bs);
+	ret = handle(ip, port, input_file, output_file, skip * bs, seek * bs, count * bs);
 	if (ret < 0)
 	{
 		error_msg("tftp dd failed");

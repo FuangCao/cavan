@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 {
 	int ret;
 	int sockfd;
-	u16 server_port = TFTP_DEFAULT_PORT;
+	u16 server_port = 0;
 	struct option long_options[] =
 	{
 		{
@@ -193,6 +193,11 @@ int main(int argc, char *argv[])
 			error_msg("illegal option");
 			return -EINVAL;
 		}
+	}
+
+	if (server_port)
+	{
+		server_port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
 	sockfd = inet_create_udp_service(server_port);

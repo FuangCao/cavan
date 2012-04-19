@@ -457,11 +457,11 @@ u16 udp_checksum(struct ip_header *ip_hdr)
 	return ~((checksum + (checksum >> 16)) & 0xFFFF);
 }
 
-void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip_address, u16 port)
+void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port)
 {
 	addr->sin_family = AF_INET;
 	addr->sin_port = htons(port);
-	addr->sin_addr.s_addr = ip_address ? inet_addr(ip_address) : htonl(INADDR_ANY);
+	addr->sin_addr.s_addr = ip ? inet_addr(ip) : htonl(INADDR_ANY);
 }
 
 int inet_create_tcp_link1(const struct sockaddr_in *addr)
@@ -487,11 +487,11 @@ int inet_create_tcp_link1(const struct sockaddr_in *addr)
 	return sockfd;
 }
 
-int inet_create_tcp_link2(const char *ip_address, u16 port)
+int inet_create_tcp_link2(const char *ip, u16 port)
 {
 	struct sockaddr_in addr;
 
-	inet_sockaddr_init(&addr, ip_address, port);
+	inet_sockaddr_init(&addr, ip, port);
 
 	return inet_create_tcp_link1(&addr);
 }
@@ -744,4 +744,30 @@ int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_a
 	*sin_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
 
 	return 0;
+}
+
+char *cavan_get_server_ip(char *buff)
+{
+	const char *ip;
+
+	ip = getenv(CAVAN_IP_ENV_NAME);
+	if (ip == NULL)
+	{
+		ip = CAVAN_DEFAULT_IP;
+	}
+
+	return text_copy(buff, ip);
+}
+
+u16 cavan_get_server_port(u16 default_port)
+{
+	const char *port;
+
+	port = getenv(CAVAN_PORT_ENV_NAME);
+	if (port == NULL)
+	{
+		return default_port;
+	}
+
+	return text2value_unsigned(port, NULL, 10);
 }

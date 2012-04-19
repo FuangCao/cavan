@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	port = argc > 1 ? text2value_unsigned(argv[1], NULL, 10) : TCP_DD_SERVER_PORT;
+	port = argc > 1 ? text2value_unsigned(argv[1], NULL, 10) : cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
 	return tcp_dd_service_run(port);
 }

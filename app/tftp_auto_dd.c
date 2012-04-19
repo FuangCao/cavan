@@ -12,7 +12,7 @@
 static void show_usage(void)
 {
 	println("Usage:");
-	println("tftp_auto_dd [--ip=ip_address] [--port=port] [-ukrscd]");
+	println("tftp_auto_dd [--ip=ip] [--port=port] [-ukrscd]");
 	println("-u: u-boot.bin");
 	println("-k: uImage");
 	println("-r: uramdisk.img");
@@ -26,8 +26,8 @@ int main(int argc, char *argv[])
 	int c;
 	int ret;
 	int delay;
-	char ip_address[20];
-	u16 port = TFTP_DEFAULT_PORT;
+	char ip[20];
+	u16 port = 0;
 	int option_index;
 	struct option long_options[] =
 	{
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	struct dd_desc descs[6], *p, *end_p;
 	struct uevent_desc udesc;
 
-	ip_address[0] = 0;
+	ip[0] = 0;
 	end_p = descs + ARRAY_SIZE(descs);
 	p = descs;
 	delay = 0;
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 		switch (c)
 		{
 			case 0:
-				strcpy(ip_address, optarg);
+				strcpy(ip, optarg);
 				break;
 
 			case 1:
@@ -161,12 +161,17 @@ int main(int argc, char *argv[])
 
 	end_p = p;
 
-	if (ip_address[0] == 0)
+	if (ip[0] == 0)
 	{
-		strcpy(ip_address, TFTP_DEFAULT_IP);
+		cavan_get_server_ip(ip);
 	}
 
-	println("ip address = %s, port = %d, image count = %d", ip_address, port, end_p - descs);
+	if (port == 0)
+	{
+		port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
+	}
+
+	println("ip address = %s, port = %d, image count = %d", ip, port, end_p - descs);
 
 	ret = uevent_init(&udesc);
 	if (ret < 0)
@@ -214,7 +219,7 @@ int main(int argc, char *argv[])
 			}
 
 			umount_partition(p->out, MNT_DETACH);
-			ret |= tftp_client_receive_file(ip_address, port, p->in, p->out, \
+			ret |= tftp_client_receive_file(ip, port, p->in, p->out, \
 					p->skip * p->bs, p->seek * p->bs, p->count * p->bs);
 		}
 

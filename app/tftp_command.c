@@ -11,15 +11,15 @@
 static void show_usage(void)
 {
 	println("Usage:");
-	println("tftp_command [--ip=ip_address --port=port] command");
+	println("tftp_command [--ip=ip --port=port] command");
 }
 
 int main(int argc, char *argv[])
 	{
 		int i;
 		int ret;
-		u16 port;
-		char ip_address[20];
+		u16 port = 0;
+		char ip[20];
 		char command[1024], *p;
 		struct option long_options[] =
 		{
@@ -41,15 +41,14 @@ int main(int argc, char *argv[])
 		int c;
 		int option_index;
 
-		port = TFTP_DEFAULT_PORT;
-		ip_address[0] = 0;
+		ip[0] = 0;
 
 		while ((c = getopt_long(argc, argv, "hH", long_options, &option_index)) != EOF)
 		{
 			switch (c)
 			{
 				case 0:
-					strcpy(ip_address, optarg);
+					strcpy(ip, optarg);
 					break;
 
 				case 1:
@@ -70,9 +69,14 @@ int main(int argc, char *argv[])
 
 		assert(argc > optind);
 
-		if (ip_address[0] == 0)
+		if (ip[0] == 0)
 		{
-			strcpy(ip_address, TFTP_DEFAULT_IP);
+			cavan_get_server_ip(ip);
+		}
+
+		if (port == 0)
+		{
+			port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 		}
 
 		p = command;
@@ -105,7 +109,7 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 
-		ret = send_command_request_show(ip_address, port, command);
+		ret = send_command_request_show(ip, port, command);
 		if (ret < 0)
 		{
 			error_msg("Send command request failed");

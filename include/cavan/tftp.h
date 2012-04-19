@@ -2,13 +2,11 @@
 
 #include <cavan/network.h>
 
-#define TFTP_DEFAULT_PORT	8888
 #define TFTP_DATA_LEN		KB(63)
 #define TFTP_PKG_MAX_LEN	(TFTP_DATA_LEN + 4)
 #define TFTP_RETRY_COUNT	5
 #define TFTP_TIMEOUT_VALUE	2
 #define TFTP_LAST_ACK_TIMES	2
-#define TFTP_DEFAULT_IP		"127.0.0.1"
 #define TFTP_MAX_LINK_COUNT	10
 
 #define TFTP_RRQ 			1
@@ -25,6 +23,7 @@
 
 #define TFTP_COMMAND_LOG_FILE	"/tmp/tftp.cmd.log"
 #define TFTP_COMMAND_EXEC_TIME	(60 * 5)
+#define TFTP_DD_DEFAULT_PORT	8888
 
 #pragma pack(1)
 struct tftp_request_pkg
@@ -116,21 +115,21 @@ struct tftp_request
 	u32 size;
 };
 
-int tftp_client_receive_file(const char *ip_address, u16 port, const char *file_in, const char *file_out, u32 offset_in, u32 offset_out, u32 size);
-int tftp_client_receive_all(const char *ip_address, u16 port, const char *file_in, const char *file_out);
-int tftp_client_send_file(const char *ip_address, u16 port, const char *file_in, const char *file_out, u32 offset_in, u32 offset_out, u32 size);
-int tftp_client_send_directory(const char *ip_address, u16 port, const char *dir_in, const char *dir_out);
-int tftp_client_send_all(const char *ip_address, u16 port, const char *file_in, const char *file_out);
+int tftp_client_receive_file(const char *ip, u16 port, const char *file_in, const char *file_out, u32 offset_in, u32 offset_out, u32 size);
+int tftp_client_receive_all(const char *ip, u16 port, const char *file_in, const char *file_out);
+int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const char *file_out, u32 offset_in, u32 offset_out, u32 size);
+int tftp_client_send_directory(const char *ip, u16 port, const char *dir_in, const char *dir_out);
+int tftp_client_send_all(const char *ip, u16 port, const char *file_in, const char *file_out);
 
 int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *file_mode, struct sockaddr_in *remote_addr);
 int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const char *file_mode, struct sockaddr_in *remote_addr);
 
-int send_mkdir_request(const char *ip_address, u16 port, const char *pathname, mode_t mode);
-int vsend_command_request(const char *ip_address, u16 port, const char *command, va_list ap);
-int send_command_request(const char *ip_address, u16 port, const char *command, ...);
-int send_command_request_show(const char *ip_address, u16 port, const char *command, ...);
-int send_mknode_request(const char *ip_address, u16 port, const char *pathname, mode_t mode, dev_t dev);
-int send_symlink_request(const char *ip_address, u16 port, const char *file_in, const char *file_out);
+int send_mkdir_request(const char *ip, u16 port, const char *pathname, mode_t mode);
+int vsend_command_request(const char *ip, u16 port, const char *command, va_list ap);
+int send_command_request(const char *ip, u16 port, const char *command, ...);
+int send_command_request_show(const char *ip, u16 port, const char *command, ...);
+int send_mknode_request(const char *ip, u16 port, const char *pathname, mode_t mode, dev_t dev);
+int send_symlink_request(const char *ip, u16 port, const char *file_in, const char *file_out);
 
 int tftp_mkdir(struct tftp_mkdir_pkg *mkdir_pkg_p, const struct sockaddr_in *remote_addr);
 int tftp_command(struct tftp_command_pkg *command_pkg_p, const struct sockaddr_in *remote_addr);

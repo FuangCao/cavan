@@ -56,13 +56,14 @@ int main(int argc, char *argv[])
 		},
 	};
 	int i;
-	char ip[16] = "127.0.0.1";
-	u16 port = TCP_DD_SERVER_PORT;
+	char ip[16];
+	u16 port = 0;
 	char src_file[1024], dest_file[1024];
 	off_t bs, seek, skip, count;
 	int (*handler)(const char *, u16, const char *, off_t, const char *, off_t, off_t);
 
 	handler = NULL;
+	ip[0] = 0;
 
 	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrR", long_option, &option_index)) != EOF)
 	{
@@ -160,7 +161,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 			goto label__unknown_option;
-				
+
 		case 's':
 			if (text_cmp(p, "kip") == 0)
 			{
@@ -175,7 +176,7 @@ int main(int argc, char *argv[])
 				goto label__unknown_option;
 			}
 			break;
-				
+
 		case 'c':
 			if (text_cmp(p, "ount") == 0)
 			{
@@ -203,6 +204,16 @@ label__unknown_option:
 	{
 		pr_red_info("Please input src_file and dest_file");
 		return -EINVAL;
+	}
+
+	if (ip[0] == 0)
+	{
+		cavan_get_server_ip(ip);
+	}
+
+	if (port == 0)
+	{
+		port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 	}
 
 	return handler(ip, port, src_file, skip * bs, dest_file, seek * bs, count * bs);

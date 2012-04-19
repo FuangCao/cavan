@@ -19,6 +19,9 @@
 #define CAVAN_LISTEN_BACKLOG	32
 
 #define SYS_NET_DIRECTORY		"/sys/class/net"
+#define CAVAN_DEFAULT_IP		"127.0.0.1"
+#define CAVAN_IP_ENV_NAME		"CAVAN_SERVER_IP"
+#define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
 
 #pragma pack(1)
 struct mac_header
@@ -181,9 +184,9 @@ int cavan_route_table_delete_by_ip(struct cavan_route_table *table, u32 ip);
 
 u16 udp_checksum(struct ip_header *ip_hdr);
 
-void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip_address, u16 port);
+void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port);
 int inet_create_tcp_link1(const struct sockaddr_in *addr);
-int inet_create_tcp_link2(const char *ip_address, u16 port);
+int inet_create_tcp_link2(const char *ip, u16 port);
 int inet_create_service(int type, u16 port);
 int inet_create_tcp_service(u16 port);
 void inet_show_sockaddr(const struct sockaddr_in *addr);
@@ -201,6 +204,9 @@ int inet_tcp_receive_file1(int sockfd, int fd);
 int inet_tcp_receive_file2(int sockfd, const char *filename);
 
 int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_addr);
+
+char *cavan_get_server_ip(char *buff);
+u16 cavan_get_server_port(u16 default_port);
 
 static inline int inet_socket(int type)
 {

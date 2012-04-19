@@ -910,7 +910,7 @@ int ftp_send_command_retry(int sockfd, const char *send_buff, size_t sendlen, ch
 	return ret;
 }
 
-int ftp_client_receive_file(int ctrl_sockfd, const char *ip_address, u16 port)
+int ftp_client_receive_file(int ctrl_sockfd, const char *ip, u16 port)
 {
 	int ret;
 	int sockfd, data_sockfd;
@@ -927,7 +927,7 @@ int ftp_client_receive_file(int ctrl_sockfd, const char *ip_address, u16 port)
 	}
 
 	p = text_copy(buff, "PORT ");
-	p = text_replace_char2(ip_address, p, '.', ',');
+	p = text_replace_char2(ip, p, '.', ',');
 	p += sprintf(p, ",%d,%d\r\n", port >> 8, port & 0xFF);
 
 	recvlen = ftp_send_command_retry(ctrl_sockfd, buff, p - buff, buff, sizeof(buff), 5);
@@ -982,16 +982,16 @@ out_close_sockfd:
 	return ret;
 }
 
-int ftp_client_run(const char *ip_address, u16 port)
+int ftp_client_run(const char *ip, u16 port)
 {
 	int sockfd;
 	char buff[1024], *p;
 	ssize_t sendlen, recvlen;
 	int ret;
 
-	pr_bold_info("IP = %s, Port = %d", ip_address, port);
+	pr_bold_info("IP = %s, Port = %d", ip, port);
 
-	sockfd = inet_create_tcp_link2(ip_address, port);
+	sockfd = inet_create_tcp_link2(ip, port);
 	if (sockfd < 0)
 	{
 		error_msg("inet_create_tcp_link2");
@@ -1026,7 +1026,7 @@ label_get_command:
 		if (text_lhcmp("ls", buff) == 0)
 		{
 			println("list command");
-			ftp_client_receive_file(sockfd, ip_address, 9999);
+			ftp_client_receive_file(sockfd, ip, 9999);
 		}
 		else
 		{
