@@ -79,20 +79,36 @@ const struct cavan_command_map *match_command_by_name(const struct cavan_command
 int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[])
 {
 	const struct cavan_command_map *p;
+	const char *pcmd;
 
-	if (argc < 2)
+	if (file_test(argv[0], "l") < 0)
 	{
-		print_command_table(map, count);
-		return -1;
+		if (argc < 2)
+		{
+			print_command_table(map, count);
+			return -1;
+		}
+
+		pcmd = argv[1];
+		argc--;
+		argv++;
+	}
+	else
+	{
+		const char *pstart;
+
+		for (pcmd = argv[0]; *pcmd; pcmd++);
+		for (pstart = argv[0]; pcmd >= pstart && *pcmd != '/'; pcmd--);
+		pcmd++;
 	}
 
-	p = match_command_by_name(map, map + count, argv[1]);
+	p = match_command_by_name(map, map + count, pcmd);
 	if (p)
 	{
-		return p->main_func(argc - 1, argv + 1);
+		return p->main_func(argc, argv);
 	}
 
-	print_maybe_command(map, map + count, argv[1]);
+	print_maybe_command(map, map + count, pcmd);
 
 	return -1;
 }
