@@ -452,8 +452,8 @@ void cavan_mtd_show_info_user(struct mtd_info_user *info)
 	println("erasesize = %s", size2text(info->erasesize));
 	println("writesize = %s", size2text(info->writesize));
 	println("oobsize = %s", size2text(info->oobsize));
-	println("ecctype = %d", info->ecctype);
-	println("eccsize = %s", size2text(info->eccsize));
+	// println("ecctype = %d", info->ecctype);
+	// println("eccsize = %s", size2text(info->eccsize));
 }
 
 int cavan_mtd_write_image1(struct mtd_partition_descriptor *desc, int fd)

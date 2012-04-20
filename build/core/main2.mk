@@ -7,6 +7,7 @@ CAVAN_NAME = cavan
 APP_PATH = app
 LIB_PATH = lib
 BUILD_PATH = build
+APP_PREFIX = ${CAVAN_NAME}-
 INCLUDE_PATH = $(ROOT_PATH)/include
 APP_CORE_PATH = $(APP_PATH)/core
 MAKEFILE_CAVAN = $(CAVAN_NAME).mk
@@ -47,7 +48,7 @@ TARGET_LIBSO = $(OUT_LIB)/lib$(CAVAN_NAME).so
 TARGET_LIBA = $(OUT_LIB)/lib$(CAVAN_NAME).a
 
 APP_OBJ_FILES = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_APP)/,.o)
-TARGET_BINS = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_BIN)/$(CAVAN_NAME)-)
+TARGET_BINS = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_BIN)/$(APP_PREFIX))
 
 ifeq "$(filter debug static release,$(BUILD_TYPE))" ""
 $(warning this project can only build as: debug static release)
@@ -112,7 +113,7 @@ Release release:
 Static static:
 	$(Q)$(MAKE) BUILD_TYPE=static
 
-$(OUT_BIN)/$(CAVAN_NAME)-%: $(OUT_APP)/%.o $(APP_DEPENDS)
+$(OUT_BIN)/$(APP_PREFIX)%: $(OUT_APP)/%.o $(APP_DEPENDS)
 	$(call link_excuteable,$@,$<)
 
 $(TARGET_CAVAN): $(CAVAN_OBJ_FILES) $(APP_DEPENDS)
