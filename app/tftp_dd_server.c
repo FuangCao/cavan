@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (server_port)
+	if (server_port == 0)
 	{
 		server_port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}

@@ -2,45 +2,42 @@
 
 function read_select()
 {
-	local opts opt index input
+	echo $1
+	shift
 
-	while :
+	select SELECT in $*
 	do
-		index=0
-		for opt in $*
-		do
-			echo "${index}. ${opt}"
-			opts[${index}]=${opt}
-			let index++
-		done
-		echo -n "Please input your select: "
-		read input
-		[ "${input}" ] || input=0
-		[ "${input}" -lt "${index}" ] && [ "${input}" -ge "0" ] &&
-		{
-			SELECT=${opts[${input}]}
-			break
-		}
+		[ "${SELECT}" ] && break
 	done
 }
+
+function file_abs_directory()
+{
+	cd $(dirname $1) && pwd
+}
+
+CMD_ABS_DIR=$(file_abs_directory $0)
+CAVAN_ABS_PATH=$(dirname ${CMD_ABS_DIR})
 
 if [ "$1" ]
 then
 TARGET_MAKEFILE=$1
 else
-TARGET_MAKEFILE=Makefile
+TARGET_MAKEFILE="${CAVAN_ABS_PATH}/Makefile"
 fi
 
-read_select host arm x86
+read_select "Target Arch" host arm x86
 ARCH=${SELECT}
-read_select none arm-linux- arm-cavan-linux-gnueabi- arm-none-linux-gnueabi-
+read_select "Toolchian prefix" none arm-linux- arm-cavan-linux-gnueabi- arm-none-linux-gnueabi-
 CROSS_COMPILE=${SELECT}
-read_select debug release static
+read_select "Build type" debug release static
 BUILD_TYPE=${SELECT}
-read_select app lib cavan
+read_select "Build Entry" app lib cavan
 BUILD_ENTRY=${SELECT}
 
 [ "${CROSS_COMPILE}" = "none" ] && CROSS_COMPILE=""
+
+echo "Generation ${TARGET_MAKEFILE}"
 
 cat > ${TARGET_MAKEFILE} << EOF
 ARCH = ${ARCH}
