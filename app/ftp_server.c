@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	u16 port = FTP_CTRL_PORT;
 	int count = FTP_DAEMON_COUNT;
 
-	while ((c = getopt_long(argc, argv, "vVhHdDpPcCrR", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHd:D:p:P:c:C:r:R:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -85,12 +85,12 @@ int main(int argc, char *argv[])
 
 		case 'p':
 		case 'P':
-			port = text2value_unsigned(argv[optind], NULL, 10);
+			port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'c':
 		case 'C':
-			count = text2value_unsigned(argv[optind], NULL, 10);
+			count = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		default:

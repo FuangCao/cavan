@@ -541,7 +541,14 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		case 0x20445743:
 			if (*cmd_arg)
 			{
-				ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, curr_path);
+				if (cmd_arg[0] == '/')
+				{
+					text_copy(curr_path, cmd_arg);
+				}
+				else
+				{
+					ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, curr_path);
+				}
 			}
 			else
 			{
