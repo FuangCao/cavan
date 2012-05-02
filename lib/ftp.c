@@ -414,6 +414,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	char cmd_buff[1024], rep_buff[1024], *cmd_arg;
 	char list_buff[1024 * 1024], *list_p;
 	char abs_path[1024], curr_path[1024];
+	char rnfr_path[1024];
 	const char *reply;
 	int ret;
 	char file_type;
@@ -783,6 +784,28 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 		case 0x706f6f6e:
 		case 0x504f4f4e:
 			reply = "200 NOOP commnd complete";
+			break;
+
+		/* rnfr */
+		case 0x76666E72:
+		case 0x52464E52:
+			ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, rnfr_path);
+			reply = "350 RNFR command complete";
+			break;
+
+		/* rnto */
+		case 0x6F746E72:
+		case 0x4F544E52:
+			ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path);
+			ret = rename(rnfr_path, abs_path);
+			if (ret < 0)
+			{
+				sprintf(rep_buff, "550 Rename %s to %s failed[%s]", rnfr_path, abs_path, strerror(errno));
+			}
+			else
+			{
+				sprintf(rep_buff, "250 Rename %s to %s successfully", rnfr_path, abs_path);
+			}
 			break;
 
 		default:
