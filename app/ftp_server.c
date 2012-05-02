@@ -80,7 +80,11 @@ int main(int argc, char *argv[])
 
 		case 'r':
 		case 'R':
-			text_copy(ftp_root_path, optarg);
+			if (realpath(optarg, ftp_root_path) == NULL)
+			{
+				error_msg("Get directory `%s' realpath failed", optarg);
+				return -ENOENT;
+			}
 			break;
 
 		case 'p':
