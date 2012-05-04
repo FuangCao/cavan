@@ -141,7 +141,7 @@ JRE_HOME="\${JAVA_HOME}/jre"
 CLASS_PATH=\$(ls \${JAVA_HOME}/lib/*.jar \${JRE_HOME}/lib/*.jar | while read line; do echo -n \${line}:; done)
 
 CAVAN_PATH="\${CAVAN_HOME}/out/host/debug:\${CAVAN_HOME}/script"
-TOOLCHIAN_PATH="\${TOOLS_PATH}/arm-cavan-linux-gnueabi/bin:\${TOOLS_PATH}/gcc-4.1.2-glibc-2.5-nptl-3/bin"
+TOOLCHIAN_PATH="\${TOOLS_HOME}/arm-cavan-linux-gnueabi/bin:\${TOOLS_HOME}/gcc-4.1.2-glibc-2.5-nptl-3/arm-none-linux-gnueabi/bin"
 SDK_PATH="\${SDK_HOME}/platform-tools:\${SDK_HOME}/tools"
 JAVA_PATH="\${JAVA_HOME}/bin:\${JRE_HOME}/bin"
 PATH="\${CAVAN_PATH}:\${TOOLCHIAN_PATH}:\${JAVA_PATH}:\${PATH}"
