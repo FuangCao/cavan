@@ -122,7 +122,6 @@ function config_bashrc()
 	cat >> ${FILE_BASHRC} << EOF
 
 # Following is Cavan's configs
-
 alias vi='vim -O'
 alias va='vi *.[chsS]'
 alias vh='vi *.h'
@@ -135,18 +134,19 @@ CAVAN_HOME="/cavan"
 TOOLS_HOME="/tools"
 JDK_VERSION="1.6.0_26"
 
-SDK_HOME="\${TOOLS_PATH}/android-sdk-linux_86"
+SDK_HOME="\${TOOLS_HOME}/android-sdk-linux_86"
 
-JAVA_HOME="\${TOOLS_PATH}/jdk\${JDK_VERSION}"
+JAVA_HOME="\${TOOLS_HOME}/jdk\${JDK_VERSION}"
 JRE_HOME="\${JAVA_HOME}/jre"
 CLASS_PATH=\$(ls \${JAVA_HOME}/lib/*.jar \${JRE_HOME}/lib/*.jar | while read line; do echo -n \${line}:; done)
-export JAVA_HOME JRE_HOME CLASS_PATH PATH
 
 CAVAN_PATH="\${CAVAN_HOME}/out/host/debug:\${CAVAN_HOME}/script"
 TOOLCHIAN_PATH="\${TOOLS_PATH}/arm-cavan-linux-gnueabi/bin:\${TOOLS_PATH}/gcc-4.1.2-glibc-2.5-nptl-3/bin"
 SDK_PATH="\${SDK_HOME}/platform-tools:\${SDK_HOME}/tools"
 JAVA_PATH="\${JAVA_HOME}/bin:\${JRE_HOME}/bin"
-export PATH="\${CAVAN_PATH}:\${TOOLCHIAN_PATH}:\${JAVA_PATH}:\${PATH}"
+PATH="\${CAVAN_PATH}:\${TOOLCHIAN_PATH}:\${JAVA_PATH}:\${PATH}"
+
+export JAVA_HOME JRE_HOME CLASS_PATH PATH
 EOF
 }
 
