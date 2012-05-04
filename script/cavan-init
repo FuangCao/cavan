@@ -3,6 +3,7 @@
 FILE_FSTAB="/etc/fstab"
 FILE_MOUNTS="/proc/mounts"
 FILE_BASHRC="/etc/bash.bashrc"
+FILE_VIMRC="/etc/vim/vimrc"
 FILE_GROUP="/etc/group"
 FILE_EXPORTS="/etc/exports"
 FILE_SAMBA_CONFIG="/etc/samba/smb.conf"
@@ -119,9 +120,8 @@ function config_bashrc()
 		-e 's,^\s*#\s*\(force_color_prompt=yes\),\1,g'
 
 	cat >> ${FILE_BASHRC} << EOF
-if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
-    . /etc/bash_completion
-fi
+
+# Following is Cavan's configs
 
 alias vi='vim -O'
 alias va='vi *.[chsS]'
@@ -131,19 +131,42 @@ alias vs='vi *.[sS]'
 alias vm='vi [Mm]akefile'
 alias mkconfig='make menuconfig'
 
-HOST_ARCH="$(uname -m)"
-HOST_PLAT="$(gcc -dumpmachine)"
-TARGET_ARCH="arm"
-TARGET_PLAT="\${TARGET_ARCH}-cavan-linux-gnueabi"
+CAVAN_HOME="/cavan"
+TOOLS_HOME="/tools"
+JDK_VERSION="1.6.0_26"
 
-export CAVAN_PATH="${CAVAN_PATH}"
-export CAVAN_WORK="\${HOME}/\${TARGET_PLAT}"
-export UTILS_PATH="\${CAVAN_WORK}/utils"
-export TOOLCHIAN_PATH="\${CAVAN_WORK}/toolchian/\${HOST_ARCH}-\${TARGET_ARCH}"
-export CAVAN_BIN="\${CAVAN_PATH}/out/\${HOST_ARCH}/dynamically:\${CAVAN_PATH}/script"
-export PATH="\${UTILS_PATH}/usr/bin:\${TOOLCHIAN_PATH}/bin:\${CAVAN_BIN}:\${PATH}"
+SDK_HOME="\${TOOLS_PATH}/android-sdk-linux_86"
 
-unset HOST_ARCH HOST_PLAT TARGET_ARCH TARGET_PLAT
+JAVA_HOME="\${TOOLS_PATH}/jdk\${JDK_VERSION}"
+JRE_HOME="\${JAVA_HOME}/jre"
+CLASS_PATH=\$(ls \${JAVA_HOME}/lib/*.jar \${JRE_HOME}/lib/*.jar | while read line; do echo -n \${line}:; done)
+export JAVA_HOME JRE_HOME CLASS_PATH PATH
+
+CAVAN_PATH="\${CAVAN_HOME}/out/host/debug:\${CAVAN_HOME}/script"
+TOOLCHIAN_PATH="\${TOOLS_PATH}/arm-cavan-linux-gnueabi/bin:\${TOOLS_PATH}/gcc-4.1.2-glibc-2.5-nptl-3/bin"
+SDK_PATH="\${SDK_HOME}/platform-tools:\${SDK_HOME}/tools"
+JAVA_PATH="\${JAVA_HOME}/bin:\${JRE_HOME}/bin"
+export PATH="\${CAVAN_PATH}:\${TOOLCHIAN_PATH}:\${JAVA_PATH}:\${PATH}"
+EOF
+}
+
+function config_vimrc()
+{
+	cat >> ${FILE_VIMRC} << EOF
+
+" Following is Cavan's configs
+set showmatch
+set ignorecase
+set smartcase
+set incsearch
+set autowrite
+set mouse=a
+set nu
+set ai
+set ts=4
+let c_space_errors=1
+
+nmap q :xa!<cr>
 EOF
 }
 
@@ -302,7 +325,7 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 for func in mount_disk create_mount_points create_symlinks \
 	config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_stardict \
-	config_bashrc config_group config_others
+	config_bashrc config_vimrc config_group config_others
 do
 	if cavan_has_mark ${func}
 	then
