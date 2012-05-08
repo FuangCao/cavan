@@ -7,7 +7,22 @@ alias vc='vi *.c'
 alias vs='vi *.[sS]'
 alias vm='vi [Mm]akefile'
 alias mkconfig='make menuconfig'
-alias cavan-server_run='cavan-tcp_dd_server & cavan-tftp_dd_server &'
+
+CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
+CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
+
+function cavan-server-run()
+{
+	sudo ${CMD_TCP_DD_SERVER} &
+	sudo ${CMD_TFTP_DD_SERVER} &
+
+	return 0
+}
+
+function cavan-server-stop()
+{
+	sudo killall ${CMD_TCP_DD_SERVER} ${CMD_TFTP_DD_SERVER}
+}
 
 function mssh()
 {

@@ -9,7 +9,8 @@ JRE_HOME="${JAVA_HOME}/jre"
 SDK_HOME="${TOOLS_HOME}/android-sdk-linux_86"
 CLASS_PATH=$(ls ${JAVA_HOME}/lib/*.jar ${JRE_HOME}/lib/*.jar | while read line; do echo -n ${line}:; done)
 
-CAVAN_PATH="${CAVAN_HOME}/out/host/debug:${CAVAN_HOME}/script"
+CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
+CAVAN_PATH="${CAVAN_OUT_DEBUG}:${CAVAN_HOME}/script"
 TOOLCHIAN_PATH="${TOOLS_HOME}/arm-cavan-linux-gnueabi/bin:${TOOLS_HOME}/gcc-4.1.2-glibc-2.5-nptl-3/arm-none-linux-gnueabi/bin"
 SDK_PATH="${SDK_HOME}/platform-tools:${SDK_HOME}/tools"
 JAVA_PATH="${JAVA_HOME}/bin:${JRE_HOME}/bin"
@@ -27,7 +28,7 @@ TARGET_DEVICE="/dev/sdb"
 
 export JAVA_HOME JRE_HOME CLASS_PATH PATH
 export KERNEL_HOME UBOOT_HOME FSLDROID_HOME PRODUCT_HOME
-export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE
+export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE CAVAN_OUT_DEBUG
 
 for fn in alias.sh file.sh
 do
