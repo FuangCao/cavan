@@ -148,7 +148,7 @@ function gget()
 
 function gput_fsldroid()
 {
-	[ "$1" ] &&
+	[ "$1" ] ||
 	{
 		echo "Please give the product name"
 		return 1
@@ -234,15 +234,13 @@ function mkfsldroid()
 {
 	local command
 
-	[ "$1" ] &&
+	[ "$1" ] ||
 	{
 		echo "Please give a product name"
 		return 1
 	}
 
-	cd ${FSLDROID_HOME} || return 1
-
-	command="make product-$1-eng -j${MAKE_JOBS} | tee $1.log"
+	command="make -C ${FSLDROID_HOME} product-$1-eng -j${MAKE_JOBS} | tee ${FSLDROID_HOME}/$1.log"
 	echo ${command}
 
 	${command} || return 1
