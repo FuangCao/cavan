@@ -13,7 +13,7 @@ function adjust_system()
 	${CAVAN_MOUNT_TO} $1 /mnt/system || return 1
 	rm /mnt/system/{app/AdobeAndroid.apk,vendor/app} -rfv
 	${CAVAN_UNMOUNT_FROM} /mnt/system
-	
+
 }
 
 function adjust_userdata()

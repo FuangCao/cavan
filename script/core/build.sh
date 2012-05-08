@@ -37,7 +37,7 @@ function cavan-execute-ack()
 function cavan-configure()
 {
 	local command
-	
+
 	command="./configure --prefix=/usr --build=$(gcc -dumpmachine) --host=arm-cavan-linux-gnueabi --target=arm-cavan-linux-gnueabi $*"
 
 	cavan-execute-ack ${command} || return 1

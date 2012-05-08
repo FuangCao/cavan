@@ -9,13 +9,13 @@ from getopt import getopt
 
 def pr_red_info(message):
 	print "\033[31m%s\033[0m" % message
-	
+
 def pr_green_info(message):
 	print "\033[32m%s\033[0m" % message
 
 def pr_blue_info(message):
 	print "\033[34m%s\033[0m" % message
-	
+
 def pr_bold_info(message):
 	print "\033[1m%s\033[0m" % message
 

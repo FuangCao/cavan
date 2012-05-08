@@ -37,12 +37,30 @@ function get_file_abs_path()
 
 function get_remote_file_directory()
 {
-	get_file_abs_directory $1 | sed "s/^${PROJECT_HOME}/${REMOTE_PROJECT_HOME}/g"
+	get_file_abs_directory $1 | sed "s#^${PROJECT_HOME}#${REMOTE_PROJECT_HOME}#g"
 }
 
 function get_remote_file_path()
 {
 	echo $(get_remote_file_directory $1)/$(basename $1)
+}
+
+function build_tcp_command()
+{
+	echo -n $1
+	[ "${CAVAN_SERVER_IP}" ] && echo -n " --ip=${CAVAN_SERVER_IP}"
+	[ "${CAVAN_SERVER_PORT}" ] && echo -n " --port=${CAVAN_SERVER_PORT}"
+}
+
+function tput()
+{
+	local command
+
+	command="$(build_tcp_command ${CMD_TCP_COPY})"
+
+	${command} -w $* || return 1
+
+	return 0
 }
 
 function gput_file()
@@ -64,9 +82,20 @@ function gput_files()
 	return 0
 }
 
+function tget()
+{
+	local command
+
+	command="$(build_tcp_command ${CMD_TCP_COPY})"
+
+	${command} -r $* || return 1
+
+	return 0
+}
+
 function gget_file()
 {
-	tget $(get_remote_file_path $1) $(basename $1) || return 1
+	tget $(get_remote_file_path $1) $(dirname $1) || return 1
 
 	return 0
 }
@@ -113,35 +142,6 @@ function gget()
 			gget_file ${fn} || return 1
 		fi
 	done
-
-	return 0
-}
-
-function build_tcp_command()
-{
-	echo -n $1
-	[ "${CAVAN_SERVER_IP}" ] && echo -n " --ip=${CAVAN_SERVER_IP}"
-	[ "${CAVAN_SERVER_PORT}" ] && echo -n " --port=${CAVAN_SERVER_PORT}"
-}
-
-function tput()
-{
-	local command
-	
-	command="$(build_tcp_command ${CMD_TCP_COPY})"
-
-	${command} -w $* || return 1
-
-	return 0
-}
-
-function tget()
-{
-	local command
-
-	command="$(build_tcp_command ${CMD_TCP_COPY})"
-
-	${command} -r $* || return 1
 
 	return 0
 }
@@ -216,7 +216,7 @@ function buboot()
 {
 	local command
 
-	command="$(build_tcp_command) ${CMD_TCP_DD}"
+	command="$(build_tcp_command ${CMD_TCP_DD})"
 
 	${command} -w if=${UBOOT_HOME}/u-boot.bin of=${TARGET_DEVICE} bs=1k seek=1 skip=1 || return 1
 

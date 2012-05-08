@@ -36,7 +36,7 @@ function build_env()
 		do
 			cp ${sub}/${fn} /tmp -av || return 1
 		done
-		
+
 		rm ${sub} -rfv || return 1
 
 
