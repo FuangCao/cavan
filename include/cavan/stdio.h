@@ -27,7 +27,11 @@
 #define FONT_WHITE_BACKGROUND	47	//set white background
 #define FONT_DEFAULT_BACKGROUND	49	//set default background color
 
-#define printf_format(a, b)		__THROW __attribute__ ((__format__ (__printf__, a, b)))
+#ifndef __THROWNL
+#define __THROWNL __THROW
+#endif
+
+#define printf_format(a, b)		__THROWNL __attribute__ ((__format__ (__printf__, a, b)))
 #define __printf_format_10__	printf_format(1, 0)
 #define __printf_format_12__	printf_format(1, 2)
 #define __printf_format_20__	printf_format(2, 0)

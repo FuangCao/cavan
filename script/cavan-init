@@ -86,17 +86,17 @@ function create_mount_points()
 
 function create_symlinks()
 {
-	cavan_symlink ${CPAN_PATH} /cpan || return 1
-	cavan_symlink ${DPAN_PATH} /dpan || return 1
-	cavan_symlink ${EPAN_PATH} /epan || return 1
-	cavan_symlink ${EPAN_PATH}/source /source || return 1
-	cavan_symlink ${FPAN_PATH} /fpan || return 1
-	cavan_symlink ${GPAN_PATH} /gpan || return 1
-	cavan_symlink ${UBUNTU_PATH} /ubuntu || return 1
+	cavan-symlink ${CPAN_PATH} /cpan || return 1
+	cavan-symlink ${DPAN_PATH} /dpan || return 1
+	cavan-symlink ${EPAN_PATH} /epan || return 1
+	cavan-symlink ${EPAN_PATH}/source /source || return 1
+	cavan-symlink ${FPAN_PATH} /fpan || return 1
+	cavan-symlink ${GPAN_PATH} /gpan || return 1
+	cavan-symlink ${UBUNTU_PATH} /ubuntu || return 1
 
 	for dir in cavan work git book project tools app
 	do
-		cavan_symlink ${UBUNTU_PATH}/${dir} /${dir} || return 1
+		cavan-symlink ${UBUNTU_PATH}/${dir} /${dir} || return 1
 	done
 }
 
@@ -122,31 +122,17 @@ function config_bashrc()
 	cat >> ${FILE_BASHRC} << EOF
 
 # Following is Cavan's configs
-alias vi='vim -O'
-alias va='vi *.[chsS]'
-alias vh='vi *.h'
-alias vc='vi *.c'
-alias vs='vi *.[sS]'
-alias vm='vi [Mm]akefile'
-alias mkconfig='make menuconfig'
-
 CAVAN_HOME="/cavan"
 TOOLS_HOME="/tools"
 JDK_VERSION="1.6.0_26"
+CAVAN_SERVER_IP="192.168.6.4"
+CAVAN_SERVER_PORT="8888"
+PROJECT_HOME=""
+PRODUCT_HOME="/project/product"
+REMOTE_PROJECT_HOME="/home/user"
+REMOTE_PRODUCT_HOME="/home/user/product"
 
-SDK_HOME="\${TOOLS_HOME}/android-sdk-linux_86"
-
-JAVA_HOME="\${TOOLS_HOME}/jdk\${JDK_VERSION}"
-JRE_HOME="\${JAVA_HOME}/jre"
-CLASS_PATH=\$(ls \${JAVA_HOME}/lib/*.jar \${JRE_HOME}/lib/*.jar | while read line; do echo -n \${line}:; done)
-
-CAVAN_PATH="\${CAVAN_HOME}/out/host/debug:\${CAVAN_HOME}/script"
-TOOLCHIAN_PATH="\${TOOLS_HOME}/arm-cavan-linux-gnueabi/bin:\${TOOLS_HOME}/gcc-4.1.2-glibc-2.5-nptl-3/arm-none-linux-gnueabi/bin"
-SDK_PATH="\${SDK_HOME}/platform-tools:\${SDK_HOME}/tools"
-JAVA_PATH="\${JAVA_HOME}/bin:\${JRE_HOME}/bin"
-PATH="\${CAVAN_PATH}:\${TOOLCHIAN_PATH}:\${JAVA_PATH}:\${PATH}"
-
-export JAVA_HOME JRE_HOME CLASS_PATH PATH
+. \${CAVAN_HOME}/script/core/bashrc.sh
 EOF
 }
 
@@ -211,7 +197,7 @@ function config_single_home()
 
 	for dir in Desktop Documents Downloads Music Pictures .stardict .VirtualBox VirtualBox\ VMs
 	do
-		cavan_symlink "${UBUNTU_HOME}/${dir}" "${dir}" || return 1
+		cavan-symlink "${UBUNTU_HOME}/${dir}" "${dir}" || return 1
 	done
 }
 
@@ -231,8 +217,8 @@ function config_aptget()
 	var_path="${LOCAL_UBUNTU}/var"
 	etc_path="${LOCAL_UBUNTU}/etc"
 
-	cavan_symlink ${etc_path}/apt /etc/apt || return 1
-	cavan_symlink ${var_path}/cache/apt /var/cache/apt || return 1
+	cavan-symlink ${etc_path}/apt /etc/apt || return 1
+	cavan-symlink ${var_path}/cache/apt /var/cache/apt || return 1
 
 }
 
@@ -327,14 +313,14 @@ for func in mount_disk create_mount_points create_symlinks \
 	config_nfs config_samba config_home config_git config_stardict \
 	config_bashrc config_vimrc config_group config_others
 do
-	if cavan_has_mark ${func}
+	if cavan-has_mark ${func}
 	then
 		pr_green_info "${func} is already completed"
 	else
 		pr_title "Start ${func}"
 		if ${func}
 		then
-			cavan_create_mark ${func}
+			cavan-create_mark ${func}
 			pr_green_info "${func} successfull"
 		else
 			pr_red_info "${func} failed"

@@ -2,13 +2,13 @@
 
 CAVAN_MARK_PATH="/etc/cavan/mark"
 
-function cavan_create_mark()
+function cavan-create_mark()
 {
 	mkdir ${CAVAN_MARK_PATH} -p || return 1
 	echo $1 > ${CAVAN_MARK_PATH}/$1 || return 1
 }
 
-function cavan_has_mark()
+function cavan-has_mark()
 {
 	[ -f "${CAVAN_MARK_PATH}/$1" ] && return 0
 
