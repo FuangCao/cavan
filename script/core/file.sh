@@ -240,7 +240,7 @@ function mkfsldroid()
 		return 1
 	}
 
-	command="make -C ${FSLDROID_HOME} product-$1-eng -j${MAKE_JOBS} | tee ${FSLDROID_HOME}/$1.log"
+	command="make -C ${FSLDROID_HOME} PRODUCT-$1-eng -j${MAKE_JOBS} | tee ${FSLDROID_HOME}/$1.log"
 	echo ${command}
 
 	${command} || return 1
