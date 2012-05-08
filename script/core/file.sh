@@ -180,7 +180,7 @@ function bkernel()
 {
 	local command
 
-	command="$(build_tcp_command) ${CMD_TCP_DD}"
+	command="$(build_tcp_command ${CMD_TCP_DD})"
 
 	${command} -w if="${KERNEL_HOME}/arch/arm/boot/uImage" of="${TARGET_DEVICE}" bs=1M seek=1 || return 1
 
