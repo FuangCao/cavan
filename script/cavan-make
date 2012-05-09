@@ -45,7 +45,7 @@ EOF
 #define FILE_CREATE_DATE "${CREATE_DATE}"
 
 EOF
-				cat ${CAVAN_ABS_PATH}/script/core/example.c >> $2.c
+				cat ${CAVAN_HOME_ABS}/script/core/example.c >> $2.c
 			fi
 			;;
 		lib)
@@ -56,7 +56,7 @@ EOF
 			then
 				HEADER_FILE_PATH="$3/$2.h"
 			else
-				HEADER_FILE_PATH="${CAVAN_ABS_PATH}/include/cavan/$2.h"
+				HEADER_FILE_PATH="${CAVAN_HOME_ABS}/include/cavan/$2.h"
 			fi
 			cat > ${HEADER_FILE_PATH} << EOF
 #pragma once
@@ -88,7 +88,7 @@ function create_makefile()
 		return 1
 	}
 
-	echo ${PWD} | grep ${CAVAN_ABS_PATH} &&
+	echo ${PWD} | grep ${CAVAN_HOME_ABS} &&
 	{
 		create_source_file $* || return 1
 		return 0
@@ -113,13 +113,13 @@ source-${FILE_TYPE} += $2.c
 EOF
 
 cat > Makefile << EOF
-CAVAN_PATH = ${CAVAN_ABS_PATH}
+CAVAN_HOME = ${CAVAN_HOME_ABS}
 
 all:
-	@+make -C \$(CAVAN_PATH) ${MAKE_TYPE}=${PWD} ${FILE_TYPE}
+	@+make -C \$(CAVAN_HOME) ${MAKE_TYPE}=${PWD} ${FILE_TYPE}
 
 %:
-	@+make -C \$(CAVAN_PATH) ${MAKE_TYPE}=${PWD} \$@
+	@+make -C \$(CAVAN_HOME) ${MAKE_TYPE}=${PWD} \$@
 EOF
 }
 
@@ -131,11 +131,11 @@ function get_file_abs_dir()
 CMD_ABS_DIR=`get_file_abs_dir $0`
 CMD_ABS_PATH=${CMD_ABS_DIR}/`basename $0`
 
-CAVAN_ABS_PATH=`dirname ${CMD_ABS_DIR}`
+CAVAN_HOME_ABS=`dirname ${CMD_ABS_DIR}`
 
 echo "============================================================"
 echo "CMD_ABS_PATH = ${CMD_ABS_PATH}"
-echo "CAVAN_ABS_PATH = ${CAVAN_ABS_PATH}"
+echo "CAVAN_HOME_ABS = ${CAVAN_HOME_ABS}"
 echo "============================================================"
 
 create_makefile $*

@@ -9,7 +9,7 @@ FILE_EXPORTS="/etc/exports"
 FILE_SAMBA_CONFIG="/etc/samba/smb.conf"
 FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
 
-CAVAN_PATH="/cavan"
+CAVAN_HOME="/cavan"
 
 CPAN_PATH="/mnt/sda1"
 DPAN_PATH="/mnt/sda5"
@@ -124,15 +124,15 @@ function config_bashrc()
 # Following is Cavan's configs
 CAVAN_HOME="/cavan"
 TOOLS_HOME="/tools"
-JDK_VERSION="1.6.0_26"
-CAVAN_SERVER_IP="192.168.6.4"
-CAVAN_SERVER_PORT="8888"
-PROJECT_HOME=""
-PRODUCT_HOME="/project/product"
-REMOTE_PROJECT_HOME="/home/user"
-REMOTE_PRODUCT_HOME="/home/user/product"
+JDK_VERSION="${JDK_VERSION-1.6.0_26}"
+CAVAN_SERVER_IP="${CAVAN_SERVER_IP-192.168.6.4}"
+CAVAN_SERVER_PORT="${CAVAN_SERVER_PORT-8888}"
+PROJECT_HOME="${PROJECT_HOME}"
+PRODUCT_HOME="${PRODUCT_HOME-/project/product}"
+REMOTE_PROJECT_HOME="${REMOTE_PROJECT_HOME-/home/user}"
+REMOTE_PRODUCT_HOME="${REMOTE_PRODUCT_HOME-/home/user/product}"
 
-. \${CAVAN_HOME}/script/core/bashrc.sh
+source \${CAVAN_HOME}/script/core/bashrc.sh
 EOF
 }
 
@@ -141,18 +141,7 @@ function config_vimrc()
 	cat >> ${FILE_VIMRC} << EOF
 
 " Following is Cavan's configs
-set showmatch
-set ignorecase
-set smartcase
-set incsearch
-set autowrite
-set mouse=a
-set nu
-set ai
-set ts=4
-let c_space_errors=1
-
-nmap q :xa!<cr>
+source ${CAVAN_HOME}/script/core/vimrc.vim
 EOF
 }
 

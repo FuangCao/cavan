@@ -35,8 +35,8 @@ function get_file_abs_dir()
 TARGET_DIR="$1"
 CMD_ABS_DIR=`get_file_abs_dir $0`
 CMD_ABS_PATH=${CMD_ABS_DIR}/`basename $0`
-CAVAN_ABS_PATH=`dirname ${CMD_ABS_DIR}`
-CAVAN_BIN_PATH="${CAVAN_ABS_PATH}/bin"
+CAVAN_HOME_ABS=`dirname ${CMD_ABS_DIR}`
+CAVAN_BIN_PATH="${CAVAN_HOME_ABS}/bin"
 
 CAVAN_RAMDISK="${CAVAN_BIN_PATH}/cavan-ramdisk"
 CAVAN_SWAN_UPGRADE="${CAVAN_BIN_PATH}/cavan-swan_upgrade"
@@ -47,8 +47,8 @@ CAVAN_RAMDISK="${CAVAN_BIN_PATH}/cavan-ramdisk"
 
 cp /project/rootfs/images/resource.img ${TARGET_DIR}/resource.img -anv || exit 1
 [ -f "${TARGET_DIR}/u-boot.bin" ] && dd if=${TARGET_DIR}/u-boot.bin of=${TARGET_DIR}/u-boot-no-padding.bin bs=1k skip=1 || exit 1
-make -C ${CAVAN_ABS_PATH}/app/swan_upgrade/header clean && make -C ${CAVAN_ABS_PATH}/app/swan_upgrade/header || exit 1
-cp ${CAVAN_ABS_PATH}/app/swan_upgrade/header/header.bin ${TARGET_DIR}/header.bin || exit 1
+make -C ${CAVAN_HOME_ABS}/app/swan_upgrade/header clean && make -C ${CAVAN_HOME_ABS}/app/swan_upgrade/header || exit 1
+cp ${CAVAN_HOME_ABS}/app/swan_upgrade/header/header.bin ${TARGET_DIR}/header.bin || exit 1
 [ -f  "${TARGET_DIR}/ramdisk.img" ] && ${CAVAN_RAMDISK} ${TARGET_DIR}/ramdisk.img ${TARGET_DIR}/uramdisk.img || exit 1
 ${CAVAN_RAMDISK} /project/rootfs/upgrade ${TARGET_DIR}/busybox.img || exit 1
 

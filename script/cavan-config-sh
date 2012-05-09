@@ -17,13 +17,13 @@ function file_abs_directory()
 }
 
 CMD_ABS_DIR=$(file_abs_directory $0)
-CAVAN_ABS_PATH=$(dirname ${CMD_ABS_DIR})
+CAVAN_HOME_ABS=$(dirname ${CMD_ABS_DIR})
 
 if [ "$1" ]
 then
 TARGET_MAKEFILE=$1
 else
-TARGET_MAKEFILE="${CAVAN_ABS_PATH}/Makefile"
+TARGET_MAKEFILE="${CAVAN_HOME_ABS}/Makefile"
 fi
 
 read_select "Target Arch" host arm x86
