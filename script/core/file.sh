@@ -163,7 +163,7 @@ function mkkernel()
 {
 	local MAKE_KERNEL
 
-	MAKE_KERNEL="make -C ${KERNEL_HOME} arch=arm cross_compile=${CAVAN_CROSS_COMPILE}"
+	MAKE_KERNEL="make -C ${KERNEL_HOME} ARCH=arm CROSS_COMPILE=${CAVAN_CROSS_COMPILE}"
 	echo "MAKE_KERNEL = ${MAKE_KERNEL}"
 
 	[ "$1" ] &&
@@ -172,6 +172,15 @@ function mkkernel()
 	}
 
 	${MAKE_KERNEL} uImage -j${MAKE_JOBS} || return 1
+
+	if [ "$1" ]
+	then
+		cp ${KERNEL_HOME}/arch/arm/boot/uImage ${KERNEL_HOME}/uImage-$1 -av || return 1
+		rm ${KERNEL_HOME}/uImage -rfv
+		ln -vsf uImage-$1 ${KERNEL_HOME}/uImage
+	else
+		cp ${KERNEL_HOME}/arch/arm/boot/uImage ${KERNEL_HOME}/uImage -av || return 1
+	fi
 
 	return 0
 }
@@ -198,7 +207,7 @@ function mkuboot()
 {
 	local MAKE_UBOOT
 
-	MAKE_UBOOT="make -C ${UBOOT_HOME} arch=arm cross_compile=${CAVAN_CROSS_COMPILE}"
+	MAKE_UBOOT="make -C ${UBOOT_HOME} ARCH=arm CROSS_COMPILE=${CAVAN_CROSS_COMPILE}"
 	echo "MAKE_UBOOT = ${MAKE_UBOOT}"
 
 	[ "$1" ] &&
