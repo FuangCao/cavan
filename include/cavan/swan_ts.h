@@ -10,6 +10,8 @@
 
 #define SWAN_TS_DEVICE_NAME			"Swan Touch Screen"
 #define SWAN_TS_MISC_DEVICE			"/dev/swan_touchscreen"
+#define SWAN_TS_PROC_DEVICE			"/proc/swan_touchscreen"
+#define SWAN_TS_DEFAULT_DEVICE		SWAN_TS_PROC_DEVICE
 
 struct swan_ts_i2c_request
 {
@@ -37,8 +39,14 @@ struct ft5406_firmware_data_package
 #define SWAN_TS_CORE_IOR(nr, size) \
 	_IOR(SWAN_TS_IOCTL_TYPE_CORE, nr, size)
 
+#define SWAN_TS_CORE_IORM(nr, size) \
+	_IOC(_IOC_READ, SWAN_TS_IOCTL_TYPE_CORE, nr, size)
+
 #define SWAN_TS_CORE_IOW(nr, size) \
 	_IOW(SWAN_TS_IOCTL_TYPE_CORE, nr, size)
+
+#define SWAN_TS_CORE_IOWM(nr, size) \
+	_IOC(_IOC_WRITE, SWAN_TS_IOCTL_TYPE_CORE, nr, size)
 
 #define SWAN_TS_DEVICE_IO(nr) \
 	_IO(SWAN_TS_IOCTL_TYPE_DEVICE, nr)
@@ -46,11 +54,17 @@ struct ft5406_firmware_data_package
 #define SWAN_TS_DEVICE_IOR(nr, size) \
 	_IOR(SWAN_TS_IOCTL_TYPE_DEVICE, nr, size)
 
+#define SWAN_TS_DEVICE_IORM(nr, size) \
+	_IOR(_IOC_READ, SWAN_TS_IOCTL_TYPE_DEVICE, nr, size)
+
 #define SWAN_TS_DEVICE_IOW(nr, size) \
 	_IOW(SWAN_TS_IOCTL_TYPE_DEVICE, nr, size)
 
-#define SWAN_TS_IOCTL_CALIBRATION			SWAN_TS_CORE_IO(0x01)
+#define SWAN_TS_DEVICE_IOWM(nr, size) \
+	_IOR(_IOC_WRITE, SWAN_TS_IOCTL_TYPE_DEVICE, nr, size)
+
 #define SWAN_TS_INPUT_IOCTL_CALIBRATION		_IO('E', 0x01)
+#define SWAN_TS_IOCTL_CALIBRATION			SWAN_TS_CORE_IO(0x01)
 #define SWAN_TS_IOCTL_READ_REGISTERS		SWAN_TS_CORE_IOR(0x02, struct swan_ts_i2c_request)
 #define SWAN_TS_IOCTL_WRITE_REGISTERS		SWAN_TS_CORE_IOW(0x03, struct swan_ts_i2c_request)
 #define SWAN_TS_IOCTL_READ_DATA				SWAN_TS_CORE_IOR(0x04, struct swan_ts_i2c_request)
@@ -59,6 +73,11 @@ struct ft5406_firmware_data_package
 #define SWAN_TS_IOCTL_SET_CLIENT_ADDRESS	SWAN_TS_CORE_IOW(0x07, u16)
 #define SWAN_TS_IOCTL_TEST_CLIENT			SWAN_TS_CORE_IOW(0x08, u16)
 #define SWAN_TS_IOCTL_DETECT_CLIENT			SWAN_TS_CORE_IOW(0x09, u32)
+#define SWAN_TS_IOCTL_REQUEST_IRQ			SWAN_TS_CORE_IO(0x10)
+#define SWAN_TS_IOCTL_FREE_IRQ				SWAN_TS_CORE_IO(0x11)
+#define SWAN_TS_IOCTL_DISABLE_IRQ			SWAN_TS_CORE_IO(0x12)
+#define SWAN_TS_IOCTL_ENABLE_IRQ			SWAN_TS_CORE_IO(0x13)
+#define SWAN_TS_IOCTL_GET_NAME(len)			SWAN_TS_CORE_IORM(0x14, len)
 
 #define FT5406_IOCTL_UPGRADE_ENTER		SWAN_TS_DEVICE_IO(0x01)
 #define FT5406_IOCTL_UPGRADE_FINISH		SWAN_TS_DEVICE_IO(0x02)

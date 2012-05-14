@@ -12,15 +12,18 @@ int swan_ts_open_misc_device(const char *devpath, int flags)
 {
 	int fd;
 
-	if (devpath == NULL)
+	if (devpath)
 	{
-		devpath = SWAN_TS_MISC_DEVICE;
+		fd = try_to_open(flags, devpath, SWAN_TS_PROC_DEVICE, SWAN_TS_MISC_DEVICE, NULL);
+	}
+	else
+	{
+		fd = try_to_open(flags, SWAN_TS_PROC_DEVICE, SWAN_TS_MISC_DEVICE, NULL);
 	}
 
-	fd = open(devpath, flags);
 	if (fd < 0)
 	{
-		pr_red_info("Open device \"%s\" failed", devpath);
+		pr_red_info("Open misc device failed");
 	}
 
 	return fd;

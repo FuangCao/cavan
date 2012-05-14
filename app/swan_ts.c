@@ -76,7 +76,7 @@ static int swan_ts_poll_registers_main(int argc, char *argv[])
 	offset = text2value_unsigned(argv[1], NULL, 10);
 	count = text2value_unsigned(argv[2], NULL, 10);
 	timeout = argc > 3 ? text2value_unsigned(argv[3], NULL, 10) : 200;
-	devpath = argc > 4 ? argv[4] : SWAN_TS_MISC_DEVICE;
+	devpath = argc > 4 ? argv[4] : SWAN_TS_DEFAULT_DEVICE;
 
 	println("offset = %d, count = %d, timeout = %d, devpath = %s", offset, count, timeout, devpath);
 
@@ -200,7 +200,7 @@ static int swan_ts_poll_data_main(int argc, char *argv[])
 
 	count = text2value_unsigned(argv[1], NULL, 10);
 	timeout = argc > 2 ? text2value_unsigned(argv[2], NULL, 10) : 200;
-	devpath = argc > 3 ? argv[3] : SWAN_TS_MISC_DEVICE;
+	devpath = argc > 3 ? argv[3] : SWAN_TS_DEFAULT_DEVICE;
 
 	println("count = %d, timeout = %d, devpath = %s", count, timeout, devpath);
 
