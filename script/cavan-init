@@ -7,6 +7,7 @@ FILE_VIMRC="/etc/vim/vimrc"
 FILE_GROUP="/etc/group"
 FILE_EXPORTS="/etc/exports"
 FILE_SAMBA_CONFIG="/etc/samba/smb.conf"
+FILE_CAVAN_SERVICE="/etc/init.d/cavan"
 FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
 
 CAVAN_HOME="/cavan"
@@ -287,6 +288,49 @@ function config_stardict()
 	done
 }
 
+function config_service()
+{
+	cat > ${FILE_CAVAN_SERVICE} << EOF
+#!/bin/sh
+
+CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
+CMD_TCP_DD_SERVER="\${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
+CMD_TFTP_DD_SERVER="\${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
+CMD_START_STOP_DAEMON="sudo start-stop-daemon --quiet --oknodo"
+CAVAN_SERVER_LIST="\${CMD_TCP_DD_SERVER} \${CMD_TFTP_DD_SERVER}"
+CAVAN_SERVER_OPTION="--daemon"
+
+case "\$1" in
+	start)
+		for cmd in \${CAVAN_SERVER_LIST}
+		do
+			\${CMD_START_STOP_DAEMON} --start --exec \${cmd} -- \${CAVAN_SERVER_OPTION}
+		done
+		;;
+	stop)
+		for cmd in \${CAVAN_SERVER_LIST}
+		do
+			\${CMD_START_STOP_DAEMON} --stop --exec \${cmd}
+		done
+		;;
+	restart)
+		for cmd in \${CAVAN_SERVER_LIST}
+		do
+			\${CMD_START_STOP_DAEMON} --stop --exec \${cmd}
+		done
+
+		for cmd in \${CAVAN_SERVER_LIST}
+		do
+			\${CMD_START_STOP_DAEMON} --start --exec \${cmd} -- \${CAVAN_SERVER_OPTION}
+		done
+		;;
+esac
+EOF
+	chmod 555 ${FILE_CAVAN_SERVICE} || return 1
+
+	return 0
+}
+
 function config_others()
 {
 	mkdir /temp -pv
@@ -304,7 +348,7 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 for func in mount_disk create_mount_points create_symlinks \
 	config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_stardict \
-	config_bashrc config_vimrc config_group config_others
+	config_bashrc config_vimrc config_group config_service config_others
 do
 	if cavan-has_mark ${func}
 	then

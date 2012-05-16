@@ -22,15 +22,20 @@ CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
 
 function cavan-server-run()
 {
-	sudo ${CMD_TCP_DD_SERVER} --daemon
-	sudo ${CMD_TFTP_DD_SERVER} --daemon
+	for server in ${CMD_TCP_DD_SERVER} ${CMD_TFTP_DD_SERVER}
+	do
+		sudo start-stop-daemon --start --exec ${server} -- --daemon
+	done
 
 	return 0
 }
 
 function cavan-server-stop()
 {
-	sudo killall ${CMD_TCP_DD_SERVER} ${CMD_TFTP_DD_SERVER}
+	for server in ${CMD_TCP_DD_SERVER} ${CMD_TFTP_DD_SERVER}
+	do
+		sudo start-stop-daemon --stop --exec ${server}
+	done
 }
 
 function mssh()
