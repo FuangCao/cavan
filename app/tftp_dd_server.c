@@ -9,6 +9,7 @@
 #include <semaphore.h>
 #include <cavan/parser.h>
 #include <cavan/service.h>
+#include <cavan/permission.h>
 
 static int handle_read_request(struct tftp_request *req_p)
 {
@@ -169,6 +170,12 @@ int main(int argc, char *argv[])
 		.show_verbose = 0,
 		.handler = service_handle
 	};
+
+	ret = is_super_user(NULL);
+	if (ret < 0)
+	{
+		return ret;
+	}
 
 	while ((c = getopt_long(argc, argv, "p:P:dDvV", long_options, &option_index)) != EOF)
 	{

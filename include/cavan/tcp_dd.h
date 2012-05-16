@@ -8,6 +8,7 @@
 
 #include <cavan.h>
 #include <cavan/network.h>
+#include <cavan/service.h>
 
 #define TCP_DD_DEFAULT_PORT		8888
 #define TCP_DD_DAEMON_COUNT		10
@@ -48,6 +49,6 @@ struct tcp_dd_package
 	union tcp_dd_body body;
 };
 
-int tcp_dd_service_run(u16 port);
+int tcp_dd_service_run(struct cavan_service_description *desc, u16 port);
 int tcp_dd_send_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size);
 int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size);

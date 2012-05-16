@@ -22,8 +22,8 @@ CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
 
 function cavan-server-run()
 {
-	sudo ${CMD_TCP_DD_SERVER} &
-	sudo ${CMD_TFTP_DD_SERVER} &
+	sudo ${CMD_TCP_DD_SERVER} --daemon
+	sudo ${CMD_TFTP_DD_SERVER} --daemon
 
 	return 0
 }

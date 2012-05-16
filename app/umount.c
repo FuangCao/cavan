@@ -2,6 +2,7 @@
 
 #include <cavan.h>
 #include <cavan/device.h>
+#include <cavan/permission.h>
 
 static void show_usage(void)
 {
@@ -33,6 +34,12 @@ int main(int argc, char *argv[])
 		},
 	};
 	int flags = 0;
+
+	ret = is_super_user(NULL);
+	if (ret < 0)
+	{
+		return ret;
+	}
 
 	while ((c = getopt_long(argc, argv, "vVhHlLfFeE", long_option, &option_index)) != EOF)
 	{

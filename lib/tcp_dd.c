@@ -298,18 +298,10 @@ static int tcp_dd_daemon_handle(int index, void *data)
 	return ret;
 }
 
-int tcp_dd_service_run(u16 port)
+int tcp_dd_service_run(struct cavan_service_description *desc, u16 port)
 {
 	int ret;
 	int sockfd;
-	struct cavan_service_description desc =
-	{
-		.name = "TCP_DD",
-		.daemon_count = TCP_DD_DAEMON_COUNT,
-		.as_daemon = 0,
-		.show_verbose = 0,
-		.handler = tcp_dd_daemon_handle
-	};
 
 	sockfd = inet_create_tcp_service(port);
 	if (sockfd < 0)
@@ -320,9 +312,10 @@ int tcp_dd_service_run(u16 port)
 
 	pr_bold_info("Port = %d", port);
 
-	desc.data = (void *)sockfd;
-	ret = cavan_service_run(&desc);
-	cavan_service_stop(&desc);
+	desc->data = (void *)sockfd;
+	desc->handler = tcp_dd_daemon_handle;
+	ret = cavan_service_run(desc);
+	cavan_service_stop(desc);
 	inet_close_tcp_socket(sockfd);
 
 	return ret;
