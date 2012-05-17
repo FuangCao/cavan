@@ -149,21 +149,19 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 
 	if (desc->as_daemon)
 	{
-		if (desc->pidfile[0] == 0)
-		{
-			pr_red_info("Please input pidfile pathname");
-			return -EINVAL;
-		}
-
 		pid = fork();
 		if (pid < 0)
 		{
 			pr_red_info("fork failed");
+			return pid;
 		}
 
 		if (pid)
 		{
-			file_printf(desc->pidfile, "%d", pid);
+			if (desc->pidfile[0])
+			{
+				file_printf(desc->pidfile, "%d", pid);
+			}
 
 			return 0;
 		}

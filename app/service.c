@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
 	int (*handler)(struct cavan_daemon_description *);
 	struct cavan_daemon_description desc;
 	int i;
+	int ret;
 
 	handler = NULL;
 	desc.as_daemon = 1;
@@ -148,5 +149,14 @@ int main(int argc, char *argv[])
 
 	desc.argv[i] = NULL;
 
-	return handler(&desc);
+	ret = handler(&desc);
+	if (ret < 0)
+	{
+		pr_red_info("Failed");
+		return ret;
+	}
+
+	pr_green_info("OK");
+
+	return 0;
 }

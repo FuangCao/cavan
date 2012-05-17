@@ -56,8 +56,8 @@ am_libcavan_a_OBJECTS = bmp.$(OBJEXT) cache.$(OBJEXT) \
 	ftp.$(OBJEXT) image.$(OBJEXT) inotify.$(OBJEXT) list.$(OBJEXT) \
 	memory.$(OBJEXT) mtd.$(OBJEXT) net_bridge.$(OBJEXT) \
 	network.$(OBJEXT) parser.$(OBJEXT) permission.$(OBJEXT) \
-	progress.$(OBJEXT) queue.$(OBJEXT) rle.$(OBJEXT) \
-	service.$(OBJEXT) sort.$(OBJEXT) stack.$(OBJEXT) \
+	process.$(OBJEXT) progress.$(OBJEXT) queue.$(OBJEXT) \
+	rle.$(OBJEXT) service.$(OBJEXT) sort.$(OBJEXT) stack.$(OBJEXT) \
 	stdio.$(OBJEXT) swan_dev.$(OBJEXT) swan_mac.$(OBJEXT) \
 	swan_pkg.$(OBJEXT) swan_ts.$(OBJEXT) swan_upgrade.$(OBJEXT) \
 	tcp_dd.$(OBJEXT) text.$(OBJEXT) tftp.$(OBJEXT) tree.$(OBJEXT) \
@@ -166,7 +166,7 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 noinst_LIBRARIES = libcavan.a
-libcavan_a_SOURCES = bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c ecc.c event.c ext2.c fb.c file.c ftp.c image.c inotify.c list.c memory.c mtd.c net_bridge.c network.c parser.c permission.c progress.c queue.c rle.c service.c sort.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c tcp_dd.c text.c tftp.c tree.c uevent.c usb.c vfat.c
+libcavan_a_SOURCES = bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c ecc.c event.c ext2.c fb.c file.c ftp.c image.c inotify.c list.c memory.c mtd.c net_bridge.c network.c parser.c permission.c process.c progress.c queue.c rle.c service.c sort.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c tcp_dd.c text.c tftp.c tree.c uevent.c usb.c vfat.c
 all: all-am
 
 .SUFFIXES:
@@ -238,6 +238,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/network.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/permission.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/process.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/progress.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/queue.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rle.Po@am__quote@

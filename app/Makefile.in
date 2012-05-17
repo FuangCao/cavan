@@ -50,12 +50,13 @@ bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
 	cavan-swan_ipu$(EXEEXT) cavan-swan_fac$(EXEEXT) \
 	cavan-swan_emmc$(EXEEXT) cavan-swan_check$(EXEEXT) \
 	cavan-super_upgrade$(EXEEXT) cavan-shrink$(EXEEXT) \
-	cavan-show_file$(EXEEXT) cavan-screen$(EXEEXT) \
-	cavan-rle$(EXEEXT) cavan-resize$(EXEEXT) cavan-remove$(EXEEXT) \
-	cavan-ramdisk$(EXEEXT) cavan-poll_event$(EXEEXT) \
-	cavan-part_table$(EXEEXT) cavan-part_show$(EXEEXT) \
-	cavan-part_probe$(EXEEXT) cavan-net_monitor$(EXEEXT) \
-	cavan-mtd$(EXEEXT) cavan-move$(EXEEXT) cavan-mount$(EXEEXT) \
+	cavan-show_file$(EXEEXT) cavan-service$(EXEEXT) \
+	cavan-screen$(EXEEXT) cavan-rle$(EXEEXT) cavan-resize$(EXEEXT) \
+	cavan-remove$(EXEEXT) cavan-ramdisk$(EXEEXT) \
+	cavan-poll_event$(EXEEXT) cavan-part_table$(EXEEXT) \
+	cavan-part_show$(EXEEXT) cavan-part_probe$(EXEEXT) \
+	cavan-net_monitor$(EXEEXT) cavan-mtd$(EXEEXT) \
+	cavan-move$(EXEEXT) cavan-mount$(EXEEXT) \
 	cavan-modem_upgrade$(EXEEXT) cavan-mksdcard$(EXEEXT) \
 	cavan-mknp$(EXEEXT) cavan-inotify$(EXEEXT) \
 	cavan-image_dd$(EXEEXT) cavan-git_daemon$(EXEEXT) \
@@ -218,6 +219,9 @@ cavan_rle_LDADD = $(LDADD)
 am_cavan_screen_OBJECTS = screen.$(OBJEXT)
 cavan_screen_OBJECTS = $(am_cavan_screen_OBJECTS)
 cavan_screen_LDADD = $(LDADD)
+am_cavan_service_OBJECTS = service.$(OBJEXT)
+cavan_service_OBJECTS = $(am_cavan_service_OBJECTS)
+cavan_service_LDADD = $(LDADD)
 am_cavan_show_file_OBJECTS = show_file.$(OBJEXT)
 cavan_show_file_OBJECTS = $(am_cavan_show_file_OBJECTS)
 cavan_show_file_LDADD = $(LDADD)
@@ -347,23 +351,23 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_poll_event_SOURCES) $(cavan_ramdisk_SOURCES) \
 	$(cavan_remove_SOURCES) $(cavan_resize_SOURCES) \
 	$(cavan_rle_SOURCES) $(cavan_screen_SOURCES) \
-	$(cavan_show_file_SOURCES) $(cavan_shrink_SOURCES) \
-	$(cavan_super_upgrade_SOURCES) $(cavan_swan_check_SOURCES) \
-	$(cavan_swan_emmc_SOURCES) $(cavan_swan_fac_SOURCES) \
-	$(cavan_swan_ipu_SOURCES) $(cavan_swan_mac_SOURCES) \
-	$(cavan_swan_md5_SOURCES) $(cavan_swan_mkfs_SOURCES) \
-	$(cavan_swan_sfdisk_SOURCES) $(cavan_swan_ts_SOURCES) \
-	$(cavan_swan_upgrade_SOURCES) $(cavan_swan_vk_SOURCES) \
-	$(cavan_swan_vn_SOURCES) $(cavan_system_init_SOURCES) \
-	$(cavan_tcp_copy_SOURCES) $(cavan_tcp_dd_SOURCES) \
-	$(cavan_tcp_dd_server_SOURCES) $(cavan_textlen_SOURCES) \
-	$(cavan_tftp_auto_dd_SOURCES) $(cavan_tftp_command_SOURCES) \
-	$(cavan_tftp_copy_SOURCES) $(cavan_tftp_dd_SOURCES) \
-	$(cavan_tftp_dd_server_SOURCES) $(cavan_touch_SOURCES) \
-	$(cavan_tty_mode_SOURCES) $(cavan_umount_SOURCES) \
-	$(cavan_usb_SOURCES) $(cavan_usb_copy_SOURCES) \
-	$(cavan_usb_dd_SOURCES) $(cavan_usb_dd_server_SOURCES) \
-	$(cavan_vfat_SOURCES)
+	$(cavan_service_SOURCES) $(cavan_show_file_SOURCES) \
+	$(cavan_shrink_SOURCES) $(cavan_super_upgrade_SOURCES) \
+	$(cavan_swan_check_SOURCES) $(cavan_swan_emmc_SOURCES) \
+	$(cavan_swan_fac_SOURCES) $(cavan_swan_ipu_SOURCES) \
+	$(cavan_swan_mac_SOURCES) $(cavan_swan_md5_SOURCES) \
+	$(cavan_swan_mkfs_SOURCES) $(cavan_swan_sfdisk_SOURCES) \
+	$(cavan_swan_ts_SOURCES) $(cavan_swan_upgrade_SOURCES) \
+	$(cavan_swan_vk_SOURCES) $(cavan_swan_vn_SOURCES) \
+	$(cavan_system_init_SOURCES) $(cavan_tcp_copy_SOURCES) \
+	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
+	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
+	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
+	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
+	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
+	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
+	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
+	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES)
 DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_auto_mount_SOURCES) $(cavan_battery_SOURCES) \
 	$(cavan_battery_level_SOURCES) $(cavan_bdata_SOURCES) \
@@ -386,23 +390,23 @@ DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_poll_event_SOURCES) $(cavan_ramdisk_SOURCES) \
 	$(cavan_remove_SOURCES) $(cavan_resize_SOURCES) \
 	$(cavan_rle_SOURCES) $(cavan_screen_SOURCES) \
-	$(cavan_show_file_SOURCES) $(cavan_shrink_SOURCES) \
-	$(cavan_super_upgrade_SOURCES) $(cavan_swan_check_SOURCES) \
-	$(cavan_swan_emmc_SOURCES) $(cavan_swan_fac_SOURCES) \
-	$(cavan_swan_ipu_SOURCES) $(cavan_swan_mac_SOURCES) \
-	$(cavan_swan_md5_SOURCES) $(cavan_swan_mkfs_SOURCES) \
-	$(cavan_swan_sfdisk_SOURCES) $(cavan_swan_ts_SOURCES) \
-	$(cavan_swan_upgrade_SOURCES) $(cavan_swan_vk_SOURCES) \
-	$(cavan_swan_vn_SOURCES) $(cavan_system_init_SOURCES) \
-	$(cavan_tcp_copy_SOURCES) $(cavan_tcp_dd_SOURCES) \
-	$(cavan_tcp_dd_server_SOURCES) $(cavan_textlen_SOURCES) \
-	$(cavan_tftp_auto_dd_SOURCES) $(cavan_tftp_command_SOURCES) \
-	$(cavan_tftp_copy_SOURCES) $(cavan_tftp_dd_SOURCES) \
-	$(cavan_tftp_dd_server_SOURCES) $(cavan_touch_SOURCES) \
-	$(cavan_tty_mode_SOURCES) $(cavan_umount_SOURCES) \
-	$(cavan_usb_SOURCES) $(cavan_usb_copy_SOURCES) \
-	$(cavan_usb_dd_SOURCES) $(cavan_usb_dd_server_SOURCES) \
-	$(cavan_vfat_SOURCES)
+	$(cavan_service_SOURCES) $(cavan_show_file_SOURCES) \
+	$(cavan_shrink_SOURCES) $(cavan_super_upgrade_SOURCES) \
+	$(cavan_swan_check_SOURCES) $(cavan_swan_emmc_SOURCES) \
+	$(cavan_swan_fac_SOURCES) $(cavan_swan_ipu_SOURCES) \
+	$(cavan_swan_mac_SOURCES) $(cavan_swan_md5_SOURCES) \
+	$(cavan_swan_mkfs_SOURCES) $(cavan_swan_sfdisk_SOURCES) \
+	$(cavan_swan_ts_SOURCES) $(cavan_swan_upgrade_SOURCES) \
+	$(cavan_swan_vk_SOURCES) $(cavan_swan_vn_SOURCES) \
+	$(cavan_system_init_SOURCES) $(cavan_tcp_copy_SOURCES) \
+	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
+	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
+	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
+	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
+	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
+	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
+	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
+	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -540,6 +544,7 @@ cavan_remove_SOURCES = remove.c
 cavan_resize_SOURCES = resize.c
 cavan_rle_SOURCES = rle.c
 cavan_screen_SOURCES = screen.c
+cavan_service_SOURCES = service.c
 cavan_show_file_SOURCES = show_file.c
 cavan_shrink_SOURCES = shrink.c
 cavan_super_upgrade_SOURCES = super_upgrade.c
@@ -779,6 +784,9 @@ cavan-rle$(EXEEXT): $(cavan_rle_OBJECTS) $(cavan_rle_DEPENDENCIES) $(EXTRA_cavan
 cavan-screen$(EXEEXT): $(cavan_screen_OBJECTS) $(cavan_screen_DEPENDENCIES) $(EXTRA_cavan_screen_DEPENDENCIES) 
 	@rm -f cavan-screen$(EXEEXT)
 	$(LINK) $(cavan_screen_OBJECTS) $(cavan_screen_LDADD) $(LIBS)
+cavan-service$(EXEEXT): $(cavan_service_OBJECTS) $(cavan_service_DEPENDENCIES) $(EXTRA_cavan_service_DEPENDENCIES) 
+	@rm -f cavan-service$(EXEEXT)
+	$(LINK) $(cavan_service_OBJECTS) $(cavan_service_LDADD) $(LIBS)
 cavan-show_file$(EXEEXT): $(cavan_show_file_OBJECTS) $(cavan_show_file_DEPENDENCIES) $(EXTRA_cavan_show_file_DEPENDENCIES) 
 	@rm -f cavan-show_file$(EXEEXT)
 	$(LINK) $(cavan_show_file_OBJECTS) $(cavan_show_file_LDADD) $(LIBS)
@@ -930,6 +938,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resize.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/screen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/service.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/show_file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shrink.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/super_upgrade.Po@am__quote@
