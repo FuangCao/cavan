@@ -14,11 +14,11 @@ int swan_ts_open_misc_device(const char *devpath, int flags)
 
 	if (devpath)
 	{
-		fd = try_to_open(flags, devpath, SWAN_TS_PROC_DEVICE, SWAN_TS_MISC_DEVICE, NULL);
+		fd = try_to_open(flags, devpath, SWAN_TS_MISC_DEVICE, SWAN_TS_PROC_DEVICE, NULL);
 	}
 	else
 	{
-		fd = try_to_open(flags, SWAN_TS_PROC_DEVICE, SWAN_TS_MISC_DEVICE, NULL);
+		fd = try_to_open(flags, SWAN_TS_MISC_DEVICE, SWAN_TS_PROC_DEVICE, NULL);
 	}
 
 	if (fd < 0)

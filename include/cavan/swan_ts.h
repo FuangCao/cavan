@@ -11,7 +11,7 @@
 #define SWAN_TS_DEVICE_NAME			"Swan Touch Screen"
 #define SWAN_TS_MISC_DEVICE			"/dev/swan_touchscreen"
 #define SWAN_TS_PROC_DEVICE			"/proc/swan_touchscreen"
-#define SWAN_TS_DEFAULT_DEVICE		SWAN_TS_PROC_DEVICE
+#define SWAN_TS_DEFAULT_DEVICE		SWAN_TS_MISC_DEVICE
 
 struct swan_ts_i2c_request
 {
