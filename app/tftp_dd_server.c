@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 		.handler = service_handle
 	};
 
-	ret = is_super_user(NULL);
+	ret = has_super_permission(NULL);
 	if (ret < 0)
 	{
 		return ret;

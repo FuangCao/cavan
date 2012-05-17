@@ -842,7 +842,7 @@ ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offs
 	ssize_t readlen;
 	int fd;
 
-#ifdef DEBUG
+#ifdef CAVAN_DEBUG
 	println("read file = %s", file_name);
 	println("size = %s", size2text(size));
 	println("offset = %s", size2text(offset));
@@ -851,7 +851,9 @@ ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offs
 	fd = open(file_name, O_RDONLY | O_BINARY | flags);
 	if (fd < 0)
 	{
+#ifdef CAVAN_DEBUG
 		print_error("open \"%s\"", file_name);
+#endif
 		return -1;
 	}
 

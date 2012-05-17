@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	};
 	int flags = 0;
 
-	ret = is_super_user(NULL);
+	ret = has_super_permission(NULL);
 	if (ret < 0)
 	{
 		return ret;

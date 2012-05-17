@@ -20,6 +20,16 @@ struct cavan_service_description
 	int (*handler)(int index, void *data);
 };
 
+struct cavan_daemon_description
+{
+	char cmdfile[512];
+	char pidfile[512];
+	int as_daemon;
+	char *argv[32];
+};
+
 int cavan_service_run(struct cavan_service_description *desc);
 int cavan_service_stop(struct cavan_service_description *desc);
+int cavan_daemon_run(struct cavan_daemon_description *desc);
+int cavan_daemon_stop(struct cavan_daemon_description *desc);
 

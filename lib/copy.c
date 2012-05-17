@@ -130,7 +130,7 @@ int directory_copy_main(const char *src, const char *dest)
 			break;
 		}
 
-#ifdef DEBUG
+#ifdef CAVAN_DEBUG
 		println("filename = %s", dt->d_name);
 #endif
 

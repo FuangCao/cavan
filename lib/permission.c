@@ -7,9 +7,9 @@
 #include <cavan.h>
 #include <cavan/permission.h>
 
-int is_super_user(const char *prompt)
+int has_super_permission(const char *prompt)
 {
-	if (getuid() == 0)
+	if (user_is_super())
 	{
 		return 0;
 	}
@@ -20,7 +20,7 @@ int is_super_user(const char *prompt)
 	}
 	else
 	{
-		pr_red_info("Only super can run this program!");
+		pr_red_info("Only super can do this");
 	}
 
 	return -EPERM;

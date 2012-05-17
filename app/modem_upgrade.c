@@ -79,7 +79,9 @@ static ssize_t parse_string_list(const char *dirname, struct modem_prop *props, 
 			tmp_text = props[prop_count].value;
 		}
 
-		// println("%s = %s", props[prop_count].name, props[prop_count].value);
+#ifdef CAVAN_DEBUG
+		println("%s = %s", props[prop_count].name, props[prop_count].value);
+#endif
 
 		prop_count++;
 
@@ -145,14 +147,18 @@ static int set_usb_power(void)
 	ret = file_puts_retry(USB_POWER_CONTROL_PATH, "on", 10);
 	if (ret < 0)
 	{
+#ifdef CAVAN_DEBUG
 		warning_msg("write file \"%s\"", USB_POWER_CONTROL_PATH);
+#endif
 		return ret;
 	}
 
 	ret = file_puts_retry(USB_POWER_WAKEUP_PATH, "disabled", 10);
 	if (ret < 0)
 	{
+#ifdef CAVAN_DEBUG
 		warning_msg("write file \"%s\"", USB_POWER_WAKEUP_PATH);
+#endif
 		return ret;
 	}
 
@@ -166,7 +172,9 @@ static int modem_power_enable(void)
 	ret = file_write(MODEM_POWER_PATH, "off", 3);
 	if (ret < 0)
 	{
+#ifdef CAVAN_DEBUG
 		error_msg("write file \"%s\"", MODEM_POWER_PATH);
+#endif
 		return ret;
 	}
 
@@ -175,7 +183,9 @@ static int modem_power_enable(void)
 	ret = file_write(MODEM_POWER_PATH, "on", 2);
 	if (ret < 0)
 	{
+#ifdef CAVAN_DEBUG
 		error_msg("write file \"%s\"", MODEM_POWER_PATH);
+#endif
 		return ret;
 	}
 
@@ -184,7 +194,9 @@ static int modem_power_enable(void)
 	ret = file_wait(MODEM_TTY_DEVICE, "c", 10);
 	if (ret < 0)
 	{
+#ifdef CAVAN_DEBUG
 		error_msg("modem power enable failed");
+#endif
 		return ret;
 	}
 

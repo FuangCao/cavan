@@ -715,7 +715,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 
 	if (file_test(UPDATER_SCRIPT_PATH, "x") == 0)
 	{
-		system_command(UPDATER_SCRIPT_PATH);
+		system_command("%s | tee %s", UPDATER_SCRIPT_PATH, SWAN_CONSOLE_DEVICE);
 	}
 
 	if (pkg_info.volume[0])

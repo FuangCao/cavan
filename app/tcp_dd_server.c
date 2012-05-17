@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 		.show_verbose = 0,
 	};
 
-	ret = is_super_user(NULL);
+	ret = has_super_permission(NULL);
 	if (ret < 0)
 	{
 		return ret;

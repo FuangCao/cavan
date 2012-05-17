@@ -1723,7 +1723,7 @@ int loop_get_fd(const char *filename, char *loop_path, u64 offset)
 
 		value2text_base(i, p, 0, 0, 10);
 
-#ifdef DEBUG
+#ifdef CAVAN_DEBUG
 		println("loop_dev = %s", loop_path);
 #endif
 

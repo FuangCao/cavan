@@ -6,6 +6,8 @@
 
 #include <cavan.h>
 #include <cavan/service.h>
+#include <cavan/permission.h>
+#include <cavan/process.h>
 
 static void *cavan_service_handler(void *data)
 {
@@ -126,4 +128,90 @@ int cavan_service_stop(struct cavan_service_description *desc)
 	desc->threads = NULL;
 
 	return 0;
+}
+
+int cavan_daemon_run(struct cavan_daemon_description *desc)
+{
+	int ret;
+	pid_t pid;
+
+	if (desc == NULL || desc->cmdfile[0] == 0)
+	{
+		pr_red_info("Daemon description fault");
+		return -EINVAL;
+	}
+
+	ret = has_super_permission(NULL);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	if (desc->as_daemon)
+	{
+		if (desc->pidfile[0] == 0)
+		{
+			pr_red_info("Please input pidfile pathname");
+			return -EINVAL;
+		}
+
+		pid = fork();
+		if (pid < 0)
+		{
+			pr_red_info("fork failed");
+		}
+
+		if (pid)
+		{
+			file_printf(desc->pidfile, "%d", pid);
+
+			return 0;
+		}
+	}
+
+	return execv(desc->cmdfile, desc->argv);
+}
+
+int cavan_daemon_stop(struct cavan_daemon_description *desc)
+{
+	pid_t pid;
+
+	if (desc == NULL)
+	{
+		pr_red_info("Daemon description fault");
+		return -EINVAL;
+	}
+
+	if (desc->pidfile[0])
+	{
+		char buff[1024];
+		ssize_t readlen;
+
+		readlen = file_read(desc->pidfile, buff, sizeof(buff));
+		if (readlen < 0)
+		{
+			pr_red_info("Read file %s failed", desc->pidfile);
+			return readlen;
+		}
+
+		remove(desc->pidfile);
+
+		pid = text2value_unsigned(buff, NULL, 10);
+	}
+	else if (desc->cmdfile[0])
+	{
+		pid = process_find_by_cmdline(NULL, desc->cmdfile);
+		if (pid < 0)
+		{
+			pr_red_info("process_find_by_cmdline failed");
+			return pid;
+		}
+	}
+	else
+	{
+		pr_red_info("Please give command pathname or pid filename");
+		return -EINVAL;
+	}
+
+	return kill(pid, SIGTERM);
 }
