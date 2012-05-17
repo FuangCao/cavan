@@ -22,9 +22,15 @@ CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
 
 function cavan-server-run()
 {
+	[ "$(id -u)" = "0" ] ||
+	{
+		echo "Only super user can do this"
+		return 1
+	}
+
 	for server in ${CMD_TCP_DD_SERVER} ${CMD_TFTP_DD_SERVER}
 	do
-		sudo start-stop-daemon --start --exec ${server} -- --daemon
+		start-stop-daemon --start --exec ${server} -- --daemon
 	done
 
 	return 0
@@ -32,9 +38,15 @@ function cavan-server-run()
 
 function cavan-server-stop()
 {
+	[ "$(id -u)" = "0" ] ||
+	{
+		echo "Only super user can do this"
+		return 1
+	}
+
 	for server in ${CMD_TCP_DD_SERVER} ${CMD_TFTP_DD_SERVER}
 	do
-		sudo start-stop-daemon --stop --exec ${server}
+		start-stop-daemon --stop --exec ${server}
 	done
 }
 
