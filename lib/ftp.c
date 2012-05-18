@@ -1,6 +1,5 @@
 #include <cavan.h>
 #include <cavan/ftp.h>
-#include <cavan/service.h>
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
@@ -846,20 +845,11 @@ int ftp_service_handle(int index, void *data)
 	return 0;
 }
 
-int ftp_service_run(u16 port, int count)
+int ftp_service_run(struct cavan_service_description *service_desc, u16 port)
 {
 	int ret;
 	struct cavan_ftp_descriptor ftp_desc;
 	struct sockaddr_in addr;
-	struct cavan_service_description service_desc =
-	{
-		.name = "FTP",
-		.daemon_count = count,
-		.as_daemon = 0,
-		.show_verbose = 0,
-		.data = (void *)&ftp_desc,
-		.handler = ftp_service_handle
-	};
 
 	ftp_desc.ctrl_sockfd = inet_create_tcp_service(port);
 	if (ftp_desc.ctrl_sockfd < 0)
@@ -877,11 +867,13 @@ int ftp_service_run(u16 port, int count)
 
 	text_replace_char2(inet_ntoa(addr.sin_addr), ftp_desc.ip_addr, '.', ',');
 
-	pr_bold_info("FTP Root Path = %s, Services = %d", ftp_root_path, count);
+	pr_bold_info("FTP Root Path = %s, Services = %d", ftp_root_path, service_desc->daemon_count);
 	pr_bold_info("Device = %s, IP = %s, Port = %d", ftp_netdev_name, ftp_desc.ip_addr, port);
 
-	ret = cavan_service_run(&service_desc);
-	cavan_service_stop(&service_desc);
+	service_desc->data = (void *)&ftp_desc;
+	service_desc->handler = ftp_service_handle;
+	ret = cavan_service_run(service_desc);
+	cavan_service_stop(service_desc);
 
 out_close_ctrl_sockfd:
 	close(ftp_desc.ctrl_sockfd);

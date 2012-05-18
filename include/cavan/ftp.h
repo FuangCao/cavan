@@ -3,6 +3,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
 #include <cavan/network.h>
+#include <cavan/service.h>
 
 #define FTP_DATA_PORT		20
 #define FTP_CTRL_PORT		21
@@ -30,6 +31,6 @@ extern char ftp_netdev_name[];
 char *ftp_file_stat_tostring(const char *filepath, char *text);
 char *ftp_list_directory(const char *dirpath, char *text);
 
-int ftp_service_run(u16 port, int count);
+int ftp_service_run(struct cavan_service_description *service_desc, u16 port);
 int ftp_client_run(const char *ip, u16 port);
 
