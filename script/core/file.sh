@@ -241,18 +241,20 @@ function mbuboot()
 
 function mkfsldroid()
 {
-	local command
+	local command log_home log_path
 
-	[ "$1" ] ||
-	{
-		echo "Please give a product name"
-		return 1
-	}
+	log_home="${FSLDROID_HOME}/out/logs"
 
-	command="make -C ${FSLDROID_HOME} PRODUCT-$1-eng -j${MAKE_JOBS}"
-	echo ${command}
+	mkdir ${log_home} -pv || return 1
 
-	${command} | tee ${FSLDROID_HOME}/$1.log || return 1
+	for product in $*
+	do
+		command="make PRODUCT-${product}-eng -j${MAKE_JOBS}"
+		log_path="${log_home}/${product}-$(date '+%Y%m%d%H%M%S').log"
+
+		echo ${command}
+		(cd ${FSLDROID_HOME} && ${command} | tee ${log_path}) || return 1
+	done
 
 	return 0
 }
