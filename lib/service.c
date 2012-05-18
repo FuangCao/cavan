@@ -45,10 +45,21 @@ int cavan_service_run(struct cavan_service_description *desc)
 	int count;
 	pthread_t *threads;
 
-	if (desc == NULL || desc->handler == NULL || desc->name == NULL || desc->daemon_count < 1)
+	if (desc == NULL)
 	{
-		pr_red_info("desc == NULL || desc->handler == NULL || desc->name == NULL || desc->daemon_count < 1");
-		return -EINVAL;
+		pr_red_info("desc == NULL");
+		ERROR_RETURN(EINVAL);
+	}
+
+	if (desc->super_permission && has_super_permission(NULL) < 0)
+	{
+		ERROR_RETURN(EPERM);
+	}
+
+	if (desc->handler == NULL || desc->name == NULL || desc->daemon_count < 1)
+	{
+		pr_red_info("desc->handler == NULL || desc->name == NULL || desc->daemon_count < 1");
+		ERROR_RETURN(EINVAL);
 	}
 
 	count = desc->daemon_count - 1;
@@ -118,6 +129,10 @@ int cavan_service_stop(struct cavan_service_description *desc)
 	}
 
 	threads = desc->threads;
+	if (threads == NULL)
+	{
+		return 0;
+	}
 
 	for (i = desc->daemon_count - 1; i >= 0; i--)
 	{

@@ -314,6 +314,7 @@ int tcp_dd_service_run(struct cavan_service_description *desc, u16 port)
 
 	desc->data = (void *)sockfd;
 	desc->handler = tcp_dd_daemon_handle;
+	desc->threads = NULL;
 	ret = cavan_service_run(desc);
 	cavan_service_stop(desc);
 	inet_close_tcp_socket(sockfd);

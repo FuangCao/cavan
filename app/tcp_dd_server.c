@@ -16,19 +16,24 @@ enum
 	LOCAL_COMMAND_OPTION_HELP,
 	LOCAL_COMMAND_OPTION_VERSION,
 	LOCAL_COMMAND_OPTION_DAEMON,
-	LOCAL_COMMAND_OPTION_VERBOSE
+	LOCAL_COMMAND_OPTION_VERBOSE,
+	LOCAL_COMMAND_OPTION_SUPER
 };
 
 static void show_usage(void)
 {
 	println("Usage:");
+	println("--help, -h, -H");
+	println("--version");
+	println("--daemon, -d, -D");
+	println("--verbose, -v, -V");
+	println("--super, -s, -S");
 }
 
 int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	int ret;
 	struct option long_option[] =
 	{
 		{
@@ -56,6 +61,12 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_VERBOSE,
 		},
 		{
+			.name = "super",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_SUPER,
+		},
+		{
 		},
 	};
 	u16 port;
@@ -65,15 +76,10 @@ int main(int argc, char *argv[])
 		.daemon_count = TCP_DD_DAEMON_COUNT,
 		.as_daemon = 0,
 		.show_verbose = 0,
+		.super_permission = 1
 	};
 
-	ret = has_super_permission(NULL);
-	if (ret < 0)
-	{
-		return ret;
-	}
-
-	while ((c = getopt_long(argc, argv, "hHvVdD", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "hHvVdDs:S:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -99,6 +105,12 @@ int main(int argc, char *argv[])
 		case 'D':
 		case LOCAL_COMMAND_OPTION_DAEMON:
 			desc.as_daemon = 1;
+			break;
+
+		case 's':
+		case 'S':
+		case LOCAL_COMMAND_OPTION_SUPER:
+			desc.super_permission = text_bool_value(optarg);
 			break;
 
 		default:

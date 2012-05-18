@@ -158,6 +158,12 @@ int main(int argc, char *argv[])
 			.val = 'v',
 		},
 		{
+			.name = "super",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 's',
+		},
+		{
 		},
 	};
 	int c;
@@ -168,16 +174,11 @@ int main(int argc, char *argv[])
 		.daemon_count = TFTP_MAX_LINK_COUNT,
 		.as_daemon = 0,
 		.show_verbose = 0,
+		.super_permission = 1,
 		.handler = service_handle
 	};
 
-	ret = has_super_permission(NULL);
-	if (ret < 0)
-	{
-		return ret;
-	}
-
-	while ((c = getopt_long(argc, argv, "p:P:dDvV", long_options, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "p:P:dDvVs:S:", long_options, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -194,6 +195,11 @@ int main(int argc, char *argv[])
 		case 'v':
 		case 'V':
 			desc.show_verbose = 1;
+			break;
+
+		case 's':
+		case 'S':
+			desc.super_permission = text_bool_value(optarg);
 			break;
 
 		default:

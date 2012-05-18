@@ -26,6 +26,15 @@ enum
 static void show_usage(void)
 {
 	println("Usage:");
+	println("--start");
+	println("--stop");
+	println("--help, -h, -H");
+	println("--version");
+	println("--daemon, -d, -D");
+	println("--verbose, -v, -V");
+	println("--super, -s, -S");
+	println("--exec, -e, -E");
+	println("--pidfile, -p, -P");
 }
 
 int main(int argc, char *argv[])
@@ -84,15 +93,17 @@ int main(int argc, char *argv[])
 		},
 	};
 	int (*handler)(struct cavan_daemon_description *);
-	struct cavan_daemon_description desc;
 	int i;
 	int ret;
+	struct cavan_daemon_description desc =
+	{
+		.as_daemon = 1,
+		.super_permission = 1
+	};
 
-	handler = NULL;
-	desc.as_daemon = 1;
-	desc.super_permission = 1;
 	desc.cmdfile[0] = 0;
 	desc.pidfile[0] = 0;
+	handler = NULL;
 
 	while ((c = getopt_long(argc, argv, "vVhHe:E:p:P:s:S:", long_option, &option_index)) != EOF)
 	{

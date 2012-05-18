@@ -14,6 +14,7 @@ struct cavan_service_description
 	int daemon_count;
 	int as_daemon;
 	int show_verbose;
+	int super_permission;
 	void *data;
 	pthread_t *threads;
 	pthread_mutex_t mutex_lock;
