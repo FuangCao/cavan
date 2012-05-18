@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+	<PreferenceScreen
+		android:key="touchscreen_name"
+		android:title="@string/touchscreen_name">
+	</PreferenceScreen>
+	<PreferenceScreen
+		android:key="calibration"
+		android:title="@string/calibration"
+		android:summary="@string/calibration_summary">
+	</PreferenceScreen>
+	<PreferenceScreen
+		android:key="upgrade_ft5406"
+		android:title="@string/upgrade_ft5406"
+		android:summary="@string/upgrade_ft5406_summary">
+	</PreferenceScreen>
+	<PreferenceScreen
+		android:key="access_i2c"
+		android:title="@string/access_i2c">
+	</PreferenceScreen>
+</PreferenceScreen>
