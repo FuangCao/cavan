@@ -20,6 +20,7 @@ enum
 	LOCAL_COMMAND_OPTION_EXEC,
 	LOCAL_COMMAND_OPTION_PIDFILE,
 	LOCAL_COMMAND_OPTION_DAEMON,
+	LOCAL_COMMAND_OPTION_SUPER
 };
 
 static void show_usage(void)
@@ -75,6 +76,12 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_DAEMON,
 		},
+		{
+			.name = "super",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_SUPER,
+		},
 	};
 	int (*handler)(struct cavan_daemon_description *);
 	struct cavan_daemon_description desc;
@@ -83,10 +90,11 @@ int main(int argc, char *argv[])
 
 	handler = NULL;
 	desc.as_daemon = 1;
+	desc.super_permission = 1;
 	desc.cmdfile[0] = 0;
 	desc.pidfile[0] = 0;
 
-	while ((c = getopt_long(argc, argv, "vVhHe:E:p:P:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHe:E:p:P:s:S:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -119,6 +127,12 @@ int main(int argc, char *argv[])
 		case 'D':
 		case LOCAL_COMMAND_OPTION_DAEMON:
 			desc.as_daemon = text_bool_value(optarg);
+			break;
+
+		case 's':
+		case 'S':
+		case LOCAL_COMMAND_OPTION_SUPER:
+			desc.super_permission = text_bool_value(optarg);
 			break;
 
 		case LOCAL_COMMAND_OPTION_START:

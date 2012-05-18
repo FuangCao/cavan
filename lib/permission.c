@@ -23,5 +23,5 @@ int has_super_permission(const char *prompt)
 		pr_red_info("Only super can do this");
 	}
 
-	return -EPERM;
+	ERROR_RETURN(EPERM);
 }

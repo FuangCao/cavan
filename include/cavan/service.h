@@ -25,6 +25,7 @@ struct cavan_daemon_description
 	char cmdfile[512];
 	char pidfile[512];
 	int as_daemon;
+	int super_permission;
 	char *argv[32];
 };
 

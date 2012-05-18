@@ -132,19 +132,17 @@ int cavan_service_stop(struct cavan_service_description *desc)
 
 int cavan_daemon_run(struct cavan_daemon_description *desc)
 {
-	int ret;
 	pid_t pid;
 
 	if (desc == NULL || desc->cmdfile[0] == 0)
 	{
 		pr_red_info("Daemon description fault");
-		return -EINVAL;
+		ERROR_RETURN(EINVAL);
 	}
 
-	ret = has_super_permission(NULL);
-	if (ret < 0)
+	if (desc->super_permission && has_super_permission(NULL) < 0)
 	{
-		return ret;
+		ERROR_RETURN(EPERM);
 	}
 
 	if (desc->as_daemon)
