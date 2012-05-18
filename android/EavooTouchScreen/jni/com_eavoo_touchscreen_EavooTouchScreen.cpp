@@ -56,7 +56,7 @@ struct ft5406_firmware_data_package
 
 #define SWAN_TS_DEVICE_IOWM(nr, size) \
 	_IOR(_IOC_WRITE, SWAN_TS_IOCTL_TYPE_DEVICE, nr, size)
-	
+
 #define SWAN_TS_DEVICE_IO(nr) \
 		SWAN_TS_DEVICE_IORM(nr, 0)
 
@@ -114,7 +114,7 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_OpenTouch
 	}
 
 	LOGI("Open device %s", path);
-	
+
 	fd = open(path, O_RDWR);
 	env->SetIntField(obj, mFieldDeviceFd, fd);
 	if (fd < 0)
@@ -132,7 +132,7 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_OpenTouch
 		LOGI("Device name = %s", buff);
 		env->SetObjectField(obj, mFieldDeviceName, env->NewStringUTF(buff));
 	}
-	
+
 	LOGI("fd = %d", fd);
 
 	env->SetObjectField(obj, mFieldDevicePath, env->NewStringUTF(path));
