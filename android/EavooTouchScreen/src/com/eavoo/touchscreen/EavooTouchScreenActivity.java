@@ -8,30 +8,17 @@ import android.util.Log;
 
 public class EavooTouchScreenActivity extends PreferenceActivity
 {
-	private static final String TAG = "EavooTPActivity";
+	private static final String TAG = "EavooTouchScreenActivity";
 
 	private static final String KEY_CALIBRATION = "calibration";
 	// private static final String KEY_UPGRADE_FT5406 = "upgrade_ft5406";
 	private static final String KEY_TOUCHSCREEN_NAME = "touchscreen_name";
 
-	private EavooTouchScreen mTouchScreen = new EavooTouchScreen();
+	private EavooTouchScreen mTouchScreen;
 
 	private PreferenceScreen mPreferenceScreen;
-	private PreferenceScreen mCalibration;
-	private PreferenceScreen mTouchScreenName;
-
-	private String getTouchScreenDeviceName()
-	{
-		String name;
-
-		name = mTouchScreen.getDeviceName();
-		if (name == null)
-		{
-			return new String("UNKNOWN");
-		}
-
-		return name;
-	}
+	private PreferenceScreen mPreferenceCalibration;
+	private PreferenceScreen mPreferenceTouchScreenName;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -41,24 +28,20 @@ public class EavooTouchScreenActivity extends PreferenceActivity
 		addPreferencesFromResource(R.xml.touchscreen);
 
 		mPreferenceScreen = getPreferenceScreen();
-		mTouchScreenName = (PreferenceScreen) mPreferenceScreen.findPreference(KEY_TOUCHSCREEN_NAME);
-		mCalibration = (PreferenceScreen) mPreferenceScreen.findPreference(KEY_CALIBRATION);
+		mPreferenceTouchScreenName = (PreferenceScreen) mPreferenceScreen.findPreference(KEY_TOUCHSCREEN_NAME);
+		mPreferenceCalibration = (PreferenceScreen) mPreferenceScreen.findPreference(KEY_CALIBRATION);
 
-		mTouchScreenName.setSummary(getTouchScreenDeviceName());
+		mTouchScreen = new EavooTouchScreen();
+		mPreferenceTouchScreenName.setSummary(mTouchScreen.getDeviceName());
 	}
 
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference)
 	{
-		if (preference == mCalibration)
+		if (preference == mPreferenceCalibration)
 		{
-			Log.i(TAG, "Calibration");
-			mTouchScreen.Calibration();
-		}
-		else if (preference == mTouchScreenName)
-		{
-			Log.i(TAG, "Touch Screen Name");
-			mTouchScreenName.setSummary(getTouchScreenDeviceName());
+			EavooTouchScreenCalibration calibration = new EavooTouchScreenCalibration(this, mTouchScreen, mPreferenceCalibration);
+			calibration.start();
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);

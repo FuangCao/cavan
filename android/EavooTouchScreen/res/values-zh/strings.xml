@@ -3,9 +3,14 @@
     <string name="app_name">奕虎触摸屏</string>
     <string name="touchscreen_name">触摸屏名称</string>
     <string name="calibration">自动校准</string>
-    <string name="calibration_summary">校准期间请不要触摸屏幕。</string>
+    <string name="calibration_summary">校准期间请不要触摸屏幕</string>
+    <string name="calibration_summary_start">开始校准触摸屏</string>
+    <string name="calibration_summary_running">正在校准触摸屏，请不要触摸屏幕</string>
+    <string name="calibration_summary_success">校准触摸屏幕成功</string>
+    <string name="calibration_summary_failed">校准触摸屏失败</string>
+    <string name="advanced_options">高级选项</string>
     <string name="upgrade_ft5406">FT5406固件升级</string>
-    <string name="upgrade_ft5406_summary">选择固件文件并执行升级。</string>
-    <string name="access_i2c">读写触摸屏I2C设备</string>
+    <string name="upgrade_ft5406_summary">选择固件文件并执行升级</string>
+    <string name="access_registers">读写触摸屏寄存器</string>
 
 </resources>

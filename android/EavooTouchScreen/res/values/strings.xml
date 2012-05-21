@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Eavoo Touch Screen</string>
-    <string name="touchscreen_name">Touch Screen Name</string>
-    <string name="calibration">Auto Calibration</string>
-    <string name="calibration_summary">Please don\'t touch the screen when calibration.</string>
+    <string name="app_name">Eavoo touch screen</string>
+    <string name="touchscreen_name">Touch screen name</string>
+    <string name="calibration">Auto calibration</string>
+    <string name="calibration_summary">Please don\'t touch the screen when calibration</string>
+    <string name="calibration_summary_start">start calibration</string>
+    <string name="calibration_summary_running">calibration，please don\'t touch the screen</string>
+    <string name="calibration_summary_success">successfully</string>
+    <string name="calibration_summary_failed">failed</string>
+    <string name="advanced_options">Anvanced Options</string>
     <string name="upgrade_ft5406">Upgrade FT5406</string>
-    <string name="upgrade_ft5406_summary">Select a firmware file and execute upgrade.</string>
-    <string name="access_i2c">Access Touch Screen I2C Device</string>
+    <string name="upgrade_ft5406_summary">Select a firmware file and execute upgrade</string>
+    <string name="access_registers">Access touch screen registers</string>
 
 </resources>

@@ -2,20 +2,29 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 	<PreferenceScreen
 		android:key="touchscreen_name"
-		android:title="@string/touchscreen_name">
+		android:title="@string/touchscreen_name"
+		android:persistent="false">
 	</PreferenceScreen>
 	<PreferenceScreen
 		android:key="calibration"
 		android:title="@string/calibration"
-		android:summary="@string/calibration_summary">
+		android:summary="@string/calibration_summary"
+		android:persistent="false">
 	</PreferenceScreen>
+	<PreferenceCategory
+		android:key="advanced_options"
+		android:title="@string/advanced_options"
+		android:persistent="false">
+	</PreferenceCategory>
 	<PreferenceScreen
 		android:key="upgrade_ft5406"
 		android:title="@string/upgrade_ft5406"
-		android:summary="@string/upgrade_ft5406_summary">
+		android:summary="@string/upgrade_ft5406_summary"
+		android:persistent="false">
 	</PreferenceScreen>
 	<PreferenceScreen
 		android:key="access_i2c"
-		android:title="@string/access_i2c">
+		android:title="@string/access_registers"
+		android:persistent="false">
 	</PreferenceScreen>
 </PreferenceScreen>

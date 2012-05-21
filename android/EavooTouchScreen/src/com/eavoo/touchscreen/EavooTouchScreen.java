@@ -6,7 +6,7 @@ import android.util.Log;
 
 public class EavooTouchScreen
 {
-	static private final String TAG = "EavooTP";
+	static private final String TAG = "EavooTouchScreen";
 	static private final String TP_PROC_DEVICE = "/proc/swan_touchscreen";
 	static private final String TP_MISC_DEVICE = "/dev/swan_touchscreen";
 
@@ -22,7 +22,7 @@ public class EavooTouchScreen
 	@Override
 	protected void finalize() throws Throwable
 	{
-		CloseTouchScreenDevice();
+		CloseTouchScreenDeviceNative();
 		super.finalize();
 	}
 
@@ -60,7 +60,7 @@ public class EavooTouchScreen
 			return false;
 		}
 
-		if (OpenTouchscreenDevice(file.getAbsolutePath()) == false)
+		if (OpenTouchscreenDeviceNative(file.getAbsolutePath()) == false)
 		{
 			return false;
 		}
@@ -76,9 +76,9 @@ public class EavooTouchScreen
 		return mDeviceName;
 	}
 
-	native private boolean OpenTouchscreenDevice(String devpath);
-	native private boolean CloseTouchScreenDevice();
+	native private boolean OpenTouchscreenDeviceNative(String devpath);
+	native private boolean CloseTouchScreenDeviceNative();
 
-	native public boolean Calibration();
-	native public boolean UpgradeFt5406(String filename);
+	native public boolean CalibrationNative();
+	native public boolean UpgradeFt5406Native(String filename);
 }

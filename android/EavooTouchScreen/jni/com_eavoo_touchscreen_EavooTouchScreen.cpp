@@ -5,7 +5,10 @@
 #include <asm/ioctl.h>
 #include <errno.h>
 
-#define TAG "TP_JNI"
+#ifdef LOG_TAG
+#undef LOG_TAG
+#endif
+#define LOG_TAG "TP_JNI"
 
 typedef unsigned short u16;
 typedef unsigned int u32;
@@ -95,7 +98,7 @@ static jfieldID mFieldDeviceName;
  * Method:    OpenTouchscreenDevice
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_OpenTouchscreenDevice(JNIEnv *env, jobject obj, jstring devpath)
+JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_OpenTouchscreenDeviceNative(JNIEnv *env, jobject obj, jstring devpath)
 {
 	int fd;
 	const char *path;
@@ -125,7 +128,7 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_OpenTouch
 	if (ioctl(fd, SWAN_TS_IOCTL_GET_NAME(sizeof(buff)), buff) < 0)
 	{
 		LOGE("SWAN_TS_IOCTL_GET_NAME failed");
-		env->SetObjectField(obj, mFieldDeviceName, NULL);
+		env->SetObjectField(obj, mFieldDeviceName, env->NewStringUTF("Unknown"));
 	}
 	else
 	{
@@ -145,7 +148,7 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_OpenTouch
  * Method:    CloseTouchScreenDevice
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_CloseTouchScreenDevice(JNIEnv *env, jobject obj)
+JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_CloseTouchScreenDeviceNative(JNIEnv *env, jobject obj)
 {
 	int fd;
 
@@ -166,7 +169,7 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_CloseTouc
  * Method:    Calibration
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_Calibration(JNIEnv *env, jobject obj)
+JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_CalibrationNative(JNIEnv *env, jobject obj)
 {
 	int fd;
 
@@ -193,17 +196,17 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_Calibrati
  * Method:    UpgradeFt5406
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_UpgradeFt5406(JNIEnv *, jobject, jstring)
+JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_EavooTouchScreen_UpgradeFt5406Native(JNIEnv *, jobject, jstring)
 {
 	return false;
 }
 
 static JNINativeMethod nativeMethods[] =
 {
-	{"OpenTouchscreenDevice", "(Ljava/lang/String;)Z", (void *)Java_com_eavoo_touchscreen_EavooTouchScreen_OpenTouchscreenDevice},
-	{"CloseTouchScreenDevice", "()Z", (void *)Java_com_eavoo_touchscreen_EavooTouchScreen_CloseTouchScreenDevice},
-	{"Calibration", "()Z", (void *)Java_com_eavoo_touchscreen_EavooTouchScreen_Calibration},
-	{"UpgradeFt5406", "(Ljava/lang/String;)Z", (void *)Java_com_eavoo_touchscreen_EavooTouchScreen_UpgradeFt5406}
+	{"OpenTouchscreenDeviceNative", "(Ljava/lang/String;)Z", (void *)Java_com_eavoo_touchscreen_EavooTouchScreen_OpenTouchscreenDeviceNative},
+	{"CloseTouchScreenDeviceNative", "()Z", (void *)Java_com_eavoo_touchscreen_EavooTouchScreen_CloseTouchScreenDeviceNative},
+	{"CalibrationNative", "()Z", (void *)Java_com_eavoo_touchscreen_EavooTouchScreen_CalibrationNative},
+	{"UpgradeFt5406Native", "(Ljava/lang/String;)Z", (void *)Java_com_eavoo_touchscreen_EavooTouchScreen_UpgradeFt5406Native}
 };
 
 jint JNI_OnLoad(JavaVM *jvm, void *reserved)
