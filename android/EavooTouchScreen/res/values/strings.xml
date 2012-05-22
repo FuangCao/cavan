@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Eavoo touch screen</string>
-    <string name="touchscreen_name">Touch screen name</string>
-    <string name="calibration">Auto calibration</string>
-    <string name="calibration_summary">Please don\'t touch the screen when calibration</string>
-    <string name="calibration_summary_start">start calibration</string>
-    <string name="calibration_summary_running">calibration，please don\'t touch the screen</string>
-    <string name="calibration_summary_success">successfully</string>
-    <string name="calibration_summary_failed">failed</string>
-    <string name="advanced_options">Anvanced Options</string>
-    <string name="upgrade_ft5406">Upgrade FT5406</string>
-    <string name="upgrade_ft5406_summary">Select a firmware file and execute upgrade</string>
-    <string name="access_registers">Access touch screen registers</string>
-
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name">"Eavoo touch screen"</string>
+    <string name="touchscreen_name">"Touch screen name"</string>
+    <string name="calibration">"Auto calibration"</string>
+    <string name="calibration_summary">"Please don\'t touch the screen when calibration"</string>
+    <string name="calibration_summary_start">"Calibration after <xliff:g id="CALIBRATION_TIME_PERIOD">%1$d</xliff:g> seconds"</string>
+    <string name="calibration_summary_running">"Calibration，please don\'t touch the screen"</string>
+    <string name="calibration_summary_success">"Successfully"</string>
+    <string name="calibration_summary_failed">"Failed"</string>
+    <string name="advanced_options">"Anvanced options"</string>
+    <string name="upgrade_firmwire">"Upgrade touch screen firmwire"</string>
+    <string name="upgrade_firmwire_summary">"Select a firmware file and execute upgrade"</string>
+    <string name="access_registers">"Access touch screen registers"</string>
 </resources>
