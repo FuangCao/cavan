@@ -3,17 +3,11 @@ package com.eavoo.touchscreen;
 import java.io.File;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.util.Log;
 
 public class TouchScreen
 {
-	public static final String ACTION_CALIBRATION_SUMMARY_INT = "com.eavoo.touchscreen.calibration.summary_int";
-	public static final String ACTION_CALIBRATION_SUMMARY_STRING = "com.eavoo.touchscreen.calibration.summary_string";
-	public static final String ACTION_CALIBRATION_RUNNING = "com.eavoo.touchscreen.calibration.running";
-	public static final String ACTION_CALIBRATION_COMPLETE = "com.eavoo.touchscreen.calibration.complete";
-
 	private static final String TAG = "TouchScreen";
 	private static final String TP_PROC_DEVICE = "/proc/swan_touchscreen";
 	private static final String TP_MISC_DEVICE = "/dev/swan_touchscreen";
@@ -35,27 +29,9 @@ public class TouchScreen
 		super.finalize();
 	}
 
-	public TouchScreen(Context context, String devpath)
-	{
-		this.mContext = context;
-
-		for (String path : new String[] {devpath, TP_MISC_DEVICE, TP_PROC_DEVICE})
-		{
-			if (path == null)
-			{
-				continue;
-			}
-
-			if (setDevicePath(path))
-			{
-				break;
-			}
-		}
-	}
-
 	public TouchScreen(Context context)
 	{
-		this(context, null);
+		this.mContext = context;
 	}
 
 	public String getDevicePath()
@@ -66,7 +42,7 @@ public class TouchScreen
 	public boolean setDevicePath(String devpath)
 	{
 		File file = new File(devpath);
-		if (file.exists() == false)
+		if (file.canRead() == false)
 		{
 			return false;
 		}
@@ -97,28 +73,22 @@ public class TouchScreen
 		return mContext.getResources();
 	}
 
-	public void sendBroadcast(String action, String value)
+	public boolean closeDevice()
 	{
-		Intent intent = new Intent(action);
-		intent.putExtra("content", value);
-		mContext.sendBroadcast(intent);
+		return CloseTouchScreenDeviceNative();
 	}
 
-	public void sendBroadcast(String action, int value)
+	public boolean openDevice()
 	{
-		Intent intent = new Intent(action);
-		intent.putExtra("content", value);
-		mContext.sendBroadcast(intent);
-	}
+		for (String path : new String[] {TP_MISC_DEVICE, TP_PROC_DEVICE})
+		{
+			if (setDevicePath(path))
+			{
+				return true;
+			}
+		}
 
-	public int getExtra(Intent intent, int defaultValue)
-	{
-		return intent.getIntExtra("content", defaultValue);
-	}
-
-	public String getExtra(Intent intent)
-	{
-		return intent.getStringExtra("content");
+		return false;
 	}
 
 	native private boolean OpenTouchscreenDeviceNative(String devpath);

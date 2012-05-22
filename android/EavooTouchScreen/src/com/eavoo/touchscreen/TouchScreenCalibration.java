@@ -1,101 +1,105 @@
 package com.eavoo.touchscreen;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.preference.Preference;
-import android.preference.Preference.OnPreferenceClickListener;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceScreen;
 import android.util.Log;
 
-public class TouchScreenCalibration extends Thread
+public class TouchScreenCalibration extends Handler
 {
 	private static final String TAG = "TouchScreenCalibration";
 
+	private static final int MSG_CALIBRATION_COUNT_DOWN = 1;
+	private static final int MSG_CALIBRATION_START = 2;
+	private static final int MSG_CALIBRATIION_RUNNING = 3;
+	private static final int MSG_CALIBRATIION_SUCCESS = 4;
+	private static final int MSG_CALIBRATIION_FAILED = 5;
+
 	private final PreferenceScreen mPreferenceScreen;
 	private final TouchScreen mTouchScreen;
+	private Context mContext;
+	private boolean mPendding = false;
 
-	private final IntentFilter mIntentFilter;
-	private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver()
+	public TouchScreenCalibration(Context context, TouchScreen touchscreen, PreferenceScreen preference)
+	{
+		this.mContext = context;
+		this.mPreferenceScreen = preference;
+		this.mTouchScreen = touchscreen;
+
+		this.mPreferenceScreen.setPersistent(false);
+	}
+
+	@Override
+	public void handleMessage(Message msg)
+	{
+		switch (msg.what)
+		{
+		case MSG_CALIBRATION_START:
+			msg = Message.obtain(this, MSG_CALIBRATION_COUNT_DOWN, 5, 0);
+			sendMessage(msg);
+			break;
+		case MSG_CALIBRATION_COUNT_DOWN:
+			if (msg.arg1 > 0)
+			{
+				mPreferenceScreen.setSummary(mContext.getResources().getString(R.string.calibration_summary_start, msg.arg1));
+
+				int count = msg.arg1 - 1;
+				msg = Message.obtain(this, MSG_CALIBRATION_COUNT_DOWN, count, 0);
+				sendMessageDelayed(msg, 1000);
+			}
+			else
+			{
+				Thread thread = new Thread(mRunnableCalibration);
+				thread.start();
+			}
+			break;
+		case MSG_CALIBRATIION_RUNNING:
+			mPreferenceScreen.setSummary(R.string.calibration_summary_running);
+			break;
+		case MSG_CALIBRATIION_SUCCESS:
+			mPreferenceScreen.setSummary(R.string.calibration_summary_success);
+			mPendding = false;
+			break;
+		case MSG_CALIBRATIION_FAILED:
+			mPreferenceScreen.setSummary(R.string.calibration_summary_failed);
+			mPendding = false;
+			break;
+		}
+
+		super.handleMessage(msg);
+	}
+
+	private Runnable mRunnableCalibration = new Runnable()
 	{
 		@Override
-		public void onReceive(Context context, Intent intent)
+		public void run()
 		{
-			String action = intent.getAction();
+			Log.i(TAG, "start calibration");
 
-			if (action.equalsIgnoreCase(TouchScreen.ACTION_CALIBRATION_SUMMARY_INT))
+			sendEmptyMessage(MSG_CALIBRATIION_RUNNING);
+
+			if (mTouchScreen.CalibrationNative())
 			{
-				mPreferenceScreen.setSummary(mTouchScreen.getExtra(intent, R.string.calibration_summary));
+				sendEmptyMessage(MSG_CALIBRATIION_SUCCESS);
+				Log.e(TAG, "calibration success");
 			}
-			else if (action.equalsIgnoreCase(TouchScreen.ACTION_CALIBRATION_SUMMARY_STRING))
+			else
 			{
-				mPreferenceScreen.setSummary(mTouchScreen.getExtra(intent));
+				sendEmptyMessage(MSG_CALIBRATIION_FAILED);
+				Log.i(TAG, "calibration failed");
 			}
 		}
 	};
 
-	private void setPreferenceSummary(int value)
+	public void start()
 	{
-		mTouchScreen.sendBroadcast(TouchScreen.ACTION_CALIBRATION_SUMMARY_INT, value);
+		mPendding = true;
+		sendEmptyMessage(MSG_CALIBRATION_START);
 	}
 
-	private void setPreferenceSummary(String value)
+	public boolean getPendding()
 	{
-		mTouchScreen.sendBroadcast(TouchScreen.ACTION_CALIBRATION_SUMMARY_STRING, value);
-	}
-
-	@Override
-	public void run()
-	{
-		mTouchScreen.sendBroadcast(TouchScreen.ACTION_CALIBRATION_RUNNING, 0);
-
-		for (int i = 5; i > 0; i--)
-		{
-			setPreferenceSummary(mTouchScreen.getResources().getString(R.string.calibration_summary_start, i));
-
-			try
-			{
-				sleep(1000);
-			}
-			catch (InterruptedException e)
-			{
-				e.printStackTrace();
-			}
-		}
-
-		Log.i(TAG, "start calibration");
-
-		setPreferenceSummary(R.string.calibration_summary_running);
-
-		if (mTouchScreen.CalibrationNative())
-		{
-			setPreferenceSummary(R.string.calibration_summary_success);
-			Log.e(TAG, "calibration success");
-			mTouchScreen.sendBroadcast(TouchScreen.ACTION_CALIBRATION_COMPLETE, 0);
-		}
-		else
-		{
-			setPreferenceSummary(R.string.calibration_summary_failed);
-			Log.i(TAG, "calibration failed");
-			mTouchScreen.sendBroadcast(TouchScreen.ACTION_CALIBRATION_COMPLETE, -1);
-		}
-	}
-
-	public TouchScreenCalibration(Context context, TouchScreen touchscreen, PreferenceScreen preference)
-	{
-		this.mPreferenceScreen = preference;
-		this.mTouchScreen = touchscreen;
-
-		mIntentFilter = new IntentFilter(TouchScreen.ACTION_CALIBRATION_SUMMARY_INT);
-		mIntentFilter.addAction(TouchScreen.ACTION_CALIBRATION_SUMMARY_STRING);
-		mTouchScreen.getContext().registerReceiver(mBroadcastReceiver, mIntentFilter);
-		mPreferenceScreen.setPersistent(false);
-	}
-
-	@Override
-	protected void finalize() throws Throwable
-	{
-		mTouchScreen.getContext().unregisterReceiver(mBroadcastReceiver);
+		return mPendding;
 	}
 }

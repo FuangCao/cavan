@@ -136,8 +136,6 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_TouchScreen_OpenTouchscree
 		env->SetObjectField(obj, mFieldDeviceName, env->NewStringUTF(buff));
 	}
 
-	LOGI("fd = %d", fd);
-
 	env->SetObjectField(obj, mFieldDevicePath, env->NewStringUTF(path));
 
 	return true;
@@ -179,8 +177,6 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_TouchScreen_CalibrationNat
 		LOGI("Touchscreen device is not opened");
 		return false;
 	}
-
-	LOGI("fd = %d", fd);
 
 	if (ioctl(fd, SWAN_TS_IOCTL_CALIBRATION) < 0)
 	{
@@ -244,4 +240,3 @@ jint JNI_OnLoad(JavaVM *jvm, void *reserved)
 
 	return JNI_VERSION_1_6;
 }
-

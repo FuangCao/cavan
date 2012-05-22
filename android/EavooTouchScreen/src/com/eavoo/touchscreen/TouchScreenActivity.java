@@ -1,16 +1,9 @@
 package com.eavoo.touchscreen;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.MutableContextWrapper;
 import android.os.Bundle;
-import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
-import android.text.method.Touch;
 import android.util.Log;
 
 public class TouchScreenActivity extends PreferenceActivity
@@ -27,26 +20,7 @@ public class TouchScreenActivity extends PreferenceActivity
 	private PreferenceScreen mPreferenceUpgrade;
 
 	private TouchScreen mTouchScreen;
-	private boolean mCalibrationPedding = false;
-
-	private IntentFilter mIntentFilter;
-	private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver()
-	{
-		@Override
-		public void onReceive(Context context, Intent intent)
-		{
-			String action = intent.getAction();
-
-			if (action.equalsIgnoreCase(TouchScreen.ACTION_CALIBRATION_COMPLETE))
-			{
-				mCalibrationPedding = false;
-			}
-			else if (action.equalsIgnoreCase(TouchScreen.ACTION_CALIBRATION_RUNNING))
-			{
-				mCalibrationPedding = true;
-			}
-		}
-	};
+	private TouchScreenCalibration mTouchScreenCalibration;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -61,11 +35,22 @@ public class TouchScreenActivity extends PreferenceActivity
 		mPreferenceUpgrade = (PreferenceScreen) mPreferenceRoot.findPreference(KEY_UPGRADE_FIRMWIRE);
 
 		mTouchScreen = new TouchScreen(this);
-		mPreferenceTouchScreenName.setSummary(mTouchScreen.getDeviceName());
+		mTouchScreenCalibration = new TouchScreenCalibration(this, mTouchScreen, mPreferenceCalibration);
+	}
 
-		mIntentFilter = new IntentFilter(TouchScreen.ACTION_CALIBRATION_RUNNING);
-		mIntentFilter.addAction(TouchScreen.ACTION_CALIBRATION_COMPLETE);
-		registerReceiver(mBroadcastReceiver, mIntentFilter);
+	@Override
+	protected void onPause()
+	{
+		mTouchScreen.closeDevice();
+		super.onPause();
+	}
+
+	@Override
+	protected void onResume()
+	{
+		mTouchScreen.openDevice();
+		mPreferenceTouchScreenName.setSummary(mTouchScreen.getDeviceName());
+		super.onResume();
 	}
 
 	@Override
@@ -73,11 +58,9 @@ public class TouchScreenActivity extends PreferenceActivity
 	{
 		if (preference == mPreferenceCalibration)
 		{
-			if (mCalibrationPedding == false)
+			if (mTouchScreenCalibration.getPendding() == false)
 			{
-				mCalibrationPedding = true;
-				TouchScreenCalibration calibration = new TouchScreenCalibration(this, mTouchScreen, mPreferenceCalibration);
-				calibration.start();
+				mTouchScreenCalibration.start();
 			}
 		}
 		else if (preference == mPreferenceUpgrade)
