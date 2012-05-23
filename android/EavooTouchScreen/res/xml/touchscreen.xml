@@ -3,28 +3,30 @@
 	<PreferenceScreen
 		android:key="touchscreen_name"
 		android:title="@string/touchscreen_name"
-		android:persistent="false">
-	</PreferenceScreen>
+		android:persistent="false"/>
+
 	<PreferenceScreen
 		android:key="calibration"
 		android:title="@string/calibration"
 		android:summary="@string/calibration_summary"
-		android:persistent="false">
-	</PreferenceScreen>
+		android:persistent="false"/>
+
 	<PreferenceCategory
 		android:key="advanced_options"
 		android:title="@string/advanced_options"
-		android:persistent="false">
-	</PreferenceCategory>
-	<PreferenceScreen
+		android:persistent="false"/>
+
+	<com.eavoo.touchscreen.FirmwarePathPreference
 		android:key="upgrade_firmwire"
 		android:title="@string/upgrade_firmwire"
 		android:summary="@string/upgrade_firmwire_summary"
-		android:persistent="false">
-	</PreferenceScreen>
+		android:dialogTitle="@string/upgrade_firmwire"
+		android:singleLine="true"
+		android:editable="false"
+		android:persistent="false"/>
+
 	<PreferenceScreen
 		android:key="access_registers"
 		android:title="@string/access_registers"
-		android:persistent="false">
-	</PreferenceScreen>
+		android:persistent="false"/>
 </PreferenceScreen>

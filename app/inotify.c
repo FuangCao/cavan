@@ -89,7 +89,6 @@ int main(int argc, char *argv[])
 			text_copy(command, optarg);
 			break;
 
-
 		default:
 			show_usage();
 			return -EINVAL;

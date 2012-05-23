@@ -17,7 +17,7 @@ public class TouchScreenActivity extends PreferenceActivity
 	private PreferenceScreen mPreferenceRoot;
 	private PreferenceScreen mPreferenceCalibration;
 	private PreferenceScreen mPreferenceTouchScreenName;
-	private PreferenceScreen mPreferenceUpgrade;
+	private FirmwarePathPreference mPreferenceUpgrade;
 
 	private TouchScreen mTouchScreen;
 	private TouchScreenCalibration mTouchScreenCalibration;
@@ -32,7 +32,7 @@ public class TouchScreenActivity extends PreferenceActivity
 		mPreferenceRoot = getPreferenceScreen();
 		mPreferenceTouchScreenName = (PreferenceScreen) mPreferenceRoot.findPreference(KEY_TOUCHSCREEN_NAME);
 		mPreferenceCalibration = (PreferenceScreen) mPreferenceRoot.findPreference(KEY_CALIBRATION);
-		mPreferenceUpgrade = (PreferenceScreen) mPreferenceRoot.findPreference(KEY_UPGRADE_FIRMWIRE);
+		mPreferenceUpgrade = (FirmwarePathPreference) mPreferenceRoot.findPreference(KEY_UPGRADE_FIRMWIRE);
 
 		mTouchScreen = new TouchScreen(this);
 		mTouchScreenCalibration = new TouchScreenCalibration(this, mTouchScreen, mPreferenceCalibration);
@@ -56,6 +56,8 @@ public class TouchScreenActivity extends PreferenceActivity
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference)
 	{
+		Log.i(TAG, "onPreferenceTreeClick = " + preference.getKey());
+
 		if (preference == mPreferenceCalibration)
 		{
 			if (mTouchScreenCalibration.getPendding() == false)
