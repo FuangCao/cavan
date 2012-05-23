@@ -3,6 +3,8 @@ package com.eavoo.touchscreen;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.Preference;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceScreen;
 import android.util.Log;
 
@@ -28,7 +30,23 @@ public class TouchScreenCalibration extends Handler
 		this.mTouchScreen = touchscreen;
 
 		this.mPreferenceScreen.setPersistent(false);
+		this.mPreferenceScreen.setOnPreferenceClickListener(mOnPreferenceClickListener);
 	}
+
+	private OnPreferenceClickListener mOnPreferenceClickListener = new OnPreferenceClickListener()
+	{
+		@Override
+		public boolean onPreferenceClick(Preference preference)
+		{
+			if (mPendding == false)
+			{
+				mPendding = true;
+				sendEmptyMessage(MSG_CALIBRATION_START);
+			}
+
+			return false;
+		}
+	};
 
 	@Override
 	public void handleMessage(Message msg)
@@ -39,6 +57,7 @@ public class TouchScreenCalibration extends Handler
 			msg = Message.obtain(this, MSG_CALIBRATION_COUNT_DOWN, 5, 0);
 			sendMessage(msg);
 			break;
+
 		case MSG_CALIBRATION_COUNT_DOWN:
 			if (msg.arg1 > 0)
 			{
@@ -54,13 +73,16 @@ public class TouchScreenCalibration extends Handler
 				thread.start();
 			}
 			break;
+
 		case MSG_CALIBRATIION_RUNNING:
 			mPreferenceScreen.setSummary(R.string.calibration_summary_running);
 			break;
+
 		case MSG_CALIBRATIION_SUCCESS:
 			mPreferenceScreen.setSummary(R.string.calibration_summary_success);
 			mPendding = false;
 			break;
+
 		case MSG_CALIBRATIION_FAILED:
 			mPreferenceScreen.setSummary(R.string.calibration_summary_failed);
 			mPendding = false;
@@ -91,15 +113,4 @@ public class TouchScreenCalibration extends Handler
 			}
 		}
 	};
-
-	public void start()
-	{
-		mPendding = true;
-		sendEmptyMessage(MSG_CALIBRATION_START);
-	}
-
-	public boolean getPendding()
-	{
-		return mPendding;
-	}
 }
