@@ -3,11 +3,27 @@ package com.eavoo.touchscreen;
 import java.io.File;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.util.Log;
 
 public class TouchScreen
 {
+	public static final String ACTION_CALIBRATION_COUNT_DOWN = "com.eavoo.touchscreen.calibration.count_down";
+	public static final String ACTION_CALIBRATION_RUNNING = "com.eavoo.touchscreen.calibration.running";
+	public static final String ACTION_CALIBRATION_SUCCESS = "com.eavoo.touchscreen.calibration.success";
+	public static final String ACTION_CALIBRATION_FAILED = "com.eavoo.touchscreen.calibration.failed";
+
+	public static final String ACTION_UPGRADE_RUNNING = "com.eavoo.touchscreen.upgrade.running";
+	public static final String ACTION_UPGRADE_UNSUPPORT = "com.eavoo.touchscreen.upgrade.unsopport";
+	public static final String ACTION_UPGRADE_SUCCESS = "com.eavoo.touchscreen.upgrade.success";
+	public static final String ACTION_UPGRADE_FAILED = "com.eavoo.touchscreen.upgrade.failed";
+	public static final String ACTION_UPGRADE_PATH_CHANGED = "com.eavoo.touchscreen.upgrade.path_changed";
+
+	public static final String DEVICE_NAME_IT7260 = "IT7260";
+	public static final String DEVICE_NAME_FT5406 = "FT5406";
+	public static final String DEVICE_NAME_MT8C = "ChaCha_MT8C";
+	public static final String DEVICE_NAME_ATMEGE168 = "ATMEGA168";
+	public static final String DEVICE_NAME_GT800 = "GT800";
+
 	private static final String TAG = "TouchScreen";
 	private static final String TP_PROC_DEVICE = "/proc/swan_touchscreen";
 	private static final String TP_MISC_DEVICE = "/dev/swan_touchscreen";
@@ -66,11 +82,6 @@ public class TouchScreen
 	public Context getContext()
 	{
 		return mContext;
-	}
-
-	public Resources getResources()
-	{
-		return mContext.getResources();
 	}
 
 	public boolean closeDevice()

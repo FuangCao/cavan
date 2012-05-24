@@ -4,12 +4,16 @@
     <string name="touchscreen_name">"Touch screen name"</string>
     <string name="calibration">"Auto calibration"</string>
     <string name="calibration_summary">"Please don\'t touch the screen when calibration"</string>
-    <string name="calibration_summary_start">"Calibration after <xliff:g id="CALIBRATION_TIME_PERIOD">%1$d</xliff:g> seconds"</string>
-    <string name="calibration_summary_running">"Calibration，please don\'t touch the screen"</string>
-    <string name="calibration_summary_success">"Successfully"</string>
-    <string name="calibration_summary_failed">"Failed"</string>
+    <string name="calibration_summary_start">"Calibration after <xliff:g id="calibration_time_preiod">%1$d</xliff:g> seconds"</string>
+    <string name="calibration_summary_running">"Ongoing calibration, please do not touch the screen"</string>
+    <string name="calibration_summary_success">"To calibrate the touch screen success"</string>
+    <string name="calibration_summary_failed">"Failed to calibrate the touch screen"</string>
     <string name="advanced_options">"Anvanced options"</string>
     <string name="upgrade_firmwire">"Upgrade touch screen firmwire"</string>
     <string name="upgrade_firmwire_summary">"Select a firmware file and execute upgrade"</string>
+    <string name="upgrade_firmwire_summary_running">"upgrading the firmware, please wait ..."</string>
+   <string name="upgrade_firmwire_summary_unsport">"Touch screen <xliff:g id="upgrade_unsport">%1$s</xliff:g> does not support the firmware upgrade"</string>
+    <string name="upgrade_firmwire_summary_success">"Firmware upgrade was successful"</string>
+    <string name="upgrade_firmwire_summary_failed">"Firmware upgrade failed"</string>
     <string name="access_registers">"Access touch screen registers"</string>
 </resources>

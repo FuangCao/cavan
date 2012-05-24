@@ -12,8 +12,6 @@ import android.widget.ListView;
 
 public class FileBrowserActivity extends Activity
 {
-	public static final String ACTION_PATHNAME = "com.eavoo.touchscreen.broswer.pathname";
-
 	private ListView mListViewBrowser;
 	private FileBrowserAdapter mFileBrowserAdapter;
 
@@ -47,7 +45,7 @@ public class FileBrowserActivity extends Activity
 
 	private void finish(String pathname)
 	{
-		Intent intent = new Intent(ACTION_PATHNAME);
+		Intent intent = new Intent(TouchScreen.ACTION_UPGRADE_PATH_CHANGED);
 		intent.putExtra("pathname", pathname);
 		sendBroadcast(intent);
 		finish();

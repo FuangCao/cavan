@@ -1,5 +1,7 @@
 package com.eavoo.touchscreen;
 
+import java.io.File;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +17,11 @@ import android.widget.EditText;
 public class FirmwarePathPreference extends EditTextPreference implements OnClickListener
 {
 	private static final String TAG = "FirmwarePathPreference";
+	private static final String[] mDefaultPathnames =
+	{
+		"/mnt/sdcard/extsd/ft_app.i",
+		"/mnt/sdcard/ft_app.i"
+	};
 
 	public FirmwarePathPreference(Context context, AttributeSet attrs)
 	{
@@ -29,7 +36,8 @@ public class FirmwarePathPreference extends EditTextPreference implements OnClic
 		{
 			Log.i(TAG, "action = " + intent.getAction());
 
-			getEditText().setText(intent.getStringExtra("pathname"));
+			String pathname = intent.getStringExtra("pathname");
+			getEditText().setText(pathname);
 		}
 	};
 
@@ -46,11 +54,25 @@ public class FirmwarePathPreference extends EditTextPreference implements OnClic
 	protected View onCreateDialogView()
 	{
 		Log.i(TAG, "onCreateDialogView()");
+
 		EditText editText = getEditText();
 		editText.setOnClickListener(this);
 
-		IntentFilter filter = new IntentFilter(FileBrowserActivity.ACTION_PATHNAME);
+		IntentFilter filter = new IntentFilter(TouchScreen.ACTION_UPGRADE_PATH_CHANGED);
 		getContext().registerReceiver(mBroadcastReceiver, filter);
+
+		if (getText() == null)
+		{
+			for (String pathname : mDefaultPathnames)
+			{
+				File file = new File(pathname);
+				if (file.canRead())
+				{
+					setText(pathname);
+					break;
+				}
+			}
+		}
 
 		return super.onCreateDialogView();
 	}
