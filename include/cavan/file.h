@@ -443,3 +443,8 @@ static inline int file_lstat(const char *filename, struct stat *st)
 	return lstat(filename, st) < 0 ? file_stat(filename, st) : 0;
 }
 
+static inline ssize_t file_read_byte(int fd, void *buff)
+{
+	return read(fd, buff, 1);
+}
+

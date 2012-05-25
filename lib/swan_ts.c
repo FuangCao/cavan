@@ -295,7 +295,7 @@ int swan_ts_test_client(const char *devpath, u16 addr)
 	return ret;
 }
 
-int ft5406_parse_app_file(const char *cfgpath, char *buff, size_t size)
+ssize_t ft5406_read_firmware_data1(const char *cfgpath, char *buff, size_t size)
 {
 	ssize_t readlen;
 	char *text_buff, *p, *p_end;
@@ -362,6 +362,132 @@ int ft5406_parse_app_file(const char *cfgpath, char *buff, size_t size)
 	return buff - buff_bak;
 }
 
+ssize_t ft5406_read_firmware_data2(const char *cfgpath, char *buff, size_t size)
+{
+	FILE *file;
+	char *buff_bak, *buff_end;
+	u32 value;
+
+	file = fopen(cfgpath, "r");
+	if (file == NULL)
+	{
+		print_error("Faild to open file %s", cfgpath);
+		return -ENOENT;
+	}
+
+	for (buff_bak = buff, buff_end = buff + size; buff < buff_end; buff++)
+	{
+		if (fscanf(file, "0x%02x, ", &value) < 1)
+		{
+			break;
+		}
+
+		println("value = 0x%02x", value);
+		*buff = (u8)value;
+	}
+
+	fclose(file);
+
+	return buff - buff_bak;
+}
+
+ssize_t ft5406_read_firmware_data3(const char *cfgpath, char *buff, size_t size)
+{
+	int fd;
+	char *buff_bak, *buff_end;
+	ssize_t readlen;
+	char readval;
+
+	fd = open(cfgpath, O_RDONLY);
+	if (fd < 0)
+	{
+		print_error("Failed to open file %s", cfgpath);
+		return fd;
+	}
+
+	for (buff_bak = buff, buff_end = buff + size; buff < buff_end; buff++)
+	{
+		u8 value;
+
+		while (1)
+		{
+			readlen = file_read_byte(fd, &readval);
+			if (readlen < 0)
+			{
+				goto out_close_fd;
+			}
+
+			if (readlen < 1)
+			{
+				goto out_cal_len;
+			}
+
+			if (readval != '0')
+			{
+				continue;
+			}
+
+			readlen = file_read_byte(fd, &readval);
+			if (readlen < 0)
+			{
+				goto out_close_fd;
+			}
+
+			if (readlen < 1)
+			{
+				goto out_cal_len;
+			}
+
+			if (readval == 'x' || readval == 'X')
+			{
+				break;
+			}
+		}
+
+		value = 0;
+
+		while (1)
+		{
+			readlen = file_read_byte(fd, &readval);
+			if (readlen < 0)
+			{
+				goto out_close_fd;
+			}
+
+			if (readlen < 1)
+			{
+				*buff = value;
+				goto out_cal_len;
+			}
+
+			if (readval >= '0' && readval <= '9')
+			{
+				value = (value << 4) + readval - '0';
+			}
+			else if (readval >= 'a' && readval <= 'z')
+			{
+				value = (value << 4) + readval - 'a' + 10;
+			}
+			else if (readval >= 'A' && readval <= 'Z')
+			{
+				value = (value << 4) + readval - 'A' + 10;
+			}
+			else
+			{
+				*buff = value;
+				break;
+			}
+		}
+	}
+
+out_cal_len:
+	readlen = buff - buff_bak;
+out_close_fd:
+	close(fd);
+
+	return readlen;
+}
+
 u8 ft5406_calculate_checksum(const void *buff, size_t size)
 {
 	const void *buff_end;
@@ -393,7 +519,7 @@ int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
 	ssize_t writelen, bufflen;
 	u8 checksum[2];
 
-	bufflen = ft5406_parse_app_file(cfgpath, buff, sizeof(buff)) - 2;
+	bufflen = ft5406_read_firmware_data3(cfgpath, buff, sizeof(buff)) - 2;
 	if (bufflen < 6)
 	{
 		pr_red_info("ft5406_parse_app_file");

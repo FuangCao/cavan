@@ -42,8 +42,8 @@ public class FirmwareUpgradeThread extends Thread
 		}
 		else
 		{
-			intent = new Intent(TouchScreen.ACTION_UPGRADE_FAILED);
 			Log.e(TAG, "Upgrade firmware failed");
+			intent = new Intent(TouchScreen.ACTION_UPGRADE_FAILED);
 		}
 
 		mContext.sendBroadcast(intent);
