@@ -34,9 +34,6 @@
 #include <cavan/memory.h>
 #include <cavan/file.h>
 
-#define msleep(msec)	usleep((msec) * 1000)
-#define ssleep(sec)		msleep((sec) * 1000)
-
 #define ARRAY_SIZE(a)	(sizeof(a) / sizeof((a)[0]))
 #define NELEM(a)		(ARRAY_SIZE(a))
 #define KB(a)			((a) << 10)
@@ -70,7 +67,7 @@
 #define ERROR_RETURN(en) \
 	do { \
 		errno = en; \
-		return -en; \
+		return -errno; \
 	} while (0)
 
 #define RETRY(func, ret, condition, count) \
@@ -81,4 +78,20 @@
 			i--; \
 		} while (i && (condition)); \
 	} while (0)
+
+static inline void msleep(useconds_t msec)
+{
+	while (msec--)
+	{
+		usleep(1000);
+	}
+}
+
+static inline void ssleep(useconds_t sec)
+{
+	while (sec--)
+	{
+		msleep(1000);
+	}
+}
 
