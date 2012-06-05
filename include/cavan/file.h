@@ -171,6 +171,9 @@ size_t fscan_directory1(DIR *dp, void *buff, size_t size);
 size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2);
 int scan_directory(const char *dirpath, void *buff, size_t size1, size_t size2);
 
+size_t ffile_line_count(int fd);
+size_t file_line_count(const char *filename);
+
 // ============================================================
 
 static inline int file_open_ro(const char *file_path)

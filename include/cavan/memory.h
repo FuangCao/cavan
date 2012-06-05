@@ -58,6 +58,8 @@ int mem_is_noset(const void *mem, int value, size_t size);
 
 u16 checksum16(const u16 *buff, size_t size);
 
+size_t mem_byte_count(const void *mem, byte c, size_t size);
+
 static inline void *mem_trans(void *text, size_t size)
 {
 	return text_ntrans(text, size);

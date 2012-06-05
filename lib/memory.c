@@ -383,3 +383,19 @@ u16 checksum16(const u16 *buff, size_t size)
 
 	return (checksum + (checksum >> 16)) & 0xFFFF;
 }
+
+size_t mem_byte_count(const void *mem, byte c, size_t size)
+{
+	const void *mem_end;
+	size_t count;
+
+	for (mem_end = mem + size, count = 0; mem < mem_end; mem++)
+	{
+		if ((*(byte *)mem) == c)
+		{
+			count++;
+		}
+	}
+
+	return count;
+}

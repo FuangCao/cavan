@@ -2524,3 +2524,58 @@ int file_open_format(int flags, mode_t mode, const char *fmt, ...)
 
 	return fd;
 }
+
+size_t ffile_line_count(int fd)
+{
+	char buff[1024];
+	ssize_t readlen;
+	size_t count;
+
+	if (lseek(fd, 0, SEEK_SET) < 0)
+	{
+		print_error("lseek");
+		return 0;
+	}
+
+	count = 0;
+
+	while (1)
+	{
+		readlen = read(fd, buff, sizeof(buff));
+		if (readlen < 0)
+		{
+			print_error("read");
+			return 0;
+		}
+
+		if (readlen)
+		{
+			count += mem_byte_count(buff, '\n', readlen);
+			println("count = %d", count);
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return count;
+}
+
+size_t file_line_count(const char *filename)
+{
+	int fd;
+	size_t count;
+
+	fd = open(filename, O_RDONLY);
+	if (fd < 0)
+	{
+		print_error("Open file `%s' failed", filename);
+		return 0;
+	}
+
+	count = ffile_line_count(fd);
+	close (fd);
+
+	return count;
+}
