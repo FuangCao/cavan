@@ -53,12 +53,8 @@ define build_app_action
 $(call find_source_files,$(1),APP_SRC_FILES)
 $$(OUT_APP)/%.o: $(1)/%.c
 	$$(call compile_file,$$@,$$^)
-$$(OUT_CAVAN)/%.c: $(1)/%.c
-	@echo "[GEN]\t$$< => $$@"
-	$$(eval main-name = do_cavan_$$*)
-	@sed	-e "s/^\s*int\s\+main\s*\((.*)\)/int $$(main-name)\1/g" \
-			-e "s/^\s*void\s\+main\s*\((.*)\)/void $$(main-name)\1/g" \
-			$$< > $$@
+$$(OUT_CAVAN)/%.o: $(1)/%.c
+	$$(call compile_file,$$@,$$^,-Dmain=do_cavan_$$*)
 endef
 
 define build_lib_action

@@ -69,10 +69,8 @@ APP_DEPENDS = $(TARGET_LIBO)
 APP_LDFLAGS += $(TARGET_LIBO)
 endif
 
-CAVAN_SRC_FILES = $(call file_path_convert,$(APP_SRC_FILES),$(OUT_CAVAN)/,.c)
 APP_CORE_SRC_FILES = $(wildcard $(APP_CORE_PATH)/*.c)
-APP_CORE_OBJ_FILES = $(call file_path_convert,$(APP_CORE_SRC_FILES),$(OUT_CAVAN)/,.o)
-CAVAN_OBJ_FILES = $(CAVAN_SRC_FILES:%.c=%.o) $(APP_CORE_OBJ_FILES)
+CAVAN_OBJ_FILES = $(call file_path_convert,$(APP_SRC_FILES) $(APP_CORE_SRC_FILES),$(OUT_CAVAN)/,.o)
 CAVAN_MAP_HEADER = $(OUT_CAVAN)/cavan_map.h
 CAVAN_MAP_SOURCE = $(OUT_CAVAN)/cavan_map.c
 TARGET_CAVAN = $(OUT_BIN)/$(CAVAN_NAME)-main
@@ -131,17 +129,14 @@ $(TARGET_LIBO): $(LIB_OBJ_FILES)
 $(OUT_CAVAN)/%.o: $(APP_CORE_PATH)/%.c $(CAVAN_MAP_HEADER) $(CAVAN_MAP_SOURCE)
 	$(call compile_file,$@,$<,$(CAVAN_CFLAGS))
 
-$(OUT_CAVAN)/%.o: $(OUT_CAVAN)/%.c
-	$(call compile_file,$@,$<,$(CAVAN_CFLAGS))
-
-$(CAVAN_MAP_HEADER): $(CAVAN_SRC_FILES)
+$(CAVAN_MAP_HEADER): $(APP_SRC_FILES)
 	@echo "[GEN]\t$@ <= $^"
 	@for app in $(patsubst %.c,do_cavan_%,$(^F)); \
 	do \
 		echo "int $${app}(int argc, char *argv[]);"; \
 	done > $@
 
-$(CAVAN_MAP_SOURCE): $(CAVAN_SRC_FILES)
+$(CAVAN_MAP_SOURCE): $(APP_SRC_FILES)
 	@echo "[GEN]\t$@ <= $^"
 	@for app in $(patsubst %.c,%,$(^F)); \
 	do \
@@ -151,4 +146,4 @@ $(CAVAN_MAP_SOURCE): $(CAVAN_SRC_FILES)
 clean:
 	$(Q)$(RM) $(OUT_PATH)
 
-.PRECIOUS: $(APP_OBJ_FILES) $(LIB_OBJ_FILES) $(CAVAN_SRC_FILES) $(CAVAN_OBJ_FILES)
+.PRECIOUS: $(APP_OBJ_FILES) $(LIB_OBJ_FILES) $(CAVAN_OBJ_FILES)
