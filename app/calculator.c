@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 
 	text_cat2(buff, argv + 1, argc - 1);
 
-	ret = simple_calculator(buff, &result);
+	ret = complete_calculation(buff, &result);
 	if (ret < 0)
 	{
 		error_msg("simple_calculator");

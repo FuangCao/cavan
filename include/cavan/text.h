@@ -9,9 +9,17 @@
 #define IS_NUMBER(c)		((c) >= '0' && (c) <= '9')
 #define IS_FLOAT(c)			((c) == '.' || IS_NUMBER(c))
 
-#define IS_LOWERCASE(c)		((c) >= 'a' && (c) <= 'z')
-#define IS_UPPERCASE(c)		((c) >= 'A' && (c) <= 'Z')
-#define IS_LETTER(c)		(IS_LOWERCASE(c) || IS_UPPERCASE(c))
+#define IS_LOWERCASE_AZ(c)	((c) >= 'a' && (c) <= 'z')
+#define IS_UPPERCASE_AZ(c)	((c) >= 'A' && (c) <= 'Z')
+#define IS_LETTER_AZ(c)		(IS_LOWERCASE_AZ(c) || IS_UPPERCASE_AZ(c))
+
+#define IS_LOWERCASE_AF(c)	((c) >= 'a' && (c) <= 'f')
+#define IS_UPPERCASE_AF(c)	((c) >= 'A' && (c) <= 'F')
+#define IS_LETTER_AF(c)		(IS_LOWERCASE_AF(c) || IS_UPPERCASE_AF(c))
+
+#define IS_LOWERCASE(c)		IS_LOWERCASE_AZ(c)
+#define IS_UPPERCASE(c)		IS_UPPERCASE_AZ(c)
+#define IS_LETTER(c)		IS_LETTER_AZ(c)
 
 #define DEFAULT_PATH_VALUE	"/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/mybin"
 
