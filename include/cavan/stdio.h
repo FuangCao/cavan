@@ -174,7 +174,6 @@ void print_sep(size_t size);
 
 void print_mem(const void *mem, size_t size);
 
-
 int show_file(const char *dev_name, u64 start, u64 size);
 int cat_file(const char *filename);
 

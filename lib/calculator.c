@@ -7,27 +7,39 @@
 char *get_bracket_pair(const char *formula, const char *formula_end)
 {
 	int counter;
+	char left_bracket;
+	char right_bracket;
 
-	for (counter = 0; formula < formula_end; formula++)
+	switch ((left_bracket = *formula++))
 	{
-		switch (*formula)
+	case '(':
+		right_bracket = ')';
+		break;
+	case '[':
+		right_bracket = ']';
+		break;
+	case '{':
+		right_bracket = '}';
+		break;
+	default:
+		pr_red_info("unknown bracket `%c'", left_bracket);
+		return NULL;
+	}
+
+	for (counter = 1; formula < formula_end; formula++)
+	{
+		if (*formula == left_bracket)
 		{
-		case '(':
-		case '[':
-		case '{':
 			counter++;
-			break;
-
-		case ')':
-		case ']':
-		case '}':
-			counter--;
-			break;
 		}
-
-		if (counter == 0)
+		else if (*formula == right_bracket)
 		{
-			return (char *)formula;
+			if (counter <= 1)
+			{
+				return (char *)formula;
+			}
+
+			counter--;
 		}
 	}
 
@@ -448,4 +460,3 @@ int simple_calculator(const char *formula, double *result_last)
 
 	return 0;
 }
-
