@@ -46,7 +46,7 @@ char *get_bracket_pair(const char *formula, const char *formula_end)
 	return NULL;
 }
 
-static char *get_operator(const char *formula)
+static char *get_float_letters(const char *formula)
 {
 	while (IS_FLOAT(*formula) || IS_LETTER(*formula))
 	{
@@ -338,9 +338,7 @@ int simple_calculator_base(const char *formula, const char *formula_end, double 
 			continue;
 
 		case '0' ... '9':
-		case 'a' ... 'z':
-		case 'A' ... 'Z':
-			formula_tmp = get_operator(formula);
+			formula_tmp = get_float_letters(formula);
 			ret = text2double(formula, formula_tmp, &result_tmp);
 			if (ret < 0)
 			{
