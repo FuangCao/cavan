@@ -3,8 +3,8 @@
 #include <stdio.h>
 
 #define PRINT_BUFFER_LEN	MB(1)
-#define FLAG_SIGNED			(1 << 9)
-#define FLAG_PREFIX			(1 << 10)
+#define TEXT_FLAG_SIGNED	(1 << 9)
+#define TEXT_FLAG_PREFIX	(1 << 10)
 
 #define IS_NUMBER(c)		((c) >= '0' && (c) <= '9')
 #define IS_FLOAT(c)			((c) == '.' || IS_NUMBER(c))
@@ -38,6 +38,11 @@ char *text_cat3(char *dest, size_t count, ...);
 char *text_cat4(char *dest, char *srcs[]);
 char *text_vcat5(char *dest, va_list ap);
 char *text_cat5(char *dest, ...);
+
+char *text2lowercase(char *text);
+char *text2uppercase(char *text);
+char *text_copy_lowercase(char *dest, const char *src);
+char *text_copy_uppercase(char *dest, const char *src);
 
 char *text_copy(char *dest, const char *src);
 char *text_ncopy(char *dest, const char *src, size_t count);
@@ -249,5 +254,10 @@ static inline char char2lowercase(char c)
 static inline char *text_replace_text(const char *text_old, char *text_new, const char *src, const char *dest)
 {
 	return text_replace_text_base(text_old, text_new, src, text_len(src), dest);
+}
+
+static inline int text_contain_char(const char *text, char c)
+{
+	return text_has_char(text, c);
 }
 

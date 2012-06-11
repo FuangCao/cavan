@@ -7,6 +7,10 @@
 #define OPERAND_MAX_SYMBOL_COUNT	8
 #define ABS_VALUE(a)				((a) < 0 ? -(a) : (a))
 
+#ifndef PI
+#define PI 3.14159265358979323846
+#endif
+
 enum calculator_operator_type
 {
 	OPERATOR_TYPE_ADD,
@@ -19,8 +23,36 @@ enum calculator_operator_type
 	OPERATOR_TYPE_XOR,
 	OPERATOR_TYPE_NEG,
 	OPERATOR_TYPE_LEFT,
-	OPERATOR_TYPE_RIGHT
+	OPERATOR_TYPE_RIGHT,
+	OPERATOR_TYPE_SIN,
+	OPERATOR_TYPE_COS,
+	OPERATOR_TYPE_TAN,
+	OPERATOR_TYPE_COT,
+	OPERATOR_TYPE_ASIN,
+	OPERATOR_TYPE_ACOS,
+	OPERATOR_TYPE_ATAN,
+	OPERATOR_TYPE_ACOT
 };
+
+#define OPERATOR_PRIORITY_ADD	11
+#define OPERATOR_PRIORITY_SUB	11
+#define OPERATOR_PRIORITY_MUL	12
+#define OPERATOR_PRIORITY_DIV	12
+#define OPERATOR_PRIORITY_MODE	12
+#define OPERATOR_PRIORITY_AND	7
+#define OPERATOR_PRIORITY_OR	5
+#define OPERATOR_PRIORITY_XOR	6
+#define OPERATOR_PRIORITY_NEG	14
+#define OPERATOR_PRIORITY_LEFT	10
+#define OPERATOR_PRIORITY_RIGHT	10
+#define OPERATOR_PRIORITY_SIN	15
+#define OPERATOR_PRIORITY_COS	15
+#define OPERATOR_PRIORITY_TAN	15
+#define OPERATOR_PRIORITY_COT	15
+#define OPERATOR_PRIORITY_ASIN	15
+#define OPERATOR_PRIORITY_ACOS	15
+#define OPERATOR_PRIORITY_ATAN	15
+#define OPERATOR_PRIORITY_ACOT	15
 
 struct calculator_operator_descriptor
 {
@@ -30,12 +62,24 @@ struct calculator_operator_descriptor
 	int (*calculation)(const struct calculator_operator_descriptor *operator, struct double_stack *stack_operand);
 };
 
+double angle_adjust(double angle, double min_value, double max_value, double period);
+
 char *get_bracket_pair(const char *formula, const char *formula_end);
 int check_bracket_match_pair(const char *formula, const char *formula_end);
 int simple_calculation_base(const char *formula, const char *formula_end, double *result_last);
 int simple_calculation(const char *formula, double *result_last);
-int text2double(const char *text, const char *text_end, double *result_last);
+const char *text2double(const char *text, const char *text_end, double *result_last);
 
 const struct calculator_operator_descriptor *get_formula_operator(const char *formula, const char **formula_last);
 int complete_calculation_base(const char *formula, const char *formula_end, double *result_last);
 int complete_calculation(const char *formula, double *result_last);
+
+static inline double angle2radian(double angle)
+{
+	return angle * PI / 180;
+}
+
+static inline double radian2angle(double radian)
+{
+	return radian * 180 / PI;
+}

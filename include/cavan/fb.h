@@ -4,10 +4,6 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-11-16 15:48:51
 
-#ifndef PI
-#define PI 3.14159265358979323846
-#endif
-
 struct cavan_point
 {
 	u32 x;

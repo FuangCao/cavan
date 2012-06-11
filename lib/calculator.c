@@ -3,6 +3,22 @@
 #include <cavan.h>
 #include <cavan/calculator.h>
 #include <cavan/stack.h>
+#include <math.h>
+
+double angle_adjust(double angle, double min_value, double max_value, double period)
+{
+	while (angle >= max_value)
+	{
+		angle -= period;
+	}
+
+	while (angle < min_value)
+	{
+		angle += period;
+	}
+
+	return angle;
+}
 
 char *get_bracket_pair(const char *formula, const char *formula_end)
 {
@@ -44,21 +60,6 @@ char *get_bracket_pair(const char *formula, const char *formula_end)
 	}
 
 	return NULL;
-}
-
-static char *get_float_letters(const char *formula)
-{
-	if (formula[0] == '0' && text_has_char("BbXxOoDd", formula[1]))
-	{
-		formula += 2;
-	}
-
-	while (IS_FLOAT(*formula) || IS_LETTER_AF(*formula))
-	{
-		formula++;
-	}
-
-	return (char *)formula;
 }
 
 int check_bracket_match_pair(const char *formula, const char *formula_end)
@@ -200,7 +201,7 @@ static int simple_operation2(struct double_stack *stack, char operator)
 	return double_stack_push(stack, result);
 }
 
-int text2double(const char *text, const char *text_end, double *result_last)
+const char *text2double(const char *text, const char *text_end, double *result_last)
 {
 	int base, value;
 	double result, weight;
@@ -208,7 +209,7 @@ int text2double(const char *text, const char *text_end, double *result_last)
 	if (text >= text_end)
 	{
 		*result_last = 0;
-		return 0;
+		return text;
 	}
 
 	if (text[0] == '0' && text[1] != '.')
@@ -218,7 +219,7 @@ int text2double(const char *text, const char *text_end, double *result_last)
 		if (text >= text_end)
 		{
 			*result_last = 0;
-			return 0;
+			return text;
 		}
 
 		switch (*text)
@@ -256,28 +257,32 @@ int text2double(const char *text, const char *text_end, double *result_last)
 		base = 10;
 	}
 
-	for (result = 0; text < text_end && *text != '.'; text++)
+	for (result = 0; text < text_end; text++)
 	{
+		if (*text == '.')
+		{
+			text++;
+			break;
+		}
+
 		value = char2value(*text);
 		if (value < 0 || value >= base)
 		{
-			error_msg("char2value");
-			return -EINVAL;
+			*result_last = result;
+			return text;
 		}
 
 		result = result * base + value;
 	}
 
 	*result_last = result;
-	text++;
 
 	for (result = 0, weight = 1.0 / base; text < text_end; text++)
 	{
 		value = char2value(*text);
 		if (value < 0 || value >= base)
 		{
-			error_msg("invalid charector '%c`", *text);
-			return -EINVAL;
+			break;
 		}
 
 		result += value * weight;
@@ -286,13 +291,13 @@ int text2double(const char *text, const char *text_end, double *result_last)
 
 	*result_last += result;
 
-	return 0;
+	return text;
 }
 
 int simple_calculation_base(const char *formula, const char *formula_end, double *result_last)
 {
 	int ret;
-	const char *formula_tmp;
+	const char *formula_last;
 	double result_tmp;
 	struct double_stack data_stack;
 	struct letter_stack operator_stack;
@@ -330,11 +335,11 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 		case '(':
 		case '[':
 		case '{':
-			formula_tmp = get_bracket_pair(formula, formula_end);
-			ret = simple_calculation_base(formula + 1, formula_tmp, &result_tmp);
+			formula_last = get_bracket_pair(formula, formula_end);
+			ret = simple_calculation_base(formula + 1, formula_last, &result_tmp);
 			if (ret < 0)
 			{
-				error_msg("__simple_calculator");
+				error_msg("simple_calculation_base");
 				goto out_free_data_stack;
 			}
 
@@ -345,26 +350,17 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 				goto out_free_data_stack;
 			}
 
-			formula = formula_tmp + 1;
+			formula = formula_last + 1;
 			continue;
 
 		case '0' ... '9':
-			formula_tmp = get_float_letters(formula);
-			ret = text2double(formula, formula_tmp, &result_tmp);
-			if (ret < 0)
-			{
-				error_msg("text2double");
-				goto out_free_data_stack;
-			}
-
+			formula = text2double(formula, formula_end, &result_tmp);
 			ret = double_stack_push(&data_stack, result_tmp);
 			if (ret < 0)
 			{
 				error_msg("double_stack_push");
 				goto out_free_data_stack;
 			}
-
-			formula = formula_tmp;
 			continue;
 
 		case '+':
@@ -451,7 +447,7 @@ int simple_calculation(const char *formula, double *result_last)
 	int ret;
 	const char *formula_end = formula + text_len(formula);
 
-	println("formula = %s", formula);
+	// println("formula = %s", formula);
 
 	ret = check_bracket_match_pair(formula, formula_end);
 	if (ret < 0)
@@ -482,26 +478,15 @@ static int complete_operation2(const struct calculator_operator_descriptor *oper
 	ret = double_stack_pop(stack_operand, &right_operand);
 	if (ret < 0)
 	{
-		print_error("double_stack_pop");
+		pr_red_info("Too a few operand");
 		return ret;
 	}
 
 	ret = double_stack_pop(stack_operand, &left_operand);
 	if (ret < 0)
 	{
-		switch (operator->type)
-		{
-		case OPERATOR_TYPE_ADD:
-			result = right_operand;
-			goto out_double_stack_push;
-		case OPERATOR_TYPE_SUB:
-			result = -right_operand;
-			goto out_double_stack_push;
-			break;
-		default:
-			print_error("double_stack_pop");
-			return ret;
-		}
+		pr_red_info("Too a few operand");
+		return ret;
 	}
 
 	switch (operator->type)
@@ -533,13 +518,13 @@ static int complete_operation2(const struct calculator_operator_descriptor *oper
 		result -= (s64)result;
 		break;
 	case OPERATOR_TYPE_AND:
-		result = ((u64)left_operand) & ((u64)right_operand);
+		result = ((u32)left_operand) & ((u32)right_operand);
 		break;
 	case OPERATOR_TYPE_OR:
-		result = ((u64)left_operand) | ((u64)right_operand);
+		result = ((u32)left_operand) | ((u32)right_operand);
 		break;
 	case OPERATOR_TYPE_XOR:
-		result = ((u64)left_operand) ^ ((u64)right_operand);
+		result = ((u32)left_operand) ^ ((u32)right_operand);
 		break;
 	case OPERATOR_TYPE_LEFT:
 		if (right_operand > 0)
@@ -584,7 +569,6 @@ static int complete_operation2(const struct calculator_operator_descriptor *oper
 		return -EINVAL;
 	}
 
-out_double_stack_push:
 	return double_stack_push(stack_operand, result);
 }
 
@@ -597,14 +581,62 @@ static int complete_operation1(const struct calculator_operator_descriptor *oper
 	ret = double_stack_pop(stack_operand, &operand);
 	if (ret < 0)
 	{
-		print_error("double_stack_pop");
+		pr_red_info("Too a few operand");
 		return ret;
 	}
 
 	switch (operator->type)
 	{
 	case OPERATOR_TYPE_NEG:
-		result = ~(u64)operand;
+		result = ~((u32)operand);
+		break;
+	case OPERATOR_TYPE_SIN:
+		operand = angle_adjust(operand, 0, 180, 360);
+		result = sin(angle2radian(operand));
+		break;
+	case OPERATOR_TYPE_COS:
+		operand = angle_adjust(operand, 0, 180, 360);
+		result = cos(angle2radian(operand));
+		break;
+	case OPERATOR_TYPE_TAN:
+		operand = angle_adjust(operand, 0, 180, 180);
+		if (operand == 90)
+		{
+			pr_red_info("angle = %lf", operand);
+			return -EINVAL;
+		}
+		result = tan(angle2radian(operand));
+		break;
+	case OPERATOR_TYPE_COT:
+		operand = angle_adjust(90 - operand, 0, 180, 180);
+		if (operand == 90)
+		{
+			pr_red_info("angle = %lf", operand);
+			return -EINVAL;
+		}
+		result = tan(angle2radian(operand));
+		break;
+	case OPERATOR_TYPE_ASIN:
+		if (operand > 1 || operand < -1)
+		{
+			pr_red_info("asin operand = %lf", operand);
+			return -EINVAL;
+		}
+		result = radian2angle(asin(operand));
+		break;
+	case OPERATOR_TYPE_ACOS:
+		if (operand > 1 || operand < -1)
+		{
+			pr_red_info("acos operand = %lf", operand);
+			return -EINVAL;
+		}
+		result = radian2angle(acos(operand));
+		break;
+	case OPERATOR_TYPE_ATAN:
+		result = radian2angle(atan(operand));
+		break;
+	case OPERATOR_TYPE_ACOT:
+		result = 90 - radian2angle(atan(operand));
 		break;
 	default:
 		print_error("invalid operator `%s'", operator->symbols[0]);
@@ -619,68 +651,116 @@ static const struct calculator_operator_descriptor operator_descs[] =
 	{
 		.symbols = {"+", "add", NULL},
 		.type = OPERATOR_TYPE_ADD,
-		.priority = 4,
+		.priority = OPERATOR_PRIORITY_ADD,
 		.calculation = complete_operation2
 	},
 	{
 		.symbols = {"-", "sub", NULL},
 		.type = OPERATOR_TYPE_SUB,
-		.priority = 4,
+		.priority = OPERATOR_PRIORITY_SUB,
 		.calculation = complete_operation2
 	},
 	{
 		.symbols = {"*", "x", "mul", NULL},
 		.type = OPERATOR_TYPE_MUL,
-		.priority = 3,
+		.priority = OPERATOR_PRIORITY_MUL,
 		.calculation = complete_operation2
 	},
 	{
 		.symbols = {"/", "div", NULL},
 		.type = OPERATOR_TYPE_DIV,
-		.priority = 3,
+		.priority = OPERATOR_PRIORITY_DIV,
 		.calculation = complete_operation2
 	},
 	{
 		.symbols = {"%", "mode", NULL},
 		.type = OPERATOR_TYPE_MODE,
-		.priority = 3,
+		.priority = OPERATOR_PRIORITY_MODE,
 		.calculation = complete_operation2
 	},
 	{
 		.symbols = {"&", "and", NULL},
 		.type = OPERATOR_TYPE_AND,
-		.priority = 8,
+		.priority = OPERATOR_PRIORITY_AND,
 		.calculation = complete_operation2
 	},
 	{
 		.symbols = {"|", "or", NULL},
 		.type = OPERATOR_TYPE_OR,
-		.priority = 10,
+		.priority = OPERATOR_PRIORITY_OR,
 		.calculation = complete_operation2
 	},
 	{
 		.symbols = {"~", "neg", NULL},
 		.type = OPERATOR_TYPE_NEG,
-		.priority = 2,
+		.priority = OPERATOR_PRIORITY_NEG,
 		.calculation = complete_operation1
 	},
 	{
 		.symbols = {"^", "xor", NULL},
 		.type = OPERATOR_TYPE_XOR,
-		.priority = 9,
+		.priority = OPERATOR_PRIORITY_XOR,
 		.calculation = complete_operation2
 	},
 	{
 		.symbols = {"<<", "left", NULL},
 		.type = OPERATOR_TYPE_LEFT,
-		.priority = 5,
+		.priority = OPERATOR_PRIORITY_LEFT,
 		.calculation = complete_operation2
 	},
 	{
 		.symbols = {">>", "right", NULL},
 		.type = OPERATOR_TYPE_RIGHT,
-		.priority = 5,
+		.priority = OPERATOR_PRIORITY_RIGHT,
 		.calculation = complete_operation2
+	},
+	{
+		.symbols = {"sin", NULL},
+		.type = OPERATOR_TYPE_SIN,
+		.priority = OPERATOR_PRIORITY_SIN,
+		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"cos", NULL},
+		.type = OPERATOR_TYPE_COS,
+		.priority = OPERATOR_PRIORITY_COS,
+		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"tan", NULL},
+		.type = OPERATOR_TYPE_TAN,
+		.priority = OPERATOR_PRIORITY_TAN,
+		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"cot", NULL},
+		.type = OPERATOR_TYPE_COT,
+		.priority = OPERATOR_PRIORITY_COT,
+		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"asin", NULL},
+		.type = OPERATOR_TYPE_ASIN,
+		.priority = OPERATOR_PRIORITY_ASIN,
+		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"acos", NULL},
+		.type = OPERATOR_TYPE_ACOS,
+		.priority = OPERATOR_PRIORITY_ACOS,
+		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"atan", NULL},
+		.type = OPERATOR_TYPE_ATAN,
+		.priority = OPERATOR_PRIORITY_ATAN,
+		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"acot", NULL},
+		.type = OPERATOR_TYPE_ACOT,
+		.priority = OPERATOR_PRIORITY_ACOT,
+		.calculation = complete_operation1
 	},
 };
 
@@ -727,6 +807,11 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 		goto out_operator_stack_free;
 	}
 
+	if (*formula == '+' || *formula == '-')
+	{
+		double_stack_push(&stack_operand, 0);
+	}
+
 	while (formula < formula_end)
 	{
 		switch (*formula)
@@ -743,7 +828,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 			formula_last = get_bracket_pair(formula, formula_end);
 			if (formula_last == NULL)
 			{
-				print_error("get_bracket_pair");
+				print_error("Bracket do't pair");
 				ret = -EINVAL;
 				goto out_operand_stack_free;
 			}
@@ -751,14 +836,13 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 			ret = complete_calculation_base(formula + 1, formula_last, result_last);
 			if (ret < 0)
 			{
-				print_error("complete_calculation_base");
 				goto out_operand_stack_free;
 			}
 
 			ret = double_stack_push(&stack_operand, *result_last);
 			if (ret < 0)
 			{
-				print_error("double_stack_push");
+				pr_red_info("Operand stack overflow");
 				goto out_operand_stack_free;
 			}
 
@@ -766,29 +850,20 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 			continue;
 
 		case '0' ... '9':
-			formula_last = get_float_letters(formula);
-			ret = text2double(formula, formula_last, result_last);
-			if (ret < 0)
-			{
-				print_error("text2double");
-				goto out_operand_stack_free;
-			}
-
+			formula = text2double(formula, formula_end, result_last);
 			ret = double_stack_push(&stack_operand, *result_last);
 			if (ret < 0)
 			{
-				print_error("double_stack_push");
+				pr_red_info("Operand stack overflow");
 				goto out_operand_stack_free;
 			}
-
-			formula = formula_last;
 			continue;
 
 		default:
 			operator = get_formula_operator(formula, &formula_last);
 			if (operator == NULL)
 			{
-				print_error("get_formula_operator, formula = %s", formula);
+				pr_red_info("invalid formula `%s'", formula);
 				ret = -EINVAL;
 				goto out_operand_stack_free;
 			}
@@ -796,7 +871,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 			while (1)
 			{
 				operator_top = general_stack_get_top_fd(&stack_operator);
-				if (operator_top == NULL || operator_top->priority > operator->priority)
+				if (operator_top == NULL || operator_top->priority < operator->priority)
 				{
 					break;
 				}
@@ -806,7 +881,6 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 				ret = operator_top->calculation(operator_top, &stack_operand);
 				if (ret < 0)
 				{
-					print_error("operator_top->calculation");
 					goto out_operand_stack_free;
 				}
 			}
@@ -814,7 +888,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 			ret = general_stack_push_fd(&stack_operator, (void *)operator);
 			if (ret < 0)
 			{
-				print_error("general_stack_push_fd");
+				pr_red_info("Operator stack overflow");
 				goto out_operand_stack_free;
 			}
 			formula = formula_last;
@@ -834,7 +908,6 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 		ret = operator_top->calculation(operator_top, &stack_operand);
 		if (ret < 0)
 		{
-			print_error("operator_top->calculation");
 			goto out_operand_stack_free;
 		}
 	}
@@ -842,7 +915,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 	ret = double_stack_pop(&stack_operand, result_last);
 	if (ret < 0)
 	{
-		print_error("double_stack_pop");
+		print_error("Too a few operand");
 		goto out_operand_stack_free;
 	}
 
@@ -852,7 +925,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 	}
 	else
 	{
-		print_error("operand stack is not empty");
+		pr_red_info("Too much operand");
 		ret = -EINVAL;
 	}
 
@@ -869,7 +942,7 @@ int complete_calculation(const char *formula, double *result_last)
 	int ret;
 	const char *formula_end = formula + text_len(formula);
 
-	println("formula = %s", formula);
+	// println("formula = %s", formula);
 
 	ret = check_bracket_match_pair(formula, formula_end);
 	if (ret < 0)

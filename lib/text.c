@@ -173,6 +173,44 @@ char *text_cat5(char *dest, ...)
 	return dest;
 }
 
+char *text2lowercase(char *text)
+{
+	char *text_bak = text;
+
+	while (1)
+	{
+		switch (*text)
+		{
+		case 0:
+			return text_bak;
+		case 'A' ... 'Z':
+			*text = *text - 'A' + 'a';
+			break;
+		}
+
+		text++;
+	}
+}
+
+char *text2uppercase(char *text)
+{
+	char *text_bak = text;
+
+	while (1)
+	{
+		switch (*text)
+		{
+		case 0:
+			return text_bak;
+		case 'a' ... 'z':
+			*text = *text - 'a' + 'Z';
+			break;
+		}
+
+		text++;
+	}
+}
+
 char *text_copy(char *dest, const char *src)
 {
 	while ((*dest = *src))
@@ -182,6 +220,46 @@ char *text_copy(char *dest, const char *src)
 	}
 
 	return dest;
+}
+
+char *text_copy_lowercase(char *dest, const char *src)
+{
+	while (1)
+	{
+		switch (*src)
+		{
+		case 0:
+			return dest;
+		case 'A' ... 'Z':
+			*dest = *src - 'A' + 'a';
+			break;
+		default:
+			*dest = *src;
+		}
+
+		dest++;
+		src++;
+	}
+}
+
+char *text_copy_uppercase(char *dest, const char *src)
+{
+	while (1)
+	{
+		switch (*src)
+		{
+		case 0:
+			return dest;
+		case 'a' ... 'z':
+			*dest = *src - 'a' + 'A';
+			break;
+		default:
+			*dest = *src;
+		}
+
+		dest++;
+		src++;
+	}
 }
 
 char *text_ncopy(char *dest, const char *src, size_t size)
@@ -921,7 +999,7 @@ char *value2text_base(s64 value, char *text, int size, char fill, int flag)
 	int base;
 
 	base = flag & 0xFF;
-	if (base == 10 && value < 0 && (flag & FLAG_SIGNED))
+	if (base == 10 && value < 0 && (flag & TEXT_FLAG_SIGNED))
 	{
 		*text++ = '-';
 		tail = simple_value2text_reverse(-value, buff, sizeof(buff), 10);
@@ -931,7 +1009,7 @@ char *value2text_base(s64 value, char *text, int size, char fill, int flag)
 		tail = simple_value2text_reverse(value, buff, sizeof(buff), base);
 	}
 
-	if (flag & FLAG_PREFIX)
+	if (flag & TEXT_FLAG_PREFIX)
 	{
 		text = base2prefix(base, text);
 	}
