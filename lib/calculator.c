@@ -564,6 +564,17 @@ static int complete_operation2(const struct calculator_operator_descriptor *oper
 		}
 		result = left_operand + right_operand;
 		break;
+	case OPERATOR_TYPE_POW:
+		result = pow(left_operand, right_operand);
+		break;
+	case OPERATOR_TYPE_SQRT:
+		if (left_operand == 0)
+		{
+			pr_red_info("Can't sqrt by 0");
+			return -EINVAL;
+		}
+		result = pow(right_operand, 1 / left_operand);
+		break;
 	default:
 		print_error("invalid operator `%s'", operator->symbols[0]);
 		return -EINVAL;
@@ -697,7 +708,7 @@ static const struct calculator_operator_descriptor operator_descs[] =
 		.calculation = complete_operation1
 	},
 	{
-		.symbols = {"^", "xor", NULL},
+		.symbols = {"xor", NULL},
 		.type = OPERATOR_TYPE_XOR,
 		.priority = OPERATOR_PRIORITY_XOR,
 		.calculation = complete_operation2
@@ -761,6 +772,18 @@ static const struct calculator_operator_descriptor operator_descs[] =
 		.type = OPERATOR_TYPE_ACOT,
 		.priority = OPERATOR_PRIORITY_ACOT,
 		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"^", "pow", NULL},
+		.type = OPERATOR_TYPE_POW,
+		.priority = OPERATOR_PRIORITY_POW,
+		.calculation = complete_operation2
+	},
+	{
+		.symbols = {"sqrt", NULL},
+		.type = OPERATOR_TYPE_SQRT,
+		.priority = OPERATOR_PRIORITY_SQRT,
+		.calculation = complete_operation2
 	},
 };
 
