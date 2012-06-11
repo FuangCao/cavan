@@ -336,6 +336,13 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 		case '[':
 		case '{':
 			formula_last = get_bracket_pair(formula, formula_end);
+			if (formula_last == NULL)
+			{
+				print_error("Bracket do't pair");
+				ret = -EINVAL;
+				goto out_free_data_stack;
+			}
+
 			ret = simple_calculation_base(formula + 1, formula_last, &result_tmp);
 			if (ret < 0)
 			{
@@ -649,6 +656,23 @@ static int complete_operation1(const struct calculator_operator_descriptor *oper
 	case OPERATOR_TYPE_ACOT:
 		result = 90 - radian2angle(atan(operand));
 		break;
+	case OPERATOR_TYPE_ABS:
+		result = operand < 0 ? (-operand) : operand;
+		break;
+	case OPERATOR_TYPE_RECI:
+		if (operand == 0)
+		{
+			pr_red_info("Can't calculation reciprocal of 0");
+			return -EINVAL;
+		}
+		result = 1 / operand;
+		break;
+	case OPERATOR_TYPE_FACT:
+		for (result = 1; operand > 1; operand--)
+		{
+			result *= operand;
+		}
+		break;
 	default:
 		print_error("invalid operator `%s'", operator->symbols[0]);
 		return -EINVAL;
@@ -784,6 +808,24 @@ static const struct calculator_operator_descriptor operator_descs[] =
 		.type = OPERATOR_TYPE_SQRT,
 		.priority = OPERATOR_PRIORITY_SQRT,
 		.calculation = complete_operation2
+	},
+	{
+		.symbols = {"abs", NULL},
+		.type = OPERATOR_TYPE_ABS,
+		.priority = OPERATOR_PRIORITY_ABS,
+		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"reci", NULL},
+		.type = OPERATOR_TYPE_RECI,
+		.priority = OPERATOR_PRIORITY_RECI,
+		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"!", "fact", NULL},
+		.type = OPERATOR_TYPE_FACT,
+		.priority = OPERATOR_PRIORITY_FACT,
+		.calculation = complete_operation1
 	},
 };
 

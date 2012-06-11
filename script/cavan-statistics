@@ -2,7 +2,7 @@
 
 count=0
 
-for fn in $(find $* -type f)
+for fn in $(find $* -type f -name "*.[ch]")
 do
 	let count="${count}+$(wc -l ${fn} | cut -d ' ' -f 1)"
 done
