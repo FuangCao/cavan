@@ -201,6 +201,37 @@ static int simple_operation2(struct double_stack *stack, char operator)
 	return double_stack_push(stack, result);
 }
 
+char *double2text(double value, char *text, int size, char fill, int flags)
+{
+	int i;
+	int base;
+
+	text = value2text_base((s64)value, text, size, fill, flags);
+	if (value == ((s64)value))
+	{
+		return text;
+	}
+
+	base = flags & 0xFF;
+	value -= (s64)value;
+
+	*text++ = '.';
+
+	for (i = 0; i < 16; i++)
+	{
+		value *= base;
+		*text++ = value2char(((s64)value) % base);
+		if (value == (s64)value)
+		{
+			break;
+		}
+	}
+
+	*text = 0;
+
+	return text;
+}
+
 const char *text2double(const char *text, const char *text_end, double *result_last)
 {
 	int base, value;

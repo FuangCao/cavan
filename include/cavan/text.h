@@ -97,8 +97,8 @@ char *simple_value2text_reverse(u64 value, char *buff, size_t size, int base);
 char *simple_value2text_unsigned(u64 value, char *buff, size_t size, int base);
 char *simple_value2text(s64 value, char *buff, size_t size, int base);
 
-char *value2text_base(s64 value, char *text, int size, char fill, int flag);
-char *value2text(u64 value, int flag);
+char *value2text_base(s64 value, char *text, int size, char fill, int flags);
+char *value2text(u64 value, int flags);
 
 u64 text2size(const char *text, const char **text_ret);
 u64 text2size_mb(const char *text);

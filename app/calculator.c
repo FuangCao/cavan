@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		value2text_base((s64)result, buff, length, 0, base | flags);
+		double2text(result, buff, length, 0, base | flags | TEXT_FLAG_SIGNED);
 		println(buff);
 	}
 

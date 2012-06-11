@@ -73,6 +73,7 @@ struct calculator_operator_descriptor
 };
 
 double angle_adjust(double angle, double min_value, double max_value, double period);
+char *double2text(double value, char *text, int size, char fill, int flags);
 
 char *get_bracket_pair(const char *formula, const char *formula_end);
 int check_bracket_match_pair(const char *formula, const char *formula_end);

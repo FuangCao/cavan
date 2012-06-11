@@ -993,13 +993,13 @@ char *base2prefix(int base, char *prefix)
 	return prefix;
 }
 
-char *value2text_base(s64 value, char *text, int size, char fill, int flag)
+char *value2text_base(s64 value, char *text, int size, char fill, int flags)
 {
 	char buff[128], *tail;
 	int base;
 
-	base = flag & 0xFF;
-	if (base == 10 && value < 0 && (flag & TEXT_FLAG_SIGNED))
+	base = flags & 0xFF;
+	if (base == 10 && value < 0 && (flags & TEXT_FLAG_SIGNED))
 	{
 		*text++ = '-';
 		tail = simple_value2text_reverse(-value, buff, sizeof(buff), 10);
@@ -1009,7 +1009,7 @@ char *value2text_base(s64 value, char *text, int size, char fill, int flag)
 		tail = simple_value2text_reverse(value, buff, sizeof(buff), base);
 	}
 
-	if (flag & TEXT_FLAG_PREFIX)
+	if (flags & TEXT_FLAG_PREFIX)
 	{
 		text = base2prefix(base, text);
 	}
@@ -1040,11 +1040,11 @@ char *value2text_base(s64 value, char *text, int size, char fill, int flag)
 	return text;
 }
 
-char *value2text(u64 value, int flag)
+char *value2text(u64 value, int flags)
 {
 	static char buff[100];
 
-	value2text_base(value, buff, 0, 0, flag);
+	value2text_base(value, buff, 0, 0, flags);
 
 	return buff;
 }
