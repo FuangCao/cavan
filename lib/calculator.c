@@ -5,6 +5,36 @@
 #include <cavan/stack.h>
 #include <math.h>
 
+u64 double_integer_part_value_base(u64 value)
+{
+	int exponent;
+	int offset;
+
+	exponent = double_exponent_part_value_base(value);
+	if (exponent < 0)
+	{
+		return 0;
+	}
+
+	offset = DOUBLE_CONTENT_SIZE - exponent + DOUBLE_CONTENT_OFFSET;
+
+	return GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), exponent + 1, offset);
+}
+
+u64 double_fractional_part_value_base(u64 value)
+{
+	int exponent;
+
+	exponent = double_exponent_part_value_base(value);
+	println("exponent = %d", exponent);
+	if (exponent < 0)
+	{
+		return GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), DOUBLE_CONTENT_SIZE + 1, DOUBLE_CONTENT_OFFSET);
+	}
+
+	return GET_PART_VALUE_LL(value, DOUBLE_CONTENT_SIZE - exponent, DOUBLE_CONTENT_OFFSET);
+}
+
 double angle_adjust(double angle, double min_value, double max_value, double period)
 {
 	while (angle >= max_value)
@@ -201,30 +231,48 @@ static int simple_operation2(struct double_stack *stack, char operator)
 	return double_stack_push(stack, result);
 }
 
-char *double2text(double value, char *text, int size, char fill, int flags)
+char *double2text_base(u64 value, char *text, int size, char fill, int flags)
 {
 	int i;
 	int base;
+	int exponent;
+	int offset;
+	u64 mask;
+	u64 integer_value;
+	u64 frational_value;
 
-	text = value2text_base((s64)value, text, size, fill, flags);
-	if (value == ((s64)value))
+	exponent = double_exponent_part_value_base(value);
+	mask = (1LL << (DOUBLE_CONTENT_SIZE - exponent)) - 1;
+	if (exponent < 0)
+	{
+		integer_value = 0;
+		frational_value = GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), DOUBLE_CONTENT_SIZE + 1, DOUBLE_CONTENT_OFFSET);
+	}
+	else
+	{
+		offset = DOUBLE_CONTENT_SIZE - exponent + DOUBLE_CONTENT_OFFSET;
+		integer_value = GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), exponent + 1, offset);
+		frational_value = value & mask;
+	}
+
+	frational_value = (frational_value >> DOUBLE_CONTENT_OFFSET) & mask;
+
+	text = value2text_base(integer_value, text, size, fill, flags);
+	if (frational_value == 0)
 	{
 		return text;
 	}
 
+	offset = DOUBLE_CONTENT_SIZE - exponent;
 	base = flags & 0xFF;
-	value -= (s64)value;
 
 	*text++ = '.';
 
-	for (i = 0; i < 16; i++)
+	for (i = 0; i < 32 && frational_value; i++)
 	{
-		value *= base;
-		*text++ = value2char(((s64)value) % base);
-		if (value == (s64)value)
-		{
-			break;
-		}
+		frational_value *= base;
+		*text++ = value2char(frational_value >> offset);
+		frational_value &= mask;
 	}
 
 	*text = 0;
@@ -546,14 +594,13 @@ static int complete_operation2(const struct calculator_operator_descriptor *oper
 		}
 		result = left_operand / right_operand;
 		break;
-	case OPERATOR_TYPE_MODE:
+	case OPERATOR_TYPE_MOD:
 		if (right_operand == 0)
 		{
 			pr_red_info("divide zero");
 			return -EINVAL;
 		}
-		result = left_operand / right_operand;
-		result -= (s64)result;
+		result = fmod(left_operand, right_operand);
 		break;
 	case OPERATOR_TYPE_AND:
 		result = ((u32)left_operand) & ((u32)right_operand);
@@ -612,6 +659,9 @@ static int complete_operation2(const struct calculator_operator_descriptor *oper
 			return -EINVAL;
 		}
 		result = pow(right_operand, 1 / left_operand);
+		break;
+	case OPERATOR_TYPE_BASE:
+		result = left_operand * right_operand / 10;
 		break;
 	default:
 		print_error("invalid operator `%s'", operator->symbols[0]);
@@ -688,7 +738,7 @@ static int complete_operation1(const struct calculator_operator_descriptor *oper
 		result = 90 - radian2angle(atan(operand));
 		break;
 	case OPERATOR_TYPE_ABS:
-		result = operand < 0 ? (-operand) : operand;
+		result = fabs(operand);
 		break;
 	case OPERATOR_TYPE_RECI:
 		if (operand == 0)
@@ -739,9 +789,9 @@ static const struct calculator_operator_descriptor operator_descs[] =
 		.calculation = complete_operation2
 	},
 	{
-		.symbols = {"%", "mode", NULL},
-		.type = OPERATOR_TYPE_MODE,
-		.priority = OPERATOR_PRIORITY_MODE,
+		.symbols = {"%", "mod", NULL},
+		.type = OPERATOR_TYPE_MOD,
+		.priority = OPERATOR_PRIORITY_MOD,
 		.calculation = complete_operation2
 	},
 	{
@@ -857,6 +907,12 @@ static const struct calculator_operator_descriptor operator_descs[] =
 		.type = OPERATOR_TYPE_FACT,
 		.priority = OPERATOR_PRIORITY_FACT,
 		.calculation = complete_operation1
+	},
+	{
+		.symbols = {"@", "base", NULL},
+		.type = OPERATOR_TYPE_BASE,
+		.priority = OPERATOR_PRIORITY_BASE,
+		.calculation = complete_operation2
 	},
 };
 
