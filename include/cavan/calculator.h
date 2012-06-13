@@ -4,7 +4,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Mon Jul  4 10:32:22 CST 2011
 
-#define OPERAND_MAX_SYMBOL_COUNT	8
+#define OPERAND_MAX_SYMBOL_COUNT	4
 #define ABS_VALUE(a)				((a) < 0 ? -(a) : (a))
 
 #ifndef PI
@@ -38,33 +38,33 @@
 #define DOUBLE_CONTENT_VALUE(value) \
 	GET_PART_VALUE_LL(value, DOUBLE_CONTENT_SIZE, DOUBLE_CONTENT_OFFSET)
 
-enum calculator_operator_type
+enum calculator_operator_identify
 {
-	OPERATOR_TYPE_ADD,
-	OPERATOR_TYPE_SUB,
-	OPERATOR_TYPE_MUL,
-	OPERATOR_TYPE_DIV,
-	OPERATOR_TYPE_MOD,
-	OPERATOR_TYPE_AND,
-	OPERATOR_TYPE_OR,
-	OPERATOR_TYPE_XOR,
-	OPERATOR_TYPE_NEG,
-	OPERATOR_TYPE_LEFT,
-	OPERATOR_TYPE_RIGHT,
-	OPERATOR_TYPE_SIN,
-	OPERATOR_TYPE_COS,
-	OPERATOR_TYPE_TAN,
-	OPERATOR_TYPE_COT,
-	OPERATOR_TYPE_ASIN,
-	OPERATOR_TYPE_ACOS,
-	OPERATOR_TYPE_ATAN,
-	OPERATOR_TYPE_ACOT,
-	OPERATOR_TYPE_POW,
-	OPERATOR_TYPE_SQRT,
-	OPERATOR_TYPE_ABS,
-	OPERATOR_TYPE_RECI,
-	OPERATOR_TYPE_FACT,
-	OPERATOR_TYPE_BASE,
+	OPERATOR_ADD_ID,
+	OPERATOR_SUB_ID,
+	OPERATOR_MUL_ID,
+	OPERATOR_DIV_ID,
+	OPERATOR_MOD_ID,
+	OPERATOR_AND_ID,
+	OPERATOR_OR_ID,
+	OPERATOR_XOR_ID,
+	OPERATOR_NEG_ID,
+	OPERATOR_LEFT_ID,
+	OPERATOR_RIGHT_ID,
+	OPERATOR_SIN_ID,
+	OPERATOR_COS_ID,
+	OPERATOR_TAN_ID,
+	OPERATOR_COT_ID,
+	OPERATOR_ASIN_ID,
+	OPERATOR_ACOS_ID,
+	OPERATOR_ATAN_ID,
+	OPERATOR_ACOT_ID,
+	OPERATOR_POW_ID,
+	OPERATOR_SQRT_ID,
+	OPERATOR_ABS_ID,
+	OPERATOR_RECI_ID,
+	OPERATOR_FACT_ID,
+	OPERATOR_BASE_ID,
 };
 
 #define OPERATOR_PRIORITY_ADD	11
@@ -91,14 +91,14 @@ enum calculator_operator_type
 #define OPERATOR_PRIORITY_FACT	15
 #define OPERATOR_PRIORITY_POW	13
 #define OPERATOR_PRIORITY_SQRT	13
-#define OPERATOR_PRIORITY_BASE	15
+#define OPERATOR_PRIORITY_BASE	16
 
 struct calculator_operator_descriptor
 {
 	const char *symbols[OPERAND_MAX_SYMBOL_COUNT];
-	enum calculator_operator_type type;
+	enum calculator_operator_identify id;
 	int priority;
-	int (*calculation)(const struct calculator_operator_descriptor *operator, struct double_stack *stack_operand);
+	int (*calculation)(const struct calculator_operator_descriptor *, struct double_stack *);
 };
 
 u64 double_integer_part_value_base(u64 value);
@@ -111,7 +111,7 @@ char *get_bracket_pair(const char *formula, const char *formula_end);
 int check_bracket_match_pair(const char *formula, const char *formula_end);
 int simple_calculation_base(const char *formula, const char *formula_end, double *result_last);
 int simple_calculation(const char *formula, double *result_last);
-const char *text2double(const char *text, const char *text_end, double *result_last);
+const char *text2double(const char *text, const char *text_end, int base, double *result_last);
 
 const struct calculator_operator_descriptor *get_formula_operator(const char *formula, const char **formula_last);
 int complete_calculation_base(const char *formula, const char *formula_end, double *result_last);
