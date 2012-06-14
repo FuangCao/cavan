@@ -248,11 +248,16 @@ char *double2text_base(u64 value, char *text, int size, char fill, int flags)
 		integer_value = 0;
 		frational_value = GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), DOUBLE_CONTENT_SIZE + 1, DOUBLE_CONTENT_OFFSET);
 	}
-	else
+	else if (exponent < DOUBLE_CONTENT_SIZE)
 	{
 		offset = DOUBLE_CONTENT_SIZE - exponent + DOUBLE_CONTENT_OFFSET;
 		integer_value = GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), exponent + 1, offset);
 		frational_value = value & mask;
+	}
+	else
+	{
+		integer_value = GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), DOUBLE_CONTENT_SIZE + 1, DOUBLE_CONTENT_OFFSET) << (exponent - DOUBLE_CONTENT_SIZE);
+		frational_value = 0;
 	}
 
 	frational_value = (frational_value >> DOUBLE_CONTENT_OFFSET) & mask;
