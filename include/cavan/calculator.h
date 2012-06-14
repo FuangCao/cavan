@@ -65,6 +65,7 @@ enum calculator_operator_identify
 	OPERATOR_RECI_ID,
 	OPERATOR_FACT_ID,
 	OPERATOR_BASE_ID,
+	OPERATOR_PI_ID,
 };
 
 #define OPERATOR_PRIORITY_ADD	11
@@ -92,6 +93,7 @@ enum calculator_operator_identify
 #define OPERATOR_PRIORITY_POW	13
 #define OPERATOR_PRIORITY_SQRT	13
 #define OPERATOR_PRIORITY_BASE	16
+#define OPERATOR_PRIORITY_PI	16
 
 struct calculator_operator_descriptor
 {

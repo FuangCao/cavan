@@ -67,8 +67,10 @@ int main(int argc, char *argv[])
 	double result;
 	char buff[1024];
 	int base = 0;
-	int length = 0;
+	int length[2];
 	int flags = 0;
+
+	length[0] = length[1] = 0;
 
 	while ((c = getopt_long(argc, argv, "vVhHb:B:l:L:pP", long_option, &option_index)) != EOF)
 	{
@@ -96,7 +98,8 @@ int main(int argc, char *argv[])
 		case 'l':
 		case 'L':
 		case LOCAL_COMMAND_OPTION_LENGTH:
-			length = text2value_unsigned(optarg, NULL, 10);
+			length[0] = text2value_unsigned(optarg, (const char **)&optarg, 10);
+			length[1] = text2value_unsigned(optarg + 1, NULL, 10);
 			break;
 
 		case 'p':
@@ -121,13 +124,23 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	if (base < 2)
+	if (base < 2 || base == 10)
 	{
-		println("%lf", result);
+		if (length[0] || length[1])
+		{
+			char format[64];
+
+			sprintf(format, "%%%d.%dlf", length[0], length[1]);
+			println(format, result);
+		}
+		else
+		{
+			println("%lf", result);
+		}
 	}
 	else
 	{
-		double2text(&result, buff, length, 0, base | flags);
+		double2text(&result, buff, length[0], 0, base | flags);
 		println(buff);
 	}
 

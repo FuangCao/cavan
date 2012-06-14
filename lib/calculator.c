@@ -904,6 +904,12 @@ static const struct calculator_operator_descriptor operator_descs[] =
 		.priority = OPERATOR_PRIORITY_BASE,
 		.calculation = NULL,
 	},
+	{
+		.symbols = {"pi", NULL},
+		.id = OPERATOR_PI_ID,
+		.priority = OPERATOR_PRIORITY_PI,
+		.calculation = NULL,
+	},
 };
 
 const struct calculator_operator_descriptor *get_formula_operator(const char *formula, const char **formula_last)
@@ -1031,22 +1037,29 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 			{
 				double operand, result;
 
-				ret = double_stack_pop(&stack_operand, &operand);
-				if (ret < 0)
-				{
-					pr_red_info("Too a few operand");
-					goto out_operand_stack_free;
-				}
-
 				switch (desc->id)
 				{
 				case OPERATOR_FACT_ID:
+					ret = double_stack_pop(&stack_operand, &operand);
+					if (ret < 0)
+					{
+						pr_red_info("Too a few operand");
+						goto out_operand_stack_free;
+					}
+
 					for (result = 1; operand > 1; operand--)
 					{
 						result *= operand;
 					}
 					break;
 				case OPERATOR_BASE_ID:
+					ret = double_stack_pop(&stack_operand, &operand);
+					if (ret < 0)
+					{
+						pr_red_info("Too a few operand");
+						goto out_operand_stack_free;
+					}
+
 					if (operand < 2)
 					{
 						pr_red_info("invalid base value `%lf'", operand);
@@ -1070,6 +1083,9 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 					}
 
 					formula_last = text2double(formula_last, formula_end, operand, &result);
+					break;
+				case OPERATOR_PI_ID:
+					result = PI;
 					break;
 				default:
 					pr_red_info("unknown operator `%s'", desc->symbols[0]);
