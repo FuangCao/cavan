@@ -144,6 +144,18 @@ $(CAVAN_MAP_SOURCE): $(APP_SRC_FILES)
 	done > $@
 
 clean:
-	$(Q)$(RM) $(OUT_PATH)
+	$(Q)$(RM) $(OUT_PATH) -v
+
+clean-app:
+	$(Q)$(RM) $(OUT_APP) -v
+
+clean-bin:
+	$(Q)$(RM) $(OUT_BIN) -v
+
+clean-lib:
+	$(Q)$(RM) $(OUT_LIB) -v
+
+clean-cavan:
+	$(Q)$(RM) $(OUT_CAVAN) -v
 
 .PRECIOUS: $(APP_OBJ_FILES) $(LIB_OBJ_FILES) $(CAVAN_OBJ_FILES)
