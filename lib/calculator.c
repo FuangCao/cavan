@@ -310,8 +310,8 @@ const char *text2double(const char *text, const char *text_end, int base, double
 		{
 		case 'o':
 		case 'O':
-		case '0' ... '7':
 			text++;
+		case '0' ... '7':
 			base = 8;
 			break;
 
@@ -1049,7 +1049,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 				case OPERATOR_BASE_ID:
 					if (operand < 2)
 					{
-						pr_red_info("invalid base value");
+						pr_red_info("invalid base value `%lf'", operand);
 						ret = -EINVAL;
 						goto out_operand_stack_free;
 					}
