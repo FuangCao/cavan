@@ -262,7 +262,15 @@ char *double2text_base(u64 value, char *text, int size, char fill, int flags)
 
 	frational_value = (frational_value >> DOUBLE_CONTENT_OFFSET) & mask;
 
-	text = value2text_base(integer_value, text, size, fill, flags);
+	if (value & DOUBLE_SIGN_MASK)
+	{
+		text = value2text_base(-integer_value, text, size, fill, flags);
+	}
+	else
+	{
+		text = value2text_base(integer_value, text, size, fill, flags);
+	}
+
 	if (frational_value == 0)
 	{
 		return text;
