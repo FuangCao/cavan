@@ -675,7 +675,7 @@ static int complete_operation2(const struct calculator_operator_descriptor *desc
 	return double_stack_push(stack_operand, result);
 }
 
-static int complete_operation1(const struct calculator_operator_descriptor *desc, struct double_stack *stack_operand)
+static int complete_operation1_left(const struct calculator_operator_descriptor *desc, struct double_stack *stack_operand)
 {
 	int ret;
 	double operand;
@@ -760,163 +760,234 @@ static int complete_operation1(const struct calculator_operator_descriptor *desc
 	return double_stack_push(stack_operand, result);
 }
 
+static int complete_operation1_right(const struct calculator_operator_descriptor *desc, struct double_stack *stack_operand)
+{
+	int ret;
+	double operand, result;
+
+	ret = double_stack_pop(stack_operand, &operand);
+	if (ret < 0)
+	{
+		pr_red_info("Too a few operand");
+		return ret;
+	}
+
+	switch (desc->id)
+	{
+	case OPERATOR_FACT_ID:
+		for (result = 1; operand > 1; operand--)
+		{
+			result *= operand;
+		}
+		break;
+	default:
+		pr_red_info("unknown operator `%s'", desc->symbols[0]);
+		return -EINVAL;
+	}
+
+	return double_stack_push(stack_operand, result);
+}
+
+static int complete_operation_const(const struct calculator_operator_descriptor *desc, struct double_stack *stack_operand)
+{
+	double result;
+
+	switch (desc->id)
+	{
+	case OPERATOR_PI_ID:
+		result = PI;
+		break;
+	default:
+		pr_red_info("unknown operator `%s'", desc->symbols[0]);
+		return -EINVAL;
+	}
+
+	return double_stack_push(stack_operand, result);
+}
+
 static const struct calculator_operator_descriptor operator_descs[] =
 {
 	{
 		.symbols = {"+", "add", NULL},
 		.id = OPERATOR_ADD_ID,
 		.priority = OPERATOR_PRIORITY_ADD,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"-", "sub", NULL},
 		.id = OPERATOR_SUB_ID,
 		.priority = OPERATOR_PRIORITY_SUB,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"*", "x", "mul", NULL},
 		.id = OPERATOR_MUL_ID,
 		.priority = OPERATOR_PRIORITY_MUL,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"/", "div", NULL},
 		.id = OPERATOR_DIV_ID,
 		.priority = OPERATOR_PRIORITY_DIV,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"%", "mod", NULL},
 		.id = OPERATOR_MOD_ID,
 		.priority = OPERATOR_PRIORITY_MOD,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"&", "and", NULL},
 		.id = OPERATOR_AND_ID,
 		.priority = OPERATOR_PRIORITY_AND,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"|", "or", NULL},
 		.id = OPERATOR_OR_ID,
 		.priority = OPERATOR_PRIORITY_OR,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"~", "neg", NULL},
 		.id = OPERATOR_NEG_ID,
 		.priority = OPERATOR_PRIORITY_NEG,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"xor", NULL},
 		.id = OPERATOR_XOR_ID,
 		.priority = OPERATOR_PRIORITY_XOR,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"<<", "left", NULL},
 		.id = OPERATOR_LEFT_ID,
 		.priority = OPERATOR_PRIORITY_LEFT,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {">>", "right", NULL},
 		.id = OPERATOR_RIGHT_ID,
 		.priority = OPERATOR_PRIORITY_RIGHT,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"sin", NULL},
 		.id = OPERATOR_SIN_ID,
 		.priority = OPERATOR_PRIORITY_SIN,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"cos", NULL},
 		.id = OPERATOR_COS_ID,
 		.priority = OPERATOR_PRIORITY_COS,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"tan", NULL},
 		.id = OPERATOR_TAN_ID,
 		.priority = OPERATOR_PRIORITY_TAN,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"cot", NULL},
 		.id = OPERATOR_COT_ID,
 		.priority = OPERATOR_PRIORITY_COT,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"asin", NULL},
 		.id = OPERATOR_ASIN_ID,
 		.priority = OPERATOR_PRIORITY_ASIN,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"acos", NULL},
 		.id = OPERATOR_ACOS_ID,
 		.priority = OPERATOR_PRIORITY_ACOS,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"atan", NULL},
 		.id = OPERATOR_ATAN_ID,
 		.priority = OPERATOR_PRIORITY_ATAN,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"acot", NULL},
 		.id = OPERATOR_ACOT_ID,
 		.priority = OPERATOR_PRIORITY_ACOT,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"^", "pow", NULL},
 		.id = OPERATOR_POW_ID,
 		.priority = OPERATOR_PRIORITY_POW,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"sqrt", NULL},
 		.id = OPERATOR_SQRT_ID,
 		.priority = OPERATOR_PRIORITY_SQRT,
+		.need_push = true,
 		.calculation = complete_operation2,
 	},
 	{
 		.symbols = {"abs", NULL},
 		.id = OPERATOR_ABS_ID,
 		.priority = OPERATOR_PRIORITY_ABS,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"reci", NULL},
 		.id = OPERATOR_RECI_ID,
 		.priority = OPERATOR_PRIORITY_RECI,
-		.calculation = complete_operation1,
+		.need_push = true,
+		.calculation = complete_operation1_left,
 	},
 	{
 		.symbols = {"!", "fact", NULL},
 		.id = OPERATOR_FACT_ID,
 		.priority = OPERATOR_PRIORITY_FACT,
-		.calculation = NULL,
+		.need_push = false,
+		.calculation = complete_operation1_right,
 	},
 	{
 		.symbols = {"@", "base", NULL},
 		.id = OPERATOR_BASE_ID,
 		.priority = OPERATOR_PRIORITY_BASE,
+		.need_push = false,
 		.calculation = NULL,
 	},
 	{
 		.symbols = {"pi", NULL},
 		.id = OPERATOR_PI_ID,
 		.priority = OPERATOR_PRIORITY_PI,
-		.calculation = NULL,
+		.need_push = false,
+		.calculation = complete_operation_const,
 	},
 };
 
@@ -1024,47 +1095,18 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 				goto out_operand_stack_free;
 			}
 
-			while (1)
-			{
-				operator_top = general_stack_get_top_fd(&stack_operator);
-				if (operator_top == NULL || operator_top->priority < desc->priority)
-				{
-					break;
-				}
-
-				general_stack_pop_fd(&stack_operator);
-
-				ret = operator_top->calculation(operator_top, &stack_operand);
-				if (ret < 0)
-				{
-					goto out_operand_stack_free;
-				}
-			}
-
 			if (desc->calculation == NULL)
 			{
 				double operand, result;
 
 				switch (desc->id)
 				{
-				case OPERATOR_FACT_ID:
-					ret = double_stack_pop(&stack_operand, &operand);
-					if (ret < 0)
-					{
-						pr_red_info("Too a few operand");
-						goto out_operand_stack_free;
-					}
-
-					for (result = 1; operand > 1; operand--)
-					{
-						result *= operand;
-					}
-					break;
 				case OPERATOR_BASE_ID:
 					ret = double_stack_pop(&stack_operand, &operand);
 					if (ret < 0)
 					{
-						pr_red_info("Too a few operand");
+						pr_red_info("Too much operator");
+						ret = -EINVAL;
 						goto out_operand_stack_free;
 					}
 
@@ -1090,21 +1132,38 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 						goto out_operand_stack_free;
 					}
 
-					formula_last = text2double(formula_last, formula_end, operand, &result);
-					break;
-				case OPERATOR_PI_ID:
-					result = PI;
-					break;
+					formula = text2double(formula_last, formula_end, operand, &result);
+					double_stack_push(&stack_operand, result);
+					continue;
 				default:
-					pr_red_info("unknown operator `%s'", desc->symbols[0]);
+					pr_red_info("invalid operator `%s'", desc->symbols[0]);
 					ret = -EINVAL;
 					goto out_operand_stack_free;
 				}
+			}
 
-				ret = double_stack_push(&stack_operand, result);
+			while (1)
+			{
+				operator_top = general_stack_get_top_fd(&stack_operator);
+				if (operator_top == NULL || operator_top->priority < desc->priority)
+				{
+					break;
+				}
+
+				general_stack_pop_fd(&stack_operator);
+
+				ret = operator_top->calculation(operator_top, &stack_operand);
 				if (ret < 0)
 				{
-					pr_red_info("Operand stack overflow");
+					goto out_operand_stack_free;
+				}
+			}
+
+			if (desc->need_push == false)
+			{
+				ret = desc->calculation(desc, &stack_operand);
+				if (ret < 0)
+				{
 					goto out_operand_stack_free;
 				}
 			}

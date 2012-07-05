@@ -100,6 +100,7 @@ struct calculator_operator_descriptor
 	const char *symbols[OPERAND_MAX_SYMBOL_COUNT];
 	enum calculator_operator_identify id;
 	int priority;
+	bool need_push;
 	int (*calculation)(const struct calculator_operator_descriptor *, struct double_stack *);
 };
 
