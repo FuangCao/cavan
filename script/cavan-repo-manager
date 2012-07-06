@@ -1,0 +1,120 @@
+#!/bin/sh
+
+"""exec" python -E $0 $@
+#"""
+
+import sys, os, os.path
+from xml.dom.minidom import parse
+from getopt import getopt
+
+def pr_red_info(message):
+	print "\033[31m%s\033[0m" % message
+
+def pr_green_info(message):
+	print "\033[32m%s\033[0m" % message
+
+def pr_bold_info(message):
+	print "\033[1m%s\033[0m" % message
+
+class RepoManager:
+	def __init__(self, repo_root = None):
+		if repo_root == None:
+			self.repo_root = os.path.abspath(".")
+		else:
+			self.repo_root = os.path.abspath(repo_root)
+		self.repo_path = os.path.join(self.repo_root, ".repo")
+
+	def show_usage():
+		pr_bold_info("Usage: %s [options] output" % os.path.basename(sys.argv[0]))
+
+	def git_clone(self, url, branch, output, options = ""):
+		if os.path.isdir(output):
+			command = "cd %s && git pull && git checkout %s" % (output, branch)
+		else:
+			command = "git clone %s -b %s %s %s" % (options, branch, url, output)
+
+		pr_bold_info(command)
+
+		if os.system(command) != 0:
+			return -1
+
+		return 0
+
+	def clone_manifest(self, url, branch, pathname = None):
+		if pathname == None:
+			pathname = os.path.join(self.repo_path, "manifest")
+
+		if self.git_clone(url, branch, pathname) < 0:
+			return -1
+
+		pathname = os.path.join(self.repo_path, "manifest.xml")
+		if os.path.exists(pathname):
+			os.remove(pathname)
+		os.symlink("manifest/default.xml", pathname)
+		return 0
+
+	def parse_xml(self, manifest):
+		self.manifest_dom = parse(manifest)
+		if self.manifest_dom ==  None:
+			return -1
+
+		self.tag_manifet = self.manifest_dom.getElementsByTagName("manifest").item(0)
+		if self.tag_manifet == None:
+			pr_red_info("No manifet tag found")
+			return -1
+
+		self.tag_remote = self.tag_manifet.getElementsByTagName("remote").item(0)
+		if self.tag_remote == None:
+			pr_red_info("No remote tag found")
+
+		self.tag_default = self.tag_manifet.getElementsByTagName("default").item(0)
+		if self.tag_default == None:
+			pr_red_info("No default tag found")
+			return -1
+
+		self.remote_url = self.tag_remote.getAttribute("fetch")
+		self.remote_name = self.tag_remote.getAttribute("name")
+		self.git_branch = self.tag_default.getAttribute("revision")
+
+		pr_bold_info("remote_url = " + self.remote_url)
+		pr_bold_info("remote_name = " + self.remote_name);
+		pr_bold_info("git_branch = " + self.git_branch)
+
+		return 0
+
+	def repo_command(self, command):
+		manifest_xml = None
+		for path in ["manifest.xml", "manifest/default.xml"]:
+			abspath = os.path.join(self.repo_path, path)
+			print "abspath = " + abspath
+			if os.path.exists(abspath):
+				manifest_xml = abspath
+				break
+
+		if manifest_xml == None:
+			pr_red_info("No manifest xml found!")
+			return -1
+		
+		if self.parse_xml(manifest_xml) < 0:
+			pr_red_info("Parse %s failed!" % manifest_xml)
+			return -1
+
+		for project in self.tag_manifet.getElementsByTagName("project"):
+			path = project.getAttribute("path")
+			name = project.getAttribute("name")
+			command_last = command.replace("<path>", path).replace("<name>", name)
+			abspath = os.path.join(self.repo_root, path)
+			pr_bold_info("%s <= `%s'" % (path, command))
+			os.chdir(abspath)
+			if os.system(command) != 0:
+				return -1
+			return 0
+
+	def repo_init(self, url, branch):
+		if self.clone_manifest(url, branch) < 0:
+			return -1
+		return 0
+
+if __name__ == "__main__":
+	repo = RepoManager("/tmp/sprdroid-4.0.3")
+	repo.repo_init("git://192.168.6.241:8888/t700/manifest.git", "idh_1153")
