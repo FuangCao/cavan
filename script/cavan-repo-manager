@@ -165,10 +165,16 @@ class RepoManager:
 			url = os.path.join(self.remote_url, name) + ".git"
 			output = os.path.join(self.repo_root, path)
 			pr_bold_info("clone `%s'" % url)
-			if not os.path.isdir(output):
-				if self.git_clone(url, self.git_branch, output, "-n") < 0:
+			if os.path.isdir(output):
+				os.chdir(output)
+				if os.system("git pull && git checkout -q %s" % self.git_branch) != 0:
+					return -1
+				if os.system("rm * -rf") != 0:
+					return -1
+			elif self.git_clone(url, self.git_branch, output, "-n") < 0:
 					pr_red_info("git clone %s failed!" % name)
 					return -1
+
 			if self.git_checkout_file(output, self.git_branch, ".gitignore") < 0:
 				return -1
 		return 0
