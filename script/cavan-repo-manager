@@ -22,27 +22,37 @@ class RepoManager:
 			self.repo_root = os.path.abspath(".")
 		else:
 			self.repo_root = os.path.abspath(repo_root)
-		self.repo_path = os.path.join(self.repo_root, ".repo")
+		self.repo_directory = os.path.join(self.repo_root, ".repo")
 
 	def mkdir_perents(self, pathname):
 		if os.path.isdir(pathname):
 			return 0
+
 		if os.path.exists(pathname):
 			os.remove(pathname)
+
 		if self.mkdir_perents(os.path.dirname(pathname)) < 0:
+			pr_red_info("%s' create perent directory failed!" % pathname)
 			return -1
-		return os.mkdir(pathname)
+
+		os.mkdir(pathname)
+		return 0
 
 	def show_usage():
 		pr_bold_info("Usage: %s [options] output" % os.path.basename(sys.argv[0]))
 
 	def git_clone(self, url, branch, output, options = ""):
 		if os.path.isdir(output):
-			command = "cd %s && git pull && git checkout %s" % (output, branch)
+			command = "git pull && git checkout %s" % branch
+		elif self.mkdir_perents(output) < 0:
+			pr_red_info("create directory %s failed!" % output)
+			return -1
 		else:
-			command = "git clone %s -b %s %s %s" % (options, branch, url, output)
+			command = "git clone %s -b %s %s ." % (options, branch, url)
 
 		pr_bold_info(command)
+
+		os.chdir(output)
 
 		if os.system(command) != 0:
 			return -1
@@ -51,22 +61,38 @@ class RepoManager:
 
 	def clone_manifest(self, url, branch, pathname = None):
 		if pathname == None:
-			pathname = os.path.join(self.repo_path, "manifest")
+			pathname = os.path.join(self.repo_directory, "manifest")
 
 		if self.git_clone(url, branch, pathname) < 0:
 			return -1
 
-		pathname = os.path.join(self.repo_path, "manifest.xml")
+		pathname = os.path.join(self.repo_directory, "manifest.xml")
 		if os.path.exists(pathname):
 			os.remove(pathname)
 		os.symlink("manifest/default.xml", pathname)
+		return 0
+
+	def git_checkout_file(self, repo_path, branch, filename):
+		os.chdir(repo_path)
+		fp = os.popen("git status -b -s --porcelain | grep --color=never \"%s\"" % filename)
+		while True:
+			line = fp.readline()[3:].strip()
+			if not line:
+				break
+			command = "git checkout %s %s" % (branch, line)
+			print command
+			if os.system(command) != 0:
+				pr_red_info("git checkout file %s failed!" % line)
+				fp.close()
+				return -1
+		fp.close()
 		return 0
 
 	def parse_xml(self, manifest_xml):
 		if manifest_xml == None or os.path.exists(manifest):
 			manifest_xml == None
 			for path in ["manifest.xml", "manifest/default.xml"]:
-				abspath = os.path.join(self.repo_path, path)
+				abspath = os.path.join(self.repo_directory, path)
 				print "abspath = " + abspath
 				if os.path.exists(abspath):
 					manifest_xml = abspath
@@ -114,21 +140,39 @@ class RepoManager:
 			command_last = command.replace("<path>", path).replace("<name>", name)
 			abspath = os.path.join(self.repo_root, path)
 			pr_bold_info("%s <= `%s'" % (path, command_last))
-			self.mkdir_perents(abspath)
+			if self.mkdir_perents(abspath) < 0:
+				pr_red_info("create directory %s failed!" % abspath)
+				return -1
+
 			os.chdir(abspath)
 			if os.system(command_last) != 0:
+				pr_red_info("execute command %s failed!" % command_last)
 				return -1
-			return 0
+		return 0
 
 	def repo_init(self, manifest_url, manifest_branch):
 		if self.clone_manifest(manifest_url, manifest_branch) < 0:
+			pr_red_info("clone manifest failed!")
 			return -1
+
 		if self.parse_xml(None) < 0:
+			pr_red_info("patse manifest xml failed!")
 			return -1
-		if self.repo_command("git clone -nb %s %s/<name> ." % (self.git_branch, self.remote_url)) < 0:
-			return -1
+
+		for project in self.tag_manifet.getElementsByTagName("project"):
+			path = project.getAttribute("path")
+			name = project.getAttribute("name")
+			url = os.path.join(self.remote_url, name) + ".git"
+			output = os.path.join(self.repo_root, path)
+			pr_bold_info("clone `%s'" % url)
+			if not os.path.isdir(output):
+				if self.git_clone(url, self.git_branch, output, "-n") < 0:
+					pr_red_info("git clone %s failed!" % name)
+					return -1
+			if self.git_checkout_file(output, self.git_branch, ".gitignore") < 0:
+				return -1
 		return 0
 
 if __name__ == "__main__":
 	repo = RepoManager("/tmp/sprdroid-4.0.3")
-	repo.repo_init("user@192.168.6.241:git/t700/manifest.git", "idh_1153")
+	repo.repo_init("~/git/t700/manifest.git", "idh_1153")
