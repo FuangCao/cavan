@@ -42,7 +42,7 @@ class RepoManager:
 		pr_bold_info("Usage: %s [options] output" % os.path.basename(sys.argv[0]))
 
 	def git_clone(self, url, branch, output, options = ""):
-		if os.path.isdir(output):
+		if os.path.isdir(os.path.join(output, ".git")):
 			command = "git pull && git checkout %s" % branch
 		elif self.mkdir_perents(output) < 0:
 			pr_red_info("create directory %s failed!" % output)
@@ -165,15 +165,12 @@ class RepoManager:
 			url = os.path.join(self.remote_url, name) + ".git"
 			output = os.path.join(self.repo_root, path)
 			pr_bold_info("clone `%s'" % url)
-			if os.path.isdir(output):
-				os.chdir(output)
-				if os.system("git pull && git checkout -q %s" % self.git_branch) != 0:
-					return -1
-				if os.system("rm * -rf") != 0:
-					return -1
-			elif self.git_clone(url, self.git_branch, output, "-n") < 0:
+			if self.git_clone(url, self.git_branch, output, "-n") < 0:
 					pr_red_info("git clone %s failed!" % name)
 					return -1
+
+			if os.system("rm %s/* -rfv" % output) != 0:
+				return -1
 
 			if self.git_checkout_file(output, self.git_branch, ".gitignore") < 0:
 				return -1
