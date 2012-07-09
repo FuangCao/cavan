@@ -162,7 +162,7 @@ function config_nfs()
 		echo "${exp} ${NFS_RO_CONFIG}"
 	done >> ${FILE_EXPORTS}
 
-	for exp in /tmp /cpan /dpan /epan /fpan /gpan
+	for exp in /tmp /temp /cavan /git /ubuntu /book /cpan /dpan /epan /fpan /gpan
 	do
 		echo "${exp} ${NFS_RW_CONFIG}"
 	done >> ${FILE_EXPORTS}
