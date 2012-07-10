@@ -3,7 +3,7 @@
 """exec" python -E $0 $@
 #"""
 
-import sys, os, os.path
+import sys, os, os.path, time
 from xml.dom.minidom import parse
 from getopt import getopt
 
@@ -19,7 +19,7 @@ def pr_bold_info(message):
 class RepoManager:
 	def __init__(self, repo_root = None):
 		if repo_root == None:
-			self.repo_root = os.path.abspath(".")
+			self.repo_root = os.path.abspath("work")
 		else:
 			self.repo_root = os.path.abspath(repo_root)
 		self.repo_directory = os.path.join(self.repo_root, ".repo")
@@ -43,12 +43,12 @@ class RepoManager:
 
 	def git_clone(self, url, branch, output, options = ""):
 		if os.path.isdir(os.path.join(output, ".git")):
-			command = "git pull && git checkout %s" % branch
+			command = "git pull %s && git checkout %s" % (url, branch)
 		elif self.mkdir_perents(output) < 0:
 			pr_red_info("create directory %s failed!" % output)
 			return -1
 		else:
-			command = "git clone %s -b %s %s ." % (options, branch, url)
+			command = "rm * -rfv && git clone %s -b %s %s ." % (options, branch, url)
 
 		pr_bold_info(command)
 
@@ -72,8 +72,8 @@ class RepoManager:
 		os.symlink("manifest/default.xml", pathname)
 		return 0
 
-	def git_checkout_file(self, repo_path, branch, filename):
-		os.chdir(repo_path)
+	def git_checkout_file(self, output, branch, filename):
+		os.chdir(output)
 		fp = os.popen("git status -b -s --porcelain | grep --color=never \"%s\"" % filename)
 		while True:
 			line = fp.readline()[3:].strip()
@@ -86,6 +86,19 @@ class RepoManager:
 				fp.close()
 				return -1
 		fp.close()
+		return 0
+
+	def git_checkout_branch(self, repo_path, branch, remote):
+		if repo_path:
+			os.chdir(repo_path)
+		if os.system("git branch | grep %s" % branch) != 0:
+			command = "git checkout %s/%s -b %s" % (remote, branch, branch)
+		else:
+			command = "git checkout %s" % branch
+		pr_bold_info(command)
+		if os.system(command) != 0:
+			pr_red_info("execute command `%s' failed" % command)
+			return -1
 		return 0
 
 	def parse_xml(self, manifest_xml):
@@ -176,6 +189,72 @@ class RepoManager:
 				return -1
 		return 0
 
+	def decom_idh_package(self, idh_path, output):
+		if os.system("rm %s -rfv" % output) != 0:
+			pr_red_info("remove %s failed" % output)
+			return -1
+
+		if self.mkdir_perents(output) != 0:
+			pr_red_info("create directory %s failed" % output)
+			return -1
+
+		os.chdir(output)
+
+		if os.system("rar x \"%s\"" % idh_path) != 0:
+			pr_red_info("decompress idh rar package failed!")
+			return -1
+
+		fp = os.popen("find -name *.tgz")
+		while True:
+			line = fp.readline().strip()
+			if not line:
+				break
+			pr_bold_info("decompress `%s'" % line)
+			if os.system("tar -xvf \"%s\"" % line) != 0:
+				pr_red_info("decompress `%s' failed" % line)
+				fp.close()
+				return -1
+		fp.close()
+
+		for fn in ["csr", "inno"]:
+			if not os.path.isdir(fn):
+				continue
+			command = "cp %s/* idh.code -av" % fn
+			pr_bold_info(command)
+			if os.system(command) != 0:
+				pr_red_info("copy `%s' failed" % fn)
+				return -1
+		return 0
+
+	def repo_merge(self, manifest_url, their_code, out_branch, their_branch):
+		# if self.repo_init(manifest_url, their_branch) < 0:
+		#	pr_red_info("init repo failed!")
+		#	return -1
+		self.parse_xml(None)
+
+		if not os.path.isdir(their_code):
+			tmp_idh_path = os.path.join(self.repo_root, "idh")
+			#if self.decom_idh_package(their_code, tmp_idh_path) < 0:
+			#	return -1
+			their_code = os.path.join(tmp_idh_path, "idh.code")
+
+		if os.system("mv %s/* %s -nv" % (their_code, self.repo_root)) != 0:
+			pr_red_info("copy code failed")
+			return -1
+
+		date = time.localtime(time.time())
+		message = "Merge code at %d.%02d.%d %d:%02d:%02d" % (date[0], date[1], date[2], date[3], date[4], date[5])
+
+		for project in self.tag_manifet.getElementsByTagName("project"):
+			path = project.getAttribute("path")
+			abspath = os.path.join(self.repo_root, path)
+			os.chdir(abspath)
+			os.system("git add -f . && git commit -asm \"%s\"" % message)
+			if self.git_checkout_branch(abspath, out_branch, "origin") != 0:
+				pr_red_info("merge code failed!")
+				return -1
+		return 0
+
 if __name__ == "__main__":
-	repo = RepoManager("/tmp/sprdroid-4.0.3")
-	repo.repo_init("~/git/t700/manifest.git", "idh_1153")
+	repo = RepoManager(None)
+	repo.repo_merge("git@192.168.6.40:T700/manifest.git", "/home/user/cavan/8810 W12.20 P5201262614512638foreavoo.rar", "eavoo_2.3.5", "idh_1153")

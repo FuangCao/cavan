@@ -38,7 +38,7 @@ def execute_repo_command(command_raw):
 if __name__ == "__main__":
 	if len(sys.argv) < 2:
 		date = time.localtime(time.time())
-		filename = "%d%02d%d%d%02d%02d.diff" % (date[0], date[1], date[2],date[3], date[4], date[5])
+		filename = "%d%02d%d%d%02d%02d.diff" % (date[0], date[1], date[2], date[3], date[4], date[5])
 		command = "git diff > %s && git reset --hard && git pull" % filename
 	else:
 		command = " ".join(sys.argv[1:])
