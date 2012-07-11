@@ -3,6 +3,11 @@
 """exec" python -E $0 $@
 #"""
 
+MANIFEST_URL = "git@192.168.6.40:T700/manifest.git"
+THEM_BRANCH = "idh_1153"
+OUR_BRANCH = "eavoo_2.3.5"
+IDH_SOURCE_PATH = "/home/user/cavan/8810 W12.20 P5201262614512638foreavoo.rar"
+
 import sys, os, os.path, time
 from xml.dom.minidom import parse
 from getopt import getopt
@@ -18,7 +23,7 @@ def pr_bold_info(message):
 
 class RepoManager:
 	def __init__(self, repo_root = None):
-		if repo_root == None:
+		if not repo_root:
 			self.repo_root = os.path.abspath("work")
 		else:
 			self.repo_root = os.path.abspath(repo_root)
@@ -41,69 +46,108 @@ class RepoManager:
 	def show_usage():
 		pr_bold_info("Usage: %s [options] output" % os.path.basename(sys.argv[0]))
 
-	def git_clone(self, url, branch, output, options = ""):
-		if os.path.isdir(os.path.join(output, ".git")):
-			command = "git pull %s && git checkout %s" % (url, branch)
-		elif self.mkdir_perents(output) < 0:
+	def cavan_popen(self, command):
+		print command
+		fp = os.popen(command)
+		if fp == None:
+			pr_red_info("Popen `%s' failed" % command)
+			return None
+		result = []
+		while True:
+			line = fp.readline()
+			if not line:
+				break
+			result.append(line.strip())
+		fp.close()
+		return result
+
+	def cavan_execute(self, command):
+		print command
+		if os.system(command) != 0:
+			pr_red_info("Execute command `%s' failed" % command)
+			return -1
+		return 0
+
+	def git_clone(self, url, branch, output, remote = None, options = ""):
+		if self.mkdir_perents(output) < 0:
 			pr_red_info("create directory %s failed!" % output)
 			return -1
-		else:
-			command = "rm * -rfv && git clone %s -b %s %s ." % (options, branch, url)
-
-		pr_bold_info(command)
 
 		os.chdir(output)
 
-		if os.system(command) != 0:
-			return -1
+		if os.path.isdir(os.path.join(output, ".git")):
+			if remote and self.set_remote_name(remote) < 0:
+				return -1
 
-		return 0
+			if self.set_remote_url(url, remote) < 0:
+				return -1
+			command = "git reset -q && git clean -xdf && git pull && git checkout %s" % branch
+		else:
+			command = "rm * -rfv && git clone %s -b %s %s ." % (options, branch, url)
+
+		return self.cavan_execute(command)
 
 	def clone_manifest(self, url, branch, pathname = None):
-		if pathname == None:
+		if not pathname:
 			pathname = os.path.join(self.repo_directory, "manifest")
 
 		if self.git_clone(url, branch, pathname) < 0:
 			return -1
 
-		pathname = os.path.join(self.repo_directory, "manifest.xml")
-		if os.path.exists(pathname):
-			os.remove(pathname)
-		os.symlink("manifest/default.xml", pathname)
-		return 0
+		manifest_path = os.path.join(self.repo_directory, "manifest.xml")
+		if os.path.exists(manifest_path):
+			os.remove(manifest_path)
+		os.symlink("manifest/default.xml", manifest_path)
+
+		if self.parse_xml(manifest_path) < 0:
+			return -1
+
+		return self.set_remote_name(self.remote_name, None, pathname)
 
 	def git_checkout_file(self, output, branch, filename):
 		os.chdir(output)
-		fp = os.popen("git status -b -s --porcelain | grep --color=never \"%s\"" % filename)
-		while True:
-			line = fp.readline()[3:].strip()
-			if not line:
-				break
-			command = "git checkout %s %s" % (branch, line)
-			print command
-			if os.system(command) != 0:
-				pr_red_info("git checkout file %s failed!" % line)
-				fp.close()
+		for fn in self.cavan_popen("git status -b -s --porcelain | grep --color=never \"%s\"" % filename):
+			if self.cavan_execute("git checkout %s %s" % (branch, fn[2:])) != 0:
 				return -1
-		fp.close()
 		return 0
 
-	def git_checkout_branch(self, repo_path, branch, remote):
+	def git_checkour_branch(self, repo_path, branch, remote = None):
 		if repo_path:
 			os.chdir(repo_path)
+
+		if not remote:
+			remote = self.remote_name
+
 		if os.system("git branch | grep %s" % branch) != 0:
 			command = "git checkout %s/%s -b %s" % (remote, branch, branch)
 		else:
 			command = "git checkout %s" % branch
-		pr_bold_info(command)
-		if os.system(command) != 0:
-			pr_red_info("execute command `%s' failed" % command)
-			return -1
-		return 0
+
+		return self.cavan_execute(command)
+
+	def set_remote_name(self, name, remote = None, repo_path = None):
+		if repo_path:
+			os.chdir(repo_path)
+
+		if not remote:
+			remote = self.cavan_popen("git remote show")[0]
+
+		if remote == name:
+			return 0
+		return self.cavan_execute("git remote rename %s %s" % (remote, name))
+
+	def set_remote_url(self, url, remote = None, repo_path = None):
+		if repo_path:
+			os.chdir(repo_path)
+
+		if not remote:
+			remote = self.cavan_popen("git remote show")[0]
+
+		return self.cavan_execute("git config remote.%s.url %s" % (remote, url))
 
 	def parse_xml(self, manifest_xml):
-		if manifest_xml == None or os.path.exists(manifest):
-			manifest_xml == None
+		if not manifest_xml or not os.path.exists(manifest_xml):
+			manifest_xml = None
 			for path in ["manifest.xml", "manifest/default.xml"]:
 				abspath = os.path.join(self.repo_directory, path)
 				print "abspath = " + abspath
@@ -111,25 +155,25 @@ class RepoManager:
 					manifest_xml = abspath
 					break
 
-		if manifest_xml == None:
+		if not manifest_xml:
 			pr_red_info("No manifest xml found!")
 			return -1
 
 		self.manifest_dom = parse(manifest_xml)
-		if self.manifest_dom ==  None:
+		if not self.manifest_dom:
 			return -1
 
 		self.tag_manifet = self.manifest_dom.getElementsByTagName("manifest").item(0)
-		if self.tag_manifet == None:
+		if not self.tag_manifet:
 			pr_red_info("No manifet tag found")
 			return -1
 
 		self.tag_remote = self.tag_manifet.getElementsByTagName("remote").item(0)
-		if self.tag_remote == None:
+		if not self.tag_remote:
 			pr_red_info("No remote tag found")
 
 		self.tag_default = self.tag_manifet.getElementsByTagName("default").item(0)
-		if self.tag_default == None:
+		if not self.tag_default:
 			pr_red_info("No default tag found")
 			return -1
 
@@ -158,8 +202,7 @@ class RepoManager:
 				return -1
 
 			os.chdir(abspath)
-			if os.system(command_last) != 0:
-				pr_red_info("execute command %s failed!" % command_last)
+			if self.cavan_execute(command_last) != 0:
 				return -1
 		return 0
 
@@ -178,11 +221,15 @@ class RepoManager:
 			url = os.path.join(self.remote_url, name) + ".git"
 			output = os.path.join(self.repo_root, path)
 			pr_bold_info("clone `%s'" % url)
-			if self.git_clone(url, self.git_branch, output, "-n") < 0:
-					pr_red_info("git clone %s failed!" % name)
-					return -1
 
-			if os.system("rm %s/* -rfv" % output) != 0:
+			if os.path.isdir(output) and self.cavan_execute("rm %s/* -rfv" % output) < 0:
+				return -1
+
+			if self.git_clone(url, self.git_branch, output, self.remote_name, "-n") < 0:
+				pr_red_info("git clone %s failed!" % name)
+				return -1
+
+			if self.cavan_execute("rm %s/* -rfv" % output) != 0:
 				return -1
 
 			if self.git_checkout_file(output, self.git_branch, ".gitignore") < 0:
@@ -190,8 +237,7 @@ class RepoManager:
 		return 0
 
 	def decom_idh_package(self, idh_path, output):
-		if os.system("rm %s -rfv" % output) != 0:
-			pr_red_info("remove %s failed" % output)
+		if self.cavan_execute("rm %s -rfv" % output) != 0:
 			return -1
 
 		if self.mkdir_perents(output) != 0:
@@ -200,46 +246,39 @@ class RepoManager:
 
 		os.chdir(output)
 
-		if os.system("rar x \"%s\"" % idh_path) != 0:
-			pr_red_info("decompress idh rar package failed!")
+		if self.cavan_execute("rar x \"%s\"" % idh_path) != 0:
 			return -1
 
-		fp = os.popen("find -name *.tgz")
-		while True:
-			line = fp.readline().strip()
-			if not line:
-				break
-			pr_bold_info("decompress `%s'" % line)
-			if os.system("tar -xvf \"%s\"" % line) != 0:
-				pr_red_info("decompress `%s' failed" % line)
-				fp.close()
+		for fn in self.cavan_popen("find -name *.tgz"):
+			if self.cavan_execute("tar -xvf \"%s\"" % fn) != 0:
 				return -1
-		fp.close()
 
 		for fn in ["csr", "inno"]:
 			if not os.path.isdir(fn):
 				continue
-			command = "cp %s/* idh.code -av" % fn
-			pr_bold_info(command)
-			if os.system(command) != 0:
-				pr_red_info("copy `%s' failed" % fn)
+
+			if self.cavan_execute("cp %s/* idh.code -av" % fn) != 0:
 				return -1
 		return 0
 
-	def repo_merge(self, manifest_url, their_code, out_branch, their_branch):
-		# if self.repo_init(manifest_url, their_branch) < 0:
-		#	pr_red_info("init repo failed!")
-		#	return -1
+	def repo_merge(self, manifest_url, them_code, our_branch, them_branch):
+		pr_bold_info("manifest_url = " + manifest_url)
+		pr_bold_info("them_branch = " + them_branch)
+		pr_bold_info("our_branch = " + our_branch)
+		pr_bold_info("them_code = " + them_code)
+
+		if self.repo_init(manifest_url, them_branch) < 0:
+			pr_red_info("init repo failed!")
+			return -1
 		self.parse_xml(None)
 
-		if not os.path.isdir(their_code):
+		if not os.path.isdir(them_code):
 			tmp_idh_path = os.path.join(self.repo_root, "idh")
-			#if self.decom_idh_package(their_code, tmp_idh_path) < 0:
-			#	return -1
-			their_code = os.path.join(tmp_idh_path, "idh.code")
+			if self.decom_idh_package(them_code, tmp_idh_path) < 0:
+				return -1
+			them_code = os.path.join(tmp_idh_path, "idh.code")
 
-		if os.system("mv %s/* %s -nv" % (their_code, self.repo_root)) != 0:
-			pr_red_info("copy code failed")
+		if self.cavan_execute("mv %s/* %s -nv" % (them_code, self.repo_root)) != 0:
 			return -1
 
 		date = time.localtime(time.time())
@@ -249,12 +288,31 @@ class RepoManager:
 			path = project.getAttribute("path")
 			abspath = os.path.join(self.repo_root, path)
 			os.chdir(abspath)
-			os.system("git add -f . && git commit -asm \"%s\"" % message)
-			if self.git_checkout_branch(abspath, out_branch, "origin") != 0:
+			self.cavan_execute("git add . && git commit -asm \"%s\"" % message)
+			if self.git_checkour_branch(abspath, our_branch, None) != 0:
 				pr_red_info("merge code failed!")
 				return -1
+			if self.cavan_execute("git merge %s" % them_branch) != 0:
+				return -1
+		pr_green_info("Repo merge is OK")
 		return 0
 
 if __name__ == "__main__":
-	repo = RepoManager(None)
-	repo.repo_merge("git@192.168.6.40:T700/manifest.git", "/home/user/cavan/8810 W12.20 P5201262614512638foreavoo.rar", "eavoo_2.3.5", "idh_1153")
+	if len(sys.argv) < 2:
+		pr_red_info("Please give some arguments")
+		sys.exit(-1)
+
+	subcmd = sys.argv[1]
+	argv = sys.argv[2:]
+
+	if subcmd == "command":
+		repo = RepoManager(".")
+		status = repo.repo_command(" ".join(argv))
+	elif subcmd == "merge":
+		repo = RepoManager(None)
+		status = repo.repo_merge(MANIFEST_URL, IDH_SOURCE_PATH, OUR_BRANCH, THEM_BRANCH)
+	else:
+		pr_red_info("Unknown subcmd `%s'" % subcmd)
+		status = -1
+
+	sys.exit(status)
