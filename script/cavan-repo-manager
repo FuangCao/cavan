@@ -81,11 +81,16 @@ class RepoManager:
 
 			if self.set_remote_url(url, remote) < 0:
 				return -1
-			command = "git reset -q && git clean -xdf && git pull && git checkout %s" % branch
-		else:
-			command = "rm * -rfv && git clone %s -b %s %s ." % (options, branch, url)
 
-		return self.cavan_execute(command)
+			return self.cavan_execute("git reset -q && git clean -xdf && git pull && git checkout %s" % branch)
+
+		if self.cavan_execute("rm * -rfv && git clone %s -b %s %s ." % (options, branch, url)) < 0:
+			return -1
+
+		if remote:
+			return self.set_remote_name(remote)
+
+		return 0
 
 	def clone_manifest(self, url, branch, pathname = None):
 		if not pathname:
@@ -292,8 +297,7 @@ class RepoManager:
 			if self.git_checkour_branch(abspath, our_branch, None) != 0:
 				pr_red_info("merge code failed!")
 				return -1
-			if self.cavan_execute("git merge %s" % them_branch) != 0:
-				return -1
+			self.cavan_execute("git merge %s" % them_branch)
 		pr_green_info("Repo merge is OK")
 		return 0
 
