@@ -150,6 +150,9 @@ class RepoManager:
 		if not remote:
 			remote = self.remote_name
 
+		if self.cavan_execute("git clean -xdf") < 0:
+			return -1
+
 		if os.path.isfile(os.path.join(DIR_GIT_REF_HEADS, branch)):
 			command = "git checkout %s" % branch
 		else:
@@ -302,7 +305,6 @@ class RepoManager:
 		if self.repo_init(manifest_url, them_branch) < 0:
 			pr_red_info("init repo failed!")
 			return -1
-		self.parse_xml(None)
 
 		if not os.path.isdir(them_code):
 			tmp_idh_path = os.path.join(self.repo_root, "idh")
@@ -316,7 +318,7 @@ class RepoManager:
 		date = time.localtime(time.time())
 		date_message = "%d.%02d.%d %d:%02d:%02d" % (date[0], date[1], date[2], date[3], date[4], date[5])
 		message_them = "Commit newest code when %s" % date_message
-		message_our = "Merge with branch `%s' when %s" % (them_branch, date_message)
+		message_our = "Merge with branch '%s' when %s" % (them_branch, date_message)
 
 		for project in self.tag_manifet.getElementsByTagName("project"):
 			path = project.getAttribute("path")
@@ -327,10 +329,15 @@ class RepoManager:
 				pr_red_info("merge code failed!")
 				return -1
 
-			self.cavan_execute("git merge %s" % them_branch)
-			while self.cavan_execute("git commit -sm \"%s\"" % message_our) < 0:
-				os.system("git status -s")
-				raw_input("Please merge the code manual and press ENTER continue")
+			if self.cavan_execute("git merge %s" % them_branch) == 0:
+				continue
+
+			while True:
+				os.system("git status")
+				pr_bold_info("Project path: %s" % abspath)
+				raw_input("Please merge manual and press ENTER continue")
+				if self.cavan_execute("git commit -sm \"%s\"" % message_our) == 0:
+					break
 
 		pr_green_info("Repo merge is OK")
 		return 0
