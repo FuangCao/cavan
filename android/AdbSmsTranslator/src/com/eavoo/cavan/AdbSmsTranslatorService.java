@@ -1,19 +1,13 @@
 package com.eavoo.cavan;
 
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.channels.Pipe;
-import java.nio.channels.Pipe.SinkChannel;
-import java.nio.channels.Pipe.SourceChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -23,14 +17,11 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.IntentSender.SendIntentException;
 import android.database.Cursor;
-import android.graphics.Paint.Join;
 import android.net.Uri;
 import android.os.IBinder;
 import android.telephony.SmsMessage;
 import android.util.Log;
-import android.widget.SlidingDrawer;
 
 public class AdbSmsTranslatorService extends Service
 {
