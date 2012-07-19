@@ -32,10 +32,10 @@ import android.telephony.SmsMessage;
 import android.util.Log;
 import android.widget.SlidingDrawer;
 
-public class AdbSMSService extends Service
+public class AdbSmsTranslatorService extends Service
 {
 	private static final int MAX_SERVICE_COUNT = 10;
-	private static final String TAG = "AdbSMSService";
+	private static final String TAG = "AdbSmsTranslatorService";
 
 	public static final String ACTION_SERVICE_RUNNING = "cavan.intent.action.SERVICE_RUNNING";
 	public static final String ACTION_SERVICE_STOPPED = "cavan.intent.action.SERVICE_STOPPED";
@@ -65,9 +65,9 @@ public class AdbSMSService extends Service
 		{
 			long threadId = cursor.getLong(1);
 			resolver.delete(Uri.parse("content://sms/conversations/" + threadId), null, null);
-			Log.d("deleteSMS", "threadId:: " + threadId);
+			Log.d(TAG, "threadId =  " + threadId);
 		} while (cursor.moveToNext());
-		
+
 		return true;
 	}
 
@@ -364,7 +364,7 @@ public class AdbSMSService extends Service
 			mLitenThread = new SocketLitenThread();
 			mLitenThread.start();
 		}
-		
+
 		if (mFile == null)
 		{
 			String pathname = intent.getStringExtra("pathname");
@@ -391,7 +391,7 @@ public class AdbSMSService extends Service
 
 		IntentFilter filter = new IntentFilter(ACTION_SMS_RECEIVED);
 		registerReceiver(mBroadcastReceiver, filter);
-		
+
 		deleteAllSms();
 	}
 
@@ -431,7 +431,7 @@ public class AdbSMSService extends Service
 					fileInputStream = new FileInputStream(mFile);
 					byte[] buff = new byte[1024];
 					int readLen;
-	
+
 					while (true)
 					{
 						readLen = fileInputStream.read(buff);
@@ -439,7 +439,7 @@ public class AdbSMSService extends Service
 						{
 							break;
 						}
-	
+
 						mOutputStreams[index].write(buff, 0, readLen);
 					}
 				}

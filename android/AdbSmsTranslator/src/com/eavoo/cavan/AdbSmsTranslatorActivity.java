@@ -16,9 +16,9 @@ import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
 
-public class AdbSMSActivity extends PreferenceActivity implements OnPreferenceChangeListener
+public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPreferenceChangeListener
 {
-	private static final String TAG = "AdbSMSActivity";
+	private static final String TAG = "AdbSmsTranslatorActivity";
 	private static final String KEY_SERVICE_ENABLE = "service_enable";
 	private static final String KEY_ADB_PORT = "adb_port";
 	private static final String KEY_TRANSLATOR_PORT = "translator_port";
@@ -26,10 +26,10 @@ public class AdbSMSActivity extends PreferenceActivity implements OnPreferenceCh
 	private CheckBoxPreference mCheckBoxPreferenceEnable;
 	private ListPreference mListPreferenceAdbPort;
 	private EditTextPreference mEditTextPreferenceTranslatorPort;
-	
+
 	private String mAdbPort;
 	private String mTranslatorPort;
-	
+
 	BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver()
 	{
 		@Override
@@ -53,14 +53,14 @@ public class AdbSMSActivity extends PreferenceActivity implements OnPreferenceCh
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		addPreferencesFromResource(R.xml.adb_sms);
-		
+
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(AdbSMSService.ACTION_SERVICE_RUNNING);
-		filter.addAction(AdbSMSService.ACTION_SERVICE_STOPPED);
-		filter.addAction(AdbSMSService.ACTION_SERVICE_START_FAILED);
-		filter.addAction(AdbSMSService.ACTION_SERVICE_STOP_FAILED);
+		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_RUNNING);
+		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_STOPPED);
+		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_START_FAILED);
+		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_STOP_FAILED);
 		registerReceiver(mBroadcastReceiver, filter);
-		
+
 		mCheckBoxPreferenceEnable = (CheckBoxPreference) findPreference(KEY_SERVICE_ENABLE);
 		mListPreferenceAdbPort = (ListPreference) findPreference(KEY_ADB_PORT);
 		mEditTextPreferenceTranslatorPort = (EditTextPreference) findPreference(KEY_TRANSLATOR_PORT);
@@ -103,7 +103,7 @@ public class AdbSMSActivity extends PreferenceActivity implements OnPreferenceCh
 
 	private boolean startService()
 	{
-		Intent intent = new Intent(getApplicationContext(), com.eavoo.cavan.AdbSMSService.class);
+		Intent intent = new Intent(getApplicationContext(), com.eavoo.cavan.AdbSmsTranslatorService.class);
 		intent.putExtra("adb_port", new Integer(mAdbPort));
 		intent.putExtra("translator_port", new Integer(mTranslatorPort));
 		Context context = getApplicationContext();
@@ -117,10 +117,10 @@ public class AdbSMSActivity extends PreferenceActivity implements OnPreferenceCh
 
 	private boolean stopService()
 	{
-		Intent intent = new Intent(getApplicationContext(), com.eavoo.cavan.AdbSMSService.class);
+		Intent intent = new Intent(getApplicationContext(), com.eavoo.cavan.AdbSmsTranslatorService.class);
 		return stopService(intent);
 	}
-	
+
 	private void setServiceEnable(int enable)
 	{
 		if (enable < 0)
@@ -139,7 +139,7 @@ public class AdbSMSActivity extends PreferenceActivity implements OnPreferenceCh
 			mCheckBoxPreferenceEnable.setSummary(R.string.service_disable);
 		}
 	}
-	
+
 	private void setAdbPort(String port)
 	{
 		if (port == null)
@@ -181,13 +181,13 @@ public class AdbSMSActivity extends PreferenceActivity implements OnPreferenceCh
 		else
 		{
 			mTranslatorPort = port;
-	
+
 			if (mCheckBoxPreferenceEnable.isChecked())
 			{
 				startService();
 			}
 		}
-		
+
 		Log.i(TAG, "mTranslatorPort = " + mTranslatorPort);
 		mEditTextPreferenceTranslatorPort.setSummary(mTranslatorPort);
 	}
@@ -195,8 +195,6 @@ public class AdbSMSActivity extends PreferenceActivity implements OnPreferenceCh
 	@Override
 	public boolean onPreferenceChange(Preference preference, Object newValue)
 	{
-		Intent intent = new Intent(this, com.eavoo.cavan.AdbSMSService.class);
-
 		if (preference.equals(mCheckBoxPreferenceEnable))
 		{
 			if (newValue.equals(true))
