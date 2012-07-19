@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ADB短信转发器</string>
+    <string name="service_anable">打开服务器</string>
+    <string name="service_disable">关闭服务器</string>
+    <string name="adb_port_setting">ADB端口号设置</string>
+    <string name="translator_port_setting">转发器端口号设置</string>
+    <string name="port_setting">端口号设置</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ADB SMS translator</string>
+    <string name="service_anable">Open service</string>
+    <string name="service_disable">Close service</string>
+    <string name="adb_port_setting">ADB port setting</string>
+    <string name="translator_port_setting">Translator port setting</string>
+    <string name="port_setting">Port setting</string>
+</resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+	<CheckBoxPreference
+		android:key="service_enable"
+		android:title="@string/app_name"
+		android:persistent="false"/>
+
+	<PreferenceCategory
+		android:key="port_settint"
+		android:title="@string/port_setting"
+		android:persistent="false"/>
+
+	<ListPreference
+		android:key="adb_port"
+		android:title="@string/adb_port_setting"
+		android:entries="@array/adb_ports"
+		android:entryValues="@array/adb_ports"
+		android:persistent="false"/>
+
+	<EditTextPreference
+		android:key="translator_port"
+		android:title="@string/translator_port_setting"
+		android:persistent="false"/>
+</PreferenceScreen>

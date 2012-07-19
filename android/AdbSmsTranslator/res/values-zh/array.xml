@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string-array name="adb_ports">
+        <item >5037</item>
+        <item >5038</item>
+    </string-array>
+</resources>
