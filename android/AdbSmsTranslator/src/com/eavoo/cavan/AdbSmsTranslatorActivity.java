@@ -35,7 +35,27 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 		@Override
 		public void onReceive(Context context, Intent intent)
 		{
-			Log.i(TAG, "onReceive: action = " + intent.getAction());
+			String action = intent.getAction();
+			Log.i(TAG, "onReceive: action = " + action);
+
+			if (action.equals(AdbSmsTranslatorService.ACTION_SERVICE_RUNNING))
+			{
+				mCheckBoxPreferenceEnable.setSummary(R.string.service_enable);
+				mCheckBoxPreferenceEnable.setChecked(true);
+			}
+			else if (action.equals(AdbSmsTranslatorService.ACTION_SERVICE_START_FAILED))
+			{
+				mCheckBoxPreferenceEnable.setSummary(R.string.service_enable_fault);
+			}
+			else if (action.equals(AdbSmsTranslatorService.ACTION_SERVICE_STOPPED))
+			{
+				mCheckBoxPreferenceEnable.setSummary(R.string.service_disable);
+				mCheckBoxPreferenceEnable.setChecked(false);
+			}
+			else if (action.equals(AdbSmsTranslatorService.ACTION_SERVICE_STOP_FAILED))
+			{
+				mCheckBoxPreferenceEnable.setSummary(R.string.service_disable_fault);
+			}
 		}
 	};
 
@@ -126,17 +146,26 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 		if (enable < 0)
 		{
 			enable = Settings.System.getInt(getContentResolver(), KEY_SERVICE_ENABLE, 0);
-			mCheckBoxPreferenceEnable.setChecked(enable != 0);
+			if (enable == 0)
+			{
+				mCheckBoxPreferenceEnable.setChecked(false);
+				mCheckBoxPreferenceEnable.setSummary(R.string.service_disable);
+			}
+			else
+			{
+				mCheckBoxPreferenceEnable.setChecked(true);
+				mCheckBoxPreferenceEnable.setSummary(R.string.service_enable);
+			}
 		}
 		else if (enable == 0)
 		{
+			mCheckBoxPreferenceEnable.setSummary(R.string.service_closeing);
 			stopService();
-			mCheckBoxPreferenceEnable.setSummary(R.string.service_anable);
 		}
 		else
 		{
+			mCheckBoxPreferenceEnable.setSummary(R.string.service_opening);
 			startService();
-			mCheckBoxPreferenceEnable.setSummary(R.string.service_disable);
 		}
 	}
 
@@ -206,7 +235,7 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 				setServiceEnable(0);
 			}
 
-			return true;
+			return false;
 		}
 		else if (preference.equals(mListPreferenceAdbPort))
 		{

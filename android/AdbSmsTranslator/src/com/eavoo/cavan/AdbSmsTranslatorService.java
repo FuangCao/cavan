@@ -264,6 +264,7 @@ public class AdbSmsTranslatorService extends Service
 				Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
 				sendBroadcast(intent);
 				e.printStackTrace();
+				return;
 			}
 		}
 
@@ -278,6 +279,7 @@ public class AdbSmsTranslatorService extends Service
 				Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
 				sendBroadcast(intent);
 				e.printStackTrace();
+				return;
 			}
 
 			mLitenThread = null;
@@ -293,6 +295,7 @@ public class AdbSmsTranslatorService extends Service
 			Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
 			sendBroadcast(intent);
 			e.printStackTrace();
+			return;
 		}
 
 		if (mFileOutputStream != null)
@@ -307,10 +310,14 @@ public class AdbSmsTranslatorService extends Service
 				Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
 				sendBroadcast(intent);
 				e.printStackTrace();
+				return;
 			}
 		}
 
 		super.onDestroy();
+
+		Intent intent = new Intent(ACTION_SERVICE_STOPPED);
+		sendBroadcast(intent);
 	}
 
 	@Override
@@ -330,7 +337,7 @@ public class AdbSmsTranslatorService extends Service
 		catch (IOException e)
 		{
 			e.printStackTrace();
-			intent.setAction(ACTION_SERVICE_START_FAILED);
+			intent = new Intent(ACTION_SERVICE_START_FAILED);
 			sendBroadcast(intent);
 
 			if (mServerSocket != null)
@@ -384,6 +391,9 @@ public class AdbSmsTranslatorService extends Service
 		registerReceiver(mBroadcastReceiver, filter);
 
 		deleteAllSms();
+
+		intent = new Intent(ACTION_SERVICE_RUNNING);
+		sendBroadcast(intent);
 	}
 
 	class SocketLitenThread extends Thread

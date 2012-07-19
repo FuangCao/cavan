@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ADB短信转发器</string>
-    <string name="service_anable">打开服务器</string>
-    <string name="service_disable">关闭服务器</string>
+    <string name="service_enable">服务器已打开</string>
+    <string name="service_disable">服务器已关闭</string>
+    <string name="service_enable_fault">打开服务器出错</string>
+    <string name="service_disable_fault">关闭服务器出错</string>
+	<string name="service_opening">正在打开服务器 ...</string>
+	<string name="service_closeing">正在关闭服务器 ...</string>
     <string name="adb_port_setting">ADB端口号设置</string>
     <string name="translator_port_setting">转发器端口号设置</string>
     <string name="port_setting">端口号设置</string>
