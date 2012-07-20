@@ -228,7 +228,6 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 		mEditTextPreferenceTranslatorPort.setSummary(mTranslatorPort);
 	}
 
-	@Override
 	public boolean onPreferenceChange(Preference preference, Object newValue)
 	{
 		if (preference.equals(mCheckBoxPreferenceEnable))

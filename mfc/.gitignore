@@ -5,3 +5,5 @@ Release
 *.plg
 *.aps
 *.clw
+*.txt
+!ReadMe.txt

@@ -84,16 +84,16 @@ public class AdbSmsTranslatorService extends Service
 
 				if (count == 0)
 				{
-					String mobile = sms.getOriginatingAddress();// 发送短信的手机号码
+					String mobile = sms.getOriginatingAddress();
 					builder.append(mobile + ",");
 
 					Date date = new Date(sms.getTimestampMillis());
 					SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					String time = format.format(date); // 得到发送时间
+					String time = format.format(date);
 					builder.append(time + ',');
 				}
 
-				String content = sms.getMessageBody(); // 短信内容
+				String content = sms.getMessageBody();
 				builder.append(content);
 
 				count++;

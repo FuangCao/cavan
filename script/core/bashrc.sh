@@ -6,7 +6,7 @@ FSLDROID_HOME="${PROJECT_HOME}/fsldroid"
 
 JAVA_HOME="${TOOLS_HOME}/jdk${JDK_VERSION}"
 JRE_HOME="${JAVA_HOME}/jre"
-SDK_HOME="${TOOLS_HOME}/android-sdk-linux_86"
+SDK_HOME="$(find ${TOOLS_HOME}/ -maxdepth 1 -name *sdk*)"
 CLASS_BIN=$(ls ${JAVA_HOME}/lib/*.jar ${JRE_HOME}/lib/*.jar | while read line; do echo -n ${line}:; done)
 
 CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
