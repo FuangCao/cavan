@@ -189,15 +189,95 @@ int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port)
 	return adb_connect_service2(ip, port, service);
 }
 
-int frecv_text_and_write(int sockfd, int fd)
+char *adb_parse_sms_single(const char *buff, const char *end, char *segments[], size_t size)
 {
-	char buff[1024];
-	ssize_t recvlen;
-	ssize_t writelen;
+	int i;
+	char *p;
+
+	end = text_find_line_end(buff, end);
+	if (end == NULL)
+	{
+		return NULL;
+	}
+
+	for (i = 0, size--; i < size; i++)
+	{
+		for (p = segments[i]; buff < end; p++, buff++)
+		{
+			if (*buff == ',')
+			{
+				break;
+			}
+
+			*p = *buff;
+		}
+
+		buff++;
+		*p = 0;
+	}
+
+	for (p = segments[i]; buff < end; buff++, p++)
+	{
+		*p = *buff;
+	}
+
+	*p = 0;
+
+	return (char *)end;
+}
+
+char *adb_parse_sms_multi(const char *buff, const char *end)
+{
+	char mobile[32];
+	char time[32];
+	char content[1024];
+	char *segments[] =
+	{
+		mobile, time, content
+	};
 
 	while (1)
 	{
-		recvlen = recv(sockfd, buff, sizeof(buff), 0);
+ 		const char *temp = adb_parse_sms_single(buff, end, segments, NELEM(segments));
+		if (temp == NULL)
+		{
+			break;
+		}
+
+		println("mobile = %s", mobile);
+		println("time = %s", time);
+		println("content = %s", content);
+
+		for (buff = temp; buff < end && (*buff == '\r' || *buff == '\n'); buff++);
+	}
+
+	return (char *)buff;
+}
+
+char *adb_parse_sms_main(char *buff, char *end)
+{
+	char *p = adb_parse_sms_multi(buff, end);
+
+	while (p < end)
+	{
+		*buff++ = *p++;
+	}
+
+	return buff;
+}
+
+int frecv_text_and_write(int sockfd, int fd)
+{
+	char buff[4096], *p, *p_end;
+	ssize_t recvlen;
+	ssize_t writelen;
+
+	p = buff;
+	p_end = buff + sizeof(buff);
+
+	while (1)
+	{
+		recvlen = recv(sockfd, p, p_end - p, 0);
 		if (recvlen <= 0)
 		{
 			pr_red_info("inet_recv");
@@ -205,10 +285,9 @@ int frecv_text_and_write(int sockfd, int fd)
 		}
 
 		// println("recvlen = %d", recvlen);
+		p = adb_parse_sms_main(buff, p + recvlen);
 
-		print_ntext(buff, recvlen);
-
-		writelen = ffile_write(fd, buff, recvlen);
+		writelen = ffile_write(fd, buff, p - buff);
 		if (writelen < 0)
 		{
 			pr_red_info("ffile_write");

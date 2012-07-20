@@ -16,6 +16,9 @@
 #define ADB_STATE_OKAY		"OKAY"
 #define ADB_STATE_FAIL		"FAIL"
 
+#define NELEM(a) \
+	(sizeof(a) / sizeof((a)[0]))
+
 /////////////////////////////////////////////////////////////////////////////
 // CEavooSellStatisticDlg dialog
 
@@ -28,6 +31,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CEavooSellStatisticDlg)
 	enum { IDD = IDD_EAVOOSELLSTATISTIC_DIALOG };
+	CStatic	m_static_state;
 	CIPAddressCtrl	m_ipaddress1;
 	CListCtrl	m_list_sms;
 	UINT	m_edit_port;
@@ -51,6 +55,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnBUTTONconnect();
 	afx_msg void OnBUTTONdisconnect();
+	afx_msg void OnBUTTONstatistic();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -58,16 +63,24 @@ private:
 	SOCKET mSocket;
 	WSADATA mWsaData;
 	CFile mFile;
+	int mIsOpened;
 	char mAdbStatus[1024];
 
 public:
 	static int ThreadHandler(void *data);
-	int TextCmpLH(const char *left, const char *right);
+	static int TextCmpLH(const char *left, const char *right);
+	static char *TextFindLineEnd(const char *buff, const char *end);
+	static char *AdbParseDataSingle(const char *buff, const char *end, char *segments[], int size);
+
+private:
+	char *AdbParseDataMulti(const char *buff, const char *end);
+	char *AdbParseDataMain(char *buff, char *end);
 	int AdbReadStatus(void);
 	int AdbSendText(const char *text);
 	int AdbSendCommand(const char *command);
-	void CloseSocket(void);
 	int AdbConnect(void);
+
+	void CloseSocket(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

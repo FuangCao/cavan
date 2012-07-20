@@ -60,9 +60,23 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 	};
 
 	@Override
+	protected void onResume()
+	{
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_RUNNING);
+		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_STOPPED);
+		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_START_FAILED);
+		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_STOP_FAILED);
+		registerReceiver(mBroadcastReceiver, filter);
+
+		super.onResume();
+	}
+
+	@Override
 	protected void onPause()
 	{
 		unregisterReceiver(mBroadcastReceiver);
+
 		super.onPause();
 	}
 
@@ -73,13 +87,6 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		addPreferencesFromResource(R.xml.adb_sms);
-
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_RUNNING);
-		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_STOPPED);
-		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_START_FAILED);
-		filter.addAction(AdbSmsTranslatorService.ACTION_SERVICE_STOP_FAILED);
-		registerReceiver(mBroadcastReceiver, filter);
 
 		mCheckBoxPreferenceEnable = (CheckBoxPreference) findPreference(KEY_SERVICE_ENABLE);
 		mListPreferenceAdbPort = (ListPreference) findPreference(KEY_ADB_PORT);

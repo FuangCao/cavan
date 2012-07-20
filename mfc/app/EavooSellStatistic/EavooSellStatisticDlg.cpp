@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "EavooSellStatistic.h"
 #include "EavooSellStatisticDlg.h"
+#include "EavooSellStatisticDlg2.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -69,12 +70,14 @@ CEavooSellStatisticDlg::CEavooSellStatisticDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	mSocket = -1;
+	mIsOpened = false;
 }
 
 void CEavooSellStatisticDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CEavooSellStatisticDlg)
+	DDX_Control(pDX, IDC_STATIC_state, m_static_state);
 	DDX_Control(pDX, IDC_IPADDRESS1, m_ipaddress1);
 	DDX_Control(pDX, IDC_LIST_sms, m_list_sms);
 	DDX_Text(pDX, IDC_EDIT_port, m_edit_port);
@@ -88,6 +91,7 @@ BEGIN_MESSAGE_MAP(CEavooSellStatisticDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_connect, OnBUTTONconnect)
 	ON_BN_CLICKED(IDC_BUTTON_disconnect, OnBUTTONdisconnect)
+	ON_BN_CLICKED(IDC_BUTTON_statistic, OnBUTTONstatistic)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -122,6 +126,15 @@ BOOL CEavooSellStatisticDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+	m_list_sms.InsertColumn(0, "手机号码", LVCFMT_LEFT, 150);
+	m_list_sms.InsertColumn(1, "发送时间", LVCFMT_LEFT, 160);
+	m_list_sms.InsertColumn(2, "内容", LVCFMT_LEFT, 260);
+
+	m_edit_port = DEFAULT_SERVER_PORT;
+	m_ipaddress1.SetWindowText(DEFAULT_SERVER_IP);
+	m_static_state.SetWindowText("停止");
+
+	UpdateData(false);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -166,14 +179,6 @@ void CEavooSellStatisticDlg::OnPaint()
 	{
 		CDialog::OnPaint();
 	}
-
-	m_edit_port = DEFAULT_SERVER_PORT;
-	m_ipaddress1.SetWindowText(DEFAULT_SERVER_IP);
-	m_list_sms.InsertColumn(0, "手机号码", LVCFMT_LEFT, 100);
-	m_list_sms.InsertColumn(1, "发送时间", LVCFMT_LEFT, 200);
-	m_list_sms.InsertColumn(2, "内容", LVCFMT_LEFT, 300);
-
-	UpdateData(false);
 }
 
 // The system calls this to obtain the cursor to display while the user drags
@@ -192,56 +197,51 @@ void CEavooSellStatisticDlg::CloseSocket(void)
 	}
 }
 
+// EDUA# + 手机的IMEI号 + “,” + 手机软件版本号 + “,,,,#”
+
 int CEavooSellStatisticDlg::ThreadHandler(void *data)
 {
-	int ret;
 	int recvLen;
-	char buff[1024];
-	char mobile[32];
-	char time[32];
-	char content[1024];
-	int isOpened;
+	char buff[4096], *p, *p_end;
 	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
-	CListCtrl &list_sms = dlg->m_list_sms;
 	int sockfd = dlg->mSocket;
-	CFile &file = dlg->mFile;
 
-	isOpened = file.Open(CACHE_FILENAME, CFile::modeWrite | CFile::modeCreate, NULL);
-	if (isOpened == false)
+	dlg->mIsOpened = dlg->mFile.Open(CACHE_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, NULL);
+	if (dlg->mIsOpened == false)
 	{
-		AfxMessageBox("Open cache file failed!");
+		AfxMessageBox("打开文件失败");
 	}
+
+	dlg->mFile.SeekToEnd();
+
+	AfxMessageBox("服务器已启动");
+	dlg->m_static_state.SetWindowText("正在运行...");
+
+	p = buff;
+	p_end = buff + sizeof(buff);
+	dlg->m_list_sms.DeleteAllItems();
 
 	while (1)
 	{
-		recvLen = recv(sockfd, buff, sizeof(buff), 0);
+		recvLen = recv(sockfd, p, p_end - p, 0);
 		if (recvLen == SOCKET_ERROR || recvLen == 0)
 		{
 			break;
 		}
 
-		if (isOpened)
-		{
-			file.Write(buff, recvLen);
-			file.Flush();
-		}
-
-		ret = sscanf(buff, "%s,%s,%s", mobile, time, content);
-		if (ret == 3)
-		{
-			list_sms.InsertItem(0, mobile);
-			list_sms.SetItemText(0, 1, time);
-			list_sms.SetItemText(0, 2, content);
-		}
+		p = dlg->AdbParseDataMain(buff, p + recvLen);
 	}
 
-	if (isOpened)
+	if (dlg->mIsOpened)
 	{
-		file.Close();
+		dlg->mFile.Close();
+		dlg->mIsOpened = false;
 	}
 
-	AfxMessageBox("接收进程退出");
 	dlg->CloseSocket();
+
+	AfxMessageBox("服务器已停止工作");
+	dlg->m_static_state.SetWindowText("服务器已停止工作");
 
 	return 0;
 }
@@ -319,7 +319,6 @@ void CEavooSellStatisticDlg::OnBUTTONconnect()
 	}
 
 	AfxBeginThread((AFX_THREADPROC)CEavooSellStatisticDlg::ThreadHandler, this);
-	AfxMessageBox("连接已经建立");
 }
 
 void CEavooSellStatisticDlg::OnBUTTONdisconnect()
@@ -421,4 +420,107 @@ int CEavooSellStatisticDlg::AdbSendCommand(const char *command)
 	}
 
 	return AdbSendText(command);
+}
+
+char *CEavooSellStatisticDlg::TextFindLineEnd(const char *buff, const char *end)
+{
+	while (buff < end)
+	{
+		if (*buff == '\r' || *buff == '\n')
+		{
+			return (char *)buff;
+		}
+
+		buff++;
+	}
+
+	return NULL;
+}
+
+char *CEavooSellStatisticDlg::AdbParseDataSingle(const char *buff, const char *end, char *segments[], int size)
+{
+	int i;
+	char *p;
+	end = TextFindLineEnd(buff, end);
+	if (end == NULL)
+	{
+		return NULL;
+	}
+
+	for (i = 0, size--; i < size; i++)
+	{
+		for (p = segments[i]; buff < end; p++, buff++)
+		{
+			if (*buff == ',')
+			{
+				break;
+			}
+
+			*p = *buff;
+		}
+
+		buff++;
+		*p = 0;
+	}
+
+	for (p = segments[i]; buff < end; buff++, p++)
+	{
+		*p = *buff;
+	}
+
+	*p = 0;
+
+	return (char *)end;
+}
+
+char *CEavooSellStatisticDlg::AdbParseDataMulti(const char *buff, const char *end)
+{
+	char mobile[32];
+	char time[32];
+	char content[1024];
+	char *segments[] =
+	{
+		mobile, time, content
+	};
+
+	while (1)
+	{
+ 		const char *temp = AdbParseDataSingle(buff, end, segments, NELEM(segments));
+		if (temp == NULL)
+		{
+			break;
+		}
+
+		m_list_sms.InsertItem(0, mobile);
+		m_list_sms.SetItemText(0, 1, time);
+		m_list_sms.SetItemText(0, 2, content);
+
+		for (buff = temp; buff < end && (*buff == '\r' || *buff == '\n'); buff++);
+	}
+
+	return (char *)buff;
+}
+
+char *CEavooSellStatisticDlg::AdbParseDataMain(char *buff, char *end)
+{
+	char *p = AdbParseDataMulti(buff, end);
+
+	if (mIsOpened)
+	{
+		mFile.Write(buff, p - buff);
+	}
+
+	while (p < end)
+	{
+		*buff++ = *p++;
+	}
+
+	return buff;
+}
+
+void CEavooSellStatisticDlg::OnBUTTONstatistic()
+{
+	CEavooSellStatisticDlg2 Dlg;
+
+	Dlg.DoModal();
 }

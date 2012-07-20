@@ -1,9 +1,5 @@
 package com.eavoo.cavan;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
@@ -39,8 +35,9 @@ public class AdbSmsTranslatorService extends Service
 	private Socket[] mClientSockets = new Socket[MAX_SERVICE_COUNT];
 	private boolean mServiceShouldStop = true;
 	private SocketLitenThread mLitenThread;
-	private File mFile;
+/*	private File mFile;
 	private FileOutputStream mFileOutputStream;
+*/
 
 	private boolean deleteAllSms()
 	{
@@ -143,7 +140,7 @@ public class AdbSmsTranslatorService extends Service
 			mClientSockets[i] = null;
 		}
 
-		if (mFileOutputStream != null)
+/*		if (mFileOutputStream != null)
 		{
 			try
 			{
@@ -165,6 +162,7 @@ public class AdbSmsTranslatorService extends Service
 				e.printStackTrace();
 			}
 		}
+*/
 	}
 
 	private void closeOutPutStreams() throws IOException
@@ -298,7 +296,7 @@ public class AdbSmsTranslatorService extends Service
 			return;
 		}
 
-		if (mFileOutputStream != null)
+/*		if (mFileOutputStream != null)
 		{
 			try
 			{
@@ -313,6 +311,7 @@ public class AdbSmsTranslatorService extends Service
 				return;
 			}
 		}
+*/
 
 		super.onDestroy();
 
@@ -363,7 +362,7 @@ public class AdbSmsTranslatorService extends Service
 			mLitenThread.start();
 		}
 
-		if (mFile == null)
+/*		if (mFile == null)
 		{
 			String pathname = intent.getStringExtra("pathname");
 			if (pathname != null)
@@ -384,7 +383,7 @@ public class AdbSmsTranslatorService extends Service
 				e.printStackTrace();
 			}
 		}
-
+*/
 		super.onStart(intent, startId);
 
 		IntentFilter filter = new IntentFilter(ACTION_SMS_RECEIVED);
@@ -423,7 +422,7 @@ public class AdbSmsTranslatorService extends Service
 				return false;
 			}
 
-			FileInputStream fileInputStream = null;
+/*			FileInputStream fileInputStream = null;
 
 			try
 			{
@@ -465,7 +464,7 @@ public class AdbSmsTranslatorService extends Service
 					e.printStackTrace();
 				}
 			}
-
+*/
 			mClientSockets[index] = socket;
 
 			return true;

@@ -2556,3 +2556,19 @@ int text_array_find(const char *text, char *buff[], int size)
 
 	return -1;
 }
+
+char *text_find_line_end(const char *text, const char *end)
+{
+	while (text < end)
+	{
+		if (*text == '\r' || *text == '\n')
+		{
+			return (char *)text;
+		}
+
+		text++;
+	}
+
+	return NULL;
+}
+
