@@ -311,6 +311,128 @@ int recv_text_and_write(int sockfd, const char *filename)
 	}
 
 	ret = frecv_text_and_write(sockfd, fd);
+
+	close(fd);
+
+	return ret;
+}
+
+int recv_sms_package(int sockfd, char *date, char *phone, char *content)
+{
+	ssize_t recvlen;
+	u8 type;
+	u32 length;
+	char *p;
+
+	phone[0] = 0;
+	date[0] = 0;
+	phone[0] = 0;
+
+	while (1)
+	{
+		recvlen = recv(sockfd, &type, sizeof(type), 0);
+		if (recvlen != sizeof(type))
+		{
+			print_error("recv");
+			return -1;
+		}
+
+		switch (type)
+		{
+		case SMS_TYPE_DATE:
+#if ADB_DEBUG
+			println("SMS_TYPE_DATE");
+#endif
+			p = date;
+			break;
+
+		case SMS_TYPE_PHONE:
+#if ADB_DEBUG
+			println("SMS_TYPE_PHONE");
+#endif
+			p = phone;
+			break;
+
+		case SMS_TYPE_CONTENT:
+#if ADB_DEBUG
+			println("SMS_TYPE_CONTENT");
+#endif
+			p = content;
+			break;
+
+		case SMS_TYPE_END:
+#if ADB_DEBUG
+			println("SMS_TYPE_END");
+#endif
+			type = SMS_TYPE_ACK;
+			return send(sockfd, &type, sizeof(type), 0);
+
+		case SMS_TYPE_TEST:
+#if ADB_DEBUG
+			println("SMS_TYPE_TEST");
+#endif
+			type = SMS_TYPE_ACK;
+			if (send(sockfd, &type, sizeof(type), 0) != sizeof(type))
+			{
+				print_error("send");
+				return -1;
+			}
+			continue;
+
+		default:
+			pr_red_info("unknown sms type");
+			return -EINVAL;
+		}
+
+		if (recv(sockfd, &length, sizeof(length), 0) != sizeof(length) || recv(sockfd, p, length, 0) != length)
+		{
+			return -1;
+		}
+
+		p[length] = 0;
+	}
+
+	return 0;
+}
+
+int frecv_sms_and_write(int sockfd, int fd)
+{
+	int ret;
+	char date[32];
+	char phone[32];
+	char content[1024];
+
+	while (1)
+	{
+		ret = recv_sms_package(sockfd, date, phone, content);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		print_sep(60);
+		println("Phone = %s", phone);
+		println("Content = %s", content);
+		println("Date = %s", date);
+	}
+
+	return 0;
+}
+
+int recv_sms_and_write(int sockfd, const char *filename)
+{
+	int ret;
+	int fd;
+
+	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0777);
+	if (fd < 0)
+	{
+		print_error("Failed to open file `%s'", filename);
+		return fd;
+	}
+
+	ret = frecv_sms_and_write(sockfd, fd);
+
 	close(fd);
 
 	return ret;

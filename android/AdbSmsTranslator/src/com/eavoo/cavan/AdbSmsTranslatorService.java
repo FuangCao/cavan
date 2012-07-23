@@ -1,11 +1,8 @@
 package com.eavoo.cavan;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -16,13 +13,13 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.IBinder;
-import android.telephony.SmsMessage;
 import android.util.Log;
 
 public class AdbSmsTranslatorService extends Service
 {
 	private static final int MAX_SERVICE_COUNT = 10;
 	private static final String TAG = "AdbSmsTranslatorService";
+	private static final boolean DEBUG = true;
 
 	public static final String ACTION_SERVICE_RUNNING = "cavan.intent.action.SERVICE_RUNNING";
 	public static final String ACTION_SERVICE_STOPPED = "cavan.intent.action.SERVICE_STOPPED";
@@ -31,13 +28,10 @@ public class AdbSmsTranslatorService extends Service
 	public static final String ACTION_SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
 
 	private ServerSocket mServerSocket;
-	private OutputStream[] mOutputStreams = new OutputStream[MAX_SERVICE_COUNT];
-	private Socket[] mClientSockets = new Socket[MAX_SERVICE_COUNT];
+	private EavooClientSocket[] mClientSockets = new EavooClientSocket[MAX_SERVICE_COUNT];
 	private boolean mServiceShouldStop = true;
 	private SocketLitenThread mLitenThread;
-/*	private File mFile;
-	private FileOutputStream mFileOutputStream;
-*/
+	private SQLiteOpenHelperMessage mSqLiteOpenHelperMessage;
 
 	private boolean deleteAllSms()
 	{
@@ -66,120 +60,78 @@ public class AdbSmsTranslatorService extends Service
 		{
 			Log.i(TAG, "action = " + intent.getAction());
 
-			Object object = intent.getExtras().get("pdus");
-			if (object == null)
+			Object []pdus = (Object []) intent.getExtras().get("pdus");
+			if (pdus == null)
 			{
 				Log.e(TAG, "object == null");
 				return;
 			}
 
-			StringBuilder builder = new StringBuilder();
-			int count = 0;
-
-			for (Object pdus : (Object[]) object)
+			try
 			{
-				byte[] pdusmessage = (byte[]) pdus;
-
-				SmsMessage sms = SmsMessage.createFromPdu(pdusmessage);
-
-				if (count == 0)
+				EavooShortMessage message = new EavooShortMessage(pdus);
+				if (sendShortMessageToClients(message) <= 0)
 				{
-					String mobile = sms.getOriginatingAddress();
-					builder.append(mobile + ",");
-
-					Date date = new Date(sms.getTimestampMillis());
-					SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					String time = format.format(date);
-					builder.append(time + ',');
+					mSqLiteOpenHelperMessage.insert(message);
 				}
-
-				String content = sms.getMessageBody();
-				builder.append(content);
-
-				count++;
 			}
-
-			builder.append("\r\n");
-			sendByteToClients(builder.toString().getBytes());
-			Log.i(TAG, "SmsMessage count = " + count);
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 
 			deleteAllSms();
 		}
 	};
 
-	private void sendByteToClients(byte[] buff)
+	private int sendShortMessageToClients(EavooShortMessage message)
 	{
-		for (int i = mOutputStreams.length - 1; i >= 0; i--)
+		byte[] buff;
+		try
 		{
-			if (mOutputStreams[i] == null)
+			buff = message.toByteArray();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			return -1;
+		}
+
+		int count = 0;
+
+		for (int i = mClientSockets.length - 1; i >= 0; i--)
+		{
+			if (mClientSockets[i] == null)
 			{
 				continue;
 			}
 
-			try
+			int ret = mClientSockets[i].write(buff);
+			if (ret < 0)
 			{
-				mOutputStreams[i].write(buff);
-				continue;
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
-
-			try
-			{
-				mOutputStreams[i].close();
 				mClientSockets[i].close();
+				mClientSockets[i] = null;
 			}
-			catch (IOException e)
+			else
 			{
-				e.printStackTrace();
+				count++;
 			}
-
-			mOutputStreams[i] = null;
-			mClientSockets[i] = null;
 		}
 
-/*		if (mFileOutputStream != null)
-		{
-			try
-			{
-				mFileOutputStream.write(buff);
-				mFileOutputStream.flush();
-			}
-			catch (IOException e)
-			{
-				try
-				{
-					mFileOutputStream.close();
-					mFileOutputStream = null;
-				}
-				catch (IOException e1)
-				{
-					e1.printStackTrace();
-				}
-
-				e.printStackTrace();
-			}
-		}
-*/
+		return count;
 	}
 
-	private void closeOutPutStreams() throws IOException
+	protected void insertIntoDatabase(EavooShortMessage message)
 	{
-		for (int i = mOutputStreams.length - 1; i >= 0; i--)
+		if (DEBUG)
 		{
-			if (mOutputStreams[i] == null)
-			{
-				continue;
-			}
-
-			mOutputStreams[i].close();
-			mOutputStreams[i] = null;
+			Log.i(TAG, "insertIntoDatabase: " + message);
 		}
+
+		mSqLiteOpenHelperMessage.insert(message);
 	}
 
-	private void closeClientSockets() throws IOException
+	private void closeClientSockets()
 	{
 		for (int i = mClientSockets.length - 1; i >= 0; i--)
 		{
@@ -199,6 +151,12 @@ public class AdbSmsTranslatorService extends Service
 		{
 			if (mClientSockets[i] == null)
 			{
+				return i;
+			}
+
+			if (mClientSockets[i].test_network() < 0)
+			{
+				mClientSockets[i].close();
 				return i;
 			}
 		}
@@ -236,6 +194,7 @@ public class AdbSmsTranslatorService extends Service
 	public void onCreate()
 	{
 		Log.i(TAG, "onCreate");
+		mSqLiteOpenHelperMessage = new SQLiteOpenHelperMessage(this, null);
 
 		super.onCreate();
 	}
@@ -283,35 +242,7 @@ public class AdbSmsTranslatorService extends Service
 			mLitenThread = null;
 		}
 
-		try
-		{
-			closeOutPutStreams();
-			closeClientSockets();
-		}
-		catch (IOException e)
-		{
-			Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
-			sendBroadcast(intent);
-			e.printStackTrace();
-			return;
-		}
-
-/*		if (mFileOutputStream != null)
-		{
-			try
-			{
-				mFileOutputStream.close();
-				mFileOutputStream = null;
-			}
-			catch (IOException e)
-			{
-				Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
-				sendBroadcast(intent);
-				e.printStackTrace();
-				return;
-			}
-		}
-*/
+		closeClientSockets();
 
 		super.onDestroy();
 
@@ -329,7 +260,6 @@ public class AdbSmsTranslatorService extends Service
 			int port = intent.getIntExtra("translator_port", 8888);
 			if (setTranslatorPort(port))
 			{
-				closeOutPutStreams();
 				closeClientSockets();
 			}
 		}
@@ -362,28 +292,6 @@ public class AdbSmsTranslatorService extends Service
 			mLitenThread.start();
 		}
 
-/*		if (mFile == null)
-		{
-			String pathname = intent.getStringExtra("pathname");
-			if (pathname != null)
-			{
-				mFile = new File(pathname);
-			}
-		}
-
-		if (mFile != null && mFileOutputStream == null)
-		{
-			try
-			{
-				mFileOutputStream = new FileOutputStream(mFile, true);
-			}
-			catch (FileNotFoundException e)
-			{
-				mFileOutputStream = null;
-				e.printStackTrace();
-			}
-		}
-*/
 		super.onStart(intent, startId);
 
 		IntentFilter filter = new IntentFilter(ACTION_SMS_RECEIVED);
@@ -399,7 +307,7 @@ public class AdbSmsTranslatorService extends Service
 	{
 		private static final String TAG = "SocketLitenThread";
 
-		private boolean HandleRequest(Socket socket)
+		synchronized private boolean HandleRequest(Socket socket)
 		{
 			int index = findFreeClientSocket();
 			if (index < 0)
@@ -413,59 +321,49 @@ public class AdbSmsTranslatorService extends Service
 
 			try
 			{
-				mOutputStreams[index] = socket.getOutputStream();
+				mClientSockets[index] = new EavooClientSocket(socket);
 			}
 			catch (IOException e)
 			{
-				mOutputStreams[index] = null;
 				e.printStackTrace();
+				mClientSockets[index] = null;
+			}
+
+			if (sendDatabaseToClient(mClientSockets[index]) == false)
+			{
+				mClientSockets[index].close();
+				mClientSockets[index] = null;
 				return false;
 			}
 
-/*			FileInputStream fileInputStream = null;
+			return true;
+		}
 
-			try
+		private boolean sendDatabaseToClient(EavooClientSocket socket)
+		{
+			Cursor cursor = mSqLiteOpenHelperMessage.quertAll();
+			if (cursor.moveToFirst() == false)
 			{
-				if (mFile != null)
+				return true;
+			}
+
+			do
+			{
+				EavooShortMessage message = new EavooShortMessage(cursor);
+				if (DEBUG)
 				{
-					fileInputStream = new FileInputStream(mFile);
-					byte[] buff = new byte[1024];
-					int readLen;
-
-					while (true)
-					{
-						readLen = fileInputStream.read(buff);
-						if (readLen <= 0)
-						{
-							break;
-						}
-
-						mOutputStreams[index].write(buff, 0, readLen);
-					}
+					Log.i(TAG, "sendDatabaseToClient: " + message);
 				}
-			}
-			catch (FileNotFoundException e)
-			{
-				e.printStackTrace();
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
 
-			if (fileInputStream != null)
-			{
-				try
+				int ret = socket.write(message);
+				if (ret < 0)
 				{
-					fileInputStream.close();
+					return false;
 				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
+
+				mSqLiteOpenHelperMessage.delete(cursor.getInt(0));
 			}
-*/
-			mClientSockets[index] = socket;
+			while (cursor.moveToNext());
 
 			return true;
 		}
