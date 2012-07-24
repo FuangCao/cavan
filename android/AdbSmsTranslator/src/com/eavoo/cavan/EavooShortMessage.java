@@ -3,10 +3,10 @@ package com.eavoo.cavan;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Date;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.telephony.SmsMessage;
 
 public class EavooShortMessage
@@ -17,15 +17,15 @@ public class EavooShortMessage
 		StringBuilder builder = new StringBuilder();
 		builder.append("Phone = " + mPhone);
 		builder.append(", Content = " + mContent);
-		builder.append(", Date = " + mDate);
+		builder.append(", Date = " + Long.toHexString(mDate));
 		return builder.toString();
 	}
 
-	private String mDate;
+	private long mDate;
 	private String mPhone;
 	private String mContent;
 
-	public EavooShortMessage(String date, String phone, String content)
+	public EavooShortMessage(long date, String phone, String content)
 	{
 		mDate = date;
 		mPhone = phone;
@@ -34,7 +34,7 @@ public class EavooShortMessage
 
 	public EavooShortMessage(Cursor cursor)
 	{
-		mDate = cursor.getString(1);
+		mDate = cursor.getLong(1);
 		mPhone = cursor.getString(2);
 		mContent = cursor.getString(3);
 	}
@@ -56,11 +56,24 @@ public class EavooShortMessage
 		}
 
 		mPhone = sms.getOriginatingAddress();
-		mDate = new Date(sms.getTimestampMillis()).toGMTString();
+		mDate = sms.getTimestampMillis() / 1000;
 		mContent = contentBuilder.toString();
 	}
 
-	private static byte[] convertToByteArray(int value)
+	public static byte[] convertToByteArray(int value)
+	{
+		byte[] bytes =
+		{
+			(byte) (value & 0xFF),
+			(byte) ((value >> 8) & 0xFF),
+			(byte) ((value >> 16) & 0xFF),
+			(byte) ((value >> 24) & 0xFF),
+		};
+
+		return bytes;
+	}
+
+	public static byte[] convertToByteArray(long value)
 	{
 		byte[] bytes =
 		{
@@ -80,11 +93,18 @@ public class EavooShortMessage
 		outputStream.write(bytes);
 	}
 
+	public static void sendLong(OutputStream outputStream, int type, long value) throws IOException
+	{
+		outputStream.write(type);
+		outputStream.write(convertToByteArray(value));
+	}
+
+
 	public void sendTo(OutputStream outputStream) throws IOException
 	{
 		sendByteArray(outputStream, EavooClientSocket.SMS_TYPE_PHONE, mPhone.getBytes());
 		sendByteArray(outputStream, EavooClientSocket.SMS_TYPE_CONTENT, mContent.getBytes());
-		sendByteArray(outputStream, EavooClientSocket.SMS_TYPE_DATE, mDate.getBytes());
+		sendLong(outputStream, EavooClientSocket.SMS_TYPE_DATE, mDate);
 		outputStream.write(EavooClientSocket.SMS_TYPE_END);
 	}
 
@@ -103,5 +123,15 @@ public class EavooShortMessage
 		values.put("content", mContent);
 
 		return values;
+	}
+
+	public static void CreateDatabaseTable(SQLiteDatabase database, String name)
+	{
+		StringBuilder sqlBuilder = new StringBuilder("create table " + name);
+		sqlBuilder.append("(id integer primary key autoincrement, ");
+		sqlBuilder.append("date long not null, ");
+		sqlBuilder.append("phone text not null, ");
+		sqlBuilder.append("content text not null)");
+		database.execSQL(sqlBuilder.toString());
 	}
 }

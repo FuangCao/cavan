@@ -86,6 +86,11 @@ public class AdbSmsTranslatorService extends Service
 
 	private int sendShortMessageToClients(EavooShortMessage message)
 	{
+		if (DEBUG)
+		{
+			Log.i(TAG, "sendShortMessageToClients: " + message);
+		}
+
 		byte[] buff;
 		try
 		{

@@ -111,5 +111,5 @@ int main(int argc, char *argv[])
 		return sockfd;
 	}
 
-	return recv_sms_and_write(sockfd, argv[optind]);
+	return sms_receive_and_write(sockfd, argv[optind]);
 }

@@ -98,7 +98,7 @@ public class EavooClientSocket
 		try
 		{
 			mOutputStream.write(buff);
-			return mInputStream.read();
+			return mInputStream.read() == SMS_TYPE_ACK ? 0 : -1;
 		}
 		catch (IOException e)
 		{
@@ -113,7 +113,7 @@ public class EavooClientSocket
 		try
 		{
 			mOutputStream.write(message.toByteArray());
-			return mInputStream.read();
+			return mInputStream.read() == SMS_TYPE_ACK ? 0 : -1;
 		}
 		catch (IOException e)
 		{
@@ -128,7 +128,7 @@ public class EavooClientSocket
 		try
 		{
 			mOutputStream.write(SMS_TYPE_TEST);
-			return mInputStream.read();
+			return mInputStream.read() == SMS_TYPE_ACK ? 0 : -1;
 		}
 		catch (IOException e)
 		{

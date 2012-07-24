@@ -20,16 +20,7 @@ public class SQLiteOpenHelperMessage extends SQLiteOpenHelper
 	@Override
 	public void onCreate(SQLiteDatabase db)
 	{
-		StringBuilder sqlBuilder = new StringBuilder("create table " + DEFAULT_TABLE_NAME + "(");
-		sqlBuilder.append("id integer primary key autoincrement, ");
-		sqlBuilder.append("date text not null, ");
-		sqlBuilder.append("phone text not null, ");
-		sqlBuilder.append("content text not null");
-		sqlBuilder.append(")");
-		String sqlString = sqlBuilder.toString();
-		Log.i(TAG, "SQL = " + sqlString);
-
-		db.execSQL(sqlString);
+		EavooShortMessage.CreateDatabaseTable(db, DEFAULT_TABLE_NAME);
 	}
 
 	@Override

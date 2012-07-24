@@ -317,21 +317,41 @@ int recv_text_and_write(int sockfd, const char *filename)
 	return ret;
 }
 
-int recv_sms_package(int sockfd, char *date, char *phone, char *content)
+ssize_t sms_receive_value(int sockfd, void *value, size_t size)
 {
-	ssize_t recvlen;
-	u8 type;
-	u32 length;
-	char *p;
+	return recv(sockfd, value, size, 0) == size ? size : -1;
+}
 
-	phone[0] = 0;
-	date[0] = 0;
-	phone[0] = 0;
+ssize_t sms_receive_text(int sockfd, char *buff)
+{
+	u32 length;
+
+	if (sms_receive_value(sockfd, &length, sizeof(length)) < 0 || sms_receive_value(sockfd, buff, length) < 0)
+	{
+		return -1;
+	}
+
+	buff[length] = 0;
+
+	return length;
+}
+
+ssize_t sms_send_response(int sockfd, u8 type)
+{
+	return send(sockfd, &type, 1, 0) == 1 ? 1 : 0;
+}
+
+int sms_receive_message(int sockfd, struct eavoo_short_message *message)
+{
+	u8 type;
+
+	message->date = 0;
+	message->phone[0] = 0;
+	message->content[0] = 0;
 
 	while (1)
 	{
-		recvlen = recv(sockfd, &type, sizeof(type), 0);
-		if (recvlen != sizeof(type))
+		if (sms_receive_value(sockfd, &type, sizeof(type)) < 0)
 		{
 			print_error("recv");
 			return -1;
@@ -340,39 +360,34 @@ int recv_sms_package(int sockfd, char *date, char *phone, char *content)
 		switch (type)
 		{
 		case SMS_TYPE_DATE:
-#if ADB_DEBUG
-			println("SMS_TYPE_DATE");
-#endif
-			p = date;
+			if (sms_receive_value(sockfd, &message->date, sizeof(message->date)) < 0)
+			{
+				return -1;
+			}
 			break;
 
 		case SMS_TYPE_PHONE:
-#if ADB_DEBUG
-			println("SMS_TYPE_PHONE");
-#endif
-			p = phone;
+			if (sms_receive_text(sockfd, message->phone) < 0)
+			{
+				return -1;
+			}
 			break;
 
 		case SMS_TYPE_CONTENT:
-#if ADB_DEBUG
-			println("SMS_TYPE_CONTENT");
-#endif
-			p = content;
+			if (sms_receive_text(sockfd, message->content) < 0)
+			{
+				return -1;
+			}
 			break;
 
 		case SMS_TYPE_END:
-#if ADB_DEBUG
-			println("SMS_TYPE_END");
-#endif
-			type = SMS_TYPE_ACK;
-			return send(sockfd, &type, sizeof(type), 0);
+			return sms_send_response(sockfd, SMS_TYPE_ACK);
 
 		case SMS_TYPE_TEST:
 #if ADB_DEBUG
 			println("SMS_TYPE_TEST");
 #endif
-			type = SMS_TYPE_ACK;
-			if (send(sockfd, &type, sizeof(type), 0) != sizeof(type))
+			if (sms_send_response(sockfd, SMS_TYPE_ACK) < 0)
 			{
 				print_error("send");
 				return -1;
@@ -381,45 +396,43 @@ int recv_sms_package(int sockfd, char *date, char *phone, char *content)
 
 		default:
 			pr_red_info("unknown sms type");
+			sms_send_response(sockfd, SMS_TYPE_FAILED);
 			return -EINVAL;
 		}
-
-		if (recv(sockfd, &length, sizeof(length), 0) != sizeof(length) || recv(sockfd, p, length, 0) != length)
-		{
-			return -1;
-		}
-
-		p[length] = 0;
 	}
 
 	return 0;
 }
 
-int frecv_sms_and_write(int sockfd, int fd)
+void show_eavoo_short_message(struct eavoo_short_message *message)
+{
+	print_sep(60);
+	println("Phone = %s", message->phone);
+	println("Content = %s", message->content);
+	println("Date = 0x%08x", message->date);
+	println("Date = %s", asctime(localtime((time_t *)&message->date)));
+}
+
+int fsms_receive_and_write(int sockfd, int fd)
 {
 	int ret;
-	char date[32];
-	char phone[32];
-	char content[1024];
+	struct eavoo_short_message message;
 
 	while (1)
 	{
-		ret = recv_sms_package(sockfd, date, phone, content);
+		ret = sms_receive_message(sockfd, &message);
 		if (ret < 0)
 		{
 			return ret;
 		}
 
-		print_sep(60);
-		println("Phone = %s", phone);
-		println("Content = %s", content);
-		println("Date = %s", date);
+		show_eavoo_short_message(&message);
 	}
 
 	return 0;
 }
 
-int recv_sms_and_write(int sockfd, const char *filename)
+int sms_receive_and_write(int sockfd, const char *filename)
 {
 	int ret;
 	int fd;
@@ -431,7 +444,7 @@ int recv_sms_and_write(int sockfd, const char *filename)
 		return fd;
 	}
 
-	ret = frecv_sms_and_write(sockfd, fd);
+	ret = fsms_receive_and_write(sockfd, fd);
 
 	close(fd);
 

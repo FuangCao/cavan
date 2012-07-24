@@ -27,6 +27,13 @@ enum
 	SMS_TYPE_CONTENT
 };
 
+struct eavoo_short_message
+{
+	u32 date;
+	char phone[32];
+	char content[1024];
+};
+
 int adb_read_status(int sockfd, char *buff, size_t size);
 int adb_send_text(int sockfd, const char *text);
 int adb_connect_service_base(const char *ip, u16 port);
@@ -35,7 +42,11 @@ int adb_connect_service2(const char *ip, u16 port, const char * service);
 int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port);
 int frecv_text_and_write(int sockfd, int fd);
 int recv_text_and_write(int sockfd, const char *filename);
-int recv_sms_package(int sockfd, char *date, char *phone, char *content);
-int frecv_sms_and_write(int sockfd, int fd);
-int recv_sms_and_write(int sockfd, const char *filename);
+
+ssize_t sms_receive_value(int sockfd, void *value, size_t size);
+ssize_t sms_receive_text(int sockfd, char *buff);
+int sms_receive_message(int sockfd, struct eavoo_short_message *message);
+void show_eavoo_short_message(struct eavoo_short_message *message);
+int fsms_receive_and_write(int sockfd, int fd);
+int sms_receive_and_write(int sockfd, const char *filename);
 

@@ -10,7 +10,7 @@
 
 #define DEFAULT_SERVER_IP	"127.0.0.1"
 #define DEFAULT_SERVER_PORT	8888
-#define CACHE_FILENAME		"eavoo_sell.txt"
+#define CACHE_FILENAME		"eavoo_sell.dat"
 
 #define ADB_SERVICE_PORT	5037
 #define ADB_STATE_OKAY		"OKAY"
@@ -18,6 +18,64 @@
 
 #define NELEM(a) \
 	(sizeof(a) / sizeof((a)[0]))
+
+class CEavooSellStatisticDlg;
+
+enum
+{
+	SMS_TYPE_END = 0x00,
+	SMS_TYPE_TEST,
+	SMS_TYPE_ACK,
+	SMS_TYPE_OKAY,
+	SMS_TYPE_FAILED,
+	SMS_TYPE_DATE,
+	SMS_TYPE_PHONE,
+	SMS_TYPE_CONTENT
+};
+
+class CEavooShortMessage
+{
+friend CEavooSellStatisticDlg;
+
+private:
+	time_t mDate;
+	char mPhone[32];
+	char mContent[1024];
+
+private:
+	CListCtrl *mListCtrl;
+	SOCKET mSocket;
+	CFile &mFile;
+
+public:
+	CEavooShortMessage(CFile &file, SOCKET sockfd = 0, CListCtrl *list = NULL);
+	~CEavooShortMessage();
+
+	int Initialize(void);
+	int Uninitialize(void);
+	void InsertIntoList(void);
+
+	time_t *GetDate(void)
+	{
+		return &mDate;
+	}
+
+	int WriteType(char type);
+	int WriteText(char type, const char *text);
+	int WriteText(char type, const char *text, int length);
+	int WriteData(char type, const char *data, int size);
+	int WriteToFile(void);
+
+	int ReadData(char *buff, UINT size);
+	int ReadText(char *buff);
+	int ReadFromFile(void);
+
+	int ReceiveData(char *buff, int size);
+	int SendData(const char *buff, int size);
+	int ReceiveText(char *buff);
+	int SendResponse(char type);
+	int ReceiveFromNetwork(void);
+};
 
 /////////////////////////////////////////////////////////////////////////////
 // CEavooSellStatisticDlg dialog
@@ -60,27 +118,23 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-	SOCKET mSocket;
 	WSADATA mWsaData;
-	CFile mFile;
-	int mIsOpened;
+	SOCKET mSocket;
 	char mAdbStatus[1024];
+	CWinThread *mThread;
 
 public:
 	static int ThreadHandler(void *data);
-	static int TextCmpLH(const char *left, const char *right);
-	static char *TextFindLineEnd(const char *buff, const char *end);
-	static char *AdbParseDataSingle(const char *buff, const char *end, char *segments[], int size);
 
 private:
+	int ReceiveData(char *buff, int size);
 	char *AdbParseDataMulti(const char *buff, const char *end);
 	char *AdbParseDataMain(char *buff, char *end);
 	int AdbReadStatus(void);
 	int AdbSendText(const char *text);
 	int AdbSendCommand(const char *command);
-	int AdbConnect(void);
-
-	void CloseSocket(void);
+	int AdbConnectTcp(void);
+	int AdbConnectServer(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

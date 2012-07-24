@@ -18,12 +18,12 @@ class CMonthSellNode
 	friend CEavooSellStatisticDlg2;
 
 private:
-	char mMonth[16];
+	int mYear, mMonth;
 	int mSellCount;
 	CMonthSellNode *next;
 
 public:
-	CMonthSellNode(const char *month);
+	CMonthSellNode(int year, int month);
 };
 
 class CMonthSellLink
@@ -37,8 +37,9 @@ public:
 	CMonthSellLink(void) : mHead(NULL) {}
 	~CMonthSellLink(void);
 	void InitLinkHead(void);
-	CMonthSellNode *FindMonth(const char *month);
-	bool AddMonthSellCount(const char *month, int count);
+	CMonthSellNode *FindMonth(int year, int month);
+	bool AddMonthSellCount(int year, int month, int count);
+	bool EavooSellStatistic(const char *pathname);
 };
 
 class CEavooSellStatisticDlg2 : public CDialog
@@ -70,14 +71,6 @@ protected:
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-
-private:
-	CMonthSellLink mLink;
-
-private:
-	char *AdbParseDataMulti(const char *buff, const char *end);
-	char *AdbParseDataMain(char *buff, char *end);
-	bool EavooSellParseFile(const char *filename);
 };
 
 //{{AFX_INSERT_LOCATION}}

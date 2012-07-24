@@ -42,9 +42,10 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMonthSell methods
 
-CMonthSellNode::CMonthSellNode(const char *month)
+CMonthSellNode::CMonthSellNode(int year, int month)
 {
-	strcpy(mMonth, month);
+	mYear = year;
+	mMonth = month;
 	mSellCount = 0;
 }
 
@@ -64,11 +65,11 @@ void CMonthSellLink::InitLinkHead(void)
 	mHead = NULL;
 }
 
-CMonthSellNode *CMonthSellLink::FindMonth(const char *month)
+CMonthSellNode *CMonthSellLink::FindMonth(int year, int month)
 {
 	for (CMonthSellNode *p = mHead; p; p = p->next)
 	{
-		if (strcmp(month, p->mMonth) == 0)
+		if (p->mYear == year && p->mMonth == month)
 		{
 			return p;
 		}
@@ -77,12 +78,12 @@ CMonthSellNode *CMonthSellLink::FindMonth(const char *month)
 	return NULL;
 }
 
-bool CMonthSellLink::AddMonthSellCount(const char *month, int count)
+bool CMonthSellLink::AddMonthSellCount(int year, int month, int count)
 {
-	CMonthSellNode *p = FindMonth(month);
+	CMonthSellNode *p = FindMonth(year, month);
 	if (p == NULL)
 	{
-		p = new CMonthSellNode(month);
+		p = new CMonthSellNode(year, month);
 		if (p == NULL)
 		{
 			return false;
@@ -93,6 +94,47 @@ bool CMonthSellLink::AddMonthSellCount(const char *month, int count)
 	}
 
 	p->mSellCount += count;
+
+	return true;
+}
+
+bool CMonthSellLink::EavooSellStatistic(const char *pathname)
+{
+	CFile file;
+
+	if (file.Open(pathname, CFile::modeRead | CFile::shareDenyNone, NULL) == false)
+	{
+		return false;
+	}
+
+	CEavooShortMessage message(file, 0, NULL);
+	if (message.Initialize() < 0)
+	{
+		return false;
+	}
+
+	InitLinkHead();
+
+	struct tm *time;
+
+	while (1)
+	{
+		if (message.ReadFromFile() < 0)
+		{
+			break;
+		}
+
+		time = gmtime(message.GetDate());
+		if (time == NULL)
+		{
+			continue;
+		}
+
+		if (AddMonthSellCount(time->tm_year + 1900, time->tm_mon, 1) == false)
+		{
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -108,95 +150,26 @@ BOOL CEavooSellStatisticDlg2::OnInitDialog()
 	m_list_sell.InsertColumn(0, "月份", LVCFMT_LEFT, 180);
 	m_list_sell.InsertColumn(1, "销量", LVCFMT_LEFT, 160);
 
-	EavooSellParseFile(CACHE_FILENAME);
+	CMonthSellLink link;
+	if (link.EavooSellStatistic(CACHE_FILENAME) == false)
+	{
+		return FALSE;
+	}
+
+	int total = 0;
+	char buff[32];
+	for (CMonthSellNode *p = link.mHead; p; p = p->next)
+	{
+		sprintf(buff, "%04d年%02d月", p->mYear, p->mMonth);
+		m_list_sell.InsertItem(0, buff);
+		sprintf(buff, "%d(台)", p->mSellCount);
+		m_list_sell.SetItemText(0, 1, buff);
+		total += p->mSellCount;
+	}
+
+	sprintf(buff, "%d(台)", total);
+	m_static_total_sell.SetWindowText(buff);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
-}
-
-char *CEavooSellStatisticDlg2::AdbParseDataMulti(const char *buff, const char *end)
-{
-	char mobile[32];
-	char time[32];
-	char content[1024];
-	char *segments[] =
-	{
-		mobile, time, content
-	};
-
-	while (1)
-	{
-		const char *temp = CEavooSellStatisticDlg::AdbParseDataSingle(buff, end, segments, NELEM(segments));
-		if (temp == NULL)
-		{
-			break;
-		}
-
-		time[7] = 0;
-		mLink.AddMonthSellCount(time, 1);
-
-		for (buff = temp; buff < end && (*buff == '\r' || *buff == '\n'); buff++);
-	}
-
-	return (char *)buff;
-}
-
-char *CEavooSellStatisticDlg2::AdbParseDataMain(char *buff, char *end)
-{
-	char *p = AdbParseDataMulti(buff, end);
-
-	while (p < end)
-	{
-		*buff++ = *p++;
-	}
-
-	return buff;
-}
-
-bool CEavooSellStatisticDlg2::EavooSellParseFile(const char *filename)
-{
-	CFile file;
-
-	if (file.Open(filename, CFile::modeRead | CFile::shareDenyRead) == false)
-	{
-		return false;
-	}
-
-	char buff[4096], *p, *p_end;
-	int readLen;
-
-	p = buff;
-	p_end = buff + sizeof(buff);
-	mLink.InitLinkHead();
-
-	while (1)
-	{
-		readLen = file.Read(p, p_end - p);
-		if (readLen == 0)
-		{
-			break;
-		}
-
-		p = AdbParseDataMain(buff, p + readLen);
-	}
-
-	file.Close();
-
-	m_list_sell.DeleteAllItems();
-	int total = 0;
-
-	for (CMonthSellNode *pNode = mLink.mHead; pNode; pNode = pNode->next)
-	{
-		m_list_sell.InsertItem(0, pNode->mMonth);
-		sprintf(buff, "%d台", pNode->mSellCount);
-		m_list_sell.SetItemText(0, 1, buff);
-		total += pNode->mSellCount;
-	}
-
-	sprintf(buff, "%d台", total);
-	m_static_total_sell.SetWindowText(buff);
-
-	mLink.InitLinkHead();
-
-	return true;
 }
