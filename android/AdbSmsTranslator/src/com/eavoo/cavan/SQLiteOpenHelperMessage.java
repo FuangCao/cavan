@@ -35,8 +35,6 @@ public class SQLiteOpenHelperMessage extends SQLiteOpenHelper
 
 	public long insert(EavooShortMessage message)
 	{
-		Log.i(TAG, "insert: " + message);
-
 		SQLiteDatabase database = getWritableDatabase();
 		return database.insert(DEFAULT_TABLE_NAME, null, message.toContentValues());
 	}

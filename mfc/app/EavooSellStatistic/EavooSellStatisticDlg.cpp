@@ -124,9 +124,9 @@ BOOL CEavooSellStatisticDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	m_list_sms.InsertColumn(0, "手机号码", LVCFMT_LEFT, 150);
-	m_list_sms.InsertColumn(1, "发送时间", LVCFMT_LEFT, 160);
-	m_list_sms.InsertColumn(2, "内容", LVCFMT_LEFT, 260);
+	m_list_sms.InsertColumn(0, "手机号码", LVCFMT_LEFT, 130);
+	m_list_sms.InsertColumn(1, "发送时间", LVCFMT_LEFT, 200);
+	m_list_sms.InsertColumn(2, "内容", LVCFMT_LEFT, 360);
 
 	m_edit_port = DEFAULT_SERVER_PORT;
 	m_ipaddress1.SetWindowText(DEFAULT_SERVER_IP);
@@ -186,265 +186,17 @@ HCURSOR CEavooSellStatisticDlg::OnQueryDragIcon()
 	return (HCURSOR) m_hIcon;
 }
 
-CEavooShortMessage::CEavooShortMessage(CFile &file, SOCKET sockfd, CListCtrl *list) : mFile(file)
+bool CEavooSellStatisticDlg::Initialize(void)
 {
-	mSocket = sockfd;
-	mListCtrl = list;
+	char ip[32];
+	m_ipaddress1.GetWindowText(ip, sizeof(ip));
+
+	return mMessage.Initialize(CACHE_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, m_edit_port, ip);
 }
 
-CEavooShortMessage::~CEavooShortMessage()
+void CEavooSellStatisticDlg::Uninitialize(void)
 {
-	Uninitialize();
-}
-
-int CEavooShortMessage::Initialize(void)
-{
-	if (mListCtrl)
-	{
-		mListCtrl->DeleteAllItems();
-	}
-
-	return 0;
-}
-
-int CEavooShortMessage::Uninitialize(void)
-{
-	mFile.Close();
-
-	if (socket > 0)
-	{
-		closesocket(mSocket);
-	}
-
-	return 0;
-}
-
-int CEavooShortMessage::ReceiveData(char *buff, int size)
-{
-	return recv(mSocket, buff, size, 0) == size ? size : -1;
-}
-
-int CEavooShortMessage::SendData(const char *buff, int size)
-{
-	return send(mSocket, buff, size, 0) == size ? size : -1;
-}
-
-int CEavooShortMessage::ReceiveText(char *buff)
-{
-	int length;
-
-	if (ReceiveData((char *)&length, sizeof(length)) < 0 || ReceiveData(buff, length) < 0)
-	{
-		return -1;
-	}
-
-	buff[length] = 0;
-
-	return length;
-}
-
-int CEavooShortMessage::SendResponse(char type)
-{
-	return SendData(&type, 1);
-}
-
-int CEavooShortMessage::ReceiveFromNetwork(void)
-{
-	char type;
-	int ret;
-
-	while (1)
-	{
-		if (ReceiveData(&type, sizeof(type)) < 0)
-		{
-			return -1;
-		}
-
-		switch (type)
-		{
-		case SMS_TYPE_DATE:
-			if (ReceiveData((char *)&mDate, sizeof(mDate)) < 0)
-			{
-				return -1;
-			}
-
-			if (WriteData(type, (char *)&mDate, sizeof(mDate)) < 0)
-			{
-				return -1;
-			}
-			break;
-
-		case SMS_TYPE_PHONE:
-			ret = ReceiveText(mPhone);
-			if (ret < 0)
-			{
-				return ret;
-			}
-
-			if (WriteText(type, mPhone, ret) < 0)
-			{
-				return -1;
-			}
-			break;
-
-		case SMS_TYPE_CONTENT:
-			ret = ReceiveText(mContent);
-			if (ret < 0)
-			{
-				return ret;
-			}
-
-			if (WriteText(type, mContent, ret) < 0)
-			{
-				return -1;
-			}
-			break;
-
-		case SMS_TYPE_TEST:
-			if (SendResponse(SMS_TYPE_ACK) < 0)
-			{
-				return -1;
-			}
-			continue;
-
-		case SMS_TYPE_END:
-			if (SendResponse(SMS_TYPE_ACK) < 0)
-			{
-				return -1;
-			}
-
-			if (WriteType(type) < 0)
-			{
-				return -1;
-			}
-			return 0;
-
-		default:
-			return -1;
-		}
-	}
-
-	return -1;
-}
-
-void CEavooShortMessage::InsertIntoList(void)
-{
-	mListCtrl->InsertItem(0, mPhone);
-	mListCtrl->SetItemText(0, 1, ctime(&mDate));
-	mListCtrl->SetItemText(0, 2, mContent);
-}
-
-int CEavooShortMessage::WriteType(char type)
-{
-	mFile.Write(&type, 1);
-
-	return 1;
-}
-
-int CEavooShortMessage::WriteText(char type, const char *text)
-{
-	mFile.Write(&type, 1);
-
-	int length = strlen(text);
-	mFile.Write(&length, sizeof(length));
-	mFile.Write(text, length);
-
-	return length;
-}
-
-int CEavooShortMessage::WriteText(char type, const char *text, int length)
-{
-	mFile.Write(&type, 1);
-	mFile.Write(&length, sizeof(length));
-	mFile.Write(text, length);
-
-	return length;
-}
-
-int CEavooShortMessage::WriteData(char type, const char *data, int size)
-{
-	mFile.Write(&type, 1);
-	mFile.Write(data, size);
-
-	return size;
-}
-
-int CEavooShortMessage::WriteToFile(void)
-{
-	WriteData(SMS_TYPE_DATE, (char *)&mDate, sizeof(mDate));
-	WriteText(SMS_TYPE_PHONE, mPhone);
-	WriteText(SMS_TYPE_CONTENT, mContent);
-	WriteType(SMS_TYPE_END);
-
-	return 0;
-}
-
-int CEavooShortMessage::ReadData(char *buff, UINT size)
-{
-	return mFile.Read(buff, size) == size ? size : -1;
-}
-
-int CEavooShortMessage::ReadText(char *buff)
-{
-	int length;
-
-	if (ReadData((char *)&length, sizeof(length)) < 0)
-	{
-		return -1;
-	}
-
-	if (ReadData(buff, length) < 0)
-	{
-		return -1;
-	}
-
-	buff[length] = 0;
-
-	return length;
-}
-
-int CEavooShortMessage::ReadFromFile(void)
-{
-	char type;
-
-	while (1)
-	{
-		if (ReadData(&type, 1) < 0)
-		{
-			return -1;
-		}
-
-		switch (type)
-		{
-		case SMS_TYPE_DATE:
-			if (ReadData((char *)&mDate, sizeof(mDate)) < 0)
-			{
-				return -1;
-			}
-			break;
-
-		case SMS_TYPE_PHONE:
-			if (ReadText(mPhone) < 0)
-			{
-				return -1;
-			}
-			break;
-
-		case SMS_TYPE_CONTENT:
-			if (ReadText(mContent) < 0)
-			{
-				return -1;
-			}
-
-		case SMS_TYPE_END:
-			return 0;
-
-		default:
-			return -1;
-		}
-	}
-
-	return 0;
+	mMessage.Uninitialize();
 }
 
 // EDUA# + 手机的IMEI号 + “,” + 手机软件版本号 + “,,,,#”
@@ -452,23 +204,9 @@ int CEavooShortMessage::ReadFromFile(void)
 int CEavooSellStatisticDlg::ThreadHandler(void *data)
 {
 	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
-	CFile file;
+	CEavooShortMessage &message = dlg->mMessage;
 
-	if (file.Open(CACHE_FILENAME, CFile::modeWrite | CFile::shareDenyNone | CFile::modeCreate | CFile::modeNoTruncate, NULL) == false)
-	{
-		return -1;
-	}
-
-	file.SeekToEnd();
-
-	if (dlg->AdbConnectServer() < 0)
-	{
-		dlg->mThread = NULL;
-		return -1;
-	}
-
-	CEavooShortMessage message(file, dlg->mSocket, &dlg->m_list_sms);
-	if (message.Initialize() < 0)
+	if (dlg->Initialize() == false)
 	{
 		dlg->mThread = NULL;
 		return -1;
@@ -479,19 +217,15 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 
 	while (1)
 	{
-		if (message.ReceiveFromNetwork() < 0)
+		if (message.ReceiveFromNetwork() == false)
 		{
 			break;
 		}
 
-		if (message.WriteToFile() < 0)
-		{
-			break;
-		}
-
-		message.InsertIntoList();
+		message.InsertIntoList(dlg->m_list_sms);
 	}
 
+	dlg->Uninitialize();
 	dlg->mThread = NULL;
 	AfxMessageBox("服务器已停止工作");
 	dlg->m_static_state.SetWindowText("服务器已停止工作");
@@ -499,72 +233,11 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 	return 0;
 }
 
-int CEavooSellStatisticDlg::AdbConnectServer(void)
-{
-	if (WSAStartup(MAKEWORD(2, 2), &mWsaData) != 0)
-	{
-		AfxMessageBox("启动协议失败");
-		return -1;
-	}
-
-	mSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (mSocket == INVALID_SOCKET)
-	{
-		AfxMessageBox("分配套接字失败");
-		return -1;
-	}
-
-	if (AdbConnectTcp() != 0)
-	{
-		AfxMessageBox("建立连接失败，请确认IP地址是否正确");
-		closesocket(mSocket);
-		return -1;
-	}
-
-	char command[16];
-	sprintf(command, "tcp:%04d", m_edit_port);
-	if (AdbSendCommand(command) < 0)
-	{
-		AfxMessageBox("建立连接失败，请确认端口号是否正确");
-		closesocket(mSocket);
-		return -1;
-	}
-
-	return 0;
-}
-
-int CEavooSellStatisticDlg::AdbConnectTcp(void)
-{
-	int ret;
-	char ip_address[32];
-
-	m_ipaddress1.GetWindowText(ip_address, sizeof(ip_address));
-
-	sockaddr_in addr;
-
-	addr.sin_family = AF_INET;
-	addr.sin_addr.S_un.S_addr = inet_addr(ip_address);
-	addr.sin_port = htons(ADB_SERVICE_PORT);
-
-	ret = connect(mSocket, (sockaddr *)&addr, sizeof(addr));
-	if (ret == 0)
-	{
-		return 0;
-	}
-
-	ret = system("adb start-server");
-	if (ret != 0)
-	{
-		AfxMessageBox("请安装ADB命令");
-		return -1;
-	}
-
-	return connect(mSocket, (sockaddr *)&addr, sizeof(addr));
-}
-
 void CEavooSellStatisticDlg::OnBUTTONconnect()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
+
 	if (mThread == NULL)
 	{
 		mThread = AfxBeginThread((AFX_THREADPROC)CEavooSellStatisticDlg::ThreadHandler, this);
@@ -574,87 +247,7 @@ void CEavooSellStatisticDlg::OnBUTTONconnect()
 void CEavooSellStatisticDlg::OnBUTTONdisconnect()
 {
 	// TODO: Add your control notification handler code here
-	closesocket(mSocket);
-}
-
-int CEavooSellStatisticDlg::ReceiveData(char *buff, int size)
-{
-	return recv(mSocket, buff, size, 0) == size ? size : -1;
-}
-
-int CEavooSellStatisticDlg::AdbReadStatus(void)
-{
-	if (ReceiveData(mAdbStatus, 4) < 0)
-	{
-		sprintf(mAdbStatus, "接收状态信息失败");
-		return -1;
-	}
-
-	if (strncmp(ADB_STATE_OKAY, mAdbStatus, 4) == 0)
-	{
-		return 0;
-	}
-
-	if (strncmp(ADB_STATE_FAIL, mAdbStatus, 4) == 0)
-	{
-		return -1;
-	}
-
-	int length;
-
-	sscanf(mAdbStatus, "%04x", &length);
-	if (length > sizeof(mAdbStatus))
-	{
-		length = sizeof(mAdbStatus);
-	}
-
-	if (ReceiveData(mAdbStatus, length) < 0)
-	{
-		sprintf(mAdbStatus, "接收状态信息失败");
-		return -1;
-	}
-
-	return -1;
-}
-
-int CEavooSellStatisticDlg::AdbSendText(const char *text)
-{
-	int sendLen;
-	int length = strlen(text);
-	char buff[32];
-
-	sprintf(buff, "%04x", length);
-	sendLen = send(mSocket, buff, 4, 0);
-	if (sendLen != 4)
-	{
-		AfxMessageBox("发送命令长度失败");
-		return sendLen;
-	}
-
-	sendLen = send(mSocket, text, length, 0);
-	if (sendLen != length)
-	{
-		AfxMessageBox("发送命令长度失败");
-		return sendLen;
-	}
-
-	return AdbReadStatus();
-}
-
-int CEavooSellStatisticDlg::AdbSendCommand(const char *command)
-{
-	int ret;
-
-	if (strncmp("host", command, 4))
-	{
-		ret = AdbSendText("host:transport-any");
-		if (ret < 0)
-		{
-			return ret;
-		}
-	}
-
-	return AdbSendText(command);
+	Uninitialize();
 }
 
 void CEavooSellStatisticDlg::OnBUTTONstatistic()

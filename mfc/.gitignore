@@ -6,4 +6,5 @@ Release
 *.aps
 *.clw
 *.txt
+*.dat
 !ReadMe.txt

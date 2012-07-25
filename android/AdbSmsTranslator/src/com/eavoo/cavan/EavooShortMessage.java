@@ -3,6 +3,8 @@ package com.eavoo.cavan;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -11,6 +13,28 @@ import android.telephony.SmsMessage;
 
 public class EavooShortMessage
 {
+	// EDUA# + 手机的IMEI号 + “,” + 手机软件版本号 + “,,,,#”
+	private static final Pattern mPattern = Pattern.compile("^EDUA#.*,.*,,,,#$");
+
+	private long mDate;
+	private String mPhone;
+	private String mContent;
+
+	public long getDate()
+	{
+		return mDate;
+	}
+
+	public String getPhone()
+	{
+		return mPhone;
+	}
+
+	public String getContent()
+	{
+		return mContent;
+	}
+
 	@Override
 	public String toString()
 	{
@@ -20,10 +44,6 @@ public class EavooShortMessage
 		builder.append(", Date = " + Long.toHexString(mDate));
 		return builder.toString();
 	}
-
-	private long mDate;
-	private String mPhone;
-	private String mContent;
 
 	public EavooShortMessage(long date, String phone, String content)
 	{
@@ -50,14 +70,20 @@ public class EavooShortMessage
 			contentBuilder.append(sms.getMessageBody());
 		}
 
+		mContent = contentBuilder.toString();
+		Matcher matcher = mPattern.matcher(mContent);
+		if (matcher.find() == false)
+		{
+			throw new Exception("Content not match: " + mContent);
+		}
+
 		if (sms == null)
 		{
-			throw new Exception();
+			throw new Exception("No SmsMessage found!");
 		}
 
 		mPhone = sms.getOriginatingAddress();
 		mDate = sms.getTimestampMillis() / 1000;
-		mContent = contentBuilder.toString();
 	}
 
 	public static byte[] convertToByteArray(int value)

@@ -70,8 +70,13 @@ public class AdbSmsTranslatorService extends Service
 			try
 			{
 				EavooShortMessage message = new EavooShortMessage(pdus);
-				if (sendShortMessageToClients(message) <= 0)
+				if (sendShortMessageToClients(message) > 0)
 				{
+					Log.i(TAG, "Send success: " + message);
+				}
+				else
+				{
+					Log.i(TAG, "Save to database: " + message);
 					mSqLiteOpenHelperMessage.insert(message);
 				}
 			}
@@ -86,11 +91,6 @@ public class AdbSmsTranslatorService extends Service
 
 	private int sendShortMessageToClients(EavooShortMessage message)
 	{
-		if (DEBUG)
-		{
-			Log.i(TAG, "sendShortMessageToClients: " + message);
-		}
-
 		byte[] buff;
 		try
 		{
@@ -124,16 +124,6 @@ public class AdbSmsTranslatorService extends Service
 		}
 
 		return count;
-	}
-
-	protected void insertIntoDatabase(EavooShortMessage message)
-	{
-		if (DEBUG)
-		{
-			Log.i(TAG, "insertIntoDatabase: " + message);
-		}
-
-		mSqLiteOpenHelperMessage.insert(message);
 	}
 
 	private void closeClientSockets()

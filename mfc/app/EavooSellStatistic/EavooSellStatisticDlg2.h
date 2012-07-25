@@ -23,7 +23,7 @@ private:
 	CMonthSellNode *next;
 
 public:
-	CMonthSellNode(int year, int month);
+	CMonthSellNode(int year, int month, int count = 0);
 };
 
 class CMonthSellLink

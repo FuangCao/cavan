@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "EavooSellStatistic.h"
-#include "EavooSellStatisticDlg.h"
+#include "EavooShortMessage.h"
 #include "EavooSellStatisticDlg2.h"
 
 #ifdef _DEBUG
@@ -42,11 +42,11 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMonthSell methods
 
-CMonthSellNode::CMonthSellNode(int year, int month)
+CMonthSellNode::CMonthSellNode(int year, int month, int count)
 {
 	mYear = year;
 	mMonth = month;
-	mSellCount = 0;
+	mSellCount = count;
 }
 
 CMonthSellLink::~CMonthSellLink(void)
@@ -83,7 +83,7 @@ bool CMonthSellLink::AddMonthSellCount(int year, int month, int count)
 	CMonthSellNode *p = FindMonth(year, month);
 	if (p == NULL)
 	{
-		p = new CMonthSellNode(year, month);
+		p = new CMonthSellNode(year, month, count);
 		if (p == NULL)
 		{
 			return false;
@@ -92,23 +92,18 @@ bool CMonthSellLink::AddMonthSellCount(int year, int month, int count)
 		p->next = mHead;
 		mHead = p;
 	}
-
-	p->mSellCount += count;
+	else
+	{
+		p->mSellCount += count;
+	}
 
 	return true;
 }
 
 bool CMonthSellLink::EavooSellStatistic(const char *pathname)
 {
-	CFile file;
-
-	if (file.Open(pathname, CFile::modeRead | CFile::shareDenyNone, NULL) == false)
-	{
-		return false;
-	}
-
-	CEavooShortMessage message(file, 0, NULL);
-	if (message.Initialize() < 0)
+	CEavooShortMessage message;
+	if (message.Initialize(pathname, CFile::modeRead | CFile::shareDenyNone) == false)
 	{
 		return false;
 	}
@@ -119,7 +114,7 @@ bool CMonthSellLink::EavooSellStatistic(const char *pathname)
 
 	while (1)
 	{
-		if (message.ReadFromFile() < 0)
+		if (message.ReadFromFile() == false)
 		{
 			break;
 		}
@@ -151,10 +146,7 @@ BOOL CEavooSellStatisticDlg2::OnInitDialog()
 	m_list_sell.InsertColumn(1, "销量", LVCFMT_LEFT, 160);
 
 	CMonthSellLink link;
-	if (link.EavooSellStatistic(CACHE_FILENAME) == false)
-	{
-		return FALSE;
-	}
+	link.EavooSellStatistic(CACHE_FILENAME);
 
 	int total = 0;
 	char buff[32];
@@ -162,12 +154,12 @@ BOOL CEavooSellStatisticDlg2::OnInitDialog()
 	{
 		sprintf(buff, "%04d年%02d月", p->mYear, p->mMonth);
 		m_list_sell.InsertItem(0, buff);
-		sprintf(buff, "%d(台)", p->mSellCount);
+		sprintf(buff, "%d 台", p->mSellCount);
 		m_list_sell.SetItemText(0, 1, buff);
 		total += p->mSellCount;
 	}
 
-	sprintf(buff, "%d(台)", total);
+	sprintf(buff, "%d 台", total);
 	m_static_total_sell.SetWindowText(buff);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
