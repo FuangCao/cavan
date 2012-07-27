@@ -362,6 +362,7 @@ public class AdbSmsTranslatorService extends Service
 	class ContentObserverMessage extends ContentObserver
 	{
 		private ContentResolver mContentResolver;
+		private Thread mThread;
 
 		public ContentObserverMessage(ContentResolver resolver, Handler handler)
 		{
@@ -373,8 +374,33 @@ public class AdbSmsTranslatorService extends Service
 		public void registerContentObserver()
 		{
 			receiveMessagesFromSms();
-			receiveMessagesFromIcc();
 			mContentResolver.registerContentObserver(SMS_CONTENT_URI, true, this);
+
+			mThread = new Thread()
+			{
+				@Override
+				public void run()
+				{
+					while (mThread != null)
+					{
+						receiveMessagesFromIcc();
+
+						try
+						{
+							sleep(5 * 60 * 1000);
+						}
+						catch (InterruptedException e)
+						{
+							e.printStackTrace();
+						}
+					}
+
+					mThread = null;
+					Log.i(TAG, "ContentObserverMessage: thread exit!");
+				}
+			};
+
+			mThread.start();
 		}
 
 		public void unregisterContentObserver()
@@ -382,6 +408,14 @@ public class AdbSmsTranslatorService extends Service
 			Log.i(TAG, "unregisterContentObserver: Uri = " + SMS_CONTENT_URI);
 
 			mContentResolver.unregisterContentObserver(this);
+
+			if (mThread != null)
+			{
+				mThread.stop();
+				mThread = null;
+			}
+
+			receiveMessagesFromIcc();
 		}
 
 		private boolean receiveMessagesFromSms()
