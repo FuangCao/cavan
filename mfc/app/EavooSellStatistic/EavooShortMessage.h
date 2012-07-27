@@ -5,6 +5,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#define MAX_LIST_SIZE		1000
 #define DEFAULT_SERVER_IP	"127.0.0.1"
 #define DEFAULT_SERVER_PORT	8888
 #define CACHE_FILENAME		"eavoo_sell.dat"
@@ -24,16 +25,16 @@ enum
 	SMS_TYPE_OKAY,
 	SMS_TYPE_FAILED,
 	SMS_TYPE_DATE,
-	SMS_TYPE_PHONE,
-	SMS_TYPE_CONTENT
+	SMS_TYPE_ADDRESS,
+	SMS_TYPE_BODY
 };
 
 class CEavooShortMessage
 {
 private:
 	time_t mDate;
-	char mPhone[32];
-	char mContent[1024];
+	char mAddress[32];
+	char mBody[1024];
 
 private:
 	SOCKET mSocket;

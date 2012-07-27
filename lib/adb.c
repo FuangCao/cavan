@@ -346,8 +346,8 @@ int sms_receive_message(int sockfd, struct eavoo_short_message *message)
 	u8 type;
 
 	message->date = 0;
-	message->phone[0] = 0;
-	message->content[0] = 0;
+	message->address[0] = 0;
+	message->body[0] = 0;
 
 	while (1)
 	{
@@ -366,15 +366,15 @@ int sms_receive_message(int sockfd, struct eavoo_short_message *message)
 			}
 			break;
 
-		case SMS_TYPE_PHONE:
-			if (sms_receive_text(sockfd, message->phone) < 0)
+		case SMS_TYPE_ADDRESS:
+			if (sms_receive_text(sockfd, message->address) < 0)
 			{
 				return -1;
 			}
 			break;
 
-		case SMS_TYPE_CONTENT:
-			if (sms_receive_text(sockfd, message->content) < 0)
+		case SMS_TYPE_BODY:
+			if (sms_receive_text(sockfd, message->body) < 0)
 			{
 				return -1;
 			}
@@ -407,8 +407,8 @@ int sms_receive_message(int sockfd, struct eavoo_short_message *message)
 void show_eavoo_short_message(struct eavoo_short_message *message)
 {
 	print_sep(60);
-	println("Phone = %s", message->phone);
-	println("Content = %s", message->content);
+	println("Address = %s", message->address);
+	println("Body = %s", message->body);
 	println("Date = 0x%08x", message->date);
 	println("Date = %s", asctime(localtime((time_t *)&message->date)));
 }

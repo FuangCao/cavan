@@ -23,15 +23,15 @@ enum
 	SMS_TYPE_OKAY,
 	SMS_TYPE_FAILED,
 	SMS_TYPE_DATE,
-	SMS_TYPE_PHONE,
-	SMS_TYPE_CONTENT
+	SMS_TYPE_ADDRESS,
+	SMS_TYPE_BODY
 };
 
 struct eavoo_short_message
 {
 	u32 date;
-	char phone[32];
-	char content[1024];
+	char address[32];
+	char body[1024];
 };
 
 int adb_read_status(int sockfd, char *buff, size_t size);

@@ -126,7 +126,7 @@ BOOL CEavooSellStatisticDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 	m_list_sms.InsertColumn(0, "手机号码", LVCFMT_LEFT, 130);
 	m_list_sms.InsertColumn(1, "发送时间", LVCFMT_LEFT, 200);
-	m_list_sms.InsertColumn(2, "内容", LVCFMT_LEFT, 360);
+	m_list_sms.InsertColumn(2, "短信的内容", LVCFMT_LEFT, 320);
 
 	m_edit_port = DEFAULT_SERVER_PORT;
 	m_ipaddress1.SetWindowText(DEFAULT_SERVER_IP);

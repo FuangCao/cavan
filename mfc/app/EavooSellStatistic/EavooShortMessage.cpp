@@ -174,27 +174,27 @@ bool CEavooShortMessage::ReceiveFromNetwork(void)
 			}
 			break;
 
-		case SMS_TYPE_PHONE:
-			ret = ReceiveText(mPhone);
+		case SMS_TYPE_ADDRESS:
+			ret = ReceiveText(mAddress);
 			if (ret < 0)
 			{
 				return false;
 			}
 
-			if (WriteText(type, mPhone, ret) < 0)
+			if (WriteText(type, mAddress, ret) < 0)
 			{
 				return false;
 			}
 			break;
 
-		case SMS_TYPE_CONTENT:
-			ret = ReceiveText(mContent);
+		case SMS_TYPE_BODY:
+			ret = ReceiveText(mBody);
 			if (ret < 0)
 			{
 				return false;
 			}
 
-			if (WriteText(type, mContent, ret) < 0)
+			if (WriteText(type, mBody, ret) < 0)
 			{
 				return false;
 			}
@@ -230,10 +230,16 @@ bool CEavooShortMessage::ReceiveFromNetwork(void)
 
 void CEavooShortMessage::InsertIntoList(CListCtrl &list)
 {
-	list.InsertItem(0, mPhone);
+	int count = list.GetItemCount();
+	if (count > MAX_LIST_SIZE)
+	{
+		list.DeleteItem(count - 1);
+	}
+
+	list.InsertItem(0, mAddress);
 	COleDateTime time(mDate);
 	list.SetItemText(0, 1, time.Format("%Y年%m月%d日 %H时%M分%S秒"));
-	list.SetItemText(0, 2, mContent);
+	list.SetItemText(0, 2, mBody);
 }
 
 bool CEavooShortMessage::WriteType(char type)
@@ -304,12 +310,12 @@ bool CEavooShortMessage::WriteToFile(void)
 		return false;
 	}
 
-	if (WriteText(SMS_TYPE_PHONE, mPhone) < 0)
+	if (WriteText(SMS_TYPE_ADDRESS, mAddress) < 0)
 	{
 		return false;
 	}
 
-	if (WriteText(SMS_TYPE_CONTENT, mContent) < 0)
+	if (WriteText(SMS_TYPE_BODY, mBody) < 0)
 	{
 		return false;
 	}
@@ -368,15 +374,15 @@ bool CEavooShortMessage::ReadFromFile(void)
 			}
 			break;
 
-		case SMS_TYPE_PHONE:
-			if (ReadText(mPhone) < 0)
+		case SMS_TYPE_ADDRESS:
+			if (ReadText(mAddress) < 0)
 			{
 				return false;
 			}
 			break;
 
-		case SMS_TYPE_CONTENT:
-			if (ReadText(mContent) < 0)
+		case SMS_TYPE_BODY:
+			if (ReadText(mBody) < 0)
 			{
 				return false;
 			}
@@ -411,7 +417,6 @@ bool CEavooShortMessage::AdbServerConnect(UINT port, const char *ip)
 
 	if (AdbLocalConnect() == false)
 	{
-		AfxMessageBox("建立连接失败，请确认IP地址是否正确");
 		closesocket(mSocket);
 		return false;
 	}
@@ -420,7 +425,7 @@ bool CEavooShortMessage::AdbServerConnect(UINT port, const char *ip)
 	sprintf(command, "tcp:%04d", port);
 	if (AdbSendCommand(command) == false)
 	{
-		AfxMessageBox("建立连接失败，请确认端口号是否正确");
+		AfxMessageBox("建立连接失败\n请确认端口号是否正确，手机端是否已打开");
 		closesocket(mSocket);
 		return false;
 	}
@@ -450,7 +455,15 @@ bool CEavooShortMessage::AdbLocalConnect(const char *ip)
 		return false;
 	}
 
-	return connect(mSocket, (sockaddr *)&addr, sizeof(addr)) == 0;
+	ret = connect(mSocket, (sockaddr *)&addr, sizeof(addr));
+	if (ret == 0)
+	{
+		return true;
+	}
+
+	AfxMessageBox("建立连接失败\n请确认IP地址是否正确");
+
+	return false;
 }
 
 bool CEavooShortMessage::AdbReadStatus(void)

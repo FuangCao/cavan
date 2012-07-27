@@ -13,8 +13,8 @@ public class EavooClientSocket
 	public static final int SMS_TYPE_OKAY = 0x03;
 	public static final int SMS_TYPE_FAILED = 0x04;
 	public static final int SMS_TYPE_DATE = 0x05;
-	public static final int SMS_TYPE_PHONE = 0x06;
-	public static final int SMS_TYPE_CONTENT = 0x07;
+	public static final int SMS_TYPE_ADDRESS = 0x06;
+	public static final int SMS_TYPE_BODY = 0x07;
 
 	private Socket mSocket;
 	private InputStream mInputStream;
@@ -65,7 +65,6 @@ public class EavooClientSocket
 		}
 		catch (IOException e)
 		{
-			// e.printStackTrace();
 			result = false;
 		}
 
@@ -76,7 +75,6 @@ public class EavooClientSocket
 		}
 		catch (IOException e)
 		{
-			// e.printStackTrace();
 			result = false;
 		}
 
@@ -86,7 +84,6 @@ public class EavooClientSocket
 		}
 		catch (IOException e)
 		{
-			// e.printStackTrace();
 			result = false;
 		}
 
@@ -123,18 +120,50 @@ public class EavooClientSocket
 		return -1;
 	}
 
-	public int test_network()
+	public boolean testNetwork()
 	{
 		try
 		{
 			mOutputStream.write(SMS_TYPE_TEST);
-			return mInputStream.read() == SMS_TYPE_ACK ? 0 : -1;
+			return mInputStream.read() == SMS_TYPE_ACK;
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
 		}
 
+		return false;
+	}
+
+	public static int findFreeSocket(EavooClientSocket[] sockets)
+	{
+		for (int i = sockets.length - 1; i >= 0; i--)
+		{
+			if (sockets[i] == null)
+			{
+				return i;
+			}
+
+			if (sockets[i].testNetwork() == false)
+			{
+				sockets[i].close();
+				sockets[i] = null;
+				return i;
+			}
+		}
+
 		return -1;
+	}
+
+	public static void closeAll(EavooClientSocket[] sockets)
+	{
+		for (int i = sockets.length - 1; i >= 0; i--)
+		{
+			if (sockets[i] != null)
+			{
+				sockets[i].close();
+				sockets[i] = null;
+			}
+		}
 	}
 }

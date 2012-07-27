@@ -133,10 +133,6 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 		Intent intent = new Intent(getApplicationContext(), com.eavoo.cavan.AdbSmsTranslatorService.class);
 		intent.putExtra("adb_port", new Integer(mAdbPort));
 		intent.putExtra("translator_port", new Integer(mTranslatorPort));
-		Context context = getApplicationContext();
-		String pathname = context.getFileStreamPath("eavoo.txt").getPath();
-		Log.i(TAG, "path = " + pathname);
-		intent.putExtra("pathname", pathname);
 		startService(intent);
 
 		return true;
