@@ -40,20 +40,28 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 
 			if (action.equals(AdbSmsTranslatorService.ACTION_SERVICE_RUNNING))
 			{
+				mCheckBoxPreferenceEnable.setEnabled(true);
 				mCheckBoxPreferenceEnable.setSummary(R.string.service_enable);
 				mCheckBoxPreferenceEnable.setChecked(true);
+				Settings.System.putInt(getContentResolver(), KEY_SERVICE_ENABLE, 1);
+				Settings.System.putString(getContentResolver(), KEY_ADB_PORT, mAdbPort);
+				Settings.System.putString(getContentResolver(), KEY_TRANSLATOR_PORT, mTranslatorPort);
 			}
 			else if (action.equals(AdbSmsTranslatorService.ACTION_SERVICE_START_FAILED))
 			{
+				mCheckBoxPreferenceEnable.setEnabled(true);
 				mCheckBoxPreferenceEnable.setSummary(R.string.service_enable_fault);
 			}
 			else if (action.equals(AdbSmsTranslatorService.ACTION_SERVICE_STOPPED))
 			{
+				mCheckBoxPreferenceEnable.setEnabled(true);
 				mCheckBoxPreferenceEnable.setSummary(R.string.service_disable);
 				mCheckBoxPreferenceEnable.setChecked(false);
+				Settings.System.putInt(getContentResolver(), KEY_SERVICE_ENABLE, 0);
 			}
 			else if (action.equals(AdbSmsTranslatorService.ACTION_SERVICE_STOP_FAILED))
 			{
+				mCheckBoxPreferenceEnable.setEnabled(true);
 				mCheckBoxPreferenceEnable.setSummary(R.string.service_disable_fault);
 			}
 		}
@@ -113,26 +121,14 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 	@Override
 	protected void onDestroy()
 	{
-		if (mAdbPort != null)
-		{
-			Settings.System.putString(getContentResolver(), KEY_ADB_PORT, mAdbPort);
-		}
-
-		if (mTranslatorPort != null)
-		{
-			Settings.System.putString(getContentResolver(), KEY_TRANSLATOR_PORT, mTranslatorPort);
-		}
-
-		Settings.System.putInt(getContentResolver(), KEY_SERVICE_ENABLE, mCheckBoxPreferenceEnable.isChecked() ? 1 : 0);
-
 		super.onDestroy();
 	}
 
 	private boolean startService()
 	{
 		Intent intent = new Intent(getApplicationContext(), com.eavoo.cavan.AdbSmsTranslatorService.class);
-		intent.putExtra("adb_port", new Integer(mAdbPort));
-		intent.putExtra("translator_port", new Integer(mTranslatorPort));
+		intent.putExtra("adb_port", Integer.parseInt(mAdbPort));
+		intent.putExtra("translator_port", Integer.parseInt(mTranslatorPort));
 		startService(intent);
 
 		return true;
@@ -228,6 +224,8 @@ public class AdbSmsTranslatorActivity extends PreferenceActivity implements OnPr
 	{
 		if (preference.equals(mCheckBoxPreferenceEnable))
 		{
+			mCheckBoxPreferenceEnable.setEnabled(false);
+
 			if (newValue.equals(true))
 			{
 				setServiceEnable(1);

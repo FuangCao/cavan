@@ -5,14 +5,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -26,50 +25,22 @@ public class AdbSmsTranslatorService extends Service
 
 	private static final Uri SMS_CONTENT_URI = Uri.parse("content://sms");
 	private static final Uri ICC_CONTENT_URI = Uri.parse("content://sms/icc");
-	public static final Uri CONTENT_CONVERSATIONS_URI = Uri.parse("content://mms-sms/conversations");
 
 	public static final String ACTION_SERVICE_RUNNING = "cavan.intent.action.SERVICE_RUNNING";
 	public static final String ACTION_SERVICE_STOPPED = "cavan.intent.action.SERVICE_STOPPED";
 	public static final String ACTION_SERVICE_START_FAILED = "cavan.intent.action.SERVICE_START_FAILED";
 	public static final String ACTION_SERVICE_STOP_FAILED = "cavan.intent.action.SERVICE_STOP_FAILED";
 
-	public static final String SMS_RECEIVED_ACTION = "android.provider.Telephony.SMS_RECEIVED";
-	public static final String DATA_SMS_RECEIVED_ACTION = "android.intent.action.DATA_SMS_RECEIVED";
+	// public static final String SMS_RECEIVED_ACTION = "android.provider.Telephony.SMS_RECEIVED";
+	// public static final String DATA_SMS_RECEIVED_ACTION = "android.intent.action.DATA_SMS_RECEIVED";
 
 	private ServerSocket mServerSocket;
+	private int mPort;
 	private EavooClientSocket[] mClientSockets = new EavooClientSocket[MAX_SERVICE_COUNT];
-	private boolean mServiceShouldStop = true;
 	private SocketLitenThread mLitenThread;
 	private SQLiteOpenHelperMessage mSqLiteOpenHelperMessage;
 	private SQLiteDatabase mSqLiteDatabase;
-
-	private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver()
-	{
-		@Override
-		public void onReceive(Context context, Intent intent)
-		{
-			receiveToDatabase();
-		}
-	};
-
-	private boolean setTranslatorPort(int port) throws IOException
-	{
-		if (mServerSocket != null)
-		{
-			if (mServerSocket.getLocalPort() == port)
-			{
-				return false;
-			}
-
-			mServerSocket.close();
-		}
-
-		Log.i(TAG, String.format("Server bind to port `%d'", port));
-
-		mServerSocket = new ServerSocket(port);
-
-		return true;
-	}
+	private ContentObserverMessage mContentObservers;
 
 	public long DatabaseInsert(EavooShortMessage message)
 	{
@@ -107,6 +78,7 @@ public class AdbSmsTranslatorService extends Service
 		Log.i(TAG, "onCreate");
 		mSqLiteOpenHelperMessage = new SQLiteOpenHelperMessage(this, DEFAULT_DB_NAME, DEFAULT_TABLE_NAME);
 		mSqLiteDatabase = mSqLiteOpenHelperMessage.getWritableDatabase();
+		mContentObservers = new ContentObserverMessage(getContentResolver(), new Handler());
 
 		super.onCreate();
 	}
@@ -116,39 +88,43 @@ public class AdbSmsTranslatorService extends Service
 	{
 		Log.i(TAG, "onDestroy");
 
-		mServiceShouldStop = true;
+		SocketLitenThread thread = mLitenThread;
+		mLitenThread = null;
+
 		if (mServerSocket != null)
 		{
 			try
 			{
 				mServerSocket.close();
-				mServerSocket = null;
 			}
 			catch (IOException e)
 			{
-				mServiceShouldStop = false;
+				e.printStackTrace();
+
 				Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
 				sendBroadcast(intent);
-				e.printStackTrace();
+				mLitenThread = thread;
+
 				return;
 			}
 		}
 
-		if (mLitenThread != null)
+		if (thread != null)
 		{
 			try
 			{
-				mLitenThread.join();
+				thread.join();
 			}
 			catch (InterruptedException e)
 			{
+				e.printStackTrace();
+
 				Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
 				sendBroadcast(intent);
-				e.printStackTrace();
+				mLitenThread = thread;
+
 				return;
 			}
-
-			mLitenThread = null;
 		}
 
 		mSqLiteDatabase.close();
@@ -160,39 +136,21 @@ public class AdbSmsTranslatorService extends Service
 	{
 		Log.i(TAG, "onStart");
 
-		try
+		mPort = intent.getIntExtra("translator_port", 8888);
+		if (mServerSocket != null && mServerSocket.getLocalPort() != mPort)
 		{
-			int port = intent.getIntExtra("translator_port", 8888);
-			if (setTranslatorPort(port))
+			try
 			{
-				EavooClientSocket.closeAll(mClientSockets);
+				mServerSocket.close();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
 			}
 		}
-		catch (IOException e)
+
+		if (mLitenThread == null)
 		{
-			e.printStackTrace();
-			intent = new Intent(ACTION_SERVICE_START_FAILED);
-			sendBroadcast(intent);
-
-			if (mServerSocket != null)
-			{
-				try
-				{
-					mServerSocket.close();
-				}
-				catch (IOException e1)
-				{
-					e1.printStackTrace();
-				}
-			}
-
-			return;
-		}
-
-		if (mServiceShouldStop)
-		{
-			mServiceShouldStop = false;
-
 			mLitenThread = new SocketLitenThread();
 			mLitenThread.start();
 		}
@@ -200,7 +158,7 @@ public class AdbSmsTranslatorService extends Service
 		super.onStart(intent, startId);
 	}
 
-	private int sendShortMessage(EavooShortMessage message)
+	synchronized private int sendShortMessage(EavooShortMessage message)
 	{
 		byte[] buff;
 		try
@@ -232,6 +190,11 @@ public class AdbSmsTranslatorService extends Service
 			{
 				count++;
 			}
+		}
+
+		if (count > 0)
+		{
+			Log.i(TAG, "sendShortMessage: " + message);
 		}
 
 		return count;
@@ -268,67 +231,9 @@ public class AdbSmsTranslatorService extends Service
 		return true;
 	}
 
-	private boolean receiveToDatabase()
-	{
-		receiveToDatabase(SMS_CONTENT_URI, "_id");
-		receiveToDatabase(ICC_CONTENT_URI, "index_on_icc");
-		sendDatabaseToClients();
-
-		return true;
-	}
-
-	private boolean receiveToDatabase(Uri uriQuery, String idName)
-	{
-		Log.i(TAG, "receiveToDatabase: uriQuery = " + uriQuery + ", idName = " + idName);
-
-		ContentResolver contentResolver = getContentResolver();
-		Cursor cursor = contentResolver.query(uriQuery, null, null, null, null);
-
-		if (cursor == null || cursor.moveToFirst() == false)
-		{
-			Log.i(TAG, "Cursor is empty!");
-			return true;
-		}
-
-		int indexId = cursor.getColumnIndex(idName);
-		int indexDate = cursor.getColumnIndex("date");
-		int indexAddress = cursor.getColumnIndex("address");
-		int indexBody = cursor.getColumnIndex("body");
-
-		do
-		{
-			long date = cursor.getLong(indexDate) / 1000;
-			String address = cursor.getString(indexAddress);
-			String body = cursor.getString(indexBody);
-
-			EavooShortMessage message;
-			try
-			{
-				message = new EavooShortMessage(date, address, body);
-			}
-			catch (Exception e)
-			{
-				message = null;
-			}
-
-			if (message == null || DatabaseInsert(message) > 0)
-			{
-				Uri uriDelete = uriQuery.buildUpon().appendPath(cursor.getString(indexId)).build();
-				Log.i(TAG, "uriDelete = " + uriDelete);
-				int delCount = contentResolver.delete(uriDelete, null, null);
-				Log.i(TAG, "delCount = " + delCount);
-			}
-		}
-		while (cursor.moveToNext());
-
-		return true;
-	}
-
 	class SocketLitenThread extends Thread
 	{
-		private static final String TAG = "SocketLitenThread";
-
-		synchronized private boolean HandleRequest(Socket socket)
+		private boolean HandleRequest(Socket socket)
 		{
 			int index = EavooClientSocket.findFreeSocket(mClientSockets);
 			if (index < 0)
@@ -353,47 +258,75 @@ public class AdbSmsTranslatorService extends Service
 			return true;
 		}
 
-		@Override
-		public void run()
+		Socket accept()
 		{
-			Intent intent;
-
-			receiveToDatabase();
-			intent = new Intent(ACTION_SERVICE_RUNNING);
-			sendBroadcast(intent);
-
-			IntentFilter filter = new IntentFilter();
-			filter.addAction(SMS_RECEIVED_ACTION);
-			filter.addAction(DATA_SMS_RECEIVED_ACTION);
-			registerReceiver(mBroadcastReceiver, filter);
-
-			while (mServerSocket != null)
+			while (true)
 			{
-				Log.i(TAG, "Service ready");
-
-				Socket socket;
-
-				try
+				if (mLitenThread == null)
 				{
-					socket = mServerSocket.accept();
+					break;
 				}
-				catch (IOException e)
+
+				if (mServerSocket == null)
 				{
-					if (mServiceShouldStop)
+					try
 					{
+						mServerSocket = new ServerSocket(mPort);
+					}
+					catch (IOException e)
+					{
+						e.printStackTrace();
+
+						Intent intent = new Intent(ACTION_SERVICE_START_FAILED);
+						sendBroadcast(intent);
+
+						mServerSocket = null;
 						break;
 					}
 
-					try
-					{
-						sleep(1000);
-					}
-					catch (InterruptedException e1)
-					{
-						e1.printStackTrace();
-					}
+					Intent intent = new Intent(ACTION_SERVICE_RUNNING);
+					sendBroadcast(intent);
 
-					continue;
+					Log.i(TAG, "Bind to port `" + mPort + "' success");
+				}
+
+				try
+				{
+					return mServerSocket.accept();
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+
+				try
+				{
+					mServerSocket.close();
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+
+				mServerSocket = null;
+			}
+
+			return null;
+		}
+
+		@Override
+		public void run()
+		{
+			mContentObservers.registerContentObserver();
+
+			while (true)
+			{
+				Log.i(TAG, "Service ready");
+
+				Socket socket = accept();
+				if (socket == null)
+				{
+					break;
 				}
 
 				if (HandleRequest(socket) == false)
@@ -407,17 +340,128 @@ public class AdbSmsTranslatorService extends Service
 						e.printStackTrace();
 					}
 				}
-
-				receiveToDatabase();
+				else
+				{
+					sendDatabaseToClients();
+				}
 			}
 
-			unregisterReceiver(mBroadcastReceiver);
+			mContentObservers.unregisterContentObserver();
 			EavooClientSocket.closeAll(mClientSockets);
 
-			intent = new Intent(ACTION_SERVICE_STOPPED);
+			Log.i(TAG, "Service exit!");
+
+			Intent intent = new Intent(ACTION_SERVICE_STOPPED);
 			sendBroadcast(intent);
 
-			Log.i(TAG, "Service exit!");
+			mLitenThread = null;
+			mServerSocket = null;
+		}
+	}
+
+	class ContentObserverMessage extends ContentObserver
+	{
+		private ContentResolver mContentResolver;
+
+		public ContentObserverMessage(ContentResolver resolver, Handler handler)
+		{
+			super(handler);
+
+			mContentResolver = resolver;
+		}
+
+		public void registerContentObserver()
+		{
+			receiveMessagesFromSms();
+			receiveMessagesFromIcc();
+			mContentResolver.registerContentObserver(SMS_CONTENT_URI, true, this);
+		}
+
+		public void unregisterContentObserver()
+		{
+			Log.i(TAG, "unregisterContentObserver: Uri = " + SMS_CONTENT_URI);
+
+			mContentResolver.unregisterContentObserver(this);
+		}
+
+		private boolean receiveMessagesFromSms()
+		{
+			return receiveMessages(SMS_CONTENT_URI, "_id");
+		}
+
+		private boolean receiveMessagesFromIcc()
+		{
+			return receiveMessages(ICC_CONTENT_URI, "index_on_icc");
+		}
+
+		synchronized private boolean receiveMessages(Uri uriQuery, String keyName)
+		{
+			Log.i(TAG, "receiveMessages: uriQuery = " + uriQuery + ", keyName = " + keyName);
+
+			Cursor cursor = mContentResolver.query(uriQuery, null, null, null, null);
+			if (cursor == null || cursor.moveToFirst() == false)
+			{
+				Log.i(TAG, "receiveMessage: cursor is empty!");
+				return false;
+			}
+
+			int indexKey = cursor.getColumnIndex(keyName);
+			int indexDate = cursor.getColumnIndex("date");
+			int indexAddress = cursor.getColumnIndex("address");
+			int indexBody = cursor.getColumnIndex("body");
+
+			if (indexKey < 0 || indexDate < 0 || indexAddress < 0 || indexBody < 0)
+			{
+				StringBuilder builder = new StringBuilder();
+				builder.append("indexKey = " + indexKey);
+				builder.append(", indexDate = " + indexDate);
+				builder.append(", indexAddress = " + indexAddress);
+				builder.append(", indexBody = " + indexBody);
+				Log.e(TAG, "onChange: " + builder);
+				return false;
+			}
+
+			while (true)
+			{
+				long date = cursor.getLong(indexDate) / 1000;
+				String address = cursor.getString(indexAddress);
+				String body = cursor.getString(indexBody);
+
+				EavooShortMessage message;
+				try
+				{
+					message = new EavooShortMessage(date, address, body);
+				}
+				catch (Exception e)
+				{
+					message = null;
+				}
+
+				if (message == null || (sendShortMessage(message) > 0 || DatabaseInsert(message) >= 0))
+				{
+					Uri delUri = uriQuery.buildUpon().appendPath(cursor.getString(indexKey)).build();
+					int delCount = mContentResolver.delete(delUri, null, null);
+					Log.i(TAG, "Delete uri = " + delUri + ", count = " + delCount);
+				}
+
+				if (cursor.moveToNext() == false)
+				{
+					break;
+				}
+			}
+
+			return true;
+		}
+
+		@Override
+		public void onChange(boolean selfChange)
+		{
+			Log.i(TAG, "onChange: selfChange = " + selfChange);
+
+			if (selfChange || receiveMessagesFromSms() || receiveMessagesFromIcc())
+			{
+				Log.i(TAG, "receiveMessages success");
+			}
 		}
 	}
 }
