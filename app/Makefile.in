@@ -63,7 +63,8 @@ bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
 	cavan-ftp_server$(EXEEXT) cavan-ftp$(EXEEXT) \
 	cavan-file_loop$(EXEEXT) cavan-file_join$(EXEEXT) \
 	cavan-file_crc32$(EXEEXT) cavan-fdisk$(EXEEXT) \
-	cavan-ext2$(EXEEXT) cavan-ecc$(EXEEXT) cavan-dos2unix$(EXEEXT) \
+	cavan-ext2$(EXEEXT) cavan-ecc$(EXEEXT) \
+	cavan-eavoo_sell_statistic$(EXEEXT) cavan-dos2unix$(EXEEXT) \
 	cavan-df$(EXEEXT) cavan-dd$(EXEEXT) cavan-copy$(EXEEXT) \
 	cavan-chroot$(EXEEXT) cavan-calculator$(EXEEXT) \
 	cavan-buboot$(EXEEXT) cavan-bsystem$(EXEEXT) \
@@ -138,6 +139,11 @@ cavan_df_LDADD = $(LDADD)
 am_cavan_dos2unix_OBJECTS = dos2unix.$(OBJEXT)
 cavan_dos2unix_OBJECTS = $(am_cavan_dos2unix_OBJECTS)
 cavan_dos2unix_LDADD = $(LDADD)
+am_cavan_eavoo_sell_statistic_OBJECTS =  \
+	eavoo_sell_statistic.$(OBJEXT)
+cavan_eavoo_sell_statistic_OBJECTS =  \
+	$(am_cavan_eavoo_sell_statistic_OBJECTS)
+cavan_eavoo_sell_statistic_LDADD = $(LDADD)
 am_cavan_ecc_OBJECTS = ecc.$(OBJEXT)
 cavan_ecc_OBJECTS = $(am_cavan_ecc_OBJECTS)
 cavan_ecc_LDADD = $(LDADD)
@@ -337,7 +343,8 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_bsystem_SOURCES) $(cavan_buboot_SOURCES) \
 	$(cavan_calculator_SOURCES) $(cavan_chroot_SOURCES) \
 	$(cavan_copy_SOURCES) $(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
-	$(cavan_dos2unix_SOURCES) $(cavan_ecc_SOURCES) \
+	$(cavan_dos2unix_SOURCES) \
+	$(cavan_eavoo_sell_statistic_SOURCES) $(cavan_ecc_SOURCES) \
 	$(cavan_ext2_SOURCES) $(cavan_fdisk_SOURCES) \
 	$(cavan_file_crc32_SOURCES) $(cavan_file_join_SOURCES) \
 	$(cavan_file_loop_SOURCES) $(cavan_ftp_SOURCES) \
@@ -376,7 +383,8 @@ DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_bsystem_SOURCES) $(cavan_buboot_SOURCES) \
 	$(cavan_calculator_SOURCES) $(cavan_chroot_SOURCES) \
 	$(cavan_copy_SOURCES) $(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
-	$(cavan_dos2unix_SOURCES) $(cavan_ecc_SOURCES) \
+	$(cavan_dos2unix_SOURCES) \
+	$(cavan_eavoo_sell_statistic_SOURCES) $(cavan_ecc_SOURCES) \
 	$(cavan_ext2_SOURCES) $(cavan_fdisk_SOURCES) \
 	$(cavan_file_crc32_SOURCES) $(cavan_file_join_SOURCES) \
 	$(cavan_file_loop_SOURCES) $(cavan_ftp_SOURCES) \
@@ -517,6 +525,7 @@ cavan_copy_SOURCES = copy.c
 cavan_dd_SOURCES = dd.c
 cavan_df_SOURCES = df.c
 cavan_dos2unix_SOURCES = dos2unix.c
+cavan_eavoo_sell_statistic_SOURCES = eavoo_sell_statistic.c
 cavan_ecc_SOURCES = ecc.c
 cavan_ext2_SOURCES = ext2.c
 cavan_fdisk_SOURCES = fdisk.c
@@ -703,6 +712,9 @@ cavan-df$(EXEEXT): $(cavan_df_OBJECTS) $(cavan_df_DEPENDENCIES) $(EXTRA_cavan_df
 cavan-dos2unix$(EXEEXT): $(cavan_dos2unix_OBJECTS) $(cavan_dos2unix_DEPENDENCIES) $(EXTRA_cavan_dos2unix_DEPENDENCIES) 
 	@rm -f cavan-dos2unix$(EXEEXT)
 	$(LINK) $(cavan_dos2unix_OBJECTS) $(cavan_dos2unix_LDADD) $(LIBS)
+cavan-eavoo_sell_statistic$(EXEEXT): $(cavan_eavoo_sell_statistic_OBJECTS) $(cavan_eavoo_sell_statistic_DEPENDENCIES) $(EXTRA_cavan_eavoo_sell_statistic_DEPENDENCIES) 
+	@rm -f cavan-eavoo_sell_statistic$(EXEEXT)
+	$(LINK) $(cavan_eavoo_sell_statistic_OBJECTS) $(cavan_eavoo_sell_statistic_LDADD) $(LIBS)
 cavan-ecc$(EXEEXT): $(cavan_ecc_OBJECTS) $(cavan_ecc_DEPENDENCIES) $(EXTRA_cavan_ecc_DEPENDENCIES) 
 	@rm -f cavan-ecc$(EXEEXT)
 	$(LINK) $(cavan_ecc_OBJECTS) $(cavan_ecc_LDADD) $(LIBS)
@@ -911,6 +923,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/df.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dos2unix.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eavoo_sell_statistic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ecc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ext2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdisk.Po@am__quote@
