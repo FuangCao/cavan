@@ -8,6 +8,9 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#define DEFAULT_SERVER_IP	"127.0.0.1"
+#define DEFAULT_SERVER_PORT	8888
+
 #include "EavooShortMessage.h"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -22,6 +25,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CEavooSellStatisticDlg)
 	enum { IDD = IDD_EAVOOSELLSTATISTIC_DIALOG };
+	CButton	m_button_stop;
+	CButton	m_button_start;
 	CStatic	m_static_state;
 	CIPAddressCtrl	m_ipaddress1;
 	CListCtrl	m_list_sms;
@@ -44,9 +49,9 @@ protected:
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
-	afx_msg void OnBUTTONconnect();
-	afx_msg void OnBUTTONdisconnect();
 	afx_msg void OnBUTTONstatistic();
+	afx_msg void OnBUTTONstop();
+	afx_msg void OnBUTTONstart();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -55,6 +60,7 @@ private:
 	CEavooShortMessage mMessage;
 
 private:
+	void ShowStatus(const char *format, ...);
 	bool Initialize(void);
 	void Uninitialize(void);
 

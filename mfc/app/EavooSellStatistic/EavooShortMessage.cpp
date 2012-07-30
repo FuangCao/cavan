@@ -1,6 +1,15 @@
+// EavooShortMessage.cpp : implementation file
+//
+
 #include "stdafx.h"
 #include "EavooSellStatistic.h"
 #include "EavooShortMessage.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 CEavooShortMessage::CEavooShortMessage(void)
 {
@@ -12,17 +21,15 @@ CEavooShortMessage::~CEavooShortMessage(void)
 	Uninitialize();
 }
 
-int CEavooShortMessage::Read(char *buff, UINT size, bool prompt)
+int CEavooShortMessage::Read(char *buff, UINT size)
 {
 	if (mFile.Read(buff, size) == size)
 	{
 		return size;
 	}
 
-	if (prompt)
-	{
-		AfxMessageBox("读数据失败");
-	}
+	mFile.Close();
+	mFile.m_hFile = CFile::hFileNull;
 
 	return -1;
 }
@@ -36,6 +43,8 @@ int CEavooShortMessage::Write(const char *buff, UINT size)
 	catch (...)
 	{
 		AfxMessageBox("写数据失败");
+		mFile.Close();
+		mFile.m_hFile = CFile::hFileNull;
 		return -1;
 	}
 
@@ -51,23 +60,23 @@ int CEavooShortMessage::Flush(void)
 	catch (...)
 	{
 		AfxMessageBox("刷数据失败");
+		mFile.Close();
+		mFile.m_hFile = CFile::hFileNull;
 		return -1;
 	}
 
 	return 0;
 }
 
-int CEavooShortMessage::Receive(char *buff, int size, bool prompt)
+int CEavooShortMessage::Receive(char *buff, int size)
 {
 	if (recv(mSocket, buff, size, 0) == size)
 	{
 		return size;
 	}
 
-	if (prompt)
-	{
-		AfxMessageBox("接收数据失败");
-	}
+	closesocket(mSocket);
+	mSocket = INVALID_SOCKET;
 
 	return -1;
 }
@@ -79,18 +88,26 @@ int CEavooShortMessage::Send(const char *buff, int size)
 		return size;
 	}
 
-	AfxMessageBox("发送数据失败");
+	// AfxMessageBox("发送数据失败");
+	closesocket(mSocket);
+	mSocket = INVALID_SOCKET;
 
 	return -1;
 }
 
-bool CEavooShortMessage::Initialize(const char *pathname, UINT flags, USHORT port, const char *ip)
+bool CEavooShortMessage::Initialize(const char *pathname, UINT flags, UINT port, const char *ip)
 {
+	if (WSAStartup(MAKEWORD(2, 2), &mWSAData) != 0)
+	{
+		AfxMessageBox("启动网络协议失败");
+		return false;
+	}
+
 	if (pathname)
 	{
 		if (mFile.Open(pathname, flags, NULL) == false)
 		{
-			AfxMessageBox("打开文件失败");
+			// AfxMessageBox("打开文件失败");
 			return false;
 		}
 
@@ -100,11 +117,8 @@ bool CEavooShortMessage::Initialize(const char *pathname, UINT flags, USHORT por
 		}
 	}
 
-	if (port && AdbServerConnect(port, ip) == false)
-	{
-		Uninitialize();
-		return false;
-	}
+	strcpy(mIpAddress, ip);
+	mPort = port;
 
 	return true;
 }
@@ -119,6 +133,7 @@ void CEavooShortMessage::Uninitialize(void)
 
 	if (mSocket != INVALID_SOCKET)
 	{
+		shutdown(mSocket, 0);
 		closesocket(mSocket);
 		mSocket = INVALID_SOCKET;
 	}
@@ -155,7 +170,7 @@ bool CEavooShortMessage::ReceiveFromNetwork(void)
 
 	while (1)
 	{
-		if (Receive(&type, 1, false) < 0)
+		if (Receive(&type, 1) < 0)
 		{
 			return false;
 		}
@@ -360,7 +375,7 @@ bool CEavooShortMessage::ReadFromFile(void)
 
 	while (1)
 	{
-		if (Read(&type, 1, false) < 0)
+		if (Read(&type, 1) < 0)
 		{
 			return false;
 		}
@@ -392,7 +407,7 @@ bool CEavooShortMessage::ReadFromFile(void)
 			return true;
 
 		default:
-			AfxMessageBox("不能识别的类型");
+			// AfxMessageBox("不能识别的类型");
 			return false;
 		}
 	}
@@ -400,46 +415,34 @@ bool CEavooShortMessage::ReadFromFile(void)
 	return false;
 }
 
-bool CEavooShortMessage::AdbServerConnect(UINT port, const char *ip)
+bool CEavooShortMessage::AdbServerConnect()
 {
-	if (WSAStartup(MAKEWORD(2, 2), &mWSAData) != 0)
+	char command[16];
+	sprintf(command, "tcp:%04d", mPort);
+
+	return AdbSendCommand(command);
+}
+
+bool CEavooShortMessage::AdbLocalConnect()
+{
+	int ret;
+	sockaddr_in addr;
+
+	if (mSocket != INVALID_SOCKET)
 	{
-		AfxMessageBox("启动协议失败");
-		return false;
+		closesocket(mSocket);
+		mSocket = INVALID_SOCKET;
 	}
 
 	mSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (mSocket == INVALID_SOCKET)
 	{
-		AfxMessageBox("分配套接字失败");
+		// AfxMessageBox("分配套接字失败");
 		return false;
 	}
-
-	if (AdbLocalConnect() == false)
-	{
-		closesocket(mSocket);
-		return false;
-	}
-
-	char command[16];
-	sprintf(command, "tcp:%04d", port);
-	if (AdbSendCommand(command) == false)
-	{
-		AfxMessageBox("建立连接失败\n请确认端口号是否正确，手机端是否已打开");
-		closesocket(mSocket);
-		return false;
-	}
-
-	return true;
-}
-
-bool CEavooShortMessage::AdbLocalConnect(const char *ip)
-{
-	int ret;
-	sockaddr_in addr;
 
 	addr.sin_family = AF_INET;
-	addr.sin_addr.S_un.S_addr = inet_addr(ip);
+	addr.sin_addr.S_un.S_addr = inet_addr(mIpAddress);
 	addr.sin_port = htons(ADB_SERVICE_PORT);
 
 	ret = connect(mSocket, (sockaddr *)&addr, sizeof(addr));
@@ -448,12 +451,17 @@ bool CEavooShortMessage::AdbLocalConnect(const char *ip)
 		return true;
 	}
 
+	system("adb kill-server");
 	ret = system("adb start-server");
 	if (ret != 0)
 	{
 		AfxMessageBox("请安装ADB命令");
+		closesocket(mSocket);
+		mSocket = INVALID_SOCKET;
 		return false;
 	}
+
+	Sleep(2000);
 
 	ret = connect(mSocket, (sockaddr *)&addr, sizeof(addr));
 	if (ret == 0)
@@ -461,7 +469,9 @@ bool CEavooShortMessage::AdbLocalConnect(const char *ip)
 		return true;
 	}
 
-	AfxMessageBox("建立连接失败\n请确认IP地址是否正确");
+	// AfxMessageBox("建立连接失败\n请确认IP地址是否正确");
+	closesocket(mSocket);
+	mSocket = INVALID_SOCKET;
 
 	return false;
 }
@@ -470,7 +480,7 @@ bool CEavooShortMessage::AdbReadStatus(void)
 {
 	if (Receive(mAdbStatus, 4) < 0)
 	{
-		AfxMessageBox("接收状态信息失败");
+		// AfxMessageBox("接收状态信息失败");
 		return false;
 	}
 
@@ -481,7 +491,7 @@ bool CEavooShortMessage::AdbReadStatus(void)
 
 	if (strncmp(ADB_STATE_FAIL, mAdbStatus, 4) == 0)
 	{
-		AfxMessageBox("ADB协议错误(FAIL)");
+		// AfxMessageBox("ADB协议错误(FAIL)");
 		return false;
 	}
 
@@ -495,13 +505,12 @@ bool CEavooShortMessage::AdbReadStatus(void)
 
 	if (Receive(mAdbStatus, length) < 0)
 	{
-		AfxMessageBox("接收状态信息失败");
+		// AfxMessageBox("接收状态信息失败");
+		return false;
 	}
-	else
-	{
-		mAdbStatus[length] = 0;
-		AfxMessageBox(mAdbStatus);
-	}
+
+	mAdbStatus[length] = 0;
+	// AfxMessageBox(mAdbStatus);
 
 	return false;
 }
@@ -514,13 +523,13 @@ bool CEavooShortMessage::AdbSendText(const char *text)
 	sprintf(buff, "%04x", length);
 	if (Send(buff, 4) < 0)
 	{
-		AfxMessageBox("发送命令长度失败");
+		// AfxMessageBox("发送命令长度失败");
 		return false;
 	}
 
 	if (Send(text, length) < 0)
 	{
-		AfxMessageBox("发送命令长度失败");
+		// AfxMessageBox("发送命令长度失败");
 		return false;
 	}
 

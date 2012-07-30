@@ -10,7 +10,9 @@
 #define IDR_MAINFRAME                   128
 #define IDD_DIALOG_statistic            129
 #define IDC_BUTTON_connect              1000
+#define IDC_BUTTON_start                1000
 #define IDC_BUTTON_disconnect           1001
+#define IDC_BUTTON_stop                 1001
 #define IDC_LIST_sms                    1002
 #define IDC_EDIT_port                   1003
 #define IDC_IPADDRESS1                  1005

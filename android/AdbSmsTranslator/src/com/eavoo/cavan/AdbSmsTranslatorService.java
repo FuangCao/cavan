@@ -415,7 +415,7 @@ public class AdbSmsTranslatorService extends Service
 				mThread = null;
 			}
 
-			receiveMessagesFromIcc();
+			// receiveMessagesFromIcc();
 		}
 
 		private boolean receiveMessagesFromSms()

@@ -1,11 +1,14 @@
-#ifndef AFX_CEAVOOSHORTMESSAGE_H__3F41B8B2_168E_4DA3_99E0_94F704ED7CD6__INCLUDED_
-#define AFX_CEAVOOSHORTMESSAGE_H__3F41B8B2_168E_4DA3_99E0_94F704ED7CD6__INCLUDED_
+#if !defined(AFX_EAVOOSHORTMESSAGE_H__0481FD35_EB2A_4F18_AC53_F5EF9D1976D9__INCLUDED_)
+#define AFX_EAVOOSHORTMESSAGE_H__0481FD35_EB2A_4F18_AC53_F5EF9D1976D9__INCLUDED_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
+// EavooShortMessage.h : header file
+//
 
 #define MAX_LIST_SIZE		1000
+#define RETRY_DELAY_TIME	1000
 #define DEFAULT_SERVER_IP	"127.0.0.1"
 #define DEFAULT_SERVER_PORT	8888
 #define CACHE_FILENAME		"eavoo_sell.dat"
@@ -41,12 +44,14 @@ private:
 	CFile mFile;
 	WSAData mWSAData;
 	char mAdbStatus[512];
+	char mIpAddress[32];
+	UINT mPort;
 
 public:
 	CEavooShortMessage(void);
 	~CEavooShortMessage(void);
 
-	bool Initialize(const char *pathname, UINT flags, USHORT port = 0, const char *ip = NULL);
+	bool Initialize(const char *pathname, UINT flags, UINT port = 0, const char *ip = DEFAULT_SERVER_IP);
 	void Uninitialize(void);
 	void InsertIntoList(CListCtrl &list);
 
@@ -55,10 +60,10 @@ public:
 		return &mDate;
 	}
 
-	int Read(char *buff, UINT size, bool prompt = true);
+	int Read(char *buff, UINT size);
 	int Write(const char *buff, UINT size);
 	int Flush(void);
-	int Receive(char *buff, int size, bool prompt = true);
+	int Receive(char *buff, int size);
 	int Send(const char *buff, int size);
 
 	int WriteText(char type, const char *text);
@@ -76,11 +81,11 @@ public:
 	bool SendResponse(char type);
 	bool ReceiveFromNetwork(void);
 
-	bool AdbServerConnect(UINT port = DEFAULT_SERVER_PORT, const char *ip = DEFAULT_SERVER_IP);
-	bool AdbLocalConnect(const char *ip = DEFAULT_SERVER_IP);
+	bool AdbServerConnect(void);
+	bool AdbLocalConnect(void);
 	bool AdbReadStatus(void);
 	bool AdbSendText(const char *text);
 	bool AdbSendCommand(const char *command);
 };
 
-#endif
+#endif // !defined(AFX_EAVOOSHORTMESSAGE_H__0481FD35_EB2A_4F18_AC53_F5EF9D1976D9__INCLUDED_)

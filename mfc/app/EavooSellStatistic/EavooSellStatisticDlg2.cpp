@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "EavooSellStatistic.h"
-#include "EavooShortMessage.h"
+#include "EavooSellStatisticDlg.h"
 #include "EavooSellStatisticDlg2.h"
 
 #ifdef _DEBUG

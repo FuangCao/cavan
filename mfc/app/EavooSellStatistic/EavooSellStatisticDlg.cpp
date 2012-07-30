@@ -64,7 +64,7 @@ CEavooSellStatisticDlg::CEavooSellStatisticDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CEavooSellStatisticDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CEavooSellStatisticDlg)
-	m_edit_port = 0;
+	m_edit_port = 8888;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -75,6 +75,8 @@ void CEavooSellStatisticDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CEavooSellStatisticDlg)
+	DDX_Control(pDX, IDC_BUTTON_stop, m_button_stop);
+	DDX_Control(pDX, IDC_BUTTON_start, m_button_start);
 	DDX_Control(pDX, IDC_STATIC_state, m_static_state);
 	DDX_Control(pDX, IDC_IPADDRESS1, m_ipaddress1);
 	DDX_Control(pDX, IDC_LIST_sms, m_list_sms);
@@ -87,14 +89,103 @@ BEGIN_MESSAGE_MAP(CEavooSellStatisticDlg, CDialog)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_BUTTON_connect, OnBUTTONconnect)
-	ON_BN_CLICKED(IDC_BUTTON_disconnect, OnBUTTONdisconnect)
 	ON_BN_CLICKED(IDC_BUTTON_statistic, OnBUTTONstatistic)
+	ON_BN_CLICKED(IDC_BUTTON_stop, OnBUTTONstop)
+	ON_BN_CLICKED(IDC_BUTTON_start, OnBUTTONstart)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CEavooSellStatisticDlg message handlers
+
+bool CEavooSellStatisticDlg::Initialize(void)
+{
+	char ip[32];
+	m_ipaddress1.GetWindowText(ip, sizeof(ip));
+
+	return mMessage.Initialize(CACHE_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, m_edit_port, ip);
+}
+
+void CEavooSellStatisticDlg::Uninitialize(void)
+{
+	mMessage.Uninitialize();
+}
+
+// EDUA# + 手机的IMEI号 + “,” + 手机软件版本号 + “,,,,#”
+
+int CEavooSellStatisticDlg::ThreadHandler(void *data)
+{
+	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
+	CEavooShortMessage &message = dlg->mMessage;
+
+	if (dlg->Initialize() == false)
+	{
+		dlg->mThread = NULL;
+		return -1;
+	}
+
+	AfxMessageBox("服务器已启动");
+	dlg->m_button_start.EnableWindow(false);
+	dlg->m_button_stop.EnableWindow(true);
+
+	while (dlg->mThread)
+	{
+		dlg->ShowStatus("连接到ADB ...");
+
+		while (message.AdbLocalConnect() == false && dlg->mThread)
+		{
+			Sleep(2000);
+		}
+
+		if (dlg->mThread == NULL)
+		{
+			break;
+		}
+
+		dlg->ShowStatus("连接到手机 ...");
+
+		if (message.AdbServerConnect() == false)
+		{
+			Sleep(2000);
+
+			for (int i = 5; i > 0 && dlg->mThread; i--)
+			{
+				dlg->ShowStatus("连接失败，%d 秒后重新连接", i);
+				Sleep(1000);
+			}
+
+			continue;
+		}
+
+		dlg->ShowStatus("正在运行 ...");
+
+		while (message.ReceiveFromNetwork())
+		{
+			message.InsertIntoList(dlg->m_list_sms);
+		}
+	}
+
+	dlg->Uninitialize();
+	dlg->mThread = NULL;
+	AfxMessageBox("服务器已停止工作");
+	dlg->ShowStatus("服务器已停止工作");
+	dlg->m_button_start.EnableWindow(true);
+	dlg->m_button_stop.EnableWindow(false);
+
+	return 0;
+}
+
+void CEavooSellStatisticDlg::ShowStatus(const char *format, ...)
+{
+	va_list ap;
+	char buff[1024];
+
+	va_start(ap, format);
+	vsprintf(buff, format, ap);
+	va_end(ap);
+
+	m_static_state.SetWindowText(buff);
+}
 
 BOOL CEavooSellStatisticDlg::OnInitDialog()
 {
@@ -128,7 +219,6 @@ BOOL CEavooSellStatisticDlg::OnInitDialog()
 	m_list_sms.InsertColumn(1, "发送时间", LVCFMT_LEFT, 200);
 	m_list_sms.InsertColumn(2, "短信的内容", LVCFMT_LEFT, 320);
 
-	m_edit_port = DEFAULT_SERVER_PORT;
 	m_ipaddress1.SetWindowText(DEFAULT_SERVER_IP);
 	m_static_state.SetWindowText("停止");
 
@@ -186,54 +276,14 @@ HCURSOR CEavooSellStatisticDlg::OnQueryDragIcon()
 	return (HCURSOR) m_hIcon;
 }
 
-bool CEavooSellStatisticDlg::Initialize(void)
+void CEavooSellStatisticDlg::OnBUTTONstatistic()
 {
-	char ip[32];
-	m_ipaddress1.GetWindowText(ip, sizeof(ip));
+	CEavooSellStatisticDlg2 Dlg;
 
-	return mMessage.Initialize(CACHE_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, m_edit_port, ip);
+	Dlg.DoModal();
 }
 
-void CEavooSellStatisticDlg::Uninitialize(void)
-{
-	mMessage.Uninitialize();
-}
-
-// EDUA# + 手机的IMEI号 + “,” + 手机软件版本号 + “,,,,#”
-
-int CEavooSellStatisticDlg::ThreadHandler(void *data)
-{
-	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
-	CEavooShortMessage &message = dlg->mMessage;
-
-	if (dlg->Initialize() == false)
-	{
-		dlg->mThread = NULL;
-		return -1;
-	}
-
-	AfxMessageBox("服务器已启动");
-	dlg->m_static_state.SetWindowText("正在运行...");
-
-	while (1)
-	{
-		if (message.ReceiveFromNetwork() == false)
-		{
-			break;
-		}
-
-		message.InsertIntoList(dlg->m_list_sms);
-	}
-
-	dlg->Uninitialize();
-	dlg->mThread = NULL;
-	AfxMessageBox("服务器已停止工作");
-	dlg->m_static_state.SetWindowText("服务器已停止工作");
-
-	return 0;
-}
-
-void CEavooSellStatisticDlg::OnBUTTONconnect()
+void CEavooSellStatisticDlg::OnBUTTONstart()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(true);
@@ -244,15 +294,14 @@ void CEavooSellStatisticDlg::OnBUTTONconnect()
 	}
 }
 
-void CEavooSellStatisticDlg::OnBUTTONdisconnect()
+void CEavooSellStatisticDlg::OnBUTTONstop()
 {
 	// TODO: Add your control notification handler code here
+	if (mThread)
+	{
+		mThread = NULL;
+	}
+
 	Uninitialize();
 }
 
-void CEavooSellStatisticDlg::OnBUTTONstatistic()
-{
-	CEavooSellStatisticDlg2 Dlg;
-
-	Dlg.DoModal();
-}
