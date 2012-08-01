@@ -33,14 +33,6 @@ int adb_read_status(int sockfd, char *buff, size_t size)
 		return -1;
 	}
 
-	recvlen = inet_recv(sockfd, buff, 4);
-	if (recvlen < 0)
-	{
-		text_copy(buff, "protocol fault (status len)");
-		return recvlen;
-	}
-
-	buff[recvlen] = 0;
 	length = text2value_unsigned(buff, NULL, 16);
 	recvlen = inet_recv(sockfd, buff, length >= size ? size - 1 : length);
 	if (recvlen < 0)
@@ -88,6 +80,22 @@ int adb_send_text(int sockfd, const char *text)
 	return 0;
 }
 
+int adb_send_command(int sockfd, const char *command)
+{
+	println("command = %s", command);
+
+	if (text_lhcmp("host", command))
+	{
+		int ret = adb_send_text(sockfd, "host:transport-any");
+		if (ret < 0)
+		{
+			return ret;
+		}
+	}
+
+	return adb_send_text(sockfd, command);
+}
+
 int adb_connect_service_base(const char *ip, u16 port)
 {
 	int sockfd;
@@ -133,31 +141,7 @@ int adb_connect_service_base(const char *ip, u16 port)
 	return -ENOENT;
 }
 
-int adb_connect_service(int sockfd, const char *service)
-{
-	int ret;
-
-	println("service = %s", service);
-
-	if (text_lhcmp("host", service))
-	{
-		ret = adb_send_text(sockfd, "host:transport-any");
-		if (ret < 0)
-		{
-			return ret;
-		}
-	}
-
-	ret = adb_send_text(sockfd, service);
-	if (ret < 0)
-	{
-		return ret;
-	}
-
-	return 0;
-}
-
-int adb_connect_service2(const char *ip, u16 port, const char *service)
+int adb_connect_service(const char *ip, u16 port, const char *service)
 {
 	int ret;
 	int sockfd;
@@ -169,7 +153,7 @@ int adb_connect_service2(const char *ip, u16 port, const char *service)
 		return sockfd;
 	}
 
-	ret = adb_connect_service(sockfd, service);
+	ret = adb_send_command(sockfd, service);
 	if (ret < 0)
 	{
 		pr_red_info("adb_connect_service");
@@ -186,7 +170,7 @@ int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port)
 
 	sprintf(service, "tcp:%04d", tcp_port);
 
-	return adb_connect_service2(ip, port, service);
+	return adb_connect_service(ip, port, service);
 }
 
 char *adb_parse_sms_single(const char *buff, const char *end, char *segments[], size_t size)
