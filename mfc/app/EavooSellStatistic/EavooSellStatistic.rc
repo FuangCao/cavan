@@ -91,19 +91,21 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "EavooSellStatistic"
 FONT 10, "宋体"
 BEGIN
-    PUSHBUTTON      "启动服务",IDC_BUTTON_start,62,344,50,14
-    PUSHBUTTON      "关闭服务",IDC_BUTTON_stop,183,344,50,14,WS_DISABLED
+    PUSHBUTTON      "启动服务",IDC_BUTTON_start,29,344,50,14
+    PUSHBUTTON      "关闭服务",IDC_BUTTON_stop,103,344,50,14,WS_DISABLED
     CONTROL         "List1",IDC_LIST_sms,"SysListView32",LVS_REPORT | 
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | 
-                    WS_TABSTOP,7,33,398,283
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTDESCENDING | 
+                    WS_BORDER | WS_TABSTOP,7,33,398,283
     EDITTEXT        IDC_EDIT_port,283,11,104,14,ES_AUTOHSCROLL
     LTEXT           "服务器端口号：",IDC_STATIC,222,13,57,8
     LTEXT           "服务器地址：",IDC_STATIC,15,14,49,8
     CONTROL         "IPAddress1",IDC_IPADDRESS1,"SysIPAddress32",WS_TABSTOP,
                     67,10,114,15
-    PUSHBUTTON      "统  计",IDC_BUTTON_statistic,304,344,50,14
+    PUSHBUTTON      "统  计",IDC_BUTTON_statistic,325,344,50,14
     LTEXT           "状态：",IDC_STATIC,7,323,25,8
     LTEXT           "",IDC_STATIC_state,36,323,369,8
+    PUSHBUTTON      "清空短信",IDC_BUTTON_clean,177,344,50,14
+    PUSHBUTTON      "加载数据库",IDC_BUTTON_load,251,344,50,14
 END
 
 IDD_DIALOG_statistic DIALOG DISCARDABLE  0, 0, 187, 211

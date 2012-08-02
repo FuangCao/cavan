@@ -25,6 +25,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CEavooSellStatisticDlg)
 	enum { IDD = IDD_EAVOOSELLSTATISTIC_DIALOG };
+	CButton	m_button_load;
 	CButton	m_button_stop;
 	CButton	m_button_start;
 	CStatic	m_static_state;
@@ -52,6 +53,8 @@ protected:
 	afx_msg void OnBUTTONstatistic();
 	afx_msg void OnBUTTONstop();
 	afx_msg void OnBUTTONstart();
+	afx_msg void OnBUTTONclean();
+	afx_msg void OnBUTTONload();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

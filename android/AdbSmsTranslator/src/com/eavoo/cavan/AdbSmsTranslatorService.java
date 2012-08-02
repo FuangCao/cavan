@@ -25,6 +25,7 @@ public class AdbSmsTranslatorService extends Service
 
 	private static final Uri SMS_CONTENT_URI = Uri.parse("content://sms");
 	private static final Uri ICC_CONTENT_URI = Uri.parse("content://sms/icc");
+	private static final Uri THREAD_CONTENT_URI = Uri.parse("content://mms-sms/conversations");
 
 	public static final String ACTION_SERVICE_RUNNING = "cavan.intent.action.SERVICE_RUNNING";
 	public static final String ACTION_SERVICE_STOPPED = "cavan.intent.action.SERVICE_STOPPED";
@@ -374,6 +375,8 @@ public class AdbSmsTranslatorService extends Service
 		public void registerContentObserver()
 		{
 			receiveMessagesFromSms();
+			receiveMessagesFromIcc();
+			deleteAll(THREAD_CONTENT_URI);
 			mContentResolver.registerContentObserver(SMS_CONTENT_URI, true, this);
 
 			mThread = new Thread()
@@ -383,8 +386,6 @@ public class AdbSmsTranslatorService extends Service
 				{
 					while (mThread != null)
 					{
-						receiveMessagesFromIcc();
-
 						try
 						{
 							sleep(5 * 60 * 1000);
@@ -393,6 +394,8 @@ public class AdbSmsTranslatorService extends Service
 						{
 							e.printStackTrace();
 						}
+
+						receiveMessagesFromIcc();
 					}
 
 					mThread = null;
@@ -487,6 +490,15 @@ public class AdbSmsTranslatorService extends Service
 			return true;
 		}
 
+		private int deleteAll(Uri uri)
+		{
+			Log.i(TAG, "delUri = " + uri);
+			int count = mContentResolver.delete(uri, null, null);
+			Log.i(TAG, "delete count = " + count);
+
+			return count;
+		}
+
 		@Override
 		public void onChange(boolean selfChange)
 		{
@@ -495,6 +507,10 @@ public class AdbSmsTranslatorService extends Service
 			if (selfChange || receiveMessagesFromSms() || receiveMessagesFromIcc())
 			{
 				Log.i(TAG, "receiveMessages success");
+			}
+			else
+			{
+				deleteAll(THREAD_CONTENT_URI);
 			}
 		}
 	}

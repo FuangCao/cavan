@@ -75,6 +75,7 @@ void CEavooSellStatisticDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CEavooSellStatisticDlg)
+	DDX_Control(pDX, IDC_BUTTON_load, m_button_load);
 	DDX_Control(pDX, IDC_BUTTON_stop, m_button_stop);
 	DDX_Control(pDX, IDC_BUTTON_start, m_button_start);
 	DDX_Control(pDX, IDC_STATIC_state, m_static_state);
@@ -92,6 +93,8 @@ BEGIN_MESSAGE_MAP(CEavooSellStatisticDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_statistic, OnBUTTONstatistic)
 	ON_BN_CLICKED(IDC_BUTTON_stop, OnBUTTONstop)
 	ON_BN_CLICKED(IDC_BUTTON_start, OnBUTTONstart)
+	ON_BN_CLICKED(IDC_BUTTON_clean, OnBUTTONclean)
+	ON_BN_CLICKED(IDC_BUTTON_load, OnBUTTONload)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -103,7 +106,7 @@ bool CEavooSellStatisticDlg::Initialize(void)
 	char ip[32];
 	m_ipaddress1.GetWindowText(ip, sizeof(ip));
 
-	return mMessage.Initialize(CACHE_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, m_edit_port, ip);
+	return mMessage.Initialize(DEFAULT_CACHE_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, m_edit_port, ip);
 }
 
 void CEavooSellStatisticDlg::Uninitialize(void)
@@ -127,6 +130,7 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 	AfxMessageBox("服务器已启动");
 	dlg->m_button_start.EnableWindow(false);
 	dlg->m_button_stop.EnableWindow(true);
+	dlg->m_button_load.EnableWindow(false);
 
 	while (dlg->mThread)
 	{
@@ -169,6 +173,7 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 	dlg->mThread = NULL;
 	AfxMessageBox("服务器已停止工作");
 	dlg->ShowStatus("服务器已停止工作");
+	dlg->m_button_load.EnableWindow(true);
 	dlg->m_button_start.EnableWindow(true);
 	dlg->m_button_stop.EnableWindow(false);
 
@@ -305,3 +310,33 @@ void CEavooSellStatisticDlg::OnBUTTONstop()
 	Uninitialize();
 }
 
+void CEavooSellStatisticDlg::OnBUTTONclean() 
+{
+	// TODO: Add your control notification handler code here
+	m_list_sms.DeleteAllItems();
+}
+
+void CEavooSellStatisticDlg::OnBUTTONload() 
+{
+	// TODO: Add your control notification handler code here
+	if (mThread != 0)
+	{
+		AfxMessageBox("请先停止服务器");
+		return;
+	}
+
+	m_list_sms.DeleteAllItems();
+
+	CEavooShortMessage message;
+	if (message.Initialize(DEFAULT_CACHE_FILENAME, CFile::modeRead | CFile::shareDenyNone) == false)
+	{
+		return;
+	}
+
+	while (message.ReadFromFile())
+	{
+		message.InsertIntoList(m_list_sms);
+	}
+
+	message.Uninitialize();
+}

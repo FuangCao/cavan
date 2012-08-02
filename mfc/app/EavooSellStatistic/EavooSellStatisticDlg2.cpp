@@ -125,7 +125,7 @@ bool CMonthSellLink::EavooSellStatistic(const char *pathname)
 			continue;
 		}
 
-		if (AddMonthSellCount(time->tm_year + 1900, time->tm_mon, 1) == false)
+		if (AddMonthSellCount(time->tm_year + 1900, time->tm_mon + 1, 1) == false)
 		{
 			return false;
 		}
@@ -146,7 +146,7 @@ BOOL CEavooSellStatisticDlg2::OnInitDialog()
 	m_list_sell.InsertColumn(1, "ÏúÁ¿", LVCFMT_LEFT, 160);
 
 	CMonthSellLink link;
-	link.EavooSellStatistic(CACHE_FILENAME);
+	link.EavooSellStatistic(DEFAULT_CACHE_FILENAME);
 
 	int total = 0;
 	char buff[32];

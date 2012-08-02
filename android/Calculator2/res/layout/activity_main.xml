@@ -4,25 +4,54 @@
     android:layout_height="match_parent" >
 
     <EditText
-        android:id="@+id/editText1"
+        android:id="@+id/editTextFormula"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:ems="10"
-        android:inputType="text" >
+        android:clickable="false"
+        android:focusable="false"
+        android:inputType="text"
+        android:singleLine="true" />
 
-        <requestFocus />
-    </EditText>
+    <EditText
+        android:id="@+id/editTextResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/editTextFormula"
+        android:layout_toLeftOf="@+id/spinnerResult"
+        android:layout_alignParentRight="true"
+        android:focusable="false"
+        android:inputType="text"
+        android:textSize="30dp"
+        android:singleLine="true" />
+
+    <Spinner
+        android:id="@+id/spinnerResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:textSize="30dp"
+        android:layout_below="@+id/editTextFormula" />
 
     <GridView
-        android:id="@+id/gridView1"
+        android:id="@+id/gridViewBitMap"
+        android:layout_below="@+id/editTextResult"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/editText1"
-        android:numColumns="3" >
+        android:numColumns="8" >
     </GridView>
+
+    <GridView
+        android:id="@+id/gridViewKeypad"
+        android:layout_below="@+id/gridViewBitMap"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:numColumns="5" >
+    </GridView>
+
 
 </RelativeLayout>

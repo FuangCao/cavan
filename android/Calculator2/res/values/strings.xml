@@ -1,8 +1,6 @@
 <resources>
 
-    <string name="app_name">Calculator2</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="app_name">科学计算器</string>
     <string name="menu_settings">Settings</string>
-    <string name="title_activity_main">MainActivity</string>
 
 </resources>

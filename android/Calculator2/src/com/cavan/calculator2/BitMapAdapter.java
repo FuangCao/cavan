@@ -83,7 +83,7 @@ public class BitMapAdapter extends BaseAdapter implements OnClickListener
 			mValue = oldValue;
 		}
 	}
-	
+
 	void setValue(long value)
 	{
 		mValue = value;
@@ -136,7 +136,7 @@ public class BitMapAdapter extends BaseAdapter implements OnClickListener
 		else
 		{
 			return -1;
-		}	
+		}
 	}
 
 	public static byte ValueToByte(long value)
@@ -148,7 +148,7 @@ public class BitMapAdapter extends BaseAdapter implements OnClickListener
 
 		return (byte) (value + 'A' - 10);
 	}
-	
+
 	public static byte[] ByteArrayExchange(byte[] bytes, int index, int size)
 	{
 		for (int last = index + size - 1; index < last; index++, last--)
@@ -163,6 +163,11 @@ public class BitMapAdapter extends BaseAdapter implements OnClickListener
 
 	String toString(int base, int size)
 	{
+		if (mValue == 0 && size == 0)
+		{
+			return "0";
+		}
+
 		byte[] bytes = new byte[128];
 		long value;
 		int i;

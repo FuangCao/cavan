@@ -11,7 +11,7 @@
 #define RETRY_DELAY_TIME	1000
 #define DEFAULT_SERVER_IP	"127.0.0.1"
 #define DEFAULT_SERVER_PORT	8888
-#define CACHE_FILENAME		"eavoo_sell.dat"
+#define DEFAULT_CACHE_FILENAME		"eavoo_sell.dat"
 
 #define ADB_SERVICE_PORT	5037
 #define ADB_STATE_OKAY		"OKAY"
