@@ -6,7 +6,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -19,17 +18,14 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity
 {
-	private static int MAX_BIT_COUNT = 32;
-
 	private EditText mEditTextFormula;
 	private EditText mEditTextResult;
 
 	private Spinner mSpinnerResult;
 
-	private GridView mGridViewBitMap;
+	private BitmapGridView mBitmapGridView;
 	private GridView mGridViewKeypad;
 
-	private BitMapAdapter mBitMapAdapter;
 	private KeypadAdapter mKeypadAdapter;
 
 	private int mBase;
@@ -39,7 +35,7 @@ public class MainActivity extends Activity
 		@Override
 		public boolean OnValueChanged(long oldValue, long newValue)
 		{
-			mEditTextResult.setText(mBitMapAdapter.toString(mBase, 0));
+			mEditTextResult.setText(mBitmapGridView.toString());
 			return true;
 		}
 	};
@@ -108,7 +104,7 @@ public class MainActivity extends Activity
 		{
 			TextView view = (TextView) arg1;
 			mBase = Integer.decode(view.getText().toString());
-			mEditTextResult.setText(mBitMapAdapter.toString(mBase, 0));
+			mEditTextResult.setText(mBitmapGridView.toString(mBase));
 		}
 
 		@Override
@@ -123,8 +119,8 @@ public class MainActivity extends Activity
 		@Override
 		public void onTextChanged(CharSequence s, int start, int before, int count)
 		{
-			mBitMapAdapter.setValue(s.toString(), 10);
-			mEditTextResult.setText(mBitMapAdapter.toString(mBase, 0));
+			mBitmapGridView.setValue(s.toString(), 10);
+			mEditTextResult.setText(mBitmapGridView.toString(mBase));
 		}
 
 		@Override
@@ -154,10 +150,8 @@ public class MainActivity extends Activity
 		mSpinnerResult.setOnItemSelectedListener(mItemSelectedListenerSpinnerResult);
 		mSpinnerResult.setSelection(10 - 2);
 
-		mGridViewBitMap = (GridView) findViewById(R.id.gridViewBitMap);
-		mBitMapAdapter = new BitMapAdapter(this, 0, MAX_BIT_COUNT);
-		mBitMapAdapter.setOnValueChangedListener(mValueChangedListener);
-		mGridViewBitMap.setAdapter(mBitMapAdapter);
+		mBitmapGridView = (BitmapGridView) findViewById(R.id.gridViewBitMap);
+		mBitmapGridView.setOnValueChangedListener(mValueChangedListener);
 
 		mGridViewKeypad = (GridView) findViewById(R.id.gridViewKeypad);
 		mKeypadAdapter = new KeypadAdapter(this);
