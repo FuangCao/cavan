@@ -2,6 +2,7 @@
 
 FILE_FSTAB="/etc/fstab"
 FILE_MOUNTS="/proc/mounts"
+FILE_PARTITIONS="/proc/partitions"
 FILE_BASHRC="/etc/bash.bashrc"
 FILE_VIMRC="/etc/vim/vimrc"
 FILE_GROUP="/etc/group"
@@ -42,7 +43,7 @@ LOCAL_UBUNTU="${UBUNTU_PATH}-${DISTRIB_RELEASE}"
 
 function mount_disk()
 {
-	local mount_point disk
+	local mount_point disk line
 
 	cd /dev || return 1
 
@@ -53,13 +54,16 @@ function mount_disk()
 		disk="sda"
 	fi
 
-	for dev in ${disk}*
+	while read line
 	do
-		mount_point="/mnt/${dev}"
+		echo ${line} | grep "${disk}[0-9]\+" || continue
+		set ${line}
+		[ "$3" -gt "10" ] || continue
 
+		mount_point="/mnt/$4"
 		umount_directory ${mount_point}
 		mkdir ${mount_point} -pv
-		mount ${dev} ${mount_point} ||
+		mount $4 ${mount_point} ||
 		{
 			rmdir ${mount_point}
 			continue
@@ -67,9 +71,9 @@ function mount_disk()
 
 		grep "${mount_point}" ${FILE_FSTAB} ||
 		{
-			echo "/dev/${dev} ${mount_point} auto errors=remount-ro 0 0" >> ${FILE_FSTAB}
+			echo "/dev/$4 ${mount_point} auto errors=remount-ro 0 0" >> ${FILE_FSTAB}
 		}
-	done
+	done < ${FILE_PARTITIONS}
 }
 
 function create_mount_points()
@@ -129,7 +133,8 @@ SMB_SERVER_IP="${SMB_SERVER_IP-192.168.0.8}"
 SMB_USER="${SMB_USER-fuang.cao}"
 SMB_PASSWORD="${SMB_PASSWORD-Eavoo2011}"
 SMB_ENTRY="${SMB_ENTRY-File Server}"
-JDK_VERSION="${JDK_VERSION-1.6.0_26}"
+JDK_VERSION="${JDK_VERSION-1.6.0_33}"
+SDK_NAME="android-sdk-linux"
 CAVAN_SERVER_IP="${CAVAN_SERVER_IP-192.168.6.4}"
 CAVAN_SERVER_PORT="${CAVAN_SERVER_PORT-8888}"
 PROJECT_HOME="${PROJECT_HOME}"
@@ -180,6 +185,8 @@ function config_samba()
    guest ok = yes
    read only = no
    create mask = 0777
+   dos charset = cp936
+   unix charset = gb2312
 EOF
 
 	service smbd restart
@@ -283,6 +290,7 @@ function config_stardict()
 
 	for dic in ${UBUNTU_PATH}/app/stardict/*.tar.*
 	do
+		[ -f "${dic}" ] || continue
 		pr_title "Install stardict ${dic}"
 		tar -xf ${dic} || return 1
 	done
