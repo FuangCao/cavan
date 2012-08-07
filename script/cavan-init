@@ -255,6 +255,7 @@ EOF
 
 function install_applications()
 {
+	dpkg --configure -a || return 1
 	apt-get update || return 1
 
 	while read line
@@ -359,10 +360,10 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 	exit 1
 }
 
-for func in mount_disk create_mount_points create_symlinks \
+for func in mount_disk create_mount_points create_symlinks config_bashrc \
 	config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_stardict \
-	config_bashrc config_vimrc config_group config_service config_others
+	config_vimrc config_group config_service config_others
 do
 	if cavan-has_mark ${func}
 	then
