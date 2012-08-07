@@ -7,7 +7,7 @@ FSLDROID_HOME="${PROJECT_HOME}/fsldroid"
 JAVA_HOME="${TOOLS_HOME}/jdk${JDK_VERSION}"
 JRE_HOME="${JAVA_HOME}/jre"
 SDK_HOME="${TOOLS_HOME}/${SDK_NAME}"
-CLASS_BIN=$(ls ${JAVA_HOME}/lib/*.jar ${JRE_HOME}/lib/*.jar | while read line; do echo -n ${line}:; done)
+CLASS_PATH=".$(find ${JAVA_HOME}/lib ${JRE_HOME}/lib -maxdepth 1 -name "*.jar" | while read line; do echo -n :${line}; done)"
 
 CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
 CAVAN_BIN="${CAVAN_OUT_DEBUG}:${CAVAN_HOME}/script"
@@ -28,7 +28,7 @@ MAKE_UBOOT="make -C ${UBOOT_HOME} arch=arm cross_compile=${CAVAN_CROSS_COMPILE}"
 
 TARGET_DEVICE="/dev/sdb"
 
-export JAVA_HOME JRE_HOME CLASS_BIN PATH
+export JAVA_HOME JRE_HOME CLASS_PATH PATH
 export KERNEL_HOME UBOOT_HOME FSLDROID_HOME PRODUCT_HOME
 export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE CAVAN_OUT_DEBUG
 
