@@ -36,12 +36,12 @@ do \
 	while test -f $${pkg}; \
 	do \
 		case "$${pkg}" in \
-			*.tar.bz2) tar --use-compress-program bzip2 -xf $${pkg};; \
-			*.tar.gz) tar --use-compress-program gzip -xf $${pkg};; \
-			*.tar.xz) tar --use-compress-program xz -xf $${pkg};; \
-			*.zip) unzip -o $${pkg};; \
-			*.rar) rar x -o+ $${pkg};; \
-			*) tar -xf $${pkg};; \
+			*.tar.bz2) tar --use-compress-program bzip2 -xf $${pkg} || tar -xf $${pkg} || exit 1;; \
+			*.tar.gz) tar --use-compress-program gzip -xf $${pkg} || tar -xf $${pkg} || exit 1;; \
+			*.tar.xz) tar --use-compress-program xz -xf $${pkg} || tar -xf $${pkg} || exit 1;; \
+			*.zip) unzip -o $${pkg} || exit 1;; \
+			*.rar) rar x -o+ $${pkg} || exit 1;; \
+			*) tar -xf $${pkg} || exit 1;; \
 		esac; \
 		for pkg in *; \
 		do \
