@@ -1,7 +1,7 @@
 <packages>
-	<package name="zlib" version="1.2.5" depend=""
+	<package name="zlib" version="1.2.7" depend=""
 			 config="--shared"
-			 url="http://ncu.dl.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)">
+			 url="http://zlib.net">
 	</package>
 
 	<package name="ncurses" version="5.9" depend=""
