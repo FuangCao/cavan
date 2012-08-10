@@ -1,2 +1,3 @@
 git svn init http://10.1.1.253/android/Qualcomm/8660/ap qcdroid
 git svn qcommit
+git config pack.windowMemory 10m
