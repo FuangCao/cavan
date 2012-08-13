@@ -7,44 +7,58 @@ from sys import argv
 class SvnRreoManager:
 	def __init__(self, repo_root = "."):
 		self.repo_root = os.path.abspath(repo_root)
+		if os.path.isdir(os.path.join(repo_root, ".svn")):
+			self.url = self.svn_repo_get_url()
+		else:
+			self.url = None
+
+	def svn_repo_get_url(self):
+		lines = self.svn_repo_popen("cd %s && svn info | grep ^URL:.*" % self.repo_root);
+		if lines == None or len(lines) < 1:
+			return None
+		return lines[0][4:].strip()
 
 	def svn_repo_system(self, command):
 		print command
-		return os.system(command)
+		if os.system(command) == 0:
+			return 0
+		return -1
 
 	def svn_repo_popen(self, command):
 		fp = os.popen(command)
+		if fp == None:
+			return []
 		lines = fp.readlines()
 		fp.close()
 		return lines
 
 	def svn_repo_update_single(self, pathname):
 		if pathname.endswith("/"):
-			if os.path.exists(pathname):
-				if self.svn_repo_system("cd %s && git svn fetch" % pathname) != 0:
+			if not os.path.isdir(pathname):
+				if os.path.exists(pathname):
+					os.remove(pathname)
+				url = os.path.join(self.url, pathname)
+				if self.svn_repo_system("git svn init %s %s" % (url, pathname)) != 0:
 					return -1
-			else:
-				url = os.path.join(self.url, pathname.strip())
-				if self.svn_repo_system("git svn clone %s" % url) != 0:
-					return -1
-		elif self.svn_repo_system("svn update " + pathname) != 0:
-			return -1
-		return 0
+			return self.svn_repo_system("cd %s && git config pack.windowMemory 20m && git svn fetch" % pathname)
+		else:
+			return self.svn_repo_system("svn update " + pathname)
 
 	def svn_repo_update(self):
+		if self.url == None:
+			print "Please give the url of svn"
+			return -1
 		for fn in self.svn_repo_popen("svn list"):
 			if self.svn_repo_update_single(fn.strip()) < 0:
 				return -1
 		return 0
 
 	def svn_repo_clone(self, argv):
-		if len(argv) < 1:
-			print "Please give the url of svn"
-			return -1
-
-		self.url = argv[0]
-		print "svn_repo clone %s => %s" % (self.url, self.repo_root)
-		if not os.path.isdir(".svn"):
+		if self.url == None:
+			if len(argv) < 1:
+				print "Please give the url of svn"
+				return -1
+			self.url = argv[0]
 			if os.path.exists(".svn"):
 				os.path.remove(".svn")
 			if self.svn_repo_system("svn checkout --depth=empty %s ." % self.url) != 0:
@@ -53,7 +67,7 @@ class SvnRreoManager:
 
 if __name__ == "__main__":
 	if len(argv) < 2:
-		print "Too a few argument"
+		print "Please give a subcmd"
 		sys.exit(-1)
 
 	repo = SvnRreoManager()
@@ -62,7 +76,7 @@ if __name__ == "__main__":
 
 	if subcmd in ["clone", "init"]:
 		repo.svn_repo_clone(argv)
-	elif subcmd in ["update"]:
+	elif subcmd in ["update", "sync"]:
 		repo.svn_repo_update()
 	else:
 		print "unknown subcmd `%s'" % subcmd
