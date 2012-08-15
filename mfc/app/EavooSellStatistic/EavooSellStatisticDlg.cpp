@@ -314,13 +314,13 @@ void CEavooSellStatisticDlg::OnBUTTONstop()
 	Uninitialize();
 }
 
-void CEavooSellStatisticDlg::OnBUTTONclean() 
+void CEavooSellStatisticDlg::OnBUTTONclean()
 {
 	// TODO: Add your control notification handler code here
 	m_list_sms.DeleteAllItems();
 }
 
-void CEavooSellStatisticDlg::OnBUTTONload() 
+void CEavooSellStatisticDlg::OnBUTTONload()
 {
 	// TODO: Add your control notification handler code here
 	if (mThread != 0)

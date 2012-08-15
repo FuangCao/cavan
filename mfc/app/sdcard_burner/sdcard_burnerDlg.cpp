@@ -144,7 +144,7 @@ BOOL CSdcard_burnerDlg::OnInitDialog()
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
-	
+
 	// TODO: Add extra initialization here
 	m_combo_uboot_ctrl.AddString("u-boot");
 	m_combo_uboot_ctrl.AddString("factory");
@@ -169,7 +169,7 @@ BOOL CSdcard_burnerDlg::OnInitDialog()
 	UpdateDevice();
 
 	UpdateData(false);
-	
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -190,7 +190,7 @@ void CSdcard_burnerDlg::OnSysCommand(UINT nID, LPARAM lParam)
 //  to draw the icon.  For MFC applications using the document/view model,
 //  this is automatically done for you by the framework.
 
-void CSdcard_burnerDlg::OnPaint() 
+void CSdcard_burnerDlg::OnPaint()
 {
 	if (IsIconic())
 	{
@@ -222,7 +222,7 @@ HCURSOR CSdcard_burnerDlg::OnQueryDragIcon()
 	return (HCURSOR) m_hIcon;
 }
 
-void CSdcard_burnerDlg::OnButtonUboot() 
+void CSdcard_burnerDlg::OnButtonUboot()
 {
 	// TODO: Add your control notification handler code here
 	CString strUbootType;
@@ -231,8 +231,8 @@ void CSdcard_burnerDlg::OnButtonUboot()
 
 	COMBO_GET_TEXT(m_combo_uboot_ctrl, strUbootType);
 
-	CFileDialog fileDlg(true, "bin", strUbootType, 
-		OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_FILEMUSTEXIST, 
+	CFileDialog fileDlg(true, "bin", strUbootType,
+		OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_FILEMUSTEXIST,
 		strUbootType + "нд╪Ч" + "|" + strUbootType + "*.bin||");
 
 	if (fileDlg.DoModal() == IDOK)
@@ -242,7 +242,7 @@ void CSdcard_burnerDlg::OnButtonUboot()
 	}
 }
 
-void CSdcard_burnerDlg::OnButtonUimage() 
+void CSdcard_burnerDlg::OnButtonUimage()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(true);
@@ -256,7 +256,7 @@ void CSdcard_burnerDlg::OnButtonUimage()
 	}
 }
 
-void CSdcard_burnerDlg::OnButtonUramdisk() 
+void CSdcard_burnerDlg::OnButtonUramdisk()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(true);
@@ -377,7 +377,7 @@ out_format_partition:
 	if (MessageBox(strTemp, "Formate Partition", MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) == IDYES)
 	{
 		strTemp.Format("format %c: /q /y /x /fs:fat32 /v:CFA8888", lpTargetDevice[0]);
-		
+
 		m_static_status_val.Format("Format Partition \"%s\" ...", lpTargetDevice);
 		UpdateData(false);
 
@@ -395,7 +395,7 @@ void CSdcard_burnerDlg::OnButtonFactory()
 	{
 		return;
 	}
-	
+
 	int iDevIndex;
 
 	iDevIndex = GetTargetDeviceIndex();
@@ -427,7 +427,7 @@ void CSdcard_burnerDlg::OnButtonFactory()
 	CCavanDebug::RightMessage(m_hWnd, "Create Factory SDCard Successfully");
 }
 
-void CSdcard_burnerDlg::OnButtonRefresh() 
+void CSdcard_burnerDlg::OnButtonRefresh()
 {
 	// TODO: Add your control notification handler code here
 	UpdateDevice();
@@ -442,7 +442,7 @@ void CSdcard_burnerDlg::UpdateDevice(void)
 	m_combo_device_ctrl.ResetContent();
 
 	for (int i = 1; i <= 26; i++)
-	{		
+	{
 		if (cvnDevice.OpenPhysicalDrive(i, 0) == false)
 		{
 			continue;
@@ -519,7 +519,7 @@ int CSdcard_burnerDlg::GetTargetDeviceIndex(void)
 		CCavanDebug::WarningMessage(m_hWnd, "No Device Find");
 		return -1;
 	}
-	
+
 	CString strDevice;
 
 	COMBO_GET_TEXT(m_combo_device_ctrl, strDevice);

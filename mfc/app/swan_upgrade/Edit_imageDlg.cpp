@@ -50,7 +50,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CEdit_imageDlg message handlers
 
-void CEdit_imageDlg::OnOK() 
+void CEdit_imageDlg::OnOK()
 {
 	// TODO: Add extra validation here
 	UpdateData(true);
@@ -60,7 +60,7 @@ void CEdit_imageDlg::OnOK()
 		MessageBox("请选择Image的路径");
 		return;
 	}
-	
+
 	CString rTemp;
 
 	m_combo_type.GetLBText(m_combo_type.GetCurSel(), rTemp);
@@ -96,14 +96,14 @@ void CEdit_imageDlg::OnOK()
 
 	m_combo_offset.GetLBText(m_combo_offset.GetCurSel(), rTemp);
 	pImage->dwOffset = TextToSize(rTemp);
-	
+
 	CDialog::OnOK();
 }
 
-BOOL CEdit_imageDlg::OnInitDialog() 
+BOOL CEdit_imageDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	// TODO: Add extra initialization here
 	int i;
 
@@ -169,16 +169,16 @@ BOOL CEdit_imageDlg::OnInitDialog()
 	}
 
 	OnSelchangeComboType();
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CEdit_imageDlg::OnSelchangeComboType() 
+void CEdit_imageDlg::OnSelchangeComboType()
 {
 	// TODO: Add your control notification handler code here
 	CString rType;
-	
+
 	m_combo_type.GetLBText(m_combo_type.GetCurSel(), rType);
 	struct CSwanImage *pCurrentImage = CSwan_upgradeApp::GetImageInfo(rType);
 
@@ -351,7 +351,7 @@ struct CFileDialogInfo fileDlgInfos[] = {
 	{"userdata.img", "img", "userdata", "userdata文件|userdata*.img||"},
 };
 
-void CEdit_imageDlg::OnButtonPath() 
+void CEdit_imageDlg::OnButtonPath()
 {
 	// TODO: Add your control notification handler code here
 	int i;

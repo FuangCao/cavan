@@ -166,7 +166,7 @@ void CSwan_upgradeDlg::OnSysCommand(UINT nID, LPARAM lParam)
 //  to draw the icon.  For MFC applications using the document/view model,
 //  this is automatically done for you by the framework.
 
-void CSwan_upgradeDlg::OnPaint() 
+void CSwan_upgradeDlg::OnPaint()
 {
 	if (IsIconic())
 	{
@@ -360,7 +360,7 @@ void CSwan_upgradeDlg::OnOK()
 		m_static_status.Format("打开文件\"%s\"失败", fileDlg.GetPathName());
 		goto out_update_data;
 	}
-	
+
 	CFileInfo fileInfo;
 
 	bRet = WriteHeader(filePkg, fileInfo, m_edit_header);
@@ -435,7 +435,7 @@ void CSwan_upgradeDlg::SetListText(int iIndex, CSwanImage *pCurrentImage, const 
 	m_list_images.SetItemText(iIndex, IMAGE_PATH_INDEX, rImagePath);
 }
 
-void CSwan_upgradeDlg::OnButtonAdd() 
+void CSwan_upgradeDlg::OnButtonAdd()
 {
 	// TODO: Add your control notification handler code here
 	CEdit_imageDlg imgDlg;
@@ -501,7 +501,7 @@ void CSwan_upgradeDlg::OnButtonDelete()
 	m_list_images.DeleteItem(iSelectedItem);
 }
 
-void CSwan_upgradeDlg::OnButtonHeader() 
+void CSwan_upgradeDlg::OnButtonHeader()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(true);
@@ -515,7 +515,7 @@ void CSwan_upgradeDlg::OnButtonHeader()
 	}
 }
 
-int CSwan_upgradeDlg::ListAddItem(CSwanImage *pImage, const CString &rImagePath) 
+int CSwan_upgradeDlg::ListAddItem(CSwanImage *pImage, const CString &rImagePath)
 {
 	int iItem = m_list_images.InsertItem(0, "-");
 
@@ -530,7 +530,7 @@ int CSwan_upgradeDlg::ListAddItem(CSwanImage *pImage, const CString &rImagePath)
 	return true;
 }
 
-void CSwan_upgradeDlg::LoadImages(CString rPath) 
+void CSwan_upgradeDlg::LoadImages(CString rPath)
 {
 	CFile file;
 	CString rImagePath;
@@ -575,7 +575,7 @@ void CSwan_upgradeDlg::LoadImages(CString rPath)
 	UpdateData(false);
 }
 
-void CSwan_upgradeDlg::OnButtonLoad() 
+void CSwan_upgradeDlg::OnButtonLoad()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(true);
@@ -609,7 +609,7 @@ void CSwan_upgradeDlg::OnButtonLoad()
 	LoadImages(pszPath);
 }
 
-void CSwan_upgradeDlg::OnButtonDelAll() 
+void CSwan_upgradeDlg::OnButtonDelAll()
 {
 	// TODO: Add your control notification handler code here
 	m_list_images.DeleteAllItems();

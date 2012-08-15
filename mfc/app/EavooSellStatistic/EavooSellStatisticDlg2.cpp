@@ -280,7 +280,7 @@ BOOL CEavooSellStatisticDlg2::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CEavooSellStatisticDlg2::OnSelchangeTABsell(NMHDR* pNMHDR, LRESULT* pResult) 
+void CEavooSellStatisticDlg2::OnSelchangeTABsell(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	// TODO: Add your control notification handler code here
 

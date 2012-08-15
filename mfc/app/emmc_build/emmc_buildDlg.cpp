@@ -130,9 +130,9 @@ BOOL CEmmc_buildDlg::OnInitDialog()
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
-	
+
 	// TODO: Add extra initialization here
-	
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -153,7 +153,7 @@ void CEmmc_buildDlg::OnSysCommand(UINT nID, LPARAM lParam)
 //  to draw the icon.  For MFC applications using the document/view model,
 //  this is automatically done for you by the framework.
 
-void CEmmc_buildDlg::OnPaint() 
+void CEmmc_buildDlg::OnPaint()
 {
 	if (IsIconic())
 	{
@@ -185,7 +185,7 @@ HCURSOR CEmmc_buildDlg::OnQueryDragIcon()
 	return (HCURSOR) m_hIcon;
 }
 
-void CEmmc_buildDlg::OnOK() 
+void CEmmc_buildDlg::OnOK()
 {
 	// TODO: Add extra validation here
 	CFileDialog fileDlg(false, "bin", "factory", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, "factory文件|factory*.bin||");
@@ -209,11 +209,11 @@ void CEmmc_buildDlg::OnOK()
 	}
 
 	UpdateData(false);
-	
+
 	// CDialog::OnOK();
 }
 
-void CEmmc_buildDlg::OnButtonUboot() 
+void CEmmc_buildDlg::OnButtonUboot()
 {
 	// TODO: Add your control notification handler code here
 	CFileDialog fileDlg(true, "bin", "u-boot-factory", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_FILEMUSTEXIST, "uboot文件|u-boot*.bin||");
@@ -225,7 +225,7 @@ void CEmmc_buildDlg::OnButtonUboot()
 	}
 }
 
-void CEmmc_buildDlg::OnButtonUimage() 
+void CEmmc_buildDlg::OnButtonUimage()
 {
 	// TODO: Add your control notification handler code here
 	CFileDialog fileDlg(true, NULL, "uImage", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_FILEMUSTEXIST, "uImage文件|uImage*||");
@@ -237,7 +237,7 @@ void CEmmc_buildDlg::OnButtonUimage()
 	}
 }
 
-void CEmmc_buildDlg::OnButtonBusybox() 
+void CEmmc_buildDlg::OnButtonBusybox()
 {
 	// TODO: Add your control notification handler code here
 	CFileDialog fileDlg(true, "img", "busybox", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_FILEMUSTEXIST, "busybox文件|busybox*.img||");
@@ -268,7 +268,7 @@ int CEmmc_buildDlg::BuileFactoryImage(CString &csFileName)
 	{
 		goto out_close_file;
 	}
-	
+
 	bRet = AppendFileToImage(m_edit_uimage, fileImage, MB(1));
 	if (bRet == false)
 	{
@@ -321,8 +321,8 @@ int CEmmc_buildDlg::AppendFileToImage(LPCTSTR lpszFileName, CFile &fileImage, LO
 	UINT nReadLen, nTotalLen;
 
 	m_progress_build.SetRange32(0, file.GetLength());
-	m_progress_build.SetPos(0);	
-	
+	m_progress_build.SetPos(0);
+
 	m_static_status.Format("正在写入\"%s\"", lpszFileName);
 	UpdateData(false);
 

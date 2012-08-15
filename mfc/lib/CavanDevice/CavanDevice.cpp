@@ -12,7 +12,7 @@
 
 void CDiskAddress::ToString(CString &strString)
 {
-	strString.Format("cylinder = %d, header = %d, sector = %d", 
+	strString.Format("cylinder = %d, header = %d, sector = %d",
 		btCylinderNumberHSB << 8 | btCylinderNumberLSB, btHeaderNumber, btSectorNumber);
 }
 
@@ -38,7 +38,7 @@ void CDiskAddress::AbsSectorNumberToDiskAddress(DWORD dwSectorNumber, CDiskAddre
 	dwSectorsPerCyliner = geoMetry.TracksPerCylinder * geoMetry.SectorsPerTrack;
 
 	DWORD wCylinderNumber;
-	
+
 	wCylinderNumber = dwSectorNumber / dwSectorsPerCyliner;
 	daDiskAddress.btCylinderNumberHSB = (wCylinderNumber >> 8) & 0x03;
 	daDiskAddress.btCylinderNumberLSB = (UCHAR)(wCylinderNumber & 0xFF);
@@ -111,10 +111,10 @@ DWORD CDiskAddress::ByteToSectorAlignmentAuto(ULONGLONG ulByteNumber, DISK_GEOME
 void CDiskPartitionTable::ToString(CString &strString)
 {
 	strString.Format("ActiveMark = 0x%02x\n", btActiveMark);
-	
+
 	CString strTemp;
 	CString daAddress;
-	
+
 	daStartAddr.ToString(daAddress);
 	strTemp.Format("StartAddr = %s\n", daAddress);
 	strString += strTemp;
@@ -234,8 +234,8 @@ BOOL CCavanDevice::GetDeviceCapability(ULONGLONG &ullCapability)
 	{
 		return false;
 	}
-	
-	ullCapability = geoMetry.BytesPerSector * geoMetry.SectorsPerTrack * 
+
+	ullCapability = geoMetry.BytesPerSector * geoMetry.SectorsPerTrack *
 		geoMetry.TracksPerCylinder * geoMetry.Cylinders.QuadPart;
 
 	return true;
