@@ -91,8 +91,8 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "EavooSellStatistic"
 FONT 10, "宋体"
 BEGIN
-    PUSHBUTTON      "启动服务",IDC_BUTTON_start,29,344,50,14
-    PUSHBUTTON      "关闭服务",IDC_BUTTON_stop,103,344,50,14,WS_DISABLED
+    PUSHBUTTON      "启动服务",IDC_BUTTON_start,7,344,50,14
+    PUSHBUTTON      "关闭服务",IDC_BUTTON_stop,76,344,50,14,WS_DISABLED
     CONTROL         "List1",IDC_LIST_sms,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTDESCENDING | 
                     WS_BORDER | WS_TABSTOP,7,33,398,283
@@ -101,24 +101,26 @@ BEGIN
     LTEXT           "服务器地址：",IDC_STATIC,15,14,49,8
     CONTROL         "IPAddress1",IDC_IPADDRESS1,"SysIPAddress32",WS_TABSTOP,
                     67,10,114,15
-    PUSHBUTTON      "统  计",IDC_BUTTON_statistic,325,344,50,14
-    LTEXT           "状态：",IDC_STATIC,7,323,25,8
-    LTEXT           "",IDC_STATIC_state,36,323,369,8
-    PUSHBUTTON      "清空短信",IDC_BUTTON_clean,177,344,50,14
-    PUSHBUTTON      "加载数据库",IDC_BUTTON_load,251,344,50,14
+    PUSHBUTTON      "统  计",IDC_BUTTON_statistic,352,344,50,14
+    LTEXT           "",IDC_STATIC_state,7,323,398,8
+    PUSHBUTTON      "清空短信",IDC_BUTTON_clean,145,344,50,14
+    PUSHBUTTON      "加载数据库",IDC_BUTTON_load,214,344,50,14
+    PUSHBUTTON      "清空数据库",IDC_BUTTON_clean_database,283,344,50,14
 END
 
-IDD_DIALOG_statistic DIALOG DISCARDABLE  0, 0, 187, 211
+IDD_DIALOG_statistic DIALOG DISCARDABLE  0, 0, 187, 226
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "对话"
+CAPTION "销量统计"
 FONT 10, "System"
 BEGIN
-    DEFPUSHBUTTON   "确定",IDOK,7,190,50,14
-    PUSHBUTTON      "取消",IDCANCEL,130,190,50,14
-    LTEXT           "总销量：",IDC_STATIC,7,7,33,8
+    DEFPUSHBUTTON   "确定",IDOK,7,205,50,14
+    PUSHBUTTON      "取消",IDCANCEL,130,205,50,14
+    LTEXT           "总销量：",IDC_STATIC,7,189,33,8
     CONTROL         "List1",IDC_LIST_sell,"SysListView32",LVS_REPORT | 
-                    WS_BORDER | WS_TABSTOP,7,24,173,157
-    LTEXT           "Static",IDC_STATIC_total_sell,43,7,130,8
+                    WS_BORDER | WS_TABSTOP,7,23,173,157
+    LTEXT           "0 台",IDC_STATIC_total_sell,46,189,114,8
+    CONTROL         "Tab1",IDC_TAB_sell,"SysTabControl32",TCS_BUTTONS,7,7,
+                    173,193
 END
 
 
@@ -194,7 +196,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 180
         TOPMARGIN, 7
-        BOTTOMMARGIN, 204
+        BOTTOMMARGIN, 219
     END
 END
 #endif    // APSTUDIO_INVOKED

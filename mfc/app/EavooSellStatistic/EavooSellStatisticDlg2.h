@@ -19,7 +19,7 @@ class CMonthSellNode
 
 private:
 	int mYear, mMonth;
-	int mSellCount;
+	ULONG mSellCount;
 	CMonthSellNode *next;
 
 public:
@@ -31,15 +31,16 @@ class CMonthSellLink
 	friend CEavooSellStatisticDlg2;
 
 private:
+	char mProjectName[16];
 	CMonthSellNode *mHead;
+	CMonthSellLink *next;
 
 public:
-	CMonthSellLink(void) : mHead(NULL) {}
+	CMonthSellLink(const char *projectname);
 	~CMonthSellLink(void);
-	void InitLinkHead(void);
+	void FreeLink(void);
 	CMonthSellNode *FindMonth(int year, int month);
 	bool AddMonthSellCount(int year, int month, int count);
-	bool EavooSellStatistic(const char *pathname);
 };
 
 class CEavooSellStatisticDlg2 : public CDialog
@@ -47,10 +48,12 @@ class CEavooSellStatisticDlg2 : public CDialog
 // Construction
 public:
 	CEavooSellStatisticDlg2(CWnd* pParent = NULL);   // standard constructor
+	~CEavooSellStatisticDlg2();
 
 // Dialog Data
 	//{{AFX_DATA(CEavooSellStatisticDlg2)
 	enum { IDD = IDD_DIALOG_statistic };
+	CTabCtrl	m_tab_sell;
 	CListCtrl	m_list_sell;
 	CStatic	m_static_total_sell;
 	//}}AFX_DATA
@@ -69,8 +72,20 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CEavooSellStatisticDlg2)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnSelchangeTABsell(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
+private:
+	CMonthSellLink *mHead;
+
+public:
+	CMonthSellLink *FindProject(const char *projectname);
+	bool EavooSellStatistic(const char *pathname);
+	bool ShowProject(const char *projectname);
+	bool ShowProject(CMonthSellLink *head);
+	bool ShowProject(void);
+	void FreeLink(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

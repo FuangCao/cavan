@@ -20,6 +20,15 @@
 #define NELEM(a) \
 	(sizeof(a) / sizeof((a)[0]))
 
+#define IS_UPPERCASE(a) \
+	((a) >= 'A' && (a) <= 'Z')
+
+#define IS_LOWERCASE(a) \
+	((a) >= 'a' && (a) <= 'z')
+
+#define IS_NUMBER(a) \
+	((a) >= '0' && (a) <= '9')
+
 enum
 {
 	SMS_TYPE_END = 0x00,
@@ -30,6 +39,22 @@ enum
 	SMS_TYPE_DATE,
 	SMS_TYPE_ADDRESS,
 	SMS_TYPE_BODY
+};
+
+class CEavooShortMessageBody
+{
+private:
+	char mIMEI[32];
+	char mSoftwareVersion[64];
+
+public:
+	CEavooShortMessageBody(const char *text = NULL);
+	static int TextCmpLH(const char *left, const char *right);
+	char *GetIMEI(void) {return mIMEI; };
+	char *GetSoftwareVersion(void) {return mSoftwareVersion; };
+	char *GetOneSep(const char *text, char *buff);
+	bool ParseText(const char *text);
+	char *GetProjectName(char *buff);
 };
 
 class CEavooShortMessage
@@ -73,7 +98,7 @@ public:
 	bool WriteToFile(void);
 
 	int ReadValue(char *buff, UINT size);
-	int ReadText(char *buff);
+	int ReadText(char *buff, int size);
 	bool ReadFromFile(void);
 
 	int ReceiveValue(char *buff, int size);
@@ -86,6 +111,8 @@ public:
 	bool AdbReadStatus(void);
 	bool AdbSendText(const char *text);
 	bool AdbSendCommand(const char *command);
+
+	bool ParseBody(CEavooShortMessageBody &body);
 };
 
 #endif // !defined(AFX_EAVOOSHORTMESSAGE_H__0481FD35_EB2A_4F18_AC53_F5EF9D1976D9__INCLUDED_)

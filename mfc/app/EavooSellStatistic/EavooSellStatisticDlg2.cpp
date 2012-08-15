@@ -22,12 +22,19 @@ CEavooSellStatisticDlg2::CEavooSellStatisticDlg2(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CEavooSellStatisticDlg2)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
+	mHead = NULL;
+}
+
+CEavooSellStatisticDlg2::~CEavooSellStatisticDlg2()
+{
+	FreeLink();
 }
 
 void CEavooSellStatisticDlg2::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CEavooSellStatisticDlg2)
+	DDX_Control(pDX, IDC_TAB_sell, m_tab_sell);
 	DDX_Control(pDX, IDC_LIST_sell, m_list_sell);
 	DDX_Control(pDX, IDC_STATIC_total_sell, m_static_total_sell);
 	//}}AFX_DATA_MAP
@@ -36,6 +43,7 @@ void CEavooSellStatisticDlg2::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CEavooSellStatisticDlg2, CDialog)
 	//{{AFX_MSG_MAP(CEavooSellStatisticDlg2)
+	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB_sell, OnSelchangeTABsell)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -49,12 +57,18 @@ CMonthSellNode::CMonthSellNode(int year, int month, int count)
 	mSellCount = count;
 }
 
-CMonthSellLink::~CMonthSellLink(void)
+CMonthSellLink::CMonthSellLink(const char *projectname)
 {
-	InitLinkHead();
+	strcpy(mProjectName, projectname);
+	mHead = NULL;
 }
 
-void CMonthSellLink::InitLinkHead(void)
+CMonthSellLink::~CMonthSellLink(void)
+{
+	FreeLink();
+}
+
+void CMonthSellLink::FreeLink(void)
 {
 	for (CMonthSellNode *q, *p = mHead; p; p = q)
 	{
@@ -100,17 +114,49 @@ bool CMonthSellLink::AddMonthSellCount(int year, int month, int count)
 	return true;
 }
 
-bool CMonthSellLink::EavooSellStatistic(const char *pathname)
+/////////////////////////////////////////////////////////////////////////////
+// CEavooSellStatisticDlg2 message handlers
+
+void CEavooSellStatisticDlg2::FreeLink(void)
 {
+	CMonthSellLink *head_next;
+
+	while (mHead)
+	{
+		head_next = mHead->next;
+		mHead->FreeLink();
+		delete mHead;
+		mHead = head_next;
+	}
+}
+
+CMonthSellLink *CEavooSellStatisticDlg2::FindProject(const char *projectname)
+{
+	for (CMonthSellLink *p = mHead; p; p = p->next)
+	{
+		if (strcmp(p->mProjectName, projectname) == 0)
+		{
+			return p;
+		}
+	}
+
+	return NULL;
+}
+
+bool CEavooSellStatisticDlg2::EavooSellStatistic(const char *pathname)
+{
+	FreeLink();
+
 	CEavooShortMessage message;
 	if (message.Initialize(pathname, CFile::modeRead | CFile::shareDenyNone) == false)
 	{
 		return false;
 	}
 
-	InitLinkHead();
-
 	struct tm *time;
+	char projectname[16];
+	CEavooShortMessageBody body;
+	CMonthSellLink *project;
 
 	while (1)
 	{
@@ -125,7 +171,30 @@ bool CMonthSellLink::EavooSellStatistic(const char *pathname)
 			continue;
 		}
 
-		if (AddMonthSellCount(time->tm_year + 1900, time->tm_mon + 1, 1) == false)
+		if (message.ParseBody(body) == false)
+		{
+			continue;
+		}
+
+		if (body.GetProjectName(projectname) == NULL)
+		{
+			continue;
+		}
+
+		project = FindProject(projectname);
+		if (project == NULL)
+		{
+			project = new CMonthSellLink(projectname);
+			if (project == NULL)
+			{
+				return false;
+			}
+
+			project->next = mHead;
+			mHead = project;
+		}
+
+		if (project->AddMonthSellCount(time->tm_year + 1900, time->tm_mon + 1, 1) == false)
 		{
 			return false;
 		}
@@ -134,23 +203,24 @@ bool CMonthSellLink::EavooSellStatistic(const char *pathname)
 	return true;
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// CEavooSellStatisticDlg2 message handlers
-
-BOOL CEavooSellStatisticDlg2::OnInitDialog()
+bool CEavooSellStatisticDlg2::ShowProject(const char *projectname)
 {
-	CDialog::OnInitDialog();
+	if (projectname == NULL)
+	{
+		return false;
+	}
 
-	// TODO: Add extra initialization here
-	m_list_sell.InsertColumn(0, "月份", LVCFMT_LEFT, 180);
-	m_list_sell.InsertColumn(1, "销量", LVCFMT_LEFT, 160);
+	return ShowProject(FindProject(projectname));
+}
 
-	CMonthSellLink link;
-	link.EavooSellStatistic(DEFAULT_CACHE_FILENAME);
-
+bool CEavooSellStatisticDlg2::ShowProject(CMonthSellLink *head)
+{
 	int total = 0;
 	char buff[32];
-	for (CMonthSellNode *p = link.mHead; p; p = p->next)
+
+	m_list_sell.DeleteAllItems();
+
+	for (CMonthSellNode *p = head->mHead; p; p = p->next)
 	{
 		sprintf(buff, "%04d年%02d月", p->mYear, p->mMonth);
 		m_list_sell.InsertItem(0, buff);
@@ -162,6 +232,58 @@ BOOL CEavooSellStatisticDlg2::OnInitDialog()
 	sprintf(buff, "%d 台", total);
 	m_static_total_sell.SetWindowText(buff);
 
+	return true;
+}
+
+bool CEavooSellStatisticDlg2::ShowProject(void)
+{
+	TCITEM item;
+	char projectname[16] = {0};
+	item.pszText = projectname;
+	item.cchTextMax = sizeof(projectname);
+	item.mask = TCIF_TEXT;
+	if (m_tab_sell.GetItem(m_tab_sell.GetCurSel(), &item) == false)
+	{
+		return false;
+	}
+
+	ShowProject(projectname);
+
+	return true;
+}
+
+BOOL CEavooSellStatisticDlg2::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	// TODO: Add extra initialization here
+	m_list_sell.InsertColumn(0, "月份", LVCFMT_LEFT, 100);
+	m_list_sell.InsertColumn(1, "销量", LVCFMT_LEFT, 200);
+	if (EavooSellStatistic(DEFAULT_CACHE_FILENAME))
+	{
+		for (CMonthSellLink *p = mHead; p; p = p->next)
+		{
+			m_tab_sell.InsertItem(0, p->mProjectName);
+		}
+
+		if (mHead)
+		{
+			ShowProject();
+		}
+	}
+	else
+	{
+		FreeLink();
+	}
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CEavooSellStatisticDlg2::OnSelchangeTABsell(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	// TODO: Add your control notification handler code here
+
+	ShowProject();
+	*pResult = 0;
 }

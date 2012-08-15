@@ -11,6 +11,123 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+CEavooShortMessageBody::CEavooShortMessageBody(const char *text)
+{
+	if (text)
+	{
+		ParseText(text);
+	}
+}
+
+int CEavooShortMessageBody::TextCmpLH(const char *left, const char *right)
+{
+	while (*left)
+	{
+		if (*left != *right)
+		{
+			return *left - *right;
+		}
+
+		left++;
+		right++;
+	}
+
+	return 0;
+}
+
+char *CEavooShortMessageBody::GetOneSep(const char *text, char *buff)
+{
+	const char *p, *p_end;
+
+	for (p_end = text; *p_end && *p_end != ','; p_end++);
+
+	for (p = text; *p == ' ' && p < p_end; p++);
+
+	while (p < p_end)
+	{
+		*buff++ = *p++;
+	}
+
+	*buff = 0;
+
+	return (char *)p;
+}
+
+bool CEavooShortMessageBody::ParseText(const char *text)
+{
+	if (TextCmpLH("EDUA#", text))
+	{
+		return false;
+	}
+
+	text += 5;
+
+	char *seps[] =
+	{
+		mIMEI, mSoftwareVersion
+	};
+
+	for (int i = 0; i < NELEM(seps); i++)
+	{
+		text = GetOneSep(text, seps[i]);
+		if (*text)
+		{
+			text++;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+char *CEavooShortMessageBody::GetProjectName(char *buff)
+{
+	const char *p, *q;
+	char *buff_bak;
+
+	for (p = mSoftwareVersion; ; p++)
+	{
+		if (p[0] == '.' && p[1] == 'E' && IS_UPPERCASE(p[2]) && IS_UPPERCASE(p[-1]))
+		{
+			break;
+		}
+
+		if (*p == 0)
+		{
+			return NULL;
+		}
+	}
+
+	p += 2;
+
+	for (q = p; ; q++)
+	{
+		if (q[0] == '.' && q[1] == 'V' && IS_NUMBER(q[2]))
+		{
+			break;
+		}
+
+		if (*q == 0)
+		{
+			return NULL;
+		}
+	}
+
+	for (q -= 4, buff_bak = buff; p < q; p++, buff++)
+	{
+		*buff = *p;
+	}
+
+	*buff = 0;
+
+	return buff_bak;
+}
+
+// ============================================================
+
 CEavooShortMessage::CEavooShortMessage(void)
 {
 	mSocket = INVALID_SOCKET;
@@ -348,7 +465,7 @@ int CEavooShortMessage::ReadValue(char *buff, UINT size)
 	return Read(buff, size);
 }
 
-int CEavooShortMessage::ReadText(char *buff)
+int CEavooShortMessage::ReadText(char *buff, int size)
 {
 	int length;
 
@@ -357,7 +474,7 @@ int CEavooShortMessage::ReadText(char *buff)
 		return -1;
 	}
 
-	if (Read(buff, length) < 0)
+	if (length <= 0 || length >= size || Read(buff, length) < 0)
 	{
 		return -1;
 	}
@@ -371,7 +488,8 @@ bool CEavooShortMessage::ReadFromFile(void)
 {
 	char type;
 
-	mDate = 0;
+	mBody[0] = 0;
+	mAddress[0] = 0;
 
 	while (1)
 	{
@@ -385,33 +503,38 @@ bool CEavooShortMessage::ReadFromFile(void)
 		case SMS_TYPE_DATE:
 			if (ReadValue((char *)&mDate, sizeof(mDate)) < 0)
 			{
-				return false;
+				goto out_bad_database;
 			}
 			break;
 
 		case SMS_TYPE_ADDRESS:
-			if (ReadText(mAddress) < 0)
+			if (ReadText(mAddress, sizeof(mAddress)) < 0)
 			{
-				return false;
+				goto out_bad_database;
 			}
 			break;
 
 		case SMS_TYPE_BODY:
-			if (ReadText(mBody) < 0)
+			if (ReadText(mBody, sizeof(mBody)) < 0)
 			{
-				return false;
+				goto out_bad_database;
 			}
 			break;
 
 		case SMS_TYPE_END:
+			if (mBody[0] == 0 || mAddress[0] == 0)
+			{
+				goto out_bad_database;
+			}
 			return true;
 
 		default:
-			// AfxMessageBox("不能识别的类型");
 			return false;
 		}
 	}
 
+out_bad_database:
+	AfxMessageBox("数据库已损坏");
 	return false;
 }
 
@@ -547,4 +670,9 @@ bool CEavooShortMessage::AdbSendCommand(const char *command)
 	}
 
 	return AdbSendText(command);
+}
+
+bool CEavooShortMessage::ParseBody(CEavooShortMessageBody &body)
+{
+	return body.ParseText(mBody);
 }

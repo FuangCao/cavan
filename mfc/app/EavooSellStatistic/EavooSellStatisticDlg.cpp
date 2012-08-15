@@ -75,6 +75,7 @@ void CEavooSellStatisticDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CEavooSellStatisticDlg)
+	DDX_Control(pDX, IDC_BUTTON_clean_database, m_button_clean_database);
 	DDX_Control(pDX, IDC_BUTTON_load, m_button_load);
 	DDX_Control(pDX, IDC_BUTTON_stop, m_button_stop);
 	DDX_Control(pDX, IDC_BUTTON_start, m_button_start);
@@ -95,6 +96,7 @@ BEGIN_MESSAGE_MAP(CEavooSellStatisticDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_start, OnBUTTONstart)
 	ON_BN_CLICKED(IDC_BUTTON_clean, OnBUTTONclean)
 	ON_BN_CLICKED(IDC_BUTTON_load, OnBUTTONload)
+	ON_BN_CLICKED(IDC_BUTTON_clean_database, OnBUTTONcleandatabase)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -131,6 +133,7 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 	dlg->m_button_start.EnableWindow(false);
 	dlg->m_button_stop.EnableWindow(true);
 	dlg->m_button_load.EnableWindow(false);
+	dlg->m_button_clean_database.EnableWindow(false);
 
 	while (dlg->mThread)
 	{
@@ -173,6 +176,7 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 	dlg->mThread = NULL;
 	AfxMessageBox("服务器已停止工作");
 	dlg->ShowStatus("服务器已停止工作");
+	dlg->m_button_clean_database.EnableWindow(true);
 	dlg->m_button_load.EnableWindow(true);
 	dlg->m_button_start.EnableWindow(true);
 	dlg->m_button_stop.EnableWindow(false);
@@ -339,4 +343,19 @@ void CEavooSellStatisticDlg::OnBUTTONload()
 	}
 
 	message.Uninitialize();
+}
+
+void CEavooSellStatisticDlg::OnBUTTONcleandatabase()
+{
+	// TODO: Add your control notification handler code here
+	if (AfxMessageBox("数据删除后将无法恢复，真的要删除吗？", MB_YESNO | MB_ICONQUESTION) == IDYES)
+	{
+		CFile file;
+		file.Open(DEFAULT_CACHE_FILENAME, CFile::modeWrite | CFile::shareDenyNone, NULL);
+		file.SetLength(0);
+		file.Close();
+
+		AfxMessageBox("数据库已清空");
+		m_list_sms.DeleteAllItems();
+	}
 }
