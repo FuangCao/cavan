@@ -32,7 +32,6 @@ public class MainActivity extends Activity
 
 	private OnValueChangedListener mValueChangedListener = new OnValueChangedListener()
 	{
-		@Override
 		public boolean OnValueChanged(long oldValue, long newValue)
 		{
 			mEditTextResult.setText(mBitmapGridView.toString());
@@ -42,19 +41,16 @@ public class MainActivity extends Activity
 
 	private OnKeypadChangedListener mKeypadChangedListener = new OnKeypadChangedListener()
 	{
-		@Override
 		public void OnTextKeyClicked(Button button)
 		{
 			mEditTextFormula.append(button.getText().toString());
 		}
 
-		@Override
 		public void OnCleanKeyClicked(Button button)
 		{
 			mEditTextFormula.setText("");
 		}
 
-		@Override
 		public void OnBackKeyClicked(Button button)
 		{
 			CharSequence text = mEditTextFormula.getText();
@@ -68,7 +64,6 @@ public class MainActivity extends Activity
 
 	private BaseAdapter mAdapterSpinnerResult = new BaseAdapter()
 	{
-		@Override
 		public View getView(int position, View convertView, ViewGroup parent)
 		{
 			TextView view = new TextView(MainActivity.this);
@@ -78,19 +73,16 @@ public class MainActivity extends Activity
 			return view;
 		}
 
-		@Override
 		public long getItemId(int position)
 		{
 			return 0;
 		}
 
-		@Override
 		public Object getItem(int position)
 		{
 			return null;
 		}
 
-		@Override
 		public int getCount()
 		{
 			return 26 + 10 - 2;
@@ -99,7 +91,6 @@ public class MainActivity extends Activity
 
 	private OnItemSelectedListener mItemSelectedListenerSpinnerResult = new OnItemSelectedListener()
 	{
-		@Override
 		public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3)
 		{
 			TextView view = (TextView) arg1;
@@ -107,7 +98,6 @@ public class MainActivity extends Activity
 			mEditTextResult.setText(mBitmapGridView.toString(mBase));
 		}
 
-		@Override
 		public void onNothingSelected(AdapterView<?> arg0)
 		{
 			arg0.setSelection(10 - 2);
@@ -116,19 +106,26 @@ public class MainActivity extends Activity
 
 	private TextWatcher mTextWatcherFormula = new TextWatcher()
 	{
-		@Override
 		public void onTextChanged(CharSequence s, int start, int before, int count)
 		{
-			mBitmapGridView.setValue(s.toString(), 10);
-			mEditTextResult.setText(mBitmapGridView.toString(mBase));
+			Calculator calculator = new Calculator(s.toString());
+			double result = 0;
+			try
+			{
+				result = calculator.getResult();
+			}
+			catch (Exception e)
+			{
+			}
+
+			mBitmapGridView.setValue((long) result);
+			mEditTextResult.setText(Double.toString(result));
 		}
 
-		@Override
 		public void beforeTextChanged(CharSequence s, int start, int count, int after)
 		{
 		}
 
-		@Override
 		public void afterTextChanged(Editable s)
 		{
 		}

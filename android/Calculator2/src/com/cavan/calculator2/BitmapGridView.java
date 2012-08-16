@@ -24,25 +24,21 @@ public class BitmapGridView extends GridView implements OnClickListener
 
 	private BaseAdapter mAdapter = new BaseAdapter()
 	{
-		@Override
 		public View getView(int position, View convertView, ViewGroup parent)
 		{
 			return mButtons[mButtons.length - position - 1];
 		}
 
-		@Override
 		public long getItemId(int position)
 		{
 			return 0;
 		}
 
-		@Override
 		public Object getItem(int arg0)
 		{
 			return null;
 		}
-		
-		@Override
+
 		public int getCount()
 		{
 			return mButtons.length;
@@ -90,7 +86,6 @@ public class BitmapGridView extends GridView implements OnClickListener
 		setValue(FormulaCalculator.TextToLong(text, base));
 	}
 
-	@Override
 	public void onClick(View v)
 	{
 		Log.i(TAG, "onClick");

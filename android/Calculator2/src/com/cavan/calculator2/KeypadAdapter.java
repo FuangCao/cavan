@@ -30,25 +30,21 @@ public class KeypadAdapter extends BaseAdapter implements OnClickListener
 		}
 	}
 
-	@Override
 	public int getCount()
 	{
 		return mButtons.length;
 	}
 
-	@Override
 	public Object getItem(int position)
 	{
 		return null;
 	}
 
-	@Override
 	public long getItemId(int position)
 	{
 		return 0;
 	}
 
-	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
 		return mButtons[position];
@@ -64,7 +60,6 @@ public class KeypadAdapter extends BaseAdapter implements OnClickListener
 		}
 	}
 
-	@Override
 	public void onClick(View v)
 	{
 		if (v.equals(mButtons[0]))

@@ -5,7 +5,7 @@ public class FormulaCalculator
 	public FormulaCalculator()
 	{
 	}
-	
+
 	public static long ByteToLong(byte b)
 	{
 		if (b >= '0' && b <= '9')
