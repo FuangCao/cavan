@@ -15,6 +15,7 @@ import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity
 {
@@ -113,13 +114,18 @@ public class MainActivity extends Activity
 			try
 			{
 				result = calculator.getResult();
+				mBitmapGridView.setValue((long) result);
+				mEditTextResult.setText(Double.toString(result));
 			}
 			catch (Exception e)
 			{
+				mEditTextResult.setText("error");
+				String message = calculator.getErrorMessage();
+				if (message != null)
+				{
+					Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+				}
 			}
-
-			mBitmapGridView.setValue((long) result);
-			mEditTextResult.setText(Double.toString(result));
 		}
 
 		public void beforeTextChanged(CharSequence s, int start, int count, int after)

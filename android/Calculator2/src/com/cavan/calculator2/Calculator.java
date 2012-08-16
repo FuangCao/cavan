@@ -5,7 +5,7 @@ import java.util.Stack;
 
 enum OperatorEnum
 {
-	ADD, SUB, MUL, DIV, MOD, LEFT_SHIFT, RIGHT_SHIFT, AND, OR, XOR, BASE,
+	ADD, SUB, MUL, DIV, MOD, LEFT_SHIFT, RIGHT_SHIFT, AND, OR, XOR, BASE, POW, SQRT,
 	NON, RECIP, SIN, ASIN, COS, ACOS, TAN, ATAN, COT, ACOT,
 	FACT, PI, E
 }
@@ -34,6 +34,8 @@ public class Calculator
 		new OperatorOne(OperatorEnum.RECIP, new String [] {"recip"}, 4),
 		new OperatorOne(OperatorEnum.NON, new String [] {"~", "non"}, 4),
 		// need one operand
+		new OperatorTwo(OperatorEnum.POW, new String [] {"**", "pow"}, 5),
+		new OperatorTwo(OperatorEnum.SQRT, new String [] {"//", "sqrt"}, 5),
 		new OperatorTwo(OperatorEnum.ADD, new String [] {"+", "add"}, 1),
 		new OperatorTwo(OperatorEnum.SUB, new String [] {"-", "sub"}, 1),
 		new OperatorTwo(OperatorEnum.LEFT_SHIFT, new String [] {"<<", "left"}, 1),
@@ -210,7 +212,7 @@ public class Calculator
 		int length = 0;
 		int j;
 
-		for (j = mOperatorSpecials.length - 1; j >= 0; j--)
+		for (j = 0; j < mOperatorSpecials.length; j++)
 		{
 			length = mOperatorSpecials[j].isMatch(mFormula, i);
 			if (length > 0)
@@ -226,7 +228,7 @@ public class Calculator
 			}
 		}
 
-		for (j = mOperators.length - 1; j >= 0; j--)
+		for (j = 0; j < mOperators.length; j++)
 		{
 			length = mOperators[j].isMatch(mFormula, i);
 			if (length > 0)
@@ -344,6 +346,7 @@ public class Calculator
 					{
 						if (mStackOperand.isEmpty())
 						{
+							setErrorMessage("Too a few operand");
 							throw new Exception("Too a few operand");
 						}
 
@@ -383,6 +386,7 @@ public class Calculator
 
 		if (mStackOperand.isEmpty())
 		{
+			setErrorMessage("Too a few operand");
 			throw new Exception("Too a few operand");
 		}
 
@@ -392,6 +396,7 @@ public class Calculator
 			return result;
 		}
 
+		setErrorMessage("Too much operand");
 		throw new Exception("Too much operand");
 	}
 
@@ -638,9 +643,19 @@ public class Calculator
 				left *= right;
 				break;
 			case DIV:
+				if (right == 0)
+				{
+					setErrorMessage("div by zero");
+					return false;
+				}
 				left /= right;
 				break;
 			case MOD:
+				if (right == 0)
+				{
+					setErrorMessage("mod by zero");
+					return false;
+				}
 				left %= right;
 				break;
 			case LEFT_SHIFT:
@@ -665,6 +680,19 @@ public class Calculator
 				break;
 			case XOR:
 				left = ((long) left) ^ ((long) right);
+				break;
+			case POW:
+				left = Math.pow(left, right);
+				break;
+			case SQRT:
+				if (left == 2.0)
+				{
+					left = Math.sqrt(right);
+				}
+				else
+				{
+					left = Math.pow(right, 1 / left);
+				}
 				break;
 
 			default:
