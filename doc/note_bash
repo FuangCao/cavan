@@ -1,3 +1,5 @@
+#!/bin/bash
+
 AA="1111"
 BB="2222"
 ${AA-${BB}} => 1111
@@ -9,3 +11,5 @@ echo disabled > /sys/bus/usb/devices/2-1/power/wakeup
 echo on > /sys/bus/usb/devices/2-1/power/control
 
 $LINENO
+
+[[ "$1" == -* ]] && echo OK

@@ -1,0 +1,40 @@
+#!/bin/bash
+
+function _build_completion()
+{
+	local cur prev
+
+	COMPREPLY=()
+	_get_comp_words_by_ref cur prev
+
+	if [ "${COMP_CWORD}" = "1" ]
+	then
+		COMPREPLY=($(compgen -W "$*" -- ${cur}))
+	else
+		_filedir
+	fi
+}
+
+function _cavan_completion()
+{
+	_build_completion $(ls ${CAVAN_HOME}/app/*.c | sed 's#.*/\(.*\)\.c$#\1#g')
+}
+
+complete -F _cavan_completion cavan
+
+function _cavan_svn_repo()
+{
+	_build_completion "init clone update sync command cmd"
+}
+
+complete -F _cavan_svn_repo cavan-svn-repo
+
+function _adb_completion()
+{
+	_build_completion "devices connect disconnect push pull sync shell" \
+	"emu logcat forward jdwp install uninstall bugreport backup restore" \
+	"help version wait-for-device start-server kill-server get-state get-serialno" \
+	"status-window remount reboot reboot-bootloader root usb tcpip ppp"
+}
+
+complete -F _adb_completion adb

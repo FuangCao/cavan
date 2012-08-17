@@ -1,8 +1,20 @@
-#!/usr/bin/python
+#!/bin/sh
+
+"""exec" python -E $0 $@
+#"""
 
 import sys
 import os
 from sys import argv
+
+def pr_red_info(message):
+	print "\033[31m%s\033[0m" % message
+
+def pr_green_info(message):
+	print "\033[32m%s\033[0m" % message
+
+def pr_bold_info(message):
+	print "\033[1m%s\033[0m" % message
 
 class SvnRreoManager:
 	def __init__(self, repo_root = "."):
@@ -46,7 +58,7 @@ class SvnRreoManager:
 
 	def svn_repo_update(self):
 		if self.url == None:
-			print "Please give the url of svn"
+			pr_red_info("Please give the url of svn")
 			return -1
 		for fn in self.svn_repo_popen("svn list"):
 			if self.svn_repo_update_single(fn.strip()) < 0:
@@ -56,7 +68,7 @@ class SvnRreoManager:
 	def svn_repo_clone(self, argv):
 		if self.url == None:
 			if len(argv) < 1:
-				print "Please give the url of svn"
+				pr_red_info("Please give the url of svn")
 				return -1
 			self.url = argv[0]
 			if os.path.exists(".svn"):
@@ -65,9 +77,22 @@ class SvnRreoManager:
 				return -1
 		return self.svn_repo_update()
 
+	def svn_repo_command(self, argv):
+		if len(argv) < 1:
+			pr_red_info("Please give a command")
+			return -1
+		command = " ".join(argv)
+		for fn in self.svn_repo_popen("svn list"):
+			fn = fn.strip()
+			if fn.endswith("/"):
+				command_last = "cd " + fn + " && " + command.replace("<path>", fn)
+				if self.svn_repo_system(command_last) != 0:
+					return -1
+
+
 if __name__ == "__main__":
 	if len(argv) < 2:
-		print "Please give a subcmd"
+		pr_red_info("Please give a subcmd")
 		sys.exit(-1)
 
 	repo = SvnRreoManager()
@@ -75,8 +100,16 @@ if __name__ == "__main__":
 	argv = argv[2:]
 
 	if subcmd in ["clone", "init"]:
-		repo.svn_repo_clone(argv)
+		ret = repo.svn_repo_clone(argv)
 	elif subcmd in ["update", "sync"]:
-		repo.svn_repo_update()
+		ret = repo.svn_repo_update()
+	elif subcmd in ["command", "cmd"]:
+		ret = repo.svn_repo_command(argv)
 	else:
-		print "unknown subcmd `%s'" % subcmd
+		pr_red_info("unknown subcmd `%s'" % subcmd)
+		ret = -1
+
+	if ret < 0:
+		pr_red_info("Failed")
+	else:
+		pr_green_info("OK")

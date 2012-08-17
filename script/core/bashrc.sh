@@ -32,7 +32,7 @@ export JAVA_HOME JRE_HOME CLASS_PATH PATH
 export KERNEL_HOME UBOOT_HOME FSLDROID_HOME PRODUCT_HOME
 export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE CAVAN_OUT_DEBUG
 
-for fn in ${CAVAN_HOME}/script/core/alias.sh ${CAVAN_HOME}/script/core/file.sh ${FSLDROID_HOME}/build/envsetup.sh
+for fn in ${CAVAN_HOME}/script/core/alias.sh ${CAVAN_HOME}/script/core/file.sh ${CAVAN_HOME}/script/core/bash_completion ${FSLDROID_HOME}/build/envsetup.sh
 do
 	[ -f "$fn" ] && source ${fn}
 done
