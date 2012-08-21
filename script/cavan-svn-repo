@@ -46,15 +46,9 @@ class SvnRreoManager:
 
 	def svn_repo_update_single(self, pathname):
 		if pathname.endswith("/"):
-			if not os.path.isdir(pathname):
-				if os.path.exists(pathname):
-					os.remove(pathname)
-				url = os.path.join(self.url, pathname)
-				if self.svn_repo_system("git svn init %s %s" % (url, pathname)) != 0:
-					return -1
-			return self.svn_repo_system("cd %s && git config pack.windowMemory 20m && git svn fetch" % pathname)
+			return self.svn_repo_system("cd %s && git svn rebase" % pathname)
 		else:
-			return self.svn_repo_system("svn update " + pathname)
+			return self.svn_repo_system("svn update --force " + pathname)
 
 	def svn_repo_update(self):
 		if self.url == None:
@@ -64,6 +58,21 @@ class SvnRreoManager:
 			if self.svn_repo_update_single(fn.strip()) < 0:
 				return -1
 		return 0
+
+	def svn_repo_clone_single(self, pathname):
+		if pathname.endswith("/"):
+			if not os.path.isdir(pathname):
+				if os.path.exists(pathname):
+					os.remove(pathname)
+				url = os.path.join(self.url, pathname)
+				if self.svn_repo_system("git svn init %s %s" % (url, pathname)) != 0:
+					return -1
+			if self.svn_repo_system("cd %s && git config pack.windowMemory 20m && git svn fetch" % pathname) != 0:
+				return -1
+			self.svn_repo_system("cd %s && git checkout -b git-svn git-svn" % pathname)
+			return 0
+		else:
+			return self.svn_repo_system("svn update --force " + pathname)
 
 	def svn_repo_clone(self, argv):
 		if self.url == None:
@@ -75,7 +84,9 @@ class SvnRreoManager:
 				os.path.remove(".svn")
 			if self.svn_repo_system("svn checkout --depth=empty %s ." % self.url) != 0:
 				return -1
-		return self.svn_repo_update()
+		for fn in self.svn_repo_popen("svn list"):
+			if self.svn_repo_clone_single(fn.strip()) != 0:
+				return -1
 
 	def svn_repo_command(self, argv):
 		if len(argv) < 1:

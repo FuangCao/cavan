@@ -13,3 +13,7 @@ echo on > /sys/bus/usb/devices/2-1/power/control
 $LINENO
 
 [[ "$1" == -* ]] && echo OK
+
+AA=1234567890
+${AA:8:1} => 9
+${AA:8:2} => 90
