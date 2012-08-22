@@ -1,5 +1,5 @@
 define list_target
-$(patsubst %.$(1),%,$(wildcard *.$(1)))
+$(patsubst %.$1,%,$(wildcard *.$1))
 endef
 
 CROSS_COMPILE =
