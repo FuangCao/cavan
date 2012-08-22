@@ -73,7 +73,7 @@ class SvnRreoManager:
 					return -1
 			if self.svn_repo_system("cd %s && git config pack.windowMemory 20m && git svn fetch && git svn rebase" % pathname) != 0:
 				return -1
-			self.svn_repo_system("cd %s && git checkout -b git-svn git-svn" % pathname)
+			self.svn_repo_system("cd %s && git checkout -b svn-master remotes/git-svn" % pathname)
 			return 0
 		else:
 			return self.svn_repo_system("svn update --force " + pathname)
