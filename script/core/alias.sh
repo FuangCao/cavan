@@ -25,7 +25,16 @@ function cavan-make2()
 	[ -f "[Mm]akefile" ] ||
 	{
 		rm "[Mm]akefile" -rfv
-		ln -vsf ${CAVAN_HOME}/script/core/general.mk Makefile || return 1
+		cat > Makefile << EOF
+### This file is automatic generation by FuangCao ###
+
+# ARCH =
+# CROSS_COMPILE =
+# CFLAGS =
+# LDFLAGS =
+
+include ${CAVAN_HOME}/script/core/general.mk
+EOF
 	}
 
 	make || return 1

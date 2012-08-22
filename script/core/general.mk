@@ -2,7 +2,6 @@ define list_target
 $(patsubst %.$1,%,$(wildcard *.$1))
 endef
 
-CROSS_COMPILE =
 AS = $(CROSS_COMPILE)as
 CC = $(CROSS_COMPILE)gcc
 CPP = $(CROSS_COMPILE)g++
@@ -12,8 +11,8 @@ AR = $(CROSS_COMPILE)ar
 CTARGET = $(call list_target,c)
 CPPTARGET = $(call list_target,cpp)
 
-CFLAGS = -Wall -Werror
-CPPFLAGS = $(CFLAGS)
+CFLAGS += -Wall -Werror
+CPPFLAGS += $(CFLAGS)
 
 all: $(CTARGET) $(CPPTARGET)
 
