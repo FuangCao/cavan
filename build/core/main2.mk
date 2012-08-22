@@ -25,6 +25,8 @@ STRIP = $(CROSS_COMPILE)strip
 RM = rm -rf
 MAKE = +make
 MKDIR = mkdir -p
+INSTALL = install -c
+CP = cp
 
 CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wno-trigraphs \
 			-Werror-implicit-function-declaration -Wno-format-security \
@@ -32,6 +34,8 @@ CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wno-trigraphs \
 			-I$(INCLUDE_PATH) -I. -DCAVAN_ARCH=$(ARCH)
 ASFLAGS +=	$(CFLAGS) -D__ASM__
 LDFLAGS += -lm -lpthread
+
+DESTDIR = /usr
 
 ifeq ("$(Q)","@")
 MAKEFLAGS += --no-print-directory
@@ -143,6 +147,28 @@ $(CAVAN_MAP_SOURCE): $(APP_SRC_FILES)
 		echo "{\"$${app}\", do_cavan_$${app}},"; \
 	done > $@
 
+install-header: $(wildcard $(ROOT_PATH)/include/*)
+	$(Q)$(CP) $^ $(DESTDIR)/include -av
+
+install-lib: $(TARGET_LIBSO) $(TARGET_LIBA)
+	$(Q)$(INSTALL) -v $^ $(DESTDIR)/lib
+
+install-bin: $(TARGET_BINS)
+	$(Q)$(INSTALL) -v $^ $(DESTDIR)/bin
+
+install: install-header install-lib install-bin
+
+uninstall-header:
+	$(Q)$(RM) $(addprefix $(DESTDIR)/include/,$(notdir $(wildcard $(ROOT_PATH)/include/*))) -v
+
+uninstall-lib: $(TARGET_LIBA) $(TARGET_LIBSO)
+	$(Q)$(RM) $(addprefix $(DESTDIR)/lib/,$(notdir $(TARGET_LIBA) $(TARGET_LIBSO))) -v
+
+uninstall-bin:
+	$(Q)$(RM) $(addprefix $(DESTDIR)/bin/,$(notdir $(TARGET_BINS))) -v
+
+uninstall: uninstall-header uninstall-lib uninstall-bin
+
 clean:
 	$(Q)$(RM) $(OUT_PATH) -v
 
@@ -159,3 +185,4 @@ clean-cavan:
 	$(Q)$(RM) $(OUT_CAVAN) -v
 
 .PRECIOUS: $(APP_OBJ_FILES) $(LIB_OBJ_FILES) $(CAVAN_OBJ_FILES)
+.PHONY: uninstall uninstall-header uninstall-lib uninstall-bin
