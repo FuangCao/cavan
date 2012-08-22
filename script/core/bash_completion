@@ -4,7 +4,6 @@ function _build_completion()
 {
 	local cur prev
 
-	COMPREPLY=()
 	_get_comp_words_by_ref cur prev
 
 	if [ "${COMP_CWORD}" = "1" ]
@@ -38,3 +37,24 @@ function _adb_completion()
 }
 
 complete -F _adb_completion adb
+
+function _cavan_mak_completion()
+{
+	local cur prev
+
+	_get_comp_words_by_ref cur prev
+
+	case ${COMP_CWORD} in
+		1)	COMPREPLY=($(compgen -W "lib app" -- ${cur}));;
+		2)	_filedir;;
+		3)	if [ "${COMP_WORDS[1]}" = "app" ]
+			then
+				COMPREPLY=($(compgen -W "simple normal" -- ${cur}))
+			else
+				COMPREPLY=()
+			fi;;
+		*)	COMPREPLY=();;
+	esac
+}
+
+complete -F _cavan_mak_completion cavan-make
