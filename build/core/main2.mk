@@ -169,6 +169,12 @@ uninstall-bin:
 
 uninstall: uninstall-header uninstall-lib uninstall-bin
 
+config-sh config shconfig menuconfig:
+	$(Q)$(ROOT_PATH)/script/cavan-config-sh
+
+config-gtk gtkconfig:
+	$(Q)$(ROOT_PATH)/script/cavan-config-gtk
+
 clean:
 	$(Q)$(RM) $(OUT_PATH) -v
 
