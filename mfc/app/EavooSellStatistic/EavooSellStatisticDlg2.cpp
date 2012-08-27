@@ -196,8 +196,8 @@ bool CEavooSellStatisticDlg2::EavooSellStatisticBase(const char *pathname)
 
 		if (helper.ParseBody(body) == false)
 		{
-			AfxMessageBox("短信的类容非法");
-			m_static_status.SetWindowText("短信的类容非法");
+			AfxMessageBox("短信的内容非法");
+			m_static_status.SetWindowText("短信的内容非法");
 			return false;
 		}
 
