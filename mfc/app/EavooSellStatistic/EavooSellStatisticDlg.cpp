@@ -108,12 +108,12 @@ bool CEavooSellStatisticDlg::Initialize(void)
 	char ip[32];
 	m_ipaddress1.GetWindowText(ip, sizeof(ip));
 
-	return mMessage.Initialize(DEFAULT_CACHE_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, m_edit_port, ip);
+	return mHelper.Initialize(DEFAULT_CACHE_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, m_edit_port, ip);
 }
 
 void CEavooSellStatisticDlg::Uninitialize(void)
 {
-	mMessage.Uninitialize();
+	mHelper.Uninitialize();
 }
 
 // EDUA# + 手机的IMEI号 + “,” + 手机软件版本号 + “,,,,#”
@@ -121,7 +121,7 @@ void CEavooSellStatisticDlg::Uninitialize(void)
 int CEavooSellStatisticDlg::ThreadHandler(void *data)
 {
 	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
-	CEavooShortMessage &message = dlg->mMessage;
+	CEavooShortMessageHelper &helper = dlg->mHelper;
 
 	if (dlg->Initialize() == false)
 	{
@@ -139,7 +139,7 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 	{
 		dlg->ShowStatus("连接到ADB ...");
 
-		while (message.AdbLocalConnect() == false && dlg->mThread)
+		while (helper.AdbLocalConnect() == false && dlg->mThread)
 		{
 			Sleep(2000);
 		}
@@ -151,7 +151,7 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 
 		dlg->ShowStatus("连接到手机 ...");
 
-		if (message.AdbServerConnect() == false)
+		if (helper.AdbServerConnect() == false)
 		{
 			Sleep(2000);
 
@@ -166,9 +166,9 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 
 		dlg->ShowStatus("正在运行 ...");
 
-		while (message.ReceiveFromNetwork())
+		while (helper.ReceiveFromNetwork() && helper.WriteToFile())
 		{
-			message.InsertIntoList(dlg->m_list_sms);
+			helper.InsertIntoList(dlg->m_list_sms);
 		}
 	}
 
@@ -225,7 +225,7 @@ BOOL CEavooSellStatisticDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	m_list_sms.InsertColumn(0, "手机号码", LVCFMT_LEFT, 130);
-	m_list_sms.InsertColumn(1, "发送时间", LVCFMT_LEFT, 200);
+	m_list_sms.InsertColumn(1, "发送时间", LVCFMT_LEFT, 160);
 	m_list_sms.InsertColumn(2, "短信的内容", LVCFMT_LEFT, 320);
 
 	m_ipaddress1.SetWindowText(DEFAULT_SERVER_IP);
@@ -299,7 +299,7 @@ void CEavooSellStatisticDlg::OnBUTTONstart()
 
 	if (mThread == NULL)
 	{
-		mThread = AfxBeginThread((AFX_THREADPROC)CEavooSellStatisticDlg::ThreadHandler, this);
+		mThread = AfxBeginThread((AFX_THREADPROC)ThreadHandler, this);
 	}
 }
 
@@ -331,18 +331,18 @@ void CEavooSellStatisticDlg::OnBUTTONload()
 
 	m_list_sms.DeleteAllItems();
 
-	CEavooShortMessage message;
-	if (message.Initialize(DEFAULT_CACHE_FILENAME, CFile::modeRead | CFile::shareDenyNone) == false)
+	CEavooShortMessageHelper helper;
+	if (helper.Initialize(DEFAULT_CACHE_FILENAME, CFile::modeRead | CFile::shareDenyNone) == false)
 	{
 		return;
 	}
 
-	while (message.ReadFromFile())
+	while (helper.ReadFromFile())
 	{
-		message.InsertIntoList(m_list_sms);
+		helper.InsertIntoList(m_list_sms);
 	}
 
-	message.Uninitialize();
+	helper.Uninitialize();
 }
 
 void CEavooSellStatisticDlg::OnBUTTONcleandatabase()

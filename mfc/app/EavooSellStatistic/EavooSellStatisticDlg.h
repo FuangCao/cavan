@@ -62,7 +62,7 @@ protected:
 
 private:
 	CWinThread *mThread;
-	CEavooShortMessage mMessage;
+	CEavooShortMessageHelper mHelper;
 
 private:
 	void ShowStatus(const char *format, ...);

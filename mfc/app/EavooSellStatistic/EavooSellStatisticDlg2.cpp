@@ -20,7 +20,6 @@ CEavooSellStatisticDlg2::CEavooSellStatisticDlg2(CWnd* pParent /*=NULL*/)
 	: CDialog(CEavooSellStatisticDlg2::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CEavooSellStatisticDlg2)
-		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 	mHead = NULL;
 }
@@ -34,9 +33,12 @@ void CEavooSellStatisticDlg2::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CEavooSellStatisticDlg2)
+	DDX_Control(pDX, IDC_BUTTON_stop, m_button_stop);
+	DDX_Control(pDX, IDOK, m_button_ok);
+	DDX_Control(pDX, IDC_STATIC_status, m_static_status);
+	DDX_Control(pDX, IDC_PROGRESS_statistic, m_progress_statistic);
 	DDX_Control(pDX, IDC_TAB_sell, m_tab_sell);
 	DDX_Control(pDX, IDC_LIST_sell, m_list_sell);
-	DDX_Control(pDX, IDC_STATIC_total_sell, m_static_total_sell);
 	//}}AFX_DATA_MAP
 }
 
@@ -44,6 +46,7 @@ void CEavooSellStatisticDlg2::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CEavooSellStatisticDlg2, CDialog)
 	//{{AFX_MSG_MAP(CEavooSellStatisticDlg2)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB_sell, OnSelchangeTABsell)
+	ON_BN_CLICKED(IDC_BUTTON_stop, OnBUTTONstop)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -143,12 +146,12 @@ CMonthSellLink *CEavooSellStatisticDlg2::FindProject(const char *projectname)
 	return NULL;
 }
 
-bool CEavooSellStatisticDlg2::EavooSellStatistic(const char *pathname)
+bool CEavooSellStatisticDlg2::EavooSellStatisticBase(const char *pathname)
 {
 	FreeLink();
 
-	CEavooShortMessage message;
-	if (message.Initialize(pathname, CFile::modeRead | CFile::shareDenyNone) == false)
+	CEavooShortMessageHelper helper;
+	if (helper.Initialize(pathname, CFile::modeRead | CFile::shareDenyNone) == false)
 	{
 		return false;
 	}
@@ -157,36 +160,61 @@ bool CEavooSellStatisticDlg2::EavooSellStatistic(const char *pathname)
 	char projectname[16];
 	CEavooShortMessageBody body;
 	CMonthSellLink *project;
+	DWORD dwTotalLength = helper.GetFileLength();
+	double dbReadLength = 0;
+
+	m_progress_statistic.SetRange32(0, 100);
+	mShouldStop = false;
 
 	while (1)
 	{
-		if (message.ReadFromFile() == false)
+		if (mShouldStop)
+		{
+			AfxMessageBox("取消统计");
+			m_static_status.SetWindowText("取消统计");
+			return false;
+		}
+
+		m_progress_statistic.SetPos((int) (dbReadLength / dwTotalLength * 100));
+
+		DWORD length = helper.ReadFromFile();
+		if (length <= 0)
 		{
 			break;
 		}
 
-		time = gmtime(message.GetDate());
+		dbReadLength += length;
+
+		m_static_status.SetWindowText(helper.GetMessageBody());
+		time = gmtime(helper.GetDate());
 		if (time == NULL)
 		{
-			continue;
+			AfxMessageBox("日期无效");
+			m_static_status.SetWindowText("日期无效");
+			return false;
 		}
 
-		if (message.ParseBody(body) == false)
+		if (helper.ParseBody(body) == false)
 		{
-			continue;
+			AfxMessageBox("短信的类容非法");
+			m_static_status.SetWindowText("短信的类容非法");
+			return false;
 		}
 
-		if (body.GetProjectName(projectname) == NULL)
+		const char *p_name = body.GetProjectName(projectname);
+		if (p_name == NULL)
 		{
-			continue;
+			p_name = "未知";
 		}
 
-		project = FindProject(projectname);
+		project = FindProject(p_name);
 		if (project == NULL)
 		{
-			project = new CMonthSellLink(projectname);
+			project = new CMonthSellLink(p_name);
 			if (project == NULL)
 			{
+				AfxMessageBox("无法分配存储空间");
+				m_static_status.SetWindowText("无法分配存储空间");
 				return false;
 			}
 
@@ -201,6 +229,28 @@ bool CEavooSellStatisticDlg2::EavooSellStatistic(const char *pathname)
 	}
 
 	return true;
+}
+
+bool CEavooSellStatisticDlg2::EavooSellStatistic(const char *pathname)
+{
+	if (EavooSellStatisticBase(pathname))
+	{
+		for (CMonthSellLink *p = mHead; p; p = p->next)
+		{
+			m_tab_sell.InsertItem(0, p->mProjectName);
+		}
+
+		if (mHead)
+		{
+			ShowProject();
+		}
+
+		return true;
+	}
+
+	FreeLink();
+
+	return false;
 }
 
 bool CEavooSellStatisticDlg2::ShowProject(const char *projectname)
@@ -223,14 +273,14 @@ bool CEavooSellStatisticDlg2::ShowProject(CMonthSellLink *head)
 	for (CMonthSellNode *p = head->mHead; p; p = p->next)
 	{
 		sprintf(buff, "%04d年%02d月", p->mYear, p->mMonth);
-		m_list_sell.InsertItem(0, buff);
+		int index = m_list_sell.InsertItem(m_list_sell.GetItemCount(), buff);
 		sprintf(buff, "%d 台", p->mSellCount);
-		m_list_sell.SetItemText(0, 1, buff);
+		m_list_sell.SetItemText(index, 1, buff);
 		total += p->mSellCount;
 	}
 
-	sprintf(buff, "%d 台", total);
-	m_static_total_sell.SetWindowText(buff);
+	sprintf(buff, "总销量：%d 台", total);
+	m_static_status.SetWindowText(buff);
 
 	return true;
 }
@@ -252,6 +302,19 @@ bool CEavooSellStatisticDlg2::ShowProject(void)
 	return true;
 }
 
+int CEavooSellStatisticDlg2::ThreadHandler(void *data)
+{
+	CEavooSellStatisticDlg2 *dlg = (CEavooSellStatisticDlg2 *)data;
+	dlg->m_button_ok.EnableWindow(false);
+	dlg->m_button_stop.EnableWindow(true);
+	dlg->EavooSellStatistic(DEFAULT_CACHE_FILENAME);
+	dlg->mThread = NULL;
+	dlg->m_button_ok.EnableWindow(true);
+	dlg->m_button_stop.EnableWindow(false);
+
+	return 0;
+}
+
 BOOL CEavooSellStatisticDlg2::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -259,22 +322,8 @@ BOOL CEavooSellStatisticDlg2::OnInitDialog()
 	// TODO: Add extra initialization here
 	m_list_sell.InsertColumn(0, "月份", LVCFMT_LEFT, 100);
 	m_list_sell.InsertColumn(1, "销量", LVCFMT_LEFT, 200);
-	if (EavooSellStatistic(DEFAULT_CACHE_FILENAME))
-	{
-		for (CMonthSellLink *p = mHead; p; p = p->next)
-		{
-			m_tab_sell.InsertItem(0, p->mProjectName);
-		}
 
-		if (mHead)
-		{
-			ShowProject();
-		}
-	}
-	else
-	{
-		FreeLink();
-	}
+	mThread = AfxBeginThread((AFX_THREADPROC)ThreadHandler, this);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -286,4 +335,10 @@ void CEavooSellStatisticDlg2::OnSelchangeTABsell(NMHDR* pNMHDR, LRESULT* pResult
 
 	ShowProject();
 	*pResult = 0;
+}
+
+void CEavooSellStatisticDlg2::OnBUTTONstop() 
+{
+	// TODO: Add your control notification handler code here
+	mShouldStop = true;
 }

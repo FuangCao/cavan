@@ -112,7 +112,8 @@ char *CEavooShortMessageBody::GetProjectName(char *buff)
 
 		if (*q == 0)
 		{
-			return NULL;
+			q = p + 8;
+			break;
 		}
 	}
 
@@ -128,64 +129,40 @@ char *CEavooShortMessageBody::GetProjectName(char *buff)
 
 // ============================================================
 
-CEavooShortMessage::CEavooShortMessage(void)
+bool CEavooShortMessage::InsertIntoList(CListCtrl &list)
+{
+	int index = list.InsertItem(0, mAddress);
+	if (index < 0)
+	{
+		return false;
+	}
+
+	COleDateTime time(mDate);
+	list.SetItemText(index, 1, time.Format("%Y-%m-%d %H:%M:%S"));
+	list.SetItemText(index, 2, mBody);
+
+	int count = list.GetItemCount();
+	if (count > MAX_LIST_SIZE)
+	{
+		list.DeleteItem(count - 1);
+	}
+
+	return true;
+}
+
+// ============================================================
+
+CEavooShortMessageHelper::CEavooShortMessageHelper(void)
 {
 	mSocket = INVALID_SOCKET;
 }
 
-CEavooShortMessage::~CEavooShortMessage(void)
+CEavooShortMessageHelper::~CEavooShortMessageHelper(void)
 {
 	Uninitialize();
 }
 
-int CEavooShortMessage::Read(char *buff, UINT size)
-{
-	if (mFile.Read(buff, size) == size)
-	{
-		return size;
-	}
-
-	mFile.Close();
-	mFile.m_hFile = CFile::hFileNull;
-
-	return -1;
-}
-
-int CEavooShortMessage::Write(const char *buff, UINT size)
-{
-	try
-	{
-		mFile.Write(buff, size);
-	}
-	catch (...)
-	{
-		AfxMessageBox("写数据失败");
-		mFile.Close();
-		mFile.m_hFile = CFile::hFileNull;
-		return -1;
-	}
-
-	return size;
-}
-
-int CEavooShortMessage::Flush(void)
-{
-	try
-	{
-		mFile.Flush();
-	}
-	catch (...)
-	{
-		AfxMessageBox("刷数据失败");
-		mFile.Close();
-		mFile.m_hFile = CFile::hFileNull;
-		return -1;
-	}
-
-	return 0;
-}
-
-int CEavooShortMessage::Receive(char *buff, int size)
+int CEavooShortMessageHelper::Receive(char *buff, int size)
 {
 	if (recv(mSocket, buff, size, 0) == size)
 	{
@@ -198,7 +175,7 @@ int CEavooShortMessage::Receive(char *buff, int size)
 	return -1;
 }
 
-int CEavooShortMessage::Send(const char *buff, int size)
+int CEavooShortMessageHelper::Send(const char *buff, int size)
 {
 	if (send(mSocket, buff, size, 0) == size)
 	{
@@ -212,7 +189,7 @@ int CEavooShortMessage::Send(const char *buff, int size)
 	return -1;
 }
 
-bool CEavooShortMessage::Initialize(const char *pathname, UINT flags, UINT port, const char *ip)
+bool CEavooShortMessageHelper::Initialize(const char *pathname, UINT flags, UINT port, const char *ip)
 {
 	if (WSAStartup(MAKEWORD(2, 2), &mWSAData) != 0)
 	{
@@ -240,7 +217,7 @@ bool CEavooShortMessage::Initialize(const char *pathname, UINT flags, UINT port,
 	return true;
 }
 
-void CEavooShortMessage::Uninitialize(void)
+void CEavooShortMessageHelper::Uninitialize(void)
 {
 	if (mFile.m_hFile != CFile::hFileNull)
 	{
@@ -256,12 +233,12 @@ void CEavooShortMessage::Uninitialize(void)
 	}
 }
 
-int CEavooShortMessage::ReceiveValue(char *buff, int size)
+int CEavooShortMessageHelper::ReceiveValue(char *buff, int size)
 {
 	return Receive(buff, size);
 }
 
-int CEavooShortMessage::ReceiveText(char *buff)
+int CEavooShortMessageHelper::ReceiveText(char *buff)
 {
 	int length;
 
@@ -275,12 +252,12 @@ int CEavooShortMessage::ReceiveText(char *buff)
 	return length;
 }
 
-bool CEavooShortMessage::SendResponse(char type)
+bool CEavooShortMessageHelper::SendResponse(char type)
 {
 	return Send(&type, 1) == 1;
 }
 
-bool CEavooShortMessage::ReceiveFromNetwork(void)
+bool CEavooShortMessageHelper::ReceiveFromNetwork(void)
 {
 	char type;
 	int ret;
@@ -295,38 +272,23 @@ bool CEavooShortMessage::ReceiveFromNetwork(void)
 		switch (type)
 		{
 		case SMS_TYPE_DATE:
-			if (ReceiveValue((char *)&mDate, sizeof(mDate)) < 0)
-			{
-				return false;
-			}
-
-			if (WriteValue(type, (char *)&mDate, sizeof(mDate)) < 0)
+			if (ReceiveValue((char *)&mShortMessage.mDate, sizeof(mShortMessage.mDate)) < 0)
 			{
 				return false;
 			}
 			break;
 
 		case SMS_TYPE_ADDRESS:
-			ret = ReceiveText(mAddress);
+			ret = ReceiveText(mShortMessage.mAddress);
 			if (ret < 0)
-			{
-				return false;
-			}
-
-			if (WriteText(type, mAddress, ret) < 0)
 			{
 				return false;
 			}
 			break;
 
 		case SMS_TYPE_BODY:
-			ret = ReceiveText(mBody);
+			ret = ReceiveText(mShortMessage.mBody);
 			if (ret < 0)
-			{
-				return false;
-			}
-
-			if (WriteText(type, mBody, ret) < 0)
 			{
 				return false;
 			}
@@ -340,17 +302,7 @@ bool CEavooShortMessage::ReceiveFromNetwork(void)
 			continue;
 
 		case SMS_TYPE_END:
-			if (SendResponse(SMS_TYPE_ACK) == false)
-			{
-				return false;
-			}
-
-			if (WriteType(type) == false)
-			{
-				return false;
-			}
-
-			return Flush() == 0;
+			return SendResponse(SMS_TYPE_ACK);
 
 		default:
 			return false;
@@ -360,185 +312,35 @@ bool CEavooShortMessage::ReceiveFromNetwork(void)
 	return false;
 }
 
-void CEavooShortMessage::InsertIntoList(CListCtrl &list)
+DWORD CEavooShortMessageHelper::WriteToFile(void)
 {
-	int count = list.GetItemCount();
-	if (count > MAX_LIST_SIZE)
+	DWORD dwWrite;
+	if (::WriteFile((HANDLE)mFile.m_hFile, &mShortMessage, sizeof(mShortMessage), &dwWrite, NULL) == FALSE)
 	{
-		list.DeleteItem(count - 1);
+		return 0;
 	}
 
-	list.InsertItem(0, mAddress);
-	COleDateTime time(mDate);
-	list.SetItemText(0, 1, time.Format("%Y年%m月%d日 %H时%M分%S秒"));
-	list.SetItemText(0, 2, mBody);
+	if (::FlushFileBuffers((HANDLE)mFile.m_hFile))
+	{
+		return dwWrite;
+	}
+
+	return 0;
 }
 
-bool CEavooShortMessage::WriteType(char type)
+DWORD CEavooShortMessageHelper::ReadFromFile(void)
 {
-	return Write(&type, 1) == 1;
+	DWORD dwRead;
+	if (::ReadFile((HANDLE)mFile.m_hFile, &mShortMessage, sizeof(mShortMessage), &dwRead, NULL))
+	{
+		return dwRead;
+	}
+
+	mFile.Close();
+	return 0;
 }
 
-int CEavooShortMessage::WriteText(char type, const char *text)
-{
-	if (Write(&type, 1) < 0)
-	{
-		return -1;
-	}
-
-	int length = strlen(text);
-	if (Write((char *)&length, sizeof(length)) < 0)
-	{
-		return -1;
-	}
-
-	if (Write(text, length) < 0)
-	{
-		return -1;
-	}
-
-	return length;
-}
-
-int CEavooShortMessage::WriteText(char type, const char *text, int length)
-{
-	if (Write(&type, 1) < 0)
-	{
-		return -1;
-	}
-
-	if (Write((char *)&length, sizeof(length)) < 0)
-	{
-		return -1;
-	}
-
-	if (Write(text, length) < 0)
-	{
-		return -1;
-	}
-
-	return length;
-}
-
-int CEavooShortMessage::WriteValue(char type, const char *data, int size)
-{
-	if (Write(&type, 1) < 0)
-	{
-		return -1;
-	}
-
-	if (Write(data, size) < 0)
-	{
-		return -1;
-	}
-
-	return size;
-}
-
-bool CEavooShortMessage::WriteToFile(void)
-{
-	if (WriteValue(SMS_TYPE_DATE, (char *)&mDate, sizeof(mDate)) < 0)
-	{
-		return false;
-	}
-
-	if (WriteText(SMS_TYPE_ADDRESS, mAddress) < 0)
-	{
-		return false;
-	}
-
-	if (WriteText(SMS_TYPE_BODY, mBody) < 0)
-	{
-		return false;
-	}
-
-	if (WriteType(SMS_TYPE_END) == false)
-	{
-		return false;
-	}
-
-	return Flush() == 0;
-}
-
-int CEavooShortMessage::ReadValue(char *buff, UINT size)
-{
-	return Read(buff, size);
-}
-
-int CEavooShortMessage::ReadText(char *buff, int size)
-{
-	int length;
-
-	if (Read((char *)&length, sizeof(length)) < 0)
-	{
-		return -1;
-	}
-
-	if (length <= 0 || length >= size || Read(buff, length) < 0)
-	{
-		return -1;
-	}
-
-	buff[length] = 0;
-
-	return length;
-}
-
-bool CEavooShortMessage::ReadFromFile(void)
-{
-	char type;
-
-	mBody[0] = 0;
-	mAddress[0] = 0;
-
-	while (1)
-	{
-		if (Read(&type, 1) < 0)
-		{
-			return false;
-		}
-
-		switch (type)
-		{
-		case SMS_TYPE_DATE:
-			if (ReadValue((char *)&mDate, sizeof(mDate)) < 0)
-			{
-				goto out_bad_database;
-			}
-			break;
-
-		case SMS_TYPE_ADDRESS:
-			if (ReadText(mAddress, sizeof(mAddress)) < 0)
-			{
-				goto out_bad_database;
-			}
-			break;
-
-		case SMS_TYPE_BODY:
-			if (ReadText(mBody, sizeof(mBody)) < 0)
-			{
-				goto out_bad_database;
-			}
-			break;
-
-		case SMS_TYPE_END:
-			if (mBody[0] == 0 || mAddress[0] == 0)
-			{
-				goto out_bad_database;
-			}
-			return true;
-
-		default:
-			return false;
-		}
-	}
-
-out_bad_database:
-	AfxMessageBox("数据库已损坏");
-	return false;
-}
-
-bool CEavooShortMessage::AdbServerConnect()
+bool CEavooShortMessageHelper::AdbServerConnect()
 {
 	char command[16];
 	sprintf(command, "tcp:%04d", mPort);
@@ -546,7 +348,7 @@ bool CEavooShortMessage::AdbServerConnect()
 	return AdbSendCommand(command);
 }
 
-bool CEavooShortMessage::AdbLocalConnect()
+bool CEavooShortMessageHelper::AdbLocalConnect()
 {
 	int ret;
 	sockaddr_in addr;
@@ -599,7 +401,7 @@ bool CEavooShortMessage::AdbLocalConnect()
 	return false;
 }
 
-bool CEavooShortMessage::AdbReadStatus(void)
+bool CEavooShortMessageHelper::AdbReadStatus(void)
 {
 	if (Receive(mAdbStatus, 4) < 0)
 	{
@@ -638,7 +440,7 @@ bool CEavooShortMessage::AdbReadStatus(void)
 	return false;
 }
 
-bool CEavooShortMessage::AdbSendText(const char *text)
+bool CEavooShortMessageHelper::AdbSendText(const char *text)
 {
 	int length = strlen(text);
 	char buff[32];
@@ -659,7 +461,7 @@ bool CEavooShortMessage::AdbSendText(const char *text)
 	return AdbReadStatus();
 }
 
-bool CEavooShortMessage::AdbSendCommand(const char *command)
+bool CEavooShortMessageHelper::AdbSendCommand(const char *command)
 {
 	if (strncmp("host", command, 4))
 	{
@@ -672,7 +474,12 @@ bool CEavooShortMessage::AdbSendCommand(const char *command)
 	return AdbSendText(command);
 }
 
-bool CEavooShortMessage::ParseBody(CEavooShortMessageBody &body)
+bool CEavooShortMessageHelper::ParseBody(CEavooShortMessageBody &body)
 {
-	return body.ParseText(mBody);
+	return body.ParseText(mShortMessage.mBody);
+}
+
+void CEavooShortMessageHelper::InsertIntoList(CListCtrl &list)
+{
+	mShortMessage.InsertIntoList(list);
 }

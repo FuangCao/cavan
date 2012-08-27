@@ -53,9 +53,12 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CEavooSellStatisticDlg2)
 	enum { IDD = IDD_DIALOG_statistic };
+	CButton	m_button_stop;
+	CButton	m_button_ok;
+	CStatic	m_static_status;
+	CProgressCtrl	m_progress_statistic;
 	CTabCtrl	m_tab_sell;
 	CListCtrl	m_list_sell;
-	CStatic	m_static_total_sell;
 	//}}AFX_DATA
 
 
@@ -73,19 +76,25 @@ protected:
 	//{{AFX_MSG(CEavooSellStatisticDlg2)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangeTABsell(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBUTTONstop();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 private:
+	CWinThread *mThread;
 	CMonthSellLink *mHead;
+	bool mShouldStop;
 
 public:
 	CMonthSellLink *FindProject(const char *projectname);
+	bool EavooSellStatisticBase(const char *pathname);
 	bool EavooSellStatistic(const char *pathname);
 	bool ShowProject(const char *projectname);
 	bool ShowProject(CMonthSellLink *head);
 	bool ShowProject(void);
 	void FreeLink(void);
+
+	static int ThreadHandler(void *data);
 };
 
 //{{AFX_INSERT_LOCATION}}

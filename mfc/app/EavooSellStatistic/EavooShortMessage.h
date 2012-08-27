@@ -57,12 +57,24 @@ public:
 	char *GetProjectName(char *buff);
 };
 
+class CEavooShortMessageHelper;
+
 class CEavooShortMessage
 {
+friend CEavooShortMessageHelper;
 private:
 	time_t mDate;
-	char mAddress[32];
-	char mBody[1024];
+	char mAddress[24];
+	char mBody[512];
+
+public:
+	bool InsertIntoList(CListCtrl &list);
+};
+
+class CEavooShortMessageHelper
+{
+private:
+	CEavooShortMessage mShortMessage;
 
 private:
 	SOCKET mSocket;
@@ -73,8 +85,8 @@ private:
 	UINT mPort;
 
 public:
-	CEavooShortMessage(void);
-	~CEavooShortMessage(void);
+	CEavooShortMessageHelper(void);
+	~CEavooShortMessageHelper(void);
 
 	bool Initialize(const char *pathname, UINT flags, UINT port = 0, const char *ip = DEFAULT_SERVER_IP);
 	void Uninitialize(void);
@@ -82,24 +94,25 @@ public:
 
 	time_t *GetDate(void)
 	{
-		return &mDate;
+		return &mShortMessage.mDate;
 	}
 
-	int Read(char *buff, UINT size);
-	int Write(const char *buff, UINT size);
 	int Flush(void);
 	int Receive(char *buff, int size);
 	int Send(const char *buff, int size);
 
-	int WriteText(char type, const char *text);
-	int WriteText(char type, const char *text, int length);
-	int WriteValue(char type, const char *data, int size);
-	bool WriteType(char type);
-	bool WriteToFile(void);
+	DWORD WriteToFile(void);
+	DWORD ReadFromFile(void);
 
-	int ReadValue(char *buff, UINT size);
-	int ReadText(char *buff, int size);
-	bool ReadFromFile(void);
+	DWORD GetFileLength(void)
+	{
+		return mFile.GetLength();
+	}
+
+	const char *GetMessageBody(void)
+	{
+		return mShortMessage.mBody;
+	}
 
 	int ReceiveValue(char *buff, int size);
 	int ReceiveText(char *buff);

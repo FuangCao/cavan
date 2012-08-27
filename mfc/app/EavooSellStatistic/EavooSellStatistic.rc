@@ -95,7 +95,7 @@ BEGIN
     PUSHBUTTON      "关闭服务",IDC_BUTTON_stop,76,344,50,14,WS_DISABLED
     CONTROL         "List1",IDC_LIST_sms,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTDESCENDING | 
-                    WS_BORDER | WS_TABSTOP,7,33,398,283
+                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,33,398,283
     EDITTEXT        IDC_EDIT_port,283,11,104,14,ES_AUTOHSCROLL
     LTEXT           "服务器端口号：",IDC_STATIC,222,13,57,8
     LTEXT           "服务器地址：",IDC_STATIC,15,14,49,8
@@ -108,19 +108,21 @@ BEGIN
     PUSHBUTTON      "清空数据库",IDC_BUTTON_clean_database,283,344,50,14
 END
 
-IDD_DIALOG_statistic DIALOG DISCARDABLE  0, 0, 187, 226
+IDD_DIALOG_statistic DIALOG DISCARDABLE  0, 0, 219, 249
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "销量统计"
 FONT 10, "System"
 BEGIN
-    DEFPUSHBUTTON   "确定",IDOK,7,205,50,14
-    PUSHBUTTON      "取消",IDCANCEL,130,205,50,14
-    LTEXT           "总销量：",IDC_STATIC,7,189,33,8
+    DEFPUSHBUTTON   "确定",IDOK,7,228,50,14
+    PUSHBUTTON      "停止",IDC_BUTTON_stop,162,228,50,14
     CONTROL         "List1",IDC_LIST_sell,"SysListView32",LVS_REPORT | 
-                    WS_BORDER | WS_TABSTOP,7,23,173,157
-    LTEXT           "0 台",IDC_STATIC_total_sell,46,189,114,8
+                    WS_BORDER | WS_TABSTOP,13,31,194,157
     CONTROL         "Tab1",IDC_TAB_sell,"SysTabControl32",TCS_BUTTONS,7,7,
-                    173,193
+                    205,13
+    CONTROL         "Progress1",IDC_PROGRESS_statistic,"msctls_progress32",
+                    WS_BORDER,13,192,194,14
+    LTEXT           "",IDC_STATIC_status,13,210,194,8
+    GROUPBOX        "",IDC_STATIC,7,21,205,202
 END
 
 
@@ -194,9 +196,9 @@ BEGIN
     IDD_DIALOG_statistic, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 180
+        RIGHTMARGIN, 212
         TOPMARGIN, 7
-        BOTTOMMARGIN, 219
+        BOTTOMMARGIN, 242
     END
 END
 #endif    // APSTUDIO_INVOKED
