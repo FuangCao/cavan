@@ -4,8 +4,8 @@
 			 url="http://ftp.gnu.org/gnu/bash">
 	</package>
 
-	<package name="busybox" version="1.19.2" depend="bash" config=""
-			 url="http://busybox.net/downloads">
+	<package name="busybox" version="1.20.2" depend="bash" config=""
+			 url="http://busybox.net/downloads/$(BUSYBOX_NAME).tar.bz2">
 	</package>
 
 	<package name="pkgconfig" version="0.18" depend="bash"
@@ -53,14 +53,14 @@
 			 url="ftp://sourceware.org/pub/libffi">
 	</package>
 
-	<package name="libusb" version="0.1.12" depend="bash"
+	<package name="libusb" version="1.0.9" depend="bash"
 	         config="--prefix=/usr"
-			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz">
+			 url="http://sourceforge.net/projects/libusb/files/libusb-1.0/$(LIBUSB_NAME)/$(LIBUSB_NAME).tar.bz2">
 	</package>
 
-	<package name="usbutils" version="0.84" depend="libusb"
+	<package name="usbutils" version="006" depend="libusb"
 			 config="--prefix=/usr"
-	         url="http://down1.chinaunix.net/distfiles">
+			 url="http://www.kernel.org/pub/linux/utils/usb/usbutils">
 	</package>
 
 	<package name="udev" version="172" depend="pciids usbutils libffi"
@@ -118,7 +118,7 @@
 			 url="http://ftp.gnu.org/gnu/gzip">
 	</package>
 
-	<package name="xz" version="5.0.3" depend="bash"
+	<package name="xz" version="5.0.4" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://tukaani.org/xz">
 	</package>

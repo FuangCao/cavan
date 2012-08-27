@@ -42,6 +42,22 @@ EOF
 	return 0
 }
 
+function adb-push-directory()
+{
+	local fn
+
+	cd $1 || return 1
+
+	for fn in *
+	do
+		[ -f "${fn}" ] || continue
+		echo "Push ${fn} => $2"
+		adb push ${fn} $2 || return 1
+	done
+
+	return 0
+}
+
 function cavan-server-run()
 {
 	[ "$(id -u)" = "0" ] ||

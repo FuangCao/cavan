@@ -53,13 +53,13 @@
 			 url="http://cgit.freedesktop.org/sbox2/snapshot">
 	</package>
 
-	<package name="libusb" version="0.1.12" depend="libtool" config=""
-			 url="http://ncu.dl.sourceforge.net/project/libusb/libusb-0.1%20%28LEGACY%29/0.1.12/libusb-0.1.12.tar.gz">
+	<package name="libusb" version="1.0.9" depend="libtool" config=""
+			 url="http://sourceforge.net/projects/libusb/files/libusb-1.0/$(LIBUSB_NAME)/$(LIBUSB_NAME).tar.bz2">
 	</package>
 
-	<package name="usbutils" version="0.84" depend="libusb"
+	<package name="usbutils" version="006" depend="libusb"
 			 config="CFLAGS=-I$(UTILS_PATH)/usr/include LDFLAGS=-L$(UTILS_PATH)/usr/lib"
-			 url="http://down1.chinaunix.net/distfiles">
+			 url="http://www.kernel.org/pub/linux/utils/usb/usbutils">
 	</package>
 
 	<other name="libXt" version="1.0.7" depend="libX11" config=""
