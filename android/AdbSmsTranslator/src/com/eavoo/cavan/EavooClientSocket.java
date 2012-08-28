@@ -92,14 +92,17 @@ public class EavooClientSocket
 
 	public int write(byte[] buff)
 	{
-		try
+		synchronized (this)
 		{
-			mOutputStream.write(buff);
-			return mInputStream.read() == SMS_TYPE_ACK ? 0 : -1;
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
+			try
+			{
+				mOutputStream.write(buff);
+				return mInputStream.read() == SMS_TYPE_ACK ? 0 : -1;
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
 		}
 
 		return -1;
@@ -107,14 +110,17 @@ public class EavooClientSocket
 
 	public int write(EavooShortMessage message)
 	{
-		try
+		synchronized (this)
 		{
-			mOutputStream.write(message.toByteArray());
-			return mInputStream.read() == SMS_TYPE_ACK ? 0 : -1;
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
+			try
+			{
+				mOutputStream.write(message.toByteArray());
+				return mInputStream.read() == SMS_TYPE_ACK ? 0 : -1;
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
 		}
 
 		return -1;
@@ -122,14 +128,17 @@ public class EavooClientSocket
 
 	public boolean testNetwork()
 	{
-		try
+		synchronized (this)
 		{
-			mOutputStream.write(SMS_TYPE_TEST);
-			return mInputStream.read() == SMS_TYPE_ACK;
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
+			try
+			{
+				mOutputStream.write(SMS_TYPE_TEST);
+				return mInputStream.read() == SMS_TYPE_ACK;
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
 		}
 
 		return false;
@@ -137,18 +146,21 @@ public class EavooClientSocket
 
 	public static int findFreeSocket(EavooClientSocket[] sockets)
 	{
-		for (int i = sockets.length - 1; i >= 0; i--)
+		synchronized (sockets)
 		{
-			if (sockets[i] == null)
+			for (int i = sockets.length - 1; i >= 0; i--)
 			{
-				return i;
-			}
+				if (sockets[i] == null)
+				{
+					return i;
+				}
 
-			if (sockets[i].testNetwork() == false)
-			{
-				sockets[i].close();
-				sockets[i] = null;
-				return i;
+				if (sockets[i].testNetwork() == false)
+				{
+					sockets[i].close();
+					sockets[i] = null;
+					return i;
+				}
 			}
 		}
 
@@ -157,12 +169,15 @@ public class EavooClientSocket
 
 	public static void closeAll(EavooClientSocket[] sockets)
 	{
-		for (int i = sockets.length - 1; i >= 0; i--)
+		synchronized (sockets)
 		{
-			if (sockets[i] != null)
+			for (int i = sockets.length - 1; i >= 0; i--)
 			{
-				sockets[i].close();
-				sockets[i] = null;
+				if (sockets[i] != null)
+				{
+					sockets[i].close();
+					sockets[i] = null;
+				}
 			}
 		}
 	}

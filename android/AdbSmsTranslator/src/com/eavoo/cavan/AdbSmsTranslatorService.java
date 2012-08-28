@@ -47,23 +47,35 @@ public class AdbSmsTranslatorService extends Service
 	{
 		Log.i(TAG, "DatabaseInsert: " + message);
 
-		return mSqLiteDatabase.insert(mSqLiteOpenHelperMessage.getTableName(), null, message.toContentValues());
+		synchronized (mSqLiteDatabase)
+		{
+			return mSqLiteDatabase.insert(mSqLiteOpenHelperMessage.getTableName(), null, message.toContentValues());
+		}
 	}
 
 	public int DatabaseDelete(String[] args)
 	{
-		return mSqLiteDatabase.delete(mSqLiteOpenHelperMessage.getTableName(), "id=?", args);
+		synchronized (mSqLiteDatabase)
+		{
+			return mSqLiteDatabase.delete(mSqLiteOpenHelperMessage.getTableName(), "id=?", args);
+		}
 	}
 
 	public int DatabaseDelete(String id)
 	{
-		String[] args = new String[] {id};
-		return DatabaseDelete(args);
+		synchronized (mSqLiteDatabase)
+		{
+			String[] args = new String[] {id};
+			return DatabaseDelete(args);
+		}
 	}
 
 	public Cursor DatabaseQuertAll()
 	{
-		return mSqLiteDatabase.query(mSqLiteOpenHelperMessage.getTableName(), null, null, null, null, null, null);
+		synchronized (mSqLiteDatabase)
+		{
+			return mSqLiteDatabase.query(mSqLiteOpenHelperMessage.getTableName(), null, null, null, null, null, null);
+		}
 	}
 
 	@Override
@@ -89,42 +101,46 @@ public class AdbSmsTranslatorService extends Service
 	{
 		Log.i(TAG, "onDestroy");
 
-		SocketLitenThread thread = mLitenThread;
-		mLitenThread = null;
-
-		if (mServerSocket != null)
+		SocketLitenThread thread;
+		synchronized (this)
 		{
-			try
+			thread = mLitenThread;
+			mLitenThread = null;
+
+			if (mServerSocket != null)
 			{
-				mServerSocket.close();
+				try
+				{
+					mServerSocket.close();
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+
+					Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
+					sendBroadcast(intent);
+					mLitenThread = thread;
+
+					return;
+				}
 			}
-			catch (IOException e)
+
+			if (thread != null)
 			{
-				e.printStackTrace();
+				try
+				{
+					thread.join();
+				}
+				catch (InterruptedException e)
+				{
+					e.printStackTrace();
 
-				Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
-				sendBroadcast(intent);
-				mLitenThread = thread;
+					Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
+					sendBroadcast(intent);
+					mLitenThread = thread;
 
-				return;
-			}
-		}
-
-		if (thread != null)
-		{
-			try
-			{
-				thread.join();
-			}
-			catch (InterruptedException e)
-			{
-				e.printStackTrace();
-
-				Intent intent = new Intent(ACTION_SERVICE_STOP_FAILED);
-				sendBroadcast(intent);
-				mLitenThread = thread;
-
-				return;
+					return;
+				}
 			}
 		}
 
@@ -137,29 +153,32 @@ public class AdbSmsTranslatorService extends Service
 	{
 		Log.i(TAG, "onStart");
 
-		mPort = intent.getIntExtra("translator_port", 8888);
-		if (mServerSocket != null && mServerSocket.getLocalPort() != mPort)
+		synchronized (this)
 		{
-			try
+			mPort = intent.getIntExtra("translator_port", 8888);
+			if (mServerSocket != null && mServerSocket.getLocalPort() != mPort)
 			{
-				mServerSocket.close();
+				try
+				{
+					mServerSocket.close();
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
 			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
-		}
 
-		if (mLitenThread == null)
-		{
-			mLitenThread = new SocketLitenThread();
-			mLitenThread.start();
+			if (mLitenThread == null)
+			{
+				mLitenThread = new SocketLitenThread();
+				mLitenThread.start();
+			}
 		}
 
 		super.onStart(intent, startId);
 	}
 
-	synchronized private int sendShortMessage(EavooShortMessage message)
+	private int sendShortMessage(EavooShortMessage message)
 	{
 		byte[] buff;
 		try
@@ -174,22 +193,25 @@ public class AdbSmsTranslatorService extends Service
 
 		int count = 0;
 
-		for (int i = mClientSockets.length - 1; i >= 0; i--)
+		synchronized (mClientSockets)
 		{
-			if (mClientSockets[i] == null)
+			for (int i = mClientSockets.length - 1; i >= 0; i--)
 			{
-				continue;
-			}
+				if (mClientSockets[i] == null)
+				{
+					continue;
+				}
 
-			int ret = mClientSockets[i].write(buff);
-			if (ret < 0)
-			{
-				mClientSockets[i].close();
-				mClientSockets[i] = null;
-			}
-			else
-			{
-				count++;
+				int ret = mClientSockets[i].write(buff);
+				if (ret < 0)
+				{
+					mClientSockets[i].close();
+					mClientSockets[i] = null;
+				}
+				else
+				{
+					count++;
+				}
 			}
 		}
 
@@ -201,7 +223,7 @@ public class AdbSmsTranslatorService extends Service
 		return count;
 	}
 
-	private boolean sendDatabaseToClients()
+	synchronized private boolean sendDatabaseToClients()
 	{
 		Cursor cursor = DatabaseQuertAll();
 		if (cursor == null || cursor.moveToFirst() == false)
@@ -246,14 +268,18 @@ public class AdbSmsTranslatorService extends Service
 			Log.i(TAG, "RemoteSocketAddress = " + socket.getRemoteSocketAddress());
 			Log.i(TAG, "index = " + index);
 
-			try
+			synchronized (this)
 			{
-				mClientSockets[index] = new EavooClientSocket(socket);
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-				mClientSockets[index] = null;
+				try
+				{
+					mClientSockets[index] = new EavooClientSocket(socket);
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+					mClientSockets[index] = null;
+					return false;
+				}
 			}
 
 			return true;
@@ -263,32 +289,35 @@ public class AdbSmsTranslatorService extends Service
 		{
 			while (true)
 			{
-				if (mLitenThread == null)
+				synchronized (this)
 				{
-					break;
-				}
-
-				if (mServerSocket == null)
-				{
-					try
+					if (mLitenThread == null)
 					{
-						mServerSocket = new ServerSocket(mPort);
-					}
-					catch (IOException e)
-					{
-						e.printStackTrace();
-
-						Intent intent = new Intent(ACTION_SERVICE_START_FAILED);
-						sendBroadcast(intent);
-
-						mServerSocket = null;
 						break;
 					}
 
-					Intent intent = new Intent(ACTION_SERVICE_RUNNING);
-					sendBroadcast(intent);
+					if (mServerSocket == null)
+					{
+						try
+						{
+							mServerSocket = new ServerSocket(mPort);
+						}
+						catch (IOException e)
+						{
+							e.printStackTrace();
 
-					Log.i(TAG, "Bind to port `" + mPort + "' success");
+							Intent intent = new Intent(ACTION_SERVICE_START_FAILED);
+							sendBroadcast(intent);
+
+							mServerSocket = null;
+							break;
+						}
+
+						Intent intent = new Intent(ACTION_SERVICE_RUNNING);
+						sendBroadcast(intent);
+
+						Log.i(TAG, "Bind to port `" + mPort + "' success");
+					}
 				}
 
 				try
@@ -309,7 +338,10 @@ public class AdbSmsTranslatorService extends Service
 					e.printStackTrace();
 				}
 
-				mServerSocket = null;
+				synchronized (this)
+				{
+					mServerSocket = null;
+				}
 			}
 
 			return null;
@@ -355,8 +387,11 @@ public class AdbSmsTranslatorService extends Service
 			Intent intent = new Intent(ACTION_SERVICE_STOPPED);
 			sendBroadcast(intent);
 
-			mLitenThread = null;
-			mServerSocket = null;
+			synchronized (this)
+			{
+				mLitenThread = null;
+				mServerSocket = null;
+			}
 		}
 	}
 
@@ -490,7 +525,7 @@ public class AdbSmsTranslatorService extends Service
 			return true;
 		}
 
-		private int deleteAll(Uri uri)
+		synchronized private int deleteAll(Uri uri)
 		{
 			Log.i(TAG, "delUri = " + uri);
 			int count = mContentResolver.delete(uri, null, null);
@@ -500,7 +535,7 @@ public class AdbSmsTranslatorService extends Service
 		}
 
 		@Override
-		public void onChange(boolean selfChange)
+		synchronized public void onChange(boolean selfChange)
 		{
 			Log.i(TAG, "onChange: selfChange = " + selfChange);
 

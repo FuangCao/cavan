@@ -122,6 +122,11 @@ char *CEavooShortMessageBody::GetProjectName(char *buff)
 		*buff = *p;
 	}
 
+	if (buff == buff_bak)
+	{
+		return NULL;
+	}
+
 	*buff = 0;
 
 	return buff_bak;
@@ -148,6 +153,23 @@ bool CEavooShortMessage::InsertIntoList(CListCtrl &list)
 	}
 
 	return true;
+}
+
+void CEavooShortMessage::Initialize(void)
+{
+	mDate = 0;
+	mAddress[0] = 0;
+	mBody[0] = 0;
+}
+
+bool CEavooShortMessage::IsInvalid(void)
+{
+	return mDate == 0 || mAddress[0] == 0 || mBody[0] == 0;
+}
+
+bool CEavooShortMessage::IsValid(void)
+{
+	return mDate && mAddress[0] && mBody[0];
 }
 
 // ============================================================
@@ -262,6 +284,8 @@ bool CEavooShortMessageHelper::ReceiveFromNetwork(void)
 	char type;
 	int ret;
 
+	mShortMessage.Initialize();
+
 	while (1)
 	{
 		if (Receive(&type, 1) < 0)
@@ -302,6 +326,11 @@ bool CEavooShortMessageHelper::ReceiveFromNetwork(void)
 			continue;
 
 		case SMS_TYPE_END:
+			if (mShortMessage.IsInvalid())
+			{
+				SendResponse(SMS_TYPE_FAILED);
+				return false;
+			}
 			return SendResponse(SMS_TYPE_ACK);
 
 		default:
@@ -331,7 +360,7 @@ DWORD CEavooShortMessageHelper::WriteToFile(void)
 DWORD CEavooShortMessageHelper::ReadFromFile(void)
 {
 	DWORD dwRead;
-	if (::ReadFile((HANDLE)mFile.m_hFile, &mShortMessage, sizeof(mShortMessage), &dwRead, NULL))
+	if (::ReadFile((HANDLE)mFile.m_hFile, &mShortMessage, sizeof(mShortMessage), &dwRead, NULL) && mShortMessage.IsValid())
 	{
 		return dwRead;
 	}

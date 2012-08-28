@@ -184,7 +184,7 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "command",
-			.owner = THIS_MODULE,
+//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -195,7 +195,7 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "keycode",
-			.owner = THIS_MODULE,
+//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -206,7 +206,7 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "event",
-			.owner = THIS_MODULE,
+//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -217,7 +217,7 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "data",
-			.owner = THIS_MODULE,
+//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -228,7 +228,7 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "value",
-			.owner = THIS_MODULE,
+//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 

@@ -238,7 +238,7 @@ const struct device_attribute vn_attrs[] =
 		.attr =
 		{
 			.name = "command",
-			.owner = THIS_MODULE,
+//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -249,7 +249,7 @@ const struct device_attribute vn_attrs[] =
 		.attr =
 		{
 			.name = "data",
-			.owner = THIS_MODULE,
+//			.owner = THIS_MODULE,
 			.mode = S_IWUGO | S_IRUGO,
 		},
 

@@ -69,6 +69,9 @@ private:
 
 public:
 	bool InsertIntoList(CListCtrl &list);
+	void Initialize(void);
+	bool IsInvalid(void);
+	bool IsValid(void);
 };
 
 class CEavooShortMessageHelper
