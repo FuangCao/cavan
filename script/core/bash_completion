@@ -20,6 +20,7 @@ function _cavan_completion()
 }
 
 complete -F _cavan_completion cavan
+complete -F _cavan_completion cavan-main
 
 function _cavan_svn_repo()
 {
@@ -58,3 +59,41 @@ function _cavan_mak_completion()
 }
 
 complete -F _cavan_mak_completion cavan-make
+
+function _fastboot__completion()
+{
+	local cur prev
+
+	_get_comp_words_by_ref cur prev
+
+	case ${COMP_CWORD} in
+		1)
+			COMPREPLY=($(compgen -W "update flashall flash erase format getvar boot flash:raw devices continue reboot reboot-bootloader help" -- ${cur}))
+			;;
+		2)
+			case ${COMP_WORDS[1]} in
+				flash | erase | format)
+					COMPREPLY=($(compgen -W "boot system cache misc userdata persist recovery" -- ${cur}))
+					;;
+				update)
+					_filedir
+					;;
+				*)
+					COMPREPLY=()
+					;;
+			esac
+			;;
+		*)
+			_filedir
+			;;
+	esac
+}
+
+complete -F _fastboot__completion fastboot
+
+function _build_helper__completion()
+{
+	_build_completion "kernelconfig kernelbuild bootimage mkboot ramdisk recovery lk all help"
+}
+
+complete -F _build_helper__completion build_helper.sh

@@ -104,11 +104,20 @@ static void swan_virtual_keypad_setup_events(struct input_dev *vk_input)
 	__set_bit(REL_WHEEL, vk_input->relbit);
 }
 
+static void swan_vk_touch(struct input_dev *input, unsigned int code)
+{
+	input_event(input, EV_KEY, code, 1);
+	input_event(input, EV_KEY, code, 0);
+	input_sync(input);
+}
+
 static ssize_t swan_virtual_keypad_command_store(struct device *dev, struct device_attribute *attr, const char *buff, size_t count)
 {
 	const struct swan_virtual_key *p, *end_p;
 	struct swan_virtual_keypad *vk = dev_get_drvdata(dev);
 	static unsigned int old_code;
+
+	pr_pos_info();
 
 	for (p = swan_vk_table, end_p = swan_vk_table + ARRAY_SIZE(swan_vk_table); p < end_p && strlhcmp(p->name, buff); p++);
 
@@ -117,8 +126,8 @@ static ssize_t swan_virtual_keypad_command_store(struct device *dev, struct devi
 		old_code = p->code;
 	}
 
-	input_event(vk->input, EV_KEY, old_code, 1);
-	input_event(vk->input, EV_KEY, old_code, 0);
+	pr_green_info("keycode = %d", old_code);
+	swan_vk_touch(vk->input, old_code);
 
 	return count;
 }
@@ -128,7 +137,6 @@ static ssize_t swan_virtual_keypad_keycode_store(struct device *dev, struct devi
 	unsigned int code;
 	static unsigned old_code;
 	struct swan_virtual_keypad *vk = dev_get_drvdata(dev);
-	struct input_dev *vk_input = vk->input;
 
 	code = simple_strtoul(buff, NULL, 10);
 	if (code)
@@ -136,8 +144,7 @@ static ssize_t swan_virtual_keypad_keycode_store(struct device *dev, struct devi
 		old_code = code;
 	}
 
-	input_event(vk_input, EV_KEY, old_code, 1);
-	input_event(vk_input, EV_KEY, old_code, 0);
+	swan_vk_touch(vk->input, old_code);
 
 	return count;
 }
@@ -172,8 +179,7 @@ static ssize_t swan_virtual_keypad_value_store(struct device *dev, struct device
 {
 	struct swan_virtual_keypad *vk = dev_get_drvdata(dev);
 
-	input_event(vk->input, EV_KEY, *(u32 *)buff, 1);
-	input_event(vk->input, EV_KEY, *(u32 *)buff, 0);
+	swan_vk_touch(vk->input, *(u32 *)buff);
 
 	return count;
 }
@@ -184,7 +190,6 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "command",
-//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -195,7 +200,6 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "keycode",
-//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -206,7 +210,6 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "event",
-//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -217,7 +220,6 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "data",
-//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -228,7 +230,6 @@ struct device_attribute vk_attrs[] =
 		.attr =
 		{
 			.name = "value",
-//			.owner = THIS_MODULE,
 			.mode = S_IWUGO,
 		},
 
@@ -323,6 +324,11 @@ static int swan_virtual_keypad_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static void swan_vk_platform_device_release(struct device *dev)
+{
+	pr_pos_info();
+}
+
 static struct platform_driver swan_virtual_keypad_driver =
 {
 	.driver =
@@ -337,6 +343,10 @@ static struct platform_driver swan_virtual_keypad_driver =
 static struct platform_device swan_virtual_keypad_device =
 {
 	.name = SWAN_VK_DEVICE_NAME,
+	.dev =
+	{
+		.release = swan_vk_platform_device_release,
+	},
 };
 
 static int __init swan_virtual_keypad_init(void)
