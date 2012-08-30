@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "EavooSellStatistic.h"
 #include "EavooSellStatisticDlg.h"
+#include "EavooShortMessage.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -59,6 +60,15 @@ BOOL CEavooSellStatisticApp::InitInstance()
 #else
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
+
+	if (GetCurrentDirectory(sizeof(eavoo_cache_file_path), eavoo_cache_file_path) < 0)
+	{
+		strcpy(eavoo_cache_file_path, DEFAULT_CACHE_FILENAME);
+	}
+	else
+	{
+		strcat(eavoo_cache_file_path, "\\" DEFAULT_CACHE_FILENAME);
+	}
 
 	CEavooSellStatisticDlg dlg;
 	m_pMainWnd = &dlg;

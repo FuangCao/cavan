@@ -11,6 +11,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+char eavoo_cache_file_path[1024];
+
 CEavooShortMessageBody::CEavooShortMessageBody(const char *text)
 {
 	if (text)
@@ -170,6 +172,18 @@ bool CEavooShortMessage::IsInvalid(void)
 bool CEavooShortMessage::IsValid(void)
 {
 	return mDate && mAddress[0] && mBody[0];
+}
+
+int CEavooShortMessage::ToTextLine(char *buff, const char *prefix, const char *sufix)
+{
+	COleDateTime time(mDate);
+	return sprintf(buff, "%s%s\t%s\t%s%s", prefix, mAddress, time.Format("%Y-%m-%d %H:%M:%S"), mBody, sufix);
+}
+
+int CEavooShortMessage::ToXmlLine(char *buff, const char *prefix, const char *sufix)
+{
+	COleDateTime time(mDate);
+	return sprintf(buff, "%s<message date=\"%s\" address=\"%s\" body=\"%s\" />%s", prefix, time.Format("%Y-%m-%d %H:%M:%S"), mAddress, mBody, sufix);
 }
 
 // ============================================================
@@ -508,7 +522,51 @@ bool CEavooShortMessageHelper::ParseBody(CEavooShortMessageBody &body)
 	return body.ParseText(mShortMessage.mBody);
 }
 
-void CEavooShortMessageHelper::InsertIntoList(CListCtrl &list)
+int CEavooShortMessageHelper::WriteTextToFile(CFile &file, const char *buff, int length)
 {
-	mShortMessage.InsertIntoList(list);
+	if (length < 0)
+	{
+		length = strlen(buff);
+	}
+
+	DWORD dwWrite;
+	if (::WriteFile((HANDLE)file.m_hFile, buff, length, &dwWrite, NULL) == false || ((DWORD)length) != dwWrite)
+	{
+		return -1;
+	}
+
+	return length;
+}
+
+bool CEavooShortMessageHelper::ExportXmlFile(CFile &file)
+{
+	char buff[1024];
+
+	WriteTextToFile(file, "<messages>\n", -1);
+
+	int length;
+
+	while (ReadFromFile() > 0)
+	{
+		length = mShortMessage.ToXmlLine(buff, "\t", "\n");
+		WriteTextToFile(file, buff, length);
+	}
+
+	WriteTextToFile(file, "</messages>", -1);
+
+	return true;
+}
+
+bool CEavooShortMessageHelper::ExportTextFile(CFile &file)
+{
+	int length;
+	char buff[1024];
+
+	while (ReadFromFile() > 0)
+	{
+		length = mShortMessage.ToTextLine(buff, "", "\r\n");
+		file.Write(buff, length);
+	}
+
+	return true;
 }

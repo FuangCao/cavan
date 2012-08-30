@@ -29,6 +29,8 @@
 #define IS_NUMBER(a) \
 	((a) >= '0' && (a) <= '9')
 
+extern char eavoo_cache_file_path[1024];
+
 enum
 {
 	SMS_TYPE_END = 0x00,
@@ -72,6 +74,8 @@ public:
 	void Initialize(void);
 	bool IsInvalid(void);
 	bool IsValid(void);
+	int ToTextLine(char *buff, const char *prefix, const char *sufix);
+	int ToXmlLine(char *buff, const char *prefix, const char *sufix);
 };
 
 class CEavooShortMessageHelper
@@ -93,7 +97,6 @@ public:
 
 	bool Initialize(const char *pathname, UINT flags, UINT port = 0, const char *ip = DEFAULT_SERVER_IP);
 	void Uninitialize(void);
-	void InsertIntoList(CListCtrl &list);
 
 	time_t *GetDate(void)
 	{
@@ -117,6 +120,11 @@ public:
 		return mShortMessage.mBody;
 	}
 
+	CEavooShortMessage &GetShortMessage(void)
+	{
+		return mShortMessage;
+	}
+
 	int ReceiveValue(char *buff, int size);
 	int ReceiveText(char *buff);
 	bool SendResponse(char type);
@@ -129,6 +137,10 @@ public:
 	bool AdbSendCommand(const char *command);
 
 	bool ParseBody(CEavooShortMessageBody &body);
+
+	int WriteTextToFile(CFile &file, const char *buff, int length);
+	bool ExportXmlFile(CFile &file);
+	bool ExportTextFile(CFile &file);
 };
 
 #endif // !defined(AFX_EAVOOSHORTMESSAGE_H__0481FD35_EB2A_4F18_AC53_F5EF9D1976D9__INCLUDED_)

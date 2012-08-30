@@ -307,7 +307,7 @@ int CEavooSellStatisticDlg2::ThreadHandler(void *data)
 	CEavooSellStatisticDlg2 *dlg = (CEavooSellStatisticDlg2 *)data;
 	dlg->m_button_ok.EnableWindow(false);
 	dlg->m_button_stop.EnableWindow(true);
-	dlg->EavooSellStatistic(DEFAULT_CACHE_FILENAME);
+	dlg->EavooSellStatistic(eavoo_cache_file_path);
 	dlg->mThread = NULL;
 	dlg->m_button_ok.EnableWindow(true);
 	dlg->m_button_stop.EnableWindow(false);
