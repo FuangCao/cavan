@@ -118,7 +118,7 @@ CAPTION "销量统计"
 FONT 10, "System"
 BEGIN
     DEFPUSHBUTTON   "确定",IDOK,7,228,50,14
-    PUSHBUTTON      "停止",IDC_BUTTON_stop,162,228,50,14
+    PUSHBUTTON      "停止",IDC_BUTTON_stop,161,228,50,14
     CONTROL         "List1",IDC_LIST_sell,"SysListView32",LVS_REPORT | 
                     WS_BORDER | WS_TABSTOP,13,31,194,157
     CONTROL         "Tab1",IDC_TAB_sell,"SysTabControl32",TCS_BUTTONS,7,7,
@@ -127,6 +127,7 @@ BEGIN
                     PBS_SMOOTH | WS_BORDER,13,192,194,14
     LTEXT           "",IDC_STATIC_status,13,210,194,8
     GROUPBOX        "",IDC_STATIC,7,21,205,202
+    PUSHBUTTON      "导出结果",IDC_BUTTON_export,84,228,50,14
 END
 
 

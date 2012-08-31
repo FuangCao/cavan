@@ -110,6 +110,10 @@ SOURCE=.\EavooShortMessage.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\EavooStatisticHelper.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -132,6 +136,10 @@ SOURCE=.\EavooSellStatisticDlg2.h
 # Begin Source File
 
 SOURCE=.\EavooShortMessage.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EavooStatisticHelper.h
 # End Source File
 # Begin Source File
 

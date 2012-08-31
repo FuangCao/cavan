@@ -7,41 +7,10 @@
 // EavooSellStatisticDlg2.h : header file
 //
 
+#include "EavooStatisticHelper.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CEavooSellStatisticDlg2 dialog
-class CMonthSellLink;
-class CEavooSellStatisticDlg2;
-
-class CMonthSellNode
-{
-	friend CMonthSellLink;
-	friend CEavooSellStatisticDlg2;
-
-private:
-	int mYear, mMonth;
-	ULONG mSellCount;
-	CMonthSellNode *next;
-
-public:
-	CMonthSellNode(int year, int month, int count = 0);
-};
-
-class CMonthSellLink
-{
-	friend CEavooSellStatisticDlg2;
-
-private:
-	char mProjectName[16];
-	CMonthSellNode *mHead;
-	CMonthSellLink *next;
-
-public:
-	CMonthSellLink(const char *projectname);
-	~CMonthSellLink(void);
-	void FreeLink(void);
-	CMonthSellNode *FindMonth(int year, int month);
-	bool AddMonthSellCount(int year, int month, int count);
-};
 
 class CEavooSellStatisticDlg2 : public CDialog
 {
@@ -53,6 +22,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CEavooSellStatisticDlg2)
 	enum { IDD = IDD_DIALOG_statistic };
+	CButton	m_button_export;
 	CButton	m_button_stop;
 	CButton	m_button_ok;
 	CStatic	m_static_status;
@@ -77,23 +47,15 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangeTABsell(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBUTTONstop();
+	afx_msg void OnBUTTONexport();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 private:
 	CWinThread *mThread;
-	CMonthSellLink *mHead;
-	bool mShouldStop;
+	CEavooStatisticHelper mHelper;
 
 public:
-	CMonthSellLink *FindProject(const char *projectname);
-	bool EavooSellStatisticBase(const char *pathname);
-	bool EavooSellStatistic(const char *pathname);
-	bool ShowProject(const char *projectname);
-	bool ShowProject(CMonthSellLink *head);
-	bool ShowProject(void);
-	void FreeLink(void);
-
 	static int ThreadHandler(void *data);
 };
 
