@@ -125,6 +125,22 @@ DWORD CEavooSellStatisticApp::WriteDatabase(CFile &file, const char *buff, DWORD
 	return dwWrite;
 }
 
+DWORD CEavooSellStatisticApp::WriteDatabaseNoSync(CFile &file, const char *buff, DWORD length)
+{
+	DWORD dwWrite;
+	CSingleLock lock(&mDatabaseMutex);
+
+	lock.Lock();
+
+	if (::WriteFile((HANDLE)file.m_hFile, buff, length, &dwWrite, NULL) == FALSE || dwWrite != length)
+	{
+		file.Close();
+		dwWrite = 0;
+	}
+
+	return dwWrite;
+}
+
 DWORD CEavooSellStatisticApp::ReadDatabase(CFile &file, char *buff, DWORD length)
 {
 	DWORD dwRead;

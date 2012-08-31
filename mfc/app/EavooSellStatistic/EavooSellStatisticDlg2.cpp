@@ -161,12 +161,15 @@ bool CEavooSellStatisticDlg2::EavooSellStatisticBase(const char *pathname)
 	CEavooShortMessageBody body;
 	CMonthSellLink *project;
 	DWORD dwTotalLength = helper.GetFileLength();
-	double dbReadLength = 0;
+	double dbReadLength, percent;
+	unsigned char count;
+	char buff[8];
 
 	m_progress_statistic.SetRange(0, 100);
 	mShouldStop = false;
+	dbReadLength = 0;
 
-	while (1)
+	for (count = 0; ; count++)
 	{
 		if (mShouldStop)
 		{
@@ -175,17 +178,22 @@ bool CEavooSellStatisticDlg2::EavooSellStatisticBase(const char *pathname)
 			return false;
 		}
 
-		m_progress_statistic.SetPos((int) (dbReadLength * 100 / dwTotalLength));
-
 		DWORD length = helper.ReadFromFile();
-		if (length <= 0)
+		if ((count & PROGRESS_MIN_COUNT) == 0 || length == 0)
 		{
-			break;
+			percent = dbReadLength * 100 / dwTotalLength;
+			m_progress_statistic.SetPos((int)percent);
+			sprintf(buff, "%0.2lf%%", percent);
+			m_static_status.SetWindowText(buff);
+
+			if (length == 0)
+			{
+				break;
+			}
 		}
 
 		dbReadLength += length;
 
-		m_static_status.SetWindowText(helper.GetMessageBody());
 		time = gmtime(helper.GetDate());
 		if (time == NULL)
 		{
@@ -228,7 +236,7 @@ bool CEavooSellStatisticDlg2::EavooSellStatisticBase(const char *pathname)
 		}
 	}
 
-	return true;
+	return dbReadLength == dwTotalLength;
 }
 
 bool CEavooSellStatisticDlg2::EavooSellStatistic(const char *pathname)

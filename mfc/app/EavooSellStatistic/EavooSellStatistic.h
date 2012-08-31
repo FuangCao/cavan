@@ -46,6 +46,7 @@ public:
 public:
 	bool OpenDatabase(CFile &file, const char *pathname, UINT nOpenFlags);
 	DWORD WriteDatabase(CFile &file, const char *buff, DWORD length);
+	DWORD WriteDatabaseNoSync(CFile &file, const char *buff, DWORD length);
 	DWORD ReadDatabase(CFile &file, char *buff, DWORD length);
 
 	DWORD ReadDatabaseNolock(CFile &file, char *buff, DWORD length);

@@ -108,8 +108,8 @@ BEGIN
     PUSHBUTTON      "清空数据库",IDC_BUTTON_clean_database,352,393,50,14
     PUSHBUTTON      "导出",IDC_BUTTON_export,7,393,50,14
     PUSHBUTTON      "导入",IDC_BUTTON_import,122,393,50,14
-    CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",WS_BORDER,
-                    7,333,397,14
+    CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",PBS_SMOOTH | 
+                    WS_BORDER,7,333,397,14
 END
 
 IDD_DIALOG_statistic DIALOG DISCARDABLE  0, 0, 219, 249
@@ -124,7 +124,7 @@ BEGIN
     CONTROL         "Tab1",IDC_TAB_sell,"SysTabControl32",TCS_BUTTONS,7,7,
                     205,13
     CONTROL         "Progress1",IDC_PROGRESS_statistic,"msctls_progress32",
-                    WS_BORDER,13,192,194,14
+                    PBS_SMOOTH | WS_BORDER,13,192,194,14
     LTEXT           "",IDC_STATIC_status,13,210,194,8
     GROUPBOX        "",IDC_STATIC,7,21,205,202
 END

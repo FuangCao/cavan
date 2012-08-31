@@ -338,29 +338,33 @@ int CEavooSellStatisticDlg::ThreadHandlerLoad(void *data)
 
 	DWORD totalLength, rdLength;
 	double rdTotal, percent;
+	unsigned char count;
 
 	totalLength = helper.GetFileLength();
 	rdTotal = 0;
 	dlg->m_progress.SetRange(0, 100);
-	dlg->m_progress.SetPos(0);
 
 	char buff[8];
 
-	while (1)
+	for (count = 0; ; count++)
 	{
 		rdLength = helper.ReadFromFile();
-		if (rdLength == 0)
+		if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
 		{
-			break;
+			percent = rdTotal * 100 / totalLength;
+			dlg->m_progress.SetPos((int)percent);
+			sprintf(buff, "%0.2lf%%", percent);
+			dlg->m_static_state.SetWindowText(buff);
+
+			if (rdLength == 0)
+			{
+				break;
+			}
 		}
 
 		helper.GetShortMessage().InsertIntoList(dlg->m_list_sms);
 
 		rdTotal += rdLength;
-		percent = rdTotal * 100 / totalLength;
-		dlg->m_progress.SetPos((int)percent);
-		sprintf(buff, "%0.2lf%%", percent);
-		dlg->m_static_state.SetWindowText(buff);
 	}
 
 	helper.Uninitialize();

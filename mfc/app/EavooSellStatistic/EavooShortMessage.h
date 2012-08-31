@@ -17,6 +17,8 @@
 #define ADB_STATE_OKAY		"OKAY"
 #define ADB_STATE_FAIL		"FAIL"
 
+#define PROGRESS_MIN_COUNT	0xFF
+
 #define NELEM(a) \
 	(sizeof(a) / sizeof((a)[0]))
 

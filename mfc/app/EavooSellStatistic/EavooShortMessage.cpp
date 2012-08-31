@@ -537,6 +537,7 @@ bool CEavooShortMessageHelper::ExportXmlFile(CFile &file, CProgressCtrl &progres
 	DWORD totalLength, rdLength;
 	double rdTotal, percent;
 	int wrLength;
+	unsigned char count;
 
 	WriteTextToFile(file, "<?xml version=\"1.0\" encoding=\"ascii\" ?>\r\n", -1);
 	WriteTextToFile(file, "<messages>\r\n", -1);
@@ -545,17 +546,20 @@ bool CEavooShortMessageHelper::ExportXmlFile(CFile &file, CProgressCtrl &progres
 	rdTotal = 0;
 	progress.SetRange(0, 100);
 
-	while (1)
+	for (count = 0; ; count++)
 	{
-		percent = rdTotal * 100 / totalLength;
-		progress.SetPos((int)(percent));
-		sprintf(buff, "%0.2f%%", percent);
-		state.SetWindowText(buff);
-
 		rdLength = ReadFromFile();
-		if (rdLength == 0)
+		if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
 		{
-			break;
+			percent = rdTotal * 100 / totalLength;
+			progress.SetPos((int)(percent));
+			sprintf(buff, "%0.2f%%", percent);
+			state.SetWindowText(buff);
+
+			if (rdLength == 0)
+			{
+				break;
+			}
 		}
 
 		wrLength = mShortMessage.ToXmlLine(buff, "\t", "\r\n");
@@ -566,7 +570,7 @@ bool CEavooShortMessageHelper::ExportXmlFile(CFile &file, CProgressCtrl &progres
 
 	WriteTextToFile(file, "</messages>", -1);
 
-	return true;
+	return rdTotal == totalLength;
 }
 
 bool CEavooShortMessageHelper::ExportTextFile(CFile &file, CProgressCtrl &progress, CStatic &state)
@@ -575,22 +579,26 @@ bool CEavooShortMessageHelper::ExportTextFile(CFile &file, CProgressCtrl &progre
 	DWORD totalLength, rdLength;
 	double rdTotal, percent;
 	int wrLength;
+	unsigned char count;
 
 	totalLength = mFile.GetLength();
 	rdTotal = 0;
 	progress.SetRange(0, 100);
 
-	while (1)
+	for (count = 0; ; count++)
 	{
-		percent = rdTotal * 100 / totalLength;
-		progress.SetPos((int)(percent));
-		sprintf(buff, "%0.2lf%%", percent);
-		state.SetWindowText(buff);
-
 		rdLength = ReadFromFile();
-		if (rdLength == 0)
+		if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
 		{
-			break;
+			percent = rdTotal * 100 / totalLength;
+			progress.SetPos((int)(percent));
+			sprintf(buff, "%0.2lf%%", percent);
+			state.SetWindowText(buff);
+
+			if (rdLength == 0)
+			{
+				break;
+			}
 		}
 
 		wrLength = mShortMessage.ToTextLine(buff, "", "\r\n");
@@ -599,11 +607,11 @@ bool CEavooShortMessageHelper::ExportTextFile(CFile &file, CProgressCtrl &progre
 		rdTotal += rdLength;
 	}
 
-	return true;
+	return rdTotal == totalLength;
 }
 
 bool CEavooShortMessageHelper::ImportDatabase(CEavooShortMessageHelper &helper, CProgressCtrl &progress, CStatic &state)
-{	
+{
 	CEavooShortMessage &message = helper.GetShortMessage();
 	DWORD (CEavooShortMessageHelper::*ReadHandler)(void);
 
@@ -620,25 +628,29 @@ bool CEavooShortMessageHelper::ImportDatabase(CEavooShortMessageHelper &helper, 
 	DWORD totalLength, rdLength;
 	double rdTotal, percent;
 	char buff[8];
+	unsigned char count;
 
 	totalLength = helper.GetFileLength();
 	rdTotal = 0;
 	progress.SetRange(0, 100);
 
-	while (1)
+	for (count = 0; ; count++)
 	{
-		percent = rdTotal * 100 / totalLength;
-		progress.SetPos((int)percent);
-		sprintf(buff, "%0.2lf%%", percent);
-		state.SetWindowText(buff);
-
 		rdLength = (helper.*ReadHandler)();
-		if (rdLength == 0)
+		if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
 		{
-			break;
+			percent = rdTotal * 100 / totalLength;
+			progress.SetPos((int)percent);
+			sprintf(buff, "%0.2lf%%", percent);
+			state.SetWindowText(buff);
+
+			if (rdLength == 0)
+			{
+				break;
+			}
 		}
 
-		if (theApp.WriteDatabase(mFile, (const char *)&message, sizeof(message)) == 0)
+		if (theApp.WriteDatabaseNoSync(mFile, (const char *)&message, sizeof(message)) == 0)
 		{
 			return false;
 		}
@@ -646,5 +658,5 @@ bool CEavooShortMessageHelper::ImportDatabase(CEavooShortMessageHelper &helper, 
 		rdTotal += rdLength;
 	}
 
-	return true;
+	return rdTotal == totalLength;
 }
