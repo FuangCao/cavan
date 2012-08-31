@@ -29,8 +29,6 @@
 #define IS_NUMBER(a) \
 	((a) >= '0' && (a) <= '9')
 
-extern char eavoo_cache_file_path[1024];
-
 enum
 {
 	SMS_TYPE_END = 0x00,
@@ -45,7 +43,7 @@ enum
 
 class CEavooShortMessageBody
 {
-private:
+public:
 	char mIMEI[32];
 	char mSoftwareVersion[64];
 
@@ -59,12 +57,9 @@ public:
 	char *GetProjectName(char *buff);
 };
 
-class CEavooShortMessageHelper;
-
 class CEavooShortMessage
 {
-friend CEavooShortMessageHelper;
-private:
+public:
 	time_t mDate;
 	char mAddress[24];
 	char mBody[512];
@@ -74,8 +69,8 @@ public:
 	void Initialize(void);
 	bool IsInvalid(void);
 	bool IsValid(void);
-	int ToTextLine(char *buff, const char *prefix, const char *sufix);
-	int ToXmlLine(char *buff, const char *prefix, const char *sufix);
+	int ToTextLine(char *buff, const char *prefix = "", const char *sufix = "");
+	int ToXmlLine(char *buff, const char *prefix = "", const char *sufix = "");
 };
 
 class CEavooShortMessageHelper
@@ -95,7 +90,7 @@ public:
 	CEavooShortMessageHelper(void);
 	~CEavooShortMessageHelper(void);
 
-	bool Initialize(const char *pathname, UINT flags, UINT port = 0, const char *ip = DEFAULT_SERVER_IP);
+	bool Initialize(UINT flags, const char *filename = NULL, UINT port = 0, const char *ip = DEFAULT_SERVER_IP);
 	void Uninitialize(void);
 
 	time_t *GetDate(void)
@@ -109,10 +104,16 @@ public:
 
 	DWORD WriteToFile(void);
 	DWORD ReadFromFile(void);
+	DWORD ReadFromFileOld(void);
 
 	DWORD GetFileLength(void)
 	{
 		return mFile.GetLength();
+	}
+
+	void SeekToBegin(void)
+	{
+		mFile.SeekToBegin();
 	}
 
 	const char *GetMessageBody(void)
@@ -139,8 +140,11 @@ public:
 	bool ParseBody(CEavooShortMessageBody &body);
 
 	int WriteTextToFile(CFile &file, const char *buff, int length);
-	bool ExportXmlFile(CFile &file);
-	bool ExportTextFile(CFile &file);
+	bool ExportXmlFile(CFile &file, CProgressCtrl &progress, CStatic &state);
+	bool ExportTextFile(CFile &file, CProgressCtrl &progress, CStatic &state);
+	bool ImportDatabase(CEavooShortMessageHelper &helper, CProgressCtrl &progress, CStatic &state);
+
+	void ShowShortMessage(void);
 };
 
 #endif // !defined(AFX_EAVOOSHORTMESSAGE_H__0481FD35_EB2A_4F18_AC53_F5EF9D1976D9__INCLUDED_)

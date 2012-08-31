@@ -25,6 +25,11 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CEavooSellStatisticDlg)
 	enum { IDD = IDD_EAVOOSELLSTATISTIC_DIALOG };
+	CButton	m_button_statistic;
+	CButton	m_button_clean;
+	CButton	m_button_export;
+	CProgressCtrl	m_progress;
+	CButton	m_button_import;
 	CButton	m_button_clean_database;
 	CButton	m_button_load;
 	CButton	m_button_stop;
@@ -58,20 +63,21 @@ protected:
 	afx_msg void OnBUTTONload();
 	afx_msg void OnBUTTONcleandatabase();
 	afx_msg void OnBUTTONexport();
+	afx_msg void OnBUTTONimport();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 private:
 	CWinThread *mThread;
-	CEavooShortMessageHelper mHelper;
 
 private:
 	void ShowStatus(const char *format, ...);
-	bool Initialize(void);
-	void Uninitialize(void);
 
 public:
 	static int ThreadHandler(void *data);
+	static int ThreadHandlerLoad(void *data);
+	static int ThreadHandlerExport(void *data);
+	static int ThreadHandlerImport(void *data);
 };
 
 //{{AFX_INSERT_LOCATION}}

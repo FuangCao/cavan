@@ -69,22 +69,17 @@ CEavooSellStatisticDlg::CEavooSellStatisticDlg(CWnd* pParent /*=NULL*/)
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mThread = NULL;
-
-	int ret = GetCurrentDirectory(sizeof(eavoo_cache_file_path), eavoo_cache_file_path);
-	if (ret < 0)
-	{
-		strcpy(eavoo_cache_file_path, ".");
-	}
-	else
-	{
-		strcat(eavoo_cache_file_path, "\\" DEFAULT_CACHE_FILENAME);
-	}
 }
 
 void CEavooSellStatisticDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CEavooSellStatisticDlg)
+	DDX_Control(pDX, IDC_BUTTON_statistic, m_button_statistic);
+	DDX_Control(pDX, IDC_BUTTON_clean, m_button_clean);
+	DDX_Control(pDX, IDC_BUTTON_export, m_button_export);
+	DDX_Control(pDX, IDC_PROGRESS1, m_progress);
+	DDX_Control(pDX, IDC_BUTTON_import, m_button_import);
 	DDX_Control(pDX, IDC_BUTTON_clean_database, m_button_clean_database);
 	DDX_Control(pDX, IDC_BUTTON_load, m_button_load);
 	DDX_Control(pDX, IDC_BUTTON_stop, m_button_stop);
@@ -108,43 +103,34 @@ BEGIN_MESSAGE_MAP(CEavooSellStatisticDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_load, OnBUTTONload)
 	ON_BN_CLICKED(IDC_BUTTON_clean_database, OnBUTTONcleandatabase)
 	ON_BN_CLICKED(IDC_BUTTON_export, OnBUTTONexport)
+	ON_BN_CLICKED(IDC_BUTTON_import, OnBUTTONimport)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CEavooSellStatisticDlg message handlers
 
-bool CEavooSellStatisticDlg::Initialize(void)
-{
-	char ip[32];
-	m_ipaddress1.GetWindowText(ip, sizeof(ip));
-
-	return mHelper.Initialize(eavoo_cache_file_path, CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, m_edit_port, ip);
-}
-
-void CEavooSellStatisticDlg::Uninitialize(void)
-{
-	mHelper.Uninitialize();
-}
-
 // EDUA# + 手机的IMEI号 + “,” + 手机软件版本号 + “,,,,#”
 
 int CEavooSellStatisticDlg::ThreadHandler(void *data)
 {
 	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
-	CEavooShortMessageHelper &helper = dlg->mHelper;
+	CEavooShortMessageHelper helper;
+	char ip[32];
+	dlg->m_ipaddress1.GetWindowText(ip, sizeof(ip));
 
-	if (dlg->Initialize() == false)
+	if (helper.Initialize(CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::shareDenyNone, NULL, dlg->m_edit_port, ip) == false)
 	{
 		dlg->mThread = NULL;
 		return -1;
 	}
 
-	AfxMessageBox("服务器已启动");
 	dlg->m_button_start.EnableWindow(false);
 	dlg->m_button_stop.EnableWindow(true);
 	dlg->m_button_load.EnableWindow(false);
 	dlg->m_button_clean_database.EnableWindow(false);
+	dlg->m_button_import.EnableWindow(false);
+	dlg->m_button_export.EnableWindow(false);
 
 	while (dlg->mThread)
 	{
@@ -183,7 +169,7 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 		}
 	}
 
-	dlg->Uninitialize();
+	helper.Uninitialize();
 	dlg->mThread = NULL;
 	AfxMessageBox("服务器已停止工作");
 	dlg->ShowStatus("服务器已停止工作");
@@ -191,6 +177,8 @@ int CEavooSellStatisticDlg::ThreadHandler(void *data)
 	dlg->m_button_load.EnableWindow(true);
 	dlg->m_button_start.EnableWindow(true);
 	dlg->m_button_stop.EnableWindow(false);
+	dlg->m_button_import.EnableWindow(true);
+	dlg->m_button_export.EnableWindow(true);
 
 	return 0;
 }
@@ -321,14 +309,70 @@ void CEavooSellStatisticDlg::OnBUTTONstop()
 	{
 		mThread = NULL;
 	}
-
-	Uninitialize();
 }
 
 void CEavooSellStatisticDlg::OnBUTTONclean()
 {
 	// TODO: Add your control notification handler code here
 	m_list_sms.DeleteAllItems();
+}
+
+int CEavooSellStatisticDlg::ThreadHandlerLoad(void *data)
+{
+	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
+
+	dlg->m_list_sms.DeleteAllItems();
+
+	CEavooShortMessageHelper helper;
+	if (helper.Initialize(CFile::modeRead | CFile::shareDenyNone) == false)
+	{
+		return -1;
+	}
+
+	dlg->m_button_import.EnableWindow(false);
+	dlg->m_button_export.EnableWindow(false);
+	dlg->m_button_start.EnableWindow(false);
+	dlg->m_button_clean_database.EnableWindow(false);
+	dlg->m_button_clean.EnableWindow(false);
+	dlg->m_button_load.EnableWindow(false);
+
+	DWORD totalLength, rdLength;
+	double rdTotal, percent;
+
+	totalLength = helper.GetFileLength();
+	rdTotal = 0;
+	dlg->m_progress.SetRange(0, 100);
+	dlg->m_progress.SetPos(0);
+
+	char buff[8];
+
+	while (1)
+	{
+		rdLength = helper.ReadFromFile();
+		if (rdLength == 0)
+		{
+			break;
+		}
+
+		helper.GetShortMessage().InsertIntoList(dlg->m_list_sms);
+
+		rdTotal += rdLength;
+		percent = rdTotal * 100 / totalLength;
+		dlg->m_progress.SetPos((int)percent);
+		sprintf(buff, "%0.2lf%%", percent);
+		dlg->m_static_state.SetWindowText(buff);
+	}
+
+	helper.Uninitialize();
+
+	dlg->m_button_import.EnableWindow(true);
+	dlg->m_button_export.EnableWindow(true);
+	dlg->m_button_start.EnableWindow(true);
+	dlg->m_button_clean_database.EnableWindow(true);
+	dlg->m_button_clean.EnableWindow(true);
+	dlg->m_button_load.EnableWindow(true);
+
+	return 0;
 }
 
 void CEavooSellStatisticDlg::OnBUTTONload()
@@ -340,20 +384,7 @@ void CEavooSellStatisticDlg::OnBUTTONload()
 		return;
 	}
 
-	m_list_sms.DeleteAllItems();
-
-	CEavooShortMessageHelper helper;
-	if (helper.Initialize(eavoo_cache_file_path, CFile::modeRead | CFile::shareDenyNone) == false)
-	{
-		return;
-	}
-
-	while (helper.ReadFromFile())
-	{
-		helper.GetShortMessage().InsertIntoList(m_list_sms);
-	}
-
-	helper.Uninitialize();
+	AfxBeginThread((AFX_THREADPROC)ThreadHandlerLoad, this);
 }
 
 void CEavooSellStatisticDlg::OnBUTTONcleandatabase()
@@ -362,7 +393,7 @@ void CEavooSellStatisticDlg::OnBUTTONcleandatabase()
 	if (AfxMessageBox("数据删除后将无法恢复，真的要删除吗？", MB_YESNO | MB_ICONQUESTION) == IDYES)
 	{
 		CFile file;
-		file.Open(eavoo_cache_file_path, CFile::modeWrite | CFile::shareDenyNone, NULL);
+		file.Open(theApp.mDatabasePath, CFile::modeWrite, NULL);
 		file.SetLength(0);
 		file.Close();
 
@@ -371,41 +402,46 @@ void CEavooSellStatisticDlg::OnBUTTONcleandatabase()
 	}
 }
 
-void CEavooSellStatisticDlg::OnBUTTONexport() 
+int CEavooSellStatisticDlg::ThreadHandlerExport(void *data)
 {
-	// TODO: Add your control notification handler code here
-	CFileDialog fileDlg(false, "txt", "eavoo_sell", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST, "(*.txt)|*.txt|(*.xml)|*.xml||");
+	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
 
+	CFileDialog fileDlg(false, "txt", "eavoo_sell", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST, "(*.txt)|*.txt|(*.xml)|*.xml||");
 	if (fileDlg.DoModal() != IDOK)
 	{
-		return;
+		return -1;
 	}
 
 	CFile file;
 	if (file.Open(fileDlg.GetPathName(), CFile::modeWrite | CFile::modeCreate | CFile::shareDenyNone, NULL) == false)
 	{
 		AfxMessageBox("打开文件失败");
-		return;
+		return -1;
 	}
 
 	CEavooShortMessageHelper helper;
-	if (helper.Initialize(eavoo_cache_file_path, CFile::modeRead | CFile::shareDenyNone) == false)
+	if (helper.Initialize(CFile::modeRead | CFile::shareDenyNone) == false)
 	{
 		AfxMessageBox("打开数据库失败");
 		file.Close();
-		return;
+		return -1;
 	}
 
 	bool result;
 
+	dlg->m_button_import.EnableWindow(false);
+	dlg->m_button_export.EnableWindow(false);
+	dlg->m_button_start.EnableWindow(false);
+	dlg->m_button_clean_database.EnableWindow(false);
+
 	CString fileExt = fileDlg.GetFileExt();
 	if (fileExt.CompareNoCase("txt") == 0)
 	{
-		result = helper.ExportTextFile(file);
+		result = helper.ExportTextFile(file, dlg->m_progress, dlg->m_static_state);
 	}
 	else if (fileExt.CompareNoCase("xml") == 0)
 	{
-		result = helper.ExportXmlFile(file);
+		result = helper.ExportXmlFile(file, dlg->m_progress, dlg->m_static_state);
 	}
 	else
 	{
@@ -413,15 +449,81 @@ void CEavooSellStatisticDlg::OnBUTTONexport()
 		result = false;
 	}
 
-	helper.Uninitialize();
 	file.Close();
+	helper.Uninitialize();
 
 	if (result)
 	{
-		AfxMessageBox("导出数据成功");
+		AfxMessageBox("导出数据完成");
 	}
 	else
 	{
 		AfxMessageBox("导出数据失败");
 	}
+
+	dlg->m_button_import.EnableWindow(true);
+	dlg->m_button_export.EnableWindow(true);
+	dlg->m_button_start.EnableWindow(true);
+	dlg->m_button_clean_database.EnableWindow(true);
+
+	return 0;
+}
+
+int CEavooSellStatisticDlg::ThreadHandlerImport(void *data)
+{
+	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
+	CEavooShortMessageHelper helperRead, helperWrite;
+
+	CFileDialog fileDlg(true, "dat", "eavoo_sell", OFN_HIDEREADONLY | OFN_FILEMUSTEXIST, "(*.dat)|*.dat||");
+	if (fileDlg.DoModal() != IDOK)
+	{
+		return -1;
+	}
+
+	if (helperRead.Initialize(CFile::modeRead, fileDlg.GetPathName()) == false)
+	{
+		return -1;
+	}
+
+	if (helperWrite.Initialize(CFile::modeWrite | CFile::modeCreate | CFile::modeNoTruncate) == false)
+	{
+		return -1;
+	}
+
+	dlg->m_button_import.EnableWindow(false);
+	dlg->m_button_export.EnableWindow(false);
+	dlg->m_button_start.EnableWindow(false);
+	dlg->m_button_load.EnableWindow(false);
+	dlg->m_button_clean_database.EnableWindow(false);
+	dlg->m_button_statistic.EnableWindow(false);
+
+	if (helperWrite.ImportDatabase(helperRead, dlg->m_progress, dlg->m_static_state))
+	{
+		AfxMessageBox("导入数据库成功");
+	}
+	else
+	{
+		AfxMessageBox("导入数据库失败");
+	}
+
+	dlg->m_button_import.EnableWindow(true);
+	dlg->m_button_export.EnableWindow(true);
+	dlg->m_button_start.EnableWindow(true);
+	dlg->m_button_load.EnableWindow(true);
+	dlg->m_button_clean_database.EnableWindow(true);
+	dlg->m_button_statistic.EnableWindow(true);
+
+	return 0;
+}
+
+void CEavooSellStatisticDlg::OnBUTTONexport()
+{
+	// TODO: Add your control notification handler code here
+	AfxBeginThread((AFX_THREADPROC)ThreadHandlerExport, this);
+}
+
+void CEavooSellStatisticDlg::OnBUTTONimport()
+{
+	// TODO: Add your control notification handler code here
+	AfxBeginThread((AFX_THREADPROC)ThreadHandlerImport, this);
 }

@@ -11,8 +11,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-char eavoo_cache_file_path[1024];
-
 CEavooShortMessageBody::CEavooShortMessageBody(const char *text)
 {
 	if (text)
@@ -225,7 +223,7 @@ int CEavooShortMessageHelper::Send(const char *buff, int size)
 	return -1;
 }
 
-bool CEavooShortMessageHelper::Initialize(const char *pathname, UINT flags, UINT port, const char *ip)
+bool CEavooShortMessageHelper::Initialize(UINT flags, const char *pathname, UINT port, const char *ip)
 {
 	if (WSAStartup(MAKEWORD(2, 2), &mWSAData) != 0)
 	{
@@ -233,18 +231,9 @@ bool CEavooShortMessageHelper::Initialize(const char *pathname, UINT flags, UINT
 		return false;
 	}
 
-	if (pathname)
+	if (theApp.OpenDatabase(mFile, pathname, flags) == false)
 	{
-		if (mFile.Open(pathname, flags, NULL) == false)
-		{
-			// AfxMessageBox("打开文件失败");
-			return false;
-		}
-
-		if ((flags & (CFile::modeWrite | CFile::modeReadWrite)) && (flags & CFile::modeNoTruncate))
-		{
-			mFile.SeekToEnd();
-		}
+		return false;
 	}
 
 	strcpy(mIpAddress, ip);
@@ -357,30 +346,26 @@ bool CEavooShortMessageHelper::ReceiveFromNetwork(void)
 
 DWORD CEavooShortMessageHelper::WriteToFile(void)
 {
-	DWORD dwWrite;
-	if (::WriteFile((HANDLE)mFile.m_hFile, &mShortMessage, sizeof(mShortMessage), &dwWrite, NULL) == FALSE)
-	{
-		return 0;
-	}
-
-	if (::FlushFileBuffers((HANDLE)mFile.m_hFile))
-	{
-		return dwWrite;
-	}
-
-	return 0;
+	return theApp.WriteDatabase(mFile, (const char *)&mShortMessage, sizeof(mShortMessage));
 }
 
 DWORD CEavooShortMessageHelper::ReadFromFile(void)
 {
-	DWORD dwRead;
-	if (::ReadFile((HANDLE)mFile.m_hFile, &mShortMessage, sizeof(mShortMessage), &dwRead, NULL) && mShortMessage.IsValid())
+	DWORD rdLength;
+
+	mShortMessage.Initialize();
+	rdLength = theApp.ReadDatabase(mFile, (char *)&mShortMessage, sizeof(mShortMessage));
+	if (rdLength == 0 || mShortMessage.IsInvalid())
 	{
-		return dwRead;
+		return 0;
 	}
 
-	mFile.Close();
-	return 0;
+	return rdLength;
+}
+
+DWORD CEavooShortMessageHelper::ReadFromFileOld(void)
+{
+	return theApp.ReadDatabaseOld(mFile, mShortMessage);
 }
 
 bool CEavooShortMessageHelper::AdbServerConnect()
@@ -522,6 +507,14 @@ bool CEavooShortMessageHelper::ParseBody(CEavooShortMessageBody &body)
 	return body.ParseText(mShortMessage.mBody);
 }
 
+void CEavooShortMessageHelper::ShowShortMessage(void)
+{
+	char buff[1024];
+
+	mShortMessage.ToXmlLine(buff);
+	AfxMessageBox(buff);
+}
+
 int CEavooShortMessageHelper::WriteTextToFile(CFile &file, const char *buff, int length)
 {
 	if (length < 0)
@@ -538,18 +531,37 @@ int CEavooShortMessageHelper::WriteTextToFile(CFile &file, const char *buff, int
 	return length;
 }
 
-bool CEavooShortMessageHelper::ExportXmlFile(CFile &file)
+bool CEavooShortMessageHelper::ExportXmlFile(CFile &file, CProgressCtrl &progress, CStatic &state)
 {
 	char buff[1024];
+	DWORD totalLength, rdLength;
+	double rdTotal, percent;
+	int wrLength;
 
-	WriteTextToFile(file, "<messages>\n", -1);
+	WriteTextToFile(file, "<?xml version=\"1.0\" encoding=\"ascii\" ?>\r\n", -1);
+	WriteTextToFile(file, "<messages>\r\n", -1);
 
-	int length;
+	totalLength = mFile.GetLength();
+	rdTotal = 0;
+	progress.SetRange(0, 100);
 
-	while (ReadFromFile() > 0)
+	while (1)
 	{
-		length = mShortMessage.ToXmlLine(buff, "\t", "\n");
-		WriteTextToFile(file, buff, length);
+		percent = rdTotal * 100 / totalLength;
+		progress.SetPos((int)(percent));
+		sprintf(buff, "%0.2f%%", percent);
+		state.SetWindowText(buff);
+
+		rdLength = ReadFromFile();
+		if (rdLength == 0)
+		{
+			break;
+		}
+
+		wrLength = mShortMessage.ToXmlLine(buff, "\t", "\r\n");
+		WriteTextToFile(file, buff, wrLength);
+
+		rdTotal += rdLength;
 	}
 
 	WriteTextToFile(file, "</messages>", -1);
@@ -557,15 +569,81 @@ bool CEavooShortMessageHelper::ExportXmlFile(CFile &file)
 	return true;
 }
 
-bool CEavooShortMessageHelper::ExportTextFile(CFile &file)
+bool CEavooShortMessageHelper::ExportTextFile(CFile &file, CProgressCtrl &progress, CStatic &state)
 {
-	int length;
 	char buff[1024];
+	DWORD totalLength, rdLength;
+	double rdTotal, percent;
+	int wrLength;
 
-	while (ReadFromFile() > 0)
+	totalLength = mFile.GetLength();
+	rdTotal = 0;
+	progress.SetRange(0, 100);
+
+	while (1)
 	{
-		length = mShortMessage.ToTextLine(buff, "", "\r\n");
-		file.Write(buff, length);
+		percent = rdTotal * 100 / totalLength;
+		progress.SetPos((int)(percent));
+		sprintf(buff, "%0.2lf%%", percent);
+		state.SetWindowText(buff);
+
+		rdLength = ReadFromFile();
+		if (rdLength == 0)
+		{
+			break;
+		}
+
+		wrLength = mShortMessage.ToTextLine(buff, "", "\r\n");
+		file.Write(buff, wrLength);
+
+		rdTotal += rdLength;
+	}
+
+	return true;
+}
+
+bool CEavooShortMessageHelper::ImportDatabase(CEavooShortMessageHelper &helper, CProgressCtrl &progress, CStatic &state)
+{	
+	CEavooShortMessage &message = helper.GetShortMessage();
+	DWORD (CEavooShortMessageHelper::*ReadHandler)(void);
+
+	if (helper.ReadFromFileOld() == 0)
+	{
+		ReadHandler = helper.ReadFromFile;
+	}
+	else
+	{
+		ReadHandler = helper.ReadFromFileOld;
+	}
+
+	helper.SeekToBegin();
+	DWORD totalLength, rdLength;
+	double rdTotal, percent;
+	char buff[8];
+
+	totalLength = helper.GetFileLength();
+	rdTotal = 0;
+	progress.SetRange(0, 100);
+
+	while (1)
+	{
+		percent = rdTotal * 100 / totalLength;
+		progress.SetPos((int)percent);
+		sprintf(buff, "%0.2lf%%", percent);
+		state.SetWindowText(buff);
+
+		rdLength = (helper.*ReadHandler)();
+		if (rdLength == 0)
+		{
+			break;
+		}
+
+		if (theApp.WriteDatabase(mFile, (const char *)&message, sizeof(message)) == 0)
+		{
+			return false;
+		}
+
+		rdTotal += rdLength;
 	}
 
 	return true;

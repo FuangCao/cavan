@@ -13,6 +13,8 @@
 #endif
 
 #include "resource.h"		// main symbols
+#include "afxmt.h"
+#include "EavooShortmessage.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CEavooSellStatisticApp:
@@ -22,6 +24,8 @@
 class CEavooSellStatisticApp : public CWinApp
 {
 public:
+	char mDatabasePath[1024];
+	CMutex mDatabaseMutex;
 	CEavooSellStatisticApp();
 
 // Overrides
@@ -38,8 +42,18 @@ public:
 		//    DO NOT EDIT what you see in these blocks of generated code !
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
+public:
+	bool OpenDatabase(CFile &file, const char *pathname, UINT nOpenFlags);
+	DWORD WriteDatabase(CFile &file, const char *buff, DWORD length);
+	DWORD ReadDatabase(CFile &file, char *buff, DWORD length);
+
+	DWORD ReadDatabaseNolock(CFile &file, char *buff, DWORD length);
+	DWORD ReadDatabaseText(CFile &file, char *buff, int size);
+	DWORD ReadDatabaseOld(CFile &file, CEavooShortMessage &message);
 };
 
+extern CEavooSellStatisticApp theApp;
 
 /////////////////////////////////////////////////////////////////////////////
 

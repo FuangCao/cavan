@@ -30,6 +30,15 @@ CEavooSellStatisticApp::CEavooSellStatisticApp()
 {
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
+
+	if (GetCurrentDirectory(sizeof(mDatabasePath), mDatabasePath) < 0)
+	{
+		strcpy(mDatabasePath, DEFAULT_CACHE_FILENAME);
+	}
+	else
+	{
+		strcat(mDatabasePath, "\\" DEFAULT_CACHE_FILENAME);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -61,15 +70,6 @@ BOOL CEavooSellStatisticApp::InitInstance()
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
 
-	if (GetCurrentDirectory(sizeof(eavoo_cache_file_path), eavoo_cache_file_path) < 0)
-	{
-		strcpy(eavoo_cache_file_path, DEFAULT_CACHE_FILENAME);
-	}
-	else
-	{
-		strcat(eavoo_cache_file_path, "\\" DEFAULT_CACHE_FILENAME);
-	}
-
 	CEavooSellStatisticDlg dlg;
 	m_pMainWnd = &dlg;
 	int nResponse = dlg.DoModal();
@@ -87,4 +87,149 @@ BOOL CEavooSellStatisticApp::InitInstance()
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
 	return FALSE;
+}
+
+bool CEavooSellStatisticApp::OpenDatabase(CFile &file, const char *pathname, UINT nOpenFlags)
+{
+	if (pathname == NULL)
+	{
+		pathname = mDatabasePath;
+	}
+
+	if (file.Open(pathname, nOpenFlags, NULL) == false)
+	{
+		return false;
+	}
+
+	if ((nOpenFlags & (CFile::modeWrite | CFile::modeReadWrite)) && (nOpenFlags & CFile::modeNoTruncate))
+	{
+		file.SeekToEnd();
+	}
+
+	return true;
+}
+
+DWORD CEavooSellStatisticApp::WriteDatabase(CFile &file, const char *buff, DWORD length)
+{
+	DWORD dwWrite;
+	CSingleLock lock(&mDatabaseMutex);
+
+	lock.Lock();
+
+	if (::WriteFile((HANDLE)file.m_hFile, buff, length, &dwWrite, NULL) == FALSE || dwWrite != length || ::FlushFileBuffers((HANDLE)file.m_hFile) == FALSE)
+	{
+		file.Close();
+		dwWrite = 0;
+	}
+
+	return dwWrite;
+}
+
+DWORD CEavooSellStatisticApp::ReadDatabase(CFile &file, char *buff, DWORD length)
+{
+	DWORD dwRead;
+	CSingleLock lock(&mDatabaseMutex);
+
+	lock.Lock();
+
+	if (::ReadFile((HANDLE)file.m_hFile, buff, length, &dwRead, NULL) == FALSE || dwRead != length)
+	{
+		file.Close();
+		dwRead = 0;
+	}
+
+	return dwRead;
+}
+
+DWORD CEavooSellStatisticApp::ReadDatabaseNolock(CFile &file, char *buff, DWORD length)
+{
+	DWORD dwRead;
+
+	if (::ReadFile((HANDLE)file.m_hFile, buff, length, &dwRead, NULL) == FALSE || dwRead != length)
+	{
+		file.Close();
+		dwRead = 0;
+	}
+
+	return dwRead;
+}
+
+DWORD CEavooSellStatisticApp::ReadDatabaseText(CFile &file, char *buff, int size)
+{
+	int length;
+	DWORD rdTotal;
+
+	rdTotal = ReadDatabaseNolock(file, (char *)&length, sizeof(length));
+	if (rdTotal == 0 || length >= size)
+	{
+		return 0;
+	}
+
+	if (ReadDatabaseNolock(file, buff, length) == 0)
+	{
+		return 0;
+	}
+
+	buff[length] = 0;
+
+	return rdTotal + length;
+}
+
+DWORD CEavooSellStatisticApp::ReadDatabaseOld(CFile &file, CEavooShortMessage &message)
+{
+	char type;
+	DWORD rdTotal, rdLength;
+	CSingleLock lock(&mDatabaseMutex);
+
+	rdTotal = 0;
+	message.Initialize();
+	lock.Lock();
+
+	while (1)
+	{
+		rdLength = ReadDatabaseNolock(file, &type, 1);
+		if (rdLength== 0)
+		{
+			return 0;
+		}
+
+		rdTotal += rdLength;
+
+		switch (type)
+		{
+		case SMS_TYPE_END:
+			if (message.IsValid())
+			{
+				return rdTotal;
+			}
+			return 0;
+
+		case SMS_TYPE_DATE:
+			rdLength = ReadDatabaseNolock(file, (char *)&message.mDate, sizeof(message.mDate));
+			if (rdLength == 0)
+			{
+				return 0;
+			}
+			rdTotal += rdLength;
+			break;
+
+		case SMS_TYPE_ADDRESS:
+			rdLength = ReadDatabaseText(file, message.mAddress, sizeof(message.mAddress));
+			if (rdLength == 0)
+			{
+				return 0;
+			}
+			rdTotal += rdLength;
+			break;
+
+		case SMS_TYPE_BODY:
+			rdLength = ReadDatabaseText(file, message.mBody, sizeof(message.mBody));
+			if (rdLength == 0)
+			{
+				return 0;
+			}
+			rdTotal += rdLength;
+			break;
+		}
+	}
 }

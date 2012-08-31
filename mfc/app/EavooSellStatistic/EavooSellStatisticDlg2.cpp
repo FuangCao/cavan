@@ -151,7 +151,7 @@ bool CEavooSellStatisticDlg2::EavooSellStatisticBase(const char *pathname)
 	FreeLink();
 
 	CEavooShortMessageHelper helper;
-	if (helper.Initialize(pathname, CFile::modeRead | CFile::shareDenyNone) == false)
+	if (helper.Initialize(CFile::modeRead | CFile::shareDenyNone) == false)
 	{
 		return false;
 	}
@@ -163,7 +163,7 @@ bool CEavooSellStatisticDlg2::EavooSellStatisticBase(const char *pathname)
 	DWORD dwTotalLength = helper.GetFileLength();
 	double dbReadLength = 0;
 
-	m_progress_statistic.SetRange32(0, 100);
+	m_progress_statistic.SetRange(0, 100);
 	mShouldStop = false;
 
 	while (1)
@@ -175,7 +175,7 @@ bool CEavooSellStatisticDlg2::EavooSellStatisticBase(const char *pathname)
 			return false;
 		}
 
-		m_progress_statistic.SetPos((int) (dbReadLength / dwTotalLength * 100));
+		m_progress_statistic.SetPos((int) (dbReadLength * 100 / dwTotalLength));
 
 		DWORD length = helper.ReadFromFile();
 		if (length <= 0)
@@ -307,7 +307,7 @@ int CEavooSellStatisticDlg2::ThreadHandler(void *data)
 	CEavooSellStatisticDlg2 *dlg = (CEavooSellStatisticDlg2 *)data;
 	dlg->m_button_ok.EnableWindow(false);
 	dlg->m_button_stop.EnableWindow(true);
-	dlg->EavooSellStatistic(eavoo_cache_file_path);
+	dlg->EavooSellStatistic(theApp.mDatabasePath);
 	dlg->mThread = NULL;
 	dlg->m_button_ok.EnableWindow(true);
 	dlg->m_button_stop.EnableWindow(false);
