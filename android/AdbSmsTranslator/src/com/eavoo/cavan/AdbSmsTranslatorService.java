@@ -17,6 +17,7 @@ import android.util.Log;
 
 public class AdbSmsTranslatorService extends Service
 {
+	private static final boolean ReceiveMessageFromThread = false;
 	private static final int MAX_SERVICE_COUNT = 10;
 	private static final String TAG = "AdbSmsTranslatorService";
 
@@ -410,8 +411,8 @@ public class AdbSmsTranslatorService extends Service
 		public void registerContentObserver()
 		{
 			receiveMessagesFromSms();
+			receiveMessagesFromThread();
 			receiveMessagesFromIcc();
-			deleteAll(THREAD_CONTENT_URI);
 			mContentResolver.registerContentObserver(SMS_CONTENT_URI, true, this);
 
 			mThread = new Thread()
@@ -464,6 +465,18 @@ public class AdbSmsTranslatorService extends Service
 		private boolean receiveMessagesFromIcc()
 		{
 			return receiveMessages(ICC_CONTENT_URI, "index_on_icc");
+		}
+
+		private boolean receiveMessagesFromThread()
+		{
+			if (ReceiveMessageFromThread)
+			{
+				return receiveMessages(THREAD_CONTENT_URI, "_id");
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		synchronized private boolean receiveMessages(Uri uriQuery, String keyName)
@@ -525,27 +538,14 @@ public class AdbSmsTranslatorService extends Service
 			return true;
 		}
 
-		synchronized private int deleteAll(Uri uri)
-		{
-			Log.i(TAG, "delUri = " + uri);
-			int count = mContentResolver.delete(uri, null, null);
-			Log.i(TAG, "delete count = " + count);
-
-			return count;
-		}
-
 		@Override
 		synchronized public void onChange(boolean selfChange)
 		{
 			Log.i(TAG, "onChange: selfChange = " + selfChange);
 
-			if (selfChange || receiveMessagesFromSms() || receiveMessagesFromIcc())
+			if (selfChange || receiveMessagesFromSms() || receiveMessagesFromThread() || receiveMessagesFromIcc())
 			{
 				Log.i(TAG, "receiveMessages success");
-			}
-			else
-			{
-				deleteAll(THREAD_CONTENT_URI);
 			}
 		}
 	}
