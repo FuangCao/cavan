@@ -11,6 +11,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// ================================================================================
+// CEavooShortMessageBody methods
+// ================================================================================
+
 CEavooShortMessageBody::CEavooShortMessageBody(const char *text)
 {
 	if (text)
@@ -132,7 +136,9 @@ char *CEavooShortMessageBody::GetProjectName(char *buff)
 	return buff_bak;
 }
 
-// ============================================================
+// ================================================================================
+// CEavooShortMessage methods
+// ================================================================================
 
 bool CEavooShortMessage::InsertIntoList(CListCtrl &list)
 {
@@ -172,7 +178,7 @@ bool CEavooShortMessage::IsValid(void)
 	return mDate && mAddress[0] && mBody[0];
 }
 
-int CEavooShortMessage::ToTextLine(char *buff, const char *prefix, const char *sufix)
+int CEavooShortMessage::ToTxtLine(char *buff, const char *prefix, const char *sufix)
 {
 	COleDateTime time(mDate);
 	return sprintf(buff, "%s%s\t%s\t%s%s", prefix, mAddress, time.Format("%Y-%m-%d %H:%M:%S"), mBody, sufix);
@@ -184,9 +190,11 @@ int CEavooShortMessage::ToXmlLine(char *buff, const char *prefix, const char *su
 	return sprintf(buff, "%s<message date=\"%s\" address=\"%s\" body=\"%s\" />%s", prefix, time.Format("%Y-%m-%d %H:%M:%S"), mAddress, mBody, sufix);
 }
 
-// ============================================================
+// ================================================================================
+// CEavooShortMessageHelper methods
+// ================================================================================
 
-CEavooShortMessageHelper::CEavooShortMessageHelper(void)
+CEavooShortMessageHelper::CEavooShortMessageHelper(CProgressCtrl &progress, CStatic &state) : mProgress(progress), mState(state)
 {
 	mSocket = INVALID_SOCKET;
 }
@@ -531,7 +539,7 @@ int CEavooShortMessageHelper::WriteTextToFile(CFile &file, const char *buff, int
 	return length;
 }
 
-bool CEavooShortMessageHelper::ExportXmlFile(CFile &file, CProgressCtrl &progress, CStatic &state)
+bool CEavooShortMessageHelper::ExportXmlFile(CFile &file)
 {
 	char buff[1024];
 	DWORD totalLength, rdLength;
@@ -539,33 +547,43 @@ bool CEavooShortMessageHelper::ExportXmlFile(CFile &file, CProgressCtrl &progres
 	int wrLength;
 	unsigned char count;
 
-	WriteTextToFile(file, "<?xml version=\"1.0\" encoding=\"ascii\" ?>\r\n", -1);
-	WriteTextToFile(file, "<messages>\r\n", -1);
-
-	totalLength = mFile.GetLength();
-	rdTotal = 0;
-	progress.SetRange(0, 100);
-
-	for (count = 0; ; count++)
+	if (WriteTextToFile(file, "<?xml version=\"1.0\" encoding=\"ascii\" ?>\r\n", -1) < 0)
 	{
-		rdLength = ReadFromFile();
-		if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
+		return false;
+	}
+
+	if (WriteTextToFile(file, "<messages>\r\n", -1) < 0)
+	{
+		return false;
+	}
+
+	rdTotal = 0;
+	totalLength = mFile.GetLength();
+	if (totalLength)
+	{
+		mProgress.SetRange(0, 100);
+
+		for (count = 0; ; count++)
 		{
-			percent = rdTotal * 100 / totalLength;
-			progress.SetPos((int)(percent));
-			sprintf(buff, "%0.2f%%", percent);
-			state.SetWindowText(buff);
-
-			if (rdLength == 0)
+			rdLength = ReadFromFile();
+			if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
 			{
-				break;
+				percent = rdTotal * 100 / totalLength;
+				mProgress.SetPos((int)(percent));
+				sprintf(buff, "%0.2f%%", percent);
+				mState.SetWindowText(buff);
+
+				if (rdLength == 0)
+				{
+					break;
+				}
 			}
+
+			wrLength = mShortMessage.ToXmlLine(buff, "\t", "\r\n");
+			WriteTextToFile(file, buff, wrLength);
+
+			rdTotal += rdLength;
 		}
-
-		wrLength = mShortMessage.ToXmlLine(buff, "\t", "\r\n");
-		WriteTextToFile(file, buff, wrLength);
-
-		rdTotal += rdLength;
 	}
 
 	WriteTextToFile(file, "</messages>", -1);
@@ -573,7 +591,7 @@ bool CEavooShortMessageHelper::ExportXmlFile(CFile &file, CProgressCtrl &progres
 	return rdTotal == totalLength;
 }
 
-bool CEavooShortMessageHelper::ExportTextFile(CFile &file, CProgressCtrl &progress, CStatic &state)
+bool CEavooShortMessageHelper::ExportTxtFile(CFile &file)
 {
 	char buff[1024];
 	DWORD totalLength, rdLength;
@@ -582,8 +600,13 @@ bool CEavooShortMessageHelper::ExportTextFile(CFile &file, CProgressCtrl &progre
 	unsigned char count;
 
 	totalLength = mFile.GetLength();
+	if (totalLength == 0)
+	{
+		return true;
+	}
+
 	rdTotal = 0;
-	progress.SetRange(0, 100);
+	mProgress.SetRange(0, 100);
 
 	for (count = 0; ; count++)
 	{
@@ -591,9 +614,9 @@ bool CEavooShortMessageHelper::ExportTextFile(CFile &file, CProgressCtrl &progre
 		if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
 		{
 			percent = rdTotal * 100 / totalLength;
-			progress.SetPos((int)(percent));
+			mProgress.SetPos((int)(percent));
 			sprintf(buff, "%0.2lf%%", percent);
-			state.SetWindowText(buff);
+			mState.SetWindowText(buff);
 
 			if (rdLength == 0)
 			{
@@ -601,7 +624,7 @@ bool CEavooShortMessageHelper::ExportTextFile(CFile &file, CProgressCtrl &progre
 			}
 		}
 
-		wrLength = mShortMessage.ToTextLine(buff, "", "\r\n");
+		wrLength = mShortMessage.ToTxtLine(buff, "", "\r\n");
 		file.Write(buff, wrLength);
 
 		rdTotal += rdLength;
@@ -610,7 +633,7 @@ bool CEavooShortMessageHelper::ExportTextFile(CFile &file, CProgressCtrl &progre
 	return rdTotal == totalLength;
 }
 
-bool CEavooShortMessageHelper::ImportDatabase(CEavooShortMessageHelper &helper, CProgressCtrl &progress, CStatic &state)
+bool CEavooShortMessageHelper::ImportDatabase(CEavooShortMessageHelper &helper)
 {
 	CEavooShortMessage &message = helper.GetShortMessage();
 	DWORD (CEavooShortMessageHelper::*ReadHandler)(void);
@@ -631,8 +654,13 @@ bool CEavooShortMessageHelper::ImportDatabase(CEavooShortMessageHelper &helper, 
 	unsigned char count;
 
 	totalLength = helper.GetFileLength();
+	if (totalLength == 0)
+	{
+		return true;
+	}
+
 	rdTotal = 0;
-	progress.SetRange(0, 100);
+	mProgress.SetRange(0, 100);
 
 	for (count = 0; ; count++)
 	{
@@ -640,9 +668,9 @@ bool CEavooShortMessageHelper::ImportDatabase(CEavooShortMessageHelper &helper, 
 		if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
 		{
 			percent = rdTotal * 100 / totalLength;
-			progress.SetPos((int)percent);
+			mProgress.SetPos((int)percent);
 			sprintf(buff, "%0.2lf%%", percent);
-			state.SetWindowText(buff);
+			mState.SetWindowText(buff);
 
 			if (rdLength == 0)
 			{

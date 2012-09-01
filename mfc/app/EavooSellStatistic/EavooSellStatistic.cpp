@@ -31,13 +31,16 @@ CEavooSellStatisticApp::CEavooSellStatisticApp()
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
 
-	if (GetCurrentDirectory(sizeof(mDatabasePath), mDatabasePath) < 0)
+	char dirpath[1024];
+	if (GetCurrentDirectory(sizeof(dirpath), dirpath) < 0)
 	{
-		strcpy(mDatabasePath, DEFAULT_CACHE_FILENAME);
+		strcpy(mDatabasePath, ".\\" DEFAULT_CACHE_FILENAME);
+		strcpy(mStatisticPath, ".\\" DEFAULT_STATISTIC_FILENAME);
 	}
 	else
 	{
-		strcat(mDatabasePath, "\\" DEFAULT_CACHE_FILENAME);
+		sprintf(mDatabasePath, "%s\\" DEFAULT_CACHE_FILENAME, dirpath);
+		sprintf(mStatisticPath, "%s\\" DEFAULT_STATISTIC_FILENAME, dirpath);
 	}
 }
 

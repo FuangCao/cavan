@@ -89,7 +89,7 @@ IDD_EAVOOSELLSTATISTIC_DIALOG DIALOGEX 0, 0, 411, 421
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "EavooSellStatistic"
-FONT 10, "宋体"
+FONT 10, "宋体", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "启动服务",IDC_BUTTON_start,7,371,50,14
     PUSHBUTTON      "关闭服务",IDC_BUTTON_stop,122,371,50,14,WS_DISABLED
@@ -112,7 +112,7 @@ BEGIN
                     WS_BORDER,7,333,397,14
 END
 
-IDD_DIALOG_statistic DIALOG DISCARDABLE  0, 0, 219, 249
+IDD_DIALOG_statistic DIALOGEX 0, 0, 219, 249
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "销量统计"
 FONT 10, "System"
@@ -122,7 +122,7 @@ BEGIN
     CONTROL         "List1",IDC_LIST_sell,"SysListView32",LVS_REPORT | 
                     WS_BORDER | WS_TABSTOP,13,31,194,157
     CONTROL         "Tab1",IDC_TAB_sell,"SysTabControl32",TCS_BUTTONS,7,7,
-                    205,13
+                    205,13,WS_EX_STATICEDGE
     CONTROL         "Progress1",IDC_PROGRESS_statistic,"msctls_progress32",
                     PBS_SMOOTH | WS_BORDER,13,192,194,14
     LTEXT           "",IDC_STATIC_status,13,210,194,8

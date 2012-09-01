@@ -111,6 +111,15 @@ SOURCE=.\EavooShortMessage.cpp
 # Begin Source File
 
 SOURCE=.\EavooStatisticHelper.cpp
+
+!IF  "$(CFG)" == "EavooSellStatistic - Win32 Release"
+
+# ADD CPP /Yu
+
+!ELSEIF  "$(CFG)" == "EavooSellStatistic - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 

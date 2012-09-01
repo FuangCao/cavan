@@ -11,7 +11,8 @@
 #define RETRY_DELAY_TIME	1000
 #define DEFAULT_SERVER_IP	"127.0.0.1"
 #define DEFAULT_SERVER_PORT	8888
-#define DEFAULT_CACHE_FILENAME		"eavoo_sell.dat"
+#define DEFAULT_CACHE_FILENAME			"eavoo_sell.dat"
+#define DEFAULT_STATISTIC_FILENAME		"eavoo_statistic.dat"
 
 #define ADB_SERVICE_PORT	5037
 #define ADB_STATE_OKAY		"OKAY"
@@ -71,7 +72,7 @@ public:
 	void Initialize(void);
 	bool IsInvalid(void);
 	bool IsValid(void);
-	int ToTextLine(char *buff, const char *prefix = "", const char *sufix = "");
+	int ToTxtLine(char *buff, const char *prefix = "", const char *sufix = "");
 	int ToXmlLine(char *buff, const char *prefix = "", const char *sufix = "");
 };
 
@@ -87,9 +88,11 @@ private:
 	char mAdbStatus[512];
 	char mIpAddress[32];
 	UINT mPort;
+	CProgressCtrl &mProgress;
+	CStatic &mState;
 
 public:
-	CEavooShortMessageHelper(void);
+	CEavooShortMessageHelper(CProgressCtrl &progress, CStatic &state);
 	~CEavooShortMessageHelper(void);
 
 	bool Initialize(UINT flags, const char *filename = NULL, UINT port = 0, const char *ip = DEFAULT_SERVER_IP);
@@ -118,6 +121,11 @@ public:
 		mFile.SeekToBegin();
 	}
 
+	DWORD Seek(LONG lOff)
+	{
+		return ::SetFilePointer((HANDLE)mFile.m_hFile, lOff, NULL, FILE_BEGIN);
+	}
+
 	const char *GetMessageBody(void)
 	{
 		return mShortMessage.mBody;
@@ -141,10 +149,10 @@ public:
 
 	bool ParseBody(CEavooShortMessageBody &body);
 
-	int WriteTextToFile(CFile &file, const char *buff, int length);
-	bool ExportXmlFile(CFile &file, CProgressCtrl &progress, CStatic &state);
-	bool ExportTextFile(CFile &file, CProgressCtrl &progress, CStatic &state);
-	bool ImportDatabase(CEavooShortMessageHelper &helper, CProgressCtrl &progress, CStatic &state);
+	static int WriteTextToFile(CFile &file, const char *buff, int length);
+	bool ExportXmlFile(CFile &file);
+	bool ExportTxtFile(CFile &file);
+	bool ImportDatabase(CEavooShortMessageHelper &helper);
 
 	void ShowShortMessage(void);
 };

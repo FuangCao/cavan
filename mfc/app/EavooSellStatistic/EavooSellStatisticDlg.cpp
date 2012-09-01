@@ -115,7 +115,7 @@ END_MESSAGE_MAP()
 int CEavooSellStatisticDlg::ThreadHandler(void *data)
 {
 	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
-	CEavooShortMessageHelper helper;
+	CEavooShortMessageHelper helper(dlg->m_progress, dlg->m_static_state);
 	char ip[32];
 	dlg->m_ipaddress1.GetWindowText(ip, sizeof(ip));
 
@@ -323,7 +323,7 @@ int CEavooSellStatisticDlg::ThreadHandlerLoad(void *data)
 
 	dlg->m_list_sms.DeleteAllItems();
 
-	CEavooShortMessageHelper helper;
+	CEavooShortMessageHelper helper(dlg->m_progress, dlg->m_static_state);
 	if (helper.Initialize(CFile::modeRead | CFile::shareDenyNone) == false)
 	{
 		return -1;
@@ -341,30 +341,33 @@ int CEavooSellStatisticDlg::ThreadHandlerLoad(void *data)
 	unsigned char count;
 
 	totalLength = helper.GetFileLength();
-	rdTotal = 0;
-	dlg->m_progress.SetRange(0, 100);
-
-	char buff[8];
-
-	for (count = 0; ; count++)
+	if (totalLength)
 	{
-		rdLength = helper.ReadFromFile();
-		if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
+		rdTotal = 0;
+		dlg->m_progress.SetRange(0, 100);
+
+		char buff[8];
+
+		for (count = 0; ; count++)
 		{
-			percent = rdTotal * 100 / totalLength;
-			dlg->m_progress.SetPos((int)percent);
-			sprintf(buff, "%0.2lf%%", percent);
-			dlg->m_static_state.SetWindowText(buff);
-
-			if (rdLength == 0)
+			rdLength = helper.ReadFromFile();
+			if ((count & PROGRESS_MIN_COUNT) == 0 || rdLength == 0)
 			{
-				break;
+				percent = rdTotal * 100 / totalLength;
+				dlg->m_progress.SetPos((int)percent);
+				sprintf(buff, "%0.2lf%%", percent);
+				dlg->m_static_state.SetWindowText(buff);
+
+				if (rdLength == 0)
+				{
+					break;
+				}
 			}
+
+			helper.GetShortMessage().InsertIntoList(dlg->m_list_sms);
+
+			rdTotal += rdLength;
 		}
-
-		helper.GetShortMessage().InsertIntoList(dlg->m_list_sms);
-
-		rdTotal += rdLength;
 	}
 
 	helper.Uninitialize();
@@ -409,7 +412,6 @@ void CEavooSellStatisticDlg::OnBUTTONcleandatabase()
 int CEavooSellStatisticDlg::ThreadHandlerExport(void *data)
 {
 	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
-
 	CFileDialog fileDlg(false, "txt", "eavoo_sell", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST, "(*.txt)|*.txt|(*.xml)|*.xml||");
 	if (fileDlg.DoModal() != IDOK)
 	{
@@ -423,7 +425,7 @@ int CEavooSellStatisticDlg::ThreadHandlerExport(void *data)
 		return -1;
 	}
 
-	CEavooShortMessageHelper helper;
+	CEavooShortMessageHelper helper(dlg->m_progress, dlg->m_static_state);
 	if (helper.Initialize(CFile::modeRead | CFile::shareDenyNone) == false)
 	{
 		AfxMessageBox("打开数据库失败");
@@ -441,11 +443,11 @@ int CEavooSellStatisticDlg::ThreadHandlerExport(void *data)
 	CString fileExt = fileDlg.GetFileExt();
 	if (fileExt.CompareNoCase("txt") == 0)
 	{
-		result = helper.ExportTextFile(file, dlg->m_progress, dlg->m_static_state);
+		result = helper.ExportTxtFile(file);
 	}
 	else if (fileExt.CompareNoCase("xml") == 0)
 	{
-		result = helper.ExportXmlFile(file, dlg->m_progress, dlg->m_static_state);
+		result = helper.ExportXmlFile(file);
 	}
 	else
 	{
@@ -476,7 +478,7 @@ int CEavooSellStatisticDlg::ThreadHandlerExport(void *data)
 int CEavooSellStatisticDlg::ThreadHandlerImport(void *data)
 {
 	CEavooSellStatisticDlg *dlg = (CEavooSellStatisticDlg *)data;
-	CEavooShortMessageHelper helperRead, helperWrite;
+	CEavooShortMessageHelper helperRead(dlg->m_progress, dlg->m_static_state), helperWrite(dlg->m_progress, dlg->m_static_state);
 
 	CFileDialog fileDlg(true, "dat", "eavoo_sell", OFN_HIDEREADONLY | OFN_FILEMUSTEXIST, "(*.dat)|*.dat||");
 	if (fileDlg.DoModal() != IDOK)
@@ -501,7 +503,7 @@ int CEavooSellStatisticDlg::ThreadHandlerImport(void *data)
 	dlg->m_button_clean_database.EnableWindow(false);
 	dlg->m_button_statistic.EnableWindow(false);
 
-	if (helperWrite.ImportDatabase(helperRead, dlg->m_progress, dlg->m_static_state))
+	if (helperWrite.ImportDatabase(helperRead))
 	{
 		AfxMessageBox("导入数据库成功");
 	}

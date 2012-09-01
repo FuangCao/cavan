@@ -1,29 +1,56 @@
+// EavooStatisticHelper.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "EavooSellStatistic.h"
+#include "EavooShortMessage.h"
 #include "EavooStatisticHelper.h"
 
-/////////////////////////////////////////////////////////////////////////////
-// CMonthSell methods
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-CMonthSellNode::CMonthSellNode(int year, int month, int count)
+// ================================================================================
+// CMonthSell methods
+// ================================================================================
+
+CEavooSellMonthNode::CEavooSellMonthNode(int year, int month, int count)
 {
 	mYear = year;
 	mMonth = month;
 	mSellCount = count;
 }
 
-CMonthSellLink::CMonthSellLink(const char *projectname)
+int CEavooSellMonthNode::ToXmlFileLine(char *buff, const char *prefix, const char *sufix)
+{
+	return sprintf(buff, "%s<sale date=\"%04d-%02d\" count=\"%d\" />%s", prefix, mYear, mMonth, mSellCount, sufix);
+}
+
+int CEavooSellMonthNode::ToTxtFileLine(char *buff, const char *prefix, const char *sufix)
+{
+	return sprintf(buff, "%sDate: %04d-%02d, Count: %d%s", prefix, mYear, mMonth, mSellCount, sufix);
+}
+
+// ================================================================================
+// CEavooSellProjectNode methods
+// ================================================================================
+
+CEavooSellProjectNode::CEavooSellProjectNode(const char *projectname)
 {
 	strcpy(mProjectName, projectname);
 	mHead = NULL;
 }
 
-CMonthSellLink::~CMonthSellLink(void)
+CEavooSellProjectNode::~CEavooSellProjectNode(void)
 {
 	FreeLink();
 }
 
-void CMonthSellLink::FreeLink(void)
+void CEavooSellProjectNode::FreeLink(void)
 {
-	for (CMonthSellNode *q, *p = mHead; p; p = q)
+	for (CEavooSellMonthNode *q, *p = mHead; p; p = q)
 	{
 		q = p->next;
 		delete p;
@@ -32,9 +59,9 @@ void CMonthSellLink::FreeLink(void)
 	mHead = NULL;
 }
 
-CMonthSellNode *CMonthSellLink::FindMonth(int year, int month)
+CEavooSellMonthNode *CEavooSellProjectNode::FindMonth(int year, int month)
 {
-	for (CMonthSellNode *p = mHead; p; p = p->next)
+	for (CEavooSellMonthNode *p = mHead; p; p = p->next)
 	{
 		if (p->mYear == year && p->mMonth == month)
 		{
@@ -45,12 +72,12 @@ CMonthSellNode *CMonthSellLink::FindMonth(int year, int month)
 	return NULL;
 }
 
-bool CMonthSellLink::AddMonthSellCount(int year, int month, int count)
+bool CEavooSellProjectNode::AddMonthSellCount(int year, int month, int count)
 {
-	CMonthSellNode *p = FindMonth(year, month);
+	CEavooSellMonthNode *p = FindMonth(year, month);
 	if (p == NULL)
 	{
-		p = new CMonthSellNode(year, month, count);
+		p = new CEavooSellMonthNode(year, month, count);
 		if (p == NULL)
 		{
 			return false;
@@ -67,16 +94,109 @@ bool CMonthSellLink::AddMonthSellCount(int year, int month, int count)
 	return true;
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// CEavooStatisticHelper methods
-
-CEavooStatisticHelper::CEavooStatisticHelper()
+bool CEavooSellProjectNode::WriteToXmlFile(CFile &file, const char *prefix, const char *sufix)
 {
+	char buff[1024];
+	int length;
+
+	length = sprintf(buff, "%s<project name=\"%s\">%s", prefix, mProjectName, sufix);
+	if (CEavooShortMessageHelper::WriteTextToFile(file, buff, length) < 0)
+	{
+		return false;
+	}
+
+	for (CEavooSellMonthNode *p = mHead; p; p = p->next)
+	{
+		length = p->ToXmlFileLine(buff, "\t\t", "\r\n");
+		if (CEavooShortMessageHelper::WriteTextToFile(file, buff, length) < 0)
+		{
+			return false;
+		}
+	}
+
+	if (CEavooShortMessageHelper::WriteTextToFile(file, "\t</project>\r\n", -1) < 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool CEavooSellProjectNode::WriteToTxtFile(CFile &file, const char *prefix, const char *sufix)
+{
+	char buff[1024];
+	int length;
+
+	length = sprintf(buff, "%sProject: %s%s", prefix, mProjectName, sufix);
+	if (CEavooShortMessageHelper::WriteTextToFile(file, buff, length) < 0)
+	{
+		return false;
+	}
+
+	for (CEavooSellMonthNode *p = mHead; p; p = p->next)
+	{
+		length = p->ToTxtFileLine(buff, "", "\r\n");
+		if (CEavooShortMessageHelper::WriteTextToFile(file, buff, length) < 0)
+		{
+			return false;
+		}
+	}
+
+	if (CEavooShortMessageHelper::WriteTextToFile(file, "============================================================\r\n", -1) < 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void CEavooSellProjectNode::AppendMonthNode(CEavooSellMonthNode *node)
+{
+	node->next = NULL;
+
+	if (mHead == NULL)
+	{
+		mHead = node;
+	}
+	else
+	{
+		for (CEavooSellMonthNode *p = mHead; p->next; p = p->next);
+		p->next = node;
+	}
+}
+
+DWORD CEavooSellProjectNode::SaveToFile(CFile &file)
+{
+	DWORD wrCount = 0, wrLength;
+
+	for (CEavooSellMonthNode *p = mHead; p; wrCount++, p = p->next)
+	{
+		if (::WriteFile((HANDLE)file.m_hFile, mProjectName, sizeof(mProjectName), &wrLength, NULL) == FALSE || wrLength != sizeof(mProjectName))
+		{
+			return 0;
+		}
+
+		if (::WriteFile((HANDLE)file.m_hFile, (const char *)p, sizeof(CEavooSellMonthNode), &wrLength, NULL) == FALSE || wrLength != sizeof(CEavooSellMonthNode))
+		{
+			return 0;
+		}
+	}
+
+	return wrCount;
+}
+
+// ================================================================================
+// CEavooStatisticHelper methods
+// ================================================================================
+
+CEavooStatisticHelper::CEavooStatisticHelper(CProgressCtrl &progress, CStatic &state) : mProgress(progress), mState(state)
+{
+	mHead = NULL;
 }
 
 void CEavooStatisticHelper::FreeLink(void)
 {
-	CMonthSellLink *head_next;
+	CEavooSellProjectNode *head_next;
 
 	while (mHead)
 	{
@@ -87,9 +207,9 @@ void CEavooStatisticHelper::FreeLink(void)
 	}
 }
 
-CMonthSellLink *CEavooStatisticHelper::FindProject(const char *projectname)
+CEavooSellProjectNode *CEavooStatisticHelper::FindProject(const char *projectname)
 {
-	for (CMonthSellLink *p = mHead; p; p = p->next)
+	for (CEavooSellProjectNode *p = mHead; p; p = p->next)
 	{
 		if (strcmp(p->mProjectName, projectname) == 0)
 		{
@@ -104,22 +224,53 @@ bool CEavooStatisticHelper::EavooSellStatisticBase(const char *pathname)
 {
 	FreeLink();
 
-	CEavooShortMessageHelper helper;
+	CEavooShortMessageHelper helper(mProgress, mState);
 	if (helper.Initialize(CFile::modeRead | CFile::shareDenyNone) == false)
 	{
 		return false;
 	}
 
+	DWORD dwLoadCount;
 	struct tm *time;
 	char projectname[16];
 	CEavooShortMessageBody body;
-	CMonthSellLink *project;
+	CEavooSellProjectNode *project;
 	DWORD dwTotalLength = helper.GetFileLength();
 	double dbReadLength, percent;
 	unsigned char count;
 	char buff[8];
 
-	m_progress_statistic.SetRange(0, 100);
+	dwLoadCount = LoadFromFile();
+	if (dwLoadCount)
+	{
+		DWORD offset = dwLoadCount * sizeof(CEavooShortMessage);
+		if (offset == dwTotalLength)
+		{
+			return true;
+		}
+		else if (offset > dwTotalLength)
+		{
+			FreeLink();
+		}
+		else
+		{
+			offset = helper.Seek(offset);
+			if (offset == (DWORD)-1)
+			{
+				FreeLink();
+			}
+			else
+			{
+				dwTotalLength -= offset;
+			}
+		}
+	}
+
+	if (dwTotalLength == 0)
+	{
+		return true;
+	}
+
 	mShouldStop = false;
 	dbReadLength = 0;
 
@@ -128,7 +279,7 @@ bool CEavooStatisticHelper::EavooSellStatisticBase(const char *pathname)
 		if (mShouldStop)
 		{
 			AfxMessageBox("取消统计");
-			m_static_status.SetWindowText("取消统计");
+			mState.SetWindowText("取消统计");
 			return false;
 		}
 
@@ -136,9 +287,9 @@ bool CEavooStatisticHelper::EavooSellStatisticBase(const char *pathname)
 		if ((count & PROGRESS_MIN_COUNT) == 0 || length == 0)
 		{
 			percent = dbReadLength * 100 / dwTotalLength;
-			m_progress_statistic.SetPos((int)percent);
+			mProgress.SetPos((int)percent);
 			sprintf(buff, "%0.2lf%%", percent);
-			m_static_status.SetWindowText(buff);
+			mState.SetWindowText(buff);
 
 			if (length == 0)
 			{
@@ -152,31 +303,31 @@ bool CEavooStatisticHelper::EavooSellStatisticBase(const char *pathname)
 		if (time == NULL)
 		{
 			AfxMessageBox("日期无效");
-			m_static_status.SetWindowText("日期无效");
+			mState.SetWindowText("日期无效");
 			return false;
 		}
 
 		if (helper.ParseBody(body) == false)
 		{
 			AfxMessageBox("短信的内容非法");
-			m_static_status.SetWindowText("短信的内容非法");
+			mState.SetWindowText("短信的内容非法");
 			return false;
 		}
 
 		const char *p_name = body.GetProjectName(projectname);
 		if (p_name == NULL)
 		{
-			p_name = "未知";
+			p_name = "OTHER";
 		}
 
 		project = FindProject(p_name);
 		if (project == NULL)
 		{
-			project = new CMonthSellLink(p_name);
+			project = new CEavooSellProjectNode(p_name);
 			if (project == NULL)
 			{
 				AfxMessageBox("无法分配存储空间");
-				m_static_status.SetWindowText("无法分配存储空间");
+				mState.SetWindowText("无法分配存储空间");
 				return false;
 			}
 
@@ -193,20 +344,18 @@ bool CEavooStatisticHelper::EavooSellStatisticBase(const char *pathname)
 	return dbReadLength == dwTotalLength;
 }
 
-bool CEavooStatisticHelper::EavooSellStatistic(const char *pathname)
+bool CEavooStatisticHelper::EavooSellStatistic(const char *pathname, CTabCtrl &tab)
 {
 	if (EavooSellStatisticBase(pathname))
 	{
-		for (CMonthSellLink *p = mHead; p; p = p->next)
+		tab.DeleteAllItems();
+
+		for (CEavooSellProjectNode *p = mHead; p; p = p->next)
 		{
-			m_tab_sell.InsertItem(0, p->mProjectName);
+			tab.InsertItem(0, p->mProjectName);
 		}
 
-		if (mHead)
-		{
-			ShowProject();
-		}
-
+		SaveToFile();
 		return true;
 	}
 
@@ -220,51 +369,191 @@ void CEavooStatisticHelper::ShouldStop(void)
 	mShouldStop = true;
 }
 
-bool CEavooStatisticHelper::ShowProject(const char *projectname)
+bool CEavooStatisticHelper::ShowProject(CEavooSellProjectNode *head, CListCtrl &list)
+{
+	int total = 0;
+	char buff[32];
+
+	list.DeleteAllItems();
+
+	for (CEavooSellMonthNode *p = head->mHead; p; p = p->next)
+	{
+		sprintf(buff, "%04d年%02d月", p->mYear, p->mMonth);
+		int index = list.InsertItem(list.GetItemCount(), buff);
+		sprintf(buff, "%d 台", p->mSellCount);
+		list.SetItemText(index, 1, buff);
+		total += p->mSellCount;
+	}
+
+	sprintf(buff, "总销量：%d 台", total);
+	mState.SetWindowText(buff);
+
+	return true;
+}
+
+bool CEavooStatisticHelper::ShowProject(const char *projectname, CListCtrl &list)
 {
 	if (projectname == NULL)
 	{
 		return false;
 	}
 
-	return ShowProject(FindProject(projectname));
+	return ShowProject(FindProject(projectname), list);
 }
 
-bool CEavooStatisticHelper::ShowProject(CMonthSellLink *head)
+bool CEavooStatisticHelper::ExportXmlFile(CFile &file)
 {
-	int total = 0;
-	char buff[32];
-
-	m_list_sell.DeleteAllItems();
-
-	for (CMonthSellNode *p = head->mHead; p; p = p->next)
-	{
-		sprintf(buff, "%04d年%02d月", p->mYear, p->mMonth);
-		int index = m_list_sell.InsertItem(m_list_sell.GetItemCount(), buff);
-		sprintf(buff, "%d 台", p->mSellCount);
-		m_list_sell.SetItemText(index, 1, buff);
-		total += p->mSellCount;
-	}
-
-	sprintf(buff, "总销量：%d 台", total);
-	m_static_status.SetWindowText(buff);
-
-	return true;
-}
-
-bool CEavooStatisticHelper::ShowProject(void)
-{
-	TCITEM item;
-	char projectname[16] = {0};
-	item.pszText = projectname;
-	item.cchTextMax = sizeof(projectname);
-	item.mask = TCIF_TEXT;
-	if (m_tab_sell.GetItem(m_tab_sell.GetCurSel(), &item) == false)
+	if (CEavooShortMessageHelper::WriteTextToFile(file, "<?xml version=\"1.0\" encoding=\"ascii\" ?>\r\n", -1) < 0)
 	{
 		return false;
 	}
 
-	ShowProject(projectname);
+	if (CEavooShortMessageHelper::WriteTextToFile(file, "<projects>\r\n", -1) < 0)
+	{
+		return false;
+	}
+
+	for (CEavooSellProjectNode *p = mHead; p; p = p->next)
+	{
+		if (p->WriteToXmlFile(file, "\t", "\r\n") == false)
+		{
+			return false;
+		}
+	}
+
+	if (CEavooShortMessageHelper::WriteTextToFile(file, "</projects>", -1) < 0)
+	{
+		return false;
+	}
 
 	return true;
+}
+
+bool CEavooStatisticHelper::ExportTxtFile(CFile &file)
+{
+	if (CEavooShortMessageHelper::WriteTextToFile(file, "============================================================\r\n", -1) < 0)
+	{
+		return false;
+	}
+
+	for (CEavooSellProjectNode *p = mHead; p; p = p->next)
+	{
+		if (p->WriteToTxtFile(file, "", "\r\n") == false)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void CEavooStatisticHelper::AppendProjectNode(CEavooSellProjectNode *node)
+{
+	node->next = NULL;
+
+	if (mHead == NULL)
+	{
+		mHead = node;
+	}
+	else
+	{
+		for (CEavooSellProjectNode *p = mHead; p->next; p = p->next);
+		p->next = node;
+	}
+}
+
+DWORD CEavooStatisticHelper::LoadFromFile(const char *pathname)
+{
+	CFile file;
+	if (file.Open(pathname, CFile::modeRead, NULL) == false)
+	{
+		return 0;
+	}
+
+	DWORD result = LoadFromFile(file);
+	file.Close();
+
+	return result;
+}
+
+DWORD CEavooStatisticHelper::LoadFromFile(CFile &file)
+{
+	CEavooSellProjectNode *nodeProject;
+	char projectName[MAX_PROJECT_NAME_LENGTH];
+	DWORD rdLength, ldCount;
+
+	FreeLink();
+	nodeProject = NULL;
+	ldCount = 0;
+
+	while (1)
+	{
+		if (::ReadFile((HANDLE)file.m_hFile, projectName, MAX_PROJECT_NAME_LENGTH, &rdLength, NULL) == FALSE || rdLength != MAX_PROJECT_NAME_LENGTH)
+		{
+			break;
+		}
+
+		CEavooSellMonthNode *nodeMonth = new CEavooSellMonthNode();
+		if (projectName[0] == 0 || nodeMonth == NULL)
+		{
+			FreeLink();
+			return false;
+		}
+
+		if (::ReadFile((HANDLE)file.m_hFile, (char *)nodeMonth, sizeof(CEavooSellMonthNode), &rdLength, NULL) == FALSE || rdLength != sizeof(CEavooSellMonthNode))
+		{
+			FreeLink();
+			return 0;
+		}
+
+		if (nodeProject == NULL || strcmp(nodeProject->mProjectName, projectName))
+		{
+			nodeProject = new CEavooSellProjectNode(projectName);
+			if (nodeProject == NULL)
+			{
+				delete nodeMonth;
+				FreeLink();
+				return 0;
+			}
+
+			AppendProjectNode(nodeProject);
+		}
+
+		nodeProject->AppendMonthNode(nodeMonth);
+		ldCount += nodeMonth->mSellCount;
+	}
+
+	return ldCount;
+}
+
+DWORD CEavooStatisticHelper::SaveToFile(const char *pathname)
+{
+	CFile file;
+	if (file.Open(pathname, CFile::modeWrite | CFile::modeCreate, NULL) == false)
+	{
+		return 0;
+	}
+
+	DWORD result = SaveToFile(file);
+	file.Close();
+
+	return result;
+}
+
+DWORD CEavooStatisticHelper::SaveToFile(CFile &file)
+{
+	DWORD wrCount, wrTotal = 0;
+
+	for (CEavooSellProjectNode *p = mHead; p; p = p->next)
+	{
+		wrCount = p->SaveToFile(file);
+		if (wrCount == 0)
+		{
+			break;
+		}
+
+		wrTotal += wrCount;
+	}
+
+	return wrTotal;
 }

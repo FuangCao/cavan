@@ -56,7 +56,9 @@ private:
 	CEavooStatisticHelper mHelper;
 
 public:
+	bool ShowCurrentProject(void);
 	static int ThreadHandler(void *data);
+	static int ThreadHandlerExport(void *data);
 };
 
 //{{AFX_INSERT_LOCATION}}

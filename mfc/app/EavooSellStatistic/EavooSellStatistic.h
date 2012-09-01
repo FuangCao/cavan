@@ -25,6 +25,7 @@ class CEavooSellStatisticApp : public CWinApp
 {
 public:
 	char mDatabasePath[1024];
+	char mStatisticPath[1024];
 	CMutex mDatabaseMutex;
 	CEavooSellStatisticApp();
 
