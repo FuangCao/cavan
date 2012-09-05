@@ -48,6 +48,15 @@ class SvnRreoManager:
 		if pathname.endswith("/"):
 			if self.svn_repo_system("cd %s && git diff > %s && git reset --hard" % (pathname, self.diffpath)) < 0:
 				return -1
+			dirname = os.path.join(pathname, ".git")
+			for fn in os.listdir(dirname):
+				if not fn.endswith(".diff"):
+					continue
+				fn = os.path.join(dirname, fn)
+				st = os.stat(fn)
+				if st.st_size == 0:
+					print "Remove empty file `%s'" % fn;
+					os.remove(fn)
 			return self.svn_repo_system("cd %s && git svn rebase" % pathname)
 		else:
 			return self.svn_repo_system("svn update --force " + pathname)
