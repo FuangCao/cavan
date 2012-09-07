@@ -10,6 +10,8 @@ BUILD_PATH = build
 APP_PREFIX = ${CAVAN_NAME}-
 INCLUDE_PATH = $(ROOT_PATH)/include
 APP_CORE_PATH = $(APP_PATH)/core
+APP_OTHERS_PATH = $(APP_PATH)/others
+LIB_OTHERS_PATH = $(LIB_PATH)/others
 MAKEFILE_CAVAN = $(CAVAN_NAME).mk
 
 OUT_PATH = out/$(ARCH)
@@ -37,14 +39,22 @@ LDFLAGS += -lm -lpthread
 
 DESTDIR = /usr
 
-ifeq ("$(Q)","@")
+ifeq "$(Q)" "@"
 MAKEFLAGS += --no-print-directory
 endif
 
 include $(BUILD_PATH)/core/defines2.mk
 
-$(foreach app,$(APP) $(APP_PATH),$(eval $(call build_app_action,$(app))))
-$(foreach lib,$(LIB) $(LIB_PATH),$(eval $(call build_lib_action,$(lib))))
+APP_SEARCH_PATHS = $(APP) $(APP_PATH)
+LIB_SEARCH_PATHS = $(LIB) $(LIB_PATH)
+
+ifeq "$(BUILD_OTHERS)" "true"
+APP_SEARCH_PATHS += $(APP_OTHERS_PATH)
+LIB_SEARCH_PATHS += $(LIB_OTHERS_PATH)
+endif
+
+$(foreach app,$(APP_SEARCH_PATHS),$(eval $(call build_app_action,$(app))))
+$(foreach lib,$(LIB_SEARCH_PATHS),$(eval $(call build_lib_action,$(lib))))
 
 LIB_OBJ_FILES = $(call file_path_convert,$(LIB_SRC_FILES),$(OUT_LIB)/,.o)
 TARGET_LIBO = $(OUT_LIB)/$(CAVAN_NAME).o

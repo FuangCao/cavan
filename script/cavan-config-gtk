@@ -24,7 +24,7 @@ class MainWin:
 		frame = gtk.Frame("General Option")
 		vbox.pack_start(frame, False, False, 0)
 
-		table = gtk.Table(4, 2, False)
+		table = gtk.Table(5, 2, False)
 		frame.add(table)
 
 		combo_style = gtk.EXPAND | gtk.FILL
@@ -41,7 +41,7 @@ class MainWin:
 
 		table.attach(gtk.Label("Toolchian:"), 0, 1, 1, 2, combo_style, combo_style, 5, 5)
 		combo = gtk.combo_box_entry_new_text()
-		entry = combo.get_child()
+		# entry = combo.get_child()
 		combo.append_text("none")
 		combo.append_text("arm-linux")
 		combo.append_text("arm-cavan-linux-gnueabi")
@@ -68,6 +68,14 @@ class MainWin:
 		combo.set_active(0)
 		self.mComboBuildEntry = combo
 		table.attach(combo, 1, 2, 3, 4, combo_style, combo_style, 5, 5)
+
+		table.attach(gtk.Label("Build Others:"), 0, 1, 4, 5, combo_style, combo_style, 5, 5)
+		combo = gtk.combo_box_new_text()
+		combo.append_text("false")
+		combo.append_text("true")
+		combo.set_active(0)
+		self.mComboBuildOthers = combo
+		table.attach(combo, 1, 2, 4, 5, combo_style, combo_style, 5, 5)
 
 		frame = gtk.Frame("Compile Option")
 		vbox.pack_start(frame, False, False, 10)
@@ -126,10 +134,17 @@ class MainWin:
 		else:
 			build_entry = "cavan"
 
+		build_others = self.mComboBuildOthers.get_active_text()
+		if build_others == "true":
+			ldflag_others = "-lasound"
+		else:
+			ldflag_others = ""
+
 		lines.append("BUILD_TYPE = %s\n" % self.mComboBuildType.get_active_text())
 		lines.append("BUILD_ENTRY = %s\n" % build_entry)
+		lines.append("BUILD_OTHERS = %s\n" % build_others)
 		lines.append("CFLAGS = %s\n" % self.mEntryCflags.get_text())
-		lines.append("LDFLAGS = %s\n" % self.mEntryLdflags.get_text())
+		lines.append("LDFLAGS = %s %s\n" % (ldflag_others, self.mEntryLdflags.get_text()))
 		lines.append("Q = @\n")
 		lines.append("\ninclude build/core/main2.mk")
 

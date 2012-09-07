@@ -34,8 +34,11 @@ read_select "Build type" debug release static
 BUILD_TYPE=${SELECT}
 read_select "Build Entry" app lib cavan
 BUILD_ENTRY=${SELECT}
+read_select "Build Others" false true
+BUILD_OTHERS=${SELECT}
 
 [ "${CROSS_COMPILE}" = "none" ] && CROSS_COMPILE=""
+[ "${BUILD_OTHERS}" = "true" ] && LDFLAGS="-lasound"
 
 echo "Generation ${TARGET_MAKEFILE}"
 
@@ -44,8 +47,9 @@ ARCH = ${ARCH}
 CROSS_COMPILE = ${CROSS_COMPILE}
 BUILD_TYPE = ${BUILD_TYPE}
 BUILD_ENTRY = ${BUILD_ENTRY}
+BUILD_OTHERS = ${BUILD_OTHERS}
 CFLAGS =
-LDFLAGS =
+LDFLAGS = ${LDFLAGS}
 Q = @
 
 include build/core/main2.mk

@@ -12,7 +12,7 @@ PREFIX = cavan-
 
 TARGET_FILE = $(call list_target,c) $(call list_target,cpp)
 
-CFLAGS += -Wall -Werror -I.
+CFLAGS += -Wall -Werror -I. -I /cavan/include
 CPPFLAGS += $(CFLAGS)
 
 all: $(TARGET_FILE)
