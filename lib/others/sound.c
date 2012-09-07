@@ -54,7 +54,7 @@ void show_wav_riff_chunk(struct wav_riff_chunk *chk)
 	pr_bold_info("wav_riff_chunk:");
 	println("ID = %s", text_header((char *)&chk->id, sizeof(chk->id)));
 	println("Type = %s", text_header((char *)&chk->type, sizeof(chk->type)));
-	println("File Size = %s", size2text(chk->file_length));
+	println("File Size = %d = %s", chk->file_length, size2text(chk->file_length));
 	print_sep(60);
 }
 
@@ -96,7 +96,7 @@ void show_wav_data_chunk(struct wav_data_chunk *chk)
 	print_sep(60);
 	pr_bold_info("wav_data_chunk:");
 	println("ID = %s", text_header((char *)&chk->id, sizeof(chk->id)));
-	println("data_length = %d", chk->data_length);
+	println("data_length = %d = %s", chk->data_length, size2text(chk->data_length));
 	print_sep(60);
 }
 
@@ -272,6 +272,8 @@ int cavan_wav_player_set_hwparams(struct cavan_wav_player *player)
 	snd_pcm_t *handle = player->pcm_handle;
 	struct wav_format_chunk *fmt_chk = &player->wav_hdr.format;
 	snd_pcm_hw_params_t *params;
+	unsigned int buffer_time;
+	unsigned int period_time;
 
 	snd_pcm_hw_params_alloca(&params);
 	player->format = wav_get_pcm_format(fmt_chk);
@@ -326,8 +328,46 @@ int cavan_wav_player_set_hwparams(struct cavan_wav_player *player)
 	if (rrate != fmt_chk->sample_rate)
 	{
 		pr_red_info("Rate doesn't match (requested %iHz, get %iHz)", fmt_chk->sample_rate, err);
-		return -EINVAL;
 	}
+	/* get the buffer time max */
+	err = snd_pcm_hw_params_get_buffer_time_max(params, &buffer_time, 0);
+	if (err < 0)
+	{
+		pr_red_info("Unable to get buffer time maxfor playback: %s", snd_strerror(err));
+		return err;
+	}
+	if (buffer_time > WAV_BUFFER_TIME)
+	{
+		buffer_time = WAV_BUFFER_TIME;
+	}
+	/* set the buffer time */
+	err = snd_pcm_hw_params_set_buffer_time_near(handle, params, &buffer_time, &dir);
+	if (err < 0)
+	{
+		pr_red_info("Unable to set buffer time %i for playback: %s", buffer_time, snd_strerror(err));
+		return err;
+	}
+	err = snd_pcm_hw_params_get_buffer_size(params, &player->buffer_size);
+	if (err < 0)
+	{
+		printf("Unable to get buffer size for playback: %s", snd_strerror(err));
+		return err;
+	}
+	/* set the period time */
+	period_time = buffer_time / 4;
+	err = snd_pcm_hw_params_set_period_time_near(handle, params, &period_time, &dir);
+	if (err < 0)
+	{
+		pr_red_info("Unable to set period time %i for playback: %s", period_time, snd_strerror(err));
+		return err;
+	}
+	err = snd_pcm_hw_params_get_period_size(params, &player->period_size, &dir);
+	if (err < 0)
+	{
+		pr_red_info("Unable to get period size for playback: %s", snd_strerror(err));
+		return err;
+	}
+
 	/* write the parameters to device */
 	err = snd_pcm_hw_params(handle, params);
 	if (err < 0)
@@ -336,17 +376,63 @@ int cavan_wav_player_set_hwparams(struct cavan_wav_player *player)
 		return err;
 	}
 
-	err = snd_pcm_hw_params_get_period_size(params, &player->period_size, &dir);
-	if (err < 0)
-	{
-		pr_red_info("Unable to get period size for playback: %s", snd_strerror(err));
-		return err;
-	}
-
 	player->buff_size = player->period_size * player->bytes_per_frame;
 
 	return 0;
 }
+
+int cavan_wav_player_set_swparams(struct cavan_wav_player *player, int period_event)
+{
+	int err;
+	snd_pcm_t *handle = player->pcm_handle;
+	snd_pcm_sw_params_t *swparams;
+
+	snd_pcm_sw_params_alloca(&swparams);
+
+	/* get the current swparams */
+	err = snd_pcm_sw_params_current(handle, swparams);
+	if (err < 0)
+	{
+		pr_red_info("Unable to determine current swparams for playback: %s", snd_strerror(err));
+		return err;
+	}
+	/* start the transfer when the buffer is almost full: */
+	/* (buffer_size / avail_min) * avail_min */
+	err = snd_pcm_sw_params_set_start_threshold(handle, swparams, (player->buffer_size / player->period_size) * player->period_size);
+	if (err < 0)
+	{
+		pr_red_info("Unable to set start threshold mode for playback: %s", snd_strerror(err));
+		return err;
+	}
+	/* allow the transfer when at least period_size samples can be processed */
+	/* or disable this mechanism when period event is enabled (aka interrupt like style processing) */
+	err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_event ? player->buffer_size : player->period_size);
+	if (err < 0)
+	{
+		pr_red_info("Unable to set avail min for playback: %s", snd_strerror(err));
+		return err;
+	}
+	/* enable period events when requested */
+	if (period_event)
+	{
+		err = snd_pcm_sw_params_set_period_event(handle, swparams, 1);
+		if (err < 0)
+		{
+			pr_red_info("Unable to set period event: %s", snd_strerror(err));
+			return err;
+		}
+	}
+	/* write the parameters to the playback device */
+	err = snd_pcm_sw_params(handle, swparams);
+	if (err < 0)
+	{
+		pr_red_info("Unable to set sw params for playback: %s", snd_strerror(err));
+		return err;
+	}
+
+	return 0;
+}
+
 
 int cavan_wav_player_init(const char *filename, struct cavan_wav_player *player)
 {
@@ -375,7 +461,14 @@ int cavan_wav_player_init(const char *filename, struct cavan_wav_player *player)
 	ret = cavan_wav_player_set_hwparams(player);
 	if (ret < 0)
 	{
-		pr_snd_error("cavan_wav_player_set_hw_params", ret);
+		print_error("cavan_wav_player_set_hw_params");
+		goto out_close_pcm;
+	}
+
+	ret = cavan_wav_player_set_swparams(player, 0);
+	if (ret < 0)
+	{
+		print_error("cavan_wav_player_set_swparams");
 		goto out_close_pcm;
 	}
 
@@ -396,23 +489,69 @@ out_close_fd:
 void cavan_wav_player_uninit(struct cavan_wav_player *player)
 {
 	snd_output_close(player->pcm_log);
-	snd_pcm_drain(player->pcm_handle);
 	snd_pcm_close(player->pcm_handle);
 	close(player->fd);
 }
 
+int cavan_wav_player_xrun_recovery(snd_pcm_t *handle, int err)
+{
+	if (err == -EPIPE)
+	{	/* under-run */
+		err = snd_pcm_prepare(handle);
+		if (err < 0)
+		{
+			pr_red_info("Can't recovery from underrun, prepare failed: %s", snd_strerror(err));
+		}
+
+		return 0;
+	}
+	else if (err == -ESTRPIPE)
+	{
+		while ((err = snd_pcm_resume(handle)) == -EAGAIN)
+		{
+			sleep(1);	/* wait until the suspend flag is released */
+		}
+
+		if (err < 0)
+		{
+			err = snd_pcm_prepare(handle);
+			if (err < 0)
+			{
+				pr_red_info("Can't recovery from suspend, prepare failed: %s", snd_strerror(err));
+			}
+		}
+
+		return 0;
+	}
+
+	return err;
+}
+
 int cavan_wav_pcm_write(snd_pcm_t *handle, u32 frame_size, const void *buff, size_t size)
 {
-	int wrcount, count;
+	int wrcount, count = size / frame_size;
 
-	for (count = size / frame_size; count; count -= wrcount, buff += wrcount * frame_size)
+	while (count > 0)
 	{
 		wrcount = snd_pcm_writei(handle, buff, count);
 		if (wrcount < 0)
 		{
-			print_error("snd_pcm_writei");
-			return wrcount;
+			if (wrcount != -EAGAIN && cavan_wav_player_xrun_recovery(handle, wrcount) < 0)
+			{
+				pr_snd_error("snd_pcm_writei", wrcount);
+				return wrcount;
+			}
+
+			continue;
 		}
+
+		if (wrcount < count)
+		{
+			snd_pcm_wait(handle, 1000);
+		}
+
+		count -= wrcount;
+		buff += wrcount * frame_size;
 	}
 
 	return 0;
@@ -422,6 +561,7 @@ int cavan_wav_player_run(struct cavan_wav_player *player)
 {
 	int fd = player->fd;
 	snd_pcm_t *handle = player->pcm_handle;
+	u32 bytes_per_frame = player->bytes_per_frame;
 	size_t buff_size = player->buff_size;
 	void *buff = alloca(buff_size);
 	size_t total_length = player->wav_hdr.data.data_length;
@@ -445,15 +585,29 @@ int cavan_wav_player_run(struct cavan_wav_player *player)
 			return rdlen;
 		}
 
-		wrcount = cavan_wav_pcm_write(handle, player->bytes_per_frame, buff, rdlen);
+		total_length -= rdlen;
+
+		if (rdlen < buff_size)
+		{
+			ret = snd_pcm_format_set_silence(player->format, buff + rdlen, (buff_size - rdlen) / player->bytes_per_sample);
+			if (ret < 0)
+			{
+				pr_snd_error("snd_pcm_format_set_silence", ret);
+				return ret;
+			}
+
+			rdlen = buff_size;
+		}
+
+		wrcount = cavan_wav_pcm_write(handle, bytes_per_frame, buff, rdlen);
 		if (wrcount < 0)
 		{
 			print_error("snd_pcm_writei");
 			return wrcount;
 		}
-
-		total_length -= rdlen;
 	}
+
+	snd_pcm_drain(handle);
 
 	return 0;
 }
@@ -476,4 +630,3 @@ int cavan_wav_playback(const char *filename)
 
 	return ret;
 }
-

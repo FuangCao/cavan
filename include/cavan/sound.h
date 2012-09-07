@@ -21,6 +21,9 @@
 #define WAV_FMT_DOLBY_AC3_SPDIF	0x0092
 #define WAV_FMT_EXTENSIBLE		0xFFFE
 
+#define WAV_BUFFER_TIME			500000
+#define WAV_PERIOD_TIME			100000
+
 #define pr_snd_error(fmt, err, args ...) \
 	print_error(fmt ": %s", ##args, snd_strerror(err))
 
@@ -71,7 +74,7 @@ struct cavan_wav_player
 	int fd;
 	u32 bytes_per_sample;
 	u32 bytes_per_frame;
-	snd_pcm_uframes_t period_size;
+	snd_pcm_uframes_t buffer_size, period_size;
 	snd_pcm_format_t format;
 	struct wav_file_header wav_hdr;
 	snd_output_t *pcm_log;
@@ -92,9 +95,10 @@ ssize_t wav_read_fact_chunk(int fd, struct wav_fact_chunk *fact_chk);
 ssize_t wav_read_data_chunk(int fd, struct wav_data_chunk *data_chk);
 ssize_t wav_read_file_header(int fd, struct wav_file_header *hdr);
 int open_wav_file(const char *filename, struct wav_file_header *hdr, int flags);
-int cavan_wav_player_set_hw_params(struct cavan_wav_player *player);
 int cavan_wav_player_init(const char *filename, struct cavan_wav_player *player);
-int set_hwparams(snd_pcm_t *handle, snd_pcm_access_t access);
+int cavan_wav_player_set_hwparams(struct cavan_wav_player *player);
+int cavan_wav_player_set_swparams(struct cavan_wav_player *player, int period_event);
+int cavan_wav_player_xrun_recovery(snd_pcm_t *handle, int err);
 void cavan_wav_player_uninit(struct cavan_wav_player *player);
 int cavan_wav_playback(const char *filename);
 
