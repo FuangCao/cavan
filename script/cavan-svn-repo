@@ -3,7 +3,7 @@
 """exec" python -E $0 $@
 #"""
 
-import sys, os, time
+import sys, os, time, re
 from sys import argv
 from xml.dom.minidom import parse
 
@@ -23,6 +23,7 @@ class SvnRreoManager:
 			self.svn_repo_load_manifest(self.manifest_xml)
 		else:
 			self.url = None
+		self.pattern = re.compile('.*/+\.[^/]+/*$')
 
 	def svn_repo_load_manifest(self, manifest_xml):
 		dom = parse(manifest_xml)
@@ -80,6 +81,9 @@ class SvnRreoManager:
 		return False
 
 	def svn_repo_gen_xml_base(self, pathname, xml_fd):
+		if self.pattern.match(pathname):
+			pr_red_info("Skipping project `%s'" % pathname)
+			return 0
 		flist = self.svn_repo_popen("svn list " + os.path.join(self.url, pathname))
 		if self.svn_repo_has_file(flist):
 			xml_fd.write("\t<project path=\"%s\" />\n" % pathname[0:-1])
@@ -155,8 +159,10 @@ class SvnRreoManager:
 					os.remove(fn)
 				url = os.path.join(self.url, fn)
 				if self.svn_repo_system("git svn init %s %s" % (url, fn)) != 0:
+					self.svn_repo_system("rm %s -rf" % fn)
 					return -1
 				if self.svn_repo_system("cd %s && git config pack.windowMemory 20m && git svn fetch && git svn rebase" % fn) != 0:
+					self.svn_repo_system("rm %s -rf" % fn)
 					return -1
 				self.svn_repo_system("cd %s && git checkout -b %s remotes/git-svn" % (fn, self.fetch))
 		return 0
