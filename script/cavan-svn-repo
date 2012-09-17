@@ -5,6 +5,7 @@
 
 import sys, os, time
 from sys import argv
+from xml.dom.minidom import parse
 
 def pr_red_info(message):
 	print "\033[31m%s\033[0m" % message
@@ -16,15 +17,42 @@ def pr_bold_info(message):
 	print "\033[1m%s\033[0m" % message
 
 class SvnRreoManager:
-	def __init__(self, repo_root = "."):
-		self.repo_root = os.path.abspath(repo_root)
-		if os.path.isdir(os.path.join(repo_root, ".svn")):
-			self.url = self.svn_repo_get_url()
+	def __init__(self):
+		self.manifest_xml = ".svn/manifest.xml"
+		if os.path.isfile(self.manifest_xml):
+			self.svn_repo_load_manifest(self.manifest_xml)
 		else:
 			self.url = None
 
+	def svn_repo_load_manifest(self, manifest_xml):
+		dom = parse(manifest_xml)
+		if not dom:
+			pr_red_info("Parse xml file `%s' failed" % manifest_xml)
+			return -1
+
+		tag_manifest = dom.getElementsByTagName("manifest").item(0)
+		if not tag_manifest:
+			pr_red_info("No manifest tag found")
+			return -1
+
+		tag_remote = tag_manifest.getElementsByTagName("remote").item(0)
+		self.url = tag_remote.getAttribute("url")
+		self.fetch = tag_remote.getAttribute("fetch")
+
+		file_list = []
+		for fn in tag_manifest.getElementsByTagName("file"):
+			file_list.append(fn.getAttribute("path"))
+		self.file_list = file_list
+
+		project_list = []
+		for fn in tag_manifest.getElementsByTagName("project"):
+			project_list.append(fn.getAttribute("path"))
+		self.project_list = project_list
+
+		return 0
+
 	def svn_repo_get_url(self):
-		lines = self.svn_repo_popen("cd %s && svn info | grep ^URL:.*" % self.repo_root);
+		lines = self.svn_repo_popen("svn info | grep ^URL:.*");
 		if lines == None or len(lines) < 1:
 			return None
 		return lines[0][4:].strip()
@@ -44,75 +72,109 @@ class SvnRreoManager:
 		fp.close()
 		return lines
 
-	def svn_repo_update_single(self, pathname):
-		if pathname.endswith("/"):
-			if self.svn_repo_system("cd %s && git diff > %s && git reset --hard" % (pathname, self.diffpath)) < 0:
-				return -1
-			dirname = os.path.join(pathname, ".git")
-			for fn in os.listdir(dirname):
-				if not fn.endswith(".diff"):
-					continue
-				fn = os.path.join(dirname, fn)
-				st = os.stat(fn)
-				if st.st_size == 0:
-					print "Remove empty file `%s'" % fn;
-					os.remove(fn)
-			return self.svn_repo_system("cd %s && git svn rebase" % pathname)
-		else:
-			return self.svn_repo_system("svn update --force " + pathname)
+	def svn_repo_has_file(self, flist):
+		for fn in flist:
+			if fn.strip().endswith("/"):
+				continue
+			return True
+		return False
 
-	def svn_repo_update(self):
-		date = time.localtime(time.time())
-		self.diffpath = ".git/%d%02d%d%d%02d%02d.diff" % (date[0], date[1], date[2], date[3], date[4], date[5])
-		if self.url == None:
-			pr_red_info("Please give the url of svn")
-			return -1
-		for fn in self.svn_repo_popen("svn list"):
-			if self.svn_repo_update_single(fn.strip()) < 0:
-				return -1
+	def svn_repo_gen_xml_base(self, pathname, xml_fd):
+		flist = self.svn_repo_popen("svn list " + os.path.join(self.url, pathname))
+		if self.svn_repo_has_file(flist):
+			xml_fd.write("\t<project path=\"%s\" />\n" % pathname[0:-1])
+			return 0
+		for dn in flist:
+			self.svn_repo_gen_xml_base(os.path.join(pathname, dn.strip()), xml_fd);
 		return 0
 
-	def svn_repo_clone_single(self, pathname):
-		if pathname.endswith("/"):
-			if not os.path.isdir(pathname):
-				if os.path.exists(pathname):
-					os.remove(pathname)
-				url = os.path.join(self.url, pathname)
-				if self.svn_repo_system("git svn init %s %s" % (url, pathname)) != 0:
-					return -1
-			if self.svn_repo_system("cd %s && git config pack.windowMemory 20m && git svn fetch && git svn rebase" % pathname) != 0:
-				return -1
-			self.svn_repo_system("cd %s && git checkout -b svn-master remotes/git-svn" % pathname)
-			return 0
-		else:
-			return self.svn_repo_system("svn update --force " + pathname)
+	def svn_repo_gen_xml(self):
+		xml_fd = open(self.manifest_xml, "w")
+		xml_fd.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n")
+		xml_fd.write("<manifest>\n")
+		xml_fd.write("\t<remote url=\"%s\" fetch=\"%s\" />\n" % (self.url, "svn-master"))
+		for fn in self.svn_repo_popen("svn list " + self.url):
+			fn = fn.strip()
+			if fn.endswith("/"):
+				self.svn_repo_gen_xml_base(fn, xml_fd)
+			else:
+				xml_fd.write("\t<file path=\"%s\" />\n" % fn)
 
-	def svn_repo_clone(self, argv):
-		if self.url == None:
-			if len(argv) < 1:
-				pr_red_info("Please give the url of svn")
-				return -1
+		xml_fd.write("</manifest>\n")
+		return 0
+
+	def svn_repo_init(self, argv):
+		if len(argv) > 0:
 			self.url = argv[0]
-			if os.path.exists(".svn"):
-				os.path.remove(".svn")
-			if self.svn_repo_system("svn checkout --depth=empty %s ." % self.url) != 0:
+		elif os.path.isdir(".svn"):
+			self.url = self.svn_repo_get_url()
+		else:
+			pr_red_info("Please give the url of svn")
+			return -1
+
+		if os.path.exists(".svn") and not os.path.isdir(".svn"):
+			os.remove(".svn")
+
+		if self.svn_repo_system("svn checkout --depth=empty %s ." % self.url) != 0:
+			return -1
+
+		return self.svn_repo_gen_xml()
+
+	def svn_repo_remove_empty_files(self, dirname, suffix):
+		for fn in os.listdir(dirname):
+			if not fn.endswith(suffix):
+				continue
+			fn = os.path.join(dirname, fn)
+			st = os.stat(fn)
+			if st.st_size == 0:
+				print "Remove empty file `%s'" % fn;
+				os.remove(fn)
+			return 0
+
+	def svn_repo_update(self):
+		if self.file_list == None or self.project_list == None:
+			pr_red_info("Please init first")
+			return -1
+
+		date = time.localtime(time.time())
+		diffpath = ".git/%04d%02d%02d%02d%02d%02d.diff" % (date[0], date[1], date[2], date[3], date[4], date[5])
+
+		for fn in self.file_list:
+			if self.svn_repo_system("svn update --force " + fn) < 0:
 				return -1
-		for fn in self.svn_repo_popen("svn list"):
-			if self.svn_repo_clone_single(fn.strip()) != 0:
-				return -1
+
+		for fn in self.project_list:
+			if os.path.isdir(fn):
+				if self.svn_repo_system("cd %s && git diff > %s && git reset --hard" % (fn, diffpath)) < 0:
+					return -1
+				self.svn_repo_remove_empty_files(os.path.join(fn, ".git"), ".diff")
+				if self.svn_repo_system("cd %s && git svn rebase" % fn) < 0:
+					return -1
+			else:
+				if os.path.exists(fn):
+					os.remove(fn)
+				url = os.path.join(self.url, fn)
+				if self.svn_repo_system("git svn init %s %s" % (url, fn)) != 0:
+					return -1
+				if self.svn_repo_system("cd %s && git config pack.windowMemory 20m && git svn fetch && git svn rebase" % fn) != 0:
+					return -1
+				self.svn_repo_system("cd %s && git checkout -b %s remotes/git-svn" % (self.fetch, fn))
 		return 0
 
 	def svn_repo_command(self, argv):
+		if self.project_list == None:
+			pr_red_info("Please init first")
+			return -1
+
 		if len(argv) < 1:
 			pr_red_info("Please give a command")
 			return -1
+
 		command = " ".join(argv)
-		for fn in self.svn_repo_popen("svn list"):
-			fn = fn.strip()
-			if fn.endswith("/"):
-				command_last = "cd " + fn + " && " + command.replace("<path>", fn)
-				if self.svn_repo_system(command_last) != 0:
-					return -1
+		for fn in self.project_list:
+			command_last = "cd " + fn + " && " + command.replace("<path>", fn)
+			if self.svn_repo_system(command_last) != 0:
+				return -1
 		return 0
 
 if __name__ == "__main__":
@@ -125,7 +187,7 @@ if __name__ == "__main__":
 	argv = argv[2:]
 
 	if subcmd in ["clone", "init"]:
-		ret = repo.svn_repo_clone(argv)
+		ret = repo.svn_repo_init(argv)
 	elif subcmd in ["update", "sync"]:
 		ret = repo.svn_repo_update()
 	elif subcmd in ["command", "cmd"]:
