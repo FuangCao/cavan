@@ -6,3 +6,5 @@ diff -u file1 file2
 排序并删除重复的行
 sort -u
 expr 1 + 1
+cat /var/log/boot.log
+smbpasswd

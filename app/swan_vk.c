@@ -45,6 +45,8 @@ static const struct swan_vk_descriptor swan_vk_table[] =
 	{"del", 14}
 };
 
+// ================================================================================
+
 static int client_active;
 
 static void show_usage(void)
@@ -52,13 +54,13 @@ static void show_usage(void)
 	println("Usage:");
 }
 
-void swan_vk_client_stop_handle(int signum)
+void swan_vk_serial_client_stop_handle(int signum)
 {
 	pr_bold_pos();
 	client_active = 0;
 }
 
-static void swan_vk_send_stop_signal(int fd_tty, u32 value, int count)
+static void swan_vk_serial_send_stop_signal(int fd_tty, u32 value, int count)
 {
 	while (count-- && write(fd_tty, (void *)&value, sizeof(value)) > 0)
 	{
@@ -66,7 +68,7 @@ static void swan_vk_send_stop_signal(int fd_tty, u32 value, int count)
 	}
 }
 
-static int swan_vk_client(const char *tty_path)
+static int swan_vk_serial_client(const char *tty_path)
 {
 	int count;
 	int fd_tty;
@@ -104,7 +106,7 @@ static int swan_vk_client(const char *tty_path)
 		goto out_close_tty;
 	}
 
-	signal(SIGINT, swan_vk_client_stop_handle);
+	signal(SIGINT, swan_vk_serial_client_stop_handle);
 	client_active = 1;
 
 	while (client_active)
@@ -124,7 +126,7 @@ static int swan_vk_client(const char *tty_path)
 		}
 	}
 
-	swan_vk_send_stop_signal(fd_tty, SWAN_VK_STOP_VALUE, 2);
+	swan_vk_serial_send_stop_signal(fd_tty, SWAN_VK_STOP_VALUE, 2);
 	close_event_devices(event_fds, count);
 out_close_tty:
 	close(fd_tty);
@@ -132,13 +134,15 @@ out_close_tty:
 	return -1;
 }
 
-void swan_vk_server_stop_handle(int signum)
+// ================================================================================
+
+static void swan_vk_serial_server_stop_handle(int signum)
 {
 	restore_tty_attr(-1);
 	exit(0);
 }
 
-int swan_vk_server(const char *tty_path, const char *data_path)
+static int swan_vk_serial_server(const char *tty_path, const char *data_path)
 {
 	int ret;
 	int fd_tty, fd_data;
@@ -161,7 +165,7 @@ int swan_vk_server(const char *tty_path, const char *data_path)
 		goto out_close_tty;
 	}
 
-	signal(SIGKILL, swan_vk_server_stop_handle);
+	signal(SIGKILL, swan_vk_serial_server_stop_handle);
 
 	fd_data = open(data_path, O_WRONLY);
 	if (fd_data < 0)
@@ -202,6 +206,24 @@ out_close_tty:
 
 	return -1;
 }
+
+// ================================================================================
+
+static int swan_vk_adb_client(void)
+{
+	pr_pos_info();
+
+	return 0;
+}
+
+static int swan_vk_adb_server(const char *data_path)
+{
+	pr_pos_info();
+
+	return 0;
+}
+
+// ================================================================================
 
 static void swan_vk_show_key_table(const struct swan_vk_descriptor *descs, size_t size)
 {
@@ -281,11 +303,14 @@ label_repo_key:
 	return -1;
 }
 
+// ================================================================================
+
 int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
 	int command;
+	int serial;
 	struct option long_option[] =
 	{
 		{
@@ -307,12 +332,31 @@ int main(int argc, char *argv[])
 			.val = 'c',
 		},
 		{
+			.name = "serial",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 's',
+		},
+		{
+			.name = "usb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "adb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
 		},
 	};
 
 	command = 0;
+	serial = 0;
 
-	while ((c = getopt_long(argc, argv, "vVhHCc", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHCcSsUu", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -329,6 +373,16 @@ int main(int argc, char *argv[])
 		case 'c':
 		case 'C':
 			command = 1;
+			break;
+
+		case 's':
+		case 'S':
+			serial = 1;
+			break;
+
+		case 'u':
+		case 'U':
+			serial = 0;
 			break;
 
 		default:
@@ -351,23 +405,21 @@ int main(int argc, char *argv[])
 
 	if (access(DEVICE_SWAN_VK_DATA, F_OK) < 0)
 	{
-		if (argc > optind)
+		if (serial)
 		{
-			return swan_vk_client(argv[optind]);
+			return swan_vk_serial_client(argc > optind ? argv[optind] : NULL);
 		}
 		else
 		{
-			return swan_vk_client(NULL);
+			return swan_vk_adb_client();
 		}
 	}
+	else if (serial)
+	{
+		return swan_vk_serial_server(argc > optind ? argv[optind] : DEVICE_SWAN_TTY, DEVICE_SWAN_VK_DATA);
+	}
 	else
-	{	if (argc > optind)
-		{
-			return swan_vk_server(argv[optind], DEVICE_SWAN_VK_DATA);
-		}
-		else
-		{
-			return swan_vk_server(DEVICE_SWAN_TTY, DEVICE_SWAN_VK_DATA);
-		}
+	{
+		return swan_vk_adb_server(DEVICE_SWAN_VK_DATA);
 	}
 }

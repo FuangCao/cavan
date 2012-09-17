@@ -7,7 +7,7 @@ $(patsubst %.c,$(2)%$(3),$(notdir $(1)))
 endef
 
 define compile_file
-@echo "[CC]\t$(2) => $(1)"
+@echo "[CC]    $(2) => $(1)"
 $(Q)$(CC) -c $(CFLAGS) $(3) -o $(1) $(2)
 endef
 
@@ -16,24 +16,24 @@ $(Q)$(STRIP) -s $(1)
 endef
 
 define link_excuteable
-@echo "[LD]\t$(1) <= $(2)"
+@echo "[LD]    $(1) <= $(2)"
 $(Q)$(CC) -o $(1) $(2) $(APP_LDFLAGS) $(LDFLAGS)
 $(call strip_file,$(1))
 endef
 
 define link_static_library
-@echo "[AR]\t$(1) <= $(2)"
+@echo "[AR]    $(1) <= $(2)"
 $(Q)$(AR) cur $(1) $(2)
 endef
 
 define link_shared_library
-@echo "[LD]\t$(1) <= $(2)"
+@echo "[LD]    $(1) <= $(2)"
 $(Q)$(CC) -shared -o $(1) $(2)
 $(call strip_file,$(1))
 endef
 
 define link_object_file
-@echo "[LD]\t$(1) <= $(2)"
+@echo "[LD]    $(1) <= $(2)"
 $(Q)$(LD) -o $(1) -r $(2)
 endef
 

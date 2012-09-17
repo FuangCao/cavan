@@ -144,14 +144,14 @@ $(OUT_CAVAN)/%.o: $(APP_CORE_PATH)/%.c $(CAVAN_MAP_HEADER) $(CAVAN_MAP_SOURCE)
 	$(call compile_file,$@,$<,$(CAVAN_CFLAGS))
 
 $(CAVAN_MAP_HEADER): $(APP_SRC_FILES)
-	@echo "[GEN]\t$@ <= $^"
+	@echo "[GEN]   $@ <= $^"
 	@for app in $(patsubst %.c,do_cavan_%,$(^F)); \
 	do \
 		echo "int $${app}(int argc, char *argv[]);"; \
 	done > $@
 
 $(CAVAN_MAP_SOURCE): $(APP_SRC_FILES)
-	@echo "[GEN]\t$@ <= $^"
+	@echo "[GEN]   $@ <= $^"
 	@for app in $(patsubst %.c,%,$(^F)); \
 	do \
 		echo "{\"$${app}\", do_cavan_$${app}},"; \
