@@ -158,7 +158,7 @@ class SvnRreoManager:
 					return -1
 				if self.svn_repo_system("cd %s && git config pack.windowMemory 20m && git svn fetch && git svn rebase" % fn) != 0:
 					return -1
-				self.svn_repo_system("cd %s && git checkout -b %s remotes/git-svn" % (self.fetch, fn))
+				self.svn_repo_system("cd %s && git checkout -b %s remotes/git-svn" % (fn, self.fetch))
 		return 0
 
 	def svn_repo_command(self, argv):
