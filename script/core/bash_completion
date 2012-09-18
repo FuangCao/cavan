@@ -19,15 +19,14 @@ function _cavan_completion()
 	_build_completion $(ls ${CAVAN_HOME}/app/*.c | sed 's#.*/\(.*\)\.c$#\1#g')
 }
 
-complete -F _cavan_completion cavan
-complete -F _cavan_completion cavan-main
+complete -F _cavan_completion cavan cavan-main
 
 function _cavan_svn_repo()
 {
 	_build_completion "init clone update sync command cmd"
 }
 
-complete -F _cavan_svn_repo cavan-svn-repo
+complete -F _cavan_svn_repo cavan-svn-repo svn-repo.py
 
 function _adb_completion()
 {

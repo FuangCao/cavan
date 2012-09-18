@@ -3,9 +3,11 @@
 """exec" python -E $0 $@
 #"""
 
-import sys, os, time, re
+MANIFEST_MAX_DEPTH = 2
+
+import sys, os, time, re, traceback
 from sys import argv
-from xml.dom.minidom import parse
+from xml.dom.minidom import parse, Document
 
 def pr_red_info(message):
 	print "\033[31m%s\033[0m" % message
@@ -18,6 +20,8 @@ def pr_bold_info(message):
 
 class SvnRreoManager:
 	def __init__(self):
+		reload(sys)
+		sys.setdefaultencoding("utf-8")
 		self.manifest_xml = ".svn/manifest.xml"
 		if os.path.isfile(self.manifest_xml):
 			self.svn_repo_load_manifest(self.manifest_xml)
@@ -31,11 +35,7 @@ class SvnRreoManager:
 			pr_red_info("Parse xml file `%s' failed" % manifest_xml)
 			return -1
 
-		tag_manifest = dom.getElementsByTagName("manifest").item(0)
-		if not tag_manifest:
-			pr_red_info("No manifest tag found")
-			return -1
-
+		tag_manifest = dom.documentElement
 		tag_remote = tag_manifest.getElementsByTagName("remote").item(0)
 		self.url = tag_remote.getAttribute("url")
 		self.fetch = tag_remote.getAttribute("fetch")
@@ -80,31 +80,50 @@ class SvnRreoManager:
 			return True
 		return False
 
-	def svn_repo_gen_xml_base(self, pathname, xml_fd):
+	def svn_repo_gen_xml_base(self, pathname, depth):
+		pr_green_info("depth = %d" % depth)
 		if self.pattern.match(pathname):
 			pr_red_info("Skipping project `%s'" % pathname)
 			return 0
 		flist = self.svn_repo_popen("svn list " + os.path.join(self.url, pathname))
-		if self.svn_repo_has_file(flist):
-			xml_fd.write("\t<project path=\"%s\" />\n" % pathname[0:-1])
+		if depth < 1 or self.svn_repo_has_file(flist):
+			tag_project = self.xml_dom.createElement("project")
+			self.tag_manifest.appendChild(tag_project)
+			tag_project.setAttribute("path", pathname[0:-1])
 			return 0
 		for dn in flist:
-			self.svn_repo_gen_xml_base(os.path.join(pathname, dn.strip()), xml_fd);
+			self.svn_repo_gen_xml_base(os.path.join(pathname, dn.strip()), depth - 1);
 		return 0
 
 	def svn_repo_gen_xml(self):
-		xml_fd = open(self.manifest_xml, "w")
-		xml_fd.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n")
-		xml_fd.write("<manifest>\n")
-		xml_fd.write("\t<remote url=\"%s\" fetch=\"%s\" />\n" % (self.url, "svn-master"))
+		xml_dom = Document()
+		tag_manifest = xml_dom.createElement("manifest")
+		xml_dom.appendChild(tag_manifest)
+		tag_remote = xml_dom.createElement("remote")
+		tag_manifest.appendChild(tag_remote)
+		tag_remote.setAttribute("url", self.url)
+		tag_remote.setAttribute("fetch", "svn-master")
+
+		self.xml_dom = xml_dom
+		self.tag_manifest = tag_manifest
+
 		for fn in self.svn_repo_popen("svn list " + self.url):
 			fn = fn.strip()
 			if fn.endswith("/"):
-				self.svn_repo_gen_xml_base(fn, xml_fd)
+				self.svn_repo_gen_xml_base(fn, MANIFEST_MAX_DEPTH)
 			else:
-				xml_fd.write("\t<file path=\"%s\" />\n" % fn)
+				tag_file = xml_dom.createElement("file")
+				tag_manifest.appendChild(tag_file)
+				tag_file.setAttribute("path", fn)
 
-		xml_fd.write("</manifest>\n")
+		fd = open(self.manifest_xml, "w")
+		try:
+			fd.write(xml_dom.toprettyxml('\t', '\n', 'utf-8'))
+		except:
+			os.remove(self.manifest_xml)
+			print traceback.format_exc()
+			return -1
+
 		return 0
 
 	def svn_repo_init(self, argv):
