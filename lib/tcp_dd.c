@@ -274,14 +274,14 @@ static int tcp_dd_handle_request(int sockfd)
 	return ret;
 }
 
-static int tcp_dd_daemon_handle(int index, void *data)
+static int tcp_dd_daemon_handle(int index, union cavan_service_data data)
 {
 	int ret;
 	int server_sockfd, client_sockfd;
 	struct sockaddr_in addr;
 	socklen_t addrlen;
 
-	server_sockfd = (int)data;
+	server_sockfd = data.type_int;
 
 	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
 	if (client_sockfd < 0)
@@ -312,7 +312,7 @@ int tcp_dd_service_run(struct cavan_service_description *desc, u16 port)
 
 	pr_bold_info("Port = %d", port);
 
-	desc->data = (void *)sockfd;
+	desc->data.type_int = sockfd;
 	desc->handler = tcp_dd_daemon_handle;
 	desc->threads = NULL;
 	ret = cavan_service_run(desc);

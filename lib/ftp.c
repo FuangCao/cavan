@@ -823,12 +823,12 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	return -1;
 }
 
-int ftp_service_handle(int index, void *data)
+int ftp_service_handle(int index, union cavan_service_data data)
 {
 	struct sockaddr_in client_addr;
 	socklen_t addrlen;
 	int sockfd;
-	struct cavan_ftp_descriptor *desc = data;
+	struct cavan_ftp_descriptor *desc = data.type_void;
 
 	sockfd = inet_accept(desc->ctrl_sockfd, &client_addr, &addrlen);
 	if (sockfd < 0)
@@ -870,7 +870,7 @@ int ftp_service_run(struct cavan_service_description *service_desc, u16 port)
 	pr_bold_info("FTP Root Path = %s, Services = %d", ftp_root_path, service_desc->daemon_count);
 	pr_bold_info("Device = %s, IP = %s, Port = %d", ftp_netdev_name, ftp_desc.ip_addr, port);
 
-	service_desc->data = (void *)&ftp_desc;
+	service_desc->data.type_void = (void *)&ftp_desc;
 	service_desc->handler = ftp_service_handle;
 	ret = cavan_service_run(service_desc);
 	cavan_service_stop(service_desc);

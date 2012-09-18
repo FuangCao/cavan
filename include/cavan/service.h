@@ -8,6 +8,21 @@
 
 #include <cavan.h>
 
+union cavan_service_data
+{
+	void *type_void;
+
+	char type_char;
+	short type_short;
+	int type_int;
+	long type_long;
+
+	unsigned char type_uchar;
+	unsigned short type_ushort;
+	unsigned int type_uint;
+	unsigned long type_ulong;
+};
+
 struct cavan_service_description
 {
 	const char *name;
@@ -15,10 +30,10 @@ struct cavan_service_description
 	int as_daemon;
 	int show_verbose;
 	int super_permission;
-	void *data;
+	union cavan_service_data data;
 	pthread_t *threads;
 	pthread_mutex_t mutex_lock;
-	int (*handler)(int index, void *data);
+	int (*handler)(int index, union cavan_service_data data);
 };
 
 struct cavan_daemon_description

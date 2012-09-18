@@ -81,7 +81,6 @@ class SvnRreoManager:
 		return False
 
 	def svn_repo_gen_xml_base(self, pathname, depth):
-		pr_green_info("depth = %d" % depth)
 		if self.pattern.match(pathname):
 			pr_red_info("Skipping project `%s'" % pathname)
 			return 0

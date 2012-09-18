@@ -45,10 +45,10 @@ static int handle_write_request(struct tftp_request *req_p)
 	return ret;
 }
 
-static int service_handle(int index, void *data)
+static int service_handle(int index, union cavan_service_data data)
 {
 	int ret;
-	int sockfd = (int)data;
+	int sockfd = data.type_int;
 	union tftp_pkg pkg;
 	struct tftp_request_pkg *req_pkg_p = (void *)&pkg;
 	struct tftp_dd_request_pkg *dd_req_pkg_p = (void *)&pkg;
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
 
 	println("Bind socket to port \"%d\" success", server_port);
 
-	desc.data = (void *)sockfd;
+	desc.data.type_int = sockfd;
 	ret = cavan_service_run(&desc);
 	cavan_service_stop(&desc);
 	close(sockfd);
