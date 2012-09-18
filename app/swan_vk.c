@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	{
 		.name = "SWAN_VK",
 		.as_daemon = 0,
-		.daemon_count = 10,
+		.daemon_count = 5,
 	};
 	char ip[32] = "127.0.0.1";
 	u16 port = SWAN_VK_TCP_PORT;

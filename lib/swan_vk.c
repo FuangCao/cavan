@@ -314,6 +314,7 @@ static int swan_vk_server_handler(int index, union cavan_service_data data)
 	struct swan_vk_service_descriptor *desc = data.type_void;
 	int sockfd = desc->sockfd;
 	int datafd = desc->datafd;
+	pthread_mutex_t *mutex_lock = &desc->mutex_lock;
 	struct sockaddr_in addr;
 	socklen_t addrlen;
 	int sockfd_client;
@@ -338,7 +339,9 @@ static int swan_vk_server_handler(int index, union cavan_service_data data)
 			return rdlen;
 		}
 
+		pthread_mutex_lock(mutex_lock);
 		wrlen = ffile_write(datafd, events, rdlen);
+		pthread_mutex_unlock(mutex_lock);
 		if (wrlen < 0)
 		{
 			pr_red_info("ffile_write");
@@ -468,6 +471,3 @@ label_repo_key:
 
 	return -1;
 }
-
-// ================================================================================
-
