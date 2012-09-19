@@ -1,0 +1,6 @@
+编译SVN:
+支持HTTP协议: --with-neon
+git svn 时报错： make swig-pl && make install-swig-pl
+
+编译openssl:
+./config -fPIC
