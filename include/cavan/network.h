@@ -159,6 +159,19 @@ struct cavan_route_table
 	int table_size;
 };
 
+struct inet_file_request
+{
+	char ip[20];
+	u16 port;
+	char src_file[1024];
+	char dest_file[1024];
+	off_t src_offset;
+	off_t dest_offset;
+	off_t size;
+	int (*open_connect)(const char *ip, u16 port);
+	void (*close_connect)(int sockfd);
+};
+
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
 ssize_t select_receive(int sockfd, long timeout, void *buff, size_t bufflen, struct sockaddr_in *remote_addr, socklen_t *addr_len);
 ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);

@@ -50,3 +50,7 @@ void show_eavoo_short_message(struct eavoo_short_message *message);
 int fsms_receive_and_write(int sockfd, int fd);
 int sms_receive_and_write(int sockfd, const char *filename);
 
+static inline int adb_create_tcp_link2(const char *ip, u16 port)
+{
+	return adb_create_tcp_link(ip, 0, port);
+}

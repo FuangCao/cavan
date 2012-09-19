@@ -50,5 +50,5 @@ struct tcp_dd_package
 };
 
 int tcp_dd_service_run(struct cavan_service_description *desc, u16 port);
-int tcp_dd_send_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size);
-int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size);
+int tcp_dd_send_file(struct inet_file_request *file_req);
+int tcp_dd_receive_file(struct inet_file_request *file_req);

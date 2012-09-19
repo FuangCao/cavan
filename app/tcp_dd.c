@@ -7,6 +7,7 @@
 #include <cavan.h>
 #include <cavan/tcp_dd.h>
 #include <cavan/parser.h>
+#include <cavan/adb.h>
 
 #define FILE_CREATE_DATE "2012-01-14 14:09:55"
 
@@ -53,19 +54,25 @@ int main(int argc, char *argv[])
 			.val = 'p',
 		},
 		{
+			.name = "adb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'a',
+		},
+		{
 		},
 	};
+	struct inet_file_request file_req =
+	{
+		.ip = "",
+		.open_connect = inet_create_tcp_link2,
+		.close_connect = inet_close_tcp_socket,
+	};
 	int i;
-	char ip[16];
-	u16 port = 0;
-	char src_file[1024], dest_file[1024];
 	off_t bs, seek, skip, count;
-	int (*handler)(const char *, u16, const char *, off_t, const char *, off_t, off_t);
+	int (*handler)(struct inet_file_request *) = NULL;
 
-	handler = NULL;
-	ip[0] = 0;
-
-	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrR", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaA", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -84,12 +91,12 @@ int main(int argc, char *argv[])
 
 		case 'i':
 		case 'I':
-			text_copy(ip, optarg);
+			text_copy(file_req.ip, optarg);
 			break;
 
 		case 'p':
 		case 'P':
-			port = text2value_unsigned(optarg, NULL, 10);
+			file_req.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'w':
@@ -104,6 +111,11 @@ int main(int argc, char *argv[])
 			handler = tcp_dd_receive_file;
 			break;
 
+		case 'a':
+		case 'A':
+			file_req.open_connect = adb_create_tcp_link2;
+			break;
+
 		default:
 			show_usage();
 			return -EINVAL;
@@ -116,7 +128,7 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	src_file[0] = dest_file[0] = 0;
+	file_req.src_file[0] = file_req.dest_file[0] = 0;
 	bs = 1;
 	count = seek = skip = 0;
 
@@ -134,11 +146,11 @@ int main(int argc, char *argv[])
 		case 'i':
 			if (text_cmp(p, "f") == 0)
 			{
-				text_copy(src_file, para_value);
+				text_copy(file_req.src_file, para_value);
 			}
 			else if (text_cmp(p, "p") == 0)
 			{
-				text_copy(ip, para_value);
+				text_copy(file_req.ip, para_value);
 			}
 			else
 			{
@@ -149,7 +161,7 @@ int main(int argc, char *argv[])
 		case 'o':
 			if (text_cmp(p, "f") == 0)
 			{
-				text_copy(dest_file, para_value);
+				text_copy(file_req.dest_file, para_value);
 				break;
 			}
 			goto label__unknown_option;
@@ -188,7 +200,7 @@ int main(int argc, char *argv[])
 		case 'p':
 			if (text_cmp(p, "ort") == 0)
 			{
-				port = text2value_unsigned(para_value, NULL, 10);
+				file_req.port = text2value_unsigned(para_value, NULL, 10);
 				break;
 			}
 			goto label__unknown_option;
@@ -200,21 +212,25 @@ label__unknown_option:
 		}
 	}
 
-	if (src_file[0] == 0 || dest_file[0] == 0)
+	if (file_req.src_file[0] == 0 || file_req.dest_file[0] == 0)
 	{
 		pr_red_info("Please input src_file and dest_file");
 		return -EINVAL;
 	}
 
-	if (ip[0] == 0)
+	if (file_req.ip[0] == 0)
 	{
-		cavan_get_server_ip(ip);
+		cavan_get_server_ip(file_req.ip);
 	}
 
-	if (port == 0)
+	if (file_req.port == 0)
 	{
-		port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+		file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 	}
 
-	return handler(ip, port, src_file, skip * bs, dest_file, seek * bs, count * bs);
+	file_req.src_offset = skip * bs;
+	file_req.dest_offset = seek * bs;
+	file_req.size = count * bs;
+
+	return handler(&file_req);
 }

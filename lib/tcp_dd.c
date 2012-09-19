@@ -322,27 +322,49 @@ int tcp_dd_service_run(struct cavan_service_description *desc, u16 port)
 	return ret;
 }
 
-int tcp_dd_send_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size)
+static int tcp_dd_check_file_request(struct inet_file_request *file_req, const char **src_file, const char **dest_file)
+{
+	if (file_req->src_file[0] == 0 && file_req->dest_file[0] == 0)
+	{
+		pr_red_info("src_file == NULL && dest_file == NULL");
+		ERROR_RETURN(EINVAL);
+	}
+
+	if (file_req->open_connect == NULL || file_req->close_connect == NULL)
+	{
+		pr_red_info("file_req->open_connect == NULL || file_req->close_connect == NULL");
+		ERROR_RETURN(EINVAL);
+	}
+
+	if (file_req->src_file[0] == 0)
+	{
+		*src_file = *dest_file = file_req->dest_file;
+	}
+	else if (file_req->dest_file[0] == 0)
+	{
+		*src_file = *dest_file = file_req->src_file;
+	}
+	else
+	{
+		*src_file = file_req->src_file;
+		*dest_file = file_req->dest_file;
+	}
+
+	return 0;
+}
+
+int tcp_dd_send_file(struct inet_file_request *file_req)
 {
 	int sockfd;
 	int fd;
 	int ret;
 	struct stat st;
+	const char *src_file, *dest_file;
 
-	if (src_file == NULL && dest_file == NULL)
+	ret = tcp_dd_check_file_request(file_req, &src_file, &dest_file);
+	if (ret < 0)
 	{
-		pr_red_info("src_file == NULL && dest_file == NULL");
-		return -EINVAL;
-	}
-
-	if (src_file == NULL)
-	{
-		src_file = dest_file;
-	}
-
-	if (dest_file == NULL)
-	{
-		dest_file = src_file;
+		return ret;
 	}
 
 	fd = open(src_file, O_RDONLY);
@@ -359,34 +381,34 @@ int tcp_dd_send_file(const char *ip, u16 port, const char *src_file, off_t src_o
 		goto out_close_fd;
 	}
 
-	if (size == 0)
+	if (file_req->size == 0)
 	{
-		size = st.st_size;
+		file_req->size = st.st_size;
 	}
 
-	if (size < src_offset)
+	if (file_req->size < file_req->src_offset)
 	{
 		pr_red_info("No data to sent");
 		return -EINVAL;
 	}
 
-	ret = lseek(fd, src_offset, SEEK_SET);
+	ret = lseek(fd, file_req->src_offset, SEEK_SET);
 	if (ret < 0)
 	{
 		pr_red_info("Seek file `%s' failed", src_file);
 		goto out_close_fd;
 	}
 
-	size -= src_offset;
+	file_req->size -= file_req->src_offset;
 
-	sockfd = inet_create_tcp_link2(ip, port);
+	sockfd = file_req->open_connect(file_req->ip, file_req->port);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_create_tcp_link2");
 		goto out_close_fd;
 	}
 
-	ret = tcp_dd_send_write_request(sockfd, dest_file, dest_offset, size, st.st_mode);
+	ret = tcp_dd_send_write_request(sockfd, dest_file, file_req->dest_offset, file_req->size, st.st_mode);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_write_request2");
@@ -394,9 +416,9 @@ int tcp_dd_send_file(const char *ip, u16 port, const char *src_file, off_t src_o
 	}
 
 	println("filename = %s", src_file);
-	println("offset = %s", size2text(src_offset));
-	println("size = %s", size2text(size));
-	ret = ffile_ncopy(fd, sockfd, size);
+	println("offset = %s", size2text(file_req->src_offset));
+	println("size = %s", size2text(file_req->size));
+	ret = ffile_ncopy(fd, sockfd, file_req->size);
 
 out_close_sockfd:
 	msleep(100);
@@ -406,27 +428,18 @@ out_close_fd:
 	return ret;
 }
 
-int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t src_offset, const char *dest_file, off_t dest_offset, off_t size)
+int tcp_dd_receive_file(struct inet_file_request *file_req)
 {
 	int fd;
 	int sockfd;
 	int ret;
 	struct tcp_dd_package pkg;
+	const char *src_file, *dest_file;
 
-	if (src_file == NULL && dest_file == NULL)
+	ret = tcp_dd_check_file_request(file_req, &src_file, &dest_file);
+	if (ret < 0)
 	{
-		pr_red_info("src_file == NULL && dest_file == NULL");
-		return -EINVAL;
-	}
-
-	if (src_file == NULL)
-	{
-		src_file = dest_file;
-	}
-
-	if (dest_file == NULL)
-	{
-		dest_file = src_file;
+		return ret;
 	}
 
 	if (file_test(dest_file, "b") == 0)
@@ -434,14 +447,14 @@ int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t sr
 		umount_device(dest_file, MNT_DETACH);
 	}
 
-	sockfd = inet_create_tcp_link2(ip, port);
+	sockfd = file_req->open_connect(file_req->ip, file_req->port);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_create_tcp_link2");
 		return sockfd;
 	}
 
-	ret = tcp_dd_send_read_request(sockfd, src_file, src_offset, size, &pkg);
+	ret = tcp_dd_send_read_request(sockfd, src_file, file_req->src_offset, file_req->size, &pkg);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_read_request");
@@ -455,12 +468,12 @@ int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t sr
 		goto out_close_sockfd;
 	}
 
-	if (size == 0)
+	if (file_req->size == 0)
 	{
-		size = pkg.body.file_req.size;
+		file_req->size = pkg.body.file_req.size;
 	}
 
-	ret = lseek(fd, dest_offset, SEEK_SET);
+	ret = lseek(fd, file_req->dest_offset, SEEK_SET);
 	if (ret < 0)
 	{
 		tcp_dd_send_response(sockfd, ret, "[Client] Seek file `%s' failed", dest_file);
@@ -475,14 +488,14 @@ int tcp_dd_receive_file(const char *ip, u16 port, const char *src_file, off_t sr
 	}
 
 	println("filename = %s", dest_file);
-	println("offset = %s", size2text(dest_offset));
-	println("size = %s", size2text(size));
-	ret = ffile_ncopy(sockfd, fd, size);
+	println("offset = %s", size2text(file_req->dest_offset));
+	println("size = %s", size2text(file_req->size));
+	ret = ffile_ncopy(sockfd, fd, file_req->size);
 
 out_close_fd:
 	close(fd);
 out_close_sockfd:
 	msleep(100);
-	inet_close_tcp_socket(sockfd);
+	file_req->close_connect(sockfd);
 	return ret;
 }
