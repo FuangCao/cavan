@@ -9,6 +9,10 @@ ROOTFS_BASE = $(BUILD_ROOTFS)/base
 
 include $(MAKEFILE_DEFINES)
 
+define find_libtool_package
+$(firstword $(wildcard $(DOWNLOAD_PATH)/$(SB2_LIBTOOL_NAME).tar.gz $(PACKAGE_PATH)/$(SB2_LIBTOOL_NAME).tar.gz))
+endef
+
 all: $(MARK_ROOTFS_READY)
 	$(Q)ln -vsf vim $(ROOTFS_PATH)/usr/bin/vi
 	$(Q)chmod 0440 $(ROOTFS_PATH)/etc/sudoers
@@ -23,8 +27,13 @@ $(SB2_INIT_MARK):
 	$(Q)ln -vsf bash $(ROOTFS_PATH)/bin/sh
 	$(Q)cp $(SYSROOT_BT_PATH)/* $(TOOLCHIAN_BT_PATH)/$(CAVAN_TARGET_PLAT)/lib $(ROOTFS_PATH) -a
 	$(Q)cp $(TOOLCHIAN_BT_PATH)/$(CAVAN_TARGET_PLAT)/include $(ROOTFS_PATH)/usr -a
-	$(eval SB2_LIBTOOL_PACKAGE = $(firstword $(wildcard $(DOWNLOAD_PATH)/$(SB2_LIBTOOL_NAME).tar.gz $(PACKAGE_PATH)/$(SB2_LIBTOOL_NAME).tar.gz)))
-	$(Q)[ -z "$(SB2_LIBTOOL_PACKAGE)" ] && $(call download_package,$(SB2_LIBTOOL_NAME),$(SB2_LIBTOOL_URL)); $(eval SB2_LIBTOOL_PACKAGE = $(DOWNLOAD_PATH)/$(SB2_LIBTOOL_NAME).tar.gz)
+	$(Q)[ "$(SB2_LIBTOOL_PACKAGE)" ] || $(call download_package,$(SB2_LIBTOOL_NAME),$(SB2_LIBTOOL_URL))
+	$(eval SB2_LIBTOOL_PACKAGE = $(call find_libtool_package))
+	$(Q)[ "$(SB2_LIBTOOL_PACKAGE)" ] || \
+	{ \
+		$(call pr_red_info,No package $(SB2_LIBTOOL_NAME) found!); \
+		exit 1; \
+	}
 	$(Q)rm $(SB2_CONFIG_PATH) -rf && mkdir $(SB2_CONFIG_PATH) -pv && cp $(SB2_LIBTOOL_PACKAGE) $(SB2_CONFIG_PATH) -a
 	$(Q)cd $(ROOTFS_PATH) && sb2-init -c qemu-$(CAVAN_TARGET_ARCH) $(CAVAN_TARGET_PLAT) $(CAVAN_TARGET_PLAT)-gcc
 	$(call generate_mark)

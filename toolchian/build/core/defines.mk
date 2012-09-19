@@ -1,51 +1,50 @@
 define pr_red_info
-echo "\033[31m$1\033[0m"
+echo -e "\033[31m$1\033[0m"
 endef
 
 define download_package
-cd $(DOWNLOAD_PATH) || \
 { \
-	$(call pr_red_info,Entry to directory $(DOWNLOAD_PATH) failed); \
-	exit 1; \
-}; \
-case "$2" in \
-	*.rar | *.zip | *.bz2 | *.gz | *.xz) \
-		file_list="$(notdir $2)"; \
-		if test -f "$(PACKAGE_PATH)/$${file_list}"; \
-		then \
-			file_list="$(PACKAGE_PATH)/$${file_list}"; \
-		else \
-			test -f "$${file_list}" || $(DOWNLOAD_COMMAND) $2 || exit 1; \
-			file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
-		fi; \
-		;; \
-	*) \
-		for type in $(DOWNLOAD_TYPES); \
-		do \
-			file_list="$1.$${type}"; \
-			$(DOWNLOAD_COMMAND) "$2/$${file_list}" && \
-			{ \
+	cd $(DOWNLOAD_PATH) || \
+	{ \
+		$(call pr_red_info,Entry to directory $(DOWNLOAD_PATH) failed); \
+		exit 1; \
+	}; \
+	case "$2" in \
+		*.rar | *.zip | *.bz2 | *.gz | *.xz) \
+			file_list="$(notdir $2)"; \
+			if test -f "$(PACKAGE_PATH)/$${file_list}"; \
+			then \
+				file_list="$(PACKAGE_PATH)/$${file_list}"; \
+			else \
+				test -f "$${file_list}" || $(DOWNLOAD_COMMAND) $2 || exit 1; \
 				file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
-				break; \
-			}; \
-			rm $${file_list} -rf; \
-		done; \
-		;; \
-esac; \
-[ -f "$${file_list}" ] || \
-{ \
-	$(call pr_red_info,Download $1 from $2 failed); \
-	exit 1; \
+			fi; \
+			;; \
+		*) \
+			for type in $(DOWNLOAD_TYPES); \
+			do \
+				file_list="$1.$${type}"; \
+				$(DOWNLOAD_COMMAND) "$2/$${file_list}" && \
+				{ \
+					file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
+					break; \
+				}; \
+				rm $${file_list} -rf; \
+			done; \
+			;; \
+	esac; \
+	[ -f "$${file_list}" ] || \
+	{ \
+		$(call pr_red_info,Download $1 from $2 failed); \
+		exit 1; \
+	}; \
 }
 endef
 
 define simple_decompression_file
 temp_decomp="$(DECOMP_PATH)/$1"; \
 file_list="$(strip $(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.*$(type) $(DOWNLOAD_PATH)/$1.*$(type))))"; \
-[ -z "$${file_list}" ] && \
-{ \
-	$(call download_package,$1,$3); \
-}; \
+[ -z "$${file_list}" ] && $(call download_package,$1,$3); \
 for pkg in $${file_list}; \
 do \
 	echo "Decompression $${pkg} => $${temp_decomp}"; \
