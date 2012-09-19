@@ -464,7 +464,11 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			cmd_arg++;
 		}
 
+#if __WORDSIZE == 64
+		println("command[%ld] = %s", recvlen, cmd_buff);
+#else
 		println("command[%d] = %s", recvlen, cmd_buff);
+#endif
 
 		switch (*(u32 *)cmd_buff)
 		{
@@ -613,7 +617,11 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			}
 			else
 			{
+#if __WORDSIZE == 64
+				sprintf(rep_buff, "213 %ld", st.st_size);
+#else
 				sprintf(rep_buff, "213 %lld", st.st_size);
+#endif
 			}
 			break;
 
@@ -823,7 +831,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	return -1;
 }
 
-int ftp_service_handle(int index, union cavan_service_data data)
+int ftp_service_handle(int index, cavan_shared_data_t data)
 {
 	struct sockaddr_in client_addr;
 	socklen_t addrlen;
@@ -1031,7 +1039,11 @@ int ftp_client_run(const char *ip, u16 port)
 		}
 
 		buff[recvlen] = 0;
+#if __WORDSIZE == 64
+		println("receive buff[%ld] = %s", recvlen, buff);
+#else
 		println("receive buff[%d] = %s", recvlen, buff);
+#endif
 
 label_get_command:
 		for (p = buff; (*p = getchar()) != '\n'; p++);
@@ -1059,8 +1071,11 @@ label_get_command:
 				ret = sendlen;
 				break;
 			}
-
+#if __WORDSIZE == 64
+			println("send buff[%ld] = %s", sendlen, buff);
+#else
 			println("send buff[%d] = %s", sendlen, buff);
+#endif
 		}
 	}
 

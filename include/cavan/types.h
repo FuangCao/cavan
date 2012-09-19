@@ -43,3 +43,18 @@ typedef enum
 	FALSE,
 	TRUE,
 } BOOL;
+
+typedef union
+{
+	void *type_void;
+
+	char type_char;
+	short type_short;
+	int type_int;
+	long type_long;
+
+	unsigned char type_uchar;
+	unsigned short type_ushort;
+	unsigned int type_uint;
+	unsigned long type_ulong;
+} cavan_shared_data_t;

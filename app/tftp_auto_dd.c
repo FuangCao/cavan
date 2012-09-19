@@ -171,7 +171,11 @@ int main(int argc, char *argv[])
 		port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
+#if __WORDSIZE == 64
+	println("ip address = %s, port = %d, image count = %ld", ip, port, end_p - descs);
+#else
 	println("ip address = %s, port = %d, image count = %d", ip, port, end_p - descs);
+#endif
 
 	ret = uevent_init(&udesc);
 	if (ret < 0)

@@ -274,7 +274,7 @@ static int tcp_dd_handle_request(int sockfd)
 	return ret;
 }
 
-static int tcp_dd_daemon_handle(int index, union cavan_service_data data)
+static int tcp_dd_daemon_handle(int index, cavan_shared_data_t data)
 {
 	int ret;
 	int server_sockfd, client_sockfd;

@@ -56,7 +56,13 @@ int adb_send_text(int sockfd, const char *text)
 	char status[256];
 
 	length = text_len(text);
+
+#if __WORDSIZE == 64
+	sprintf(buff, "%04lx", length);
+#else
 	sprintf(buff, "%04x", length);
+#endif
+
 	sendlen = inet_send(sockfd, buff, 4);
 	if (sendlen < 0)
 	{

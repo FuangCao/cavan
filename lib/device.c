@@ -1029,7 +1029,7 @@ void set_part_address(struct disk_partition_table *part_table_p, struct hd_geome
 	sector_index2disk_address(geo_p, sec_index + sec_count - 1, &part_table_p->end_addr);
 }
 
-int fget_first_partition_offset(int fd, off_t *offset)
+ssize_t fget_first_partition_offset(int fd, off_t *offset)
 {
 	int ret;
 	int i;
@@ -1877,6 +1877,17 @@ void show_statfs(struct statfs *stfs)
 	println("avail = %s", size2text(fs_avail));
 	println("used = %Ld%%", ((fs_size - fs_free) * 100) / fs_size);
 
+#if __WORDSIZE == 64
+	println("f_bavail = %ld", stfs->f_bavail);
+	println("f_bfree = %ld", stfs->f_bfree);
+	println("f_blocks = %ld", stfs->f_blocks);
+	println("f_bsize = %ld", stfs->f_bsize);
+	println("f_ffree = %ld", stfs->f_ffree);
+	println("f_files = %ld", stfs->f_files);
+	println("f_frsize = %ld", stfs->f_frsize);
+	println("f_namelen = %ld", stfs->f_namelen);
+	println("f_type = %ld", stfs->f_type);
+#else
 	println("f_bavail = %Ld", stfs->f_bavail);
 	println("f_bfree = %Ld", stfs->f_bfree);
 	println("f_blocks = %Ld", stfs->f_blocks);
@@ -1886,6 +1897,7 @@ void show_statfs(struct statfs *stfs)
 	println("f_frsize = %d", stfs->f_frsize);
 	println("f_namelen = %d", stfs->f_namelen);
 	println("f_type = %d", stfs->f_type);
+#endif
 }
 
 int get_device_statfs(const char *devpath, const char *fstype, struct statfs *stfs)

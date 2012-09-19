@@ -73,9 +73,15 @@ void show_ext2_desc(struct ext2_desc *desc)
 	int i;
 
 	print_sep(60);
+#if __WORDSIZE == 64
+	println("block_shift = %ld", desc->block_shift);
+	println("block_size = %ld", desc->block_size);
+	println("group_count = %ld", desc->group_count);
+#else
 	println("block_shift = %d", desc->block_shift);
 	println("block_size = %d", desc->block_size);
 	println("group_count = %d", desc->group_count);
+#endif
 	print_sep(60);
 	show_ext2_super_block(&desc->super_block);
 

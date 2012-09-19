@@ -2551,7 +2551,11 @@ size_t ffile_line_count(int fd)
 		if (readlen)
 		{
 			count += mem_byte_count(buff, '\n', readlen);
+#if __WORDSIZE == 64
+			println("count = %ld", count);
+#else
 			println("count = %d", count);
+#endif
 		}
 		else
 		{

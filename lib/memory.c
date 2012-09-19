@@ -29,14 +29,14 @@ void *mem_copy16(void *dest, const void *src, size_t size)
 {
 	void *end_dest;
 
-	if (((u32)dest & 1) != ((u32)src & 1))
+	if (((long)dest & 1) != ((long)src & 1))
 	{
 		return text_ncopy(dest, src, size);
 	}
 
 	end_dest = dest + size;
 
-	while ((u32)src & 1)
+	while ((long)src & 1)
 	{
 		*(char *)dest++ = *(const char *)src++;
 		size--;
@@ -56,14 +56,14 @@ void *mem_copy32(void *dest, const void *src, size_t size)
 {
 	void *end_dest;
 
-	if (((u32)dest & 3) != ((u32)src & 3))
+	if (((long)dest & 3) != ((long)src & 3))
 	{
 		return mem_copy16(dest, src, size);
 	}
 
 	end_dest = dest + size;
 
-	while ((u32)dest & 3)
+	while ((long)dest & 3)
 	{
 		*(char *)dest++ = *(const char *)src++;
 		size--;
@@ -83,14 +83,14 @@ void *mem_copy64(void *dest, const void *src, size_t size)
 {
 	void *end_dest;
 
-	if (((u32)dest & 7) != ((u32)src & 7))
+	if (((long)dest & 7) != ((long)src & 7))
 	{
 		return mem_copy32(dest, src, size);
 	}
 
 	end_dest = dest + size;
 
-	while ((u32)dest & 7)
+	while ((long)dest & 7)
 	{
 		*(char *)dest++ = *(const char *)src++;
 		size--;
@@ -111,7 +111,7 @@ void *mem_set16(void *mem, int value, size_t size)
 	void *end_mem = mem + size;
 	u16 value16;
 
-	while ((u32)mem & 1)
+	while ((long)mem & 1)
 	{
 		*(u8 *)mem++ = value;
 		size--;
@@ -133,7 +133,7 @@ void *mem_set32(void *mem, int value, size_t size)
 	void *end_mem = mem + size;
 	u32 value32;
 
-	while ((u32)mem & 3)
+	while ((long)mem & 3)
 	{
 		*(u8 *)mem++ = value;
 		size--;
@@ -155,7 +155,7 @@ void *mem_set64(void *mem, int value, size_t size)
 	void *end_mem = mem + size;
 	u64 value64;
 
-	while ((u32)mem & 7)
+	while ((long)mem & 7)
 	{
 		*(u8 *)mem++ = value;
 		size--;

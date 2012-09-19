@@ -47,7 +47,10 @@
 	((dest) = (typeof(dest))(src))
 
 #define MEMBER_OFFSET(type, member) \
-	((int)&((type *)0)->member)
+	((long)&((type *)0)->member)
+
+#define OFFSETOF(type, member) \
+	MEMBER_OFFSET(type, member)
 
 #define MEMBER_STRUCT(addr, type, member) \
 	((void *)(addr) - MEMBER_OFFSET(type, member))

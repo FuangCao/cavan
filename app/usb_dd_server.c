@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 		fcntl(fd_adb, F_SETFD, FD_CLOEXEC);
 
 		cftp_desc.fd = fd_adb;
-		cftp_desc.data = (void *)fd_adb;
+		cftp_desc.data.type_int = fd_adb;
 
 		cftp_service_heandle(&cftp_desc);
 

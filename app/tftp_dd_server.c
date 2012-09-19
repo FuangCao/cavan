@@ -45,7 +45,7 @@ static int handle_write_request(struct tftp_request *req_p)
 	return ret;
 }
 
-static int service_handle(int index, union cavan_service_data data)
+static int service_handle(int index, cavan_shared_data_t data)
 {
 	int ret;
 	int sockfd = data.type_int;

@@ -990,36 +990,36 @@ void *cftp_service_heandle(void *data)
 	return NULL;
 }
 
-ssize_t cftp_udp_receive_data(void *data, void *buff, size_t size)
+ssize_t cftp_udp_receive_data(cavan_shared_data_t data, void *buff, size_t size)
 {
-	struct cftp_udp_link_descriptor *link = data;
+	struct cftp_udp_link_descriptor *link = data.type_void;
 
 	return inet_recvfrom(link->sockfd, buff, size, &link->client_addr, &link->addrlen);
 }
 
-ssize_t cftp_udp_send_data(void *data, const void *buff, size_t size)
+ssize_t cftp_udp_send_data(cavan_shared_data_t data, const void *buff, size_t size)
 {
-	struct cftp_udp_link_descriptor *link = data;
+	struct cftp_udp_link_descriptor *link = data.type_void;
 
 	return inet_sendto(link->sockfd, buff, size, &link->client_addr);
 }
 
-ssize_t cftp_usb_receive_data(void *data, void *buff, size_t size)
+ssize_t cftp_usb_receive_data(cavan_shared_data_t data, void *buff, size_t size)
 {
-	return cavan_usb_read_data(data, buff, size);
+	return cavan_usb_read_data(data.type_void, buff, size);
 }
 
-ssize_t cftp_usb_send_data(void *data, const void *buff, size_t size)
+ssize_t cftp_usb_send_data(cavan_shared_data_t data, const void *buff, size_t size)
 {
-	return cavan_usb_write_data(data, buff, size);
+	return cavan_usb_write_data(data.type_void, buff, size);
 }
 
-ssize_t cftp_adb_receive_data(void *data, void *buff, size_t size)
+ssize_t cftp_adb_receive_data(cavan_shared_data_t data, void *buff, size_t size)
 {
-	return cavan_adb_read_data((int)data, buff, size);
+	return cavan_adb_read_data(data.type_int, buff, size);
 }
 
-ssize_t cftp_adb_send_data(void *data, const void *buff, size_t size)
+ssize_t cftp_adb_send_data(cavan_shared_data_t data, const void *buff, size_t size)
 {
-	return cavan_adb_write_data((int)data, buff, size);
+	return cavan_adb_write_data(data.type_int, buff, size);
 }

@@ -227,7 +227,11 @@ static void *server_send_handle(void *data)
 		readlen = cavan_usb_read_data(usb_desc, buff, sizeof(buff));
 		if (readlen < 0)
 		{
+#if __WORDSIZE == 64
+			print_error("cavan_usb_read_data, readlen = %ld", readlen);
+#else
 			print_error("cavan_usb_read_data, readlen = %d", readlen);
+#endif
 			break;
 		}
 

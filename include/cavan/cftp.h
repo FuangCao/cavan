@@ -74,19 +74,19 @@ enum cftp_package_type
 
 struct cftp_descriptor
 {
-	void *data;
+	cavan_shared_data_t data;
 	int fd;
 	size_t max_xfer_length;
 	u32 timeout_value;
 	int retry_count;
 
-	ssize_t (*send)(void *data, const void *buff, size_t size);
-	ssize_t (*receive)(void *data, void *buff, size_t size);
-	ssize_t (*send_timeout)(void *data, const void *buff, size_t size, u32 timeout);
-	ssize_t (*receive_timeout)(void *data, void *buff, size_t size, u32 timeout);
-	int (*receive_handle)(void *data, struct cftp_file_request *req);
-	int (*send_handle)(void *data, struct cftp_file_request *req);
-	int (*can_receive)(void *data, u32 timeout);
+	ssize_t (*send)(cavan_shared_data_t data, const void *buff, size_t size);
+	ssize_t (*receive)(cavan_shared_data_t data, void *buff, size_t size);
+	ssize_t (*send_timeout)(cavan_shared_data_t data, const void *buff, size_t size, u32 timeout);
+	ssize_t (*receive_timeout)(cavan_shared_data_t data, void *buff, size_t size, u32 timeout);
+	int (*receive_handle)(cavan_shared_data_t data, struct cftp_file_request *req);
+	int (*send_handle)(cavan_shared_data_t data, struct cftp_file_request *req);
+	int (*can_receive)(cavan_shared_data_t data, u32 timeout);
 };
 
 struct cftp_udp_link_descriptor
@@ -103,11 +103,11 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 int cftp_server_send_file(struct cftp_descriptor *desc, const char *filename, u32 offset, size_t size);
 void *cftp_service_heandle(void *data);
 
-ssize_t cftp_udp_receive_data(void *data, void *buff, size_t size);
-ssize_t cftp_udp_send_data(void *data, const void *buff, size_t size);
+ssize_t cftp_udp_receive_data(cavan_shared_data_t data, void *buff, size_t size);
+ssize_t cftp_udp_send_data(cavan_shared_data_t data, const void *buff, size_t size);
 
-ssize_t cftp_usb_receive_data(void *data, void *buff, size_t size);
-ssize_t cftp_usb_send_data(void *data, const void *buff, size_t size);
-ssize_t cftp_adb_receive_data(void *data, void *buff, size_t size);
-ssize_t cftp_adb_send_data(void *data, const void *buff, size_t size);
+ssize_t cftp_usb_receive_data(cavan_shared_data_t data, void *buff, size_t size);
+ssize_t cftp_usb_send_data(cavan_shared_data_t data, const void *buff, size_t size);
+ssize_t cftp_adb_receive_data(cavan_shared_data_t data, void *buff, size_t size);
+ssize_t cftp_adb_send_data(cavan_shared_data_t data, const void *buff, size_t size);
 

@@ -227,7 +227,11 @@ int cavan_mtd_erase_blocks(struct mtd_partition_descriptor *desc, int start, int
 		bpos = pos;
 		if (ioctl(fd, MEMGETBADBLOCK, &bpos) > 0)
 		{
+#if __WORDSIZE == 64
+			pr_red_info("Bad Block at 0x%08lx", bpos);
+#else
 			pr_red_info("Bad Block at 0x%08Lx", bpos);
+#endif
 			bad_count++;
 			continue;
 		}
@@ -235,7 +239,11 @@ int cavan_mtd_erase_blocks(struct mtd_partition_descriptor *desc, int start, int
 		erase_info.start = pos;
 		if (ioctl(fd, MEMERASE, &erase_info) < 0)
 		{
+#if __WORDSIZE == 64
+			pr_red_info("Erase failed block at 0x%08lx", pos);
+#else
 			pr_red_info("Erase failed block at 0x%08Lx", pos);
+#endif
 			bad_count++;
 		}
 	}
@@ -293,14 +301,22 @@ ssize_t cavan_mtd_write_block(struct mtd_partition_descriptor *desc, const void 
 		bpos = pos;
 		if (ioctl(fd, MEMGETBADBLOCK, &bpos) > 0)
 		{
+#if __WORDSIZE == 64
+			pr_red_info("Bad block at 0x%08lx", bpos);
+#else
 			pr_red_info("Bad block at 0x%08Lx", bpos);
+#endif
 			continue;
 		}
 
 		erase_info.start = pos;
 		if (ioctl(fd, MEMERASE, &erase_info) < 0)
 		{
+#if __WORDSIZE == 64
+			pr_red_info("Erase failed block at 0x%08lx", pos);
+#else
 			pr_red_info("Erase failed block at 0x%08Lx", pos);
+#endif
 			continue;
 		}
 

@@ -1127,11 +1127,15 @@ int tftp_mknode(struct tftp_mknode_pkg *mknode_pkg_p, const struct sockaddr_in *
 {
 	int ret;
 
+#if __WORDSIZE == 64
+	println("Create device %s, sizeof(dev_t) = %ld", mknode_pkg_p->pathname, sizeof(dev_t));
+	println("dev = 0x%lx", mknode_pkg_p->dev);
+#else
 	println("Create device %s, sizeof(dev_t) = %d", mknode_pkg_p->pathname, sizeof(dev_t));
+	println("dev = 0x%llx", mknode_pkg_p->dev);
+#endif
 
 	remove(mknode_pkg_p->pathname);
-
-	println("dev = 0x%llx", mknode_pkg_p->dev);
 
 	ret = remknod(mknode_pkg_p->pathname, mknode_pkg_p->mode, mknode_pkg_p->dev);
 	if (ret < 0)

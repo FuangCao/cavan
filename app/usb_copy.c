@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 	}
 
 	cftp_descriptor_init(&cftp_desc);
-	cftp_desc.data = &usb_desc;
+	cftp_desc.data.type_void = &usb_desc;
 	cftp_desc.send = cftp_usb_send_data;
 	cftp_desc.receive = cftp_usb_receive_data;
 	cftp_desc.max_xfer_length = CAVAN_USB_MAX_XFER_SIZE;
@@ -118,4 +118,3 @@ int main(int argc, char *argv[])
 
 	return ret;
 }
-

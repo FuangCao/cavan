@@ -871,7 +871,11 @@ int fat16_print_root(struct fat_info *info_p)
 			build_short_name((char *)desc_curr->name, name_temp);
 		}
 
+#if __WORDSIZE == 64
+		println("%s[%ld]: %s", attribute_to_string(desc_curr->attribute), desc_curr - dir_descs, name_temp);
+#else
 		println("%s[%d]: %s", attribute_to_string(desc_curr->attribute), desc_curr - dir_descs, name_temp);
+#endif
 	}
 
 	ERROR_RETURN(ENOENT);
@@ -936,7 +940,11 @@ int print_directory(struct fat_info *info_p, u32 cluster_index)
 				build_short_name((char *)desc_curr->name, name_curr);
 			}
 
+#if __WORDSIZE == 64
+			println("%s[%ld]: %s", attribute_to_string(desc_curr->attribute), desc_curr - dir_descs, name_curr);
+#else
 			println("%s[%d]: %s", attribute_to_string(desc_curr->attribute), desc_curr - dir_descs, name_curr);
+#endif
 		}
 
 		if (desc_curr < desc_end)
