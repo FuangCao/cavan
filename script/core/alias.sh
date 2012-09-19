@@ -90,5 +90,5 @@ function cavan-server-stop()
 
 function mssh()
 {
-	ssh user@${1-${CAVAN_SERVER_IP}}
+	ssh ${SSH_USER}@${1-${CAVAN_SERVER_IP}}
 }
