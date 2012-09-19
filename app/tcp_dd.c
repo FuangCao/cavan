@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
 	struct inet_file_request file_req =
 	{
 		.ip = "",
+		.port = 0,
 		.open_connect = inet_create_tcp_link2,
 		.close_connect = inet_close_tcp_socket,
 	};
