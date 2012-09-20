@@ -103,7 +103,7 @@ class SvnRreoManager:
 		fp = os.popen(command)
 		if fp == None:
 			return []
-		lines = [ line.strip() for line in fp.readlines()]
+		lines = [line.strip() for line in fp.readlines()]
 		fp.close()
 		return lines
 
