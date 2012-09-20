@@ -23,6 +23,9 @@ def pr_bold_info(message):
 
 class CavanProgressBar:
 	def __init__(self, total):
+		self.init(total)
+
+	def init(self, total):
 		self.total = total
 		self.current = 0
 		self.update()
@@ -45,8 +48,8 @@ class CavanProgressBar:
 		percent = self.current * 100 / self.total
 		print "[%s %d%% %s] [%d/%d]" % (left, percent, right, self.current, self.total)
 
-	def add(self, count):
-		self.current += 1
+	def add(self, count = 1):
+		self.current += count
 		self.update()
 
 class SvnRreoManager:
@@ -87,7 +90,7 @@ class SvnRreoManager:
 		lines = self.svn_repo_popen("svn info | grep ^URL:.*");
 		if lines == None or len(lines) < 1:
 			return None
-		return lines[0][4:].strip()
+		return lines[0][4:]
 
 	def svn_repo_system(self, command):
 		pr_bold_info(command)
@@ -100,13 +103,13 @@ class SvnRreoManager:
 		fp = os.popen(command)
 		if fp == None:
 			return []
-		lines = fp.readlines()
+		lines = [ line.strip() for line in fp.readlines()]
 		fp.close()
 		return lines
 
 	def svn_repo_has_file(self, flist):
 		for fn in flist:
-			if fn.strip().endswith("/"):
+			if fn.endswith("/"):
 				continue
 			return True
 		return False
@@ -120,9 +123,10 @@ class SvnRreoManager:
 			tag_project = self.xml_dom.createElement("project")
 			self.tag_manifest.appendChild(tag_project)
 			tag_project.setAttribute("path", pathname[0:-1])
+			tag_project.setAttribute("name", pathname[0:-1])
 			return 0
 		for dn in flist:
-			self.svn_repo_gen_xml_base(os.path.join(pathname, dn.strip()), depth - 1);
+			self.svn_repo_gen_xml_base(os.path.join(pathname, dn), depth - 1);
 		return 0
 
 	def svn_repo_gen_xml(self):
@@ -138,13 +142,13 @@ class SvnRreoManager:
 		self.tag_manifest = tag_manifest
 
 		for fn in self.svn_repo_popen("svn list " + self.url):
-			fn = fn.strip()
 			if fn.endswith("/"):
 				self.svn_repo_gen_xml_base(fn, MANIFEST_MAX_DEPTH)
 			else:
 				tag_file = xml_dom.createElement("file")
 				tag_manifest.appendChild(tag_file)
 				tag_file.setAttribute("path", fn)
+				tag_file.setAttribute("name", fn)
 
 		fd = open(self.manifest_xml, "w")
 		try:
@@ -192,11 +196,13 @@ class SvnRreoManager:
 		date = time.localtime(time.time())
 		diffpath = ".git/%04d%02d%02d%02d%02d%02d.diff" % (date[0], date[1], date[2], date[3], date[4], date[5])
 
+		bar = CavanProgressBar(len(self.file_list))
 		for fn in self.file_list:
 			if self.svn_repo_system("svn update --force " + fn) < 0:
 				return -1
+			bar.add()
 
-		bar = CavanProgressBar(len(self.project_list))
+		bar.init(len(self.project_list))
 		for fn in self.project_list:
 			if os.path.isdir(fn):
 				if self.svn_repo_system("cd %s && git diff > %s && git reset --hard" % (fn, diffpath)) < 0:
@@ -215,7 +221,7 @@ class SvnRreoManager:
 					self.svn_repo_system("rm %s -rf" % fn)
 					return -1
 				self.svn_repo_system("cd %s && git checkout -b %s remotes/git-svn" % (fn, self.fetch))
-			bar.add(1)
+			bar.add()
 		return 0
 
 	def svn_repo_command(self, argv):
@@ -233,7 +239,7 @@ class SvnRreoManager:
 			command_last = "cd " + fn + " && " + command.replace("<path>", fn)
 			if self.svn_repo_system(command_last) != 0:
 				return -1
-			bar.add(1)
+			bar.add()
 		return 0
 
 if __name__ == "__main__":
