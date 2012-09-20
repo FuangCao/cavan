@@ -4,6 +4,9 @@
 #"""
 
 MANIFEST_MAX_DEPTH = 2
+LOCAL_SCRIPT_NAME = "svn-repo.py"
+PROGRESS_BAR_LENGTH_HALF = 30
+PROGRESS_BAR_LENGTH = PROGRESS_BAR_LENGTH_HALF * 2
 
 import sys, os, time, re, traceback
 from sys import argv
@@ -17,6 +20,34 @@ def pr_green_info(message):
 
 def pr_bold_info(message):
 	print "\033[1m%s\033[0m" % message
+
+class CavanProgressBar:
+	def __init__(self, total):
+		self.total = total
+		self.current = 0
+		self.update()
+
+	def update(self):
+		fill = self.current * PROGRESS_BAR_LENGTH / self.total
+		left = right = ""
+		for weight in range(0, PROGRESS_BAR_LENGTH_HALF):
+			if weight < fill:
+				left += "H"
+			else:
+				left += "="
+
+		for weight in range(PROGRESS_BAR_LENGTH_HALF, PROGRESS_BAR_LENGTH):
+			if weight < fill:
+				right += "H"
+			else:
+				right += "="
+
+		percent = self.current * 100 / self.total
+		print "[%s %d%% %s] [%d/%d]" % (left, percent, right, self.current, self.total)
+
+	def add(self, count):
+		self.current += 1
+		self.update()
 
 class SvnRreoManager:
 	def __init__(self):
@@ -165,6 +196,7 @@ class SvnRreoManager:
 			if self.svn_repo_system("svn update --force " + fn) < 0:
 				return -1
 
+		bar = CavanProgressBar(len(self.project_list))
 		for fn in self.project_list:
 			if os.path.isdir(fn):
 				if self.svn_repo_system("cd %s && git diff > %s && git reset --hard" % (fn, diffpath)) < 0:
@@ -183,6 +215,7 @@ class SvnRreoManager:
 					self.svn_repo_system("rm %s -rf" % fn)
 					return -1
 				self.svn_repo_system("cd %s && git checkout -b %s remotes/git-svn" % (fn, self.fetch))
+			bar.add(1)
 		return 0
 
 	def svn_repo_command(self, argv):
@@ -195,16 +228,22 @@ class SvnRreoManager:
 			return -1
 
 		command = " ".join(argv)
+		bar = CavanProgressBar(len(self.project_list))
 		for fn in self.project_list:
 			command_last = "cd " + fn + " && " + command.replace("<path>", fn)
 			if self.svn_repo_system(command_last) != 0:
 				return -1
+			bar.add(1)
 		return 0
 
 if __name__ == "__main__":
 	if len(argv) < 2:
 		pr_red_info("Please give a subcmd")
 		sys.exit(-1)
+
+	if os.path.exists(LOCAL_SCRIPT_NAME):
+		os.remove(LOCAL_SCRIPT_NAME)
+	os.symlink(os.path.abspath(argv[0]), LOCAL_SCRIPT_NAME)
 
 	repo = SvnRreoManager()
 	subcmd = argv[1]
