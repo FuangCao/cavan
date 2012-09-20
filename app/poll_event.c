@@ -16,13 +16,15 @@ int main(int argc, char *argv[])
 
 	if (file_test(argv[1], "c") < 0)
 	{
-		sprintf(name, "/dev/input/event%c", argv[1][0]);
+		sprintf(name, "/dev/input/event%s", argv[1]);
 		dev_path = name;
 	}
 	else
 	{
 		dev_path = argv[1];
 	}
+
+	println("dev_path = %s", dev_path);
 
 	ret = event_init_by_path(&desc, dev_path);
 	if (ret < 0)

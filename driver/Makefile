@@ -1,5 +1,5 @@
 KERNEL_VERSION = $(shell uname -r)
-# KERNEL_PATH ?= /lib/modules/$(KERNEL_VERSION)/build
+KERNEL_PATH ?= /lib/modules/$(KERNEL_VERSION)/build
 
 $(info KERNEL_PATH = $(KERNEL_PATH))
 
