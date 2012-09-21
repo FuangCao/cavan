@@ -31,7 +31,13 @@ class CavanProgressBar:
 		self.update()
 
 	def update(self):
-		fill = self.current * PROGRESS_BAR_LENGTH / self.total
+		if self.total == 0:
+			fill = PROGRESS_BAR_LENGTH
+			percent = 100
+		else:
+			fill = self.current * PROGRESS_BAR_LENGTH / self.total
+			percent = self.current * 100 / self.total
+
 		left = right = ""
 		for weight in range(0, PROGRESS_BAR_LENGTH_HALF):
 			if weight < fill:
@@ -45,7 +51,6 @@ class CavanProgressBar:
 			else:
 				right += "="
 
-		percent = self.current * 100 / self.total
 		print "[%s %d%% %s] [%d/%d]" % (left, percent, right, self.current, self.total)
 
 	def add(self, count = 1):
