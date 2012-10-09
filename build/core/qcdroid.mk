@@ -48,6 +48,7 @@ cp:
 	ln -vsf custSSNSKOLYM.h $(MODEM_PROC)/build/cust/CUSTSSNSKOLYM.H
 	ln -vsf custssnskolym.h $(BUILD_MS)/CUSTSSNSKOLYM.H
 	ln -vsf custusnskolym.h $(BUILD_MS)/CUSTUSNSKOLYM.H
+	chmod a+x qcom_cp/modem_proc/build/ms/*.pl qcom_cp/modem_proc/tools/build/*.pl -v
 	+cd $(BUILD_MS) $(shell while read line; do echo " && "; echo "$${line}" | sed -e "s/^make/make BUILD_UNIX=yes/g" -e "s/\$$0/$(COMMAND_FILE)/g"; done < $(BUILD_MS)/$(COMMAND_FILE))
 
 boot.img:
