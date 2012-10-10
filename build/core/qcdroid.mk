@@ -19,7 +19,7 @@ endif
 
 ARM_COMPILER_PATH = $(UTLILS_ROOT)/rvct22/linux-pentium
 ARMTOOLS = RVCT221
-ARMROOT = $(UTLILS_ROOT)/rvct22/
+ARMROOT = $(UTLILS_ROOT)/rvct22
 ARMLIB = $(ARMROOT)/lib
 ARMINCLUDE = $(ARMROOT)/include/unix
 ARMINC = $(ARMINCLUDE)
@@ -45,13 +45,16 @@ ap:
 	+cd $(AP_ROOT) && make PRODUCT-$(TARGET_PRODUCT)-eng
 
 cp:
-	ln -vsf custSSNSKOLYM.h $(MODEM_PROC)/build/cust/CUSTSSNSKOLYM.H
-	ln -vsf custssnskolym.h $(BUILD_MS)/CUSTSSNSKOLYM.H
+ifeq "$(PROJECT)" "msm7627a"
 	ln -vsf custusnskolym.h $(BUILD_MS)/CUSTUSNSKOLYM.H
 	chmod a+x qcom_cp/modem_proc/build/ms/*.pl qcom_cp/modem_proc/tools/build/*.pl -v
+else
+	ln -vsf custSSNSKOLYM.h $(MODEM_PROC)/build/cust/CUSTSSNSKOLYM.H
+	ln -vsf custssnskolym.h $(BUILD_MS)/CUSTSSNSKOLYM.H
+endif
 	+cd $(BUILD_MS) $(shell while read line; do echo " && "; echo "$${line}" | sed -e "s/^make/make BUILD_UNIX=yes/g" -e "s/\$$0/$(COMMAND_FILE)/g"; done < $(BUILD_MS)/$(COMMAND_FILE))
 
-boot.img:
+boot boot.img:
 	mkdir $(KERNEL_OUT) -pv
 	+$(KERNEL_MAKE) $(KERNEL_CONFIG)
 	+$(KERNEL_MAKE) headers_install
@@ -62,7 +65,7 @@ boot.img:
 				--cmdline "console=ttyMSM2,115200n8 androidboot.hardware=qcom" \
 				--base 0x00200000 --pagesize 4096
 
-menuconfig:
+kconfig menuconfig:
 	mkdir $(KERNEL_OUT) -pv
 	+$(KERNEL_MAKE) headers_install
 	+$(KERNEL_MAKE) menuconfig
