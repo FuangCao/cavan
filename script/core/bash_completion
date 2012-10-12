@@ -74,7 +74,7 @@ function _fastboot__completion()
 				flash | erase | format)
 					COMPREPLY=($(compgen -W "boot system cache misc userdata persist recovery" -- ${cur}))
 					;;
-				update)
+				update | boot)
 					_filedir
 					;;
 				*)

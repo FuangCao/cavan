@@ -5,9 +5,10 @@ enum
 	LOCAL_COMMAND_OPTION_VERSION,
 };
 
-static void show_usage(void)
+static void show_usage(const char *command)
 {
 	println("Usage:");
+	println("%s", command);
 }
 
 int main(int argc, char *argv[])
@@ -46,11 +47,11 @@ int main(int argc, char *argv[])
 		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
-			show_usage();
+			show_usage(argv[0]);
 			return 0;
 
 		default:
-			show_usage();
+			show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}
