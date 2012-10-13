@@ -273,7 +273,7 @@ function mount_smb()
 
 	mount_point="${1-/mnt/share}"
 	mkdir "${mount_point}" -pv || return 1
-	mount.cifs "//${SMB_SERVER_IP}/${SMB_ENTRY}" "${mount_point}" -o "user=${SMB_USER}%${SMB_PASSWORD},mode=0777" || return 1
+	mount.cifs "//${SMB_SERVER_IP}/${SMB_ENTRY}" "${mount_point}" -o "user=${SMB_USER}%${SMB_PASSWORD}" || return 1
 
 	return 0
 }
