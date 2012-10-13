@@ -37,7 +37,7 @@ KERNEL_OUT = $(AP_ROOT)/out/kernel
 KERNEL_ROOT = $(AP_ROOT)/kernel
 KERNEL_MAKE = make -C $(KERNEL_ROOT) O=$(KERNEL_OUT) ARCH=arm CROSS_COMPILE=arm-cavan-linux-gnueabi-
 
-PATH := $(ARM_COMPILER_PATH):$(OUT_HOST)/linux-x86/bin:$(PATH)
+PATH := $(PATH):$(ARM_COMPILER_PATH):$(OUT_HOST)/linux-x86/bin
 
 export ARM_COMPILER_PATH ARMTOOLS ARMROOT ARMLIB ARMINCLUDE ARMINC ARMCONF ARMDLL ARMBIN ARMHOME ARMLMD_LICENSE_FILE PATH
 
@@ -66,7 +66,9 @@ boot boot.img:
 				--base 0x00200000 --pagesize 4096
 
 kconfig menuconfig:
-	mkdir $(KERNEL_OUT) -pv
-	+$(KERNEL_MAKE) headers_install
+	[ -d "$(KERNEL_OUT)" ] || \
+	{ \
+		mkdir $(KERNEL_OUT) -pv && $(KERNEL_MAKE) headers_install; \
+	}
 	+$(KERNEL_MAKE) menuconfig
 	cp $(KERNEL_OUT)/.config $(KERNEL_ROOT)/arch/arm/configs/$(KERNEL_CONFIG) -av
