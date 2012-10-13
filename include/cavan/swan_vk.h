@@ -10,7 +10,7 @@
 #include <cavan/service.h>
 
 #define SWAN_VK_PROMPT		"SWAN-VK"
-#define DEVICE_SWAN_VK_DATA "/sys/devices/platform/swan_vk.0/data"
+#define DEVICE_SWAN_VK_DATA "/dev/swan_vk"
 #define DEVICE_SWAN_VK_VALUE "/sys/devices/platform/swan_vk.0/value"
 #define DEVICE_SWAN_TTY		"/dev/ttymxc0"
 #define SWAN_VK_STOP_VALUE	0x504F5453
