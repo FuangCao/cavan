@@ -41,7 +41,7 @@ static const struct swan_vk_descriptor swan_vk_table[] =
 	{"del", 14}
 };
 
-static void swan_vk_serial_client_stop_handle(int signum)
+static void swan_vk_client_stop_handle(int signum)
 {
 	pr_bold_pos();
 	client_active = 0;
@@ -93,7 +93,7 @@ int swan_vk_serial_client(const char *tty_path)
 		goto out_close_tty;
 	}
 
-	signal(SIGINT, swan_vk_serial_client_stop_handle);
+	signal(SIGINT, swan_vk_client_stop_handle);
 	client_active = 1;
 
 	while (client_active)
@@ -256,6 +256,36 @@ static void swan_vk_map_keys(struct input_event *ep, size_t count)
 	}
 }
 
+static int swan_vk_release_all_key(int sockfd)
+{
+	u16 code;
+	ssize_t wrlen;
+	struct input_event events[2] =
+	{
+		{
+			.type = EV_KEY,
+			.value = 0
+		},
+		{
+			.type = EV_SYN,
+			.code = SYN_REPORT,
+			.value = 0
+		}
+	};
+
+	for (code = 0; code < KEY_MAX; code++)
+	{
+		events[0].code = code;
+		wrlen = inet_send(sockfd, events, sizeof(events));
+		if (wrlen < 0)
+		{
+			return wrlen;
+		}
+	}
+
+	return 0;
+}
+
 int swan_vk_adb_client(const char *ip, u16 port)
 {
 	int count;
@@ -280,7 +310,10 @@ int swan_vk_adb_client(const char *ip, u16 port)
 		goto out_close_sockfd;
 	}
 
-	while (1)
+	signal(SIGINT, swan_vk_client_stop_handle);
+	client_active = 1;
+
+	while (client_active)
 	{
 		rdlen = poll_event_devices(event_fds, count, events, sizeof(events));
 		if (rdlen < 0)
@@ -299,11 +332,10 @@ int swan_vk_adb_client(const char *ip, u16 port)
 		}
 	}
 
-	return 0;
-
 out_close_devices:
 	close_event_devices(event_fds, count);
 out_close_sockfd:
+	swan_vk_release_all_key(sockfd);
 	inet_close_tcp_socket(sockfd);
 
 	return -1;

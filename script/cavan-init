@@ -10,6 +10,7 @@ FILE_EXPORTS="/etc/exports"
 FILE_SAMBA_CONFIG="/etc/samba/smb.conf"
 FILE_CAVAN_SERVICE="/etc/init.d/cavan"
 FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
+FILE_GRUB_LINUX="/etc/grub.d/10_linux"
 
 CAVAN_HOME="/cavan"
 
@@ -347,9 +348,21 @@ EOF
 	return 0
 }
 
+function config_grub()
+{
+	sed 	-e 's#^\(\s*linux.*\s\+root=\).*$#\1${GRUB_DEVICE} vga=0x318#g' \
+			-e 's/^\s*printf.*\${prepare_\w*_cache}/# &/g'\
+			-i ${FILE_GRUB_LINUX} || return 1
+	update-grub2 || return 1
+
+	return 0
+}
+
 function config_others()
 {
-	mkdir /temp -pv
+	mkdir /temp -pv || return 1
+
+	return 0
 }
 
 pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
@@ -364,7 +377,7 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 for func in mount_disk create_mount_points create_symlinks config_bashrc \
 	config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_stardict \
-	config_vimrc config_group config_service config_others
+	config_vimrc config_group config_service config_grub config_others
 do
 	if cavan-has_mark ${func}
 	then
@@ -380,4 +393,4 @@ do
 			exit 1
 		fi
 	fi
-done 2>/dev/null
+done
