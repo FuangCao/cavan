@@ -5,9 +5,9 @@
 #include <linux/platform_device.h>
 #include <linux/miscdevice.h>
 
-#define X_AXIS_MAX		1024
+#define X_AXIS_MAX		4096
 #define X_AXIS_MIN		0
-#define Y_AXIS_MAX		600
+#define Y_AXIS_MAX		4096
 #define Y_AXIS_MIN		0
 #define PRESSURE_MAX	255
 #define PRESSURE_MIN	0
@@ -92,9 +92,15 @@ static void swan_virtual_keypad_setup_events(struct input_dev *vk_input)
 	}
 
 	__set_bit(EV_ABS, vk_input->evbit);
+	__set_bit(BTN_TOUCH, vk_input->keybit);
 	input_set_abs_params(vk_input, ABS_X, X_AXIS_MIN, X_AXIS_MAX, 0, 0);
 	input_set_abs_params(vk_input, ABS_Y, Y_AXIS_MIN, Y_AXIS_MAX, 0, 0);
 	input_set_abs_params(vk_input, ABS_PRESSURE, PRESSURE_MIN, PRESSURE_MAX, 0, 0);
+
+	input_set_abs_params(vk_input, ABS_MT_POSITION_X, X_AXIS_MIN, X_AXIS_MAX, 0, 0);
+	input_set_abs_params(vk_input, ABS_MT_POSITION_Y, X_AXIS_MIN, X_AXIS_MAX, 0, 0);
+	input_set_abs_params(vk_input, ABS_MT_TOUCH_MAJOR, PRESSURE_MIN, PRESSURE_MAX, 0, 0);
+	input_set_abs_params(vk_input, ABS_MT_WIDTH_MAJOR, PRESSURE_MIN, PRESSURE_MAX, 0, 0);
 
 	__set_bit(EV_REL, vk_input->evbit);
 	__set_bit(REL_X, vk_input->relbit);
