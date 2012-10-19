@@ -539,7 +539,10 @@ static void swan_vk_map_keys(int fd, struct input_event *ep, size_t count)
 
 		case KEY_LEFTMETA:
 		case KEY_RIGHTMETA:
-			swan_vk_send_line_base(fd, SWAN_VK_UNLOCK_X0, SWAN_VK_UNLOCK_Y, SWAN_VK_UNLOCK_X1, SWAN_VK_UNLOCK_Y);
+			if (ep->value)
+			{
+				swan_vk_send_line_base(fd, SWAN_VK_UNLOCK_X0, SWAN_VK_UNLOCK_Y, SWAN_VK_UNLOCK_X1, SWAN_VK_UNLOCK_Y);
+			}
 			break;
 		}
 	}
