@@ -12,6 +12,8 @@
 #include <cavan/network.h>
 #include <cavan/adb.h>
 #include <cavan/swan_upgrade.h>
+#include <cavan/fb.h>
+#include <cavan/calculator.h>
 
 static int client_active;
 static const struct swan_vk_descriptor swan_vk_table[] =
@@ -424,6 +426,288 @@ int swan_vk_adb_server(struct cavan_service_description *desc, const char *data_
 	return ret;
 }
 
+static ssize_t swan_vk_send_touch_point(int fd, int x, int y)
+{
+	struct input_event events[] =
+	{
+		{
+			.type = EV_ABS,
+			.code = ABS_MT_POSITION_X,
+			.value = x
+		},
+		{
+			.type = EV_ABS,
+			.code = ABS_MT_POSITION_Y,
+			.value = y
+		},
+		{
+			.type = EV_ABS,
+			.code = ABS_MT_TOUCH_MAJOR,
+			.value = 1
+		},
+		{
+			.type = EV_ABS,
+			.code = ABS_MT_WIDTH_MAJOR,
+			.value = 1
+		},
+		{
+			.type = EV_SYN,
+			.code = SYN_MT_REPORT,
+			.value = 0
+		},
+		{
+			.type = EV_SYN,
+			.code = SYN_REPORT,
+			.value = 0
+		},
+	};
+
+	// println("[%d, %d]", x, y);
+
+	return write(fd, events, sizeof(events));
+}
+
+static ssize_t swan_vk_send_touch_up(int fd)
+{
+	struct input_event events[] =
+	{
+		{
+			.type = EV_SYN,
+			.code = SYN_MT_REPORT,
+			.value = 0
+		},
+		{
+			.type = EV_SYN,
+			.code = SYN_REPORT,
+			.value = 0
+		},
+	};
+
+	return write(fd, events, sizeof(events));
+}
+
+static int swan_vk_send_line_horizon(int fd, int x0, int y0, int x1, int y1)
+{
+	ssize_t wrlen;
+	double a, b;
+
+	if (x0 == x1)
+	{
+		if (y0 < y1)
+		{
+			while (y0 <= y1)
+			{
+				wrlen = swan_vk_send_touch_point(fd, x0, y0);
+				if (wrlen < 0)
+				{
+					return wrlen;
+				}
+
+				y0++;
+			}
+		}
+		else
+		{
+			while (y0 >= y1)
+			{
+				wrlen = swan_vk_send_touch_point(fd, x0, y0);
+				if (wrlen < 0)
+				{
+					return wrlen;
+				}
+
+				y0--;
+			}
+		}
+
+		return 0;
+	}
+
+	cavan_build_line_equation(x0, y0, x1, y1, &a, &b);
+
+	if (x0 < x1)
+	{
+		while (x0 <= x1)
+		{
+			wrlen = swan_vk_send_touch_point(fd, x0, a * x0 + b);
+			if (wrlen < 0)
+			{
+				return wrlen;
+			}
+
+			x0++;
+		}
+	}
+	else
+	{
+		while (x0 >= x1)
+		{
+			wrlen = swan_vk_send_touch_point(fd, x0, a * x0 + b);
+			if (wrlen < 0)
+			{
+				return wrlen;
+			}
+
+			x0--;
+		}
+	}
+
+	return 0;
+}
+
+static int swan_vk_send_line_vertical(int fd, int x0, int y0, int x1, int y1)
+{
+	ssize_t wrlen;
+	double a, b;
+
+	if (y0 == y1)
+	{
+		if (x0 < x1)
+		{
+			while (x0 <= x1)
+			{
+				wrlen = swan_vk_send_touch_point(fd, x0, y0);
+				if (wrlen < 0)
+				{
+					return wrlen;
+				}
+
+				x0++;
+			}
+		}
+		else
+		{
+			while (x0 >= x1)
+			{
+				wrlen = swan_vk_send_touch_point(fd, x0, y0);
+				if (wrlen < 0)
+				{
+					return wrlen;
+				}
+
+				x0--;
+			}
+		}
+
+		return 0;
+	}
+
+	cavan_build_line_equation(y0, x0, y1, x1, &a, &b);
+
+	if (y0 < y1)
+	{
+		while (y0 <= y1)
+		{
+			wrlen = swan_vk_send_touch_point(fd, a * y0 + b, y0);
+			if (wrlen < 0)
+			{
+				return wrlen;
+			}
+
+			y0++;
+		}
+	}
+	else
+	{
+		while (y0 >= y1)
+		{
+			wrlen = swan_vk_send_touch_point(fd, a * y0 + b, y0);
+			if (wrlen < 0)
+			{
+				return wrlen;
+			}
+
+			y0--;
+		}
+	}
+
+	return 0;
+}
+
+static int swan_vk_send_line_base(int fd, int x0, int y0, int x1, int y1)
+{
+	int ret;
+	int (*send_line)(int, int, int, int, int);
+
+	pr_bold_info("%s: [%d, %d] => [%d, %d]", __FUNCTION__, x0, y0, x1, y1);
+
+	if (((u32)x0) >= 100 || ((u32)x1) >= 100 || ((u32)y0) >= 100 || ((u32)y1) >= 100)
+	{
+		pr_red_info("some axis is wrong");
+		return -EINVAL;
+	}
+
+	if (ABS_VALUE(x1 - x0) > ABS_VALUE(y1 - y0))
+	{
+		send_line = swan_vk_send_line_horizon;
+	}
+	else
+	{
+		send_line = swan_vk_send_line_vertical;
+	}
+
+	x0 = SWAN_VK_AXIS_CAL(x0, X_AXIS_MAX);
+	x1 = SWAN_VK_AXIS_CAL(x1, X_AXIS_MAX);
+	y0 = SWAN_VK_AXIS_CAL(y0, Y_AXIS_MAX);
+	y1 = SWAN_VK_AXIS_CAL(y1, Y_AXIS_MAX);
+
+	ret = send_line(fd, x0, y0, x1, y1);
+	if (ret < 0)
+	{
+		pr_red_info("send_line");
+		return ret;
+	}
+
+	return swan_vk_send_touch_up(fd);
+}
+
+static int swan_vk_send_line(const char *dev_path, const char *ip, u16 port, int x0, int y0, int x1, int y1)
+{
+	int ret;
+	int fd;
+	const char *pathname;
+
+	if (dev_path[0])
+	{
+		pathname = dev_path;
+	}
+	else if (access_w(DEVICE_SWAN_VK_DATA) == 0)
+	{
+		pathname = DEVICE_SWAN_VK_DATA;
+	}
+	else
+	{
+		pathname = NULL;
+	}
+
+	if (pathname)
+	{
+		pr_bold_info("Device path = %s", pathname);
+		fd = file_open_wo(pathname);
+	}
+	else
+	{
+		pr_bold_info("Send line use adb");
+		fd = adb_create_tcp_link2(ip, port);
+	}
+
+	if (fd < 0)
+	{
+		pr_red_info("Failed to connect device");
+		return fd;
+	}
+
+	ret = swan_vk_send_line_base(fd, x0, y0, x1, y1);
+	if (ret < 0)
+	{
+		pr_red_info("swan_vk_send_line");
+	}
+
+	close(fd);
+
+	return ret;
+}
+
 // ================================================================================
 
 static void swan_vk_show_key_table(const struct swan_vk_descriptor *descs, size_t size)
@@ -502,4 +786,394 @@ label_repo_key:
 	close(fd_data);
 
 	return -1;
+}
+
+// ================================================================================
+
+int swan_vk_server_main(int argc, char *argv[])
+{
+	int c;
+	int option_index;
+	char ip[32] = "127.0.0.1";
+	u16 port = SWAN_VK_TCP_PORT;
+	int serial = 0;
+	struct cavan_service_description desc =
+	{
+		.name = "SWAN_VK",
+		.as_daemon = 0,
+		.daemon_count = 5,
+	};
+	struct option long_option[] =
+	{
+		{
+			.name = "serial",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 's',
+		},
+		{
+			.name = "usb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "adb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "daemon",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'd',
+		},
+		{
+			.name = "ip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'i',
+		},
+		{
+			.name = "port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p',
+		},
+		{
+		},
+	};
+
+	while ((c = getopt_long(argc, argv, "SsUuDdP:p:I:i:", long_option, &option_index)) != EOF)
+	{
+		switch (c)
+		{
+		case 's':
+		case 'S':
+			serial = 1;
+			break;
+
+		case 'u':
+		case 'U':
+			serial = 0;
+			break;
+
+		case 'd':
+		case 'D':
+			desc.as_daemon = 1;
+			break;
+
+		case 'i':
+		case 'I':
+			text_copy(ip, optarg);
+			break;
+
+		case 'p':
+		case 'P':
+			port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		default:
+			pr_red_info("Unknown option");
+			return -EINVAL;
+		}
+	}
+
+	if (serial)
+	{
+		return swan_vk_serial_server(argc > optind ? argv[optind] : DEVICE_SWAN_TTY, DEVICE_SWAN_VK_DATA);
+	}
+	else
+	{
+		return swan_vk_adb_server(&desc, DEVICE_SWAN_VK_DATA, port);
+	}
+}
+
+int swan_vk_client_main(int argc, char *argv[])
+{
+	int c;
+	int option_index;
+	char ip[32] = "127.0.0.1";
+	u16 port = SWAN_VK_TCP_PORT;
+	int serial = 0;
+	struct option long_option[] =
+	{
+		{
+			.name = "serial",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 's',
+		},
+		{
+			.name = "usb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "adb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "ip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'i',
+		},
+		{
+			.name = "port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p',
+		},
+		{
+		},
+	};
+
+	while ((c = getopt_long(argc, argv, "SsUuP:p:I:i:", long_option, &option_index)) != EOF)
+	{
+		switch (c)
+		{
+		case 's':
+		case 'S':
+			serial = 1;
+			break;
+
+		case 'u':
+		case 'U':
+			serial = 0;
+			break;
+
+		case 'i':
+		case 'I':
+			text_copy(ip, optarg);
+			break;
+
+		case 'p':
+		case 'P':
+			port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		default:
+			pr_red_info("Unknown option");
+			return -EINVAL;
+		}
+	}
+
+	if (serial)
+	{
+		return swan_vk_serial_client(argc > optind ? argv[optind] : NULL);
+	}
+	else
+	{
+		return swan_vk_adb_client(ip, port);
+	}
+}
+
+int swan_vk_cmdline_main(int argc, char *argv[])
+{
+	if (argc > 1)
+	{
+		return swan_vk_commadline(argv[1]);
+	}
+	else
+	{
+		return swan_vk_commadline(DEVICE_SWAN_VK_VALUE);
+	}
+}
+
+int swan_vk_line_main(int argc, char *argv[])
+{
+	int ret;
+	int c;
+	int option_index;
+	char ip[32] = "127.0.0.1";
+	u16 port = SWAN_VK_TCP_PORT;
+	char dev_path[1024];
+	int x0, y0, x1, y1;
+	struct option long_option[] =
+	{
+		{
+			.name = "serial",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 's',
+		},
+		{
+			.name = "usb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "adb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "ip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'i',
+		},
+		{
+			.name = "port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p',
+		},
+		{
+		},
+	};
+
+	dev_path[0] = 0;
+
+	while ((c = getopt_long(argc, argv, "S:s:UuP:p:I:i:", long_option, &option_index)) != EOF)
+	{
+		switch (c)
+		{
+		case 's':
+		case 'S':
+			text_copy(dev_path, optarg);
+			break;
+
+		case 'u':
+		case 'U':
+			dev_path[0] = 0;
+			break;
+
+		case 'i':
+		case 'I':
+			text_copy(ip, optarg);
+			break;
+
+		case 'p':
+		case 'P':
+			port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		default:
+			pr_red_info("Unknown option");
+			return -EINVAL;
+		}
+	}
+
+	if (optind + 4 > argc)
+	{
+		pr_red_info("Too a few argument");
+		return -EINVAL;
+	}
+
+	argv += optind;
+	x0 = text2value_unsigned(argv[0], NULL, 10);
+	y0 = text2value_unsigned(argv[1], NULL, 10);
+	x1 = text2value_unsigned(argv[2], NULL, 10);
+	y1 = text2value_unsigned(argv[3], NULL, 10);
+
+	ret = swan_vk_send_line(dev_path, ip, port, x0, y0, x1, y1);
+	if (ret < 0)
+	{
+		pr_red_info("swan_vk_send_line");
+	}
+
+	return ret;
+}
+
+int swan_vk_unlock_main(int argc, char *argv[])
+{
+	int ret;
+	int c;
+	int y;
+	int option_index;
+	char ip[32] = "127.0.0.1";
+	u16 port = SWAN_VK_TCP_PORT;
+	char dev_path[1024];
+	struct option long_option[] =
+	{
+		{
+			.name = "serial",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 's',
+		},
+		{
+			.name = "usb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "adb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "ip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'i',
+		},
+		{
+			.name = "port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p',
+		},
+		{
+		},
+	};
+
+	dev_path[0] = 0;
+
+	while ((c = getopt_long(argc, argv, "S:s:UuP:p:I:i:", long_option, &option_index)) != EOF)
+	{
+		switch (c)
+		{
+		case 's':
+		case 'S':
+			text_copy(dev_path, optarg);
+			break;
+
+		case 'u':
+		case 'U':
+			dev_path[0] = 0;
+			break;
+
+		case 'i':
+		case 'I':
+			text_copy(ip, optarg);
+			break;
+
+		case 'p':
+		case 'P':
+			port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		default:
+			pr_red_info("Unknown option");
+			return -EINVAL;
+		}
+	}
+
+	if (optind < argc)
+	{
+		y = text2value_unsigned(argv[optind], NULL, 10);
+	}
+	else
+	{
+		y = 75;
+	}
+
+	ret = swan_vk_send_line(dev_path, ip, port, 10, y, 90, y);
+	if (ret < 0)
+	{
+		pr_red_info("swan_vk_send_line");
+	}
+
+	return ret;
 }

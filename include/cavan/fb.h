@@ -65,6 +65,7 @@ int cavan_draw_polygon_standard3(struct cavan_screen_descriptor *desc, size_t co
 int cavan_fill_polygon_standard3(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation);
 int cavan_draw_polygon_standard4(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation);
 
+int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b);
 void cavan_point_sort_x(struct cavan_point *start, struct cavan_point *end);
 void show_cavan_points(const struct cavan_point *points, size_t size);
 

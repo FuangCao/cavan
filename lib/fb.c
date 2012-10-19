@@ -211,7 +211,7 @@ void cavan_fb_clear(struct cavan_screen_descriptor *desc)
 	mem_set32(desc->fb_base, desc->background, desc->fb_size);
 }
 
-static int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b)
+int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b)
 {
 	int x_diff;
 

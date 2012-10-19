@@ -32,6 +32,14 @@
 #define SWAN_VKEY_LEFT			105
 #define SWAN_VKEY_RIGHT			106
 
+#define X_AXIS_MAX				4096
+#define X_AXIS_MIN				0
+#define Y_AXIS_MAX				4096
+#define Y_AXIS_MIN				0
+
+#define SWAN_VK_AXIS_CAL(value, max) \
+	((value) * (max) / 100)
+
 struct swan_vk_descriptor
 {
 	char *name;
@@ -50,3 +58,9 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path);
 int swan_vk_adb_client(const char *ip, u16 port);
 int swan_vk_adb_server(struct cavan_service_description *desc, const char *data_path, u16 port);
 int swan_vk_commadline(const char *data_path);
+
+int swan_vk_server_main(int argc, char *argv[]);
+int swan_vk_client_main(int argc, char *argv[]);
+int swan_vk_cmdline_main(int argc, char *argv[]);
+int swan_vk_line_main(int argc, char *argv[]);
+int swan_vk_unlock_main(int argc, char *argv[]);
