@@ -37,6 +37,10 @@
 #define Y_AXIS_MAX				4096
 #define Y_AXIS_MIN				0
 
+#define SWAN_VK_UNLOCK_X0		10
+#define SWAN_VK_UNLOCK_X1		90
+#define SWAN_VK_UNLOCK_Y		75
+
 #define SWAN_VK_AXIS_CAL(value, max) \
 	((value) * (max) / 100)
 
