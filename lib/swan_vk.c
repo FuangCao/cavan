@@ -263,10 +263,15 @@ static int swan_vk_send_line_base(int fd, int x0, int y0, int x1, int y1)
 		send_line = swan_vk_send_line_vertical;
 	}
 
+#if (X_AXIS_MAX != 100)
 	x0 = SWAN_VK_AXIS_CAL(x0, X_AXIS_MAX);
 	x1 = SWAN_VK_AXIS_CAL(x1, X_AXIS_MAX);
+#endif
+
+#if (Y_AXIS_MAX != 100)
 	y0 = SWAN_VK_AXIS_CAL(y0, Y_AXIS_MAX);
 	y1 = SWAN_VK_AXIS_CAL(y1, Y_AXIS_MAX);
+#endif
 
 	ret = send_line(fd, x0, y0, x1, y1);
 	if (ret < 0)

@@ -5,9 +5,9 @@
 #include <linux/platform_device.h>
 #include <linux/miscdevice.h>
 
-#define X_AXIS_MAX		4096
+#define X_AXIS_MAX		1024
 #define X_AXIS_MIN		0
-#define Y_AXIS_MAX		4096
+#define Y_AXIS_MAX		1024
 #define Y_AXIS_MIN		0
 #define PRESSURE_MAX	255
 #define PRESSURE_MIN	0

@@ -19,9 +19,11 @@
 			 url="http://ftp.gnu.org/gnu/gperf">
 	</package>
 
+	<!--
 	<package name="gettext" version="0.18.1.1" depend="gperf" config=""
 			 url="http://ftp.gnu.org/pub/gnu/gettext">
 	</package>
+	-->
 
 	<package name="ncurses" version="5.9" depend="gettext"
 			 config="--enable-pc-files"

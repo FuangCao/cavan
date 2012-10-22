@@ -258,7 +258,7 @@ EOF
 function install_applications()
 {
 	dpkg --configure -a || return 1
-	apt-get update || return 1
+	apt-get update --fix-missing || return 1
 
 	while read line
 	do
@@ -271,7 +271,7 @@ function install_applications()
 					;;
 				*)
 					pr_title "Install application ${app}"
-					apt-get -y --install-suggests install ${app} || return 1
+					apt-get -y --install-suggests install ${app} || apt-get install -y ${app} || return 1
 					;;
 			esac
 		done

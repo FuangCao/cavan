@@ -32,9 +32,9 @@
 #define SWAN_VKEY_LEFT			105
 #define SWAN_VKEY_RIGHT			106
 
-#define X_AXIS_MAX				4096
+#define X_AXIS_MAX				1024
 #define X_AXIS_MIN				0
-#define Y_AXIS_MAX				4096
+#define Y_AXIS_MAX				1024
 #define Y_AXIS_MIN				0
 
 #define SWAN_VK_UNLOCK_X0		10
