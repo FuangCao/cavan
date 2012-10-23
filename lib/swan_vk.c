@@ -206,6 +206,7 @@ static int swan_vk_link_server(struct swan_vk_command_option *opt)
 		{
 			print_error("open file `%s'", opt->devpath);
 		}
+		break;
 
 	case SWAN_VK_LINK_TCP:
 		fd = inet_create_tcp_link2(opt->ip, opt->port);
@@ -213,8 +214,8 @@ static int swan_vk_link_server(struct swan_vk_command_option *opt)
 		{
 			pr_red_info("inet_create_tcp_link2");
 		}
+		break;
 
-	case SWAN_VK_LINK_UDP:
 	default:
 		pr_red_info("Unknown link type %d", opt->link_type);
 		return -EINVAL;
