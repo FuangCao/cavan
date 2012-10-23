@@ -2,7 +2,11 @@ ROOT_DIR = $(shell pwd -P)
 KERNEL_VERSION = $(shell uname -r)
 KERNEL_PATH ?= /lib/modules/$(KERNEL_VERSION)/build
 ARCH ?= arm
+
+ifeq "$(ARCH)" "arm"
 CROSS_COMPILE ?= arm-cavan-linux-gnueabi-
+endif
+
 Q ?= @
 
 $(info KERNEL_PATH = $(KERNEL_PATH))

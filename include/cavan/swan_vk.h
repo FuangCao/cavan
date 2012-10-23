@@ -44,6 +44,25 @@
 #define SWAN_VK_AXIS_CAL(value, max) \
 	((value) * (max) / 100)
 
+enum swan_vk_link_type
+{
+	SWAN_VK_LINK_TCP,
+	SWAN_VK_LINK_UDP,
+	SWAN_VK_LINK_SERIAL,
+	SWAN_VK_LINK_ADB,
+	SWAN_VK_LINK_LOCAL,
+	SWAN_VK_LINK_INVALID
+};
+
+struct swan_vk_command_option
+{
+	enum swan_vk_link_type link_type;
+	u16 port;
+	char ip[32];
+	char devpath[1024];
+	bool as_daemon;
+};
+
 struct swan_vk_descriptor
 {
 	char *name;
