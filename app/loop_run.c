@@ -125,6 +125,11 @@ int main(int argc, char *argv[])
 		if (ret)
 		{
 			pr_red_info("Failed");
+
+			if (WIFSIGNALED(ret))
+			{
+				break;
+			}
 		}
 		else
 		{
@@ -134,10 +139,6 @@ int main(int argc, char *argv[])
 		if (delay)
 		{
 			sleep(delay);
-		}
-		else
-		{
-			msleep(100);
 		}
 	}
 
