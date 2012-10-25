@@ -76,6 +76,8 @@ int cavan_inotify_register_watch(struct cavan_inotify_descriptor *desc, const ch
 	text_copy(p->pathname, pathname);
 	desc->watch_count++;
 
+	pr_green_info("Add watch: %s", pathname);
+
 	return 0;
 }
 

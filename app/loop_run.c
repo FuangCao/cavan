@@ -117,10 +117,10 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	pr_bold_info("command = `%s'", command);
-
 	while (1)
 	{
+		println(command);
+
 		ret = system(command);
 		if (ret)
 		{
