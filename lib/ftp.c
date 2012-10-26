@@ -4,7 +4,6 @@
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
 char ftp_root_path[1024] = "/";
-char ftp_netdev_name[32] = "eth0";
 
 static inline int ftp_check_socket(int sockfd, const struct sockaddr_in *addr)
 {
@@ -414,6 +413,8 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	char list_buff[1024 * 1024], *list_p;
 	char abs_path[1024], curr_path[1024];
 	char rnfr_path[1024];
+	char local_ip[32];
+	struct sockaddr_in local_addr;
 	const char *reply;
 	int ret;
 	char file_type;
@@ -435,6 +436,18 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 
 	reply = "231 User login successfull";
 	text_copy(curr_path, ftp_root_path);
+
+	ret = inet_getsockname(sockfd, &local_addr, &addrlen);
+	if (ret < 0)
+	{
+		pr_red_info("inet_getsockname");
+		return ret;
+	}
+
+	pr_bold_info("Local Address:");
+	inet_show_sockaddr(&local_addr);
+
+	text_replace_char2(inet_ntoa(local_addr.sin_addr), local_ip, '.', ',');
 
 	while (1)
 	{
@@ -703,7 +716,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 				continue;
 			}
 
-			sendlen = ftp_send_text(sockfd, "227 Entering Passive Mode (%s,%d,%d)\r\n", desc->ip_addr, (ret >> 8) & 0xFF, ret & 0xFF);
+			sendlen = ftp_send_text(sockfd, "227 Entering Passive Mode (%s,%d,%d)\r\n", local_ip, (ret >> 8) & 0xFF, ret & 0xFF);
 			if (sendlen < 0)
 			{
 				print_error("ftp_send_text");
@@ -857,7 +870,6 @@ int ftp_service_run(struct cavan_service_description *service_desc, u16 port)
 {
 	int ret;
 	struct cavan_ftp_descriptor ftp_desc;
-	struct sockaddr_in addr;
 
 	ftp_desc.ctrl_sockfd = inet_create_tcp_service(port);
 	if (ftp_desc.ctrl_sockfd < 0)
@@ -866,24 +878,13 @@ int ftp_service_run(struct cavan_service_description *service_desc, u16 port)
 		return ftp_desc.ctrl_sockfd;
 	}
 
-	ret = inet_get_sockaddr(ftp_desc.ctrl_sockfd, ftp_netdev_name, &addr);
-	if (ret < 0)
-	{
-		error_msg("inet_get_sockaddr");
-		goto out_close_ctrl_sockfd;
-	}
-
-	text_replace_char2(inet_ntoa(addr.sin_addr), ftp_desc.ip_addr, '.', ',');
-
-	pr_bold_info("FTP Root Path = %s, Services = %d", ftp_root_path, service_desc->daemon_count);
-	pr_bold_info("Device = %s, IP = %s, Port = %d", ftp_netdev_name, ftp_desc.ip_addr, port);
+	pr_bold_info("FTP Root Path = %s", ftp_root_path);
 
 	service_desc->data.type_void = (void *)&ftp_desc;
 	service_desc->handler = ftp_service_handle;
 	ret = cavan_service_run(service_desc);
 	cavan_service_stop(service_desc);
 
-out_close_ctrl_sockfd:
 	close(ftp_desc.ctrl_sockfd);
 
 	return ret;

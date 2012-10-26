@@ -26,7 +26,6 @@ static void show_usage(void)
 	println("--version");
 	println("--daemon");
 	println("--verbose, -v, -V");
-	println("--dev, -d, -D");
 	println("--port, -p, -P");
 	println("--root, -r, -R");
 	println("--count, -c, -C");
@@ -49,12 +48,6 @@ int main(int argc, char *argv[])
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_VERSION,
-		},
-		{
-			.name = "dev",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DEVICE,
 		},
 		{
 			.name = "root",
@@ -113,12 +106,6 @@ int main(int argc, char *argv[])
 		case LOCAL_COMMAND_OPTION_HELP:
 			show_usage();
 			return 0;
-
-		case 'd':
-		case 'D':
-		case LOCAL_COMMAND_OPTION_DEVICE:
-			text_copy(ftp_netdev_name, optarg);
-			break;
 
 		case 'r':
 		case 'R':

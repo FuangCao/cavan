@@ -22,11 +22,9 @@ struct cavan_ftp_descriptor
 {
 	int ctrl_sockfd;
 	int data_sockfd;
-	char ip_addr[32];
 };
 
 extern char ftp_root_path[];
-extern char ftp_netdev_name[];
 
 char *ftp_file_stat_tostring(const char *filepath, char *text);
 char *ftp_list_directory(const char *dirpath, char *text);

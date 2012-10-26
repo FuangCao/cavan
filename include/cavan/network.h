@@ -218,6 +218,7 @@ int inet_tcp_receive_file1(int sockfd, int fd);
 int inet_tcp_receive_file2(int sockfd, const char *filename);
 
 int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_addr);
+int inet_get_devname(int sockfd, int index, char *devname);
 
 char *cavan_get_server_ip(char *buff);
 u16 cavan_get_server_port(u16 default_port);
@@ -293,3 +294,8 @@ static inline void inet_close_tcp_socket(int sockfd)
 	close(sockfd);
 }
 
+static inline int inet_getsockname(int sockfd, struct sockaddr_in *addr, socklen_t *addrlen)
+{
+	*addrlen = sizeof(struct sockaddr_in);
+	return getsockname(sockfd, (struct sockaddr *)addr, addrlen);
+}
