@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 	char command[1024];
 	int ret;
 
-	delay = 0;
+	delay = 1;
 	wait_for_devices = false;
 
 	while ((c = getopt_long(argc, argv, "vVhHswW:S:d:D:", long_option, &option_index)) != EOF)
