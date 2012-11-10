@@ -1,0 +1,14 @@
+#!/bin/bash
+
+function gen_module_makefile()
+{
+cat > Makefile << EOF
+KERNLE_PATH = ${KERNLE_PATH}
+KERNEL_CONFIG = ${KERNEL_CONFIG}
+ARCH ?= arm
+
+ifeq "$(ARCH)" "arm"
+CROSS_COMPILE ?= arm-cavan-linux-gnueabi-
+endif
+EOF
+}
