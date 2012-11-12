@@ -3,9 +3,6 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_CFLAGS =
-
-#	system/bluetooth/bluez-clean-headers
-
 LOCAL_C_INCLUDES = \
 	external/dbus \
 	external/bluetooth/bluez/src \
@@ -13,8 +10,6 @@ LOCAL_C_INCLUDES = \
 	system/bluetooth/bluedroid/include
 
 LOCAL_STATIC_LIBRARIES =
-LOCAL_SHARED_LIBRARIES =
-
 LOCAL_SHARED_LIBRARIES = \
 	libbluedroid libdbus libbluetooth
 
