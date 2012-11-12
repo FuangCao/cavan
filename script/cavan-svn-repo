@@ -21,7 +21,10 @@ def pr_green_info(message):
 
 def pr_debug_info(message):
 	if SVN_REPO_DEBUG:
-		print "\033[1m%s\033[0m" % message
+		print message
+
+def pr_bold_info(message):
+	print "\033[1m%s\033[0m" % message
 
 class CavanProgressBar:
 	def __init__(self, total):
@@ -160,6 +163,7 @@ class SvnRreoManager:
 			return 0
 		flist = self.svn_repo_popen("svn list " + os.path.join(self.url, pathname))
 		if depth < 1 or self.svn_repo_has_file(flist):
+			pr_bold_info("Add directory " + pathname)
 			tag_project = self.xml_dom.createElement("project")
 			self.tag_manifest.appendChild(tag_project)
 			tag_project.setAttribute("path", pathname[0:-1])
@@ -185,6 +189,7 @@ class SvnRreoManager:
 			if fn.endswith("/"):
 				self.svn_repo_gen_xml_base(fn, MANIFEST_MAX_DEPTH)
 			else:
+				pr_bold_info("Add file " + fn)
 				tag_file = xml_dom.createElement("file")
 				tag_manifest.appendChild(tag_file)
 				tag_file.setAttribute("path", fn)
