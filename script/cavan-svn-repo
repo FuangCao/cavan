@@ -3,6 +3,7 @@
 """exec" python -E $0 $@
 #"""
 
+SVN_REPO_DEBUG = False
 MANIFEST_MAX_DEPTH = 2
 LOCAL_SCRIPT_NAME = "svn-repo.py"
 PROGRESS_BAR_LENGTH_HALF = 30
@@ -18,8 +19,9 @@ def pr_red_info(message):
 def pr_green_info(message):
 	print "\033[32m%s\033[0m" % message
 
-def pr_bold_info(message):
-	print "\033[1m%s\033[0m" % message
+def pr_debug_info(message):
+	if SVN_REPO_DEBUG:
+		print "\033[1m%s\033[0m" % message
 
 class CavanProgressBar:
 	def __init__(self, total):
@@ -51,22 +53,53 @@ class CavanProgressBar:
 			else:
 				right += "="
 
-		print "[%s %d%% %s] [%d/%d]" % (left, percent, right, self.current, self.total)
+		text = "[%s %d%% %s] [%d/%d]" % (left, percent, right, self.current, self.total)
+		if SVN_REPO_DEBUG:
+			print text
+		else:
+			sys.stdout.write(text + "\r")
+			sys.stdout.flush()
 
 	def add(self, count = 1):
 		self.current += count
 		self.update()
 
+	def finish(self):
+		self.current = self.total
+		self.update()
+		print
+
 class SvnRreoManager:
 	def __init__(self):
 		reload(sys)
 		sys.setdefaultencoding("utf-8")
+
+		self.project_root = os.path.abspath(".")
+
+		date = time.localtime(time.time())
+		self.datename = "%04d-%02d-%02d_%02d:%02d:%02d" % (date[0], date[1], date[2], date[3], date[4], date[5])
+
+		self.logpath = os.path.join(self.project_root, ".svn/svn_repo_log")
+		self.svn_repo_mkdir(self.logpath)
+		self.logfile = os.path.join(self.logpath, "%s.log" % self.datename)
+
+		self.diffpath = os.path.join(self.project_root, ".svn/svn_repo_diff")
+		self.svn_repo_mkdir(self.diffpath)
+
 		self.manifest_xml = ".svn/manifest.xml"
 		if os.path.isfile(self.manifest_xml):
 			self.svn_repo_load_manifest(self.manifest_xml)
 		else:
 			self.url = None
 		self.pattern = re.compile('.*/+\.[^/]+/*$')
+
+	def svn_repo_mkdir(self, pathname):
+		if os.path.isdir(pathname):
+			return 0
+		if self.svn_repo_mkdir(os.path.dirname(pathname)) < 0:
+			return -1
+		os.mkdir(pathname)
+		return 0
 
 	def svn_repo_load_manifest(self, manifest_xml):
 		dom = parse(manifest_xml)
@@ -92,19 +125,21 @@ class SvnRreoManager:
 		return 0
 
 	def svn_repo_get_url(self):
-		lines = self.svn_repo_popen("svn info | grep ^URL:.*");
+		lines = self.svn_repo_popen("svn info | grep ^URL:.*")
 		if lines == None or len(lines) < 1:
 			return None
 		return lines[0][4:]
 
 	def svn_repo_system(self, command):
-		pr_bold_info(command)
+		pr_debug_info(command)
+		if not SVN_REPO_DEBUG:
+			command = command + ">> " + self.logfile
 		if os.system(command) == 0:
 			return 0
 		return -1
 
 	def svn_repo_popen(self, command):
-		pr_bold_info("[popen] " + command)
+		pr_debug_info("[popen] " + command)
 		fp = os.popen(command)
 		if fp == None:
 			return []
@@ -131,7 +166,7 @@ class SvnRreoManager:
 			tag_project.setAttribute("name", pathname[0:-1])
 			return 0
 		for dn in flist:
-			self.svn_repo_gen_xml_base(os.path.join(pathname, dn), depth - 1);
+			self.svn_repo_gen_xml_base(os.path.join(pathname, dn), depth - 1)
 		return 0
 
 	def svn_repo_gen_xml(self):
@@ -182,37 +217,35 @@ class SvnRreoManager:
 
 		return self.svn_repo_gen_xml()
 
+	def svn_repo_remove_empty_file(self, pathname):
+		st = os.stat(pathname)
+		if st.st_size == 0:
+			pr_debug_info("Remove empty file `%s'" % pathname)
+			os.remove(pathname)
+		return 0
+
 	def svn_repo_remove_empty_files(self, dirname, suffix):
 		for fn in os.listdir(dirname):
-			if not fn.endswith(suffix):
-				continue
-			fn = os.path.join(dirname, fn)
-			st = os.stat(fn)
-			if st.st_size == 0:
-				print "Remove empty file `%s'" % fn;
-				os.remove(fn)
-			return 0
+			if fn.endswith(suffix):
+				self.svn_repo_remove_empty_file(os.path.join(dirname, fn))
+		return 0
 
 	def svn_repo_update(self):
 		if self.file_list == None or self.project_list == None:
 			pr_red_info("Please init first")
 			return -1
 
-		date = time.localtime(time.time())
-		diffpath = ".git/%04d%02d%02d%02d%02d%02d.diff" % (date[0], date[1], date[2], date[3], date[4], date[5])
-
-		bar = CavanProgressBar(len(self.file_list))
 		for fn in self.file_list:
 			if self.svn_repo_system("svn update --force " + fn) < 0:
 				return -1
-			bar.add()
 
-		bar.init(len(self.project_list))
+		bar = CavanProgressBar(len(self.project_list))
 		for fn in self.project_list:
 			if os.path.isdir(fn):
+				diffpath = "%s/%s_%s.diff" % (self.diffpath, fn.replace("/", "_"), self.datename)
 				if self.svn_repo_system("cd %s && git diff > %s && git reset --hard" % (fn, diffpath)) < 0:
 					return -1
-				self.svn_repo_remove_empty_files(os.path.join(fn, ".git"), ".diff")
+				self.svn_repo_remove_empty_file(diffpath)
 				if self.svn_repo_system("cd %s && git svn rebase" % fn) < 0:
 					return -1
 			else:
@@ -227,6 +260,9 @@ class SvnRreoManager:
 					return -1
 				self.svn_repo_system("cd %s && git checkout -b %s remotes/git-svn" % (fn, self.fetch))
 			bar.add()
+		bar.finish()
+
+		self.svn_repo_remove_empty_files(self.diffpath, ".diff")
 		return 0
 
 	def svn_repo_command(self, argv):
@@ -245,6 +281,7 @@ class SvnRreoManager:
 			if self.svn_repo_system(command_last) != 0:
 				return -1
 			bar.add()
+		bar.finish()
 		return 0
 
 if __name__ == "__main__":

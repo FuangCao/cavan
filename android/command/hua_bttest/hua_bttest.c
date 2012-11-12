@@ -68,6 +68,8 @@ static ssize_t huamobile_hci_inquiry(int hci_dev, int dev_id, struct hci_inquiry
 	req->length = 10;
 	req->num_rsp = count;
 
+	pr_bold_info("Scanning ...");
+
 	ret = ioctl(hci_dev, HCIINQUIRY, req);
 	if (ret < 0)
 	{
@@ -350,8 +352,6 @@ int main(int argc, char *argv[])
 		pr_error_info("alloca");
 		goto out_hci_close_dev;
 	}
-
-	pr_bold_info("Scanning ...");
 
 	num_rsp = huamobile_hci_inquiry(hci_dev, dev_id, req, HUAMOBILE_MAX_RSP_NUM);
 	if (num_rsp < 0)
