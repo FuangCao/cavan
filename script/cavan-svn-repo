@@ -83,7 +83,7 @@ class SvnRreoManager:
 		self.svn_repo_mkdir(self.logpath)
 		self.logfile = os.path.join(self.logpath, "%s.log" % self.datename)
 
-		self.diffpath = os.path.join(self.project_root, ".svn/svn_repo_diff")
+		self.diffpath = os.path.join(self.project_root, ".svn/svn_repo_diff/" + self.datename)
 		self.svn_repo_mkdir(self.diffpath)
 
 		self.manifest_xml = ".svn/manifest.xml"
@@ -242,7 +242,7 @@ class SvnRreoManager:
 		bar = CavanProgressBar(len(self.project_list))
 		for fn in self.project_list:
 			if os.path.isdir(fn):
-				diffpath = "%s/%s_%s.diff" % (self.diffpath, fn.replace("/", "_"), self.datename)
+				diffpath = "%s/%s.diff" % (self.diffpath, fn.replace("/", "_"))
 				if self.svn_repo_system("cd %s && git diff > %s && git reset --hard" % (fn, diffpath)) < 0:
 					return -1
 				self.svn_repo_remove_empty_file(diffpath)
