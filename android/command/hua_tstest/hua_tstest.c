@@ -7,12 +7,19 @@ int huamobile_vk_matcher(struct huamobile_input_device *dev, void *data)
 
 int huamobile_vk_point_handler(struct huamobile_input_device *dev, struct huamobile_touch_point *point, void *data)
 {
-	pr_bold_info("p%d = [%d, %d]", point->id, point->x, point->y);
+	if (point == NULL)
+	{
+		pr_bold_info("Touch up");
+	}
+	else
+	{
+		pr_bold_info("p%d = [%d, %d]", point->id, point->x, point->y);
+	}
 
 	return 0;
 }
 
-int huamobile_vk_key_handler(struct huamobile_input_device *dev, int code, int value)
+int huamobile_vk_key_handler(struct huamobile_input_device *dev, int code, int value, void *data)
 {
 	pr_bold_info("code = %d, value = %d", code, value);
 

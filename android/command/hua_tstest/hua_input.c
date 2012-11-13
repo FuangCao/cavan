@@ -600,10 +600,15 @@ int huamobile_ts_event_handler(struct huamobile_input_device *dev, struct input_
 		if (event->code == BTN_TOUCH)
 		{
 			ts->pressed = event->value;
+			if (ts->pressed == 0 && ts->released == 0)
+			{
+				ts->point_handler(dev, NULL, ts->private_data);
+				ts->released = 1;
+			}
 		}
 		else
 		{
-			ts->key_handler(dev, event->code, event->value);
+			ts->key_handler(dev, event->code, event->value, ts->private_data);
 		}
 		break;
 
@@ -625,7 +630,7 @@ int huamobile_ts_event_handler(struct huamobile_input_device *dev, struct input_
 
 		case SYN_REPORT:
 			p = ts->points + ts->point_count;
-			if (ts->point_count == 0 && ts->pressed && p->x >= 0 && p->y >= 0)
+			if (ts->point_count == 0 && ts->pressed > 0 && p->x >= 0 && p->y >= 0)
 			{
 				p->pressure = 1;
 				ts->point_count++;
@@ -646,13 +651,14 @@ int huamobile_ts_event_handler(struct huamobile_input_device *dev, struct input_
 
 						if (key->value != value)
 						{
-							ts->key_handler(dev, key->code, value);
+							ts->key_handler(dev, key->code, value, ts->private_data);
 							key->value = value;
 						}
 					}
 					else if (p->pressure > 0)
 					{
 						ts->point_handler(dev, p, ts->private_data);
+						ts->released = 0;
 					}
 
 					p->id = p->x = p->y = p->pressure = -1;
@@ -668,9 +674,15 @@ int huamobile_ts_event_handler(struct huamobile_input_device *dev, struct input_
 				{
 					if (key->value != 0)
 					{
-						ts->key_handler(dev, key->code, 0);
+						ts->key_handler(dev, key->code, 0, ts->private_data);
 						key->value = 0;
 					}
+				}
+
+				if (ts->released == 0)
+				{
+					ts->point_handler(dev, NULL, ts->private_data);
+					ts->released = 1;
 				}
 			}
 			break;
@@ -694,6 +706,7 @@ int huamobile_ts_start(struct huamobile_ts_device *ts, void *data)
 
 	ts->private_data = data;
 	ts->pressed = 0;
+	ts->released = 1;
 	ts->point_count = 0;
 
 	for (p = ts->points, p_end = p + NELEM(ts->points); p < p_end; p++)

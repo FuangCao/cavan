@@ -102,13 +102,14 @@ struct huamobile_touch_point
 struct huamobile_ts_device
 {
 	int pressed;
+	int released;
 	int point_count;
 	struct huamobile_touch_point points[10];
 	void *private_data;
 	struct huamobile_input_thread thread;
 
 	int (*matcher)(struct huamobile_input_device *dev, void *data);
-	int (*key_handler)(struct huamobile_input_device *dev, int code, int value);
+	int (*key_handler)(struct huamobile_input_device *dev, int code, int value, void *data);
 	int (*point_handler)(struct huamobile_input_device *dev, struct huamobile_touch_point *point, void *data);
 };
 
