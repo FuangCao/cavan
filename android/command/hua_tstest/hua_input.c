@@ -1,4 +1,5 @@
 #include "hua_input.h"
+#include <stdarg.h>
 
 int huamobile_input_msleep(useconds_t ms)
 {
@@ -116,7 +117,7 @@ int huamobile_input_parse_virtual_keymap(const char *devname, struct huamobile_v
 	return key - keys;
 }
 
-ssize_t huamobile_input_open_devices(struct huamobile_input_device *devs, size_t count, int (*match)(struct huamobile_input_device *dev, void *data), void *data)
+ssize_t huamobile_input_open_devices(struct huamobile_input_device *devs, size_t count, int (*matcher)(struct huamobile_input_device *dev, void *data), void *data)
 {
 	int fd;
 	int ret;
@@ -161,9 +162,9 @@ ssize_t huamobile_input_open_devices(struct huamobile_input_device *devs, size_t
 			continue;
 		}
 
-		if (match && match(pdev, data) < 0)
+		if (matcher && matcher(pdev, data) < 0)
 		{
-			pr_red_info("Match device %s, name = %s", pathname, pdev->name);
+			pr_red_info("Can't match device %s, name = %s", pathname, pdev->name);
 			close(fd);
 			continue;
 		}
@@ -354,7 +355,7 @@ int huamobile_input_thread_start(struct huamobile_input_thread *thread, void *da
 
 	thread->private_data = data;
 
-	count = huamobile_input_open_devices(thread->input_devs, NELEM(thread->input_devs), thread->match, thread->private_data);
+	count = huamobile_input_open_devices(thread->input_devs, NELEM(thread->input_devs), thread->matcher, thread->private_data);
 	if (count < 0)
 	{
 		pr_red_info("huamobile_input_open_devices");
@@ -400,6 +401,170 @@ int huamobile_input_thread_stop(struct huamobile_input_thread *thread)
 	return 0;
 }
 
+int huamobile_touch_screen_matcher_multi(struct huamobile_input_device *dev, void *data)
+{
+	int ret;
+    uint8_t abs_bitmask[sizeof_bit_array(ABS_MAX + 1)];
+
+	pr_pos_info();
+
+    memset(abs_bitmask, 0, sizeof(abs_bitmask));
+
+	ret = ioctl(dev->fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
+	if (ret < 0)
+	{
+		pr_red_info("ioctl EVIOCGBIT EV_ABS");
+		return ret;
+	}
+
+	if (test_bit(ABS_MT_POSITION_X, abs_bitmask) && test_bit(ABS_MT_POSITION_Y, abs_bitmask))
+	{
+		return 0;
+	}
+
+	return -EINVAL;
+}
+
+int huamobile_touch_screen_matcher_single(struct huamobile_input_device *dev, void *data)
+{
+	int ret;
+    uint8_t abs_bitmask[sizeof_bit_array(ABS_MAX + 1)];
+    uint8_t key_bitmask[sizeof_bit_array(KEY_MAX + 1)];
+
+	pr_pos_info();
+
+    memset(abs_bitmask, 0, sizeof(abs_bitmask));
+	ret = ioctl(dev->fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl EVIOCGBIT EV_ABS");
+		return ret;
+	}
+
+	if (test_bit(ABS_X, abs_bitmask) == 0 || test_bit(ABS_Y, abs_bitmask) == 0 || test_bit(ABS_Z, abs_bitmask))
+	{
+		return 0;
+	}
+
+    memset(key_bitmask, 0, sizeof(key_bitmask));
+	ret = ioctl(dev->fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl EVIOCGBIT EV_KEY");
+		return ret;
+	}
+
+	if (test_bit(BTN_TOUCH, key_bitmask))
+	{
+		return 0;
+	}
+
+	return -EINVAL;
+}
+
+int huamobile_touch_screen_matcher(struct huamobile_input_device *dev, void *data)
+{
+	int ret;
+    uint8_t abs_bitmask[sizeof_bit_array(ABS_MAX + 1)];
+    uint8_t key_bitmask[sizeof_bit_array(KEY_MAX + 1)];
+
+	pr_pos_info();
+
+    memset(abs_bitmask, 0, sizeof(abs_bitmask));
+	ret = ioctl(dev->fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl EVIOCGBIT EV_ABS");
+		return ret;
+	}
+
+	if (test_bit(ABS_MT_POSITION_X, abs_bitmask) && test_bit(ABS_MT_POSITION_Y, abs_bitmask))
+	{
+		pr_green_info("Deivce %s mutil touch screen", dev->name);
+		return 0;
+	}
+
+    memset(key_bitmask, 0, sizeof(key_bitmask));
+	ret = ioctl(dev->fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl EVIOCGBIT EV_KEY");
+		return ret;
+	}
+
+	if (test_bit(BTN_TOUCH, key_bitmask) && test_bit(ABS_X, abs_bitmask) && test_bit(ABS_Y, abs_bitmask) && test_bit(ABS_Z, abs_bitmask) == 0)
+	{
+		pr_green_info("Deivce %s single touch screen", dev->name);
+		return 0;
+	}
+
+	return -EINVAL;
+}
+
+int huamobile_gsensor_matcher(struct huamobile_input_device *dev, void *data)
+{
+	int ret;
+    uint8_t abs_bitmask[sizeof_bit_array(ABS_MAX + 1)];
+
+	pr_pos_info();
+
+    memset(abs_bitmask, 0, sizeof(abs_bitmask));
+	ret = ioctl(dev->fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl EVIOCGBIT EV_ABS");
+		return ret;
+	}
+
+	if (test_bit(ABS_X, abs_bitmask) && test_bit(ABS_Y, abs_bitmask) && test_bit(ABS_Y, abs_bitmask))
+	{
+		return 0;
+	}
+
+	return -EINVAL;
+}
+
+int huamobile_input_name_matcher(const char *devname, ...)
+{
+	va_list ap;
+	const char *name;
+
+	va_start(ap, devname);
+
+	while (1)
+	{
+		name = va_arg(ap, const char *);
+		if (name == NULL)
+		{
+			break;
+		}
+
+		if (strcmp(devname, name) == 0)
+		{
+			break;
+		}
+	}
+
+	va_end(ap);
+
+	return name ? 0 : -EINVAL;
+}
+
+struct huamobile_virtual_key *huamobile_input_find_virtual_key(struct huamobile_virtual_key *key, struct huamobile_virtual_key *key_end, int x, int y)
+{
+	while (key < key_end)
+	{
+		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right)
+		{
+			return key;
+		}
+
+		key++;
+	}
+
+	return NULL;
+}
+
 int huamobile_ts_event_handler(struct huamobile_input_device *dev, struct input_event *event, void *data)
 {
 	struct huamobile_ts_device *ts = data;
@@ -436,38 +601,78 @@ int huamobile_ts_event_handler(struct huamobile_input_device *dev, struct input_
 		{
 			ts->pressed = event->value;
 		}
+		else
+		{
+			ts->key_handler(dev, event->code, event->value);
+		}
 		break;
 
 	case EV_SYN:
 		switch (event->code)
 		{
 		case SYN_MT_REPORT:
-			if (ts->points[ts->point_count].id < 0)
+			p = ts->points + ts->point_count;
+			if (p->id < 0)
 			{
-				ts->points[ts->point_count].id = ts->point_count;
+				p->id = ts->point_count;
 			}
 
-			ts->point_count++;
+			if (p->x >= 0 && p->y >= 0 && p->pressure >= 0)
+			{
+				ts->point_count++;
+			}
 			break;
 
 		case SYN_REPORT:
-			if (ts->point_count == 0 && ts->pressed)
+			p = ts->points + ts->point_count;
+			if (ts->point_count == 0 && ts->pressed && p->x >= 0 && p->y >= 0)
 			{
-				ts->points[ts->point_count].pressure = 1;
+				p->pressure = 1;
 				ts->point_count++;
 			}
 
-			for (p = ts->points, p_end = p + ts->point_count; p < p_end; p++)
+			if (ts->point_count)
 			{
-				if (p->pressure > 0 && p->x > 0 && p->y > 0)
+				struct huamobile_virtual_key *key, *key_end;
+
+				key_end = dev->vkeys + dev->vkey_count;
+
+				for (p = ts->points, p_end = p + ts->point_count; p < p_end; p++)
 				{
-					ts->point_handler(p, ts->private_data);
+					key = huamobile_input_find_virtual_key(dev->vkeys, key_end, p->x, p->y);
+					if (key)
+					{
+						int value = p->pressure > 0;
+
+						if (key->value != value)
+						{
+							ts->key_handler(dev, key->code, value);
+							key->value = value;
+						}
+					}
+					else if (p->pressure > 0)
+					{
+						ts->point_handler(dev, p, ts->private_data);
+					}
+
+					p->id = p->x = p->y = p->pressure = -1;
 				}
 
-				p->id = p->x = p->y = p->pressure = -1;
+				ts->point_count = 0;
 			}
+			else
+			{
+				struct huamobile_virtual_key *key, *key_end;
 
-			ts->point_count = 0;
+				for (key = dev->vkeys, key_end = key + dev->vkey_count; key < key_end; key++)
+				{
+					if (key->value != 0)
+					{
+						ts->key_handler(dev, key->code, 0);
+						key->value = 0;
+					}
+				}
+			}
 			break;
 		}
 		break;
@@ -481,9 +686,9 @@ int huamobile_ts_start(struct huamobile_ts_device *ts, void *data)
 	struct huamobile_touch_point *p, *p_end;
 	struct huamobile_input_thread *thread;
 
-	if (ts->point_handler == NULL)
+	if (ts->point_handler == NULL || ts->key_handler == NULL)
 	{
-		pr_red_info("ts->point_handler == NULL");
+		pr_red_info("ts->point_handler == NULL || ts->key_handler == NULL");
 		return -EINVAL;
 	}
 
@@ -498,7 +703,7 @@ int huamobile_ts_start(struct huamobile_ts_device *ts, void *data)
 
 	thread = &ts->thread;
 	thread->event_handler = huamobile_ts_event_handler;
-	thread->match = ts->match;
+	thread->matcher = ts->matcher;
 
 	return huamobile_input_thread_start(thread, ts);
 }

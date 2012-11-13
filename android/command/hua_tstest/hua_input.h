@@ -65,6 +65,7 @@ struct huamobile_virtual_key
 	int top;
 	int bottom;
 	int code;
+	int value;
 };
 
 struct huamobile_input_device
@@ -86,7 +87,7 @@ struct huamobile_input_thread
 	pthread_mutex_t lock;
 	void *private_data;
 
-	int (*match)(struct huamobile_input_device *dev, void *data);
+	int (*matcher)(struct huamobile_input_device *dev, void *data);
 	int (*event_handler)(struct huamobile_input_device *dev, struct input_event *event, void *data);
 };
 
@@ -106,8 +107,9 @@ struct huamobile_ts_device
 	void *private_data;
 	struct huamobile_input_thread thread;
 
-	int (*match)(struct huamobile_input_device *dev, void *data);
-	int (*point_handler)(struct huamobile_touch_point *point, void *data);
+	int (*matcher)(struct huamobile_input_device *dev, void *data);
+	int (*key_handler)(struct huamobile_input_device *dev, int code, int value);
+	int (*point_handler)(struct huamobile_input_device *dev, struct huamobile_touch_point *point, void *data);
 };
 
 int huamobile_input_msleep(useconds_t ms);
@@ -116,7 +118,7 @@ int huamobile_input_text_lhcmp(const char *text1, const char *text2);
 char *huamobile_input_text_copy(char *dest, const char *src);
 
 int huamobile_input_parse_virtual_keymap(const char *devname, struct huamobile_virtual_key *keys, size_t count);
-ssize_t huamobile_input_open_devices(struct huamobile_input_device *devs, size_t count, int (*match)(struct huamobile_input_device *dev, void *data), void *data);
+ssize_t huamobile_input_open_devices(struct huamobile_input_device *devs, size_t count, int (*matcher)(struct huamobile_input_device *dev, void *data), void *data);
 void huamobile_input_close_devices(struct huamobile_input_device *devs, size_t count);
 void *huamobile_input_thread_handler(void *data);
 
@@ -126,6 +128,12 @@ int huamobile_input_thread_start(struct huamobile_input_thread *thread, void *da
 int huamobile_input_thread_stop(struct huamobile_input_thread *thread);
 
 int huamobile_ts_start(struct huamobile_ts_device *ts, void *data);
+
+int huamobile_touch_screen_matcher_multi(struct huamobile_input_device *dev, void *data);
+int huamobile_touch_screen_matcher_single(struct huamobile_input_device *dev, void *data);
+int huamobile_touch_screen_matcher(struct huamobile_input_device *dev, void *data);
+int huamobile_gsensor_matcher(struct huamobile_input_device *dev, void *data);
+int huamobile_input_name_matcher(const char *devname, ...);
 
 static inline int huamobile_input_send_command(struct huamobile_input_thread *thread, enum huamobile_input_command cmd)
 {
