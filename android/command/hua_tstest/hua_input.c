@@ -604,6 +604,8 @@ static int huamobile_ts_init(struct huamobile_input_device *dev, void *data)
     uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
 	struct huamobile_ts_device *ts = data;
 
+	pr_bold_info("lcd_width = %d, lcd_height = %d", ts->lcd_width, ts->lcd_height);
+
     memset(abs_bitmask, 0, sizeof(abs_bitmask));
 	ret = ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
 	if (ret < 0)
@@ -632,6 +634,8 @@ static int huamobile_ts_init(struct huamobile_input_device *dev, void *data)
 	}
 	else
 	{
+		pr_bold_info("x-min = %d, x-max = %d", min, max);
+
 		diff = max - min;
 		ts->xscale = ((double)ts->lcd_width) / diff;
 		ts->xoffset = ((double)ts->lcd_width) * min / diff;
@@ -657,6 +661,7 @@ static int huamobile_ts_init(struct huamobile_input_device *dev, void *data)
 	}
 	else
 	{
+		pr_bold_info("y-min = %d, y-max = %d", min, max);
 		diff = max - min;
 		ts->yscale = ((double)ts->lcd_height) / diff;
 		ts->yoffset = ((double)ts->lcd_height) * min / diff;
