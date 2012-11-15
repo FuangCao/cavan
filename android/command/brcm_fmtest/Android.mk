@@ -2,17 +2,26 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_CFLAGS = -DPLATFORM_ANDROID  -DBRCM_BT_USE_BTL_IF -DBT_USE_BTL_IF
+BRCM_ANDROID_PATH = 3rdparty/bluetooth/BRCM4330_BT/special/android
+BRCM_ADPT_PATH = $(BRCM_ANDROID_PATH)/hardware/broadcom/bt/adaptation
+
+LOCAL_CFLAGS =
 LOCAL_C_INCLUDES = \
-			$(BRCM_BT_INC_ROOT_PATH)/adaptation/btl-if/client \
-			$(BRCM_BT_INC_ROOT_PATH)/adaptation/btl-if/include
+			$(BRCM_ADPT_PATH)/btl-if/client \
+			$(BRCM_ADPT_PATH)/btl-if/include \
+			$(BRCM_ADPT_PATH)/dtun/include \
+			$(BRCM_ADPT_PATH)/include
 
 LOCAL_STATIC_LIBRARIES =
-LOCAL_SHARED_LIBRARIES =
+LOCAL_SHARED_LIBRARIES = \
+	libfmservice \
+	libbluedroid
 
-LOCAL_SRC_FILES = brcm_fmtest.c
-LOCAL_MODULE := brcm_fmtest
-LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := \
+	brcm_fmtest.c
+
+LOCAL_MODULE = brcm_fmtest
+LOCAL_MODULE_TAGS = optional
 
 include $(BUILD_EXECUTABLE)
 
