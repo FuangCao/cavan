@@ -256,7 +256,7 @@ static void *huamobile_input_thread_handler(void *data)
 
 	while (1)
 	{
-		ret = poll(fds, NELEM(fds), 0);
+		ret = poll(fds, NELEM(fds), -1);
 		if (ret < 0)
 		{
 			pr_error_info("poll");
