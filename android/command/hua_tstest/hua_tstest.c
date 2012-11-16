@@ -47,11 +47,15 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
+#if 1
 	ret = huamobile_input_service_join(&service.input_service);
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_input_thread_join");
 	}
+#else
+	huamobile_ssleep(10);
+#endif
 
 	huamobile_ts_service_stop(&service);
 

@@ -20,6 +20,34 @@
 
 #include <huamobile.h>
 
+static struct huamobile_virtual_key *huamobile_input_free_virtual_keymap(struct huamobile_virtual_key *head)
+{
+	struct huamobile_virtual_key *key_next;
+
+	while (head)
+	{
+		key_next = head->next;
+		free(head);
+		head = key_next;
+	}
+
+	return head;
+}
+
+static struct huamobile_keylayout_node *huamobile_input_free_keylayout(struct huamobile_keylayout_node *head)
+{
+	struct huamobile_keylayout_node *node_next;
+
+	while (head)
+	{
+		node_next = head->next;
+		free(head);
+		head = node_next;
+	}
+
+	return head;
+}
+
 static struct huamobile_virtual_key *huamobile_input_find_virtual_key(struct huamobile_virtual_key *head, int x, int y)
 {
 	struct huamobile_virtual_key *key;
@@ -209,14 +237,14 @@ out_file_unmap:
 static void huamobile_input_close_devices(struct huamobile_input_service *service)
 {
 	struct huamobile_input_device *pdev, *pdev_next;
-	struct huamobile_keylayout_node *kl, *kl_next;
-	struct huamobile_virtual_key *vk, *vk_next;
 
 	pr_pos_info();
 
 	pthread_mutex_lock(&service->lock);
 
-	for (pdev = service->dev_head; pdev; pdev = pdev->next)
+	pdev = service->dev_head;
+
+	while (pdev)
 	{
 		if (service->remove)
 		{
@@ -225,21 +253,8 @@ static void huamobile_input_close_devices(struct huamobile_input_service *servic
 
 		close(pdev->fd);
 
-		kl = pdev->kl_head;
-		while (kl)
-		{
-			kl_next = kl->next;
-			free(kl);
-			kl = kl_next;;
-		}
-
-		vk = pdev->vk_head;
-		while (vk)
-		{
-			vk_next = vk->next;
-			free(vk);
-			vk = vk_next;
-		}
+		huamobile_input_free_virtual_keymap(pdev->vk_head);
+		huamobile_input_free_keylayout(pdev->kl_head);
 
 		pdev_next = pdev->next;
 		free(pdev);
@@ -730,6 +745,7 @@ static int huamobile_ts_probe(struct huamobile_input_device *dev, void *data)
 	struct huamobile_ts_device *ts;
 	struct huamobile_touch_point *p, *p_end;
 
+	pr_pos_info();
 	pr_bold_info("lcd_width = %d, lcd_height = %d", service->lcd_width, service->lcd_height);
 
     memset(abs_bitmask, 0, sizeof(abs_bitmask));
@@ -836,6 +852,8 @@ static int huamobile_ts_probe(struct huamobile_input_device *dev, void *data)
 
 static void huamobile_ts_remove(struct huamobile_input_device *dev, void *data)
 {
+	pr_bold_info("Remove input device %s", dev->name);
+
 	free(dev->private_data);
 }
 
