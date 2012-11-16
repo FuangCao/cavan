@@ -1,10 +1,10 @@
 /*
- * File:         huamobile.h
+ * File:		huamobile.h
  * Based on:
- * Author:       Fuang Cao <cavan.cfa@gmail.com>
+ * Author:		Fuang Cao <cavan.cfa@gmail.com>
  *
- * Created:	  2012-11-14
- * Description:  HUAMOBILE LIBRARY
+ * Created:		2012-11-14
+ * Description:	HUAMOBILE LIBRARY
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,16 +23,17 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <errno.h>
 #include <pthread.h>
+#include <string.h>
 #include <sys/types.h>
 #include <linux/limits.h>
 
 #include <huamobile/text.h>
 #include <huamobile/file.h>
 #include <huamobile/input.h>
-
-#include <utils/Log.h>
 
 #define BYTE_IS_LF(b) \
 	((b) == '\r' || (b) == '\n')
@@ -67,7 +68,7 @@
 
 #define pr_error_info(fmt, args ...) \
 		if (errno) { \
-			pr_red_info("%s[%d](" fmt "): %s", __FUNCTION__, __LINE__, ##args, strerror(errno)); \
+			pr_red_info("%s[%d] (" fmt "): %s", __FUNCTION__, __LINE__, ##args, strerror(errno)); \
 		} else { \
 			pr_red_info("%s[%d]:" fmt, __FUNCTION__, __LINE__, ##args); \
 		}

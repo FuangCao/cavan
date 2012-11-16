@@ -1,10 +1,10 @@
 /*
- * File:         huamobile.c
+ * File:		huamobile.c
  * Based on:
- * Author:       Fuang Cao <cavan.cfa@gmail.com>
+ * Author:		Fuang Cao <cavan.cfa@gmail.com>
  *
- * Created:	  2012-11-14
- * Description:  HUAMOBILE LIBRARY
+ * Created:		2012-11-14
+ * Description:	HUAMOBILE LIBRARY
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

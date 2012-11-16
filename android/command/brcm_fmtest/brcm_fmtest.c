@@ -49,20 +49,20 @@ static struct brcm_fm_device fm_dev;
 
 static void brcm_fm_audio_enable(int enable)
 {
-    if(enable)
+	if(enable)
 	{
-        system("alsa_amixer cset -c sprdphone name=\"BypassFM Playback Switch\" 1");
-        system("alsa_amixer cset -c sprdphone name=\"Headset Playback Switch\" 1");
-        system("alsa_amixer sset 'LineinFM' on");
-        system("alsa_amixer -c sprdphone cset name='Power Codec' 1");
-    }
+		system("alsa_amixer cset -c sprdphone name=\"BypassFM Playback Switch\" 1");
+		system("alsa_amixer cset -c sprdphone name=\"Headset Playback Switch\" 1");
+		system("alsa_amixer sset 'LineinFM' on");
+		system("alsa_amixer -c sprdphone cset name='Power Codec' 1");
+	}
 	else
 	{
-        system("alsa_amixer -c sprdphone cset name='Power Codec' 4");
-        system("alsa_amixer cset -c sprdphone name=\"BypassFM Playback Switch\" 0");
-        system("alsa_amixer cset -c sprdphone name=\"Speaker Playback Switch\" 0");
-        system("alsa_amixer sset 'LineinFM' off");
-    }
+		system("alsa_amixer -c sprdphone cset name='Power Codec' 4");
+		system("alsa_amixer cset -c sprdphone name=\"BypassFM Playback Switch\" 0");
+		system("alsa_amixer cset -c sprdphone name=\"Speaker Playback Switch\" 0");
+		system("alsa_amixer sset 'LineinFM' off");
+	}
 }
 
 static char *text_copy(char *dest, const char *src)
@@ -295,102 +295,102 @@ static void brcm_fm_data_handler(tDATA_HANDLE handle, char *p, int len)
 
 static void brcm_fm_ctrl_handler(tCTRL_HANDLE handle, tBTLIF_CTRL_MSG_ID id, tBTL_PARAMS *params)
 {
-    switch (id)
+	switch (id)
 	{
-    case BTLIF_FM_ENABLE:
+	case BTLIF_FM_ENABLE:
 		pr_bold_info("BTLIF_FM_ENABLE: status = %d", params->fm_I_param.i1);
-        break;
+		break;
 
-    case BTLIF_FM_DISABLE:
+	case BTLIF_FM_DISABLE:
 		pr_bold_info("BTLIF_FM_DISABLE: status = %d", params->fm_I_param.i1);
-        break;
+		break;
 
-    case BTLIF_FM_TUNE:
+	case BTLIF_FM_TUNE:
 		pr_bold_info("BTLIF_FM_TUNE: status = %d, rssi = %d, freq = %d, snr = %d ", \
 			params->fm_IIII_param.i1, params->fm_IIII_param.i2, params->fm_IIII_param.i3, params->fm_IIII_param.i4);
-        break;
+		break;
 
-    case BTLIF_FM_MUTE:
+	case BTLIF_FM_MUTE:
 		pr_bold_info("BTLIF_FM_MUTE: status = %d, is_mute = %d", \
 			params->fm_IZ_param.i1, params->fm_IZ_param.z1);
-        break;
+		break;
 
-    case BTLIF_FM_SEARCH:
+	case BTLIF_FM_SEARCH:
 		pr_bold_info("BTLIF_FM_SEARCH: rssi = %d, freq = %d, snr = %d", \
 			params->fm_III_param.i1, params->fm_III_param.i2, params->fm_III_param.i3);
-        break;
+		break;
 
-    case BTLIF_FM_SEARCH_CMPL_EVT:
+	case BTLIF_FM_SEARCH_CMPL_EVT:
 		pr_bold_info("BTLIF_FM_SEARCH_CMPL_EVT: status = %d, rssi = %d, freq = %d, snr = %d ", \
 			params->fm_IIII_param.i1, params->fm_IIII_param.i2, params->fm_IIII_param.i3, params->fm_IIII_param.i4);
-        break;
+		break;
 
-    case BTLIF_FM_SEARCH_ABORT:
+	case BTLIF_FM_SEARCH_ABORT:
 		pr_bold_info("BTLIF_FM_SEARCH_ABORT: status = %d, rssi = %d, freq = %d", \
 			params->fm_III_param.i1, params->fm_III_param.i2, params->fm_III_param.i3);
-        break;
+		break;
 
-    case BTLIF_FM_SET_RDS_MODE:
+	case BTLIF_FM_SET_RDS_MODE:
 		pr_bold_info("BTLIF_FM_SET_RDS_MODE: status = %d, rds_on = %d, af_on = %d", \
 			params->fm_IZZ_param.i1, params->fm_IZZ_param.z1, params->fm_IZZ_param.z2);
-        break;
+		break;
 
-    case BTLIF_FM_SET_RDS_RBDS:
+	case BTLIF_FM_SET_RDS_RBDS:
 		pr_bold_info("BTLIF_FM_SET_RDS_RBDS: status = %d, type = %d", \
 			params->fm_II_param.i1, params->fm_II_param.i2);
-        break;
+		break;
 
-    case BTLIF_FM_RDS_UPDATE:
+	case BTLIF_FM_RDS_UPDATE:
 		pr_bold_info("BTLIF_FM_RDS_UPDATE: status = %d, data = %d, index = %d, text = %s", \
 			params->fm_IIIS_param.i1, params->fm_IIIS_param.i2, params->fm_IIIS_param.i3, params->fm_IIIS_param.s1);
-        break;
+		break;
 
-    case BTLIF_FM_AUDIO_MODE:
+	case BTLIF_FM_AUDIO_MODE:
 		pr_bold_info("BTLIF_FM_AUDIO_MODE: status = %d, audio_mode = %d", \
 			params->fm_II_param.i1, params->fm_II_param.i2);
-        break;
+		break;
 
-    case BTLIF_FM_AUDIO_PATH:
+	case BTLIF_FM_AUDIO_PATH:
 		pr_bold_info("BTLIF_FM_AUDIO_PATH: status = %d, audio_path = %d", \
 			params->fm_II_param.i1, params->fm_II_param.i2);
-        break;
+		break;
 
-    case BTLIF_FM_SCAN_STEP:
+	case BTLIF_FM_SCAN_STEP:
 		pr_bold_info("BTLIF_FM_SCAN_STEP: scan_step = %d", params->fm_I_param.i1);
-        break;
+		break;
 
-    case BTLIF_FM_SET_REGION:
+	case BTLIF_FM_SET_REGION:
 		pr_bold_info("BTLIF_FM_SET_REGION: status = %d, region = %d", \
 			params->fm_II_param.i1, params->fm_II_param.i2);
-        break;
+		break;
 
-    case BTLIF_FM_CONFIGURE_DEEMPHASIS:
+	case BTLIF_FM_CONFIGURE_DEEMPHASIS:
 		pr_bold_info("BTLIF_FM_CONFIGURE_DEEMPHASIS: status = %d, time_const = %d", \
 			params->fm_II_param.i1, params->fm_II_param.i2);
-        break;
+		break;
 
-    case BTLIF_FM_ESTIMATE_NFL:
+	case BTLIF_FM_ESTIMATE_NFL:
 		pr_bold_info("BTLIF_FM_ESTIMATE_NFL: nfloor = %d", params->fm_I_param.i1);
-        break;
+		break;
 
-    case BTLIF_FM_GET_AUDIO_QUALITY:
+	case BTLIF_FM_GET_AUDIO_QUALITY:
 		pr_bold_info("BTLIF_FM_GET_AUDIO_QUALITY: status = %d, rssi = %d, audio_mode = %d, snr = %d", \
 			params->fm_IIII_param.i1, params->fm_IIII_param.i2, params->fm_IIII_param.i3, params->fm_IIII_param.i4);
-        break;
+		break;
 
-    case BTLIF_FM_AF_JMP_EVT:
+	case BTLIF_FM_AF_JMP_EVT:
 		pr_bold_info("BTLIF_FM_AF_JMP_EVT: status = %d, freq = %d, rssi = %d", \
 			params->fm_III_param.i1, params->fm_III_param.i2, params->fm_III_param.i3);
 		break;
 
-    case BTLIF_FM_SET_VOLUME_EVT:
+	case BTLIF_FM_SET_VOLUME_EVT:
 		pr_bold_info("BTLIF_FM_SET_VOLUME_EVT: status = %d, volume = %d", \
 			params->fm_II_param.i1, params->fm_II_param.i2);
-        break;
+		break;
 
 	default:
 		pr_bold_info("Message ID = %d", id);
-    }
+	}
 
 	write(fm_dev.pipefd[1], &id, sizeof(id));
 	write(fm_dev.pipefd[1], params, sizeof(*params));

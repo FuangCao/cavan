@@ -1,10 +1,10 @@
 /*
- * File:         input.c
+ * File:		input.c
  * Based on:
- * Author:       Fuang Cao <cavan.cfa@gmail.com>
+ * Author:		Fuang Cao <cavan.cfa@gmail.com>
  *
- * Created:	  2012-11-14
- * Description:  HUAMOBILE LIBRARY
+ * Created:		2012-11-14
+ * Description:	HUAMOBILE LIBRARY
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,14 +50,14 @@ static struct huamobile_keylayout_node *huamobile_input_free_keylayout(struct hu
 
 static struct huamobile_virtual_key *huamobile_input_find_virtual_key(struct huamobile_virtual_key *head, int x, int y)
 {
-	struct huamobile_virtual_key *key;
-
-	for (key = head; key; key = key->next)
+	while (head)
 	{
-		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right)
+		if (y >= head->top && y <= head->bottom && x >= head->left && x <= head->right)
 		{
-			return key;
+			return head;
 		}
+
+		head = head->next;
 	}
 
 	return NULL;
@@ -65,14 +65,14 @@ static struct huamobile_virtual_key *huamobile_input_find_virtual_key(struct hua
 
 const char *huamobile_input_find_key_name(struct huamobile_keylayout_node *head, int code)
 {
-	struct huamobile_keylayout_node *node;
-
-	for (node = head; node; node = node->next)
+	while (head)
 	{
-		if (node->code == code)
+		if (head->code == code)
 		{
-			return node->name;
+			return head->name;
 		}
+
+		head = head->next;
 	}
 
 	return NULL;
@@ -164,6 +164,7 @@ static int huamobile_input_parse_keylayout(struct huamobile_input_device *dev)
 	int fd;
 	int ret;
 	char pathname[1024];
+	uint8_t key_bitmask[sizeof_bit_array(KEY_CNT)];
 	const char *p, *line_end, *file_end;
 	struct huamobile_keylayout_node *node;
 	void *map;
@@ -173,6 +174,14 @@ static int huamobile_input_parse_keylayout(struct huamobile_input_device *dev)
 	if (ret < 0)
 	{
 		pr_red_info("huamobile_input_get_keylayout_pathname");
+		return ret;
+	}
+
+	memset(key_bitmask, 0, sizeof(key_bitmask));
+	ret = ioctl(dev->fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl EVIOCGBIT EV_KEY");
 		return ret;
 	}
 
@@ -188,7 +197,7 @@ static int huamobile_input_parse_keylayout(struct huamobile_input_device *dev)
 	dev->kl_head = NULL;
 	p = map;
 	file_end = p + size;
-	
+
 	node = malloc(sizeof(*node));
 	if (node == NULL)
 	{
@@ -206,7 +215,7 @@ static int huamobile_input_parse_keylayout(struct huamobile_input_device *dev)
 		}
 
 		ret = sscanf(p, "key %d %s", &node->code, node->name);
-		if (ret != 2)
+		if (ret != 2 || test_bit(node->code, key_bitmask) == 0)
 		{
 			goto label_goto_next_line;
 		}
@@ -220,7 +229,7 @@ static int huamobile_input_parse_keylayout(struct huamobile_input_device *dev)
 		if (node == NULL)
 		{
 			pr_error_info("malloc");
-			break;
+			goto label_goto_next_line;
 		}
 
 label_goto_next_line:
@@ -571,11 +580,11 @@ int huamobile_input_service_stop(struct huamobile_input_service *service)
 int huamobile_touch_screen_matcher_multi(struct huamobile_ts_device *ts, struct huamobile_input_device *dev, void *data)
 {
 	int ret;
-    uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
+	uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
 
 	pr_pos_info();
 
-    memset(abs_bitmask, 0, sizeof(abs_bitmask));
+	memset(abs_bitmask, 0, sizeof(abs_bitmask));
 
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
 	if (ret < 0)
@@ -595,12 +604,12 @@ int huamobile_touch_screen_matcher_multi(struct huamobile_ts_device *ts, struct 
 int huamobile_touch_screen_matcher_single(struct huamobile_ts_device *ts, struct huamobile_input_device *dev, void *data)
 {
 	int ret;
-    uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
-    uint8_t key_bitmask[sizeof_bit_array(KEY_CNT)];
+	uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
+	uint8_t key_bitmask[sizeof_bit_array(KEY_CNT)];
 
 	pr_pos_info();
 
-    memset(abs_bitmask, 0, sizeof(abs_bitmask));
+	memset(abs_bitmask, 0, sizeof(abs_bitmask));
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
 	if (ret < 0)
 	{
@@ -613,7 +622,7 @@ int huamobile_touch_screen_matcher_single(struct huamobile_ts_device *ts, struct
 		return 0;
 	}
 
-    memset(key_bitmask, 0, sizeof(key_bitmask));
+	memset(key_bitmask, 0, sizeof(key_bitmask));
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
 	if (ret < 0)
 	{
@@ -632,12 +641,12 @@ int huamobile_touch_screen_matcher_single(struct huamobile_ts_device *ts, struct
 int huamobile_touch_screen_matcher(struct huamobile_ts_device *ts, struct huamobile_input_device *dev, void *data)
 {
 	int ret;
-    uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
-    uint8_t key_bitmask[sizeof_bit_array(KEY_CNT)];
+	uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
+	uint8_t key_bitmask[sizeof_bit_array(KEY_CNT)];
 
 	pr_pos_info();
 
-    memset(abs_bitmask, 0, sizeof(abs_bitmask));
+	memset(abs_bitmask, 0, sizeof(abs_bitmask));
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
 	if (ret < 0)
 	{
@@ -651,7 +660,7 @@ int huamobile_touch_screen_matcher(struct huamobile_ts_device *ts, struct huamob
 		return 0;
 	}
 
-    memset(key_bitmask, 0, sizeof(key_bitmask));
+	memset(key_bitmask, 0, sizeof(key_bitmask));
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
 	if (ret < 0)
 	{
@@ -671,11 +680,11 @@ int huamobile_touch_screen_matcher(struct huamobile_ts_device *ts, struct huamob
 int huamobile_gsensor_matcher(struct huamobile_input_device *dev, void *data)
 {
 	int ret;
-    uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
+	uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
 
 	pr_pos_info();
 
-    memset(abs_bitmask, 0, sizeof(abs_bitmask));
+	memset(abs_bitmask, 0, sizeof(abs_bitmask));
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
 	if (ret < 0)
 	{
@@ -740,7 +749,7 @@ static int huamobile_ts_probe(struct huamobile_input_device *dev, void *data)
 	int ret;
 	int fd = dev->fd;
 	int min, max, diff;
-    uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
+	uint8_t abs_bitmask[sizeof_bit_array(ABS_CNT)];
 	struct huamobile_ts_service *service = data;
 	struct huamobile_ts_device *ts;
 	struct huamobile_touch_point *p, *p_end;
@@ -748,7 +757,7 @@ static int huamobile_ts_probe(struct huamobile_input_device *dev, void *data)
 	pr_pos_info();
 	pr_bold_info("lcd_width = %d, lcd_height = %d", service->lcd_width, service->lcd_height);
 
-    memset(abs_bitmask, 0, sizeof(abs_bitmask));
+	memset(abs_bitmask, 0, sizeof(abs_bitmask));
 	ret = ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
 	if (ret < 0)
 	{
@@ -1022,7 +1031,6 @@ static int huamobile_ts_point_handler_dummy(struct huamobile_ts_device *dev, str
 
 int huamobile_ts_service_start(struct huamobile_ts_service *service, void *data)
 {
-	struct huamobile_touch_point *p, *p_end;
 	struct huamobile_input_service *input_service;
 
 	if (service->point_handler == NULL && service->key_handler == NULL)

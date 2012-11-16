@@ -1,10 +1,10 @@
 /*
- * File:         file.h
+ * File:		file.h
  * Based on:
- * Author:       Fuang Cao <cavan.cfa@gmail.com>
+ * Author:		Fuang Cao <cavan.cfa@gmail.com>
  *
- * Created:	  2012-11-14
- * Description:  HUAMOBILE LIBRARY
+ * Created:		2012-11-14
+ * Description:	HUAMOBILE LIBRARY
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <poll.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <huamobile.h>
 
 int huamobile_file_mmap(const char *pathname, void **addr, size_t *size, int flags);
