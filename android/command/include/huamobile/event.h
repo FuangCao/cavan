@@ -37,8 +37,13 @@
 #define KEY_CNT				(KEY_MAX + 1)
 #endif
 
+#ifndef REL_CNT
+#define REL_CNT				(REL_MAX + 1)
+#endif
+
 #define ABS_BITMASK_SIZE	sizeof_bit_array(ABS_CNT)
 #define KEY_BITMASK_SIZE	sizeof_bit_array(KEY_CNT)
+#define REL_BITMASK_SIZE	sizeof_bit_array(REL_CNT)
 
 enum huamobile_event_command
 {
@@ -56,6 +61,7 @@ enum huamobile_event_device_type
 {
 	HUA_EVENT_DEVICE_UNKNOWN,
 	HUA_EVENT_DEVICE_KEYPAD,
+	HUA_EVENT_DEVICE_MOUSE,
 	HUA_EVENT_DEVICE_MULTI_TOUCH,
 	HUA_EVENT_DEVICE_SINGLE_TOUCH,
 	HUA_EVENT_DEVICE_GSENSOR
@@ -154,4 +160,9 @@ static inline int huamobile_event_get_abs_bitmask(int fd, void *bitmask, size_t 
 static inline int huamobile_event_get_key_bitmask(int fd, void *bitmask, size_t size)
 {
 	return huamobile_event_get_bitmask(fd, EV_KEY, bitmask, size);
+}
+
+static inline int huamobile_event_get_rel_bitmask(int fd, void *bitmask, size_t size)
+{
+	return huamobile_event_get_bitmask(fd, EV_REL, bitmask, size);
 }

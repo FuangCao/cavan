@@ -24,6 +24,7 @@
 #include <huamobile/keypad.h>
 #include <huamobile/gsensor.h>
 #include <huamobile/touchscreen.h>
+#include <huamobile/mouse.h>
 #include <huamobile.h>
 
 struct huamobile_input_service
@@ -32,15 +33,19 @@ struct huamobile_input_service
 
 	void *private_data;
 	int lcd_width, lcd_height;
+	double mouse_speed;
 	pthread_mutex_t lock;
 
 	bool (*matcher)(int fd, const char *name, void *data);
 	int (*probe)(struct huamobile_event_device *dev, void *data);
 	void (*remove)(struct huamobile_event_device *dev, void *data);
 	void (*key_handler)(struct huamobile_event_device *dev, const char *name, int code, int value, void *data);
+	void (*wheel_handler)(struct huamobile_event_device *dev, int value, void *data);
 	void (*touch_handler)(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data);
+	void (*right_touch_handler)(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data);
 	void (*move_handler)(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data);
 	void (*release_handler)(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data);
+	void (*right_release_handler)(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data);
 	void (*gsensor_handler)(struct huamobile_event_device *dev, struct huamobile_gsensor_event *event, void *data);
 };
 

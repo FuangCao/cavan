@@ -23,8 +23,9 @@
 static enum huamobile_event_device_type huamobile_input_get_device_type(int fd, const char *name)
 {
 	int ret;
-	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 	uint8_t key_bitmask[KEY_BITMASK_SIZE];
+	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
+	uint8_t rel_bitmask[REL_BITMASK_SIZE];
 
 	pr_pos_info();
 
@@ -37,7 +38,7 @@ static enum huamobile_event_device_type huamobile_input_get_device_type(int fd, 
 
 	if (huamobile_multi_touch_device_match(abs_bitmask))
 	{
-		pr_green_info("Deivce %s is mutil touch screen", name);
+		pr_green_info("Deivce `%s' is mutil touch screen", name);
 		return HUA_EVENT_DEVICE_MULTI_TOUCH;
 	}
 
@@ -50,23 +51,36 @@ static enum huamobile_event_device_type huamobile_input_get_device_type(int fd, 
 
 	if (huamobile_single_touch_device_match(abs_bitmask, key_bitmask))
 	{
-		pr_green_info("Deivce %s is single touch screen", name);
+		pr_green_info("Deivce `%s' is single touch screen", name);
 		return HUA_EVENT_DEVICE_SINGLE_TOUCH;
 	}
 
 	if (huamobile_gsensor_device_match(abs_bitmask))
 	{
-		pr_green_info("Device %s is g-sensor", name);
+		pr_green_info("Device `%s' is g-sensor", name);
 		return HUA_EVENT_DEVICE_GSENSOR;
+	}
+
+	ret = huamobile_event_get_rel_bitmask(fd, rel_bitmask, sizeof(rel_bitmask));
+	if (ret < 0)
+	{
+		pr_error_info("huamobile_event_get_rel_bitmask");
+		return HUA_EVENT_DEVICE_UNKNOWN;
+	}
+
+	if (huamobile_mouse_device_match(key_bitmask, rel_bitmask))
+	{
+		pr_green_info("Device `%s' is mouse", name);
+		return HUA_EVENT_DEVICE_MOUSE;
 	}
 
 	if (huamobile_keypad_device_match(key_bitmask, sizeof(key_bitmask)))
 	{
-		pr_green_info("Device %s is keypad", name);
+		pr_green_info("Device `%s' is keypad", name);
 		return HUA_EVENT_DEVICE_KEYPAD;
 	}
 
-	pr_red_info("Device %s type unknown", name);
+	pr_red_info("Device `%s' type unknown", name);
 
 	return HUA_EVENT_DEVICE_UNKNOWN;
 }
@@ -102,6 +116,9 @@ static struct huamobile_event_device *huamobile_input_create_device(enum huamobi
 	case HUA_EVENT_DEVICE_SINGLE_TOUCH:
 		return huamobile_single_touch_device_create(data);
 
+	case HUA_EVENT_DEVICE_MOUSE:
+		return huamobile_mouse_create(data);
+
 	case HUA_EVENT_DEVICE_UNKNOWN:
 		break;
 
@@ -135,6 +152,21 @@ static void huamobile_input_release_handler_dummy(struct huamobile_event_device 
 static void huamobile_input_gsensor_handler_dummy(struct huamobile_event_device *dev, struct huamobile_gsensor_event *event, void *data)
 {
 	pr_bold_info("g-sensor: [%d, %d, %d]", event->x, event->y, event->z);
+}
+
+static void huamobile_input_right_touch_handler_dummy(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data)
+{
+	pr_bold_info("right_touch[%d] = [%d, %d]", point->id, point->x, point->y);
+}
+
+static void huamobile_input_right_release_handler_dummy(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data)
+{
+	pr_bold_info("right_release[%d] = [%d, %d]", point->id, point->x, point->y);
+}
+
+static void huamobile_input_wheel_handler_dummy(struct huamobile_event_device *dev, int value, void *data)
+{
+	pr_bold_info("wheel: value = %d", value);
 }
 
 int huamobile_input_service_start(struct huamobile_input_service *service, void *data)
@@ -172,6 +204,26 @@ int huamobile_input_service_start(struct huamobile_input_service *service, void 
 	if (service->gsensor_handler == NULL)
 	{
 		service->gsensor_handler = huamobile_input_gsensor_handler_dummy;
+	}
+
+	if (service->wheel_handler == NULL)
+	{
+		service->wheel_handler = huamobile_input_wheel_handler_dummy;
+	}
+
+	if (service->right_touch_handler == NULL)
+	{
+		service->right_touch_handler = huamobile_input_right_touch_handler_dummy;
+	}
+
+	if (service->right_release_handler == NULL)
+	{
+		service->right_release_handler = huamobile_input_right_release_handler_dummy;
+	}
+
+	if (service->mouse_speed <= 0)
+	{
+		service->mouse_speed = 1;
 	}
 
 	service->private_data = data;

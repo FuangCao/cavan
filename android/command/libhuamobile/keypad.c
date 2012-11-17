@@ -65,6 +65,7 @@ static void huamobile_keypad_event_handler(struct huamobile_event_device *dev, s
 		service->key_handler(dev, keyname, event->code, event->value, service->private_data);
 		break;
 
+	case EV_MSC:
 	case EV_SYN:
 		break;
 

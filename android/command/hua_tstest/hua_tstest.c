@@ -3,7 +3,11 @@
 
 static bool huamobile_vk_matcher(int fd, const char *name, void *data)
 {
+#if 0
 	return huamobile_event_name_matcher(name, "FT5216", "CY8C242", "sprd-keypad", "headset-keyboard", "accelerometer", NULL);
+#else
+	return true;
+#endif
 }
 
 int main(int argc, char *argv[])
@@ -11,8 +15,9 @@ int main(int argc, char *argv[])
 	int ret;
 	struct huamobile_input_service service =
 	{
-		.lcd_width = -1,
-		.lcd_height = -1,
+		.lcd_width = 1024,
+		.lcd_height = 768,
+		.mouse_speed = 1.5,
 		.matcher = huamobile_vk_matcher,
 		.probe = NULL,
 		.remove = NULL,
