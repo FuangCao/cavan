@@ -31,9 +31,13 @@
 #include <sys/types.h>
 #include <linux/limits.h>
 
-#include <huamobile/text.h>
-#include <huamobile/file.h>
-#include <huamobile/input.h>
+#ifdef CONFIG_BUILD_FOR_ANDROID
+#include <utils/Log.h>
+#endif
+
+#ifndef huamobile_printf
+#define huamobile_printf	printf
+#endif
 
 #define BYTE_IS_LF(b) \
 	((b) == '\r' || (b) == '\n')
@@ -48,8 +52,6 @@
 #define NELEM(a) \
 	ARRAY_SIZE(a)
 #endif
-
-#define huamobile_printf	printf
 
 #define pr_std_info(fmt, args ...) \
 		huamobile_printf(fmt "\n", ##args)
@@ -72,6 +74,12 @@
 		} else { \
 			pr_red_info("%s[%d]:" fmt, __FUNCTION__, __LINE__, ##args); \
 		}
+
+typedef enum
+{
+	false = 0,
+	true = 1
+} bool;
 
 int huamobile_msleep(useconds_t ms);
 int huamobile_ssleep(useconds_t ss);

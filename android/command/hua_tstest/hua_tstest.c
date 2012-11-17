@@ -1,46 +1,29 @@
 #include <huamobile.h>
+#include <huamobile/input.h>
 
-static int huamobile_vk_matcher(struct huamobile_input_device *dev, void *data)
+static bool huamobile_vk_matcher(int fd, const char *name, void *data)
 {
-	return huamobile_input_name_matcher(dev->name, "FT5216", "CY8C242", "sprd-keypad", "headset-keyboard", NULL);
-}
-
-static int huamobile_vk_point_handler(struct huamobile_ts_device *ts, struct huamobile_touch_point *point, void *data)
-{
-	if (point)
-	{
-		pr_bold_info("p%d = [%d, %d]", point->id, point->x, point->y);
-	}
-	else
-	{
-		pr_bold_info("release");
-	}
-
-	return 0;
-}
-
-static int huamobile_vk_key_handler(struct huamobile_ts_device *ts, const char *name, int code, int value, void *data)
-{
-	pr_bold_info("name = %s, code = %d, value = %d", name, code, value);
-
-	return 0;
+	return huamobile_event_name_matcher(name, "FT5216", "CY8C242", "sprd-keypad", "headset-keyboard", "accelerometer", NULL);
 }
 
 int main(int argc, char *argv[])
 {
 	int ret;
-	struct huamobile_ts_service service =
+	struct huamobile_input_service service =
 	{
 		.lcd_width = -1,
 		.lcd_height = -1,
 		.matcher = huamobile_vk_matcher,
 		.probe = NULL,
 		.remove = NULL,
-		.point_handler = huamobile_vk_point_handler,
-		.key_handler = huamobile_vk_key_handler
+		.gsensor_handler = NULL,
+		.touch_handler = NULL,
+		.move_handler = NULL,
+		.release_handler = NULL,
+		.key_handler = NULL
 	};
 
-	ret = huamobile_ts_service_start(&service, NULL);
+	ret = huamobile_input_service_start(&service, NULL);
 	if (ret < 0)
 	{
 		pr_red_info("huamobile_ts_start");
@@ -48,7 +31,7 @@ int main(int argc, char *argv[])
 	}
 
 #if 1
-	ret = huamobile_input_service_join(&service.input_service);
+	ret = huamobile_event_service_join(&service.event_service);
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_input_thread_join");
@@ -57,7 +40,7 @@ int main(int argc, char *argv[])
 	huamobile_ssleep(10);
 #endif
 
-	huamobile_ts_service_stop(&service);
+	huamobile_input_service_stop(&service);
 
 	return ret;
 }
