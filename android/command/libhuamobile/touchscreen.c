@@ -155,9 +155,9 @@ static void huamobile_multi_touch_event_handler(struct huamobile_event_device *d
 						if (key->value != value)
 						{
 							service->key_handler(dev, key->name, key->code, value, service->private_data);
+							key->value = value;
 						}
 
-						key->value = value;
 						ts->point_count--;
 					}
 					else if (p->pressure > 0)
@@ -187,12 +187,11 @@ static void huamobile_multi_touch_event_handler(struct huamobile_event_device *d
 
 				for (key = dev->vk_head; key; key = key->next)
 				{
-					if (key->value != 0)
+					if (key->value)
 					{
 						service->key_handler(dev, key->name, key->code, 0, service->private_data);
+						key->value = 0;
 					}
-
-					key->value = 0;
 				}
 			}
 
