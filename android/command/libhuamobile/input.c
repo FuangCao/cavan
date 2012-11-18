@@ -19,13 +19,49 @@
  */
 
 #include <huamobile/input.h>
+#include <huamobile/mouse.h>
+#include <huamobile/keypad.h>
+#include <huamobile/gsensor.h>
+#include <huamobile/touchscreen.h>
 
-static enum huamobile_event_device_type huamobile_input_get_device_type(int fd, const char *name)
+static struct huamobile_input_device *huamobile_input_device_create(uint8_t *key_bitmask, uint8_t *abs_bitmask, uint8_t *rel_bitmask)
+{
+	if (huamobile_gsensor_device_match(abs_bitmask))
+	{
+		return huamobile_gsensor_create();
+	}
+
+	if (huamobile_multi_touch_device_match(abs_bitmask))
+	{
+		return huamobile_multi_touch_device_create();
+	}
+
+	if (huamobile_single_touch_device_match(abs_bitmask, key_bitmask))
+	{
+		return huamobile_single_touch_device_create();
+	}
+
+	if (huamobile_mouse_device_match(key_bitmask, rel_bitmask))
+	{
+		return huamobile_mouse_create();
+	}
+
+	if (huamobile_keypad_device_match(key_bitmask, sizeof(key_bitmask)))
+	{
+		return huamobile_keypad_create();
+	}
+
+	return NULL;
+}
+
+static int huamobile_input_device_probe(struct huamobile_event_device *event_dev, void *data)
 {
 	int ret;
+	int fd = event_dev->fd;
 	uint8_t key_bitmask[KEY_BITMASK_SIZE];
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 	uint8_t rel_bitmask[REL_BITMASK_SIZE];
+	struct huamobile_input_device *dev, *head = NULL, *tail;
 
 	pr_pos_info();
 
@@ -33,138 +69,147 @@ static enum huamobile_event_device_type huamobile_input_get_device_type(int fd, 
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_abs_bitmask");
-		return HUA_EVENT_DEVICE_UNKNOWN;
-	}
-
-	if (huamobile_multi_touch_device_match(abs_bitmask))
-	{
-		pr_green_info("Deivce `%s' is mutil touch screen", name);
-		return HUA_EVENT_DEVICE_MULTI_TOUCH;
+		return ret;
 	}
 
 	ret = huamobile_event_get_key_bitmask(fd, key_bitmask, sizeof(key_bitmask));
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_key_bitmask");
-		return HUA_EVENT_DEVICE_UNKNOWN;
-	}
-
-	if (huamobile_single_touch_device_match(abs_bitmask, key_bitmask))
-	{
-		pr_green_info("Deivce `%s' is single touch screen", name);
-		return HUA_EVENT_DEVICE_SINGLE_TOUCH;
-	}
-
-	if (huamobile_gsensor_device_match(abs_bitmask))
-	{
-		pr_green_info("Device `%s' is g-sensor", name);
-		return HUA_EVENT_DEVICE_GSENSOR;
+		return ret;
 	}
 
 	ret = huamobile_event_get_rel_bitmask(fd, rel_bitmask, sizeof(rel_bitmask));
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_rel_bitmask");
-		return HUA_EVENT_DEVICE_UNKNOWN;
+		return ret;
 	}
 
-	if (huamobile_mouse_device_match(key_bitmask, rel_bitmask))
+	while (1)
 	{
-		pr_green_info("Device `%s' is mouse", name);
-		return HUA_EVENT_DEVICE_MOUSE;
+		dev = huamobile_input_device_create(key_bitmask, abs_bitmask, rel_bitmask);
+		if (dev == NULL)
+		{
+			break;
+		}
+
+		dev->event_dev = event_dev;
+
+		if (dev->probe && dev->probe(dev, data) < 0)
+		{
+			free(dev);
+			continue;
+		}
+
+		if (head)
+		{
+			tail->next = dev;
+			tail = dev;
+		}
+		else
+		{
+			head = tail = dev;
+		}
 	}
 
-	if (huamobile_keypad_device_match(key_bitmask, sizeof(key_bitmask)))
+	if (head == NULL)
 	{
-		pr_green_info("Device `%s' is keypad", name);
-		return HUA_EVENT_DEVICE_KEYPAD;
+		pr_red_info("can't recognize device");
+		return -EINVAL;
 	}
 
-	pr_red_info("Device `%s' type unknown", name);
+	tail->next = NULL;
+	event_dev->private_data = head;
 
-	return HUA_EVENT_DEVICE_UNKNOWN;
+	return 0;
 }
 
-static enum huamobile_event_device_type huamobile_input_matcher(int fd, const char *name, void *data)
+static void huamobile_input_device_remove(struct huamobile_event_device *event_dev, void *data)
 {
-	struct huamobile_input_service *service = data;
+	struct huamobile_input_device *dev = event_dev->private_data, *next;
 
-	if (service->matcher && service->matcher(fd, name, service->private_data) == false)
+	while (dev)
 	{
-		pr_red_info("Match device %s failed", name);
-		return HUA_EVENT_DEVICE_UNKNOWN;
-	}
+		if (dev->remove)
+		{
+			dev->remove(dev, data);
+		}
 
-	return huamobile_input_get_device_type(fd, name);
+		next = dev->next;
+		free(dev);
+		dev = next;
+	}
 }
 
-static struct huamobile_event_device *huamobile_input_create_device(enum huamobile_event_device_type type, void *data)
+static bool huamobile_input_device_event_handler(struct huamobile_event_device *event_dev, struct input_event *event, void *data)
 {
-	pr_pos_info();
+	struct huamobile_input_device *dev = event_dev->private_data;
 
-	switch (type)
+	switch(event->type)
 	{
-	case HUA_EVENT_DEVICE_GSENSOR:
-		return huamobile_gsensor_create(data);
+	case EV_SYN:
+		while (dev)
+		{
+			dev->event_handler(dev, event, data);
+			dev = dev->next;
+		}
+		return true;
 
-	case HUA_EVENT_DEVICE_KEYPAD:
-		return huamobile_keypad_create(data);
-
-	case HUA_EVENT_DEVICE_MULTI_TOUCH:
-		return huamobile_multi_touch_device_create(data);
-
-	case HUA_EVENT_DEVICE_SINGLE_TOUCH:
-		return huamobile_single_touch_device_create(data);
-
-	case HUA_EVENT_DEVICE_MOUSE:
-		return huamobile_mouse_create(data);
-
-	case HUA_EVENT_DEVICE_UNKNOWN:
-		break;
+	case EV_MSC:
+		return true;
 
 	default:
-		pr_red_info("unknown device type %d", type);
+		while (dev)
+		{
+			if (dev->event_handler(dev, event, data))
+			{
+				return true;
+			}
+
+			dev = dev->next;
+		}
 	}
 
-	return NULL;
+	return false;
 }
 
-static void huamobile_input_key_handler_dummy(struct huamobile_event_device *dev, const char *name, int code, int value, void *data)
+static void huamobile_input_key_handler_dummy(struct huamobile_input_device *dev, const char *name, int code, int value, void *data)
 {
 	pr_bold_info("key: name = %s, code = %d, value = %d", name, code, value);
 }
 
-static void huamobile_input_touch_handler_dummy(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data)
+static void huamobile_input_touch_handler_dummy(struct huamobile_input_device *dev, struct huamobile_touch_point *point, void *data)
 {
 	pr_bold_info("touch[%d] = [%d, %d]", point->id, point->x, point->y);
 }
 
-static void huamobile_input_move_handler_dummy(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data)
+static void huamobile_input_move_handler_dummy(struct huamobile_input_device *dev, struct huamobile_touch_point *point, void *data)
 {
 	pr_bold_info("move[%d] = [%d, %d]", point->id, point->x, point->y);
 }
 
-static void huamobile_input_release_handler_dummy(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data)
+static void huamobile_input_release_handler_dummy(struct huamobile_input_device *dev, struct huamobile_touch_point *point, void *data)
 {
 	pr_bold_info("release[%d] = [%d, %d]", point->id, point->x, point->y);
 }
 
-static void huamobile_input_gsensor_handler_dummy(struct huamobile_event_device *dev, struct huamobile_gsensor_event *event, void *data)
+static void huamobile_input_gsensor_handler_dummy(struct huamobile_input_device *dev, struct huamobile_gsensor_event *event, void *data)
 {
 	pr_bold_info("g-sensor: [%d, %d, %d]", event->x, event->y, event->z);
 }
 
-static void huamobile_input_right_touch_handler_dummy(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data)
+static void huamobile_input_right_touch_handler_dummy(struct huamobile_input_device *dev, struct huamobile_touch_point *point, void *data)
 {
 	pr_bold_info("right_touch[%d] = [%d, %d]", point->id, point->x, point->y);
 }
 
-static void huamobile_input_right_release_handler_dummy(struct huamobile_event_device *dev, struct huamobile_touch_point *point, void *data)
+static void huamobile_input_right_release_handler_dummy(struct huamobile_input_device *dev, struct huamobile_touch_point *point, void *data)
 {
 	pr_bold_info("right_release[%d] = [%d, %d]", point->id, point->x, point->y);
 }
 
-static void huamobile_input_wheel_handler_dummy(struct huamobile_event_device *dev, int value, void *data)
+static void huamobile_input_wheel_handler_dummy(struct huamobile_input_device *dev, int value, void *data)
 {
 	pr_bold_info("wheel: value = %d", value);
 }
@@ -229,8 +274,9 @@ int huamobile_input_service_start(struct huamobile_input_service *service, void 
 	service->private_data = data;
 
 	event_service = &service->event_service;
-	event_service->matcher = huamobile_input_matcher;
-	event_service->create_device = huamobile_input_create_device;
+	event_service->probe = huamobile_input_device_probe;
+	event_service->remove = huamobile_input_device_remove;
+	event_service->event_handler = huamobile_input_device_event_handler;
 
 	return huamobile_event_service_start(event_service, service);
 }

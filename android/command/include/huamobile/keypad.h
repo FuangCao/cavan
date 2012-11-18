@@ -20,14 +20,14 @@
 
 #pragma once
 
-#include <huamobile/event.h>
+#include <huamobile/input.h>
 #include <huamobile.h>
 
 struct huamobile_keypad_device
 {
-	struct huamobile_event_device dev;
+	struct huamobile_input_device dev;
 };
 
-bool huamobile_keypad_device_match(const uint8_t *key_bitmask, size_t size);
+bool huamobile_keypad_device_match(uint8_t *key_bitmask, size_t size);
 bool huamobile_keypad_device_matcher(int fd, const char *name, void *data);
-struct huamobile_event_device *huamobile_keypad_create(void *data);
+struct huamobile_input_device *huamobile_keypad_create(void);

@@ -24,6 +24,7 @@
 
 int huamobile_text_cmp(const char *left, const char *right);
 int huamobile_text_lhcmp(const char *left, const char *right);
+char *huamobile_text_ncopy(char *dest, const char *src, size_t size);
 char *huamobile_text_nfind(const char *text, const char *end, char c, size_t count);
 char *huamobile_text_copy(char *dest, const char *src);
 char *huamobile_text_skip_space_head(const char *text, const char *line_end);

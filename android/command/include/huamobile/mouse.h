@@ -1,5 +1,5 @@
 /*
- * File:		gsensor.h
+ * File:		mouse.h
  * Based on:
  * Author:		Fuang Cao <cavan.cfa@gmail.com>
  *
@@ -18,20 +18,20 @@
  *
  */
 
-#pragma once
+ #pragma once
 
-#include <huamobile/input.h>
+#include <huamobile/event.h>
+#include <huamobile/touchscreen.h>
 #include <huamobile.h>
 
-struct huamobile_gsensor_device
+struct huamobile_mouse_device
 {
 	struct huamobile_input_device dev;
-	struct huamobile_gsensor_event event;
-	int xmin, xmax;
-	int ymin, ymax;
-	int zmin, zmax;
+	struct huamobile_touch_point point;
+	int xold, xmax;
+	int yold, ymax;
 };
 
-bool huamobile_gsensor_device_match(uint8_t *abs_bitmask);
-bool huamobile_gsensor_device_matcher(int fd, const char *name, void *data);
-struct huamobile_input_device *huamobile_gsensor_create();
+bool huamobile_mouse_device_match(uint8_t *key_bitmask, uint8_t *rel_bitmask);
+bool huamobile_mouse_device_matcher(int fd, const char *name, void *data);
+struct huamobile_input_device *huamobile_mouse_create(void);

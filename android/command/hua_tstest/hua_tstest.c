@@ -15,12 +15,14 @@ int main(int argc, char *argv[])
 	int ret;
 	struct huamobile_input_service service =
 	{
+		.event_service =
+		{
+			.matcher = huamobile_vk_matcher
+		},
+
 		.lcd_width = 1024,
 		.lcd_height = 768,
 		.mouse_speed = 1.5,
-		.matcher = huamobile_vk_matcher,
-		.probe = NULL,
-		.remove = NULL,
 		.gsensor_handler = NULL,
 		.touch_handler = NULL,
 		.move_handler = NULL,

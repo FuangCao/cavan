@@ -21,6 +21,22 @@
 #include <huamobile/gsensor.h>
 #include <huamobile/input.h>
 
+bool huamobile_gsensor_device_match(uint8_t *abs_bitmask)
+{
+	if (test_bit(ABS_X, abs_bitmask) == 0 || \
+		test_bit(ABS_Y, abs_bitmask) == 0 || \
+		test_bit(ABS_Z, abs_bitmask) == 0)
+	{
+		return false;
+	}
+
+	clean_bit(ABS_X, abs_bitmask);
+	clean_bit(ABS_Y, abs_bitmask);
+	clean_bit(ABS_Z, abs_bitmask);
+
+	return true;
+}
+
 bool huamobile_gsensor_device_matcher(int fd, const char *name, void *data)
 {
 	int ret;
@@ -38,7 +54,7 @@ bool huamobile_gsensor_device_matcher(int fd, const char *name, void *data)
 	return huamobile_gsensor_device_match(abs_bitmask);
 }
 
-static void huamobile_gsensor_event_handler(struct huamobile_event_device *dev, struct input_event *event, void *data)
+static bool huamobile_gsensor_event_handler(struct huamobile_input_device *dev, struct input_event *event, void *data)
 {
 	struct huamobile_gsensor_device *sensor = (struct huamobile_gsensor_device *)dev;
 	struct huamobile_input_service *service = data;
@@ -59,52 +75,27 @@ static void huamobile_gsensor_event_handler(struct huamobile_event_device *dev, 
 		case ABS_Z:
 			sensor->event.z = event->value;
 			break;
+
+		default:
+			return false;
 		}
 		break;
 
 	case EV_SYN:
 		service->gsensor_handler(dev, &sensor->event, service->private_data);
 		break;
-	}
-}
 
-static int huamobile_gsensor_probe(struct huamobile_event_device *dev, void *data)
-{
-	struct huamobile_input_service *service = data;
-
-	pr_pos_info();
-
-	if (service->probe)
-	{
-		return service->probe(dev, service->private_data);
+	default:
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
-static void huamobile_gsensor_remove(struct huamobile_event_device *dev, void *data)
-{
-	struct huamobile_input_service *service = data;
-
-	pr_pos_info();
-
-	if (service->remove)
-	{
-		service->remove(dev, service->private_data);
-	}
-}
-
-static void huamobile_gsensor_destroy(struct huamobile_event_device *dev, void *data)
-{
-	pr_pos_info();
-
-	free(dev);
-}
-
-struct huamobile_event_device *huamobile_gsensor_create(void *data)
+struct huamobile_input_device *huamobile_gsensor_create()
 {
 	struct huamobile_gsensor_device *sensor;
-	struct huamobile_event_device *dev;
+	struct huamobile_input_device *dev;
 	struct huamobile_gsensor_event *event;
 
 	pr_pos_info();
@@ -120,10 +111,8 @@ struct huamobile_event_device *huamobile_gsensor_create(void *data)
 	event->x = event->y = event->z = 0;
 
 	dev = &sensor->dev;
-	dev->type = HUA_EVENT_DEVICE_GSENSOR;
-	dev->probe = huamobile_gsensor_probe;
-	dev->remove = huamobile_gsensor_remove;
-	dev->destroy = huamobile_gsensor_destroy;
+	dev->probe = NULL;
+	dev->remove = NULL;
 	dev->event_handler = huamobile_gsensor_event_handler;
 
 	return dev;

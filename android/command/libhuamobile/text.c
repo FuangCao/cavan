@@ -81,9 +81,14 @@ char *huamobile_text_copy(char *dest, const char *src)
 
 char *huamobile_text_ncopy(char *dest, const char *src, size_t size)
 {
-	const char *src_end = src + size;
+	const char *src_end;
 
-	while (src < src_end && (*dest++ = *src++));
+	for (src_end = src + size - 1; src < src_end && *src; dest++, src++)
+	{
+		*dest = *src;
+	}
+
+	*dest = 0;
 
 	return dest;
 }

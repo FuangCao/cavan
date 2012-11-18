@@ -21,19 +21,21 @@
 #include <huamobile/keypad.h>
 #include <huamobile/input.h>
 
-bool huamobile_keypad_device_match(const uint8_t *key_bitmask, size_t size)
+bool huamobile_keypad_device_match(uint8_t *key_bitmask, size_t size)
 {
 	const uint8_t *key_end;
+	bool result = false;
 
 	for (key_end = key_bitmask + size; key_bitmask < key_end; key_bitmask++)
 	{
 		if (*key_bitmask)
 		{
-			return true;
+			result = true;
+			*key_bitmask = 0;
 		}
 	}
 
-	return false;
+	return result;
 }
 
 bool huamobile_keypad_device_matcher(int fd, const char *name, void *data)
@@ -53,7 +55,7 @@ bool huamobile_keypad_device_matcher(int fd, const char *name, void *data)
 	return huamobile_keypad_device_match(key_bitmask, sizeof(key_bitmask));
 }
 
-static void huamobile_keypad_event_handler(struct huamobile_event_device *dev, struct input_event *event, void *data)
+static bool huamobile_keypad_event_handler(struct huamobile_input_device *dev, struct input_event *event, void *data)
 {
 	struct huamobile_input_service *service = data;
 	const char *keyname;
@@ -61,56 +63,24 @@ static void huamobile_keypad_event_handler(struct huamobile_event_device *dev, s
 	switch (event->type)
 	{
 	case EV_KEY:
-		keyname = huamobile_event_find_key_name(dev, event->code);
+		keyname = huamobile_event_find_key_name(dev->event_dev, event->code);
 		service->key_handler(dev, keyname, event->code, event->value, service->private_data);
 		break;
 
-	case EV_MSC:
 	case EV_SYN:
 		break;
 
 	default:
-		pr_red_info("unknown keypad event %d", event->type);
-	}
-}
-
-static int huamobile_keypad_probe(struct huamobile_event_device *dev, void *data)
-{
-	struct huamobile_input_service *service = data;
-
-	pr_pos_info();
-
-	if (service->probe)
-	{
-		return service->probe(dev, service->private_data);
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
-static void huamobile_keypad_remove(struct huamobile_event_device *dev, void *data)
-{
-	struct huamobile_input_service *service = data;
-
-	pr_pos_info();
-
-	if (service->remove)
-	{
-		service->remove(dev, service->private_data);
-	}
-}
-
-static void huamobile_keypad_destroy(struct huamobile_event_device *dev, void *data)
-{
-	pr_pos_info();
-
-	free(dev);
-}
-
-struct huamobile_event_device *huamobile_keypad_create(void *data)
+struct huamobile_input_device *huamobile_keypad_create(void)
 {
 	struct huamobile_keypad_device *keypad;
-	struct huamobile_event_device *dev;
+	struct huamobile_input_device *dev;
 
 	pr_pos_info();
 
@@ -122,10 +92,8 @@ struct huamobile_event_device *huamobile_keypad_create(void *data)
 	}
 
 	dev = &keypad->dev;
-	dev->type = HUA_EVENT_DEVICE_KEYPAD;
-	dev->probe = huamobile_keypad_probe;
-	dev->remove = huamobile_keypad_remove;
-	dev->destroy = huamobile_keypad_destroy;
+	dev->probe = NULL;
+	dev->remove = NULL;
 	dev->event_handler = huamobile_keypad_event_handler;
 
 	return dev;

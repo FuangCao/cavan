@@ -227,9 +227,9 @@ static void huamobile_event_close_devices(struct huamobile_event_service *servic
 
 	while (pdev)
 	{
-		if (pdev->remove)
+		if (service->remove)
 		{
-			pdev->remove(pdev, service->private_data);
+			service->remove(pdev, service->private_data);
 		}
 
 		close(pdev->fd);
@@ -238,18 +238,11 @@ static void huamobile_event_close_devices(struct huamobile_event_service *servic
 		huamobile_event_free_keylayout(pdev->kl_head);
 
 		pdev_next = pdev->next;
-		pdev->destroy(pdev, service->private_data);
+		free(pdev);
 		pdev = pdev_next;
 	}
 
 	pthread_mutex_unlock(&service->lock);
-}
-
-static void huamobile_event_destroy_device_dummy(struct huamobile_event_device *dev, void *data)
-{
-	pr_pos_info();
-
-	free(dev);
 }
 
 static int huamobile_event_open_devices(struct huamobile_event_service *service)
@@ -261,7 +254,6 @@ static int huamobile_event_open_devices(struct huamobile_event_service *service)
 	char devname[1024];
 	char pathname[PATH_MAX + 1], *filename;
 	struct huamobile_event_device *dev;
-	enum huamobile_event_device_type type;
 
 	pr_pos_info();
 
@@ -293,42 +285,31 @@ static int huamobile_event_open_devices(struct huamobile_event_service *service)
 		if (ret < 0)
 		{
 			pr_error_info("huamobile_event_get_devname");
-			close(fd);
-			continue;
+			goto label_close_fd;
 		}
 
-		if (service->matcher)
+		if (service->matcher && service->matcher(fd, devname, service->private_data) == false)
 		{
-			type = service->matcher(fd, devname, service->private_data);
-		}
-		else
-		{
-			type = HUA_EVENT_DEVICE_UNKNOWN;
+			pr_error_info("Can't match device %s, path = %s", pathname, devname);
+			goto label_close_fd;
 		}
 
-		dev = service->create_device(type, service->private_data);
+		dev = malloc(sizeof(*dev));
 		if (dev == NULL)
 		{
-			pr_red_info("create_device");
-			close(fd);
-			continue;
-		}
-
-		if (dev->destroy == NULL)
-		{
-			dev->destroy = huamobile_event_destroy_device_dummy;
-		}
-
-		if (dev->probe && dev->probe(dev, service->private_data) < 0)
-		{
-			pr_red_info("Faile to Init device %s, name = %s", pathname, devname);
-			dev->destroy(dev, service->private_data);
-			close(fd);
-			continue;
+			pr_error_info("malloc");
+			goto label_close_fd;
 		}
 
 		dev->fd = fd;
-		huamobile_text_copy(dev->name, devname);
+		huamobile_text_ncopy(dev->name, devname, sizeof(dev->name));
+		huamobile_text_ncopy(dev->pathname, pathname, sizeof(dev->pathname));
+
+		if (service->probe && service->probe(dev, service->private_data) < 0)
+		{
+			pr_red_info("Faile to Init device %s, name = %s", pathname, devname);
+			goto label_free_dev;
+		}
 
 		pr_green_info("Add device %s, name = %s", pathname, devname);
 
@@ -339,6 +320,12 @@ static int huamobile_event_open_devices(struct huamobile_event_service *service)
 		dev->next = service->dev_head;
 		service->dev_head = dev;
 		pthread_mutex_unlock(&service->lock);
+		continue;
+
+label_free_dev:
+		free(dev);
+label_close_fd:
+		close(fd);
 	}
 
 	closedir(dp);
@@ -418,7 +405,11 @@ static void *huamobile_event_service_handler(void *data)
 
 			for (ep = events, ep_end = ep + (rdlen / sizeof(events[0])); ep < ep_end; ep++)
 			{
-				pdev->event_handler(pdev, ep, service->private_data);
+				if (service->event_handler(pdev, ep, service->private_data) == false)
+				{
+					pr_red_info("can't handle event: type = %d, code = %d, value = %d", \
+						ep->type, ep->code, ep->value);
+				}
 			}
 		}
 	}
@@ -531,28 +522,16 @@ int huamobile_event_stop_poll_thread(struct huamobile_event_service *service)
 	return 0;
 }
 
-static struct huamobile_event_device *huamobile_event_create_device_dummy(enum huamobile_event_device_type type, void *data)
-{
-	pr_pos_info();
-
-	return malloc(sizeof(struct huamobile_event_device));
-}
-
 int huamobile_event_service_start(struct huamobile_event_service *service, void *data)
 {
 	int ret;
 
 	pr_pos_info();
 
-	if (service == NULL)
+	if (service == NULL || service->event_handler == NULL)
 	{
-		pr_red_info("service == NULL");
+		pr_red_info("service == NULL || service->event_handler == NULL");
 		return -EINVAL;
-	}
-
-	if (service->create_device == NULL)
-	{
-		service->create_device = huamobile_event_create_device_dummy;
 	}
 
 	service->private_data = data;

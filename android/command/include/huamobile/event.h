@@ -26,6 +26,9 @@
 #define test_bit(bit, array) \
 	((array)[(bit) >> 3] & (1 << ((bit) & 0x07)))
 
+#define clean_bit(bit, array) \
+	((array)[(bit) >> 3] &= ~(1 << ((bit) & 0x07)))
+
 #define sizeof_bit_array(bits) \
 	(((bits) + 7) >> 3)
 
@@ -57,16 +60,6 @@ enum huamobile_event_service_state
 	HUA_INPUT_THREAD_STATE_STOPPED
 };
 
-enum huamobile_event_device_type
-{
-	HUA_EVENT_DEVICE_UNKNOWN,
-	HUA_EVENT_DEVICE_KEYPAD,
-	HUA_EVENT_DEVICE_MOUSE,
-	HUA_EVENT_DEVICE_MULTI_TOUCH,
-	HUA_EVENT_DEVICE_SINGLE_TOUCH,
-	HUA_EVENT_DEVICE_GSENSOR
-};
-
 struct huamobile_keylayout_node
 {
 	char name[32];
@@ -91,32 +84,30 @@ struct huamobile_virtual_key
 struct huamobile_event_device
 {
 	int fd;
-	char name[512];
+	char name[128];
+	char pathname[16];
 	struct pollfd *pfd;
-	enum huamobile_event_device_type type;
+	void *private_data;
 
 	struct huamobile_virtual_key *vk_head;
 	struct huamobile_keylayout_node *kl_head;
 	struct huamobile_event_device *next;
-
-	int (*probe)(struct huamobile_event_device *dev, void *data);
-	void (*remove)(struct huamobile_event_device *dev, void *data);
-	void (*destroy)(struct huamobile_event_device *dev, void *data);
-	void (*event_handler)(struct huamobile_event_device *dev, struct input_event *event, void *data);
 };
 
 struct huamobile_event_service
 {
-	pthread_t thread;
 	int pipefd[2];
+	pthread_t thread;
 	pthread_mutex_t lock;
 	enum huamobile_event_service_state state;
 
 	void *private_data;
 	struct huamobile_event_device *dev_head;
 
-	enum huamobile_event_device_type (*matcher)(int fd, const char *name, void *data);
-	struct huamobile_event_device *(*create_device)(enum huamobile_event_device_type type, void *data);
+	bool (*matcher)(int fd, const char *name, void *data);
+	int (*probe)(struct huamobile_event_device *dev, void *data);
+	void (*remove)(struct huamobile_event_device *dev, void *data);
+	bool (*event_handler)(struct huamobile_event_device *dev, struct input_event *event, void *data);
 };
 
 struct huamobile_virtual_key *huamobile_event_find_virtual_key(struct huamobile_event_device *dev, int x, int y);
