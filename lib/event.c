@@ -468,7 +468,6 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 	mem = file_read_all(pathname, &size);
 	if (mem == NULL)
 	{
-		pr_red_info("cavan_file_mmap");
 		return -ENOMEM;
 	}
 
@@ -517,7 +516,7 @@ out_free_mem:
 	return 0;
 }
 
-static int cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, char *pathname)
+static char *cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, char *pathname)
 {
 	int i;
 	char *filename;
@@ -530,11 +529,11 @@ static int cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, ch
 		sprintf(filename, "%s.kl", filenames[i]);
 		if (access(pathname, R_OK) == 0)
 		{
-			return 0;
+			return pathname;
 		}
 	}
 
-	return -ENOENT;
+	return NULL;
 }
 
 static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
@@ -548,11 +547,9 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 	void *map;
 	size_t size;
 
-	ret = cavan_event_get_keylayout_pathname(dev, pathname);
-	if (ret < 0)
+	if (cavan_event_get_keylayout_pathname(dev, pathname) == NULL)
 	{
-		pr_red_info("cavan_event_get_keylayout_pathname");
-		return ret;
+		return -ENOENT;
 	}
 
 	memset(key_bitmask, 0, sizeof(key_bitmask));
@@ -660,8 +657,6 @@ ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data
 	char *filename;
 	size_t count;
 
-	pr_pos_info();
-
 	if (matcher == NULL || matcher->handler == NULL)
 	{
 		pr_red_info("matcher == NULL || matcher->handler == NULL");
@@ -685,8 +680,9 @@ ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data
 			continue;
 		}
 
+		println("============================================================");
+
 		text_copy(filename, entry->d_name);
-		pr_bold_info("pathname = %s", matcher->pathname);
 		fd = open(matcher->pathname, O_RDONLY);
 		if (fd < 0)
 		{
@@ -729,8 +725,6 @@ ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data
 static bool cavan_event_service_match(struct cavan_event_matcher *matcher, void *data)
 {
 	struct cavan_event_service *service = data;
-
-	pr_pos_info();
 
 	if (service->matcher)
 	{
@@ -785,8 +779,6 @@ static int cavan_event_open_devices(struct cavan_event_service *service)
 		.handler = cavan_event_service_match_handler
 	};
 
-	pr_pos_info();
-
 	count = cavan_event_scan_devices(&matcher, service);
 	if (count < 0)
 	{
@@ -804,8 +796,6 @@ static void *cavan_event_service_handler(void *data)
 	struct pollfd fds[service->dev_count + 1], *pfd;
 	struct cavan_event_device *pdev;
 	struct input_event events[32], *ep, *ep_end;
-
-	pr_pos_info();
 
 	pfd = fds;
 	pfd->fd = service->pipefd[0];
@@ -910,8 +900,6 @@ int cavan_event_start_poll_thread(struct cavan_event_service *service)
 {
 	int ret;
 
-	pr_pos_info();
-
 	pthread_mutex_lock(&service->lock);
 
 	if (service->state == CAVAN_INPUT_THREAD_STATE_RUNNING)
@@ -996,8 +984,6 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	int ret;
 	ssize_t count;
 
-	pr_pos_info();
-
 	if (service == NULL)
 	{
 		pr_red_info("service == NULL");
@@ -1062,6 +1048,8 @@ bool cavan_event_simple_matcher(struct cavan_event_matcher *matcher, void *data)
 {
 	if (data)
 	{
+		pr_pos_info();
+		pr_bold_info("data = %s", (char *)data);
 		return text_cmp(matcher->devname, data) == 0 || text_cmp(matcher->pathname, data) == 0;
 	}
 

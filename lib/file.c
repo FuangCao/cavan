@@ -2591,12 +2591,9 @@ int file_mmap(const char *pathname, void **addr, size_t *size, int flags)
 	struct stat st;
 	void *mem;
 
-	pr_bold_info("pathname = %s", pathname);
-
 	fd = open(pathname, flags, 0777);
 	if (fd < 0)
 	{
-		pr_error_info("open file `%s'", pathname);
 		return fd;
 	}
 
@@ -2661,12 +2658,9 @@ void *file_read_all(const char *pathname, size_t *size)
 	void *mem;
 	ssize_t rdlen;
 
-	pr_bold_info("pathname = %s", pathname);
-
 	fd = open(pathname, O_RDONLY);
 	if (fd < 0)
 	{
-		pr_error_info("open file %s", pathname);
 		return NULL;
 	}
 

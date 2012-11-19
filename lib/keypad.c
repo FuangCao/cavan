@@ -35,14 +35,12 @@ bool cavan_keypad_device_match(uint8_t *key_bitmask)
 	return result;
 }
 
-bool cavan_keypad_device_matcher(int fd, const char *name, void *data)
+bool cavan_keypad_device_matcher(struct cavan_event_matcher *matcher, void *data)
 {
 	int ret;
 	uint8_t key_bitmask[ABS_BITMASK_SIZE];
 
-	pr_pos_info();
-
-	ret = cavan_event_get_key_bitmask(fd, key_bitmask);
+	ret = cavan_event_get_key_bitmask(matcher->fd, key_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_event_get_key_bitmask");
@@ -78,8 +76,6 @@ struct cavan_input_device *cavan_keypad_create(void)
 {
 	struct cavan_keypad_device *keypad;
 	struct cavan_input_device *dev;
-
-	pr_pos_info();
 
 	keypad = malloc(sizeof(*keypad));
 	if (keypad == NULL)

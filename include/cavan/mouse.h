@@ -30,5 +30,5 @@ struct cavan_mouse_device
 };
 
 bool cavan_mouse_device_match(uint8_t *key_bitmask, uint8_t *rel_bitmask);
-bool cavan_mouse_device_matcher(int fd, const char *name, void *data);
+bool cavan_mouse_device_matcher(struct cavan_event_matcher *matcher, void *data);
 struct cavan_input_device *cavan_mouse_create(void);

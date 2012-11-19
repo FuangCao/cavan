@@ -25,26 +25,31 @@ static struct cavan_input_device *cavan_input_device_create(uint8_t *key_bitmask
 {
 	if (cavan_gsensor_device_match(abs_bitmask))
 	{
+		pr_green_info("G-Sensor Matched");
 		return cavan_gsensor_create();
 	}
 
 	if (cavan_multi_touch_device_match(abs_bitmask))
 	{
+		pr_green_info("Muti Touch Panel Matched");
 		return cavan_multi_touch_device_create();
 	}
 
 	if (cavan_single_touch_device_match(abs_bitmask, key_bitmask))
 	{
+		pr_green_info("Single Touch Panel Matched");
 		return cavan_single_touch_device_create();
 	}
 
 	if (cavan_mouse_device_match(key_bitmask, rel_bitmask))
 	{
+		pr_green_info("Mouse Matched");
 		return cavan_mouse_create();
 	}
 
 	if (cavan_keypad_device_match(key_bitmask))
 	{
+		pr_green_info("Keypad Matched");
 		return cavan_keypad_create();
 	}
 
@@ -59,8 +64,6 @@ static int cavan_input_device_probe(struct cavan_event_device *event_dev, void *
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 	uint8_t rel_bitmask[REL_BITMASK_SIZE];
 	struct cavan_input_device *dev, *head, *tail;
-
-	pr_pos_info();
 
 	ret = cavan_event_get_abs_bitmask(fd, abs_bitmask);
 	if (ret < 0)
@@ -173,6 +176,18 @@ static bool cavan_input_device_event_handler(struct cavan_event_device *event_de
 	return false;
 }
 
+static bool cavan_input_device_matcher(struct cavan_event_matcher *matcher, void *data)
+{
+	struct cavan_input_service *service = data;
+
+	if (service->matcher)
+	{
+		return service->matcher(matcher, service->private_data);
+	}
+
+	return true;
+}
+
 static void cavan_input_key_handler_dummy(struct cavan_input_device *dev, const char *name, int code, int value, void *data)
 {
 	pr_bold_info("key: name = %s, code = %d, value = %d", name, code, value);
@@ -215,12 +230,13 @@ static void cavan_input_wheel_handler_dummy(struct cavan_input_device *dev, int 
 
 void cavan_input_service_init(struct cavan_input_service *service, bool (*matcher)(struct cavan_event_matcher *, void *))
 {
-	cavan_event_service_init(&service->event_service, matcher);
+	cavan_event_service_init(&service->event_service, cavan_input_device_matcher);
 
 	service->lcd_width = -1;
 	service->lcd_height = -1;
 	service->mouse_speed = 1;
 
+	service->matcher = matcher;
 	service->key_handler = NULL;
 	service->wheel_handler = NULL;
 	service->touch_handler = NULL;
@@ -291,6 +307,7 @@ int cavan_input_service_start(struct cavan_input_service *service, void *data)
 	service->private_data = data;
 
 	event_service = &service->event_service;
+	event_service->matcher = cavan_input_device_matcher;
 	event_service->probe = cavan_input_device_probe;
 	event_service->remove = cavan_input_device_remove;
 	event_service->event_handler = cavan_input_device_event_handler;

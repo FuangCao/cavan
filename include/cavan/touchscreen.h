@@ -65,10 +65,10 @@ struct cavan_single_touch_device
 };
 
 bool cavan_multi_touch_device_match(uint8_t *abs_bitmask);
-bool cavan_multi_touch_device_matcher(int fd, const char *name, void *data);
+bool cavan_multi_touch_device_matcher(struct cavan_event_matcher *matcher, void *data);
 bool cavan_single_touch_device_match(uint8_t *abs_bitmask, uint8_t *key_bitmask);
-bool cavan_single_touch_device_matcher(int fd, const char *name, void *data);
-bool cavan_touch_device_matcher(int fd, const char *name, void *data);
+bool cavan_single_touch_device_matcher(struct cavan_event_matcher *matcher, void *data);
+bool cavan_touch_device_matcher(struct cavan_event_matcher *matcher, void *data);
 
 struct cavan_input_device *cavan_multi_touch_device_create(void);
 struct cavan_input_device *cavan_single_touch_device_create(void);

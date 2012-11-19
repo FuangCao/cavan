@@ -68,7 +68,11 @@
 	pr_color_info(CAVAN_COLOR_RED, fmt, ##args)
 
 #define pr_error_info(fmt, args ...) \
-	pr_color_info(CAVAN_COLOR_RED, "%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+	if (errno) { \
+		pr_red_info("%s[%d] (" fmt "): %s", __FUNCTION__, __LINE__, ##args, strerror(errno)); \
+	} else { \
+		pr_red_info("%s[%d]:" fmt, __FUNCTION__, __LINE__, ##args); \
+	}
 
 #define pr_green_info(fmt, args ...) \
 	pr_color_info(CAVAN_COLOR_GREEN, fmt, ##args)

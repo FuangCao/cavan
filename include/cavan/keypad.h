@@ -26,5 +26,5 @@ struct cavan_keypad_device
 };
 
 bool cavan_keypad_device_match(uint8_t *key_bitmask);
-bool cavan_keypad_device_matcher(int fd, const char *name, void *data);
+bool cavan_keypad_device_matcher(struct cavan_event_matcher *matcher, void *data);
 struct cavan_input_device *cavan_keypad_create(void);

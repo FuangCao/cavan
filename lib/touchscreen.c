@@ -31,14 +31,12 @@ bool cavan_multi_touch_device_match(uint8_t *abs_bitmask)
 	return true;
 }
 
-bool cavan_multi_touch_device_matcher(int fd, const char *name, void *data)
+bool cavan_multi_touch_device_matcher(struct cavan_event_matcher *matcher, void *data)
 {
 	int ret;
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 
-	pr_pos_info();
-
-	ret = cavan_event_get_abs_bitmask(fd, abs_bitmask);
+	ret = cavan_event_get_abs_bitmask(matcher->fd, abs_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_event_get_abs_bitmask");
@@ -62,22 +60,20 @@ bool cavan_single_touch_device_match(uint8_t *abs_bitmask, uint8_t *key_bitmask)
 	return true;
 }
 
-bool cavan_single_touch_device_matcher(int fd, const char *name, void *data)
+bool cavan_single_touch_device_matcher(struct cavan_event_matcher *matcher, void *data)
 {
 	int ret;
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 	uint8_t key_bitmask[KEY_BITMASK_SIZE];
 
-	pr_pos_info();
-
-	ret = cavan_event_get_abs_bitmask(fd, abs_bitmask);
+	ret = cavan_event_get_abs_bitmask(matcher->fd, abs_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_event_get_abs_bitmask");
 		return false;
 	}
 
-	ret = cavan_event_get_key_bitmask(fd, key_bitmask);
+	ret = cavan_event_get_key_bitmask(matcher->fd, key_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_event_get_key_bitmask");
@@ -87,15 +83,13 @@ bool cavan_single_touch_device_matcher(int fd, const char *name, void *data)
 	return cavan_single_touch_device_match(abs_bitmask, key_bitmask);
 }
 
-bool cavan_touch_device_matcher(int fd, const char *name, void *data)
+bool cavan_touch_device_matcher(struct cavan_event_matcher *matcher, void *data)
 {
 	int ret;
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 	uint8_t key_bitmask[KEY_BITMASK_SIZE];
 
-	pr_pos_info();
-
-	ret = cavan_event_get_abs_bitmask(fd, abs_bitmask);
+	ret = cavan_event_get_abs_bitmask(matcher->fd, abs_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_event_get_abs_bitmask");
@@ -104,11 +98,11 @@ bool cavan_touch_device_matcher(int fd, const char *name, void *data)
 
 	if (cavan_multi_touch_device_match(abs_bitmask))
 	{
-		pr_green_info("Deivce %s mutil touch screen", name);
+		pr_green_info("Deivce %s mutil touch screen", matcher->devname);
 		return true;
 	}
 
-	ret = cavan_event_get_key_bitmask(fd, key_bitmask);
+	ret = cavan_event_get_key_bitmask(matcher->fd, key_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_event_get_key_bitmask");
@@ -131,8 +125,7 @@ static int cavan_touch_device_probe(struct cavan_touch_device *dev, void *data)
 	int fd = dev->input_dev.event_dev->fd;
 	struct cavan_input_service *service = data;
 
-	pr_pos_info();
-	pr_bold_info("lcd_width = %d, lcd_height = %d", service->lcd_width, service->lcd_height);
+	pr_bold_info("LCD: width = %d, height = %d", service->lcd_width, service->lcd_height);
 
 	if (service->lcd_width > 0)
 	{
@@ -322,8 +315,6 @@ struct cavan_input_device *cavan_multi_touch_device_create(void)
 	struct cavan_input_device *dev;
 	struct cavan_touch_point *p, *p_end;
 
-	pr_pos_info();
-
 	ts = malloc(sizeof(*ts));
 	if (ts == NULL)
 	{
@@ -454,8 +445,6 @@ struct cavan_input_device *cavan_single_touch_device_create(void)
 	struct cavan_single_touch_device *ts;
 	struct cavan_touch_device *touch_dev;
 	struct cavan_input_device *dev;
-
-	pr_pos_info();
 
 	ts = malloc(sizeof(*ts));
 	if (ts == NULL)

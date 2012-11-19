@@ -36,22 +36,20 @@ bool cavan_mouse_device_match(uint8_t *key_bitmask, uint8_t *rel_bitmask)
 	return true;
 }
 
-bool cavan_mouse_device_matcher(int fd, const char *name, void *data)
+bool cavan_mouse_device_matcher(struct cavan_event_matcher *matcher, void *data)
 {
 	int ret;
 	uint8_t key_bitmask[KEY_BITMASK_SIZE];
 	uint8_t rel_bitmask[REL_BITMASK_SIZE];
 
-	pr_pos_info();
-
-	ret = cavan_event_get_rel_bitmask(fd, rel_bitmask);
+	ret = cavan_event_get_rel_bitmask(matcher->fd, rel_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_event_get_rel_bitmask");
 		return ret;
 	}
 
-	ret = cavan_event_get_key_bitmask(fd, key_bitmask);
+	ret = cavan_event_get_key_bitmask(matcher->fd, key_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_event_get_key_bitmask");
@@ -157,7 +155,7 @@ static int cavan_mouse_probe(struct cavan_input_device *dev, void *data)
 	struct cavan_input_service *service = data;
 	struct cavan_mouse_device *mouse = (struct cavan_mouse_device *)dev;
 
-	pr_pos_info();
+	pr_bold_info("LCD: width = %d, height = %d", service->lcd_width, service->lcd_height);
 
 	if (service->lcd_width <= 0 || service->lcd_height <= 0)
 	{
@@ -168,6 +166,8 @@ static int cavan_mouse_probe(struct cavan_input_device *dev, void *data)
 	mouse->xmax = service->lcd_width - 1;
 	mouse->ymax = service->lcd_height - 1;
 
+	pr_bold_info("Mouse: x-max = %d, y-max = %d", mouse->xmax, mouse->ymax);
+
 	return 0;
 }
 
@@ -176,8 +176,6 @@ struct cavan_input_device *cavan_mouse_create(void)
 	struct cavan_mouse_device *mouse;
 	struct cavan_input_device *dev;
 	struct cavan_touch_point *point;
-
-	pr_pos_info();
 
 	mouse = malloc(sizeof(*mouse));
 	if (mouse == NULL)

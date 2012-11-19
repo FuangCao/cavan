@@ -54,6 +54,7 @@ struct cavan_input_service
 	double mouse_speed;
 	pthread_mutex_t lock;
 
+	bool (*matcher)(struct cavan_event_matcher *matcher, void *data);
 	void (*key_handler)(struct cavan_input_device *dev, const char *name, int code, int value, void *data);
 	void (*wheel_handler)(struct cavan_input_device *dev, int value, void *data);
 	void (*touch_handler)(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data);

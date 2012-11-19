@@ -34,14 +34,12 @@ bool cavan_gsensor_device_match(uint8_t *abs_bitmask)
 	return true;
 }
 
-bool cavan_gsensor_device_matcher(int fd, const char *name, void *data)
+bool cavan_gsensor_device_matcher(struct cavan_event_matcher *matcher, void *data)
 {
 	int ret;
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 
-	pr_pos_info();
-
-	ret = cavan_event_get_abs_bitmask(fd, abs_bitmask);
+	ret = cavan_event_get_abs_bitmask(matcher->fd, abs_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_event_get_abs_bitmask");
@@ -94,8 +92,6 @@ struct cavan_input_device *cavan_gsensor_create(void)
 	struct cavan_gsensor_device *sensor;
 	struct cavan_input_device *dev;
 	struct cavan_gsensor_event *event;
-
-	pr_pos_info();
 
 	sensor = malloc(sizeof(*sensor));
 	if (sensor == NULL)

@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 		dev_path = NULL;
 	}
 
-	cavan_input_service_init(&service, NULL);
+	cavan_input_service_init(&service, cavan_event_simple_matcher);
 	service.lcd_width = service.lcd_height = 100;
 	ret = cavan_input_service_start(&service, (void *)dev_path);
 	if (ret < 0)
