@@ -79,8 +79,7 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_VERBOSE,
 		},
-		{
-		},
+		{0, 0, 0, 0},
 	};
 	u16 port = FTP_CTRL_PORT;
 	struct cavan_service_description desc =

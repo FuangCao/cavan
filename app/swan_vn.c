@@ -229,7 +229,7 @@ static void *server_send_handle(void *data)
 		readlen = cavan_usb_read_data(usb_desc, buff, sizeof(buff));
 		if (readlen < 0)
 		{
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined(CONFIG_BUILD_FOR_ANDROID)
 			print_error("cavan_usb_read_data, readlen = %ld", readlen);
 #else
 			print_error("cavan_usb_read_data, readlen = %d", readlen);
@@ -417,6 +417,7 @@ int main(int argc, char *argv[])
 			.val = 'v',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 

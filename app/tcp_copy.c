@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
 			.val = 'a',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	struct inet_file_request file_req =

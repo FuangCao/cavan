@@ -33,8 +33,7 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = 'v',
 		},
-		{
-		},
+		{0, 0, 0, 0},
 	};
 	char dest_dev[1024];
 	int burn_image_dir;
@@ -59,7 +58,7 @@ int main(int argc, char *argv[])
 		case 'v':
 		case 'V':
 			show_author_info();
-			println(FILE_CREATE_DATE);
+			println("%s", FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':

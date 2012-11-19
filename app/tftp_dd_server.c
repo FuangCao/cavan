@@ -164,6 +164,7 @@ int main(int argc, char *argv[])
 			.val = 's',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	int c;

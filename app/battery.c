@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		}
 
 		ret = ffile_write(fd_out, &file_hdr, sizeof(file_hdr));
-		if (ret < sizeof(file_hdr))
+		if (ret < (int)sizeof(file_hdr))
 		{
 			print_error("write file header");
 			goto out_close_out;

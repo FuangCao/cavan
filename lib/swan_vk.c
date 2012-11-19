@@ -98,7 +98,9 @@ static int swan_vk_parse_option(struct swan_vk_command_option *opt, int argc, ch
 			.flag = NULL,
 			.val = 'l',
 		},
-		{0, 0, 0, 0},
+		{
+			0, 0, 0, 0
+		},
 	};
 
 	opt->link_type = SWAN_VK_LINK_ADB;

@@ -53,8 +53,7 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_PORT,
 		},
-		{
-		},
+		{0, 0, 0, 0},
 	};
 	int sockfd;
 	char ip[32];

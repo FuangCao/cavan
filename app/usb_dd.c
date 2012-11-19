@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
 			.val = 'v',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	int ret;

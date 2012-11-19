@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
 			.val = 'v',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	const char *server_ip;

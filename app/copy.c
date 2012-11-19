@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
 			.val = 'n',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	char dest_path[1024];

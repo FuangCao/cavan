@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_COMMAND,
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	int ret;

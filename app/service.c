@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 		},
 	};
 	int (*handler)(struct cavan_daemon_description *);
-	int i;
+	unsigned int i;
 	int ret;
 	struct cavan_daemon_description desc =
 	{

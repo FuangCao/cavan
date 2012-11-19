@@ -12,7 +12,7 @@
 static int swan_init(const char *mnt_point)
 {
 	int ret;
-	int i;
+	unsigned int i;
 	const char *sd_devices[] =
 	{
 		"/dev/block/mmcblk1p1",
@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
 			.val = 'u',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	int (*action)(const char *) = swan_install;

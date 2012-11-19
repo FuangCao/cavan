@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 			.val = 'h',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 

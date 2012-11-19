@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
 			.val = 1,
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	int c;

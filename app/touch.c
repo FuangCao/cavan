@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
 			.val = 'l',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	struct partition_desc part_desc =

@@ -5,6 +5,7 @@
  */
 
 #include <cavan.h>
+#include <sys/wait.h>
 
 #define FILE_CREATE_DATE "2012-10-12 09:36:56"
 
@@ -59,8 +60,7 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = 'w',
 		},
-		{
-		},
+		{0, 0, 0, 0},
 	};
 	u32 delay;
 	bool wait_for_devices;
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		println(command);
+		println("%s", command);
 		ret = system(command);
 		if (ret)
 		{

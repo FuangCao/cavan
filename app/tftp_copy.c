@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 			.val = 1,
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	char temp_name[512], *p_name;

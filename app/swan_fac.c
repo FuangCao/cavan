@@ -33,7 +33,7 @@ static int create_image(const char *img_name)
 {
 	int fd_in, fd_out;
 	int ret;
-	int i;
+	unsigned int i;
 
 	fd_out = open(img_name, WRITE_FLAGS | O_TRUNC, 0777);
 	if (fd_out < 0)

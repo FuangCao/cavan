@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
 			.val = 'i',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	int ret;

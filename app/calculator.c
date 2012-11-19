@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_PREFIX,
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	int ret;
@@ -141,7 +142,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		double2text(&result, buff, length[0], 0, base | flags);
-		println(buff);
+		println("%s", buff);
 	}
 
 	return 0;

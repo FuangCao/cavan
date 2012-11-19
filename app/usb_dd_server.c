@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 			.val = 'v',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	struct cftp_descriptor cftp_desc;

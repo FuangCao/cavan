@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_SUPER,
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	u16 port;

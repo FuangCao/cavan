@@ -35,8 +35,7 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_VERSION,
 		},
-		{
-		},
+		{0, 0, 0, 0},
 	};
 	u8 ecc_table[256];
 

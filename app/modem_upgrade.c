@@ -391,6 +391,7 @@ int main(int argc, char *argv[])
 			.val = 'p',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	char resource_path[1024];

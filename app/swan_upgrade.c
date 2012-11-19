@@ -246,6 +246,7 @@ int main(int argc, char *argv[])
 			.val = '7',
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 
