@@ -18,7 +18,7 @@
  *
  */
 
- #pragma once
+#pragma once
 
 #include <huamobile/event.h>
 #include <huamobile/touchscreen.h>
@@ -26,7 +26,7 @@
 
 struct huamobile_mouse_device
 {
-	struct huamobile_input_device dev;
+	struct huamobile_input_device input_dev;
 	struct huamobile_touch_point point;
 	int xold, xmax;
 	int yold, ymax;

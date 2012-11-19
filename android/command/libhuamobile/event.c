@@ -307,7 +307,7 @@ static int huamobile_event_open_devices(struct huamobile_event_service *service)
 
 		if (service->probe && service->probe(dev, service->private_data) < 0)
 		{
-			pr_red_info("Faile to Init device %s, name = %s", pathname, devname);
+			pr_red_info("Faile to probe device %s, name = %s", pathname, devname);
 			goto label_free_dev;
 		}
 

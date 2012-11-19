@@ -44,7 +44,7 @@ bool huamobile_gsensor_device_matcher(int fd, const char *name, void *data)
 
 	pr_pos_info();
 
-	ret = huamobile_event_get_abs_bitmask(fd, abs_bitmask, sizeof(abs_bitmask));
+	ret = huamobile_event_get_abs_bitmask(fd, abs_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_abs_bitmask");
@@ -110,7 +110,7 @@ struct huamobile_input_device *huamobile_gsensor_create()
 	event = &sensor->event;
 	event->x = event->y = event->z = 0;
 
-	dev = &sensor->dev;
+	dev = &sensor->input_dev;
 	dev->probe = NULL;
 	dev->remove = NULL;
 	dev->event_handler = huamobile_gsensor_event_handler;

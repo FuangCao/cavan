@@ -23,6 +23,8 @@
 #include <huamobile/input.h>
 #include <huamobile.h>
 
+#define HUA_TOUCH_POINT_MAX	5
+
 #ifndef SYN_MT_REPORT
 #define SYN_MT_REPORT		2
 #define ABS_MT_SLOT			0x2f	/* MT slot being modified */
@@ -40,25 +42,27 @@
 #define ABS_MT_DISTANCE		0x3b	/* Contact hover distance */
 #endif
 
-struct huamobile_multi_touch_device
+struct huamobile_touch_device
 {
-	struct huamobile_input_device dev;
+	struct huamobile_input_device input_dev;
+
+	int xaxis, yaxis;
 
 	double xscale, yscale;
 	double xoffset, yoffset;
+};
 
-	struct huamobile_touch_point points[10];
+struct huamobile_multi_touch_device
+{
+	struct huamobile_touch_device touch_dev;
+	struct huamobile_touch_point points[HUA_TOUCH_POINT_MAX];
 	int point_count;
 	int point_count_old;
 };
 
 struct huamobile_single_touch_device
 {
-	struct huamobile_input_device dev;
-
-	double xscale, yscale;
-	double xoffset, yoffset;
-
+	struct huamobile_touch_device touch_dev;
 	int pressed;
 	struct huamobile_touch_point point;
 };

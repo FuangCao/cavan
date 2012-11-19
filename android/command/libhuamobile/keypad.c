@@ -21,12 +21,12 @@
 #include <huamobile/keypad.h>
 #include <huamobile/input.h>
 
-bool huamobile_keypad_device_match(uint8_t *key_bitmask, size_t size)
+bool huamobile_keypad_device_match(uint8_t *key_bitmask)
 {
 	const uint8_t *key_end;
 	bool result = false;
 
-	for (key_end = key_bitmask + size; key_bitmask < key_end; key_bitmask++)
+	for (key_end = key_bitmask + KEY_BITMASK_SIZE; key_bitmask < key_end; key_bitmask++)
 	{
 		if (*key_bitmask)
 		{
@@ -45,14 +45,14 @@ bool huamobile_keypad_device_matcher(int fd, const char *name, void *data)
 
 	pr_pos_info();
 
-	ret = huamobile_event_get_key_bitmask(fd, key_bitmask, sizeof(key_bitmask));
+	ret = huamobile_event_get_key_bitmask(fd, key_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_key_bitmask");
 		return ret;
 	}
 
-	return huamobile_keypad_device_match(key_bitmask, sizeof(key_bitmask));
+	return huamobile_keypad_device_match(key_bitmask);
 }
 
 static bool huamobile_keypad_event_handler(struct huamobile_input_device *dev, struct input_event *event, void *data)
@@ -91,7 +91,7 @@ struct huamobile_input_device *huamobile_keypad_create(void)
 		return NULL;
 	}
 
-	dev = &keypad->dev;
+	dev = &keypad->input_dev;
 	dev->probe = NULL;
 	dev->remove = NULL;
 	dev->event_handler = huamobile_keypad_event_handler;

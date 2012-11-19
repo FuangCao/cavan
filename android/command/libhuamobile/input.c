@@ -46,7 +46,7 @@ static struct huamobile_input_device *huamobile_input_device_create(uint8_t *key
 		return huamobile_mouse_create();
 	}
 
-	if (huamobile_keypad_device_match(key_bitmask, sizeof(key_bitmask)))
+	if (huamobile_keypad_device_match(key_bitmask))
 	{
 		return huamobile_keypad_create();
 	}
@@ -61,30 +61,32 @@ static int huamobile_input_device_probe(struct huamobile_event_device *event_dev
 	uint8_t key_bitmask[KEY_BITMASK_SIZE];
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 	uint8_t rel_bitmask[REL_BITMASK_SIZE];
-	struct huamobile_input_device *dev, *head = NULL, *tail;
+	struct huamobile_input_device *dev, *head, *tail;
 
 	pr_pos_info();
 
-	ret = huamobile_event_get_abs_bitmask(fd, abs_bitmask, sizeof(abs_bitmask));
+	ret = huamobile_event_get_abs_bitmask(fd, abs_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_abs_bitmask");
 		return ret;
 	}
 
-	ret = huamobile_event_get_key_bitmask(fd, key_bitmask, sizeof(key_bitmask));
+	ret = huamobile_event_get_key_bitmask(fd, key_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_key_bitmask");
 		return ret;
 	}
 
-	ret = huamobile_event_get_rel_bitmask(fd, rel_bitmask, sizeof(rel_bitmask));
+	ret = huamobile_event_get_rel_bitmask(fd, rel_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_rel_bitmask");
 		return ret;
 	}
+
+	head = tail = NULL;
 
 	while (1)
 	{

@@ -25,9 +25,9 @@
 
 struct huamobile_keypad_device
 {
-	struct huamobile_input_device dev;
+	struct huamobile_input_device input_dev;
 };
 
-bool huamobile_keypad_device_match(uint8_t *key_bitmask, size_t size);
+bool huamobile_keypad_device_match(uint8_t *key_bitmask);
 bool huamobile_keypad_device_matcher(int fd, const char *name, void *data);
 struct huamobile_input_device *huamobile_keypad_create(void);

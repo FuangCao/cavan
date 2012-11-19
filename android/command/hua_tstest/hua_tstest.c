@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
 			.matcher = huamobile_vk_matcher
 		},
 
-		.lcd_width = 1024,
-		.lcd_height = 768,
+		.lcd_width = 100,
+		.lcd_height = 100,
 		.mouse_speed = 1.5,
 		.gsensor_handler = NULL,
 		.touch_handler = NULL,

@@ -25,7 +25,7 @@
 
 struct huamobile_gsensor_device
 {
-	struct huamobile_input_device dev;
+	struct huamobile_input_device input_dev;
 	struct huamobile_gsensor_event event;
 	int xmin, xmax;
 	int ymin, ymax;

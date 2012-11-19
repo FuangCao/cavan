@@ -143,17 +143,17 @@ static inline int huamobile_event_get_devname(int fd, char *devname, size_t size
 	return ioctl(fd, EVIOCGNAME(size), devname);
 }
 
-static inline int huamobile_event_get_abs_bitmask(int fd, void *bitmask, size_t size)
+static inline int huamobile_event_get_abs_bitmask(int fd, void *bitmask)
 {
-	return huamobile_event_get_bitmask(fd, EV_ABS, bitmask, size);
+	return huamobile_event_get_bitmask(fd, EV_ABS, bitmask, ABS_BITMASK_SIZE);
 }
 
-static inline int huamobile_event_get_key_bitmask(int fd, void *bitmask, size_t size)
+static inline int huamobile_event_get_key_bitmask(int fd, void *bitmask)
 {
-	return huamobile_event_get_bitmask(fd, EV_KEY, bitmask, size);
+	return huamobile_event_get_bitmask(fd, EV_KEY, bitmask, KEY_BITMASK_SIZE);
 }
 
-static inline int huamobile_event_get_rel_bitmask(int fd, void *bitmask, size_t size)
+static inline int huamobile_event_get_rel_bitmask(int fd, void *bitmask)
 {
-	return huamobile_event_get_bitmask(fd, EV_REL, bitmask, size);
+	return huamobile_event_get_bitmask(fd, EV_REL, bitmask, REL_BITMASK_SIZE);
 }

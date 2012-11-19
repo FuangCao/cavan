@@ -47,14 +47,14 @@ bool huamobile_mouse_device_matcher(int fd, const char *name, void *data)
 
 	pr_pos_info();
 
-	ret = huamobile_event_get_rel_bitmask(fd, rel_bitmask, sizeof(rel_bitmask));
+	ret = huamobile_event_get_rel_bitmask(fd, rel_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_rel_bitmask");
 		return ret;
 	}
 
-	ret = huamobile_event_get_key_bitmask(fd, key_bitmask, sizeof(key_bitmask));
+	ret = huamobile_event_get_key_bitmask(fd, key_bitmask);
 	if (ret < 0)
 	{
 		pr_error_info("huamobile_event_get_key_bitmask");
@@ -199,7 +199,7 @@ struct huamobile_input_device *huamobile_mouse_create(void)
 	point->pressure = 0;
 	point->released = 1;
 
-	dev = &mouse->dev;
+	dev = &mouse->input_dev;
 	dev->probe = huamobile_mouse_probe;
 	dev->remove = NULL;
 	dev->event_handler = huamobile_mouse_event_handler;
