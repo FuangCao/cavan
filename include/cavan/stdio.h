@@ -27,6 +27,10 @@
 #define FONT_WHITE_BACKGROUND	47	//set white background
 #define FONT_DEFAULT_BACKGROUND	49	//set default background color
 
+#ifndef __THROW
+#define __THROW
+#endif
+
 #ifndef __THROWNL
 #define __THROWNL __THROW
 #endif
@@ -35,11 +39,7 @@
 #define	_POSIX_VDISABLE	'\0'
 #endif
 
-#ifdef CONFIG_BUILD_FOR_ANDROID
-#define printf_format(a, b)
-#else
 #define printf_format(a, b)		__THROWNL __attribute__ ((__format__ (__printf__, a, b)))
-#endif
 
 #define __printf_format_10__	printf_format(1, 0)
 #define __printf_format_12__	printf_format(1, 2)

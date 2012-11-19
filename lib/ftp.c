@@ -481,7 +481,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			cmd_arg++;
 		}
 
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined(CONFIG_BUILD_FOR_ANDROID)
 		println("command[%ld] = %s", recvlen, cmd_buff);
 #else
 		println("command[%d] = %s", recvlen, cmd_buff);
@@ -1044,7 +1044,7 @@ int ftp_client_run(const char *ip, u16 port)
 		}
 
 		buff[recvlen] = 0;
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined(CONFIG_BUILD_FOR_ANDROID)
 		println("receive buff[%ld] = %s", recvlen, buff);
 #else
 		println("receive buff[%d] = %s", recvlen, buff);
@@ -1076,7 +1076,7 @@ label_get_command:
 				ret = sendlen;
 				break;
 			}
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined(CONFIG_BUILD_FOR_ANDROID)
 			println("send buff[%ld] = %s", sendlen, buff);
 #else
 			println("send buff[%d] = %s", sendlen, buff);

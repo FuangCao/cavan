@@ -1110,7 +1110,7 @@ int tftp_command_pipe(struct tftp_command_pkg *command_pkg_p, const struct socka
 
 	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
-	fp = pipe_command_verbose(command_pkg_p->command);
+	fp = pipe_command_verbose("%s", command_pkg_p->command);
 	if (fp == NULL || write_response_to(fp, TFTP_COMMAND_LOG_FILE) < 0)
 	{
 		print_error("Excute command \"%s\" failed", command_pkg_p->command);
@@ -1132,7 +1132,11 @@ int tftp_mknode(struct tftp_mknode_pkg *mknode_pkg_p, const struct sockaddr_in *
 	println("dev = 0x%lx", mknode_pkg_p->dev);
 #else
 	println("Create device %s, sizeof(dev_t) = %d", mknode_pkg_p->pathname, sizeof(dev_t));
+#ifdef CONFIG_BUILD_FOR_ANDROID
+	println("dev = 0x%x", mknode_pkg_p->dev);
+#else
 	println("dev = 0x%llx", mknode_pkg_p->dev);
+#endif
 #endif
 
 	remove(mknode_pkg_p->pathname);
