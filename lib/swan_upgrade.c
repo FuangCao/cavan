@@ -146,7 +146,7 @@ static void swan_keypad_handler(struct cavan_input_device *dev, const char *name
 
 static void swan_show_picture(const char *state, int reset)
 {
-	int i;
+	unsigned int i;
 	const char *fb_devices[] = {"/dev/fb0", "/dev/graphice/fb0", "/dev/fb1", "/dev/graphice/fb1"};
 	struct cavan_input_service service;
 
@@ -597,7 +597,7 @@ out_close_img:
 int upgrade(const char *pkg_name, const char *dir_name)
 {
 	int ret;
-	int i;
+	unsigned int i;
 	int pkg_fd;
 	struct swan_package_info pkg_info;
 	struct swan_file_info file_info;
@@ -792,7 +792,7 @@ out_close_pkg:
 
 int fupgrade_simple(int pkg_fd)
 {
-	int i;
+	unsigned int i;
 	int ret;
 	struct swan_package_info pkg_info;
 	struct swan_file_info file_info;

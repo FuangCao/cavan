@@ -16,7 +16,7 @@ struct cavan_inotify_watch
 struct cavan_inotify_descriptor
 {
 	int fd;
-	int watch_count;
+	size_t watch_count;
 	struct cavan_inotify_watch watchs[INOTIFY_MAX_WATCH_COUNT];
 };
 

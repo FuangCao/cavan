@@ -592,7 +592,7 @@ int cavan_fill_ellipse(struct cavan_screen_descriptor *desc, int x, int y, int w
 
 int cavan_draw_polygon(struct cavan_screen_descriptor *desc, struct cavan_point *points, size_t count)
 {
-	int i;
+	unsigned int i;
 	int ret;
 
 	if (count < 3)
@@ -939,7 +939,7 @@ int cavan_calculate_line_cross_point(int x1, int x2, double a1, double b1, doubl
 
 int cavan_calculate_polygo_cross_points(struct cavan_point *points, struct cavan_point *cross_points, size_t count)
 {
-	int i;
+	size_t i;
 	int ret;
 	struct cavan_point *p0, *p1, *p2, *p3;
 	double a1, a2, b1, b2;
@@ -972,7 +972,7 @@ int cavan_calculate_polygo_cross_points(struct cavan_point *points, struct cavan
 int cavan_fill_polygon_standard2(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
-	int i;
+	size_t i;
 	struct cavan_point points[count];
 	struct cavan_point cross_points[count];
 	struct cavan_point triangle_points[3];
@@ -1010,7 +1010,7 @@ int cavan_draw_polygon_standard3(struct cavan_screen_descriptor *desc, size_t co
 {
 	int ret;
 	struct cavan_point points[count];
-	int i, j;
+	size_t i, j;
 
 	ret = cavan_build_polygon_points(desc, points, count, x, y, r, rotation);
 	if (ret < 0)
@@ -1035,7 +1035,7 @@ int cavan_draw_polygon_standard3(struct cavan_screen_descriptor *desc, size_t co
 int cavan_fill_polygon_standard3(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
-	int i;
+	unsigned int i;
 	struct cavan_point points[count];
 	struct cavan_point cross_points[count];
 

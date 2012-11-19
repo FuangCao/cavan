@@ -23,7 +23,7 @@ struct binary_tree_descriptor
 {
 	struct binary_tree_node *root;
 	struct binary_tree_cache buff[TREE_BUFFER_SIZE], *buff_end;
-	int count;
+	size_t count;
 	int (*compare)(const void *data1, const void *data2);
 	void (*traversal)(void *data);
 };

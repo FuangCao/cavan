@@ -98,8 +98,7 @@ static int swan_vk_parse_option(struct swan_vk_command_option *opt, int argc, ch
 			.flag = NULL,
 			.val = 'l',
 		},
-		{
-		},
+		{0, 0, 0, 0},
 	};
 
 	opt->link_type = SWAN_VK_LINK_ADB;
@@ -803,7 +802,7 @@ static int swan_vk_server_handler(int index, cavan_shared_data_t data)
 	while (1)
 	{
 		rdlen = recv(sockfd_client, events, sizeof(events), 0);
-		if (rdlen < sizeof(events[0]))
+		if (rdlen < (ssize_t)sizeof(events[0]))
 		{
 			pr_red_info("inet_recv");
 			return rdlen;

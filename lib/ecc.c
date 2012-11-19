@@ -3,7 +3,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-12-23 16:39:57
 
-const static u8 cavan_ecc_table[] =
+static const u8 cavan_ecc_table[] =
 {
 	0x00, 0x55, 0x56, 0x03, 0x59, 0x0c, 0x0f, 0x5a, 0x5a, 0x0f,
 	0x0c, 0x59, 0x03, 0x56, 0x55, 0x00, 0x65, 0x30, 0x33, 0x66,
@@ -51,9 +51,9 @@ int cavan_ecc_polarity_row(u8 data)
 
 u8 cavan_ecc_polarity_column(u8 data)
 {
-	int i;
+	unsigned int i;
 	u8 cp;
-	const static u8 cp_table[] =
+	static const u8 cp_table[] =
 	{
 		0x55, 0xaa, 0x33, 0xCC, 0x0F, 0xF0
 	};
@@ -83,7 +83,7 @@ void cavan_ecc_show_ecc_table(const u8 *table, size_t count)
 
 u8 *cavan_ecc_build_ecc_table(u8 *table, size_t count)
 {
-	int i;
+	unsigned int i;
 	u8 ecc;
 
 	for (i = 0; i < count; i++)

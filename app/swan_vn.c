@@ -148,6 +148,7 @@ static int run_client_thead(const char *data_path)
 		}
 		pthread_mutex_unlock(&client_data.lock);
 
+#ifndef CONFIG_BUILD_FOR_ANDROID
 		if (thread_send)
 		{
 			pthread_cancel(thread_send);
@@ -157,6 +158,7 @@ static int run_client_thead(const char *data_path)
 		{
 			pthread_cancel(thread_recv);
 		}
+#endif
 
 		while (1)
 		{
@@ -362,7 +364,7 @@ static int run_server_thead(const char *net_dev, const char *usb_dev)
 		goto out_usb_uninit;
 	}
 
-	pr_bold_info("host hwaddr = %s", mac_address_tostring(nb_desc.host_hwaddr, MAC_ADDRESS_LEN));
+	pr_bold_info("host hwaddr = %s", mac_address_tostring((char *)nb_desc.host_hwaddr, MAC_ADDRESS_LEN));
 	pr_bold_info("host ipaddr = %s", inet_ntoa(nb_desc.host_ifaddr.sin_addr));
 
 	server_data.nb_desc = &nb_desc;

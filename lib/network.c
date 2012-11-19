@@ -222,8 +222,8 @@ const char *ip_protocol_type_tostring(int type)
 
 void show_mac_header(struct mac_header *hdr)
 {
-	println("dest_mac = %s", mac_address_tostring(hdr->dest_mac, sizeof(hdr->dest_mac)));
-	println("src_mac = %s", mac_address_tostring(hdr->src_mac, sizeof(hdr->src_mac)));
+	println("dest_mac = %s", mac_address_tostring((char *)hdr->dest_mac, sizeof(hdr->dest_mac)));
+	println("src_mac = %s", mac_address_tostring((char *)hdr->src_mac, sizeof(hdr->src_mac)));
 	pr_bold_info("protocol_type = %s", mac_protocol_type_tostring(ntohs(hdr->protocol_type)));
 }
 
@@ -283,9 +283,9 @@ void show_arp_header(struct arp_header *hdr, int simple)
 		println("op_code = %d", ntohs(hdr->op_code));
 	}
 
-	println("src_mac = %s", mac_address_tostring(hdr->src_mac, sizeof(hdr->src_mac)));
+	println("src_mac = %s", mac_address_tostring((char *)hdr->src_mac, sizeof(hdr->src_mac)));
 	println("src_ip = %s", inet_ntoa(*(struct in_addr *)&hdr->src_ip));
-	println("dest_mac = %s", mac_address_tostring(hdr->dest_mac, sizeof(hdr->dest_mac)));
+	println("dest_mac = %s", mac_address_tostring((char *)hdr->dest_mac, sizeof(hdr->dest_mac)));
 	println("dest_ip = %s", inet_ntoa(*(struct in_addr *)&hdr->dest_ip));
 }
 
@@ -302,7 +302,7 @@ void show_dhcp_header(struct dhcp_header *hdr)
 	println("yiaddr = %s", inet_ntoa(*(struct in_addr *)&hdr->yiaddr));
 	println("siaddr = %s", inet_ntoa(*(struct in_addr *)&hdr->siaddr));
 	println("giaddr = %s", inet_ntoa(*(struct in_addr *)&hdr->giaddr));
-	println("chaddr = %s", mac_address_tostring(hdr->chaddr, MAC_ADDRESS_LEN));
+	println("chaddr = %s", mac_address_tostring((char *)hdr->chaddr, MAC_ADDRESS_LEN));
 	println("sname = %s", hdr->sname);
 }
 

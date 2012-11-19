@@ -152,7 +152,7 @@ static inline int ext2_read_gdt(struct ext2_desc *desc, struct ext2_group_desc *
 {
 	size_t gdt_size = desc->group_count * sizeof(*gdt);
 
-	return ffile_readfrom(desc->fd, gdt, gdt_size, BOOT_BLOCK_SIZE + desc->block_size) == gdt_size ? 0 : -EFAULT;
+	return (size_t)ffile_readfrom(desc->fd, gdt, gdt_size, BOOT_BLOCK_SIZE + desc->block_size) == gdt_size ? 0 : -EFAULT;
 }
 
 static inline off_t block_index_to_offset(struct ext2_desc *desc, u32 block_index)

@@ -70,9 +70,9 @@ int ftp_server_receive_file2(int sockfd, const struct sockaddr_in *addr, const c
 	return 0;
 }
 
-ssize_t ftp_send_text_data(int sockfd, const void *text, size_t size)
+ssize_t ftp_send_text_data(int sockfd, const char *text, size_t size)
 {
-	const void *text_end;
+	const char *text_end;
 	char buff[size << 1], *p;
 
 	for (p = buff, text_end = text + size; text < text_end; p++, text++)
@@ -190,7 +190,7 @@ static char *ftp_file_time_tostring(const time_t *time, char *text)
 
 	if (localtime_r(time, &ti) == NULL)
 	{
-		mem_set8(&ti, 0, sizeof(ti));
+		mem_set8((u8 *)&ti, 0, sizeof(ti));
 	}
 
 	return text + sprintf(text, "%s %02d %02d:%02d", month_tostring(ti.tm_mon), ti.tm_mday, ti.tm_hour, ti.tm_min);
@@ -210,8 +210,12 @@ char *ftp_file_stat_tostring(const char *filepath, char *text)
 
 	*text++ = file_type_to_char(st.st_mode);
 	text = file_permition_tostring(st.st_mode, text);
-	text += sprintf(text, " %-5lld %-5lld %-5lld %-10lld ", (u64)st.st_nlink, (u64)st.st_uid, (u64)st.st_gid, (u64)st.st_size);
-	text = ftp_file_time_tostring(&st.st_mtime, text);
+#if __WORDSIZE == 64
+	text += sprintf(text, " %-5ld %-5ld %-5ld %-10ld ", (u64)st.st_nlink, (u64)st.st_uid, (u64)st.st_gid, (u64)st.st_size);
+#else
+	text += sprintf(text, " %-5Ld %-5Ld %-5Ld %-10Ld ", (u64)st.st_nlink, (u64)st.st_uid, (u64)st.st_gid, (u64)st.st_size);
+#endif
+	text = ftp_file_time_tostring((time_t *)&st.st_mtime, text);
 
 	return text;
 }
@@ -795,7 +799,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 			{
 				struct tm ti;
 
-				if (localtime_r(&st.st_atime, &ti) == NULL)
+				if (localtime_r((time_t *)&st.st_atime, &ti) == NULL)
 				{
 					sprintf(rep_buff, "550 get localtime failed: %s", strerror(errno));
 				}

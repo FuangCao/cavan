@@ -117,7 +117,7 @@ void cavan_mtd_free_partition_descriptor(struct mtd_partition_descriptor *desc)
 {
 	struct cavan_mtd_descriptor *dev_desc = desc->part_info->dev_desc;
 
-	if (desc >= dev_desc->part_descs && (desc - dev_desc->part_descs) < NELEM(dev_desc->part_descs))
+	if (desc >= dev_desc->part_descs && (desc - dev_desc->part_descs) < (int)NELEM(dev_desc->part_descs))
 	{
 		desc->fd = -1;
 		desc->part_info = NULL;
@@ -130,10 +130,11 @@ void cavan_mtd_free_partition_descriptor(struct mtd_partition_descriptor *desc)
 
 int mtd_open_char_device(int index, int flags)
 {
-	int i;
+	unsigned int i;
 	int fd;
 	char buff[1024];
 	const char *mtd_char_dirs[] = {"/dev", "/dev/mtd"};
+
 	for (i = 0; i < NELEM(mtd_char_dirs); i++)
 	{
 		sprintf(buff, "%s/mtd%d", mtd_char_dirs[i], index);
@@ -328,7 +329,7 @@ ssize_t cavan_mtd_write_block(struct mtd_partition_descriptor *desc, const void 
 		}
 
 		writelen = write(fd, buff, erase_size);
-		if (writelen != erase_size)
+		if ((size_t)writelen != erase_size)
 		{
 			print_error("write");
 			return writelen;

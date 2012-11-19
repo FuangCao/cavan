@@ -509,9 +509,9 @@ out_close_fd:
 	return readlen;
 }
 
-u8 ft5406_calculate_checksum(const void *buff, size_t size)
+u8 ft5406_calculate_checksum(const char *buff, size_t size)
 {
-	const void *buff_end;
+	const char *buff_end;
 	u8 checksum;
 
 	for (buff_end = buff + size, checksum = 0; buff < buff_end; buff++)

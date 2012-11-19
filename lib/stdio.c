@@ -1,6 +1,7 @@
 #include <cavan.h>
 #include <cavan/text.h>
 #include <linux/kd.h>
+#include <termios.h>
 
 #define MAX_BUFF_LEN	MB(1)
 
@@ -40,11 +41,14 @@ int restore_tty_attr(int fd)
 		return -EINVAL;
 	}
 
-	tcdrain (fd);
-	tcflush (fd, TCIOFLUSH);
-	tcflow (fd, TCOON);
+#ifndef CONFIG_BUILD_FOR_ANDROID
+	tcdrain(fd);
+#endif
 
-	return tcsetattr (fd, TCSADRAIN, &tty_old_attr);
+	tcflush(fd, TCIOFLUSH);
+	tcflow(fd, TCOON);
+
+	return tcsetattr(fd, TCSADRAIN, &tty_old_attr);
 }
 
 int set_tty_mode(int fd, int mode)
@@ -63,7 +67,7 @@ int set_tty_mode(int fd, int mode)
 		}
 
 		tty_attr = tty_old_attr;
-		tty_attr.c_iflag = BRKINT|IXON;
+		tty_attr.c_iflag = BRKINT | IXON;
 		tty_attr.c_oflag = 0;
 		tty_attr.c_cflag &= ~PARENB;
 		tty_attr.c_cflag |= CS8;
@@ -331,7 +335,11 @@ int show_file(const char *dev_name, u64 start, u64 size)
 	int ret;
 	char buff[size];
 
-	println("start = %lld, size = %lld", start, size);
+#if __WORDSIZE == 64
+	println("start = %ld, size = %ld", start, size);
+#else
+	println("start = %Ld, size = %Ld", start, size);
+#endif
 
 	fd = open(dev_name, O_RDONLY | O_BINARY);
 	if (fd == -1)
@@ -407,7 +415,7 @@ out_close_fd:
 
 void print_title(const char *title, char sep, size_t size)
 {
-	int i;
+	size_t i;
 
 	for (i = 0; i < size; i++)
 	{
@@ -486,7 +494,7 @@ int open_console(const char *dev_path)
 	console_fp = fp;
 
 	set_default_font();
-	fswitch2text_mode(fp->_fileno);
+	fswitch2text_mode(fileno(fp));
 
 	return 0;
 }
@@ -499,7 +507,7 @@ void close_console(void)
 	}
 
 	set_default_font();
-	fswitch2graph_mode(console_fp->_fileno);
+	fswitch2graph_mode(fileno(console_fp));
 
 	fflush(console_fp);
 	fclose(console_fp);

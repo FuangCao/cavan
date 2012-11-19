@@ -29,7 +29,7 @@ int get_index_line(struct buffer *buff, int index, char *line);
 char *find_prefix_line(struct buffer *buff, const char *prefix, int prefix_size);
 int get_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, char *line);
 char *find_next_line(struct buffer *buff, char *line);
-void *mem_area_copy(void *dest, const void *src, const void *src_end);
+char *mem_area_copy(char *dest, const char *src, const char *src_end);
 struct buffer *replace_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, const char *new_line, int new_line_size);
 
 ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, struct equation *line, size_t count);

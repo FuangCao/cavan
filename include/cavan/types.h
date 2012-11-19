@@ -1,22 +1,23 @@
 #pragma once
 
-#include <asm-generic/int-ll64.h>
+#include <stdint.h>
+#include <sys/types.h>
 
-typedef __u64 u64, dword;
-typedef __s64 s64;
+typedef uint64_t u64, dword;
+typedef int64_t s64;
 
-typedef __u32 u32, word;
-typedef __s32 s32, sword;
+typedef uint32_t u32, word;
+typedef int32_t s32, sword;
 
-typedef __u16 u16, hword;
-typedef __s16 s16;
+typedef uint16_t u16, hword;
+typedef int16_t s16;
 
-typedef __u8 u8, byte;
-typedef __s8 s8;
+typedef uint8_t u8, byte;
+typedef int8_t s8;
 
 typedef unsigned long int ulong;
 typedef unsigned short int ushort;
-typedef unsigned int uint;
+
 typedef unsigned char uchar;
 
 typedef signed long int slong;

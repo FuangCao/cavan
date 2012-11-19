@@ -260,7 +260,7 @@ int get_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, ch
 	return q - line;
 }
 
-void *mem_area_copy(void *dest, const void *src, const void *src_end)
+char *mem_area_copy(char *dest, const char *src, const char *src_end)
 {
 	while (src <= src_end)
 	{

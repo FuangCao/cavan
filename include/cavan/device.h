@@ -22,6 +22,11 @@
 #define MNT_EXPIRE			(1 << 2)
 #endif
 
+#ifndef BLKSSZGET
+#define BLKSSZGET			_IO(0x12,104) /* Get block device sector size.  */
+#define BLKGETSIZE64		_IOR(0x12,114,size_t) /* return device size.  */
+#endif
+
 typedef struct loop_info64	cavan_loop_info_t;
 
 #pragma pack(1)

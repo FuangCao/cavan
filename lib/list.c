@@ -17,7 +17,7 @@ void single_link_free(struct single_link *link, off_t offset)
 	while (node)
 	{
 		next = node->next;
-		free(((void *)node) - offset);
+		free(((char *)node) - offset);
 		node = next;
 	}
 
@@ -121,7 +121,7 @@ void circle_link_free(struct circle_link *link, off_t offset)
 	while (node != head)
 	{
 		temp = node->next;
-		free(((void *)node) - offset);
+		free(((char *)node) - offset);
 		node = temp;
 	}
 
@@ -203,7 +203,7 @@ void double_link_free(struct double_link *link, off_t offset)
 	while (node != head)
 	{
 		temp = node->next;
-		free(((void *)node) - offset);
+		free(((char *)node) - offset);
 		node = temp;
 	}
 

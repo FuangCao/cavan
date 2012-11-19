@@ -2,6 +2,7 @@
 
 #include <cavan.h>
 #include <cavan/event.h>
+#include <cavan/input.h>
 
 char *cavan_event_tostring(struct input_event *event, char *text)
 {

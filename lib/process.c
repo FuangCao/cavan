@@ -27,7 +27,7 @@ ssize_t process_get_cmdline_simple2(const char *pid, char *buff, size_t size)
 
 char *process_get_cmdline_base(const char *filename, char *buff, size_t size)
 {
-	size_t readlen;
+	ssize_t readlen;
 	char readbuff[1024];
 	char *p, *p_end, *buff_end;
 

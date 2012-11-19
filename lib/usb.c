@@ -4,11 +4,11 @@
 #include <cavan/usb.h>
 #include <dirent.h>
 
-int dump_cavan_usb_descriptor(const void *buff, struct cavan_usb_descriptor *desc, size_t length)
+int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *desc, size_t length)
 {
 	struct usb_device_descriptor *dev_desc;
 	struct usb_config_descriptor *cfg_desc, *cfg_desc_end;
-	const void *end_buff;
+	const char *end_buff;
 
 	if (length < USB_DT_DEVICE_SIZE + USB_DT_CONFIG_SIZE)
 	{
@@ -18,7 +18,7 @@ int dump_cavan_usb_descriptor(const void *buff, struct cavan_usb_descriptor *des
 
 	dev_desc = &desc->dev_desc;
 
-	if (is_usb_device_descriptor(buff))
+	if (is_usb_device_descriptor((struct usb_device_descriptor *)buff))
 	{
 		memcpy(dev_desc, buff, USB_DT_DEVICE_SIZE);
 		buff += USB_DT_DEVICE_SIZE;
@@ -31,7 +31,7 @@ int dump_cavan_usb_descriptor(const void *buff, struct cavan_usb_descriptor *des
 
 	for (cfg_desc = desc->cfg_descs, cfg_desc_end = cfg_desc + dev_desc->bNumConfigurations; cfg_desc < cfg_desc_end; cfg_desc++)
 	{
-		if (is_usb_config_descriptor(buff))
+		if (is_usb_config_descriptor((struct usb_config_descriptor *)buff))
 		{
 			memcpy(cfg_desc, buff, USB_DT_CONFIG_SIZE);
 			buff += USB_DT_CONFIG_SIZE;
@@ -46,7 +46,7 @@ int dump_cavan_usb_descriptor(const void *buff, struct cavan_usb_descriptor *des
 	desc->if_count = 0;
 	end_buff = buff + length - USB_DT_INTERFACE_SIZE;
 
-	while (buff <= end_buff && is_usb_interface_descriptor(buff))
+	while (buff <= end_buff && is_usb_interface_descriptor((struct usb_interface_descriptor *)buff))
 	{
 		struct usb_interface_descriptor *if_desc;
 		struct cavan_usb_interface_descriptor *cavan_if_desc;
@@ -419,7 +419,9 @@ out_close_fd:
 
 void cavan_usb_uninit(struct cavan_usb_descriptor *desc)
 {
+#ifndef CONFIG_BUILD_FOR_ANDROID
 	pthread_cancel(desc->thread_notify);
+#endif
 
 	close(desc->fd);
 }
@@ -605,7 +607,7 @@ ssize_t cavan_usb_read_data(struct cavan_usb_descriptor *desc, void *buff, size_
 	struct cavan_usb_data_header hdr;
 
 	readlen = cavan_usb_bluk_read(desc, &hdr, sizeof(hdr));
-	if (readlen < sizeof(hdr))
+	if (readlen < (ssize_t)sizeof(hdr))
 	{
 		pr_red_pos();
 		return readlen < 0 ? readlen : -ENOMEDIUM;
@@ -630,7 +632,7 @@ ssize_t cavan_usb_write_data(struct cavan_usb_descriptor *desc, const void *buff
 	};
 
 	writelen = cavan_usb_bluk_write(desc, &hdr, sizeof(hdr));
-	if (writelen < sizeof(hdr))
+	if (writelen < (ssize_t)sizeof(hdr))
 	{
 		pr_red_pos();
 		return writelen < 0 ? writelen : -ENOMEDIUM;
@@ -645,7 +647,7 @@ ssize_t cavan_adb_read_data(int fd_adb, void *buff, size_t size)
 	struct cavan_usb_data_header hdr;
 
 	readlen = read(fd_adb, &hdr, sizeof(hdr));
-	if (readlen < sizeof(hdr))
+	if (readlen < (ssize_t)sizeof(hdr))
 	{
 		pr_red_pos();
 		return readlen < 0 ? readlen : -ENOMEDIUM;
@@ -670,7 +672,7 @@ ssize_t cavan_adb_write_data(int fd_adb, const void *buff, size_t size)
 	};
 
 	writelen = write(fd_adb, &hdr, sizeof(hdr));
-	if (writelen < sizeof(hdr))
+	if (writelen < (ssize_t)sizeof(hdr))
 	{
 		print_error("write");
 		return writelen < 0 ? writelen : -ENOMEDIUM;

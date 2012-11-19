@@ -89,7 +89,7 @@ u32 cal_fat_table_offset(struct fat_info *info_p, u32 cluster_index)
 u32 get_fat_table_entry(struct fat_info *info_p, u32 cluster_index)
 {
 	u32 fat_entry;
-	void *start_addr = info_p->fat_table + cal_fat_table_offset(info_p, cluster_index);
+	void *start_addr = (char *)info_p->fat_table + cal_fat_table_offset(info_p, cluster_index);
 
 	if (info_p->type == FAT12)
 	{
@@ -126,7 +126,7 @@ int set_fat_table_entry(struct fat_info *info_p, u32 cluster_index, u32 fat_entr
 	struct fat_dbr *dbr = &info_p->dbr;
 
 	fat_offset = cal_fat_table_offset(info_p, cluster_index);
-	start_addr = info_p->fat_table + fat_offset;
+	start_addr = (char *)info_p->fat_table + fat_offset;
 	sector_index = fat_offset / dbr->bytes_per_sector;
 
 	if (info_p->type == FAT12)
@@ -171,7 +171,7 @@ int set_fat_table_entry(struct fat_info *info_p, u32 cluster_index, u32 fat_entr
 		}
 	}
 
-	return fat_write_sectors(info_p, dbr->reserve_sector_count + sector_index, write_count, info_p->fat_table + sector_index * dbr->bytes_per_sector);
+	return fat_write_sectors(info_p, dbr->reserve_sector_count + sector_index, write_count, (char *)info_p->fat_table + sector_index * dbr->bytes_per_sector);
 }
 
 int entry_is_eof(struct fat_info *info_p, u32 entry_cotent)
@@ -516,7 +516,7 @@ ssize_t load_data(struct fat_info *info_p, u32 start_cluster, void *buff, size_t
 			break;
 		}
 
-		buff += readlen;
+		buff = (char *)buff + readlen;
 		size -= readlen;
 	}
 

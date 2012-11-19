@@ -11,7 +11,7 @@
 #define MAX_BUFF_LEN	MB(1)
 #define MIN_FILE_SIZE	KB(1)
 
-const static u32 crc16_table[256] =
+static const u32 crc16_table[256] =
 {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
 	0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
@@ -47,7 +47,7 @@ const static u32 crc16_table[256] =
 	0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0,
 };
 
-const static u32 crc32_table[256] =
+static const u32 crc32_table[256] =
 {
 	0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L,
 	0x706af48fL, 0xe963a535L, 0x9e6495a3L, 0x0edb8832L, 0x79dcb8a4L,
@@ -141,7 +141,7 @@ int file_join(const char *dest_file, char *src_files[], int count)
 
 		while (1)
 		{
-			size_t readlen, writelen;
+			ssize_t readlen, writelen;
 			char buff[MAX_BUFF_LEN];
 
 			readlen = read(src_fd, buff, sizeof(buff));
@@ -732,11 +732,11 @@ int try_to_open(int flags, ...)
 
 ssize_t ffile_read(int fd, void *buff, size_t size)
 {
-	void *buff_bak = buff, *buff_end = buff + size;
+	void *buff_bak = buff, *buff_end = (char *)buff + size;
 
 	while (buff < buff_end)
 	{
-		ssize_t readlen = read(fd, buff, buff_end - buff);
+		ssize_t readlen = read(fd, buff, (char *)buff_end - (char *)buff);
 
 		if (readlen < 0)
 		{
@@ -745,22 +745,22 @@ ssize_t ffile_read(int fd, void *buff, size_t size)
 
 		if (readlen == 0)
 		{
-			return buff - buff_bak;
+			break;
 		}
 
-		buff += readlen;
+		buff = (char *)buff + readlen;
 	}
 
-	return buff - buff_bak;
+	return (char *)buff - (char *)buff_bak;
 }
 
 ssize_t ffile_write(int fd, const void *buff, size_t size)
 {
-	const void *buff_bak = buff, *buff_end = buff + size;
+	const void *buff_bak = buff, *buff_end = (char *)buff + size;
 
 	while (buff < buff_end)
 	{
-		ssize_t writelen = write(fd, buff, buff_end - buff);
+		ssize_t writelen = write(fd, buff, (char *)buff_end - (char *)buff);
 
 		if (writelen < 0)
 		{
@@ -769,13 +769,13 @@ ssize_t ffile_write(int fd, const void *buff, size_t size)
 
 		if (writelen == 0)
 		{
-			return buff - buff_bak;
+			break;
 		}
 
-		buff += writelen;
+		buff = (char *)buff + writelen;
 	}
 
-	return buff - buff_bak;
+	return (char *)buff - (char *)buff_bak;
 }
 
 ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
@@ -1176,27 +1176,27 @@ out_close_file1:
 	return ret;
 }
 
-u16 mem_crc16(u16 crc, const void *buff, size_t size)
+u16 mem_crc16(u16 crc, const char *buff, size_t size)
 {
-	const void *buff_end = buff + size;
+	const char *buff_end = buff + size;
 
 	while (buff < buff_end)
 	{
-		crc = crc16_table[((crc >> 8) ^ (*(char *)buff++)) & 0xFF] ^ (crc << 8);
+		crc = crc16_table[((crc >> 8) ^ (*buff++)) & 0xFF] ^ (crc << 8);
 	}
 
 	return crc;
 }
 
-u32 mem_crc32(u32 crc, const void *buff, size_t size)
+u32 mem_crc32(u32 crc, const char *buff, size_t size)
 {
-	const void *buff_end = buff + size;
+	const char *buff_end = buff + size;
 
 	crc ^= 0xFFFFFFFFL;
 
 	while (buff < buff_end)
 	{
-		crc = crc32_table[(crc ^ (*(char *)buff++)) & 0xFF] ^ (crc >> 8);
+		crc = crc32_table[(crc ^ (*buff++)) & 0xFF] ^ (crc >> 8);
 	}
 
 	return crc ^ 0xFFFFFFFFL;
@@ -1750,14 +1750,14 @@ int file_select_read(int fd, long timeout)
 	return select(fd + 1, &set_read, NULL, NULL, &time);
 }
 
-u32 mem_checksum32_simple(const void *mem, size_t count)
+u32 mem_checksum32_simple(const char *mem, size_t count)
 {
-	const void *mem_end = mem + count;
+	const char *mem_end = mem + count;
 	u64 checksum = 0;
 
 	while (mem < mem_end)
 	{
-		checksum += *(char *)mem++;
+		checksum += *mem++;
 	}
 
 	checksum = (checksum >> 32) + (checksum & 0xFFFFFFFF);
@@ -1765,7 +1765,7 @@ u32 mem_checksum32_simple(const void *mem, size_t count)
 	return (u32)((checksum >> 32) + checksum);
 }
 
-u16 mem_checksum16_simple(const void *mem, size_t count)
+u16 mem_checksum16_simple(const char *mem, size_t count)
 {
 	u32 checksum = mem_checksum32_simple(mem, count);
 
@@ -1774,7 +1774,7 @@ u16 mem_checksum16_simple(const void *mem, size_t count)
 	return (u16)((checksum >> 16) + checksum);
 }
 
-u8 mem_checksum8_simple(const void *mem, size_t count)
+u8 mem_checksum8_simple(const char *mem, size_t count)
 {
 	u16 checksum = mem_checksum16_simple(mem, count);
 
@@ -1791,15 +1791,19 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 
 	if (size == 0)
 	{
-		size = ffile_get_size(fd);
-		if (size < 0)
+		ssize_t tmp;
+
+		tmp = ffile_get_size(fd);
+		if (tmp < 0)
 		{
 			error_msg("get file size failed");
-			return size;
+			return tmp;
 		}
+
+		size = tmp;
 	}
 
-	if (offset >= size)
+	if ((size_t)offset >= size)
 	{
 		goto out_return;
 	}
@@ -1994,7 +1998,7 @@ int file_set_loop(const char *filename, char *loop_path, u64 offset)
 		goto out_close_loop;
 	}
 
-	mem_set8(&loopinfo, 0, sizeof(loopinfo));
+	mem_set8((u8 *)&loopinfo, 0, sizeof(loopinfo));
 	if (to_abs_path2_base(filename, (char *)loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL)
 	{
 		ret = -ENOENT;
@@ -2328,7 +2332,7 @@ const char *month_tostring(int month)
 {
 	const char *month_table[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-	if (month >= 0 && month < ARRAY_SIZE(month_table))
+	if (month >= 0 && month < (int)ARRAY_SIZE(month_table))
 	{
 		return month_table[month];
 	}
@@ -2340,7 +2344,7 @@ const char *week_tostring(int week)
 {
 	const char *week_table[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
-	if (week >= 0 && week < ARRAY_SIZE(week_table))
+	if (week >= 0 && week < (int)ARRAY_SIZE(week_table))
 	{
 		return week_table[week];
 	}
@@ -2447,7 +2451,7 @@ size_t fscan_directory1(DIR *dp, void *buff, size_t size)
 	void *buff_end;
 	struct dirent *en;
 
-	buff_end = buff + size;
+	buff_end = (char *)buff + size;
 	size = 0;
 
 	while (buff < buff_end && (en = readdir(dp)))
@@ -2469,7 +2473,7 @@ size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2)
 	void *buff_end;
 	struct dirent *en;
 
-	buff_end = buff + (size1 * size2);
+	buff_end = (char *)buff + (size1 * size2);
 	size1 = 0;
 
 	while (buff < buff_end && (en = readdir(dp)))
@@ -2481,7 +2485,7 @@ size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2)
 
 		text_ncopy(buff, en->d_name, size2);
 
-		buff += size2;
+		buff = (char *)buff + size2;
 		size1++;
 	}
 

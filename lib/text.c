@@ -596,7 +596,11 @@ void text_show64(const u64 *text, size_t count)
 
 	while (text < end_text)
 	{
+#if __WORDSIZE == 64
+		print("%016lx ", *text++);
+#else
 		print("%016Lx ", *text++);
+#endif
 	}
 
 	print_char('\n');
@@ -2308,7 +2312,7 @@ int text_bool_value(const char *text)
 	{
 		"1", "y", "yes", "true",
 	};
-	int i;
+	unsigned int i;
 
 	if (text == NULL)
 	{
@@ -2326,10 +2330,10 @@ int text_bool_value(const char *text)
 	return 0;
 }
 
-void *mac_address_tostring_base(const void *mac, size_t maclen, void *buff)
+char *mac_address_tostring_base(const char *mac, size_t maclen, char *buff)
 {
 	char *p;
-	const void *mac_end;
+	const char *mac_end;
 
 	for (mac_end = mac + maclen - 1, p = buff; mac < mac_end; mac++)
 	{
@@ -2339,7 +2343,7 @@ void *mac_address_tostring_base(const void *mac, size_t maclen, void *buff)
 	return p + sprintf(p, "%02x", *(u8 *)mac);
 }
 
-char *mac_address_tostring(const void *mac, size_t maclen)
+char *mac_address_tostring(const char *mac, size_t maclen)
 {
 	static char buff[20];
 
@@ -2492,9 +2496,9 @@ int text_isnot_dot_name(const char *filename)
 	return filename[0] != '.' || filename[1] != 0;
 }
 
-size_t text_split_by_char(const char *text, char sep, void *buff, size_t size1, size_t size2)
+size_t text_split_by_char(const char *text, char sep, char *buff, size_t size1, size_t size2)
 {
-	void *buff_end;
+	char *buff_end;
 	char *p;
 
 	for (p = buff, buff_end = buff + (size1 * size2), size1 = 1; *text && buff < buff_end; text++)
@@ -2517,9 +2521,9 @@ size_t text_split_by_char(const char *text, char sep, void *buff, size_t size1, 
 	return size1;
 }
 
-char *text_join_by_char(char *text[], size_t size1, char sep, void *buff, size_t size2)
+char *text_join_by_char(char *text[], size_t size1, char sep, char *buff, size_t size2)
 {
-	void *buff_end;
+	char *buff_end;
 	char **text_last;
 
 	for (buff_end = buff + size2, text_last = text + (size1 - 1); buff < buff_end; text++)
@@ -2539,9 +2543,9 @@ char *text_join_by_char(char *text[], size_t size1, char sep, void *buff, size_t
 	return buff;
 }
 
-size_t text_split_by_text(const char *text, const char *sep, void *buff, size_t size1, size_t size2)
+size_t text_split_by_text(const char *text, const char *sep, char *buff, size_t size1, size_t size2)
 {
-	void *buff_end;
+	char *buff_end;
 	char *p;
 	size_t sep_len;
 	const char *text_end;
@@ -2571,9 +2575,9 @@ size_t text_split_by_text(const char *text, const char *sep, void *buff, size_t 
 	return size1;
 }
 
-char *text_join_by_text(char *text[], size_t size1, const char *sep, void *buff, size_t size2)
+char *text_join_by_text(char *text[], size_t size1, const char *sep, char *buff, size_t size2)
 {
-	void *buff_end;
+	char *buff_end;
 	char **text_last;
 
 	for (buff_end = buff + size2, text_last = text + (size1 - 1); buff < buff_end; text++)

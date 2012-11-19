@@ -81,8 +81,8 @@ int ffile_ncat(int fd, size_t size);
 int ffile_cmp(int fd1, int fd2, size_t size);
 int file_cmp(const char *file1, const char *file2, size_t size);
 
-u16 mem_crc16(u16 crc, const void *buff, size_t size);
-u32 mem_crc32(u32 crc, const void *buff, size_t size);
+u16 mem_crc16(u16 crc, const char *buff, size_t size);
+u32 mem_crc32(u32 crc, const char *buff, size_t size);
 int ffile_crc32(int fd, u32 *crc);
 int file_crc32(const char *file_name, u32 *crc);
 
@@ -120,9 +120,9 @@ int file_stat(const char *file_name, struct stat *st);
 int file_select_read(int fd, long timeout);
 int file_poll(int fd, short events, int timeout);
 
-u32 mem_checksum32_simple(const void *mem, size_t count);
-u16 mem_checksum16_simple(const void *mem, size_t count);
-u8 mem_checksum8_simple(const void *mem, size_t count);
+u32 mem_checksum32_simple(const char *mem, size_t count);
+u16 mem_checksum16_simple(const char *mem, size_t count);
+u8 mem_checksum8_simple(const char *mem, size_t count);
 
 u32 ffile_checksum32_simple(int fd, off_t offset, size_t size);
 u16 ffile_checksum16_simple(int fd, off_t offset, size_t size);

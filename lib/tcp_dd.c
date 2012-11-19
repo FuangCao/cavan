@@ -17,7 +17,7 @@ static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 		return;
 	}
 
-	if (res->code < 0)
+	if ((int)res->code < 0)
 	{
 		if (res->number)
 		{
@@ -158,7 +158,7 @@ static int tcp_dd_handle_read_request(int sockfd, struct tcp_dd_file_request *re
 		size = req->size;
 	}
 
-	if (size < req->offset)
+	if (size < (off_t)req->offset)
 	{
 		ret = -EINVAL;
 		tcp_dd_send_response(sockfd, ret, "[Server] No data to be sent");

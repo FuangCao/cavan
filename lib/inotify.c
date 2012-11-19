@@ -157,7 +157,7 @@ int cavan_inotify_event_loop(struct cavan_inotify_descriptor *desc, int (*handle
 				handle(watch->pathname, p, watch->data);
 			}
 
-			p = (void *)(p + 1) + p->len;
+			p = (struct inotify_event *)((char *)(p + 1) + p->len);
 		}
 	}
 

@@ -118,7 +118,7 @@ int swan_ts_test_client(const char *devpath, u16 addr);
 ssize_t ft5406_read_firmware_data1(const char *cfgpath, char *buff, size_t size);
 ssize_t ft5406_read_firmware_data2(const char *cfgpath, char *buff, size_t size);
 ssize_t ft5406_read_firmware_data3(const char *cfgpath, char *buff, size_t size);
-u8 ft5406_calculate_checksum(const void *buff, size_t size);
+u8 ft5406_calculate_checksum(const char *buff, size_t size);
 int ft5406_firmware_write_last_data(int fd, const void *buff, size_t size);
 int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath);
 int ft5406_firmware_upgrade(const char *devpath, const char *cfgpath);

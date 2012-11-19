@@ -105,7 +105,7 @@ int adb_send_command(int sockfd, const char *command)
 int adb_connect_service_base(const char *ip, u16 port)
 {
 	int sockfd;
-	int i;
+	unsigned int i;
 	u16 ports[] = {port, ADB_PORT1, ADB_PORT2};
 	struct sockaddr_in addr;
 
@@ -181,7 +181,7 @@ int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port)
 
 char *adb_parse_sms_single(const char *buff, const char *end, char *segments[], size_t size)
 {
-	int i;
+	unsigned int i;
 	char *p;
 
 	end = text_find_line_end(buff, end);
@@ -309,7 +309,7 @@ int recv_text_and_write(int sockfd, const char *filename)
 
 ssize_t sms_receive_value(int sockfd, void *value, size_t size)
 {
-	return recv(sockfd, value, size, 0) == size ? size : -1;
+	return (size_t)recv(sockfd, value, size, 0) == size ? (ssize_t)size : -1;
 }
 
 ssize_t sms_receive_text(int sockfd, char *buff)

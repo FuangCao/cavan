@@ -131,8 +131,8 @@ static void cavan_shell_insert(int *a, int *end, int step)
 void cavan_shell_short(int *a, size_t size, int *steps, size_t step_size)
 {
 	int *end;
-	int i;
-	int step;
+	size_t i;
+	size_t step;
 
 	if (size < 2)
 	{
@@ -153,7 +153,7 @@ void cavan_shell_short(int *a, size_t size, int *steps, size_t step_size)
 	}
 	else
 	{
-		int j;
+		size_t j;
 
 		for (i = 0; i < step_size; i++)
 		{

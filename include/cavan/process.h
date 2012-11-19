@@ -7,6 +7,7 @@
  */
 
 #include <cavan.h>
+#include <pthread.h>
 
 ssize_t process_get_cmdline_simple1(pid_t pid, char *buff, size_t size);
 ssize_t process_get_cmdline_simple2(const char *pid, char *buff, size_t size);

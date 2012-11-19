@@ -121,7 +121,7 @@ struct cavan_usb_package
 #endif
 #pragma pack()
 
-int dump_cavan_usb_descriptor(const void *buff, struct cavan_usb_descriptor *desc, size_t length);
+int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *desc, size_t length);
 int fusb_read_cavan_descriptor(int fd, struct cavan_usb_descriptor *desc);
 int usb_read_cavan_descriptor(const char *dev_path, struct cavan_usb_descriptor *desc);
 

@@ -219,7 +219,7 @@ static int swan_copy_base(const char *dev_path, const char *cache_file)
 
 int swan_copy(const char *cache_file)
 {
-	int i;
+	unsigned int i;
 	int ret;
 	const char *dev_list[] = {SDCARD_DEVICE "p1", SDCARD_DEVICE, EMMC_DEVICE "p1", EMMC_DEVICE};
 
@@ -262,7 +262,7 @@ int swan_find_upgrade_file_from(const char *dev_path, const char *tmp_file)
 
 int swan_find_upgrade_file(const char *tmp_file)
 {
-	int i;
+	unsigned int i;
 	int ret;
 	const char *dev_list[] = {SDCARD_DEVICE "p1", SDCARD_DEVICE, EMMC_DEVICE "p1", EMMC_DEVICE};
 
@@ -352,7 +352,7 @@ int set_brightness_shadow(int brightness, int step, u32 msec)
 	char buff[32];
 	int ret;
 	ssize_t readlen;
-	u32 current_brightness;
+	int current_brightness;
 
 	fd = open(BRIGHTNESS_PATH, O_RDWR | O_SYNC | O_BINARY);
 	if (fd < 0)
@@ -431,7 +431,7 @@ static struct swan_machine swan_machine_table[] =
 
 int swan_board_name_to_type(const char *name)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(swan_machine_table); i++)
 	{
@@ -446,7 +446,7 @@ int swan_board_name_to_type(const char *name)
 
 const char *swan_board_type_tostring(enum swan_board_type type)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(swan_machine_table); i++)
 	{

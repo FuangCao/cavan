@@ -23,7 +23,7 @@ static void check_bt_mac(char *bt_mac)
 	readlen = file_read_urandom(bt_mac_value, sizeof(bt_mac_value));
 	if (readlen < 0)
 	{
-		int i;
+		unsigned int i;
 
 		for (i = 0; i < ARRAY_SIZE(bt_mac_value); i++)
 		{
@@ -117,7 +117,7 @@ static int read_oem_info(const char *emmc_dev, struct oem_info *oem_info)
 
 static char *get_bt_mac_file(const char *system_mnt_point, char *pathname)
 {
-	int i;
+	unsigned int i;
 	const char *bt_mac_files[] = {I600_BT_MAC_FILE, I200_BT_MAC_FILE};
 	char *name_p;
 

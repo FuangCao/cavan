@@ -314,7 +314,7 @@ int umount_main(const char *pathname, int flags)
 
 int umount_all1(char *devs[], size_t count, int flags)
 {
-	int i;
+	size_t i;
 	int ret, ret_tmp;
 
 	for (i = 0, ret = 0; i < count; i++)
@@ -508,7 +508,7 @@ int mount_update_mtab(const char *source, const char *target, const char *fstype
 
 int libc_mount_auto(const char *source, const char *target, unsigned long flags, const void *data)
 {
-	int i;
+	unsigned int i;
 	int ret;
 	const char *fstypes[] = {"ext4", "vfat", "fuseblk", "ext3", "ext2"};
 
@@ -858,7 +858,7 @@ int fwrite_master_boot_sector(int dev_fd, struct master_boot_sector *mbs_p)
 	}
 
 	ret = ffile_write(dev_fd, mbs_p, sizeof(*mbs_p));
-	if (ret < sizeof(*mbs_p))
+	if (ret < (int)sizeof(*mbs_p))
 	{
 		print_error("ffile_write");
 		return ret;
@@ -1170,7 +1170,7 @@ struct filesystem_desc fs_table[] =
 
 struct filesystem_desc *get_fsdesc_by_name(const char *name)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(fs_table); i++)
 	{
@@ -1187,7 +1187,7 @@ struct filesystem_desc *get_fsdesc_by_name(const char *name)
 
 struct filesystem_desc *get_fsdesc_by_type(enum filesystem_type type)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(fs_table); i++)
 	{
@@ -1303,7 +1303,7 @@ ssize_t partition_read_label(struct partition_desc *part_desc)
 
 ssize_t partition_read_label_auto(const char *dev_path, char *buff, size_t buff_len)
 {
-	int i;
+	unsigned int i;
 	const char *label_cmds[] = {"e2label", "dosfslabel", "ntfslabel"};
 
 	for (i = 0; i < ARRAY_SIZE(label_cmds); i++)
@@ -1758,7 +1758,7 @@ int loop_get_fd(const char *filename, char *loop_path, u64 offset)
 int system_init(const char *path, char *argv[])
 {
 	int ret;
-	int i;
+	unsigned int i;
 	const char *init_paths[] = {"/sbin/init", "/bin/init", "/init", "/bin/sh", "/bin/bash"};
 
 	ret = mount_system_devices();
@@ -1875,9 +1875,9 @@ void show_statfs(struct statfs *stfs)
 
 	println("size = %s", size2text(fs_size));
 	println("avail = %s", size2text(fs_avail));
-	println("used = %Ld%%", ((fs_size - fs_free) * 100) / fs_size);
 
 #if __WORDSIZE == 64
+	println("used = %ld%%", ((fs_size - fs_free) * 100) / fs_size);
 	println("f_bavail = %ld", stfs->f_bavail);
 	println("f_bfree = %ld", stfs->f_bfree);
 	println("f_blocks = %ld", stfs->f_blocks);
@@ -1888,6 +1888,7 @@ void show_statfs(struct statfs *stfs)
 	println("f_namelen = %ld", stfs->f_namelen);
 	println("f_type = %ld", stfs->f_type);
 #else
+	println("used = %Ld%%", ((fs_size - fs_free) * 100) / fs_size);
 	println("f_bavail = %Ld", stfs->f_bavail);
 	println("f_bfree = %Ld", stfs->f_bfree);
 	println("f_blocks = %Ld", stfs->f_blocks);

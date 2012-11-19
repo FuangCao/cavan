@@ -39,7 +39,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	src_ip = inet_addr(text_src_ip);
 	dest_ip = inet_addr(text_dest_ip);
 
-	println("net device = %s, host mac = %s", net_dev, mac_address_tostring(desc.host_hwaddr, MAC_ADDRESS_LEN));
+	println("net device = %s, host mac = %s", net_dev, mac_address_tostring((char *)desc.host_hwaddr, MAC_ADDRESS_LEN));
 	println("src_ip = %s", inet_ntoa(*(struct in_addr *)&src_ip));
 	println("dest_ip = %s", inet_ntoa(*(struct in_addr *)&dest_ip));
 

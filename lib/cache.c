@@ -39,7 +39,7 @@ void mem_cache_uninit(struct mem_cache *cache)
 	free(cache->buff);
 }
 
-size_t mem_cache_write(struct mem_cache *cache, const void *buff, size_t size)
+size_t mem_cache_write(struct mem_cache *cache, const char *buff, size_t size)
 {
 	size_t size_bak;
 	char *head;
@@ -49,7 +49,7 @@ size_t mem_cache_write(struct mem_cache *cache, const void *buff, size_t size)
 
 	for (head = cache->head, end = cache->end; size && head < end; size--)
 	{
-		*head++ = *(const char *)buff++;
+		*head++ = *buff++;
 	}
 
 	if (size == 0)
@@ -59,7 +59,7 @@ size_t mem_cache_write(struct mem_cache *cache, const void *buff, size_t size)
 
 	for (head = cache->buff, end = cache->tail; size && head < end; size--)
 	{
-		*head++ = *(const char *)buff++;
+		*head++ = *buff++;
 	}
 
 out_return:
@@ -69,7 +69,7 @@ out_return:
 	return size_bak;
 }
 
-size_t mem_cache_read(struct mem_cache *cache, void *buff, size_t size)
+size_t mem_cache_read(struct mem_cache *cache, char *buff, size_t size)
 {
 	size_t size_bak;
 	const char *tail, *end;
@@ -79,7 +79,7 @@ size_t mem_cache_read(struct mem_cache *cache, void *buff, size_t size)
 
 	for (tail = cache->tail, end = cache->end; size && tail < end; size--)
 	{
-		*(char *)buff++ = *tail++;
+		*buff++ = *tail++;
 	}
 
 	if (size == 0)
@@ -89,7 +89,7 @@ size_t mem_cache_read(struct mem_cache *cache, void *buff, size_t size)
 
 	for (tail = cache->buff, end = cache->head; size && tail < end; size--)
 	{
-		*(char *)buff++ = *tail++;
+		*buff++ = *tail++;
 	}
 
 out_return:
@@ -134,7 +134,7 @@ size_t mem_cache_discard(struct mem_cache *cache, size_t size)
 	return size;
 }
 
-size_t mem_cache_clean(struct mem_cache *cache, void *buff)
+size_t mem_cache_clean(struct mem_cache *cache, char *buff)
 {
 	size_t size, size_bak;
 	const char *tail, *end;
@@ -143,7 +143,7 @@ size_t mem_cache_clean(struct mem_cache *cache, void *buff)
 
 	for (tail = cache->tail, end = cache->end; size && tail < end; size--)
 	{
-		*(char *)buff++ = *tail++;
+		*buff++ = *tail++;
 	}
 
 	if (size == 0)
@@ -153,7 +153,7 @@ size_t mem_cache_clean(struct mem_cache *cache, void *buff)
 
 	for (tail = cache->buff, end = cache->head; size && tail < end; size--)
 	{
-		*(char *)buff++ = *tail++;
+		*buff++ = *tail++;
 	}
 
 out_return:

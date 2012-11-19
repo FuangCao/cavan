@@ -31,7 +31,16 @@
 #define __THROWNL __THROW
 #endif
 
+#ifndef _POSIX_VDISABLE
+#define	_POSIX_VDISABLE	'\0'
+#endif
+
+#ifdef CONFIG_BUILD_FOR_ANDROID
+#define printf_format(a, b)
+#else
 #define printf_format(a, b)		__THROWNL __attribute__ ((__format__ (__printf__, a, b)))
+#endif
+
 #define __printf_format_10__	printf_format(1, 0)
 #define __printf_format_12__	printf_format(1, 2)
 #define __printf_format_20__	printf_format(2, 0)

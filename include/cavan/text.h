@@ -137,8 +137,8 @@ char *text_path_cat(char *pathname, const char *dirname, const char *basename);
 char *text_delete_char_base(const char *text_in, char *text_out, char c);
 char *text_delete_sub_base(const char *text_in, char *text_out, const char *sub, const size_t sublen);
 
-void *mem_kmp_find(const void *mem, const void *sub, size_t memlen, size_t sublen);
-int mem_kmp_find_all(const void *mem, const void *sub, size_t memlen, size_t sublen, void **results, size_t size);
+char *mem_kmp_find(const char *mem, const char *sub, size_t memlen, size_t sublen);
+int mem_kmp_find_all(const char *mem, const char *sub, size_t memlen, size_t sublen, char **results, size_t size);
 char *text_find_next_line(const char *text);
 char *text_find_line(const char *text, int index);
 char *text_get_line(const char *text, char *buff, int index);
@@ -183,8 +183,8 @@ __printf_format_34__ ssize_t buff_command2(char *buff, size_t bufflen, const cha
 __printf_format_23__ char *buff_command_path(const char *path, const char *command, ...);
 __printf_format_45__ ssize_t buff_command_path2(const char *path, char *buff, size_t bufflen, const char *command, ...);
 
-void *mac_address_tostring_base(const void *mac, size_t maclen, void *buff);
-char *mac_address_tostring(const void *mac, size_t maclen);
+char *mac_address_tostring_base(const char *mac, size_t maclen, char *buff);
+char *mac_address_tostring(const char *mac, size_t maclen);
 
 int text_is_number(const char *text);
 int text_is_float(const char *text);
@@ -198,10 +198,10 @@ char *text_replace_text_base(const char *text_old, char *text_new, const char *s
 int text_is_dot_name(const char *filename);
 int text_isnot_dot_name(const char *filename);
 
-size_t text_split_by_char(const char *text, char sep, void *buff, size_t size1, size_t size2);
-char *text_join_by_char(char *text[], size_t size1, char sep, void *buff, size_t size2);
-size_t text_split_by_text(const char *text, const char *sep, void *buff, size_t size1, size_t size2);
-char *text_join_by_text(char *text[], size_t size1, const char *sep, void *buff, size_t size2);
+size_t text_split_by_char(const char *text, char sep, char *buff, size_t size1, size_t size2);
+char *text_join_by_char(char *text[], size_t size1, char sep, char *buff, size_t size2);
+size_t text_split_by_text(const char *text, const char *sep, char *buff, size_t size1, size_t size2);
+char *text_join_by_text(char *text[], size_t size1, const char *sep, char *buff, size_t size2);
 
 int text_array_find(const char *text, char *buff[], int size);
 char *text_find_line_end(const char *text, const char *end);
@@ -220,7 +220,7 @@ static inline char *text_kmp_find(const char *buff, const char *sub)
 
 static inline int text_kmp_find_all(const char *buff, const char *sub, char **results, size_t size)
 {
-	return mem_kmp_find_all(buff, sub, text_len(buff), text_len(sub), (void **)results, size);
+	return mem_kmp_find_all(buff, sub, text_len(buff), text_len(sub), results, size);
 }
 
 static inline char *text_delete_char(char *text, char c)

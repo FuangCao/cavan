@@ -518,7 +518,11 @@ int image_resize(const char *img_path, u64 size)
 		return ret;
 	}
 
+#if __WORDSIZE == 64
+	ret = system_command("resize2fs -fp %s %ldK", img_path, size >> 10);
+#else
 	ret = system_command("resize2fs -fp %s %LdK", img_path, size >> 10);
+#endif
 	if (ret < 0)
 	{
 		return system_command_retry(5, "e2fsck -fy %s", img_path);
@@ -641,7 +645,7 @@ int get_ramdisk(const char *dev_path, const char *file_path, int busybox)
 int burn_swan_image_directory(const char *dirname, const char *dest_dev)
 {
 	int ret;
-	int i;
+	unsigned int i;
 	struct dd_desc descs[] =
 	{
 		{

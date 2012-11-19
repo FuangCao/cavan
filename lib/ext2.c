@@ -70,7 +70,7 @@ void ext2_uninit(struct ext2_desc *desc)
 
 void show_ext2_desc(struct ext2_desc *desc)
 {
-	int i;
+	unsigned int i;
 
 	print_sep(60);
 #if __WORDSIZE == 64
@@ -186,7 +186,7 @@ const char *ext2_filetype_to_text(int type)
 {
 	const char *ext2_filetypes[] = {"Unknown", "Regular", "Directory", "Char_dev", "Block_dev", "Pipe", "Socket", "Symlink"};
 
-	if (type < 0 || type >= ARRAY_SIZE(ext2_filetypes))
+	if (type < 0 || (size_t)type >= ARRAY_SIZE(ext2_filetypes))
 	{
 		return ext2_filetypes[0];
 	}
@@ -391,7 +391,7 @@ ssize_t ext2_read_file_base(struct ext2_desc *desc, struct ext2_inode *inode, vo
 			return readlen;
 		}
 
-		buff += readlen;
+		buff = (char *)buff + readlen;
 	}
 
 	return total_len;
