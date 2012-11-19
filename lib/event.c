@@ -6,7 +6,6 @@
 
 char *cavan_event_tostring(struct input_event *event, char *text)
 {
-	char *text_bak = text;
 	const char *event_code = "UNKNOWN";
 
 	switch (event->type)
@@ -16,15 +15,15 @@ char *cavan_event_tostring(struct input_event *event, char *text)
 		{
 		case SYN_REPORT:
 			text_copy(text, "SYN_REPORT");
-			return text_bak;
+			return text;
 
 		case SYN_CONFIG:
 			text_copy(text, "SYN_CONFIG");
-			return text_bak;
+			return text;
 
 		case SYN_MT_REPORT:
 			text_copy(text, "SYN_MT_REPORT");
-			return text_bak;
+			return text;
 
 		default:
 			sprintf(text, "EV_SYN[%d] = %d", event->code, event->value);
@@ -426,7 +425,7 @@ char *cavan_event_tostring(struct input_event *event, char *text)
 
 	sprintf(text, "%s = %d", event_code, event->value);
 
-	return text_bak;
+	return text;
 }
 
 static struct cavan_virtual_key *cavan_event_free_virtual_keymap(struct cavan_virtual_key *head)
