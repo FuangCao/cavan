@@ -701,7 +701,7 @@ ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data
 		matcher->fd = fd;
 		if (matcher->match && matcher->match(matcher, data) == false)
 		{
-			pr_error_info("Can't match device `%s', path = %s", matcher->devname, matcher->pathname);
+			pr_red_info("Can't match device `%s', path = %s", matcher->devname, matcher->pathname);
 			close(fd);
 			continue;
 		}
@@ -1048,8 +1048,6 @@ bool cavan_event_simple_matcher(struct cavan_event_matcher *matcher, void *data)
 {
 	if (data)
 	{
-		pr_pos_info();
-		pr_bold_info("data = %s", (char *)data);
 		return text_cmp(matcher->devname, data) == 0 || text_cmp(matcher->pathname, data) == 0;
 	}
 
