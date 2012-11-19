@@ -112,6 +112,7 @@ void cavan_event_service_init(struct cavan_event_service *service, bool (*matche
 int cavan_event_service_start(struct cavan_event_service *service, void *data);
 int cavan_event_service_stop(struct cavan_event_service *service);
 
+bool cavan_event_simple_matcher(struct cavan_event_matcher *matcher, void *data);
 bool cavan_event_name_matcher(const char *devname, ...);
 int cavan_event_get_absinfo(int fd, int axis, int *min, int *max);
 char *cavan_event_tostring(struct input_event *event, char *text);

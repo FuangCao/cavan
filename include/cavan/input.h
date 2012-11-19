@@ -67,3 +67,8 @@ struct cavan_input_service
 void cavan_input_service_init(struct cavan_input_service *service, bool (*matcher)(struct cavan_event_matcher *, void *));
 int cavan_input_service_start(struct cavan_input_service *service, void *data);
 int cavan_input_service_stop(struct cavan_input_service *service);
+
+static inline int cavan_input_service_join(struct cavan_input_service *service)
+{
+	return cavan_event_service_join(&service->event_service);
+}

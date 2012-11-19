@@ -705,7 +705,6 @@ ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data
 		matcher->fd = fd;
 		if (matcher->match && matcher->match(matcher, data) == false)
 		{
-			pr_pos_info();
 			pr_error_info("Can't match device `%s', path = %s", matcher->devname, matcher->pathname);
 			close(fd);
 			continue;
@@ -738,7 +737,7 @@ static bool cavan_event_service_match(struct cavan_event_matcher *matcher, void 
 		return service->matcher(matcher, service->private_data);
 	}
 
-	return 0;
+	return true;
 }
 
 static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher, void *data)
@@ -812,7 +811,6 @@ static void *cavan_event_service_handler(void *data)
 	pfd->fd = service->pipefd[0];
 	pfd->events = POLLIN;
 	pfd->revents = 0;
-	pr_pos_info();
 
 	for (pdev = service->dev_head; pdev; pdev = pdev->next)
 	{
@@ -984,6 +982,15 @@ void cavan_event_service_init(struct cavan_event_service *service, bool (*matche
 	service->event_handler = NULL;
 }
 
+static bool cavan_event_handler_dummy(struct cavan_event_device *dev, struct input_event *event, void *data)
+{
+	char buff[1024];
+
+	print_string(cavan_event_tostring(event, buff));
+
+	return true;
+}
+
 int cavan_event_service_start(struct cavan_event_service *service, void *data)
 {
 	int ret;
@@ -991,10 +998,15 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 
 	pr_pos_info();
 
-	if (service == NULL || service->event_handler == NULL)
+	if (service == NULL)
 	{
-		pr_red_info("service == NULL || service->event_handler == NULL");
+		pr_red_info("service == NULL");
 		return -EINVAL;
+	}
+
+	if (service->event_handler == NULL)
+	{
+		service->event_handler = cavan_event_handler_dummy;
 	}
 
 	service->private_data = data;
@@ -1044,6 +1056,16 @@ int cavan_event_service_stop(struct cavan_event_service *service)
 	pthread_mutex_destroy(&service->lock);
 
 	return 0;
+}
+
+bool cavan_event_simple_matcher(struct cavan_event_matcher *matcher, void *data)
+{
+	if (data)
+	{
+		return text_cmp(matcher->devname, data) == 0 || text_cmp(matcher->pathname, data) == 0;
+	}
+
+	return true;
 }
 
 bool cavan_event_name_matcher(const char *devname, ...)
