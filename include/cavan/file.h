@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cavan/text.h>
+#include <sys/file.h>
 #include <poll.h>
 
 #define MAX_BUFFER_LEN				MB(1)
@@ -173,6 +174,10 @@ int scan_directory(const char *dirpath, void *buff, size_t size1, size_t size2);
 
 size_t ffile_line_count(int fd);
 size_t file_line_count(const char *filename);
+
+int file_mmap(const char *pathname, void **addr, size_t *size, int flags);
+void file_unmap(int fd, void *map, size_t size);
+void *file_read_all(const char *pathname, size_t *size);
 
 // ============================================================
 

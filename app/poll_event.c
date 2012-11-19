@@ -5,56 +5,62 @@
 #include <cavan/file.h>
 #include <cavan/event.h>
 
+static bool poll_event_matcher(struct cavan_event_matcher *matcher, void *data)
+{
+	if (data)
+	{
+		return text_cmp(matcher->devname, data) == 0 || text_cmp(matcher->pathname, data) == 0;
+	}
+
+	return true;
+}
+
+static bool poll_event_handler(struct cavan_event_device *dev, struct input_event *event, void *data)
+{
+	char print_buff[1024];
+
+	print_string(cavan_event_tostring(event, print_buff));
+
+	return true;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;
 	const char *dev_path;
-	struct event_desc desc;
 	char name[64];
+	struct cavan_event_service service;
 
-	assert(argc == 2);
+	assert(argc < 3);
 
-	if (file_test(argv[1], "c") < 0)
+	if (argc > 1)
 	{
-		sprintf(name, "/dev/input/event%s", argv[1]);
-		dev_path = name;
+		if (file_test(argv[1], "c") < 0 && text_is_number(argv[1]))
+		{
+			sprintf(name, "/dev/input/event%s", argv[1]);
+			dev_path = name;
+		}
+		else
+		{
+			dev_path = argv[1];
+		}
 	}
 	else
 	{
-		dev_path = argv[1];
+		dev_path = NULL;
 	}
 
-	println("dev_path = %s", dev_path);
-
-	ret = event_init_by_path(&desc, dev_path);
+	cavan_event_service_init(&service, poll_event_matcher);
+	service.event_handler = poll_event_handler;
+	ret = cavan_event_service_start(&service, (void *)dev_path);
 	if (ret < 0)
 	{
-		error_msg("event_init_by_path");
+		pr_red_info("cavan_event_service_start");
 		return ret;
 	}
 
-	println("Input device name = %s", desc.dev_name);
-
-	while (1)
-	{
-		struct input_event event;
-		char print_buff[1024];
-
-		ret = read_events(&desc, &event, 1);
-		if (ret < 0)
-		{
-			error_msg("read_events");
-			goto out_event_uninit;
-		}
-
-		if (ret)
-		{
-			print_string(event_to_text(&event, print_buff));
-		}
-	}
-
-out_event_uninit:
-	event_uninit(&desc);
+	cavan_event_service_join(&service);
+	cavan_event_service_stop(&service);
 
 	return ret;
 }

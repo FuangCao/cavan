@@ -29,31 +29,52 @@ int swan_ts_open_misc_device(const char *devpath, int flags)
 	return fd;
 }
 
-int swan_ts_input_calibration(const char *devname)
+static bool swan_ts_match(struct cavan_event_matcher *matcher, void *data)
+{
+	return cavan_event_name_matcher(matcher->devname, data, NULL);
+}
+
+static int swan_ts_match_handler(struct cavan_event_matcher *matcher, void *data)
 {
 	int ret;
-	struct event_desc desc;
+
+	pr_std_info("Device \"%s\" is named \"%s\"", matcher->pathname, matcher->devname);
+	pr_bold_info("Calibration, don't touch the screen");
+
+	ret = ioctl(matcher->fd, SWAN_TS_INPUT_IOCTL_CALIBRATION);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl SWAN_TS_INPUT_IOCTL_CALIBRATION");
+		return ret;
+	}
+
+	close(matcher->fd);
+
+	return 0;
+}
+
+int swan_ts_input_calibration(const char *devname)
+{
+	ssize_t count;
+	struct cavan_event_matcher matcher =
+	{
+		.match = swan_ts_match,
+		.handler = swan_ts_match_handler
+	};
 
 	if (devname == NULL)
 	{
 		devname = SWAN_TS_DEVICE_NAME;
 	}
 
-	ret = event_init_by_name(&desc, devname);
-	if (ret < 0)
+	count = cavan_event_scan_devices(&matcher, (void *)devname);
+	if (count <= 0)
 	{
-		pr_red_info("No input event named \"%s\"", devname);
-		return ret;
+		pr_red_info("cavan_event_scan_devices");
+		return -EFAULT;
 	}
 
-	pr_std_info("Device \"%s\" is named \"%s\"", desc.dev_path, devname);
-	pr_bold_info("Calibration, don't touch the screen");
-
-	ret = ioctl(desc.fd, SWAN_TS_INPUT_IOCTL_CALIBRATION);
-
-	event_uninit(&desc);
-
-	return ret;
+	return 0;
 }
 
 int swan_ts_calibration(const char *devpath)

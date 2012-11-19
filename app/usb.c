@@ -92,58 +92,85 @@ out_close_data:
 	return -1;
 }
 
+static bool swan_adb_event_handler(struct cavan_event_device *dev, struct input_event *event, void *data)
+{
+	ssize_t wrlen;
+	struct swan_adb_client_descriptor *desc = data;
+
+	wrlen = cavan_usb_write_data(desc->usb_desc, event, sizeof(*event));
+	if (wrlen < 0)
+	{
+		print_error("cavan_usb_bluk_write");
+
+		wrlen = write(desc->pipefd[1], &wrlen, sizeof(wrlen));
+		if (wrlen < 0)
+		{
+			pr_error_info("write");
+			exit(-1);
+		}
+	}
+
+	return true;
+}
+
 static int swan_adb_client(const char *dev_path)
 {
 	int ret;
-	struct cavan_usb_descriptor desc;
-	struct pollfd event_fds[32];
-	int count;
-	ssize_t readlen, writelen;
-	struct input_event event_buff[32];
+	ssize_t rdlen;
+	struct cavan_usb_descriptor usb_desc;
+	struct swan_adb_client_descriptor desc;
+	struct cavan_event_service service;
 
 	pr_bold_pos();
 
 	system_command("killall adb");
 
-	ret = cavan_find_usb_device(dev_path, &desc);
+	ret = cavan_find_usb_device(dev_path, &usb_desc);
 	if (ret < 0)
 	{
 		error_msg("cavan_find_usb_device failed");
 		return ret;
 	}
 
-	pr_bold_info("usb device path = %s", desc.dev_path);
-	pr_bold_info("usb device serial = %s", desc.serial);
-	pr_bold_info("idProduct = 0x%04x", desc.dev_desc.idProduct);
-	pr_bold_info("idVendor = 0x%04x", desc.dev_desc.idVendor);
+	pr_bold_info("usb device path = %s", usb_desc.dev_path);
+	pr_bold_info("usb device serial = %s", usb_desc.serial);
+	pr_bold_info("idProduct = 0x%04x", usb_desc.dev_desc.idProduct);
+	pr_bold_info("idVendor = 0x%04x", usb_desc.dev_desc.idVendor);
 
-	count = open_event_devices(event_fds, ARRAY_SIZE(event_fds), O_RDONLY);
-	if (count <= 0)
+	ret = pipe(desc.pipefd);
+	if (ret < 0)
 	{
-		pr_red_info("no input device found");
+		pr_error_info("pipe");
 		goto out_usb_uninit;
 	}
 
-	while (1)
-	{
-		readlen = poll_event_devices(event_fds, count, event_buff,  sizeof(event_buff));
-		if (readlen < 0)
-		{
-			print_error("poll_event_devices");
-			break;
-		}
+	desc.usb_desc = &usb_desc;
 
-		writelen = cavan_usb_write_data(&desc, event_buff, readlen);
-		if (writelen < 0)
-		{
-			print_error("cavan_usb_bluk_write");
-			break;
-		}
+	cavan_event_service_init(&service, NULL);
+	service.event_handler = swan_adb_event_handler;
+	ret = cavan_event_service_start(&service, &desc);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_event_service_start");
+		goto out_close_pipe;
 	}
 
-	close_event_devices(event_fds, count);
+	rdlen = read(desc.pipefd[0], &ret, sizeof(ret));
+	if (rdlen < 0)
+	{
+		pr_error_info("read");
+	}
+	else
+	{
+		pr_green_info("ret = %d", ret);
+	}
+
+	cavan_event_service_stop(&service);
+out_close_pipe:
+	close(desc.pipefd[0]);
+	close(desc.pipefd[1]);
 out_usb_uninit:
-	cavan_usb_uninit(&desc);
+	cavan_usb_uninit(&usb_desc);
 
 	return -1;
 }

@@ -15,7 +15,8 @@
 #include <cavan/fb.h>
 #include <cavan/calculator.h>
 
-static int client_active;
+static int ctrl_fd;
+
 static const struct swan_vk_descriptor swan_vk_table[] =
 {
 	{"search", SWAN_VKEY_SEARCH},
@@ -488,8 +489,16 @@ static int swan_vk_send_line(struct swan_vk_command_option *opt, int x0, int y0,
 
 static void swan_vk_client_stop_handle(int signum)
 {
+	ssize_t wrlen;
+
 	pr_bold_pos();
-	client_active = 0;
+
+	wrlen = write(ctrl_fd, &signum, sizeof(signum));
+	if (wrlen < 0)
+	{
+		pr_error_info("write");
+		exit(-1);
+	}
 }
 
 // ================================================================================
@@ -649,25 +658,6 @@ static void swan_vk_map_abs(struct input_event *ep)
 	}
 }
 
-static void swan_vk_map_events(int fd, struct input_event *ep, size_t count)
-{
-	struct input_event *ep_end;
-
-	for (ep_end = ep + count; ep < ep_end; ep++)
-	{
-		switch (ep->type)
-		{
-		case EV_KEY:
-			swan_vk_map_key(fd, ep);
-			break;
-
-		case EV_ABS:
-			swan_vk_map_abs(ep);
-			break;
-		}
-	}
-}
-
 static int swan_vk_release_all_key(int sockfd)
 {
 	u16 code;
@@ -698,13 +688,45 @@ static int swan_vk_release_all_key(int sockfd)
 	return 0;
 }
 
+static bool swan_vk_event_handler(struct cavan_event_device *dev, struct input_event *event, void *data)
+{
+	struct swan_vk_clien_descriptor *desc = data;
+	ssize_t wrlen;
+
+	switch (event->type)
+	{
+	case EV_KEY:
+		swan_vk_map_key(desc->fd, event);
+		break;
+	
+	case EV_ABS:
+		swan_vk_map_abs(event);
+		break;
+	}
+
+	wrlen = write(desc->fd, event, sizeof(*event));
+	if (wrlen < 0)
+	{
+		pr_error_info("write");
+
+		wrlen = write(desc->pipefd[1], &wrlen, sizeof(wrlen));
+		if (wrlen < 0)
+		{
+			pr_error_info("write pipe");
+			exit(-1);
+		}
+	}
+
+	return true;
+}
+
 int swan_vk_client(struct swan_vk_command_option *opt)
 {
-	int count;
+	int ret;
 	int fd;
-	struct pollfd event_fds[16];
-	struct input_event events[32];
-	ssize_t rdlen, wrlen;
+	int result;
+	struct cavan_event_service service;
+	struct swan_vk_clien_descriptor desc;
 
 	pr_bold_pos();
 
@@ -715,37 +737,41 @@ int swan_vk_client(struct swan_vk_command_option *opt)
 		return fd;
 	}
 
-	count = open_event_devices(event_fds, ARRAY_SIZE(event_fds), O_RDONLY);
-	if (count <= 0)
+	ret = pipe(desc.pipefd);
+	if (ret < 0)
 	{
-		error_msg("no input device found");
+		pr_error_info("pipe");
 		goto out_close_fd;
 	}
 
-	signal(SIGINT, swan_vk_client_stop_handle);
-	client_active = 1;
+	cavan_event_service_init(&service, NULL);
+	service.event_handler = swan_vk_event_handler;
 
-	while (client_active)
+	desc.fd = fd;
+	ret = cavan_event_service_start(&service, &desc);
+	if (ret < 0)
 	{
-		rdlen = poll_event_devices(event_fds, count, events, sizeof(events));
-		if (rdlen < 0)
-		{
-			error_msg("poll_event_devices");
-			goto out_close_devices;
-		}
-
-		swan_vk_map_events(fd, events, rdlen / sizeof(events[0]));
-
-		wrlen = write(fd, events, rdlen);
-		if (wrlen < 0)
-		{
-			error_msg("inet_send");
-			goto out_close_devices;
-		}
+		pr_red_info("cavan_event_service_start");
+		goto out_close_pipe;
 	}
 
-out_close_devices:
-	close_event_devices(event_fds, count);
+	ctrl_fd = desc.pipefd[1];
+	signal(SIGINT, swan_vk_client_stop_handle);
+
+	ret = read(desc.pipefd[0], &result, sizeof(result));
+	if (ret < 0)
+	{
+		pr_error_info("read");
+	}
+	else
+	{
+		pr_green_info("result = %d", result);
+	}
+
+	cavan_event_service_stop(&service);
+out_close_pipe:
+	close(desc.pipefd[0]);
+	close(desc.pipefd[1]);
 out_close_fd:
 	swan_vk_release_all_key(fd);
 	close(fd);

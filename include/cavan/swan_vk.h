@@ -69,6 +69,12 @@ struct swan_vk_descriptor
 	unsigned int code;
 };
 
+struct swan_vk_clien_descriptor
+{
+	int fd;
+	int pipefd[2];
+};
+
 struct swan_vk_service_descriptor
 {
 	int sockfd;

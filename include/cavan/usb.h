@@ -45,6 +45,12 @@ struct cavan_usb_descriptor
 	struct cavan_usb_interface_descriptor if_descs[10];
 };
 
+struct swan_adb_client_descriptor
+{
+	int pipefd[2];
+	struct cavan_usb_descriptor *usb_desc;
+};
+
 enum cavan_usb_package_type
 {
 	CAVAN_UMSG_UNKNOWN,

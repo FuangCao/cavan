@@ -18,6 +18,7 @@
 #include <cavan/image.h>
 #include <cavan/parser.h>
 #include <cavan/list.h>
+#include <cavan/input.h>
 
 char swan_vfat_volume[128] = EMMC_VFAT_DEFAULT_LABEL;
 u32 swan_mkfs_mask = MKFS_MASK_USERDATA | MKFS_MASK_CACHE;
@@ -128,46 +129,26 @@ struct swan_image_info swan_images[] =
 	},
 };
 
-static void *keypad_monitor_handle(void *data)
+static bool swan_keypad_match(struct cavan_event_matcher *matcher, void *data)
 {
-	struct event_desc desc;
+	return cavan_event_name_matcher(matcher->devname, data, NULL);
+}
 
-	if (event_init_by_name(&desc, SWAN_KPD_NAME) < 0 && event_init_by_path(&desc, SWAN_KPD_DEVICE) < 0)
+static void swan_keypad_handler(struct cavan_input_device *dev, const char *name, int code, int value, void *data)
+{
+	if ((name && text_cmp(name, "POWER") == 0) || code == SWAN_KEY_POWER)
 	{
-		error_msg("event_init_by_name");
-		return NULL;
+		print_string("Power key was pressed, reset the system ...");
+		sync();
+		reboot(RB_AUTOBOOT);
 	}
-
-	while (1)
-	{
-		struct input_event event;
-
-		if (read_event_by_type(&desc, EV_KEY, &event) < 0)
-		{
-			goto out_event_uninit;
-		}
-
-		if (event.code == SWAN_KEY_POWER)
-		{
-			break;
-		}
-	}
-
-	print_string("Power key was pressed, reset the system ...");
-	sync();
-	reboot(RB_AUTOBOOT);
-
-out_event_uninit:
-	event_uninit(&desc);
-
-	return NULL;
 }
 
 static void swan_show_picture(const char *state, int reset)
 {
 	int i;
-	pthread_t newthread;
 	const char *fb_devices[] = {"/dev/fb0", "/dev/graphice/fb0", "/dev/fb1", "/dev/graphice/fb1"};
+	struct cavan_input_service service;
 
 	close_console();
 
@@ -200,7 +181,9 @@ out_loop:
 	}
 
 	print_string("Press \"Power\" reset the system");
-	pthread_create(&newthread, NULL, keypad_monitor_handle, NULL);
+	cavan_input_service_init(&service, swan_keypad_match);
+	service.key_handler = swan_keypad_handler;
+	cavan_input_service_start(&service, NULL);
 
 	print_string("Press \"Enter\" into command line");
 	for (i = REBOOT_TIMEOUT; i > 0; i--)
@@ -213,7 +196,7 @@ out_loop:
 
 		if (c == '\n')
 		{
-			pthread_cancel(newthread);
+			cavan_input_service_stop(&service);
 			return;
 		}
 	}

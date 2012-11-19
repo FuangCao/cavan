@@ -33,7 +33,51 @@ char *text_find(const char *text, char c)
 	return NULL;
 }
 
-char *text_nfind(const char *text, char c)
+char *text_nfind(const char *text, char c, size_t count)
+{
+	while (text[0])
+	{
+		if (text[0] == c)
+		{
+			if (count > 0)
+			{
+				count--;
+			}
+			else
+			{
+				return (char *)text;
+			}
+		}
+
+		text++;
+	}
+
+	return NULL;
+}
+
+char *text_nfind2(const char *text, const char *end, char c, size_t count)
+{
+	while (text < end)
+	{
+		if (*text == c)
+		{
+			if (count > 0)
+			{
+				count--;
+			}
+			else
+			{
+				return (char *)text;
+			}
+		}
+
+		text++;
+	}
+
+	return (char *)text;
+}
+
+char *text_find_tail(const char *text, char c)
 {
 	const char *tmp = NULL;
 
@@ -266,7 +310,12 @@ char *text_ncopy(char *dest, const char *src, size_t size)
 {
 	const char *end_src;
 
-	for (end_src = src + size; src < end_src && (*dest = *src); src++, dest++);
+	for (end_src = src + size - 1; src < end_src && *src; src++, dest++)
+	{
+		*dest = *src;
+	}
+
+	*dest = 0;
 
 	return dest;
 }
@@ -2557,18 +2606,47 @@ int text_array_find(const char *text, char *buff[], int size)
 	return -1;
 }
 
-char *text_find_line_end(const char *text, const char *end)
+char *text_skip_space_head(const char *text, const char *line_end)
 {
-	while (text < end)
+	while (text < line_end && BYTE_IS_SPACE(*text))
 	{
-		if (*text == '\r' || *text == '\n')
+		text++;
+	}
+
+	return (char *)text;
+}
+
+char *text_skip_space_tail(const char *text, const char *line)
+{
+	while (text > line && BYTE_IS_SPACE(*text))
+	{
+		text--;
+	}
+
+	return (char *)text;
+}
+
+char *text_find_line_end(const char *text, const char *file_end)
+{
+	while (text < file_end)
+	{
+		if (BYTE_IS_LF(*text))
 		{
-			return (char *)text;
+			break;
 		}
 
 		text++;
 	}
 
-	return NULL;
+	return (char *)text;
 }
 
+char *text_skip_line_end(const char *text, const char *file_end)
+{
+	while (text < file_end && BYTE_IS_LF(*text))
+	{
+		text++;
+	}
+
+	return (char *)text;
+}

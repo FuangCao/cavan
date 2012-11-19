@@ -56,7 +56,8 @@ void text_show32(const u32 *text, size_t count);
 void text_show64(const u64 *text, size_t count);
 
 char *text_find(const char *text, char c);
-char *text_nfind(const char *text, char c);
+char *text_nfind(const char *text, char c, size_t count);
+char *text_nfind2(const char *text, const char *end, char c, size_t count);
 char *text_ntrans(char *text, size_t size);
 
 int text_cmp(const char *text1, const char *text2);
@@ -154,6 +155,11 @@ char *text_to_nlowercase(const char *src, char *dest, size_t size);
 int text_cmp_nocase(const char *text1, const char *text2);
 int text_ncmp_nocase(const char *text1, const char *text2, size_t size);
 int text_bool_value(const char *text);
+
+char *text_skip_space_head(const char *text, const char *line_end);
+char *text_skip_space_tail(const char *text, const char *line);
+char *text_find_line_end(const char *text, const char *file_end);
+char *text_skip_line_end(const char *text, const char *file_end);
 
 __printf_format_20__ char *vformat_text (char *buff, const char *fmt, va_list args);
 __printf_format_12__ char *format_text(const char *fmt, ...);

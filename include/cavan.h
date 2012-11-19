@@ -22,6 +22,7 @@
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <poll.h>
 #include <pthread.h>
 #include <termios.h>
 #include <time.h>
@@ -33,6 +34,12 @@
 #include <cavan/text.h>
 #include <cavan/memory.h>
 #include <cavan/file.h>
+
+#define BYTE_IS_LF(b) \
+	((b) == '\r' || (b) == '\n')
+
+#define BYTE_IS_SPACE(b) \
+	((b) == ' ' || (b) == '\t')
 
 #define ARRAY_SIZE(a)	(sizeof(a) / sizeof((a)[0]))
 #define NELEM(a)		(ARRAY_SIZE(a))
@@ -97,4 +104,3 @@ static inline void ssleep(useconds_t sec)
 		msleep(1000);
 	}
 }
-
