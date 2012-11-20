@@ -32,11 +32,11 @@ static int cavan_draw_rect_main(int argc, char *argv[])
 
 	if (strcmp(argv[0], "draw_rect") == 0)
 	{
-		ret = cavan_draw_rect(&fb_dev, left, top, width, height);
+		ret = cavan_fb_draw_rect(&fb_dev, left, top, width, height);
 	}
 	else
 	{
-		ret = cavan_fill_rect(&fb_dev, left, top, width, height);
+		ret = cavan_fb_fill_rect(&fb_dev, left, top, width, height);
 	}
 
 	if (ret < 0)
