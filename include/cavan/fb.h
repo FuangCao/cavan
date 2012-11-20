@@ -26,10 +26,7 @@ struct cavan_screen_descriptor
 	int yres;
 	size_t line_size;
 	size_t fb_size;
-	u32 background;
-	u32 foreground;
-	u32 bordercolor;
-	u32 bordersize;
+	u32 pen_color;
 	struct fb_fix_screeninfo fix_info;
 	struct fb_var_screeninfo var_info;
 	struct cavan_color_element red;
@@ -74,48 +71,25 @@ static inline void cavan_draw_point(struct cavan_screen_descriptor *desc, int x,
 	return desc->draw_point(desc, x, y, color);
 }
 
-static inline u32 cavan_build_color(struct cavan_screen_descriptor *desc, u32 red, u32 green, u32 blue)
+static inline u32 cavan_build_color(struct cavan_screen_descriptor *desc, u32 red, u32 green, u32 blue, u32 transp)
 {
-	return ((red << desc->red.offset) & desc->red.mask) | ((green << desc->green.offset) & desc->green.mask) | ((blue << desc->blue.offset) & desc->blue.mask);
+	return ((red << desc->red.offset) & desc->red.mask) | \
+		((green << desc->green.offset) & desc->green.mask) | \
+		((blue << desc->blue.offset) & desc->blue.mask) | \
+		((transp << desc->transp.offset) & desc->transp.mask);
 }
 
 static inline u32 cavan_build_color3f(struct cavan_screen_descriptor *desc, float red, float green, float blue)
 {
-	return cavan_build_color(desc, red * desc->red.max, green * desc->green.max, blue * desc->blue.max);
+	return cavan_build_color(desc, red * desc->red.max, green * desc->green.max, blue * desc->blue.max, desc->transp.max);
 }
 
-static inline void cavan_set_background(struct cavan_screen_descriptor *desc, u32 red, u32 green, u32 blue)
+static inline void cavan_set_pen_color(struct cavan_screen_descriptor *desc, u32 red, u32 green, u32 blue)
 {
-	desc->background = cavan_build_color(desc, red, green, blue);
+	desc->pen_color = cavan_build_color(desc, red, green, blue, desc->transp.max);
 }
 
-static inline void cavan_set_background3f(struct cavan_screen_descriptor *desc, float red, float green, float blue)
+static inline void cavan_set_pen_color3f(struct cavan_screen_descriptor *desc, float red, float green, float blue)
 {
-	desc->background = cavan_build_color3f(desc, red, green, blue);
+	desc->pen_color = cavan_build_color3f(desc, red, green, blue);
 }
-
-static inline void cavan_set_foreground(struct cavan_screen_descriptor *desc, u32 red, u32 green, u32 blue)
-{
-	desc->foreground = cavan_build_color(desc, red, green, blue);
-}
-
-static inline void cavan_set_foreground3f(struct cavan_screen_descriptor *desc, float red, float green, float blue)
-{
-	desc->foreground = cavan_build_color3f(desc, red, green, blue);
-}
-
-static inline void cavan_set_bordercolor(struct cavan_screen_descriptor *desc, u32 red, u32 green, u32 blue)
-{
-	desc->bordercolor = cavan_build_color(desc, red, green, blue);
-}
-
-static inline void cavan_set_bordercolor3f(struct cavan_screen_descriptor *desc, float red, float green, float blue)
-{
-	desc->bordercolor = cavan_build_color3f(desc, red, green, blue);
-}
-
-static inline void cavan_set_bordersize(struct cavan_screen_descriptor *desc, u32 bordersize)
-{
-	desc->bordersize = bordersize;
-}
-

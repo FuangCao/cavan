@@ -20,8 +20,8 @@ void show_bitfield(struct fb_bitfield *field, const char *msg)
 void show_fb_var_info(struct fb_var_screeninfo *var)
 {
 	print_sep(60);
-	println("var->xres = %d", var->xres);
-	println("var->yres = %d", var->yres);
+	println("var->xres = %d, var->xres_virtual = %d", var->xres, var->xres_virtual);
+	println("var->yres = %d, var->yres_virtual = %d", var->yres, var->yres_virtual);
 	println("var->bits_per_pixel = %d", var->bits_per_pixel);
 	show_bitfield(&var->red, "red fb_bitfield:");
 	show_bitfield(&var->green, "green fb_bitfield:");
@@ -44,68 +44,29 @@ void cavan_bitfield2element(struct fb_bitfield *field, struct cavan_color_elemen
 	emt->index = emt->offset >> 3;
 }
 
-static void cavan_draw_point8(struct cavan_screen_descriptor * desc,int x, int y, u32 color)
+static void cavan_draw_point8(struct cavan_screen_descriptor *desc,int x, int y, u32 color)
 {
-	u8 *p1, *p2, *end1, *end2;
-
-	p1 = ((u8 *)desc->fb_base) + y * desc->xres + x;
-
-	for (end1 = p1 + (desc->xres * desc->bordersize); p1 < end1; p1 += desc->xres)
-	{
-		for (p2 = p1, end2 = p2 + desc->bordersize; p2 < end2; p2++)
-		{
-			*p2 = color;
-		}
-	}
+	(((u8 *)desc->fb_base) + y * desc->xres)[x] = color;
 }
 
-static void cavan_draw_point16(struct cavan_screen_descriptor * desc,int x, int y, u32 color)
+static void cavan_draw_point16(struct cavan_screen_descriptor *desc,int x, int y, u32 color)
 {
-	u16 *p1, *p2, *end1, *end2;
-
-	p1 = ((u16 *)desc->fb_base) + y * desc->xres + x;
-
-	for (end1 = p1 + (desc->xres * desc->bordersize); p1 < end1; p1 += desc->xres)
-	{
-		for (p2 = p1, end2 = p2 + desc->bordersize; p2 < end2; p2++)
-		{
-			*p2 = color;
-		}
-	}
+	(((u16 *)desc->fb_base) + y * desc->xres)[x] = color;
 }
 
 static void cavan_draw_point24(struct cavan_screen_descriptor *desc, int x, int y, u32 color)
 {
-	u8 *p1, *p2, *end1, *end2;
-	int line_size;
+	u8 *p;
 
-	p1 = ((u8 *)desc->fb_base) + (y * desc->xres + x) * 3;
-	line_size = desc->xres * 3;
-
-	for (end1 = p1 + (line_size * desc->bordersize); p1 < end1; p1 += line_size)
-	{
-		for (p2 = p1, end2 = p2 + desc->bordersize * 3; p2 < end2; p2 += 3)
-		{
-			p2[desc->red.index] = (color & desc->red.mask) >> desc->red.offset;
-			p2[desc->green.index] = (color & desc->green.mask) >> desc->green.offset;
-			p2[desc->blue.index] = (color & desc->blue.mask) >> desc->blue.offset;
-		}
-	}
+	p = ((u8 *)desc->fb_base) + (y * desc->xres + x) * 3;
+	p[desc->red.index] = (color & desc->red.mask) >> desc->red.offset;
+	p[desc->green.index] = (color & desc->green.mask) >> desc->green.offset;
+	p[desc->blue.index] = (color & desc->blue.mask) >> desc->blue.offset;
 }
 
 static void cavan_draw_point32(struct cavan_screen_descriptor * desc, int x, int y, u32 color)
 {
-	u32 *p1, *p2, *end1, *end2;
-
-	p1 = ((u32 *)desc->fb_base) + y * desc->xres + x;
-
-	for (end1 = p1 + (desc->xres * desc->bordersize); p1 < end1; p1 += desc->xres)
-	{
-		for (p2 = p1, end2 = p2 + desc->bordersize; p2 < end2; p2++)
-		{
-			*p2 = color;
-		}
-	}
+	(((u32 *)desc->fb_base) + y * desc->xres)[x] = color;
 }
 
 int cavan_fb_init(struct cavan_screen_descriptor *desc, const char *fbpath)
@@ -187,10 +148,7 @@ int cavan_fb_init(struct cavan_screen_descriptor *desc, const char *fbpath)
 	cavan_bitfield2element(&desc->var_info.blue, &desc->blue);
 	cavan_bitfield2element(&desc->var_info.transp, &desc->transp);
 
-	cavan_set_background3f(desc, 0, 0, 0);
-	cavan_set_foreground3f(desc, 1.0, 1.0, 1.0);
-	cavan_set_bordercolor3f(desc, 1.0, 0, 0);
-	desc->bordersize = 1;
+	cavan_set_pen_color3f(desc, 1.0, 1.0, 1.0);
 
 	return 0;
 
@@ -208,7 +166,7 @@ void cavan_fb_uninit(struct cavan_screen_descriptor *desc)
 
 void cavan_fb_clear(struct cavan_screen_descriptor *desc)
 {
-	mem_set32(desc->fb_base, desc->background, desc->fb_size);
+	mem_set32(desc->fb_base, desc->pen_color, desc->fb_size);
 }
 
 int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b)
@@ -238,7 +196,7 @@ static int cavan_draw_line_horizon(struct cavan_screen_descriptor *desc, int x1,
 	u32 color;
 
 	draw_point_handle = desc->draw_point;
-	color = desc->bordercolor;
+	color = desc->pen_color;
 
 	if (x1 == x2)
 	{
@@ -291,7 +249,7 @@ static int cavan_draw_line_vertical(struct cavan_screen_descriptor *desc, int x1
 	u32 color;
 
 	draw_point_handle = desc->draw_point;
-	color = desc->bordercolor;
+	color = desc->pen_color;
 
 	if (y1 == y2)
 	{
@@ -377,7 +335,7 @@ int cavan_draw_rect(struct cavan_screen_descriptor *desc, int left, int top, int
 	}
 
 	draw_point_handle = desc->draw_point;
-	color = desc->bordercolor;
+	color = desc->pen_color;
 
 	for (i = left; i <= right; i++)
 	{
@@ -415,7 +373,7 @@ int cavan_fill_rect(struct cavan_screen_descriptor *desc, int left, int top, int
 	}
 
 	draw_point_handle = desc->draw_point;
-	color = desc->foreground;
+	color = desc->pen_color;
 
 	for (y = top; y <= bottom; y++)
 	{
@@ -443,7 +401,7 @@ int cavan_draw_circle(struct cavan_screen_descriptor *desc, int x, int y, int r)
 
 	draw_point_handle = desc->draw_point;
 	rr = r * r;
-	color = desc->bordercolor;
+	color = desc->pen_color;
 
 	for (i = 0; i < r; i++)
 	{
@@ -478,7 +436,7 @@ int cavan_fill_circle(struct cavan_screen_descriptor *desc, int x, int y, int r)
 
 	draw_point_handle = desc->draw_point;
 	rr = r * r;
-	color = desc->foreground;
+	color = desc->pen_color;
 
 	for (i = 0; i < r; i++)
 	{
@@ -519,7 +477,7 @@ int cavan_draw_ellipse(struct cavan_screen_descriptor *desc, int x, int y, int w
 	aa *= aa;
 	bb *= bb;
 	draw_point_handle = desc->draw_point;
-	color = desc->bordercolor;
+	color = desc->pen_color;
 
 	for (i = width >> 1; i >= 0; i--)
 	{
@@ -563,7 +521,7 @@ int cavan_fill_ellipse(struct cavan_screen_descriptor *desc, int x, int y, int w
 	aa *= aa;
 	bb *= bb;
 	draw_point_handle = desc->draw_point;
-	color = desc->foreground;
+	color = desc->pen_color;
 
 	for (i = width >> 1; i >= 0; i--)
 	{
@@ -703,7 +661,7 @@ static int cavan_fill_triangle_half(struct cavan_screen_descriptor *desc, struct
 	draw_point_handle = desc->draw_point;
 	left = p1->x;
 	right = p2->x;
-	color = desc->foreground;
+	color = desc->pen_color;
 
 	if ((a1 == 0 && b1 == 0) || (a2 == 0 && b2 == 0))
 	{

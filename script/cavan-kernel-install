@@ -40,6 +40,7 @@ MAKE="make -C ${KERNEL_PATH}"
 
 ${MAKE} menuconfig || exit 1
 read_choise "Do you want to compile the kernel" "Y" || exit 0
+rm defconfig -rfv && ${MAKE} savedefconfig || exit 1
 ${MAKE} -j4 || exit 1
 read_choise "Do you want to install the kernel" "Y" || exit 0
 sudo ${MAKE} modules_install || exit 1
