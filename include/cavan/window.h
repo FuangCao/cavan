@@ -54,6 +54,8 @@ struct cavan_application_context
 	struct cavan_display_device display;
 	struct cavan_input_service input_service;
 
+	struct cavan_window *win_curr;
+	struct cavan_window *win_active;
 	struct cavan_window *win_head;
 	size_t win_count;
 
