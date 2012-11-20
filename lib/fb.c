@@ -44,17 +44,17 @@ void cavan_bitfield2element(struct fb_bitfield *field, struct cavan_color_elemen
 	emt->index = emt->offset >> 3;
 }
 
-static void cavan_draw_point8(struct cavan_screen_descriptor *desc,int x, int y, u32 color)
+static void cavan_draw_point8(struct cavan_fb_device *desc,int x, int y, u32 color)
 {
 	(((u8 *)desc->fb_base) + y * desc->xres)[x] = color;
 }
 
-static void cavan_draw_point16(struct cavan_screen_descriptor *desc,int x, int y, u32 color)
+static void cavan_draw_point16(struct cavan_fb_device *desc,int x, int y, u32 color)
 {
 	(((u16 *)desc->fb_base) + y * desc->xres)[x] = color;
 }
 
-static void cavan_draw_point24(struct cavan_screen_descriptor *desc, int x, int y, u32 color)
+static void cavan_draw_point24(struct cavan_fb_device *desc, int x, int y, u32 color)
 {
 	u8 *p;
 
@@ -64,12 +64,12 @@ static void cavan_draw_point24(struct cavan_screen_descriptor *desc, int x, int 
 	p[desc->blue.index] = (color & desc->blue.mask) >> desc->blue.offset;
 }
 
-static void cavan_draw_point32(struct cavan_screen_descriptor * desc, int x, int y, u32 color)
+static void cavan_draw_point32(struct cavan_fb_device * desc, int x, int y, u32 color)
 {
 	(((u32 *)desc->fb_base) + y * desc->xres)[x] = color;
 }
 
-int cavan_fb_init(struct cavan_screen_descriptor *desc, const char *fbpath)
+int cavan_fb_init(struct cavan_fb_device *desc, const char *fbpath)
 {
 	int ret;
 	int fb;
@@ -158,13 +158,13 @@ out_close_fb:
 	return ret;
 }
 
-void cavan_fb_uninit(struct cavan_screen_descriptor *desc)
+void cavan_fb_uninit(struct cavan_fb_device *desc)
 {
 	munmap(desc->fb_base, desc->fix_info.smem_len);
 	close(desc->fb);
 }
 
-void cavan_fb_clear(struct cavan_screen_descriptor *desc)
+void cavan_fb_clear(struct cavan_fb_device *desc)
 {
 	mem_set32(desc->fb_base, desc->pen_color, desc->fb_size);
 }
@@ -189,10 +189,10 @@ int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double 
 	return 0;
 }
 
-static int cavan_draw_line_horizon(struct cavan_screen_descriptor *desc, int x1, int y1, int x2, int y2)
+static int cavan_draw_line_horizon(struct cavan_fb_device *desc, int x1, int y1, int x2, int y2)
 {
 	double a, b;
-	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
+	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
 	draw_point_handle = desc->draw_point;
@@ -242,10 +242,10 @@ static int cavan_draw_line_horizon(struct cavan_screen_descriptor *desc, int x1,
 	return 0;
 }
 
-static int cavan_draw_line_vertical(struct cavan_screen_descriptor *desc, int x1, int y1, int x2, int y2)
+static int cavan_draw_line_vertical(struct cavan_fb_device *desc, int x1, int y1, int x2, int y2)
 {
 	double a, b;
-	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
+	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
 	draw_point_handle = desc->draw_point;
@@ -295,7 +295,7 @@ static int cavan_draw_line_vertical(struct cavan_screen_descriptor *desc, int x1
 	return 0;
 }
 
-int cavan_draw_line(struct cavan_screen_descriptor *desc, int x1, int y1, int x2, int y2)
+int cavan_draw_line(struct cavan_fb_device *desc, int x1, int y1, int x2, int y2)
 {
 	int ret;
 
@@ -314,24 +314,33 @@ int cavan_draw_line(struct cavan_screen_descriptor *desc, int x1, int y1, int x2
 	return ret < 0 ? ret : cavan_draw_line_vertical(desc, x1, y1, x2, y2);
 }
 
-int cavan_draw_rect(struct cavan_screen_descriptor *desc, int left, int top, int width, int height)
+int cavan_draw_rect(struct cavan_fb_device *desc, int left, int top, int width, int height)
 {
-	int right, bottom;
 	int i;
-	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
+	int right, bottom;
+	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
-	if (left < 0 || top < 0)
+	right = left + width - 1;
+	if (right >= desc->xres)
 	{
-		return -EINVAL;
+		right = desc->xres - 1;
 	}
 
-	right = left + width - 1;
 	bottom = top + height - 1;
-
-	if (right >= desc->xres || bottom >= desc->yres)
+	if (bottom >= desc->yres)
 	{
-		return -EINVAL;
+		bottom = desc->yres - 1;
+	}
+
+	if (left < 0)
+	{
+		left = 0;
+	}
+
+	if (top < 0)
+	{
+		top = 0;
 	}
 
 	draw_point_handle = desc->draw_point;
@@ -352,11 +361,11 @@ int cavan_draw_rect(struct cavan_screen_descriptor *desc, int left, int top, int
 	return 0;
 }
 
-int cavan_fill_rect(struct cavan_screen_descriptor *desc, int left, int top, int width, int height)
+int cavan_fill_rect(struct cavan_fb_device *desc, int left, int top, int width, int height)
 {
 	int right, bottom;
 	int x, y;
-	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
+	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
 	if (left < 0 || top < 0)
@@ -386,12 +395,12 @@ int cavan_fill_rect(struct cavan_screen_descriptor *desc, int left, int top, int
 	return 0;
 }
 
-int cavan_draw_circle(struct cavan_screen_descriptor *desc, int x, int y, int r)
+int cavan_draw_circle(struct cavan_fb_device *desc, int x, int y, int r)
 {
 	int rr;
 	int i;
 	int tmp;
-	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
+	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
 	if (x - r < 0 || x + r >= desc->xres || y - r < 0 || y + r >= desc->yres)
@@ -421,12 +430,12 @@ int cavan_draw_circle(struct cavan_screen_descriptor *desc, int x, int y, int r)
 	return 0;
 }
 
-int cavan_fill_circle(struct cavan_screen_descriptor *desc, int x, int y, int r)
+int cavan_fill_circle(struct cavan_fb_device *desc, int x, int y, int r)
 {
 	int rr;
 	int i;
 	int tmp, left, right, top, bottom;
-	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
+	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
 	if (x - r < 0 || x + r >= desc->xres || y - r < 0 || y + r >= desc->yres)
@@ -458,12 +467,12 @@ int cavan_fill_circle(struct cavan_screen_descriptor *desc, int x, int y, int r)
 	return 0;
 }
 
-int cavan_draw_ellipse(struct cavan_screen_descriptor *desc, int x, int y, int width, int height)
+int cavan_draw_ellipse(struct cavan_fb_device *desc, int x, int y, int width, int height)
 {
 	double aa, bb;
 	int tmp;
 	int i;
-	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
+	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
 	aa = ((double)width) / 2;
@@ -502,12 +511,12 @@ int cavan_draw_ellipse(struct cavan_screen_descriptor *desc, int x, int y, int w
 	return 0;
 }
 
-int cavan_fill_ellipse(struct cavan_screen_descriptor *desc, int x, int y, int width, int height)
+int cavan_fill_ellipse(struct cavan_fb_device *desc, int x, int y, int width, int height)
 {
 	double aa, bb;
 	int tmp, left, right, top, bottom;
 	int i;
-	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
+	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
 	aa = ((double)width) / 2;
@@ -548,7 +557,7 @@ int cavan_fill_ellipse(struct cavan_screen_descriptor *desc, int x, int y, int w
 	return 0;
 }
 
-int cavan_draw_polygon(struct cavan_screen_descriptor *desc, struct cavan_point *points, size_t count)
+int cavan_draw_polygon(struct cavan_fb_device *desc, struct cavan_point *points, size_t count)
 {
 	unsigned int i;
 	int ret;
@@ -649,10 +658,10 @@ void cavan_point_sort_x(struct cavan_point *start, struct cavan_point *end)
 	}
 }
 
-static int cavan_fill_triangle_half(struct cavan_screen_descriptor *desc, struct cavan_point *p1, struct cavan_point *p2, double a1, double b1, double a2, double b2)
+static int cavan_fill_triangle_half(struct cavan_fb_device *desc, struct cavan_point *p1, struct cavan_point *p2, double a1, double b1, double a2, double b2)
 {
 	int left, right, top, bottom;
-	void (*draw_point_handle)(struct cavan_screen_descriptor *, int, int, u32);
+	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
 	// println("left = %d, right = %d", left, right);
@@ -708,7 +717,7 @@ static int cavan_fill_triangle_half(struct cavan_screen_descriptor *desc, struct
 	return 0;
 }
 
-int cavan_fill_triangle(struct cavan_screen_descriptor *desc, struct cavan_point *points)
+int cavan_fill_triangle(struct cavan_fb_device *desc, struct cavan_point *points)
 {
 	double a[3], b[3];
 	struct cavan_point *p0, *p1, *p2;
@@ -765,7 +774,7 @@ int cavan_fill_triangle(struct cavan_screen_descriptor *desc, struct cavan_point
 	return 0;
 }
 
-int cavan_fill_polygon(struct cavan_screen_descriptor *desc, struct cavan_point *points, size_t count)
+int cavan_fill_polygon(struct cavan_fb_device *desc, struct cavan_point *points, size_t count)
 {
 	int ret;
 	struct cavan_point *p, *p_end;
@@ -792,7 +801,7 @@ int cavan_fill_polygon(struct cavan_screen_descriptor *desc, struct cavan_point 
 	return 0;
 }
 
-static int cavan_build_polygon_points(struct cavan_screen_descriptor *desc, struct cavan_point *points, size_t count, int x, int y, int r, int rotation)
+static int cavan_build_polygon_points(struct cavan_fb_device *desc, struct cavan_point *points, size_t count, int x, int y, int r, int rotation)
 {
 	double angle, avg_angle;
 	struct cavan_point *point_end;
@@ -813,7 +822,7 @@ static int cavan_build_polygon_points(struct cavan_screen_descriptor *desc, stru
 	return 0;
 }
 
-int cavan_draw_polygon_standard(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+int cavan_draw_polygon_standard(struct cavan_fb_device *desc, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
 	struct cavan_point points[count];
@@ -823,7 +832,7 @@ int cavan_draw_polygon_standard(struct cavan_screen_descriptor *desc, size_t cou
 	return ret < 0 ? ret : cavan_draw_polygon(desc, points, count);
 }
 
-int cavan_fill_polygon_standard(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+int cavan_fill_polygon_standard(struct cavan_fb_device *desc, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
 	struct cavan_point points[count];
@@ -833,7 +842,7 @@ int cavan_fill_polygon_standard(struct cavan_screen_descriptor *desc, size_t cou
 	return ret < 0 ? ret : cavan_fill_polygon(desc, points, count);
 }
 
-int cavan_draw_polygon_standard2(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+int cavan_draw_polygon_standard2(struct cavan_fb_device *desc, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
 	struct cavan_point points[count];
@@ -927,7 +936,7 @@ int cavan_calculate_polygo_cross_points(struct cavan_point *points, struct cavan
 	return 0;
 }
 
-int cavan_fill_polygon_standard2(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+int cavan_fill_polygon_standard2(struct cavan_fb_device *desc, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
 	size_t i;
@@ -964,7 +973,7 @@ int cavan_fill_polygon_standard2(struct cavan_screen_descriptor *desc, size_t co
 	return 0;
 }
 
-int cavan_draw_polygon_standard3(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+int cavan_draw_polygon_standard3(struct cavan_fb_device *desc, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
 	struct cavan_point points[count];
@@ -990,7 +999,7 @@ int cavan_draw_polygon_standard3(struct cavan_screen_descriptor *desc, size_t co
 	return 0;
 }
 
-int cavan_fill_polygon_standard3(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+int cavan_fill_polygon_standard3(struct cavan_fb_device *desc, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
 	unsigned int i;
@@ -1030,7 +1039,7 @@ int cavan_fill_polygon_standard3(struct cavan_screen_descriptor *desc, size_t co
 	return 0;
 }
 
-int cavan_draw_polygon_standard4(struct cavan_screen_descriptor *desc, size_t count, int x, int y, int r, int rotation)
+int cavan_draw_polygon_standard4(struct cavan_fb_device *desc, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
 

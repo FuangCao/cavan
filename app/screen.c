@@ -10,7 +10,7 @@
 
 static int cavan_draw_rect_main(int argc, char *argv[])
 {
-	struct cavan_screen_descriptor desc;
+	struct cavan_fb_device fb_dev;
 	const char *fbpath;
 	int ret;
 	int left, top, width, height;
@@ -18,7 +18,7 @@ static int cavan_draw_rect_main(int argc, char *argv[])
 	assert(argc > 4);
 
 	fbpath = argc > 5 ? argv[5] : NULL;
-	ret = cavan_fb_init(&desc, fbpath);
+	ret = cavan_fb_init(&fb_dev, fbpath);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_fb_init");
@@ -32,11 +32,11 @@ static int cavan_draw_rect_main(int argc, char *argv[])
 
 	if (strcmp(argv[0], "draw_rect") == 0)
 	{
-		ret = cavan_draw_rect(&desc, left, top, width, height);
+		ret = cavan_draw_rect(&fb_dev, left, top, width, height);
 	}
 	else
 	{
-		ret = cavan_fill_rect(&desc, left, top, width, height);
+		ret = cavan_fill_rect(&fb_dev, left, top, width, height);
 	}
 
 	if (ret < 0)
@@ -44,7 +44,7 @@ static int cavan_draw_rect_main(int argc, char *argv[])
 		pr_red_info("Failed");
 	}
 
-	cavan_fb_uninit(&desc);
+	cavan_fb_uninit(&fb_dev);
 
 	return ret;
 }
