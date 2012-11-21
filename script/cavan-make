@@ -116,7 +116,7 @@ cat > Makefile << EOF
 CAVAN_HOME = ${CAVAN_HOME_ABS}
 
 all:
-	@+make -C \$(CAVAN_HOME) ${MAKE_TYPE}=${PWD} ${FILE_TYPE}
+	@+make -C \$(CAVAN_HOME) ${MAKE_TYPE}=${PWD}
 
 %:
 	@+make -C \$(CAVAN_HOME) ${MAKE_TYPE}=${PWD} \$@
