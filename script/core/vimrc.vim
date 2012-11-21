@@ -12,6 +12,8 @@ set ai
 "set hlsearch
 let c_space_errors=1
 
+set path=.,/usr/include,/cavan/include
+
 " Source a global configuration file if available
 if filereadable("/etc/vim/vimrc.local")
   source /etc/vim/vimrc.local
