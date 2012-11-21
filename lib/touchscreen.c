@@ -279,7 +279,7 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 				{
 					if (p->released == 0)
 					{
-						service->release_handler(dev, p, service->private_data);
+						service->touch_handler(dev, p, service->private_data);
 						p->released = 1;
 					}
 				}
@@ -420,7 +420,7 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 
 			if (p->released == 0)
 			{
-				service->release_handler(dev, p, service->private_data);
+				service->touch_handler(dev, p, service->private_data);
 				p->released = 1;
 			}
 		}

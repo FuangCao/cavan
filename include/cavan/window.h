@@ -10,7 +10,7 @@
 #include <cavan/display.h>
 #include <cavan/input.h>
 
-struct cavan_application_context;
+#define CAVAN_MOUSE_SIZE	10
 
 struct cavan_window
 {
@@ -19,23 +19,32 @@ struct cavan_window
 	int width, height;
 	int border_width;
 
+	int id;
 	char text[512];
 	pthread_mutex_t lock;
 
-	struct cavan_display_color3f border_color;
-	struct cavan_display_color3f back_color;
-	struct cavan_display_color3f fore_color;
+	cavan_display_color_t border_color;
+	cavan_display_color_t back_color;
+	cavan_display_color_t fore_color;
+
+	void *private_data;
 
 	struct cavan_window *child;
 	struct cavan_window *parent;
 	struct cavan_window *next;
 
-	int (*paint)(struct cavan_window *win, struct cavan_application_context *context);
-	bool (*paint_handler)(struct cavan_window *win, struct cavan_application_context *context);
-	bool (*click_handler)(struct cavan_window *win, bool pressed);
-	bool (*move_handler)(struct cavan_window *win, struct cavan_touch_point *point);
-	bool (*entry_handler)(struct cavan_window *win, struct cavan_touch_point *point);
-	bool (*exit_handler)(struct cavan_window *win, struct cavan_touch_point *point);
+	void (*destory_handler)(struct cavan_window *win);
+	void (*paint_handler)(struct cavan_window *win);
+	void (*click_handler)(struct cavan_window *win, bool pressed);
+	void (*move_handler)(struct cavan_window *win, int x, int y);
+	void (*entry_handler)(struct cavan_window *win);
+	void (*exit_handler)(struct cavan_window *win);
+
+	bool (*on_paint)(struct cavan_window *win, void *data);
+	bool (*on_click)(struct cavan_window *win, int x, int y, bool pressed, void *data);
+	bool (*on_move)(struct cavan_window *win, int x, int y, void *data);
+	bool (*on_entry)(struct cavan_window *win, void *data);
+	bool (*on_exit)(struct cavan_window *win, void *data);
 };
 
 struct cavan_dialog
@@ -54,6 +63,13 @@ struct cavan_application_context
 	struct cavan_display_device display;
 	struct cavan_input_service input_service;
 
+	void *private_data;
+
+	struct cavan_display_memory *mouse_point_mem;
+	float mouse_speed;
+	int x, max_x;
+	int y, max_y;
+
 	struct cavan_window *win_curr;
 	struct cavan_window *win_active;
 	struct cavan_window *win_head;
@@ -62,5 +78,19 @@ struct cavan_application_context
 	pthread_mutex_t lock;
 };
 
+void cavan_window_set_position(struct cavan_window *win, int x, int y);
 void cavan_window_add_child(struct cavan_window *win, struct cavan_window *child);
 int cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child);
+
+int cavan_dislog_init(struct cavan_dialog *dialog, void *data);
+int cavan_button_init(struct cavan_button *button, void *data);
+
+int cavan_application_context_init(struct cavan_application_context *context, void *data);
+void cavan_application_context_uninit(struct cavan_application_context *app);
+void cavan_application_context_add_window(struct cavan_application_context *context, struct cavan_window *win);
+int cavan_application_context_remove_window(struct cavan_application_context *context, struct cavan_window *win);
+
+static inline int cavan_application_context_run(struct cavan_application_context *context)
+{
+	return cavan_input_service_join(&context->input_service);
+}

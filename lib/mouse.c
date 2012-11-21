@@ -30,6 +30,7 @@ bool cavan_mouse_device_match(uint8_t *key_bitmask, uint8_t *rel_bitmask)
 
 	clean_bit(BTN_LEFT, key_bitmask);
 	clean_bit(BTN_RIGHT, key_bitmask);
+	clean_bit(BTN_MIDDLE, key_bitmask);
 	clean_bit(REL_X, rel_bitmask);
 	clean_bit(REL_Y, rel_bitmask);
 
@@ -63,7 +64,6 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 {
 	struct cavan_input_service *service = data;
 	struct cavan_mouse_device *mouse = (struct cavan_mouse_device *)dev;
-	struct cavan_touch_point *p = &mouse->point;
 
 	switch (event->type)
 	{
@@ -71,25 +71,15 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 		switch (event->code)
 		{
 		case BTN_LEFT:
-			if (event->value)
-			{
-				service->touch_handler(dev, p, service->private_data);
-			}
-			else
-			{
-				service->release_handler(dev, p, service->private_data);
-			}
+			service->mouse_touch_handler(dev, CAVAN_MOUSE_BUTTON_LEFT, event->value, service->private_data);
 			break;
 
 		case BTN_RIGHT:
-			if (event->value)
-			{
-				service->right_touch_handler(dev, p, service->private_data);
-			}
-			else
-			{
-				service->right_release_handler(dev, p, service->private_data);
-			}
+			service->mouse_touch_handler(dev, CAVAN_MOUSE_BUTTON_RIGHT, event->value, service->private_data);
+			break;
+
+		case BTN_MIDDLE:
+			service->mouse_touch_handler(dev, CAVAN_MOUSE_BUTTON_MIDDLE, event->value, service->private_data);
 			break;
 
 		default:
@@ -101,31 +91,15 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 		switch (event->code)
 		{
 		case REL_X:
-			p->x += event->value * service->mouse_speed;
-			if (p->x < 0)
-			{
-				p->x = 0;
-			}
-			else if (p->x > mouse->xmax)
-			{
-				p->x = mouse->xmax;
-			}
+			mouse->x = event->value;
 			break;
 
 		case REL_Y:
-			p->y += event->value * service->mouse_speed;
-			if (p->y < 0)
-			{
-				p->y = 0;
-			}
-			else if (p->y > mouse->ymax)
-			{
-				p->y = mouse->ymax;
-			}
+			mouse->y = event->value;
 			break;
 
 		case REL_WHEEL:
-			service->wheel_handler(dev, event->value, service->private_data);
+			service->mouse_wheel_handler(dev, event->value, service->private_data);
 			break;
 
 		default:
@@ -134,12 +108,10 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 		break;
 
 	case EV_SYN:
-		if (p->x != mouse->xold || p->y != mouse->yold)
+		if (mouse->x || mouse->y)
 		{
-			service->move_handler(dev, p, service->private_data);
-
-			mouse->xold = p->x;
-			mouse->yold = p->y;
+			service->mouse_move_handler(dev, mouse->x, mouse->y, service->private_data);
+			mouse->x = mouse->y = 0;
 		}
 		break;
 
@@ -150,32 +122,10 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 	return true;
 }
 
-static int cavan_mouse_probe(struct cavan_input_device *dev, void *data)
-{
-	struct cavan_input_service *service = data;
-	struct cavan_mouse_device *mouse = (struct cavan_mouse_device *)dev;
-
-	pr_bold_info("LCD: width = %d, height = %d", service->lcd_width, service->lcd_height);
-
-	if (service->lcd_width <= 0 || service->lcd_height <= 0)
-	{
-		pr_red_info("service->lcd_width <= 0 || service->lcd_height <= 0");
-		return -EINVAL;
-	}
-
-	mouse->xmax = service->lcd_width - 1;
-	mouse->ymax = service->lcd_height - 1;
-
-	pr_bold_info("Mouse: x-max = %d, y-max = %d", mouse->xmax, mouse->ymax);
-
-	return 0;
-}
-
 struct cavan_input_device *cavan_mouse_create(void)
 {
 	struct cavan_mouse_device *mouse;
 	struct cavan_input_device *dev;
-	struct cavan_touch_point *point;
 
 	mouse = malloc(sizeof(*mouse));
 	if (mouse == NULL)
@@ -184,18 +134,10 @@ struct cavan_input_device *cavan_mouse_create(void)
 		return NULL;
 	}
 
-	mouse->xold = 0;
-	mouse->yold = 0;
-
-	point = &mouse->point;
-	point->id = 0;
-	point->x = 0;
-	point->y = 0;
-	point->pressure = 0;
-	point->released = 1;
+	mouse->x = mouse->y = 0;
 
 	dev = &mouse->input_dev;
-	dev->probe = cavan_mouse_probe;
+	dev->probe = NULL;
 	dev->remove = NULL;
 	dev->event_handler = cavan_mouse_event_handler;
 

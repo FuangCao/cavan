@@ -24,9 +24,7 @@
 struct cavan_mouse_device
 {
 	struct cavan_input_device input_dev;
-	struct cavan_touch_point point;
-	int xold, xmax;
-	int yold, ymax;
+	int x, y;
 };
 
 bool cavan_mouse_device_match(uint8_t *key_bitmask, uint8_t *rel_bitmask);

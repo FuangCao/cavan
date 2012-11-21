@@ -103,19 +103,19 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	switch (dev->var_info.bits_per_pixel)
 	{
 	case 8:
-		dev->line_size = dev->xres;
+		dev->byte_per_pixel = 1;
 		dev->draw_point = cavan_fb_draw_point8;
 		break;
 	case 16:
-		dev->line_size = dev->xres * 2;
+		dev->byte_per_pixel = 2;
 		dev->draw_point = cavan_fb_draw_point16;
 		break;
 	case 24:
-		dev->line_size = dev->xres * 3;
+		dev->byte_per_pixel = 3;
 		dev->draw_point = cavan_fb_draw_point24;
 		break;
 	case 32:
-		dev->line_size = dev->xres * 4;
+		dev->byte_per_pixel = 4;
 		dev->draw_point = cavan_fb_draw_point32;
 		break;
 	default:
@@ -124,6 +124,7 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 		goto out_close_fb;
 	}
 
+	dev->line_size = dev->byte_per_pixel * dev->xres;
 	dev->fb_size = dev->line_size * dev->yres;
 
 	ret = ioctl(fb, FBIOGET_FSCREENINFO, &dev->fix_info);
@@ -148,7 +149,7 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	cavan_fb_bitfield2element(&dev->var_info.blue, &dev->blue);
 	cavan_fb_bitfield2element(&dev->var_info.transp, &dev->transp);
 
-	cavan_fb_set_pen_color3f(dev, 1.0, 1.0, 1.0);
+	cavan_fb_set_pen_color3f(dev, 1.0, 1.0, 1.0, 1.0);
 
 	return 0;
 
@@ -166,7 +167,7 @@ void cavan_fb_uninit(struct cavan_fb_device *dev)
 
 void cavan_fb_clear(struct cavan_fb_device *dev)
 {
-	mem_set32(dev->fb_base, dev->pen_color, dev->fb_size);
+	mem_set32(dev->fb_base, dev->pen_color.value, dev->fb_size);
 }
 
 int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b)
@@ -196,7 +197,7 @@ static int cavan_fb_draw_line_horizon(struct cavan_fb_device *dev, int x1, int y
 	u32 color;
 
 	draw_point_handle = dev->draw_point;
-	color = dev->pen_color;
+	color = dev->pen_color.value;
 
 	if (x1 == x2)
 	{
@@ -249,7 +250,7 @@ static int cavan_fb_draw_line_vertical(struct cavan_fb_device *dev, int x1, int 
 	u32 color;
 
 	draw_point_handle = dev->draw_point;
-	color = dev->pen_color;
+	color = dev->pen_color.value;
 
 	if (y1 == y2)
 	{
@@ -327,15 +328,15 @@ int cavan_fb_draw_rect(struct cavan_fb_device *dev, int left, int top, int width
 		right = dev->xres - 1;
 	}
 
+	if (left < 0)
+	{
+		left = 0;
+	}
+
 	bottom = top + height - 1;
 	if (bottom >= dev->yres)
 	{
 		bottom = dev->yres - 1;
-	}
-
-	if (left < 0)
-	{
-		left = 0;
 	}
 
 	if (top < 0)
@@ -344,7 +345,7 @@ int cavan_fb_draw_rect(struct cavan_fb_device *dev, int left, int top, int width
 	}
 
 	draw_point_handle = dev->draw_point;
-	color = dev->pen_color;
+	color = dev->pen_color.value;
 
 	for (i = left; i <= right; i++)
 	{
@@ -368,21 +369,30 @@ int cavan_fb_fill_rect(struct cavan_fb_device *dev, int left, int top, int width
 	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
 	u32 color;
 
-	if (left < 0 || top < 0)
+	right = left + width - 1;
+	if (right >= dev->xres)
 	{
-		return -EINVAL;
+		right = dev->xres - 1;
 	}
 
-	right = left + width - 1;
-	bottom = top + height - 1;
-
-	if (right >= dev->xres || bottom >= dev->yres)
+	if (left < 0)
 	{
-		return -EINVAL;
+		left = 0;
+	}
+
+	bottom = top + height - 1;
+	if (bottom >= dev->yres)
+	{
+		bottom = dev->yres - 1;
+	}
+
+	if (top < 0)
+	{
+		top = 0;
 	}
 
 	draw_point_handle = dev->draw_point;
-	color = dev->pen_color;
+	color = dev->pen_color.value;
 
 	for (y = top; y <= bottom; y++)
 	{
@@ -410,7 +420,7 @@ int cavan_fb_draw_circle(struct cavan_fb_device *dev, int x, int y, int r)
 
 	draw_point_handle = dev->draw_point;
 	rr = r * r;
-	color = dev->pen_color;
+	color = dev->pen_color.value;
 
 	for (i = 0; i < r; i++)
 	{
@@ -445,7 +455,7 @@ int cavan_fb_fill_circle(struct cavan_fb_device *dev, int x, int y, int r)
 
 	draw_point_handle = dev->draw_point;
 	rr = r * r;
-	color = dev->pen_color;
+	color = dev->pen_color.value;
 
 	for (i = 0; i < r; i++)
 	{
@@ -486,7 +496,7 @@ int cavan_fb_draw_ellipse(struct cavan_fb_device *dev, int x, int y, int width, 
 	aa *= aa;
 	bb *= bb;
 	draw_point_handle = dev->draw_point;
-	color = dev->pen_color;
+	color = dev->pen_color.value;
 
 	for (i = width >> 1; i >= 0; i--)
 	{
@@ -530,7 +540,7 @@ int cavan_fb_fill_ellipse(struct cavan_fb_device *dev, int x, int y, int width, 
 	aa *= aa;
 	bb *= bb;
 	draw_point_handle = dev->draw_point;
-	color = dev->pen_color;
+	color = dev->pen_color.value;
 
 	for (i = width >> 1; i >= 0; i--)
 	{
@@ -557,7 +567,7 @@ int cavan_fb_fill_ellipse(struct cavan_fb_device *dev, int x, int y, int width, 
 	return 0;
 }
 
-int cavan_fb_draw_polygon(struct cavan_fb_device *dev, struct cavan_fb_point *points, size_t count)
+int cavan_fb_draw_polygon(struct cavan_fb_device *dev, cavan_display_point_t *points, size_t count)
 {
 	unsigned int i;
 	int ret;
@@ -599,9 +609,9 @@ int min3i(int a, int b, int c)
 	return c < a ? c : a;
 }
 
-void show_cavan_fb_points(const struct cavan_fb_point *points, size_t size)
+void cavan_fb_show_points(const cavan_display_point_t *points, size_t size)
 {
-	const struct cavan_fb_point *end;
+	const cavan_display_point_t *end;
 
 	for (end = points + size; points < end; points++)
 	{
@@ -609,9 +619,9 @@ void show_cavan_fb_points(const struct cavan_fb_point *points, size_t size)
 	}
 }
 
-void cavan_fb_point_sort_x(struct cavan_fb_point *start, struct cavan_fb_point *end)
+void cavan_fb_point_sort_x(cavan_display_point_t *start, cavan_display_point_t *end)
 {
-	struct cavan_fb_point mid, *start_bak, *end_bak;
+	cavan_display_point_t mid, *start_bak, *end_bak;
 
 	if (start >= end)
 	{
@@ -658,7 +668,7 @@ void cavan_fb_point_sort_x(struct cavan_fb_point *start, struct cavan_fb_point *
 	}
 }
 
-static int cavan_fb_fill_triangle_half(struct cavan_fb_device *dev, struct cavan_fb_point *p1, struct cavan_fb_point *p2, double a1, double b1, double a2, double b2)
+static int cavan_fb_fill_triangle_half(struct cavan_fb_device *dev, cavan_display_point_t *p1, cavan_display_point_t *p2, double a1, double b1, double a2, double b2)
 {
 	int left, right, top, bottom;
 	void (*draw_point_handle)(struct cavan_fb_device *, int, int, u32);
@@ -670,7 +680,7 @@ static int cavan_fb_fill_triangle_half(struct cavan_fb_device *dev, struct cavan
 	draw_point_handle = dev->draw_point;
 	left = p1->x;
 	right = p2->x;
-	color = dev->pen_color;
+	color = dev->pen_color.value;
 
 	if ((a1 == 0 && b1 == 0) || (a2 == 0 && b2 == 0))
 	{
@@ -691,7 +701,7 @@ static int cavan_fb_fill_triangle_half(struct cavan_fb_device *dev, struct cavan
 
 			for (i = top; i <= bottom; i++)
 			{
-				cavan_fb_draw_point(dev, left, i, color);
+				draw_point_handle(dev, left, i, color);
 			}
 
 			left++;
@@ -717,10 +727,10 @@ static int cavan_fb_fill_triangle_half(struct cavan_fb_device *dev, struct cavan
 	return 0;
 }
 
-int cavan_fb_fill_triangle(struct cavan_fb_device *dev, struct cavan_fb_point *points)
+int cavan_fb_fill_triangle(struct cavan_fb_device *dev, cavan_display_point_t *points)
 {
 	double a[3], b[3];
-	struct cavan_fb_point *p0, *p1, *p2;
+	cavan_display_point_t *p0, *p1, *p2;
 
 	if (points[0].x < points[1].x)
 	{
@@ -774,11 +784,11 @@ int cavan_fb_fill_triangle(struct cavan_fb_device *dev, struct cavan_fb_point *p
 	return 0;
 }
 
-int cavan_fb_fill_polygon(struct cavan_fb_device *dev, struct cavan_fb_point *points, size_t count)
+int cavan_fb_fill_polygon(struct cavan_fb_device *dev, cavan_display_point_t *points, size_t count)
 {
 	int ret;
-	struct cavan_fb_point *p, *p_end;
-	struct cavan_fb_point point_buff[3];
+	cavan_display_point_t *p, *p_end;
+	cavan_display_point_t point_buff[3];
 
 	if (count < 3)
 	{
@@ -801,10 +811,10 @@ int cavan_fb_fill_polygon(struct cavan_fb_device *dev, struct cavan_fb_point *po
 	return 0;
 }
 
-static int cavan_build_polygon_points(struct cavan_fb_device *dev, struct cavan_fb_point *points, size_t count, int x, int y, int r, int rotation)
+static int cavan_build_polygon_points(struct cavan_fb_device *dev, cavan_display_point_t *points, size_t count, int x, int y, int r, int rotation)
 {
 	double angle, avg_angle;
-	struct cavan_fb_point *point_end;
+	cavan_display_point_t *point_end;
 
 	if (count < 3)
 	{
@@ -825,7 +835,7 @@ static int cavan_build_polygon_points(struct cavan_fb_device *dev, struct cavan_
 int cavan_fb_draw_polygon_standard(struct cavan_fb_device *dev, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
-	struct cavan_fb_point points[count];
+	cavan_display_point_t points[count];
 
 	ret = cavan_build_polygon_points(dev, points, count, x, y, r, rotation);
 
@@ -835,7 +845,7 @@ int cavan_fb_draw_polygon_standard(struct cavan_fb_device *dev, size_t count, in
 int cavan_fb_fill_polygon_standard(struct cavan_fb_device *dev, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
-	struct cavan_fb_point points[count];
+	cavan_display_point_t points[count];
 
 	ret = cavan_build_polygon_points(dev, points, count, x, y, r, rotation);
 
@@ -845,8 +855,8 @@ int cavan_fb_fill_polygon_standard(struct cavan_fb_device *dev, size_t count, in
 int cavan_fb_draw_polygon_standard2(struct cavan_fb_device *dev, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
-	struct cavan_fb_point points[count];
-	struct cavan_fb_point *p1, *p2, *end_p;
+	cavan_display_point_t points[count];
+	cavan_display_point_t *p1, *p2, *end_p;
 
 	ret = cavan_build_polygon_points(dev, points, count, x, y, r, rotation);
 	if (ret < 0)
@@ -878,7 +888,7 @@ int cavan_fb_draw_polygon_standard2(struct cavan_fb_device *dev, size_t count, i
 	return 0;
 }
 
-int cavan_calculate_line_cross_point(int x1, int x2, double a1, double b1, double a2, double b2, struct cavan_fb_point *point)
+int cavan_calculate_line_cross_point(int x1, int x2, double a1, double b1, double a2, double b2, cavan_display_point_t *point)
 {
 	if (a1 == a2)
 	{
@@ -904,11 +914,11 @@ int cavan_calculate_line_cross_point(int x1, int x2, double a1, double b1, doubl
 	return 0;
 }
 
-int cavan_calculate_polygo_cross_points(struct cavan_fb_point *points, struct cavan_fb_point *cross_points, size_t count)
+int cavan_calculate_polygo_cross_points(cavan_display_point_t *points, cavan_display_point_t *cross_points, size_t count)
 {
 	size_t i;
 	int ret;
-	struct cavan_fb_point *p0, *p1, *p2, *p3;
+	cavan_display_point_t *p0, *p1, *p2, *p3;
 	double a1, a2, b1, b2;
 
 	if (count < 5)
@@ -940,9 +950,9 @@ int cavan_fb_fill_polygon_standard2(struct cavan_fb_device *dev, size_t count, i
 {
 	int ret;
 	size_t i;
-	struct cavan_fb_point points[count];
-	struct cavan_fb_point cross_points[count];
-	struct cavan_fb_point triangle_points[3];
+	cavan_display_point_t points[count];
+	cavan_display_point_t cross_points[count];
+	cavan_display_point_t triangle_points[3];
 
 	if (count < 5)
 	{
@@ -976,7 +986,7 @@ int cavan_fb_fill_polygon_standard2(struct cavan_fb_device *dev, size_t count, i
 int cavan_fb_draw_polygon_standard3(struct cavan_fb_device *dev, size_t count, int x, int y, int r, int rotation)
 {
 	int ret;
-	struct cavan_fb_point points[count];
+	cavan_display_point_t points[count];
 	size_t i, j;
 
 	ret = cavan_build_polygon_points(dev, points, count, x, y, r, rotation);
@@ -1003,8 +1013,8 @@ int cavan_fb_fill_polygon_standard3(struct cavan_fb_device *dev, size_t count, i
 {
 	int ret;
 	unsigned int i;
-	struct cavan_fb_point points[count];
-	struct cavan_fb_point cross_points[count];
+	cavan_display_point_t points[count];
+	cavan_display_point_t cross_points[count];
 
 	if (count < 5)
 	{
@@ -1027,7 +1037,7 @@ int cavan_fb_fill_polygon_standard3(struct cavan_fb_device *dev, size_t count, i
 
 	for (i = 0; i < count; i++)
 	{
-		struct cavan_fb_point triangle_points[3];
+		cavan_display_point_t triangle_points[3];
 
 		triangle_points[0] = cross_points[i];
 		triangle_points[1] = cross_points[(i + 1) % count];
@@ -1050,4 +1060,74 @@ int cavan_fb_draw_polygon_standard4(struct cavan_fb_device *dev, size_t count, i
 	}
 
 	return cavan_fb_draw_circle(dev, x, y, r);
+}
+
+int cavan_fb_display_memory_xfer(struct cavan_fb_device *dev, struct cavan_display_memory *mem, bool read)
+{
+	char *data;
+	size_t width;
+	size_t line_size;
+	char *p, *p_end;
+	int right, bottom;
+
+	right = mem->x + mem->width;
+	if (right > dev->xres)
+	{
+		right = dev->xres;
+	}
+
+	if (mem->x < 0)
+	{
+		mem->x = 0;
+	}
+
+	bottom = mem->y + mem->height;
+	if (bottom > dev->yres)
+	{
+		bottom = dev->yres;
+	}
+
+	if (mem->y < 0)
+	{
+		mem->y = 0;
+	}
+
+	if (mem->x >= right || mem->y >= bottom)
+	{
+		return 0;
+	}
+
+	mem->width = right - mem->x;
+	mem->height = bottom - mem->y;
+
+	width = mem->width * dev->byte_per_pixel;
+	line_size = dev->line_size;
+
+	p = (char *)dev->fb_base + mem->y * line_size + mem->x * dev->byte_per_pixel;
+	p_end = p + mem->height * line_size;
+
+	data = mem->data;
+
+	if (read)
+	{
+		while (p < p_end)
+		{
+			mem_copy(data, p, width);
+
+			data += width;
+			p += line_size;
+		}
+	}
+	else
+	{
+		while (p < p_end)
+		{
+			mem_copy(p, data, width);
+
+			data += width;
+			p += line_size;
+		}
+	}
+
+	return 0;
 }

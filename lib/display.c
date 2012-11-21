@@ -5,86 +5,105 @@
  */
 
 #include <cavan.h>
+#include <cavan/fb.h>
 #include <cavan/display.h>
 
-static void cavan_display_update_data(struct cavan_display_device *dev)
+cavan_display_color_t cavan_display_build_color3f(struct cavan_display_device *display, float red, float green, float blue, float transp)
 {
-	pr_pos_info();
+	return cavan_fb_build_color3f(display->private_data, red, green, blue, transp);
 }
 
-static void cavan_display_set_color(struct cavan_display_device *dev, struct cavan_display_color3f *color)
+static void cavan_display_update_data(struct cavan_display_device *display)
 {
-	cavan_fb_set_pen_color3f(dev->private_data, color->red, color->green, color->blue);
 }
 
-static void cavan_display_draw_point(struct cavan_display_device *dev, int x, int y)
+static void cavan_display_set_color(struct cavan_display_device *display, cavan_display_color_t color)
 {
-	cavan_fb_draw_point2(dev->private_data, x, y);
+	struct cavan_fb_device *fb_dev = display->private_data;
+
+	fb_dev->pen_color = color;
 }
 
-static int cavan_display_draw_line(struct cavan_display_device *dev, int x1, int y1, int x2, int y2)
+static void cavan_display_draw_point(struct cavan_display_device *display, int x, int y)
 {
-	return cavan_fb_draw_line(dev->private_data, x1, y1, x2, y2);
+	cavan_fb_draw_point(display->private_data, x, y);
 }
 
-static size_t cavan_display_mesure_text(struct cavan_display_device *dev, const char *text)
+static int cavan_display_draw_line(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
+{
+	return cavan_fb_draw_line(display->private_data, x1, y1, x2, y2);
+}
+
+static size_t cavan_display_mesure_text(struct cavan_display_device *display, const char *text)
 {
 	return text_len(text);
 }
 
-static int cavan_display_draw_text(struct cavan_display_device *dev, int x, int y, const char *text)
+static int cavan_display_draw_text(struct cavan_display_device *display, int x, int y, const char *text)
 {
-	pr_pos_info();
-
 	return 0;
 }
 
-static int cavan_display_draw_rect(struct cavan_display_device *dev, int x, int y, int width, int height)
+static int cavan_display_draw_rect(struct cavan_display_device *display, int x, int y, int width, int height)
 {
-	return cavan_fb_draw_rect(dev->private_data, x, y, width, height);
+	return cavan_fb_draw_rect(display->private_data, x, y, width, height);
 }
 
-static int cavan_display_fill_rect(struct cavan_display_device *dev, int x, int y, int width, int height)
+static int cavan_display_fill_rect(struct cavan_display_device *display, int x, int y, int width, int height)
 {
-	return cavan_fb_fill_rect(dev->private_data, x, y, width, height);
+	return cavan_fb_fill_rect(display->private_data, x, y, width, height);
 }
 
-static int cavan_display_draw_circle(struct cavan_display_device *dev, int x, int y, int r)
+static int cavan_display_draw_circle(struct cavan_display_device *display, int x, int y, int r)
 {
-	return cavan_fb_draw_circle(dev->private_data, x, y, r);
+	return cavan_fb_draw_circle(display->private_data, x, y, r);
 }
 
-static int cavan_display_fill_circle(struct cavan_display_device *dev, int x, int y, int r)
+static int cavan_display_fill_circle(struct cavan_display_device *display, int x, int y, int r)
 {
-	return cavan_fb_fill_circle(dev->private_data, x, y, r);
+	return cavan_fb_fill_circle(display->private_data, x, y, r);
 }
 
-static int cavan_display_draw_ellipse(struct cavan_display_device *dev, int x, int y, int width, int height)
+static int cavan_display_draw_ellipse(struct cavan_display_device *display, int x, int y, int width, int height)
 {
-	return cavan_fb_draw_ellipse(dev->private_data, x, y, width, height);
+	return cavan_fb_draw_ellipse(display->private_data, x, y, width, height);
 }
 
-static int cavan_display_fill_ellipse(struct cavan_display_device *dev, int x, int y, int width, int height)
+static int cavan_display_fill_ellipse(struct cavan_display_device *display, int x, int y, int width, int height)
 {
-	return cavan_fb_fill_ellipse(dev->private_data, x, y, width, height);
+	return cavan_fb_fill_ellipse(display->private_data, x, y, width, height);
 }
 
-static int cavan_display_draw_polygon(struct cavan_display_device *dev, struct cavan_fb_point *points, size_t count)
+static int cavan_display_draw_polygon(struct cavan_display_device *display, cavan_display_point_t *points, size_t count)
 {
-	return cavan_fb_draw_polygon(dev->private_data, points, count);
+	return cavan_fb_draw_polygon(display->private_data, points, count);
 }
 
-static int cavan_display_fill_triangle(struct cavan_display_device *dev, struct cavan_fb_point *points)
+static int cavan_display_fill_triangle(struct cavan_display_device *display, cavan_display_point_t *points)
 {
-	return cavan_fb_fill_triangle(dev->private_data, points);
+	return cavan_fb_fill_triangle(display->private_data, points);
 }
 
-static int cavan_display_fill_polygon(struct cavan_display_device *dev, struct cavan_fb_point *points, size_t count)
+static int cavan_display_fill_polygon(struct cavan_display_device *display, cavan_display_point_t *points, size_t count)
 {
-	return cavan_fb_fill_polygon(dev->private_data, points, count);
+	return cavan_fb_fill_polygon(display->private_data, points, count);
 }
 
-int cavan_display_init(struct cavan_display_device *dev)
+static int cavan_display_memory_xfer(struct cavan_display_device *display, struct cavan_display_memory *mem, bool read)
+{
+	return cavan_fb_display_memory_xfer(display->private_data, mem, read);
+}
+
+static int cavan_display_clear(struct cavan_display_device *display, cavan_display_color_t color)
+{
+	struct cavan_fb_device *fb_dev = display->private_data;
+
+	fb_dev->pen_color = color;
+
+	return cavan_fb_fill_rect(fb_dev, 0, 0, display->width, display->height);
+}
+
+int cavan_display_init(struct cavan_display_device *display)
 {
 	int ret;
 	struct cavan_fb_device *fb_dev;
@@ -104,31 +123,63 @@ int cavan_display_init(struct cavan_display_device *dev)
 		return ret;
 	}
 
-	dev->private_data = fb_dev;
-	dev->width = fb_dev->xres;
-	dev->height = fb_dev->yres;
+	display->private_data = fb_dev;
+	display->width = fb_dev->xres;
+	display->height = fb_dev->yres;
 
-	dev->update_data = cavan_display_update_data;
-	dev->set_color = cavan_display_set_color;
-	dev->draw_point = cavan_display_draw_point;
-	dev->draw_line = cavan_display_draw_line;
-	dev->mesure_text = cavan_display_mesure_text;
-	dev->draw_text = cavan_display_draw_text;
-	dev->draw_rect = cavan_display_draw_rect;
-	dev->fill_rect = cavan_display_fill_rect;
-	dev->draw_circle = cavan_display_draw_circle;
-	dev->fill_circle = cavan_display_fill_circle;
-	dev->draw_ellipse = cavan_display_draw_ellipse;
-	dev->fill_ellipse = cavan_display_fill_ellipse;
-	dev->draw_polygon = cavan_display_draw_polygon;
-	dev->fill_triangle = cavan_display_fill_triangle;
-	dev->fill_polygon = cavan_display_fill_polygon;
+	display->update_data = cavan_display_update_data;
+	display->set_color = cavan_display_set_color;
+	display->clear = cavan_display_clear;
+	display->draw_point = cavan_display_draw_point;
+	display->draw_line = cavan_display_draw_line;
+	display->mesure_text = cavan_display_mesure_text;
+	display->draw_text = cavan_display_draw_text;
+	display->draw_rect = cavan_display_draw_rect;
+	display->fill_rect = cavan_display_fill_rect;
+	display->draw_circle = cavan_display_draw_circle;
+	display->fill_circle = cavan_display_fill_circle;
+	display->draw_ellipse = cavan_display_draw_ellipse;
+	display->fill_ellipse = cavan_display_fill_ellipse;
+	display->draw_polygon = cavan_display_draw_polygon;
+	display->fill_triangle = cavan_display_fill_triangle;
+	display->fill_polygon = cavan_display_fill_polygon;
+	display->display_memory_xfer = cavan_display_memory_xfer;
 
 	return 0;
 }
 
-void cavan_display_uninit(struct cavan_display_device *dev)
+void cavan_display_uninit(struct cavan_display_device *display)
 {
-	cavan_fb_uninit(dev->private_data);
-	free(dev->private_data);
+	cavan_fb_uninit(display->private_data);
+	free(display->private_data);
+}
+
+struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height)
+{
+	struct cavan_display_memory *mem;
+	struct cavan_fb_device *fb_dev = display->private_data;
+	size_t size;
+
+	size = width * height * fb_dev->byte_per_pixel;
+	mem = malloc(sizeof(*mem) + size);
+	if (mem == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	mem->x = 0;
+	mem->y = 0;
+	mem->width = 0;
+	mem->height = 0;
+
+	mem->width_max = width;
+	mem->height_max = height;
+
+	return mem;
+}
+
+void cavan_display_memory_free(struct cavan_display_memory *mem)
+{
+	free(mem);
 }

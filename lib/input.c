@@ -195,7 +195,14 @@ static void cavan_input_key_handler_dummy(struct cavan_input_device *dev, const 
 
 static void cavan_input_touch_handler_dummy(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data)
 {
-	pr_bold_info("touch[%d] = [%d, %d]", point->id, point->x, point->y);
+	if (point->pressure)
+	{
+		pr_bold_info("touch[%d] = [%d, %d]", point->id, point->x, point->y);
+	}
+	else
+	{
+		pr_bold_info("release[%d] = [%d, %d]", point->id, point->x, point->y);
+	}
 }
 
 static void cavan_input_move_handler_dummy(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data)
@@ -203,29 +210,24 @@ static void cavan_input_move_handler_dummy(struct cavan_input_device *dev, struc
 	pr_bold_info("move[%d] = [%d, %d]", point->id, point->x, point->y);
 }
 
-static void cavan_input_release_handler_dummy(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data)
-{
-	pr_bold_info("release[%d] = [%d, %d]", point->id, point->x, point->y);
-}
-
 static void cavan_input_gsensor_handler_dummy(struct cavan_input_device *dev, struct cavan_gsensor_event *event, void *data)
 {
 	pr_bold_info("g-sensor: [%d, %d, %d]", event->x, event->y, event->z);
 }
 
-static void cavan_input_right_touch_handler_dummy(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data)
-{
-	pr_bold_info("right_touch[%d] = [%d, %d]", point->id, point->x, point->y);
-}
-
-static void cavan_input_right_release_handler_dummy(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data)
-{
-	pr_bold_info("right_release[%d] = [%d, %d]", point->id, point->x, point->y);
-}
-
-static void cavan_input_wheel_handler_dummy(struct cavan_input_device *dev, int value, void *data)
+static void cavan_input_mouse_wheel_handler_dummy(struct cavan_input_device *dev, int value, void *data)
 {
 	pr_bold_info("wheel: value = %d", value);
+}
+
+static void cavan_input_mouse_move_handler_dummy(struct cavan_input_device *dev, int axis, int value, void *data)
+{
+	pr_bold_info("mouse_move: axis = %d, value = %d", axis, value);
+}
+
+static void cavan_input_mouse_touch_handler_dummy(struct cavan_input_device *dev, int button, bool pressed, void *data)
+{
+	pr_bold_info("mouse_touch: button = %d, pressed = %d", button, pressed);
 }
 
 void cavan_input_service_init(struct cavan_input_service *service, bool (*matcher)(struct cavan_event_matcher *, void *))
@@ -234,16 +236,14 @@ void cavan_input_service_init(struct cavan_input_service *service, bool (*matche
 
 	service->lcd_width = -1;
 	service->lcd_height = -1;
-	service->mouse_speed = 1;
 
 	service->matcher = matcher;
 	service->key_handler = NULL;
-	service->wheel_handler = NULL;
+	service->mouse_wheel_handler = NULL;
+	service->mouse_move_handler = NULL;
+	service->mouse_touch_handler = NULL;
 	service->touch_handler = NULL;
-	service->right_touch_handler = NULL;
 	service->move_handler = NULL;
-	service->release_handler = NULL;
-	service->right_release_handler = NULL;
 	service->gsensor_handler = NULL;
 }
 
@@ -274,34 +274,24 @@ int cavan_input_service_start(struct cavan_input_service *service, void *data)
 		service->move_handler = cavan_input_move_handler_dummy;
 	}
 
-	if (service->release_handler == NULL)
-	{
-		service->release_handler = cavan_input_release_handler_dummy;
-	}
-
 	if (service->gsensor_handler == NULL)
 	{
 		service->gsensor_handler = cavan_input_gsensor_handler_dummy;
 	}
 
-	if (service->wheel_handler == NULL)
+	if (service->mouse_wheel_handler == NULL)
 	{
-		service->wheel_handler = cavan_input_wheel_handler_dummy;
+		service->mouse_wheel_handler = cavan_input_mouse_wheel_handler_dummy;
 	}
 
-	if (service->right_touch_handler == NULL)
+	if (service->mouse_move_handler == NULL)
 	{
-		service->right_touch_handler = cavan_input_right_touch_handler_dummy;
+		service->mouse_move_handler = cavan_input_mouse_move_handler_dummy;
 	}
 
-	if (service->right_release_handler == NULL)
+	if (service->mouse_touch_handler == NULL)
 	{
-		service->right_release_handler = cavan_input_right_release_handler_dummy;
-	}
-
-	if (service->mouse_speed <= 0)
-	{
-		service->mouse_speed = 1;
+		service->mouse_touch_handler = cavan_input_mouse_touch_handler_dummy;
 	}
 
 	service->private_data = data;

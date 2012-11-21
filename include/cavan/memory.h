@@ -70,7 +70,7 @@ static inline void mem_show(const char *mem, size_t size)
 	text_show(mem, size);
 }
 
-static inline void mem_set8(u8 *mem, int value, size_t size)
+static inline void mem_set8(void *mem, int value, size_t size)
 {
 	text_set8(mem, value, size);
 }
