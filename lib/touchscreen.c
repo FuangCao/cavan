@@ -354,6 +354,18 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 
 	switch (event->type)
 	{
+	case EV_KEY:
+		switch (event->code)
+		{
+		case BTN_TOUCH:
+			ts->pressed = event->value;
+			break;
+
+		default:
+			return false;
+		}
+		break;
+
 	case EV_ABS:
 		switch (event->code)
 		{
@@ -386,9 +398,9 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 				if (key->value != value)
 				{
 					service->key_handler(dev, key->name, key->code, value, service->private_data);
+					key->value = value;
 				}
 
-				key->value = value;
 			}
 			else
 			{
@@ -401,7 +413,6 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 				}
 
 				service->move_handler(dev, p, service->private_data);
-				p->released = 0;
 			}
 		}
 		else
@@ -413,9 +424,8 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 				if (key->value != 0)
 				{
 					service->key_handler(dev, key->name, key->code, 0, service->private_data);
+					key->value = 0;
 				}
-
-				key->value = 0;
 			}
 
 			if (p->released == 0)

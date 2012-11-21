@@ -20,15 +20,16 @@
 
 bool cavan_keypad_device_match(uint8_t *key_bitmask)
 {
-	const uint8_t *key_end;
+	uint8_t *key, *key_end;
 	bool result = false;
 
-	for (key_end = key_bitmask + KEY_BITMASK_SIZE; key_bitmask < key_end; key_bitmask++)
+	for (key = key_bitmask, key_end = key + KEY_BITMASK_SIZE; key < key_end; key++)
 	{
-		if (*key_bitmask)
+		if (*key)
 		{
 			result = true;
-			*key_bitmask = 0;
+			pr_bold_info("key_bitmask[%d] = 0x%02x", key - key_bitmask, *key);
+			*key = 0;
 		}
 	}
 

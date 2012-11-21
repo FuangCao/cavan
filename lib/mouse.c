@@ -79,7 +79,7 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 			break;
 
 		case BTN_MIDDLE:
-			service->mouse_touch_handler(dev, CAVAN_MOUSE_BUTTON_MIDDLE, event->value, service->private_data);
+			service->mouse_touch_handler(dev, CAVAN_MOUSE_BUTTON_MIDDLE0, event->value, service->private_data);
 			break;
 
 		default:
