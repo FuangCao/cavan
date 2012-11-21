@@ -187,7 +187,7 @@ static struct cavan_window *cavan_window_find_by_axis(struct cavan_window *head,
 
 	for (win = head; win; win = win->next)
 	{
-		if (x >= win->x && y >= win->y && x < win->x + win->width && y < win->y + win->height)
+		if (x >= win->abs_x && y >= win->abs_y && x < win->abs_x + win->width && y < win->abs_y + win->height)
 		{
 			struct cavan_window *child = cavan_window_find_by_axis(win->child, x, y);
 			if (child)
@@ -214,6 +214,8 @@ void cavan_window_add_child(struct cavan_window *win, struct cavan_window *child
 	win->child = child;
 
 	pthread_mutex_unlock(&win->lock);
+
+	cavan_window_paint(child);
 }
 
 int cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child)
@@ -287,7 +289,7 @@ static void cavan_button_click_handler(struct cavan_window *win, bool pressed)
 	struct cavan_button *button = (struct cavan_button *)win;
 
 	button->pressed = pressed;
-	win->paint_handler(win);
+	cavan_window_paint(win);
 
 	cavan_window_click_handler(win, pressed);
 }
@@ -480,12 +482,14 @@ int cavan_application_context_init(struct cavan_application_context *context, vo
 	context->win_active = NULL;
 	context->win_head = NULL;
 
+	pthread_mutex_init(&context->lock, NULL);
+
 	display = &context->display;
 	ret = cavan_display_init(display);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_display_init");
-		return ret;
+		goto out_mutex_destroy;
 	}
 
 	context->mouse_point_mem = cavan_application_mouse_alloc(context);
@@ -520,6 +524,8 @@ int cavan_application_context_init(struct cavan_application_context *context, vo
 
 	return 0;
 
+out_mutex_destroy:
+	pthread_mutex_destroy(&context->lock);
 out_display_memory_free:
 	cavan_display_memory_free(context->mouse_point_mem);
 out_display_uninit:
@@ -540,6 +546,8 @@ void cavan_application_context_uninit(struct cavan_application_context *context)
 	{
 		win->destory_handler(win);
 	}
+
+	pthread_mutex_destroy(&context->lock);
 }
 
 void cavan_application_context_add_window(struct cavan_application_context *context, struct cavan_window *win)
