@@ -523,13 +523,12 @@ int cavan_application_context_init(struct cavan_application_context *context, vo
 	}
 
 	return 0;
-
-out_mutex_destroy:
-	pthread_mutex_destroy(&context->lock);
 out_display_memory_free:
 	cavan_display_memory_free(context->mouse_point_mem);
 out_display_uninit:
 	cavan_display_uninit(display);
+out_mutex_destroy:
+	pthread_mutex_destroy(&context->lock);
 
 	return ret;
 }
