@@ -12,7 +12,7 @@
 #include <cavan/network.h>
 #include <cavan/adb.h>
 #include <cavan/swan_upgrade.h>
-#include <cavan/fb.h>
+#include <cavan/display.h>
 #include <cavan/calculator.h>
 
 static int ctrl_fd;

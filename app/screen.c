@@ -10,18 +10,24 @@
 
 static int cavan_draw_rect_main(int argc, char *argv[])
 {
-	struct cavan_fb_device fb_dev;
-	const char *fbpath;
+	struct cavan_display_device *display;
 	int ret;
 	int left, top, width, height;
 
 	assert(argc > 4);
 
-	fbpath = argc > 5 ? argv[5] : NULL;
-	ret = cavan_fb_init(&fb_dev, fbpath);
+	display = cavan_fb_display_create();
+	if (display == NULL)
+	{
+		pr_red_info("cavan_fb_display_create");
+		return -EFAULT;
+	}
+
+	ret = cavan_display_check(display);
 	if (ret < 0)
 	{
-		pr_red_info("cavan_fb_init");
+		pr_red_info("cavan_display_check");
+		display->destory(display);
 		return ret;
 	}
 
@@ -30,13 +36,15 @@ static int cavan_draw_rect_main(int argc, char *argv[])
 	width = text2value_unsigned(argv[3], NULL, 10);
 	height = text2value_unsigned(argv[4], NULL, 10);
 
+	cavan_display_set_color3f(display, 1.0, 0, 0);
+
 	if (strcmp(argv[0], "draw_rect") == 0)
 	{
-		ret = cavan_fb_draw_rect(&fb_dev, left, top, width, height);
+		ret = display->draw_rect(display, left, top, width, height);
 	}
 	else
 	{
-		ret = cavan_fb_fill_rect(&fb_dev, left, top, width, height);
+		ret = display->fill_rect(display, left, top, width, height);
 	}
 
 	if (ret < 0)
@@ -44,7 +52,7 @@ static int cavan_draw_rect_main(int argc, char *argv[])
 		pr_red_info("Failed");
 	}
 
-	cavan_fb_uninit(&fb_dev);
+	display->destory(display);
 
 	return ret;
 }

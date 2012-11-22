@@ -67,10 +67,9 @@ struct cavan_button
 
 struct cavan_application_context
 {
-	struct cavan_display_device display;
-	struct cavan_input_service input_service;
-
 	void *private_data;
+	struct cavan_display_device *display;
+	struct cavan_input_service input_service;
 
 	struct cavan_display_memory *mouse_backup;
 	float mouse_speed;
@@ -102,24 +101,24 @@ int cavan_application_context_run(struct cavan_application_context *context);
 
 static inline void cavan_application_context_update_data(struct cavan_application_context *context)
 {
-	context->display.update_data(&context->display);
+	context->display->refresh(context->display);
 }
 
 static inline void cavan_window_set_back_color(struct cavan_window *win, float red, float green, float blue)
 {
-	win->back_color = cavan_display_build_color3f(&win->context->display, red, green, blue);
+	win->back_color = cavan_display_build_color3f(win->context->display, red, green, blue);
 	cavan_window_paint_all(win);
 }
 
 static inline void cavan_window_set_fore_color(struct cavan_window *win, float red, float green, float blue)
 {
-	win->fore_color = cavan_display_build_color3f(&win->context->display, red, green, blue);
+	win->fore_color = cavan_display_build_color3f(win->context->display, red, green, blue);
 	cavan_window_paint_all(win);
 }
 
 static inline void cavan_window_set_border_color(struct cavan_window *win, float red, float green, float blue)
 {
-	win->border_color = cavan_display_build_color3f(&win->context->display, red, green, blue);
+	win->border_color = cavan_display_build_color3f(win->context->display, red, green, blue);
 	cavan_window_paint_all(win);
 }
 
