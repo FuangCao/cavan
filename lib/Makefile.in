@@ -70,10 +70,9 @@ am_libcavan_a_OBJECTS = adb.$(OBJEXT) bmp.$(OBJEXT) cache.$(OBJEXT) \
 	calculator.$(OBJEXT) cftp.$(OBJEXT) command.$(OBJEXT) \
 	copy.$(OBJEXT) dd.$(OBJEXT) device.$(OBJEXT) display.$(OBJEXT) \
 	ecc.$(OBJEXT) event.$(OBJEXT) ext2.$(OBJEXT) fb.$(OBJEXT) \
-	file.$(OBJEXT) ftp.$(OBJEXT) gsensor.$(OBJEXT) \
-	huamobile.$(OBJEXT) image.$(OBJEXT) inotify.$(OBJEXT) \
-	input.$(OBJEXT) keypad.$(OBJEXT) list.$(OBJEXT) \
-	memory.$(OBJEXT) mouse.$(OBJEXT) mtd.$(OBJEXT) \
+	file.$(OBJEXT) ftp.$(OBJEXT) gsensor.$(OBJEXT) image.$(OBJEXT) \
+	inotify.$(OBJEXT) input.$(OBJEXT) keypad.$(OBJEXT) \
+	list.$(OBJEXT) memory.$(OBJEXT) mouse.$(OBJEXT) mtd.$(OBJEXT) \
 	net_bridge.$(OBJEXT) network.$(OBJEXT) parser.$(OBJEXT) \
 	permission.$(OBJEXT) process.$(OBJEXT) progress.$(OBJEXT) \
 	queue.$(OBJEXT) rle.$(OBJEXT) service.$(OBJEXT) sort.$(OBJEXT) \
@@ -192,7 +191,7 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 noinst_LIBRARIES = libcavan.a
-libcavan_a_SOURCES = adb.c bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c display.c ecc.c event.c ext2.c fb.c file.c ftp.c gsensor.c huamobile.c image.c inotify.c input.c keypad.c list.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c process.c progress.c queue.c rle.c service.c sort.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c text.c tftp.c touchscreen.c tree.c uevent.c usb.c vfat.c window.c xml.c
+libcavan_a_SOURCES = adb.c bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c display.c ecc.c event.c ext2.c fb.c file.c ftp.c gsensor.c image.c inotify.c input.c keypad.c list.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c process.c progress.c queue.c rle.c service.c sort.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c text.c tftp.c touchscreen.c tree.c uevent.c usb.c vfat.c window.c xml.c
 all: all-am
 
 .SUFFIXES:
@@ -258,7 +257,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ftp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gsensor.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/huamobile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/image.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inotify.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/input.Po@am__quote@

@@ -28,7 +28,13 @@ bool cavan_keypad_device_match(uint8_t *key_bitmask)
 		if (*key)
 		{
 			result = true;
+
+#if __WORDSIZE == 64
+			pr_bold_info("key_bitmask[%ld] = 0x%02x", key - key_bitmask, *key);
+#else
 			pr_bold_info("key_bitmask[%d] = 0x%02x", key - key_bitmask, *key);
+#endif
+
 			*key = 0;
 		}
 	}

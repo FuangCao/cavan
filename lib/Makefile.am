@@ -7,4 +7,4 @@ MAINTAINERCLEANFILES = Makefile.am Makefile.in
 CFLAGS = -fPIC
 
 noinst_LIBRARIES = libcavan.a
-libcavan_a_SOURCES = adb.c bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c display.c ecc.c event.c ext2.c fb.c file.c ftp.c gsensor.c huamobile.c image.c inotify.c input.c keypad.c list.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c process.c progress.c queue.c rle.c service.c sort.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c text.c tftp.c touchscreen.c tree.c uevent.c usb.c vfat.c window.c xml.c
+libcavan_a_SOURCES = adb.c bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c display.c ecc.c event.c ext2.c fb.c file.c ftp.c gsensor.c image.c inotify.c input.c keypad.c list.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c process.c progress.c queue.c rle.c service.c sort.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c text.c tftp.c touchscreen.c tree.c uevent.c usb.c vfat.c window.c xml.c
