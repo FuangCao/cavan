@@ -72,15 +72,18 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	int ret;
 	int fb;
 
-	if (fbpath == NULL)
+	if (fbpath)
 	{
-		fbpath = "/dev/fb0";
+		fb = try_to_open(O_RDWR, fbpath, "/dev/fb0", "/dev/graphics/fb0", "/dev/fb1", "/dev/graphics/fb1", NULL);
+	}
+	else
+	{
+		fb = try_to_open(O_RDWR, "/dev/fb0", "/dev/graphics/fb0", "/dev/fb1", "/dev/graphics/fb1", NULL);
 	}
 
-	fb = try_to_open(O_RDWR, fbpath, "/dev/fb0", "/dev/graphics/fb0", "/dev/fb1", "/dev/graphics/fb1");
 	if (fb < 0)
 	{
-		print_error("open device %s failed", fbpath);
+		print_error("open fb device failed");
 		return fb;
 	}
 
