@@ -114,17 +114,17 @@ static inline void cavan_window_set_back_color(struct cavan_window *win, float r
 static inline void cavan_window_set_fore_color(struct cavan_window *win, float red, float green, float blue)
 {
 	win->fore_color = cavan_display_build_color3f(&win->context->display, red, green, blue);
-	win->paint_handler(win);
+	cavan_window_paint_all(win);
 }
 
 static inline void cavan_window_set_border_color(struct cavan_window *win, float red, float green, float blue)
 {
 	win->border_color = cavan_display_build_color3f(&win->context->display, red, green, blue);
-	win->paint_handler(win);
+	cavan_window_paint_all(win);
 }
 
 static inline void cavan_window_set_text(struct cavan_window *win, const char *text)
 {
 	text_ncopy(win->text, text, sizeof(win->text));
-	win->paint_handler(win);
+	cavan_window_paint_all(win);
 }

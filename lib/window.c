@@ -71,7 +71,9 @@ static void cavan_window_click_handler(struct cavan_window *win, bool pressed)
 	{
 		struct cavan_application_context *context = win->context;
 
+		pthread_mutex_unlock(&win->lock);
 		win->on_click(win, context->x, context->y, pressed, context->private_data);
+		pthread_mutex_lock(&win->lock);
 	}
 
 	pthread_mutex_unlock(&win->lock);
@@ -83,7 +85,9 @@ static void cavan_window_move_handler(struct cavan_window *win, int x, int y)
 
 	if (win->on_move)
 	{
+		pthread_mutex_unlock(&win->lock);
 		win->on_move(win, x, y, win->context->private_data);
+		pthread_mutex_lock(&win->lock);
 	}
 
 	pthread_mutex_unlock(&win->lock);
@@ -95,7 +99,9 @@ static void cavan_window_entry_handler(struct cavan_window *win)
 
 	if (win->on_entry)
 	{
+		pthread_mutex_unlock(&win->lock);
 		win->on_entry(win, win->context->private_data);
+		pthread_mutex_lock(&win->lock);
 	}
 
 	pthread_mutex_unlock(&win->lock);
@@ -107,7 +113,9 @@ static void cavan_window_exit_handler(struct cavan_window *win)
 
 	if (win->on_exit)
 	{
+		pthread_mutex_unlock(&win->lock);
 		win->on_exit(win, win->context->private_data);
+		pthread_mutex_lock(&win->lock);
 	}
 
 	pthread_mutex_unlock(&win->lock);
@@ -392,7 +400,7 @@ int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_cont
 
 static void cavan_button_paint_handler(struct cavan_window *win)
 {
-	size_t width; 
+	size_t width;
 	struct cavan_display_device *display;
 
 	pthread_mutex_lock(&win->lock);
@@ -485,31 +493,34 @@ static inline void cavan_application_draw_mouse(struct cavan_application_context
 
 static void cavan_application_move(struct cavan_application_context *context, int x, int y)
 {
-	struct cavan_window *win;
-
-	win = cavan_window_find_by_axis(context->win_head, x, y);
-	if (win != context->win_curr)
-	{
-		if (context->win_curr)
-		{
-			context->win_curr->exit_handler(context->win_curr);
-		}
-
-		if (win)
-		{
-			win->entry_handler(win);
-		}
-
-		context->win_curr = win;
-	}
-
 	if (context->win_active)
 	{
 		context->win_active->move_handler(context->win_active, x, y);
 	}
-	else if (win)
+	else
 	{
-		win->move_handler(win, x, y);
+		struct cavan_window *win = cavan_window_find_by_axis(context->win_head, x, y);
+
+		if (win)
+		{
+			if (win != context->win_curr)
+			{
+				if (context->win_curr)
+				{
+					context->win_curr->exit_handler(context->win_curr);
+				}
+
+				win->entry_handler(win);
+			}
+
+			win->move_handler(win, x, y);
+		}
+		else if (context->win_curr)
+		{
+			context->win_curr->exit_handler(context->win_curr);
+		}
+
+		context->win_curr = win;
 	}
 
 	context->x = x;
