@@ -84,7 +84,7 @@ static inline cavan_display_color_t cavan_fb_build_color(struct cavan_fb_device 
 	return color;
 }
 
-static inline cavan_display_color_t cavan_fb_build_color3f(struct cavan_fb_device *dev, float red, float green, float blue, float transp)
+static inline cavan_display_color_t cavan_fb_build_color4f(struct cavan_fb_device *dev, float red, float green, float blue, float transp)
 {
 	return cavan_fb_build_color(dev, red * dev->red.max, green * dev->green.max, blue * dev->blue.max, transp * dev->transp.max);
 }
@@ -94,7 +94,12 @@ static inline void cavan_fb_set_pen_color(struct cavan_fb_device *dev, u32 red, 
 	dev->pen_color = cavan_fb_build_color(dev, red, green, blue, dev->transp.max);
 }
 
-static inline void cavan_fb_set_pen_color3f(struct cavan_fb_device *dev, float red, float green, float blue, float transp)
+static inline void cavan_fb_set_pen_color4f(struct cavan_fb_device *dev, float red, float green, float blue, float transp)
 {
-	dev->pen_color = cavan_fb_build_color3f(dev, red, green, blue, transp);
+	dev->pen_color = cavan_fb_build_color4f(dev, red, green, blue, transp);
+}
+
+static inline void cavan_fb_set_pen_color3f(struct cavan_fb_device *dev, float red, float green, float blue)
+{
+	cavan_fb_set_pen_color4f(dev, red, green, blue, 1.0);
 }

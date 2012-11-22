@@ -149,7 +149,7 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	cavan_fb_bitfield2element(&dev->var_info.blue, &dev->blue);
 	cavan_fb_bitfield2element(&dev->var_info.transp, &dev->transp);
 
-	cavan_fb_set_pen_color3f(dev, 1.0, 1.0, 1.0, 1.0);
+	cavan_fb_set_pen_color3f(dev, 1.0, 1.0, 1.0);
 
 	return 0;
 
@@ -1112,7 +1112,7 @@ int cavan_fb_display_memory_xfer(struct cavan_fb_device *dev, struct cavan_displ
 	{
 		while (p < p_end)
 		{
-			mem_copy(data, p, width);
+			mem_copy32(data, p, width);
 
 			data += width;
 			p += line_size;
@@ -1122,7 +1122,7 @@ int cavan_fb_display_memory_xfer(struct cavan_fb_device *dev, struct cavan_displ
 	{
 		while (p < p_end)
 		{
-			mem_copy(p, data, width);
+			mem_copy32(p, data, width);
 
 			data += width;
 			p += line_size;

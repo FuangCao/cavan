@@ -69,6 +69,22 @@ struct cavan_display_device
 
 int cavan_display_init(struct cavan_display_device *display);
 void cavan_display_uninit(struct cavan_display_device *display);
-cavan_display_color_t cavan_display_build_color3f(struct cavan_display_device *display, float red, float green, float blue, float transp);
 struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height);
 void cavan_display_memory_free(struct cavan_display_memory *mem);
+
+cavan_display_color_t cavan_display_build_color4f(struct cavan_display_device *display, float red, float green, float blue, float transp);
+
+static inline cavan_display_color_t cavan_display_build_color3f(struct cavan_display_device *display, float red, float green, float blue)
+{
+	return cavan_display_build_color4f(display, red, green, blue, 1.0);
+}
+
+static inline void cavan_display_set_color4f(struct cavan_display_device *display, float red, float green, float blue, float transp)
+{
+	display->set_color(display, cavan_display_build_color4f(display, red, green, blue, transp));
+}
+
+static inline void cavan_display_set_color3f(struct cavan_display_device *display, float red, float green, float blue)
+{
+	cavan_display_set_color4f(display, red, green, blue, 1.0);
+}

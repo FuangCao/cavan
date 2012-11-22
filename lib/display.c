@@ -8,9 +8,9 @@
 #include <cavan/fb.h>
 #include <cavan/display.h>
 
-cavan_display_color_t cavan_display_build_color3f(struct cavan_display_device *display, float red, float green, float blue, float transp)
+cavan_display_color_t cavan_display_build_color4f(struct cavan_display_device *display, float red, float green, float blue, float transp)
 {
-	return cavan_fb_build_color3f(display->private_data, red, green, blue, transp);
+	return cavan_fb_build_color4f(display->private_data, red, green, blue, transp);
 }
 
 static void cavan_display_update_data(struct cavan_display_device *display)
