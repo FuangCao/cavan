@@ -1158,7 +1158,7 @@ struct cavan_display_memory_rect *cavan_display_memory_rect_alloc(struct cavan_d
 
 int cavan_display_memory_rect_backup(struct cavan_display_device *display, struct cavan_display_memory_rect *mem_rect, int x, int y)
 {
-	int i;
+	unsigned int i;
 	struct cavan_display_memory *mem;
 
 	mem = mem_rect->mems[0];
@@ -1201,7 +1201,7 @@ int cavan_display_memory_rect_backup(struct cavan_display_device *display, struc
 
 int cavan_display_memory_rect_restore(struct cavan_display_device *display, struct cavan_display_memory_rect *mem_rect)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < NELEM(mem_rect->mems); i++)
 	{
