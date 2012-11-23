@@ -424,6 +424,7 @@ void cavan_button_paint_handler(struct cavan_window *win)
 void cavan_button_click_handler(struct cavan_window *win, bool pressed)
 {
 	struct cavan_display_device *display;
+	struct cavan_button *button = (struct cavan_button *)win;
 
 	pthread_mutex_lock(&win->lock);
 
@@ -431,15 +432,19 @@ void cavan_button_click_handler(struct cavan_window *win, bool pressed)
 
 	if (pressed)
 	{
+		button->back_color_backup = win->back_color;
+		button->fore_color_backup = win->fore_color;
+		button->border_color_backup = win->border_color;
+
 		win->back_color = cavan_display_build_color3f(display, 1.0, 1.0, 0);
 		win->fore_color = cavan_display_build_color3f(display, 1.0, 0, 1.0);
 		win->border_color = cavan_display_build_color3f(display, 1.0, 0, 0);
 	}
 	else
 	{
-		win->back_color = cavan_display_build_color3f(display, 0, 0, 0);
-		win->fore_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
-		win->border_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
+		win->back_color = button->back_color_backup;
+		win->fore_color = button->fore_color_backup;
+		win->border_color = button->border_color_backup;
 	}
 
 	pthread_mutex_unlock(&win->lock);
@@ -451,6 +456,7 @@ void cavan_button_click_handler(struct cavan_window *win, bool pressed)
 int cavan_button_init(struct cavan_button *button, struct cavan_application_context *context)
 {
 	int ret;
+	struct cavan_display_device *display;
 	struct cavan_window *win = &button->window;
 
 	ret = cavan_window_init(win, context);
@@ -462,7 +468,11 @@ int cavan_button_init(struct cavan_button *button, struct cavan_application_cont
 
 	win->paint_handler = cavan_button_paint_handler;
 	win->click_handler = cavan_button_click_handler;
-	cavan_button_click_handler(win, false);
+
+	display = context->display;
+	win->back_color = cavan_display_build_color3f(display, 0, 0, 0);
+	win->fore_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
+	win->border_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
 
 	return 0;
 }

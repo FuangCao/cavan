@@ -65,6 +65,10 @@ struct cavan_dialog
 struct cavan_button
 {
 	struct cavan_window window;
+
+	cavan_display_color_t border_color_backup;
+	cavan_display_color_t back_color_backup;
+	cavan_display_color_t fore_color_backup;
 };
 
 struct cavan_application_context
