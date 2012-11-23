@@ -180,17 +180,49 @@ static void cavan_fb_display_draw_point_handler(struct cavan_display_device *dis
 	cavan_fb_draw_point(display->private_data, x, y, color);
 }
 
-static void cavan_fb_display_destory_handler(struct cavan_display_device *display)
+static void cavan_fb_display_destory_handler1(struct cavan_display_device *display)
+{
+	cavan_fb_uninit(display->private_data);
+}
+
+static void cavan_fb_display_destory_handler2(struct cavan_display_device *display)
 {
 	cavan_fb_uninit(display->private_data);
 	free(display);
 }
 
+int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_device *fb_dev)
+{
+	int ret;
+
+	ret = cavan_fb_init(fb_dev, NULL);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_fb_init");
+		return ret;
+	}
+
+	cavan_display_init(display);
+
+	display->private_data = fb_dev;
+	display->fb_base = fb_dev->fb_base;
+	display->xres= fb_dev->xres;
+	display->yres = fb_dev->yres;
+	display->bpp_byte = fb_dev->bpp_byte;
+
+	display->destory = cavan_fb_display_destory_handler1;
+	display->refresh = cavan_fb_display_refresh_handler;
+	display->build_color = cavan_fb_display_build_color_handler;
+	display->draw_point = cavan_fb_display_draw_point_handler;
+
+	return 0;
+}
+
 struct cavan_display_device *cavan_fb_display_create(void)
 {
 	int ret;
-	struct cavan_fb_device *fb_dev;
 	struct cavan_display_device *display;
+	struct cavan_fb_device *fb_dev;
 
 	display = malloc(sizeof(*display) + sizeof(*fb_dev));
 	if (display == NULL)
@@ -199,29 +231,16 @@ struct cavan_display_device *cavan_fb_display_create(void)
 		return NULL;
 	}
 
-	cavan_display_init(display);
-
 	fb_dev = (struct cavan_fb_device *)(display + 1);
-	display->private_data = fb_dev;
-
-	ret = cavan_fb_init(fb_dev, NULL);
+	ret = cavan_fb_display_init(display, fb_dev);
 	if (ret < 0)
 	{
-		pr_red_info("cavan_fb_init");
+		pr_red_info("cavan_fb_display_init");
 		free(display);
 		return NULL;
 	}
 
-	display->private_data = fb_dev;
-	display->fb_base = fb_dev->fb_base;
-	display->xres= fb_dev->xres;
-	display->yres = fb_dev->yres;
-	display->bpp_byte = fb_dev->bpp_byte;
-
-	display->destory = cavan_fb_display_destory_handler;
-	display->refresh = cavan_fb_display_refresh_handler;
-	display->build_color = cavan_fb_display_build_color_handler;
-	display->draw_point = cavan_fb_display_draw_point_handler;
+	display->destory = cavan_fb_display_destory_handler2;
 
 	return display;
 }

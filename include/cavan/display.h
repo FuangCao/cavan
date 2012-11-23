@@ -29,16 +29,20 @@ typedef struct
 
 struct cavan_display_memory
 {
-	int x;
-	int y;
-
-	size_t width;
-	size_t height;
-
-	size_t width_max;
-	size_t height_max;
+	int x, y;
+	int width, height;
+	int width_max, height_max;
 
 	char data[0];
+};
+
+struct cavan_display_memory_rect
+{
+	int x, y;
+	int border_width;
+	int width, height;
+
+	struct cavan_display_memory *mems[4];
 };
 
 struct cavan_display_device
@@ -113,12 +117,27 @@ size_t cavan_display_mesure_text(struct cavan_display_device *display, const cha
 int cavan_display_draw_text(struct cavan_display_device *display, int x, int y, const char *text);
 void cavan_display_set_color(struct cavan_display_device *display, cavan_display_color_t color);
 
-struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height);
 int cavan_display_check(struct cavan_display_device *display);
+
+struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height);
+struct cavan_display_memory_rect *cavan_display_memory_rect_alloc(struct cavan_display_device *display, size_t width, size_t height, int border_width);
+int cavan_display_memory_rect_backup(struct cavan_display_device *display, struct cavan_display_memory_rect *mem_rect, int x, int y);
+int cavan_display_memory_rect_restore(struct cavan_display_device *display, struct cavan_display_memory_rect *mem_rect);
 
 static inline void cavan_display_memory_free(struct cavan_display_memory *mem)
 {
-	free(mem);
+	if (mem)
+	{
+		free(mem);
+	}
+}
+
+static inline void cavan_display_memory_rect_free(struct cavan_display_memory_rect *mem_rect)
+{
+	if (mem_rect)
+	{
+		free(mem_rect);
+	}
 }
 
 static inline void cavan_display_destory(struct cavan_display_device *display)
@@ -156,9 +175,22 @@ static inline int cavan_display_clear(struct cavan_display_device *display, cava
 	return display->fill_rect(display, 0, 0, display->xres, display->yres);
 }
 
-static inline int cavan_display_init(struct cavan_display_device *display)
+static inline void cavan_display_init(struct cavan_display_device *display)
 {
 	mem_set(display, 0, sizeof(*display));
+}
 
-	return 0;
+static inline int cavan_display_memory_backup(struct cavan_display_device *display, struct cavan_display_memory *mem, int x, int y)
+{
+	mem->x = x;
+	mem->y = y;
+	mem->width = mem->width_max;
+	mem->height = mem->height_max;
+
+	return display->display_memory_xfer(display, mem, true);
+}
+
+static inline int cavan_display_memory_restore(struct cavan_display_device *display, struct cavan_display_memory *mem)
+{
+	return display->display_memory_xfer(display, mem, false);
 }

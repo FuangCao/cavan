@@ -905,9 +905,9 @@ int cavan_display_draw_polygon_standard4(struct cavan_display_device *display, s
 int cavan_display_memory_xfer(struct cavan_display_device *display, struct cavan_display_memory *mem, bool read)
 {
 	char *data;
-	size_t width;
 	size_t line_size;
 	char *p, *p_end;
+	int width;
 	int right, bottom;
 
 	right = mem->x + mem->width;
@@ -985,30 +985,6 @@ int cavan_display_draw_text(struct cavan_display_device *display, int x, int y, 
 void cavan_display_set_color(struct cavan_display_device *display, cavan_display_color_t color)
 {
 	display->pen_color = color;
-}
-
-struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height)
-{
-	struct cavan_display_memory *mem;
-	size_t size;
-
-	size = width * height * display->bpp_byte;
-	mem = malloc(sizeof(*mem) + size);
-	if (mem == NULL)
-	{
-		pr_error_info("malloc");
-		return NULL;
-	}
-
-	mem->x = 0;
-	mem->y = 0;
-	mem->width = 0;
-	mem->height = 0;
-
-	mem->width_max = width;
-	mem->height_max = height;
-
-	return mem;
 }
 
 int cavan_display_check(struct cavan_display_device *display)
@@ -1109,6 +1085,135 @@ int cavan_display_check(struct cavan_display_device *display)
 	}
 
 	display->set_color = cavan_display_set_color;
+
+	return 0;
+}
+
+struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height)
+{
+	struct cavan_display_memory *mem;
+	size_t size;
+
+	size = width * height * display->bpp_byte;
+	mem = malloc(sizeof(*mem) + size);
+	if (mem == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	mem->width = mem->height = 0;
+	mem->width_max = width;
+	mem->height_max = height;
+
+	return mem;
+}
+
+struct cavan_display_memory_rect *cavan_display_memory_rect_alloc(struct cavan_display_device *display, size_t width, size_t height, int border_width)
+{
+	struct cavan_display_memory *mem;
+	struct cavan_display_memory_rect *mem_rect;
+	size_t hsize, vsize;
+
+	hsize = sizeof(struct cavan_display_memory) + width * border_width * display->bpp_byte;
+	vsize = sizeof(struct cavan_display_memory) + border_width * (height - border_width * 2) * display->bpp_byte;
+
+	mem_rect = malloc(sizeof(*mem_rect) + (hsize + vsize) * 2);
+	if (mem_rect == NULL)
+	{
+		pr_error_info("malloc");
+		return mem_rect;
+	}
+
+	mem = (struct cavan_display_memory *)(mem_rect + 1);
+	mem->width = mem->height = 0;
+	mem->width_max = width;
+	mem->height_max = border_width;
+	mem_rect->mems[0] = mem;
+
+	mem = (struct cavan_display_memory *)(((byte *)mem) + hsize);
+	mem->width = mem->height = 0;
+	mem->width_max = width;
+	mem->height_max = border_width;
+	mem_rect->mems[1] = mem;
+
+	mem = (struct cavan_display_memory *)(((byte *)mem) + hsize);
+	mem->width = mem->height = 0;
+	mem->width_max = border_width;
+	mem->height_max = height - border_width * 2;
+	mem_rect->mems[2] = mem;
+
+	mem = (struct cavan_display_memory *)(((byte *)mem) + vsize);
+	mem->width = mem->height = 0;
+	mem->width_max = border_width;
+	mem->height_max = height - border_width * 2;
+	mem_rect->mems[3] = mem;
+
+	mem_rect->width = width;
+	mem_rect->height = height;
+	mem_rect->border_width = border_width;
+
+	return mem_rect;
+}
+
+int cavan_display_memory_rect_backup(struct cavan_display_device *display, struct cavan_display_memory_rect *mem_rect, int x, int y)
+{
+	int i;
+	struct cavan_display_memory *mem;
+
+	mem = mem_rect->mems[0];
+	mem->x = x;
+	mem->y = y;
+
+	mem = mem_rect->mems[1];
+	mem->x = x;
+	mem->y = y + mem_rect->height - mem_rect->border_width;
+
+	mem = mem_rect->mems[2];
+	mem->x = x;
+	mem->y = y + mem_rect->border_width;
+
+	mem = mem_rect->mems[3];
+	mem->x = x + mem_rect->width - mem_rect->border_width;
+	mem->y = y + mem_rect->border_width;
+
+	for (i = 0; i < NELEM(mem_rect->mems); i++)
+	{
+		int ret;
+
+		mem = mem_rect->mems[i];
+		mem->width = mem->width_max;
+		mem->height = mem->height_max;
+
+		ret = display->display_memory_xfer(display, mem, true);
+		if (ret < 0)
+		{
+			pr_red_info("display->display_memory_xfer");
+			return ret;
+		}
+	}
+
+	mem_rect->x = x;
+	mem_rect->y = y;
+
+	return 0;
+}
+
+int cavan_display_memory_rect_restore(struct cavan_display_device *display, struct cavan_display_memory_rect *mem_rect)
+{
+	int i;
+
+	for (i = 0; i < NELEM(mem_rect->mems); i++)
+	{
+		int ret;
+
+		ret = display->display_memory_xfer(display, mem_rect->mems[i], false);
+		if (ret < 0)
+		{
+			pr_red_info("display->display_memory_xfer");
+			return ret;
+		}
+	}
 
 	return 0;
 }
