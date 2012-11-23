@@ -3,7 +3,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-11-16 15:48:51
 
-void show_bitfield(struct fb_bitfield *field, const char *msg)
+void show_fb_bitfield(struct fb_bitfield *field, const char *msg)
 {
 	print_sep(60);
 	if (msg)
@@ -21,10 +21,10 @@ void show_fb_var_info(struct fb_var_screeninfo *var)
 	println("var->xres = %d, var->xres_virtual = %d", var->xres, var->xres_virtual);
 	println("var->yres = %d, var->yres_virtual = %d", var->yres, var->yres_virtual);
 	println("var->bits_per_pixel = %d", var->bits_per_pixel);
-	show_bitfield(&var->red, "red fb_bitfield:");
-	show_bitfield(&var->green, "green fb_bitfield:");
-	show_bitfield(&var->blue, "blue fb_bitfield:");
-	show_bitfield(&var->transp, "transp fb_bitfield:");
+	show_fb_bitfield(&var->red, "red fb_bitfield:");
+	show_fb_bitfield(&var->green, "green fb_bitfield:");
+	show_fb_bitfield(&var->blue, "blue fb_bitfield:");
+	show_fb_bitfield(&var->transp, "transp fb_bitfield:");
 }
 
 void show_fb_fix_info(struct fb_fix_screeninfo *fix)

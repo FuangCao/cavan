@@ -292,7 +292,7 @@ static int modem_if_need_upgrade(const char *dirname, int retry)
 #endif
 }
 
-void *set_usb_power_handle(void *data)
+static void *set_usb_power_handle(void *data)
 {
 	while (1)
 	{

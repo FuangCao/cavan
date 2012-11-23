@@ -31,6 +31,7 @@ INSTALL = install -c
 CP = cp
 
 CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wno-trigraphs \
+			-Wsign-compare -Wmissing-prototypes -Wmissing-declarations \
 			-Werror-implicit-function-declaration -Wno-format-security \
 			-fno-strict-aliasing -g -O2 \
 			-I$(INCLUDE_PATH) -I. -DCAVAN_ARCH=$(ARCH)

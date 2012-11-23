@@ -721,7 +721,7 @@ static bool swan_vk_event_handler(struct cavan_event_device *dev, struct input_e
 	return true;
 }
 
-int swan_vk_client(struct swan_vk_command_option *opt)
+static int swan_vk_client(struct swan_vk_command_option *opt)
 {
 	int ret;
 	int fd;

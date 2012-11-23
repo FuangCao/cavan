@@ -42,7 +42,7 @@ const char *fat_type_to_string(enum fat_type type)
 	return "unknown";
 }
 
-void get_volume_label_base(char *dest, const void *src)
+static void get_volume_label_base(char *dest, const void *src)
 {
 	dest = mem_copy(dest, src, 11);
 
@@ -69,7 +69,7 @@ void get_fat_volume_label(struct fat_info *info_p, char *volume)
 	}
 }
 
-u32 cal_fat_table_offset(struct fat_info *info_p, u32 cluster_index)
+static u32 cal_fat_table_offset(struct fat_info *info_p, u32 cluster_index)
 {
 	switch (info_p->type)
 	{

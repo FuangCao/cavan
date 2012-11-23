@@ -31,6 +31,7 @@ struct binary_tree_descriptor
 int binary_tree_init(struct binary_tree_descriptor *desc);
 struct binary_tree_node *binary_tree_malloc_node(struct binary_tree_descriptor *desc, void *data, struct binary_tree_node *left, struct binary_tree_node *right);
 int binary_tree_insert(struct binary_tree_descriptor *desc, void *data);
+void binary_tree_free_node(struct binary_tree_descriptor *desc, struct binary_tree_node *node);
 
 int binary_tree_traversal_first(struct binary_tree_descriptor *desc);
 int binary_tree_traversal_middle(struct binary_tree_descriptor *desc);

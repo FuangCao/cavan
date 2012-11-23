@@ -1092,7 +1092,7 @@ struct swan_image_info *get_swan_image_info_by_type(enum swan_image_type type)
 
 	for (p = swan_images, end_p = p + ARRAY_SIZE(swan_images); p < end_p; p++)
 	{
-		if (p->type == type)
+		if ((enum swan_image_type)p->type == type)
 		{
 			return p;
 		}

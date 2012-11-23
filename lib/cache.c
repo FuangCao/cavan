@@ -251,7 +251,7 @@ void file_cache_uninit(struct file_cache *cache)
 	close(cache->fd);
 }
 
-ssize_t file_cache_fill(struct file_cache *cache)
+static ssize_t file_cache_fill(struct file_cache *cache)
 {
 	struct mem_cache *read_cache;
 	ssize_t readblk;

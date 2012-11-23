@@ -59,6 +59,7 @@ char *text_find(const char *text, char c);
 char *text_nfind(const char *text, char c, size_t count);
 char *text_nfind2(const char *text, const char *end, char c, size_t count);
 char *text_ntrans(char *text, size_t size);
+char *text_find_tail(const char *text, char c);
 
 int text_cmp(const char *text1, const char *text2);
 int text_hcmp(const char *text1, const char *text2);
@@ -101,10 +102,14 @@ char *simple_value2text(s64 value, char *buff, size_t size, int base);
 char *value2text_base(s64 value, char *text, int size, char fill, int flags);
 char *value2text(u64 value, int flags);
 
+char *base2prefix(int base, char *prefix);
+u64 text2size_single(const char *text, const char **text_ret);
 u64 text2size(const char *text, const char **text_ret);
 u64 text2size_mb(const char *text);
 char *size2text_base(u64 size, char *buff, size_t buff_len);
 char *size2text(u64 size);
+
+int text_match(const char *text1, const char *text2);
 
 char *text_basename_base(char *buff, const char *path);
 char *text_basename(const char *path);

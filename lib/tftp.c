@@ -1038,7 +1038,7 @@ int tftp_mkdir(struct tftp_mkdir_pkg *mkdir_pkg_p, const struct sockaddr_in *rem
 	return 0;
 }
 
-int write_response_to(FILE *fp, const char *file_out)
+static int write_response_to(FILE *fp, const char *file_out)
 {
 	int ret;
 	int fd_out;

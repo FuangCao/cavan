@@ -85,12 +85,28 @@ struct cavan_application_context
 	pthread_mutex_t lock;
 };
 
-void cavan_window_set_position(struct cavan_window *win, int x, int y);
 void cavan_window_add_child(struct cavan_window *win, struct cavan_window *child);
 int cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child);
+void cavan_window_set_abs_position(struct cavan_window *win, int x, int y);
+void cavan_window_set_position(struct cavan_window *win, int x, int y);
+struct cavan_window *cavan_window_find_by_axis(struct cavan_window *head, int x, int y);
 
+void cavan_window_paint_handler(struct cavan_window *win);
+void cavan_window_destory_handler(struct cavan_window *win);
+void cavan_window_click_handler(struct cavan_window *win, bool pressed);
+void cavan_window_move_handler(struct cavan_window *win, int x, int y);
+void cavan_window_entry_handler(struct cavan_window *win);
+void cavan_window_exit_handler(struct cavan_window *win);
+void cavan_window_key_handler(struct cavan_window *win, const char *name, int code, int value);
 int cavan_window_init(struct cavan_window *win, struct cavan_application_context *context);
+
+void cavan_dialog_paint_handler(struct cavan_window *win);
+void cavan_dialog_click_handler(struct cavan_window *win, bool pressed);
+void cavan_dialog_move_handler(struct cavan_window *win, int x, int y);
 int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_context *context);
+
+void cavan_button_paint_handler(struct cavan_window *win);
+void cavan_button_click_handler(struct cavan_window *win, bool pressed);
 int cavan_button_init(struct cavan_button *button, struct cavan_application_context *context);
 
 int cavan_application_context_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data);

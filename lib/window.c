@@ -8,7 +8,7 @@
 #include <cavan/window.h>
 #include <cavan/fb.h>
 
-static void cavan_window_paint_handler(struct cavan_window *win)
+void cavan_window_paint_handler(struct cavan_window *win)
 {
 	int x, y;
 	int width, height;
@@ -53,7 +53,7 @@ static void cavan_window_paint_handler(struct cavan_window *win)
 	display->refresh(display);
 }
 
-static void cavan_window_destory_handler(struct cavan_window *win)
+void cavan_window_destory_handler(struct cavan_window *win)
 {
 	pthread_mutex_destroy(&win->lock);
 
@@ -63,7 +63,7 @@ static void cavan_window_destory_handler(struct cavan_window *win)
 	}
 }
 
-static void cavan_window_click_handler(struct cavan_window *win, bool pressed)
+void cavan_window_click_handler(struct cavan_window *win, bool pressed)
 {
 	pthread_mutex_lock(&win->lock);
 
@@ -82,7 +82,7 @@ static void cavan_window_click_handler(struct cavan_window *win, bool pressed)
 	}
 }
 
-static void cavan_window_move_handler(struct cavan_window *win, int x, int y)
+void cavan_window_move_handler(struct cavan_window *win, int x, int y)
 {
 	pthread_mutex_lock(&win->lock);
 
@@ -97,7 +97,7 @@ static void cavan_window_move_handler(struct cavan_window *win, int x, int y)
 	}
 }
 
-static void cavan_window_entry_handler(struct cavan_window *win)
+void cavan_window_entry_handler(struct cavan_window *win)
 {
 	pthread_mutex_lock(&win->lock);
 
@@ -112,7 +112,7 @@ static void cavan_window_entry_handler(struct cavan_window *win)
 	}
 }
 
-static void cavan_window_exit_handler(struct cavan_window *win)
+void cavan_window_exit_handler(struct cavan_window *win)
 {
 	pthread_mutex_lock(&win->lock);
 
@@ -127,7 +127,7 @@ static void cavan_window_exit_handler(struct cavan_window *win)
 	}
 }
 
-static void cavan_window_key_handler(struct cavan_window *win, const char *name, int code, int value)
+void cavan_window_key_handler(struct cavan_window *win, const char *name, int code, int value)
 {
 	pthread_mutex_lock(&win->lock);
 
@@ -218,7 +218,7 @@ void cavan_window_set_position(struct cavan_window *win, int x, int y)
 	cavan_window_set_abs_position(win, x, y);
 }
 
-static struct cavan_window *cavan_window_find_by_axis(struct cavan_window *head, int x, int y)
+struct cavan_window *cavan_window_find_by_axis(struct cavan_window *head, int x, int y)
 {
 	struct cavan_window *win;
 
@@ -404,7 +404,7 @@ int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_cont
 	return 0;
 }
 
-static void cavan_button_paint_handler(struct cavan_window *win)
+void cavan_button_paint_handler(struct cavan_window *win)
 {
 	size_t width;
 	struct cavan_display_device *display;
@@ -421,7 +421,7 @@ static void cavan_button_paint_handler(struct cavan_window *win)
 	cavan_window_paint_handler(win);
 }
 
-static void cavan_button_click_handler(struct cavan_window *win, bool pressed)
+void cavan_button_click_handler(struct cavan_window *win, bool pressed)
 {
 	struct cavan_display_device *display;
 

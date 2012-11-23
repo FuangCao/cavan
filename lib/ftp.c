@@ -10,7 +10,7 @@ static inline int ftp_check_socket(int sockfd, const struct sockaddr_in *addr)
 	return sockfd < 0 ? inet_create_tcp_link1(addr) : sockfd;
 }
 
-int ftp_server_send_file1(int sockfd, const struct sockaddr_in *addr, int fd)
+static int ftp_server_send_file1(int sockfd, const struct sockaddr_in *addr, int fd)
 {
 	int ret;
 
@@ -28,7 +28,8 @@ int ftp_server_send_file1(int sockfd, const struct sockaddr_in *addr, int fd)
 	return ret;
 }
 
-int ftp_server_send_file2(int sockfd, const struct sockaddr_in *addr, const char *filename)
+#if 0
+static int ftp_server_send_file2(int sockfd, const struct sockaddr_in *addr, const char *filename)
 {
 	int fd;
 	int ret;
@@ -46,8 +47,9 @@ int ftp_server_send_file2(int sockfd, const struct sockaddr_in *addr, const char
 
 	return ret;
 }
+#endif
 
-int ftp_server_receive_file1(int sockfd, const struct sockaddr_in *addr, int fd)
+static int ftp_server_receive_file1(int sockfd, const struct sockaddr_in *addr, int fd)
 {
 	int ret;
 
@@ -65,12 +67,14 @@ int ftp_server_receive_file1(int sockfd, const struct sockaddr_in *addr, int fd)
 	return ret;
 }
 
-int ftp_server_receive_file2(int sockfd, const struct sockaddr_in *addr, const char *fllename)
+#if 0
+static int ftp_server_receive_file2(int sockfd, const struct sockaddr_in *addr, const char *fllename)
 {
 	return 0;
 }
+#endif
 
-ssize_t ftp_send_text_data(int sockfd, const char *text, size_t size)
+static ssize_t ftp_send_text_data(int sockfd, const char *text, size_t size)
 {
 	const char *text_end;
 	char buff[size << 1], *p;
@@ -92,7 +96,7 @@ ssize_t ftp_send_text_data(int sockfd, const char *text, size_t size)
 	return inet_send(sockfd, buff, p - buff);
 }
 
-ssize_t ftp_send_data(int sockfd, const struct sockaddr_in *addr, const void *buff, size_t size, char type)
+static ssize_t ftp_send_data(int sockfd, const struct sockaddr_in *addr, const void *buff, size_t size, char type)
 {
 	int ret;
 
@@ -117,7 +121,8 @@ ssize_t ftp_send_data(int sockfd, const struct sockaddr_in *addr, const void *bu
 	return ret;
 }
 
-int ftp_send_text_file1(int sockfd, int fd)
+#if 0
+static int ftp_send_text_file1(int sockfd, int fd)
 {
 	int sendlen, readlen;
 	char buff[1024];
@@ -147,7 +152,7 @@ int ftp_send_text_file1(int sockfd, int fd)
 	return 0;
 }
 
-int ftp_send_text_file2(int sockfd, const struct sockaddr_in *addr, int fd)
+static int ftp_send_text_file2(int sockfd, const struct sockaddr_in *addr, int fd)
 {
 	int ret;
 
@@ -165,7 +170,7 @@ int ftp_send_text_file2(int sockfd, const struct sockaddr_in *addr, int fd)
 	return ret;
 }
 
-int ftp_send_text_file3(int sockfd, struct sockaddr_in *addr, const char *filename)
+static int ftp_send_text_file3(int sockfd, struct sockaddr_in *addr, const char *filename)
 {
 	int ret;
 	int fd;
@@ -183,6 +188,7 @@ int ftp_send_text_file3(int sockfd, struct sockaddr_in *addr, const char *filena
 
 	return ret;
 }
+#endif
 
 static char *ftp_file_time_tostring(const time_t *time, char *text)
 {
@@ -220,7 +226,7 @@ char *ftp_file_stat_tostring(const char *filepath, char *text)
 	return text;
 }
 
-char *ftp_list_directory1(const char *dirpath, char *text)
+static char *ftp_list_directory1(const char *dirpath, char *text)
 {
 	DIR *dp;
 	struct dirent *ep;
@@ -256,7 +262,8 @@ char *ftp_list_directory1(const char *dirpath, char *text)
 	return text;
 }
 
-ssize_t ftp_list_directory2(int sockfd, const struct sockaddr_in *addr, const char *dirpath)
+#if 0
+static ssize_t ftp_list_directory2(int sockfd, const struct sockaddr_in *addr, const char *dirpath)
 {
 	int ret;
 	char buff[MB(1)], *p;
@@ -282,8 +289,9 @@ out_close_sockfd:
 
 	return ret;
 }
+#endif
 
-int ftp_send_text(int sockfd, const char *format, ...)
+static int ftp_send_text(int sockfd, const char *format, ...)
 {
 	int ret;
 	char buff[1024];
@@ -296,7 +304,7 @@ int ftp_send_text(int sockfd, const char *format, ...)
 	return inet_send(sockfd, buff, ret);
 }
 
-ssize_t ftp_receive_timeout(int sockfd, void *buff, size_t size)
+static ssize_t ftp_receive_timeout(int sockfd, void *buff, size_t size)
 {
 	while (1)
 	{
@@ -326,7 +334,7 @@ ssize_t ftp_receive_timeout(int sockfd, void *buff, size_t size)
 	return 0;
 }
 
-int ftp_service_login(int sockfd)
+static int ftp_service_login(int sockfd)
 {
 	char buff[1024];
 	const char *reply;
@@ -396,7 +404,7 @@ int ftp_service_login(int sockfd)
 	}
 }
 
-char *ftp_get_abs_path(const char *root_path, const char *curr_path, const char *path, char *abs_path)
+static char *ftp_get_abs_path(const char *root_path, const char *curr_path, const char *path, char *abs_path)
 {
 	if (*path == '/')
 	{
@@ -410,7 +418,7 @@ char *ftp_get_abs_path(const char *root_path, const char *curr_path, const char 
 	return abs_path;
 }
 
-int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct sockaddr_in *addr)
+static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct sockaddr_in *addr)
 {
 	ssize_t sendlen, recvlen;
 	char cmd_buff[1024], rep_buff[1024], *cmd_arg;
@@ -848,7 +856,7 @@ int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct so
 	return -1;
 }
 
-int ftp_service_handle(int index, cavan_shared_data_t data)
+static int ftp_service_handle(int index, cavan_shared_data_t data)
 {
 	struct sockaddr_in client_addr;
 	socklen_t addrlen;
@@ -894,7 +902,7 @@ int ftp_service_run(struct cavan_service_description *service_desc, u16 port)
 	return ret;
 }
 
-int ftp_send_command_retry(int sockfd, const char *send_buff, size_t sendlen, char *recv_buff, size_t recvlen, int retry)
+static int ftp_send_command_retry(int sockfd, const char *send_buff, size_t sendlen, char *recv_buff, size_t recvlen, int retry)
 {
 	int ret;
 
@@ -945,7 +953,7 @@ int ftp_send_command_retry(int sockfd, const char *send_buff, size_t sendlen, ch
 	return ret;
 }
 
-int ftp_client_receive_file(int ctrl_sockfd, const char *ip, u16 port)
+static int ftp_client_receive_file(int ctrl_sockfd, const char *ip, u16 port)
 {
 	int ret;
 	int sockfd, data_sockfd;

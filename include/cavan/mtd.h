@@ -56,3 +56,7 @@ int cavan_mtd_write_partition5(const char *partname, const char *filename);
 int cavan_mtd_write_image1(struct mtd_partition_descriptor *desc, int fd);
 int cavan_mtd_write_image2(struct mtd_partition_descriptor *desc, const char *imagename);
 
+struct mtd_partition_descriptor *cavan_mtd_malloc_partition_descriptor(struct cavan_mtd_descriptor *desc);
+void cavan_mtd_free_partition_descriptor(struct mtd_partition_descriptor *desc);
+struct mtd_partition_descriptor *cavan_mtd_open_partition(struct mtd_partition_info *info, int flags);
+void cavan_mtd_show_info_user(struct mtd_info_user *info);

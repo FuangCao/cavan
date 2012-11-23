@@ -70,7 +70,7 @@ int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *des
 	return 0;
 }
 
-int usb_clam_interface(int fd, int if_num, int serial_num, char *serial)
+static int usb_clam_interface(int fd, int if_num, int serial_num, char *serial)
 {
 	int i;
 	int ret;

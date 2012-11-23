@@ -143,6 +143,10 @@ int ext2_list_directory(struct ext2_desc *desc, const char *pathname);
 ssize_t ext2_read_file_base(struct ext2_desc *desc, struct ext2_inode *inode, void *buff, size_t size);
 ssize_t ext2_read_file(struct ext2_desc *desc, const char *pathname, void *buff, size_t size);
 
+void show_ext2_directory_entry(struct ext2_directory_entry *dir_entry);
+void show_ext2_inode(struct ext2_inode *inode);
+const char *ext2_filetype_to_text(int type);
+
 static inline int ext2_read_super_block(struct ext2_desc *desc, struct ext2_super_block *super_block)
 {
 	return ffile_readfrom(desc->fd, super_block, sizeof(*super_block), BOOT_BLOCK_SIZE) == sizeof(*super_block) ? 0 : -EFAULT;

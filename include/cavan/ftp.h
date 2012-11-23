@@ -31,4 +31,3 @@ char *ftp_list_directory(const char *dirpath, char *text);
 
 int ftp_service_run(struct cavan_service_description *service_desc, u16 port);
 int ftp_client_run(const char *ip, u16 port);
-

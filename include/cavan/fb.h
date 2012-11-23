@@ -40,6 +40,8 @@ void show_fb_fix_info(struct fb_fix_screeninfo *fix);
 
 int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath);
 void cavan_fb_uninit(struct cavan_fb_device *dev);
+void cavan_fb_bitfield2element(struct fb_bitfield *field, struct cavan_fb_color_element *emt);
+
 int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_device *fb_dev);
 struct cavan_display_device *cavan_fb_display_create(void);
 
