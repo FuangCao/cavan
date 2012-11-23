@@ -247,7 +247,7 @@ void cavan_window_add_child(struct cavan_window *win, struct cavan_window *child
 
 	if (child->x < 0)
 	{
-		child->x = win->x + win->border_width;
+		child->x = win->border_width;
 	}
 
 	if (child->width <= 0)
@@ -257,7 +257,7 @@ void cavan_window_add_child(struct cavan_window *win, struct cavan_window *child
 
 	if (child->y < 0)
 	{
-		child->y = win->y + win->border_width;
+		child->y = win->border_width;
 	}
 
 	if (child->height <= 0)
