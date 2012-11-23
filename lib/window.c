@@ -426,6 +426,11 @@ int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_cont
 	win->click_handler = cavan_dialog_click_handler;
 	win->move_handler = cavan_dialog_move_handler;
 
+	if (win->x < 0 && win->y < 0 && win->width <= 0 && win->height <= 0)
+	{
+		dialog->move_able = false;
+	}
+
 	dialog->backup = NULL;
 	dialog->x_offset = dialog->y_offset = 0;
 
