@@ -97,3 +97,8 @@ static inline int cavan_input_service_join(struct cavan_input_service *service)
 {
 	return cavan_event_service_join(&service->event_service);
 }
+
+static inline u32 timeval2msec(struct timeval *time)
+{
+	return time->tv_sec * 1000 + time->tv_usec / 1000;
+}

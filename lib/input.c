@@ -19,6 +19,7 @@
 #include <cavan/mouse.h>
 #include <cavan/keypad.h>
 #include <cavan/gsensor.h>
+#include <cavan/touchpad.h>
 #include <cavan/touchscreen.h>
 
 static struct cavan_input_device *cavan_input_device_create(uint8_t *key_bitmask, uint8_t *abs_bitmask, uint8_t *rel_bitmask)
@@ -27,6 +28,12 @@ static struct cavan_input_device *cavan_input_device_create(uint8_t *key_bitmask
 	{
 		pr_green_info("G-Sensor Matched");
 		return cavan_gsensor_create();
+	}
+
+	if (cavan_touchpad_device_match(key_bitmask, abs_bitmask))
+	{
+		pr_green_info("Touch Pad Matched");
+		return cavan_touchpad_device_create();
 	}
 
 	if (cavan_multi_touch_device_match(abs_bitmask))
@@ -220,9 +227,9 @@ static void cavan_input_mouse_wheel_handler_dummy(struct cavan_input_device *dev
 	pr_bold_info("wheel: value = %d", value);
 }
 
-static void cavan_input_mouse_move_handler_dummy(struct cavan_input_device *dev, int axis, int value, void *data)
+static void cavan_input_mouse_move_handler_dummy(struct cavan_input_device *dev, int x, int y, void *data)
 {
-	pr_bold_info("mouse_move: axis = %d, value = %d", axis, value);
+	pr_bold_info("mouse_move: x = %d, y = %d", x, y);
 }
 
 static void cavan_input_mouse_touch_handler_dummy(struct cavan_input_device *dev, int button, bool pressed, void *data)
