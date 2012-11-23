@@ -135,7 +135,7 @@ int cavan_display_draw_line_vertical(struct cavan_display_device *display, int x
 	return 0;
 }
 
-int cavan_display_draw_line(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
+int cavan_display_draw_line_dummy(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
 {
 	int ret;
 
@@ -154,7 +154,7 @@ int cavan_display_draw_line(struct cavan_display_device *display, int x1, int y1
 	return ret < 0 ? ret : cavan_display_draw_line_vertical(display, x1, y1, x2, y2);
 }
 
-int cavan_display_draw_rect(struct cavan_display_device *display, int left, int top, int width, int height)
+int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left, int top, int width, int height)
 {
 	int i;
 	int right, bottom;
@@ -201,7 +201,7 @@ int cavan_display_draw_rect(struct cavan_display_device *display, int left, int 
 	return 0;
 }
 
-int cavan_display_fill_rect(struct cavan_display_device *display, int left, int top, int width, int height)
+int cavan_display_fill_rect_dummy(struct cavan_display_device *display, int left, int top, int width, int height)
 {
 	int right, bottom;
 	int x, y;
@@ -244,7 +244,7 @@ int cavan_display_fill_rect(struct cavan_display_device *display, int left, int 
 	return 0;
 }
 
-int cavan_display_draw_circle(struct cavan_display_device *display, int x, int y, int r)
+int cavan_display_draw_circle_dummy(struct cavan_display_device *display, int x, int y, int r)
 {
 	int rr;
 	int i;
@@ -279,7 +279,7 @@ int cavan_display_draw_circle(struct cavan_display_device *display, int x, int y
 	return 0;
 }
 
-int cavan_display_fill_circle(struct cavan_display_device *display, int x, int y, int r)
+int cavan_display_fill_circle_dummy(struct cavan_display_device *display, int x, int y, int r)
 {
 	int rr;
 	int i;
@@ -316,7 +316,7 @@ int cavan_display_fill_circle(struct cavan_display_device *display, int x, int y
 	return 0;
 }
 
-int cavan_display_draw_ellipse(struct cavan_display_device *display, int x, int y, int width, int height)
+int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x, int y, int width, int height)
 {
 	double aa, bb;
 	int tmp;
@@ -360,7 +360,7 @@ int cavan_display_draw_ellipse(struct cavan_display_device *display, int x, int 
 	return 0;
 }
 
-int cavan_display_fill_ellipse(struct cavan_display_device *display, int x, int y, int width, int height)
+int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x, int y, int width, int height)
 {
 	double aa, bb;
 	int tmp, left, right, top, bottom;
@@ -406,7 +406,7 @@ int cavan_display_fill_ellipse(struct cavan_display_device *display, int x, int 
 	return 0;
 }
 
-int cavan_display_draw_polygon(struct cavan_display_device *display, cavan_display_point_t *points, size_t count)
+int cavan_display_draw_polygon_dummy(struct cavan_display_device *display, cavan_display_point_t *points, size_t count)
 {
 	unsigned int i;
 	int ret;
@@ -418,14 +418,14 @@ int cavan_display_draw_polygon(struct cavan_display_device *display, cavan_displ
 
 	for (i = 0, count--; i < count; i++)
 	{
-		ret = cavan_display_draw_line(display, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+		ret = cavan_display_draw_line_dummy(display, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
 		if (ret < 0)
 		{
 			return ret;
 		}
 	}
 
-	return cavan_display_draw_line(display, points[0].x, points[0].y, points[count].x, points[count].y);
+	return cavan_display_draw_line_dummy(display, points[0].x, points[0].y, points[count].x, points[count].y);
 }
 
 int max3i(int a, int b, int c)
@@ -567,7 +567,7 @@ int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan
 	return 0;
 }
 
-int cavan_display_fill_triangle(struct cavan_display_device *display, cavan_display_point_t *points)
+int cavan_display_fill_triangle_dummy(struct cavan_display_device *display, cavan_display_point_t *points)
 {
 	double a[3], b[3];
 	cavan_display_point_t *p0, *p1, *p2;
@@ -624,7 +624,7 @@ int cavan_display_fill_triangle(struct cavan_display_device *display, cavan_disp
 	return 0;
 }
 
-int cavan_display_fill_polygon(struct cavan_display_device *display, cavan_display_point_t *points, size_t count)
+int cavan_display_fill_polygon_dummy(struct cavan_display_device *display, cavan_display_point_t *points, size_t count)
 {
 	int ret;
 	cavan_display_point_t *p, *p_end;
@@ -641,7 +641,7 @@ int cavan_display_fill_polygon(struct cavan_display_device *display, cavan_displ
 		point_buff[1] = p[0];
 		point_buff[2] = p[1];
 
-		ret = cavan_display_fill_triangle(display, point_buff);
+		ret = cavan_display_fill_triangle_dummy(display, point_buff);
 		if (ret < 0)
 		{
 			return ret;
@@ -679,7 +679,7 @@ int cavan_display_draw_polygon_standard(struct cavan_display_device *display, si
 
 	ret = cavan_build_polygon_points(display, points, count, x, y, r, rotation);
 
-	return ret < 0 ? ret : cavan_display_draw_polygon(display, points, count);
+	return ret < 0 ? ret : cavan_display_draw_polygon_dummy(display, points, count);
 }
 
 int cavan_display_fill_polygon_standard(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation)
@@ -689,7 +689,7 @@ int cavan_display_fill_polygon_standard(struct cavan_display_device *display, si
 
 	ret = cavan_build_polygon_points(display, points, count, x, y, r, rotation);
 
-	return ret < 0 ? ret : cavan_display_fill_polygon(display, points, count);
+	return ret < 0 ? ret : cavan_display_fill_polygon_dummy(display, points, count);
 }
 
 int cavan_display_draw_polygon_standard2(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation)
@@ -708,7 +708,7 @@ int cavan_display_draw_polygon_standard2(struct cavan_display_device *display, s
 	{
 		for (p2 = points; p2 < p1; p2++)
 		{
-			ret = cavan_display_draw_line(display, p1->x, p1->y, p2->x, p2->y);
+			ret = cavan_display_draw_line_dummy(display, p1->x, p1->y, p2->x, p2->y);
 			if (ret < 0)
 			{
 				return ret;
@@ -717,7 +717,7 @@ int cavan_display_draw_polygon_standard2(struct cavan_display_device *display, s
 
 		for (p2 = p1 + 1; p2 < end_p; p2++)
 		{
-			ret = cavan_display_draw_line(display, p1->x, p1->y, p2->x, p2->y);
+			ret = cavan_display_draw_line_dummy(display, p1->x, p1->y, p2->x, p2->y);
 			if (ret < 0)
 			{
 				return ret;
@@ -817,7 +817,7 @@ int cavan_display_fill_polygon_standard2(struct cavan_display_device *display, s
 		triangle_points[1] = cross_points[(i + 1) % count];
 		triangle_points[2] = points[(i + 2) % count];
 
-		cavan_display_fill_triangle(display, triangle_points);
+		cavan_display_fill_triangle_dummy(display, triangle_points);
 	}
 
 	return 0;
@@ -839,7 +839,7 @@ int cavan_display_draw_polygon_standard3(struct cavan_display_device *display, s
 	{
 		j = (i + 2) % count;
 
-		ret = cavan_display_draw_line(display, points[i].x, points[i].y, points[j].x, points[j].y);
+		ret = cavan_display_draw_line_dummy(display, points[i].x, points[i].y, points[j].x, points[j].y);
 		if (ret < 0)
 		{
 			return ret;
@@ -873,7 +873,7 @@ int cavan_display_fill_polygon_standard3(struct cavan_display_device *display, s
 		return ret;
 	}
 
-	cavan_display_fill_polygon(display, cross_points, count);
+	cavan_display_fill_polygon_dummy(display, cross_points, count);
 
 	for (i = 0; i < count; i++)
 	{
@@ -883,7 +883,7 @@ int cavan_display_fill_polygon_standard3(struct cavan_display_device *display, s
 		triangle_points[1] = cross_points[(i + 1) % count];
 		triangle_points[2] = points[(i + 2) % count];
 
-		cavan_display_fill_triangle(display, triangle_points);
+		cavan_display_fill_triangle_dummy(display, triangle_points);
 	}
 
 	return 0;
@@ -899,10 +899,10 @@ int cavan_display_draw_polygon_standard4(struct cavan_display_device *display, s
 		return ret;
 	}
 
-	return cavan_display_draw_circle(display, x, y, r);
+	return cavan_display_draw_circle_dummy(display, x, y, r);
 }
 
-int cavan_display_memory_xfer(struct cavan_display_device *display, struct cavan_display_memory *mem, bool read)
+int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct cavan_display_memory *mem, bool read)
 {
 	char *data;
 	size_t line_size;
@@ -972,19 +972,23 @@ int cavan_display_memory_xfer(struct cavan_display_device *display, struct cavan
 	return 0;
 }
 
-size_t cavan_display_mesure_text(struct cavan_display_device *display, const char *text)
+size_t cavan_display_mesure_text_dummy(struct cavan_display_device *display, const char *text)
 {
 	return text_len(text);
 }
 
-int cavan_display_draw_text(struct cavan_display_device *display, int x, int y, const char *text)
+int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, int y, const char *text)
 {
 	return 0;
 }
 
-void cavan_display_set_color(struct cavan_display_device *display, cavan_display_color_t color)
+void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_display_color_t color)
 {
 	display->pen_color = color;
+}
+
+void cavan_display_destory_dummy(struct cavan_display_device *display)
+{
 }
 
 int cavan_display_check(struct cavan_display_device *display)
@@ -1021,70 +1025,78 @@ int cavan_display_check(struct cavan_display_device *display)
 
 	if (display->mesure_text == NULL)
 	{
-		display->mesure_text = cavan_display_mesure_text;
+		display->mesure_text = cavan_display_mesure_text_dummy;
 	}
 
 	if (display->draw_text == NULL)
 	{
-		display->draw_text = cavan_display_draw_text;
+		display->draw_text = cavan_display_draw_text_dummy;
 	}
 
 	if (display->draw_line == NULL)
 	{
-		display->draw_line = cavan_display_draw_line;
+		display->draw_line = cavan_display_draw_line_dummy;
 	}
 
 	if (display->draw_rect == NULL)
 	{
-		display->draw_rect = cavan_display_draw_rect;
+		display->draw_rect = cavan_display_draw_rect_dummy;
 	}
 
 	if (display->fill_rect == NULL)
 	{
-		display->fill_rect = cavan_display_fill_rect;
+		display->fill_rect = cavan_display_fill_rect_dummy;
 	}
 
 	if (display->draw_circle == NULL)
 	{
-		display->draw_circle = cavan_display_draw_circle;
+		display->draw_circle = cavan_display_draw_circle_dummy;
 	}
 
 	if (display->fill_circle == NULL)
 	{
-		display->fill_circle = cavan_display_fill_circle;
+		display->fill_circle = cavan_display_fill_circle_dummy;
 	}
 
 	if (display->draw_ellipse == NULL)
 	{
-		display->draw_ellipse = cavan_display_draw_ellipse;
+		display->draw_ellipse = cavan_display_draw_ellipse_dummy;
 	}
 
 	if (display->fill_ellipse == NULL)
 	{
-		display->fill_ellipse = cavan_display_fill_ellipse;
+		display->fill_ellipse = cavan_display_fill_ellipse_dummy;
 	}
 
 	if (display->draw_polygon == NULL)
 	{
-		display->draw_polygon = cavan_display_draw_polygon;
+		display->draw_polygon = cavan_display_draw_polygon_dummy;
 	}
 
 	if (display->fill_triangle == NULL)
 	{
-		display->fill_triangle = cavan_display_fill_triangle;
+		display->fill_triangle = cavan_display_fill_triangle_dummy;
 	}
 
 	if (display->fill_polygon == NULL)
 	{
-		display->fill_polygon = cavan_display_fill_polygon;
+		display->fill_polygon = cavan_display_fill_polygon_dummy;
 	}
 
 	if (display->display_memory_xfer == NULL)
 	{
-		display->display_memory_xfer = cavan_display_memory_xfer;
+		display->display_memory_xfer = cavan_display_memory_xfer_dummy;
 	}
 
-	display->set_color = cavan_display_set_color;
+	if (display->set_color == NULL)
+	{
+		display->set_color = cavan_display_set_color_dummy;
+	}
+
+	if (display->destory == NULL)
+	{
+		display->destory = cavan_display_destory_dummy;
+	}
 
 	return 0;
 }

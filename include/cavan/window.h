@@ -59,6 +59,7 @@ struct cavan_dialog
 	int title_height;
 	int x_offset;
 	int y_offset;
+	bool move_able;
 	struct cavan_display_memory_rect *backup;
 };
 
@@ -165,6 +166,30 @@ static inline void cavan_window_set_text(struct cavan_window *win, const char *t
 {
 	pthread_mutex_lock(&win->lock);
 	text_ncopy(win->text, text, sizeof(win->text));
+	pthread_mutex_unlock(&win->lock);
+	win->paint_handler(win);
+}
+
+static inline void cavan_window_set_width(struct cavan_window *win, int width)
+{
+	pthread_mutex_lock(&win->lock);
+	win->width = width;
+	pthread_mutex_unlock(&win->lock);
+	win->paint_handler(win);
+}
+
+static inline void cavan_window_set_height(struct cavan_window *win, int height)
+{
+	pthread_mutex_lock(&win->lock);
+	win->height = height;
+	pthread_mutex_unlock(&win->lock);
+	win->paint_handler(win);
+}
+
+static inline void cavan_window_set_border_width(struct cavan_window *win, int width)
+{
+	pthread_mutex_lock(&win->lock);
+	win->border_width = width;
 	pthread_mutex_unlock(&win->lock);
 	win->paint_handler(win);
 }
