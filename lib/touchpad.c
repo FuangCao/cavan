@@ -126,7 +126,13 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 			}
 			else
 			{
-				service->mouse_move_handler(dev, touchpad->x - touchpad->xold, touchpad->y - touchpad->yold, service->private_data);
+				int x = (touchpad->x - touchpad->xold) * touchpad->xspeed;
+				int y = (touchpad->y - touchpad->yold) * touchpad->yspeed;
+
+				if (x || y)
+				{
+					service->mouse_move_handler(dev, x, y, service->private_data);
+				}
 			}
 
 			touchpad->xold = touchpad->x;
@@ -143,6 +149,55 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 	}
 
 	return true;
+}
+
+static int cavan_touchpad_probe(struct cavan_input_device *dev, void *data)
+{
+	int ret;
+	int min, max;
+	int fd = dev->event_dev->fd;
+	struct cavan_touchpad_device *touchpad = (struct cavan_touchpad_device *)dev;
+	struct cavan_input_service *service = data;
+
+	pr_bold_info("LCD: width = %d, height = %d", service->lcd_width, service->lcd_height);
+
+	if (service->lcd_width > 0)
+	{
+		ret = cavan_event_get_absinfo(fd, ABS_X, &min, &max);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_event_get_absinfo");
+			return ret;
+		}
+
+		pr_bold_info("x-min = %d, x-max = %d", min, max);
+		touchpad->xspeed = ((double)service->lcd_width) / (max - min);
+	}
+	else
+	{
+		touchpad->xspeed = 1;
+	}
+
+	if (service->lcd_height > 0)
+	{
+		ret = cavan_event_get_absinfo(fd, ABS_Y, &min, &max);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_event_get_absinfo");
+			return ret;
+		}
+
+		pr_bold_info("y-min = %d, y-max = %d", min, max);
+		touchpad->yspeed = ((double)service->lcd_height) / (max - min);
+	}
+	else
+	{
+		touchpad->yspeed = 1;
+	}
+
+	pr_bold_info("xspeed = %lf, yspeed = %lf", touchpad->xspeed, touchpad->yspeed);
+
+	return 0;
 }
 
 struct cavan_input_device *cavan_touchpad_device_create(void)
@@ -163,7 +218,7 @@ struct cavan_input_device *cavan_touchpad_device_create(void)
 	touchpad->released = 1;
 
 	dev = &touchpad->input_dev;
-	dev->probe = NULL;
+	dev->probe = cavan_touchpad_probe;
 	dev->remove = NULL;
 	dev->event_handler = cavan_touchpad_event_handler;
 

@@ -36,6 +36,7 @@ struct cavan_window
 	struct cavan_window *parent;
 	struct cavan_window *next;
 
+	int (*init_handler)(struct cavan_window *win, struct cavan_application_context *context);
 	void (*destory_handler)(struct cavan_window *win);
 	void (*paint_handler)(struct cavan_window *win);
 	void (*key_handler)(struct cavan_window *win, const char *name, int code, int value);
@@ -44,6 +45,7 @@ struct cavan_window
 	void (*entry_handler)(struct cavan_window *win);
 	void (*exit_handler)(struct cavan_window *win);
 
+	void (*on_destory)(struct cavan_window *win, void *data);
 	bool (*on_paint)(struct cavan_window *win, void *data);
 	bool (*on_key_pressed)(struct cavan_window *win, const char *name, int code, int value, void *data);
 	bool (*on_clicked)(struct cavan_window *win, int x, int y, bool pressed, void *data);
@@ -90,108 +92,59 @@ struct cavan_application_context
 	pthread_mutex_t lock;
 };
 
-void cavan_window_add_child(struct cavan_window *win, struct cavan_window *child);
+int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child);
 int cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child);
 void cavan_window_set_abs_position(struct cavan_window *win, int x, int y);
 void cavan_window_set_position(struct cavan_window *win, int x, int y);
 struct cavan_window *cavan_window_find_by_axis(struct cavan_window *head, int x, int y);
+void cavan_window_paint(struct cavan_window *win);
+void cavan_window_destory(struct cavan_window *win);
+void cavan_window_set_back_color(struct cavan_window *win, float red, float green, float blue);
+void cavan_window_set_fore_color(struct cavan_window *win, float red, float green, float blue);
+void cavan_window_set_border_color(struct cavan_window *win, float red, float green, float blue);
+void cavan_window_set_text(struct cavan_window *win, const char *text);
+void cavan_window_set_width(struct cavan_window *win, int width);
+void cavan_window_set_height(struct cavan_window *win, int height);
+void cavan_window_set_border_width(struct cavan_window *win, int width);
 
-void cavan_window_paint_handler(struct cavan_window *win);
+int cavan_window_init_base(struct cavan_window *win, int (*handler)(struct cavan_window *win, struct cavan_application_context *context));
+int cavan_window_init_handler(struct cavan_window *win, struct cavan_application_context *context);
 void cavan_window_destory_handler(struct cavan_window *win);
+void cavan_window_paint_handler(struct cavan_window *win);
+void cavan_window_paint_handler(struct cavan_window *win);
+void cavan_window_key_handler(struct cavan_window *win, const char *name, int code, int value);
 void cavan_window_click_handler(struct cavan_window *win, bool pressed);
 void cavan_window_move_handler(struct cavan_window *win, int x, int y);
 void cavan_window_entry_handler(struct cavan_window *win);
 void cavan_window_exit_handler(struct cavan_window *win);
-void cavan_window_key_handler(struct cavan_window *win, const char *name, int code, int value);
-int cavan_window_init(struct cavan_window *win, struct cavan_application_context *context);
 
+int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application_context *context);
 void cavan_dialog_paint_handler(struct cavan_window *win);
 void cavan_dialog_click_handler(struct cavan_window *win, bool pressed);
 void cavan_dialog_move_handler(struct cavan_window *win, int x, int y);
-int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_context *context);
 
+int cavan_button_init_handler(struct cavan_window *win, struct cavan_application_context *context);
 void cavan_button_paint_handler(struct cavan_window *win);
 void cavan_button_click_handler(struct cavan_window *win, bool pressed);
-int cavan_button_init(struct cavan_button *button, struct cavan_application_context *context);
 
-int cavan_application_context_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data);
-void cavan_application_context_uninit(struct cavan_application_context *context);
+int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data);
+void cavan_application_uninit(struct cavan_application_context *context);
+int cavan_application_main_loop(struct cavan_application_context *context);
 
-static inline void cavan_application_context_update_data(struct cavan_application_context *context)
+static inline void cavan_application_update_data(struct cavan_application_context *context)
 {
+	cavan_window_paint(&context->win_root);
 	context->display->refresh(context->display);
 }
 
-static inline void cavan_application_context_add_window(struct cavan_application_context *context, struct cavan_window *win)
+static inline void cavan_application_add_window(struct cavan_application_context *context, struct cavan_window *win)
 {
 	cavan_window_add_child(&context->win_root, win);
 }
 
-static inline int cavan_application_context_remove_window(struct cavan_application_context *context, struct cavan_window *win)
+static inline int cavan_application_remove_window(struct cavan_application_context *context, struct cavan_window *win)
 {
 	return cavan_window_remove_child(&context->win_root, win);
-}
-
-static inline int cavan_application_context_main_loop(struct cavan_application_context *context)
-{
-	context->win_root.paint_handler(&context->win_root);
-	return cavan_input_service_join(&context->input_service);
-}
-
-static inline void cavan_window_set_back_color(struct cavan_window *win, float red, float green, float blue)
-{
-	pthread_mutex_lock(&win->lock);
-	win->back_color = cavan_display_build_color3f(win->context->display, red, green, blue);
-	pthread_mutex_unlock(&win->lock);
-	win->paint_handler(win);
-}
-
-static inline void cavan_window_set_fore_color(struct cavan_window *win, float red, float green, float blue)
-{
-	pthread_mutex_lock(&win->lock);
-	win->fore_color = cavan_display_build_color3f(win->context->display, red, green, blue);
-	pthread_mutex_unlock(&win->lock);
-	win->paint_handler(win);
-}
-
-static inline void cavan_window_set_border_color(struct cavan_window *win, float red, float green, float blue)
-{
-	pthread_mutex_lock(&win->lock);
-	win->border_color = cavan_display_build_color3f(win->context->display, red, green, blue);
-	pthread_mutex_unlock(&win->lock);
-	win->paint_handler(win);
-}
-
-static inline void cavan_window_set_text(struct cavan_window *win, const char *text)
-{
-	pthread_mutex_lock(&win->lock);
-	text_ncopy(win->text, text, sizeof(win->text));
-	pthread_mutex_unlock(&win->lock);
-	win->paint_handler(win);
-}
-
-static inline void cavan_window_set_width(struct cavan_window *win, int width)
-{
-	pthread_mutex_lock(&win->lock);
-	win->width = width;
-	pthread_mutex_unlock(&win->lock);
-	win->paint_handler(win);
-}
-
-static inline void cavan_window_set_height(struct cavan_window *win, int height)
-{
-	pthread_mutex_lock(&win->lock);
-	win->height = height;
-	pthread_mutex_unlock(&win->lock);
-	win->paint_handler(win);
-}
-
-static inline void cavan_window_set_border_width(struct cavan_window *win, int width)
-{
-	pthread_mutex_lock(&win->lock);
-	win->border_width = width;
-	pthread_mutex_unlock(&win->lock);
-	win->paint_handler(win);
 }
 
 static inline void cavan_window_set_on_paint(struct cavan_window *win, bool (*handler)(struct cavan_window *win, void *data))
@@ -234,4 +187,19 @@ static inline void cavan_window_set_on_move(struct cavan_window *win, bool (*han
 	pthread_mutex_lock(&win->lock);
 	win->on_move = handler;
 	pthread_mutex_unlock(&win->lock);
+}
+
+static inline int cavan_window_init(struct cavan_window *win)
+{
+	return cavan_window_init_base(win, cavan_window_init_handler);
+}
+
+static inline int cavan_dialog_init(struct cavan_dialog *dialog)
+{
+	return cavan_window_init_base(&dialog->window, cavan_dialog_init_handler);
+}
+
+static inline int cavan_button_init(struct cavan_button *button)
+{
+	return cavan_window_init_base(&button->window, cavan_button_init_handler);
 }

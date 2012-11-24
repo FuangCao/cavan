@@ -16,6 +16,8 @@ struct cavan_touchpad_device
 	int y, yold;
 	int pressed;
 	int released;
+	float xspeed;
+	float yspeed;
 	u32 time;
 };
 

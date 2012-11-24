@@ -8,13 +8,173 @@
 #include <cavan/window.h>
 #include <cavan/fb.h>
 
+void cavan_window_paint(struct cavan_window *win)
+{
+	struct cavan_window *child;
+	struct cavan_display_device *display;
+
+	if (win->on_paint == NULL || win->on_paint(win, win->context->private_data) == false)
+	{
+		win->paint_handler(win);
+	}
+
+	pthread_mutex_lock(&win->lock);
+
+	for (child = win->child; child; child = child->next)
+	{
+		cavan_window_paint(child);
+	}
+
+	display = win->context->display;
+	display->refresh(display);
+
+	pthread_mutex_unlock(&win->lock);
+}
+
+void cavan_window_destory(struct cavan_window *win)
+{
+	struct cavan_window *child;
+
+	if (win->on_destory)
+	{
+		win->on_destory(win, win->context->private_data);
+	}
+
+	pthread_mutex_lock(&win->lock);
+
+	for (child = win->child; child; child = child->next)
+	{
+		cavan_window_destory(child);
+	}
+
+	pthread_mutex_unlock(&win->lock);
+
+	win->destory_handler(win);
+}
+
+static void cavan_window_clicked(struct cavan_window *win, bool pressed)
+{
+	struct cavan_application_context *context;
+
+	pthread_mutex_lock(&win->lock);
+	win->pressed = pressed;
+	context = win->context;
+	pthread_mutex_unlock(&win->lock);
+
+	if (win->on_clicked == NULL || win->on_clicked(win, context->x, context->y, pressed, context->private_data) == false)
+	{
+		win->click_handler(win, pressed);
+	}
+}
+
+static void cavan_window_mouse_move(struct cavan_window *win, int x, int y)
+{
+	if (win->on_move == NULL || win->on_move(win, x, y, win->context->private_data) == false)
+	{
+		win->move_handler(win, x, y);
+	}
+}
+
+static void cavan_window_mouse_entry(struct cavan_window *win)
+{
+	if (win->on_entry == NULL || win->on_entry(win, win->context->private_data) == false)
+	{
+		win->entry_handler(win);
+	}
+}
+
+static void cavan_window_mouse_exit(struct cavan_window *win)
+{
+	if (win->on_exit == NULL || win->on_exit(win, win->context->private_data) == false)
+	{
+		win->exit_handler(win);
+	}
+}
+
+static void cavan_window_key_pressed(struct cavan_window *win, const char *name, int code, int value)
+{
+	if (win->on_key_pressed == NULL || win->on_key_pressed(win, name, code, value, win->context->private_data) == false)
+	{
+		win->key_handler(win, name, code, value);
+	}
+}
+
+void cavan_window_set_back_color(struct cavan_window *win, float red, float green, float blue)
+{
+	pthread_mutex_lock(&win->lock);
+	win->back_color = cavan_display_build_color3f(win->context->display, red, green, blue);
+	pthread_mutex_unlock(&win->lock);
+	cavan_window_paint(win);
+}
+
+void cavan_window_set_fore_color(struct cavan_window *win, float red, float green, float blue)
+{
+	pthread_mutex_lock(&win->lock);
+	win->fore_color = cavan_display_build_color3f(win->context->display, red, green, blue);
+	pthread_mutex_unlock(&win->lock);
+	cavan_window_paint(win);
+}
+
+void cavan_window_set_border_color(struct cavan_window *win, float red, float green, float blue)
+{
+	pthread_mutex_lock(&win->lock);
+	win->border_color = cavan_display_build_color3f(win->context->display, red, green, blue);
+	pthread_mutex_unlock(&win->lock);
+	cavan_window_paint(win);
+}
+
+void cavan_window_set_text(struct cavan_window *win, const char *text)
+{
+	pthread_mutex_lock(&win->lock);
+	text_ncopy(win->text, text, sizeof(win->text));
+	pthread_mutex_unlock(&win->lock);
+	cavan_window_paint(win);
+}
+
+void cavan_window_set_width(struct cavan_window *win, int width)
+{
+	pthread_mutex_lock(&win->lock);
+	win->width = width;
+	pthread_mutex_unlock(&win->lock);
+	cavan_window_paint(win);
+}
+
+void cavan_window_set_height(struct cavan_window *win, int height)
+{
+	pthread_mutex_lock(&win->lock);
+	win->height = height;
+	pthread_mutex_unlock(&win->lock);
+	cavan_window_paint(win);
+}
+
+void cavan_window_set_border_width(struct cavan_window *win, int width)
+{
+	pthread_mutex_lock(&win->lock);
+	win->border_width = width;
+	pthread_mutex_unlock(&win->lock);
+	cavan_window_paint(win);
+}
+
+// ================================================================================
+
+int cavan_window_init_handler(struct cavan_window *win, struct cavan_application_context *context)
+{
+	win->context = context;
+
+	return 0;
+}
+
+void cavan_window_destory_handler(struct cavan_window *win)
+{
+	pthread_mutex_destroy(&win->lock);
+}
+
 void cavan_window_paint_handler(struct cavan_window *win)
 {
 	int x, y;
 	int width, height;
 	struct cavan_application_context *context;
 	struct cavan_display_device *display;
-	struct cavan_window *child;
 
 	pthread_mutex_lock(&win->lock);
 
@@ -35,114 +195,30 @@ void cavan_window_paint_handler(struct cavan_window *win)
 	display->fill_rect(display, win->abs_x, y, win->border_width, height);
 	display->fill_rect(display, x + width, y, win->border_width, height);
 
-	if (win->on_paint)
-	{
-		pthread_mutex_unlock(&win->lock);
-		win->on_paint(win, context->private_data);
-	}
-	else
-	{
-		pthread_mutex_unlock(&win->lock);
-	}
-
-	for (child = win->child; child; child = child->next)
-	{
-		child->paint_handler(child);
-	}
-
-	display->refresh(display);
-}
-
-void cavan_window_destory_handler(struct cavan_window *win)
-{
-	pthread_mutex_destroy(&win->lock);
-
-	for (win = win->child; win; win = win->next)
-	{
-		win->destory_handler(win);
-	}
-}
-
-void cavan_window_click_handler(struct cavan_window *win, bool pressed)
-{
-	pthread_mutex_lock(&win->lock);
-
-	win->pressed = pressed;
-
-	if (win->on_clicked)
-	{
-		struct cavan_application_context *context = win->context;
-
-		pthread_mutex_unlock(&win->lock);
-		win->on_clicked(win, context->x, context->y, pressed, context->private_data);
-	}
-	else
-	{
-		pthread_mutex_unlock(&win->lock);
-	}
-}
-
-void cavan_window_move_handler(struct cavan_window *win, int x, int y)
-{
-	pthread_mutex_lock(&win->lock);
-
-	if (win->on_move)
-	{
-		pthread_mutex_unlock(&win->lock);
-		win->on_move(win, x, y, win->context->private_data);
-	}
-	else
-	{
-		pthread_mutex_unlock(&win->lock);
-	}
-}
-
-void cavan_window_entry_handler(struct cavan_window *win)
-{
-	pthread_mutex_lock(&win->lock);
-
-	if (win->on_entry)
-	{
-		pthread_mutex_unlock(&win->lock);
-		win->on_entry(win, win->context->private_data);
-	}
-	else
-	{
-		pthread_mutex_unlock(&win->lock);
-	}
-}
-
-void cavan_window_exit_handler(struct cavan_window *win)
-{
-	pthread_mutex_lock(&win->lock);
-
-	if (win->on_exit)
-	{
-		pthread_mutex_unlock(&win->lock);
-		win->on_exit(win, win->context->private_data);
-	}
-	else
-	{
-		pthread_mutex_unlock(&win->lock);
-	}
+	pthread_mutex_unlock(&win->lock);
 }
 
 void cavan_window_key_handler(struct cavan_window *win, const char *name, int code, int value)
 {
-	pthread_mutex_lock(&win->lock);
-
-	if (win->on_key_pressed)
-	{
-		pthread_mutex_unlock(&win->lock);
-		win->on_key_pressed(win, name, code, value, win->context->private_data);
-	}
-	else
-	{
-		pthread_mutex_unlock(&win->lock);
-	}
 }
 
-int cavan_window_init(struct cavan_window *win, struct cavan_application_context *context)
+void cavan_window_click_handler(struct cavan_window *win, bool pressed)
+{
+}
+
+void cavan_window_move_handler(struct cavan_window *win, int x, int y)
+{
+}
+
+void cavan_window_entry_handler(struct cavan_window *win)
+{
+}
+
+void cavan_window_exit_handler(struct cavan_window *win)
+{
+}
+
+int cavan_window_init_base(struct cavan_window *win, int (*handler)(struct cavan_window *win, struct cavan_application_context *context))
 {
 	pthread_mutex_init(&win->lock, NULL);
 
@@ -150,8 +226,7 @@ int cavan_window_init(struct cavan_window *win, struct cavan_application_context
 	win->parent = NULL;
 	win->next = NULL;
 
-	win->context = context;
-
+	win->on_destory = NULL;
 	win->on_paint = NULL;
 	win->on_clicked = NULL;
 	win->on_move = NULL;
@@ -160,6 +235,7 @@ int cavan_window_init(struct cavan_window *win, struct cavan_application_context
 	win->on_key_pressed = NULL;
 
 	win->pressed = false;
+	win->init_handler = handler ? handler : cavan_window_init_handler;
 	win->destory_handler = cavan_window_destory_handler;
 	win->paint_handler = cavan_window_paint_handler;
 	win->click_handler = cavan_window_click_handler;
@@ -188,14 +264,8 @@ static void cavan_window_set_abs_position_base(struct cavan_window *win, int x, 
 
 void cavan_window_set_abs_position(struct cavan_window *win, int x, int y)
 {
-	struct cavan_window *parent;
-
-	pthread_mutex_lock(&win->lock);
-	parent = win->parent ? win->parent : win;
-	pthread_mutex_unlock(&win->lock);
-
 	cavan_window_set_abs_position_base(win, x, y);
-	parent->paint_handler(parent);
+	cavan_window_paint(win->parent);
 }
 
 void cavan_window_set_position(struct cavan_window *win, int x, int y)
@@ -241,8 +311,16 @@ struct cavan_window *cavan_window_find_by_axis(struct cavan_window *head, int x,
 	return NULL;
 }
 
-void cavan_window_add_child(struct cavan_window *win, struct cavan_window *child)
+int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child)
 {
+	int ret;
+
+	ret = child->init_handler(child, win->context);
+	if (ret  < 0)
+	{
+		return ret;
+	}
+
 	pthread_mutex_lock(&win->lock);
 
 	if (child->x < 0)
@@ -272,6 +350,8 @@ void cavan_window_add_child(struct cavan_window *win, struct cavan_window *child
 	pthread_mutex_unlock(&win->lock);
 
 	cavan_window_set_abs_position(child, child->x + win->abs_x, child->y + win->abs_y);
+
+	return 0;
 }
 
 int cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child)
@@ -307,6 +387,8 @@ out_mutex_unlock:
 	return ret;
 }
 
+// ================================================================================
+
 void cavan_dialog_paint_handler(struct cavan_window *win)
 {
 	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
@@ -330,7 +412,6 @@ void cavan_dialog_paint_handler(struct cavan_window *win)
 
 		display->set_color(display, win->fore_color);
 		display->draw_text(display, x, y, win->text);
-		display->refresh(display);
 	}
 
 	pthread_mutex_unlock(&win->lock);
@@ -365,8 +446,6 @@ void cavan_dialog_click_handler(struct cavan_window *win, bool pressed)
 	}
 
 	pthread_mutex_unlock(&win->lock);
-
-	cavan_window_click_handler(win, pressed);
 }
 
 void cavan_dialog_move_handler(struct cavan_window *win, int x, int y)
@@ -405,26 +484,19 @@ void cavan_dialog_move_handler(struct cavan_window *win, int x, int y)
 	}
 
 	pthread_mutex_unlock(&win->lock);
-
-	cavan_window_move_handler(win, x, y);
 }
 
-int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_context *context)
+int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application_context *context)
 {
 	int ret;
 	struct cavan_display_device *display;
-	struct cavan_window *win = &dialog->window;
+	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
 
-	ret = cavan_window_init(win, context);
+	ret = cavan_window_init_handler(win, context);
 	if (ret < 0)
 	{
-		pr_red_info("cavan_window_init");
 		return ret;
 	}
-
-	win->paint_handler = cavan_dialog_paint_handler;
-	win->click_handler = cavan_dialog_click_handler;
-	win->move_handler = cavan_dialog_move_handler;
 
 	if (win->x < 0 && win->y < 0 && win->width <= 0 && win->height <= 0)
 	{
@@ -439,8 +511,14 @@ int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_cont
 	win->fore_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
 	win->border_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
 
+	win->paint_handler = cavan_dialog_paint_handler;
+	win->click_handler = cavan_dialog_click_handler;
+	win->move_handler = cavan_dialog_move_handler;
+
 	return 0;
 }
+
+// ================================================================================
 
 void cavan_button_paint_handler(struct cavan_window *win)
 {
@@ -478,9 +556,9 @@ void cavan_button_click_handler(struct cavan_window *win, bool pressed)
 		button->fore_color_backup = win->fore_color;
 		button->border_color_backup = win->border_color;
 
-		win->back_color = cavan_display_build_color3f(display, 1.0, 1.0, 0);
-		win->fore_color = cavan_display_build_color3f(display, 1.0, 0, 1.0);
-		win->border_color = cavan_display_build_color3f(display, 1.0, 0, 0);
+		win->back_color = cavan_display_build_color3f(display, 0, 1.0, 0);
+		win->fore_color = cavan_display_build_color3f(display, 0, 0, 0);
+		win->border_color = cavan_display_build_color3f(display, 0, 0, 1.0);
 	}
 	else
 	{
@@ -491,20 +569,17 @@ void cavan_button_click_handler(struct cavan_window *win, bool pressed)
 
 	pthread_mutex_unlock(&win->lock);
 
-	win->paint_handler(win);
-	cavan_window_click_handler(win, pressed);
+	cavan_window_paint(win);
 }
 
-int cavan_button_init(struct cavan_button *button, struct cavan_application_context *context)
+int cavan_button_init_handler(struct cavan_window *win, struct cavan_application_context *context)
 {
 	int ret;
 	struct cavan_display_device *display;
-	struct cavan_window *win = &button->window;
 
-	ret = cavan_window_init(win, context);
+	ret = cavan_window_init_handler(win, context);
 	if (ret < 0)
 	{
-		pr_red_info("cavan_window_init");
 		return ret;
 	}
 
@@ -546,7 +621,7 @@ static void cavan_application_move(struct cavan_application_context *context, in
 {
 	if (context->win_active)
 	{
-		context->win_active->move_handler(context->win_active, x, y);
+		cavan_window_mouse_move(context->win_active, x, y);
 	}
 	else
 	{
@@ -558,17 +633,17 @@ static void cavan_application_move(struct cavan_application_context *context, in
 			{
 				if (context->win_curr)
 				{
-					context->win_curr->exit_handler(context->win_curr);
+					cavan_window_mouse_exit(context->win_curr);
 				}
 
-				win->entry_handler(win);
+				cavan_window_mouse_entry(win);
 			}
 
-			win->move_handler(win, x, y);
+			cavan_window_mouse_move(win, x, y);
 		}
 		else if (context->win_curr)
 		{
-			context->win_curr->exit_handler(context->win_curr);
+			cavan_window_mouse_exit(context->win_curr);
 		}
 
 		context->win_curr = win;
@@ -585,7 +660,7 @@ static void cavan_application_click(struct cavan_application_context *context, b
 		struct cavan_window *win = cavan_window_find_by_axis(&context->win_root, context->x, context->y);
 		if (win && win->pressed == false)
 		{
-			win->click_handler(win, true);
+			cavan_window_clicked(win, true);
 		}
 
 		context->win_active = win;
@@ -594,7 +669,7 @@ static void cavan_application_click(struct cavan_application_context *context, b
 	{
 		if (context->win_active->pressed)
 		{
-			context->win_active->click_handler(context->win_active, false);
+			cavan_window_clicked(context->win_active, false);
 		}
 
 		context->win_active = NULL;
@@ -606,26 +681,16 @@ static void cavan_application_click(struct cavan_application_context *context, b
 static void cavan_application_key_handler(struct cavan_input_device *dev, const char *name, int code, int value, void *data)
 {
 	struct cavan_application_context *context = data;
-	struct cavan_window *win;
 
 	pthread_mutex_lock(&context->lock);
 
 	if (context->win_active)
 	{
-		win = context->win_active;
+		cavan_window_key_pressed(context->win_active, name, code, value);
 	}
 	else if (context->win_curr)
 	{
-		win = context->win_curr;
-	}
-	else
-	{
-		win = NULL;
-	}
-
-	if (win)
-	{
-		win->key_handler(win, name, code, value);
+		cavan_window_key_pressed(context->win_curr, name, code, value);
 	}
 
 	pthread_mutex_unlock(&context->lock);
@@ -708,7 +773,7 @@ static void cavan_application_gsensor_handler(struct cavan_input_device *dev, st
 
 // ================================================================================
 
-int cavan_application_context_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data)
+int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data)
 {
 	int ret;
 	struct cavan_input_service *input_service;
@@ -734,7 +799,7 @@ int cavan_application_context_init(struct cavan_application_context *context, st
 	context->display = display;
 
 	win = &context->win_root;
-	ret = cavan_window_init(win, context);
+	ret = cavan_window_init(win);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_window_init");
@@ -742,6 +807,7 @@ int cavan_application_context_init(struct cavan_application_context *context, st
 	}
 
 	text_copy(win->text, "ROOT");
+	win->parent = win;
 	win->x = win->abs_x = 0;
 	win->y = win->abs_y = 0;
 	win->width = display->xres;
@@ -750,6 +816,13 @@ int cavan_application_context_init(struct cavan_application_context *context, st
 	win->back_color = cavan_display_build_color3f(display, 0, 0, 0);
 	win->fore_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
 	win->border_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
+
+	ret = win->init_handler(win, context);
+	if (ret < 0)
+	{
+		pr_red_info("win->init_handler");
+		goto out_display_destory;
+	}
 
 	context->private_data = data;
 	context->win_curr = NULL;
@@ -768,9 +841,6 @@ int cavan_application_context_init(struct cavan_application_context *context, st
 	context->mouse_speed = 1.0;
 	context->max_x = display->xres - 1;
 	context->max_y = display->yres - 1;
-
-	cavan_application_move(context, 0, 0);
-	cavan_application_draw_mouse(context);
 
 	input_service = &context->input_service;
 	cavan_input_service_init(input_service, NULL);
@@ -796,19 +866,28 @@ out_display_memory_free:
 	cavan_display_memory_free(context->mouse_backup);
 out_win_destroy:
 	pthread_mutex_destroy(&context->lock);
-	win->destory_handler(win);
+	cavan_window_destory(win);
 out_display_destory:
 	display->destory(display);
 
 	return ret;
 }
 
-void cavan_application_context_uninit(struct cavan_application_context *context)
+void cavan_application_uninit(struct cavan_application_context *context)
 {
 	cavan_input_service_stop(&context->input_service);
 	cavan_display_memory_free(context->mouse_backup);
 	context->display->destory(context->display);
-	context->win_root.destory_handler(&context->win_root);
+	cavan_window_destory(&context->win_root);
 
 	pthread_mutex_destroy(&context->lock);
+}
+
+int cavan_application_main_loop(struct cavan_application_context *context)
+{
+	cavan_window_paint(&context->win_root);
+	cavan_application_move(context, 0, 0);
+	cavan_application_draw_mouse(context);
+
+	return cavan_input_service_join(&context->input_service);
 }
