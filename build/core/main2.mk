@@ -36,7 +36,7 @@ CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wno-trigraphs \
 			-fno-strict-aliasing -g -O2 \
 			-I$(INCLUDE_PATH) -I. -DCAVAN_ARCH=$(ARCH)
 ASFLAGS +=	$(CFLAGS) -D__ASM__
-LDFLAGS += -lm -lpthread
+LDFLAGS += -lm -lrt -lpthread
 
 DESTDIR = /usr
 
