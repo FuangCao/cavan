@@ -71,15 +71,9 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 		switch (event->code)
 		{
 		case BTN_LEFT:
-			service->mouse_touch_handler(dev, CAVAN_MOUSE_BUTTON_LEFT, event->value, service->private_data);
-			break;
-
 		case BTN_RIGHT:
-			service->mouse_touch_handler(dev, CAVAN_MOUSE_BUTTON_RIGHT, event->value, service->private_data);
-			break;
-
 		case BTN_MIDDLE:
-			service->mouse_touch_handler(dev, CAVAN_MOUSE_BUTTON_MIDDLE0, event->value, service->private_data);
+			service->mouse_touch_handler(dev, event->code, event->value, service->private_data);
 			break;
 
 		default:
@@ -99,7 +93,7 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 			break;
 
 		case REL_WHEEL:
-			service->mouse_wheel_handler(dev, event->value, service->private_data);
+			service->mouse_wheel_handler(dev, REL_WHEEL, event->value, service->private_data);
 			break;
 
 		default:

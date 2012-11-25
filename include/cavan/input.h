@@ -19,6 +19,7 @@
 
 #include <linux/input.h>
 #include <cavan/event.h>
+#include <cavan/timer.h>
 #include <cavan.h>
 
 #ifndef SYN_MT_REPORT
@@ -37,14 +38,6 @@
 #define ABS_MT_PRESSURE		0x3a	/* Pressure on contact area */
 #define ABS_MT_DISTANCE		0x3b	/* Contact hover distance */
 #endif
-
-enum cavan_mouse_button
-{
-	CAVAN_MOUSE_BUTTON_LEFT,
-	CAVAN_MOUSE_BUTTON_RIGHT,
-	CAVAN_MOUSE_BUTTON_MIDDLE0,
-	CAVAN_MOUSE_BUTTON_MIDDLE1
-};
 
 struct cavan_gsensor_event
 {
@@ -73,6 +66,7 @@ struct cavan_input_device
 struct cavan_input_service
 {
 	struct cavan_event_service event_service;
+	struct cavan_timer_service timer_service;
 
 	void *private_data;
 	int lcd_width, lcd_height;
@@ -81,9 +75,9 @@ struct cavan_input_service
 	bool (*matcher)(struct cavan_event_matcher *matcher, void *data);
 
 	void (*key_handler)(struct cavan_input_device *dev, const char *name, int code, int value, void *data);
-	void (*mouse_wheel_handler)(struct cavan_input_device *dev, int value, void *data);
+	void (*mouse_wheel_handler)(struct cavan_input_device *dev, int code, int value, void *data);
 	void (*mouse_move_handler)(struct cavan_input_device *dev, int x, int y, void *data);
-	void (*mouse_touch_handler)(struct cavan_input_device *dev, int button, bool pressed, void *data);
+	void (*mouse_touch_handler)(struct cavan_input_device *dev, int code, int value, void *data);
 	void (*touch_handler)(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data);
 	void (*move_handler)(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data);
 	void (*gsensor_handler)(struct cavan_input_device *dev, struct cavan_gsensor_event *event, void *data);

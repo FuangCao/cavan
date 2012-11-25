@@ -696,7 +696,7 @@ static void cavan_application_key_handler(struct cavan_input_device *dev, const 
 	pthread_mutex_unlock(&context->lock);
 }
 
-static void cavan_application_mouse_wheel_handler(struct cavan_input_device *dev, int value, void *data)
+static void cavan_application_mouse_wheel_handler(struct cavan_input_device *dev, int code, int value, void *data)
 {
 }
 
@@ -733,14 +733,14 @@ static void cavan_application_mouse_move_handler(struct cavan_input_device *dev,
 	pthread_mutex_unlock(&context->lock);
 }
 
-static void cavan_application_mouse_touch_handler(struct cavan_input_device *dev, int button, bool pressed, void *data)
+static void cavan_application_mouse_touch_handler(struct cavan_input_device *dev, int code, int value, void *data)
 {
 	struct cavan_application_context *context = data;
 
 	pthread_mutex_lock(&context->lock);
 
 	cavan_application_restore_mouse(context);
-	cavan_application_click(context, pressed);
+	cavan_application_click(context, value > 0);
 	cavan_application_draw_mouse(context);
 
 	pthread_mutex_unlock(&context->lock);

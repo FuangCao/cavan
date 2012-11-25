@@ -222,9 +222,9 @@ static void cavan_input_gsensor_handler_dummy(struct cavan_input_device *dev, st
 	pr_bold_info("g-sensor: [%d, %d, %d]", event->x, event->y, event->z);
 }
 
-static void cavan_input_mouse_wheel_handler_dummy(struct cavan_input_device *dev, int value, void *data)
+static void cavan_input_mouse_wheel_handler_dummy(struct cavan_input_device *dev, int code, int value, void *data)
 {
-	pr_bold_info("wheel: value = %d", value);
+	pr_bold_info("wheel: code = %d, value = %d", code, value);
 }
 
 static void cavan_input_mouse_move_handler_dummy(struct cavan_input_device *dev, int x, int y, void *data)
@@ -232,9 +232,9 @@ static void cavan_input_mouse_move_handler_dummy(struct cavan_input_device *dev,
 	pr_bold_info("mouse_move: x = %d, y = %d", x, y);
 }
 
-static void cavan_input_mouse_touch_handler_dummy(struct cavan_input_device *dev, int button, bool pressed, void *data)
+static void cavan_input_mouse_touch_handler_dummy(struct cavan_input_device *dev, int code, int value, void *data)
 {
-	pr_bold_info("mouse_touch: button = %d, pressed = %d", button, pressed);
+	pr_bold_info("mouse_touch: code = %d, value = %d", code, value);
 }
 
 void cavan_input_service_init(struct cavan_input_service *service, bool (*matcher)(struct cavan_event_matcher *, void *))
@@ -256,6 +256,7 @@ void cavan_input_service_init(struct cavan_input_service *service, bool (*matche
 
 int cavan_input_service_start(struct cavan_input_service *service, void *data)
 {
+	int ret;
 	struct cavan_event_service *event_service;
 
 	if (service == NULL)
@@ -309,7 +310,25 @@ int cavan_input_service_start(struct cavan_input_service *service, void *data)
 	event_service->remove = cavan_input_device_remove;
 	event_service->event_handler = cavan_input_device_event_handler;
 
-	return cavan_event_service_start(event_service, service);
+	ret = cavan_timer_service_start(&service->timer_service);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_timer_service_start");
+		return ret;
+	}
+
+	ret = cavan_event_service_start(event_service, service);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_event_service_start");
+		goto out_timer_service_stop;
+	}
+
+	return 0;
+
+out_timer_service_stop:
+	cavan_timer_service_stop(&service->timer_service);
+	return ret;
 }
 
 int cavan_input_service_stop(struct cavan_input_service *service)
@@ -322,6 +341,8 @@ int cavan_input_service_stop(struct cavan_input_service *service)
 		pr_red_info("cavan_event_service_stop");
 		return ret;
 	}
+
+	cavan_timer_service_stop(&service->timer_service);
 
 	pthread_mutex_destroy(&service->lock);
 
