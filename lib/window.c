@@ -218,6 +218,14 @@ void cavan_window_exit_handler(struct cavan_window *win)
 {
 }
 
+void cavan_window_get_rect_handler(struct cavan_window *win, struct cavan_window_rect *rect)
+{
+	rect->x = win->border_width;
+	rect->y = win->border_width;
+	rect->width = win->width - win->border_width * 2;
+	rect->height = win->height - win->border_width * 2;
+}
+
 int cavan_window_init_base(struct cavan_window *win, int (*handler)(struct cavan_window *win, struct cavan_application_context *context))
 {
 	pthread_mutex_init(&win->lock, NULL);
@@ -229,6 +237,7 @@ int cavan_window_init_base(struct cavan_window *win, int (*handler)(struct cavan
 	win->on_destory = NULL;
 	win->on_paint = NULL;
 	win->on_clicked = NULL;
+	win->on_double_clicked = NULL;
 	win->on_move = NULL;
 	win->on_entry = NULL;
 	win->on_exit = NULL;
@@ -243,6 +252,7 @@ int cavan_window_init_base(struct cavan_window *win, int (*handler)(struct cavan
 	win->entry_handler = cavan_window_entry_handler;
 	win->exit_handler = cavan_window_exit_handler;
 	win->key_handler = cavan_window_key_handler;
+	win->get_rect_handler = cavan_window_get_rect_handler;
 
 	return 0;
 }
@@ -270,18 +280,17 @@ void cavan_window_set_abs_position(struct cavan_window *win, int x, int y)
 
 void cavan_window_set_position(struct cavan_window *win, int x, int y)
 {
+	struct cavan_window_rect rect;
+
 	pthread_mutex_lock(&win->lock);
 
 	win->x = x;
 	win->y = y;
 
-	if (win->parent)
-	{
-		struct cavan_window *parent = win->parent;
+	win->parent->get_rect_handler(win->parent, &rect);
 
-		x += parent->abs_x;
-		y += parent->abs_y;
-	}
+	x += rect.x;
+	y += rect.y;
 
 	pthread_mutex_unlock(&win->lock);
 
@@ -314,6 +323,7 @@ struct cavan_window *cavan_window_find_by_axis(struct cavan_window *head, int x,
 int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child)
 {
 	int ret;
+	struct cavan_window_rect rect;
 
 	ret = child->init_handler(child, win->context);
 	if (ret  < 0)
@@ -323,24 +333,26 @@ int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child)
 
 	pthread_mutex_lock(&win->lock);
 
+	win->get_rect_handler(win, &rect);
+
 	if (child->x < 0)
 	{
-		child->x = win->border_width;
+		child->x = rect.x;
 	}
 
 	if (child->width <= 0)
 	{
-		child->width = win->width - child->x - win->border_width;
+		child->width = rect.width;
 	}
 
 	if (child->y < 0)
 	{
-		child->y = win->border_width;
+		child->y = rect.y;
 	}
 
 	if (child->height <= 0)
 	{
-		child->height = win->height - child->y - win->border_width;
+		child->height = rect.height;
 	}
 
 	child->parent = win;
@@ -486,6 +498,16 @@ void cavan_dialog_move_handler(struct cavan_window *win, int x, int y)
 	pthread_mutex_unlock(&win->lock);
 }
 
+void cavan_dialog_get_rect_handler(struct cavan_window *win, struct cavan_window_rect *rect)
+{
+	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
+
+	rect->x = win->border_width;
+	rect->y = win->border_width + dialog->title_height;
+	rect->width = win->width - win->border_width * 2;
+	rect->height = win->height - dialog->title_height - win->border_width * 2;
+}
+
 int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application_context *context)
 {
 	int ret;
@@ -514,6 +536,7 @@ int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application
 	win->paint_handler = cavan_dialog_paint_handler;
 	win->click_handler = cavan_dialog_click_handler;
 	win->move_handler = cavan_dialog_move_handler;
+	win->get_rect_handler = cavan_dialog_get_rect_handler;
 
 	return 0;
 }
