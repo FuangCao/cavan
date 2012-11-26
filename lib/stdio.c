@@ -439,16 +439,20 @@ void print_title(const char *title, char sep, size_t size)
 	print_char('\n');
 }
 
-void print_mem(const void *mem, size_t size)
+void print_mem(const u8 *mem, size_t size)
 {
-	const u8 *p, *endp;
+	char buff[size * 2 + 1], *p;
+	const u8 *mem_end;
 
-	for (p = mem, endp = p + size; p < endp; p++)
+	for (mem_end = mem + size, p = buff; mem < mem_end; mem++)
 	{
-		print("%02x", *p);
+		*p++ = value2char((*mem) >> 4);
+		*p++ = value2char((*mem) & 0x0F);
 	}
 
-	print_char('\n');
+	*p = '\n';
+
+	print_ntext(buff, sizeof(buff));
 }
 
 void print_error_base(const char *fmt, ...)
