@@ -70,7 +70,7 @@ static void cavan_touchpad_touch(struct cavan_touchpad_device *touchpad, struct 
 
 static void cavan_touchpad_timer_handler_down(struct cavan_timer *timer)
 {
-	struct cavan_touchpad_device *touchpad = MEMBER_STRUCT(timer, struct cavan_touchpad_device, timer);
+	struct cavan_touchpad_device *touchpad = MEMBER_TO_STRUCT(timer, struct cavan_touchpad_device, timer);
 
 	if (touchpad->x > touchpad->right)
 	{
@@ -91,7 +91,7 @@ static void cavan_touchpad_timer_handler_down(struct cavan_timer *timer)
 
 static void cavan_touchpad_timer_handler_up(struct cavan_timer *timer)
 {
-	struct cavan_touchpad_device *touchpad = MEMBER_STRUCT(timer, struct cavan_touchpad_device, timer);
+	struct cavan_touchpad_device *touchpad = MEMBER_TO_STRUCT(timer, struct cavan_touchpad_device, timer);
 	struct cavan_input_service *service = timer->private_data;
 
 	touchpad->state = CAVAN_TOUCHPAD_STATE_IDEL;
