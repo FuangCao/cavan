@@ -159,7 +159,14 @@ void cavan_window_set_border_width(struct cavan_window *win, int width)
 
 int cavan_window_init_handler(struct cavan_window *win, struct cavan_application_context *context)
 {
+	struct cavan_display_device *display;
+
 	win->context = context;
+
+	display = context->display;
+	win->back_color = cavan_display_build_color3f(display, 0, 0, 0);
+	win->fore_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
+	win->border_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
 
 	return 0;
 }
@@ -218,7 +225,7 @@ void cavan_window_exit_handler(struct cavan_window *win)
 {
 }
 
-void cavan_window_get_rect_handler(struct cavan_window *win, struct cavan_window_rect *rect)
+void cavan_window_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect)
 {
 	rect->x = win->border_width;
 	rect->y = win->border_width;
@@ -280,7 +287,7 @@ void cavan_window_set_abs_position(struct cavan_window *win, int x, int y)
 
 void cavan_window_set_position(struct cavan_window *win, int x, int y)
 {
-	struct cavan_window_rect rect;
+	struct cavan_display_rect rect;
 
 	pthread_mutex_lock(&win->lock);
 
@@ -323,7 +330,7 @@ struct cavan_window *cavan_window_find_by_axis(struct cavan_window *head, int x,
 int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child)
 {
 	int ret;
-	struct cavan_window_rect rect;
+	struct cavan_display_rect rect;
 
 	ret = child->init_handler(child, win->context);
 	if (ret  < 0)
@@ -498,7 +505,7 @@ void cavan_dialog_move_handler(struct cavan_window *win, int x, int y)
 	pthread_mutex_unlock(&win->lock);
 }
 
-void cavan_dialog_get_rect_handler(struct cavan_window *win, struct cavan_window_rect *rect)
+void cavan_dialog_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect)
 {
 	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
 
@@ -511,7 +518,6 @@ void cavan_dialog_get_rect_handler(struct cavan_window *win, struct cavan_window
 int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application_context *context)
 {
 	int ret;
-	struct cavan_display_device *display;
 	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
 
 	ret = cavan_window_init_handler(win, context);
@@ -527,11 +533,6 @@ int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application
 
 	dialog->backup = NULL;
 	dialog->x_offset = dialog->y_offset = 0;
-
-	display = context->display;
-	win->back_color = cavan_display_build_color3f(display, 0, 0, 0);
-	win->fore_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
-	win->border_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
 
 	win->paint_handler = cavan_dialog_paint_handler;
 	win->click_handler = cavan_dialog_click_handler;
@@ -559,7 +560,6 @@ void cavan_button_paint_handler(struct cavan_window *win)
 
 	display->set_color(display, win->fore_color);
 	display->draw_text(display, x, y, win->text);
-	display->refresh(display);
 
 	pthread_mutex_unlock(&win->lock);
 }
@@ -615,6 +615,116 @@ int cavan_button_init_handler(struct cavan_window *win, struct cavan_application
 	win->border_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
 
 	return 0;
+}
+
+// ================================================================================
+
+void cavan_progress_bar_paint_handler(struct cavan_window *win)
+{
+	struct cavan_display_rect rect;
+	struct cavan_progress_bar *bar;
+	struct cavan_display_device *display;
+	char buff[16];
+	double percent;
+	int width;
+
+	cavan_window_paint_handler(win);
+
+	pthread_mutex_lock(&win->lock);
+
+	POINTER_ASSIGN_CASE(bar, win);
+
+	if (bar->total)
+	{
+		percent = bar->pos / bar->total;
+	}
+	else
+	{
+		percent = 1.0;
+	}
+
+	win->get_rect_handler(win, &rect);
+	rect.x += win->abs_x;
+	rect.y += win->abs_y;
+
+	display = win->context->display;
+
+	width = rect.width * percent;
+	display->set_color(display, bar->complete_color);
+	display->fill_rect(display, rect.x, rect.y, width, rect.height);
+
+	sprintf(buff, "%2.2lf%%", percent * 100);
+	display->set_color(display, win->fore_color);
+	cavan_display_draw_text_centre(display, &rect, buff);
+
+	pthread_mutex_unlock(&win->lock);
+}
+
+int cavan_progress_bar_init_handler(struct cavan_window *win, struct cavan_application_context *context)
+{
+	int ret;
+	struct cavan_display_device *display;
+	struct cavan_progress_bar *bar;
+
+	ret = cavan_window_init_handler(win, context);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	win->paint_handler = cavan_progress_bar_paint_handler;
+
+	POINTER_ASSIGN_CASE(bar, win);
+
+	display = context->display;
+	bar->complete_color = cavan_display_build_color3f(display, 0, 0, 1.0);
+
+	return 0;
+}
+
+int cavan_progress_bar_init(struct cavan_progress_bar *bar, double total)
+{
+	int ret;
+
+	ret = cavan_window_init_base(&bar->window, cavan_progress_bar_init_handler);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	bar->pos = 0;
+	bar->total = total;
+
+	return 0;
+}
+
+int cavan_progress_bar_start(struct cavan_progress_bar *bar, double total)
+{
+	if (total <= 0)
+	{
+		pr_red_info("total <= 0");
+		return -EINVAL;
+	}
+
+	bar->pos = 0;
+
+	cavan_window_paint(&bar->window);
+
+	return 0;
+}
+
+void cavan_progress_bar_set_pos(struct cavan_progress_bar *bar, double pos)
+{
+	if (pos > bar->total)
+	{
+		bar->pos = bar->total;
+	}
+	else
+	{
+		bar->pos = pos;
+	}
+
+	cavan_window_paint(&bar->window);
 }
 
 // ================================================================================
@@ -906,11 +1016,16 @@ void cavan_application_uninit(struct cavan_application_context *context)
 	pthread_mutex_destroy(&context->lock);
 }
 
-int cavan_application_main_loop(struct cavan_application_context *context)
+int cavan_application_main_loop(struct cavan_application_context *context, void (*handler)(struct cavan_application_context *context, void *data), void *data)
 {
 	cavan_window_paint(&context->win_root);
 	cavan_application_move(context, 0, 0);
 	cavan_application_draw_mouse(context);
+
+	if (handler)
+	{
+		handler(context, data);
+	}
 
 	return cavan_input_service_join(&context->input_service);
 }
