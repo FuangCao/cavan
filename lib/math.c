@@ -7,139 +7,213 @@
 #include <cavan.h>
 #include <cavan/math.h>
 
-u8 *math_memory_shift_left(const u8 *src, u8 *result, size_t size, int shift)
+void math_memory_copy(u8 *dest, const u8 *src, size_t dest_size, size_t src_size)
 {
-	u8 *p, *p_end;
-	const u8 *src_end;
-
-	src_end = src + size;
-	p_end = result + size;
-
-	for (src += shift, p = result; src < src_end; src++)
+	if (dest < src)
 	{
-		*p++ = *src++;
+		u8 *dest_end = dest + dest_size;
+		const u8 *src_end = src + src_size;
+
+		while (src < src_end && dest < dest_end)
+		{
+			*dest++ = *src++;
+		}
+
+		while (dest <= dest_end)
+		{
+			*dest++ = 0;
+		}
+	}
+	else if (dest > src)
+	{
+		u8 *pdest = dest + dest_size - 1;
+		const u8 *psrc = src + src_size - 1;
+
+		while (psrc >= src && pdest >= dest)
+		{
+			*pdest-- = *psrc--;
+		}
+
+		while (pdest >= dest)
+		{
+			*pdest-- = 0;
+		}
+	}
+}
+
+u8 *math_memory_shift_left(u8 *mem, size_t size, size_t shift)
+{
+	if (shift > size)
+	{
+		shift = size;
 	}
 
-	while (p < p_end)
+	math_memory_copy(mem, mem + shift, size, size - shift);
+
+	return mem;
+}
+
+u8 *math_memory_shift_left2(const u8 *mem, u8 *result, size_t size, size_t shift)
+{
+	if (shift > size)
 	{
-		*p++ = 0;
+		shift = size;
 	}
+
+	math_memory_copy(result, mem + shift, size, size - shift);
 
 	return result;
 }
 
-u8 *math_memory_shift_right(const u8 *src, u8 *result, size_t size, int shift)
+u8 *math_memory_shift_right(u8 *mem, size_t size, size_t shift)
 {
-	u8 *p_result;
-	const u8 *p_src;
-
-	for (p_src = src + size - 1 - shift, p_result = result + size - 1; p_src >= src; p_src--, p_result--)
+	if (shift > size)
 	{
-		*p_result = *p_src;
+		shift = size;
 	}
 
-	while (p_result >= result)
+	math_memory_copy(mem + shift, mem, size - shift, size - shift);
+	mem_set(mem, 0, shift);
+
+	return mem;
+}
+
+u8 *math_memory_shift_right2(const u8 *mem, u8 *result, size_t size, size_t shift)
+{
+	if (shift > size)
 	{
-		*p_result-- = 0;
+		shift = size;
 	}
+
+	math_memory_copy(result + shift, mem, size - shift, size - shift);
+	mem_set(result, 0, shift);
 
 	return result;
 }
 
-u8 *math_memory_add_single(const u8 *left, const u8 *left_last, u8 right, u8 *result, u8 *result_last)
+// ================================================================================
+
+u8 *math_memory_add_single(u8 *mem, u8 *mem_end, u8 value)
 {
 	u16 tmp;
-	u8 *result_bak = result;
+	u8 *mem_bak = mem;
 
-	while (left <= left_last && right && result <= result_last)
+	while (mem < mem_end && value)
 	{
-		tmp = left[0] + right;
-		result[0] = tmp & 0xFF;
+		tmp = value + *mem;
+		*mem = tmp & 0xFF;
 
-		right = tmp >> 8;
-		left++;
-		result++;
+		value = tmp >> 8;
+		mem++;
 	}
 
-	while (left <= left_last && result <= result_last)
-	{
-		*result++ = *left++;
-	}
-
-	while (result <= result_last)
-	{
-		*result++ = 0;
-	}
-
-	return result_bak;
+	return mem_bak;
 }
 
-u8 *math_memory_add(const u8 *left, const u8 *right, u8 *result, size_t size, size_t result_size)
+u8 *math_memory_add_single2(u8 *mem, size_t size, u8 value)
+{
+	math_memory_add_single(mem, mem + size, value);
+
+	return mem;
+}
+
+u8 *math_memory_add_single3(const u8 *mem, u8 *result, size_t mem_size, size_t result_size, u8 value)
+{
+	math_memory_copy(result, mem, result_size, mem_size);
+	math_memory_add_single2(result, result_size, value);
+
+	return result;
+}
+
+u8 *math_memory_add(u8 *left, u8 *left_end, const u8 *right, const u8 *right_last)
 {
 	u16 tmp;
-	u8 *result_bak = result;
+	u8 *left_bak = left;
+
+	for (tmp = 0; left < left_end && right <= right_last; left++, right++)
+	{
+		tmp = *left + *right + (tmp >> 8);
+		*left = tmp & 0xFF;
+	}
+
+	math_memory_add_single(left, left_end, tmp >> 8);
+
+	return left_bak;
+}
+
+u8 *math_memory_add2(u8 *left, const u8 *right, size_t lsize, size_t rsize)
+{
 	const u8 *right_last;
-	u8 *result_last;
 
-	for (right_last = right + size - 1; right_last >= right && right_last[0] == 0; right_last--);
+	for (right_last = right + rsize - 1; right_last >= right && *right_last == 0; right_last--);
 
-	result_last = result + result_size - 1;
+	math_memory_add(left, left + lsize, right, right_last);
 
-	for (tmp = 0; right <= right_last && result <= result_last; left++, right++, result++)
-	{
-		tmp = (tmp >> 8) + left[0] + right[0];
-		*result = tmp & 0xFF;
-	}
-
-	math_memory_add_single(result, result_last, tmp >> 8, result, result_last);
-
-	return result_bak;
+	return left;
 }
 
-u8 *math_memory_mul_single(const u8 *left, const u8 *left_last, u8 right, u8 *result, u8 *result_last)
+u8 *math_memory_add3(const u8 *left, const u8 *right, u8 *result, size_t size, size_t result_size)
+{
+	math_memory_copy(result, left, result_size, size);
+	math_memory_add2(result, right, result_size, size);
+
+	return result;
+}
+
+// ================================================================================
+
+u8 *math_memory_mul_single(u8 *mem, u8 *mem_last, u8 *mem_end, u8 value)
 {
 	u16 tmp;
-	u8 *result_bak = result;
+	u8 *mem_bak = mem;
 
-	while (left_last >= left && left_last[0] == 0)
+	for (tmp = 0; mem <= mem_last; mem++)
 	{
-		left_last++;
+		tmp = *mem * value + (tmp >> 8);
+		*mem = tmp & 0xFF;
 	}
 
-	for (tmp = 0; left <= left_last && result <= result_last; left++, result++)
+	if (mem < mem_end)
 	{
-		tmp = (tmp >> 8) + left[0] * right;
-		result[0] = tmp & 0xFF;
+		*mem = tmp >> 8;
 	}
 
-	if (result <= result_last)
-	{
-		*result++ = tmp >> 8;
-	}
+	return mem_bak;
+}
 
-	while (result <= result_last)
-	{
-		*result++ = 0;
-	}
+u8 *math_memory_mul_single2(u8 *mem, size_t size, u8 value)
+{
+	u8 *mem_last;
 
-	return result_bak;
+	for (mem_last = mem + size - 1; mem_last >= mem && *mem_last == 0; mem_last--);
+
+	math_memory_mul_single(mem, mem_last, mem + size, value);
+
+	return mem;
+}
+
+u8 *math_memory_mul_single3(const u8 *mem, u8 *result, size_t mem_size, size_t result_size, u8 value)
+{
+	math_memory_copy(result, mem, result_size, mem_size);
+	math_memory_mul_single2(result, result_size, value);
+
+	return result;
 }
 
 u8 *math_text2memory(const char *text, u8 *mem, size_t mem_size, int base)
 {
 	int value;
-	u8 *mem_last;
 
-	if (base < 2)
+	value = prefix2base(text, &text);
+	if (value > 1)
 	{
-		base = prefix2base(text, &text);
-		if (base < 0)
-		{
-			base = 10;
-		}
+		base = value;
+	}
+	else if (base < 2)
+	{
+		base = 10;
 	}
 
-	mem_last = mem + mem_size - 1;
 	mem_set(mem, 0, mem_size);
 
 	while (1)
@@ -150,8 +224,8 @@ u8 *math_text2memory(const char *text, u8 *mem, size_t mem_size, int base)
 			break;
 		}
 
-		math_memory_mul_single(mem, mem_last, base, mem, mem_last);
-		math_memory_add_single(mem, mem_last, value, mem, mem_last);
+		math_memory_mul_single2(mem, mem_size, base);
+		math_memory_add_single2(mem, mem_size, value);
 
 		text++;
 	}
@@ -161,24 +235,31 @@ u8 *math_text2memory(const char *text, u8 *mem, size_t mem_size, int base)
 
 u8 *math_memory_mul(const u8 *left, const u8 *right, u8 *result, size_t size, size_t result_size)
 {
-	const u8 *left_last, *right_last;
-	u8 buff[result_size], *buff_last;
+	const u8 *right_last;
+	u8 buff[result_size];
 
-	for (left_last = left + size - 1; left_last >= left && left_last[0] == 0; left_last--);
-
-	for (right_last = right + size - 1; right_last >= right && right_last[0] == 0; right_last--);
+	for (right_last = right + size - 1; right_last >= right && *right_last == 0; right_last--);
 
 	mem_set(result, 0, result_size);
-	buff_last = buff + sizeof(buff) - 1;
 
 	while (right_last >= right)
 	{
-		math_memory_mul_single(left, left_last, *right_last, buff, buff_last);
-		math_memory_shift_right(result, result, result_size, 1);
-		math_memory_add(result, buff, result, result_size, result_size);
+		math_memory_mul_single3(left, buff, size, sizeof(buff), *right_last);
+		math_memory_shift_right(result, result_size, 1);
+		math_memory_add2(result, buff, result_size, result_size);
 
 		right_last--;
 	}
 
 	return result;
+}
+
+u8 *math_memory_mul2(u8 *left, const u8 *right, size_t lsize, size_t rsize)
+{
+	u8 result[lsize];
+
+	math_memory_mul(left, right, result, lsize, rsize);
+	math_memory_copy(left, result, lsize, lsize);
+
+	return left;
 }
