@@ -14,7 +14,17 @@ byte *math_text2memory(const char *text, byte *mem, size_t mem_size, int base);
 
 void math_memory_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
 void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
+
 byte math_memory_add_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t res_size);
 byte math_memory_add(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
+
+int math_memory_cmp(const byte *left, size_t lsize, const byte *right, size_t rsize);
+byte math_memory_sub_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t res_size);
+byte math_memory_sub_single2(const byte *mem, size_t mem_size, byte value, byte *res, size_t res_size);
+byte math_memory_sub(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
+
 byte math_memory_mul_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t res_size);
 byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
+
+byte math_memory_div_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t res_size);
+byte math_memory_div(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
