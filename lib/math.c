@@ -261,15 +261,17 @@ byte math_memory_mul_single(const byte *mem, size_t mem_size, byte value, byte *
 
 byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
 {
-	byte *buff;
 	byte carry;
+	byte *buff;
+	size_t buff_size;
 	const byte *right_last = math_memory_shrink(right, rsize);
 	const byte *left_last = math_memory_shrink(left, lsize);
 
 	lsize = left_last - left + 1;
 	rsize = right_last - right + 1;
 
-	buff = alloca(lsize + 1);
+	buff_size = lsize + 1;
+	buff = alloca(buff_size);
 	if (buff == NULL)
 	{
 		return 0xFF;
@@ -301,13 +303,9 @@ byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t r
 	{
 		math_memory_shift_right_byte(res, res_size, 1, NULL, 0);
 
-		carry = math_memory_mul_single(left, lsize, *right_last, buff, res_size);
-		if (carry)
-		{
-			break;
-		}
+		math_memory_mul_single(left, lsize, *right_last, buff, buff_size);
 
-		carry = math_memory_add(res, res_size, buff, res_size, NULL, 0);
+		carry = math_memory_add(res, res_size, buff, buff_size, NULL, 0);
 		if (carry)
 		{
 			break;
