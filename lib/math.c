@@ -16,6 +16,31 @@ byte *math_memory_shrink(const byte *mem, size_t size)
 	return (byte *)mem_last;
 }
 
+void math_memory_exchange(const byte *mem, byte *res, size_t size)
+{
+	if (res && res != mem)
+	{
+		const byte *last;
+
+		for (last = mem + size - 1; last >= mem; res++, last--)
+		{
+			*res = *last;
+		}
+	}
+	else
+	{
+		byte tmp;
+		byte *last;
+
+		for (res = (byte *)mem, last = res + size - 1; last > res; res++, last--)
+		{
+			tmp = *last;
+			*last = *res;
+			*res = tmp;
+		}
+	}
+}
+
 void math_memory_copy(byte *dest, size_t dest_size, const byte *src, size_t src_size)
 {
 	if (dest < src)
@@ -74,13 +99,47 @@ byte *math_text2memory(const char *text, byte *mem, size_t mem_size, int base)
 			break;
 		}
 
-		math_memory_mul_single(mem, mem_size, base, 0, NULL, 0);
-		math_memory_add_single(mem, mem_size, value, 0, NULL, 0);
+		math_memory_mul_single(mem, mem_size, base, NULL, 0);
+		math_memory_add_single(mem, mem_size, value, NULL, 0);
 
 		text++;
 	}
 
 	return mem;
+}
+
+char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text_size, int base, char fill, size_t size)
+{
+	char *text_bak, *text_end;
+	byte value;
+	byte buff[mem_size];
+
+	math_memory_copy(buff, mem_size, mem, mem_size);
+
+	for (text_bak = text, text_end = text + text_size - 1; text < text_end && mem_size; text++)
+	{
+		value = math_memory_div_single(buff, mem_size, base, NULL, &mem_size);
+		*text = value2char(value);
+	}
+
+	if (fill && (size_t)(text - text_bak) < size)
+	{
+		for (text_end = text_bak + size; text < text_end; text++)
+		{
+			*text = fill;
+		}
+	}
+
+	if (text_end - text > 1)
+	{
+		text = base2prefix_reverse(base, text);
+	}
+
+	text_reverse_simple(text_bak, text - 1);
+
+	*text = 0;
+
+	return text;
 }
 
 // ================================================================================
@@ -124,9 +183,9 @@ void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift
 
 // ================================================================================
 
-byte math_memory_add_single(const byte *mem, size_t mem_size, byte value, byte carry, byte *res, size_t res_size)
+byte math_memory_add_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t res_size)
 {
-	u16 adder = value + carry;
+	u16 adder = value;
 	byte *res_end;
 	const byte *mem_last = math_memory_shrink(mem, mem_size);
 
@@ -201,12 +260,12 @@ byte math_memory_add(const byte *left, size_t lsize, const byte *right, size_t r
 
 	if (right <= right_last)
 	{
-		return math_memory_add_single(right, right_last - right + 1, adder, 0, res, res_end - res);
+		return math_memory_add_single(right, right_last - right + 1, adder, res, res_end - res);
 	}
 
 	if (left <= left_last)
 	{
-		return math_memory_add_single(left, left_last - left + 1, adder, 0, res, res_end - res);
+		return math_memory_add_single(left, left_last - left + 1, adder, res, res_end - res);
 	}
 
 	if (res < res_end)
@@ -478,9 +537,9 @@ byte math_memory_sub(const byte *left, size_t lsize, const byte *right, size_t r
 
 // ================================================================================
 
-byte math_memory_mul_single(const byte *mem, size_t mem_size, byte value, byte carry, byte *res, size_t res_size)
+byte math_memory_mul_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t res_size)
 {
-	u16 adder = carry;
+	u16 adder = 0;
 	byte *res_end;
 	const byte *mem_last = math_memory_shrink(mem, mem_size);
 
@@ -566,7 +625,7 @@ byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t r
 	{
 		math_memory_shift_right_byte(res, res_size, 1, NULL, 0);
 
-		math_memory_mul_single(left, lsize, *right_last, 0, buff, buff_size);
+		math_memory_mul_single(left, lsize, *right_last, buff, buff_size);
 
 		carry = math_memory_add(res, res_size, buff, buff_size, NULL, 0);
 		if (carry)
@@ -580,9 +639,70 @@ byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t r
 
 // ================================================================================
 
-byte math_memory_div_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t res_size)
+byte math_memory_div_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t *res_size)
 {
-	return 0;
+	u16 divider;
+	byte *res_end;
+	const byte *mem_last = math_memory_shrink(mem, mem_size);
+
+	if (mem_last >= mem && *mem_last < value)
+	{
+		divider = *mem_last--;
+	}
+	else
+	{
+		divider = 0;
+	}
+
+	if (res_size && *res_size)
+	{
+		mem_size = *res_size;
+	}
+
+	if (res && res != mem)
+	{
+		byte *res_bak = res;
+
+		for (res_end = res + mem_size; mem_last >= mem && res < res_end; mem_last--, res++)
+		{
+			divider = divider << 8 | *mem_last;
+			*res = divider / value;
+			divider %= value;
+		}
+
+		if (res_size)
+		{
+			*res_size = res - res_bak;
+		}
+
+		math_memory_exchange(res_bak, NULL, res - res_bak);
+	}
+	else
+	{
+		res_end = (byte *)mem + mem_size;
+
+		for (res = (byte *)mem_last; res >= mem; res--)
+		{
+			divider = divider << 8 | *res;
+			*res = divider / value;
+			divider %= value;
+		}
+
+		res = (byte *)mem_last + 1;
+
+		if (res_size)
+		{
+			mem_last = math_memory_shrink(mem, mem_last - mem + 1);
+			*res_size = mem_last - mem + 1;
+		}
+	}
+
+	while (res < res_end)
+	{
+		*res++ = 0;
+	}
+
+	return divider;
 }
 
 byte math_memory_div(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)

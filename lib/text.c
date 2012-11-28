@@ -1046,6 +1046,35 @@ char *base2prefix(int base, char *prefix)
 	return prefix;
 }
 
+char *base2prefix_reverse(int base, char *prefix)
+{
+	switch (base)
+	{
+	case 2:
+		*(u16 *)prefix = 0x3042;
+		prefix += 2;
+		break;
+
+	case 8:
+		*prefix++ = '0';
+		break;
+
+	case 10:
+		*(u16 *)prefix = 0x3044;
+		prefix += 2;
+		break;
+
+	case 16:
+		*(u16 *)prefix = 0x3078;
+		prefix += 2;
+		break;
+	}
+
+	*prefix = 0;
+
+	return prefix;
+}
+
 char *value2text_base(s64 value, char *text, int size, char fill, int flags)
 {
 	char buff[128], *tail;
