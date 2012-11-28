@@ -142,6 +142,20 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 	return text;
 }
 
+void math_memory_show(const char *prompt, const byte *mem, size_t mem_size, int base)
+{
+	char text[1024];
+
+	math_memory2text(mem, mem_size, text, sizeof(text), base, 0, 0);
+
+	if (prompt == NULL)
+	{
+		prompt = "Memory";
+	}
+
+	println("%s: %s", prompt, text);
+ }
+
 // ================================================================================
 
 void math_memory_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
@@ -285,6 +299,29 @@ byte math_memory_add(const byte *left, size_t lsize, const byte *right, size_t r
 
 // ================================================================================
 
+int math_memory_cmp_base(const byte *left_last, const byte *right, const byte *right_last)
+{
+	while (right_last >= right)
+	{
+		if (*left_last != *right_last)
+		{
+			if (*left_last > *right_last)
+			{
+				return 1;
+			}
+			else
+			{
+				return -1;
+			}
+		}
+
+		left_last--;
+		right_last--;
+	}
+
+	return 0;
+}
+
 int math_memory_cmp(const byte *left, size_t lsize, const byte *right, size_t rsize)
 {
 	const byte *left_last = math_memory_shrink(left, lsize);
@@ -303,25 +340,7 @@ int math_memory_cmp(const byte *left, size_t lsize, const byte *right, size_t rs
 	}
 	else
 	{
-		while (left_last >= left)
-		{
-			if (*left_last != *right_last)
-			{
-				if (*left_last > *right_last)
-				{
-					return 1;
-				}
-				else
-				{
-					return 0;
-				}
-			}
-
-			left_last--;
-			right_last--;
-		}
-
-		return 0;
+		return math_memory_cmp_base(left_last, right, right_last);
 	}
 }
 
@@ -380,6 +399,7 @@ byte math_memory_sub_single(const byte *mem, size_t mem_size, byte value, byte c
 
 		for (res = (byte *)mem, res_end = res + res_size; res <= mem_last && (value || carry); res++)
 		{
+
 			carry = math_byte_sub_carry(*res, value, carry, res);
 			value = 0;
 		}
@@ -451,7 +471,7 @@ byte math_memory_sub_single2(byte value, byte carry, const byte *mem, size_t mem
 			*res = 0xFF - *res;
 			res++;
 		}
- 	}
+	}
 
 	if (value < carry)
 	{
@@ -515,24 +535,21 @@ byte math_memory_sub(const byte *left, size_t lsize, const byte *right, size_t r
 		{
 			carry = math_byte_sub_carry(*res, *right, carry, res);
 		}
+
+		if (res <= left_last)
+		{
+			return math_memory_sub_single(res, left_last - res + 1, 0, carry, NULL, res_end - res);
+		}
 	}
+
+	res_size = res_end - res;
 
 	if (right <= right_last)
 	{
-		return math_memory_sub_single2(0, carry, right, right_last - right + 1, res, res_end - res);
+		return math_memory_sub_single2(0, carry, right, right_last - right + 1, res, res_size);
 	}
 
-	while (res < res_end)
-	{
-		*res++ = 0;
-	}
-
-	if (carry == 0)
-	{
-		return 0;
-	}
-
-	return math_memory_sub_single(res, res_end - res, carry, 0, NULL, 0);
+	return math_memory_sub_single(res, 0, carry, 0, NULL, res_size);
 }
 
 // ================================================================================
@@ -705,7 +722,112 @@ byte math_memory_div_single(const byte *mem, size_t mem_size, byte value, byte *
 	return divider;
 }
 
-byte math_memory_div(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
+byte math_memory_mult(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
 {
+	u16 mult;
+
+	if (lsize > rsize)
+	{
+		mult = left[lsize - 1] << 8 | left[lsize - 2];
+	}
+	else
+	{
+		mult = left[lsize - 1];
+	}
+
+	mult /= right[rsize - 1];
+	if (mult > 0xFF)
+	{
+		mult = 0xFF;
+	}
+
+	while (mult)
+	{
+		math_memory_mul_single(right, rsize, mult, res, res_size);
+		if (math_memory_cmp(left, lsize, res, res_size) >= 0)
+		{
+			return mult;
+		}
+
+		mult--;
+	}
+
 	return 0;
+}
+
+byte math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
+{
+	byte *buff;
+	byte mult;
+	byte *res_bak, *res_end;
+	byte *left_pos, *left_last = math_memory_shrink(left, lsize);
+	const byte *right_last = math_memory_shrink(right, rsize);
+
+	rsize = right_last - right + 1;
+
+	buff = alloca(rsize + 1);
+	if (buff == NULL)
+	{
+		pr_error_info("buff == NULL");
+		return 0xFF;
+	}
+
+	res_bak = res;
+	left_pos = left_last - rsize + 1;
+
+	for (res_end = res + res_size; left_pos >= left && res < res_end; res++, left_pos--)
+	{
+		lsize = left_last - left_pos + 1;
+
+		mult = math_memory_mult(left_pos, lsize, right, rsize, buff, sizeof(buff));
+		if (mult)
+		{
+			math_memory_sub(left_pos, lsize, buff, sizeof(buff), NULL, 0);
+		}
+
+		*res = mult;
+
+		if (*left_last == 0)
+		{
+			left_last--;
+		}
+	}
+
+	math_memory_exchange(res_bak, NULL, res - res_bak);
+
+	while (res < res_end)
+	{
+		*res++ = 0;
+	}
+
+	return 0;
+}
+
+byte math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
+{
+	byte carry;
+	byte *buff;
+	const byte *left_last = math_memory_shrink(left, lsize);
+
+	lsize = left_last - left + 1;
+
+	buff = alloca(lsize);
+	if (buff == NULL)
+	{
+		pr_error_info("buff == NULL");
+		return 0xFF;
+	}
+
+	if (res && res != left)
+	{
+		math_memory_copy(buff, lsize, left, lsize);
+		carry = math_memory_div(buff, lsize, right, rsize, res, res_size);
+	}
+	else
+	{
+		carry = math_memory_div((byte *)left, lsize, right, rsize, buff, lsize);
+		math_memory_copy((byte *)left, lsize, buff, lsize);
+	}
+
+	return carry;
 }
