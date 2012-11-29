@@ -34,7 +34,8 @@ function gen_app_makefile_am()
 
 bin_PROGRAMS = ${bin_all}
 
-LIBS = @abs_top_builddir@/lib/.libs/lib${CAVAN_NAME}.a -lpthread -lm -lrt
+LDFLAGS = -Wl,-rpath -Wl,@abs_top_builddir@/lib/.libs -Wl,-rpath -Wl,@libdir@
+LIBS = @abs_top_builddir@/lib/.libs/lib${CAVAN_NAME}.so -lpthread -lm -lrt
 EOF
 
 	return 0
