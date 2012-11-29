@@ -34,7 +34,7 @@ function gen_app_makefile_am()
 
 bin_PROGRAMS = ${bin_all}
 
-LIBS = @abs_top_builddir@/lib/lib${CAVAN_NAME}.a -lpthread -lm
+LIBS = @abs_top_builddir@/lib/lib${CAVAN_NAME}.a -lpthread -lm -lrt
 EOF
 
 	return 0
