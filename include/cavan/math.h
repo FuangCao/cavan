@@ -11,7 +11,7 @@
 byte *math_memory_shrink(const byte *mem, size_t size);
 void math_memory_exchange(const byte *mem, byte *res, size_t size);
 void math_memory_copy(byte *dest, size_t dest_size, const byte *src, size_t src_size);
-byte *math_text2memory(const char *text, byte *mem, size_t mem_size, int base);
+char *math_text2memory(const char *text, byte *mem, size_t mem_size, int base);
 char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text_size, int base, char fill, size_t size);
 void math_memory_show(const char *prompt, const byte *mem, size_t mem_size, int base);
 
