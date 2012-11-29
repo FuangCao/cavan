@@ -627,7 +627,7 @@ int inet_bind_rand(int sockfd, int retry)
 		ret = inet_bind(sockfd, &addr);
 	} while (ret < 0 && retry--);
 
-	return ret < 0 ? ret : ntohs(addr.sin_port);
+	return ret < 0 ? ret : (int)ntohs(addr.sin_port);
 }
 
 int inet_tcp_send_file1(int sockfd, int fd)

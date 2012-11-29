@@ -60,5 +60,5 @@ endef
 define build_lib_action
 $(call find_source_files,$(1),LIB_SRC_FILES)
 $$(OUT_LIB)/%.o: $(1)/%.c
-	$$(call compile_file,$$@,$$^,-fPIC)
+	$$(call compile_file,$$@,$$^,-fPIC -Wmissing-prototypes -Wmissing-declarations)
 endef
