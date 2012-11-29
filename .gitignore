@@ -8,6 +8,9 @@
 *.files
 *.log
 *.diff
+/libtool
+/m4
+/config.*
 /*.patch
 !.gitignore
 /out

@@ -34,7 +34,7 @@ function gen_app_makefile_am()
 
 bin_PROGRAMS = ${bin_all}
 
-LIBS = @abs_top_builddir@/lib/lib${CAVAN_NAME}.a -lpthread -lm -lrt
+LIBS = @abs_top_builddir@/lib/.libs/lib${CAVAN_NAME}.a -lpthread -lm -lrt
 EOF
 
 	return 0
@@ -47,11 +47,13 @@ function gen_lib_makefile_am()
 	gen_makefile_am_header
 
 	cat >> ${MAKEFILE_AM} << EOF
+ACLOCAL_AMFLAGS = -I m4
+
 CFLAGS = -fPIC
 
-noinst_LIBRARIES = lib${CAVAN_NAME}.a
+lib_LTLIBRARIES = lib${CAVAN_NAME}.la
 EOF
-	echo lib${CAVAN_NAME}_a_SOURCES = *.c >> ${MAKEFILE_AM}
+	echo lib${CAVAN_NAME}_la_SOURCES = *.c >> ${MAKEFILE_AM}
 
 	return 0
 }
@@ -103,7 +105,15 @@ gen_lib_makefile_am ${CAVAN_ROOT}/lib || exit 1
 gen_include_makefile_am ${CAVAN_ROOT}/include || exit 1
 
 cd ${CAVAN_ROOT} || exit 1
+echo autoscan
+# autoscan || exit
+echo aclocal
 aclocal || exit 1
-autoheader || exit 1
+echo libtoolize
+libtoolize -cf || exit 1
+echo automake
 automake --add-missing || exit 1
+echo autoheader
+autoheader || exit 1
+echo autoconf
 autoconf || exit 1
