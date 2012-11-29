@@ -5285,7 +5285,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile app/Makefile lib/Makefile"
+ac_config_files="$ac_config_files Makefile include/Makefile include/cavan/Makefile app/Makefile lib/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6007,6 +6007,8 @@ do
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
+    "include/cavan/Makefile") CONFIG_FILES="$CONFIG_FILES include/cavan/Makefile" ;;
     "app/Makefile") CONFIG_FILES="$CONFIG_FILES app/Makefile" ;;
     "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
 

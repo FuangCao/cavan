@@ -212,7 +212,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = lib app
+SUBDIRS = include lib app
 MAINTAINERCLEANFILES = configure aclocal.m4 config.h.in depcomp install-sh missing Makefile.in
 INCLUDES = -I@abs_top_srcdir@/include
 all: config.h

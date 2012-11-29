@@ -44,6 +44,8 @@ AC_FUNC_MMAP
 AC_CHECK_FUNCS([ftruncate getcwd gettimeofday inet_ntoa localtime_r memset mkdir mkfifo munmap rmdir select setenv socket sqrt strerror utime])
 
 AC_CONFIG_FILES([Makefile
+                 include/Makefile
+				 include/cavan/Makefile
                  app/Makefile
                  lib/Makefile])
 AC_OUTPUT
