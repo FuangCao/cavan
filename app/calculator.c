@@ -5,6 +5,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/math.h>
 #include <cavan/calculator.h>
 
 #define FILE_CREATE_DATE "2012-06-11 10:49:18"
@@ -16,7 +17,8 @@ enum
 	LOCAL_COMMAND_OPTION_VERSION,
 	LOCAL_COMMAND_OPTION_BASE,
 	LOCAL_COMMAND_OPTION_LENGTH,
-	LOCAL_COMMAND_OPTION_PREFIX
+	LOCAL_COMMAND_OPTION_PREFIX,
+	LOCAL_COMMAND_OPTION_LONG
 };
 
 static void show_usage(void)
@@ -61,15 +63,21 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_PREFIX,
 		},
 		{
+			.name = "long",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_LONG,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
 	int ret;
-	double result;
 	char buff[1024];
 	int base = 0;
 	int length[2];
 	int flags = 0;
+	bool long_cal = false;
 
 	length[0] = length[1] = 0;
 
@@ -109,6 +117,10 @@ int main(int argc, char *argv[])
 			flags |= TEXT_FLAG_PREFIX;
 			break;
 
+		case LOCAL_COMMAND_OPTION_LONG:
+			long_cal = true;
+			break;
+
 		default:
 			show_usage();
 			return -EINVAL;
@@ -118,31 +130,43 @@ int main(int argc, char *argv[])
 	assert(argc > optind);
 
 	text_cat2(buff, argv + optind, argc - optind);
+	text2lowercase(buff);
 
-	ret = complete_calculation(text2lowercase(buff), &result);
-	if (ret < 0)
+	if (long_cal)
 	{
-		return ret;
-	}
+		byte result[1024];
 
-	if (base < 2 || base == 10)
-	{
-		if (length[0] || length[1])
-		{
-			char format[64];
-
-			sprintf(format, "%%%d.%dlf", length[0], length[1]);
-			println(format, result);
-		}
-		else
-		{
-			println("%lf", result);
-		}
+		math_memory_calculator(buff, result, sizeof(result), base, '0', length[0]);
 	}
 	else
 	{
-		double2text(&result, buff, length[0], 0, base | flags);
-		println("%s", buff);
+		double result;
+
+		ret = complete_calculation(buff, &result);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		if (base < 2 || base == 10)
+		{
+			if (length[0] || length[1])
+			{
+				char format[64];
+
+				sprintf(format, "%%%d.%dlf", length[0], length[1]);
+				println(format, result);
+			}
+			else
+			{
+				println("%lf", result);
+			}
+		}
+		else
+		{
+			double2text(&result, buff, length[0], 0, base | flags);
+			println("%s", buff);
+		}
 	}
 
 	return 0;

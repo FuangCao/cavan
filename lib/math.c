@@ -78,6 +78,22 @@ void math_memory_copy(byte *dest, size_t dest_size, const byte *src, size_t src_
 char *math_text2memory(const char *text, byte *mem, size_t mem_size, int base)
 {
 	int value;
+	bool negative;
+
+	while (BYTE_IS_SPACE(*text))
+	{
+		text++;
+	}
+
+	if (*text == '-')
+	{
+		negative = true;
+		text++;
+	}
+	else
+	{
+		negative = false;
+	}
 
 	value = prefix2base(text, &text);
 	if (value > 1)
@@ -105,6 +121,12 @@ char *math_text2memory(const char *text, byte *mem, size_t mem_size, int base)
 		text++;
 	}
 
+	if (negative)
+	{
+		math_memory_not(mem, NULL, mem_size);
+		math_memory_add_single(mem, mem_size, 1, NULL, 0);
+	}
+
 	return (char *)text;
 }
 
@@ -113,8 +135,24 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 	char *text_bak, *text_end;
 	byte value;
 	byte buff[mem_size];
+	bool negative;
 
-	math_memory_copy(buff, mem_size, mem, mem_size);
+	if (mem_size > 0 && mem[mem_size - 1] & (1 << 7))
+	{
+		math_memory_not(mem, buff, mem_size);
+		math_memory_add_single(buff, mem_size, 1, NULL, 0);
+		negative = true;
+	}
+	else
+	{
+		math_memory_copy(buff, mem_size, mem, mem_size);
+		negative = false;
+	}
+
+	if (base < 2 || base > 24)
+	{
+		base = 10;
+	}
 
 	for (text_bak = text, text_end = text + text_size - 1; text < text_end && mem_size; text++)
 	{
@@ -122,17 +160,25 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 		*text = value2char(value);
 	}
 
-	if (fill && (size_t)(text - text_bak) < size)
+	if (fill)
 	{
-		for (text_end = text_bak + size; text < text_end; text++)
+		char *fill_end = text_bak + size;
+		if (fill_end > text_end)
 		{
-			*text = fill;
+			fill_end = text_end;
+		}
+
+		while (text < fill_end)
+		{
+			*text++ = fill;
 		}
 	}
 
-	if (text_end - text > 1)
+	text = base2prefix_reverse(text, text_end - text, base);
+
+	if (negative && text < text_end)
 	{
-		text = base2prefix_reverse(base, text);
+		*text++ = '-';
 	}
 
 	text_reverse_simple(text_bak, text - 1);
@@ -154,7 +200,7 @@ void math_memory_show(const char *prompt, const byte *mem, size_t mem_size, int 
 	}
 
 	println("%s: %s", prompt, text);
- }
+}
 
 // ================================================================================
 
@@ -192,6 +238,92 @@ void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift
 	else
 	{
 		mem_set(res, 0, res_size);
+	}
+}
+
+void math_memory_and(const byte *left, const byte *right, byte *res, size_t size)
+{
+	const byte *right_end = right + size;
+
+	if (res && res != left)
+	{
+		while (right < right_end)
+		{
+			*res = *left & *right;
+
+			res++, left++, right++;
+		}
+	}
+	else
+	{
+		for (res = (byte *)left; right < right_end; res++, right++)
+		{
+			*res &= *right;
+		}
+	}
+}
+
+void math_memory_or(const byte *left, const byte *right, byte *res, size_t size)
+{
+	const byte *right_end = right + size;
+
+	if (res && res != left)
+	{
+		while (right < right_end)
+		{
+			*res = *left | *right;
+
+			res++, left++, right++;
+		}
+	}
+	else
+	{
+		for (res = (byte *)left; right < right_end; res++, right++)
+		{
+			*res |= *right;
+		}
+	}
+}
+
+void math_memory_not(const byte *mem, byte *res, size_t size)
+{
+	const byte *mem_end = mem + size;
+
+	if (res && res != mem)
+	{
+		while (mem < mem_end)
+		{
+			*res++ = ~(*mem++);
+		}
+	}
+	else
+	{
+		for (res = (byte *)mem; res < mem_end; res++)
+		{
+			*res = ~(*res);
+		}
+	}
+}
+
+void math_memory_xor(const byte *left, const byte *right, byte *res, size_t size)
+{
+	const byte *right_end = right + size;
+
+	if (res && res != left)
+	{
+		while (right < right_end)
+		{
+			*res = *left ^ *right;
+
+			res++, left++, right++;
+		}
+	}
+	else
+	{
+		for (res = (byte *)left; right < right_end; res++, right++)
+		{
+			*res ^= *right;
+		}
 	}
 }
 
@@ -399,7 +531,6 @@ byte math_memory_sub_single(const byte *mem, size_t mem_size, byte value, byte c
 
 		for (res = (byte *)mem, res_end = res + res_size; res <= mem_last && (value || carry); res++)
 		{
-
 			carry = math_byte_sub_carry(*res, value, carry, res);
 			value = 0;
 		}
@@ -722,7 +853,7 @@ byte math_memory_div_single(const byte *mem, size_t mem_size, byte value, byte *
 	return divider;
 }
 
-byte math_memory_mult(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
+byte math_memory_div_once(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
 {
 	int ret;
 	u16 divider;
@@ -749,20 +880,15 @@ byte math_memory_mult(byte *left, size_t lsize, const byte *right, size_t rsize,
 
 	if (mh > 0xFF)
 	{
-		pr_bold_info("mh = 0x%04x, ml = 0x%04x", mh, ml);
+		pr_red_info("divider = 0x%04x, mh = 0x%04x, ml = 0x%04x", divider, mh, ml);
 		mh = 0xFF;
 	}
 
 	while (1)
 	{
-		divider = (mh + ml) / 2;
+		divider = (mh + ml + 1) / 2;
 
 		math_memory_mul_single(right, rsize, divider, res, res_size);
-		if (mh == divider || ml == divider)
-		{
-			break;
-		}
-
 		ret = math_memory_cmp(left, lsize, res, res_size);
 		if (ret == 0)
 		{
@@ -771,11 +897,15 @@ byte math_memory_mult(byte *left, size_t lsize, const byte *right, size_t rsize,
 
 		if (ret < 0)
 		{
-			mh = divider;
+			mh = divider - 1;
+		}
+		else if (ml < divider)
+		{
+			ml = divider;
 		}
 		else
 		{
-			ml = divider;
+			break;
 		}
 	}
 
@@ -800,7 +930,7 @@ size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize
 
 		lsize = left_last - left_pos + 1;
 
-		mult = math_memory_mult(left_pos, lsize, right, rsize, buff, sizeof(buff));
+		mult = math_memory_div_once(left_pos, lsize, right, rsize, buff, sizeof(buff));
 		if (mult)
 		{
 			math_memory_sub(left_pos, lsize, buff, sizeof(buff), NULL, 0);
@@ -851,4 +981,74 @@ size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsiz
 	}
 
 	return res_size;
+}
+
+// ================================================================================
+
+int math_memory_calculator(const char *formula, byte *res, size_t res_size, int base, char fill, int size)
+{
+	byte left[res_size];
+	byte right[res_size];
+	char operator;
+	char text_left[res_size << 3];
+	char text_right[res_size << 3];
+	char text_res[res_size << 3];
+	const char *formula_end;
+
+	if (res_size == 0)
+	{
+		pr_red_info("res_size == 0");
+		return -EINVAL;
+	}
+
+	if (res == NULL)
+	{
+		res = alloca(res_size);
+		if (res == NULL)
+		{
+			pr_error_info("res == NULL");
+			return -ENOMEM;
+		}
+	}
+
+	formula_end = formula + text_len(formula);
+
+	formula = math_text2memory(formula, res, res_size, -1);
+
+	while (formula < formula_end)
+	{
+		math_memory_copy(left, sizeof(left), res, res_size);
+		operator = *formula;
+		formula = math_text2memory(formula + 1, right, sizeof(right), -1);
+
+		switch (operator)
+		{
+		case '+':
+			math_memory_add(left, sizeof(left), right, sizeof(right), res, res_size);
+			break;
+
+		case '-':
+			math_memory_sub(left, sizeof(left), right, sizeof(right), res, res_size);
+			break;
+
+		case '*':
+			math_memory_mul(left, sizeof(left), right, sizeof(right), res, res_size);
+			break;
+
+		case '/':
+			math_memory_div2(left, sizeof(left), right, sizeof(right), res, res_size);
+			break;
+
+		default:
+			pr_red_info("invalid operator `%c'", operator);
+			return -EINVAL;
+		}
+
+		math_memory2text(left, sizeof(left), text_left, sizeof(text_left), base, '0', size);
+		math_memory2text(right, sizeof(right), text_right, sizeof(text_right), base, '0', size);
+		math_memory2text(res, res_size, text_res, sizeof(text_res), base, '0', size);
+		println("%s %c %s = %s", text_left, operator, text_right, text_res);
+	}
+
+	return 0;
 }

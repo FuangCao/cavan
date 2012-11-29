@@ -103,7 +103,7 @@ char *value2text_base(s64 value, char *text, int size, char fill, int flags);
 char *value2text(u64 value, int flags);
 
 char *base2prefix(int base, char *prefix);
-char *base2prefix_reverse(int base, char *prefix);
+char *base2prefix_reverse(char *text, size_t size, int base);
 u64 text2size_single(const char *text, const char **text_ret);
 u64 text2size(const char *text, const char **text_ret);
 u64 text2size_mb(const char *text);

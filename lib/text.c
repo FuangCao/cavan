@@ -1046,33 +1046,43 @@ char *base2prefix(int base, char *prefix)
 	return prefix;
 }
 
-char *base2prefix_reverse(int base, char *prefix)
+char *base2prefix_reverse(char *text, size_t size, int base)
 {
+	if (size < 2)
+	{
+		if (size)
+		{
+			*text = 0;
+		}
+
+		return text;
+	}
+
 	switch (base)
 	{
 	case 2:
-		*(u16 *)prefix = 0x3042;
-		prefix += 2;
+		*(u16 *)text = 0x3042;
+		text += 2;
 		break;
 
 	case 8:
-		*prefix++ = '0';
+		*text++ = '0';
 		break;
 
 	case 10:
-		*(u16 *)prefix = 0x3044;
-		prefix += 2;
+		*(u16 *)text = 0x3044;
+		text += 2;
 		break;
 
 	case 16:
-		*(u16 *)prefix = 0x3078;
-		prefix += 2;
+		*(u16 *)text = 0x3078;
+		text += 2;
 		break;
 	}
 
-	*prefix = 0;
+	*text = 0;
 
-	return prefix;
+	return text;
 }
 
 char *value2text_base(s64 value, char *text, int size, char fill, int flags)
