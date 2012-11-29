@@ -196,10 +196,10 @@ void math_memory_show(const char *prompt, const byte *mem, size_t mem_size, int 
 
 	if (prompt == NULL)
 	{
-		prompt = "Memory";
+		prompt = "Memory = ";
 	}
 
-	println("%s: %s", prompt, text);
+	println("%s%s", prompt, text);
 }
 
 // ================================================================================
@@ -929,7 +929,6 @@ size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize
 		byte buff[rsize + 1];
 
 		lsize = left_last - left_pos + 1;
-
 		mult = math_memory_div_once(left_pos, lsize, right, rsize, buff, sizeof(buff));
 		if (mult)
 		{
@@ -955,28 +954,20 @@ size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize
 	return res_size;
 }
 
-size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
+size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size, int base)
 {
-	byte *buff;
-	const byte *left_last = math_memory_shrink(left, lsize);
-
-	lsize = left_last - left + 1;
-
-	buff = alloca(lsize);
-	if (buff == NULL)
-	{
-		pr_error_info("buff == NULL");
-		return 0xFF;
-	}
+	byte buff[lsize];
 
 	if (res && res != left)
 	{
 		math_memory_copy(buff, lsize, left, lsize);
 		res_size = math_memory_div(buff, lsize, right, rsize, res, res_size);
+		math_memory_show("Remainder = ", buff, lsize, base);
 	}
 	else
 	{
 		res_size = math_memory_div((byte *)left, lsize, right, rsize, buff, lsize);
+		math_memory_show("Remainder = ", left, lsize, base);
 		math_memory_copy((byte *)left, lsize, buff, lsize);
 	}
 
@@ -1036,7 +1027,7 @@ int math_memory_calculator(const char *formula, byte *res, size_t res_size, int 
 			break;
 
 		case '/':
-			math_memory_div2(left, sizeof(left), right, sizeof(right), res, res_size);
+			math_memory_div2(left, sizeof(left), right, sizeof(right), res, res_size, base);
 			break;
 
 		default:
