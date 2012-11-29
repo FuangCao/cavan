@@ -33,5 +33,5 @@ byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t r
 
 byte math_memory_mult(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
 byte math_memory_div_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t *res_size);
-byte math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
-byte math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
+size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
+size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
