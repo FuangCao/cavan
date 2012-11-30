@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.68])
-AC_INIT([cavan], [1.0], [cavan.cfa@gmail.com])
+AC_PREREQ([2.69])
+AC_INIT([fuang-cao-cavan], [1.0], [cavan.cfa@gmail.com])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 
@@ -31,7 +31,7 @@ AC_CHECK_LIB([rt], [-lrt])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h malloc.h netinet/in.h stdint.h stdlib.h string.h sys/file.h sys/ioctl.h sys/mount.h sys/socket.h sys/time.h sys/vfs.h termios.h unistd.h utime.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
+AC_CHECK_HEADER_STDBOOL
 AC_C_INLINE
 AC_TYPE_INT16_T
 AC_TYPE_INT32_T
