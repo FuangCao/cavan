@@ -2,6 +2,15 @@
 
 #include <stdarg.h>
 
+#ifdef CONFIG_BUILD_FOR_ANDROID
+#include <utils/Log.h>
+#define printf	LOGD
+#endif
+
+#ifndef LOG_TAG
+#define LOG_TAG	"Cavan"
+#endif
+
 #define DEFAULT_CONSOLE_DEVICE	"/dev/tty0"
 
 #define FONT_DEFAULT			0	//set all attributes to their defaults
@@ -70,6 +79,9 @@
 #define pr_std_info(fmt, args ...) \
 	printf(fmt "\n", ##args)
 
+#define pr_func_info(fmt, args ...) \
+	pr_std_info("%s: " fmt, __FUNCTION__, ##args)
+
 #define pr_color_info(color, fmt, args ...) \
 	pr_std_info(color fmt CAVAN_COLOR_STAND, ##args)
 
@@ -93,7 +105,7 @@
 	pr_color_info(CAVAN_COLOR_BOLD, fmt, ##args)
 
 #define pr_std_pos(fmt) \
-	printf(fmt "\n", __FILE__, __FUNCTION__, __LINE__)
+	pr_std_info(fmt, __FILE__, __FUNCTION__, __LINE__)
 
 #define pr_pos_info() \
 	pr_std_pos("%s => %s[%d]")
