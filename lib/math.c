@@ -115,7 +115,12 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 	byte buff[mem_size];
 	bool negative;
 
-	if (mem_size > 0 && mem[mem_size - 1] & (1 << 7))
+	if (base < 2 || base > 24)
+	{
+		base = 10;
+	}
+
+	if (base == 10 && mem_size > 0 && mem[mem_size - 1] & (1 << 7))
 	{
 		math_memory_not(mem, buff, mem_size);
 		math_memory_add_single(buff, mem_size, 1, NULL, 0);
@@ -125,11 +130,6 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 	{
 		math_memory_copy(buff, mem_size, mem, mem_size);
 		negative = false;
-	}
-
-	if (base < 2 || base > 24)
-	{
-		base = 10;
 	}
 
 	for (text_bak = text, text_end = text + text_size - 1; text < text_end && mem_size; text++)
@@ -250,6 +250,8 @@ void math_memory_shift_left(const byte *mem, size_t mem_size, size_t shift, byte
 	math_memory_shift_left_byte(res, mem_size, shift >> 3, NULL, res_size);
 }
 
+// ================================================================================
+
 void math_memory_ring_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
 {
 	if (res_size == 0)
@@ -274,6 +276,38 @@ void math_memory_ring_shift_left_byte(const byte *mem, size_t mem_size, size_t s
 		mem_copy(res, buff, shift);
 	}
 }
+
+void math_memory_ring_shift_left_bit(const byte *mem, size_t size, size_t shift, byte *res)
+{
+	byte low = mem[size - 1] >> (8 - shift);
+
+	math_memory_shift_left_bit(mem, size, shift, res);
+
+	if (res == NULL)
+	{
+		res = (byte *)mem;
+	}
+
+	*res |= low;
+}
+
+void math_memory_ring_shift_left(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
+{
+	if (res == NULL)
+	{
+		res = (byte *)mem;
+	}
+
+	if (res_size == 0)
+	{
+		res_size = mem_size;
+	}
+
+	math_memory_ring_shift_left_bit(mem, mem_size, shift & 0x07, res);
+	math_memory_ring_shift_left_byte(res, mem_size, shift >> 3, NULL, res_size);
+}
+
+// ================================================================================
 
 void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
 {
@@ -341,6 +375,8 @@ void math_memory_shift_right(const byte *mem, size_t mem_size, size_t shift, byt
 	math_memory_shift_right_byte(res, mem_size, shift >> 3, res, res_size);
 }
 
+// ================================================================================
+
 void math_memory_ring_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
 {
 	if (res_size == 0)
@@ -363,6 +399,38 @@ void math_memory_ring_shift_right_byte(const byte *mem, size_t mem_size, size_t 
 		math_memory_copy(res + mem_size - shift, res_size + shift - mem_size, buff, shift);
 	}
 }
+
+void math_memory_ring_shift_right_bit(const byte *mem, size_t size, size_t shift, byte *res)
+{
+	byte high = *mem << (8 - shift);
+
+	math_memory_shift_right_bit(mem, size, shift, res);
+
+	if (res == NULL)
+	{
+		res = (byte *)mem;
+	}
+
+	res[size - 1] |= high;
+}
+
+void math_memory_ring_shift_right(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
+{
+	if (res == NULL)
+	{
+		res = (byte *)mem;
+	}
+
+	if (res_size == 0)
+	{
+		res_size = mem_size;
+	}
+
+	math_memory_ring_shift_right_bit(mem, mem_size, shift & 0x07, res);
+	math_memory_ring_shift_right_byte(res, mem_size, shift >> 3, NULL, res_size);
+}
+
+// ================================================================================
 
 void math_memory_and(const byte *left, const byte *right, byte *res, size_t size)
 {
