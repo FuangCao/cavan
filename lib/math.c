@@ -152,7 +152,10 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 		}
 	}
 
-	text = base2prefix_reverse(text, text_end - text, base);
+	if (base != 10)
+	{
+		text = base2prefix_reverse(text, text_end - text, base);
+	}
 
 	if (negative && text < text_end)
 	{
