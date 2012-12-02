@@ -20,6 +20,7 @@
 byte *math_memory_shrink(const byte *mem, size_t size);
 void math_memory_exchange(const byte *mem, byte *res, size_t size);
 void math_memory_copy(byte *dest, size_t dest_size, const byte *src, size_t src_size);
+void math_memory_complement(const byte *mem, size_t mem_size, byte *res, size_t res_size);
 char *math_text2memory(const char *text, byte *mem, size_t mem_size, int base);
 char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text_size, int base, char fill, size_t size);
 void math_memory_show(const char *prompt, const byte *mem, size_t mem_size, int base);
@@ -56,11 +57,18 @@ byte math_memory_sub_single2(byte value, byte carry, const byte *mem, size_t mem
 byte math_memory_sub(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
 
 byte math_memory_mul_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t res_size);
+byte math_memory_mul_unsigned(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
 byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
 
 byte math_memory_div_single(const byte *mem, size_t mem_size, byte value, byte *res, size_t *res_size);
 byte math_memory_div_once(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
+size_t math_memory_div_unsigned(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
 size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size);
 size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size, int base);
 
 int math_memory_calculator(const char *formula, byte *res, size_t res_size, int base, char fill, int size);
+
+static inline bool math_memory_is_negative(const byte *mem, size_t size)
+{
+	return mem[size - 1] & (1 << 7);
+}

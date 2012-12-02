@@ -53,6 +53,22 @@ void math_memory_copy(byte *dest, size_t dest_size, const byte *src, size_t src_
 	}
 }
 
+void math_memory_complement(const byte *mem, size_t mem_size, byte *res, size_t res_size)
+{
+	if (res == NULL)
+	{
+		res = (byte *)mem;
+	}
+
+	if (res_size == 0)
+	{
+		res_size = mem_size;
+	}
+
+	math_memory_not(mem, res, mem_size);
+	math_memory_add_single(res, mem_size, 1, NULL, res_size);
+}
+
 char *math_text2memory(const char *text, byte *mem, size_t mem_size, int base)
 {
 	int value;
@@ -101,8 +117,7 @@ char *math_text2memory(const char *text, byte *mem, size_t mem_size, int base)
 
 	if (negative)
 	{
-		math_memory_not(mem, NULL, mem_size);
-		math_memory_add_single(mem, mem_size, 1, NULL, 0);
+		math_memory_complement(mem, mem_size, NULL, 0);
 	}
 
 	return (char *)text;
@@ -120,10 +135,9 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 		base = 10;
 	}
 
-	if (base == 10 && mem_size > 0 && mem[mem_size - 1] & (1 << 7))
+	if (base == 10 && mem_size > 0 && math_memory_is_negative(mem, mem_size))
 	{
-		math_memory_not(mem, buff, mem_size);
-		math_memory_add_single(buff, mem_size, 1, NULL, 0);
+		math_memory_complement(mem, mem_size, buff, mem_size);
 		negative = true;
 	}
 	else
@@ -923,7 +937,7 @@ byte math_memory_mul_single(const byte *mem, size_t mem_size, byte value, byte *
 	return adder;
 }
 
-byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
+byte math_memory_mul_unsigned(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
 {
 	byte carry;
 	byte *buff;
@@ -958,7 +972,7 @@ byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t r
 
 		math_memory_copy(buff, lsize, left, lsize);
 
-		return math_memory_mul(buff, lsize, right, rsize, (byte *)left, res_size > 0 ? res_size : lsize);
+		return math_memory_mul_unsigned(buff, lsize, right, rsize, (byte *)left, res_size > 0 ? res_size : lsize);
 	}
 
 	mem_set(res, 0, res_size);
@@ -974,6 +988,50 @@ byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t r
 		{
 			break;
 		}
+	}
+
+	return carry;
+}
+
+byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
+{
+	byte carry;
+	int negative = 0;
+
+	if (math_memory_is_negative(right, rsize))
+	{
+		byte *p = alloca(rsize);
+		if (p == NULL)
+		{
+			pr_error_info("alloca");
+			return 0xFF;
+		}
+
+		math_memory_complement(right, rsize, p, rsize);
+		right = p;
+		negative++;
+	}
+
+	if (res == NULL)
+	{
+		res = (byte *)left;
+	}
+
+	if (math_memory_is_negative(res, lsize))
+	{
+		math_memory_complement(res, lsize, NULL, 0);
+		negative++;
+	}
+
+	carry = math_memory_mul_unsigned(res, lsize, right, rsize, NULL, res_size);
+	if (negative & 1)
+	{
+		if (res_size == 0)
+		{
+			res_size = lsize;
+		}
+
+		math_memory_complement(res, res_size, NULL, 0);
 	}
 
 	return carry;
@@ -1106,7 +1164,7 @@ byte math_memory_div_once(byte *left, size_t lsize, const byte *right, size_t rs
 	return divider;
 }
 
-size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
+size_t math_memory_div_unsigned(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
 {
 	byte mult;
 	byte *res_bak, *res_end;
@@ -1146,6 +1204,46 @@ size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize
 	}
 
 	return res_size;
+}
+
+size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size)
+{
+	size_t size;
+	bool left_negative;
+	bool right_negative;
+
+	right_negative = math_memory_is_negative(right, rsize);
+	if (right_negative)
+	{
+		byte *p = alloca(rsize);
+		if (p == NULL)
+		{
+			pr_error_info("alloca");
+			return 0xFF;
+		}
+
+		math_memory_complement(right, rsize, p, rsize);
+		right = p;
+	}
+
+	left_negative = math_memory_is_negative(left, lsize);
+	if (left_negative)
+	{
+		math_memory_complement(left, lsize, NULL, 0);
+	}
+
+	size = math_memory_div_unsigned(left, lsize, right, rsize, res, res_size);
+	if (left_negative != right_negative)
+	{
+		math_memory_complement(res, res_size, NULL, 0);
+	}
+
+	if (left_negative)
+	{
+		math_memory_complement(left, lsize, NULL, 0);
+	}
+
+	return size;
 }
 
 size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size, int base)
