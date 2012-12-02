@@ -11,6 +11,7 @@ FILE_SAMBA_CONFIG="/etc/samba/smb.conf"
 FILE_CAVAN_SERVICE="/etc/init.d/cavan"
 FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
 FILE_GRUB_LINUX="/etc/grub.d/10_linux"
+FILE_APP_FEILED="/tmp/cavan-app-failed.txt"
 
 CAVAN_HOME="/cavan"
 
@@ -222,7 +223,6 @@ function config_aptget()
 
 	cavan-symlink ${etc_path}/apt /etc/apt || return 1
 	cavan-symlink ${var_path}/cache/apt /var/cache/apt || return 1
-
 }
 
 function config_git()
@@ -261,6 +261,8 @@ function install_applications()
 	dpkg --configure -a || return 1
 	apt-get update --fix-missing || return 1
 
+	: > ${FILE_APP_FEILED}
+
 	while read line
 	do
 		for app in ${line}
@@ -272,11 +274,18 @@ function install_applications()
 					;;
 				*)
 					pr_title "Install application ${app}"
-					apt-get -y --install-suggests install ${app} || apt-get install -y ${app} || return 1
+					apt-get -y --install-suggests install ${app} || apt-get install -y ${app} ||
+					{
+						pr_red_info "Install application '${app}' failed"
+						echo ${app} >> ${FILE_APP_FEILED}
+					}
 					;;
 			esac
 		done
 	done < ${FILE_APP_CONFIG}
+
+	mkdir -pv /etc/cavan || return 1
+	cp ${FILE_APP_FEILED} /etc/cavan -av || return 1
 }
 
 function install_debin_packages()
@@ -352,7 +361,7 @@ EOF
 function config_grub()
 {
 	sed 	-e 's#^\(\s*linux.*\s\+root=\).*$#\1${GRUB_DEVICE} vga=0x318#g' \
-			-e 's/^\s*printf.*\${prepare_\w*_cache}/# &/g'\
+			-e 's/^\s*printf.*\${prepare_\w*_cache}/# &/g' \
 			-i ${FILE_GRUB_LINUX} || return 1
 	update-grub2 || return 1
 

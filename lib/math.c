@@ -43,35 +43,13 @@ void math_memory_exchange(const byte *mem, byte *res, size_t size)
 
 void math_memory_copy(byte *dest, size_t dest_size, const byte *src, size_t src_size)
 {
-	if (dest < src)
+	size_t size = MIN(dest_size, src_size);
+
+	mem_move(dest, src, size);
+
+	if (dest_size > size)
 	{
-		byte *dest_end = dest + dest_size;
-		const byte *src_end = src + src_size;
-
-		while (src < src_end && dest < dest_end)
-		{
-			*dest++ = *src++;
-		}
-
-		while (dest <= dest_end)
-		{
-			*dest++ = 0;
-		}
-	}
-	else if (dest > src)
-	{
-		byte *pdest = dest + dest_size - 1;
-		const byte *psrc = src + src_size - 1;
-
-		while (psrc >= src && pdest >= dest)
-		{
-			*pdest-- = *psrc--;
-		}
-
-		while (pdest >= dest)
-		{
-			*pdest-- = 0;
-		}
+		mem_set(dest + size, 0, dest_size - size);
 	}
 }
 
@@ -209,24 +187,10 @@ void math_memory_shift_left_byte(const byte *mem, size_t mem_size, size_t shift,
 	if (res == NULL)
 	{
 		res = (byte *)mem;
-		res_size = mem_size;
 	}
 
-	if (shift < mem_size)
+	if (res_size == 0)
 	{
-		math_memory_copy(res, res_size, mem + shift, mem_size - shift);
-	}
-	else
-	{
-		mem_set(res, 0, res_size);
-	}
-}
-
-void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
-{
-	if (res == NULL)
-	{
-		res = (byte *)mem;
 		res_size = mem_size;
 	}
 
@@ -238,6 +202,76 @@ void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift
 	else
 	{
 		mem_set(res, 0, res_size);
+	}
+}
+
+void math_memory_ring_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
+{
+	if (res_size == 0)
+	{
+		res_size = mem_size;
+	}
+
+	shift %= mem_size;
+
+	if (res && res != mem)
+	{
+		mem_copy(res, mem + mem_size - shift, shift);
+		math_memory_copy(res + shift, res_size - shift, mem, mem_size - shift);
+	}
+	else
+	{
+		byte buff[shift];
+
+		res = (byte *)mem;
+		mem_copy(buff, res + mem_size - shift, shift);
+		math_memory_copy(res + shift, res_size - shift, mem, mem_size - shift);
+		mem_copy(res, buff, shift);
+	}
+}
+
+void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
+{
+	if (res == NULL)
+	{
+		res = (byte *)mem;
+	}
+
+	if (res_size == 0)
+	{
+		res_size = mem_size;
+	}
+
+	if (shift < mem_size && shift < res_size)
+	{
+		math_memory_copy(res, res_size, mem + shift, mem_size - shift);
+	}
+	else
+	{
+		mem_set(res, 0, res_size);
+	}
+}
+
+void math_memory_ring_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
+{
+	if (res_size == 0)
+	{
+		res_size = mem_size;
+	}
+
+	if (res && res != mem)
+	{
+		mem_copy(res, mem + shift, mem_size - shift);
+		math_memory_copy(res + mem_size - shift, res_size + shift - mem_size, mem, shift);
+	}
+	else
+	{
+		byte buff[shift];
+
+		res = (byte *)mem;
+		mem_copy(buff, mem, shift);
+		mem_copy(res, mem + shift, mem_size - shift);
+		math_memory_copy(res + mem_size - shift, res_size + shift - mem_size, buff, shift);
 	}
 }
 
@@ -771,7 +805,7 @@ byte math_memory_mul(const byte *left, size_t lsize, const byte *right, size_t r
 
 	for (carry = 0; right_last >= right; right_last--)
 	{
-		math_memory_shift_right_byte(res, res_size, 1, NULL, 0);
+		math_memory_shift_left_byte(res, res_size, 1, NULL, 0);
 
 		math_memory_mul_single(left, lsize, *right_last, buff, buff_size);
 

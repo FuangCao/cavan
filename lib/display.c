@@ -952,7 +952,7 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 	{
 		while (p < p_end)
 		{
-			mem_copy32(data, p, width);
+			mem_copy(data, p, width);
 
 			data += width;
 			p += line_size;
@@ -962,7 +962,7 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 	{
 		while (p < p_end)
 		{
-			mem_copy32(p, data, width);
+			mem_copy(p, data, width);
 
 			data += width;
 			p += line_size;

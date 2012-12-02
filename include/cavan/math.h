@@ -8,6 +8,15 @@
 
 #include <cavan.h>
 
+#define MIN(a, b) \
+	((a) < (b) ? (a) : (b))
+
+#define MAX(a, b) \
+	((a) > (b) ? (a) : (b))
+
+#define ABS(a) \
+	((a) < 0 ? -(a) : (a))
+
 byte *math_memory_shrink(const byte *mem, size_t size);
 void math_memory_exchange(const byte *mem, byte *res, size_t size);
 void math_memory_copy(byte *dest, size_t dest_size, const byte *src, size_t src_size);
@@ -16,7 +25,9 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 void math_memory_show(const char *prompt, const byte *mem, size_t mem_size, int base);
 
 void math_memory_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
+void math_memory_ring_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
 void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
+void math_memory_ring_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
 
 void math_memory_and(const byte *left, const byte *right, byte *res, size_t size);
 void math_memory_or(const byte *left, const byte *right, byte *res, size_t size);

@@ -2485,12 +2485,12 @@ char *text_replace_text_base(const char *text_old, char *text_new, const char *s
 		p = mem_kmp_find_base(text_old, old_end, src, srclen, steps);
 		if (p == NULL)
 		{
-			text_new = mem_copy2(text_new, text_old, old_end);
+			text_new = mem_copy(text_new, text_old, old_end - text_old);
 			break;
 		}
 		else
 		{
-			text_new = mem_copy2(text_new, text_old, p);
+			text_new = mem_copy(text_new, text_old, p - text_old);
 			text_new = text_copy(text_new, dest);
 			text_old = p + srclen;
 		}

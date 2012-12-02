@@ -27,18 +27,23 @@
 #define assign64(addr, value) \
 	assign(addr, value, u64)
 
-#define mem_set mem_set8
+void mem_copy8(u8 *dest, const u8 *src, size_t count);
+void mem_copy16(u16 *dest, const u16 *src, size_t count);
+void mem_copy32(u32 *dest, const u32 *src, size_t count);
+void mem_copy64(u64 *dest, const u64 *src, size_t count);
+void *mem_copy(void *dest, const void *src, size_t size);
 
-char *mem_copy(char *dest, const char *src, size_t size);
-char *mem_copy2(char *dest, const char *src, const char *src_end);
+void mem_move8(u8 *dest, const u8 *src, size_t count);
+void mem_move16(u16 *dest, const u16 *src, size_t count);
+void mem_move32(u32 *dest, const u32 *src, size_t count);
+void mem_move64(u64 *dest, const u64 *src, size_t count);
+void mem_move(void *dest, const void *src, size_t size);
 
-char *mem_copy16(char *dest, const char *src, size_t size);
-char *mem_copy32(char *dest, const char *src, size_t size);
-char *mem_copy64(char *dest, const char *src, size_t size);
-
-char *mem_set16(char *mem, int value, size_t size);
-char *mem_set32(char *mem, int value, size_t size);
-char *mem_set64(char *mem, int value, size_t size);
+void mem_set8(u8 *mem, u8 value, size_t count);
+void mem_set16(u16 *mem, u16 value, size_t count);
+void mem_set32(u32 *mem, u32 value, size_t count);
+void mem_set64(u64 *mem, u64 value, size_t count);
+void mem_set(void *mem, int value, size_t size);
 
 void bits_set(char *mem, int start, int end, u32 value);
 
@@ -70,13 +75,7 @@ static inline void mem_show(const char *mem, size_t size)
 	text_show(mem, size);
 }
 
-static inline void mem_set8(void *mem, int value, size_t size)
-{
-	text_set8(mem, value, size);
-}
-
 static inline size_t mem_delete_char(char *mem, const size_t size, const char c)
 {
 	return mem_delete_char_base(mem, mem, size, c);
 }
-

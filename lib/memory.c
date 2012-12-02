@@ -3,174 +3,303 @@
 #include <cavan.h>
 #include <cavan/memory.h>
 
-char *mem_copy(char *dest, const char *src, size_t size)
+void mem_copy8(u8 *dest, const u8 *src, size_t count)
 {
-	const char *end = src + size;
+	const u8 *end;
 
-	while (src < end)
+	for (end = src + count; src < end; src++, dest++)
 	{
-		*(char *)dest++ = *(const char *)src++;
+		*dest = *src;
 	}
-
-	return dest;
 }
 
-char *mem_copy2(char *dest, const char *src, const char *src_end)
+void mem_copy16(u16 *dest, const u16 *src, size_t count)
 {
-	while (src < src_end)
-	{
-		*(char *)dest++ = *(const char *)src++;
-	}
+	const u16 *end;
 
-	return dest;
+	for (end = src + count; src < end; src++, dest++)
+	{
+		*dest = *src;
+	}
 }
 
-char *mem_copy16(char *dest, const char *src, size_t size)
+void mem_copy32(u32 *dest, const u32 *src, size_t count)
 {
-	char *end_dest;
+	const u32 *end;
 
-	if (((long)dest & 1) != ((long)src & 1))
+	for (end = src + count; src < end; src++, dest++)
 	{
-		return text_ncopy(dest, src, size);
+		*dest = *src;
 	}
-
-	end_dest = dest + size;
-
-	while ((long)src & 1)
-	{
-		*(char *)dest++ = *(const char *)src++;
-		size--;
-	}
-
-	dest = (char *)text_copy16((u16 *)dest, (const u16 *)src, size >> 1);
-
-	while (dest < end_dest)
-	{
-		*(char *)dest++ = *(const char *)src++;
-	}
-
-	return dest;
 }
 
-char *mem_copy32(char *dest, const char *src, size_t size)
+void mem_copy64(u64 *dest, const u64 *src, size_t count)
 {
-	char *end_dest;
+	const u64 *end;
 
-	if (((long)dest & 3) != ((long)src & 3))
+	for (end = src + count; src < end; src++, dest++)
 	{
-		return mem_copy16(dest, src, size);
+		*dest = *src;
 	}
-
-	end_dest = dest + size;
-
-	while ((long)dest & 3)
-	{
-		*(char *)dest++ = *(const char *)src++;
-		size--;
-	}
-
-	dest = (char *)text_copy32((u32 *)dest, (const u32 *)src, size >> 2);
-
-	while (dest < end_dest)
-	{
-		*(char *)dest++ = *(const char *)src++;
-	}
-
-	return dest;
 }
 
-char *mem_copy64(char *dest, const char *src, size_t size)
+void *mem_copy(void *dest, const void *src, size_t size)
 {
-	char *end_dest;
+	size_t count;
+	void *dest_bak = dest;
 
-	if (((long)dest & 7) != ((long)src & 7))
+	if (((long)dest & 0x07) == 0 && ((long)src & 0x07) == 0)
 	{
-		return mem_copy32(dest, src, size);
+		count = size >> 3;
+		mem_copy64(dest, src, count);
+
+		count <<= 3;
+		dest = (u8 *)dest + count;
+		src = (const u8 *)src + count;
+
+		count = size & 0x07;
+	}
+	else if (((long)dest & 0x03) == 0 && ((long)src & 0x03) == 0)
+	{
+		count = size >> 2;
+		mem_copy32(dest, src, count);
+
+		count <<= 2;
+		dest = (u8 *)dest + count;
+		src = (const u8 *)src + count;
+
+		count = size & 0x03;
+	}
+	else if (((long)dest & 0x01) == 0 && ((long)src & 0x01) == 0)
+	{
+		count = size >> 1;
+		mem_copy16(dest, src, count);
+
+		count <<= 1;
+		dest = (u8 *)dest + count;
+		src = (const u8 *)src + count;
+
+		count = size & 0x01;
+	}
+	else
+	{
+		count = size;
 	}
 
-	end_dest = dest + size;
-
-	while ((long)dest & 7)
+	if (count)
 	{
-		*(char *)dest++ = *(const char *)src++;
-		size--;
+		mem_copy8(dest, src, count);
 	}
 
-	dest = (char *)text_copy64((u64 *)dest, (const u64 *)src, size >> 3);
-
-	while (dest < end_dest)
-	{
-		*(char *)dest++ = *(const char *)src++;
-	}
-
-	return dest;
+	return dest_bak;
 }
 
-char *mem_set16(char *mem, int value, size_t size)
+// ================================================================================
+
+void mem_move8(u8 *dest, const u8 *src, size_t count)
 {
-	char *end_mem = mem + size;
-	u16 value16;
+	const u8 *start;
 
-	while ((long)mem & 1)
+	if (dest < src)
 	{
-		*(u8 *)mem++ = value;
-		size--;
+		mem_copy8(dest, src, count);
 	}
-
-	text_set8((u8 *)&value16, value, sizeof(value16));
-	mem = text_set16((u16 *)mem, value16, size >> 1);
-
-	while (mem < end_mem)
+	else for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
 	{
-		*(u8 *)mem++ = value;
+		*dest = *src;
 	}
-
-	return mem;
 }
 
-char *mem_set32(char *mem, int value, size_t size)
+void mem_move16(u16 *dest, const u16 *src, size_t count)
 {
-	char *end_mem = mem + size;
-	u32 value32;
+	const u16 *start;
 
-	while ((long)mem & 3)
+	if (dest < src)
 	{
-		*(u8 *)mem++ = value;
-		size--;
+		mem_copy16(dest, src, count);
 	}
-
-	text_set8((u8 *)&value32, value, sizeof(value32));
-	mem = text_set32((u32 *)mem, value32, size >> 2);
-
-	while (mem < end_mem)
+	else for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
 	{
-		*(u8 *)mem++ = value;
+		*dest = *src;
 	}
-
-	return mem;
 }
 
-char *mem_set64(char *mem, int value, size_t size)
+void mem_move32(u32 *dest, const u32 *src, size_t count)
 {
-	char *end_mem = mem + size;
-	u64 value64;
+	const u32 *start;
 
-	while ((long)mem & 7)
+	if (dest < src)
 	{
-		*(u8 *)mem++ = value;
-		size--;
+		mem_copy32(dest, src, count);
 	}
-
-	text_set8((u8 *)&value64, value, sizeof(value64));
-	mem = text_set64((u64 *)mem, value64, size >> 3);
-
-	while (mem < end_mem)
+	else for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
 	{
-		*(u8 *)mem++ = value;
+		*dest = *src;
 	}
-
-	return mem;
 }
+
+void mem_move64(u64 *dest, const u64 *src, size_t count)
+{
+	const u64 *start;
+
+	if (dest < src)
+	{
+		mem_copy64(dest, src, count);
+	}
+	else for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
+	{
+		*dest = *src;
+	}
+}
+
+void mem_move(void *dest, const void *src, size_t size)
+{
+	size_t count;
+
+	if (((long)dest & 0x07) == 0 && ((long)src & 0x07) == 0)
+	{
+		count = size >> 3;
+		mem_move64(dest, src, count);
+
+		count <<= 3;
+		dest = (u8 *)dest + count;
+		src = (const u8 *)src + count;
+
+		count = size & 0x07;
+	}
+	else if (((long)dest & 0x03) == 0 && ((long)src & 0x03) == 0)
+	{
+		count = size >> 2;
+		mem_move32(dest, src, count);
+
+		count <<= 2;
+		dest = (u8 *)dest + count;
+		src = (const u8 *)src + count;
+
+		count = size & 0x03;
+	}
+	else if (((long)dest & 0x01) == 0 && ((long)src & 0x01) == 0)
+	{
+		count = size >> 1;
+		mem_move16(dest, src, count);
+
+		count <<= 1;
+		dest = (u8 *)dest + count;
+		src = (const u8 *)src + count;
+
+		count = size & 0x01;
+	}
+	else
+	{
+		count = size;
+	}
+
+	if (count)
+	{
+		mem_move8(dest, src, count);
+	}
+}
+
+// ================================================================================
+
+void mem_set8(u8 *mem, u8 value, size_t count)
+{
+	u8 *mem_end;
+
+	for (mem_end = mem + count; mem < mem_end; mem++)
+	{
+		*mem = value;
+	}
+}
+
+void mem_set16(u16 *mem, u16 value, size_t count)
+{
+	u16 *mem_end;
+
+	for (mem_end = mem + count; mem < mem_end; mem++)
+	{
+		*mem = value;
+	}
+}
+
+void mem_set32(u32 *mem, u32 value, size_t count)
+{
+	u32 *mem_end;
+
+	for (mem_end = mem + count; mem < mem_end; mem++)
+	{
+		*mem = value;
+	}
+}
+
+void mem_set64(u64 *mem, u64 value, size_t count)
+{
+	u64 *mem_end;
+
+	for (mem_end = mem + count; mem < mem_end; mem++)
+	{
+		*mem = value;
+	}
+}
+
+void mem_set(void *mem, int value, size_t size)
+{
+	size_t count;
+
+	if (((long)mem & 0x07) == 0)
+	{
+		u64 value64;
+
+		value64 = value;
+		value64 |= value64 << 8;
+		value64 |= value64 << 16;
+		value64 |= value64 << 32;
+
+		count = size >> 3;
+		mem_set64(mem, value64, count);
+
+		mem = (u8 *)mem + (count << 3);
+		count = size & 0x07;
+	}
+	else if (((long)mem & 0x03) == 0)
+	{
+		u32 value32;
+
+		value32 = value;
+		value32 |= value32 << 8;
+		value32 |= value32 << 16;
+
+		count = size >> 2;
+		mem_set32(mem, value32, count);
+
+		mem = (u8 *)mem + (count << 2);
+		count = size & 0x03;
+	}
+	else if (((long)mem & 0x01) == 0)
+	{
+		u16 value16;
+
+		value16 = value;
+		value16 |= value16 << 8;
+
+		count = size >> 1;
+		mem_set16(mem, value16, count);
+
+		mem = (u8 *)mem + (count << 1);
+		count = size & 0x01;
+	}
+	else
+	{
+		count = size;
+	}
+
+	if (count)
+	{
+		mem_set8(mem, value, count);
+	}
+}
+
+// ================================================================================
 
 void bits_set(char *mem, int start, int end, u32 value)
 {
