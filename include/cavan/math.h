@@ -25,8 +25,12 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 void math_memory_show(const char *prompt, const byte *mem, size_t mem_size, int base);
 
 void math_memory_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
+void math_memory_shift_left_bit(const byte *mem, size_t size, size_t shift, byte *res);
+void math_memory_shift_left(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
 void math_memory_ring_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
 void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
+void math_memory_shift_right_bit(const byte *mem, size_t size, size_t shift, byte *res);
+void math_memory_shift_right(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
 void math_memory_ring_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);
 
 void math_memory_and(const byte *left, const byte *right, byte *res, size_t size);

@@ -46,7 +46,14 @@ void mem_copy64(u64 *dest, const u64 *src, size_t count)
 void *mem_copy(void *dest, const void *src, size_t size)
 {
 	size_t count;
-	void *dest_bak = dest;
+	void *dest_bak;
+
+	if (dest == src)
+	{
+		return dest;
+	}
+
+	dest_bak = dest;
 
 	if (((long)dest & 0x07) == 0 && ((long)src & 0x07) == 0)
 	{
@@ -104,9 +111,12 @@ void mem_move8(u8 *dest, const u8 *src, size_t count)
 	{
 		mem_copy8(dest, src, count);
 	}
-	else for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
+	else if (dest > src)
 	{
-		*dest = *src;
+		for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
+		{
+			*dest = *src;
+		}
 	}
 }
 
@@ -118,9 +128,12 @@ void mem_move16(u16 *dest, const u16 *src, size_t count)
 	{
 		mem_copy16(dest, src, count);
 	}
-	else for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
+	else if (dest > src)
 	{
-		*dest = *src;
+		for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
+		{
+			*dest = *src;
+		}
 	}
 }
 
@@ -132,9 +145,12 @@ void mem_move32(u32 *dest, const u32 *src, size_t count)
 	{
 		mem_copy32(dest, src, count);
 	}
-	else for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
+	else if (dest > src)
 	{
-		*dest = *src;
+		for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
+		{
+			*dest = *src;
+		}
 	}
 }
 
@@ -146,15 +162,23 @@ void mem_move64(u64 *dest, const u64 *src, size_t count)
 	{
 		mem_copy64(dest, src, count);
 	}
-	else for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
+	else if (dest > src)
 	{
-		*dest = *src;
+		for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
+		{
+			*dest = *src;
+		}
 	}
 }
 
 void mem_move(void *dest, const void *src, size_t size)
 {
 	size_t count;
+
+	if (dest == src)
+	{
+		return;
+	}
 
 	if (((long)dest & 0x07) == 0 && ((long)src & 0x07) == 0)
 	{

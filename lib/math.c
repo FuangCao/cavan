@@ -205,6 +205,51 @@ void math_memory_shift_left_byte(const byte *mem, size_t mem_size, size_t shift,
 	}
 }
 
+void math_memory_shift_left_bit(const byte *mem, size_t size, size_t shift, byte *res)
+{
+	byte high = 0;
+	size_t remain = 8 - shift;
+	const byte *mem_end = mem + size;
+
+	if (res && res != mem)
+	{
+		while (mem < mem_end)
+		{
+			*res = *mem << shift | high;
+			high = *mem >> remain;
+
+			res++, mem++;
+		}
+	}
+	else
+	{
+		byte high_bak;
+
+		for (res = (byte *)mem; res < mem_end; res++)
+		{
+			high_bak = *res >> remain;
+			*res = *res << shift | high;
+			high = high_bak;
+		}
+	}
+}
+
+void math_memory_shift_left(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
+{
+	if (res == NULL)
+	{
+		res = (byte *)mem;
+	}
+
+	if (res_size == 0)
+	{
+		res_size = mem_size;
+	}
+
+	math_memory_shift_left_bit(mem, mem_size, shift & 0x07, res);
+	math_memory_shift_left_byte(res, mem_size, shift >> 3, NULL, res_size);
+}
+
 void math_memory_ring_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
 {
 	if (res_size == 0)
@@ -250,6 +295,50 @@ void math_memory_shift_right_byte(const byte *mem, size_t mem_size, size_t shift
 	{
 		mem_set(res, 0, res_size);
 	}
+}
+
+void math_memory_shift_right_bit(const byte *mem, size_t size, size_t shift, byte *res)
+{
+	byte high = 0;
+	size_t remain = 8 - shift;
+
+	if (res && res != mem)
+	{
+		const byte *mem_start = mem;
+
+		for (mem = mem + size - 1, res = res + size - 1; mem >= mem_start; mem--, res--)
+		{
+			*res = *mem >> shift | high;
+			high = *mem << remain;
+		}
+	}
+	else
+	{
+		byte high_bak;
+
+		for (res = (byte *)mem + size - 1; res >= mem; res--)
+		{
+			high_bak = *res << remain;
+			*res = *res >> shift | high;
+			high = high_bak;
+		}
+	}
+}
+
+void math_memory_shift_right(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
+{
+	if (res == NULL)
+	{
+		res = (byte *)mem;
+	}
+
+	if (res_size == 0)
+	{
+		res_size = mem_size;
+	}
+
+	math_memory_shift_right_bit(mem, mem_size, shift & 0x07, res);
+	math_memory_shift_right_byte(res, mem_size, shift >> 3, res, res_size);
 }
 
 void math_memory_ring_shift_right_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size)
