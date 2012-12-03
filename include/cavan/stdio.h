@@ -80,7 +80,7 @@
 	printf(fmt "\n", ##args)
 
 #define pr_func_info(fmt, args ...) \
-	pr_std_info("%s: " fmt, __FUNCTION__, ##args)
+	pr_std_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
 
 #define pr_color_info(color, fmt, args ...) \
 	pr_std_info(color fmt CAVAN_COLOR_STAND, ##args)
