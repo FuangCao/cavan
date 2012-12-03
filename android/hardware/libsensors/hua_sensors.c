@@ -189,7 +189,7 @@ static int hua_sensors_send_wakeup_event(struct hua_sensors_poll_device *pdev, c
 		return wrlen;
 	}
 
-	pr_bold_info("send wakeup event %d", event);
+	pr_bold_info("Send wakeup event %d", event);
 
 	return 0;
 }
@@ -206,7 +206,7 @@ static int hua_sensors_recv_wakeup_event(struct hua_sensors_poll_device *pdev)
 		return rdlen;
 	}
 
-	pr_bold_info("recv wakeup event %d", event);
+	pr_bold_info("Receive wakeup event %d", event);
 
 	return event;
 }
@@ -265,7 +265,7 @@ static int hua_sensors_rebuild_pollfd_list(struct hua_sensors_poll_device *pdev)
 	}
 
 	pdev->poll_count = list - pdev->pfd_list;
-	pr_bold_info("poll_count = %d", pdev->poll_count);
+	pr_bold_info("Active device count = %d", pdev->poll_count - 1);
 
 	hua_sensors_send_wakeup_event(pdev, 0);
 
@@ -274,15 +274,17 @@ static int hua_sensors_rebuild_pollfd_list(struct hua_sensors_poll_device *pdev)
 	return 0;
 }
 
-static int hua_sensor_active_enable(struct hua_sensors_poll_device *pdev, struct hua_sensor_device *sensor, bool enable)
+static int hua_sensor_active_enable(struct hua_sensors_poll_device *pdev, struct hua_sensor_device *sensor, unsigned int enable)
 {
 	int ret;
 
 	pthread_mutex_lock(&sensor->lock);
 
+	pr_bold_info("%s device %s", enable ? "Enable" : "Disable", sensor->name);
+
 	if (sensor->active == enable)
 	{
-		pr_bold_info("Don't need change active state, enable = %d", enable);
+		pr_func_info("Nothing to be done");
 		pthread_mutex_unlock(&sensor->lock);
 		return 0;
 	}
@@ -314,7 +316,6 @@ static int hua_sensor_active_enable(struct hua_sensors_poll_device *pdev, struct
 	pthread_mutex_unlock(&sensor->lock);
 
 	ret = hua_sensors_rebuild_pollfd_list(pdev);
-	pr_bold_info("Set device %s %s", sensor->name, enable ? "active" : "inactive");
 
 	return ret;
 }
