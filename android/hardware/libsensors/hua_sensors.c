@@ -1,3 +1,22 @@
+/*
+ * File:			hua_sensors.c
+ * Author:			Fuang Cao <cavan.cfa@gmail.com>
+ *
+ * Created:			2012-12-03
+ * Description:		Huamobile Sensor HAL
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
+
 #include <hua_sensors.h>
 
 char *text_copy(char *dest, const char *src)
@@ -291,7 +310,7 @@ static int hua_sensor_active_enable(struct hua_sensors_poll_device *pdev, struct
 
 	sensor->active = enable;
 
-	pthread_mutex_unlock(&pdev->lock);	
+	pthread_mutex_unlock(&pdev->lock);
 	pthread_mutex_unlock(&sensor->lock);
 
 	ret = hua_sensors_rebuild_pollfd_list(pdev);
