@@ -107,10 +107,11 @@ static int hua_sensor_get_attributes(struct hua_sensor_device *dev, struct senso
 
 static struct hua_sensor_device *hua_sensor_create(int fd, const char *name)
 {
+	int ret;
 	struct hua_sensor_device *sensor;
 	char ctrl_path[1024];
 
-	if (strcmp(name, "accelerometer") == 0)
+	if (strcmp(name, "HuaMobile_GSensor") == 0)
 	{
 		sensor = hua_gsensor_create();
 	}
@@ -130,8 +131,16 @@ static struct hua_sensor_device *hua_sensor_create(int fd, const char *name)
 		return NULL;
 	}
 
+	ret = ioctl(sensor->ctrl_fd, HUA_SENSOR_IOCG_NAME(sizeof(sensor->name)), sensor->name);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl HUA_SENSOR_IOCG_NAME");
+		close(fd);
+		free(sensor);
+		return NULL;
+	}
+
 	sensor->data_fd = fd;
-	text_ncopy(sensor->name, name, sizeof(sensor->name));
 
 	pthread_mutex_init(&sensor->lock, NULL);
 

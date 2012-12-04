@@ -34,13 +34,14 @@
 #include <utils/Atomic.h>
 #include <hardware/sensors.h>
 
-#define HUA_SENSOR_IOCG_MAX_RANGE		_IOR('H', 0x01, unsigned int)
-#define HUA_SENSOR_IOCG_RESOLUTION		_IOR('H', 0x02, unsigned int)
-#define HUA_SENSOR_IOCG_POWER_CONSUME	_IOR('H', 0x03, unsigned int)
-#define HUA_SENSOR_IOCG_MIN_DELAY		_IOR('H', 0x04, unsigned int)
+#define HUA_SENSOR_IOCG_NAME(len)		_IOC(_IOC_READ, 'H', 0x01, len)
+#define HUA_SENSOR_IOCG_MAX_RANGE		_IOR('H', 0x02, unsigned int)
+#define HUA_SENSOR_IOCG_RESOLUTION		_IOR('H', 0x03, unsigned int)
+#define HUA_SENSOR_IOCG_POWER_CONSUME	_IOR('H', 0x04, unsigned int)
+#define HUA_SENSOR_IOCG_MIN_DELAY		_IOR('H', 0x05, unsigned int)
 
-#define HUA_SENSOR_IOCS_ENABLE			_IOW('H', 0x05, unsigned int)
-#define HUA_SENSOR_IOCS_DELAY			_IOW('H', 0x06, unsigned int)
+#define HUA_SENSOR_IOCS_ENABLE			_IOW('H', 0x06, unsigned int)
+#define HUA_SENSOR_IOCS_DELAY			_IOW('H', 0x07, unsigned int)
 
 #define pr_std_info(fmt, args ...) \
 	LOGD(fmt "\n", ##args)
