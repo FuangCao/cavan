@@ -291,19 +291,19 @@ static int hua_sensor_active_enable(struct hua_sensors_poll_device *pdev, struct
 
 	pr_bold_info("%s device %s", enable ? "Enable" : "Disable", sensor->name);
 
-	if (sensor->active == enable)
-	{
-		pr_func_info("Nothing to be done");
-		pthread_mutex_unlock(&sensor->lock);
-		return 0;
-	}
-
 	ret = ioctl(sensor->ctrl_fd, HUA_SENSOR_IOCS_ENABLE, &enable);
 	if (ret < 0)
 	{
 		pr_error_info("ioctl HUA_SENSOR_IOCS_ENABLE");
 		pthread_mutex_unlock(&sensor->lock);
 		return ret;
+	}
+
+	if (sensor->active == enable)
+	{
+		pr_func_info("Nothing to be done");
+		pthread_mutex_unlock(&sensor->lock);
+		return 0;
 	}
 
 	pthread_mutex_lock(&pdev->lock);
