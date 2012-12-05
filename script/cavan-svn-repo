@@ -82,12 +82,11 @@ class SvnRreoManager:
 		date = time.localtime(time.time())
 		self.datename = "%04d-%02d-%02d_%02d:%02d:%02d" % (date[0], date[1], date[2], date[3], date[4], date[5])
 
-		self.logpath = os.path.join(self.project_root, ".svn/svn_repo_log")
-		self.svn_repo_mkdir(self.logpath)
+		self.logpath = os.path.join(self.project_root, "/tmp/svn_repo_log")
 		self.logfile = os.path.join(self.logpath, "%s.log" % self.datename)
+		self.svn_repo_mkdir(self.logpath)
 
 		self.diffpath = os.path.join(self.project_root, ".svn/svn_repo_diff/" + self.datename)
-		self.svn_repo_mkdir(self.diffpath)
 
 		self.manifest_xml = ".svn/manifest.xml"
 		if os.path.isfile(self.manifest_xml):
@@ -243,6 +242,9 @@ class SvnRreoManager:
 		for fn in self.file_list:
 			if self.svn_repo_system("svn update --force " + fn) < 0:
 				return -1
+
+		if not os.path.isdir(self.diffpath):
+			self.svn_repo_mkdir(self.diffpath)
 
 		bar = CavanProgressBar(len(self.project_list))
 		for fn in self.project_list:
