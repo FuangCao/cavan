@@ -23,6 +23,7 @@ void math_memory_copy(byte *dest, size_t dest_size, const byte *src, size_t src_
 void math_memory_complement(const byte *mem, size_t mem_size, byte *res, size_t res_size);
 char *math_text2memory(const char *text, byte *mem, size_t mem_size, int base);
 char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text_size, int base, char fill, size_t size);
+char *math_memory_remain2text(const byte *left, size_t lsize, const byte *right, size_t rsize, char *text, size_t tsize, int base, char fill, size_t size);
 void math_memory_show(const char *prompt, const byte *mem, size_t mem_size, int base);
 
 void math_memory_shift_left_byte(const byte *mem, size_t mem_size, size_t shift, byte *res, size_t res_size);

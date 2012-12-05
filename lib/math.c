@@ -130,7 +130,7 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 	byte buff[mem_size];
 	bool negative;
 
-	if (base < 2 || base > 24)
+	if (base < 2)
 	{
 		base = 10;
 	}
@@ -177,6 +177,64 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 	}
 
 	text_reverse_simple(text_bak, text - 1);
+
+	*text = 0;
+
+	return text;
+}
+
+char *math_memory_remain2text(const byte *left, size_t lsize, const byte *right, size_t rsize, char *text, size_t tsize, int base, char fill, size_t size)
+{
+	byte mult;
+	char *text_end, *text_bak;
+	byte buff[lsize + 1];
+	byte mult_buff[lsize + 1];
+	const byte *left_last = math_memory_shrink(left, lsize);
+	const byte *right_last = math_memory_shrink(right, rsize);
+
+	if (base < 2)
+	{
+		base = 10;
+	}
+
+	lsize = left_last - left + 1;
+	rsize = right_last - right + 1;
+
+	math_memory_copy(buff, sizeof(buff), left, lsize);
+
+	for (text_bak = text, text_end = text + tsize - 1; text < text_end; text++)
+	{
+		math_memory_mul_single(buff, sizeof(buff), base, NULL, 0);
+		left_last = math_memory_shrink(buff, sizeof(buff));
+		if (left_last < buff)
+		{
+			break;
+		}
+
+		lsize = left_last - buff + 1;
+		mult = math_memory_div_once(buff, lsize, right, rsize, mult_buff, sizeof(mult_buff));
+		if (mult)
+		{
+			math_memory_sub(buff, sizeof(buff), mult_buff, sizeof(mult_buff), NULL, 0);
+		}
+
+		*text = value2char(mult);
+	}
+
+	if (fill)
+	{
+		char *fill_end = text_bak + size;
+
+		if (fill_end > text_end)
+		{
+			fill_end = text_end;
+		}
+
+		while (text < fill_end)
+		{
+			*text++ = fill;
+		}
+	}
 
 	*text = 0;
 
@@ -1249,12 +1307,15 @@ size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize
 size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size, int base)
 {
 	byte buff[lsize];
+	char text[1024];
 
 	if (res && res != left)
 	{
 		math_memory_copy(buff, lsize, left, lsize);
 		res_size = math_memory_div(buff, lsize, right, rsize, res, res_size);
-		math_memory_show("Remainder = ", buff, lsize, base);
+
+		math_memory_remain2text(buff, lsize, right, rsize, text, sizeof(text), base, 0, 0);
+		println("remain = 0.%s", text);
 	}
 	else
 	{
