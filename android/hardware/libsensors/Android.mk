@@ -16,10 +16,10 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH) \
 
 LOCAL_SRC_FILES := \
-			hua_sensors.c \
-			hua_gsensor.c
+			hua_sensor_core.c \
+			hua_sensor_device.c
 
-LOCAL_SHARED_LIBRARIES := liblog libcutils libdl
+LOCAL_SHARED_LIBRARIES := libutils
 
 LOCAL_PRELINK_MODULE := false
 

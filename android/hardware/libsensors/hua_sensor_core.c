@@ -1,5 +1,5 @@
 /*
- * File:			hua_sensors.c
+ * File:			hua_sensor_core.c
  * Author:			Fuang Cao <cavan.cfa@gmail.com>
  *
  * Created:			2012-12-03
@@ -17,7 +17,7 @@
  *
  */
 
-#include <hua_sensors.h>
+#include <hua_sensor.h>
 
 char *text_copy(char *dest, const char *src)
 {
@@ -60,118 +60,154 @@ int text_lhcmp(const char *text1, const char *text2)
 	return 0;
 }
 
-static int hua_sensor_get_attributes(struct hua_sensor_device *dev, struct sensor_t *sensor)
+static struct hua_sensor_chip *hua_sensor_chip_create(int fd, const char *devname)
 {
 	int ret;
-	unsigned int value;
-	int fd = dev->ctrl_fd;
-
-	ret = ioctl(fd, HUA_SENSOR_IOCG_MAX_RANGE, &value);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOCG_MAX_RANGE");
-		return ret;
-	}
-
-	sensor->maxRange = value;
-
-	ret = ioctl(fd, HUA_SENSOR_IOCG_RESOLUTION, &value);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOCG_RESOLUTION");
-		return ret;
-	}
-
-	sensor->resolution = value;
-
-	ret = ioctl(fd, HUA_SENSOR_IOCG_POWER_CONSUME, &value);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOCG_POWER_CONSUME");
-		return ret;
-	}
-
-	sensor->power = ((float)value) / 1000;
-
-	ret = ioctl(fd, HUA_SENSOR_IOCG_MIN_DELAY, &value);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOCG_MIN_DELAY");
-		return ret;
-	}
-
-	sensor->minDelay = value;
-
-	return 0;
-}
-
-static struct hua_sensor_device *hua_sensor_create(int fd, const char *name)
-{
-	int ret;
-	struct hua_sensor_device *sensor;
+	int index;
+	int ctrl_fd;
 	char ctrl_path[1024];
+	struct hua_sensor_chip *chip;
+	struct hua_sensor_device *sensor, *sensor_end;
 
-	if (strcmp(name, "HuaMobile_GSensor") == 0)
-	{
-		sensor = hua_gsensor_create();
-	}
-	else
+	if (text_lhcmp("sensor-", devname))
 	{
 		return NULL;
 	}
 
-	sprintf(ctrl_path, "/dev/%s", name);
+	sprintf(ctrl_path, "/dev/%s", devname);
 	pr_bold_info("ctrl_path = %s", ctrl_path);
 
-	sensor->ctrl_fd = open(ctrl_path, 0);
-	if (sensor->ctrl_fd < 0)
+	ctrl_fd = open(ctrl_path, 0);
+	if (ctrl_fd < 0)
 	{
 		pr_error_info("open `%s'", ctrl_path);
-		free(sensor);
 		return NULL;
 	}
 
-	ret = ioctl(sensor->ctrl_fd, HUA_SENSOR_IOCG_NAME(sizeof(sensor->name)), sensor->name);
+	chip = malloc(sizeof(*chip));
+	if (chip == NULL)
+	{
+		pr_error_info("malloc");
+		goto out_close_ctrl_fd;
+	}
+
+	chip->data_fd = fd;
+	chip->ctrl_fd = ctrl_fd;
+
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_CHIP_NAME(sizeof(chip->name)), chip->name);
 	if (ret < 0)
 	{
-		pr_error_info("ioctl HUA_SENSOR_IOCG_NAME");
-		close(fd);
-		free(sensor);
-		return NULL;
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_CHIP_NAME");
+		goto out_free_chip;
 	}
 
-	sensor->data_fd = fd;
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_SENSOR_COUNT, &chip->sensor_count);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_SENSOR_COUNT");
+		goto out_free_chip;
+	}
 
-	pthread_mutex_init(&sensor->lock, NULL);
+	pr_bold_info("chip %s sensor count = %d", chip->name, chip->sensor_count);
 
-	return sensor;
+	if (chip->sensor_count == 0)
+	{
+		pr_red_info("chip->sensor_count == 0");
+		goto out_free_chip;
+	}
+
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_CHIP_VENDOR(sizeof(chip->vensor)), chip->vensor);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_CHIP_VENDOR");
+		goto out_free_chip;
+	}
+
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_MIN_DELAY, &chip->min_delay);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MIN_DELAY");
+		goto out_free_chip;
+	}
+
+	sensor = malloc(sizeof(*sensor) * chip->sensor_count);
+	if (sensor == NULL)
+	{
+		pr_error_info("malloc");
+		goto out_free_chip;
+	}
+
+	chip->sensor_list = sensor;
+
+	for (index = 0, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; index++, sensor++)
+	{
+		ret = hua_sensor_device_init(sensor, chip, index);
+		if (ret < 0)
+		{
+			pr_red_info("hua_sensor_device_init");
+			goto out_free_sensors;
+		}
+	}
+
+	return chip;
+
+out_free_sensors:
+	free(chip->sensor_list);
+out_free_chip:
+	free(chip);
+out_close_ctrl_fd:
+	close(ctrl_fd);
+	return NULL;
 }
 
-static void hua_sensor_destory(struct hua_sensor_device *sensor)
+static void hua_sensor_chip_destory(struct hua_sensor_chip *chip)
 {
-	close(sensor->ctrl_fd);
-	close(sensor->data_fd);
-	pthread_mutex_destroy(&sensor->lock);
-	free(sensor);
+	close(chip->ctrl_fd);
+	close(chip->data_fd);
+	pthread_mutex_destroy(&chip->lock);
+	free(chip->sensor_list);
+	free(chip);
 }
 
-static struct hua_sensor_device *hua_sensors_list_add(struct hua_sensor_device *head, struct hua_sensor_device *sensor)
+static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t *sensor_hal, struct hua_sensor_device *sensor_map[], int handle)
+{
+	int ret;
+	struct hua_sensor_device *sensor, *sensor_end;
+
+	for (sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; sensor++, handle++)
+	{
+		ret = hua_sensor_device_probe(sensor, sensor_hal);
+		if (ret < 0)
+		{
+			pr_red_info("hua_sensor_device_probe");
+			return ret;
+		}
+
+		sensor_hal->version = 1;
+		sensor_hal->handle = handle;
+		sensor_map[handle] = sensor;
+	}
+
+	return handle;
+}
+
+static struct hua_sensor_chip *hua_sensor_add_chip(struct hua_sensor_chip *head, struct hua_sensor_chip *chip)
 {
 	if (head)
 	{
-		head->prev = sensor;
+		head->prev = chip;
 	}
 
-	sensor->prev = NULL;
-	sensor->next = head;
+	chip->prev = NULL;
+	chip->next = head;
 
-	return sensor;
+	return chip;
 }
 
-static struct hua_sensor_device *hua_sensors_list_remove(struct hua_sensor_device *head, struct hua_sensor_device *sensor)
+static struct hua_sensor_chip *hua_sensor_remove_chip(struct hua_sensor_chip *head, struct hua_sensor_chip *chip)
 {
-	struct hua_sensor_device *prev = sensor->prev;
-	struct hua_sensor_device *next = sensor->next;
+	struct hua_sensor_chip *prev = chip->prev;
+	struct hua_sensor_chip *next = chip->next;
 
 	if (next)
 	{
@@ -187,7 +223,7 @@ static struct hua_sensor_device *hua_sensors_list_remove(struct hua_sensor_devic
 	return next;
 }
 
-static int hua_sensors_send_wakeup_event(struct hua_sensors_poll_device *pdev, char event)
+static int hua_sensors_send_wakeup_event(struct hua_sensor_poll_device *pdev, char event)
 {
 	ssize_t wrlen;
 
@@ -203,7 +239,7 @@ static int hua_sensors_send_wakeup_event(struct hua_sensors_poll_device *pdev, c
 	return 0;
 }
 
-static int hua_sensors_recv_wakeup_event(struct hua_sensors_poll_device *pdev)
+static int hua_sensors_recv_wakeup_event(struct hua_sensor_poll_device *pdev)
 {
 	char event;
 	ssize_t rdlen;
@@ -220,70 +256,71 @@ static int hua_sensors_recv_wakeup_event(struct hua_sensors_poll_device *pdev)
 	return event;
 }
 
-static int hua_sensors_rebuild_pollfd_list(struct hua_sensors_poll_device *pdev)
+static void hua_sensor_set_active(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
 {
-	struct hua_sensor_device *sensor;
-	struct pollfd *list, *list_end;
+	int fd_max;
 
-	pthread_mutex_lock(&pdev->lock);
+	pr_bold_info("set sensor chip %s active %s", chip->name, enable ? "enable" : "disable");
 
-	if (pdev->pfd_list == NULL)
+	if (enable)
 	{
-		int ret;
-
-		list = malloc(sizeof(*list) * (pdev->sensor_count + 1));
-		if (list == NULL)
-		{
-			pr_error_info("malloc");
-			pdev->poll_count = 0;
-			pthread_mutex_unlock(&pdev->lock);
-			return -ENOMEM;
-		}
-
-		ret = pipe(pdev->pipefd);
-		if (ret < 0)
-		{
-			pr_error_info("pipe");
-			free(list);
-			pdev->poll_count = 0;
-			pthread_mutex_unlock(&pdev->lock);
-			return ret;
-		}
-
-		pdev->pfd_list = list;
-
-		list->events = POLLIN;
-		list->fd = pdev->pipefd[0];
-		list->revents = 0;
-		list++;
+		pdev->inactive_head = hua_sensor_remove_chip(pdev->inactive_head, chip);
+		pdev->active_head = hua_sensor_add_chip(pdev->active_head, chip);
+		FD_SET(chip->data_fd, &pdev->read_fdset);
 	}
 	else
 	{
-		list = pdev->pfd_list + 1;
+		pdev->active_head = hua_sensor_remove_chip(pdev->active_head, chip);
+		pdev->inactive_head = hua_sensor_add_chip(pdev->inactive_head, chip);
+		FD_CLR(chip->data_fd, &pdev->read_fdset);
 	}
-
-	for (list_end = list + pdev->sensor_count, sensor = pdev->active_head; list < list_end && sensor; sensor = sensor->next, list++)
-	{
-		pr_bold_info("Add sensor %s to poll list", sensor->name);
-
-		list->events = POLLIN;
-		list->fd = sensor->data_fd;
-		list->revents = 0;
-
-		sensor->pfd = list;
-	}
-
-	pdev->poll_count = list - pdev->pfd_list;
-	pr_bold_info("Active device count = %d", pdev->poll_count - 1);
 
 	hua_sensors_send_wakeup_event(pdev, 0);
 
+	for (fd_max = pdev->pipefd[0], chip = pdev->active_head; chip; chip = chip->next)
+	{
+		if (chip->data_fd > fd_max)
+		{
+			fd_max = chip->data_fd;
+		}
+	}
+
+	pdev->fd_max = fd_max + 1;
+
+	pr_bold_info("max fd = %d", pdev->fd_max);
+}
+
+static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
+{
+	pthread_mutex_lock(&pdev->lock);
+	pthread_mutex_lock(&chip->lock);
+
+	if (enable)
+	{
+		if (chip->use_count == 0)
+		{
+			hua_sensor_set_active(pdev, chip, true);
+		}
+
+		chip->use_count++;
+	}
+	else
+	{
+		if (chip->use_count == 1)
+		{
+			hua_sensor_set_active(pdev, chip, false);
+		}
+
+		chip->use_count--;
+	}
+
+	pthread_mutex_unlock(&chip->lock);
 	pthread_mutex_unlock(&pdev->lock);
 
 	return 0;
 }
 
-static int hua_sensor_active_enable(struct hua_sensors_poll_device *pdev, struct hua_sensor_device *sensor, unsigned int enable)
+static int hua_sensor_device_set_enable(struct hua_sensor_poll_device *pdev, struct hua_sensor_device *sensor, bool enable)
 {
 	int ret;
 
@@ -291,7 +328,7 @@ static int hua_sensor_active_enable(struct hua_sensors_poll_device *pdev, struct
 
 	pr_bold_info("%s device %s", enable ? "Enable" : "Disable", sensor->name);
 
-	ret = ioctl(sensor->ctrl_fd, HUA_SENSOR_IOCS_ENABLE, &enable);
+	ret = ioctl(sensor->chip->ctrl_fd, HUA_SENSOR_IOC_SET_ENABLE(sensor->index), enable);
 	if (ret < 0)
 	{
 		pr_error_info("ioctl HUA_SENSOR_IOCS_ENABLE");
@@ -299,50 +336,35 @@ static int hua_sensor_active_enable(struct hua_sensors_poll_device *pdev, struct
 		return ret;
 	}
 
-	if (sensor->active == enable)
+	if (sensor->enabled == enable)
 	{
 		pr_func_info("Nothing to be done");
 		pthread_mutex_unlock(&sensor->lock);
 		return 0;
 	}
 
-	pthread_mutex_lock(&pdev->lock);
+	hua_sensor_chip_set_enable_lock(pdev, sensor->chip, enable);
+	sensor->enabled = enable;
 
-	if (enable)
-	{
-		pdev->inactive_head = hua_sensors_list_remove(pdev->inactive_head, sensor);
-		pdev->active_head = hua_sensors_list_add(pdev->active_head, sensor);
-	}
-	else
-	{
-		pdev->active_head = hua_sensors_list_remove(pdev->active_head, sensor);
-		pdev->inactive_head = hua_sensors_list_add(pdev->inactive_head, sensor);
-	}
-
-	sensor->active = enable;
-
-	pthread_mutex_unlock(&pdev->lock);
 	pthread_mutex_unlock(&sensor->lock);
-
-	ret = hua_sensors_rebuild_pollfd_list(pdev);
 
 	return ret;
 }
 
-static void hua_sensors_destory(struct hua_sensors_poll_device *pdev)
+static void hua_sensors_destory(struct hua_sensor_poll_device *pdev)
 {
-	struct hua_sensor_device *sensor;
+	struct hua_sensor_chip *chip;
 
 	pthread_mutex_lock(&pdev->lock);
 
-	for (sensor = pdev->active_head; sensor; sensor = sensor->next)
+	for (chip = pdev->active_head; chip; chip = chip->next)
 	{
-		hua_sensor_destory(sensor);
+		hua_sensor_chip_destory(chip);
 	}
 
-	for (sensor = pdev->inactive_head; sensor; sensor = sensor->next)
+	for (chip = pdev->inactive_head; chip; chip = chip->next)
 	{
-		hua_sensor_destory(sensor);
+		hua_sensor_chip_destory(chip);
 	}
 
 	pdev->active_head = NULL;
@@ -354,17 +376,14 @@ static void hua_sensors_destory(struct hua_sensors_poll_device *pdev)
 	pthread_mutex_destroy(&pdev->lock);
 }
 
-static void hua_sensors_remove(struct hua_sensors_poll_device *pdev)
+static void hua_sensors_remove(struct hua_sensor_poll_device *pdev)
 {
 	pthread_mutex_lock(&pdev->lock);
 
-	if (pdev->pfd_list)
+	if (pdev->pipefd[0] > 0)
 	{
-		free(pdev->pfd_list);
 		close(pdev->pipefd[0]);
 		close(pdev->pipefd[1]);
-		pdev->poll_count = 0;
-		pdev->pfd_list = NULL;
 	}
 
 	if (pdev->sensor_list)
@@ -379,11 +398,13 @@ static void hua_sensors_remove(struct hua_sensors_poll_device *pdev)
 	hua_sensors_destory(pdev);
 }
 
-static int hua_sensors_probe(struct hua_sensors_poll_device *pdev)
+static int hua_sensors_probe(struct hua_sensor_poll_device *pdev)
 {
+	int ret;
+	int handle;
 	struct sensor_t *list, *list_end;
 	struct hua_sensor_device **map;
-	struct hua_sensor_device *sensor;
+	struct hua_sensor_chip *chip, *chip_next;
 
 	pthread_mutex_lock(&pdev->lock);
 
@@ -395,7 +416,7 @@ static int hua_sensors_probe(struct hua_sensors_poll_device *pdev)
 			pr_error_info("malloc");
 			pdev->sensor_count = 0;
 			pthread_mutex_unlock(&pdev->lock);
-			return 0;
+			return -ENOMEM;
 		}
 
 		pdev->sensor_list = list;
@@ -407,29 +428,30 @@ static int hua_sensors_probe(struct hua_sensors_poll_device *pdev)
 	}
 
 	map = pdev->sensor_map;
+	list_end = list + pdev->sensor_count;
 
-	for (list_end = list + pdev->sensor_count, sensor = pdev->inactive_head; list < list_end && sensor; sensor = sensor->next)
+	for (handle = 0, chip = pdev->inactive_head; chip; chip = chip->next)
 	{
-		if (hua_sensor_get_attributes(sensor, list) < 0 || (sensor->probe && sensor->probe(sensor, list) < 0))
+		chip_next = chip->next;
+
+		ret = hua_sensor_chip_probe(chip, list, map, handle);
+		if (ret < 0)
 		{
-			pdev->inactive_head = hua_sensors_list_remove(pdev->inactive_head, sensor);
-			hua_sensor_destory(sensor);
+			pr_red_info("hua_sensor_chip_probe");
+			pdev->inactive_head = hua_sensor_remove_chip(pdev->inactive_head, chip);
+			hua_sensor_chip_destory(chip);
+			continue;
 		}
-		else
-		{
-			pr_std_info("============================================================");
 
-			pr_green_info("Device name = %s", sensor->name);
-			pr_green_info("Name = %s, Vendor = %s", list->name, list->vendor);
-			pr_green_info("maxRange = %f, Resolution = %f", list->maxRange, list->resolution);
-			pr_green_info("Power = %f, minDelay = %d", list->power, list->minDelay);
+		pr_std_info("============================================================");
 
-			list->version = 1;
-			list->handle = list - pdev->sensor_list;
-			map[list->handle] = sensor;
+		pr_green_info("Name = %s, Vendor = %s", list->name, list->vendor);
+		pr_green_info("maxRange = %f, Resolution = %f", list->maxRange, list->resolution);
+		pr_green_info("Power = %f, minDelay = %d", list->power, list->minDelay);
 
-			list++;
-		}
+		handle = ret;
+		list += chip->sensor_count;
+		map += chip->sensor_count;
 	}
 
 	pdev->sensor_count = list - pdev->sensor_list;
@@ -441,12 +463,13 @@ static int hua_sensors_probe(struct hua_sensors_poll_device *pdev)
 
 static int hua_sensors_match_handler(int fd, const char *pathname, const char *devname, void *data)
 {
-	struct hua_sensor_device *sensor;
-	struct hua_sensors_poll_device *pdev = data;
+	struct hua_sensor_chip *chip;
+	struct hua_sensor_poll_device *pdev = data;
 
-	sensor = hua_sensor_create(fd, devname);
-	if (sensor == NULL)
+	chip = hua_sensor_chip_create(fd, devname);
+	if (chip == NULL)
 	{
+		pr_red_info("hua_sensor_chip_create %s, pathname = %s", devname, pathname);
 		return -EFAULT;
 	}
 
@@ -454,9 +477,8 @@ static int hua_sensors_match_handler(int fd, const char *pathname, const char *d
 
 	pthread_mutex_lock(&pdev->lock);
 
-	pdev->inactive_head = hua_sensors_list_add(pdev->inactive_head, sensor);
-	sensor->active = false;
-	pdev->sensor_count++;
+	pdev->inactive_head = hua_sensor_add_chip(pdev->inactive_head, chip);
+	pdev->sensor_count += chip->sensor_count;
 
 	pthread_mutex_unlock(&pdev->lock);
 
@@ -531,7 +553,7 @@ ssize_t hua_sensors_scan_devices(int (*match_handle)(int fd, const char *pathnam
 	return count;
 }
 
-static int hua_sensors_open(struct hua_sensors_poll_device *pdev)
+static int hua_sensors_open(struct hua_sensor_poll_device *pdev)
 {
 	int ret;
 
@@ -541,10 +563,8 @@ static int hua_sensors_open(struct hua_sensors_poll_device *pdev)
 	pdev->sensor_list = NULL;
 	pdev->sensor_map = NULL;
 
-	pdev->poll_count = 0;
-	pdev->pfd_list = NULL;
-	pdev->active_head = NULL;
-	pdev->inactive_head = NULL;
+	pdev->active_head = pdev->inactive_head = NULL;
+	pdev->pipefd[0] = pdev->pipefd[1] = -1;
 
 	ret = hua_sensors_scan_devices(hua_sensors_match_handler, pdev);
 	if (ret < 0)
@@ -574,37 +594,40 @@ static int hua_sensors_open(struct hua_sensors_poll_device *pdev)
 		return -ENOENT;
 	}
 
-	ret = hua_sensors_rebuild_pollfd_list(pdev);
+	ret = pipe(pdev->pipefd);
 	if (ret < 0)
 	{
-		pr_red_info("hua_sensors_rebuild_pollfd_list");
-		hua_sensors_remove(pdev);
+		pr_error_info("pipe");
 		return ret;
 	}
+
+	FD_ZERO(&pdev->read_fdset);
+	FD_SET(pdev->pipefd[0], &pdev->read_fdset);
+	pdev->fd_max = pdev->pipefd[0] + 1;
 
 	return 0;
 }
 
 static int hua_sensors_activate(struct sensors_poll_device_t *dev, int handle, int enabled)
 {
-	struct hua_sensors_poll_device *pdev = (struct hua_sensors_poll_device *)dev;
+	struct hua_sensor_poll_device *pdev = (struct hua_sensor_poll_device *)dev;
 	struct hua_sensor_device *sensor = pdev->sensor_map[handle];
 
-	return hua_sensor_active_enable(pdev, sensor, enabled);
+	return hua_sensor_device_set_enable(pdev, sensor, enabled);
 }
 
 static int hua_sensors_setDelay(struct sensors_poll_device_t *dev, int handle, int64_t ns)
 {
 	int ret;
 	unsigned int delay = ns / 1000000;
-	struct hua_sensors_poll_device *pdev = (struct hua_sensors_poll_device *)dev;
+	struct hua_sensor_poll_device *pdev = (struct hua_sensor_poll_device *)dev;
 	struct hua_sensor_device *sensor = pdev->sensor_map[handle];
 
 	pr_func_info("Delay = %d(ms)", delay);
 
 	pthread_mutex_lock(&sensor->lock);
 
-	ret = ioctl(sensor->ctrl_fd, HUA_SENSOR_IOCS_DELAY, &delay);
+	ret = ioctl(sensor->chip->ctrl_fd, HUA_SENSOR_IOC_SET_DELAY(sensor->index), delay);
 	if (ret < 0)
 	{
 		pr_error_info("ioctl HUA_SENSOR_IOCS_DELAY");
@@ -619,60 +642,64 @@ static int hua_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t *
 {
 	int ret;
 	ssize_t rdlen;
-	struct hua_sensor_device *sensor;
+	struct hua_sensor_chip *chip;
 	struct input_event evbuff[count], *ep, *ep_end;
-	struct hua_sensors_poll_device *pdev = (struct hua_sensors_poll_device *)dev;
-	struct sensors_event_t *data_bak = data, *data_last = data + count - 1;
+	struct hua_sensor_poll_device *pdev = (struct hua_sensor_poll_device *)dev;
+	struct sensors_event_t *data_bak = data, *data_end = data + count;
 
 	pthread_mutex_lock(&pdev->lock);
 
 	while (data_bak == data)
 	{
+		fd_set rfds = pdev->read_fdset;
+
 		pthread_mutex_unlock(&pdev->lock);
 
-		ret = poll(pdev->pfd_list, pdev->poll_count, -1);
+		ret = select(pdev->fd_max, &rfds, NULL, NULL, NULL);
 		if (ret < 0)
 		{
-			pr_error_info("poll");
+			pr_error_info("select");
 			return ret;
 		}
 
 		pthread_mutex_lock(&pdev->lock);
 
-		if (pdev->pfd_list->revents)
+		if (FD_ISSET(pdev->pipefd[0], &rfds))
 		{
 			hua_sensors_recv_wakeup_event(pdev);
 			pthread_mutex_unlock(&pdev->lock);
 			return 0;
 		}
 
-		for (sensor = pdev->active_head; sensor; sensor = sensor->next)
+		for (chip = pdev->active_head; chip; chip = chip->next)
 		{
-			if (sensor->pfd->revents == 0)
+			if (FD_ISSET(chip->data_fd, &rfds) == 0)
 			{
 				continue;
 			}
 
-			rdlen = read(sensor->data_fd, evbuff, sizeof(evbuff));
+			rdlen = read(chip->data_fd, evbuff, sizeof(evbuff));
 			if (rdlen < 0)
 			{
-				pr_error_info("read data from %s", sensor->name);
+				pr_error_info("read data from chip %s", chip->name);
 				pthread_mutex_unlock(&pdev->lock);
 				return rdlen;
 			}
 
 			for (ep = evbuff, ep_end = ep + rdlen / sizeof(evbuff[0]); ep < ep_end; ep++)
 			{
-				if (sensor->event_handler(sensor, ep))
+				if (ep->type == EV_SYN)
 				{
-					memcpy(data, &sensor->event, sizeof(*data));
-					data->timestamp = timeval2nano(&ep->time);
-
-					if (++data > data_last)
+					data = hua_sensor_chip_sync_event(chip, data, data_end - data);
+					if (data >= data_end)
 					{
 						pthread_mutex_unlock(&pdev->lock);
 						return count;
 					}
+				}
+				else
+				{
+					hua_sensor_chip_report_event(chip, ep);
 				}
 			}
 		}
@@ -689,12 +716,12 @@ static int hua_sensors_module_close(struct hw_device_t *device)
 {
 	pr_func_info("device = %p", device);
 
-	hua_sensors_remove((struct hua_sensors_poll_device *)device);
+	hua_sensors_remove((struct hua_sensor_poll_device *)device);
 
 	return 0;
 }
 
-static struct hua_sensors_poll_device hua_poll_device =
+static struct hua_sensor_poll_device hua_poll_device =
 {
 	.device =
 	{
