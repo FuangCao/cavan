@@ -258,36 +258,22 @@ static int hua_sensors_recv_wakeup_event(struct hua_sensor_poll_device *pdev)
 
 static void hua_sensor_set_active(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
 {
-	int fd_max;
-
 	pr_bold_info("set sensor chip %s active %s", chip->name, enable ? "enable" : "disable");
 
 	if (enable)
 	{
 		pdev->inactive_head = hua_sensor_remove_chip(pdev->inactive_head, chip);
 		pdev->active_head = hua_sensor_add_chip(pdev->active_head, chip);
-		FD_SET(chip->data_fd, &pdev->read_fdset);
+		chip->pfd->events = POLLIN;
 	}
 	else
 	{
 		pdev->active_head = hua_sensor_remove_chip(pdev->active_head, chip);
 		pdev->inactive_head = hua_sensor_add_chip(pdev->inactive_head, chip);
-		FD_CLR(chip->data_fd, &pdev->read_fdset);
+		chip->pfd->events = 0;
 	}
 
 	hua_sensors_send_wakeup_event(pdev, 0);
-
-	for (fd_max = pdev->pipefd[0], chip = pdev->active_head; chip; chip = chip->next)
-	{
-		if (chip->data_fd > fd_max)
-		{
-			fd_max = chip->data_fd;
-		}
-	}
-
-	pdev->fd_max = fd_max + 1;
-
-	pr_bold_info("max fd = %d", pdev->fd_max);
 }
 
 static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
@@ -316,6 +302,8 @@ static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, 
 
 	pthread_mutex_unlock(&chip->lock);
 	pthread_mutex_unlock(&pdev->lock);
+
+	pr_bold_info("chip %s use count = %d", chip->name, chip->use_count);
 
 	return 0;
 }
@@ -370,6 +358,7 @@ static void hua_sensors_destory(struct hua_sensor_poll_device *pdev)
 	pdev->active_head = NULL;
 	pdev->inactive_head = NULL;
 	pdev->sensor_count = 0;
+	pdev->pollfd_count = 0;
 
 	pthread_mutex_unlock(&pdev->lock);
 
@@ -380,18 +369,13 @@ static void hua_sensors_remove(struct hua_sensor_poll_device *pdev)
 {
 	pthread_mutex_lock(&pdev->lock);
 
-	if (pdev->pipefd[0] > 0)
-	{
-		close(pdev->pipefd[0]);
-		close(pdev->pipefd[1]);
-	}
+	free(pdev->sensor_list);
+	pdev->sensor_list = NULL;
+	pdev->sensor_map = NULL;
+	pdev->pollfd_list = NULL;
 
-	if (pdev->sensor_list)
-	{
-		free(pdev->sensor_list);
-		pdev->sensor_list = NULL;
-		pdev->sensor_map = NULL;
-	}
+	close(pdev->pipefd[0]);
+	close(pdev->pipefd[1]);
 
 	pthread_mutex_unlock(&pdev->lock);
 
@@ -402,33 +386,39 @@ static int hua_sensors_probe(struct hua_sensor_poll_device *pdev)
 {
 	int ret;
 	int handle;
-	struct sensor_t *list, *list_end;
+	struct sensor_t *list;
 	struct hua_sensor_device **map;
+	struct pollfd *pfd;
 	struct hua_sensor_chip *chip, *chip_next;
 
 	pthread_mutex_lock(&pdev->lock);
 
-	if (pdev->sensor_list == NULL)
+	ret = pipe(pdev->pipefd);
+	if (ret < 0)
 	{
-		list = malloc((sizeof(*list) + sizeof(*map)) * pdev->sensor_count);
-		if (list == NULL)
-		{
-			pr_error_info("malloc");
-			pdev->sensor_count = 0;
-			pthread_mutex_unlock(&pdev->lock);
-			return -ENOMEM;
-		}
-
-		pdev->sensor_list = list;
-		pdev->sensor_map = (struct hua_sensor_device **)(list + pdev->sensor_count);
-	}
-	else
-	{
-		list = pdev->sensor_list;
+		pr_error_info("pipe");
+		goto out_mutex_unlock;
 	}
 
-	map = pdev->sensor_map;
-	list_end = list + pdev->sensor_count;
+	pdev->pollfd_count++;
+
+	list = malloc((sizeof(*list) + sizeof(*map)) * pdev->sensor_count + sizeof(*pfd) * pdev->pollfd_count);
+	if (list == NULL)
+	{
+		pr_error_info("malloc");
+		ret = -ENOMEM;
+		goto out_close_pipe;
+	}
+
+	map = (struct hua_sensor_device **)(list + pdev->sensor_count);
+	pfd = (struct pollfd *)(map + pdev->sensor_count);
+
+	pdev->sensor_list = list;
+	pdev->sensor_map = map;
+	pdev->pollfd_list = pfd;
+
+	pfd->events = POLLIN;
+	pfd->fd = pdev->pipefd[0];
 
 	for (handle = 0, chip = pdev->inactive_head; chip; chip = chip->next)
 	{
@@ -452,13 +442,30 @@ static int hua_sensors_probe(struct hua_sensor_poll_device *pdev)
 		handle = ret;
 		list += chip->sensor_count;
 		map += chip->sensor_count;
+
+		pfd++;
+		pfd->events = 0;
+		pfd->fd = chip->data_fd;
+		chip->pfd = pfd;
 	}
 
 	pdev->sensor_count = list - pdev->sensor_list;
+	if (pdev->sensor_count)
+	{
+		pthread_mutex_unlock(&pdev->lock);
+		return 0;
+	}
 
+	pr_red_info("No sensor device found!");
+	ret = -ENOENT;
+
+	free(pdev->sensor_list);
+out_close_pipe:
+	close(pdev->pipefd[0]);
+	close(pdev->pipefd[1]);
+out_mutex_unlock:
 	pthread_mutex_unlock(&pdev->lock);
-
-	return 0;
+	return ret;
 }
 
 static int hua_sensors_match_handler(int fd, const char *pathname, const char *devname, void *data)
@@ -479,6 +486,7 @@ static int hua_sensors_match_handler(int fd, const char *pathname, const char *d
 
 	pdev->inactive_head = hua_sensor_add_chip(pdev->inactive_head, chip);
 	pdev->sensor_count += chip->sensor_count;
+	pdev->pollfd_count++;
 
 	pthread_mutex_unlock(&pdev->lock);
 
@@ -559,6 +567,7 @@ static int hua_sensors_open(struct hua_sensor_poll_device *pdev)
 
 	pthread_mutex_init(&pdev->lock, NULL);
 
+	pdev->pollfd_count = 0;
 	pdev->sensor_count = 0;
 	pdev->sensor_list = NULL;
 	pdev->sensor_map = NULL;
@@ -586,24 +595,6 @@ static int hua_sensors_open(struct hua_sensor_poll_device *pdev)
 		hua_sensors_destory(pdev);
 		return ret;
 	}
-
-	if (pdev->sensor_count == 0)
-	{
-		pr_red_info("pdev->sensor_count == 0");
-		hua_sensors_remove(pdev);
-		return -ENOENT;
-	}
-
-	ret = pipe(pdev->pipefd);
-	if (ret < 0)
-	{
-		pr_error_info("pipe");
-		return ret;
-	}
-
-	FD_ZERO(&pdev->read_fdset);
-	FD_SET(pdev->pipefd[0], &pdev->read_fdset);
-	pdev->fd_max = pdev->pipefd[0] + 1;
 
 	return 0;
 }
@@ -651,20 +642,18 @@ static int hua_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t *
 
 	while (data_bak == data)
 	{
-		fd_set rfds = pdev->read_fdset;
-
 		pthread_mutex_unlock(&pdev->lock);
 
-		ret = select(pdev->fd_max, &rfds, NULL, NULL, NULL);
+		ret = poll(pdev->pollfd_list, pdev->pollfd_count, -1);
 		if (ret < 0)
 		{
-			pr_error_info("select");
+			pr_error_info("poll");
 			return ret;
 		}
 
 		pthread_mutex_lock(&pdev->lock);
 
-		if (FD_ISSET(pdev->pipefd[0], &rfds))
+		if (pdev->pollfd_list->revents)
 		{
 			hua_sensors_recv_wakeup_event(pdev);
 			pthread_mutex_unlock(&pdev->lock);
@@ -673,7 +662,7 @@ static int hua_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t *
 
 		for (chip = pdev->active_head; chip; chip = chip->next)
 		{
-			if (FD_ISSET(chip->data_fd, &rfds) == 0)
+			if (chip->pfd->revents == 0)
 			{
 				continue;
 			}

@@ -27,6 +27,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <pthread.h>
 #include <linux/input.h>
 #include <utils/Log.h>
@@ -184,6 +185,7 @@ struct hua_sensor_chip
 
 	unsigned int min_delay;
 	unsigned int sensor_count;
+	struct pollfd *pfd;
 	struct hua_sensor_device *sensor_list;
 
 	struct hua_sensor_chip *prev;
@@ -196,13 +198,14 @@ struct hua_sensor_poll_device
 
 	pthread_mutex_t lock;
 
+	size_t chip_count;
 	size_t sensor_count;
 	struct sensor_t *sensor_list;
 	struct hua_sensor_device **sensor_map;
 
 	int pipefd[2];
-	int fd_max;
-	fd_set read_fdset;
+	size_t pollfd_count;
+	struct pollfd *pollfd_list;
 
 	struct hua_sensor_chip *active_head;
 	struct hua_sensor_chip *inactive_head;
