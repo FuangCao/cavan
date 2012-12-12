@@ -138,7 +138,7 @@ typedef enum
 
 struct hua_sensor_device
 {
-	char name[32];
+	char name[128];
 
 	unsigned int type;
 	unsigned int max_range;
@@ -177,8 +177,8 @@ struct hua_sensor_chip
 {
 	int data_fd;
 	int ctrl_fd;
-	char name[32];
-	char vensor[32];
+	char name[128];
+	char vensor[128];
 
 	size_t use_count;
 	pthread_mutex_t lock;
