@@ -286,6 +286,7 @@ static bool lis3dh_acceleration_event_handler(struct hua_sensor_device *sensor, 
 struct hua_sensor_device lis3dh_sensor_list[] =
 {
 	{
+		.name = "LIS3DH Three-Axis Digital Accelerometer",
 		.type = HUA_SENSOR_TYPE_ACCELEROMETER,
 		.fuzz = 32,
 		.flat = 32,

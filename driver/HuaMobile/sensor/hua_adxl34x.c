@@ -159,7 +159,7 @@
 #define ADXL346_3D_BOTTOM		6	/* -Z */
 
 #define ADXL346_GINT1			EIC_ID_0
-#define ADXL34X_IRQ_MASK		(DATA_READY | ACTIVITY | INACTIVITY)
+#define ADXL34X_INT_MASK		(DATA_READY | ACTIVITY | INACTIVITY)
 
 #pragma pack(1)
 struct adxl34x_data_package
@@ -223,7 +223,7 @@ static int adxl34x_sensor_chip_set_power(struct hua_sensor_chip *chip, bool enab
 	ret = chip->write_register(chip, POWER_CTL, value);
 	if (ret < 0)
 	{
-		pr_red_info("hua_sensor_i2c_write_register");
+		pr_red_info("write_register POWER_CTL");
 		return ret;
 	}
 
@@ -234,9 +234,9 @@ static void adxl34x_sensor_main_loop(struct hua_sensor_chip *chip)
 {
 	int ret;
 	u8 irq_state;
+#if defined(ADXL346_GINT2) || defined(ADXL346_GINT1)
 	struct completion *event_completion = &chip->event_completion;
-
-	pr_pos_info();
+#endif
 
 	while (1)
 	{
@@ -297,9 +297,59 @@ static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor,
 	return true;
 }
 
+static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, u32 mask)
+{
+	int ret;
+	int x, y, z;
+	u8 orient;
+
+	ret = chip->read_register(chip, ORIENT, &orient);
+	if (ret < 0)
+	{
+		pr_red_info("read_register");
+		return false;
+	}
+
+	if ((orient & ADXL346_3D_VALID) == 0)
+	{
+		return false;
+	}
+
+	x = y = z = 0;
+
+	switch (orient & 0x07)
+	{
+	case 1:
+		z = 1;
+		break;
+	case 2:
+		y = 1;
+		break;
+	case 3:
+		x = 1;
+		break;
+	case 4:
+		x = -1;
+		break;
+	case 5:
+		y = -1;
+		break;
+	case 6:
+		z = -1;
+		break;
+	default:
+		return false;
+	}
+
+	sensor->report_vector_event(chip->input, x, y, z);
+
+	return true;
+}
+
 struct hua_sensor_device adxl34x_sensor_list[] =
 {
 	{
+		.name = "ADXL345/346 Three-Axis Digital Accelerometer",
 		.type = HUA_SENSOR_TYPE_ACCELEROMETER,
 		.fuzz = 3,
 		.flat = 3,
@@ -308,6 +358,17 @@ struct hua_sensor_device adxl34x_sensor_list[] =
 		.resolution = 4096,
 		.power_consume = 145,
 		.event_handler = adxl34x_acceleration_event_handler
+	},
+	{
+		.name = "ADXL345/346 Three-Axis Digital Orientation",
+		.type = HUA_SENSOR_TYPE_ORIENTATION,
+		.fuzz = 0,
+		.flat = 0,
+		.poll_delay = 200,
+		.max_range = 360,
+		.resolution = 2,
+		.power_consume = 145,
+		.event_handler = adxl34x_orientation_event_handler
 	}
 };
 
@@ -331,11 +392,11 @@ static struct hua_sensor_init_data adxl34x_init_data[] =
 	{DATA_FORMAT, FULL_RES, 0},
 	{FIFO_CTL, FIFO_MODE(FIFO_STREAM) | SAMPLES(0), 0},
 #ifdef ADXL346_GINT2
-	{INT_MAP, ADXL34X_IRQ_MASK | OVERRUN, 0},
+	{INT_MAP, ADXL34X_INT_MASK | OVERRUN, 0},
 #else
 	{INT_MAP, 0, 0},
 #endif
-	{INT_ENABLE, ADXL34X_IRQ_MASK | OVERRUN, 0}
+	{INT_ENABLE, ADXL34X_INT_MASK | OVERRUN, 0}
 };
 
 static int __devinit adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)

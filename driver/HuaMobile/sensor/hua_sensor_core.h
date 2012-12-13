@@ -57,6 +57,7 @@
 	((index) & HUA_SENSOR_IOC_INDEX_MASK) << HUA_SENSOR_IOC_INDEX_SHIFT | \
 	((size) & HUA_SENSOR_IOC_SIZE_MASK) << HUA_SENSOR_IOC_SIZE_SHIFT)
 
+#define HUA_SENSOR_IOC_SET_DETECT					HUA_SENSOR_IOC('H', 0x00, 0, 0)
 #define HUA_SENSOR_IOC_GET_CHIP_NAME(len)			HUA_SENSOR_IOC('H', 0x01, 0, len)
 #define HUA_SENSOR_IOC_GET_CHIP_VENDOR(len)			HUA_SENSOR_IOC('H', 0x02, 0, len)
 #define HUA_SENSOR_IOC_GET_SENSOR_COUNT				HUA_SENSOR_IOC('H', 0x03, 0, 0)
@@ -108,9 +109,7 @@ enum hua_sensor_type
 
 enum hua_sensor_thread_state
 {
-	HUA_SENSOR_THREAD_STATE_IDEL,
 	HUA_SENSOR_THREAD_STATE_RUNNING,
-	HUA_SENSOR_THREAD_STATE_SUSPENDING,
 	HUA_SENSOR_THREAD_STATE_SUSPEND,
 	HUA_SENSOR_THREAD_STATE_STOPPING,
 	HUA_SENSOR_THREAD_STATE_STOPPED
@@ -163,6 +162,7 @@ struct hua_sensor_chip
 
 	const struct hua_sensor_init_data *init_data;
 	size_t init_data_size;
+	bool power_on_init;
 
 	void *private_data;
 	u32 devid;
@@ -206,8 +206,11 @@ struct hua_sensor_core
 
 	struct mutex lock;
 
-	u32 poll_delay;
-	struct task_struct *poll_task;
+	u32 detect_delay;
+	struct task_struct *detect_task;
+
+	struct file_operations misc_fops;
+	struct miscdevice misc_dev;
 
 	struct hua_sensor_chip *chip_head;
 };
