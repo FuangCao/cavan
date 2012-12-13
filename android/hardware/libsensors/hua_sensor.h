@@ -145,7 +145,6 @@ struct hua_sensor_device
 
 	unsigned int type;
 	unsigned int max_range;
-	unsigned int min_delay;
 	unsigned int power_consume;
 	unsigned int resolution;
 

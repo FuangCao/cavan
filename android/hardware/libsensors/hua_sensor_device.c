@@ -266,7 +266,6 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *a
 
 	asensor->resolution = asensor->maxRange / sensor->resolution;
 	asensor->power = ((float)sensor->power_consume) / 1000;
-	asensor->minDelay = sensor->min_delay;
 	asensor->vendor = sensor->chip->vensor;
 	asensor->name = sensor->name;
 

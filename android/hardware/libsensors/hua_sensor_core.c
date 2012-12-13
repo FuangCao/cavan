@@ -186,6 +186,7 @@ static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t a
 		}
 
 		hal_sensor->version = 1;
+		hal_sensor->minDelay = chip->min_delay;
 		hal_sensor->handle = handle;
 		sensor_map[handle] = sensor;
 
