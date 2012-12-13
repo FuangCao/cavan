@@ -142,7 +142,7 @@ int hua_sensor_device_init(struct hua_sensor_device *sensor, struct hua_sensor_c
 	return 0;
 }
 
-int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *sensor_hal)
+int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *asensor)
 {
 	int type = sensor->type;
 	struct sensors_event_t *event = &sensor->event;
@@ -151,8 +151,8 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *s
 	switch (type)
 	{
 	case HUA_SENSOR_TYPE_ACCELEROMETER:
-		sensor_hal->type = SENSOR_TYPE_ACCELEROMETER;
-		sensor_hal->maxRange = sensor->max_range * GRAVITY_EARTH;
+		asensor->type = SENSOR_TYPE_ACCELEROMETER;
+		asensor->maxRange = sensor->max_range * GRAVITY_EARTH;
 		event->type = SENSOR_TYPE_ACCELEROMETER;
 		event->acceleration.status = SENSOR_STATUS_ACCURACY_HIGH;
 		sensor->event_type = EV_ABS;
@@ -163,8 +163,8 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *s
 		break;
 
 	case HUA_SENSOR_TYPE_MAGNETIC_FIELD:
-		sensor_hal->type = SENSOR_TYPE_MAGNETIC_FIELD;
-		sensor_hal->maxRange = sensor->max_range;
+		asensor->type = SENSOR_TYPE_MAGNETIC_FIELD;
+		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_MAGNETIC_FIELD;
 		event->magnetic.status = SENSOR_STATUS_ACCURACY_HIGH;
 		sensor->event_type = EV_ABS;
@@ -175,8 +175,8 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *s
 		break;
 
 	case HUA_SENSOR_TYPE_ORIENTATION:
-		sensor_hal->type = SENSOR_TYPE_ORIENTATION;
-		sensor_hal->maxRange = sensor->max_range;
+		asensor->type = SENSOR_TYPE_ORIENTATION;
+		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_ORIENTATION;
 		event->orientation.status = SENSOR_STATUS_ACCURACY_HIGH;
 		sensor->event_type = EV_REL;
@@ -193,26 +193,26 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *s
 		if (type == HUA_SENSOR_TYPE_GRAVITY)
 		{
 			event->type = SENSOR_TYPE_GRAVITY;
-			sensor_hal->type = SENSOR_TYPE_GRAVITY;
-			sensor_hal->maxRange = sensor->max_range * GRAVITY_EARTH;
+			asensor->type = SENSOR_TYPE_GRAVITY;
+			asensor->maxRange = sensor->max_range * GRAVITY_EARTH;
 		}
 		else if (type == HUA_SENSOR_TYPE_GYROSCOPE)
 		{
 			event->type = SENSOR_TYPE_GYROSCOPE;
-			sensor_hal->type = SENSOR_TYPE_GYROSCOPE;
-			sensor_hal->maxRange = sensor->max_range;
+			asensor->type = SENSOR_TYPE_GYROSCOPE;
+			asensor->maxRange = sensor->max_range;
 		}
 		else if (type == HUA_SENSOR_TYPE_ROTATION_VECTOR)
 		{
 			event->type = SENSOR_TYPE_ROTATION_VECTOR;
-			sensor_hal->type = SENSOR_TYPE_ROTATION_VECTOR;
-			sensor_hal->maxRange = sensor->max_range;
+			asensor->type = SENSOR_TYPE_ROTATION_VECTOR;
+			asensor->maxRange = sensor->max_range;
 		}
 		else
 		{
 			event->type = SENSOR_TYPE_LINEAR_ACCELERATION;
-			sensor_hal->type = SENSOR_TYPE_LINEAR_ACCELERATION;
-			sensor_hal->maxRange = sensor->max_range;
+			asensor->type = SENSOR_TYPE_LINEAR_ACCELERATION;
+			asensor->maxRange = sensor->max_range;
 		}
 
 		event->gyro.status = SENSOR_STATUS_ACCURACY_HIGH;
@@ -224,8 +224,8 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *s
 		break;
 
 	case HUA_SENSOR_TYPE_LIGHT:
-		sensor_hal->type = SENSOR_TYPE_LIGHT;
-		sensor_hal->maxRange = sensor->max_range;
+		asensor->type = SENSOR_TYPE_LIGHT;
+		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_LIGHT;
 		sensor->event_type = EV_ABS;
 		sensor->event_code = ABS_VOLUME;
@@ -233,8 +233,8 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *s
 		break;
 
 	case HUA_SENSOR_TYPE_PRESSURE:
-		sensor_hal->type = SENSOR_TYPE_PRESSURE;
-		sensor_hal->maxRange = sensor->max_range;
+		asensor->type = SENSOR_TYPE_PRESSURE;
+		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_PRESSURE;
 		sensor->event_type = EV_ABS;
 		sensor->event_code = ABS_PRESSURE;
@@ -242,8 +242,8 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *s
 		break;
 
 	case HUA_SENSOR_TYPE_TEMPERATURE:
-		sensor_hal->type = SENSOR_TYPE_TEMPERATURE;
-		sensor_hal->maxRange = sensor->max_range;
+		asensor->type = SENSOR_TYPE_TEMPERATURE;
+		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_TEMPERATURE;
 		sensor->event_type = EV_ABS;
 		sensor->event_code = ABS_THROTTLE;
@@ -251,8 +251,8 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *s
 		break;
 
 	case HUA_SENSOR_TYPE_PROXIMITY:
-		sensor_hal->type = SENSOR_TYPE_PROXIMITY;
-		sensor_hal->maxRange = sensor->max_range;
+		asensor->type = SENSOR_TYPE_PROXIMITY;
+		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_PROXIMITY;
 		sensor->event_type = EV_ABS;
 		sensor->event_code = ABS_DISTANCE;
@@ -264,13 +264,13 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *s
 		return -EINVAL;
 	}
 
-	sensor_hal->resolution = sensor_hal->maxRange / sensor->resolution;
-	sensor_hal->power = ((float)sensor->power_consume) / 1000;
-	sensor_hal->minDelay = sensor->min_delay;
-	sensor_hal->vendor = sensor->chip->vensor;
-	sensor_hal->name = sensor->name;
+	asensor->resolution = asensor->maxRange / sensor->resolution;
+	asensor->power = ((float)sensor->power_consume) / 1000;
+	asensor->minDelay = sensor->min_delay;
+	asensor->vendor = sensor->chip->vensor;
+	asensor->name = sensor->name;
 
-	sensor->scale = sensor_hal->resolution;
+	sensor->scale = asensor->resolution;
 
 	return 0;
 }

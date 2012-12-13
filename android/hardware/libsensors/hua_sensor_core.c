@@ -169,26 +169,32 @@ static void hua_sensor_chip_destory(struct hua_sensor_chip *chip)
 	free(chip);
 }
 
-static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t *sensor_hal, struct hua_sensor_device *sensor_map[], int handle)
+static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t asensor[], struct hua_sensor_device *sensor_map[], int handle)
 {
 	int ret;
 	struct hua_sensor_device *sensor, *sensor_end;
 
 	for (sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; sensor++, handle++)
 	{
-		ret = hua_sensor_device_probe(sensor, sensor_hal);
+		ret = hua_sensor_device_probe(sensor, asensor + handle);
 		if (ret < 0)
 		{
 			pr_red_info("hua_sensor_device_probe");
 			return ret;
 		}
 
-		sensor_hal->version = 1;
-		sensor_hal->handle = handle;
+		asensor[handle].version = 1;
+		asensor[handle].handle = handle;
 		sensor_map[handle] = sensor;
+
+		pr_std_info("============================================================");
+
+		pr_green_info("Name = %s, Vendor = %s, Handle = %d", asensor->name, asensor->vendor, handle);
+		pr_green_info("maxRange = %f, Resolution = %f", asensor->maxRange, asensor->resolution);
+		pr_green_info("Power = %f, minDelay = %d", asensor->power, asensor->minDelay);
 	}
 
-	return handle;
+	return 0;
 }
 
 static struct hua_sensor_chip *hua_sensor_add_chip(struct hua_sensor_chip *head, struct hua_sensor_chip *chip)
@@ -256,7 +262,7 @@ static int hua_sensors_recv_wakeup_event(struct hua_sensor_poll_device *pdev)
 	return event;
 }
 
-static void hua_sensor_set_active(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
+static void hua_sensor_set_enable_base(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
 {
 	pr_bold_info("set sensor chip %s active %s", chip->name, enable ? "enable" : "disable");
 
@@ -285,7 +291,7 @@ static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, 
 	{
 		if (chip->use_count == 0)
 		{
-			hua_sensor_set_active(pdev, chip, true);
+			hua_sensor_set_enable_base(pdev, chip, true);
 		}
 
 		chip->use_count++;
@@ -294,7 +300,7 @@ static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, 
 	{
 		if (chip->use_count == 1)
 		{
-			hua_sensor_set_active(pdev, chip, false);
+			hua_sensor_set_enable_base(pdev, chip, false);
 		}
 
 		chip->use_count--;
@@ -433,15 +439,7 @@ static int hua_sensors_probe(struct hua_sensor_poll_device *pdev)
 			continue;
 		}
 
-		pr_std_info("============================================================");
-
-		pr_green_info("Name = %s, Vendor = %s", list->name, list->vendor);
-		pr_green_info("maxRange = %f, Resolution = %f", list->maxRange, list->resolution);
-		pr_green_info("Power = %f, minDelay = %d", list->power, list->minDelay);
-
-		handle = ret;
-		list += chip->sensor_count;
-		map += chip->sensor_count;
+		handle += chip->sensor_count;
 
 		pfd++;
 		pfd->events = 0;
@@ -449,14 +447,14 @@ static int hua_sensors_probe(struct hua_sensor_poll_device *pdev)
 		chip->pfd = pfd;
 	}
 
-	pdev->sensor_count = list - pdev->sensor_list;
+	pdev->sensor_count = handle;
 	if (pdev->sensor_count)
 	{
 		pthread_mutex_unlock(&pdev->lock);
 		return 0;
 	}
 
-	pr_red_info("No sensor device found!");
+	pr_red_info("No sensor chip found!");
 	ret = -ENOENT;
 
 	free(pdev->sensor_list);
@@ -564,6 +562,8 @@ ssize_t hua_sensors_scan_devices(int (*match_handle)(int fd, const char *pathnam
 static int hua_sensors_open(struct hua_sensor_poll_device *pdev)
 {
 	int ret;
+	int core_fd;
+	const char *core_ctrl_path;
 
 	pthread_mutex_init(&pdev->lock, NULL);
 
@@ -596,13 +596,33 @@ static int hua_sensors_open(struct hua_sensor_poll_device *pdev)
 		return ret;
 	}
 
-	return 0;
+	core_ctrl_path = HUA_SENSOR_CORE_DEVPATH;
+	core_fd = open(core_ctrl_path, 0);
+	if (core_fd < 0)
+	{
+		pr_error_info("open core ctrl device %s", core_ctrl_path);
+		hua_sensors_remove(pdev);
+		return core_fd;
+	}
+
+	ret = ioctl(core_fd, HUA_SENSOR_IOC_SET_DETECT, false);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl HUA_SENSOR_IOC_SET_DETECT");
+		hua_sensors_remove(pdev);
+	}
+
+	close(core_fd);
+
+	return ret;
 }
 
 static int hua_sensors_activate(struct sensors_poll_device_t *dev, int handle, int enabled)
 {
 	struct hua_sensor_poll_device *pdev = (struct hua_sensor_poll_device *)dev;
 	struct hua_sensor_device *sensor = pdev->sensor_map[handle];
+
+	pr_bold_info("handle = %d, index = %d", handle, sensor->index);
 
 	return hua_sensor_device_set_enable(pdev, sensor, enabled);
 }

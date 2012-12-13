@@ -35,6 +35,8 @@
 #include <utils/Timers.h>
 #include <hardware/sensors.h>
 
+#define HUA_SENSOR_CORE_DEVPATH "/dev/HuaMobile_SS"
+
 #define HUA_SENSOR_IOC_LENGTH_TO_MASK(len) \
 	((1 << (len)) - 1)
 
@@ -77,6 +79,7 @@
 	((index) & HUA_SENSOR_IOC_INDEX_MASK) << HUA_SENSOR_IOC_INDEX_SHIFT | \
 	((size) & HUA_SENSOR_IOC_SIZE_MASK) << HUA_SENSOR_IOC_SIZE_SHIFT)
 
+#define HUA_SENSOR_IOC_SET_DETECT					HUA_SENSOR_IOC('H', 0x00, 0, 0)
 #define HUA_SENSOR_IOC_GET_CHIP_NAME(len)			HUA_SENSOR_IOC('H', 0x01, 0, len)
 #define HUA_SENSOR_IOC_GET_CHIP_VENDOR(len)			HUA_SENSOR_IOC('H', 0x02, 0, len)
 #define HUA_SENSOR_IOC_GET_SENSOR_COUNT				HUA_SENSOR_IOC('H', 0x03, 0, 0)
