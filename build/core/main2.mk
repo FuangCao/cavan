@@ -30,8 +30,8 @@ MKDIR = mkdir -p
 INSTALL = install -c
 CP = cp
 
-CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wno-trigraphs -Wsign-compare \
-			-Werror-implicit-function-declaration -Wno-format-security \
+CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wsign-compare -Werror-implicit-function-declaration \
+			-Wno-trigraphs -Wno-format-security -Wno-unused-result \
 			-Wpointer-arith -fno-strict-aliasing -g -O2 \
 			-I$(INCLUDE_PATH) -I. -DCAVAN_ARCH=$(ARCH)
 ASFLAGS +=	$(CFLAGS) -D__ASM__

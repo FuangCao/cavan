@@ -176,22 +176,24 @@ static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t a
 
 	for (sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; sensor++, handle++)
 	{
-		ret = hua_sensor_device_probe(sensor, asensor + handle);
+		struct sensor_t *hal_sensor = asensor + handle;
+
+		ret = hua_sensor_device_probe(sensor, hal_sensor);
 		if (ret < 0)
 		{
 			pr_red_info("hua_sensor_device_probe");
 			return ret;
 		}
 
-		asensor[handle].version = 1;
-		asensor[handle].handle = handle;
+		hal_sensor->version = 1;
+		hal_sensor->handle = handle;
 		sensor_map[handle] = sensor;
 
 		pr_std_info("============================================================");
 
-		pr_green_info("Name = %s, Vendor = %s, Handle = %d", asensor->name, asensor->vendor, handle);
-		pr_green_info("maxRange = %f, Resolution = %f", asensor->maxRange, asensor->resolution);
-		pr_green_info("Power = %f, minDelay = %d", asensor->power, asensor->minDelay);
+		pr_green_info("Name = %s, Vendor = %s", hal_sensor->name, hal_sensor->vendor);
+		pr_green_info("maxRange = %f, Resolution = %f, Handle = %d", hal_sensor->maxRange, hal_sensor->resolution, handle);
+		pr_green_info("Power = %f, minDelay = %d", hal_sensor->power, hal_sensor->minDelay);
 	}
 
 	return 0;
