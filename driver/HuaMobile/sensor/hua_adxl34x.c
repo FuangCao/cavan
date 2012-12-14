@@ -305,7 +305,7 @@ static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor,
 static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, u32 mask)
 {
 	int ret;
-	int x, y, z;
+	int pitch, roll;
 	u8 orient;
 	struct hua_sensor_chip *chip = sensor->chip;
 
@@ -324,40 +324,30 @@ static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, 
 	switch (orient & 0x07)
 	{
 	case 1:
-		x = y = 0;
-		z = 1;
-		break;
-
-	case 2:
-		x = z = 0;
-		y = 1;
-		break;
-
-	case 3:
-		y = z = 0;
-		x = 1;
-		break;
-
-	case 4:
-		y = z = 0;
-		x = -1;
-		break;
-
-	case 5:
-		x = z = 0;
-		y = -1;
+		roll = 0;
+		pitch = 2;
 		break;
 
 	case 6:
-		x = y = 0;
-		z = -1;
+		roll = 0;
+		pitch = -2;
+		break;
+
+	case 3:
+		roll = 1;
+		pitch = 0;
+		break;
+
+	case 4:
+		roll = -1;
+		pitch = 0;
 		break;
 
 	default:
 		return false;
 	}
 
-	hua_sensor_report_vector(sensor, chip->input, x, y, z);
+	hua_sensor_report_vector(sensor, chip->input, 0, pitch, roll);
 
 	return true;
 }
@@ -382,7 +372,7 @@ struct hua_sensor_device adxl34x_sensor_list[] =
 		.flat = 0,
 		.poll_delay = 200,
 		.max_range = 360,
-		.resolution = 2,
+		.resolution = 4,
 		.power_consume = 145,
 		.event_handler = adxl34x_orientation_event_handler
 	}

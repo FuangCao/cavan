@@ -55,6 +55,8 @@ static bool hua_sensor_vector_event_handler(struct hua_sensor_device *sensor, st
 		return false;
 	}
 
+	// pr_func_info("%s: [%f, %f, %f]", sensor->name, vector->x, vector->y, vector->z);
+
 	return true;
 }
 

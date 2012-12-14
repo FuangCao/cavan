@@ -478,7 +478,7 @@ static int hua_sensor_set_enable(struct hua_sensor_device *sensor, struct hua_se
 
 	if (chip->use_count > 0)
 	{
-		return hua_sensor_set_delay(sensor, chip, sensor->poll_delay);
+		return hua_sensor_set_delay(sensor, chip, sensor->enabled ? sensor->poll_delay : UINT_MAX);
 	}
 
 	return 0;
@@ -713,13 +713,35 @@ static int hua_sensor_chip_misc_ioctl(struct inode *inode, struct file *file, un
 static ssize_t hua_sensor_chip_misc_write(struct file *file, const char __user *buff, size_t size, loff_t *offset)
 {
 	int ret;
+	u32 mask;
+	int index;
+	const char *p, *p_end;
+	char buff_kernel[size];
+	struct hua_sensor_chip *chip;
 	struct hua_sensor_device *sensor, *sensor_end;
-	struct hua_sensor_chip *chip = file->private_data;
-	bool enable = simple_strtoul(buff, NULL, 10) > 0;
 
-	for (sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; sensor++)
+	if (copy_from_user(buff_kernel, buff, sizeof(buff_kernel)))
 	{
-		ret = hua_sensor_set_enable(sensor, chip, enable);
+		pr_red_info("copy_from_user");
+		return -EFAULT;
+	}
+
+	for (mask = 0, p = buff_kernel, p_end = p + sizeof(buff_kernel); p < p_end; p++)
+	{
+		index = *p - '0';
+		if (index >= 0 && index <= 9)
+		{
+			mask |= 1 << index;
+		}
+	}
+
+	pr_bold_info("mask = 0x%02x", mask);
+
+	chip = file->private_data;
+
+	for (index = 0, sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; index++, sensor++)
+	{
+		ret = hua_sensor_set_enable(sensor, chip, (mask & (1 << index)) > 0);
 		if (ret < 0)
 		{
 			pr_red_info("hua_sensor_set_enable %s %s", chip->name, sensor->name);
