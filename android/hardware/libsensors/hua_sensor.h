@@ -86,11 +86,14 @@
 #define HUA_SENSOR_IOC_GET_MIN_DELAY				HUA_SENSOR_IOC('H', 0x04, 0, 0)
 #define HUA_SENSOR_IOC_GET_SENSOR_TYPE(index)		HUA_SENSOR_IOC('H', 0x05, index, 0)
 #define HUA_SENSOR_IOC_GET_SENSOR_NAME(index, len)	HUA_SENSOR_IOC('H', 0x06, index, len)
-#define HUA_SENSOR_IOC_GET_MAX_RANGE(index)			HUA_SENSOR_IOC('H', 0x07, index, 0)
-#define HUA_SENSOR_IOC_GET_RESOLUTION(index)		HUA_SENSOR_IOC('H', 0x08, index, 0)
-#define HUA_SENSOR_IOC_GET_POWER_CONSUME(index)		HUA_SENSOR_IOC('H', 0x09, index, 0)
-#define HUA_SENSOR_IOC_SET_DELAY(index)				HUA_SENSOR_IOC('H', 0x0A, index, 0)
-#define HUA_SENSOR_IOC_SET_ENABLE(index)			HUA_SENSOR_IOC('H', 0x0B, index, 0)
+#define HUA_SENSOR_IOC_GET_XCODE(index)				HUA_SENSOR_IOC('H', 0x07, index, 0)
+#define HUA_SENSOR_IOC_GET_YCODE(index)				HUA_SENSOR_IOC('H', 0x08, index, 0)
+#define HUA_SENSOR_IOC_GET_ZCODE(index)				HUA_SENSOR_IOC('H', 0x09, index, 0)
+#define HUA_SENSOR_IOC_GET_MAX_RANGE(index)			HUA_SENSOR_IOC('H', 0x0A, index, 0)
+#define HUA_SENSOR_IOC_GET_RESOLUTION(index)		HUA_SENSOR_IOC('H', 0x0B, index, 0)
+#define HUA_SENSOR_IOC_GET_POWER_CONSUME(index)		HUA_SENSOR_IOC('H', 0x0C, index, 0)
+#define HUA_SENSOR_IOC_SET_DELAY(index)				HUA_SENSOR_IOC('H', 0x0D, index, 0)
+#define HUA_SENSOR_IOC_SET_ENABLE(index)			HUA_SENSOR_IOC('H', 0x0E, index, 0)
 
 #define pr_std_info(fmt, args ...) \
 	LOGD(fmt "\n", ##args)
@@ -144,23 +147,10 @@ struct hua_sensor_device
 	char name[128];
 
 	unsigned int type;
-	unsigned int max_range;
-	unsigned int power_consume;
-	unsigned int resolution;
 
-	int event_type;
-
-	union
-	{
-		int event_code;
-
-		struct
-		{
-			int xcode;
-			int ycode;
-			int zcode;
-		};
-	};
+	int xcode;
+	int ycode;
+	int zcode;
 
 	bool updated;
 	bool enabled;

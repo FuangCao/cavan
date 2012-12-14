@@ -178,6 +178,8 @@ static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t a
 	{
 		struct sensor_t *hal_sensor = asensor + handle;
 
+		pr_std_info("============================================================");
+
 		ret = hua_sensor_device_probe(sensor, hal_sensor);
 		if (ret < 0)
 		{
@@ -190,10 +192,11 @@ static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t a
 		hal_sensor->handle = handle;
 		sensor_map[handle] = sensor;
 
-		pr_std_info("============================================================");
-
-		pr_green_info("Name = %s, Vendor = %s", hal_sensor->name, hal_sensor->vendor);
-		pr_green_info("maxRange = %f, Resolution = %f, Handle = %d", hal_sensor->maxRange, hal_sensor->resolution, handle);
+		pr_green_info("Chip = %s, Vendor = %s", chip->name, hal_sensor->vendor);
+		pr_green_info("Name = %s", hal_sensor->name);
+		pr_green_info("Type = %d, Index = %d, Handle = %d", sensor->type, sensor->index, hal_sensor->handle);
+		pr_green_info("xcode = %d, ycode = %d, zcode = %d", sensor->xcode, sensor->ycode, sensor->zcode);
+		pr_green_info("maxRange = %f, Resolution = %f", hal_sensor->maxRange, hal_sensor->resolution);
 		pr_green_info("Power = %f, minDelay = %d", hal_sensor->power, hal_sensor->minDelay);
 	}
 
@@ -770,7 +773,7 @@ static int hua_sensors_module_open(const struct hw_module_t *module, const char 
 	return 0;
 }
 
-static int hua_sensors_get_list(struct sensors_module_t *module, struct sensor_t const **list) 
+static int hua_sensors_get_list(struct sensors_module_t *module, struct sensor_t const **list)
 {
 	pr_func_info("module = %p, sensor_count = %d", module, hua_poll_device.sensor_count);
 

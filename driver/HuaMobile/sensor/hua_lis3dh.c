@@ -266,10 +266,11 @@ static struct hua_sensor_init_data lis3dh_init_data[] =
 	{TT_TW, 0x00, 0}
 };
 
-static bool lis3dh_acceleration_event_handler(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, u32 mask)
+static bool lis3dh_acceleration_event_handler(struct hua_sensor_device *sensor, u32 mask)
 {
 	int ret;
 	struct lis3dh_data_package package;
+	struct hua_sensor_chip *chip = sensor->chip;
 
 	ret = chip->read_data(chip, I2C_AUTO_INCREMENT | AXISDATA_REG, &package, sizeof(package));
 	if (ret < 0)
@@ -278,7 +279,7 @@ static bool lis3dh_acceleration_event_handler(struct hua_sensor_device *sensor, 
 		return false;
 	}
 
-	sensor->report_vector_event(chip->input, package.x >> 4, -(package.y >> 4), package.z >> 4);
+	hua_sensor_report_vector(sensor, chip->input, package.x >> 4, -(package.y >> 4), package.z >> 4);
 
 	return true;
 }

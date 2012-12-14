@@ -21,7 +21,7 @@
 
 static bool hua_sensor_event_handler(struct hua_sensor_device *sensor, struct input_event *event)
 {
-	if (event->code == sensor->event_code)
+	if (event->code == sensor->xcode)
 	{
 		float *value = (float *)sensor->event.data;
 
@@ -113,24 +113,24 @@ int hua_sensor_device_init(struct hua_sensor_device *sensor, struct hua_sensor_c
 		return ret;
 	}
 
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_MAX_RANGE(index), &sensor->max_range);
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_XCODE(index), &sensor->xcode);
 	if (ret < 0)
 	{
 		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MAX_RANGE");
 		return ret;
 	}
 
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_RESOLUTION(index), &sensor->resolution);
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_YCODE(index), &sensor->ycode);
 	if (ret < 0)
 	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_RESOLUTION");
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MAX_RANGE");
 		return ret;
 	}
 
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_POWER_CONSUME(index), &sensor->power_consume);
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_ZCODE(index), &sensor->zcode);
 	if (ret < 0)
 	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_POWER_CONSUME");
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MAX_RANGE");
 		return ret;
 	}
 
@@ -144,118 +144,98 @@ int hua_sensor_device_init(struct hua_sensor_device *sensor, struct hua_sensor_c
 
 int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *asensor)
 {
-	int type = sensor->type;
+	int ret;
+	unsigned int max_range;
+	unsigned int power_consume;
+	unsigned int resolution;
+	int index = sensor->index;
+	int ctrl_fd = sensor->chip->ctrl_fd;
 	struct sensors_event_t *event = &sensor->event;
-	hua_sensor_event_init(event);
 
-	switch (type)
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_MAX_RANGE(index), &max_range);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MAX_RANGE");
+		return ret;
+	}
+
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_RESOLUTION(index), &resolution);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_RESOLUTION");
+		return ret;
+	}
+
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_POWER_CONSUME(index), &power_consume);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_POWER_CONSUME");
+		return ret;
+	}
+
+	hua_sensor_event_init(event);
+	asensor->maxRange = max_range;
+
+	switch (sensor->type)
 	{
 	case HUA_SENSOR_TYPE_ACCELEROMETER:
 		asensor->type = SENSOR_TYPE_ACCELEROMETER;
-		asensor->maxRange = sensor->max_range * GRAVITY_EARTH;
+		asensor->maxRange = max_range * GRAVITY_EARTH;
 		event->type = SENSOR_TYPE_ACCELEROMETER;
-		event->acceleration.status = SENSOR_STATUS_ACCURACY_HIGH;
-		sensor->event_type = EV_ABS;
-		sensor->xcode = ABS_X;
-		sensor->ycode = ABS_Y;
-		sensor->zcode = ABS_Z;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_MAGNETIC_FIELD:
 		asensor->type = SENSOR_TYPE_MAGNETIC_FIELD;
-		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_MAGNETIC_FIELD;
-		event->magnetic.status = SENSOR_STATUS_ACCURACY_HIGH;
-		sensor->event_type = EV_ABS;
-		sensor->xcode = ABS_RX;
-		sensor->ycode = ABS_RY;
-		sensor->zcode = ABS_RZ;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_ORIENTATION:
 		asensor->type = SENSOR_TYPE_ORIENTATION;
-		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_ORIENTATION;
-		event->orientation.status = SENSOR_STATUS_ACCURACY_HIGH;
-		sensor->event_type = EV_REL;
-		sensor->xcode = REL_X;
-		sensor->ycode = REL_Y;
-		sensor->zcode = REL_Z;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_GRAVITY:
-	case HUA_SENSOR_TYPE_GYROSCOPE:
-	case HUA_SENSOR_TYPE_ROTATION_VECTOR:
-	case HUA_SENSOR_TYPE_LINEAR_ACCELERATION:
-		if (type == HUA_SENSOR_TYPE_GRAVITY)
-		{
-			event->type = SENSOR_TYPE_GRAVITY;
-			asensor->type = SENSOR_TYPE_GRAVITY;
-			asensor->maxRange = sensor->max_range * GRAVITY_EARTH;
-		}
-		else if (type == HUA_SENSOR_TYPE_GYROSCOPE)
-		{
-			event->type = SENSOR_TYPE_GYROSCOPE;
-			asensor->type = SENSOR_TYPE_GYROSCOPE;
-			asensor->maxRange = sensor->max_range;
-		}
-		else if (type == HUA_SENSOR_TYPE_ROTATION_VECTOR)
-		{
-			event->type = SENSOR_TYPE_ROTATION_VECTOR;
-			asensor->type = SENSOR_TYPE_ROTATION_VECTOR;
-			asensor->maxRange = sensor->max_range;
-		}
-		else
-		{
-			event->type = SENSOR_TYPE_LINEAR_ACCELERATION;
-			asensor->type = SENSOR_TYPE_LINEAR_ACCELERATION;
-			asensor->maxRange = sensor->max_range;
-		}
+		asensor->type = SENSOR_TYPE_GRAVITY;
+		event->type = SENSOR_TYPE_GRAVITY;
+		sensor->event_handler = hua_sensor_vector_event_handler;
+		break;
 
-		event->gyro.status = SENSOR_STATUS_ACCURACY_HIGH;
-		sensor->event_type = EV_REL;
-		sensor->xcode = REL_RX;
-		sensor->ycode = REL_RY;
-		sensor->zcode = REL_RZ;
+	case HUA_SENSOR_TYPE_GYROSCOPE:
+		asensor->type = SENSOR_TYPE_GYROSCOPE;
+		event->type = SENSOR_TYPE_GYROSCOPE;
+		sensor->event_handler = hua_sensor_vector_event_handler;
+		break;
+
+	case HUA_SENSOR_TYPE_ROTATION_VECTOR:
+		asensor->type = SENSOR_TYPE_ROTATION_VECTOR;
+		event->type = SENSOR_TYPE_ROTATION_VECTOR;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_LIGHT:
 		asensor->type = SENSOR_TYPE_LIGHT;
-		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_LIGHT;
-		sensor->event_type = EV_ABS;
-		sensor->event_code = ABS_VOLUME;
 		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_PRESSURE:
 		asensor->type = SENSOR_TYPE_PRESSURE;
-		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_PRESSURE;
-		sensor->event_type = EV_ABS;
-		sensor->event_code = ABS_PRESSURE;
 		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_TEMPERATURE:
 		asensor->type = SENSOR_TYPE_TEMPERATURE;
-		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_TEMPERATURE;
-		sensor->event_type = EV_ABS;
-		sensor->event_code = ABS_THROTTLE;
 		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_PROXIMITY:
 		asensor->type = SENSOR_TYPE_PROXIMITY;
-		asensor->maxRange = sensor->max_range;
 		event->type = SENSOR_TYPE_PROXIMITY;
-		sensor->event_type = EV_ABS;
-		sensor->event_code = ABS_DISTANCE;
 		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
@@ -264,8 +244,10 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *a
 		return -EINVAL;
 	}
 
-	asensor->resolution = asensor->maxRange / sensor->resolution;
-	asensor->power = ((float)sensor->power_consume) / 1000;
+	event->acceleration.status = SENSOR_STATUS_ACCURACY_HIGH;
+
+	asensor->resolution = asensor->maxRange / resolution;
+	asensor->power = ((float)power_consume) / 1000;
 	asensor->vendor = sensor->chip->vensor;
 	asensor->name = sensor->name;
 

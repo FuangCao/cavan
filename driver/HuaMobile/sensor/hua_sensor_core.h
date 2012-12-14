@@ -64,11 +64,14 @@
 #define HUA_SENSOR_IOC_GET_MIN_DELAY				HUA_SENSOR_IOC('H', 0x04, 0, 0)
 #define HUA_SENSOR_IOC_GET_SENSOR_TYPE(index)		HUA_SENSOR_IOC('H', 0x05, index, 0)
 #define HUA_SENSOR_IOC_GET_SENSOR_NAME(index, len)	HUA_SENSOR_IOC('H', 0x06, index, len)
-#define HUA_SENSOR_IOC_GET_MAX_RANGE(index)			HUA_SENSOR_IOC('H', 0x07, index, 0)
-#define HUA_SENSOR_IOC_GET_RESOLUTION(index)		HUA_SENSOR_IOC('H', 0x08, index, 0)
-#define HUA_SENSOR_IOC_GET_POWER_CONSUME(index)		HUA_SENSOR_IOC('H', 0x09, index, 0)
-#define HUA_SENSOR_IOC_SET_DELAY(index)				HUA_SENSOR_IOC('H', 0x0A, index, 0)
-#define HUA_SENSOR_IOC_SET_ENABLE(index)			HUA_SENSOR_IOC('H', 0x0B, index, 0)
+#define HUA_SENSOR_IOC_GET_XCODE(index)				HUA_SENSOR_IOC('H', 0x07, index, 0)
+#define HUA_SENSOR_IOC_GET_YCODE(index)				HUA_SENSOR_IOC('H', 0x08, index, 0)
+#define HUA_SENSOR_IOC_GET_ZCODE(index)				HUA_SENSOR_IOC('H', 0x09, index, 0)
+#define HUA_SENSOR_IOC_GET_MAX_RANGE(index)			HUA_SENSOR_IOC('H', 0x0A, index, 0)
+#define HUA_SENSOR_IOC_GET_RESOLUTION(index)		HUA_SENSOR_IOC('H', 0x0B, index, 0)
+#define HUA_SENSOR_IOC_GET_POWER_CONSUME(index)		HUA_SENSOR_IOC('H', 0x0C, index, 0)
+#define HUA_SENSOR_IOC_SET_DELAY(index)				HUA_SENSOR_IOC('H', 0x0D, index, 0)
+#define HUA_SENSOR_IOC_SET_ENABLE(index)			HUA_SENSOR_IOC('H', 0x0E, index, 0)
 
 #define pr_pos_info() \
 	printk(KERN_INFO "%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__)
@@ -138,12 +141,14 @@ struct hua_sensor_device
 
 	bool enabled;
 
+	int xcode;
+	int ycode;
+	int zcode;
+
 	struct mutex lock;
 
 	int (*set_enable)(struct hua_sensor_device *sensor, bool enable);
-	bool (*event_handler)(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, u32 mask);
-	void (*report_event)(struct input_dev *input, int value);
-	void (*report_vector_event)(struct input_dev *input, int x, int y, int z);
+	bool (*event_handler)(struct hua_sensor_device *sensor, u32 mask);
 };
 
 struct hua_sensor_chip
@@ -263,4 +268,56 @@ static inline void hua_sensor_chip_set_data(struct hua_sensor_chip *chip, void *
 static inline void *hua_sensor_chip_get_data(struct hua_sensor_chip *chip)
 {
 	return chip->private_data;
+}
+
+static inline void hua_sensor_report_value(struct hua_sensor_device *sensor, struct input_dev *input, int value)
+{
+	input_report_abs(input, sensor->xcode, value);
+}
+
+static inline void hua_sensor_report_value2(struct hua_sensor_device *sensor, int value)
+{
+	hua_sensor_report_value(sensor, sensor->chip->input, value);
+}
+
+static inline void hua_sensor_report_xaxis(struct hua_sensor_device *sensor, struct input_dev *input, int x)
+{
+	input_report_abs(input, sensor->xcode, x);
+}
+
+static inline void hua_sensor_report_xaxis2(struct hua_sensor_device *sensor, int x)
+{
+	hua_sensor_report_xaxis(sensor, sensor->chip->input, x);
+}
+
+static inline void hua_sensor_report_yaxis(struct hua_sensor_device *sensor, struct input_dev *input, int y)
+{
+	input_report_abs(input, sensor->ycode, y);
+}
+
+static inline void hua_sensor_report_yaxis2(struct hua_sensor_device *sensor, int y)
+{
+	hua_sensor_report_yaxis(sensor, sensor->chip->input, y);
+}
+
+static inline void hua_sensor_report_zaxis(struct hua_sensor_device *sensor, struct input_dev *input, int z)
+{
+	input_report_abs(input, sensor->zcode, z);
+}
+
+static inline void hua_sensor_report_zaxis2(struct hua_sensor_device *sensor, int z)
+{
+	hua_sensor_report_zaxis(sensor, sensor->chip->input, z);
+}
+
+static inline void hua_sensor_report_vector(struct hua_sensor_device *sensor, struct input_dev *input, int x, int y, int z)
+{
+	input_report_abs(input, sensor->xcode, x);
+	input_report_abs(input, sensor->ycode, y);
+	input_report_abs(input, sensor->zcode, z);
+}
+
+static inline void hua_sensor_report_vector2(struct hua_sensor_device *sensor, int x, int y, int z)
+{
+	hua_sensor_report_vector(sensor, sensor->chip->input, x, y, z);
 }

@@ -474,7 +474,7 @@ static int hua_sensor_set_enable(struct hua_sensor_device *sensor, struct hua_se
 		hua_sensor_chip_set_enable(chip, false);
 	}
 
-	pr_bold_info("sensor %s[%s] %s", chip->name, sensor->name, sensor->enabled ? "enabled" : "disabled");
+	pr_bold_info("sensor %s %s %s", chip->name, sensor->name, sensor->enabled ? "enabled" : "disabled");
 
 	if (chip->use_count > 0)
 	{
@@ -498,177 +498,68 @@ static int hua_sensor_set_enable_lock(struct hua_sensor_device *sensor, bool ena
 	return ret;
 }
 
-static void hua_sensor_acceleration_report_event(struct input_dev *input, int x, int y, int z)
-{
-	input_report_abs(input, ABS_X, x);
-	input_report_abs(input, ABS_Y, y);
-	input_report_abs(input, ABS_Z, z);
-}
-
-static void hua_sensor_acceleration_input_init(struct hua_sensor_device *sensor, struct input_dev *input)
-{
-	int range = sensor->max_range / 2;
-
-	set_bit(EV_ABS, input->evbit);
-	input_set_abs_params(input, ABS_X, -range, range, sensor->fuzz, sensor->flat);
-	input_set_abs_params(input, ABS_Y, -range, range, sensor->fuzz, sensor->flat);
-	input_set_abs_params(input, ABS_Z, -range, range, sensor->fuzz, sensor->flat);
-
-	sensor->report_vector_event = hua_sensor_acceleration_report_event;
-}
-
-static void hua_sensor_magnetic_report_event(struct input_dev *input, int x, int y, int z)
-{
-	input_report_abs(input, ABS_RX, x);
-	input_report_abs(input, ABS_RY, y);
-	input_report_abs(input, ABS_RZ, z);
-}
-
-static void hua_sensor_magnetic_input_init(struct hua_sensor_device *sensor, struct input_dev *input)
-{
-	int range = sensor->max_range / 2;
-
-	set_bit(EV_ABS, input->evbit);
-	input_set_abs_params(input, ABS_RX, -range, range, sensor->fuzz, sensor->flat);
-	input_set_abs_params(input, ABS_RY, -range, range, sensor->fuzz, sensor->flat);
-	input_set_abs_params(input, ABS_RZ, -range, range, sensor->fuzz, sensor->flat);
-
-	sensor->report_vector_event = hua_sensor_magnetic_report_event;
-}
-
-static void hua_sensor_orientation_report_event(struct input_dev *input, int x, int y, int z)
-{
-	input_report_rel(input, REL_X, x);
-	input_report_rel(input, REL_Y, y);
-	input_report_rel(input, REL_Z, z);
-}
-
-static void hua_sensor_orientation_input_init(struct hua_sensor_device *sensor, struct input_dev *input)
-{
-	set_bit(EV_REL, input->evbit);
-	set_bit(REL_X, input->relbit);
-	set_bit(REL_Y, input->relbit);
-	set_bit(REL_Z, input->relbit);
-
-	sensor->report_vector_event = hua_sensor_orientation_report_event;
-}
-
-static void hua_sensor_gyro_report_event(struct input_dev *input, int x, int y, int z)
-{
-	input_report_rel(input, REL_RX, x);
-	input_report_rel(input, REL_RY, y);
-	input_report_rel(input, REL_RZ, z);
-}
-
-static void hua_sensor_gyro_input_init(struct hua_sensor_device *sensor, struct input_dev *input)
-{
-	set_bit(EV_REL, input->evbit);
-	set_bit(REL_RX, input->relbit);
-	set_bit(REL_RY, input->relbit);
-	set_bit(REL_RZ, input->relbit);
-
-	sensor->report_vector_event = hua_sensor_gyro_report_event;
-}
-
-static void hua_sensor_temperature_report_event(struct input_dev *input, int value)
-{
-	input_report_abs(input, ABS_THROTTLE, value);
-}
-
-static void hua_sensor_temperature_input_init(struct hua_sensor_device *sensor, struct input_dev *input)
-{
-	set_bit(EV_ABS, input->evbit);
-	input_set_abs_params(input, ABS_THROTTLE, 0, sensor->max_range, sensor->fuzz, sensor->flat);
-
-	sensor->report_event = hua_sensor_temperature_report_event;
-}
-
-static void hua_sensor_distance_report_event(struct input_dev *input, int value)
-{
-	input_report_abs(input, ABS_DISTANCE, value);
-}
-
-static void hua_sensor_distance_input_init(struct hua_sensor_device *sensor, struct input_dev *input)
-{
-	set_bit(EV_ABS, input->evbit);
-	input_set_abs_params(input, ABS_DISTANCE, 0, sensor->max_range, sensor->fuzz, sensor->flat);
-
-	sensor->report_event = hua_sensor_distance_report_event;
-}
-
-static void hua_sensor_pressure_report_event(struct input_dev *input, int value)
-{
-	input_report_abs(input, ABS_PRESSURE, value);
-}
-
-static void hua_sensor_pressure_input_init(struct hua_sensor_device *sensor, struct input_dev *input)
-{
-	set_bit(EV_ABS, input->evbit);
-	input_set_abs_params(input, ABS_PRESSURE, 0, sensor->max_range, sensor->fuzz, sensor->flat);
-
-	sensor->report_event = hua_sensor_pressure_report_event;
-}
-
-static void hua_sensor_volume_report_event(struct input_dev *input, int value)
-{
-	input_report_abs(input, ABS_VOLUME, value);
-}
-
-static void hua_sensor_volume_input_init(struct hua_sensor_device *sensor, struct input_dev *input)
-{
-	set_bit(EV_ABS, input->evbit);
-	input_set_abs_params(input, ABS_VOLUME, 0, sensor->max_range, sensor->fuzz, sensor->flat);
-
-	sensor->report_event = hua_sensor_volume_report_event;
-}
-
-static void hua_sensor_report_event_dummy(struct input_dev *input, int value)
-{
-	pr_func_info("value = %d", value);
-}
-
-static void hua_sensor_report_vector_event_dummy(struct input_dev *input, int x, int y, int z)
-{
-	pr_func_info("x = %d, y = %d, z = %d", x, y, z);
-}
-
 static int hua_sensor_input_init(struct hua_sensor_device *sensor, struct input_dev *input)
 {
+	int xcode, ycode, zcode;
+
 	switch (sensor->type)
 	{
 	case HUA_SENSOR_TYPE_ACCELEROMETER:
-		hua_sensor_acceleration_input_init(sensor, input);
+		xcode = ABS_X;
+		ycode = ABS_Y;
+		zcode = ABS_Z;
 		break;
 
 	case HUA_SENSOR_TYPE_MAGNETIC_FIELD:
-		hua_sensor_magnetic_input_init(sensor, input);
+		xcode = ABS_RX;
+		ycode = ABS_RY;
+		zcode = ABS_RZ;
 		break;
 
 	case HUA_SENSOR_TYPE_ORIENTATION:
-		hua_sensor_orientation_input_init(sensor, input);
+		xcode = ABS_HAT0X;
+		ycode = ABS_HAT0Y;
+		zcode = ABS_RUDDER;
 		break;
 
 	case HUA_SENSOR_TYPE_GYROSCOPE:
+		xcode = ABS_HAT1X;
+		ycode = ABS_HAT1Y;
+		zcode = ABS_WHEEL;
+		break;
+
 	case HUA_SENSOR_TYPE_GRAVITY:
+		xcode = ABS_HAT2X;
+		ycode = ABS_HAT2Y;
+		zcode = ABS_GAS;
+		break;
+
 	case HUA_SENSOR_TYPE_ROTATION_VECTOR:
+		xcode = ABS_HAT3X;
+		ycode = ABS_HAT3Y;
+		zcode = ABS_BRAKE;
+		break;
+
 	case HUA_SENSOR_TYPE_LINEAR_ACCELERATION:
-		hua_sensor_gyro_input_init(sensor, input);
+		xcode = ABS_TILT_X;
+		ycode = ABS_TILT_Y;
+		zcode = ABS_TOOL_WIDTH;
 		break;
 
 	case HUA_SENSOR_TYPE_LIGHT:
-		hua_sensor_volume_input_init(sensor, input);
+		xcode = ycode = zcode = ABS_VOLUME;
 		break;
 
 	case HUA_SENSOR_TYPE_PRESSURE:
-		hua_sensor_pressure_input_init(sensor, input);
+		xcode = ycode = zcode = ABS_PRESSURE;
 		break;
 
 	case HUA_SENSOR_TYPE_TEMPERATURE:
-		hua_sensor_temperature_input_init(sensor, input);
+		xcode = ycode = zcode = ABS_THROTTLE;
 		break;
 
 	case HUA_SENSOR_TYPE_PROXIMITY:
-		hua_sensor_distance_input_init(sensor, input);
+		xcode = ycode = zcode = ABS_DISTANCE;
 		break;
 
 	default:
@@ -676,16 +567,16 @@ static int hua_sensor_input_init(struct hua_sensor_device *sensor, struct input_
 		return -EINVAL;
 	}
 
-	if (sensor->report_event == NULL)
-	{
-		sensor->report_event = hua_sensor_report_event_dummy;
-	}
+	set_bit(EV_ABS, input->evbit);
+	input_set_abs_params(input, xcode, 0, sensor->max_range, sensor->fuzz, sensor->flat);
+	input_set_abs_params(input, ycode, 0, sensor->max_range, sensor->fuzz, sensor->flat);
+	input_set_abs_params(input, zcode, 0, sensor->max_range, sensor->fuzz, sensor->flat);
 
-	if (sensor->report_vector_event == NULL)
-	{
-		sensor->report_vector_event = hua_sensor_report_vector_event_dummy;
-	}
+	sensor->xcode = xcode;
+	sensor->ycode = ycode;
+	sensor->zcode = zcode;
 
+	pr_func_info("xcode = 0x%02x, ycode = 0x%02x, zcode = 0x%02x", xcode, ycode, zcode);
 	pr_green_info("sensor %s input init complete", sensor->name);
 
 	return 0;
@@ -761,6 +652,15 @@ static int hua_sensor_chip_misc_ioctl_base(unsigned int command, unsigned long a
 	case HUA_SENSOR_IOC_GET_SENSOR_NAME(0, 0):
 		return hua_sensor_copy_to_user_text(command, arg, sensor->name);
 
+	case HUA_SENSOR_IOC_GET_XCODE(0):
+		return hua_sensor_copy_to_user_uint(arg, sensor->xcode);
+
+	case HUA_SENSOR_IOC_GET_YCODE(0):
+		return hua_sensor_copy_to_user_uint(arg, sensor->ycode);
+
+	case HUA_SENSOR_IOC_GET_ZCODE(0):
+		return hua_sensor_copy_to_user_uint(arg, sensor->zcode);
+
 	case HUA_SENSOR_IOC_GET_MAX_RANGE(0):
 		return hua_sensor_copy_to_user_uint(arg, sensor->max_range);
 
@@ -822,7 +722,7 @@ static ssize_t hua_sensor_chip_misc_write(struct file *file, const char __user *
 		ret = hua_sensor_set_enable(sensor, chip, enable);
 		if (ret < 0)
 		{
-			pr_red_info("hua_sensor_set_enable %s[%s]", sensor->name, chip->name);
+			pr_red_info("hua_sensor_set_enable %s %s", chip->name, sensor->name);
 			return ret;
 		}
 	}
@@ -854,7 +754,7 @@ void hua_sensor_chip_report_event(struct hua_sensor_chip *chip, u32 mask)
 
 	for (count = 0, sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; sensor++)
 	{
-		if (sensor->enabled && sensor->event_handler(sensor, chip, mask))
+		if (sensor->enabled && sensor->event_handler(sensor, mask))
 		{
 			count++;
 		}

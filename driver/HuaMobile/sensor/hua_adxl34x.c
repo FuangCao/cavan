@@ -188,18 +188,20 @@ static int adxl34x_sensor_chip_readid(struct hua_sensor_chip *chip)
 	{
 	case ID_ADXL345:
 		chip->devid = 0x0345;
-		pr_bold_info("This sendor is ADXL345");
+		chip->name = "ADXL345";
 		break;
 
 	case ID_ADXL346:
 		chip->devid = 0x0346;
-		pr_bold_info("This sendor is ADXL346");
+		chip->name = "ADXL346";
 		break;
 
 	default:
 		pr_red_info("Invalid device id = 0x%02x", id);
 		return -EINVAL;
 	}
+
+	pr_bold_info("This sendor is %s", chip->name);
 
 	return 0;
 }
@@ -264,16 +266,19 @@ static void adxl34x_sensor_main_loop(struct hua_sensor_chip *chip)
 	}
 }
 
-static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, u32 mask)
+static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor, u32 mask)
 {
 	int ret;
 	u8 fifo_state;
+	struct hua_sensor_chip *chip;
 	struct adxl34x_data_package package;
 
 	if ((mask & (DATA_READY | WATERMARK)) == 0)
 	{
 		return false;
 	}
+
+	chip = sensor->chip;
 
 	ret = chip->read_register(chip, FIFO_STATUS, &fifo_state);
 	if (ret < 0)
@@ -291,17 +296,18 @@ static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor,
 			continue;
 		}
 
-		sensor->report_vector_event(chip->input, package.x, package.y, package.z);
+		hua_sensor_report_vector(sensor, chip->input, package.x, package.y, package.z);
 	}
 
 	return true;
 }
 
-static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, u32 mask)
+static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, u32 mask)
 {
 	int ret;
 	int x, y, z;
 	u8 orient;
+	struct hua_sensor_chip *chip = sensor->chip;
 
 	ret = chip->read_register(chip, ORIENT, &orient);
 	if (ret < 0)
@@ -315,33 +321,43 @@ static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, 
 		return false;
 	}
 
-	x = y = z = 0;
-
 	switch (orient & 0x07)
 	{
 	case 1:
+		x = y = 0;
 		z = 1;
 		break;
+
 	case 2:
+		x = z = 0;
 		y = 1;
 		break;
+
 	case 3:
+		y = z = 0;
 		x = 1;
 		break;
+
 	case 4:
+		y = z = 0;
 		x = -1;
 		break;
+
 	case 5:
+		x = z = 0;
 		y = -1;
 		break;
+
 	case 6:
+		x = y = 0;
 		z = -1;
 		break;
+
 	default:
 		return false;
 	}
 
-	sensor->report_vector_event(chip->input, x, y, z);
+	hua_sensor_report_vector(sensor, chip->input, x, y, z);
 
 	return true;
 }
@@ -349,7 +365,7 @@ static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, 
 struct hua_sensor_device adxl34x_sensor_list[] =
 {
 	{
-		.name = "ADXL345/346 Three-Axis Digital Accelerometer",
+		.name = "Three-Axis Digital Accelerometer",
 		.type = HUA_SENSOR_TYPE_ACCELEROMETER,
 		.fuzz = 3,
 		.flat = 3,
@@ -360,7 +376,7 @@ struct hua_sensor_device adxl34x_sensor_list[] =
 		.event_handler = adxl34x_acceleration_event_handler
 	},
 	{
-		.name = "ADXL345/346 Three-Axis Digital Orientation",
+		.name = "Three-Axis Digital Orientation",
 		.type = HUA_SENSOR_TYPE_ORIENTATION,
 		.fuzz = 0,
 		.flat = 0,
