@@ -1212,7 +1212,7 @@ static int hua_sensor_detect_thread_handler(void *data)
 
 		if (kthread_should_stop())
 		{
-			goto out_thread_exit;
+			break;
 		}
 
 		if (core->detect_delay < 60 * 1000)
@@ -1221,7 +1221,6 @@ static int hua_sensor_detect_thread_handler(void *data)
 		}
 	}
 
-out_thread_exit:
 	core->detect_task = NULL;
 
 	mutex_unlock(&core->lock);
@@ -1406,8 +1405,6 @@ static int __init hua_sensor_core_init(void)
 		pr_red_info("misc_register");
 		return ret;
 	}
-
-	hua_sensor_detect_thread_start(&sensor_core);
 
 	return 0;
 }
