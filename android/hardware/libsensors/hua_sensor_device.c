@@ -144,7 +144,7 @@ int hua_sensor_device_init(struct hua_sensor_device *sensor, struct hua_sensor_c
 	return 0;
 }
 
-int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *asensor)
+int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *hal_sensor)
 {
 	int ret;
 	unsigned int max_range;
@@ -176,67 +176,67 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *a
 	}
 
 	hua_sensor_event_init(event);
-	asensor->maxRange = max_range;
+	hal_sensor->maxRange = max_range;
 
 	switch (sensor->type)
 	{
 	case HUA_SENSOR_TYPE_ACCELEROMETER:
-		asensor->type = SENSOR_TYPE_ACCELEROMETER;
-		asensor->maxRange = max_range * GRAVITY_EARTH;
+		hal_sensor->type = SENSOR_TYPE_ACCELEROMETER;
+		hal_sensor->maxRange = max_range * GRAVITY_EARTH;
 		event->type = SENSOR_TYPE_ACCELEROMETER;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_MAGNETIC_FIELD:
-		asensor->type = SENSOR_TYPE_MAGNETIC_FIELD;
+		hal_sensor->type = SENSOR_TYPE_MAGNETIC_FIELD;
 		event->type = SENSOR_TYPE_MAGNETIC_FIELD;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_ORIENTATION:
-		asensor->type = SENSOR_TYPE_ORIENTATION;
+		hal_sensor->type = SENSOR_TYPE_ORIENTATION;
 		event->type = SENSOR_TYPE_ORIENTATION;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_GRAVITY:
-		asensor->type = SENSOR_TYPE_GRAVITY;
+		hal_sensor->type = SENSOR_TYPE_GRAVITY;
 		event->type = SENSOR_TYPE_GRAVITY;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_GYROSCOPE:
-		asensor->type = SENSOR_TYPE_GYROSCOPE;
+		hal_sensor->type = SENSOR_TYPE_GYROSCOPE;
 		event->type = SENSOR_TYPE_GYROSCOPE;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_ROTATION_VECTOR:
-		asensor->type = SENSOR_TYPE_ROTATION_VECTOR;
+		hal_sensor->type = SENSOR_TYPE_ROTATION_VECTOR;
 		event->type = SENSOR_TYPE_ROTATION_VECTOR;
 		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_LIGHT:
-		asensor->type = SENSOR_TYPE_LIGHT;
+		hal_sensor->type = SENSOR_TYPE_LIGHT;
 		event->type = SENSOR_TYPE_LIGHT;
 		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_PRESSURE:
-		asensor->type = SENSOR_TYPE_PRESSURE;
+		hal_sensor->type = SENSOR_TYPE_PRESSURE;
 		event->type = SENSOR_TYPE_PRESSURE;
 		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_TEMPERATURE:
-		asensor->type = SENSOR_TYPE_TEMPERATURE;
+		hal_sensor->type = SENSOR_TYPE_TEMPERATURE;
 		event->type = SENSOR_TYPE_TEMPERATURE;
 		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_PROXIMITY:
-		asensor->type = SENSOR_TYPE_PROXIMITY;
+		hal_sensor->type = SENSOR_TYPE_PROXIMITY;
 		event->type = SENSOR_TYPE_PROXIMITY;
 		sensor->event_handler = hua_sensor_event_handler;
 		break;
@@ -248,12 +248,8 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *a
 
 	event->acceleration.status = SENSOR_STATUS_ACCURACY_HIGH;
 
-	asensor->resolution = asensor->maxRange / resolution;
-	asensor->power = ((float)power_consume) / 1000;
-	asensor->vendor = sensor->chip->vensor;
-	asensor->name = sensor->name;
-
-	sensor->scale = asensor->resolution;
+	hal_sensor->resolution = hal_sensor->maxRange / resolution;
+	hal_sensor->power = ((float)power_consume) / 1000;
 
 	return 0;
 }

@@ -175,9 +175,8 @@ struct hua_sensor_chip
 	size_t use_count;
 	pthread_mutex_t lock;
 
-	unsigned int min_delay;
-	unsigned int sensor_count;
 	struct pollfd *pfd;
+	unsigned int sensor_count;
 	struct hua_sensor_device *sensor_list;
 
 	struct hua_sensor_chip *prev;
@@ -190,7 +189,6 @@ struct hua_sensor_poll_device
 
 	pthread_mutex_t lock;
 
-	size_t chip_count;
 	size_t sensor_count;
 	struct sensor_t *sensor_list;
 	struct hua_sensor_device **sensor_map;

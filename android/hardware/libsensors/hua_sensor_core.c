@@ -123,13 +123,6 @@ static struct hua_sensor_chip *hua_sensor_chip_create(int fd, const char *devnam
 		goto out_free_chip;
 	}
 
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_MIN_DELAY, &chip->min_delay);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MIN_DELAY");
-		goto out_free_chip;
-	}
-
 	sensor = malloc(sizeof(*sensor) * chip->sensor_count);
 	if (sensor == NULL)
 	{
@@ -169,14 +162,22 @@ static void hua_sensor_chip_destory(struct hua_sensor_chip *chip)
 	free(chip);
 }
 
-static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t asensor[], struct hua_sensor_device *sensor_map[], int handle)
+static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t hal_sensor_list[], struct hua_sensor_device *sensor_map[], int handle)
 {
 	int ret;
+	unsigned int min_delay;
 	struct hua_sensor_device *sensor, *sensor_end;
+
+	ret = ioctl(chip->ctrl_fd, HUA_SENSOR_IOC_GET_MIN_DELAY, &min_delay);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MIN_DELAY");
+		return ret;
+	}
 
 	for (sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; sensor++, handle++)
 	{
-		struct sensor_t *hal_sensor = asensor + handle;
+		struct sensor_t *hal_sensor = hal_sensor_list + handle;
 
 		pr_std_info("============================================================");
 
@@ -188,9 +189,13 @@ static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t a
 		}
 
 		hal_sensor->version = 1;
-		hal_sensor->minDelay = chip->min_delay;
+		hal_sensor->vendor = chip->vensor;
+		hal_sensor->name = sensor->name;
+		hal_sensor->minDelay =	min_delay;
 		hal_sensor->handle = handle;
+
 		sensor_map[handle] = sensor;
+		sensor->scale = hal_sensor->resolution;
 
 		pr_green_info("Chip = %s, Vendor = %s", chip->name, hal_sensor->vendor);
 		pr_green_info("Name = %s", hal_sensor->name);
