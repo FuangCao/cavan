@@ -19,60 +19,34 @@
 
 #include <hua_sensor.h>
 
-static bool hua_sensor_event_handler(struct hua_sensor_device *sensor, struct input_event *event)
+#define HUA_SENSOR_DEVICE_DEBUG		1
+
+struct sensors_event_t *hua_sensor_device_sync_event(struct hua_sensor_device *head, struct sensors_event_t *data, size_t data_size)
 {
-	if (event->code == sensor->xcode)
-	{
-		float *value = (float *)sensor->event.data;
-
-		*value = event->value * sensor->scale;
-
-		return true;
-	}
-
-	return false;
-}
-
-static bool hua_sensor_vector_event_handler(struct hua_sensor_device *sensor, struct input_event *event)
-{
-	int code = event->code;
-	sensors_vec_t *vector = (sensors_vec_t *)sensor->event.data;
-
-	if (code == sensor->xcode)
-	{
-		vector->x = event->value * sensor->scale;
-	}
-	else if (code == sensor->ycode)
-	{
-		vector->y = event->value * sensor->scale;
-	}
-	else if (code == sensor->zcode)
-	{
-		vector->z = event->value * sensor->scale;
-	}
-	else
-	{
-		return false;
-	}
-
-	// pr_func_info("%s: [%f, %f, %f]", sensor->name, vector->x, vector->y, vector->z);
-
-	return true;
-}
-
-struct sensors_event_t *hua_sensor_device_sync_event(struct hua_sensor_device *sensor, size_t sensor_count, struct sensors_event_t *data, size_t data_size)
-{
-	struct hua_sensor_device *sensor_end;
-	struct sensors_event_t *data_end = data + data_size;
+	struct sensors_event_t *data_end;
 	int64_t timestamp = systemTime(SYSTEM_TIME_MONOTONIC);
 
-	for (sensor_end = sensor + sensor_count; sensor < sensor_end && data < data_end; sensor++)
+	for (data_end = data + data_size; head; head = head->next)
 	{
-		if (sensor->enabled && sensor->updated)
+		if (head->updated)
 		{
-			sensor->updated = false;
-			*data = sensor->event;
-			data->timestamp = timestamp;
+#if HUA_SENSOR_DEVICE_DEBUG
+			float *value = head->event.data;
+
+			pr_func_info("%s: [%f, %f, %f]", head->name, value[0], value[1], value[2]);
+#endif
+
+			if (data < data_end)
+			{
+				head->updated = false;
+				*data = head->event;
+				data->timestamp = timestamp;
+			}
+			else
+			{
+				break;
+			}
+
 			data++;
 		}
 	}
@@ -80,17 +54,41 @@ struct sensors_event_t *hua_sensor_device_sync_event(struct hua_sensor_device *s
 	return data;
 }
 
-bool hua_sensor_device_report_event(struct hua_sensor_device *sensor, size_t count, struct input_event *event)
+static bool hua_sensor_device_report_event_single(struct hua_sensor_device *sensor, struct input_event *event)
 {
-	struct hua_sensor_device *sensor_end;
+	int code = event->code;
 
-	for (sensor_end = sensor + count; sensor < sensor_end; sensor++)
+	if (code == sensor->xcode)
 	{
-		if (sensor->enabled && sensor->event_handler(sensor, event))
+		sensor->event.data[0] = event->value * sensor->scale;
+	}
+	else if (code == sensor->ycode)
+	{
+		sensor->event.data[1] = event->value * sensor->scale;
+	}
+	else if (code == sensor->zcode)
+	{
+		sensor->event.data[2] = event->value * sensor->scale;
+	}
+	else
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool hua_sensor_device_report_event(struct hua_sensor_device *head, struct input_event *event)
+{
+	while (head)
+	{
+		if (hua_sensor_device_report_event_single(head, event))
 		{
-			sensor->updated = true;
+			head->updated = true;
 			return true;
 		}
+
+		head = head->next;
 	}
 
 	return false;
@@ -183,62 +181,42 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *h
 	case HUA_SENSOR_TYPE_ACCELEROMETER:
 		hal_sensor->type = SENSOR_TYPE_ACCELEROMETER;
 		hal_sensor->maxRange = max_range * GRAVITY_EARTH;
-		event->type = SENSOR_TYPE_ACCELEROMETER;
-		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_MAGNETIC_FIELD:
 		hal_sensor->type = SENSOR_TYPE_MAGNETIC_FIELD;
-		event->type = SENSOR_TYPE_MAGNETIC_FIELD;
-		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_ORIENTATION:
 		hal_sensor->type = SENSOR_TYPE_ORIENTATION;
-		event->type = SENSOR_TYPE_ORIENTATION;
-		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_GRAVITY:
 		hal_sensor->type = SENSOR_TYPE_GRAVITY;
-		event->type = SENSOR_TYPE_GRAVITY;
-		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_GYROSCOPE:
 		hal_sensor->type = SENSOR_TYPE_GYROSCOPE;
-		event->type = SENSOR_TYPE_GYROSCOPE;
-		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_ROTATION_VECTOR:
 		hal_sensor->type = SENSOR_TYPE_ROTATION_VECTOR;
-		event->type = SENSOR_TYPE_ROTATION_VECTOR;
-		sensor->event_handler = hua_sensor_vector_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_LIGHT:
 		hal_sensor->type = SENSOR_TYPE_LIGHT;
-		event->type = SENSOR_TYPE_LIGHT;
-		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_PRESSURE:
 		hal_sensor->type = SENSOR_TYPE_PRESSURE;
-		event->type = SENSOR_TYPE_PRESSURE;
-		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_TEMPERATURE:
 		hal_sensor->type = SENSOR_TYPE_TEMPERATURE;
-		event->type = SENSOR_TYPE_TEMPERATURE;
-		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	case HUA_SENSOR_TYPE_PROXIMITY:
 		hal_sensor->type = SENSOR_TYPE_PROXIMITY;
-		event->type = SENSOR_TYPE_PROXIMITY;
-		sensor->event_handler = hua_sensor_event_handler;
 		break;
 
 	default:
@@ -246,6 +224,7 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *h
 		return -EINVAL;
 	}
 
+	event->type = hal_sensor->type;
 	event->acceleration.status = SENSOR_STATUS_ACCURACY_HIGH;
 
 	hal_sensor->resolution = hal_sensor->maxRange / resolution;

@@ -93,6 +93,7 @@ static struct hua_sensor_chip *hua_sensor_chip_create(int fd, const char *devnam
 
 	chip->data_fd = fd;
 	chip->ctrl_fd = ctrl_fd;
+	chip->enabled = false;
 
 	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_CHIP_NAME(sizeof(chip->name)), chip->name);
 	if (ret < 0)
@@ -273,9 +274,17 @@ static int hua_sensors_recv_wakeup_event(struct hua_sensor_poll_device *pdev)
 	return event;
 }
 
-static void hua_sensor_set_enable_base(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
+static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
 {
+	if (chip->enabled == enable)
+	{
+		pr_func_info("Nothing to be done");
+		return 0;
+	}
+
 	pr_bold_info("set sensor chip %s active %s", chip->name, enable ? "enable" : "disable");
+
+	pthread_mutex_lock(&pdev->lock);
 
 	if (enable)
 	{
@@ -290,44 +299,50 @@ static void hua_sensor_set_enable_base(struct hua_sensor_poll_device *pdev, stru
 		chip->pfd->events = 0;
 	}
 
+	chip->enabled = enable;
 	hua_sensors_send_wakeup_event(pdev, 0);
-}
 
-static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
-{
-	pthread_mutex_lock(&pdev->lock);
-	pthread_mutex_lock(&chip->lock);
-
-	if (enable)
-	{
-		if (chip->use_count == 0)
-		{
-			hua_sensor_set_enable_base(pdev, chip, true);
-		}
-
-		chip->use_count++;
-	}
-	else
-	{
-		if (chip->use_count == 1)
-		{
-			hua_sensor_set_enable_base(pdev, chip, false);
-		}
-
-		chip->use_count--;
-	}
-
-	pthread_mutex_unlock(&chip->lock);
 	pthread_mutex_unlock(&pdev->lock);
 
-	pr_bold_info("chip %s use count = %d", chip->name, chip->use_count);
-
 	return 0;
+}
+
+static struct hua_sensor_device *hua_sensor_chip_add_device(struct hua_sensor_device *head, struct hua_sensor_device *sensor)
+{
+	sensor->next = head;
+	sensor->prev = NULL;
+
+	if (head)
+	{
+		head->prev = sensor;
+	}
+
+	return sensor;
+}
+
+static struct hua_sensor_device *hua_sensor_chip_remove_device(struct hua_sensor_device *head, struct hua_sensor_device *sensor)
+{
+	struct hua_sensor_device *next = sensor->next;
+	struct hua_sensor_device *prev = sensor->prev;
+
+	if (next)
+	{
+		next->prev = prev;
+	}
+
+	if (prev)
+	{
+		prev->next = next;
+		return head;
+	}
+
+	return next;
 }
 
 static int hua_sensor_device_set_enable(struct hua_sensor_poll_device *pdev, struct hua_sensor_device *sensor, bool enable)
 {
 	int ret;
+	struct hua_sensor_chip *chip;
 
 	pthread_mutex_lock(&sensor->lock);
 
@@ -348,7 +363,23 @@ static int hua_sensor_device_set_enable(struct hua_sensor_poll_device *pdev, str
 		return 0;
 	}
 
-	hua_sensor_chip_set_enable_lock(pdev, sensor->chip, enable);
+	chip = sensor->chip;
+
+	pthread_mutex_lock(&chip->lock);
+
+	if (enable)
+	{
+		chip->active_head = hua_sensor_chip_add_device(chip->active_head, sensor);
+	}
+	else
+	{
+		chip->active_head = hua_sensor_chip_remove_device(chip->active_head, sensor);
+	}
+
+	hua_sensor_chip_set_enable_lock(pdev, chip, chip->active_head != NULL);
+
+	pthread_mutex_unlock(&chip->lock);
+
 	sensor->enabled = enable;
 
 	pthread_mutex_unlock(&sensor->lock);

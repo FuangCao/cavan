@@ -147,8 +147,11 @@ struct hua_sensor_device
 
 	struct mutex lock;
 
+	struct hua_sensor_device *next;
+	struct hua_sensor_device *prev;
+
 	int (*set_enable)(struct hua_sensor_device *sensor, bool enable);
-	bool (*event_handler)(struct hua_sensor_device *sensor, u32 mask);
+	bool (*event_handler)(struct hua_sensor_device *sensor, u8 mask);
 };
 
 struct hua_sensor_chip
@@ -157,12 +160,12 @@ struct hua_sensor_chip
 	const char *vendor;
 
 	unsigned int min_delay;
-	unsigned int poll_delay;
 
 	int irq;
 	unsigned long irq_flags;
 
 	struct hua_sensor_device *sensor_list;
+	struct hua_sensor_device *active_head;
 	size_t sensor_count;
 
 	const struct hua_sensor_init_data *init_data;
@@ -171,12 +174,11 @@ struct hua_sensor_chip
 
 	void *private_data;
 	u32 devid;
+	unsigned long poll_jiffies;
 	enum hua_sensor_thread_state state;
 
 	bool powered;
-	bool enabled;
-	bool irq_ctrl;
-	size_t use_count;
+	bool ctrl_irq;
 
 	struct mutex lock;
 	struct input_dev *input;
@@ -203,6 +205,7 @@ struct hua_sensor_chip
 	ssize_t (*read_data)(struct hua_sensor_chip *chip, u8 addr, void *buff, size_t size);
 	int (*write_register)(struct hua_sensor_chip *chip, u8 addr, u8 value);
 	int (*read_register)(struct hua_sensor_chip *chip, u8 addr, u8 *value);
+	bool (*wait_for_event)(struct hua_sensor_chip *chip);
 };
 
 struct hua_sensor_core
@@ -226,7 +229,7 @@ ssize_t hua_i2c_write_data(struct i2c_client *client, u8 addr, const void *buff,
 int hua_sensor_read_register_i2c_smbus(struct hua_sensor_chip *chip, u8 addr, u8 *value);
 int hua_sensor_write_register_i2c_smbus(struct hua_sensor_chip *chip, u8 addr, u8 value);
 
-void hua_sensor_chip_report_event(struct hua_sensor_chip *chip, u32 mask);
+void hua_sensor_chip_report_event(struct hua_sensor_chip *chip, u8 mask);
 int hua_sensor_register_chip(struct hua_sensor_chip *chip);
 void hua_sensor_unregister_chip(struct hua_sensor_chip *chip);
 

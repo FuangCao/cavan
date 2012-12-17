@@ -236,25 +236,9 @@ static void adxl34x_sensor_main_loop(struct hua_sensor_chip *chip)
 {
 	int ret;
 	u8 irq_state;
-#if defined(ADXL346_GINT2) || defined(ADXL346_GINT1)
-	struct completion *event_completion = &chip->event_completion;
-#endif
 
-	while (1)
+	while (likely(chip->wait_for_event(chip)))
 	{
-#if defined(ADXL346_GINT2) || defined(ADXL346_GINT1)
-		enable_irq(chip->irq);
-		wait_for_completion(event_completion);
-#else
-		msleep(chip->poll_delay);
-#endif
-
-		if (chip->state != HUA_SENSOR_THREAD_STATE_RUNNING)
-		{
-			pr_pos_info();
-			break;
-		}
-
 		ret = chip->read_register(chip, INT_SOURCE, &irq_state);
 		if (ret < 0)
 		{
@@ -266,7 +250,7 @@ static void adxl34x_sensor_main_loop(struct hua_sensor_chip *chip)
 	}
 }
 
-static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor, u32 mask)
+static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor, u8 mask)
 {
 	int ret;
 	u8 fifo_state;
@@ -302,7 +286,7 @@ static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor,
 	return true;
 }
 
-static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, u32 mask)
+static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, u8 mask)
 {
 	int ret;
 	int pitch, roll;
@@ -330,7 +314,7 @@ static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, 
 
 	case 6:
 		roll = 0;
-		pitch = -2;
+		pitch = 0;
 		break;
 
 	case 3:

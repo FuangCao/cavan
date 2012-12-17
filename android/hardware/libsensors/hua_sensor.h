@@ -160,9 +160,9 @@ struct hua_sensor_device
 	int index;
 	struct hua_sensor_chip *chip;
 	struct sensors_event_t event;
-	struct hua_sensor_device *next;
 
-	bool (*event_handler)(struct hua_sensor_device *dev, struct input_event *event);
+	struct hua_sensor_device *next;
+	struct hua_sensor_device *prev;
 };
 
 struct hua_sensor_chip
@@ -172,12 +172,13 @@ struct hua_sensor_chip
 	char name[128];
 	char vensor[128];
 
-	size_t use_count;
 	pthread_mutex_t lock;
 
+	bool enabled;
 	struct pollfd *pfd;
 	unsigned int sensor_count;
 	struct hua_sensor_device *sensor_list;
+	struct hua_sensor_device *active_head;
 
 	struct hua_sensor_chip *prev;
 	struct hua_sensor_chip *next;
@@ -204,19 +205,19 @@ struct hua_sensor_poll_device
 int text_lhcmp(const char *text1, const char *text2);
 char *text_copy(char *dest, const char *src);
 char *text_ncopy(char *dest, const char *src, size_t size);
-struct sensors_event_t *hua_sensor_device_sync_event(struct hua_sensor_device *sensor, size_t sensor_count, struct sensors_event_t *data, size_t data_size);
-bool hua_sensor_device_report_event(struct hua_sensor_device *sensor, size_t count, struct input_event *event);
+struct sensors_event_t *hua_sensor_device_sync_event(struct hua_sensor_device *head, struct sensors_event_t *data, size_t data_size);
+bool hua_sensor_device_report_event(struct hua_sensor_device *head, struct input_event *event);
 int hua_sensor_device_init(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, int index);
 int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *sensor_hal);
 
 static inline struct sensors_event_t *hua_sensor_chip_sync_event(struct hua_sensor_chip *chip, struct sensors_event_t *data, size_t data_size)
 {
-	return hua_sensor_device_sync_event(chip->sensor_list, chip->sensor_count, data, data_size);
+	return hua_sensor_device_sync_event(chip->active_head, data, data_size);
 }
 
 static inline bool hua_sensor_chip_report_event(struct hua_sensor_chip *chip, struct input_event *event)
 {
-	return hua_sensor_device_report_event(chip->sensor_list, chip->sensor_count, event);
+	return hua_sensor_device_report_event(chip->active_head, event);
 }
 
 static inline int64_t timeval2nano(struct timeval *time)

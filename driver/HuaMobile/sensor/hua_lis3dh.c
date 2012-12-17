@@ -266,7 +266,7 @@ static struct hua_sensor_init_data lis3dh_init_data[] =
 	{TT_TW, 0x00, 0}
 };
 
-static bool lis3dh_acceleration_event_handler(struct hua_sensor_device *sensor, u32 mask)
+static bool lis3dh_acceleration_event_handler(struct hua_sensor_device *sensor, u8 mask)
 {
 	int ret;
 	struct lis3dh_data_package package;
@@ -287,7 +287,7 @@ static bool lis3dh_acceleration_event_handler(struct hua_sensor_device *sensor, 
 struct hua_sensor_device lis3dh_sensor_list[] =
 {
 	{
-		.name = "LIS3DH Three-Axis Digital Accelerometer",
+		.name = "Three-Axis Digital Accelerometer",
 		.type = HUA_SENSOR_TYPE_ACCELEROMETER,
 		.fuzz = 32,
 		.flat = 32,

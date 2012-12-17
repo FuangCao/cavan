@@ -214,6 +214,14 @@ static irqreturn_t hua_sensor_isr_level(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
+static bool hua_sensor_wait_for_event_level(struct hua_sensor_chip *chip)
+{
+	enable_irq(chip->irq);
+	wait_for_completion(&chip->event_completion);
+
+	return chip->state == HUA_SENSOR_THREAD_STATE_RUNNING;
+}
+
 static irqreturn_t hua_sensor_isr_edge(int irq, void *dev_id)
 {
 	struct hua_sensor_chip *chip = (struct hua_sensor_chip *)dev_id;
@@ -223,27 +231,45 @@ static irqreturn_t hua_sensor_isr_edge(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
+static bool hua_sensor_wait_for_event_edge(struct hua_sensor_chip *chip)
+{
+	wait_for_completion(&chip->event_completion);
+
+	return chip->state == HUA_SENSOR_THREAD_STATE_RUNNING;
+}
+
+static bool hua_sensor_wait_for_event_poll(struct hua_sensor_chip *chip)
+{
+	set_current_state(TASK_UNINTERRUPTIBLE);
+	schedule_timeout(chip->poll_jiffies);
+
+	return chip->state == HUA_SENSOR_THREAD_STATE_RUNNING;
+}
+
 static int hua_sensor_request_irq(struct hua_sensor_chip *chip)
 {
 	int ret;
 	irq_handler_t handler;
 
-	chip->irq_ctrl = false;
-
-	if (chip->irq < 1 || (chip->irq_flags & IRQF_TRIGGER_MASK) == 0)
+	if (chip->irq < 0 || (chip->irq_flags & IRQF_TRIGGER_MASK) == 0)
 	{
 		pr_func_info("Don't need request IRQ");
+		chip->ctrl_irq = false;
+		chip->wait_for_event = hua_sensor_wait_for_event_poll;
 		return 0;
 	}
 
 	if (chip->irq_flags & (IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW))
 	{
 		handler = hua_sensor_isr_level;
+		chip->ctrl_irq = false;
+		chip->wait_for_event = hua_sensor_wait_for_event_level;
 	}
 	else
 	{
 		handler = hua_sensor_isr_edge;
-		chip->irq_ctrl = true;
+		chip->ctrl_irq = true;
+		chip->wait_for_event = hua_sensor_wait_for_event_edge;
 	}
 
 	pr_green_info("%s irq trigger type is %s", chip->name, hua_sensor_irq_trigger_type_tostring(chip->irq_flags));
@@ -260,18 +286,30 @@ static int hua_sensor_request_irq(struct hua_sensor_chip *chip)
 	return 0;
 }
 
-static int hua_sensor_set_delay(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, unsigned int delay)
+static int hua_sensor_chip_apply_delay(struct hua_sensor_chip *chip)
 {
 	int ret;
-	struct hua_sensor_device *sensor_end;
+	unsigned int delay;
+	struct hua_sensor_device *sensor;
 
-	pr_func_info("sensor = %s, delay = %d", sensor->name, delay);
-
-	sensor->poll_delay = delay;
-
-	for (sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; sensor++)
+	sensor = chip->active_head;
+	if (sensor == NULL)
 	{
-		if (sensor->enabled && sensor->poll_delay < delay)
+		chip->state = HUA_SENSOR_THREAD_STATE_SUSPEND;
+		return 0;
+	}
+
+	delay = sensor->poll_delay;
+
+	while (1)
+	{
+		sensor = sensor->next;
+		if (sensor == NULL)
+		{
+			break;
+		}
+
+		if (sensor->poll_delay < delay)
 		{
 			delay = sensor->poll_delay;
 		}
@@ -285,7 +323,9 @@ static int hua_sensor_set_delay(struct hua_sensor_device *sensor, struct hua_sen
 		return ret;
 	}
 
-	chip->poll_delay = delay;
+	chip->poll_jiffies = msecs_to_jiffies(delay) + 1;
+	chip->state = HUA_SENSOR_THREAD_STATE_RUNNING;
+	wake_up_process(chip->event_task);
 
 	return 0;
 }
@@ -295,9 +335,12 @@ static int hua_sensor_set_delay_lock(struct hua_sensor_device *sensor, unsigned 
 	int ret;
 	struct hua_sensor_chip *chip = sensor->chip;
 
+	pr_func_info("sensor = %s, delay = %d", sensor->name, delay);
+
 	mutex_lock(&chip->lock);
 	mutex_lock(&sensor->lock);
-	ret = hua_sensor_set_delay(sensor, chip, delay);
+	sensor->poll_delay = delay;
+	ret = hua_sensor_chip_apply_delay(chip);
 	mutex_unlock(&sensor->lock);
 	mutex_unlock(&chip->lock);
 
@@ -346,82 +389,6 @@ static int hua_sensor_chip_set_power(struct hua_sensor_chip *chip, bool enable)
 	return ret;
 }
 
-static int hua_sensor_chip_set_enable_base(struct hua_sensor_chip *chip, bool enable)
-{
-	int ret;
-
-	if (chip->enabled == enable)
-	{
-		pr_func_info("Nothing to be done");
-		return 0;
-	}
-
-	if (enable == false)
-	{
-		if (chip->irq_ctrl)
-		{
-			disable_irq_nosync(chip->irq);
-		}
-
-		chip->state = HUA_SENSOR_THREAD_STATE_SUSPEND;
-	}
-
-	ret = hua_sensor_chip_set_power(chip, enable);
-	if (ret < 0)
-	{
-		pr_red_info("hua_sensor_chip_power_enable");
-	}
-	else
-	{
-		chip->enabled = enable;
-	}
-
-	if (chip->enabled)
-	{
-		if (chip->irq_ctrl)
-		{
-			enable_irq(chip->irq);
-		}
-
-		chip->state = HUA_SENSOR_THREAD_STATE_RUNNING;
-		wake_up_process(chip->event_task);
-	}
-
-	pr_bold_info("sensor chip %s %s", chip->name, chip->enabled ? "enabled" : "disabled");
-
-	return ret;
-}
-
-static int hua_sensor_chip_set_enable(struct hua_sensor_chip *chip, bool enable)
-{
-	int ret;
-
-	if (enable)
-	{
-		if (chip->use_count == 0 && (ret = hua_sensor_chip_set_enable_base(chip, true)) < 0)
-		{
-			pr_red_info("hua_sensor_chip_set_enable_base");
-			return ret;
-		}
-
-		chip->use_count++;
-	}
-	else
-	{
-		if (chip->use_count == 1 && (ret = hua_sensor_chip_set_enable_base(chip, false)) < 0)
-		{
-			pr_red_info("hua_sensor_chip_set_enable_base");
-			return ret;
-		}
-
-		chip->use_count--;
-	}
-
-	pr_bold_info("sensor chip %s use count = %d", chip->name, chip->use_count);
-
-	return 0;
-}
-
 static int hua_sensor_chip_readid(struct hua_sensor_chip *chip)
 {
 	int ret;
@@ -443,6 +410,38 @@ static int hua_sensor_chip_readid(struct hua_sensor_chip *chip)
 
 // ================================================================================
 
+static struct hua_sensor_device *hua_sensor_chip_add_device(struct hua_sensor_device *head, struct hua_sensor_device *sensor)
+{
+	sensor->next = head;
+	sensor->prev = NULL;
+
+	if (head)
+	{
+		head->prev = sensor;
+	}
+
+	return sensor;
+}
+
+static struct hua_sensor_device *hua_sensor_chip_remove_device(struct hua_sensor_device *head, struct hua_sensor_device *sensor)
+{
+	struct hua_sensor_device *next = sensor->next;
+	struct hua_sensor_device *prev = sensor->prev;
+
+	if (next)
+	{
+		next->prev = prev;
+	}
+
+	if (prev)
+	{
+		prev->next = next;
+		return head;
+	}
+
+	return next;
+}
+
 static int hua_sensor_set_enable(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, bool enable)
 {
 	int ret;
@@ -453,7 +452,7 @@ static int hua_sensor_set_enable(struct hua_sensor_device *sensor, struct hua_se
 		return 0;
 	}
 
-	if (enable && (ret = hua_sensor_chip_set_enable(chip, true)) < 0)
+	if (enable && (ret = hua_sensor_chip_set_power(chip, true)) < 0)
 	{
 		pr_red_info("hua_sensor_chip_set_enable");
 		return ret;
@@ -469,19 +468,18 @@ static int hua_sensor_set_enable(struct hua_sensor_device *sensor, struct hua_se
 		sensor->enabled = enable;
 	}
 
-	if (sensor->enabled == false)
+	if (sensor->enabled)
 	{
-		hua_sensor_chip_set_enable(chip, false);
+		chip->active_head = hua_sensor_chip_add_device(chip->active_head, sensor);
+	}
+	else
+	{
+		chip->active_head = hua_sensor_chip_remove_device(chip->active_head, sensor);
 	}
 
 	pr_bold_info("sensor %s %s %s", chip->name, sensor->name, sensor->enabled ? "enabled" : "disabled");
 
-	if (chip->use_count > 0)
-	{
-		return hua_sensor_set_delay(sensor, chip, sensor->enabled ? sensor->poll_delay : UINT_MAX);
-	}
-
-	return 0;
+	return hua_sensor_chip_apply_delay(chip);
 }
 
 static int hua_sensor_set_enable_lock(struct hua_sensor_device *sensor, bool enable)
@@ -596,6 +594,7 @@ static int hua_sensor_device_init(struct hua_sensor_device *sensor, struct hua_s
 
 	sensor->chip = chip;
 	sensor->enabled = false;
+	sensor->prev = sensor->next = NULL;
 	mutex_init(&sensor->lock);
 
 	if (sensor->name == NULL)
@@ -769,20 +768,20 @@ static int hua_sensor_chip_misc_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
-void hua_sensor_chip_report_event(struct hua_sensor_chip *chip, u32 mask)
+void hua_sensor_chip_report_event(struct hua_sensor_chip *chip, u8 mask)
 {
-	int count;
-	struct hua_sensor_device *sensor, *sensor_end;
+	bool need_sync;
+	struct hua_sensor_device *sensor;
 
-	for (count = 0, sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; sensor++)
+	for (need_sync = false, sensor = chip->active_head; sensor; sensor = sensor->next)
 	{
-		if (sensor->enabled && sensor->event_handler(sensor, mask))
+		if (sensor->event_handler(sensor, mask))
 		{
-			count++;
+			need_sync = true;
 		}
 	}
 
-	if (count > 0)
+	if (need_sync)
 	{
 		input_sync(chip->input);
 	}
@@ -790,61 +789,12 @@ void hua_sensor_chip_report_event(struct hua_sensor_chip *chip, u32 mask)
 
 EXPORT_SYMBOL_GPL(hua_sensor_chip_report_event);
 
-static void hua_sensor_main_loop_irq_level(struct hua_sensor_chip *chip)
-{
-	struct completion *event_completion = &chip->event_completion;
-
-	pr_pos_info();
-
-	while (1)
-	{
-		enable_irq(chip->irq);
-		wait_for_completion(event_completion);
-
-		if (chip->state != HUA_SENSOR_THREAD_STATE_RUNNING)
-		{
-			pr_pos_info();
-			break;
-		}
-
-		hua_sensor_chip_report_event(chip, 0);
-	}
-}
-
-static void hua_sensor_main_loop_irq_edge(struct hua_sensor_chip *chip)
-{
-	struct completion *event_completion = &chip->event_completion;
-
-	pr_pos_info();
-
-	while (1)
-	{
-		wait_for_completion(event_completion);
-
-		if (chip->state != HUA_SENSOR_THREAD_STATE_RUNNING)
-		{
-			pr_pos_info();
-			break;
-		}
-
-		hua_sensor_chip_report_event(chip, 0);
-	}
-}
-
-static void hua_sensor_main_loop_no_irq(struct hua_sensor_chip *chip)
+static void hua_sensor_main_loop_dummy(struct hua_sensor_chip *chip)
 {
 	pr_pos_info();
 
-	while (1)
+	while (likely(chip->wait_for_event(chip)))
 	{
-		msleep(chip->poll_delay);
-
-		if (chip->state != HUA_SENSOR_THREAD_STATE_RUNNING)
-		{
-			pr_pos_info();
-			break;
-		}
-
 		hua_sensor_chip_report_event(chip, 0);
 	}
 }
@@ -891,18 +841,16 @@ static int hua_sensor_chip_init(struct hua_sensor_chip *chip, struct hua_sensor_
 
 	if (chip->main_loop == NULL)
 	{
-		if (chip->irq > 0 && (chip->irq_flags & (IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW)))
-		{
-			chip->main_loop = hua_sensor_main_loop_irq_level;
-		}
-		else if (chip->irq > 0 && (chip->irq_flags & (IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING)))
-		{
-			chip->main_loop = hua_sensor_main_loop_irq_edge;
-		}
-		else
-		{
-			chip->main_loop = hua_sensor_main_loop_no_irq;
-		}
+		chip->main_loop = hua_sensor_main_loop_dummy;
+	}
+
+	if ((chip->irq_flags & IRQF_TRIGGER_MASK) == 0)
+	{
+		chip->irq = -1;
+	}
+	else if (chip->irq < 0)
+	{
+		chip->irq_flags = 0;
 	}
 
 	chip->core = core;
@@ -911,9 +859,7 @@ static int hua_sensor_chip_init(struct hua_sensor_chip *chip, struct hua_sensor_
 
 	chip->state = HUA_SENSOR_THREAD_STATE_STOPPED;
 	chip->powered = false;
-	chip->enabled = false;
-	chip->irq_ctrl = false;
-	chip->use_count = 0;
+	chip->active_head = NULL;
 
 	for (sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; sensor++)
 	{
@@ -984,19 +930,30 @@ static int hua_sensor_event_thread_handler(void *data)
 
 	while (chip->state != HUA_SENSOR_THREAD_STATE_STOPPING)
 	{
-		mutex_unlock(&chip->lock);
+		if (chip->ctrl_irq)
+		{
+			enable_irq(chip->irq);
+		}
+
 		chip->state = HUA_SENSOR_THREAD_STATE_RUNNING;
+
+		mutex_unlock(&chip->lock);
 		pr_green_info("sensor chip %s enter main loop", chip->name);
 		chip->main_loop(chip);
 		pr_green_info("sensor chip %s exit main loop", chip->name);
 		mutex_lock(&chip->lock);
 
+		if (chip->ctrl_irq)
+		{
+			disable_irq_nosync(chip->irq);
+		}
+
 		while (chip->state == HUA_SENSOR_THREAD_STATE_SUSPEND)
 		{
 			pr_green_info("sensor chip hip %s suspending", chip->name);
 
-			mutex_unlock(&chip->lock);
 			set_current_state(TASK_UNINTERRUPTIBLE);
+			mutex_unlock(&chip->lock);
 			schedule();
 			mutex_lock(&chip->lock);
 		}
@@ -1205,8 +1162,8 @@ static int hua_sensor_detect_thread_handler(void *data)
 			timeout = msecs_to_jiffies(core->detect_delay) + 1;
 		}
 
-		mutex_unlock(&core->lock);
 		set_current_state(TASK_UNINTERRUPTIBLE);
+		mutex_unlock(&core->lock);
 		schedule_timeout(timeout);
 		mutex_lock(&core->lock);
 
