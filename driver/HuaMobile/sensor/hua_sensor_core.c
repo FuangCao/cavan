@@ -482,10 +482,9 @@ static int hua_sensor_set_enable(struct hua_sensor_device *sensor, struct hua_se
 	return hua_sensor_chip_apply_delay(chip);
 }
 
-static int hua_sensor_set_enable_lock(struct hua_sensor_device *sensor, bool enable)
+static int hua_sensor_set_enable_lock(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, bool enable)
 {
 	int ret;
-	struct hua_sensor_chip *chip = sensor->chip;
 
 	mutex_lock(&chip->lock);
 	mutex_lock(&sensor->lock);
@@ -673,7 +672,7 @@ static int hua_sensor_chip_misc_ioctl_base(unsigned int command, unsigned long a
 		return hua_sensor_set_delay_lock(sensor, arg);
 
 	case HUA_SENSOR_IOC_SET_ENABLE(0):
-		return hua_sensor_set_enable_lock(sensor, arg > 0);
+		return hua_sensor_set_enable_lock(sensor, chip, arg > 0);
 
 	default:
 		if (chip->ioctl)
@@ -740,7 +739,7 @@ static ssize_t hua_sensor_chip_misc_write(struct file *file, const char __user *
 
 	for (index = 0, sensor = chip->sensor_list, sensor_end = sensor + chip->sensor_count; sensor < sensor_end; index++, sensor++)
 	{
-		ret = hua_sensor_set_enable(sensor, chip, (mask & (1 << index)) > 0);
+		ret = hua_sensor_set_enable_lock(sensor, chip, (mask & (1 << index)) > 0);
 		if (ret < 0)
 		{
 			pr_red_info("hua_sensor_set_enable %s %s", chip->name, sensor->name);

@@ -19,7 +19,7 @@
 
 #include <hua_sensor.h>
 
-#define HUA_SENSOR_DEVICE_DEBUG		1
+#define HUA_SENSOR_DEVICE_DEBUG		0
 
 struct sensors_event_t *hua_sensor_device_sync_event(struct hua_sensor_device *head, struct sensors_event_t *data, size_t data_size)
 {

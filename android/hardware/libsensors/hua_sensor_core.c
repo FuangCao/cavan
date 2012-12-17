@@ -192,7 +192,7 @@ static int hua_sensor_chip_probe(struct hua_sensor_chip *chip, struct sensor_t h
 		hal_sensor->version = 1;
 		hal_sensor->vendor = chip->vensor;
 		hal_sensor->name = sensor->name;
-		hal_sensor->minDelay =	min_delay;
+		hal_sensor->minDelay = min_delay;
 		hal_sensor->handle = handle;
 
 		sensor_map[handle] = sensor;
@@ -274,7 +274,7 @@ static int hua_sensors_recv_wakeup_event(struct hua_sensor_poll_device *pdev)
 	return event;
 }
 
-static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
+static int hua_sensor_chip_set_enable(struct hua_sensor_poll_device *pdev, struct hua_sensor_chip *chip, bool enable)
 {
 	if (chip->enabled == enable)
 	{
@@ -283,8 +283,6 @@ static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, 
 	}
 
 	pr_bold_info("set sensor chip %s active %s", chip->name, enable ? "enable" : "disable");
-
-	pthread_mutex_lock(&pdev->lock);
 
 	if (enable)
 	{
@@ -301,8 +299,6 @@ static int hua_sensor_chip_set_enable_lock(struct hua_sensor_poll_device *pdev, 
 
 	chip->enabled = enable;
 	hua_sensors_send_wakeup_event(pdev, 0);
-
-	pthread_mutex_unlock(&pdev->lock);
 
 	return 0;
 }
@@ -376,7 +372,9 @@ static int hua_sensor_device_set_enable(struct hua_sensor_poll_device *pdev, str
 		chip->active_head = hua_sensor_chip_remove_device(chip->active_head, sensor);
 	}
 
-	hua_sensor_chip_set_enable_lock(pdev, chip, chip->active_head != NULL);
+	pthread_mutex_lock(&pdev->lock);
+	hua_sensor_chip_set_enable(pdev, chip, chip->active_head != NULL);
+	pthread_mutex_unlock(&pdev->lock);
 
 	pthread_mutex_unlock(&chip->lock);
 
