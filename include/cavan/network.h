@@ -223,6 +223,8 @@ int inet_get_devname(int sockfd, int index, char *devname);
 char *cavan_get_server_ip(char *buff);
 u16 cavan_get_server_port(u16 default_port);
 
+int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd);
+
 static inline int inet_socket(int type)
 {
 	return socket(AF_INET, type, 0);
@@ -285,6 +287,11 @@ static inline ssize_t inet_send(int sockfd, const void *buff, size_t size)
 static inline ssize_t inet_recv(int sockfd, void *buff, size_t size)
 {
 	return recv(sockfd, buff, size, MSG_NOSIGNAL);
+}
+
+static inline ssize_t inet_recv2(int sockfd, void *buff, size_t size)
+{
+	return recv(sockfd, buff, size, 0);
 }
 
 static inline void inet_close_tcp_socket(int sockfd)

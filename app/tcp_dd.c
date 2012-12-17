@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				goto label__unknown_option;
+				goto label_unknown_option;
 			}
 			break;
 
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 				text_copy(file_req.dest_file, para_value);
 				break;
 			}
-			goto label__unknown_option;
+			goto label_unknown_option;
 
 		case 'b':
 			if (text_cmp(p, "s") == 0)
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 				bs = text2size(para_value, NULL);
 				break;
 			}
-			goto label__unknown_option;
+			goto label_unknown_option;
 
 		case 's':
 			if (text_cmp(p, "kip") == 0)
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				goto label__unknown_option;
+				goto label_unknown_option;
 			}
 			break;
 
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 				count = text2size(para_value, NULL);
 				break;
 			}
-			goto label__unknown_option;
+			goto label_unknown_option;
 
 		case 'p':
 			if (text_cmp(p, "ort") == 0)
@@ -205,10 +205,10 @@ int main(int argc, char *argv[])
 				file_req.port = text2value_unsigned(para_value, NULL, 10);
 				break;
 			}
-			goto label__unknown_option;
+			goto label_unknown_option;
 
 		default:
-label__unknown_option:
+label_unknown_option:
 			pr_red_info("unknown option `%s'", para_option);
 			return -EINVAL;
 		}

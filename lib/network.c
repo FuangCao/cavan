@@ -790,3 +790,33 @@ u16 cavan_get_server_port(u16 default_port)
 
 	return text2value_unsigned(port, NULL, 10);
 }
+
+int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd)
+{
+	char buff[1024];
+	ssize_t rwlen;
+
+	while (1)
+	{
+		rwlen = inet_recv(src_sockfd, buff, sizeof(buff));
+		if (rwlen < 0)
+		{
+			pr_red_info("inet_recv");
+			return rwlen;
+		}
+
+		if (rwlen == 0)
+		{
+			break;
+		}
+
+		rwlen = inet_send(dest_sockfd, buff, rwlen);
+		if (rwlen < 0)
+		{
+			pr_red_info("inet_send");
+			return rwlen;
+		}
+	}
+
+	return 0;
+}
