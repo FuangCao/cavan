@@ -116,7 +116,7 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 int cavan_exec_redirect_stdio1(int ttyfd, const char *command)
 {
 	int ret;
-	const char *shell_path = "sh";
+	const char *shell_command = "sh";
 
 	ret = setsid();
 	if (ret < 0)
@@ -148,11 +148,11 @@ int cavan_exec_redirect_stdio1(int ttyfd, const char *command)
 
 	if (command && command[0] && text_cmp("shell", command))
 	{
-		return execlp(shell_path, shell_path, "-c", command, NULL);
+		return execlp(shell_command, shell_command, "-c", command, NULL);
 	}
 	else
 	{
-		return execlp(shell_path, shell_path, "-", NULL);
+		return execlp(shell_command, shell_command, "-", NULL);
 	}
 }
 
