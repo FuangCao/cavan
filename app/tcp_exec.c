@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	cavan_get_server_ip(file_req.ip);
 	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
-	while ((c = getopt_long(argc, argv, "vVhHIaA:I:p:P:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -114,12 +114,6 @@ int main(int argc, char *argv[])
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
-	}
-
-	if (argc <= optind)
-	{
-		pr_red_info("Please input a command");
-		return -EINVAL;
 	}
 
 	text_join_by_char(argv + optind, argc - optind, ' ', file_req.command, sizeof(file_req.command));

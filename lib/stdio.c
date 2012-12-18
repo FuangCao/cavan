@@ -128,18 +128,9 @@ int set_tty_mode(int fd, int mode)
 		}
 
 		tty_attr = tty_old_attr;
-		tty_attr.c_lflag &= ~ICANON;
-		tty_attr.c_lflag |= ISIG;
-		tty_attr.c_lflag |= IEXTEN;
-		tty_attr.c_iflag |= ICRNL;
-		tty_attr.c_iflag &= ~INLCR;
-		tty_attr.c_oflag |= OPOST;
-		tty_attr.c_oflag |= ONLCR;
-		tty_attr.c_oflag &= ~OCRNL;
-		tty_attr.c_oflag &= ~ONOCR;
-		tty_attr.c_oflag &= ~ONLRET;
-		tty_attr.c_cc[VMIN] = 1;
+		tty_attr.c_lflag = 0;
 		tty_attr.c_cc[VTIME] = 0;
+		tty_attr.c_cc[VMIN] = 1;
 
 		return tcsetattr(fd, TCSANOW, &tty_attr);
 

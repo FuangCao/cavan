@@ -554,14 +554,6 @@ out_close_sockfd:
 	return ret;
 }
 
-static void tcp_dd_exec_exit_signal(int signum)
-{
-	pr_pos_info();
-
-	set_tty_mode(fileno(stdin), 0);
-	exit(-1);
-}
-
 int tcp_dd_exec_command(struct inet_file_request *file_req)
 {
 	int ret;
@@ -595,9 +587,6 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 		goto out_close_sockfd;
 	}
 
-	signal(SIGKILL, tcp_dd_exec_exit_signal);
-	signal(SIGINT, tcp_dd_exec_exit_signal);
-
 	pfds[0].events = POLLIN;
 	pfds[1].fd = tty_in;
 
@@ -610,7 +599,7 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 		if (ret < 0)
 		{
 			pr_error_info("poll");
-			goto out_close_sockfd;
+			goto out_restore_tty_attr;
 		}
 
 		if (pfds[0].revents)
@@ -635,6 +624,8 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 	}
 
 	ret = 0;
+out_restore_tty_attr:
+	restore_tty_attr(tty_in);
 out_close_sockfd:
 	file_req->close_connect(sockfd);
 	return ret;
