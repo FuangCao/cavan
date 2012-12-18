@@ -30,10 +30,12 @@ MKDIR = mkdir -p
 INSTALL = install -c
 CP = cp
 
+CAVAN_PLAT = $(shell $(CC) -dumpmachine)
+
 CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wsign-compare -Werror-implicit-function-declaration \
 			-Wno-trigraphs -Wno-format-security -Wno-unused-result \
-			-Wpointer-arith -fno-strict-aliasing -g -O2 \
-			-I$(INCLUDE_PATH) -I. -DCAVAN_ARCH=$(ARCH)
+			-Wpointer-arith -fno-strict-aliasing -g -O2 -I$(INCLUDE_PATH) -I. \
+			-DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\"
 ASFLAGS +=	$(CFLAGS) -D__ASM__
 LDFLAGS += -lm -lrt -lpthread
 
