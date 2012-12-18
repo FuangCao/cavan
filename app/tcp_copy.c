@@ -67,9 +67,6 @@ int main(int argc, char *argv[])
 	{
 		.ip = "",
 		.port = 0,
-		.src_offset = 0,
-		.dest_offset = 0,
-		.size = 0,
 		.open_connect = inet_create_tcp_link2,
 		.close_connect = inet_close_tcp_socket
 	};
@@ -153,6 +150,9 @@ int main(int argc, char *argv[])
 
 		text_basename_base(pname, argv[i]);
 		text_copy(file_req.src_file, argv[i]);
+		file_req.src_offset = 0;
+		file_req.dest_offset = 0;
+		file_req.size = 0;
 
 		println("%s => %s", argv[i], file_req.dest_file);
 
