@@ -889,7 +889,7 @@ static const struct swan_vk_descriptor *swan_vk_match_key(const char *keyname, c
 	return NULL;
 }
 
-int swan_vk_commadline(const char *data_path)
+int swan_vk_commandline(const char *data_path)
 {
 	int fd_data;
 	char name[1024], *name_p;
@@ -991,11 +991,11 @@ int swan_vk_cmdline_main(int argc, char *argv[])
 {
 	if (argc > 1)
 	{
-		return swan_vk_commadline(argv[1]);
+		return swan_vk_commandline(argv[1]);
 	}
 	else
 	{
-		return swan_vk_commadline(DEVICE_SWAN_VK_VALUE);
+		return swan_vk_commandline(DEVICE_SWAN_VK_VALUE);
 	}
 }
 

@@ -86,7 +86,7 @@ int swan_vk_serial_client(const char *tty_path);
 int swan_vk_serial_server(const char *tty_path, const char *data_path);
 int swan_vk_adb_client(const char *ip, u16 port);
 int swan_vk_adb_server(struct cavan_service_description *desc, const char *data_path, u16 port);
-int swan_vk_commadline(const char *data_path);
+int swan_vk_commandline(const char *data_path);
 
 int swan_vk_server_main(int argc, char *argv[]);
 int swan_vk_client_main(int argc, char *argv[]);

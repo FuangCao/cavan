@@ -113,9 +113,10 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 	return -1;
 }
 
-int cavan_exec_redirect_stdio1(int ttyfd, const char *command, const char *args)
+int cavan_exec_redirect_stdio1(int ttyfd, const char *command)
 {
 	int ret;
+	const char *shell_path = "sh";
 
 	ret = setsid();
 	if (ret < 0)
@@ -145,10 +146,17 @@ int cavan_exec_redirect_stdio1(int ttyfd, const char *command, const char *args)
 		return ret;
 	}
 
-	return execl(command, command, args, NULL);
+	if (command && command[0] && text_cmp("shell", command))
+	{
+		return execlp(shell_path, shell_path, "-c", command, NULL);
+	}
+	else
+	{
+		return execlp(shell_path, shell_path, "-", NULL);
+	}
 }
 
-int cavan_exec_redirect_stdio2(const char *ttypath, const char *command, const char *args)
+int cavan_exec_redirect_stdio2(const char *ttypath, const char *command)
 {
 	int ret;
 	int ttyfd;
@@ -162,10 +170,10 @@ int cavan_exec_redirect_stdio2(const char *ttypath, const char *command, const c
 		return ttyfd;
 	}
 
-	ret = cavan_exec_redirect_stdio1(ttyfd, command, args);
+	ret = cavan_exec_redirect_stdio1(ttyfd, command);
 	if (ret < 0)
 	{
-		pr_red_info("cavan_exec_redirect_stdio1 %s %s", command, args);
+		pr_red_info("cavan_exec_redirect_stdio1 %s", command);
 	}
 
 	close(ttyfd);
@@ -173,7 +181,7 @@ int cavan_exec_redirect_stdio2(const char *ttypath, const char *command, const c
 	return ret;
 }
 
-int cavan_exec_redirect_stdio_main(const char *command, const char *args, int in_fd, int out_fd)
+int cavan_exec_redirect_stdio_main(const char *command, int in_fd, int out_fd)
 {
 	int ret;
 	pid_t pid;
@@ -183,6 +191,8 @@ int cavan_exec_redirect_stdio_main(const char *command, const char *args, int in
 	const char *ptspath;
 	const char *ptmpath = "/dev/ptmx";
 	struct pollfd pfds[2];
+
+	pr_func_info("command = %s", command);
 
 	ptm_fd = open(ptmpath, O_RDWR);
 	if (ptm_fd < 0)
@@ -234,7 +244,7 @@ int cavan_exec_redirect_stdio_main(const char *command, const char *args, int in
 	{
 		close(ptm_fd);
 
-		return cavan_exec_redirect_stdio2(ptspath, command, args);
+		return cavan_exec_redirect_stdio2(ptspath, command);
 	}
 	else
 	{
@@ -273,7 +283,7 @@ int cavan_exec_redirect_stdio_main(const char *command, const char *args, int in
 		if (pfds[0].revents)
 		{
 			rwlen = read(ptm_fd, buff, sizeof(buff));
-			if (rwlen <= 0 || write(out_fd, buff, rwlen) < 0)
+			if (rwlen <= 0 || write(out_fd, buff, rwlen) < rwlen)
 			{
 				break;
 			}
@@ -282,7 +292,7 @@ int cavan_exec_redirect_stdio_main(const char *command, const char *args, int in
 		if (pfds[1].revents)
 		{
 			rwlen = read(in_fd, buff, sizeof(buff));
-			if (rwlen <= 0 || write(ptm_fd, buff, rwlen) < 0)
+			if (rwlen <= 0 || write(ptm_fd, buff, rwlen) < rwlen)
 			{
 				break;
 			}

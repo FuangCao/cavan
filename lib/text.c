@@ -2563,21 +2563,20 @@ size_t text_split_by_char(const char *text, char sep, char *buff, size_t size1, 
 char *text_join_by_char(char *text[], size_t size1, char sep, char *buff, size_t size2)
 {
 	char *buff_end;
-	char **text_last;
+	char **text_end;
 
-	for (buff_end = buff + size2, text_last = text + (size1 - 1); buff < buff_end; text++)
+	for (buff_end = buff + size2, text_end = text + size1; buff < buff_end && text < text_end; text++, buff++)
 	{
 		buff = text_copy(buff, *text);
-
-		if (text < text_last)
-		{
-			*(char *)buff++ = sep;
-		}
-		else
-		{
-			break;
-		}
+		*buff = sep;
 	}
+
+	if (size1)
+	{
+		buff--;
+	}
+
+	*buff = 0;
 
 	return buff;
 }

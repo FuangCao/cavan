@@ -9,6 +9,7 @@
 #include <cavan/tcp_dd.h>
 #include <cavan/service.h>
 #include <cavan/device.h>
+#include <cavan/command.h>
 
 static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
@@ -40,12 +41,12 @@ static int __printf_format_34__ tcp_dd_send_response(int sockfd, int code, const
 	int ret;
 
 	pkg.type = TCP_DD_RESPONSE;
-	pkg.body.res_pkg.code = code;
-	pkg.body.res_pkg.number = errno;
+	pkg.res_pkg.code = code;
+	pkg.res_pkg.number = errno;
 
 	if (fmt == NULL)
 	{
-		pkg.body.res_pkg.message[0] = 0;
+		pkg.res_pkg.message[0] = 0;
 		ret = 1;
 	}
 	else
@@ -53,11 +54,11 @@ static int __printf_format_34__ tcp_dd_send_response(int sockfd, int code, const
 		va_list ap;
 
 		va_start(ap, fmt);
-		ret = vsprintf(pkg.body.res_pkg.message, fmt, ap) + 1;
+		ret = vsprintf(pkg.res_pkg.message, fmt, ap) + 1;
 		va_end(ap);
 	}
 
-	tcp_dd_show_response(&pkg.body.res_pkg);
+	tcp_dd_show_response(&pkg.res_pkg);
 
 	return inet_send(sockfd, &pkg, sizeof(pkg.type) + (sizeof(int) * 2) + ret);
 }
@@ -67,9 +68,9 @@ static int tcp_dd_send_read_request(int sockfd, const char *filename, off_t offs
 	int ret;
 
 	pkg->type = TCP_DD_READ;
-	pkg->body.file_req.offset = offset;
-	pkg->body.file_req.size = size;
-	ret = text_copy(pkg->body.file_req.filename, filename) - (char *)&pkg + 1;
+	pkg->file_req.offset = offset;
+	pkg->file_req.size = size;
+	ret = text_copy(pkg->file_req.filename, filename) - (char *)&pkg + 1;
 
 	ret = inet_send(sockfd, pkg, ret);
 	if (ret < 0)
@@ -88,8 +89,8 @@ static int tcp_dd_send_read_request(int sockfd, const char *filename, off_t offs
 	switch (pkg->type)
 	{
 	case TCP_DD_RESPONSE:
-		tcp_dd_show_response(&pkg->body.res_pkg);
-		return pkg->body.res_pkg.code;
+		tcp_dd_show_response(&pkg->res_pkg);
+		return pkg->res_pkg.code;
 
 	case TCP_DD_WRITE:
 		return 0;
@@ -105,11 +106,11 @@ static int tcp_dd_send_write_request(int sockfd, const char *filename, off_t off
 	struct tcp_dd_package pkg;
 
 	pkg.type = TCP_DD_WRITE;
-	pkg.body.file_req.offset = offset;
-	pkg.body.file_req.size = size;
-	pkg.body.file_req.mode = mode;
+	pkg.file_req.offset = offset;
+	pkg.file_req.size = size;
+	pkg.file_req.mode = mode;
 
-	ret = text_copy(pkg.body.file_req.filename, filename) - (char *)&pkg + 1;
+	ret = text_copy(pkg.file_req.filename, filename) - (char *)&pkg + 1;
 	ret = inet_send(sockfd, &pkg, ret);
 	if (ret < 0)
 	{
@@ -126,8 +127,42 @@ static int tcp_dd_send_write_request(int sockfd, const char *filename, off_t off
 
 	if (pkg.type == TCP_DD_RESPONSE)
 	{
-		tcp_dd_show_response(&pkg.body.res_pkg);
-		return pkg.body.res_pkg.code;
+		tcp_dd_show_response(&pkg.res_pkg);
+		return pkg.res_pkg.code;
+	}
+	else
+	{
+		return -EINVAL;
+	}
+}
+
+static int tcp_dd_send_exec_request(int sockfd, const char *command)
+{
+	int ret;
+	struct tcp_dd_package pkg;
+	char *p;
+
+	pkg.type = TCP_DD_EXEC;
+	p = text_copy(pkg.exec_req.command, command);
+
+	ret = p - (char *)&pkg;
+	ret = inet_send(sockfd, &pkg, ret + 1);
+	if (ret < 0)
+	{
+		pr_red_info("inet_send");
+		return ret;
+	}
+
+	ret = inet_recv(sockfd, &pkg, sizeof(pkg));
+	if (ret < 0)
+	{
+		pr_red_info("inet_recv");
+		return ret;
+	}
+
+	if (pkg.type == TCP_DD_RESPONSE)
+	{
+		return pkg.res_pkg.code;
 	}
 	else
 	{
@@ -242,6 +277,20 @@ out_close_fd:
 	return ret;
 }
 
+static int tcp_dd_handle_exec_request(int sockfd, struct tcp_dd_exec_request *req)
+{
+	int ret;
+
+	ret = tcp_dd_send_response(sockfd, 0, "[Server] start execute command %s", req->command);
+	if (ret < 0)
+	{
+		pr_red_info("tcp_dd_send_response");
+		return ret;
+	}
+
+	return cavan_exec_redirect_stdio_main(req->command, sockfd, sockfd);
+}
+
 static int tcp_dd_handle_request(int sockfd)
 {
 	int ret;
@@ -258,12 +307,17 @@ static int tcp_dd_handle_request(int sockfd)
 	{
 	case TCP_DD_READ:
 		pr_bold_info("TCP_DD_READ");
-		ret = tcp_dd_handle_read_request(sockfd, &pkg.body.file_req);
+		ret = tcp_dd_handle_read_request(sockfd, &pkg.file_req);
 		break;
 
 	case TCP_DD_WRITE:
 		pr_bold_info("TCP_DD_WRITE");
-		ret = tcp_dd_handle_write_request(sockfd, &pkg.body.file_req);
+		ret = tcp_dd_handle_write_request(sockfd, &pkg.file_req);
+		break;
+
+	case TCP_DD_EXEC:
+		pr_bold_info("TCP_DD_EXEC");
+		ret = tcp_dd_handle_exec_request(sockfd, &pkg.exec_req);
 		break;
 
 	default:
@@ -461,7 +515,7 @@ int tcp_dd_receive_file(struct inet_file_request *file_req)
 		goto out_close_sockfd;
 	}
 
-	fd = open(dest_file, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, pkg.body.file_req.mode);
+	fd = open(dest_file, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, pkg.file_req.mode);
 	if (fd < 0)
 	{
 		tcp_dd_send_response(sockfd, fd, "[Client] Open file `%s' failed", dest_file);
@@ -470,7 +524,7 @@ int tcp_dd_receive_file(struct inet_file_request *file_req)
 
 	if (file_req->size == 0)
 	{
-		file_req->size = pkg.body.file_req.size;
+		file_req->size = pkg.file_req.size;
 	}
 
 	ret = lseek(fd, file_req->dest_offset, SEEK_SET);
@@ -496,6 +550,92 @@ out_close_fd:
 	close(fd);
 out_close_sockfd:
 	msleep(100);
+	file_req->close_connect(sockfd);
+	return ret;
+}
+
+static void tcp_dd_exec_exit_signal(int signum)
+{
+	pr_pos_info();
+
+	set_tty_mode(fileno(stdin), 0);
+	exit(-1);
+}
+
+int tcp_dd_exec_command(struct inet_file_request *file_req)
+{
+	int ret;
+	int sockfd;
+	ssize_t rwlen;
+	char buff[1024];
+	struct pollfd pfds[2];
+	int tty_in, tty_out;
+
+	sockfd = file_req->open_connect(file_req->ip, file_req->port);
+	if (sockfd < 0)
+	{
+		pr_red_info("file_req->open_connect");
+		return sockfd;
+	}
+
+	ret = tcp_dd_send_exec_request(sockfd, file_req->command);
+	if (ret < 0)
+	{
+		pr_red_info("tcp_dd_send_exec_request");
+		goto out_close_sockfd;
+	}
+
+	tty_in = fileno(stdin);
+	tty_out = fileno(stdout);
+
+	ret = set_tty_mode(tty_in, 5);
+	if (ret < 0)
+	{
+		pr_red_info("set_tty_mode");
+		goto out_close_sockfd;
+	}
+
+	signal(SIGKILL, tcp_dd_exec_exit_signal);
+	signal(SIGINT, tcp_dd_exec_exit_signal);
+
+	pfds[0].events = POLLIN;
+	pfds[1].fd = tty_in;
+
+	pfds[1].events = POLL_IN;
+	pfds[1].fd = sockfd;
+
+	while (1)
+	{
+		ret = poll(pfds, NELEM(pfds), -1);
+		if (ret < 0)
+		{
+			pr_error_info("poll");
+			goto out_close_sockfd;
+		}
+
+		if (pfds[0].revents)
+		{
+			rwlen = read(tty_in, buff, sizeof(buff));
+			if (rwlen <= 0 || inet_send(sockfd, buff, rwlen) < rwlen)
+			{
+				break;
+			}
+		}
+
+		if (pfds[1].revents)
+		{
+			rwlen = inet_recv(sockfd, buff, sizeof(buff));
+			if (rwlen <= 0 || write(tty_out, buff, rwlen) < rwlen)
+			{
+				break;
+			}
+
+			fsync(tty_out);
+		}
+	}
+
+	ret = 0;
+out_close_sockfd:
 	file_req->close_connect(sockfd);
 	return ret;
 }

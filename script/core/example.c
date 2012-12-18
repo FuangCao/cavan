@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_VERSION,
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 

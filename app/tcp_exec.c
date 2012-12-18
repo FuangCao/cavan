@@ -1,26 +1,29 @@
 /*
  * Author: Fuang.Cao
  * Email: cavan.cfa@gmail.com
- * Date: Tue Apr 17 16:20:46 CST 2012
+ * Date: Tue Dec 18 15:10:21 CST 2012
  */
 
 #include <cavan.h>
-#include <cavan/tcp_dd.h>
-#include <cavan/parser.h>
 #include <cavan/adb.h>
+#include <cavan/tcp_dd.h>
 
-#define FILE_CREATE_DATE "2012-04-17 14:23:55"
+#define FILE_CREATE_DATE "2012-12-18 15:10:21"
 
 enum
 {
 	LOCAL_COMMAND_OPTION_UNKNOWN,
 	LOCAL_COMMAND_OPTION_HELP,
 	LOCAL_COMMAND_OPTION_VERSION,
+	LOCAL_COMMAND_OPTION_IP,
+	LOCAL_COMMAND_OPTION_PORT,
+	LOCAL_COMMAND_OPTION_ADB,
 };
 
-static void show_usage(void)
+static void show_usage(const char *command)
 {
 	println("Usage:");
+	println("%s", command);
 }
 
 int main(int argc, char *argv[])
@@ -45,19 +48,19 @@ int main(int argc, char *argv[])
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 'i',
+			.val = LOCAL_COMMAND_OPTION_IP,
 		},
 		{
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 'p',
+			.val = LOCAL_COMMAND_OPTION_PORT,
 		},
 		{
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = 'a',
+			.val = LOCAL_COMMAND_OPTION_ADB,
 		},
 		{
 			0, 0, 0, 0
@@ -68,14 +71,11 @@ int main(int argc, char *argv[])
 		.open_connect = inet_create_tcp_link2,
 		.close_connect = inet_close_tcp_socket
 	};
-	int i;
-	char *pname;
-	int (*handler)(struct inet_file_request *) = NULL;
 
 	cavan_get_server_ip(file_req.ip);
 	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
-	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRAa", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHIaA:I:p:P:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -89,72 +89,40 @@ int main(int argc, char *argv[])
 		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
-			show_usage();
+			show_usage(argv[0]);
 			return 0;
+
+		case 'a':
+		case 'A':
+		case LOCAL_COMMAND_OPTION_ADB:
+			file_req.open_connect = adb_create_tcp_link2;
+			break;
 
 		case 'i':
 		case 'I':
+		case LOCAL_COMMAND_OPTION_IP:
 			text_copy(file_req.ip, optarg);
 			break;
 
 		case 'p':
 		case 'P':
+		case LOCAL_COMMAND_OPTION_PORT:
 			file_req.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
-		case 'w':
-		case 'W':
-		case 's':
-		case 'S':
-			handler = tcp_dd_send_file;
-			break;
-
-		case 'r':
-		case 'R':
-			handler = tcp_dd_receive_file;
-			break;
-
-		case 'a':
-		case 'A':
-			file_req.open_connect = adb_create_tcp_link2;
-			break;
-
 		default:
-			show_usage();
+			show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}
 
-	if (handler == NULL)
+	if (argc <= optind)
 	{
-		pr_red_info("Please select action type");
+		pr_red_info("Please input a command");
 		return -EINVAL;
 	}
 
-	assert(argc - optind > 1);
+	text_join_by_char(argv + optind, argc - optind, ' ', file_req.command, sizeof(file_req.command));
 
-	pname = text_path_cat(file_req.dest_file, argv[--argc], NULL);
-
-	for (i = optind; i < argc; i++)
-	{
-		int ret;
-
-		text_basename_base(pname, argv[i]);
-		text_copy(file_req.src_file, argv[i]);
-		file_req.src_offset = 0;
-		file_req.dest_offset = 0;
-		file_req.size = 0;
-
-		println("%s => %s", argv[i], file_req.dest_file);
-
-		ret = handler(&file_req);
-		if (ret < 0)
-		{
-			pr_red_info("Copy file %s to %s failed!", argv[i], file_req.dest_file);
-			return ret;
-		}
-	}
-
-	return 0;
+	return tcp_dd_exec_command(&file_req);
 }
-

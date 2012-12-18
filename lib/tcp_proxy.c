@@ -54,7 +54,7 @@ static int tcp_proxy_service_handle(int index, cavan_shared_data_t data)
 		if (pfds[0].revents)
 		{
 			rwlen = inet_recv(client_sockfd, buff, sizeof(buff));
-			if (rwlen <= 0 || inet_send(proxy_sockfd, buff, rwlen) < 0)
+			if (rwlen <= 0 || inet_send(proxy_sockfd, buff, rwlen) < rwlen)
 			{
 				break;
 			}
@@ -63,7 +63,7 @@ static int tcp_proxy_service_handle(int index, cavan_shared_data_t data)
 		if (pfds[1].revents)
 		{
 			rwlen = inet_recv(proxy_sockfd, buff, sizeof(buff));
-			if (rwlen <= 0 || inet_send(client_sockfd, buff, rwlen) < 0)
+			if (rwlen <= 0 || inet_send(client_sockfd, buff, rwlen) < rwlen)
 			{
 				break;
 			}

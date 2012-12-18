@@ -163,11 +163,21 @@ struct inet_file_request
 {
 	char ip[20];
 	u16 port;
-	char src_file[1024];
-	char dest_file[1024];
-	off_t src_offset;
-	off_t dest_offset;
-	off_t size;
+
+	union
+	{
+		struct
+		{
+			char src_file[1024];
+			char dest_file[1024];
+			off_t src_offset;
+			off_t dest_offset;
+			off_t size;
+		};
+
+		char command[2048];
+	};
+
 	int (*open_connect)(const char *ip, u16 port);
 	void (*close_connect)(int sockfd);
 };

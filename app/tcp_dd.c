@@ -65,14 +65,15 @@ int main(int argc, char *argv[])
 	};
 	struct inet_file_request file_req =
 	{
-		.ip = "",
-		.port = 0,
 		.open_connect = inet_create_tcp_link2,
 		.close_connect = inet_close_tcp_socket,
 	};
 	int i;
 	off_t bs, seek, skip, count;
 	int (*handler)(struct inet_file_request *) = NULL;
+
+	cavan_get_server_ip(file_req.ip);
+	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
 	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaA", long_option, &option_index)) != EOF)
 	{
@@ -218,16 +219,6 @@ label_unknown_option:
 	{
 		pr_red_info("Please input src_file and dest_file");
 		return -EINVAL;
-	}
-
-	if (file_req.ip[0] == 0)
-	{
-		cavan_get_server_ip(file_req.ip);
-	}
-
-	if (file_req.port == 0)
-	{
-		file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 	}
 
 	file_req.src_offset = skip * bs;
