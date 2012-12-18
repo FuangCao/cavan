@@ -16,18 +16,22 @@ enum
 	LOCAL_COMMAND_OPTION_HELP,
 	LOCAL_COMMAND_OPTION_VERSION,
 	LOCAL_COMMAND_OPTION_DAEMON,
+	LOCAL_COMMAND_OPTION_DAEMON_COUNT,
 	LOCAL_COMMAND_OPTION_VERBOSE,
-	LOCAL_COMMAND_OPTION_SUPER
+	LOCAL_COMMAND_OPTION_SUPER,
+	LOCAL_COMMAND_OPTION_PORT
 };
 
-static void show_usage(void)
+static void show_usage(const char *command)
 {
 	println("Usage:");
-	println("--help, -h, -H");
-	println("--version");
-	println("--daemon, -d, -D");
-	println("--verbose, -v, -V");
-	println("--super, -s, -S");
+	println("%s [option] port", command);
+	println("--help, -h, -H\t\tshow this help");
+	println("--super, -s, -S\t\tneed super permission");
+	println("--daemon, -d, -D\trun as a daemon");
+	println("--daemon_count, -c, -C\tdaemon count");
+	println("--verbose, -v, -V\tshow log message");
+	println("--port, -p, -P\t\tserver port");
 }
 
 int main(int argc, char *argv[])
@@ -55,6 +59,12 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_DAEMON,
 		},
 		{
+			.name = "daemon_count",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_DAEMON_COUNT,
+		},
+		{
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -67,10 +77,16 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_SUPER,
 		},
 		{
+			.name = "port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_PORT,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
-	u16 port;
+	u16 port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 	struct cavan_service_description desc =
 	{
 		.name = "TCP_DD",
@@ -80,7 +96,7 @@ int main(int argc, char *argv[])
 		.super_permission = 1
 	};
 
-	while ((c = getopt_long(argc, argv, "hHvVdDs:S:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "hHvVdDs:S:c:C:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -88,7 +104,7 @@ int main(int argc, char *argv[])
 		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
-			show_usage();
+			show_usage(argv[0]);
 			return 0;
 
 		case LOCAL_COMMAND_OPTION_VERSION:
@@ -114,13 +130,28 @@ int main(int argc, char *argv[])
 			desc.super_permission = text_bool_value(optarg);
 			break;
 
+		case 'p':
+		case 'P':
+		case LOCAL_COMMAND_OPTION_PORT:
+			port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'c':
+		case 'C':
+		case LOCAL_COMMAND_OPTION_DAEMON_COUNT:
+			desc.daemon_count = text2value_unsigned(optarg, NULL, 10);
+			break;
+
 		default:
-			show_usage();
+			show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}
 
-	port = argc > optind ? text2value_unsigned(argv[optind], NULL, 10) : cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	if (argc > optind)
+	{
+		port = text2value_unsigned(argv[optind], NULL, 10);
+	}
 
 	return tcp_dd_service_run(&desc, port);
 }

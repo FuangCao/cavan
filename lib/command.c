@@ -113,9 +113,10 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 	return -1;
 }
 
-int cavan_exec_redirect_stdio1(int ttyfd, const char *command)
+int cavan_exec_redirect_stdio_base(const char *ttypath, const char *command)
 {
 	int ret;
+	int ttyfd;
 	const char *shell_command = "sh";
 
 	ret = setsid();
@@ -125,26 +126,35 @@ int cavan_exec_redirect_stdio1(int ttyfd, const char *command)
 		return ret;
 	}
 
+	ttyfd = open(ttypath, O_RDWR);
+	if (ttyfd < 0)
+	{
+		pr_error_info("open file %s", ttypath);
+		return ttyfd;
+	}
+
 	ret = dup2(ttyfd, fileno(stdin));
 	if (ret < 0)
 	{
 		pr_error_info("dup2 stdin");
-		return ret;
+		goto out_close_ttyfd;
 	}
 
 	ret = dup2(ttyfd, fileno(stdout));
 	if (ret < 0)
 	{
 		pr_error_info("dup2 stdout");
-		return ret;
+		goto out_close_ttyfd;
 	}
 
 	ret = dup2(ttyfd, fileno(stderr));
 	if (ret < 0)
 	{
 		pr_error_info("dup2 stderr");
-		return ret;
+		goto out_close_ttyfd;
 	}
+
+	close(ttyfd);
 
 	if (command && command[0] && text_cmp("shell", command))
 	{
@@ -154,30 +164,9 @@ int cavan_exec_redirect_stdio1(int ttyfd, const char *command)
 	{
 		return execlp(shell_command, shell_command, "-", NULL);
 	}
-}
 
-int cavan_exec_redirect_stdio2(const char *ttypath, const char *command)
-{
-	int ret;
-	int ttyfd;
-
-	println("ttypath = %s", ttypath);
-
-	ttyfd = open(ttypath, O_RDWR);
-	if (ttyfd < 0)
-	{
-		pr_error_info("open file %s", ttypath);
-		return ttyfd;
-	}
-
-	ret = cavan_exec_redirect_stdio1(ttyfd, command);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_exec_redirect_stdio1 %s", command);
-	}
-
+out_close_ttyfd:
 	close(ttyfd);
-
 	return ret;
 }
 
@@ -191,8 +180,6 @@ int cavan_exec_redirect_stdio_main(const char *command, int in_fd, int out_fd)
 	const char *ptspath;
 	const char *ptmpath = "/dev/ptmx";
 	struct pollfd pfds[2];
-
-	pr_func_info("command = %s", command);
 
 	ptm_fd = open(ptmpath, O_RDWR);
 	if (ptm_fd < 0)
@@ -230,8 +217,6 @@ int cavan_exec_redirect_stdio_main(const char *command, int in_fd, int out_fd)
 		goto out_close_ptm;
 	}
 
-	println("ptspath = %s", ptspath);
-
 	pid = fork();
 	if (pid < 0)
 	{
@@ -244,14 +229,13 @@ int cavan_exec_redirect_stdio_main(const char *command, int in_fd, int out_fd)
 	{
 		close(ptm_fd);
 
-		return cavan_exec_redirect_stdio2(ptspath, command);
+		return cavan_exec_redirect_stdio_base(ptspath, command);
 	}
 	else
 	{
 		char oompath[64];
 
 		sprintf(oompath, "/proc/%d/oom_adj", pid);
-		println("oompath = %s", oompath);
 		file_write(oompath, "0", 1);
 	}
 

@@ -18,9 +18,22 @@ enum
 	LOCAL_COMMAND_OPTION_VERSION,
 };
 
-static void show_usage(void)
+static void show_usage(const char *command)
 {
 	println("Usage:");
+	println("%s [option] if=input of=output", command);
+	println("if=FILE\t\t\tinput file");
+	println("of=FILE\t\t\toutput file");
+	println("bs=BYTES\t\tblock size");
+	println("seek=BLOCKS\t\toffset of output");
+	println("skip=BLOCKS\t\toffset of input");
+	println("--help, -h, -H\t\tshow this help");
+	println("--version, -v, -V\tshow version");
+	println("--ip, -i, -I\t\tserver ip address");
+	println("--port, -p, -P\t\tserver port");
+	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
+	println("-w, -W, -s, -S\t\tsend file");
+	println("-r, -R\t\t\treceive file");
 }
 
 int main(int argc, char *argv[])
@@ -89,7 +102,7 @@ int main(int argc, char *argv[])
 		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
-			show_usage();
+			show_usage(argv[0]);
 			return 0;
 
 		case 'i':
@@ -120,7 +133,7 @@ int main(int argc, char *argv[])
 			break;
 
 		default:
-			show_usage();
+			show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}

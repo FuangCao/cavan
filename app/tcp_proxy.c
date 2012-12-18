@@ -27,7 +27,16 @@ enum
 static void show_usage(const char *command)
 {
 	println("Usage:");
-	println("%s", command);
+	println("%s [option] proxy_port", command);
+	println("--help, -h, -H\t\tshow this help");
+	println("--version, -v, -V\tshow version");
+	println("--port, -p, -P\t\tserver port");
+	println("--proxy_ip, -i, -I\tproxy ip address");
+	println("--proxy_port\t\tproxy port");
+	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
+	println("--daemon, -d, -D\trun as a daemon");
+	println("--daemon_count, -c, -C\tdaemon count");
+	println("--verbose\t\tshow log message");
 }
 
 int main(int argc, char *argv[])
@@ -111,7 +120,7 @@ int main(int argc, char *argv[])
 		.close_connect = inet_close_tcp_socket
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhHp:P:c:C:dDaA", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:c:C:dDaA", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -138,6 +147,8 @@ int main(int argc, char *argv[])
 			proxy_service.proxy_port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
+		case 'i':
+		case 'I':
 		case LOCAL_COMMAND_OPTION_PROXY_IP:
 			text_copy(proxy_service.proxy_ip, optarg);
 			break;

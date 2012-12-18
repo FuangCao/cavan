@@ -23,7 +23,12 @@ enum
 static void show_usage(const char *command)
 {
 	println("Usage:");
-	println("%s", command);
+	println("%s [option] command", command);
+	println("--help, -h, -H\t\tshow this help");
+	println("--version, -v, -V\tshow version");
+	println("--ip, -i, -I\t\tserver ip address");
+	println("--port, -p, -P\t\tserver port");
+	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
 }
 
 int main(int argc, char *argv[])
