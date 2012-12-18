@@ -810,6 +810,9 @@ int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd)
 			break;
 		}
 
+		buff[rwlen] = 0;
+		println("buff = %s", buff);
+
 		rwlen = inet_send(dest_sockfd, buff, rwlen);
 		if (rwlen < 0)
 		{

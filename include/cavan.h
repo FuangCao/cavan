@@ -3,6 +3,7 @@
 #define _LARGEFILE64_SOURCE
 #define _FILE_OFFSET_BITS	64
 #define __USE_FILE_OFFSET64
+#define _XOPEN_SOURCE		500
 
 #include <linux/version.h>
 #include <assert.h>

@@ -14,6 +14,10 @@
  #endif
 #endif
 
+#ifndef S_IFSOCK
+#define S_IFSOCK 0140000
+#endif
+
 #define	READ_FLAGS					(O_RDONLY | O_BINARY)
 #define WRITE_FLAGS					(O_CREAT | O_WRONLY | O_SYNC | O_BINARY)
 #define RDWR_FLAGS					(O_CREAT | O_RDWR | O_SYNC | O_BINARY)

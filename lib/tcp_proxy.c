@@ -7,32 +7,6 @@
 #include <cavan.h>
 #include <cavan/tcp_proxy.h>
 
-static void *tcp_proxy_send_thread_handle(void *data)
-{
-	struct tcp_proxy_translator *translator = data;
-
-	inet_tcp_transmit_loop(translator->client_sockfd, translator->proxy_sockfd);
-
-	pthread_mutex_lock(&translator->lock);
-	pthread_cond_broadcast(&translator->cond);
-	pthread_mutex_unlock(&translator->lock);
-
-	return NULL;
-}
-
-static void *tcp_proxy_receive_thread_handle(void *data)
-{
-	struct tcp_proxy_translator *translator = data;
-
-	inet_tcp_transmit_loop(translator->proxy_sockfd, translator->client_sockfd);
-
-	pthread_mutex_lock(&translator->lock);
-	pthread_cond_broadcast(&translator->cond);
-	pthread_mutex_unlock(&translator->lock);
-
-	return NULL;
-}
-
 static int tcp_proxy_service_handle(int index, cavan_shared_data_t data)
 {
 	int ret;
@@ -41,8 +15,9 @@ static int tcp_proxy_service_handle(int index, cavan_shared_data_t data)
 	struct tcp_proxy_service *proxy_service = data.type_void;
 	int client_sockfd, proxy_sockfd;
 	int server_sockfd = proxy_service->sockfd;
-	struct tcp_proxy_translator translator;
-	pthread_t send_thread, recv_thread;
+	ssize_t rwlen;
+	char buff[1024];
+	struct pollfd pfds[2];
 
 	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
 	if (client_sockfd < 0)
@@ -61,48 +36,41 @@ static int tcp_proxy_service_handle(int index, cavan_shared_data_t data)
 		goto out_close_client_sockfd;
 	}
 
-	ret = pthread_mutex_init(&translator.lock, NULL);
-	if (ret < 0)
+	pfds[0].events = POLLIN;
+	pfds[0].fd = client_sockfd;
+
+	pfds[1].events = POLLIN;
+	pfds[1].fd = proxy_sockfd;
+
+	while (1)
 	{
-		pr_error_info("pthread_mutex_init");
-		goto out_close_proxy_sockfd;
+		ret = poll(pfds, NELEM(pfds), -1);
+		if (ret < 0)
+		{
+			pr_error_info("poll");
+			goto out_close_proxy_sockfd;
+		}
+
+		if (pfds[0].revents)
+		{
+			rwlen = inet_recv(client_sockfd, buff, sizeof(buff));
+			if (rwlen <= 0 || inet_send(proxy_sockfd, buff, rwlen) < 0)
+			{
+				break;
+			}
+		}
+
+		if (pfds[1].revents)
+		{
+			rwlen = inet_recv(proxy_sockfd, buff, sizeof(buff));
+			if (rwlen <= 0 || inet_send(client_sockfd, buff, rwlen) < 0)
+			{
+				break;
+			}
+		}
 	}
 
-	ret = pthread_cond_init(&translator.cond, NULL);
-	if (ret < 0)
-	{
-		pr_error_info("pthread_cond_init");
-		goto out_pthread_mutex_destroy;
-	}
-
-	translator.client_sockfd = client_sockfd;
-	translator.proxy_sockfd = proxy_sockfd;
-
-	ret = pthread_create(&send_thread, NULL, tcp_proxy_send_thread_handle, &translator);
-	if (ret < 0)
-	{
-		pr_error_info("pthread_create");
-		goto out_pthread_cond_destroy;
-	}
-
-	ret = pthread_create(&recv_thread, NULL, tcp_proxy_receive_thread_handle, &translator);
-	if (ret < 0)
-	{
-		pr_error_info("pthread_create");
-		goto out_pthread_cond_destroy;
-	}
-
-	pthread_mutex_lock(&translator.lock);
-	pthread_cond_wait(&translator.cond, &translator.lock);
-	pthread_mutex_unlock(&translator.lock);
-
-	pthread_cancel(send_thread);
-	pthread_cancel(recv_thread);
-
-out_pthread_cond_destroy:
-	pthread_cond_destroy(&translator.cond);
-out_pthread_mutex_destroy:
-	pthread_mutex_destroy(&translator.lock);
+	ret = 0;
 out_close_proxy_sockfd:
 	close(proxy_sockfd);
 out_close_client_sockfd:

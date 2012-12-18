@@ -22,12 +22,4 @@ struct tcp_proxy_service
 	void (*close_connect)(int sockfd);
 };
 
-struct tcp_proxy_translator
-{
-	int client_sockfd;
-	int proxy_sockfd;
-	pthread_mutex_t lock;
-	pthread_cond_t cond;
-};
-
 int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service);

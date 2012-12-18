@@ -7,6 +7,7 @@
  */
 
 #include <cavan.h>
+#include <sys/wait.h>
 
 struct cavan_command_map
 {
@@ -23,3 +24,6 @@ void print_maybe_command(const struct cavan_command_map *p, const struct cavan_c
 const struct cavan_command_map *match_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname);
 int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[]);
 
+int cavan_exec_redirect_stdio1(int ttyfd, const char *command, const char *args);
+int cavan_exec_redirect_stdio2(const char *ttypath, const char *command, const char *args);
+int cavan_exec_redirect_stdio_main(const char *command, const char *args, int in_fd, int out_fd);

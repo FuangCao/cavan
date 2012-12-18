@@ -92,7 +92,7 @@
 	if (errno) { \
 		pr_red_info("%s[%d] (" fmt "): %s", __FUNCTION__, __LINE__, ##args, strerror(errno)); \
 	} else { \
-		pr_red_info("%s[%d]:" fmt, __FUNCTION__, __LINE__, ##args); \
+		pr_red_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args); \
 	}
 
 #define pr_green_info(fmt, args ...) \
