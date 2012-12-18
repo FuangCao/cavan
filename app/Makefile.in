@@ -60,6 +60,7 @@ bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
 	cavan-tftp_dd_server$(EXEEXT) cavan-tftp_dd$(EXEEXT) \
 	cavan-tftp_copy$(EXEEXT) cavan-tftp_command$(EXEEXT) \
 	cavan-tftp_auto_dd$(EXEEXT) cavan-textlen$(EXEEXT) \
+	cavan-tcp_proxy$(EXEEXT) cavan-tcp_exec$(EXEEXT) \
 	cavan-tcp_dd_server$(EXEEXT) cavan-tcp_dd$(EXEEXT) \
 	cavan-tcp_copy$(EXEEXT) cavan-system_init$(EXEEXT) \
 	cavan-swan_vn$(EXEEXT) cavan-swan_vk$(EXEEXT) \
@@ -310,6 +311,12 @@ cavan_tcp_dd_LDADD = $(LDADD)
 am_cavan_tcp_dd_server_OBJECTS = tcp_dd_server.$(OBJEXT)
 cavan_tcp_dd_server_OBJECTS = $(am_cavan_tcp_dd_server_OBJECTS)
 cavan_tcp_dd_server_LDADD = $(LDADD)
+am_cavan_tcp_exec_OBJECTS = tcp_exec.$(OBJEXT)
+cavan_tcp_exec_OBJECTS = $(am_cavan_tcp_exec_OBJECTS)
+cavan_tcp_exec_LDADD = $(LDADD)
+am_cavan_tcp_proxy_OBJECTS = tcp_proxy.$(OBJEXT)
+cavan_tcp_proxy_OBJECTS = $(am_cavan_tcp_proxy_OBJECTS)
+cavan_tcp_proxy_LDADD = $(LDADD)
 am_cavan_textlen_OBJECTS = textlen.$(OBJEXT)
 cavan_textlen_OBJECTS = $(am_cavan_textlen_OBJECTS)
 cavan_textlen_LDADD = $(LDADD)
@@ -399,6 +406,7 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_swan_vk_SOURCES) $(cavan_swan_vn_SOURCES) \
 	$(cavan_system_init_SOURCES) $(cavan_tcp_copy_SOURCES) \
 	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
+	$(cavan_tcp_exec_SOURCES) $(cavan_tcp_proxy_SOURCES) \
 	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
 	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
 	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
@@ -440,6 +448,7 @@ DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_swan_vk_SOURCES) $(cavan_swan_vn_SOURCES) \
 	$(cavan_system_init_SOURCES) $(cavan_tcp_copy_SOURCES) \
 	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
+	$(cavan_tcp_exec_SOURCES) $(cavan_tcp_proxy_SOURCES) \
 	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
 	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
 	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
@@ -644,6 +653,8 @@ cavan_system_init_SOURCES = system_init.c
 cavan_tcp_copy_SOURCES = tcp_copy.c
 cavan_tcp_dd_SOURCES = tcp_dd.c
 cavan_tcp_dd_server_SOURCES = tcp_dd_server.c
+cavan_tcp_exec_SOURCES = tcp_exec.c
+cavan_tcp_proxy_SOURCES = tcp_proxy.c
 cavan_textlen_SOURCES = textlen.c
 cavan_tftp_auto_dd_SOURCES = tftp_auto_dd.c
 cavan_tftp_command_SOURCES = tftp_command.c
@@ -942,6 +953,12 @@ cavan-tcp_dd$(EXEEXT): $(cavan_tcp_dd_OBJECTS) $(cavan_tcp_dd_DEPENDENCIES) $(EX
 cavan-tcp_dd_server$(EXEEXT): $(cavan_tcp_dd_server_OBJECTS) $(cavan_tcp_dd_server_DEPENDENCIES) $(EXTRA_cavan_tcp_dd_server_DEPENDENCIES) 
 	@rm -f cavan-tcp_dd_server$(EXEEXT)
 	$(LINK) $(cavan_tcp_dd_server_OBJECTS) $(cavan_tcp_dd_server_LDADD) $(LIBS)
+cavan-tcp_exec$(EXEEXT): $(cavan_tcp_exec_OBJECTS) $(cavan_tcp_exec_DEPENDENCIES) $(EXTRA_cavan_tcp_exec_DEPENDENCIES) 
+	@rm -f cavan-tcp_exec$(EXEEXT)
+	$(LINK) $(cavan_tcp_exec_OBJECTS) $(cavan_tcp_exec_LDADD) $(LIBS)
+cavan-tcp_proxy$(EXEEXT): $(cavan_tcp_proxy_OBJECTS) $(cavan_tcp_proxy_DEPENDENCIES) $(EXTRA_cavan_tcp_proxy_DEPENDENCIES) 
+	@rm -f cavan-tcp_proxy$(EXEEXT)
+	$(LINK) $(cavan_tcp_proxy_OBJECTS) $(cavan_tcp_proxy_LDADD) $(LIBS)
 cavan-textlen$(EXEEXT): $(cavan_textlen_OBJECTS) $(cavan_textlen_DEPENDENCIES) $(EXTRA_cavan_textlen_DEPENDENCIES) 
 	@rm -f cavan-textlen$(EXEEXT)
 	$(LINK) $(cavan_textlen_OBJECTS) $(cavan_textlen_LDADD) $(LIBS)
@@ -1059,6 +1076,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_copy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_dd_server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_exec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_proxy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/textlen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tftp_auto_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tftp_command.Po@am__quote@
