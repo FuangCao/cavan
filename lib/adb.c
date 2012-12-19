@@ -140,14 +140,14 @@ int adb_connect_service(const char *ip, u16 port, const char *service)
 		return sockfd;
 	}
 
-	if (file_access_e("/sbin/adbd") == false && (ret = adb_send_text(sockfd, "host:transport-any")) < 0)
+	if (file_access_e("/sbin/adbd") == false && (ret = adb_send_command(sockfd, "host:transport-any")) < 0)
 	{
-		pr_red_info("adb_send_text");
+		pr_red_info("adb_send_command");
 		close(sockfd);
 		return ret;
 	}
 
-	ret = adb_send_text(sockfd, service);
+	ret = adb_send_command(sockfd, service);
 	if (ret < 0)
 	{
 		pr_red_info("adb_connect_service");

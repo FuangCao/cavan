@@ -192,10 +192,16 @@ class MainWin:
 			return -1
 		arch = widget.get_active_text()
 		if arch == "arm":
-			toolchian = "arm-linux"
+			toolchian = "arm-cavan-linux-gnueabi"
+			type = "static"
+			entry = "cavan"
 		else:
 			toolchian = "none"
+			type = "debug"
+			entry = "application"
 		self.SetComboActiveText(self.mComboCrossCompile, toolchian)
+		self.SetComboActiveText(self.mComboBuildType, type);
+		self.SetComboActiveText(self.mComboBuildEntry, entry);
 		self.EventLockUp()
 
 	def OnCrossCompileChanged(self, widget):

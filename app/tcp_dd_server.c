@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 		.super_permission = 1
 	};
 
-	while ((c = getopt_long(argc, argv, "hHvVdDs:S:c:C:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
