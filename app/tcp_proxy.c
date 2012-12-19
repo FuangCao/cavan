@@ -28,15 +28,15 @@ static void show_usage(const char *command)
 {
 	println("Usage:");
 	println("%s [option] proxy_port", command);
-	println("--help, -h, -H\t\tshow this help");
-	println("--version, -v, -V\tshow version");
-	println("--port, -p, -P\t\tserver port");
-	println("--proxy_ip, -i, -I\tproxy ip address");
-	println("--proxy_port\t\tproxy port");
-	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
-	println("--daemon, -d, -D\trun as a daemon");
-	println("--daemon_count, -c, -C\tdaemon count");
-	println("--verbose\t\tshow log message");
+	println("--help, -h, -H\t\t\tshow this help");
+	println("--version, -v, -V\t\tshow version");
+	println("--port, -p, -P\t\t\tserver port");
+	println("--proxy_ip, --pip, -i, -I\tproxy ip address");
+	println("--proxy_port, --pport\t\tproxy port");
+	println("--adb, -a, -A\t\t\tuse adb procotol instead of tcp");
+	println("--daemon, -d, -D\t\trun as a daemon");
+	println("--daemon_count, -c, -C\t\tdaemon count");
+	println("--verbose\t\t\tshow log message");
 }
 
 int main(int argc, char *argv[])
@@ -71,7 +71,19 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_PROXY_IP,
 		},
 		{
+			.name = "pip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_PROXY_IP,
+		},
+		{
 			.name = "proxy_port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_PROXY_PORT,
+		},
+		{
+			.name = "pport",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_PROXY_PORT,
