@@ -211,6 +211,7 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 	int ret;
 	ssize_t rwlen;
 	char *p;
+	struct termios attr;
 
 	fd = open(MODEM_TTY_DEVICE, O_RDWR | O_SYNC | O_TRUNC | O_NOCTTY);
 	if (fd < 0)
@@ -219,7 +220,7 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 		return fd;
 	}
 
-	ret = set_tty_mode(fd, 4);
+	ret = set_tty_mode(fd, 4, &attr);
 	if (ret < 0)
 	{
 		error_msg("set_tty_mode");
@@ -239,7 +240,7 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 	ret = read(fd, buff, size);
 
 out_restore_tty:
-	restore_tty_attr(fd);
+	restore_tty_attr(fd, &attr);
 out_close_fd:
 	close(fd);
 

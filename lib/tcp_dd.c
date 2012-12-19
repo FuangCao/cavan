@@ -562,6 +562,7 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 	char buff[1024];
 	struct pollfd pfds[2];
 	int tty_in, tty_out;
+	struct termios tty_attr;
 
 	sockfd = file_req->open_connect(file_req->ip, file_req->port);
 	if (sockfd < 0)
@@ -580,7 +581,7 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 	tty_in = fileno(stdin);
 	tty_out = fileno(stdout);
 
-	ret = set_tty_mode(tty_in, 5);
+	ret = set_tty_mode(tty_in, 5, &tty_attr);
 	if (ret < 0)
 	{
 		pr_red_info("set_tty_mode");
@@ -625,7 +626,7 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 
 	ret = 0;
 out_restore_tty_attr:
-	restore_tty_attr(tty_in);
+	restore_tty_attr(tty_in, &tty_attr);
 out_close_sockfd:
 	file_req->close_connect(sockfd);
 	return ret;

@@ -16,6 +16,8 @@
 #include <cavan/calculator.h>
 
 static int ctrl_fd;
+static int swan_vk_tty_fd;
+static struct termios swan_vk_tty_attr;
 
 static const struct swan_vk_descriptor swan_vk_table[] =
 {
@@ -506,7 +508,7 @@ static void swan_vk_client_stop_handle(int signum)
 
 static void swan_vk_serial_server_stop_handle(int signum)
 {
-	restore_tty_attr(-1);
+	restore_tty_attr(swan_vk_tty_fd, &swan_vk_tty_attr);
 	exit(0);
 }
 
@@ -526,12 +528,14 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 		return fd_tty;
 	}
 
-	ret = set_tty_mode(fd_tty, 3);
+	ret = set_tty_mode(fd_tty, 3, &swan_vk_tty_attr);
 	if (ret < 0)
 	{
 		print_error("set_tty_mode");
 		goto out_close_tty;
 	}
+
+	swan_vk_tty_fd = fd_tty;
 
 	signal(SIGKILL, swan_vk_serial_server_stop_handle);
 
@@ -564,7 +568,7 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 		}
 	}
 
-	restore_tty_attr(fd_tty);
+	restore_tty_attr(swan_vk_tty_fd, &swan_vk_tty_attr);
 
 	close(fd_data);
 out_close_tty:

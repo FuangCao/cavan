@@ -188,9 +188,8 @@
 
 extern FILE *console_fp;
 
-int backup_tty_attr(int fd, int force);
-int restore_tty_attr(int fd);
-int set_tty_mode(int fd, int mode);
+int set_tty_attr(int fd, int action, struct termios *attr);
+int set_tty_mode(int fd, int mode, struct termios *attr_bak);
 
 int has_char(long sec, long usec);
 int timeout_getchar(long sec, long usec);
@@ -283,13 +282,12 @@ static inline void print_size(u64 size)
 	print_char('\n');
 }
 
-static inline int get_tty_attr(int fd, struct termios *tty_attr)
+static inline int get_tty_attr(int fd, struct termios *attr)
 {
-	return tcgetattr(fd, tty_attr);
+	return tcgetattr(fd, attr);
 }
 
-static inline int set_tty_attr(int fd, int action, struct termios *tty_attr)
+static inline int restore_tty_attr(int fd, struct termios *attr)
 {
-	return tcsetattr(fd, action, tty_attr);
+	return set_tty_attr(fd, TCSADRAIN, attr);
 }
-

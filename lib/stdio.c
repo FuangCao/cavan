@@ -5,40 +5,16 @@
 
 #define MAX_BUFF_LEN	MB(1)
 
-static struct termios tty_old_attr;
-static int old_tty_fd = -1;
 FILE *console_fp;
 
-int backup_tty_attr(int fd, int force)
+int set_tty_attr(int fd, int action, struct termios *attr)
 {
 	int ret;
 
-	if (fd == old_tty_fd && force == 0)
-	{
-		return 0;
-	}
-
-	ret = tcgetattr(fd, &tty_old_attr);
+	ret = tcsetattr(fd, action, attr);
 	if (ret < 0)
 	{
 		return ret;
-	}
-
-	old_tty_fd = fd;
-
-	return 0;
-}
-
-int restore_tty_attr(int fd)
-{
-	if (fd < 0)
-	{
-		fd = old_tty_fd;
-	}
-
-	if (fd < 0)
-	{
-		return -EINVAL;
 	}
 
 #ifndef CONFIG_BUILD_FOR_ANDROID
@@ -48,100 +24,72 @@ int restore_tty_attr(int fd)
 	tcflush(fd, TCIOFLUSH);
 	tcflow(fd, TCOON);
 
-	return tcsetattr(fd, TCSADRAIN, &tty_old_attr);
+	return 0;
 }
 
-int set_tty_mode(int fd, int mode)
+int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 {
 	int ret;
+	struct termios attr;
 
-	struct termios tty_attr;
+	ret = get_tty_attr(fd, attr_bak);
+	if (ret < 0)
+	{
+		pr_red_info("get_tty_attr");
+		return ret;
+	}
+
+	attr = *attr_bak;
 
 	switch (mode)
 	{
 	case 2:
-		ret = backup_tty_attr(fd, 0);
-		if (ret < 0)
-		{
-			return ret;
-		}
-
-		tty_attr = tty_old_attr;
-		tty_attr.c_iflag = BRKINT | IXON;
-		tty_attr.c_oflag = 0;
-		tty_attr.c_cflag &= ~PARENB;
-		tty_attr.c_cflag |= CS8;
-		tty_attr.c_lflag = ISIG;
-		tty_attr.c_cc[VINTR] = 030;
-		tty_attr.c_cc[VQUIT] = _POSIX_VDISABLE;
-		tty_attr.c_cc[VMIN] = 1;
-		tty_attr.c_cc[VTIME] = 1;
-
-		return tcsetattr(fd,TCSADRAIN, &tty_attr);
+		attr.c_iflag = BRKINT | IXON;
+		attr.c_oflag = 0;
+		attr.c_cflag &= ~PARENB;
+		attr.c_cflag |= CS8;
+		attr.c_lflag = ISIG;
+		attr.c_cc[VINTR] = 030;
+		attr.c_cc[VQUIT] = _POSIX_VDISABLE;
+		attr.c_cc[VMIN] = 1;
+		attr.c_cc[VTIME] = 1;
+		return set_tty_attr(fd, TCSADRAIN, &attr);
 
 	case 1:
 	case 3:
-		ret = backup_tty_attr(fd, 0);
-		if (ret < 0)
-		{
-			return ret;
-		}
-
-		tty_attr = tty_old_attr;
-		tty_attr.c_iflag = IGNBRK;
+		attr.c_iflag = IGNBRK;
 		if (mode == 3)
 		{
-			tty_attr.c_iflag |= IXOFF;
+			attr.c_iflag |= IXOFF;
 		}
 
-		tty_attr.c_lflag &= ~(ECHO | ICANON | ISIG);
-		tty_attr.c_oflag = 0;
-		tty_attr.c_cflag &= ~(PARENB);
-		tty_attr.c_cflag &= ~(CSIZE);
-		tty_attr.c_cflag |= CS8;
-		tty_attr.c_cc[VMIN] = 1;
-		tty_attr.c_cc[VTIME] = 1;
-
-		return tcsetattr(fd, TCSADRAIN, &tty_attr);
+		attr.c_lflag &= ~(ECHO | ICANON | ISIG);
+		attr.c_oflag = 0;
+		attr.c_cflag &= ~(PARENB);
+		attr.c_cflag &= ~(CSIZE);
+		attr.c_cflag |= CS8;
+		attr.c_cc[VMIN] = 1;
+		attr.c_cc[VTIME] = 1;
+		return set_tty_attr(fd, TCSADRAIN, &attr);
 
 	case 4:
-		ret = backup_tty_attr(fd, 0);
-		if (ret < 0)
-		{
-			return ret;
-		}
-
-		tty_attr = tty_old_attr;
-		tty_attr.c_lflag &= ~(ICANON | ECHO | ISIG);
-		tty_attr.c_cflag |= (CREAD | CLOCAL);
-		tty_attr.c_cflag &= ~(CSTOPB | PARENB | CRTSCTS);
-		tty_attr.c_cflag &= ~(CBAUD | CSIZE) ;
-		tty_attr.c_cflag |= (B115200 | CS8);
-
-		return tcsetattr(fd, TCSANOW, &tty_attr);
+		attr.c_lflag &= ~(ICANON | ECHO | ISIG);
+		attr.c_cflag |= (CREAD | CLOCAL);
+		attr.c_cflag &= ~(CSTOPB | PARENB | CRTSCTS);
+		attr.c_cflag &= ~(CBAUD | CSIZE) ;
+		attr.c_cflag |= (B115200 | CS8);
+		return set_tty_attr(fd, TCSANOW, &attr);
 
 	case 5:
-		ret = backup_tty_attr(fd, 0);
-		if (ret < 0)
-		{
-			return ret;
-		}
-
-		tty_attr = tty_old_attr;
-		tty_attr.c_lflag = 0;
-		tty_attr.c_cc[VTIME] = 0;
-		tty_attr.c_cc[VMIN] = 1;
-
-		return tcsetattr(fd, TCSANOW, &tty_attr);
-
-	case 0:
-		return restore_tty_attr(fd);
+		attr.c_lflag = 0;
+		attr.c_cc[VTIME] = 0;
+		attr.c_cc[VMIN] = 1;
+		return set_tty_attr(fd, TCSANOW, &attr);
 
 	default:
+		pr_red_info("invalid mode %d", mode);
 		return -EINVAL;
 	}
-
-	return 0;
 }
 
 int has_char(long sec, long usec)
