@@ -26,7 +26,7 @@ static int tcp_proxy_service_handle(int index, cavan_shared_data_t data)
 		return client_sockfd;
 	}
 
-	pr_bold_info("IP = %s, port = %d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+	inet_show_sockaddr(&addr);
 
 	proxy_sockfd = proxy_service->open_connect(proxy_service->proxy_ip, proxy_service->proxy_port);
 	if (proxy_sockfd < 0)
@@ -45,9 +45,8 @@ static int tcp_proxy_service_handle(int index, cavan_shared_data_t data)
 	while (1)
 	{
 		ret = poll(pfds, NELEM(pfds), -1);
-		if (ret < 0)
+		if (ret <= 0)
 		{
-			pr_error_info("poll");
 			goto out_close_proxy_sockfd;
 		}
 
@@ -83,6 +82,8 @@ int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service)
 	int ret;
 	int sockfd;
 	struct cavan_service_description *service;
+
+	println("PROXY_IP = %s, PROXY_PORT = %d", proxy_service->proxy_ip, proxy_service->proxy_port);
 
 	sockfd = inet_create_tcp_service(proxy_service->port);
 	if (sockfd < 0)

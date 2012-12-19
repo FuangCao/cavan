@@ -40,6 +40,8 @@ struct tcp_dd_file_request
 
 struct tcp_dd_exec_request
 {
+	u16 lines;
+	u16 columns;
 	char command[1024];
 };
 

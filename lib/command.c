@@ -113,7 +113,7 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 	return -1;
 }
 
-int cavan_exec_redirect_stdio_base(const char *ttypath, const char *command)
+int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, const char *command)
 {
 	int ret;
 	int ttyfd;
@@ -131,6 +131,24 @@ int cavan_exec_redirect_stdio_base(const char *ttypath, const char *command)
 	{
 		pr_error_info("open file %s", ttypath);
 		return ttyfd;
+	}
+
+	if (isatty(ttyfd) && lines > 0 && columns > 0)
+	{
+		struct winsize wsize =
+		{
+			.ws_row = lines,
+			.ws_col = columns,
+			.ws_xpixel = 0,
+			.ws_ypixel = 0
+		};
+
+		ret = ioctl(ttyfd, TIOCSWINSZ, &wsize);
+		if (ret < 0)
+		{
+			pr_error_info("ioctl TIOCSWINSZ");
+			return ret;
+		}
 	}
 
 	ret = dup2(ttyfd, fileno(stdin));
@@ -170,7 +188,7 @@ out_close_ttyfd:
 	return ret;
 }
 
-int cavan_exec_redirect_stdio_main(const char *command, int in_fd, int out_fd)
+int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd)
 {
 	int ret;
 	pid_t pid;
@@ -229,7 +247,7 @@ int cavan_exec_redirect_stdio_main(const char *command, int in_fd, int out_fd)
 	{
 		close(ptm_fd);
 
-		return cavan_exec_redirect_stdio_base(ptspath, command);
+		return cavan_exec_redirect_stdio_base(ptspath, lines, columns, command);
 	}
 	else
 	{
@@ -258,9 +276,8 @@ int cavan_exec_redirect_stdio_main(const char *command, int in_fd, int out_fd)
 	while (1)
 	{
 		ret = poll(pfds, NELEM(pfds), -1);
-		if (ret < 0)
+		if (ret <= 0)
 		{
-			pr_error_info("poll");
 			goto out_close_ptm;
 		}
 

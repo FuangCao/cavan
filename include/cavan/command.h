@@ -24,5 +24,5 @@ void print_maybe_command(const struct cavan_command_map *p, const struct cavan_c
 const struct cavan_command_map *match_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname);
 int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[]);
 
-int cavan_exec_redirect_stdio_base(const char *ttypath, const char *command);
-int cavan_exec_redirect_stdio_main(const char *command, int in_fd, int out_fd);
+int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, const char *command);
+int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);

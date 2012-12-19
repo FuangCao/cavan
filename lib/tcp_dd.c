@@ -58,8 +58,6 @@ static int __printf_format_34__ tcp_dd_send_response(int sockfd, int code, const
 		va_end(ap);
 	}
 
-	tcp_dd_show_response(&pkg.res_pkg);
-
 	return inet_send(sockfd, &pkg, sizeof(pkg.type) + (sizeof(int) * 2) + ret);
 }
 
@@ -136,11 +134,33 @@ static int tcp_dd_send_write_request(int sockfd, const char *filename, off_t off
 	}
 }
 
-static int tcp_dd_send_exec_request(int sockfd, const char *command)
+static int tcp_dd_send_exec_request(int sockfd, int ttyfd, const char *command)
 {
 	int ret;
 	struct tcp_dd_package pkg;
 	char *p;
+
+	if (isatty(ttyfd))
+	{
+		struct winsize wsize;
+
+		ret = ioctl(ttyfd, TIOCGWINSZ, &wsize);
+		if (ret < 0)
+		{
+			pr_error_info("ioctl TIOCGWINSZ");
+			return ret;
+		}
+
+		pkg.exec_req.lines = wsize.ws_row;
+		pkg.exec_req.columns = wsize.ws_col;
+	}
+	else
+	{
+		pr_red_info("%d is not a terminal", ttyfd);
+
+		pkg.exec_req.lines = 0;
+		pkg.exec_req.columns = 0;
+	}
 
 	pkg.type = TCP_DD_EXEC;
 	p = text_copy(pkg.exec_req.command, command);
@@ -281,14 +301,14 @@ static int tcp_dd_handle_exec_request(int sockfd, struct tcp_dd_exec_request *re
 {
 	int ret;
 
-	ret = tcp_dd_send_response(sockfd, 0, "[Server] start execute command %s", req->command);
+	ret = tcp_dd_send_response(sockfd, 0, "[Server] start execute command");
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_response");
 		return ret;
 	}
 
-	return cavan_exec_redirect_stdio_main(req->command, sockfd, sockfd);
+	return cavan_exec_redirect_stdio_main(req->command, req->lines, req->columns, sockfd, sockfd);
 }
 
 static int tcp_dd_handle_request(int sockfd)
@@ -344,7 +364,8 @@ static int tcp_dd_daemon_handle(int index, cavan_shared_data_t data)
 		return client_sockfd;
 	}
 
-	pr_bold_info("IP = %s, port = %d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+	inet_show_sockaddr(&addr);
+
 	ret = tcp_dd_handle_request(client_sockfd);
 	msleep(100);
 	inet_close_tcp_socket(client_sockfd);
@@ -363,8 +384,6 @@ int tcp_dd_service_run(struct cavan_service_description *desc, u16 port)
 		print_error("inet_create_tcp_service");
 		return sockfd;
 	}
-
-	pr_bold_info("Port = %d", port);
 
 	desc->data.type_int = sockfd;
 	desc->handler = tcp_dd_daemon_handle;
@@ -571,15 +590,15 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 		return sockfd;
 	}
 
-	ret = tcp_dd_send_exec_request(sockfd, file_req->command);
+	tty_in = fileno(stdin);
+	tty_out = fileno(stdout);
+
+	ret = tcp_dd_send_exec_request(sockfd, tty_out, file_req->command);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_exec_request");
 		goto out_close_sockfd;
 	}
-
-	tty_in = fileno(stdin);
-	tty_out = fileno(stdout);
 
 	ret = set_tty_mode(tty_in, 5, &tty_attr);
 	if (ret < 0)
@@ -589,17 +608,16 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 	}
 
 	pfds[0].events = POLLIN;
-	pfds[1].fd = tty_in;
+	pfds[0].fd = tty_in;
 
-	pfds[1].events = POLL_IN;
+	pfds[1].events = POLLIN;
 	pfds[1].fd = sockfd;
 
 	while (1)
 	{
 		ret = poll(pfds, NELEM(pfds), -1);
-		if (ret < 0)
+		if (ret <= 0)
 		{
-			pr_error_info("poll");
 			goto out_restore_tty_attr;
 		}
 
