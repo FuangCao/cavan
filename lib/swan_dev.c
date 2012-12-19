@@ -508,12 +508,12 @@ int swan_board_type_check(int pkg_type)
 
 int swan_check_emmc_device(void)
 {
-	if (access_e("/dev/mmcblk1") == 0 || access_e("/dev/mmcblk0p2") == 0)
+	if (file_access_e("/dev/mmcblk1") == 0 || file_access_e("/dev/mmcblk0p2") == 0)
 	{
 		return 0;
 	}
 
-	if (access_e("/dev/block/mmcblk1") == 0 || access_e("/dev/block/mmcblk0p2") == 0)
+	if (file_access_e("/dev/block/mmcblk1") == 0 || file_access_e("/dev/block/mmcblk0p2") == 0)
 	{
 		return 0;
 	}

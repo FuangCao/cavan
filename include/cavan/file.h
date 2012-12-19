@@ -335,34 +335,34 @@ static inline int file_dos2unix(const char *filename)
 	return file_copy(TEMP_DOS2UNIX_FILE, filename, 0);
 }
 
-static inline int access_e(const char *filename)
+static inline bool file_access_e(const char *filename)
 {
-	return access(filename, 0);
+	return access(filename, 0) == 0;
 }
 
-static inline int access_r(const char *filename)
+static inline bool file_access_r(const char *filename)
 {
-	return access(filename, R_OK);
+	return access(filename, R_OK) == 0;
 }
 
-static inline int access_w(const char *filename)
+static inline bool file_access_w(const char *filename)
 {
-	return access(filename, W_OK);
+	return access(filename, W_OK) == 0;
 }
 
-static inline int access_x(const char *filename)
+static inline bool file_access_x(const char *filename)
 {
-	return access(filename, X_OK);
+	return access(filename, X_OK) == 0;
 }
 
-static inline int access_rw(const char *filename)
+static inline bool file_access_rw(const char *filename)
 {
-	return access(filename, R_OK | W_OK);
+	return access(filename, R_OK | W_OK) == 0;
 }
 
-static inline int access_rwx(const char *filename)
+static inline bool file_access_rwx(const char *filename)
 {
-	return access(filename, R_OK | W_OK | X_OK);
+	return access(filename, R_OK | W_OK | X_OK) == 0;
 }
 
 static inline int file_poll_read(int fd, int timeout)

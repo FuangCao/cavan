@@ -9,10 +9,10 @@
 
 int adb_read_status(int sockfd, char *buff, size_t size)
 {
-	size_t length;
+	int ret;
 	ssize_t recvlen;
 
-	recvlen = inet_recv(sockfd, buff, 4);
+	recvlen = inet_recv(sockfd, buff, size > 8 ? 8 : size - 1);
 	if (recvlen < 0)
 	{
 		text_copy(buff, "protocol fault (no status)");
@@ -20,31 +20,28 @@ int adb_read_status(int sockfd, char *buff, size_t size)
 	}
 
 	buff[recvlen] = 0;
-	println("status = %s", buff);
+	ret = text_lhcmp("OKAY", buff) ? -EFAULT : 0;
 
-	if (text_lhcmp("OKAY", buff) == 0)
+	if (recvlen == 8)
 	{
-		return 0;
+		size_t length;
+
+		length = text2value_unsigned(buff + 4, NULL, 16);
+		if (length >= size)
+		{
+			length = size - 1;
+		}
+
+		recvlen = inet_recv(sockfd, buff, length);
+		if (recvlen < 0)
+		{
+			return recvlen;
+		}
+
+		buff[recvlen] = 0;
 	}
 
-	if(text_lhcmp("FAIL", buff) == 0)
-	{
-		text_copy(buff, "protocol fault (status FAIL)");
-		return -1;
-	}
-
-	length = text2value_unsigned(buff, NULL, 16);
-	recvlen = inet_recv(sockfd, buff, length >= size ? size - 1 : length);
-	if (recvlen < 0)
-	{
-		text_copy(buff, "protocol fault (status read)");
-		return recvlen;
-	}
-
-	buff[recvlen] = 0;
-	println("status = %s", buff);
-
-	return -1;
+	return ret;
 }
 
 int adb_send_text(int sockfd, const char *text)
@@ -79,27 +76,11 @@ int adb_send_text(int sockfd, const char *text)
 	ret = adb_read_status(sockfd, status, sizeof(status));
 	if (ret < 0)
 	{
-		pr_red_info("status = `%s'", status);
+		pr_red_info("status = %s", status);
 		return ret;
 	}
 
 	return 0;
-}
-
-int adb_send_command(int sockfd, const char *command)
-{
-	println("command = %s", command);
-
-	if (text_lhcmp("host", command))
-	{
-		int ret = adb_send_text(sockfd, "host:transport-any");
-		if (ret < 0)
-		{
-			return ret;
-		}
-	}
-
-	return adb_send_text(sockfd, command);
 }
 
 int adb_connect_service_base(const char *ip, u16 port)
@@ -159,7 +140,14 @@ int adb_connect_service(const char *ip, u16 port, const char *service)
 		return sockfd;
 	}
 
-	ret = adb_send_command(sockfd, service);
+	if (file_access_e("/sbin/adbd") == false && (ret = adb_send_text(sockfd, "host:transport-any")) < 0)
+	{
+		pr_red_info("adb_send_text");
+		close(sockfd);
+		return ret;
+	}
+
+	ret = adb_send_text(sockfd, service);
 	if (ret < 0)
 	{
 		pr_red_info("adb_connect_service");

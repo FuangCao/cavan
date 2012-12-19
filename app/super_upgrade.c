@@ -31,7 +31,7 @@ static int swan_init(const char *mnt_point)
 		return ret;
 	}
 
-	if (access_e(SIDELOAD_PACKAGE_PATH) < 0)
+	if (file_access_e(SIDELOAD_PACKAGE_PATH) == false)
 	{
 		goto out_mount_tmp;
 	}

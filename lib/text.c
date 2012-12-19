@@ -739,7 +739,8 @@ int prefix2base(const char *prefix, const char **prefix_ret)
 
 	if (*prefix != '0')
 	{
-		return -EINVAL;
+		base = 10;
+		goto out_return;
 	}
 
 	prefix++;
@@ -776,6 +777,7 @@ int prefix2base(const char *prefix, const char **prefix_ret)
 		base = -EINVAL;
 	}
 
+out_return:
 	if (prefix_ret)
 	{
 		*prefix_ret = prefix;
@@ -789,20 +791,17 @@ u64 text2value_unsigned(const char *text, const char **text_ret, int base)
 	u64 value;
 	int tmp;
 
-	if (text == NULL || (tmp = prefix2base(text, &text)) == 0)
+	if (text == NULL)
 	{
-		if (text_ret)
-		{
-			*text_ret = text;
-		}
 		return 0;
 	}
 
-	if (tmp > 0)
+	if (base < 2)
 	{
-		base = tmp;
+		base = prefix2base(text, &text);
 	}
-	else if (base < 1)
+
+	if (base < 2)
 	{
 		base = 10;
 	}
