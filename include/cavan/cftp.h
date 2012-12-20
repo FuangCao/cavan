@@ -6,7 +6,7 @@
 #include <cavan/usb.h>
 
 #define CFTP_MIN_PACKAGE_LENGTH		KB(4)
-#define CFTP_TIMEOUT_VALUE			5
+#define CFTP_TIMEOUT_VALUE			5000
 #define CFTP_RETRY_COUNT			5
 
 #pragma pack(1)
@@ -77,16 +77,16 @@ struct cftp_descriptor
 	cavan_shared_data_t data;
 	int fd;
 	size_t max_xfer_length;
-	u32 timeout_value;
+	int timeout_ms;
 	int retry_count;
 
 	ssize_t (*send)(cavan_shared_data_t data, const void *buff, size_t size);
 	ssize_t (*receive)(cavan_shared_data_t data, void *buff, size_t size);
-	ssize_t (*send_timeout)(cavan_shared_data_t data, const void *buff, size_t size, u32 timeout);
-	ssize_t (*receive_timeout)(cavan_shared_data_t data, void *buff, size_t size, u32 timeout);
+	ssize_t (*send_timeout)(cavan_shared_data_t data, const void *buff, size_t size, int timeout_ms);
+	ssize_t (*receive_timeout)(cavan_shared_data_t data, void *buff, size_t size, int timeout_ms);
 	int (*receive_handle)(cavan_shared_data_t data, struct cftp_file_request *req);
 	int (*send_handle)(cavan_shared_data_t data, struct cftp_file_request *req);
-	int (*can_receive)(cavan_shared_data_t data, u32 timeout);
+	bool (*can_receive)(cavan_shared_data_t data, int timeout_ms);
 };
 
 struct cftp_udp_link_descriptor

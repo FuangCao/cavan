@@ -234,6 +234,7 @@ __printf_format_23__ void print_color_text(int color, const char *fmt, ...);
 __printf_format_12__ void print_error_base(const char *fmt, ...);
 
 extern char *size2text(u64 size);
+bool cavan_get_choose_yesno(const char *prompt, bool def_value, int timeout_ms);
 
 // ============================================================
 

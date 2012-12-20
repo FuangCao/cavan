@@ -922,7 +922,7 @@ static int ftp_send_command_retry(int sockfd, const char *send_buff, size_t send
 			return ret;
 		}
 
-		ret = file_poll_read(sockfd, 5000);
+		ret = file_poll_input(sockfd, 5000);
 		if (ret < 0)
 		{
 			error_msg("file_poll_read");

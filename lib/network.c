@@ -9,7 +9,6 @@ ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const
 	while (retry--)
 	{
 		ssize_t sendlen;
-		int ret;
 
 		sendlen = inet_sendto(sockfd, buff, len, remote_addr);
 		if (sendlen < 0)
@@ -18,14 +17,7 @@ ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const
 			return sendlen;
 		}
 
-		ret = file_select_read(sockfd, NETWORK_TIMEOUT_VALUE);
-		if (ret < 0)
-		{
-			error_msg("select file failed");
-			return ret;
-		}
-
-		if (ret > 0)
+		if (file_poll_input(sockfd, NETWORK_TIMEOUT_VALUE))
 		{
 			return sendlen;
 		}
@@ -46,32 +38,6 @@ ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buf
 	}
 
 	return inet_recvfrom(sockfd, recv_buff, recvlen, remote_addr, addr_len);
-}
-
-ssize_t select_receive(int sockfd, long timeout, void *buff, size_t bufflen, struct sockaddr_in *remote_addr, socklen_t *addr_len)
-{
-	int ret;
-
-	ret = file_select_read(sockfd, timeout);
-	if (ret < 0)
-	{
-		return ret;
-	}
-
-	return ret ? inet_recvfrom(sockfd, buff, bufflen, remote_addr, addr_len) : -1;
-}
-
-ssize_t recvform_noblock(int sockfd, long timeout, void *buff, size_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len)
-{
-	int ret;
-
-	ret = file_select_read(sockfd, timeout);
-	if (ret <= 0)
-	{
-		return -ETIMEDOUT;
-	}
-
-	return inet_recvfrom(sockfd, buff, recvlen, remote_addr, addr_len);
 }
 
 const char *mac_protocol_type_tostring(int type)
@@ -543,39 +509,6 @@ int inet_create_tcp_service(u16 port)
 	}
 
 	return sockfd;
-}
-
-void inet_show_sockaddr(const struct sockaddr_in *addr)
-{
-	println("IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
-}
-
-ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int timeout)
-{
-	int ret;
-
-	ret = file_poll_read(sockfd, timeout);
-	if (ret < 0)
-	{
-		error_msg("file_poll_read");
-		return ret;
-	}
-
-	return (ret & POLLIN) ? inet_recv(sockfd, buff, size) : 0;
-}
-
-ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen, int timeout)
-{
-	int ret;
-
-	ret = file_poll_read(sockfd, timeout);
-	if (ret < 0)
-	{
-		error_msg("file_poll_read");
-		return ret;
-	}
-
-	return (ret & POLLIN) ? inet_recvfrom(sockfd, buff, size, addr, addrlen) : 0;
 }
 
 ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size)

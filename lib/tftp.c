@@ -205,7 +205,7 @@ int vsend_command_request(const char *ip, u16 port, const char *command, va_list
 		goto out_close_socket;
 	}
 
-	ret = select_receive(sockfd, TFTP_COMMAND_EXEC_TIME, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
+	ret = inet_recvfrom_timeout(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len, TFTP_COMMAND_EXEC_TIME);
 	if (ret < 0)
 	{
 		goto out_close_socket;

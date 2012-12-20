@@ -9,7 +9,7 @@ void cftp_descriptor_init(struct cftp_descriptor *desc)
 	memset(desc, 0, sizeof(*desc));
 
 	desc->max_xfer_length = CFTP_MIN_PACKAGE_LENGTH;
-	desc->timeout_value = CFTP_TIMEOUT_VALUE;
+	desc->timeout_ms = CFTP_TIMEOUT_VALUE;
 	desc->retry_count = CFTP_RETRY_COUNT;
 }
 
@@ -21,7 +21,7 @@ static ssize_t cftp_send_data(struct cftp_descriptor *desc, const void *buff, si
 	}
 	else if (desc->send_timeout)
 	{
-		return desc->send_timeout(desc->data, buff, size, desc->timeout_value);
+		return desc->send_timeout(desc->data, buff, size, desc->timeout_ms);
 	}
 	else if (desc->fd > 0)
 	{
@@ -41,7 +41,7 @@ static ssize_t cftp_receive_data(struct cftp_descriptor *desc, void *buff, size_
 	}
 	else if (desc->receive_timeout)
 	{
-		return desc->receive_timeout(desc->data, buff, size, desc->timeout_value);
+		return desc->receive_timeout(desc->data, buff, size, desc->timeout_ms);
 	}
 	else if (desc->fd > 0)
 	{
@@ -53,19 +53,19 @@ static ssize_t cftp_receive_data(struct cftp_descriptor *desc, void *buff, size_
 	}
 }
 
-static ssize_t cftp_can_receive(struct cftp_descriptor *desc)
+static bool cftp_can_receive(struct cftp_descriptor *desc)
 {
 	if (desc->can_receive)
 	{
-		return desc->can_receive(desc->data, desc->timeout_value);
+		return desc->can_receive(desc->data, desc->timeout_ms);
 	}
 	else if (desc->fd > 0)
 	{
-		return file_select_read(desc->fd, desc->timeout_value);
+		return file_poll_input(desc->fd, desc->timeout_ms);
 	}
 	else
 	{
-		return 1;
+		return true;
 	}
 }
 

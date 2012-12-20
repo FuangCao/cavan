@@ -36,12 +36,6 @@ int main(int argc, char *argv[])
 	};
 	int flags = 0;
 
-	ret = has_super_permission(NULL);
-	if (ret < 0)
-	{
-		return ret;
-	}
-
 	while ((c = getopt_long(argc, argv, "vVhHlLfFeE", long_option, &option_index)) != EOF)
 	{
 		switch (c)
@@ -78,6 +72,12 @@ int main(int argc, char *argv[])
 	}
 
 	assert(optind < argc);
+
+	ret = check_super_permission(false, 0);
+	if (ret < 0)
+	{
+		return ret;
+	}
 
 	println("flags = 0x%08x", flags);
 

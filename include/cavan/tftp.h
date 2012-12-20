@@ -22,7 +22,7 @@
 #define TFTP_COMMAND_REQ	11
 
 #define TFTP_COMMAND_LOG_FILE	"/tmp/tftp.cmd.log"
-#define TFTP_COMMAND_EXEC_TIME	(60 * 5)
+#define TFTP_COMMAND_EXEC_TIME	(60 * 1000 * 5)
 #define TFTP_DD_DEFAULT_PORT	8888
 
 #pragma pack(1)

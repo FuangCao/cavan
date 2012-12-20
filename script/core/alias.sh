@@ -16,6 +16,8 @@ alias egrep='egrep --color=auto'
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
+alias mkae='make'
+alias mkea='make'
 
 CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
 CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
@@ -91,4 +93,9 @@ function cavan-server-stop()
 function mssh()
 {
 	ssh ${SSH_USER}@${1-${CAVAN_SERVER_IP}}
+}
+
+function cavan-ssh()
+{
+	cavan-tcp_exec --port ${1-8888} --ip ${2-${CAVAN_SERVER_IP}} bash
 }

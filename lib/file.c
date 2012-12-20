@@ -1736,7 +1736,7 @@ out_free_old_buff:
 	return ret;
 }
 
-int file_select_read(int fd, long timeout)
+int file_select_read(int fd, int timeout_ms)
 {
 	fd_set set_read;
 	struct timeval time;
@@ -1744,8 +1744,8 @@ int file_select_read(int fd, long timeout)
 	FD_ZERO(&set_read);
 	FD_SET(fd, &set_read);
 
-	time.tv_sec = timeout;
-	time.tv_usec = 0;
+	time.tv_sec = timeout_ms / 1000;
+	time.tv_usec = (timeout_ms % 1000) * 1000;
 
 	return select(fd + 1, &set_read, NULL, NULL, &time);
 }
@@ -2259,7 +2259,7 @@ int file_find_and_open(const char *prefix, char *last_path, int start, int end, 
 	return -ENOENT;
 }
 
-int file_poll(int fd, short events, int timeout)
+bool file_poll(int fd, short events, int timeout_ms)
 {
 	int ret;
 	struct pollfd pfd =
@@ -2268,14 +2268,13 @@ int file_poll(int fd, short events, int timeout)
 		.events = events,
 	};
 
-	ret = poll(&pfd, 1, timeout);
-	if (ret < 0)
+	ret = poll(&pfd, 1, timeout_ms);
+	if (ret < 1)
 	{
-		print_error("poll");
-		return ret;
+		return false;
 	}
 
-	return pfd.revents;
+	return true;
 }
 
 char file_type_to_char(mode_t mode)

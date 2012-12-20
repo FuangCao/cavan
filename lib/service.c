@@ -51,15 +51,26 @@ int cavan_service_run(struct cavan_service_description *desc)
 		ERROR_RETURN(EINVAL);
 	}
 
-	if (desc->super_permission && has_super_permission(NULL) < 0)
-	{
-		ERROR_RETURN(EPERM);
-	}
-
 	if (desc->handler == NULL || desc->name == NULL || desc->daemon_count < 1)
 	{
 		pr_red_info("desc->handler == NULL || desc->name == NULL || desc->daemon_count < 1");
 		ERROR_RETURN(EINVAL);
+	}
+
+	if (desc->super_permission && (ret = check_super_permission(true, 5000)) < 0)
+	{
+		return ret;
+	}
+
+	if (desc->as_daemon)
+	{
+		pr_blue_info("Run %s as daemon", desc->name);
+		ret = daemon(0, desc->show_verbose);
+		if (ret < 0)
+		{
+			print_error("daemon");
+			return ret;
+		}
 	}
 
 	count = desc->daemon_count - 1;
@@ -94,17 +105,6 @@ int cavan_service_run(struct cavan_service_description *desc)
 	}
 
 	desc->threads = threads;
-
-	if (desc->as_daemon)
-	{
-		pr_blue_info("Run %s as daemon", desc->name);
-		ret = daemon(0, desc->show_verbose);
-		if (ret < 0)
-		{
-			print_error("daemon");
-			goto out_free_threads;
-		}
-	}
 
 	cavan_service_handler(desc);
 
@@ -151,6 +151,7 @@ int cavan_service_stop(struct cavan_service_description *desc)
 
 int cavan_daemon_run(struct cavan_daemon_description *desc)
 {
+	int ret;
 	pid_t pid;
 
 	if (desc == NULL || desc->cmdfile[0] == 0)
@@ -159,9 +160,9 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 		ERROR_RETURN(EINVAL);
 	}
 
-	if (desc->super_permission && has_super_permission(NULL) < 0)
+	if (desc->super_permission && (ret = check_super_permission(false, 5000)) < 0)
 	{
-		ERROR_RETURN(EPERM);
+		return ret;
 	}
 
 	if (desc->as_daemon)

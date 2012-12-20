@@ -7,20 +7,18 @@
 #include <cavan.h>
 #include <cavan/permission.h>
 
-int has_super_permission(const char *prompt)
+int check_super_permission(bool def_choose, int timeout_ms)
 {
 	if (user_is_super())
 	{
 		return 0;
 	}
 
-	if (prompt)
+	pr_red_info("Require super user permission");
+
+	if (cavan_get_choose_yesno("Do you want to run as general user", def_choose, timeout_ms))
 	{
-		pr_red_info("%s", prompt);
-	}
-	else
-	{
-		pr_red_info("Only super can do this");
+		return 0;
 	}
 
 	ERROR_RETURN(EPERM);

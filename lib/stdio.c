@@ -597,3 +597,64 @@ void show_author_info(void)
 	println("Fuang.Cao <fuang.cao@eavoo.com>");
 }
 
+bool cavan_get_choose_yesno(const char *prompt, bool def_choose, int timeout_ms)
+{
+	char buff[8];
+	ssize_t rdlen;
+	const char *option;
+
+	if (prompt == NULL || timeout_ms == 0)
+	{
+		return def_choose;
+	}
+
+	option = def_choose ? "Y/n" : "y/N";
+
+	while (1)
+	{
+		print("%s [%s]: ", prompt, option);
+
+		if (timeout_ms > 0)
+		{
+			rdlen = file_read_timeout(fileno(stdin), buff, sizeof(buff), timeout_ms);
+		}
+		else
+		{
+			rdlen = read(fileno(stdin), buff, sizeof(buff));
+		}
+
+		if (rdlen <= 0)
+		{
+			if (def_choose)
+			{
+				println("Y");
+				return true;
+			}
+
+			println("N");
+			return false;
+		}
+
+		switch (buff[0])
+		{
+		case '\n':
+			return def_choose;
+
+		case 'y':
+		case 'Y':
+			if (rdlen == 1 || buff[1] == '\n')
+			{
+				return true;
+			}
+
+		case 'n':
+		case 'N':
+			if (rdlen == 1 || buff[1] == '\n')
+			{
+				return false;
+			}
+		}
+
+		pr_red_info("Please input [Y/y/N/n/Enter]");
+	}
+}

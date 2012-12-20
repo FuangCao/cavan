@@ -8,14 +8,14 @@
 
 #include <cavan.h>
 
-int has_super_permission(const char *prompt);
+int check_super_permission(bool def_choose, int timeout_ms);
 
-static inline int user_id_equal(uid_t uid)
+static inline bool user_id_equal(uid_t uid)
 {
 	return uid == getuid();
 }
 
-static inline int user_is_super(void)
+static inline bool user_is_super(void)
 {
 	return user_id_equal(0);
 }

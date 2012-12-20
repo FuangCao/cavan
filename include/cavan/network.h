@@ -12,7 +12,7 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 
-#define NETWORK_TIMEOUT_VALUE	5
+#define NETWORK_TIMEOUT_VALUE	5000
 #define NETWORK_RETRY_COUNT		5
 #define ROUTE_TABLE_SIZE		16
 #define MAC_ADDRESS_LEN			6
@@ -183,9 +183,7 @@ struct inet_file_request
 };
 
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
-ssize_t select_receive(int sockfd, long timeout, void *buff, size_t bufflen, struct sockaddr_in *remote_addr, socklen_t *addr_len);
 ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);
-ssize_t recvform_noblock(int sockfd, long timeout, void *buff, size_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);
 
 const char *mac_protocol_type_tostring(int type);
 const char *ip_protocol_type_tostring(int type);
@@ -213,10 +211,7 @@ int inet_create_tcp_link1(const struct sockaddr_in *addr);
 int inet_create_tcp_link2(const char *ip, u16 port);
 int inet_create_service(int type, u16 port);
 int inet_create_tcp_service(u16 port);
-void inet_show_sockaddr(const struct sockaddr_in *addr);
 
-ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int timeout);
-ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen, int timeout);
 ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size);
 
 u32 get_rand_value(void);
@@ -304,6 +299,26 @@ static inline ssize_t inet_recv2(int sockfd, void *buff, size_t size)
 	return recv(sockfd, buff, size, 0);
 }
 
+static inline ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int timeout_ms)
+{
+	if (file_poll_input(sockfd, timeout_ms))
+	{
+		inet_recv(sockfd, buff, size);
+	}
+
+	return -ETIMEDOUT;
+}
+
+static inline ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen, int timeout_ms)
+{
+	if (file_poll_input(sockfd, timeout_ms))
+	{
+		return inet_recvfrom(sockfd, buff, size, addr, addrlen);
+	}
+
+	return -ETIMEDOUT;
+}
+
 static inline void inet_close_tcp_socket(int sockfd)
 {
 	fsync(sockfd);
@@ -315,4 +330,9 @@ static inline int inet_getsockname(int sockfd, struct sockaddr_in *addr, socklen
 {
 	*addrlen = sizeof(struct sockaddr_in);
 	return getsockname(sockfd, (struct sockaddr *)addr, addrlen);
+}
+
+static inline void inet_show_sockaddr(const struct sockaddr_in *addr)
+{
+	println("IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
 }

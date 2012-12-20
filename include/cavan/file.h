@@ -121,8 +121,8 @@ ssize_t ffile_read(int fd, void *buff, size_t size);
 
 int file_replace_line_simple(const char *file_path, const char *prefix, off_t prefix_size, const char *new_line, off_t new_line_size);
 int file_stat(const char *file_name, struct stat *st);
-int file_select_read(int fd, long timeout);
-int file_poll(int fd, short events, int timeout);
+int file_select_read(int fd, int timeout_ms);
+bool file_poll(int fd, short events, int timeout_ms);
 
 u32 mem_checksum32_simple(const char *mem, size_t count);
 u16 mem_checksum16_simple(const char *mem, size_t count);
@@ -365,14 +365,24 @@ static inline bool file_access_rwx(const char *filename)
 	return access(filename, R_OK | W_OK | X_OK) == 0;
 }
 
-static inline int file_poll_read(int fd, int timeout)
+static inline bool file_poll_input(int fd, int timeout_ms)
 {
-	return file_poll(fd, POLLIN, timeout);
+	return file_poll(fd, POLLIN, timeout_ms);
 }
 
-static inline int file_poll_write(int fd, int timeout)
+static inline bool file_poll_output(int fd, int timeout_ms)
 {
-	return file_poll(fd, POLLOUT, timeout);
+	return file_poll(fd, POLLOUT, timeout_ms);
+}
+
+static inline ssize_t file_read_timeout(int fd, void *buff, size_t size, int timeout_ms)
+{
+	if (file_poll_input(fd, timeout_ms))
+	{
+		return read(fd, buff, size);
+	}
+
+	return -ETIMEDOUT;
 }
 
 static inline int file_is_file(const char *pathname)
@@ -459,4 +469,3 @@ static inline ssize_t file_read_byte(int fd, void *buff)
 {
 	return read(fd, buff, 1);
 }
-
