@@ -1,24 +1,24 @@
 #!/bin/bash
 
-function read_choise()
+function read_choose()
 {
-	local def_choise choise message
+	local def_choose choose message
 
 	if [ "$2" = "" ] || [ "$2" = "y" ] || [ "$2" = "Y" ]
 	then
-		def_choise="Y"
+		def_choose="Y"
 		message="$1 [Y/n]? "
 	else
-		def_choise="N"
+		def_choose="N"
 		message="$1 [y/N]? "
 	fi
 
 	while :
 	do
 		echo -n "${message}"
-		read choise
-		[ "${choise}" ] || choise=${def_choise}
-		case ${choise} in
+		read choose
+		[ "${choose}" ] || choose=${def_choose}
+		case ${choose} in
 			Y | y)
 				return 0 ;;
 			n | N)
@@ -39,11 +39,11 @@ fi
 MAKE="make -C ${KERNEL_PATH}"
 
 ${MAKE} menuconfig || exit 1
-read_choise "Do you want to compile the kernel" "Y" || exit 0
+read_choose "Do you want to compile the kernel" "Y" || exit 0
 rm defconfig -rfv && ${MAKE} savedefconfig || exit 1
 ${MAKE} -j4 || exit 1
-read_choise "Do you want to install the kernel" "Y" || exit 0
+read_choose "Do you want to install the kernel" "Y" || exit 0
 sudo ${MAKE} modules_install || exit 1
 sudo ${MAKE} install || exit 1
-read_choise "Do you want to restart the computer" "N" || exit 0
+read_choose "Do you want to restart the computer" "N" || exit 0
 sudo reboot
