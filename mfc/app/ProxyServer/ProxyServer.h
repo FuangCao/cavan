@@ -15,7 +15,7 @@
 #include "resource.h"		// main symbols
 
 #define CavanMessageBoxPos(func) \
-	CavanMessageBoxInfo("%s => %s[%d]", __FILE__, func, __LINE__)
+	CavanMessageBoxInfo("%s[%d]", func, __LINE__)
 
 /////////////////////////////////////////////////////////////////////////////
 // CProxyServerApp:

@@ -210,10 +210,6 @@ void CProxyServerDlg::OnButtonStart()
 		m_ctrlButtonStart.EnableWindow(false);
 		m_ctrlButtonStop.EnableWindow(true);
 	}
-	else
-	{
-		CavanMessageBoxError("mProxyService.Start()");
-	}
 }
 
 void CProxyServerDlg::OnButtonStop()

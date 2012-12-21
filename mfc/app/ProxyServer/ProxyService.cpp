@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "ProxyServer.h"
 #include "ProxyService.h"
+#include <process.h>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -129,13 +130,14 @@ bool CTransportAdbClient::SendText(const char *text)
 
 	if (CheckStatus() == false)
 	{
+		CavanMessageBoxError("发送ADB命令 %s 失败 %s", text, mStatus);
 		return false;
 	}
 
 	return true;
 }
 
-bool CTransportAdbClient::Connect(WORD port)
+bool CTransportAdbClient::CreateTcpLink(WORD port)
 {
 	if (SendText("host:transport-any") == false)
 	{
@@ -148,14 +150,25 @@ bool CTransportAdbClient::Connect(WORD port)
 	return SendText(buff);
 }
 
+bool CTransportAdbClient::Connect(DWORD ip)
+{
+	if (CTransportTcpClient::Open(ADB_SERVICE_PORT1, ip))
+	{
+		return true;
+	}
+
+	return CTransportTcpClient::Open(ADB_SERVICE_PORT2, ip);
+}
+
 bool CTransportAdbClient::Open(WORD port, DWORD ip)
 {
-	if (CTransportTcpClient::Open(ADB_SERVICE_PORT, ip) == false)
+	if (Connect(ip) == false)
 	{
+		CavanMessageBoxError("连接到ADB服务器失败");
 		return false;
 	}
 
-	if (Connect(port) == false)
+	if (CreateTcpLink(port) == false)
 	{
 		CTransportTcpClient::Close();
 		return false;
@@ -312,9 +325,6 @@ bool CProxyThread::Run(void)
 
 	if (mProxyTransport->Open(mProxyPort, mProxyIP) == false)
 	{
-		struct in_addr addr;
-		addr.s_addr = htonl(mProxyIP);
-		CavanMessageBoxError("Open: IP = %s, Port = %d", inet_ntoa(addr), mProxyPort);
 		delete trspClient;
 		return true;
 	}
@@ -490,16 +500,19 @@ bool CProxyService::Start(void)
 		break;
 
 	default:
+		CavanMessageBoxError("未知的协议类型 %d", mLocalProtocol);
 		return false;
 	}
 
 	if (mServiceTransport == NULL)
 	{
+		CavanMessageBoxError("创建服务器套接字失败");
 		return false;
 	}
 
 	if (CreateThreads() == false)
 	{
+		CavanMessageBoxError("分配存储空间失败");
 		return false;
 	}
 
@@ -510,11 +523,13 @@ bool CProxyService::Start(void)
 
 	if (mServiceTransport->Open(mLocalPort, INADDR_ANY) == false)
 	{
+		CavanMessageBoxError("绑定到本地端口 %d 失败\n\n可能这个端口已经被占用了", mLocalPort);
 		return false;
 	}
 
 	if (CCavanService::Start() == false)
 	{
+		CavanMessageBoxError("启动服务器失败");
 		mServiceTransport->Close();
 		return false;
 	}

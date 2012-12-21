@@ -11,7 +11,8 @@
 
 #include "CavanService.h"
 
-#define ADB_SERVICE_PORT	5037
+#define ADB_SERVICE_PORT1	5037
+#define ADB_SERVICE_PORT2	5038
 
 class CProxyThread;
 
@@ -75,7 +76,8 @@ private:
 public:
 	virtual bool Open(WORD port = 8888, DWORD ip = INADDR_ANY);
 
-	bool Connect(WORD port);
+	bool Connect(DWORD ip);
+	bool CreateTcpLink(WORD port);
 	bool SendText(const char *text);
 	bool CheckStatus(void);
 };
