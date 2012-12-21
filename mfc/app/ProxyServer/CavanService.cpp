@@ -47,13 +47,12 @@ void CCavanThread::ThreadHandler(void *data)
 	_endthread();
 }
 
-bool CCavanThread::Start(int index)
+bool CCavanThread::Start(void)
 {
 	CSingleLock lock(&mLock);
 
 	if (mState == CAVAN_THREAD_STATE_STOPED)
 	{
-		mIndex = index;
 		mState = CAVAN_THREAD_STATE_IDLE;
 		_beginthread(ThreadHandler, 0, this);
 	}
@@ -87,22 +86,6 @@ CCavanService::~CCavanService()
 	Stop();
 }
 
-void CCavanService::DestoryThreads(void)
-{
-	CCavanThread *thread = mThreadHead;
-
-	while (thread)
-	{
-		CCavanThread *next = thread->next;
-
-		delete thread;
-		thread = next;
-	}
-
-	mThreadHead = NULL;
-	mDaemonCount = 0;
-}
-
 bool CCavanService::Start(void)
 {
 	CSingleLock lock(&mLock);
@@ -114,7 +97,7 @@ bool CCavanService::Start(void)
 
 	for (CCavanThread *thread = mThreadHead; thread; thread = thread->next)
 	{
-		thread->Start(thread - mThreadHead);
+		thread->Start();
 	}
 
 	return true;

@@ -67,22 +67,29 @@ CProxyServerDlg::CProxyServerDlg(CWnd* pParent /*=NULL*/)
 	m_nProxyProtocol = 2;
 	m_dwLocalPort = 8888;
 	m_dwProxyPort = 8888;
+	m_dwDaemonCount = 20;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	mProxyService = new CProxyService(this);
 }
 
 void CProxyServerDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CProxyServerDlg)
-	DDX_Control(pDX, IDC_BUTTON_STOP, m_ctrlButtonStop);
-	DDX_Control(pDX, IDC_BUTTON_START, m_ctrlButtonStart);
+	DDX_Control(pDX, IDC_RADIO_PROXY_TCP, m_ctrlRadioProxyProtocol);
+	DDX_Control(pDX, IDC_STATIC_STATUS, m_ctrlStatus);
+	DDX_Control(pDX, IDC_PROGRESS_SERVICE, m_ctrlServiceProgress);
+	DDX_Control(pDX, IDC_LIST_SERVICE, m_ctrlListService);
 	DDX_Control(pDX, IDC_IPADDRESS_PROXY, m_ctrlProxyIP);
 	DDX_Radio(pDX, IDC_RADIO_LOCAL_TCP, m_nLocalProtocol);
 	DDX_Radio(pDX, IDC_RADIO_PROXY_TCP, m_nProxyProtocol);
 	DDX_Text(pDX, IDC_EDIT_LOCAL_PORT, m_dwLocalPort);
 	DDX_Text(pDX, IDC_EDIT_PROXY_PORT, m_dwProxyPort);
+	DDX_Text(pDX, IDC_EDIT_DAEMON_COUNT, m_dwDaemonCount);
+	DDV_MinMaxDWord(pDX, m_dwDaemonCount, 10, 1000);
 	//}}AFX_DATA_MAP
 }
 
@@ -93,6 +100,9 @@ BEGIN_MESSAGE_MAP(CProxyServerDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_START, OnButtonStart)
 	ON_BN_CLICKED(IDC_BUTTON_STOP, OnButtonStop)
+	ON_BN_CLICKED(IDC_RADIO_PROXY_TCP, OnRadioProxyProtocol)
+	ON_BN_CLICKED(IDC_RADIO_PROXY_UDP, OnRadioProxyProtocol)
+	ON_BN_CLICKED(IDC_RADIO_PROXY_ADB, OnRadioProxyProtocol)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -128,7 +138,13 @@ BOOL CProxyServerDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	m_ctrlProxyIP.SetAddress(127, 0, 0, 1);
-	m_ctrlButtonStop.EnableWindow(false);
+	GetDlgItem(IDC_BUTTON_STOP)->EnableWindow(false);
+	m_ctrlListService.InsertColumn(0, "ID", LVCFMT_LEFT, 50, -1);
+	m_ctrlListService.InsertColumn(1, "状态", LVCFMT_LEFT, 50, -1);
+	m_ctrlListService.InsertColumn(2, "IP地址", LVCFMT_LEFT, 100, -1);
+	m_ctrlListService.InsertColumn(3, "端口号", LVCFMT_LEFT, 60, -1);
+
+	OnRadioProxyProtocol();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -197,6 +213,51 @@ CProxyProcotolType CProxyServerDlg::ValueToProtocolType(int value)
 	}
 }
 
+void CProxyServerDlg::ShowStatus(const char *strFormat, ...)
+{
+	char text[1024];
+	va_list ap;
+
+	va_start(ap, strFormat);
+	_vsnprintf(text, sizeof(text), strFormat, ap);
+	va_end(ap);
+
+	m_ctrlStatus.SetWindowText(text);
+}
+
+void CProxyServerDlg::EnableAllWindow(bool enable)
+{
+	int ids[] =
+	{
+		IDC_EDIT_LOCAL_PORT,
+		IDC_EDIT_PROXY_PORT,
+		IDC_RADIO_PROXY_TCP,
+		IDC_RADIO_PROXY_UDP,
+		IDC_RADIO_PROXY_ADB,
+		IDC_RADIO_LOCAL_TCP,
+		IDC_RADIO_LOCAL_UDP,
+		IDC_EDIT_DAEMON_COUNT
+	};
+
+	for (int i = 0; i < NELEM(ids); i++)
+	{
+		GetDlgItem(ids[i])->EnableWindow(enable);
+	}
+
+	if (enable)
+	{
+		GetDlgItem(IDC_IPADDRESS_PROXY)->EnableWindow(m_nProxyProtocol != 2);
+		GetDlgItem(IDC_BUTTON_START)->EnableWindow(true);
+		GetDlgItem(IDC_BUTTON_STOP)->EnableWindow(false);
+	}
+	else
+	{
+		GetDlgItem(IDC_IPADDRESS_PROXY)->EnableWindow(false);
+		GetDlgItem(IDC_BUTTON_START)->EnableWindow(false);
+		GetDlgItem(IDC_BUTTON_STOP)->EnableWindow(true);
+	}
+}
+
 void CProxyServerDlg::OnButtonStart()
 {
 	UpdateData(true);
@@ -204,18 +265,40 @@ void CProxyServerDlg::OnButtonStart()
 	DWORD dwAddress;
 	m_ctrlProxyIP.GetAddress(dwAddress);
 
-	mProxyService.Prepare(m_dwProxyPort, m_dwLocalPort, dwAddress, ValueToProtocolType(m_nLocalProtocol), ValueToProtocolType(m_nProxyProtocol));
-	if (mProxyService.Start())
+	if (dwAddress == INADDR_LOOPBACK && m_nLocalProtocol == m_nProxyProtocol && m_dwLocalPort == m_dwProxyPort)
 	{
-		m_ctrlButtonStart.EnableWindow(false);
-		m_ctrlButtonStop.EnableWindow(true);
+		CavanMessageBoxError("自己不能代理自己");
+	}
+	else
+	{
+		mProxyService->Prepare(m_dwProxyPort, m_dwLocalPort, dwAddress, ValueToProtocolType(m_nLocalProtocol), ValueToProtocolType(m_nProxyProtocol), m_dwDaemonCount);
+		if (mProxyService->Start())
+		{
+			EnableAllWindow(false);
+		}
+		else
+		{
+			CavanMessageBoxError("启动服务器失败");
+		}
 	}
 }
 
 void CProxyServerDlg::OnButtonStop()
 {
-	mProxyService.Stop();
+	mProxyService->Stop();
+	EnableAllWindow(true);
+}
 
-	m_ctrlButtonStart.EnableWindow(true);
-	m_ctrlButtonStop.EnableWindow(false);
+void CProxyServerDlg::OnRadioProxyProtocol() 
+{
+	UpdateData(true);
+
+	if (m_nProxyProtocol == 2)
+	{
+		m_ctrlProxyIP.EnableWindow(false);
+	}
+	else
+	{
+		m_ctrlProxyIP.EnableWindow(true);
+	}
 }

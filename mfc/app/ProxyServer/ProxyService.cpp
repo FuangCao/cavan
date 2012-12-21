@@ -130,7 +130,7 @@ bool CTransportAdbClient::SendText(const char *text)
 
 	if (CheckStatus() == false)
 	{
-		CavanMessageBoxError("发送ADB命令 %s 失败 %s", text, mStatus);
+		// CavanMessageBoxError("发送ADB命令 %s 失败 %s", text, mStatus);
 		return false;
 	}
 
@@ -164,7 +164,7 @@ bool CTransportAdbClient::Open(WORD port, DWORD ip)
 {
 	if (Connect(ip) == false)
 	{
-		CavanMessageBoxError("连接到ADB服务器失败");
+		// CavanMessageBoxError("连接到ADB服务器失败");
 		return false;
 	}
 
@@ -304,6 +304,14 @@ CCavanTransport *CTransportUdpService::Accept(void *buff, int *size)
 
 // ================================================================================
 
+CProxyThread::CProxyThread(int nIndex, CListCtrl &list, CProgressCtrl &progress) : CCavanThread(nIndex), mListCtrl(list), mProgressCtrl(progress), mProxyTransport(NULL)
+{
+	char buff[8];
+
+	sprintf(buff, "%02d", mIndex);
+	mListCtrl.InsertItem(mIndex, buff);
+}
+
 void CProxyThread::Prepare(CCavanTransport *trspService, WORD wProxyPort, CProxyProcotolType nProxyProtocol, DWORD dwProxyIP)
 {
 	mServiceTransport = trspService;
@@ -314,8 +322,13 @@ void CProxyThread::Prepare(CCavanTransport *trspService, WORD wProxyPort, CProxy
 
 bool CProxyThread::Run(void)
 {
+	int nFdCount;
 	char buff[1024];
 	int nLength = sizeof(buff);
+
+	SetStatusText("监听");
+	SetIpText("-");
+	SetPortText("-");
 
 	CCavanTransport *trspClient = mServiceTransport->Accept(buff, &nLength);
 	if (trspClient == NULL)
@@ -323,17 +336,20 @@ bool CProxyThread::Run(void)
 		return false;
 	}
 
+	SetStatusText("连接");
+	SetIpText(inet_ntoa(trspClient->mSockAddr.sin_addr));
+	SetPortText(ntohs(trspClient->mSockAddr.sin_port));
+
+	mProgressCtrl.OffsetPos(1);
+
 	if (mProxyTransport->Open(mProxyPort, mProxyIP) == false)
 	{
-		delete trspClient;
-		return true;
+		goto out_sub_progress;
 	}
 
 	if (nLength && mProxyTransport->SendData(buff, nLength) < 0)
 	{
-		mProxyTransport->Close();
-		delete trspClient;
-		return true;
+		goto out_close_proxy;
 	}
 
 	fd_set setRead;
@@ -342,7 +358,9 @@ bool CProxyThread::Run(void)
 	FD_SET(trspClient->mSocket, &setRead);
 	FD_SET(mProxyTransport->mSocket, &setRead);
 
-	int nFdCount = max(trspClient->mSocket, mProxyTransport->mSocket) + 1;
+	nFdCount = max(trspClient->mSocket, mProxyTransport->mSocket) + 1;
+
+	SetStatusText("运行");
 
 	while (1)
 	{
@@ -379,13 +397,18 @@ bool CProxyThread::Run(void)
 		}
 	}
 
+	SetStatusText("完成");
+
+out_close_proxy:
 	mProxyTransport->Close();
+out_sub_progress:
+	mProgressCtrl.OffsetPos(-1);
 	delete trspClient;
 
 	return true;
 }
 
-bool CProxyThread::Start(int index)
+bool CProxyThread::Start(void)
 {
 	CSingleLock lock(&mLock);
 
@@ -413,7 +436,7 @@ bool CProxyThread::Start(int index)
 		return false;
 	}
 
-	return CCavanThread::Start(index);
+	return CCavanThread::Start();
 }
 
 void CProxyThread::Stop(void)
@@ -452,7 +475,7 @@ bool CProxyService::CreateThreads(void)
 
 	for (int i = 0; i < mDaemonCount; i++)
 	{
-		CProxyThread *thread = new CProxyThread();
+		CProxyThread *thread = new CProxyThread(i, mProxyDialog->m_ctrlListService, mProxyDialog->m_ctrlServiceProgress);
 		if (thread == NULL)
 		{
 			continue;
@@ -463,6 +486,23 @@ bool CProxyService::CreateThreads(void)
 	}
 
 	return true;
+}
+
+void CProxyService::DestoryThreads(void)
+{
+	CCavanThread *thread = mThreadHead;
+
+	while (thread)
+	{
+		CCavanThread *next = thread->next;
+
+		delete thread;
+		thread = next;
+	}
+
+	mThreadHead = NULL;
+	mDaemonCount = 0;
+	mProxyDialog->m_ctrlListService.DeleteAllItems();
 }
 
 void CProxyService::Prepare(WORD wProxyPort, WORD wLocalPort, DWORD dwProxyIP, CProxyProcotolType nLocalProtocol, CProxyProcotolType nProxyProtocol, int nDaemonCount)
@@ -500,19 +540,19 @@ bool CProxyService::Start(void)
 		break;
 
 	default:
-		CavanMessageBoxError("未知的协议类型 %d", mLocalProtocol);
+		mProxyDialog->ShowStatus("未知的协议类型 %d", mLocalProtocol);
 		return false;
 	}
 
 	if (mServiceTransport == NULL)
 	{
-		CavanMessageBoxError("创建服务器套接字失败");
+		mProxyDialog->ShowStatus("创建服务器套接字失败");
 		return false;
 	}
 
 	if (CreateThreads() == false)
 	{
-		CavanMessageBoxError("分配存储空间失败");
+		mProxyDialog->ShowStatus("分配存储空间失败");
 		return false;
 	}
 
@@ -523,16 +563,20 @@ bool CProxyService::Start(void)
 
 	if (mServiceTransport->Open(mLocalPort, INADDR_ANY) == false)
 	{
-		CavanMessageBoxError("绑定到本地端口 %d 失败\n\n可能这个端口已经被占用了", mLocalPort);
+		mProxyDialog->ShowStatus("绑定到本地端口 %d 失败\n\n可能这个端口已经被占用了", mLocalPort);
 		return false;
 	}
 
 	if (CCavanService::Start() == false)
 	{
-		CavanMessageBoxError("启动服务器失败");
+		mProxyDialog->ShowStatus("启动服务器失败");
 		mServiceTransport->Close();
 		return false;
 	}
+
+	mProxyDialog->m_ctrlServiceProgress.SetRange(0, mDaemonCount);
+	mProxyDialog->m_ctrlServiceProgress.SetPos(0);
+	mProxyDialog->ShowStatus("服务器正在运行");
 
 	return true;
 }
@@ -551,4 +595,6 @@ void CProxyService::Stop(void)
 	}
 
 	DestoryThreads();
+
+	mProxyDialog->ShowStatus("服务器已停止运行");
 }

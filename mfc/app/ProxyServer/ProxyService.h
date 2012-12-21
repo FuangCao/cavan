@@ -10,11 +10,13 @@
 #endif // _MSC_VER > 1000
 
 #include "CavanService.h"
+#include "ProxyServerDlg.h"
 
 #define ADB_SERVICE_PORT1	5037
 #define ADB_SERVICE_PORT2	5038
 
 class CProxyThread;
+class CProxyServerDlg;
 
 enum CProxyProcotolType
 {
@@ -114,16 +116,40 @@ private:
 	WORD mProxyPort;
 	DWORD mProxyIP;
 	CProxyProcotolType mProxyProtocol;
+	CListCtrl &mListCtrl;
+	CProgressCtrl &mProgressCtrl;
 
 protected:
 	virtual bool Run(void);
 
 public:
-	CProxyThread() : CCavanThread(), mProxyTransport(NULL) {}
-
+	CProxyThread(int nIndex, CListCtrl &list, CProgressCtrl &progess);
 	virtual void Prepare(CCavanTransport *trspService, WORD wProxyPort = 8888, CProxyProcotolType nProxyProtocol = PROXY_PROTOCOL_TYPE_ADB, DWORD dwProxyIP = INADDR_LOOPBACK);
-	virtual bool Start(int index);
+	virtual bool Start(void);
 	virtual void Stop(void);
+
+	void SetStatusText(const char *text)
+	{
+		mListCtrl.SetItemText(mIndex, 1, text);
+	}
+
+	void SetIpText(const char *text)
+	{
+		mListCtrl.SetItemText(mIndex, 2, text);
+	}
+
+	void SetPortText(const char *text)
+	{
+		mListCtrl.SetItemText(mIndex, 3, text);
+	}
+
+	void SetPortText(WORD port)
+	{
+		char buff[16];
+
+		sprintf(buff, "%04d", port);
+		SetPortText(buff);
+	}
 };
 
 class CProxyService : public CCavanService
@@ -136,14 +162,16 @@ private:
 	CProxyProcotolType mLocalProtocol;
 	CProxyProcotolType mProxyProtocol;
 	CCavanTransport *mServiceTransport;
+	CProxyServerDlg *mProxyDialog;
 
 public:
-	CProxyService() : CCavanService(), mLocalPort(8888), mProxyPort(8888), mProxyIP(INADDR_LOOPBACK), mLocalProtocol(PROXY_PROTOCOL_TYPE_TCP), mProxyProtocol(PROXY_PROTOCOL_TYPE_ADB), mServiceTransport(NULL) {}
+	CProxyService(CProxyServerDlg *dlg) : CCavanService(), mProxyDialog(dlg), mLocalPort(8888), mProxyPort(8888), mProxyIP(INADDR_LOOPBACK), mLocalProtocol(PROXY_PROTOCOL_TYPE_TCP), mProxyProtocol(PROXY_PROTOCOL_TYPE_ADB), mServiceTransport(NULL) {}
 	virtual ~CProxyService();
 
 	void Prepare(WORD wProxyPort, WORD wLocalPort = 8888, DWORD dwProxyIP = INADDR_LOOPBACK, CProxyProcotolType nLocalProtocol = PROXY_PROTOCOL_TYPE_TCP, CProxyProcotolType nProxyProtocol = PROXY_PROTOCOL_TYPE_ADB, int nDaemonCount = 20);
 	bool CreateThreads(void);
-	virtual bool Start(void);
+	void DestoryThreads(void);
+	virtual bool Start();
 	virtual void Stop(void);
 };
 

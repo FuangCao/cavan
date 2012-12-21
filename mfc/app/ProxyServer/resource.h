@@ -13,13 +13,15 @@
 #define IDC_EDIT_PROXY_PORT             1003
 #define IDC_BUTTON_START                1004
 #define IDC_BUTTON_STOP                 1005
-#define IDC_LIST_CLIENT                 1007
+#define IDC_LIST_SERVICE                1006
+#define IDC_PROGRESS_SERVICE            1007
 #define IDC_RADIO_PROXY_TCP             1008
 #define IDC_RADIO_PROXY_UDP             1009
 #define IDC_RADIO_PROXY_ADB             1010
 #define IDC_RADIO_LOCAL_TCP             1011
 #define IDC_RADIO_LOCAL_UDP             1012
-#define IDC_RADIO_LOCAL_ADB             1013
+#define IDC_STATIC_STATUS               1013
+#define IDC_EDIT_DAEMON_COUNT           1014
 
 // Next default values for new objects
 //
@@ -27,7 +29,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

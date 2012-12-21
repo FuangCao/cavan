@@ -14,6 +14,9 @@
 
 #include "resource.h"		// main symbols
 
+#define NELEM(a) \
+	(sizeof(a) / sizeof((a)[0]))
+
 #define CavanMessageBoxPos(func) \
 	CavanMessageBoxInfo("%s[%d]", func, __LINE__)
 

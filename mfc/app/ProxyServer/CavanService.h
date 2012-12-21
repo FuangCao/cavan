@@ -38,10 +38,10 @@ protected:
 	virtual bool Run(void) = 0;
 
 public:
-	CCavanThread(void) : next(NULL), mState(CAVAN_THREAD_STATE_STOPED) {}
+	CCavanThread(int nIndex) : next(NULL), mIndex(nIndex), mState(CAVAN_THREAD_STATE_STOPED) {}
 	~CCavanThread(void);
 	virtual void Prepare(CCavanTransport *trspService, WORD wProxyPort, CProxyProcotolType nProxyProtocol, DWORD dwProxyIP) = 0;
-	virtual bool Start(int index);
+	virtual bool Start(void);
 	virtual void Stop(void);
 
 private:
@@ -61,7 +61,6 @@ public:
 	CCavanService(void) : mThreadHead(NULL), mDaemonCount(0) {};
 	virtual ~CCavanService(void);
 
-	void DestoryThreads(void);
 	virtual bool Start(void);
 	virtual void Stop(void);
 };

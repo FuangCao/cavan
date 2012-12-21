@@ -13,10 +13,13 @@
 
 #include "ProxyService.h"
 
+class CProxyThread;
+class CProxyService;
+
 class CProxyServerDlg : public CDialog
 {
 private:
-	CProxyService mProxyService;
+	CProxyService *mProxyService;
 // Construction
 public:
 	CProxyServerDlg(CWnd* pParent = NULL);	// standard constructor
@@ -24,13 +27,16 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CProxyServerDlg)
 	enum { IDD = IDD_PROXYSERVER_DIALOG };
-	CButton	m_ctrlButtonStop;
-	CButton	m_ctrlButtonStart;
+	CButton	m_ctrlRadioProxyProtocol;
+	CStatic	m_ctrlStatus;
+	CProgressCtrl	m_ctrlServiceProgress;
+	CListCtrl	m_ctrlListService;
 	CIPAddressCtrl	m_ctrlProxyIP;
 	int		m_nLocalProtocol;
 	int		m_nProxyProtocol;
 	short	m_dwLocalPort;
 	short	m_dwProxyPort;
+	DWORD	m_dwDaemonCount;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -51,10 +57,17 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnButtonStart();
 	afx_msg void OnButtonStop();
+	afx_msg void OnRadioProxyProtocol();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
+public:
 	CProxyProcotolType ValueToProtocolType(int value);
+	void ShowStatus(const char *strFormat, ...);
+	void EnableAllWindow(bool enable);
+
+	friend CProxyThread;
+	friend CProxyService;
 };
 
 //{{AFX_INSERT_LOCATION}}
