@@ -17,34 +17,32 @@ static char THIS_FILE[]=__FILE__;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CCavanThread::~CCavanThread()
-{
-	Stop();
-}
-
 void CCavanThread::ThreadHandler(void *data)
 {
 	CCavanThread *thread = (CCavanThread *)data;
+	thread->MainLoop();
+	_endthread();
+}
 
-	thread->mLock.Lock();
-	thread->mState = CAVAN_THREAD_STATE_RUNNING;
+void CCavanThread::MainLoop(void)
+{
+	mLock.Lock();
+	mState = CAVAN_THREAD_STATE_RUNNING;
 
-	while (thread->mState != CAVAN_THREAD_STATE_STOPPING)
+	while (mState != CAVAN_THREAD_STATE_STOPPING)
 	{
-		thread->mLock.Unlock();
+		mLock.Unlock();
 
-		if (thread->Run() == false)
+		if (Run() == false)
 		{
 			break;
 		}
 
-		thread->mLock.Lock();
+		mLock.Lock();
 	}
 
-	thread->mState = CAVAN_THREAD_STATE_STOPED;
-	thread->mLock.Unlock();
-
-	_endthread();
+	mState = CAVAN_THREAD_STATE_STOPED;
+	mLock.Unlock();
 }
 
 bool CCavanThread::Start(void)
@@ -80,11 +78,6 @@ void CCavanThread::Stop(void)
 }
 
 // ================================================================================
-
-CCavanService::~CCavanService()
-{
-	Stop();
-}
 
 bool CCavanService::Start(void)
 {

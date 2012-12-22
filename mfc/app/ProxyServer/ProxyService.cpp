@@ -63,16 +63,6 @@ bool CTransportTcpClient::Open(WORD port, DWORD ip)
 	return true;
 }
 
-int CTransportTcpClient::ReceiveData(void *buff, int size)
-{
-	return recv(mSocket, (char *)buff, size, 0);
-}
-
-int CTransportTcpClient::SendData(const void *buff, int size)
-{
-	return send(mSocket, (char *)buff, size, 0);
-}
-
 // ================================================================================
 
 bool CTransportAdbClient::CheckStatus(void)
@@ -130,7 +120,6 @@ bool CTransportAdbClient::SendText(const char *text)
 
 	if (CheckStatus() == false)
 	{
-		// CavanMessageBoxError("发送ADB命令 %s 失败 %s", text, mStatus);
 		return false;
 	}
 
@@ -164,7 +153,6 @@ bool CTransportAdbClient::Open(WORD port, DWORD ip)
 {
 	if (Connect(ip) == false)
 	{
-		// CavanMessageBoxError("连接到ADB服务器失败");
 		return false;
 	}
 
@@ -251,16 +239,6 @@ bool CTransportUdpClient::Open(WORD port, DWORD ip)
 	return true;
 }
 
-int CTransportUdpClient::ReceiveData(void *buff, int size)
-{
-	return recvfrom(mSocket, (char *)buff, size, 0, (struct sockaddr *)&mSockAddr, &mSockAddrLen);
-}
-
-int CTransportUdpClient::SendData(const void *buff, int size)
-{
-	return sendto(mSocket, (char *)buff, size, 0, (struct sockaddr *)&mSockAddr, mSockAddrLen);
-}
-
 // ================================================================================
 
 bool CTransportUdpService::Open(WORD port, DWORD ip)
@@ -304,20 +282,18 @@ CCavanTransport *CTransportUdpService::Accept(void *buff, int *size)
 
 // ================================================================================
 
-CProxyThread::CProxyThread(int nIndex, CListCtrl &list, CProgressCtrl &progress) : CCavanThread(nIndex), mListCtrl(list), mProgressCtrl(progress), mProxyTransport(NULL)
+void CProxyThread::Prepare(CCavanTransport *trspService, WORD wProxyPort, CProxyProcotolType nProxyProtocol, DWORD dwProxyIP)
 {
 	char buff[8];
 
-	sprintf(buff, "%02d", mIndex);
-	mListCtrl.InsertItem(mIndex, buff);
-}
-
-void CProxyThread::Prepare(CCavanTransport *trspService, WORD wProxyPort, CProxyProcotolType nProxyProtocol, DWORD dwProxyIP)
-{
 	mServiceTransport = trspService;
 	mProxyPort = wProxyPort;
 	mProxyProtocol = nProxyProtocol;
 	mProxyIP = dwProxyIP;
+
+	sprintf(buff, "%02d", mIndex);
+	mListCtrl.SetItemText(mIndex, 0, buff);
+	SetStatusText("准备");
 }
 
 bool CProxyThread::Run(void)
@@ -330,18 +306,17 @@ bool CProxyThread::Run(void)
 	SetIpText("-");
 	SetPortText("-");
 
-	CCavanTransport *trspClient = mServiceTransport->Accept(buff, &nLength);
-	if (trspClient == NULL)
+	mClientTransport = mServiceTransport->Accept(buff, &nLength);
+	if (mClientTransport == NULL)
 	{
 		return false;
 	}
 
 	SetStatusText("连接");
-	SetIpText(inet_ntoa(trspClient->mSockAddr.sin_addr));
-	SetPortText(ntohs(trspClient->mSockAddr.sin_port));
+	SetIpText(inet_ntoa(mClientTransport->mSockAddr.sin_addr));
+	SetPortText(ntohs(mClientTransport->mSockAddr.sin_port));
 
 	mProgressCtrl.OffsetPos(1);
-
 	if (mProxyTransport->Open(mProxyPort, mProxyIP) == false)
 	{
 		goto out_sub_progress;
@@ -355,10 +330,10 @@ bool CProxyThread::Run(void)
 	fd_set setRead;
 
 	FD_ZERO(&setRead);
-	FD_SET(trspClient->mSocket, &setRead);
+	FD_SET(mClientTransport->mSocket, &setRead);
 	FD_SET(mProxyTransport->mSocket, &setRead);
 
-	nFdCount = max(trspClient->mSocket, mProxyTransport->mSocket) + 1;
+	nFdCount = max(mClientTransport->mSocket, mProxyTransport->mSocket) + 1;
 
 	SetStatusText("运行");
 
@@ -369,10 +344,9 @@ bool CProxyThread::Run(void)
 		{
 			break;
 		}
-
-		if (FD_ISSET(trspClient->mSocket, &setRead))
+		if (FD_ISSET(mClientTransport->mSocket, &setRead))
 		{
-			nLength = trspClient->ReceiveData(buff, sizeof(buff));
+			nLength = mClientTransport->ReceiveData(buff, sizeof(buff));
 			if (nLength <= 0 || mProxyTransport->SendData(buff, nLength) < 0)
 			{
 				break;
@@ -380,13 +354,13 @@ bool CProxyThread::Run(void)
 		}
 		else
 		{
-			FD_SET(trspClient->mSocket, &setRead);
+			FD_SET(mClientTransport->mSocket, &setRead);
 		}
 
 		if (FD_ISSET(mProxyTransport->mSocket, &setRead))
 		{
 			nLength = mProxyTransport->ReceiveData(buff, sizeof(buff));
-			if (nLength <= 0 || trspClient->SendData(buff, nLength) < 0)
+			if (nLength <= 0 || mClientTransport->SendData(buff, nLength) < 0)
 			{
 				break;
 			}
@@ -403,7 +377,8 @@ out_close_proxy:
 	mProxyTransport->Close();
 out_sub_progress:
 	mProgressCtrl.OffsetPos(-1);
-	delete trspClient;
+	delete mClientTransport;
+	mClientTransport = NULL;
 
 	return true;
 }
@@ -448,6 +423,11 @@ void CProxyThread::Stop(void)
 		mProxyTransport->Close();
 	}
 
+	if (mClientTransport)
+	{
+		mClientTransport->Close();
+	}
+
 	CCavanThread::Stop();
 
 	if (mProxyTransport)
@@ -455,16 +435,13 @@ void CProxyThread::Stop(void)
 		delete mProxyTransport;
 		mProxyTransport = NULL;
 	}
+
+	SetStatusText("停止");
+	SetIpText("-");
+	SetPortText("-");
 }
 
 // ================================================================================
-
-CProxyService::~CProxyService()
-{
-	Stop();
-
-	DestoryThreads();
-}
 
 bool CProxyService::CreateThreads(void)
 {
@@ -473,9 +450,12 @@ bool CProxyService::CreateThreads(void)
 		return true;
 	}
 
+	CListCtrl &ctrlList = mProxyDialog->m_ctrlListService;
+	CProgressCtrl &ctrlProgress = mProxyDialog->m_ctrlServiceProgress;
+
 	for (int i = 0; i < mDaemonCount; i++)
 	{
-		CProxyThread *thread = new CProxyThread(i, mProxyDialog->m_ctrlListService, mProxyDialog->m_ctrlServiceProgress);
+		CProxyThread *thread = new CProxyThread(i, ctrlList, ctrlProgress);
 		if (thread == NULL)
 		{
 			continue;
@@ -483,6 +463,11 @@ bool CProxyService::CreateThreads(void)
 
 		thread->next = mThreadHead;
 		mThreadHead = thread;
+
+		ctrlList.InsertItem(0, "-");
+		ctrlList.SetItemText(0, 1, "-");
+		ctrlList.SetItemText(0, 2, "-");
+		ctrlList.SetItemText(0, 3, "-");
 	}
 
 	return true;
@@ -523,6 +508,10 @@ void CProxyService::Prepare(WORD wProxyPort, WORD wLocalPort, DWORD dwProxyIP, C
 	}
 
 	mDaemonCount = nDaemonCount;
+
+	CProgressCtrl &ctrlProgress = mProxyDialog->m_ctrlServiceProgress;
+	ctrlProgress.SetRange(0, mDaemonCount);
+	ctrlProgress.SetPos(0);
 }
 
 bool CProxyService::Start(void)
@@ -540,19 +529,19 @@ bool CProxyService::Start(void)
 		break;
 
 	default:
-		mProxyDialog->ShowStatus("未知的协议类型 %d", mLocalProtocol);
+		CavanMessageBoxError("未知的协议类型 %d", mLocalProtocol);
 		return false;
 	}
 
 	if (mServiceTransport == NULL)
 	{
-		mProxyDialog->ShowStatus("创建服务器套接字失败");
+		CavanMessageBoxError("创建服务器套接字失败");
 		return false;
 	}
 
 	if (CreateThreads() == false)
 	{
-		mProxyDialog->ShowStatus("分配存储空间失败");
+		CavanMessageBoxError("分配存储空间失败");
 		return false;
 	}
 
@@ -563,19 +552,17 @@ bool CProxyService::Start(void)
 
 	if (mServiceTransport->Open(mLocalPort, INADDR_ANY) == false)
 	{
-		mProxyDialog->ShowStatus("绑定到本地端口 %d 失败\n\n可能这个端口已经被占用了", mLocalPort);
+		CavanMessageBoxError("绑定到本地端口 %d 失败\n\n可能这个端口已经被占用了", mLocalPort);
 		return false;
 	}
 
 	if (CCavanService::Start() == false)
 	{
-		mProxyDialog->ShowStatus("启动服务器失败");
+		CavanMessageBoxError("启动服务器失败");
 		mServiceTransport->Close();
 		return false;
 	}
 
-	mProxyDialog->m_ctrlServiceProgress.SetRange(0, mDaemonCount);
-	mProxyDialog->m_ctrlServiceProgress.SetPos(0);
 	mProxyDialog->ShowStatus("服务器正在运行");
 
 	return true;
@@ -584,6 +571,8 @@ bool CProxyService::Start(void)
 void CProxyService::Stop(void)
 {
 	CSingleLock lock(&mLock);
+
+	mProxyDialog->ShowStatus("正在停止服务器");
 
 	if (mServiceTransport)
 	{
@@ -594,7 +583,6 @@ void CProxyService::Stop(void)
 		mServiceTransport = NULL;
 	}
 
-	DestoryThreads();
-
 	mProxyDialog->ShowStatus("服务器已停止运行");
+	mProxyDialog->m_ctrlServiceProgress.SetPos(0);
 }

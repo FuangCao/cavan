@@ -65,6 +65,11 @@ public:
 	CProxyProcotolType ValueToProtocolType(int value);
 	void ShowStatus(const char *strFormat, ...);
 	void EnableAllWindow(bool enable);
+	bool StartAdbServer(void);
+	bool EnableService(bool enable);
+
+	static void StartThreadHandler(void *data);
+	static void StopThreadHandler(void *data);
 
 	friend CProxyThread;
 	friend CProxyService;

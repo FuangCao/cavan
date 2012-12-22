@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "ProxyServer.h"
 #include "ProxyServerDlg.h"
+#include <process.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -89,7 +90,6 @@ void CProxyServerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_LOCAL_PORT, m_dwLocalPort);
 	DDX_Text(pDX, IDC_EDIT_PROXY_PORT, m_dwProxyPort);
 	DDX_Text(pDX, IDC_EDIT_DAEMON_COUNT, m_dwDaemonCount);
-	DDV_MinMaxDWord(pDX, m_dwDaemonCount, 10, 1000);
 	//}}AFX_DATA_MAP
 }
 
@@ -258,38 +258,93 @@ void CProxyServerDlg::EnableAllWindow(bool enable)
 	}
 }
 
+bool CProxyServerDlg::StartAdbServer(void)
+{
+	ShowStatus("正在启动ADB服务器 请稍等");
+
+	if (ExecuteCommand("adb", "start-server"))
+	{
+		ShowStatus("启动ADB服务器成功");
+		return true;
+	}
+
+	ShowStatus("启动ADB服务器成功失败");
+
+	return false;
+}
+
+void CProxyServerDlg::StartThreadHandler(void *data)
+{
+	CProxyServerDlg *dlg = (CProxyServerDlg *)data;
+	CButton *btnStart = (CButton *)dlg->GetDlgItem(IDC_BUTTON_START);
+
+	btnStart->EnableWindow(false);
+
+	if (dlg->EnableService(true))
+	{
+		dlg->EnableAllWindow(false);
+	}
+	else
+	{
+		btnStart->EnableWindow(true);
+	}
+}
+
+void CProxyServerDlg::StopThreadHandler(void *data)
+{
+	CProxyServerDlg *dlg = (CProxyServerDlg *)data;
+	CButton *btnStop = (CButton *)dlg->GetDlgItem(IDC_BUTTON_STOP);
+
+	btnStop->EnableWindow(false);
+	dlg->EnableService(false);
+	dlg->EnableAllWindow(true);
+}
+
+bool CProxyServerDlg::EnableService(bool enable)
+{
+	if (enable)
+	{
+		DWORD dwAddress;
+		m_ctrlProxyIP.GetAddress(dwAddress);
+
+		if (dwAddress == INADDR_LOOPBACK && m_nLocalProtocol == m_nProxyProtocol && m_dwLocalPort == m_dwProxyPort)
+		{
+			CavanMessageBoxError("自己不能代理自己");
+			return false;
+		}
+
+		if (m_nProxyProtocol == 2 && StartAdbServer() == false)
+		{
+			CavanMessageBoxError("启动ADB服务器失败");
+			return false;
+		}
+
+		mProxyService->Prepare(m_dwProxyPort, m_dwLocalPort, dwAddress, ValueToProtocolType(m_nLocalProtocol), ValueToProtocolType(m_nProxyProtocol), m_dwDaemonCount);
+
+		return mProxyService->Start();
+	}
+	else
+	{
+		mProxyService->Stop();
+		EnableAllWindow(true);
+
+		return true;
+	}
+}
+
 void CProxyServerDlg::OnButtonStart()
 {
 	UpdateData(true);
 
-	DWORD dwAddress;
-	m_ctrlProxyIP.GetAddress(dwAddress);
-
-	if (dwAddress == INADDR_LOOPBACK && m_nLocalProtocol == m_nProxyProtocol && m_dwLocalPort == m_dwProxyPort)
-	{
-		CavanMessageBoxError("自己不能代理自己");
-	}
-	else
-	{
-		mProxyService->Prepare(m_dwProxyPort, m_dwLocalPort, dwAddress, ValueToProtocolType(m_nLocalProtocol), ValueToProtocolType(m_nProxyProtocol), m_dwDaemonCount);
-		if (mProxyService->Start())
-		{
-			EnableAllWindow(false);
-		}
-		else
-		{
-			CavanMessageBoxError("启动服务器失败");
-		}
-	}
+	_beginthread(StartThreadHandler, 0, this);
 }
 
 void CProxyServerDlg::OnButtonStop()
 {
-	mProxyService->Stop();
-	EnableAllWindow(true);
+	_beginthread(StopThreadHandler, 0, this);
 }
 
-void CProxyServerDlg::OnRadioProxyProtocol() 
+void CProxyServerDlg::OnRadioProxyProtocol()
 {
 	UpdateData(true);
 

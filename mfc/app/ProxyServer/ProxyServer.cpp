@@ -173,3 +173,56 @@ DWORD TextToValue(const char *text, int base)
 
 	return dwValue;
 }
+
+bool ExecuteCommand(const char *command, const char *strFormat, ...)
+{
+	char args[1024];
+
+	if (strFormat)
+	{
+		va_list ap;
+
+		va_start(ap, strFormat);
+		_vsnprintf(args, sizeof(args), strFormat, ap);
+		va_end(ap);
+	}
+	else
+	{
+		args[0] = 0;
+	}
+
+	SHELLEXECUTEINFO ShExecInfo;
+	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+	ShExecInfo.hwnd = NULL;
+	ShExecInfo.lpVerb = NULL;
+	ShExecInfo.lpFile = command;
+	ShExecInfo.lpParameters = args;
+	ShExecInfo.lpDirectory = NULL;
+	ShExecInfo.nShow = SW_HIDE;
+	ShExecInfo.hInstApp = NULL;
+
+	if (ShellExecuteEx(&ShExecInfo) == false)
+	{
+		return false;
+	}
+
+	WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
+
+	DWORD dwExitCode;
+	bool bRes;
+
+	if (GetExitCodeProcess(ShExecInfo.hProcess, &dwExitCode) && dwExitCode == 0)
+	{
+		bRes = true;
+	}
+	else
+	{
+		bRes = false;
+	}
+
+	CloseHandle(ShExecInfo.hProcess);
+
+	return bRes;
+}
+

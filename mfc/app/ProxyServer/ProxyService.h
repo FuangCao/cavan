@@ -66,8 +66,16 @@ class CTransportTcpClient : public CCavanTransport
 public:
 	CTransportTcpClient(SOCKET sockfd = INVALID_SOCKET, struct sockaddr_in *addr = NULL) : CCavanTransport(sockfd, addr) {}
 	virtual bool Open(WORD port, DWORD ip = INADDR_LOOPBACK);
-	virtual int ReceiveData(void *buff, int size);
-	virtual int SendData(const void *buff, int size);
+
+	virtual int ReceiveData(void *buff, int size)
+	{
+		return recv(mSocket, (char *)buff, size, 0);
+	}
+
+	virtual int SendData(const void *buff, int size)
+	{
+		return send(mSocket, (char *)buff, size, 0);
+	}
 };
 
 class CTransportAdbClient : public CTransportTcpClient
@@ -96,8 +104,16 @@ class CTransportUdpClient : public CCavanTransport
 public:
 	CTransportUdpClient(SOCKET sockfd = INVALID_SOCKET, struct sockaddr_in *addr = NULL, bool bNeedClose = true) : CCavanTransport(sockfd, addr, bNeedClose) {}
 	virtual bool Open(WORD port, DWORD ip = INADDR_LOOPBACK);
-	virtual int ReceiveData(void *buff, int size);
-	virtual int SendData(const void *buff, int size);
+
+	virtual int ReceiveData(void *buff, int size)
+	{
+		return recvfrom(mSocket, (char *)buff, size, 0, (struct sockaddr *)&mSockAddr, &mSockAddrLen);
+	}
+
+	virtual int SendData(const void *buff, int size)
+	{
+		return sendto(mSocket, (char *)buff, size, 0, (struct sockaddr *)&mSockAddr, mSockAddrLen);
+	}
 };
 
 class CTransportUdpService : public CTransportUdpClient
@@ -112,6 +128,7 @@ class CProxyThread : public CCavanThread
 private:
 	CMutex mLock;
 	CCavanTransport *mServiceTransport;
+	CCavanTransport *mClientTransport;
 	CCavanTransport *mProxyTransport;
 	WORD mProxyPort;
 	DWORD mProxyIP;
@@ -123,7 +140,9 @@ protected:
 	virtual bool Run(void);
 
 public:
-	CProxyThread(int nIndex, CListCtrl &list, CProgressCtrl &progess);
+	CProxyThread(int nIndex, CListCtrl &list, CProgressCtrl &progress) :
+		CCavanThread(nIndex), mListCtrl(list), mProgressCtrl(progress), mProxyTransport(NULL), mClientTransport(NULL) {}
+
 	virtual void Prepare(CCavanTransport *trspService, WORD wProxyPort = 8888, CProxyProcotolType nProxyProtocol = PROXY_PROTOCOL_TYPE_ADB, DWORD dwProxyIP = INADDR_LOOPBACK);
 	virtual bool Start(void);
 	virtual void Stop(void);
@@ -165,8 +184,15 @@ private:
 	CProxyServerDlg *mProxyDialog;
 
 public:
-	CProxyService(CProxyServerDlg *dlg) : CCavanService(), mProxyDialog(dlg), mLocalPort(8888), mProxyPort(8888), mProxyIP(INADDR_LOOPBACK), mLocalProtocol(PROXY_PROTOCOL_TYPE_TCP), mProxyProtocol(PROXY_PROTOCOL_TYPE_ADB), mServiceTransport(NULL) {}
-	virtual ~CProxyService();
+	CProxyService(CProxyServerDlg *dlg) :
+		CCavanService(), mProxyDialog(dlg), mLocalPort(8888), mProxyPort(8888), mProxyIP(INADDR_LOOPBACK),
+		mLocalProtocol(PROXY_PROTOCOL_TYPE_TCP), mProxyProtocol(PROXY_PROTOCOL_TYPE_ADB), mServiceTransport(NULL) {}
+
+	virtual ~CProxyService()
+	{
+		Stop();
+		DestoryThreads();
+	}
 
 	void Prepare(WORD wProxyPort, WORD wLocalPort = 8888, DWORD dwProxyIP = INADDR_LOOPBACK, CProxyProcotolType nLocalProtocol = PROXY_PROTOCOL_TYPE_TCP, CProxyProcotolType nProxyProtocol = PROXY_PROTOCOL_TYPE_ADB, int nDaemonCount = 20);
 	bool CreateThreads(void);
