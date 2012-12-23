@@ -60,6 +60,6 @@ void CavanMessageBoxInfo(const char *strFormat, ...);
 int TextLhCmp(const char *left, const char *right);
 int CharToValue(char c);
 DWORD TextToValue(const char *text, int base);
-bool ExecuteCommand(const char *command, const char *strFormat, ...);
+bool ExecuteCommand(const char *strCommandName, const char *strArgFormat, ...);
 
 #endif // !defined(AFX_PROXYSERVER_H__46CF4C33_4D3A_42B3_9715_E6B0F1BE9608__INCLUDED_)

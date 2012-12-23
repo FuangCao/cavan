@@ -17,17 +17,15 @@ static char THIS_FILE[]=__FILE__;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CCavanTransport::CCavanTransport(SOCKET sockfd, struct sockaddr_in *addr, bool bNeedClose)
+CCavanTransport::CCavanTransport(CProxyProcotolType type, SOCKET sockfd, struct sockaddr_in *addr, bool bNeedClose)
+	: mType(type), mSocket(sockfd), mNeedClose(bNeedClose)
 {
-	mSocket = sockfd;
-
 	if (addr)
 	{
 		mSockAddr = *addr;
 	}
 
 	mSockAddrLen = sizeof(mSockAddr);
-	mNeedClose = bNeedClose;
 }
 
 void CCavanTransport::Close(void)
@@ -293,7 +291,7 @@ void CProxyThread::Prepare(CCavanTransport *trspService, WORD wProxyPort, CProxy
 
 	sprintf(buff, "%02d", mIndex);
 	mListCtrl.SetItemText(mIndex, 0, buff);
-	SetStatusText("×¼±¸");
+	SetStatusText("¿ÕÏÐ");
 }
 
 bool CProxyThread::Run(void)
@@ -387,28 +385,41 @@ bool CProxyThread::Start(void)
 {
 	CSingleLock lock(&mLock);
 
-	if (mServiceTransport == NULL || mProxyTransport)
+	if (mServiceTransport == NULL)
 	{
 		return false;
 	}
 
-	switch (mProxyProtocol)
+	if (mProxyTransport && mProxyTransport->mType != mProxyProtocol)
 	{
-	case PROXY_PROTOCOL_TYPE_TCP:
-		mProxyTransport = new CTransportTcpClient();
-		break;
-
-	case PROXY_PROTOCOL_TYPE_UDP:
-		mProxyTransport = new CTransportUdpClient();
-		break;
-
-	case PROXY_PROTOCOL_TYPE_ADB:
-		mProxyTransport = new CTransportAdbClient();
-		break;
-
-	default:
+		if (mIndex == 0)
+			CavanMessageBoxPos("CProxyThread::Start");
+		delete mProxyTransport;
 		mProxyTransport = NULL;
-		return false;
+	}
+
+	if (mProxyTransport == NULL)
+	{
+		if (mIndex == 0)
+			CavanMessageBoxPos("CProxyThread::Start");
+		switch (mProxyProtocol)
+		{
+		case PROXY_PROTOCOL_TYPE_TCP:
+			mProxyTransport = new CTransportTcpClient();
+			break;
+
+		case PROXY_PROTOCOL_TYPE_UDP:
+			mProxyTransport = new CTransportUdpClient();
+			break;
+
+		case PROXY_PROTOCOL_TYPE_ADB:
+			mProxyTransport = new CTransportAdbClient();
+			break;
+
+		default:
+			SetStatusText("´íÎó");
+			return false;
+		}
 	}
 
 	return CCavanThread::Start();
@@ -429,12 +440,6 @@ void CProxyThread::Stop(void)
 	}
 
 	CCavanThread::Stop();
-
-	if (mProxyTransport)
-	{
-		delete mProxyTransport;
-		mProxyTransport = NULL;
-	}
 
 	SetStatusText("Í£Ö¹");
 	SetIpText("-");

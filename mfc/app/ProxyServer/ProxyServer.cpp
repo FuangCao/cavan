@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "ProxyServer.h"
 #include "ProxyServerDlg.h"
+#include <errno.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -174,16 +175,16 @@ DWORD TextToValue(const char *text, int base)
 	return dwValue;
 }
 
-bool ExecuteCommand(const char *command, const char *strFormat, ...)
+bool ExecuteCommand(const char *strCommandName, const char *strArgFormat, ...)
 {
 	char args[1024];
 
-	if (strFormat)
+	if (strArgFormat)
 	{
 		va_list ap;
 
-		va_start(ap, strFormat);
-		_vsnprintf(args, sizeof(args), strFormat, ap);
+		va_start(ap, strArgFormat);
+		_vsnprintf(args, sizeof(args), strArgFormat, ap);
 		va_end(ap);
 	}
 	else
@@ -193,10 +194,10 @@ bool ExecuteCommand(const char *command, const char *strFormat, ...)
 
 	SHELLEXECUTEINFO ShExecInfo;
 	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI;
 	ShExecInfo.hwnd = NULL;
 	ShExecInfo.lpVerb = NULL;
-	ShExecInfo.lpFile = command;
+	ShExecInfo.lpFile = strCommandName;
 	ShExecInfo.lpParameters = args;
 	ShExecInfo.lpDirectory = NULL;
 	ShExecInfo.nShow = SW_HIDE;
@@ -204,7 +205,35 @@ bool ExecuteCommand(const char *command, const char *strFormat, ...)
 
 	if (ShellExecuteEx(&ShExecInfo) == false)
 	{
-		return false;
+		if (GetLastError() != ENOENT)
+		{
+			return false;
+		}
+
+		int ret;
+		char buff[1024];
+
+		_snprintf(buff, sizeof(buff), "找不到命令 %s\n\n是否手动选择？", strCommandName);
+		ret = AfxMessageBox(buff, MB_ICONQUESTION | MB_YESNO, 0);
+		if (ret != IDYES)
+		{
+			return false;
+		}
+
+		_snprintf(buff, sizeof(buff), "%s 文件|%s|可执行文件 (*.exe)|*.exe|所有文件 (*)|*||", strCommandName, strCommandName);
+		CFileDialog fileDialog(true, NULL, strCommandName, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, buff);
+		ret = fileDialog.DoModal();
+		if (ret != IDOK)
+		{
+			return false;
+		}
+
+		strcpy(buff, fileDialog.GetPathName());
+		ShExecInfo.lpFile = buff;
+		if (ShellExecuteEx(&ShExecInfo) == false)
+		{
+			return false;
+		}
 	}
 
 	WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
@@ -225,4 +254,3 @@ bool ExecuteCommand(const char *command, const char *strFormat, ...)
 
 	return bRes;
 }
-

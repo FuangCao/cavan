@@ -262,13 +262,13 @@ bool CProxyServerDlg::StartAdbServer(void)
 {
 	ShowStatus("正在启动ADB服务器 请稍等");
 
-	if (ExecuteCommand("adb", "start-server"))
+	if (ExecuteCommand("adb.exe", "start-server"))
 	{
 		ShowStatus("启动ADB服务器成功");
 		return true;
 	}
 
-	ShowStatus("启动ADB服务器成功失败");
+	ShowStatus("启动ADB服务器失败");
 
 	return false;
 }
@@ -315,7 +315,6 @@ bool CProxyServerDlg::EnableService(bool enable)
 
 		if (m_nProxyProtocol == 2 && StartAdbServer() == false)
 		{
-			CavanMessageBoxError("启动ADB服务器失败");
 			return false;
 		}
 

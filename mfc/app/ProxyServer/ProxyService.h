@@ -32,12 +32,13 @@ private:
 	bool mNeedClose;
 
 protected:
+	const CProxyProcotolType mType;
 	SOCKET mSocket;
 	struct sockaddr_in mSockAddr;
 	int mSockAddrLen;
 
 public:
-	CCavanTransport(SOCKET sockfd, struct sockaddr_in *addr, bool bNeedClose = true);
+	CCavanTransport(CProxyProcotolType type, SOCKET sockfd, struct sockaddr_in *addr, bool bNeedClose = true);
 	virtual ~CCavanTransport()
 	{
 		Close();
@@ -64,7 +65,7 @@ public:
 class CTransportTcpClient : public CCavanTransport
 {
 public:
-	CTransportTcpClient(SOCKET sockfd = INVALID_SOCKET, struct sockaddr_in *addr = NULL) : CCavanTransport(sockfd, addr) {}
+	CTransportTcpClient(SOCKET sockfd = INVALID_SOCKET, struct sockaddr_in *addr = NULL, CProxyProcotolType type = PROXY_PROTOCOL_TYPE_TCP) : CCavanTransport(type, sockfd, addr) {}
 	virtual bool Open(WORD port, DWORD ip = INADDR_LOOPBACK);
 
 	virtual int ReceiveData(void *buff, int size)
@@ -84,6 +85,7 @@ private:
 	char mStatus[1024];
 
 public:
+	CTransportAdbClient(SOCKET sockfd = INVALID_SOCKET, struct sockaddr_in *addr = NULL, CProxyProcotolType type = PROXY_PROTOCOL_TYPE_ADB) : CTransportTcpClient(sockfd, addr, type) {}
 	virtual bool Open(WORD port = 8888, DWORD ip = INADDR_ANY);
 
 	bool Connect(DWORD ip);
@@ -102,7 +104,7 @@ public:
 class CTransportUdpClient : public CCavanTransport
 {
 public:
-	CTransportUdpClient(SOCKET sockfd = INVALID_SOCKET, struct sockaddr_in *addr = NULL, bool bNeedClose = true) : CCavanTransport(sockfd, addr, bNeedClose) {}
+	CTransportUdpClient(SOCKET sockfd = INVALID_SOCKET, struct sockaddr_in *addr = NULL, bool bNeedClose = true) : CCavanTransport(PROXY_PROTOCOL_TYPE_UDP, sockfd, addr, bNeedClose) {}
 	virtual bool Open(WORD port, DWORD ip = INADDR_LOOPBACK);
 
 	virtual int ReceiveData(void *buff, int size)
@@ -142,6 +144,16 @@ protected:
 public:
 	CProxyThread(int nIndex, CListCtrl &list, CProgressCtrl &progress) :
 		CCavanThread(nIndex), mListCtrl(list), mProgressCtrl(progress), mProxyTransport(NULL), mClientTransport(NULL) {}
+
+	virtual ~CProxyThread(void)
+	{
+		Stop();
+
+		if (mProxyTransport)
+		{
+			delete mProxyTransport;
+		}
+	}
 
 	virtual void Prepare(CCavanTransport *trspService, WORD wProxyPort = 8888, CProxyProcotolType nProxyProtocol = PROXY_PROTOCOL_TYPE_ADB, DWORD dwProxyIP = INADDR_LOOPBACK);
 	virtual bool Start(void);
