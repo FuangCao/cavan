@@ -68,9 +68,12 @@ class CavanProgressBar:
 		self.update()
 
 	def finish(self):
-		self.current = self.total
-		self.update()
-		print
+		if self.current < self.total:
+			self.current = self.total
+			self.update()
+
+		if not SVN_REPO_DEBUG:
+			print
 
 class SvnRreoManager:
 	def __init__(self):

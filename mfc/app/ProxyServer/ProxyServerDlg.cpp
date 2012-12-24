@@ -12,6 +12,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#define WM_SHOW_TASK	(WM_USER + 1)
+
 /////////////////////////////////////////////////////////////////////////////
 // CAboutDlg dialog used for App About
 
@@ -74,6 +76,7 @@ CProxyServerDlg::CProxyServerDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	mProxyService = new CProxyService(this);
+	mServiceRunning = false;
 }
 
 void CProxyServerDlg::DoDataExchange(CDataExchange* pDX)
@@ -101,8 +104,15 @@ BEGIN_MESSAGE_MAP(CProxyServerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_START, OnButtonStart)
 	ON_BN_CLICKED(IDC_BUTTON_STOP, OnButtonStop)
 	ON_BN_CLICKED(IDC_RADIO_PROXY_TCP, OnRadioProxyProtocol)
+	ON_WM_DESTROY()
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_MENUITEM_EXIT, OnMenuitemExit)
 	ON_BN_CLICKED(IDC_RADIO_PROXY_UDP, OnRadioProxyProtocol)
 	ON_BN_CLICKED(IDC_RADIO_PROXY_ADB, OnRadioProxyProtocol)
+	ON_COMMAND(ID_MENUITEM_START, OnButtonStart)
+	ON_COMMAND(ID_MENUITEM_STOP, OnButtonStop)
+	ON_COMMAND(ID_MENUITEM_VISIBLE, OnMenuitemVisible)
+	ON_MESSAGE(WM_SHOW_TASK, OnNotifyIconProxy)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -144,6 +154,17 @@ BOOL CProxyServerDlg::OnInitDialog()
 	m_ctrlListService.InsertColumn(2, "IP地址", LVCFMT_LEFT, 100, -1);
 	m_ctrlListService.InsertColumn(3, "端口号", LVCFMT_LEFT, 60, -1);
 
+	mNotifyIconData.cbSize = sizeof(mNotifyIconData);
+	mNotifyIconData.hIcon = m_hIcon;
+	mNotifyIconData.hWnd = GetSafeHwnd();
+	mNotifyIconData.uID = IDR_MAINFRAME;
+	strcpy(mNotifyIconData.szTip, "代理服务器");
+	mNotifyIconData.uCallbackMessage = WM_SHOW_TASK;
+	mNotifyIconData.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
+	Shell_NotifyIcon(NIM_ADD, &mNotifyIconData);
+
+	mProxyMenu.LoadMenu(IDR_MENU_PROXY);
+
 	OnRadioProxyProtocol();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -151,13 +172,23 @@ BOOL CProxyServerDlg::OnInitDialog()
 
 void CProxyServerDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+	switch (nID & 0xFFF0)
 	{
-		CAboutDlg dlgAbout;
-		dlgAbout.DoModal();
-	}
-	else
-	{
+	case IDM_ABOUTBOX:
+		{
+			CAboutDlg dlgAbout;
+			dlgAbout.DoModal();
+		}
+		break;
+
+	case SC_CLOSE:
+		if (mServiceRunning && CavanMessageBoxYesNo("服务器正在运行，是否最小化到托盘？"))
+		{
+			ShowWindow(SW_HIDE);
+			break;
+		}
+
+	default:
 		CDialog::OnSysCommand(nID, lParam);
 	}
 }
@@ -302,6 +333,8 @@ void CProxyServerDlg::StopThreadHandler(void *data)
 
 bool CProxyServerDlg::EnableService(bool enable)
 {
+	const char *strResult;
+
 	if (enable)
 	{
 		DWORD dwAddress;
@@ -320,15 +353,27 @@ bool CProxyServerDlg::EnableService(bool enable)
 
 		mProxyService->Prepare(m_dwProxyPort, m_dwLocalPort, dwAddress, ValueToProtocolType(m_nLocalProtocol), ValueToProtocolType(m_nProxyProtocol), m_dwDaemonCount);
 
-		return mProxyService->Start();
+		if (mProxyService->Start() == false)
+		{
+			return false;
+		}
+
+		mServiceRunning = true;
+		strResult = "启动";
 	}
 	else
 	{
 		mProxyService->Stop();
-		EnableAllWindow(true);
-
-		return true;
+		mServiceRunning = false;
+		strResult = "停止";
 	}
+
+	if (IsWindowVisible() == false)
+	{
+		CavanMessageBoxInfo("代理服务器已%s", strResult);
+	}
+
+	return true;
 }
 
 void CProxyServerDlg::OnButtonStart()
@@ -354,5 +399,70 @@ void CProxyServerDlg::OnRadioProxyProtocol()
 	else
 	{
 		m_ctrlProxyIP.EnableWindow(true);
+	}
+}
+
+void CProxyServerDlg::OnDestroy()
+{
+	CDialog::OnDestroy();
+
+	Shell_NotifyIcon(NIM_DELETE, &mNotifyIconData);
+}
+
+LRESULT CProxyServerDlg::OnNotifyIconProxy(WPARAM wParam, LPARAM lParam)
+{
+	switch (lParam)
+	{
+	case WM_RBUTTONUP:
+		{
+			CPoint point;
+			GetCursorPos(&point);
+			SetForegroundWindow();
+			OnContextMenu(this, point);
+		}
+		break;
+
+	case WM_LBUTTONUP:
+		ShowWindow(SW_SHOW);
+		SetForegroundWindow();
+		break;
+	}
+
+	return 0;
+}
+
+void CProxyServerDlg::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	CMenu *menu = mProxyMenu.GetSubMenu(0);
+
+	menu->EnableMenuItem(ID_MENUITEM_START, mServiceRunning);
+	menu->EnableMenuItem(ID_MENUITEM_STOP, mServiceRunning == false);
+
+	if (IsWindowVisible())
+	{
+		menu->ModifyMenu(ID_MENUITEM_VISIBLE, MF_BYCOMMAND, ID_MENUITEM_VISIBLE, "隐藏主界面");
+	}
+	else
+	{
+		menu->ModifyMenu(ID_MENUITEM_VISIBLE, MF_BYCOMMAND, ID_MENUITEM_VISIBLE, "显示主界面");
+	}
+
+	menu->TrackPopupMenu(TPM_LEFTALIGN, point.x , point.y, this);
+}
+
+void CProxyServerDlg::OnMenuitemExit()
+{
+	PostQuitMessage(0);
+}
+
+void CProxyServerDlg::OnMenuitemVisible()
+{
+	if (IsWindowVisible())
+	{
+		ShowWindow(SW_HIDE);
+	}
+	else
+	{
+		ShowWindow(SW_SHOW);
 	}
 }

@@ -297,7 +297,7 @@ out_close_fd:
 	return ret;
 }
 
-static int tcp_dd_handle_exec_request(int sockfd, struct tcp_dd_exec_request *req)
+static int tcp_dd_handle_exec_request(int sockfd, struct tcp_dd_exec_request *req, struct sockaddr_in *addr)
 {
 	int ret;
 
@@ -308,10 +308,12 @@ static int tcp_dd_handle_exec_request(int sockfd, struct tcp_dd_exec_request *re
 		return ret;
 	}
 
+	setenv(CAVAN_IP_ENV_NAME, inet_ntoa(addr->sin_addr), 1);
+
 	return cavan_exec_redirect_stdio_main(req->command, req->lines, req->columns, sockfd, sockfd);
 }
 
-static int tcp_dd_handle_request(int sockfd)
+static int tcp_dd_handle_request(int sockfd, struct sockaddr_in *addr)
 {
 	int ret;
 	struct tcp_dd_package pkg;
@@ -337,7 +339,7 @@ static int tcp_dd_handle_request(int sockfd)
 
 	case TCP_DD_EXEC:
 		pr_bold_info("TCP_DD_EXEC");
-		ret = tcp_dd_handle_exec_request(sockfd, &pkg.exec_req);
+		ret = tcp_dd_handle_exec_request(sockfd, &pkg.exec_req, addr);
 		break;
 
 	default:
@@ -366,7 +368,7 @@ static int tcp_dd_daemon_handle(int index, cavan_shared_data_t data)
 
 	inet_show_sockaddr(&addr);
 
-	ret = tcp_dd_handle_request(client_sockfd);
+	ret = tcp_dd_handle_request(client_sockfd, &addr);
 	msleep(100);
 	inet_close_tcp_socket(client_sockfd);
 

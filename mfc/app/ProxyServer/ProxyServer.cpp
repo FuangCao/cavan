@@ -80,13 +80,13 @@ BOOL CProxyServerApp::InitInstance()
 	return FALSE;
 }
 
-void CavanMessageBox(UINT nType, const char *strFormat, va_list ap)
+int CavanMessageBox(UINT nType, const char *strFormat, va_list ap)
 {
 	char buff[1024];
 
 	_vsnprintf(buff, sizeof(buff), strFormat, ap);
 
-	AfxMessageBox(buff, nType);
+	return AfxMessageBox(buff, nType);
 }
 
 void CavanMessageBoxError(const char *strFormat, ...)
@@ -114,6 +114,18 @@ void CavanMessageBoxInfo(const char *strFormat, ...)
 	va_start(ap, strFormat);
 	CavanMessageBox(MB_ICONINFORMATION, strFormat, ap);
 	va_end(ap);
+}
+
+bool CavanMessageBoxYesNo(const char *strFormat, ...)
+{
+	int ret;
+	va_list ap;
+
+	va_start(ap, strFormat);
+	ret = CavanMessageBox(MB_ICONQUESTION | MB_YESNO, strFormat, ap);
+	va_end(ap);
+
+	return ret == IDYES;
 }
 
 int TextLhCmp(const char *left, const char *right)

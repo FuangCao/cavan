@@ -16,15 +16,16 @@ enum
 	LOCAL_COMMAND_OPTION_UNKNOWN,
 	LOCAL_COMMAND_OPTION_HELP,
 	LOCAL_COMMAND_OPTION_VERSION,
+	LOCAL_COMMAND_OPTION_LOCAL
 };
 
 static void show_usage(const char *command)
 {
-	println("Usage:");
-	println("%s [option] <-r|-w> src_files dest", command);
+	println("Usage: %s [option] <-r|-w> src_files dest_dir", command);
 	println("--help, -h, -H\t\tshow this help");
 	println("--version, -v, -V\tshow version");
 	println("--ip, -i, -I\t\tserver ip address");
+	println("--local, -l, -L\t\tuse localhost ip");
 	println("--port, -p, -P\t\tserver port");
 	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
 	println("-w, -W, -s, -S\t\tsend file");
@@ -68,6 +69,12 @@ int main(int argc, char *argv[])
 			.val = 'a',
 		},
 		{
+			.name = "local",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_LOCAL,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -83,7 +90,7 @@ int main(int argc, char *argv[])
 	cavan_get_server_ip(file_req.ip);
 	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
-	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRAa", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRAalL", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -100,6 +107,10 @@ int main(int argc, char *argv[])
 			show_usage(argv[0]);
 			return 0;
 
+		case 'l':
+		case 'L':
+		case LOCAL_COMMAND_OPTION_LOCAL:
+			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
 			text_copy(file_req.ip, optarg);
