@@ -52,11 +52,11 @@ public:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-int CavanMessageBox(UINT nType, const char *strFormat, va_list ap);
-void CavanMessageBoxError(const char *strFormat, ...);
-void CavanMessageBoxWarning(const char *strFormat, ...);
-void CavanMessageBoxInfo(const char *strFormat, ...);
-bool CavanMessageBoxYesNo(const char *strFormat, ...);
+int CavanMessageBox(UINT nType, const char *strTitle, const char *strFormat, va_list ap);
+void CavanMessageBoxError(const char *strTitle, const char *strFormat, ...);
+void CavanMessageBoxWarning(const char *strTitle, const char *strFormat, ...);
+void CavanMessageBoxInfo(const char *strTitle, const char *strFormat, ...);
+bool CavanMessageBoxYesNo(const char *strTitle, const char *strFormat, ...);
 
 int TextLhCmp(const char *left, const char *right);
 int CharToValue(char c);

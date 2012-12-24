@@ -23,6 +23,7 @@ private:
 	bool mServiceRunning;
 	NOTIFYICONDATA mNotifyIconData;
 	CMenu mProxyMenu;
+	CMenu *mContextMenu;
 // Construction
 public:
 	CProxyServerDlg(CWnd* pParent = NULL);	// standard constructor

@@ -148,7 +148,6 @@ BOOL CProxyServerDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	m_ctrlProxyIP.SetAddress(127, 0, 0, 1);
-	GetDlgItem(IDC_BUTTON_STOP)->EnableWindow(false);
 	m_ctrlListService.InsertColumn(0, "ID", LVCFMT_LEFT, 50, -1);
 	m_ctrlListService.InsertColumn(1, "状态", LVCFMT_LEFT, 50, -1);
 	m_ctrlListService.InsertColumn(2, "IP地址", LVCFMT_LEFT, 100, -1);
@@ -164,8 +163,9 @@ BOOL CProxyServerDlg::OnInitDialog()
 	Shell_NotifyIcon(NIM_ADD, &mNotifyIconData);
 
 	mProxyMenu.LoadMenu(IDR_MENU_PROXY);
+	mContextMenu = mProxyMenu.GetSubMenu(0);
 
-	OnRadioProxyProtocol();
+	EnableAllWindow(true);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -182,7 +182,7 @@ void CProxyServerDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		break;
 
 	case SC_CLOSE:
-		if (mServiceRunning && CavanMessageBoxYesNo("服务器正在运行，是否最小化到托盘？"))
+		if (mServiceRunning && CavanMessageBoxYesNo("服务器正在运行", "是否最小化到系统托盘？"))
 		{
 			ShowWindow(SW_HIDE);
 			break;
@@ -280,12 +280,16 @@ void CProxyServerDlg::EnableAllWindow(bool enable)
 		GetDlgItem(IDC_IPADDRESS_PROXY)->EnableWindow(m_nProxyProtocol != 2);
 		GetDlgItem(IDC_BUTTON_START)->EnableWindow(true);
 		GetDlgItem(IDC_BUTTON_STOP)->EnableWindow(false);
+		mContextMenu->EnableMenuItem(ID_MENUITEM_START, false);
+		mContextMenu->EnableMenuItem(ID_MENUITEM_STOP, true);
 	}
 	else
 	{
 		GetDlgItem(IDC_IPADDRESS_PROXY)->EnableWindow(false);
 		GetDlgItem(IDC_BUTTON_START)->EnableWindow(false);
 		GetDlgItem(IDC_BUTTON_STOP)->EnableWindow(true);
+		mContextMenu->EnableMenuItem(ID_MENUITEM_START, true);
+		mContextMenu->EnableMenuItem(ID_MENUITEM_STOP, false);
 	}
 }
 
@@ -308,8 +312,10 @@ void CProxyServerDlg::StartThreadHandler(void *data)
 {
 	CProxyServerDlg *dlg = (CProxyServerDlg *)data;
 	CButton *btnStart = (CButton *)dlg->GetDlgItem(IDC_BUTTON_START);
+	CMenu *menu = dlg->mContextMenu;
 
 	btnStart->EnableWindow(false);
+	menu->EnableMenuItem(ID_MENUITEM_START, true);
 
 	if (dlg->EnableService(true))
 	{
@@ -318,6 +324,7 @@ void CProxyServerDlg::StartThreadHandler(void *data)
 	else
 	{
 		btnStart->EnableWindow(true);
+		menu->EnableMenuItem(ID_MENUITEM_START, false);
 	}
 }
 
@@ -325,10 +332,15 @@ void CProxyServerDlg::StopThreadHandler(void *data)
 {
 	CProxyServerDlg *dlg = (CProxyServerDlg *)data;
 	CButton *btnStop = (CButton *)dlg->GetDlgItem(IDC_BUTTON_STOP);
+	CMenu *menu = dlg->mContextMenu;
 
 	btnStop->EnableWindow(false);
+	menu->EnableMenuItem(ID_MENUITEM_STOP, false);
+
 	dlg->EnableService(false);
+
 	dlg->EnableAllWindow(true);
+	menu->EnableMenuItem(ID_MENUITEM_STOP, true);
 }
 
 bool CProxyServerDlg::EnableService(bool enable)
@@ -342,7 +354,7 @@ bool CProxyServerDlg::EnableService(bool enable)
 
 		if (dwAddress == INADDR_LOOPBACK && m_nLocalProtocol == m_nProxyProtocol && m_dwLocalPort == m_dwProxyPort)
 		{
-			CavanMessageBoxError("自己不能代理自己");
+			CavanMessageBoxError("自己不能代理自己", "本地服务和目标服务是同一个服务");
 			return false;
 		}
 
@@ -433,21 +445,16 @@ LRESULT CProxyServerDlg::OnNotifyIconProxy(WPARAM wParam, LPARAM lParam)
 
 void CProxyServerDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
-	CMenu *menu = mProxyMenu.GetSubMenu(0);
-
-	menu->EnableMenuItem(ID_MENUITEM_START, mServiceRunning);
-	menu->EnableMenuItem(ID_MENUITEM_STOP, mServiceRunning == false);
-
 	if (IsWindowVisible())
 	{
-		menu->ModifyMenu(ID_MENUITEM_VISIBLE, MF_BYCOMMAND, ID_MENUITEM_VISIBLE, "隐藏主界面");
+		mContextMenu->ModifyMenu(ID_MENUITEM_VISIBLE, MF_BYCOMMAND, ID_MENUITEM_VISIBLE, "隐藏主界面");
 	}
 	else
 	{
-		menu->ModifyMenu(ID_MENUITEM_VISIBLE, MF_BYCOMMAND, ID_MENUITEM_VISIBLE, "显示主界面");
+		mContextMenu->ModifyMenu(ID_MENUITEM_VISIBLE, MF_BYCOMMAND, ID_MENUITEM_VISIBLE, "显示主界面");
 	}
 
-	menu->TrackPopupMenu(TPM_LEFTALIGN, point.x , point.y, this);
+	mContextMenu->TrackPopupMenu(TPM_LEFTALIGN, point.x , point.y, this);
 }
 
 void CProxyServerDlg::OnMenuitemExit()

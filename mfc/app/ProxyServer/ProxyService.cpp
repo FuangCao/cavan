@@ -317,6 +317,7 @@ bool CProxyThread::Run(void)
 	mProgressCtrl.OffsetPos(1);
 	if (mProxyTransport->Open(mProxyPort, mProxyIP) == false)
 	{
+		CavanMessageBoxWarning("连接失败", "请确认目标服务器已开启");
 		goto out_sub_progress;
 	}
 
@@ -392,16 +393,12 @@ bool CProxyThread::Start(void)
 
 	if (mProxyTransport && mProxyTransport->mType != mProxyProtocol)
 	{
-		if (mIndex == 0)
-			CavanMessageBoxPos("CProxyThread::Start");
 		delete mProxyTransport;
 		mProxyTransport = NULL;
 	}
 
 	if (mProxyTransport == NULL)
 	{
-		if (mIndex == 0)
-			CavanMessageBoxPos("CProxyThread::Start");
 		switch (mProxyProtocol)
 		{
 		case PROXY_PROTOCOL_TYPE_TCP:
@@ -534,19 +531,19 @@ bool CProxyService::Start(void)
 		break;
 
 	default:
-		CavanMessageBoxError("未知的协议类型 %d", mLocalProtocol);
+		CavanMessageBoxError("协议错误", "未知的协议类型 %d", mLocalProtocol);
 		return false;
 	}
 
 	if (mServiceTransport == NULL)
 	{
-		CavanMessageBoxError("创建服务器套接字失败");
+		CavanMessageBoxError("协议错误", "创建服务器套接字失败");
 		return false;
 	}
 
 	if (CreateThreads() == false)
 	{
-		CavanMessageBoxError("分配存储空间失败");
+		CavanMessageBoxError("内存空间不足", "分配存储空间失败");
 		return false;
 	}
 
@@ -557,13 +554,13 @@ bool CProxyService::Start(void)
 
 	if (mServiceTransport->Open(mLocalPort, INADDR_ANY) == false)
 	{
-		CavanMessageBoxError("绑定到本地端口 %d 失败\n\n可能这个端口已经被占用了", mLocalPort);
+		CavanMessageBoxError("协议错误", "绑定到本地端口 %d 失败\n\n可能这个端口已经被占用了", mLocalPort);
 		return false;
 	}
 
 	if (CCavanService::Start() == false)
 	{
-		CavanMessageBoxError("启动服务器失败");
+		CavanMessageBoxError("无法启动服务进程", "启动服务器失败");
 		mServiceTransport->Close();
 		return false;
 	}

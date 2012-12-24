@@ -80,49 +80,49 @@ BOOL CProxyServerApp::InitInstance()
 	return FALSE;
 }
 
-int CavanMessageBox(UINT nType, const char *strFormat, va_list ap)
+int CavanMessageBox(UINT nType, const char *strTitle, const char *strFormat, va_list ap)
 {
 	char buff[1024];
 
 	_vsnprintf(buff, sizeof(buff), strFormat, ap);
 
-	return AfxMessageBox(buff, nType);
+	return theApp.m_pMainWnd->MessageBox(buff, strTitle, nType);
 }
 
-void CavanMessageBoxError(const char *strFormat, ...)
+void CavanMessageBoxError(const char *strTitle, const char *strFormat, ...)
 {
 	va_list ap;
 
 	va_start(ap, strFormat);
-	CavanMessageBox(MB_ICONERROR, strFormat, ap);
+	CavanMessageBox(MB_ICONERROR, strTitle, strFormat, ap);
 	va_end(ap);
 }
 
-void CavanMessageBoxWarning(const char *strFormat, ...)
+void CavanMessageBoxWarning(const char *strTitle, const char *strFormat, ...)
 {
 	va_list ap;
 
 	va_start(ap, strFormat);
-	CavanMessageBox(MB_ICONWARNING, strFormat, ap);
+	CavanMessageBox(MB_ICONWARNING, strTitle, strFormat, ap);
 	va_end(ap);
 }
 
-void CavanMessageBoxInfo(const char *strFormat, ...)
+void CavanMessageBoxInfo(const char *strTitle, const char *strFormat, ...)
 {
 	va_list ap;
 
 	va_start(ap, strFormat);
-	CavanMessageBox(MB_ICONINFORMATION, strFormat, ap);
+	CavanMessageBox(MB_ICONINFORMATION, strTitle, strFormat, ap);
 	va_end(ap);
 }
 
-bool CavanMessageBoxYesNo(const char *strFormat, ...)
+bool CavanMessageBoxYesNo(const char *strTitle, const char *strFormat, ...)
 {
 	int ret;
 	va_list ap;
 
 	va_start(ap, strFormat);
-	ret = CavanMessageBox(MB_ICONQUESTION | MB_YESNO, strFormat, ap);
+	ret = CavanMessageBox(MB_ICONQUESTION | MB_YESNO, strTitle, strFormat, ap);
 	va_end(ap);
 
 	return ret == IDYES;
@@ -222,17 +222,15 @@ bool ExecuteCommand(const char *strCommandName, const char *strArgFormat, ...)
 			return false;
 		}
 
-		int ret;
-		char buff[1024];
-
-		_snprintf(buff, sizeof(buff), "找不到命令 %s\n\n是否手动选择？", strCommandName);
-		ret = AfxMessageBox(buff, MB_ICONQUESTION | MB_YESNO, 0);
-		if (ret != IDYES)
+		if (CavanMessageBoxYesNo("命令不存在", "找不到命令 %s\n\n是否手动选择？", strCommandName) == false)
 		{
 			return false;
 		}
 
-		_snprintf(buff, sizeof(buff), "%s 文件|%s|可执行文件 (*.exe)|*.exe|所有文件 (*)|*||", strCommandName, strCommandName);
+		int ret;
+		char buff[1024];
+
+		_snprintf(buff, sizeof(buff), "指定的文件 (%s)|%s*|可执行文件 (*.exe)|*.exe|所有文件 (*)|*||", strCommandName, strCommandName);
 		CFileDialog fileDialog(true, NULL, strCommandName, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, buff);
 		ret = fileDialog.DoModal();
 		if (ret != IDOK)
