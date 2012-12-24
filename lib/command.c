@@ -142,6 +142,7 @@ int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, 
 			.ws_xpixel = 0,
 			.ws_ypixel = 0
 		};
+		char buff[64];
 
 		ret = ioctl(ttyfd, TIOCSWINSZ, &wsize);
 		if (ret < 0)
@@ -149,6 +150,11 @@ int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, 
 			pr_error_info("ioctl TIOCSWINSZ");
 			return ret;
 		}
+
+		sprintf(buff, "LINES=%d", lines);
+		putenv(buff);
+		sprintf(buff, "COLUMNS=%d", columns);
+		putenv(buff);
 	}
 
 	ret = dup2(ttyfd, fileno(stdin));

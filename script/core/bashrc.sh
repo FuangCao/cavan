@@ -31,6 +31,7 @@ TARGET_DEVICE="/dev/sdb"
 export JAVA_HOME JRE_HOME CLASS_PATH PATH
 export KERNEL_HOME UBOOT_HOME FSLDROID_HOME PRODUCT_HOME
 export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE CAVAN_OUT_DEBUG
+export CAVAN_HOME CAVAN_SERVER_IP CAVAN_SERVER_PORT
 
 for fn in ${CAVAN_HOME}/script/core/alias.sh ${CAVAN_HOME}/script/core/file.sh ${CAVAN_HOME}/script/core/bash_completion ${FSLDROID_HOME}/build/envsetup.sh
 do

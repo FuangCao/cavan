@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 			.super_permission = 0
 		},
 		.port = 8888,
-		.proxy_port = 0,
+		.proxy_port = 8888,
 		.proxy_ip = "127.0.0.1",
 		.open_connect = inet_create_tcp_link2,
 		.close_connect = inet_close_tcp_socket
@@ -204,9 +204,9 @@ int main(int argc, char *argv[])
 		proxy_service.proxy_port = text2value_unsigned(argv[optind], NULL, 10);
 	}
 
-	if (proxy_service.proxy_port == 0)
+	if (proxy_service.open_connect != adb_create_tcp_link2 && proxy_service.proxy_port == proxy_service.port && inet_addr(proxy_service.proxy_ip) == htonl(INADDR_LOOPBACK))
 	{
-		pr_red_info("Please input proxy port");
+		pr_red_info("Can't proxy yourself, please change proxy port");
 		return -EINVAL;
 	}
 
