@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_ADB,
 		},
 		{
+			0, 0, 0, 0
 		},
 	};
 	struct tcp_proxy_service proxy_service =

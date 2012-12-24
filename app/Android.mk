@@ -8,7 +8,7 @@ include $(CLEAR_VARS)
 
 LOCAL_CFLAGS := -DCONFIG_BUILD_FOR_ANDROID -Werror
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include
-LOCAL_SHARED_LIBRARIES := libcavan
+LOCAL_SHARED_LIBRARIES := libcavan libutils
 LOCAL_SRC_FILES := $(1)
 LOCAL_MODULE := cavan-$(basename $(notdir $(1)))
 LOCAL_MODULE_TAGS := optional

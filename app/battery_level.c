@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 
 	voltage = text2value_unsigned(argv[1], NULL, 10);
 
-	printf("Voltage = %d, Level = %d\n", voltage, (voltage - MIN_VOLTAGE) * 100 / (MAX_VOLTAGE - MIN_VOLTAGE));
+	println("Voltage = %d, Level = %d", voltage, (voltage - MIN_VOLTAGE) * 100 / (MAX_VOLTAGE - MIN_VOLTAGE));
 
 	return 0;
 }
