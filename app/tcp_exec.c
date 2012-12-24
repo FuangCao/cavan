@@ -18,15 +18,16 @@ enum
 	LOCAL_COMMAND_OPTION_IP,
 	LOCAL_COMMAND_OPTION_PORT,
 	LOCAL_COMMAND_OPTION_ADB,
+	LOCAL_COMMAND_OPTION_LOCAL
 };
 
 static void show_usage(const char *command)
 {
-	println("Usage:");
-	println("%s [option] command", command);
+	println("Usage: %s [option] command", command);
 	println("--help, -h, -H\t\tshow this help");
 	println("--version, -v, -V\tshow version");
 	println("--ip, -i, -I\t\tserver ip address");
+	println("--local, -l, -L\t\tuse localhost ip");
 	println("--port, -p, -P\t\tserver port");
 	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
 }
@@ -68,6 +69,12 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_ADB,
 		},
 		{
+			.name = "local",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_LOCAL,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -80,7 +87,7 @@ int main(int argc, char *argv[])
 	cavan_get_server_ip(file_req.ip);
 	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
-	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lL", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -103,6 +110,10 @@ int main(int argc, char *argv[])
 			file_req.open_connect = adb_create_tcp_link2;
 			break;
 
+		case 'l':
+		case 'L':
+		case LOCAL_COMMAND_OPTION_LOCAL:
+			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
 		case LOCAL_COMMAND_OPTION_IP:

@@ -7,8 +7,7 @@ enum
 
 static void show_usage(const char *command)
 {
-	println("Usage:");
-	println("%s [option]", command);
+	println("Usage: %s [option]", command);
 	println("--help, -h, -H\t\tshow this help");
 	println("--version, -v, -V\tshow version");
 }
