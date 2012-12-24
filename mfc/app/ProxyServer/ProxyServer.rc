@@ -89,10 +89,11 @@ BEGIN
 END
 
 IDD_PROXYSERVER_DIALOG DIALOGEX 0, 0, 357, 238
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "代理服务器"
-FONT 9, "宋体"
+FONT 9, "宋体", 0, 0, 0x1
 BEGIN
     CONTROL         "TCP协议",IDC_RADIO_LOCAL_TCP,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,199,65,44,10
@@ -195,6 +196,23 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_PROXY MENU DISCARDABLE 
+BEGIN
+    POPUP "代理服务器"
+    BEGIN
+        MENUITEM "隐藏主界面",                  ID_MENUITEM_VISIBLE
+        MENUITEM "启动服务 (&R)",               ID_MENUITEM_START
+        MENUITEM "停止服务 (&S)",               ID_MENUITEM_STOP
+        MENUITEM "退出 (&X)",                   ID_MENUITEM_EXIT
+    END
+END
 
 
 /////////////////////////////////////////////////////////////////////////////

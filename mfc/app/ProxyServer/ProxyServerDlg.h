@@ -20,6 +20,9 @@ class CProxyServerDlg : public CDialog
 {
 private:
 	CProxyService *mProxyService;
+	bool mServiceRunning;
+	NOTIFYICONDATA mNotifyIconData;
+	CMenu mProxyMenu;
 // Construction
 public:
 	CProxyServerDlg(CWnd* pParent = NULL);	// standard constructor
@@ -58,6 +61,11 @@ protected:
 	afx_msg void OnButtonStart();
 	afx_msg void OnButtonStop();
 	afx_msg void OnRadioProxyProtocol();
+	afx_msg void OnDestroy();
+	afx_msg LRESULT OnNotifyIconProxy(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnMenuitemExit();
+	afx_msg void OnMenuitemVisible();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
