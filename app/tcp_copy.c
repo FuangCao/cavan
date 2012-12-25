@@ -135,12 +135,6 @@ int main(int argc, char *argv[])
 
 		case 'a':
 		case 'A':
-			if (system("adb start-server") != 0)
-			{
-				pr_error_info("start adb server failed");
-				return -EFAULT;
-			}
-
 			file_req.open_connect = adb_create_tcp_link2;
 			break;
 

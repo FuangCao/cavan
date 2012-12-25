@@ -185,12 +185,6 @@ int main(int argc, char *argv[])
 		case 'a':
 		case 'A':
 		case LOCAL_COMMAND_OPTION_ADB:
-			if (system("adb start-server") != 0)
-			{
-				pr_error_info("start adb server failed");
-				return -EFAULT;
-			}
-
 			proxy_service.open_connect = adb_create_tcp_link2;
 			break;
 

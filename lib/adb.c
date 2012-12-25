@@ -83,7 +83,7 @@ int adb_send_text(int sockfd, const char *text)
 	return 0;
 }
 
-int adb_connect_service_base(const char *ip, u16 port)
+int adb_connect_service_base(const char *ip, u16 port, int retry)
 {
 	int sockfd;
 	unsigned int i;
@@ -107,19 +107,33 @@ int adb_connect_service_base(const char *ip, u16 port)
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr(ip);
 
-	for (i = 0; i < NELEM(ports); i++)
+	while (1)
 	{
-		if (ports[i] == 0)
+		for (i = 0; i < NELEM(ports); i++)
 		{
-			continue;
+			if (ports[i] == 0)
+			{
+				continue;
+			}
+
+			pr_std_info("Try port %04d", ports[i]);
+			addr.sin_port = htons(ports[i]);
+
+			if (inet_connect(sockfd, &addr) >= 0)
+			{
+				return sockfd;
+			}
 		}
 
-		pr_std_info("Try port %04d", ports[i]);
-		addr.sin_port = htons(ports[i]);
-
-		if (inet_connect(sockfd, &addr) >= 0)
+		if (--retry < 0)
 		{
-			return sockfd;
+			break;
+		}
+
+		if (system("adb start-server"))
+		{
+			pr_error_info("Start adb servic failed");
+			break;
 		}
 	}
 
@@ -133,7 +147,7 @@ int adb_connect_service(const char *ip, u16 port, const char *service)
 	int ret;
 	int sockfd;
 
-	sockfd = adb_connect_service_base(ip, port);
+	sockfd = adb_connect_service_base(ip, port, 1);
 	if (sockfd < 0)
 	{
 		pr_red_info("adb_create_link");
