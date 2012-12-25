@@ -23,18 +23,18 @@ enum
 	LOCAL_COMMAND_OPTION_SUPER
 };
 
-static void show_usage(void)
+static void show_usage(const char *command)
 {
-	println("Usage:");
-	println("--start");
-	println("--stop");
-	println("--help, -h, -H");
-	println("--version");
-	println("--daemon, -d, -D");
-	println("--verbose, -v, -V");
-	println("--super, -s, -S");
-	println("--exec, -e, -E");
-	println("--pidfile, -p, -P");
+	println("Usage: %s [--start|--stop] [option] <--exec command>", command);
+	println("--start:\t\tstart a server");
+	println("--stop:\t\t\tstop a server");
+	println("--help, -h, -H\t\tshow this help");
+	println("--version, -v, -V\tshow version");
+	println("--daemon, -d, -D\trun as a daemon");
+	println("--verbose, -v, -V\tshow log message");
+	println("--super, -s, -S\t\tneed super permission");
+	println("--exec, -e, -E\t\tservice command name");
+	println("--pidfile, -p, -P\tsave process id to file");
 }
 
 int main(int argc, char *argv[])
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
-			show_usage();
+			show_usage(argv[0]);
 			return 0;
 
 		case 'e':
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 			break;
 
 		default:
-			show_usage();
+			show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 	if (handler == NULL)
 	{
 		pr_red_info("Please specify --start or --stop option");
-		show_usage();
+		show_usage(argv[0]);
 		return -EINVAL;
 	}
 
