@@ -262,16 +262,21 @@ class SvnRreoManager:
 				diffpath = "%s/%s.diff" % (self.diffpath, fn.replace("/", "_"))
 				self.svn_repo_system("git diff > %s" % diffpath)
 				if self.svn_repo_system("git reset --hard") < 0:
-					return -1
-				self.svn_repo_remove_empty_file(diffpath)
-				if self.svn_repo_system("git svn rebase") < 0:
-					return -1
+					need_create = True
+				else:
+					self.svn_repo_remove_empty_file(diffpath)
+					if self.svn_repo_system("rm .git/svn/.metadata.lock -rfv && git svn rebase") < 0:
+						return -1
+					need_create = False
 			else:
+				need_create = True
+
+			if need_create:
 				if os.path.exists(project_path):
-					os.remove(project_path)
+					self.svn_repo_system("rm %s -rfv" % project_path)
 				url = os.path.join(self.url, fn)
 				if self.svn_repo_system("git svn init %s %s" % (url, project_path)) != 0:
-					self.svn_repo_system("rm %s -rf" % fn)
+					self.svn_repo_system("rm %s -rf" % project_path)
 					return -1
 				os.chdir(project_path)
 				if self.svn_repo_system("git config pack.windowMemory 20m && git svn fetch && git svn rebase") != 0:
