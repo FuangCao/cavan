@@ -107,6 +107,7 @@ $(MARK_TOOLCHIAN_READY): $(MARK_GCC2)
 	$(Q)cd $(TOOLCHIAN_PATH)/bin && for tool in $(CAVAN_TARGET_PLAT)-*; \
 	do \
 		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-linux$${tool##$(CAVAN_TARGET_PLAT)}"; \
+		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-eabi$${tool##$(CAVAN_TARGET_PLAT)}"; \
 	done
 ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 	$(Q)sed 's/\<__packed\>/__attribute__ ((__packed__))/g' $(SYSROOT_PATH)/usr/include/mtd/ubi-user.h -i
