@@ -29,11 +29,7 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--enable-long-long \
 					--disable-nls \
 					--disable-multilib \
-					--disable-libstdcxx-pch \
-					--disable-bootstrap \
-					--disable-libgomp \
-					--without-ppl \
-					--without-cloog
+					--disable-bootstrap
 
 stage1:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION1)
@@ -43,5 +39,5 @@ stage1:
 
 stage2:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION2)
-	$(Q)+make AS_FOR_TARGET="$(CAVAN_TARGET_PLAT)-as" LD_FOR_TARGET="$(CAVAN_TARGET_PLAT)-ld"
+	$(Q)+make
 	$(Q)+make install

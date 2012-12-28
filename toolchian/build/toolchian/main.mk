@@ -56,8 +56,12 @@ MPC_URL = http://www.multiprecision.org/mpc/download
 KERNEL_URL = http://www.kernel.org/pub/linux/kernel/v3.0
 
 SYSROOT_PATH = $(TOOLCHIAN_PATH)/sysroot
-TOOLCHIAN_COMMON_CONFIG = --prefix=$(TOOLCHIAN_PATH) --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT) --with-sysroot=$(SYSROOT_PATH)
+TOOLCHIAN_COMMON_CONFIG = --prefix=$(TOOLCHIAN_PATH) --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT)
 LIBRARY_COMMON_CONFIG = --prefix=/usr --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_TARGET_PLAT)
+
+ifneq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
+TOOLCHIAN_COMMON_CONFIG += --with-sysroot=$(SYSROOT_PATH)
+endif
 
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
 export SYSROOT_PATH TOOLCHIAN_COMMON_CONFIG LIBRARY_COMMON_CONFIG
@@ -103,7 +107,11 @@ endef
 all: $(MARK_TOOLCHIAN_READY)
 	$(Q)echo "Toolchian compile successfull"
 
+ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
+$(MARK_TOOLCHIAN_READY): $(MARK_GLIBC)
+else
 $(MARK_TOOLCHIAN_READY): $(MARK_GCC2)
+endif
 	$(Q)cd $(TOOLCHIAN_PATH)/bin && for tool in $(CAVAN_TARGET_PLAT)-*; \
 	do \
 		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-linux$${tool##$(CAVAN_TARGET_PLAT)}"; \
@@ -116,10 +124,23 @@ else
 	$(call generate_mark)
 endif
 
-$(MARK_GCC2): $(MARK_GLIBC)
+ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
+$(MARK_GCC2): $(MARK_BINUTILS)
 	$(call decompression_gcc)
 	$(call remake_directory,$(OUT_GCC2))
 	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) stage2
+	$(call generate_mark)
+
+$(MARK_GLIBC): $(MARK_GCC2)
+	$(call decompression_glibc,$(SRC_GLIBC))
+	$(call remake_directory,$(OUT_GLIBC))
+	$(Q)+make -C $(OUT_GLIBC) -f $(MAKEFILE_GLIBC)
+	$(call generate_mark)
+else
+$(MARK_GCC2): $(MARK_GLIBC)
+	$(call decompression_gcc)
+	$(call remake_directory,$(OUT_GCC2))
+	$(Q)+make AS_FOR_TARGET="$(CAVAN_TARGET_PLAT)-as" LD_FOR_TARGET="$(CAVAN_TARGET_PLAT)-ld" -C $(OUT_GCC2) -f $(MAKEFILE_GCC) stage2
 	$(call generate_mark)
 
 ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
@@ -138,6 +159,7 @@ else
 $(MARK_GLIBC): $(MARK_BINUTILS)
 	$(Q)echo "Nothing to be done"
 	$(call generate_mark)
+endif
 endif
 
 $(MARK_BINUTILS): $(MARK_HEADER)
