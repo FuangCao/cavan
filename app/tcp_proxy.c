@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 			.name = "TCP_PROXY",
 			.daemon_count = 10,
 			.as_daemon = 0,
-			.show_verbose = 1,
+			.show_verbose = 0,
 			.super_permission = 0
 		},
 		.port = 8888,
