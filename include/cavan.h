@@ -5,7 +5,7 @@
 #define __USE_FILE_OFFSET64
 
 #ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE		500
+#define _XOPEN_SOURCE		700
 #endif
 
 #ifndef _BSD_SOURCE

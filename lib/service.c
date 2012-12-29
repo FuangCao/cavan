@@ -44,6 +44,7 @@ int cavan_service_run(struct cavan_service_description *desc)
 	int i;
 	int count;
 	pthread_t *threads;
+	const char *homepath;
 
 	if (desc == NULL)
 	{
@@ -86,6 +87,12 @@ int cavan_service_run(struct cavan_service_description *desc)
 	{
 		pr_red_info("pthread_mutex_init");
 		return ret;
+	}
+
+	homepath = getenv("HOME");
+	if (homepath)
+	{
+		chdir(homepath);
 	}
 
 	for (i = 0; i < count; i++)
