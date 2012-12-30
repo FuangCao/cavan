@@ -3,6 +3,8 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
+#define FTP_TIMEOUT_MS	0
+
 char ftp_root_path[1024] = "/";
 
 static inline int ftp_check_socket(int sockfd, const struct sockaddr_in *addr)
@@ -305,6 +307,7 @@ static int ftp_send_text(int sockfd, const char *format, ...)
 }
 
 static ssize_t ftp_receive_timeout(int sockfd, void *buff, size_t size)
+#if FTP_TIMEOUT_MS > 0
 {
 	while (1)
 	{
@@ -316,7 +319,7 @@ static ssize_t ftp_receive_timeout(int sockfd, void *buff, size_t size)
 
 		for (i = 0; i < 2; i++)
 		{
-			recvlen = inet_recv_timeout(sockfd, buff, size, 5000);
+			recvlen = inet_recv_timeout(sockfd, buff, size, FTP_TIMEOUT_MS);
 			if (recvlen)
 			{
 				return recvlen;
@@ -327,12 +330,17 @@ static ssize_t ftp_receive_timeout(int sockfd, void *buff, size_t size)
 
 		if (stop_time - start_time == 0)
 		{
-			return -ENOENT;
+			break;
 		}
 	}
 
-	return 0;
+	return -ETIMEDOUT;
 }
+#else
+{
+	return inet_recv(sockfd, buff, size);
+}
+#endif
 
 static int ftp_service_login(int sockfd)
 {
@@ -354,7 +362,7 @@ static int ftp_service_login(int sockfd)
 		}
 
 		recvlen = ftp_receive_timeout(sockfd, buff, sizeof(buff));
-		if (recvlen < 0)
+		if (recvlen <= 0)
 		{
 			error_msg("inet_recv_timeout");
 			return recvlen;
@@ -474,7 +482,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		}
 
 		recvlen = ftp_receive_timeout(sockfd, cmd_buff, sizeof(cmd_buff));
-		if (recvlen < 0)
+		if (recvlen <= 0)
 		{
 			error_msg("ftp_receive_timeout");
 			return recvlen;

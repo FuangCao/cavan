@@ -303,7 +303,7 @@ static inline ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int
 {
 	if (file_poll_input(sockfd, timeout_ms))
 	{
-		inet_recv(sockfd, buff, size);
+		return inet_recv(sockfd, buff, size);
 	}
 
 	return -ETIMEDOUT;
