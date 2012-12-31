@@ -502,7 +502,6 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 		key->top = y - height;
 		key->bottom = y + height - 1;
 		key->code = code;
-		key->name = cavan_event_find_key_name(dev, code);
 
 		key->next = dev->vk_head;
 		dev->vk_head = key;
@@ -544,6 +543,7 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 	uint8_t key_bitmask[sizeof_bit_array(KEY_CNT)];
 	const char *p, *line_end, *file_end;
 	struct cavan_keylayout_node *node;
+	struct cavan_virtual_key *vk;
 	void *map;
 	size_t size;
 
@@ -580,6 +580,11 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 		goto out_file_unmap;
 	}
 
+	for (vk = dev->vk_head; vk; vk = vk->next)
+	{
+		set_bit(vk->code, key_bitmask);
+	}
+
 	while (p < file_end)
 	{
 		line_end = text_find_line_end(p, file_end);
@@ -612,6 +617,12 @@ label_goto_next_line:
 	}
 
 	free(node);
+
+	for (vk = dev->vk_head; vk; vk = vk->next)
+	{
+		vk->name = cavan_event_find_key_name(dev, vk->code);
+	}
+
 out_file_unmap:
 	file_unmap(fd, map, size);
 
@@ -759,8 +770,8 @@ static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher
 
 	pr_green_info("Add device %s, name = %s", matcher->pathname, matcher->devname);
 
-	cavan_event_parse_keylayout(dev);
 	cavan_event_parse_virtual_keymap(dev);
+	cavan_event_parse_keylayout(dev);
 
 	pthread_mutex_lock(&service->lock);
 	dev->next = service->dev_head;

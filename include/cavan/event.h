@@ -8,6 +8,9 @@
 #define test_bit(bit, array) \
 	((array)[(bit) >> 3] & (1 << ((bit) & 0x07)))
 
+#define set_bit(bit, array) \
+	((array)[(bit) >> 3] |= 1 << ((bit) & 0x07))
+
 #define clean_bit(bit, array) \
 	((array)[(bit) >> 3] &= ~(1 << ((bit) & 0x07)))
 
