@@ -1638,7 +1638,7 @@ FILE *vpipe_command(const char *command, va_list ap)
 	ftemp = popen(buff, "r");
 	if (ftemp)
 	{
-		system_sync();
+		// system_sync();
 	}
 	else
 	{
@@ -1671,7 +1671,7 @@ FILE *vpipe_command_verbose(const char *command, va_list ap)
 	ftemp = popen(buff, "r");
 	if (ftemp)
 	{
-		system_sync();
+		// system_sync();
 	}
 	else
 	{
@@ -1787,7 +1787,7 @@ int system_command_simple(const char *command)
 	ret = system(command);
 	if (ret == 0)
 	{
-		system_sync();
+		// system_sync();
 	}
 	else
 	{
