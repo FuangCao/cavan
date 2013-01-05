@@ -1,7 +1,7 @@
 #!/bin/bash
 
-BASE_PATH=${1-${HOME}/git}
-PORT=${2-"8888"}
+PORT=${1-"8888"}
+BASE_PATH=${2-${HOME}/git}
 
 mkdir ${BASE_PATH} -p || exit 1
 
