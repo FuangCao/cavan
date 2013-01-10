@@ -21,7 +21,7 @@ enum
 
 static void show_usage(const char *command)
 {
-	println("Usage: %s [option] <-w|-r> if=input of=output", command);
+	println("Usage: %s [option] <-w|-r> if=input of=output [src] [dest]", command);
 	println("if=FILE\t\t\tinput file");
 	println("of=FILE\t\t\toutput file");
 	println("bs=BYTES\t\tblock size");
@@ -88,7 +88,6 @@ int main(int argc, char *argv[])
 		.open_connect = inet_create_tcp_link2,
 		.close_connect = inet_close_tcp_socket,
 	};
-	int i;
 	off_t bs, seek, skip, count;
 	int (*handler)(struct inet_file_request *) = NULL;
 
@@ -156,14 +155,12 @@ int main(int argc, char *argv[])
 	}
 
 	file_req.src_file[0] = file_req.dest_file[0] = 0;
-	bs = 1;
-	count = seek = skip = 0;
 
-	for (i = optind; i < argc; i++)
+	for (bs = 1, count = seek = skip = 0; optind < argc; optind++)
 	{
 		char c, *p;
 
-		parse_parameter(argv[i]);
+		parse_parameter(argv[optind]);
 
 		c = para_option[0];
 		p = para_option + 1;
@@ -181,7 +178,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				goto label_unknown_option;
+				goto label_parse_complete;
 			}
 			break;
 
@@ -191,7 +188,7 @@ int main(int argc, char *argv[])
 				text_copy(file_req.dest_file, para_value);
 				break;
 			}
-			goto label_unknown_option;
+			goto label_parse_complete;
 
 		case 'b':
 			if (text_cmp(p, "s") == 0)
@@ -199,7 +196,7 @@ int main(int argc, char *argv[])
 				bs = text2size(para_value, NULL);
 				break;
 			}
-			goto label_unknown_option;
+			goto label_parse_complete;
 
 		case 's':
 			if (text_cmp(p, "kip") == 0)
@@ -212,7 +209,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				goto label_unknown_option;
+				goto label_parse_complete;
 			}
 			break;
 
@@ -222,7 +219,7 @@ int main(int argc, char *argv[])
 				count = text2size(para_value, NULL);
 				break;
 			}
-			goto label_unknown_option;
+			goto label_parse_complete;
 
 		case 'p':
 			if (text_cmp(p, "ort") == 0)
@@ -230,13 +227,26 @@ int main(int argc, char *argv[])
 				file_req.port = text2value_unsigned(para_value, NULL, 10);
 				break;
 			}
-			goto label_unknown_option;
+			goto label_parse_complete;
 
 		default:
-label_unknown_option:
-			pr_red_info("unknown option `%s'", para_option);
-			return -EINVAL;
+			goto label_parse_complete;
 		}
+	}
+
+label_parse_complete:
+	switch (argc - optind)
+	{
+	case 2:
+		text_copy(file_req.src_file, argv[optind++]);
+	case 1:
+		text_copy(file_req.dest_file, argv[optind++]);
+	case 0:
+		break;
+
+	default:
+		show_usage(argv[0]);
+		return -EINVAL;
 	}
 
 	if (file_req.src_file[0] == 0 || file_req.dest_file[0] == 0)
