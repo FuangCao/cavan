@@ -277,3 +277,50 @@ function mount_smb()
 
 	return 0
 }
+
+function cavan-svn-sync-init()
+{
+	local src_url dest_url dest_path hook_revprop
+
+	[ "$2" ] ||
+	{
+		echo "Too a few argument"
+		return 1
+	}
+
+	dest_path=$(get_file_abs_path $1)
+	dest_url="file://${dest_path}"
+	hook_revprop="${dest_path}/hooks/pre-revprop-change"
+	src_url=$2
+
+	shift 2
+
+	svnadmin create ${dest_path} || return 1
+
+	cat > ${hook_revprop} << EOF
+#!/bin/sh
+
+echo "Nothing to be dong"
+EOF
+
+	chmod a+x ${hook_revprop} || return 1
+	svnsync initialize ${dest_url} ${src_url} $* || return 1
+	svnsync synchronize ${dest_url} $* || return 1
+
+	return 0
+}
+
+function cavan-svn-sync()
+{
+	local dest_url
+
+	dest_url="file://${PWD}"
+
+	svnsync synchronize ${dest_url} $* ||
+	{
+		svn propdel svn:sync-lock --revprop -r0 ${dest_url}
+		return 1
+	}
+
+	return 0
+}

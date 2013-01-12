@@ -1,2 +1,14 @@
 svn co svn://10.1.1.66/cavan
 svn ci -m "Add all file to svn"
+
+svnadmin create backup
+cd backup/hooks
+cp pre-revprop-change.tmpl pre-revprop-change
+vi pre-revprop-change
+chmod a+x pre-revprop-change
+svnsync initialize file:///tmp/backup svn://127.0.0.1/cavan
+svnsync synchronize file:///tmp/backup
+svn propdel svn:sync-lock --revprop -r0 file:///tmp/backup
+cp post-commit.tmpl post-commit
+chmod a+x post-commit
+svnsync synchronize --non-interactive file:///tmp/backup
