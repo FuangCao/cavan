@@ -135,14 +135,14 @@ int main(int argc, char *argv[])
 	{
 		if (wait_for_devices)
 		{
-			pr_bold_info("Adb Wait For Devices");
+			// pr_bold_info("Adb Wait For Devices");
 			if (system("adb wait-for-devices"))
 			{
 				break;
 			}
 		}
 
-		println("%s", command);
+		// println("%s", command);
 		ret = system(command);
 		if (ret)
 		{
@@ -152,10 +152,6 @@ int main(int argc, char *argv[])
 			{
 				break;
 			}
-		}
-		else
-		{
-			pr_green_info("OK");
 		}
 
 		if (delay)
