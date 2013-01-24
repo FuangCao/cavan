@@ -317,7 +317,7 @@ bool CProxyThread::Run(void)
 	mProgressCtrl.OffsetPos(1);
 	if (mProxyTransport->Open(mProxyPort, mProxyIP) == false)
 	{
-		CavanMessageBoxWarning("连接失败", "请确认目标服务器已开启");
+		// CavanMessageBoxWarning("连接失败", "请确认目标服务器已开启");
 		goto out_sub_progress;
 	}
 
