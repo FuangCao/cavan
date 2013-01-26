@@ -313,3 +313,82 @@ out_close_ptm:
 	close(ptm_fd);
 	return ret;
 }
+
+int cavan_tty_redirect_base(int ttyfd)
+{
+	int ret;
+	ssize_t rwlen;
+	char buff[1024];
+	struct pollfd pfds[2];
+	int tty_in, tty_out;
+	struct termios tty_attr;
+
+	tty_in = fileno(stdin);
+	tty_out = fileno(stdout);
+
+	ret = set_tty_mode(tty_in, 5, &tty_attr);
+	if (ret < 0)
+	{
+		pr_red_info("set_tty_mode");
+		return ret;
+	}
+
+	pfds[0].events = POLLIN;
+	pfds[0].fd = tty_in;
+
+	pfds[1].events = POLLIN;
+	pfds[1].fd = ttyfd;
+
+	while (1)
+	{
+		ret = poll(pfds, NELEM(pfds), -1);
+		if (ret <= 0)
+		{
+			goto out_restore_tty_attr;
+		}
+
+		if (pfds[0].revents)
+		{
+			rwlen = read(tty_in, buff, sizeof(buff));
+			if (rwlen <= 0 || write(ttyfd, buff, rwlen) < rwlen)
+			{
+				break;
+			}
+		}
+
+		if (pfds[1].revents)
+		{
+			rwlen = read(ttyfd, buff, sizeof(buff));
+			if (rwlen <= 0 || write(tty_out, buff, rwlen) < rwlen)
+			{
+				break;
+			}
+
+			fsync(tty_out);
+		}
+	}
+
+	ret = 0;
+out_restore_tty_attr:
+	restore_tty_attr(tty_in, &tty_attr);
+	return ret;
+}
+
+int cavan_tty_redirect(const char *ttypath)
+{
+	int ret;
+	int fd;
+
+	fd = open(ttypath, O_RDWR);
+	if (fd < 0)
+	{
+		pr_error_info("open tty device %s", ttypath);
+		return fd;
+	}
+
+	ret = cavan_tty_redirect_base(fd);
+
+	close(fd);
+
+	return ret;
+}

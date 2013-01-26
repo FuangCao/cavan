@@ -92,7 +92,7 @@ int cavan_service_run(struct cavan_service_description *desc)
 	homepath = getenv("HOME");
 	if (homepath)
 	{
-		chdir(homepath);
+		ret = chdir(homepath);
 	}
 
 	for (i = 0; i < count; i++)

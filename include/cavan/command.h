@@ -26,3 +26,6 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 
 int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, const char *command);
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
+
+int cavan_tty_redirect_base(int ttyfd);
+int cavan_tty_redirect(const char *ttypath);

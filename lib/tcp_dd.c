@@ -579,11 +579,6 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 {
 	int ret;
 	int sockfd;
-	ssize_t rwlen;
-	char buff[1024];
-	struct pollfd pfds[2];
-	int tty_in, tty_out;
-	struct termios tty_attr;
 
 	sockfd = file_req->open_connect(file_req->ip, file_req->port);
 	if (sockfd < 0)
@@ -592,61 +587,14 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 		return sockfd;
 	}
 
-	tty_in = fileno(stdin);
-	tty_out = fileno(stdout);
-
-	ret = tcp_dd_send_exec_request(sockfd, tty_out, file_req->command);
+	ret = tcp_dd_send_exec_request(sockfd, fileno(stdout), file_req->command);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_exec_request");
 		goto out_close_sockfd;
 	}
 
-	ret = set_tty_mode(tty_in, 5, &tty_attr);
-	if (ret < 0)
-	{
-		pr_red_info("set_tty_mode");
-		goto out_close_sockfd;
-	}
-
-	pfds[0].events = POLLIN;
-	pfds[0].fd = tty_in;
-
-	pfds[1].events = POLLIN;
-	pfds[1].fd = sockfd;
-
-	while (1)
-	{
-		ret = poll(pfds, NELEM(pfds), -1);
-		if (ret <= 0)
-		{
-			goto out_restore_tty_attr;
-		}
-
-		if (pfds[0].revents)
-		{
-			rwlen = read(tty_in, buff, sizeof(buff));
-			if (rwlen <= 0 || inet_send(sockfd, buff, rwlen) < rwlen)
-			{
-				break;
-			}
-		}
-
-		if (pfds[1].revents)
-		{
-			rwlen = inet_recv(sockfd, buff, sizeof(buff));
-			if (rwlen <= 0 || write(tty_out, buff, rwlen) < rwlen)
-			{
-				break;
-			}
-
-			fsync(tty_out);
-		}
-	}
-
-	ret = 0;
-out_restore_tty_attr:
-	restore_tty_attr(tty_in, &tty_attr);
+	ret = cavan_tty_redirect_base(sockfd);
 out_close_sockfd:
 	file_req->close_connect(sockfd);
 	return ret;
