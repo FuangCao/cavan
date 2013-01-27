@@ -382,7 +382,7 @@ static inline ssize_t file_read_timeout(int fd, void *buff, size_t size, int tim
 		return read(fd, buff, size);
 	}
 
-	return -ETIMEDOUT;
+	ERROR_RETURN(ETIMEDOUT);
 }
 
 static inline int file_is_file(const char *pathname)

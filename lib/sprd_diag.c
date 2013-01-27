@@ -5,9 +5,9 @@
  */
 
 #include <cavan.h>
-#include <cavan/sprd_vbpipe.h>
+#include <cavan/sprd_diag.h>
 
-static u16 const sprd_vbpipe_crc16_table[256] =
+static u16 const sprd_diag_crc16_table[256] =
 {
 	0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
 	0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
@@ -43,19 +43,19 @@ static u16 const sprd_vbpipe_crc16_table[256] =
 	0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040
 };
 
-u16 sprd_vbpipe_crc16(u16 crc, const u8 *buff, size_t size)
+u16 sprd_diag_crc16(u16 crc, const u8 *buff, size_t size)
 {
 	const u8 *buff_end;
 
 	for (buff_end = buff + size; buff < buff_end; buff++)
 	{
-		crc = (crc >> 8) ^ sprd_vbpipe_crc16_table[(crc ^ buff[0]) & 0xFF];
+		crc = (crc >> 8) ^ sprd_diag_crc16_table[(crc ^ buff[0]) & 0xFF];
 	}
 
 	return crc;
 }
 
-void sprd_vbpipe_show_data(const char *prompt, const char *data, size_t size)
+void sprd_diag_show_data(const char *prompt, const char *data, size_t size)
 {
 	const char *data_end;
 	char buff[size * 2 + 1], *p;
@@ -82,17 +82,17 @@ void sprd_vbpipe_show_data(const char *prompt, const char *data, size_t size)
 	}
 }
 
-void sprd_vbpipe_show_imei(const struct sprd_vbpipe_imei_data *imei)
+void sprd_diag_show_imei(const struct sprd_diag_imei_data *imei)
 {
-	sprd_vbpipe_show_data("IMEI1", (char *)imei->imei1, sizeof(imei->imei1));
-	sprd_vbpipe_show_data("IMEI2", (char *)imei->imei2, sizeof(imei->imei2));
-	sprd_vbpipe_show_data("IMEI3", (char *)imei->imei3, sizeof(imei->imei3));
-	sprd_vbpipe_show_data("IMEI4", (char *)imei->imei4, sizeof(imei->imei4));
-	sprd_vbpipe_show_data("WIFI-MAC", (char *)imei->wifi_mac, sizeof(imei->wifi_mac));
-	sprd_vbpipe_show_data("BT-MAC", (char *)imei->bt_mac, sizeof(imei->bt_mac));
+	sprd_diag_show_data("IMEI1", (char *)imei->imei1, sizeof(imei->imei1));
+	sprd_diag_show_data("IMEI2", (char *)imei->imei2, sizeof(imei->imei2));
+	sprd_diag_show_data("IMEI3", (char *)imei->imei3, sizeof(imei->imei3));
+	sprd_diag_show_data("IMEI4", (char *)imei->imei4, sizeof(imei->imei4));
+	sprd_diag_show_data("WIFI-MAC", (char *)imei->wifi_mac, sizeof(imei->wifi_mac));
+	sprd_diag_show_data("BT-MAC", (char *)imei->bt_mac, sizeof(imei->bt_mac));
 }
 
-char *sprd_vbpipe_encode_data(const char *src, size_t srclen, char *dest, size_t destlen)
+char *sprd_diag_encode_data(const char *src, size_t srclen, char *dest, size_t destlen)
 {
 	const char *src_end = src + srclen;
 	char *dest_end = dest + destlen;
@@ -101,12 +101,12 @@ char *sprd_vbpipe_encode_data(const char *src, size_t srclen, char *dest, size_t
 	{
 		switch (*src)
 		{
-		case SPRD_VBPIPE_FLAG_BYTE:
-		case SPRD_VBPIPE_ESCAPE_BYTE:
-			*dest++ = SPRD_VBPIPE_ESCAPE_BYTE;
+		case SPRD_DIAG_FLAG_BYTE:
+		case SPRD_DIAG_ESCAPE_BYTE:
+			*dest++ = SPRD_DIAG_ESCAPE_BYTE;
 			if (dest < dest_end)
 			{
-				*dest++ = *src++ ^ SPRD_VBPIPE_COMPLEMENT_BYTE;
+				*dest++ = *src++ ^ SPRD_DIAG_COMPLEMENT_BYTE;
 			}
 			break;
 
@@ -118,20 +118,20 @@ char *sprd_vbpipe_encode_data(const char *src, size_t srclen, char *dest, size_t
 	return dest;
 }
 
-size_t sprd_vbpipe_encode_message(const struct sprd_vbpipe_message_desc *message, const char *src, size_t srclen, char *dest, size_t destlen)
+size_t sprd_diag_encode_message(const struct sprd_diag_message_desc *message, const char *src, size_t srclen, char *dest, size_t destlen)
 {
 	char *p, *dest_end = dest + destlen;
 
 	p = dest;
-	*p++ = SPRD_VBPIPE_FLAG_BYTE;
-	p = sprd_vbpipe_encode_data((const char *)message, sizeof(*message), p, dest_end - p);
-	p = sprd_vbpipe_encode_data(src, srclen, p, dest_end - p);
-	*p++ = SPRD_VBPIPE_FLAG_BYTE;
+	*p++ = SPRD_DIAG_FLAG_BYTE;
+	p = sprd_diag_encode_data((const char *)message, sizeof(*message), p, dest_end - p);
+	p = sprd_diag_encode_data(src, srclen, p, dest_end - p);
+	*p++ = SPRD_DIAG_FLAG_BYTE;
 
 	return p - dest;
 }
 
-char *sprd_vbpipe_decode_data(const char *src, size_t srclen, char *dest, size_t destlen, size_t *reslen)
+char *sprd_diag_decode_data(const char *src, size_t srclen, char *dest, size_t destlen, size_t *reslen)
 {
 	const char *src_end = src + srclen;
 	char *dest_bak = dest, *dest_end = dest + destlen;
@@ -140,8 +140,8 @@ char *sprd_vbpipe_decode_data(const char *src, size_t srclen, char *dest, size_t
 	{
 		switch (*src)
 		{
-		case SPRD_VBPIPE_ESCAPE_BYTE:
-			*dest = src[1] ^ SPRD_VBPIPE_COMPLEMENT_BYTE;
+		case SPRD_DIAG_ESCAPE_BYTE:
+			*dest = src[1] ^ SPRD_DIAG_COMPLEMENT_BYTE;
 			src += 2;
 			break;
 
@@ -158,13 +158,13 @@ char *sprd_vbpipe_decode_data(const char *src, size_t srclen, char *dest, size_t
 	return (char *)src;
 }
 
-ssize_t sprd_vbpipe_read_reply(int fd, struct sprd_vbpipe_command_desc *command)
+ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command)
 {
 	ssize_t rdlen;
 	size_t reslen;
 	char c;
 	char buff[1024], *p, *p_end;
-	struct sprd_vbpipe_message_desc message;
+	struct sprd_diag_message_desc message;
 
 	while (1)
 	{
@@ -173,11 +173,11 @@ ssize_t sprd_vbpipe_read_reply(int fd, struct sprd_vbpipe_command_desc *command)
 			rdlen = file_read_timeout(fd, &c, 1, 5000);
 			if (rdlen < 0)
 			{
-				pr_error_info("read");
+				pr_error_info("file_read_timeout");
 				return rdlen;
 			}
 
-			if (c == SPRD_VBPIPE_FLAG_BYTE)
+			if (c == SPRD_DIAG_FLAG_BYTE)
 			{
 				break;
 			}
@@ -191,10 +191,11 @@ ssize_t sprd_vbpipe_read_reply(int fd, struct sprd_vbpipe_command_desc *command)
 			rdlen = file_read_timeout(fd, p, 1, 5000);
 			if (rdlen < 0)
 			{
+				pr_error_info("file_read_timeout");
 				return rdlen;
 			}
 
-			if (*p != SPRD_VBPIPE_FLAG_BYTE)
+			if (*p != SPRD_DIAG_FLAG_BYTE)
 			{
 				p++;
 				continue;
@@ -212,14 +213,14 @@ ssize_t sprd_vbpipe_read_reply(int fd, struct sprd_vbpipe_command_desc *command)
 		}
 
 		p_end = p;
-		p = sprd_vbpipe_decode_data(buff, rdlen, (char *)&message, sizeof(message), NULL);
+		p = sprd_diag_decode_data(buff, rdlen, (char *)&message, sizeof(message), NULL);
 		if (message.type == command->reply_type && message.subtype == command->reply_subtype && message.seq_num == command->seq_num)
 		{
 			break;
 		}
 	}
 
-	sprd_vbpipe_decode_data(p, p_end - p, command->reply, command->reply_len, &reslen);
+	sprd_diag_decode_data(p, p_end - p, command->reply, command->reply_len, &reslen);
 
 	rdlen = message.length - sizeof(message);
 	if (reslen != (size_t)rdlen)
@@ -228,17 +229,17 @@ ssize_t sprd_vbpipe_read_reply(int fd, struct sprd_vbpipe_command_desc *command)
 		return -EINVAL;
 	}
 
-	sprd_vbpipe_show_data("reply", command->reply, reslen);
+	sprd_diag_show_data("reply", command->reply, reslen);
 
 	return reslen;
 }
 
-int sprd_vbpipe_send_command(int fd, struct sprd_vbpipe_command_desc *command)
+int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command)
 {
 	ssize_t rwlen;
 	size_t cmdlen;
 	static unsigned int cmd_seq_num = 0;
-	struct sprd_vbpipe_message_desc message =
+	struct sprd_diag_message_desc message =
 	{
 		.seq_num = ++cmd_seq_num,
 		.length = sizeof(message) + command->command_len,
@@ -247,12 +248,12 @@ int sprd_vbpipe_send_command(int fd, struct sprd_vbpipe_command_desc *command)
 	};
 	char buff[sizeof(message) + command->command_len * 2 + 2];
 
-	cmdlen = sprd_vbpipe_encode_message(&message, command->command, command->command_len, buff, sizeof(buff));
+	cmdlen = sprd_diag_encode_message(&message, command->command, command->command_len, buff, sizeof(buff));
 	command->seq_num = message.seq_num;
 
 	while (1)
 	{
-		sprd_vbpipe_show_data("command", buff, cmdlen);
+		sprd_diag_show_data("command", buff, cmdlen);
 
 		rwlen = write(fd, buff, cmdlen);
 		if (rwlen < 0)
@@ -261,10 +262,10 @@ int sprd_vbpipe_send_command(int fd, struct sprd_vbpipe_command_desc *command)
 			return rwlen;
 		}
 
-		rwlen = sprd_vbpipe_read_reply(fd, command);
+		rwlen = sprd_diag_read_reply(fd, command);
 		if (rwlen < 0)
 		{
-			pr_error_info("sprd_vbpipe_read_reply");
+			pr_red_info("sprd_diag_read_reply");
 			return rwlen;
 		}
 
@@ -279,17 +280,17 @@ int sprd_vbpipe_send_command(int fd, struct sprd_vbpipe_command_desc *command)
 	return 0;
 }
 
-int sprd_vbpipe_read_imei(int fd, struct sprd_vbpipe_imei_data *imei, u8 mask)
+int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 {
 	int ret;
 	u16 crc;
 	u16 data = 0;
-	struct sprd_vbpipe_command_desc command =
+	struct sprd_diag_command_desc command =
 	{
-		.cmd_type = SPRD_VBPIPE_DIRECT_NV,
+		.cmd_type = SPRD_DIAG_DIRECT_NV,
 		.cmd_subtype = mask | 1 << 7,
-		.reply_type = SPRD_VBPIPE_DIRECT_NV,
-		.reply_subtype = SPRD_VBPIPE_OPER_SUCCESS_FLAG,
+		.reply_type = SPRD_DIAG_DIRECT_NV,
+		.reply_subtype = SPRD_DIAG_OPER_SUCCESS_FLAG,
 		.command = (char *)&data,
 		.command_len = sizeof(data),
 		.reply = (char *)imei,
@@ -298,10 +299,10 @@ int sprd_vbpipe_read_imei(int fd, struct sprd_vbpipe_imei_data *imei, u8 mask)
 
 	while (1)
 	{
-		ret = sprd_vbpipe_send_command(fd, &command);
+		ret = sprd_diag_send_command(fd, &command);
 		if (ret < 0)
 		{
-			pr_error_info("sprd_vbpipe_send_command");
+			pr_red_info("sprd_diag_send_command");
 			return ret;
 		}
 
@@ -310,7 +311,7 @@ int sprd_vbpipe_read_imei(int fd, struct sprd_vbpipe_imei_data *imei, u8 mask)
 			continue;
 		}
 
-		crc = sprd_vbpipe_crc16(0, (u8 *)imei, sizeof(*imei) - sizeof(imei->crc16));
+		crc = sprd_diag_crc16(0, (u8 *)imei, sizeof(*imei) - sizeof(imei->crc16));
 		println("CRC16 = 0x%04x = 0x%04x", imei->crc16, crc);
 		if (crc == imei->crc16)
 		{
@@ -321,22 +322,22 @@ int sprd_vbpipe_read_imei(int fd, struct sprd_vbpipe_imei_data *imei, u8 mask)
 	return 0;
 }
 
-int sprd_vbpipe_write_imei(int fd, struct sprd_vbpipe_imei_data *imei, u8 mask)
+int sprd_diag_write_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 {
 	char reply[1024];
-	struct sprd_vbpipe_command_desc command =
+	struct sprd_diag_command_desc command =
 	{
-		.cmd_type = SPRD_VBPIPE_DIRECT_NV,
+		.cmd_type = SPRD_DIAG_DIRECT_NV,
 		.cmd_subtype = mask,
-		.reply_type = SPRD_VBPIPE_DIRECT_NV,
-		.reply_subtype = SPRD_VBPIPE_OPER_SUCCESS_FLAG,
+		.reply_type = SPRD_DIAG_DIRECT_NV,
+		.reply_subtype = SPRD_DIAG_OPER_SUCCESS_FLAG,
 		.command = (char *)imei,
 		.command_len = sizeof(*imei),
 		.reply = reply,
 		.reply_len = sizeof(reply)
 	};
 
-	imei->crc16 = sprd_vbpipe_crc16(0, (u8 *)imei, sizeof(*imei) - sizeof(imei->crc16));
+	imei->crc16 = sprd_diag_crc16(0, (u8 *)imei, sizeof(*imei) - sizeof(imei->crc16));
 
-	return sprd_vbpipe_send_command(fd, &command);
+	return sprd_diag_send_command(fd, &command);
 }

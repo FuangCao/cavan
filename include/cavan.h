@@ -36,13 +36,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <cavan/debug.h>
-#include <cavan/types.h>
-#include <cavan/stdio.h>
-#include <cavan/text.h>
-#include <cavan/memory.h>
-#include <cavan/file.h>
-
 #define BYTE_IS_LF(b) \
 	((b) == '\r' || (b) == '\n')
 
@@ -112,3 +105,10 @@ static inline void ssleep(useconds_t sec)
 		msleep(1000);
 	}
 }
+
+#include <cavan/debug.h>
+#include <cavan/types.h>
+#include <cavan/stdio.h>
+#include <cavan/text.h>
+#include <cavan/memory.h>
+#include <cavan/file.h>

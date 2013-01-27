@@ -107,6 +107,9 @@ int main(int argc, char *argv[])
 			show_usage(argv[0]);
 			return 0;
 
+		case 'a':
+		case 'A':
+			file_req.open_connect = adb_create_tcp_link2;
 		case 'l':
 		case 'L':
 		case LOCAL_COMMAND_OPTION_LOCAL:
@@ -131,11 +134,6 @@ int main(int argc, char *argv[])
 		case 'r':
 		case 'R':
 			handler = tcp_dd_receive_file;
-			break;
-
-		case 'a':
-		case 'A':
-			file_req.open_connect = adb_create_tcp_link2;
 			break;
 
 		default:

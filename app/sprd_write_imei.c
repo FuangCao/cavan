@@ -6,7 +6,7 @@
 
 #include <cavan.h>
 #include <cavan/math.h>
-#include <cavan/sprd_vbpipe.h>
+#include <cavan/sprd_diag.h>
 
 #define FILE_CREATE_DATE "2013-01-27 22:03:56"
 
@@ -26,9 +26,16 @@ enum
 
 static void show_usage(const char *command)
 {
-	println("Usage: %s [option]", command);
+	println("Usage: %s [option] [devpath]", command);
 	println("--help, -h, -H\t\tshow this help");
 	println("--version, -v, -V\tshow version");
+	println("--imei, --imei1\t\twrite imei1");
+	println("--imei2\t\t\twrite imei2");
+	println("--imei3\t\t\twrite imei3");
+	println("--imei4\t\t\twrite imei4");
+	println("--bt, --bt-mac\t\twrite bluetooth mac address");
+	println("--wifi, --wifi-mac\twrite wifi mac address");
+	println("--dev, -d, -D\t\tvbpipe device path");
 }
 
 int main(int argc, char *argv[])
@@ -117,7 +124,7 @@ int main(int argc, char *argv[])
 	int ret;
 	u8 mask = 0;
 	char devpath[1024] = "/dev/vbpipe0";
-	struct sprd_vbpipe_imei_data imei;
+	struct sprd_diag_imei_data imei;
 
 	while ((c = getopt_long(argc, argv, "vVhHd:D:", long_option, &option_index)) != EOF)
 	{
@@ -137,32 +144,34 @@ int main(int argc, char *argv[])
 			return 0;
 
 		case LOCAL_COMMAND_OPTION_IMEI1:
-			mask |= SPRD_VBPIPE_MASK_IMEI1;
+			mask |= SPRD_DIAG_MASK_IMEI1;
 			math_text2memory(optarg, imei.imei1, sizeof(imei.imei1), 10);
 			break;
 
 		case LOCAL_COMMAND_OPTION_IMEI2:
-			mask |= SPRD_VBPIPE_MASK_IMEI2;
+			mask |= SPRD_DIAG_MASK_IMEI2;
 			break;
 
 		case LOCAL_COMMAND_OPTION_IMEI3:
-			mask |= SPRD_VBPIPE_MASK_IMEI3;
+			mask |= SPRD_DIAG_MASK_IMEI3;
 			break;
 
 		case LOCAL_COMMAND_OPTION_IMEI4:
-			mask |= SPRD_VBPIPE_MASK_IMEI4;
+			mask |= SPRD_DIAG_MASK_IMEI4;
 			break;
 
 		case LOCAL_COMMAND_OPTION_WIFI_MAC:
-			mask |= SPRD_VBPIPE_MASK_WIFI_MAC;
+			mask |= SPRD_DIAG_MASK_WIFI_MAC;
 			math_text2memory(optarg, imei.wifi_mac, sizeof(imei.wifi_mac), 16);
 			break;
 
 		case LOCAL_COMMAND_OPTION_BT_MAC:
-			mask |= SPRD_VBPIPE_MASK_BT_MAC;
+			mask |= SPRD_DIAG_MASK_BT_MAC;
 			math_text2memory(optarg, imei.bt_mac, sizeof(imei.bt_mac), 16);
 			break;
 
+		case 'd':
+		case 'D':
 		case LOCAL_COMMAND_OPTION_DEVICE:
 			text_copy(devpath, optarg);
 			break;
@@ -173,7 +182,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind > argc)
+	if (optind < argc)
 	{
 		text_copy(devpath, argv[optind]);
 	}
@@ -188,24 +197,24 @@ int main(int argc, char *argv[])
 	if (mask)
 	{
 		println("mask = 0x%02x", mask);
-		sprd_vbpipe_show_imei(&imei);
+		sprd_diag_show_imei(&imei);
 
-		ret = sprd_vbpipe_write_imei(fd, &imei, mask);
+		ret = sprd_diag_write_imei(fd, &imei, mask);
 		if (ret < 0)
 		{
-			pr_red_info("sprd_vbpipe_write_imei");
+			pr_red_info("sprd_diag_write_imei");
 		}
 	}
 	else
 	{
-		ret = sprd_vbpipe_read_imei(fd, &imei, 0xFF);
+		ret = sprd_diag_read_imei(fd, &imei, 0xFF);
 		if (ret < 0)
 		{
-			pr_red_info("sprd_vbpipe_read_imei");
+			pr_red_info("sprd_diag_read_imei");
 		}
 		else
 		{
-			sprd_vbpipe_show_imei(&imei);
+			sprd_diag_show_imei(&imei);
 		}
 	}
 
