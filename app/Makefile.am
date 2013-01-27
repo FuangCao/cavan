@@ -18,6 +18,7 @@ cavan_bsystem_SOURCES = bsystem.c
 cavan_buboot_SOURCES = buboot.c
 cavan_calculator_SOURCES = calculator.c
 cavan_chroot_SOURCES = chroot.c
+cavan_chtty_SOURCES = chtty.c
 cavan_copy_SOURCES = copy.c
 cavan_dd_SOURCES = dd.c
 cavan_df_SOURCES = df.c
@@ -55,6 +56,7 @@ cavan_screen_SOURCES = screen.c
 cavan_service_SOURCES = service.c
 cavan_show_file_SOURCES = show_file.c
 cavan_shrink_SOURCES = shrink.c
+cavan_sprd_write_imei_SOURCES = sprd_write_imei.c
 cavan_super_upgrade_SOURCES = super_upgrade.c
 cavan_swan_check_SOURCES = swan_check.c
 cavan_swan_emmc_SOURCES = swan_emmc.c
@@ -89,7 +91,7 @@ cavan_usb_dd_SOURCES = usb_dd.c
 cavan_usb_dd_server_SOURCES = usb_dd_server.c
 cavan_vfat_SOURCES = vfat.c
 
-bin_PROGRAMS = cavan-vfat cavan-usb_dd_server cavan-usb_dd cavan-usb_copy cavan-usb cavan-umount cavan-tty_mode cavan-touch cavan-tftp_dd_server cavan-tftp_dd cavan-tftp_copy cavan-tftp_command cavan-tftp_auto_dd cavan-textlen cavan-tcp_proxy cavan-tcp_exec cavan-tcp_dd_server cavan-tcp_dd cavan-tcp_copy cavan-system_init cavan-swan_vn cavan-swan_vk cavan-swan_upgrade cavan-swan_ts cavan-swan_sfdisk cavan-swan_mkfs cavan-swan_md5 cavan-swan_mac cavan-swan_ipu cavan-swan_fac cavan-swan_emmc cavan-swan_check cavan-super_upgrade cavan-shrink cavan-show_file cavan-service cavan-screen cavan-rle cavan-resize cavan-remove cavan-ramdisk cavan-poll_input cavan-poll_event cavan-part_table cavan-part_show cavan-part_probe cavan-net_monitor cavan-mtd cavan-move cavan-mount cavan-modem_upgrade cavan-mksdcard cavan-mknp cavan-loop_run cavan-inotify cavan-image_dd cavan-git_daemon cavan-ftp_server cavan-ftp cavan-file_loop cavan-file_join cavan-file_crc32 cavan-fdisk cavan-ext2 cavan-ecc cavan-eavoo_sell_statistic cavan-dos2unix cavan-df cavan-dd cavan-copy cavan-chroot cavan-calculator cavan-buboot cavan-bsystem cavan-brecovery cavan-bramdisk cavan-bmp_view cavan-bkernel cavan-bdata cavan-battery_level cavan-battery cavan-auto_mount cavan-auto_dd cavan-abspath 
+bin_PROGRAMS = cavan-vfat cavan-usb_dd_server cavan-usb_dd cavan-usb_copy cavan-usb cavan-umount cavan-tty_mode cavan-touch cavan-tftp_dd_server cavan-tftp_dd cavan-tftp_copy cavan-tftp_command cavan-tftp_auto_dd cavan-textlen cavan-tcp_proxy cavan-tcp_exec cavan-tcp_dd_server cavan-tcp_dd cavan-tcp_copy cavan-system_init cavan-swan_vn cavan-swan_vk cavan-swan_upgrade cavan-swan_ts cavan-swan_sfdisk cavan-swan_mkfs cavan-swan_md5 cavan-swan_mac cavan-swan_ipu cavan-swan_fac cavan-swan_emmc cavan-swan_check cavan-super_upgrade cavan-sprd_write_imei cavan-shrink cavan-show_file cavan-service cavan-screen cavan-rle cavan-resize cavan-remove cavan-ramdisk cavan-poll_input cavan-poll_event cavan-part_table cavan-part_show cavan-part_probe cavan-net_monitor cavan-mtd cavan-move cavan-mount cavan-modem_upgrade cavan-mksdcard cavan-mknp cavan-loop_run cavan-inotify cavan-image_dd cavan-git_daemon cavan-ftp_server cavan-ftp cavan-file_loop cavan-file_join cavan-file_crc32 cavan-fdisk cavan-ext2 cavan-ecc cavan-eavoo_sell_statistic cavan-dos2unix cavan-df cavan-dd cavan-copy cavan-chtty cavan-chroot cavan-calculator cavan-buboot cavan-bsystem cavan-brecovery cavan-bramdisk cavan-bmp_view cavan-bkernel cavan-bdata cavan-battery_level cavan-battery cavan-auto_mount cavan-auto_dd cavan-abspath 
 
 LDFLAGS = -Wl,-rpath -Wl,@abs_top_builddir@/lib/.libs -Wl,-rpath -Wl,@libdir@
 LIBS = @abs_top_builddir@/lib/.libs/libcavan.so -lpthread -lm -lrt
