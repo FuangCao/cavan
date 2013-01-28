@@ -84,11 +84,6 @@ int prefix2base(const char *prefix, const char **prefix_ret);
 u64 text2value_unsigned(const char *text, const char **text_ret, int base);
 s64 text2value(const char *text, const char **text_ret, int base);
 
-void text_reverse_simple(char *start, char *end);
-void text_reverse1(char *p1, char *p2);
-void text_reverse2(char *text, size_t size);
-void text_reverse3(char *text);
-
 char *reverse_value2text_base2(u64 value, char *buff, size_t size);
 char *reverse_value2text_base4(u64 value, char *buff, size_t size);
 char *reverse_value2text_base8(u64 value, char *buff, size_t size);
@@ -212,6 +207,9 @@ char *text_join_by_text(char *text[], size_t size1, const char *sep, char *buff,
 int text_array_find(const char *text, char *buff[], int size);
 char *text_find_line_end(const char *text, const char *end);
 
+extern void mem_reverse_simple(byte *start, byte *end);
+extern void mem_reverse(byte *start, byte *end);
+
 // ============================================================
 
 static inline char *text_trans(char *text)
@@ -274,3 +272,12 @@ static inline int text_contain_char(const char *text, char c)
 	return text_has_char(text, c);
 }
 
+static inline void text_reverse2(char *text, size_t size)
+{
+	mem_reverse_simple((byte *)text, (byte *)text + size - 1);
+}
+
+static inline void text_reverse3(char *text)
+{
+	text_reverse2(text, text_len(text));
+}

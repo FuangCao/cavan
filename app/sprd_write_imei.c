@@ -145,29 +145,32 @@ int main(int argc, char *argv[])
 
 		case LOCAL_COMMAND_OPTION_IMEI1:
 			mask |= SPRD_DIAG_MASK_IMEI1;
-			math_text2memory(optarg, imei.imei1, sizeof(imei.imei1), 10);
+			sprd_diag_text2imei(optarg, imei.imei1, sizeof(imei.imei1));
 			break;
 
 		case LOCAL_COMMAND_OPTION_IMEI2:
 			mask |= SPRD_DIAG_MASK_IMEI2;
+			sprd_diag_text2imei(optarg, imei.imei2, sizeof(imei.imei2));
 			break;
 
 		case LOCAL_COMMAND_OPTION_IMEI3:
 			mask |= SPRD_DIAG_MASK_IMEI3;
+			sprd_diag_text2imei(optarg, imei.imei3, sizeof(imei.imei3));
 			break;
 
 		case LOCAL_COMMAND_OPTION_IMEI4:
 			mask |= SPRD_DIAG_MASK_IMEI4;
+			sprd_diag_text2imei(optarg, imei.imei4, sizeof(imei.imei4));
 			break;
 
 		case LOCAL_COMMAND_OPTION_WIFI_MAC:
 			mask |= SPRD_DIAG_MASK_WIFI_MAC;
-			math_text2memory(optarg, imei.wifi_mac, sizeof(imei.wifi_mac), 16);
+			sprd_diag_text2mac(optarg, imei.wifi_mac, sizeof(imei.wifi_mac));
 			break;
 
 		case LOCAL_COMMAND_OPTION_BT_MAC:
 			mask |= SPRD_DIAG_MASK_BT_MAC;
-			math_text2memory(optarg, imei.bt_mac, sizeof(imei.bt_mac), 16);
+			sprd_diag_text2mac(optarg, imei.bt_mac, sizeof(imei.bt_mac));
 			break;
 
 		case 'd':

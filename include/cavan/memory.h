@@ -65,6 +65,9 @@ u16 checksum16(const u16 *buff, size_t size);
 
 size_t mem_byte_count(const char *mem, byte c, size_t size);
 
+void mem_reverse_simple(byte *start, byte *end);
+void mem_reverse(byte *start, byte *end);
+
 static inline char *mem_trans(char *text, size_t size)
 {
 	return text_ntrans(text, size);

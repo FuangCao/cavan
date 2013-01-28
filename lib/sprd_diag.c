@@ -5,6 +5,8 @@
  */
 
 #include <cavan.h>
+#include <cavan/math.h>
+#include <cavan/memory.h>
 #include <cavan/sprd_diag.h>
 
 static u16 const sprd_diag_crc16_table[256] =
@@ -75,27 +77,85 @@ void sprd_diag_show_data(const char *prompt, const char *data, size_t size)
 	if (size)
 	{
 #if __WORDSIZE == 64
-		pr_green_info("%s[%ld] = 0x%s", prompt, size, buff);
+		println("%s[%ld] = 0x%s", prompt, size, buff);
 #else
-		pr_green_info("%s[%d] = 0x%s", prompt, size, buff);
+		println("%s[%d] = 0x%s", prompt, size, buff);
 #endif
 	}
 	else
 	{
 #if __WORDSIZE == 64
-		pr_green_info("%s[%ld] = None", prompt, size);
+		println("%s[%ld] = None", prompt, size);
 #else
-		pr_green_info("%s[%d] = None", prompt, size);
+		println("%s[%d] = None", prompt, size);
 #endif
 	}
 }
 
+char *sprd_diag_imei_tostring(const byte *imei, size_t isize, char *buff, size_t size)
+{
+	char *buff_end;
+	const byte *imei_end;
+
+	for (buff_end = buff + size - 1, imei_end = imei + isize - 1; buff < buff_end && imei < imei_end; buff += 2, imei++)
+	{
+		buff[0] = value2char((imei[0] >> 4) & 0x0F);
+		buff[1] = value2char(imei[1] & 0x0F);
+	}
+
+	if (buff < buff_end)
+	{
+		*buff++ = value2char((imei[0] >> 4) & 0x0F);
+	}
+
+	*buff = 0;
+
+	return buff;
+}
+
+size_t sprd_diag_text2imei(const char *text, byte *imei, size_t isize)
+{
+	byte *imei_bak = imei, *imei_end;
+	byte lsb = 0x0A;
+
+	for (imei_end = imei + isize; text[0] && text[1] && imei < imei_end; text += 2, imei++)
+	{
+		*imei = char2value(text[0]) << 4 | lsb;
+		lsb = char2value(text[1]);
+	}
+
+	if (imei < imei_end && *text)
+	{
+		*imei++ = char2value(*text) << 4 | lsb;
+	}
+
+	return imei - imei_bak;
+}
+
+char *sprd_diag_text2mac(const char *text, byte *mac, size_t size)
+{
+	text = math_text2memory(text, mac, size, 16);
+	mem_reverse_simple(mac, mac + size - 1);
+
+	return (char *)text;
+}
+
 void sprd_diag_show_imei(const struct sprd_diag_imei_data *imei)
 {
-	sprd_diag_show_data("IMEI1", (char *)imei->imei1, sizeof(imei->imei1));
-	sprd_diag_show_data("IMEI2", (char *)imei->imei2, sizeof(imei->imei2));
-	sprd_diag_show_data("IMEI3", (char *)imei->imei3, sizeof(imei->imei3));
-	sprd_diag_show_data("IMEI4", (char *)imei->imei4, sizeof(imei->imei4));
+	char buff[64];
+
+	sprd_diag_imei_tostring(imei->imei1, sizeof(imei->imei1), buff, sizeof(buff));
+	println("IMEI1 = %s", buff);
+
+	sprd_diag_imei_tostring(imei->imei2, sizeof(imei->imei2), buff, sizeof(buff));
+	println("IMEI2 = %s", buff);
+
+	sprd_diag_imei_tostring(imei->imei3, sizeof(imei->imei3), buff, sizeof(buff));
+	println("IMEI3 = %s", buff);
+
+	sprd_diag_imei_tostring(imei->imei4, sizeof(imei->imei4), buff, sizeof(buff));
+	println("IMEI4 = %s", buff);
+
 	sprd_diag_show_data("WIFI-MAC", (char *)imei->wifi_mac, sizeof(imei->wifi_mac));
 	sprd_diag_show_data("BT-MAC", (char *)imei->bt_mac, sizeof(imei->bt_mac));
 }
@@ -246,7 +306,7 @@ ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command)
 	return reslen;
 }
 
-int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command)
+int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int retry)
 {
 	ssize_t rwlen;
 	size_t cmdlen;
@@ -265,6 +325,11 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command)
 
 	while (1)
 	{
+		if (--retry < 0)
+		{
+			ERROR_RETURN(ETIMEDOUT);
+		}
+
 		sprd_diag_show_data("command", buff, cmdlen);
 
 		rwlen = write(fd, buff, cmdlen);
@@ -275,6 +340,11 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command)
 		}
 
 		rwlen = sprd_diag_read_reply(fd, command);
+		if (errno == ETIMEDOUT)
+		{
+			continue;
+		}
+
 		if (rwlen < 0)
 		{
 			pr_red_info("sprd_diag_read_reply");
@@ -285,6 +355,10 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command)
 		{
 			break;
 		}
+	}
+
+	if (retry < 0)
+	{
 	}
 
 	command->reply_len = rwlen;
@@ -311,7 +385,7 @@ int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 
 	while (1)
 	{
-		ret = sprd_diag_send_command(fd, &command);
+		ret = sprd_diag_send_command(fd, &command, 10);
 		if (ret < 0)
 		{
 			pr_red_info("sprd_diag_send_command");
@@ -351,5 +425,5 @@ int sprd_diag_write_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 
 	imei->crc16 = sprd_diag_crc16(0, (u8 *)imei, sizeof(*imei) - sizeof(imei->crc16));
 
-	return sprd_diag_send_command(fd, &command);
+	return sprd_diag_send_command(fd, &command, 10);
 }

@@ -844,43 +844,6 @@ s64 text2value(const char *text, const char **text_ret, int base)
 	return text2value_unsigned(text, text_ret, base);
 }
 
-void text_reverse_simple(char *start, char *end)
-{
-	char tmp;
-
-	while (start < end)
-	{
-		tmp = *start;
-		*start = *end;
-		*end = tmp;
-
-		start++;
-		end--;
-	}
-}
-
-void text_reverse1(char *p1, char *p2)
-{
-	if (p1 < p2)
-	{
-		text_reverse_simple(p1, p2);
-	}
-	else if (p1 > p2)
-	{
-		text_reverse_simple(p2, p1);
-	}
-}
-
-void text_reverse2(char *text, size_t size)
-{
-	text_reverse_simple(text, text + size - 1);
-}
-
-void text_reverse3(char *text)
-{
-	text_reverse2(text, text_len(text));
-}
-
 char *reverse_value2text_base2(u64 value, char *buff, size_t size)
 {
 	char *buff_end;
@@ -1000,7 +963,7 @@ char *simple_value2text_unsigned(u64 value, char *buff, size_t size, int base)
 	char *tail;
 
 	tail = simple_value2text_reverse(value, buff, size, base);
-	text_reverse_simple(buff, tail - 1);
+	mem_reverse_simple((byte *)buff, (byte *)tail - 1);
 
 	return tail;
 }

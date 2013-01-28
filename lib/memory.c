@@ -552,3 +552,30 @@ size_t mem_byte_count(const char *mem, byte c, size_t size)
 
 	return count;
 }
+
+void mem_reverse_simple(byte *start, byte *end)
+{
+	byte tmp;
+
+	while (start < end)
+	{
+		tmp = *start;
+		*start = *end;
+		*end = tmp;
+
+		start++;
+		end--;
+	}
+}
+
+void mem_reverse(byte *start, byte *end)
+{
+	if (start < end)
+	{
+		mem_reverse_simple(start, end);
+	}
+	else if (start > end)
+	{
+		mem_reverse_simple(end, start);
+	}
+}

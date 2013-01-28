@@ -34,14 +34,14 @@ struct sprd_diag_message_desc
 
 struct sprd_diag_imei_data
 {
-	u8 imei1[8];
-	u8 imei2[8];
-	u8 bt_mac[6];
-	u8 gps_info[44];
-	u8 wifi_mac[6];
+	byte imei1[8];
+	byte imei2[8];
+	byte bt_mac[6];
+	byte gps_info[44];
+	byte wifi_mac[6];
 	u8 reserved1[2];
-	u8 imei3[8];
-	u8 imei4[8];
+	byte imei3[8];
+	byte imei4[8];
 	u8 reserved2[16];
 	u16 crc16;
 };
@@ -103,13 +103,16 @@ enum sprd_diag_command_type
 u16 sprd_diag_crc16(u16 crc, const u8 *buff, size_t size);
 void sprd_diag_show_data(const char *prompt, const char *data, size_t size);
 void sprd_diag_show_imei(const struct sprd_diag_imei_data *imei);
+size_t sprd_diag_text2imei(const char *text, byte *imei, size_t isize);
+char *sprd_diag_imei_tostring(const byte *imei, size_t isize, char *buff, size_t size);
+char *sprd_diag_text2mac(const char *text, byte *mac, size_t size);
 
 char *sprd_diag_encode_data(const char *src, size_t srclen, char *dest, size_t destlen);
 size_t sprd_diag_encode_message(const struct sprd_diag_message_desc *message, const char *src, size_t srclen, char *dest, size_t destlen);
 char *sprd_diag_decode_data(const char *src, size_t srclen, char *dest, size_t destlen, size_t *reslen);
 
 ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command);
-int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command);
+int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int retry);
 
 int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask);
 int sprd_diag_write_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask);

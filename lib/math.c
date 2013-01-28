@@ -176,7 +176,7 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 		*text++ = '-';
 	}
 
-	text_reverse_simple(text_bak, text - 1);
+	mem_reverse_simple((byte *)text_bak, (byte *)text - 1);
 
 	*text = 0;
 
