@@ -739,7 +739,7 @@ int prefix2base(const char *prefix, const char **prefix_ret)
 
 	if (*prefix != '0')
 	{
-		base = 10;
+		base = -1;
 		goto out_return;
 	}
 
