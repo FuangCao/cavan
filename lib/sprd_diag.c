@@ -230,65 +230,78 @@ ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command)
 {
 	ssize_t rdlen;
 	size_t reslen;
-	char c;
-	char buff[1024], *p, *p_end;
+	int found = 0;
 	struct sprd_diag_message_desc message;
+	char useful[1024], *pos, *pos_end;
+	char buff[1024], *p = NULL, *p_end;
 
-	while (1)
+	found = 0;
+	pos = useful;
+	pos_end = pos + sizeof(useful);
+
+	while (pos < pos_end && found < 2)
 	{
-		while (1)
+		rdlen = file_read_timeout(fd, buff, sizeof(buff), 1000);
+		if (rdlen < 0)
 		{
-			rdlen = file_read_timeout(fd, &c, 1, 5000);
-			if (rdlen < 0)
-			{
-				pr_error_info("file_read_timeout");
-				return rdlen;
-			}
+			pr_error_info("file_read_timeout");
+			return rdlen;
+		}
 
-			if (c == SPRD_DIAG_FLAG_BYTE)
+		for (p = buff, p_end = buff + rdlen; p < p_end; p++)
+		{
+			if (*p == SPRD_DIAG_FLAG_BYTE)
 			{
 				break;
 			}
 		}
 
-		p = buff;
-		p_end = p + sizeof(buff);
-
-		while (p < p_end)
+		if (p < p_end)
 		{
-			rdlen = file_read_timeout(fd, p, 1, 5000);
-			if (rdlen < 0)
+label_found:
+			if (found)
 			{
-				pr_error_info("file_read_timeout");
-				return rdlen;
-			}
-
-			if (*p != SPRD_DIAG_FLAG_BYTE)
-			{
-				p++;
-				continue;
-			}
-
-			rdlen = p - buff;
-			if (rdlen < (ssize_t)sizeof(message))
-			{
+				p_end = p;
 				p = buff;
 			}
-			else
+			else while (p < p_end && *p == SPRD_DIAG_FLAG_BYTE)
 			{
-				break;
+				p++;
 			}
+
+			found++;
+		}
+		else if (found)
+		{
+			p = buff;
+		}
+		else
+		{
+			continue;
 		}
 
-		p_end = p;
-		p = sprd_diag_decode_data(buff, rdlen, (char *)&message, sizeof(message), NULL);
-		if (message.type == command->reply_type && message.subtype == command->reply_subtype && message.seq_num == command->seq_num)
+		while (pos < pos_end && p < p_end)
 		{
-			break;
+			*pos++ = *p++;
 		}
 	}
 
-	sprd_diag_decode_data(p, p_end - p, command->reply, command->reply_len, &reslen);
+	pos_end = pos;
+
+	pos = sprd_diag_decode_data(useful, pos_end - useful, (char *)&message, sizeof(message), NULL);
+	if (message.type != command->reply_type || message.subtype != command->reply_subtype || message.seq_num != command->seq_num)
+	{
+		if (p == NULL)
+		{
+			return 0;
+		}
+
+		found = 0;
+		pos = useful;
+		goto label_found;
+	}
+
+	sprd_diag_decode_data(pos, pos_end - pos, command->reply, command->reply_len, &reslen);
 
 	rdlen = message.length - sizeof(message);
 	if (reslen != (size_t)rdlen)
@@ -341,6 +354,8 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 			return rwlen;
 		}
 
+		fsync(fd);
+
 		rwlen = sprd_diag_read_reply(fd, command);
 		if (rwlen < 0 && errno != ETIMEDOUT)
 		{
@@ -352,10 +367,6 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 		{
 			break;
 		}
-	}
-
-	if (retry < 0)
-	{
 	}
 
 	command->reply_len = rwlen;
