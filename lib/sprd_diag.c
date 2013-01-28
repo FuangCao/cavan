@@ -74,11 +74,19 @@ void sprd_diag_show_data(const char *prompt, const char *data, size_t size)
 
 	if (size)
 	{
+#if __WORDSIZE == 64
+		pr_green_info("%s[%ld] = 0x%s", prompt, size, buff);
+#else
 		pr_green_info("%s[%d] = 0x%s", prompt, size, buff);
+#endif
 	}
 	else
 	{
+#if __WORDSIZE == 64
+		pr_green_info("%s[%ld] = None", prompt, size);
+#else
 		pr_green_info("%s[%d] = None", prompt, size);
+#endif
 	}
 }
 
@@ -225,7 +233,11 @@ ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command)
 	rdlen = message.length - sizeof(message);
 	if (reslen != (size_t)rdlen)
 	{
+#if __WORDSIZE == 64
+		pr_red_info("reslen(%ld) != rdlen(%ld)", reslen, rdlen);
+#else
 		pr_red_info("reslen(%d) != rdlen(%d)", reslen, rdlen);
+#endif
 		return -EINVAL;
 	}
 
