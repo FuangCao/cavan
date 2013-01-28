@@ -241,7 +241,7 @@ ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command)
 
 	while (pos < pos_end && found < 2)
 	{
-		rdlen = file_read_timeout(fd, buff, sizeof(buff), 1000);
+		rdlen = file_read_timeout(fd, buff, sizeof(buff), 500);
 		if (rdlen < 0)
 		{
 			pr_error_info("file_read_timeout");
@@ -258,15 +258,30 @@ ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command)
 
 		if (p < p_end)
 		{
-label_found:
 			if (found)
 			{
 				p_end = p;
 				p = buff;
 			}
-			else while (p < p_end && *p == SPRD_DIAG_FLAG_BYTE)
+			else
+label_found_one:
 			{
-				p++;
+				char *q;
+
+				while (*p == SPRD_DIAG_FLAG_BYTE)
+				{
+					p++;
+				}
+
+				for (q = p; q < p_end; q++)
+				{
+					if (*q == SPRD_DIAG_FLAG_BYTE)
+					{
+						p_end = q;
+						found++;
+						break;
+					}
+				}
 			}
 
 			found++;
@@ -286,21 +301,29 @@ label_found:
 		}
 	}
 
-	pos_end = pos;
-
-	pos = sprd_diag_decode_data(useful, pos_end - useful, (char *)&message, sizeof(message), NULL);
-	if (message.type != command->reply_type || message.subtype != command->reply_subtype || message.seq_num != command->seq_num)
+	reslen = pos - useful;
+	if (reslen >= sizeof(message) + 2)
 	{
-		if (p == NULL)
-		{
-			return 0;
-		}
+		pos_end = pos;
+		pos = sprd_diag_decode_data(useful, reslen, (char *)&message, sizeof(message), NULL);
 
-		found = 0;
-		pos = useful;
-		goto label_found;
+		if (message.type == command->reply_type && message.subtype == command->reply_subtype && message.seq_num == command->seq_num)
+		{
+			goto label_decode_data;
+		}
 	}
 
+	if (p == NULL)
+	{
+		ERROR_RETURN(EINVAL);
+	}
+
+	found = 0;
+	pos = useful;
+	p_end = buff + rdlen;
+	goto label_found_one;
+
+label_decode_data:
 	sprd_diag_decode_data(pos, pos_end - pos, command->reply, command->reply_len, &reslen);
 
 	rdlen = message.length - sizeof(message);
@@ -356,6 +379,12 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 
 		fsync(fd);
 
+		if (command->reply == NULL || command->reply_len == 0)
+		{
+			command->reply_len = 0;
+			break;
+		}
+
 		rwlen = sprd_diag_read_reply(fd, command);
 		if (rwlen < 0 && errno != ETIMEDOUT)
 		{
@@ -365,11 +394,10 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 
 		if (rwlen > 0)
 		{
+			command->reply_len = rwlen;
 			break;
 		}
 	}
-
-	command->reply_len = rwlen;
 
 	return 0;
 }
