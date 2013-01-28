@@ -332,6 +332,8 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 
 		sprd_diag_show_data("command", buff, cmdlen);
 
+		file_discard_all(fd);
+
 		rwlen = write(fd, buff, cmdlen);
 		if (rwlen < 0)
 		{
@@ -340,12 +342,7 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 		}
 
 		rwlen = sprd_diag_read_reply(fd, command);
-		if (errno == ETIMEDOUT)
-		{
-			continue;
-		}
-
-		if (rwlen < 0)
+		if (rwlen < 0 && errno != ETIMEDOUT)
 		{
 			pr_red_info("sprd_diag_read_reply");
 			return rwlen;

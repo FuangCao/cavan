@@ -2277,6 +2277,47 @@ bool file_poll(int fd, short events, int timeout_ms)
 	return true;
 }
 
+bool file_discard_all(int fd)
+{
+	int ret;
+	ssize_t rdlen;
+	char buff[1024];
+	struct pollfd pfd =
+	{
+		.fd = fd,
+		.events = POLLIN,
+	};
+
+	while (1)
+	{
+		ret = poll(&pfd, 1, 0);
+		if (ret < 0)
+		{
+			pr_error_info("poll");
+			return false;
+		}
+
+		if (ret < 1)
+		{
+			break;
+		}
+
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen < 0)
+		{
+			pr_error_info("read");
+			return false;
+		}
+
+		if (rdlen < (ssize_t)sizeof(buff))
+		{
+			break;
+		}
+	}
+
+	return true;
+}
+
 char file_type_to_char(mode_t mode)
 {
 	switch (mode & S_IFMT)

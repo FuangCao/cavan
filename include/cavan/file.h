@@ -123,6 +123,7 @@ int file_replace_line_simple(const char *file_path, const char *prefix, off_t pr
 int file_stat(const char *file_name, struct stat *st);
 int file_select_read(int fd, int timeout_ms);
 bool file_poll(int fd, short events, int timeout_ms);
+bool file_discard_all(int fd);
 
 u32 mem_checksum32_simple(const char *mem, size_t count);
 u16 mem_checksum16_simple(const char *mem, size_t count);
