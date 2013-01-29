@@ -56,3 +56,26 @@ function cavan-app-install()
 
 	return 0
 }
+
+function cavan-git-daemon-run()
+{
+	PORT=${1-"7777"}
+	BASE_PATH=${2-${HOME}/git}
+
+	mkdir ${BASE_PATH} -p || exit 1
+
+	echo "BASE_PATH = ${BASE_PATH}"
+	echo "PORT = ${PORT}"
+
+	`git --exec-path`/git-daemon --verbose --port=${PORT} --export-all --enable=receive-pack --enable=upload-pack --enable=upload-archive --base-path=${BASE_PATH}
+}
+
+function cavan-daemon-run()
+{
+	cavan-tcp_dd_server -ds0
+	cavan-tcp_proxy -adp 9999
+	cavan-tcp_proxy --daemon --pip 123.58.173.89 --pport 80 --port 6666
+	cavan-git-daemon-run 7777 &
+
+	return 0
+}
