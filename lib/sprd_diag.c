@@ -228,14 +228,13 @@ char *sprd_diag_decode_data(const char *src, size_t srclen, char *dest, size_t d
 
 ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command)
 {
-	ssize_t rdlen;
 	size_t reslen;
 	int found = 0;
+	ssize_t rdlen = 0;
 	struct sprd_diag_message_desc message;
 	char useful[1024], *pos, *pos_end;
 	char buff[1024], *p = NULL, *p_end;
 
-	found = 0;
 	pos = useful;
 	pos_end = pos + sizeof(useful);
 

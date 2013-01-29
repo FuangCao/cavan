@@ -33,7 +33,8 @@ export KERNEL_HOME UBOOT_HOME FSLDROID_HOME PRODUCT_HOME
 export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE CAVAN_OUT_DEBUG
 export CAVAN_HOME CAVAN_SERVER_IP CAVAN_SERVER_PORT
 
-for fn in ${CAVAN_HOME}/script/core/alias.sh ${CAVAN_HOME}/script/core/file.sh ${CAVAN_HOME}/script/core/bash_completion ${FSLDROID_HOME}/build/envsetup.sh
+for fn in alias.sh file.sh bash_completion.sh application.sh ${FSLDROID_HOME}/build/envsetup.sh
 do
-	[ -f "$fn" ] && source ${fn}
+	[ -f "${fn}" ] || fn="${CAVAN_HOME}/script/core/${fn}"
+	[ -f "${fn}" ] && source ${fn}
 done

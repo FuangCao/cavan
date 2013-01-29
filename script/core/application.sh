@@ -75,7 +75,7 @@ function cavan-daemon-run()
 	cavan-tcp_dd_server -ds0
 	cavan-tcp_proxy -adp 9999
 	cavan-tcp_proxy --daemon --pip 123.58.173.89 --pport 80 --port 6666
-	cavan-git-daemon-run 7777 &
+	cavan-git-daemon-run 7777
 
 	return 0
 }
