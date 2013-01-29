@@ -462,3 +462,37 @@ int sprd_diag_write_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 
 	return sprd_diag_send_command(fd, &command, 10);
 }
+
+ssize_t sprd_modem_send_at_command(int fd, char *reply, size_t size, const char *command, ...)
+{
+	va_list ap;
+	ssize_t rwlen;
+	char buff[1024];
+
+	va_start(ap, command);
+	rwlen = vsnprintf(buff, sizeof(buff), command, ap);
+	va_end(ap);
+
+	rwlen = write(fd, buff, rwlen);
+	if (rwlen < 0)
+	{
+		pr_error_info("write");
+		return rwlen;
+	}
+
+	if (reply == NULL || size == 0)
+	{
+		return 0;
+	}
+
+	rwlen = file_read_timeout(fd, reply, size, 5000);
+	if (rwlen < 0)
+	{
+		pr_error_info("file_read_timeout");
+		return rwlen;
+	}
+
+	print_ntext(reply, rwlen);
+
+	return rwlen;
+}

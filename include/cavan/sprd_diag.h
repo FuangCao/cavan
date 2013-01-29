@@ -8,20 +8,22 @@
 
 #include <cavan.h>
 
-#define	SPRD_DIAG_FLAG_BYTE		0x7E
+#define	SPRD_DIAG_FLAG_BYTE			0x7E
 #define SPRD_DIAG_ESCAPE_BYTE		0x7D
 #define SPRD_DIAG_COMPLEMENT_BYTE	0x20
 
 #define SPRD_DIAG_MASK_IMEI1		(1 << 0)
 #define SPRD_DIAG_MASK_IMEI2		(1 << 1)
 #define SPRD_DIAG_MASK_BT_MAC		(1 << 2)
-#define SPRD_DIAG_MASK_GPS_INFO	(1 << 3)
+#define SPRD_DIAG_MASK_GPS_INFO		(1 << 3)
 #define SPRD_DIAG_MASK_IMEI3		(1 << 4)
 #define SPRD_DIAG_MASK_IMEI4		(1 << 5)
-#define SPRD_DIAG_MASK_WIFI_MAC	(1 << 6)
-#define SPRD_DIAG_READ_FLAG		(1 << 7)
+#define SPRD_DIAG_MASK_WIFI_MAC		(1 << 6)
+#define SPRD_DIAG_READ_FLAG			(1 << 7)
 
 #define SPRD_DIAG_OPER_SUCCESS_FLAG	0x01
+
+#define SPRD_DEFAULT_AT_DEVICE		"/dev/CHNPTY12"
 
 #pragma pack(1)
 struct sprd_diag_message_desc
@@ -116,3 +118,5 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 
 int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask);
 int sprd_diag_write_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask);
+
+ssize_t sprd_modem_send_at_command(int fd, char *reply, size_t size, const char *command, ...);
