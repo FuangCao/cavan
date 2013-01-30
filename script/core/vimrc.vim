@@ -9,7 +9,8 @@ set mouse=a		" Enable mouse usage (all modes)
 set nu
 set ts=4
 set ai
-"set hlsearch
+set hlsearch
+set fencs=utf-8,cp936
 let c_space_errors=1
 
 set path+=/cavan/include
@@ -53,3 +54,51 @@ nmap ln :set mouse=<cr>:set nonu<cr>
 nmap lc :wa<cr>:!cavan-gcc<cr>
 nmap le :!./a.out<cr>
 nmap lm :wa<cr>:!make<cr>
+
+if has("autocmd")
+	au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$")
+		\| exe "normal g'\"" |
+endif
+
+set nocompatible
+set columns=80
+filetype on
+set history=1000
+set autoindent
+set smartindent
+set tabstop=4
+set shiftwidth=4
+set showmatch
+set guioptions-=T
+set vb t_vb=
+set ruler
+set nohls
+set noexpandtab
+set ignorecase
+set cindent
+set fencs=utf-8,cp936
+set showcmd
+set wildmenu
+set updatetime=100
+
+autocmd FileType python set omnifunc=pythoncomplete#Complete
+
+let Tlist_Use_Right_Window=1
+let Tlist_File_Fold_Auto_Close=1
+
+if has("cscope")
+	set csprg=/usr/bin/cscope
+	set csto=0
+	set cst
+	set nocsverb
+
+	if filereadable("cscope.out")
+		cs add cscope.out
+	elseif $CSCOPE_DB != ""
+		cs add $CSCOPE_DB
+	endif
+
+	set csverb
+	set cscopetag
+	"set cscopequickfix=s-,g-,d-,t-,e-,f-,i-
+endif

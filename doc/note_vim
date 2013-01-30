@@ -71,3 +71,8 @@ J{3,5}     JJJ或JJJJ或JJJJJ
 两者取一|
 J|A     J或A
 Java|Hello     Java或Hello
+
+apt-get install ctags cscope
+
+cscope -Rbq
+ctags -R .
