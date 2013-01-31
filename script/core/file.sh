@@ -324,3 +324,9 @@ function cavan-svn-sync()
 
 	return 0
 }
+
+function cavan-cscope-update()
+{
+	cscope -Rbq
+	ctags -R .
+}
