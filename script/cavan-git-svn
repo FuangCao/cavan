@@ -32,7 +32,7 @@ class CavanGitSvn:
 		return os.system(command) == 0
 
 	def sync(self):
-		if not os.path.exists(".svn") or not self.system("svn update"):
+		if not self.system("svn info") or not self.system("svn update"):
 			return False
 
 		if not os.path.exists(".git") and not self.system("git init"):
