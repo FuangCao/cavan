@@ -28,6 +28,13 @@ function _cavan_svn_repo()
 
 complete -F _cavan_svn_repo cavan-svn-repo svn-repo.py
 
+function _cavan_git_svn()
+{
+	_build_completion "init clone update sync"
+}
+
+complete -F _cavan_git_svn cavan-git-svn git-svn.py
+
 function _adb_completion()
 {
 	_build_completion "devices connect disconnect push pull sync shell" \

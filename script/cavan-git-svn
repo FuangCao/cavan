@@ -32,7 +32,7 @@ class CavanGitSvn:
 		return os.system(command) == 0
 
 	def sync(self):
-		if not self.system("svn update"):
+		if not os.path.exists(".svn") or not self.system("svn update"):
 			return False
 
 		if not os.path.exists(".git") and not self.system("git init"):
@@ -41,6 +41,7 @@ class CavanGitSvn:
 		fp = os.popen("svn list -R")
 		if fp == None:
 			return False
+
 		while True:
 			line = fp.readline()
 			if len(line) == 0:
