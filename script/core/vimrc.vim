@@ -61,7 +61,7 @@ if has("autocmd")
 endif
 
 set nocompatible
-set columns=80
+" set columns=80
 filetype on
 set history=1000
 set autoindent
