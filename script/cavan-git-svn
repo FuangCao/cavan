@@ -50,9 +50,7 @@ class CavanGitSvn:
 			if len(line) == 0 or line.endswith("/"):
 				continue
 
-			if not self.system("git add -f \"%s\"" % line, False):
-				fp.close()
-				return False
+			self.system("git add -f '%s'" % line)
 
 		fp.close()
 
