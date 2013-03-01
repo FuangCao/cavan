@@ -464,16 +464,18 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 	size_t size;
 	int x, y, width, height, code;
 
+	dev->vk_head = NULL;
+
 	sprintf(pathname, "/sys/board_properties/virtualkeys.%s", dev->name);
-	mem = file_read_all(pathname, &size);
+	mem = file_read_all(pathname, 0, &size);
 	if (mem == NULL)
 	{
+		// pr_red_info("file_read_all %s", pathname);
 		return -ENOMEM;
 	}
 
 	pr_bold_info("Parse virtual key file %s", pathname);
 
-	dev->vk_head = NULL;
 	file_end = mem + size;
 	p = text_skip_space_head(mem, file_end);
 
@@ -537,14 +539,13 @@ static char *cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, 
 
 static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 {
-	int fd;
 	int ret;
 	char pathname[1024];
 	uint8_t key_bitmask[sizeof_bit_array(KEY_CNT)];
 	const char *p, *line_end, *file_end;
 	struct cavan_keylayout_node *node;
 	struct cavan_virtual_key *vk;
-	void *map;
+	char *mem;
 	size_t size;
 
 	if (cavan_event_get_keylayout_pathname(dev, pathname) == NULL)
@@ -560,24 +561,26 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 		return ret;
 	}
 
-	fd = file_mmap(pathname, &map, &size, O_RDONLY);
-	if (fd < 0)
+	mem = file_read_all(pathname, 1, &size);
+	if (mem == NULL)
 	{
-		pr_red_info("cavan_file_mmap");
-		return fd;
+		pr_red_info("file_read_all %s", pathname);
+		return -EFAULT;
 	}
+
+	mem[size] = 0;
 
 	pr_bold_info("Parse keylayout file %s", pathname);
 
 	dev->kl_head = NULL;
-	p = map;
+	p = mem;
 	file_end = p + size;
 
 	node = malloc(sizeof(*node));
 	if (node == NULL)
 	{
 		pr_error_info("malloc");
-		goto out_file_unmap;
+		goto out_free_memory;
 	}
 
 	for (vk = dev->vk_head; vk; vk = vk->next)
@@ -623,8 +626,8 @@ label_goto_next_line:
 		vk->name = cavan_event_find_key_name(dev, vk->code);
 	}
 
-out_file_unmap:
-	file_unmap(fd, map, size);
+out_free_memory:
+	free(mem);
 
 	return 0;
 }

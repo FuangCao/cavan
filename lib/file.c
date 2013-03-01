@@ -2694,7 +2694,7 @@ void file_unmap(int fd, void *map, size_t size)
 	close(fd);
 }
 
-void *file_read_all(const char *pathname, size_t *size)
+void *file_read_all(const char *pathname, size_t extra, size_t *size)
 {
 	int ret;
 	int fd;
@@ -2716,7 +2716,7 @@ void *file_read_all(const char *pathname, size_t *size)
 		return NULL;
 	}
 
-	mem = malloc(st.st_size);
+	mem = malloc(st.st_size + extra);
 	if (mem == NULL)
 	{
 		pr_error_info("malloc");
