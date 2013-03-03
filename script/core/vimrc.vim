@@ -1,5 +1,5 @@
 "set showcmd		" Show (partial) command in status line.
-"set showmatch		" Show matching brackets.
+set showmatch		" Show matching brackets.
 set ignorecase		" Do case insensitive matching
 "set smartcase		" Do smart case matching
 set incsearch		" Incremental search
@@ -92,10 +92,23 @@ if has("cscope")
 	set cst
 	set nocsverb
 
-	if filereadable("cscope.out")
-		cs add cscope.out
-	elseif $CSCOPE_DB != ""
-		cs add $CSCOPE_DB
+	if has("python")
+python << EOF
+import os, vim
+
+dirname = os.getcwd()
+
+while True:
+	pathname = os.path.join(dirname, "cscope.out")
+	if os.path.exists(pathname):
+		vim.command("cs add %s %s" % (pathname, dirname))
+		break
+
+	if dirname == "/":
+		break
+
+	dirname = os.path.dirname(dirname)
+EOF
 	endif
 
 	set csverb
