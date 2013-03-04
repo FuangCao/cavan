@@ -1,1 +1,2 @@
-ndiswrapper*：解决无线上网问题
+ndiswrapper*：	解决无线上网问题
+squid:			代理服务器，配置文件为“/etc/squid.conf”
