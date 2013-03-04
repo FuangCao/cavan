@@ -115,3 +115,12 @@ EOF
 	set cscopetag
 	"set cscopequickfix=s-,g-,d-,t-,e-,f-,i-
 endif
+
+python << EOF
+import os, vim
+
+dirname = os.path.join(os.getenv("CAVAN_HOME"), "script/core/vim")
+
+for filename in os.listdir(dirname):
+	vim.command("source %s/%s" % (dirname, filename))
+EOF
