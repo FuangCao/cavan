@@ -46,14 +46,11 @@ void mem_copy64(u64 *dest, const u64 *src, size_t count)
 void *mem_copy(void *dest, const void *src, size_t size)
 {
 	size_t count;
-	void *dest_bak;
 
 	if (dest == src)
 	{
 		return dest;
 	}
-
-	dest_bak = dest;
 
 	if (((long)dest & 0x07) == 0 && ((long)src & 0x07) == 0)
 	{
@@ -98,7 +95,7 @@ void *mem_copy(void *dest, const void *src, size_t size)
 		mem_copy8(dest, src, count);
 	}
 
-	return dest_bak;
+	return (u8 *)dest + count;
 }
 
 // ================================================================================
