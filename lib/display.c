@@ -904,9 +904,9 @@ int cavan_display_draw_polygon_standard4(struct cavan_display_device *display, s
 
 int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct cavan_display_memory *mem, bool read)
 {
-	char *data;
+	byte *data;
+	byte *p, *p_end;
 	size_t line_size;
-	char *p, *p_end;
 	int width;
 	int right, bottom;
 
@@ -943,7 +943,7 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 	width = mem->width * display->bpp_byte;
 	line_size = display->bpp_byte * display->xres;
 
-	p = (char *)display->fb_base + mem->y * line_size + mem->x * display->bpp_byte;
+	p = (byte *)display->fb_base + mem->y * line_size + mem->x * display->bpp_byte;
 	p_end = p + mem->height * line_size;
 
 	data = mem->data;

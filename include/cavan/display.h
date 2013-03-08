@@ -33,7 +33,7 @@ struct cavan_display_memory
 	int width, height;
 	int width_max, height_max;
 
-	char data[0];
+	byte data[0];
 };
 
 struct cavan_display_rect
