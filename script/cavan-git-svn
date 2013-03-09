@@ -4,6 +4,7 @@
 #"""
 
 GIT_SVN_DEBUG = 1
+FILE_LIST_NAME = "svn-file-list.txt"
 
 import sys, os, time, re, traceback
 from sys import argv
@@ -38,22 +39,29 @@ class CavanGitSvn:
 		if not os.path.exists(".git") and not self.system("git init"):
 			return False
 
-		fp = os.popen("svn list -R")
-		if fp == None:
+		fp_file = open(FILE_LIST_NAME, "w")
+		if fp_file == None:
+			return False
+
+		fp_cmd = os.popen("svn list -R")
+		if fp_cmd == None:
+			fp_file.close()
 			return False
 
 		while True:
-			line = fp.readline()
+			line = fp_cmd.readline()
 			if len(line) == 0:
 				break
 			line = line.strip()
 			if len(line) == 0 or line.endswith("/"):
 				continue
 
-			self.system("git add -f '%s'" % line)
+			fp_file.write(line + "\n")
 
-		fp.close()
+		fp_cmd.close()
+		fp_file.close()
 
+		self.system("git add -f $(cat %s) %s" % (FILE_LIST_NAME, FILE_LIST_NAME))
 		self.system("git commit -asm \"sync from svn\"")
 
 		return True
