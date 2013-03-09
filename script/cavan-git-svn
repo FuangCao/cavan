@@ -5,6 +5,7 @@
 
 GIT_SVN_DEBUG = 1
 FILE_LIST_NAME = "svn-file-list.txt"
+FILE_DIFF_NAME = "svn-file-diff.txt"
 
 import sys, os, time, re, traceback
 from sys import argv
@@ -39,38 +40,19 @@ class CavanGitSvn:
 		if not os.path.exists(".git") and not self.system("git init"):
 			return False
 
-		fp_file = open(FILE_LIST_NAME, "w")
-		if fp_file == None:
+		if self.system("svn list -R | sed -e \"/.*\/\+$/d\" > %s" % FILE_LIST_NAME) == False:
 			return False
 
-		fp_cmd = os.popen("svn list -R")
-		if fp_cmd == None:
-			fp_file.close()
-			return False
-
-		while True:
-			line = fp_cmd.readline()
-			if len(line) == 0:
-				break
-			line = line.strip()
-			if len(line) == 0 or line.endswith("/"):
-				continue
-
-			fp_file.write(line + "\n")
-
-		fp_cmd.close()
-		fp_file.close()
-
-		if self.system("git add -f " + FILE_LIST_NAME) == False:
+		if self.system("git add -f %s" % FILE_LIST_NAME) == False:
 			return False
 
 		if self.system("git add -f $(cat %s)" % FILE_LIST_NAME) == False:
-			fp_file = open(FILE_LIST_NAME, "r")
-			if fp_file == None:
+			fp = open(FILE_LIST_NAME, "r")
+			if fp == None:
 				return False
 
-			lines = fp_file.readlines()
-			fp_file.close()
+			lines = fp.readlines()
+			fp.close()
 
 			for line in lines:
 				self.system("git add -f '%s'" % line.strip())
