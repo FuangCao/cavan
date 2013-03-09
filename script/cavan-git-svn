@@ -61,15 +61,16 @@ class CavanGitSvn:
 		fp_cmd.close()
 		fp_file.close()
 
-		if self.system("git add -f $(cat %s) %s" % (FILE_LIST_NAME, FILE_LIST_NAME)) == False:
+		if self.system("git add -f " + FILE_LIST_NAME) == False:
+			return False
+
+		if self.system("git add -f $(cat %s)" % FILE_LIST_NAME) == False:
 			fp_file = open(FILE_LIST_NAME, "r")
 			if fp_file == None:
 				return False
 
 			lines = fp_file.readlines()
 			fp_file.close()
-
-			lines.append(FILE_LIST_NAME)
 
 			for line in lines:
 				self.system("git add -f '%s'" % line.strip())
