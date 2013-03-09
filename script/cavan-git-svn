@@ -61,7 +61,19 @@ class CavanGitSvn:
 		fp_cmd.close()
 		fp_file.close()
 
-		self.system("git add -f $(cat %s) %s" % (FILE_LIST_NAME, FILE_LIST_NAME))
+		if self.system("git add -f $(cat %s) %s" % (FILE_LIST_NAME, FILE_LIST_NAME)) == False:
+			fp_file = open(FILE_LIST_NAME, "r")
+			if fp_file == None:
+				return False
+
+			lines = fp_file.readlines()
+			fp_file.close()
+
+			lines.append(FILE_LIST_NAME)
+
+			for line in lines:
+				self.system("git add -f '%s'" % line.strip())
+
 		self.system("git commit -asm \"sync from svn\"")
 
 		return True
