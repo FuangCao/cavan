@@ -40,14 +40,23 @@ class CavanGitSvn:
 		if not os.path.exists(".git") and not self.system("git init"):
 			return False
 
-		if self.system("svn list -R | sed -e \"/.*\/\+$/d\" > %s" % FILE_LIST_NAME) == False:
+		if self.system("touch .git/%s && cp .git/%s . -av" % (FILE_LIST_NAME, FILE_LIST_NAME)) == False:
 			return False
 
 		if self.system("git add -f %s" % FILE_LIST_NAME) == False:
 			return False
 
-		if self.system("git add -f $(cat %s)" % FILE_LIST_NAME) == False:
-			fp = open(FILE_LIST_NAME, "r")
+		if self.system("svn list -R | sed -e \"/.*\/\+$/d\" > %s" % FILE_LIST_NAME) == False:
+			return False
+
+		if self.system("git diff | grep '^+[^+]' | sed 's/^+//g' > %s" % FILE_DIFF_NAME) == False:
+			return False
+
+		if self.system("echo \"%s\" >> %s" % (FILE_LIST_NAME, FILE_DIFF_NAME)) == False:
+			return False
+
+		if self.system("git add -f $(cat %s)" % FILE_DIFF_NAME) == False:
+			fp = open(FILE_DIFF_NAME, "r")
 			if fp == None:
 				return False
 
@@ -57,7 +66,7 @@ class CavanGitSvn:
 			for line in lines:
 				self.system("git add -f '%s'" % line.strip())
 
-		self.system("git commit -asm \"sync from svn\"")
+		self.system("git commit -uno -asm \"sync from svn\" && cp %s .git -av" % FILE_LIST_NAME)
 
 		return True
 
