@@ -330,6 +330,8 @@ label_decode_data:
 	{
 #if __WORDSIZE == 64
 		pr_red_info("reslen(%ld) != rdlen(%ld)", reslen, rdlen);
+#elif defined(CONFIG_BUILD_FOR_ANDROID)
+		pr_red_info("reslen(%d) != rdlen(%ld)", reslen, rdlen);
 #else
 		pr_red_info("reslen(%d) != rdlen(%d)", reslen, rdlen);
 #endif
