@@ -1,26 +1,26 @@
-ROOT_DIR = $(shell pwd -P)
-KERNEL_VERSION = $(shell uname -r)
-KERNEL_PATH ?= /lib/modules/$(KERNEL_VERSION)/build
+KERNEL_PATH = $(HOME)/kernel
 ARCH ?= arm
-
-ifeq "$(ARCH)" "arm"
 CROSS_COMPILE ?= arm-cavan-linux-gnueabi-
-endif
+EXTRA_CFLAGS = -Wall -Werror -I$(PWD)/include
 
-Q ?= @
+hua_input_core-objs = core/hua_input_core.o core/hua_sensor_core.o core/hua_ts_core.o
 
-$(info KERNEL_PATH = $(KERNEL_PATH))
-$(info ARCH = $(ARCH))
-$(info CROSS_COMPILE = $(CROSS_COMPILE))
-
-obj-m += swan_vk.o swan_vn.o
-
-KERNEL_MAKE = +make -C $(KERNEL_PATH) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE)
-RM = rm -rfv
+obj-m += sensor/hua_adxl34x.o sensor/hua_lis3dh.o
+obj-m += touchscreen/hua_cy8c242.o touchscreen/hua_ft5216.o
+obj-m += misc/swan_vk.o misc/swan_vn.o
+obj-m += hua_input_core.o
 
 all:
-	$(Q)$(KERNEL_MAKE) M=$(PWD)
+	make ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL_PATH) M=$(PWD)
 
 clean:
-	$(Q)$(RM) *.o *.mod.c *.ko .*.cmd
-	$(Q)$(RM) modules.order Module.symvers .tmp_versions
+	@for dir in . core touchscreen sensor misc; \
+	do \
+		cd $(PWD)/$${dir} && \
+		{ \
+			rm -rfv *.o *.ko *.mod.* .*.cmd; \
+			rm -rfv .tmp_versions modules.order Module.symvers; \
+		}; \
+	done
+
+

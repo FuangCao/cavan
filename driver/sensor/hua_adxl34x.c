@@ -1,4 +1,5 @@
-#include "hua_sensor_core.h"
+#include <linux/input/hua_sensor.h>
+
 #ifdef CONFIG_ARCH_SC8810
 #include <mach/eic.h>
 #endif
@@ -170,7 +171,7 @@ struct adxl34x_data_package
 };
 #pragma pack()
 
-static int adxl34x_sensor_chip_readid(struct hua_sensor_chip *chip)
+static int adxl34x_sensor_chip_readid(struct hua_input_chip *chip)
 {
 	int ret;
 	u8 id;
@@ -206,7 +207,7 @@ static int adxl34x_sensor_chip_readid(struct hua_sensor_chip *chip)
 	return 0;
 }
 
-static int adxl34x_sensor_chip_set_power(struct hua_sensor_chip *chip, bool enable)
+static int adxl34x_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
 {
 	int ret;
 	u8 value;
@@ -232,43 +233,38 @@ static int adxl34x_sensor_chip_set_power(struct hua_sensor_chip *chip, bool enab
 	return 0;
 }
 
-static void adxl34x_sensor_main_loop(struct hua_sensor_chip *chip)
+static void adxl34x_sensor_chip_event_handler(struct hua_input_chip *chip)
 {
 	int ret;
 	u8 irq_state;
 
-	while (likely(chip->wait_for_event(chip)))
+	ret = chip->read_register(chip, INT_SOURCE, &irq_state);
+	if (ret < 0)
 	{
-		ret = chip->read_register(chip, INT_SOURCE, &irq_state);
-		if (ret < 0)
-		{
-			pr_red_info("sensor->read_register INT_SOURCE");
-			continue;
-		}
-
-		hua_sensor_chip_report_event(chip, irq_state);
+		pr_red_info("sensor->read_register INT_SOURCE");
+		return;
 	}
+
+	chip->irq_state = irq_state;
+	hua_input_chip_report_events(chip, &chip->isr_list);
 }
 
-static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor, u8 mask)
+static int adxl34x_acceleration_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
 	u8 fifo_state;
-	struct hua_sensor_chip *chip;
 	struct adxl34x_data_package package;
 
-	if ((mask & (DATA_READY | WATERMARK)) == 0)
+	if ((chip->irq_state & (DATA_READY | WATERMARK)) == 0)
 	{
-		return false;
+		return 0;
 	}
-
-	chip = sensor->chip;
 
 	ret = chip->read_register(chip, FIFO_STATUS, &fifo_state);
 	if (ret < 0)
 	{
 		pr_red_info("sensor->read_register FIFO_STATUS");
-		return false;
+		return ret;
 	}
 
 	for (fifo_state = (fifo_state & 0x3F) + 1; fifo_state; fifo_state--)
@@ -280,89 +276,68 @@ static bool adxl34x_acceleration_event_handler(struct hua_sensor_device *sensor,
 			continue;
 		}
 
-		hua_sensor_report_vector(sensor, chip->input, package.x, package.y, package.z);
+		hua_sensor_report_vector(dev->input, package.x, package.y, package.z);
 	}
 
-	return true;
+	return 0;
 }
 
-static bool adxl34x_orientation_event_handler(struct hua_sensor_device *sensor, u8 mask)
+static int adxl34x_input_chip_probe(struct hua_input_chip *chip)
 {
 	int ret;
-	int pitch, roll;
-	u8 orient;
-	struct hua_sensor_chip *chip = sensor->chip;
+	struct hua_sensor_device *sensor;
+	struct hua_input_device *dev;
 
-	ret = chip->read_register(chip, ORIENT, &orient);
+	pr_pos_info();
+
+	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
+	if (sensor == NULL)
+	{
+		pr_red_info("kzalloc");
+		return -ENOMEM;
+	}
+
+	hua_input_chip_set_dev_data(chip, sensor);
+
+	sensor->min_delay = 20;
+	sensor->max_range = 16;
+	sensor->resolution = 4096;
+	sensor->power_consume = 145;
+
+	dev = &sensor->dev;
+	dev->name = "Three-Axis Digital Accelerometer";
+	dev->fuzz = 3;
+	dev->flat = 3;
+	dev->use_irq = true;
+	dev->type = HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
+	dev->poll_delay = 200;
+	dev->event_handler = adxl34x_acceleration_event_handler;
+
+	ret = hua_input_device_register(chip, dev);
 	if (ret < 0)
 	{
-		pr_red_info("read_register");
-		return false;
+		pr_red_info("hua_input_device_register");
+		goto out_kfree_sensor;
 	}
 
-	if ((orient & ADXL346_3D_VALID) == 0)
-	{
-		return false;
-	}
+	return 0;
 
-	switch (orient & 0x07)
-	{
-	case 1:
-		roll = 0;
-		pitch = 2;
-		break;
-
-	case 6:
-		roll = 0;
-		pitch = 0;
-		break;
-
-	case 3:
-		roll = 1;
-		pitch = 0;
-		break;
-
-	case 4:
-		roll = -1;
-		pitch = 0;
-		break;
-
-	default:
-		return false;
-	}
-
-	hua_sensor_report_vector(sensor, chip->input, 0, pitch, roll);
-
-	return true;
+out_kfree_sensor:
+	kfree(sensor);
+	return ret;
 }
 
-struct hua_sensor_device adxl34x_sensor_list[] =
+static void adxl34x_input_chip_remove(struct hua_input_chip *chip)
 {
-	{
-		.name = "Three-Axis Digital Accelerometer",
-		.type = HUA_SENSOR_TYPE_ACCELEROMETER,
-		.fuzz = 3,
-		.flat = 3,
-		.poll_delay = 200,
-		.max_range = 16,
-		.resolution = 4096,
-		.power_consume = 145,
-		.event_handler = adxl34x_acceleration_event_handler
-	},
-	{
-		.name = "Three-Axis Digital Orientation",
-		.type = HUA_SENSOR_TYPE_ORIENTATION,
-		.fuzz = 0,
-		.flat = 0,
-		.poll_delay = 200,
-		.max_range = 360,
-		.resolution = 4,
-		.power_consume = 145,
-		.event_handler = adxl34x_orientation_event_handler
-	}
-};
+	struct hua_sensor_device *sensor = hua_input_chip_get_dev_data(chip);
 
-static struct hua_sensor_init_data adxl34x_init_data[] =
+	pr_pos_info();
+
+	hua_input_device_unregister(chip, &sensor->dev);
+	kfree(sensor);
+}
+
+static struct hua_input_init_data adxl34x_init_data[] =
 {
 	{THRESH_TAP, 35, 0},
 	{OFSX, 0, 0},
@@ -389,10 +364,10 @@ static struct hua_sensor_init_data adxl34x_init_data[] =
 	{INT_ENABLE, ADXL34X_INT_MASK | OVERRUN, 0}
 };
 
-static int __devinit adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
+static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	int ret;
-	struct hua_sensor_chip *chip;
+	struct hua_input_chip *chip;
 
 	pr_pos_info();
 
@@ -403,46 +378,44 @@ static int __devinit adxl34x_i2c_probe(struct i2c_client *client, const struct i
 		return -ENOMEM;
 	}
 
+	i2c_set_clientdata(client, chip);
+	hua_input_chip_set_bus_data(chip, client);
+
 #if defined(ADXL346_GINT2) || defined(ADXL346_GINT1)
 #ifdef ADXL346_GINT2
-	chip->irq = sprd_alloc_eic_irq(ADXL346_GINT2);
+	ret = sprd_alloc_eic_irq(ADXL346_GINT2);
 #else
-	chip->irq = sprd_alloc_eic_irq(ADXL346_GINT1);
+	ret = sprd_alloc_eic_irq(ADXL346_GINT1);
 #endif
-	if (chip->irq < 0)
+	if (ret < 0)
 	{
 		pr_red_info("sprd_alloc_eic_irq");
-		ret = chip->irq;
 		goto out_kfree_sensor;
 	}
-	chip->min_delay = 0;
+	chip->irq = ret;
 #else
 	chip->irq = -1;
-	chip->min_delay = 200;
 #endif
 
 	chip->name = "ADXL34X";
+	chip->devmask = 1 << HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
 	chip->irq_flags = IRQF_TRIGGER_HIGH;
 	chip->init_data = adxl34x_init_data;
 	chip->init_data_size = ARRAY_SIZE(adxl34x_init_data);
-	chip->sensor_list = adxl34x_sensor_list;
-	chip->sensor_count = ARRAY_SIZE(adxl34x_sensor_list);
-
-	chip->read_data = hua_sensor_read_data_i2c;
-	chip->write_data = hua_sensor_write_data_i2c;
-	chip->write_register = hua_sensor_write_register_i2c_smbus;
-
+	chip->read_data = hua_input_read_data_i2c;
+	chip->write_data = hua_input_write_data_i2c;
+	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->readid = adxl34x_sensor_chip_readid;
 	chip->set_power = adxl34x_sensor_chip_set_power;
-	chip->main_loop = adxl34x_sensor_main_loop;
+	chip->event_handler = adxl34x_sensor_chip_event_handler;
 
-	hua_sensor_chip_set_data(chip, client);
-	i2c_set_clientdata(client, chip);
+	chip->probe = adxl34x_input_chip_probe;
+	chip->remove = adxl34x_input_chip_remove;
 
-	ret = hua_sensor_register_chip(chip);
+	ret = hua_input_chip_register(chip);
 	if (ret < 0)
 	{
-		pr_red_info("hua_sensor_register_gsensor");
+		pr_red_info("hua_input_chip_register");
 		goto out_free_eic_irq;
 	}
 
@@ -458,13 +431,13 @@ out_kfree_sensor:
 	return ret;
 }
 
-static int __devexit adxl34x_i2c_remove(struct i2c_client *client)
+static int adxl34x_i2c_remove(struct i2c_client *client)
 {
-	struct hua_sensor_chip *chip = i2c_get_clientdata(client);
+	struct hua_input_chip *chip = i2c_get_clientdata(client);
 
 	pr_pos_info();
 
-	hua_sensor_unregister_chip(chip);
+	hua_input_chip_unregister(chip);
 
 	if (chip->irq > 0)
 	{

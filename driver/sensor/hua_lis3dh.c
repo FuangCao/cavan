@@ -1,4 +1,4 @@
-#include "hua_sensor_core.h"
+#include <linux/input/hua_sensor.h>
 
 #define	INTERRUPT_MANAGEMENT 1
 
@@ -144,9 +144,19 @@
 #pragma pack(1)
 struct lis3dh_data_package
 {
-	short x;
-	short y;
-	short z;
+	s16 x;
+	s16 y;
+	s16 z;
+};
+
+struct lis3de_data_package
+{
+	u8 not_x;
+	s8 x;
+	u8 not_y;
+	s8 y;
+	u8 not_z;
+	s8 z;
 };
 #pragma pack()
 
@@ -183,16 +193,7 @@ static u8 lis3dh_delay2mask(const struct lis3dh_delay_map_node *map, size_t coun
 	return map->mask;
 }
 
-static int lis3dh_sensor_chip_set_delay(struct hua_sensor_chip *chip, unsigned int delay)
-{
-	u8 mask = lis3dh_delay2mask(lis3dh_delay_map, ARRAY_SIZE(lis3dh_delay_map), delay);
-
-	pr_func_info("mask = 0x%02x", mask);
-
-	return chip->write_register(chip, CTRL_REG1, LIS3DH_ACC_ENABLE_ALL_AXES | mask);
-}
-
-static int lis3dh_sensor_chip_readid(struct hua_sensor_chip *chip)
+static int lis3dh_sensor_chip_readid(struct hua_input_chip *chip)
 {
 	int ret;
 	u8 id;
@@ -217,7 +218,7 @@ static int lis3dh_sensor_chip_readid(struct hua_sensor_chip *chip)
 	return 0;
 }
 
-static int lis3dh_sensor_chip_set_power(struct hua_sensor_chip *chip, bool enable)
+static int lis3dh_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
 {
 	int ret;
 	u8 value;
@@ -243,7 +244,7 @@ static int lis3dh_sensor_chip_set_power(struct hua_sensor_chip *chip, bool enabl
 	return 0;
 }
 
-static struct hua_sensor_init_data lis3dh_init_data[] =
+static struct hua_input_init_data lis3dh_init_data[] =
 {
 	{CTRL_REG1, LIS3DH_ACC_ENABLE_ALL_AXES, 0},
 	{CTRL_REG2, 0x00, 0},
@@ -266,45 +267,123 @@ static struct hua_sensor_init_data lis3dh_init_data[] =
 	{TT_TW, 0x00, 0}
 };
 
-static bool lis3dh_acceleration_event_handler(struct hua_sensor_device *sensor, u8 mask)
+static int lis3dh_acceleration_set_delay(struct hua_input_device *dev, unsigned int delay)
+{
+	struct hua_input_chip *chip = dev->chip;
+	u8 mask = lis3dh_delay2mask(lis3dh_delay_map, ARRAY_SIZE(lis3dh_delay_map), delay);
+
+	pr_func_info("mask = 0x%02x", mask);
+
+	return chip->write_register(chip, CTRL_REG1, LIS3DH_ACC_ENABLE_ALL_AXES | mask);
+}
+
+static int lis3dh_acceleration_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
 	struct lis3dh_data_package package;
-	struct hua_sensor_chip *chip = sensor->chip;
 
 	ret = chip->read_data(chip, I2C_AUTO_INCREMENT | AXISDATA_REG, &package, sizeof(package));
 	if (ret < 0)
 	{
 		pr_red_info("hua_sensor_i2c_read_data");
-		return false;
+		return ret;
 	}
 
-	hua_sensor_report_vector(sensor, chip->input, package.x >> 4, -(package.y >> 4), package.z >> 4);
+	hua_sensor_report_vector(dev->input, package.x >> 4, -(package.y >> 4), package.z >> 4);
 
-	return true;
+	return 0;
 }
 
-struct hua_sensor_device lis3dh_sensor_list[] =
-{
-	{
-		.name = "Three-Axis Digital Accelerometer",
-		.type = HUA_SENSOR_TYPE_ACCELEROMETER,
-		.fuzz = 32,
-		.flat = 32,
-		.poll_delay = 200,
-		.max_range = 2,
-		.resolution = 2048,
-		.power_consume = 145,
-		.event_handler = lis3dh_acceleration_event_handler
-	}
-};
-
-static int __devinit lis3dh_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
+static int lis3de_acceleration_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
-	struct hua_sensor_chip *chip;
+	struct lis3de_data_package package;
+
+	ret = chip->read_data(chip, I2C_AUTO_INCREMENT | AXISDATA_REG, &package, sizeof(package));
+	if (ret < 0)
+	{
+		pr_red_info("hua_sensor_i2c_read_data");
+		return ret;
+	}
+
+	pr_bold_info("[%d, %d, %d]", package.x, package.y, package.z);
+
+	hua_sensor_report_vector(dev->input, package.x, -package.y, package.z);
+
+	return 0;
+}
+
+static int lis3dh_input_chip_probe(struct hua_input_chip *chip)
+{
+	int ret;
+	struct hua_sensor_device *sensor;
+	struct hua_input_device *dev;
 
 	pr_pos_info();
+
+	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
+	if (sensor == NULL)
+	{
+		pr_red_info("kzalloc");
+		return -ENOMEM;
+	}
+
+	hua_input_chip_set_dev_data(chip, sensor);
+
+	sensor->min_delay = 20;
+	sensor->power_consume = 145;
+
+	dev = &sensor->dev;
+	dev->name = "Three-Axis Digital Accelerometer";
+	dev->type = HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
+	dev->poll_delay = 200;
+	dev->set_delay = lis3dh_acceleration_set_delay;
+
+	if (strcmp(chip->name, "LIS3DH") == 0)
+	{
+		dev->fuzz = 32;
+		dev->flat = 32;
+		sensor->max_range = 2;
+		sensor->resolution = 2048;
+		dev->event_handler = lis3dh_acceleration_event_handler;
+	}
+	else
+	{
+		dev->fuzz = 0;
+		dev->flat = 0;
+		sensor->max_range = 4;
+		sensor->resolution = 256;
+		dev->event_handler = lis3de_acceleration_event_handler;
+	}
+
+	ret = hua_input_device_register(chip, dev);
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_device_register");
+		goto out_kfree_sensor;
+	}
+
+	return 0;
+
+out_kfree_sensor:
+	kfree(sensor);
+	return ret;
+}
+
+static void lis3dh_input_chip_remove(struct hua_input_chip *chip)
+{
+	struct hua_sensor_device *sensor = hua_input_chip_get_dev_data(chip);
+
+	pr_pos_info();
+
+	hua_input_device_unregister(chip, &sensor->dev);
+	kfree(sensor);
+}
+
+static int lis3dh_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
+{
+	int ret;
+	struct hua_input_chip *chip;
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
 	if (chip == NULL)
@@ -313,30 +392,36 @@ static int __devinit lis3dh_i2c_probe(struct i2c_client *client, const struct i2
 		return -ENOMEM;
 	}
 
+	i2c_set_clientdata(client, chip);
+	hua_input_chip_set_bus_data(chip, client);
+
+	if (strcmp(client->name, "lis3dh") == 0)
+	{
+		chip->name = "LIS3DH";
+	}
+	else
+	{
+		chip->name = "LIS3DE";
+	}
+
+	chip->devmask = 1 << HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
 	chip->irq = -1;
 	chip->irq_flags = 0;
-	chip->min_delay = 10;
-	chip->name = "LIS3DH";
 	chip->init_data = lis3dh_init_data;
 	chip->init_data_size = ARRAY_SIZE(lis3dh_init_data);
-	chip->sensor_list = lis3dh_sensor_list;
-	chip->sensor_count = ARRAY_SIZE(lis3dh_sensor_list);
-
 	chip->readid = lis3dh_sensor_chip_readid;
 	chip->set_power = lis3dh_sensor_chip_set_power;
-	chip->set_delay = lis3dh_sensor_chip_set_delay;
+	chip->read_data = hua_input_read_data_i2c;
+	chip->write_data = hua_input_write_data_i2c;
+	chip->write_register = hua_input_write_register_i2c_smbus;
 
-	chip->read_data = hua_sensor_read_data_i2c;
-	chip->write_data = hua_sensor_write_data_i2c;
-	chip->write_register = hua_sensor_write_register_i2c_smbus;
+	chip->probe = lis3dh_input_chip_probe;
+	chip->remove = lis3dh_input_chip_remove;
 
-	hua_sensor_chip_set_data(chip, client);
-	i2c_set_clientdata(client, chip);
-
-	ret = hua_sensor_register_chip(chip);
+	ret = hua_input_chip_register(chip);
 	if (ret < 0)
 	{
-		pr_red_info("hua_sensor_register_gsensor");
+		pr_red_info("hua_input_chip_register");
 		goto out_kfree_sensor;
 	}
 
@@ -347,11 +432,13 @@ out_kfree_sensor:
 	return ret;
 }
 
-static int __devexit lis3dh_i2c_remove(struct i2c_client *client)
+static int lis3dh_i2c_remove(struct i2c_client *client)
 {
-	struct hua_sensor_chip *chip = i2c_get_clientdata(client);
+	struct hua_input_chip *chip = i2c_get_clientdata(client);
 
-	hua_sensor_unregister_chip(chip);
+	pr_pos_info();
+
+	hua_input_chip_unregister(chip);
 	kfree(chip);
 
 	return 0;
@@ -359,7 +446,7 @@ static int __devexit lis3dh_i2c_remove(struct i2c_client *client)
 
 static const struct i2c_device_id lis3dh_id[] =
 {
-	{"lis3dh", 0}, {}
+	{"lis3dh", 0}, {"lis3de", 0}, {}
 };
 
 MODULE_DEVICE_TABLE(i2c, lis3dh_id);
