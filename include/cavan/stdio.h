@@ -7,9 +7,11 @@
 #define printf	LOGD
 #endif
 
-#ifndef LOG_TAG
-#define LOG_TAG	"Cavan"
+#ifdef LOG_TAG
+#undef LOG_TAG
 #endif
+
+#define LOG_TAG	"Cavan"
 
 #define DEFAULT_CONSOLE_DEVICE	"/dev/tty0"
 
