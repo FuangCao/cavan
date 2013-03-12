@@ -986,10 +986,11 @@ int cavan_application_init(struct cavan_application_context *context, struct cav
 	input_service->touch_handler = cavan_application_touch_handler;
 	input_service->move_handler = cavan_application_move_handler;
 	input_service->gsensor_handler = cavan_application_gsensor_handler;
-	ret = cavan_input_service_start(input_service, context);
+
+	ret = pipe(context->pipefd);
 	if (ret < 0)
 	{
-		pr_red_info("cavan_input_service_start");
+		pr_error_info("pipe");
 		goto out_display_memory_free;
 	}
 
@@ -1008,7 +1009,9 @@ out_display_destory:
 
 void cavan_application_uninit(struct cavan_application_context *context)
 {
-	cavan_input_service_stop(&context->input_service);
+	close(context->pipefd[0]);
+	close(context->pipefd[1]);
+
 	cavan_display_memory_free(context->mouse_backup);
 	context->display->destory(context->display);
 	cavan_window_destory(&context->win_root);
@@ -1018,14 +1021,52 @@ void cavan_application_uninit(struct cavan_application_context *context)
 
 int cavan_application_main_loop(struct cavan_application_context *context, void (*handler)(struct cavan_application_context *context, void *data), void *data)
 {
+	int ret;
+	int fd;
+	enum cavan_application_event event;
+
+	ret = cavan_input_service_start(&context->input_service, context);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_input_service_start");
+		return ret;
+	}
+
 	cavan_window_paint(&context->win_root);
 	cavan_application_move(context, 0, 0);
-	cavan_application_draw_mouse(context);
 
 	if (handler)
 	{
 		handler(context, data);
 	}
 
-	return cavan_input_service_join(&context->input_service);
+	fd = context->pipefd[0];
+
+	while (1)
+	{
+		ret = read(fd, &event, sizeof(event));
+		if (ret < (int)sizeof(event))
+		{
+			pr_error_info("read");
+			break;
+		}
+
+		pr_bold_info("event = %d", event);
+
+		switch (event)
+		{
+		case CAVAN_APP_EVENT_STOP:
+		case CAVAN_APP_EVENT_EXIT:
+			goto out_cavan_input_service_stop;
+
+		default:
+			pr_red_info("unknown event %d", event);
+		}
+	}
+
+out_cavan_input_service_stop:
+	cavan_input_service_stop(&context->input_service);
+	cavan_input_service_join(&context->input_service);
+
+	return 0;
 }

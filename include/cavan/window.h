@@ -14,6 +14,12 @@
 
 struct cavan_application_context;
 
+enum cavan_application_event
+{
+	CAVAN_APP_EVENT_STOP,
+	CAVAN_APP_EVENT_EXIT,
+};
+
 struct cavan_window
 {
 	int id;
@@ -101,6 +107,7 @@ struct cavan_application_context
 	struct cavan_window win_root;
 
 	pthread_mutex_t lock;
+	int pipefd[2];
 };
 
 int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child);
@@ -231,4 +238,14 @@ static inline void cavan_progress_bar_add(struct cavan_progress_bar *bar, double
 static inline void cavan_progress_bar_complete(struct cavan_progress_bar *bar)
 {
 	cavan_progress_bar_set_pos(bar, bar->total);
+}
+
+static inline int cavan_application_send_event(struct cavan_application_context *context, enum cavan_application_event event)
+{
+	return write(context->pipefd[1], &event, sizeof(event));
+}
+
+static inline int cavan_application_exit(struct cavan_application_context *context)
+{
+	return cavan_application_send_event(context, CAVAN_APP_EVENT_EXIT);
 }
