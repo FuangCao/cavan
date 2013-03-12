@@ -33,7 +33,7 @@ struct sensors_event_t *hua_sensor_device_sync_event(struct hua_sensor_device *h
 #if HUA_SENSOR_DEVICE_DEBUG
 			float *value = head->event.data;
 
-			pr_func_info("%s: [%f, %f, %f]", head->name, value[0], value[1], value[2]);
+			pr_func_info("%s(%d): [%f, %f, %f]", head->name, head->event.type, value[0], value[1], value[2]);
 #endif
 
 			if (data < data_end)
@@ -99,38 +99,10 @@ int hua_sensor_device_init(struct hua_sensor_device *sensor, struct hua_sensor_c
 	int ret;
 	int ctrl_fd = chip->ctrl_fd;
 
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_SENSOR_TYPE(index), &sensor->type);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_SENSOR_TYPE");
-		return ret;
-	}
-
 	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_SENSOR_NAME(index, sizeof(sensor->name)), sensor->name);
 	if (ret < 0)
 	{
 		pr_error_info("ioctl HUA_SENSOR_IOC_GET_SENSOR_NAME");
-		return ret;
-	}
-
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_XCODE(index), &sensor->xcode);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MAX_RANGE");
-		return ret;
-	}
-
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_YCODE(index), &sensor->ycode);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MAX_RANGE");
-		return ret;
-	}
-
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_ZCODE(index), &sensor->zcode);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MAX_RANGE");
 		return ret;
 	}
 
@@ -145,42 +117,26 @@ int hua_sensor_device_init(struct hua_sensor_device *sensor, struct hua_sensor_c
 int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *hal_sensor)
 {
 	int ret;
-	unsigned int max_range;
-	unsigned int power_consume;
-	unsigned int resolution;
+	struct hua_sensor_attribute attr;
 	int index = sensor->index;
 	int ctrl_fd = sensor->chip->ctrl_fd;
 	struct sensors_event_t *event = &sensor->event;
 
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_MAX_RANGE(index), &max_range);
+	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_ATTRIBUTE(index), &attr);
 	if (ret < 0)
 	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_MAX_RANGE");
-		return ret;
-	}
-
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_RESOLUTION(index), &resolution);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_RESOLUTION");
-		return ret;
-	}
-
-	ret = ioctl(ctrl_fd, HUA_SENSOR_IOC_GET_POWER_CONSUME(index), &power_consume);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl HUA_SENSOR_IOC_GET_POWER_CONSUME");
+		pr_error_info("ioctl HUA_SENSOR_IOC_GET_ATTRIBUTE");
 		return ret;
 	}
 
 	hua_sensor_event_init(event);
-	hal_sensor->maxRange = max_range;
+	hal_sensor->maxRange = attr.max_range;
 
-	switch (sensor->type)
+	switch (attr.type)
 	{
 	case HUA_SENSOR_TYPE_ACCELEROMETER:
 		hal_sensor->type = SENSOR_TYPE_ACCELEROMETER;
-		hal_sensor->maxRange = max_range * GRAVITY_EARTH;
+		hal_sensor->maxRange *= GRAVITY_EARTH;
 		break;
 
 	case HUA_SENSOR_TYPE_MAGNETIC_FIELD:
@@ -220,15 +176,22 @@ int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *h
 		break;
 
 	default:
-		pr_red_info("Invalid sensor type %d", sensor->type);
+		pr_red_info("Invalid sensor type %d", attr.type);
 		return -EINVAL;
 	}
 
 	event->type = hal_sensor->type;
+	event->sensor = hal_sensor->handle;
 	event->acceleration.status = SENSOR_STATUS_ACCURACY_HIGH;
 
-	hal_sensor->resolution = hal_sensor->maxRange / resolution;
-	hal_sensor->power = ((float)power_consume) / 1000;
+	hal_sensor->minDelay = attr.min_delay;
+	hal_sensor->resolution = hal_sensor->maxRange / attr.resolution;
+	hal_sensor->power = ((float)attr.power_consume) / 1000;
+
+	sensor->xcode = attr.xcode;
+	sensor->ycode = attr.ycode;
+	sensor->zcode = attr.zcode;
+	sensor->scale = hal_sensor->resolution;
 
 	return 0;
 }

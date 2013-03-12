@@ -35,65 +35,54 @@
 #include <utils/Timers.h>
 #include <hardware/sensors.h>
 
-#define HUA_SENSOR_CORE_DEVPATH "/dev/HuaMobile_SS"
-
-#define HUA_SENSOR_IOC_LENGTH_TO_MASK(len) \
+#define HUA_INPUT_IOC_LENGTH_TO_MASK(len) \
 	((1 << (len)) - 1)
 
-#define HUA_SENSOR_IOC_GET_VALUE(cmd, shift, mask) \
+#define HUA_INPUT_IOC_GET_VALUE(cmd, shift, mask) \
 	(((cmd) >> (shift)) & (mask))
 
-#define HUA_SENSOR_IOC_TYPE_LEN		8
-#define HUA_SENSOR_IOC_NR_LEN		8
-#define HUA_SENSOR_IOC_INDEX_LEN	4
-#define HUA_SENSOR_IOC_SIZE_LEN		12
+#define HUA_INPUT_IOC_TYPE_LEN		8
+#define HUA_INPUT_IOC_NR_LEN		8
+#define HUA_INPUT_IOC_SIZE_LEN		16
 
-#define HUA_SENSOR_IOC_TYPE_MASK	HUA_SENSOR_IOC_LENGTH_TO_MASK(HUA_SENSOR_IOC_TYPE_LEN)
-#define HUA_SENSOR_IOC_NR_MASK		HUA_SENSOR_IOC_LENGTH_TO_MASK(HUA_SENSOR_IOC_NR_LEN)
-#define HUA_SENSOR_IOC_INDEX_MASK	HUA_SENSOR_IOC_LENGTH_TO_MASK(HUA_SENSOR_IOC_INDEX_LEN)
-#define HUA_SENSOR_IOC_SIZE_MASK	HUA_SENSOR_IOC_LENGTH_TO_MASK(HUA_SENSOR_IOC_SIZE_LEN)
+#define HUA_INPUT_IOC_TYPE_MASK		HUA_INPUT_IOC_LENGTH_TO_MASK(HUA_INPUT_IOC_TYPE_LEN)
+#define HUA_INPUT_IOC_NR_MASK		HUA_INPUT_IOC_LENGTH_TO_MASK(HUA_INPUT_IOC_NR_LEN)
+#define HUA_INPUT_IOC_SIZE_MASK		HUA_INPUT_IOC_LENGTH_TO_MASK(HUA_INPUT_IOC_SIZE_LEN)
 
-#define HUA_SENSOR_IOC_TYPE_SHIFT	0
-#define HUA_SENSOR_IOC_NR_SHIFT		(HUA_SENSOR_IOC_TYPE_SHIFT + HUA_SENSOR_IOC_TYPE_LEN)
-#define HUA_SENSOR_IOC_INDEX_SHIFT	(HUA_SENSOR_IOC_NR_SHIFT + HUA_SENSOR_IOC_NR_LEN)
-#define HUA_SENSOR_IOC_SIZE_SHIFT	(HUA_SENSOR_IOC_INDEX_SHIFT + HUA_SENSOR_IOC_INDEX_LEN)
+#define HUA_INPUT_IOC_TYPE_SHIFT	0
+#define HUA_INPUT_IOC_NR_SHIFT		(HUA_INPUT_IOC_TYPE_SHIFT + HUA_INPUT_IOC_TYPE_LEN)
+#define HUA_INPUT_IOC_SIZE_SHIFT	(HUA_INPUT_IOC_NR_SHIFT + HUA_INPUT_IOC_NR_LEN)
 
-#define HUA_SENSOR_IOC_GET_TYPE(cmd) \
-	HUA_SENSOR_IOC_GET_VALUE(cmd, HUA_SENSOR_IOC_TYPE_SHIFT, HUA_SENSOR_IOC_TYPE_MASK)
+#define HUA_INPUT_IOC_GET_TYPE(cmd) \
+	HUA_INPUT_IOC_GET_VALUE(cmd, HUA_INPUT_IOC_TYPE_SHIFT, HUA_INPUT_IOC_TYPE_MASK)
 
-#define HUA_SENSOR_IOC_GET_NR(cmd) \
-	HUA_SENSOR_IOC_GET_VALUE(cmd, HUA_SENSOR_IOC_NR_SHIFT, HUA_SENSOR_IOC_NR_MASK)
+#define HUA_INPUT_IOC_GET_NR(cmd) \
+	HUA_INPUT_IOC_GET_VALUE(cmd, HUA_INPUT_IOC_NR_SHIFT, HUA_INPUT_IOC_NR_MASK)
 
-#define HUA_SENSOR_IOC_GET_INDEX(cmd) \
-	HUA_SENSOR_IOC_GET_VALUE(cmd, HUA_SENSOR_IOC_INDEX_SHIFT, HUA_SENSOR_IOC_INDEX_MASK)
+#define HUA_INPUT_IOC_GET_SIZE(cmd) \
+	HUA_INPUT_IOC_GET_VALUE(cmd, HUA_INPUT_IOC_SIZE_SHIFT, HUA_INPUT_IOC_SIZE_MASK)
 
-#define HUA_SENSOR_IOC_GET_SIZE(cmd) \
-	HUA_SENSOR_IOC_GET_VALUE(cmd, HUA_SENSOR_IOC_SIZE_SHIFT, HUA_SENSOR_IOC_SIZE_MASK)
+#define HUA_INPUT_IOC_GET_CMD_RAW(cmd) \
+	((cmd) & HUA_INPUT_IOC_LENGTH_TO_MASK(HUA_INPUT_IOC_TYPE_LEN + HUA_INPUT_IOC_NR_LEN))
 
-#define HUA_SENSOR_IOC_GET_CMD_RAW(cmd) \
-	((cmd) & HUA_SENSOR_IOC_LENGTH_TO_MASK(HUA_SENSOR_IOC_TYPE_LEN + HUA_SENSOR_IOC_NR_LEN))
+#define HUA_INPUT_IOC(type, nr, size) \
+	(((type) & HUA_INPUT_IOC_TYPE_MASK) << HUA_INPUT_IOC_TYPE_SHIFT | \
+	((nr) & HUA_INPUT_IOC_NR_MASK) << HUA_INPUT_IOC_NR_SHIFT | \
+	((size) & HUA_INPUT_IOC_SIZE_MASK) << HUA_INPUT_IOC_SIZE_SHIFT)
 
-#define HUA_SENSOR_IOC(type, nr, index, size) \
-	(((type) & HUA_SENSOR_IOC_TYPE_MASK) << HUA_SENSOR_IOC_TYPE_SHIFT | \
-	((nr) & HUA_SENSOR_IOC_NR_MASK) << HUA_SENSOR_IOC_NR_SHIFT | \
-	((index) & HUA_SENSOR_IOC_INDEX_MASK) << HUA_SENSOR_IOC_INDEX_SHIFT | \
-	((size) & HUA_SENSOR_IOC_SIZE_MASK) << HUA_SENSOR_IOC_SIZE_SHIFT)
+#define HUA_INPUT_CHIP_IOC_GET_NAME(len)	HUA_INPUT_IOC('I', 0x00, len)
+#define HUA_INPUT_CHIP_IOC_GET_VENDOR(len)	HUA_INPUT_IOC('I', 0x01, len)
+#define HUA_INPUT_CHIP_IOC_SET_FW_SIZE		HUA_INPUT_IOC('I', 0x02, 0)
 
-#define HUA_SENSOR_IOC_SET_DETECT					HUA_SENSOR_IOC('H', 0x00, 0, 0)
-#define HUA_SENSOR_IOC_GET_CHIP_NAME(len)			HUA_SENSOR_IOC('H', 0x01, 0, len)
-#define HUA_SENSOR_IOC_GET_CHIP_VENDOR(len)			HUA_SENSOR_IOC('H', 0x02, 0, len)
-#define HUA_SENSOR_IOC_GET_SENSOR_COUNT				HUA_SENSOR_IOC('H', 0x03, 0, 0)
-#define HUA_SENSOR_IOC_GET_MIN_DELAY				HUA_SENSOR_IOC('H', 0x04, 0, 0)
-#define HUA_SENSOR_IOC_GET_SENSOR_TYPE(index)		HUA_SENSOR_IOC('H', 0x05, index, 0)
-#define HUA_SENSOR_IOC_GET_SENSOR_NAME(index, len)	HUA_SENSOR_IOC('H', 0x06, index, len)
-#define HUA_SENSOR_IOC_GET_XCODE(index)				HUA_SENSOR_IOC('H', 0x07, index, 0)
-#define HUA_SENSOR_IOC_GET_YCODE(index)				HUA_SENSOR_IOC('H', 0x08, index, 0)
-#define HUA_SENSOR_IOC_GET_ZCODE(index)				HUA_SENSOR_IOC('H', 0x09, index, 0)
-#define HUA_SENSOR_IOC_GET_MAX_RANGE(index)			HUA_SENSOR_IOC('H', 0x0A, index, 0)
-#define HUA_SENSOR_IOC_GET_RESOLUTION(index)		HUA_SENSOR_IOC('H', 0x0B, index, 0)
-#define HUA_SENSOR_IOC_GET_POWER_CONSUME(index)		HUA_SENSOR_IOC('H', 0x0C, index, 0)
-#define HUA_SENSOR_IOC_SET_DELAY(index)				HUA_SENSOR_IOC('H', 0x0D, index, 0)
-#define HUA_SENSOR_IOC_SET_ENABLE(index)			HUA_SENSOR_IOC('H', 0x0E, index, 0)
+#define HUA_INPUT_DEVICE_IOC_GET_TYPE		HUA_INPUT_IOC('I', 0x10, 0)
+#define HUA_INPUT_DEVICE_IOC_GET_NAME(len)	HUA_INPUT_IOC('I', 0x11, len)
+#define HUA_INPUT_DEVICE_IOC_SET_DELAY		HUA_INPUT_IOC('I', 0x12, 0)
+#define HUA_INPUT_DEVICE_IOC_SET_ENABLE		HUA_INPUT_IOC('I', 0x13, 0)
+
+#define HUA_INPUT_SENSOR_IOC_GET_MIN_DELAY		HUA_INPUT_IOC('S', 0x00, 0)
+#define HUA_INPUT_SENSOR_IOC_GET_MAX_RANGE		HUA_INPUT_IOC('S', 0x01, 0)
+#define HUA_INPUT_SENSOR_IOC_GET_RESOLUTION		HUA_INPUT_IOC('S', 0x02, 0)
+#define HUA_INPUT_SENSOR_IOC_GET_POWER_CONSUME	HUA_INPUT_IOC('S', 0x03, 0)
 
 #define pr_std_info(fmt, args ...) \
 	LOGD(fmt "\n", ##args)
@@ -120,20 +109,21 @@
 		pr_red_info("%s[%d]:" fmt, __FUNCTION__, __LINE__, ##args); \
 	}
 
-enum hua_sensor_type
+enum hua_input_device_type
 {
-	HUA_SENSOR_TYPE_NONE,
-	HUA_SENSOR_TYPE_ACCELEROMETER,
-	HUA_SENSOR_TYPE_MAGNETIC_FIELD,
-	HUA_SENSOR_TYPE_ORIENTATION,
-	HUA_SENSOR_TYPE_GYROSCOPE,
-	HUA_SENSOR_TYPE_LIGHT,
-	HUA_SENSOR_TYPE_PRESSURE,
-	HUA_SENSOR_TYPE_TEMPERATURE,
-	HUA_SENSOR_TYPE_PROXIMITY,
-	HUA_SENSOR_TYPE_GRAVITY,
-	HUA_SENSOR_TYPE_LINEAR_ACCELERATION,
-	HUA_SENSOR_TYPE_ROTATION_VECTOR
+	HUA_INPUT_DEVICE_TYPE_NONE,
+	HUA_INPUT_DEVICE_TYPE_TOUCHSCREEN,
+	HUA_INPUT_DEVICE_TYPE_ACCELEROMETER,
+	HUA_INPUT_DEVICE_TYPE_MAGNETIC_FIELD,
+	HUA_INPUT_DEVICE_TYPE_ORIENTATION,
+	HUA_INPUT_DEVICE_TYPE_GYROSCOPE,
+	HUA_INPUT_DEVICE_TYPE_LIGHT,
+	HUA_INPUT_DEVICE_TYPE_PRESSURE,
+	HUA_INPUT_DEVICE_TYPE_TEMPERATURE,
+	HUA_INPUT_DEVICE_TYPE_PROXIMITY,
+	HUA_INPUT_DEVICE_TYPE_GRAVITY,
+	HUA_INPUT_DEVICE_TYPE_LINEAR_ACCELERATION,
+	HUA_INPUT_DEVICE_TYPE_ROTATION_VECTOR
 };
 
 typedef enum
@@ -144,44 +134,20 @@ typedef enum
 
 struct hua_sensor_device
 {
-	char name[128];
-
-	unsigned int type;
-
-	int xcode;
-	int ycode;
-	int zcode;
-
-	bool updated;
-	bool enabled;
-	float scale;
-	pthread_mutex_t lock;
-
-	int index;
-	struct hua_sensor_chip *chip;
-	struct sensors_event_t event;
-
-	struct hua_sensor_device *next;
-	struct hua_sensor_device *prev;
-};
-
-struct hua_sensor_chip
-{
 	int data_fd;
 	int ctrl_fd;
 	char name[128];
 	char vensor[128];
 
+	float scale;
 	pthread_mutex_t lock;
 
 	bool enabled;
 	struct pollfd *pfd;
-	unsigned int sensor_count;
-	struct hua_sensor_device *sensor_list;
-	struct hua_sensor_device *active_head;
+	struct sensors_event_t event;
 
-	struct hua_sensor_chip *prev;
-	struct hua_sensor_chip *next;
+	struct hua_sensor_device *prev;
+	struct hua_sensor_device *next;
 };
 
 struct hua_sensor_poll_device
@@ -198,27 +164,13 @@ struct hua_sensor_poll_device
 	size_t pollfd_count;
 	struct pollfd *pollfd_list;
 
-	struct hua_sensor_chip *active_head;
-	struct hua_sensor_chip *inactive_head;
+	struct hua_sensor_device *active_head;
+	struct hua_sensor_device *inactive_head;
 };
 
 int text_lhcmp(const char *text1, const char *text2);
 char *text_copy(char *dest, const char *src);
 char *text_ncopy(char *dest, const char *src, size_t size);
-struct sensors_event_t *hua_sensor_device_sync_event(struct hua_sensor_device *head, struct sensors_event_t *data, size_t data_size);
-bool hua_sensor_device_report_event(struct hua_sensor_device *head, struct input_event *event);
-int hua_sensor_device_init(struct hua_sensor_device *sensor, struct hua_sensor_chip *chip, int index);
-int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *sensor_hal);
-
-static inline struct sensors_event_t *hua_sensor_chip_sync_event(struct hua_sensor_chip *chip, struct sensors_event_t *data, size_t data_size)
-{
-	return hua_sensor_device_sync_event(chip->active_head, data, data_size);
-}
-
-static inline bool hua_sensor_chip_report_event(struct hua_sensor_chip *chip, struct input_event *event)
-{
-	return hua_sensor_device_report_event(chip->active_head, event);
-}
 
 static inline int64_t timeval2nano(struct timeval *time)
 {
@@ -231,7 +183,7 @@ static inline void hua_sensor_event_init(struct sensors_event_t *event)
 	event->version = sizeof(*event);
 }
 
-static inline int cavan_event_get_devname(int fd, char *devname, size_t size)
+static inline int hua_input_get_devname(int fd, char *devname, size_t size)
 {
 	return ioctl(fd, EVIOCGNAME(size), devname);
 }
