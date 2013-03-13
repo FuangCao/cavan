@@ -908,7 +908,7 @@ const char *cavan_event_find_key_name(struct cavan_event_device *dev, int code)
 		}
 	}
 
-	return NULL;
+	return "NONE";
 }
 
 int cavan_event_start_poll_thread(struct cavan_event_service *service)
