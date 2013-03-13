@@ -13,9 +13,11 @@ void cavan_window_paint(struct cavan_window *win)
 	struct cavan_window *child;
 	struct cavan_display_device *display;
 
-	if (win->on_paint == NULL || win->on_paint(win, win->context->private_data) == false)
+	win->paint_handler(win);
+
+	if (win->on_paint)
 	{
-		win->paint_handler(win);
+		win->on_paint(win, win->context->private_data);
 	}
 
 	pthread_mutex_lock(&win->lock);
@@ -796,6 +798,21 @@ static void cavan_application_click(struct cavan_application_context *context, b
 			cavan_window_clicked(win, true);
 		}
 
+		if (win != context->win_curr)
+		{
+			if (context->win_curr)
+			{
+				cavan_window_mouse_exit(context->win_curr);
+			}
+
+			if (win)
+			{
+				cavan_window_mouse_entry(win);
+			}
+
+			context->win_curr = win;
+		}
+
 		context->win_active = win;
 	}
 	else if (context->win_active)
@@ -881,11 +898,21 @@ static void cavan_application_mouse_touch_handler(struct cavan_input_device *dev
 
 static void cavan_application_touch_handler(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data)
 {
-	struct cavan_application_context *context = data;
+	struct cavan_application_context *context;
+
+	if (point->id != 0)
+	{
+		pr_std_info("point->id = %d, skiping ...", point->id);
+		return;
+	}
+
+	context = data;
 
 	pthread_mutex_lock(&context->lock);
 
-	cavan_application_move(context, point->x, point->y);
+	context->x = point->x;
+	context->y = point->y;
+
 	cavan_application_click(context, point->pressure > 0);
 
 	pthread_mutex_unlock(&context->lock);
@@ -972,6 +999,7 @@ int cavan_application_init(struct cavan_application_context *context, struct cav
 	}
 
 	context->mouse_speed = 1.0;
+	context->x = context->y = 0;
 	context->max_x = display->xres - 1;
 	context->max_y = display->yres - 1;
 
@@ -1033,7 +1061,6 @@ int cavan_application_main_loop(struct cavan_application_context *context, void 
 	}
 
 	cavan_window_paint(&context->win_root);
-	cavan_application_move(context, 0, 0);
 
 	if (handler)
 	{

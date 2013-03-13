@@ -504,6 +504,7 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 		key->top = y - height;
 		key->bottom = y + height - 1;
 		key->code = code;
+		key->value = 0;
 
 		key->next = dev->vk_head;
 		dev->vk_head = key;
