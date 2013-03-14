@@ -48,8 +48,8 @@ struct cavan_window
 	void (*key_handler)(struct cavan_window *win, const char *name, int code, int value);
 	void (*click_handler)(struct cavan_window *win, bool pressed);
 	void (*move_handler)(struct cavan_window *win, int x, int y);
-	void (*entry_handler)(struct cavan_window *win);
-	void (*exit_handler)(struct cavan_window *win);
+	void (*entry_handler)(struct cavan_window *win, int x, int y);
+	void (*exit_handler)(struct cavan_window *win, int x, int y);
 	void (*get_rect_handler)(struct cavan_window *win, struct cavan_display_rect *rect);
 
 	void (*on_destory)(struct cavan_window *win, void *data);
@@ -58,8 +58,8 @@ struct cavan_window
 	bool (*on_clicked)(struct cavan_window *win, int x, int y, bool pressed, void *data);
 	bool (*on_double_clicked)(struct cavan_window *win, int x, int y, bool pressed, void *data);
 	bool (*on_move)(struct cavan_window *win, int x, int y, void *data);
-	bool (*on_entry)(struct cavan_window *win, void *data);
-	bool (*on_exit)(struct cavan_window *win, void *data);
+	bool (*on_entry)(struct cavan_window *win, int x, int y, void *data);
+	bool (*on_exit)(struct cavan_window *win, int x, int y, void *data);
 };
 
 struct cavan_dialog
@@ -133,8 +133,8 @@ void cavan_window_paint_handler(struct cavan_window *win);
 void cavan_window_key_handler(struct cavan_window *win, const char *name, int code, int value);
 void cavan_window_click_handler(struct cavan_window *win, bool pressed);
 void cavan_window_move_handler(struct cavan_window *win, int x, int y);
-void cavan_window_entry_handler(struct cavan_window *win);
-void cavan_window_exit_handler(struct cavan_window *win);
+void cavan_window_entry_handler(struct cavan_window *win, int x, int y);
+void cavan_window_exit_handler(struct cavan_window *win, int x, int y);
 void cavan_window_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect);
 
 int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application_context *context);
@@ -194,14 +194,14 @@ static inline void cavan_window_set_on_key_pressed(struct cavan_window *win, boo
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_entry(struct cavan_window *win, bool (*handler)(struct cavan_window *win, void *data))
+static inline void cavan_window_set_on_entry(struct cavan_window *win, bool (*handler)(struct cavan_window *win, int x, int y, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_entry = handler;
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_exit(struct cavan_window *win, bool (*handler)(struct cavan_window *win, void *data))
+static inline void cavan_window_set_on_exit(struct cavan_window *win, bool (*handler)(struct cavan_window *win, int x, int y, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_exit = handler;

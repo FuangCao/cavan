@@ -77,19 +77,19 @@ static void cavan_window_mouse_move(struct cavan_window *win, int x, int y)
 	}
 }
 
-static void cavan_window_mouse_entry(struct cavan_window *win)
+static void cavan_window_mouse_entry(struct cavan_window *win, int x, int y)
 {
-	if (win->on_entry == NULL || win->on_entry(win, win->context->private_data) == false)
+	if (win->on_entry == NULL || win->on_entry(win, x, y, win->context->private_data) == false)
 	{
-		win->entry_handler(win);
+		win->entry_handler(win, x, y);
 	}
 }
 
-static void cavan_window_mouse_exit(struct cavan_window *win)
+static void cavan_window_mouse_exit(struct cavan_window *win, int x, int y)
 {
-	if (win->on_exit == NULL || win->on_exit(win, win->context->private_data) == false)
+	if (win->on_exit == NULL || win->on_exit(win, x, y, win->context->private_data) == false)
 	{
-		win->exit_handler(win);
+		win->exit_handler(win, x, y);
 	}
 }
 
@@ -219,11 +219,11 @@ void cavan_window_move_handler(struct cavan_window *win, int x, int y)
 {
 }
 
-void cavan_window_entry_handler(struct cavan_window *win)
+void cavan_window_entry_handler(struct cavan_window *win, int x, int y)
 {
 }
 
-void cavan_window_exit_handler(struct cavan_window *win)
+void cavan_window_exit_handler(struct cavan_window *win, int x, int y)
 {
 }
 
@@ -768,17 +768,17 @@ static void cavan_application_move(struct cavan_application_context *context, in
 			{
 				if (context->win_curr)
 				{
-					cavan_window_mouse_exit(context->win_curr);
+					cavan_window_mouse_exit(context->win_curr, x, y);
 				}
 
-				cavan_window_mouse_entry(win);
+				cavan_window_mouse_entry(win, x, y);
 			}
 
 			cavan_window_mouse_move(win, x, y);
 		}
 		else if (context->win_curr)
 		{
-			cavan_window_mouse_exit(context->win_curr);
+			cavan_window_mouse_exit(context->win_curr, x, y);
 		}
 
 		context->win_curr = win;
@@ -802,12 +802,12 @@ static void cavan_application_click(struct cavan_application_context *context, b
 		{
 			if (context->win_curr)
 			{
-				cavan_window_mouse_exit(context->win_curr);
+				cavan_window_mouse_exit(context->win_curr, context->x, context->y);
 			}
 
 			if (win)
 			{
-				cavan_window_mouse_entry(win);
+				cavan_window_mouse_entry(win, context->x, context->y);
 			}
 
 			context->win_curr = win;
