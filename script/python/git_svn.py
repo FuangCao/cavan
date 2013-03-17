@@ -195,7 +195,7 @@ class GitSvnManager:
 			return False
 
 		fp.write(entry.getMessage().encode("UTF-8"))
-		fp.write("\n\ngit-svn-id: %s@%s %s" % (self.mUrl, entry.getRevesion(), self.mUuid))
+		fp.write("\n\ncavan-git-svn-id: %s@%s %s" % (self.mUrl, entry.getRevesion(), self.mUuid))
 		fp.close()
 
 		author = entry.getAuthor()
