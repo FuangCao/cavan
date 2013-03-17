@@ -205,7 +205,7 @@ class GitSvnManager:
 	def svnCheckout(self, entry):
 		revision = entry.getRevesion()
 		if os.path.isdir(".svn"):
-			command = "svn update -r %s" % revision
+			command = "svn update --accept tf --force -r %s" % revision
 		else:
 			command = "svn checkout -r %s %s ." % (revision, self.mUrl)
 
