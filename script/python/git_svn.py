@@ -1,18 +1,22 @@
 #!/usr/bin/python
 
-import sys, os, stdio
-from command import command_vision, popen_tostring
+import sys, os
 from getopt import getopt
 from xml.dom.minidom import parse
 
+from cavan_file import file_read_line, file_write_text
+from cavan_command import command_vision, popen_tostring
+from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
+
 DIR_GIT_SVN = ".git_svn"
 GIT_REMOTE_SVN = "svn"
-FILE_CMD_NAME = "git-svn.py"
 FILE_SVN_LOG_XML = os.path.join(DIR_GIT_SVN, "svn_log.xml")
 FILE_SVN_INFO_XML = os.path.join(DIR_GIT_SVN, "svn_info.xml")
 FILE_SVN_LIST = os.path.join(DIR_GIT_SVN, "svn_list.txt")
-FILE_LAST_REVISION = os.path.join(DIR_GIT_SVN, "svn_revision.txt")
+FILE_GIT_REVISION = os.path.join(DIR_GIT_SVN, "git_revision.txt")
 FILE_GIT_MESSAGE = os.path.join(DIR_GIT_SVN, "git_message.txt")
+FILE_GIT_IGNORE = os.path.join(DIR_GIT_SVN, ".gitignore")
+FILE_SVN_IGNORE = os.path.join(".svn", ".gitignore")
 
 def getFirstElement(parent, name):
 	tags = parent.getElementsByTagName(name)
@@ -44,7 +48,10 @@ class SvnInfoParser:
 		return self.mRootElement.getAttribute("path")
 
 	def getRevesion(self):
-		return self.mRootElement.getAttribute("revision")
+		revision = self.mRootElement.getAttribute("revision")
+		if not revision:
+			return 0
+		return int(revision)
 
 	def getKind(self):
 		return self.mRootElement.getAttribute("kind")
@@ -122,12 +129,10 @@ class SvnLogParser:
 		entrys = self.mRootElement.getElementsByTagName("logentry")
 		if not entrys:
 			return None
-
-		entrys.reverse()
 		return entrys
 
-class SvnLogEntryParser:
-	def setRootElement(self, element):
+class SvnLogEntry:
+	def __init__(self, element):
 		self.mRootElement = element
 
 	def getRevesion(self):
@@ -147,19 +152,31 @@ class GitSvnManager:
 		return command_vision("svn info --xml %s > %s" % (self.mUrl, pathname))
 
 	def genSvnLogXml(self, pathname = FILE_SVN_LOG_XML):
-		return command_vision("svn log --xml %s > %s" % (self.mUrl, pathname))
+		if self.mGitRevision >= self.mSvnRevision:
+			return False
+		return command_vision("svn log --xml -r %d:%d %s > %s" % (self.mGitRevision + 1, self.mSvnRevision, self.mUrl, pathname))
 
-	def genGitRepo(self, info):
+	def genGitRepo(self):
 		if os.path.isdir(".git"):
 			return True
 		if command_vision("git init") == False:
 			return False
-		return command_vision("git remote add %s %s" % (GIT_REMOTE_SVN, info.getUrl()))
+		return command_vision("git remote add %s %s" % (GIT_REMOTE_SVN, self.mUrl))
 
-	def saveLastRevision(self, revision):
-		return command_vision("echo %s > %s && git add -f %s" % (revision, FILE_LAST_REVISION, FILE_LAST_REVISION))
+	def saveGitRevision(self, revision):
+		return file_write_text(FILE_GIT_REVISION, revision)
 
-	def gitCommit(self, info, entry):
+	def getGitRevision(self):
+		if not os.path.exists(".git") or command_vision("git checkout %s" % FILE_GIT_REVISION) == False:
+			return 0
+
+		line = file_read_line(FILE_GIT_REVISION)
+		if not line:
+			return 0
+
+		return int(line.strip())
+
+	def gitCommit(self, entry):
 		size = os.path.getsize(FILE_SVN_LIST)
 		if size > 0 and (command_vision("git add -f $(cat %s)" % FILE_SVN_LIST)) == False:
 			fp = open(FILE_LIST_DIFF, "r")
@@ -178,28 +195,37 @@ class GitSvnManager:
 			return False
 
 		fp.write(entry.getMessage().encode("UTF-8"))
-		fp.write("\n\ngit-svn-id: %s@%s %s" % (info.getUrl(), entry.getRevesion(), info.getUuid()))
+		fp.write("\n\ngit-svn-id: %s@%s %s" % (self.mUrl, entry.getRevesion(), self.mUuid))
 		fp.close()
 
 		author = entry.getAuthor()
-		author = "%s <%s@%s>" % (author, author, info.getUuid())
+		author = "%s <%s@%s>" % (author, author, self.mUuid)
 		return command_vision("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), FILE_GIT_MESSAGE))
 
-	def svnCheckout(self, info, entry):
+	def svnCheckout(self, entry):
+		revision = entry.getRevesion()
 		if os.path.isdir(".svn"):
-			command = "svn update -r %s" % entry.getRevesion()
+			command = "svn update -r %s" % revision
 		else:
-			command = "svn checkout -r %s %s ." % (entry.getRevesion(), info.getUrl())
+			command = "svn checkout -r %s %s ." % (revision, self.mUrl)
 
 		if command_vision("%s | grep '^A\s\+' | awk '{print $NF}' > %s" % (command, FILE_SVN_LIST)) == False:
 			return False
 
-		if self.saveLastRevision(entry.getRevesion()) == False:
+		if not os.path.exists(FILE_SVN_IGNORE):
+			file_write_text(FILE_SVN_IGNORE, "*")
+			command_vision("git add -f %s" % FILE_SVN_IGNORE)
+
+		if self.saveGitRevision(revision) == False:
 			return False
 
-		return self.gitCommit(info, entry)
+		return self.gitCommit(entry)
 
-	def cmd_init(self):
+	def cmd_sync(self):
+		if self.mGitRevision >= self.mSvnRevision:
+			pr_green_info("Nothing to be done")
+			return True
+
 		if self.genSvnLogXml() == False:
 			return False
 
@@ -207,26 +233,33 @@ class GitSvnManager:
 		if logParser.loadXml() == False:
 			return False
 
-		if self.genSvnInfoXml() == False:
-			return False
-
-		infoParser = SvnInfoParser()
-		if infoParser.loadXml() == False:
-			return False
-
-		if self.genGitRepo(infoParser) == False:
-			return False
-
-		entryParser = SvnLogEntryParser()
-		for entry in logParser.getLogEntrys():
-			entryParser.setRootElement(entry)
-			if self.svnCheckout(infoParser, entryParser) == False:
+		for item in logParser.getLogEntrys():
+			entry = SvnLogEntry(item)
+			if self.svnCheckout(entry) == False:
 				return False
 
 		return True
 
-	def cmd_sync(self):
-		return True
+	def cmd_init(self):
+		if os.path.exists(FILE_GIT_REVISION):
+			pr_red_info("Has been initialized")
+			return False
+
+		if self.genGitRepo() == False:
+			return False
+
+		if file_write_text(FILE_GIT_IGNORE, "*") == False:
+		 	return False
+
+		if self.saveGitRevision("0") == False:
+			return False
+
+		self.mGitRevision = 0
+
+		if command_vision("git add -f %s %s" % (FILE_GIT_IGNORE, FILE_GIT_REVISION)) == False:
+			return False
+
+		return self.cmd_sync()
 
 	def main(self, argv):
 		length = len(argv)
@@ -258,15 +291,21 @@ class GitSvnManager:
 
 		os.chdir(pathname)
 
-		if not os.path.exists(FILE_CMD_NAME):
-			os.symlink(cmdAbsPath, FILE_CMD_NAME)
-
 		if not os.path.exists(DIR_GIT_SVN):
 			os.mkdir(DIR_GIT_SVN, 0777)
 
-		print "url = %s, pathname = %s" % (url, pathname)
+		self.mUrl = url.rstrip("/")
+	
+		if self.genSvnInfoXml() == False:
+			return False
 
-		self.mUrl = url
+		infoParser = SvnInfoParser()
+		if infoParser.loadXml() == False:
+			return False
+
+		self.mUuid = infoParser.getUuid()
+		self.mSvnRevision = infoParser.getRevesion()
+		self.mGitRevision = self.getGitRevision()
 
 		if subcmd in ["init", "clone"]:
 			return self.cmd_init()
