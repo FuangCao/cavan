@@ -4,9 +4,14 @@
 #"""
 
 import sys, os
+
 from python import git_svn
+from python.cavan_stdio import pr_red_info, pr_green_info
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		manager = git_svn.GitSvnManager()
-		manager.main(sys.argv)
+		if manager.main(sys.argv):
+			pr_green_info("OK")
+		else:
+			pr_red_info("Failed")

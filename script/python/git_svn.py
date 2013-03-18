@@ -223,7 +223,7 @@ class GitSvnManager:
 
 	def cmd_sync(self):
 		if self.mGitRevision >= self.mSvnRevision:
-			pr_green_info("Nothing to be done")
+			pr_green_info("Already up-to-date.")
 			return True
 
 		if self.genSvnLogXml() == False:
@@ -232,6 +232,11 @@ class GitSvnManager:
 		logParser = SvnLogParser()
 		if logParser.loadXml() == False:
 			return False
+
+		nodes = logParser.getLogEntrys();
+		if not nodes:
+			pr_green_info("Already up-to-date.")
+			return True
 
 		for item in logParser.getLogEntrys():
 			entry = SvnLogEntry(item)
@@ -264,7 +269,7 @@ class GitSvnManager:
 	def main(self, argv):
 		length = len(argv)
 		if length < 2:
-			stdio.pr_red_info("Too a few argument")
+			stdio.pr_red_info("Please give a subcmd")
 			return False
 
 		cmdAbsPath = os.path.abspath(argv[0])
