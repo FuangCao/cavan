@@ -175,11 +175,16 @@ class GitSvnManager:
 
 		return int(line.strip())
 
+	def saveGitMessage(self, entry):
+		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
+		return file_write_text(self.mFileGitMessag, content.encode("utf-8"))
+
 	def gitCommit(self, entry):
 		size = os.path.getsize(self.mFileSvnList)
 		if size > 0 and (command_vision("git add -f $(cat %s)" % self.mFileSvnList)) == False:
 			fp = open(self.mFileSvnList, "r")
 			if not fp:
+				pr_red_info("open file %s failed" % self.mFileSvnList)
 				return False
 
 			lines = fp.readlines()
@@ -189,24 +194,21 @@ class GitSvnManager:
 				if command_vision("git add -f '%s'" % line.strip()) == False:
 					return False
 
-		fp = open(self.mFileGitMessag, "w")
-		if not fp:
+		if self.saveGitRevision(entry.getRevesion()) == False:
 			return False
 
-		fp.write(entry.getMessage().encode("UTF-8"))
-		fp.write("\n\ncavan-git-svn-id: %s@%s %s" % (self.mUrl, entry.getRevesion(), self.mUuid))
-		fp.close()
+		if self.saveGitMessage(entry) == False:
+			return False
 
 		author = entry.getAuthor()
 		author = "%s <%s@%s>" % (author, author, self.mUuid)
 		return command_vision("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), self.mFileGitMessag))
 
 	def svnCheckout(self, entry):
-		revision = entry.getRevesion()
 		if os.path.isdir(".svn"):
-			command = "svn update --accept tf --force -r %s" % revision
+			command = "svn update --accept tf --force -r %s" % entry.getRevesion()
 		else:
-			command = "svn checkout -r %s %s ." % (revision, self.mUrl)
+			command = "svn checkout -r %s %s ." % (entry.getRevesion(), self.mUrl)
 
 		if command_vision("%s | grep '^A\s\+' | awk '{print $NF}' > %s" % (command, self.mFileSvnList)) == False:
 			return False
@@ -214,9 +216,6 @@ class GitSvnManager:
 		if not os.path.exists(self.mFileSvnIgnore):
 			file_write_text(self.mFileSvnIgnore, "*")
 			command_vision("git add -f %s" % self.mFileSvnIgnore)
-
-		if self.saveGitRevision(revision) == False:
-			return False
 
 		return self.gitCommit(entry)
 
