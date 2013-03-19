@@ -267,17 +267,22 @@ class GitSvnManager:
 				pathname = argv[2]
 			else:
 				pathname = os.path.basename(self.mUrl)
+		else:
+			self.mUrl = None
+			pathname = None
 
+		if pathname != None:
 			if not os.path.exists(pathname):
 				os.makedirs(pathname, 0777)
-
 			os.chdir(pathname)
-			if not os.path.isdir(self.mGitSvnPath):
-				os.mkdir(self.mGitSvnPath, 0777)
-		elif os.path.isdir(".svn"):
-			if not os.path.isdir(self.mGitSvnPath):
-				os.mkdir(self.mGitSvnPath, 0777)
 
+		if not os.path.isdir(self.mGitSvnPath):
+			os.mkdir(self.mGitSvnPath, 0777)
+		elif os.path.exists(self.mFileGitRevision):
+			pr_red_info("Has been initialized")
+			return False
+
+		if self.mUrl == None:
 			if self.genSvnInfoXml("") == False:
 				return False
 
@@ -286,12 +291,6 @@ class GitSvnManager:
 				return False
 
 			self.mUrl = infoParser.getUrl()
-		else:
-			return False
-
-		if os.path.exists(self.mFileGitRevision):
-			pr_red_info("Has been initialized")
-			return False
 
 		if self.genGitRepo() == False:
 			return False
