@@ -157,9 +157,11 @@ class GitSvnManager:
 
 	def genGitRepo(self):
 		if os.path.isdir(".git"):
-			return True
+			command_vision("rm .git -rf")
+
 		if command_vision("git init") == False:
 			return False
+
 		return command_vision("git remote add %s %s" % (self.mRemoteName, self.mUrl))
 
 	def saveGitRevision(self, revision):
@@ -205,15 +207,16 @@ class GitSvnManager:
 		return command_vision("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), self.mFileGitMessag))
 
 	def svnCheckout(self, entry):
-		if os.path.isdir(".svn"):
-			command = "svn update --accept tf --force -r %s" % entry.getRevesion()
-		else:
-			command = "svn checkout -r %s %s ." % (entry.getRevesion(), self.mUrl)
+		result = False
+		for command in ["svn update --accept tf --force -r %s" % entry.getRevesion(), "svn checkout -r %s %s ." % (entry.getRevesion(), self.mUrl)]:
+			if command_vision("%s | grep '^A\s\+' | awk '{print $NF}' > %s" % (command, self.mFileSvnList)):
+				result = True
+				break
 
-		if command_vision("%s | grep '^A\s\+' | awk '{print $NF}' > %s" % (command, self.mFileSvnList)) == False:
+		if not result:
 			return False
 
-		if not os.path.exists(self.mFileSvnIgnore):
+		if os.path.isdir(".svn") and not os.path.exists(self.mFileSvnIgnore):
 			file_write_text(self.mFileSvnIgnore, "*")
 			command_vision("git add -f %s" % self.mFileSvnIgnore)
 
