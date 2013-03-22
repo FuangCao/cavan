@@ -307,3 +307,26 @@ struct cavan_display_device *cavan_fb_display_create(void)
 
 	return display;
 }
+
+struct cavan_display_device *cavan_fb_display_create_check(void)
+{
+	int ret;
+	struct cavan_display_device *display;
+
+	display = cavan_fb_display_create();
+	if (display == NULL)
+	{
+		pr_red_info("cavan_fb_display_create");
+		return NULL;
+	}
+
+	ret = cavan_display_check(display);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_display_check");
+		display->destory(display);
+		return NULL;
+	}
+
+	return display;
+}
