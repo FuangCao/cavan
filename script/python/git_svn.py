@@ -207,16 +207,16 @@ class GitSvnManager:
 		return command_vision("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), self.mFileGitMessag))
 
 	def svnCheckout(self, entry):
-		result = False
-		for command in ["svn update --accept tf --force -r %s" % entry.getRevesion(), "svn checkout -r %s %s ." % (entry.getRevesion(), self.mUrl)]:
-			if command_vision("%s | grep '^A\s\+' | awk '{print $NF}' > %s" % (command, self.mFileSvnList)):
-				result = True
-				break
+		common = "--force -r %s | grep '^[AUGER]\s\+' | awk '{print $NF}' > %s" % (entry.getRevesion(), self.mFileSvnList)
+		if os.path.isdir(".svn"):
+			if command_vision("svn update --accept tf %s" % common) == False:
+				return False
+		else:
+			command_vision("rm * -rf")
 
-		if not result:
-			return False
+			if command_vision("svn checkout %s . %s" % (self.mUrl, common)) == False:
+				return False
 
-		if os.path.isdir(".svn") and not os.path.exists(self.mFileSvnIgnore):
 			file_write_text(self.mFileSvnIgnore, "*")
 			command_vision("git add -f %s" % self.mFileSvnIgnore)
 

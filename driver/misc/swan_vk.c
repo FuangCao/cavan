@@ -98,7 +98,7 @@ static void swan_virtual_keypad_setup_events(struct input_dev *vk_input)
 	input_set_abs_params(vk_input, ABS_PRESSURE, PRESSURE_MIN, PRESSURE_MAX, 0, 0);
 
 	input_set_abs_params(vk_input, ABS_MT_POSITION_X, X_AXIS_MIN, X_AXIS_MAX, 0, 0);
-	input_set_abs_params(vk_input, ABS_MT_POSITION_Y, X_AXIS_MIN, X_AXIS_MAX, 0, 0);
+	input_set_abs_params(vk_input, ABS_MT_POSITION_Y, Y_AXIS_MIN, Y_AXIS_MAX, 0, 0);
 	input_set_abs_params(vk_input, ABS_MT_TOUCH_MAJOR, PRESSURE_MIN, PRESSURE_MAX, 0, 0);
 	input_set_abs_params(vk_input, ABS_MT_WIDTH_MAJOR, PRESSURE_MIN, PRESSURE_MAX, 0, 0);
 
