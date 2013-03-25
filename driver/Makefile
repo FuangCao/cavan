@@ -1,14 +1,19 @@
-KERNEL_PATH = $(HOME)/kernel
-ARCH ?= arm
+ifeq "$(ARCH)" "arm"
 CROSS_COMPILE ?= arm-cavan-linux-gnueabi-
+KERNEL_PATH = $(HOME)/kernel
+obj-m += hua_input_core.o
+obj-m += sensor/hua_adxl34x.o sensor/hua_lis3dh.o sensor/hua_mxc6225.o sensor/hua_kionix.o sensor/hua_mma845x.o
+obj-m += touchscreen/hua_cy8c242.o touchscreen/hua_ft5216.o
+else
+ARCH = $(shell uname -m)
+KERNEL_PATH = /lib/modules/$(shell uname -r)/build
+endif
+
 EXTRA_CFLAGS = -Wall -Werror -I$(PWD)/include
 
 hua_input_core-objs = core/hua_input_core.o core/hua_sensor_core.o core/hua_ts_core.o
 
-obj-m += sensor/hua_adxl34x.o sensor/hua_lis3dh.o sensor/hua_mxc6225.o sensor/hua_kionix.o sensor/hua_mma845x.o
-obj-m += touchscreen/hua_cy8c242.o touchscreen/hua_ft5216.o
 obj-m += misc/swan_vk.o misc/swan_vn.o
-obj-m += hua_input_core.o
 
 all:
 	make ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL_PATH) M=$(PWD)

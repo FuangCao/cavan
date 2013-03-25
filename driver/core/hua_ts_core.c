@@ -62,11 +62,19 @@ static void hua_ts_device_remove(struct hua_input_device *dev)
 
 static int hua_ts_device_open(struct input_dev *dev)
 {
+	int ret;
 	struct hua_input_device *idev = input_get_drvdata(dev);
 
 	pr_pos_info();
 
-	return hua_input_device_set_enable_lock(idev, true);
+	ret = hua_input_device_set_enable_lock(idev, true);
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_device_set_enable_lock");
+		return ret;
+	}
+
+	return 0;
 }
 
 int hua_ts_device_probe(struct hua_input_device *dev)

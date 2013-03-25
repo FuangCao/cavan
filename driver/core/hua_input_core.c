@@ -1601,7 +1601,6 @@ static int hua_input_device_probe(struct hua_input_chip *chip, struct hua_input_
 	if (ret < 0)
 	{
 		pr_red_info("probe device failed");
-		mutex_lock(&chip->lock);
 		goto out_kfree_input_name;
 	}
 
@@ -1609,7 +1608,6 @@ static int hua_input_device_probe(struct hua_input_chip *chip, struct hua_input_
 	if (ret < 0)
 	{
 		pr_red_info("input_register_device");
-		mutex_lock(&chip->lock);
 		goto out_device_remove;
 	}
 
