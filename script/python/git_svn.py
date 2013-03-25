@@ -217,6 +217,9 @@ class GitSvnManager:
 			if command_vision("svn checkout %s . %s" % (self.mUrl, common)) == False:
 				return False
 
+			if command_vision("svn switch %s" % self.mUrl) == False:
+				return False
+
 			file_write_text(self.mFileSvnIgnore, "*")
 			command_vision("git add -f %s" % self.mFileSvnIgnore)
 
@@ -228,6 +231,9 @@ class GitSvnManager:
 			return False
 
 		self.mUrl = url.strip()
+		if os.path.isdir(".svn") and command_vision("svn switch %s" % self.mUrl) == False:
+			return False
+
 		if self.genSvnInfoXml() == False:
 			return False
 
