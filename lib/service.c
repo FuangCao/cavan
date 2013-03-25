@@ -159,11 +159,11 @@ int cavan_service_stop(struct cavan_service_description *desc)
 int cavan_daemon_run(struct cavan_daemon_description *desc)
 {
 	int ret;
-	pid_t pid;
+	const char *shell_command = "sh";
 
-	if (desc == NULL || desc->cmdfile[0] == 0)
+	if (desc == NULL || desc->command == NULL)
 	{
-		pr_red_info("Daemon description fault");
+		pr_red_info("desc == NULL || desc->command == NULL");
 		ERROR_RETURN(EINVAL);
 	}
 
@@ -174,25 +174,20 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 
 	if (desc->as_daemon)
 	{
-		pid = fork();
-		if (pid < 0)
+		ret = daemon(1, desc->verbose);
+		if (ret < 0)
 		{
-			pr_red_info("fork failed");
-			return pid;
+			pr_error_info("daemon");
+			return ret;
 		}
 
-		if (pid)
+		if (desc->pidfile)
 		{
-			if (desc->pidfile[0])
-			{
-				file_printf(desc->pidfile, "%d", pid);
-			}
-
-			return 0;
+			file_printf(desc->pidfile, "%d", getpid());
 		}
 	}
 
-	return execv(desc->cmdfile, desc->argv);
+	return execlp(shell_command, shell_command, "-c", desc->command, NULL);
 }
 
 int cavan_daemon_stop(struct cavan_daemon_description *desc)
@@ -201,11 +196,11 @@ int cavan_daemon_stop(struct cavan_daemon_description *desc)
 
 	if (desc == NULL)
 	{
-		pr_red_info("Daemon description fault");
+		pr_red_info("desc == NULL");
 		return -EINVAL;
 	}
 
-	if (desc->pidfile[0])
+	if (desc->pidfile)
 	{
 		char buff[1024];
 		ssize_t readlen;
@@ -221,9 +216,9 @@ int cavan_daemon_stop(struct cavan_daemon_description *desc)
 
 		pid = text2value_unsigned(buff, NULL, 10);
 	}
-	else if (desc->cmdfile[0])
+	else if (desc->command)
 	{
-		pid = process_find_by_cmdline(NULL, desc->cmdfile);
+		pid = process_find_by_cmdline(NULL, desc->command);
 		if (pid < 0)
 		{
 			pr_red_info("process_find_by_cmdline failed");

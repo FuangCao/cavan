@@ -20,7 +20,8 @@ enum
 	LOCAL_COMMAND_OPTION_EXEC,
 	LOCAL_COMMAND_OPTION_PIDFILE,
 	LOCAL_COMMAND_OPTION_DAEMON,
-	LOCAL_COMMAND_OPTION_SUPER
+	LOCAL_COMMAND_OPTION_SUPER,
+	LOCAL_COMMAND_OPTION_VERBOSE
 };
 
 static void show_usage(const char *command)
@@ -29,12 +30,13 @@ static void show_usage(const char *command)
 	println("--start:\t\tstart a server");
 	println("--stop:\t\t\tstop a server");
 	println("--help, -h, -H\t\tshow this help");
-	println("--version, -v, -V\tshow version");
+	println("--version\t\tshow version");
 	println("--daemon, -d, -D\trun as a daemon");
 	println("--verbose, -v, -V\tshow log message");
 	println("--super, -s, -S\t\tneed super permission");
 	println("--exec, -e, -E\t\tservice command name");
 	println("--pidfile, -p, -P\tsave process id to file");
+	println("--verbose, -v, -V\tshow log message");
 }
 
 int main(int argc, char *argv[])
@@ -91,26 +93,30 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_SUPER,
 		},
+		{
+			.name = "verbose",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_VERBOSE,
+		},
 	};
 	int (*handler)(struct cavan_daemon_description *);
-	unsigned int i;
 	int ret;
 	struct cavan_daemon_description desc =
 	{
+		.verbose = 0,
 		.as_daemon = 1,
 		.super_permission = 1
 	};
 
-	desc.cmdfile[0] = 0;
-	desc.pidfile[0] = 0;
+	desc.command = NULL;
+	desc.pidfile = NULL;
 	handler = NULL;
 
 	while ((c = getopt_long(argc, argv, "vVhHe:E:p:P:s:S:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
-		case 'v':
-		case 'V':
 		case LOCAL_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
@@ -125,13 +131,13 @@ int main(int argc, char *argv[])
 		case 'e':
 		case 'E':
 		case LOCAL_COMMAND_OPTION_EXEC:
-			text_copy(desc.cmdfile, optarg);
+			desc.command = optarg;
 			break;
 
 		case 'p':
 		case 'P':
 		case LOCAL_COMMAND_OPTION_PIDFILE:
-			text_copy(desc.pidfile, optarg);
+			desc.pidfile = optarg;
 			break;
 
 		case 'd':
@@ -144,6 +150,12 @@ int main(int argc, char *argv[])
 		case 'S':
 		case LOCAL_COMMAND_OPTION_SUPER:
 			desc.super_permission = text_bool_value(optarg);
+			break;
+
+		case 'v':
+		case 'V':
+		case LOCAL_COMMAND_OPTION_VERBOSE:
+			desc.verbose = 1;
 			break;
 
 		case LOCAL_COMMAND_OPTION_START:
@@ -166,13 +178,6 @@ int main(int argc, char *argv[])
 		show_usage(argv[0]);
 		return -EINVAL;
 	}
-
-	for (desc.argv[0] = desc.cmdfile, i = 1; optind < argc && i < (NELEM(desc.argv) - 2); i++, optind++)
-	{
-		desc.argv[i] = argv[optind];
-	}
-
-	desc.argv[i] = NULL;
 
 	ret = handler(&desc);
 	if (ret < 0)

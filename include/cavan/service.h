@@ -23,11 +23,11 @@ struct cavan_service_description
 
 struct cavan_daemon_description
 {
-	char cmdfile[512];
-	char pidfile[512];
+	const char *pidfile;
+	const char *command;
+	int verbose;
 	int as_daemon;
 	int super_permission;
-	char *argv[32];
 };
 
 int cavan_service_run(struct cavan_service_description *desc);
