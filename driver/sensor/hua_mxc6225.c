@@ -7,8 +7,8 @@
 #pragma pack(1)
 struct mxc6225_data_package
 {
-	s8 x;
 	s8 y;
+	s8 x;
 };
 #pragma pack()
 
@@ -57,8 +57,7 @@ static int mxc6225_acceleration_event_handler(struct hua_input_chip *chip, struc
 		return ret;
 	}
 
-	pr_bold_info("x = %d, y = %d", package.x, package.y);
-	hua_sensor_report_vector(dev->input, package.x, package.y, -64);
+	hua_sensor_report_vector(dev->input, package.x, -package.y, 32);
 
 	return 0;
 }
@@ -133,7 +132,7 @@ static int mxc6225_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	i2c_set_clientdata(client, chip);
 	hua_input_chip_set_bus_data(chip, client);
 
-	chip->name = "MAX6225";
+	chip->name = "MXC6225";
 	chip->devmask = 1 << HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
 	chip->irq = -1;
 	chip->irq_flags = 0;
