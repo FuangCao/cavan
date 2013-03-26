@@ -155,7 +155,7 @@ function config_vimrc()
 	cat >> ${FILE_VIMRC} << EOF
 
 " Following is Cavan's configs
-source ${CAVAN_HOME}/script/core/vimrc.vim
+source ${CAVAN_HOME}/script/vim/vimrc.vim
 EOF
 }
 

@@ -120,9 +120,11 @@ if has("python")
 python << EOF
 import os, vim
 
-dirname = os.path.join(os.getenv("CAVAN_HOME"), "script/core/vim")
+dirname = os.path.join(os.getenv("CAVAN_HOME"), "script/vim")
 
 for filename in os.listdir(dirname):
+	if filename in ["vimrc.vim"]:
+		continue
 	vim.command("source %s/%s" % (dirname, filename))
 EOF
 endif
