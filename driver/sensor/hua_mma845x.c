@@ -185,7 +185,7 @@ static int mma845x_input_chip_probe(struct hua_input_chip *chip)
 	hua_input_chip_set_dev_data(chip, sensor);
 
 	sensor->min_delay = 20;
-	sensor->max_range = 16;
+	sensor->max_range = 4;
 	sensor->resolution = 4096;
 	sensor->power_consume = 145;
 
