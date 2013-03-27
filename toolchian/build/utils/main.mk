@@ -1,7 +1,7 @@
 XML_CONFIG1 = $(BUILD_UTILS)/config1.xml
 XML_CONFIG2 = $(BUILD_UTILS)/config2.xml
 
-XZ_VERSION = 5.0.3
+XZ_VERSION = 5.0.4
 XZ_NAME = xz-$(XZ_VERSION)
 XZ_URL = http://tukaani.org/xz
 XZ_CONFIG =
