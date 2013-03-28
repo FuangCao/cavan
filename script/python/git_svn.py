@@ -193,8 +193,7 @@ class GitSvnManager:
 			fp.close()
 
 			for line in lines:
-				if command_vision("git add -f '%s'" % line.strip()) == False:
-					return False
+				command_vision("git add -f '%s'" % line.strip())
 
 		if self.saveGitRevision(entry.getRevesion()) == False:
 			return False
