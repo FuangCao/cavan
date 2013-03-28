@@ -6,8 +6,8 @@
 
 #include <cavan.h>
 #include <cavan/service.h>
-#include <cavan/permission.h>
 #include <cavan/process.h>
+#include <cavan/permission.h>
 
 static void *cavan_service_handler(void *data)
 {

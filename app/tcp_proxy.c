@@ -32,7 +32,7 @@ static void show_usage(const char *command)
 	println("--version, -v, -V\t\tshow version");
 	println("--port, -p, -P\t\t\tserver port");
 	println("--proxy_ip, --pip, -i, -I\tproxy ip address");
-	println("--proxy_port, --pport\t\tproxy port");
+	println("--proxy_port, --pport, --pp\tproxy port");
 	println("--adb, -a, -A\t\t\tuse adb procotol instead of tcp");
 	println("--daemon, -d, -D\t\trun as a daemon");
 	println("--daemon_count, -c, -C\t\tdaemon count");
@@ -84,6 +84,12 @@ int main(int argc, char *argv[])
 		},
 		{
 			.name = "pport",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_PROXY_PORT,
+		},
+		{
+			.name = "pp",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_PROXY_PORT,

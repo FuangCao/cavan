@@ -132,7 +132,7 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 
 		if (system("adb start-server"))
 		{
-			pr_error_info("Start adb servic failed");
+			pr_error_info("Start adb service failed");
 			break;
 		}
 	}
