@@ -7,7 +7,7 @@
 #include <cavan.h>
 #include <cavan/tcp_proxy.h>
 
-static int tcp_proxy_service_handle(int index, cavan_shared_data_t data)
+static int tcp_proxy_service_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
 {
 	int ret;
 	socklen_t addrlen;

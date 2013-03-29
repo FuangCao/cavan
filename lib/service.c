@@ -24,7 +24,7 @@ static void *cavan_service_handler(void *data)
 		int ret;
 
 		pr_bold_info("%s daemon %d ready", desc->name, index);
-		ret = desc->handler(index, desc->data);
+		ret = desc->handler(desc, index, desc->data);
 		if (ret < 0)
 		{
 			pr_red_info("%s daemon %d fault", desc->name, index);

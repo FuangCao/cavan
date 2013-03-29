@@ -784,7 +784,7 @@ out_close_fd:
 	return -1;
 }
 
-static int swan_vk_server_handler(int index, cavan_shared_data_t data)
+static int swan_vk_server_handler(struct cavan_service_description *service, int index, cavan_shared_data_t data)
 {
 	struct swan_vk_service_descriptor *desc = data.type_void;
 	int sockfd = desc->sockfd;

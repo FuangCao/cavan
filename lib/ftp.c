@@ -864,7 +864,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 	return -1;
 }
 
-static int ftp_service_handle(int index, cavan_shared_data_t data)
+static int ftp_service_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
 {
 	struct sockaddr_in client_addr;
 	socklen_t addrlen;

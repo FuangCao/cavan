@@ -18,7 +18,7 @@ struct cavan_service_description
 	cavan_shared_data_t data;
 	pthread_t *threads;
 	pthread_mutex_t mutex_lock;
-	int (*handler)(int index, cavan_shared_data_t data);
+	int (*handler)(struct cavan_service_description *service, int index, cavan_shared_data_t data);
 };
 
 struct cavan_daemon_description

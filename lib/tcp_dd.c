@@ -350,7 +350,7 @@ static int tcp_dd_handle_request(int sockfd, struct sockaddr_in *addr)
 	return ret;
 }
 
-static int tcp_dd_daemon_handle(int index, cavan_shared_data_t data)
+static int tcp_dd_daemon_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
 {
 	int ret;
 	int server_sockfd, client_sockfd;
