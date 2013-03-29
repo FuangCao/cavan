@@ -71,7 +71,7 @@ function cavan-git-daemon-run()
 
 	COMMAND="$(git --exec-path)/git-daemon --verbose --port=${PORT} --export-all --enable=receive-pack --enable=upload-pack --enable=upload-archive --base-path=${BASE_PATH}"
 
-	if which cavan-service
+	if which cavan-service > /dev/null
 	then
 		cavan-service --start -s 0 --exec "${COMMAND}"
 	else
