@@ -26,7 +26,7 @@ enum
 
 static void show_usage(const char *command)
 {
-	println("Usage: %s [--start|--stop] [option] <--exec command>", command);
+	println("Usage: %s [--start|--stop] [option] [<--exec command>|<command>]", command);
 	println("--start:\t\tstart a server");
 	println("--stop:\t\t\tstop a server");
 	println("--help, -h, -H\t\tshow this help");
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 
 	desc.command = NULL;
 	desc.pidfile = NULL;
-	handler = NULL;
+	handler = cavan_daemon_run;
 
 	while ((c = getopt_long(argc, argv, "vVhHe:E:p:P:s:S:", long_option, &option_index)) != EOF)
 	{
@@ -172,11 +172,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (handler == NULL)
+	if (argc > optind && desc.command == NULL)
 	{
-		pr_red_info("Please specify --start or --stop option");
-		show_usage(argv[0]);
-		return -EINVAL;
+		desc.command = argv[optind];
 	}
 
 	ret = handler(&desc);

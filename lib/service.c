@@ -169,7 +169,7 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 
 	pr_bold_info("command = %s", desc->command);
 
-	if (desc->super_permission && (ret = check_super_permission(false, 5000)) < 0)
+	if (desc->super_permission && (ret = check_super_permission(true, 5000)) < 0)
 	{
 		return ret;
 	}
