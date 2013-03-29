@@ -108,8 +108,6 @@ int main(int argc, char *argv[])
 		case 'A':
 		case LOCAL_COMMAND_OPTION_ADB:
 			file_req.open_connect = adb_create_tcp_link2;
-			break;
-
 		case 'l':
 		case 'L':
 		case LOCAL_COMMAND_OPTION_LOCAL:
