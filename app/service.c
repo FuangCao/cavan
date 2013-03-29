@@ -100,8 +100,9 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_VERBOSE,
 		},
 	};
-	int (*handler)(struct cavan_daemon_description *);
 	int ret;
+	char command[1024];
+	int (*handler)(struct cavan_daemon_description *);
 	struct cavan_daemon_description desc =
 	{
 		.verbose = 0,
@@ -174,7 +175,8 @@ int main(int argc, char *argv[])
 
 	if (argc > optind && desc.command == NULL)
 	{
-		desc.command = argv[optind];
+		text_join_by_char(argv + optind, argc - optind, ' ', command, sizeof(command));
+		desc.command = command;
 	}
 
 	ret = handler(&desc);
