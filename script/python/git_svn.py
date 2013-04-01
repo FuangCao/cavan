@@ -4,7 +4,7 @@ import sys, os
 from getopt import getopt
 from xml.dom.minidom import parse
 
-from cavan_file import file_read_line, file_write_text
+from cavan_file import file_read_line, file_read_lines, file_write_text
 from cavan_command import command_vision, popen_tostring
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
 
@@ -141,6 +141,7 @@ class GitSvnManager:
 		self.mFileSvnLog = os.path.join(self.mGitSvnPath, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mGitSvnPath, "svn_info.xml")
 		self.mFileSvnList = os.path.join(self.mGitSvnPath, "svn_list.txt")
+		self.mFileSvnUpdate = os.path.join(self.mGitSvnPath, "svn_update.txt")
 		self.mFileGitRevision = os.path.join(self.mGitSvnPath, "git_revision.txt")
 		self.mFileGitMessag = os.path.join(self.mGitSvnPath, "git_message.txt")
 		self.mFileGitIgnore = os.path.join(self.mGitSvnPath, ".gitignore")
@@ -181,19 +182,29 @@ class GitSvnManager:
 		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
 		return file_write_text(self.mFileGitMessag, content.encode("utf-8"))
 
+	def gitAddFiles(self, listfile):
+		if not os.path.exists(listfile):
+			return True
+
+		if not os.path.getsize(listfile):
+			return True
+
+		if command_vision("git add -f $(cat %s)" % listfile) == True:
+			return True
+
+		for line in file_read_lines(listfile):
+			line = line.strip()
+			if command_vision("git add -f '%s'" % line) == True:
+				continue
+			if command_vision("git add -f \"%s\"" % line.replace("\'", "\\'")) == True:
+				continue
+			return False
+
+		return True
+
 	def gitCommit(self, entry):
-		size = os.path.getsize(self.mFileSvnList)
-		if size > 0 and (command_vision("git add -f $(cat %s)" % self.mFileSvnList)) == False:
-			fp = open(self.mFileSvnList, "r")
-			if not fp:
-				pr_red_info("open file %s failed" % self.mFileSvnList)
-				return False
-
-			lines = fp.readlines()
-			fp.close()
-
-			for line in lines:
-				command_vision("git add -f '%s'" % line.strip())
+		if self.gitAddFiles(self.mFileSvnList) == False:
+			return False
 
 		if self.saveGitRevision(entry.getRevesion()) == False:
 			return False
@@ -205,22 +216,49 @@ class GitSvnManager:
 		author = "%s <%s@%s>" % (author, author, self.mUuid)
 		return command_vision("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), self.mFileGitMessag))
 
+	def genSvnList(self):
+		listPath = []
+		for line in file_read_lines(self.mFileSvnUpdate):
+			line = line.strip()
+			if not os.path.isdir(line):
+				line = os.path.dirname(line)
+				if not line:
+					line = "."
+
+			found = False
+			for path in listPath:
+				if line.startswith(path):
+					found = True
+					break
+
+			if found == False:
+				if line == ".":
+					listPath = ["."]
+					break
+				listPath.append(line)
+
+		if os.path.exists(self.mFileSvnList):
+			os.remove(self.mFileSvnList)
+
+		for path in listPath:
+			if command_vision("svn list -R %s | sed -e '/\/\+\s*$/d' -e 's/^/%s\//g' >> %s" % (path, path.replace("/", "\/"), self.mFileSvnList)) == False:
+				return False
+
+		return True
+
 	def svnCheckout(self, entry):
-		common = "--force -r %s | grep '^[AUGER]\s\+' | awk '{print $NF}' > %s" % (entry.getRevesion(), self.mFileSvnList)
 		if os.path.isdir(".svn"):
-			if command_vision("svn update --accept tf %s" % common) == False:
+			if command_vision("svn update --accept tf --force -r %s | grep '^[UCGER]*A[UCGER]*\s\+' | awk '{print $NF}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)) == False:
 				return False
 		else:
-			command_vision("rm * -rf")
+			if command_vision("svn checkout %s@%s . && echo '.' > %s" % (self.mUrl, entry.getRevesion(), self.mFileSvnUpdate)) == False:
+				return True
 
-			if command_vision("svn checkout %s . %s" % (self.mUrl, common)) == False:
+			if command_vision("echo '*' > %s && git add -f %s" % (self.mFileSvnIgnore, self.mFileSvnIgnore)) == False:
 				return False
 
-			if command_vision("svn switch %s" % self.mUrl) == False:
-				return False
-
-			file_write_text(self.mFileSvnIgnore, "*")
-			command_vision("git add -f %s" % self.mFileSvnIgnore)
+		if self.genSvnList() == False:
+			return False
 
 		return self.gitCommit(entry)
 
@@ -230,8 +268,6 @@ class GitSvnManager:
 			return False
 
 		self.mUrl = url.strip()
-		if os.path.isdir(".svn") and command_vision("svn switch %s" % self.mUrl) == False:
-			return False
 
 		if self.genSvnInfoXml() == False:
 			return False
@@ -247,6 +283,9 @@ class GitSvnManager:
 		if self.mGitRevision >= self.mSvnRevision:
 			pr_green_info("Already up-to-date.")
 			return True
+
+		if self.mGitRevision > 0 and command_vision("svn switch %s@%d && svn update -r %d" % (self.mUrl, self.mGitRevision, self.mGitRevision)) == False:
+				return False
 
 		if self.genSvnLogXml() == False:
 			return False

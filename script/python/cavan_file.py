@@ -19,3 +19,13 @@ def file_read_line(filename):
 	fp.close()
 
 	return line
+
+def file_read_lines(filename):
+	fp = open(filename, "r")
+	if not fp:
+		return []
+
+	lines = fp.readlines()
+	fp.close()
+
+	return lines
