@@ -248,7 +248,7 @@ class GitSvnManager:
 
 	def svnCheckout(self, entry):
 		if os.path.isdir(".svn"):
-			if command_vision("svn update --accept tf --force -r %s | grep '^[UCGER]*A[UCGER]*\s\+' | awk '{print $NF}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)) == False:
+			if command_vision("svn update --accept tf --force -r %s | grep '^[UCGER]*A[UCGER]*\s\+' | sed 's/^[^ ]\+\s\+//g' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)) == False:
 				return False
 		else:
 			if command_vision("svn checkout %s@%s . && echo '.' > %s" % (self.mUrl, entry.getRevesion(), self.mFileSvnUpdate)) == False:
