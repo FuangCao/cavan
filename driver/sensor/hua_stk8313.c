@@ -153,13 +153,13 @@ static int stk8313_acceleration_event_handler(struct hua_input_chip *chip, struc
 		return ret;
 	}
 
-	x = STK8313_BUILD_WORD(package.xh, package.xl) >> 4;
-	y = STK8313_BUILD_WORD(package.yh, package.yl) >> 4;
-	z = STK8313_BUILD_WORD(package.zh, package.zl) >> 4;
+	x = (STK8313_BUILD_WORD(package.xh, package.xl) >> 4) - 145;
+	y = (STK8313_BUILD_WORD(package.yh, package.yl) >> 4) - 183;
+	z = (STK8313_BUILD_WORD(package.zh, package.zl) >> 4) - 365;
 
-	pr_bold_info("x = %d, y = %d, z = %d", x, y, z);
+	// pr_bold_info("x = %d, y = %d, z = %d", x, y, z);
 
-	hua_sensor_report_vector(dev->input, x, -y, z);
+	hua_sensor_report_vector(dev->input, -x, -y, z);
 
 	return 0;
 }
@@ -182,7 +182,7 @@ static int stk8313_input_chip_probe(struct hua_input_chip *chip)
 	hua_input_chip_set_dev_data(chip, sensor);
 
 	sensor->min_delay = 20;
-	sensor->max_range = 4;
+	sensor->max_range = 32;
 	sensor->resolution = 4096;
 	sensor->power_consume = 145;
 
@@ -223,8 +223,11 @@ static void stk8313_input_chip_remove(struct hua_input_chip *chip)
 static struct hua_input_init_data stk8313_init_data[] =
 {
 	{REG_MODE, 0x00},
-	{REG_SWRST, 0x00},
-	{REG_PDET, 0x07 << 5},
+	{REG_SWRST, 0x00, 100},
+	{REG_OFSX, 0},
+	{REG_OFSY, 0},
+	{REG_OFSZ, 0},
+	{REG_STH, 2 << 6 | 7},
 };
 
 static int stk8313_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
