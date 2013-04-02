@@ -150,6 +150,7 @@ static int mma845x_acceleration_event_handler(struct hua_input_chip *chip, struc
 	int ret;
 	short x, y, z;
 	struct mma845x_data_package package;
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	ret = chip->read_data(chip, REG_DATA_START, &package, sizeof(package));
 	if (ret < 0)
@@ -158,11 +159,11 @@ static int mma845x_acceleration_event_handler(struct hua_input_chip *chip, struc
 		return ret;
 	}
 
-	x = MMA845X_BUILD_WORD(package.xh, package.xl) >> 4;
-	y = MMA845X_BUILD_WORD(package.yh, package.yl) >> 4;
-	z = MMA845X_BUILD_WORD(package.zh, package.zl) >> 4;
+	x = BUILD_WORD(package.xh, package.xl) >> 4;
+	y = BUILD_WORD(package.yh, package.yl) >> 4;
+	z = BUILD_WORD(package.zh, package.zl) >> 4;
 
-	hua_sensor_report_vector(dev->input, x, -y, z);
+	sensor->report_vector(sensor, x, y, z);
 
 	return 0;
 }

@@ -101,6 +101,52 @@ int hua_input_write_register_i2c_smbus(struct hua_input_chip *chip, u8 addr, u8 
 
 EXPORT_SYMBOL_GPL(hua_input_write_register_i2c_smbus);
 
+int hua_input_master_read_i2c(struct hua_input_chip *chip, void *buff, size_t size)
+{
+	int ret;
+	struct i2c_client *client = chip->bus_data;
+	struct i2c_msg msg =
+	{
+		.addr = client->addr,
+		.flags = (client->flags & I2C_M_TEN) | I2C_M_RD,
+		.len = size,
+		.buf = buff
+	};
+
+	ret = i2c_transfer(client->adapter, &msg, 1);
+	if (ret == 1)
+	{
+		return size;
+	}
+
+	return likely(ret < 0) ? ret : -EFAULT;
+}
+
+EXPORT_SYMBOL_GPL(hua_input_master_read_i2c);
+
+int hua_input_master_write_i2c(struct hua_input_chip *chip, const void *buff, size_t size)
+{
+	int ret;
+	struct i2c_client *client = chip->bus_data;
+	struct i2c_msg msg =
+	{
+		.addr = client->addr,
+		.flags = client->flags & I2C_M_TEN,
+		.len = size,
+		.buf = (__u8 *)buff
+	};
+
+	ret = i2c_transfer(client->adapter, &msg, 1);
+	if (ret == 1)
+	{
+		return size;
+	}
+
+	return likely(ret < 0) ? ret : -EFAULT;
+}
+
+EXPORT_SYMBOL_GPL(hua_input_master_write_i2c);
+
 int hua_input_test_i2c(struct i2c_client *client)
 {
 	struct i2c_msg msg =
@@ -120,6 +166,43 @@ int hua_input_test_i2c(struct i2c_client *client)
 }
 
 EXPORT_SYMBOL_GPL(hua_input_test_i2c);
+
+int hua_input_detect_i2c(struct i2c_client *client, u8 start, u8 end)
+{
+	struct i2c_adapter *adapter = client->adapter;
+	struct i2c_msg msg =
+	{
+		.flags = (client->flags & I2C_M_TEN) | I2C_M_RD,
+		.len = 0,
+		.buf = NULL
+	};
+
+	if (start == 0)
+	{
+		start = 1;
+	}
+
+	if (end == 0)
+	{
+		end = 0x7F;
+	}
+
+	while (start <= end)
+	{
+		msg.addr = start;
+
+		if (i2c_transfer(adapter, &msg, 1) == 1)
+		{
+			return start;
+		}
+
+		start++;
+	}
+
+	return -ENOENT;
+}
+
+EXPORT_SYMBOL_GPL(hua_input_detect_i2c);
 
 // ================================================================================
 
@@ -783,13 +866,24 @@ static inline void hua_input_chip_free_irq(struct hua_input_chip *chip)
 	}
 }
 
-static struct hua_input_firmware *hua_input_firmware_alloc(size_t size)
+static struct hua_input_firmware *hua_input_firmware_alloc(struct hua_input_firmware *fw, size_t size)
 {
-	struct hua_input_firmware *fw;
+	size_t size_fill;
+	size_t size_total = sizeof(struct hua_input_firmware) + size;
 
 	pr_bold_info("Firmware Size = %d", size);
 
-	fw = kmalloc(sizeof(struct hua_input_firmware) + size, GFP_KERNEL);
+	if (fw == NULL)
+	{
+		size_fill = 0;
+		fw = kmalloc(size_total, GFP_USER);
+	}
+	else
+	{
+		size_fill = fw->size;
+		fw = krealloc(fw, size_total, GFP_USER);
+	}
+
 	if (fw == NULL)
 	{
 		pr_red_info("kmalloc");
@@ -798,7 +892,7 @@ static struct hua_input_firmware *hua_input_firmware_alloc(size_t size)
 
 	fw->data = (void *)(fw + 1);
 	fw->max_size = size;
-	fw->size = 0;
+	fw->size = size_fill;
 	fw->state = 0;
 
 	return fw;
@@ -1110,29 +1204,13 @@ static int hua_input_chip_firmware_upgrade(struct hua_input_chip *chip, const vo
 
 static int hua_input_chip_open(struct hua_misc_device *dev)
 {
-	struct hua_input_firmware *fw;
 	struct hua_input_chip *chip = hua_misc_device_get_data(dev);
 
 	pr_pos_info();
 
 	mutex_lock(&chip->lock);
 
-	if (chip->firmware_size == 0 || chip->firmware_upgrade == NULL)
-	{
-		pr_red_info("chip->firmware_size == 0 || chip->firmware_upgrade == NULL");
-		mutex_unlock(&chip->lock);
-		return -EINVAL;
-	}
-
-	fw = hua_input_firmware_alloc(chip->firmware_size);
-	if (fw == NULL)
-	{
-		pr_red_info("hua_input_firmware_alloc");
-		mutex_unlock(&chip->lock);
-		return -ENOMEM;
-	}
-
-	hua_input_chip_set_misc_data(chip, fw);
+	hua_input_chip_set_misc_data(chip, NULL);
 
 	mutex_unlock(&chip->lock);
 
@@ -1144,6 +1222,11 @@ static int hua_input_chip_release(struct hua_misc_device *dev)
 	int ret;
 	struct hua_input_chip *chip = hua_misc_device_get_data(dev);
 	struct hua_input_firmware *fw = hua_input_chip_get_misc_data(chip);
+
+	if (fw == NULL)
+	{
+		return 0;
+	}
 
 	if (fw->state < 0)
 	{
@@ -1168,11 +1251,33 @@ static ssize_t hua_input_chip_write(struct hua_misc_device *dev, const char __us
 	struct hua_input_chip *chip = hua_misc_device_get_data(dev);
 	struct hua_input_firmware *fw = hua_input_chip_get_misc_data(chip);
 
+	if (fw == NULL)
+	{
+		if (chip->firmware_upgrade == NULL)
+		{
+			pr_red_info("chip->firmware_upgrade == NULL");
+			return -EINVAL;
+		}
+
+		fw = hua_input_firmware_alloc(NULL, chip->firmware_size);
+		hua_input_chip_set_misc_data(chip, fw);
+		if (fw == NULL)
+		{
+			pr_red_info("hua_input_firmware_alloc");
+			return -ENOMEM;
+		}
+	}
+
 	if (fw->size + size > fw->max_size)
 	{
 		pr_red_info("fw->size + size > fw->max_size");
-		fw->state = -ENOMEM;
-		return fw->state;
+		fw = hua_input_firmware_alloc(fw, fw->size + size);
+		hua_input_chip_set_misc_data(chip, fw);
+		if (fw == NULL)
+		{
+			pr_red_info("hua_input_firmware_alloc");
+			return -ENOMEM;
+		}
 	}
 
 	if (copy_from_user(fw->data + fw->size, buff, size))
@@ -1388,6 +1493,16 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 		chip->write_register = hua_input_write_register_dummy;
 	}
 
+	if (chip->master_read == NULL)
+	{
+		chip->master_read = hua_input_master_read_i2c;
+	}
+
+	if (chip->master_write == NULL)
+	{
+		chip->master_write = hua_input_master_write_i2c;
+	}
+
 	chip->core = core;
 	chip->powered = false;
 
@@ -1490,6 +1605,129 @@ static ssize_t hua_input_device_write(struct hua_misc_device *dev, const char __
 	return size;
 }
 
+static int hua_input_chip_data_xfer(struct hua_input_chip *chip, unsigned long args)
+{
+	int ret;
+	struct hua_input_data_package package;
+	void *data;
+
+	if (copy_from_user(&package, (const void __user *)args, sizeof(package)))
+	{
+		pr_red_info("copy_from_user");
+		return -EFAULT;
+	}
+
+	if (package.type == HUA_INPUT_DATA_XFER_READ_REGISTER || package.type == HUA_INPUT_DATA_XFER_WRITE_REGISTER)
+	{
+		package.size = 1;
+	}
+
+	data = kmalloc(package.size, GFP_USER);
+	if (data == NULL)
+	{
+		pr_red_info("malloc");
+		return -ENOMEM;
+	}
+
+	switch (package.type)
+	{
+	case HUA_INPUT_DATA_XFER_READ_REGISTER:
+		ret = chip->read_register(chip, package.addr, data);
+		if (ret < 0)
+		{
+			pr_red_info("chip->read_register");
+			goto out_kfree_data;
+		}
+		break;
+
+	case HUA_INPUT_DATA_XFER_READ_DATA:
+		ret = chip->read_data(chip, package.addr, data, package.size);
+		if (ret < 0)
+		{
+			pr_red_info("chip->read_data");
+			goto out_kfree_data;
+		}
+		break;
+
+	case HUA_INPUT_DATA_XFER_MASTER_READ:
+		ret = chip->master_read(chip, data, package.size);
+		if (ret < 0)
+		{
+			pr_red_info("chip->master_read");
+			goto out_kfree_data;
+		}
+		break;
+
+	case HUA_INPUT_DATA_XFER_WRITE_REGISTER:
+	case HUA_INPUT_DATA_XFER_WRITE_DATA:
+	case HUA_INPUT_DATA_XFER_MASTER_WRITE:
+		if (copy_from_user(data, package.data, package.size))
+		{
+			ret = -EFAULT;
+			pr_red_info("copy_from_user");
+			goto out_kfree_data;
+		}
+		break;
+
+	default:
+		ret = -EINVAL;
+		pr_red_info("Invalid xfer type %d", package.type);
+		goto out_kfree_data;
+	}
+
+	switch (package.type)
+	{
+	case HUA_INPUT_DATA_XFER_WRITE_REGISTER:
+		ret = chip->write_register(chip, package.addr, *(u8 *)data);
+		if (ret < 0)
+		{
+			pr_red_info("chip->write_register");
+			goto out_kfree_data;
+		}
+		break;
+
+	case HUA_INPUT_DATA_XFER_WRITE_DATA:
+		ret = chip->write_data(chip, package.addr, data, package.size);
+		if (ret < 0)
+		{
+			pr_red_info("chip->write_data");
+			goto out_kfree_data;
+		}
+		break;
+
+	case HUA_INPUT_DATA_XFER_MASTER_WRITE:
+		ret = chip->master_write(chip, data, package.size);
+		if (ret < 0)
+		{
+			pr_red_info("chip->master_write");
+			goto out_kfree_data;
+		}
+		break;
+
+	case HUA_INPUT_DATA_XFER_READ_REGISTER:
+	case HUA_INPUT_DATA_XFER_READ_DATA:
+	case HUA_INPUT_DATA_XFER_MASTER_READ:
+		if (copy_to_user(package.data, data, package.size))
+		{
+			ret = -EFAULT;
+			pr_red_info("copy_to_user");
+			goto out_kfree_data;
+		}
+		break;
+
+	default:
+		ret = -EINVAL;
+		pr_red_info("Invalid xfer type %d", package.type);
+		goto out_kfree_data;
+	}
+
+	ret = 0;
+
+out_kfree_data:
+	kfree(data);
+	return ret;
+}
+
 static int hua_input_device_ioctl(struct hua_misc_device *dev, unsigned int command, unsigned long args)
 {
 	struct hua_input_device *idev = hua_misc_device_get_data(dev);
@@ -1506,6 +1744,9 @@ static int hua_input_device_ioctl(struct hua_misc_device *dev, unsigned int comm
 		idev->chip->firmware_size = args;
 		return 0;
 
+	case HUA_INPUT_CHIP_IOC_DATA_XFER:
+		return hua_input_chip_data_xfer(idev->chip, args);
+
 	case HUA_INPUT_DEVICE_IOC_GET_TYPE:
 		return hua_input_copy_to_user_uint(args, idev->type);
 
@@ -1517,6 +1758,23 @@ static int hua_input_device_ioctl(struct hua_misc_device *dev, unsigned int comm
 
 	case HUA_INPUT_DEVICE_IOC_SET_ENABLE:
 		return hua_input_device_set_enable_lock(idev, args > 0);
+
+	case HUA_INPUT_DEVICE_IOC_CALIBRATION:
+		if (idev->calibration)
+		{
+			size_t size = HUA_INPUT_IOC_GET_SIZE(command);
+			char buff[size + 1];
+
+			if (copy_from_user(buff, (const void __user *)args, size))
+			{
+				pr_red_info("copy_from_user");
+				return -EFAULT;
+			}
+
+			buff[size] = 0;
+
+			return idev->calibration(idev, buff, size);
+		}
 
 	default:
 		if (idev->ioctl)

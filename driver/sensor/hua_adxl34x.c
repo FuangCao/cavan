@@ -165,8 +165,8 @@
 #pragma pack(1)
 struct adxl34x_data_package
 {
-	short y;
 	short x;
+	short y;
 	short z;
 };
 #pragma pack()
@@ -254,6 +254,7 @@ static int adxl34x_acceleration_event_handler(struct hua_input_chip *chip, struc
 	int ret;
 	u8 fifo_state;
 	struct adxl34x_data_package package;
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	if ((chip->irq_state & (DATA_READY | WATERMARK)) == 0)
 	{
@@ -276,7 +277,7 @@ static int adxl34x_acceleration_event_handler(struct hua_input_chip *chip, struc
 			continue;
 		}
 
-		hua_sensor_report_vector(dev->input, package.x, package.y, package.z);
+		sensor->report_vector(sensor, package.x, package.y, package.z);
 	}
 
 	return 0;

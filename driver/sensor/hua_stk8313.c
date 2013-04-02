@@ -143,7 +143,8 @@ static int stk8313_acceleration_set_delay(struct hua_input_device *dev, unsigned
 static int stk8313_acceleration_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
-	short x, y, z;
+	int x, y, z;
+	struct hua_sensor_device *sensor;
 	struct stk8313_data_package package;
 
 	ret = chip->read_data(chip, REG_XOUT1, &package, sizeof(package));
@@ -153,13 +154,12 @@ static int stk8313_acceleration_event_handler(struct hua_input_chip *chip, struc
 		return ret;
 	}
 
-	x = (STK8313_BUILD_WORD(package.xh, package.xl) >> 4) - 145;
-	y = (STK8313_BUILD_WORD(package.yh, package.yl) >> 4) - 183;
-	z = (STK8313_BUILD_WORD(package.zh, package.zl) >> 4) - 365;
+	x = BUILD_WORD(package.xh, package.xl) >> 4;
+	y = BUILD_WORD(package.yh, package.yl) >> 4;
+	z = BUILD_WORD(package.zh, package.zl) >> 4;
 
-	// pr_bold_info("x = %d, y = %d, z = %d", x, y, z);
-
-	hua_sensor_report_vector(dev->input, -x, -y, z);
+	sensor = (struct hua_sensor_device *)dev;
+	sensor->report_vector(sensor, x, y, z);
 
 	return 0;
 }
@@ -185,6 +185,11 @@ static int stk8313_input_chip_probe(struct hua_input_chip *chip)
 	sensor->max_range = 32;
 	sensor->resolution = 4096;
 	sensor->power_consume = 145;
+
+	sensor->offset.x = -145;
+	sensor->offset.y = -183;
+	sensor->offset.z = -365;
+	sensor->orientation = HUA_SENSOR_ORIENTATION_UPWARD_0;
 
 	dev = &sensor->dev;
 	dev->name = "Three-Axis Digital Accelerometer";

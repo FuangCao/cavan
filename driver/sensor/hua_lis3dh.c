@@ -281,6 +281,7 @@ static int lis3dh_acceleration_event_handler(struct hua_input_chip *chip, struct
 {
 	int ret;
 	struct lis3dh_data_package package;
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	ret = chip->read_data(chip, I2C_AUTO_INCREMENT | AXISDATA_REG, &package, sizeof(package));
 	if (ret < 0)
@@ -289,7 +290,7 @@ static int lis3dh_acceleration_event_handler(struct hua_input_chip *chip, struct
 		return ret;
 	}
 
-	hua_sensor_report_vector(dev->input, package.x >> 4, -(package.y >> 4), package.z >> 4);
+	sensor->report_vector(sensor, package.x >> 4, package.y >> 4, package.z >> 4);
 
 	return 0;
 }
@@ -298,6 +299,7 @@ static int lis3de_acceleration_event_handler(struct hua_input_chip *chip, struct
 {
 	int ret;
 	struct lis3de_data_package package;
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	ret = chip->read_data(chip, I2C_AUTO_INCREMENT | AXISDATA_REG, &package, sizeof(package));
 	if (ret < 0)
@@ -308,7 +310,7 @@ static int lis3de_acceleration_event_handler(struct hua_input_chip *chip, struct
 
 	pr_bold_info("[%d, %d, %d]", package.x, package.y, package.z);
 
-	hua_sensor_report_vector(dev->input, package.x, -package.y, package.z);
+	sensor->report_vector(sensor, package.x, package.y, package.z);
 
 	return 0;
 }

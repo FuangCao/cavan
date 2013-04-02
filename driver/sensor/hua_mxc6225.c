@@ -7,8 +7,8 @@
 #pragma pack(1)
 struct mxc6225_data_package
 {
-	s8 y;
 	s8 x;
+	s8 y;
 };
 #pragma pack()
 
@@ -49,6 +49,7 @@ static int mxc6225_acceleration_event_handler(struct hua_input_chip *chip, struc
 {
 	int ret;
 	struct mxc6225_data_package package;
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	ret = chip->read_data(chip, 0, &package, sizeof(package));
 	if (ret < 0)
@@ -57,7 +58,7 @@ static int mxc6225_acceleration_event_handler(struct hua_input_chip *chip, struc
 		return ret;
 	}
 
-	hua_sensor_report_vector(dev->input, package.x, -package.y, 32);
+	sensor->report_vector(sensor, package.x, package.y, 32);
 
 	return 0;
 }

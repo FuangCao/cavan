@@ -490,11 +490,12 @@ static int cy8c242_firmware_upgrade(struct hua_input_chip *chip, const void *buf
 	return 0;
 }
 
-static int cy8c242_calibration(struct hua_input_chip *chip, const void *buff, size_t size)
+static int cy8c242_calibration(struct hua_input_device *dev, const void *buff, size_t size)
 {
 	int ret;
 	u8 value;
 	int i;
+	struct hua_input_chip *chip = dev->chip;
 	struct i2c_client *client = hua_input_chip_get_bus_data(chip);
 	char data[2] = {0x1C, 0x01};
 
@@ -600,6 +601,7 @@ static int cy8c242_input_chip_probe(struct hua_input_chip *chip)
 	base_dev->type = HUA_INPUT_DEVICE_TYPE_TOUCHSCREEN;
 	base_dev->use_irq = true;
 	base_dev->event_handler = cy8c242_ts_event_handler;
+	base_dev->calibration = cy8c242_calibration;
 
 	ret = hua_input_device_register(chip, base_dev);
 	if (ret < 0)
@@ -685,7 +687,6 @@ static int cy8c242_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->firmware_size = KB(180);
 	chip->firmware_upgrade = cy8c242_firmware_upgrade;
-	chip->calibration = cy8c242_calibration;
 
 	ret = hua_input_chip_register(chip);
 	if (ret < 0)
