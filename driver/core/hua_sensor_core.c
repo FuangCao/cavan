@@ -114,7 +114,7 @@ static int hua_sensor_device_ioctl(struct hua_input_device *dev, unsigned int co
 			pr_red_info("copy_to_user");
 			return -EINVAL;
 		}
-		break;
+		return 0;
 
 	default:
 		pr_red_info("Invalid IOCTL 0x%08x", command);
