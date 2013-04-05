@@ -18,7 +18,10 @@ def file_read_line(filename):
 	line = fp.readline()
 	fp.close()
 
-	return line
+	if not line:
+		return None
+
+	return line.rstrip("\r\n\f")
 
 def file_read_lines(filename):
 	fp = open(filename, "r")
@@ -29,3 +32,23 @@ def file_read_lines(filename):
 	fp.close()
 
 	return lines
+
+def file_write_lines(filename, lines):
+	fp = open(filename, "w")
+	if not fp:
+		return False
+
+	fp.writelines(lines)
+	fp.close()
+
+	return True
+
+def file_append_line(filename, line):
+	fp = open(filename, "a")
+	if not fp:
+		return False
+
+	fp.write(line + "\n")
+	fp.close()
+
+	return True

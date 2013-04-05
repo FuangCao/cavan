@@ -4,7 +4,7 @@ import sys, os
 from getopt import getopt
 from xml.dom.minidom import parse
 
-from cavan_file import file_read_line, file_read_lines, file_write_text
+from cavan_file import file_read_line, file_read_lines, file_write_text, file_write_lines, file_append_line
 from cavan_command import command_vision, popen_tostring, popen_to_list
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
 
@@ -139,16 +139,15 @@ class GitSvnManager:
 		sys.setdefaultencoding("utf-8")
 
 		self.mRemoteName = "svn"
-		self.mGitSvnPath = ".git_svn"
+		self.mGitSvnPath = ".git/svn"
 		self.mFileSvnIgnore = ".svn/.gitignore"
 		self.mFileSvnLog = os.path.join(self.mGitSvnPath, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mGitSvnPath, "svn_info.xml")
 		self.mFileSvnList = os.path.join(self.mGitSvnPath, "svn_list.txt")
 		self.mFileGitList = os.path.join(self.mGitSvnPath, "git_list.txt")
 		self.mFileSvnUpdate = os.path.join(self.mGitSvnPath, "svn_update.txt")
-		self.mFileGitRevision = os.path.join(self.mGitSvnPath, "git_revision.txt")
+		self.mFileRevisionMap = os.path.join(self.mGitSvnPath, "revision_map.txt")
 		self.mFileGitMessag = os.path.join(self.mGitSvnPath, "git_message.txt")
-		self.mFileGitIgnore = os.path.join(self.mGitSvnPath, ".gitignore")
 
 	def genSvnInfoXml(self, url = None):
 		if url == None:
@@ -161,9 +160,6 @@ class GitSvnManager:
 		return command_vision("svn log --xml -r %d:%d %s > %s" % (self.mGitRevision + 1, self.mSvnRevision, self.mUrl, self.mFileSvnLog))
 
 	def genGitRepo(self):
-		if os.path.isdir(".git"):
-			command_vision("rm .git -rf")
-
 		if command_vision("git init") == False:
 			return False
 
@@ -175,18 +171,36 @@ class GitSvnManager:
 
 		return command_vision("git remote add %s %s" % (self.mRemoteName, self.mUrl))
 
-	def saveGitRevision(self, revision):
-		return file_write_text(self.mFileGitRevision, revision)
+	def getGitHead(self):
+		lines = popen_to_list("cat .git/HEAD | awk '/ref:/ {print $2}'")
+		if not lines:
+			return None
+		return file_read_line(os.path.join(".git", lines[0].strip()))
 
 	def getGitRevision(self):
-		if not os.path.exists(".git") or command_vision("git checkout %s" % self.mFileGitRevision) == False:
+		if not os.path.exists(self.mFileRevisionMap):
 			return 0
 
-		line = file_read_line(self.mFileGitRevision)
-		if not line:
-			return 0
+		head = self.getGitHead()
+		if not head:
+			return -1
 
-		return int(line.strip())
+		fpMap = open(self.mFileRevisionMap, "r+w")
+		if not fpMap:
+			return -1
+
+		while True:
+			line = fpMap.readline()
+			if not line:
+				break
+
+			if line.startswith(head):
+				fpMap.truncate()
+				fpMap.close()
+				return int(line[len(head) + 1 :])
+
+		fpMap.close()
+		return -1
 
 	def saveGitMessage(self, entry):
 		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
@@ -245,15 +259,21 @@ class GitSvnManager:
 		if self.gitAddFiles() == False:
 			return False
 
-		if self.saveGitRevision(entry.getRevesion()) == False:
-			return False
-
 		if self.saveGitMessage(entry) == False:
 			return False
 
 		author = entry.getAuthor()
 		author = "%s <%s@%s>" % (author, author, self.mUuid)
-		return command_vision("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), self.mFileGitMessag))
+		if command_vision("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), self.mFileGitMessag)) == False:
+			return False
+
+		head = self.getGitHead()
+		if not head:
+			return False
+
+		self.mFpGitRevision.write("%s %s\n" % (head, entry.getRevesion()))
+		self.mFpGitRevision.flush()
+		return True
 
 	def listHasPath(self, path, listPath):
 		for item in listPath:
@@ -313,6 +333,10 @@ class GitSvnManager:
 		return self.gitCommit(entry)
 
 	def cmd_sync(self):
+		self.mGitRevision = self.getGitRevision()
+		if self.mGitRevision < 0:
+			return False
+
 		url = popen_tostring("git config remote.%s.url" % self.mRemoteName)
 		if not url:
 			return False
@@ -328,7 +352,6 @@ class GitSvnManager:
 
 		self.mUuid = infoParser.getUuid()
 		self.mSvnRevision = infoParser.getRevesion()
-		self.mGitRevision = self.getGitRevision()
 
 		if self.mGitRevision >= self.mSvnRevision:
 			pr_green_info("Already up-to-date.")
@@ -349,11 +372,17 @@ class GitSvnManager:
 			pr_green_info("Already up-to-date.")
 			return True
 
+		self.mFpGitRevision = open(self.mFileRevisionMap, "a")
+		if not self.mFpGitRevision:
+			return False
+
 		for item in logParser.getLogEntrys():
 			entry = SvnLogEntry(item)
 			if self.svnCheckout(entry) == False:
+				self.mFpGitRevision.close()
 				return False
 
+		self.mFpGitRevision.close()
 		return True
 
 	def cmd_init(self, argv):
@@ -374,8 +403,8 @@ class GitSvnManager:
 			os.chdir(pathname)
 
 		if not os.path.isdir(self.mGitSvnPath):
-			os.mkdir(self.mGitSvnPath, 0777)
-		elif os.path.exists(self.mFileGitRevision):
+			os.makedirs(self.mGitSvnPath, 0777)
+		elif os.path.exists(self.mFileRevisionMap):
 			pr_red_info("Has been initialized")
 			return False
 
@@ -390,15 +419,6 @@ class GitSvnManager:
 			self.mUrl = infoParser.getUrl()
 
 		if self.genGitRepo() == False:
-			return False
-
-		if file_write_text(self.mFileGitIgnore, "*") == False:
-		 	return False
-
-		if self.saveGitRevision("0") == False:
-			return False
-
-		if command_vision("git add -f %s %s" % (self.mFileGitIgnore, self.mFileGitRevision)) == False:
 			return False
 
 		return self.cmd_sync()
@@ -417,3 +437,7 @@ class GitSvnManager:
 		else:
 			stdio.pr_red_info("unknown subcmd " + subcmd)
 			return False
+
+class GitSvnRepo:
+	def __init__(self):
+		print "1111111111111111111"
