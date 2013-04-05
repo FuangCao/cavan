@@ -5,7 +5,7 @@ from getopt import getopt
 from xml.dom.minidom import parse
 
 from cavan_file import file_read_line, file_read_lines, file_write_text
-from cavan_command import command_vision, popen_tostring
+from cavan_command import command_vision, popen_tostring, popen_to_list
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
 
 def getFirstElement(parent, name):
@@ -216,33 +216,39 @@ class GitSvnManager:
 		author = "%s <%s@%s>" % (author, author, self.mUuid)
 		return command_vision("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), self.mFileGitMessag))
 
+	def listHasPath(self, path, listPath):
+		for item in listPath:
+			if path.startswith(item):
+				return True
+		return False
+
 	def genSvnList(self):
+		fp = open(self.mFileSvnList, "w")
+		if not fp:
+			return False
+
 		listPath = []
 		for line in file_read_lines(self.mFileSvnUpdate):
 			line = line.strip()
-			if not os.path.isdir(line):
-				line = os.path.dirname(line)
-				if not line:
-					line = "."
+			if self.listHasPath(line, listPath):
+				continue
 
-			found = False
-			for path in listPath:
-				if line.startswith(path):
-					found = True
-					break
-
-			if found == False:
-				if line == ".":
-					listPath = ["."]
-					break
+			if os.path.isdir(line):
 				listPath.append(line)
-
-		if os.path.exists(self.mFileSvnList):
-			os.remove(self.mFileSvnList)
+			else:
+				fp.write(line.encode("utf-8"))
+				fp.write("\n")
 
 		for path in listPath:
-			if command_vision("svn list -R %s | sed -e '/\/\+\s*$/d' -e 's/^/%s\//g' >> %s" % (path, path.replace("/", "\/"), self.mFileSvnList)) == False:
+			listFile = popen_to_list("svn list -R %s | awk '! /\/+$/ {print \"%s/\" $0}'" % (path, path.replace("/", "\/")))
+			if not listFile:
+				fp.close()
 				return False
+
+			for line in listFile:
+				fp.write(line.encode("utf-8"))
+
+		fp.close()
 
 		return True
 
@@ -284,7 +290,7 @@ class GitSvnManager:
 			pr_green_info("Already up-to-date.")
 			return True
 
-		if self.mGitRevision > 0 and command_vision("svn switch %s@%d && svn update -r %d" % (self.mUrl, self.mGitRevision, self.mGitRevision)) == False:
+		if self.mGitRevision > 0 and command_vision("svn switch --force --accept tf %s@%d" % (self.mUrl, self.mGitRevision)) == False:
 				return False
 
 		if self.genSvnLogXml() == False:
