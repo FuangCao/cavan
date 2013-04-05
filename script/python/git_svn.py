@@ -196,7 +196,7 @@ class GitSvnManager:
 			return True
 
 		for line in file_read_lines(listfile):
-			line = line.rstrip()
+			line = line.rstrip("\r\n")
 			if command_vision("git add -f '%s'" % line) == True:
 				continue
 			if command_vision("git add -f \"%s\"" % line.replace("\'", "\\'")) == True:
@@ -232,7 +232,7 @@ class GitSvnManager:
 
 		listPath = []
 		for line in file_read_lines(self.mFileSvnUpdate):
-			line = line.rstrip()
+			line = line.rstrip("\r\n")
 			if self.listHasPath(line, listPath):
 				continue
 
