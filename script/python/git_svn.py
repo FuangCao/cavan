@@ -285,15 +285,15 @@ class GitSvnManager:
 			fpSvnList.writelines(listFile)
 
 		for path in listDir:
-			listFile = popen_to_list("svn list -R '%s' | awk '! /\/+$/ {print \"%s/\" $0}'" % (path, path))
+			listFile = popen_to_list("svn list -R '%s' | awk '! /\/+$/ {print \"%s\" $0}'" % (path.replace("'", "'\\''"), path))
 			if listFile == None:
 				fpSvnList.close()
 				return False
 
-			fpSvnList.writelines(listFile)
+			if len(listFile) > 0:
+				fpSvnList.writelines(listFile)
 
 		fpSvnList.close()
-
 		return True
 
 	def svnCheckout(self, entry):
