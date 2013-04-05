@@ -262,22 +262,29 @@ class GitSvnManager:
 		return False
 
 	def genSvnList(self):
+		listDir = []
+		listFile = []
+
+		for line in file_read_lines(self.mFileSvnUpdate):
+			line = line.rstrip("\r\n")
+			if self.listHasPath(line, listDir):
+				continue
+
+			if os.path.isdir(line):
+				print "[DIR]  Add " + line
+				listDir.append(line + "/")
+			else:
+				print "[FILE] Add " + line
+				listFile.append(line + "\n")
+
 		fpSvnList = open(self.mFileSvnList, "w")
 		if not fpSvnList:
 			return False
 
-		listPath = []
-		for line in file_read_lines(self.mFileSvnUpdate):
-			line = line.rstrip("\r\n")
-			if self.listHasPath(line, listPath):
-				continue
+		if len(listFile) > 0:
+			fpSvnList.writelines(listFile)
 
-			if os.path.isdir(line):
-				listPath.append(line)
-			else:
-				fpSvnList.write(line + "\n")
-
-		for path in listPath:
+		for path in listDir:
 			listFile = popen_to_list("svn list -R '%s' | awk '! /\/+$/ {print \"%s/\" $0}'" % (path, path))
 			if listFile == None:
 				fpSvnList.close()
