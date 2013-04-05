@@ -135,6 +135,9 @@ class SvnLogEntry:
 
 class GitSvnManager:
 	def __init__(self):
+		reload(sys)
+		sys.setdefaultencoding("utf-8")
+
 		self.mRemoteName = "svn"
 		self.mGitSvnPath = ".git_svn"
 		self.mFileSvnIgnore = ".svn/.gitignore"
@@ -180,7 +183,7 @@ class GitSvnManager:
 
 	def saveGitMessage(self, entry):
 		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
-		return file_write_text(self.mFileGitMessag, content.encode("utf-8"))
+		return file_write_text(self.mFileGitMessag, content)
 
 	def gitAddFiles(self, listfile):
 		if not os.path.exists(listfile):
@@ -193,7 +196,7 @@ class GitSvnManager:
 			return True
 
 		for line in file_read_lines(listfile):
-			line = line.strip()
+			line = line.rstrip()
 			if command_vision("git add -f '%s'" % line) == True:
 				continue
 			if command_vision("git add -f \"%s\"" % line.replace("\'", "\\'")) == True:
@@ -229,24 +232,22 @@ class GitSvnManager:
 
 		listPath = []
 		for line in file_read_lines(self.mFileSvnUpdate):
-			line = line.strip()
+			line = line.rstrip()
 			if self.listHasPath(line, listPath):
 				continue
 
 			if os.path.isdir(line):
 				listPath.append(line)
 			else:
-				fp.write(line.encode("utf-8"))
-				fp.write("\n")
+				fp.write(line + "\n")
 
 		for path in listPath:
-			listFile = popen_to_list("svn list -R %s | awk '! /\/+$/ {print \"%s/\" $0}'" % (path, path.replace("/", "\/")))
+			listFile = popen_to_list("svn list -R '%s' | awk '! /\/+$/ {print \"%s/\" $0}'" % (path, path.replace("/", "\/")))
 			if not listFile:
 				fp.close()
 				return False
 
-			for line in listFile:
-				fp.write(line.encode("utf-8"))
+			fp.writelines(listFile)
 
 		fp.close()
 
@@ -254,7 +255,7 @@ class GitSvnManager:
 
 	def svnCheckout(self, entry):
 		if os.path.isdir(".svn"):
-			if command_vision("svn update --accept tf --force -r %s | grep '^[UCGER]*A[UCGER]*\s\+' | sed 's/^[^ ]\+\s\+//g' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)) == False:
+			if command_vision("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*\s+/ {print substr($0, 6)}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)) == False:
 				return False
 		else:
 			if command_vision("svn checkout %s@%s . && echo '.' > %s" % (self.mUrl, entry.getRevesion(), self.mFileSvnUpdate)) == False:
