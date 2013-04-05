@@ -59,15 +59,15 @@ static int cavan_display_test_main(int argc, char *argv[])
 	}
 
 	color_map[0][0] = display->build_color(display, 1.0, 0.0, 0.0, 1.0);
-	color_map[1][0] = display->build_color(display, 1.0, 1.0, 1.0, 1.0);
-	color_map[2][0] = display->build_color(display, 0.0, 1.0, 1.0, 1.0);
-
 	color_map[0][1] = display->build_color(display, 0.0, 1.0, 0.0, 1.0);
-	color_map[1][1] = display->build_color(display, 0.0, 0.0, 0.0, 1.0);
-	color_map[2][1] = display->build_color(display, 1.0, 0.0, 1.0, 1.0);
-
 	color_map[0][2] = display->build_color(display, 0.0, 0.0, 1.0, 1.0);
-	color_map[1][2] = display->build_color(display, 1.0, 1.0, 1.0, 1.0);
+
+	color_map[1][0] = display->build_color(display, 1.0, 1.0, 1.0, 1.0);
+	color_map[1][1] = display->build_color(display, 0.0, 0.0, 0.0, 1.0);
+	color_map[1][2] = display->build_color(display, 0.5, 0.5, 0.5, 1.0);
+
+	color_map[2][0] = display->build_color(display, 0.0, 1.0, 1.0, 1.0);
+	color_map[2][1] = display->build_color(display, 1.0, 0.0, 1.0, 1.0);
 	color_map[2][2] = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
 
 	width = display->xres / 3;
