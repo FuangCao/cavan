@@ -70,9 +70,10 @@ bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
 	cavan-swan_ipu$(EXEEXT) cavan-swan_fac$(EXEEXT) \
 	cavan-swan_emmc$(EXEEXT) cavan-swan_check$(EXEEXT) \
 	cavan-super_upgrade$(EXEEXT) cavan-sprd_write_imei$(EXEEXT) \
-	cavan-shrink$(EXEEXT) cavan-show_file$(EXEEXT) \
-	cavan-service$(EXEEXT) cavan-screen$(EXEEXT) \
-	cavan-rle$(EXEEXT) cavan-resize$(EXEEXT) cavan-remove$(EXEEXT) \
+	cavan-sprd_at$(EXEEXT) cavan-shrink$(EXEEXT) \
+	cavan-show_file$(EXEEXT) cavan-service$(EXEEXT) \
+	cavan-screen_mirror$(EXEEXT) cavan-rle$(EXEEXT) \
+	cavan-resize$(EXEEXT) cavan-remove$(EXEEXT) \
 	cavan-ramdisk$(EXEEXT) cavan-poll_input$(EXEEXT) \
 	cavan-poll_event$(EXEEXT) cavan-part_table$(EXEEXT) \
 	cavan-part_show$(EXEEXT) cavan-part_probe$(EXEEXT) \
@@ -86,8 +87,8 @@ bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
 	cavan-file_join$(EXEEXT) cavan-file_crc32$(EXEEXT) \
 	cavan-fdisk$(EXEEXT) cavan-ext2$(EXEEXT) cavan-ecc$(EXEEXT) \
 	cavan-eavoo_sell_statistic$(EXEEXT) cavan-dos2unix$(EXEEXT) \
-	cavan-df$(EXEEXT) cavan-dd$(EXEEXT) cavan-copy$(EXEEXT) \
-	cavan-chtty$(EXEEXT) cavan-chroot$(EXEEXT) \
+	cavan-display$(EXEEXT) cavan-df$(EXEEXT) cavan-dd$(EXEEXT) \
+	cavan-copy$(EXEEXT) cavan-chtty$(EXEEXT) cavan-chroot$(EXEEXT) \
 	cavan-calculator$(EXEEXT) cavan-buboot$(EXEEXT) \
 	cavan-bsystem$(EXEEXT) cavan-brecovery$(EXEEXT) \
 	cavan-bramdisk$(EXEEXT) cavan-bmp_view$(EXEEXT) \
@@ -161,6 +162,9 @@ cavan_dd_LDADD = $(LDADD)
 am_cavan_df_OBJECTS = df.$(OBJEXT)
 cavan_df_OBJECTS = $(am_cavan_df_OBJECTS)
 cavan_df_LDADD = $(LDADD)
+am_cavan_display_OBJECTS = display.$(OBJEXT)
+cavan_display_OBJECTS = $(am_cavan_display_OBJECTS)
+cavan_display_LDADD = $(LDADD)
 am_cavan_dos2unix_OBJECTS = dos2unix.$(OBJEXT)
 cavan_dos2unix_OBJECTS = $(am_cavan_dos2unix_OBJECTS)
 cavan_dos2unix_LDADD = $(LDADD)
@@ -253,9 +257,9 @@ cavan_resize_LDADD = $(LDADD)
 am_cavan_rle_OBJECTS = rle.$(OBJEXT)
 cavan_rle_OBJECTS = $(am_cavan_rle_OBJECTS)
 cavan_rle_LDADD = $(LDADD)
-am_cavan_screen_OBJECTS = screen.$(OBJEXT)
-cavan_screen_OBJECTS = $(am_cavan_screen_OBJECTS)
-cavan_screen_LDADD = $(LDADD)
+am_cavan_screen_mirror_OBJECTS = screen_mirror.$(OBJEXT)
+cavan_screen_mirror_OBJECTS = $(am_cavan_screen_mirror_OBJECTS)
+cavan_screen_mirror_LDADD = $(LDADD)
 am_cavan_service_OBJECTS = service.$(OBJEXT)
 cavan_service_OBJECTS = $(am_cavan_service_OBJECTS)
 cavan_service_LDADD = $(LDADD)
@@ -265,6 +269,9 @@ cavan_show_file_LDADD = $(LDADD)
 am_cavan_shrink_OBJECTS = shrink.$(OBJEXT)
 cavan_shrink_OBJECTS = $(am_cavan_shrink_OBJECTS)
 cavan_shrink_LDADD = $(LDADD)
+am_cavan_sprd_at_OBJECTS = sprd_at.$(OBJEXT)
+cavan_sprd_at_OBJECTS = $(am_cavan_sprd_at_OBJECTS)
+cavan_sprd_at_LDADD = $(LDADD)
 am_cavan_sprd_write_imei_OBJECTS = sprd_write_imei.$(OBJEXT)
 cavan_sprd_write_imei_OBJECTS = $(am_cavan_sprd_write_imei_OBJECTS)
 cavan_sprd_write_imei_LDADD = $(LDADD)
@@ -389,7 +396,7 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_calculator_SOURCES) $(cavan_chroot_SOURCES) \
 	$(cavan_chtty_SOURCES) $(cavan_copy_SOURCES) \
 	$(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
-	$(cavan_dos2unix_SOURCES) \
+	$(cavan_display_SOURCES) $(cavan_dos2unix_SOURCES) \
 	$(cavan_eavoo_sell_statistic_SOURCES) $(cavan_ecc_SOURCES) \
 	$(cavan_ext2_SOURCES) $(cavan_fdisk_SOURCES) \
 	$(cavan_file_crc32_SOURCES) $(cavan_file_join_SOURCES) \
@@ -404,9 +411,10 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_part_table_SOURCES) $(cavan_poll_event_SOURCES) \
 	$(cavan_poll_input_SOURCES) $(cavan_ramdisk_SOURCES) \
 	$(cavan_remove_SOURCES) $(cavan_resize_SOURCES) \
-	$(cavan_rle_SOURCES) $(cavan_screen_SOURCES) \
+	$(cavan_rle_SOURCES) $(cavan_screen_mirror_SOURCES) \
 	$(cavan_service_SOURCES) $(cavan_show_file_SOURCES) \
-	$(cavan_shrink_SOURCES) $(cavan_sprd_write_imei_SOURCES) \
+	$(cavan_shrink_SOURCES) $(cavan_sprd_at_SOURCES) \
+	$(cavan_sprd_write_imei_SOURCES) \
 	$(cavan_super_upgrade_SOURCES) $(cavan_swan_check_SOURCES) \
 	$(cavan_swan_emmc_SOURCES) $(cavan_swan_fac_SOURCES) \
 	$(cavan_swan_ipu_SOURCES) $(cavan_swan_mac_SOURCES) \
@@ -433,7 +441,7 @@ DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_calculator_SOURCES) $(cavan_chroot_SOURCES) \
 	$(cavan_chtty_SOURCES) $(cavan_copy_SOURCES) \
 	$(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
-	$(cavan_dos2unix_SOURCES) \
+	$(cavan_display_SOURCES) $(cavan_dos2unix_SOURCES) \
 	$(cavan_eavoo_sell_statistic_SOURCES) $(cavan_ecc_SOURCES) \
 	$(cavan_ext2_SOURCES) $(cavan_fdisk_SOURCES) \
 	$(cavan_file_crc32_SOURCES) $(cavan_file_join_SOURCES) \
@@ -448,9 +456,10 @@ DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_part_table_SOURCES) $(cavan_poll_event_SOURCES) \
 	$(cavan_poll_input_SOURCES) $(cavan_ramdisk_SOURCES) \
 	$(cavan_remove_SOURCES) $(cavan_resize_SOURCES) \
-	$(cavan_rle_SOURCES) $(cavan_screen_SOURCES) \
+	$(cavan_rle_SOURCES) $(cavan_screen_mirror_SOURCES) \
 	$(cavan_service_SOURCES) $(cavan_show_file_SOURCES) \
-	$(cavan_shrink_SOURCES) $(cavan_sprd_write_imei_SOURCES) \
+	$(cavan_shrink_SOURCES) $(cavan_sprd_at_SOURCES) \
+	$(cavan_sprd_write_imei_SOURCES) \
 	$(cavan_super_upgrade_SOURCES) $(cavan_swan_check_SOURCES) \
 	$(cavan_swan_emmc_SOURCES) $(cavan_swan_fac_SOURCES) \
 	$(cavan_swan_ipu_SOURCES) $(cavan_swan_mac_SOURCES) \
@@ -615,6 +624,7 @@ cavan_chtty_SOURCES = chtty.c
 cavan_copy_SOURCES = copy.c
 cavan_dd_SOURCES = dd.c
 cavan_df_SOURCES = df.c
+cavan_display_SOURCES = display.c
 cavan_dos2unix_SOURCES = dos2unix.c
 cavan_eavoo_sell_statistic_SOURCES = eavoo_sell_statistic.c
 cavan_ecc_SOURCES = ecc.c
@@ -645,10 +655,11 @@ cavan_ramdisk_SOURCES = ramdisk.c
 cavan_remove_SOURCES = remove.c
 cavan_resize_SOURCES = resize.c
 cavan_rle_SOURCES = rle.c
-cavan_screen_SOURCES = screen.c
+cavan_screen_mirror_SOURCES = screen_mirror.c
 cavan_service_SOURCES = service.c
 cavan_show_file_SOURCES = show_file.c
 cavan_shrink_SOURCES = shrink.c
+cavan_sprd_at_SOURCES = sprd_at.c
 cavan_sprd_write_imei_SOURCES = sprd_write_imei.c
 cavan_super_upgrade_SOURCES = super_upgrade.c
 cavan_swan_check_SOURCES = swan_check.c
@@ -817,6 +828,9 @@ cavan-dd$(EXEEXT): $(cavan_dd_OBJECTS) $(cavan_dd_DEPENDENCIES) $(EXTRA_cavan_dd
 cavan-df$(EXEEXT): $(cavan_df_OBJECTS) $(cavan_df_DEPENDENCIES) $(EXTRA_cavan_df_DEPENDENCIES) 
 	@rm -f cavan-df$(EXEEXT)
 	$(LINK) $(cavan_df_OBJECTS) $(cavan_df_LDADD) $(LIBS)
+cavan-display$(EXEEXT): $(cavan_display_OBJECTS) $(cavan_display_DEPENDENCIES) $(EXTRA_cavan_display_DEPENDENCIES) 
+	@rm -f cavan-display$(EXEEXT)
+	$(LINK) $(cavan_display_OBJECTS) $(cavan_display_LDADD) $(LIBS)
 cavan-dos2unix$(EXEEXT): $(cavan_dos2unix_OBJECTS) $(cavan_dos2unix_DEPENDENCIES) $(EXTRA_cavan_dos2unix_DEPENDENCIES) 
 	@rm -f cavan-dos2unix$(EXEEXT)
 	$(LINK) $(cavan_dos2unix_OBJECTS) $(cavan_dos2unix_LDADD) $(LIBS)
@@ -907,9 +921,9 @@ cavan-resize$(EXEEXT): $(cavan_resize_OBJECTS) $(cavan_resize_DEPENDENCIES) $(EX
 cavan-rle$(EXEEXT): $(cavan_rle_OBJECTS) $(cavan_rle_DEPENDENCIES) $(EXTRA_cavan_rle_DEPENDENCIES) 
 	@rm -f cavan-rle$(EXEEXT)
 	$(LINK) $(cavan_rle_OBJECTS) $(cavan_rle_LDADD) $(LIBS)
-cavan-screen$(EXEEXT): $(cavan_screen_OBJECTS) $(cavan_screen_DEPENDENCIES) $(EXTRA_cavan_screen_DEPENDENCIES) 
-	@rm -f cavan-screen$(EXEEXT)
-	$(LINK) $(cavan_screen_OBJECTS) $(cavan_screen_LDADD) $(LIBS)
+cavan-screen_mirror$(EXEEXT): $(cavan_screen_mirror_OBJECTS) $(cavan_screen_mirror_DEPENDENCIES) $(EXTRA_cavan_screen_mirror_DEPENDENCIES) 
+	@rm -f cavan-screen_mirror$(EXEEXT)
+	$(LINK) $(cavan_screen_mirror_OBJECTS) $(cavan_screen_mirror_LDADD) $(LIBS)
 cavan-service$(EXEEXT): $(cavan_service_OBJECTS) $(cavan_service_DEPENDENCIES) $(EXTRA_cavan_service_DEPENDENCIES) 
 	@rm -f cavan-service$(EXEEXT)
 	$(LINK) $(cavan_service_OBJECTS) $(cavan_service_LDADD) $(LIBS)
@@ -919,6 +933,9 @@ cavan-show_file$(EXEEXT): $(cavan_show_file_OBJECTS) $(cavan_show_file_DEPENDENC
 cavan-shrink$(EXEEXT): $(cavan_shrink_OBJECTS) $(cavan_shrink_DEPENDENCIES) $(EXTRA_cavan_shrink_DEPENDENCIES) 
 	@rm -f cavan-shrink$(EXEEXT)
 	$(LINK) $(cavan_shrink_OBJECTS) $(cavan_shrink_LDADD) $(LIBS)
+cavan-sprd_at$(EXEEXT): $(cavan_sprd_at_OBJECTS) $(cavan_sprd_at_DEPENDENCIES) $(EXTRA_cavan_sprd_at_DEPENDENCIES) 
+	@rm -f cavan-sprd_at$(EXEEXT)
+	$(LINK) $(cavan_sprd_at_OBJECTS) $(cavan_sprd_at_LDADD) $(LIBS)
 cavan-sprd_write_imei$(EXEEXT): $(cavan_sprd_write_imei_OBJECTS) $(cavan_sprd_write_imei_DEPENDENCIES) $(EXTRA_cavan_sprd_write_imei_DEPENDENCIES) 
 	@rm -f cavan-sprd_write_imei$(EXEEXT)
 	$(LINK) $(cavan_sprd_write_imei_OBJECTS) $(cavan_sprd_write_imei_LDADD) $(LIBS)
@@ -1046,6 +1063,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/copy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/df.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/display.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dos2unix.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eavoo_sell_statistic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ecc.Po@am__quote@
@@ -1076,10 +1094,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/remove.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resize.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rle.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/screen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/screen_mirror.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/service.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/show_file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shrink.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sprd_at.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sprd_write_imei.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/super_upgrade.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_check.Po@am__quote@
