@@ -144,6 +144,7 @@ class GitSvnManager:
 		self.mFileSvnLog = os.path.join(self.mGitSvnPath, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mGitSvnPath, "svn_info.xml")
 		self.mFileSvnList = os.path.join(self.mGitSvnPath, "svn_list.txt")
+		self.mFileGitList = os.path.join(self.mGitSvnPath, "git_list.txt")
 		self.mFileSvnUpdate = os.path.join(self.mGitSvnPath, "svn_update.txt")
 		self.mFileGitRevision = os.path.join(self.mGitSvnPath, "git_revision.txt")
 		self.mFileGitMessag = os.path.join(self.mGitSvnPath, "git_message.txt")
@@ -166,6 +167,12 @@ class GitSvnManager:
 		if command_vision("git init") == False:
 			return False
 
+		if command_vision("git config user.name Fuang.Cao") == False:
+			return False
+
+		if command_vision("git config user.email cavan.cfa@gmail.com") == False:
+			return False
+
 		return command_vision("git remote add %s %s" % (self.mRemoteName, self.mUrl))
 
 	def saveGitRevision(self, revision):
@@ -185,28 +192,57 @@ class GitSvnManager:
 		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
 		return file_write_text(self.mFileGitMessag, content)
 
-	def gitAddFiles(self, listfile):
-		if not os.path.exists(listfile):
+	def gitAddFile(self, pathname):
+		pathname = pathname.rstrip("\f\r\n")
+		if command_vision("git add -f '%s'" % pathname.replace("'", "'\\''")):
+			return True
+		if command_vision("git add -f \"%s\"" % pathname.replace("\"", "\\\"")):
+			return True
+		return False
+
+	def gitAddFiles(self):
+		fpSvnList = open(self.mFileSvnList, "r")
+		if not fpSvnList:
 			return True
 
-		if not os.path.getsize(listfile):
-			return True
+		while True:
+			lines = []
+			while len(lines) < 200:
+				line = fpSvnList.readline()
+				if not line:
+					break
 
-		if command_vision("git add -f $(cat %s)" % listfile) == True:
-			return True
+				if line.find(" ") < 0 and line.find("\t") < 0:
+					lines.append(line)
+					continue
 
-		for line in file_read_lines(listfile):
-			line = line.rstrip("\r\n")
-			if command_vision("git add -f '%s'" % line) == True:
+				if self.gitAddFile(line) == False:
+					fpSvnList.close()
+					return False
+
+			if not lines:
+				break
+
+			fpGitList = open(self.mFileGitList, "w")
+			if not fpGitList:
+				fpSvnList.close()
+				return False
+			fpGitList.writelines(lines)
+			fpGitList.close()
+
+			if command_vision("git add -f $(cat %s)" % self.mFileGitList):
 				continue
-			if command_vision("git add -f \"%s\"" % line.replace("\'", "\\'")) == True:
-				continue
-			return False
 
+			for line in lines:
+				if self.gitAddFile(line) == False:
+					fpSvnList.close()
+					return False
+
+		fpSvnList.close()
 		return True
 
 	def gitCommit(self, entry):
-		if self.gitAddFiles(self.mFileSvnList) == False:
+		if self.gitAddFiles() == False:
 			return False
 
 		if self.saveGitRevision(entry.getRevesion()) == False:
@@ -226,8 +262,8 @@ class GitSvnManager:
 		return False
 
 	def genSvnList(self):
-		fp = open(self.mFileSvnList, "w")
-		if not fp:
+		fpSvnList = open(self.mFileSvnList, "w")
+		if not fpSvnList:
 			return False
 
 		listPath = []
@@ -239,17 +275,17 @@ class GitSvnManager:
 			if os.path.isdir(line):
 				listPath.append(line)
 			else:
-				fp.write(line + "\n")
+				fpSvnList.write(line + "\n")
 
 		for path in listPath:
-			listFile = popen_to_list("svn list -R '%s' | awk '! /\/+$/ {print \"%s/\" $0}'" % (path, path.replace("/", "\/")))
-			if not listFile:
-				fp.close()
+			listFile = popen_to_list("svn list -R '%s' | awk '! /\/+$/ {print \"%s/\" $0}'" % (path, path))
+			if listFile == None:
+				fpSvnList.close()
 				return False
 
-			fp.writelines(listFile)
+			fpSvnList.writelines(listFile)
 
-		fp.close()
+		fpSvnList.close()
 
 		return True
 
@@ -291,7 +327,7 @@ class GitSvnManager:
 			pr_green_info("Already up-to-date.")
 			return True
 
-		if self.mGitRevision > 0 and command_vision("svn switch --force --accept tf %s@%d" % (self.mUrl, self.mGitRevision)) == False:
+		if self.mGitRevision > 0 and command_vision("svn switch --force --accept tf %s@%d > /dev/null" % (self.mUrl, self.mGitRevision)) == False:
 				return False
 
 		if self.genSvnLogXml() == False:
