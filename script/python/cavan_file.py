@@ -52,3 +52,13 @@ def file_append_line(filename, line):
 	fp.close()
 
 	return True
+
+def file_append_lines(filename, lines):
+	fp = open(filename, "a")
+	if not fp:
+		return False
+
+	fp.writelines(lines)
+	fp.close()
+
+	return True

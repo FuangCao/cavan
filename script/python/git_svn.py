@@ -4,7 +4,9 @@ import sys, os
 from getopt import getopt
 from xml.dom.minidom import parse
 
-from cavan_file import file_read_line, file_read_lines, file_write_text, file_write_lines, file_append_line
+from cavan_file import file_read_line, file_read_lines, \
+		 file_write_text, file_write_lines, file_append_line, file_append_lines
+
 from cavan_command import command_vision, popen_tostring, popen_to_list
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
 
@@ -140,7 +142,7 @@ class GitSvnManager:
 
 		self.mRemoteName = "svn"
 		self.mGitSvnPath = ".git/svn"
-		self.mFileSvnIgnore = ".svn/.gitignore"
+		self.mFileSvnIgnore = ".gitignore"
 		self.mFileSvnLog = os.path.join(self.mGitSvnPath, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mGitSvnPath, "svn_info.xml")
 		self.mFileSvnList = os.path.join(self.mGitSvnPath, "svn_list.txt")
@@ -324,7 +326,8 @@ class GitSvnManager:
 			if command_vision("svn checkout %s@%s . && echo '.' > %s" % (self.mUrl, entry.getRevesion(), self.mFileSvnUpdate)) == False:
 				return True
 
-			if command_vision("echo '*' > %s && git add -f %s" % (self.mFileSvnIgnore, self.mFileSvnIgnore)) == False:
+			lines = ["/.gitignore\n", ".svn\n"]
+			if file_append_lines(self.mFileSvnIgnore, lines) == False:
 				return False
 
 		if self.genSvnList() == False:
