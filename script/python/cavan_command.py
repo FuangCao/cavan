@@ -24,6 +24,9 @@ def popen_tostring(command, sep = ""):
 	result = [line.rstrip("\r\n") for line in result]
 	return sep.join(result)
 
+def single_arg(argument):
+	return "'" + argument.replace("'", "'\\''") + "'"
+
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		print popen_tostring(sys.argv[1])

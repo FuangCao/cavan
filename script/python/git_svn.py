@@ -7,7 +7,7 @@ from xml.dom.minidom import parse, Document
 from cavan_file import file_read_line, file_read_lines, \
 		 file_write_line, file_write_lines, file_append_line, file_append_lines
 
-from cavan_command import command_vision, popen_tostring, popen_to_list
+from cavan_command import command_vision, popen_tostring, popen_to_list, single_arg
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
 from cavan_xml import getFirstElement, getFirstElementData
 
@@ -160,7 +160,7 @@ class GitSvnManager:
 		return command_vision("git remote add %s %s" % (self.mRemoteName, self.mUrl))
 
 	def setRemoteUrl(self, url):
-		return command_vision("git config remote.svn.url '%s'" % url.replace("'", "'\\''"))
+		return command_vision("git config remote.svn.url %s" % single_arg(url))
 
 	def getGitHead(self):
 		line = file_read_line(".git/HEAD")
@@ -305,7 +305,7 @@ class GitSvnManager:
 			fpSvnList.writelines(listFile)
 
 		for path in listDir:
-			listFile = popen_to_list("svn list -R '%s' | awk '! /\/+$/ {print \"%s\" $0}'" % (path.replace("'", "'\\''"), path))
+			listFile = popen_to_list("svn list -R %s | awk '! /\/+$/ {print \"%s\" $0}'" % (single_arg(path), path))
 			if listFile == None:
 				fpSvnList.close()
 				return False
