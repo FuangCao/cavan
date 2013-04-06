@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, os
+import sys, os, re
 from getopt import getopt
 from xml.dom.minidom import parse
 
@@ -174,10 +174,19 @@ class GitSvnManager:
 		return command_vision("git remote add %s %s" % (self.mRemoteName, self.mUrl))
 
 	def getGitHead(self):
-		lines = popen_to_list("cat .git/HEAD | awk '/ref:/ {print $2}'")
-		if not lines:
+		line = file_read_line(".git/HEAD")
+		if not line:
 			return None
-		return file_read_line(os.path.join(".git", lines[0].strip()))
+
+		pattern = re.compile('^\s*ref\s*:\s*(.*)$')
+		if not pattern:
+			return None
+
+		match = pattern.match(line)
+		if not match:
+			return None
+
+		return file_read_line(os.path.join(".git", match.group(1)))
 
 	def getGitRevision(self):
 		if not os.path.exists(self.mFileRevisionMap):

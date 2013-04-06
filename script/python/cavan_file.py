@@ -21,7 +21,7 @@ def file_read_line(filename):
 	if not line:
 		return None
 
-	return line.rstrip("\r\n\f")
+	return line.rstrip("\r\n")
 
 def file_read_lines(filename):
 	fp = open(filename, "r")
