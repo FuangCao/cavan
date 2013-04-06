@@ -12,8 +12,8 @@ def getFirstElement(parent, name):
 def getFirstElementData(parent, name):
 	tag = getFirstElement(parent, name)
 	if tag == None:
-		
 		return None
+
 	node = tag.firstChild
 	if not node or node.nodeType != node.TEXT_NODE:
 		return None

@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
+import sys, os
+from git_svn import GitSvnManager
 from cavan_xml import CavanXmlBase
+from cavan_command import popen_to_list, command_vision
+from cavan_stdio import pr_red_info
 
 class AndroidManifest(CavanXmlBase):
 	def load(self, pathname):
@@ -36,6 +40,7 @@ class AndroidManifest(CavanXmlBase):
 		self.mTagDefault = node
 
 		self.setRemoteName("cavan-svn")
+		self.setRevision("master")
 
 		return True
 
@@ -54,7 +59,7 @@ class AndroidManifest(CavanXmlBase):
 			if attrName == name:
 				return tag
 		return None
-	
+
 	def getTagDefault(self):
 		node = self.getFirstElement("default")
 		if not node:
@@ -87,7 +92,7 @@ class AndroidManifest(CavanXmlBase):
 
 	def setUrl(self, url):
 		return self.mTagRemote.setAttribute("url", url)
-	
+
 	def getProjects(self):
 		dictProject = {}
 		tagProject = self.getElementsByTagName("project")
@@ -127,3 +132,147 @@ class AndroidManifest(CavanXmlBase):
 
 	def appendFile(self, name, path = None):
 		return self.appendProjectBase("file", name, path)
+
+class CavanGitSvnRepoManager:
+	def __init__(self):
+		self.mPathSvnRepo = ".svn_repo"
+		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
+
+	def genProjectNode(self, depth = 0, path = ""):
+		url = os.path.join(self.mUrl, path.replace("'", "'\\''"))
+		lines = popen_to_list("svn list '%s'" % url)
+		if not lines:
+			return lines != None
+
+		if depth > 2:
+			self.mManifest.appendProject(path)
+			return True
+
+		listDir = []
+		listFile = []
+
+		for line in lines:
+			line = os.path.join(path, line.rstrip("\r\n"))
+			if line.endswith("/"):
+				listDir.append(line)
+			elif depth <= 0:
+				listFile.append(line)
+			else:
+				self.mManifest.appendProject(path)
+				return True
+
+		for line in listFile:
+			if not self.mManifest.appendFile(line):
+				return False
+
+		for line in listDir:
+			if not self.genProjectNode(depth + 1, line):
+				return False
+
+		return True
+
+	def genManifest(self, url):
+		self.mManifest = AndroidManifest()
+		if not self.mManifest.create():
+			return False
+
+		self.mManifest.setUrl(url)
+		self.mUrl = url
+
+		if not self.genProjectNode():
+			return False
+
+		return self.mManifest.save(self.mFileManifest)
+
+	def loadManifest(self):
+		self.mManifest = AndroidManifest()
+		return self.mManifest.load(self.mFileManifest)
+
+	def getManifest(self):
+		return self.mManifest
+
+	def doInit(self, argv):
+		length = len(argv)
+		if length > 0:
+			url = argv[0].rstrip("/")
+			if length > 1:
+				pathname = argv[1]
+			else:
+				pathname = os.path.basename(url)
+		elif os.path.exists(self.mFileManifest):
+			if not self.loadManifest():
+				return False
+			url = self.mManifest.getUrl()
+			pathname = "."
+		else:
+			pr_red_info("Please give repo url")
+			return False
+
+		if not os.path.exists(pathname):
+			os.makedirs(pathname, 0777)
+		os.chdir(pathname)
+
+		if not os.path.isdir(self.mPathSvnRepo):
+			os.makedirs(self.mPathSvnRepo)
+
+		return self.genManifest(url)
+
+	def doSync(self):
+		if not self.loadManifest():
+			return False
+
+		self.mRootDir = os.path.abspath(".")
+		self.mUrl = self.mManifest.getUrl()
+
+		dictProject = self.mManifest.getProjects()
+		for node in dictProject:
+			url = os.path.join(self.mUrl, node)
+			pathname = dictProject[node]
+			if not pathname:
+				pathname = node
+
+			pathname = os.path.join(self.mRootDir, pathname)
+			if not os.path.isdir(pathname):
+				os.makedirs(pathname)
+			os.chdir(pathname)
+
+			manager = GitSvnManager()
+			if manager.isInitialized():
+				if not manager.doSync(url):
+					return False
+			elif not manager.doInitBase(url, None):
+					return False
+
+		os.chdir(self.mRootDir)
+
+		dictFile = self.mManifest.getFiles()
+		for node in dictFile:
+			url = os.path.join(self.mUrl, node).replace("'", "'\\''")
+			pathname = dictFile[node]
+			if not pathname:
+				pathname = node
+			pathname = pathname.replace("'", "'\\''")
+			if not command_vision("svn export --force '%s' '%s' > /dev/null" % (url, pathname)):
+				return False
+
+		return True
+
+	def doCommand(self, argv):
+		return False
+
+	def main(self, argv):
+		length = len(argv)
+		if length < 2:
+			stdio.pr_red_info("Please give a subcmd")
+			return False
+
+		subcmd = argv[1]
+		if subcmd in ["init", "clone"]:
+			return self.doInit(argv[2:])
+		elif subcmd in ["update", "sync"]:
+			return self.doSync()
+		elif subcmd in ["command", "cmd"]:
+			return self.doCommand(argv[2:])
+		else:
+			stdio.pr_red_info("unknown subcmd " + subcmd)
+			return False

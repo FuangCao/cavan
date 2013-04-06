@@ -159,6 +159,9 @@ class GitSvnManager:
 
 		return command_vision("git remote add %s %s" % (self.mRemoteName, self.mUrl))
 
+	def setRemoteUrl(self, url):
+		return command_vision("git config remote.svn.url '%s'" % url.replace("'", "'\\''"))
+
 	def getGitHead(self):
 		line = file_read_line(".git/HEAD")
 		if not line:
@@ -334,16 +337,22 @@ class GitSvnManager:
 
 		return self.gitCommit(entry)
 
-	def cmd_sync(self):
+	def isInitialized(self):
+		return os.path.exists(self.mFileRevisionMap)
+
+	def doSync(self, url = None):
 		self.mGitRevision = self.getGitRevision()
 		if self.mGitRevision < 0:
 			return False
 
-		url = popen_tostring("git config remote.%s.url" % self.mRemoteName)
 		if not url:
+			url = popen_tostring("git config remote.%s.url" % self.mRemoteName)
+			if not url:
+				return False
+		elif not self.setRemoteUrl(url):
 			return False
 
-		self.mUrl = url.strip()
+		self.mUrl = url
 
 		if self.genSvnInfoXml() == False:
 			return False
@@ -387,18 +396,8 @@ class GitSvnManager:
 		self.mFpGitRevision.close()
 		return True
 
-	def cmd_init(self, argv):
-		length = len(argv)
-		if length > 1:
-			self.mUrl = argv[1].rstrip("/")
-			if length > 2:
-				pathname = argv[2]
-			else:
-				pathname = os.path.basename(self.mUrl)
-		else:
-			self.mUrl = None
-			pathname = None
-
+	def doInitBase(self, url, pathname = None):
+		self.mUrl = url
 		if pathname != None:
 			if not os.path.exists(pathname):
 				os.makedirs(pathname, 0777)
@@ -406,7 +405,7 @@ class GitSvnManager:
 
 		if not os.path.isdir(self.mGitSvnPath):
 			os.makedirs(self.mGitSvnPath, 0777)
-		elif os.path.exists(self.mFileRevisionMap):
+		elif self.isInitialized():
 			pr_red_info("Has been initialized")
 			return False
 
@@ -423,7 +422,21 @@ class GitSvnManager:
 		if self.genGitRepo() == False:
 			return False
 
-		return self.cmd_sync()
+		return self.doSync()
+
+	def doInit(self, argv):
+		length = len(argv)
+		if length > 0:
+			url = argv[0].rstrip("/")
+			if length > 1:
+				pathname = argv[1]
+			else:
+				pathname = os.path.basename(url)
+		else:
+			url = None
+			pathname = None
+
+		return self.doInitBase(url, pathname)
 
 	def main(self, argv):
 		length = len(argv)
@@ -433,9 +446,9 @@ class GitSvnManager:
 
 		subcmd = argv[1]
 		if subcmd in ["init", "clone"]:
-			return self.cmd_init(argv[1:])
+			return self.doInit(argv[2:])
 		elif subcmd in ["update", "sync"]:
-			return self.cmd_sync()
+			return self.doSync()
 		else:
 			stdio.pr_red_info("unknown subcmd " + subcmd)
 			return False

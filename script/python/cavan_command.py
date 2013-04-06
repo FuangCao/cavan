@@ -21,6 +21,7 @@ def popen_tostring(command, sep = ""):
 	result = popen_to_list(command)
 	if result == None:
 		return None
+	result = [line.rstrip("\r\n") for line in result]
 	return sep.join(result)
 
 if __name__ == "__main__":
