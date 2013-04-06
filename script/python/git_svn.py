@@ -5,7 +5,7 @@ from getopt import getopt
 from xml.dom.minidom import parse
 
 from cavan_file import file_read_line, file_read_lines, \
-		 file_write_text, file_write_lines, file_append_line, file_append_lines
+		 file_write_line, file_write_lines, file_append_line, file_append_lines
 
 from cavan_command import command_vision, popen_tostring, popen_to_list
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
@@ -215,7 +215,7 @@ class GitSvnManager:
 
 	def saveGitMessage(self, entry):
 		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
-		return file_write_text(self.mFileGitMessag, content)
+		return file_write_line(self.mFileGitMessag, content)
 
 	def gitAddFile(self, pathname):
 		pathname = pathname.rstrip("\f\r\n")
@@ -332,12 +332,16 @@ class GitSvnManager:
 			if command_vision("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*\s+/ {print substr($0, 6)}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)) == False:
 				return False
 		else:
-			if command_vision("svn checkout %s@%s . && echo '.' > %s" % (self.mUrl, entry.getRevesion(), self.mFileSvnUpdate)) == False:
+			if command_vision("svn checkout %s@%s ." % (self.mUrl, entry.getRevesion())) == False:
 				return True
 
-			lines = ["/.gitignore\n", ".svn\n"]
-			if file_append_lines(self.mFileSvnIgnore, lines) == False:
+			if file_write_line(self.mFileSvnUpdate, '.') == False:
 				return False
+
+			if not os.path.exists(self.mFileSvnIgnore):
+				lines = ["/.gitignore\n", ".svn\n"]
+				if file_write_lines(self.mFileSvnIgnore, lines) == False:
+					return False
 
 		if self.genSvnList() == False:
 			return False

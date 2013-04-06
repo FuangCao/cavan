@@ -1,15 +1,5 @@
 #!/usr/bin/python
 
-def file_write_text(filename, text):
-	fp = open(filename, "w", 0777)
-	if not fp:
-		return False
-
-	fp.write(text)
-	fp.close()
-
-	return True
-
 def file_read_line(filename):
 	fp = open(filename, "r")
 	if not fp:
@@ -32,6 +22,16 @@ def file_read_lines(filename):
 	fp.close()
 
 	return lines
+
+def file_write_line(filename, text):
+	fp = open(filename, "w")
+	if not fp:
+		return False
+
+	fp.write(text)
+	fp.close()
+
+	return True
 
 def file_write_lines(filename, lines):
 	fp = open(filename, "w")
