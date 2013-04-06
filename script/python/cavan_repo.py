@@ -202,22 +202,19 @@ class CavanGitSvnRepoManager:
 		length = len(argv)
 		if length > 0:
 			url = argv[0].rstrip("/")
-			if length > 1:
-				pathname = argv[1]
-			else:
-				pathname = os.path.basename(url)
 		elif os.path.exists(self.mFileManifest):
 			if not self.loadManifest():
 				return False
 			url = self.mManifest.getUrl()
-			pathname = "."
 		else:
 			pr_red_info("Please give repo url")
 			return False
 
-		if not os.path.exists(pathname):
-			os.makedirs(pathname, 0777)
-		os.chdir(pathname)
+		if length > 1:
+			pathname = argv[1]
+			if not os.path.exists(pathname):
+				os.makedirs(pathname, 0777)
+			os.chdir(pathname)
 
 		if not os.path.isdir(self.mPathSvnRepo):
 			os.makedirs(self.mPathSvnRepo)
