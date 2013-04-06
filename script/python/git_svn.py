@@ -7,7 +7,8 @@ from xml.dom.minidom import parse, Document
 from cavan_file import file_read_line, file_read_lines, \
 		 file_write_line, file_write_lines, file_append_line, file_append_lines
 
-from cavan_command import command_vision, popen_tostring, popen_to_list, single_arg
+from cavan_command import command_vision, popen_tostring, popen_to_list, \
+		 single_arg, single_arg2
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
 from cavan_xml import getFirstElement, getFirstElementData
 
@@ -140,12 +141,12 @@ class GitSvnManager:
 	def genSvnInfoXml(self, url = None):
 		if url == None:
 			url = self.mUrl
-		return command_vision("svn info --xml %s > %s" % (url, self.mFileSvnInfo))
+		return command_vision("svn info --xml %s > %s" % (single_arg(url), self.mFileSvnInfo))
 
 	def genSvnLogXml(self):
 		if self.mGitRevision >= self.mSvnRevision:
 			return False
-		return command_vision("svn log --xml -r %d:%d %s > %s" % (self.mGitRevision + 1, self.mSvnRevision, self.mUrl, self.mFileSvnLog))
+		return command_vision("svn log --xml -r %d:%d %s > %s" % (self.mGitRevision + 1, self.mSvnRevision, single_arg(self.mUrl), self.mFileSvnLog))
 
 	def genGitRepo(self):
 		if command_vision("git init") == False:
@@ -157,7 +158,7 @@ class GitSvnManager:
 		if command_vision("git config user.email cavan.cfa@gmail.com") == False:
 			return False
 
-		return command_vision("git remote add %s %s" % (self.mRemoteName, self.mUrl))
+		return command_vision("git remote add %s %s" % (self.mRemoteName, single_arg(self.mUrl)))
 
 	def setRemoteUrl(self, url):
 		return command_vision("git config remote.svn.url %s" % single_arg(url))
@@ -305,7 +306,7 @@ class GitSvnManager:
 			fpSvnList.writelines(listFile)
 
 		for path in listDir:
-			listFile = popen_to_list("svn list -R %s | awk '! /\/+$/ {print \"%s\" $0}'" % (single_arg(path), path))
+			listFile = popen_to_list("svn list -R %s | awk '!/\/+$/ {print %s $0}'" % (single_arg(path), single_arg2(path)))
 			if listFile == None:
 				fpSvnList.close()
 				return False
@@ -321,7 +322,7 @@ class GitSvnManager:
 			if command_vision("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*\s+/ {print substr($0, 6)}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)) == False:
 				return False
 		else:
-			if command_vision("svn checkout %s@%s ." % (self.mUrl, entry.getRevesion())) == False:
+			if command_vision("svn checkout %s ." % single_arg(self.mUrl + "@" + entry.getRevesion())) == False:
 				return True
 
 			if file_write_line(self.mFileSvnUpdate, '.') == False:
@@ -368,7 +369,7 @@ class GitSvnManager:
 			pr_green_info("Already up-to-date.")
 			return True
 
-		if self.mGitRevision > 0 and command_vision("svn switch --force --accept tf %s@%d > /dev/null" % (self.mUrl, self.mGitRevision)) == False:
+		if self.mGitRevision > 0 and command_vision("svn switch --force --accept tf %s > /dev/null" % single_arg("%s@%d" % (self.mUrl, self.mGitRevision))) == False:
 				return False
 
 		if self.genSvnLogXml() == False:

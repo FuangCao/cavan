@@ -27,6 +27,9 @@ def popen_tostring(command, sep = ""):
 def single_arg(argument):
 	return "'" + argument.replace("'", "'\\''") + "'"
 
+def single_arg2(argument):
+	return "\"" + argument.replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "'\\''") + "\""
+
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		print popen_tostring(sys.argv[1])
