@@ -1,0 +1,19 @@
+#!/bin/sh
+
+"""exec" python -E $0 $@
+#"""
+
+import sys, os
+
+from python import cavan_repo
+from python.cavan_stdio import pr_red_info, pr_green_info
+
+if __name__ == "__main__":
+	manifest = cavan_repo.AndroidManifest()
+	if not manifest.load("/tmp/default.xml"):
+		sys.exit(-1)
+
+	print manifest.getUrl()
+	manifest.setUrl("123")
+	print manifest.getUrl()
+	manifest.save("/tmp/123.xml")

@@ -2,28 +2,14 @@
 
 import sys, os, re
 from getopt import getopt
-from xml.dom.minidom import parse
+from xml.dom.minidom import parse, Document
 
 from cavan_file import file_read_line, file_read_lines, \
 		 file_write_line, file_write_lines, file_append_line, file_append_lines
 
 from cavan_command import command_vision, popen_tostring, popen_to_list
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
-
-def getFirstElement(parent, name):
-	tags = parent.getElementsByTagName(name)
-	if not tags or len(tags) < 1:
-		return None
-	return tags[0]
-
-def getFirstElementData(parent, name):
-	tag = getFirstElement(parent, name)
-	if tag == None:
-		return None
-	node = tag.firstChild
-	if not node or node.nodeType != node.TEXT_NODE:
-		return None
-	return node.data
+from cavan_xml import getFirstElement, getFirstElementData
 
 class SvnInfoParser:
 	def loadXml(self, pathname):
@@ -453,7 +439,3 @@ class GitSvnManager:
 		else:
 			stdio.pr_red_info("unknown subcmd " + subcmd)
 			return False
-
-class GitSvnRepo:
-	def __init__(self):
-		print "1111111111111111111"
