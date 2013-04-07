@@ -130,14 +130,14 @@ class AndroidManifest(CavanXmlBase):
 	def appendProjectBase(self, typeName, name, path = None):
 		node = self.createElement(typeName)
 		if not node:
-			return False
+			return None
 
 		node.setAttribute("name", name)
 		if path != None:
 			node.setAttribute("path", path)
 		self.appendChild(node)
 
-		return True
+		return node
 
 	def appendProject(self, name, path = None):
 		if path == None:
@@ -149,9 +149,14 @@ class AndroidManifest(CavanXmlBase):
 
 class CavanGitSvnRepoManager:
 	def __init__(self):
-		self.mRootPath = os.path.abspath(".")
+		self.mPathRoot = os.path.abspath(".")
 		self.mPathSvnRepo = ".svn_repo"
 		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
+		self.mPathManifestRepo = os.path.join(self.mPathSvnRepo, "manifest")
+		self.mPathFileRepo = os.path.join(self.mPathSvnRepo, "copyfile")
+
+	def getAbsPath(self, pathname):
+		return os.path.join(self.mPathRoot, pathname)
 
 	def genProjectNode(self, depth = 0, path = ""):
 		url = os.path.join(self.mUrl, path)
@@ -160,8 +165,7 @@ class CavanGitSvnRepoManager:
 			return lines != None
 
 		if depth > 2:
-			self.mManifest.appendProject(path)
-			return True
+			return self.mManifest.appendProject(path) != None
 
 		listDir = []
 		listFile = []
@@ -173,8 +177,7 @@ class CavanGitSvnRepoManager:
 			elif depth <= 0:
 				listFile.append(line)
 			else:
-				self.mManifest.appendProject(path)
-				return True
+				return self.mManifest.appendProject(path) != None
 
 		for line in listFile:
 			if not self.mManifest.appendFile(line):
@@ -225,7 +228,9 @@ class CavanGitSvnRepoManager:
 			pathname = argv[1]
 			if not os.path.exists(pathname):
 				os.makedirs(pathname, 0777)
+
 			os.chdir(pathname)
+			self.mPathRoot = os.path.abspath(".")
 
 		if not os.path.isdir(self.mPathSvnRepo):
 			os.makedirs(self.mPathSvnRepo)
@@ -245,7 +250,7 @@ class CavanGitSvnRepoManager:
 			if not pathname:
 				pathname = node
 
-			pathname = os.path.join(self.mRootPath, pathname)
+			pathname = self.getAbsPath(pathname)
 			if not os.path.isdir(pathname):
 				os.makedirs(pathname)
 			os.chdir(pathname)
@@ -257,50 +262,132 @@ class CavanGitSvnRepoManager:
 			elif not manager.doInitBase(url, None):
 					return False
 
-		os.chdir(self.mRootPath)
-
 		dictFile = self.mManifest.getFiles()
 		for node in dictFile:
 			url = os.path.join(self.mUrl, node)
 			pathname = dictFile[node]
 			if not pathname:
 				pathname = node
-			pathname = pathname
+			pathname = self.getAbsPath(pathname)
 			if not command_vision("svn export --force %s %s > /dev/null" % (single_arg(url), single_arg(pathname))):
 				return False
 
 		return True
 
+	def doClone(self, argv):
+		if len(argv) == 1:
+			argv.append(os.path.basename(argv[0].rstrip("/")))
+
+		if not self.doInit(argv):
+			return False
+
+		return self.doSync()
+
 	def doCommand(self, argv):
 		return False
+
+	def genGitRepo(self, pathname, option = ""):
+		if not os.path.isdir(pathname):
+			os.makedirs(pathname)
+		os.chdir(pathname)
+
+		return command_vision("git branch > /dev/null || git init %s" % option)
+
+	def gitAutoCommit(self):
+		return command_vision("git add -f . && git commit -asm 'auto commit by Fuang.Cao'")
+
+	def genManifestRepo(self):
+		if not self.genGitRepo(self.getAbsPath(self.mPathManifestRepo)):
+			return False
+
+		if not self.mManifest.save("default.xml"):
+			return False
+
+		self.gitAutoCommit()
+		return True
+
+	def genFileRepo(self):
+		nodeProject = self.mManifest.appendProject("platform/copyfile", self.mPathFileRepo)
+		if not nodeProject:
+			return False
+
+		if not self.genGitRepo(self.getAbsPath(self.mPathFileRepo)):
+			return False
+
+		dictFile = self.mManifest.getFiles()
+		for node in dictFile:
+			pathname = dictFile[node]
+			if not pathname:
+				pathname = node
+
+			dirname = os.path.dirname(pathname)
+			if not dirname:
+				dirname = "."
+			elif not os.path.isdir(dirname):
+				os.makedirs(dirname)
+
+			if not command_vision("cp -a %s %s" % (single_arg(self.getAbsPath(pathname)), single_arg(dirname))):
+				return False
+
+			copyfile = self.mManifest.createElement("copyfile")
+			if not copyfile:
+				return False
+
+			copyfile.setAttribute("dest", pathname)
+			copyfile.setAttribute("src", pathname)
+			nodeProject.appendChild(copyfile)
+
+		self.gitAutoCommit()
+		return True
 
 	def doBackup(self, argv):
 		if not self.loadManifest():
 			return False
 
-		if len(argv) < 1:
-			self.mBackupPath = self.mManifest.getBackup()
-			if not self.mBackupPath:
-				pr_red_info("Please give backup path")
-				return False
-		else:
-			self.mBackupPath = os.path.abspath(argv[0])
-			self.mManifest.setBackup(self.mBackupPath)
-			self.mManifest.save(self.mFileManifest)
+		length = len(argv)
 
-		if not os.path.isdir(self.mBackupPath):
-			os.makedirs(self.mBackupPath)
+		if length > 0:
+			self.mPathBackup = os.path.abspath(argv[0])
+			self.mManifest.setBackup(self.mPathBackup)
+		else:
+			self.mPathBackup = self.mManifest.getBackup()
+
+		if not self.mPathBackup:
+			pr_red_info("Please give backup path")
+			return False
+
+		if length > 1:
+			self.mUrlFetch = argv[1]
+			self.mManifest.setFetch(self.mUrlFetch)
+		else:
+			self.mUrlFetch = self.mManifest.getFetch()
+
+		if not self.mUrlFetch:
+			pr_red_info("Please give fetch url")
+			return False
+
+		self.mManifest.save(self.mFileManifest)
+
+		if not os.path.isdir(self.mPathBackup):
+			os.makedirs(self.mPathBackup)
+
+		if not self.genFileRepo():
+			return False
+
+		if not self.genManifestRepo():
+			return False
 
 		dictProject = self.mManifest.getProjects()
+		dictProject["platform/manifest"] = self.mPathManifestRepo
 		for node in dictProject:
 			localPath = dictProject[node]
 			if not localPath:
 				localPath = node
-			localPath = os.path.join(self.mRootPath, localPath)
+			localPath = self.getAbsPath(localPath)
 			if not os.path.isdir(localPath):
 				return False
 
-			backupPath = os.path.join(self.mBackupPath, node)
+			backupPath = os.path.join(self.mPathBackup, node + ".git")
 			if not os.path.exists(os.path.join(backupPath, "HEAD")):
 				if not os.path.isdir(backupPath):
 					os.makedirs(backupPath)
@@ -321,8 +408,10 @@ class CavanGitSvnRepoManager:
 			return False
 
 		subcmd = argv[1]
-		if subcmd in ["init", "clone"]:
+		if subcmd in ["init"]:
 			return self.doInit(argv[2:])
+		if subcmd in ["clone"]:
+			return self.doClone(argv[2:])
 		elif subcmd in ["update", "sync"]:
 			return self.doSync()
 		elif subcmd in ["command", "cmd"]:
