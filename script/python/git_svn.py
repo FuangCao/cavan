@@ -413,7 +413,12 @@ class GitSvnManager:
 		if subcmd in ["init", "clone"]:
 			return self.doInit(argv[2:])
 		elif subcmd in ["update", "sync"]:
-			return self.doSync()
+			if length > 2:
+				url = argv[2]
+			else:
+				url = None
+
+			return self.doSync(url)
 		else:
 			stdio.pr_red_info("unknown subcmd " + subcmd)
 			return False

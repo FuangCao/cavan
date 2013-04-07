@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-import sys, os
-from threading import Thread
-from git_svn import GitSvnManager
+import sys, os, threading
 from cavan_xml import CavanXmlBase
-from cavan_stdio import pr_red_info
+from cavan_stdio import pr_red_info, pr_bold_info, pr_green_info
 from cavan_command import popen_to_list, command_vision, single_arg
+
+MAX_THREAD_COUNT = 10
 
 class AndroidManifest(CavanXmlBase):
 	def load(self, pathname):
@@ -148,18 +148,34 @@ class AndroidManifest(CavanXmlBase):
 	def appendFile(self, name, path = None):
 		return self.appendProjectBase("file", name, path)
 
-class CavanGitSvnCheckoutThread(Thread):
-	def __init__(self, manager, project):
-		Thread.__init__(self)
+class CavanProjectDict:
+	def __init__(self, dictProject):
+		self.mDictProject = dictProject
+		self.mLock = threading.Lock()
+
+	def pop(self):
+		self.mLock.acquire()
+
+		try:
+			node = self.mDictProject.popitem()
+		except:
+			node = None
+
+		self.mLock.release()
+		return node
+
+class CavanCheckoutThread(threading.Thread):
+	def __init__(self, index, manager, project):
+		threading.Thread.__init__(self)
+		self.mIndex = index
 		self.mRepoManager = manager
 		self.mDictProject = project
 		self.mExitStatus = True
 
 	def run(self):
 		while True:
-			try:
-				node = self.mDictProject.popitem()
-			except:
+			node = self.mDictProject.pop()
+			if not node:
 				break
 
 			name = node[0]
@@ -168,20 +184,24 @@ class CavanGitSvnCheckoutThread(Thread):
 			else:
 				pathname = node[1]
 
-			pathname = self.mRepoManager.getAbsPath(pathname)
-			if not os.path.isdir(pathname):
-				os.makedirs(pathname)
-			os.chdir(pathname)
+			pr_green_info("Thread %d checkout project %s" % (self.mIndex, name))
 
+			pathname = self.mRepoManager.getAbsPath(pathname)
 			url = os.path.join(self.mRepoManager.mUrl, name)
-			manager = GitSvnManager()
-			if manager.isInitialized():
-				if not manager.doSync(url):
+
+			if os.path.isdir(pathname):
+				if not command_vision("cd %s && cavan-git-svn sync %s" % (single_arg(pathname), single_arg(url))):
 					self.mExitStatus = False
 					break
-			elif not manager.doInitBase(url, None):
-				self.mExitStatus = False
-				break
+			else:
+				if not command_vision("cavan-git-svn clone %s %s" % (single_arg(url), single_arg(pathname))):
+					self.mExitStatus = False
+					break
+
+		if self.mExitStatus:
+			pr_green_info("Thread %d exit" % self.mIndex)
+		else:
+			pr_red_info("Thread %d exit" % self.mIndex)
 
 class CavanGitSvnRepoManager:
 	def __init__(self):
@@ -280,13 +300,16 @@ class CavanGitSvnRepoManager:
 		self.mUrl = self.mManifest.getUrl()
 
 		listThread = []
-		dictProject = self.mManifest.getProjects()
+		dictProject = CavanProjectDict(self.mManifest.getProjects())
 
-		for index in range(10):
-			thread = CavanGitSvnCheckoutThread(self, dictProject)
+		for index in range(MAX_THREAD_COUNT):
+			thread = CavanCheckoutThread(index, self, dictProject)
 			if not thread:
 				return False
+
 			listThread.append(thread)
+
+			thread.setDaemon(True)
 			thread.start()
 
 		for thread in listThread:
