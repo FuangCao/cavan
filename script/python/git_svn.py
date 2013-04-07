@@ -140,7 +140,13 @@ class GitSvnManager:
 	def genSvnInfoXml(self, url = None):
 		if url == None:
 			url = self.mUrl
-		return command_vision("svn info --xml %s > %s" % (single_arg(url), self.mFileSvnInfo))
+
+		listCommand = ["svn info --xml"]
+
+		if url != None:
+			listCommand.append(single_arg(url))
+
+		return command_vision("%s > %s" % (" ".join(listCommand), self.mFileSvnInfo))
 
 	def genSvnLogXml(self):
 		if self.mGitRevision >= self.mSvnRevision:
@@ -383,7 +389,7 @@ class GitSvnManager:
 			return False
 
 		if self.mUrl == None:
-			if self.genSvnInfoXml("") == False:
+			if self.genSvnInfoXml() == False:
 				return False
 
 			infoParser = SvnInfoParser()
@@ -392,24 +398,30 @@ class GitSvnManager:
 
 			self.mUrl = infoParser.getUrl()
 
-		if self.genGitRepo() == False:
-			return False
-
-		return self.doSync()
+		return self.genGitRepo()
 
 	def doInit(self, argv):
 		length = len(argv)
 		if length > 0:
 			url = argv[0].rstrip("/")
-			if length > 1:
-				pathname = argv[1]
-			else:
-				pathname = os.path.basename(url)
 		else:
 			url = None
+
+		if length > 1:
+			pathname = argv[1].rstrip("/")
+		else:
 			pathname = None
 
 		return self.doInitBase(url, pathname)
+
+	def doClone(self, argv):
+		if len(argv) == 1:
+			argv.append(os.path.basename(argv[0].rstrip("/")))
+
+		if not self.doInit(argv):
+			return False
+
+		return self.doSync()
 
 	def main(self, argv):
 		length = len(argv)
@@ -418,8 +430,10 @@ class GitSvnManager:
 			return False
 
 		subcmd = argv[1]
-		if subcmd in ["init", "clone"]:
+		if subcmd in ["init"]:
 			return self.doInit(argv[2:])
+		if subcmd in ["clone"]:
+			return self.doClone(argv[2:])
 		elif subcmd in ["update", "sync"]:
 			if length > 2:
 				url = argv[2]
