@@ -13,5 +13,7 @@ if __name__ == "__main__":
 		manager = cavan_repo.CavanGitSvnRepoManager()
 		if manager.main(sys.argv):
 			pr_green_info("OK")
-		else:
-			pr_red_info("Failed")
+			sys.exit(0)
+
+	pr_red_info("Failed")
+	sys.exit(-1)
