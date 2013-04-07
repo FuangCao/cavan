@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys, os
+from threading import Thread
 from git_svn import GitSvnManager
 from cavan_xml import CavanXmlBase
 from cavan_stdio import pr_red_info
@@ -147,6 +148,41 @@ class AndroidManifest(CavanXmlBase):
 	def appendFile(self, name, path = None):
 		return self.appendProjectBase("file", name, path)
 
+class CavanGitSvnCheckoutThread(Thread):
+	def __init__(self, manager, project):
+		Thread.__init__(self)
+		self.mRepoManager = manager
+		self.mDictProject = project
+		self.mExitStatus = True
+
+	def run(self):
+		while True:
+			try:
+				node = self.mDictProject.popitem()
+			except:
+				break
+
+			name = node[0]
+			if len(node) < 2:
+				pathname = name
+			else:
+				pathname = node[1]
+
+			pathname = self.mRepoManager.getAbsPath(pathname)
+			if not os.path.isdir(pathname):
+				os.makedirs(pathname)
+			os.chdir(pathname)
+
+			url = os.path.join(self.mRepoManager.mUrl, name)
+			manager = GitSvnManager()
+			if manager.isInitialized():
+				if not manager.doSync(url):
+					self.mExitStatus = False
+					break
+			elif not manager.doInitBase(url, None):
+				self.mExitStatus = False
+				break
+
 class CavanGitSvnRepoManager:
 	def __init__(self):
 		self.mPathRoot = os.path.abspath(".")
@@ -243,24 +279,22 @@ class CavanGitSvnRepoManager:
 
 		self.mUrl = self.mManifest.getUrl()
 
+		listThread = []
 		dictProject = self.mManifest.getProjects()
-		for node in dictProject:
-			url = os.path.join(self.mUrl, node)
-			pathname = dictProject[node]
-			if not pathname:
-				pathname = node
 
-			pathname = self.getAbsPath(pathname)
-			if not os.path.isdir(pathname):
-				os.makedirs(pathname)
-			os.chdir(pathname)
+		for index in range(10):
+			thread = CavanGitSvnCheckoutThread(self, dictProject)
+			if not thread:
+				return False
+			listThread.append(thread)
+			thread.start()
 
-			manager = GitSvnManager()
-			if manager.isInitialized():
-				if not manager.doSync(url):
-					return False
-			elif not manager.doInitBase(url, None):
-					return False
+		for thread in listThread:
+			thread.join()
+
+		for thread in listThread:
+			if thread.mExitStatus == False:
+				return False
 
 		dictFile = self.mManifest.getFiles()
 		for node in dictFile:
