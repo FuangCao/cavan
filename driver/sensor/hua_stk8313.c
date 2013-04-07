@@ -63,28 +63,19 @@ static struct stk8313_rate_map_node stk8313_rate_map[] =
 
 static int stk8313_sensor_chip_readid(struct hua_input_chip *chip)
 {
-#if 0
 	int ret;
-	struct i2c_client *client = chip->bus_data;
+	u8 value;
 
-	for (client->addr = 1; client->addr < 0x7F; client->addr++)
+	ret = chip->read_register(chip, REG_MODE, &value);
+	if (ret < 0)
 	{
-		ret = hua_input_test_i2c(client);
-		if (ret < 0)
-		{
-			pr_red_info("address = 0x%02x", client->addr);
-		}
-		else
-		{
-			pr_green_info("address = 0x%02x", client->addr);
-			return 0;
-		}
+		pr_red_info("read_register REG_MODE");
+		return ret;
 	}
 
-	return -EFAULT;
-#else
+	pr_bold_info("REG_MODE = 0x%02x", value);
+
 	return 0;
-#endif
 }
 
 static int stk8313_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
@@ -189,7 +180,7 @@ static int stk8313_input_chip_probe(struct hua_input_chip *chip)
 	sensor->offset.x = -145;
 	sensor->offset.y = -183;
 	sensor->offset.z = -365;
-	sensor->orientation = HUA_SENSOR_ORIENTATION_UPWARD_0;
+	sensor->orientation = HUA_SENSOR_ORIENTATION_UPWARD_180;
 
 	dev = &sensor->dev;
 	dev->name = "Three-Axis Digital Accelerometer";
@@ -295,7 +286,7 @@ static int stk8313_i2c_remove(struct i2c_client *client)
 
 static const struct i2c_device_id stk8313_id[] =
 {
-	{"stk8313", 0}, {"adxl34x", 0}, {}
+	{"stk8313", 0}, {}
 };
 
 MODULE_DEVICE_TABLE(i2c, stk8313_id);

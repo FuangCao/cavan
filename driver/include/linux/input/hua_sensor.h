@@ -2,6 +2,14 @@
 
 #include <linux/input/hua_input.h>
 
+#define HUA_INPUT_SENSOR_IOC_GET_MIN_DELAY		HUA_INPUT_IOC('S', 0x00, 0)
+#define HUA_INPUT_SENSOR_IOC_GET_MAX_RANGE		HUA_INPUT_IOC('S', 0x01, 0)
+#define HUA_INPUT_SENSOR_IOC_GET_RESOLUTION		HUA_INPUT_IOC('S', 0x02, 0)
+#define HUA_INPUT_SENSOR_IOC_GET_POWER_CONSUME	HUA_INPUT_IOC('S', 0x03, 0)
+#define HUA_INPUT_SENSOR_IOC_GET_XYZ			HUA_INPUT_IOC('S', 0x04, 0)
+#define HUA_INPUT_SENSOR_IOC_SET_OFFSET			HUA_INPUT_IOC('S', 0x05, 0)
+#define HUA_INPUT_SENSOR_IOC_CALIBRATION		HUA_INPUT_IOC('S', 0x06, 0)
+
 enum hua_sensor_orientation
 {
 	HUA_SENSOR_ORIENTATION_UPWARD_0,
@@ -36,14 +44,6 @@ struct hua_sensor_device
 
 	void (*report_vector)(struct hua_sensor_device *sensor, int x, int y, int z);
 };
-
-#define HUA_INPUT_SENSOR_IOC_GET_MIN_DELAY		HUA_INPUT_IOC('S', 0x00, 0)
-#define HUA_INPUT_SENSOR_IOC_GET_MAX_RANGE		HUA_INPUT_IOC('S', 0x01, 0)
-#define HUA_INPUT_SENSOR_IOC_GET_RESOLUTION		HUA_INPUT_IOC('S', 0x02, 0)
-#define HUA_INPUT_SENSOR_IOC_GET_POWER_CONSUME	HUA_INPUT_IOC('S', 0x03, 0)
-#define HUA_INPUT_SENSOR_IOC_GET_XYZ			HUA_INPUT_IOC('S', 0x04, 0)
-#define HUA_INPUT_SENSOR_IOC_SET_OFFSET			HUA_INPUT_IOC('S', 0x05, 0)
-#define HUA_INPUT_SENSOR_IOC_CALIBRATION		HUA_INPUT_IOC('S', 0x06, 0)
 
 static inline void hua_sensor_report_value(struct input_dev *input, int value)
 {
