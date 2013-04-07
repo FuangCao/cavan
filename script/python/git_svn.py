@@ -165,11 +165,19 @@ class GitSvnManager:
 		return command_vision("git config remote.svn.url %s" % single_arg(url))
 
 	def getGitRevision(self):
-		lines = popen_to_list("git log -1 | tail -1 | sed 's/.*@\([0-9]\+\)\s[^\s]\+$/\\1/g'")
-		if not lines or len(lines) != 1:
+		lines = popen_to_list("git log -1 | tail -1")
+		if not lines:
 			return 0
 
-		return int(lines[0].strip())
+		pattern = re.compile('\s*cavan-git-svn-id: .*@([0-9]+) [^ ]+$')
+		if not pattern:
+			return -1
+
+		match = pattern.match(lines[0].strip())
+		if not match:
+			return -1
+
+		return int(match.group(1))
 
 	def saveGitMessage(self, entry):
 		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
