@@ -292,10 +292,10 @@ class GitSvnManager(CavanCommandBase):
 
 	def svnCheckout(self, entry):
 		if os.path.isdir(".svn"):
-			if not self.doPathExecute("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*/ {print substr($0, 6)}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)):
+			if not self.doPathExecute("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*/ {print substr($0, 6)}'" % entry.getRevesion(), self.mFileSvnUpdate):
 				return False
 		else:
-			if not self.doPathExecute("svn checkout %s . > /dev/null" % single_arg(self.mUrl + "@" + entry.getRevesion())):
+			if not self.doPathExecute("svn checkout %s ." % single_arg(self.mUrl + "@" + entry.getRevesion()), "/dev/null"):
 				return False
 
 			if not file_write_line(self.mFileSvnUpdate, '.'):

@@ -6,7 +6,7 @@ from cavan_xml import CavanXmlBase
 from cavan_stdio import pr_red_info, pr_bold_info, pr_green_info
 from cavan_command import CavanCommandBase, single_arg
 
-MAX_THREAD_COUNT = 10
+MAX_THREAD_COUNT = 8
 
 class AndroidManifest(CavanXmlBase):
 	def load(self, pathname):
