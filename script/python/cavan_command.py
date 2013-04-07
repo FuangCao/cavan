@@ -30,6 +30,69 @@ def single_arg(argument):
 def single_arg2(argument):
 	return "\"" + argument.replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "'\\''") + "\""
 
+class CavanCommandBase:
+	def __init__(self, pathname = "."):
+		reload(sys)
+		sys.setdefaultencoding("utf-8")
+		self.setRootPath(pathname)
+
+	def setRootPath(self, pathname):
+		if not os.path.isdir(pathname):
+			os.makedirs(pathname)
+		self.mPathRoot = os.path.abspath(pathname)
+
+	def getAbsPath(self, pathname):
+		return os.path.join(self.mPathRoot, pathname)
+
+	def getRelPath(self, pathname):
+		return os.path.relpath(pathname, self.mPathRoot)
+
+	def doExecute(self, command, output = None, verbose = True):
+		if verbose:
+			print command
+
+		if output != None:
+			res = os.system("%s > %s" % (command, single_arg(output)))
+		else:
+			res = os.system(command)
+
+		return res == 0
+
+	def doPathExecute(self, command, output = None, pathname = None, verbose = True):
+		if verbose:
+			print command
+
+		if not pathname:
+			pathname = self.mPathRoot
+
+		return self.doExecute("cd %s && { %s; }" % (single_arg(pathname), command), output, False)
+
+	def popenToList(self, command, verbose = True):
+		if verbose:
+			print command
+
+		fp = os.popen(command)
+		if not fp:
+			return None
+
+		lines = fp.readlines()
+
+		try:
+			fp.close()
+		except:
+			return None
+
+		return lines
+
+	def doPathPopen(self, command, pathname = None, verbose = True):
+		if verbose:
+			print command
+
+		if not pathname:
+			pathname = self.mPathRoot
+
+		return self.popenToList("cd %s && { %s; }" % (single_arg(pathname), command), False)
+
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		print popen_tostring(sys.argv[1])

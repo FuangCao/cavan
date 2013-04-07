@@ -7,8 +7,7 @@ from xml.dom.minidom import parse, Document
 from cavan_file import file_read_line, file_read_lines, \
 		 file_write_line, file_write_lines, file_append_line, file_append_lines
 
-from cavan_command import command_vision, popen_tostring, popen_to_list, \
-		 single_arg, single_arg2
+from cavan_command import CavanCommandBase, single_arg, single_arg2
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
 from cavan_xml import getFirstElement, getFirstElementData
 
@@ -122,14 +121,15 @@ class SvnLogEntry:
 	def getMessage(self):
 		return getFirstElementData(self.mRootElement, "msg")
 
-class GitSvnManager:
-	def __init__(self):
-		reload(sys)
-		sys.setdefaultencoding("utf-8")
-
+class GitSvnManager(CavanCommandBase):
+	def __init__(self, pathname = "."):
+		CavanCommandBase.__init__(self, pathname)
 		self.mRemoteName = "svn"
-		self.mGitSvnPath = ".git/svn"
-		self.mFileSvnIgnore = ".gitignore"
+
+	def setRootPath(self, pathname):
+		CavanCommandBase.setRootPath(self, pathname)
+		self.mFileSvnIgnore = self.getAbsPath(".gitignore")
+		self.mGitSvnPath = self.getAbsPath(".git/svn")
 		self.mFileSvnLog = os.path.join(self.mGitSvnPath, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mGitSvnPath, "svn_info.xml")
 		self.mFileSvnList = os.path.join(self.mGitSvnPath, "svn_list.txt")
@@ -146,32 +146,32 @@ class GitSvnManager:
 		if url != None:
 			listCommand.append(single_arg(url))
 
-		return command_vision("%s > %s" % (" ".join(listCommand), self.mFileSvnInfo))
+		return self.doPathExecute(" ".join(listCommand), self.mFileSvnInfo)
 
 	def genSvnLogXml(self):
 		if self.mGitRevision >= self.mSvnRevision:
 			return False
-		return command_vision("svn log --xml -r %d:%d %s > %s" % (self.mGitRevision + 1, self.mSvnRevision, single_arg(self.mUrl), self.mFileSvnLog))
+		return self.doPathExecute("svn log --xml -r %d:%d %s" % (self.mGitRevision + 1, self.mSvnRevision, single_arg(self.mUrl)), self.mFileSvnLog)
 
 	def genGitRepo(self):
-		if command_vision("git init") == False:
+		if not self.doPathExecute("git init"):
 			return False
 
-		if command_vision("git config user.name Fuang.Cao") == False:
+		if not self.doPathExecute("git config user.name 'Fuang.Cao'"):
 			return False
 
-		if command_vision("git config user.email cavan.cfa@gmail.com") == False:
+		if not self.doPathExecute("git config user.email 'cavan.cfa@gmail.com'"):
 			return False
 
-		command_vision("git remote add %s %s" % (self.mRemoteName, single_arg(self.mUrl)))
+		self.doPathExecute("git remote add %s %s" % (self.mRemoteName, single_arg(self.mUrl)))
 
 		return True
 
 	def setRemoteUrl(self, url):
-		return command_vision("git config remote.svn.url %s" % single_arg(url))
+		return self.doPathExecute("git config remote.svn.url %s" % single_arg(url))
 
 	def getGitRevision(self):
-		lines = popen_to_list("git log -1 | tail -1")
+		lines = self.doPathPopen("git log -1 | tail -1")
 		if not lines:
 			return 0
 
@@ -191,9 +191,9 @@ class GitSvnManager:
 
 	def gitAddFile(self, pathname):
 		pathname = pathname.rstrip("\f\r\n")
-		if command_vision("git add -f '%s'" % pathname.replace("'", "'\\''")):
+		if self.doPathExecute("git add -f '%s'" % pathname.replace("'", "'\\''")):
 			return True
-		if command_vision("git add -f \"%s\"" % pathname.replace("\"", "\\\"")):
+		if self.doPathExecute("git add -f \"%s\"" % pathname.replace("\"", "\\\"")):
 			return True
 		return False
 
@@ -227,7 +227,7 @@ class GitSvnManager:
 			fpGitList.writelines(lines)
 			fpGitList.close()
 
-			if command_vision("git add -f $(cat %s)" % self.mFileGitList):
+			if self.doPathExecute("git add -f $(cat %s)" % self.mFileGitList):
 				continue
 
 			for line in lines:
@@ -247,7 +247,7 @@ class GitSvnManager:
 
 		author = entry.getAuthor()
 		author = "%s <%s@%s>" % (author, author, self.mUuid)
-		return command_vision("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), self.mFileGitMessag))
+		return self.doPathExecute("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), single_arg(self.mFileGitMessag)))
 
 	def listHasPath(self, path, listPath):
 		for item in listPath:
@@ -279,7 +279,7 @@ class GitSvnManager:
 			fpSvnList.writelines(listFile)
 
 		for path in listDir:
-			listFile = popen_to_list("svn list -R %s | awk '!/\/+$/ {print %s $0}'" % (single_arg(path), single_arg2(path)))
+			listFile = self.doPathPopen("svn list -R %s | awk '!/\/+$/ {print %s $0}'" % (single_arg(path), single_arg2(path)))
 			if listFile == None:
 				fpSvnList.close()
 				return False
@@ -292,10 +292,10 @@ class GitSvnManager:
 
 	def svnCheckout(self, entry):
 		if os.path.isdir(".svn"):
-			if not command_vision("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*/ {print substr($0, 6)}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)):
+			if not self.doPathExecute("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*/ {print substr($0, 6)}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)):
 				return False
 		else:
-			if not command_vision("svn checkout %s . > /dev/null" % single_arg(self.mUrl + "@" + entry.getRevesion())):
+			if not self.doPathExecute("svn checkout %s . > /dev/null" % single_arg(self.mUrl + "@" + entry.getRevesion())):
 				return False
 
 			if not file_write_line(self.mFileSvnUpdate, '.'):
@@ -312,7 +312,7 @@ class GitSvnManager:
 		return self.gitCommit(entry)
 
 	def isInitialized(self):
-		return command_vision("git branch > /dev/null")
+		return self.doPathExecute("git branch", "/dev/null")
 
 	def doSync(self, url = None):
 		self.mGitRevision = self.getGitRevision()
@@ -320,9 +320,10 @@ class GitSvnManager:
 			return False
 
 		if not url:
-			url = popen_tostring("git config remote.%s.url" % self.mRemoteName)
-			if not url:
+			lines = self.doPathPopen("git config remote.%s.url" % self.mRemoteName)
+			if not lines:
 				return False
+			url = lines[0].rstrip("\r\n")
 		elif not self.setRemoteUrl(url):
 			return False
 
@@ -343,12 +344,12 @@ class GitSvnManager:
 			return True
 
 		if self.mGitRevision > 0:
-			if not command_vision("svn switch --force --accept tf %s > /dev/null" % single_arg("%s@%d" % (self.mUrl, self.mGitRevision))):
+			if not self.doPathExecute("svn switch --force --accept tf %s" % single_arg("%s@%d" % (self.mUrl, self.mGitRevision)), "/dev/null"):
 				return False
 		else:
 			revision = 1
 			while revision < self.mSvnRevision:
-				res = os.system("svn info %s 2>/dev/null" % single_arg("%s@%d" % (self.mUrl, revision)))
+				res = os.system("cd %s && svn info %s 2>/dev/null" % (self.mPathRoot, single_arg("%s@%d" % (self.mUrl, revision))))
 				if res == 0:
 					break
 				if res == 2:
@@ -380,7 +381,7 @@ class GitSvnManager:
 		if pathname != None:
 			if not os.path.exists(pathname):
 				os.makedirs(pathname, 0777)
-			os.chdir(pathname)
+			self.setRootPath(pathname)
 
 		if not os.path.isdir(self.mGitSvnPath):
 			os.makedirs(self.mGitSvnPath, 0777)

@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
 import sys, os, threading
+from git_svn import GitSvnManager
 from cavan_xml import CavanXmlBase
 from cavan_stdio import pr_red_info, pr_bold_info, pr_green_info
-from cavan_command import popen_to_list, command_vision, single_arg
+from cavan_command import CavanCommandBase, single_arg
 
 MAX_THREAD_COUNT = 10
 
@@ -189,34 +190,34 @@ class CavanCheckoutThread(threading.Thread):
 			pathname = self.mRepoManager.getAbsPath(pathname)
 			url = os.path.join(self.mRepoManager.mUrl, name)
 
-			if os.path.isdir(pathname):
-				if not command_vision("cd %s && cavan-git-svn sync %s" % (single_arg(pathname), single_arg(url))):
-					self.mExitStatus = False
-					break
-			else:
-				if not command_vision("cavan-git-svn clone %s %s" % (single_arg(url), single_arg(pathname))):
-					self.mExitStatus = False
-					break
+			manager = GitSvnManager(pathname)
+			if not manager.isInitialized() and not manager.doInitBase(url):
+				self.mExitStatus = False
+				break
+
+			if not manager.doSync(url):
+				self.mExitStatus = False
+				break
 
 		if self.mExitStatus:
 			pr_green_info("Thread %d exit" % self.mIndex)
 		else:
 			pr_red_info("Thread %d exit" % self.mIndex)
 
-class CavanGitSvnRepoManager:
-	def __init__(self):
-		self.mPathRoot = os.path.abspath(".")
-		self.mPathSvnRepo = ".svn_repo"
+class CavanGitSvnRepoManager(CavanCommandBase):
+	def __init__(self, pathname = "."):
+		CavanCommandBase.__init__(self, pathname)
+
+	def setRootPath(self, pathname):
+		CavanCommandBase.setRootPath(self, pathname)
+		self.mPathSvnRepo = self.getAbsPath(".svn_repo")
 		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
 		self.mPathManifestRepo = os.path.join(self.mPathSvnRepo, "manifest")
 		self.mPathFileRepo = os.path.join(self.mPathSvnRepo, "copyfile")
 
-	def getAbsPath(self, pathname):
-		return os.path.join(self.mPathRoot, pathname)
-
 	def genProjectNode(self, depth = 0, path = ""):
 		url = os.path.join(self.mUrl, path)
-		lines = popen_to_list("svn list %s" % single_arg(url))
+		lines = self.doPathPopen("svn list %s" % single_arg(url))
 		if not lines:
 			return lines != None
 
@@ -285,8 +286,7 @@ class CavanGitSvnRepoManager:
 			if not os.path.exists(pathname):
 				os.makedirs(pathname, 0777)
 
-			os.chdir(pathname)
-			self.mPathRoot = os.path.abspath(".")
+			self.setRootPath(pathname)
 
 		if not os.path.isdir(self.mPathSvnRepo):
 			os.makedirs(self.mPathSvnRepo)
@@ -326,7 +326,7 @@ class CavanGitSvnRepoManager:
 			if not pathname:
 				pathname = node
 			pathname = self.getAbsPath(pathname)
-			if not command_vision("svn export --force %s %s > /dev/null" % (single_arg(url), single_arg(pathname))):
+			if not self.doPathExecute("svn export --force %s %s" % (single_arg(url), single_arg(pathname)), "/dev/null"):
 				return False
 
 		return True
@@ -347,41 +347,39 @@ class CavanGitSvnRepoManager:
 		if not os.path.isdir(pathname):
 			os.makedirs(pathname)
 
-		os.chdir(pathname)
-
-		if command_vision("git branch > /dev/null"):
+		if self.doPathExecute("git branch", "/dev/null", pathname):
 			return True
 
-		if not command_vision("git init %s" % option):
+		if not self.doPathExecute("git init %s" % option, None, pathname):
 			return False
 
-		if not command_vision("git config user.name Fuang.Cao"):
+		if not self.doPathExecute("git config user.name Fuang.Cao", None, pathname):
 			return False
 
-		if not command_vision("git config user.email cavan.cfa@gmail.com"):
+		if not self.doPathExecute("git config user.email cavan.cfa@gmail.com", None, pathname):
 			return False
 
 		return True
 
-	def gitAutoCommit(self):
-		return command_vision("git add -f . && git commit -asm 'auto commit by Fuang.Cao'")
+	def gitAutoCommit(self, pathname = None):
+		return self.doPathExecute("git add -f . && git commit -asm 'auto commit by Fuang.Cao'", None, pathname)
 
 	def genManifestRepo(self):
-		if not self.genGitRepo(self.getAbsPath(self.mPathManifestRepo)):
+		if not self.genGitRepo(self.mPathManifestRepo):
 			return False
 
-		if not self.mManifest.save("default.xml"):
+		if not self.mManifest.save(os.path.join(self.mPathManifestRepo, "default.xml")):
 			return False
 
-		self.gitAutoCommit()
+		self.gitAutoCommit(self.mPathManifestRepo)
 		return True
 
 	def genFileRepo(self):
-		nodeProject = self.mManifest.appendProject("platform/copyfile", self.mPathFileRepo)
+		nodeProject = self.mManifest.appendProject("platform/copyfile", self.getRelPath(self.mPathFileRepo))
 		if not nodeProject:
 			return False
 
-		if not self.genGitRepo(self.getAbsPath(self.mPathFileRepo)):
+		if not self.genGitRepo(self.mPathFileRepo):
 			return False
 
 		dictFile = self.mManifest.getFiles()
@@ -396,7 +394,8 @@ class CavanGitSvnRepoManager:
 			elif not os.path.isdir(dirname):
 				os.makedirs(dirname)
 
-			if not command_vision("cp -a %s %s" % (single_arg(self.getAbsPath(pathname)), single_arg(dirname))):
+			dirname = os.path.join(self.mPathFileRepo, dirname)
+			if not self.doExecute("cp -a %s %s" % (single_arg(self.getAbsPath(pathname)), single_arg(dirname))):
 				return False
 
 			copyfile = self.mManifest.createElement("copyfile")
@@ -407,7 +406,7 @@ class CavanGitSvnRepoManager:
 			copyfile.setAttribute("src", pathname)
 			nodeProject.appendChild(copyfile)
 
-		self.gitAutoCommit()
+		self.gitAutoCommit(self.mPathFileRepo)
 		return True
 
 	def doBackup(self, argv):
@@ -461,8 +460,7 @@ class CavanGitSvnRepoManager:
 			if not self.genGitRepo(backupPath, "--shared --bare"):
 				return False
 
-			os.chdir(localPath)
-			if not command_vision("git push --all %s" % single_arg(backupPath)):
+			if not self.doPathExecute("git push --all %s" % single_arg(backupPath), None, localPath):
 				return False
 
 		return True
