@@ -289,9 +289,22 @@ class CavanGitSvnRepoManager:
 	def genGitRepo(self, pathname, option = ""):
 		if not os.path.isdir(pathname):
 			os.makedirs(pathname)
+
 		os.chdir(pathname)
 
-		return command_vision("git branch > /dev/null || git init %s" % option)
+		if command_vision("git branch > /dev/null"):
+			return True
+
+		if not command_vision("git init %s" % option):
+			return False
+
+		if not command_vision("git config user.name Fuang.Cao"):
+			return False
+
+		if not command_vision("git config user.email cavan.cfa@gmail.com"):
+			return False
+
+		return True
 
 	def gitAutoCommit(self):
 		return command_vision("git add -f . && git commit -asm 'auto commit by Fuang.Cao'")
@@ -388,12 +401,8 @@ class CavanGitSvnRepoManager:
 				return False
 
 			backupPath = os.path.join(self.mPathBackup, node + ".git")
-			if not os.path.exists(os.path.join(backupPath, "HEAD")):
-				if not os.path.isdir(backupPath):
-					os.makedirs(backupPath)
-				os.chdir(backupPath)
-				if not command_vision("git init --shared --bare"):
-					return False
+			if not self.genGitRepo(backupPath, "--shared --bare"):
+				return False
 
 			os.chdir(localPath)
 			if not command_vision("git push --all %s" % single_arg(backupPath)):
