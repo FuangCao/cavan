@@ -87,6 +87,12 @@ class AndroidManifest(CavanXmlBase):
 	def setFetch(self, fetch):
 		return self.mTagRemote.setAttribute("fetch", fetch)
 
+	def getReview(self):
+		return self.mTagRemote.getAttribute("review")
+
+	def setReview(self, review):
+		return self.mTagRemote.setAttribute("review", review)
+
 	def getUrl(self):
 		return self.mTagRemote.getAttribute("url")
 
@@ -134,6 +140,8 @@ class AndroidManifest(CavanXmlBase):
 		return True
 
 	def appendProject(self, name, path = None):
+		if path == None:
+			path = name
 		return self.appendProjectBase("project", name, path)
 
 	def appendFile(self, name, path = None):
@@ -161,7 +169,7 @@ class CavanGitSvnRepoManager:
 		for line in lines:
 			line = os.path.join(path, line.rstrip("\r\n"))
 			if line.endswith("/"):
-				listDir.append(line)
+				listDir.append(line.rstrip("/"))
 			elif depth <= 0:
 				listFile.append(line)
 			else:
@@ -206,6 +214,9 @@ class CavanGitSvnRepoManager:
 			if not self.loadManifest():
 				return False
 			url = self.mManifest.getUrl()
+			if not url:
+				pr_red_info("Url not found")
+				return False
 		else:
 			pr_red_info("Please give repo url")
 			return False

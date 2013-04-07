@@ -158,7 +158,9 @@ class GitSvnManager:
 		if command_vision("git config user.email cavan.cfa@gmail.com") == False:
 			return False
 
-		return command_vision("git remote add %s %s" % (self.mRemoteName, single_arg(self.mUrl)))
+		command_vision("git remote add %s %s" % (self.mRemoteName, single_arg(self.mUrl)))
+
+		return True
 
 	def setRemoteUrl(self, url):
 		return command_vision("git config remote.svn.url %s" % single_arg(url))
@@ -319,18 +321,18 @@ class GitSvnManager:
 
 	def svnCheckout(self, entry):
 		if os.path.isdir(".svn"):
-			if command_vision("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*\s+/ {print substr($0, 6)}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)) == False:
+			if not command_vision("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*\s+/ {print substr($0, 6)}' > %s" % (entry.getRevesion(), self.mFileSvnUpdate)):
 				return False
 		else:
-			if command_vision("svn checkout %s ." % single_arg(self.mUrl + "@" + entry.getRevesion())) == False:
-				return True
+			if not command_vision("svn checkout %s . > /dev/null" % single_arg(self.mUrl + "@" + entry.getRevesion())):
+				return False
 
-			if file_write_line(self.mFileSvnUpdate, '.') == False:
+			if not file_write_line(self.mFileSvnUpdate, '.'):
 				return False
 
 			if not os.path.exists(self.mFileSvnIgnore):
 				lines = ["/.gitignore\n", ".svn\n"]
-				if file_write_lines(self.mFileSvnIgnore, lines) == False:
+				if not file_write_lines(self.mFileSvnIgnore, lines):
 					return False
 
 		if self.genSvnList() == False:
@@ -369,8 +371,19 @@ class GitSvnManager:
 			pr_green_info("Already up-to-date.")
 			return True
 
-		if self.mGitRevision > 0 and command_vision("svn switch --force --accept tf %s > /dev/null" % single_arg("%s@%d" % (self.mUrl, self.mGitRevision))) == False:
+		if self.mGitRevision > 0:
+			if not command_vision("svn switch --force --accept tf %s > /dev/null" % single_arg("%s@%d" % (self.mUrl, self.mGitRevision))):
 				return False
+		else:
+			revision = 1
+			while revision < self.mSvnRevision:
+				res = os.system("svn info %s 2>/dev/null" % single_arg("%s@%d" % (self.mUrl, revision)))
+				if res == 0:
+					break
+				if res == 2:
+					return False
+				revision = revision + 1
+			self.mGitRevision = revision - 1
 
 		if self.genSvnLogXml() == False:
 			return False
