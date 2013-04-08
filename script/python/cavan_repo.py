@@ -2,6 +2,7 @@
 
 import sys, os, threading
 from git_svn import GitSvnManager
+from cavan_file import file_append_line
 from cavan_xml import CavanXmlBase
 from cavan_stdio import pr_red_info, pr_bold_info, pr_green_info
 from cavan_command import CavanCommandBase, single_arg
@@ -174,6 +175,9 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 	def __init__(self, pathname = "."):
 		CavanCommandBase.__init__(self, pathname)
 
+		self.mLockProject = threading.Lock()
+		self.mPathTempProject = "/tmp/cavan-git-svn-repo"
+
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
 
@@ -182,6 +186,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			os.makedirs(self.mPathSvnRepo)
 
 		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
+		self.mFileFailed = os.path.join(self.mPathSvnRepo, "failed.txt")
 		self.mPathManifestRepo = os.path.join(self.mPathSvnRepo, "manifest")
 		self.mPathFileRepo = os.path.join(self.mPathSvnRepo, "copyfile")
 
@@ -236,6 +241,16 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 	def getManifest(self):
 		return self.mManifest
 
+	def getProjectRelPath(self, nodeProject):
+		if not nodeProject[1]:
+			return nodeProject[0]
+		else:
+			return nodeProject[1]
+
+	def getProjectAbsPath(self, nodeProject):
+		pathname = self.getProjectRelPath(nodeProject)
+		return self.getAbsPath(pathname)
+
 	def doInit(self, argv):
 		length = len(argv)
 		if length > 0:
@@ -256,49 +271,70 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 
 		return self.genManifest(url)
 
+	def getTempProjectPath(self):
+		for index in range(100):
+			pathname = os.path.join(self.mPathTempProject, "%02d" % index)
+			if not os.path.isdir(pathname):
+				return pathname
+
+		return None
+
 	def syncProject(self):
 		self.mLockProject.acquire()
-
 		length = len(self.mListProject)
 		if length > 0:
 			node = self.mListProject.pop(0)
 		else:
 			node = None
+		self.mLockProject.release()
 
 		pr_green_info("Project remain %d" % length)
-
-		self.mLockProject.release()
 
 		if not node:
 			return 0
 
-		name = node[0]
-		if len(node) < 2:
-			pathname = name
-		else:
-			pathname = node[1]
+		pathname = self.getProjectAbsPath(node)
+		url = os.path.join(self.mUrl, node[0])
 
-		pathname = self.getAbsPath(pathname)
-		url = os.path.join(self.mUrl, name)
+		for count in range(2):
+			pr_bold_info("%s => %s" % (url, pathname))
+			manager = GitSvnManager(pathname)
+			if (manager.isInitialized() or manager.doInitBase(url)) and manager.doSync(url):
+				return 1
 
-		manager = GitSvnManager(pathname)
-		if not manager.isInitialized() and not manager.doInitBase(url):
-			return -1
+			pr_red_info("Retry count = %d" % count)
+			self.doExecute("rm -rf %s" % single_arg(pathname))
 
-		if not manager.doSync(url):
-			return -1
+		self.mLockProject.acquire()
+		tmpPathname = self.getTempProjectPath()
+		self.mLockProject.release()
 
-		return 1
+		if tmpPathname != None:
+			pr_red_info("%s => %s" % (url, tmpPathname))
+			manager = GitSvnManager(tmpPathname)
+			if manager.doInitBase(url) and manager.doSync(url) and self.doExecute("mv %s %s" % (tmpPathname, single_arg(pathname))):
+				return 1
+			self.doExecute("rm %s -rf" % tmpPathname)
+
+		pr_red_info("Checkout %s failed" % pathname)
+
+		self.mLockProject.acquire()
+		file_append_line(self.mFileFailed, "%s => %s" % (pathname, url))
+		self.mLockProject.release()
+
+		return -1
 
 	def doSync(self):
 		if not self.loadManifest():
 			return False
 
+		if os.path.exists(self.mFileFailed):
+			os.remove(self.mFileFailed)
+
 		self.mUrl = self.mManifest.getUrl()
+		self.mListProject = self.mManifest.getProjects()
 
 		listThread = []
-		self.mListProject = self.mManifest.getProjects()
-		self.mLockProject = threading.Lock()
 
 		for index in range(MAX_THREAD_COUNT):
 			thread = CavanCheckoutThread(index, self)
@@ -313,13 +349,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		iResult = 1
 
 		for node in self.mManifest.getFiles():
-			if not node[1]:
-				pathname = node[0]
-			else:
-				pathname = node[1]
-
-			pathname = self.getAbsPath(pathname)
-
+			pathname = self.getProjectAbsPath(node)
 			dirname = os.path.dirname(pathname)
 			if not os.path.isdir(dirname):
 				os.makedirs(dirname)
@@ -397,11 +427,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			return False
 
 		for node in self.mManifest.getFiles():
-			if not node[1]:
-				pathname = node[0]
-			else:
-				pathname = node[1]
-
+			pathname = self.getProjectRelPath(node)
 			dirname = os.path.dirname(pathname)
 			if not dirname:
 				dirname = self.mPathFileRepo
@@ -410,7 +436,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 				if not os.path.isdir(dirname):
 					os.makedirs(dirname)
 
-			if not self.doExecute("cp -a %s %s" % (single_arg(self.getAbsPath(pathname)), single_arg(dirname))):
+			if not self.doPathExecute("cp -a %s %s" % (single_arg(pathname), single_arg(dirname))):
 				return False
 
 			copyfile = self.mManifest.createElement("copyfile")
@@ -464,12 +490,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		listProject = self.mManifest.getProjects()
 		listProject.append(("platform/manifest", self.mPathManifestRepo))
 		for node in listProject:
-			if not node[1]:
-				localPath = node[0]
-			else:
-				localPath = node[1]
-
-			localPath = self.getAbsPath(localPath)
+			localPath = self.getProjectAbsPath(node)
 			if not os.path.isdir(localPath):
 				return False
 

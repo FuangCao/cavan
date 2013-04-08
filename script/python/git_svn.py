@@ -125,7 +125,7 @@ class GitSvnManager(CavanCommandBase):
 	def __init__(self, pathname = "."):
 		CavanCommandBase.__init__(self, pathname)
 		self.mRemoteName = "cavan-svn"
-		self.mPatternSvnUpdate = re.compile('^A[UCGER ]{5}(.*)$')
+		self.mPatternSvnUpdate = re.compile('^A[UCGER ]{4}(.*)$')
 		self.mPatternGitRevision = re.compile('\s*cavan-git-svn-id: .*@([0-9]+) [^ ]+$')
 
 	def setRootPath(self, pathname):
@@ -226,6 +226,7 @@ class GitSvnManager(CavanCommandBase):
 			if not fpGitList:
 				fpSvnList.close()
 				return False
+
 			fpGitList.writelines(lines)
 			fpGitList.close()
 
@@ -241,9 +242,6 @@ class GitSvnManager(CavanCommandBase):
 		return True
 
 	def gitCommit(self, entry):
-		if self.gitAddFiles() == False:
-			return False
-
 		if self.saveGitMessage(entry) == False:
 			return False
 
@@ -270,7 +268,7 @@ class GitSvnManager(CavanCommandBase):
 			if self.listHasPath(line, listDir):
 				continue
 
-			if os.path.isdir(line):
+			if os.path.isdir(self.getAbsPath(line)):
 				print "[DIR]  Add " + line
 				listDir.append(line + "/")
 			else:
@@ -300,7 +298,7 @@ class GitSvnManager(CavanCommandBase):
 		return count
 
 	def svnCheckout(self, entry):
-		if os.path.isdir(".svn"):
+		if os.path.isdir(self.getAbsPath(".svn")):
 			lines = self.doPathPopen("svn update --accept theirs-full --force -r %s" % entry.getRevesion())
 			if lines == None:
 				return False
@@ -333,6 +331,9 @@ class GitSvnManager(CavanCommandBase):
 
 		count = self.genSvnList()
 		if count < 0:
+			return False
+
+		if count > 0 and self.gitAddFiles() == False:
 			return False
 
 		if self.gitCommit(entry):
@@ -402,7 +403,6 @@ class GitSvnManager(CavanCommandBase):
 					minRevision = revision
 
 			self.mGitRevision = minRevision
-			self.doPathExecute("rm .svn -rf")
 
 		if self.genSvnLogXml() == False:
 			return False
