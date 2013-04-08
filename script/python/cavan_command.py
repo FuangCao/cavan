@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, os
+import sys, os, subprocess
 
 def command_vision(command):
 	print command
@@ -31,15 +31,20 @@ def single_arg2(argument):
 	return "\"" + argument.replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "'\\''") + "\""
 
 class CavanCommandBase:
-	def __init__(self, pathname = "."):
+	def __init__(self, pathname = ".", shell = "sh"):
 		reload(sys)
 		sys.setdefaultencoding("utf-8")
+
 		self.setRootPath(pathname)
+		self.setShellName(shell)
 
 	def setRootPath(self, pathname):
 		if not os.path.isdir(pathname):
 			os.makedirs(pathname)
 		self.mPathRoot = os.path.abspath(pathname)
+
+	def setShellName(self, name):
+		self.mShellName = name
 
 	def getAbsPath(self, pathname):
 		return os.path.join(self.mPathRoot, pathname)
@@ -47,54 +52,68 @@ class CavanCommandBase:
 	def getRelPath(self, pathname):
 		return os.path.relpath(pathname, self.mPathRoot)
 
-	def doExecute(self, command, output = None, verbose = True):
+	def doExecute(self, args, of = None, ef = None, cwd = None, verbose = True):
 		if verbose:
-			print command
+			print args
 
-		if output != None:
-			res = os.system("%s > %s" % (command, single_arg(output)))
+		if not of:
+			fpStdout = None
 		else:
-			res = os.system(command)
+			fpStdout = open(of, "w")
 
-		if res == 2:
-			sys.exit(-1)
+		if not ef:
+			fpStderr = None
+		else:
+			fpStderr = open(ef, "w")
+
+		if not cwd:
+			cwd = self.mPathRoot
+
+		process = subprocess.Popen(args, stdout = fpStdout, stderr = fpStderr, cwd = cwd)
+		if not process:
+			res = -1
+		else:
+			res = process.wait()
+
+		if fpStderr != None:
+			fpStderr.close()
+
+		if fpStdout != None:
+			fpStdout.close()
 
 		return res == 0
 
-	def doPathExecute(self, command, output = None, pathname = None, verbose = True):
+	def buildSystemArgs(self, command):
+		return [self.mShellName, "-c", "--", command]
+
+	def doSystemExec(self, command, of = None, ef = None, cwd = None, verbose = True):
 		if verbose:
 			print command
 
-		if not pathname:
-			pathname = self.mPathRoot
+		return self.doExecute(self.buildSystemArgs(command), of, ef, cwd, False)
 
-		return self.doExecute("cd %s && { %s; }" % (single_arg(pathname), command), output, False)
-
-	def popenToList(self, command, verbose = True):
+	def doPopen(self, args, cwd = None, verbose = True):
 		if verbose:
-			print command
+			print args
 
-		fp = os.popen(command)
-		if not fp:
+		if not cwd:
+			cwd = self.mPathRoot
+
+		process = subprocess.Popen(args, cwd = cwd, stdout = subprocess.PIPE)
+		if not process:
 			return None
 
-		lines = fp.readlines()
-
-		try:
-			fp.close()
-		except:
+		lines = process.stdout.readlines()
+		if process.wait() != 0:
 			return None
 
 		return lines
 
-	def doPathPopen(self, command, pathname = None, verbose = True):
+	def doSystemPopen(self, command, cwd = None, verbose = True):
 		if verbose:
 			print command
 
-		if not pathname:
-			pathname = self.mPathRoot
-
-		return self.popenToList("cd %s && { %s; }" % (single_arg(pathname), command), False)
+		return self.doPopen(self.buildSystemArgs(command), cwd, False)
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1:

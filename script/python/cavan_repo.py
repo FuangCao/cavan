@@ -7,7 +7,7 @@ from cavan_xml import CavanXmlBase
 from cavan_stdio import pr_red_info, pr_bold_info, pr_green_info
 from cavan_command import CavanCommandBase, single_arg
 
-MAX_THREAD_COUNT = 8
+MAX_THREAD_COUNT = 5
 
 class AndroidManifest(CavanXmlBase):
 	def load(self, pathname):
@@ -150,23 +150,17 @@ class CavanCheckoutThread(threading.Thread):
 		threading.Thread.__init__(self)
 		self.mIndex = index
 		self.mRepoManager = manager
-		self.mExitStatus = True
-
-	def getExitStatus(self):
-		return self.mExitStatus
 
 	def run(self):
 		iResult = 1
 
 		while iResult > 0:
 			pr_green_info("Thread %d running" % self.mIndex)
-			iResult = self.mRepoManager.syncProject()
+			iResult = self.mRepoManager.fetchProject()
 
 		if iResult < 0:
-			self.mExitStatus = False
 			pr_red_info("Thread %s fault" % self.mIndex)
 		else:
-			self.mExitStatus = True
 			pr_green_info("Thread %s complete" % self.mIndex)
 
 		pr_bold_info("Thread %d exit" % self.mIndex)
@@ -175,6 +169,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 	def __init__(self, pathname = "."):
 		CavanCommandBase.__init__(self, pathname)
 
+		self.mErrorCount = 0
 		self.mLockProject = threading.Lock()
 		self.mPathTempProject = "/tmp/cavan-git-svn-repo"
 
@@ -192,7 +187,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 
 	def genProjectNode(self, depth = 0, path = ""):
 		url = os.path.join(self.mUrl, path)
-		lines = self.doPathPopen("svn list %s" % single_arg(url))
+		lines = self.doPopen(["svn", "list", url])
 		if not lines:
 			return lines != None
 
@@ -273,16 +268,19 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 
 	def getTempProjectPath(self):
 		for index in range(100):
+			if self.mErrorCount > 0:
+				break
+
 			pathname = os.path.join(self.mPathTempProject, "%02d" % index)
 			if not os.path.isdir(pathname):
 				return pathname
 
 		return None
 
-	def syncProject(self):
+	def fetchProject(self):
 		self.mLockProject.acquire()
 		length = len(self.mListProject)
-		if length > 0:
+		if self.mErrorCount == 0 and length > 0:
 			node = self.mListProject.pop(0)
 		else:
 			node = None
@@ -297,13 +295,16 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		url = os.path.join(self.mUrl, node[0])
 
 		for count in range(2):
+			if self.mErrorCount > 0:
+				return -1
+
 			pr_bold_info("%s => %s" % (url, pathname))
 			manager = GitSvnManager(pathname)
 			if (manager.isInitialized() or manager.doInitBase(url)) and manager.doSync(url):
 				return 1
 
 			pr_red_info("Retry count = %d" % count)
-			self.doExecute("rm -rf %s" % single_arg(pathname))
+			self.doExecute(["rm", "-rf", pathname])
 
 		self.mLockProject.acquire()
 		tmpPathname = self.getTempProjectPath()
@@ -312,13 +313,14 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		if tmpPathname != None:
 			pr_red_info("%s => %s" % (url, tmpPathname))
 			manager = GitSvnManager(tmpPathname)
-			if manager.doInitBase(url) and manager.doSync(url) and self.doExecute("mv %s %s" % (tmpPathname, single_arg(pathname))):
+			if manager.doInitBase(url) and manager.doSync(url) and self.doExecute(["mv", tmpPathname, pathname]):
 				return 1
-			self.doExecute("rm %s -rf" % tmpPathname)
+			self.doExecute(["rm", "-rf", tmpPathname])
 
 		pr_red_info("Checkout %s failed" % pathname)
 
 		self.mLockProject.acquire()
+		self.mErrorCount = self.mErrorCount + 1
 		file_append_line(self.mFileFailed, "%s => %s" % (pathname, url))
 		self.mLockProject.release()
 
@@ -356,22 +358,18 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 
 			url = os.path.join(self.mUrl, node[0])
 
-			if not self.doPathExecute("svn export --force %s %s" % (single_arg(url), single_arg(pathname)), "/dev/null"):
+			if not self.doExecute(["svn", "export", "--force", url, pathname], of = "/dev/null"):
 				iResult = -1
 				break
 
 		while iResult > 0:
-			iResult = self.syncProject()
+			iResult = self.fetchProject()
 
 		for thread in listThread:
 			thread.join()
 
-		if iResult < 0:
+		if iResult < 0 or self.mErrorCount > 0:
 			return False
-
-		for thread in listThread:
-			if thread.getExitStatus() == False:
-				return False
 
 		return True
 
@@ -387,26 +385,34 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 	def doCommand(self, argv):
 		return False
 
-	def genGitRepo(self, pathname, option = ""):
+	def genGitRepo(self, pathname, option = None):
 		if not os.path.isdir(pathname):
 			os.makedirs(pathname)
 
-		if self.doPathExecute("git branch", "/dev/null", pathname):
+		if self.doExecute(["git", "branch"], of = "/dev/null", cwd = pathname):
 			return True
 
-		if not self.doPathExecute("git init %s" % option, None, pathname):
+		listCommand = ["git", "init"]
+		if option != None:
+			for node in option:
+				listCommand.append(node)
+
+		if not self.doExecute(listCommand, cwd = pathname):
 			return False
 
-		if not self.doPathExecute("git config user.name Fuang.Cao", None, pathname):
+		if not self.doExecute(["git", "config", "user.name", "Fuang.Cao"], cwd = pathname):
 			return False
 
-		if not self.doPathExecute("git config user.email cavan.cfa@gmail.com", None, pathname):
+		if not self.doExecute(["git", "config", "user.email", "cavan.cfa@gmail.com"], cwd = pathname):
 			return False
 
 		return True
 
 	def gitAutoCommit(self, pathname = None):
-		return self.doPathExecute("git add -f . && git commit -asm 'auto commit by Fuang.Cao'", None, pathname)
+		if not self.doExecute(["git", "add", "-f", "."], cwd = pathname):
+			return False
+
+		return self.doExecute(["git", "commit", "-asm", "auto commit by Fuang.Cao"], cwd = pathname)
 
 	def genManifestRepo(self):
 		if not self.genGitRepo(self.mPathManifestRepo):
@@ -436,7 +442,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 				if not os.path.isdir(dirname):
 					os.makedirs(dirname)
 
-			if not self.doPathExecute("cp -a %s %s" % (single_arg(pathname), single_arg(dirname))):
+			if not self.doExecute(["cp", "-a", pathname, dirname]):
 				return False
 
 			copyfile = self.mManifest.createElement("copyfile")
@@ -449,6 +455,18 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 
 		self.gitAutoCommit(self.mPathFileRepo)
 		return True
+
+	def gitPushProject(self, localPath, backupPath):
+		for count in range(2):
+			if not self.genGitRepo(backupPath, ["--shared", "--bare"]):
+				return False
+
+			if self.doExecute(["git", "push", "--all", backupPath], cwd = localPath):
+				return True
+
+			self.doExecute(["rm", "-rf", backupPath])
+
+		return False
 
 	def doBackup(self, argv):
 		if not self.loadManifest():
@@ -495,10 +513,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 				return False
 
 			backupPath = os.path.join(self.mPathBackup, node[0] + ".git")
-			if not self.genGitRepo(backupPath, "--shared --bare"):
-				return False
-
-			if not self.doPathExecute("git push --all %s" % single_arg(backupPath), None, localPath):
+			if not self.gitPushProject(localPath, backupPath):
 				return False
 
 		return True

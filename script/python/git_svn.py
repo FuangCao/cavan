@@ -147,37 +147,37 @@ class GitSvnManager(CavanCommandBase):
 		if url == None:
 			url = self.mUrl
 
-		listCommand = ["svn info --xml"]
+		listCommand = ["svn", "info", "--xml"]
 
 		if url != None:
-			listCommand.append(single_arg(url))
+			listCommand.append(url)
 
-		return self.doPathExecute(" ".join(listCommand), self.mFileSvnInfo)
+		return self.doExecute(listCommand, of = self.mFileSvnInfo)
 
 	def genSvnLogXml(self):
 		if self.mGitRevision >= self.mSvnRevision:
 			return False
-		return self.doPathExecute("svn log --xml -r %d:%d %s" % (self.mGitRevision + 1, self.mSvnRevision, single_arg(self.mUrl)), self.mFileSvnLog)
+		return self.doExecute(["svn", "log", "--xml", "-r", "%d:%d" % (self.mGitRevision + 1, self.mSvnRevision), self.mUrl], of = self.mFileSvnLog)
 
 	def genGitRepo(self):
-		if not self.doPathExecute("git init"):
+		if not self.doExecute(["git", "init"]):
 			return False
 
-		if not self.doPathExecute("git config user.name 'Fuang.Cao'"):
+		if not self.doExecute(["git", "config", "user.name", "Fuang.Cao"]):
 			return False
 
-		if not self.doPathExecute("git config user.email 'cavan.cfa@gmail.com'"):
+		if not self.doExecute(["git", "config", "user.email", "cavan.cfa@gmail.com"]):
 			return False
 
-		self.doPathExecute("git remote add %s %s" % (self.mRemoteName, single_arg(self.mUrl)))
+		self.doExecute(["git", "remote", "add", self.mRemoteName, self.mUrl])
 
 		return True
 
 	def setRemoteUrl(self, url):
-		return self.doPathExecute("git config remote.svn.url %s" % single_arg(url))
+		return self.doExecute(["git", "config", "remote.svn.url", url])
 
 	def getGitRevision(self):
-		lines = self.doPathPopen("git log -1 | tail -1")
+		lines = self.doSystemPopen("git log -1 | tail -1")
 		if not lines:
 			return 0
 
@@ -192,12 +192,7 @@ class GitSvnManager(CavanCommandBase):
 		return file_write_line(self.mFileGitMessag, content)
 
 	def gitAddFile(self, pathname):
-		pathname = pathname.rstrip("\r\n")
-		if self.doPathExecute("git add -f '%s'" % pathname.replace("'", "'\\''")):
-			return True
-		if self.doPathExecute("git add -f \"%s\"" % pathname.replace("\"", "\\\"")):
-			return True
-		return False
+		return self.doExecute(["git", "add", "-f", pathname.rstrip("\r\n")])
 
 	def gitAddFiles(self):
 		fpSvnList = open(self.mFileSvnList, "r")
@@ -230,7 +225,7 @@ class GitSvnManager(CavanCommandBase):
 			fpGitList.writelines(lines)
 			fpGitList.close()
 
-			if self.doPathExecute("git add -f $(cat %s)" % self.mFileGitList):
+			if self.doSystemExec("git add -f $(cat %s)" % self.mFileGitList):
 				continue
 
 			for line in lines:
@@ -247,7 +242,7 @@ class GitSvnManager(CavanCommandBase):
 
 		author = entry.getAuthor()
 		author = "%s <%s@%s>" % (author, author, self.mUuid)
-		if not self.doPathExecute("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), single_arg(self.mFileGitMessag))):
+		if not self.doExecute(["git", "commit", "--author", author, "--date", entry.getDate(), "-aF", self.mFileGitMessag]):
 			return False
 
 		self.mGitRevision = int(entry.getRevesion())
@@ -284,22 +279,24 @@ class GitSvnManager(CavanCommandBase):
 			fpSvnList.writelines(listFile)
 
 		for path in listDir:
-			listFile = self.doPathPopen("svn list -R %s | awk '!/\/+$/ {print %s $0}'" % (single_arg(path), single_arg2(path)))
-			if listFile == None:
+			lines = self.doPopen(["svn", "list", "-R", path])
+			if lines == None:
 				fpSvnList.close()
 				return -1
 
-			length = len(listFile)
-			if length > 0:
-				fpSvnList.writelines(listFile)
-				count = count + length
+			for line in lines:
+				if line.rstrip("\r\n").endswith("/"):
+					continue
+
+				fpSvnList.write(os.path.join(path, line))
+				count = count + 1
 
 		fpSvnList.close()
 		return count
 
 	def svnCheckout(self, entry):
 		if os.path.isdir(self.getAbsPath(".svn")):
-			lines = self.doPathPopen("svn update --accept theirs-full --force -r %s" % entry.getRevesion())
+			lines = self.doPopen(["svn", "update", "--accept", "theirs-full", "--force", "-r", entry.getRevesion()])
 			if lines == None:
 				return False
 
@@ -316,7 +313,7 @@ class GitSvnManager(CavanCommandBase):
 
 			initialized = True
 		else:
-			if not self.doPathExecute("svn checkout %s ." % single_arg(self.mUrl + "@" + entry.getRevesion()), "/dev/null"):
+			if not self.doExecute(["svn", "checkout", "%s@%s" % (self.mUrl, entry.getRevesion()), "."], of = "/dev/null"):
 				return False
 
 			if not file_write_line(self.mFileSvnUpdate, '.'):
@@ -342,14 +339,14 @@ class GitSvnManager(CavanCommandBase):
 		if count == 0 and initialized == False:
 			return True
 
-		lines = self.doPathPopen("svn diff -r %d:%s" % (self.mGitRevision, entry.getRevesion()))
+		lines = self.doPopen(["svn", "diff", "-r", "%d:%s" % (self.mGitRevision, entry.getRevesion())])
 		if not lines:
 			return lines != None
 
 		return False
 
 	def isInitialized(self):
-		return self.doPathExecute("git branch", "/dev/null")
+		return self.doExecute(["git", "branch"], of = "/dev/null")
 
 	def buildSvnUrl(self, url, revision):
 		return "%s@%s" % (url, revision)
@@ -360,7 +357,7 @@ class GitSvnManager(CavanCommandBase):
 			return False
 
 		if not url:
-			lines = self.doPathPopen("git config remote.%s.url" % self.mRemoteName)
+			lines = self.doPopen(["git", "config", "remote.%s.url" % self.mRemoteName])
 			if not lines:
 				return False
 			url = lines[0].rstrip("\r\n")
@@ -385,7 +382,7 @@ class GitSvnManager(CavanCommandBase):
 
 		if self.mGitRevision > 0:
 			url = self.buildSvnUrl(self.mUrl, self.mGitRevision)
-			if not self.doPathExecute("svn switch --force --accept theirs-full %s" % single_arg(url), "/dev/null"):
+			if not self.doExecute(["svn", "switch", "--force", "--accept", "theirs-full", url], of = "/dev/null"):
 				return False
 		else:
 			minRevision = 0
@@ -397,7 +394,7 @@ class GitSvnManager(CavanCommandBase):
 					break
 
 				url = self.buildSvnUrl(self.mUrl, revision)
-				if self.doPathExecute("svn info %s 2>/dev/null" % (single_arg(url)), "/dev/null"):
+				if self.doExecute(["svn", "info", url], of = "/dev/null", ef = "/dev/null"):
 					maxRevision = revision - 1
 				else:
 					minRevision = revision
