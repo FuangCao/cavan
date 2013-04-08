@@ -358,15 +358,19 @@ class GitSvnManager(CavanCommandBase):
 			minRevision = 0
 			maxRevision = self.mSvnRevision - 1
 
-			while minRevision < maxRevision:
+			while True:
 				revision = (minRevision + maxRevision) / 2
+				if revision <= minRevision:
+					break
+
 				url = self.buildSvnUrl(self.mUrl, revision)
-				if self.doPathExecute("svn info %s 2>/dev/null" % (single_arg(url)), "/dev/null", verbose = False):
+				if self.doPathExecute("svn info %s 2>/dev/null" % (single_arg(url)), "/dev/null"):
 					maxRevision = revision - 1
 				else:
 					minRevision = revision
 
 			self.mGitRevision = minRevision
+			self.doPathExecute("rm .svn -rf")
 
 		if self.genSvnLogXml() == False:
 			return False
