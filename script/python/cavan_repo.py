@@ -259,10 +259,13 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 	def syncProject(self):
 		self.mLockProject.acquire()
 
-		if len(self.mListProject) > 0:
+		length = len(self.mListProject)
+		if length > 0:
 			node = self.mListProject.pop(0)
 		else:
 			node = None
+
+		pr_green_info("Project remain %d" % length)
 
 		self.mLockProject.release()
 
