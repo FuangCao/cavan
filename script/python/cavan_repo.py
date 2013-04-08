@@ -155,19 +155,17 @@ class CavanCheckoutThread(threading.Thread):
 		return self.mExitStatus
 
 	def run(self):
-		while True:
+		iResult = 1
+
+		while iResult > 0:
 			pr_green_info("Thread %d running" % self.mIndex)
+			iResult = self.mRepoManager.syncProject()
 
-			res = self.mRepoManager.syncProject()
-			if res <= 0:
-				if res < 0:
-					self.mExitStatus = False
-					pr_red_info("Thread %s fault" % self.mIndex)
-				else:
-					self.mExitStatus = True
-
-				break
-
+		if iResult < 0:
+			self.mExitStatus = False
+			pr_red_info("Thread %s fault" % self.mIndex)
+		else:
+			self.mExitStatus = True
 			pr_green_info("Thread %s complete" % self.mIndex)
 
 		pr_bold_info("Thread %d exit" % self.mIndex)
@@ -303,11 +301,13 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			thread = CavanCheckoutThread(index, self)
 			if not thread:
 				return False
-
 			listThread.append(thread)
 
+		for thread in listThread:
 			thread.setDaemon(True)
 			thread.start()
+
+		iResult = 1
 
 		for node in self.mManifest.getFiles():
 			if not node[1]:
@@ -324,21 +324,23 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			url = os.path.join(self.mUrl, node[0])
 
 			if not self.doPathExecute("svn export --force %s %s" % (single_arg(url), single_arg(pathname)), "/dev/null"):
-				return False
-
-		while True:
-			res = self.syncProject()
-			if res <= 0:
+				iResult = -1
 				break
+
+		while iResult > 0:
+			iResult = self.syncProject()
 
 		for thread in listThread:
 			thread.join()
+
+		if iResult < 0:
+			return False
 
 		for thread in listThread:
 			if thread.getExitStatus() == False:
 				return False
 
-		return res == 0
+		return True
 
 	def doClone(self, argv):
 		if len(argv) == 1:

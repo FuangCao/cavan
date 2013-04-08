@@ -277,27 +277,32 @@ class GitSvnManager(CavanCommandBase):
 
 		fpSvnList = open(self.mFileSvnList, "w")
 		if not fpSvnList:
-			return False
+			return -1
 
-		if len(listFile) > 0:
+		count = len(listFile)
+		if count > 0:
 			fpSvnList.writelines(listFile)
 
 		for path in listDir:
 			listFile = self.doPathPopen("svn list -R %s | awk '!/\/+$/ {print %s $0}'" % (single_arg(path), single_arg2(path)))
 			if listFile == None:
 				fpSvnList.close()
-				return False
+				return -1
 
-			if len(listFile) > 0:
+			length = len(listFile)
+			if length > 0:
 				fpSvnList.writelines(listFile)
+				count = count + length
 
 		fpSvnList.close()
-		return True
+		return count
 
 	def svnCheckout(self, entry):
 		if os.path.isdir(".svn"):
-			if not self.doPathExecute("svn update --accept tf --force -r %s | awk '/^[UCGER]*A[UCGER]*/ {print substr($0, 6)}'" % entry.getRevesion(), self.mFileSvnUpdate):
+			if not self.doPathExecute("svn update --accept theirs-full --force -r %s | awk '/^[UCGER]*A[UCGER]*/ {print substr($0, 6)}'" % entry.getRevesion(), self.mFileSvnUpdate):
 				return False
+
+			initialized = True
 		else:
 			if not self.doPathExecute("svn checkout %s ." % single_arg(self.mUrl + "@" + entry.getRevesion()), "/dev/null"):
 				return False
@@ -310,8 +315,14 @@ class GitSvnManager(CavanCommandBase):
 				if not file_write_lines(self.mFileSvnIgnore, lines):
 					return False
 
-		if self.genSvnList() == False:
+			initialized = False
+
+		count = self.genSvnList()
+		if count < 0:
 			return False
+
+		if count == 0 and initialized == False:
+			return True
 
 		return self.gitCommit(entry)
 
@@ -352,7 +363,7 @@ class GitSvnManager(CavanCommandBase):
 
 		if self.mGitRevision > 0:
 			url = self.buildSvnUrl(self.mUrl, self.mGitRevision)
-			if not self.doPathExecute("svn switch --force --accept tf %s" % single_arg(url), "/dev/null"):
+			if not self.doPathExecute("svn switch --force --accept theirs-full %s" % single_arg(url), "/dev/null"):
 				return False
 		else:
 			minRevision = 0
