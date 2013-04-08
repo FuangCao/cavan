@@ -5,7 +5,7 @@ from getopt import getopt
 from xml.dom.minidom import parse, Document
 
 from cavan_file import file_read_line, file_read_lines, \
-		 file_write_line, file_write_lines, file_append_line, file_append_lines
+		file_write_line, file_write_lines, file_append_line, file_append_lines
 
 from cavan_command import CavanCommandBase, single_arg, single_arg2
 from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
@@ -124,12 +124,16 @@ class SvnLogEntry:
 class GitSvnManager(CavanCommandBase):
 	def __init__(self, pathname = "."):
 		CavanCommandBase.__init__(self, pathname)
-		self.mRemoteName = "svn"
+		self.mRemoteName = "cavan-svn"
 
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
 		self.mFileSvnIgnore = self.getAbsPath(".gitignore")
+
 		self.mGitSvnPath = self.getAbsPath(".git/svn")
+		if not os.path.isdir(self.mGitSvnPath):
+			os.makedirs(self.mGitSvnPath)
+
 		self.mFileSvnLog = os.path.join(self.mGitSvnPath, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mGitSvnPath, "svn_info.xml")
 		self.mFileSvnList = os.path.join(self.mGitSvnPath, "svn_list.txt")
@@ -314,6 +318,9 @@ class GitSvnManager(CavanCommandBase):
 	def isInitialized(self):
 		return self.doPathExecute("git branch", "/dev/null")
 
+	def buildSvnUrl(self, url, revision):
+		return "%s@%s" % (url, revision)
+
 	def doSync(self, url = None):
 		self.mGitRevision = self.getGitRevision()
 		if self.mGitRevision < 0:
@@ -344,18 +351,22 @@ class GitSvnManager(CavanCommandBase):
 			return True
 
 		if self.mGitRevision > 0:
-			if not self.doPathExecute("svn switch --force --accept tf %s" % single_arg("%s@%d" % (self.mUrl, self.mGitRevision)), "/dev/null"):
+			url = self.buildSvnUrl(self.mUrl, self.mGitRevision)
+			if not self.doPathExecute("svn switch --force --accept tf %s" % single_arg(url), "/dev/null"):
 				return False
 		else:
-			revision = 1
-			while revision < self.mSvnRevision:
-				res = os.system("cd %s && svn info %s 2>/dev/null" % (self.mPathRoot, single_arg("%s@%d" % (self.mUrl, revision))))
-				if res == 0:
-					break
-				if res == 2:
-					return False
-				revision = revision + 1
-			self.mGitRevision = revision - 1
+			minRevision = 0
+			maxRevision = self.mSvnRevision - 1
+
+			while minRevision < maxRevision:
+				revision = (minRevision + maxRevision) / 2
+				url = self.buildSvnUrl(self.mUrl, revision)
+				if self.doPathExecute("svn info %s 2>/dev/null" % (single_arg(url)), "/dev/null", verbose = False):
+					maxRevision = revision - 1
+				else:
+					minRevision = revision
+
+			self.mGitRevision = minRevision
 
 		if self.genSvnLogXml() == False:
 			return False
@@ -379,13 +390,9 @@ class GitSvnManager(CavanCommandBase):
 	def doInitBase(self, url, pathname = None):
 		self.mUrl = url
 		if pathname != None:
-			if not os.path.exists(pathname):
-				os.makedirs(pathname, 0777)
 			self.setRootPath(pathname)
 
-		if not os.path.isdir(self.mGitSvnPath):
-			os.makedirs(self.mGitSvnPath, 0777)
-		elif self.isInitialized():
+		if self.isInitialized():
 			pr_red_info("Has been initialized")
 			return False
 

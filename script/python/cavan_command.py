@@ -56,6 +56,9 @@ class CavanCommandBase:
 		else:
 			res = os.system(command)
 
+		if res == 2:
+			sys.exit(-1)
+
 		return res == 0
 
 	def doPathExecute(self, command, output = None, pathname = None, verbose = True):

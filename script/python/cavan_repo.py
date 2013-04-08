@@ -210,7 +210,11 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
+
 		self.mPathSvnRepo = self.getAbsPath(".svn_repo")
+		if not os.path.isdir(self.mPathSvnRepo):
+			os.makedirs(self.mPathSvnRepo)
+
 		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
 		self.mPathManifestRepo = os.path.join(self.mPathSvnRepo, "manifest")
 		self.mPathFileRepo = os.path.join(self.mPathSvnRepo, "copyfile")
@@ -282,14 +286,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			return False
 
 		if length > 1:
-			pathname = argv[1]
-			if not os.path.exists(pathname):
-				os.makedirs(pathname, 0777)
-
-			self.setRootPath(pathname)
-
-		if not os.path.isdir(self.mPathSvnRepo):
-			os.makedirs(self.mPathSvnRepo)
+			self.setRootPath(argv[1])
 
 		return self.genManifest(url)
 
