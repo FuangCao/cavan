@@ -125,6 +125,8 @@ class GitSvnManager(CavanCommandBase):
 	def __init__(self, pathname = "."):
 		CavanCommandBase.__init__(self, pathname)
 		self.mRemoteName = "cavan-svn"
+		self.mPatternSvnUpdate = re.compile('^A[UCGER ]{5}(.*)$')
+		self.mPatternGitRevision = re.compile('\s*cavan-git-svn-id: .*@([0-9]+) [^ ]+$')
 
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
@@ -179,11 +181,7 @@ class GitSvnManager(CavanCommandBase):
 		if not lines:
 			return 0
 
-		pattern = re.compile('\s*cavan-git-svn-id: .*@([0-9]+) [^ ]+$')
-		if not pattern:
-			return -1
-
-		match = pattern.match(lines[0].strip())
+		match = self.mPatternGitRevision.match(lines[0].strip())
 		if not match:
 			return -1
 
@@ -194,7 +192,7 @@ class GitSvnManager(CavanCommandBase):
 		return file_write_line(self.mFileGitMessag, content)
 
 	def gitAddFile(self, pathname):
-		pathname = pathname.rstrip("\f\r\n")
+		pathname = pathname.rstrip("\r\n")
 		if self.doPathExecute("git add -f '%s'" % pathname.replace("'", "'\\''")):
 			return True
 		if self.doPathExecute("git add -f \"%s\"" % pathname.replace("\"", "\\\"")):
@@ -251,7 +249,11 @@ class GitSvnManager(CavanCommandBase):
 
 		author = entry.getAuthor()
 		author = "%s <%s@%s>" % (author, author, self.mUuid)
-		return self.doPathExecute("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), single_arg(self.mFileGitMessag)))
+		if not self.doPathExecute("git commit --author \"%s\" --date %s -aF %s" % (author, entry.getDate(), single_arg(self.mFileGitMessag))):
+			return False
+
+		self.mGitRevision = int(entry.getRevesion())
+		return True
 
 	def listHasPath(self, path, listPath):
 		for item in listPath:
@@ -299,7 +301,19 @@ class GitSvnManager(CavanCommandBase):
 
 	def svnCheckout(self, entry):
 		if os.path.isdir(".svn"):
-			if not self.doPathExecute("svn update --accept theirs-full --force -r %s | awk '/^[UCGER]*A[UCGER]*/ {print substr($0, 6)}'" % entry.getRevesion(), self.mFileSvnUpdate):
+			lines = self.doPathPopen("svn update --accept theirs-full --force -r %s" % entry.getRevesion())
+			if lines == None:
+				return False
+
+			listUpdate = []
+
+			for line in lines:
+				match = self.mPatternSvnUpdate.match(line)
+				if not match:
+					continue
+				listUpdate.append(match.group(1) + "\n")
+
+			if not file_write_lines(self.mFileSvnUpdate, listUpdate):
 				return False
 
 			initialized = True
@@ -321,10 +335,17 @@ class GitSvnManager(CavanCommandBase):
 		if count < 0:
 			return False
 
+		if self.gitCommit(entry):
+			return True
+
 		if count == 0 and initialized == False:
 			return True
 
-		return self.gitCommit(entry)
+		lines = self.doPathPopen("svn diff -r %d:%s" % (self.mGitRevision, entry.getRevesion()))
+		if not lines:
+			return lines != None
+
+		return False
 
 	def isInitialized(self):
 		return self.doPathExecute("git branch", "/dev/null")
