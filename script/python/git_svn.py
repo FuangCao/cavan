@@ -160,22 +160,14 @@ class GitSvnManager(CavanCommandBase):
 			return False
 		return self.doExecute(["svn", "log", "--xml", "-r", "%d:%d" % (self.mGitRevision + 1, self.mSvnRevision), self.mUrl], of = self.mFileSvnLog)
 
-	def genGitRepo(self):
-		if not self.doExecute(["git", "init"]):
-			return False
-
-		if not self.doExecute(["git", "config", "user.name", "Fuang.Cao"]):
-			return False
-
-		if not self.doExecute(["git", "config", "user.email", "cavan.cfa@gmail.com"]):
-			return False
-
-		self.doExecute(["git", "remote", "add", self.mRemoteName, self.mUrl])
-
-		return True
-
 	def setRemoteUrl(self, url):
 		return self.doExecute(["git", "config", "remote.%s.url" % self.mRemoteName, url])
+
+	def genGitRepo(self):
+		if not CavanCommandBase.genGitRepo(self):
+			return False
+
+		return self.setRemoteUrl(self.mUrl)
 
 	def getGitRevision(self):
 		lines = self.doSystemPopen("git log -1 | tail -1")

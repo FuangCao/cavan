@@ -385,35 +385,6 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 	def doCommand(self, argv):
 		return False
 
-	def genGitRepo(self, pathname, option = None):
-		if not os.path.isdir(pathname):
-			os.makedirs(pathname)
-
-		if self.doExecute(["git", "branch"], of = "/dev/null", cwd = pathname):
-			return True
-
-		listCommand = ["git", "init"]
-		if option != None:
-			for node in option:
-				listCommand.append(node)
-
-		if not self.doExecute(listCommand, cwd = pathname):
-			return False
-
-		if not self.doExecute(["git", "config", "user.name", "Fuang.Cao"], cwd = pathname):
-			return False
-
-		if not self.doExecute(["git", "config", "user.email", "cavan.cfa@gmail.com"], cwd = pathname):
-			return False
-
-		return True
-
-	def gitAutoCommit(self, pathname = None):
-		if not self.doExecute(["git", "add", "-f", "."], cwd = pathname):
-			return False
-
-		return self.doExecute(["git", "commit", "-asm", "auto commit by Fuang.Cao"], cwd = pathname)
-
 	def genManifestRepo(self):
 		if not self.genGitRepo(self.mPathManifestRepo):
 			return False
