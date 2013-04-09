@@ -457,16 +457,10 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		return True
 
 	def gitPushProject(self, localPath, backupPath):
-		for count in range(2):
-			if not self.genGitRepo(backupPath, ["--shared", "--bare"]):
-				return False
+		if not self.genGitRepo(backupPath, ["--shared", "--bare"]):
+			return False
 
-			if self.doExecute(["git", "push", "--all", backupPath], cwd = localPath):
-				return True
-
-			self.doExecute(["rm", "-rf", backupPath])
-
-		return False
+		return self.doExecute(["git", "push", "--all", backupPath], cwd = localPath)
 
 	def doBackup(self, argv):
 		if not self.loadManifest():
