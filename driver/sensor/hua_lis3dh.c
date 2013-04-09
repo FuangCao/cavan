@@ -144,17 +144,17 @@
 #pragma pack(1)
 struct lis3dh_data_package
 {
-	s16 x;
 	s16 y;
+	s16 x;
 	s16 z;
 };
 
 struct lis3de_data_package
 {
-	u8 not_x;
-	s8 x;
 	u8 not_y;
 	s8 y;
+	u8 not_x;
+	s8 x;
 	u8 not_z;
 	s8 z;
 };
@@ -218,7 +218,7 @@ static int lis3dh_sensor_chip_readid(struct hua_input_chip *chip)
 	return 0;
 }
 
-static int lis3dh_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
+static int lis3dh_sensor_chip_set_active(struct hua_input_chip *chip, bool enable)
 {
 	int ret;
 	u8 value;
@@ -281,7 +281,6 @@ static int lis3dh_acceleration_event_handler(struct hua_input_chip *chip, struct
 {
 	int ret;
 	struct lis3dh_data_package package;
-	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	ret = chip->read_data(chip, I2C_AUTO_INCREMENT | AXISDATA_REG, &package, sizeof(package));
 	if (ret < 0)
@@ -290,7 +289,7 @@ static int lis3dh_acceleration_event_handler(struct hua_input_chip *chip, struct
 		return ret;
 	}
 
-	sensor->report_vector(sensor, package.x >> 4, package.y >> 4, package.z >> 4);
+	hua_sensor_report_vector(dev->input, package.x >> 4, -(package.y >> 4), -(package.z >> 4));
 
 	return 0;
 }
@@ -299,7 +298,6 @@ static int lis3de_acceleration_event_handler(struct hua_input_chip *chip, struct
 {
 	int ret;
 	struct lis3de_data_package package;
-	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	ret = chip->read_data(chip, I2C_AUTO_INCREMENT | AXISDATA_REG, &package, sizeof(package));
 	if (ret < 0)
@@ -308,9 +306,7 @@ static int lis3de_acceleration_event_handler(struct hua_input_chip *chip, struct
 		return ret;
 	}
 
-	pr_bold_info("[%d, %d, %d]", package.x, package.y, package.z);
-
-	sensor->report_vector(sensor, package.x, package.y, package.z);
+	hua_sensor_report_vector(dev->input, package.x, -package.y, -package.z);
 
 	return 0;
 }
@@ -412,7 +408,7 @@ static int lis3dh_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->init_data = lis3dh_init_data;
 	chip->init_data_size = ARRAY_SIZE(lis3dh_init_data);
 	chip->readid = lis3dh_sensor_chip_readid;
-	chip->set_power = lis3dh_sensor_chip_set_power;
+	chip->set_active = lis3dh_sensor_chip_set_active;
 	chip->read_data = hua_input_read_data_i2c;
 	chip->write_data = hua_input_write_data_i2c;
 	chip->write_register = hua_input_write_register_i2c_smbus;

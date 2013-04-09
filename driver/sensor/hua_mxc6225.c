@@ -7,8 +7,8 @@
 #pragma pack(1)
 struct mxc6225_data_package
 {
-	s8 x;
 	s8 y;
+	s8 x;
 };
 #pragma pack()
 
@@ -31,7 +31,7 @@ static int mxc6225_sensor_chip_readid(struct hua_input_chip *chip)
 	return 0;
 }
 
-static int mxc6225_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
+static int mxc6225_sensor_chip_set_active(struct hua_input_chip *chip, bool enable)
 {
 	int ret;
 
@@ -49,7 +49,6 @@ static int mxc6225_acceleration_event_handler(struct hua_input_chip *chip, struc
 {
 	int ret;
 	struct mxc6225_data_package package;
-	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	ret = chip->read_data(chip, 0, &package, sizeof(package));
 	if (ret < 0)
@@ -58,7 +57,7 @@ static int mxc6225_acceleration_event_handler(struct hua_input_chip *chip, struc
 		return ret;
 	}
 
-	sensor->report_vector(sensor, package.x, package.y, 32);
+	hua_sensor_report_vector(dev->input, package.x, -package.y, 32);
 
 	return 0;
 }
@@ -138,7 +137,7 @@ static int mxc6225_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->irq = -1;
 	chip->irq_flags = 0;
 	chip->readid = mxc6225_sensor_chip_readid;
-	chip->set_power = mxc6225_sensor_chip_set_power;
+	chip->set_active = mxc6225_sensor_chip_set_active;
 	chip->read_data = hua_input_read_data_i2c;
 	chip->write_data = hua_input_write_data_i2c;
 	chip->write_register = hua_input_write_register_i2c_smbus;

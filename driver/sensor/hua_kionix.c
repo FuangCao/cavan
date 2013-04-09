@@ -60,7 +60,6 @@ static int kionix_acceleration_event_handler(struct hua_input_chip *chip, struct
 {
 	int ret;
 	struct kionix_data_package package;
-	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	ret = chip->read_data(chip, REG_DATA_START, &package, sizeof(package));
 	if (ret < 0)
@@ -69,7 +68,7 @@ static int kionix_acceleration_event_handler(struct hua_input_chip *chip, struct
 		return ret;
 	}
 
-	sensor->report_vector(sensor, package.x >> 4, package.y >> 4, package.z >> 4);
+	hua_sensor_report_vector(dev->input, package.x >> 4, -(package.y >> 4), package.z >> 4);
 
 	return 0;
 }

@@ -19,8 +19,8 @@
 #pragma pack(1)
 struct mma845x_data_package
 {
-	u8 xh, xl;
 	u8 yh, yl;
+	u8 xh, xl;
 	u8 zh, zl;
 };
 #pragma pack()
@@ -60,7 +60,7 @@ static int mma845x_sensor_chip_readid(struct hua_input_chip *chip)
 	return 0;
 }
 
-static int mma845x_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
+static int mma845x_sensor_chip_set_active(struct hua_input_chip *chip, bool enable)
 {
 	int ret;
 	u8 value;
@@ -150,7 +150,6 @@ static int mma845x_acceleration_event_handler(struct hua_input_chip *chip, struc
 	int ret;
 	short x, y, z;
 	struct mma845x_data_package package;
-	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	ret = chip->read_data(chip, REG_DATA_START, &package, sizeof(package));
 	if (ret < 0)
@@ -159,11 +158,11 @@ static int mma845x_acceleration_event_handler(struct hua_input_chip *chip, struc
 		return ret;
 	}
 
-	x = BUILD_WORD(package.xh, package.xl) >> 4;
-	y = BUILD_WORD(package.yh, package.yl) >> 4;
-	z = BUILD_WORD(package.zh, package.zl) >> 4;
+	x = MMA845X_BUILD_WORD(package.xh, package.xl) >> 4;
+	y = MMA845X_BUILD_WORD(package.yh, package.yl) >> 4;
+	z = MMA845X_BUILD_WORD(package.zh, package.zl) >> 4;
 
-	sensor->report_vector(sensor, x, y, z);
+	hua_sensor_report_vector(dev->input, x, -y, -z);
 
 	return 0;
 }
@@ -261,7 +260,7 @@ static int mma845x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->write_data = hua_input_write_data_i2c;
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->readid = mma845x_sensor_chip_readid;
-	chip->set_power = mma845x_sensor_chip_set_power;
+	chip->set_active = mma845x_sensor_chip_set_active;
 
 	chip->probe = mma845x_input_chip_probe;
 	chip->remove = mma845x_input_chip_remove;

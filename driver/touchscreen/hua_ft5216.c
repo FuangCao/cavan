@@ -131,22 +131,8 @@ static int ft5216_ts_event_handler(struct hua_input_chip *chip, struct hua_input
 	return 0;
 }
 
-static int ft5216_ts_set_enable(struct hua_input_device *dev, bool enable)
-{
-	if (enable)
-	{
-		return ft5216_change_power_mode(dev->chip, FT5216_MODE_ACTIVE, 10);
-	}
-	else
-	{
-		return ft5216_change_power_mode(dev->chip, FT5216_MODE_HIBERNATE, 2);
-	}
-}
-
 static int ft5216_set_power(struct hua_input_chip *chip, bool enable)
 {
-	sprd_ts_power_enable(false);
-
 	if (enable)
 	{
 		sprd_ts_reset_enable(false);
@@ -155,8 +141,31 @@ static int ft5216_set_power(struct hua_input_chip *chip, bool enable)
 		sprd_ts_reset_enable(true);
 		msleep(200);
 	}
+	else
+	{
+		sprd_ts_power_enable(false);
+	}
 
 	return 0;
+}
+
+static int ft5216_set_active(struct hua_input_chip *chip, bool enable)
+{
+	u8 mode;
+	int retry;
+
+	if (enable)
+	{
+		mode = FT5216_MODE_ACTIVE;
+		retry = 10;
+	}
+	else
+	{
+		mode = FT5216_MODE_HIBERNATE;
+		retry = 2;
+	}
+
+	return ft5216_change_power_mode(chip, mode, retry);
 }
 
 static int ft5216_readid(struct hua_input_chip *chip)
@@ -246,7 +255,6 @@ static int ft5216_input_chip_probe(struct hua_input_chip *chip)
 	dev = &ts->dev;
 	dev->type = HUA_INPUT_DEVICE_TYPE_TOUCHSCREEN;
 	dev->use_irq = true;
-	dev->set_enable = ft5216_ts_set_enable;
 	dev->event_handler = ft5216_ts_event_handler;
 
 	ret = hua_input_device_register(chip, dev);
@@ -297,6 +305,7 @@ static int ft5216_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->probe = ft5216_input_chip_probe;
 	chip->remove = ft5216_input_chip_remove;
 	chip->set_power = ft5216_set_power;
+	chip->set_active = ft5216_set_active;
 	chip->readid = ft5216_readid;
 	chip->read_data = hua_input_read_data_i2c;
 	chip->write_data = hua_input_write_data_i2c;

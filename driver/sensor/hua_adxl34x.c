@@ -207,7 +207,7 @@ static int adxl34x_sensor_chip_readid(struct hua_input_chip *chip)
 	return 0;
 }
 
-static int adxl34x_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
+static int adxl34x_sensor_chip_set_active(struct hua_input_chip *chip, bool enable)
 {
 	int ret;
 	u8 value;
@@ -254,7 +254,6 @@ static int adxl34x_acceleration_event_handler(struct hua_input_chip *chip, struc
 	int ret;
 	u8 fifo_state;
 	struct adxl34x_data_package package;
-	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
 
 	if ((chip->irq_state & (DATA_READY | WATERMARK)) == 0)
 	{
@@ -277,7 +276,7 @@ static int adxl34x_acceleration_event_handler(struct hua_input_chip *chip, struc
 			continue;
 		}
 
-		sensor->report_vector(sensor, package.x, package.y, package.z);
+		hua_sensor_report_vector(dev->input, -package.x, -package.y, -package.z);
 	}
 
 	return 0;
@@ -407,7 +406,7 @@ static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->write_data = hua_input_write_data_i2c;
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->readid = adxl34x_sensor_chip_readid;
-	chip->set_power = adxl34x_sensor_chip_set_power;
+	chip->set_active = adxl34x_sensor_chip_set_active;
 	chip->event_handler = adxl34x_sensor_chip_event_handler;
 
 	chip->probe = adxl34x_input_chip_probe;

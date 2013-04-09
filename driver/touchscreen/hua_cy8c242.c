@@ -5,9 +5,9 @@
 #define HUA_SUPPORT_PROXIMITY		1
 
 #define CY8C242_XAXIS_MIN			1
-#define CY8C242_XAXIS_MAX			322
+#define CY8C242_XAXIS_MAX			480//322
 #define CY8C242_YAXIS_MIN			1
-#define CY8C242_YAXIS_MAX			480
+#define CY8C242_YAXIS_MAX			800//480
 #define CY8C242_POINT_COUNT			2
 #define CY8C242_DEVICE_NAME			"cy8c242_ts"
 
@@ -155,21 +155,32 @@ static int cy8c242_set_power(struct hua_input_chip *chip, bool enable)
 		sprd_ts_reset_enable(false);
 
 		msleep(200);
-
-		return cy8c242_change_power_mode(chip, CY8C242_MODE_ACTIVE, 10);
 	}
 	else
 	{
-		int ret = cy8c242_change_power_mode(chip, CY8C242_MODE_HIBERNATE, 2);
-		if (ret < 0)
-		{
-			return ret;
-		}
-
 		sprd_ts_power_enable(false);
 	}
 
 	return 0;
+}
+
+static int cy8c242_set_active(struct hua_input_chip *chip, bool enable)
+{
+	u8 mode;
+	int retry;
+
+	if (enable)
+	{
+		mode = CY8C242_MODE_ACTIVE;
+		retry = 10;
+	}
+	else
+	{
+		mode = CY8C242_MODE_HIBERNATE;
+		retry = 2;
+	}
+
+	return cy8c242_change_power_mode(chip, mode, retry);
 }
 
 static struct hua_ts_touch_key cy8c242_touch_keys[] =
@@ -178,45 +189,45 @@ static struct hua_ts_touch_key cy8c242_touch_keys[] =
 	{
 		.code = KEY_MENU,
 		.x = 20,
-		.y = 530,
-		.width = 40,
-		.height = 60,
+		.y = 830,
+		.width = 80,
+		.height = 55,
 	},
 	{
 		.code = KEY_HOME,
-		.x = 130,
-		.y = 530,
-		.width = 100,
-		.height = 60,
+		.x = 140,
+		.y = 830,
+		.width = 120,
+		.height = 55,
 	},
 	{
 		.code = KEY_BACK,
-		.x = 260,
-		.y = 530,
-		.width = 120,
-		.height = 60,
+		.x = 300,
+		.y = 830,
+		.width = 140,
+		.height = 55,
 	}
 #else
 	{
 		.code = KEY_MENU,
-		.x = 30,
-		.y = 530,
-		.width = 60,
-		.height = 60,
+		.x = 70,
+		.y = 880,
+		.width = 120,
+		.height = 80,
 	},
 	{
 		.code = KEY_HOME,
-		.x = 150,
-		.y = 530,
-		.width = 90,
-		.height = 60,
+		.x = 240,
+		.y = 880,
+		.width = 120,
+		.height = 80,
 	},
 	{
 		.code = KEY_BACK,
-		.x = 270,
-		.y = 530,
-		.width = 100,
-		.height = 60,
+		.x = 410,
+		.y = 880,
+		.width = 120,
+		.height = 80,
 	}
 #endif
 };
@@ -408,20 +419,20 @@ static int cy8c242_firmware_write_data(struct hua_input_chip *chip, const char *
 		case 'w':
 		case 'W':
 			ret = cy8c242_firmware2data(p + 2, end_line, datas);
-			ret = i2c_master_send(chip->bus_data, datas + 1, ret - 1);
+			ret = chip->master_send(chip, datas + 1, ret - 1);
 			if (ret < 0)
 			{
-				pr_red_info("i2c_master_send");
+				pr_red_info("master_send");
 				return ret;
 			}
 			break;
 
 		case 'r':
 		case 'R':
-			ret = i2c_master_recv(chip->bus_data, datas, 3);
+			ret = chip->master_recv(chip, datas, 3);
 			if (ret < 0)
 			{
-				pr_red_info("i2c_master_recv");
+				pr_red_info("master_recv");
 				return ret;
 			}
 
@@ -490,13 +501,11 @@ static int cy8c242_firmware_upgrade(struct hua_input_chip *chip, const void *buf
 	return 0;
 }
 
-static int cy8c242_calibration(struct hua_input_device *dev, const void *buff, size_t size)
+static int cy8c242_calibration(struct hua_input_chip *chip, const void *buff, size_t size)
 {
 	int ret;
 	u8 value;
 	int i;
-	struct hua_input_chip *chip = dev->chip;
-	struct i2c_client *client = hua_input_chip_get_bus_data(chip);
 	char data[2] = {0x1C, 0x01};
 
 	pr_pos_info();
@@ -507,26 +516,26 @@ static int cy8c242_calibration(struct hua_input_device *dev, const void *buff, s
 
 		msleep(100);
 
-		ret = i2c_master_send(client, data, sizeof(data));
+		ret = chip->master_send(chip, data, sizeof(data));
 		if (ret < 0)
 		{
-			pr_red_info("i2c_master_send");
+			pr_red_info("master_send");
 			return ret;
 		}
 
 		msleep(1000);
 
-		ret = i2c_master_send(client, data, 1);
+		ret = chip->master_send(chip, data, 1);
 		if (ret < 0)
 		{
-			pr_red_info("i2c_master_send");
+			pr_red_info("master_send");
 			return ret;
 		}
 
-		ret = i2c_master_recv(client, &value, 1);
+		ret = chip->master_recv(chip, &value, 1);
 		if (ret < 0)
 		{
-			pr_red_info("i2c_master_recv");
+			pr_red_info("master_recv");
 			return ret;
 		}
 
@@ -568,6 +577,45 @@ static int cy8c242_proximity_set_enable(struct hua_input_device *dev, bool enabl
 	return chip->write_register(chip, 0x12, value);
 }
 
+static ssize_t cy8c242_firmware_id_show(struct device *dev, struct device_attribute *attr, char *buff)
+{
+	int ret;
+	u8 vendor, version;
+	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
+	struct hua_input_chip *chip = i2c_get_clientdata(client);
+
+	mutex_lock(&chip->lock);
+
+	ret = hua_input_chip_set_power(chip, true);
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_chip_set_power_lock");
+		goto out_mutex_unlock;
+	}
+
+	ret = chip->read_register(chip, 0x10, &vendor);
+	if (ret < 0)
+	{
+		pr_red_info("read_register");
+		goto out_mutex_unlock;
+	}
+
+	ret = chip->read_register(chip, 0x11, &version);
+	if (ret < 0)
+	{
+		pr_red_info("read_register");
+		goto out_mutex_unlock;
+	}
+
+	ret = sprintf(buff, "%02x%02x\n", vendor, version);
+
+out_mutex_unlock:
+	mutex_unlock(&chip->lock);
+	return ret;
+}
+
+static DEVICE_ATTR(firmware_id, S_IRUGO, cy8c242_firmware_id_show, NULL);
+
 static int cy8c242_input_chip_probe(struct hua_input_chip *chip)
 {
 	int ret;
@@ -601,7 +649,6 @@ static int cy8c242_input_chip_probe(struct hua_input_chip *chip)
 	base_dev->type = HUA_INPUT_DEVICE_TYPE_TOUCHSCREEN;
 	base_dev->use_irq = true;
 	base_dev->event_handler = cy8c242_ts_event_handler;
-	base_dev->calibration = cy8c242_calibration;
 
 	ret = hua_input_device_register(chip, base_dev);
 	if (ret < 0)
@@ -631,8 +678,17 @@ static int cy8c242_input_chip_probe(struct hua_input_chip *chip)
 		goto out_hua_input_device_unregister_ts;
 	}
 
+	ret = device_create_file(&((struct i2c_client *)chip->bus_data)->dev, &dev_attr_firmware_id);
+	if (ret < 0)
+	{
+		pr_red_info("device_create_file");
+		goto out_hua_input_device_unregister_prox;
+	}
+
 	return 0;
 
+out_hua_input_device_unregister_prox:
+	hua_input_device_unregister(chip, &prox->dev);
 out_hua_input_device_unregister_ts:
 	hua_input_device_unregister(chip, &ts->dev);
 out_free_dev:
@@ -646,12 +702,10 @@ static void cy8c242_input_chip_remove(struct hua_input_chip *chip)
 
 	pr_pos_info();
 
+	device_remove_file(&((struct i2c_client *)chip->bus_data)->dev, &dev_attr_firmware_id);
 	hua_input_device_unregister(chip, &dev->prox.dev);
-	pr_pos_info();
 	hua_input_device_unregister(chip, &dev->ts.dev);
-	pr_pos_info();
 	kfree(dev);
-	pr_pos_info();
 }
 
 static int cy8c242_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
@@ -677,6 +731,7 @@ static int cy8c242_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->devmask = 1 << HUA_INPUT_DEVICE_TYPE_TOUCHSCREEN | 1 << HUA_INPUT_DEVICE_TYPE_PROXIMITY;
 
 	chip->set_power = cy8c242_set_power;
+	chip->set_active = cy8c242_set_active;
 	chip->readid = cy8c242_readid;
 	chip->probe = cy8c242_input_chip_probe;
 	chip->remove = cy8c242_input_chip_remove;
@@ -687,6 +742,7 @@ static int cy8c242_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->firmware_size = KB(180);
 	chip->firmware_upgrade = cy8c242_firmware_upgrade;
+	chip->calibration = cy8c242_calibration;
 
 	ret = hua_input_chip_register(chip);
 	if (ret < 0)

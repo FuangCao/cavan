@@ -184,19 +184,10 @@ static int stk8313_sensor_chip_set_active(struct hua_input_chip *chip, bool enab
 
 	pr_bold_info("value = 0x%02x", value);
 
-	return chip->write_register(chip, REG_MODE, value);
-}
-
-static int stk8313_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
-{
-	int ret;
-
-	pr_pos_info();
-
-	ret = stk8313_sensor_chip_set_active(chip, enable);
+	ret = chip->write_register(chip, REG_MODE, value);
 	if (ret < 0)
 	{
-		pr_red_info("stk8313_sensor_chip_set_active");
+		pr_red_info("write_register");
 		return ret;
 	}
 
@@ -230,9 +221,9 @@ static int stk8313_acceleration_set_delay(struct hua_input_device *dev, unsigned
 
 	pr_bold_info("value = 0x%02x, rate = 0x%02x", value, p->value);
 
-	stk8313_sensor_chip_set_power(chip, false);
+	stk8313_sensor_chip_set_active(chip, false);
 	ret = chip->write_register(chip, REG_SR, value);
-	stk8313_sensor_chip_set_power(chip, true);
+	stk8313_sensor_chip_set_active(chip, true);
 
 	return ret;
 }
@@ -241,7 +232,6 @@ static int stk8313_acceleration_event_handler(struct hua_input_chip *chip, struc
 {
 	int ret;
 	short x, y, z;
-	struct hua_sensor_device *sensor;
 	struct stk8313_data_package package;
 
 	ret = chip->read_data(chip, REG_XOUT1, &package, sizeof(package));
@@ -257,8 +247,7 @@ static int stk8313_acceleration_event_handler(struct hua_input_chip *chip, struc
 
 	pr_bold_info("[%d, %d, %d]", x, y, z);
 
-	sensor = (struct hua_sensor_device *)dev;
-	sensor->report_vector(sensor, x, y, z);
+	hua_sensor_report_vector(dev->input, -x, -y, z);
 
 	return 0;
 }
@@ -284,11 +273,6 @@ static int stk8313_input_chip_probe(struct hua_input_chip *chip)
 	sensor->max_range = 16;
 	sensor->resolution = 4096;
 	sensor->power_consume = 145;
-
-	sensor->offset.x = 0;
-	sensor->offset.y = 0;
-	sensor->offset.z = 0;
-	sensor->orientation = HUA_SENSOR_ORIENTATION_UPWARD_180;
 
 	dev = &sensor->dev;
 	dev->name = "Three-Axis Digital Accelerometer";
@@ -361,7 +345,7 @@ static int stk8313_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->write_data = hua_input_write_data_i2c;
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->readid = stk8313_sensor_chip_readid;
-	chip->set_power = stk8313_sensor_chip_set_power;
+	chip->set_active = stk8313_sensor_chip_set_active;
 
 	chip->probe = stk8313_input_chip_probe;
 	chip->remove = stk8313_input_chip_remove;
