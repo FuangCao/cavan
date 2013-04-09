@@ -7,8 +7,7 @@ from xml.dom.minidom import parse, Document
 from cavan_file import file_read_line, file_read_lines, \
 		file_write_line, file_write_lines, file_append_line, file_append_lines
 
-from cavan_command import CavanCommandBase, single_arg, single_arg2
-from cavan_stdio import pr_red_info, pr_green_info, pr_bold_info
+from cavan_command import CavanCommandBase
 from cavan_xml import getFirstElement, getFirstElementData
 
 class SvnInfoParser:
@@ -339,7 +338,7 @@ class GitSvnManager(CavanCommandBase):
 		self.mSvnRevision = infoParser.getRevesion()
 
 		if self.mGitRevision >= self.mSvnRevision:
-			pr_green_info("Already up-to-date.")
+			self.prGreenInfo("Already up-to-date.")
 			return True
 
 		if self.mGitRevision > 0:
@@ -373,7 +372,7 @@ class GitSvnManager(CavanCommandBase):
 
 		nodes = logParser.getLogEntrys();
 		if not nodes:
-			pr_green_info("Already up-to-date.")
+			self.prGreenInfo("Already up-to-date.")
 			return True
 
 		for item in logParser.getLogEntrys():
@@ -389,7 +388,7 @@ class GitSvnManager(CavanCommandBase):
 			self.setRootPath(pathname)
 
 		if self.isInitialized():
-			pr_red_info("Has been initialized")
+			self.prRedInfo("Has been initialized")
 			return False
 
 		if self.mUrl == None:
@@ -430,7 +429,7 @@ class GitSvnManager(CavanCommandBase):
 	def main(self, argv):
 		length = len(argv)
 		if length < 2:
-			stdio.pr_red_info("Please give a subcmd")
+			stdio.self.prRedInfo("Please give a subcmd")
 			return False
 
 		subcmd = argv[1]
@@ -446,5 +445,5 @@ class GitSvnManager(CavanCommandBase):
 
 			return self.doSync(url)
 		else:
-			stdio.pr_red_info("unknown subcmd " + subcmd)
+			stdio.self.prRedInfo("unknown subcmd " + subcmd)
 			return False

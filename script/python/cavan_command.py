@@ -31,12 +31,15 @@ def single_arg2(argument):
 	return "\"" + argument.replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "'\\''") + "\""
 
 class CavanCommandBase:
-	def __init__(self, pathname = ".", shell = "sh"):
+	def __init__(self, pathname = ".", shell = "sh", stdout = None, stderr = None):
 		reload(sys)
 		sys.setdefaultencoding("utf-8")
 
 		self.setRootPath(pathname)
 		self.setShellName(shell)
+
+		self.setStdoutFp()
+		self.setStderrFp()
 
 	def setRootPath(self, pathname):
 		if not os.path.isdir(pathname):
@@ -46,6 +49,66 @@ class CavanCommandBase:
 	def setShellName(self, name):
 		self.mShellName = name
 
+	def setStdoutFp(self, stdout = None):
+		if not stdout:
+			stdout = sys.stdout
+
+		self.mFpStdout = stdout
+
+	def setStdoutFile(self, pathname, mode = "w"):
+		return self.setStdoutFp(open(pathname, mode))
+
+	def setStderrFp(self, stderr = None):
+		if not stderr:
+			stderr = sys.stderr
+
+		self.mFpStderr = stderr
+
+	def setStderrFile(self, pathname, mode = "w"):
+		return self.setStderrFp(open(pathname, mode))
+
+	def prStdInfo(self, *messge):
+		stdout = self.mFpStdout
+
+		for node in messge:
+			stdout.write(node)
+
+		stdout.write("\n")
+
+	def prStdErr(self, *messge):
+		stdout = self.mFpStderr
+
+		for node in messge:
+			stdout.write(node)
+
+		stdout.write("\n")
+
+	def prColorInfo(self, color, messge, stdout = None):
+		if not stdout:
+			stdout = self.mFpStdout
+
+		stdout.write("\033[%sm" % color)
+
+		for node in messge:
+			stdout.write(node)
+
+		stdout.write("\n\033[0m")
+
+	def prBoldInfo(self, *messge):
+		self.prColorInfo("1", messge)
+
+	def prRedInfo(self, *messge):
+		self.prColorInfo("31", messge)
+
+	def prGreenInfo(self, *messge):
+		self.prColorInfo(32, messge)
+
+	def prBrownInfo(self, *messge):
+		self.prColorInfo(33, messge)
+
+	def prBlueInfo(self, *messge):
+		self.prColorInfo(34, messge)
+
 	def getAbsPath(self, pathname):
 		return os.path.join(self.mPathRoot, pathname)
 
@@ -54,7 +117,7 @@ class CavanCommandBase:
 
 	def doExecute(self, args, of = None, ef = None, cwd = None, verbose = True):
 		if verbose:
-			print args
+			print >> self.mFpStdout, args
 
 		if not of:
 			fpStdout = None
@@ -88,18 +151,23 @@ class CavanCommandBase:
 
 	def doSystemExec(self, command, of = None, ef = None, cwd = None, verbose = True):
 		if verbose:
-			print command
+			self.prStdInfo(command)
 
 		return self.doExecute(self.buildSystemArgs(command), of, ef, cwd, False)
 
-	def doPopen(self, args, cwd = None, verbose = True):
+	def doPopen(self, args, cwd = None, ef = None, verbose = True):
 		if verbose:
-			print args
+			print >> self.mFpStdout, args
 
 		if not cwd:
 			cwd = self.mPathRoot
 
-		process = subprocess.Popen(args, cwd = cwd, stdout = subprocess.PIPE)
+		if not ef:
+			fpStderr = None
+		else:
+			fpStderr = open(ef, "w")
+
+		process = subprocess.Popen(args, cwd = cwd, stdout = subprocess.PIPE, stderr = fpStderr)
 		if not process:
 			return None
 
@@ -109,11 +177,11 @@ class CavanCommandBase:
 
 		return lines
 
-	def doSystemPopen(self, command, cwd = None, verbose = True):
+	def doSystemPopen(self, command, cwd = None, ef = None, verbose = True):
 		if verbose:
-			print command
+			self.prStdInfo(command)
 
-		return self.doPopen(self.buildSystemArgs(command), cwd, False)
+		return self.doPopen(self.buildSystemArgs(command), cwd, ef, False)
 
 	def genGitRepo(self, pathname = None, option = None):
 		if not pathname:

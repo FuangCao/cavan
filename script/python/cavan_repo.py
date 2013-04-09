@@ -4,7 +4,6 @@ import sys, os, threading
 from git_svn import GitSvnManager
 from cavan_file import file_append_line
 from cavan_xml import CavanXmlBase
-from cavan_stdio import pr_red_info, pr_bold_info, pr_green_info
 from cavan_command import CavanCommandBase, single_arg
 
 MAX_THREAD_COUNT = 5
@@ -153,17 +152,18 @@ class CavanCheckoutThread(threading.Thread):
 
 	def run(self):
 		iResult = 1
+		manager = self.mRepoManager
 
 		while iResult > 0:
-			pr_green_info("Thread %d running" % self.mIndex)
+			manager.prGreenInfo("Thread %d running" % self.mIndex)
 			iResult = self.mRepoManager.fetchProject()
 
 		if iResult < 0:
-			pr_red_info("Thread %s fault" % self.mIndex)
+			manager.prRedInfo("Thread %s fault" % self.mIndex)
 		else:
-			pr_green_info("Thread %s complete" % self.mIndex)
+			manager.prGreenInfo("Thread %s complete" % self.mIndex)
 
-		pr_bold_info("Thread %d exit" % self.mIndex)
+		manager.prBoldInfo("Thread %d exit" % self.mIndex)
 
 class CavanGitSvnRepoManager(CavanCommandBase):
 	def __init__(self, pathname = "."):
@@ -255,10 +255,10 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 				return False
 			url = self.mManifest.getUrl()
 			if not url:
-				pr_red_info("Url not found")
+				self.prRedInfo("Url not found")
 				return False
 		else:
-			pr_red_info("Please give repo url")
+			self.prRedInfo("Please give repo url")
 			return False
 
 		if length > 1:
@@ -286,7 +286,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			node = None
 		self.mLockProject.release()
 
-		pr_green_info("Project remain %d" % length)
+		self.prGreenInfo("Project remain %d" % length)
 
 		if not node:
 			return 0
@@ -298,12 +298,12 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			if self.mErrorCount > 0:
 				return -1
 
-			pr_bold_info("%s => %s" % (url, pathname))
+			self.prBoldInfo(url, " => ", pathname)
 			manager = GitSvnManager(pathname)
 			if (manager.isInitialized() or manager.doInitBase(url)) and manager.doSync(url):
 				return 1
 
-			pr_red_info("Retry count = %d" % count)
+			self.prRedInfo("Retry count = %d" % count)
 			self.doExecute(["rm", "-rf", pathname])
 
 		self.mLockProject.acquire()
@@ -311,13 +311,13 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		self.mLockProject.release()
 
 		if tmpPathname != None:
-			pr_red_info("%s => %s" % (url, tmpPathname))
+			self.prRedInfo(url, " => ", tmpPathname)
 			manager = GitSvnManager(tmpPathname)
 			if manager.doInitBase(url) and manager.doSync(url) and self.doExecute(["mv", tmpPathname, pathname]):
 				return 1
 			self.doExecute(["rm", "-rf", tmpPathname])
 
-		pr_red_info("Checkout %s failed" % pathname)
+		self.prRedInfo("Checkout ", pathname, " Failed")
 
 		self.mLockProject.acquire()
 		self.mErrorCount = self.mErrorCount + 1
@@ -383,7 +383,16 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		return self.doSync()
 
 	def doCommand(self, argv):
-		return False
+		if len(argv) < 1:
+			self.prBlueInfo("Too a few argument")
+			return False
+
+		for node in self.mManifest.getProjects():
+			pathname = self.getProjectAbsPath()
+			if not self.doExecute(argv, cwd = pathname):
+				return False
+
+		return True
 
 	def genManifestRepo(self):
 		if not self.genGitRepo(self.mPathManifestRepo):
@@ -446,7 +455,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			self.mPathBackup = self.mManifest.getBackup()
 
 		if not self.mPathBackup:
-			pr_red_info("Please give backup path")
+			self.prRedInfo("Please give backup path")
 			return False
 
 		if length > 1:
@@ -456,7 +465,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			self.mUrlFetch = self.mManifest.getFetch()
 
 		if not self.mUrlFetch:
-			pr_red_info("Please give fetch url")
+			self.prRedInfo("Please give fetch url")
 			return False
 
 		self.mManifest.save(self.mFileManifest)
@@ -486,7 +495,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 	def main(self, argv):
 		length = len(argv)
 		if length < 2:
-			stdio.pr_red_info("Please give a subcmd")
+			stdio.self.prRedInfo("Please give a subcmd")
 			return False
 
 		subcmd = argv[1]
@@ -501,5 +510,5 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		elif subcmd in ["backup"]:
 			return self.doBackup(argv[2:])
 		else:
-			pr_red_info("unknown subcmd " + subcmd)
+			self.prRedInfo("unknown subcmd ", subcmd)
 			return False
