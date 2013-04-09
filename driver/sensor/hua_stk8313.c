@@ -27,9 +27,6 @@ enum stk8313_register_map
 	REG_SWRST = 0x20
 };
 
-#define STK8313_BUILD_WORD(h, l) \
-	((short)((h) << 8 | (l)))
-
 #ifdef CONFIG_ARCH_SC8810
 #include <mach/eic.h>
 #endif
@@ -78,10 +75,98 @@ static int stk8313_sensor_chip_readid(struct hua_input_chip *chip)
 	return 0;
 }
 
-static int stk8313_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
+static int stk8313_sensor_chip_read_reg24(struct hua_input_chip *chip, u8 *value, int retry)
+{
+	int ret;
+	u8 buff[2];
+
+	while (retry--)
+	{
+		ret = chip->write_register(chip, 0x3D, 0x70);
+		if (ret < 0)
+		{
+			pr_red_info("write_register");
+			return ret;
+		}
+
+		ret = chip->write_register(chip, 0x3F, 0x02);
+		if (ret < 0)
+		{
+			pr_red_info("write_register");
+			return ret;
+		}
+
+		ret = chip->read_data(chip, 0x3E, buff, 2);
+		if (ret < 0)
+		{
+			pr_red_info("read_register");
+			return ret;
+		}
+
+		pr_bold_info("buff = 0x%02x 0x%02x", buff[0], buff[1]);
+
+		if (buff[1] & (1 << 7))
+		{
+			*value = buff[0];
+			break;
+		}
+
+		msleep(1);
+	}
+
+	return retry;
+}
+
+static int stk8313_sensor_chip_set_vd(struct hua_input_chip *chip, int retry)
+{
+	int ret;
+	u8 reg24, value;
+
+	pr_pos_info();
+
+	ret = stk8313_sensor_chip_read_reg24(chip, &reg24, 10);
+	if (ret < 0)
+	{
+		pr_red_info("stk8313_sensor_chip_read_reg24");
+		return ret;
+	}
+
+	if (reg24 == 0)
+	{
+		return 0;
+	}
+
+	ret = chip->write_register(chip, 0x24, reg24);
+	if (ret < 0)
+	{
+		pr_red_info("write_register");
+		return ret;
+	}
+
+	ret = chip->read_register(chip, 0x24, &value);
+	if (ret < 0)
+	{
+		pr_red_info("read_register");
+		return ret;
+	}
+
+	pr_bold_info("value = 0x%02x, reg24 = 0x%02x", value, reg24);
+
+	if (value != reg24)
+	{
+		pr_red_info("value != reg24");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int stk8313_sensor_chip_set_active(struct hua_input_chip *chip, bool enable)
 {
 	int ret;
 	u8 value;
+
+	pr_pos_info();
 
 	ret = chip->read_register(chip, REG_MODE, &value);
 	if (ret < 0)
@@ -90,18 +175,39 @@ static int stk8313_sensor_chip_set_power(struct hua_input_chip *chip, bool enabl
 		return ret;
 	}
 
+	value &= 0xF8;
+
 	if (enable)
 	{
-		value |= 1;
-	}
-	else
-	{
-		value &= ~1;
+		value |= 0x01;
 	}
 
 	pr_bold_info("value = 0x%02x", value);
 
 	return chip->write_register(chip, REG_MODE, value);
+}
+
+static int stk8313_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
+{
+	int ret;
+
+	pr_pos_info();
+
+	ret = stk8313_sensor_chip_set_active(chip, enable);
+	if (ret < 0)
+	{
+		pr_red_info("stk8313_sensor_chip_set_active");
+		return ret;
+	}
+
+	if (enable == false)
+	{
+		return 0;
+	}
+
+	msleep(1);
+
+	return stk8313_sensor_chip_set_vd(chip, 10);
 }
 
 static int stk8313_acceleration_set_delay(struct hua_input_device *dev, unsigned int delay)
@@ -124,9 +230,9 @@ static int stk8313_acceleration_set_delay(struct hua_input_device *dev, unsigned
 
 	pr_bold_info("value = 0x%02x, rate = 0x%02x", value, p->value);
 
-	chip->set_power(chip, false);
+	stk8313_sensor_chip_set_power(chip, false);
 	ret = chip->write_register(chip, REG_SR, value);
-	chip->set_power(chip, true);
+	stk8313_sensor_chip_set_power(chip, true);
 
 	return ret;
 }
@@ -134,7 +240,7 @@ static int stk8313_acceleration_set_delay(struct hua_input_device *dev, unsigned
 static int stk8313_acceleration_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
-	int x, y, z;
+	short x, y, z;
 	struct hua_sensor_device *sensor;
 	struct stk8313_data_package package;
 
@@ -175,13 +281,13 @@ static int stk8313_input_chip_probe(struct hua_input_chip *chip)
 	hua_input_chip_set_dev_data(chip, sensor);
 
 	sensor->min_delay = 20;
-	sensor->max_range = 32;
+	sensor->max_range = 16;
 	sensor->resolution = 4096;
 	sensor->power_consume = 145;
 
-	sensor->offset.x = -145;
-	sensor->offset.y = -183;
-	sensor->offset.z = -365;
+	sensor->offset.x = 0;
+	sensor->offset.y = 0;
+	sensor->offset.z = 0;
 	sensor->orientation = HUA_SENSOR_ORIENTATION_UPWARD_180;
 
 	dev = &sensor->dev;
@@ -220,12 +326,13 @@ static void stk8313_input_chip_remove(struct hua_input_chip *chip)
 
 static struct hua_input_init_data stk8313_init_data[] =
 {
-	{REG_MODE, 0x00},
-	{REG_SWRST, 0x00, 100},
-	{REG_OFSX, 0},
-	{REG_OFSY, 0},
-	{REG_OFSZ, 0},
-	{REG_STH, 2 << 6 | 7},
+	{REG_SWRST, 0x00, 1},
+	{REG_MODE, 0xC0},
+	{REG_SR, 0x03},
+	{REG_STH, 0x82},
+	{REG_OFSX, 0x00},
+	{REG_OFSY, 0x00},
+	{REG_OFSZ, 0x00}
 };
 
 static int stk8313_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)

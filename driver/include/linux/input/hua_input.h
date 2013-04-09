@@ -15,10 +15,10 @@
 #define GB(size)	((size) << 30)
 
 #define BUILD_WORD(hb, lb) \
-	((hb) << 8 | (lb))
+	((short)((hb) << 8 | (lb)))
 
 #define BUILD_DWORD(hw, lw) \
-	((hw) << 16 | (lw))
+	((int)((hw) << 16 | (lw)))
 
 #define BYTE_IS_LF(b) \
 	((b) == '\n' || (b) == '\r')
