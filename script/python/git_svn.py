@@ -142,9 +142,6 @@ class GitSvnManager(CavanCommandBase):
 
 		self.mFileSvnLog = os.path.join(self.mPathGitSvn, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mPathGitSvn, "svn_info.xml")
-		self.mFileSvnList = os.path.join(self.mPathGitSvn, "svn_list.txt")
-		self.mFileGitList = os.path.join(self.mPathGitSvn, "git_list.txt")
-		self.mFileSvnUpdate = os.path.join(self.mPathGitSvn, "svn_update.txt")
 		self.mFileGitMessag = os.path.join(self.mPathGitSvn, "git_message.txt")
 
 	def genSvnInfoXml(self, url = None):
@@ -195,51 +192,6 @@ class GitSvnManager(CavanCommandBase):
 		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
 		return file_write_line(self.mFileGitMessag, content)
 
-	def gitAddFile(self, pathname):
-		return self.doExecute(["git", "add", "-f", pathname.rstrip("\r\n")])
-
-	def gitAddFiles(self):
-		fpSvnList = open(self.mFileSvnList, "r")
-		if not fpSvnList:
-			return True
-
-		while True:
-			lines = []
-			while len(lines) < 200:
-				line = fpSvnList.readline()
-				if not line:
-					break
-
-				if line.find(" ") < 0 and line.find("\t") < 0:
-					lines.append(line)
-					continue
-
-				if self.gitAddFile(line) == False:
-					fpSvnList.close()
-					return False
-
-			if not lines:
-				break
-
-			fpGitList = open(self.mFileGitList, "w")
-			if not fpGitList:
-				fpSvnList.close()
-				return False
-
-			fpGitList.writelines(lines)
-			fpGitList.close()
-
-			if self.doSystemExec("git add -f $(cat %s)" % self.mFileGitList):
-				continue
-
-			for line in lines:
-				if self.gitAddFile(line) == False:
-					fpSvnList.close()
-					return False
-
-		fpSvnList.close()
-		return True
-
 	def gitCommit(self, entry):
 		if self.saveGitMessage(entry) == False:
 			return False
@@ -258,12 +210,21 @@ class GitSvnManager(CavanCommandBase):
 				return True
 		return False
 
-	def genSvnList(self):
+	def gitAddFileList(self, listFile):
+		if len(listFile) == 0:
+			return True
+
+		listFile.insert(0, "git")
+		listFile.insert(1, "add")
+		listFile.insert(2, "-f")
+
+		return self.doExecute(listFile, verbose = False)
+
+	def gitAddFiles(self, listUpdate):
 		listDir = []
 		listFile = []
 
-		for line in file_read_lines(self.mFileSvnUpdate):
-			line = line.rstrip("\r\n")
+		for line in listUpdate:
 			if self.listHasPath(line, listDir):
 				continue
 
@@ -272,30 +233,31 @@ class GitSvnManager(CavanCommandBase):
 				listDir.append(line + "/")
 			else:
 				print "[FILE] Add " + line
-				listFile.append(line + "\n")
+				listFile.append(line)
 
-		fpSvnList = open(self.mFileSvnList, "w")
-		if not fpSvnList:
+		if not self.gitAddFileList(listFile):
 			return -1
 
 		count = len(listFile)
-		if count > 0:
-			fpSvnList.writelines(listFile)
 
 		for path in listDir:
 			lines = self.doPopen(["svn", "list", "-R", path])
 			if lines == None:
-				fpSvnList.close()
 				return -1
 
+			listFile = []
 			for line in lines:
-				if line.rstrip("\r\n").endswith("/"):
+				line = line.rstrip("\r\n")
+				if line.endswith("/"):
 					continue
 
-				fpSvnList.write(os.path.join(path, line))
-				count = count + 1
+				listFile.append(os.path.join(path, line))
 
-		fpSvnList.close()
+			if not self.gitAddFileList(listFile):
+				return -1
+
+			count = count + len(listFile)
+
 		return count
 
 	def svnCheckout(self, entry):
@@ -310,18 +272,14 @@ class GitSvnManager(CavanCommandBase):
 				match = self.mPatternSvnUpdate.match(line)
 				if not match:
 					continue
-				listUpdate.append(match.group(1) + "\n")
-
-			if not file_write_lines(self.mFileSvnUpdate, listUpdate):
-				return False
+				listUpdate.append(match.group(1))
 
 			initialized = True
 		else:
 			if not self.doExecute(["svn", "checkout", "%s@%s" % (self.mUrl, entry.getRevesion()), "."], of = "/dev/null"):
 				return False
 
-			if not file_write_line(self.mFileSvnUpdate, '.'):
-				return False
+			listUpdate = ["."]
 
 			if not os.path.exists(self.mFileSvnIgnore):
 				lines = ["/.gitignore\n", ".svn\n"]
@@ -330,11 +288,8 @@ class GitSvnManager(CavanCommandBase):
 
 			initialized = False
 
-		count = self.genSvnList()
+		count = self.gitAddFiles(listUpdate)
 		if count < 0:
-			return False
-
-		if count > 0 and self.gitAddFiles() == False:
 			return False
 
 		if self.gitCommit(entry):
@@ -357,10 +312,12 @@ class GitSvnManager(CavanCommandBase):
 
 	def doGitReset(self):
 		lines = self.doPopen(["git", "diff"])
-		if lines != None and len(lines) > 0:
-			tmNow = time.localtime()
-			filename = "%04d-%02d%02d-%02d%02d%02d.diff" % (tmNow.tm_year, tmNow.tm_mon, tmNow.tm_mday, tmNow.tm_hour, tmNow.tm_min, tmNow.tm_sec)
-			file_write_lines(os.path.join(self.mPathPatch, filename), lines)
+		if not lines:
+			return True
+
+		tmNow = time.localtime()
+		filename = "%04d-%02d%02d-%02d%02d%02d.diff" % (tmNow.tm_year, tmNow.tm_mon, tmNow.tm_mday, tmNow.tm_hour, tmNow.tm_min, tmNow.tm_sec)
+		file_write_lines(os.path.join(self.mPathPatch, filename), lines)
 
 		return self.doExecute(["git", "reset", "--hard"])
 
