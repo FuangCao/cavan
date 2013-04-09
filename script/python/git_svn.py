@@ -174,7 +174,7 @@ class GitSvnManager(CavanCommandBase):
 		return True
 
 	def setRemoteUrl(self, url):
-		return self.doExecute(["git", "config", "remote.svn.url", url])
+		return self.doExecute(["git", "config", "remote.%s.url" % self.mRemoteName, url])
 
 	def getGitRevision(self):
 		lines = self.doSystemPopen("git log -1 | tail -1")
