@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, os, re
+import sys, os, re, time
 from getopt import getopt
 from xml.dom.minidom import parse, Document
 
@@ -132,16 +132,20 @@ class GitSvnManager(CavanCommandBase):
 		CavanCommandBase.setRootPath(self, pathname)
 		self.mFileSvnIgnore = self.getAbsPath(".gitignore")
 
-		self.mGitSvnPath = self.getAbsPath(".git/svn")
-		if not os.path.isdir(self.mGitSvnPath):
-			os.makedirs(self.mGitSvnPath)
+		self.mPathGitSvn = self.getAbsPath(".git/cavan-svn")
+		if not os.path.isdir(self.mPathGitSvn):
+			os.makedirs(self.mPathGitSvn)
 
-		self.mFileSvnLog = os.path.join(self.mGitSvnPath, "svn_log.xml")
-		self.mFileSvnInfo = os.path.join(self.mGitSvnPath, "svn_info.xml")
-		self.mFileSvnList = os.path.join(self.mGitSvnPath, "svn_list.txt")
-		self.mFileGitList = os.path.join(self.mGitSvnPath, "git_list.txt")
-		self.mFileSvnUpdate = os.path.join(self.mGitSvnPath, "svn_update.txt")
-		self.mFileGitMessag = os.path.join(self.mGitSvnPath, "git_message.txt")
+		self.mPathPatch = self.getAbsPath(".git/cavan-patch")
+		if not os.path.isdir(self.mPathPatch):
+			os.makedirs(self.mPathPatch)
+
+		self.mFileSvnLog = os.path.join(self.mPathGitSvn, "svn_log.xml")
+		self.mFileSvnInfo = os.path.join(self.mPathGitSvn, "svn_info.xml")
+		self.mFileSvnList = os.path.join(self.mPathGitSvn, "svn_list.txt")
+		self.mFileGitList = os.path.join(self.mPathGitSvn, "git_list.txt")
+		self.mFileSvnUpdate = os.path.join(self.mPathGitSvn, "svn_update.txt")
+		self.mFileGitMessag = os.path.join(self.mPathGitSvn, "git_message.txt")
 
 	def genSvnInfoXml(self, url = None):
 		if url == None:
@@ -351,6 +355,15 @@ class GitSvnManager(CavanCommandBase):
 	def buildSvnUrl(self, url, revision):
 		return "%s@%s" % (url, revision)
 
+	def doGitReset(self):
+		lines = self.doPopen(["git", "diff"])
+		if lines != None and len(lines) > 0:
+			tmNow = time.localtime()
+			filename = "%04d-%02d%02d-%02d%02d%02d.diff" % (tmNow.tm_year, tmNow.tm_mon, tmNow.tm_mday, tmNow.tm_hour, tmNow.tm_min, tmNow.tm_sec)
+			file_write_lines(os.path.join(self.mPathPatch, filename), lines)
+
+		return self.doExecute(["git", "reset", "--hard"])
+
 	def doSync(self, url = None):
 		self.mGitRevision = self.getGitRevision()
 		if self.mGitRevision < 0:
@@ -381,6 +394,7 @@ class GitSvnManager(CavanCommandBase):
 			return True
 
 		if self.mGitRevision > 0:
+			self.doGitReset()
 			url = self.buildSvnUrl(self.mUrl, self.mGitRevision)
 			if not self.doExecute(["svn", "switch", "--force", "--accept", "theirs-full", url], of = "/dev/null"):
 				return False
