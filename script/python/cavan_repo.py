@@ -387,9 +387,15 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			self.prBlueInfo("Too a few argument")
 			return False
 
+		if not self.loadManifest():
+			return False
+
+		commandRaw = " ".join(argv)
+
 		for node in self.mManifest.getProjects():
-			pathname = self.getProjectAbsPath()
-			if not self.doExecute(argv, cwd = pathname):
+			pathname = self.getProjectAbsPath(node)
+			command = commandRaw.replace("<path>", pathname).replace("<name>", node[0]).replace("<all>", "*")
+			if not self.doSystemExec(command, cwd = pathname):
 				return False
 
 		return True
