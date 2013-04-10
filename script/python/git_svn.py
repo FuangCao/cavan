@@ -451,6 +451,9 @@ class GitSvnManager(CavanCommandBase):
 		if len(listPendLog) == 0:
 			return True
 
+		if not self.doExecute(["svn", "update"]):
+			return False
+
 		lastCommit = dictLog["commit"]
 
 		while len(listPendLog) > 0:
