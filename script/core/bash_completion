@@ -37,7 +37,7 @@ complete -F _cavan_git_svn_repo cavan-git-svn-repo git-svn-repo.py
 
 function _cavan_git_svn()
 {
-	_build_completion "init clone update sync"
+	_build_completion "init clone update sync rebase dcommit"
 }
 
 complete -F _cavan_git_svn cavan-git-svn git-svn.py

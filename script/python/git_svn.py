@@ -124,8 +124,12 @@ class GitSvnManager(CavanCommandBase):
 	def __init__(self, pathname = "."):
 		CavanCommandBase.__init__(self, pathname)
 		self.mRemoteName = "cavan-svn"
+		self.mBranchName = "master"
 		self.mPatternSvnUpdate = re.compile('^A[UCGER ]{4}(.*)$')
-		self.mPatternGitRevision = re.compile('\s*cavan-git-svn-id: .*@([0-9]+) [^ ]+$')
+		self.mPatternGitRevision = re.compile('^\s*cavan-git-svn-id: .*@([0-9]+) [^ ]+$')
+		self.mPatternGitLogCommit = re.compile('^commit (.*)$')
+		self.mPatternGitLogAuthor = re.compile('^Author: (.*) \<(.*)\>$')
+		self.mPatternGitLogDate = re.compile('^Date:   (.*)$')
 
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
@@ -179,6 +183,53 @@ class GitSvnManager(CavanCommandBase):
 			return -1
 
 		return int(match.group(1))
+
+	def getGitHeadLog(self, index = 1, commit = None):
+		command = ["git", "log", "-%d" % index]
+		if commit != None:
+			command.append(commit)
+
+		lines = self.doPopen(command, ef = "/dev/null")
+		if not lines:
+			return None
+
+		dictLog = {}
+
+		try:
+			while index > 0:
+				match = self.mPatternGitLogCommit.match(lines.pop(0))
+				if match != None:
+					index = index - 1
+			dictLog["commit"] = match.group(1)
+
+			match = self.mPatternGitLogAuthor.match(lines.pop(0))
+			if not match:
+				return None
+			dictLog["author"] = match.group(1)
+			dictLog["email"] = match.group(2)
+
+			match = self.mPatternGitLogDate.match(lines.pop(0))
+			if not match:
+				return None
+			dictLog["date"] = match.group(1)
+
+			lines.pop(0)
+			logSvnId = lines.pop()
+
+			match = self.mPatternGitRevision.match(logSvnId)
+			if not match:
+				lines.append(logSvnId)
+				gitSvnId = -1
+			else:
+				lines.pop()
+				gitSvnId = match.group(1)
+		except:
+			return None
+
+		dictLog["log"] = [line[4:] for line in lines]
+		dictLog["svn-id"] = gitSvnId
+
+		return dictLog
 
 	def saveGitMessage(self, entry):
 		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
@@ -296,6 +347,9 @@ class GitSvnManager(CavanCommandBase):
 		return "%s@%s" % (url, revision)
 
 	def doGitReset(self):
+		if not self.doExecute(["git", "checkout", self.mBranchName], of = "/dev/null", ef = "/dev/null"):
+			return False
+
 		lines = self.doPopen(["git", "diff"])
 		if not lines:
 			return True
@@ -380,6 +434,38 @@ class GitSvnManager(CavanCommandBase):
 
 		return True
 
+	def doDcommit(self, url = None):
+		listPendLog = []
+		dictLog = self.getGitHeadLog(commit = self.mBranchName)
+
+		while True:
+			if not dictLog:
+				return False
+
+			if dictLog["svn-id"] >= 0:
+				break
+
+			listPendLog.append(dictLog)
+			dictLog = self.getGitHeadLog(2, dictLog["commit"])
+
+		if len(listPendLog) == 0:
+			return True
+
+		lastCommit = dictLog["commit"]
+
+		while len(listPendLog) > 0:
+			dictLog = listPendLog.pop()
+			if not self.doExecute(["git", "checkout", "--quiet", dictLog["commit"]]):
+				return False
+
+			if not self.doExecute(["svn", "commit", "-m", "".join(dictLog["log"])]):
+				return False
+
+		if not self.doExecute(["git", "checkout", "--quiet", self.mBranchName]):
+			return False
+
+		return self.doExecute(["git", "reset", lastCommit])
+
 	def doInitBase(self, url, pathname = None):
 		self.mUrl = url
 		if pathname != None:
@@ -435,11 +521,15 @@ class GitSvnManager(CavanCommandBase):
 			return self.doInit(argv[2:])
 		if subcmd in ["clone"]:
 			return self.doClone(argv[2:])
-		elif subcmd in ["update", "sync"]:
+		elif subcmd in ["update", "sync", "rebase", "dcommit"]:
 			if length > 2:
 				url = argv[2]
 			else:
 				url = None
+
+			if subcmd in ["dcommit"]:
+				if not self.doDcommit(url):
+					return False
 
 			return self.doSync(url)
 		else:
