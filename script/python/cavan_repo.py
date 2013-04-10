@@ -480,7 +480,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			return False
 
 		listProject = self.mManifest.getProjects()
-		listProject.append(("platform/manifest", self.mPathManifestRepo))
+		listProject.insert(0, ("platform/manifest", self.mPathManifestRepo))
 		for node in listProject:
 			localPath = self.getProjectAbsPath(node)
 			if not os.path.isdir(localPath):
