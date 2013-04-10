@@ -189,7 +189,7 @@ class CavanCommandBase:
 		elif not os.path.isdir(pathname):
 			os.makedirs(pathname)
 
-		if self.doExecute(["git", "branch"], of = "/dev/null", cwd = pathname):
+		if self.doExecute(["git", "branch"], of = "/dev/null", ef = "/dev/null", cwd = pathname):
 			return True
 
 		listCommand = ["git", "init"]

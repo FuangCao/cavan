@@ -169,11 +169,12 @@ class GitSvnManager(CavanCommandBase):
 		return self.setRemoteUrl(self.mUrl)
 
 	def getGitRevision(self):
-		lines = self.doSystemPopen("git log -1 | tail -1")
+		lines = self.doPopen(["git", "log", "-1"], ef = "/dev/null")
 		if not lines:
 			return 0
 
-		match = self.mPatternGitRevision.match(lines[0].strip())
+		gitSvnId = lines.pop()
+		match = self.mPatternGitRevision.match(gitSvnId)
 		if not match:
 			return -1
 
@@ -227,29 +228,25 @@ class GitSvnManager(CavanCommandBase):
 				listFile.append(line)
 
 		if not self.gitAddFileList(listFile):
-			return -1
-
-		count = len(listFile)
+			return False
 
 		for path in listDir:
 			lines = self.doPopen(["svn", "list", "-R", path])
 			if lines == None:
-				return -1
+				return False
 
 			listFile = []
 			for line in lines:
-				line = line.rstrip("\r\n")
+				line = line.rstrip("\n")
 				if line.endswith("/"):
 					continue
 
 				listFile.append(os.path.join(path, line))
 
 			if not self.gitAddFileList(listFile):
-				return -1
+				return False
 
-			count = count + len(listFile)
-
-		return count
+		return True
 
 	def svnCheckout(self, entry):
 		if os.path.isdir(self.getAbsPath(".svn")):
@@ -264,29 +261,26 @@ class GitSvnManager(CavanCommandBase):
 				if not match:
 					continue
 				listUpdate.append(match.group(1))
-
-			initialized = True
 		else:
-			if not self.doExecute(["svn", "checkout", "%s@%s" % (self.mUrl, entry.getRevesion()), "."], of = "/dev/null"):
+			url = "%s@%s" % (self.mUrl, entry.getRevesion())
+			if not self.doExecute(["svn", "checkout", "--force", url, "."], of = "/dev/null"):
 				return False
-
-			listUpdate = ["."]
 
 			if not os.path.exists(self.mFileSvnIgnore):
 				lines = ["/.gitignore\n", ".svn\n"]
 				if not file_write_lines(self.mFileSvnIgnore, lines):
 					return False
 
-			initialized = False
+			listUpdate = self.doPopen(["svn", "list"])
+			if not listUpdate:
+				return listUpdate != None
 
-		count = self.gitAddFiles(listUpdate)
-		if count < 0:
+			listUpdate = [line.rstrip("/\n") for line in listUpdate]
+
+		if not self.gitAddFiles(listUpdate):
 			return False
 
 		if self.gitCommit(entry):
-			return True
-
-		if count == 0 and initialized == False:
 			return True
 
 		lines = self.doPopen(["svn", "diff", "-r", "%d:%s" % (self.mGitRevision, entry.getRevesion())])
@@ -296,7 +290,7 @@ class GitSvnManager(CavanCommandBase):
 		return False
 
 	def isInitialized(self):
-		return self.doExecute(["git", "branch"], of = "/dev/null")
+		return self.doExecute(["git", "branch"], of = "/dev/null", ef = "/dev/null")
 
 	def buildSvnUrl(self, url, revision):
 		return "%s@%s" % (url, revision)
@@ -321,7 +315,7 @@ class GitSvnManager(CavanCommandBase):
 			lines = self.doPopen(["git", "config", "remote.%s.url" % self.mRemoteName])
 			if not lines:
 				return False
-			url = lines[0].rstrip("\r\n")
+			url = lines[0].rstrip("\n")
 		elif not self.setRemoteUrl(url):
 			return False
 
@@ -343,10 +337,14 @@ class GitSvnManager(CavanCommandBase):
 
 		if self.mGitRevision > 0:
 			self.doGitReset()
+			self.doExecute(["svn", "unlock", "--force", "."], ef = "/dev/null", of = "/dev/null")
+
 			url = self.buildSvnUrl(self.mUrl, self.mGitRevision)
 			if not self.doExecute(["svn", "switch", "--force", "--accept", "theirs-full", url], of = "/dev/null"):
 				return False
 		else:
+			self.doExecute(["rm", "-rf", ".svn"])
+
 			minRevision = 0
 			maxRevision = self.mSvnRevision - 1
 
