@@ -130,6 +130,7 @@ class GitSvnManager(CavanCommandBase):
 		self.mPatternGitLogCommit = re.compile('^commit (.*)$')
 		self.mPatternGitLogAuthor = re.compile('^Author: (.*) \<(.*)\>$')
 		self.mPatternGitLogDate = re.compile('^Date:   (.*)$')
+		self.mPatternGitWhatChanged = re.compile('^:([0-9]{3}[0-7]{3} ){2}(.{7}\.{3} ){2}A\t(.*)$')
 
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
@@ -162,8 +163,18 @@ class GitSvnManager(CavanCommandBase):
 			return False
 		return self.doExecute(["svn", "log", "--xml", "-r", "%d:%d" % (self.mGitRevision + 1, self.mSvnRevision), self.mUrl], of = self.mFileSvnLog)
 
-	def setRemoteUrl(self, url):
-		return self.doExecute(["git", "config", "remote.%s.url" % self.mRemoteName, url])
+	def setRemoteUrl(self, url = None):
+		if not url:
+			lines = self.doPopen(["git", "config", "remote.%s.url" % self.mRemoteName])
+			if not lines:
+				return False
+			url = lines[0].rstrip("\n")
+		elif not self.doExecute(["git", "config", "remote.%s.url" % self.mRemoteName, url]):
+			return False
+
+		self.mUrl = url
+
+		return True
 
 	def genGitRepo(self):
 		if not CavanCommandBase.genGitRepo(self):
@@ -363,15 +374,8 @@ class GitSvnManager(CavanCommandBase):
 		if self.mGitRevision < 0:
 			return False
 
-		if not url:
-			lines = self.doPopen(["git", "config", "remote.%s.url" % self.mRemoteName])
-			if not lines:
-				return False
-			url = lines[0].rstrip("\n")
-		elif not self.setRemoteUrl(url):
+		if not self.setRemoteUrl(url):
 			return False
-
-		self.mUrl = url
 
 		if self.genSvnInfoXml() == False:
 			return False
@@ -432,7 +436,29 @@ class GitSvnManager(CavanCommandBase):
 
 		return True
 
+	def svnAddFiles(self, listFile):
+		listDir = []
+
+		for node in listFile:
+			dirname = os.path.dirname(node)
+			try:
+				listDir.index(dirname)
+			except:
+				if not dirname or self.doExecute(["svn", "info", os.path.join(self.mUrl, dirname)], ef = "/dev/null", of = "/dev/null"):
+					if not self.doExecute(["svn", "add", node]):
+						return False
+				else:
+				  listDir.append(dirname)
+
+		if len(listDir) > 0:
+			return self.svnAddFiles(listDir)
+
+		return True
+
 	def doDcommit(self, url = None):
+		if not self.setRemoteUrl(url):
+			return False
+
 		listPendLog = []
 		dictLog = self.getGitHeadLog(commit = self.mBranchName)
 
@@ -452,6 +478,9 @@ class GitSvnManager(CavanCommandBase):
 		if not self.doExecute(["svn", "update"]):
 			return False
 
+		if not self.doExecute(["svn", "revert", "--quiet", "-R", "."]):
+			return False
+
 		lastCommit = dictLog["commit"]
 
 		while len(listPendLog) > 0:
@@ -459,7 +488,20 @@ class GitSvnManager(CavanCommandBase):
 			if not self.doExecute(["git", "checkout", "--quiet", dictLog["commit"]]):
 				return False
 
-			if not self.doExecute(["svn", "commit", "-m", "".join(dictLog["log"])]):
+			lines = self.doPopen(["git", "whatchanged", "-1"])
+			if lines == None:
+				return False
+
+			listFile = []
+
+			for line in lines:
+				match = self.mPatternGitWhatChanged.match(line)
+				if not match:
+					continue
+
+				listFile.append(match.group(3))
+
+			if len(listFile) > 0 and not self.svnAddFiles(listFile):
 				return False
 
 		if not self.doExecute(["git", "checkout", "--quiet", self.mBranchName]):
