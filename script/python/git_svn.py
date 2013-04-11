@@ -477,14 +477,11 @@ class GitSvnManager(CavanCommandBase):
 		if not self.doExecute(["svn", "update"]):
 			return False
 
-		if not self.doExecute(["svn", "revert", "--quiet", "-R", "."]):
-			return False
-
 		lastCommit = dictLog["commit"]
 
 		while len(listPendLog) > 0:
 			dictLog = listPendLog.pop()
-			if not self.doExecute(["git", "checkout", "--quiet", dictLog["commit"]]):
+			if not self.doExecute(["git", "checkout", "--quiet", "--force", dictLog["commit"]]):
 				return False
 
 			lines = self.doPopen(["git", "whatchanged", "-1"])
@@ -501,6 +498,7 @@ class GitSvnManager(CavanCommandBase):
 				listFile.append(match.group(3))
 
 			if len(listFile) > 0 and not self.svnAddFiles(listFile):
+				self.doExecute(["svn", "revert", "--quiet", "-R", "."])
 				return False
 
 			if not self.doExecute(["svn", "ci", "-m", "".join(dictLog["message"])]):
