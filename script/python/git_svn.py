@@ -145,7 +145,6 @@ class GitSvnManager(CavanCommandBase):
 
 		self.mFileSvnLog = os.path.join(self.mPathGitSvn, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mPathGitSvn, "svn_info.xml")
-		self.mFileGitMessag = os.path.join(self.mPathGitSvn, "git_message.txt")
 
 	def genSvnInfoXml(self, url = None):
 		if url == None:
@@ -231,22 +230,6 @@ class GitSvnManager(CavanCommandBase):
 
 		return dictLog
 
-	def saveGitMessage(self, entry):
-		content = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, entry.getRevesion(), self.mUuid)
-		return file_write_line(self.mFileGitMessag, content)
-
-	def gitCommit(self, entry):
-		if self.saveGitMessage(entry) == False:
-			return False
-
-		author = entry.getAuthor()
-		author = "%s <%s@%s>" % (author, author, self.mUuid)
-		if not self.doExecute(["git", "commit", "--author", author, "--date", entry.getDate(), "-aF", self.mFileGitMessag]):
-			return False
-
-		self.mGitRevision = int(entry.getRevesion())
-		return True
-
 	def listHasPath(self, path, listPath):
 		for item in listPath:
 			if path.startswith(item):
@@ -300,8 +283,10 @@ class GitSvnManager(CavanCommandBase):
 		return True
 
 	def svnCheckout(self, entry):
+		revision = entry.getRevesion()
+
 		if os.path.isdir(self.getAbsPath(".svn")):
-			lines = self.doPopen(["svn", "update", "--accept", "theirs-full", "--force", "-r", entry.getRevesion()])
+			lines = self.doPopen(["svn", "update", "--accept", "theirs-full", "--force", "-r", revision])
 			if lines == None:
 				return False
 
@@ -313,8 +298,8 @@ class GitSvnManager(CavanCommandBase):
 					continue
 				listUpdate.append(match.group(1))
 		else:
-			url = "%s@%s" % (self.mUrl, entry.getRevesion())
-			if not self.doExecute(["svn", "checkout", "--force", url, "."], of = "/dev/null"):
+			url = "%s@%s" % (self.mUrl, revision)
+			if not self.doExecute(["svn", "checkout", "--force", "--quiet", url, "."], of = "/dev/null"):
 				return False
 
 			if not os.path.exists(self.mFileSvnIgnore):
@@ -331,10 +316,15 @@ class GitSvnManager(CavanCommandBase):
 		if not self.gitAddFiles(listUpdate):
 			return False
 
-		if self.gitCommit(entry):
+		author = entry.getAuthor()
+		author = "%s <%s@%s>" % (author, author, self.mUuid)
+		message = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, revision, self.mUuid)
+
+		if self.doExecute(["git", "commit", "--quiet", "--author", author, "--date", entry.getDate(), "-am", message], of = "/dev/null"):
+			self.mGitRevision = int(revision)
 			return True
 
-		lines = self.doPopen(["svn", "diff", "-r", "%d:%s" % (self.mGitRevision, entry.getRevesion())])
+		lines = self.doPopen(["git", "status", "-su", "no"])
 		if not lines:
 			return lines != None
 
@@ -394,7 +384,7 @@ class GitSvnManager(CavanCommandBase):
 			self.doExecute(["svn", "unlock", "--force", "."], ef = "/dev/null", of = "/dev/null")
 
 			url = self.buildSvnUrl(self.mUrl, self.mGitRevision)
-			if not self.doExecute(["svn", "switch", "--force", "--accept", "theirs-full", url], of = "/dev/null"):
+			if not self.doExecute(["svn", "switch", "--force", "--quiet", "--accept", "theirs-full", url], of = "/dev/null"):
 				return False
 		else:
 			self.doExecute(["rm", "-rf", ".svn"])
