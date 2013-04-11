@@ -22,6 +22,7 @@ FPAN_PATH="/mnt/sda7"
 GPAN_PATH="/mnt/sda8"
 UBUNTU_PATH="${DPAN_PATH}/ubuntu"
 UBUNTU_HOME="${UBUNTU_PATH}/home"
+FILE_SWAP_IMG="${UBUNTU_PATH}/swap.img"
 
 NFS_RW_CONFIG="*(rw,sync,no_subtree_check)"
 NFS_RO_CONFIG="*(ro,sync,no_subtree_check)"
@@ -77,6 +78,19 @@ function mount_disk()
 			echo "/dev/$4 ${mount_point} auto errors=remount-ro 0 0" >> ${FILE_FSTAB}
 		}
 	done < ${FILE_PARTITIONS}
+}
+
+function swap_init()
+{
+	[ -f "${FILE_SWAP_IMG}" ] ||
+	{
+		dd if=/dev/zero of=${FILE_SWAP_IMG} bs=2M count=1024 || return 1
+		mkswap -L CFA8888 ${FILE_SWAP_IMG} || return 1
+	}
+
+	swapon ${FILE_SWAP_IMG} || return 1
+	cat ${FILE_FSTAB} | grep "${FILE_SWAP_IMG}" && return 0
+	echo "${FILE_SWAP_IMG} swap swap default 0 0" >> ${FILE_FSTAB}
 }
 
 function create_mount_points()
@@ -386,7 +400,7 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 }
 
 for func in mount_disk create_mount_points create_symlinks config_bashrc \
-	config_aptget install_applications install_debin_packages \
+	swap_init config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_stardict \
 	config_vimrc config_group config_service config_grub config_others
 do
