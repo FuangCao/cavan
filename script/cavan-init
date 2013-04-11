@@ -84,7 +84,7 @@ function swap_init()
 {
 	[ -f "${FILE_SWAP_IMG}" ] ||
 	{
-		dd if=/dev/zero of=${FILE_SWAP_IMG} bs=2M count=1024 || return 1
+		dd if=/dev/zero of=${FILE_SWAP_IMG} bs=3M count=1024 || return 1
 		mkswap -L CFA8888 ${FILE_SWAP_IMG} || return 1
 	}
 
