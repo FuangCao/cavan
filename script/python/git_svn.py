@@ -282,6 +282,19 @@ class GitSvnManager(CavanCommandBase):
 
 		return True
 
+	def gitSvnCommit(self, revision, author, date, message):
+		listCommand = ["git", "commit", "--quiet", "--all", "--date", date]
+		listCommand.append("--author")
+		listCommand.append("%s <%s@%s>" % (author, author, self.mUuid))
+		listCommand.append("--message")
+		listCommand.append("%s\n\ncavan-git-svn-id: %s@%s %s" % (message, self.mUrl, revision, self.mUuid))
+
+		if self.doExecute(listCommand, of = "/dev/null"):
+			self.mGitRevision = int(revision)
+			return True
+
+		return False
+
 	def svnCheckout(self, entry):
 		revision = entry.getRevesion()
 
@@ -316,12 +329,7 @@ class GitSvnManager(CavanCommandBase):
 		if not self.gitAddFiles(listUpdate):
 			return False
 
-		author = entry.getAuthor()
-		author = "%s <%s@%s>" % (author, author, self.mUuid)
-		message = "%s\n\ncavan-git-svn-id: %s@%s %s" % (entry.getMessage(), self.mUrl, revision, self.mUuid)
-
-		if self.doExecute(["git", "commit", "--quiet", "--author", author, "--date", entry.getDate(), "-am", message], of = "/dev/null"):
-			self.mGitRevision = int(revision)
+		if self.gitSvnCommit(revision, entry.getAuthor(), entry.getDate(), entry.getMessage()):
 			return True
 
 		lines = self.doPopen(["git", "status", "-su", "no"])
