@@ -236,12 +236,12 @@ class GitSvnManager(CavanCommandBase):
 		except:
 			return None
 
-		dictLog["log"] = [line[4:] for line in lines]
+		dictLog["message"] = [line[4:] for line in lines]
 		dictLog["svn-id"] = gitSvnId
 
 		return dictLog
 
-	def listHasPath(self, path, listPath):
+	def listHasPath(self, listPath, path):
 		for item in listPath:
 			if path.startswith(item):
 				return True
@@ -262,7 +262,7 @@ class GitSvnManager(CavanCommandBase):
 		listFile = []
 
 		for line in listUpdate:
-			if self.listHasPath(line, listDir):
+			if self.listHasPath(listDir, line):
 				continue
 
 			if os.path.isdir(self.getAbsPath(line)):
@@ -440,15 +440,14 @@ class GitSvnManager(CavanCommandBase):
 		listDir = []
 
 		for node in listFile:
-			dirname = os.path.dirname(node)
-			try:
-				listDir.index(dirname)
-			except:
-				if not dirname or self.doExecute(["svn", "info", os.path.join(self.mUrl, dirname)], ef = "/dev/null", of = "/dev/null"):
-					if not self.doExecute(["svn", "add", node]):
-						return False
-				else:
-				  listDir.append(dirname)
+			dirname = os.path.dirname(node.rstrip("/"))
+			if len(dirname) > 0 and self.listHasPath(listDir, dirname):
+				continue
+
+			if not self.doExecute(["svn", "info", os.path.join(self.mUrl, dirname)], ef = "/dev/null", of = "/dev/null"):
+				listDir.append(dirname)
+			elif not self.doExecute(["svn", "add", node]):
+				return False
 
 		if len(listDir) > 0:
 			return self.svnAddFiles(listDir)
@@ -502,6 +501,9 @@ class GitSvnManager(CavanCommandBase):
 				listFile.append(match.group(3))
 
 			if len(listFile) > 0 and not self.svnAddFiles(listFile):
+				return False
+
+			if not self.doExecute(["svn", "ci", "-m", "".join(dictLog["message"])]):
 				return False
 
 		if not self.doExecute(["git", "checkout", "--quiet", self.mBranchName]):
