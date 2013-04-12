@@ -31,7 +31,7 @@ def single_arg2(argument):
 	return "\"" + argument.replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "'\\''") + "\""
 
 class CavanCommandBase:
-	def __init__(self, pathname = ".", shell = "sh", stdout = None, stderr = None, verbose = True):
+	def __init__(self, pathname = ".", verbose = True, shell = "sh", stdout = None, stderr = None):
 		reload(sys)
 		sys.setdefaultencoding("utf-8")
 
@@ -42,7 +42,7 @@ class CavanCommandBase:
 		self.setStderrFp(stderr)
 		self.setVerbose(verbose)
 
-	def setVerbose(self, verbose = False):
+	def setVerbose(self, verbose):
 		self.mVerbose = verbose
 
 	def setRootPath(self, pathname):

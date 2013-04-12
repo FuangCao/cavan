@@ -4,7 +4,8 @@ import sys, os, threading
 from git_svn import GitSvnManager
 from cavan_file import file_append_line
 from cavan_xml import CavanXmlBase
-from cavan_command import CavanCommandBase, single_arg
+from cavan_command import CavanCommandBase
+from cavan_progress import CavanProgressBar
 
 MAX_THREAD_COUNT = 5
 
@@ -155,19 +156,24 @@ class CavanCheckoutThread(threading.Thread):
 		manager = self.mRepoManager
 
 		while iResult > 0:
-			manager.prGreenInfo("Thread %d running" % self.mIndex)
+			if manager.mVerbose:
+				manager.prGreenInfo("Thread %d running" % self.mIndex)
 			iResult = self.mRepoManager.fetchProject()
 
-		if iResult < 0:
-			manager.prRedInfo("Thread %s fault" % self.mIndex)
-		else:
-			manager.prGreenInfo("Thread %s complete" % self.mIndex)
+		if manager.mVerbose:
+			if iResult < 0:
+				manager.prRedInfo("Thread %s fault" % self.mIndex)
+			else:
+				manager.prGreenInfo("Thread %s complete" % self.mIndex)
 
-		manager.prBoldInfo("Thread %d exit" % self.mIndex)
+			manager.prBoldInfo("Thread %d exit" % self.mIndex)
 
-class CavanGitSvnRepoManager(CavanCommandBase):
-	def __init__(self, pathname = "."):
-		CavanCommandBase.__init__(self, pathname)
+		return iResult
+
+class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
+	def __init__(self, pathname = ".", verbose = False):
+		CavanCommandBase.__init__(self, pathname, verbose)
+		CavanProgressBar.__init__(self)
 
 		self.mErrorCount = 0
 		self.mLockProject = threading.Lock()
@@ -264,6 +270,8 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		if length > 1:
 			self.setRootPath(argv[1])
 
+		self.setVerbose(True)
+
 		return self.genManifest(url)
 
 	def getTempProjectPath(self):
@@ -286,8 +294,6 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			node = None
 		self.mLockProject.release()
 
-		self.prGreenInfo("Project remain %d" % length)
-
 		if not node:
 			return 0
 
@@ -298,9 +304,12 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			if self.mErrorCount > 0:
 				return -1
 
-			self.prBoldInfo(url, " => ", pathname)
-			manager = GitSvnManager(pathname)
+			if self.mVerbose:
+				self.prBoldInfo(url, " => ", pathname)
+
+			manager = GitSvnManager(pathname, self.mVerbose)
 			if (manager.isInitialized() or manager.doInitBase(url)) and manager.doSync(url):
+				self.addProgress()
 				return 1
 
 			self.prRedInfo("Retry count = %d" % count)
@@ -311,9 +320,12 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		self.mLockProject.release()
 
 		if tmpPathname != None:
-			self.prRedInfo(url, " => ", tmpPathname)
-			manager = GitSvnManager(tmpPathname)
+			if self.mVerbose:
+				self.prRedInfo(url, " => ", tmpPathname)
+
+			manager = GitSvnManager(tmpPathname, self.mVerbose)
 			if manager.doInitBase(url) and manager.doSync(url) and self.doExecute(["mv", tmpPathname, pathname]):
+				self.addProgress()
 				return 1
 			self.doExecute(["rm", "-rf", tmpPathname])
 
@@ -344,6 +356,8 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 				return False
 			listThread.append(thread)
 
+		self.initProgress(len(self.mListProject))
+
 		for thread in listThread:
 			thread.setDaemon(True)
 			thread.start()
@@ -370,6 +384,8 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 
 		if iResult < 0 or self.mErrorCount > 0:
 			return False
+
+		self.finishProgress()
 
 		return True
 
@@ -443,10 +459,17 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 		return True
 
 	def gitPushProject(self, localPath, backupPath):
-		if not self.genGitRepo(backupPath, ["--shared", "--bare"]):
-			return False
+		for index in range(2):
+			if not self.genGitRepo(backupPath, ["--shared", "--bare"]):
+				return False
 
-		return self.doExecute(["git", "push", "--all", backupPath], cwd = localPath)
+			if self.doExecute(["git", "push", "--all", backupPath], cwd = localPath):
+				return True
+
+			self.prRedInfo("Remove git repo ", backupPath)
+			self.doExecute(["rm", "-rf", backupPath])
+
+		return False
 
 	def doBackup(self, argv):
 		if not self.loadManifest():
@@ -474,6 +497,7 @@ class CavanGitSvnRepoManager(CavanCommandBase):
 			self.prRedInfo("Please give fetch url")
 			return False
 
+		self.setVerbose(True)
 		self.mManifest.save(self.mFileManifest)
 
 		if not os.path.isdir(self.mPathBackup):

@@ -121,8 +121,8 @@ class SvnLogEntry:
 		return getFirstElementData(self.mRootElement, "msg")
 
 class GitSvnManager(CavanCommandBase):
-	def __init__(self, pathname = ".", verbose = False):
-		CavanCommandBase.__init__(self, pathname, verbose = verbose)
+	def __init__(self, pathname = ".", verbose = True):
+		CavanCommandBase.__init__(self, pathname, verbose)
 		self.mRemoteName = "cavan-svn"
 		self.mBranchMaster = "master"
 		self.mBranchMerge = "cavan-merge"

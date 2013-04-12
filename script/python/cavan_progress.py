@@ -1,51 +1,86 @@
-PROGRESS_BAR_LENGTH_HALF = 30
-PROGRESS_BAR_LENGTH = PROGRESS_BAR_LENGTH_HALF * 2
+#!/usr/bin/python
+
+import sys, threading
 
 class CavanProgressBar:
-	def __init__(self, total):
-		self.init(total)
+	def __init__(self, length = 60, stdout = None):
+		self.mLock = threading.Lock()
+		self.setProgressStdout(stdout)
+		self.setProgressBarLength(length)
 
-	def init(self, total):
-		self.total = total
-		self.current = 0
-		self.update()
+	def setProgressStdout(self, stdout = None):
+		self.mLock.acquire()
 
-	def update(self):
-		if self.total == 0:
+		if stdout != None:
+			self.mStdout = stdout
+		else:
+			self.mStdout = sys.stdout
+
+		self.mLock.release()
+
+	def setProgressBarLength(self, length):
+		self.mLock.acquire()
+
+		self.mHalfLength = length >> 1
+		self.mLength = self.mHalfLength << 1
+
+		self.mLock.release()
+
+	def initProgress(self, total, current = 0):
+		self.mLock.acquire()
+
+		self.mTotal = total
+		self.mCurrent = current
+
+		self.mLock.release()
+
+		self.updateProgress()
+
+	def updateProgress(self):
+		self.mLock.acquire()
+
+		if self.mTotal == 0:
 			fill = PROGRESS_BAR_LENGTH
 			percent = 100
 		else:
-			fill = self.current * PROGRESS_BAR_LENGTH / self.total
-			percent = self.current * 100 / self.total
+			fill = self.mCurrent * self.mLength / self.mTotal
+			percent = self.mCurrent * 100 / self.mTotal
 
 		left = right = ""
-		for weight in range(0, PROGRESS_BAR_LENGTH_HALF):
+
+		for weight in range(0, self.mHalfLength):
 			if weight < fill:
 				left += "H"
 			else:
 				left += "="
 
-		for weight in range(PROGRESS_BAR_LENGTH_HALF, PROGRESS_BAR_LENGTH):
+		for weight in range(self.mHalfLength, self.mLength):
 			if weight < fill:
 				right += "H"
 			else:
 				right += "="
 
-		text = "[%s %d%% %s] [%d/%d]" % (left, percent, right, self.current, self.total)
-		if SVN_REPO_DEBUG:
-			print text
+		text = "[%s %d%% %s] [%d/%d]" % (left, percent, right, self.mCurrent, self.mTotal)
+		self.mStdout.write(text + "\r")
+		self.mStdout.flush()
+
+		self.mLock.release()
+
+	def addProgress(self, count = 1):
+		self.mLock.acquire()
+		self.mCurrent += count
+		self.mLock.release()
+
+		self.updateProgress()
+
+	def finishProgress(self):
+		self.mLock.acquire()
+
+		if self.mCurrent < self.mTotal:
+			self.mCurrent = self.mTotal
+			self.mLock.release()
+			self.updateProgress()
 		else:
-			sys.stdout.write(text + "\r")
-			sys.stdout.flush()
+			self.mLock.release()
 
-	def add(self, count = 1):
-		self.current += count
-		self.update()
-
-	def finish(self):
-		if self.current < self.total:
-			self.current = self.total
-			self.update()
-
-		if not SVN_REPO_DEBUG:
-			print
+		print >> self.mStdout
