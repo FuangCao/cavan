@@ -405,6 +405,8 @@ class GitSvnManager(CavanCommandBase):
 			return False
 
 		if self.mGitRevision >= self.mSvnRevision:
+			if self.mVerbose:
+				self.prGreenInfo("Already up-to-date.")
 			return True
 
 		if self.mGitRevision > 0:
@@ -442,7 +444,8 @@ class GitSvnManager(CavanCommandBase):
 
 		nodes = logParser.getLogEntrys();
 		if not nodes:
-			self.prGreenInfo("Already up-to-date.")
+			if self.mVerbose:
+				self.prGreenInfo("Already up-to-date.")
 			return True
 
 		for item in logParser.getLogEntrys():
