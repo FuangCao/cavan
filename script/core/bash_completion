@@ -52,7 +52,7 @@ function _adb_completion()
 
 complete -F _adb_completion adb
 
-function _cavan_mak_completion()
+function _cavan_make_completion()
 {
 	local cur prev
 
@@ -71,9 +71,9 @@ function _cavan_mak_completion()
 	esac
 }
 
-complete -F _cavan_mak_completion cavan-make
+complete -F _cavan_make_completion cavan-make
 
-function _fastboot__completion()
+function _fastboot_completion()
 {
 	local cur prev
 
@@ -102,11 +102,18 @@ function _fastboot__completion()
 	esac
 }
 
-complete -F _fastboot__completion fastboot
+complete -F _fastboot_completion fastboot
 
-function _build_helper__completion()
+function _build_helper_completion()
 {
 	_build_completion "kernelconfig kernelbuild bootimage mkboot ramdisk recovery lk all help"
 }
 
-complete -F _build_helper__completion build_helper.sh
+complete -F _build_helper_completion build_helper.sh
+
+function _git_repo_completion()
+{
+	_build_completion "abandon branch branches checkout cherry-pick diff download grep init list prune rebase smartsync stage start status sync upload"
+}
+
+complete -F _git_repo_completion repo git-repo

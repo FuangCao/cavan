@@ -346,6 +346,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			os.remove(self.mFileFailed)
 
 		self.mUrl = self.mManifest.getUrl()
+		self.mListFile = self.mManifest.getFiles()
 		self.mListProject = self.mManifest.getProjects()
 
 		listThread = []
@@ -356,7 +357,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 				return False
 			listThread.append(thread)
 
-		self.initProgress(len(self.mListProject))
+		self.initProgress(len(self.mListProject) + len(self.mListFile))
 
 		for thread in listThread:
 			thread.setDaemon(True)
@@ -364,7 +365,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		iResult = 1
 
-		for node in self.mManifest.getFiles():
+		for node in self.mListFile:
 			pathname = self.getProjectAbsPath(node)
 			dirname = os.path.dirname(pathname)
 			if not os.path.isdir(dirname):
@@ -375,6 +376,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			if not self.doExecute(["svn", "export", "--force", url, pathname], of = "/dev/null"):
 				iResult = -1
 				break
+
+			self.addProgress()
 
 		while iResult > 0:
 			iResult = self.fetchProject()
