@@ -197,6 +197,9 @@ class CavanCommandBase:
 			return True
 
 		listCommand = ["git", "init"]
+		if not self.mVerbose:
+			listCommand.append("--quiet")
+
 		if option != None:
 			for node in option:
 				listCommand.append(node)

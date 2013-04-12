@@ -177,6 +177,16 @@ class GitSvnManager(CavanCommandBase):
 			return False
 		return self.doExecute(["svn", "log", "--xml", "-r", "%d:%d" % (self.mGitRevision + 1, self.mSvnRevision), self.mUrl], of = self.mFileSvnLog)
 
+	def getSvnLog(self):
+		if not self.genSvnLogXml():
+			return None
+
+		logParser = SvnLogParser()
+		if not logParser.loadXml(self.mFileSvnLog):
+			return None
+
+		return logParser
+
 	def setRemoteUrl(self, url = None):
 		if not url:
 			lines = self.doPopen(["git", "config", "remote.%s.url" % self.mRemoteName])
@@ -215,7 +225,7 @@ class GitSvnManager(CavanCommandBase):
 		if commit != None:
 			command.append(commit)
 
-		lines = self.doPopen(command)
+		lines = self.doPopen(command, ef = "/dev/null")
 		if not lines:
 			return None
 
@@ -400,7 +410,7 @@ class GitSvnManager(CavanCommandBase):
 			branch = self.mBranchMaster
 
 		self.mGitRevision = self.getGitHeadSvnRevision(branch)
-		if self.mGitRevision < 0 and self.doExecute(["git", "log", "-1"]):
+		if self.mGitRevision < 0 and self.doExecute(["git", "log", "-1"], of = "/dev/null", ef = "/dev/null"):
 			self.prRedInfo("get svn revision failed")
 			return False
 
@@ -435,11 +445,8 @@ class GitSvnManager(CavanCommandBase):
 
 			self.mGitRevision = minRevision
 
-		if self.genSvnLogXml() == False:
-			return False
-
-		logParser = SvnLogParser()
-		if logParser.loadXml(self.mFileSvnLog) == False:
+		logParser = self.getSvnLog()
+		if not logParser:
 			return False
 
 		nodes = logParser.getLogEntrys();
@@ -450,7 +457,7 @@ class GitSvnManager(CavanCommandBase):
 
 		for item in logParser.getLogEntrys():
 			entry = SvnLogEntry(item)
-			if self.svnCheckout(entry) == False:
+			if not self.svnCheckout(entry):
 				return False
 
 		return True
@@ -471,6 +478,9 @@ class GitSvnManager(CavanCommandBase):
 		return self.svnAddNonRecursive(pathname)
 
 	def svnRemoveFile(self, pathname):
+		if self.mVerbose:
+			self.prStdInfo("Remove ", pathname)
+
 		if not self.doExecute(["svn", "remove", "--quiet", pathname], verbose = False):
 			return True
 
@@ -478,14 +488,11 @@ class GitSvnManager(CavanCommandBase):
 		if not dirname:
 			return True
 
-		lines = self.doPopen(["svn", "list", dirname], verbose = False)
-		if lines == None:
-			return False
-
+		lines = os.listdir(self.getAbsPath(dirname))
 		if not lines:
-			return True
+			return self.svnRemoveFile(dirname)
 
-		return self.svnRemoveFile(dirname)
+		return True
 
 	def doDcommit(self, url = None):
 		if not self.getSvnInfo(url):
