@@ -31,15 +31,19 @@ def single_arg2(argument):
 	return "\"" + argument.replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "'\\''") + "\""
 
 class CavanCommandBase:
-	def __init__(self, pathname = ".", shell = "sh", stdout = None, stderr = None):
+	def __init__(self, pathname = ".", shell = "sh", stdout = None, stderr = None, verbose = True):
 		reload(sys)
 		sys.setdefaultencoding("utf-8")
 
 		self.setRootPath(pathname)
 		self.setShellName(shell)
 
-		self.setStdoutFp()
-		self.setStderrFp()
+		self.setStdoutFp(stdout)
+		self.setStderrFp(stderr)
+		self.setVerbose(verbose)
+
+	def setVerbose(self, verbose = False):
+		self.mVerbose = verbose
 
 	def setRootPath(self, pathname):
 		if not os.path.isdir(pathname):
@@ -116,7 +120,7 @@ class CavanCommandBase:
 		return os.path.relpath(pathname, self.mPathRoot)
 
 	def doExecute(self, args, of = None, ef = None, cwd = None, verbose = True):
-		if verbose:
+		if self.mVerbose and verbose:
 			print >> self.mFpStdout, args
 
 		if not of:
@@ -150,13 +154,13 @@ class CavanCommandBase:
 		return [self.mShellName, "-c", "--", command]
 
 	def doSystemExec(self, command, of = None, ef = None, cwd = None, verbose = True):
-		if verbose:
+		if self.mVerbose and verbose:
 			self.prStdInfo(command)
 
 		return self.doExecute(self.buildSystemArgs(command), of, ef, cwd, False)
 
 	def doPopen(self, args, cwd = None, ef = None, verbose = True):
-		if verbose:
+		if self.mVerbose and verbose:
 			print >> self.mFpStdout, args
 
 		if not cwd:
@@ -178,7 +182,7 @@ class CavanCommandBase:
 		return lines
 
 	def doSystemPopen(self, command, cwd = None, ef = None, verbose = True):
-		if verbose:
+		if self.mVerbose and verbose:
 			self.prStdInfo(command)
 
 		return self.doPopen(self.buildSystemArgs(command), cwd, ef, False)

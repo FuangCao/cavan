@@ -121,17 +121,13 @@ class SvnLogEntry:
 		return getFirstElementData(self.mRootElement, "msg")
 
 class GitSvnManager(CavanCommandBase):
-	def __init__(self, pathname = "."):
-		CavanCommandBase.__init__(self, pathname)
+	def __init__(self, pathname = ".", verbose = False):
+		CavanCommandBase.__init__(self, pathname, verbose = verbose)
 		self.mRemoteName = "cavan-svn"
 		self.mBranchMaster = "master"
 		self.mBranchMerge = "cavan-merge"
 		self.mPatternSvnUpdate = re.compile('^A[UCGER ]{4}(.*)$')
-		self.mPatternGitRevision = re.compile('^cavan-git-svn-id: .*@([0-9]+) [^ ]+$')
-		self.mPatternGitLogCommit = re.compile('^commit (.*)$')
-		self.mPatternGitLogAuthor = re.compile('^Author: (.*) \<(.*)\>$')
-		self.mPatternGitLogDate = re.compile('^Date:   (.*)$')
-		self.mPatternGitWhatChanged = re.compile('^:([0-9]{3}[0-7]{3} ){2}(.{7}\.{3} ){2}([AMD])\t(.*)$')
+		self.mPatternGitWhatChanged = re.compile('^:([0-9]{3}[0-7]{3} ){2}([0-9a-f]{7}\.{3} ){2}([AMD])\t(.*)$')
 
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
@@ -159,18 +155,35 @@ class GitSvnManager(CavanCommandBase):
 
 		return self.doExecute(listCommand, of = self.mFileSvnInfo)
 
+	def getSvnInfo(self, url = None):
+		if not self.setRemoteUrl(url):
+			return False
+
+		if not self.genSvnInfoXml(url):
+			return None
+
+		parser = SvnInfoParser()
+		if not parser.loadXml(self.mFileSvnInfo):
+			return False
+
+		self.mSvnRevision = parser.getRevesion()
+		self.mUuid = parser.getUuid()
+		self.mPatternGitRevision = re.compile('^cavan-git-svn-id: .*@([0-9]+) %s$' % self.mUuid)
+
+		return parser
+
 	def genSvnLogXml(self):
 		if self.mGitRevision >= self.mSvnRevision:
 			return False
 		return self.doExecute(["svn", "log", "--xml", "-r", "%d:%d" % (self.mGitRevision + 1, self.mSvnRevision), self.mUrl], of = self.mFileSvnLog)
 
-	def setRemoteUrl(self, url = None, verbose = False):
+	def setRemoteUrl(self, url = None):
 		if not url:
-			lines = self.doPopen(["git", "config", "remote.%s.url" % self.mRemoteName], verbose)
+			lines = self.doPopen(["git", "config", "remote.%s.url" % self.mRemoteName])
 			if not lines:
 				return False
 			url = lines[0].rstrip("\n")
-		elif not self.doExecute(["git", "config", "remote.%s.url" % self.mRemoteName, url], verbose):
+		elif not self.doExecute(["git", "config", "remote.%s.url" % self.mRemoteName, url]):
 			return False
 
 		self.mUrl = url
@@ -186,7 +199,7 @@ class GitSvnManager(CavanCommandBase):
 			for item in option:
 				listCommand.append(item)
 
-		return self.doExecute(listCommand, ef = "/dev/null", verbose = False)
+		return self.doExecute(listCommand, ef = "/dev/null")
 
 	def genGitRepo(self):
 		if not CavanCommandBase.genGitRepo(self):
@@ -202,7 +215,7 @@ class GitSvnManager(CavanCommandBase):
 		if commit != None:
 			command.append(commit)
 
-		lines = self.doPopen(command, verbose = False)
+		lines = self.doPopen(command)
 		if not lines:
 			return None
 
@@ -274,10 +287,12 @@ class GitSvnManager(CavanCommandBase):
 				continue
 
 			if os.path.isdir(self.getAbsPath(line)):
-				print "[DIR]  Add " + line
+				if self.mVerbose:
+					print "[DIR]  Add " + line
 				listDir.append(line + "/")
 			else:
-				print "[FILE] Add " + line
+				if self.mVerbose:
+					print "[FILE] Add " + line
 				listFile.append(line)
 
 		if not self.gitAddFileList(listFile):
@@ -308,7 +323,7 @@ class GitSvnManager(CavanCommandBase):
 		listCommand.append("--message")
 		listCommand.append("%s\n\ncavan-git-svn-id: %s@%s %s" % (message, self.mUrl, revision, self.mUuid))
 
-		if self.doExecute(listCommand, of = "/dev/null", verbose = False):
+		if self.doExecute(listCommand, of = "/dev/null"):
 			self.mGitRevision = int(revision)
 			return True
 
@@ -375,28 +390,19 @@ class GitSvnManager(CavanCommandBase):
 		filename = "%04d-%02d%02d-%02d%02d%02d.diff" % (tmNow.tm_year, tmNow.tm_mon, tmNow.tm_mday, tmNow.tm_hour, tmNow.tm_min, tmNow.tm_sec)
 		file_write_lines(os.path.join(self.mPathPatch, filename), lines)
 
-		return self.doExecute(["git", "reset", "--hard"])
+		return self.doExecute(["git", "reset", "--hard"], of = "/dev/null")
 
 	def doSync(self, url = None, branch = None):
+		if not self.getSvnInfo(url):
+			return False
+
 		if not branch:
 			branch = self.mBranchMaster
 
 		self.mGitRevision = self.getGitHeadSvnRevision(branch)
-		if self.mGitRevision < 0:
+		if self.mGitRevision < 0 and self.doExecute(["git", "log", "-1"]):
+			self.prRedInfo("get svn revision failed")
 			return False
-
-		if not self.setRemoteUrl(url):
-			return False
-
-		if self.genSvnInfoXml() == False:
-			return False
-
-		infoParser = SvnInfoParser()
-		if infoParser.loadXml(self.mFileSvnInfo) == False:
-			return False
-
-		self.mUuid = infoParser.getUuid()
-		self.mSvnRevision = infoParser.getRevesion()
 
 		if self.mGitRevision >= self.mSvnRevision:
 			return True
@@ -479,7 +485,7 @@ class GitSvnManager(CavanCommandBase):
 		return self.svnRemoveFile(dirname)
 
 	def doDcommit(self, url = None):
-		if not self.setRemoteUrl(url):
+		if not self.getSvnInfo(url):
 			return False
 
 		listPendLog = []
@@ -522,7 +528,7 @@ class GitSvnManager(CavanCommandBase):
 
 			commit = tupCommit[0]
 
-			lines = self.doPopen(["git", "whatchanged", "-1", "--pretty=tformat:%H", commit], verbose = False)
+			lines = self.doPopen(["git", "whatchanged", "-1", "--pretty=tformat:%H", commit])
 			if lines == None:
 				return False
 
@@ -544,7 +550,7 @@ class GitSvnManager(CavanCommandBase):
 					if action == 'A' and not self.svnAddFile(pathname):
 						return False
 
-			if not self.doPopen(["svn", "commit", "-m", "".join(tupCommit[1][1])], verbose = False):
+			if not self.doPopen(["svn", "commit", "-m", "".join(tupCommit[1][1])]):
 				return False
 
 		return self.doExecute(["git", "branch", "-M", self.mBranchMerge, self.mBranchMaster])
@@ -558,15 +564,8 @@ class GitSvnManager(CavanCommandBase):
 			self.prRedInfo("Has been initialized")
 			return False
 
-		if self.mUrl == None:
-			if self.genSvnInfoXml() == False:
-				return False
-
-			infoParser = SvnInfoParser()
-			if infoParser.loadXml(self.mFileSvnInfo) == False:
-				return False
-
-			self.mUrl = infoParser.getUrl()
+		if self.mUrl == None and not self.getSvnInfo():
+			return False
 
 		return self.genGitRepo()
 
