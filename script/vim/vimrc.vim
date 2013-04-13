@@ -1,5 +1,4 @@
-let listPath = [$CAVAN_HOME, "/cavan", $HOME."/cavan", $PWD."/cavan", $PWD]
-for path in listPath
+for path in [$CAVAN_HOME, "/cavan", $HOME."/cavan", $PWD."/cavan", $PWD]
 	if isdirectory(path)
 		let g:CAVAN_HOME = path
 		break
@@ -58,7 +57,7 @@ set ai
 " set list
 set nowrap
 set cindent
-" set cursorline
+set cursorline
 set nocompatible
 set smartindent
 set ruler
