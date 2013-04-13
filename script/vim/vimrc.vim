@@ -1,3 +1,42 @@
+function s:list_directory(dirname, type)
+	return split(globpath(a:dirname, a:type), "\n")
+endfunction
+
+function s:path_join(dirname, filename)
+	return substitute(a:dirname, '/*$', '/' . a:filename, 'g')
+endfunction
+
+function s:path_dirname(pathname)
+	let index = match(a:pathname, '/+$')
+	if index == 0
+		return "/"
+	elseif index < 0
+		let pathname = a:pathname
+	else
+		let pathname = strpart(a:pathname, 0, index)
+	endif
+
+	let index = strridx(pathname, '/')
+	if index == 0
+		return "/"
+	elseif index < 0
+		return "."
+	else
+		return strpart(pathname, 0, index)
+	endif
+endfunction
+
+function s:path_basename(pathname)
+	let index = match(a:pathname, '/*$')
+	let pathname = strpart(a:pathname, 0, index)
+	let index = strridx(pathname, '/')
+	if index < 0
+		return pathname
+	else
+		return strpart(pathname, index + 1)
+	endif
+endfunction
+
 set showcmd		" Show (partial) command in status line.
 set showmatch		" Show matching brackets.
 set ignorecase		" Do case insensitive matching
@@ -25,7 +64,6 @@ set guioptions-=T
 set shiftwidth=4
 set tabstop=4
 set history=1000
-set ts=4
 set mouse=a		" Enable mouse usage (all modes)
 set fencs=utf-8,cp936
 set path+=/cavan/include
@@ -94,49 +132,38 @@ nmap lc :wa<cr>:!cavan-gcc<cr>
 nmap le :!./a.out<cr>
 nmap lm :wa<cr>:!make<cr>
 
+let dirname = s:path_join($CAVAN_HOME, "script/vim")
+
+for pathname in s:list_directory(dirname, "*.vim")
+	if match(pathname, '/vimrc.vim$') < 0
+		execute "source " . pathname
+	endif
+endfor
+
 if has("cscope")
 	set csprg=/usr/bin/cscope
 	set csto=0
 	set cst
 	set nocsverb
 
-	if has("python")
-python << EOF
-import sys, os, vim
-
-dirname = os.getcwd()
-
-while True:
-	pathname = os.path.join(dirname, "cscope.out")
-	if os.path.exists(pathname):
-		vim.command("cs add %s %s" % (pathname, dirname))
-		break
-
-	if dirname == "/":
-		break
-
-	dirname = os.path.dirname(dirname)
-EOF
-	endif
-
 	set csverb
 	set cscopetag
 	"set cscopequickfix=s-,g-,d-,t-,e-,f-,i-
-endif
 
-if has("python")
-python << EOF
-import os, vim
+	let dirname = getcwd()
 
-cavan_home = os.getenv("CAVAN_HOME")
-if not cavan_home:
-	cavan_home = "/cavan"
+	while 1
+		let pathname = s:path_join(dirname, "cscope.out")
 
-dirname = os.path.join(cavan_home, "script/vim")
-if os.path.isdir(dirname):
-	for filename in os.listdir(dirname):
-		if filename in ["vimrc.vim"]:
-			continue
-		vim.command("source %s/%s" % (dirname, filename))
-EOF
+		if filereadable(pathname)
+			silent execute printf("cs add %s %s", pathname, dirname)
+			break
+		endif
+
+		if dirname == '.' || dirname == '/'
+			break
+		endif
+
+		let dirname = s:path_dirname(dirname)
+	endwhile
 endif
