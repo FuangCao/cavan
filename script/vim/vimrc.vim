@@ -1,19 +1,58 @@
-"set showcmd		" Show (partial) command in status line.
+set showcmd		" Show (partial) command in status line.
 set showmatch		" Show matching brackets.
 set ignorecase		" Do case insensitive matching
-"set smartcase		" Do smart case matching
+set smartcase		" Do smart case matching
 set incsearch		" Incremental search
-"set autowrite		" Automatically save before commands like :next and :make
-"set hidden             " Hide buffers when they are abandoned
-set mouse=a		" Enable mouse usage (all modes)
+set autowrite		" Automatically save before commands like :next and :make
+set hidden             " Hide buffers when they are abandoned
 set nu
-set ts=4
 set ai
+" 显示特殊字符
+" set list
+set nowrap
+set cindent
+" set cursorline
+set nocompatible
+set smartindent
+set ruler
+set wildmenu
 set hlsearch
-set fencs=utf-8,cp936
-let c_space_errors=1
+" 自动重新加载外部修改内容
+set autoread
 
+set updatetime=100
+set guioptions-=T
+set shiftwidth=4
+set tabstop=4
+set history=1000
+set ts=4
+set mouse=a		" Enable mouse usage (all modes)
+set fencs=utf-8,cp936
 set path+=/cavan/include
+set backspace=indent,eol,start
+" set columns=80
+" 保存文件的格式顺序
+set fileformats=unix,dos
+" 设置帮助信息
+set helplang=cn
+
+filetype on
+" colorscheme darkblue
+
+let c_space_errors=1
+let Tlist_Use_Right_Window=1
+let Tlist_File_Fold_Auto_Close=1
+
+autocmd FileType python set omnifunc=pythoncomplete#Complete
+
+if has("autocmd")
+	au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$")
+		\| exe "normal g'\"" |
+endif
+
+if has("syntax")
+	syntax on
+endif
 
 " Source a global configuration file if available
 if filereadable("/etc/vim/vimrc.local")
@@ -55,37 +94,6 @@ nmap lc :wa<cr>:!cavan-gcc<cr>
 nmap le :!./a.out<cr>
 nmap lm :wa<cr>:!make<cr>
 
-if has("autocmd")
-	au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$")
-		\| exe "normal g'\"" |
-endif
-
-set nocompatible
-" set columns=80
-filetype on
-set history=1000
-set autoindent
-set smartindent
-set tabstop=4
-set shiftwidth=4
-set showmatch
-set guioptions-=T
-set vb t_vb=
-set ruler
-set nohls
-set noexpandtab
-set ignorecase
-set cindent
-set fencs=utf-8,cp936
-set showcmd
-set wildmenu
-set updatetime=100
-
-autocmd FileType python set omnifunc=pythoncomplete#Complete
-
-let Tlist_Use_Right_Window=1
-let Tlist_File_Fold_Auto_Close=1
-
 if has("cscope")
 	set csprg=/usr/bin/cscope
 	set csto=0
@@ -94,7 +102,7 @@ if has("cscope")
 
 	if has("python")
 python << EOF
-import os, vim
+import sys, os, vim
 
 dirname = os.getcwd()
 
@@ -120,11 +128,15 @@ if has("python")
 python << EOF
 import os, vim
 
-dirname = os.path.join(os.getenv("CAVAN_HOME"), "script/vim")
+cavan_home = os.getenv("CAVAN_HOME")
+if not cavan_home:
+	cavan_home = "/cavan"
 
-for filename in os.listdir(dirname):
-	if filename in ["vimrc.vim"]:
-		continue
-	vim.command("source %s/%s" % (dirname, filename))
+dirname = os.path.join(cavan_home, "script/vim")
+if os.path.isdir(dirname):
+	for filename in os.listdir(dirname):
+		if filename in ["vimrc.vim"]:
+			continue
+		vim.command("source %s/%s" % (dirname, filename))
 EOF
 endif

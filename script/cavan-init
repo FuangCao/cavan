@@ -23,6 +23,7 @@ GPAN_PATH="/mnt/sda8"
 UBUNTU_PATH="${DPAN_PATH}/ubuntu"
 UBUNTU_HOME="${UBUNTU_PATH}/home"
 FILE_SWAP_IMG="${UBUNTU_PATH}/swap.img"
+FILE_VIMRC_VIM="${CAVAN_HOME}/script/vim/vimrc.vim"
 
 NFS_RW_CONFIG="*(rw,sync,no_subtree_check)"
 NFS_RO_CONFIG="*(ro,sync,no_subtree_check)"
@@ -169,7 +170,9 @@ function config_vimrc()
 	cat >> ${FILE_VIMRC} << EOF
 
 " Following is Cavan's configs
-source ${CAVAN_HOME}/script/vim/vimrc.vim
+if filereadable("${FILE_VIMRC_VIM}")
+  source ${FILE_VIMRC_VIM}
+endif
 EOF
 }
 
