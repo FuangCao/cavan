@@ -1,4 +1,5 @@
-map <c-a> :s/^/\t/g<cr>:set nohls<cr>
+map . :s/^/\t/g<cr>:set nohls<cr>
+map , :s/^\s\?//g<cr>:set nohls<cr>
 
 nmap q :xa!<cr>
 nmap hq :qa!<cr>
@@ -9,8 +10,6 @@ nmap fs :%s/\s*$//g<cr>:%s/\n{\r\r\1}/g<cr>:%s/(\s*/(/g<cr>:%s\s*)/)/g<cr>:set n
 nmap fh :%s/for\s*(/for (/g<cr>:%s/while\s*(/while (/g<cr>:%s/if\s*(/if (/g<cr>:set nohls<cr>
 nmap fi gg:s/.*/#include \r&/g<cr>:set nohls<cr>k$i
 nmap fc ggVGdi
-nmap < :s/\s\(.*\)/\1&/g:set nohls<cr>
-nmap > :s/.*/\t&/g:set nohls<cr>
 nmap ff	gg=G
 
 nmap js :s/.*/struct \r{\r\r\1};/<cr>:set nohls<cr>kkk$a

@@ -1,3 +1,11 @@
+let listPath = [$CAVAN_HOME, "/cavan", $HOME."/cavan", $PWD."/cavan", $PWD]
+for path in listPath
+	if isdirectory(path)
+		let g:CAVAN_HOME = path
+		break
+	endif
+endfor
+
 function s:list_directory(dirname, type)
 	return split(globpath(a:dirname, a:type), "\n")
 endfunction
@@ -66,7 +74,6 @@ set tabstop=4
 set history=1000
 set mouse=a		" Enable mouse usage (all modes)
 set fencs=utf-8,cp936
-set path+=/cavan/include
 set backspace=indent,eol,start
 " set columns=80
 " 保存文件的格式顺序
@@ -76,6 +83,8 @@ set helplang=cn
 
 filetype on
 " colorscheme darkblue
+
+let &path = s:path_join(g:CAVAN_HOME, "include") . "," . &path
 
 let c_space_errors=1
 let Tlist_Use_Right_Window=1
@@ -97,7 +106,7 @@ if filereadable("/etc/vim/vimrc.local")
   source /etc/vim/vimrc.local
 endif
 
-let dirname = s:path_join($CAVAN_HOME, "script/vim")
+let dirname = s:path_join(g:CAVAN_HOME, "script/vim")
 
 for pathname in s:list_directory(dirname, "*.vim")
 	if match(pathname, '/vimrc.vim$') < 0
