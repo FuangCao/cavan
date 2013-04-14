@@ -57,7 +57,7 @@ set ai
 " set list
 set nowrap
 set cindent
-set cursorline
+" set cursorline
 set nocompatible
 set smartindent
 set ruler
@@ -89,20 +89,13 @@ let c_space_errors = 1
 let Tlist_Use_Right_Window = 0
 let Tlist_File_Fold_Auto_Close = 1
 
-autocmd FileType python set omnifunc=pythoncomplete#Complete
-
 if has("autocmd")
-	au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$")
-		\| exe "normal g'\"" |
+	au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal g'\"" |
+	au FileType python set omnifunc=pythoncomplete#Complete
 endif
 
 if has("syntax")
 	syntax on
-endif
-
-" Source a global configuration file if available
-if filereadable("/etc/vim/vimrc.local")
-  source /etc/vim/vimrc.local
 endif
 
 let dirname = s:path_join(g:CAVAN_HOME, "script/vim")

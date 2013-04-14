@@ -1,35 +1,66 @@
-map . :s/^/\t/g<cr>:set nohls<cr>
-map , :s/^\s\?//g<cr>:set nohls<cr>
+map <S-Tab>		:set nohls<CR>:'<,'>s/^\s\?//g<CR>
+map <Tab>		:set nohls<CR>:'<,'>s/^.\+/\t&/g<CR>
+map <Space>		:set nohls<CR>:'<,'>s/^.\+/ &/g<CR>
 
-nmap q :xa!<cr>
-nmap hq :qa!<cr>
-nmap w :wa!<cr>
-nmap hw :wa!<cr>i
+vmap <S-Tab>	:s/^\s\?//g<CR>:set nohls<CR>
+vmap <Tab>		:s/^.\+/\t&/g<CR>:set nohls<CR>
+vmap <Space>	:s/^.\+/ &/g<CR>:set nohls<CR>
 
-nmap fs :%s/\s*$//g<cr>:%s/\n{\r\r\1}/g<cr>:%s/(\s*/(/g<cr>:%s\s*)/)/g<cr>:set nohls<cr>
-nmap fh :%s/for\s*(/for (/g<cr>:%s/while\s*(/while (/g<cr>:%s/if\s*(/if (/g<cr>:set nohls<cr>
-nmap fi gg:s/.*/#include \r&/g<cr>:set nohls<cr>k$i
-nmap fc ggVGdi
-nmap ff	gg=G
+nmap q			:xa!<CR>
+nmap w			:wa!<CR>
+nmap <C-m>		:set mouse=a<CR>:set nu<CR>
+nmap <C-n>		:set mouse=v<CR>:set nonu<CR>
 
-nmap js :s/.*/struct \r{\r\r\1};/<cr>:set nohls<cr>kkk$a
-nmap jc :s/.*/class \r{\rprivate:\r\r\rpublic:\r\r};/<cr>:set nohls<cr>kkkkkkk$a
-nmap jf kyyp:s/[\t{]/\t/g<cr>:s/\(\s*\).*/\1for (i = 0; i < ; i++)\r\1{\r\r\1}/g<cr>:set nohls<cr>kkk$hhhhhi
-nmap jw kyyp:s/[\t{]/\t/g<cr>:s/\(\s*\).*/\1while ()\r\1{\r\r\1}/g<cr>:set nohls<cr>kkk$i
-nmap jd kyyp:s/[\t{]/\t/g<cr>:s/\(\s*\).*/\1do\r\1{\r\r\1} while ();/g<cr>:set nohls<cr>$hi
-nmap ji kyyp:s/[\t{]/\t/g<cr>:s/\(\s*\).*/\1if ()\r\1{\r\r\1}/g<cr>:set nohls<cr>kkk$i
-nmap je kyyp:s/[\t{]/\t/g<cr>:s/\(\s*\).*/\1else if ()\r\1{\r\r\1}/g<cr>:set nohls<cr>kkk$i
-nmap jl kyyp:s/[\t{]/\t/g<cr>:s/\(\s*\).*/\1else\r\1{\r\1\t\r\1}/g<cr>:set nohls<cr>k$a
-nmap jm gg:s/.*/#include <cavan.h>\r&/g<cr>G:s/.*/&\rint main(int argc, char *argv[])\r{\r\t\r\treturn 0;\r}/<cr>:set nohls<cr>kkk$a<cr>
-nmap jh :s/.*/&\rint (void)\r{\r\r\treturn 0;\r}/g<cr>:set nohls<cr>kkkk$hhhhhi
-nmap ja :s/.*/\t\.global main\rmain\:\r\tstmfd sp!, {lr}\r\r\tldr r0, =string1\r\tbl printf\r\t\r\r\tldmfd sp!, {pc}\r\rstring1\:\r\t\.asciz "r1 = %#x, r2 = %#x, r3 = %#x\\n"\r\t\.align 2/<cr>:set nohls<cr><cr>kkkkkk$a
-nmap j/ :s/\s*/&\/\//<cr>:set nohls<cr>
-nmap j\ :s/\(\s*\)\/*/\1/<cr>:set nohls<cr>
-nmap j( :s/\(\s*\).*/&()\r\1{\r\r\1}/g<cr>:set nohls<cr>kkk$i
-nmap j{ :s/\(\s*\).*/&\r\1{\r\1\t\r\1}/g<cr>:set nohls<cr>k$a
+function s:set_keymap_c()
+	vmap //			:s/^\(\s*\)\(.\+\)/\1\/\/ \2/g<CR>:set nohls<CR>
+	vmap \\			:s/^\(\s*\)\/\+\s*/\1/g<CR>:set nohls<CR>
+	imap f<Tab>		for (i = 0; i < ; i++)<CR>{<CR><CR>}<CR><Esc>kkkk$hhhhhi
+	imap w<Tab>		while ()<CR>{<CR><CR>}<CR><Esc>kkkk$i
+	imap d<Tab>		do<CR>{<CR><CR>} while ();<CR><Esc>k$hi
+	imap i<Tab>		if ()<CR>{<CR><CR>}<CR><Esc>kkkk$i
+	imap e<Tab>		else<CR>{<CR>}<CR><Esc>kk$a<CR>
+	imap ei<Tab>	else if ()<CR>{<CR><CR>}<CR><Esc>kkkk$i
+	imap s<Tab>		struct <CR>{<CR>};<CR><Esc>kkk$a
+	imap h<Tab>		static int (void)<CR>{<CR><CR>return 0;<CR><Backspace>}<CR><Esc>kkkkk$hhhhhi
+	imap m<Tab>		int main(int argc, char *argv[])<CR>{<CR><CR><Tab>return 0;<CR><Backspace>}<Esc>kkk$a<CR><Tab><Esc>ggi#include <cavan.h><CR><Esc><C-o>a
+	imap a<Tab>		.global main<CR><CR>main:<CR><Tab>stmfd sp!, {lr}<CR><CR>ldr r0, =string1<CR>bl printf<CR><CR><CR><CR>ldmfd sp!, {pc}<CR><CR>string1:<CR><Tab>.asciz "r1 = %#x, r2 = %#x, r3 = %#x\n"<CR>.align 2<CR><Esc><Esc>kkkkkkk$a<Tab>
+	imap (<Tab>		()<CR>{<CR><CR>}<CR><Esc>kkkk$i
+	imap {<Tab>		{<CR>}<CR><Esc>kk$a<CR>
+	imap {}			{<CR>}<CR><Esc>kk$a<CR>
+endfunction
 
-nmap ls :set mouse=a<cr>:set nu<cr>
-nmap ln :set mouse=<cr>:set nonu<cr>
-nmap lc :wa<cr>:!cavan-gcc<cr>
-nmap le :!./a.out<cr>
-nmap lm :wa<cr>:!make<cr>
+function s:set_keymap_cpp()
+	call s:set_keymap_c()
+	imap f<Tab>		for (int i = 0; i < ; i++)<CR>{<CR><CR>}<CR><Esc>kkkk$hhhhhi
+	imap c<Tab>		class <CR>{<CR><Backspace>private:<CR><CR><CR><Backspace>public:<CR><CR>};<CR><Esc>kkkkkkkk$a
+endfunction
+
+function s:set_keymap_asm()
+	vmap //			:s/^\(\s*\)\(.\+\)/\1\/\/ \2/g<CR>:set nohls<CR>
+	vmap \\			:s/^\(\s*\)\/\+\s*/\1/g<CR>:set nohls<CR>
+	imap m<Tab>		.global main<CR><CR>main:<CR><Tab>stmfd sp!, {lr}<CR><CR>ldr r0, =string1<CR>bl printf<CR><CR><CR><CR>ldmfd sp!, {pc}<CR><CR>string1:<CR><Tab>.asciz "r1 = %#x, r2 = %#x, r3 = %#x\n"<CR>.align 2<CR><Esc><Esc>kkkkkkk$a<Tab>
+endfunction
+
+function s:set_keymap_vim()
+	vmap //			:s/^\(\s*\)\(.\+\)/\1" \2/g<CR>:set nohls<CR>
+	vmap \\			:s/^\(\s*\)"\+\s*/\1/g<CR>:set nohls<CR>
+endfunction
+
+function s:set_keymap_sh()
+	vmap //			:s/^\(\s*\)\(.\+\)/\1# \2/g<CR>:set nohls<CR>
+	vmap \\			:s/^\(\s*\)#\+\s*/\1/g<CR>:set nohls<CR>
+endfunction
+
+function s:set_keymap_python()
+	vmap //			:s/^\(\s*\)\(.\+\)/\1# \2/g<CR>:set nohls<CR>
+	vmap \\			:s/^\(\s*\)#\+\s*/\1/g<CR>:set nohls<CR>
+endfunction
+
+if has("autocmd")
+	autocmd FileType c		call s:set_keymap_c()
+	autocmd FileType cpp	call s:set_keymap_cpp()
+	autocmd FileType asm	call s:set_keymap_asm()
+	autocmd FileType vim	call s:set_keymap_vim()
+	autocmd FileType sh		call s:set_keymap_sh()
+	autocmd FileType python	call s:set_keymap_python()
+endif
