@@ -12,29 +12,46 @@ nmap <C-m>		:set mouse=a<CR>:set nu<CR>
 nmap <C-n>		:set mouse=v<CR>:set nonu<CR>
 
 function s:set_keymap_c()
-	map \\			:'<,'>s/^\(\s*\)\/\/\+\s*/\1/g<CR>:set nohls<CR>
-	vmap /			:s/^\(\s*\)\(.\+\)/\1\/\/ \2/g<CR>:set nohls<CR>
-	vmap \\			:s/^\(\s*\)\/\/\+\s*/\1/g<CR>:set nohls<CR>
-	imap f<Tab>		for (i = 0; i < ; i++)<CR>{<CR><CR>}<Esc>kkk$hhhhhi
-	imap w<Tab>		while ()<CR>{<CR><CR>}<Esc>kkk$i
-	imap d<Tab>		do<CR>{<CR><CR>} while ();<Esc>$hi
-	imap i<Tab>		if ()<CR>{<CR><CR>}<Esc>kkk$i
-	imap e<Tab>		else<CR>{<CR>}<Esc>k$a<CR>
-	imap ei<Tab>	else if ()<CR>{<CR><CR>}<Esc>kkk$i
-	imap s<Tab>		struct <CR>{<CR>};<CR><Esc>kkk$a
-	imap h<Tab>		static int (void)<CR>{<CR><CR>return 0;<CR><Backspace>}<CR><Esc>kkkkk$hhhhhi
-	imap m<Tab>		int main(int argc, char *argv[])<CR>{<CR><CR>return 0;<CR><Backspace>}<Esc>ggi#include <cavan.h><CR><CR><Esc><C-o>kkk$a<CR>
-	imap (<Tab>		()<CR>{<CR><CR>}<CR><Esc>kkkk$i
-	imap {<Tab>		{<CR>}<CR><Esc>kk$a<CR>
-	imap {}			{<CR>}<CR><Esc>kk$a<CR>
-	imap #i<Tab>	#include <><Left>
-	imap #d<Tab>	#define<Space>
+	map \\				:'<,'>s/^\(\s*\)\/\/\+\s*/\1/g<CR>:set nohls<CR>
+	vmap /				:s/^\(\s*\)\(.\+\)/\1\/\/ \2/g<CR>:set nohls<CR>
+	vmap \\				:s/^\(\s*\)\/\/\+\s*/\1/g<CR>:set nohls<CR>
+	imap (<Tab>			()<CR>{<CR><CR>}<CR><Esc>kkkk$i
+	imap {<Tab>			{<CR>}<CR><Esc>kk$a<CR>
+	imap {}				{<Tab>
+	imap for<Tab>		for (i = 0; i < ; i++)<CR>{<CR><CR>}<Esc>kkk$hhhhhi
+	imap f<Tab>			for<Tab>
+	imap while<Tab>		while (<Tab>
+	imap w<Tab>			while<Tab>
+	imap dw<Tab>		do<CR>{<CR><CR>} while ();<Esc>$hi
+	imap d<Tab>			dw<Tab>
+	imap do<Tab>		dw<Tab>
+	imap if<Tab>		if (<Tab>
+	imap i<Tab>			if<Tab>
+	imap else<Tab>		else<CR>{<Tab>
+	imap e<Tab>			else<Tab>
+	imap ei<Tab>		else if<Tab>
+	imap struct<Tab>	struct <CR>{<CR>};<CR><Esc>kkk$a
+	imap s<Tab>			struct<Tab>
+	imap enum<Tab>		enum <CR>{<CR>};<CR><Esc>kkk$a
+	imap en<Tab>		enum<Tab>
+	imap union<Tab>		union <CR>{<CR>};<CR><Esc>kkk$a
+	imap u<Tab>			union<Tab>
+	imap h<Tab>			static int (void)<CR>{<CR><CR>return 0;<CR><Backspace>}<CR><Esc>kkkkk$hhhhhi
+	imap m<Tab>			int main(int argc, char *argv[])<CR>{<CR><CR>return 0;<CR><Backspace>}<Esc>ggi#include <cavan.h><CR><CR><Esc><C-o>kkk$a<CR>
+	imap in<Tab>		#include <><Left>
+	imap de<Tab>		#define<Space>
 endfunction
 
 function s:set_keymap_cpp()
 	call s:set_keymap_c()
 	imap f<Tab>		for (int i = 0; i < ; i++)<CR>{<CR><CR>}<CR><Esc>kkkk$hhhhhi
 	imap c<Tab>		class <CR>{<CR><Backspace>private:<CR><CR><CR><Backspace>public:<CR><CR>};<CR><Esc>kkkkkkkk$a
+endfunction
+
+function s:set_keymap_java()
+	call s:set_keymap_cpp()
+	imap f<Tab>		for (int i = 0; i < ; i++)<CR>{<CR><CR>}<CR><Esc>kkkk$hhhhhi
+	imap c<Tab>		public class <CR>{<CR><CR>}<CR><Esc>kkkk$a
 endfunction
 
 function s:set_keymap_asm()
@@ -71,6 +88,7 @@ endfunction
 if has("autocmd")
 	autocmd FileType c		call s:set_keymap_c()
 	autocmd FileType cpp	call s:set_keymap_cpp()
+	autocmd FileType java	call s:set_keymap_java()
 	autocmd FileType asm	call s:set_keymap_asm()
 	autocmd FileType vim	call s:set_keymap_vim()
 	autocmd FileType sh		call s:set_keymap_sh()
