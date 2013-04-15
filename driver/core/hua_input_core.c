@@ -1150,7 +1150,7 @@ int hua_input_device_set_enable(struct hua_input_device *dev, bool enable)
 
 	if (enable)
 	{
-		ret = hua_input_chip_set_power_lock(chip, true);
+		ret = hua_input_chip_set_active_lock(chip, true);
 		if (ret < 0)
 		{
 			pr_red_info("hua_input_chip_set_power");

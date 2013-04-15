@@ -73,6 +73,11 @@ struct cavan_dialog
 	struct cavan_display_memory_rect *backup;
 };
 
+struct cavan_label
+{
+	struct cavan_window window;
+};
+
 struct cavan_button
 {
 	struct cavan_window window;
@@ -142,6 +147,9 @@ void cavan_dialog_paint_handler(struct cavan_window *win);
 void cavan_dialog_click_handler(struct cavan_window *win, bool pressed);
 void cavan_dialog_move_handler(struct cavan_window *win, int x, int y);
 void cavan_dialog_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect);
+
+int cavan_label_init_handler(struct cavan_window *win, struct cavan_application_context *context);
+void cavan_label_paint_handler(struct cavan_window *win);
 
 int cavan_button_init_handler(struct cavan_window *win, struct cavan_application_context *context);
 void cavan_button_paint_handler(struct cavan_window *win);
@@ -223,6 +231,11 @@ static inline int cavan_window_init(struct cavan_window *win)
 static inline int cavan_dialog_init(struct cavan_dialog *dialog)
 {
 	return cavan_window_init_base(&dialog->window, cavan_dialog_init_handler);
+}
+
+static inline int cavan_label_init(struct cavan_label *label)
+{
+	return cavan_window_init_base(&label->window, cavan_label_init_handler);
 }
 
 static inline int cavan_button_init(struct cavan_button *button)
