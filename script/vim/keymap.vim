@@ -16,7 +16,7 @@ function s:set_keymap_c()
 	vmap /				:s/^\(\s*\)\(.\+\)/\1\/\/ \2/g<CR>:set nohls<CR>
 	vmap \\				:s/^\(\s*\)\/\/\+\s*/\1/g<CR>:set nohls<CR>
 	imap (<Tab>			()<CR>{<CR><CR>}<CR><Esc>kkkk$i
-	imap {<Tab>			{<CR>}<CR><Esc>kk$a<CR>
+	imap {<Tab>			{<CR>}<Esc>k$a<CR>
 	imap {}				{<Tab>
 	imap for<Tab>		for (i = 0; i < ; i++)<CR>{<CR><CR>}<Esc>kkk$hhhhhi
 	imap f<Tab>			for<Tab>
@@ -40,6 +40,10 @@ function s:set_keymap_c()
 	imap m<Tab>			int main(int argc, char *argv[])<CR>{<CR><CR>return 0;<CR><Backspace>}<Esc>ggi#include <cavan.h><CR><CR><Esc><C-o>kkk$a<CR>
 	imap in<Tab>		#include <><Left>
 	imap de<Tab>		#define<Space>
+	imap ret<Tab>		return ;<Left>
+	imap r<Tab>			ret<Tab>
+	imap b<Tab>			break;
+	imap c<Tab>			continue;
 endfunction
 
 function s:set_keymap_cpp()
