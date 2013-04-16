@@ -219,7 +219,6 @@ static void cavan_input_move_handler_dummy(struct cavan_input_device *dev, struc
 
 static void cavan_input_gsensor_handler_dummy(struct cavan_input_device *dev, struct cavan_gsensor_event *event, void *data)
 {
-	pr_bold_info("g-sensor: [%d, %d, %d]", event->x, event->y, event->z);
 }
 
 static void cavan_input_mouse_wheel_handler_dummy(struct cavan_input_device *dev, int code, int value, void *data)

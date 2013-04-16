@@ -113,6 +113,8 @@ struct cavan_application_context
 
 	pthread_mutex_t lock;
 	int pipefd[2];
+
+	bool (*on_key_pressed)(struct cavan_application_context *context, const char *name, int code, int value, void *data);
 };
 
 int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child);
@@ -161,6 +163,8 @@ int cavan_progress_bar_init(struct cavan_progress_bar *bar, double total);
 int cavan_progress_bar_start(struct cavan_progress_bar *bar, double total);
 void cavan_progress_bar_set_pos(struct cavan_progress_bar *bar, double pos);
 
+bool cavan_window_clicked(struct cavan_window *win, bool pressed);
+
 int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data);
 void cavan_application_uninit(struct cavan_application_context *context);
 int cavan_application_main_loop(struct cavan_application_context *context, void (*handler)(struct cavan_application_context *context, void *data), void *data);
@@ -179,6 +183,13 @@ static inline void cavan_application_add_window(struct cavan_application_context
 static inline int cavan_application_remove_window(struct cavan_application_context *context, struct cavan_window *win)
 {
 	return cavan_window_remove_child(&context->win_root, win);
+}
+
+static inline void cavan_application_set_on_key_pressed(struct cavan_application_context *context, bool (*handler)(struct cavan_application_context *context, const char *name, int code, int value, void *data))
+{
+	pthread_mutex_lock(&context->lock);
+	context->on_key_pressed = handler;
+	pthread_mutex_unlock(&context->lock);
 }
 
 static inline void cavan_window_set_on_paint(struct cavan_window *win, bool (*handler)(struct cavan_window *win, void *data))
@@ -221,6 +232,11 @@ static inline void cavan_window_set_on_move(struct cavan_window *win, bool (*han
 	pthread_mutex_lock(&win->lock);
 	win->on_move = handler;
 	pthread_mutex_unlock(&win->lock);
+}
+
+static inline void cavan_window_get_rect(struct cavan_window *win, struct cavan_display_rect *rect)
+{
+	return win->get_rect_handler(win, rect);
 }
 
 static inline int cavan_window_init(struct cavan_window *win)

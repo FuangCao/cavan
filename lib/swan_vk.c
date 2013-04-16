@@ -703,7 +703,7 @@ static bool swan_vk_event_handler(struct cavan_event_device *dev, struct input_e
 	case EV_KEY:
 		swan_vk_map_key(desc->fd, event);
 		break;
-	
+
 	case EV_ABS:
 		swan_vk_map_abs(event);
 		break;

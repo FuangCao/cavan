@@ -16,20 +16,39 @@ int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double 
 	// println("x1 = %d, y1 = %d, x2 = %d, y2 = %d", x1, y1, x2, y2);
 
 	x_diff = x2 - x1;
-	if (x_diff > -5 && x_diff < 5)
-	{
-		*a = 0;
-		*b = 0;
-		return -EINVAL;
-	}
-
 	*a = ((double)(y2 - y1)) / x_diff;
 	*b = y1 - *a * x1;
 
 	return 0;
 }
 
-int cavan_display_draw_line_horizon(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
+static void cavan_display_draw_line_horizon_stand(struct cavan_display_device *display, int x1, int x2, int y)
+{
+	cavan_display_color_t color;
+	cavan_display_draw_point_handler_t handler;
+
+	handler = display->draw_point;
+	color = display->pen_color;
+
+	if (x1 < x2)
+	{
+		while (x1 <= x2)
+		{
+			handler(display, x1, y, color);
+			x1++;
+		}
+	}
+	else
+	{
+		while (x1 >= x2)
+		{
+			handler(display, x1, y, color);
+			x1--;
+		}
+	}
+}
+
+static void cavan_display_draw_line_horizon(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
 {
 	double a, b;
 	cavan_display_color_t color;
@@ -37,28 +56,6 @@ int cavan_display_draw_line_horizon(struct cavan_display_device *display, int x1
 
 	handler = display->draw_point;
 	color = display->pen_color;
-
-	if (x1 == x2)
-	{
-		if (y1 < y2)
-		{
-			while (y1 <= y2)
-			{
-				handler(display, x1, y1, color);
-				y1++;
-			}
-		}
-		else
-		{
-			while (y1 >= y2)
-			{
-				handler(display, x1, y1, color);
-				y1--;
-			}
-		}
-
-		return 0;
-	}
 
 	cavan_build_line_equation(x1, y1, x2, y2, &a, &b);
 
@@ -78,11 +75,35 @@ int cavan_display_draw_line_horizon(struct cavan_display_device *display, int x1
 			x1--;
 		}
 	}
-
-	return 0;
 }
 
-int cavan_display_draw_line_vertical(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
+static void cavan_display_draw_line_vertical_stand(struct cavan_display_device *display, int x, int y1, int y2)
+{
+	cavan_display_color_t color;
+	cavan_display_draw_point_handler_t handler;
+
+	handler = display->draw_point;
+	color = display->pen_color;
+
+	if (y1 < y2)
+	{
+		while (y1 <= y2)
+		{
+			handler(display, x, y1, color);
+			y1++;
+		}
+	}
+	else
+	{
+		while (y1 >= y2)
+		{
+			handler(display, x, y1, color);
+			y1--;
+		}
+	}
+}
+
+static void cavan_display_draw_line_vertical(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
 {
 	double a, b;
 	cavan_display_color_t color;
@@ -90,28 +111,6 @@ int cavan_display_draw_line_vertical(struct cavan_display_device *display, int x
 
 	handler = display->draw_point;
 	color = display->pen_color;
-
-	if (y1 == y2)
-	{
-		if (x1 < x2)
-		{
-			while (x1 <= x2)
-			{
-				handler(display, x1, y1, color);
-				x1++;
-			}
-		}
-		else
-		{
-			while (x1 >= x2)
-			{
-				handler(display, x1, y1, color);
-				x1--;
-			}
-		}
-
-		return 0;
-	}
 
 	cavan_build_line_equation(y1, x1, y2, x2, &a, &b);
 
@@ -131,27 +130,74 @@ int cavan_display_draw_line_vertical(struct cavan_display_device *display, int x
 			y1--;
 		}
 	}
+}
 
-	return 0;
+static int cavan_display_adjust_value(int value, int res)
+{
+	if (value < 0)
+	{
+		return 0;
+	}
+	else if (value >= res)
+	{
+		return res - 1;
+	}
+	else
+	{
+		return value;
+	}
 }
 
 int cavan_display_draw_line_dummy(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
 {
-	int ret;
+	int diffx, diffy;
 
-	if (x1 < 0 || x1 >= display->xres || x2 < 0 || x2 >= display->xres)
+	x1 = cavan_display_adjust_value(x1, display->xres);
+	x2 = cavan_display_adjust_value(x2, display->xres);
+
+	y1 = cavan_display_adjust_value(y1, display->yres);
+	y2 = cavan_display_adjust_value(y2, display->yres);
+
+	diffx = x1 - x2;
+	if (diffx < 0)
 	{
-		return -EINVAL;
+		diffx = -diffx;
 	}
 
-	if (y1 < 0 || y1 >= display->yres || y2 < 0 || y2 >= display->yres)
+	diffy = y1 - y2;
+	if (diffy < 0)
 	{
-		return -EINVAL;
+		diffy = -diffy;
 	}
 
-	ret = cavan_display_draw_line_horizon(display, x1, y1, x2, y2);
+	pthread_mutex_lock(&display->lock);
 
-	return ret < 0 ? ret : cavan_display_draw_line_vertical(display, x1, y1, x2, y2);
+	if (diffx > diffy)
+	{
+		if (diffy < 2)
+		{
+			cavan_display_draw_line_horizon_stand(display, x1, x2, y1);
+		}
+		else
+		{
+			cavan_display_draw_line_horizon(display, x1, y1, x2, y2);
+		}
+	}
+	else
+	{
+		if (diffx < 2)
+		{
+			cavan_display_draw_line_vertical_stand(display, x1, y1, y2);
+		}
+		else
+		{
+			cavan_display_draw_line_vertical(display, x1, y1, x2, y2);
+		}
+	}
+
+	pthread_mutex_unlock(&display->lock);
+
+	return 0;
 }
 
 int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left, int top, int width, int height)
@@ -160,6 +206,8 @@ int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left
 	int right, bottom;
 	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
+
+	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -198,6 +246,8 @@ int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left
 		handler(display, right, i, color);
 	}
 
+	pthread_mutex_unlock(&display->lock);
+
 	return 0;
 }
 
@@ -207,6 +257,8 @@ int cavan_display_fill_rect_dummy(struct cavan_display_device *display, int left
 	int x, y;
 	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
+
+	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -241,6 +293,8 @@ int cavan_display_fill_rect_dummy(struct cavan_display_device *display, int left
 		}
 	}
 
+	pthread_mutex_unlock(&display->lock);
+
 	return 0;
 }
 
@@ -256,6 +310,8 @@ int cavan_display_draw_circle_dummy(struct cavan_display_device *display, int x,
 	{
 		return -EINVAL;
 	}
+
+	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -276,6 +332,8 @@ int cavan_display_draw_circle_dummy(struct cavan_display_device *display, int x,
 		handler(display, x - tmp, y - i, color);
 	}
 
+	pthread_mutex_unlock(&display->lock);
+
 	return 0;
 }
 
@@ -291,6 +349,8 @@ int cavan_display_fill_circle_dummy(struct cavan_display_device *display, int x,
 	{
 		return -EINVAL;
 	}
+
+	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -313,6 +373,8 @@ int cavan_display_fill_circle_dummy(struct cavan_display_device *display, int x,
 		}
 	}
 
+	pthread_mutex_unlock(&display->lock);
+
 	return 0;
 }
 
@@ -334,6 +396,9 @@ int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x
 
 	aa *= aa;
 	bb *= bb;
+
+	pthread_mutex_lock(&display->lock);
+
 	handler = display->draw_point;
 	color = display->pen_color;
 
@@ -357,6 +422,8 @@ int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x
 		handler(display, x - tmp, y - i, color);
 	}
 
+	pthread_mutex_unlock(&display->lock);
+
 	return 0;
 }
 
@@ -378,6 +445,9 @@ int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x
 
 	aa *= aa;
 	bb *= bb;
+
+	pthread_mutex_lock(&display->lock);
+
 	handler = display->draw_point;
 	color = display->pen_color;
 
@@ -402,6 +472,8 @@ int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x
 			handler(display, left, bottom, color);
 		}
 	}
+
+	pthread_mutex_unlock(&display->lock);
 
 	return 0;
 }
@@ -516,6 +588,8 @@ int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan
 	// println("left = %d, right = %d", left, right);
 	// println("a1 = %lf, b1 = %lf, a2 = %lf, b2 = %lf", a1, b1, a2, b2);
 
+	pthread_mutex_lock(&display->lock);
+
 	handler = display->draw_point;
 	color = display->pen_color;
 
@@ -547,6 +621,8 @@ int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan
 			left++;
 		}
 
+		pthread_mutex_unlock(&display->lock);
+
 		return 0;
 	}
 
@@ -563,6 +639,8 @@ int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan
 
 		left++;
 	}
+
+	pthread_mutex_unlock(&display->lock);
 
 	return 0;
 }
@@ -989,6 +1067,15 @@ void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_d
 
 void cavan_display_destory_dummy(struct cavan_display_device *display)
 {
+	pthread_mutex_destroy(&display->lock);
+}
+
+int cavan_display_init(struct cavan_display_device *display)
+{
+	mem_set(display, 0, sizeof(*display));
+	pthread_mutex_init(&display->lock, NULL);
+
+	return 0;
 }
 
 int cavan_display_check(struct cavan_display_device *display)

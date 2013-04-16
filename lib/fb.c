@@ -229,12 +229,20 @@ void cavan_fb_uninit(struct cavan_fb_device *dev)
 
 static cavan_display_color_t cavan_fb_display_build_color_handler(struct cavan_display_device *display, float red, float green, float blue, float transp)
 {
-	return cavan_fb_build_color4f(display->private_data, red, green, blue, transp);
+	cavan_display_color_t color;
+
+	pthread_mutex_lock(&display->lock);
+	color = cavan_fb_build_color4f(display->private_data, red, green, blue, transp);
+	pthread_mutex_unlock(&display->lock);
+
+	return color;
 }
 
 static void cavan_fb_display_refresh_handler(struct cavan_display_device *display)
 {
+	pthread_mutex_lock(&display->lock);
 	cavan_fb_refresh(display->private_data);
+	pthread_mutex_unlock(&display->lock);
 }
 
 static void cavan_fb_display_draw_point_handler(struct cavan_display_device *display, int x, int y, cavan_display_color_t color)
@@ -245,11 +253,12 @@ static void cavan_fb_display_draw_point_handler(struct cavan_display_device *dis
 static void cavan_fb_display_destory_handler1(struct cavan_display_device *display)
 {
 	cavan_fb_uninit(display->private_data);
+	cavan_display_destory_dummy(display);
 }
 
 static void cavan_fb_display_destory_handler2(struct cavan_display_device *display)
 {
-	cavan_fb_uninit(display->private_data);
+	cavan_fb_display_destory_handler1(display);
 	free(display);
 }
 

@@ -61,6 +61,8 @@ struct cavan_display_device
 	void *private_data;
 	cavan_display_color_t pen_color;
 
+	pthread_mutex_t lock;
+
 	void (*destory)(struct cavan_display_device *display);
 	void (*refresh)(struct cavan_display_device *display);
 	cavan_display_color_t (*build_color)(struct cavan_display_device *display, float red, float green, float blue, float transp);
@@ -91,8 +93,6 @@ struct cavan_display_device
 typedef void (*cavan_display_draw_point_handler_t)(struct cavan_display_device *display, int x, int y, cavan_display_color_t color);
 
 int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b);
-int cavan_display_draw_line_horizon(struct cavan_display_device *display, int x1, int y1, int x2, int y2);
-int cavan_display_draw_line_vertical(struct cavan_display_device *display, int x1, int y1, int x2, int y2);
 int cavan_display_draw_line_dummy(struct cavan_display_device *display, int x1, int y1, int x2, int y2);
 int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left, int top, int width, int height);
 int cavan_display_fill_rect_dummy(struct cavan_display_device *display, int left, int top, int width, int height);
@@ -124,6 +124,8 @@ int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, i
 void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_display_color_t color);
 void cavan_display_destory_dummy(struct cavan_display_device *display);
 
+int cavan_display_init(struct cavan_display_device *display);
+void cavan_display_uninit(struct cavan_display_device *display);
 int cavan_display_check(struct cavan_display_device *display);
 
 struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height);
@@ -173,11 +175,6 @@ static inline int cavan_display_clear(struct cavan_display_device *display, cava
 	display->set_color(display, color);
 
 	return display->fill_rect(display, 0, 0, display->xres, display->yres);
-}
-
-static inline void cavan_display_init(struct cavan_display_device *display)
-{
-	mem_set(display, 0, sizeof(*display));
 }
 
 static inline int cavan_display_memory_backup(struct cavan_display_device *display, struct cavan_display_memory *mem, int x, int y)
