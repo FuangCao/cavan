@@ -10,6 +10,7 @@ SDK_HOME="${TOOLS_HOME}/${SDK_NAME}"
 CLASS_PATH=".$(find ${JAVA_HOME}/lib ${JRE_HOME}/lib -maxdepth 1 -name "*.jar" | while read line; do echo -n :${line}; done)"
 
 CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
+CAVAN_OUT_ARM="${CAVAN_HOME}/out/arm/static"
 CAVAN_BIN="${CAVAN_OUT_DEBUG}:${CAVAN_HOME}/script"
 TOOLCHIAN_BIN="${TOOLS_HOME}/arm-cavan-linux-gnueabi/bin:${TOOLS_HOME}/gcc-4.1.2-glibc-2.5-nptl-3/arm-none-linux-gnueabi/bin"
 SDK_BIN="${SDK_HOME}/platform-tools:${SDK_HOME}/tools"
