@@ -134,15 +134,18 @@ class GitSvnManager(CavanCommandBase):
 		self.mFileSvnIgnore = self.getAbsPath(".gitignore")
 
 		self.mPathGitSvn = self.getAbsPath(".git/cavan-svn")
-		if not os.path.isdir(self.mPathGitSvn):
-			os.makedirs(self.mPathGitSvn)
-
 		self.mPathPatch = self.getAbsPath(".git/cavan-patch")
-		if not os.path.isdir(self.mPathPatch):
-			os.makedirs(self.mPathPatch)
-
 		self.mFileSvnLog = os.path.join(self.mPathGitSvn, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mPathGitSvn, "svn_info.xml")
+
+	def findRootPath(self):
+		pathname = self.mPathRoot
+		while not os.path.isdir(os.path.join(pathname, ".git")):
+			pathname = os.path.dirname(pathname)
+			if not pathname:
+				return None
+
+		return pathname
 
 	def genSvnInfoXml(self, url = None):
 		if url == None:
@@ -574,6 +577,12 @@ class GitSvnManager(CavanCommandBase):
 			self.prRedInfo("Has been initialized")
 			return False
 
+		if not os.path.isdir(self.mPathGitSvn):
+			os.makedirs(self.mPathGitSvn)
+
+		if not os.path.isdir(self.mPathPatch):
+			os.makedirs(self.mPathPatch)
+
 		if self.mUrl == None and not self.getSvnInfo():
 			return False
 
@@ -618,6 +627,12 @@ class GitSvnManager(CavanCommandBase):
 				url = argv[2]
 			else:
 				url = None
+
+			pathname = self.findRootPath()
+			if not pathname:
+				return False
+
+			self.setRootPath(pathname)
 
 			if subcmd in ["dcommit"]:
 				return self.doDcommit(url)
