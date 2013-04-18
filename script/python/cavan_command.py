@@ -96,7 +96,7 @@ class CavanCommandBase:
 		for node in messge:
 			stdout.write(node)
 
-		stdout.write("\n\033[0m")
+		stdout.write("\033[0m\n")
 
 	def prBoldInfo(self, *messge):
 		self.prColorInfo("1", messge)

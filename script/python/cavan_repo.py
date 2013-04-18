@@ -414,6 +414,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		for node in self.mManifest.getProjects():
 			pathname = self.getProjectAbsPath(node)
 			command = commandRaw.replace("<path>", pathname).replace("<name>", node[0]).replace("<all>", "*")
+			self.prBrownInfo(command, " => ", pathname)
 			if not self.doSystemExec(command, cwd = pathname):
 				return False
 
