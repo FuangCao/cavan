@@ -37,7 +37,7 @@ function s:set_keymap_c()
 	imap union<Tab>		union <CR>{<CR>};<CR><Esc>kkk$a
 	imap u<Tab>			union<Tab>
 	imap h<Tab>			static int (void)<CR>{<CR><CR>return 0;<CR><Backspace>}<CR><Esc>kkkkk$hhhhhi
-	imap m<Tab>			int main(int argc, char *argv[])<CR>{<CR><CR>return 0;<CR><Backspace>}<Esc>ggi#include <cavan.h><CR><CR><Esc><C-o>kkk$a<CR>
+	imap m<Tab>			int main(int argc, char *argv[])<CR>{<CR><CR>return 0;<CR><Backspace>}<Esc>ggi#include <stdio.h><CR><CR><Esc><C-o>kkk$a<CR>
 	imap in<Tab>		#include <><Left>
 	imap de<Tab>		#define<Space>
 	imap ret<Tab>		return ;<Left>
