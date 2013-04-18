@@ -15,10 +15,10 @@ function s:set_keymap_c()
 	map \\				:'<,'>s/^\(\s*\)\/\/\+\s*/\1/g<CR>:set nohls<CR>
 	vmap /				:s/^\(\s*\)\(.\+\)/\1\/\/ \2/g<CR>:set nohls<CR>
 	vmap \\				:s/^\(\s*\)\/\/\+\s*/\1/g<CR>:set nohls<CR>
-	imap (<Tab>			()<CR>{<CR><CR>}<CR><Esc>kkkk$i
+	imap (<Tab>			()<CR>{<CR>}<CR><Esc>kkk$i
 	imap {<Tab>			{<CR>}<Esc>k$a<CR>
 	imap {}				{<Tab>
-	imap for<Tab>		for (i = 0; i < ; i++)<CR>{<CR><CR>}<Esc>kkk$hhhhhi
+	imap for<Tab>		for (i = 0; i < ; i++)<CR>{<CR>}<Esc>kk$hhhhhi
 	imap f<Tab>			for<Tab>
 	imap while<Tab>		while (<Tab>
 	imap w<Tab>			while<Tab>

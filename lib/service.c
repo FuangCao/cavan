@@ -9,6 +9,205 @@
 #include <cavan/process.h>
 #include <cavan/permission.h>
 
+static int cavan_thread_wait_handler_dummy(struct cavan_thread *thread, void *data)
+{
+	return 0;
+}
+
+static int cavan_thread_wake_handler_dummy(struct cavan_thread *thread, void *data)
+{
+	return 0;
+}
+
+int cavan_thread_init(struct cavan_thread *thread, void *data)
+{
+	int ret;
+
+	if (thread->handler == NULL)
+	{
+		pr_red_info("thread->handler == NULL");
+		return -EINVAL;
+	}
+
+	ret = pthread_mutex_init(&thread->lock, NULL);
+	if (ret < 0)
+	{
+		pr_red_info("pthread_mutex_init");
+		return ret;
+	}
+
+	thread->state = CAVAN_THREAD_STATE_NONE;
+	thread->private_data = data;
+
+	if (thread->wait_handler == NULL)
+	{
+		thread->wait_handler = cavan_thread_wait_handler_dummy;
+	}
+
+	if (thread->wake_handker == NULL)
+	{
+		thread->wake_handker = cavan_thread_wake_handler_dummy;
+	}
+
+	return 0;
+}
+
+void cavan_thread_deinit(struct cavan_thread *thread)
+{
+	pthread_mutex_destroy(&thread->lock);
+}
+
+static void cavan_thread_sighandler(int signum)
+{
+	pthread_exit(0);
+}
+
+static void *cavan_thread_main_loop(void *data)
+{
+	int ret;
+	struct cavan_thread *thread = data;
+
+	signal(SIGUSR1, cavan_thread_sighandler);
+
+	pthread_mutex_lock(&thread->lock);
+
+	data = thread->private_data;
+	thread->state = CAVAN_THREAD_STATE_RUNNING;
+
+	while (1)
+	{
+		pthread_mutex_unlock(&thread->lock);
+		ret = thread->wait_handler(thread, data);
+		pthread_mutex_lock(&thread->lock);
+		if (ret < 0)
+		{
+			pr_red_info("thread->wait_handler");
+			goto out_thread_exit;
+		}
+
+		switch (thread->state)
+		{
+		case CAVAN_THREAD_STATE_RUNNING:
+			pthread_mutex_unlock(&thread->lock);
+			ret = thread->handler(thread, data);
+			pthread_mutex_lock(&thread->lock);
+			if (ret < 0)
+			{
+				pr_red_info("thread->handler");
+				goto out_thread_exit;
+			}
+			break;
+
+		case CAVAN_THREAD_STATE_STOPPPING:
+			pr_bold_info("Thread %s stopping", thread->name);
+			goto out_thread_exit;
+
+		case CAVAN_THREAD_STATE_SUSPEND:
+			pr_bold_info("Thread %s suspend", thread->name);
+			break;
+
+		default:
+			pr_red_info("Thread %s invalid state %d", thread->name, thread->state);
+		}
+	}
+
+out_thread_exit:
+	thread->state = CAVAN_THREAD_STATE_STOPPED;
+	pr_bold_info("Thread %s soppped", thread->name);
+
+	pthread_mutex_unlock(&thread->lock);
+
+	return NULL;
+}
+
+int cavan_thread_start(struct cavan_thread *thread)
+{
+	int ret;
+
+	pthread_mutex_lock(&thread->lock);
+
+	if (thread->state == CAVAN_THREAD_STATE_NONE)
+	{
+		ret = pthread_create(&thread->id, NULL, cavan_thread_main_loop, thread);
+		if (ret < 0)
+		{
+			pr_red_info("pthread_create");
+		}
+		else
+		{
+			thread->state = CAVAN_THREAD_STATE_IDEL;
+		}
+	}
+	else
+	{
+		ret = 0;
+	}
+
+	pthread_mutex_unlock(&thread->lock);
+
+	return ret;
+}
+
+void cavan_thread_stop(struct cavan_thread *thread)
+{
+	pthread_mutex_lock(&thread->lock);
+
+	if (thread->state == CAVAN_THREAD_STATE_RUNNING || thread->state == CAVAN_THREAD_STATE_SUSPEND)
+	{
+		int i;
+
+		for (i = 0; i < 10; i++)
+		{
+			thread->state = CAVAN_THREAD_STATE_STOPPPING;
+
+			pthread_mutex_unlock(&thread->lock);
+			thread->wake_handker(thread, thread->private_data);
+			msleep(1);
+			pthread_mutex_lock(&thread->lock);
+
+			if (thread->state == CAVAN_THREAD_STATE_STOPPED)
+			{
+				break;
+			}
+		}
+	}
+
+	if (thread->state != CAVAN_THREAD_STATE_NONE && thread->state != CAVAN_THREAD_STATE_STOPPED)
+	{
+		pthread_kill(thread->id, SIGUSR1);
+	}
+
+	pthread_mutex_unlock(&thread->lock);
+}
+
+void cavan_thread_suspend(struct cavan_thread *thread)
+{
+	pthread_mutex_lock(&thread->lock);
+
+	if (thread->state == CAVAN_THREAD_STATE_RUNNING)
+	{
+		thread->state = CAVAN_THREAD_STATE_SUSPEND;
+	}
+
+	pthread_mutex_unlock(&thread->lock);
+}
+
+void cavan_thread_resume(struct cavan_thread *thread)
+{
+	pthread_mutex_lock(&thread->lock);
+
+	if (thread->state == CAVAN_THREAD_STATE_SUSPEND)
+	{
+		thread->state = CAVAN_THREAD_STATE_RUNNING;
+	}
+
+	pthread_mutex_unlock(&thread->lock);
+
+	thread->wake_handker(thread, thread->private_data);
+}
+
+// ================================================================================
+
 static void *cavan_service_handler(void *data)
 {
 	struct cavan_service_description *desc = data;

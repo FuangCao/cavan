@@ -22,6 +22,8 @@
 #include <cavan/timer.h>
 #include <cavan.h>
 
+#define CAVAN_INPUT_MESSAGE_POOL_SIZE	20
+
 #ifndef SYN_MT_REPORT
 #define SYN_MT_REPORT		2
 #define ABS_MT_SLOT			0x2f	/* MT slot being modified */
@@ -38,6 +40,93 @@
 #define ABS_MT_PRESSURE		0x3a	/* Pressure on contact area */
 #define ABS_MT_DISTANCE		0x3b	/* Contact hover distance */
 #endif
+
+typedef enum cavan_input_message_type
+{
+	CAVAN_INPUT_MESSAGE_KEY,
+	CAVAN_INPUT_MESSAGE_MOVE,
+	CAVAN_INPUT_MESSAGE_TOUCH,
+	CAVAN_INPUT_MESSAGE_MOUSE_MOVE,
+	CAVAN_INPUT_MESSAGE_MOUSE_WHEEL,
+	CAVAN_INPUT_MESSAGE_MOUSE_TOUCH,
+} cavan_input_message_type_t;
+
+struct cavan_input_message_key
+{
+	const char *name;
+	int code;
+	int value;
+};
+
+struct cavan_input_message_move
+{
+	int id;
+	int x;
+	int y;
+};
+
+struct cavan_input_message_touch
+{
+	int id;
+	int x;
+	int y;
+	int pressure;
+};
+
+struct cavan_input_message_mouse_move
+{
+	int x;
+	int y;
+};
+
+struct cavan_input_message_mouse_wheel
+{
+	int code;
+	int value;
+};
+
+struct cavan_input_message_mouse_touch
+{
+	int code;
+	int value;
+};
+
+typedef struct cavan_input_message
+{
+	cavan_input_message_type_t type;
+
+	union
+	{
+		struct cavan_input_message_key key;
+		struct cavan_input_message_move move;
+		struct cavan_input_message_touch touch;
+		struct cavan_input_message_mouse_move mouse_move;
+		struct cavan_input_message_mouse_wheel mouse_wheel;
+		struct cavan_input_message_mouse_touch mouse_touch;
+	};
+
+	void *data;
+	struct cavan_input_message *next;
+
+	void (*destroy)(struct cavan_input_message *message);
+} cavan_input_message_t;
+
+struct cavan_input_message_pool
+{
+	pthread_mutex_t lock;
+	cavan_input_message_t *buff;
+	cavan_input_message_t *head;
+};
+
+struct cavan_input_message_queue
+{
+	pthread_mutex_t lock;
+	pthread_cond_t cond;
+
+	struct cavan_input_message_pool pool;
+	cavan_input_message_t *head;
+	cavan_input_message_t *tail;
+};
 
 struct cavan_gsensor_event
 {
@@ -86,6 +175,19 @@ struct cavan_input_service
 void cavan_input_service_init(struct cavan_input_service *service, bool (*matcher)(struct cavan_event_matcher *, void *));
 int cavan_input_service_start(struct cavan_input_service *service, void *data);
 int cavan_input_service_stop(struct cavan_input_service *service);
+
+void cavan_input_message_pool_push(struct cavan_input_message_pool *pool, cavan_input_message_t *message);
+cavan_input_message_t *cavan_input_message_pool_pop(struct cavan_input_message_pool *pool);
+int cavan_input_message_pool_init(struct cavan_input_message_pool *pool, size_t size);
+void cavan_input_message_pool_deinit(struct cavan_input_message_pool *pool);
+
+int cavan_input_message_queue_init(struct cavan_input_message_queue *queue, size_t size);
+void cavan_input_message_queue_deinit(struct cavan_input_message_queue *queue);
+cavan_input_message_t *cavan_input_message_create(struct cavan_input_message_queue *queue);
+void cavan_input_message_queue_append(struct cavan_input_message_queue *queue, cavan_input_message_t *message);
+cavan_input_message_t *cavan_input_message_queue_pop(struct cavan_input_message_queue *queue);
+cavan_input_message_t *cavan_input_message_queue_wait(struct cavan_input_message_queue *queue);
+cavan_input_message_t *cavan_input_message_queue_timedwait(struct cavan_input_message_queue *queue, u32 ms);
 
 static inline int cavan_input_service_join(struct cavan_input_service *service)
 {
