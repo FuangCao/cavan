@@ -20,16 +20,19 @@ typedef enum cavan_thread_state
 
 struct cavan_thread
 {
-	pthread_t id;
 	const char *name;
+
+	pthread_t id;
+	int pipefd[2];
+
 	pthread_mutex_t lock;
 	cavan_thread_state_t state;
 
 	void *private_data;
 
-	int (*wait_handler)(struct cavan_thread *thread, void *data);
-	int (*wake_handker)(struct cavan_thread *thread, void *data);
-	int (*handler)(struct cavan_thread *thread, void *data);
+	int (*wait_handler)(struct cavan_thread *thread, u32 *event, void *data);
+	int (*wake_handker)(struct cavan_thread *thread, u32 event, void *data);
+	int (*handler)(struct cavan_thread *thread, u32 event, void *data);
 };
 
 struct cavan_service_description
@@ -54,6 +57,8 @@ struct cavan_daemon_description
 	int super_permission;
 };
 
+int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
+int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event);
 int cavan_thread_init(struct cavan_thread *thread, void *data);
 void cavan_thread_deinit(struct cavan_thread *thread);
 int cavan_thread_start(struct cavan_thread *thread);
@@ -65,3 +70,8 @@ int cavan_service_run(struct cavan_service_description *desc);
 int cavan_service_stop(struct cavan_service_description *desc);
 int cavan_daemon_run(struct cavan_daemon_description *desc);
 int cavan_daemon_stop(struct cavan_daemon_description *desc);
+
+static inline int cavan_thread_join(struct cavan_thread *thread)
+{
+	return pthread_join(thread->id, NULL);
+}

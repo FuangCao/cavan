@@ -9,14 +9,37 @@
 #include <cavan/process.h>
 #include <cavan/permission.h>
 
-static int cavan_thread_wait_handler_dummy(struct cavan_thread *thread, void *data)
+int cavan_thread_send_event(struct cavan_thread *thread, u32 event)
 {
+	pr_bold_info("send event %d", event);
+
+	return write(thread->pipefd[1], &event, sizeof(event));
+}
+
+int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event)
+{
+	int ret;
+
+	ret = read(thread->pipefd[0], event, sizeof(*event));
+	if (ret < 0)
+	{
+		pr_red_info("read");
+		return ret;
+	}
+
+	pr_bold_info("receive event %d", *event);
+
 	return 0;
 }
 
-static int cavan_thread_wake_handler_dummy(struct cavan_thread *thread, void *data)
+static int cavan_thread_wait_handler_dummy(struct cavan_thread *thread, u32 *event, void *data)
 {
-	return 0;
+	return cavan_thread_recv_event(thread, event);
+}
+
+static int cavan_thread_wake_handler_dummy(struct cavan_thread *thread, u32 event, void *data)
+{
+	return cavan_thread_send_event(thread, event);
 }
 
 int cavan_thread_init(struct cavan_thread *thread, void *data)
@@ -36,6 +59,13 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 		return ret;
 	}
 
+	ret = pipe(thread->pipefd);
+	if (ret < 0)
+	{
+		pr_red_info("pipe");
+		goto out_pthread_mutex_destroy;
+	}
+
 	thread->state = CAVAN_THREAD_STATE_NONE;
 	thread->private_data = data;
 
@@ -49,7 +79,9 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 		thread->wake_handker = cavan_thread_wake_handler_dummy;
 	}
 
-	return 0;
+out_pthread_mutex_destroy:
+	pthread_mutex_destroy(&thread->lock);
+	return ret;
 }
 
 void cavan_thread_deinit(struct cavan_thread *thread)
@@ -59,12 +91,18 @@ void cavan_thread_deinit(struct cavan_thread *thread)
 
 static void cavan_thread_sighandler(int signum)
 {
-	pthread_exit(0);
+	pr_bold_info("signum = %d", signum);
+
+	if (signum == SIGUSR1)
+	{
+		pthread_exit(0);
+	}
 }
 
 static void *cavan_thread_main_loop(void *data)
 {
 	int ret;
+	u32 event;
 	struct cavan_thread *thread = data;
 
 	signal(SIGUSR1, cavan_thread_sighandler);
@@ -77,7 +115,7 @@ static void *cavan_thread_main_loop(void *data)
 	while (1)
 	{
 		pthread_mutex_unlock(&thread->lock);
-		ret = thread->wait_handler(thread, data);
+		ret = thread->wait_handler(thread, &event, data);
 		pthread_mutex_lock(&thread->lock);
 		if (ret < 0)
 		{
@@ -89,7 +127,7 @@ static void *cavan_thread_main_loop(void *data)
 		{
 		case CAVAN_THREAD_STATE_RUNNING:
 			pthread_mutex_unlock(&thread->lock);
-			ret = thread->handler(thread, data);
+			ret = thread->handler(thread, event, data);
 			pthread_mutex_lock(&thread->lock);
 			if (ret < 0)
 			{
@@ -161,7 +199,7 @@ void cavan_thread_stop(struct cavan_thread *thread)
 			thread->state = CAVAN_THREAD_STATE_STOPPPING;
 
 			pthread_mutex_unlock(&thread->lock);
-			thread->wake_handker(thread, thread->private_data);
+			thread->wake_handker(thread, 0, thread->private_data);
 			msleep(1);
 			pthread_mutex_lock(&thread->lock);
 
@@ -203,7 +241,7 @@ void cavan_thread_resume(struct cavan_thread *thread)
 
 	pthread_mutex_unlock(&thread->lock);
 
-	thread->wake_handker(thread, thread->private_data);
+	thread->wake_handker(thread, 0, thread->private_data);
 }
 
 // ================================================================================
