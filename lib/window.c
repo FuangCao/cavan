@@ -359,8 +359,6 @@ static void cavan_window_set_abs_position_base(struct cavan_window *win, int x, 
 	struct cavan_window *child;
 	struct cavan_display_rect rect;
 
-	pr_bold_info("> text = %s", win->text);
-
 	pthread_mutex_lock(&win->lock);
 
 	win->abs_x = x;
@@ -377,7 +375,6 @@ static void cavan_window_set_abs_position_base(struct cavan_window *win, int x, 
 	}
 
 	pthread_mutex_unlock(&win->lock);
-	pr_bold_info("< text = %s", win->text);
 }
 
 void cavan_window_set_abs_position(struct cavan_window *win, int x, int y)
@@ -1151,6 +1148,8 @@ int cavan_application_init(struct cavan_application_context *context, struct cav
 		pr_error_info("pipe");
 		goto out_display_memory_free;
 	}
+
+	context->on_key_pressed = NULL;
 
 	return 0;
 

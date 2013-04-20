@@ -37,6 +37,7 @@ struct cavan_thread
 
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
 int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event);
+int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 ms);
 int cavan_thread_init(struct cavan_thread *thread, void *data);
 void cavan_thread_deinit(struct cavan_thread *thread);
 int cavan_thread_start(struct cavan_thread *thread);
@@ -47,4 +48,11 @@ void cavan_thread_resume(struct cavan_thread *thread);
 static inline int cavan_thread_join(struct cavan_thread *thread)
 {
 	return pthread_join(thread->id, NULL);
+}
+
+static inline int cavan_thread_msleep(struct cavan_thread *thread, u32 ms)
+{
+	u32 event;
+
+	return cavan_thread_recv_event_timeout(thread, &event, ms);
 }

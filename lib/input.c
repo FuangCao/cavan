@@ -264,7 +264,7 @@ cavan_input_message_t *cavan_input_message_queue_timedwait(struct cavan_input_me
 	struct timespec time;
 	cavan_input_message_t *message;
 
-	cavan_timer_set_time(&time, ms);
+	cavan_timer_set_timespec(&time, ms);
 
 	pthread_mutex_lock(&queue->lock);
 

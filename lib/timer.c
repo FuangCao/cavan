@@ -7,21 +7,46 @@
 #include <cavan.h>
 #include <cavan/timer.h>
 
-int cavan_time_diff(const struct timespec *t1, const struct timespec *t2)
+int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2)
+{
+	if (t1->tv_sec > t2->tv_sec)
+	{
+		return 1;
+	}
+
+	if (t1->tv_sec < t2->tv_sec)
+	{
+		return -1;
+	}
+
+	if (t1->tv_nsec > t2->tv_nsec)
+	{
+		return 1;
+	}
+
+	if (t1->tv_nsec < t2->tv_nsec)
+	{
+		return -1;
+	}
+
+	return 0;
+}
+
+int cavan_timespec_diff(const struct timespec *t1, const struct timespec *t2)
 {
 	return (t1->tv_sec - t2->tv_sec) * 1000 + (t1->tv_nsec - t2->tv_nsec) / 1000000;
 }
 
-int cavan_real_time_diff(const struct timespec *time)
+int cavan_real_timespec_diff(const struct timespec *time)
 {
 	struct timespec curr_time;
 
 	clock_gettime(CLOCK_REALTIME, &curr_time);
 
-	return (time->tv_sec - curr_time.tv_sec) * 1000 + (time->tv_nsec - curr_time.tv_nsec) / 1000000;
+	return cavan_timespec_diff(time, &curr_time);
 }
 
-void cavan_timer_set_time(struct timespec *time, u32 timeout)
+void cavan_timer_set_timespec(struct timespec *time, u32 timeout)
 {
 	long tmp;
 
@@ -66,9 +91,6 @@ bool cavan_timer_remove_node(struct cavan_timer_service *service, struct cavan_t
 
 	cavan_timer_remove_node_base(node);
 
-	sem_trywait(&service->sem);
-	pthread_cond_broadcast(&service->cond);
-
 	pthread_mutex_unlock(&service->lock);
 
 	return true;
@@ -80,7 +102,7 @@ static void cavan_timer_add_node_base(struct cavan_timer *head, struct cavan_tim
 
 	for (p = head->next; p != head; p = p->next)
 	{
-		if (cavan_time_diff(&p->time, &node->time) > 0)
+		if (cavan_timespec_cmp(&p->time, &node->time) > 0)
 		{
 			break;
 		}
@@ -104,87 +126,82 @@ int cavan_timer_add_node(struct cavan_timer_service *service, struct cavan_timer
 		return -EINVAL;
 	}
 
+	cavan_timer_set_timespec(&node->time, timeout);
+
 	pthread_mutex_lock(&service->lock);
 
-	cavan_timer_set_time(&node->time, timeout);
-
 	head = &service->head_node;
-
 	if (cavan_timer_exists(head, node))
 	{
 		cavan_timer_remove_node_base(node);
-		cavan_timer_add_node_base(head, node);
-	}
-	else
-	{
-		cavan_timer_add_node_base(head, node);
-		sem_post(&service->sem);
 	}
 
-	pthread_cond_broadcast(&service->cond);
+	cavan_timer_add_node_base(head, node);
+	cavan_thread_resume(&service->thread);
 
 	pthread_mutex_unlock(&service->lock);
 
 	return 0;
 }
 
-static void *cavan_timer_service_handler(void *data)
+static int cavan_timer_service_handler(struct cavan_thread *thread, u32 event, void *data)
 {
-	int ret;
 	struct cavan_timer *timer;
 	struct cavan_timer_service *service = data;
 	struct cavan_timer *head = &service->head_node;
 
 	pthread_mutex_lock(&service->lock);
 
-	service->state = CAVAN_TIMER_STATE_RUNNING;
-
-	while (service->state == CAVAN_TIMER_STATE_RUNNING)
+	timer = head->next;
+	if (timer != head)
 	{
+		int diff = cavan_real_timespec_diff(&timer->time);
+
 		pthread_mutex_unlock(&service->lock);
 
-		sem_wait(&service->sem);
-
-		pthread_mutex_lock(&service->lock);
-
-		while (service->state == CAVAN_TIMER_STATE_RUNNING)
+		if (diff > 0)
 		{
-			timer = head->next;
-			if (timer == head)
-			{
-				break;
-			}
-
-			ret = pthread_cond_timedwait(&service->cond, &service->lock, &timer->time);
-			if (ret && timer == head->next)
-			{
-				cavan_timer_remove_node_base(timer);
-
-				pthread_mutex_unlock(&service->lock);
-				timer->handler(timer);
-				pthread_mutex_lock(&service->lock);
-
-				break;
-			}
+			cavan_thread_msleep(thread, diff);
+		}
+		else
+		{
+			timer->handler(timer);
+			cavan_timer_remove_node(service, timer);
 		}
 	}
+	else
+	{
+		pthread_mutex_unlock(&service->lock);
+		cavan_thread_suspend(thread);
+	}
 
-	service->state = CAVAN_TIMER_STATE_STOPPED;
-	pthread_mutex_unlock(&service->lock);
+	return 0;
+}
 
-	pr_red_info("Timer service exit!");
+static int cavan_timer_service_wait_handler(struct cavan_thread *thread, u32 *event, void *data)
+{
+	return 0;
+}
 
-	return NULL;
+static int cavan_timer_service_wake_handler(struct cavan_thread *thread, u32 event, void *data)
+{
+	return 0;
 }
 
 int cavan_timer_service_start(struct cavan_timer_service *service)
 {
 	int ret;
+	struct cavan_thread *thread = &service->thread;
 
-	ret = sem_init(&service->sem, 0, 0);
+	thread->name = "TIMER";
+	thread->wait_handler = cavan_timer_service_wait_handler;
+	thread->wake_handker = cavan_timer_service_wake_handler;
+	thread->handler = cavan_timer_service_handler;
+
+	ret = cavan_thread_init(thread, service);
 	if (ret < 0)
 	{
-		pr_error_info("sem_init");
+		pr_red_info("cavan_thread_init");
 		return ret;
 	}
 
@@ -192,58 +209,38 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 	if (ret < 0)
 	{
 		pr_error_info("pthread_mutex_init");
-		goto out_sem_destory;
-	}
-
-	ret = pthread_cond_init(&service->cond, NULL);
-	if (ret < 0)
-	{
-		pr_error_info("pthread_cond_init");
-		goto out_mutex_destroy;
+		goto out_cavan_thread_deinit;
 	}
 
 	service->head_node.next = &service->head_node;
 	service->head_node.prev = &service->head_node;
 
-	ret = pthread_create(&service->thread, NULL, cavan_timer_service_handler, service);
+	ret = cavan_thread_start(thread);
 	if (ret < 0)
 	{
-		pr_error_info("pthread_create");
-		goto out_cond_destroy;
+		pr_red_info("cavan_thread_start");
+		goto out_mutex_destroy;
 	}
 
 	return 0;
 
-out_cond_destroy:
-	pthread_cond_destroy(&service->cond);
 out_mutex_destroy:
 	pthread_mutex_destroy(&service->lock);
-out_sem_destory:
-	sem_destroy(&service->sem);
+out_cavan_thread_deinit:
+	cavan_thread_deinit(thread);
 	return ret;
 }
 
 int cavan_timer_service_stop(struct cavan_timer_service *service)
 {
+	struct cavan_thread *thread = &service->thread;
+
 	pthread_mutex_lock(&service->lock);
-
-	service->state = CAVAN_TIMER_STATE_STOPPING;
-
-	while (service->state != CAVAN_TIMER_STATE_STOPPED)
-	{
-		sem_post(&service->sem);
-		pthread_cond_broadcast(&service->cond);
-
-		pthread_mutex_unlock(&service->lock);
-		msleep(100);
-		pthread_mutex_lock(&service->lock);
-	}
-
+	cavan_thread_stop(thread);
 	pthread_mutex_unlock(&service->lock);
 
-	pthread_cond_destroy(&service->cond);
+	cavan_thread_deinit(thread);
 	pthread_mutex_destroy(&service->lock);
-	sem_destroy(&service->sem);
 
 	return 0;
 }

@@ -7,9 +7,13 @@
 #include <cavan.h>
 #include <cavan/thread.h>
 
+#define CAVAN_THREAD_DEBUG	0
+
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event)
 {
+#if CAVAN_THREAD_DEBUG
 	pr_bold_info("send event %d", event);
+#endif
 
 	return write(thread->pipefd[1], &event, sizeof(event));
 }
@@ -25,7 +29,19 @@ int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event)
 		return ret;
 	}
 
+#if CAVAN_THREAD_DEBUG
 	pr_bold_info("receive event %d", *event);
+#endif
+
+	return ret;
+}
+
+int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 ms)
+{
+	if (file_poll_input(thread->pipefd[0], ms))
+	{
+		return cavan_thread_recv_event(thread, event);
+	}
 
 	return 0;
 }
@@ -84,12 +100,19 @@ out_pthread_mutex_destroy:
 
 void cavan_thread_deinit(struct cavan_thread *thread)
 {
+	cavan_thread_stop(thread);
+
+	close(thread->pipefd[0]);
+	close(thread->pipefd[1]);
+
 	pthread_mutex_destroy(&thread->lock);
 }
 
 static void cavan_thread_sighandler(int signum)
 {
+#if CAVAN_THREAD_DEBUG
 	pr_bold_info("signum = %d", signum);
+#endif
 
 	if (signum == SIGUSR1)
 	{
@@ -112,44 +135,75 @@ static void *cavan_thread_main_loop(void *data)
 
 	while (1)
 	{
-		pthread_mutex_unlock(&thread->lock);
-		ret = thread->wait_handler(thread, &event, data);
-		pthread_mutex_lock(&thread->lock);
-		if (ret < 0)
-		{
-			pr_red_info("thread->wait_handler");
-			goto out_thread_exit;
-		}
-
 		switch (thread->state)
 		{
 		case CAVAN_THREAD_STATE_RUNNING:
-			pthread_mutex_unlock(&thread->lock);
-			ret = thread->handler(thread, event, data);
-			pthread_mutex_lock(&thread->lock);
-			if (ret < 0)
+#if CAVAN_THREAD_DEBUG
+			pr_bold_info("Thread %s running", thread->name);
+#endif
+			while (1)
 			{
-				pr_red_info("thread->handler");
-				goto out_thread_exit;
+				pthread_mutex_unlock(&thread->lock);
+				ret = thread->wait_handler(thread, &event, data);
+				pthread_mutex_lock(&thread->lock);
+				if (ret < 0)
+				{
+					pr_red_info("thread->wait_handler");
+					goto out_thread_exit;
+				}
+
+				if (thread->state != CAVAN_THREAD_STATE_RUNNING)
+				{
+					break;
+				}
+
+				pthread_mutex_unlock(&thread->lock);
+				ret = thread->handler(thread, event, data);
+				pthread_mutex_lock(&thread->lock);
+				if (ret < 0)
+				{
+					pr_red_info("thread->handler");
+					goto out_thread_exit;
+				}
 			}
 			break;
 
 		case CAVAN_THREAD_STATE_STOPPPING:
+#if CAVAN_THREAD_DEBUG
 			pr_bold_info("Thread %s stopping", thread->name);
+#endif
 			goto out_thread_exit;
 
 		case CAVAN_THREAD_STATE_SUSPEND:
+#if CAVAN_THREAD_DEBUG
 			pr_bold_info("Thread %s suspend", thread->name);
+#endif
+			while (thread->state == CAVAN_THREAD_STATE_SUSPEND)
+			{
+				pthread_mutex_unlock(&thread->lock);
+				ret = cavan_thread_recv_event(thread, &event);
+				pthread_mutex_lock(&thread->lock);
+				if (ret < 0)
+				{
+					pr_red_info("cavan_thread_recv_event");
+					goto out_thread_exit;
+				}
+			}
 			break;
 
 		default:
+#if CAVAN_THREAD_DEBUG
 			pr_red_info("Thread %s invalid state %d", thread->name, thread->state);
+#endif
+			break;
 		}
 	}
 
 out_thread_exit:
 	thread->state = CAVAN_THREAD_STATE_STOPPED;
+#if CAVAN_THREAD_DEBUG
 	pr_bold_info("Thread %s soppped", thread->name);
+#endif
 
 	pthread_mutex_unlock(&thread->lock);
 
@@ -186,32 +240,41 @@ int cavan_thread_start(struct cavan_thread *thread)
 
 void cavan_thread_stop(struct cavan_thread *thread)
 {
+	int i;
+
 	pthread_mutex_lock(&thread->lock);
 
-	if (thread->state == CAVAN_THREAD_STATE_RUNNING || thread->state == CAVAN_THREAD_STATE_SUSPEND)
+	switch (thread->state)
 	{
-		int i;
+	case CAVAN_THREAD_STATE_STOPPPING:
+	case CAVAN_THREAD_STATE_STOPPED:
+		break;
 
-		for (i = 0; i < 10; i++)
-		{
-			thread->state = CAVAN_THREAD_STATE_STOPPPING;
+	case CAVAN_THREAD_STATE_RUNNING:
+	case CAVAN_THREAD_STATE_SUSPEND:
+		thread->state = CAVAN_THREAD_STATE_STOPPPING;
+		break;
 
-			pthread_mutex_unlock(&thread->lock);
-			thread->wake_handker(thread, 0, thread->private_data);
-			msleep(1);
-			pthread_mutex_lock(&thread->lock);
-
-			if (thread->state == CAVAN_THREAD_STATE_STOPPED)
-			{
-				break;
-			}
-		}
+	default:
+		thread->state = CAVAN_THREAD_STATE_STOPPED;
 	}
 
-	if (thread->state != CAVAN_THREAD_STATE_NONE && thread->state != CAVAN_THREAD_STATE_STOPPED)
+	for (i = 0; thread->state != CAVAN_THREAD_STATE_STOPPED && i < 10; i++)
+	{
+		cavan_thread_send_event(thread, 0);
+
+		pthread_mutex_unlock(&thread->lock);
+		thread->wake_handker(thread, 0, thread->private_data);
+		msleep(1);
+		pthread_mutex_lock(&thread->lock);
+	}
+
+	if (thread->state != CAVAN_THREAD_STATE_STOPPED)
 	{
 		pthread_kill(thread->id, SIGUSR1);
 	}
+
+	thread->state = CAVAN_THREAD_STATE_STOPPED;
 
 	pthread_mutex_unlock(&thread->lock);
 }
@@ -235,9 +298,11 @@ void cavan_thread_resume(struct cavan_thread *thread)
 	if (thread->state == CAVAN_THREAD_STATE_SUSPEND)
 	{
 		thread->state = CAVAN_THREAD_STATE_RUNNING;
+
+		cavan_thread_send_event(thread, 0);
 	}
 
-	pthread_mutex_unlock(&thread->lock);
-
 	thread->wake_handker(thread, 0, thread->private_data);
+
+	pthread_mutex_unlock(&thread->lock);
 }

@@ -637,8 +637,6 @@ static void cavan_event_close_devices(struct cavan_event_service *service)
 {
 	struct cavan_event_device *pdev, *pdev_next;
 
-	pr_pos_info();
-
 	pthread_mutex_lock(&service->lock);
 
 	pdev = service->dev_head;
@@ -948,8 +946,6 @@ int cavan_event_start_poll_thread(struct cavan_event_service *service)
 
 int cavan_event_stop_poll_thread(struct cavan_event_service *service)
 {
-	pr_pos_info();
-
 	pthread_mutex_lock(&service->lock);
 
 	while (service->state == CAVAN_INPUT_THREAD_STATE_RUNNING)
@@ -1043,8 +1039,6 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 int cavan_event_service_stop(struct cavan_event_service *service)
 {
 	int ret;
-
-	pr_pos_info();
 
 	ret = cavan_event_stop_poll_thread(service);
 	if (ret < 0)
