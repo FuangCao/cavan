@@ -62,10 +62,10 @@ bool cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer 
 	return double_link_remove(&service->link, &timer->node);
 }
 
-static bool cavan_timer_match_later(struct double_link_node *node, void *data)
+static bool cavan_timer_match_later(struct double_link *link, struct double_link_node *node, void *data)
 {
 	struct timespec *time = data;
-	struct cavan_timer *timer = (struct cavan_timer *)node;
+	struct cavan_timer *timer = double_link_get_container(link, node);
 
 	return cavan_timespec_cmp(&timer->time, time) > 0;
 }
@@ -75,6 +75,7 @@ static void cavan_timer_insert_base(struct double_link *link, struct cavan_timer
 	struct double_link_node *next;
 
 	double_link_remove(link, &timer->node);
+
 	next = double_link_find(link, &timer->time, cavan_timer_match_later);
 	if (next)
 	{
@@ -108,15 +109,17 @@ int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *
 
 static int cavan_timer_service_handler(struct cavan_thread *thread, u32 event, void *data)
 {
-	struct cavan_timer *timer;
+	struct double_link_node *node;
 	struct cavan_timer_service *service = data;
+	struct double_link *link = &service->link;
 
 	pthread_mutex_lock(&service->lock);
 
-	timer = (struct cavan_timer *)double_link_get_first_node(&service->link);
-	if (timer)
+	node = double_link_get_first_node(link);
+	if (node)
 	{
 		int delay;
+		struct cavan_timer *timer = double_link_get_container(link, node);
 
 		pthread_mutex_unlock(&service->lock);
 
@@ -127,7 +130,7 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, u32 event, v
 		}
 		else
 		{
-			double_link_remove(&service->link, &timer->node);
+			double_link_remove(link, node);
 			timer->handler(timer);
 		}
 	}
@@ -163,7 +166,7 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 		goto out_cavan_thread_deinit;
 	}
 
-	ret = double_link_init(&service->link);
+	ret = double_link_init(&service->link, MEMBER_OFFSET(struct cavan_timer, node));
 	if (ret < 0)
 	{
 		pr_red_info("double_link_init");

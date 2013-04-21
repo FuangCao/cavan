@@ -48,7 +48,10 @@ int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32
 
 static int cavan_thread_wait_handler_dummy(struct cavan_thread *thread, u32 *event, void *data)
 {
-	*event = 0;
+	if (event)
+	{
+		*event = 0;
+	}
 
 	return 0;
 }
@@ -85,15 +88,8 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 	thread->state = CAVAN_THREAD_STATE_NONE;
 	thread->private_data = data;
 
-	if (thread->wait_handler == NULL)
-	{
-		thread->wait_handler = cavan_thread_wait_handler_dummy;
-	}
-
-	if (thread->wake_handker == NULL)
-	{
-		thread->wake_handker = cavan_thread_wake_handler_dummy;
-	}
+	thread->wait_handler = cavan_thread_wait_handler_dummy;
+	thread->wake_handker = cavan_thread_wake_handler_dummy;
 
 out_pthread_mutex_destroy:
 	pthread_mutex_destroy(&thread->lock);

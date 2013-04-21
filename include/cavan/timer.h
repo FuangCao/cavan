@@ -13,10 +13,10 @@
 
 struct cavan_timer
 {
-	struct double_link_node node;
-
 	struct timespec time;
 	void *private_data;
+
+	struct double_link_node node;
 
 	void (*handler)(struct cavan_timer *timer);
 };

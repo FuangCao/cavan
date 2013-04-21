@@ -63,6 +63,12 @@
 #define MEMBER_TO_STRUCT(addr, type, member) \
 	((type *)((byte *)(addr) - MEMBER_OFFSET(type, member)))
 
+#define POINTER_ADD(pointer, offset) \
+	((void *)(((byte *)(pointer)) + (offset)))
+
+#define POINTER_SUB(pointer, offset) \
+	((void *)(((byte *)(pointer)) - (offset)))
+
 #define MLC_TO(p) \
 	(p) = malloc(sizeof(*p))
 

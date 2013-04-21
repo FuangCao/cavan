@@ -58,21 +58,28 @@ static bool double_link_remove_base(struct double_link_node *node)
 	return res;
 }
 
-static bool single_link_node_match_equal(struct single_link_node *node, void *data)
+static bool single_link_node_match_equal(struct single_link *link, struct single_link_node *node, void *data)
 {
 	return node == (struct single_link_node *)data;
 }
 
-static bool double_link_node_match_equal(struct double_link_node *node, void *data)
+static bool circle_link_node_match_equal(struct circle_link *link, struct single_link_node *node, void *data)
+{
+	return node == (struct single_link_node *)data;
+}
+
+static bool double_link_node_match_equal(struct double_link *link, struct double_link_node *node, void *data)
 {
 	return node == (struct double_link_node *)data;
 }
 
 // ================================================================================
 
-int single_link_init(struct single_link *link)
+int single_link_init(struct single_link *link, off_t offset)
 {
+	link->offset = offset;
 	link->head_node.destroy = NULL;
+
 	single_link_init_base(link);
 
 	return pthread_mutex_init(&link->lock, NULL);
@@ -88,6 +95,7 @@ void single_link_deinit(struct single_link *link)
 void single_link_free(struct single_link *link)
 {
 	struct single_link_node *node;
+	off_t offset = link->offset;
 
 	pthread_mutex_lock(&link->lock);
 
@@ -99,7 +107,7 @@ void single_link_free(struct single_link *link)
 
 		if (node->destroy)
 		{
-			node->destroy(node);
+			node->destroy(POINTER_SUB(node, offset));
 		}
 
 		node = next;
@@ -198,7 +206,7 @@ struct single_link_node *single_link_pop(struct single_link *link)
 	return node;
 }
 
-void single_link_traversal(struct single_link *link, void (*handle)(struct single_link_node *node))
+void single_link_traversal(struct single_link *link, void *data, void (*handle)(struct single_link *link, struct single_link_node *node, void *data))
 {
 	struct single_link_node *node;
 
@@ -206,13 +214,13 @@ void single_link_traversal(struct single_link *link, void (*handle)(struct singl
 
 	for (node = link->head_node.next; node; node = node->next)
 	{
-		handle(node);
+		handle(link, node, data);
 	}
 
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct single_link_node *single_link_find(struct single_link *link, void *data, bool (*match)(struct single_link_node *node, void *data))
+struct single_link_node *single_link_find(struct single_link *link, void *data, bool (*match)(struct single_link *link, struct single_link_node *node, void *data))
 {
 	struct single_link_node *node;
 
@@ -220,7 +228,7 @@ struct single_link_node *single_link_find(struct single_link *link, void *data, 
 
 	for (node = link->head_node.next; node; node = node->next)
 	{
-		if (match(node, data))
+		if (match(link, node, data))
 		{
 			pthread_mutex_unlock(&link->lock);
 
@@ -240,9 +248,11 @@ bool single_link_has_node(struct single_link *link, struct single_link_node *nod
 
 // ================================================================================
 
-int circle_link_init(struct circle_link *link)
+int circle_link_init(struct circle_link *link, off_t offset)
 {
+	link->offset = offset;
 	link->head_node.destroy = NULL;
+
 	circle_link_init_base(link);
 
 	return pthread_mutex_init(&link->lock, NULL);
@@ -258,6 +268,7 @@ void circle_link_deinit(struct circle_link *link)
 void circle_link_free(struct circle_link *link)
 {
 	struct single_link_node *head, *node;
+	off_t offset = link->offset;
 
 	pthread_mutex_lock(&link->lock);
 
@@ -270,7 +281,7 @@ void circle_link_free(struct circle_link *link)
 
 		if (node->destroy)
 		{
-			node->destroy(node);
+			node->destroy(POINTER_SUB(node, offset));
 		}
 
 		node = next;
@@ -379,7 +390,7 @@ struct single_link_node *circle_link_pop(struct circle_link *link)
 	return node;
 }
 
-void circle_link_traversal(struct circle_link *link, void (*handle)(struct single_link_node *node))
+void circle_link_traversal(struct circle_link *link, void *data, void (*handle)(struct circle_link *link, struct single_link_node *node, void *data))
 {
 	struct single_link_node *head, *node;
 
@@ -387,13 +398,13 @@ void circle_link_traversal(struct circle_link *link, void (*handle)(struct singl
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
-		handle(node);
+		handle(link, node, data);
 	}
 
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct single_link_node *circle_link_find(struct circle_link *link, void *data, bool (*match)(struct single_link_node *node, void *data))
+struct single_link_node *circle_link_find(struct circle_link *link, void *data, bool (*match)(struct circle_link *link, struct single_link_node *node, void *data))
 {
 	struct single_link_node *head, *node;
 
@@ -401,7 +412,7 @@ struct single_link_node *circle_link_find(struct circle_link *link, void *data, 
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
-		if (match(node, data))
+		if (match(link, node, data))
 		{
 			pthread_mutex_unlock(&link->lock);
 
@@ -416,14 +427,16 @@ struct single_link_node *circle_link_find(struct circle_link *link, void *data, 
 
 bool circle_link_has_node(struct circle_link *link, struct single_link_node *node)
 {
-	return circle_link_find(link, node, single_link_node_match_equal) != NULL;
+	return circle_link_find(link, node, circle_link_node_match_equal) != NULL;
 }
 
 // ================================================================================
 
-int double_link_init(struct double_link *link)
+int double_link_init(struct double_link *link, off_t offset)
 {
+	link->offset = offset;
 	link->head_node.destroy = NULL;
+
 	double_link_init_base(link);
 
 	return pthread_mutex_init(&link->lock, NULL);
@@ -439,6 +452,7 @@ void double_link_deinit(struct double_link *link)
 void double_link_free(struct double_link *link)
 {
 	struct double_link_node *head, *node;
+	off_t offset = link->offset;
 
 	pthread_mutex_lock(&link->lock);
 
@@ -451,7 +465,7 @@ void double_link_free(struct double_link *link)
 
 		if (node->destroy)
 		{
-			node->destroy(node);
+			node->destroy(POINTER_SUB(node, offset));
 		}
 
 		node = next;
@@ -567,7 +581,7 @@ struct double_link_node *double_link_pop(struct double_link *link)
 	return node;
 }
 
-void double_link_traversal(struct double_link *link, void (*handle)(struct double_link_node *node))
+void double_link_traversal(struct double_link *link, void *data, void (*handle)(struct double_link *link, struct double_link_node *node, void *data))
 {
 	struct double_link_node *head, *node;
 
@@ -575,13 +589,13 @@ void double_link_traversal(struct double_link *link, void (*handle)(struct doubl
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
-		handle(node);
+		handle(link, node, data);
 	}
 
 	pthread_mutex_unlock(&link->lock);
 }
 
-void double_link_traversal2(struct double_link *link, void (*handle)(struct double_link_node *node))
+void double_link_traversal2(struct double_link *link, void *data, void (*handle)(struct double_link *link, struct double_link_node *node, void *data))
 {
 	struct double_link_node *head, *node;
 
@@ -589,13 +603,13 @@ void double_link_traversal2(struct double_link *link, void (*handle)(struct doub
 
 	for (head = &link->head_node, node = head->prev; node != head; node = node->prev)
 	{
-		handle(node);
+		handle(link, node, data);
 	}
 
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct double_link_node *double_link_find(struct double_link *link, void *data, bool (*match)(struct double_link_node *node, void *data))
+struct double_link_node *double_link_find(struct double_link *link, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
 {
 	struct double_link_node *head, *node;
 
@@ -603,7 +617,7 @@ struct double_link_node *double_link_find(struct double_link *link, void *data, 
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
-		if (match(node, data))
+		if (match(link, node, data))
 		{
 			pthread_mutex_unlock(&link->lock);
 			return node;
