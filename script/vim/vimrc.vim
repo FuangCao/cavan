@@ -116,7 +116,11 @@ if has("cscope")
 	set cscopetag
 	"set cscopequickfix=s-,g-,d-,t-,e-,f-,i-
 
-	let dirname = getcwd()
+	if argc() > 0
+		let dirname = s:path_dirname(argv(0))
+	else
+		let dirname = getcwd()
+	endif
 
 	while 1
 		let pathname = s:path_join(dirname, "cscope.out")

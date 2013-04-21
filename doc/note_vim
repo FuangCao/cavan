@@ -3,6 +3,7 @@ gf: 打开头文件
 ctrl + k: 打开函数的帮助文档
 Tlist: 打开导航条
 :%!xxd：用二进制方式查看文件
+:help functions
 
 
 正则表达式：
