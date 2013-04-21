@@ -2,6 +2,8 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Wed Apr 13 10:47:15 CST 2011
 
+#include <cavan.h>
+
 struct general_stack
 {
 	void **buffer;

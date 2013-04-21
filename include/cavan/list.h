@@ -2,6 +2,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Wed Apr 13 10:40:43 CST 2011
 
+#include <cavan.h>
 #include <pthread.h>
 
 struct single_link_node
@@ -13,7 +14,7 @@ struct single_link_node
 
 struct single_link
 {
-	off_t offset;
+	long offset;
 	pthread_mutex_t lock;
 
 	struct single_link_node head_node;
@@ -21,7 +22,7 @@ struct single_link
 
 struct circle_link
 {
-	off_t offset;
+	long offset;
 	pthread_mutex_t lock;
 
 	struct single_link_node head_node;
@@ -37,13 +38,13 @@ struct double_link_node
 
 struct double_link
 {
-	off_t offset;
+	long offset;
 	pthread_mutex_t lock;
 
 	struct double_link_node head_node;
 };
 
-int single_link_init(struct single_link *link, off_t offset);
+int single_link_init(struct single_link *link, long offset);
 void single_link_deinit(struct single_link *link);
 void single_link_free(struct single_link *link);
 bool single_link_empty(struct single_link *link);
@@ -57,7 +58,7 @@ void single_link_traversal(struct single_link *link, void *data, void (*handler)
 struct single_link_node *single_link_find(struct single_link *link, void *data, bool (*match)(struct single_link *link, struct single_link_node *node, void *data));
 bool single_link_has_node(struct single_link *link, struct single_link_node *node);
 
-int circle_link_init(struct circle_link *link, off_t offset);
+int circle_link_init(struct circle_link *link, long offset);
 void circle_link_deinit(struct circle_link *link);
 void circle_link_free(struct circle_link *link);
 bool circle_link_empty(struct circle_link *link);
@@ -71,7 +72,7 @@ void circle_link_traversal(struct circle_link *link, void *data, void (*handler)
 struct single_link_node *circle_link_find(struct circle_link *link, void *data, bool (*match)(struct circle_link *link, struct single_link_node *node, void *data));
 bool circle_link_has_node(struct circle_link *link, struct single_link_node *node);
 
-int double_link_init(struct double_link *link, off_t offset);
+int double_link_init(struct double_link *link, long offset);
 void double_link_deinit(struct double_link *link);
 void double_link_free(struct double_link *link);
 bool double_link_empty(struct double_link *link);

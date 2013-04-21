@@ -75,7 +75,7 @@ static bool double_link_node_match_equal(struct double_link *link, struct double
 
 // ================================================================================
 
-int single_link_init(struct single_link *link, off_t offset)
+int single_link_init(struct single_link *link, long offset)
 {
 	link->offset = offset;
 	link->head_node.destroy = NULL;
@@ -95,7 +95,7 @@ void single_link_deinit(struct single_link *link)
 void single_link_free(struct single_link *link)
 {
 	struct single_link_node *node;
-	off_t offset = link->offset;
+	long offset = link->offset;
 
 	pthread_mutex_lock(&link->lock);
 
@@ -248,7 +248,7 @@ bool single_link_has_node(struct single_link *link, struct single_link_node *nod
 
 // ================================================================================
 
-int circle_link_init(struct circle_link *link, off_t offset)
+int circle_link_init(struct circle_link *link, long offset)
 {
 	link->offset = offset;
 	link->head_node.destroy = NULL;
@@ -268,7 +268,7 @@ void circle_link_deinit(struct circle_link *link)
 void circle_link_free(struct circle_link *link)
 {
 	struct single_link_node *head, *node;
-	off_t offset = link->offset;
+	long offset = link->offset;
 
 	pthread_mutex_lock(&link->lock);
 
@@ -432,7 +432,7 @@ bool circle_link_has_node(struct circle_link *link, struct single_link_node *nod
 
 // ================================================================================
 
-int double_link_init(struct double_link *link, off_t offset)
+int double_link_init(struct double_link *link, long offset)
 {
 	link->offset = offset;
 	link->head_node.destroy = NULL;
@@ -452,7 +452,7 @@ void double_link_deinit(struct double_link *link)
 void double_link_free(struct double_link *link)
 {
 	struct double_link_node *head, *node;
-	off_t offset = link->offset;
+	long offset = link->offset;
 
 	pthread_mutex_lock(&link->lock);
 
