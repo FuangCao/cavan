@@ -43,7 +43,7 @@
 	((b) == ' ' || (b) == '\t')
 
 #define ARRAY_SIZE(a)	(sizeof(a) / sizeof((a)[0]))
-#define NELEM(a)		(ARRAY_SIZE(a))
+#define NELEM(a)		((int)ARRAY_SIZE(a))
 #define KB(a)			((a) << 10)
 #define BK(a)			((a) >> 10)
 #define MB(a)			((a) << 20)

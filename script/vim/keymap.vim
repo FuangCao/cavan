@@ -7,8 +7,9 @@ nmap <Tab>		:set nohls<CR>:'<,'>s/^.\+/\t&/g<CR>
 
 nmap q			:xa!<CR>
 nmap w			:wa!<CR>
-nmap <C-m>		:set mouse=a<CR>:set nu<CR>
 nmap <C-n>		:set mouse=v<CR>:set nonu<CR>
+nmap <C-a>		:set mouse=a<CR>:set nu<CR>
+nmap <C-m>		:!make<CR>
 nmap <C-f>		:%s/\s\+$//g<CR>
 
 function s:set_keymap_c()
