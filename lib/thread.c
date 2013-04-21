@@ -48,12 +48,14 @@ int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32
 
 static int cavan_thread_wait_handler_dummy(struct cavan_thread *thread, u32 *event, void *data)
 {
-	return cavan_thread_recv_event(thread, event);
+	*event = 0;
+
+	return 0;
 }
 
 static int cavan_thread_wake_handler_dummy(struct cavan_thread *thread, u32 event, void *data)
 {
-	return cavan_thread_send_event(thread, event);
+	return 0;
 }
 
 int cavan_thread_init(struct cavan_thread *thread, void *data)

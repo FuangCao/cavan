@@ -118,12 +118,12 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 				if (touchpad->mode == CAVAN_TOUCHPAD_MODE_NONE)
 				{
 					touchpad->state = CAVAN_TOUCHPAD_STATE_UP1;
-					cavan_timer_remove_node(&service->timer_service, &touchpad->timer);
+					cavan_timer_remove(&service->timer_service, &touchpad->timer);
 					cavan_touchpad_touch(touchpad, service, 1);
 
 					touchpad->timer.private_data = service;
 					touchpad->timer.handler = cavan_touchpad_timer_handler_up;
-					cavan_timer_add_node(&service->timer_service, &touchpad->timer, 200);
+					cavan_timer_insert(&service->timer_service, &touchpad->timer, 200);
 				}
 				else
 				{
@@ -134,11 +134,11 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 
 			case CAVAN_TOUCHPAD_STATE_UP1:
 				touchpad->state = CAVAN_TOUCHPAD_STATE_DOWN2;
-				cavan_timer_remove_node(&service->timer_service, &touchpad->timer);
+				cavan_timer_remove(&service->timer_service, &touchpad->timer);
 
 				touchpad->timer.private_data = service;
 				touchpad->timer.handler = cavan_touchpad_timer_handler_down;
-				cavan_timer_add_node(&service->timer_service, &touchpad->timer, 200);
+				cavan_timer_insert(&service->timer_service, &touchpad->timer, 200);
 				break;
 
 			case CAVAN_TOUCHPAD_STATE_DOWN2:
@@ -150,7 +150,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 
 					touchpad->timer.private_data = service;
 					touchpad->timer.handler = cavan_touchpad_timer_handler_up;
-					cavan_timer_add_node(&service->timer_service, &touchpad->timer, 200);
+					cavan_timer_insert(&service->timer_service, &touchpad->timer, 200);
 				}
 				else
 				{
@@ -160,7 +160,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 				break;
 
 			case CAVAN_TOUCHPAD_STATE_UP2:
-				cavan_timer_remove_node(&service->timer_service, &touchpad->timer);
+				cavan_timer_remove(&service->timer_service, &touchpad->timer);
 				cavan_touchpad_touch(touchpad, service, 0);
 			case CAVAN_TOUCHPAD_STATE_IDEL:
 				if (event->value)
@@ -169,7 +169,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 
 					touchpad->timer.private_data = service;
 					touchpad->timer.handler = cavan_touchpad_timer_handler_down;
-					cavan_timer_add_node(&service->timer_service, &touchpad->timer, 100);
+					cavan_timer_insert(&service->timer_service, &touchpad->timer, 100);
 				}
 				else
 				{
@@ -319,6 +319,8 @@ struct cavan_input_device *cavan_touchpad_device_create(void)
 	touchpad->y = touchpad->yold = 0;
 	touchpad->state = CAVAN_TOUCHPAD_STATE_IDEL;
 	touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
+
+	cavan_timer_init(&touchpad->timer, NULL, NULL);
 
 	dev = &touchpad->input_dev;
 	dev->probe = cavan_touchpad_probe;

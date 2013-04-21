@@ -57,86 +57,48 @@ void cavan_timer_set_timespec(struct timespec *time, u32 timeout)
 	time->tv_nsec = (tmp % 1000) * 1000000;
 }
 
-static bool cavan_timer_exists(struct cavan_timer *head, struct cavan_timer *node)
+bool cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer *timer)
 {
-	struct cavan_timer *p;
+	return double_link_remove(&service->link, &timer->node);
+}
 
-	for (p = head->next; p != head; p = p->next)
+static bool cavan_timer_match_later(struct double_link_node *node, void *data)
+{
+	struct timespec *time = data;
+	struct cavan_timer *timer = (struct cavan_timer *)node;
+
+	return cavan_timespec_cmp(&timer->time, time) > 0;
+}
+
+static void cavan_timer_insert_base(struct double_link *link, struct cavan_timer *timer)
+{
+	struct double_link_node *next;
+
+	double_link_remove(link, &timer->node);
+	next = double_link_find(link, &timer->time, cavan_timer_match_later);
+	if (next)
 	{
-		if (p == node)
-		{
-			return true;
-		}
+		double_link_insert(link, next->prev, &timer->node);
 	}
-
-	return false;
-}
-
-static void cavan_timer_remove_node_base(struct cavan_timer *node)
-{
-	node->prev->next = node->next;
-	node->next->prev = node->prev;
-	node->prev = node->next = node;
-}
-
-bool cavan_timer_remove_node(struct cavan_timer_service *service, struct cavan_timer *node)
-{
-	pthread_mutex_lock(&service->lock);
-
-	if (cavan_timer_exists(&service->head_node, node) == false)
+	else
 	{
-		pthread_mutex_unlock(&service->lock);
-		return false;
+		double_link_append(link, &timer->node);
 	}
-
-	cavan_timer_remove_node_base(node);
-
-	pthread_mutex_unlock(&service->lock);
-
-	return true;
 }
 
-static void cavan_timer_add_node_base(struct cavan_timer *head, struct cavan_timer *node)
+int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *timer, u32 timeout)
 {
-	struct cavan_timer *p;
-
-	for (p = head->next; p != head; p = p->next)
-	{
-		if (cavan_timespec_cmp(&p->time, &node->time) > 0)
-		{
-			break;
-		}
-	}
-
-	p->prev->next = node;
-	node->next = p;
-
-	node->prev = p->prev;
-	p->prev = node;
-}
-
-int cavan_timer_add_node(struct cavan_timer_service *service, struct cavan_timer *node, u32 timeout)
-{
-	struct cavan_timer *head;
-
-	if (node->handler == NULL)
+	if (timer->handler == NULL)
 	{
 		pr_red_info("p->handler == NULL");
 
 		return -EINVAL;
 	}
 
-	cavan_timer_set_timespec(&node->time, timeout);
-
 	pthread_mutex_lock(&service->lock);
 
-	head = &service->head_node;
-	if (cavan_timer_exists(head, node))
-	{
-		cavan_timer_remove_node_base(node);
-	}
-
-	cavan_timer_add_node_base(head, node);
+	cavan_timer_set_timespec(&timer->time, timeout);
+	cavan_timer_insert_base(&service->link, timer);
 	cavan_thread_resume(&service->thread);
 
 	pthread_mutex_unlock(&service->lock);
@@ -148,43 +110,34 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, u32 event, v
 {
 	struct cavan_timer *timer;
 	struct cavan_timer_service *service = data;
-	struct cavan_timer *head = &service->head_node;
 
 	pthread_mutex_lock(&service->lock);
 
-	timer = head->next;
-	if (timer != head)
+	timer = (struct cavan_timer *)double_link_get_first_node(&service->link);
+	if (timer)
 	{
-		int diff = cavan_real_timespec_diff(&timer->time);
+		int delay;
 
 		pthread_mutex_unlock(&service->lock);
 
-		if (diff > 0)
+		delay = cavan_real_timespec_diff(&timer->time);
+		if (delay > 0)
 		{
-			cavan_thread_msleep(thread, diff);
+			cavan_thread_msleep(thread, delay);
 		}
 		else
 		{
+			double_link_remove(&service->link, &timer->node);
 			timer->handler(timer);
-			cavan_timer_remove_node(service, timer);
 		}
 	}
 	else
 	{
-		pthread_mutex_unlock(&service->lock);
 		cavan_thread_suspend(thread);
+
+		pthread_mutex_unlock(&service->lock);
 	}
 
-	return 0;
-}
-
-static int cavan_timer_service_wait_handler(struct cavan_thread *thread, u32 *event, void *data)
-{
-	return 0;
-}
-
-static int cavan_timer_service_wake_handler(struct cavan_thread *thread, u32 event, void *data)
-{
 	return 0;
 }
 
@@ -194,8 +147,6 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 	struct cavan_thread *thread = &service->thread;
 
 	thread->name = "TIMER";
-	thread->wait_handler = cavan_timer_service_wait_handler;
-	thread->wake_handker = cavan_timer_service_wake_handler;
 	thread->handler = cavan_timer_service_handler;
 
 	ret = cavan_thread_init(thread, service);
@@ -212,18 +163,24 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 		goto out_cavan_thread_deinit;
 	}
 
-	service->head_node.next = &service->head_node;
-	service->head_node.prev = &service->head_node;
+	ret = double_link_init(&service->link);
+	if (ret < 0)
+	{
+		pr_red_info("double_link_init");
+		goto out_mutex_destroy;
+	}
 
 	ret = cavan_thread_start(thread);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_thread_start");
-		goto out_mutex_destroy;
+		goto out_double_link_deinit;
 	}
 
 	return 0;
 
+out_double_link_deinit:
+	double_link_deinit(&service->link);
 out_mutex_destroy:
 	pthread_mutex_destroy(&service->lock);
 out_cavan_thread_deinit:
@@ -239,6 +196,7 @@ int cavan_timer_service_stop(struct cavan_timer_service *service)
 	cavan_thread_stop(thread);
 	pthread_mutex_unlock(&service->lock);
 
+	double_link_deinit(&service->link);
 	cavan_thread_deinit(thread);
 	pthread_mutex_destroy(&service->lock);
 
