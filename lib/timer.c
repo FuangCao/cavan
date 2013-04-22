@@ -57,11 +57,6 @@ void cavan_timer_set_timespec(struct timespec *time, u32 timeout)
 	time->tv_nsec = (tmp % 1000) * 1000000;
 }
 
-bool cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer *timer)
-{
-	return double_link_remove(&service->link, &timer->node);
-}
-
 static bool cavan_timer_match_later(struct double_link *link, struct double_link_node *node, void *data)
 {
 	struct timespec *time = data;

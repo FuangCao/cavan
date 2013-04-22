@@ -3,23 +3,6 @@
 #include <cavan.h>
 #include <cavan/list.h>
 
-static void single_link_init_base(struct single_link *link)
-{
-	link->head_node.next = NULL;
-}
-
-static void circle_link_init_base(struct circle_link *link)
-{
-	link->head_node.next = &link->head_node;
-}
-
-static void double_link_init_base(struct double_link *link)
-{
-	struct double_link_node *head = &link->head_node;
-
-	head->next = head->prev = head;;
-}
-
 static void single_link_insert_base(struct single_link_node *prev, struct single_link_node *node)
 {
 	node->next = prev->next;
@@ -32,6 +15,12 @@ static void single_link_remove_base(struct single_link_node *prev, struct single
 	node->next = NULL;
 }
 
+static void circle_link_remove_base(struct single_link_node *prev, struct single_link_node *node)
+{
+	prev->next = node->next;
+	node->next = node;
+}
+
 static void double_link_insert_base(struct double_link_node *prev, struct double_link_node *next, struct double_link_node *node)
 {
 	prev->next = node;
@@ -41,24 +30,11 @@ static void double_link_insert_base(struct double_link_node *prev, struct double
 	node->prev = prev;
 }
 
-static bool double_link_remove_base(struct double_link_node *node)
+static void double_link_remove_base(struct double_link_node *node)
 {
-	struct double_link_node *prev = node->prev;
-	struct double_link_node *next = node->next;
-
-	if (prev)
-	{
-		prev->next = next;
-		node->prev = NULL;
-	}
-
-	if (next)
-	{
-		next->prev = prev;
-		node->next = NULL;
-	}
-
-	return prev || next;
+	node->prev->next = node->next;
+	node->next->prev = node->prev;
+	node->next = node->prev = node;
 }
 
 static bool single_link_node_match_equal(struct single_link *link, struct single_link_node *node, void *data)
@@ -81,9 +57,7 @@ static bool double_link_node_match_equal(struct double_link *link, struct double
 int single_link_init(struct single_link *link, long offset)
 {
 	link->offset = offset;
-	link->head_node.destroy = NULL;
-
-	single_link_init_base(link);
+	single_link_node_init(&link->head_node, NULL);
 
 	return pthread_mutex_init(&link->lock, NULL);
 }
@@ -116,7 +90,7 @@ void single_link_free(struct single_link *link)
 		node = next;
 	}
 
-	single_link_init_base(link);
+	single_link_node_init(&link->head_node, NULL);
 
 	pthread_mutex_unlock(&link->lock);
 }
@@ -165,7 +139,6 @@ void single_link_append(struct single_link *link, struct single_link_node *node)
 
 bool single_link_remove(struct single_link *link, struct single_link_node *node)
 {
-	bool res = false;
 	struct single_link_node *prev;
 
 	pthread_mutex_lock(&link->lock);
@@ -174,15 +147,15 @@ bool single_link_remove(struct single_link *link, struct single_link_node *node)
 	{
 		if (prev->next == node)
 		{
-			res = true;
 			single_link_remove_base(prev, node);
-			break;
+			pthread_mutex_unlock(&link->lock);
+			return true;
 		}
 	}
 
 	pthread_mutex_unlock(&link->lock);
 
-	return res;
+	return false;
 }
 
 void single_link_push(struct single_link *link, struct single_link_node *node)
@@ -254,9 +227,7 @@ bool single_link_has_node(struct single_link *link, struct single_link_node *nod
 int circle_link_init(struct circle_link *link, long offset)
 {
 	link->offset = offset;
-	link->head_node.destroy = NULL;
-
-	circle_link_init_base(link);
+	circle_link_node_init(&link->head_node, NULL);
 
 	return pthread_mutex_init(&link->lock, NULL);
 }
@@ -290,7 +261,7 @@ void circle_link_free(struct circle_link *link)
 		node = next;
 	}
 
-	circle_link_init_base(link);
+	circle_link_node_init(&link->head_node, NULL);
 
 	pthread_mutex_unlock(&link->lock);
 }
@@ -345,7 +316,6 @@ void circle_link_insert(struct circle_link *link, struct single_link_node *prev,
 
 bool circle_link_remove(struct circle_link *link, struct single_link_node *node)
 {
-	bool res = false;
 	struct single_link_node *head, *prev;
 
 	pthread_mutex_lock(&link->lock);
@@ -354,15 +324,15 @@ bool circle_link_remove(struct circle_link *link, struct single_link_node *node)
 	{
 		if (prev->next == node)
 		{
-			res = true;
-			single_link_remove_base(prev, node);
-			break;
+			circle_link_remove_base(prev, node);
+			pthread_mutex_unlock(&link->lock);
+			return true;
 		}
 	}
 
 	pthread_mutex_unlock(&link->lock);
 
-	return res;
+	return false;
 }
 
 void circle_link_push(struct circle_link *link, struct single_link_node *node)
@@ -438,9 +408,7 @@ bool circle_link_has_node(struct circle_link *link, struct single_link_node *nod
 int double_link_init(struct double_link *link, long offset)
 {
 	link->offset = offset;
-	link->head_node.destroy = NULL;
-
-	double_link_init_base(link);
+	double_link_node_init(&link->head_node, NULL);
 
 	return pthread_mutex_init(&link->lock, NULL);
 }
@@ -474,7 +442,7 @@ void double_link_free(struct double_link *link)
 		node = next;
 	}
 
-	double_link_init_base(link);
+	double_link_node_init(&link->head_node, NULL);
 
 	pthread_mutex_unlock(&link->lock);
 }
@@ -566,15 +534,11 @@ void double_link_push(struct double_link *link, struct double_link_node *node)
 	pthread_mutex_unlock(&link->lock);
 }
 
-bool double_link_remove(struct double_link *link, struct double_link_node *node)
+void double_link_remove(struct double_link *link, struct double_link_node *node)
 {
-	bool res;
-
 	pthread_mutex_lock(&link->lock);
-	res = double_link_remove_base(node);
+	double_link_remove_base(node);
 	pthread_mutex_unlock(&link->lock);
-
-	return res;
 }
 
 struct double_link_node *double_link_pop(struct double_link *link)

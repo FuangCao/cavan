@@ -34,7 +34,6 @@ int cavan_timespec_diff(const struct timespec *t1, const struct timespec *t2);
 int cavan_real_timespec_diff(const struct timespec *time);
 void cavan_timer_set_timespec(struct timespec *time, u32 timeout);
 
-bool cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer *node);
 int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *node, u32 timeout);
 int cavan_timer_service_start(struct cavan_timer_service *service);
 int cavan_timer_service_stop(struct cavan_timer_service *service);
@@ -44,4 +43,9 @@ static inline void cavan_timer_init(struct cavan_timer *timer, void *data, void 
 	timer->private_data = data;
 	timer->handler = NULL;
 	double_link_node_init(&timer->node, destroy);
+}
+
+static inline void cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer *timer)
+{
+	double_link_remove(&service->link, &timer->node);
 }

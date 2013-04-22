@@ -89,7 +89,7 @@ struct double_link_node *double_link_get_first_node(struct double_link *link);
 struct double_link_node *double_link_get_last_node(struct double_link *link);
 void double_link_insert(struct double_link *link, struct double_link_node *prev, struct double_link_node *node);
 void doubel_link_insert2(struct double_link *link, struct double_link_node *next, struct double_link_node *node);
-bool double_link_remove(struct double_link *link, struct double_link_node *node);
+void double_link_remove(struct double_link *link, struct double_link_node *node);
 void double_link_append(struct double_link *link, struct double_link_node *node);
 void double_link_push(struct double_link *link, struct double_link_node *node);
 struct double_link_node *double_link_pop(struct double_link *link);
@@ -108,10 +108,15 @@ static inline void single_link_node_init(struct single_link_node *node, void (*d
 	node->destroy = destroy;
 }
 
+static inline void circle_link_node_init(struct single_link_node *node, void (*destroy)(void *pointer))
+{
+	node->next = node;
+	node->destroy = destroy;
+}
+
 static inline void double_link_node_init(struct double_link_node *node, void (*destroy)(void *pointer))
 {
-	node->next = NULL;
-	node->prev = NULL;
+	node->next = node->prev = node;
 	node->destroy = destroy;
 }
 
