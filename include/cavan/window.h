@@ -38,9 +38,9 @@ struct cavan_window
 	pthread_mutex_t lock;
 	struct cavan_application_context *context;
 
-	struct cavan_window *child;
 	struct cavan_window *parent;
-	struct cavan_window *next;
+	struct double_link_node node;
+	struct double_link child_link;
 
 	int (*init_handler)(struct cavan_window *win, struct cavan_application_context *context);
 	void (*destory_handler)(struct cavan_window *win);
@@ -107,9 +107,13 @@ struct cavan_application_context
 	int x, max_x;
 	int y, max_y;
 
+	cavan_display_color_t back_color;
+	cavan_display_color_t mouse_color;
+	cavan_display_color_t move_color;
+
 	struct cavan_window *win_curr;
 	struct cavan_window *win_active;
-	struct cavan_window win_root;
+	struct double_link win_link;
 
 	pthread_mutex_t lock;
 	int pipefd[2];
@@ -118,10 +122,11 @@ struct cavan_application_context
 };
 
 int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child);
-int cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child);
+void cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child);
 void cavan_window_set_abs_position(struct cavan_window *win, int x, int y);
 void cavan_window_set_position(struct cavan_window *win, int x, int y);
-struct cavan_window *cavan_window_find_by_axis(struct cavan_window *head, int x, int y);
+struct cavan_window *cavan_window_find_by_axis(struct double_link *link, struct cavan_display_rect *rect);
+static inline struct cavan_window *cavan_window_find_by_axis2(struct double_link *link, int x, int y);
 void cavan_window_paint(struct cavan_window *win);
 void cavan_window_destory(struct cavan_window *win);
 void cavan_window_set_back_color(struct cavan_window *win, float red, float green, float blue);
@@ -168,22 +173,10 @@ bool cavan_window_clicked(struct cavan_window *win, bool pressed);
 int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data);
 void cavan_application_uninit(struct cavan_application_context *context);
 int cavan_application_main_loop(struct cavan_application_context *context, void (*handler)(struct cavan_application_context *context, void *data), void *data);
-
-static inline void cavan_application_update_data(struct cavan_application_context *context)
-{
-	cavan_window_paint(&context->win_root);
-	context->display->refresh(context->display);
-}
-
-static inline void cavan_application_add_window(struct cavan_application_context *context, struct cavan_window *win)
-{
-	cavan_window_add_child(&context->win_root, win);
-}
-
-static inline int cavan_application_remove_window(struct cavan_application_context *context, struct cavan_window *win)
-{
-	return cavan_window_remove_child(&context->win_root, win);
-}
+void cavan_application_paint(struct cavan_application_context *context);
+void cavan_application_update_data(struct cavan_application_context *context);
+int cavan_application_add_window(struct cavan_application_context *context, struct cavan_window *win);
+void cavan_application_remove_window(struct cavan_application_context *context, struct cavan_window *win);
 
 static inline void cavan_application_set_on_key_pressed(struct cavan_application_context *context, bool (*handler)(struct cavan_application_context *context, const char *name, int code, int value, void *data))
 {
@@ -277,4 +270,15 @@ static inline int cavan_application_send_event(struct cavan_application_context 
 static inline int cavan_application_exit(struct cavan_application_context *context)
 {
 	return cavan_application_send_event(context, CAVAN_APP_EVENT_EXIT);
+}
+
+static inline struct cavan_window *cavan_window_find_by_axis2(struct double_link *link, int x, int y)
+{
+	struct cavan_display_rect rect =
+	{
+		.x = x,
+		.y = y
+	};
+
+	return cavan_window_find_by_axis(link, &rect);
 }

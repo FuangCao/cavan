@@ -170,8 +170,6 @@ int cavan_display_draw_line_dummy(struct cavan_display_device *display, int x1, 
 		diffy = -diffy;
 	}
 
-	pthread_mutex_lock(&display->lock);
-
 	if (diffx > diffy)
 	{
 		if (diffy < 2)
@@ -195,8 +193,6 @@ int cavan_display_draw_line_dummy(struct cavan_display_device *display, int x1, 
 		}
 	}
 
-	pthread_mutex_unlock(&display->lock);
-
 	return 0;
 }
 
@@ -206,8 +202,6 @@ int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left
 	int right, bottom;
 	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
-
-	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -246,8 +240,6 @@ int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left
 		handler(display, right, i, color);
 	}
 
-	pthread_mutex_unlock(&display->lock);
-
 	return 0;
 }
 
@@ -257,8 +249,6 @@ int cavan_display_fill_rect_dummy(struct cavan_display_device *display, int left
 	int x, y;
 	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
-
-	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -293,8 +283,6 @@ int cavan_display_fill_rect_dummy(struct cavan_display_device *display, int left
 		}
 	}
 
-	pthread_mutex_unlock(&display->lock);
-
 	return 0;
 }
 
@@ -310,8 +298,6 @@ int cavan_display_draw_circle_dummy(struct cavan_display_device *display, int x,
 	{
 		return -EINVAL;
 	}
-
-	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -332,8 +318,6 @@ int cavan_display_draw_circle_dummy(struct cavan_display_device *display, int x,
 		handler(display, x - tmp, y - i, color);
 	}
 
-	pthread_mutex_unlock(&display->lock);
-
 	return 0;
 }
 
@@ -349,8 +333,6 @@ int cavan_display_fill_circle_dummy(struct cavan_display_device *display, int x,
 	{
 		return -EINVAL;
 	}
-
-	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -373,8 +355,6 @@ int cavan_display_fill_circle_dummy(struct cavan_display_device *display, int x,
 		}
 	}
 
-	pthread_mutex_unlock(&display->lock);
-
 	return 0;
 }
 
@@ -396,8 +376,6 @@ int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x
 
 	aa *= aa;
 	bb *= bb;
-
-	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -422,8 +400,6 @@ int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x
 		handler(display, x - tmp, y - i, color);
 	}
 
-	pthread_mutex_unlock(&display->lock);
-
 	return 0;
 }
 
@@ -445,8 +421,6 @@ int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x
 
 	aa *= aa;
 	bb *= bb;
-
-	pthread_mutex_lock(&display->lock);
 
 	handler = display->draw_point;
 	color = display->pen_color;
@@ -472,8 +446,6 @@ int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x
 			handler(display, left, bottom, color);
 		}
 	}
-
-	pthread_mutex_unlock(&display->lock);
 
 	return 0;
 }
@@ -588,8 +560,6 @@ int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan
 	// println("left = %d, right = %d", left, right);
 	// println("a1 = %lf, b1 = %lf, a2 = %lf, b2 = %lf", a1, b1, a2, b2);
 
-	pthread_mutex_lock(&display->lock);
-
 	handler = display->draw_point;
 	color = display->pen_color;
 
@@ -621,8 +591,6 @@ int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan
 			left++;
 		}
 
-		pthread_mutex_unlock(&display->lock);
-
 		return 0;
 	}
 
@@ -639,8 +607,6 @@ int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan
 
 		left++;
 	}
-
-	pthread_mutex_unlock(&display->lock);
 
 	return 0;
 }

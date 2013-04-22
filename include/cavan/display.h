@@ -191,3 +191,10 @@ static inline int cavan_display_memory_restore(struct cavan_display_device *disp
 {
 	return display->display_memory_xfer(display, mem, false);
 }
+
+static inline void cavan_display_refresh(struct cavan_display_device *display)
+{
+	pthread_mutex_lock(&display->lock);
+	display->refresh(display);
+	pthread_mutex_unlock(&display->lock);
+}

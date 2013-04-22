@@ -596,7 +596,6 @@ static struct double_link_node *double_link_find_base(struct double_link *link, 
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
-		pr_bold_info("node = %p", node);
 		if (matcher(link, node, data))
 		{
 			return node;
