@@ -88,6 +88,8 @@ void double_link_traversal(struct double_link *link, void *data, void (*handler)
 void double_link_traversal2(struct double_link *link, void *data, void (*handler)(struct double_link *link, struct double_link_node *node, void *data));
 struct double_link_node *double_link_find(struct double_link *link, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data));
 bool double_link_has_node(struct double_link *link, struct double_link_node *node);
+void double_link_cond_insert_append(struct double_link *link, struct double_link_node *node, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data));
+void double_link_cond_insert_push(struct double_link *link, struct double_link_node *node, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data));
 
 bool array_has_element(int element, const int a[], size_t size);
 

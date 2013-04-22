@@ -306,10 +306,9 @@ void cavan_thread_resume(struct cavan_thread *thread)
 	if (thread->state == CAVAN_THREAD_STATE_SUSPEND)
 	{
 		thread->state = CAVAN_THREAD_STATE_RUNNING;
-
-		cavan_thread_send_event(thread, 0);
 	}
 
+	cavan_thread_send_event(thread, 0);
 	thread->wake_handker(thread, 0, thread->private_data);
 
 	pthread_mutex_unlock(&thread->lock);

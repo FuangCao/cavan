@@ -538,6 +538,34 @@ void doubel_link_insert2(struct double_link *link, struct double_link_node *next
 	pthread_mutex_unlock(&link->lock);
 }
 
+static void double_link_append_base(struct double_link *link, struct double_link_node *node)
+{
+	struct double_link_node *head = &link->head_node;
+
+	double_link_insert_base(head->prev, head, node);
+}
+
+void double_link_append(struct double_link *link, struct double_link_node *node)
+{
+	pthread_mutex_lock(&link->lock);
+	double_link_append_base(link, node);
+	pthread_mutex_unlock(&link->lock);
+}
+
+static void double_link_push_base(struct double_link *link, struct double_link_node *node)
+{
+	struct double_link_node *head = &link->head_node;
+
+	double_link_insert_base(head, head->next, node);
+}
+
+void double_link_push(struct double_link *link, struct double_link_node *node)
+{
+	pthread_mutex_lock(&link->lock);
+	double_link_push_base(link, node);
+	pthread_mutex_unlock(&link->lock);
+}
+
 bool double_link_remove(struct double_link *link, struct double_link_node *node)
 {
 	bool res;
@@ -547,24 +575,6 @@ bool double_link_remove(struct double_link *link, struct double_link_node *node)
 	pthread_mutex_unlock(&link->lock);
 
 	return res;
-}
-
-void double_link_append(struct double_link *link, struct double_link_node *node)
-{
-	struct double_link_node *head = &link->head_node;
-
-	pthread_mutex_lock(&link->lock);
-	double_link_insert_base(head->prev, head, node);
-	pthread_mutex_unlock(&link->lock);
-}
-
-void double_link_push(struct double_link *link, struct double_link_node *node)
-{
-	struct double_link_node *head = &link->head_node;
-
-	pthread_mutex_lock(&link->lock);
-	double_link_insert_base(head, head->next, node);
-	pthread_mutex_unlock(&link->lock);
 }
 
 struct double_link_node *double_link_pop(struct double_link *link)
@@ -616,30 +626,74 @@ void double_link_traversal2(struct double_link *link, void *data, void (*handle)
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct double_link_node *double_link_find(struct double_link *link, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
+static struct double_link_node *double_link_find_base(struct double_link *link, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
 {
 	struct double_link_node *head, *node;
-
-	pthread_mutex_lock(&link->lock);
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
 		pr_bold_info("node = %p", node);
 		if (match(link, node, data))
 		{
-			pthread_mutex_unlock(&link->lock);
 			return node;
 		}
 	}
 
+	return NULL;
+}
+
+struct double_link_node *double_link_find(struct double_link *link, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
+{
+	struct double_link_node *node;
+
+	pthread_mutex_lock(&link->lock);
+	node = double_link_find_base(link, data, match);
 	pthread_mutex_unlock(&link->lock);
 
-	return NULL;
+	return node;
 }
 
 bool double_link_has_node(struct double_link *link, struct double_link_node *node)
 {
 	return double_link_find(link, node, double_link_node_match_equal) != NULL;
+}
+
+void double_link_cond_insert_append(struct double_link *link, struct double_link_node *node, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
+{
+	struct double_link_node *next;
+
+	pthread_mutex_lock(&link->lock);
+
+	next = double_link_find_base(link, data, match);
+	if (next)
+	{
+		double_link_insert_base(next->prev, next, node);
+	}
+	else
+	{
+		double_link_append_base(link, node);
+	}
+
+	pthread_mutex_unlock(&link->lock);
+}
+
+void double_link_cond_insert_push(struct double_link *link, struct double_link_node *node, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
+{
+	struct double_link_node *next;
+
+	pthread_mutex_lock(&link->lock);
+
+	next = double_link_find_base(link, data, match);
+	if (next)
+	{
+		double_link_insert_base(next->prev, next, node);
+	}
+	else
+	{
+		double_link_push_base(link, node);
+	}
+
+	pthread_mutex_unlock(&link->lock);
 }
 
 // ================================================================================

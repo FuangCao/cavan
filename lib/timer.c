@@ -70,22 +70,6 @@ static bool cavan_timer_match_later(struct double_link *link, struct double_link
 	return cavan_timespec_cmp(&timer->time, time) > 0;
 }
 
-static void cavan_timer_insert_base(struct double_link *link, struct cavan_timer *timer)
-{
-	struct double_link_node *next;
-
-	double_link_remove(link, &timer->node);
-	next = double_link_find(link, &timer->time, cavan_timer_match_later);
-	if (next)
-	{
-		double_link_insert(link, next->prev, &timer->node);
-	}
-	else
-	{
-		double_link_append(link, &timer->node);
-	}
-}
-
 int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *timer, u32 timeout)
 {
 	if (timer->handler == NULL)
@@ -97,8 +81,9 @@ int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *
 
 	pthread_mutex_lock(&service->lock);
 
+	double_link_remove(&service->link, &timer->node);
 	cavan_timer_set_timespec(&timer->time, timeout);
-	cavan_timer_insert_base(&service->link, timer);
+	double_link_cond_insert_append(&service->link, &timer->node, &timer->time, cavan_timer_match_later);
 	cavan_thread_resume(&service->thread);
 
 	pthread_mutex_unlock(&service->lock);
@@ -120,19 +105,17 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, u32 event, v
 		int delay;
 		struct cavan_timer *timer = double_link_get_container(link, node);
 
-		pthread_mutex_unlock(&service->lock);
-
 		delay = cavan_real_timespec_diff(&timer->time);
 		if (delay > 0)
 		{
+			pthread_mutex_unlock(&service->lock);
 			cavan_thread_msleep(thread, delay);
 		}
 		else
 		{
-			bool res;
-			res = double_link_remove(link, node);
-			pr_bold_info("Remove %s is %s", (char *)timer->private_data, res ? "true" : "false");
+			double_link_remove(link, node);
 			timer->handler(timer, timer->private_data);
+			pthread_mutex_unlock(&service->lock);
 		}
 	}
 	else
