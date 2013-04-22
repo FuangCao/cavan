@@ -460,7 +460,7 @@ static void cavan_input_key_handler_dummy(struct cavan_input_device *dev, const 
 	pr_bold_info("key: name = %s, code = %d, value = %d", name, code, value);
 }
 
-static void cavan_input_touch_handler_dummy(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data)
+static void cavan_input_touch_handler_dummy(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data)
 {
 	if (point->pressure)
 	{
@@ -472,7 +472,7 @@ static void cavan_input_touch_handler_dummy(struct cavan_input_device *dev, stru
 	}
 }
 
-static void cavan_input_move_handler_dummy(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data)
+static void cavan_input_move_handler_dummy(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data)
 {
 	pr_bold_info("move[%d] = [%d, %d]", point->id, point->x, point->y);
 }

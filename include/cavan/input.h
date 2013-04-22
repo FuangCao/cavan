@@ -133,14 +133,14 @@ struct cavan_gsensor_event
 	int x, y, z;
 };
 
-struct cavan_touch_point
+typedef struct cavan_touch_point
 {
 	int id;
 	int x;
 	int y;
 	int pressure;
 	int released;
-};
+} cavan_touch_point_t;
 
 struct cavan_input_device
 {
@@ -167,8 +167,8 @@ struct cavan_input_service
 	void (*mouse_wheel_handler)(struct cavan_input_device *dev, int code, int value, void *data);
 	void (*mouse_move_handler)(struct cavan_input_device *dev, int x, int y, void *data);
 	void (*mouse_touch_handler)(struct cavan_input_device *dev, int code, int value, void *data);
-	void (*touch_handler)(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data);
-	void (*move_handler)(struct cavan_input_device *dev, struct cavan_touch_point *point, void *data);
+	void (*touch_handler)(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data);
+	void (*move_handler)(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data);
 	void (*gsensor_handler)(struct cavan_input_device *dev, struct cavan_gsensor_event *event, void *data);
 };
 

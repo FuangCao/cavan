@@ -61,6 +61,12 @@ typedef union
 	unsigned long type_ulong;
 } cavan_shared_data_t;
 
+typedef struct
+{
+	int x;
+	int y;
+} cavan_point_t;
+
 #define ARRAY_SIZE(a)	(sizeof(a) / sizeof((a)[0]))
 #define NELEM(a)		((int)ARRAY_SIZE(a))
 

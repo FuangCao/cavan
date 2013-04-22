@@ -112,7 +112,7 @@ bool cavan_touch_device_matcher(struct cavan_event_matcher *matcher, void *data)
 	return cavan_single_touch_device_match(abs_bitmask, key_bitmask);
 }
 
-static inline void cavan_touch_point_mapping(struct cavan_touch_device *dev, struct cavan_touch_point *point)
+static inline void cavan_touch_point_mapping(struct cavan_touch_device *dev, cavan_touch_point_t *point)
 {
 	point->x = point->x * dev->xscale - dev->xoffset;
 	point->y = point->y * dev->yscale - dev->yoffset;
@@ -177,7 +177,7 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 {
 	struct cavan_multi_touch_device *ts = (struct cavan_multi_touch_device *)dev;
 	struct cavan_input_service *service = data;
-	struct cavan_touch_point *p, *p_end;
+	cavan_touch_point_t *p, *p_end;
 
 	switch (event->type)
 	{
@@ -313,7 +313,7 @@ struct cavan_input_device *cavan_multi_touch_device_create(void)
 	struct cavan_multi_touch_device *ts;
 	struct cavan_touch_device *touch_dev;
 	struct cavan_input_device *dev;
-	struct cavan_touch_point *p, *p_end;
+	cavan_touch_point_t *p, *p_end;
 
 	ts = malloc(sizeof(*ts));
 	if (ts == NULL)
@@ -350,7 +350,7 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 {
 	struct cavan_single_touch_device *ts = (struct cavan_single_touch_device *)dev;
 	struct cavan_input_service *service = data;
-	struct cavan_touch_point *p = &ts->point;
+	cavan_touch_point_t *p = &ts->point;
 
 	switch (event->type)
 	{

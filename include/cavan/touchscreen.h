@@ -35,7 +35,7 @@ struct cavan_touch_device
 struct cavan_multi_touch_device
 {
 	struct cavan_touch_device touch_dev;
-	struct cavan_touch_point points[CAVAN_TOUCH_POINT_MAX];
+	cavan_touch_point_t points[CAVAN_TOUCH_POINT_MAX];
 	int point_count;
 	int point_count_old;
 };
@@ -44,7 +44,7 @@ struct cavan_single_touch_device
 {
 	struct cavan_touch_device touch_dev;
 	int pressed;
-	struct cavan_touch_point point;
+	cavan_touch_point_t point;
 };
 
 bool cavan_multi_touch_device_match(uint8_t *abs_bitmask);

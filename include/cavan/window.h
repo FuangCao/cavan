@@ -46,20 +46,20 @@ struct cavan_window
 	void (*destory_handler)(struct cavan_window *win);
 	void (*paint_handler)(struct cavan_window *win);
 	void (*key_handler)(struct cavan_window *win, const char *name, int code, int value);
-	void (*click_handler)(struct cavan_window *win, bool pressed);
-	void (*move_handler)(struct cavan_window *win, int x, int y);
-	void (*entry_handler)(struct cavan_window *win, int x, int y);
-	void (*exit_handler)(struct cavan_window *win, int x, int y);
+	void (*click_handler)(struct cavan_window *win, cavan_touch_point_t *point);
+	void (*move_handler)(struct cavan_window *win, cavan_touch_point_t *point);
+	void (*entry_handler)(struct cavan_window *win, cavan_touch_point_t *point);
+	void (*exit_handler)(struct cavan_window *win, cavan_touch_point_t *point);
 	void (*get_rect_handler)(struct cavan_window *win, struct cavan_display_rect *rect);
 
 	void (*on_destory)(struct cavan_window *win, void *data);
 	bool (*on_paint)(struct cavan_window *win, void *data);
 	bool (*on_key_pressed)(struct cavan_window *win, const char *name, int code, int value, void *data);
-	bool (*on_clicked)(struct cavan_window *win, int x, int y, bool pressed, void *data);
-	bool (*on_double_clicked)(struct cavan_window *win, int x, int y, bool pressed, void *data);
-	bool (*on_move)(struct cavan_window *win, int x, int y, void *data);
-	bool (*on_entry)(struct cavan_window *win, int x, int y, void *data);
-	bool (*on_exit)(struct cavan_window *win, int x, int y, void *data);
+	bool (*on_clicked)(struct cavan_window *win, cavan_touch_point_t *point, void *data);
+	bool (*on_double_clicked)(struct cavan_window *win, cavan_point_t *point, bool pressed, void *data);
+	bool (*on_move)(struct cavan_window *win, cavan_touch_point_t *point, void *data);
+	bool (*on_entry)(struct cavan_window *win, cavan_touch_point_t *point, void *data);
+	bool (*on_exit)(struct cavan_window *win, cavan_touch_point_t *point, void *data);
 };
 
 struct cavan_dialog
@@ -125,8 +125,7 @@ int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child)
 void cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child);
 void cavan_window_set_abs_position(struct cavan_window *win, int x, int y);
 void cavan_window_set_position(struct cavan_window *win, int x, int y);
-struct cavan_window *cavan_window_find_by_axis(struct double_link *link, struct cavan_display_rect *rect);
-static inline struct cavan_window *cavan_window_find_by_axis2(struct double_link *link, int x, int y);
+struct cavan_window *cavan_window_find_by_point(struct double_link *link, cavan_touch_point_t *point);
 void cavan_window_paint(struct cavan_window *win);
 void cavan_window_destory(struct cavan_window *win);
 void cavan_window_set_back_color(struct cavan_window *win, float red, float green, float blue);
@@ -143,16 +142,16 @@ void cavan_window_destory_handler(struct cavan_window *win);
 void cavan_window_paint_handler(struct cavan_window *win);
 void cavan_window_paint_handler(struct cavan_window *win);
 void cavan_window_key_handler(struct cavan_window *win, const char *name, int code, int value);
-void cavan_window_click_handler(struct cavan_window *win, bool pressed);
-void cavan_window_move_handler(struct cavan_window *win, int x, int y);
-void cavan_window_entry_handler(struct cavan_window *win, int x, int y);
-void cavan_window_exit_handler(struct cavan_window *win, int x, int y);
+void cavan_window_click_handler(struct cavan_window *win, cavan_touch_point_t *point);
+void cavan_window_move_handler(struct cavan_window *win, cavan_touch_point_t *point);
+void cavan_window_entry_handler(struct cavan_window *win, cavan_touch_point_t *point);
+void cavan_window_exit_handler(struct cavan_window *win, cavan_touch_point_t *point);
 void cavan_window_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect);
 
 int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application_context *context);
 void cavan_dialog_paint_handler(struct cavan_window *win);
-void cavan_dialog_click_handler(struct cavan_window *win, bool pressed);
-void cavan_dialog_move_handler(struct cavan_window *win, int x, int y);
+void cavan_dialog_click_handler(struct cavan_window *win, cavan_touch_point_t *point);
+void cavan_dialog_move_handler(struct cavan_window *win, cavan_touch_point_t *point);
 void cavan_dialog_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect);
 
 int cavan_label_init_handler(struct cavan_window *win, struct cavan_application_context *context);
@@ -160,7 +159,7 @@ void cavan_label_paint_handler(struct cavan_window *win);
 
 int cavan_button_init_handler(struct cavan_window *win, struct cavan_application_context *context);
 void cavan_button_paint_handler(struct cavan_window *win);
-void cavan_button_click_handler(struct cavan_window *win, bool pressed);
+void cavan_button_click_handler(struct cavan_window *win, cavan_touch_point_t *point);
 
 void cavan_progress_bar_paint_handler(struct cavan_window *win);
 int cavan_progress_bar_init_handler(struct cavan_window *win, struct cavan_application_context *context);
@@ -168,7 +167,7 @@ int cavan_progress_bar_init(struct cavan_progress_bar *bar, double total);
 int cavan_progress_bar_start(struct cavan_progress_bar *bar, double total);
 void cavan_progress_bar_set_pos(struct cavan_progress_bar *bar, double pos);
 
-bool cavan_window_clicked(struct cavan_window *win, bool pressed);
+bool cavan_window_clicked(struct cavan_window *win, cavan_touch_point_t *point);
 
 int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data);
 void cavan_application_uninit(struct cavan_application_context *context);
@@ -192,7 +191,7 @@ static inline void cavan_window_set_on_paint(struct cavan_window *win, bool (*ha
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_clicked(struct cavan_window *win, bool (*handler)(struct cavan_window *win, int x, int y, bool pressed, void *data))
+static inline void cavan_window_set_on_clicked(struct cavan_window *win, bool (*handler)(struct cavan_window *win, cavan_touch_point_t *point, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_clicked = handler;
@@ -206,21 +205,21 @@ static inline void cavan_window_set_on_key_pressed(struct cavan_window *win, boo
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_entry(struct cavan_window *win, bool (*handler)(struct cavan_window *win, int x, int y, void *data))
+static inline void cavan_window_set_on_entry(struct cavan_window *win, bool (*handler)(struct cavan_window *win, cavan_touch_point_t *point, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_entry = handler;
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_exit(struct cavan_window *win, bool (*handler)(struct cavan_window *win, int x, int y, void *data))
+static inline void cavan_window_set_on_exit(struct cavan_window *win, bool (*handler)(struct cavan_window *win, cavan_touch_point_t *point, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_exit = handler;
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_move(struct cavan_window *win, bool (*handler)(struct cavan_window *win, int x, int y, void *data))
+static inline void cavan_window_set_on_move(struct cavan_window *win, bool (*handler)(struct cavan_window *win, cavan_touch_point_t *point, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_move = handler;
@@ -270,15 +269,4 @@ static inline int cavan_application_send_event(struct cavan_application_context 
 static inline int cavan_application_exit(struct cavan_application_context *context)
 {
 	return cavan_application_send_event(context, CAVAN_APP_EVENT_EXIT);
-}
-
-static inline struct cavan_window *cavan_window_find_by_axis2(struct double_link *link, int x, int y)
-{
-	struct cavan_display_rect rect =
-	{
-		.x = x,
-		.y = y
-	};
-
-	return cavan_window_find_by_axis(link, &rect);
 }
