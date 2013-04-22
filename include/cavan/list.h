@@ -44,6 +44,15 @@ struct double_link
 	struct double_link_node head_node;
 };
 
+typedef void (*single_link_handler_t)(struct single_link *link, struct single_link_node *node, void *data);
+typedef bool (*single_link_matcher_t)(struct single_link *link, struct single_link_node *node, void *data);
+
+typedef void (*circle_link_handler_t)(struct circle_link *link, struct single_link_node *node, void *data);
+typedef bool (*circle_link_matcher_t)(struct circle_link *link, struct single_link_node *node, void *data);
+
+typedef void (*double_link_handler_t)(struct double_link *link, struct double_link_node *node, void *data);
+typedef bool (*double_link_matcher_t)(struct double_link *link, struct double_link_node *node, void *data);
+
 int single_link_init(struct single_link *link, long offset);
 void single_link_deinit(struct single_link *link);
 void single_link_free(struct single_link *link);
@@ -54,8 +63,8 @@ void single_link_append(struct single_link *link, struct single_link_node *node)
 bool single_link_remove(struct single_link *link, struct single_link_node *node);
 void single_link_push(struct single_link *link, struct single_link_node *node);
 struct single_link_node *single_link_pop(struct single_link *link);
-void single_link_traversal(struct single_link *link, void *data, void (*handler)(struct single_link *link, struct single_link_node *node, void *data));
-struct single_link_node *single_link_find(struct single_link *link, void *data, bool (*match)(struct single_link *link, struct single_link_node *node, void *data));
+void single_link_traversal(struct single_link *link, void *data, single_link_handler_t handler);
+struct single_link_node *single_link_find(struct single_link *link, void *data, single_link_matcher_t macher);
 bool single_link_has_node(struct single_link *link, struct single_link_node *node);
 
 int circle_link_init(struct circle_link *link, long offset);
@@ -68,8 +77,8 @@ void circle_link_insert(struct circle_link *link, struct single_link_node *prev,
 bool circle_link_remove(struct circle_link *link, struct single_link_node *node);
 void circle_link_push(struct circle_link *link, struct single_link_node *node);
 struct single_link_node *circle_link_pop(struct circle_link *link);
-void circle_link_traversal(struct circle_link *link, void *data, void (*handler)(struct circle_link *link, struct single_link_node *node, void *data));
-struct single_link_node *circle_link_find(struct circle_link *link, void *data, bool (*match)(struct circle_link *link, struct single_link_node *node, void *data));
+void circle_link_traversal(struct circle_link *link, void *data, circle_link_handler_t handler);
+struct single_link_node *circle_link_find(struct circle_link *link, void *data, circle_link_matcher_t matcher);
 bool circle_link_has_node(struct circle_link *link, struct single_link_node *node);
 
 int double_link_init(struct double_link *link, long offset);
@@ -84,12 +93,12 @@ bool double_link_remove(struct double_link *link, struct double_link_node *node)
 void double_link_append(struct double_link *link, struct double_link_node *node);
 void double_link_push(struct double_link *link, struct double_link_node *node);
 struct double_link_node *double_link_pop(struct double_link *link);
-void double_link_traversal(struct double_link *link, void *data, void (*handler)(struct double_link *link, struct double_link_node *node, void *data));
-void double_link_traversal2(struct double_link *link, void *data, void (*handler)(struct double_link *link, struct double_link_node *node, void *data));
-struct double_link_node *double_link_find(struct double_link *link, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data));
+void double_link_traversal(struct double_link *link, void *data, double_link_handler_t handler);
+void double_link_traversal2(struct double_link *link, void *data, double_link_handler_t handler);
+struct double_link_node *double_link_find(struct double_link *link, void *data, double_link_matcher_t matcher);
 bool double_link_has_node(struct double_link *link, struct double_link_node *node);
-void double_link_cond_insert_append(struct double_link *link, struct double_link_node *node, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data));
-void double_link_cond_insert_push(struct double_link *link, struct double_link_node *node, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data));
+void double_link_cond_insert_append(struct double_link *link, struct double_link_node *node, void *data, double_link_matcher_t matcher);
+void double_link_cond_insert_push(struct double_link *link, struct double_link_node *node, void *data, double_link_matcher_t matcher);
 
 bool array_has_element(int element, const int a[], size_t size);
 

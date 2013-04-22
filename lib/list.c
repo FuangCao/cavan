@@ -209,7 +209,7 @@ struct single_link_node *single_link_pop(struct single_link *link)
 	return node;
 }
 
-void single_link_traversal(struct single_link *link, void *data, void (*handle)(struct single_link *link, struct single_link_node *node, void *data))
+void single_link_traversal(struct single_link *link, void *data, single_link_handler_t handler)
 {
 	struct single_link_node *node;
 
@@ -217,13 +217,13 @@ void single_link_traversal(struct single_link *link, void *data, void (*handle)(
 
 	for (node = link->head_node.next; node; node = node->next)
 	{
-		handle(link, node, data);
+		handler(link, node, data);
 	}
 
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct single_link_node *single_link_find(struct single_link *link, void *data, bool (*match)(struct single_link *link, struct single_link_node *node, void *data))
+struct single_link_node *single_link_find(struct single_link *link, void *data, single_link_matcher_t matcher)
 {
 	struct single_link_node *node;
 
@@ -231,7 +231,7 @@ struct single_link_node *single_link_find(struct single_link *link, void *data, 
 
 	for (node = link->head_node.next; node; node = node->next)
 	{
-		if (match(link, node, data))
+		if (matcher(link, node, data))
 		{
 			pthread_mutex_unlock(&link->lock);
 
@@ -393,7 +393,7 @@ struct single_link_node *circle_link_pop(struct circle_link *link)
 	return node;
 }
 
-void circle_link_traversal(struct circle_link *link, void *data, void (*handle)(struct circle_link *link, struct single_link_node *node, void *data))
+void circle_link_traversal(struct circle_link *link, void *data, circle_link_handler_t handler)
 {
 	struct single_link_node *head, *node;
 
@@ -401,13 +401,13 @@ void circle_link_traversal(struct circle_link *link, void *data, void (*handle)(
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
-		handle(link, node, data);
+		handler(link, node, data);
 	}
 
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct single_link_node *circle_link_find(struct circle_link *link, void *data, bool (*match)(struct circle_link *link, struct single_link_node *node, void *data))
+struct single_link_node *circle_link_find(struct circle_link *link, void *data, circle_link_matcher_t matcher)
 {
 	struct single_link_node *head, *node;
 
@@ -415,7 +415,7 @@ struct single_link_node *circle_link_find(struct circle_link *link, void *data, 
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
-		if (match(link, node, data))
+		if (matcher(link, node, data))
 		{
 			pthread_mutex_unlock(&link->lock);
 
@@ -598,7 +598,7 @@ struct double_link_node *double_link_pop(struct double_link *link)
 	return node;
 }
 
-void double_link_traversal(struct double_link *link, void *data, void (*handle)(struct double_link *link, struct double_link_node *node, void *data))
+void double_link_traversal(struct double_link *link, void *data, double_link_handler_t handler)
 {
 	struct double_link_node *head, *node;
 
@@ -606,13 +606,13 @@ void double_link_traversal(struct double_link *link, void *data, void (*handle)(
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
-		handle(link, node, data);
+		handler(link, node, data);
 	}
 
 	pthread_mutex_unlock(&link->lock);
 }
 
-void double_link_traversal2(struct double_link *link, void *data, void (*handle)(struct double_link *link, struct double_link_node *node, void *data))
+void double_link_traversal2(struct double_link *link, void *data, double_link_handler_t handler)
 {
 	struct double_link_node *head, *node;
 
@@ -620,20 +620,20 @@ void double_link_traversal2(struct double_link *link, void *data, void (*handle)
 
 	for (head = &link->head_node, node = head->prev; node != head; node = node->prev)
 	{
-		handle(link, node, data);
+		handler(link, node, data);
 	}
 
 	pthread_mutex_unlock(&link->lock);
 }
 
-static struct double_link_node *double_link_find_base(struct double_link *link, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
+static struct double_link_node *double_link_find_base(struct double_link *link, void *data, double_link_matcher_t matcher)
 {
 	struct double_link_node *head, *node;
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next)
 	{
 		pr_bold_info("node = %p", node);
-		if (match(link, node, data))
+		if (matcher(link, node, data))
 		{
 			return node;
 		}
@@ -642,12 +642,12 @@ static struct double_link_node *double_link_find_base(struct double_link *link, 
 	return NULL;
 }
 
-struct double_link_node *double_link_find(struct double_link *link, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
+struct double_link_node *double_link_find(struct double_link *link, void *data, double_link_matcher_t matcher)
 {
 	struct double_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
-	node = double_link_find_base(link, data, match);
+	node = double_link_find_base(link, data, matcher);
 	pthread_mutex_unlock(&link->lock);
 
 	return node;
@@ -658,13 +658,13 @@ bool double_link_has_node(struct double_link *link, struct double_link_node *nod
 	return double_link_find(link, node, double_link_node_match_equal) != NULL;
 }
 
-void double_link_cond_insert_append(struct double_link *link, struct double_link_node *node, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
+void double_link_cond_insert_append(struct double_link *link, struct double_link_node *node, void *data, double_link_matcher_t matcher)
 {
 	struct double_link_node *next;
 
 	pthread_mutex_lock(&link->lock);
 
-	next = double_link_find_base(link, data, match);
+	next = double_link_find_base(link, data, matcher);
 	if (next)
 	{
 		double_link_insert_base(next->prev, next, node);
@@ -677,13 +677,13 @@ void double_link_cond_insert_append(struct double_link *link, struct double_link
 	pthread_mutex_unlock(&link->lock);
 }
 
-void double_link_cond_insert_push(struct double_link *link, struct double_link_node *node, void *data, bool (*match)(struct double_link *link, struct double_link_node *node, void *data))
+void double_link_cond_insert_push(struct double_link *link, struct double_link_node *node, void *data, double_link_matcher_t matcher)
 {
 	struct double_link_node *next;
 
 	pthread_mutex_lock(&link->lock);
 
-	next = double_link_find_base(link, data, match);
+	next = double_link_find_base(link, data, matcher);
 	if (next)
 	{
 		double_link_insert_base(next->prev, next, node);
