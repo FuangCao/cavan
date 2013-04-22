@@ -38,21 +38,25 @@ int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event)
 
 int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 ms)
 {
-	if (file_poll_input(thread->pipefd[0], ms))
+	int ret;
+
+	ret = poll(&thread->pfd, 1, ms);
+	if (ret < 0)
 	{
-		return cavan_thread_recv_event(thread, event);
+		pr_error_info("poll");
+		return ret;
 	}
 
-	return 0;
+	if (ret < 1)
+	{
+		return 0;
+	}
+
+	return cavan_thread_recv_event(thread, event);
 }
 
 static int cavan_thread_wait_handler_dummy(struct cavan_thread *thread, u32 *event, void *data)
 {
-	if (event)
-	{
-		*event = 0;
-	}
-
 	return 0;
 }
 
@@ -64,6 +68,7 @@ static int cavan_thread_wake_handler_dummy(struct cavan_thread *thread, u32 even
 int cavan_thread_init(struct cavan_thread *thread, void *data)
 {
 	int ret;
+	struct pollfd *pfd;
 
 	if (thread->handler == NULL)
 	{
@@ -84,6 +89,11 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 		pr_red_info("pipe");
 		goto out_pthread_mutex_destroy;
 	}
+
+	pfd = &thread->pfd;
+	pfd->fd = thread->pipefd[0];
+	pfd->events = POLLIN;
+	pfd->revents = 0;
 
 	thread->state = CAVAN_THREAD_STATE_NONE;
 	thread->private_data = data;

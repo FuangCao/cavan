@@ -24,6 +24,7 @@ struct cavan_thread
 
 	pthread_t id;
 	int pipefd[2];
+	struct pollfd pfd;
 
 	pthread_mutex_t lock;
 	cavan_thread_state_t state;

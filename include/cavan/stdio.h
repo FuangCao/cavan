@@ -89,7 +89,7 @@
 	pr_std_info(color fmt CAVAN_COLOR_STAND, ##args)
 
 #define pr_red_info(fmt, args ...) \
-	pr_color_info(CAVAN_COLOR_RED, fmt, ##args)
+	pr_color_info(CAVAN_COLOR_RED, "%s: " fmt, __FUNCTION__, ##args)
 
 #define pr_error_info(fmt, args ...) \
 	if (errno) { \

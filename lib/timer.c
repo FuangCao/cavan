@@ -75,7 +75,6 @@ static void cavan_timer_insert_base(struct double_link *link, struct cavan_timer
 	struct double_link_node *next;
 
 	double_link_remove(link, &timer->node);
-
 	next = double_link_find(link, &timer->time, cavan_timer_match_later);
 	if (next)
 	{
@@ -130,8 +129,10 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, u32 event, v
 		}
 		else
 		{
-			double_link_remove(link, node);
-			timer->handler(timer);
+			bool res;
+			res = double_link_remove(link, node);
+			pr_bold_info("Remove %s is %s", (char *)timer->private_data, res ? "true" : "false");
+			timer->handler(timer, timer->private_data);
 		}
 	}
 	else
