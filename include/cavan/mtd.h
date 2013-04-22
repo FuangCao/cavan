@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cavan.h>
 #include <mtd/mtd-user.h>
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-12-06 18:20:47

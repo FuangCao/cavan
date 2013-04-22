@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cavan.h>
+
 struct tm {
 	int tm_sec;		 /* seconds */
 	int tm_min;		 /* minutes */

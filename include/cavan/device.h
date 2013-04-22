@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cavan.h>
 #include <sys/mount.h>
 #include <linux/hdreg.h>
 #include <linux/loop.h>
@@ -32,7 +33,7 @@ typedef struct loop_info64	cavan_loop_info_t;
 #pragma pack(1)
 struct disk_address
 {
-	u8 	header_number;
+	u8	header_number;
 	u8	sector_number		:6;
 	u8	cylinder_number_hsb	:2;
 	u8	cylinder_number_lsb;

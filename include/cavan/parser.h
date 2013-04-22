@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cavan.h>
+
 struct buffer
 {
 	int size;
@@ -39,4 +41,3 @@ static inline void parse_parameter(const char *parameter)
 {
 	parse_parameter_base(parameter, para_option, para_value);
 }
-

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cavan.h>
 #include <cavan/network.h>
 
 // Fuang.Cao <cavan.cfa@gmail.com> Fri May 13 17:54:01 CST 2011

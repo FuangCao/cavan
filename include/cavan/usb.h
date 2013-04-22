@@ -2,6 +2,8 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Wed Sep  7 09:54:06 CST 2011
 
+#include <cavan.h>
+
 #include <linux/usbdevice_fs.h>
 #include <pthread.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 20)

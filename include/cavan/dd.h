@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cavan.h>
+
 struct dd_desc
 {
 	char in[1024];

@@ -2,8 +2,8 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Wed May 25 10:12:17 CST 2011
 
-#include <linux/input.h>
 #include <cavan.h>
+#include <linux/input.h>
 
 #define test_bit(bit, array) \
 	((array)[(bit) >> 3] & (1 << ((bit) & 0x07)))

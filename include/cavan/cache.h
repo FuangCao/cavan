@@ -2,6 +2,8 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Mon Jun 27 09:56:25 CST 2011
 
+#include <cavan.h>
+
 #define DEFAULT_BLOCK_SIZE		512
 #define DEFAULT_CACHE_BLOCKS	128
 

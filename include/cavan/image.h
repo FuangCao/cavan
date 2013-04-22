@@ -2,6 +2,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Tue Jan 11 23:03:28 CST 2011
 
+#include <cavan.h>
 #include <cavan/dd.h>
 
 #define UIMAGE_HEADER_SIZE	64

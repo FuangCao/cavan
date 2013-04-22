@@ -2,6 +2,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
+#include <cavan.h>
 #include <cavan/network.h>
 #include <cavan/service.h>
 

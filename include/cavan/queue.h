@@ -2,6 +2,8 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Wed Apr 13 10:47:06 CST 2011
 
+#include <cavan.h>
+
 struct list_queue
 {
 	void **buffer;
@@ -25,4 +27,3 @@ int list_queue_insert(struct list_queue *queue, void *data);
 void *list_queue_remove(struct list_queue *queue);
 void *list_queue_get_head_data(struct list_queue *queue);
 void *list_queue_get_tail_data(struct list_queue *queue);
-

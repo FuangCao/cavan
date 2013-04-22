@@ -4,6 +4,8 @@
 #define FREE_CHAR		'='
 #define FULL_CHAR		'H'
 
+#include <cavan.h>
+
 #pragma pack(1)
 struct progress_bar_body
 {
@@ -29,4 +31,3 @@ void progress_bar_init(struct progress_bar *bar, u64 total);
 void progress_bar_add(struct progress_bar *bar, u64 val);
 void progress_bar_set(struct progress_bar *bar, u64 val);
 void progress_bar_finish(struct progress_bar *bar);
-

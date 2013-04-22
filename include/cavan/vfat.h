@@ -2,6 +2,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Sat May  7 00:23:47 CST 2011
 
+#include <cavan.h>
 #include <cavan/file.h>
 
 #define ATTR_READ_ONLY	(1 << 0)

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cavan.h>
 #include <cavan/network.h>
 
 #define TFTP_DATA_LEN		KB(63)
@@ -9,10 +10,10 @@
 #define TFTP_LAST_ACK_TIMES	2
 #define TFTP_MAX_LINK_COUNT	10
 
-#define TFTP_RRQ 			1
-#define TFTP_WRQ 			2
-#define TFTP_DATA 			3
-#define TFTP_ACK 			4
+#define TFTP_RRQ			1
+#define TFTP_WRQ			2
+#define TFTP_DATA			3
+#define TFTP_ACK			4
 #define TFTP_ERROR			5
 #define TFTP_DD_RRQ			6
 #define TFTP_DD_WRQ			7

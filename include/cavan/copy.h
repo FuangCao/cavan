@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cavan.h>
+
 extern int write_flags;
 
 int symlink_copy(const char *src, const char *dest);

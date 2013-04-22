@@ -6,10 +6,10 @@
  * Date: Sat Nov 24 18:07:06 CST 2012
  */
 
-#include <time.h>
 #include <cavan.h>
 #include <cavan/list.h>
 #include <cavan/thread.h>
+#include <time.h>
 
 struct cavan_timer
 {

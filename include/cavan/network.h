@@ -2,6 +2,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Apr 21 10:08:25 CST 2011
 
+#include <cavan.h>
 #include <sys/socket.h>
 // #include <bits/sockaddr.h>
 #include <linux/netlink.h>

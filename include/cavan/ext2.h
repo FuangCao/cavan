@@ -2,6 +2,8 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Wed Jun 15 10:56:28 CST 2011
 
+#include <cavan.h>
+
 #define BOOT_BLOCK_SIZE			KB(1)
 #define EXT2_N_BLOCKS			15
 #define EXT2_NAME_LEN			255

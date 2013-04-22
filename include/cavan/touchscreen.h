@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <cavan/input.h>
 #include <cavan.h>
+#include <cavan/input.h>
 
 #define CAVAN_TOUCH_POINT_MAX	5
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cavan.h>
 #include <cavan/device.h>
 
 #define BOOT_SIZE				36

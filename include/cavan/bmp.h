@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cavan.h>
 #include <linux/fb.h>
 
 #pragma pack(1)

@@ -2,6 +2,8 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-12-02 10:35:54
 
+#include <cavan.h>
+
 #define TREE_MAX_DEPTH		100
 #define TREE_BUFFER_SIZE	100
 

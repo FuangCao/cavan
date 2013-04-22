@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cavan.h>
 #include <stdio.h>
 
 #define PRINT_BUFFER_LEN	MB(1)

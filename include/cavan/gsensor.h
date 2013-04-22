@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <cavan/input.h>
 #include <cavan.h>
+#include <cavan/input.h>
 
 struct cavan_gsensor_device
 {

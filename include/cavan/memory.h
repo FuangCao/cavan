@@ -2,7 +2,15 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Wed Apr 13 09:53:53 CST 2011
 
+#include <cavan.h>
 #include <cavan/text.h>
+
+#define KB(a)	((a) << 10)
+#define BK(a)	((a) >> 10)
+#define MB(a)	((a) << 20)
+#define BM(a)	((a) >> 20)
+#define GB(a)	((a) << 30)
+#define BG(a)	((a) >> 30)
 
 #define NUMBER_SWAP(num1, num2) \
 	do { \

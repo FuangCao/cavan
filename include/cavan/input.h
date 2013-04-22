@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <linux/input.h>
+#include <cavan.h>
 #include <cavan/event.h>
 #include <cavan/timer.h>
-#include <cavan.h>
+#include <linux/input.h>
 
 #define CAVAN_INPUT_MESSAGE_POOL_SIZE	20
 

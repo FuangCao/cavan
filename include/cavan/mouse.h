@@ -17,9 +17,9 @@
 
 #pragma once
 
+#include <cavan.h>
 #include <cavan/event.h>
 #include <cavan/touchscreen.h>
-#include <cavan.h>
 
 struct cavan_mouse_device
 {

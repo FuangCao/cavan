@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cavan.h>
+
 #define MAX_SN_LEN				64
 #define WIFI_MAC_LEN			18
 #define BT_MAC_LEN				27
@@ -19,4 +21,3 @@ struct oem_info
 };
 
 int write_mac_address(const char *emmc_dev, const char *system_mnt_point);
-

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cavan.h>
 #include <cavan/file.h>
 #include <cavan/swan_dev.h>
 

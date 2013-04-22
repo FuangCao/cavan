@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cavan.h>
 #include <stdarg.h>
 
 #ifdef CONFIG_BUILD_FOR_ANDROID

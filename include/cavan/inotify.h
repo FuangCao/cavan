@@ -2,6 +2,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-12-22 12:20:56
 
+#include <cavan.h>
 #include <sys/inotify.h>
 
 #define INOTIFY_MAX_WATCH_COUNT 1024

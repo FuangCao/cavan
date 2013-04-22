@@ -2,6 +2,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Mon Sep 12 19:04:07 CST 2011
 
+#include <cavan.h>
 #include <cavan/network.h>
 
 #define ROUTE_TABLE_SIZE	16
