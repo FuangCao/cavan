@@ -7,7 +7,9 @@
 #include <cavan.h>
 #include <cavan/thread.h>
 
+#ifndef CAVAN_THREAD_DEBUG
 #define CAVAN_THREAD_DEBUG	0
+#endif
 
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event)
 {
@@ -307,7 +309,7 @@ void cavan_thread_suspend(struct cavan_thread *thread)
 			}
 
 			ret = read(thread->pipefd[0], buff, sizeof(buff));
-			if (ret < 1)
+			if (ret < (int)sizeof(buff))
 			{
 				break;
 			}
