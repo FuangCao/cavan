@@ -129,27 +129,29 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 	struct cavan_thread *thread = &service->thread;
 
 	thread->name = "TIMER";
+	thread->wait_handler = NULL;
+	thread->wake_handker = NULL;
 	thread->handler = cavan_timer_service_handler;
-
-	ret = cavan_thread_init(thread, service);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_thread_init");
-		return ret;
-	}
 
 	ret = pthread_mutex_init(&service->lock, NULL);
 	if (ret < 0)
 	{
 		pr_error_info("pthread_mutex_init");
-		goto out_cavan_thread_deinit;
+		return ret;
+	}
+
+	ret = cavan_thread_init(thread, service);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_thread_init");
+		goto out_pthread_mutex_destroy;
 	}
 
 	ret = double_link_init(&service->link, MEMBER_OFFSET(struct cavan_timer, node));
 	if (ret < 0)
 	{
 		pr_red_info("double_link_init");
-		goto out_mutex_destroy;
+		goto out_cavan_thread_deinit;
 	}
 
 	ret = cavan_thread_start(thread);
@@ -163,10 +165,10 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 
 out_double_link_deinit:
 	double_link_deinit(&service->link);
-out_mutex_destroy:
-	pthread_mutex_destroy(&service->lock);
 out_cavan_thread_deinit:
 	cavan_thread_deinit(thread);
+out_pthread_mutex_destroy:
+	pthread_mutex_destroy(&service->lock);
 	return ret;
 }
 

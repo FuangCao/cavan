@@ -26,6 +26,7 @@ struct cavan_thread
 	int pipefd[2];
 	struct pollfd pfd;
 
+	pthread_cond_t cond;
 	pthread_mutex_t lock;
 	cavan_thread_state_t state;
 
@@ -45,15 +46,9 @@ int cavan_thread_start(struct cavan_thread *thread);
 void cavan_thread_stop(struct cavan_thread *thread);
 void cavan_thread_suspend(struct cavan_thread *thread);
 void cavan_thread_resume(struct cavan_thread *thread);
+int cavan_thread_msleep(struct cavan_thread *thread, u32 ms);
 
 static inline int cavan_thread_join(struct cavan_thread *thread)
 {
 	return pthread_join(thread->id, NULL);
-}
-
-static inline int cavan_thread_msleep(struct cavan_thread *thread, u32 ms)
-{
-	u32 event;
-
-	return cavan_thread_recv_event_timeout(thread, &event, ms);
 }

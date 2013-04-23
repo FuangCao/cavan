@@ -5,6 +5,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/timer.h>
 #include <cavan/thread.h>
 
 #ifndef CAVAN_THREAD_DEBUG
@@ -57,6 +58,20 @@ int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32
 	return cavan_thread_recv_event(thread, event);
 }
 
+int cavan_thread_msleep(struct cavan_thread *thread, u32 ms)
+{
+	int ret;
+	struct timespec time;
+
+	cavan_timer_set_timespec(&time, ms);
+
+	pthread_mutex_lock(&thread->lock);
+	ret = pthread_cond_timedwait(&thread->cond, &thread->lock, &time);
+	pthread_mutex_unlock(&thread->lock);
+
+	return ret;
+}
+
 static int cavan_thread_wait_handler_dummy(struct cavan_thread *thread, u32 *event, void *data)
 {
 	return 0;
@@ -81,15 +96,22 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 	ret = pthread_mutex_init(&thread->lock, NULL);
 	if (ret < 0)
 	{
-		pr_red_info("pthread_mutex_init");
+		pr_error_info("pthread_mutex_init");
 		return ret;
+	}
+
+	ret = pthread_cond_init(&thread->cond, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_cond_init");
+		goto out_pthread_mutex_destroy;
 	}
 
 	ret = pipe(thread->pipefd);
 	if (ret < 0)
 	{
 		pr_red_info("pipe");
-		goto out_pthread_mutex_destroy;
+		goto out_pthread_cond_destroy;
 	}
 
 	pfd = &thread->pfd;
@@ -103,6 +125,10 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 	thread->wait_handler = cavan_thread_wait_handler_dummy;
 	thread->wake_handker = cavan_thread_wake_handler_dummy;
 
+	return 0;
+
+out_pthread_cond_destroy:
+	pthread_cond_destroy(&thread->cond);
 out_pthread_mutex_destroy:
 	pthread_mutex_destroy(&thread->lock);
 	return ret;
@@ -115,6 +141,7 @@ void cavan_thread_deinit(struct cavan_thread *thread)
 	close(thread->pipefd[0]);
 	close(thread->pipefd[1]);
 
+	pthread_cond_destroy(&thread->cond);
 	pthread_mutex_destroy(&thread->lock);
 }
 
@@ -190,12 +217,10 @@ static void *cavan_thread_main_loop(void *data)
 #endif
 			while (thread->state == CAVAN_THREAD_STATE_SUSPEND)
 			{
-				pthread_mutex_unlock(&thread->lock);
-				ret = cavan_thread_recv_event(thread, &event);
-				pthread_mutex_lock(&thread->lock);
+				ret = pthread_cond_wait(&thread->cond, &thread->lock);
 				if (ret < 0)
 				{
-					pr_red_info("cavan_thread_recv_event");
+					pr_error_info("pthread_cond_wait");
 					goto out_thread_exit;
 				}
 			}
@@ -271,7 +296,7 @@ void cavan_thread_stop(struct cavan_thread *thread)
 
 	for (i = 0; thread->state != CAVAN_THREAD_STATE_STOPPED && i < 10; i++)
 	{
-		cavan_thread_send_event(thread, 0);
+		pthread_cond_broadcast(&thread->cond);
 
 		pthread_mutex_unlock(&thread->lock);
 		thread->wake_handker(thread, 0, thread->private_data);
@@ -296,24 +321,6 @@ void cavan_thread_suspend(struct cavan_thread *thread)
 	if (thread->state == CAVAN_THREAD_STATE_RUNNING)
 	{
 		thread->state = CAVAN_THREAD_STATE_SUSPEND;
-
-		while (1)
-		{
-			int ret;
-			char buff[1024];
-
-			ret = poll(&thread->pfd, 1, 0);
-			if (ret < 1)
-			{
-				break;
-			}
-
-			ret = read(thread->pipefd[0], buff, sizeof(buff));
-			if (ret < (int)sizeof(buff))
-			{
-				break;
-			}
-		}
 	}
 
 	pthread_mutex_unlock(&thread->lock);
@@ -328,7 +335,7 @@ void cavan_thread_resume(struct cavan_thread *thread)
 		thread->state = CAVAN_THREAD_STATE_RUNNING;
 	}
 
-	thread->wake_handker(thread, 0, thread->private_data);
+	pthread_cond_broadcast(&thread->cond);
 
 	pthread_mutex_unlock(&thread->lock);
 }
