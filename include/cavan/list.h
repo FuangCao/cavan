@@ -87,8 +87,8 @@ void double_link_free(struct double_link *link);
 bool double_link_empty(struct double_link *link);
 struct double_link_node *double_link_get_first_node(struct double_link *link);
 struct double_link_node *double_link_get_last_node(struct double_link *link);
-void double_link_insert(struct double_link *link, struct double_link_node *prev, struct double_link_node *node);
-void doubel_link_insert2(struct double_link *link, struct double_link_node *next, struct double_link_node *node);
+void double_link_insert(struct double_link *link, struct double_link_node *next, struct double_link_node *node);
+void double_link_insert2(struct double_link *link, struct double_link_node *prev, struct double_link_node *node);
 void double_link_remove(struct double_link *link, struct double_link_node *node);
 void double_link_append(struct double_link *link, struct double_link_node *node);
 void double_link_push(struct double_link *link, struct double_link_node *node);
@@ -99,6 +99,10 @@ struct double_link_node *double_link_find(struct double_link *link, void *data, 
 bool double_link_has_node(struct double_link *link, struct double_link_node *node);
 void double_link_cond_insert_append(struct double_link *link, struct double_link_node *node, void *data, double_link_matcher_t matcher);
 void double_link_cond_insert_push(struct double_link *link, struct double_link_node *node, void *data, double_link_matcher_t matcher);
+void double_link_move(struct double_link *link, struct double_link_node *next, struct double_link_node *node);
+void double_link_move2(struct double_link *link, struct double_link_node *prev, struct double_link_node *node);
+void double_link_move_to_head(struct double_link *link, struct double_link_node *node);
+void double_link_move_to_tail(struct double_link *link, struct double_link_node *node);
 
 bool array_has_element(int element, const int a[], size_t size);
 

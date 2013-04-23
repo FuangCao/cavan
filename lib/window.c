@@ -100,6 +100,8 @@ bool cavan_window_clicked(struct cavan_window *win, cavan_touch_point_t *point)
 
 	pthread_mutex_unlock(&win->lock);
 
+	cavan_window_paint(win);
+
 	return false;
 }
 
@@ -194,62 +196,6 @@ static bool cavan_window_key_pressed(struct cavan_window *win, const char *name,
 	pthread_mutex_unlock(&win->lock);
 
 	return false;
-}
-
-void cavan_window_set_back_color(struct cavan_window *win, float red, float green, float blue)
-{
-	pthread_mutex_lock(&win->lock);
-	win->back_color = cavan_display_build_color3f(win->context->display, red, green, blue);
-	pthread_mutex_unlock(&win->lock);
-	cavan_window_paint(win);
-}
-
-void cavan_window_set_fore_color(struct cavan_window *win, float red, float green, float blue)
-{
-	pthread_mutex_lock(&win->lock);
-	win->fore_color = cavan_display_build_color3f(win->context->display, red, green, blue);
-	pthread_mutex_unlock(&win->lock);
-	cavan_window_paint(win);
-}
-
-void cavan_window_set_border_color(struct cavan_window *win, float red, float green, float blue)
-{
-	pthread_mutex_lock(&win->lock);
-	win->border_color = cavan_display_build_color3f(win->context->display, red, green, blue);
-	pthread_mutex_unlock(&win->lock);
-	cavan_window_paint(win);
-}
-
-void cavan_window_set_text(struct cavan_window *win, const char *text)
-{
-	pthread_mutex_lock(&win->lock);
-	text_ncopy(win->text, text, sizeof(win->text));
-	pthread_mutex_unlock(&win->lock);
-	cavan_window_paint(win);
-}
-
-void cavan_window_set_width(struct cavan_window *win, int width)
-{
-	pthread_mutex_lock(&win->lock);
-	win->width = width;
-	pthread_mutex_unlock(&win->lock);
-	cavan_window_paint(win);
-}
-
-void cavan_window_set_height(struct cavan_window *win, int height)
-{
-	pthread_mutex_lock(&win->lock);
-	win->height = height;
-	pthread_mutex_unlock(&win->lock);
-	cavan_window_paint(win);
-}
-
-void cavan_window_set_border_width(struct cavan_window *win, int width)
-{
-	pthread_mutex_lock(&win->lock);
-	win->border_width = width;
-	pthread_mutex_unlock(&win->lock);
-	cavan_window_paint(win);
 }
 
 // ================================================================================
@@ -757,10 +703,6 @@ void cavan_button_click_handler(struct cavan_window *win, cavan_touch_point_t *p
 		win->fore_color = button->fore_color_backup;
 		win->border_color = button->border_color_backup;
 	}
-
-	pthread_mutex_unlock(&win->lock);
-	cavan_window_paint(win);
-	pthread_mutex_lock(&win->lock);
 }
 
 int cavan_button_init_handler(struct cavan_window *win, struct cavan_application_context *context)
@@ -982,10 +924,7 @@ static void cavan_application_click(struct cavan_application_context *context, c
 			struct cavan_window *parent = win->parent;
 			struct double_link *link = parent ? &parent->child_link : &context->win_link;
 
-			double_link_remove(link, &win->node);
-			double_link_push(link, &win->node);
-			cavan_window_paint(win);
-
+			double_link_move_to_head(link, &win->node);
 			cavan_window_clicked(win, point);
 		}
 

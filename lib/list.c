@@ -30,11 +30,32 @@ static void double_link_insert_base(struct double_link_node *prev, struct double
 	node->prev = prev;
 }
 
-static void double_link_remove_base(struct double_link_node *node)
+static void double_link_insert_base2(struct double_link_node *next, struct double_link_node *node)
+{
+	double_link_insert_base(next->prev, next, node);
+}
+
+static void double_link_insert_base3(struct double_link_node *prev, struct double_link_node *node)
+{
+	double_link_insert_base(prev, prev->next, node);
+}
+
+static void double_link_remove_only(struct double_link_node *node)
 {
 	node->prev->next = node->next;
 	node->next->prev = node->prev;
+}
+
+static void double_link_remove_base(struct double_link_node *node)
+{
+	double_link_remove_only(node);
 	node->next = node->prev = node;
+}
+
+static void double_link_move_base(struct double_link_node *prev, struct double_link_node *next, struct double_link_node *node)
+{
+	double_link_remove_only(node);
+	double_link_insert_base(prev, next, node);
 }
 
 static bool single_link_node_match_equal(struct single_link *link, struct single_link_node *node, void *data)
@@ -492,45 +513,31 @@ struct double_link_node *double_link_get_last_node(struct double_link *link)
 	return node;
 }
 
-void double_link_insert(struct double_link *link, struct double_link_node *prev, struct double_link_node *node)
-{
-	pthread_mutex_lock(&link->lock);
-	double_link_insert_base(prev, prev->next, node);
-	pthread_mutex_unlock(&link->lock);
-}
-
-void doubel_link_insert2(struct double_link *link, struct double_link_node *next, struct double_link_node *node)
+void double_link_insert(struct double_link *link, struct double_link_node *next, struct double_link_node *node)
 {
 	pthread_mutex_lock(&link->lock);
 	double_link_insert_base(next->prev, next, node);
 	pthread_mutex_unlock(&link->lock);
 }
 
-static void double_link_append_base(struct double_link *link, struct double_link_node *node)
+void double_link_insert2(struct double_link *link, struct double_link_node *prev, struct double_link_node *node)
 {
-	struct double_link_node *head = &link->head_node;
-
-	double_link_insert_base(head->prev, head, node);
+	pthread_mutex_lock(&link->lock);
+	double_link_insert_base(prev, prev->next, node);
+	pthread_mutex_unlock(&link->lock);
 }
 
 void double_link_append(struct double_link *link, struct double_link_node *node)
 {
 	pthread_mutex_lock(&link->lock);
-	double_link_append_base(link, node);
+	double_link_insert_base3(&link->head_node, node);
 	pthread_mutex_unlock(&link->lock);
-}
-
-static void double_link_push_base(struct double_link *link, struct double_link_node *node)
-{
-	struct double_link_node *head = &link->head_node;
-
-	double_link_insert_base(head, head->next, node);
 }
 
 void double_link_push(struct double_link *link, struct double_link_node *node)
 {
 	pthread_mutex_lock(&link->lock);
-	double_link_push_base(link, node);
+	double_link_insert_base2(&link->head_node, node);
 	pthread_mutex_unlock(&link->lock);
 }
 
@@ -634,7 +641,7 @@ void double_link_cond_insert_append(struct double_link *link, struct double_link
 	}
 	else
 	{
-		double_link_append_base(link, node);
+		double_link_insert_base3(&link->head_node, node);
 	}
 
 	pthread_mutex_unlock(&link->lock);
@@ -653,7 +660,61 @@ void double_link_cond_insert_push(struct double_link *link, struct double_link_n
 	}
 	else
 	{
-		double_link_push_base(link, node);
+		double_link_insert_base2(&link->head_node, node);
+	}
+
+	pthread_mutex_unlock(&link->lock);
+}
+
+void double_link_move(struct double_link *link, struct double_link_node *next, struct double_link_node *node)
+{
+	pthread_mutex_lock(&link->lock);
+
+	if (node->next != next)
+	{
+		double_link_move_base(next->prev, next, node);
+	}
+
+	pthread_mutex_unlock(&link->lock);
+}
+
+void double_link_move2(struct double_link *link, struct double_link_node *prev, struct double_link_node *node)
+{
+	pthread_mutex_lock(&link->lock);
+
+	if (node->prev != prev)
+	{
+		double_link_move_base(prev, prev->next, node);
+	}
+
+	pthread_mutex_unlock(&link->lock);
+}
+
+void double_link_move_to_head(struct double_link *link, struct double_link_node *node)
+{
+	struct double_link_node *head;
+
+	pthread_mutex_lock(&link->lock);
+
+	head = &link->head_node;
+	if (head->next != node)
+	{
+		double_link_move_base(head, head->next, node);
+	}
+
+	pthread_mutex_unlock(&link->lock);
+}
+
+void double_link_move_to_tail(struct double_link *link, struct double_link_node *node)
+{
+	struct double_link_node *head;
+
+	pthread_mutex_lock(&link->lock);
+
+	head = &link->head_node;
+	if (node->next != head)
+	{
+		double_link_move_base(head->prev, head, node);
 	}
 
 	pthread_mutex_unlock(&link->lock);
