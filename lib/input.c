@@ -22,47 +22,42 @@
 #include <cavan/touchpad.h>
 #include <cavan/touchscreen.h>
 
-void cavan_input_message_pool_push(struct cavan_input_message_pool *pool, cavan_input_message_t *message)
+void cavan_input_message_pool_append(struct cavan_input_message_pool *pool, cavan_input_message_t *message)
 {
-	pthread_mutex_lock(&pool->lock);
-
-	message->next = pool->head;
-	pool->head = message;
-
-	pthread_mutex_unlock(&pool->lock);
+	double_link_append(&pool->link, &message->node);
 }
 
 cavan_input_message_t *cavan_input_message_pool_pop(struct cavan_input_message_pool *pool)
 {
-	cavan_input_message_t *message;
+	struct double_link_node *node;
 
-	pthread_mutex_lock(&pool->lock);
-
-	message = pool->head;
-	if (message)
+	node = double_link_pop(&pool->link);
+	if (node == NULL)
 	{
-		pool->head = message->next;
+		return NULL;
 	}
 
-	pthread_mutex_unlock(&pool->lock);
-
-	return message;
+	return double_link_get_container(&pool->link, node);
 }
 
-static void cavan_input_message_pool_node_destroy(cavan_input_message_t *message)
+static void cavan_input_message_pool_node_destroy(void *pointer)
 {
-	cavan_input_message_pool_push(message->data, message);
+	cavan_input_message_t *message = pointer;
+	pr_pos_info();
+
+	cavan_input_message_pool_append(message->data, message);
 }
 
 int cavan_input_message_pool_init(struct cavan_input_message_pool *pool, size_t size)
 {
 	int ret;
-	cavan_input_message_t *head, *mp, *mp_end;
+	cavan_input_message_t *mp, *mp_end;
+	struct double_link *link = &pool->link;
 
-	ret = pthread_mutex_init(&pool->lock, NULL);
+	ret = double_link_init(link, MOFS(cavan_input_message_t, node));
 	if (ret < 0)
 	{
-		pr_red_info("pthread_mutex_init");
+		pr_red_info("double_link_init");
 		return ret;
 	}
 
@@ -70,26 +65,23 @@ int cavan_input_message_pool_init(struct cavan_input_message_pool *pool, size_t 
 	if (mp == NULL)
 	{
 		ret = -ENOMEM;
-		pr_red_info("malloc");
-		goto out_pthread_mutex_destroy;
+		pr_error_info("malloc");
+		goto out_double_link_deinit;
 	}
 
 	pool->buff = mp;
 
-	for (mp_end = mp + size, head = NULL; mp < mp_end; head = mp, mp++)
+	for (mp_end = mp + size; mp < mp_end; mp++)
 	{
 		mp->data = pool;
-		mp->destroy = cavan_input_message_pool_node_destroy;
-
-		mp->next = head;
+		mp->node.destroy = cavan_input_message_pool_node_destroy;
+		double_link_append(link, &mp->node);
 	}
-
-	pool->head = head;
 
 	return 0;
 
-out_pthread_mutex_destroy:
-	pthread_mutex_destroy(&pool->lock);
+out_double_link_deinit:
+	double_link_deinit(&pool->link);
 	return ret;
 }
 
@@ -97,78 +89,107 @@ void cavan_input_message_pool_deinit(struct cavan_input_message_pool *pool)
 {
 	free(pool->buff);
 	pool->buff = NULL;
-	pool->head = NULL;
 
-	pthread_mutex_destroy(&pool->lock);
+	double_link_deinit(&pool->link);
 }
 
 // ================================================================================
 
-int cavan_input_message_queue_init(struct cavan_input_message_queue *queue, size_t size)
+static int cavan_input_message_queue_thread_handler(struct cavan_thread *thread, u32 event, void *data)
+{
+	struct double_link_node *node;
+	struct cavan_input_message_queue *queue = data;
+
+	node = double_link_pop(&queue->link);
+	if (node)
+	{
+		cavan_input_message_t *message = double_link_get_container(&queue->link, node);
+
+		queue->handler(message, queue->private_data);
+		if (node->destroy)
+		{
+			node->destroy(message);
+		}
+	}
+	else
+	{
+		cavan_thread_suspend(thread);
+	}
+
+	return 0;
+}
+
+int cavan_input_message_queue_start(struct cavan_input_message_queue *queue, size_t size, void *data)
 {
 	int ret;
+	struct cavan_thread *thread;
 
-	ret = pthread_mutex_init(&queue->lock, NULL);
+	if (queue->handler == NULL)
+	{
+		pr_red_info("queue->handler == NULL");
+		ERROR_RETURN(EINVAL);
+	}
+
+	thread = &queue->thread;
+	thread->name = "MESSAGE_QUEUE";
+	thread->wait_handler = NULL;
+	thread->wake_handker = NULL;
+	thread->handler = cavan_input_message_queue_thread_handler;
+
+	ret = cavan_thread_init(thread, queue);
 	if (ret < 0)
 	{
-		pr_red_info("pthread_mutex_init");
+		pr_red_info("cavan_thread_init");
 		return ret;
 	}
 
-	ret = pthread_cond_init(&queue->cond, NULL);
+	ret = double_link_init(&queue->link, MOFS(cavan_input_message_t, node));
 	if (ret < 0)
 	{
-		pr_red_info("pthread_cond_init");
-		goto out_pthread_mutex_destroy;
+		pr_red_info("double_link_init");
+		goto out_cavan_thread_deinit;
 	}
 
 	ret = cavan_input_message_pool_init(&queue->pool, size);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_input_message_pool_init");
-		goto out_pthread_cond_destroy;
+		goto out_double_link_deinit;
 	}
 
-	queue->head = NULL;
-	queue->tail = NULL;
+	queue->private_data = data;
+
+	ret = cavan_thread_start(thread);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_thread_start");
+		goto out_cavan_input_message_pool_deinit;
+	}
 
 	return 0;
 
-out_pthread_cond_destroy:
-	pthread_cond_destroy(&queue->cond);
-out_pthread_mutex_destroy:
-	pthread_mutex_destroy(&queue->lock);
+out_cavan_input_message_pool_deinit:
+	cavan_input_message_pool_deinit(&queue->pool);
+out_double_link_deinit:
+	double_link_deinit(&queue->link);
+out_cavan_thread_deinit:
+	cavan_thread_deinit(thread);
 	return ret;
 }
 
-void cavan_input_message_queue_deinit(struct cavan_input_message_queue *queue)
+void cavan_input_message_queue_stop(struct cavan_input_message_queue *queue)
 {
-	cavan_input_message_t *message;
-
-	pthread_mutex_lock(&queue->lock);
-
-	message = queue->head;
-
-	while (message)
-	{
-		cavan_input_message_t *next;
-
-		next = message->next;
-		message->destroy(message);
-		message = next;
-	}
-
-	pthread_mutex_unlock(&queue->lock);
-
+	cavan_thread_stop(&queue->thread);
+	double_link_free(&queue->link);
+	double_link_deinit(&queue->link);
 	cavan_input_message_pool_deinit(&queue->pool);
-
-	pthread_cond_destroy(&queue->cond);
-	pthread_mutex_destroy(&queue->lock);
+	cavan_thread_deinit(&queue->thread);
 }
 
-static void cavan_input_message_free(cavan_input_message_t *message)
+static void cavan_input_message_destory(void *pointer)
 {
-	free(message);
+	pr_pos_info();
+	free(pointer);
 }
 
 cavan_input_message_t *cavan_input_message_create(struct cavan_input_message_queue *queue)
@@ -188,94 +209,7 @@ cavan_input_message_t *cavan_input_message_create(struct cavan_input_message_que
 		return NULL;
 	}
 
-	message->destroy = cavan_input_message_free;
-
-	return message;
-}
-
-void cavan_input_message_queue_append(struct cavan_input_message_queue *queue, cavan_input_message_t *message)
-{
-	pthread_mutex_lock(&queue->lock);
-
-	message->next = NULL;
-
-	if (queue->tail)
-	{
-		queue->tail->next = message;
-	}
-	else
-	{
-		queue->head = queue->tail = message;
-	}
-
-	pthread_cond_broadcast(&queue->cond);
-
-	pthread_mutex_unlock(&queue->lock);
-}
-
-static cavan_input_message_t *cavan_input_message_queue_pop_base(struct cavan_input_message_queue *queue)
-{
-	cavan_input_message_t *message;
-
-	message = queue->head;
-	if (message)
-	{
-		queue->head = message->next;
-	}
-	else
-	{
-		queue->tail = NULL;
-	}
-
-	return message;
-}
-
-cavan_input_message_t *cavan_input_message_queue_pop(struct cavan_input_message_queue *queue)
-{
-	cavan_input_message_t *message;
-
-	pthread_mutex_lock(&queue->lock);
-	message = cavan_input_message_queue_pop_base(queue);
-	pthread_mutex_unlock(&queue->lock);
-
-	return message;
-}
-
-cavan_input_message_t *cavan_input_message_queue_wait(struct cavan_input_message_queue *queue)
-{
-	cavan_input_message_t *message;
-
-	pthread_mutex_lock(&queue->lock);
-
-	if (queue->head == NULL)
-	{
-		pthread_cond_wait(&queue->cond, &queue->lock);
-	}
-
-	message = cavan_input_message_queue_pop_base(queue);
-
-	pthread_mutex_unlock(&queue->lock);
-
-	return message;
-}
-
-cavan_input_message_t *cavan_input_message_queue_timedwait(struct cavan_input_message_queue *queue, u32 ms)
-{
-	struct timespec time;
-	cavan_input_message_t *message;
-
-	cavan_timer_set_timespec(&time, ms);
-
-	pthread_mutex_lock(&queue->lock);
-
-	if (queue->head == NULL)
-	{
-		pthread_cond_timedwait(&queue->cond, &queue->lock, &time);
-	}
-
-	message = cavan_input_message_queue_pop_base(queue);
-
-	pthread_mutex_unlock(&queue->lock);
+	double_link_node_init(&message->node, cavan_input_message_destory);
 
 	return message;
 }

@@ -106,26 +106,23 @@ typedef struct cavan_input_message
 	};
 
 	void *data;
-	struct cavan_input_message *next;
-
-	void (*destroy)(struct cavan_input_message *message);
+	struct double_link_node node;
 } cavan_input_message_t;
 
 struct cavan_input_message_pool
 {
-	pthread_mutex_t lock;
 	cavan_input_message_t *buff;
-	cavan_input_message_t *head;
+	struct double_link link;
 };
 
 struct cavan_input_message_queue
 {
-	pthread_mutex_t lock;
-	pthread_cond_t cond;
-
+	struct double_link link;
+	struct cavan_thread thread;
 	struct cavan_input_message_pool pool;
-	cavan_input_message_t *head;
-	cavan_input_message_t *tail;
+
+	void *private_data;
+	void (*handler)(cavan_input_message_t *message, void *data);
 };
 
 struct cavan_gsensor_event
@@ -176,18 +173,14 @@ void cavan_input_service_init(struct cavan_input_service *service, bool (*matche
 int cavan_input_service_start(struct cavan_input_service *service, void *data);
 int cavan_input_service_stop(struct cavan_input_service *service);
 
-void cavan_input_message_pool_push(struct cavan_input_message_pool *pool, cavan_input_message_t *message);
+void cavan_input_message_pool_append(struct cavan_input_message_pool *pool, cavan_input_message_t *message);
 cavan_input_message_t *cavan_input_message_pool_pop(struct cavan_input_message_pool *pool);
 int cavan_input_message_pool_init(struct cavan_input_message_pool *pool, size_t size);
 void cavan_input_message_pool_deinit(struct cavan_input_message_pool *pool);
 
-int cavan_input_message_queue_init(struct cavan_input_message_queue *queue, size_t size);
-void cavan_input_message_queue_deinit(struct cavan_input_message_queue *queue);
+int cavan_input_message_queue_start(struct cavan_input_message_queue *queue, size_t size, void *data);
+void cavan_input_message_queue_stop(struct cavan_input_message_queue *queue);
 cavan_input_message_t *cavan_input_message_create(struct cavan_input_message_queue *queue);
-void cavan_input_message_queue_append(struct cavan_input_message_queue *queue, cavan_input_message_t *message);
-cavan_input_message_t *cavan_input_message_queue_pop(struct cavan_input_message_queue *queue);
-cavan_input_message_t *cavan_input_message_queue_wait(struct cavan_input_message_queue *queue);
-cavan_input_message_t *cavan_input_message_queue_timedwait(struct cavan_input_message_queue *queue, u32 ms);
 
 static inline int cavan_input_service_join(struct cavan_input_service *service)
 {
@@ -197,4 +190,15 @@ static inline int cavan_input_service_join(struct cavan_input_service *service)
 static inline u32 timeval2msec(struct timeval *time)
 {
 	return time->tv_sec * 1000 + time->tv_usec / 1000;
+}
+
+static inline void cavan_input_message_queue_append(struct cavan_input_message_queue *queue, cavan_input_message_t *message)
+{
+	double_link_append(&queue->link, &message->node);
+	cavan_thread_resume(&queue->thread);
+}
+
+static inline void cavan_input_message_queue_remove(struct cavan_input_message_queue *queue, cavan_input_message_t *message)
+{
+	double_link_remove(&queue->link, &message->node);
 }

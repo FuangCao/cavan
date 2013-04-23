@@ -62,7 +62,7 @@ static int cavan_thread_wait_handler_dummy(struct cavan_thread *thread, u32 *eve
 
 static int cavan_thread_wake_handler_dummy(struct cavan_thread *thread, u32 event, void *data)
 {
-	return 0;
+	return cavan_thread_send_event(thread, event);
 }
 
 int cavan_thread_init(struct cavan_thread *thread, void *data)
@@ -294,6 +294,24 @@ void cavan_thread_suspend(struct cavan_thread *thread)
 	if (thread->state == CAVAN_THREAD_STATE_RUNNING)
 	{
 		thread->state = CAVAN_THREAD_STATE_SUSPEND;
+
+		while (1)
+		{
+			int ret;
+			char buff[1024];
+
+			ret = poll(&thread->pfd, 1, 0);
+			if (ret < 1)
+			{
+				break;
+			}
+
+			ret = read(thread->pipefd[0], buff, sizeof(buff));
+			if (ret < 1)
+			{
+				break;
+			}
+		}
 	}
 
 	pthread_mutex_unlock(&thread->lock);
@@ -308,7 +326,6 @@ void cavan_thread_resume(struct cavan_thread *thread)
 		thread->state = CAVAN_THREAD_STATE_RUNNING;
 	}
 
-	cavan_thread_send_event(thread, 0);
 	thread->wake_handker(thread, 0, thread->private_data);
 
 	pthread_mutex_unlock(&thread->lock);

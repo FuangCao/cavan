@@ -85,8 +85,6 @@ int single_link_init(struct single_link *link, long offset)
 
 void single_link_deinit(struct single_link *link)
 {
-	single_link_free(link);
-
 	pthread_mutex_destroy(&link->lock);
 }
 
@@ -255,8 +253,6 @@ int circle_link_init(struct circle_link *link, long offset)
 
 void circle_link_deinit(struct circle_link *link)
 {
-	circle_link_free(link);
-
 	pthread_mutex_destroy(&link->lock);
 }
 
@@ -436,8 +432,6 @@ int double_link_init(struct double_link *link, long offset)
 
 void double_link_deinit(struct double_link *link)
 {
-	double_link_free(link);
-
 	pthread_mutex_destroy(&link->lock);
 }
 
@@ -530,14 +524,14 @@ void double_link_insert2(struct double_link *link, struct double_link_node *prev
 void double_link_append(struct double_link *link, struct double_link_node *node)
 {
 	pthread_mutex_lock(&link->lock);
-	double_link_insert_base3(&link->head_node, node);
+	double_link_insert_base2(&link->head_node, node);
 	pthread_mutex_unlock(&link->lock);
 }
 
 void double_link_push(struct double_link *link, struct double_link_node *node)
 {
 	pthread_mutex_lock(&link->lock);
-	double_link_insert_base2(&link->head_node, node);
+	double_link_insert_base3(&link->head_node, node);
 	pthread_mutex_unlock(&link->lock);
 }
 
@@ -641,7 +635,7 @@ void double_link_cond_insert_append(struct double_link *link, struct double_link
 	}
 	else
 	{
-		double_link_insert_base3(&link->head_node, node);
+		double_link_insert_base2(&link->head_node, node);
 	}
 
 	pthread_mutex_unlock(&link->lock);
@@ -660,7 +654,7 @@ void double_link_cond_insert_push(struct double_link *link, struct double_link_n
 	}
 	else
 	{
-		double_link_insert_base2(&link->head_node, node);
+		double_link_insert_base3(&link->head_node, node);
 	}
 
 	pthread_mutex_unlock(&link->lock);
