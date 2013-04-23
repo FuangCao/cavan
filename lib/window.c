@@ -13,6 +13,11 @@ static void cavan_child_window_destory_handler(struct double_link *link, struct 
 static void cavan_child_window_set_abs_position_handler(struct double_link *link, struct double_link_node *node, void *data);
 static bool cavan_window_find_by_point_matcher(struct double_link *link, struct double_link_node *node, void *data);
 
+void cavan_window_paint_child(struct double_link *link)
+{
+	double_link_traversal2(link, NULL, cavan_child_window_paint_handler);
+}
+
 static void cavan_window_paint_base(struct cavan_window *win)
 {
 	pthread_mutex_lock(&win->lock);
@@ -26,7 +31,7 @@ static void cavan_window_paint_base(struct cavan_window *win)
 		pthread_mutex_lock(&win->lock);
 	}
 
-	double_link_traversal2(&win->child_link, NULL, cavan_child_window_paint_handler);
+	cavan_window_paint_child(&win->child_link);
 
 	pthread_mutex_unlock(&win->lock);
 }
@@ -362,7 +367,9 @@ void cavan_window_set_abs_position(struct cavan_window *win, int x, int y)
 
 		pthread_mutex_lock(&display->lock);
 		display->set_color(display, context->back_color);
+		pthread_mutex_lock(&win->lock);
 		display->fill_rect(display, win->abs_x, win->abs_y, win->width, win->height);
+		pthread_mutex_unlock(&win->lock);
 		pthread_mutex_unlock(&display->lock);
 	}
 
@@ -374,7 +381,8 @@ void cavan_window_set_abs_position(struct cavan_window *win, int x, int y)
 	}
 	else
 	{
-		cavan_application_paint(context);
+		cavan_window_paint_child(&context->win_link);
+		cavan_display_refresh(context->display);
 	}
 }
 
@@ -1246,12 +1254,6 @@ out_cavan_input_service_stop:
 	return 0;
 }
 
-void cavan_application_paint(struct cavan_application_context *context)
-{
-	double_link_traversal2(&context->win_link, NULL, cavan_child_window_paint_handler);
-	cavan_display_refresh(context->display);
-}
-
 void cavan_application_update_data(struct cavan_application_context *context)
 {
 	struct cavan_display_device *display;
@@ -1265,7 +1267,8 @@ void cavan_application_update_data(struct cavan_application_context *context)
 	display->fill_rect(display, 0, 0, display->xres, display->yres);
 	pthread_mutex_unlock(&display->lock);
 
-	cavan_application_paint(context);
+	cavan_window_paint_child(&context->win_link);
+	cavan_display_refresh(display);
 
 	pthread_mutex_unlock(&context->lock);
 }

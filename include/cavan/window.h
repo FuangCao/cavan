@@ -127,6 +127,7 @@ void cavan_window_set_abs_position(struct cavan_window *win, int x, int y);
 void cavan_window_set_position(struct cavan_window *win, int x, int y);
 struct cavan_window *cavan_window_find_by_point(struct double_link *link, cavan_touch_point_t *point);
 void cavan_window_paint(struct cavan_window *win);
+void cavan_window_paint_child(struct double_link *link);
 void cavan_window_destory(struct cavan_window *win);
 
 int cavan_window_init_base(struct cavan_window *win, int (*handler)(struct cavan_window *win, struct cavan_application_context *context));
