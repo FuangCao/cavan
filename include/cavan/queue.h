@@ -16,11 +16,12 @@ struct list_queue
 
 struct cavan_data_queue
 {
+	void *private_data;
 	struct double_link link;
 	struct cavan_thread thread;
 	struct cavan_data_pool pool;
 
-	void (*handler)(struct cavan_data_queue *queue, void *node);
+	void (*handler)(struct cavan_data_queue *queue, void *addr, void *data);
 };
 
 int list_queue_init(struct list_queue *queue, int count);
@@ -30,7 +31,7 @@ void *list_queue_remove(struct list_queue *queue);
 void *list_queue_get_head_data(struct list_queue *queue);
 void *list_queue_get_tail_data(struct list_queue *queue);
 
-int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t node_size, int pool_size);
+int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t node_size, int pool_size, void *data);
 void cavan_data_queue_deinit(struct cavan_data_queue *queue);
 
 static inline int list_queue_empty(struct list_queue *queue)
@@ -53,11 +54,11 @@ static inline void cavan_data_queue_stop(struct cavan_data_queue *queue)
 	cavan_thread_stop(&queue->thread);
 }
 
-static inline int cavan_data_queue_run(struct cavan_data_queue *queue, int offset, size_t node_size, int pool_size)
+static inline int cavan_data_queue_run(struct cavan_data_queue *queue, int offset, size_t node_size, int pool_size, void *data)
 {
 	int ret;
 
-	ret = cavan_data_queue_init(queue, offset, node_size, pool_size);
+	ret = cavan_data_queue_init(queue, offset, node_size, pool_size, data);
 	if (ret < 0)
 	{
 		return ret;

@@ -83,7 +83,7 @@ static int cavan_data_queue_thread_handler(struct cavan_thread *thread, void *da
 	if (node)
 	{
 		data = double_link_get_container(&queue->link, node);
-		queue->handler(queue, data);
+		queue->handler(queue, data, queue->private_data);
 		cavan_data_pool_node_free(&queue->pool, data);
 	}
 	else
@@ -94,7 +94,7 @@ static int cavan_data_queue_thread_handler(struct cavan_thread *thread, void *da
 	return 0;
 }
 
-int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t node_size, int pool_size)
+int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t node_size, int pool_size, void *data)
 {
 	int ret;
 	struct cavan_thread *thread;
@@ -130,6 +130,8 @@ int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t nod
 		pr_red_info("cavan_data_pool_init");
 		goto out_cavan_thread_deinit;
 	}
+
+	queue->private_data = data;
 
 	return 0;
 

@@ -74,13 +74,13 @@ static void cavan_child_window_destory_handler(struct double_link *link, struct 
 	cavan_window_destory(win);
 }
 
-bool cavan_window_clicked(struct cavan_window *win, cavan_touch_point_t *point)
+bool cavan_window_clicked(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 	bool pressed;
 
 	pthread_mutex_lock(&win->lock);
 
-	pressed = point->pressure > 0;
+	pressed = message->pressure > 0;
 	if (win->pressed == pressed)
 	{
 		pthread_mutex_unlock(&win->lock);
@@ -93,7 +93,7 @@ bool cavan_window_clicked(struct cavan_window *win, cavan_touch_point_t *point)
 	{
 		pthread_mutex_unlock(&win->lock);
 
-		if (win->on_clicked(win, point, win->context->private_data))
+		if (win->on_clicked(win, message, win->context->private_data))
 		{
 			return true;
 		}
@@ -101,7 +101,7 @@ bool cavan_window_clicked(struct cavan_window *win, cavan_touch_point_t *point)
 		pthread_mutex_lock(&win->lock);
 	}
 
-	win->click_handler(win, point);
+	win->click_handler(win, message);
 
 	pthread_mutex_unlock(&win->lock);
 
@@ -110,7 +110,7 @@ bool cavan_window_clicked(struct cavan_window *win, cavan_touch_point_t *point)
 	return false;
 }
 
-static bool cavan_window_mouse_move(struct cavan_window *win, cavan_touch_point_t *point)
+static bool cavan_window_mouse_move(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 	pthread_mutex_lock(&win->lock);
 
@@ -118,7 +118,7 @@ static bool cavan_window_mouse_move(struct cavan_window *win, cavan_touch_point_
 	{
 		pthread_mutex_unlock(&win->lock);
 
-		if (win->on_move(win, point, win->context->private_data))
+		if (win->on_move(win, message, win->context->private_data))
 		{
 			return true;
 		}
@@ -126,14 +126,14 @@ static bool cavan_window_mouse_move(struct cavan_window *win, cavan_touch_point_
 		pthread_mutex_lock(&win->lock);
 	}
 
-	win->move_handler(win, point);
+	win->move_handler(win, message);
 
 	pthread_mutex_unlock(&win->lock);
 
 	return false;
 }
 
-static bool cavan_window_mouse_entry(struct cavan_window *win, cavan_touch_point_t *point)
+static bool cavan_window_mouse_entry(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 	pthread_mutex_lock(&win->lock);
 
@@ -141,7 +141,7 @@ static bool cavan_window_mouse_entry(struct cavan_window *win, cavan_touch_point
 	{
 		pthread_mutex_unlock(&win->lock);
 
-		if (win->on_entry(win, point, win->context->private_data))
+		if (win->on_entry(win, message, win->context->private_data))
 		{
 			return true;
 		}
@@ -149,14 +149,14 @@ static bool cavan_window_mouse_entry(struct cavan_window *win, cavan_touch_point
 		pthread_mutex_lock(&win->lock);
 	}
 
-	win->entry_handler(win, point);
+	win->entry_handler(win, message);
 
 	pthread_mutex_unlock(&win->lock);
 
 	return false;
 }
 
-static bool cavan_window_mouse_exit(struct cavan_window *win, cavan_touch_point_t *point)
+static bool cavan_window_mouse_exit(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 
 	pthread_mutex_lock(&win->lock);
@@ -165,7 +165,7 @@ static bool cavan_window_mouse_exit(struct cavan_window *win, cavan_touch_point_
 	{
 		pthread_mutex_unlock(&win->lock);
 
-		if (win->on_exit(win, point, win->context->private_data))
+		if (win->on_exit(win, message, win->context->private_data))
 		{
 			return true;
 		}
@@ -173,14 +173,14 @@ static bool cavan_window_mouse_exit(struct cavan_window *win, cavan_touch_point_
 		pthread_mutex_lock(&win->lock);
 	}
 
-	win->exit_handler(win, point);
+	win->exit_handler(win, message);
 
 	pthread_mutex_unlock(&win->lock);
 
 	return false;
 }
 
-static bool cavan_window_key_pressed(struct cavan_window *win, const char *name, int code, int value)
+static bool cavan_window_key_pressed(struct cavan_window *win, struct cavan_input_message_key *message)
 {
 	pthread_mutex_lock(&win->lock);
 
@@ -188,7 +188,7 @@ static bool cavan_window_key_pressed(struct cavan_window *win, const char *name,
 	{
 		pthread_mutex_unlock(&win->lock);
 
-		if (win->on_key_pressed(win, name, code, value, win->context->private_data))
+		if (win->on_key_pressed(win, message, win->context->private_data))
 		{
 			return true;
 		}
@@ -196,7 +196,7 @@ static bool cavan_window_key_pressed(struct cavan_window *win, const char *name,
 		pthread_mutex_lock(&win->lock);
 	}
 
-	win->key_handler(win, name, code, value);
+	win->key_handler(win, message);
 
 	pthread_mutex_unlock(&win->lock);
 
@@ -254,23 +254,23 @@ void cavan_window_paint_handler(struct cavan_window *win)
 	pthread_mutex_unlock(&display->lock);
 }
 
-void cavan_window_key_handler(struct cavan_window *win, const char *name, int code, int value)
+void cavan_window_key_handler(struct cavan_window *win, struct cavan_input_message_key *message)
 {
 }
 
-void cavan_window_click_handler(struct cavan_window *win, cavan_touch_point_t *point)
+void cavan_window_click_handler(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 }
 
-void cavan_window_move_handler(struct cavan_window *win, cavan_touch_point_t *point)
+void cavan_window_move_handler(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 }
 
-void cavan_window_entry_handler(struct cavan_window *win, cavan_touch_point_t *point)
+void cavan_window_entry_handler(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 }
 
-void cavan_window_exit_handler(struct cavan_window *win, cavan_touch_point_t *point)
+void cavan_window_exit_handler(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 }
 
@@ -410,34 +410,34 @@ void cavan_window_set_position(struct cavan_window *win, int x, int y)
 	cavan_window_set_abs_position(win, x, y);
 }
 
-struct cavan_window *cavan_window_find_by_point(struct double_link *link, cavan_touch_point_t *point)
+struct cavan_window *cavan_window_find_by_point(struct double_link *link, struct cavan_input_message_touch *message)
 {
 	struct double_link_node *node;
 	struct cavan_window *win, *child;
 
-	node = double_link_find(link, point, cavan_window_find_by_point_matcher);
+	node = double_link_find(link, message, cavan_window_find_by_point_matcher);
 	if (node == NULL)
 	{
 		return NULL;
 	}
 
 	win = double_link_get_container(link, node);
-	child = cavan_window_find_by_point(&win->child_link, point);
+	child = cavan_window_find_by_point(&win->child_link, message);
 
 	return child ? child : win;
 }
 
 static bool cavan_window_find_by_point_matcher(struct double_link *link, struct double_link_node *node, void *data)
 {
-	cavan_touch_point_t *point = data;
+	struct cavan_input_message_touch *message = data;
 	struct cavan_window *win = double_link_get_container(link, node);
 
-	if (point->x < win->abs_x || point->x >= win->abs_x + win->width)
+	if (message->x < win->abs_x || message->x >= win->abs_x + win->width)
 	{
 		return false;
 	}
 
-	if (point->y < win->abs_y || point->y >= win->abs_y + win->height)
+	if (message->y < win->abs_y || message->y >= win->abs_y + win->height)
 	{
 		return false;
 	}
@@ -529,14 +529,14 @@ void cavan_dialog_paint_handler(struct cavan_window *win)
 	}
 }
 
-void cavan_dialog_click_handler(struct cavan_window *win, cavan_touch_point_t *point)
+void cavan_dialog_click_handler(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
 
 	if (win->pressed)
 	{
-		dialog->x_offset = point->x - win->abs_x;
-		dialog->y_offset = point->y - win->abs_y;
+		dialog->x_offset = message->x - win->abs_x;
+		dialog->y_offset = message->y - win->abs_y;
 	}
 	else if (dialog->backup)
 	{
@@ -554,7 +554,7 @@ void cavan_dialog_click_handler(struct cavan_window *win, cavan_touch_point_t *p
 	}
 }
 
-void cavan_dialog_move_handler(struct cavan_window *win, cavan_touch_point_t *point)
+void cavan_dialog_move_handler(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
 
@@ -585,7 +585,7 @@ void cavan_dialog_move_handler(struct cavan_window *win, cavan_touch_point_t *po
 		pthread_mutex_lock(&display->lock);
 
 		cavan_display_memory_rect_restore(display, mem);
-		cavan_display_memory_rect_backup(display, mem, point->x - dialog->x_offset, point->y - dialog->y_offset);
+		cavan_display_memory_rect_backup(display, mem, message->x - dialog->x_offset, message->y - dialog->y_offset);
 
 		display->set_color(display, context->move_color);
 		display->draw_rect(display, mem->x, mem->y, mem->width, mem->height);
@@ -688,7 +688,7 @@ void cavan_button_paint_handler(struct cavan_window *win)
 	pthread_mutex_unlock(&display->lock);
 }
 
-void cavan_button_click_handler(struct cavan_window *win, cavan_touch_point_t *point)
+void cavan_button_click_handler(struct cavan_window *win, struct cavan_input_message_touch *message)
 {
 	struct cavan_display_device *display;
 	struct cavan_button *button = (struct cavan_button *)win;
@@ -882,50 +882,50 @@ static void cavan_application_draw_mouse(struct cavan_application_context *conte
 	pthread_mutex_unlock(&display->lock);
 }
 
-static void cavan_application_move(struct cavan_application_context *context, cavan_touch_point_t *point)
+static void cavan_application_move(struct cavan_application_context *context, struct cavan_input_message_touch *message)
 {
 	struct cavan_window *win;
 
 	win = context->win_active;
 	if (win && win->pressed)
 	{
-		cavan_window_mouse_move(win, point);
+		cavan_window_mouse_move(win, message);
 	}
 	else
 	{
-		win = cavan_window_find_by_point(&context->win_link, point);
+		win = cavan_window_find_by_point(&context->win_link, message);
 		if (win)
 		{
 			if (win != context->win_curr)
 			{
 				if (context->win_curr)
 				{
-					cavan_window_mouse_exit(context->win_curr, point);
+					cavan_window_mouse_exit(context->win_curr, message);
 				}
 
-				cavan_window_mouse_entry(win, point);
+				cavan_window_mouse_entry(win, message);
 			}
 
-			cavan_window_mouse_move(win, point);
+			cavan_window_mouse_move(win, message);
 		}
 		else if (context->win_curr)
 		{
-			cavan_window_mouse_exit(context->win_curr, point);
+			cavan_window_mouse_exit(context->win_curr, message);
 		}
 
 		context->win_curr = win;
 	}
 
-	context->x = point->x;
-	context->y = point->y;
+	context->x = message->x;
+	context->y = message->y;
 }
 
-static void cavan_application_click(struct cavan_application_context *context, cavan_touch_point_t *point)
+static void cavan_application_click(struct cavan_application_context *context, struct cavan_input_message_touch *message)
 {
 	struct cavan_window *win;
 
-	win = cavan_window_find_by_point(&context->win_link, point);
-	if (point->pressure > 0)
+	win = cavan_window_find_by_point(&context->win_link, message);
+	if (message->pressure > 0)
 	{
 		if (win)
 		{
@@ -933,26 +933,26 @@ static void cavan_application_click(struct cavan_application_context *context, c
 			struct double_link *link = parent ? &parent->child_link : &context->win_link;
 
 			double_link_move_to_head(link, &win->node);
-			cavan_window_clicked(win, point);
+			cavan_window_clicked(win, message);
 		}
 
 		context->win_active = win;
 	}
 	else if (context->win_active)
 	{
-		cavan_window_clicked(context->win_active, point);
+		cavan_window_clicked(context->win_active, message);
 	}
 
 	if (win != context->win_curr)
 	{
 		if (context->win_curr)
 		{
-			cavan_window_mouse_exit(context->win_curr, point);
+			cavan_window_mouse_exit(context->win_curr, message);
 		}
 
 		if (win)
 		{
-			cavan_window_mouse_entry(win, point);
+			cavan_window_mouse_entry(win, message);
 		}
 
 		context->win_curr = win;
@@ -961,17 +961,16 @@ static void cavan_application_click(struct cavan_application_context *context, c
 
 // ================================================================================
 
-static void cavan_application_key_handler(struct cavan_input_device *dev, const char *name, int code, int value, void *data)
+static void cavan_application_on_key_message(struct cavan_application_context *context, struct cavan_input_message_key *message)
 {
 	bool res;
-	struct cavan_application_context *context = data;
 
 	pthread_mutex_lock(&context->lock);
 
 	if (context->on_key_pressed)
 	{
 		pthread_mutex_unlock(&context->lock);
-		res = context->on_key_pressed(context, name, code, value, context->private_data);
+		res = context->on_key_pressed(context, message, context->private_data);
 		pthread_mutex_lock(&context->lock);
 	}
 	else
@@ -983,119 +982,257 @@ static void cavan_application_key_handler(struct cavan_input_device *dev, const 
 	{
 		if (context->win_active)
 		{
-			cavan_window_key_pressed(context->win_active, name, code, value);
+			cavan_window_key_pressed(context->win_active, message);
 		}
 		else if (context->win_curr)
 		{
-			cavan_window_key_pressed(context->win_curr, name, code, value);
+			cavan_window_key_pressed(context->win_curr, message);
 		}
 	}
 
 	pthread_mutex_unlock(&context->lock);
 }
 
+static void cavan_application_on_wheel_message(struct cavan_application_context *context, struct cavan_input_message_wheel *message)
+{
+}
+
+static void cavan_application_on_mouse_move_message(struct cavan_application_context *context, struct cavan_input_message_touch *message)
+{
+	int x, y;
+
+	pthread_mutex_lock(&context->lock);
+
+	x = message->x * context->mouse_speed + context->x;
+	if (x < 0)
+	{
+		message->x = 0;
+	}
+	else if (x > context->max_x)
+	{
+		message->x = context->max_x;
+	}
+	else
+	{
+		message->x = x;
+	}
+
+	y = message->y * context->mouse_speed + context->y;
+	if (y < 0)
+	{
+		message->y = 0;
+	}
+	else if (y > context->max_y)
+	{
+		message->y = context->max_y;
+	}
+	else
+	{
+		message->y = y;
+	}
+
+	cavan_application_restore_mouse(context);
+	cavan_application_move(context, message);
+	cavan_application_draw_mouse(context);
+
+	pthread_mutex_unlock(&context->lock);
+}
+
+static void cavan_application_on_mouse_touch_message(struct cavan_application_context *context, struct cavan_input_message_touch *message)
+{
+	pthread_mutex_lock(&context->lock);
+
+	message->x = context->x;
+	message->y = context->y;
+
+	if (message->id == BTN_LEFT)
+	{
+		message->id = 0;
+	}
+
+	cavan_application_restore_mouse(context);
+	cavan_application_click(context, message);
+	cavan_application_draw_mouse(context);
+
+	pthread_mutex_unlock(&context->lock);
+}
+
+static void cavan_application_on_touch_message(struct cavan_application_context *context, struct cavan_input_message_touch *message)
+{
+	if (message->id != 0)
+	{
+		pr_std_info("point->id = %d, skiping ...", message->id);
+		return;
+	}
+
+	pthread_mutex_lock(&context->lock);
+
+	context->x = message->x;
+	context->y = message->y;
+
+	cavan_application_click(context, message);
+
+	pthread_mutex_unlock(&context->lock);
+}
+
+static void cavan_application_on_move_message(struct cavan_application_context *context, struct cavan_input_message_touch *message)
+{
+	pthread_mutex_lock(&context->lock);
+	cavan_application_move(context, message);
+	pthread_mutex_unlock(&context->lock);
+}
+
+// ================================================================================
+
+static void cavan_application_message_queue_handler(struct cavan_data_queue *queue, void *addr, void *data)
+{
+	cavan_input_message_t *message = addr;
+
+	switch (message->type)
+	{
+	case CAVAN_INPUT_MESSAGE_KEY:
+		cavan_application_on_key_message(data, &message->key);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_MOVE:
+		cavan_application_on_move_message(data, &message->touch);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_TOUCH:
+		cavan_application_on_touch_message(data, &message->touch);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_WHEEL:
+		cavan_application_on_wheel_message(data, &message->wheel);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_MOUSE_MOVE:
+		cavan_application_on_mouse_move_message(data, &message->touch);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_MOUSE_TOUCH:
+		cavan_application_on_mouse_touch_message(data, &message->touch);
+		break;
+
+	default:
+		pr_red_info("Invalid message type %d", message->type);
+	}
+}
+
+static void cavan_application_key_handler(struct cavan_input_device *dev, const char *name, int code, int value, void *data)
+{
+	struct cavan_application_context *context = data;
+	cavan_input_message_t *message;
+
+	message = cavan_data_queue_get_node(&context->message_queue);
+	if (message)
+	{
+		struct cavan_input_message_key *key = &message->key;
+
+		key->name = name;
+		key->code = code;
+		key->value = value;
+
+		message->type = CAVAN_INPUT_MESSAGE_KEY;
+		cavan_data_queue_append(&context->message_queue, &message->node);
+	}
+}
+
 static void cavan_application_mouse_wheel_handler(struct cavan_input_device *dev, int code, int value, void *data)
 {
+	struct cavan_application_context *context = data;
+	cavan_input_message_t *message;
+
+	message = cavan_data_queue_get_node(&context->message_queue);
+	if (message)
+	{
+		struct cavan_input_message_wheel *wheel = &message->wheel;
+
+		wheel->code = code;
+		wheel->value = value;
+
+		message->type = CAVAN_INPUT_MESSAGE_WHEEL;
+		cavan_data_queue_append(&context->message_queue, &message->node);
+	}
 }
 
 static void cavan_application_mouse_move_handler(struct cavan_input_device *dev, int x, int y, void *data)
 {
 	struct cavan_application_context *context = data;
-	cavan_touch_point_t point =
-	{
-		.id = 0,
-		.pressure = 1
-	};
+	cavan_input_message_t *message;
 
-	pthread_mutex_lock(&context->lock);
+	message = cavan_data_queue_get_node(&context->message_queue);
+	if (message)
+	{
+		struct cavan_input_message_touch *touch = &message->touch;
 
-	x = x * context->mouse_speed + context->x;
-	if (x < 0)
-	{
-		point.x = 0;
-	}
-	else if (x > context->max_x)
-	{
-		point.x = context->max_x;
-	}
-	else
-	{
-		point.x = x;
-	}
+		touch->id = 0;
+		touch->x = x;
+		touch->y = y;
+		touch->pressure = 1;
 
-	y = y * context->mouse_speed + context->y;
-	if (y < 0)
-	{
-		point.y = 0;
+		message->type = CAVAN_INPUT_MESSAGE_MOUSE_MOVE;
+		cavan_data_queue_append(&context->message_queue, &message->node);
 	}
-	else if (y > context->max_y)
-	{
-		point.y = context->max_y;
-	}
-	else
-	{
-		point.y = y;
-	}
-
-	cavan_application_restore_mouse(context);
-	cavan_application_move(context, &point);
-	cavan_application_draw_mouse(context);
-
-	pthread_mutex_unlock(&context->lock);
 }
 
 static void cavan_application_mouse_touch_handler(struct cavan_input_device *dev, int code, int value, void *data)
 {
 	struct cavan_application_context *context = data;
-	cavan_touch_point_t point =
+	cavan_input_message_t *message;
+
+	message = cavan_data_queue_get_node(&context->message_queue);
+	if (message)
 	{
-		.id = 0,
-		.pressure = value,
-		.x = context->x,
-		.y = context->y,
-	};
+		struct cavan_input_message_touch *touch = &message->touch;
 
-	pthread_mutex_lock(&context->lock);
+		touch->id = code;
+		touch->pressure = value;
 
-	cavan_application_restore_mouse(context);
-	cavan_application_click(context, &point);
-	cavan_application_draw_mouse(context);
-
-	pthread_mutex_unlock(&context->lock);
+		message->type = CAVAN_INPUT_MESSAGE_MOUSE_TOUCH;
+		cavan_data_queue_append(&context->message_queue, &message->node);
+	}
 }
 
 static void cavan_application_touch_handler(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data)
 {
-	struct cavan_application_context *context;
+	struct cavan_application_context *context = data;
+	cavan_input_message_t *message;
 
-	if (point->id != 0)
+	message = cavan_data_queue_get_node(&context->message_queue);
+	if (message)
 	{
-		pr_std_info("point->id = %d, skiping ...", point->id);
-		return;
+		struct cavan_input_message_touch *touch = &message->touch;
+
+		touch->id = point->id;
+		touch->x = point->x;
+		touch->y = point->y;
+		touch->pressure = point->pressure;
+
+		message->type = CAVAN_INPUT_MESSAGE_TOUCH;
+		cavan_data_queue_append(&context->message_queue, &message->node);
 	}
-
-	context = data;
-
-	pthread_mutex_lock(&context->lock);
-
-	context->x = point->x;
-	context->y = point->y;
-
-	cavan_application_click(context, point);
-
-	pthread_mutex_unlock(&context->lock);
 }
 
 static void cavan_application_move_handler(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data)
 {
 	struct cavan_application_context *context = data;
+	cavan_input_message_t *message;
 
-	pthread_mutex_lock(&context->lock);
-	cavan_application_move(data, point);
-	pthread_mutex_unlock(&context->lock);
+	message = cavan_data_queue_get_node(&context->message_queue);
+	if (message)
+	{
+		struct cavan_input_message_touch *touch = &message->touch;
+
+		touch->id = point->id;
+		touch->x = point->x;
+		touch->y = point->y;
+		touch->pressure = point->pressure;
+
+		message->type = CAVAN_INPUT_MESSAGE_MOVE;
+		cavan_data_queue_append(&context->message_queue, &message->node);
+	}
 }
-
-// ================================================================================
 
 int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data)
 {
@@ -1136,12 +1273,29 @@ int cavan_application_init(struct cavan_application_context *context, struct cav
 		goto out_display_destory;
 	}
 
+	context->message_queue.handler = cavan_application_message_queue_handler;
+
+	ret = cavan_data_queue_init(&context->message_queue, \
+		MOFS(cavan_input_message_t, node), sizeof(cavan_input_message_t), CAVAN_APP_MESSAGE_POOL_SIZE, context);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_data_queue_init");
+		goto out_double_link_deinit;
+	}
+
 	context->mouse_backup = cavan_application_mouse_alloc(context);
 	if (context->mouse_backup == NULL)
 	{
 		ret = -ENOMEM;
 		pr_red_info("cavan_display_memory_alloc");
-		goto out_double_link_deinit;
+		goto out_cavan_data_queue_deinit;
+	}
+
+	ret = pipe(context->pipefd);
+	if (ret < 0)
+	{
+		pr_error_info("pipe");
+		goto out_display_memory_free;
 	}
 
 	context->private_data = data;
@@ -1168,19 +1322,14 @@ int cavan_application_init(struct cavan_application_context *context, struct cav
 	input_service->touch_handler = cavan_application_touch_handler;
 	input_service->move_handler = cavan_application_move_handler;
 
-	ret = pipe(context->pipefd);
-	if (ret < 0)
-	{
-		pr_error_info("pipe");
-		goto out_display_memory_free;
-	}
-
 	context->on_key_pressed = NULL;
 
 	return 0;
 
 out_display_memory_free:
 	cavan_display_memory_free(context->mouse_backup);
+out_cavan_data_queue_deinit:
+	cavan_data_queue_deinit(&context->message_queue);
 out_double_link_deinit:
 	double_link_deinit(&context->win_link);
 out_display_destory:
@@ -1196,6 +1345,7 @@ void cavan_application_uninit(struct cavan_application_context *context)
 	close(context->pipefd[0]);
 	close(context->pipefd[1]);
 
+	cavan_data_queue_deinit(&context->message_queue);
 	double_link_deinit(&context->win_link);
 	cavan_display_memory_free(context->mouse_backup);
 	context->display->destory(context->display);
@@ -1209,11 +1359,18 @@ int cavan_application_main_loop(struct cavan_application_context *context, void 
 	int fd;
 	enum cavan_application_event event;
 
+	ret = cavan_data_queue_start(&context->message_queue);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_data_queue_start");
+		return ret;
+	}
+
 	ret = cavan_input_service_start(&context->input_service, context);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_input_service_start");
-		return ret;
+		goto out_cavan_data_queue_stop;
 	}
 
 	cavan_application_update_data(context);
@@ -1250,8 +1407,9 @@ int cavan_application_main_loop(struct cavan_application_context *context, void 
 out_cavan_input_service_stop:
 	cavan_input_service_stop(&context->input_service);
 	cavan_input_service_join(&context->input_service);
-
-	return 0;
+out_cavan_data_queue_stop:
+	cavan_data_queue_stop(&context->message_queue);
+	return ret;
 }
 
 void cavan_application_update_data(struct cavan_application_context *context)

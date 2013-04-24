@@ -59,8 +59,6 @@ int cavan_data_pool_init(struct cavan_data_pool *pool, int offset, size_t node_s
 	pool->offset = offset;
 	pool->node_size = node_size;
 
-	pr_bold_info("pool = %p", pool);
-
 	for (buff_end = buff + size; buff < buff_end; buff += node_size)
 	{
 		struct cavan_data_pool_node *data = cavan_data_pool_to_node(pool, buff);
