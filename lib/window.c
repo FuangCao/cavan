@@ -1234,9 +1234,36 @@ static void cavan_application_move_handler(struct cavan_input_device *dev, cavan
 	}
 }
 
+static int cavan_application_main_thread_handler(struct cavan_thread *thread, void *data)
+{
+	int ret;
+	u32 event;
+
+	ret = cavan_thread_recv_event(thread, &event);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_thread_recv_event");
+		return ret;
+	}
+
+	switch (event)
+	{
+	case CAVAN_APP_EVENT_STOP:
+	case CAVAN_APP_EVENT_EXIT:
+		cavan_thread_should_stop(thread);
+		break;
+
+	default:
+		pr_red_info("unknown event %d", event);
+	}
+
+	return 0;
+}
+
 int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data)
 {
 	int ret;
+	struct cavan_thread *thread;
 	struct cavan_input_service *input_service;
 
 	ret = pthread_mutex_init(&context->lock, NULL);
@@ -1291,10 +1318,14 @@ int cavan_application_init(struct cavan_application_context *context, struct cav
 		goto out_cavan_data_queue_deinit;
 	}
 
-	ret = pipe(context->pipefd);
+	thread = &context->thread;
+	thread->name = "AppMain";
+	thread->wake_handker = NULL;
+	thread->handler = cavan_application_main_thread_handler;
+	ret = cavan_thread_init(thread, context);
 	if (ret < 0)
 	{
-		pr_error_info("pipe");
+		pr_red_info("cavan_thread_init");
 		goto out_display_memory_free;
 	}
 
@@ -1342,9 +1373,7 @@ out_pthread_mutex_destroy:
 
 void cavan_application_uninit(struct cavan_application_context *context)
 {
-	close(context->pipefd[0]);
-	close(context->pipefd[1]);
-
+	cavan_thread_deinit(&context->thread);
 	cavan_data_queue_deinit(&context->message_queue);
 	double_link_deinit(&context->win_link);
 	cavan_display_memory_free(context->mouse_backup);
@@ -1356,8 +1385,6 @@ void cavan_application_uninit(struct cavan_application_context *context)
 int cavan_application_main_loop(struct cavan_application_context *context, void (*handler)(struct cavan_application_context *context, void *data), void *data)
 {
 	int ret;
-	int fd;
-	enum cavan_application_event event;
 
 	ret = cavan_data_queue_start(&context->message_queue);
 	if (ret < 0)
@@ -1373,6 +1400,13 @@ int cavan_application_main_loop(struct cavan_application_context *context, void 
 		goto out_cavan_data_queue_stop;
 	}
 
+	ret = cavan_thread_start(&context->thread);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_thread_start");
+		goto out_cavan_input_service_stop;
+	}
+
 	cavan_application_update_data(context);
 
 	if (handler)
@@ -1380,29 +1414,7 @@ int cavan_application_main_loop(struct cavan_application_context *context, void 
 		handler(context, data);
 	}
 
-	fd = context->pipefd[0];
-
-	while (1)
-	{
-		ret = read(fd, &event, sizeof(event));
-		if (ret < (int)sizeof(event))
-		{
-			pr_error_info("read");
-			break;
-		}
-
-		pr_bold_info("event = %d", event);
-
-		switch (event)
-		{
-		case CAVAN_APP_EVENT_STOP:
-		case CAVAN_APP_EVENT_EXIT:
-			goto out_cavan_input_service_stop;
-
-		default:
-			pr_red_info("unknown event %d", event);
-		}
-	}
+	cavan_thread_join(&context->thread);
 
 out_cavan_input_service_stop:
 	cavan_input_service_stop(&context->input_service);

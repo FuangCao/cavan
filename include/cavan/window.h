@@ -100,6 +100,7 @@ struct cavan_progress_bar
 struct cavan_application_context
 {
 	void *private_data;
+	struct cavan_thread thread;
 	struct cavan_display_device *display;
 	struct cavan_data_queue message_queue;
 	struct cavan_input_service input_service;
@@ -118,7 +119,6 @@ struct cavan_application_context
 	struct double_link win_link;
 
 	pthread_mutex_t lock;
-	int pipefd[2];
 
 	bool (*on_key_pressed)(struct cavan_application_context *context, struct cavan_input_message_key *message, void *data);
 };
@@ -306,9 +306,9 @@ static inline void cavan_progress_bar_complete(struct cavan_progress_bar *bar)
 	cavan_progress_bar_set_pos(bar, bar->total);
 }
 
-static inline int cavan_application_send_event(struct cavan_application_context *context, enum cavan_application_event event)
+static inline int cavan_application_send_event(struct cavan_application_context *context, u32 event)
 {
-	return write(context->pipefd[1], &event, sizeof(event));
+	return cavan_thread_send_event(&context->thread, event);
 }
 
 static inline int cavan_application_exit(struct cavan_application_context *context)
