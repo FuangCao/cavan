@@ -23,7 +23,7 @@
 #include <cavan/queue.h>
 #include <linux/input.h>
 
-#define CAVAN_INPUT_MESSAGE_POOL_SIZE	20
+#define CAVAN_INPUT_MESSAGE_POOL_SIZE	50
 
 #ifndef SYN_MT_REPORT
 #define SYN_MT_REPORT		2
