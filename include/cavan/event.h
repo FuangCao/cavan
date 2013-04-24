@@ -3,6 +3,8 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Wed May 25 10:12:17 CST 2011
 
 #include <cavan.h>
+#include <cavan/list.h>
+#include <cavan/thread.h>
 #include <linux/input.h>
 
 #define test_bit(bit, array) \
@@ -33,24 +35,12 @@
 #define KEY_BITMASK_SIZE	sizeof_bit_array(KEY_CNT)
 #define REL_BITMASK_SIZE	sizeof_bit_array(REL_CNT)
 
-enum cavan_event_command
-{
-	CAVAN_INPUT_COMMAND_STOP
-};
-
-enum cavan_event_service_state
-{
-	CAVAN_INPUT_THREAD_STATE_RUNNING,
-	CAVAN_INPUT_THREAD_STATE_STOPPING,
-	CAVAN_INPUT_THREAD_STATE_STOPPED
-};
-
 struct cavan_keylayout_node
 {
 	char name[32];
 	int code;
 
-	struct cavan_keylayout_node *next;
+	struct single_link_node node;
 };
 
 struct cavan_virtual_key
@@ -63,7 +53,8 @@ struct cavan_virtual_key
 	int value;
 
 	const char *name;
-	struct cavan_virtual_key *next;
+
+	struct single_link_node node;
 };
 
 struct cavan_event_matcher
@@ -83,21 +74,21 @@ struct cavan_event_device
 	struct pollfd *pfd;
 	void *private_data;
 
-	struct cavan_virtual_key *vk_head;
-	struct cavan_keylayout_node *kl_head;
-	struct cavan_event_device *next;
+	struct single_link vk_link;
+	struct single_link kl_link;
+	struct double_link_node node;
 };
 
 struct cavan_event_service
 {
-	int pipefd[2];
-	pthread_t thread;
+	struct cavan_thread thread;
 	pthread_mutex_t lock;
-	enum cavan_event_service_state state;
 
 	void *private_data;
-	size_t dev_count;
-	struct cavan_event_device *dev_head;
+	size_t pfd_count;
+	struct pollfd *pfds;
+
+	struct double_link link;
 
 	bool (*matcher)(struct cavan_event_matcher *matcher, void *data);
 	int (*probe)(struct cavan_event_device *dev, void *data);
@@ -109,8 +100,6 @@ struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device
 const char *cavan_event_find_key_name(struct cavan_event_device *dev, int code);
 
 ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data);
-int cavan_event_start_poll_thread(struct cavan_event_service *service);
-int cavan_event_stop_poll_thread(struct cavan_event_service *service);
 void cavan_event_service_init(struct cavan_event_service *service, bool (*matcher)(struct cavan_event_matcher *, void *));
 int cavan_event_service_start(struct cavan_event_service *service, void *data);
 int cavan_event_service_stop(struct cavan_event_service *service);
@@ -127,14 +116,14 @@ static inline char *cavan_event_tostring_simple(struct input_event *event, char 
 	return text;
 }
 
-static inline int cavan_event_send_command(struct cavan_event_service *service, enum cavan_event_command cmd)
+static inline int cavan_event_send_event(struct cavan_event_service *service, u32 event)
 {
-	return write(service->pipefd[1], &cmd, sizeof(cmd));
+	return cavan_thread_send_event(&service->thread, event);
 }
 
 static inline int cavan_event_service_join(struct cavan_event_service *service)
 {
-	return pthread_join(service->thread, NULL);
+	return cavan_thread_join(&service->thread);
 }
 
 static inline int cavan_event_get_bitmask(int fd, int type, void *bitmask, size_t size)
@@ -164,3 +153,12 @@ static inline int cavan_event_get_rel_bitmask(int fd, void *bitmask)
 	return cavan_event_get_bitmask(fd, EV_REL, bitmask, REL_BITMASK_SIZE);
 }
 
+static inline int cavan_event_start_poll_thread(struct cavan_event_service *service)
+{
+	return cavan_thread_start(&service->thread);
+}
+
+static inline void cavan_event_stop_poll_thread(struct cavan_event_service *service)
+{
+	cavan_thread_stop(&service->thread);
+}

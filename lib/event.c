@@ -428,43 +428,32 @@ char *cavan_event_tostring(struct input_event *event, char *text)
 	return text;
 }
 
-static struct cavan_virtual_key *cavan_event_free_virtual_keymap(struct cavan_virtual_key *head)
-{
-	struct cavan_virtual_key *key_next;
+// ================================================================================
 
-	while (head)
+static void cavan_event_virtual_build_bitmask(struct single_link *link, uint8_t *bitmask)
+{
+	struct single_link_node *node;
+	struct cavan_virtual_key *key;
+
+	pthread_mutex_lock(&link->lock);
+
+	single_link_foreach_node(link, node)
 	{
-		key_next = head->next;
-		free(head);
-		head = key_next;
+		key = single_link_get_container(link, node);
+
+		set_bit(key->code, bitmask);
 	}
 
-	return head;
-}
-
-static struct cavan_keylayout_node *cavan_event_free_keylayout(struct cavan_keylayout_node *head)
-{
-	struct cavan_keylayout_node *node_next;
-
-	while (head)
-	{
-		node_next = head->next;
-		free(head);
-		head = node_next;
-	}
-
-	return head;
+	pthread_mutex_unlock(&link->lock);
 }
 
 static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 {
+	size_t size;
 	char pathname[1024];
 	const char *mem, *p, *file_end;
 	struct cavan_virtual_key *key;
-	size_t size;
 	int x, y, width, height, code;
-
-	dev->vk_head = NULL;
 
 	sprintf(pathname, "/sys/board_properties/virtualkeys.%s", dev->name);
 	mem = file_read_all(pathname, 0, &size);
@@ -506,8 +495,7 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 		key->code = code;
 		key->value = 0;
 
-		key->next = dev->vk_head;
-		dev->vk_head = key;
+		single_link_push(&dev->vk_link, &key->node);
 
 		p = text_nfind2(p, file_end, ':', 5);
 	}
@@ -538,16 +526,60 @@ static char *cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, 
 	return NULL;
 }
 
+static const char *cavan_event_find_key_name_base(struct single_link *link, int code)
+{
+	struct single_link_node *node;
+	struct cavan_keylayout_node *key;
+
+	single_link_foreach_node(link, node)
+	{
+		key = single_link_get_container(link, node);
+		if (key->code == code)
+		{
+			return key->name;
+		}
+	}
+
+	return "NONE";
+}
+
+const char *cavan_event_find_key_name(struct cavan_event_device *dev, int code)
+{
+	const char *name;
+	struct single_link *link = &dev->kl_link;
+
+	pthread_mutex_lock(&link->lock);
+	name = cavan_event_find_key_name_base(link, code);
+	pthread_mutex_unlock(&link->lock);
+
+	return name;
+}
+
+static void cavan_event_virtual_key_set_name(struct single_link *vk_link, struct single_link *kl_link)
+{
+	struct single_link_node *node;
+	struct cavan_virtual_key *key;
+
+	pthread_mutex_lock(&vk_link->lock);
+
+	single_link_foreach_node(vk_link, node)
+	{
+		key = single_link_get_container(vk_link, node);
+		key->name = cavan_event_find_key_name_base(kl_link, key->code);
+	}
+
+	pthread_mutex_unlock(&vk_link->lock);
+}
+
 static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 {
 	int ret;
+	char *mem;
+	size_t size;
 	char pathname[1024];
 	uint8_t key_bitmask[sizeof_bit_array(KEY_CNT)];
 	const char *p, *line_end, *file_end;
 	struct cavan_keylayout_node *node;
-	struct cavan_virtual_key *vk;
-	char *mem;
-	size_t size;
 
 	if (cavan_event_get_keylayout_pathname(dev, pathname) == NULL)
 	{
@@ -573,7 +605,6 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 
 	pr_bold_info("Parse keylayout file %s", pathname);
 
-	dev->kl_head = NULL;
 	p = mem;
 	file_end = p + size;
 
@@ -584,10 +615,7 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 		goto out_free_memory;
 	}
 
-	for (vk = dev->vk_head; vk; vk = vk->next)
-	{
-		set_bit(vk->code, key_bitmask);
-	}
+	cavan_event_virtual_build_bitmask(&dev->vk_link, key_bitmask);
 
 	while (p < file_end)
 	{
@@ -606,8 +634,7 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 
 		pr_bold_info("name = %s, code = %d", node->name, node->code);
 
-		node->next = dev->kl_head;
-		dev->kl_head = node;
+		single_link_push(&dev->kl_link, &node->node);
 
 		node = malloc(sizeof(*node));
 		if (node == NULL)
@@ -622,10 +649,7 @@ label_goto_next_line:
 
 	free(node);
 
-	for (vk = dev->vk_head; vk; vk = vk->next)
-	{
-		vk->name = cavan_event_find_key_name(dev, vk->code);
-	}
+	cavan_event_virtual_key_set_name(&dev->vk_link, &dev->kl_link);
 
 out_free_memory:
 	free(mem);
@@ -633,31 +657,28 @@ out_free_memory:
 	return 0;
 }
 
-static void cavan_event_close_devices(struct cavan_event_service *service)
+static void cavan_event_close_device_handler(struct double_link *link, struct double_link_node *node, void *data)
 {
-	struct cavan_event_device *pdev, *pdev_next;
+	struct cavan_event_service *service = data;
+	struct cavan_event_device *dev = double_link_get_container(link, node);
 
-	pthread_mutex_lock(&service->lock);
-
-	pdev = service->dev_head;
-
-	while (pdev)
+	if (service->remove)
 	{
-		if (service->remove)
-		{
-			service->remove(pdev, service->private_data);
-		}
-
-		close(pdev->fd);
-
-		cavan_event_free_virtual_keymap(pdev->vk_head);
-		cavan_event_free_keylayout(pdev->kl_head);
-
-		pdev_next = pdev->next;
-		free(pdev);
-		pdev = pdev_next;
+		service->remove(dev, service->private_data);
 	}
 
+	close(dev->fd);
+
+	single_link_free_all(&dev->kl_link);
+	single_link_free_all(&dev->vk_link);
+
+	free(dev);
+}
+
+static void cavan_event_close_devices(struct cavan_event_service *service)
+{
+	pthread_mutex_lock(&service->lock);
+	double_link_destroy(&service->link, service, cavan_event_close_device_handler);
 	pthread_mutex_unlock(&service->lock);
 }
 
@@ -749,8 +770,9 @@ static bool cavan_event_service_match(struct cavan_event_matcher *matcher, void 
 
 static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher, void *data)
 {
-	struct cavan_event_service *service = data;
+	int ret;
 	struct cavan_event_device *dev;
+	struct cavan_event_service *service = data;
 
 	dev = malloc(sizeof(*dev));
 	if (dev == NULL)
@@ -759,15 +781,29 @@ static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher
 		return -ENOMEM;
 	}
 
+	ret = single_link_init(&dev->vk_link, MOFS(struct cavan_virtual_key, node));
+	if (ret < 0)
+	{
+		pr_red_info("single_link_init");
+		goto out_free_dev;
+	}
+
+	ret = single_link_init(&dev->kl_link, MOFS(struct cavan_keylayout_node, node));
+	if (ret < 0)
+	{
+		pr_red_info("single_link_init");
+		goto out_single_link_deinit_vk;
+	}
+
 	dev->fd = matcher->fd;
 	text_ncopy(dev->name, matcher->devname, sizeof(dev->name));
 	text_ncopy(dev->pathname, matcher->pathname, sizeof(dev->pathname));
 
 	if (service->probe && service->probe(dev, service->private_data) < 0)
 	{
+		ret = -EFAULT;
 		pr_red_info("Faile to probe device %s, name = %s", matcher->pathname, matcher->devname);
-		free(dev);
-		return -EFAULT;
+		goto out_single_link_deinit_kl;
 	}
 
 	pr_green_info("Add device %s, name = %s", matcher->pathname, matcher->devname);
@@ -775,12 +811,17 @@ static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher
 	cavan_event_parse_virtual_keymap(dev);
 	cavan_event_parse_keylayout(dev);
 
-	pthread_mutex_lock(&service->lock);
-	dev->next = service->dev_head;
-	service->dev_head = dev;
-	pthread_mutex_unlock(&service->lock);
+	double_link_append(&service->link, &dev->node);
 
 	return 0;
+
+out_single_link_deinit_kl:
+	single_link_deinit(&dev->kl_link);
+out_single_link_deinit_vk:
+	single_link_deinit(&dev->vk_link);
+out_free_dev:
+	free(dev);
+	return ret;
 }
 
 static int cavan_event_open_devices(struct cavan_event_service *service)
@@ -801,176 +842,86 @@ static int cavan_event_open_devices(struct cavan_event_service *service)
 	return count;
 }
 
-static void *cavan_event_service_handler(void *data)
+static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 {
 	int ret;
 	ssize_t rdlen;
 	struct cavan_event_service *service = data;
-	struct pollfd fds[service->dev_count + 1], *pfd;
+	struct pollfd *pfds = service->pfds;
 	struct cavan_event_device *pdev;
+	struct double_link *link;
+	struct double_link_node *node, *head;
 	struct input_event events[32], *ep, *ep_end;
 
-	pfd = fds;
-	pfd->fd = service->pipefd[0];
-	pfd->events = POLLIN;
-	pfd->revents = 0;
-
-	for (pdev = service->dev_head; pdev; pdev = pdev->next)
+	ret = poll(pfds, service->pfd_count, -1);
+	if (ret < 0)
 	{
-		pfd++;
-		pfd->fd = pdev->fd;
-		pfd->events = POLLIN;
-		pfd->revents = 0;
-		pdev->pfd = pfd;
+		pr_error_info("poll");
+		return ret;
 	}
 
-	pthread_mutex_lock(&service->lock);
-	service->state = CAVAN_INPUT_THREAD_STATE_RUNNING;
-	pthread_mutex_unlock(&service->lock);
-
-	while (1)
+	if (pfds[0].revents)
 	{
-		ret = poll(fds, NELEM(fds), -1);
-		if (ret < 0)
+		return 0;
+	}
+
+	link = &service->link;
+
+	pthread_mutex_lock(&link->lock);
+
+	for (head = &link->head_node, node = head->next; node != head; node = node->next)
+	{
+		pdev = double_link_get_container(link, node);
+		if (pdev->pfd->revents == 0)
 		{
-			pr_error_info("poll");
-			break;
+			continue;
 		}
 
-		if (fds[0].revents)
+		rdlen = read(pdev->fd, events, sizeof(events));
+		if (rdlen < 0)
 		{
-			pr_green_info("Thread should stop");
-			break;
+			pr_error_info("read");
+			pthread_mutex_unlock(&link->lock);
+			return rdlen;
 		}
 
-		for (pdev = service->dev_head; pdev; pdev = pdev->next)
+		for (ep = events, ep_end = ep + (rdlen / sizeof(events[0])); ep < ep_end; ep++)
 		{
-			if (pdev->pfd->revents == 0)
+			if (service->event_handler(pdev, ep, service->private_data) == false)
 			{
-				continue;
-			}
+				char print_buff[1024];
 
-			rdlen = read(pdev->fd, events, sizeof(events));
-			if (rdlen < 0)
-			{
-				pr_error_info("read");
-				goto out_thread_exit;
-			}
-
-			for (ep = events, ep_end = ep + (rdlen / sizeof(events[0])); ep < ep_end; ep++)
-			{
-				if (service->event_handler(pdev, ep, service->private_data) == false)
-				{
-					char print_buff[1024];
-
-					pr_red_info("%s", cavan_event_tostring(ep, print_buff));
-				}
+				pr_red_info("%s", cavan_event_tostring(ep, print_buff));
 			}
 		}
 	}
 
-out_thread_exit:
-	pthread_mutex_lock(&service->lock);
-	service->state = CAVAN_INPUT_THREAD_STATE_STOPPED;
-	pthread_mutex_unlock(&service->lock);
+	pthread_mutex_unlock(&link->lock);
 
-	pr_red_info("cavan input service exit");
-
-	return NULL;
+	return 0;
 }
 
 struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device *dev, int x, int y)
 {
 	struct cavan_virtual_key *key;
+	struct single_link_node *node;
+	struct single_link *link = &dev->vk_link;
 
-	for (key = dev->vk_head; key; key = key->next)
+	pthread_mutex_lock(&link->lock);
+
+	single_link_foreach_node(link, node)
 	{
+		key = single_link_get_container(link, node);
 		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right)
 		{
+			pthread_mutex_unlock(&link->lock);
 			return key;
 		}
 	}
 
+	pthread_mutex_unlock(&link->lock);
+
 	return NULL;
-}
-
-const char *cavan_event_find_key_name(struct cavan_event_device *dev, int code)
-{
-	struct cavan_keylayout_node *node;
-
-	for (node = dev->kl_head; node; node = node->next)
-	{
-		if (node->code == code)
-		{
-			return node->name;
-		}
-	}
-
-	return "NONE";
-}
-
-int cavan_event_start_poll_thread(struct cavan_event_service *service)
-{
-	int ret;
-
-	pthread_mutex_lock(&service->lock);
-
-	if (service->state == CAVAN_INPUT_THREAD_STATE_RUNNING)
-	{
-		pthread_mutex_unlock(&service->lock);
-		return 0;
-	}
-
-	ret = pipe(service->pipefd);
-	if (ret < 0)
-	{
-		pr_error_info("pipe");
-		pthread_mutex_unlock(&service->lock);
-		return ret;
-	}
-
-	ret = pthread_create(&service->thread, NULL, cavan_event_service_handler, service);
-	if (ret < 0)
-	{
-		pr_red_info("pthread_create");
-		close(service->pipefd[0]);
-		close(service->pipefd[1]);
-		pthread_mutex_unlock(&service->lock);
-		return ret;
-	}
-
-	pthread_mutex_unlock(&service->lock);
-
-	return 0;
-}
-
-int cavan_event_stop_poll_thread(struct cavan_event_service *service)
-{
-	pthread_mutex_lock(&service->lock);
-
-	while (service->state == CAVAN_INPUT_THREAD_STATE_RUNNING)
-	{
-		int ret;
-
-		ret = cavan_event_send_command(service, CAVAN_INPUT_COMMAND_STOP);
-		if (ret < 0)
-		{
-			pr_error_info("cavan_event_send_command");
-			pthread_mutex_unlock(&service->lock);
-			return ret;
-		}
-
-		pthread_mutex_unlock(&service->lock);
-		msleep(100);
-		pthread_mutex_unlock(&service->lock);
-	}
-
-	close(service->pipefd[0]);
-	close(service->pipefd[1]);
-
-	pthread_mutex_unlock(&service->lock);
-
-	return 0;
 }
 
 void cavan_event_service_init(struct cavan_event_service *service, bool (*matcher)(struct cavan_event_matcher *, void *))
@@ -994,6 +945,11 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 {
 	int ret;
 	ssize_t count;
+	struct double_link *link;
+	struct double_link_node *node;
+	struct cavan_event_device *dev;
+	struct pollfd *pfd, *pfd_end;
+	struct cavan_thread *thread;
 
 	if (service == NULL)
 	{
@@ -1007,47 +963,95 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	}
 
 	service->private_data = data;
-	service->dev_head = NULL;
 	pthread_mutex_init(&service->lock, NULL);
+
+	ret = double_link_init(&service->link, MOFS(struct cavan_event_device, node));
+	if (ret < 0)
+	{
+		pr_red_info("double_link_init");
+		return ret;
+	}
 
 	count = cavan_event_open_devices(service);
 	if (count < 0)
 	{
+		ret = count;
 		pr_red_info("cavan_event_open_devices");
-		return count;
+		goto out_double_link_deinit;
 	}
 
 	if (count == 0)
 	{
+		ret = -ENOENT;
 		pr_red_info("No input device found!");
-		return -ENOENT;
+		goto out_double_link_deinit;
 	}
 
-	service->dev_count = count;
-	service->state = CAVAN_INPUT_THREAD_STATE_STOPPED;
+	thread = &service->thread;
+	thread->name = "EVENT";
+	thread->wake_handker = NULL;
+	thread->handler = cavan_event_service_handler;
+	ret = cavan_thread_init(thread, service);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_thread_init");
+		goto out_cavan_event_close_devices;
+	}
+
+	service->pfd_count = count + 1;
+	pfd = malloc(service->pfd_count * sizeof(*pfd));
+	if (pfd == NULL)
+	{
+		ret = -ENOMEM;
+		pr_error_info("malloc");
+		goto out_cavan_thread_deinit;
+	}
+
+	service->pfds = pfd;
+
+	*pfd = service->thread.pfd;
+	link = &service->link;
+
+	pthread_mutex_lock(&link->lock);
+
+	for (pfd++, pfd_end = pfd + count, node = link->head_node.next; pfd < pfd_end; pfd++, node = node->next)
+	{
+		dev = double_link_get_container(link, node);
+
+		dev->pfd = pfd;
+		pfd->fd = dev->fd;
+		pfd->events = POLLIN;
+		pfd->revents = 0;
+	}
+
+	pthread_mutex_unlock(&link->lock);
 
 	ret = cavan_event_start_poll_thread(service);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_event_start_poll_thread");
-		cavan_event_close_devices(service);
+		goto out_free_pfd;
 	}
 
 	return 0;
+
+out_free_pfd:
+	free(pfd);
+out_cavan_thread_deinit:
+	cavan_thread_deinit(thread);
+out_cavan_event_close_devices:
+	cavan_event_close_devices(service);
+out_double_link_deinit:
+	double_link_deinit(&service->link);
+	return ret;
 }
 
 int cavan_event_service_stop(struct cavan_event_service *service)
 {
-	int ret;
-
-	ret = cavan_event_stop_poll_thread(service);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_event_stop_poll_thread");
-		return ret;
-	}
-
+	cavan_event_stop_poll_thread(service);
+	free(service->pfds);
 	cavan_event_close_devices(service);
+	cavan_thread_deinit(&service->thread);
 	pthread_mutex_destroy(&service->lock);
 
 	return 0;
