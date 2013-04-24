@@ -195,47 +195,6 @@ static bool cavan_input_device_matcher(struct cavan_event_matcher *matcher, void
 	return true;
 }
 
-static void cavan_input_key_handler_dummy(struct cavan_input_device *dev, const char *name, int code, int value, void *data)
-{
-	pr_bold_info("key: name = %s, code = %d, value = %d", name, code, value);
-}
-
-static void cavan_input_touch_handler_dummy(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data)
-{
-	if (point->pressure)
-	{
-		pr_bold_info("touch[%d] = [%d, %d]", point->id, point->x, point->y);
-	}
-	else
-	{
-		pr_bold_info("release[%d] = [%d, %d]", point->id, point->x, point->y);
-	}
-}
-
-static void cavan_input_move_handler_dummy(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data)
-{
-	pr_bold_info("move[%d] = [%d, %d]", point->id, point->x, point->y);
-}
-
-static void cavan_input_gsensor_handler_dummy(struct cavan_input_device *dev, struct cavan_gsensor_event *event, void *data)
-{
-}
-
-static void cavan_input_mouse_wheel_handler_dummy(struct cavan_input_device *dev, int code, int value, void *data)
-{
-	pr_bold_info("wheel: code = %d, value = %d", code, value);
-}
-
-static void cavan_input_mouse_move_handler_dummy(struct cavan_input_device *dev, int x, int y, void *data)
-{
-	pr_bold_info("mouse_move: x = %d, y = %d", x, y);
-}
-
-static void cavan_input_mouse_touch_handler_dummy(struct cavan_input_device *dev, int code, int value, void *data)
-{
-	pr_bold_info("mouse_touch: code = %d, value = %d", code, value);
-}
-
 void cavan_input_service_init(struct cavan_input_service *service, bool (*matcher)(struct cavan_event_matcher *, void *))
 {
 	cavan_event_service_init(&service->event_service, cavan_input_device_matcher);
@@ -244,13 +203,58 @@ void cavan_input_service_init(struct cavan_input_service *service, bool (*matche
 	service->lcd_height = -1;
 
 	service->matcher = matcher;
-	service->key_handler = NULL;
-	service->mouse_wheel_handler = NULL;
-	service->mouse_move_handler = NULL;
-	service->mouse_touch_handler = NULL;
-	service->touch_handler = NULL;
-	service->move_handler = NULL;
-	service->gsensor_handler = NULL;
+	service->handler = NULL;
+}
+
+static void cavan_input_message_queue_handler(void *addr, void *data)
+{
+	struct cavan_input_service *service = data;
+
+	service->handler(addr, service->private_data);
+}
+
+static void cavan_input_message_queue_handler_dummy(void *addr, void *data)
+{
+	struct cavan_input_message_key *key;
+	struct cavan_input_message_point *point;
+	struct cavan_input_message_vector *vector;
+	cavan_input_message_t *message = addr;
+
+	switch (message->type)
+	{
+	case CAVAN_INPUT_MESSAGE_KEY:
+		key = &message->key;
+		pr_std_info("key: name = %s, code = %d, value = %d", key->name, key->code, key->value);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_MOVE:
+		point = &message->point;
+		pr_std_info("move[%d] = [%d, %d]", point->id, point->x, point->y);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_TOUCH:
+		point = &message->point;
+		pr_std_info("touch[%d] = [%d, %d]", point->id, point->x, point->y);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_WHEEL:
+		key = &message->key;
+		pr_std_info("wheel[%d] = %d", key->code, key->value);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_MOUSE_MOVE:
+		vector = &message->vector;
+		pr_std_info("mouse_move = [%d, %d]", vector->x, vector->y);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_MOUSE_TOUCH:
+		key = &message->key;
+		pr_std_info("mouse_touch[%d] = %d", key->code, key->value);
+		break;
+
+	default:
+		pr_red_info("Invalid message type %d", message->type);
+	}
 }
 
 int cavan_input_service_start(struct cavan_input_service *service, void *data)
@@ -261,47 +265,28 @@ int cavan_input_service_start(struct cavan_input_service *service, void *data)
 	if (service == NULL)
 	{
 		pr_red_info("service == NULL");
-		return -EINVAL;
+		ERROR_RETURN(EINVAL);
 	}
 
 	pthread_mutex_init(&service->lock, NULL);
-
-	if (service->key_handler == NULL)
-	{
-		service->key_handler = cavan_input_key_handler_dummy;
-	}
-
-	if (service->touch_handler == NULL)
-	{
-		service->touch_handler = cavan_input_touch_handler_dummy;
-	}
-
-	if (service->move_handler == NULL)
-	{
-		service->move_handler = cavan_input_move_handler_dummy;
-	}
-
-	if (service->gsensor_handler == NULL)
-	{
-		service->gsensor_handler = cavan_input_gsensor_handler_dummy;
-	}
-
-	if (service->mouse_wheel_handler == NULL)
-	{
-		service->mouse_wheel_handler = cavan_input_mouse_wheel_handler_dummy;
-	}
-
-	if (service->mouse_move_handler == NULL)
-	{
-		service->mouse_move_handler = cavan_input_mouse_move_handler_dummy;
-	}
-
-	if (service->mouse_touch_handler == NULL)
-	{
-		service->mouse_touch_handler = cavan_input_mouse_touch_handler_dummy;
-	}
-
 	service->private_data = data;
+
+	if (service->handler)
+	{
+		service->queue.handler = cavan_input_message_queue_handler;
+	}
+	else
+	{
+		service->queue.handler = cavan_input_message_queue_handler_dummy;
+	}
+
+	ret = cavan_data_queue_run(&service->queue, MOFS(cavan_input_message_t, node), \
+			sizeof(cavan_input_message_t), CAVAN_INPUT_MESSAGE_POOL_SIZE, service);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_data_queue_run");
+		return ret;
+	}
 
 	event_service = &service->event_service;
 	event_service->matcher = cavan_input_device_matcher;
@@ -313,7 +298,7 @@ int cavan_input_service_start(struct cavan_input_service *service, void *data)
 	if (ret < 0)
 	{
 		pr_red_info("cavan_timer_service_start");
-		return ret;
+		goto out_cavan_data_queue_stop;
 	}
 
 	ret = cavan_event_service_start(event_service, service);
@@ -327,23 +312,75 @@ int cavan_input_service_start(struct cavan_input_service *service, void *data)
 
 out_timer_service_stop:
 	cavan_timer_service_stop(&service->timer_service);
+out_cavan_data_queue_stop:
+	cavan_data_queue_stop(&service->queue);
+	cavan_data_queue_deinit(&service->queue);
 	return ret;
 }
 
-int cavan_input_service_stop(struct cavan_input_service *service)
+void cavan_input_service_stop(struct cavan_input_service *service)
 {
-	int ret;
+	cavan_event_service_stop(&service->event_service);
+	cavan_timer_service_stop(&service->timer_service);
+	cavan_data_queue_stop(&service->queue);
+	cavan_data_queue_deinit(&service->queue);
+	pthread_mutex_destroy(&service->lock);
+}
 
-	ret = cavan_event_service_stop(&service->event_service);
-	if (ret < 0)
+bool cavan_input_service_append_key_message(struct cavan_input_service *service, int type, const char *name, int code, int value)
+{
+	cavan_input_message_t *message;
+	struct cavan_input_message_key *key;
+
+	message = cavan_input_service_get_message(service, type);
+	if (message == NULL)
 	{
-		pr_red_info("cavan_event_service_stop");
-		return ret;
+		return false;
 	}
 
-	cavan_timer_service_stop(&service->timer_service);
+	key = &message->key;
+	key->name = name;
+	key->code = code;
+	key->value = value;
 
-	pthread_mutex_destroy(&service->lock);
+	cavan_input_service_append_message(service, message);
 
-	return 0;
+	return true;
+}
+
+bool cavan_input_service_append_vector_message(struct cavan_input_service *service, int type, int x, int y, int z)
+{
+	cavan_input_message_t *message;
+	struct cavan_input_message_vector *vector;
+
+	message = cavan_input_service_get_message(service, type);
+	if (message == NULL)
+	{
+		return false;
+	}
+
+	vector = &message->vector;
+	vector->x = x;
+	vector->y = y;
+	vector->z = z;
+
+	cavan_input_service_append_message(service, message);
+
+	return true;
+}
+
+bool cavan_input_service_append_point_message(struct cavan_input_service *service, int type, struct cavan_input_message_point *point)
+{
+	cavan_input_message_t *message;
+
+	message = cavan_input_service_get_message(service, type);
+	if (message == NULL)
+	{
+		return false;
+	}
+
+	message->point = *point;
+	cavan_input_service_append_message(service, message);
+
+	return true;
 }

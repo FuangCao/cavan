@@ -50,6 +50,17 @@ typedef enum cavan_input_message_type
 	CAVAN_INPUT_MESSAGE_WHEEL,
 	CAVAN_INPUT_MESSAGE_MOUSE_MOVE,
 	CAVAN_INPUT_MESSAGE_MOUSE_TOUCH,
+	CAVAN_INPUT_MESSAGE_ACCELEROMETER,
+	CAVAN_INPUT_MESSAGE_MAGNETIC_FIELD,
+	CAVAN_INPUT_MESSAGE_ORIENTATION,
+	CAVAN_INPUT_MESSAGE_GYROSCOPE,
+	CAVAN_INPUT_MESSAGE_LIGHT,
+	CAVAN_INPUT_MESSAGE_PRESSURE,
+	CAVAN_INPUT_MESSAGE_TEMPERATURE,
+	CAVAN_INPUT_MESSAGE_PROXIMITY,
+	CAVAN_INPUT_MESSAGE_GRAVITY,
+	CAVAN_INPUT_MESSAGE_LINEAR_ACCELERATION,
+	CAVAN_INPUT_MESSAGE_ROTATION_VECTOR
 } cavan_input_message_type_t;
 
 struct cavan_input_message_key
@@ -59,18 +70,20 @@ struct cavan_input_message_key
 	int value;
 };
 
-struct cavan_input_message_touch
+struct cavan_input_message_point
 {
 	int id;
 	int x;
 	int y;
 	int pressure;
+	int released;
 };
 
-struct cavan_input_message_wheel
+struct cavan_input_message_vector
 {
-	int code;
-	int value;
+	int x;
+	int y;
+	int z;
 };
 
 typedef struct cavan_input_message
@@ -79,9 +92,10 @@ typedef struct cavan_input_message
 
 	union
 	{
+		int value;
 		struct cavan_input_message_key key;
-		struct cavan_input_message_touch touch;
-		struct cavan_input_message_wheel wheel;
+		struct cavan_input_message_point point;
+		struct cavan_input_message_vector vector;
 	};
 
 	struct cavan_data_pool_node node;
@@ -95,20 +109,6 @@ struct cavan_input_message_queue
 	void (*handler)(struct cavan_input_message_queue *queue, cavan_input_message_t *message, void *data);
 };
 
-struct cavan_gsensor_event
-{
-	int x, y, z;
-};
-
-typedef struct cavan_touch_point
-{
-	int id;
-	int x;
-	int y;
-	int pressure;
-	int released;
-} cavan_touch_point_t;
-
 struct cavan_input_device
 {
 	struct cavan_event_device *event_dev;
@@ -121,6 +121,7 @@ struct cavan_input_device
 
 struct cavan_input_service
 {
+	struct cavan_data_queue queue;
 	struct cavan_event_service event_service;
 	struct cavan_timer_service timer_service;
 
@@ -129,19 +130,15 @@ struct cavan_input_service
 	pthread_mutex_t lock;
 
 	bool (*matcher)(struct cavan_event_matcher *matcher, void *data);
-
-	void (*key_handler)(struct cavan_input_device *dev, const char *name, int code, int value, void *data);
-	void (*mouse_wheel_handler)(struct cavan_input_device *dev, int code, int value, void *data);
-	void (*mouse_move_handler)(struct cavan_input_device *dev, int x, int y, void *data);
-	void (*mouse_touch_handler)(struct cavan_input_device *dev, int code, int value, void *data);
-	void (*touch_handler)(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data);
-	void (*move_handler)(struct cavan_input_device *dev, cavan_touch_point_t *point, void *data);
-	void (*gsensor_handler)(struct cavan_input_device *dev, struct cavan_gsensor_event *event, void *data);
+	void (*handler)(cavan_input_message_t *message, void *data);
 };
 
 void cavan_input_service_init(struct cavan_input_service *service, bool (*matcher)(struct cavan_event_matcher *, void *));
 int cavan_input_service_start(struct cavan_input_service *service, void *data);
-int cavan_input_service_stop(struct cavan_input_service *service);
+void cavan_input_service_stop(struct cavan_input_service *service);
+bool cavan_input_service_append_key_message(struct cavan_input_service *service, int type, const char *name, int code, int value);
+bool cavan_input_service_append_vector_message(struct cavan_input_service *service, int type, int x, int y, int z);
+bool cavan_input_service_append_point_message(struct cavan_input_service *service, int type, struct cavan_input_message_point *point);
 
 static inline int cavan_input_service_join(struct cavan_input_service *service)
 {
@@ -151,4 +148,22 @@ static inline int cavan_input_service_join(struct cavan_input_service *service)
 static inline u32 timeval2msec(struct timeval *time)
 {
 	return time->tv_sec * 1000 + time->tv_usec / 1000;
+}
+
+static inline cavan_input_message_t *cavan_input_service_get_message(struct cavan_input_service *service, int type)
+{
+	cavan_input_message_t *message;
+
+	message = cavan_data_queue_get_node(&service->queue);
+	if (message)
+	{
+		message->type = type;
+	}
+
+	return message;
+}
+
+static inline void cavan_input_service_append_message(struct cavan_input_service *service, cavan_input_message_t *message)
+{
+	cavan_data_queue_append(&service->queue, &message->node);
 }

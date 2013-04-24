@@ -112,7 +112,7 @@ bool cavan_touch_device_matcher(struct cavan_event_matcher *matcher, void *data)
 	return cavan_single_touch_device_match(abs_bitmask, key_bitmask);
 }
 
-static inline void cavan_touch_point_mapping(struct cavan_touch_device *dev, cavan_touch_point_t *point)
+static inline void cavan_touch_point_mapping(struct cavan_touch_device *dev, struct cavan_input_message_point *point)
 {
 	point->x = point->x * dev->xscale - dev->xoffset;
 	point->y = point->y * dev->yscale - dev->yoffset;
@@ -175,9 +175,8 @@ static int cavan_touch_device_probe(struct cavan_touch_device *dev, void *data)
 
 static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
 {
+	struct cavan_input_message_point *p, *p_end;
 	struct cavan_multi_touch_device *ts = (struct cavan_multi_touch_device *)dev;
-	struct cavan_input_service *service = data;
-	cavan_touch_point_t *p, *p_end;
 
 	switch (event->type)
 	{
@@ -233,7 +232,8 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 
 						if (key->value != value)
 						{
-							service->key_handler(dev, key->name, key->code, value, service->private_data);
+							cavan_input_service_append_key_message(data, \
+									CAVAN_INPUT_MESSAGE_KEY, key->name, key->code, value);
 							key->value = value;
 						}
 
@@ -245,11 +245,13 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 
 						if (p->released)
 						{
-							service->touch_handler(dev, p, service->private_data);
+							cavan_input_service_append_point_message(data, \
+									CAVAN_INPUT_MESSAGE_TOUCH, p);
 							p->released = 0;
 						}
 
-						service->move_handler(dev, p, service->private_data);
+						cavan_input_service_append_point_message(data, \
+								CAVAN_INPUT_MESSAGE_MOVE, p);
 					}
 					else
 					{
@@ -268,7 +270,8 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 				{
 					if (key->value)
 					{
-						service->key_handler(dev, key->name, key->code, 0, service->private_data);
+						cavan_input_service_append_key_message(data, \
+								CAVAN_INPUT_MESSAGE_KEY, key->name, key->code, 0);
 						key->value = 0;
 					}
 				}
@@ -281,7 +284,8 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 				{
 					if (p->released == 0)
 					{
-						service->touch_handler(dev, p, service->private_data);
+						cavan_input_service_append_point_message(data, \
+								CAVAN_INPUT_MESSAGE_TOUCH, p);
 						p->released = 1;
 					}
 				}
@@ -315,7 +319,7 @@ struct cavan_input_device *cavan_multi_touch_device_create(void)
 	struct cavan_multi_touch_device *ts;
 	struct cavan_touch_device *touch_dev;
 	struct cavan_input_device *dev;
-	cavan_touch_point_t *p, *p_end;
+	struct cavan_input_message_point *p, *p_end;
 
 	ts = malloc(sizeof(*ts));
 	if (ts == NULL)
@@ -351,8 +355,7 @@ struct cavan_input_device *cavan_multi_touch_device_create(void)
 static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
 {
 	struct cavan_single_touch_device *ts = (struct cavan_single_touch_device *)dev;
-	struct cavan_input_service *service = data;
-	cavan_touch_point_t *p = &ts->point;
+	struct cavan_input_message_point *p = &ts->point;
 
 	switch (event->type)
 	{
@@ -399,7 +402,8 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 
 				if (key->value != value)
 				{
-					service->key_handler(dev, key->name, key->code, value, service->private_data);
+					cavan_input_service_append_key_message(data, \
+							CAVAN_INPUT_MESSAGE_KEY, key->name, key->code, value);
 					key->value = value;
 				}
 
@@ -410,11 +414,13 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 
 				if (p->released)
 				{
-					service->touch_handler(dev, p, service->private_data);
+					cavan_input_service_append_point_message(data, \
+							CAVAN_INPUT_MESSAGE_TOUCH, p);
 					p->released = 0;
 				}
 
-				service->move_handler(dev, p, service->private_data);
+				cavan_input_service_append_point_message(data, \
+						CAVAN_INPUT_MESSAGE_MOVE, p);
 			}
 		}
 		else
@@ -426,7 +432,8 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 			{
 				if (key->value != 0)
 				{
-					service->key_handler(dev, key->name, key->code, 0, service->private_data);
+					cavan_input_service_append_key_message(data, \
+							CAVAN_INPUT_MESSAGE_KEY, key->name, key->code, 0);
 					key->value = 0;
 				}
 			}
@@ -434,7 +441,8 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 
 			if (p->released == 0)
 			{
-				service->touch_handler(dev, p, service->private_data);
+				cavan_input_service_append_point_message(data, \
+						CAVAN_INPUT_MESSAGE_TOUCH, p);
 				p->released = 1;
 			}
 		}

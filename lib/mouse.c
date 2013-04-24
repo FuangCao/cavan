@@ -62,7 +62,6 @@ bool cavan_mouse_device_matcher(struct cavan_event_matcher *matcher, void *data)
 
 static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
 {
-	struct cavan_input_service *service = data;
 	struct cavan_mouse_device *mouse = (struct cavan_mouse_device *)dev;
 
 	switch (event->type)
@@ -73,7 +72,8 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 		case BTN_LEFT:
 		case BTN_RIGHT:
 		case BTN_MIDDLE:
-			service->mouse_touch_handler(dev, event->code, event->value, service->private_data);
+			cavan_input_service_append_key_message(data, \
+					CAVAN_INPUT_MESSAGE_MOUSE_TOUCH, NULL, event->code, event->value);
 			break;
 
 		default:
@@ -93,7 +93,8 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 			break;
 
 		case REL_WHEEL:
-			service->mouse_wheel_handler(dev, REL_WHEEL, event->value, service->private_data);
+			cavan_input_service_append_key_message(data, \
+					CAVAN_INPUT_MESSAGE_WHEEL, NULL, REL_WHEEL, event->value);
 			break;
 
 		default:
@@ -104,8 +105,11 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 	case EV_SYN:
 		if (mouse->x || mouse->y)
 		{
-			service->mouse_move_handler(dev, mouse->x, mouse->y, service->private_data);
-			mouse->x = mouse->y = 0;
+			if (cavan_input_service_append_vector_message(data, \
+					CAVAN_INPUT_MESSAGE_MOUSE_MOVE, mouse->x, mouse->y, 0))
+			{
+				mouse->x = mouse->y = 0;
+			}
 		}
 		break;
 

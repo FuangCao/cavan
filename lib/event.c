@@ -882,7 +882,6 @@ struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device
 {
 	struct cavan_virtual_key *key;
 
-	pr_pos_info();
 	single_link_foreach(&dev->vk_link, key)
 	{
 		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right)
@@ -891,7 +890,6 @@ struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device
 		}
 	}
 	end_link_foreach(&dev->vk_link);
-	pr_pos_info();
 
 	return NULL;
 }
@@ -1018,15 +1016,13 @@ out_double_link_deinit:
 	return ret;
 }
 
-int cavan_event_service_stop(struct cavan_event_service *service)
+void cavan_event_service_stop(struct cavan_event_service *service)
 {
 	cavan_event_stop_poll_thread(service);
 	free(service->pfds);
 	cavan_event_close_devices(service);
 	cavan_thread_deinit(&service->thread);
 	pthread_mutex_destroy(&service->lock);
-
-	return 0;
 }
 
 bool cavan_event_simple_matcher(struct cavan_event_matcher *matcher, void *data)

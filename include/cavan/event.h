@@ -102,7 +102,7 @@ const char *cavan_event_find_key_name_base(struct single_link *link, int code);
 ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data);
 void cavan_event_service_init(struct cavan_event_service *service, bool (*matcher)(struct cavan_event_matcher *, void *));
 int cavan_event_service_start(struct cavan_event_service *service, void *data);
-int cavan_event_service_stop(struct cavan_event_service *service);
+void cavan_event_service_stop(struct cavan_event_service *service);
 
 bool cavan_event_simple_matcher(struct cavan_event_matcher *matcher, void *data);
 bool cavan_event_name_matcher(const char *devname, ...);

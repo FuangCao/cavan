@@ -23,7 +23,7 @@
 struct cavan_gsensor_device
 {
 	struct cavan_input_device input_dev;
-	struct cavan_gsensor_event event;
+	struct cavan_input_message_vector vector;
 	int xmin, xmax;
 	int ymin, ymax;
 	int zmin, zmax;

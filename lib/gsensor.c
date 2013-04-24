@@ -51,8 +51,9 @@ bool cavan_gsensor_device_matcher(struct cavan_event_matcher *matcher, void *dat
 
 static bool cavan_gsensor_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
 {
-	struct cavan_gsensor_device *sensor = (struct cavan_gsensor_device *)dev;
+	cavan_input_message_t *message;
 	struct cavan_input_service *service = data;
+	struct cavan_gsensor_device *sensor = (struct cavan_gsensor_device *)dev;
 
 	switch (event->type)
 	{
@@ -60,15 +61,15 @@ static bool cavan_gsensor_event_handler(struct cavan_input_device *dev, struct i
 		switch (event->code)
 		{
 		case ABS_X:
-			sensor->event.x = event->value;
+			sensor->vector.x = event->value;
 			break;
 
 		case ABS_Y:
-			sensor->event.y = event->value;
+			sensor->vector.y = event->value;
 			break;
 
 		case ABS_Z:
-			sensor->event.z = event->value;
+			sensor->vector.z = event->value;
 			break;
 
 		default:
@@ -77,7 +78,13 @@ static bool cavan_gsensor_event_handler(struct cavan_input_device *dev, struct i
 		break;
 
 	case EV_SYN:
-		service->gsensor_handler(dev, &sensor->event, service->private_data);
+		message = cavan_data_queue_get_node(&service->queue);
+		if (message)
+		{
+			message->type = CAVAN_INPUT_MESSAGE_ACCELEROMETER;
+			message->vector = sensor->vector;
+			cavan_data_queue_append(&service->queue, &message->node);
+		}
 		break;
 
 	default:
@@ -91,7 +98,7 @@ struct cavan_input_device *cavan_gsensor_create(void)
 {
 	struct cavan_gsensor_device *sensor;
 	struct cavan_input_device *dev;
-	struct cavan_gsensor_event *event;
+	struct cavan_input_message_vector *vector;
 
 	sensor = malloc(sizeof(*sensor));
 	if (sensor == NULL)
@@ -100,8 +107,8 @@ struct cavan_input_device *cavan_gsensor_create(void)
 		return NULL;
 	}
 
-	event = &sensor->event;
-	event->x = event->y = event->z = 0;
+	vector = &sensor->vector;
+	vector->x = vector->y = vector->z = 0;
 
 	dev = &sensor->input_dev;
 	dev->probe = NULL;

@@ -134,9 +134,18 @@ static bool swan_keypad_match(struct cavan_event_matcher *matcher, void *data)
 	return cavan_event_name_matcher(matcher->devname, data, NULL);
 }
 
-static void swan_keypad_handler(struct cavan_input_device *dev, const char *name, int code, int value, void *data)
+static void swan_keypad_handler(cavan_input_message_t *message, void *data)
 {
-	if ((name && text_cmp(name, "POWER") == 0) || code == SWAN_KEY_POWER)
+	struct cavan_input_message_key *key;
+
+	if (message->type != CAVAN_INPUT_MESSAGE_KEY)
+	{
+		return;
+	}
+
+	key = &message->key;
+
+	if (text_cmp(key->name, "POWER") == 0 || key->code == SWAN_KEY_POWER)
 	{
 		print_string("Power key was pressed, reset the system ...");
 		sync();
@@ -182,7 +191,7 @@ out_loop:
 
 	print_string("Press \"Power\" reset the system");
 	cavan_input_service_init(&service, swan_keypad_match);
-	service.key_handler = swan_keypad_handler;
+	service.handler = swan_keypad_handler;
 	cavan_input_service_start(&service, NULL);
 
 	print_string("Press \"Enter\" into command line");

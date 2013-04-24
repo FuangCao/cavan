@@ -65,7 +65,8 @@ static void cavan_touchpad_touch(struct cavan_touchpad_device *touchpad, struct 
 		}
 	}
 
-	service->mouse_touch_handler(&touchpad->input_dev, touchpad->btn_code, value, service->private_data);
+	cavan_input_service_append_key_message(service, \
+			CAVAN_INPUT_MESSAGE_MOUSE_TOUCH, NULL, touchpad->btn_code, value);
 }
 
 static void cavan_touchpad_timer_handler_down(struct cavan_timer *timer, void *data)
@@ -185,7 +186,8 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 		case BTN_MIDDLE:
 		case BTN_0:
 		case BTN_1:
-			service->mouse_touch_handler(dev, event->code, event->value, service->private_data);
+			cavan_input_service_append_key_message(data, \
+					CAVAN_INPUT_MESSAGE_MOUSE_TOUCH, NULL, event->code, event->value);
 			break;
 
 		default:
@@ -220,7 +222,8 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 			ydiff = (touchpad->yold - touchpad->y) * touchpad->yspeed;
 			if (ydiff)
 			{
-				service->mouse_wheel_handler(dev, REL_HWHEEL, ydiff > 0 ? 1 : -1, service->private_data);
+				cavan_input_service_append_key_message(data, \
+						CAVAN_INPUT_MESSAGE_WHEEL, NULL, REL_HWHEEL, ydiff > 0 ? 1 : -1);
 				touchpad->yold = touchpad->y;
 			}
 			break;
@@ -229,7 +232,8 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 			xdiff = (touchpad->xold - touchpad->x) * touchpad->xspeed;
 			if (xdiff)
 			{
-				service->mouse_wheel_handler(dev, REL_WHEEL, xdiff > 0 ? 1 : -1, service->private_data);
+				cavan_input_service_append_key_message(data, \
+						CAVAN_INPUT_MESSAGE_WHEEL, NULL, REL_WHEEL, xdiff > 0 ? 1 : -1);
 				touchpad->xold = touchpad->x;
 			}
 			break;
@@ -240,7 +244,8 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 
 			if (xdiff || ydiff)
 			{
-				service->mouse_move_handler(dev, xdiff, ydiff, service->private_data);
+				cavan_input_service_append_vector_message(data, \
+						CAVAN_INPUT_MESSAGE_MOUSE_MOVE, xdiff, ydiff, 0);
 
 				touchpad->xold = touchpad->x;
 				touchpad->yold = touchpad->y;

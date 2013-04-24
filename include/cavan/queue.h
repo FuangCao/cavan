@@ -21,7 +21,7 @@ struct cavan_data_queue
 	struct cavan_thread thread;
 	struct cavan_data_pool pool;
 
-	void (*handler)(struct cavan_data_queue *queue, void *addr, void *data);
+	void (*handler)(void *addr, void *data);
 };
 
 int list_queue_init(struct list_queue *queue, int count);

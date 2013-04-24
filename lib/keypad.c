@@ -61,14 +61,14 @@ bool cavan_keypad_device_matcher(struct cavan_event_matcher *matcher, void *data
 
 static bool cavan_keypad_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
 {
-	struct cavan_input_service *service = data;
 	const char *keyname;
 
 	switch (event->type)
 	{
 	case EV_KEY:
 		keyname = cavan_event_find_key_name(dev->event_dev, event->code);
-		service->key_handler(dev, keyname, event->code, event->value, service->private_data);
+		cavan_input_service_append_key_message(data, \
+				CAVAN_INPUT_MESSAGE_KEY, keyname, event->code, event->value);
 		break;
 
 	case EV_SYN:

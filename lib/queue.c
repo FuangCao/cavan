@@ -83,7 +83,7 @@ static int cavan_data_queue_thread_handler(struct cavan_thread *thread, void *da
 	if (node)
 	{
 		data = double_link_get_container(&queue->link, node);
-		queue->handler(queue, data, queue->private_data);
+		queue->handler(data, queue->private_data);
 		cavan_data_pool_node_free(&queue->pool, data);
 	}
 	else
