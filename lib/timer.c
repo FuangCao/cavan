@@ -86,7 +86,7 @@ int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *
 	return 0;
 }
 
-static int cavan_timer_service_handler(struct cavan_thread *thread, u32 event, void *data)
+static int cavan_timer_service_handler(struct cavan_thread *thread, void *data)
 {
 	struct double_link_node *node;
 	struct cavan_timer_service *service = data;
@@ -129,7 +129,6 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 	struct cavan_thread *thread = &service->thread;
 
 	thread->name = "TIMER";
-	thread->wait_handler = NULL;
 	thread->wake_handker = NULL;
 	thread->handler = cavan_timer_service_handler;
 

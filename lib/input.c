@@ -95,7 +95,7 @@ void cavan_input_message_pool_deinit(struct cavan_input_message_pool *pool)
 
 // ================================================================================
 
-static int cavan_input_message_queue_thread_handler(struct cavan_thread *thread, u32 event, void *data)
+static int cavan_input_message_queue_thread_handler(struct cavan_thread *thread, void *data)
 {
 	struct double_link_node *node;
 	struct cavan_input_message_queue *queue = data;
@@ -132,7 +132,6 @@ int cavan_input_message_queue_start(struct cavan_input_message_queue *queue, siz
 
 	thread = &queue->thread;
 	thread->name = "MESSAGE_QUEUE";
-	thread->wait_handler = NULL;
 	thread->wake_handker = NULL;
 	thread->handler = cavan_input_message_queue_thread_handler;
 

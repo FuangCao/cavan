@@ -32,9 +32,8 @@ struct cavan_thread
 
 	void *private_data;
 
-	int (*wait_handler)(struct cavan_thread *thread, u32 *event, void *data);
-	int (*wake_handker)(struct cavan_thread *thread, u32 event, void *data);
-	int (*handler)(struct cavan_thread *thread, u32 event, void *data);
+	int (*wake_handker)(struct cavan_thread *thread, void *data);
+	int (*handler)(struct cavan_thread *thread, void *data);
 };
 
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
@@ -44,6 +43,7 @@ int cavan_thread_init(struct cavan_thread *thread, void *data);
 void cavan_thread_deinit(struct cavan_thread *thread);
 int cavan_thread_start(struct cavan_thread *thread);
 void cavan_thread_stop(struct cavan_thread *thread);
+int cavan_thread_run(struct cavan_thread *thread, void *data);
 void cavan_thread_suspend(struct cavan_thread *thread);
 void cavan_thread_resume(struct cavan_thread *thread);
 int cavan_thread_msleep(struct cavan_thread *thread, u32 ms);
