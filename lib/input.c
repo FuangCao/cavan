@@ -40,12 +40,9 @@ cavan_input_message_t *cavan_input_message_pool_pop(struct cavan_input_message_p
 	return double_link_get_container(&pool->link, node);
 }
 
-static void cavan_input_message_pool_node_destroy(void *pointer)
+static void cavan_input_message_pool_node_destroy(cavan_input_message_t *message)
 {
-	cavan_input_message_t *message = pointer;
-	pr_pos_info();
-
-	cavan_input_message_pool_append(message->data, message);
+	cavan_input_message_pool_append(message->private_data, message);
 }
 
 int cavan_input_message_pool_init(struct cavan_input_message_pool *pool, size_t size)
@@ -73,8 +70,8 @@ int cavan_input_message_pool_init(struct cavan_input_message_pool *pool, size_t 
 
 	for (mp_end = mp + size; mp < mp_end; mp++)
 	{
-		mp->data = pool;
-		mp->node.destroy = cavan_input_message_pool_node_destroy;
+		mp->private_data = pool;
+		mp->destroy = cavan_input_message_pool_node_destroy;
 		double_link_append(link, &mp->node);
 	}
 
@@ -106,10 +103,7 @@ static int cavan_input_message_queue_thread_handler(struct cavan_thread *thread,
 		cavan_input_message_t *message = double_link_get_container(&queue->link, node);
 
 		queue->handler(message, queue->private_data);
-		if (node->destroy)
-		{
-			node->destroy(message);
-		}
+		message->destroy(message);
 	}
 	else
 	{
@@ -179,16 +173,15 @@ out_cavan_thread_deinit:
 void cavan_input_message_queue_stop(struct cavan_input_message_queue *queue)
 {
 	cavan_thread_stop(&queue->thread);
-	double_link_free(&queue->link);
+	double_link_remove_all(&queue->link);
 	double_link_deinit(&queue->link);
 	cavan_input_message_pool_deinit(&queue->pool);
 	cavan_thread_deinit(&queue->thread);
 }
 
-static void cavan_input_message_destory(void *pointer)
+static void cavan_input_message_destory(cavan_input_message_t *message)
 {
-	pr_pos_info();
-	free(pointer);
+	free(message);
 }
 
 cavan_input_message_t *cavan_input_message_create(struct cavan_input_message_queue *queue)
@@ -208,7 +201,8 @@ cavan_input_message_t *cavan_input_message_create(struct cavan_input_message_que
 		return NULL;
 	}
 
-	double_link_node_init(&message->node, cavan_input_message_destory);
+	message->destroy = cavan_input_message_destory;
+	double_link_node_init(&message->node);
 
 	return message;
 }

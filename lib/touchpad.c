@@ -320,7 +320,7 @@ struct cavan_input_device *cavan_touchpad_device_create(void)
 	touchpad->state = CAVAN_TOUCHPAD_STATE_IDEL;
 	touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
 
-	cavan_timer_init(&touchpad->timer, NULL, NULL);
+	cavan_timer_init(&touchpad->timer, NULL);
 
 	dev = &touchpad->input_dev;
 	dev->probe = cavan_touchpad_probe;

@@ -300,7 +300,7 @@ int cavan_window_init_base(struct cavan_window *win, int (*handler)(struct cavan
 		goto out_pthread_mutex_destroy;
 	}
 
-	double_link_node_init(&win->node, NULL);
+	double_link_node_init(&win->node);
 
 	win->parent = NULL;
 

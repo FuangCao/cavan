@@ -105,8 +105,10 @@ typedef struct cavan_input_message
 		struct cavan_input_message_mouse_touch mouse_touch;
 	};
 
-	void *data;
+	void *private_data;
 	struct double_link_node node;
+
+	void (*destroy)(struct cavan_input_message *message);
 } cavan_input_message_t;
 
 struct cavan_input_message_pool

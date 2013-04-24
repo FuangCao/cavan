@@ -38,11 +38,11 @@ int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *
 int cavan_timer_service_start(struct cavan_timer_service *service);
 int cavan_timer_service_stop(struct cavan_timer_service *service);
 
-static inline void cavan_timer_init(struct cavan_timer *timer, void *data, void (*destroy)(void *pointer))
+static inline void cavan_timer_init(struct cavan_timer *timer, void *data)
 {
 	timer->private_data = data;
 	timer->handler = NULL;
-	double_link_node_init(&timer->node, destroy);
+	double_link_node_init(&timer->node);
 }
 
 static inline void cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer *timer)

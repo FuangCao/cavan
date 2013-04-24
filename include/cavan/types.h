@@ -95,6 +95,12 @@ typedef struct
 #define POINTER_SUB(pointer, offset) \
 	((void *)(((byte *)(pointer)) - (offset)))
 
+#define ADDR_ADD(addr, offset) \
+	POINTER_ADD(addr, offset)
+
+#define ADDR_SUB(addr, offset) \
+	POINTER_SUB(addr, offset)
+
 #define MLC_TO(p) \
 	(p) = malloc(sizeof(*p))
 

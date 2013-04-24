@@ -133,8 +133,6 @@ out_pthread_mutex_destroy:
 
 void cavan_thread_deinit(struct cavan_thread *thread)
 {
-	cavan_thread_stop(thread);
-
 	close(thread->pipefd[0]);
 	close(thread->pipefd[1]);
 
@@ -297,6 +295,20 @@ void cavan_thread_stop(struct cavan_thread *thread)
 }
 
 int cavan_thread_run(struct cavan_thread *thread, void *data)
+{
+	int ret;
+
+	ret = cavan_thread_init(thread, data);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_thread_init");
+		return ret;
+	}
+
+	return cavan_thread_start(thread);
+}
+
+int cavan_thread_run_self(struct cavan_thread *thread, void *data)
 {
 	int ret;
 

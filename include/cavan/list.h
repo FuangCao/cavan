@@ -9,12 +9,12 @@ struct single_link_node
 {
 	struct single_link_node *next;
 
-	void (*destroy)(void *pointer);
+	void (*destroy)(void *addr);
 };
 
 struct single_link
 {
-	long offset;
+	int offset;
 	pthread_mutex_t lock;
 
 	struct single_link_node head_node;
@@ -22,7 +22,7 @@ struct single_link
 
 struct circle_link
 {
-	long offset;
+	int offset;
 	pthread_mutex_t lock;
 
 	struct single_link_node head_node;
@@ -32,13 +32,11 @@ struct double_link_node
 {
 	struct double_link_node *prev;
 	struct double_link_node *next;
-
-	void (*destroy)(void *pointer);
 };
 
 struct double_link
 {
-	long offset;
+	int offset;
 	pthread_mutex_t lock;
 
 	struct double_link_node head_node;
@@ -53,9 +51,8 @@ typedef bool (*circle_link_matcher_t)(struct circle_link *link, struct single_li
 typedef void (*double_link_handler_t)(struct double_link *link, struct double_link_node *node, void *data);
 typedef bool (*double_link_matcher_t)(struct double_link *link, struct double_link_node *node, void *data);
 
-int single_link_init(struct single_link *link, long offset);
+int single_link_init(struct single_link *link, int offset);
 void single_link_deinit(struct single_link *link);
-void single_link_free(struct single_link *link);
 bool single_link_empty(struct single_link *link);
 struct single_link_node *single_link_get_first_node(struct single_link *link);
 void single_link_insert(struct single_link *link, struct single_link_node *prev, struct single_link_node *node);
@@ -67,9 +64,8 @@ void single_link_traversal(struct single_link *link, void *data, single_link_han
 struct single_link_node *single_link_find(struct single_link *link, void *data, single_link_matcher_t macher);
 bool single_link_has_node(struct single_link *link, struct single_link_node *node);
 
-int circle_link_init(struct circle_link *link, long offset);
+int circle_link_init(struct circle_link *link, int offset);
 void circle_link_deinit(struct circle_link *link);
-void circle_link_free(struct circle_link *link);
 bool circle_link_empty(struct circle_link *link);
 struct single_link_node *circle_link_get_first_node(struct circle_link *link);
 void circle_link_append(struct circle_link *link, struct single_link_node *node);
@@ -81,9 +77,8 @@ void circle_link_traversal(struct circle_link *link, void *data, circle_link_han
 struct single_link_node *circle_link_find(struct circle_link *link, void *data, circle_link_matcher_t matcher);
 bool circle_link_has_node(struct circle_link *link, struct single_link_node *node);
 
-int double_link_init(struct double_link *link, long offset);
+int double_link_init(struct double_link *link, int offset);
 void double_link_deinit(struct double_link *link);
-void double_link_free(struct double_link *link);
 bool double_link_empty(struct double_link *link);
 struct double_link_node *double_link_get_first_node(struct double_link *link);
 struct double_link_node *double_link_get_last_node(struct double_link *link);
@@ -106,35 +101,58 @@ void double_link_move_to_tail(struct double_link *link, struct double_link_node 
 
 bool array_has_element(int element, const int a[], size_t size);
 
-static inline void single_link_node_init(struct single_link_node *node, void (*destroy)(void *pointer))
+static inline void single_link_node_init(struct single_link_node *node)
 {
 	node->next = NULL;
-	node->destroy = destroy;
 }
 
-static inline void circle_link_node_init(struct single_link_node *node, void (*destroy)(void *pointer))
+static inline void circle_link_node_init(struct single_link_node *node)
 {
 	node->next = node;
-	node->destroy = destroy;
 }
 
-static inline void double_link_node_init(struct double_link_node *node, void (*destroy)(void *pointer))
+static inline void double_link_node_init(struct double_link_node *node)
 {
 	node->next = node->prev = node;
-	node->destroy = destroy;
+}
+
+static inline void single_link_remove_all(struct single_link *link)
+{
+	pthread_mutex_lock(&link->lock);
+	single_link_node_init(&link->head_node);
+	pthread_mutex_unlock(&link->lock);
+}
+
+static inline void circle_link_remove_all(struct circle_link *link)
+{
+	pthread_mutex_lock(&link->lock);
+	circle_link_node_init(&link->head_node);
+	pthread_mutex_unlock(&link->lock);
+}
+
+static inline void double_link_remove_all(struct double_link *link)
+{
+	pthread_mutex_lock(&link->lock);
+	double_link_node_init(&link->head_node);
+	pthread_mutex_unlock(&link->lock);
 }
 
 static inline void *single_link_get_container(struct single_link *link, struct single_link_node *node)
 {
-	return POINTER_SUB(node, link->offset);
+	return ADDR_SUB(node, link->offset);
 }
 
 static inline void *circle_link_get_container(struct circle_link *link, struct single_link_node *node)
 {
-	return POINTER_SUB(node, link->offset);
+	return ADDR_SUB(node, link->offset);
 }
 
 static inline void *double_link_get_container(struct double_link *link, struct double_link_node *node)
 {
-	return POINTER_SUB(node, link->offset);
+	return ADDR_SUB(node, link->offset);
+}
+
+static inline struct double_link_node *double_link_get_to_node(struct double_link *link, void *addr)
+{
+	return ADDR_ADD(addr, link->offset);
 }

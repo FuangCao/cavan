@@ -75,10 +75,10 @@ static bool double_link_node_match_equal(struct double_link *link, struct double
 
 // ================================================================================
 
-int single_link_init(struct single_link *link, long offset)
+int single_link_init(struct single_link *link, int offset)
 {
 	link->offset = offset;
-	single_link_node_init(&link->head_node, NULL);
+	single_link_node_init(&link->head_node);
 
 	return pthread_mutex_init(&link->lock, NULL);
 }
@@ -86,32 +86,6 @@ int single_link_init(struct single_link *link, long offset)
 void single_link_deinit(struct single_link *link)
 {
 	pthread_mutex_destroy(&link->lock);
-}
-
-void single_link_free(struct single_link *link)
-{
-	struct single_link_node *node;
-	long offset = link->offset;
-
-	pthread_mutex_lock(&link->lock);
-
-	node = link->head_node.next;
-
-	while (node)
-	{
-		struct single_link_node *next = node->next;
-
-		if (node->destroy)
-		{
-			node->destroy(POINTER_SUB(node, offset));
-		}
-
-		node = next;
-	}
-
-	single_link_node_init(&link->head_node, NULL);
-
-	pthread_mutex_unlock(&link->lock);
 }
 
 bool single_link_empty(struct single_link *link)
@@ -243,10 +217,10 @@ bool single_link_has_node(struct single_link *link, struct single_link_node *nod
 
 // ================================================================================
 
-int circle_link_init(struct circle_link *link, long offset)
+int circle_link_init(struct circle_link *link, int offset)
 {
 	link->offset = offset;
-	circle_link_node_init(&link->head_node, NULL);
+	circle_link_node_init(&link->head_node);
 
 	return pthread_mutex_init(&link->lock, NULL);
 }
@@ -254,33 +228,6 @@ int circle_link_init(struct circle_link *link, long offset)
 void circle_link_deinit(struct circle_link *link)
 {
 	pthread_mutex_destroy(&link->lock);
-}
-
-void circle_link_free(struct circle_link *link)
-{
-	struct single_link_node *head, *node;
-	long offset = link->offset;
-
-	pthread_mutex_lock(&link->lock);
-
-	head = &link->head_node;
-	node = head->next;
-
-	while (node != head)
-	{
-		struct single_link_node *next = node->next;
-
-		if (node->destroy)
-		{
-			node->destroy(POINTER_SUB(node, offset));
-		}
-
-		node = next;
-	}
-
-	circle_link_node_init(&link->head_node, NULL);
-
-	pthread_mutex_unlock(&link->lock);
 }
 
 bool circle_link_empty(struct circle_link *link)
@@ -422,10 +369,10 @@ bool circle_link_has_node(struct circle_link *link, struct single_link_node *nod
 
 // ================================================================================
 
-int double_link_init(struct double_link *link, long offset)
+int double_link_init(struct double_link *link, int offset)
 {
 	link->offset = offset;
-	double_link_node_init(&link->head_node, NULL);
+	double_link_node_init(&link->head_node);
 
 	return pthread_mutex_init(&link->lock, NULL);
 }
@@ -433,33 +380,6 @@ int double_link_init(struct double_link *link, long offset)
 void double_link_deinit(struct double_link *link)
 {
 	pthread_mutex_destroy(&link->lock);
-}
-
-void double_link_free(struct double_link *link)
-{
-	struct double_link_node *head, *node;
-	long offset = link->offset;
-
-	pthread_mutex_lock(&link->lock);
-
-	head = &link->head_node;
-	node = head->next;
-
-	while (node != head)
-	{
-		struct double_link_node *next = node->next;
-
-		if (node->destroy)
-		{
-			node->destroy(POINTER_SUB(node, offset));
-		}
-
-		node = next;
-	}
-
-	double_link_node_init(&link->head_node, NULL);
-
-	pthread_mutex_unlock(&link->lock);
 }
 
 bool double_link_empty(struct double_link *link)

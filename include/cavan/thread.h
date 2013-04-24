@@ -44,6 +44,7 @@ void cavan_thread_deinit(struct cavan_thread *thread);
 int cavan_thread_start(struct cavan_thread *thread);
 void cavan_thread_stop(struct cavan_thread *thread);
 int cavan_thread_run(struct cavan_thread *thread, void *data);
+int cavan_thread_run_self(struct cavan_thread *thread, void *data);
 void cavan_thread_suspend(struct cavan_thread *thread);
 void cavan_thread_resume(struct cavan_thread *thread);
 int cavan_thread_msleep(struct cavan_thread *thread, u32 ms);
