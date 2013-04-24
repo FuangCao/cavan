@@ -5,8 +5,39 @@
 #include <cavan.h>
 #include <pthread.h>
 
-#define single_link_foreach_node(link, node) \
-	for (node = link->head_node.next; node; node = node->next)
+#define single_link_foreach(link, entry) \
+	do { \
+		struct single_link_node *node; \
+		struct single_link *__link = link; \
+		pthread_mutex_lock(&__link->lock); \
+		for (node = __link->head_node.next; node; node = node->next) \
+		{ \
+			entry = single_link_get_container(__link, node);
+
+#define end_link_foreach(link) \
+		} \
+		pthread_mutex_unlock(&(link)->lock); \
+	} while (0)
+
+#define link_foreach_return(link, value) \
+	do { \
+		pthread_mutex_unlock(&(link)->lock); \
+		return value; \
+	} while (0)
+
+#define circle_link_foreach(link, entry) \
+	do { \
+		struct circle_link_node *head, *node; \
+		struct circle_link *__link = link; \
+		pthread_mutex_lock(&__link->lock); \
+		for (head = &link->head_node, node = head->next; node != head; node = node->next) \
+		{ \
+			entry = circle_link_get_container(__link, node);
+
+#define end_link_foreach(link) \
+		} \
+		pthread_mutex_unlock(&(link)->lock); \
+	} while (0)
 
 struct single_link_node
 {

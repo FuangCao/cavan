@@ -261,23 +261,18 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 			}
 			else
 			{
-				struct single_link_node *node;
 				struct cavan_virtual_key *key;
 				struct single_link *link = &dev->event_dev->vk_link;
 
-				pthread_mutex_lock(&link->lock);
-
-				single_link_foreach_node(link, node)
+				single_link_foreach(link, key)
 				{
-					key = single_link_get_container(link, node);
 					if (key->value)
 					{
 						service->key_handler(dev, key->name, key->code, 0, service->private_data);
 						key->value = 0;
 					}
 				}
-
-				pthread_mutex_unlock(&link->lock);
+				end_link_foreach(link);
 			}
 
 			if (ts->point_count < ts->point_count_old)
@@ -424,23 +419,18 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 		}
 		else
 		{
-			struct single_link_node *node;
 			struct cavan_virtual_key *key;
 			struct single_link *link = &dev->event_dev->vk_link;
 
-			pthread_mutex_lock(&link->lock);
-
-			single_link_foreach_node(link, node)
+			single_link_foreach(link, key)
 			{
-				key = single_link_get_container(link, node);
 				if (key->value != 0)
 				{
 					service->key_handler(dev, key->name, key->code, 0, service->private_data);
 					key->value = 0;
 				}
 			}
-
-			pthread_mutex_unlock(&link->lock);
+			end_link_foreach(link);
 
 			if (p->released == 0)
 			{

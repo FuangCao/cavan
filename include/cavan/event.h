@@ -97,7 +97,7 @@ struct cavan_event_service
 };
 
 struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device *dev, int x, int y);
-const char *cavan_event_find_key_name(struct cavan_event_device *dev, int code);
+const char *cavan_event_find_key_name_base(struct single_link *link, int code);
 
 ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data);
 void cavan_event_service_init(struct cavan_event_service *service, bool (*matcher)(struct cavan_event_matcher *, void *));
@@ -114,6 +114,11 @@ static inline char *cavan_event_tostring_simple(struct input_event *event, char 
 	sprintf(text, "type = %d, code = %d, value = %d", event->type, event->code, event->value);
 
 	return text;
+}
+
+static inline const char *cavan_event_find_key_name(struct cavan_event_device *dev, int code)
+{
+	return cavan_event_find_key_name_base(&dev->kl_link, code);
 }
 
 static inline int cavan_event_send_event(struct cavan_event_service *service, u32 event)

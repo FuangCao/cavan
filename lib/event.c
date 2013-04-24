@@ -432,19 +432,13 @@ char *cavan_event_tostring(struct input_event *event, char *text)
 
 static void cavan_event_virtual_build_bitmask(struct single_link *link, uint8_t *bitmask)
 {
-	struct single_link_node *node;
 	struct cavan_virtual_key *key;
 
-	pthread_mutex_lock(&link->lock);
-
-	single_link_foreach_node(link, node)
+	single_link_foreach(link, key)
 	{
-		key = single_link_get_container(link, node);
-
 		set_bit(key->code, bitmask);
 	}
-
-	pthread_mutex_unlock(&link->lock);
+	end_link_foreach(link);
 }
 
 static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
@@ -526,49 +520,32 @@ static char *cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, 
 	return NULL;
 }
 
-static const char *cavan_event_find_key_name_base(struct single_link *link, int code)
+const char *cavan_event_find_key_name_base(struct single_link *link, int code)
 {
-	struct single_link_node *node;
 	struct cavan_keylayout_node *key;
 
-	single_link_foreach_node(link, node)
+	single_link_foreach(link, key)
 	{
-		key = single_link_get_container(link, node);
 		if (key->code == code)
 		{
-			return key->name;
+			link_foreach_return(link, key->name);
 		}
 	}
+
+	end_link_foreach(link);
 
 	return "NONE";
 }
 
-const char *cavan_event_find_key_name(struct cavan_event_device *dev, int code)
-{
-	const char *name;
-	struct single_link *link = &dev->kl_link;
-
-	pthread_mutex_lock(&link->lock);
-	name = cavan_event_find_key_name_base(link, code);
-	pthread_mutex_unlock(&link->lock);
-
-	return name;
-}
-
 static void cavan_event_virtual_key_set_name(struct single_link *vk_link, struct single_link *kl_link)
 {
-	struct single_link_node *node;
 	struct cavan_virtual_key *key;
 
-	pthread_mutex_lock(&vk_link->lock);
-
-	single_link_foreach_node(vk_link, node)
+	single_link_foreach(vk_link, key)
 	{
-		key = single_link_get_container(vk_link, node);
 		key->name = cavan_event_find_key_name_base(kl_link, key->code);
 	}
-
-	pthread_mutex_unlock(&vk_link->lock);
+	end_link_foreach(vk_link);
 }
 
 static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
@@ -904,22 +881,17 @@ static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device *dev, int x, int y)
 {
 	struct cavan_virtual_key *key;
-	struct single_link_node *node;
-	struct single_link *link = &dev->vk_link;
 
-	pthread_mutex_lock(&link->lock);
-
-	single_link_foreach_node(link, node)
+	pr_pos_info();
+	single_link_foreach(&dev->vk_link, key)
 	{
-		key = single_link_get_container(link, node);
 		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right)
 		{
-			pthread_mutex_unlock(&link->lock);
-			return key;
+			link_foreach_return(&dev->vk_link, key);
 		}
 	}
-
-	pthread_mutex_unlock(&link->lock);
+	end_link_foreach(&dev->vk_link);
+	pr_pos_info();
 
 	return NULL;
 }
