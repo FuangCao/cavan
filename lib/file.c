@@ -2740,3 +2740,187 @@ void *file_read_all(const char *pathname, size_t extra, size_t *size)
 
 	return mem;
 }
+
+mode_t file_mode2value(const char *text)
+{
+	int count, index;
+	mode_t mode, temp_mode;
+
+	if (text_is_number(text))
+	{
+		return text2value_unsigned(text, NULL, 8);
+	}
+
+	mode = 0;
+	temp_mode = 0;
+	count = 0;
+	index = 6;
+
+	while (1)
+	{
+		switch (*text)
+		{
+		case 0:
+			return mode | temp_mode << index;
+
+		case 'r':
+		case 'R':
+			temp_mode |= 1 << 2;
+			break;
+
+		case 'w':
+		case 'W':
+			temp_mode |= 1 << 1;
+			break;
+
+		case 'x':
+		case 'X':
+			temp_mode |= 1 << 0;
+			break;
+
+		case '-':
+			break;
+
+		default:
+			pr_red_info("Invalid mode char %c", *text);
+		}
+
+		if (count < 2)
+		{
+			count++;
+		}
+		else
+		{
+			mode |= temp_mode << index;
+
+			if (index > 0)
+			{
+				index -= 3;
+			}
+			else
+			{
+				break;
+			}
+
+			count = 0;
+			temp_mode = 0;
+		}
+
+		text++;
+	}
+
+	return mode;
+}
+
+int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *option)
+{
+	int ret;
+
+	if (file_access_e(pathname))
+	{
+		return 0;
+	}
+
+	if (option->verbose)
+	{
+		pr_std_info("create directory `%s'", pathname);
+	}
+
+	ret = mkdir(pathname, option->mode);
+	if (ret == 0)
+	{
+		return 0;
+	}
+
+	if (errno != EEXIST)
+	{
+		pr_error_info("create directory %s", pathname);
+		return ret;
+	}
+
+	if (file_access_e(pathname) == false)
+	{
+		char buff[1024], *filename;
+
+		filename = text_dirname_base(buff, pathname);
+		*filename = '/';
+		text_copy(filename + 1, CAVAN_TEMP_FILENAME);
+
+		mkdir(buff, option->mode);
+
+		return rename(buff, pathname);
+	}
+
+	return 0;
+}
+
+int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option *option)
+{
+	int ret;
+	char buff[1024], *p, *name;
+
+	if (pathname == NULL || *pathname == 0)
+	{
+		return -EINVAL;
+	}
+
+	p = text_copy(buff, pathname) - 1;
+
+	while (1)
+	{
+		if (p == buff)
+		{
+			return 0;
+		}
+
+		if (*p != '/')
+		{
+			break;
+		}
+
+		*p-- = 0;
+	}
+
+	for (name = p; name > buff; name--)
+	{
+		if (*name == '/')
+		{
+			name++;
+			break;
+		}
+	}
+
+	for (p = buff; p < name && *p == '/'; p++);
+
+	while (p < name)
+	{
+		if (*p == '/')
+		{
+			*p = 0;
+
+			ret = cavan_mkdir_simple(buff, option);
+			if (ret < 0)
+			{
+				return ret;
+			}
+
+			for (*p++ = '/'; p < name && *p == '/'; p++);
+		}
+		else
+		{
+			p++;
+		}
+	}
+
+	return cavan_mkdir_simple(buff, option);
+}
+
+int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *option)
+{
+	if (option->parents)
+	{
+		return cavan_mkdir_parents(pathname, option);
+	}
+
+	return cavan_mkdir_simple(pathname, option);
+}

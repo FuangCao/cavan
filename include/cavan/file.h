@@ -33,10 +33,18 @@
 #define FILE_ETC_MTAB				"/etc/mtab"
 
 #define TEMP_DOS2UNIX_FILE			"/tmp/dos2unix_tmp_file"
+#define CAVAN_TEMP_FILENAME			".__CAVAN__"
 
 #define FILE_PROC_MOUNTS_MAX_SIZE	MB(1)
 #define FILE_PROC_FILESYSTEMS_SIZE	MB(1)
 #define FILE_CPUINFO_SIZE			MB(1)
+
+struct cavan_mkdir_command_option
+{
+	mode_t mode;
+	bool verbose;
+	bool parents;
+};
 
 int file_open_rw_ro(const char *pathname, int flags);
 
@@ -184,6 +192,11 @@ size_t file_line_count(const char *filename);
 int file_mmap(const char *pathname, void **addr, size_t *size, int flags);
 void file_unmap(int fd, void *map, size_t size);
 void *file_read_all(const char *pathname, size_t extra, size_t *size);
+
+mode_t file_mode2value(const char *text);
+int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *option);
+int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option *option);
+int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *option);
 
 // ============================================================
 
