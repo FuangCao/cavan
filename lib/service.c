@@ -103,7 +103,7 @@ int cavan_service_run(struct cavan_service_description *desc)
 			pr_red_info("pthread_create");
 			while (i-- > 0)
 			{
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#if CONFIG_BUILD_FOR_ANDROID == 0
 				pthread_cancel(threads[i]);
 #endif
 				goto out_free_threads;
@@ -145,7 +145,7 @@ int cavan_service_stop(struct cavan_service_description *desc)
 
 	for (i = desc->daemon_count - 1; i >= 0; i--)
 	{
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#if CONFIG_BUILD_FOR_ANDROID == 0
 		pthread_cancel(threads[i]);
 #endif
 	}

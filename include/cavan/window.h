@@ -164,7 +164,7 @@ void cavan_progress_bar_set_pos(struct cavan_progress_bar *bar, double pos);
 
 bool cavan_window_clicked(struct cavan_window *win, struct cavan_input_message_point *message);
 
-int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data);
+int cavan_application_init(struct cavan_application_context *context, u32 refresh_hz, struct cavan_display_device *display, void *data);
 void cavan_application_uninit(struct cavan_application_context *context);
 int cavan_application_main_loop(struct cavan_application_context *context, void (*handler)(struct cavan_application_context *context, void *data), void *data);
 void cavan_application_paint(struct cavan_application_context *context);
@@ -172,7 +172,7 @@ void cavan_application_update_data(struct cavan_application_context *context);
 int cavan_application_add_window(struct cavan_application_context *context, struct cavan_window *win);
 void cavan_application_remove_window(struct cavan_application_context *context, struct cavan_window *win);
 
-static inline void cavan_application_set_on_key_pressed(struct cavan_application_context *context, bool (*handler)(struct cavan_application_context *context, struct cavan_input_message_key *message, void *data))
+static inline void cavan_application_set_on_key_pressed(struct cavan_application_context *context, bool (*handler)(struct cavan_application_context *context, struct cavan_input_message_key *key, void *data))
 {
 	pthread_mutex_lock(&context->lock);
 	context->on_key_pressed = handler;
@@ -235,35 +235,35 @@ static inline void cavan_window_set_on_paint(struct cavan_window *win, bool (*ha
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_clicked(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_point *message, void *data))
+static inline void cavan_window_set_on_clicked(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_point *point, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_clicked = handler;
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_key_pressed(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_key *message, void *data))
+static inline void cavan_window_set_on_key_pressed(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_key *key, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_key_pressed = handler;
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_entry(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_point *message, void *data))
+static inline void cavan_window_set_on_entry(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_point *point, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_entry = handler;
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_exit(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_point *message, void *data))
+static inline void cavan_window_set_on_exit(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_point *point, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_exit = handler;
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_on_move(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_point *message, void *data))
+static inline void cavan_window_set_on_move(struct cavan_window *win, bool (*handler)(struct cavan_window *win, struct cavan_input_message_point *point, void *data))
 {
 	pthread_mutex_lock(&win->lock);
 	win->on_move = handler;

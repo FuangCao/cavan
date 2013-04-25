@@ -65,3 +65,25 @@ static inline void cavan_thread_should_stop(struct cavan_thread *thread)
 {
 	cavan_thread_set_state(thread, CAVAN_THREAD_STATE_STOPPPING);
 }
+
+static inline int cavan_thread_wake_handler_send_event(struct cavan_thread *thread, void *data)
+{
+	return cavan_thread_send_event(thread, 0);
+}
+
+static inline int cavan_thread_wake_handler_resume(struct cavan_thread *thread, void *data)
+{
+	cavan_thread_resume(thread);
+
+	return 0;
+}
+
+static inline int cavan_thread_wake_handler_empty(struct cavan_thread *thread, void *data)
+{
+	return 0;
+}
+
+static inline int cavan_thread_wakeup(struct cavan_thread *thread)
+{
+	return thread->wake_handker(thread, thread->private_data);
+}

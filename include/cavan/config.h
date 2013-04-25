@@ -11,3 +11,7 @@
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE
 #endif
+
+#ifndef CONFIG_BUILD_FOR_ANDROID
+#define CONFIG_BUILD_FOR_ANDROID	0
+#endif

@@ -22,13 +22,17 @@
 #include <cavan/touchpad.h>
 #include <cavan/touchscreen.h>
 
+#define CAVAN_INPUT_SUPPORT_GSENSOR	0
+
 static struct cavan_input_device *cavan_input_device_create(uint8_t *key_bitmask, uint8_t *abs_bitmask, uint8_t *rel_bitmask)
 {
+#if CAVAN_INPUT_SUPPORT_GSENSOR
 	if (cavan_gsensor_device_match(abs_bitmask))
 	{
 		pr_green_info("G-Sensor Matched");
 		return cavan_gsensor_create();
 	}
+#endif
 
 	if (cavan_touchpad_device_match(key_bitmask, abs_bitmask))
 	{

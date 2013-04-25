@@ -72,11 +72,6 @@ int cavan_thread_msleep(struct cavan_thread *thread, u32 ms)
 	return ret;
 }
 
-static int cavan_thread_wake_handler_dummy(struct cavan_thread *thread, void *data)
-{
-	return cavan_thread_send_event(thread, 0);
-}
-
 int cavan_thread_init(struct cavan_thread *thread, void *data)
 {
 	int ret;
@@ -119,7 +114,7 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 
 	if (thread->wake_handker == NULL)
 	{
-		thread->wake_handker = cavan_thread_wake_handler_dummy;
+		thread->wake_handker = cavan_thread_wake_handler_send_event;
 	}
 
 	return 0;
@@ -346,7 +341,7 @@ void cavan_thread_resume(struct cavan_thread *thread)
 		thread->state = CAVAN_THREAD_STATE_RUNNING;
 	}
 
-	pthread_cond_broadcast(&thread->cond);
+	pthread_cond_signal(&thread->cond);
 
 	pthread_mutex_unlock(&thread->lock);
 }

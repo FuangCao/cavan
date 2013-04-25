@@ -17,7 +17,7 @@ int set_tty_attr(int fd, int action, struct termios *attr)
 		return ret;
 	}
 
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#if CONFIG_BUILD_FOR_ANDROID == 0
 	tcdrain(fd);
 #endif
 
@@ -142,6 +142,17 @@ char *sprintln(char *buff, const char *fmt, ...)
 	return buff;
 }
 
+#if CONFIG_BUILD_FOR_ANDROID
+void print_ntext(const char *text, size_t size)
+{
+	char buff[size + 1];
+
+	mem_copy(buff, text, size);
+	buff[size] = 0;
+
+	LOGD("%s", buff);
+}
+#else
 void print_ntext(const char *text, size_t size)
 {
 	if (console_fp)
@@ -153,6 +164,7 @@ void print_ntext(const char *text, size_t size)
 	fwrite(text, 1, size, stdout);
 	fflush(stdout);
 }
+#endif
 
 void print_buffer(const char *buff, size_t size)
 {

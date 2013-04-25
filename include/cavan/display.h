@@ -7,6 +7,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/thread.h>
 
 typedef union
 {
@@ -61,7 +62,9 @@ struct cavan_display_device
 	void *private_data;
 	cavan_display_color_t pen_color;
 
+	u32 refresh_delay;
 	pthread_mutex_t lock;
+	struct cavan_thread thread;
 
 	void (*destory)(struct cavan_display_device *display);
 	void (*refresh)(struct cavan_display_device *display);
@@ -126,7 +129,8 @@ void cavan_display_destory_dummy(struct cavan_display_device *display);
 
 int cavan_display_init(struct cavan_display_device *display);
 void cavan_display_uninit(struct cavan_display_device *display);
-int cavan_display_check(struct cavan_display_device *display);
+int cavan_display_start(struct cavan_display_device *display, u32 refresh_hz);
+void cavan_display_stop(struct cavan_display_device *display);
 
 struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height);
 struct cavan_display_memory_rect *cavan_display_memory_rect_alloc(struct cavan_display_device *display, size_t width, size_t height, int border_width);
@@ -192,9 +196,17 @@ static inline int cavan_display_memory_restore(struct cavan_display_device *disp
 	return display->display_memory_xfer(display, mem, false);
 }
 
-static inline void cavan_display_refresh(struct cavan_display_device *display)
+static inline void cavan_display_lock(struct cavan_display_device *display)
 {
 	pthread_mutex_lock(&display->lock);
-	display->refresh(display);
+}
+
+static inline void cavan_display_unlock(struct cavan_display_device *display)
+{
 	pthread_mutex_unlock(&display->lock);
+}
+
+static inline void cavan_display_refresh(struct cavan_display_device *display)
+{
+	cavan_thread_wakeup(&display->thread);
 }

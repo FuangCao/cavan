@@ -50,7 +50,7 @@ void cavan_fb_bitfield2element(struct fb_bitfield *field, struct cavan_fb_color_
 
 int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_device *fb_dev);
 struct cavan_display_device *cavan_fb_display_create(void);
-struct cavan_display_device *cavan_fb_display_create_check(void);
+struct cavan_display_device *cavan_fb_display_start(u32 refresh_hz);
 
 static inline void cavan_fb_draw_point(struct cavan_fb_device *dev, int x, int y, cavan_display_color_t color)
 {

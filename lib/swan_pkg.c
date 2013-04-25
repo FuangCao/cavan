@@ -402,7 +402,7 @@ int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info 
 	part_size = get_partition_size_by_type(img_p->type, part_table);
 	if (part_size >= 0 && img_p->length > (u32)MB(part_size))
 	{
-#if __WORDSIZE == 64 || defined(CONFIG_BUILD_FOR_ANDROID)
+#if __WORDSIZE == 64 || CONFIG_BUILD_FOR_ANDROID
 		pr_red_info("partition size = %ldMB", part_size);
 #else
 		pr_red_info("partition size = %dMB", part_size);

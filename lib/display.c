@@ -1044,8 +1044,37 @@ int cavan_display_init(struct cavan_display_device *display)
 	return 0;
 }
 
-int cavan_display_check(struct cavan_display_device *display)
+static int cavan_display_delay_refresh_thread_handler(struct cavan_thread *thread, void *data)
 {
+	struct cavan_display_device *display = data;
+
+	cavan_display_lock(display);
+	display->refresh(display);
+	cavan_display_unlock(display);
+
+	msleep(display->refresh_delay);
+
+	return 0;
+}
+
+static int cavan_display_auto_sleep_refresh_thread_handler(struct cavan_thread *thread, void *data)
+{
+	struct cavan_display_device *display = data;
+
+	cavan_display_lock(display);
+	display->refresh(display);
+	cavan_display_unlock(display);
+
+	cavan_thread_suspend(thread);
+
+	return 0;
+}
+
+int cavan_display_start(struct cavan_display_device *display, u32 refresh_hz)
+{
+	int ret;
+	struct cavan_thread *thread;
+
 	if (display == NULL)
 	{
 		pr_red_info("display == NULL");
@@ -1074,6 +1103,36 @@ int cavan_display_check(struct cavan_display_device *display)
 	{
 		pr_red_info("display->display_memory_xfer == NULL && display->fb_base == NULL");
 		return -EINVAL;
+	}
+
+	if (refresh_hz)
+	{
+		display->refresh_delay = 1000 / refresh_hz;
+	}
+	else
+	{
+		display->refresh_delay = 0;
+	}
+
+	pr_bold_info("Refresh: frequency = %d(HZ), delay = %d(ms)", refresh_hz, display->refresh_delay);
+
+	thread = &display->thread;
+	thread->name = "DISPLAY";
+	if (display->refresh_delay)
+	{
+		thread->wake_handker = cavan_thread_wake_handler_empty;
+		thread->handler = cavan_display_delay_refresh_thread_handler;
+	}
+	else
+	{
+		thread->wake_handker = cavan_thread_wake_handler_resume;
+		thread->handler = cavan_display_auto_sleep_refresh_thread_handler;
+	}
+	ret = cavan_thread_init(thread, display);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_thread_init");
+		return ret;
 	}
 
 	if (display->mesure_text == NULL)
@@ -1151,7 +1210,24 @@ int cavan_display_check(struct cavan_display_device *display)
 		display->destory = cavan_display_destory_dummy;
 	}
 
+	ret = cavan_thread_start(thread);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_thread_start");
+		goto out_cavan_thread_deinit;
+	}
+
 	return 0;
+
+out_cavan_thread_deinit:
+	cavan_thread_deinit(thread);
+	return ret;
+}
+
+void cavan_display_stop(struct cavan_display_device *display)
+{
+	cavan_thread_stop(&display->thread);
+	cavan_thread_deinit(&display->thread);
 }
 
 struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height)

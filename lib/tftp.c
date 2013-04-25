@@ -1132,7 +1132,7 @@ int tftp_mknode(struct tftp_mknode_pkg *mknode_pkg_p, const struct sockaddr_in *
 	println("dev = 0x%lx", mknode_pkg_p->dev);
 #else
 	println("Create device %s, sizeof(dev_t) = %d", mknode_pkg_p->pathname, sizeof(dev_t));
-#ifdef CONFIG_BUILD_FOR_ANDROID
+#if CONFIG_BUILD_FOR_ANDROID
 	println("dev = 0x%x", mknode_pkg_p->dev);
 #else
 	println("dev = 0x%llx", mknode_pkg_p->dev);

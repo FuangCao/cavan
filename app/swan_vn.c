@@ -148,7 +148,7 @@ static int run_client_thead(const char *data_path)
 		}
 		pthread_mutex_unlock(&client_data.lock);
 
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#if CONFIG_BUILD_FOR_ANDROID == 0
 		if (thread_send)
 		{
 			pthread_cancel(thread_send);
@@ -229,7 +229,7 @@ static void *server_send_handle(void *data)
 		readlen = cavan_usb_read_data(usb_desc, buff, sizeof(buff));
 		if (readlen < 0)
 		{
-#if __WORDSIZE == 64 || defined(CONFIG_BUILD_FOR_ANDROID)
+#if __WORDSIZE == 64 || CONFIG_BUILD_FOR_ANDROID
 			print_error("cavan_usb_read_data, readlen = %ld", readlen);
 #else
 			print_error("cavan_usb_read_data, readlen = %d", readlen);

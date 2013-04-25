@@ -3,7 +3,7 @@
 #include <cavan.h>
 #include <stdarg.h>
 
-#ifdef CONFIG_BUILD_FOR_ANDROID
+#if CONFIG_BUILD_FOR_ANDROID
 #include <utils/Log.h>
 #define printf	LOGD
 #endif
@@ -176,7 +176,12 @@
 		} \
 	} while (0)
 
+#if CONFIG_BUILD_FOR_ANDROID
+#define print_text(text)					LOGD("%s", text)
+#else
 #define print_text(text)					print_ntext(text, strlen(text))
+#endif
+
 #define clear_screen_to_current()			print_text("\033[1J")
 #define clear_whole_screen()				print_text("\033[2J")
 #define clear_line_to_current()				print_text("\033[1K")

@@ -16,10 +16,10 @@ static int cavan_display_rect_main(int argc, char *argv[])
 
 	assert(argc > 4);
 
-	display = cavan_fb_display_create_check();
+	display = cavan_fb_display_start(0);
 	if (display == NULL)
 	{
-		pr_red_info("cavan_fb_display_create");
+		pr_red_info("cavan_fb_display_start");
 		return -EFAULT;
 	}
 
@@ -39,7 +39,9 @@ static int cavan_display_rect_main(int argc, char *argv[])
 		ret = display->fill_rect(display, left, top, width, height);
 	}
 
-	display->refresh(display);
+	cavan_display_refresh(display);
+
+	cavan_display_stop(display);
 	display->destory(display);
 
 	return ret;
@@ -51,10 +53,10 @@ static int cavan_display_test_main(int argc, char *argv[])
 	struct cavan_display_device *display;
 	cavan_display_color_t color_map[3][3];
 
-	display = cavan_fb_display_create_check();
+	display = cavan_fb_display_start(0);
 	if (display == NULL)
 	{
-		pr_red_info("cavan_fb_display_create");
+		pr_red_info("cavan_fb_display_start");
 		return -EFAULT;
 	}
 
@@ -82,7 +84,9 @@ static int cavan_display_test_main(int argc, char *argv[])
 		}
 	}
 
-	display->refresh(display);
+	cavan_display_refresh(display);
+
+	cavan_display_stop(display);
 	display->destory(display);
 
 	return 0;
