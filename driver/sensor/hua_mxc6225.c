@@ -4,8 +4,17 @@
 #define REG_DETECTION	0x04
 #define REG_CHIP_ID		0x08
 
+#define CHIP_ID_MXC6225XC	0x05
+#define CHIP_ID_MXC6225XU	0x25
+
 #pragma pack(1)
-struct mxc6225_data_package
+struct mxc6225xc_data_package
+{
+	s8 x;
+	s8 y;
+};
+
+struct mxc6225xu_data_package
 {
 	s8 y;
 	s8 x;
@@ -24,9 +33,25 @@ static int mxc6225_sensor_chip_readid(struct hua_input_chip *chip)
 		return ret;
 	}
 
-	pr_bold_info("Device ID = 0x%02x", id);
+	chip->devid = id & 0x3F;
 
-	chip->devid = id;
+	pr_bold_info("Device ID = 0x%02x = 0x%02x", id, chip->devid);
+
+	switch (chip->devid)
+	{
+	case CHIP_ID_MXC6225XC:
+		chip->name = "MXC6225XC";
+		break;
+
+	case CHIP_ID_MXC6225XU:
+		chip->name = "MXC6225XU";
+		break;
+
+	default:
+		pr_red_info("Invalid Chip ID 0x%02x", chip->devid);
+	}
+
+	pr_bold_info("This chip is %s", chip->name);
 
 	return 0;
 }
@@ -45,10 +70,10 @@ static int mxc6225_sensor_chip_set_active(struct hua_input_chip *chip, bool enab
 	return 0;
 }
 
-static int mxc6225_acceleration_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
+static int mxc6225xu_acceleration_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
-	struct mxc6225_data_package package;
+	struct mxc6225xu_data_package package;
 
 	ret = chip->read_data(chip, 0, &package, sizeof(package));
 	if (ret < 0)
@@ -58,6 +83,23 @@ static int mxc6225_acceleration_event_handler(struct hua_input_chip *chip, struc
 	}
 
 	hua_sensor_report_vector(dev->input, package.x, -package.y, 32);
+
+	return 0;
+}
+
+static int mxc6225xc_acceleration_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
+{
+	int ret;
+	struct mxc6225xc_data_package package;
+
+	ret = chip->read_data(chip, 0, &package, sizeof(package));
+	if (ret < 0)
+	{
+		pr_red_info("hua_sensor_i2c_read_data");
+		return ret;
+	}
+
+	hua_sensor_report_vector(dev->input, -package.x, package.y, 32);
 
 	return 0;
 }
@@ -91,7 +133,15 @@ static int mxc6225_input_chip_probe(struct hua_input_chip *chip)
 	dev->flat = 0;
 	sensor->max_range = 4;
 	sensor->resolution = 256;
-	dev->event_handler = mxc6225_acceleration_event_handler;
+
+	if (chip->devid == CHIP_ID_MXC6225XC)
+	{
+		dev->event_handler = mxc6225xc_acceleration_event_handler;
+	}
+	else
+	{
+		dev->event_handler = mxc6225xu_acceleration_event_handler;
+	}
 
 	ret = hua_input_device_register(chip, dev);
 	if (ret < 0)
