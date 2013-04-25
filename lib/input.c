@@ -252,6 +252,57 @@ static void cavan_input_message_queue_handler_dummy(void *addr, void *data)
 		pr_std_info("mouse_touch[%d] = %d", key->code, key->value);
 		break;
 
+	case CAVAN_INPUT_MESSAGE_ACCELEROMETER:
+		vector = &message->vector;
+		pr_std_info("Accelerometer = [%d, %d, %d]", vector->x, vector->y, vector->z);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_MAGNETIC_FIELD:
+		vector = &message->vector;
+		pr_std_info("Magnetic_Field = [%d, %d, %d]", vector->x, vector->y, vector->z);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_ORIENTATION:
+		vector = &message->vector;
+		pr_std_info("Orientation = [%d, %d, %d]", vector->x, vector->y, vector->z);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_GYROSCOPE:
+		vector = &message->vector;
+		pr_std_info("Gyroscope = [%d, %d, %d]", vector->x, vector->y, vector->z);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_GRAVITY:
+		vector = &message->vector;
+		pr_std_info("Gravity = [%d, %d, %d]", vector->x, vector->y, vector->z);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_LINEAR_ACCELERATION:
+		vector = &message->vector;
+		pr_std_info("Linear_Acceleration = [%d, %d, %d]", vector->x, vector->y, vector->z);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_ROTATION_VECTOR:
+		vector = &message->vector;
+		pr_std_info("Rotation_Vector = [%d, %d, %d]", vector->x, vector->y, vector->z);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_LIGHT:
+		pr_std_info("Light = [%d]", message->value);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_PRESSURE:
+		pr_std_info("Pressure = [%d]", message->value);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_TEMPERATURE:
+		pr_std_info("Temperature = [%d]", message->value);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_PROXIMITY:
+		pr_std_info("Proximity = [%d]", message->value);
+		break;
+
 	default:
 		pr_red_info("Invalid message type %d", message->type);
 	}
