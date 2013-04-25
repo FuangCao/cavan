@@ -245,8 +245,13 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 
 						if (p->released)
 						{
-							cavan_input_service_append_point_message(data, \
-									CAVAN_INPUT_MESSAGE_TOUCH, p);
+#if CAVAN_REPORT_ALL_TOUCH == 0
+							if (ts->point_count_old == 0)
+#endif
+							{
+								cavan_input_service_append_point_message(data, \
+										CAVAN_INPUT_MESSAGE_TOUCH, p);
+							}
 							p->released = 0;
 						}
 
@@ -278,7 +283,11 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 				end_link_foreach(link);
 			}
 
+#if CAVAN_REPORT_ALL_TOUCH
 			if (ts->point_count < ts->point_count_old)
+#else
+			if (ts->point_count == 0)
+#endif
 			{
 				for (p = ts->points + ts->point_count, p_end = p + ts->point_count_old; p < p_end; p++)
 				{

@@ -1054,12 +1054,6 @@ static void cavan_application_on_mouse_touch_message(struct cavan_application_co
 
 static void cavan_application_on_touch_message(struct cavan_application_context *context, struct cavan_input_message_point *message)
 {
-	if (message->id != 0)
-	{
-		pr_std_info("point->id = %d, skiping ...", message->id);
-		return;
-	}
-
 	pthread_mutex_lock(&context->lock);
 
 	context->x = message->x;

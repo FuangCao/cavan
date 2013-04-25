@@ -21,6 +21,7 @@
 #include <cavan/input.h>
 
 #define CAVAN_TOUCH_POINT_MAX	5
+#define CAVAN_REPORT_ALL_TOUCH	0
 
 struct cavan_touch_device
 {
