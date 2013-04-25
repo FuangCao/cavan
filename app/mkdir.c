@@ -138,6 +138,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (optind >= argc)
+	{
+		pr_red_info("Please give least one pathname");
+		return -EINVAL;
+	}
+
 	while (optind < argc)
 	{
 		int ret = cavan_mkdir_main(argv[optind], &option);

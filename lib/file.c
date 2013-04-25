@@ -2832,13 +2832,7 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 		return 0;
 	}
 
-	if (errno != EEXIST)
-	{
-		pr_error_info("create directory %s", pathname);
-		return ret;
-	}
-
-	if (file_access_e(pathname) == false)
+	if (errno == EEXIST)
 	{
 		char buff[1024], *filename;
 
@@ -2848,10 +2842,18 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 
 		mkdir(buff, option->mode);
 
-		return rename(buff, pathname);
+		ret = rename(buff, pathname);
+		if (ret < 0)
+		{
+			pr_error_info("rename directory `%s'", pathname);
+		}
+	}
+	else
+	{
+		pr_error_info("create directory `%s'", pathname);
 	}
 
-	return 0;
+	return ret;
 }
 
 int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option *option)
@@ -2861,7 +2863,8 @@ int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option 
 
 	if (pathname == NULL || *pathname == 0)
 	{
-		return -EINVAL;
+		pr_red_info("pathname is empty");
+		ERROR_RETURN(EINVAL);
 	}
 
 	p = text_copy(buff, pathname) - 1;
