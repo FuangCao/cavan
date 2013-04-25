@@ -243,8 +243,10 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 					{
 						cavan_touch_point_mapping(&ts->touch_dev, p);
 
-						if (p->released)
+						if (p->pressed == false)
 						{
+							p->pressed = true;
+
 #if CAVAN_REPORT_ALL_TOUCH == 0
 							if (ts->point_count_old == 0)
 #endif
@@ -252,7 +254,6 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 								cavan_input_service_append_point_message(data, \
 										CAVAN_INPUT_MESSAGE_TOUCH, p);
 							}
-							p->released = 0;
 						}
 
 						cavan_input_service_append_point_message(data, \
@@ -291,11 +292,11 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 			{
 				for (p = ts->points + ts->point_count, p_end = p + ts->point_count_old; p < p_end; p++)
 				{
-					if (p->released == 0)
+					if (p->pressed)
 					{
+						p->pressed = false;
 						cavan_input_service_append_point_message(data, \
 								CAVAN_INPUT_MESSAGE_TOUCH, p);
-						p->released = 1;
 					}
 				}
 			}
@@ -344,7 +345,7 @@ struct cavan_input_device *cavan_multi_touch_device_create(void)
 	{
 		p->id = p - ts->points;
 		p->pressure = -1;
-		p->released = 1;
+		p->pressed = false;
 	}
 
 	touch_dev = &ts->touch_dev;
@@ -421,11 +422,11 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 			{
 				cavan_touch_point_mapping(&ts->touch_dev, p);
 
-				if (p->released)
+				if (p->pressed == false)
 				{
+					p->pressed = true;
 					cavan_input_service_append_point_message(data, \
 							CAVAN_INPUT_MESSAGE_TOUCH, p);
-					p->released = 0;
 				}
 
 				cavan_input_service_append_point_message(data, \
@@ -448,11 +449,11 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 			}
 			end_link_foreach(link);
 
-			if (p->released == 0)
+			if (p->pressed)
 			{
+				p->pressed = false;
 				cavan_input_service_append_point_message(data, \
 						CAVAN_INPUT_MESSAGE_TOUCH, p);
-				p->released = 1;
 			}
 		}
 		break;
@@ -485,7 +486,7 @@ struct cavan_input_device *cavan_single_touch_device_create(void)
 	}
 
 	ts->pressed = 0;
-	ts->point.released = 1;
+	ts->point.pressed = false;
 
 	touch_dev = &ts->touch_dev;
 	touch_dev->xaxis = ABS_X;

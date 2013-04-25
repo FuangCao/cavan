@@ -76,7 +76,7 @@ struct cavan_input_message_point
 	int x;
 	int y;
 	int pressure;
-	int released;
+	bool pressed;
 };
 
 struct cavan_input_message_vector

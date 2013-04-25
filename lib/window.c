@@ -81,18 +81,15 @@ static void cavan_child_window_destory_handler(struct double_link *link, struct 
 
 bool cavan_window_clicked(struct cavan_window *win, struct cavan_input_message_point *message)
 {
-	bool pressed;
-
 	pthread_mutex_lock(&win->lock);
 
-	pressed = message->pressure > 0;
-	if (win->pressed == pressed)
+	if (win->pressed == message->pressed)
 	{
 		pthread_mutex_unlock(&win->lock);
 		return false;
 	}
 
-	win->pressed = pressed;
+	win->pressed = message->pressed;
 
 	if (win->on_clicked)
 	{
@@ -915,7 +912,7 @@ static void cavan_application_click(struct cavan_application_context *context, s
 	struct cavan_window *win;
 
 	win = cavan_window_find_by_point(&context->win_link, message);
-	if (message->pressure > 0)
+	if (message->pressed)
 	{
 		if (win)
 		{
@@ -993,7 +990,7 @@ static void cavan_application_on_mouse_move_message(struct cavan_application_con
 	struct cavan_input_message_point point =
 	{
 		.id = 0,
-		.pressure = 1
+		.pressed = true
 	};
 
 	pthread_mutex_lock(&context->lock);
@@ -1038,7 +1035,7 @@ static void cavan_application_on_mouse_touch_message(struct cavan_application_co
 	struct cavan_input_message_point point =
 	{
 		.id = 0,
-		.pressure = message->value,
+		.pressed = message->value > 0,
 		.x = context->x,
 		.y = context->y
 	};
