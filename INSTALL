@@ -2,5 +2,5 @@
 
 ./script/cavan-autogen
 ./configure --prefix=${1-${HOME}}
-make
+make -j4
 make install
