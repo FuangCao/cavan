@@ -78,6 +78,7 @@
 #define CAVAN_COLOR_RED					"\033[31m"
 #define CAVAN_COLOR_GREEN				"\033[32m"
 #define CAVAN_COLOR_BLUE				"\033[34m"
+#define CAVAN_COLOR_MAGENTA				"\033[35m"
 
 #define pr_std_info(fmt, args ...) \
 	printf(fmt "\n", ##args)
@@ -97,6 +98,9 @@
 	} else { \
 		pr_red_info(fmt, ##args); \
 	}
+
+#define pr_warning_info(fmt, args ...) \
+	pr_color_info(CAVAN_COLOR_MAGENTA, "%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
 
 #define pr_green_info(fmt, args ...) \
 	pr_color_info(CAVAN_COLOR_GREEN, fmt, ##args)
