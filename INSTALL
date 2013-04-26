@@ -1,4 +1,6 @@
+#!/bin/sh
+
 ./script/cavan-autogen
-./configure --prefix=/usr
+./configure --prefix=${1-${HOME}}
 make
 make install

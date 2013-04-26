@@ -2847,7 +2847,7 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 		{
 			rmdir(buff);
 
-			if (errno == ENOTEMPTY)
+			if (errno == EEXIST || errno == ENOTEMPTY)
 			{
 				pr_warning_info("directory `%s' is not empty", pathname);
 				return 0;

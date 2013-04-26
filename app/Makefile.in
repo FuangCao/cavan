@@ -80,12 +80,13 @@ bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
 	cavan-net_monitor$(EXEEXT) cavan-mtd$(EXEEXT) \
 	cavan-move$(EXEEXT) cavan-mount$(EXEEXT) \
 	cavan-modem_upgrade$(EXEEXT) cavan-mksdcard$(EXEEXT) \
-	cavan-mknp$(EXEEXT) cavan-loop_run$(EXEEXT) \
-	cavan-inotify$(EXEEXT) cavan-image_dd$(EXEEXT) \
-	cavan-git_daemon$(EXEEXT) cavan-ftp_server$(EXEEXT) \
-	cavan-ftp$(EXEEXT) cavan-file_loop$(EXEEXT) \
-	cavan-file_join$(EXEEXT) cavan-file_crc32$(EXEEXT) \
-	cavan-fdisk$(EXEEXT) cavan-ext2$(EXEEXT) cavan-ecc$(EXEEXT) \
+	cavan-mknp$(EXEEXT) cavan-mkdir$(EXEEXT) \
+	cavan-loop_run$(EXEEXT) cavan-inotify$(EXEEXT) \
+	cavan-image_dd$(EXEEXT) cavan-git_daemon$(EXEEXT) \
+	cavan-ftp_server$(EXEEXT) cavan-ftp$(EXEEXT) \
+	cavan-file_loop$(EXEEXT) cavan-file_join$(EXEEXT) \
+	cavan-file_crc32$(EXEEXT) cavan-fdisk$(EXEEXT) \
+	cavan-ext2$(EXEEXT) cavan-ecc$(EXEEXT) \
 	cavan-eavoo_sell_statistic$(EXEEXT) cavan-dos2unix$(EXEEXT) \
 	cavan-display$(EXEEXT) cavan-df$(EXEEXT) cavan-dd$(EXEEXT) \
 	cavan-copy$(EXEEXT) cavan-chtty$(EXEEXT) cavan-chroot$(EXEEXT) \
@@ -209,6 +210,9 @@ cavan_inotify_LDADD = $(LDADD)
 am_cavan_loop_run_OBJECTS = loop_run.$(OBJEXT)
 cavan_loop_run_OBJECTS = $(am_cavan_loop_run_OBJECTS)
 cavan_loop_run_LDADD = $(LDADD)
+am_cavan_mkdir_OBJECTS = mkdir.$(OBJEXT)
+cavan_mkdir_OBJECTS = $(am_cavan_mkdir_OBJECTS)
+cavan_mkdir_LDADD = $(LDADD)
 am_cavan_mknp_OBJECTS = mknp.$(OBJEXT)
 cavan_mknp_OBJECTS = $(am_cavan_mknp_OBJECTS)
 cavan_mknp_LDADD = $(LDADD)
@@ -403,18 +407,18 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_file_loop_SOURCES) $(cavan_ftp_SOURCES) \
 	$(cavan_ftp_server_SOURCES) $(cavan_git_daemon_SOURCES) \
 	$(cavan_image_dd_SOURCES) $(cavan_inotify_SOURCES) \
-	$(cavan_loop_run_SOURCES) $(cavan_mknp_SOURCES) \
-	$(cavan_mksdcard_SOURCES) $(cavan_modem_upgrade_SOURCES) \
-	$(cavan_mount_SOURCES) $(cavan_move_SOURCES) \
-	$(cavan_mtd_SOURCES) $(cavan_net_monitor_SOURCES) \
-	$(cavan_part_probe_SOURCES) $(cavan_part_show_SOURCES) \
-	$(cavan_part_table_SOURCES) $(cavan_poll_event_SOURCES) \
-	$(cavan_poll_input_SOURCES) $(cavan_ramdisk_SOURCES) \
-	$(cavan_remove_SOURCES) $(cavan_resize_SOURCES) \
-	$(cavan_rle_SOURCES) $(cavan_screen_mirror_SOURCES) \
-	$(cavan_service_SOURCES) $(cavan_show_file_SOURCES) \
-	$(cavan_shrink_SOURCES) $(cavan_sprd_at_SOURCES) \
-	$(cavan_sprd_write_imei_SOURCES) \
+	$(cavan_loop_run_SOURCES) $(cavan_mkdir_SOURCES) \
+	$(cavan_mknp_SOURCES) $(cavan_mksdcard_SOURCES) \
+	$(cavan_modem_upgrade_SOURCES) $(cavan_mount_SOURCES) \
+	$(cavan_move_SOURCES) $(cavan_mtd_SOURCES) \
+	$(cavan_net_monitor_SOURCES) $(cavan_part_probe_SOURCES) \
+	$(cavan_part_show_SOURCES) $(cavan_part_table_SOURCES) \
+	$(cavan_poll_event_SOURCES) $(cavan_poll_input_SOURCES) \
+	$(cavan_ramdisk_SOURCES) $(cavan_remove_SOURCES) \
+	$(cavan_resize_SOURCES) $(cavan_rle_SOURCES) \
+	$(cavan_screen_mirror_SOURCES) $(cavan_service_SOURCES) \
+	$(cavan_show_file_SOURCES) $(cavan_shrink_SOURCES) \
+	$(cavan_sprd_at_SOURCES) $(cavan_sprd_write_imei_SOURCES) \
 	$(cavan_super_upgrade_SOURCES) $(cavan_swan_check_SOURCES) \
 	$(cavan_swan_emmc_SOURCES) $(cavan_swan_fac_SOURCES) \
 	$(cavan_swan_ipu_SOURCES) $(cavan_swan_mac_SOURCES) \
@@ -448,18 +452,18 @@ DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_file_loop_SOURCES) $(cavan_ftp_SOURCES) \
 	$(cavan_ftp_server_SOURCES) $(cavan_git_daemon_SOURCES) \
 	$(cavan_image_dd_SOURCES) $(cavan_inotify_SOURCES) \
-	$(cavan_loop_run_SOURCES) $(cavan_mknp_SOURCES) \
-	$(cavan_mksdcard_SOURCES) $(cavan_modem_upgrade_SOURCES) \
-	$(cavan_mount_SOURCES) $(cavan_move_SOURCES) \
-	$(cavan_mtd_SOURCES) $(cavan_net_monitor_SOURCES) \
-	$(cavan_part_probe_SOURCES) $(cavan_part_show_SOURCES) \
-	$(cavan_part_table_SOURCES) $(cavan_poll_event_SOURCES) \
-	$(cavan_poll_input_SOURCES) $(cavan_ramdisk_SOURCES) \
-	$(cavan_remove_SOURCES) $(cavan_resize_SOURCES) \
-	$(cavan_rle_SOURCES) $(cavan_screen_mirror_SOURCES) \
-	$(cavan_service_SOURCES) $(cavan_show_file_SOURCES) \
-	$(cavan_shrink_SOURCES) $(cavan_sprd_at_SOURCES) \
-	$(cavan_sprd_write_imei_SOURCES) \
+	$(cavan_loop_run_SOURCES) $(cavan_mkdir_SOURCES) \
+	$(cavan_mknp_SOURCES) $(cavan_mksdcard_SOURCES) \
+	$(cavan_modem_upgrade_SOURCES) $(cavan_mount_SOURCES) \
+	$(cavan_move_SOURCES) $(cavan_mtd_SOURCES) \
+	$(cavan_net_monitor_SOURCES) $(cavan_part_probe_SOURCES) \
+	$(cavan_part_show_SOURCES) $(cavan_part_table_SOURCES) \
+	$(cavan_poll_event_SOURCES) $(cavan_poll_input_SOURCES) \
+	$(cavan_ramdisk_SOURCES) $(cavan_remove_SOURCES) \
+	$(cavan_resize_SOURCES) $(cavan_rle_SOURCES) \
+	$(cavan_screen_mirror_SOURCES) $(cavan_service_SOURCES) \
+	$(cavan_show_file_SOURCES) $(cavan_shrink_SOURCES) \
+	$(cavan_sprd_at_SOURCES) $(cavan_sprd_write_imei_SOURCES) \
 	$(cavan_super_upgrade_SOURCES) $(cavan_swan_check_SOURCES) \
 	$(cavan_swan_emmc_SOURCES) $(cavan_swan_fac_SOURCES) \
 	$(cavan_swan_ipu_SOURCES) $(cavan_swan_mac_SOURCES) \
@@ -639,6 +643,7 @@ cavan_git_daemon_SOURCES = git_daemon.c
 cavan_image_dd_SOURCES = image_dd.c
 cavan_inotify_SOURCES = inotify.c
 cavan_loop_run_SOURCES = loop_run.c
+cavan_mkdir_SOURCES = mkdir.c
 cavan_mknp_SOURCES = mknp.c
 cavan_mksdcard_SOURCES = mksdcard.c
 cavan_modem_upgrade_SOURCES = modem_upgrade.c
@@ -873,6 +878,9 @@ cavan-inotify$(EXEEXT): $(cavan_inotify_OBJECTS) $(cavan_inotify_DEPENDENCIES) $
 cavan-loop_run$(EXEEXT): $(cavan_loop_run_OBJECTS) $(cavan_loop_run_DEPENDENCIES) $(EXTRA_cavan_loop_run_DEPENDENCIES) 
 	@rm -f cavan-loop_run$(EXEEXT)
 	$(LINK) $(cavan_loop_run_OBJECTS) $(cavan_loop_run_LDADD) $(LIBS)
+cavan-mkdir$(EXEEXT): $(cavan_mkdir_OBJECTS) $(cavan_mkdir_DEPENDENCIES) $(EXTRA_cavan_mkdir_DEPENDENCIES) 
+	@rm -f cavan-mkdir$(EXEEXT)
+	$(LINK) $(cavan_mkdir_OBJECTS) $(cavan_mkdir_LDADD) $(LIBS)
 cavan-mknp$(EXEEXT): $(cavan_mknp_OBJECTS) $(cavan_mknp_DEPENDENCIES) $(EXTRA_cavan_mknp_DEPENDENCIES) 
 	@rm -f cavan-mknp$(EXEEXT)
 	$(LINK) $(cavan_mknp_OBJECTS) $(cavan_mknp_LDADD) $(LIBS)
@@ -1078,6 +1086,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/image_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inotify.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loop_run.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkdir.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mknp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mksdcard.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modem_upgrade.Po@am__quote@
