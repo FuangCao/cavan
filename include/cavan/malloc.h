@@ -22,27 +22,61 @@
 #include <cavan.h>
 #include <cavan/list.h>
 
-#if __WORDSIZE == 64
+#define CAVAN_NODE_ALLOCATED_MASK	0x01
+
+#define CAVAN_SIZE_ALIGN(size, bytes, mask) \
+	(((size) + (bytes) - 1) & (~(typeof(size))(mask)))
+
+#define CAVAN_SIZE_ALIGN_DOWN(size, mask) \
+	((size) & (~(typeof(size))(mask)))
+
+#if __WORDSIZE > 32
 #define CAVAN_SIZE_WORD_ALIGN(size) \
-	(((size) + 7) & (~((typeof(size))0x07)))
+	CAVAN_SIZE_ALIGN(size, 8, 0x07)
+#define CAVAN_SIZE_WORD_ALIGN_DOWN(size) \
+	CAVAN_SIZE_ALIGN_DOWN(size, 0x07)
+#elif __WORDSIZE > 16
+#define CAVAN_SIZE_WORD_ALIGN(size) \
+	CAVAN_SIZE_ALIGN(size, 4, 0x03)
+#define CAVAN_SIZE_WORD_ALIGN_DOWN(size) \
+	CAVAN_SIZE_ALIGN_DOWN(size, 0x03)
 #else
 #define CAVAN_SIZE_WORD_ALIGN(size) \
-	(((size) + 3) & (~((typeof(size))0x03)))
+	CAVAN_SIZE_ALIGN(size, 2, 0x01)
+#define CAVAN_SIZE_WORD_ALIGN_DOWN(size) \
+	CAVAN_SIZE_ALIGN_DOWN(size, 0x01)
 #endif
+
+#define CAVAN_NODE_IS_FREE(size) \
+	(((size) & CAVAN_NODE_ALLOCATED_MASK) == 0)
+
+#define CAVAN_NODE_SET_ALLOCATED(size) \
+	((size) |= CAVAN_NODE_ALLOCATED_MASK)
+
+#define CAVAN_NODE_GET_REAL_SIZE(size) \
+	((size) & (~(typeof(size))CAVAN_NODE_ALLOCATED_MASK))
 
 struct cavan_malloc_node
 {
-	size_t size;
+	u32 size;
+	u32 prev_size;
+
 	struct double_link_node node;
 };
 
-extern struct double_link cavan_global_malloc_link;
+struct cavan_malloc_info
+{
+	struct double_link link;
+	struct cavan_malloc_node *last;
+};
 
-int cavan_malloc_init_base(struct double_link *link, void *addr, size_t size);
-void cavan_malloc_deinit_base(struct double_link *link);
-void *cavan_malloc_base(struct double_link *link, size_t size);
-void cavan_free_base(struct double_link *link, void *addr);
-void cavan_malloc_show_base(struct double_link *link);
+extern struct cavan_malloc_info cavan_global_malloc_info;
+
+int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t size);
+void cavan_malloc_deinit_base(struct cavan_malloc_info *info);
+void *cavan_malloc_base(struct cavan_malloc_info *info, size_t size);
+void cavan_free_base(struct cavan_malloc_info *info, void *addr);
+void cavan_malloc_show_base(struct cavan_malloc_info *info);
 
 static inline struct cavan_malloc_node *cavan_malloc_get_next_near_base(struct double_link_node *node, size_t size)
 {
@@ -54,6 +88,11 @@ static inline struct cavan_malloc_node *cavan_malloc_get_next_near(struct cavan_
 	return cavan_malloc_get_next_near_base(&node->node, node->size);
 }
 
+static inline struct double_link_node *cavan_malloc_get_prev_near(struct cavan_malloc_node *node)
+{
+	return ADDR_SUB(node, node->prev_size);
+}
+
 static inline size_t cavan_malloc_get_available_size(struct double_link *link, size_t size)
 {
 	return size - link->offset;
@@ -61,25 +100,25 @@ static inline size_t cavan_malloc_get_available_size(struct double_link *link, s
 
 static inline int cavan_malloc_init(void *addr, size_t size)
 {
-	return cavan_malloc_init_base(&cavan_global_malloc_link, addr, size);
+	return cavan_malloc_init_base(&cavan_global_malloc_info, addr, size);
 }
 
 static inline void cavan_malloc_deinit(void)
 {
-	cavan_malloc_deinit_base(&cavan_global_malloc_link);
+	cavan_malloc_deinit_base(&cavan_global_malloc_info);
 }
 
 static inline void *cavan_malloc(size_t size)
 {
-	return cavan_malloc_base(&cavan_global_malloc_link, size);
+	return cavan_malloc_base(&cavan_global_malloc_info, size);
 }
 
 static inline void cavan_free(void *addr)
 {
-	cavan_free_base(&cavan_global_malloc_link, addr);
+	cavan_free_base(&cavan_global_malloc_info, addr);
 }
 
 static inline void cavan_malloc_show(void)
 {
-	cavan_malloc_show_base(&cavan_global_malloc_link);
+	cavan_malloc_show_base(&cavan_global_malloc_info);
 }
