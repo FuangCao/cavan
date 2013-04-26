@@ -434,7 +434,7 @@ static void cavan_event_virtual_build_bitmask(struct single_link *link, uint8_t 
 {
 	struct cavan_virtual_key *key;
 
-	single_link_foreach(link, key)
+	link_foreach_single(link, key)
 	{
 		set_bit(key->code, bitmask);
 	}
@@ -524,7 +524,7 @@ const char *cavan_event_find_key_name_base(struct single_link *link, int code)
 {
 	struct cavan_keylayout_node *key;
 
-	single_link_foreach(link, key)
+	link_foreach_single(link, key)
 	{
 		if (key->code == code)
 		{
@@ -541,7 +541,7 @@ static void cavan_event_virtual_key_set_name(struct single_link *vk_link, struct
 {
 	struct cavan_virtual_key *key;
 
-	single_link_foreach(vk_link, key)
+	link_foreach_single(vk_link, key)
 	{
 		key->name = cavan_event_find_key_name_base(kl_link, key->code);
 	}
@@ -882,7 +882,7 @@ struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device
 {
 	struct cavan_virtual_key *key;
 
-	single_link_foreach(&dev->vk_link, key)
+	link_foreach_single(&dev->vk_link, key)
 	{
 		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right)
 		{
