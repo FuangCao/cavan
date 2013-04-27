@@ -936,6 +936,9 @@ static void cavan_application_move(struct cavan_application_context *context, st
 {
 	struct cavan_window *win = cavan_window_find_by_point(&context->win_link, point);
 
+	context->x = point->x;
+	context->y = point->y;
+
 	if (win)
 	{
 		if (win != context->win_curr)
@@ -945,37 +948,40 @@ static void cavan_application_move(struct cavan_application_context *context, st
 				cavan_window_mouse_exit(context->win_curr, point);
 			}
 
+			context->win_curr = win;
 			cavan_window_mouse_entry(win, point);
 		}
 
 		cavan_window_mouse_move(win, point);
 	}
-	else if (context->win_curr)
+	else
 	{
-		cavan_window_mouse_exit(context->win_curr, point);
-	}
+		if (context->win_curr)
+		{
+			cavan_window_mouse_exit(context->win_curr, point);
+		}
 
-	context->win_curr = win;
-	context->x = point->x;
-	context->y = point->y;
+		context->win_curr = NULL;
+	}
 }
 
 static void cavan_application_click(struct cavan_application_context *context, struct cavan_input_message_point *point)
 {
-	struct cavan_window *win;
-
-	win = cavan_window_find_by_point(&context->win_link, point);
 	if (point->pressed)
 	{
+		struct cavan_window *win = cavan_window_find_by_point(&context->win_link, point);
+
 		if (win)
 		{
-			win->entered = true;
+			if (win != context->win_active)
+			{
+				context->win_active = win;
+				cavan_window_set_top(win);
+			}
 
-			cavan_window_set_top(win);
+			win->entered = true;
 			cavan_window_clicked(win, point);
 		}
-
-		context->win_active = win;
 	}
 	else if (context->win_active)
 	{
