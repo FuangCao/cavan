@@ -21,6 +21,13 @@ enum cavan_application_event
 	CAVAN_APP_EVENT_EXIT,
 };
 
+enum cavan_window_text_align
+{
+	CAVAN_WIN_TEXT_ALIGN_CENTER,
+	CAVAN_WIN_TEXT_ALIGN_LEFT,
+	CAVAN_WIN_TEXT_ALIGN_RIGHT
+};
+
 struct cavan_window
 {
 	int id;
@@ -36,6 +43,8 @@ struct cavan_window
 	cavan_display_color_t fore_color;
 
 	bool pressed;
+	bool entered;
+	bool visible;
 	pthread_mutex_t lock;
 	struct cavan_application_context *context;
 
@@ -77,6 +86,8 @@ struct cavan_dialog
 struct cavan_label
 {
 	struct cavan_window window;
+
+	enum cavan_window_text_align align;
 };
 
 struct cavan_button
@@ -126,6 +137,7 @@ int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child)
 void cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child);
 void cavan_window_set_abs_position(struct cavan_window *win, int x, int y);
 void cavan_window_set_position(struct cavan_window *win, int x, int y);
+void cavan_window_set_top(struct cavan_window *win);
 struct cavan_window *cavan_window_find_by_point(struct double_link *link, struct cavan_input_message_point *message);
 void cavan_window_paint(struct cavan_window *win);
 void cavan_window_paint_child(struct double_link *link);
@@ -179,6 +191,16 @@ static inline void cavan_application_set_on_key_pressed(struct cavan_application
 	pthread_mutex_unlock(&context->lock);
 }
 
+static inline void cavan_window_lock(struct cavan_window *win)
+{
+	pthread_mutex_lock(&win->lock);
+}
+
+static inline void cavan_window_unlock(struct cavan_window *win)
+{
+	pthread_mutex_unlock(&win->lock);
+}
+
 static inline void cavan_window_set_back_color(struct cavan_window *win, float red, float green, float blue)
 {
 	pthread_mutex_lock(&win->lock);
@@ -218,6 +240,13 @@ static inline void cavan_window_set_height(struct cavan_window *win, int height)
 {
 	pthread_mutex_lock(&win->lock);
 	win->height = height;
+	pthread_mutex_unlock(&win->lock);
+}
+
+static inline void cavan_window_set_visible(struct cavan_window *win, bool visible)
+{
+	pthread_mutex_lock(&win->lock);
+	win->visible = visible;
 	pthread_mutex_unlock(&win->lock);
 }
 
@@ -273,6 +302,15 @@ static inline void cavan_window_set_on_move(struct cavan_window *win, bool (*han
 static inline void cavan_window_get_rect(struct cavan_window *win, struct cavan_display_rect *rect)
 {
 	return win->get_rect_handler(win, rect);
+}
+
+static inline void cavan_window_update(struct cavan_window *win)
+{
+	cavan_window_lock(win);
+	cavan_window_set_top(win);
+	cavan_window_unlock(win);
+
+	cavan_window_paint(win);
 }
 
 static inline int cavan_window_init(struct cavan_window *win)
