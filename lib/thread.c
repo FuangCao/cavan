@@ -157,6 +157,7 @@ static void *cavan_thread_main_loop(void *data)
 	pthread_mutex_lock(&thread->lock);
 
 	data = thread->private_data;
+	thread->pending = false;
 	thread->state = CAVAN_THREAD_STATE_RUNNING;
 
 	while (1)
@@ -187,11 +188,19 @@ static void *cavan_thread_main_loop(void *data)
 			goto out_thread_exit;
 
 		case CAVAN_THREAD_STATE_SUSPEND:
+			if (thread->pending)
+			{
 #if CAVAN_THREAD_DEBUG
-			pr_bold_info("Thread %s suspend", thread->name);
+				pr_bold_info("Thread %s pending", thread->name);
 #endif
+				thread->state = CAVAN_THREAD_STATE_RUNNING;
+			}
+
 			while (thread->state == CAVAN_THREAD_STATE_SUSPEND)
 			{
+#if CAVAN_THREAD_DEBUG
+				pr_bold_info("Thread %s suspend", thread->name);
+#endif
 				ret = pthread_cond_wait(&thread->cond, &thread->lock);
 				if (ret < 0)
 				{
@@ -199,6 +208,8 @@ static void *cavan_thread_main_loop(void *data)
 					goto out_thread_exit;
 				}
 			}
+
+			thread->pending = false;
 			break;
 
 		default:
@@ -341,6 +352,7 @@ void cavan_thread_resume(struct cavan_thread *thread)
 		thread->state = CAVAN_THREAD_STATE_RUNNING;
 	}
 
+	thread->pending = true;
 	pthread_cond_signal(&thread->cond);
 
 	pthread_mutex_unlock(&thread->lock);

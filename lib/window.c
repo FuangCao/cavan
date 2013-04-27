@@ -685,8 +685,7 @@ int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application
 
 void cavan_label_paint_handler(struct cavan_window *win)
 {
-	int x, y;
-	int width, height;
+	int x;
 	struct cavan_application_context *context = win->context;
 	struct cavan_display_device *display = context->display;
 	struct cavan_label *label = (struct cavan_label *)win;

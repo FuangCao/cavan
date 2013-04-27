@@ -22,6 +22,7 @@ struct cavan_thread
 {
 	const char *name;
 
+	bool pending;
 	pthread_t id;
 	int pipefd[2];
 	struct pollfd pfd;
