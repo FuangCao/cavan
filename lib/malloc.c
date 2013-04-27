@@ -20,11 +20,14 @@
 #include <cavan.h>
 #include <cavan/malloc.h>
 
+#define CAVAN_MALLOC_DEBUG	0
+
 struct cavan_malloc_info cavan_global_malloc_info;
 
 int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t size)
 {
 	int ret;
+	void *last;
 	struct cavan_malloc_node *node;
 
 	ret = double_link_init(&info->link, MOFS(struct cavan_malloc_node, node));
@@ -34,13 +37,24 @@ int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t si
 		return ret;
 	}
 
-	size = CAVAN_SIZE_WORD_ALIGN_DOWN(size);
-	info->last = ADDR_ADD(addr, size);
+	info->size = size;
+	info->buff = addr;
+
+	last = ADDR_ADD(addr, size);
+	addr = CAVAN_ADDR_WORD_ALIGN(addr);
 
 	node = addr;
+	node->size = cavan_malloc_get_available_size(&info->link, ADDR_SUB2(last, addr));
+	if (node->size == 0)
+	{
+		pr_red_info("size to small");
+		ERROR_RETURN(EINVAL);
+	}
+
 	node->prev_size = CAVAN_NODE_ALLOCATED_MASK;
-	node->size = cavan_malloc_get_available_size(&info->link, size);
 	double_link_append(&info->link, &node->node);
+
+	info->last = ADDR_ADD(node, node->size);
 
 	return 0;
 }
@@ -54,18 +68,13 @@ void *cavan_malloc_base(struct cavan_malloc_info *info, size_t size)
 {
 	size_t size_remain;
 	struct double_link_node *node, *head;
-	struct cavan_malloc_node *free_node, *near_next;
+	struct cavan_malloc_node *alloc_node, *near_next;
 	struct double_link *link = &info->link;
 
 	size += link->offset;
-
-	if (size < sizeof(struct double_link_node))
+	if (size < sizeof(struct cavan_malloc_node))
 	{
-		size = sizeof(struct double_link_node);
-	}
-	else
-	{
-		size = CAVAN_SIZE_WORD_ALIGN(size);
+		size = sizeof(struct cavan_malloc_node);
 	}
 
 	double_link_lock(link);
@@ -81,8 +90,8 @@ void *cavan_malloc_base(struct cavan_malloc_info *info, size_t size)
 			return NULL;
 		}
 
-		free_node = double_link_get_container(link, node);
-		if (free_node->size >= size)
+		alloc_node = double_link_get_container(link, node);
+		if (alloc_node->size >= size)
 		{
 			break;
 		}
@@ -90,30 +99,28 @@ void *cavan_malloc_base(struct cavan_malloc_info *info, size_t size)
 		node = node->next;
 	}
 
-	size_remain = free_node->size - size;
-	if (size_remain > sizeof(struct double_link_node))
+	size_remain = CAVAN_SIZE_WORD_ALIGN_DOWN(alloc_node->size - size);
+	if (size_remain > 0)
 	{
-		struct cavan_malloc_node *new_node;
+		size = alloc_node->size - size_remain;
+		alloc_node->size = size_remain;
 
-		free_node->size = size_remain;
+		alloc_node = cavan_malloc_get_next_near_base(node, size_remain);
+		alloc_node->size = cavan_malloc_get_available_size(link, size);
+		alloc_node->prev_size = size_remain;
 
-		new_node = ADDR_ADD(node, size_remain);
-		new_node->size = cavan_malloc_get_available_size(link, size);
-		new_node->prev_size = free_node->size;
-
-		free_node = new_node;
-		node = &free_node->node;
+		node = &alloc_node->node;
 	}
 	else
 	{
 		double_link_remove_base(node);
 	}
 
-	near_next = cavan_malloc_get_next_near(free_node);
-	CAVAN_NODE_SET_ALLOCATED(free_node->size);
+	near_next = cavan_malloc_get_next_near(alloc_node);
+	CAVAN_NODE_SET_ALLOCATED(alloc_node->size);
 	if (near_next < info->last)
 	{
-		near_next->prev_size = free_node->size;
+		near_next->prev_size = alloc_node->size;
 	}
 
 	double_link_unlock(link);
@@ -133,10 +140,18 @@ void cavan_free_base(struct cavan_malloc_info *info, void *addr)
 	free_node = double_link_get_container(link, addr);
 	free_node->size = CAVAN_NODE_GET_REAL_SIZE(free_node->size);
 
+#if CAVAN_MALLOC_DEBUG
+	pr_bold_info("free_node: addr = %p, size = %d, prev_size = %d", free_node, free_node->size, free_node->prev_size);
+#endif
+
 	if (CAVAN_NODE_IS_FREE(free_node->prev_size))
 	{
 		struct double_link_node *prev = cavan_malloc_get_prev_near(free_node);
 		struct cavan_malloc_node *near_prev = double_link_get_container(link, prev);
+
+#if CAVAN_MALLOC_DEBUG
+		pr_bold_info("near_prev: addr = %p, size = %d, prev_size = %d", near_prev, near_prev->size, near_prev->prev_size);
+#endif
 
 		near_prev->size += free_node->size + link->offset;
 
@@ -147,6 +162,10 @@ void cavan_free_base(struct cavan_malloc_info *info, void *addr)
 	near_next = cavan_malloc_get_next_near(free_node);
 	if (near_next < info->last)
 	{
+#if CAVAN_MALLOC_DEBUG
+		pr_bold_info("near_next: addr = %p, size = %d, prev_size = %d", near_next, near_next->size, near_next->prev_size);
+#endif
+
 		if (CAVAN_NODE_IS_FREE(near_next->size))
 		{
 			free_node->size += near_next->size + link->offset;
@@ -189,11 +208,7 @@ void cavan_malloc_show_base(struct cavan_malloc_info *info)
 
 	link_foreach_double(&info->link, node)
 	{
-#if __WORDSIZE == 64
-		pr_bold_info("addr = %p, size = %ld, prev_size = %ld", node, node->size, node->prev_size);
-#else
 		pr_bold_info("addr = %p, size = %d, prev_size = %d", node, node->size, node->prev_size);
-#endif
 	}
 	end_link_foreach(&info->link);
 

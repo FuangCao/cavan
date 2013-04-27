@@ -24,28 +24,40 @@
 
 #define CAVAN_NODE_ALLOCATED_MASK	0x01
 
+#if __WORDSIZE > 32
+#define CAVAN_WORD_BYTES			8
+#define CAVAN_WORD_MASK				0x07
+#elif __WORDSIZE > 16
+#define CAVAN_WORD_BYTES			4
+#define CAVAN_WORD_MASK				0x03
+#else
+#define CAVAN_WORD_BYTES			2
+#define CAVAN_WORD_MASK				0x01
+#endif
+
 #define CAVAN_SIZE_ALIGN(size, bytes, mask) \
 	(((size) + (bytes) - 1) & (~(typeof(size))(mask)))
 
 #define CAVAN_SIZE_ALIGN_DOWN(size, mask) \
 	((size) & (~(typeof(size))(mask)))
 
-#if __WORDSIZE > 32
+#define CAVAN_ADDR_ALIGN(addr, bytes, mask) \
+	((typeof(addr))CAVAN_SIZE_ALIGN((long)(addr), bytes, mask))
+
+#define CAVAN_ADDR_ALIGN_DOWN(addr, mask) \
+	((typeof(addr))CAVAN_SIZE_ALIGN_DOWN((long)(addr), mask)))
+
 #define CAVAN_SIZE_WORD_ALIGN(size) \
-	CAVAN_SIZE_ALIGN(size, 8, 0x07)
+	CAVAN_SIZE_ALIGN(size, CAVAN_WORD_BYTES, CAVAN_WORD_MASK)
+
 #define CAVAN_SIZE_WORD_ALIGN_DOWN(size) \
-	CAVAN_SIZE_ALIGN_DOWN(size, 0x07)
-#elif __WORDSIZE > 16
-#define CAVAN_SIZE_WORD_ALIGN(size) \
-	CAVAN_SIZE_ALIGN(size, 4, 0x03)
-#define CAVAN_SIZE_WORD_ALIGN_DOWN(size) \
-	CAVAN_SIZE_ALIGN_DOWN(size, 0x03)
-#else
-#define CAVAN_SIZE_WORD_ALIGN(size) \
-	CAVAN_SIZE_ALIGN(size, 2, 0x01)
-#define CAVAN_SIZE_WORD_ALIGN_DOWN(size) \
-	CAVAN_SIZE_ALIGN_DOWN(size, 0x01)
-#endif
+	CAVAN_SIZE_ALIGN_DOWN(size, CAVAN_WORD_MASK)
+
+#define CAVAN_ADDR_WORD_ALIGN(addr) \
+	CAVAN_ADDR_ALIGN(addr, CAVAN_WORD_BYTES, CAVAN_WORD_MASK)
+
+#define CAVAN_ADDR_WORD_ALIGN_DOWN(addr) \
+	CAVAN_ADDR_ALIGN_DOWN(addr, CAVAN_WORD_BYTES, CAVAN_WORD_MASK)
 
 #define CAVAN_NODE_IS_FREE(size) \
 	(((size) & CAVAN_NODE_ALLOCATED_MASK) == 0)
@@ -66,6 +78,8 @@ struct cavan_malloc_node
 
 struct cavan_malloc_info
 {
+	void *buff;
+	size_t size;
 	struct double_link link;
 	struct cavan_malloc_node *last;
 };
@@ -95,7 +109,12 @@ static inline struct double_link_node *cavan_malloc_get_prev_near(struct cavan_m
 
 static inline size_t cavan_malloc_get_available_size(struct double_link *link, size_t size)
 {
-	return size - link->offset;
+	if (size < sizeof(struct cavan_malloc_node))
+	{
+		return 0;
+	}
+
+	return CAVAN_SIZE_WORD_ALIGN_DOWN(size - link->offset);
 }
 
 static inline int cavan_malloc_init(void *addr, size_t size)
