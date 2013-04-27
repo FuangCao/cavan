@@ -554,7 +554,7 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 	char *mem;
 	size_t size;
 	char pathname[1024];
-	uint8_t key_bitmask[sizeof_bit_array(KEY_CNT)];
+	uint8_t key_bitmask[KEY_BITMASK_SIZE];
 	const char *p, *line_end, *file_end;
 	struct cavan_keylayout_node *node;
 
@@ -564,6 +564,7 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 	}
 
 	memset(key_bitmask, 0, sizeof(key_bitmask));
+
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
 	if (ret < 0)
 	{

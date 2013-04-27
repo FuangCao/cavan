@@ -47,7 +47,7 @@ bool cavan_keypad_device_match(uint8_t *key_bitmask)
 bool cavan_keypad_device_matcher(struct cavan_event_matcher *matcher, void *data)
 {
 	int ret;
-	uint8_t key_bitmask[ABS_BITMASK_SIZE];
+	uint8_t key_bitmask[KEY_BITMASK_SIZE];
 
 	ret = cavan_event_get_key_bitmask(matcher->fd, key_bitmask);
 	if (ret < 0)
@@ -61,14 +61,37 @@ bool cavan_keypad_device_matcher(struct cavan_event_matcher *matcher, void *data
 
 static bool cavan_keypad_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
 {
-	const char *keyname;
+#if CONFIG_CAVAN_KEYPAD_DROP_REPORT
+	bool pressed, keydown;
+#endif
+	struct cavan_keypad_device *keypad = (struct cavan_keypad_device *)dev;
 
 	switch (event->type)
 	{
 	case EV_KEY:
-		keyname = cavan_event_find_key_name(dev->event_dev, event->code);
-		cavan_input_service_append_key_message(data, \
-				CAVAN_INPUT_MESSAGE_KEY, keyname, event->code, event->value);
+#if CONFIG_CAVAN_KEYPAD_DROP_REPORT
+		keydown = event->value > 0;
+		pressed = test_bit(event->code, keypad->key_bitmask) != 0;
+		if (pressed != keydown)
+#endif
+		{
+			const char *keyname;
+
+#if CONFIG_CAVAN_KEYPAD_DROP_REPORT
+			if (keydown)
+			{
+				set_bit(event->code, keypad->key_bitmask);
+			}
+			else
+			{
+				clean_bit(event->code, keypad->key_bitmask);
+			}
+#endif
+
+			keyname = cavan_event_find_key_name(dev->event_dev, event->code);
+			cavan_input_service_append_key_message(data, \
+					CAVAN_INPUT_MESSAGE_KEY, keyname, event->code, event->value);
+		}
 		break;
 
 	case EV_SYN:
@@ -92,6 +115,10 @@ struct cavan_input_device *cavan_keypad_create(void)
 		pr_error_info("malloc");
 		return NULL;
 	}
+
+#if CONFIG_CAVAN_KEYPAD_DROP_REPORT
+	memset(keypad->key_bitmask, 0, sizeof(keypad->key_bitmask));
+#endif
 
 	dev = &keypad->input_dev;
 	dev->probe = NULL;

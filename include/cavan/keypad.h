@@ -20,9 +20,15 @@
 #include <cavan.h>
 #include <cavan/input.h>
 
+#define CONFIG_CAVAN_KEYPAD_DROP_REPORT	1
+
 struct cavan_keypad_device
 {
 	struct cavan_input_device input_dev;
+
+#if CONFIG_CAVAN_KEYPAD_DROP_REPORT
+	uint8_t key_bitmask[KEY_BITMASK_SIZE];
+#endif
 };
 
 bool cavan_keypad_device_match(uint8_t *key_bitmask);
