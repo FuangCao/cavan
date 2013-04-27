@@ -24,7 +24,7 @@
 
 struct cavan_malloc_info cavan_global_malloc_info;
 
-int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t size)
+int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t size, void (*destroy)(struct cavan_malloc_info *info))
 {
 	int ret;
 	void *last;
@@ -41,10 +41,9 @@ int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t si
 	info->buff = addr;
 
 	last = ADDR_ADD(addr, size);
-	addr = CAVAN_ADDR_WORD_ALIGN(addr);
+	node = CAVAN_ADDR_WORD_ALIGN(addr);
 
-	node = addr;
-	node->size = cavan_malloc_get_available_size(&info->link, ADDR_SUB2(last, addr));
+	node->size = cavan_malloc_get_available_size(&info->link, ADDR_SUB2(last, node));
 	if (node->size == 0)
 	{
 		pr_red_info("size to small");
@@ -54,6 +53,7 @@ int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t si
 	node->prev_size = CAVAN_NODE_ALLOCATED_MASK;
 	double_link_append(&info->link, &node->node);
 
+	info->destroy = destroy;
 	info->last = ADDR_ADD(node, node->size);
 
 	return 0;
@@ -62,6 +62,11 @@ int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t si
 void cavan_malloc_deinit_base(struct cavan_malloc_info *info)
 {
 	double_link_deinit(&info->link);
+
+	if (info->destroy)
+	{
+		info->destroy(info);
+	}
 }
 
 void *cavan_malloc_base(struct cavan_malloc_info *info, size_t size)

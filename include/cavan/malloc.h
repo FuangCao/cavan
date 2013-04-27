@@ -82,11 +82,13 @@ struct cavan_malloc_info
 	size_t size;
 	struct double_link link;
 	struct cavan_malloc_node *last;
+
+	void (*destroy)(struct cavan_malloc_info *info);
 };
 
 extern struct cavan_malloc_info cavan_global_malloc_info;
 
-int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t size);
+int cavan_malloc_init_base(struct cavan_malloc_info *info, void *addr, size_t size, void (*destroy)(struct cavan_malloc_info *info));
 void cavan_malloc_deinit_base(struct cavan_malloc_info *info);
 void *cavan_malloc_base(struct cavan_malloc_info *info, size_t size);
 void cavan_free_base(struct cavan_malloc_info *info, void *addr);
@@ -119,7 +121,7 @@ static inline size_t cavan_malloc_get_available_size(struct double_link *link, s
 
 static inline int cavan_malloc_init(void *addr, size_t size)
 {
-	return cavan_malloc_init_base(&cavan_global_malloc_info, addr, size);
+	return cavan_malloc_init_base(&cavan_global_malloc_info, addr, size, NULL);
 }
 
 static inline void cavan_malloc_deinit(void)
