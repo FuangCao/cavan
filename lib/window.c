@@ -15,7 +15,7 @@ static bool cavan_window_find_by_point_matcher(struct double_link *link, struct 
 
 static bool cavan_window_contian_point(struct cavan_window *win, struct cavan_input_message_point *point)
 {
-	if (win->visible == false)
+	if (win->visible == false || win->active == false)
 	{
 		return false;
 	}
@@ -374,6 +374,7 @@ int cavan_window_init_base(struct cavan_window *win, int (*handler)(struct cavan
 	win->pressed = false;
 	win->entered = false;
 	win->visible = true;
+	win->active = true;
 	win->init_handler = handler ? handler : cavan_window_init_handler;
 	win->destory_handler = cavan_window_destory_handler;
 	win->paint_handler = cavan_window_paint_handler;

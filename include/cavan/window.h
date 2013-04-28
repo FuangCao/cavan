@@ -45,6 +45,7 @@ struct cavan_window
 	bool pressed;
 	bool entered;
 	bool visible;
+	bool active;
 	pthread_mutex_t lock;
 	struct cavan_application_context *context;
 
@@ -247,6 +248,17 @@ static inline void cavan_window_set_visible(struct cavan_window *win, bool visib
 {
 	pthread_mutex_lock(&win->lock);
 	win->visible = visible;
+	win->entered = false;
+	win->pressed = false;
+	pthread_mutex_unlock(&win->lock);
+}
+
+static inline void cavan_window_set_active(struct cavan_window *win, bool active)
+{
+	pthread_mutex_lock(&win->lock);
+	win->active = active;
+	win->entered = false;
+	win->pressed = false;
 	pthread_mutex_unlock(&win->lock);
 }
 
@@ -321,6 +333,13 @@ static inline int cavan_window_init(struct cavan_window *win)
 static inline int cavan_dialog_init(struct cavan_dialog *dialog)
 {
 	return cavan_window_init_base(&dialog->window, cavan_dialog_init_handler);
+}
+
+static inline void cavan_dialog_set_title_height(struct cavan_dialog *dialog, int height)
+{
+	cavan_window_lock(&dialog->window);
+	dialog->title_height = height;
+	cavan_window_unlock(&dialog->window);
 }
 
 static inline int cavan_label_init(struct cavan_label *label)
