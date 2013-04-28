@@ -67,7 +67,7 @@ function mount_disk()
 		mount_point="/mnt/$4"
 		umount_directory ${mount_point}
 		mkdir ${mount_point} -pv
-		umount $4 -l
+		umount $4
 		mount $4 ${mount_point} ||
 		{
 			rmdir ${mount_point}
@@ -292,7 +292,7 @@ function install_applications()
 					;;
 				*)
 					pr_title "Install application ${app}"
-					apt-get -y --install-suggests install ${app} || apt-get install -y ${app} ||
+					apt-get install -y ${app} ||
 					{
 						pr_red_info "Install application '${app}' failed"
 						echo ${app} >> ${FILE_APP_FEILED}

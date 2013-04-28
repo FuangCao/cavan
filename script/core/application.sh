@@ -83,7 +83,7 @@ function cavan-daemon-run()
 {
 	cavan-tcp_dd_server -ds0
 	cavan-tcp_proxy -adp 9999
-	cavan-tcp_proxy --daemon --pip 123.58.173.89 --pport 80 --port 6666
+	cavan-tcp_proxy --daemon --pip 119.188.36.70 --pport 80 --port 6666
 	squid
 	cavan-git-daemon-run
 
