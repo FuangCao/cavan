@@ -1048,7 +1048,10 @@ static int cavan_display_refresh_thread_handler(struct cavan_thread *thread, voi
 {
 	struct cavan_display_device *display = data;
 
+	cavan_display_lock(display);
 	display->refresh(display);
+	cavan_display_unlock(display);
+
 	cavan_thread_suspend(thread);
 
 	return 0;
