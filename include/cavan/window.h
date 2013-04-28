@@ -176,7 +176,7 @@ void cavan_progress_bar_set_pos(struct cavan_progress_bar *bar, double pos);
 
 bool cavan_window_clicked(struct cavan_window *win, struct cavan_input_message_point *message);
 
-int cavan_application_init(struct cavan_application_context *context, u32 refresh_hz, struct cavan_display_device *display, void *data);
+int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data);
 void cavan_application_uninit(struct cavan_application_context *context);
 int cavan_application_main_loop(struct cavan_application_context *context, void (*handler)(struct cavan_application_context *context, void *data), void *data);
 void cavan_application_paint(struct cavan_application_context *context);

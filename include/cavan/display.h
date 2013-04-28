@@ -62,7 +62,6 @@ struct cavan_display_device
 	void *private_data;
 	cavan_display_color_t pen_color;
 
-	u32 refresh_delay;
 	pthread_mutex_t lock;
 	struct cavan_thread thread;
 
@@ -129,7 +128,7 @@ void cavan_display_destory_dummy(struct cavan_display_device *display);
 
 int cavan_display_init(struct cavan_display_device *display);
 void cavan_display_uninit(struct cavan_display_device *display);
-int cavan_display_start(struct cavan_display_device *display, u32 refresh_hz);
+int cavan_display_start(struct cavan_display_device *display);
 void cavan_display_stop(struct cavan_display_device *display);
 
 struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height);
@@ -208,5 +207,5 @@ static inline void cavan_display_unlock(struct cavan_display_device *display)
 
 static inline void cavan_display_refresh(struct cavan_display_device *display)
 {
-	cavan_thread_wakeup(&display->thread);
+	cavan_thread_resume(&display->thread);
 }

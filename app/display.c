@@ -16,7 +16,7 @@ static int cavan_display_rect_main(int argc, char *argv[])
 
 	assert(argc > 4);
 
-	display = cavan_fb_display_start(0);
+	display = cavan_fb_display_start();
 	if (display == NULL)
 	{
 		pr_red_info("cavan_fb_display_start");
@@ -53,7 +53,7 @@ static int cavan_display_test_main(int argc, char *argv[])
 	struct cavan_display_device *display;
 	cavan_display_color_t color_map[3][3];
 
-	display = cavan_fb_display_start(0);
+	display = cavan_fb_display_start();
 	if (display == NULL)
 	{
 		pr_red_info("cavan_fb_display_start");

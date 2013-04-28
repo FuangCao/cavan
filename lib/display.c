@@ -1044,33 +1044,17 @@ int cavan_display_init(struct cavan_display_device *display)
 	return 0;
 }
 
-static int cavan_display_delay_refresh_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_display_refresh_thread_handler(struct cavan_thread *thread, void *data)
 {
 	struct cavan_display_device *display = data;
 
-	cavan_display_lock(display);
 	display->refresh(display);
-	cavan_display_unlock(display);
-
-	msleep(display->refresh_delay);
-
-	return 0;
-}
-
-static int cavan_display_auto_sleep_refresh_thread_handler(struct cavan_thread *thread, void *data)
-{
-	struct cavan_display_device *display = data;
-
-	cavan_display_lock(display);
-	display->refresh(display);
-	cavan_display_unlock(display);
-
 	cavan_thread_suspend(thread);
 
 	return 0;
 }
 
-int cavan_display_start(struct cavan_display_device *display, u32 refresh_hz)
+int cavan_display_start(struct cavan_display_device *display)
 {
 	int ret;
 	struct cavan_thread *thread;
@@ -1105,29 +1089,11 @@ int cavan_display_start(struct cavan_display_device *display, u32 refresh_hz)
 		return -EINVAL;
 	}
 
-	if (refresh_hz)
-	{
-		display->refresh_delay = 1000 / refresh_hz;
-	}
-	else
-	{
-		display->refresh_delay = 0;
-	}
-
-	pr_bold_info("Refresh: frequency = %d(HZ), delay = %d(ms)", refresh_hz, display->refresh_delay);
-
 	thread = &display->thread;
 	thread->name = "DISPLAY";
-	if (display->refresh_delay)
-	{
-		thread->wake_handker = cavan_thread_wake_handler_empty;
-		thread->handler = cavan_display_delay_refresh_thread_handler;
-	}
-	else
-	{
-		thread->wake_handker = cavan_thread_wake_handler_resume;
-		thread->handler = cavan_display_auto_sleep_refresh_thread_handler;
-	}
+	thread->wake_handker = NULL;
+	thread->handler = cavan_display_refresh_thread_handler;
+
 	ret = cavan_thread_init(thread, display);
 	if (ret < 0)
 	{

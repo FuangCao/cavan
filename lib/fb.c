@@ -309,7 +309,7 @@ struct cavan_display_device *cavan_fb_display_create(void)
 	return display;
 }
 
-struct cavan_display_device *cavan_fb_display_start(u32 refresh_hz)
+struct cavan_display_device *cavan_fb_display_start(void)
 {
 	int ret;
 	struct cavan_display_device *display;
@@ -321,7 +321,7 @@ struct cavan_display_device *cavan_fb_display_start(u32 refresh_hz)
 		return NULL;
 	}
 
-	ret = cavan_display_start(display, refresh_hz);
+	ret = cavan_display_start(display);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_display_check");

@@ -1173,7 +1173,7 @@ static int cavan_application_main_thread_handler(struct cavan_thread *thread, vo
 	return 0;
 }
 
-int cavan_application_init(struct cavan_application_context *context, u32 refresh_hz, struct cavan_display_device *display, void *data)
+int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data)
 {
 	int ret;
 	struct cavan_thread *thread;
@@ -1199,7 +1199,7 @@ int cavan_application_init(struct cavan_application_context *context, u32 refres
 
 	context->display = display;
 
-	ret = cavan_display_start(display, refresh_hz);
+	ret = cavan_display_start(display);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_display_check");
