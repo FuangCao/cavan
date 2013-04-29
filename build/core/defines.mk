@@ -15,7 +15,7 @@ endef
 
 define build_libso_file
 @echo "[LD] $^ => $@"
-$(Q)$(CC) -shared -o $@ $^
+$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 endef
 
 define build_libo_file

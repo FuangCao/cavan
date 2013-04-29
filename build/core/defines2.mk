@@ -28,7 +28,7 @@ endef
 
 define link_shared_library
 @echo "[LD]    $(1) <= $(2)"
-$(Q)$(CC) -shared -o $(1) $(2)
+$(Q)$(CC) -shared -o $(1) $(2) $(LDFLAGS)
 $(call strip_file,$(1))
 endef
 
