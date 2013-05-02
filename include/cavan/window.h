@@ -12,6 +12,7 @@
 
 #define CAVAN_MOUSE_SIZE			10
 #define CAVAN_APP_MESSAGE_POOL_SIZE	20
+#define CAVAN_WINDOW_POOL_SIZE		10
 #define CAVAN_WINDOW_SEP_WIDTH		2
 
 struct cavan_application_context;
@@ -44,9 +45,10 @@ struct cavan_window
 	cavan_display_color_t fore_color;
 
 	bool pressed;
-	bool entered;
 	bool visible;
 	bool active;
+	int move_mask;
+	int touch_mask;
 
 	pthread_mutex_t lock;
 	struct cavan_application_context *context;
@@ -113,6 +115,13 @@ struct cavan_dialog
 	struct cavan_display_memory_rect *backup;
 };
 
+struct cavan_window_alias
+{
+	struct cavan_window *win;
+
+	struct cavan_data_pool_node node;
+};
+
 struct cavan_application_context
 {
 	void *private_data;
@@ -129,9 +138,11 @@ struct cavan_application_context
 	cavan_display_color_t mouse_color;
 	cavan_display_color_t move_color;
 
-	struct cavan_window *win_curr;
-	struct cavan_window *win_active;
 	struct double_link win_link;
+
+	struct cavan_data_pool win_pool;
+	struct double_link win_active;
+	struct double_link win_current;
 
 	pthread_mutex_t lock;
 
@@ -248,8 +259,9 @@ static inline void cavan_window_set_visible(struct cavan_window *win, bool visib
 {
 	pthread_mutex_lock(&win->lock);
 	win->visible = visible;
-	win->entered = false;
 	win->pressed = false;
+	win->move_mask = 0;
+	win->touch_mask = 0;
 	pthread_mutex_unlock(&win->lock);
 }
 
@@ -257,8 +269,9 @@ static inline void cavan_window_set_active(struct cavan_window *win, bool active
 {
 	pthread_mutex_lock(&win->lock);
 	win->active = active;
-	win->entered = false;
 	win->pressed = false;
+	win->move_mask = 0;
+	win->touch_mask = 0;
 	pthread_mutex_unlock(&win->lock);
 }
 
