@@ -49,7 +49,7 @@ out_close_sockfd:
 	return ret;
 }
 
-void uevent_uninit(struct uevent_desc *desc)
+void uevent_deinit(struct uevent_desc *desc)
 {
 	close(desc->sockfd);
 }

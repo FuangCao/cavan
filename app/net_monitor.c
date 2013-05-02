@@ -100,7 +100,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 		print_sep(60);
 	}
 
-	cavan_net_bridge_uninit(&desc);
+	cavan_net_bridge_deinit(&desc);
 
 	return -1;
 }

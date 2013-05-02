@@ -135,7 +135,7 @@ struct ext2_desc
 };
 
 int ext2_init(struct ext2_desc *desc, const char *dev_path);
-void ext2_uninit(struct ext2_desc *desc);
+void ext2_deinit(struct ext2_desc *desc);
 void show_ext2_super_block(struct ext2_super_block *super_block);
 void show_ext2_group_desc(struct ext2_group_desc *gdt);
 void show_ext2_desc(struct ext2_desc *desc);

@@ -313,7 +313,7 @@ int fat_init(const char *pathname, struct fat_info *info_p)
 	return 0;
 }
 
-void fat_uninit(struct fat_info *info_p)
+void fat_deinit(struct fat_info *info_p)
 {
 	close(info_p->fat_fd);
 

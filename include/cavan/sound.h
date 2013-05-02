@@ -99,7 +99,7 @@ int cavan_wav_player_init(const char *filename, struct cavan_wav_player *player)
 int cavan_wav_player_set_hwparams(struct cavan_wav_player *player);
 int cavan_wav_player_set_swparams(struct cavan_wav_player *player, int period_event);
 int cavan_wav_player_xrun_recovery(snd_pcm_t *handle, int err);
-void cavan_wav_player_uninit(struct cavan_wav_player *player);
+void cavan_wav_player_deinit(struct cavan_wav_player *player);
 int cavan_wav_playback(const char *filename);
 
 static inline int wav_riff_check(struct wav_riff_chunk *chk)

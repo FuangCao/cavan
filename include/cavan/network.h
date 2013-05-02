@@ -197,7 +197,7 @@ void show_dhcp_header(struct dhcp_header *hdr);
 void show_icmp_header(struct icmp_header *hdr);
 
 int cavan_route_table_init(struct cavan_route_table *table, size_t table_size);
-void cavan_route_table_uninit(struct cavan_route_table *table);
+void cavan_route_table_deinit(struct cavan_route_table *table);
 int cavan_route_table_insert_node(struct cavan_route_table *table, struct cavan_route_node *node);
 struct cavan_route_node **cavan_find_route_by_mac(struct cavan_route_table *table, u8 *mac);
 struct cavan_route_node **cavan_find_route_by_ip(struct cavan_route_table *table, u32 ip);

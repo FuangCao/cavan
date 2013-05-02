@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	uevent_uninit(&udesc);
+	uevent_deinit(&udesc);
 
 	return ret;
 }

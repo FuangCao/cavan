@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 			{
 				error_msg("cavan_mtd_get_partition_info_by_name");
 				ret = -1;
-				goto out_mtd_uninit;
+				goto out_mtd_deinit;
 			}
 
 			cavan_mtd_show_parts_info(info, 1);
@@ -164,14 +164,14 @@ int main(int argc, char *argv[])
 			cavan_mtd_show_parts_info(desc.part_infos, desc.part_count);
 		}
 		ret = 0;
-		goto out_mtd_uninit;
+		goto out_mtd_deinit;
 	}
 
 	if (partname[0] == 0)
 	{
 		show_usage();
 		ret = -EINVAL;
-		goto out_mtd_uninit;
+		goto out_mtd_deinit;
 	}
 
 	part = cavan_mtd_open_partition2(&desc, partname, O_RDWR);
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 	{
 		error_msg("cavan_mtd_open_partition2");
 		ret = -1;
-		goto out_mtd_uninit;
+		goto out_mtd_deinit;
 	}
 
 	cavan_mtd_show_parts_info(part->part_info, 1);
@@ -226,8 +226,8 @@ int main(int argc, char *argv[])
 
 out_close_part:
 	cavan_mtd_close_partition(part);
-out_mtd_uninit:
-	cavan_mtd_uninit(&desc);
+out_mtd_deinit:
+	cavan_mtd_deinit(&desc);
 
 	return ret;
 }

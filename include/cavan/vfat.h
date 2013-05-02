@@ -177,7 +177,7 @@ u64 get_first_sector_of_cluster(struct fat_info *info_p, u32 cluster_index);
 
 int ffat_init(int fd, struct fat_info *info_p);
 int fat_init(const char *pathname, struct fat_info *info_p);
-void fat_uninit(struct fat_info *info_p);
+void fat_deinit(struct fat_info *info_p);
 
 void get_fat_volume_label(struct fat_info *info_p, char *volume);
 struct fat_directory *get_file_name(struct fat_directory *dir_p, char *buff);

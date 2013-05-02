@@ -65,7 +65,7 @@ struct cavan_display_device
 	pthread_mutex_t lock;
 	struct cavan_thread thread;
 
-	void (*destory)(struct cavan_display_device *display);
+	void (*destroy)(struct cavan_display_device *display);
 	void (*refresh)(struct cavan_display_device *display);
 	cavan_display_color_t (*build_color)(struct cavan_display_device *display, float red, float green, float blue, float transp);
 	void (*set_color)(struct cavan_display_device *display, cavan_display_color_t color);
@@ -124,10 +124,10 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 size_t cavan_display_mesure_text_dummy(struct cavan_display_device *display, const char *text);
 int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, int y, const char *text);
 void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_display_color_t color);
-void cavan_display_destory_dummy(struct cavan_display_device *display);
+void cavan_display_destroy_dummy(struct cavan_display_device *display);
 
 int cavan_display_init(struct cavan_display_device *display);
-void cavan_display_uninit(struct cavan_display_device *display);
+void cavan_display_deinit(struct cavan_display_device *display);
 int cavan_display_start(struct cavan_display_device *display);
 void cavan_display_stop(struct cavan_display_device *display);
 

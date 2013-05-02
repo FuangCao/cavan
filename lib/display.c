@@ -1031,7 +1031,7 @@ void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_d
 	display->pen_color = color;
 }
 
-void cavan_display_destory_dummy(struct cavan_display_device *display)
+void cavan_display_destroy_dummy(struct cavan_display_device *display)
 {
 	pthread_mutex_destroy(&display->lock);
 }
@@ -1174,9 +1174,9 @@ int cavan_display_start(struct cavan_display_device *display)
 		display->set_color = cavan_display_set_color_dummy;
 	}
 
-	if (display->destory == NULL)
+	if (display->destroy == NULL)
 	{
-		display->destory = cavan_display_destory_dummy;
+		display->destroy = cavan_display_destroy_dummy;
 	}
 
 	ret = cavan_thread_start(thread);

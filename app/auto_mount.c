@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 		mount_main(devpath, NULL, NULL, NULL);
 	}
 
-	uevent_uninit(&udesc);
+	uevent_deinit(&udesc);
 
 	return 0;
 }

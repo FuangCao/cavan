@@ -136,7 +136,7 @@ void show_cavan_usb_descriptor(const struct cavan_usb_descriptor *desc);
 
 int cavan_usb_init(const char *dev_path, struct cavan_usb_descriptor *desc);
 int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *desc);
-void cavan_usb_uninit(struct cavan_usb_descriptor *desc);
+void cavan_usb_deinit(struct cavan_usb_descriptor *desc);
 
 int cavan_usb_bluk_rw(struct cavan_usb_descriptor *desc, void *buff, size_t length, int read);
 int cavan_usb_bluk_read(struct cavan_usb_descriptor *desc, void *buff, size_t length);

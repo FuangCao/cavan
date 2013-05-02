@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 		if (ret < 0)
 		{
 			error_msg("ext2_read_file");
-			goto out_fat_uninit;
+			goto out_fat_deinit;
 		}
 
 		println("file \"%s\" is:", pathname);
@@ -82,8 +82,8 @@ int main(int argc, char *argv[])
 		ret = ext2_list_directory(&desc, pathname);
 	}
 
-out_fat_uninit:
-	ext2_uninit(&desc);
+out_fat_deinit:
+	ext2_deinit(&desc);
 
 	return ret;
 }

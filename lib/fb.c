@@ -218,7 +218,7 @@ out_close_fb:
 	return ret;
 }
 
-void cavan_fb_uninit(struct cavan_fb_device *dev)
+void cavan_fb_deinit(struct cavan_fb_device *dev)
 {
 	free(dev->fb_cache);
 	munmap(dev->fb_base, dev->fix_info.smem_len);
@@ -242,15 +242,15 @@ static void cavan_fb_display_draw_point_handler(struct cavan_display_device *dis
 	cavan_fb_draw_point(display->private_data, x, y, color);
 }
 
-static void cavan_fb_display_destory_handler1(struct cavan_display_device *display)
+static void cavan_fb_display_destroy_handler1(struct cavan_display_device *display)
 {
-	cavan_fb_uninit(display->private_data);
-	cavan_display_destory_dummy(display);
+	cavan_fb_deinit(display->private_data);
+	cavan_display_destroy_dummy(display);
 }
 
-static void cavan_fb_display_destory_handler2(struct cavan_display_device *display)
+static void cavan_fb_display_destroy_handler2(struct cavan_display_device *display)
 {
-	cavan_fb_display_destory_handler1(display);
+	cavan_fb_display_destroy_handler1(display);
 	free(display);
 }
 
@@ -274,7 +274,7 @@ int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_
 	display->yres = fb_dev->yres;
 	display->bpp_byte = fb_dev->bpp_byte;
 
-	display->destory = cavan_fb_display_destory_handler1;
+	display->destroy = cavan_fb_display_destroy_handler1;
 	display->refresh = cavan_fb_display_refresh_handler;
 	display->build_color = cavan_fb_display_build_color_handler;
 	display->draw_point = cavan_fb_display_draw_point_handler;
@@ -304,7 +304,7 @@ struct cavan_display_device *cavan_fb_display_create(void)
 		return NULL;
 	}
 
-	display->destory = cavan_fb_display_destory_handler2;
+	display->destroy = cavan_fb_display_destroy_handler2;
 
 	return display;
 }
@@ -325,7 +325,7 @@ struct cavan_display_device *cavan_fb_display_start(void)
 	if (ret < 0)
 	{
 		pr_red_info("cavan_display_check");
-		display->destory(display);
+		display->destroy(display);
 		return NULL;
 	}
 

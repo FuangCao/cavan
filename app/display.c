@@ -42,7 +42,7 @@ static int cavan_display_rect_main(int argc, char *argv[])
 	cavan_display_refresh(display);
 
 	cavan_display_stop(display);
-	display->destory(display);
+	display->destroy(display);
 
 	return ret;
 }
@@ -87,7 +87,7 @@ static int cavan_display_test_main(int argc, char *argv[])
 	cavan_display_refresh(display);
 
 	cavan_display_stop(display);
-	display->destory(display);
+	display->destroy(display);
 
 	return 0;
 }

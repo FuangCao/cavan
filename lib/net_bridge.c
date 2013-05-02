@@ -73,14 +73,14 @@ out_close_socket:
 	return ret;
 }
 
-void cavan_net_bridge_uninit(struct cavan_net_bridge_descriptor *desc)
+void cavan_net_bridge_deinit(struct cavan_net_bridge_descriptor *desc)
 {
 	if (desc == NULL)
 	{
 		return;
 	}
 
-	cavan_route_table_uninit(&desc->route_table);
+	cavan_route_table_deinit(&desc->route_table);
 	close(desc->sockfd);
 }
 

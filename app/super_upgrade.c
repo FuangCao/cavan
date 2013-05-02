@@ -48,7 +48,7 @@ out_mount_tmp:
 	return libc_mount("none", mnt_point, "tmpfs", 0, "size=500m");
 }
 
-static int swan_uninit(const char *mnt_point)
+static int swan_deinit(const char *mnt_point)
 {
 	umount_directory2(mnt_point, MNT_DETACH);
 
@@ -101,7 +101,7 @@ static int swan_install(const char *dirpath)
 
 	ret = fupgrade_simple(fd);
 
-	system_command("/etc/init.d/super_uninit.sh");
+	system_command("/etc/init.d/super_deinit.sh");
 
 out_close_fd:
 	close(fd);
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 			.val = 'i',
 		},
 		{
-			.name = "uninit",
+			.name = "deinit",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'u',
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 
 		case 'u':
 		case 'U':
-			action = swan_uninit;
+			action = swan_deinit;
 			break;
 
 		default:

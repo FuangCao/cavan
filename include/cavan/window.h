@@ -12,6 +12,7 @@
 
 #define CAVAN_MOUSE_SIZE			10
 #define CAVAN_APP_MESSAGE_POOL_SIZE	20
+#define CAVAN_WINDOW_SEP_WIDTH		2
 
 struct cavan_application_context;
 
@@ -54,16 +55,16 @@ struct cavan_window
 	struct double_link_node node;
 	struct double_link child_link;
 
-	void (*destory_handler)(struct cavan_window *win);
+	void (*destroy_handler)(struct cavan_window *win);
 	void (*paint_handler)(struct cavan_window *win);
 	void (*key_handler)(struct cavan_window *win, struct cavan_input_message_key *message);
-	void (*click_handler)(struct cavan_window *win, struct cavan_input_message_point *message);
+	bool (*click_handler)(struct cavan_window *win, struct cavan_input_message_point *message);
 	void (*move_handler)(struct cavan_window *win, struct cavan_input_message_point *message);
 	void (*entry_handler)(struct cavan_window *win, struct cavan_input_message_point *message);
 	void (*exit_handler)(struct cavan_window *win, struct cavan_input_message_point *message);
 	void (*get_rect_handler)(struct cavan_window *win, struct cavan_display_rect *rect);
 
-	void (*on_destory)(struct cavan_window *win, void *data);
+	void (*on_destroy)(struct cavan_window *win, void *data);
 	bool (*on_paint)(struct cavan_window *win, void *data);
 	bool (*on_key_pressed)(struct cavan_window *win, struct cavan_input_message_key *message, void *data);
 	bool (*on_clicked)(struct cavan_window *win, struct cavan_input_message_point *message, void *data);
@@ -103,6 +104,7 @@ struct cavan_dialog
 {
 	struct cavan_window window;
 	struct cavan_label title;
+	struct cavan_window body;
 
 	bool move_able;
 	int xofs, yofs;
@@ -143,33 +145,37 @@ void cavan_window_set_top(struct cavan_window *win);
 struct cavan_window *cavan_window_find_by_point(struct double_link *link, struct cavan_input_message_point *message);
 void cavan_window_paint(struct cavan_window *win);
 void cavan_window_paint_child(struct double_link *link);
-void cavan_window_destory(struct cavan_window *win);
 
 int cavan_window_init(struct cavan_window *win, struct cavan_application_context *context);
-void cavan_window_destory_handler(struct cavan_window *win);
+void cavan_window_destroy(struct cavan_window *win);
 void cavan_window_paint_handler(struct cavan_window *win);
 void cavan_window_paint_handler(struct cavan_window *win);
 void cavan_window_key_handler(struct cavan_window *win, struct cavan_input_message_key *message);
-void cavan_window_click_handler(struct cavan_window *win, struct cavan_input_message_point *message);
+bool cavan_window_click_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 void cavan_window_move_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 void cavan_window_entry_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 void cavan_window_exit_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 void cavan_window_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect);
+void cavan_window_destroy_handler(struct cavan_window *win);
 
 int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_context *context);
+void cavan_dialog_deinit(struct cavan_dialog *dialog);
 void cavan_dialog_paint_handler(struct cavan_window *win);
-void cavan_dialog_click_handler(struct cavan_window *win, struct cavan_input_message_point *message);
+bool cavan_dialog_click_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 void cavan_dialog_move_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 void cavan_dialog_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect);
+void cavan_dialog_set_title_height(struct cavan_dialog *dialog, int height);
 
 int cavan_label_init(struct cavan_label *label, struct cavan_application_context *context);
+void cavan_label_deinit(struct cavan_label *label);
 void cavan_label_paint_handler(struct cavan_window *win);
 
 int cavan_button_init(struct cavan_button *button, struct cavan_application_context *context);
 void cavan_button_paint_handler(struct cavan_window *win);
-void cavan_button_click_handler(struct cavan_window *win, struct cavan_input_message_point *message);
+bool cavan_button_click_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 
 int cavan_progress_bar_init(struct cavan_progress_bar *bar, double total, struct cavan_application_context *context);
+void cavan_progress_bar_deinit(struct cavan_progress_bar *bar);
 int cavan_progress_bar_start(struct cavan_progress_bar *bar, double total);
 void cavan_progress_bar_set_pos(struct cavan_progress_bar *bar, double pos);
 void cavan_progress_bar_paint_handler(struct cavan_window *win);
@@ -177,7 +183,7 @@ void cavan_progress_bar_paint_handler(struct cavan_window *win);
 bool cavan_window_clicked(struct cavan_window *win, struct cavan_input_message_point *message);
 
 int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data);
-void cavan_application_uninit(struct cavan_application_context *context);
+void cavan_application_deinit(struct cavan_application_context *context);
 int cavan_application_main_loop(struct cavan_application_context *context, void (*handler)(struct cavan_application_context *context, void *data), void *data);
 void cavan_application_paint(struct cavan_application_context *context);
 void cavan_application_update_data(struct cavan_application_context *context);
@@ -319,9 +325,9 @@ static inline void cavan_window_update(struct cavan_window *win)
 	cavan_window_paint(win);
 }
 
-static inline void cavan_dialog_set_title_height(struct cavan_dialog *dialog, int height)
+static inline void cavan_dialog_add_child(struct cavan_dialog *dialog, struct cavan_window *win)
 {
-	cavan_window_set_height(&dialog->title.window, height);
+	cavan_window_add_child(&dialog->body, win);
 }
 
 static inline void cavan_label_set_text(struct cavan_label *label, const char *text)

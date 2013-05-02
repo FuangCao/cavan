@@ -29,7 +29,7 @@ int mem_cache_init(struct mem_cache *cache, size_t size)
 	return 0;
 }
 
-void mem_cache_uninit(struct mem_cache *cache)
+void mem_cache_deinit(struct mem_cache *cache)
 {
 	if (cache == NULL || cache->buff == NULL)
 	{
@@ -182,13 +182,13 @@ int ffile_cache_init(struct file_cache *cache, size_t read_size, size_t write_si
 	ret = mem_cache_init(&cache->write_cache, write_size);
 	if (ret < 0)
 	{
-		goto out_read_cache_uninit;
+		goto out_read_cache_deinit;
 	}
 
 	return 0;
 
-out_read_cache_uninit:
-	mem_cache_uninit(&cache->read_cache);
+out_read_cache_deinit:
+	mem_cache_deinit(&cache->read_cache);
 
 	return ret;
 }
@@ -238,7 +238,7 @@ out_close_fd:
 	return ret;
 }
 
-void file_cache_uninit(struct file_cache *cache)
+void file_cache_deinit(struct file_cache *cache)
 {
 	if (cache == NULL)
 	{
@@ -246,8 +246,8 @@ void file_cache_uninit(struct file_cache *cache)
 	}
 
 	file_cache_fflush(cache);
-	mem_cache_uninit(&cache->read_cache);
-	mem_cache_uninit(&cache->write_cache);
+	mem_cache_deinit(&cache->read_cache);
+	mem_cache_deinit(&cache->write_cache);
 	close(cache->fd);
 }
 

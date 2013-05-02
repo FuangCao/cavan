@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 		if (ret < 0)
 		{
 			error_msg("load_file");
-			goto out_fat_uninit;
+			goto out_fat_deinit;
 		}
 
 		println("file \"%s\" is:", pathname);
@@ -86,8 +86,8 @@ int main(int argc, char *argv[])
 		ret = list_directory(&info, pathname);
 	}
 
-out_fat_uninit:
-	fat_uninit(&info);
+out_fat_deinit:
+	fat_deinit(&info);
 
 	return ret;
 }

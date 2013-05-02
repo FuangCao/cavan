@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 		pr_red_info("cftp_client_send_file failed");
 	}
 
-	cavan_usb_uninit(&usb_desc);
+	cavan_usb_deinit(&usb_desc);
 
 	return ret;
 

@@ -141,7 +141,7 @@ static int swan_adb_client(const char *dev_path)
 	if (ret < 0)
 	{
 		pr_error_info("pipe");
-		goto out_usb_uninit;
+		goto out_usb_deinit;
 	}
 
 	desc.usb_desc = &usb_desc;
@@ -169,8 +169,8 @@ static int swan_adb_client(const char *dev_path)
 out_close_pipe:
 	close(desc.pipefd[0]);
 	close(desc.pipefd[1]);
-out_usb_uninit:
-	cavan_usb_uninit(&usb_desc);
+out_usb_deinit:
+	cavan_usb_deinit(&usb_desc);
 
 	return -1;
 }

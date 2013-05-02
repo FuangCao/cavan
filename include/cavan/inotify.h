@@ -22,7 +22,7 @@ struct cavan_inotify_descriptor
 };
 
 int cavan_inotify_init(struct cavan_inotify_descriptor *desc);
-void cavan_inotify_uninit(struct cavan_inotify_descriptor *desc);
+void cavan_inotify_deinit(struct cavan_inotify_descriptor *desc);
 int cavan_inotify_register_watch(struct cavan_inotify_descriptor *desc, const char *pathname, uint32_t mask, void *data);
 struct cavan_inotify_watch *cavan_inotify_find_watch(int wd, struct cavan_inotify_watch *watchs, size_t count);
 int cavan_inotify_unregister_watch(struct cavan_inotify_descriptor *desc, const char *pathname);

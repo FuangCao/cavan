@@ -20,14 +20,14 @@
 #include <cavan.h>
 #include <cavan/pool.h>
 
-static void cavan_data_pool_node_destory(struct cavan_data_pool_node *node, void *addr)
+static void cavan_data_pool_node_destroy(struct cavan_data_pool_node *node, void *addr)
 {
 	struct cavan_data_pool *pool = node->private_data;
 
 	double_link_append(&pool->link, &node->node);
 }
 
-static void cavan_data_pool_node_destory2(struct cavan_data_pool_node *node, void *addr)
+static void cavan_data_pool_node_destroy2(struct cavan_data_pool_node *node, void *addr)
 {
 	free(addr);
 }
@@ -64,7 +64,7 @@ int cavan_data_pool_init(struct cavan_data_pool *pool, int offset, size_t node_s
 		struct cavan_data_pool_node *data = cavan_data_pool_to_node(pool, buff);
 
 		data->private_data = pool;
-		data->destroy = cavan_data_pool_node_destory;
+		data->destroy = cavan_data_pool_node_destroy;
 		double_link_node_init(&data->node);
 		double_link_append(link, &data->node);
 	}
@@ -102,7 +102,7 @@ void *cavan_data_pool_alloc(struct cavan_data_pool *pool)
 	}
 
 	pool_node = cavan_data_pool_to_node(pool, data);
-	pool_node->destroy = cavan_data_pool_node_destory2;
+	pool_node->destroy = cavan_data_pool_node_destroy2;
 	double_link_node_init(&pool_node->node);
 
 	return data;

@@ -33,7 +33,7 @@ struct file_cache
 
 int mem_cache_init(struct mem_cache *cache, size_t size);
 void mem_cache_reinit(struct mem_cache *cache);
-void mem_cache_uninit(struct mem_cache *cache);
+void mem_cache_deinit(struct mem_cache *cache);
 size_t mem_cache_discard(struct mem_cache *cache, size_t size);
 size_t mem_cache_write(struct mem_cache *cache, const char *buff, size_t size);
 size_t mem_cache_read(struct mem_cache *cache, char *buff, size_t size);
@@ -41,7 +41,7 @@ size_t mem_cache_clean(struct mem_cache *cache, char *buff);
 
 int ffile_cache_init(struct file_cache *cache, size_t read_size, size_t write_size);
 int file_cache_init(struct file_cache *cache, const char *pathname, int flags, mode_t mode);
-void file_cache_uninit(struct file_cache *cache);
+void file_cache_deinit(struct file_cache *cache);
 ssize_t file_cache_read(struct file_cache *cache, void *buff, size_t size);
 ssize_t file_cache_fflush(struct file_cache *cache);
 ssize_t file_cache_clean(struct file_cache *cache);

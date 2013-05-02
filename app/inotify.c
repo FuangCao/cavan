@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 		if (ret < 0)
 		{
 			error_msg("cavan_inotify_register_watch");
-			goto out_inotify_uninit;
+			goto out_inotify_deinit;
 		}
 
 		optind++;
@@ -131,8 +131,8 @@ int main(int argc, char *argv[])
 
 	ret = cavan_inotify_event_loop(&desc, cavan_inotify_event_handle);
 
-out_inotify_uninit:
-	cavan_inotify_uninit(&desc);
+out_inotify_deinit:
+	cavan_inotify_deinit(&desc);
 
 	return ret;
 }

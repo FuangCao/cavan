@@ -38,7 +38,7 @@ struct cavan_mtd_descriptor
 void cavan_mtd_show_parts_info(const struct mtd_partition_info *parts, size_t size);
 int cavan_load_mtd_table(struct cavan_mtd_descriptor *desc, const char *mtd_table);
 int cavan_mtd_init(struct cavan_mtd_descriptor *desc, const char *mtd_table);
-void cavan_mtd_uninit(struct cavan_mtd_descriptor *desc);
+void cavan_mtd_deinit(struct cavan_mtd_descriptor *desc);
 struct mtd_partition_info *cavan_mtd_get_partition_info_by_name(struct cavan_mtd_descriptor *desc, const char *partname);
 int cavan_mtd_open(struct mtd_partition_info *part, int flags);
 int mtd_open_char_device(int index, int flags);

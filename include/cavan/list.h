@@ -5,7 +5,7 @@
 #include <cavan.h>
 #include <pthread.h>
 
-#define link_foreach_single(link, entry) \
+#define single_link_foreach(link, entry) \
 	do { \
 		struct single_link_node *__node; \
 		struct single_link *__link = link; \
@@ -25,7 +25,7 @@
 		return value; \
 	} while (0)
 
-#define link_foreach_circle(link, entry) \
+#define circle_link_foreach(link, entry) \
 	do { \
 		struct single_link_node *__head, *__node; \
 		struct circle_link *__link = link; \
@@ -34,7 +34,7 @@
 		{ \
 			entry = circle_link_get_container(__link, __node);
 
-#define link_foreach_double(link, entry) \
+#define double_link_foreach(link, entry) \
 	do { \
 		struct double_link_node *__head, *__node; \
 		struct double_link *__link = link; \

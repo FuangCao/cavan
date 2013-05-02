@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	cavan_usb_uninit(&usb_desc);
+	cavan_usb_deinit(&usb_desc);
 
 	return ret;
 }

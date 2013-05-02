@@ -211,7 +211,7 @@ void cavan_malloc_show_base(struct cavan_malloc_info *info)
 
 	print_sep(60);
 
-	link_foreach_double(&info->link, node)
+	double_link_foreach(&info->link, node)
 	{
 		pr_bold_info("addr = %p, size = %d, prev_size = %d", node, node->size, node->prev_size);
 	}

@@ -301,7 +301,7 @@ int cavan_route_table_init(struct cavan_route_table *table, size_t table_size)
 	return 0;
 }
 
-void cavan_route_table_uninit(struct cavan_route_table *table)
+void cavan_route_table_deinit(struct cavan_route_table *table)
 {
 	if (table)
 	{

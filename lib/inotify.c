@@ -27,7 +27,7 @@ int cavan_inotify_init(struct cavan_inotify_descriptor *desc)
 	return 0;
 }
 
-void cavan_inotify_uninit(struct cavan_inotify_descriptor *desc)
+void cavan_inotify_deinit(struct cavan_inotify_descriptor *desc)
 {
 	struct cavan_inotify_watch *p, *p_end;
 

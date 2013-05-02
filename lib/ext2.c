@@ -62,7 +62,7 @@ out_close_device:
 	return ret;
 }
 
-void ext2_uninit(struct ext2_desc *desc)
+void ext2_deinit(struct ext2_desc *desc)
 {
 	free(desc->gdt);
 	close(desc->fd);

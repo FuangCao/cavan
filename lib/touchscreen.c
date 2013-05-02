@@ -272,7 +272,7 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 				struct cavan_virtual_key *key;
 				struct single_link *link = &dev->event_dev->vk_link;
 
-				link_foreach_single(link, key)
+				single_link_foreach(link, key)
 				{
 					if (key->value)
 					{
@@ -438,7 +438,7 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 			struct cavan_virtual_key *key;
 			struct single_link *link = &dev->event_dev->vk_link;
 
-			link_foreach_single(link, key)
+			single_link_foreach(link, key)
 			{
 				if (key->value != 0)
 				{

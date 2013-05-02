@@ -16,7 +16,7 @@ struct cavan_net_bridge_descriptor
 };
 
 int cavan_net_bridge_init(struct cavan_net_bridge_descriptor *desc, const char *if_name);
-void cavan_net_bridge_uninit(struct cavan_net_bridge_descriptor *desc);
+void cavan_net_bridge_deinit(struct cavan_net_bridge_descriptor *desc);
 int cavan_net_bridge_recv_daemon(struct cavan_net_bridge_descriptor *desc, ssize_t (*write_handle)(void *data, const char *buff, size_t size));
 int cavan_net_bridge_send_daemon(struct cavan_net_bridge_descriptor *desc, ssize_t (*read_handle)(void *data, const char *buff, size_t size));
 

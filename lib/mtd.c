@@ -79,7 +79,7 @@ int cavan_mtd_init(struct cavan_mtd_descriptor *desc, const char *mtd_table)
 	return 0;
 }
 
-void cavan_mtd_uninit(struct cavan_mtd_descriptor *desc)
+void cavan_mtd_deinit(struct cavan_mtd_descriptor *desc)
 {
 }
 
@@ -456,7 +456,7 @@ int cavan_mtd_write_partition5(const char *partname, const char *filename)
 
 	ret = cavan_mtd_write_partition4(&desc, partname, filename);
 
-	cavan_mtd_uninit(&desc);
+	cavan_mtd_deinit(&desc);
 
 	return ret;
 }

@@ -361,7 +361,7 @@ static int run_server_thead(const char *net_dev, const char *usb_dev)
 	if (ret < 0)
 	{
 		pr_red_info("cavan_net_bridge_init");
-		goto out_usb_uninit;
+		goto out_usb_deinit;
 	}
 
 	pr_bold_info("host hwaddr = %s", mac_address_tostring((char *)nb_desc.host_hwaddr, MAC_ADDRESS_LEN));
@@ -376,24 +376,24 @@ static int run_server_thead(const char *net_dev, const char *usb_dev)
 	if (ret < 0)
 	{
 		print_error("pthread_create");
-		goto out_net_bridge_uninit;
+		goto out_net_bridge_deinit;
 	}
 
 	ret = pthread_create(&thread_recv, NULL, server_recv_handle, &server_data);
 	if (ret < 0)
 	{
 		print_error("pthread_create");
-		goto out_net_bridge_uninit;
+		goto out_net_bridge_deinit;
 	}
 
 	pthread_mutex_lock(&server_data.lock);
 	pthread_cond_wait(&server_data.notify, &server_data.lock);
 	pthread_mutex_unlock(&server_data.lock);
 
-out_net_bridge_uninit:
-	cavan_net_bridge_uninit(&nb_desc);
-out_usb_uninit:
-	cavan_usb_uninit(&usb_desc);
+out_net_bridge_deinit:
+	cavan_net_bridge_deinit(&nb_desc);
+out_usb_deinit:
+	cavan_usb_deinit(&usb_desc);
 
 	return -1;
 }

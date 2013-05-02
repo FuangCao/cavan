@@ -20,7 +20,7 @@ struct uevent_desc
 };
 
 int uevent_init(struct uevent_desc *desc);
-void uevent_uninit(struct uevent_desc *desc);
+void uevent_deinit(struct uevent_desc *desc);
 int get_disk_insert_uevent(struct uevent_desc *desc, char *devname);
 size_t uevent_split_base(const char *event, size_t event_len, char *props[], size_t size);
 char *uevent_get_property_base(char *props[], int prop_count, const char *prefix, char *buff);

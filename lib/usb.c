@@ -417,7 +417,7 @@ out_close_fd:
 	return ret;
 }
 
-void cavan_usb_uninit(struct cavan_usb_descriptor *desc)
+void cavan_usb_deinit(struct cavan_usb_descriptor *desc)
 {
 #if CONFIG_BUILD_FOR_ANDROID == 0
 	pthread_cancel(desc->thread_notify);
