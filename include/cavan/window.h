@@ -31,11 +31,11 @@ enum cavan_window_text_align
 struct cavan_window
 {
 	int id;
-	char text[512];
 
-	int x, abs_x;
-	int y, abs_y;
+	int x, y;
+	int xabs, yabs;
 	int width, height;
+	int right, bottom;
 	int border_width;
 
 	cavan_display_color_t border_color;
@@ -46,6 +46,7 @@ struct cavan_window
 	bool entered;
 	bool visible;
 	bool active;
+
 	pthread_mutex_t lock;
 	struct cavan_application_context *context;
 
@@ -53,7 +54,6 @@ struct cavan_window
 	struct double_link_node node;
 	struct double_link child_link;
 
-	int (*init_handler)(struct cavan_window *win, struct cavan_application_context *context);
 	void (*destory_handler)(struct cavan_window *win);
 	void (*paint_handler)(struct cavan_window *win);
 	void (*key_handler)(struct cavan_window *win, struct cavan_input_message_key *message);
@@ -73,27 +73,17 @@ struct cavan_window
 	bool (*on_exit)(struct cavan_window *win, struct cavan_input_message_point *message, void *data);
 };
 
-struct cavan_dialog
-{
-	struct cavan_window window;
-
-	int title_height;
-	int x_offset;
-	int y_offset;
-	bool move_able;
-	struct cavan_display_memory_rect *backup;
-};
-
 struct cavan_label
 {
 	struct cavan_window window;
 
+	const char *text;
 	enum cavan_window_text_align align;
 };
 
 struct cavan_button
 {
-	struct cavan_window window;
+	struct cavan_label label;
 
 	cavan_display_color_t border_color_backup;
 	cavan_display_color_t back_color_backup;
@@ -107,6 +97,17 @@ struct cavan_progress_bar
 	double pos;
 	double total;
 	cavan_display_color_t complete_color;
+};
+
+struct cavan_dialog
+{
+	struct cavan_window window;
+	struct cavan_label title;
+
+	bool move_able;
+	int xofs, yofs;
+
+	struct cavan_display_memory_rect *backup;
 };
 
 struct cavan_application_context
@@ -134,7 +135,7 @@ struct cavan_application_context
 	bool (*on_key_pressed)(struct cavan_application_context *context, struct cavan_input_message_key *message, void *data);
 };
 
-int cavan_window_add_child(struct cavan_window *win, struct cavan_window *child);
+void cavan_window_add_child(struct cavan_window *win, struct cavan_window *child);
 void cavan_window_remove_child(struct cavan_window *win, struct cavan_window *child);
 void cavan_window_set_abs_position(struct cavan_window *win, int x, int y);
 void cavan_window_set_position(struct cavan_window *win, int x, int y);
@@ -144,8 +145,7 @@ void cavan_window_paint(struct cavan_window *win);
 void cavan_window_paint_child(struct double_link *link);
 void cavan_window_destory(struct cavan_window *win);
 
-int cavan_window_init_base(struct cavan_window *win, int (*handler)(struct cavan_window *win, struct cavan_application_context *context));
-int cavan_window_init_handler(struct cavan_window *win, struct cavan_application_context *context);
+int cavan_window_init(struct cavan_window *win, struct cavan_application_context *context);
 void cavan_window_destory_handler(struct cavan_window *win);
 void cavan_window_paint_handler(struct cavan_window *win);
 void cavan_window_paint_handler(struct cavan_window *win);
@@ -156,24 +156,23 @@ void cavan_window_entry_handler(struct cavan_window *win, struct cavan_input_mes
 void cavan_window_exit_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 void cavan_window_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect);
 
-int cavan_dialog_init_handler(struct cavan_window *win, struct cavan_application_context *context);
+int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_context *context);
 void cavan_dialog_paint_handler(struct cavan_window *win);
 void cavan_dialog_click_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 void cavan_dialog_move_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 void cavan_dialog_get_rect_handler(struct cavan_window *win, struct cavan_display_rect *rect);
 
-int cavan_label_init_handler(struct cavan_window *win, struct cavan_application_context *context);
+int cavan_label_init(struct cavan_label *label, struct cavan_application_context *context);
 void cavan_label_paint_handler(struct cavan_window *win);
 
-int cavan_button_init_handler(struct cavan_window *win, struct cavan_application_context *context);
+int cavan_button_init(struct cavan_button *button, struct cavan_application_context *context);
 void cavan_button_paint_handler(struct cavan_window *win);
 void cavan_button_click_handler(struct cavan_window *win, struct cavan_input_message_point *message);
 
-void cavan_progress_bar_paint_handler(struct cavan_window *win);
-int cavan_progress_bar_init_handler(struct cavan_window *win, struct cavan_application_context *context);
-int cavan_progress_bar_init(struct cavan_progress_bar *bar, double total);
+int cavan_progress_bar_init(struct cavan_progress_bar *bar, double total, struct cavan_application_context *context);
 int cavan_progress_bar_start(struct cavan_progress_bar *bar, double total);
 void cavan_progress_bar_set_pos(struct cavan_progress_bar *bar, double pos);
+void cavan_progress_bar_paint_handler(struct cavan_window *win);
 
 bool cavan_window_clicked(struct cavan_window *win, struct cavan_input_message_point *message);
 
@@ -182,7 +181,7 @@ void cavan_application_uninit(struct cavan_application_context *context);
 int cavan_application_main_loop(struct cavan_application_context *context, void (*handler)(struct cavan_application_context *context, void *data), void *data);
 void cavan_application_paint(struct cavan_application_context *context);
 void cavan_application_update_data(struct cavan_application_context *context);
-int cavan_application_add_window(struct cavan_application_context *context, struct cavan_window *win);
+void cavan_application_add_window(struct cavan_application_context *context, struct cavan_window *win);
 void cavan_application_remove_window(struct cavan_application_context *context, struct cavan_window *win);
 
 static inline void cavan_application_set_on_key_pressed(struct cavan_application_context *context, bool (*handler)(struct cavan_application_context *context, struct cavan_input_message_key *key, void *data))
@@ -223,17 +222,11 @@ static inline void cavan_window_set_border_color(struct cavan_window *win, float
 	pthread_mutex_unlock(&win->lock);
 }
 
-static inline void cavan_window_set_text(struct cavan_window *win, const char *text)
-{
-	pthread_mutex_lock(&win->lock);
-	text_ncopy(win->text, text, sizeof(win->text));
-	pthread_mutex_unlock(&win->lock);
-}
-
 static inline void cavan_window_set_width(struct cavan_window *win, int width)
 {
 	pthread_mutex_lock(&win->lock);
 	win->width = width;
+	win->right = win->xabs + width - 1;
 	pthread_mutex_unlock(&win->lock);
 }
 
@@ -241,6 +234,7 @@ static inline void cavan_window_set_height(struct cavan_window *win, int height)
 {
 	pthread_mutex_lock(&win->lock);
 	win->height = height;
+	win->bottom = win->yabs + height - 1;
 	pthread_mutex_unlock(&win->lock);
 }
 
@@ -325,31 +319,16 @@ static inline void cavan_window_update(struct cavan_window *win)
 	cavan_window_paint(win);
 }
 
-static inline int cavan_window_init(struct cavan_window *win)
-{
-	return cavan_window_init_base(win, cavan_window_init_handler);
-}
-
-static inline int cavan_dialog_init(struct cavan_dialog *dialog)
-{
-	return cavan_window_init_base(&dialog->window, cavan_dialog_init_handler);
-}
-
 static inline void cavan_dialog_set_title_height(struct cavan_dialog *dialog, int height)
 {
-	cavan_window_lock(&dialog->window);
-	dialog->title_height = height;
-	cavan_window_unlock(&dialog->window);
+	cavan_window_set_height(&dialog->title.window, height);
 }
 
-static inline int cavan_label_init(struct cavan_label *label)
+static inline void cavan_label_set_text(struct cavan_label *label, const char *text)
 {
-	return cavan_window_init_base(&label->window, cavan_label_init_handler);
-}
-
-static inline int cavan_button_init(struct cavan_button *button)
-{
-	return cavan_window_init_base(&button->window, cavan_button_init_handler);
+	cavan_window_lock(&label->window);
+	label->text = text;
+	cavan_window_unlock(&label->window);
 }
 
 static inline void cavan_progress_bar_add(struct cavan_progress_bar *bar, double value)
