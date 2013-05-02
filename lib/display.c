@@ -1328,7 +1328,7 @@ int cavan_display_memory_rect_restore(struct cavan_display_device *display, stru
 	return 0;
 }
 
-int cavan_display_draw_text_centre(struct cavan_display_device *display, struct cavan_display_rect *rect, const char *text)
+int cavan_display_draw_text_center(struct cavan_display_device *display, struct cavan_display_rect *rect, const char *text)
 {
 	int x, y;
 

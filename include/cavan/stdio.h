@@ -84,10 +84,10 @@
 	printf(fmt "\n", ##args)
 
 #ifdef CAVAN_DEBUG
-#define pr_debug_info(fmt, args) \
-	pr_std_info(fmt, args)
+#define pr_debug_info(fmt, args ...) \
+	pr_std_info(fmt, ##args)
 #else
-#define pr_debug_info(fmt, args)
+#define pr_debug_info(fmt, args ...)
 #endif
 
 #define pr_func_info(fmt, args ...) \

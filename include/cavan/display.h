@@ -135,7 +135,7 @@ struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_dev
 struct cavan_display_memory_rect *cavan_display_memory_rect_alloc(struct cavan_display_device *display, size_t width, size_t height, int border_width);
 int cavan_display_memory_rect_backup(struct cavan_display_device *display, struct cavan_display_memory_rect *mem_rect, int x, int y);
 int cavan_display_memory_rect_restore(struct cavan_display_device *display, struct cavan_display_memory_rect *mem_rect);
-int cavan_display_draw_text_centre(struct cavan_display_device *display, struct cavan_display_rect *rect, const char *text);
+int cavan_display_draw_text_center(struct cavan_display_device *display, struct cavan_display_rect *rect, const char *text);
 
 static inline void cavan_display_memory_free(struct cavan_display_memory *mem)
 {
