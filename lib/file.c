@@ -2815,11 +2815,7 @@ mode_t file_mode2value(const char *text)
 int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *option)
 {
 	int ret;
-
-	if (file_access_e(pathname))
-	{
-		return 0;
-	}
+	char buff[1024], *filename;
 
 	if (option->verbose)
 	{
@@ -2832,34 +2828,39 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 		return 0;
 	}
 
-	if (errno == EEXIST)
-	{
-		char buff[1024], *filename;
-
-		filename = text_dirname_base(buff, pathname);
-		*filename = '/';
-		text_copy(filename + 1, CAVAN_TEMP_FILENAME);
-
-		mkdir(buff, option->mode);
-
-		ret = rename(buff, pathname);
-		if (ret < 0)
-		{
-			rmdir(buff);
-
-			if (errno == EEXIST || errno == ENOTEMPTY || file_access_e(pathname))
-			{
-				pr_warning_info("directory `%s' is not empty", pathname);
-				return 0;
-			}
-
-			pr_error_info("rename directory `%s'", pathname);
-		}
-	}
-	else
+	if (errno != EEXIST)
 	{
 		pr_error_info("create directory `%s'", pathname);
+		return ret;
 	}
+
+	if (file_access_e(pathname))
+	{
+		return 0;
+	}
+
+	filename = text_dirname_base(buff, pathname);
+	*filename = '/';
+	text_copy(filename + 1, CAVAN_TEMP_FILENAME);
+
+	mkdir(buff, option->mode);
+
+	pr_warning_info("rename %s => %s", buff, pathname);
+
+	ret = rename(buff, pathname);
+	if (ret == 0)
+	{
+		return 0;
+	}
+
+	rmdir(buff);
+
+	if (file_access_e(pathname))
+	{
+		return 0;
+	}
+
+	pr_error_info("rename directory `%s'", pathname);
 
 	return ret;
 }
