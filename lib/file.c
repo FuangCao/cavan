@@ -2929,6 +2929,8 @@ int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option 
 
 int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *option)
 {
+	umask(0);
+
 	if (option->parents)
 	{
 		return cavan_mkdir_parents(pathname, option);

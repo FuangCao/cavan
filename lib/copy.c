@@ -46,6 +46,8 @@ int file_copy_main(const char *src, const char *dest)
 		return ret;
 	}
 
+	umask(0);
+
 	switch (st.st_mode & S_IFMT)
 	{
 	case S_IFCHR:

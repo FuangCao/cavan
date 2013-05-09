@@ -95,6 +95,8 @@ int cavan_service_run(struct cavan_service_description *desc)
 		ret = chdir(homepath);
 	}
 
+	umask(0);
+
 	for (i = 0; i < count; i++)
 	{
 		ret = pthread_create(threads + i, NULL, cavan_service_handler, desc);
