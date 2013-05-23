@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CavanServer</string>
+    <string name="app_name">CavanServerManager</string>
     <string name="service_running">service running</string>
     <string name="service_stopped">service stopped</string>
     <string name="service_opening">service opening</string>
