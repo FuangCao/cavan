@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" android:title="@string/app_name">
+    <CheckBoxPreference
+            android:key="enable_service"
+            android:title="@string/service_name"
+            android:persistent="false" />
+    <EditTextPreference
+            android:key="service_port"
+            android:title="@string/service_port"
+            android:persistent="false" />
+</PreferenceScreen>

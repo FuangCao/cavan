@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TcpDdServer</string>
+    <string name="service_name">TCP DD Service</string>
+    <string name="enable_service">enable service</string>
+    <string name="disable_service">disable service</string>
+    <string name="service_running">service running</string>
+    <string name="service_stopped">service stopped</string>
+    <string name="service_opening">service opening</string>
+    <string name="service_stopping">service stopping</string>
+    <string name="menu_settings">Settings</string>
+    <string name="service_port">Service Port</string>
+</resources>
