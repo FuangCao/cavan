@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">曹福昂服务管理</string>
+    <string name="service_running">服务正在运行</string>
+    <string name="service_stopped">服务已停止</string>
+    <string name="service_opening">正在打开服务器</string>
+    <string name="service_stopping">正在停止服务器</string>
+    <string name="menu_settings">设置</string>
+    <string name="tcp_dd_name">TCP_DD 服务</string>
+    <string name="tcp_dd_port">TCP_DD 服务端口号</string>
+    <string name="ftp_name">FTP 服务</string>
+    <string name="ftp_port">FTP 服务端口号</string>
+</resources>

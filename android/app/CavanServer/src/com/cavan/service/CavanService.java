@@ -1,8 +1,5 @@
 package com.cavan.service;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -12,22 +9,22 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-public class TcpDdService extends Service {
+public abstract class CavanService extends Service {
 	private static final String TAG = "TcpDdService";
 
 	public static final int SERVICE_STATE_RUNNING = 0;
 	public static final int SERVICE_STATE_STOPPED = 1;
-	public static final String ACTION_SERVICE_STATE_CHANGE = "com.cavan.service.STATE_CHANGE";
 
 	private Process mProcessService;
-	private File mFileCavanMain;
-	private int mState = SERVICE_STATE_STOPPED;
-	private int mPort = 8888;
+	private String mCommand;
+
+	protected int mState = SERVICE_STATE_STOPPED;
+	protected int mPort;
 
 	class MonitorThread extends Thread {
-		private TcpDdService mService;
+		private CavanService mService;
 
-		public MonitorThread(TcpDdService mService) {
+		public MonitorThread(CavanService mService) {
 			super();
 			this.mService = mService;
 		}
@@ -67,8 +64,8 @@ public class TcpDdService extends Service {
 	}
 
 	class ServiceBinder extends Binder {
-		TcpDdService getService() {
-			return TcpDdService.this;
+		CavanService getService() {
+			return CavanService.this;
 		}
 	}
 
@@ -80,16 +77,10 @@ public class TcpDdService extends Service {
 
 	@Override
 	public void onCreate() {
-		mFileCavanMain = new File(getFilesDir(), "cavan-main");
-
-		try {
-			prepareCavanMain(R.raw.cavan, mFileCavanMain);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
+		Log.d(TAG, "onCreate()");
 		super.onCreate();
 	}
+
 	public int getState() {
 		return mState;
 	}
@@ -99,14 +90,15 @@ public class TcpDdService extends Service {
 			mProcessService.destroy();
 		}
 
-		Intent intent = new Intent(getApplicationContext(), TcpDdService.class);
+		Intent intent = new Intent(getApplicationContext(), CavanService.class);
 		stopService(intent);
 	}
 
-	public boolean start(int port) {
+	public boolean start(String format, int port) {
 		mPort = port;
+		mCommand = String.format(format, port);
 
-		Intent intent = new Intent(getApplicationContext(), TcpDdService.class);
+		Intent intent = new Intent(getApplicationContext(), getClass());
 		startService(intent);
 
 		return true;
@@ -127,10 +119,10 @@ public class TcpDdService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.d(TAG, "onStartCommand");
+		Log.d(TAG, "onStartCommand command = " + mCommand);
 
 		try {
-			mProcessService = Runtime.getRuntime().exec(mFileCavanMain.getAbsolutePath() + " tcp_dd_server -s 0 -p " + mPort);
+			mProcessService = Runtime.getRuntime().exec(mCommand);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return -1;
@@ -139,12 +131,6 @@ public class TcpDdService extends Service {
 		new MonitorThread(this).start();
 
 		return super.onStartCommand(intent, flags, startId);
-	}
-
-	private void notifyStateChanged() {
-		Intent intent = new Intent(ACTION_SERVICE_STATE_CHANGE);
-		intent.putExtra("state", mState);
-		sendBroadcast(intent);
 	}
 
 	public boolean setState(int state) {
@@ -158,40 +144,5 @@ public class TcpDdService extends Service {
 		return true;
 	}
 
-	private boolean prepareCavanMain(int id, File file) throws IOException {
-		if (file.exists()) {
-			return true;
-		}
-
-		Log.d(TAG, "Extra file " + file.getAbsolutePath());
-
-		InputStream inputStream = getResources().openRawResource(id);
-
-		FileOutputStream outputStream;
-		try {
-			outputStream = new FileOutputStream(file);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			inputStream.close();
-			return false;
-		}
-
-		int length;
-		byte []buff = new byte[1024];
-
-		try {
-			while ((length = inputStream.read(buff)) > 0) {
-				outputStream.write(buff, 0, length);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			outputStream.close();
-			inputStream.close();
-		}
-
-		file.setExecutable(true);
-
-		return true;
-	}
+	protected abstract void notifyStateChanged();
 }

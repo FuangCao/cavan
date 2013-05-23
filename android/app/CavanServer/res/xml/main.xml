@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" android:title="@string/app_name">
+    <CheckBoxPreference
+            android:key="enable_tcp_dd"
+            android:title="@string/tcp_dd_name"
+            android:persistent="false" />
+    <EditTextPreference
+            android:key="tcp_dd_port"
+            android:title="@string/tcp_dd_port"
+            android:persistent="false" />
+    <CheckBoxPreference
+            android:key="enable_ftp"
+            android:title="@string/ftp_name"
+            android:persistent="false" />
+    <EditTextPreference
+            android:key="ftp_port"
+            android:title="@string/ftp_port"
+            android:persistent="false" />
+</PreferenceScreen>

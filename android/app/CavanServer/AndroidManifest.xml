@@ -25,6 +25,7 @@
             </intent-filter>
         </activity>
         <service android:name="com.cavan.service.TcpDdService"></service>
+        <service android:name="com.cavan.service.FtpService"></service>
     </application>
 
 </manifest>
