@@ -8,3 +8,7 @@ sort -u
 expr 1 + 1
 cat /var/log/boot.log
 smbpasswd
+chown root:root /usr/bin/sudo
+chmod 06755 /usr/bin/sudo
+more
+whereis sudo
