@@ -2,6 +2,7 @@
 
 MAKEFILE_AM="Makefile.am"
 CAVAN_NAME="cavan"
+SUID_BINS="sudo"
 
 function gen_makefile_am_header()
 {
@@ -36,6 +37,12 @@ bin_PROGRAMS = ${bin_all}
 
 LDFLAGS = -L@abs_top_builddir@/lib/_libs -L@abs_top_builddir@/lib/.libs -Wl,-rpath -Wl,@libdir@
 LIBS = -l${CAVAN_NAME} -lpthread -lm -lrt
+
+install: install-am
+	for fn in ${SUID_BINS}; \\
+	do \\
+		chmod -f 04755 \$(DESTDIR)\$(bindir)/cavan-\$\${fn}; \\
+	done
 EOF
 
 	return 0

@@ -69,11 +69,11 @@ bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
 	cavan-swan_md5$(EXEEXT) cavan-swan_mac$(EXEEXT) \
 	cavan-swan_ipu$(EXEEXT) cavan-swan_fac$(EXEEXT) \
 	cavan-swan_emmc$(EXEEXT) cavan-swan_check$(EXEEXT) \
-	cavan-super_upgrade$(EXEEXT) cavan-sprd_write_imei$(EXEEXT) \
-	cavan-sprd_at$(EXEEXT) cavan-shrink$(EXEEXT) \
-	cavan-show_file$(EXEEXT) cavan-service$(EXEEXT) \
-	cavan-screen_mirror$(EXEEXT) cavan-rle$(EXEEXT) \
-	cavan-resize$(EXEEXT) cavan-remove$(EXEEXT) \
+	cavan-super_upgrade$(EXEEXT) cavan-sudo$(EXEEXT) \
+	cavan-sprd_write_imei$(EXEEXT) cavan-sprd_at$(EXEEXT) \
+	cavan-shrink$(EXEEXT) cavan-show_file$(EXEEXT) \
+	cavan-service$(EXEEXT) cavan-screen_mirror$(EXEEXT) \
+	cavan-rle$(EXEEXT) cavan-resize$(EXEEXT) cavan-remove$(EXEEXT) \
 	cavan-ramdisk$(EXEEXT) cavan-poll_input$(EXEEXT) \
 	cavan-poll_event$(EXEEXT) cavan-part_table$(EXEEXT) \
 	cavan-part_show$(EXEEXT) cavan-part_probe$(EXEEXT) \
@@ -279,6 +279,9 @@ cavan_sprd_at_LDADD = $(LDADD)
 am_cavan_sprd_write_imei_OBJECTS = sprd_write_imei.$(OBJEXT)
 cavan_sprd_write_imei_OBJECTS = $(am_cavan_sprd_write_imei_OBJECTS)
 cavan_sprd_write_imei_LDADD = $(LDADD)
+am_cavan_sudo_OBJECTS = sudo.$(OBJEXT)
+cavan_sudo_OBJECTS = $(am_cavan_sudo_OBJECTS)
+cavan_sudo_LDADD = $(LDADD)
 am_cavan_super_upgrade_OBJECTS = super_upgrade.$(OBJEXT)
 cavan_super_upgrade_OBJECTS = $(am_cavan_super_upgrade_OBJECTS)
 cavan_super_upgrade_LDADD = $(LDADD)
@@ -419,23 +422,23 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_screen_mirror_SOURCES) $(cavan_service_SOURCES) \
 	$(cavan_show_file_SOURCES) $(cavan_shrink_SOURCES) \
 	$(cavan_sprd_at_SOURCES) $(cavan_sprd_write_imei_SOURCES) \
-	$(cavan_super_upgrade_SOURCES) $(cavan_swan_check_SOURCES) \
-	$(cavan_swan_emmc_SOURCES) $(cavan_swan_fac_SOURCES) \
-	$(cavan_swan_ipu_SOURCES) $(cavan_swan_mac_SOURCES) \
-	$(cavan_swan_md5_SOURCES) $(cavan_swan_mkfs_SOURCES) \
-	$(cavan_swan_sfdisk_SOURCES) $(cavan_swan_ts_SOURCES) \
-	$(cavan_swan_upgrade_SOURCES) $(cavan_swan_vk_SOURCES) \
-	$(cavan_swan_vn_SOURCES) $(cavan_system_init_SOURCES) \
-	$(cavan_tcp_copy_SOURCES) $(cavan_tcp_dd_SOURCES) \
-	$(cavan_tcp_dd_server_SOURCES) $(cavan_tcp_exec_SOURCES) \
-	$(cavan_tcp_proxy_SOURCES) $(cavan_textlen_SOURCES) \
-	$(cavan_tftp_auto_dd_SOURCES) $(cavan_tftp_command_SOURCES) \
-	$(cavan_tftp_copy_SOURCES) $(cavan_tftp_dd_SOURCES) \
-	$(cavan_tftp_dd_server_SOURCES) $(cavan_touch_SOURCES) \
-	$(cavan_tty_mode_SOURCES) $(cavan_umount_SOURCES) \
-	$(cavan_usb_SOURCES) $(cavan_usb_copy_SOURCES) \
-	$(cavan_usb_dd_SOURCES) $(cavan_usb_dd_server_SOURCES) \
-	$(cavan_vfat_SOURCES)
+	$(cavan_sudo_SOURCES) $(cavan_super_upgrade_SOURCES) \
+	$(cavan_swan_check_SOURCES) $(cavan_swan_emmc_SOURCES) \
+	$(cavan_swan_fac_SOURCES) $(cavan_swan_ipu_SOURCES) \
+	$(cavan_swan_mac_SOURCES) $(cavan_swan_md5_SOURCES) \
+	$(cavan_swan_mkfs_SOURCES) $(cavan_swan_sfdisk_SOURCES) \
+	$(cavan_swan_ts_SOURCES) $(cavan_swan_upgrade_SOURCES) \
+	$(cavan_swan_vk_SOURCES) $(cavan_swan_vn_SOURCES) \
+	$(cavan_system_init_SOURCES) $(cavan_tcp_copy_SOURCES) \
+	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
+	$(cavan_tcp_exec_SOURCES) $(cavan_tcp_proxy_SOURCES) \
+	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
+	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
+	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
+	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
+	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
+	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
+	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES)
 DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_auto_mount_SOURCES) $(cavan_battery_SOURCES) \
 	$(cavan_battery_level_SOURCES) $(cavan_bdata_SOURCES) \
@@ -464,23 +467,23 @@ DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_screen_mirror_SOURCES) $(cavan_service_SOURCES) \
 	$(cavan_show_file_SOURCES) $(cavan_shrink_SOURCES) \
 	$(cavan_sprd_at_SOURCES) $(cavan_sprd_write_imei_SOURCES) \
-	$(cavan_super_upgrade_SOURCES) $(cavan_swan_check_SOURCES) \
-	$(cavan_swan_emmc_SOURCES) $(cavan_swan_fac_SOURCES) \
-	$(cavan_swan_ipu_SOURCES) $(cavan_swan_mac_SOURCES) \
-	$(cavan_swan_md5_SOURCES) $(cavan_swan_mkfs_SOURCES) \
-	$(cavan_swan_sfdisk_SOURCES) $(cavan_swan_ts_SOURCES) \
-	$(cavan_swan_upgrade_SOURCES) $(cavan_swan_vk_SOURCES) \
-	$(cavan_swan_vn_SOURCES) $(cavan_system_init_SOURCES) \
-	$(cavan_tcp_copy_SOURCES) $(cavan_tcp_dd_SOURCES) \
-	$(cavan_tcp_dd_server_SOURCES) $(cavan_tcp_exec_SOURCES) \
-	$(cavan_tcp_proxy_SOURCES) $(cavan_textlen_SOURCES) \
-	$(cavan_tftp_auto_dd_SOURCES) $(cavan_tftp_command_SOURCES) \
-	$(cavan_tftp_copy_SOURCES) $(cavan_tftp_dd_SOURCES) \
-	$(cavan_tftp_dd_server_SOURCES) $(cavan_touch_SOURCES) \
-	$(cavan_tty_mode_SOURCES) $(cavan_umount_SOURCES) \
-	$(cavan_usb_SOURCES) $(cavan_usb_copy_SOURCES) \
-	$(cavan_usb_dd_SOURCES) $(cavan_usb_dd_server_SOURCES) \
-	$(cavan_vfat_SOURCES)
+	$(cavan_sudo_SOURCES) $(cavan_super_upgrade_SOURCES) \
+	$(cavan_swan_check_SOURCES) $(cavan_swan_emmc_SOURCES) \
+	$(cavan_swan_fac_SOURCES) $(cavan_swan_ipu_SOURCES) \
+	$(cavan_swan_mac_SOURCES) $(cavan_swan_md5_SOURCES) \
+	$(cavan_swan_mkfs_SOURCES) $(cavan_swan_sfdisk_SOURCES) \
+	$(cavan_swan_ts_SOURCES) $(cavan_swan_upgrade_SOURCES) \
+	$(cavan_swan_vk_SOURCES) $(cavan_swan_vn_SOURCES) \
+	$(cavan_system_init_SOURCES) $(cavan_tcp_copy_SOURCES) \
+	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
+	$(cavan_tcp_exec_SOURCES) $(cavan_tcp_proxy_SOURCES) \
+	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
+	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
+	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
+	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
+	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
+	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
+	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -666,6 +669,7 @@ cavan_show_file_SOURCES = show_file.c
 cavan_shrink_SOURCES = shrink.c
 cavan_sprd_at_SOURCES = sprd_at.c
 cavan_sprd_write_imei_SOURCES = sprd_write_imei.c
+cavan_sudo_SOURCES = sudo.c
 cavan_super_upgrade_SOURCES = super_upgrade.c
 cavan_swan_check_SOURCES = swan_check.c
 cavan_swan_emmc_SOURCES = swan_emmc.c
@@ -947,6 +951,9 @@ cavan-sprd_at$(EXEEXT): $(cavan_sprd_at_OBJECTS) $(cavan_sprd_at_DEPENDENCIES) $
 cavan-sprd_write_imei$(EXEEXT): $(cavan_sprd_write_imei_OBJECTS) $(cavan_sprd_write_imei_DEPENDENCIES) $(EXTRA_cavan_sprd_write_imei_DEPENDENCIES) 
 	@rm -f cavan-sprd_write_imei$(EXEEXT)
 	$(LINK) $(cavan_sprd_write_imei_OBJECTS) $(cavan_sprd_write_imei_LDADD) $(LIBS)
+cavan-sudo$(EXEEXT): $(cavan_sudo_OBJECTS) $(cavan_sudo_DEPENDENCIES) $(EXTRA_cavan_sudo_DEPENDENCIES) 
+	@rm -f cavan-sudo$(EXEEXT)
+	$(LINK) $(cavan_sudo_OBJECTS) $(cavan_sudo_LDADD) $(LIBS)
 cavan-super_upgrade$(EXEEXT): $(cavan_super_upgrade_OBJECTS) $(cavan_super_upgrade_DEPENDENCIES) $(EXTRA_cavan_super_upgrade_DEPENDENCIES) 
 	@rm -f cavan-super_upgrade$(EXEEXT)
 	$(LINK) $(cavan_super_upgrade_OBJECTS) $(cavan_super_upgrade_LDADD) $(LIBS)
@@ -1109,6 +1116,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shrink.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sprd_at.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sprd_write_imei.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sudo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/super_upgrade.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_check.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_emmc.Po@am__quote@
@@ -1259,7 +1267,6 @@ installdirs:
 	for dir in "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -1376,6 +1383,12 @@ uninstall-am: uninstall-binPROGRAMS
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-binPROGRAMS
 
+
+install: install-am
+	for fn in sudo; \
+	do \
+		chmod -f 04755 $(DESTDIR)$(bindir)/cavan-$${fn}; \
+	done
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
