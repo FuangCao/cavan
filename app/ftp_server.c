@@ -10,7 +10,6 @@ enum
 	LOCAL_COMMAND_OPTION_UNKNOWN,
 	LOCAL_COMMAND_OPTION_HELP,
 	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_DEVICE,
 	LOCAL_COMMAND_OPTION_PORT,
 	LOCAL_COMMAND_OPTION_COUNT,
 	LOCAL_COMMAND_OPTION_ROOT,
@@ -19,16 +18,16 @@ enum
 	LOCAL_COMMAND_OPTION_SUPER
 };
 
-static void show_usage(void)
+static void show_usage(const char *command)
 {
 	println("Usage:");
-	println("--help, -h, -H");
-	println("--version");
-	println("--daemon");
-	println("--verbose, -v, -V");
-	println("--port, -p, -P");
-	println("--root, -r, -R");
-	println("--count, -c, -C");
+	println("%s [option] port", command);
+	println("--help, -h, -H\t\tshow this help");
+	println("--super, -s, -S\t\tneed super permission");
+	println("--daemon, -d, -D\trun as a daemon");
+	println("--count, -c, -C\t\tdaemon count");
+	println("--verbose, -v, -V\tshow log message");
+	println("--port, -p, -P\t\tserver port");
 }
 
 int main(int argc, char *argv[])
@@ -79,6 +78,12 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_VERBOSE,
 		},
+		{
+			.name = "super",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_SUPER,
+		},
 		{0, 0, 0, 0},
 	};
 	u16 port = FTP_CTRL_PORT;
@@ -88,10 +93,10 @@ int main(int argc, char *argv[])
 		.daemon_count = FTP_DAEMON_COUNT,
 		.as_daemon = 0,
 		.show_verbose = 0,
-		.super_permission = 0
+		.super_permission = 1
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhHd:D:p:P:c:C:r:R:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHdDp:P:c:C:r:R:s:S:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -103,7 +108,7 @@ int main(int argc, char *argv[])
 		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
-			show_usage();
+			show_usage(argv[0]);
 			return 0;
 
 		case 'r':
@@ -136,8 +141,14 @@ int main(int argc, char *argv[])
 			desc.show_verbose = 1;
 			break;
 
+		case 's':
+		case 'S':
+		case LOCAL_COMMAND_OPTION_SUPER:
+			desc.super_permission = text_bool_value(optarg);
+			break;
+
 		default:
-			show_usage();
+			show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}
