@@ -131,10 +131,11 @@ class GitSvnManager(CavanCommandBase):
 
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
-		self.mFileSvnIgnore = self.getAbsPath(".gitignore")
+		self.mFileSvnIgnore = self.getAbsPath(".svn/.gitignore")
 
 		self.mPathGitSvn = self.getAbsPath(".git/cavan-svn")
 		self.mPathPatch = self.getAbsPath(".git/cavan-patch")
+		self.mPathSvnRepo = self.getAbsPath(".svn")
 		self.mFileSvnLog = os.path.join(self.mPathGitSvn, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mPathGitSvn, "svn_info.xml")
 
@@ -345,7 +346,7 @@ class GitSvnManager(CavanCommandBase):
 	def svnCheckout(self, entry):
 		revision = entry.getRevesion()
 
-		if os.path.isdir(self.getAbsPath(".svn")):
+		if os.path.isdir(self.mPathSvnRepo):
 			lines = self.doPopen(["svn", "update", "--accept", "theirs-full", "--force", "-r", revision])
 			if lines == None:
 				return False
@@ -362,10 +363,8 @@ class GitSvnManager(CavanCommandBase):
 			if not self.doExecute(["svn", "checkout", "--force", "--quiet", url, "."], of = "/dev/null"):
 				return False
 
-			if not os.path.exists(self.mFileSvnIgnore):
-				lines = ["/.gitignore\n", ".svn\n"]
-				if not file_write_lines(self.mFileSvnIgnore, lines):
-					return False
+			if not file_write_line(self.mFileSvnIgnore, "*"):
+				return False
 
 			listUpdate = self.doPopen(["svn", "list"])
 			if not listUpdate:
@@ -411,6 +410,18 @@ class GitSvnManager(CavanCommandBase):
 
 		if not branch:
 			branch = self.mBranchMaster
+
+		if not os.path.isdir(self.mPathSvnRepo) and os.path.isdir(self.mPathGitSvn):
+			os.makedirs(os.path.join(self.mPathSvnRepo, "tmp"))
+			relPath = os.path.join("..", self.getRelPath(self.mPathGitSvn))
+			for filename in os.listdir(self.mPathGitSvn):
+				destPath = os.path.join(self.mPathSvnRepo, filename)
+				srcPath = os.path.join(relPath, filename)
+				os.symlink(srcPath, destPath)
+
+		if not os.path.exists(self.mFileSvnIgnore) and os.path.isdir(self.mPathSvnRepo):
+			if not file_write_line(self.mFileSvnIgnore, "*"):
+				return False
 
 		self.mGitRevision = self.getGitHeadSvnRevision(branch)
 		if self.mGitRevision < 0 and self.doExecute(["git", "log", "-1"], of = "/dev/null", ef = "/dev/null"):
@@ -462,6 +473,22 @@ class GitSvnManager(CavanCommandBase):
 			entry = SvnLogEntry(item)
 			if not self.svnCheckout(entry):
 				return False
+
+		for filename in os.listdir(self.mPathSvnRepo):
+			if filename in ["tmp", ".gitignore"]:
+				continue
+
+			srcPath = os.path.join(self.mPathSvnRepo, filename)
+			if os.path.islink(srcPath):
+				continue
+
+			destPath = os.path.join(self.mPathGitSvn, filename)
+			if os.path.exists(destPath):
+				self.doExecute(["rm", "-rf", destPath])
+
+			os.rename(srcPath, destPath)
+			relPath = os.path.join("..", self.getRelPath(destPath))
+			os.symlink(relPath, srcPath)
 
 		return True
 
