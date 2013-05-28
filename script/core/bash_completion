@@ -117,4 +117,4 @@ function _git_repo_completion()
 }
 
 complete -F _git_repo_completion repo git-repo
-complete -F _root_command cavan-sudo
+complete -F _root_command cavan-sudo cavan-service cavan-daemon-command

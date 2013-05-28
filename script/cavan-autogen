@@ -2,7 +2,7 @@
 
 MAKEFILE_AM="Makefile.am"
 CAVAN_NAME="cavan"
-SUID_BINS="sudo"
+SUID_BINS="sudo service"
 
 function gen_makefile_am_header()
 {

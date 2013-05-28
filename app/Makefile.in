@@ -1385,7 +1385,7 @@ uninstall-am: uninstall-binPROGRAMS
 
 
 install: install-am
-	for fn in sudo; \
+	for fn in sudo service; \
 	do \
 		chmod -f 04755 $(DESTDIR)$(bindir)/cavan-$${fn}; \
 	done

@@ -101,7 +101,7 @@ LDFLAGS = -L@abs_top_builddir@/lib/_libs -L@abs_top_builddir@/lib/.libs -Wl,-rpa
 LIBS = -lcavan -lpthread -lm -lrt
 
 install: install-am
-	for fn in sudo; \
+	for fn in sudo service; \
 	do \
 		chmod -f 04755 $(DESTDIR)$(bindir)/cavan-$${fn}; \
 	done
