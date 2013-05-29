@@ -142,9 +142,10 @@ class GitSvnManager(CavanCommandBase):
 	def findRootPath(self):
 		pathname = self.mPathRoot
 		while not os.path.isdir(os.path.join(pathname, ".git")):
-			pathname = os.path.dirname(pathname)
-			if not pathname:
+			if not pathname or pathname == '/':
 				return None
+
+			pathname = os.path.dirname(pathname)
 
 		return pathname
 
@@ -654,6 +655,7 @@ class GitSvnManager(CavanCommandBase):
 
 			pathname = self.findRootPath()
 			if not pathname:
+				self.prRedInfo("Please init this repo first")
 				return False
 
 			self.setRootPath(pathname)

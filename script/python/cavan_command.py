@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, os, subprocess
+import sys, os, subprocess, errno
 
 def command_vision(command):
 	print command
@@ -46,8 +46,11 @@ class CavanCommandBase:
 		self.mVerbose = verbose
 
 	def setRootPath(self, pathname):
-		if not os.path.isdir(pathname):
+		try:
 			os.makedirs(pathname)
+		except OSError, e:
+			if e.errno != errno.EEXIST:
+				raise
 		self.mPathRoot = os.path.abspath(pathname)
 
 	def setShellName(self, name):
@@ -114,7 +117,28 @@ class CavanCommandBase:
 		self.prColorInfo(34, messge)
 
 	def getAbsPath(self, pathname):
+		if os.path.isabs(pathname):
+			return pathname
 		return os.path.join(self.mPathRoot, pathname)
+
+	def getRelRoot(self, pathname):
+		if os.path.isabs(pathname):
+			pathname = self.getRelPath(pathname)
+
+		bHasSep = True
+		relPath = ""
+
+		for c in pathname:
+			if c == '/':
+				if not bHasSep:
+					bHasSep = True
+					relPath = relPath + '/'
+			else:
+				if bHasSep:
+					relPath = relPath + '..'
+					bHasSep = False
+
+		return relPath.rstrip('/')
 
 	def getRelPath(self, pathname):
 		return os.path.relpath(pathname, self.mPathRoot)

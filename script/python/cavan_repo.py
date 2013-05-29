@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, os, threading
+import sys, os, threading, errno
 from git_svn import GitSvnManager
 from cavan_file import file_append_line
 from cavan_xml import CavanXmlBase
@@ -183,6 +183,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		CavanCommandBase.setRootPath(self, pathname)
 
 		self.mPathSvnRepo = self.getAbsPath(".svn_repo")
+		self.mPathProjects = os.path.join(self.mPathSvnRepo, "projects")
 		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
 		self.mFileFailed = os.path.join(self.mPathSvnRepo, "failed.txt")
 		self.mPathManifestRepo = os.path.join(self.mPathSvnRepo, "manifest")
@@ -267,8 +268,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if length > 1:
 			self.setRootPath(argv[1])
 
-		if not os.path.isdir(self.mPathSvnRepo):
-			os.makedirs(self.mPathSvnRepo)
+		if not os.path.isdir(self.mPathProjects):
+			os.makedirs(self.mPathProjects)
 
 		self.setVerbose(True)
 
@@ -285,20 +286,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		return None
 
-	def fetchProject(self):
-		self.mLockProject.acquire()
-		length = len(self.mListProject)
-		if self.mErrorCount == 0 and length > 0:
-			node = self.mListProject.pop(0)
-		else:
-			node = None
-		self.mLockProject.release()
-
-		if not node:
-			return 0
-
-		pathname = self.getProjectAbsPath(node)
-		url = os.path.join(self.mUrl, node[0])
+	def fetchProjectBase(self, pathname, name):
+		url = os.path.join(self.mUrl, name)
 
 		for count in range(2):
 			if self.mErrorCount > 0:
@@ -337,6 +326,55 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		self.mLockProject.release()
 
 		return -1
+
+	def fetchProject(self):
+		self.mLockProject.acquire()
+		length = len(self.mListProject)
+		if self.mErrorCount == 0 and length > 0:
+			node = self.mListProject.pop(0)
+		else:
+			node = None
+		self.mLockProject.release()
+
+		if not node:
+			return 0
+
+		relPath = self.getProjectRelPath(node)
+		srcPath = self.getAbsPath(relPath)
+		srcGitPath = os.path.join(srcPath, ".git")
+
+		destPath = os.path.join(self.mPathProjects, relPath + ".git")
+		relDestPath = self.getRelPath(destPath)
+		relDestPath = os.path.join(self.getRelRoot(relPath), relDestPath)
+
+		if not os.path.exists(srcGitPath) and os.path.isdir(destPath):
+			try:
+				os.makedirs(os.path.dirname(srcGitPath))
+			except OSError, e:
+				if e.errno != errno.EEXIST:
+					return -1
+			os.symlink(relDestPath, srcGitPath)
+
+		iResult = self.fetchProjectBase(srcPath, node[0])
+		if iResult < 1:
+			return iResult
+
+		if os.path.islink(srcGitPath):
+			return iResult
+
+		if os.path.exists(destPath):
+			self.doExecute(["rm", "-rf", destPath])
+		else:
+			try:
+				os.makedirs(os.path.dirname(destPath))
+			except OSError, e:
+				if e.errno != errno.EEXIST:
+					return -1
+
+		os.rename(srcGitPath, destPath)
+		os.symlink(relDestPath, srcGitPath)
+
+		return iResult
 
 	def doSync(self):
 		if not self.loadManifest():

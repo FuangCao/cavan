@@ -1,3 +1,5 @@
+@echo off
+
 :loop
 adb wait-for-device || goto label_pause
 adb push ..\..\out\arm\static\cavan-main /data/internal_memory/ || goto label_pause
