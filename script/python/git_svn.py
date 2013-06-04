@@ -406,12 +406,6 @@ class GitSvnManager(CavanCommandBase):
 		return self.doExecute(["git", "reset", "--hard"], of = "/dev/null")
 
 	def doSync(self, url = None, branch = None):
-		if not self.getSvnInfo(url):
-			return False
-
-		if not branch:
-			branch = self.mBranchMaster
-
 		if not os.path.isdir(self.mPathSvnRepo) and os.path.isdir(self.mPathGitSvn):
 			os.makedirs(os.path.join(self.mPathSvnRepo, "tmp"))
 			relPath = os.path.join("..", self.getRelPath(self.mPathGitSvn))
@@ -419,6 +413,12 @@ class GitSvnManager(CavanCommandBase):
 				destPath = os.path.join(self.mPathSvnRepo, filename)
 				srcPath = os.path.join(relPath, filename)
 				os.symlink(srcPath, destPath)
+
+		if not self.getSvnInfo(url):
+			return False
+
+		if not branch:
+			branch = self.mBranchMaster
 
 		if not os.path.exists(self.mFileSvnIgnore) and os.path.isdir(self.mPathSvnRepo):
 			if not file_write_line(self.mFileSvnIgnore, "*"):
