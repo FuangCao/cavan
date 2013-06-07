@@ -12,3 +12,4 @@ chown root:root /usr/bin/sudo
 chmod 06755 /usr/bin/sudo
 more
 whereis sudo
+xrandr - 更改屏幕分辨率
