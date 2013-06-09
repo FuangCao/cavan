@@ -96,7 +96,7 @@ bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
 	cavan-bkernel$(EXEEXT) cavan-bdata$(EXEEXT) \
 	cavan-battery_level$(EXEEXT) cavan-battery$(EXEEXT) \
 	cavan-auto_mount$(EXEEXT) cavan-auto_dd$(EXEEXT) \
-	cavan-abspath$(EXEEXT)
+	cavan-alarm$(EXEEXT) cavan-abspath$(EXEEXT)
 subdir = app
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -112,6 +112,9 @@ PROGRAMS = $(bin_PROGRAMS)
 am_cavan_abspath_OBJECTS = abspath.$(OBJEXT)
 cavan_abspath_OBJECTS = $(am_cavan_abspath_OBJECTS)
 cavan_abspath_LDADD = $(LDADD)
+am_cavan_alarm_OBJECTS = alarm.$(OBJEXT)
+cavan_alarm_OBJECTS = $(am_cavan_alarm_OBJECTS)
+cavan_alarm_LDADD = $(LDADD)
 am_cavan_auto_dd_OBJECTS = auto_dd.$(OBJEXT)
 cavan_auto_dd_OBJECTS = $(am_cavan_auto_dd_OBJECTS)
 cavan_auto_dd_LDADD = $(LDADD)
@@ -394,15 +397,15 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
-	$(cavan_auto_mount_SOURCES) $(cavan_battery_SOURCES) \
-	$(cavan_battery_level_SOURCES) $(cavan_bdata_SOURCES) \
-	$(cavan_bkernel_SOURCES) $(cavan_bmp_view_SOURCES) \
-	$(cavan_bramdisk_SOURCES) $(cavan_brecovery_SOURCES) \
-	$(cavan_bsystem_SOURCES) $(cavan_buboot_SOURCES) \
-	$(cavan_calculator_SOURCES) $(cavan_chroot_SOURCES) \
-	$(cavan_chtty_SOURCES) $(cavan_copy_SOURCES) \
-	$(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
+SOURCES = $(cavan_abspath_SOURCES) $(cavan_alarm_SOURCES) \
+	$(cavan_auto_dd_SOURCES) $(cavan_auto_mount_SOURCES) \
+	$(cavan_battery_SOURCES) $(cavan_battery_level_SOURCES) \
+	$(cavan_bdata_SOURCES) $(cavan_bkernel_SOURCES) \
+	$(cavan_bmp_view_SOURCES) $(cavan_bramdisk_SOURCES) \
+	$(cavan_brecovery_SOURCES) $(cavan_bsystem_SOURCES) \
+	$(cavan_buboot_SOURCES) $(cavan_calculator_SOURCES) \
+	$(cavan_chroot_SOURCES) $(cavan_chtty_SOURCES) \
+	$(cavan_copy_SOURCES) $(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
 	$(cavan_display_SOURCES) $(cavan_dos2unix_SOURCES) \
 	$(cavan_eavoo_sell_statistic_SOURCES) $(cavan_ecc_SOURCES) \
 	$(cavan_ext2_SOURCES) $(cavan_fdisk_SOURCES) \
@@ -439,15 +442,15 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
 	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
 	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
 	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES)
-DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_auto_dd_SOURCES) \
-	$(cavan_auto_mount_SOURCES) $(cavan_battery_SOURCES) \
-	$(cavan_battery_level_SOURCES) $(cavan_bdata_SOURCES) \
-	$(cavan_bkernel_SOURCES) $(cavan_bmp_view_SOURCES) \
-	$(cavan_bramdisk_SOURCES) $(cavan_brecovery_SOURCES) \
-	$(cavan_bsystem_SOURCES) $(cavan_buboot_SOURCES) \
-	$(cavan_calculator_SOURCES) $(cavan_chroot_SOURCES) \
-	$(cavan_chtty_SOURCES) $(cavan_copy_SOURCES) \
-	$(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
+DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_alarm_SOURCES) \
+	$(cavan_auto_dd_SOURCES) $(cavan_auto_mount_SOURCES) \
+	$(cavan_battery_SOURCES) $(cavan_battery_level_SOURCES) \
+	$(cavan_bdata_SOURCES) $(cavan_bkernel_SOURCES) \
+	$(cavan_bmp_view_SOURCES) $(cavan_bramdisk_SOURCES) \
+	$(cavan_brecovery_SOURCES) $(cavan_bsystem_SOURCES) \
+	$(cavan_buboot_SOURCES) $(cavan_calculator_SOURCES) \
+	$(cavan_chroot_SOURCES) $(cavan_chtty_SOURCES) \
+	$(cavan_copy_SOURCES) $(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
 	$(cavan_display_SOURCES) $(cavan_dos2unix_SOURCES) \
 	$(cavan_eavoo_sell_statistic_SOURCES) $(cavan_ecc_SOURCES) \
 	$(cavan_ext2_SOURCES) $(cavan_fdisk_SOURCES) \
@@ -614,6 +617,7 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 cavan_abspath_SOURCES = abspath.c
+cavan_alarm_SOURCES = alarm.c
 cavan_auto_dd_SOURCES = auto_dd.c
 cavan_auto_mount_SOURCES = auto_mount.c
 cavan_battery_SOURCES = battery.c
@@ -786,6 +790,9 @@ clean-binPROGRAMS:
 cavan-abspath$(EXEEXT): $(cavan_abspath_OBJECTS) $(cavan_abspath_DEPENDENCIES) $(EXTRA_cavan_abspath_DEPENDENCIES) 
 	@rm -f cavan-abspath$(EXEEXT)
 	$(LINK) $(cavan_abspath_OBJECTS) $(cavan_abspath_LDADD) $(LIBS)
+cavan-alarm$(EXEEXT): $(cavan_alarm_OBJECTS) $(cavan_alarm_DEPENDENCIES) $(EXTRA_cavan_alarm_DEPENDENCIES) 
+	@rm -f cavan-alarm$(EXEEXT)
+	$(LINK) $(cavan_alarm_OBJECTS) $(cavan_alarm_LDADD) $(LIBS)
 cavan-auto_dd$(EXEEXT): $(cavan_auto_dd_OBJECTS) $(cavan_auto_dd_DEPENDENCIES) $(EXTRA_cavan_auto_dd_DEPENDENCIES) 
 	@rm -f cavan-auto_dd$(EXEEXT)
 	$(LINK) $(cavan_auto_dd_OBJECTS) $(cavan_auto_dd_LDADD) $(LIBS)
@@ -1061,6 +1068,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/abspath.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alarm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auto_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auto_mount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/battery.Po@am__quote@
