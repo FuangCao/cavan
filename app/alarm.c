@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_VERSION,
 		},
 		{
-			.name = "deamon",
+			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_DAEMON,
