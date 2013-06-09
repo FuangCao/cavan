@@ -43,7 +43,7 @@ int cavan_text2date(const char *text, struct tm *date)
 		"%Y/%m/%d %H:%M",
 		"%H:%M:%S",
 		"%H:%M",
-		"%Y-%m-%d"
+		"%Y-%m-%d",
 		"%Y/%m/%d"
 	};
 
