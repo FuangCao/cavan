@@ -32,22 +32,31 @@ void cavan_show_date(struct tm *date)
 	// pr_bold_info("tm_wday = %d, tm_yday = %d, tm_isdst = %d", date->tm_wday, date->tm_yday, date->tm_isdst);
 }
 
+void cavan_show_date2(const time_t *time)
+{
+	struct tm date;
+
+	localtime_r(time, &date);
+	cavan_show_date(&date);
+}
+
 int cavan_text2date(const char *text, struct tm *date)
 {
 	int i;
 	const char *date_formats[] =
 	{
 		"%Y-%m-%d %H:%M:%S",
-		"%Y/%m/%d %H:%M:%S",
 		"%Y-%m-%d %H:%M",
-		"%Y/%m/%d %H:%M",
+		"%m-%d %H:%M:%S",
+		"%m-%d %H:%M",
+		"%Y-%m-%d",
 		"%H:%M:%S",
 		"%H:%M",
-		"%Y-%m-%d",
-		"%Y/%m/%d"
 	};
 
 	date->tm_sec = 0;
+	date->tm_min = 0;
+	date->tm_hour = 0;
 
 	for (i = 0; i < NELEM(date_formats); i++)
 	{
@@ -291,8 +300,15 @@ int cavan_alarm_insert_node(struct cavan_alarm_thread *thread, struct cavan_alar
 
 	if (date)
 	{
-		cavan_show_date(date);
+		time_t curr_time = time(NULL);
+
 		node->time = mktime(date);
+		while (node->time < curr_time)
+		{
+			node->time += 24 * 60 * 60;
+		}
+
+		cavan_show_date2(&node->time);
 	}
 
 	pthread_mutex_lock(&thread->lock);
