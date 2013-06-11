@@ -29,40 +29,18 @@ enum
 	LOCAL_COMMAND_OPTION_HELP,
 	LOCAL_COMMAND_OPTION_VERSION,
 	LOCAL_COMMAND_OPTION_DAEMON,
-	LOCAL_COMMAND_OPTION_YEAR,
-	LOCAL_COMMAND_OPTION_MON,
-	LOCAL_COMMAND_OPTION_DAY,
-	LOCAL_COMMAND_OPTION_HOUR,
-	LOCAL_COMMAND_OPTION_MIN,
-	LOCAL_COMMAND_OPTION_SEC,
 	LOCAL_COMMAND_OPTION_DATE,
-	LOCAL_COMMAND_OPTION_YEAR_REPEAT,
-	LOCAL_COMMAND_OPTION_WEEK_REPEAT,
-	LOCAL_COMMAND_OPTION_DAY_REPEAT,
-	LOCAL_COMMAND_OPTION_HOUR_REPEAT,
-	LOCAL_COMMAND_OPTION_MIN_REPEAT,
-	LOCAL_COMMAND_OPTION_SEC_REPEAT,
+	LOCAL_COMMAND_OPTION_REPEAT,
 };
 
 static void show_usage(const char *command)
 {
 	println("Usage: %s [option] command", command);
-	println("--help, -H\t\tshow this help");
+	println("--help, -h, -H\t\tshow this help");
 	println("--version, -v, -V\tshow version");
-	println("--daemon, -D\t\trun as a daemon");
-	println("--year, -y\t\tdate of year");
-	println("--mon, -M\t\tdate of month");
-	println("--day, -d\t\tdate of day");
-	println("--hour, -h\t\ttime of hoer");
-	println("--min, -m\t\ttime of minutes");
-	println("--sec, -s\t\ttime of second");
-	println("--date");
-	println("--yr, --year-repeat");
-	println("--wr, --week-repeat");
-	println("--dr, --day-repeat");
-	println("--hr, --hour-repeat");
-	println("--mr, --min-repeat");
-	println("--sr, --sec-repeat");
+	println("--daemon, -d\t\trun as a daemon");
+	println("--date, -D");
+	println("--repeat, -r, -R");
 }
 
 static void cavan_alarm_handler(struct cavan_alarm_node *alarm, struct cavan_alarm_thread *thread, void *data)
@@ -103,118 +81,16 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_DAEMON,
 		},
 		{
-			.name = "year",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_YEAR,
-		},
-		{
-			.name = "mon",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_MON,
-		},
-		{
-			.name = "day",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAY,
-		},
-		{
-			.name = "hour",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HOUR,
-		},
-		{
-			.name = "min",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_MIN,
-		},
-		{
-			.name = "sec",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_SEC,
-		},
-		{
 			.name = "date",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_DATE,
 		},
 		{
-			.name = "year-repeat",
+			.name = "repeat",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_YEAR_REPEAT,
-		},
-		{
-			.name = "yr",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_YEAR_REPEAT,
-		},
-		{
-			.name = "week-repeat",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_WEEK_REPEAT,
-		},
-		{
-			.name = "wr",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_WEEK_REPEAT,
-		},
-		{
-			.name = "day-repeat",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAY_REPEAT,
-		},
-		{
-			.name = "dr",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAY_REPEAT,
-		},
-		{
-			.name = "hour-repeat",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HOUR_REPEAT,
-		},
-		{
-			.name = "hr",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HOUR_REPEAT,
-		},
-		{
-			.name = "min-repeat",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_MIN_REPEAT,
-		},
-		{
-			.name = "mr",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_MIN_REPEAT,
-		},
-		{
-			.name = "sec-repeat",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_SEC_REPEAT,
-		},
-		{
-			.name = "sr",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_SEC_REPEAT,
+			.val = LOCAL_COMMAND_OPTION_REPEAT,
 		},
 		{
 			0, 0, 0, 0
@@ -238,7 +114,7 @@ int main(int argc, char *argv[])
 
 	localtime_r(&node.time, &date);
 
-	while ((c = getopt_long(argc, argv, "vVHDy:h:M:d:h:m:s:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHr:R:dD:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -249,48 +125,20 @@ int main(int argc, char *argv[])
 			println(FILE_CREATE_DATE);
 			return 0;
 
+		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
-		case 'D':
+		case 'd':
 		case LOCAL_COMMAND_OPTION_DAEMON:
 			as_daemon = true;
 			break;
 
-		case 'y':
-		case LOCAL_COMMAND_OPTION_YEAR:
-			date.tm_year = text2value_unsigned(optarg, NULL, 10) - 1900;
-			break;
-
-		case 'M':
-		case LOCAL_COMMAND_OPTION_MON:
-			date.tm_mon = text2value_unsigned(optarg, NULL, 10) - 1;
-			break;
-
-		case 'd':
-		case LOCAL_COMMAND_OPTION_DAY:
-			date.tm_mday = text2value_unsigned(optarg, NULL, 10);
-			break;
-
-		case 'h':
-		case LOCAL_COMMAND_OPTION_HOUR:
-			date.tm_hour = text2value_unsigned(optarg, NULL, 10);
-			break;
-
-		case 'm':
-		case LOCAL_COMMAND_OPTION_MIN:
-			date.tm_min = text2value_unsigned(optarg, NULL, 10);
-			break;
-
-		case 's':
-		case LOCAL_COMMAND_OPTION_SEC:
-			date.tm_sec = text2value_unsigned(optarg, NULL, 10);
-			break;
-
+		case 'D':
 		case LOCAL_COMMAND_OPTION_DATE:
-			ret = cavan_text2date(optarg, &date);
+			ret = text2date(optarg, &date);
 			if (ret < 0)
 			{
 				pr_red_info("cavan_text2date");
@@ -298,28 +146,10 @@ int main(int argc, char *argv[])
 			}
 			break;
 
-		case LOCAL_COMMAND_OPTION_YEAR_REPEAT:
-			cavan_alarm_set_year_repeat(&node, text2value_unsigned(optarg, NULL, 10));
-			break;
-
-		case LOCAL_COMMAND_OPTION_WEEK_REPEAT:
-			cavan_alarm_set_week_repeat(&node, text2value_unsigned(optarg, NULL, 10));
-			break;
-
-		case LOCAL_COMMAND_OPTION_DAY_REPEAT:
-			cavan_alarm_set_day_repeat(&node, text2value_unsigned(optarg, NULL, 10));
-			break;
-
-		case LOCAL_COMMAND_OPTION_HOUR_REPEAT:
-			cavan_alarm_set_hour_repeat(&node, text2value_unsigned(optarg, NULL, 10));
-			break;
-
-		case LOCAL_COMMAND_OPTION_MIN_REPEAT:
-			cavan_alarm_set_min_repeat(&node, text2value_unsigned(optarg, NULL, 10));
-			break;
-
-		case LOCAL_COMMAND_OPTION_SEC_REPEAT:
-			cavan_alarm_set_sec_repeat(&node, text2value_unsigned(optarg, NULL, 10));
+		case 'r':
+		case 'R':
+		case LOCAL_COMMAND_OPTION_REPEAT:
+			node.repeat = text2time(optarg, NULL);
 			break;
 
 		default:
@@ -338,6 +168,8 @@ int main(int argc, char *argv[])
 		show_usage(argv[0]);
 		return -EINVAL;
 	}
+
+	pr_bold_info("command = %s", command);
 
 	ret = cavan_alarm_thread_init(&thread);
 	if (ret < 0)

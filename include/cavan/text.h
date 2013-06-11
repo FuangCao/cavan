@@ -81,9 +81,11 @@ char *text_dup(const char *text);
 char *text_tok(char *text, const char *delim);
 
 int char2value(char c);
-int prefix2base(const char *prefix, const char **prefix_ret);
-u64 text2value_unsigned(const char *text, const char **text_ret, int base);
-s64 text2value(const char *text, const char **text_ret, int base);
+int prefix2base(const char *prefix, const char *prefix_end, const char **last, int base);
+u64 text2value_unsigned(const char *text, const char **last, int base);
+s64 text2value(const char *text, const char **last, int base);
+double text2double_unsigned(const char *text, const char *text_end, const char **last, int base);
+double text2double(const char *text, const char *text_end, const char **last, int base);
 
 char *reverse_value2text_base2(u64 value, char *buff, size_t size);
 char *reverse_value2text_base4(u64 value, char *buff, size_t size);
@@ -100,11 +102,14 @@ char *value2text(u64 value, int flags);
 
 char *base2prefix(int base, char *prefix);
 char *base2prefix_reverse(char *text, size_t size, int base);
-u64 text2size_single(const char *text, const char **text_ret);
-u64 text2size(const char *text, const char **text_ret);
-u64 text2size_mb(const char *text);
+double text2size_single(const char *text, const char **last);
+double text2size(const char *text, const char **last);
+double text2size_mb(const char *text);
 char *size2text_base(u64 size, char *buff, size_t buff_len);
 char *size2text(u64 size);
+double text2time_single(const char *text, const char **last);
+double text2time(const char *text, const char **last);
+int text2date(const char *text, struct tm *date);
 
 int text_match(const char *text1, const char *text2);
 
@@ -212,6 +217,11 @@ extern void mem_reverse_simple(byte *start, byte *end);
 extern void mem_reverse(byte *start, byte *end);
 
 // ============================================================
+
+static inline int prefix2base2(const char *prefix, const char **last, int base)
+{
+	return prefix2base(prefix, NULL, last, base);
+}
 
 static inline char *text_trans(char *text)
 {

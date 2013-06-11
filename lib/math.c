@@ -89,17 +89,14 @@ char *math_text2memory(const char *text, byte *mem, size_t mem_size, int base)
 		negative = false;
 	}
 
-	value = prefix2base(text, &text);
-	if (value > 1)
-	{
-		base = value;
-	}
-	else if (base < 2)
-	{
-		base = 10;
-	}
-
 	mem_set(mem, 0, mem_size);
+
+	base = prefix2base2(text, &text, base);
+	if (base < 0)
+	{
+		pr_red_info("prefix2base");
+		return (char *)text;
+	}
 
 	while (1)
 	{

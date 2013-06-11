@@ -293,93 +293,6 @@ char *double2text_base(u64 value, char *text, int size, char fill, int flags)
 	return text;
 }
 
-const char *text2double(const char *text, const char *text_end, int base, double *result_last)
-{
-	int value;
-	double result, weight;
-
-	if (text >= text_end)
-	{
-		*result_last = 0;
-		return text;
-	}
-
-	if (text[0] == '0' && text[1] != '.')
-	{
-		text++;
-
-		if (text >= text_end)
-		{
-			*result_last = 0;
-			return text;
-		}
-
-		switch (*text)
-		{
-		case 'o':
-		case 'O':
-			text++;
-		case '0' ... '7':
-			base = 8;
-			break;
-
-		case 'x':
-		case 'X':
-			text++;
-			base = 16;
-			break;
-
-		case 'b':
-		case 'B':
-			text++;
-			base = 2;
-			break;
-
-		case 'd':
-		case 'D':
-			text++;
-			base = 10;
-			break;
-		}
-	}
-
-	for (result = 0; text < text_end; text++)
-	{
-		if (*text == '.')
-		{
-			text++;
-			break;
-		}
-
-		value = char2value(*text);
-		if (value < 0 || value >= base)
-		{
-			*result_last = result;
-			return text;
-		}
-
-		result = result * base + value;
-	}
-
-	*result_last = result;
-
-	for (result = 0, weight = 1.0 / base; text < text_end; text++)
-	{
-		value = char2value(*text);
-		if (value < 0 || value >= base)
-		{
-			break;
-		}
-
-		result += value * weight;
-		weight /= base;
-	}
-
-	*result_last += result;
-
-	return text;
-}
-
 int simple_calculation_base(const char *formula, const char *formula_end, double *result_last)
 {
 	int ret;
@@ -447,7 +360,7 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 			continue;
 
 		case '0' ... '9':
-			formula = text2double(formula, formula_end, 10, &result_tmp);
+			result_tmp = text2double_unsigned(formula, formula_end, &formula, 10);
 			ret = double_stack_push(&data_stack, result_tmp);
 			if (ret < 0)
 			{
@@ -1077,7 +990,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 			continue;
 
 		case '0' ... '9':
-			formula = text2double(formula, formula_end, 10, result_last);
+			*result_last = text2double_unsigned(formula, formula_end, &formula, 10);
 			ret = double_stack_push(&stack_operand, *result_last);
 			if (ret < 0)
 			{
@@ -1132,7 +1045,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 						goto out_operand_stack_free;
 					}
 
-					formula = text2double(formula_last, formula_end, operand, &result);
+					result = text2double_unsigned(formula_last, formula_end, &formula, operand);
 					double_stack_push(&stack_operand, result);
 					continue;
 				default:

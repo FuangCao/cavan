@@ -2,6 +2,7 @@
 #include <cavan/text.h>
 #include <sys/wait.h>
 #include <cavan/file.h>
+#include <cavan/alarm.h>
 
 #define MAX_PATH_LEN		KB(1)
 #define USE_SYSTEM_PRINTF	1
@@ -733,13 +734,15 @@ int char2value(char c)
 	}
 }
 
-int prefix2base(const char *prefix, const char **prefix_ret)
+int prefix2base(const char *prefix, const char *prefix_end, const char **last, int base)
 {
-	int base;
-
-	if (*prefix != '0')
+	if ((prefix_end && prefix + 1 >= prefix_end) || *prefix != '0')
 	{
-		base = -1;
+		if (base < 2)
+		{
+			base = 10;
+		}
+
 		goto out_return;
 	}
 
@@ -756,6 +759,12 @@ int prefix2base(const char *prefix, const char **prefix_ret)
 	case 'd':
 	case 'D':
 		prefix++;
+	case '.':
+		base = 10;
+		break;
+
+	case 0:
+		prefix--;
 		base = 10;
 		break;
 
@@ -765,28 +774,29 @@ int prefix2base(const char *prefix, const char **prefix_ret)
 		base = 16;
 		break;
 
+	case 'o':
+	case 'O':
+		prefix++;
 	case '0' ... '7':
 		base = 8;
 		break;
 
-	case 0:
-		base = 0;
-		break;
-
 	default:
+		prefix--;
 		base = -EINVAL;
+		pr_red_info("Invalid prefix");
 	}
 
 out_return:
-	if (prefix_ret)
+	if (last)
 	{
-		*prefix_ret = prefix;
+		*last = prefix;
 	}
 
 	return base;
 }
 
-u64 text2value_unsigned(const char *text, const char **text_ret, int base)
+u64 text2value_unsigned(const char *text, const char **last, int base)
 {
 	u64 value;
 	int tmp;
@@ -796,14 +806,12 @@ u64 text2value_unsigned(const char *text, const char **text_ret, int base)
 		return 0;
 	}
 
-	if (base < 2)
+	base = prefix2base2(text, &text, base);
+	if (base < 0)
 	{
-		base = prefix2base(text, &text);
-	}
-
-	if (base < 2)
-	{
-		base = 10;
+		value = 0;
+		pr_result_info("prefix2base");
+		goto out_return;
 	}
 
 	for (value = 0; *text; text++)
@@ -817,31 +825,113 @@ u64 text2value_unsigned(const char *text, const char **text_ret, int base)
 		value = value * base + tmp;
 	}
 
-	if (text_ret)
+out_return:
+	if (last)
 	{
-		*text_ret = text;
+		*last = text;
 	}
 
 	return value;
 }
 
-s64 text2value(const char *text, const char **text_ret, int base)
+s64 text2value(const char *text, const char **last, int base)
 {
 	if (text == NULL)
 	{
-		if (text_ret)
+		if (last)
 		{
-			*text_ret = NULL;
+			*last = NULL;
 		}
 		return 0;
 	}
 
 	if (*text == '-')
 	{
-		return -text2value_unsigned(text + 1, text_ret, base);
+		return -text2value_unsigned(text + 1, last, base);
 	}
 
-	return text2value_unsigned(text, text_ret, base);
+	return text2value_unsigned(text, last, base);
+}
+
+double text2double_unsigned(const char *text, const char *text_end, const char **last, int base)
+{
+	int value;
+	double result, weight;
+
+	if (text_end == NULL)
+	{
+		text_end = text + text_len(text);
+	}
+
+	if (text >= text_end)
+	{
+		result = 0;
+		goto out_return;
+	}
+
+	base = prefix2base(text, text_end, &text, base);
+	if (base < 0)
+	{
+		result = 0;
+		goto out_return;
+	}
+
+	for (result = 0; text < text_end; text++)
+	{
+		if (*text == '.')
+		{
+			text++;
+			break;
+		}
+
+		value = char2value(*text);
+		if (value < 0 || value >= base)
+		{
+			goto out_return;
+		}
+
+		result = result * base + value;
+	}
+
+	for (weight = 1.0 / base; text < text_end; text++)
+	{
+		value = char2value(*text);
+		if (value < 0 || value >= base)
+		{
+			break;
+		}
+
+		result += value * weight;
+		weight /= base;
+	}
+
+out_return:
+	if (last)
+	{
+		*last = text;
+	}
+
+	return result;
+}
+
+double text2double(const char *text, const char *text_end, const char **last, int base)
+{
+	if (text == NULL)
+	{
+		if (last)
+		{
+			*last = NULL;
+		}
+
+		return 0;
+	}
+
+	if (*text == '-')
+	{
+		return -text2double_unsigned(text, text_end, last, base);
+	}
+
+	return text2double_unsigned(text, text_end, last, base);
 }
 
 char *reverse_value2text_base2(u64 value, char *buff, size_t size)
@@ -1103,34 +1193,39 @@ char *value2text(u64 value, int flags)
 	return buff;
 }
 
-u64 text2size_single(const char *text, const char **text_ret)
+double text2size_single(const char *text, const char **last)
 {
-	u64 size;
+	double size;
 
-	size = text2value_unsigned(text, &text, 10);
+	size = text2double_unsigned(text, NULL, &text, 10);
 
 	switch (*text)
 	{
 	case 't':
 	case 'T':
-		size <<= 40;
+		size *= 1LL << 40;
 		break;
+
 	case 'g':
 	case 'G':
-		size <<= 30;
+		size *= 1 << 30;
 		break;
+
 	case 'm':
 	case 'M':
-		size <<= 20;
+		size *= 1 << 20;
 		break;
+
 	case 'k':
 	case 'K':
-		size <<= 10;
+		size *= 1 << 10;
 		break;
+
 	case 'b':
 	case 'B':
 	case 0:
 		break;
+
 	default:
 		error_msg("illegal character \'%c\'", *text);
 	}
@@ -1140,17 +1235,17 @@ u64 text2size_single(const char *text, const char **text_ret)
 		text++;
 	}
 
-	if (text_ret)
+	if (last)
 	{
-		*text_ret = text;
+		*last = text;
 	}
 
 	return size;
 }
 
-u64 text2size(const char *text, const char **text_ret)
+double text2size(const char *text, const char **last)
 {
-	u64 size;
+	double size;
 
 	if (text == NULL)
 	{
@@ -1164,28 +1259,28 @@ u64 text2size(const char *text, const char **text_ret)
 		size += text2size_single(text, &text);
 	}
 
-	if (text_ret)
+	if (last)
 	{
-		*text_ret = text;
+		*last = text;
 	}
 
 	return size;
 }
 
-u64 text2size_mb(const char *text)
+double text2size_mb(const char *text)
 {
 	if (text == NULL)
 	{
 		return 0;
 	}
 
-	if (text_is_number(text))
+	if (text_is_float(text))
 	{
-		return text2value_unsigned(text, NULL, 10);
+		return text2double_unsigned(text, NULL, NULL, 10);
 	}
 	else
 	{
-		return text2size(text, NULL) >> 20;
+		return text2size(text, NULL) / (1 << 20);
 	}
 }
 
@@ -1247,6 +1342,120 @@ char *size2text(u64 size)
 	size2text_base(size, buff, sizeof(buff));
 
 	return buff;
+}
+
+double text2time_single(const char *text, const char **last)
+{
+	double time;
+
+	time = text2double_unsigned(text, NULL, &text, 10);
+
+	switch (*text)
+	{
+	case 'y':
+	case 'Y':
+		time = TIME_YEAR(time);
+		break;
+
+	case 'w':
+	case 'W':
+		time = TIME_WEEK(time);
+		break;
+
+	case 'd':
+	case 'D':
+		time = TIME_DAY(time);
+		break;
+
+	case 'h':
+	case 'H':
+		time = TIME_HOUR(time);
+		break;
+
+	case 'm':
+	case 'M':
+		time = TIME_MINUTE(time);
+		break;
+
+	case 's':
+	case 'S':
+	case 0:
+		time = TIME_SECOND(time);
+		break;
+
+	default:
+		error_msg("illegal character \'%c\'", *text);
+	}
+
+	if (*text)
+	{
+		text++;
+	}
+
+	if (last)
+	{
+		*last = text;
+	}
+
+	return time;
+}
+
+double text2time(const char *text, const char **last)
+{
+	double time;
+
+	if (text == NULL)
+	{
+		return 0;
+	}
+
+	time = 0;
+
+	while (*text)
+	{
+		time += text2time_single(text, &text);
+	}
+
+	if (last)
+	{
+		*last = text;
+	}
+
+	return time;
+}
+
+int text2date(const char *text, struct tm *date)
+{
+	int i;
+	const char *date_formats[] =
+	{
+		"%Y-%m-%d %H:%M:%S",
+		"%Y-%m-%d %H:%M",
+		"%m-%d %H:%M:%S",
+		"%m-%d %H:%M",
+		"%Y-%m-%d",
+		"%H:%M:%S",
+		"%H:%M",
+	};
+
+	date->tm_sec = 0;
+	date->tm_min = 0;
+	date->tm_hour = 0;
+
+	for (i = 0; i < NELEM(date_formats); i++)
+	{
+		struct tm date_bak = *date;
+
+		if (strptime(text, date_formats[i], date))
+		{
+			pr_bold_info("Date Format = %s", date_formats[i]);
+			return 0;
+		}
+
+		*date = date_bak;
+	}
+
+	return -EINVAL;
 }
 
 #ifndef USE_SYSTEM_PRINTF

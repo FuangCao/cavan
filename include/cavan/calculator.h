@@ -115,7 +115,6 @@ char *get_bracket_pair(const char *formula, const char *formula_end);
 int check_bracket_match_pair(const char *formula, const char *formula_end);
 int simple_calculation_base(const char *formula, const char *formula_end, double *result_last);
 int simple_calculation(const char *formula, double *result_last);
-const char *text2double(const char *text, const char *text_end, int base, double *result_last);
 
 const struct calculator_operator_descriptor *get_formula_operator(const char *formula, const char **formula_last);
 int complete_calculation_base(const char *formula, const char *formula_end, double *result_last);

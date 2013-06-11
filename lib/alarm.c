@@ -23,55 +23,26 @@
 
 static struct cavan_alarm_thread *global_alarm_thread;
 
-void cavan_show_date(struct tm *date)
+void cavan_show_date(struct tm *date, const char *prompt)
 {
-	pr_bold_info("%04d-%02d-%02d %02d:%02d:%02d",
+	if (prompt == NULL)
+	{
+		prompt = "";
+	}
+
+	pr_bold_info("%s%04d-%02d-%02d %02d:%02d:%02d", prompt,
 		date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
 		date->tm_hour, date->tm_min, date->tm_sec);
 
 	// pr_bold_info("tm_wday = %d, tm_yday = %d, tm_isdst = %d", date->tm_wday, date->tm_yday, date->tm_isdst);
 }
 
-void cavan_show_date2(const time_t *time)
+void cavan_show_date2(const time_t *time, const char *prompt)
 {
 	struct tm date;
 
 	localtime_r(time, &date);
-	cavan_show_date(&date);
-}
-
-int cavan_text2date(const char *text, struct tm *date)
-{
-	int i;
-	const char *date_formats[] =
-	{
-		"%Y-%m-%d %H:%M:%S",
-		"%Y-%m-%d %H:%M",
-		"%m-%d %H:%M:%S",
-		"%m-%d %H:%M",
-		"%Y-%m-%d",
-		"%H:%M:%S",
-		"%H:%M",
-	};
-
-	date->tm_sec = 0;
-	date->tm_min = 0;
-	date->tm_hour = 0;
-
-	for (i = 0; i < NELEM(date_formats); i++)
-	{
-		struct tm date_bak = *date;
-
-		if (strptime(text, date_formats[i], date))
-		{
-			pr_bold_info("Date Format = %s", date_formats[i]);
-			return 0;
-		}
-
-		*date = date_bak;
-	}
-
-	return -EINVAL;
+	cavan_show_date(&date, prompt);
 }
 
 int cavan_date_cmp(struct tm *d1, struct tm *d2)
@@ -198,6 +169,9 @@ static int cavan_alarm_thread_handler(struct cavan_thread *thread, void *data)
 			return curr_time;
 		}
 
+		cavan_show_date2(&curr_time, "curr_time = ");
+		cavan_show_date2(&alarm_node->time, "alarm_time = ");
+
 		if (curr_time < alarm_node->time)
 		{
 			alarm(alarm_node->time - curr_time);
@@ -303,13 +277,18 @@ int cavan_alarm_insert_node(struct cavan_alarm_thread *thread, struct cavan_alar
 		time_t curr_time = time(NULL);
 
 		node->time = mktime(date);
-		while (node->time < curr_time)
+		if (node->time < curr_time)
 		{
-			node->time += 24 * 60 * 60;
+			node->time += TIME_DAY(1);
+			if (node->time < curr_time)
+			{
+				pr_red_info("Date too old");
+				return -EINVAL;
+			}
 		}
-
-		cavan_show_date2(&node->time);
 	}
+
+	cavan_show_date2(&node->time, "date = ");
 
 	pthread_mutex_lock(&thread->lock);
 

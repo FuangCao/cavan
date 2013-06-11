@@ -23,6 +23,24 @@
 #include <cavan/list.h>
 #include <cavan/thread.h>
 
+#define TIME_SECOND(time) \
+	(time)
+
+#define TIME_MINUTE(time) \
+	TIME_SECOND(60 * (time))
+
+#define TIME_HOUR(time) \
+	TIME_MINUTE(60 * (time))
+
+#define TIME_DAY(time) \
+	TIME_HOUR(24 * (time))
+
+#define TIME_WEEK(time) \
+	TIME_DAY(7 * (time))
+
+#define TIME_YEAR(time) \
+	TIME_DAY(365 * (time))
+
 struct cavan_alarm_thread
 {
 	struct cavan_thread thread;
@@ -42,9 +60,8 @@ struct cavan_alarm_node
 	void (*handler)(struct cavan_alarm_node *alarm, struct cavan_alarm_thread *thread, void *data);
 };
 
-void cavan_show_date(struct tm *date);
-void cavan_show_date2(const time_t *time);
-int cavan_text2date(const char *text, struct tm *date);
+void cavan_show_date(struct tm *date, const char *prompt);
+void cavan_show_date2(const time_t *time, const char *prompt);
 int cavan_date_cmp(struct tm *d1, struct tm *d2);
 long cavan_date_diff(struct tm *d1, struct tm *d2);
 
@@ -67,34 +84,4 @@ static inline void cavan_alarm_node_init(struct cavan_alarm_node *node, void *da
 static inline int cavan_alarm_thread_join(struct cavan_alarm_thread *thread)
 {
 	return cavan_thread_join(&thread->thread);
-}
-
-static inline void cavan_alarm_set_sec_repeat(struct cavan_alarm_node *node, u32 count)
-{
-	node->repeat += count;
-}
-
-static inline void cavan_alarm_set_min_repeat(struct cavan_alarm_node *node, u32 count)
-{
-	node->repeat += 60 * count;
-}
-
-static inline void cavan_alarm_set_hour_repeat(struct cavan_alarm_node *node, u32 count)
-{
-	cavan_alarm_set_min_repeat(node, 60 * count);
-}
-
-static inline void cavan_alarm_set_day_repeat(struct cavan_alarm_node *node, u32 count)
-{
-	cavan_alarm_set_hour_repeat(node, 24 * count);
-}
-
-static inline void cavan_alarm_set_week_repeat(struct cavan_alarm_node *node, u32 count)
-{
-	cavan_alarm_set_day_repeat(node, 7 * count);
-}
-
-static inline void cavan_alarm_set_year_repeat(struct cavan_alarm_node *node, u32 count)
-{
-	cavan_alarm_set_day_repeat(node, 365 * count);
 }
