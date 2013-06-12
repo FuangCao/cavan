@@ -318,7 +318,7 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libcavan.la: $(libcavan_la_OBJECTS) $(libcavan_la_DEPENDENCIES) $(EXTRA_libcavan_la_DEPENDENCIES) 
+libcavan.la: $(libcavan_la_OBJECTS) $(libcavan_la_DEPENDENCIES) $(EXTRA_libcavan_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libcavan_la_OBJECTS) $(libcavan_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:

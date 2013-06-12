@@ -180,13 +180,17 @@ static int cavan_alarm_thread_handler(struct cavan_thread *thread, void *data)
 		else
 		{
 			double_link_remove(&alarm_thread->link, node);
+			alarm_node->handler(alarm_node, alarm_thread, alarm_node->private_data);
+
 			if (alarm_node->repeat)
 			{
 				alarm_node->time += alarm_node->repeat;
 				cavan_alarm_insert_node_base(alarm_thread, alarm_node);
 			}
-
-			alarm_node->handler(alarm_node, alarm_thread, alarm_node->private_data);
+			else if (alarm_node->destroy)
+			{
+				alarm_node->destroy(alarm_node, alarm_node->private_data);
+			}
 		}
 	}
 

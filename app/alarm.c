@@ -19,7 +19,10 @@
 
 #include <cavan.h>
 #include <time.h>
+#include <cavan/adb.h>
 #include <cavan/alarm.h>
+#include <cavan/tcp_dd.h>
+#include <cavan/network.h>
 
 #define FILE_CREATE_DATE "2013-06-09 14:27:41"
 
@@ -28,32 +31,20 @@ enum
 	LOCAL_COMMAND_OPTION_UNKNOWN,
 	LOCAL_COMMAND_OPTION_HELP,
 	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_DAEMON,
-	LOCAL_COMMAND_OPTION_DATE,
-	LOCAL_COMMAND_OPTION_REPEAT,
 };
 
 static void show_usage(const char *command)
 {
-	println("Usage: %s [option] command", command);
+	println("Usage: %s [add|remove|list] <option> [command|index]", command);
 	println("--help, -h, -H\t\tshow this help");
 	println("--version, -v, -V\tshow version");
-	println("--daemon, -d\t\trun as a daemon");
 	println("--date, -D");
+	println("--time, -t, -T");
 	println("--repeat, -r, -R");
-}
-
-static void cavan_alarm_handler(struct cavan_alarm_node *alarm, struct cavan_alarm_thread *thread, void *data)
-{
-	pid_t pid;
-
-	pid = fork();
-	if (pid == 0)
-	{
-		const char *shell_command = "sh";
-
-		execlp(shell_command, shell_command, "-c", data, NULL);
-	}
+	println("--ip, -i, -I\t\tserver ip address");
+	println("--local, -l, -L\t\tuse localhost ip");
+	println("--port, -p, -P\t\tserver port");
+	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
 }
 
 int main(int argc, char *argv[])
@@ -75,46 +66,76 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_VERSION,
 		},
 		{
-			.name = "daemon",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON,
-		},
-		{
 			.name = "date",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DATE,
+			.val = 'd',
+		},
+		{
+			.name = "time",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 't',
 		},
 		{
 			.name = "repeat",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_REPEAT,
+			.val = 'r',
+		},
+		{
+			.name = "ip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'i',
+		},
+		{
+			.name = "port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p',
+		},
+		{
+			.name = "adb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'a',
+		},
+		{
+			.name = "local",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'l',
 		},
 		{
 			0, 0, 0, 0
 		},
 	};
 	int ret;
-	bool as_daemon = false;
-	char command[1024];
+	time_t curr_time, repeat;
 	struct tm date;
-	struct cavan_alarm_thread thread;
-	struct cavan_alarm_node node;
+	const char *subcmd;
+	struct inet_file_request file_req =
+	{
+		.open_connect = inet_create_tcp_link2,
+		.close_connect = inet_close_tcp_socket,
+	};
 
-	cavan_alarm_node_init(&node, command, cavan_alarm_handler);
-
-	node.time = time(NULL);
-	if (node.time == ((time_t)-1))
+	curr_time = time(NULL);
+	if (curr_time == ((time_t)-1))
 	{
 		pr_error_info("time");
 		return -EFAULT;
 	}
 
-	localtime_r(&node.time, &date);
+	repeat = 0;
+	localtime_r(&curr_time, &date);
 
-	while ((c = getopt_long(argc, argv, "vVhHr:R:dD:", long_option, &option_index)) != EOF)
+	cavan_get_server_ip(file_req.ip);
+	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+
+	while ((c = getopt_long(argc, argv, "vVhHlLr:R:d:D:t:T:i:I:p:P:", long_option, &option_index)) != EOF)
+
 	{
 		switch (c)
 		{
@@ -132,13 +153,19 @@ int main(int argc, char *argv[])
 			return 0;
 
 		case 'd':
-		case LOCAL_COMMAND_OPTION_DAEMON:
-			as_daemon = true;
+		case 'D':
+			ret = text2date(optarg, &date, "%Y-%m-%d", "%m-%d", NULL);
+			if (ret < 0)
+			{
+				pr_red_info("cavan_text2date");
+				return -EINVAL;
+			}
 			break;
 
-		case 'D':
-		case LOCAL_COMMAND_OPTION_DATE:
-			ret = text2date(optarg, &date);
+		case 't':
+		case 'T':
+			date.tm_sec = 0;
+			ret = text2date(optarg, &date, "%H:%M:%S", "%H:%M", NULL);
 			if (ret < 0)
 			{
 				pr_red_info("cavan_text2date");
@@ -148,8 +175,23 @@ int main(int argc, char *argv[])
 
 		case 'r':
 		case 'R':
-		case LOCAL_COMMAND_OPTION_REPEAT:
-			node.repeat = text2time(optarg, NULL);
+			repeat = text2time(optarg, NULL);
+			break;
+
+		case 'a':
+		case 'A':
+			file_req.open_connect = adb_create_tcp_link2;
+		case 'l':
+		case 'L':
+			optarg = "127.0.0.1";
+		case 'i':
+		case 'I':
+			text_copy(file_req.ip, optarg);
+			break;
+
+		case 'p':
+		case 'P':
+			file_req.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		default:
@@ -158,54 +200,82 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind < argc)
+	if (optind >= argc)
 	{
-		text_join_by_char(argv + optind, argc - optind, ' ', command, sizeof(command));
-	}
-	else
-	{
-		pr_red_info("Please give a command");
+		pr_red_info("Please give a subcmd");
 		show_usage(argv[0]);
 		return -EINVAL;
 	}
 
-	pr_bold_info("command = %s", command);
+	subcmd = argv[optind++];
 
-	ret = cavan_alarm_thread_init(&thread);
-	if (ret < 0)
+	if (strcmp(subcmd, "add") == 0)
 	{
-		pr_red_info("cavan_alarm_thread_init");
-		return ret;
-	}
-
-	if (as_daemon)
-	{
-		ret = daemon(0, 0);
-		if (ret < 0)
+		if (optind < argc)
 		{
-			pr_warning_info("daemon");
+			text_join_by_char(argv + optind, argc - optind, ' ', file_req.command, sizeof(file_req.command));
+			ret = tcp_alarm_add(&file_req, mktime(&date), repeat);
+			if (ret < 0)
+			{
+				pr_red_info("cavan_tcp_alarm_add");
+			}
+		}
+		else
+		{
+			pr_red_info("Please give a command");
+			show_usage(argv[0]);
+			return -EINVAL;
 		}
 	}
-
-	ret = cavan_alarm_thread_start(&thread);
-	if (ret < 0)
+	else if (strcmp(subcmd, "remove") == 0)
 	{
-		pr_red_info("cavan_alarm_thread_start");
-		goto out_cavan_alarm_thread_deinit;
+		if (optind < argc && text_is_number(argv[optind]))
+		{
+			int index = text2value_unsigned(argv[optind], NULL, 10);
+
+			ret = tcp_alarm_remove(&file_req, index);
+			if (ret < 0)
+			{
+				pr_red_info("cavan_tcp_alarm_remove");
+			}
+		}
+		else
+		{
+			pr_red_info("Please give a command");
+			show_usage(argv[0]);
+			return -EINVAL;
+		}
+	}
+	else if (strcmp(subcmd, "list") == 0)
+	{
+		int index = -1;
+
+		if (optind < argc)
+		{
+			if (text_is_number(argv[optind]))
+			{
+				index = text2value_unsigned(argv[optind], NULL, 10);
+			}
+			else
+			{
+				pr_red_info("The alarm index is not a number");
+				show_usage(argv[0]);
+				return -EINVAL;
+			}
+		}
+
+		ret = tcp_alarm_list(&file_req, index);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_tcp_alarm_list");
+		}
+	}
+	else
+	{
+		pr_red_info("Invalid subcmd `%s'", subcmd);
+		show_usage(argv[0]);
+		return -EINVAL;
 	}
 
-	ret = cavan_alarm_insert_node(&thread, &node, &date);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_alarm_add_node");
-		goto out_cavan_alarm_thread_stop;
-	}
-
-	ret = cavan_alarm_thread_join(&thread);
-
-out_cavan_alarm_thread_stop:
-	cavan_alarm_thread_stop(&thread);
-out_cavan_alarm_thread_deinit:
-	cavan_alarm_thread_deinit(&thread);
 	return ret;
 }

@@ -109,7 +109,7 @@ char *size2text_base(u64 size, char *buff, size_t buff_len);
 char *size2text(u64 size);
 double text2time_single(const char *text, const char **last);
 double text2time(const char *text, const char **last);
-int text2date(const char *text, struct tm *date);
+int text2date(const char *text, struct tm *date, ...);
 
 int text_match(const char *text1, const char *text2);
 

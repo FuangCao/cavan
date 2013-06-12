@@ -58,6 +58,7 @@ struct cavan_alarm_node
 	void *private_data;
 
 	void (*handler)(struct cavan_alarm_node *alarm, struct cavan_alarm_thread *thread, void *data);
+	void (*destroy)(struct cavan_alarm_node *alarm, void *data);
 };
 
 void cavan_show_date(struct tm *date, const char *prompt);
@@ -77,6 +78,7 @@ static inline void cavan_alarm_node_init(struct cavan_alarm_node *node, void *da
 {
 	node->private_data = data;
 	node->handler = handler;
+	node->destroy = NULL;
 	node->repeat = 0;
 	double_link_node_init(&node->node);
 }

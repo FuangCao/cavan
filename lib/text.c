@@ -1424,38 +1424,35 @@ double text2time(const char *text, const char **last)
 	return time;
 }
 
-int text2date(const char *text, struct tm *date)
+int text2date(const char *text, struct tm *date, ...)
 {
-	int i;
-	const char *date_formats[] =
+	va_list ap;
+
+	va_start(ap, date);
+
+	while (1)
 	{
-		"%Y-%m-%d %H:%M:%S",
-		"%Y-%m-%d %H:%M",
-		"%m-%d %H:%M:%S",
-		"%m-%d %H:%M",
-		"%Y-%m-%d",
-		"%H:%M:%S",
-		"%H:%M",
-	};
+		const char *format;
+		struct tm date_bak;
 
-	date->tm_sec = 0;
-	date->tm_min = 0;
-	date->tm_hour = 0;
-
-	for (i = 0; i < NELEM(date_formats); i++)
-	{
-		struct tm date_bak = *date;
-
-		if (strptime(text, date_formats[i], date))
+		format = va_arg(ap, const char *);
+		if (format == NULL)
 		{
-			pr_bold_info("Date Format = %s", date_formats[i]);
-			return 0;
+			return -EINVAL;
+		}
+
+		date_bak = *date;
+
+		if (strptime(text, format, date))
+		{
+			pr_bold_info("Date Format = %s", format);
+			break;
 		}
 
 		*date = date_bak;
 	}
 
-	return -EINVAL;
+	return 0;
 }
 
 #ifndef USE_SYSTEM_PRINTF

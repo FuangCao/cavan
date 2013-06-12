@@ -87,13 +87,16 @@ int main(int argc, char *argv[])
 		},
 	};
 	u16 port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
-	struct cavan_service_description desc =
+	struct cavan_tcp_dd_service service =
 	{
-		.name = "TCP_DD",
-		.daemon_count = TCP_DD_DAEMON_COUNT,
-		.as_daemon = 0,
-		.show_verbose = 0,
-		.super_permission = 1
+		.desc =
+		{
+			.name = "TCP_DD",
+			.daemon_count = TCP_DD_DAEMON_COUNT,
+			.as_daemon = 0,
+			.show_verbose = 0,
+			.super_permission = 1
+		}
 	};
 
 	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:", long_option, &option_index)) != EOF)
@@ -115,19 +118,19 @@ int main(int argc, char *argv[])
 		case 'v':
 		case 'V':
 		case LOCAL_COMMAND_OPTION_VERBOSE:
-			desc.show_verbose = 1;
+			service.desc.show_verbose = 1;
 			break;
 
 		case 'd':
 		case 'D':
 		case LOCAL_COMMAND_OPTION_DAEMON:
-			desc.as_daemon = 1;
+			service.desc.as_daemon = 1;
 			break;
 
 		case 's':
 		case 'S':
 		case LOCAL_COMMAND_OPTION_SUPER:
-			desc.super_permission = text_bool_value(optarg);
+			service.desc.super_permission = text_bool_value(optarg);
 			break;
 
 		case 'p':
@@ -139,7 +142,7 @@ int main(int argc, char *argv[])
 		case 'c':
 		case 'C':
 		case LOCAL_COMMAND_OPTION_DAEMON_COUNT:
-			desc.daemon_count = text2value_unsigned(optarg, NULL, 10);
+			service.desc.daemon_count = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		default:
@@ -153,5 +156,5 @@ int main(int argc, char *argv[])
 		port = text2value_unsigned(argv[optind], NULL, 10);
 	}
 
-	return tcp_dd_service_run(&desc, port);
+	return tcp_dd_service_run(&service, port);
 }
