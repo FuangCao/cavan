@@ -846,6 +846,10 @@ int tcp_alarm_add(struct inet_file_request *file_req, time_t time, time_t repeat
 		return sockfd;
 	}
 
+	cavan_show_date2(time, "date = ");
+	pr_bold_info("repeat = %lds", repeat);
+	pr_bold_info("command = %s", file_req->command);
+
 	ret = tcp_dd_send_alarm_add_request(sockfd, time, repeat, file_req->command);
 	if (ret < 0)
 	{
@@ -912,7 +916,7 @@ int tcp_alarm_list(struct inet_file_request *file_req, int index)
 			break;
 		}
 
-		sprintf(prompt, "index = %d, command = %s, date = ", index++, alarm.command);
+		sprintf(prompt, "index = %d, command = %s, repeat = %ds, date = ", index++, alarm.command, alarm.repeat);
 		cavan_show_date2(alarm.time, prompt);
 	}
 

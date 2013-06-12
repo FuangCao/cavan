@@ -270,6 +270,8 @@ void cavan_alarm_thread_stop(struct cavan_alarm_thread *thread)
 
 int cavan_alarm_insert_node(struct cavan_alarm_thread *thread, struct cavan_alarm_node *node, struct tm *date)
 {
+	time_t curr_time;
+
 	if (node->handler == NULL)
 	{
 		pr_red_info("node->handler == NULL");
@@ -278,17 +280,17 @@ int cavan_alarm_insert_node(struct cavan_alarm_thread *thread, struct cavan_alar
 
 	if (date)
 	{
-		time_t curr_time = time(NULL);
-
 		node->time = mktime(date);
+	}
+
+	curr_time = time(NULL);
+	if (node->time < curr_time)
+	{
+		node->time += TIME_DAY(1);
 		if (node->time < curr_time)
 		{
-			node->time += TIME_DAY(1);
-			if (node->time < curr_time)
-			{
-				pr_red_info("Date too old");
-				return -EINVAL;
-			}
+			pr_red_info("Date too old");
+			return -EINVAL;
 		}
 	}
 
