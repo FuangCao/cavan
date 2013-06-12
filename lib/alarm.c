@@ -37,11 +37,11 @@ void cavan_show_date(struct tm *date, const char *prompt)
 	// pr_bold_info("tm_wday = %d, tm_yday = %d, tm_isdst = %d", date->tm_wday, date->tm_yday, date->tm_isdst);
 }
 
-void cavan_show_date2(const time_t *time, const char *prompt)
+void cavan_show_date2(const time_t time, const char *prompt)
 {
 	struct tm date;
 
-	localtime_r(time, &date);
+	localtime_r(&time, &date);
 	cavan_show_date(&date, prompt);
 }
 
@@ -169,8 +169,8 @@ static int cavan_alarm_thread_handler(struct cavan_thread *thread, void *data)
 			return curr_time;
 		}
 
-		cavan_show_date2(&curr_time, "curr_time = ");
-		cavan_show_date2(&alarm_node->time, "alarm_time = ");
+		cavan_show_date2(curr_time, "curr_time = ");
+		cavan_show_date2(alarm_node->time, "alarm_time = ");
 
 		if (curr_time < alarm_node->time)
 		{
@@ -292,7 +292,7 @@ int cavan_alarm_insert_node(struct cavan_alarm_thread *thread, struct cavan_alar
 		}
 	}
 
-	cavan_show_date2(&node->time, "date = ");
+	cavan_show_date2(node->time, "date = ");
 
 	pthread_mutex_lock(&thread->lock);
 
@@ -328,6 +328,10 @@ void cavan_alarm_delete_node(struct cavan_alarm_thread *thread, struct cavan_ala
 	pthread_mutex_lock(&thread->lock);
 
 	double_link_remove(&thread->link, &node->node);
+	if (node->destroy)
+	{
+		node->destroy(node, node->private_data);
+	}
 
 	pthread_mutex_unlock(&thread->lock);
 }

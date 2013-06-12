@@ -62,7 +62,7 @@ struct cavan_alarm_node
 };
 
 void cavan_show_date(struct tm *date, const char *prompt);
-void cavan_show_date2(const time_t *time, const char *prompt);
+void cavan_show_date2(const time_t time, const char *prompt);
 int cavan_date_cmp(struct tm *d1, struct tm *d2);
 long cavan_date_diff(struct tm *d1, struct tm *d2);
 

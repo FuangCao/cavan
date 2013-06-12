@@ -525,6 +525,32 @@ bool double_link_has_node(struct double_link *link, struct double_link_node *nod
 	return double_link_find(link, node, double_link_node_match_equal) != NULL;
 }
 
+struct double_link_node *double_link_get_node_base(struct double_link *link, int index)
+{
+	struct double_link_node *head, *node;
+
+	for (head = &link->head_node, node = head->next; node != head; node = node->next, index--)
+	{
+		if (index == 0)
+		{
+			return node;
+		}
+	}
+
+	return NULL;
+}
+
+struct double_link_node *double_link_get_node(struct double_link *link, int index)
+{
+	struct double_link_node *node;
+
+	pthread_mutex_lock(&link->lock);
+	node = double_link_get_node_base(link, index);
+	pthread_mutex_unlock(&link->lock);
+
+	return node;
+}
+
 void double_link_cond_insert_append(struct double_link *link, struct double_link_node *node, void *data, double_link_matcher_t matcher)
 {
 	struct double_link_node *next;

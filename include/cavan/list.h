@@ -135,6 +135,8 @@ void double_link_traversal(struct double_link *link, void *data, double_link_han
 void double_link_traversal2(struct double_link *link, void *data, double_link_handler_t handler);
 struct double_link_node *double_link_find(struct double_link *link, void *data, double_link_matcher_t matcher);
 bool double_link_has_node(struct double_link *link, struct double_link_node *node);
+struct double_link_node *double_link_get_node_base(struct double_link *link, int index);
+struct double_link_node *double_link_get_node(struct double_link *link, int index);
 void double_link_cond_insert_append(struct double_link *link, struct double_link_node *node, void *data, double_link_matcher_t matcher);
 void double_link_cond_insert_push(struct double_link *link, struct double_link_node *node, void *data, double_link_matcher_t matcher);
 void double_link_move(struct double_link *link, struct double_link_node *next, struct double_link_node *node);

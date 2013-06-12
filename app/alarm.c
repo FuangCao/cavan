@@ -38,13 +38,13 @@ static void show_usage(const char *command)
 	println("Usage: %s [add|remove|list] <option> [command|index]", command);
 	println("--help, -h, -H\t\tshow this help");
 	println("--version, -v, -V\tshow version");
-	println("--date, -D");
-	println("--time, -t, -T");
-	println("--repeat, -r, -R");
 	println("--ip, -i, -I\t\tserver ip address");
 	println("--local, -l, -L\t\tuse localhost ip");
 	println("--port, -p, -P\t\tserver port");
 	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
+	println("--date, -d, -D");
+	println("--time, -t, -T");
+	println("--repeat, -r, -R");
 }
 
 int main(int argc, char *argv[])

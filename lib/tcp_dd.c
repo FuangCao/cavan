@@ -448,13 +448,32 @@ out_free_node:
 
 static int tcp_dd_handle_alarm_remove_request(struct cavan_alarm_thread *alarm, int sockfd, struct tcp_alarm_query_request *req, struct sockaddr_in *addr)
 {
-	return 0;
+	int ret;
+	struct double_link_node *node;
+
+	node = double_link_get_node(&alarm->link, req->index);
+	if (node == NULL)
+	{
+		tcp_dd_send_response(sockfd, -ENOENT, "[Server] alarm not found");
+		return -ENOENT;
+	}
+
+	cavan_alarm_delete_node(alarm, double_link_get_container(&alarm->link, node));
+
+	ret = tcp_dd_send_response(sockfd, 0, "[Server] remove alarm successfull");
+	if (ret < 0)
+	{
+		pr_red_info("tcp_dd_send_response");
+	}
+
+	return ret;
 }
 
 static int tcp_dd_handle_alarm_list_request(struct cavan_alarm_thread *alarm, int sockfd, struct tcp_alarm_query_request *req, struct sockaddr_in *addr)
 {
 	int ret;
 	struct cavan_alarm_node *node;
+	struct tcp_alarm_add_request item;
 
 	ret = tcp_dd_send_response(sockfd, 0, "[Server] start send alarm list");
 	if (ret < 0)
@@ -465,7 +484,13 @@ static int tcp_dd_handle_alarm_list_request(struct cavan_alarm_thread *alarm, in
 
 	double_link_foreach(&alarm->link, node)
 	{
-		ret = inet_send(sockfd, node, sizeof(*node));
+		msleep(1);
+
+		item.time = node->time;
+		item.repeat = node->repeat;
+		text_copy(item.command, node->private_data);
+
+		ret = inet_send(sockfd, &item, MOFS(struct tcp_alarm_add_request, command) + text_len(item.command) + 1);
 		if (ret < 0)
 		{
 			link_foreach_return(&alarm->link, ret);
@@ -859,7 +884,7 @@ int tcp_alarm_list(struct inet_file_request *file_req, int index)
 {
 	int ret;
 	int sockfd;
-	struct cavan_alarm_node node;
+	struct tcp_alarm_add_request alarm;
 
 	sockfd = file_req->open_connect(file_req->ip, file_req->port);
 	if (sockfd < 0)
@@ -875,19 +900,23 @@ int tcp_alarm_list(struct inet_file_request *file_req, int index)
 		goto out_close_sockfd;
 	}
 
+	index = 0;
+
 	while (1)
 	{
-		ret = read(sockfd, &node, sizeof(node));
+		char prompt[1024];
+
+		ret = inet_recv(sockfd, &alarm, sizeof(alarm));
 		if (ret <= 0)
 		{
 			break;
 		}
 
-		cavan_show_date2((time_t *)&node.time, "date = ");
+		sprintf(prompt, "index = %d, command = %s, date = ", index++, alarm.command);
+		cavan_show_date2(alarm.time, prompt);
 	}
 
 out_close_sockfd:
-	msleep(100);
 	file_req->close_connect(sockfd);
 	return ret;
 }
