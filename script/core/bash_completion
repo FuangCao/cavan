@@ -123,12 +123,26 @@ function _cavan_alarm()
 
 	_get_comp_words_by_ref cur prev
 
-	if [ "${COMP_CWORD}" = "1" ]
-	then
-		COMPREPLY=($(compgen -W "add remove list" -- ${cur}))
-	else
-		COMPREPLY=($(compgen -dc -- "$cur"))
-	fi
+	case "${COMP_CWORD}" in
+		1)
+			COMPREPLY=($(compgen -W "add remove list" -- ${cur}))
+			;;
+		2)
+			if [ "${COMP_WORDS[1]}" = "add" ]
+			then
+				COMPREPLY=($(compgen -dc -- "$cur"))
+			else
+				COMPREPLY=()
+			fi
+			;;
+		*)
+			if [ "${COMP_WORDS[1]}" = "add" ]
+			then
+				_command
+			else
+				COMPREPLY=()
+			fi
+	esac
 }
 
 complete -F _cavan_alarm cavan-alarm
