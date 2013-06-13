@@ -600,30 +600,35 @@ int tcp_dd_service_run(struct cavan_tcp_dd_service *service, u16 port)
 		goto out_inet_close_tcp_socket;
 	}
 
-	ret = cavan_alarm_thread_start(&service->alarm);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_alarm_thread_start");
-		goto out_cavan_alarm_thread_deinit;
-	}
-
 	service->sockfd = sockfd;
 
 	desc = &service->desc;
 	desc->data.type_void = service;
 	desc->handler = tcp_dd_daemon_handle;
 	desc->threads = NULL;
-	ret = cavan_service_run(desc);
+	ret = cavan_service_start(desc);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_service_run");
-		goto out_cavan_alarm_thread_stop;
+		goto out_cavan_alarm_thread_deinit;
 	}
 
-	cavan_service_stop(desc);
+	ret = cavan_alarm_thread_start(&service->alarm);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_alarm_thread_start");
+		goto out_cavan_service_stop;
+	}
 
-out_cavan_alarm_thread_stop:
+	ret = cavan_service_main_loop(desc);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_service_main_loop");
+	}
+
 	cavan_alarm_thread_stop(&service->alarm);
+out_cavan_service_stop:
+	cavan_service_stop(desc);
 out_cavan_alarm_thread_deinit:
 	cavan_alarm_thread_deinit(&service->alarm);
 out_inet_close_tcp_socket:

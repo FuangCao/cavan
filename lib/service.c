@@ -9,11 +9,23 @@
 #include <cavan/process.h>
 #include <cavan/permission.h>
 
+static void cavan_service_sighandler(int signum)
+{
+	pr_bold_info("signum = %d", signum);
+
+	if (signum == SIGUSR1)
+	{
+		pthread_exit(0);
+	}
+}
+
 static void *cavan_service_handler(void *data)
 {
 	struct cavan_service_description *desc = data;
 	static int count = 0;
 	int index;
+
+	signal(SIGUSR1, cavan_service_sighandler);
 
 	pthread_mutex_lock(&desc->mutex_lock);
 	index = ++count;
@@ -38,7 +50,7 @@ static void *cavan_service_handler(void *data)
 	return NULL;
 }
 
-int cavan_service_run(struct cavan_service_description *desc)
+int cavan_service_start(struct cavan_service_description *desc)
 {
 	int ret;
 	int i;
@@ -74,7 +86,7 @@ int cavan_service_run(struct cavan_service_description *desc)
 		}
 	}
 
-	count = desc->daemon_count - 1;
+	count = desc->daemon_count;
 	threads = (pthread_t *)malloc(sizeof(pthread_t) * count);
 	if (threads == NULL)
 	{
@@ -115,17 +127,37 @@ int cavan_service_run(struct cavan_service_description *desc)
 
 	desc->threads = threads;
 
-	cavan_service_handler(desc);
-
-	for (i = 0; i < count; i++)
-	{
-		pthread_join(threads[i], NULL);
-	}
-
 out_free_threads:
 	free(threads);
 
 	return ret;
+}
+
+int cavan_service_main_loop(struct cavan_service_description *desc)
+{
+	int i;
+	pthread_t *threads;
+
+	for (i = desc->daemon_count - 1, threads = desc->threads; i >= 0; i--)
+	{
+		pthread_join(threads[i], NULL);
+	}
+
+	return 0;
+}
+
+int cavan_service_run(struct cavan_service_description *desc)
+{
+	int ret;
+
+	ret = cavan_service_start(desc);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_service_start");
+		return ret;
+	}
+
+	return cavan_service_main_loop(desc);
 }
 
 int cavan_service_stop(struct cavan_service_description *desc)
@@ -150,6 +182,7 @@ int cavan_service_stop(struct cavan_service_description *desc)
 #if CONFIG_BUILD_FOR_ANDROID == 0
 		pthread_cancel(threads[i]);
 #endif
+		pthread_kill(threads[i], SIGUSR1);
 	}
 
 	free(threads);

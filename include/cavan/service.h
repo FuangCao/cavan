@@ -30,6 +30,8 @@ struct cavan_daemon_description
 	int super_permission;
 };
 
+int cavan_service_start(struct cavan_service_description *desc);
+int cavan_service_main_loop(struct cavan_service_description *desc);
 int cavan_service_run(struct cavan_service_description *desc);
 int cavan_service_stop(struct cavan_service_description *desc);
 int cavan_daemon_run(struct cavan_daemon_description *desc);
