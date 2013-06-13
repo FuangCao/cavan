@@ -242,10 +242,11 @@ int cavan_alarm_thread_init(struct cavan_alarm_thread *alarm_thread)
 
 	return 0;
 
-out_pthread_mutex_destroy:
-	pthread_mutex_destroy(&thread->lock);
 out_double_link_deinit:
 	double_link_deinit(&alarm_thread->link);
+out_pthread_mutex_destroy:
+	pthread_mutex_destroy(&alarm_thread->lock);
+
 	return ret;
 }
 
