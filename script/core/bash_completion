@@ -2,12 +2,10 @@
 
 function _build_completion()
 {
-	local cur prev
-
-	_get_comp_words_by_ref cur prev
-
 	if [ "${COMP_CWORD}" = "1" ]
 	then
+		local cur prev
+		_get_comp_words_by_ref cur prev
 		COMPREPLY=($(compgen -W "$*" -- ${cur}))
 	else
 		_filedir
@@ -117,11 +115,20 @@ function _git_repo_completion()
 }
 
 complete -F _git_repo_completion repo git-repo
-complete -F _root_command cavan-sudo cavan-service cavan-daemon-command
+complete -F _command cavan-sudo cavan-service cavan-daemon-command
 
 function _cavan_alarm()
 {
-	_build_completion "add remove list"
+	local cur prev
+
+	_get_comp_words_by_ref cur prev
+
+	if [ "${COMP_CWORD}" = "1" ]
+	then
+		COMPREPLY=($(compgen -W "add remove list" -- ${cur}))
+	else
+		COMPREPLY=($(compgen -dc -- "$cur"))
+	fi
 }
 
 complete -F _cavan_alarm cavan-alarm
