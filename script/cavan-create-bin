@@ -1,0 +1,49 @@
+#!/bin/bash
+
+START=${LINENO}
+
+function install_script()
+{
+	cat << EOF
+#!/bin/bash
+
+echo "Extracting ..."
+echo
+
+tail -n +$(expr ${END} - ${START} - 7) "\$0" | tar -xjv || exit 1
+
+echo
+echo "Done."
+echo
+echo "============================================================"
+echo
+
+cd "$1" || exit 1
+
+echo "Installing ..."
+echo
+
+[ -f "install.sh" ] &&
+{
+	chmod a+x install.sh || exit 1
+	./install.sh \$* || exit 1
+}
+
+echo
+echo "Done."
+
+exit 0
+EOF
+}
+
+END=${LINENO}
+
+PATH_PARENT="$(dirname $1)"
+PATH_BASENAME="$(basename $1)"
+
+{
+	install_script "${PATH_BASENAME}"
+	cd "${PATH_PARENT}" && tar -cj ${PATH_BASENAME}
+} > "$2"
+
+chmod a+x "$2"
