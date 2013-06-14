@@ -81,6 +81,9 @@ class CavanXmlBase:
 			return None
 		return tags[0]
 
+	def getAttribute(self, name):
+		return self.mRootElement.getAttribute(name)
+
 	def createElement(self, name):
 		return self.mDocument.createElement(name)
 
