@@ -94,7 +94,7 @@ class CavanAlarmManager(CavanCommandBase):
 		if not path:
 			listCommand.append(command)
 		else:
-			listCommand.append("cd %s && {%s}" % (path, command))
+			listCommand.append("cd %s && {%s}" % (self.getAbsPath(path), command))
 
 		return self.doExecute(listCommand)
 
