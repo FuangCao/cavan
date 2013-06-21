@@ -91,3 +91,15 @@ class CavanXmlBase:
 		if not parent:
 			parent = self.mRootElement
 		parent.appendChild(node)
+
+	def removeChild(self, node, parent = None):
+		if not parent:
+			parent = self.mRootElement
+		parent.removeChild(node)
+
+	def removeAllChildByName(self, name, parent = None):
+		if not parent:
+			parent = self.mRootElement
+
+		for node in parent.getElementsByTagName(name):
+			parent.removeChild(node)

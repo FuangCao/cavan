@@ -145,6 +145,12 @@ class AndroidManifest(CavanXmlBase):
 	def appendFile(self, name, path = None):
 		return self.appendProjectBase("file", name, path)
 
+	def removeAllProject(self):
+		self.removeAllChildByName("project")
+
+	def removeAllFile(self):
+		self.removeAllChildByName("file")
+
 class CavanCheckoutThread(threading.Thread):
 	def __init__(self, index, manager):
 		threading.Thread.__init__(self)
@@ -221,12 +227,25 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		return True
 
 	def genManifest(self, url):
-		self.mManifest = AndroidManifest()
-		if not self.mManifest.create():
-			return False
+		if os.path.exists(self.mFileManifest):
+			if not self.loadManifest():
+				return False
+		else:
+			self.mManifest = AndroidManifest()
+			if not self.mManifest.create():
+				return False
 
-		self.mManifest.setUrl(url)
+		if not url:
+			url = self.mManifest.getUrl()
+			if not url:
+				self.prRedInfo("Url not found")
+				return False
+		else:
+			self.mManifest.setUrl(url)
+
 		self.mUrl = url
+		self.mManifest.removeAllProject()
+		self.mManifest.removeAllFile()
 
 		if not self.genProjectNode():
 			return False
@@ -251,27 +270,19 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		return self.getAbsPath(pathname)
 
 	def doInit(self, argv):
-		length = len(argv)
-		if length > 0:
-			url = argv[0].rstrip("/")
-		elif os.path.exists(self.mFileManifest):
-			if not self.loadManifest():
-				return False
-			url = self.mManifest.getUrl()
-			if not url:
-				self.prRedInfo("Url not found")
-				return False
-		else:
-			self.prRedInfo("Please give repo url")
-			return False
+		self.setVerbose(True)
 
+		length = len(argv)
 		if length > 1:
 			self.setRootPath(argv[1])
 
 		if not os.path.isdir(self.mPathProjects):
 			os.makedirs(self.mPathProjects)
 
-		self.setVerbose(True)
+		if length > 0:
+			url = argv[0].rstrip("/")
+		else:
+			url = None
 
 		return self.genManifest(url)
 
