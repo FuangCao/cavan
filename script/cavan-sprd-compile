@@ -14,6 +14,7 @@ do
 	set $line
 
 	cavan_visual_command cd $1 || continue
+	cavan_visual_command cavan-git-svn-repo init || continue
 	cavan_visual_command cavan-git-svn-repo sync || continue
 	cavan_visual_command cavan-git-svn-repo backup
 
@@ -21,6 +22,14 @@ do
 	do
 		shift
 		[ "$1" ] || break
-		cavan_visual_command ./mk -o=2sim $1 n
+		if [ -d "3rdparty" ]
+		then
+			cavan_visual_command ./mk -o=2sim $1 n
+		else
+			source build/envsetup.sh
+			lunch $1-eng
+			kheader
+			make -j16 > $1.log
+		fi
 	done
 done < $1
