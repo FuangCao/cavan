@@ -31,6 +31,10 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--disable-multilib \
 					--disable-bootstrap
 
+ifeq "$(GCC_VERSION)" "4.8.1"
+GCC_OPTION1 += --disable-libatomic
+endif
+
 stage1:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION1)
 	$(Q)+make

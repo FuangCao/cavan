@@ -102,7 +102,6 @@ endef
 
 define remake_directory
 $(Q)echo "Remake Directory $1"
-$(Q)rm $1 -rf
 $(Q)mkdir $1 -pv
 endef
 

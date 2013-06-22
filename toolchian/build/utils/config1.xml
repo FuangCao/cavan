@@ -3,9 +3,11 @@
 			 url="http://ftp.gnu.org/gnu/gawk">
 	</package>
 
+	<!--
 	<package name="m4" version="1.4.16" depend="gawk" config=""
 			 url="http://ftp.gnu.org/gnu/m4">
 	</package>
+	-->
 
 	<package name="autoconf" version="2.68" depend="m4" config=""
 			 url="http://ftp.gnu.org/gnu/autoconf">
