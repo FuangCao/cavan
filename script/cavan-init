@@ -9,6 +9,7 @@ FILE_GROUP="/etc/group"
 FILE_EXPORTS="/etc/exports"
 FILE_SAMBA_CONFIG="/etc/samba/smb.conf"
 FILE_CAVAN_SERVICE="/etc/init.d/cavan"
+FILE_CAVAN_SERVICE_CONF="/etc/init/cavan.conf"
 FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
 FILE_GRUB_LINUX="/etc/grub.d/10_linux"
 FILE_APP_FEILED="/tmp/cavan-app-failed.txt"
@@ -148,7 +149,7 @@ function config_bashrc()
 CAVAN_HOME="/cavan"
 TOOLS_HOME="/tools"
 SSH_USER="${SSH_USER-caofuang}"
-SMB_SERVER_IP="${SMB_SERVER_IP-10.1.1.241}"
+SMB_SERVER_IP="${SMB_SERVER_IP-10.1.1.150}"
 SMB_USER="${SMB_USER-caofuang}"
 SMB_PASSWORD="${SMB_PASSWORD-CFA8888}"
 SMB_ENTRY="${SMB_ENTRY-huaserver2_caofuang}"
@@ -330,6 +331,11 @@ function config_stardict()
 
 function config_service()
 {
+	CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
+	CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
+	CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
+	CMD_TCP_PROXY="${CAVAN_OUT_DEBUG}/cavan-tcp_proxy"
+
 	cat > ${FILE_CAVAN_SERVICE} << EOF
 #!/bin/sh
 
@@ -339,11 +345,8 @@ function config_service()
 	exit 1
 }
 
-CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
-CMD_TCP_DD_SERVER="\${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
-CMD_TFTP_DD_SERVER="\${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
 CMD_START_STOP_DAEMON="start-stop-daemon --quiet --oknodo"
-CAVAN_SERVER_LIST="\${CMD_TCP_DD_SERVER} \${CMD_TFTP_DD_SERVER}"
+CAVAN_SERVER_LIST="${CMD_TCP_DD_SERVER} ${CMD_TFTP_DD_SERVER}"
 CAVAN_SERVER_OPTION="--daemon"
 
 case "\$1" in
@@ -372,7 +375,18 @@ case "\$1" in
 		;;
 esac
 EOF
-	chmod 555 ${FILE_CAVAN_SERVICE} || return 1
+
+	chmod 0555 ${FILE_CAVAN_SERVICE} || return 1
+
+cat > ${FILE_CAVAN_SERVICE_CONF} << EOF
+description "cavan daemon"
+
+start on net-device-up
+
+exec ${CMD_TCP_DD_SERVER} & ${CMD_TCP_PROXY} -ap 9999
+EOF
+
+	chmod 0644 ${FILE_CAVAN_SERVICE_CONF} || return 1
 
 	return 0
 }
