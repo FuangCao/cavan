@@ -37,16 +37,8 @@ define link_object_file
 $(Q)$(LD) -o $(1) -r $(2)
 endef
 
-define load_cavan_make
-$(eval source-app =)
-$(eval source-lib =)
-$(eval include $(1)/$(MAKEFILE_CAVAN))
-$(eval APP_SRC_FILES += $(addprefix $(1)/,$(source-app)))
-$(eval LIB_SRC_FILES += $(addprefix $(1)/,$(source-lib)))
-endef
-
 define find_source_files
-$(if $(wildcard $(1)/$(MAKEFILE_CAVAN)),$(call load_cavan_make,$(1)),$(eval $(2) += $(wildcard $(1)/*.c)))
+$(eval $(2) += $(wildcard $(1)/*.c))
 endef
 
 define build_app_action
