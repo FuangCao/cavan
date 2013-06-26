@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include <media/AudioSystem.h>
+#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define pr_std_info(fmt, args ...) \
 	printf("%s[%d]: " fmt "\n", __FUNCTION__, __LINE__, ##args)
@@ -17,6 +19,9 @@
 #define NELEM(a) \
 	((int)(sizeof(a) / sizeof((a)[0])))
 #endif
+
+int setStreamVolume(int stream, float volume);
+int getStreamVolume(int stream, float *volume);
 
 static const char *stream_name_list[] =
 {
@@ -68,7 +73,7 @@ int main(int argc, char *argv[])
 	{
 		volume = atoi(argv[2]);
 
-		ret = android::AudioSystem::setStreamVolume(stream, volume / 100, 0);
+		ret = setStreamVolume(stream, volume / 100);
 		if (ret < 0)
 		{
 			pr_red_info("setStreamVolume");
@@ -80,7 +85,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		ret = android::AudioSystem::getStreamVolume(stream, &volume, 0);
+		ret = getStreamVolume(stream, &volume);
 		if (ret < 0)
 		{
 			pr_red_info("getStreamVolume");
