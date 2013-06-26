@@ -9,6 +9,26 @@ function cavan_visual_command()
 	return 0
 }
 
+function sprd_compile_once()
+{
+	[ "$1" ] || return 1
+
+	if [ -d "3rdparty" ]
+	then
+		./mk -o=2sim $1 n
+	else
+		source build/envsetup.sh
+		lunch $1-eng
+		kheader
+		make -j16 > $1.log
+	fi
+}
+
+[ -f "$1" ] ||
+{
+	sprd_compile_once $1
+}
+
 while read line
 do
 	set $line
@@ -22,14 +42,6 @@ do
 	do
 		shift
 		[ "$1" ] || break
-		if [ -d "3rdparty" ]
-		then
-			cavan_visual_command ./mk -o=2sim $1 n
-		else
-			source build/envsetup.sh
-			lunch $1-eng
-			kheader
-			make -j16 > $1.log
-		fi
+		sprd_compile_once $1
 	done
 done < $1

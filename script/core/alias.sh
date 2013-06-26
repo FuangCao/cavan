@@ -140,3 +140,12 @@ function cavan-adb-build-env()
 	adb shell chmod 777 /data/bin/bash || return 1
 	adb shell cp /data/bin/bash /system/bin/sh || return 1
 }
+
+function cavan-svn-cleanup()
+{
+	cavan-mkdir .svn/tmp
+	svn cleanup
+	cavan-mkdir .svn/tmp
+	rm -rf .svn/tmp
+	svn cleanup
+}
