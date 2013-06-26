@@ -42,10 +42,38 @@ complete -F _cavan_git_svn cavan-git-svn git-svn.py
 
 function _adb_completion()
 {
-	_build_completion "devices connect disconnect push pull sync shell" \
-	"emu logcat forward jdwp install uninstall bugreport backup restore" \
-	"help version wait-for-device start-server kill-server get-state get-serialno" \
-	"status-window remount reboot reboot-bootloader root usb tcpip ppp"
+	local cur prev
+
+	_get_comp_words_by_ref cur prev
+
+	case ${COMP_CWORD} in
+		1)
+			COMPREPLY=($(compgen -W "devices connect disconnect push pull sync shell
+				emu logcat forward jdwp install uninstall bugreport backup restore
+				help version wait-for-device start-server kill-server get-state get-serialno
+				status-window remount reboot reboot-bootloader root usb tcpip ppp" -- ${cur}))
+			;;
+
+		2)
+			if [ "${prev}" = "shell" ]
+			then
+				compopt -o filenames
+				COMPREPLY=($(compgen -dc -- "$cur"))
+			else
+				_filedir
+			fi
+			;;
+
+		*)
+			if [ "${prev}" = "busybox" ]
+			then
+				compopt -o filenames
+				COMPREPLY=($(compgen -dc -- "$cur"))
+			else
+				_filedir
+			fi
+			;;
+	esac
 }
 
 complete -F _adb_completion adb
@@ -57,15 +85,26 @@ function _cavan_make_completion()
 	_get_comp_words_by_ref cur prev
 
 	case ${COMP_CWORD} in
-		1)	COMPREPLY=($(compgen -W "lib app" -- ${cur}));;
-		2)	_filedir;;
-		3)	if [ "${COMP_WORDS[1]}" = "app" ]
+		1)
+			COMPREPLY=($(compgen -W "lib app" -- ${cur}))
+			;;
+
+		2)
+			_filedir
+			;;
+
+		3)
+			if [ "${COMP_WORDS[1]}" = "app" ]
 			then
 				COMPREPLY=($(compgen -W "simple normal" -- ${cur}))
 			else
 				COMPREPLY=()
-			fi;;
-		*)	COMPREPLY=();;
+			fi
+			;;
+
+		*)
+			COMPREPLY=()
+			;;
 	esac
 }
 
@@ -130,6 +169,7 @@ function _cavan_alarm()
 		2)
 			if [ "${COMP_WORDS[1]}" = "add" ]
 			then
+				compopt -o filenames
 				COMPREPLY=($(compgen -dc -- "$cur"))
 			else
 				COMPREPLY=()
