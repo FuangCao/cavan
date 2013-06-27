@@ -251,7 +251,7 @@ class CavanCommandBase:
 				return False
 
 		dirname = os.path.dirname(pathname)
-		if not dirname or not self.mkdirAll(dirname):
+		if len(dirname) > 0 and not self.mkdirAll(dirname):
 			return False
 
 		try:
@@ -264,11 +264,13 @@ class CavanCommandBase:
 		if not os.path.isdir(tmppath):
 			os.mkdir(tmppath)
 
-		self.prBoldInfo("Rename ", tmppath, " => ", pathname)
+		self.prBrownInfo("Rename ", tmppath, " => ", pathname)
 
 		try:
 			os.rename(tmppath, pathname)
 		except:
+			os.rmdir(tmppath)
+
 			if os.path.isdir(pathname):
 				return True
 			else:
