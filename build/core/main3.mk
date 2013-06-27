@@ -3,6 +3,7 @@ ROOT_PATH = $(shell pwd)
 CAVAN_NAME = cavan
 BUILD_PATH = $(ROOT_PATH)/build
 BUILD_CORE_PATH = $(BUILD_PATH)/core
+APP_CORE_PATH = $(ROOT_PATH)/app/core
 INCLUDE_PATH = $(ROOT_PATH)/include
 SUB_DIRS = lib app
 
@@ -11,6 +12,7 @@ MAKEFILE_CAVAN = $(CAVAN_NAME).mk
 BUILD_LIBA = $(BUILD_CORE_PATH)/build_liba.mk
 BUILD_LIBSO = $(BUILD_CORE_PATH)/build_libso.mk
 BUILD_EXECUTE = $(BUILD_CORE_PATH)/build_execute.mk
+BUILD_EXEC_PKG = $(BUILD_CORE_PATH)/build_exec_pkg.mk
 
 OUT_PATH = out/$(ARCH)
 OUT_LIB = $(OUT_PATH)/lib

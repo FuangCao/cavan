@@ -18,15 +18,9 @@ ifeq ($$(LOCAL_MODULE),)
 $$(error Please give module name for $$(LOCAL_PATH))
 endif
 
-LOCAL_C_SOURCE := $$(foreach fn,$$(LOCAL_C_SOURCE),$$(wildcard $$(fn) $$(LOCAL_PATH)/$$(fn)))
-LOCAL_C_INCLUDE := $$(foreach pn,$$(LOCAL_C_INCLUDE),$$(wildcard $$(pn) $$(ROOT_PATH)/$$(pn)))
-
 LOCAL_OUT_PATH := $$(OUT_OBJ)/$$(LOCAL_MODULE)_$(1)
-LOCAL_COBJ := $$(patsubst $$(LOCAL_PATH)/%.c,$$(LOCAL_OUT_PATH)/%.o,$$(LOCAL_C_SOURCE))
+LOCAL_COBJ := $$(patsubst %.c,$$(LOCAL_OUT_PATH)/%.o,$$(LOCAL_C_SOURCE))
 $$(LOCAL_MODULE_PATH): CFLAGS := $$(CFLAGS) $$(LOCAL_CFLAGS) $$(addprefix -I,$$(LOCAL_C_INCLUDE))
-
-$$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.c | $$(LOCAL_OUT_PATH)
-	$$(call build_c_object)
 
 $$(LOCAL_OUT_PATH):
 	$$(Q)$$(MKDIR) $$@
@@ -40,7 +34,7 @@ $(Q)$(CC) -o $@ $(CFLAGS) $(1) -c $<
 endef
 
 define search_all_files
-$(wildcard $(LOCAL_PATH)/$(1))
+$(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/$(1)))
 endef
 
 define strip_files
