@@ -118,7 +118,7 @@ function cavan-adb-cavan-main()
 
 function cavan-adb-tcp_dd_server()
 {
-	cavan-loop_run -wd2 "adb shell cavan-main tcp_dd_server"
+	cavan-loop_run -wd2 "adb remount; adb shell cavan-main tcp_dd_server"
 }
 
 function cavan-adb-logcat()

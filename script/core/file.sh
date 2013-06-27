@@ -330,3 +330,35 @@ function cavan-cscope-update()
 	cscope -Rbq
 	ctags -R .
 }
+
+function cavan-path-copy()
+{
+	local destDir destPath
+
+	[ $# -ge 2 ] || return 1
+
+	destDir="$(echo ${!#} | sed 's/\/\+$//g')"
+
+	while [ $# -ge 2 ]
+	do
+		if [[ "$1" == /* ]]
+		then
+			destPath="${destDir}"
+		else
+			destPath="${destDir}/$1"
+		fi
+
+		[ -e "${destPath}" ] || mkdir "$(dirname "${destPath}")" -pv
+
+		if [ -d "$1" ]
+		then
+			cp "$1" "$(dirname "${destPath}")" -av
+		else
+			cp "$1" "${destPath}" -av
+		fi
+
+		shift
+	done
+
+	return 0
+}
