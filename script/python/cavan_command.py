@@ -242,6 +242,40 @@ class CavanCommandBase:
 
 		return self.doExecute(["git", "commit", "-asm", "Auto commit by Fuang.Cao"], cwd = pathname)
 
+	def mkdirAll(self, pathname):
+		pathname = self.getAbsPath(pathname)
+		if os.path.exists(pathname):
+			if os.path.isdir(pathname):
+				return True
+			else:
+				return False
+
+		dirname = os.path.dirname(pathname)
+		if not dirname or not self.mkdirAll(dirname):
+			return False
+
+		try:
+			os.mkdir(pathname)
+		except:
+			if os.path.isdir(pathname):
+				return True
+
+		tmppath = os.path.join(dirname, ".__CAVAN__")
+		if not os.path.isdir(tmppath):
+			os.mkdir(tmppath)
+
+		self.prBoldInfo("Rename ", tmppath, " => ", pathname)
+
+		try:
+			os.rename(tmppath, pathname)
+		except:
+			if os.path.isdir(pathname):
+				return True
+			else:
+				return False
+
+		return True
+
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		print popen_tostring(sys.argv[1])

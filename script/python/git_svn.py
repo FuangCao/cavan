@@ -126,7 +126,7 @@ class GitSvnManager(CavanCommandBase):
 		self.mRemoteName = "cavan-svn"
 		self.mBranchMaster = "master"
 		self.mBranchMerge = "cavan-merge"
-		self.mPatternSvnUpdate = re.compile('^A[UCGER ]{4}(.*)$')
+		self.mPatternSvnUpdate = re.compile('^([AD])[UCGER ]{4}(.*)$')
 		self.mPatternGitWhatChanged = re.compile('^:([0-9]{3}[0-7]{3} ){2}([0-9a-f]{7}\.{3} ){2}([AMD])\t(.*)$')
 
 	def setRootPath(self, pathname):
@@ -173,6 +173,7 @@ class GitSvnManager(CavanCommandBase):
 
 		self.mSvnRevision = parser.getRevesion()
 		self.mUuid = parser.getUuid()
+		self.mSvnUrl = parser.getUrl()
 		self.mPatternGitRevision = re.compile('^cavan-git-svn-id: .*@([0-9]+) %s$' % self.mUuid)
 
 		return parser
@@ -358,7 +359,12 @@ class GitSvnManager(CavanCommandBase):
 				match = self.mPatternSvnUpdate.match(line)
 				if not match:
 					continue
-				listUpdate.append(match.group(1))
+
+				if match.group(1) == "D":
+					self.mkdirAll(match.group(2))
+					self.doExecute(["rm", "-rf", match.group(2)])
+				else:
+					listUpdate.append(match.group(2))
 		else:
 			url = "%s@%s" % (self.mUrl, revision)
 			if not self.doExecute(["svn", "checkout", "--force", "--quiet", url, "."], of = "/dev/null"):
@@ -438,9 +444,10 @@ class GitSvnManager(CavanCommandBase):
 			self.doGitReset(branch)
 			self.doExecute(["svn", "unlock", "--force", "."], ef = "/dev/null", of = "/dev/null")
 
-			url = self.buildSvnUrl(self.mUrl, self.mGitRevision)
-			if not self.doExecute(["svn", "switch", "--force", "--quiet", "--accept", "theirs-full", url], of = "/dev/null"):
-				return False
+			if self.mUrl != self.mSvnUrl:
+				url = self.buildSvnUrl(self.mUrl, self.mGitRevision)
+				if not self.doExecute(["svn", "switch", "--force", "--quiet", "--accept", "theirs-full", url], of = "/dev/null"):
+					return False
 		else:
 			self.doExecute(["rm", "-rf", ".svn"])
 
