@@ -36,6 +36,8 @@ CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wsign-compare -Werror-impli
 			-Wpointer-arith -fno-strict-aliasing -g -O2 -I$(INCLUDE_PATH) -I. \
 			-DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\"
 
+LDFLAGS += -lm -lrt -lpthread
+
 ifeq ($(BUILD_TYPE),debug)
 CFLAGS += -DCAVAN_DEBUG
 endif
