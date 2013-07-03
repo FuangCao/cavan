@@ -381,7 +381,7 @@ EOF
 cat > ${FILE_CAVAN_SERVICE_CONF} << EOF
 description "cavan daemon"
 
-start on net-device-up
+start on runlevel [2345] or net-device-up
 
 exec ${CMD_TCP_DD_SERVER} & ${CMD_TCP_PROXY} -ap 9999
 EOF
