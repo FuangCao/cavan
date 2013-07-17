@@ -7,6 +7,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/font.h>
 #include <cavan/thread.h>
 
 typedef union
@@ -60,6 +61,7 @@ struct cavan_display_device
 
 	void *fb_base;
 	void *private_data;
+	struct cavan_font font;
 	cavan_display_color_t pen_color;
 
 	pthread_mutex_t lock;

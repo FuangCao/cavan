@@ -1018,11 +1018,59 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 
 size_t cavan_display_mesure_text_dummy(struct cavan_display_device *display, const char *text)
 {
-	return text_len(text);
+	return text_len(text) * display->font.cwidth;
 }
 
 int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, int y, const char *text)
 {
+	int x_bak = x;
+	struct cavan_font *font = &display->font;
+	cavan_display_color_t color = display->pen_color;
+	cavan_display_draw_point_handler_t handler = display->draw_point;
+
+	while (1)
+	{
+		if (*text < 32)
+		{
+			switch (*text)
+			{
+			case 0:
+				return 0;
+
+			case '\n':
+				y += font->cheight;
+			case '\r':
+				x = x_bak;
+				break;
+			}
+		}
+		else if (*text < 128)
+		{
+			int top;
+			const byte *p, *p_end;
+
+			p = font->body + ((*text - 32) * font->cwidth);
+
+			for (p_end = p + font->stride, top = y; p < p_end; p += font->width, top++)
+			{
+				int left;
+				const byte *q, *q_end;
+
+				for (q = p, q_end = q + font->cwidth, left = x; q < q_end; q++, left++)
+				{
+					if (*q)
+					{
+						handler(display, left, top, color);
+					}
+				}
+			}
+
+			x += font->cwidth;
+		}
+
+		text++;
+	}
+
 	return 0;
 }
 
@@ -1033,15 +1081,35 @@ void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_d
 
 void cavan_display_destroy_dummy(struct cavan_display_device *display)
 {
+	cavan_font_deinit(&display->font);
 	pthread_mutex_destroy(&display->lock);
 }
 
 int cavan_display_init(struct cavan_display_device *display)
 {
+	int ret;
+
 	mem_set(display, 0, sizeof(*display));
-	pthread_mutex_init(&display->lock, NULL);
+
+	ret = pthread_mutex_init(&display->lock, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_mutex_init");
+		return ret;
+	}
+
+	ret = cavan_font_init(&display->font);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_font_init");
+		goto out_pthread_mutex_destroy;
+	}
 
 	return 0;
+
+out_pthread_mutex_destroy:
+	pthread_mutex_destroy(&display->lock);
+	return ret;
 }
 
 static int cavan_display_refresh_thread_handler(struct cavan_thread *thread, void *data)
