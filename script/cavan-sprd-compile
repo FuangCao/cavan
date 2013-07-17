@@ -2,7 +2,7 @@
 
 function cavan_visual_command()
 {
-	echo $*
+	echo -e "\033[1mExecute: $*\033[0m"
 
 	$* || return 1
 
@@ -15,18 +15,21 @@ function sprd_compile_once()
 
 	if [ -d "3rdparty" ]
 	then
-		./mk -o=2sim $1 n
+		cavan_visual_command ./mk -o=2sim $1 n
 	else
 		source build/envsetup.sh
-		lunch $1-eng
-		kheader
-		make -j16 > $1.log
+		cavan_visual_command lunch $1-eng || return 1
+		cavan_visual_command kheader || return 1
+		cavan_visual_command make -j16 || return 1
 	fi
+
+	return 0
 }
 
 [ -f "$1" ] ||
 {
-	sprd_compile_once $1
+	sprd_compile_once $1 || exit 1
+	exit 0
 }
 
 while read line
