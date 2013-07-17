@@ -758,6 +758,8 @@ int cavan_dialog_init(struct cavan_dialog *dialog, struct cavan_application_cont
 		goto out_win_destroy;
 	}
 
+	dialog->title.align = CAVAN_WIN_TEXT_ALIGN_CENTER;
+
 	ret = cavan_window_init(&dialog->body, context);
 	if (ret < 0)
 	{
@@ -883,6 +885,8 @@ int cavan_button_init(struct cavan_button *button, struct cavan_application_cont
 	{
 		return ret;
 	}
+
+	button->label.align = CAVAN_WIN_TEXT_ALIGN_CENTER;
 
 	win = &button->label.window;
 	win->paint_handler = cavan_button_paint_handler;

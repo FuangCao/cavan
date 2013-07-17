@@ -1028,6 +1028,8 @@ int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, i
 	cavan_display_color_t color = display->pen_color;
 	cavan_display_draw_point_handler_t handler = display->draw_point;
 
+	y -= font->cheight / 2;
+
 	while (1)
 	{
 		if (*text < 32)
@@ -1071,7 +1073,7 @@ int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, i
 		text++;
 	}
 
-	return 0;
+	return x - x_bak;
 }
 
 void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_display_color_t color)
