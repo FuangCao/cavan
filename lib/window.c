@@ -624,11 +624,11 @@ void cavan_label_paint_handler(struct cavan_window *win)
 		break;
 
 	case CAVAN_WIN_TEXT_ALIGN_RIGHT:
-		x = win->xabs + (win->width - (int)display->mesure_text(display, label->text));
+		x = win->xabs + (win->width - (int)display->mesure_text(display, label->text)) - 2;
 		break;
 
 	default:
-		x = win->xabs;
+		x = win->xabs + 2;
 	}
 
 	display->draw_text(display, x, win->yabs + win->height / 2, label->text);
@@ -648,6 +648,92 @@ int cavan_label_init(struct cavan_label *label, struct cavan_application_context
 	label->text = text;
 	label->align = CAVAN_WIN_TEXT_ALIGN_LEFT;
 	win->paint_handler = cavan_label_paint_handler;
+
+	return 0;
+}
+
+// ================================================================================
+
+static void cavan_textview_key_handler(struct cavan_window *win, struct cavan_input_message_key *message)
+{
+	struct cavan_textview *view = (struct cavan_textview *)win;
+
+	switch (message->code)
+	{
+	case KEY_LEFTSHIFT:
+	case KEY_RIGHTSHIFT:
+		view->shift_down = message->value > 0;
+		return;
+
+	case KEY_CAPSLOCK:
+		if (message->value > 0)
+		{
+			view->caps_lock = !view->caps_lock;
+		}
+		return;
+
+	case KEY_BACKSPACE:
+		if (message->value > 0 && view->tail > view->text)
+		{
+			*--view->tail = 0;
+
+			if (view->head > view->text)
+			{
+				view->head--;
+				view->label.text = view->head;
+			}
+		}
+		break;
+
+	default:
+		if (message->value > 0)
+		{
+			*view->tail++ = cavan_keycode2ascii(message->code, view->caps_lock ? !view->shift_down : view->shift_down);
+			*view->tail = 0;
+			if (view->tail - view->text > view->size)
+			{
+				view->head++;
+				view->label.text = view->head;
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&win->lock);
+	cavan_window_paint(win);
+	pthread_mutex_lock(&win->lock);
+}
+
+int cavan_textview_init(struct cavan_textview *view, struct cavan_application_context *context, const char *text)
+{
+	int ret;
+
+	if (text)
+	{
+		view->tail = text_copy(view->text, text);
+	}
+	else
+	{
+		view->text[0] = 0;
+		view->tail = view->text;
+	}
+
+	view->head = view->text;
+	view->shift_down = false;
+	view->caps_lock = false;
+
+	view->size = (view->label.window.width / context->display->font.cwidth) - 1;
+	if (view->size >= NELEM(view->text))
+	{
+		view->size = NELEM(view->text) - 1;
+	}
+
+	ret = cavan_label_init(&view->label, context, view->head);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	view->label.window.key_handler = cavan_textview_key_handler;
 
 	return 0;
 }

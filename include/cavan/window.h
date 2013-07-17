@@ -93,6 +93,18 @@ struct cavan_button
 	cavan_display_color_t fore_color_backup;
 };
 
+struct cavan_textview
+{
+	struct cavan_label label;
+
+	char text[1024];
+	int size;
+	bool shift_down;
+	bool caps_lock;
+	char *head;
+	char *tail;
+};
+
 struct cavan_progress_bar
 {
 	struct cavan_window window;
@@ -180,6 +192,8 @@ void cavan_dialog_set_title_height(struct cavan_dialog *dialog, int height);
 int cavan_label_init(struct cavan_label *label, struct cavan_application_context *context, const char *text);
 void cavan_label_deinit(struct cavan_label *label);
 void cavan_label_paint_handler(struct cavan_window *win);
+
+int cavan_textview_init(struct cavan_textview *view, struct cavan_application_context *context, const char *text);
 
 int cavan_button_init(struct cavan_button *button, struct cavan_application_context *context, const char *text);
 void cavan_button_paint_handler(struct cavan_window *win);

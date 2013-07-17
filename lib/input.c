@@ -439,3 +439,24 @@ bool cavan_input_service_append_point_message(struct cavan_input_service *servic
 
 	return true;
 }
+
+char cavan_keycode2ascii(int code, bool shift_down)
+{
+	const char *ascii_map =
+		"**1234567890-=*\t"
+		"qwertyuiop[]**"
+		"asdfghjkl;'***"
+		"zxcvbnm,.**** ";
+	const char *ascii_map_shift =
+		"**!@#$%^&*()_+*\t"
+		"QWERTYUIOP{}**"
+		"ASDFGHJKL:\"***"
+		"ZXCVBNM<>**** ";
+
+	if (code < 0 || code > KEY_SPACE)
+	{
+		return '*';
+	}
+
+	return shift_down ? ascii_map_shift[code] : ascii_map[code];
+}
