@@ -18,7 +18,7 @@ struct cavan_timer
 
 	struct double_link_node node;
 
-	void (*handler)(struct cavan_timer *timer, void *data);
+	int (*handler)(struct cavan_timer *timer, void *data);
 };
 
 struct cavan_timer_service

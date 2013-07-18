@@ -69,7 +69,7 @@ static void cavan_touchpad_touch(struct cavan_touchpad_device *touchpad, struct 
 			CAVAN_INPUT_MESSAGE_MOUSE_TOUCH, NULL, touchpad->btn_code, value);
 }
 
-static void cavan_touchpad_timer_handler_down(struct cavan_timer *timer, void *data)
+static int cavan_touchpad_timer_handler_down(struct cavan_timer *timer, void *data)
 {
 	struct cavan_touchpad_device *touchpad = MEMBER_TO_STRUCT(timer, struct cavan_touchpad_device, timer);
 
@@ -88,9 +88,11 @@ static void cavan_touchpad_timer_handler_down(struct cavan_timer *timer, void *d
 
 	touchpad->xold = touchpad->x;
 	touchpad->yold = touchpad->y;
+
+	return 0;
 }
 
-static void cavan_touchpad_timer_handler_up(struct cavan_timer *timer, void *data)
+static int cavan_touchpad_timer_handler_up(struct cavan_timer *timer, void *data)
 {
 	struct cavan_touchpad_device *touchpad = MEMBER_TO_STRUCT(timer, struct cavan_touchpad_device, timer);
 	struct cavan_input_service *service = data;
@@ -99,6 +101,8 @@ static void cavan_touchpad_timer_handler_up(struct cavan_timer *timer, void *dat
 	cavan_touchpad_touch(touchpad, service, 0);
 
 	touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
+
+	return 0;
 }
 
 static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
