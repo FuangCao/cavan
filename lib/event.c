@@ -387,36 +387,37 @@ char *cavan_event_tostring(struct input_event *event, char *text)
 			return text;
 		}
 		break;
+
 	case EV_MSC:
-		text_copy(text, "EV_MSC");
+		sprintf(text, "EV_MSC[%d] = %d", event->code, event->value);
 		return text;
 
 	case EV_SW:
-		text_copy(text, "EV_SW");
+		sprintf(text, "EV_SW[%d] = %d", event->code, event->value);
 		return text;
 
 	case EV_LED:
-		text_copy(text, "EV_LED");
+		sprintf(text, "EV_LED[%d] = %d", event->code, event->value);
 		return text;
 
 	case EV_SND:
-		text_copy(text, "EV_SND");
+		sprintf(text, "EV_SND[%d] = %d", event->code, event->value);
 		return text;
 
 	case EV_REP:
-		text_copy(text, "EV_REP");
+		sprintf(text, "EV_REP[%d] = %d", event->code, event->value);
 		return text;
 
 	case EV_FF:
-		text_copy(text, "EV_FF");
+		sprintf(text, "EV_FF[%d] = %d", event->code, event->value);
 		return text;
 
 	case EV_PWR:
-		text_copy(text, "EV_PWR");
+		sprintf(text, "EV_PWR[%d] = %d", event->code, event->value);
 		return text;
 
 	case EV_FF_STATUS:
-		text_copy(text, "EV_FF_STATUS");
+		sprintf(text, "EV_FF_STATUS[%d] = %d", event->code, event->value);
 		return text;
 
 	default:

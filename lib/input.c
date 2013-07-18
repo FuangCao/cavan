@@ -445,13 +445,13 @@ char cavan_keycode2ascii(int code, bool shift_down)
 	const char *ascii_map =
 		"**1234567890-=*\t"
 		"qwertyuiop[]**"
-		"asdfghjkl;'***"
-		"zxcvbnm,.**** ";
+		"asdfghjkl;'`*\\"
+		"zxcvbnm,./*** ";
 	const char *ascii_map_shift =
 		"**!@#$%^&*()_+*\t"
 		"QWERTYUIOP{}**"
-		"ASDFGHJKL:\"***"
-		"ZXCVBNM<>**** ";
+		"ASDFGHJKL:\"~*|"
+		"ZXCVBNM<>?*** ";
 
 	if (code < 0 || code > KEY_SPACE)
 	{

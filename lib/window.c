@@ -1172,10 +1172,39 @@ static void cavan_application_click(struct cavan_application_context *context, s
 
 	if (point->pressed)
 	{
+		bool is_active = false;
+		struct cavan_window_alias *alias;
+
 		win = cavan_window_find_by_point(&context->win_link, point);
+
+		double_link_foreach(&context->win_active, alias)
+		{
+			struct cavan_window *active_win = alias->win;
+
+			if (active_win == win)
+			{
+				is_active = true;
+				continue;
+			}
+
+			point->pressed = false;
+			cavan_window_clicked(win, point);
+			if (win->pressed == false)
+			{
+				double_link_remove_base(&alias->node.node);
+				alias->node.destroy(&alias->node, alias);
+			}
+		}
+		end_link_foreach(&context->win_active);
+
 		if (win)
 		{
-			if (cavan_window_alias_has(&context->win_active, win) == false)
+			point->pressed = true;
+			cavan_window_clicked(win, point);
+			cavan_window_set_top(win);
+			win->move_mask |= point->id;
+
+			if (is_active == false)
 			{
 				struct cavan_window_alias *alias;
 
@@ -1185,12 +1214,7 @@ static void cavan_application_click(struct cavan_application_context *context, s
 					alias->win = win;
 					double_link_append(&context->win_active, &alias->node.node);
 				}
-
-				cavan_window_set_top(win);
 			}
-
-			cavan_window_clicked(win, point);
-			win->move_mask |= point->id;
 		}
 	}
 	else
@@ -1201,12 +1225,6 @@ static void cavan_application_click(struct cavan_application_context *context, s
 		{
 			win = alias->win;
 			cavan_window_clicked(win, point);
-
-			if (win->pressed == false)
-			{
-				double_link_remove_base(&alias->node.node);
-				alias->node.destroy(&alias->node, alias);
-			}
 		}
 		end_link_foreach(&context->win_active);
 	}
