@@ -645,6 +645,16 @@ int cavan_label_init(struct cavan_label *label, struct cavan_application_context
 		return ret;
 	}
 
+	if (win->height < 1)
+	{
+		win->height = context->display->font.cheight + win->border_width * 4;
+	}
+
+	if (win->width < 1 && text)
+	{
+		win->width = context->display->mesure_text(context->display, text) + win->border_width * 4;
+	}
+
 	label->text = text;
 	label->align = CAVAN_WIN_TEXT_ALIGN_LEFT;
 	win->paint_handler = cavan_label_paint_handler;
@@ -686,7 +696,7 @@ static void cavan_textview_key_handler(struct cavan_window *win, struct cavan_in
 		break;
 
 	default:
-		if (message->value > 0)
+		if (message->value > 0 && view->tail - view->text < NELEM(view->text) - 1)
 		{
 			*view->tail++ = cavan_keycode2ascii(message->code, view->caps_lock ? !view->shift_down : view->shift_down);
 			*view->tail = 0;
@@ -947,7 +957,7 @@ bool cavan_button_click_handler(struct cavan_window *win, struct cavan_input_mes
 		button->border_color_backup = win->border_color;
 
 		win->back_color = cavan_display_build_color3f(display, 0, 0, 1.0);
-		win->fore_color = cavan_display_build_color3f(display, 0, 0, 0);
+		win->fore_color = cavan_display_build_color3f(display, 1.0, 1.0, 0);
 		win->border_color = cavan_display_build_color3f(display, 1.0, 0, 0);
 	}
 	else
@@ -1188,8 +1198,8 @@ static void cavan_application_click(struct cavan_application_context *context, s
 			}
 
 			point->pressed = false;
-			cavan_window_clicked(win, point);
-			if (win->pressed == false)
+			cavan_window_clicked(active_win, point);
+			if (active_win->pressed == false)
 			{
 				double_link_remove_base(&alias->node.node);
 				alias->node.destroy(&alias->node, alias);
@@ -1383,7 +1393,6 @@ static void cavan_application_message_queue_handler(cavan_input_message_t *messa
 
 	default:
 		pr_red_info("Invalid message type %d", message->type);
-		break;
 	}
 }
 

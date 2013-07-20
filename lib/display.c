@@ -1018,6 +1018,11 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 
 size_t cavan_display_mesure_text_dummy(struct cavan_display_device *display, const char *text)
 {
+	if (text == NULL)
+	{
+		return 0;
+	}
+
 	return text_len(text) * display->font.cwidth;
 }
 
