@@ -725,6 +725,24 @@ static void cavan_textview_key_handler(struct cavan_window *win, struct cavan_in
 		}
 		break;
 
+	case KEY_DELETE:
+		if (message->value > 0 && view->cursor < view->tail)
+		{
+			cavan_cursor_stop(&win->context->cursor);
+
+			mem_move(view->cursor, view->cursor + 1, view->tail - view->cursor - 1);
+			*--view->tail = 0;
+
+			if (view->head > view->text)
+			{
+				view->head--;
+				view->label.text = view->head;
+			}
+
+			cavan_cursor_start(&win->context->cursor, NULL);
+		}
+		break;
+
 	default:
 		if (message->value > 0 && view->tail - view->text < NELEM(view->text) - 1)
 		{
@@ -761,12 +779,12 @@ static void cavan_textview_cursor_set_visual(struct cavan_cursor *cursor, bool v
 	struct cavan_display_device *display = win->context->display;
 
 	win->get_rect_handler(win, &rect);
-	rect.x += win->xabs;
-	rect.y += win->yabs;
+	rect.x += win->xabs + display->font.cwidth * (view->cursor - view->head) - 2;
+	rect.y += win->yabs + (rect.height - display->font.cheight) / 2;
 
 	cavan_display_lock(display);
 	display->set_color(display, visual ? win->fore_color : win->back_color);
-	display->fill_rect(display, rect.x + display->font.cwidth * (view->cursor - view->head) - 2, rect.y, 1, display->font.cheight);
+	display->fill_rect(display, rect.x, rect.y, 1, display->font.cheight);
 	cavan_display_unlock(display);
 
 	cavan_display_refresh(display);
@@ -850,19 +868,22 @@ bool cavan_dialog_click_handler(struct cavan_window *win, struct cavan_input_mes
 
 		cavan_cursor_stop(&win->context->cursor);
 	}
-	else if (dialog->backup)
+	else
 	{
-		struct cavan_display_memory_rect *mem = dialog->backup;
-
-		if (dialog->xbak != mem->x || dialog->ybak != mem->y)
+		if (dialog->backup)
 		{
-			pthread_mutex_unlock(&win->lock);
-			cavan_window_set_abs_position(win, dialog->xbak, dialog->ybak, mem->x, mem->y);
-			pthread_mutex_lock(&win->lock);
-		}
+			struct cavan_display_memory_rect *mem = dialog->backup;
 
-		cavan_display_memory_rect_free(mem);
-		dialog->backup = NULL;
+			if (dialog->xbak != mem->x || dialog->ybak != mem->y)
+			{
+				pthread_mutex_unlock(&win->lock);
+				cavan_window_set_abs_position(win, dialog->xbak, dialog->ybak, mem->x, mem->y);
+				pthread_mutex_lock(&win->lock);
+			}
+
+			cavan_display_memory_rect_free(mem);
+			dialog->backup = NULL;
+		}
 
 		cavan_cursor_start(&win->context->cursor, NULL);
 	}
