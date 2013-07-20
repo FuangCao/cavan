@@ -65,6 +65,7 @@ struct cavan_window
 	void (*entry_handler)(struct cavan_window *win, struct cavan_input_message_point *message);
 	void (*exit_handler)(struct cavan_window *win, struct cavan_input_message_point *message);
 	void (*get_rect_handler)(struct cavan_window *win, struct cavan_display_rect *rect);
+	void (*focuse_handler)(struct cavan_window *win, bool focuse);
 
 	void (*on_destroy)(struct cavan_window *win, void *data);
 	bool (*on_paint)(struct cavan_window *win, void *data);
@@ -74,6 +75,7 @@ struct cavan_window
 	bool (*on_move)(struct cavan_window *win, struct cavan_input_message_point *message, void *data);
 	bool (*on_entry)(struct cavan_window *win, struct cavan_input_message_point *message, void *data);
 	bool (*on_exit)(struct cavan_window *win, struct cavan_input_message_point *message, void *data);
+	bool (*on_focuse)(struct cavan_window *win, bool focuse, void *data);
 };
 
 struct cavan_label
@@ -103,6 +105,7 @@ struct cavan_textview
 	bool caps_lock;
 	char *head;
 	char *tail;
+	char *cursor;
 };
 
 struct cavan_progress_bar
@@ -140,6 +143,8 @@ struct cavan_application_context
 	struct cavan_thread thread;
 	struct cavan_display_device *display;
 	struct cavan_input_service input_service;
+	struct cavan_cursor cursor;
+	struct cavan_timer_service timer_service;
 
 	struct cavan_display_memory *mouse_backup;
 	float mouse_speed;

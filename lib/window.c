@@ -675,6 +675,30 @@ static void cavan_textview_key_handler(struct cavan_window *win, struct cavan_in
 		view->shift_down = message->value > 0;
 		return;
 
+	case KEY_LEFT:
+	case KEY_RIGHT:
+		if (message->value > 0)
+		{
+			cavan_cursor_stop(&win->context->cursor);
+			if (message->code == KEY_LEFT)
+			{
+				if (view->cursor > view->head)
+				{
+					view->cursor--;
+				}
+			}
+			else
+			{
+				if (view->cursor < view->tail)
+				{
+					view->cursor++;
+				}
+			}
+
+			cavan_cursor_start(&win->context->cursor, NULL);
+		}
+		break;
+
 	case KEY_CAPSLOCK:
 		if (message->value > 0)
 		{
@@ -683,8 +707,12 @@ static void cavan_textview_key_handler(struct cavan_window *win, struct cavan_in
 		return;
 
 	case KEY_BACKSPACE:
-		if (message->value > 0 && view->tail > view->text)
+		if (message->value > 0 && view->cursor > view->text)
 		{
+			cavan_cursor_stop(&win->context->cursor);
+
+			mem_move(view->cursor - 1, view->cursor, view->tail - view->cursor);
+			view->cursor--;
 			*--view->tail = 0;
 
 			if (view->head > view->text)
@@ -692,25 +720,73 @@ static void cavan_textview_key_handler(struct cavan_window *win, struct cavan_in
 				view->head--;
 				view->label.text = view->head;
 			}
+
+			cavan_cursor_start(&win->context->cursor, NULL);
 		}
 		break;
 
 	default:
 		if (message->value > 0 && view->tail - view->text < NELEM(view->text) - 1)
 		{
-			*view->tail++ = cavan_keycode2ascii(message->code, view->caps_lock ? !view->shift_down : view->shift_down);
-			*view->tail = 0;
+			cavan_cursor_stop(&win->context->cursor);
+
+			if (view->cursor < view->tail)
+			{
+				mem_move(view->cursor + 1, view->cursor, view->tail - view->cursor);
+			}
+
+			*view->cursor++ = cavan_keycode2ascii(message->code, view->caps_lock ? !view->shift_down : view->shift_down);
+			*++view->tail = 0;
+
 			if (view->tail - view->text > view->size)
 			{
 				view->head++;
 				view->label.text = view->head;
 			}
+
+			cavan_cursor_start(&win->context->cursor, NULL);
 		}
 	}
 
 	pthread_mutex_unlock(&win->lock);
 	cavan_window_paint(win);
 	pthread_mutex_lock(&win->lock);
+}
+
+static void cavan_textview_cursor_set_visual(struct cavan_cursor *cursor, bool visual, void *data)
+{
+	struct cavan_display_rect rect;
+	struct cavan_window *win = data;
+	struct cavan_textview *view = data;
+	struct cavan_display_device *display = win->context->display;
+
+	win->get_rect_handler(win, &rect);
+	rect.x += win->xabs;
+	rect.y += win->yabs;
+
+	cavan_display_lock(display);
+	display->set_color(display, visual ? win->fore_color : win->back_color);
+	display->fill_rect(display, rect.x + display->font.cwidth * (view->cursor - view->head) - 2, rect.y, 1, display->font.cheight);
+	cavan_display_unlock(display);
+
+	cavan_display_refresh(display);
+}
+
+static bool cavan_textview_click_handler(struct cavan_window *win, struct cavan_input_message_point *message)
+{
+	struct cavan_cursor *cursor;
+
+	if (message->pressed == false)
+	{
+		return false;
+	}
+
+	cursor = &win->context->cursor;
+	cursor->period = 500;
+	cursor->set_visual = cavan_textview_cursor_set_visual;
+	cavan_cursor_start(cursor, win);
+
+	return true;
 }
 
 int cavan_textview_init(struct cavan_textview *view, struct cavan_application_context *context, const char *text)
@@ -727,6 +803,7 @@ int cavan_textview_init(struct cavan_textview *view, struct cavan_application_co
 		view->tail = view->text;
 	}
 
+	view->cursor = view->tail;
 	view->head = view->text;
 	view->shift_down = false;
 	view->caps_lock = false;
@@ -744,6 +821,7 @@ int cavan_textview_init(struct cavan_textview *view, struct cavan_application_co
 	}
 
 	view->label.window.key_handler = cavan_textview_key_handler;
+	view->label.window.click_handler = cavan_textview_click_handler;
 
 	return 0;
 }
@@ -769,6 +847,8 @@ bool cavan_dialog_click_handler(struct cavan_window *win, struct cavan_input_mes
 
 		dialog->xbak = win->xabs;
 		dialog->ybak = win->yabs;
+
+		cavan_cursor_stop(&win->context->cursor);
 	}
 	else if (dialog->backup)
 	{
@@ -783,6 +863,8 @@ bool cavan_dialog_click_handler(struct cavan_window *win, struct cavan_input_mes
 
 		cavan_display_memory_rect_free(mem);
 		dialog->backup = NULL;
+
+		cavan_cursor_start(&win->context->cursor, NULL);
 	}
 
 	return false;
@@ -1572,11 +1654,25 @@ int cavan_application_main_loop(struct cavan_application_context *context, void 
 {
 	int ret;
 
+	ret = cavan_timer_service_start(&context->timer_service);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_timer_service_start");
+		return ret;
+	}
+
+	ret = cavan_cursor_init(&context->cursor, &context->timer_service);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_cursor_init");
+		goto out_cavan_timer_service_stop;
+	}
+
 	ret = cavan_input_service_start(&context->input_service, context);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_input_service_start");
-		return ret;
+		goto out_cavan_timer_service_stop;
 	}
 
 	ret = cavan_thread_start(&context->thread);
@@ -1598,6 +1694,8 @@ int cavan_application_main_loop(struct cavan_application_context *context, void 
 out_cavan_input_service_stop:
 	cavan_input_service_stop(&context->input_service);
 	cavan_input_service_join(&context->input_service);
+out_cavan_timer_service_stop:
+	cavan_timer_service_stop(&context->timer_service);
 	return ret;
 }
 

@@ -197,3 +197,25 @@ int cavan_timer_service_stop(struct cavan_timer_service *service)
 
 	return 0;
 }
+
+// ============================================================
+
+static int cavan_cursor_timer_handler(struct cavan_timer *timer, void *data)
+{
+	struct cavan_cursor *cursor = (struct cavan_cursor *)timer;
+
+	cursor->visual = !cursor->visual;
+	cursor->set_visual(cursor, cursor->visual, cursor->private_data);
+
+	return cursor->period;
+}
+
+int cavan_cursor_init(struct cavan_cursor *cursor, struct cavan_timer_service *service)
+{
+	cavan_timer_init(&cursor->timer, cursor);
+	cursor->timer.handler = cavan_cursor_timer_handler;
+	cursor->service = service;
+	cursor->set_visual = NULL;
+
+	return 0;
+}
