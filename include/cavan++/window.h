@@ -84,8 +84,7 @@ protected:
 	const char *text;
 
 public:
-	Window(void);
-	~Window(void);
+	Window(int id, const char *text) : id(id), text(text) {};
 
 	int getId(void)
 	{
