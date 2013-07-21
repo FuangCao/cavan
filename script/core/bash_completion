@@ -93,12 +93,12 @@ function _cavan_make_completion()
 			_filedir
 			;;
 
-		3)
-			if [ "${COMP_WORDS[1]}" = "app" ]
+		3|4)
+			if [ "${COMP_WORDS[1]}" = "app" -a "${COMP_CWORD}" = 3 ]
 			then
 				COMPREPLY=($(compgen -W "simple normal" -- ${cur}))
 			else
-				COMPREPLY=()
+				COMPREPLY=($(compgen -W "c cpp" -- ${cur}))
 			fi
 			;;
 

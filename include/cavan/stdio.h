@@ -47,6 +47,11 @@
 #define __THROWNL __THROW
 #endif
 
+#ifdef __cplusplus
+#undef __THROWNL
+#define __THROWNL
+#endif
+
 #ifndef _POSIX_VDISABLE
 #define	_POSIX_VDISABLE	'\0'
 #endif

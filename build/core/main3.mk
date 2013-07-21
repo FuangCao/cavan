@@ -5,7 +5,7 @@ BUILD_PATH = $(ROOT_PATH)/build
 BUILD_CORE_PATH = $(BUILD_PATH)/core
 APP_CORE_PATH = $(ROOT_PATH)/app/core
 INCLUDE_PATH = $(ROOT_PATH)/include
-SUB_DIRS = lib app
+SUB_DIRS = lib cpp app
 
 APP_PREFIX = ${CAVAN_NAME}-
 MAKEFILE_CAVAN = $(CAVAN_NAME).mk
@@ -20,6 +20,7 @@ OUT_OBJ = $(OUT_PATH)/obj
 OUT_BIN = $(OUT_PATH)/$(BUILD_TYPE)
 
 CC = $(CROSS_COMPILE)gcc
+CPP = $(CROSS_COMPILE)g++
 LD = $(CROSS_COMPILE)ld
 AR = $(CROSS_COMPILE)ar
 STRIP = $(CROSS_COMPILE)strip
@@ -31,16 +32,18 @@ CP = cp
 
 CAVAN_PLAT = $(shell $(CC) -dumpmachine)
 
-CFLAGS +=	-Wall -Wundef -Werror -Wstrict-prototypes -Wsign-compare -Werror-implicit-function-declaration \
+CFLAGS +=	-Wall -Wundef -Werror -Wsign-compare \
 			-Wno-trigraphs -Wno-format-security \
 			-Wpointer-arith -fno-strict-aliasing -g -O2 -I$(INCLUDE_PATH) -I. \
 			-DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\"
 
-LDFLAGS += -lm -lrt -lpthread
-
 ifeq ($(BUILD_TYPE),debug)
 CFLAGS += -DCAVAN_DEBUG
 endif
+
+CPPFLAGS := $(CPPFLAGS) $(CFLAGS)
+CFLAGS += -Werror-implicit-function-declaration -Wstrict-prototypes
+LDFLAGS += -lm -lrt -lpthread
 
 ifeq ($(BUILD_TYPE),static)
 LDFLAGS += -static

@@ -146,7 +146,7 @@ class MainWin:
 		lines.append("CFLAGS = %s\n" % self.mEntryCflags.get_text())
 		lines.append("LDFLAGS = %s %s\n" % (ldflag_others, self.mEntryLdflags.get_text()))
 		lines.append("Q = @\n")
-		lines.append("\ninclude build/core/main2.mk")
+		lines.append("\ninclude build/core/main3.mk")
 
 		if len(sys.argv) > 1:
 			makefile_path = sys.argv[1]

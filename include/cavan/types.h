@@ -28,11 +28,13 @@ typedef signed char schar;
 
 typedef char * pchar, text;
 
+#ifndef __cplusplus
 typedef enum
 {
 	false,
 	true
 } bool;
+#endif
 
 typedef enum
 {

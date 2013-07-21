@@ -269,17 +269,17 @@ static inline int file_ncrc32_back(const char *file_name, size_t size, u32 *crc)
 
 static inline u8 mem_checksum8(const void *mem, size_t count)
 {
-	return ~(mem_checksum8_simple(mem, count));
+	return ~(mem_checksum8_simple((const char *)mem, count));
 }
 
 static inline u16 mem_checksum16(const void *mem, size_t count)
 {
-	return ~(mem_checksum16_simple(mem, count));
+	return ~(mem_checksum16_simple((const char *)mem, count));
 }
 
 static inline u32 mem_checksum32(const void *mem, size_t count)
 {
-	return ~(mem_checksum32_simple(mem, count));
+	return ~(mem_checksum32_simple((const char *)mem, count));
 }
 
 static inline u32 ffile_checksum32(int fd, off_t offset, size_t size)

@@ -1,6 +1,9 @@
 #pragma once
 
+#ifndef _LARGEFILE64_SOURCE
 #define _LARGEFILE64_SOURCE
+#endif
+
 #define _FILE_OFFSET_BITS	64
 #define __USE_FILE_OFFSET64
 

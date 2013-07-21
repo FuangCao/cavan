@@ -34,15 +34,23 @@ function create_source_file()
 {
 	local HEADER_FILE_PATH
 
-	generate_source_file_header $2.c
-
 	case "$1" in
 		app)
+			if [ "$4" = "cpp" ]
+			then
+				SOURCE_FILE_NAME="$2.cpp"
+			else
+				SOURCE_FILE_NAME="$2.c"
+			fi
+
+			generate_source_file_header ${SOURCE_FILE_NAME}
+
 			FILE_TYPE="app"
 			MAKE_TYPE="APP"
+
 			if [ "$3" = "simple" ]
 			then
-				cat >> $2.c << EOF
+				cat >> ${SOURCE_FILE_NAME} << EOF
 
 int main(int argc, char *argv[])
 {
@@ -51,7 +59,7 @@ int main(int argc, char *argv[])
 }
 EOF
 			else
-				cat >> $2.c << EOF
+				cat >> ${SOURCE_FILE_NAME} << EOF
 
 #define FILE_CREATE_DATE "${CREATE_DATE}"
 
@@ -63,19 +71,25 @@ EOF
 			FILE_TYPE="lib"
 			MAKE_TYPE="LIB"
 
-			if [ "$3" ]
+			if [ "$3" = "cpp" ]
 			then
-				HEADER_FILE_PATH="$3/$2.h"
+				HEADER_FILE_REL_PATH="cavan++/$2.h"
+				SOURCE_FILE_NAME="$2.cpp"
 			else
-				HEADER_FILE_PATH="${CAVAN_HOME_ABS}/include/cavan/$2.h"
+				HEADER_FILE_REL_PATH="cavan/$2.h"
+				SOURCE_FILE_NAME="$2.c"
 			fi
-			cat > ${HEADER_FILE_PATH} << EOF
+
+			HEADER_FILE_REL_PATH=$(echo ${HEADER_FILE_REL_PATH} | tr [:upper:] [:lower:])
+			HEADER_FILE_PATH="${CAVAN_HOME_ABS}/include/${HEADER_FILE_REL_PATH}"
+			cat > "${HEADER_FILE_PATH}" << EOF
 #pragma once
 
 EOF
+			generate_source_file_header ${SOURCE_FILE_NAME}
 			generate_source_file_header ${HEADER_FILE_PATH}
-			cat >> $2.c << EOF
-#include <cavan/$2.h>
+			cat >> ${SOURCE_FILE_NAME} << EOF
+#include <${HEADER_FILE_REL_PATH}>
 EOF
 			;;
 		*)
