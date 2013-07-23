@@ -8,6 +8,11 @@
 #define printf	LOGD
 #endif
 
+#ifdef __cplusplus
+#include <iostream>
+using namespace std;
+#endif
+
 #ifdef LOG_TAG
 #undef LOG_TAG
 #endif

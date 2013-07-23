@@ -13,17 +13,7 @@ $(eval LOCAL_PATH := $(ROOT_PATH)/$(1))
 $(eval include $(LOCAL_PATH)/cavan.mk)
 endef
 
-define module_common_action
-ifeq ($$(LOCAL_MODULE),)
-$$(error Please give module name for $$(LOCAL_PATH))
-endif
-
-LOCAL_OUT_PATH := $$(OUT_OBJ)/$$(LOCAL_MODULE)_$(1)
-LOCAL_OBJECT := $$(patsubst %.c,$$(LOCAL_OUT_PATH)/%.o,$$(LOCAL_SOURCE))
-LOCAL_OBJECT := $$(patsubst %.cpp,$$(LOCAL_OUT_PATH)/%.o,$$(LOCAL_OBJECT))
-$$(LOCAL_MODULE_PATH): CFLAGS += $$(LOCAL_CFLAGS) $$(addprefix -I,$$(LOCAL_INCLUDE))
-
-ifeq ($(1),package)
+define module_package_action
 APP_CORE_OUT_PATH := $$(LOCAL_OUT_PATH)_core
 APP_CORE_SRC := $$(wildcard $$(APP_CORE_PATH)/*.c)
 APP_CORE_MAP_C := $$(APP_CORE_OUT_PATH)/cavan_map.c
@@ -46,17 +36,44 @@ $$(APP_CORE_MAP_H): $$(LOCAL_OBJECT) | $$(APP_CORE_OUT_PATH)
 		echo "int do_cavan_$$$${obj}(int argc, char *argv[]);"; \
 	done > $$@
 
+$$(APP_CORE_OUT_PATH):
+	$$(Q)$$(MKDIR) $$@
+
 LOCAL_OBJECT += $$(patsubst %.c,$$(APP_CORE_OUT_PATH)/%.o,$$(notdir $$(APP_CORE_SRC)))
 $$(LOCAL_OUT_PATH)/%.o: CFLAGS += -Dmain=$$(patsubst %.o,do_cavan_%,$$(notdir $$@))
+endef
+
+define module_common_action
+ifeq ($$(LOCAL_MODULE),)
+$$(error Please give module name for $$(LOCAL_PATH))
 endif
 
-$$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.cpp | $$(LOCAL_OUT_PATH)
-	$$(call build_cpp_object)
+LOCAL_OUT_PATH := $$(OUT_OBJ)/$$(LOCAL_MODULE)_$(1)
+LOCAL_OBJECT := $$(patsubst %,$$(LOCAL_OUT_PATH)/%.o,$$(basename $$(LOCAL_SOURCE)))
+LOCAL_CFLAGS += $$(addprefix -I,$$(LOCAL_INCLUDE))
+
+ifeq ($$(filter %.cpp %.cxx %.cc,$$(LOCAL_SOURCE)),)
+$$(LOCAL_MODULE_PATH): CFLAGS += $$(LOCAL_CFLAGS)
+else
+$$(LOCAL_MODULE_PATH): CC = $$(CPP)
+$$(LOCAL_MODULE_PATH): CFLAGS = $$(CPPFLAGS) $$(LOCAL_CFLAGS)
+endif
+
+$$(if $$(filter package,$(1)),$$(eval $$(call module_package_action)))
 
 $$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.c | $$(LOCAL_OUT_PATH)
 	$$(call build_c_object)
 
-$$(LOCAL_OUT_PATH) $$(APP_CORE_OUT_PATH):
+$$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.cc | $$(LOCAL_OUT_PATH)
+	$$(call build_c_object)
+
+$$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.cpp | $$(LOCAL_OUT_PATH)
+	$$(call build_c_object)
+
+$$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.cxx | $$(LOCAL_OUT_PATH)
+	$$(call build_c_object)
+
+$$(LOCAL_OUT_PATH):
 	$$(Q)$$(MKDIR) $$@
 
 MODULES := $$(MODULES) $$(LOCAL_MODULE_PATH)
@@ -65,11 +82,6 @@ endef
 define build_c_object
 @echo "[CC]    $< => $@"
 $(Q)$(CC) -o $@ $(CFLAGS) $(1) -c $<
-endef
-
-define build_cpp_object
-@echo "[CPP]   $< => $@"
-$(Q)$(CPP) -o $@ $(CPPFLAGS) $(1) -c $<
 endef
 
 define link_c_execute
@@ -98,7 +110,7 @@ $(Q)$(AR) cur $@ $^
 endef
 
 define search_all_files
-$(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/$(1)))
+$(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(addprefix $(LOCAL_PATH)/,$(1))))
 endef
 
 define strip_files

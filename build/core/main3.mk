@@ -5,7 +5,7 @@ BUILD_PATH = $(ROOT_PATH)/build
 BUILD_CORE_PATH = $(BUILD_PATH)/core
 APP_CORE_PATH = $(ROOT_PATH)/app/core
 INCLUDE_PATH = $(ROOT_PATH)/include
-SUB_DIRS = lib cpp app
+SUB_DIRS = lib cpp app test
 
 APP_PREFIX = ${CAVAN_NAME}-
 MAKEFILE_CAVAN = $(CAVAN_NAME).mk
