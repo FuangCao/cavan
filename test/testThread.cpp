@@ -11,10 +11,14 @@ static int handler(Thread *thread)
 
 int main(int argc, char *argv[])
 {
-	Thread thread(handler);
+	Thread thread("Test", handler);
 
 	thread.start();
 	// thread.join();
+	msleep(2000);
+	thread.suspend();
+	msleep(2000);
+	thread.resume();
 	msleep(2000);
 	thread.stop();
 

@@ -40,23 +40,23 @@ private:
 	cavan_thread_handler_t mHandler;
 
 public:
-	Thread(cavan_thread_handler_t handler = NULL, const char *name = "None");
+	Thread(const char *name, cavan_thread_handler_t handler = NULL);
 	int start(void);
 	int stop(void);
 	int suspend(void);
 	int resume(void);
-	int mainLoop(void);
+	void mainLoop(void);
 
-	virtual int handler(void);
+	virtual int run(void);
 
-	int wait()
+	int wait(void)
 	{
 		return mCond.wait();
 	}
 
-	int timedwait(u32 ms)
+	int wait(u32 ms)
 	{
-		return mCond.timedwait(ms);
+		return mCond.wait(ms);
 	}
 
 	int join(void **retval = NULL)

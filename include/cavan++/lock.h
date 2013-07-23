@@ -141,7 +141,7 @@ public:
 		return ret;
 	}
 
-	int timedwait(const struct timespec *abstime)
+	int wait(const struct timespec *abstime)
 	{
 		pthread_mutex_lock(&mLock);
 		int ret = pthread_cond_timedwait(&mCond, &mLock, abstime);
@@ -150,11 +150,11 @@ public:
 		return ret;
 	}
 
-	int timedwait(u32 ms)
+	int wait(u32 ms)
 	{
 		struct timespec abstime;
 
 		cavan_timer_set_timespec(&abstime, ms);
-		return timedwait(&abstime);
+		return wait(&abstime);
 	}
 };

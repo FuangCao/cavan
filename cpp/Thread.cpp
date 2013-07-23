@@ -20,6 +20,8 @@
 #include <cavan.h>
 #include <cavan++/thread.h>
 
+#define CAVAN_THREAD_DEBUG 0
+
 static void ThreadSignal(int signum)
 {
 	pr_bold_info("signum = %d", signum);
@@ -33,20 +35,20 @@ static void ThreadSignal(int signum)
 static void *ThreadMain(void *data)
 {
 	signal(SIGUSR1, ThreadSignal);
-
 	((Thread *)data)->mainLoop();
 
 	return NULL;
 }
 
-Thread::Thread(cavan_thread_handler_t handler, const char *name) : mLock(), mCond()
+Thread::Thread(const char *name, cavan_thread_handler_t handler) : mLock(), mCond()
 {
 	mName = name;
+	mPending = false;
 	mHandler = handler;
 	mState = CAVAN_THREAD_STATE_NONE;
 }
 
-int Thread::handler(void)
+int Thread::run(void)
 {
 	if (mHandler == NULL)
 	{
@@ -57,100 +59,123 @@ int Thread::handler(void)
 	return mHandler(this);
 }
 
-int Thread::mainLoop(void)
+void Thread::mainLoop(void)
 {
-	if (getState() != CAVAN_THREAD_STATE_IDEL)
-	{
-		setState(CAVAN_THREAD_STATE_STOPPED);
-		return 0;
-	}
+	AutoLock lock(mLock);
 
-	setState(CAVAN_THREAD_STATE_RUNNING);
+	mState = CAVAN_THREAD_STATE_RUNNING;
 
 	while (1)
 	{
-		switch (getState())
+		switch (mState)
 		{
 		case CAVAN_THREAD_STATE_RUNNING:
-			while (getState() == CAVAN_THREAD_STATE_RUNNING)
-			{
-				int ret = handler();
+#if CAVAN_THREAD_DEBUG
+			pr_bold_info("Thread %s running", mName);
+#endif
+			do {
+				mLock.release();
+				int ret = run();
+				mLock.acquire();
 				if (ret < 0)
 				{
-					setState(CAVAN_THREAD_STATE_STOPPED);
-					return ret;
+					goto out_thread_stopped;
 				}
-			}
+			} while (mState == CAVAN_THREAD_STATE_RUNNING);
 			break;
 
 		case CAVAN_THREAD_STATE_SUSPEND:
-			if (isPending())
+			if (mPending)
 			{
-				setPending(false);
+#if CAVAN_THREAD_DEBUG
+				pr_bold_info("Thread %s pending", mName);
+#endif
+				mState = CAVAN_THREAD_STATE_RUNNING;
+				mPending = false;
 				break;
 			}
 
-			while (getState() == CAVAN_THREAD_STATE_SUSPEND)
-			{
+#if CAVAN_THREAD_DEBUG
+			pr_bold_info("Thread %s suspend", mName);
+#endif
+
+			do {
+				mLock.release();
 				wait();
-			}
+				mLock.acquire();
+			} while (mState == CAVAN_THREAD_STATE_SUSPEND);
 			break;
 
 		case CAVAN_THREAD_STATE_STOPPPING:
-			setState(CAVAN_THREAD_STATE_STOPPED);
+#if CAVAN_THREAD_DEBUG
+			pr_bold_info("Thread %s stopping", mName);
+#endif
 		case CAVAN_THREAD_STATE_STOPPED:
-			return 0;
+			goto out_thread_stopped;
 
 		default:
 			pr_red_info("invalid state = %d", mState);
 		}
 	}
 
-	setState(CAVAN_THREAD_STATE_STOPPED);
-
-	return -1;
+out_thread_stopped:
+#if CAVAN_THREAD_DEBUG
+	pr_red_info("Thread %s stopped", mName);
+#endif
+	mState = CAVAN_THREAD_STATE_STOPPED;
 }
 
 int Thread::start(void)
 {
-	setState(CAVAN_THREAD_STATE_IDEL);
+	AutoLock lock(mLock);
+
+	mState = CAVAN_THREAD_STATE_IDEL;
 
 	int ret = pthread_create(&mThread, NULL, ThreadMain, this);
 	if (ret < 0)
 	{
 		pr_error_info("pthread_create");
-		setState(CAVAN_THREAD_STATE_NONE);
+		mState = CAVAN_THREAD_STATE_NONE;
+		return ret;
 	}
 
-	return ret;
+	do {
+		mLock.release();
+		msleep(10);
+		mLock.acquire();
+	} while (mState == CAVAN_THREAD_STATE_IDEL);
+
+	return 0;
 }
 
 int Thread::stop(void)
 {
-	switch (getState())
+	AutoLock lock(mLock);
+
+	switch (mState)
 	{
 	case CAVAN_THREAD_STATE_RUNNING:
 	case CAVAN_THREAD_STATE_SUSPEND:
 	case CAVAN_THREAD_STATE_IDEL:
-		setState(CAVAN_THREAD_STATE_STOPPPING);
+		mState = CAVAN_THREAD_STATE_STOPPPING;
 	case CAVAN_THREAD_STATE_STOPPPING:
-		for (int i = 10; getState() != CAVAN_THREAD_STATE_STOPPED; i--)
+		for (int i = 100; mState != CAVAN_THREAD_STATE_STOPPED && i > 0; i--)
 		{
-			if (i > 0)
-			{
-				msleep(100);
-			}
-			else
-			{
-				pthread_kill(mThread, SIGUSR1);
-				setState(CAVAN_THREAD_STATE_STOPPED);
-				break;
-			}
+			mLock.release();
+			wakeup();
+			msleep(10);
+			mLock.acquire();
+		}
+
+		if (mState != CAVAN_THREAD_STATE_STOPPED)
+		{
+			pthread_kill(mThread, SIGUSR1);
+			mState = CAVAN_THREAD_STATE_STOPPED;
 		}
 		break;
 
 	default:
-		pr_green_info("Don't need stop");
+		pr_green_info("Thread %s is suppend", mName);
 	}
 
 	return 0;
@@ -158,10 +183,26 @@ int Thread::stop(void)
 
 int Thread::suspend(void)
 {
+	AutoLock lock(mLock);
+
+	if (mState == CAVAN_THREAD_STATE_RUNNING)
+	{
+		mState = CAVAN_THREAD_STATE_SUSPEND;
+	}
+
 	return 0;
 }
 
 int Thread::resume(void)
 {
+	AutoLock lock(mLock);
+
+	if (mState == CAVAN_THREAD_STATE_SUSPEND)
+	{
+		mPending = true;
+		mState = CAVAN_THREAD_STATE_RUNNING;
+		wakeup();
+	}
+
 	return 0;
 }
