@@ -105,6 +105,7 @@ public:
 
 	void setPending(bool pending = true)
 	{
+		AutoLock lock(mLock);
 		mPending = pending;
 	}
 };
