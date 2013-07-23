@@ -11,6 +11,10 @@
 #include <cavan/thread.h>
 #include <time.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct cavan_timer
 {
 	struct timespec time;
@@ -90,3 +94,7 @@ static inline void cavan_cursor_stop(struct cavan_cursor *cursor)
 		cursor->set_visual(cursor, false, cursor->private_data);
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif

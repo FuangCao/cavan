@@ -55,7 +55,7 @@ static inline int cavan_thread_join(struct cavan_thread *thread)
 	return pthread_join(thread->id, NULL);
 }
 
-static inline void cavan_thread_set_state(struct cavan_thread *thread, int state)
+static inline void cavan_thread_set_state(struct cavan_thread *thread, cavan_thread_state_t state)
 {
 	pthread_mutex_lock(&thread->lock);
 	thread->state = state;

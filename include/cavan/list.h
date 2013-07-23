@@ -211,7 +211,7 @@ static inline void double_link_insert_base2(struct double_link_node *next, struc
 	double_link_insert_base(next->prev, next, node);
 }
 
-static inline inline void double_link_insert_base3(struct double_link_node *prev, struct double_link_node *node)
+static inline void double_link_insert_base3(struct double_link_node *prev, struct double_link_node *node)
 {
 	double_link_insert_base(prev, prev->next, node);
 }
@@ -276,7 +276,7 @@ static inline void *double_link_get_container(struct double_link *link, struct d
 
 static inline struct double_link_node *double_link_get_to_node(struct double_link *link, void *addr)
 {
-	return ADDR_ADD(addr, link->offset);
+	return (struct double_link_node *)ADDR_ADD(addr, link->offset);
 }
 
 // ================================================================================
