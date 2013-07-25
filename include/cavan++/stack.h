@@ -31,14 +31,46 @@ private:
 	T *mData;
 
 public:
-	Stack(int size);
+	Stack(int size)
+	{
+		mData = new T[size];
+		if (mData == NULL)
+		{
+			size = 0;
+		}
+
+		mTop = mData;
+		mLast = mTop + size - 1;
+	}
+
 	~Stack(void)
 	{
 		delete []mData;
 	}
 
-	int push(T &data);
-	int pop(T &data);
+	int push(T &data)
+	{
+		if (isFull())
+		{
+			return -1;
+		}
+
+		*mTop++ = data;
+
+		return 0;
+	}
+
+	int pop(T &data)
+	{
+		if (isEmpty())
+		{
+			return -1;
+		}
+
+		data = *--mTop;
+
+		return 0;
+	}
 
 	bool isEmpty(void)
 	{
@@ -59,10 +91,44 @@ private:
 
 public:
 	LinkStack(void) : mTop(NULL) {}
-	~LinkStack(void);
+	~LinkStack(void)
+	{
+		while (mTop)
+		{
+			LinkNode<T> *next = mTop->next;
+			delete mTop;
+			mTop = next;
+		}
+	}
 
-	int push(T &data);
-	int pop(T &data);
+	int push(T &data)
+	{
+		LinkNode<T> *node = new LinkNode<T>(data, mTop);
+		if (node == NULL)
+		{
+			return -1;
+		}
+
+		mTop = node;
+
+		return 0;
+	}
+
+	int pop(T &data)
+	{
+		if (isEmpty())
+		{
+			return -1;
+		}
+
+		data = mTop->data;
+
+		LinkNode<T> *next = mTop->next;
+		delete mTop;
+		mTop = next;
+
+		return 0;
+	}
 
 	bool isEmpty(void)
 	{

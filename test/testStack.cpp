@@ -1,7 +1,7 @@
 /*
- * File:		List.cpp
+ * File:		testStack.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2013-07-24 19:05:22
+ * Created:		2013-07-25 14:25:30
  *
  * Copyright (c) 2013 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -18,4 +18,26 @@
  */
 
 #include <cavan.h>
-#include <cavan++/list.h>
+#include <cavan++/stack.h>
+
+int main(int argc, char *argv[])
+{
+	Stack<int> stack1(10);
+
+	for (int i = 0; i < 10; i++)
+	{
+		stack1.push(i);
+	}
+
+	for (int i = 0; i < 10; i++)
+	{
+		int data;
+
+		if (stack1.pop(data) >= 0)
+		{
+			cout << "data = " << data << endl;
+		}
+	}
+
+	return 0;
+}
