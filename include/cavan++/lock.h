@@ -132,6 +132,16 @@ public:
 		return pthread_cond_broadcast(&mCond);
 	}
 
+	int notify(void)
+	{
+		return signal();
+	}
+
+	int notifyAll(void)
+	{
+		return broadcast();
+	}
+
 	int wait(void)
 	{
 		pthread_mutex_lock(&mLock);

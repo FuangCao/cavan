@@ -9,8 +9,9 @@ endef
 
 define build_sub_module
 $(call clear_vars)
-$(eval LOCAL_PATH := $(ROOT_PATH)/$(1))
-$(eval include $(LOCAL_PATH)/cavan.mk)
+$(eval LOCAL_PATH := $(1))
+$(eval LOCAL_MAKEFILE := $(wildcard $(ROOT_PATH)/$(LOCAL_PATH)/cavan.mk))
+$(if $(LOCAL_MAKEFILE),$(eval include $(LOCAL_MAKEFILE)),$(error no cavan.mk found in $(LOCAL_PATH)))
 endef
 
 define module_package_action
