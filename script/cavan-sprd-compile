@@ -40,6 +40,7 @@ do
 	cavan_visual_command cavan-git-svn-repo init || continue
 	cavan_visual_command cavan-git-svn-repo sync || continue
 	cavan_visual_command cavan-git-svn-repo backup
+	cavan_visual_command rm out -rf
 
 	while :
 	do
