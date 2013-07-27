@@ -61,6 +61,8 @@ struct LinkNode
 	}
 };
 
+// ================================================================================
+
 template <typename T>
 struct DoubleLinkNode
 {
@@ -101,6 +103,8 @@ struct DoubleLinkNode
 		return *this;
 	}
 };
+
+// ================================================================================
 
 template <typename T>
 class Link
@@ -269,6 +273,8 @@ public:
 	}
 };
 
+// ================================================================================
+
 template <typename T>
 class DoubleLink
 {
@@ -409,13 +415,14 @@ public:
 	}
 };
 
+// ================================================================================
+
 template <typename T>
-struct LoopLink
+class LoopLink
 {
 private:
 	LinkNode<T> *mTail;
 	MutexLock mLock;
-	int mCount;
 
 	void insertBase(LinkNode<T> *prev, LinkNode<T> *node)
 	{
@@ -429,8 +436,6 @@ private:
 			node->next = prev->next;
 			prev->next = node;
 		}
-
-		mCount++;
 	}
 
 	void removeBase(LinkNode<T> *prev, LinkNode<T> *node)
@@ -449,8 +454,6 @@ private:
 
 		prev->next = node->next;
 		node->next = node;
-
-		mCount--;
 	}
 
 	LinkNode<T> *findPrevNode(LinkNode<T> *node)
@@ -469,19 +472,7 @@ private:
 	}
 
 public:
-	LoopLink(LinkNode<T> *tail = NULL, int count = 0) : mLock()
-	{
-		if (count == 0)
-		{
-			mTail = NULL;
-			mCount = 0;
-		}
-		else
-		{
-			mTail = tail;
-			mCount = count;
-		}
-	}
+	LoopLink(LinkNode<T> *tail = NULL) : mTail(tail), mLock() {}
 
 	void insert(LinkNode<T> *prev, LinkNode<T> *node)
 	{
@@ -569,11 +560,6 @@ public:
 		AutoLock lock(mLock);
 
 		return mTail;
-	}
-
-	int getCount(void)
-	{
-		return mCount;
 	}
 
 	bool hasNode(LinkNode<T> *node)
@@ -675,8 +661,6 @@ public:
 	{
 		AutoLock lock(mLock);
 
-		cout << "count = " << mCount << endl;
-
 		if (mTail == NULL)
 		{
 			return;
@@ -689,6 +673,330 @@ public:
 			cout << "data[" << i << "] = " << node->data << endl;
 
 			if (node == mTail)
+			{
+				break;
+			}
+		}
+	}
+};
+
+// ================================================================================
+
+template <typename T>
+class DoubleLoopLink
+{
+private:
+	DoubleLinkNode<T> *mHead;
+	MutexLock mLock;
+
+	void insertOnly(DoubleLinkNode<T> *prev, DoubleLinkNode<T> *next, DoubleLinkNode<T> *node)
+	{
+		node->prev = prev;
+		node->next = next;
+
+		prev->next = node;
+		next->prev = node;
+	}
+
+	void insertBase(DoubleLinkNode<T> *prev, DoubleLinkNode<T> *next, DoubleLinkNode<T> *node)
+	{
+		if (mHead == NULL)
+		{
+			node->prev = node->next = node;
+			mHead = node;
+		}
+		else
+		{
+			insertOnly(prev, next, node);
+		}
+	}
+
+	void removeOnly(DoubleLinkNode<T> *prev, DoubleLinkNode<T> *next)
+	{
+		prev->next = next;
+		next->prev = prev;
+	}
+
+	void removeBase(DoubleLinkNode<T> *prev, DoubleLinkNode<T> *next, DoubleLinkNode<T> *node)
+	{
+		removeOnly(prev, next);
+		node->next = node->prev = node;
+
+		if (mHead == node)
+		{
+			if (node == next)
+			{
+				mHead = NULL;
+			}
+			else
+			{
+				mHead = next;
+			}
+		}
+	}
+
+	void removeBase(DoubleLinkNode<T> *node)
+	{
+		removeBase(node->prev, node->next, node);
+	}
+
+	void moveBase(DoubleLinkNode<T> *prev, DoubleLinkNode<T> *next, DoubleLinkNode<T> *node)
+	{
+		removeOnly(node->prev, node->next);
+		insertOnly(prev, next, node);
+	}
+
+public:
+	DoubleLoopLink(DoubleLinkNode<T> *head = NULL) : mHead(head), mLock() {}
+
+	void insert(DoubleLinkNode<T> *prev, DoubleLinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		insertBase(prev, prev->next, node);
+	}
+
+	void remove(DoubleLinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		removeBase(node->prev, node->next, node);
+	}
+
+	void append(DoubleLinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead)
+		{
+			insertBase(mHead->prev, mHead, node);
+		}
+		else
+		{
+			insertBase(NULL, NULL, node);
+		}
+	}
+
+	void push(DoubleLinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead)
+		{
+			insertBase(mHead->prev, mHead, node);
+			mHead = node;
+		}
+		else
+		{
+			insertBase(NULL, NULL, node);
+		}
+	}
+
+	DoubleLinkNode<T> *pop(void)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead == NULL)
+		{
+			return NULL;
+		}
+
+		DoubleLinkNode<T> *node = mHead;
+		removeBase(node);
+
+		return node;
+	}
+
+	DoubleLinkNode<T> *delTail(void)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead == NULL)
+		{
+			return NULL;
+		}
+
+		DoubleLinkNode<T> *node = mHead->prev;
+		removeBase(node);
+
+		return node;
+	}
+
+	DoubleLinkNode<T> *getHeadNode(void)
+	{
+		AutoLock lock(mLock);
+
+		return mHead;
+	}
+
+	DoubleLinkNode<T> *getTailNode(void)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead == NULL)
+		{
+			return NULL;
+		}
+
+		return mHead->prev;
+	}
+
+	void traversal(void (*handler)(DoubleLinkNode<T> *node, void *data), void *data)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead == NULL)
+		{
+			return;
+		}
+
+		for (DoubleLinkNode<T> *node = mHead, *tail = node->prev;; node = node->next)
+		{
+			handler(node, data);
+
+			if (node == tail)
+			{
+				break;
+			}
+		}
+	}
+
+	DoubleLinkNode<T> *find(bool (*matcher)(DoubleLinkNode<T> *node, void *data), void *data)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead == NULL)
+		{
+			return NULL;
+		}
+
+		for (DoubleLinkNode<T> *node = mHead, *tail = node->prev;; node = node->next)
+		{
+			if (matcher(node, data))
+			{
+				return node;
+			}
+
+			if (node == tail)
+			{
+				break;
+			}
+		}
+
+		return NULL;
+	}
+
+	DoubleLinkNode<T> *find(T data)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead == NULL)
+		{
+			return NULL;
+		}
+
+		for (DoubleLinkNode<T> *node = mHead, *tail = node->prev;; node = node->next)
+		{
+			if (node->data == data)
+			{
+				return node;
+			}
+
+			if (node == tail)
+			{
+				break;
+			}
+		}
+
+		return NULL;
+	}
+
+	int getCount(void)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead == NULL)
+		{
+			return 0;
+		}
+
+		int count = 0;
+
+		for (DoubleLinkNode<T> *node = mHead, *tail = node->prev;; node = node->next)
+		{
+			count++;
+
+			if (node == tail)
+			{
+				break;
+			}
+		}
+
+		return count;
+	}
+
+	void setTop(DoubleLinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		mHead = node;
+	}
+
+	void setTail(DoubleLinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		mHead = node->next;
+	}
+
+	void moveToTop(DoubleLinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead && node != mHead)
+		{
+			if (mHead->prev != node)
+			{
+				moveBase(mHead->prev, mHead, node);
+			}
+
+			mHead = node;
+		}
+	}
+
+	void moveToTail(DoubleLinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead && node != mHead->prev)
+		{
+			if (node == mHead)
+			{
+				mHead = node->next;
+			}
+			else
+			{
+				moveBase(mHead->prev, mHead, node);
+			}
+		}
+	}
+
+	void dump(void)
+	{
+		AutoLock lock(mLock);
+
+		if (mHead == NULL)
+		{
+			return;
+		}
+
+		int i = 0;
+
+		for (DoubleLinkNode<T> *node = mHead, *tail = node->prev;; node = node->next, i++)
+		{
+			cout << "data[" << i << "] = " << node->data << endl;
+
+			if (node == tail)
 			{
 				break;
 			}
