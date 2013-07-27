@@ -129,8 +129,8 @@ template <typename T>
 class LinkList
 {
 private:
-	LinkNode<T> *mHead;
-	LinkNode<T> *mTail;
+	LinkNodeT<T> *mHead;
+	LinkNodeT<T> *mTail;
 
 public:
 	LinkList(void)
@@ -140,7 +140,7 @@ public:
 
 	int append(T &data)
 	{
-		LinkNode<T> *node = new LinkNode<T>(data);
+		LinkNodeT<T> *node = new LinkNodeT<T>(data);
 		if (node == NULL)
 		{
 			return -1;
@@ -169,7 +169,7 @@ public:
 
 		data = mHead->data;
 
-		LinkNode<T> *next = mHead->next;
+		LinkNodeT<T> *next = mHead->next;
 		delete mHead;
 		mHead = next;
 

@@ -87,7 +87,7 @@ template <typename T>
 class LinkStack
 {
 private:
-	LinkNode<T> *mTop;
+	LinkNodeT<T> *mTop;
 
 public:
 	LinkStack(void) : mTop(NULL) {}
@@ -95,7 +95,7 @@ public:
 	{
 		while (mTop)
 		{
-			LinkNode<T> *next = mTop->next;
+			LinkNodeT<T> *next = mTop->next;
 			delete mTop;
 			mTop = next;
 		}
@@ -103,7 +103,7 @@ public:
 
 	int push(T &data)
 	{
-		LinkNode<T> *node = new LinkNode<T>(data, mTop);
+		LinkNodeT<T> *node = new LinkNodeT<T>(data, mTop);
 		if (node == NULL)
 		{
 			return -1;
@@ -123,7 +123,7 @@ public:
 
 		data = mTop->data;
 
-		LinkNode<T> *next = mTop->next;
+		LinkNodeT<T> *next = mTop->next;
 		delete mTop;
 		mTop = next;
 
