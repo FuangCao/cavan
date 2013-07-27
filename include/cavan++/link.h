@@ -408,3 +408,290 @@ public:
 		return NULL;
 	}
 };
+
+template <typename T>
+struct LoopLink
+{
+private:
+	LinkNode<T> *mTail;
+	MutexLock mLock;
+	int mCount;
+
+	void insertBase(LinkNode<T> *prev, LinkNode<T> *node)
+	{
+		if (mTail == NULL)
+		{
+			node->next = node;
+			mTail = node;
+		}
+		else
+		{
+			node->next = prev->next;
+			prev->next = node;
+		}
+
+		mCount++;
+	}
+
+	void removeBase(LinkNode<T> *prev, LinkNode<T> *node)
+	{
+		if (node == mTail)
+		{
+			if (prev == node)
+			{
+				mTail = NULL;
+			}
+			else
+			{
+				mTail = prev;
+			}
+		}
+
+		prev->next = node->next;
+		node->next = node;
+
+		mCount--;
+	}
+
+	LinkNode<T> *findPrevNode(LinkNode<T> *node)
+	{
+		LinkNode<T> *prev;
+
+		for (prev = node->next; prev->next != node; prev = prev->next)
+		{
+			if (prev == node)
+			{
+				return NULL;
+			}
+		}
+
+		return prev;
+	}
+
+public:
+	LoopLink(LinkNode<T> *tail = NULL, int count = 0) : mLock()
+	{
+		if (count == 0)
+		{
+			mTail = NULL;
+			mCount = 0;
+		}
+		else
+		{
+			mTail = tail;
+			mCount = count;
+		}
+	}
+
+	void insert(LinkNode<T> *prev, LinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		insertBase(prev, node);
+	}
+
+	void remove(LinkNode<T> *prev, LinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		removeBase(prev, node);
+	}
+
+	void remove(LinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		LinkNode<T> *prev = findPrevNode(node);
+		if (prev)
+		{
+			removeBase(prev, node);
+		}
+	}
+
+	void append(LinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		insertBase(mTail, node);
+		mTail = node;
+	}
+
+	void push(LinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		insertBase(mTail, node);
+	}
+
+	LinkNode<T> *pop(void)
+	{
+		AutoLock lock(mLock);
+
+		if (mTail == NULL)
+		{
+			return NULL;
+		}
+
+		LinkNode<T> *node = mTail->next;
+		removeBase(mTail, node);
+
+		return node;
+	}
+
+	LinkNode<T> *getTopNode(void)
+	{
+		AutoLock lock(mLock);
+
+		if (mTail == NULL)
+		{
+			return NULL;
+		}
+
+		return mTail->next;
+	}
+
+	void setTop(LinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		mTail = findPrevNode(node);
+	}
+
+	void setTail(LinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		mTail = node;
+	}
+
+	LinkNode<T> *getTailNode(void)
+	{
+		AutoLock lock(mLock);
+
+		return mTail;
+	}
+
+	int getCount(void)
+	{
+		return mCount;
+	}
+
+	bool hasNode(LinkNode<T> *node)
+	{
+		AutoLock lock(mLock);
+
+		if (mTail == NULL)
+		{
+			return false;
+		}
+
+		for (LinkNode<T> *head = mTail->next;; head = head->next)
+		{
+			if (head == node)
+			{
+				return true;
+			}
+
+			if (head == mTail)
+			{
+				break;
+			}
+		}
+
+		return false;
+	}
+
+	void traversal(void (*handler)(LinkNode<T> *node, void *data), void *data)
+	{
+		AutoLock lock(mLock);
+
+		if (mTail == NULL)
+		{
+			return;
+		}
+
+		for (LinkNode<T> *node = mTail->next;; node = node->next)
+		{
+			handler(node, data);
+
+			if (node == mTail)
+			{
+				break;
+			}
+		}
+	}
+
+	LinkNode<T> *find(bool (*matcher)(LinkNode<T> *node, void *data), void *data)
+	{
+		AutoLock lock(mLock);
+
+		if (mTail == NULL)
+		{
+			return NULL;
+		}
+
+		for (LinkNode<T> *node = mTail->next;; node = node->next)
+		{
+			if (matcher(node, data))
+			{
+				return node;
+			}
+
+			if (node == mTail)
+			{
+				break;
+			}
+		}
+
+		return NULL;
+	}
+
+	LinkNode<T> *find(T data)
+	{
+		AutoLock lock(mLock);
+
+		if (mTail == NULL)
+		{
+			return NULL;
+		}
+
+		for (LinkNode<T> *node = mTail->next;; node = node->next)
+		{
+			if (node->data == data)
+			{
+				return node;
+			}
+
+			if (node == mTail)
+			{
+				break;
+			}
+		}
+
+		return NULL;
+	}
+
+	void dump(void)
+	{
+		AutoLock lock(mLock);
+
+		cout << "count = " << mCount << endl;
+
+		if (mTail == NULL)
+		{
+			return;
+		}
+
+		int i = 0;
+
+		for (LinkNode<T> *node = mTail->next;; node = node->next, i++)
+		{
+			cout << "data[" << i << "] = " << node->data << endl;
+
+			if (node == mTail)
+			{
+				break;
+			}
+		}
+	}
+};
