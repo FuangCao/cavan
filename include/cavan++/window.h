@@ -20,8 +20,9 @@
  */
 
 #include <cavan.h>
+#include <cavan++/link.h>
 
-class Rect
+class CavanRect
 {
 protected:
 	int x;
@@ -77,34 +78,80 @@ public:
 	}
 };
 
-class Window : public Rect
+class CavanWindow : public DoubleLinkNode, CavanRect
 {
 protected:
 	int id;
 	const char *text;
+	MutexLock mLock;
+	CavanWindow *mParent;
+	DoubleLoopLink mChildLink;
+
+	void (*onPaint)(CavanWindow *win);
+	void (*onClick)(CavanWindow *win, int x, int y, bool pressed);
+	void (*onMove)(CavanWindow *win, int x, int y);
+	void (*onEnter)(CavanWindow *win, int x, int y);
+	void (*onExit)(CavanWindow *win, int x, int y);
+	void (*onKey)(CavanWindow *win, int code, int value, const char *name);
 
 public:
-	Window(int id, const char *text) : id(id), text(text) {};
+	CavanWindow(int id, const char *text) : mLock(), mChildLink()
+	{
+		this->id = id;
+		this->text = text;
+	}
+
+	void PaintAll(void);
+
+	void setOnPaint(void (*handler)(CavanWindow *win))
+	{
+		AutoLock lock(mLock);
+
+		onPaint = handler;
+	}
 
 	int getId(void)
 	{
+		AutoLock lock(mLock);
+
 		return id;
 	}
 
 	void setId(int id)
 	{
+		AutoLock lock(mLock);
+
 		this->id = id;
 	}
 
+	void setParent(CavanWindow *parent)
+	{
+		AutoLock lock(mLock);
+
+		mParent = parent;
+	}
+
+	void addChild(CavanWindow *win)
+	{
+		AutoLock lock(mLock);
+
+		win->setParent(this);
+		mChildLink.push(win);
+	}
+
+	virtual void Paint(void);
+
 	virtual const char *getText(void)
 	{
+		AutoLock lock(mLock);
+
 		return text;
 	}
 
 	virtual void setText(const char *text)
 	{
+		AutoLock lock(mLock);
+
 		this->text = text;
 	}
-
-	virtual void Paint(void) = 0;
 };

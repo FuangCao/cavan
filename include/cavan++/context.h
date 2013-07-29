@@ -1,7 +1,9 @@
+#pragma once
+
 /*
- * File:		Window.cpp
+ * File:		context.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2013-07-21 20:12:00
+ * Created:		2013-07-29 17:40:18
  *
  * Copyright (c) 2013 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -18,29 +20,3 @@
  */
 
 #include <cavan.h>
-#include <cavan++/window.h>
-
-static void WindowPaintAllHandler(DoubleLinkNode *node, void *data)
-{
-	CavanWindow *win = static_cast<CavanWindow *>(node);
-
-	win->PaintAll();
-}
-
-void CavanWindow::PaintAll(void)
-{
-	AutoLock lock(mLock);
-
-	Paint();
-	mSubLink.traversal(WindowPaintAllHandler, NULL);
-}
-
-void CavanWindow::Paint()
-{
-	AutoLock lock(mLock);
-
-	if (onPaint)
-	{
-		onPaint(this);
-	}
-}
