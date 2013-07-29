@@ -123,7 +123,7 @@ function cavan-adb-tcp_dd_server()
 
 function cavan-adb-logcat()
 {
-	cavan-loop_run -wd2 "adb logcat $*" || return 1
+	cavan-loop_run -wd2 "adb logcat -v time $*" || return 1
 }
 
 function cavan-adb-kmsg()

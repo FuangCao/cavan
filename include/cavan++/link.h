@@ -25,8 +25,6 @@
 struct LinkNode
 {
 	LinkNode *next;
-
-	LinkNode(LinkNode *next = NULL) : next(next) {}
 };
 
 template <typename T>
@@ -34,10 +32,8 @@ struct LinkNodeT : public LinkNode
 {
 	T data;
 
-	LinkNodeT(T data, LinkNodeT *next = NULL) : LinkNode(next)
-	{
-		this->data = data;
-	}
+	LinkNodeT(void) {}
+	LinkNodeT(T data) : data(data) {}
 };
 
 // ================================================================================
@@ -45,8 +41,6 @@ struct LinkNodeT : public LinkNode
 struct DoubleLinkNode
 {
 	DoubleLinkNode *prev, *next;
-
-	DoubleLinkNode(DoubleLinkNode *next = NULL, DoubleLinkNode *prev = NULL) : prev(prev), next(next) {}
 };
 
 template <typename T>
@@ -54,10 +48,8 @@ struct DoubleLinkNodeT : public DoubleLinkNode
 {
 	T data;
 
-	DoubleLinkNodeT(T data, DoubleLinkNodeT *prev = NULL, DoubleLinkNodeT *next = NULL) : DoubleLinkNode(prev, next)
-	{
-		this->data = data;
-	}
+	DoubleLinkNodeT(void) {}
+	DoubleLinkNodeT(T data) : data(data) {}
 };
 
 // ================================================================================
@@ -82,6 +74,20 @@ public:
 	LinkNode *pop(void);
 	void traversal(void (*handler)(LinkNode *node, void *data), void *data);
 	LinkNode *find(bool (*matcher)(LinkNode *node, void *data), void *data);
+
+	bool isEmpty(void)
+	{
+		AutoLock lock(mLock);
+
+		return mHead == NULL;
+	}
+
+	bool hasNode(void)
+	{
+		AutoLock lock(mLock);
+
+		return mHead != NULL;
+	}
 };
 
 // ================================================================================
@@ -168,4 +174,14 @@ public:
 	void setTail(DoubleLinkNode *node);
 	void moveToTop(DoubleLinkNode *node);
 	void moveToTail(DoubleLinkNode *node);
+
+	DoubleLinkNode *getTop(void)
+	{
+		return getHeadNode();
+	}
+
+	DoubleLinkNode *getTail(void)
+	{
+		return getTailNode();
+	}
 };
