@@ -149,3 +149,8 @@ function cavan-svn-cleanup()
 	rm -rf .svn/tmp
 	svn cleanup
 }
+
+function cavan-format-code()
+{
+	sed -i 's/\s\+$//g' $*
+}

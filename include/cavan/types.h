@@ -117,3 +117,6 @@ typedef struct
 
 #define BYTES_DWORD(b1, b2, b3, b4) \
 	WORDS_DWORD(BYTES_WORD(b1, b2), BYTES_WORD(b3, b4))
+
+#define VALUE_DIFF(a, b) \
+	((a) > (b) ? (a) - (b) : (b) - (a))

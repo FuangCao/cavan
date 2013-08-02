@@ -32,7 +32,7 @@ void CavanWindow::PaintAll(void)
 	AutoLock lock(mLock);
 
 	Paint();
-	mSubLink.traversal(WindowPaintAllHandler, NULL);
+	mChildLink.traversal(WindowPaintAllHandler, NULL);
 }
 
 void CavanWindow::Paint()
