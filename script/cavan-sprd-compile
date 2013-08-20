@@ -15,12 +15,15 @@ function sprd_compile_once()
 
 	if [ -d "3rdparty" ]
 	then
+		cavan_visual_command rm out/target/common -rf
 		cavan_visual_command ./mk -o=2sim $1 n
+		ln -vsf out/target/product/hsdroid .
 	else
 		source build/envsetup.sh
 		cavan_visual_command lunch $1-eng || return 1
 		cavan_visual_command kheader || return 1
 		cavan_visual_command make -j16 || return 1
+		ln -vsf out/target/product/$1 .
 	fi
 
 	return 0
@@ -34,13 +37,15 @@ function sprd_compile_once()
 
 while read line
 do
+	[[ "${line}" == \#* ]] && continue
+
 	set $line
 
 	cavan_visual_command cd $1 || continue
 	cavan_visual_command cavan-git-svn-repo init || continue
 	cavan_visual_command cavan-git-svn-repo sync || continue
 	cavan_visual_command cavan-git-svn-repo backup
-	cavan_visual_command rm out -rf
+	cavan_visual_command rm out *.pac -rf
 
 	while :
 	do
@@ -48,4 +53,6 @@ do
 		[ "$1" ] || break
 		sprd_compile_once $1
 	done
+
+	ln -vsf u-boot/u-boot-*.bin u-boot/nand_fdl/fdl2.bin u-boot/nand_spl/u-boot-spl-16k.bin .
 done < $1
