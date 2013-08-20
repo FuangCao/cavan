@@ -212,6 +212,7 @@ char *text_join_by_text(char *text[], size_t size1, const char *sep, char *buff,
 
 int text_array_find(const char *text, char *buff[], int size);
 char *text_find_line_end(const char *text, const char *end);
+char text_get_char(const char *text, int index);
 
 extern void mem_reverse_simple(byte *start, byte *end);
 extern void mem_reverse(byte *start, byte *end);

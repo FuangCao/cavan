@@ -2860,3 +2860,16 @@ char *text_skip_line_end(const char *text, const char *file_end)
 
 	return (char *)text;
 }
+
+char text_get_char(const char *text, int index)
+{
+	if (index < 0)
+	{
+		while (*text)
+		{
+			text++;
+		}
+	}
+
+	return *(text + index);
+}

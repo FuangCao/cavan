@@ -105,6 +105,12 @@ int umount_partition(const char *dev_path, int flags)
 	ssize_t readlen;
 	char abs_path[1024];
 
+	if (dev_path == NULL)
+	{
+		pr_red_info("dev_path == NULL");
+		ERROR_RETURN(EINVAL);
+	}
+
 	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL)
 	{
 		ERROR_RETURN(ENOENT);
@@ -230,6 +236,22 @@ int umount_device(const char *dev_path, int flags)
 	ssize_t readlen;
 	char abs_path[1024];
 	struct mount_table mtab[100], *p, *end_p;
+
+	if (dev_path == NULL)
+	{
+		pr_red_info("dev_path == NULL");
+		ERROR_RETURN(EINVAL);
+	}
+	else
+	{
+		char c;
+
+		c = text_get_char(dev_path, -1);
+		if (IS_NUMBER(c))
+		{
+			return umount_partition(dev_path, flags);
+		}
+	}
 
 	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL)
 	{
