@@ -758,7 +758,7 @@ int tcp_dd_receive_file(struct inet_file_request *file_req)
 
 	if (file_test(dest_file, "b") == 0)
 	{
-		umount_device(dest_file, MNT_DETACH);
+		umount_partition(dest_file, MNT_DETACH);
 	}
 
 	sockfd = file_req->open_connect(file_req->ip, file_req->port);

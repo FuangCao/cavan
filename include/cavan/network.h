@@ -3,6 +3,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Apr 21 10:08:25 CST 2011
 
 #include <cavan.h>
+#include <netdb.h>
 #include <sys/socket.h>
 // #include <bits/sockaddr.h>
 #include <linux/netlink.h>
@@ -230,6 +231,7 @@ char *cavan_get_server_ip(char *buff);
 u16 cavan_get_server_port(u16 default_port);
 
 int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd);
+int inet_hostname2sockaddr(const char *host, struct sockaddr_in *addr);
 
 static inline int inet_socket(int type)
 {

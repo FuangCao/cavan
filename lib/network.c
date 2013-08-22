@@ -756,3 +756,48 @@ int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd)
 
 	return 0;
 }
+
+int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
+{
+	int ret;
+	struct addrinfo *res, *p;
+	struct addrinfo nints;
+
+	addr->sin_family = AF_INET;
+
+	if (inet_aton(hostname, &addr->sin_addr))
+	{
+		return 0;
+	}
+
+	memset(&nints, 0, sizeof(nints));
+	nints.ai_family = AF_INET;
+	nints.ai_socktype = SOCK_STREAM;
+	nints.ai_flags = 0;
+	ret = getaddrinfo(hostname, NULL, &nints, &res);
+	if (ret < 0)
+	{
+		pr_error_info("getaddrinfo");
+		return ret;
+	}
+
+	if (res == NULL)
+	{
+		pr_red_info("res == NULL");
+		return -ENOENT;
+	}
+
+	for (p = res; p; p = p->ai_next)
+	{
+		if (p->ai_family == AF_INET)
+		{
+			res = p;
+			break;
+		}
+	}
+
+	memcpy(addr, res->ai_addr, res->ai_addrlen);
+	freeaddrinfo(res);
+
+	return 0;
+}

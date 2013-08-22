@@ -22,4 +22,13 @@ struct tcp_proxy_service
 	void (*close_connect)(int sockfd);
 };
 
+struct network_protocol
+{
+	const char *name;
+	u16 port;
+};
+
 int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service);
+char *web_proxy_parse_url(const char *url, char *protocol, char *hostname);
+int web_proxy_protocol2port(const char *protocol);
+int web_proxy_service_run(struct cavan_service_description *service, u16 port);
