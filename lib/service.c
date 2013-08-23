@@ -98,7 +98,7 @@ int cavan_service_start(struct cavan_service_description *desc)
 	if (ret < 0)
 	{
 		pr_red_info("pthread_mutex_init");
-		return ret;
+		goto out_free_threads;
 	}
 
 	homepath = getenv("HOME");
@@ -115,21 +115,24 @@ int cavan_service_start(struct cavan_service_description *desc)
 		if (ret < 0)
 		{
 			pr_red_info("pthread_create");
+
 			while (i-- > 0)
 			{
 #if CONFIG_BUILD_FOR_ANDROID == 0
 				pthread_cancel(threads[i]);
 #endif
-				goto out_free_threads;
+				free(threads);
+				return ret;
 			}
 		}
 	}
 
 	desc->threads = threads;
 
+	return 0;
+
 out_free_threads:
 	free(threads);
-
 	return ret;
 }
 

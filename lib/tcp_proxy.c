@@ -7,25 +7,27 @@
 #include <cavan.h>
 #include <cavan/tcp_proxy.h>
 
+#define WEB_PROXY_DEBUG		0
+
 static struct network_protocol protocol_map[] =
 {
 	{"http", 80},
 	{"ftp", 21}
 };
 
-static int tcp_proxy_main_loop(int sockfd1, int sockfd2)
+static int tcp_proxy_main_loop(int localfd, int remotefd)
 {
 	int ret;
 	ssize_t rwlen;
-	char buff[4096];
+	char buff[2048];
 	struct pollfd pfds[2] =
 	{
 		{
-			.fd = sockfd1,
+			.fd = localfd,
 			.events = POLLIN
 		},
 		{
-			.fd = sockfd2,
+			.fd = remotefd,
 			.events = POLLIN
 		}
 	};
@@ -40,8 +42,10 @@ static int tcp_proxy_main_loop(int sockfd1, int sockfd2)
 
 		if (pfds[0].revents)
 		{
-			rwlen = inet_recv(sockfd1, buff, sizeof(buff));
-			if (rwlen <= 0 || inet_send(sockfd2, buff, rwlen) < rwlen)
+			rwlen = inet_recv(localfd, buff, sizeof(buff));
+			buff[rwlen] = 0;
+			pr_red_info("buff =\n%s", buff);
+			if (rwlen <= 0 || inet_send(remotefd, buff, rwlen) < rwlen)
 			{
 				break;
 			}
@@ -49,8 +53,8 @@ static int tcp_proxy_main_loop(int sockfd1, int sockfd2)
 
 		if (pfds[1].revents)
 		{
-			rwlen = inet_recv(sockfd2, buff, sizeof(buff));
-			if (rwlen <= 0 || inet_send(sockfd1, buff, rwlen) < rwlen)
+			rwlen = inet_recv(remotefd, buff, sizeof(buff));
+			if (rwlen <= 0 || inet_send(localfd, buff, rwlen) < rwlen)
 			{
 				break;
 			}
@@ -222,9 +226,10 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	struct sockaddr_in addr, proxy_addr;
 	int client_sockfd, proxy_sockfd;
 	int server_sockfd = service->data.type_int;
-	char req[4096], *req_end, *args;
+	char buff[2048], *buff_end, *args;
 	char protocol[8];
 	char hostname[1024];
+	struct pollfd pfds[2];
 
 	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
 	if (client_sockfd < 0)
@@ -235,79 +240,107 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 
 	inet_show_sockaddr(&addr);
 
-	rwlen = inet_recv(client_sockfd, req, sizeof(req) - 1);
-	if (rwlen <= 0)
+	pfds[0].fd = client_sockfd;
+	pfds[0].events = pfds[1].events = POLLIN;
+
+	while (1)
 	{
-		ret = rwlen;
-		pr_error_info("inet_recv");
-		goto out_close_client_sockfd;
+		rwlen = inet_recv(client_sockfd, buff, sizeof(buff) - 1);
+		if (rwlen <= 0)
+		{
+			ret = rwlen;
+			goto out_close_client_sockfd;
+		}
+
+		buff[rwlen] = 0;
+		buff_end = buff + rwlen;
+
+#if WEB_PROXY_DEBUG
+		println("request is:\n%s", buff);
+#endif
+
+		for (args = buff; args < buff_end && *args != ' '; args++);
+
+		cmdlen = args - buff;
+		*args++ = 0;
+
+		args = web_proxy_parse_url(args, protocol, hostname);
+		if (args == NULL)
+		{
+			ret = -EINVAL;
+			pr_red_info("web_proxy_parse_url");
+			goto out_close_client_sockfd;
+		}
+
+#if WEB_PROXY_DEBUG
+		println("protocol = %s, hostname = %s", protocol, hostname);
+#endif
+
+		if (inet_hostname2sockaddr(hostname, &proxy_addr) < 0)
+		{
+			ret = -EINVAL;
+			pr_red_info("inet_hostname2sockaddr of %s failed", hostname);
+			goto out_close_client_sockfd;
+		}
+
+		ret = web_proxy_protocol2port(protocol);
+		if (ret < 0)
+		{
+			pr_red_info("invalid protocol %s", protocol);
+			goto out_close_client_sockfd;
+		}
+
+		proxy_addr.sin_port = htons((u16)ret);
+		inet_show_sockaddr(&proxy_addr);
+
+		proxy_sockfd = inet_create_tcp_link1(&proxy_addr);
+		if (proxy_sockfd < 0)
+		{
+			ret = proxy_sockfd;
+			pr_red_info("inet_create_tcp_link1");
+			goto out_close_client_sockfd;
+		}
+
+		pfds[1].fd = proxy_sockfd;
+
+		args -= cmdlen + 1;
+		memcpy(args, buff, cmdlen);
+		args[cmdlen] = ' ';
+
+#if WEB_PROXY_DEBUG
+		println("New request is:\n%s", args);
+#endif
+
+		rwlen = inet_send(proxy_sockfd, args, buff_end - args);
+		if (rwlen < 0)
+		{
+			ret = rwlen;
+			pr_error_info("inet_send");
+			goto label_close_proxy_sockfd;
+		}
+
+		while (1)
+		{
+			ret = poll(pfds, NELEM(pfds), -1);
+			if (ret <= 0 || pfds[0].revents)
+			{
+				break;
+			}
+
+			if (pfds[1].revents)
+			{
+				rwlen = inet_recv(proxy_sockfd, buff, sizeof(buff));
+				if (rwlen <= 0 || inet_send(client_sockfd, buff, rwlen) < rwlen)
+				{
+					break;
+				}
+			}
+		}
+
+label_close_proxy_sockfd:
+		close(proxy_sockfd);
 	}
 
-	req[rwlen] = 0;
-	req_end = req + rwlen;
-
-	println("request is:\n%s", req);
-
-	for (args = req; args < req_end && *args != ' '; args++);
-
-	cmdlen = args - req;
-	*args++ = 0;
-
-	args = web_proxy_parse_url(args, protocol, hostname);
-	if (args == NULL)
-	{
-		ret = -EINVAL;
-		pr_red_info("web_proxy_parse_url");
-		goto out_close_client_sockfd;
-	}
-
-	println("protocol = %s, hostname = %s", protocol, hostname);
-
-	if (inet_hostname2sockaddr(hostname, &proxy_addr) < 0)
-	{
-		ret = -EINVAL;
-		pr_red_info("inet_hostname2sockaddr of %s failed", hostname);
-		goto out_close_client_sockfd;
-	}
-
-	println("IP = %s", inet_ntoa(proxy_addr.sin_addr));
-
-	ret = web_proxy_protocol2port(protocol);
-	if (ret < 0)
-	{
-		pr_red_info("invalid protocol %s", protocol);
-		goto out_close_client_sockfd;
-	}
-
-	println("port = %d", ret);
-	proxy_addr.sin_port = htons((u16)ret);
-
-	proxy_sockfd = inet_create_tcp_link1(&proxy_addr);
-	if (proxy_sockfd < 0)
-	{
-		ret = proxy_sockfd;
-		pr_red_info("inet_create_tcp_link1");
-		goto out_close_client_sockfd;
-	}
-
-	args -= cmdlen + 1;
-	memcpy(args, req, cmdlen);
-	args[cmdlen] = ' ';
-
-	println("New request is:\n%s", args);
-
-	rwlen = inet_send(proxy_sockfd, args, req_end - args);
-	if (rwlen < 0)
-	{
-		ret = rwlen;
-		pr_error_info("inet_send");
-		goto ou_close_proxy_sockfd;
-	}
-
-	ret = tcp_proxy_main_loop(client_sockfd, proxy_sockfd);
-
-ou_close_proxy_sockfd:
-	close(proxy_sockfd);
 out_close_client_sockfd:
 	close(client_sockfd);
 	return ret;

@@ -297,7 +297,7 @@ void CProxyThread::Prepare(CCavanTransport *trspService, WORD wProxyPort, CProxy
 bool CProxyThread::Run(void)
 {
 	int nFdCount;
-	char buff[1024];
+	char buff[2048];
 	int nLength = sizeof(buff);
 
 	SetStatusText("¼àÌý");
@@ -343,6 +343,7 @@ bool CProxyThread::Run(void)
 		{
 			break;
 		}
+
 		if (FD_ISSET(mClientTransport->mSocket, &setRead))
 		{
 			nLength = mClientTransport->ReceiveData(buff, sizeof(buff));
