@@ -29,6 +29,6 @@ struct network_protocol
 };
 
 int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service);
-char *web_proxy_parse_url(const char *url, char *protocol, char *hostname);
+char *web_proxy_parse_url(const char *url, char *protocol, size_t protlen, char *hostname, size_t namelen);
 int web_proxy_protocol2port(const char *protocol);
 int web_proxy_service_run(struct cavan_service_description *service, u16 port);

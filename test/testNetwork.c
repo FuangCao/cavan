@@ -23,12 +23,12 @@
 
 int main(int argc, char *argv[])
 {
-	char protocol[16];
-	char hostname[1024];
+	char protocol[512];
+	char hostname[512];
 
 	assert(argc > 1);
 
-	if (web_proxy_parse_url(argv[1], protocol, hostname) == NULL)
+	if (web_proxy_parse_url(argv[1], protocol, sizeof(protocol), hostname, sizeof(hostname)) == NULL)
 	{
 		pr_red_info("web_proxy_parse_url");
 	}
