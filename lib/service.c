@@ -36,6 +36,7 @@ static void *cavan_service_handler(void *data)
 		int ret;
 
 		pr_bold_info("%s daemon %d ready", desc->name, index);
+
 		ret = desc->handler(desc, index, desc->data);
 		if (ret < 0)
 		{
@@ -48,6 +49,24 @@ static void *cavan_service_handler(void *data)
 	}
 
 	return NULL;
+}
+
+void cavan_service_set_busy(struct cavan_service_description *desc, int index, bool busy)
+{
+	pthread_mutex_lock(&desc->mutex_lock);
+
+	if (busy)
+	{
+		desc->used_count++;
+	}
+	else
+	{
+		desc->used_count--;
+	}
+
+	pr_green_info("%s daemon %d %s [%d/%d]", desc->name, index, busy ? "busy" : "idle", desc->used_count, desc->daemon_count);
+
+	pthread_mutex_unlock(&desc->mutex_lock);
 }
 
 int cavan_service_start(struct cavan_service_description *desc)
@@ -108,6 +127,7 @@ int cavan_service_start(struct cavan_service_description *desc)
 	}
 
 	umask(0);
+	desc->used_count = 0;
 
 	for (i = 0; i < count; i++)
 	{

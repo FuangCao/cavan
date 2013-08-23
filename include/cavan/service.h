@@ -11,6 +11,7 @@
 struct cavan_service_description
 {
 	const char *name;
+	int used_count;
 	int daemon_count;
 	int as_daemon;
 	int show_verbose;
@@ -30,6 +31,7 @@ struct cavan_daemon_description
 	int super_permission;
 };
 
+void cavan_service_set_busy(struct cavan_service_description *desc, int index, bool busy);
 int cavan_service_start(struct cavan_service_description *desc);
 int cavan_service_main_loop(struct cavan_service_description *desc);
 int cavan_service_run(struct cavan_service_description *desc);
