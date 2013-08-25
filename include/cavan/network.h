@@ -339,3 +339,8 @@ static inline void inet_show_sockaddr(const struct sockaddr_in *addr)
 {
 	println("IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
 }
+
+static inline bool inet_sockaddr_equals(const struct sockaddr_in *left, const struct sockaddr_in *right)
+{
+	return memcmp(&left->sin_addr, &right->sin_addr, sizeof(left->sin_addr)) == 0 && left->sin_port == right->sin_port;
+}

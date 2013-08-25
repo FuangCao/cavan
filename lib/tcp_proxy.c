@@ -7,7 +7,7 @@
 #include <cavan.h>
 #include <cavan/tcp_proxy.h>
 
-#define WEB_PROXY_DEBUG		1
+#define WEB_PROXY_DEBUG		0
 
 static struct network_protocol protocol_map[] =
 {
@@ -37,7 +37,12 @@ static int tcp_proxy_main_loop(int localfd, int remotefd)
 		ret = poll(pfds, NELEM(pfds), -1);
 		if (ret <= 0)
 		{
-			return ret;
+			if (ret < 0)
+			{
+				return ret;
+			}
+
+			return -ETIMEDOUT;
 		}
 
 		if (pfds[0].revents)
@@ -45,7 +50,7 @@ static int tcp_proxy_main_loop(int localfd, int remotefd)
 			rwlen = inet_recv(localfd, buff, sizeof(buff));
 			if (rwlen <= 0 || inet_send(remotefd, buff, rwlen) < rwlen)
 			{
-				break;
+				return -EIO;
 			}
 		}
 
@@ -54,7 +59,7 @@ static int tcp_proxy_main_loop(int localfd, int remotefd)
 			rwlen = inet_recv(remotefd, buff, sizeof(buff));
 			if (rwlen <= 0 || inet_send(localfd, buff, rwlen) < rwlen)
 			{
-				break;
+				return -EIO;
 			}
 		}
 	}
@@ -275,7 +280,7 @@ http_request_type_t web_proxy_get_request_type(const char *req)
 	return -EINVAL;
 }
 
-static int web_proxy_send_data(int srcfd, int destfd, int timeout)
+static int web_proxy_main_loop(int srcfd, int destfd, int timeout)
 {
 	int ret;
 	ssize_t rwlen;
@@ -297,7 +302,12 @@ static int web_proxy_send_data(int srcfd, int destfd, int timeout)
 		ret = poll(pfds, NELEM(pfds), timeout);
 		if (ret <= 0)
 		{
-			break;
+			if (ret < 0)
+			{
+				return ret;
+			}
+
+			return -ETIMEDOUT;
 		}
 
 		if (pfds[0].revents)
@@ -305,7 +315,7 @@ static int web_proxy_send_data(int srcfd, int destfd, int timeout)
 			rwlen = inet_recv(srcfd, buff, sizeof(buff));
 			if (rwlen <= 0 || inet_send(destfd, buff, rwlen) < rwlen)
 			{
-				break;
+				return -EIO;
 			}
 		}
 
@@ -315,7 +325,7 @@ static int web_proxy_send_data(int srcfd, int destfd, int timeout)
 		}
 	}
 
-	return ret;
+	return 0;
 }
 
 static int web_proxy_service_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
@@ -325,8 +335,8 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	size_t cmdlen;
 	socklen_t addrlen;
 	http_request_type_t type;
-	struct sockaddr_in addr, proxy_addr;
-	int client_sockfd, proxy_sockfd;
+	struct sockaddr_in addr, proxy_addr, proxy_addr_bak;
+	int client_sockfd, proxy_sockfd = -1;
 	int server_sockfd = service->data.type_int;
 	char buff[2048], *buff_end, *req, *url;
 	char protocol[512];
@@ -341,6 +351,8 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 
 	cavan_service_set_busy(service, index, true);
 	inet_show_sockaddr(&addr);
+
+	memset(&proxy_addr_bak, 0, sizeof(proxy_addr_bak));
 
 	while (1)
 	{
@@ -365,30 +377,19 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 		type = web_proxy_get_request_type(buff);
 		if (type < 0)
 		{
-			ret = type;
 			pr_red_info("invalid request %s", buff);
 			break;
 		}
 
-#if WEB_PROXY_DEBUG
-		pr_green_info("%s = %d, service = %d", buff, type, index);
-#endif
-
 		req = web_proxy_parse_url(url, protocol, sizeof(protocol), hostname, sizeof(hostname));
 		if (req == NULL)
 		{
-			ret = -EINVAL;
 			pr_red_info("web_proxy_parse_url:\n%s", url);
 			break;
 		}
 
-#if WEB_PROXY_DEBUG
-		println("protocol = %s, hostname = %s", protocol, hostname);
-#endif
-
 		if (inet_hostname2sockaddr(hostname, &proxy_addr) < 0)
 		{
-			ret = -EINVAL;
 			pr_red_info("inet_hostname2sockaddr of %s failed", hostname);
 			break;
 		}
@@ -401,14 +402,28 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 		}
 
 		proxy_addr.sin_port = htons((u16)ret);
-		inet_show_sockaddr(&proxy_addr);
 
-		proxy_sockfd = inet_create_tcp_link1(&proxy_addr);
-		if (proxy_sockfd < 0)
+		pr_bold_info("%s[%d] => %s[%s:%d]", buff, type, hostname, inet_ntoa(proxy_addr.sin_addr), ret);
+
+		if (proxy_sockfd < 0 || inet_sockaddr_equals(&proxy_addr, &proxy_addr_bak) == false)
 		{
-			ret = proxy_sockfd;
-			pr_red_info("inet_create_tcp_link1");
-			break;
+			if (proxy_sockfd >= 0)
+			{
+				close(proxy_sockfd);
+			}
+
+			proxy_sockfd = inet_create_tcp_link1(&proxy_addr);
+			if (proxy_sockfd < 0)
+			{
+				pr_red_info("inet_create_tcp_link1");
+				break;
+			}
+
+			memcpy(&proxy_addr_bak, &proxy_addr, sizeof(proxy_addr));
+		}
+		else
+		{
+			pr_green_info("Don't need connect");
 		}
 
 		if (type == HTTP_REQ_CONNECT)
@@ -419,8 +434,9 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 		{
 			req -= cmdlen + 1;
 			memcpy(req, buff, cmdlen);
-			req[cmdlen] = ' ';
 		}
+
+		req[cmdlen] = ' ';
 
 #if WEB_PROXY_DEBUG
 		println("New request is:\n%s", req);
@@ -429,36 +445,41 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 		rwlen = inet_send(proxy_sockfd, req, buff_end - req);
 		if (rwlen < 0)
 		{
-			ret = rwlen;
 			pr_error_info("inet_send");
-			goto label_close_proxy_sockfd;
+			break;
 		}
 
 		switch (type)
 		{
-		case HTTP_REQ_GET:
-		case HTTP_REQ_HEAD:
-			web_proxy_send_data(proxy_sockfd, client_sockfd, -1);
-			break;
-
-		case HTTP_REQ_PUT:
-		case HTTP_REQ_POST:
 		case HTTP_REQ_CONNECT:
 			tcp_proxy_main_loop(client_sockfd, proxy_sockfd);
 			break;
 
 		default:
-			pr_red_info("unsupport http request %d", type);
-		}
+			ret = web_proxy_main_loop(client_sockfd, proxy_sockfd, 5000);
+			if (ret < 0)
+			{
+				goto out_close_client_sockfd;
+			}
 
-label_close_proxy_sockfd:
+			ret = web_proxy_main_loop(proxy_sockfd, client_sockfd, 5000);
+			if (ret < 0)
+			{
+				goto out_close_client_sockfd;
+			}
+		}
+	}
+
+out_close_client_sockfd:
+	if (proxy_sockfd >= 0)
+	{
 		close(proxy_sockfd);
 	}
 
 	close(client_sockfd);
 	cavan_service_set_busy(service, index, false);
 
-	return ret;
+	return 0;
 }
 
 int web_proxy_service_run(struct cavan_service_description *proxy_service, u16 port)

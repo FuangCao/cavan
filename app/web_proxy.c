@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	struct cavan_service_description proxy_service =
 	{
 		.name = "WEB_PROXY",
-		.daemon_count = 10,
+		.daemon_count = 100,
 		.as_daemon = 0,
 		.show_verbose = 0,
 		.super_permission = 0
