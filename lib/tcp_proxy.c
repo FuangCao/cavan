@@ -144,8 +144,8 @@ int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service)
 char *web_proxy_parse_url(const char *url, char *protocol, size_t protlen, char *hostname, size_t namelen)
 {
 	int step = 0;
-	char *p = protocol;
-	char *p_end = p + protlen;
+	char *p = hostname;
+	char *p_end = p + namelen;
 
 	while (p < p_end)
 	{
@@ -169,19 +169,13 @@ char *web_proxy_parse_url(const char *url, char *protocol, size_t protlen, char 
 			{
 				url += 3;
 				p = hostname;
-				p_end = p + namelen;
-
+				text_ncopy(protocol, hostname, protlen);
 			}
 			else if (IS_NUMBER(url[1]))
 			{
 				url++;
 				p = protocol;
 				p_end = p + protlen;
-
-				if (step == 0)
-				{
-					text_copy(hostname, protocol);
-				}
 			}
 			else
 			{
@@ -330,17 +324,19 @@ static int web_proxy_main_loop(int srcfd, int destfd, int timeout)
 
 static int web_proxy_service_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
 {
-	int ret = 0;
+	int ret;
+	int port;
+	int mismatch;
 	ssize_t rwlen;
 	size_t cmdlen;
 	socklen_t addrlen;
 	http_request_type_t type;
-	struct sockaddr_in addr, proxy_addr, proxy_addr_bak;
-	int client_sockfd, proxy_sockfd = -1;
+	struct sockaddr_in addr, proxy_addr;
+	int client_sockfd, proxy_sockfd;
 	int server_sockfd = service->data.type_int;
 	char buff[2048], *buff_end, *req, *url;
-	char protocol[512];
-	char hostname[512];
+	char protocol[8], protocol_bak[8];
+	char hostname[512], hostname_bak[512];
 
 	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
 	if (client_sockfd < 0)
@@ -352,7 +348,10 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	cavan_service_set_busy(service, index, true);
 	inet_show_sockaddr(&addr);
 
-	memset(&proxy_addr_bak, 0, sizeof(proxy_addr_bak));
+	port = -1;
+	proxy_sockfd = -1;
+	protocol_bak[0] = 0;
+	hostname_bak[0] = 0;
 
 	while (1)
 	{
@@ -388,29 +387,47 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			break;
 		}
 
-		if (inet_hostname2sockaddr(hostname, &proxy_addr) < 0)
+		mismatch = 0;
+
+		if (text_cmp(hostname, hostname_bak))
 		{
-			pr_red_info("inet_hostname2sockaddr of %s failed", hostname);
-			break;
+			if (inet_hostname2sockaddr(hostname, &proxy_addr) < 0)
+			{
+				pr_red_info("inet_hostname2sockaddr of %s failed", hostname);
+				break;
+			}
+
+			text_copy(hostname_bak, hostname);
+			mismatch++;
+		}
+		else
+		{
+			pr_green_info("Don't need get hostname");
 		}
 
-		ret = web_proxy_protocol2port(protocol);
-		if (ret < 0)
+		if (text_cmp(protocol, protocol_bak))
 		{
-			pr_red_info("invalid protocol %s", protocol);
-			break;
+			port = web_proxy_protocol2port(protocol);
+			if (port < 0)
+			{
+				pr_red_info("invalid protocol %s", protocol);
+				break;
+			}
+
+			text_copy(protocol_bak, protocol);
+			mismatch++;
 		}
 
-		proxy_addr.sin_port = htons((u16)ret);
+		pr_std_info("%s[%d] => %s@%s [%s:%d]", buff, type, hostname, protocol, inet_ntoa(proxy_addr.sin_addr), port);
 
-		pr_bold_info("%s[%d] => %s[%s:%d]", buff, type, hostname, inet_ntoa(proxy_addr.sin_addr), ret);
-
-		if (proxy_sockfd < 0 || inet_sockaddr_equals(&proxy_addr, &proxy_addr_bak) == false)
+		if (proxy_sockfd < 0 || mismatch)
 		{
 			if (proxy_sockfd >= 0)
 			{
 				close(proxy_sockfd);
 			}
+
+			proxy_addr.sin_port = htons((u16)port);
 
 			proxy_sockfd = inet_create_tcp_link1(&proxy_addr);
 			if (proxy_sockfd < 0)
@@ -418,8 +435,6 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 				pr_red_info("inet_create_tcp_link1");
 				break;
 			}
-
-			memcpy(&proxy_addr_bak, &proxy_addr, sizeof(proxy_addr));
 		}
 		else
 		{

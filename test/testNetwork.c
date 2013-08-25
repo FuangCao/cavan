@@ -23,7 +23,7 @@
 
 int main(int argc, char *argv[])
 {
-	char protocol[512];
+	char protocol[8];
 	char hostname[512];
 
 	assert(argc > 1);
