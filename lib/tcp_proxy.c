@@ -12,6 +12,7 @@
 static struct network_protocol protocol_map[] =
 {
 	{"http", 80},
+	{"https", 445},
 	{"ftp", 21}
 };
 
@@ -326,6 +327,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 {
 	int ret;
 	int port;
+	int count;
 	int mismatch;
 	ssize_t rwlen;
 	size_t cmdlen;
@@ -349,6 +351,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	inet_show_sockaddr(&addr);
 
 	port = -1;
+	count = 0;
 	proxy_sockfd = -1;
 	protocol_bak[0] = 0;
 	hostname_bak[0] = 0;
@@ -418,7 +421,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			mismatch++;
 		}
 
-		pr_std_info("%s[%d] => %s@%s [%s:%d]", buff, type, hostname, protocol, inet_ntoa(proxy_addr.sin_addr), port);
+		pr_std_info("%s[%d](%d.%d) => %s@%s [%s:%d]", buff, type, index, count, protocol, hostname, inet_ntoa(proxy_addr.sin_addr), port);
 
 		if (proxy_sockfd < 0 || mismatch)
 		{
@@ -435,10 +438,13 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 				pr_red_info("inet_create_tcp_link1");
 				break;
 			}
+
+			count = 0;
 		}
 		else
 		{
 			pr_green_info("Don't need connect");
+			count++;
 		}
 
 		if (type == HTTP_REQ_CONNECT)
