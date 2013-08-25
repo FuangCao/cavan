@@ -101,7 +101,7 @@ endef
 
 define link_c_libso
 @echo "[LD]    $@ <= $(notdir $^)"
-$(Q)$(CC) -shared -o $@ $^
+$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 $(call strip_files,$@)
 endef
 

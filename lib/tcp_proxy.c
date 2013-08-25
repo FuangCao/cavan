@@ -142,11 +142,15 @@ int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service)
 
 // ================================================================================
 
-char *web_proxy_parse_url(const char *url, char *protocol, size_t protlen, char *hostname, size_t namelen)
+char *web_proxy_parse_url(const char *url, char *protocol, size_t protlen, char *hostname, size_t namelen, u16 *port)
 {
 	int step = 0;
+	char porttext[8];
 	char *p = hostname;
 	char *p_end = p + namelen;
+
+	porttext[0] = 0;
+	protocol[0] = 0;
 
 	while (p < p_end)
 	{
@@ -155,12 +159,39 @@ char *web_proxy_parse_url(const char *url, char *protocol, size_t protlen, char 
 		case 0 ... 31:
 		case ' ':
 		case '/':
-			if (step < 1)
+			if (step < 1 || p == hostname)
 			{
 				return NULL;
 			}
 
 			*p = 0;
+
+#if WEB_PROXY_DEBUG
+			println("hostname = %s, protocol = %s, port = %s", hostname, protocol, porttext);
+#endif
+
+			if (port)
+			{
+				if (porttext[0])
+				{
+					*port = text2value_unsigned(porttext, NULL, 10);
+				}
+				else if (protocol[0])
+				{
+					int temp = web_proxy_protocol2port(protocol);
+					if (temp < 0)
+					{
+						return NULL;
+					}
+
+					*port = temp;
+				}
+				else
+				{
+					return NULL;
+				}
+			}
+
 			return (char *)url;
 
 		case ':':
@@ -175,8 +206,8 @@ char *web_proxy_parse_url(const char *url, char *protocol, size_t protlen, char 
 			else if (IS_NUMBER(url[1]))
 			{
 				url++;
-				p = protocol;
-				p_end = p + protlen;
+				p = porttext;
+				p_end = p + sizeof(porttext);
 			}
 			else
 			{
@@ -326,7 +357,6 @@ static int web_proxy_main_loop(int srcfd, int destfd, int timeout)
 static int web_proxy_service_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
 {
 	int ret;
-	int port;
 	int count;
 	int mismatch;
 	ssize_t rwlen;
@@ -337,7 +367,8 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	int client_sockfd, proxy_sockfd;
 	int server_sockfd = service->data.type_int;
 	char buff[2048], *buff_end, *req, *url;
-	char protocol[8], protocol_bak[8];
+	u16 port, port_bak;
+	char protocol[8];
 	char hostname[512], hostname_bak[512];
 
 	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
@@ -350,10 +381,9 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	cavan_service_set_busy(service, index, true);
 	inet_show_sockaddr(&addr);
 
-	port = -1;
 	count = 0;
 	proxy_sockfd = -1;
-	protocol_bak[0] = 0;
+	port_bak = 0;
 	hostname_bak[0] = 0;
 
 	while (1)
@@ -383,14 +413,22 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			break;
 		}
 
-		req = web_proxy_parse_url(url, protocol, sizeof(protocol), hostname, sizeof(hostname));
+		req = web_proxy_parse_url(url, protocol, sizeof(protocol), hostname, sizeof(hostname), &port);
 		if (req == NULL)
 		{
 			pr_red_info("web_proxy_parse_url:\n%s", url);
 			break;
 		}
 
-		mismatch = 0;
+		if (port != port_bak)
+		{
+			port_bak = port;
+			mismatch = 1;
+		}
+		else
+		{
+			mismatch = 0;
+		}
 
 		if (text_cmp(hostname, hostname_bak))
 		{
@@ -406,19 +444,6 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 		else
 		{
 			pr_green_info("Don't need get hostname");
-		}
-
-		if (text_cmp(protocol, protocol_bak))
-		{
-			port = web_proxy_protocol2port(protocol);
-			if (port < 0)
-			{
-				pr_red_info("invalid protocol %s", protocol);
-				break;
-			}
-
-			text_copy(protocol_bak, protocol);
-			mismatch++;
 		}
 
 		pr_std_info("%s[%d](%d.%d) => %s@%s [%s:%d]", buff, type, index, count, protocol, hostname, inet_ntoa(proxy_addr.sin_addr), port);

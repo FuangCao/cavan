@@ -23,18 +23,19 @@
 
 int main(int argc, char *argv[])
 {
+	u16 port;
 	char protocol[8];
 	char hostname[512];
 
 	assert(argc > 1);
 
-	if (web_proxy_parse_url(argv[1], protocol, sizeof(protocol), hostname, sizeof(hostname)) == NULL)
+	if (web_proxy_parse_url(argv[1], protocol, sizeof(protocol), hostname, sizeof(hostname), &port) == NULL)
 	{
 		pr_red_info("web_proxy_parse_url");
 	}
 	else
 	{
-		println("hostname = %s, protocol = %s", hostname, protocol);
+		println("hostname = %s, protocol = %s, port = %d", hostname, protocol, port);
 	}
 
 	return 0;

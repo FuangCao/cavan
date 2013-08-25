@@ -7,7 +7,11 @@ FSLDROID_HOME="${PROJECT_HOME}/fsldroid"
 JAVA_HOME="${TOOLS_HOME}/jdk${JDK_VERSION}"
 JRE_HOME="${JAVA_HOME}/jre"
 SDK_HOME="${TOOLS_HOME}/${SDK_NAME}"
-CLASS_PATH=".$(find ${JAVA_HOME}/lib ${JRE_HOME}/lib -maxdepth 1 -name "*.jar" | while read line; do echo -n :${line}; done)"
+
+[ -d ${JAVA_HOME} -o -d ${JRE_HOME} ] &&
+{
+	CLASS_PATH=".$(find ${JAVA_HOME}/lib ${JRE_HOME}/lib -maxdepth 1 -name "*.jar" | while read line; do echo -n :${line}; done)"
+}
 
 CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
 CAVAN_OUT_ARM="${CAVAN_HOME}/out/arm/static"
