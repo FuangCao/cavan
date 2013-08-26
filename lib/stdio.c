@@ -116,24 +116,24 @@ int timeout_getchar(long sec, long usec)
 	return -1;
 }
 
-char *sprint(char *buff, const char *fmt, ...)
+char *sprint(char *buff, size_t size, const char *fmt, ...)
 {
 	char *ret_buff;
 	va_list ap;
 
 	va_start(ap, fmt);
-	ret_buff = vformat_text(buff, fmt, ap);
+	ret_buff = vformat_text(buff, size, fmt, ap);
 	va_end(ap);
 
 	return ret_buff;
 }
 
-char *sprintln(char *buff, const char *fmt, ...)
+char *sprintln(char *buff, size_t size, const char *fmt, ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	buff = vformat_text(buff, fmt, ap);
+	buff = vformat_text(buff, size, fmt, ap);
 	va_end(ap);
 
 	*buff++ = '\n';
@@ -150,7 +150,7 @@ void print_ntext(const char *text, size_t size)
 	mem_copy(buff, text, size);
 	buff[size] = 0;
 
-	LOGD("%s", buff);
+	__android_log_write(ANDROID_LOG_DEBUG, LOG_TAG, buff);
 }
 #else
 void print_ntext(const char *text, size_t size)
@@ -177,7 +177,7 @@ void vprint(const char *fmt, va_list ap)
 {
 	char buff[PRINT_BUFFER_LEN];
 
-	vformat_text(buff, fmt, ap);
+	vformat_text(buff, sizeof(buff), fmt, ap);
 	print_text(buff);
 }
 
@@ -195,7 +195,7 @@ void vprintln(const char *fmt, va_list ap)
 	char *tmp;
 	char buff[PRINT_BUFFER_LEN];
 
-	tmp = vformat_text(buff, fmt, ap);
+	tmp = vformat_text(buff, sizeof(buff), fmt, ap);
 	*tmp++ = '\n';
 	*tmp = 0;
 	print_text(buff);
@@ -435,7 +435,7 @@ void print_error_base(const char *fmt, ...)
 	char buff[1024];
 
 	va_start(ap, fmt);
-	vformat_text(buff, fmt, ap);
+	vformat_text(buff, sizeof(buff), fmt, ap);
 	va_end(ap);
 
 	if (errno == 0)

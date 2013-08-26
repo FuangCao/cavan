@@ -245,7 +245,7 @@ int web_proxy_protocol2port(const char *protocol)
 	return -EINVAL;
 }
 
-http_request_type_t web_proxy_get_request_type(const char *req)
+int web_proxy_get_request_type(const char *req)
 {
 	switch (req[0])
 	{
@@ -357,12 +357,12 @@ static int web_proxy_main_loop(int srcfd, int destfd, int timeout)
 static int web_proxy_service_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
 {
 	int ret;
+	int type;
 	int count;
 	int mismatch;
 	ssize_t rwlen;
 	size_t cmdlen;
 	socklen_t addrlen;
-	http_request_type_t type;
 	struct sockaddr_in addr, proxy_addr;
 	int client_sockfd, proxy_sockfd;
 	int server_sockfd = service->data.type_int;

@@ -3,7 +3,7 @@
 #include <cavan.h>
 #include <stdio.h>
 
-#define PRINT_BUFFER_LEN	MB(1)
+#define PRINT_BUFFER_LEN	KB(10)
 #define TEXT_FLAG_SIGNED	(1 << 9)
 #define TEXT_FLAG_PREFIX	(1 << 10)
 
@@ -168,7 +168,7 @@ char *text_skip_space_tail(const char *text, const char *line);
 char *text_find_line_end(const char *text, const char *file_end);
 char *text_skip_line_end(const char *text, const char *file_end);
 
-__printf_format_20__ char *vformat_text (char *buff, const char *fmt, va_list args);
+__printf_format_30__ char *vformat_text (char *buff, size_t size, const char *fmt, va_list args);
 __printf_format_12__ char *format_text(const char *fmt, ...);
 
 int system_command_simple(const char *command);

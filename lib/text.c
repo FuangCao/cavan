@@ -810,7 +810,7 @@ u64 text2value_unsigned(const char *text, const char **last, int base)
 	if (base < 0)
 	{
 		value = 0;
-		pr_result_info("prefix2base");
+		pr_red_info("prefix2base");
 		goto out_return;
 	}
 
@@ -1603,9 +1603,9 @@ out_return:
 	return buff;
 }
 #else
-inline char *vformat_text(char *buff, const char *fmt, va_list args)
+inline char *vformat_text(char *buff, size_t size, const char *fmt, va_list args)
 {
-	return buff + vsprintf(buff, fmt, args);
+	return buff + vsnprintf(buff, size, fmt, args);
 }
 #endif
 
@@ -1615,7 +1615,7 @@ char *format_text(const char *fmt, ...)
 	static char buff[1024];
 
 	va_start(ap, fmt);
-	vformat_text(buff, fmt, ap);
+	vformat_text(buff, sizeof(buff), fmt, ap);
 	va_end(ap);
 
 	return buff;

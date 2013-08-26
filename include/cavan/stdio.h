@@ -197,11 +197,7 @@ using namespace std;
 		} \
 	} while (0)
 
-#if CONFIG_BUILD_FOR_ANDROID
-#define print_text(text)					LOGD("%s", text)
-#else
 #define print_text(text)					print_ntext(text, strlen(text))
-#endif
 
 #define clear_screen_to_current()			print_text("\033[1J")
 #define clear_whole_screen()				print_text("\033[2J")
@@ -246,8 +242,8 @@ int fswitch2graph_mode(int tty_fd);
 int switch2graph_mode(const char *tty_path);
 void show_author_info(void);
 
-__printf_format_23__ char *sprint(char *buff, const char *fmt, ...);
-__printf_format_23__ char *sprintln(char *buff, const char *fmt, ...);
+__printf_format_34__ char *sprint(char *buff, size_t size, const char *fmt, ...);
+__printf_format_34__ char *sprintln(char *buff, size_t size, const char *fmt, ...);
 __printf_format_12__ void print(const char *fmt, ...);
 __printf_format_10__ void vprint(const char *fmt, va_list ap);
 __printf_format_10__ void vprintln(const char *fmt, va_list ap);
