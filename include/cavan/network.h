@@ -272,16 +272,6 @@ static inline int inet_create_udp_service(u16 port)
 	return inet_create_service(SOCK_DGRAM, port);
 }
 
-static inline ssize_t inet_send_text(int sockfd, const char *text)
-{
-	return send(sockfd, text, text_len(text), 0);
-}
-
-static inline ssize_t inet_send_text_to(int sockfd, const char *text, const struct sockaddr_in *addr)
-{
-	return inet_sendto(sockfd, text, text_len(text), addr);
-}
-
 static inline int inet_listen(int sockfd)
 {
 	return listen(sockfd, CAVAN_LISTEN_BACKLOG);
@@ -290,6 +280,16 @@ static inline int inet_listen(int sockfd)
 static inline ssize_t inet_send(int sockfd, const void *buff, size_t size)
 {
 	return send(sockfd, buff, size, MSG_NOSIGNAL);
+}
+
+static inline ssize_t inet_send_text(int sockfd, const char *text)
+{
+	return inet_send(sockfd, text, text_len(text));
+}
+
+static inline ssize_t inet_send_text_to(int sockfd, const char *text, const struct sockaddr_in *addr)
+{
+	return inet_sendto(sockfd, text, text_len(text), addr);
 }
 
 static inline ssize_t inet_recv(int sockfd, void *buff, size_t size)

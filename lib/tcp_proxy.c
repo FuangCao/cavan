@@ -472,36 +472,34 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			count++;
 		}
 
-		if (type == HTTP_REQ_CONNECT)
-		{
-			req = buff;
-		}
-		else
-		{
-			req -= cmdlen + 1;
-			memcpy(req, buff, cmdlen);
-		}
-
-		req[cmdlen] = ' ';
-
-#if WEB_PROXY_DEBUG
-		println("New request is:\n%s", req);
-#endif
-
-		rwlen = inet_send(proxy_sockfd, req, buff_end - req);
-		if (rwlen < 0)
-		{
-			pr_error_info("inet_send");
-			break;
-		}
-
 		switch (type)
 		{
 		case HTTP_REQ_CONNECT:
+			rwlen = inet_send_text(client_sockfd, "HTTP/1.1 200 Connection established\r\n\r\n");
+			if (rwlen < 0)
+			{
+				pr_error_info("inet_send");
+				goto out_close_client_sockfd;
+			}
 			tcp_proxy_main_loop(client_sockfd, proxy_sockfd);
 			break;
 
 		default:
+			req -= cmdlen + 1;
+			memcpy(req, buff, cmdlen);
+			req[cmdlen] = ' ';
+
+#if WEB_PROXY_DEBUG
+			println("New request is:\n%s", req);
+#endif
+
+			rwlen = inet_send(proxy_sockfd, req, buff_end - req);
+			if (rwlen < 0)
+			{
+				pr_error_info("inet_send");
+				goto out_close_client_sockfd;
+			}
+
 			ret = web_proxy_main_loop(client_sockfd, proxy_sockfd, 5000);
 			if (ret < 0)
 			{
