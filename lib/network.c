@@ -425,7 +425,7 @@ u16 udp_checksum(struct ip_header *ip_hdr)
 
 void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port)
 {
-	println("IP = %s, port = %d", ip ? ip : "INADDR_ANY", port);
+	println("IP = %s, PORT = %d", ip ? ip : "INADDR_ANY", port);
 	addr->sin_family = AF_INET;
 	addr->sin_port = htons(port);
 	addr->sin_addr.s_addr = ip ? inet_addr(ip) : htonl(INADDR_ANY);
@@ -454,13 +454,67 @@ int inet_create_tcp_link1(const struct sockaddr_in *addr)
 	return sockfd;
 }
 
-int inet_create_tcp_link2(const char *ip, u16 port)
+int inet_create_tcp_link2(const char *hostname, u16 port)
 {
+	int ret;
 	struct sockaddr_in addr;
 
-	inet_sockaddr_init(&addr, ip, port);
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
 
-	return inet_create_tcp_link1(&addr);
+	if (text_cmp(hostname, "localhost") == 0)
+	{
+		hostname = "127.0.0.1";
+	}
+
+	if (inet_aton(hostname, &addr.sin_addr))
+	{
+		ret = inet_create_tcp_link1(&addr);
+	}
+	else
+	{
+		struct addrinfo *res;
+		struct addrinfo nints;
+
+		memset(&nints, 0, sizeof(nints));
+		nints.ai_family = AF_INET;
+		nints.ai_socktype = SOCK_STREAM;
+		nints.ai_flags = 0;
+		ret = getaddrinfo(hostname, NULL, &nints, &res);
+		if (ret < 0 || res == NULL)
+		{
+			pr_error_info("getaddrinfo");
+			return -ENOENT;
+		}
+
+		ret = -ENOENT;
+
+		while (res)
+		{
+			if (res->ai_family == AF_INET)
+			{
+				addr.sin_addr.s_addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
+				ret = inet_create_tcp_link1(&addr);
+				if (ret >= 0)
+				{
+					break;
+				}
+			}
+
+			res = res->ai_next;
+		}
+
+		freeaddrinfo(res);
+	}
+
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	println("%s => %s:%d", hostname, inet_ntoa(addr.sin_addr), port);
+
+	return ret;
 }
 
 int inet_create_service(int type, u16 port)

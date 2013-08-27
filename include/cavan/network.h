@@ -210,7 +210,7 @@ u16 udp_checksum(struct ip_header *ip_hdr);
 
 void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port);
 int inet_create_tcp_link1(const struct sockaddr_in *addr);
-int inet_create_tcp_link2(const char *ip, u16 port);
+int inet_create_tcp_link2(const char *hostname, u16 port);
 int inet_create_service(int type, u16 port);
 int inet_create_tcp_service(u16 port);
 

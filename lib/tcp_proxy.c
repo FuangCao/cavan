@@ -359,11 +359,10 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	int ret;
 	int type;
 	int count;
-	int mismatch;
 	ssize_t rwlen;
 	size_t cmdlen;
 	socklen_t addrlen;
-	struct sockaddr_in addr, proxy_addr;
+	struct sockaddr_in addr;
 	int client_sockfd, proxy_sockfd;
 	int server_sockfd = service->data.type_int;
 	char buff[2048], *buff_end, *req, *url;
@@ -420,44 +419,16 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			break;
 		}
 
-		if (port != port_bak)
-		{
-			port_bak = port;
-			mismatch = 1;
-		}
-		else
-		{
-			mismatch = 0;
-		}
+		pr_std_info("%s[%d](%d.%d) => %s://%s:%d", buff, type, index, count, protocol[0] ? protocol : "none", hostname, port);
 
-		if (text_cmp(hostname, hostname_bak))
-		{
-			if (inet_hostname2sockaddr(hostname, &proxy_addr) < 0)
-			{
-				pr_red_info("inet_hostname2sockaddr of %s failed", hostname);
-				break;
-			}
-
-			text_copy(hostname_bak, hostname);
-			mismatch++;
-		}
-		else
-		{
-			pr_green_info("Don't need get hostname");
-		}
-
-		pr_std_info("%s[%d](%d.%d) => %s@%s [%s:%d]", buff, type, index, count, protocol, hostname, inet_ntoa(proxy_addr.sin_addr), port);
-
-		if (proxy_sockfd < 0 || mismatch)
+		if (proxy_sockfd < 0 || text_cmp(hostname, hostname_bak) || port != port_bak)
 		{
 			if (proxy_sockfd >= 0)
 			{
 				close(proxy_sockfd);
 			}
 
-			proxy_addr.sin_port = htons((u16)port);
-
-			proxy_sockfd = inet_create_tcp_link1(&proxy_addr);
+			proxy_sockfd = inet_create_tcp_link2(hostname, port);
 			if (proxy_sockfd < 0)
 			{
 				pr_red_info("inet_create_tcp_link1");
@@ -465,6 +436,8 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			}
 
 			count = 0;
+			port_bak = port;
+			text_copy(hostname_bak, hostname);
 		}
 		else
 		{
@@ -481,6 +454,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 				pr_error_info("inet_send");
 				goto out_close_client_sockfd;
 			}
+
 			tcp_proxy_main_loop(client_sockfd, proxy_sockfd);
 			break;
 
