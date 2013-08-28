@@ -6,9 +6,9 @@
 
 static struct network_protocol protocols[] =
 {
-	[NETWORK_PROTOCOL_HTTP] = {"http", 80},
-	[NETWORK_PROTOCOL_HTTPS] = {"https", 445},
-	[NETWORK_PROTOCOL_FTP] = {"ftp", 21}
+	[NETWORK_PROTOCOL_HTTP] = {"http", 80, NETWORK_PROTOCOL_HTTP},
+	[NETWORK_PROTOCOL_HTTPS] = {"https", 445, NETWORK_PROTOCOL_HTTPS},
+	[NETWORK_PROTOCOL_FTP] = {"ftp", 21, NETWORK_PROTOCOL_FTP}
 };
 
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr)
@@ -950,6 +950,11 @@ const struct network_protocol *network_get_protocol_by_name(const char *name)
 {
 	const struct network_protocol *p, *p_end;
 
+	if (name == NULL || name[0] == 0)
+	{
+		return protocols + NETWORK_PROTOCOL_HTTP;
+	}
+
 	for (p = protocols, p_end = p + NELEM(protocols); p < p_end; p++)
 	{
 		if (text_cmp(name, p->name) == 0)
@@ -986,7 +991,7 @@ const struct network_protocol *network_get_protocol_by_port(u16 port)
 	return NULL;
 }
 
-int network_get_port_by_url(const struct network_url *url)
+int network_get_port_by_url(const struct network_url *url, const struct network_protocol *protocol)
 {
 	if (url->port[0])
 	{
@@ -994,14 +999,18 @@ int network_get_port_by_url(const struct network_url *url)
 	}
 	else if (url->protocol[0])
 	{
-		const struct network_protocol *p = network_get_protocol_by_name(url->protocol);
-		if (p == NULL)
+		if (protocol == NULL)
+		{
+			protocol = network_get_protocol_by_name(url->protocol);
+		}
+
+		if (protocol == NULL)
 		{
 			pr_red_info("unknown protocol %s", url->protocol);
 			return -EINVAL;
 		}
 
-		return p->port;
+		return protocol->port;
 	}
 	else
 	{

@@ -257,6 +257,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	int server_sockfd = service->data.type_int;
 	char buff[2048], *buff_end, *req, *url_text;
 	struct network_url urls[2], *url, *url_bak;
+	const struct network_protocol *protocol = NULL;
 
 	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
 	if (client_sockfd < 0)
@@ -316,7 +317,8 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 				close(proxy_sockfd);
 			}
 
-			ret = network_get_port_by_url(url);
+			protocol = network_get_protocol_by_name(url->protocol);
+			ret = network_get_port_by_url(url, protocol);
 			if (ret < 0)
 			{
 				pr_red_info("network_get_port_by_url");
@@ -363,30 +365,50 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			goto out_close_client_sockfd;
 
 		default:
-			req -= cmdlen + 1;
-			memcpy(req, buff, cmdlen);
-			req[cmdlen] = ' ';
+			if (protocol == NULL)
+			{
+				pr_red_info("invalid protocol");
+				goto out_close_client_sockfd;
+			}
+
+			switch (protocol->type)
+			{
+			case NETWORK_PROTOCOL_HTTP:
+			case NETWORK_PROTOCOL_HTTPS:
+				req -= cmdlen + 1;
+				memcpy(req, buff, cmdlen);
+				req[cmdlen] = ' ';
 
 #if WEB_PROXY_DEBUG
-			println("New request is:\n%s", req);
+				println("New request is:\n%s", req);
 #endif
 
-			rwlen = inet_send(proxy_sockfd, req, buff_end - req);
-			if (rwlen < 0)
-			{
-				pr_error_info("inet_send");
-				goto out_close_client_sockfd;
-			}
+				rwlen = inet_send(proxy_sockfd, req, buff_end - req);
+				if (rwlen < 0)
+				{
+					pr_error_info("inet_send");
+					goto out_close_client_sockfd;
+				}
 
-			ret = web_proxy_main_loop(client_sockfd, proxy_sockfd, 5000);
-			if (ret < 0)
-			{
-				goto out_close_client_sockfd;
-			}
+				ret = web_proxy_main_loop(client_sockfd, proxy_sockfd, 5000);
+				if (ret < 0)
+				{
+					goto out_close_client_sockfd;
+				}
 
-			ret = web_proxy_main_loop(proxy_sockfd, client_sockfd, 5000);
-			if (ret < 0)
-			{
+				ret = web_proxy_main_loop(proxy_sockfd, client_sockfd, 5000);
+				if (ret < 0)
+				{
+					goto out_close_client_sockfd;
+				}
+
+				break;
+
+			case NETWORK_PROTOCOL_FTP:
+				goto out_close_client_sockfd;
+
+			default:
+				pr_red_info("unsupport network protocol %s", protocol->name);
 				goto out_close_client_sockfd;
 			}
 		}

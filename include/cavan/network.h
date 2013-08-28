@@ -195,6 +195,7 @@ struct network_protocol
 {
 	const char *name;
 	u16 port;
+	network_protocol_type_t type;
 };
 
 struct network_url
@@ -258,7 +259,7 @@ char *network_parse_url(const char *text, struct network_url *url);
 const struct network_protocol *network_get_protocol_by_name(const char *name);
 const struct network_protocol *network_get_protocol_by_type(network_protocol_type_t type);
 const struct network_protocol *network_get_protocol_by_port(u16 port);
-int network_get_port_by_url(const struct network_url *url);
+int network_get_port_by_url(const struct network_url *url, const struct network_protocol *protocol);
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
 
 static inline int inet_socket(int type)
