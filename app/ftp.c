@@ -29,13 +29,39 @@ int main(int argc, char *argv[])
 			.val = 'v',
 		},
 		{
+			.name = "user",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "username",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'u',
+		},
+		{
+			.name = "pass",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p',
+		},
+		{
+			.name = "password",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p',
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
 	const char *server_ip;
 	u16 server_port;
+	const char *username = NULL;
+	const char *password = NULL;
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHu:U:p:P:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -49,6 +75,16 @@ int main(int argc, char *argv[])
 		case 'H':
 			show_usage();
 			return 0;
+
+		case 'u':
+		case 'U':
+			username = optarg;
+			break;
+
+		case 'p':
+		case 'P':
+			password = optarg;
+			break;
 
 		default:
 			show_usage();
@@ -75,5 +111,5 @@ int main(int argc, char *argv[])
 		server_port = text2value_unsigned(argv[1], NULL, 10);
 	}
 
-	return ftp_client_run(server_ip, server_port);
+	return ftp_client_run(server_ip, server_port, username, password);
 }

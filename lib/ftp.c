@@ -4,6 +4,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
 #define FTP_TIMEOUT_MS	0
+#define FTP_DEBUG		0
 
 char ftp_root_path[1024] = "/";
 
@@ -423,6 +424,10 @@ static char *ftp_get_abs_path(const char *root_path, const char *curr_path, cons
 		text_path_cat(abs_path, curr_path, path);
 	}
 
+#if FTP_DEBUG
+	println("root_path = %s, curr_path = %s, abs_path = %s, path = %s", root_path, curr_path, abs_path, path);
+#endif
+
 	return abs_path;
 }
 
@@ -454,7 +459,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 	file_type = 0;
 	pasv_port = 0;
 
-	reply = "231 User login successfull";
+	reply = "230 User login successfull";
 	text_copy(curr_path, ftp_root_path);
 
 	ret = inet_getsockname(sockfd, &local_addr, &addrlen);
@@ -464,8 +469,10 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		return ret;
 	}
 
+#if FTP_DEBUG
 	pr_bold_info("Local Address:");
 	inet_show_sockaddr(&local_addr);
+#endif
 
 	text_replace_char2(inet_ntoa(local_addr.sin_addr), local_ip, '.', ',');
 
@@ -488,7 +495,18 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 			return recvlen;
 		}
 
-		cmd_buff[recvlen - 2] = 0;
+		while (recvlen >= 0)
+		{
+			char c = cmd_buff[recvlen - 1];
+			if (c != '\r' && c != '\n')
+			{
+				break;
+			}
+
+			recvlen--;
+		}
+
+		cmd_buff[recvlen] = 0;
 		reply = rep_buff;
 
 		for (cmd_arg = cmd_buff; *cmd_arg && !is_empty_character(*cmd_arg); cmd_arg++);
@@ -497,10 +515,8 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 			cmd_arg++;
 		}
 
-#if __WORDSIZE == 64 || CONFIG_BUILD_FOR_ANDROID
-		println("command[%ld] = %s", recvlen, cmd_buff);
-#else
-		println("command[%d] = %s", recvlen, cmd_buff);
+#if FTP_DEBUG
+		println("cmd_arg = %s", cmd_arg);
 #endif
 
 		switch (*(u32 *)cmd_buff)
@@ -562,7 +578,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* type */
 		case 0x65707974:
 		case 0x45505954:
-			reply = "220 TYPE commnd complete";
+			reply = "200 TYPE commnd complete";
 			file_type = cmd_buff[5];
 			break;
 
@@ -748,7 +764,9 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 			{
 				ret = inet_accept(data_sockfd, addr, &addrlen);
 			}
+
 			close(data_sockfd);
+
 			if (ret < 0)
 			{
 				data_sockfd = -1;
@@ -1019,7 +1037,9 @@ static int ftp_client_receive_file(int ctrl_sockfd, const char *ip, u16 port)
 			break;
 		}
 
+#if FTP_DEBUG
 		print_ntext(buff, recvlen);
+#endif
 	}
 
 	ret = 0;
@@ -1033,55 +1053,191 @@ out_close_sockfd:
 	return ret;
 }
 
-int ftp_client_run(const char *ip, u16 port)
+int ftp_client_read_response(int sockfd, char *response, size_t size)
+{
+	int state;
+	ssize_t rwlen;
+	char buff[2048], *p = buff, *p_end = p + sizeof(buff);
+
+	while (p < p_end)
+	{
+		char *q;
+
+		rwlen = inet_recv(sockfd, p, p_end - p);
+		if (rwlen <= 0)
+		{
+			return -EFAULT;
+		}
+
+		for (q = p, p += rwlen; q < p; q++)
+		{
+			int step = 0;
+
+			while (q < p && IS_NUMBER(*q))
+			{
+				q++;
+			}
+
+			if (q < p && *q != '-')
+			{
+				step++;
+			}
+
+			while (q < p)
+			{
+				if (*q == '\n')
+				{
+					step++;
+					break;
+				}
+
+				q++;
+			}
+
+			if (step == 2)
+			{
+				goto label_read_complete;
+			}
+		}
+	}
+
+label_read_complete:
+	*p = 0;
+#if FTP_DEBUG
+	print_ntext(buff, p - buff);
+#endif
+	state = text2value_unsigned(buff, (const char **)&p, 10);
+
+	if (response && size > 0)
+	{
+		text_ncopy(response, p + 1, size);
+	}
+
+	return state;
+}
+
+int ftp_client_send_command(int sockfd, const char *command, size_t cmdsize, char *response, size_t repsize)
+{
+	size_t rwlen;
+
+#if FTP_DEBUG
+	println("%s", command);
+#endif
+
+	file_discard_all(sockfd);
+
+	rwlen = inet_send(sockfd, command, cmdsize);
+	if (rwlen < cmdsize)
+	{
+		return -EFAULT;
+	}
+
+	return ftp_client_read_response(sockfd, response, repsize);
+}
+
+int ftp_client_send_command2(int sockfd, char *response, size_t repsize, const char *command, ...)
+{
+	int ret;
+	va_list ap;
+	char buff[2048];
+
+	va_start(ap, command);
+	ret = vsnprintf(buff, sizeof(buff), command, ap);
+	va_end(ap);
+
+	return ftp_client_send_command(sockfd, buff, ret, response, repsize);
+}
+
+int ftp_client_login(int sockfd, const char *username, const char *password)
+{
+	int ret;
+
+	if (username == NULL)
+	{
+		username = "anonymous";
+	}
+
+#if FTP_DEBUG
+	println("username = %s, password = %s", username, password);
+#endif
+
+	ret = ftp_client_read_response(sockfd, NULL, 0);
+	if (ret < 0)
+	{
+		pr_red_info("ftp_client_read_response");
+		return ret;
+	}
+
+	if (ret != 220)
+	{
+		return -EFAULT;
+	}
+
+	ret = ftp_client_send_command2(sockfd, NULL, 0, "USER %s\r\n", username);
+	if (ret < 0)
+	{
+		pr_red_info("ftp_client_send_command2");
+		return ret;
+	}
+
+	if (ret == 230)
+	{
+		return 0;
+	}
+
+	if (password == NULL)
+	{
+		password = "cavan";
+	}
+
+	ret = ftp_client_send_command2(sockfd, NULL, 0, "PASS %s\r\n", password);
+	if (ret < 0)
+	{
+		pr_red_info("ftp_client_send_command2");
+		return ret;
+	}
+
+	return 0;
+}
+
+int ftp_client_run(const char *hostname, u16 port, const char *username, const char *password)
 {
 	int sockfd;
 	char buff[1024], *p;
 	ssize_t sendlen, recvlen;
 	int ret;
 
-	pr_bold_info("IP = %s, Port = %d", ip, port);
-
-	sockfd = inet_create_tcp_link2(ip, port);
+	sockfd = inet_create_tcp_link2(hostname, port);
 	if (sockfd < 0)
 	{
 		error_msg("inet_create_tcp_link2");
 		return sockfd;
 	}
 
+	ret = ftp_client_login(sockfd, username, password);
+	if (ret < 0)
+	{
+		pr_red_info("ftp_client_login");
+		return ret;
+	}
+
 	while (1)
 	{
-		recvlen = inet_recv(sockfd, buff, sizeof(buff));
-		if (recvlen < 0)
+		while (1)
 		{
-			print_error("inet_recv");
-			ret = recvlen;
-			break;
-		}
+			for (p = buff; (*p = getchar()) != '\n'; p++);
 
-		buff[recvlen] = 0;
-#if __WORDSIZE == 64 || CONFIG_BUILD_FOR_ANDROID
-		println("receive buff[%ld] = %s", recvlen, buff);
-#else
-		println("receive buff[%d] = %s", recvlen, buff);
-#endif
-
-label_get_command:
-		for (p = buff; (*p = getchar()) != '\n'; p++);
-
-		if (p > buff)
-		{
-			p = text_copy(p, "\r\n");
-		}
-		else
-		{
-			goto label_get_command;
+			if (p > buff)
+			{
+				p = text_copy(p, "\r\n");
+				break;
+			}
 		}
 
 		if (text_lhcmp("ls", buff) == 0)
 		{
 			println("list command");
-			ftp_client_receive_file(sockfd, ip, 9999);
+			ftp_client_receive_file(sockfd, hostname, 9999);
 		}
 		else
 		{
@@ -1098,6 +1254,17 @@ label_get_command:
 			println("send buff[%d] = %s", sendlen, buff);
 #endif
 		}
+
+		recvlen = inet_recv(sockfd, buff, sizeof(buff));
+		if (recvlen < 0)
+		{
+			print_error("inet_recv");
+			ret = recvlen;
+			break;
+		}
+
+		buff[recvlen] = 0;
+		println("%s", buff);
 	}
 
 	close(sockfd);
