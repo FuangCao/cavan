@@ -184,6 +184,26 @@ struct inet_file_request
 	void (*close_connect)(int sockfd);
 };
 
+typedef enum
+{
+	NETWORK_PROTOCOL_HTTP,
+	NETWORK_PROTOCOL_HTTPS,
+	NETWORK_PROTOCOL_FTP,
+} network_protocol_type_t;
+
+struct network_protocol
+{
+	const char *name;
+	u16 port;
+};
+
+struct network_url
+{
+	char port[8];
+	char protocol[8];
+	char hostname[512];
+};
+
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
 ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);
 
@@ -232,6 +252,14 @@ u16 cavan_get_server_port(u16 default_port);
 
 int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd);
 int inet_hostname2sockaddr(const char *host, struct sockaddr_in *addr);
+
+char *network_url_tostring(const struct network_url *url, char *buff, size_t size);
+char *network_parse_url(const char *text, struct network_url *url);
+const struct network_protocol *network_get_protocol_by_name(const char *name);
+const struct network_protocol *network_get_protocol_by_type(network_protocol_type_t type);
+const struct network_protocol *network_get_protocol_by_port(u16 port);
+int network_get_port_by_url(const struct network_url *url);
+bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
 
 static inline int inet_socket(int type)
 {

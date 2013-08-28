@@ -34,14 +34,6 @@ struct tcp_proxy_service
 	void (*close_connect)(int sockfd);
 };
 
-struct network_protocol
-{
-	const char *name;
-	u16 port;
-};
-
 int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service);
-char *web_proxy_parse_url(const char *url, char *protocol, size_t protlen, char *hostname, size_t namelen, u16 *port);
-int web_proxy_protocol2port(const char *protocol);
 int web_proxy_get_request_type(const char *req);
 int web_proxy_service_run(struct cavan_service_description *service, u16 port);

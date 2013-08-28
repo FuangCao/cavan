@@ -4,6 +4,13 @@
 #include <cavan/network.h>
 #include <cavan/file.h>
 
+static struct network_protocol protocols[] =
+{
+	[NETWORK_PROTOCOL_HTTP] = {"http", 80},
+	[NETWORK_PROTOCOL_HTTPS] = {"https", 445},
+	[NETWORK_PROTOCOL_FTP] = {"ftp", 21}
+};
+
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr)
 {
 	while (retry--)
@@ -854,4 +861,165 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 	freeaddrinfo(res);
 
 	return 0;
+}
+
+char *network_url_tostring(const struct network_url *url, char *buff, size_t size)
+{
+	if (buff == NULL || size == 0)
+	{
+		static char static_buff[1024];
+
+		buff = static_buff;
+		size = sizeof(static_buff);
+	}
+
+	if (url->protocol[0])
+	{
+		if (url->port[0])
+		{
+			snprintf(buff, size, "%s://%s:%s", url->protocol, url->hostname, url->port);
+		}
+		else
+		{
+			snprintf(buff, size, "%s://%s", url->protocol, url->hostname);
+		}
+	}
+	else if (url->port[0])
+	{
+		snprintf(buff, size, "%s:%s", url->hostname, url->port);
+	}
+	else
+	{
+		snprintf(buff, size, "%s", url->hostname);
+	}
+
+	return buff;
+}
+
+char *network_parse_url(const char *text, struct network_url *url)
+{
+	int step = 0;
+	char *p = url->hostname;
+	char *p_end = p + sizeof(url->hostname);
+
+	url->port[0] = 0;
+	url->protocol[0] = 0;
+
+	while (p < p_end)
+	{
+		switch (*text)
+		{
+		case 0 ... 31:
+		case ' ':
+		case '/':
+			*p = 0;
+			return (char *)text;
+
+		case ':':
+			*p = 0;
+
+			if (step == 0 && text_lhcmp("//", text + 1) == 0)
+			{
+				text += 3;
+				p = url->hostname;
+				text_ncopy(url->protocol, url->hostname, sizeof(url->protocol));
+			}
+			else if (IS_NUMBER(text[1]))
+			{
+				text++;
+				p = url->port;
+				p_end = p + sizeof(url->port);
+			}
+			else
+			{
+				return NULL;
+			}
+
+			step++;
+			break;
+
+		default:
+			*p++ = *text++;
+		}
+	}
+
+	return NULL;
+}
+
+const struct network_protocol *network_get_protocol_by_name(const char *name)
+{
+	const struct network_protocol *p, *p_end;
+
+	for (p = protocols, p_end = p + NELEM(protocols); p < p_end; p++)
+	{
+		if (text_cmp(name, p->name) == 0)
+		{
+			return p;
+		}
+	}
+
+	return NULL;
+}
+
+const struct network_protocol *network_get_protocol_by_type(network_protocol_type_t type)
+{
+	if (type < 0 || type >= NELEM(protocols))
+	{
+		return NULL;
+	}
+
+	return protocols + type;
+}
+
+const struct network_protocol *network_get_protocol_by_port(u16 port)
+{
+	const struct network_protocol *p, *p_end;
+
+	for (p = protocols, p_end = p + NELEM(protocols); p < p_end; p++)
+	{
+		if (p->port == port)
+		{
+			return p;
+		}
+	}
+
+	return NULL;
+}
+
+int network_get_port_by_url(const struct network_url *url)
+{
+	if (url->port[0])
+	{
+		return text2value_unsigned(url->port, NULL, 10);
+	}
+	else if (url->protocol[0])
+	{
+		const struct network_protocol *p = network_get_protocol_by_name(url->protocol);
+		if (p == NULL)
+		{
+			pr_red_info("unknown protocol %s", url->protocol);
+			return -EINVAL;
+		}
+
+		return p->port;
+	}
+	else
+	{
+		return -EINVAL;
+	}
+}
+
+bool network_url_equals(const struct network_url *url1, const struct network_url *url2)
+{
+	if (text_cmp(url1->hostname, url2->hostname))
+	{
+		return false;
+	}
+
+	if (text_cmp(url1->protocol, url2->protocol))
+	{
+		return false;
+	}
+
+	return text_cmp(url1->port, url2->port) == 0;
 }

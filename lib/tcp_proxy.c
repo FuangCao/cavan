@@ -9,13 +9,6 @@
 
 #define WEB_PROXY_DEBUG		0
 
-static struct network_protocol protocol_map[] =
-{
-	{"http", 80},
-	{"https", 445},
-	{"ftp", 21}
-};
-
 static int tcp_proxy_main_loop(int localfd, int remotefd)
 {
 	int ret;
@@ -51,7 +44,7 @@ static int tcp_proxy_main_loop(int localfd, int remotefd)
 			rwlen = inet_recv(localfd, buff, sizeof(buff));
 			if (rwlen <= 0 || inet_send(remotefd, buff, rwlen) < rwlen)
 			{
-				return -EIO;
+				break;
 			}
 		}
 
@@ -60,7 +53,7 @@ static int tcp_proxy_main_loop(int localfd, int remotefd)
 			rwlen = inet_recv(remotefd, buff, sizeof(buff));
 			if (rwlen <= 0 || inet_send(localfd, buff, rwlen) < rwlen)
 			{
-				return -EIO;
+				break;
 			}
 		}
 	}
@@ -141,109 +134,6 @@ int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service)
 }
 
 // ================================================================================
-
-char *web_proxy_parse_url(const char *url, char *protocol, size_t protlen, char *hostname, size_t namelen, u16 *port)
-{
-	int step = 0;
-	char porttext[8];
-	char *p = hostname;
-	char *p_end = p + namelen;
-
-	porttext[0] = 0;
-	protocol[0] = 0;
-
-	while (p < p_end)
-	{
-		switch (*url)
-		{
-		case 0 ... 31:
-		case ' ':
-		case '/':
-			if (step < 1 || p == hostname)
-			{
-				return NULL;
-			}
-
-			*p = 0;
-
-#if WEB_PROXY_DEBUG
-			println("hostname = %s, protocol = %s, port = %s", hostname, protocol, porttext);
-#endif
-
-			if (port)
-			{
-				if (porttext[0])
-				{
-					*port = text2value_unsigned(porttext, NULL, 10);
-				}
-				else if (protocol[0])
-				{
-					int temp = web_proxy_protocol2port(protocol);
-					if (temp < 0)
-					{
-						return NULL;
-					}
-
-					*port = temp;
-				}
-				else
-				{
-					return NULL;
-				}
-			}
-
-			return (char *)url;
-
-		case ':':
-			*p = 0;
-
-			if (step == 0 && text_lhcmp("//", url + 1) == 0)
-			{
-				url += 3;
-				p = hostname;
-				text_ncopy(protocol, hostname, protlen);
-			}
-			else if (IS_NUMBER(url[1]))
-			{
-				url++;
-				p = porttext;
-				p_end = p + sizeof(porttext);
-			}
-			else
-			{
-				return NULL;
-			}
-
-			step++;
-			break;
-
-		default:
-			*p++ = *url++;
-		}
-	}
-
-	return NULL;
-}
-
-int web_proxy_protocol2port(const char *protocol)
-{
-	struct network_protocol *p, *p_end;
-
-	if (text_is_number(protocol))
-	{
-		return text2value_unsigned(protocol, NULL, 10);
-	}
-
-	for (p = protocol_map, p_end = p + NELEM(protocol_map); p < p_end; p++)
-	{
-		if (text_cmp(protocol, p->name) == 0)
-		{
-			return p->port;
-		}
-	}
-
-	return -EINVAL;
-}
 
 int web_proxy_get_request_type(const char *req)
 {
@@ -365,10 +255,8 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	struct sockaddr_in addr;
 	int client_sockfd, proxy_sockfd;
 	int server_sockfd = service->data.type_int;
-	char buff[2048], *buff_end, *req, *url;
-	u16 port, port_bak;
-	char protocol[8];
-	char hostname[512], hostname_bak[512];
+	char buff[2048], *buff_end, *req, *url_text;
+	struct network_url urls[2], *url, *url_bak;
 
 	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
 	if (client_sockfd < 0)
@@ -382,8 +270,8 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 
 	count = 0;
 	proxy_sockfd = -1;
-	port_bak = 0;
-	hostname_bak[0] = 0;
+	url = urls;
+	url_bak = url + 1;
 
 	while (1)
 	{
@@ -400,10 +288,10 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 		println("request is:\n%s", buff);
 #endif
 
-		for (url = buff; url < buff_end && *url != ' '; url++);
+		for (url_text = buff; url_text < buff_end && *url_text != ' '; url_text++);
 
-		cmdlen = url - buff;
-		*url++ = 0;
+		cmdlen = url_text - buff;
+		*url_text++ = 0;
 
 		type = web_proxy_get_request_type(buff);
 		if (type < 0)
@@ -412,23 +300,30 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			break;
 		}
 
-		req = web_proxy_parse_url(url, protocol, sizeof(protocol), hostname, sizeof(hostname), &port);
+		req = network_parse_url(url_text, url);
 		if (req == NULL)
 		{
-			pr_red_info("web_proxy_parse_url:\n%s", url);
+			pr_red_info("web_proxy_parse_url:\n%s", url_text);
 			break;
 		}
 
-		pr_std_info("%s[%d](%d.%d) => %s://%s:%d", buff, type, index, count, protocol[0] ? protocol : "none", hostname, port);
+		pr_std_info("%s[%d](%d.%d) => %s", buff, type, index, count, network_url_tostring(url, NULL, 0));
 
-		if (proxy_sockfd < 0 || text_cmp(hostname, hostname_bak) || port != port_bak)
+		if (proxy_sockfd < 0 || network_url_equals(url_bak, url) == false)
 		{
 			if (proxy_sockfd >= 0)
 			{
 				close(proxy_sockfd);
 			}
 
-			proxy_sockfd = inet_create_tcp_link2(hostname, port);
+			ret = network_get_port_by_url(url);
+			if (ret < 0)
+			{
+				pr_red_info("network_get_port_by_url");
+				break;
+			}
+
+			proxy_sockfd = inet_create_tcp_link2(url->hostname, ret);
 			if (proxy_sockfd < 0)
 			{
 				pr_red_info("inet_create_tcp_link1");
@@ -436,8 +331,17 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			}
 
 			count = 0;
-			port_bak = port;
-			text_copy(hostname_bak, hostname);
+
+			if (url == urls)
+			{
+				url_bak = urls;
+				url = url_bak + 1;
+			}
+			else
+			{
+				url = urls;
+				url_bak = url + 1;
+			}
 		}
 		else
 		{
@@ -456,7 +360,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			}
 
 			tcp_proxy_main_loop(client_sockfd, proxy_sockfd);
-			break;
+			goto out_close_client_sockfd;
 
 		default:
 			req -= cmdlen + 1;
