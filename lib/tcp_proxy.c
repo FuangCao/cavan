@@ -8,7 +8,7 @@
 #include <cavan/ftp.h>
 #include <cavan/tcp_proxy.h>
 
-#define WEB_PROXY_DEBUG		0
+#define WEB_PROXY_DEBUG		1
 
 static int tcp_proxy_main_loop(int localfd, int remotefd)
 {
@@ -245,7 +245,38 @@ static int web_proxy_main_loop(int srcfd, int destfd, int timeout)
 	return 0;
 }
 
-static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const char *dirname, const char *filename)
+static int web_proxy_ftp_send_http_reply(int sockfd, const char *type, size_t length, struct tm *time)
+{
+	char buff[2048], *p;
+
+	p = text_copy(buff, "HTTP/1.1 200 Gatewaying\r\n"
+		"Server: cavan-web_proxy\r\n"
+		"Mime-Version: 1.0\r\n"
+		"X-Cache: MISS from server\r\n"
+		"Via: 1.1 server (cavan-web_proxy)\r\n");
+
+	if (type)
+	{
+		p += sprintf(p, "Content-Type: %s\r\n", type);
+	}
+
+#if __WORDSIZE == 64 || CONFIG_BUILD_FOR_ANDROID
+	p += sprintf(p, "Content-Length: %ld\r\n", length) - 1;
+#else
+	p += sprintf(p, "Content-Length: %d\r\n", length) - 1;
+#endif
+
+	if (time)
+	{
+		p += sprintf(p, "Last-Modified: %s\r\n", asctime(time)) - 1;
+	}
+
+	p = text_copy(p, "Connection: keep-alive\r\n\r\n");
+
+	return inet_send(sockfd, buff, p - buff);
+}
+
+static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const char *filename)
 {
 	int ret;
 	int sockfd;
@@ -253,7 +284,6 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 	struct tm time;
 	size_t rdlen, wrlen;
 	char buff[2048], *p;
-	struct sockaddr_in addr;
 
 	ret = ftp_client_send_command2(proxy_sockfd, buff, sizeof(buff), "MDTM %s\r\n", filename);
 	if (ret != 213)
@@ -277,17 +307,10 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 
 	size = text2value_unsigned(buff, NULL, 10);
 
-	ret = ftp_client_send_pasv_command(proxy_sockfd, &addr);
-	if (ret < 0)
-	{
-		pr_red_info("ftp_client_send_pasv_command");
-		return ret;
-	}
-
-	sockfd = inet_create_tcp_link1(&addr);
+	sockfd = ftp_client_create_pasv_link(proxy_sockfd);
 	if (sockfd < 0)
 	{
-		pr_red_info("inet_create_tcp_link1");
+		pr_red_info("ftp_client_create_pasv_link");
 		return sockfd;
 	}
 
@@ -299,21 +322,12 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 		goto out_close_sockfd;
 	}
 
-	p = text_copy(buff, "HTTP/1.1 200 Gatewaying\r\n"
-		"Server: cavan-web_proxy\r\n"
-		"Mime-Version: 1.0\r\n"
-		"Content-Type: text/plain\r\n"
-		"X-Cache: MISS from server\r\n"
-		"Via: 1.1 server (cavan-web_proxy)\r\n");
-
-#if __WORDSIZE == 64 || CONFIG_BUILD_FOR_ANDROID
-	p += sprintf(p, "Content-Length: %ld\r\n", size) - 1;
-#else
-	p += sprintf(p, "Content-Length: %d\r\n", size) - 1;
-#endif
-
-	p += sprintf(p, "Last-Modified: %s\r\n", asctime(&time)) - 1;
-	p = text_copy(p, "Connection: keep-alive\r\n\r\n");
+	ret = web_proxy_ftp_send_http_reply(client_sockfd, "text/plain", size, &time);
+	if (ret < 0)
+	{
+		pr_red_info("web_proxy_ftp_send_http_reply");
+		goto out_close_sockfd;
+	}
 
 	rdlen = p - buff;
 	wrlen = inet_send(client_sockfd, buff, rdlen);
@@ -326,7 +340,7 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 
 	while (size)
 	{
-		rdlen = inet_recv(sockfd, buff, sizeof(buff));
+		rdlen = inet_recv(sockfd, buff, size < sizeof(buff) ? size : sizeof(buff));
 		if (rdlen <= 0)
 		{
 			ret = -EIO;
@@ -355,9 +369,99 @@ out_close_sockfd:
 	return ret;
 }
 
-static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, const char *dirname)
+static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, struct network_url *url, const char *dirname)
 {
-	return 0;
+	int ret;
+	int sockfd;
+	struct stat st;
+	char buff[1024];
+	FILE *file_html, *file_txt;
+
+	sockfd = ftp_client_create_pasv_link(proxy_sockfd);
+	if (sockfd < 0)
+	{
+		pr_red_info("ftp_client_create_pasv_link");
+		return sockfd;
+	}
+
+	ret = ftp_client_send_command2(proxy_sockfd, NULL, 0, "LIST\r\n");
+	if (ret != 150)
+	{
+		ret = -EFAULT;
+		pr_red_info("ftp_client_send_command2 LIST");
+		goto out_close_sockfd;
+	}
+
+	file_txt = fdopen(proxy_sockfd, "r");
+	if (file_txt == NULL)
+	{
+		pr_red_info("fdopen");
+		goto out_close_sockfd;
+	}
+
+	file_html = tmpfile();
+	if (file_html == NULL)
+	{
+		fclose(file_txt);
+		pr_red_info("tmpfile");
+		goto out_close_sockfd;
+	}
+
+	fprintf(file_html, "<html><head><title>Directory: %s/%s/</title></head>"
+		"<body><table id=\"dirlisting\" summary=\"Directory Listing\">",
+		network_url_tostring(url, buff, sizeof(buff)), dirname);
+#if 0
+	while (1)
+	{
+		int count;
+		size_t size;
+		char filename[1024];
+		char permission[16];
+		char uid[8], gid[8];
+
+		ret = fscanf(file_txt, "%s %d %s %s %ld %s", permission, &count, uid, gid, &size, filename);
+		println("ret = %d", ret);
+		if (ret != 6)
+		{
+			break;
+		}
+
+		println("permission = %s, count = %d, uid = %s, gid = %s, size = %ld, filename = %s",
+			permission, count, uid, gid, size, filename);
+	}
+#endif
+
+	fprintf(file_html, "</table></body></html>");
+	fflush(file_html);
+
+	ret = ftp_client_read_response(proxy_sockfd, NULL, 0);
+	if (ret != 226)
+	{
+		ret = -EFAULT;
+		pr_red_info("ftp_client_read_response");
+		goto out_close_sockfd;
+	}
+
+	ret = fstat(fileno(file_html), &st);
+	if (ret < 0)
+	{
+		pr_red_info("stat");
+		goto out_close_sockfd;
+	}
+
+	ret = web_proxy_ftp_send_http_reply(client_sockfd, "text/html", st.st_size, NULL);
+	if (ret < 0)
+	{
+		pr_red_info("web_proxy_ftp_send_http_reply");
+		goto out_close_sockfd;
+	}
+
+	lseek(fileno(file_html), 0, SEEK_SET);
+	ret = inet_tcp_send_file1(client_sockfd, fileno(file_html));
+
+out_close_sockfd:
+	close(sockfd);
+	return ret;
 }
 
 static int web_proxy_service_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
@@ -545,7 +649,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			println("dirname = %s, filename = %s", req, filename);
 #endif
 
-			ret = ftp_client_send_command2(proxy_sockfd, NULL, 0, "CWD %s\r\n", req);
+			ret = ftp_client_send_command2(proxy_sockfd, NULL, 0, "CWD %s\r\n", req[0] ? req : "/");
 			if (ret != 250)
 			{
 				pr_red_info("ftp_client_send_command2 CWD");
@@ -557,11 +661,11 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			case HTTP_REQ_GET:
 				if (filename[0])
 				{
-					web_proxy_ftp_read_file(client_sockfd, proxy_sockfd, req, filename);
+					web_proxy_ftp_read_file(client_sockfd, proxy_sockfd, filename);
 				}
 				else
 				{
-					web_proxy_ftp_list_directory(client_sockfd, proxy_sockfd, req);
+					web_proxy_ftp_list_directory(client_sockfd, proxy_sockfd, url, req);
 				}
 				break;
 

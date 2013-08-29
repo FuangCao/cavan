@@ -4,7 +4,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
 #define FTP_TIMEOUT_MS	0
-#define FTP_DEBUG		0
+#define FTP_DEBUG		1
 
 char ftp_root_path[1024] = "/";
 
@@ -1106,7 +1106,7 @@ int ftp_client_read_response(int sockfd, char *response, size_t size)
 	{
 		char *q;
 
-		rwlen = inet_recv(sockfd, p, p_end - p);
+		rwlen = inet_recv_timeout(sockfd, p, p_end - p, 5000);
 		if (rwlen <= 0)
 		{
 			return -EFAULT;
@@ -1222,6 +1222,21 @@ int ftp_client_send_pasv_command(int sockfd, struct sockaddr_in *addr)
 	return 0;
 }
 
+int ftp_client_create_pasv_link(int ctrl_sockfd)
+{
+	int ret;
+	struct sockaddr_in addr;
+
+	ret = ftp_client_send_pasv_command(ctrl_sockfd, &addr);
+	if (ret < 0)
+	{
+		pr_red_info("ftp_client_send_pasv_command");
+		return ret;
+	}
+
+	return inet_create_tcp_link1(&addr);
+}
+
 int ftp_client_login(int sockfd, const char *username, const char *password)
 {
 	int ret;
@@ -1311,7 +1326,7 @@ int ftp_client_run(const char *hostname, u16 port, const char *username, const c
 		if (text_lhcmp("ls", buff) == 0)
 		{
 			println("list command");
-			ftp_client_receive_file(sockfd, hostname, 9999);
+			ftp_client_receive_file(sockfd, hostname, 6789);
 		}
 		else
 		{

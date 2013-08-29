@@ -240,10 +240,12 @@ ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size)
 u32 get_rand_value(void);
 int inet_bind_rand(int sockfd, int retry);
 
+ssize_t inet_send(int sockfd, const char *buff, size_t size);
 int inet_tcp_send_file1(int sockfd, int fd);
 int inet_tcp_send_file2(int sockfd, const char *filename);
 int inet_tcp_receive_file1(int sockfd, int fd);
 int inet_tcp_receive_file2(int sockfd, const char *filename);
+int inet_tcp_transfer(int src_sockfd, int dest_sockfd, size_t size);
 
 int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_addr);
 int inet_get_devname(int sockfd, int index, char *devname);
@@ -304,11 +306,6 @@ static inline int inet_create_udp_service(u16 port)
 static inline int inet_listen(int sockfd)
 {
 	return listen(sockfd, CAVAN_LISTEN_BACKLOG);
-}
-
-static inline ssize_t inet_send(int sockfd, const void *buff, size_t size)
-{
-	return send(sockfd, buff, size, MSG_NOSIGNAL);
 }
 
 static inline ssize_t inet_send_text(int sockfd, const char *text)

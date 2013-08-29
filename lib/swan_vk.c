@@ -683,7 +683,7 @@ static int swan_vk_release_all_key(int sockfd)
 	for (code = 0; code < KEY_MAX; code++)
 	{
 		events[0].code = code;
-		wrlen = inet_send(sockfd, events, sizeof(events));
+		wrlen = inet_send(sockfd, (char *)events, sizeof(events));
 		if (wrlen < 0)
 		{
 			return wrlen;

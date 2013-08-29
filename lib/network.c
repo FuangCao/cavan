@@ -624,6 +624,23 @@ int inet_bind_rand(int sockfd, int retry)
 	return ret < 0 ? ret : (int)ntohs(addr.sin_port);
 }
 
+ssize_t inet_send(int sockfd, const char *buff, size_t size)
+{
+	ssize_t wrlen;
+	const char *buff_end;
+
+	for (buff_end = buff + size; buff < buff_end; buff += wrlen)
+	{
+		wrlen = send(sockfd, buff, buff_end - buff, MSG_NOSIGNAL);
+		if (wrlen <= 0)
+		{
+			return wrlen;
+		}
+	}
+
+	return size;
+}
+
 int inet_tcp_send_file1(int sockfd, int fd)
 {
 	ssize_t readlen, sendlen;
@@ -708,7 +725,7 @@ int inet_tcp_receive_file2(int sockfd, const char *filename)
 	int ret;
 	int fd;
 
-	fd = open(filename, O_WRONLY | O_CREAT, 0777);
+	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	if (fd < 0)
 	{
 		print_error("open file %s failed", filename);
@@ -720,6 +737,20 @@ int inet_tcp_receive_file2(int sockfd, const char *filename)
 	close(fd);
 
 	return ret;
+}
+
+int inet_tcp_transfer(int src_sockfd, int dest_sockfd, size_t size)
+{
+	ssize_t rdlen;
+	char buff[size];
+
+	rdlen = inet_recv(src_sockfd, buff, sizeof(buff));
+	if (rdlen <= 0)
+	{
+		return rdlen;
+	}
+
+	return inet_send(dest_sockfd, buff, rdlen);
 }
 
 int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_addr)
