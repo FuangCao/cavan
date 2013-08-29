@@ -35,5 +35,6 @@ int ftp_service_run(struct cavan_service_description *service_desc, u16 port);
 int ftp_client_read_response(int sockfd, char *response, size_t size);
 int ftp_client_send_command(int sockfd, const char *command, size_t cmdsize, char *response, size_t repsize);
 int ftp_client_send_command2(int sockfd, char *response, size_t repsize, const char *command, ...);
+int ftp_client_send_pasv_command(int sockfd, struct sockaddr_in *addr);
 int ftp_client_login(int sockfd, const char *username, const char *password);
 int ftp_client_run(const char *hostname, u16 port, const char *username, const char *password);

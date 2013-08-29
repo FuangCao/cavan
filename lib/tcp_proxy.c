@@ -253,7 +253,6 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 	struct tm time;
 	size_t rdlen, wrlen;
 	char buff[2048], *p;
-	int ip[4], port[2];
 	struct sockaddr_in addr;
 
 	ret = ftp_client_send_command2(proxy_sockfd, buff, sizeof(buff), "MDTM %s\r\n", filename);
@@ -278,22 +277,12 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 
 	size = text2value_unsigned(buff, NULL, 10);
 
-	ret = ftp_client_send_command2(proxy_sockfd, buff, sizeof(buff), "PASV\r\n");
-	if (ret != 227)
+	ret = ftp_client_send_pasv_command(proxy_sockfd, &addr);
+	if (ret < 0)
 	{
-		pr_red_info("ftp_client_send_command2 PASV");
-		return -EFAULT;
+		pr_red_info("ftp_client_send_pasv_command");
+		return ret;
 	}
-
-	for (p = buff; *p && *p != '('; p++);
-
-	sscanf(p, "(%d,%d,%d,%d,%d,%d)", ip, ip + 1, ip + 2, ip + 3, port, port + 1);
-
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = htonl(ip[0] << 24 | ip[1] << 16 | ip[2] << 8 | ip[3]);
-	addr.sin_port = htons((u16)(port[0] << 8 | port[1]));
-
-	inet_show_sockaddr(&addr);
 
 	sockfd = inet_create_tcp_link1(&addr);
 	if (sockfd < 0)
@@ -354,7 +343,12 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 		size -= wrlen;
 	}
 
-	ret = 0;
+	ret = ftp_client_read_response(proxy_sockfd, NULL, 0);
+	if (ret != 226)
+	{
+		ret = -EFAULT;
+		pr_red_info("ftp_client_read_response");
+	}
 
 out_close_sockfd:
 	inet_close_tcp_socket(sockfd);
@@ -513,13 +507,13 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 					goto out_close_client_sockfd;
 				}
 
-				ret = web_proxy_main_loop(client_sockfd, proxy_sockfd, 5000);
+				ret = web_proxy_main_loop(client_sockfd, proxy_sockfd, 60 * 1000);
 				if (ret < 0)
 				{
 					goto out_close_client_sockfd;
 				}
 
-				ret = web_proxy_main_loop(proxy_sockfd, client_sockfd, 5000);
+				ret = web_proxy_main_loop(proxy_sockfd, client_sockfd, 60 * 1000);
 				if (ret < 0)
 				{
 					goto out_close_client_sockfd;
@@ -528,36 +522,39 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			break;
 
 		case NETWORK_PROTOCOL_FTP:
+			ret = ftp_client_login(proxy_sockfd, NULL, NULL);
+			if (ret < 0)
+			{
+				pr_red_info("ftp_client_login");
+				goto out_close_client_sockfd;
+			}
+
+			ret = ftp_client_send_command2(proxy_sockfd, NULL, 0, "TYPE I\r\n");
+			if (ret != 200)
+			{
+				pr_red_info("ftp_client_send_command2 TYPE A");
+				goto label_ftp_quit;
+			}
+
+			for (filename = req; filename < buff_end && text_lhcmp("HTTP", filename); filename++);
+			for (filename -= 2, filename[1] = 0; *filename != '/'; filename--);
+
+			*filename++ = 0;
+
+#if WEB_PROXY_DEBUG
+			println("dirname = %s, filename = %s", req, filename);
+#endif
+
+			ret = ftp_client_send_command2(proxy_sockfd, NULL, 0, "CWD %s\r\n", req);
+			if (ret != 250)
+			{
+				pr_red_info("ftp_client_send_command2 CWD");
+				goto label_ftp_quit;
+			}
+
 			switch (type)
 			{
 			case HTTP_REQ_GET:
-				ret = ftp_client_login(proxy_sockfd, NULL, NULL);
-				if (ret < 0)
-				{
-					pr_red_info("ftp_client_login");
-					goto out_close_client_sockfd;
-				}
-
-				ret = ftp_client_send_command2(proxy_sockfd, NULL, 0, "TYPE I\r\n");
-				if (ret != 200)
-				{
-					pr_red_info("ftp_client_send_command2 TYPE A");
-					goto out_close_client_sockfd;
-				}
-
-				for (filename = req; filename < buff_end && text_lhcmp("HTTP", filename); filename++);
-				for (filename -= 2, filename[1] = 0; *filename != '/'; filename--);
-
-				*filename++ = 0;
-				println("dirname = %s, filename = %s", req, filename);
-
-				ret = ftp_client_send_command2(proxy_sockfd, NULL, 0, "CWD %s\r\n", req);
-				if (ret != 250)
-				{
-					pr_red_info("ftp_client_send_command2 CWD");
-					goto out_close_client_sockfd;
-				}
-
 				if (filename[0])
 				{
 					web_proxy_ftp_read_file(client_sockfd, proxy_sockfd, req, filename);
@@ -566,13 +563,14 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 				{
 					web_proxy_ftp_list_directory(client_sockfd, proxy_sockfd, req);
 				}
-
-				goto out_close_client_sockfd;
+				break;
 
 			case HTTP_REQ_PUT:
 				break;
 			}
 
+label_ftp_quit:
+			ftp_client_send_command2(proxy_sockfd, NULL, 0, "QUIT\r\n");
 			goto out_close_client_sockfd;
 
 		default:
