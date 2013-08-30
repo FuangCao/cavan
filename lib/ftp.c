@@ -4,7 +4,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
 #define FTP_TIMEOUT_MS	0
-#define FTP_DEBUG		1
+#define FTP_DEBUG		0
 
 char ftp_root_path[1024] = "/";
 

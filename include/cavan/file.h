@@ -198,6 +198,8 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option *option);
 int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *option);
 
+ssize_t file_read_line(int fd, char *buff, size_t size);
+
 // ============================================================
 
 static inline int file_open_ro(const char *file_path)

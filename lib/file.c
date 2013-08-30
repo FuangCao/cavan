@@ -2939,3 +2939,43 @@ int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *op
 
 	return cavan_mkdir_simple(pathname, option);
 }
+
+ssize_t file_read_line(int fd, char *buff, size_t size)
+{
+	char c;
+	ssize_t rdlen;
+	char *buff_bak = buff;
+	char *buff_end = buff + size - 1;
+
+	while (buff < buff_end)
+	{
+		rdlen = read(fd, &c, 1);
+		if (rdlen < 1)
+		{
+			if (rdlen < 0)
+			{
+				return rdlen;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		if (c == '\r' || c == '\n')
+		{
+			if (buff == buff_bak)
+			{
+				continue;
+			}
+
+			break;
+		}
+
+		*buff++ = c;
+	}
+
+	*buff = 0;
+
+	return buff - buff_bak;
+}

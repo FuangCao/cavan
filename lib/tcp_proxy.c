@@ -8,7 +8,7 @@
 #include <cavan/ftp.h>
 #include <cavan/tcp_proxy.h>
 
-#define WEB_PROXY_DEBUG		1
+#define WEB_PROXY_DEBUG		0
 
 static int tcp_proxy_main_loop(int localfd, int remotefd)
 {
@@ -288,6 +288,11 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 	ret = ftp_client_send_command2(proxy_sockfd, buff, sizeof(buff), "MDTM %s\r\n", filename);
 	if (ret != 213)
 	{
+		if (ret == 550)
+		{
+			errno = EISDIR;
+		}
+
 		pr_red_info("ftp_client_send_command2 MDTM");
 		return -EFAULT;
 	}
@@ -372,16 +377,16 @@ out_close_sockfd:
 static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, struct network_url *url, const char *dirname)
 {
 	int ret;
-	int sockfd;
+	int data_sockfd;
 	struct stat st;
-	char buff[1024];
-	FILE *file_html, *file_txt;
+	char buff[2048], *p;
+	FILE *file_html;
 
-	sockfd = ftp_client_create_pasv_link(proxy_sockfd);
-	if (sockfd < 0)
+	data_sockfd = ftp_client_create_pasv_link(proxy_sockfd);
+	if (data_sockfd < 0)
 	{
 		pr_red_info("ftp_client_create_pasv_link");
-		return sockfd;
+		return data_sockfd;
 	}
 
 	ret = ftp_client_send_command2(proxy_sockfd, NULL, 0, "LIST\r\n");
@@ -389,49 +394,89 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 	{
 		ret = -EFAULT;
 		pr_red_info("ftp_client_send_command2 LIST");
-		goto out_close_sockfd;
-	}
-
-	file_txt = fdopen(proxy_sockfd, "r");
-	if (file_txt == NULL)
-	{
-		pr_red_info("fdopen");
-		goto out_close_sockfd;
+		goto out_close_data_sockfd;
 	}
 
 	file_html = tmpfile();
 	if (file_html == NULL)
 	{
-		fclose(file_txt);
 		pr_red_info("tmpfile");
-		goto out_close_sockfd;
+		goto out_close_data_sockfd;
 	}
 
-	fprintf(file_html, "<html><head><title>Directory: %s/%s/</title></head>"
-		"<body><table id=\"dirlisting\" summary=\"Directory Listing\">",
+	fprintf(file_html, "<html>\r\n\t<head>\r\n\t\t<title>Directory: %s%s</title>\r\n\t</head>\r\n\t<body>\r\n",
 		network_url_tostring(url, buff, sizeof(buff)), dirname);
-#if 0
+
+	fprintf(file_html, "\t\t<h1>FTP Proxy Server (<a href=\"http://mail.google.com\">Fuang.Cao@cavan.cfa@gmail.com)</a></h1>\r\n");
+	fprintf(file_html, "\t\t<h2>Directory: <a href=\"%s%s/\">%s%s</a></h2>\r\n", buff, dirname, buff, dirname);
+
+	p = text_dirname_base(buff, dirname);
+	if (p == buff || p[-1] != '/')
+	{
+		*p++ = '/';
+		*p = 0;
+	}
+
+	fprintf(file_html, "\t\t<h2><a href=\"%s\">Parent directory</a> (<a href=\"/\">Root directory</a>)</h2>\r\n", buff);
+	fprintf(file_html, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
+
 	while (1)
 	{
-		int count;
-		size_t size;
+		char size[16];
+		char ref_count[8];
+		char uid[8], gid[8];
 		char filename[1024];
 		char permission[16];
-		char uid[8], gid[8];
+		char mon[4], day[4], year[8];
 
-		ret = fscanf(file_txt, "%s %d %s %s %ld %s", permission, &count, uid, gid, &size, filename);
-		println("ret = %d", ret);
-		if (ret != 6)
+		ret = file_read_line(data_sockfd, buff, sizeof(buff));
+		if (ret < 0)
+		{
+			pr_red_info("file_read_line");
+			goto out_close_file_html;
+		}
+
+		// println("buff = %s", buff);
+
+		ret = sscanf(buff, "%10s %8s %4s %4s %s %3s %2s %5s %s\n",
+			permission, ref_count, uid, gid, size, mon, day, year, filename);
+		if (ret < 9)
 		{
 			break;
 		}
 
-		println("permission = %s, count = %d, uid = %s, gid = %s, size = %ld, filename = %s",
-			permission, count, uid, gid, size, filename);
-	}
-#endif
+		// println("permission = %s, ref_count = %s, uid = %s gid = %s, size = %ld, year = %s, mon = %s, day = %s, filename = %s", permission, ref_count, uid, gid, size, year, mon, day, filename);
 
-	fprintf(file_html, "</table></body></html>");
+		fprintf(file_html, "\t\t\t<tr class=\"entry\"><td class=\"type\">");
+
+		if (permission[0] == 'd')
+		{
+			fprintf(file_html, "[DIR]");
+
+			buff[0] = '/';
+			buff[1] = 0;
+		}
+		else
+		{
+			if (permission[0] == 'l')
+			{
+				fprintf(file_html, "[LINK]");
+			}
+			else
+			{
+				fprintf(file_html, "[FILE]");
+			}
+
+			buff[0] = 0;
+		}
+
+		fprintf(file_html, "</td><td class=\"filename\"><a href=\"%s%s\">%s</a></td>", filename, buff, filename);
+		fprintf(file_html, "<td class=\"size\">%s</td>", size);
+		fprintf(file_html, "<td class=\"date\">%s %s %s</td>", mon, day, year);
+		fprintf(file_html, "</tr>\r\n");
+	}
+
+	fprintf(file_html, "\t\t</table>\r\n\t</body>\r\n</html>");
 	fflush(file_html);
 
 	ret = ftp_client_read_response(proxy_sockfd, NULL, 0);
@@ -439,28 +484,30 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 	{
 		ret = -EFAULT;
 		pr_red_info("ftp_client_read_response");
-		goto out_close_sockfd;
+		goto out_close_file_html;
 	}
 
 	ret = fstat(fileno(file_html), &st);
 	if (ret < 0)
 	{
 		pr_red_info("stat");
-		goto out_close_sockfd;
+		goto out_close_file_html;
 	}
 
 	ret = web_proxy_ftp_send_http_reply(client_sockfd, "text/html", st.st_size, NULL);
 	if (ret < 0)
 	{
 		pr_red_info("web_proxy_ftp_send_http_reply");
-		goto out_close_sockfd;
+		goto out_close_file_html;
 	}
 
 	lseek(fileno(file_html), 0, SEEK_SET);
 	ret = inet_tcp_send_file1(client_sockfd, fileno(file_html));
 
-out_close_sockfd:
-	close(sockfd);
+out_close_file_html:
+	fclose(file_html);
+out_close_data_sockfd:
+	close(data_sockfd);
 	return ret;
 }
 
@@ -645,6 +692,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 
 			*filename++ = 0;
 
+label_change_dir:
 #if WEB_PROXY_DEBUG
 			println("dirname = %s, filename = %s", req, filename);
 #endif
@@ -659,13 +707,18 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			switch (type)
 			{
 			case HTTP_REQ_GET:
-				if (filename[0])
+				if (filename && filename[0])
 				{
-					web_proxy_ftp_read_file(client_sockfd, proxy_sockfd, filename);
+					if (web_proxy_ftp_read_file(client_sockfd, proxy_sockfd, filename) < 0 && errno == EISDIR)
+					{
+						filename[-1] = '/';
+						filename = NULL;
+						goto label_change_dir;
+					}
 				}
 				else
 				{
-					web_proxy_ftp_list_directory(client_sockfd, proxy_sockfd, url, req);
+					web_proxy_ftp_list_directory(client_sockfd, proxy_sockfd, url_bak, req);
 				}
 				break;
 
