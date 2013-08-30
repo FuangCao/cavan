@@ -404,10 +404,11 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 		goto out_close_data_sockfd;
 	}
 
+	fprintf(file_html, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
 	fprintf(file_html, "<html>\r\n\t<head>\r\n\t\t<title>Directory: %s%s</title>\r\n\t</head>\r\n\t<body>\r\n",
 		network_url_tostring(url, buff, sizeof(buff)), dirname);
 
-	fprintf(file_html, "\t\t<h1>FTP Proxy Server (<a href=\"http://mail.google.com\">Fuang.Cao@cavan.cfa@gmail.com)</a></h1>\r\n");
+	fprintf(file_html, "\t\t<h1>FTP Proxy Server (<a href=\"http://mail.google.com\">Fuang.Cao@cavan.cfa@gmail.com</a>)</h1>\r\n");
 	fprintf(file_html, "\t\t<h2>Directory: <a href=\"%s%s/\">%s%s</a></h2>\r\n", buff, dirname, buff, dirname);
 
 	p = text_dirname_base(buff, dirname);
@@ -419,6 +420,7 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 
 	fprintf(file_html, "\t\t<h2><a href=\"%s\">Parent directory</a> (<a href=\"/\">Root directory</a>)</h2>\r\n", buff);
 	fprintf(file_html, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
+	fprintf(file_html, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
 
 	while (1)
 	{
@@ -447,30 +449,40 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 
 		// println("permission = %s, ref_count = %s, uid = %s gid = %s, size = %ld, year = %s, mon = %s, day = %s, filename = %s", permission, ref_count, uid, gid, size, year, mon, day, filename);
 
-		fprintf(file_html, "\t\t\t<tr class=\"entry\"><td class=\"type\">");
+		fprintf(file_html, "\t\t\t<tr class=\"entry\">");
 
-		if (permission[0] == 'd')
+		buff[0] = 0;
+
+		switch (permission[0])
 		{
-			fprintf(file_html, "[DIR]");
+			case 'l':
+				p = "LINK";
+				break;
 
-			buff[0] = '/';
-			buff[1] = 0;
+			case 'f':
+				p = "FIFO";
+				break;
+
+			case 'c':
+				p = "CHR";
+				break;
+
+			case 'b':
+				p = "BLK";
+				break;
+
+			case 'd':
+				p = "DIR";
+				buff[0] = '/';
+				buff[1] = 0;
+				break;
+
+			default:
+				p = "FILE";
 		}
-		else
-		{
-			if (permission[0] == 'l')
-			{
-				fprintf(file_html, "[LINK]");
-			}
-			else
-			{
-				fprintf(file_html, "[FILE]");
-			}
 
-			buff[0] = 0;
-		}
-
-		fprintf(file_html, "</td><td class=\"filename\"><a href=\"%s%s\">%s</a></td>", filename, buff, filename);
+		fprintf(file_html, "<td class=\"type\">[%s]</td>", p);
+		fprintf(file_html, "<td class=\"filename\"><a href=\"%s%s\">%s</a></td>", filename, buff, filename);
 		fprintf(file_html, "<td class=\"size\">%s</td>", size);
 		fprintf(file_html, "<td class=\"date\">%s %s %s</td>", mon, day, year);
 		fprintf(file_html, "</tr>\r\n");
