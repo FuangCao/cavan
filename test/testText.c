@@ -22,7 +22,17 @@
 
 int main(int argc, char *argv[])
 {
-	println("%c", text_get_char("123456", 1));
+	int i;
+	int ret;
+	char *texts[10];
+
+	assert(argc > 1);
+
+	ret = text_split_by_space(argv[1], texts, NELEM(texts));
+	for (i = 0; i < ret; i++)
+	{
+		println("text[%d] = %s", i, texts[i]);
+	}
 
 	return 0;
 }

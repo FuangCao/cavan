@@ -2728,6 +2728,58 @@ size_t text_split_by_char(const char *text, char sep, char *buff, size_t size1, 
 	return size1;
 }
 
+int text_split_by_space(char *text, char *texts[], int size)
+{
+	int index;
+
+	if (size == 0)
+	{
+		return 0;
+	}
+
+	index = 0;
+	texts[0] = text;
+
+	while (1)
+	{
+		switch (*text)
+		{
+		case 0:
+			return index + 1;
+
+		case ' ':
+		case '\t':
+		case '\f':
+		case '\r':
+		case '\n':
+			if (texts[index] < text)
+			{
+				*text = 0;
+				index++;
+
+				if (index < size)
+				{
+					texts[index] = text + 1;
+				}
+				else
+				{
+					return index + 1;
+				}
+			}
+			else
+			{
+				texts[index] = text + 1;
+			}
+
+			break;
+		}
+
+		text++;
+	}
+
+	return index + 1;
+}
+
 char *text_join_by_char(char *text[], size_t size1, char sep, char *buff, size_t size2)
 {
 	char *buff_end;

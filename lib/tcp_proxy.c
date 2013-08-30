@@ -424,12 +424,8 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 
 	while (1)
 	{
-		char size[16];
-		char ref_count[8];
-		char uid[8], gid[8];
-		char filename[1024];
-		char permission[16];
-		char mon[4], day[4], year[8];
+		int count;
+		char *texts[16];
 
 		ret = file_read_line(data_sockfd, buff, sizeof(buff));
 		if (ret < 0)
@@ -438,22 +434,21 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 			goto out_close_file_html;
 		}
 
-		// println("buff = %s", buff);
-
-		ret = sscanf(buff, "%10s %8s %4s %4s %s %3s %2s %5s %s\n",
-			permission, ref_count, uid, gid, size, mon, day, year, filename);
-		if (ret < 9)
+		if (ret == 0)
 		{
 			break;
 		}
 
-		// println("permission = %s, ref_count = %s, uid = %s gid = %s, size = %ld, year = %s, mon = %s, day = %s, filename = %s", permission, ref_count, uid, gid, size, year, mon, day, filename);
+		count = text_split_by_space(buff, texts, NELEM(texts));
+		if (count < 9)
+		{
+			pr_red_info("invalid line %s", buff);
+			continue;
+		}
 
 		fprintf(file_html, "\t\t\t<tr class=\"entry\">");
 
-		buff[0] = 0;
-
-		switch (permission[0])
+		switch (texts[0][0])
 		{
 			case 'l':
 				p = "LINK";
@@ -473,18 +468,30 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 
 			case 'd':
 				p = "DIR";
-				buff[0] = '/';
-				buff[1] = 0;
 				break;
 
 			default:
 				p = "FILE";
 		}
 
-		fprintf(file_html, "<td class=\"type\">[%s]</td>", p);
-		fprintf(file_html, "<td class=\"filename\"><a href=\"%s%s\">%s</a></td>", filename, buff, filename);
-		fprintf(file_html, "<td class=\"size\">%s</td>", size);
-		fprintf(file_html, "<td class=\"date\">%s %s %s</td>", mon, day, year);
+		fprintf(file_html, "<td class=\"type\">[%s]</td><td class=\"filename\">", p);
+
+		if (texts[0][0] == 'd')
+		{
+			fprintf(file_html, "<a href=\"%s/\">%s</a>", texts[8], texts[8]);
+		}
+		else
+		{
+			fprintf(file_html, "<a href=\"%s\">%s</a>", texts[8], texts[8]);
+		}
+
+		if (texts[0][0] == 'l' && count > 10)
+		{
+			fprintf(file_html, " -> <a href=\"%s\">%s</a>", texts[10], texts[10]);
+		}
+
+		fprintf(file_html, "</td><td class=\"size\">%s</td>", texts[4]);
+		fprintf(file_html, "<td class=\"date\">%s %s %s</td>", texts[5], texts[6], texts[7]);
 		fprintf(file_html, "</tr>\r\n");
 	}
 
