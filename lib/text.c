@@ -2745,7 +2745,7 @@ int text_split_by_space(char *text, char *texts[], int size)
 		switch (*text)
 		{
 		case 0:
-			return index + 1;
+			return texts[index] < text ? index + 1 : index;
 
 		case ' ':
 		case '\t':
@@ -2777,7 +2777,7 @@ int text_split_by_space(char *text, char *texts[], int size)
 		text++;
 	}
 
-	return index + 1;
+	return 0;
 }
 
 char *text_join_by_char(char *text[], size_t size1, char sep, char *buff, size_t size2)

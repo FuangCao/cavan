@@ -2962,17 +2962,22 @@ ssize_t file_read_line(int fd, char *buff, size_t size)
 			}
 		}
 
-		if (c == '\r' || c == '\n')
+		if (c == '\r')
 		{
-			if (buff == buff_bak)
-			{
-				continue;
-			}
-
-			break;
+			continue;
 		}
 
-		*buff++ = c;
+		if (c == '\n')
+		{
+			if (buff > buff_bak)
+			{
+				break;
+			}
+		}
+		else
+		{
+			*buff++ = c;
+		}
 	}
 
 	*buff = 0;
