@@ -53,27 +53,28 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = cavan-vfat$(EXEEXT) cavan-usb_dd_server$(EXEEXT) \
-	cavan-usb_dd$(EXEEXT) cavan-usb_copy$(EXEEXT) \
-	cavan-usb$(EXEEXT) cavan-umount$(EXEEXT) \
-	cavan-tty_mode$(EXEEXT) cavan-touch$(EXEEXT) \
-	cavan-tftp_dd_server$(EXEEXT) cavan-tftp_dd$(EXEEXT) \
-	cavan-tftp_copy$(EXEEXT) cavan-tftp_command$(EXEEXT) \
-	cavan-tftp_auto_dd$(EXEEXT) cavan-textlen$(EXEEXT) \
-	cavan-tcp_proxy$(EXEEXT) cavan-tcp_exec$(EXEEXT) \
-	cavan-tcp_dd_server$(EXEEXT) cavan-tcp_dd$(EXEEXT) \
-	cavan-tcp_copy$(EXEEXT) cavan-system_init$(EXEEXT) \
-	cavan-swan_vn$(EXEEXT) cavan-swan_vk$(EXEEXT) \
-	cavan-swan_upgrade$(EXEEXT) cavan-swan_ts$(EXEEXT) \
-	cavan-swan_sfdisk$(EXEEXT) cavan-swan_mkfs$(EXEEXT) \
-	cavan-swan_md5$(EXEEXT) cavan-swan_mac$(EXEEXT) \
-	cavan-swan_ipu$(EXEEXT) cavan-swan_fac$(EXEEXT) \
-	cavan-swan_emmc$(EXEEXT) cavan-swan_check$(EXEEXT) \
-	cavan-super_upgrade$(EXEEXT) cavan-sudo$(EXEEXT) \
-	cavan-sprd_write_imei$(EXEEXT) cavan-sprd_at$(EXEEXT) \
-	cavan-shrink$(EXEEXT) cavan-show_file$(EXEEXT) \
-	cavan-service$(EXEEXT) cavan-screen_mirror$(EXEEXT) \
-	cavan-rle$(EXEEXT) cavan-resize$(EXEEXT) cavan-remove$(EXEEXT) \
+bin_PROGRAMS = cavan-web_proxy$(EXEEXT) cavan-vfat$(EXEEXT) \
+	cavan-usb_dd_server$(EXEEXT) cavan-usb_dd$(EXEEXT) \
+	cavan-usb_copy$(EXEEXT) cavan-usb$(EXEEXT) \
+	cavan-umount$(EXEEXT) cavan-tty_mode$(EXEEXT) \
+	cavan-touch$(EXEEXT) cavan-tftp_dd_server$(EXEEXT) \
+	cavan-tftp_dd$(EXEEXT) cavan-tftp_copy$(EXEEXT) \
+	cavan-tftp_command$(EXEEXT) cavan-tftp_auto_dd$(EXEEXT) \
+	cavan-textlen$(EXEEXT) cavan-tcp_proxy$(EXEEXT) \
+	cavan-tcp_exec$(EXEEXT) cavan-tcp_dd_server$(EXEEXT) \
+	cavan-tcp_dd$(EXEEXT) cavan-tcp_copy$(EXEEXT) \
+	cavan-system_init$(EXEEXT) cavan-swan_vn$(EXEEXT) \
+	cavan-swan_vk$(EXEEXT) cavan-swan_upgrade$(EXEEXT) \
+	cavan-swan_ts$(EXEEXT) cavan-swan_sfdisk$(EXEEXT) \
+	cavan-swan_mkfs$(EXEEXT) cavan-swan_md5$(EXEEXT) \
+	cavan-swan_mac$(EXEEXT) cavan-swan_ipu$(EXEEXT) \
+	cavan-swan_fac$(EXEEXT) cavan-swan_emmc$(EXEEXT) \
+	cavan-swan_check$(EXEEXT) cavan-super_upgrade$(EXEEXT) \
+	cavan-sudo$(EXEEXT) cavan-sprd_write_imei$(EXEEXT) \
+	cavan-sprd_at$(EXEEXT) cavan-shrink$(EXEEXT) \
+	cavan-show_file$(EXEEXT) cavan-service$(EXEEXT) \
+	cavan-screen_mirror$(EXEEXT) cavan-rle$(EXEEXT) \
+	cavan-resize$(EXEEXT) cavan-remove$(EXEEXT) \
 	cavan-ramdisk$(EXEEXT) cavan-poll_input$(EXEEXT) \
 	cavan-poll_event$(EXEEXT) cavan-part_table$(EXEEXT) \
 	cavan-part_show$(EXEEXT) cavan-part_probe$(EXEEXT) \
@@ -384,6 +385,9 @@ cavan_usb_dd_server_LDADD = $(LDADD)
 am_cavan_vfat_OBJECTS = vfat.$(OBJEXT)
 cavan_vfat_OBJECTS = $(am_cavan_vfat_OBJECTS)
 cavan_vfat_LDADD = $(LDADD)
+am_cavan_web_proxy_OBJECTS = web_proxy.$(OBJEXT)
+cavan_web_proxy_OBJECTS = $(am_cavan_web_proxy_OBJECTS)
+cavan_web_proxy_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -441,7 +445,8 @@ SOURCES = $(cavan_abspath_SOURCES) $(cavan_alarm_SOURCES) \
 	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
 	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
 	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
-	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES)
+	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES) \
+	$(cavan_web_proxy_SOURCES)
 DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_alarm_SOURCES) \
 	$(cavan_auto_dd_SOURCES) $(cavan_auto_mount_SOURCES) \
 	$(cavan_battery_SOURCES) $(cavan_battery_level_SOURCES) \
@@ -486,7 +491,8 @@ DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_alarm_SOURCES) \
 	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
 	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
 	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
-	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES)
+	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES) \
+	$(cavan_web_proxy_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -707,6 +713,7 @@ cavan_usb_copy_SOURCES = usb_copy.c
 cavan_usb_dd_SOURCES = usb_dd.c
 cavan_usb_dd_server_SOURCES = usb_dd_server.c
 cavan_vfat_SOURCES = vfat.c
+cavan_web_proxy_SOURCES = web_proxy.c
 all: all-am
 
 .SUFFIXES:
@@ -1060,6 +1067,9 @@ cavan-usb_dd_server$(EXEEXT): $(cavan_usb_dd_server_OBJECTS) $(cavan_usb_dd_serv
 cavan-vfat$(EXEEXT): $(cavan_vfat_OBJECTS) $(cavan_vfat_DEPENDENCIES) $(EXTRA_cavan_vfat_DEPENDENCIES) 
 	@rm -f cavan-vfat$(EXEEXT)
 	$(LINK) $(cavan_vfat_OBJECTS) $(cavan_vfat_LDADD) $(LIBS)
+cavan-web_proxy$(EXEEXT): $(cavan_web_proxy_OBJECTS) $(cavan_web_proxy_DEPENDENCIES) $(EXTRA_cavan_web_proxy_DEPENDENCIES) 
+	@rm -f cavan-web_proxy$(EXEEXT)
+	$(LINK) $(cavan_web_proxy_OBJECTS) $(cavan_web_proxy_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -1158,6 +1168,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usb_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usb_dd_server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vfat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/web_proxy.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
