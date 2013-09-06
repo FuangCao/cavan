@@ -232,9 +232,36 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 		return ret;
 	}
 
+	if (desc->logfile)
+	{
+		int fd = open(desc->logfile, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		if (fd < 0)
+		{
+			pr_error_info("open file %s failed", desc->logfile);
+			return fd;
+		}
+
+		ret = dup2(fd, fileno(stdout));
+		if (ret < 0)
+		{
+			pr_error_info("dup2 stdout");
+		}
+		else
+		{
+			ret = dup2(fd, fileno(stderr));
+		}
+
+		close(fd);
+
+		if (ret < 0)
+		{
+			return ret;
+		}
+	}
+
 	if (desc->as_daemon)
 	{
-		ret = daemon(1, desc->verbose);
+		ret = daemon(1, desc->verbose || desc->logfile);
 		if (ret < 0)
 		{
 			pr_error_info("daemon");

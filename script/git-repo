@@ -3,7 +3,7 @@
 ## repo default configuration
 ##
 from __future__ import print_function
-REPO_URL = 'https://gerrit.googlesource.com/git-repo'
+REPO_URL = 'git://10.1.1.150:7777/repo.git'
 REPO_REV = 'stable'
 
 # Copyright (C) 2008 Google Inc.

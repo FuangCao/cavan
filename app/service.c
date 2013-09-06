@@ -19,6 +19,7 @@ enum
 	LOCAL_COMMAND_OPTION_STOP,
 	LOCAL_COMMAND_OPTION_EXEC,
 	LOCAL_COMMAND_OPTION_PIDFILE,
+	LOCAL_COMMAND_OPTION_LOGFILE,
 	LOCAL_COMMAND_OPTION_DAEMON,
 	LOCAL_COMMAND_OPTION_SUPER,
 	LOCAL_COMMAND_OPTION_VERBOSE
@@ -36,6 +37,7 @@ static void show_usage(const char *command)
 	println("--super, -s, -S\t\tneed super permission");
 	println("--exec, -e, -E\t\tservice command name");
 	println("--pidfile, -p, -P\tsave process id to file");
+	println("--logfile, -l, -L\tredirect stdout and stderr to file");
 	println("--verbose, -v, -V\tshow log message");
 }
 
@@ -82,6 +84,12 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_PIDFILE,
 		},
 		{
+			.name = "logfile",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_LOGFILE,
+		},
+		{
 			.name = "daemon",
 			.has_arg = required_argument,
 			.flag = NULL,
@@ -107,14 +115,15 @@ int main(int argc, char *argv[])
 	{
 		.verbose = 0,
 		.as_daemon = 1,
-		.super_permission = 1
+		.super_permission = 1,
+		.command = NULL,
+		.pidfile = NULL,
+		.pidfile = NULL,
 	};
 
-	desc.command = NULL;
-	desc.pidfile = NULL;
 	handler = cavan_daemon_run;
 
-	while ((c = getopt_long(argc, argv, "vVhHe:E:p:P:s:S:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHd:D:e:E:p:P:s:S:l:L:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -139,6 +148,12 @@ int main(int argc, char *argv[])
 		case 'P':
 		case LOCAL_COMMAND_OPTION_PIDFILE:
 			desc.pidfile = optarg;
+			break;
+
+		case 'l':
+		case 'L':
+		case LOCAL_COMMAND_OPTION_LOGFILE:
+			desc.logfile = optarg;
 			break;
 
 		case 'd':

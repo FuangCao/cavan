@@ -25,6 +25,7 @@ struct cavan_service_description
 struct cavan_daemon_description
 {
 	const char *pidfile;
+	const char *logfile;
 	const char *command;
 	int verbose;
 	int as_daemon;
