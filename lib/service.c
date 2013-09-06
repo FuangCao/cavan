@@ -214,6 +214,29 @@ int cavan_service_stop(struct cavan_service_description *desc)
 	return 0;
 }
 
+int cavan_daemon_permission_clear(u32 permission)
+{
+	int ret;
+	struct __user_cap_data_struct data;
+	struct __user_cap_header_struct header =
+	{
+		.pid = 0,
+		.version = _LINUX_CAPABILITY_VERSION,
+	};
+
+	ret = capget(&header, &data);
+	if (ret < 0)
+	{
+		pr_error_info("capget");
+		return ret;
+	}
+
+	data.permitted &= ~permission;
+	data.effective = data.permitted;
+
+	return capset(&header, &data);
+}
+
 int cavan_daemon_run(struct cavan_daemon_description *desc)
 {
 	int ret;
@@ -227,9 +250,18 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 
 	pr_bold_info("command = %s", desc->command);
 
-	if (desc->super_permission && (ret = check_super_permission(true, 5000)) < 0)
+	if (desc->super_permission)
 	{
-		return ret;
+		ret = check_super_permission(true, 5000);
+		if (ret < 0)
+		{
+			return ret;
+		}
+	}
+	else
+	{
+		ret = setuid(getuid());
+		ret = setgid(getgid());
 	}
 
 	if (desc->logfile)

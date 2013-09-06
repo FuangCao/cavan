@@ -7,6 +7,7 @@
  */
 
 #include <cavan.h>
+#include <linux/capability.h>
 
 struct cavan_service_description
 {
@@ -32,10 +33,14 @@ struct cavan_daemon_description
 	int super_permission;
 };
 
+extern int capget(cap_user_header_t hdrp, cap_user_data_t datap);
+extern int capset(cap_user_header_t hdrp, const cap_user_data_t datap);
+
 void cavan_service_set_busy(struct cavan_service_description *desc, int index, bool busy);
 int cavan_service_start(struct cavan_service_description *desc);
 int cavan_service_main_loop(struct cavan_service_description *desc);
 int cavan_service_run(struct cavan_service_description *desc);
 int cavan_service_stop(struct cavan_service_description *desc);
+int cavan_daemon_permission_clear(u32 permission);
 int cavan_daemon_run(struct cavan_daemon_description *desc);
 int cavan_daemon_stop(struct cavan_daemon_description *desc);
