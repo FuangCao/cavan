@@ -10,6 +10,8 @@
 #include <cavan/network.h>
 #include <cavan/service.h>
 
+#define WEB_PROXY_TEMP_FILE		CAVAN_TEMP_PATH "/cavan-XXXXXX.html"
+
 typedef enum
 {
 	HTTP_REQ_CONNECT,

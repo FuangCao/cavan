@@ -367,11 +367,12 @@ out_close_sockfd:
 
 static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, struct network_url *url, const char *dirname)
 {
+	int fd;
 	int ret;
 	int data_sockfd;
 	struct stat st;
 	char buff[2048], *p;
-	FILE *file_html;
+	char pathname[] = WEB_PROXY_TEMP_FILE;
 
 	data_sockfd = ftp_client_create_pasv_link(proxy_sockfd);
 	if (data_sockfd < 0)
@@ -388,19 +389,22 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 		goto out_close_data_sockfd;
 	}
 
-	file_html = tmpfile();
-	if (file_html == NULL)
+	fd = mkstemps(pathname, 5);
+	if (fd < 0)
 	{
-		pr_red_info("tmpfile");
+		ret = fd;
+		pr_error_info("mkstemp `%s'", pathname);
 		goto out_close_data_sockfd;
 	}
 
-	fprintf(file_html, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
-	fprintf(file_html, "<html>\r\n\t<head>\r\n\t\t<title>Directory: %s%s</title>\r\n\t</head>\r\n\t<body>\r\n",
+	println("pathname = %s", pathname);
+
+	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
+	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<title>Directory: %s%s</title>\r\n\t</head>\r\n\t<body>\r\n",
 		network_url_tostring(url, buff, sizeof(buff)), dirname);
 
-	fprintf(file_html, "\t\t<h1>FTP Proxy Server (<a href=\"http://mail.google.com\">Fuang.Cao@cavan.cfa@gmail.com</a>)</h1>\r\n");
-	fprintf(file_html, "\t\t<h2>Directory: <a href=\"%s%s/\">%s%s</a></h2>\r\n", buff, dirname, buff, dirname);
+	ffile_puts(fd, "\t\t<h1>FTP Proxy Server (<a href=\"http://mail.google.com\">Fuang.Cao@cavan.cfa@gmail.com</a>)</h1>\r\n");
+	ffile_printf(fd, "\t\t<h2>Directory: <a href=\"%s%s/\">%s%s</a></h2>\r\n", buff, dirname, buff, dirname);
 
 	p = text_dirname_base(buff, dirname);
 	if (p == buff || p[-1] != '/')
@@ -409,9 +413,9 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 		*p = 0;
 	}
 
-	fprintf(file_html, "\t\t<h2><a href=\"%s\">Parent directory</a> (<a href=\"/\">Root directory</a>)</h2>\r\n", buff);
-	fprintf(file_html, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
-	fprintf(file_html, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
+	ffile_printf(fd, "\t\t<h2><a href=\"%s\">Parent directory</a> (<a href=\"/\">Root directory</a>)</h2>\r\n", buff);
+	ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
+	ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
 
 	while (1)
 	{
@@ -422,7 +426,7 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 		if (ret < 0)
 		{
 			pr_red_info("file_read_line");
-			goto out_close_file_html;
+			goto out_close_fd;
 		}
 
 		if (ret == 0)
@@ -437,7 +441,7 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 			continue;
 		}
 
-		fprintf(file_html, "\t\t\t<tr class=\"entry\">");
+		ffile_puts(fd, "\t\t\t<tr class=\"entry\">");
 
 		switch (texts[0][0])
 		{
@@ -465,57 +469,58 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 				p = "FILE";
 		}
 
-		fprintf(file_html, "<td class=\"type\">[%s]</td><td class=\"filename\">", p);
+		ffile_printf(fd, "<td class=\"type\">[%s]</td><td class=\"filename\">", p);
 
 		if (texts[0][0] == 'd')
 		{
-			fprintf(file_html, "<a href=\"%s/\">%s</a>", texts[8], texts[8]);
+			ffile_printf(fd, "<a href=\"%s/\">%s</a>", texts[8], texts[8]);
 		}
 		else
 		{
-			fprintf(file_html, "<a href=\"%s\">%s</a>", texts[8], texts[8]);
+			ffile_printf(fd, "<a href=\"%s\">%s</a>", texts[8], texts[8]);
 		}
 
 		if (texts[0][0] == 'l' && count > 10)
 		{
-			fprintf(file_html, " -> <a href=\"%s\">%s</a>", texts[10], texts[10]);
+			ffile_printf(fd, " -> <a href=\"%s\">%s</a>", texts[10], texts[10]);
 		}
 
-		fprintf(file_html, "</td><td class=\"size\">%s</td>", texts[4]);
-		fprintf(file_html, "<td class=\"date\">%s %s %s</td>", texts[5], texts[6], texts[7]);
-		fprintf(file_html, "</tr>\r\n");
+		ffile_printf(fd, "</td><td class=\"size\">%s</td>", texts[4]);
+		ffile_printf(fd, "<td class=\"date\">%s %s %s</td>", texts[5], texts[6], texts[7]);
+		ffile_printf(fd, "</tr>\r\n");
 	}
 
-	fprintf(file_html, "\t\t</table>\r\n\t</body>\r\n</html>");
-	fflush(file_html);
+	ffile_puts(fd, "\t\t</table>\r\n\t</body>\r\n</html>");
+	fsync(fd);
 
 	ret = ftp_client_read_response(proxy_sockfd, NULL, 0);
 	if (ret != 226)
 	{
 		ret = -EFAULT;
 		pr_red_info("ftp_client_read_response");
-		goto out_close_file_html;
+		goto out_close_fd;
 	}
 
-	ret = fstat(fileno(file_html), &st);
+	ret = fstat(fd, &st);
 	if (ret < 0)
 	{
 		pr_red_info("stat");
-		goto out_close_file_html;
+		goto out_close_fd;
 	}
 
 	ret = web_proxy_ftp_send_http_reply(client_sockfd, "text/html", st.st_size, NULL);
 	if (ret < 0)
 	{
 		pr_red_info("web_proxy_ftp_send_http_reply");
-		goto out_close_file_html;
+		goto out_close_fd;
 	}
 
-	lseek(fileno(file_html), 0, SEEK_SET);
-	ret = inet_tcp_send_file1(client_sockfd, fileno(file_html));
+	lseek(fd, 0, SEEK_SET);
+	ret = inet_tcp_send_file1(client_sockfd, fd);
 
-out_close_file_html:
-	fclose(file_html);
+out_close_fd:
+	close(fd);
+	unlink(pathname);
 out_close_data_sockfd:
 	close(data_sockfd);
 	return ret;

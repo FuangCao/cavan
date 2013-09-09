@@ -164,7 +164,7 @@ int vfile_try_open(int flags, mode_t mode, va_list ap);
 int file_try_open(int flags, mode_t mode, ...);
 
 __printf_format_20__ ssize_t ffile_vprintf(int fd, const char *fmt, va_list ap);
-__printf_format_23__ ssize_t ffile_prinf(int fd, const char *fmt, ...);
+__printf_format_23__ ssize_t ffile_printf(int fd, const char *fmt, ...);
 __printf_format_20__ ssize_t file_vprintf(const char *filename, const char *fmt, va_list ap);
 __printf_format_23__ ssize_t file_printf(const char *filename, const char *fmt, ...);
 __printf_format_34__ int file_open_format(int flags, mode_t mode, const char *fmt, ...);

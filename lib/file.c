@@ -1930,13 +1930,13 @@ ssize_t ffile_vprintf(int fd, const char *fmt, va_list ap)
 	char buff[1024];
 	ssize_t writelen;
 
-	writelen = vsprintf(buff, fmt, ap);
+	writelen = vsnprintf(buff, sizeof(buff), fmt, ap);
 	writelen = ffile_write(fd, buff, writelen);
 
 	return writelen;
 }
 
-ssize_t ffile_prinf(int fd, const char *fmt, ...)
+ssize_t ffile_printf(int fd, const char *fmt, ...)
 {
 	ssize_t writelen;
 	va_list ap;
@@ -1953,7 +1953,7 @@ ssize_t file_vprintf(const char *filename, const char *fmt, va_list ap)
 	char buff[1024];
 	ssize_t writelen;
 
-	writelen = vsprintf(buff, fmt, ap);
+	writelen = vsnprintf(buff, sizeof(buff), fmt, ap);
 	writelen = file_writeto(filename, buff, writelen, 0, 0);
 
 	return writelen;
@@ -2558,7 +2558,7 @@ int file_open_format(int flags, mode_t mode, const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	vsprintf(buff, fmt, ap);
+	vsnprintf(buff, sizeof(buff), fmt, ap);
 	va_end(ap);
 
 	fd = open(buff, flags, mode);
