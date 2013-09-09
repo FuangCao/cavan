@@ -372,7 +372,7 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 	int data_sockfd;
 	struct stat st;
 	char buff[2048], *p;
-	char pathname[] = WEB_PROXY_TEMP_FILE;
+	char pathname[] = CAVAN_TEMP_PATH "/cavan-XXXXXX";
 
 	data_sockfd = ftp_client_create_pasv_link(proxy_sockfd);
 	if (data_sockfd < 0)
@@ -389,7 +389,7 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 		goto out_close_data_sockfd;
 	}
 
-	fd = mkstemps(pathname, 5);
+	fd = mkstemp(pathname);
 	if (fd < 0)
 	{
 		ret = fd;
