@@ -283,7 +283,7 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 	size_t size;
 	struct tm time;
 	size_t rdlen, wrlen;
-	char buff[2048], *p;
+	char buff[2048];
 
 	ret = ftp_client_send_command2(proxy_sockfd, buff, sizeof(buff), "MDTM %s\r\n", filename);
 	if (ret != 213)
