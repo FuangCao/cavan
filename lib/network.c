@@ -480,7 +480,7 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 	}
 	else
 	{
-		struct addrinfo *res;
+		struct addrinfo *res, *p;
 		struct addrinfo nints;
 
 		memset(&nints, 0, sizeof(nints));
@@ -496,19 +496,17 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 
 		ret = -ENOENT;
 
-		while (res)
+		for (p = res; p; p = p->ai_next)
 		{
-			if (res->ai_family == AF_INET)
+			if (p->ai_family == AF_INET)
 			{
-				addr.sin_addr.s_addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
+				addr.sin_addr.s_addr = ((struct sockaddr_in *)p->ai_addr)->sin_addr.s_addr;
 				ret = inet_create_tcp_link1(&addr);
 				if (ret >= 0)
 				{
 					break;
 				}
 			}
-
-			res = res->ai_next;
 		}
 
 		freeaddrinfo(res);
