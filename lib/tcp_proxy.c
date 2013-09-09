@@ -260,7 +260,7 @@ static int web_proxy_ftp_send_http_reply(int sockfd, const char *type, size_t le
 		p += sprintf(p, "Content-Type: %s\r\n", type);
 	}
 
-#if __WORDSIZE == 64 || CONFIG_BUILD_FOR_ANDROID
+#if __WORDSIZE == 64
 	p += sprintf(p, "Content-Length: %ld\r\n", length) - 1;
 #else
 	p += sprintf(p, "Content-Length: %d\r\n", length) - 1;
@@ -331,15 +331,6 @@ static int web_proxy_ftp_read_file(int client_sockfd, int proxy_sockfd, const ch
 	if (ret < 0)
 	{
 		pr_red_info("web_proxy_ftp_send_http_reply");
-		goto out_close_sockfd;
-	}
-
-	rdlen = p - buff;
-	wrlen = inet_send(client_sockfd, buff, rdlen);
-	if (wrlen < rdlen)
-	{
-		ret = -EIO;
-		pr_error_info("inet_send");
 		goto out_close_sockfd;
 	}
 

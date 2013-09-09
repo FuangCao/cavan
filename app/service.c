@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 		.super_permission = 1,
 		.command = NULL,
 		.pidfile = NULL,
-		.pidfile = NULL,
+		.logfile = NULL,
 	};
 
 	handler = cavan_daemon_run;
