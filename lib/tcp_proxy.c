@@ -371,8 +371,7 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 	int ret;
 	int data_sockfd;
 	struct stat st;
-	char buff[2048], *p;
-	char pathname[] = CAVAN_TEMP_PATH "/cavan-XXXXXX";
+	char *p, buff[2048];
 
 	data_sockfd = ftp_client_create_pasv_link(proxy_sockfd);
 	if (data_sockfd < 0)
@@ -389,15 +388,18 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 		goto out_close_data_sockfd;
 	}
 
-	fd = mkstemp(pathname);
+	text_copy(buff, CAVAN_TEMP_PATH "/cavan-XXXXXX");
+
+	fd = mkstemp(buff);
 	if (fd < 0)
 	{
 		ret = fd;
-		pr_error_info("mkstemp `%s'", pathname);
+		pr_error_info("mkstemp `%s'", buff);
 		goto out_close_data_sockfd;
 	}
 
-	println("pathname = %s", pathname);
+	unlink(buff);
+	println("pathname = %s", buff);
 
 	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
 	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<title>Directory: %s%s</title>\r\n\t</head>\r\n\t<body>\r\n",
@@ -520,7 +522,6 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 
 out_close_fd:
 	close(fd);
-	unlink(pathname);
 out_close_data_sockfd:
 	close(data_sockfd);
 	return ret;
