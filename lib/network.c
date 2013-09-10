@@ -461,13 +461,48 @@ int inet_create_tcp_link1(const struct sockaddr_in *addr)
 	return sockfd;
 }
 
+int inet_create_tcp_link_by_addrinfo(struct addrinfo *info, u16 port, struct sockaddr_in *addr)
+{
+	int sockfd;
+
+	sockfd = inet_socket(SOCK_STREAM);
+	if (sockfd < 0)
+	{
+		pr_error_info("inet_socket");
+		return sockfd;
+	}
+
+	while (info)
+	{
+		if (info->ai_family == AF_INET)
+		{
+			struct sockaddr_in *p = (struct sockaddr_in *)info->ai_addr;
+
+			p->sin_port = htons(port);
+			if (inet_connect(sockfd, p) == 0)
+			{
+				if (addr)
+				{
+					addr->sin_addr.s_addr = p->sin_addr.s_addr;
+				}
+
+				return sockfd;
+			}
+		}
+
+		info = info->ai_next;
+	}
+
+	close(sockfd);
+
+	return -ENOENT;
+}
+
 int inet_create_tcp_link2(const char *hostname, u16 port)
 {
 	int ret;
+	int sockfd;
 	struct sockaddr_in addr;
-
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
 
 	if (text_cmp(hostname, "localhost") == 0)
 	{
@@ -476,50 +511,38 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 
 	if (inet_aton(hostname, &addr.sin_addr))
 	{
-		ret = inet_create_tcp_link1(&addr);
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(port);
+		sockfd = inet_create_tcp_link1(&addr);
 	}
 	else
 	{
-		struct addrinfo *res, *p;
+		struct addrinfo *info;
 		struct addrinfo nints;
 
 		memset(&nints, 0, sizeof(nints));
 		nints.ai_family = AF_INET;
 		nints.ai_socktype = SOCK_STREAM;
 		nints.ai_flags = 0;
-		ret = getaddrinfo(hostname, NULL, &nints, &res);
-		if (ret < 0 || res == NULL)
+		ret = getaddrinfo(hostname, NULL, &nints, &info);
+		if (ret < 0 || info == NULL)
 		{
 			pr_error_info("getaddrinfo");
 			return -ENOENT;
 		}
 
-		ret = -ENOENT;
-
-		for (p = res; p; p = p->ai_next)
-		{
-			if (p->ai_family == AF_INET)
-			{
-				addr.sin_addr.s_addr = ((struct sockaddr_in *)p->ai_addr)->sin_addr.s_addr;
-				ret = inet_create_tcp_link1(&addr);
-				if (ret >= 0)
-				{
-					break;
-				}
-			}
-		}
-
-		freeaddrinfo(res);
+		sockfd = inet_create_tcp_link_by_addrinfo(info, port, &addr);
+		freeaddrinfo(info);
 	}
 
-	if (ret < 0)
+	if (sockfd < 0)
 	{
-		return ret;
+		return sockfd;
 	}
 
 	println("%s => %s:%d", hostname, inet_ntoa(addr.sin_addr), port);
 
-	return ret;
+	return sockfd;
 }
 
 int inet_create_service(int type, u16 port)

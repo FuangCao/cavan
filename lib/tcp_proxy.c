@@ -535,6 +535,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	ssize_t rwlen;
 	size_t cmdlen;
 	char *filename;
+	bool ftp_login;
 	socklen_t addrlen;
 	struct sockaddr_in addr;
 	int client_sockfd, proxy_sockfd;
@@ -554,6 +555,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	inet_show_sockaddr(&addr);
 
 	count = 0;
+	ftp_login = false;
 	proxy_sockfd = -1;
 	url = urls;
 	url_bak = url + 1;
@@ -628,6 +630,8 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 				url = urls;
 				url_bak = url + 1;
 			}
+
+			ftp_login = false;
 		}
 		else
 		{
@@ -689,18 +693,27 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			break;
 
 		case NETWORK_PROTOCOL_FTP:
-			ret = ftp_client_login(proxy_sockfd, NULL, NULL);
-			if (ret < 0)
+			if (ftp_login)
 			{
-				pr_red_info("ftp_client_login");
-				goto out_close_client_sockfd;
+				pr_green_info("Don't need login");
+			}
+			else
+			{
+				ret = ftp_client_login(proxy_sockfd, NULL, NULL);
+				if (ret < 0)
+				{
+					pr_red_info("ftp_client_login");
+					goto out_close_client_sockfd;
+				}
+
+				ftp_login = true;
 			}
 
 			ret = ftp_client_send_command2(proxy_sockfd, NULL, 0, "TYPE I\r\n");
 			if (ret != 200)
 			{
 				pr_red_info("ftp_client_send_command2 TYPE A");
-				goto label_ftp_quit;
+				goto out_close_client_sockfd;
 			}
 
 			for (filename = req; filename < buff_end && text_lhcmp("HTTP", filename); filename++);
@@ -717,7 +730,7 @@ label_change_dir:
 			if (ret != 250)
 			{
 				pr_red_info("ftp_client_send_command2 CWD");
-				goto label_ftp_quit;
+				goto out_close_client_sockfd;
 			}
 
 			switch (type)
@@ -725,26 +738,36 @@ label_change_dir:
 			case HTTP_REQ_GET:
 				if (filename && filename[0])
 				{
-					if (web_proxy_ftp_read_file(client_sockfd, proxy_sockfd, filename) < 0 && errno == EISDIR)
+					ret = web_proxy_ftp_read_file(client_sockfd, proxy_sockfd, filename);
+					if (ret < 0)
 					{
-						filename[-1] = '/';
-						filename = NULL;
-						goto label_change_dir;
+						pr_red_info("web_proxy_ftp_read_file `%s'", filename);
+
+						if (errno == EISDIR)
+						{
+							filename[-1] = '/';
+							filename = NULL;
+							goto label_change_dir;
+						}
+
+						goto out_close_client_sockfd;
 					}
 				}
 				else
 				{
-					web_proxy_ftp_list_directory(client_sockfd, proxy_sockfd, url_bak, req);
+					ret = web_proxy_ftp_list_directory(client_sockfd, proxy_sockfd, url_bak, req);
+					if (ret < 0)
+					{
+						pr_red_info("web_proxy_ftp_list_directory `%s'", req);
+						goto out_close_client_sockfd;
+					}
 				}
 				break;
 
 			case HTTP_REQ_PUT:
 				break;
 			}
-
-label_ftp_quit:
-			ftp_client_send_command2(proxy_sockfd, NULL, 0, "QUIT\r\n");
-			goto out_close_client_sockfd;
+			break;
 
 		default:
 			pr_red_info("unsupport network protocol %s", protocol->name);
@@ -755,6 +778,11 @@ label_ftp_quit:
 out_close_client_sockfd:
 	if (proxy_sockfd >= 0)
 	{
+		if (ftp_login)
+		{
+			ftp_client_send_command2(proxy_sockfd, NULL, 0, "QUIT\r\n");
+		}
+
 		inet_close_tcp_socket(proxy_sockfd);
 	}
 
