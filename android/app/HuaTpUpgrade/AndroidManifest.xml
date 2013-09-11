@@ -25,5 +25,6 @@
             </intent-filter>
         </activity>
 		<activity android:name="com.cavan.touchscreen.FileBrowserActivity" />
+		<service android:name="com.cavan.touchscreen.TouchscreenService" />
 	</application>
 </manifest>

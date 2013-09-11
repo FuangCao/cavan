@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import android.content.Context;
-import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;

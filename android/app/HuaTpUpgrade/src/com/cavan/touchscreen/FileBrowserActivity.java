@@ -5,7 +5,6 @@ import java.io.File;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -13,8 +12,6 @@ import android.widget.ListView;
 
 public class FileBrowserActivity extends Activity
 {
-	private static final String TAG = "Cavan";
-
 	private ListView mListViewBrowser;
 	private FileBrowserAdapter mFileBrowserAdapter;
 	public static final String PATHNAME_CHANGED_ACTION = "com.cavan.huatpupgrade.PATHNAME_CHANGED";
