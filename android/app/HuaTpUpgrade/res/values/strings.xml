@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HuaTpUpgrade</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="dev_name">DeviceName</string>
+    <string name="dev_path">DevicePath</string>
+    <string name="fw_id">Firmware ID</string>
+    <string name="fw_upgrade">Firmware Upgrade</string>
+    <string name="fw_upgrade_summary">please select a firmware file</string>
+    <string name="fw_upgrade_start">upgrade please wait ...</string>
+    <string name="fw_upgrade_failed">firmware upgrade failed</string>
+    <string name="fw_upgrade_success">firmware upgrade success</string>
+</resources>

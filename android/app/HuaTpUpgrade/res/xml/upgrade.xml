@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+	<PreferenceScreen
+		android:key="dev_name"
+		android:title="@string/dev_name"
+		android:persistent="false"/>
+
+	<PreferenceScreen
+		android:key="dev_path"
+		android:title="@string/dev_path"
+		android:persistent="false"/>
+
+	<PreferenceScreen
+		android:key="fw_id"
+		android:title="@string/fw_id"
+		android:persistent="false"/>
+
+	<com.cavan.touchscreen.FirmwarePathPreference
+		android:key="fw_upgrade"
+		android:title="@string/fw_upgrade"
+		android:summary="@string/fw_upgrade_summary"
+		android:dialogTitle="@string/fw_upgrade"
+		android:singleLine="true"
+		android:editable="false"
+		android:persistent="false"/>
+</PreferenceScreen>
