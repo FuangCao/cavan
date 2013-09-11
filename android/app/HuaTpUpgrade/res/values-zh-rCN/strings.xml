@@ -10,7 +10,7 @@
     <string name="fw_upgrade_summary">请选择一个固件文件</string>
     <string name="fw_upgrade_start">正在升级，请稍候 ...</string>
     <string name="fw_upgrade_retry">升级失败, 2秒后重试 ...</string>
-    <string name="fw_upgrade_failed">固件升级失败</string>
+    <string name="fw_upgrade_failed">固件升级失败, 内存空间不足</string>
     <string name="fw_upgrade_success">固件升级成功</string>
     <string name="vendor_name">模组产</string>
     <string name="vendor_name_unknown">未知</string>
