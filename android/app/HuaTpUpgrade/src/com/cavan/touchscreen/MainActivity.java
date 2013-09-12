@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -177,76 +176,17 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return false;
 	}
 
-	private int getVendorName(int id) {
-		if (Build.BOARD.equals("h1")) {
-			switch (id) {
-			case 0x13:
-				return R.string.vendor_name_dianjing;
-			case 0x31:
-				return R.string.vendor_name_yeji;
-			default:
-				return R.string.vendor_name_unknown;
-			}
-		} else if (Build.BOARD.equals("h2")) {
-			switch (id) {
-			case 0x94:
-				return R.string.vendor_name_yingmao;
-			case 0x87:
-				return R.string.vendor_name_lianchuang;
-			case 0x11:
-				return R.string.vendor_name_lihaojie;
-			default:
-				return R.string.vendor_name_unknown;
-			}
-		} else if (Build.BOARD.equals("h3")) {
-			switch (id) {
-			case 0xdb:
-				return R.string.vendor_name_dianjing;
-			case 0xda:
-				return R.string.vendor_name_tongxincheng;
-			default:
-				return R.string.vendor_name_unknown;
-			}
-		} else if (Build.BOARD.equals("h4")) {
-			switch (id) {
-			case 0xba:
-				return R.string.vendor_name_dianjing;
-			case 0x11:
-				return R.string.vendor_name_lihaojie;
-			case 0x74:
-				return R.string.vendor_name_yuansheng;
-			default:
-				return R.string.vendor_name_unknown;
-			}
-		} else if (Build.BOARD.equals("h5")) {
-			switch (id) {
-			case 0x32:
-				return R.string.vendor_name_lianchuang;
-			case 0x13:
-				return R.string.vendor_name_dianjing;
-			default:
-				return R.string.vendor_name_unknown;
-			}
-		} else {
-			return R.string.vendor_name_unknown;
-		}
-	}
-
 	private void updateFirmwareID() {
 		if (mService == null) {
 			return;
 		}
 
-		int id;
-
 		try {
-			id = mService.readFwID();
-		} catch (RemoteException e1) {
-			e1.printStackTrace();
-			return;
+			DeviceID devID = mService.readDevID();
+			mPreferenceScreenFwID.setSummary(String.format("%02x%02x", devID.getVendorID(), devID.getFwVersion()));
+			mPreferenceScreenVendorName.setSummary(devID.getVendorName());
+		} catch (RemoteException e) {
+			e.printStackTrace();
 		}
-
-		mPreferenceScreenFwID.setSummary(String.format("0x%04x", id));
-		mPreferenceScreenVendorName.setSummary(getVendorName((id >> 8) & 0xff));
 	}
 }

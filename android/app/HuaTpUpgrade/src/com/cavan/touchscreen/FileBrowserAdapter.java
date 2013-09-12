@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import android.content.Context;
+import android.os.Environment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -18,7 +19,6 @@ import android.widget.TextView;
 public class FileBrowserAdapter extends BaseAdapter
 {
 	private static final String mRootDirectory = "/";
-	private static final String mDefaultDirectory = "/sdcard";
 
 	private File mCurrentDirectory;
 	private File mParentDirectory;
@@ -31,7 +31,7 @@ public class FileBrowserAdapter extends BaseAdapter
 
 		if (pathanme == null || pathanme.length() == 0)
 		{
-			mCurrentDirectory = new File(mDefaultDirectory);
+			mCurrentDirectory = Environment.getExternalStorageDirectory();
 		}
 		else
 		{
@@ -58,6 +58,10 @@ public class FileBrowserAdapter extends BaseAdapter
 		{
 			for (File file : files)
 			{
+				if (file.getName().startsWith(".")) {
+					continue;
+				}
+
 				mFileList.add(file);
 			}
 		}
