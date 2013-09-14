@@ -32,10 +32,12 @@ CP = cp
 
 CAVAN_PLAT = $(shell $(CC) -dumpmachine)
 
-CFLAGS +=	-Wall -Wundef -Werror -Wsign-compare \
-			-Wno-trigraphs -Wno-format-security \
-			-Wpointer-arith -fno-strict-aliasing -g -O2 -I$(INCLUDE_PATH) -I. \
-			-DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\"
+CFLAGS +=	-Wall -Wundef -Werror -Wsign-compare -Wno-unused -Winit-self -Wpointer-arith -Wa,--noexecstack \
+			-Wno-trigraphs -Wno-format-security -Wno-psabi -Wno-multichar -Wstrict-aliasing=2 \
+			-fno-strict-aliasing -fno-exceptions -fno-inline-functions-called-once -fno-short-enums \
+			-ffunction-sections -funwind-tables -fstack-protector -finline-functions \
+			-fgcse-after-reload -frerun-cse-after-loop -frename-registers -fomit-frame-pointer -finline-limit=64 \
+			-g -Os -I$(INCLUDE_PATH) -I.-DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\"
 
 ifeq ($(BUILD_TYPE),debug)
 CFLAGS += -DCAVAN_DEBUG
