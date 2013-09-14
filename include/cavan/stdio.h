@@ -4,8 +4,8 @@
 #include <stdarg.h>
 
 #if CONFIG_BUILD_FOR_ANDROID
-#include <utils/Log.h>
-#define printf	LOGD
+// #include <utils/Log.h>
+// #define printf	LOGD
 #define CAVAN_TEMP_PATH		"/data"
 #else
 #define CAVAN_TEMP_PATH		"/tmp"

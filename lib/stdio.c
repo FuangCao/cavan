@@ -142,7 +142,7 @@ char *sprintln(char *buff, size_t size, const char *fmt, ...)
 	return buff;
 }
 
-#if CONFIG_BUILD_FOR_ANDROID
+#if 0 // CONFIG_BUILD_FOR_ANDROID
 void print_ntext(const char *text, size_t size)
 {
 	char buff[size + 1];
