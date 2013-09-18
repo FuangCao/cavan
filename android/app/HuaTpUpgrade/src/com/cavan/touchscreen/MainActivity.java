@@ -183,6 +183,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		try {
 			DeviceID devID = mService.readDevID();
+			if (devID == null) {
+				return;
+			}
+
 			mPreferenceScreenFwID.setSummary(String.format("%02x%02x", devID.getVendorID(), devID.getFwVersion()));
 			mPreferenceScreenVendorName.setSummary(devID.getVendorName());
 		} catch (RemoteException e) {

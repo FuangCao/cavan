@@ -95,21 +95,37 @@ public class TouchscreenService extends Service {
 
 		@Override
 		public String getDevPath() throws RemoteException {
+			if (mDevice == null) {
+				return null;
+			}
+
 			return mDevice.getDevPath();
 		}
 
 		@Override
 		public String getDevName() throws RemoteException {
+			if (mDevice == null) {
+				return null;
+			}
+
 			return mDevice.getDevName();
 		}
 
 		@Override
 		public DeviceID readDevID() throws RemoteException {
+			if (mDevice == null) {
+				return null;
+			}
+
 			return mDevice.readDevID();
 		}
 
 		@Override
 		public String getFwName() throws RemoteException {
+			if (mDevice == null) {
+				return null;
+			}
+
 			DeviceID devID = mDevice.readDevID();
 			if (devID == null) {
 				return null;
