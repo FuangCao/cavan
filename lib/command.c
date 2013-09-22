@@ -10,7 +10,6 @@
 void print_command_table(const struct cavan_command_map *p, size_t size)
 {
 	const struct cavan_command_map *p_end;
-	char buff[MB(1)], *buff_p;
 
 	if (size == 0)
 	{
@@ -19,61 +18,81 @@ void print_command_table(const struct cavan_command_map *p, size_t size)
 
 	pr_bold_info("Available command is:");
 
-	for (p_end = p + size, buff_p = buff; p < p_end; p++)
+	for (p_end = p + size - 1; p < p_end; p++)
 	{
-		buff_p += sprintf(buff_p, "%s, ", p->name);
+		print("%s, ", p->name);
 	}
 
-	*(buff_p - 2) = 0;
-
-	print_string(buff);
+	print_string(p->name);
 }
 
 const struct cavan_command_map *find_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname, size_t size)
 {
-	while (p < p_end && text_ncmp(cmdname, p->name, size))
+	while (p < p_end)
 	{
+		if (text_ncmp(cmdname, p->name, size) == 0)
+		{
+			return p;
+		}
+
 		p++;
 	}
 
-	return p < p_end ? p : NULL;
+	return NULL;
 }
 
 void print_maybe_command(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname)
 {
 	int size;
-	const struct cavan_command_map *p_match;
-	char buff[MB(1)], *buff_p;
+	const struct cavan_command_map *q;
 
-	for (size = text_len(cmdname); size && ((p_match = find_command_by_name(p, p_end, cmdname, size))) == NULL; size--);
+	for (size = text_len(cmdname); size && ((q = find_command_by_name(p, p_end, cmdname, size))) == NULL; size--);
 
-	if (size == 0)
+	if (size)
+	{
+		int i;
+		int count;
+		const struct cavan_command_map *matchs[100];
+
+		pr_bold_info("This command maybe:");
+
+		for (count = 0, p = q; count < NELEM(matchs); count++)
+		{
+			matchs[count] = p;
+
+			p = find_command_by_name(p + 1, p_end, cmdname, size);
+			if (p == NULL)
+			{
+				break;
+			}
+		}
+
+		for (i = 0; i < count; i++)
+		{
+			print("%s, ", matchs[i]->name);
+		}
+
+		print_string(matchs[i]->name);
+	}
+	else
 	{
 		pr_red_info("`%s' No such command", cmdname);
-		return;
 	}
-
-	pr_bold_info("This command maybe:");
-
-	buff_p = buff;
-
-	do {
-		buff_p += sprintf(buff_p, "%s, ", p_match->name);
-	} while ((p_match = find_command_by_name(p_match + 1, p_end, cmdname, size)));
-
-	*(buff_p - 2) = 0;
-
-	print_string(buff);
 }
 
 const struct cavan_command_map *match_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname)
 {
-	while (p < p_end && text_cmp(cmdname, p->name))
+	while (p < p_end)
 	{
+		if (text_cmp(cmdname, p->name) == 0)
+		{
+			return p;
+		}
+
 		p++;
 	}
 
-	return p < p_end ? p : NULL;
+	return NULL;
 }
 
 int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[])
@@ -99,6 +118,7 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 
 		for (pcmd = argv[0]; *pcmd; pcmd++);
 		for (pstart = argv[0]; pcmd >= pstart && *pcmd != '/'; pcmd--);
+
 		pcmd++;
 	}
 
