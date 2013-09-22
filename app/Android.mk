@@ -15,12 +15,11 @@ LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_EXECUTABLE)
 
-LOCAL_INTERMEDIATES_DIR := $(call local-intermediates-dir)
-CAVAN_MAP_H := $(LOCAL_INTERMEDIATES_DIR)/cavan_map.h
-CAVAN_MAP_C := $(LOCAL_INTERMEDIATES_DIR)/cavan_map.c
+CAVAN_MAP_H := $(intermediates)/cavan_map.h
+CAVAN_MAP_C := $(intermediates)/cavan_map.c
 
-$(LOCAL_INTERMEDIATES_DIR)/%.o: PRIVATE_CFLAGS += -Dmain=do_cavan_$(basename $(notdir $@))
-$(LOCAL_INTERMEDIATES_DIR)/core/%.o: PRIVATE_CFLAGS += -Umain
+$(intermediates)/%.o: PRIVATE_CFLAGS += -Dmain=do_cavan_$(basename $(notdir $@))
+$(intermediates)/core/%.o: PRIVATE_CFLAGS += -Umain
 $(CAVAN_APP_CORE_FILES): $(CAVAN_MAP_H) $(CAVAN_MAP_C)
 
 $(CAVAN_MAP_H): $(CAVAN_APP_SRC_FILES)
