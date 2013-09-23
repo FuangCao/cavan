@@ -62,15 +62,14 @@ endif
 
 include $(BUILD_CORE_PATH)/defines3.mk
 
-all: all-modules
-
-ifeq ($(MAKECMDGOALS),)
 $(foreach path,$(OUT_LIB) $(OUT_BIN),$(shell [ -d $(path) ] || $(MKDIR) $(path)))
-$(foreach sub,$(SUB_DIRS),$(eval $(call build_sub_module,$(sub))))
-endif
+
+all: all-modules
 
 clean distclean:
 	@rm $(OUT_PATH) -rf
+
+$(foreach sub,$(SUB_DIRS),$(eval $(call build_sub_module,$(sub))))
 
 all-modules: $(MODULES)
 
