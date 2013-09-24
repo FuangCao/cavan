@@ -99,30 +99,24 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 {
 	const struct cavan_command_map *p;
 	const char *pcmd;
+	const char *pstart;
 
-	if (file_test(argv[0], "l") < 0)
+	for (pcmd = argv[0]; *pcmd; pcmd++);
+	for (pstart = argv[0]; pcmd >= pstart && *pcmd != '/'; pcmd--);
+
+	pcmd++;
+
+	p = match_command_by_name(map, map + count, pcmd);
+
+	if (p == NULL && argc > 1 && file_test(argv[0], "l") < 0)
 	{
-		if (argc < 2)
-		{
-			print_command_table(map, count);
-			return -1;
-		}
-
 		pcmd = argv[1];
 		argc--;
 		argv++;
-	}
-	else
-	{
-		const char *pstart;
 
-		for (pcmd = argv[0]; *pcmd; pcmd++);
-		for (pstart = argv[0]; pcmd >= pstart && *pcmd != '/'; pcmd--);
-
-		pcmd++;
+		p = match_command_by_name(map, map + count, pcmd);
 	}
 
-	p = match_command_by_name(map, map + count, pcmd);
 	if (p)
 	{
 		return p->main_func(argc, argv);
