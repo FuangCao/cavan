@@ -133,13 +133,22 @@ int odexCheck(int fd)
 		return -EFAULT;
     }
 
-	checksum = fileAdler32(fd, adler32(0L, Z_NULL, 0), dexOptHeader.depsOffset, dexOptHeader.optOffset + dexOptHeader.optLength - dexOptHeader.depsOffset);
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+	if ((dexOptHeader.flags & DEX_OPT_FLAG_BIG))
+#else
+	if ((dexOptHeader.flags & DEX_OPT_FLAG_BIG) != DEX_OPT_FLAG_BIG)
+#endif
+	{
+		pr_red_info("DexOpt: header flag mismatch");
+		return -EFAULT;
+	}
 
 #if LOCAL_DEBUG
 	showDexOptHeader(&dexOptHeader);
 	println("checksum = 0x%08x", checksum);
 #endif
 
+	checksum = fileAdler32(fd, adler32(0L, Z_NULL, 0), dexOptHeader.depsOffset, dexOptHeader.optOffset + dexOptHeader.optLength - dexOptHeader.depsOffset);
 	if (dexOptHeader.checksum != checksum) {
 		pr_red_info("DexOptHeader checksum is not match");
 		return -EFAULT;
@@ -166,15 +175,14 @@ int odexCheck(int fd)
     }
 #endif
 
-	rdLen = sizeof(dexHeader.magic) + sizeof(dexHeader.checksum);
-	checksum = adler32(adler32(0L, Z_NULL, 0), dexHeader.signature, sizeof(dexHeader) - rdLen);
-	checksum = fileAdler32(fd, checksum, dexOptHeader.dexOffset + sizeof(dexHeader), dexOptHeader.dexLength - sizeof(dexHeader));
-
 #if LOCAL_DEBUG
 	showDexHeader(&dexHeader);
 	println("checksum = 0x%08x", checksum);
 #endif
 
+	rdLen = sizeof(dexHeader.magic) + sizeof(dexHeader.checksum);
+	checksum = adler32(adler32(0L, Z_NULL, 0), dexHeader.signature, sizeof(dexHeader) - rdLen);
+	checksum = fileAdler32(fd, checksum, dexOptHeader.dexOffset + sizeof(dexHeader), dexOptHeader.dexLength - sizeof(dexHeader));
 	if (dexHeader.checksum != checksum) {
 		pr_red_info("DexHeader checksum is not match");
 		return -EFAULT;
