@@ -8,7 +8,7 @@
 #include <cavan/device.h>
 #include <cavan/network.h>
 
-#define MAX_BUFF_LEN	MB(1)
+#define MAX_BUFF_LEN	KB(4)
 
 static ssize_t send_error_pkg(int sockfd, int err_code, const char *err_msg, const struct sockaddr_in *remote_addr)
 {

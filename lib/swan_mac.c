@@ -5,7 +5,7 @@
 #include <cavan/device.h>
 #include <cavan/image.h>
 
-#define MAX_BUFF_LEN			MB(1)
+#define MAX_BUFF_LEN			KB(4)
 
 static void show_oem_info(struct oem_info *oem)
 {

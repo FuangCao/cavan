@@ -3,7 +3,7 @@
 #include <linux/kd.h>
 #include <termios.h>
 
-#define MAX_BUFF_LEN	MB(1)
+#define MAX_BUFF_LEN	KB(4)
 
 FILE *console_fp;
 

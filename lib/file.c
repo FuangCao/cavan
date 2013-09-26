@@ -8,7 +8,7 @@
 #include <cavan/device.h>
 #include <cavan/memory.h>
 
-#define MAX_BUFF_LEN	MB(1)
+#define MAX_BUFF_LEN	KB(4)
 #define MIN_FILE_SIZE	KB(1)
 
 static const u32 crc16_table[256] =
@@ -114,7 +114,7 @@ int file_join(const char *dest_file, char *src_files[], int count)
 	dest_fd = open(dest_file, O_WRONLY | O_CREAT | O_SYNC | O_TRUNC | O_BINARY, 0777);
 	if (dest_fd < 0)
 	{
-		print_error("open \"%s\"", dest_file);
+		pr_error_info("open \"%s\"", dest_file);
 		return -1;
 	}
 
@@ -126,14 +126,14 @@ int file_join(const char *dest_file, char *src_files[], int count)
 		if (src_fd < 0)
 		{
 			ret = -1;
-			print_error("open \"%s\"", src_files[i]);
+			pr_error_info("open \"%s\"", src_files[i]);
 			goto out_close_dest;
 		}
 
 		ret = fstat(src_fd, &st);
 		if (ret < 0)
 		{
-			print_error("fstat \"%s\"", src_files[i]);
+			pr_error_info("fstat \"%s\"", src_files[i]);
 			goto out_close_src;
 		}
 
@@ -148,7 +148,7 @@ int file_join(const char *dest_file, char *src_files[], int count)
 			if (readlen < 0)
 			{
 				ret = readlen;
-				print_error("read \"%s\"", src_files[i]);
+				pr_error_info("read \"%s\"", src_files[i]);
 				goto out_close_src;
 			}
 
@@ -161,7 +161,7 @@ int file_join(const char *dest_file, char *src_files[], int count)
 			if (writelen != readlen)
 			{
 				ret = -errno;
-				print_error("write \"%s\"", dest_file);
+				pr_error_info("write \"%s\"", dest_file);
 				goto out_close_src;
 			}
 
@@ -198,14 +198,14 @@ int file_split(const char *file_name, const char *dest_dir, int count)
 	src_fd = open(file_name, O_RDONLY | O_BINARY);
 	if (src_fd < 0)
 	{
-		print_error("open \"%s\"", file_name);
+		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
 	ret = fstat(src_fd, &st);
 	if (ret < 0)
 	{
-		print_error("fstat \"%s\"", file_name);
+		pr_error_info("fstat \"%s\"", file_name);
 		goto out_close_src;
 	}
 
@@ -221,7 +221,7 @@ int file_split(const char *file_name, const char *dest_dir, int count)
 		dest_fd = open(format_text("%s/%d", dest_dir, i), O_WRONLY | O_CREAT | O_TRUNC | O_SYNC | O_BINARY, 0777);
 		if (dest_fd < 0)
 		{
-			print_error("open");
+			pr_error_info("open");
 			goto out_close_dest;
 		}
 
@@ -234,7 +234,7 @@ int file_split(const char *file_name, const char *dest_dir, int count)
 			if (ret < 0)
 			{
 				ret = readlen;
-				print_error("read");
+				pr_error_info("read");
 				goto out_close_dest;
 			}
 
@@ -247,7 +247,7 @@ int file_split(const char *file_name, const char *dest_dir, int count)
 			if (writelen != readlen)
 			{
 				ret = -errno;
-				print_error("write");
+				pr_error_info("write");
 				goto out_close_dest;
 			}
 
@@ -282,7 +282,7 @@ int ffile_copy_simple(int src_fd, int dest_fd)
 		readlen = read(src_fd, buff, sizeof(buff));
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -294,7 +294,7 @@ int ffile_copy_simple(int src_fd, int dest_fd)
 		writelen = write(dest_fd, buff, readlen);
 		if (writelen != readlen)
 		{
-			print_error("write");
+			pr_error_info("write");
 			return -errno;
 		}
 	}
@@ -324,7 +324,7 @@ int ffile_copy(int src_fd, int dest_fd)
 		readlen = read(src_fd, buff, sizeof(buff));
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -336,7 +336,7 @@ int ffile_copy(int src_fd, int dest_fd)
 		writelen = write(dest_fd, buff, readlen);
 		if (writelen != readlen)
 		{
-			print_error("write");
+			pr_error_info("write");
 			return -errno;
 		}
 
@@ -356,7 +356,7 @@ int file_append(const char *file_src, const char *file_dest)
 	fd_src = open(file_src, READ_FLAGS);
 	if (fd_src < 0)
 	{
-		print_error("open \"%s\"", file_src);
+		pr_error_info("open \"%s\"", file_src);
 		return -1;
 	}
 
@@ -364,7 +364,7 @@ int file_append(const char *file_src, const char *file_dest)
 	if (fd_dest < 0)
 	{
 		ret = -1;
-		print_error("open \"%s\"", file_dest);
+		pr_error_info("open \"%s\"", file_dest);
 		goto out_close_fd_src;
 	}
 
@@ -396,7 +396,7 @@ int file_open_rw_ro(const char *pathname, int flags)
 #ifdef CAVAN_DEBUG
 	if (fd < 0)
 	{
-		print_error("open file \"%s\"", pathname);
+		pr_error_info("open file \"%s\"", pathname);
 	}
 #endif
 
@@ -411,14 +411,14 @@ static int open_files(const char *src_file, const char *dest_file, int *src_fd, 
 	*src_fd = open(src_file, O_RDONLY);
 	if (*src_fd < 0)
 	{
-		print_error("open \"%s\"", src_file);
+		pr_error_info("open \"%s\"", src_file);
 		return *src_fd;
 	}
 
 	ret = fstat(*src_fd, &st);
 	if (ret < 0)
 	{
-		print_error("fstat \"%s\"", src_file);
+		pr_error_info("fstat \"%s\"", src_file);
 		goto out_close_src_fd;
 	}
 
@@ -426,7 +426,7 @@ static int open_files(const char *src_file, const char *dest_file, int *src_fd, 
 	if (*dest_fd < 0)
 	{
 		ret = *dest_fd;
-		print_error("open \"%s\"", dest_file);
+		pr_error_info("open \"%s\"", dest_file);
 		goto out_close_src_fd;
 	}
 
@@ -470,7 +470,7 @@ off_t ffile_get_size(int fd)
 	ret = fstat(fd, &st);
 	if (ret < 0)
 	{
-		print_error("fstat");
+		pr_error_info("fstat");
 		return 0;
 	}
 
@@ -485,7 +485,7 @@ off_t file_get_size(const char *filepath)
 	ret = file_stat2(filepath, &st);
 	if (ret < 0)
 	{
-		print_error("file_stat \"%s\"", filepath);
+		pr_error_info("file_stat \"%s\"", filepath);
 		return 0;
 	}
 
@@ -598,7 +598,7 @@ int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 		readlen = read(src_fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -610,7 +610,7 @@ int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 		writelen = write(dest_fd, buff, readlen);
 		if (writelen != readlen)
 		{
-			print_error("write");
+			pr_error_info("write");
 			return -errno;
 		}
 
@@ -639,7 +639,7 @@ int ffile_ncopy(int src_fd, int dest_fd, size_t size)
 		readlen = read(src_fd, buff, size < sizeof(buff) ? size : sizeof(buff));
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -651,7 +651,7 @@ int ffile_ncopy(int src_fd, int dest_fd, size_t size)
 		writelen = write(dest_fd, buff, readlen);
 		if (writelen != readlen)
 		{
-			print_error("write");
+			pr_error_info("write");
 			return -errno;
 		}
 
@@ -786,7 +786,7 @@ ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
 		if (offset < 0)
 		{
 #ifdef CAVAN_DEBUG
-			print_error("lseek");
+			pr_error_info("lseek");
 #endif
 			return offset;
 		}
@@ -810,7 +810,7 @@ ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t
 	if (fd < 0)
 	{
 #ifdef CAVAN_DEBUG
-		print_error("open \"%s\"", file_name);
+		pr_error_info("open \"%s\"", file_name);
 #endif
 		return -1;
 	}
@@ -829,7 +829,7 @@ ssize_t ffile_readfrom(int fd, void *buff, size_t size, off_t offset)
 		offset = lseek(fd, offset, SEEK_SET);
 		if (offset < 0)
 		{
-			print_error("lseek");
+			pr_error_info("lseek");
 			return offset;
 		}
 	}
@@ -852,7 +852,7 @@ ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offs
 	if (fd < 0)
 	{
 #ifdef CAVAN_DEBUG
-		print_error("open \"%s\"", file_name);
+		pr_error_info("open \"%s\"", file_name);
 #endif
 		return -1;
 	}
@@ -881,7 +881,7 @@ int ffile_show(int fd)
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -913,7 +913,7 @@ int ffile_nshow(int fd, size_t size)
 		readlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -1051,7 +1051,7 @@ int ffile_cat(int fd)
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -1083,7 +1083,7 @@ int ffile_ncat(int fd, size_t size)
 		readlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -1117,7 +1117,7 @@ int ffile_cmp(int fd1, int fd2, size_t size)
 		readlen = read(fd1, buff1, size > sizeof(buff1) ? sizeof(buff1) : size);
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -1129,7 +1129,7 @@ int ffile_cmp(int fd1, int fd2, size_t size)
 		readlen = read(fd2, buff2, readlen);
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -1152,7 +1152,7 @@ int file_cmp(const char *file1, const char *file2, size_t size)
 	fd1 = open(file1, READ_FLAGS);
 	if (fd1 < 0)
 	{
-		print_error("open \"%s\"", file1);
+		pr_error_info("open \"%s\"", file1);
 		return -1;
 	}
 
@@ -1160,7 +1160,7 @@ int file_cmp(const char *file1, const char *file2, size_t size)
 	if (fd2 < 0)
 	{
 		ret = -1;
-		print_error("open \"%s\"", file2);
+		pr_error_info("open \"%s\"", file2);
 		goto out_close_file1;
 	}
 
@@ -1215,7 +1215,7 @@ int ffile_crc32(int fd, u32 *crc)
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -1242,7 +1242,7 @@ int file_crc32(const char *file_name, u32 *crc)
 	fd = open(file_name, READ_FLAGS);
 	if (fd < 0)
 	{
-		print_error("open \"%s\"", file_name);
+		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
@@ -1271,7 +1271,7 @@ int ffile_ncrc32(int fd, size_t size, u32 *crc)
 		readlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -1298,7 +1298,7 @@ int file_ncrc32(const char *file_name, size_t size, u32 *crc)
 	fd = open(file_name, READ_FLAGS);
 	if (fd < 0)
 	{
-		print_error("open \"%s\"", file_name);
+		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
@@ -1321,7 +1321,7 @@ int ffile_crc32_seek(int fd, off_t offset, int whence, u32 *crc)
 	offset_bak = lseek(fd, offset, whence);
 	if (offset_bak < 0)
 	{
-		print_error("lseek");
+		pr_error_info("lseek");
 		return -1;
 	}
 
@@ -1335,7 +1335,7 @@ int ffile_crc32_seek(int fd, off_t offset, int whence, u32 *crc)
 	ret = lseek(fd, offset_bak, SEEK_SET);
 	if (ret < 0)
 	{
-		print_error("lseek");
+		pr_error_info("lseek");
 		return ret;
 	}
 
@@ -1350,7 +1350,7 @@ int file_crc32_seek(const char *file_name, off_t offset, int whence, u32 *crc)
 	fd = open(file_name, READ_FLAGS);
 	if (fd < 0)
 	{
-		print_error("open \"%s\"", file_name);
+		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
@@ -1373,7 +1373,7 @@ int ffile_ncrc32_seek(int fd, off_t offset, int whence, size_t size, u32 *crc)
 	offset_bak = lseek(fd, offset, whence);
 	if (offset_bak < 0)
 	{
-		print_error("lseek");
+		pr_error_info("lseek");
 		return -1;
 	}
 
@@ -1387,7 +1387,7 @@ int ffile_ncrc32_seek(int fd, off_t offset, int whence, size_t size, u32 *crc)
 	ret = lseek(fd, offset_bak, SEEK_SET);
 	if (ret < 0)
 	{
-		print_error("lseek");
+		pr_error_info("lseek");
 		return ret;
 	}
 
@@ -1402,7 +1402,7 @@ int file_ncrc32_seek(const char *file_name, off_t offset, int whence, size_t siz
 	fd = open(file_name, READ_FLAGS);
 	if (fd < 0)
 	{
-		print_error("open \"%s\"", file_name);
+		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
@@ -1646,7 +1646,7 @@ int file_resize(const char *file_path, off_t length)
 	fd = open(file_path, O_CREAT | O_WRONLY | O_BINARY, 0777);
 	if (fd < 0)
 	{
-		print_error("open file \"%s\"", file_path);
+		pr_error_info("open file \"%s\"", file_path);
 		return fd;
 	}
 
@@ -1664,7 +1664,7 @@ int get_file_pointer(int fd, off_t *fpointer)
 	ret = lseek(fd, 0, SEEK_CUR);
 	if (ret < 0)
 	{
-		print_error("lseek");
+		pr_error_info("lseek");
 		return ret;
 	}
 
@@ -1681,7 +1681,7 @@ int calculate_file_md5sum(const char *file_path, char *md5sum)
 	ret = system_command("md5sum -b %s > " MD5SUM_FILE_PATH, file_path);
 	if (ret < 0)
 	{
-		print_error("system_command");
+		pr_error_info("system_command");
 		return ret;
 	}
 
@@ -1876,7 +1876,7 @@ u32 file_checksum32(const char *filename, off_t offset, size_t size)
 	fd = file_open_ro(filename);
 	if (fd < 0)
 	{
-		print_error("open file \"%s\"", filename);
+		pr_error_info("open file \"%s\"", filename);
 		return 0;
 	}
 
@@ -1895,7 +1895,7 @@ u16 file_checksum16(const char *filename, off_t offset, size_t size)
 	fd = file_open_ro(filename);
 	if (fd < 0)
 	{
-		print_error("open file \"%s\"", filename);
+		pr_error_info("open file \"%s\"", filename);
 		return 0;
 	}
 
@@ -1914,7 +1914,7 @@ u8 file_checksum8(const char *filename, off_t offset, size_t size)
 	fd = file_open_ro(filename);
 	if (fd < 0)
 	{
-		print_error("open file \"%s\"", filename);
+		pr_error_info("open file \"%s\"", filename);
 		return 0;
 	}
 
@@ -2044,7 +2044,7 @@ int file_mount_to(const char *source, const char *target, const char *fs_type, u
 	if (ret < 0)
 	{
 #ifdef CAVAN_DEBUG
-		print_error("libc_mount_to");
+		pr_error_info("libc_mount_to");
 #endif
 		loop_clr_fd(loop_path);
 		return ret;
@@ -2121,7 +2121,7 @@ int ffile_delete_char(int fd_in, int fd_out, char c)
 		readlen = read(fd_in, buff, sizeof(buff));
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return readlen;
 		}
 
@@ -2134,7 +2134,7 @@ int ffile_delete_char(int fd_in, int fd_out, char c)
 		writelen = write(fd_out, buff, readlen);
 		if (writelen != readlen)
 		{
-			print_error("write");
+			pr_error_info("write");
 			if (writelen < 0)
 			{
 				return writelen;
@@ -2155,7 +2155,7 @@ int file_delete_char(const char *file_in, const char *file_out, char c)
 	fd_in = open(file_in, O_RDONLY | O_BINARY);
 	if (fd_in < 0)
 	{
-		print_error("open input file \"%s\"", file_in);
+		pr_error_info("open input file \"%s\"", file_in);
 		return fd_in;
 	}
 
@@ -2163,7 +2163,7 @@ int file_delete_char(const char *file_in, const char *file_out, char c)
 	if (fd_out < 0)
 	{
 		ret = fd_out;
-		print_error("open output file \"%s\"", file_out);
+		pr_error_info("open output file \"%s\"", file_out);
 		goto out_close_fd_in;
 	}
 
@@ -2403,7 +2403,7 @@ int remove_directory(const char *pathname)
 	dp = opendir(pathname);
 	if (dp == NULL)
 	{
-		print_error("opendir %s failed", pathname);
+		pr_error_info("opendir %s failed", pathname);
 		return -ENOENT;
 	}
 
@@ -2430,7 +2430,7 @@ int remove_directory(const char *pathname)
 
 		if (ret < 0)
 		{
-			print_error("delete %s failed", tmppath);
+			pr_error_info("delete %s failed", tmppath);
 			goto out_close_dp;
 		}
 	}
@@ -2452,7 +2452,7 @@ int remove_auto(const char *pathname)
 	ret = lstat(pathname, &st);
 	if (ret < 0)
 	{
-		print_error("get file %s stat failed", pathname);
+		pr_error_info("get file %s stat failed", pathname);
 		return ret;
 	}
 
@@ -2540,7 +2540,7 @@ int scan_directory(const char *dirpath, void *buff, size_t size1, size_t size2)
 	dp = opendir(dirpath);
 	if (dp == NULL)
 	{
-		print_error("opendir %s failed", dirpath);
+		pr_error_info("opendir %s failed", dirpath);
 		return -1;
 	}
 
@@ -2564,7 +2564,7 @@ int file_open_format(int flags, mode_t mode, const char *fmt, ...)
 	fd = open(buff, flags, mode);
 	if (fd < 0)
 	{
-		print_error("Open file `%s' failed", buff);
+		pr_error_info("Open file `%s' failed", buff);
 	}
 
 	return fd;
@@ -2578,7 +2578,7 @@ size_t ffile_line_count(int fd)
 
 	if (lseek(fd, 0, SEEK_SET) < 0)
 	{
-		print_error("lseek");
+		pr_error_info("lseek");
 		return 0;
 	}
 
@@ -2589,7 +2589,7 @@ size_t ffile_line_count(int fd)
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0)
 		{
-			print_error("read");
+			pr_error_info("read");
 			return 0;
 		}
 
@@ -2619,7 +2619,7 @@ size_t file_line_count(const char *filename)
 	fd = open(filename, O_RDONLY);
 	if (fd < 0)
 	{
-		print_error("Open file `%s' failed", filename);
+		pr_error_info("Open file `%s' failed", filename);
 		return 0;
 	}
 

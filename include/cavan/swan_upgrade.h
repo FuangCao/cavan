@@ -74,9 +74,9 @@
 #define SWAN_KEY_CALL			231
 #define SWAN_KEY_ENDCALL		107
 
-#define MAX_BUFF_LEN			MB(1)
+#define MAX_BUFF_LEN			KB(4)
 
-#define MAX_BUILD_PROP_LEN		MB(1)
+#define MAX_BUILD_PROP_LEN		KB(4)
 #define BUILD_PROP_PRODUCT		"ro.build.product"
 #define BUILD_PROP_NAME			"build.prop"
 
