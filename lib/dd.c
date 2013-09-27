@@ -79,9 +79,7 @@ int cavan_dd_base(const char *file_in, const char *file_out, off_t offset_in, of
 
 	println("%s [dd]-> %s", file_in, file_out);
 
-	ret = get_first_partition_offset(file_out, &size);
-	if (ret < 0)
-	{
+	if (file_test(file_out, "b") < 0 || get_first_partition_offset(file_out, &size) < 0) {
 		size = 0;
 	}
 
