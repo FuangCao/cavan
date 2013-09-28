@@ -7,6 +7,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/list.h>
 #include <linux/capability.h>
 
 struct cavan_service_description
@@ -31,6 +32,19 @@ struct cavan_daemon_description
 	int verbose;
 	int as_daemon;
 	int super_permission;
+};
+
+struct cavan_service_daemon
+{
+	int index;
+	struct double_link_node node;
+};
+
+struct cavan_service
+{
+	const char *name;
+	int min, max;
+	struct double_link link;
 };
 
 extern int capget(cap_user_header_t hdrp, cap_user_data_t datap);

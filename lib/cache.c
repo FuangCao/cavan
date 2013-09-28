@@ -3,6 +3,8 @@
 #include <cavan.h>
 #include <cavan/cache.h>
 
+#define CAVAN_CACHE_DEBUG	1
+
 int mem_cache_init(struct mem_cache *cache, size_t size)
 {
 	if(cache == NULL)
@@ -417,3 +419,292 @@ off_t file_cache_seek(struct file_cache *cache, off_t offset)
 	return 0;
 }
 
+// ============================================================
+
+int cavan_cache_init(struct cavan_cache *cache, size_t size)
+{
+	int ret;
+
+	ret = pthread_mutex_init(&cache->lock, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_mutex_init");
+		return ret;
+	}
+
+	ret = pthread_cond_init(&cache->rdcond, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_cond_init");
+		goto out_pthread_mutex_destroy_lock;
+	}
+
+	ret = pthread_cond_init(&cache->wrcond, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_cond_init");
+		goto out_pthread_cond_destroy_rdcond;
+	}
+
+	cache->mem = malloc(size);
+	if (cache->mem == NULL)
+	{
+		ret = -ENOMEM;
+		pr_error_info("malloc");
+		goto out_pthread_cond_destroy_wrcond;
+	}
+
+	cache->size = size;
+	cache->mem_end = cache->mem + size;
+
+	return 0;
+
+out_pthread_cond_destroy_wrcond:
+	pthread_cond_destroy(&cache->wrcond);
+out_pthread_cond_destroy_rdcond:
+	pthread_cond_destroy(&cache->rdcond);
+out_pthread_mutex_destroy_lock:
+	pthread_mutex_destroy(&cache->lock);
+	return ret;
+}
+
+void cavan_cache_deinit(struct cavan_cache *cache)
+{
+	free(cache->mem);
+	pthread_cond_destroy(&cache->wrcond);
+	pthread_cond_destroy(&cache->rdcond);
+	pthread_mutex_destroy(&cache->lock);
+}
+
+void cavan_cache_open(struct cavan_cache *cache)
+{
+	pthread_mutex_lock(&cache->lock);
+	cache->closed = false;
+	cache->head = cache->tail = cache->mem;
+	pthread_mutex_unlock(&cache->lock);
+}
+
+void cavan_cache_close(struct cavan_cache *cache)
+{
+	pthread_mutex_lock(&cache->lock);
+	cache->closed = true;
+	pthread_mutex_unlock(&cache->lock);
+
+	pthread_cond_broadcast(&cache->rdcond);
+	pthread_cond_broadcast(&cache->wrcond);
+}
+
+ssize_t cavan_cache_free_space(struct cavan_cache *cache)
+{
+	if (cache->tail < cache->head)
+	{
+		return cache->head - cache->tail - 1;
+	}
+	else
+	{
+		return (cache->mem_end - cache->tail) + (cache->head - cache->mem) - 1;
+	}
+}
+
+ssize_t cavan_cache_used_space(struct cavan_cache *cache)
+{
+	if (cache->head < cache->tail)
+	{
+		return cache->tail - cache->head;
+	}
+	else
+	{
+		return (cache->mem_end - cache->head) + (cache->head - cache->mem);
+	}
+}
+
+char *cavan_cache_pointer_add(struct cavan_cache *cache, char *pointer, off_t offset)
+{
+	pointer += offset;
+
+	while (pointer >= cache->mem_end)
+	{
+		pointer -= cache->size;
+	}
+
+	return pointer;
+}
+
+ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t size)
+{
+	const char *buff_bak = buff;
+	const char *buff_end = buff + size;
+
+	pthread_mutex_lock(&cache->lock);
+
+	while (1)
+	{
+		size_t length, rcount;
+		size_t remain;
+
+		remain = buff_end - buff;
+		if (remain == 0)
+		{
+			break;
+		}
+
+		while (1)
+		{
+			if (cache->tail < cache->head)
+			{
+				length = rcount = cache->head - cache->tail - 1;
+			}
+			else
+			{
+				rcount = cache->mem_end - cache->tail;
+				length = rcount + (cache->head - cache->mem) - 1;
+			}
+
+#if CAVAN_CACHE_DEBUG
+			println("mem = %p, mem_end = %p, size = %d", cache->mem, cache->mem_end, cache->size);
+			println("Write: head = %p, tail = %p, rcount = %d, length = %d", cache->head, cache->tail, rcount, length);
+#endif
+
+			if (length > 0)
+			{
+				break;
+			}
+
+			if (cache->closed)
+			{
+				size = buff - buff_bak;
+				goto out_pthread_mutex_unlock;
+			}
+
+			pthread_cond_wait(&cache->wrcond, &cache->lock);
+		}
+
+		if (length > remain)
+		{
+			length = remain;
+		}
+
+		if (length > rcount)
+		{
+			size_t lcount = length - rcount;
+
+			memcpy(cache->tail, buff, rcount);
+			memcpy(cache->mem, buff + rcount, lcount);
+			cache->tail = cache->mem + lcount;
+		}
+		else
+		{
+			memcpy(cache->tail, buff, length);
+
+			cache->tail += length;
+			if (cache->tail >= cache->mem_end)
+			{
+				cache->tail = cache->mem;
+			}
+		}
+
+		pthread_mutex_unlock(&cache->lock);
+		pthread_cond_broadcast(&cache->rdcond);
+		pthread_mutex_lock(&cache->lock);
+
+		buff += length;
+	}
+
+out_pthread_mutex_unlock:
+	pthread_mutex_unlock(&cache->lock);
+	return size;
+}
+
+ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, long timeout)
+{
+	size_t length, rcount;
+
+	pthread_mutex_lock(&cache->lock);
+
+	while (1)
+	{
+		if (cache->head > cache->tail)
+		{
+			rcount = cache->mem_end - cache->head;
+			length = rcount + (cache->tail - cache->mem);
+		}
+		else
+		{
+			length = rcount = cache->tail - cache->head;
+		}
+
+#if CAVAN_CACHE_DEBUG
+		println("mem = %p, mem_end = %p, size = %d", cache->mem, cache->mem_end, cache->size);
+		println("Read: head = %p, tail = %p, rcount = %d, length = %d", cache->head, cache->tail, rcount, length);
+#endif
+
+		if (length > reserved)
+		{
+			length -= reserved;
+			break;
+		}
+
+		if (cache->closed)
+		{
+			length = 0;
+			goto out_pthread_mutex_unlock;
+		}
+
+		pthread_cond_wait(&cache->rdcond, &cache->lock);
+	}
+
+	if (length > size)
+	{
+		length = size;
+	}
+
+	if (length > rcount)
+	{
+		size_t lcount = length - rcount;
+
+		memcpy(buff, cache->head, rcount);
+		memcpy(buff + rcount, cache->mem, lcount);
+		cache->head = cache->mem + lcount;
+	}
+	else
+	{
+		memcpy(buff, cache->head, length);
+
+		cache->head += length;
+		if (cache->head >= cache->mem_end)
+		{
+			cache->head = cache->mem;
+		}
+	}
+
+out_pthread_mutex_unlock:
+	pthread_mutex_unlock(&cache->lock);
+	pthread_cond_broadcast(&cache->wrcond);
+	return length;
+}
+
+ssize_t cavan_cache_fill(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, long timeout)
+{
+	char *buff_bak = buff;
+	char *buff_end = buff + size;
+
+	while (buff < buff_end)
+	{
+		ssize_t rdlen = cavan_cache_read(cache, buff, buff_end - buff, reserved, timeout);
+		if (rdlen < 0)
+		{
+			pr_red_info("cavan_cache_read");
+			return rdlen;
+		}
+
+		if (rdlen == 0)
+		{
+			size = buff - buff_bak;
+			break;
+		}
+
+		buff += rdlen;
+	}
+
+	return size;
+}

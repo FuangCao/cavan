@@ -31,6 +31,22 @@ struct file_cache
 	ssize_t (*write_blocks)(struct file_cache *cache, const void *buff, size_t count);
 };
 
+struct cavan_cache
+{
+	char *head;
+	char *tail;
+
+	char *mem;
+	char *mem_end;
+
+	bool closed;
+	size_t size;
+
+	pthread_mutex_t lock;
+	pthread_cond_t rdcond;
+	pthread_cond_t wrcond;
+};
+
 int mem_cache_init(struct mem_cache *cache, size_t size);
 void mem_cache_reinit(struct mem_cache *cache);
 void mem_cache_deinit(struct mem_cache *cache);
@@ -48,3 +64,11 @@ ssize_t file_cache_clean(struct file_cache *cache);
 ssize_t file_cache_write(struct file_cache *cache, const void *buff, size_t size);
 off_t file_cache_seek(struct file_cache *cache, off_t offset);
 
+int cavan_cache_init(struct cavan_cache *cache, size_t size);
+void cavan_cache_deinit(struct cavan_cache *cache);
+void cavan_cache_open(struct cavan_cache *cache);
+void cavan_cache_close(struct cavan_cache *cache);
+char *cavan_cache_pointer_add(struct cavan_cache *cache, char *pointer, off_t offset);
+ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t size);
+ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, long timeout);
+ssize_t cavan_cache_fill(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, long timeout);
