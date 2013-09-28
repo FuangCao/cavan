@@ -60,19 +60,19 @@ out_return:
 int main(int argc, char *argv[])
 {
 	int ret;
-	struct cavan_cache cache;
+	struct cavan_cache *cache;
 	pthread_t rdthread;
 
-	ret = cavan_cache_init(&cache, 10);
-	if (ret < 0)
+	cache = cavan_cache_create(10);
+	if (cache == NULL)
 	{
-		pr_red_info("cavan_cache_init");
-		return ret;
+		pr_red_info("cavan_cache_create");
+		return -1;
 	}
 
-	cavan_cache_open(&cache);
+	cavan_cache_open(cache);
 
-	pthread_create(&rdthread, NULL, read_thread_handler, &cache);
+	pthread_create(&rdthread, NULL, read_thread_handler, cache);
 
 	while (1)
 	{
@@ -85,14 +85,14 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		wrlen = cavan_cache_write(&cache, buff, strlen(buff));
+		wrlen = cavan_cache_write(cache, buff, strlen(buff));
 		if (wrlen < 0)
 		{
 			pr_red_info("cavan_cache_write");
 			break;
 		}
 
-		wrlen = cavan_cache_write(&cache, "\n", 1);
+		wrlen = cavan_cache_write(cache, "\n", 1);
 		if (wrlen < 0)
 		{
 			pr_red_info("cavan_cache_write");
@@ -100,13 +100,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	cavan_cache_close(&cache);
+	cavan_cache_close(cache);
 
 	pr_pos_info();
 	pthread_join(rdthread, NULL);
 
 	pr_pos_info();
-	cavan_cache_deinit(&cache);
+	cavan_cache_destroy(cache);
 
 	pr_pos_info();
 	msleep(1000);

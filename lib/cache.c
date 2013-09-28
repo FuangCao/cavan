@@ -422,7 +422,7 @@ off_t file_cache_seek(struct file_cache *cache, off_t offset)
 
 // ============================================================
 
-int cavan_cache_init(struct cavan_cache *cache, size_t size)
+int cavan_cache_init(struct cavan_cache *cache, void *mem, size_t size)
 {
 	int ret;
 
@@ -447,15 +447,8 @@ int cavan_cache_init(struct cavan_cache *cache, size_t size)
 		goto out_pthread_cond_destroy_rdcond;
 	}
 
-	cache->mem = malloc(size);
-	if (cache->mem == NULL)
-	{
-		ret = -ENOMEM;
-		pr_error_info("malloc");
-		goto out_pthread_cond_destroy_wrcond;
-	}
-
 	cache->size = size;
+	cache->mem = mem;
 	cache->mem_end = cache->mem + size;
 
 	return 0;
@@ -471,10 +464,36 @@ out_pthread_mutex_destroy_lock:
 
 void cavan_cache_deinit(struct cavan_cache *cache)
 {
-	free(cache->mem);
 	pthread_cond_destroy(&cache->wrcond);
 	pthread_cond_destroy(&cache->rdcond);
 	pthread_mutex_destroy(&cache->lock);
+}
+
+struct cavan_cache *cavan_cache_create(size_t size)
+{
+	struct cavan_cache *cache;
+
+	cache = malloc(sizeof(struct cavan_cache) + size);
+	if (cache == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	if (cavan_cache_init(cache, (void *)(cache + 1), size) < 0)
+	{
+		pr_red_info("cavan_cache_init");
+		free(cache);
+		return NULL;
+	}
+
+	return cache;
+}
+
+void cavan_cache_destroy(struct cavan_cache *cache)
+{
+	cavan_cache_deinit(cache);
+	free(cache);
 }
 
 void cavan_cache_open(struct cavan_cache *cache)

@@ -64,8 +64,10 @@ ssize_t file_cache_clean(struct file_cache *cache);
 ssize_t file_cache_write(struct file_cache *cache, const void *buff, size_t size);
 off_t file_cache_seek(struct file_cache *cache, off_t offset);
 
-int cavan_cache_init(struct cavan_cache *cache, size_t size);
+int cavan_cache_init(struct cavan_cache *cache, void *mem, size_t size);
 void cavan_cache_deinit(struct cavan_cache *cache);
+struct cavan_cache *cavan_cache_create(size_t size);
+void cavan_cache_destroy(struct cavan_cache *cache);
 void cavan_cache_open(struct cavan_cache *cache);
 void cavan_cache_close(struct cavan_cache *cache);
 ssize_t cavan_cache_free_space(struct cavan_cache *cache);
