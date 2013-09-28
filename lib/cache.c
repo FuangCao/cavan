@@ -4,7 +4,7 @@
 #include <cavan/cache.h>
 #include <cavan/timer.h>
 
-#define CAVAN_CACHE_DEBUG	1
+#define CAVAN_CACHE_DEBUG	0
 
 int mem_cache_init(struct mem_cache *cache, size_t size)
 {
@@ -725,4 +725,46 @@ ssize_t cavan_cache_fill(struct cavan_cache *cache, char *buff, size_t size, siz
 	}
 
 	return size;
+}
+
+ssize_t cavan_cache_read_line(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout)
+{
+	char *buff_bak = buff;
+	char *buff_end = buff + size - 1;
+
+	while (buff < buff_end)
+	{
+		char c;
+		ssize_t rdlen;
+
+		rdlen = cavan_cache_read(cache, &c, 1, reserved, timeout);
+		if (rdlen < 0)
+		{
+			pr_red_info("cavan_cache_read");
+			return rdlen;
+		}
+
+		if (rdlen == 0)
+		{
+			break;
+		}
+
+		switch (c)
+		{
+		case '\n':
+			if (buff > buff_bak)
+			{
+				goto out_return;
+			}
+		case '\r':
+			break;
+
+		default:
+			*buff++ = c;
+		}
+	}
+
+out_return:
+	*buff = 0;
+	return buff - buff_bak;
 }

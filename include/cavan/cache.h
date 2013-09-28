@@ -72,3 +72,4 @@ char *cavan_cache_pointer_add(struct cavan_cache *cache, char *pointer, off_t of
 ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t size);
 ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout);
 ssize_t cavan_cache_fill(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout);
+ssize_t cavan_cache_read_line(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout);

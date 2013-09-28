@@ -28,7 +28,7 @@ static void *read_thread_handler(void *data)
 
 	while (1)
 	{
-		rdlen = cavan_cache_fill(cache, buff, 10, 5, 20000);
+		rdlen = cavan_cache_read_line(cache, buff, sizeof(buff), 5, 20000);
 		if (rdlen <= 0)
 		{
 			if (rdlen < 0)
@@ -86,6 +86,13 @@ int main(int argc, char *argv[])
 		}
 
 		wrlen = cavan_cache_write(&cache, buff, strlen(buff));
+		if (wrlen < 0)
+		{
+			pr_red_info("cavan_cache_write");
+			break;
+		}
+
+		wrlen = cavan_cache_write(&cache, "\n", 1);
 		if (wrlen < 0)
 		{
 			pr_red_info("cavan_cache_write");
