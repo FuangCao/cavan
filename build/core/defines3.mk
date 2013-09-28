@@ -51,13 +51,13 @@ endif
 
 LOCAL_OUT_PATH := $$(OUT_OBJ)/$$(LOCAL_MODULE)_$(1)
 LOCAL_OBJECT := $$(patsubst %,$$(LOCAL_OUT_PATH)/%.o,$$(basename $$(LOCAL_SOURCE)))
-LOCAL_CFLAGS += $$(addprefix -I,$$(LOCAL_INCLUDE))
+PRIVATE_CFLAGS := $$(LOCAL_CFLAGS) $$(addprefix -I,$$(LOCAL_INCLUDE) $$(LOCAL_PATH))
 
 ifeq ($$(filter %.cpp %.cxx %.cc,$$(LOCAL_SOURCE)),)
-$$(LOCAL_MODULE_PATH): CFLAGS += $$(LOCAL_CFLAGS)
+$$(LOCAL_MODULE_PATH): CFLAGS += $$(PRIVATE_CFLAGS)
 else
 $$(LOCAL_MODULE_PATH): CC = $$(CPP)
-$$(LOCAL_MODULE_PATH): CFLAGS = $$(CPPFLAGS) $$(LOCAL_CFLAGS)
+$$(LOCAL_MODULE_PATH): CFLAGS = $$(CPPFLAGS) $$(PRIVATE_CFLAGS)
 endif
 
 $$(if $$(filter package,$(1)),$$(eval $$(call module_package_action)))

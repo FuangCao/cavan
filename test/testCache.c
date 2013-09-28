@@ -23,12 +23,12 @@
 static void *read_thread_handler(void *data)
 {
 	ssize_t rdlen;
-	char buff[20];
+	char buff[1024];
 	struct cavan_cache *cache = data;
 
 	while (1)
 	{
-		rdlen = cavan_cache_read_line(cache, buff, sizeof(buff), 5, 20000);
+		rdlen = cavan_cache_read_line(cache, buff, sizeof(buff), 0, 20000);
 		if (rdlen <= 0)
 		{
 			if (rdlen < 0)

@@ -68,6 +68,8 @@ int cavan_cache_init(struct cavan_cache *cache, size_t size);
 void cavan_cache_deinit(struct cavan_cache *cache);
 void cavan_cache_open(struct cavan_cache *cache);
 void cavan_cache_close(struct cavan_cache *cache);
+ssize_t cavan_cache_free_space(struct cavan_cache *cache);
+ssize_t cavan_cache_used_space(struct cavan_cache *cache);
 char *cavan_cache_pointer_add(struct cavan_cache *cache, char *pointer, off_t offset);
 ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t size);
 ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout);

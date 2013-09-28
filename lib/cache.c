@@ -509,13 +509,13 @@ ssize_t cavan_cache_free_space(struct cavan_cache *cache)
 
 ssize_t cavan_cache_used_space(struct cavan_cache *cache)
 {
-	if (cache->head < cache->tail)
+	if (cache->head > cache->tail)
 	{
-		return cache->tail - cache->head;
+		return (cache->mem_end - cache->head) + (cache->tail - cache->mem);
 	}
 	else
 	{
-		return (cache->mem_end - cache->head) + (cache->head - cache->mem);
+		return cache->tail - cache->head;
 	}
 }
 
@@ -562,8 +562,8 @@ ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t si
 			}
 
 #if CAVAN_CACHE_DEBUG
-			println("mem = %p, mem_end = %p, size = %d", cache->mem, cache->mem_end, cache->size);
-			println("Write: head = %p, tail = %p, rcount = %d, length = %d", cache->head, cache->tail, rcount, length);
+			println("Write: head = %p, tail = %p, rcount = %d, length = %d, free_space = %d",
+				cache->head, cache->tail, rcount, length, cavan_cache_free_space(cache));
 #endif
 
 			if (length > 0)
@@ -633,8 +633,8 @@ ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, siz
 		}
 
 #if CAVAN_CACHE_DEBUG
-		println("mem = %p, mem_end = %p, size = %d", cache->mem, cache->mem_end, cache->size);
-		println("Read: head = %p, tail = %p, rcount = %d, length = %d", cache->head, cache->tail, rcount, length);
+		println("Read: head = %p, tail = %p, rcount = %d, length = %d, used_space = %d",
+			cache->head, cache->tail, rcount, length, cavan_cache_used_space(cache));
 #endif
 
 		if ((size_t) length > reserved)
