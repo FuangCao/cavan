@@ -2,6 +2,7 @@
 
 #include <cavan.h>
 #include <cavan/cache.h>
+#include <cavan/timer.h>
 
 #define CAVAN_CACHE_DEBUG	1
 
@@ -603,11 +604,9 @@ ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t si
 			}
 		}
 
-		pthread_mutex_unlock(&cache->lock);
-		pthread_cond_broadcast(&cache->rdcond);
-		pthread_mutex_lock(&cache->lock);
-
 		buff += length;
+
+		pthread_cond_signal(&cache->rdcond);
 	}
 
 out_pthread_mutex_unlock:
@@ -615,9 +614,9 @@ out_pthread_mutex_unlock:
 	return size;
 }
 
-ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, long timeout)
+ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout)
 {
-	size_t length, rcount;
+	ssize_t length, rcount;
 
 	pthread_mutex_lock(&cache->lock);
 
@@ -638,7 +637,7 @@ ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, siz
 		println("Read: head = %p, tail = %p, rcount = %d, length = %d", cache->head, cache->tail, rcount, length);
 #endif
 
-		if (length > reserved)
+		if ((size_t) length > reserved)
 		{
 			length -= reserved;
 			break;
@@ -650,10 +649,28 @@ ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, siz
 			goto out_pthread_mutex_unlock;
 		}
 
-		pthread_cond_wait(&cache->rdcond, &cache->lock);
+		if (timeout > 0)
+		{
+			int ret;
+			struct timespec abstime;
+
+			cavan_timer_set_timespec(&abstime, timeout);
+
+			ret = pthread_cond_timedwait(&cache->rdcond, &cache->lock, &abstime);
+			if (ret != 0)
+			{
+				length = -ETIMEDOUT;
+				pr_red_info("pthread_cond_timedwait");
+				goto out_pthread_mutex_unlock;
+			}
+		}
+		else
+		{
+			pthread_cond_wait(&cache->rdcond, &cache->lock);
+		}
 	}
 
-	if (length > size)
+	if ((size_t) length > size)
 	{
 		length = size;
 	}
@@ -677,13 +694,14 @@ ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, siz
 		}
 	}
 
+	pthread_cond_signal(&cache->wrcond);
+
 out_pthread_mutex_unlock:
 	pthread_mutex_unlock(&cache->lock);
-	pthread_cond_broadcast(&cache->wrcond);
 	return length;
 }
 
-ssize_t cavan_cache_fill(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, long timeout)
+ssize_t cavan_cache_fill(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout)
 {
 	char *buff_bak = buff;
 	char *buff_end = buff + size;

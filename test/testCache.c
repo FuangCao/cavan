@@ -28,7 +28,7 @@ static void *read_thread_handler(void *data)
 
 	while (1)
 	{
-		rdlen = cavan_cache_fill(cache, buff, 10, 5, 0);
+		rdlen = cavan_cache_fill(cache, buff, 10, 5, 20000);
 		if (rdlen <= 0)
 		{
 			if (rdlen < 0)
