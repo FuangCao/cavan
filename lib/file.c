@@ -160,7 +160,7 @@ int file_join(const char *dest_file, char *src_files[], int count)
 			writelen = write(dest_fd, buff, readlen);
 			if (writelen != readlen)
 			{
-				ret = -errno;
+				ret = writelen < 0 ? writelen : -EFAULT;
 				pr_error_info("write \"%s\"", dest_file);
 				goto out_close_src;
 			}
@@ -246,7 +246,7 @@ int file_split(const char *file_name, const char *dest_dir, int count)
 			writelen = write(dest_fd, buff, readlen);
 			if (writelen != readlen)
 			{
-				ret = -errno;
+				ret = writelen < 0 ? writelen : -EFAULT;
 				pr_error_info("write");
 				goto out_close_dest;
 			}
@@ -295,7 +295,7 @@ int ffile_copy_simple(int src_fd, int dest_fd)
 		if (writelen != readlen)
 		{
 			pr_error_info("write");
-			return -errno;
+			return writelen < 0 ? writelen : -EFAULT;
 		}
 	}
 
@@ -337,7 +337,7 @@ int ffile_copy(int src_fd, int dest_fd)
 		if (writelen != readlen)
 		{
 			pr_error_info("write");
-			return -errno;
+			return writelen < 0 ? writelen : -EFAULT;
 		}
 
 		progress_bar_add(&bar, writelen);
@@ -611,7 +611,7 @@ int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 		if (writelen != readlen)
 		{
 			pr_error_info("write");
-			return -errno;
+			return writelen < 0 ? writelen : -EFAULT;
 		}
 
 		size -= writelen;
@@ -652,7 +652,7 @@ int ffile_ncopy(int src_fd, int dest_fd, size_t size)
 		if (writelen != readlen)
 		{
 			pr_error_info("write");
-			return -errno;
+			return writelen < 0 ? writelen : -EFAULT;
 		}
 
 		progress_bar_add(&bar, writelen);
