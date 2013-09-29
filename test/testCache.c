@@ -47,7 +47,12 @@ static void *read_thread_handler(void *data)
 		}
 
 		buff[rdlen] = 0;
+
+#if __WORDSIZE == 64
+		pr_green_info("buff[%ld] = %s", rdlen, buff);
+#else
 		pr_green_info("buff[%d] = %s", rdlen, buff);
+#endif
 
 		// msleep(500);
 	}
