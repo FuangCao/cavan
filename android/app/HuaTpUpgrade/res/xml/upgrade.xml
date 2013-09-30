@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
+    android:key="parent">
+
 	<PreferenceScreen
 		android:key="dev_name"
 		android:title="@string/dev_name"
@@ -28,4 +32,8 @@
 		android:singleLine="true"
 		android:editable="false"
 		android:persistent="false"/>
+
+	<PreferenceCategory
+	    android:key="fw_list"
+	    android:persistent="false"/>
 </PreferenceScreen>

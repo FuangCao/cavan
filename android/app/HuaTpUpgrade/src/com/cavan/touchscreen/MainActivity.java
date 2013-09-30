@@ -1,6 +1,7 @@
 package com.cavan.touchscreen;
 
 import java.io.File;
+import java.util.List;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -9,16 +10,20 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
+import android.widget.Toast;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener, OnPreferenceClickListener {
 	private static final String TAG = "Cavan";
@@ -27,12 +32,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private static final String KEY_TP_FW_ID = "fw_id";
 	private static final String KEY_TP_VENDOR_NAME = "vendor_name";
 	private static final String KEY_TP_FW_UPGRADE = "fw_upgrade";
+	private static final String KEY_TP_FW_LIST = "fw_list";
 
 	private PreferenceScreen mPreferenceScreenDevName;
 	private PreferenceScreen mPreferenceScreenDevPath;
 	private PreferenceScreen mPreferenceScreenFwID;
 	private PreferenceScreen mPreferenceScreenVendorName;
 	private FirmwarePathPreference mPreferenceFwUpgrade;
+	private PreferenceCategory mPreferenceCategoryFwList;
 
 	private ITouchscreenService mService;
 	private ServiceConnection mConnection = new ServiceConnection() {
@@ -52,6 +59,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
+
+			scanFirmware();
 		}
 	};
 
@@ -97,7 +106,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		// setContentView(R.layout.activity_main);
 		addPreferencesFromResource(R.xml.upgrade);
 
 		mPreferenceScreenDevName = (PreferenceScreen) findPreference(KEY_TP_DEV_NAME);
@@ -118,8 +127,47 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceFwUpgrade.setOnPreferenceChangeListener(this);
 
+		mPreferenceCategoryFwList = (PreferenceCategory) findPreference(KEY_TP_FW_LIST);
+
 		Intent service = new Intent(this, TouchscreenService.class);
 		bindService(service, mConnection, BIND_AUTO_CREATE);
+	}
+
+	private void scanFirmware() {
+		Thread thread = new Thread() {
+			public void run() {
+				mPreferenceCategoryFwList.removeAll();
+
+				List<String> listFw;
+				String fwName;
+
+				try {
+					fwName = mService.getFwName();
+					if (fwName == null) {
+						return;
+					}
+
+					listFw = mService.findFirmware();
+					if (listFw == null) {
+						return;
+					}
+				} catch (RemoteException e) {
+					e.printStackTrace();
+					return;
+				}
+
+				for (String fwPath : listFw) {
+					Log.d(TAG, "pathname = " + fwPath);
+					Preference preference = new Preference(getApplicationContext());
+					preference.setTitle(fwName);
+					preference.setSummary(fwPath);
+					preference.setEnabled(true);
+					mPreferenceCategoryFwList.addPreference(preference);
+				}
+			}
+		};
+
+		thread.start();
 	}
 
 	@Override

@@ -7,5 +7,6 @@ interface ITouchscreenService {
 	String getDevPath();
 	DeviceID readDevID();
 	String getFwName();
+	List<String> findFirmware();
 	void upgradeFirmware(String pathname);
 }

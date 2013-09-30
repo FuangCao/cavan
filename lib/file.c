@@ -876,7 +876,7 @@ int ffile_show(int fd)
 	while (1)
 	{
 		ssize_t readlen;
-		char buff[MAX_BUFF_LEN];
+		char buff[16];
 
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0)

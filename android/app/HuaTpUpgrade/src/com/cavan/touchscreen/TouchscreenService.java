@@ -1,12 +1,20 @@
 package com.cavan.touchscreen;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.provider.Settings.System;
+import android.util.Log;
 
 public class TouchscreenService extends Service {
+	private static final String TAG = "Cavan";
+
 	public static final int FW_STATE_START = 0;
 	public static final int FW_STATE_RETRY = 1;
 	public static final int FW_STATE_FAILED = 2;
@@ -132,6 +140,43 @@ public class TouchscreenService extends Service {
 			}
 
 			return String.format("%s_%s_%s", Build.BOARD, mDevice.getFwName(), devID.getVendorShortName());
+		}
+
+		private List<String> findFileFrom(File dir, String filename) {
+			List<String> listFile = new ArrayList<String>();
+
+			File[] files = dir.listFiles();
+			if (files == null) {
+				return listFile;
+			}
+
+			for (File file : files) {
+				if (file.isHidden()) {
+					continue;
+				}
+
+				if (file.isDirectory()) {
+					for (String node : findFileFrom(file, filename)) {
+						listFile.add(node);
+					}
+				} else if (filename.equals(file.getName())) {
+					listFile.add(file.getPath());
+				}
+			}
+
+			return listFile;
+		}
+
+		@Override
+		public List<String> findFirmware() throws RemoteException {
+			String fwName = getFwName();
+			if (fwName == null) {
+				return null;
+			}
+
+			Log.d(TAG, "fwName = " + fwName);
+
+			return findFileFrom(new File("/mnt/sdcard"), fwName);
 		}
 	};
 

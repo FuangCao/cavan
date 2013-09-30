@@ -557,54 +557,82 @@ int text_rtcmp(const char *text1, const char *text2)
 
 void text_show(const char *text, size_t size)
 {
-	const char *end_text = text + size;
+	const char *end_text;
 
-	while (text < end_text)
+	if (size == 0)
 	{
-		print("%02x ", *(u8 *)text++);
+		println("Empty");
+		return;
 	}
 
-	print_char('\n');
+	for (end_text = text + size - 1; text < end_text; text++)
+	{
+		print("%02x ", *(u8 *)text);
+	}
+
+	print("%02x\n", *(u8 *)text);
 }
 
 void text_show16(const u16 *text, size_t count)
 {
-	const u16 *end_text = text + count;
+	const u16 *end_text;
 
-	while (text < end_text)
+	if (count == 0)
 	{
-		print("%04x ", *text++);
+		println("Empty");
+		return;
 	}
 
-	print_char('\n');
+	for (end_text = text + count - 1; text < end_text; text++)
+	{
+		print("%04x ", *text);
+	}
+
+	print("%04x\n", *text);
 }
 
 void text_show32(const u32 *text, size_t count)
 {
-	const u32 *end_text = text + count;
+	const u32 *end_text;
 
-	while (text < end_text)
+	if (count == 0)
 	{
-		print("%08x ", *text++);
+		println("Empty");
+		return;
 	}
 
-	print_char('\n');
+	for (end_text = text + count - 1; text < end_text; text++)
+	{
+		print("%08x ", *text);
+	}
+
+	print("%08x\n", *text);
 }
 
 void text_show64(const u64 *text, size_t count)
 {
 	const u64 *end_text = text + count;
 
-	while (text < end_text)
+	if (count == 0)
+	{
+		println("Empty");
+		return;
+	}
+
+	for (end_text = text + count - 1; text < end_text; text)
 	{
 #if __WORDSIZE == 64
-		print("%016lx ", *text++);
+		print("%016lx ", *text);
 #else
-		print("%016Lx ", *text++);
+		print("%016Lx ", *text);
 #endif
 	}
 
-	print_char('\n');
+#if __WORDSIZE == 64
+	print("%016lx\n", *text);
+#else
+	print("%016Lx\n", *text);
+#endif
 }
 
 void *text_set8(u8 *text, u8 value, size_t count)

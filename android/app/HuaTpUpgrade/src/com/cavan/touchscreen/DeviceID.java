@@ -119,7 +119,7 @@ public class DeviceID implements Parcelable {
 	}
 
 	public String getVendorShortName() {
-		switch (getVendorID()) {
+		switch (mVendorName) {
 		case R.string.vendor_name_dianjing:
 			return "dianjing";
 		case R.string.vendor_name_lianchuang:
