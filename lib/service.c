@@ -9,6 +9,8 @@
 #include <cavan/process.h>
 #include <cavan/permission.h>
 
+#define CAVAN_SERVICE_DEBUG		0
+
 static void cavan_service_sighandler(int signum)
 {
 	pr_bold_info("signum = %d", signum);
@@ -351,4 +353,208 @@ int cavan_daemon_stop(struct cavan_daemon_description *desc)
 	}
 
 	return kill(pid, SIGTERM);
+}
+
+// ================================================================================
+
+int cavan_dynamic_service_init(struct cavan_dynamic_service *service)
+{
+	int ret;
+
+	ret = pthread_mutex_init(&service->lock, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_mutex_init");
+		return ret;
+	}
+
+	return 0;
+}
+
+void cavan_dynamic_service_deinit(struct cavan_dynamic_service *service)
+{
+	pthread_mutex_destroy(&service->lock);
+}
+
+struct cavan_dynamic_service *cavan_dynamic_service_create(size_t size)
+{
+	struct cavan_dynamic_service *service;
+
+	service = malloc(sizeof(*service) + size);
+	if (service == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	if (cavan_dynamic_service_init(service) < 0)
+	{
+		pr_red_info("cavan_dynamic_service_init");
+		goto out_free_service;
+	}
+
+	service->private_data = service + 1;
+
+	return service;
+
+out_free_service:
+	free(service);
+	return NULL;
+}
+
+void cavan_dynamic_service_destroy(struct cavan_dynamic_service *service)
+{
+	cavan_dynamic_service_deinit(service);
+	free(service);
+}
+
+static void *cavan_dynamic_service_handler(void *data)
+{
+	int ret;
+	int index;
+	void *conn;
+	pthread_t thread;
+	struct cavan_dynamic_service *service = data;
+
+	pthread_mutex_lock(&service->lock);
+	index = ++service->count;
+
+	while (1)
+	{
+		pr_bold_info("service %s daemon %d ready (%d/%d)", service->name, index, service->used, service->count);
+
+		pthread_mutex_unlock(&service->lock);
+		conn = service->open_connect(service);
+		pthread_mutex_lock(&service->lock);
+
+		if (conn == NULL)
+		{
+			pr_red_info("conn == NULL");
+			continue;
+		}
+
+		service->used++;
+
+		if (service->used < service->count)
+		{
+			pr_green_info("don't need create daemon");
+		}
+		else
+		{
+			if (service->count < service->max)
+			{
+				int ret;
+
+				ret = pthread_create(&thread, NULL, cavan_dynamic_service_handler, service);
+				if (ret < 0)
+				{
+					pr_red_info("create daemon faild");
+				}
+				else
+				{
+					pr_green_info("create daemon successfully");
+				}
+			}
+			else
+			{
+				pr_red_info("too match deamon count = %d", service->count);
+			}
+		}
+
+		pr_bold_info("service %s daemon %d busy (%d/%d)", service->name, index, service->used, service->count);
+
+		pthread_mutex_unlock(&service->lock);
+		ret = service->service_handler(service, conn);
+		service->close_connect(service, conn);
+		if (ret < 0)
+		{
+			pr_red_info("service %s daemon %d fault", service->name, index);
+		}
+		else
+		{
+			pr_green_info("service %s daemon %d complete", service->name, index);
+		}
+
+		pthread_mutex_lock(&service->lock);
+		service->used--;
+
+		if (index > service->min && service->count - service->used > 1)
+		{
+			break;
+		}
+	}
+
+	service->count--;
+	pr_green_info("service %s daemon %d exit (%d/%d)", service->name, index, service->used, service->count);
+
+	pthread_mutex_unlock(&service->lock);
+
+	return NULL;
+}
+
+int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
+{
+	int ret;
+
+	if (service == NULL)
+	{
+		pr_red_info("service == NULL");
+		return -EINVAL;
+	}
+
+	if (service->name == NULL)
+	{
+		pr_red_info("service->name == NULL");
+		return -EINVAL;
+	}
+
+	if (service->open_connect == NULL)
+	{
+		pr_red_info("service->open_connect == NULL");
+		return -EINVAL;
+	}
+
+	if (service->close_connect == NULL)
+	{
+		pr_red_info("service->close_connect == NULL");
+		return -EINVAL;
+	}
+
+	if (service->service_handler == NULL)
+	{
+		pr_red_info("service->service_handler == NULL");
+		return -EINVAL;
+	}
+
+	pr_bold_info("daemon min = %d, max = %d", service->min, service->max);
+
+	if (service->min <= 0 || service->max < service->min)
+	{
+		pr_red_info("invalid min or max");
+		return -EINVAL;
+	}
+
+	if (service->super_permission && (ret = check_super_permission(true, 5000)) < 0)
+	{
+		return ret;
+	}
+
+	if (service->as_daemon)
+	{
+		pr_blue_info("Run %s as daemon", service->name);
+
+		ret = daemon(0, service->show_verbose);
+		if (ret < 0)
+		{
+			pr_red_info("daemon");
+			return ret;
+		}
+	}
+
+	service->count = 0;
+	service->used = 0;
+
+	cavan_dynamic_service_handler(service);
+
+	return 0;
 }

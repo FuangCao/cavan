@@ -34,6 +34,18 @@ struct tcp_proxy_service
 	void (*close_connect)(int sockfd);
 };
 
+struct web_proxy_connect
+{
+	int sockfd;
+	socklen_t addrlen;
+	struct sockaddr_in addr;
+};
+
+struct web_proxy_service
+{
+	int sockfd;
+};
+
 int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service);
 int web_proxy_get_request_type(const char *req);
-int web_proxy_service_run(struct cavan_service_description *service, u16 port);
+int web_proxy_service_run(struct cavan_dynamic_service *service, u16 port);

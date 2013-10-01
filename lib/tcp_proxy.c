@@ -527,7 +527,41 @@ out_close_data_sockfd:
 	return ret;
 }
 
-static int web_proxy_service_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
+static void *web_proxy_open_connect(struct cavan_dynamic_service *service)
+{
+	struct web_proxy_connect *conn;
+	struct web_proxy_service *proxy;
+
+	conn = malloc(sizeof(struct web_proxy_connect));
+	if (conn == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	proxy = cavan_dynamic_service_get_data(service);
+	conn->sockfd = inet_accept(proxy->sockfd, &conn->addr, &conn->addrlen);
+	if (conn->sockfd < 0)
+	{
+		print_error("inet_accept");
+		free(conn);
+		return NULL;
+	}
+
+	inet_show_sockaddr(&conn->addr);
+
+	return conn;
+}
+
+static void web_proxy_close_connect(struct cavan_dynamic_service *service, void *conn)
+{
+	struct web_proxy_connect *client = conn;
+
+	inet_close_tcp_socket(client->sockfd);
+	free(client);
+}
+
+static int web_proxy_service_handler(struct cavan_dynamic_service *service, void *conn)
 {
 	int ret;
 	int type;
@@ -536,23 +570,11 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 	size_t cmdlen;
 	char *filename;
 	bool ftp_login;
-	socklen_t addrlen;
-	struct sockaddr_in addr;
-	int client_sockfd, proxy_sockfd;
-	int server_sockfd = service->data.type_int;
+	int proxy_sockfd;
 	char buff[2048], *buff_end, *req, *url_text;
 	struct network_url urls[2], *url, *url_bak;
 	const struct network_protocol *protocol = NULL;
-
-	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
-	if (client_sockfd < 0)
-	{
-		print_error("inet_accept");
-		return client_sockfd;
-	}
-
-	cavan_service_set_busy(service, index, true);
-	inet_show_sockaddr(&addr);
+	struct web_proxy_connect *client = conn;
 
 	count = 0;
 	ftp_login = false;
@@ -562,7 +584,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 
 	while (1)
 	{
-		rwlen = inet_recv(client_sockfd, buff, sizeof(buff) - 1);
+		rwlen = inet_recv(client->sockfd, buff, sizeof(buff) - 1);
 		if (rwlen <= 0)
 		{
 			break;
@@ -594,7 +616,7 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			break;
 		}
 
-		pr_std_info("%s[%d](%d.%d) => %s", buff, type, index, count, network_url_tostring(url, NULL, 0));
+		pr_std_info("%s[%d](%d) => %s", buff, type, count, network_url_tostring(url, NULL, 0));
 
 		if (proxy_sockfd < 0 || network_url_equals(url_bak, url) == false)
 		{
@@ -652,14 +674,14 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 			switch (type)
 			{
 			case HTTP_REQ_CONNECT:
-				rwlen = inet_send_text(client_sockfd, "HTTP/1.1 200 Connection established\r\n\r\n");
+				rwlen = inet_send_text(client->sockfd, "HTTP/1.1 200 Connection established\r\n\r\n");
 				if (rwlen < 0)
 				{
 					pr_error_info("inet_send");
 					goto out_close_client_sockfd;
 				}
 
-				tcp_proxy_main_loop(client_sockfd, proxy_sockfd);
+				tcp_proxy_main_loop(client->sockfd, proxy_sockfd);
 				goto out_close_client_sockfd;
 
 			default:
@@ -678,13 +700,13 @@ static int web_proxy_service_handle(struct cavan_service_description *service, i
 					goto out_close_client_sockfd;
 				}
 
-				ret = web_proxy_main_loop(client_sockfd, proxy_sockfd, 60 * 1000);
+				ret = web_proxy_main_loop(client->sockfd, proxy_sockfd, 60 * 1000);
 				if (ret < 0)
 				{
 					goto out_close_client_sockfd;
 				}
 
-				ret = web_proxy_main_loop(proxy_sockfd, client_sockfd, 60 * 1000);
+				ret = web_proxy_main_loop(proxy_sockfd, client->sockfd, 60 * 1000);
 				if (ret < 0)
 				{
 					goto out_close_client_sockfd;
@@ -738,7 +760,7 @@ label_change_dir:
 			case HTTP_REQ_GET:
 				if (filename && filename[0])
 				{
-					ret = web_proxy_ftp_read_file(client_sockfd, proxy_sockfd, filename);
+					ret = web_proxy_ftp_read_file(client->sockfd, proxy_sockfd, filename);
 					if (ret < 0)
 					{
 						pr_red_info("web_proxy_ftp_read_file `%s'", filename);
@@ -755,7 +777,7 @@ label_change_dir:
 				}
 				else
 				{
-					ret = web_proxy_ftp_list_directory(client_sockfd, proxy_sockfd, url_bak, req);
+					ret = web_proxy_ftp_list_directory(client->sockfd, proxy_sockfd, url_bak, req);
 					if (ret < 0)
 					{
 						pr_red_info("web_proxy_ftp_list_directory `%s'", req);
@@ -786,16 +808,14 @@ out_close_client_sockfd:
 		inet_close_tcp_socket(proxy_sockfd);
 	}
 
-	inet_close_tcp_socket(client_sockfd);
-	cavan_service_set_busy(service, index, false);
-
 	return 0;
 }
 
-int web_proxy_service_run(struct cavan_service_description *proxy_service, u16 port)
+int web_proxy_service_run(struct cavan_dynamic_service *service, u16 port)
 {
 	int ret;
 	int sockfd;
+	struct web_proxy_service *web_proxy;
 
 	sockfd = inet_create_tcp_service(port);
 	if (sockfd < 0)
@@ -804,11 +824,14 @@ int web_proxy_service_run(struct cavan_service_description *proxy_service, u16 p
 		return sockfd;
 	}
 
-	proxy_service->data.type_int = sockfd;
-	proxy_service->handler = web_proxy_service_handle;
-	proxy_service->threads = NULL;
-	ret = cavan_service_run(proxy_service);
-	cavan_service_stop(proxy_service);
+	web_proxy = cavan_dynamic_service_get_data(service);
+	web_proxy->sockfd = sockfd;
+	service->name = "WEB_PROXY";
+	service->open_connect = web_proxy_open_connect;
+	service->close_connect = web_proxy_close_connect;
+	service->service_handler = web_proxy_service_handler;
+
+	ret = cavan_dynamic_service_run(service);
 	inet_close_tcp_socket(sockfd);
 
 	return ret;

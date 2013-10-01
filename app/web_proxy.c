@@ -30,7 +30,8 @@ enum
 	LOCAL_COMMAND_OPTION_VERSION,
 	LOCAL_COMMAND_OPTION_PORT,
 	LOCAL_COMMAND_OPTION_DAEMON,
-	LOCAL_COMMAND_OPTION_DAEMON_COUNT,
+	LOCAL_COMMAND_OPTION_MIN,
+	LOCAL_COMMAND_OPTION_MAX,
 	LOCAL_COMMAND_OPTION_VERBOSE,
 };
 
@@ -43,7 +44,8 @@ static void show_usage(const char *command)
 	println("--port, -p, -P\t\t\tserver port");
 	println("--adb, -a, -A\t\t\tuse adb procotol instead of tcp");
 	println("--daemon, -d, -D\t\trun as a daemon");
-	println("--daemon_count, -c, -C\t\tdaemon count");
+	println("--min, -m, -c\t\t\tmin daemon count");
+	println("--max, -M, -C\t\t\tmax daemon count");
 	println("--verbose\t\t\tshow log message");
 }
 
@@ -79,10 +81,16 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_DAEMON,
 		},
 		{
-			.name = "daemon_count",
+			.name = "min",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON_COUNT,
+			.val = LOCAL_COMMAND_OPTION_MIN,
+		},
+		{
+			.name = "max",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_MAX,
 		},
 		{
 			.name = "verbose",
@@ -94,17 +102,23 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	u16 port = 8888;
-	struct cavan_service_description proxy_service =
-	{
-		.name = "WEB_PROXY",
-		.daemon_count = 200,
-		.as_daemon = 0,
-		.show_verbose = 0,
-		.super_permission = 0
-	};
+	u16 port = 9090;
+	struct cavan_dynamic_service *service;
 
-	while ((c = getopt_long(argc, argv, "vVhHp:P:c:C:dD", long_option, &option_index)) != EOF)
+	service = cavan_dynamic_service_create(sizeof(struct web_proxy_service));
+	if (service == NULL)
+	{
+		pr_red_info("cavan_dynamic_service_create");
+		return -ENOMEM;
+	}
+
+	service->min = 20;
+	service->max = 1000;
+	service->as_daemon = 0;
+	service->show_verbose = 0;
+	service->super_permission = 0;
+
+	while ((c = getopt_long(argc, argv, "vVhHp:P:c:C:m:M:dD", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -113,13 +127,15 @@ int main(int argc, char *argv[])
 		case LOCAL_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
-			return 0;
+			ret = 0;
+			goto out_cavan_dynamic_service_destroy;
 
 		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
-			return 0;
+			ret = 0;
+			goto out_cavan_dynamic_service_destroy;
 
 		case 'p':
 		case 'P':
@@ -130,22 +146,27 @@ int main(int argc, char *argv[])
 		case 'd':
 		case 'D':
 		case LOCAL_COMMAND_OPTION_DAEMON:
-			proxy_service.as_daemon = 1;
+			service->as_daemon = 1;
 			break;
 
 		case 'c':
+		case LOCAL_COMMAND_OPTION_MIN:
+			service->min = text2value_unsigned(optarg, NULL, 10);
+			break;
+
 		case 'C':
-		case LOCAL_COMMAND_OPTION_DAEMON_COUNT:
-			proxy_service.daemon_count = text2value_unsigned(optarg, NULL, 10);
+		case LOCAL_COMMAND_OPTION_MAX:
+			service->max = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case LOCAL_COMMAND_OPTION_VERBOSE:
-			proxy_service.show_verbose = 1;
+			service->show_verbose = 1;
 			break;
 
 		default:
 			show_usage(argv[0]);
-			return -EINVAL;
+			ret = -EINVAL;
+			goto out_cavan_dynamic_service_destroy;
 		}
 	}
 
@@ -154,12 +175,14 @@ int main(int argc, char *argv[])
 		port = text2value_unsigned(argv[optind], NULL, 10);
 	}
 
-	ret = web_proxy_service_run(&proxy_service, port);
+	ret = web_proxy_service_run(service, port);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_proxy_service_run");
 	}
 
+out_cavan_dynamic_service_destroy:
+	cavan_dynamic_service_destroy(service);
 	return ret;
 }
 

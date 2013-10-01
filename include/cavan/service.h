@@ -34,17 +34,20 @@ struct cavan_daemon_description
 	int super_permission;
 };
 
-struct cavan_service_daemon
-{
-	int index;
-	struct double_link_node node;
-};
-
-struct cavan_service
+struct cavan_dynamic_service
 {
 	const char *name;
 	int min, max;
-	struct double_link link;
+	int count, used;
+	int as_daemon;
+	int show_verbose;
+	int super_permission;
+	void *private_data;
+	pthread_mutex_t lock;
+
+	void *(*open_connect)(struct cavan_dynamic_service *service);
+	void (*close_connect)(struct cavan_dynamic_service *service, void *conn);
+	int (*service_handler)(struct cavan_dynamic_service *service, void *conn);
 };
 
 extern int capget(cap_user_header_t hdrp, cap_user_data_t datap);
@@ -58,3 +61,19 @@ int cavan_service_stop(struct cavan_service_description *desc);
 int cavan_daemon_permission_clear(u32 permission);
 int cavan_daemon_run(struct cavan_daemon_description *desc);
 int cavan_daemon_stop(struct cavan_daemon_description *desc);
+
+int cavan_dynamic_service_init(struct cavan_dynamic_service *service);
+void cavan_dynamic_service_deinit(struct cavan_dynamic_service *service);
+struct cavan_dynamic_service *cavan_dynamic_service_create(size_t size);
+void cavan_dynamic_service_destroy(struct cavan_dynamic_service *service);
+int cavan_dynamic_service_run(struct cavan_dynamic_service *service);
+
+static inline void *cavan_dynamic_service_get_data(struct cavan_dynamic_service *service)
+{
+	return service->private_data;
+}
+
+static inline void cavan_dynamic_service_set_data(struct cavan_dynamic_service *service, void *data)
+{
+	service->private_data = data;
+}
