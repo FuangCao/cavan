@@ -39,6 +39,18 @@ static void test_close_connect(struct cavan_dynamic_service *service, void *conn
 	free(conn);
 }
 
+static int test_service_start(struct cavan_dynamic_service *service)
+{
+	pr_pos_info();
+
+	return 0;
+}
+
+static void test_service_stop(struct cavan_dynamic_service *service)
+{
+	pr_pos_info();
+}
+
 static int test_service_handler(struct cavan_dynamic_service *service, void *conn)
 {
 	pr_pos_info();
@@ -67,19 +79,17 @@ int main(int argc, char *argv[])
 	service->max = 10;
 	service->open_connect = test_open_connect;
 	service->close_connect = test_close_connect;
-	service->service_handler = test_service_handler;
-
-	pr_pos_info();
+	service->start = test_service_start;
+	service->stop = test_service_stop;
+	service->run = test_service_handler;
 
 	ret = cavan_dynamic_service_run(service);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_dynamic_service_run");
 	}
-	pr_pos_info();
 
 	cavan_dynamic_service_destroy(service);
-	pr_pos_info();
 
 	return ret;
 }

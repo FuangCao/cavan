@@ -561,7 +561,28 @@ static void web_proxy_close_connect(struct cavan_dynamic_service *service, void 
 	free(client);
 }
 
-static int web_proxy_service_handler(struct cavan_dynamic_service *service, void *conn)
+static int web_proxy_start_handler(struct cavan_dynamic_service *service)
+{
+	struct web_proxy_service *proxy = cavan_dynamic_service_get_data(service);
+
+	proxy->sockfd = inet_create_tcp_service(proxy->port);
+	if (proxy->sockfd < 0)
+	{
+		pr_red_info("inet_create_tcp_service");
+		return proxy->sockfd;
+	}
+
+	return 0;
+}
+
+static void web_proxy_stop_handler(struct cavan_dynamic_service *service)
+{
+	struct web_proxy_service *proxy = cavan_dynamic_service_get_data(service);
+
+	inet_close_tcp_socket(proxy->sockfd);
+}
+
+static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *conn)
 {
 	int ret;
 	int type;
@@ -811,28 +832,14 @@ out_close_client_sockfd:
 	return 0;
 }
 
-int web_proxy_service_run(struct cavan_dynamic_service *service, u16 port)
+int web_proxy_service_run(struct cavan_dynamic_service *service)
 {
-	int ret;
-	int sockfd;
-	struct web_proxy_service *web_proxy;
-
-	sockfd = inet_create_tcp_service(port);
-	if (sockfd < 0)
-	{
-		pr_red_info("inet_create_tcp_service");
-		return sockfd;
-	}
-
-	web_proxy = cavan_dynamic_service_get_data(service);
-	web_proxy->sockfd = sockfd;
 	service->name = "WEB_PROXY";
 	service->open_connect = web_proxy_open_connect;
 	service->close_connect = web_proxy_close_connect;
-	service->service_handler = web_proxy_service_handler;
+	service->start = web_proxy_start_handler;
+	service->stop = web_proxy_stop_handler;
+	service->run = web_proxy_run_handler;
 
-	ret = cavan_dynamic_service_run(service);
-	inet_close_tcp_socket(sockfd);
-
-	return ret;
+	return cavan_dynamic_service_run(service);
 }

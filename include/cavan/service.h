@@ -10,6 +10,13 @@
 #include <cavan/list.h>
 #include <linux/capability.h>
 
+typedef enum cavan_service_state
+{
+	CAVAN_SERVICE_STATE_RUNNING,
+	CAVAN_SERVICE_STATE_STOPPED,
+	CAVAN_SERVICE_STATE_STOPPING,
+} cavan_service_state_t;
+
 struct cavan_service_description
 {
 	const char *name;
@@ -44,10 +51,13 @@ struct cavan_dynamic_service
 	int super_permission;
 	void *private_data;
 	pthread_mutex_t lock;
+	cavan_service_state_t state;
 
 	void *(*open_connect)(struct cavan_dynamic_service *service);
 	void (*close_connect)(struct cavan_dynamic_service *service, void *conn);
-	int (*service_handler)(struct cavan_dynamic_service *service, void *conn);
+	int (*start)(struct cavan_dynamic_service *service);
+	void (*stop)(struct cavan_dynamic_service *service);
+	int (*run)(struct cavan_dynamic_service *service, void *conn);
 };
 
 extern int capget(cap_user_header_t hdrp, cap_user_data_t datap);
@@ -67,6 +77,7 @@ void cavan_dynamic_service_deinit(struct cavan_dynamic_service *service);
 struct cavan_dynamic_service *cavan_dynamic_service_create(size_t size);
 void cavan_dynamic_service_destroy(struct cavan_dynamic_service *service);
 int cavan_dynamic_service_run(struct cavan_dynamic_service *service);
+int cavan_dynamic_service_stop(struct cavan_dynamic_service *service);
 
 static inline void *cavan_dynamic_service_get_data(struct cavan_dynamic_service *service)
 {

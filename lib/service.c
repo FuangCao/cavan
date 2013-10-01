@@ -419,7 +419,7 @@ static void *cavan_dynamic_service_handler(void *data)
 	pthread_mutex_lock(&service->lock);
 	index = ++service->count;
 
-	while (1)
+	while (service->state == CAVAN_SERVICE_STATE_RUNNING)
 	{
 		pr_bold_info("service %s daemon %d ready (%d/%d)", service->name, index, service->used, service->count);
 
@@ -464,7 +464,7 @@ static void *cavan_dynamic_service_handler(void *data)
 		pr_bold_info("service %s daemon %d busy (%d/%d)", service->name, index, service->used, service->count);
 
 		pthread_mutex_unlock(&service->lock);
-		ret = service->service_handler(service, conn);
+		ret = service->run(service, conn);
 		service->close_connect(service, conn);
 		if (ret < 0)
 		{
@@ -520,9 +520,21 @@ int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
 		return -EINVAL;
 	}
 
-	if (service->service_handler == NULL)
+	if (service->start == NULL)
 	{
-		pr_red_info("service->service_handler == NULL");
+		pr_red_info("service->start == NULL");
+		return -EINVAL;
+	}
+
+	if (service->stop == NULL)
+	{
+		pr_red_info("service->stop == NULL");
+		return -EINVAL;
+	}
+
+	if (service->run == NULL)
+	{
+		pr_red_info("service->run == NULL");
 		return -EINVAL;
 	}
 
@@ -553,8 +565,60 @@ int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
 
 	service->count = 0;
 	service->used = 0;
+	service->state = CAVAN_SERVICE_STATE_RUNNING;
+
+	ret = service->start(service);
+	if (ret < 0)
+	{
+		pr_red_info("service->start");
+		return ret;
+	}
 
 	cavan_dynamic_service_handler(service);
+
+	pthread_mutex_lock(&service->lock);
+
+	if (service->state == CAVAN_SERVICE_STATE_RUNNING)
+	{
+		service->stop(service);
+	}
+
+	service->state = CAVAN_SERVICE_STATE_STOPPED;
+
+	pthread_mutex_unlock(&service->lock);
+
+	pr_bold_info("service %s stopped", service->name);
+
+	return 0;
+}
+
+int cavan_dynamic_service_stop(struct cavan_dynamic_service *service)
+{
+	pthread_mutex_lock(&service->lock);
+
+	if (service->state == CAVAN_SERVICE_STATE_RUNNING)
+	{
+		int i;
+
+		service->state = CAVAN_SERVICE_STATE_STOPPING;
+		service->stop(service);
+
+		for (i = 0; i < 100; i++)
+		{
+			pthread_mutex_unlock(&service->lock);
+			msleep(100);
+			pthread_mutex_lock(&service->lock);
+
+			if (service->state == CAVAN_SERVICE_STATE_STOPPED)
+			{
+				break;
+			}
+
+			pr_red_info("wait service stop %d", i);
+		}
+	}
+
+	pthread_mutex_unlock(&service->lock);
 
 	return 0;
 }

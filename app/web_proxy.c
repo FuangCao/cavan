@@ -102,8 +102,8 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	u16 port = 9090;
 	struct cavan_dynamic_service *service;
+	struct web_proxy_service *proxy_service;
 
 	service = cavan_dynamic_service_create(sizeof(struct web_proxy_service));
 	if (service == NULL)
@@ -117,6 +117,9 @@ int main(int argc, char *argv[])
 	service->as_daemon = 0;
 	service->show_verbose = 0;
 	service->super_permission = 0;
+
+	proxy_service = cavan_dynamic_service_get_data(service);
+	proxy_service->port = 9090;
 
 	while ((c = getopt_long(argc, argv, "vVhHp:P:c:C:m:M:dD", long_option, &option_index)) != EOF)
 	{
@@ -140,7 +143,7 @@ int main(int argc, char *argv[])
 		case 'p':
 		case 'P':
 		case LOCAL_COMMAND_OPTION_PORT:
-			port = text2value_unsigned(optarg, NULL, 10);
+			proxy_service->port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'd':
@@ -172,10 +175,10 @@ int main(int argc, char *argv[])
 
 	if (optind < argc)
 	{
-		port = text2value_unsigned(argv[optind], NULL, 10);
+		proxy_service->port = text2value_unsigned(argv[optind], NULL, 10);
 	}
 
-	ret = web_proxy_service_run(service, port);
+	ret = web_proxy_service_run(service);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_proxy_service_run");

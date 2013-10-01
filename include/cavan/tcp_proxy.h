@@ -44,8 +44,9 @@ struct web_proxy_connect
 struct web_proxy_service
 {
 	int sockfd;
+	u16 port;
 };
 
 int tcp_proxy_service_run(struct tcp_proxy_service *proxy_service);
 int web_proxy_get_request_type(const char *req);
-int web_proxy_service_run(struct cavan_dynamic_service *service, u16 port);
+int web_proxy_service_run(struct cavan_dynamic_service *service);
