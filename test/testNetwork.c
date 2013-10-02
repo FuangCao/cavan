@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		println("%s", network_url_tostring(&url, NULL, 0));
+		println("%s", network_url_tostring(&url, NULL, 0, NULL));
 	}
 
 	return 0;

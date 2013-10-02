@@ -915,8 +915,10 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 	return 0;
 }
 
-char *network_url_tostring(const struct network_url *url, char *buff, size_t size)
+char *network_url_tostring(const struct network_url *url, char *buff, size_t size, char **tail)
 {
+	int ret;
+
 	if (buff == NULL || size == 0)
 	{
 		static char static_buff[1024];
@@ -929,20 +931,32 @@ char *network_url_tostring(const struct network_url *url, char *buff, size_t siz
 	{
 		if (url->port[0])
 		{
-			snprintf(buff, size, "%s://%s:%s", url->protocol, url->hostname, url->port);
+			ret = snprintf(buff, size, "%s://%s:%s", url->protocol, url->hostname, url->port);
 		}
 		else
 		{
-			snprintf(buff, size, "%s://%s", url->protocol, url->hostname);
+			ret = snprintf(buff, size, "%s://%s", url->protocol, url->hostname);
 		}
 	}
 	else if (url->port[0])
 	{
-		snprintf(buff, size, "%s:%s", url->hostname, url->port);
+		ret = snprintf(buff, size, "%s:%s", url->hostname, url->port);
 	}
 	else
 	{
-		snprintf(buff, size, "%s", url->hostname);
+		ret = snprintf(buff, size, "%s", url->hostname);
+	}
+
+	if (tail)
+	{
+		if (ret > 0)
+		{
+			*tail = buff + ret;
+		}
+		else
+		{
+			*tail = buff;
+		}
 	}
 
 	return buff;

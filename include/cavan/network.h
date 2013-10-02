@@ -257,7 +257,7 @@ u16 cavan_get_server_port(u16 default_port);
 int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd);
 int inet_hostname2sockaddr(const char *host, struct sockaddr_in *addr);
 
-char *network_url_tostring(const struct network_url *url, char *buff, size_t size);
+char *network_url_tostring(const struct network_url *url, char *buff, size_t size, char **tail);
 char *network_parse_url(const char *text, struct network_url *url);
 const struct network_protocol *network_get_protocol_by_name(const char *name);
 const struct network_protocol *network_get_protocol_by_type(network_protocol_type_t type);
