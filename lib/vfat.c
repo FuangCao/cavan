@@ -12,13 +12,13 @@ ssize_t ffat_read_dbr(int fd, struct fat_dbr *dbr)
 	readlen = ffile_read(fd, dbr, sizeof(*dbr));
 	if (readlen < 0)
 	{
-		error_msg("ffile_read");
+		pr_error_info("ffile_read");
 		return readlen;
 	}
 
 	if (dbr->boot_flags != 0xAA55)
 	{
-		error_msg("DBR = 0x%04x is invalid", dbr->boot_flags);
+		pr_error_info("DBR = 0x%04x is invalid", dbr->boot_flags);
 		ERROR_RETURN(EINVAL);
 	}
 
@@ -214,7 +214,7 @@ int ffat_init(int fd, struct fat_info *info_p)
 	readlen = ffat_read_dbr(fd, dbr);
 	if (readlen < 0)
 	{
-		error_msg("ffat_read_dbr");
+		pr_error_info("ffat_read_dbr");
 		return readlen;
 	}
 
@@ -361,7 +361,7 @@ static void build_short_name(const char *name, char *buff)
 
 static char *copy_name(char *dest, const char *src, size_t size)
 {
-	const char *src_end = src + size;
+	const char *src_end;
 
 	for (src_end = src + size; src < src_end; src += 2)
 	{
@@ -412,7 +412,7 @@ ssize_t load_directory(struct fat_info *info_p, u32 cluster_index, struct fat_so
 		readlen = fat_read_clusters(info_p, cluster_index, 1, dirs);
 		if (readlen < 0)
 		{
-			error_msg("fat_read_clusters");
+			pr_error_info("fat_read_clusters");
 			return readlen;
 		}
 
@@ -489,7 +489,7 @@ ssize_t load_data(struct fat_info *info_p, u32 start_cluster, void *buff, size_t
 			readlen = fat_read_clusters(info_p, start_cluster, 1, buff);
 			if (readlen < 0)
 			{
-				error_msg("fat_read_clusters");
+				pr_error_info("fat_read_clusters");
 				return readlen;
 			}
 		}
@@ -500,7 +500,7 @@ ssize_t load_data(struct fat_info *info_p, u32 start_cluster, void *buff, size_t
 			readlen = fat_read_clusters(info_p, start_cluster, 1, tmp_buff);
 			if (readlen < 0)
 			{
-				error_msg("fat_read_clusters");
+				pr_error_info("fat_read_clusters");
 				return readlen;
 			}
 
@@ -532,7 +532,7 @@ int fat16_root_find(struct fat_info *info_p, const char *filename, struct fat_di
 	readlen = fat_read_sectors(info_p, info_p->root_first_sector, info_p->root_sector_count, dir_descs);
 	if (readlen < 0)
 	{
-		error_msg("fat_read_sectors");
+		pr_error_info("fat_read_sectors");
 		return readlen;
 	}
 
@@ -577,7 +577,7 @@ ssize_t fat16_load_root_directory(struct fat_info *info_p, struct fat_soft_direc
 	readlen = fat_read_sectors(info_p, info_p->root_first_sector, info_p->root_sector_count, dir_descs);
 	if (readlen < 0)
 	{
-		error_msg("fat_read_sectors");
+		pr_error_info("fat_read_sectors");
 		return readlen;
 	}
 
@@ -635,7 +635,7 @@ int find_path(struct fat_info *info_p, const char *pathname, struct fat_director
 	dir_count = load_root_directory(info_p, soft_dirs, ARRAY_SIZE(soft_dirs));
 	if (dir_count <= 0)
 	{
-		error_msg("load_root_directory");
+		pr_error_info("load_root_directory");
 		return dir_count;
 	}
 
@@ -665,7 +665,7 @@ int find_path(struct fat_info *info_p, const char *pathname, struct fat_director
 
 		if (dir_curr >= dir_end)
 		{
-			error_msg("file \"%s\" not find", localpath);
+			pr_error_info("file \"%s\" not find", localpath);
 			ERROR_RETURN(ENOENT);
 		}
 
@@ -685,7 +685,7 @@ int find_path(struct fat_info *info_p, const char *pathname, struct fat_director
 		dir_count = load_directory(info_p, BUILD_START_CLUSTER(tmp_dir), soft_dirs, ARRAY_SIZE(soft_dirs));
 		if (dir_count <= 0)
 		{
-			error_msg("load_directory");
+			pr_error_info("load_directory");
 			ERROR_RETURN(ENOENT);
 		}
 	}
@@ -715,7 +715,7 @@ int find_path2_simple(struct fat_info *info_p, u32 cluster_index, const char *fi
 		readlen = fat_read_clusters(info_p, cluster_index, 1, dir_descs);
 		if (readlen < 0)
 		{
-			error_msg("fat_read_clusters");
+			pr_error_info("fat_read_clusters");
 			return readlen;
 		}
 
@@ -803,7 +803,7 @@ int find_path2(struct fat_info *info_p, const char *pathname, struct fat_directo
 		ret = find_path2_simple(info_p, cluster_index, path_curr, file_desc);
 		if (ret < 0)
 		{
-			error_msg("find_path2_simple");
+			pr_error_info("find_path2_simple");
 			return ret;
 		}
 
@@ -845,7 +845,7 @@ int fat16_print_root(struct fat_info *info_p)
 	readlen = fat_read_sectors(info_p, info_p->root_first_sector, info_p->root_sector_count, dir_descs);
 	if (readlen < 0)
 	{
-		error_msg("fat_read_sectors");
+		pr_error_info("fat_read_sectors");
 		return readlen;
 	}
 
@@ -900,7 +900,7 @@ int print_directory(struct fat_info *info_p, u32 cluster_index)
 		readlen = fat_read_clusters(info_p, cluster_index, 1, dir_descs);
 		if (readlen < 0)
 		{
-			error_msg("fat_read_clusters");
+			pr_error_info("fat_read_clusters");
 			return readlen;
 		}
 
@@ -971,13 +971,13 @@ ssize_t load_file(struct fat_info *info_p, const char *pathname, void *buff, siz
 	ret = find_path2(info_p, pathname, &file_desc);
 	if (ret < 0)
 	{
-		error_msg("file not find");
+		pr_error_info("file not find");
 		ERROR_RETURN(ENOENT);
 	}
 
 	if (IS_NOT_FILE(&file_desc))
 	{
-		error_msg("this is't a file");
+		pr_error_info("this is't a file");
 		ERROR_RETURN(EISDIR);
 	}
 
@@ -1017,13 +1017,13 @@ int list_directory(struct fat_info *info_p, const char *pathname)
 		ret = find_path2(info_p, pathname, &dir_desc);
 		if (ret < 0)
 		{
-			error_msg("directory not find");
+			pr_error_info("directory not find");
 			ERROR_RETURN(ENOENT);
 		}
 
 		if (!IS_DIRECTORY(&dir_desc))
 		{
-			error_msg("this is't a directory");
+			pr_error_info("this is't a directory");
 			ERROR_RETURN(EISDIR);
 		}
 
