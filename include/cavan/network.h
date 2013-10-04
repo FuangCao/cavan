@@ -209,7 +209,6 @@ struct network_url
 struct inet_connect
 {
 	int sockfd;
-	socklen_t addrlen;
 	struct sockaddr_in addr;
 };
 
