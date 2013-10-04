@@ -19,7 +19,7 @@
 
 #include <cavan.h>
 #include <cavan/adb.h>
-#include <cavan/tcp_proxy.h>
+#include <cavan/web_proxy.h>
 
 #define FILE_CREATE_DATE "2013-08-22 14:10:51"
 
