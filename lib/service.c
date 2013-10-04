@@ -5,6 +5,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/timer.h>
 #include <cavan/service.h>
 #include <cavan/process.h>
 #include <cavan/permission.h>
@@ -368,11 +369,23 @@ int cavan_dynamic_service_init(struct cavan_dynamic_service *service)
 		return ret;
 	}
 
+	ret = pthread_cond_init(&service->cond, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_cond_init");
+		goto out_pthread_mutex_destroy;
+	}
+
 	return 0;
+
+out_pthread_mutex_destroy:
+	pthread_mutex_destroy(&service->lock);
+	return ret;
 }
 
 void cavan_dynamic_service_deinit(struct cavan_dynamic_service *service)
 {
+	pthread_cond_destroy(&service->cond);
 	pthread_mutex_destroy(&service->lock);
 }
 
@@ -461,7 +474,7 @@ static void *cavan_dynamic_service_handler(void *data)
 			}
 		}
 
-		pr_bold_info("service %s daemon %d busy (%d/%d)", service->name, index, service->used, service->count);
+		pr_bold_info("service %s daemon %d running (%d/%d)", service->name, index, service->used, service->count);
 
 		pthread_mutex_unlock(&service->lock);
 		ret = service->run(service, conn);
@@ -487,12 +500,20 @@ static void *cavan_dynamic_service_handler(void *data)
 	service->count--;
 	pr_green_info("service %s daemon %d exit (%d/%d)", service->name, index, service->used, service->count);
 
+	if (service->count == 0)
+	{
+		pr_red_info("service %s stopped", service->name);
+
+		service->state = CAVAN_SERVICE_STATE_STOPPED;
+		pthread_cond_signal(&service->cond);
+	}
+
 	pthread_mutex_unlock(&service->lock);
 
 	return NULL;
 }
 
-int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
+int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync)
 {
 	int ret;
 
@@ -561,6 +582,8 @@ int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
 			pr_red_info("daemon");
 			return ret;
 		}
+
+		sync = true;
 	}
 
 	service->count = 0;
@@ -574,9 +597,54 @@ int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
 		return ret;
 	}
 
-	cavan_dynamic_service_handler(service);
+	if (sync)
+	{
+		cavan_dynamic_service_handler(service);
+	}
+	else
+	{
+		int i;
+		pthread_t thread;
 
+		ret = pthread_create(&thread, NULL, cavan_dynamic_service_handler, service);
+		if (ret < 0)
+		{
+			pr_error_info("pthread_create");
+			service->stop(service);
+			return ret;
+		}
+
+		pthread_mutex_lock(&service->lock);
+
+		for (i = 0; i < 200; i++)
+		{
+			pthread_mutex_unlock(&service->lock);
+			msleep(10);
+			pthread_mutex_lock(&service->lock);
+
+			if (service->count)
+			{
+				break;
+			}
+
+			pr_bold_info("service %s not ready", service->name);
+		}
+
+		pthread_mutex_unlock(&service->lock);
+	}
+
+	return 0;
+}
+
+void cavan_dynamic_service_join(struct cavan_dynamic_service *service)
+{
 	pthread_mutex_lock(&service->lock);
+
+	while (service->count)
+	{
+		pr_bold_info("service %s daemon count %d", service->name, service->count);
+		pthread_cond_wait(&service->cond, &service->lock);
+	}
 
 	if (service->state == CAVAN_SERVICE_STATE_RUNNING)
 	{
@@ -588,6 +656,18 @@ int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
 	pthread_mutex_unlock(&service->lock);
 
 	pr_bold_info("service %s stopped", service->name);
+}
+
+int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
+{
+	int ret = cavan_dynamic_service_start(service, true);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_dynamic_service_start");
+		return ret;
+	}
+
+	cavan_dynamic_service_join(service);
 
 	return 0;
 }
@@ -603,11 +683,12 @@ int cavan_dynamic_service_stop(struct cavan_dynamic_service *service)
 		service->state = CAVAN_SERVICE_STATE_STOPPING;
 		service->stop(service);
 
-		for (i = 0; i < 100; i++)
+		for (i = 0; i < 10 && service->count; i++)
 		{
-			pthread_mutex_unlock(&service->lock);
-			msleep(100);
-			pthread_mutex_lock(&service->lock);
+			struct timespec abstime;
+
+			cavan_timer_set_timespec(&abstime, 2000);
+			pthread_cond_timedwait(&service->cond, &service->lock, &abstime);
 
 			if (service->state == CAVAN_SERVICE_STATE_STOPPED)
 			{

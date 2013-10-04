@@ -57,8 +57,6 @@ static int test_service_handler(struct cavan_dynamic_service *service, void *con
 
 	msleep(500);
 
-	pr_pos_info();
-
 	return 0;
 }
 
@@ -83,10 +81,16 @@ int main(int argc, char *argv[])
 	service->stop = test_service_stop;
 	service->run = test_service_handler;
 
-	ret = cavan_dynamic_service_run(service);
+	ret = cavan_dynamic_service_start(service, false);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_dynamic_service_run");
+	}
+	else
+	{
+		msleep(5000);
+		cavan_dynamic_service_stop(service);
+		cavan_dynamic_service_join(service);
 	}
 
 	cavan_dynamic_service_destroy(service);

@@ -50,6 +50,7 @@ struct cavan_dynamic_service
 	int show_verbose;
 	int super_permission;
 	void *private_data;
+	pthread_cond_t cond;
 	pthread_mutex_t lock;
 	cavan_service_state_t state;
 
@@ -76,6 +77,8 @@ int cavan_dynamic_service_init(struct cavan_dynamic_service *service);
 void cavan_dynamic_service_deinit(struct cavan_dynamic_service *service);
 struct cavan_dynamic_service *cavan_dynamic_service_create(size_t size);
 void cavan_dynamic_service_destroy(struct cavan_dynamic_service *service);
+void cavan_dynamic_service_join(struct cavan_dynamic_service *service);
+int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync);
 int cavan_dynamic_service_run(struct cavan_dynamic_service *service);
 int cavan_dynamic_service_stop(struct cavan_dynamic_service *service);
 
