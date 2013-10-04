@@ -103,8 +103,8 @@ am_libcavan_la_OBJECTS = adb.lo alarm.lo bmp.lo cache.lo calculator.lo \
 	sprd_diag.lo stack.lo stdio.lo swan_dev.lo swan_mac.lo \
 	swan_pkg.lo swan_ts.lo swan_upgrade.lo swan_vk.lo tcp_dd.lo \
 	tcp_proxy.lo text.lo tftp.lo thread.lo timer.lo touchpad.lo \
-	touchscreen.lo tree.lo uevent.lo usb.lo vfat.lo window.lo \
-	xml.lo
+	touchscreen.lo tree.lo uevent.lo usb.lo vfat.lo web_proxy.lo \
+	window.lo xml.lo
 libcavan_la_OBJECTS = $(am_libcavan_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -252,7 +252,7 @@ AUTOMAKE_OPTIONS = foreign
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libcavan.la
-libcavan_la_SOURCES = adb.c alarm.c bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c display.c ecc.c event.c ext2.c fb.c file.c font.c ftp.c gsensor.c image.c inotify.c input.c keypad.c list.c malloc.c math.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c pool.c process.c progress.c queue.c rle.c screen_mirror.c service.c sort.c sprd_diag.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c tcp_proxy.c text.c tftp.c thread.c timer.c touchpad.c touchscreen.c tree.c uevent.c usb.c vfat.c window.c xml.c
+libcavan_la_SOURCES = adb.c alarm.c bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c device.c display.c ecc.c event.c ext2.c fb.c file.c font.c ftp.c gsensor.c image.c inotify.c input.c keypad.c list.c malloc.c math.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c pool.c process.c progress.c queue.c rle.c screen_mirror.c service.c sort.c sprd_diag.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c tcp_proxy.c text.c tftp.c thread.c timer.c touchpad.c touchscreen.c tree.c uevent.c usb.c vfat.c web_proxy.c window.c xml.c
 all: all-am
 
 .SUFFIXES:
@@ -390,6 +390,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uevent.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vfat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/web_proxy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml.Plo@am__quote@
 
