@@ -331,7 +331,6 @@ static int web_proxy_ftp_list_directory(int client_sockfd, int proxy_sockfd, str
 	int fd;
 	int ret;
 	int data_sockfd;
-	struct stat st;
 	char *p, buff[2048];
 
 	data_sockfd = ftp_client_create_pasv_link(proxy_sockfd);

@@ -453,7 +453,6 @@ int cavan_cache_init(struct cavan_cache *cache, void *mem, size_t size)
 
 	return 0;
 
-out_pthread_cond_destroy_wrcond:
 	pthread_cond_destroy(&cache->wrcond);
 out_pthread_cond_destroy_rdcond:
 	pthread_cond_destroy(&cache->rdcond);

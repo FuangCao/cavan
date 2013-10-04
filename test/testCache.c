@@ -57,7 +57,6 @@ static void *read_thread_handler(void *data)
 		// msleep(500);
 	}
 
-out_return:
 	pr_red_info("Read thread exit!");
 	return NULL;
 }

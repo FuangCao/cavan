@@ -140,8 +140,6 @@ static int tcp_proxy_service_run_handler(struct cavan_dynamic_service *service, 
 
 int tcp_proxy_service_run(struct cavan_dynamic_service *service)
 {
-	int ret;
-	int sockfd;
 	struct tcp_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
 	println("PROXY_HOST = %s, PROXY_PORT = %d", proxy->proxy_host, proxy->proxy_port);

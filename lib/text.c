@@ -619,7 +619,7 @@ void text_show64(const u64 *text, size_t count)
 		return;
 	}
 
-	for (end_text = text + count - 1; text < end_text; text)
+	for (end_text = text + count - 1; text < end_text; text++)
 	{
 #if __WORDSIZE == 64
 		print("%016lx ", *text);
