@@ -559,7 +559,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		return -EINVAL;
 	}
 
-	pr_bold_info("daemon min = %d, max = %d", service->min, service->max);
+	pr_bold_info("service %s daemon (%d/%d)", service->name, service->min, service->max);
 
 	if (service->min <= 0 || service->max < service->min)
 	{

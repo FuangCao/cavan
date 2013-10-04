@@ -17,7 +17,7 @@ enum
 	LOCAL_COMMAND_OPTION_VERSION,
 	LOCAL_COMMAND_OPTION_PORT,
 	LOCAL_COMMAND_OPTION_PROXY_PORT,
-	LOCAL_COMMAND_OPTION_PROXY_IP,
+	LOCAL_COMMAND_OPTION_PROXY_HOST,
 	LOCAL_COMMAND_OPTION_DAEMON,
 	LOCAL_COMMAND_OPTION_DAEMON_MIN,
 	LOCAL_COMMAND_OPTION_DAEMON_MAX,
@@ -67,16 +67,16 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_PORT,
 		},
 		{
-			.name = "proxy_ip",
+			.name = "host",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PROXY_IP,
+			.val = LOCAL_COMMAND_OPTION_PROXY_HOST,
 		},
 		{
 			.name = "pip",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PROXY_IP,
+			.val = LOCAL_COMMAND_OPTION_PROXY_HOST,
 		},
 		{
 			.name = "proxy_port",
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 		case 'i':
 		case 'I':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_PROXY_IP:
+		case LOCAL_COMMAND_OPTION_PROXY_HOST:
 			proxy->proxy_host = optarg;
 			break;
 
