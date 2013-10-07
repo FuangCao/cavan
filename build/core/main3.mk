@@ -43,7 +43,7 @@ CFLAGS += -DCAVAN_DEBUG
 endif
 
 CPPFLAGS := $(CPPFLAGS) $(CFLAGS)
-CFLAGS += -Werror-implicit-function-declaration -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS += -Werror-implicit-function-declaration -Wstrict-prototypes
 LDFLAGS += -lm -lrt -lpthread
 
 ifeq ($(BUILD_TYPE),static)
