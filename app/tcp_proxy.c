@@ -22,6 +22,7 @@ enum
 	LOCAL_COMMAND_OPTION_DAEMON_MIN,
 	LOCAL_COMMAND_OPTION_DAEMON_MAX,
 	LOCAL_COMMAND_OPTION_VERBOSE,
+	LOCAL_COMMAND_OPTION_LOGFILE,
 	LOCAL_COMMAND_OPTION_ADB
 };
 
@@ -39,6 +40,7 @@ static void show_usage(const char *command)
 	println("--min, -m, -c\t\t\tmin daemon count");
 	println("--max, -M, -C\t\t\tmax daemon count");
 	println("--verbose\t\t\tshow log message");
+	println("--log, -l, -L\t\t\tsave log to file");
 }
 
 int main(int argc, char *argv[])
@@ -127,6 +129,12 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_ADB,
 		},
 		{
+			.name = "log",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_LOGFILE,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -142,16 +150,13 @@ int main(int argc, char *argv[])
 
 	service->min = 20;
 	service->max = 1000;
-	service->as_daemon = 0;
-	service->show_verbose = 0;
-	service->super_permission = 0;
 
 	proxy = cavan_dynamic_service_get_data(service);
 	proxy->port = 8888;
 	proxy->proxy_host = "127.0.0.1";
 	proxy->proxy_port = 8888;
 
-	while ((c = getopt_long(argc, argv, "vVhH:i:I:p:P:c:C:m:M:dDaA", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhH:i:I:p:P:c:C:m:M:dDaAl:L:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -161,6 +166,12 @@ int main(int argc, char *argv[])
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
+
+		case 'l':
+		case 'L':
+		case LOCAL_COMMAND_OPTION_LOGFILE:
+			service->logfile = optarg;
+			break;
 
 		case 'h':
 		case LOCAL_COMMAND_OPTION_HELP:
@@ -203,7 +214,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case LOCAL_COMMAND_OPTION_VERBOSE:
-			service->show_verbose = 1;
+			service->verbose = 1;
 			break;
 
 		case 'a':

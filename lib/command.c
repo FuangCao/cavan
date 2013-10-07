@@ -139,6 +139,66 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 	return -1;
 }
 
+int cavan_redirect_stdio_base(int ttyfd, int flags)
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+		if (flags & (1 << i))
+		{
+			int ret;
+
+			ret = dup2(ttyfd, i);
+			if (ret < 0)
+			{
+				pr_error_info("dup2 stdio %d", i);
+				return ret;
+			}
+		}
+	}
+
+	return 0;
+}
+
+int cavan_redirect_stdio(const char *pathname, int flags)
+{
+	int fd;
+	int ret;
+	int open_flags;
+
+	pr_bold_info("pathname = %s, flags = 0x%02x", pathname, flags);
+
+	if ((flags & 0x01))
+	{
+		if ((flags & 0x06))
+		{
+			open_flags = O_RDWR;
+		}
+		else
+		{
+			open_flags = O_RDONLY;
+		}
+	}
+	else
+	{
+		open_flags = O_WRONLY;
+	}
+
+	fd = open(pathname, open_flags | O_CREAT | O_TRUNC, 0777);
+	if (fd < 0)
+	{
+		pr_error_info("open file `%s' failed", pathname);
+		return fd;
+	}
+
+	ret = cavan_redirect_stdio_base(fd, flags);
+
+	close(fd);
+
+	return ret;
+}
+
 int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, const char *command)
 {
 	int ret;
@@ -183,24 +243,10 @@ int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, 
 		putenv(buff);
 	}
 
-	ret = dup2(ttyfd, fileno(stdin));
+	ret = cavan_redirect_stdio_base(ttyfd, 0x07);
 	if (ret < 0)
 	{
-		pr_error_info("dup2 stdin");
-		goto out_close_ttyfd;
-	}
-
-	ret = dup2(ttyfd, fileno(stdout));
-	if (ret < 0)
-	{
-		pr_error_info("dup2 stdout");
-		goto out_close_ttyfd;
-	}
-
-	ret = dup2(ttyfd, fileno(stderr));
-	if (ret < 0)
-	{
-		pr_error_info("dup2 stderr");
+		pr_error_info("cavan_redirect_stdio_base");
 		goto out_close_ttyfd;
 	}
 

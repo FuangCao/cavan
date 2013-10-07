@@ -8,6 +8,7 @@
 #include <cavan/timer.h>
 #include <cavan/service.h>
 #include <cavan/process.h>
+#include <cavan/command.h>
 #include <cavan/permission.h>
 
 #define CAVAN_SERVICE_DEBUG		0
@@ -269,34 +270,19 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 
 	if (desc->logfile)
 	{
-		int fd = open(desc->logfile, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-		if (fd < 0)
-		{
-			pr_error_info("open file %s failed", desc->logfile);
-			return fd;
-		}
-
-		ret = dup2(fd, fileno(stdout));
+		ret = cavan_redirect_stdio(desc->logfile, 0x06);
 		if (ret < 0)
 		{
-			pr_error_info("dup2 stdout");
-		}
-		else
-		{
-			ret = dup2(fd, fileno(stderr));
-		}
-
-		close(fd);
-
-		if (ret < 0)
-		{
+			pr_red_info("cavan_redirect_stdio");
 			return ret;
 		}
+
+		desc->verbose = 1;
 	}
 
 	if (desc->as_daemon)
 	{
-		ret = daemon(1, desc->verbose || desc->logfile);
+		ret = daemon(1, desc->verbose);
 		if (ret < 0)
 		{
 			pr_error_info("daemon");
@@ -399,6 +385,8 @@ struct cavan_dynamic_service *cavan_dynamic_service_create(size_t size)
 		pr_error_info("malloc");
 		return NULL;
 	}
+
+	memset(service, 0, sizeof(*service));
 
 	if (cavan_dynamic_service_init(service) < 0)
 	{
@@ -572,11 +560,23 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		return ret;
 	}
 
+	if (service->logfile)
+	{
+		ret = cavan_redirect_stdio(service->logfile, 0x06);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_redirect_stdio");
+			return ret;
+		}
+
+		service->verbose = 1;
+	}
+
 	if (service->as_daemon)
 	{
 		pr_blue_info("Run %s as daemon", service->name);
 
-		ret = daemon(0, service->show_verbose);
+		ret = daemon(0, service->verbose);
 		if (ret < 0)
 		{
 			pr_red_info("daemon");

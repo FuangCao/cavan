@@ -47,9 +47,10 @@ struct cavan_dynamic_service
 	int min, max;
 	int count, used;
 	int as_daemon;
-	int show_verbose;
+	int verbose;
 	int super_permission;
 	void *private_data;
+	const char *logfile;
 	pthread_cond_t cond;
 	pthread_mutex_t lock;
 	cavan_service_state_t state;
