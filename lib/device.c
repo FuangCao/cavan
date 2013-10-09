@@ -4,6 +4,8 @@
 #include <cavan/file.h>
 #include <sys/vfs.h>
 
+#define MAX_MOUNT_COUNT		100
+
 int fget_device_size(int dev_fd, u64 *size)
 {
 	int ret;
@@ -101,7 +103,7 @@ int umount_directory2(const char *mnt_point, int flags)
 
 int umount_partition(const char *dev_path, int flags)
 {
-	struct mount_table mtab[100], *p, *end_p;
+	struct mount_table *mtab, *p, *end_p;
 	ssize_t readlen;
 	char abs_path[1024];
 
@@ -116,7 +118,14 @@ int umount_partition(const char *dev_path, int flags)
 		ERROR_RETURN(ENOENT);
 	}
 
-	readlen = read_mount_table(mtab, ARRAY_SIZE(mtab));
+	mtab = alloca(sizeof(*mtab) * MAX_MOUNT_COUNT);
+	if (mtab == NULL)
+	{
+		pr_error_info("alloca");
+		return -EFAULT;
+	}
+
+	readlen = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (readlen < 0)
 	{
 		return readlen;
@@ -146,24 +155,24 @@ int umount_partition(const char *dev_path, int flags)
 
 int umount_by_key_text(const char *key_text, int flags)
 {
-	char mounts[FILE_PROC_MOUNTS_MAX_SIZE];
-	ssize_t readlen;
+	int ret;
+	char *file_mem;
+	size_t file_size;
 	const char *p, *end_p;
 
-	readlen = file_read_mounts(mounts, sizeof(mounts));
-	if (readlen < 0)
+	file_mem = file_read_mounts(&file_size);
+	if (file_mem == NULL)
 	{
-		return readlen;
+		pr_red_info("file_read_mounts");
+		return -EFAULT;
 	}
 
-	mounts[readlen] = 0;
-	p = mounts;
-	end_p = mounts + readlen;
+	p = file_mem;
+	end_p = file_mem + file_size;
 
 	while (p < end_p)
 	{
 		struct mount_table mtab;
-		int ret;
 
 		p = find_mount_table_base(p, &mtab, key_text);
 		if (p == NULL)
@@ -174,7 +183,7 @@ int umount_by_key_text(const char *key_text, int flags)
 		ret = umount_directory2(mtab.target, flags);
 		if (ret < 0)
 		{
-			return ret;
+			goto out_free_file_mem;
 		}
 
 		while (p < end_p && *p != '\n')
@@ -192,15 +201,26 @@ int umount_by_key_text(const char *key_text, int flags)
 		}
 	}
 
-	return 0;
+	ret = 0;
+
+out_free_file_mem:
+	free(file_mem);
+	return ret;
 }
 
 int device_is_mounted_base(const char *dev_abs_path)
 {
 	ssize_t readlen;
-	struct mount_table mtab[100], *p, *end_p;
+	struct mount_table *mtab, *p, *end_p;
 
-	readlen = read_mount_table(mtab, ARRAY_SIZE(mtab));
+	mtab = alloca(sizeof(*mtab) * MAX_MOUNT_COUNT);
+	if (mtab == NULL)
+	{
+		pr_error_info("alloca");
+		return -EFAULT;
+	}
+
+	readlen = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (readlen < 0)
 	{
 		error_msg("read mount table failed");
@@ -235,7 +255,7 @@ int umount_device(const char *dev_path, int flags)
 {
 	ssize_t readlen;
 	char abs_path[1024];
-	struct mount_table mtab[100], *p, *end_p;
+	struct mount_table *mtab, *p, *end_p;
 
 	if (dev_path == NULL)
 	{
@@ -259,7 +279,14 @@ int umount_device(const char *dev_path, int flags)
 		ERROR_RETURN(ENOENT);
 	}
 
-	readlen = read_mount_table(mtab, ARRAY_SIZE(mtab));
+	mtab = alloca(sizeof(*mtab) * MAX_MOUNT_COUNT);
+	if (mtab == NULL)
+	{
+		pr_error_info("alloca");
+		return -EFAULT;
+	}
+
+	readlen = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (readlen < 0)
 	{
 		error_msg("read mount table failed");
@@ -285,9 +312,16 @@ int umount_device(const char *dev_path, int flags)
 int umount_abs_path(const char *abs_path, int flags)
 {
 	ssize_t readlen;
-	struct mount_table mtab[100], *p, *end_p;
+	struct mount_table *mtab, *p, *end_p;
 
-	readlen = read_mount_table(mtab, ARRAY_SIZE(mtab));
+	mtab = alloca(sizeof(*mtab) * MAX_MOUNT_COUNT);
+	if (mtab == NULL)
+	{
+		pr_error_info("alloca");
+		return -EFAULT;
+	}
+
+	readlen = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (readlen < 0)
 	{
 		error_msg("read mount table failed");
@@ -481,16 +515,20 @@ label_next_line:
 
 ssize_t read_filesystems(char (*fstypes)[FSTYPE_NAME_LEN], size_t fstype_size)
 {
-	ssize_t readlen;
-	char buff[FILE_PROC_FILESYSTEMS_SIZE];
+	ssize_t count;
+	char *file_mem;
+	size_t file_size;
 
-	readlen = file_read_filesystems(buff, sizeof(buff));
-	if (readlen < 0)
+	file_mem = file_read_filesystems(&file_size);
+	if (file_mem == NULL)
 	{
-		return readlen;
+		return -EFAULT;
 	}
 
-	return parse_filesystems(buff, readlen, fstypes, fstype_size);
+	count = parse_filesystems(file_mem, file_size, fstypes, fstype_size);
+	free(file_mem);
+
+	return count;
 }
 
 int partition_is_mounted(const char *source, const char *target)
@@ -1541,16 +1579,21 @@ ssize_t parse_mount_table(const char *buff, size_t buff_size, struct mount_table
 
 ssize_t read_mount_table(struct mount_table *mtab, size_t size)
 {
-	ssize_t readlen;
-	char buff[FILE_PROC_MOUNTS_MAX_SIZE];
+	char *file_mem;
+	size_t file_size;
+	ssize_t count;
 
-	readlen = file_read_mounts(buff, sizeof(buff));
-	if (readlen < 0)
+	file_mem = file_read_mounts(&file_size);
+	if (file_mem == NULL)
 	{
-		return readlen;
+		pr_red_info("file_read_mounts");
+		return -EFAULT;
 	}
 
-	return parse_mount_table(buff, readlen, mtab, size);
+	count = parse_mount_table(file_mem, file_size, mtab, size);
+	free(file_mem);
+
+	return count;
 }
 
 void print_mount_table_base(struct mount_table *mtab, size_t size)
@@ -1566,9 +1609,16 @@ void print_mount_table_base(struct mount_table *mtab, size_t size)
 int print_mount_table(void)
 {
 	ssize_t readlen;
-	struct mount_table mtab[100];
+	struct mount_table *mtab;
 
-	readlen = read_mount_table(mtab, ARRAY_SIZE(mtab));
+	mtab = alloca(sizeof(*mtab) * MAX_MOUNT_COUNT);
+	if (mtab == NULL)
+	{
+		pr_error_info("alloca");
+		return -EFAULT;
+	}
+
+	readlen = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (readlen < 0)
 	{
 		error_msg("read_mount_table failed");
@@ -1620,23 +1670,26 @@ const char *find_mount_table_base(const char *mounts, struct mount_table *mtab, 
 
 int find_mount_table(struct mount_table *mtab, const char *text)
 {
-	ssize_t readlen;
-	char mounts[MAX_BUFFER_LEN];
+	ssize_t count;
+	char *file_mem;
+	size_t file_size;
 
-	readlen = file_read_mounts(mounts, sizeof(mounts));
-	if (readlen < 0)
+	file_mem = file_read_mounts(&file_size);
+	if (file_mem == NULL)
 	{
-		return readlen;
+		pr_red_info("file_read_mounts");
+		return -EFAULT;
 	}
 
-	mounts[readlen] = 0;
+	count = find_mount_table_base(file_mem, mtab, text) ? 0 : -ENODATA;
+	free(file_mem);
 
-	return find_mount_table_base(mounts, mtab, text) ? 0 : -ENODATA;
+	return count;
 }
 
 char *get_mount_source_base(const char *target, char *buff, size_t size)
 {
-	struct mount_table mtab[100], *p, *end_p;
+	struct mount_table *mtab, *p, *end_p;
 	ssize_t mtab_size;
 	char target_abs[1024];
 
@@ -1645,7 +1698,14 @@ char *get_mount_source_base(const char *target, char *buff, size_t size)
 		return NULL;
 	}
 
-	mtab_size = read_mount_table(mtab, ARRAY_SIZE(mtab));
+	mtab = alloca(sizeof(*mtab) * MAX_MOUNT_COUNT);
+	if (mtab == NULL)
+	{
+		pr_error_info("alloca");
+		return NULL;
+	}
+
+	mtab_size = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (mtab_size < 0)
 	{
 		return NULL;
@@ -1681,7 +1741,7 @@ char *get_mount_source(const char *target)
 
 char *get_mount_target_base(const char *source, char *buff, size_t size)
 {
-	struct mount_table mtab[100], *p, *end_p;
+	struct mount_table *mtab, *p, *end_p;
 	ssize_t mtab_size;
 	char source_abs[1024];
 
@@ -1690,7 +1750,14 @@ char *get_mount_target_base(const char *source, char *buff, size_t size)
 		return NULL;
 	}
 
-	mtab_size = read_mount_table(mtab, ARRAY_SIZE(mtab));
+	mtab = alloca(sizeof(*mtab) * MAX_MOUNT_COUNT);
+	if (mtab == NULL)
+	{
+		pr_error_info("alloca");
+		return NULL;
+	}
+
+	mtab_size = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (mtab_size < 0)
 	{
 		return NULL;

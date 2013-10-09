@@ -192,6 +192,7 @@ size_t file_line_count(const char *filename);
 int file_mmap(const char *pathname, void **addr, size_t *size, int flags);
 void file_unmap(int fd, void *map, size_t size);
 void *file_read_all(const char *pathname, size_t extra, size_t *size);
+char *file_read_all_text(const char *pathname, size_t *size);
 
 mode_t file_mode2value(const char *text);
 int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *option);
@@ -319,14 +320,14 @@ static inline ssize_t file_read_urandom(void *buff, size_t size)
 	return file_readfrom(URANDOM_DEVICE, buff, size, 0, 0);
 }
 
-static inline ssize_t file_read_mounts(void *buff, size_t size)
+static inline char *file_read_mounts(size_t *size)
 {
-	return file_read(FILE_PROC_MOUNTS, buff, size);
+	return file_read_all_text(FILE_PROC_MOUNTS, size);
 }
 
-static inline ssize_t file_read_filesystems(void *buff, size_t size)
+static inline char *file_read_filesystems(size_t *size)
 {
-	return file_read(FILE_PROC_FILESYSTEMS, buff, size);
+	return file_read_all_text(FILE_PROC_FILESYSTEMS, size);
 }
 
 static inline int update_mount_table(void)

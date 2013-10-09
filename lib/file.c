@@ -2697,35 +2697,36 @@ void file_unmap(int fd, void *map, size_t size)
 
 void *file_read_all(const char *pathname, size_t extra, size_t *size)
 {
-	int ret;
 	int fd;
-	struct stat st;
 	void *mem;
 	ssize_t rdlen;
+	off_t last;
 
 	fd = open(pathname, O_RDONLY);
 	if (fd < 0)
 	{
+		pr_error_info("open file `%s' failed", pathname);
 		return NULL;
 	}
 
-	ret = fstat(fd, &st);
-	if (ret < 0)
+	last = lseek(fd, 0, SEEK_END);
+	if (last == (off_t) -1)
 	{
-		pr_error_info("get file `%s' stat", pathname);
-		close(fd);
-		return NULL;
+		last = KB(100);
+	}
+	else
+	{
+		lseek(fd, 0, SEEK_SET);
 	}
 
-	mem = malloc(st.st_size + extra);
+	mem = malloc(last + extra);
 	if (mem == NULL)
 	{
 		pr_error_info("malloc");
-		close(fd);
-		return NULL;
+		goto out_close_fd;
 	}
 
-	rdlen = ffile_read(fd, mem, st.st_size);
+	rdlen = ffile_read(fd, mem, last);
 	if (rdlen < 0)
 	{
 		pr_error_info("read");
@@ -2737,9 +2738,21 @@ void *file_read_all(const char *pathname, size_t extra, size_t *size)
 		*size = rdlen;
 	}
 
+out_close_fd:
 	close(fd);
-
 	return mem;
+}
+
+char *file_read_all_text(const char *pathname, size_t *size)
+{
+	char *file_mem = (char *) file_read_all(pathname, 1, size);
+	if (file_mem == NULL)
+	{
+		return NULL;
+	}
+
+	file_mem[*size] = 0;
+	return file_mem;
 }
 
 mode_t file_mode2value(const char *text)
