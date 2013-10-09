@@ -34,12 +34,20 @@ CAVAN_PLAT = $(shell $(CC) -dumpmachine)
 
 CFLAGS +=	-Wall -Wundef -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,--noexecstack -Wstrict-aliasing=2 \
 			-fno-strict-aliasing -fno-exceptions -fno-inline-functions-called-once -fno-short-enums \
-			-ffunction-sections -funwind-tables -fstack-protector -finline-functions -Wmissing-declarations \
+			-ffunction-sections -funwind-tables -fstack-protector -finline-functions \
 			-fgcse-after-reload -frerun-cse-after-loop -frename-registers -fomit-frame-pointer -finline-limit=64 \
 			-g -Os -I$(INCLUDE_PATH) -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\"
 
 ifeq ($(BUILD_TYPE),debug)
 CFLAGS += -DCAVAN_DEBUG
+endif
+
+ifneq ($(BUILD_ENTRY),cavan)
+CFLAGS += -Wmissing-declarations
+endif
+
+ifneq ($(FRAME_SIZE),)
+CFLAGS += -Wframe-larger-than=$(FRAME_SIZE)
 endif
 
 CPPFLAGS := $(CPPFLAGS) $(CFLAGS)
