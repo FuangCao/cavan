@@ -179,7 +179,7 @@ ssize_t partition_read_label_auto(const char *dev_path, char *buff, size_t size)
 
 void show_mount_table(struct mount_table *mtab);
 
-ssize_t parse_mount_table(const char *buff, size_t buff_size, struct mount_table *mtab, size_t mtab_size);
+ssize_t parse_mount_table(int fd, struct mount_table *mtab, size_t mtab_size);
 ssize_t read_mount_table(struct mount_table *mtab, size_t size);
 void print_mount_table_base(struct mount_table *mtab, size_t size);
 int print_mount_table(void);
@@ -193,7 +193,7 @@ char *get_mount_target(const char *source);
 
 int loop_get_fd(const char *filename, char *loop_path, u64 offset);
 
-ssize_t parse_filesystems(const char *buff, size_t buff_size, char (*fstypes)[FSTYPE_NAME_LEN], size_t fstype_size);
+ssize_t parse_filesystems(int fd, char (*fstypes)[FSTYPE_NAME_LEN], size_t fstype_size);
 ssize_t read_filesystems(char (*fstypes)[FSTYPE_NAME_LEN], size_t fstype_size);
 
 ssize_t device_read_blocks(int fd, void *buff, size_t block_size, off_t start, size_t count);

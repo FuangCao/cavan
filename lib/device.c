@@ -487,27 +487,34 @@ int system_mount(const char *mnt_dev, const char *mnt_point, const void *data)
 	}
 }
 
-ssize_t parse_filesystems(const char *buff, size_t buff_size, char (*fstypes)[FSTYPE_NAME_LEN], size_t fstype_size)
+ssize_t parse_filesystems(int fd, char (*fstypes)[FSTYPE_NAME_LEN], size_t fstype_size)
 {
-	const char *end_buff = buff + buff_size;
 	char (*fstypes_bak)[FSTYPE_NAME_LEN] = fstypes;
 	char (*end_fstypes)[FSTYPE_NAME_LEN] = fstypes + fstype_size;
 
-	while (buff < end_buff && fstypes < end_fstypes)
+	while (fstypes < end_fstypes)
 	{
-		int ret;
+		ssize_t rdlen;
+		char buff[512];
 		char temp[FSTYPE_NAME_LEN];
 
-		ret = sscanf(buff, "%s %s", *fstypes, temp);
-		if (ret != 1 && text_lhcmp("nodev", *fstypes) == 0)
+		rdlen = file_read_line(fd, buff, sizeof(buff));
+		if (rdlen < 1)
 		{
-			goto label_next_line;
+			if (rdlen < 0)
+			{
+				pr_red_info("file_read_line");
+				return rdlen;
+			}
+
+			break;
 		}
 
-		fstypes++;
-
-label_next_line:
-		while (buff < end_buff && *buff++ != '\n');
+		rdlen = sscanf(buff, "%s %s", *fstypes, temp);
+		if (rdlen == 1 || text_lhcmp("nodev", *fstypes))
+		{
+			fstypes++;
+		}
 	}
 
 	return fstypes - fstypes_bak;
@@ -515,18 +522,18 @@ label_next_line:
 
 ssize_t read_filesystems(char (*fstypes)[FSTYPE_NAME_LEN], size_t fstype_size)
 {
+	int fd;
 	ssize_t count;
-	char *file_mem;
-	size_t file_size;
 
-	file_mem = file_read_filesystems(&file_size);
-	if (file_mem == NULL)
+	fd = open(FILE_PROC_FILESYSTEMS, O_RDONLY);
+	if (fd < 0)
 	{
-		return -EFAULT;
+		pr_error_info("open file `%s' failed", FILE_PROC_FILESYSTEMS);
+		return fd;
 	}
 
-	count = parse_filesystems(file_mem, file_size, fstypes, fstype_size);
-	free(file_mem);
+	count = parse_filesystems(fd, fstypes, fstype_size);
+	close(fd);
 
 	return count;
 }
@@ -1554,24 +1561,36 @@ void show_mount_table(struct mount_table *mtab)
 	println("option = %s", mtab->option);
 }
 
-ssize_t parse_mount_table(const char *buff, size_t buff_size, struct mount_table *mtab, size_t mtab_size)
+ssize_t parse_mount_table(int fd, struct mount_table *mtab, size_t mtab_size)
 {
 	struct mount_table *end_mtab = mtab + mtab_size, *mtab_bak = mtab;;
-	const char *end_buff = buff + buff_size;
 
-	while (buff < end_buff && mtab < end_mtab)
+	while (mtab < end_mtab)
 	{
-		int ret;
+		ssize_t rdlen;
+		char buff[1024];
 
-		ret = parse_mount_table_simple(buff, mtab);
-		if (ret < 0)
+		rdlen = file_read_line(fd, buff, sizeof(buff));
+		if (rdlen < 1)
 		{
-			break;
+			if (rdlen == 0)
+			{
+				break;
+			}
+
+			pr_red_info("file_read_line");
+
+			return rdlen;
+		}
+
+		rdlen = parse_mount_table_simple(buff, mtab);
+		if (rdlen < 0)
+		{
+			pr_red_info("parse_mount_table_simple");
+			return rdlen;
 		}
 
 		mtab++;
-
-		while (buff < end_buff && *buff++ != '\n');
 	}
 
 	return mtab - mtab_bak;
@@ -1579,19 +1598,18 @@ ssize_t parse_mount_table(const char *buff, size_t buff_size, struct mount_table
 
 ssize_t read_mount_table(struct mount_table *mtab, size_t size)
 {
-	char *file_mem;
-	size_t file_size;
+	int fd;
 	ssize_t count;
 
-	file_mem = file_read_mounts(&file_size);
-	if (file_mem == NULL)
+	fd = open(FILE_PROC_MOUNTS, O_RDONLY);
+	if (fd < 0)
 	{
-		pr_red_info("file_read_mounts");
-		return -EFAULT;
+		pr_error_info("open file `%s' failed", FILE_PROC_MOUNTS);
+		return fd;
 	}
 
-	count = parse_mount_table(file_mem, file_size, mtab, size);
-	free(file_mem);
+	count = parse_mount_table(fd, mtab, size);
+	close(fd);
 
 	return count;
 }

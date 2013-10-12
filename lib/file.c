@@ -2975,25 +2975,22 @@ ssize_t file_read_line(int fd, char *buff, size_t size)
 			}
 		}
 
-		if (c == '\r')
+		switch (c)
 		{
-			continue;
-		}
-
-		if (c == '\n')
-		{
+		case '\n':
 			if (buff > buff_bak)
 			{
-				break;
+				goto out_complete;
 			}
-		}
-		else
-		{
+		case '\r':
+			break;
+
+		default:
 			*buff++ = c;
 		}
 	}
 
+out_complete:
 	*buff = 0;
-
 	return buff - buff_bak;
 }
