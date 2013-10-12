@@ -345,27 +345,34 @@ class GitSvnManager(CavanCommandBase):
 
 		return False
 
+	def svnUpdate(self, revision):
+		lines = self.doPopen(["svn", "update", "--accept", "theirs-full", "--force", "-r", revision])
+		if lines == None:
+			return None
+
+		listUpdate = []
+
+		for line in lines:
+			match = self.mPatternSvnUpdate.match(line)
+			if not match:
+				continue
+
+			if match.group(1) == "D":
+				if not os.path.exists(self.getAbsPath(match.group(2))):
+					self.mkdirAll(match.group(2))
+					self.doExecute(["rm", "-rf", match.group(2)])
+			else:
+				listUpdate.append(match.group(2))
+
+		return listUpdate
+
 	def svnCheckout(self, entry):
 		revision = entry.getRevesion()
 
 		if os.path.isdir(self.mPathSvnRepo):
-			lines = self.doPopen(["svn", "update", "--accept", "theirs-full", "--force", "-r", revision])
-			if lines == None:
+			listUpdate = self.svnUpdate(revision)
+			if listUpdate == None:
 				return False
-
-			listUpdate = []
-
-			for line in lines:
-				match = self.mPatternSvnUpdate.match(line)
-				if not match:
-					continue
-
-				if match.group(1) == "D":
-					if not os.path.exists(self.getAbsPath(match.group(2))):
-						self.mkdirAll(match.group(2))
-						self.doExecute(["rm", "-rf", match.group(2)])
-				else:
-					listUpdate.append(match.group(2))
 		else:
 			url = "%s@%s" % (self.mUrl, revision)
 			if not self.doExecute(["svn", "checkout", "--force", "--quiet", url, "."], of = "/dev/null"):
@@ -449,6 +456,8 @@ class GitSvnManager(CavanCommandBase):
 				url = self.buildSvnUrl(self.mUrl, self.mGitRevision)
 				if not self.doExecute(["svn", "switch", "--force", "--quiet", "--accept", "theirs-full", url], of = "/dev/null"):
 					return False
+			elif self.svnUpdate("%s" % self.mGitRevision) == None:
+				return False
 		else:
 			self.doExecute(["rm", "-rf", ".svn"])
 
