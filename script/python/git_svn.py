@@ -358,9 +358,8 @@ class GitSvnManager(CavanCommandBase):
 				continue
 
 			if match.group(1) == "D":
-				if not os.path.exists(self.getAbsPath(match.group(2))):
-					self.mkdirAll(match.group(2))
-					self.doExecute(["rm", "-rf", match.group(2)])
+				if not self.removeSafe(match.group(2)):
+					return None
 			else:
 				listUpdate.append(match.group(2))
 

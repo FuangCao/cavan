@@ -242,7 +242,7 @@ class CavanCommandBase:
 
 		return self.doExecute(["git", "commit", "-asm", "Auto commit by Fuang.Cao"], cwd = pathname)
 
-	def mkdirAll(self, pathname):
+	def mkdirSafe(self, pathname):
 		pathname = self.getAbsPath(pathname)
 		if os.path.exists(pathname):
 			if os.path.isdir(pathname):
@@ -251,7 +251,7 @@ class CavanCommandBase:
 				return False
 
 		dirname = os.path.dirname(pathname)
-		if len(dirname) > 0 and not self.mkdirAll(dirname):
+		if len(dirname) > 0 and not self.mkdirSafe(dirname):
 			return False
 
 		try:
@@ -277,6 +277,13 @@ class CavanCommandBase:
 				return False
 
 		return True
+
+	def removeSafe(self, pathname):
+		pathname = self.getAbsPath(pathname)
+		if os.path.exists(pathname) or self.doExecute(["touch", pathname], ef = "/dev/null") or self.mkdirSafe(pathname):
+			return self.doExecute(["rm", "-rf", pathname])
+
+		return False
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
