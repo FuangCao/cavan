@@ -1,6 +1,7 @@
 #pragma once
 
-#include <linux/input/hua_input.h>
+#include <huamobile/hua_input.h>
+#include <huamobile/hua_sysfs.h>
 #include <linux/earlysuspend.h>
 
 struct hua_ts_touch_key

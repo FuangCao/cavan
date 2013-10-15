@@ -1,4 +1,5 @@
-#include <linux/input/hua_sensor.h>
+#include <huamobile/hua_sensor.h>
+#include <huamobile/hua_i2c.h>
 
 #define	INTERRUPT_MANAGEMENT 1
 
@@ -144,17 +145,17 @@
 #pragma pack(1)
 struct lis3dh_data_package
 {
-	s16 y;
 	s16 x;
+	s16 y;
 	s16 z;
 };
 
 struct lis3de_data_package
 {
-	u8 not_y;
-	s8 y;
 	u8 not_x;
 	s8 x;
+	u8 not_y;
+	s8 y;
 	u8 not_z;
 	s8 z;
 };
@@ -289,7 +290,7 @@ static int lis3dh_acceleration_event_handler(struct hua_input_chip *chip, struct
 		return ret;
 	}
 
-	hua_sensor_report_vector(dev->input, package.x >> 4, -(package.y >> 4), -(package.z >> 4));
+	hua_sensor_report_vector(dev->input, package.y >> 4, package.x >> 4, package.z >> 4);
 
 	return 0;
 }
@@ -306,7 +307,7 @@ static int lis3de_acceleration_event_handler(struct hua_input_chip *chip, struct
 		return ret;
 	}
 
-	hua_sensor_report_vector(dev->input, package.x, -package.y, -package.z);
+	hua_sensor_report_vector(dev->input, package.y, package.x, package.z);
 
 	return 0;
 }

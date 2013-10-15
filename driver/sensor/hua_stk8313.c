@@ -1,4 +1,5 @@
-#include <linux/input/hua_sensor.h>
+#include <huamobile/hua_sensor.h>
+#include <huamobile/hua_i2c.h>
 
 enum stk8313_register_map
 {
@@ -245,9 +246,7 @@ static int stk8313_acceleration_event_handler(struct hua_input_chip *chip, struc
 	y = BUILD_WORD(package.yh, package.yl) >> 4;
 	z = BUILD_WORD(package.zh, package.zl) >> 4;
 
-	pr_bold_info("[%d, %d, %d]", x, y, z);
-
-	hua_sensor_report_vector(dev->input, -x, -y, z);
+	hua_sensor_report_vector(dev->input, -x, y, z);
 
 	return 0;
 }

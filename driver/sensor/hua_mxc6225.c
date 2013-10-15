@@ -1,4 +1,5 @@
-#include <linux/input/hua_sensor.h>
+#include <huamobile/hua_sensor.h>
+#include <huamobile/hua_i2c.h>
 
 #define REG_DATA_START	0x00
 #define REG_DETECTION	0x04
@@ -82,8 +83,7 @@ static int mxc6225xu_acceleration_event_handler(struct hua_input_chip *chip, str
 		return ret;
 	}
 
-	hua_sensor_report_vector(dev->input, package.x, -package.y, 32);
-
+	hua_sensor_report_vector(dev->input, package.y, package.x, 32);
 	return 0;
 }
 
@@ -99,8 +99,7 @@ static int mxc6225xc_acceleration_event_handler(struct hua_input_chip *chip, str
 		return ret;
 	}
 
-	hua_sensor_report_vector(dev->input, -package.x, package.y, 32);
-
+	hua_sensor_report_vector(dev->input, -package.y, -package.x, 32);
 	return 0;
 }
 

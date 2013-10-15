@@ -1,13 +1,14 @@
-#include <linux/input/hua_ts.h>
-#include <linux/input/hua_sensor.h>
+#include <huamobile/hua_ts.h>
+#include <huamobile/hua_sensor.h>
+#include <huamobile/hua_i2c.h>
 
-#define HOME_AXIS_CENTER_130		0
 #define HUA_SUPPORT_PROXIMITY		1
 
 #define CY8C242_XAXIS_MIN			1
-#define CY8C242_XAXIS_MAX			480//322
+#define CY8C242_XAXIS_MAX			(CONFIG_HUAMOBILE_LCD_WIDTH + 2)
 #define CY8C242_YAXIS_MIN			1
-#define CY8C242_YAXIS_MAX			800//480
+#define CY8C242_YAXIS_MAX			CONFIG_HUAMOBILE_LCD_HEIGHT
+
 #define CY8C242_POINT_COUNT			2
 #define CY8C242_DEVICE_NAME			"cy8c242_ts"
 
@@ -59,7 +60,7 @@ struct hua_cy8c242_device
 	struct hua_sensor_device prox;
 };
 
-static inline ssize_t cy8c242_data_package(struct hua_input_chip *chip, struct cy8c242_data_package *package)
+static inline ssize_t cy8c242_read_data_package(struct hua_input_chip *chip, struct cy8c242_data_package *package)
 {
 	return chip->read_data(chip, 0, package, sizeof(*package));
 }
@@ -110,10 +111,11 @@ static int cy8c242_ts_event_handler(struct hua_input_chip *chip, struct hua_inpu
 	struct cy8c242_data_package package;
 	struct cy8c242_touch_point *p, *p_end;
 
-	ret = cy8c242_data_package(chip, &package);
+	ret = cy8c242_read_data_package(chip, &package);
 	if (ret < 0)
 	{
 		pr_red_info("cy8c242_read_data_package");
+		hua_input_chip_recovery(chip, false);
 		return ret;
 	}
 
@@ -185,31 +187,9 @@ static int cy8c242_set_active(struct hua_input_chip *chip, bool enable)
 
 static struct hua_ts_touch_key cy8c242_touch_keys[] =
 {
-#if HOME_AXIS_CENTER_130
-	{
-		.code = KEY_MENU,
-		.x = 20,
-		.y = 830,
-		.width = 80,
-		.height = 55,
-	},
-	{
-		.code = KEY_HOME,
-		.x = 140,
-		.y = 830,
-		.width = 120,
-		.height = 55,
-	},
+#if CONFIG_HUAMOBILE_LCD_WIDTH == 480
 	{
 		.code = KEY_BACK,
-		.x = 300,
-		.y = 830,
-		.width = 140,
-		.height = 55,
-	}
-#else
-	{
-		.code = KEY_MENU,
 		.x = 70,
 		.y = 880,
 		.width = 120,
@@ -223,11 +203,33 @@ static struct hua_ts_touch_key cy8c242_touch_keys[] =
 		.height = 80,
 	},
 	{
-		.code = KEY_BACK,
+		.code = KEY_MENU,
 		.x = 410,
 		.y = 880,
 		.width = 120,
 		.height = 80,
+	}
+#else
+	{
+		.code = KEY_MENU,
+		.x = 30,
+		.y = 530,
+		.width = 60,
+		.height = 60,
+	},
+	{
+		.code = KEY_HOME,
+		.x = 150,
+		.y = 530,
+		.width = 90,
+		.height = 60,
+	},
+	{
+		.code = KEY_BACK,
+		.x = 270,
+		.y = 530,
+		.width = 100,
+		.height = 60,
 	}
 #endif
 };
@@ -367,58 +369,39 @@ static int cy8c242_firmware2data(const char *p, const char *end, u8 *datas)
 	return count;
 }
 
-static int cy8c242_firmware_write_data(struct hua_input_chip *chip, const char *buff, size_t size)
+static int cy8c242_firmware_write_data(struct hua_input_chip *chip, struct hua_firmware *fw)
 {
 	int ret;
 	u32 delay;
-	const char *p, *end_line, *end_file;
 	u8 datas[32];
+	ssize_t rdlen;
+	char buff[512], *line, *line_end;
 
 	pr_pos_info();
 
-	if (size < 100)
-	{
-		pr_red_info("file size too small");
-		return 0;
-	}
-
-	for (p = buff, end_file = p + size; p < end_file; p = end_line + 1)
-	{
-		if (((p - buff) & 0x0F) == 0)
-		{
-			pr_bold_info("Remain %d byte", end_file - p);
+	while (1) {
+		rdlen = hua_firmware_read_line(fw, buff, sizeof(buff), 0, 5000);
+		if (rdlen < 0) {
+			pr_red_info("hua_firmware_read_line");
+			return rdlen;
 		}
 
-		while (BYTE_IS_SPACE(*p))
-		{
-			if (p < end_file)
-			{
-				p++;
-			}
-			else
-			{
-				return 0;
-			}
+		if (rdlen == 0) {
+			pr_green_info("Firmware upgrade successfully");
+			break;
 		}
 
-		for (end_line = p; end_line < end_file; end_line++)
-		{
-			if (BYTE_IS_LF(*end_line))
-			{
-				break;
-			}
-		}
+		for (line = buff, line_end = line + rdlen; line < line_end && BYTE_IS_SPACE(*line); line++);
 
-		if (p == end_line)
-		{
+		if (line_end - line == 0) {
 			continue;
 		}
 
-		switch (*p)
+		switch (line[0])
 		{
 		case 'w':
 		case 'W':
-			ret = cy8c242_firmware2data(p + 2, end_line, datas);
+			ret = cy8c242_firmware2data(line + 2, line_end, datas);
 			ret = chip->master_send(chip, datas + 1, ret - 1);
 			if (ret < 0)
 			{
@@ -444,7 +427,7 @@ static int cy8c242_firmware_write_data(struct hua_input_chip *chip, const char *
 			break;
 
 		case '[':
-			ret = sscanf(p, "[delay=%d]", &delay);
+			ret = sscanf(line, "[delay=%d]", &delay);
 			if (ret == 1)
 			{
 				msleep(delay);
@@ -460,20 +443,18 @@ static int cy8c242_firmware_write_data(struct hua_input_chip *chip, const char *
 			break;
 
 		default:
-			pr_red_info("unknown char 0x%02x at %d", *p, p - buff);
+			pr_red_info("unknown char 0x%02x at line %s", line[0], line);
 		}
 	}
 
 	return 0;
 }
 
-static int cy8c242_firmware_upgrade(struct hua_input_chip *chip, const void *buff, size_t size)
+static int cy8c242_firmware_upgrade(struct hua_input_chip *chip, struct hua_firmware *fw)
 {
 	int ret;
 
 	pr_pos_info();
-
-	pr_bold_info("buff size = %d", size);
 
 	ret = cy8c242_enter_upgrade_mode(chip, 10);
 	if (ret < 0)
@@ -482,7 +463,7 @@ static int cy8c242_firmware_upgrade(struct hua_input_chip *chip, const void *buf
 		return ret;
 	}
 
-	ret = cy8c242_firmware_write_data(chip, buff, size);
+	ret = cy8c242_firmware_write_data(chip, fw);
 	if (ret < 0)
 	{
 		pr_red_info("cy8c242_firmware_write_data");
@@ -559,6 +540,7 @@ static int cy8c242_proximity_event_handler(struct hua_input_chip *chip, struct h
 	if (ret < 0)
 	{
 		pr_red_info("dev->read_register");
+		hua_input_chip_recovery(chip, false);
 		return ret;
 	}
 
@@ -740,7 +722,6 @@ static int cy8c242_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->write_data = hua_input_write_data_i2c;
 	chip->read_register = hua_input_read_register_i2c_smbus;
 	chip->write_register = hua_input_write_register_i2c_smbus;
-	chip->firmware_size = KB(180);
 	chip->firmware_upgrade = cy8c242_firmware_upgrade;
 	chip->calibration = cy8c242_calibration;
 

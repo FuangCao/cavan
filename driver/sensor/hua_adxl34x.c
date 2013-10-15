@@ -1,4 +1,5 @@
-#include <linux/input/hua_sensor.h>
+#include <huamobile/hua_sensor.h>
+#include <huamobile/hua_i2c.h>
 
 #ifdef CONFIG_ARCH_SC8810
 #include <mach/eic.h>
@@ -276,7 +277,7 @@ static int adxl34x_acceleration_event_handler(struct hua_input_chip *chip, struc
 			continue;
 		}
 
-		hua_sensor_report_vector(dev->input, -package.x, -package.y, -package.z);
+		hua_sensor_report_vector(dev->input, -package.x, package.y, package.z);
 	}
 
 	return 0;

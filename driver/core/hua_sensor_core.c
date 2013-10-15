@@ -1,4 +1,4 @@
-#include <linux/input/hua_sensor.h>
+#include <huamobile/hua_sensor.h>
 
 static int hua_sensor_device_ioctl(struct hua_input_device *dev, unsigned int command, unsigned long args)
 {

@@ -1,4 +1,4 @@
-#include <linux/input/hua_ts.h>
+#include <huamobile/hua_ts.h>
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void hua_ts_suspend(struct early_suspend *h)
@@ -58,6 +58,7 @@ static void hua_ts_device_remove(struct hua_input_device *dev)
 
 	hua_input_remove_sysfs_files(&core->prop_kobj, &hua_ts_board_properties_attr, 1);
 	kfree(hua_ts_board_properties_attr.attr.name);
+	hua_input_remove_kobject(&core->prop_kobj);
 }
 
 static int hua_ts_device_open(struct input_dev *dev)
@@ -87,11 +88,19 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 	const struct hua_ts_touch_key *key, *key_end;
 	const char *name;
 
+	ret = hua_input_add_kobject(&core->prop_kobj, "board_properties");
+	if (ret < 0 && ret != -EEXIST)
+	{
+		pr_red_info("hua_input_add_kobject");
+		return ret;
+	}
+
 	name = kasprintf(GFP_KERNEL, "virtualkeys.%s", input->name);
 	if (name == NULL)
 	{
+		ret = -ENOMEM;
 		pr_red_info("kasprintf");
-		return -ENOMEM;
+		goto out_hua_input_remove_kobject;
 	}
 
 	hua_ts_board_properties_attr.attr.name = name;
@@ -100,8 +109,7 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_add_kobject");
-		kfree(name);
-		return ret;
+		goto out_kfree_name;
 	}
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -134,6 +142,12 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 	pr_green_info("huamobile touch screen %s probe complete", dev->name);
 
 	return 0;
+
+out_kfree_name:
+	kfree(name);
+out_hua_input_remove_kobject:
+	hua_input_remove_kobject(&core->prop_kobj);
+	return ret;
 }
 
 MODULE_AUTHOR("Fuang.Cao <cavan.cfa@gmail.com>");

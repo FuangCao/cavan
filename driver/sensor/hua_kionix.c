@@ -1,4 +1,5 @@
-#include <linux/input/hua_sensor.h>
+#include <huamobile/hua_sensor.h>
+#include <huamobile/hua_i2c.h>
 
 #define REG_DATA_START		0x06
 #define REG_CHIP_ID			0x0F
@@ -68,7 +69,7 @@ static int kionix_acceleration_event_handler(struct hua_input_chip *chip, struct
 		return ret;
 	}
 
-	hua_sensor_report_vector(dev->input, package.x >> 4, -(package.y >> 4), package.z >> 4);
+	hua_sensor_report_vector(dev->input, package.y >> 4, package.x >> 4, package.z >> 4);
 
 	return 0;
 }
@@ -154,7 +155,16 @@ static int kionix_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	hua_input_chip_set_bus_data(chip, client);
 
 	chip->irq = -1;
-	chip->name = "KIONIX";
+
+	if (strcmp(client->name, "kxcjk") == 0)
+	{
+		chip->name = "KXCJK";
+	}
+	else
+	{
+		chip->name = "KXTIK";
+	}
+
 	chip->devmask = 1 << HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
 	chip->init_data = kionix_init_data;
 	chip->init_data_size = ARRAY_SIZE(kionix_init_data);
@@ -195,7 +205,7 @@ static int kionix_i2c_remove(struct i2c_client *client)
 
 static const struct i2c_device_id kionix_id[] =
 {
-	{"kionix", 0}, {}
+	{"kxtik", 0}, {"kxcjk", 0}, {}
 };
 
 MODULE_DEVICE_TABLE(i2c, kionix_id);

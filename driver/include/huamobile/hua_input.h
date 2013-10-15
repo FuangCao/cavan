@@ -9,6 +9,8 @@
 #include <linux/wakelock.h>
 #include <linux/interrupt.h>
 #include <linux/miscdevice.h>
+#include <huamobile/hua_thread.h>
+#include <huamobile/hua_firmware.h>
 
 #define KB(size)	((size) << 10)
 #define MB(size)	((size) << 20)
@@ -69,7 +71,6 @@
 
 #define HUA_INPUT_CHIP_IOC_GET_NAME(len)	HUA_INPUT_IOC('I', 0x00, len)
 #define HUA_INPUT_CHIP_IOC_GET_VENDOR(len)	HUA_INPUT_IOC('I', 0x01, len)
-#define HUA_INPUT_CHIP_IOC_SET_FW_SIZE		HUA_INPUT_IOC('I', 0x02, 0)
 
 #define HUA_INPUT_DEVICE_IOC_GET_TYPE		HUA_INPUT_IOC('I', 0x10, 0)
 #define HUA_INPUT_DEVICE_IOC_GET_NAME(len)	HUA_INPUT_IOC('I', 0x11, len)
@@ -97,15 +98,6 @@
 struct hua_input_core;
 struct hua_input_chip;
 struct hua_input_device;
-
-enum hua_input_thread_state
-{
-	HUA_INPUT_THREAD_STATE_CREATED,
-	HUA_INPUT_THREAD_STATE_RUNNING,
-	HUA_INPUT_THREAD_STATE_SUSPEND,
-	HUA_INPUT_THREAD_STATE_STOPPING,
-	HUA_INPUT_THREAD_STATE_STOPPED
-};
 
 enum hua_input_device_type
 {
@@ -137,43 +129,11 @@ struct hua_input_list
 	struct list_head head;
 };
 
-struct hua_input_firmware
-{
-	int state;
-	size_t size;
-	size_t max_size;
-	void *data;
-};
-
 struct hua_input_init_data
 {
 	u8 addr;
 	u8 value;
 	u32 delay;
-};
-
-struct hua_input_thread
-{
-	const char *name;
-	void *private_data;
-	enum hua_input_thread_state state;
-
-	int priority;
-	struct mutex lock;
-	struct task_struct *task;
-
-	void (*stop)(struct hua_input_thread *thread);
-	void (*prepare)(struct hua_input_thread *thread, bool enable);
-	void (*event_handle)(struct hua_input_thread *thread);
-	void (*wait_for_event)(struct hua_input_thread *thread);
-};
-
-struct hua_input_attribute
-{
-	struct attribute attr;
-	struct hua_input_device *dev;
-	ssize_t (*show)(struct hua_input_device *dev, struct hua_input_attribute *attr, char *buff);
-	ssize_t (*store)(struct hua_input_device *dev, struct hua_input_attribute *attr, const char *buff, size_t count);
 };
 
 struct hua_misc_device
@@ -233,9 +193,6 @@ struct hua_input_chip
 	struct completion event_completion;
 
 	long poll_jiffies;
-
-	size_t firmware_size;
-
 	bool poweron_init;
 	size_t init_data_size;
 	const struct hua_input_init_data *init_data;
@@ -246,6 +203,7 @@ struct hua_input_chip
 
 	bool powered;
 	bool actived;
+	int recovery_count;
 
 	struct mutex lock;
 	struct wake_lock wake_lock;
@@ -279,7 +237,7 @@ struct hua_input_chip
 	int (*read_register)(struct hua_input_chip *chip, u8 addr, u8 *value);
 	int (*write_register)(struct hua_input_chip *chip, u8 addr, u8 value);
 
-	int (*firmware_upgrade)(struct hua_input_chip *chip, const void *buff, size_t size);
+	int (*firmware_upgrade)(struct hua_input_chip *chip, struct hua_firmware *fw);
 	int (*calibration)(struct hua_input_chip *chip, const void *buff, size_t size);
 };
 
@@ -298,33 +256,17 @@ struct hua_input_core
 	struct hua_input_list exclude_list;
 };
 
-ssize_t hua_input_read_data_i2c(struct hua_input_chip *chip, u8 addr, void *buff, size_t size);
-ssize_t hua_input_write_data_i2c(struct hua_input_chip *chip, u8 addr, const void *buff, size_t size);
-
-int hua_input_read_register_i2c_smbus(struct hua_input_chip *chip, u8 addr, u8 *value);
-int hua_input_write_register_i2c_smbus(struct hua_input_chip *chip, u8 addr, u8 value);
-
-int hua_input_master_recv_i2c(struct hua_input_chip *chip, void *buff, size_t size);
-int hua_input_master_send_i2c(struct hua_input_chip *chip, const void *buff, size_t size);
-
-int hua_input_test_i2c(struct i2c_client *client);
-int hua_input_detect_i2c(struct i2c_client *client, u8 start, u8 end);
-
 char *hua_input_print_memory(const void *mem, size_t size);
 
 int hua_input_copy_to_user_text(unsigned int command, unsigned long args, const char *text);
 int hua_input_copy_to_user_uint(unsigned long args, unsigned int value);
 
-int hua_input_add_kobject(struct kobject *kobj, const char *name);
-void hua_input_remove_kobject(struct kobject *kobj);
-int hua_input_create_sysfs_files(struct hua_input_device *dev, struct kobject *kobj, struct hua_input_attribute *attrs, size_t count);
-void hua_input_remove_sysfs_files(struct kobject *kobj, struct hua_input_attribute *attrs, size_t count);
-
 int hua_input_chip_set_power(struct hua_input_chip *chip, bool enable);
 int hua_input_chip_set_power_lock(struct hua_input_chip *chip, bool enable);
 int hua_input_chip_set_active(struct hua_input_chip *chip, bool enable);
 int hua_input_chip_set_active_lock(struct hua_input_chip *chip, bool enable);
-int hua_input_device_set_enable(struct hua_input_device *dev, bool enable);
+void hua_input_chip_recovery(struct hua_input_chip *chip, bool force);
+int hua_input_chip_firmware_upgrade(struct hua_input_chip *chip, void *buff, size_t size, int flags);
 int hua_input_device_set_enable_lock(struct hua_input_device *dev, bool enable);
 
 int hua_input_device_register(struct hua_input_chip *chip, struct hua_input_device *dev);

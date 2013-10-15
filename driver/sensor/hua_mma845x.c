@@ -1,4 +1,5 @@
-#include <linux/input/hua_sensor.h>
+#include <huamobile/hua_sensor.h>
+#include <huamobile/hua_i2c.h>
 
 #define REG_DATA_START		0x01
 #define REG_CHIP_ID			0x0D
@@ -19,8 +20,8 @@
 #pragma pack(1)
 struct mma845x_data_package
 {
-	u8 yh, yl;
 	u8 xh, xl;
+	u8 yh, yl;
 	u8 zh, zl;
 };
 #pragma pack()
@@ -162,7 +163,7 @@ static int mma845x_acceleration_event_handler(struct hua_input_chip *chip, struc
 	y = MMA845X_BUILD_WORD(package.yh, package.yl) >> 4;
 	z = MMA845X_BUILD_WORD(package.zh, package.zl) >> 4;
 
-	hua_sensor_report_vector(dev->input, x, -y, -z);
+	hua_sensor_report_vector(dev->input, y, x, z);
 
 	return 0;
 }
