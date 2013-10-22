@@ -666,6 +666,8 @@ class GitSvnManager(CavanCommandBase):
 			return self.doInit(argv[2:])
 		if subcmd in ["clone"]:
 			return self.doClone(argv[2:])
+		if subcmd in ["clean", "cleanup"]:
+			return self.doGitClean()
 		elif subcmd in ["update", "sync", "rebase", "dcommit"]:
 			if length > 2:
 				url = argv[2]

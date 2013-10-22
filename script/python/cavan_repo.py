@@ -469,6 +469,18 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		return True
 
+	def doCleanup(self):
+		if not self.loadManifest():
+			return False
+
+		for node in self.mManifest.getProjects():
+			pathname = self.getProjectAbsPath(node)
+			self.prBrownInfo("Cleaning ", pathname)
+			if not self.doGitClean(pathname):
+				return False
+
+		return True
+
 	def genManifestRepo(self):
 		if not self.genGitRepo(self.mPathManifestRepo):
 			return False
@@ -592,6 +604,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			return self.doCommand(argv[2:])
 		elif subcmd in ["backup"]:
 			return self.doBackup(argv[2:])
+		elif subcmd in ["clean", "cleanup"]:
+			return self.doCleanup()
 		else:
 			self.prRedInfo("unknown subcmd ", subcmd)
 			return False

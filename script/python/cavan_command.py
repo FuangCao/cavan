@@ -264,7 +264,7 @@ class CavanCommandBase:
 		if not os.path.isdir(tmppath):
 			os.mkdir(tmppath)
 
-		self.prBrownInfo("Rename ", tmppath, " => ", pathname)
+		self.prBrownInfo("Fixup ", pathname)
 
 		try:
 			os.rename(tmppath, pathname)
@@ -284,6 +284,29 @@ class CavanCommandBase:
 			return self.doExecute(["rm", "-rf", pathname])
 
 		return False
+
+	def doGitClean(self, pathname = None):
+		lines = self.doPopen(["git", "clean", "-xdfe", ".svn"], cwd = pathname)
+		if lines == None:
+			return False
+
+		for line in lines:
+			if not line.startswith("Removing"):
+				continue
+
+			line = line.rstrip()
+			if not line.endswith("/"):
+				continue
+
+			line = line[9:]
+
+			if pathname != None:
+				line = os.path.join(pathname, line)
+
+			if not self.removeSafe(line):
+				return False
+
+		return True
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
