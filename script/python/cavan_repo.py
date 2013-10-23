@@ -192,8 +192,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		self.mPathProjects = os.path.join(self.mPathSvnRepo, "projects")
 		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
 		self.mFileFailed = os.path.join(self.mPathSvnRepo, "failed.txt")
-		self.mPathManifestRepo = os.path.join(self.mPathSvnRepo, "manifest")
-		self.mPathFileRepo = os.path.join(self.mPathSvnRepo, "copyfile")
+		self.mPathManifestRepo = os.path.join(self.mPathProjects, "platform/manifest.git")
+		self.mPathFileRepo = os.path.join(self.mPathProjects, "platform/copyfile.git")
 
 	def genProjectNode(self, depth = 0, path = ""):
 		url = os.path.join(self.mUrl, path)
@@ -587,6 +587,65 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		return True
 
+	def doSymlink(self, argv):
+		if not self.loadManifest():
+			return False
+
+		length = len(argv)
+
+		if length > 0:
+			self.mPathBackup = os.path.abspath(argv[0])
+			self.mManifest.setBackup(self.mPathBackup)
+		else:
+			self.mPathBackup = self.mManifest.getBackup()
+
+		if not self.mPathBackup:
+			self.prRedInfo("Please give symlink path")
+			return False
+
+		if length > 1:
+			self.mUrlFetch = argv[1]
+			self.mManifest.setFetch(self.mUrlFetch)
+		else:
+			self.mUrlFetch = self.mManifest.getFetch()
+
+		if not self.mUrlFetch:
+			self.prRedInfo("Please give fetch url")
+			return False
+
+		self.setVerbose(True)
+		self.mManifest.save(self.mFileManifest)
+
+		if not os.path.isdir(self.mPathBackup):
+			os.makedirs(self.mPathBackup)
+
+		if not self.genFileRepo():
+			return False
+
+		if not self.genManifestRepo():
+			return False
+
+		listProject = self.mManifest.getProjects()
+		listProject.insert(0, ("platform/manifest", self.mPathManifestRepo))
+		for node in listProject:
+			relPath = node[0] + ".git"
+			localPath = os.path.join(self.mPathProjects, relPath)
+			if not os.path.isdir(localPath):
+				return False
+
+			symlinkPath = os.path.join(self.mPathBackup, relPath)
+			if os.path.exists(symlinkPath):
+				if not os.path.islink(symlinkPath):
+					return False
+				os.remove(symlinkPath)
+			elif not self.mkdirSafe(os.path.dirname(symlinkPath)):
+				return False
+
+			self.prBoldInfo(localPath, " <= ", symlinkPath)
+			os.symlink(localPath, symlinkPath)
+
+		return True
+
 	def main(self, argv):
 		length = len(argv)
 		if length < 2:
@@ -606,6 +665,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			return self.doBackup(argv[2:])
 		elif subcmd in ["clean", "cleanup"]:
 			return self.doCleanup()
+		elif subcmd in ["ln", "link", "symlink"]:
+			return self.doSymlink(argv[2:])
 		else:
 			self.prRedInfo("unknown subcmd ", subcmd)
 			return False

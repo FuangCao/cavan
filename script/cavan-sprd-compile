@@ -44,7 +44,7 @@ do
 	cavan_visual_command cd $1 || continue
 	cavan_visual_command cavan-git-svn-repo init || continue
 	cavan_visual_command cavan-git-svn-repo sync || continue
-	cavan_visual_command cavan-git-svn-repo backup
+	cavan_visual_command cavan-git-svn-repo symlink
 
 	[ $# -gt 1 ] && cavan_visual_command rm out *.pac -rf
 
