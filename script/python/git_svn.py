@@ -531,6 +531,9 @@ class GitSvnManager(CavanCommandBase):
 		if not self.doExecute(["svn", "remove", "--quiet", pathname], verbose = False):
 			return True
 
+		if not self.removeSafe(pathname):
+			return False
+
 		dirname = os.path.dirname(pathname)
 		if not dirname:
 			return True

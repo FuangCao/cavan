@@ -256,6 +256,7 @@ class CavanCommandBase:
 
 		try:
 			os.mkdir(pathname)
+			return True
 		except:
 			if os.path.isdir(pathname):
 				return True
