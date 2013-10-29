@@ -30,8 +30,8 @@ enum
 	LOCAL_COMMAND_OPTION_VERSION,
 	LOCAL_COMMAND_OPTION_PORT,
 	LOCAL_COMMAND_OPTION_DAEMON,
-	LOCAL_COMMAND_OPTION_MIN,
-	LOCAL_COMMAND_OPTION_MAX,
+	LOCAL_COMMAND_OPTION_DAEMON_MIN,
+	LOCAL_COMMAND_OPTION_DAEMON_MAX,
 	LOCAL_COMMAND_OPTION_VERBOSE,
 	LOCAL_COMMAND_OPTION_LOGFILE,
 };
@@ -86,13 +86,13 @@ int main(int argc, char *argv[])
 			.name = "min",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_MIN,
+			.val = LOCAL_COMMAND_OPTION_DAEMON_MIN,
 		},
 		{
 			.name = "max",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_MAX,
+			.val = LOCAL_COMMAND_OPTION_DAEMON_MAX,
 		},
 		{
 			.name = "verbose",
@@ -158,12 +158,14 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'c':
-		case LOCAL_COMMAND_OPTION_MIN:
+		case 'm':
+		case LOCAL_COMMAND_OPTION_DAEMON_MIN:
 			service->min = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'C':
-		case LOCAL_COMMAND_OPTION_MAX:
+		case 'M':
+		case LOCAL_COMMAND_OPTION_DAEMON_MAX:
 			service->max = text2value_unsigned(optarg, NULL, 10);
 			break;
 

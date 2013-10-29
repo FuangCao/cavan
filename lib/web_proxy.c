@@ -505,10 +505,9 @@ out_close_fd:
 static int web_proxy_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	socklen_t addrlen;
-	struct web_proxy_service *proxy;
 	struct inet_connect *client = conn;
+	struct web_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
-	proxy = cavan_dynamic_service_get_data(service);
 	client->sockfd = inet_accept(proxy->sockfd, &client->addr, &addrlen);
 	if (client->sockfd < 0)
 	{

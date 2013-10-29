@@ -78,11 +78,11 @@ struct tcp_dd_package
 struct cavan_tcp_dd_service
 {
 	int sockfd;
-	struct cavan_service_description desc;
+	u16 port;
 	struct cavan_alarm_thread alarm;
 };
 
-int tcp_dd_service_run(struct cavan_tcp_dd_service *service, u16 port);
+int tcp_dd_service_run(struct cavan_dynamic_service *service);
 int tcp_dd_send_file(struct inet_file_request *file_req);
 int tcp_dd_receive_file(struct inet_file_request *file_req);
 int tcp_dd_exec_command(struct inet_file_request *file_req);

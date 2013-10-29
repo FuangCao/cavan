@@ -87,10 +87,9 @@ static void tcp_proxy_stop_handler(struct cavan_dynamic_service *service)
 static int tcp_proxy_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	socklen_t addrlen;
-	struct tcp_proxy_service *proxy;
 	struct inet_connect *client = conn;
+	struct tcp_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
-	proxy = cavan_dynamic_service_get_data(service);
 	client->sockfd = inet_accept(proxy->sockfd, &client->addr, &addrlen);
 	if (client->sockfd < 0)
 	{

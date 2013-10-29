@@ -501,12 +501,76 @@ static int tcp_dd_handle_alarm_list_request(struct cavan_alarm_thread *alarm, in
 	return 0;
 }
 
-static int tcp_dd_handle_request(struct cavan_tcp_dd_service *service, int sockfd, struct sockaddr_in *addr)
+static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, void *conn)
+{
+	socklen_t addrlen;
+	struct inet_connect *client = conn;
+	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
+
+	client->sockfd = inet_accept(dd_service->sockfd, &client->addr, &addrlen);
+	if (client->sockfd < 0)
+	{
+		pr_error_info("inet_accept");
+		return client->sockfd;
+	}
+
+	inet_show_sockaddr(&client->addr);
+
+	return 0;
+}
+
+static void tcp_dd_service_close_connect(struct cavan_dynamic_service *service, void *conn)
+{
+	struct inet_connect *client = conn;
+
+	inet_close_tcp_socket(client->sockfd);
+}
+
+static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
+{
+	int ret;
+	int sockfd;
+	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
+
+	sockfd = inet_create_tcp_service(dd_service->port);
+	if (sockfd < 0)
+	{
+		pr_red_info("inet_create_tcp_service");
+		return sockfd;
+	}
+
+	ret = cavan_alarm_thread_init(&dd_service->alarm);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_alarm_thread_init");
+		goto out_inet_close_tcp_socket;
+	}
+
+	dd_service->sockfd = sockfd;
+
+	return 0;
+
+out_inet_close_tcp_socket:
+	inet_close_tcp_socket(sockfd);
+	return ret;
+}
+
+static void tcp_dd_service_stop_handler(struct cavan_dynamic_service *service)
+{
+	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
+
+	cavan_alarm_thread_deinit(&dd_service->alarm);
+	inet_close_tcp_socket(dd_service->sockfd);
+}
+
+static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, void *conn)
 {
 	int ret;
 	struct tcp_dd_package pkg;
+	struct inet_connect *client = conn;
+	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	ret = inet_recv(sockfd, &pkg, sizeof(pkg));
+	ret = inet_recv(client->sockfd, &pkg, sizeof(pkg));
 	if (ret < 0)
 	{
 		pr_red_info("inet_recv");
@@ -517,32 +581,32 @@ static int tcp_dd_handle_request(struct cavan_tcp_dd_service *service, int sockf
 	{
 	case TCP_DD_READ:
 		pr_bold_info("TCP_DD_READ");
-		ret = tcp_dd_handle_read_request(sockfd, &pkg.file_req);
+		ret = tcp_dd_handle_read_request(client->sockfd, &pkg.file_req);
 		break;
 
 	case TCP_DD_WRITE:
 		pr_bold_info("TCP_DD_WRITE");
-		ret = tcp_dd_handle_write_request(sockfd, &pkg.file_req);
+		ret = tcp_dd_handle_write_request(client->sockfd, &pkg.file_req);
 		break;
 
 	case TCP_DD_EXEC:
 		pr_bold_info("TCP_DD_EXEC");
-		ret = tcp_dd_handle_exec_request(sockfd, &pkg.exec_req, addr);
+		ret = tcp_dd_handle_exec_request(client->sockfd, &pkg.exec_req, &client->addr);
 		break;
 
 	case TCP_ALARM_ADD:
 		pr_bold_info("TCP_ALARM_ADD");
-		ret = tcp_dd_handle_alarm_add_request(&service->alarm, sockfd, &pkg.alarm_add, addr);
+		ret = tcp_dd_handle_alarm_add_request(&dd_service->alarm, client->sockfd, &pkg.alarm_add, &client->addr);
 		break;
 
 	case TCP_ALARM_REMOVE:
 		pr_bold_info("TCP_ALARM_REMOVE");
-		ret = tcp_dd_handle_alarm_remove_request(&service->alarm, sockfd, &pkg.alarm_query, addr);
+		ret = tcp_dd_handle_alarm_remove_request(&dd_service->alarm, client->sockfd, &pkg.alarm_query, &client->addr);
 		break;
 
 	case TCP_ALARM_LIST:
 		pr_bold_info("TCP_ALARM_LIST");
-		ret = tcp_dd_handle_alarm_list_request(&service->alarm, sockfd, &pkg.alarm_query, addr);
+		ret = tcp_dd_handle_alarm_list_request(&dd_service->alarm, client->sockfd, &pkg.alarm_query, &client->addr);
 		break;
 
 	default:
@@ -550,90 +614,22 @@ static int tcp_dd_handle_request(struct cavan_tcp_dd_service *service, int sockf
 		return -EINVAL;
 	}
 
-	return ret;
-}
-
-static int tcp_dd_daemon_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
-{
-	int ret;
-	int server_sockfd, client_sockfd;
-	struct sockaddr_in addr;
-	socklen_t addrlen;
-	struct cavan_tcp_dd_service *tcp_dd_service;
-
-	tcp_dd_service = data.type_void;
-	server_sockfd = tcp_dd_service->sockfd;
-
-	client_sockfd = inet_accept(server_sockfd, &addr, &addrlen);
-	if (client_sockfd < 0)
-	{
-		print_error("inet_accept");
-		return client_sockfd;
-	}
-
-	inet_show_sockaddr(&addr);
-
-	ret = tcp_dd_handle_request(tcp_dd_service, client_sockfd, &addr);
 	msleep(100);
-	inet_close_tcp_socket(client_sockfd);
 
 	return ret;
 }
 
-int tcp_dd_service_run(struct cavan_tcp_dd_service *service, u16 port)
+int tcp_dd_service_run(struct cavan_dynamic_service *service)
 {
-	int ret;
-	int sockfd;
-	struct cavan_service_description *desc;
+	service->name = "TCP_DD";
+	service->conn_size = sizeof(struct inet_connect);
+	service->start = tcp_dd_service_start_handler;
+	service->stop = tcp_dd_service_stop_handler;
+	service->run = tcp_dd_service_run_handler;
+	service->open_connect = tcp_dd_service_open_connect;
+	service->close_connect = tcp_dd_service_close_connect;
 
-	sockfd = inet_create_tcp_service(port);
-	if (sockfd < 0)
-	{
-		pr_red_info("inet_create_tcp_service");
-		return sockfd;
-	}
-
-	ret = cavan_alarm_thread_init(&service->alarm);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_alarm_thread_init");
-		goto out_inet_close_tcp_socket;
-	}
-
-	service->sockfd = sockfd;
-
-	desc = &service->desc;
-	desc->data.type_void = service;
-	desc->handler = tcp_dd_daemon_handle;
-	desc->threads = NULL;
-	ret = cavan_service_start(desc);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_service_run");
-		goto out_cavan_alarm_thread_deinit;
-	}
-
-	ret = cavan_alarm_thread_start(&service->alarm);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_alarm_thread_start");
-		goto out_cavan_service_stop;
-	}
-
-	ret = cavan_service_main_loop(desc);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_service_main_loop");
-	}
-
-	cavan_alarm_thread_stop(&service->alarm);
-out_cavan_service_stop:
-	cavan_service_stop(desc);
-out_cavan_alarm_thread_deinit:
-	cavan_alarm_thread_deinit(&service->alarm);
-out_inet_close_tcp_socket:
-	inet_close_tcp_socket(sockfd);
-	return ret;
+	return cavan_dynamic_service_run(service);
 }
 
 static int tcp_dd_check_file_request(struct inet_file_request *file_req, const char **src_file, const char **dest_file)
