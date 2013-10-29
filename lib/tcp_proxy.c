@@ -84,31 +84,23 @@ static void tcp_proxy_stop_handler(struct cavan_dynamic_service *service)
 	inet_close_tcp_socket(proxy->sockfd);
 }
 
-static void *tcp_proxy_open_connect(struct cavan_dynamic_service *service)
+static int tcp_proxy_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	socklen_t addrlen;
-	struct inet_connect *conn;
 	struct tcp_proxy_service *proxy;
-
-	conn = malloc(sizeof(struct inet_connect));
-	if (conn == NULL)
-	{
-		pr_error_info("malloc");
-		return NULL;
-	}
+	struct inet_connect *client = conn;
 
 	proxy = cavan_dynamic_service_get_data(service);
-	conn->sockfd = inet_accept(proxy->sockfd, &conn->addr, &addrlen);
-	if (conn->sockfd < 0)
+	client->sockfd = inet_accept(proxy->sockfd, &client->addr, &addrlen);
+	if (client->sockfd < 0)
 	{
 		pr_error_info("inet_accept");
-		free(conn);
-		return NULL;
+		return client->sockfd;
 	}
 
-	inet_show_sockaddr(&conn->addr);
+	inet_show_sockaddr(&client->addr);
 
-	return conn;
+	return 0;
 }
 
 static void tcp_proxy_close_connect(struct cavan_dynamic_service *service, void *conn)
@@ -116,7 +108,6 @@ static void tcp_proxy_close_connect(struct cavan_dynamic_service *service, void 
 	struct inet_connect *client = conn;
 
 	inet_close_tcp_socket(client->sockfd);
-	free(client);
 }
 
 static int tcp_proxy_service_run_handler(struct cavan_dynamic_service *service, void *conn)
@@ -156,6 +147,7 @@ int tcp_proxy_service_run(struct cavan_dynamic_service *service)
 	}
 
 	service->name = "TCP_PROXY";
+	service->conn_size = sizeof(struct inet_connect);
 	service->start = tcp_proxy_start_handler;
 	service->stop = tcp_proxy_stop_handler;
 	service->run = tcp_proxy_service_run_handler;

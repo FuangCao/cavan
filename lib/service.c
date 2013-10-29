@@ -420,17 +420,24 @@ static void *cavan_dynamic_service_handler(void *data)
 	pthread_mutex_lock(&service->lock);
 	index = ++service->count;
 
+	conn = malloc(service->conn_size);
+	if (conn == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
 	while (service->state == CAVAN_SERVICE_STATE_RUNNING)
 	{
 		pr_bold_info("service %s daemon %d ready (%d/%d)", service->name, index, service->used, service->count);
 
 		pthread_mutex_unlock(&service->lock);
-		conn = service->open_connect(service);
+		ret = service->open_connect(service, conn);
 		pthread_mutex_lock(&service->lock);
 
-		if (conn == NULL)
+		if (ret < 0)
 		{
-			pr_red_info("conn == NULL");
+			pr_red_info("open_connect");
 			continue;
 		}
 
@@ -485,6 +492,8 @@ static void *cavan_dynamic_service_handler(void *data)
 		}
 	}
 
+	free(conn);
+
 	service->count--;
 	pr_green_info("service %s daemon %d exit (%d/%d)", service->name, index, service->used, service->count);
 
@@ -493,6 +502,7 @@ static void *cavan_dynamic_service_handler(void *data)
 		pr_red_info("service %s stopped", service->name);
 
 		service->state = CAVAN_SERVICE_STATE_STOPPED;
+
 		pthread_cond_signal(&service->cond);
 	}
 
@@ -555,6 +565,16 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		return -EINVAL;
 	}
 
+	if (service->conn_size <= 0)
+	{
+#if __WORDSIZE == 64
+		pr_red_info("invalid conn_size = %ld", service->conn_size);
+#else
+		pr_red_info("invalid conn_size = %d", service->conn_size);
+#endif
+		return -EINVAL;
+	}
+
 	if (service->super_permission && (ret = check_super_permission(true, 5000)) < 0)
 	{
 		return ret;
@@ -610,8 +630,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		if (ret < 0)
 		{
 			pr_error_info("pthread_create");
-			service->stop(service);
-			return ret;
+			goto out_service_stop;
 		}
 
 		pthread_mutex_lock(&service->lock);
@@ -634,6 +653,10 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	}
 
 	return 0;
+
+out_service_stop:
+	service->stop(service);
+	return ret;
 }
 
 void cavan_dynamic_service_join(struct cavan_dynamic_service *service)

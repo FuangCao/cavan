@@ -25,18 +25,16 @@ struct test_service_data
 	int data;
 };
 
-static void *test_open_connect(struct cavan_dynamic_service *service)
+static int test_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	pr_pos_info();
 
-	return malloc(sizeof(struct test_service_data));
+	return 0;
 }
 
 static void test_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	pr_pos_info();
-
-	free(conn);
 }
 
 static int test_service_start(struct cavan_dynamic_service *service)
@@ -75,6 +73,7 @@ int main(int argc, char *argv[])
 	service->name = "TEST";
 	service->min = 2;
 	service->max = 10;
+	service->conn_size = sizeof(struct test_service_data);
 	service->open_connect = test_open_connect;
 	service->close_connect = test_close_connect;
 	service->start = test_service_start;

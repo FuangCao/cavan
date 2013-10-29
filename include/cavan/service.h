@@ -48,6 +48,7 @@ struct cavan_dynamic_service
 	int count, used;
 	int as_daemon;
 	int verbose;
+	size_t conn_size;
 	int super_permission;
 	void *private_data;
 	const char *logfile;
@@ -55,7 +56,7 @@ struct cavan_dynamic_service
 	pthread_mutex_t lock;
 	cavan_service_state_t state;
 
-	void *(*open_connect)(struct cavan_dynamic_service *service);
+	int (*open_connect)(struct cavan_dynamic_service *service, void *conn);
 	void (*close_connect)(struct cavan_dynamic_service *service, void *conn);
 	int (*start)(struct cavan_dynamic_service *service);
 	void (*stop)(struct cavan_dynamic_service *service);
