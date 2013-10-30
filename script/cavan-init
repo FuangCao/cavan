@@ -212,6 +212,8 @@ function config_samba()
 EOF
 
 	service smbd restart
+
+	return 0
 }
 
 function config_single_home()
@@ -265,6 +267,8 @@ function config_git()
 		cp /root/.gitconfig ${home}/.gitconfig -av || return 1
 		chown ${user}:${user} ${home}/.gitconfig -v
 	done
+
+	mkdir $(dirname ${FILE_GIT_DAEMON_RUN}) -pv || return 1
 
 	cat > ${FILE_GIT_DAEMON_RUN} << EOF
 #!/bin/sh
@@ -383,7 +387,7 @@ description "cavan daemon"
 
 start on runlevel [2345] or net-device-up
 
-exec ${CMD_TCP_DD_SERVER} -d & ${CMD_TCP_PROXY} -adp 9999 & ${CMD_TCP_PROXY} -adp 9090 --pport 9090 -c 200
+exec ${CMD_TCP_DD_SERVER} -d & ${CMD_TCP_PROXY} -adp 9999 & ${CMD_TCP_PROXY} -adp 9090 --pport 9090
 EOF
 
 	chmod 0644 ${FILE_CAVAN_SERVICE_CONF} || return 1
