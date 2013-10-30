@@ -10,6 +10,7 @@ FILE_EXPORTS="/etc/exports"
 FILE_SAMBA_CONFIG="/etc/samba/smb.conf"
 FILE_CAVAN_SERVICE="/etc/init.d/cavan"
 FILE_CAVAN_SERVICE_CONF="/etc/init/cavan.conf"
+FILE_GIT_DAEMON_CONF="/etc/init/git-daemon.conf"
 FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
 FILE_GRUB_LINUX="/etc/grub.d/10_linux"
 FILE_APP_FEILED="/tmp/cavan-app-failed.txt"
@@ -25,6 +26,12 @@ UBUNTU_PATH="${DPAN_PATH}/ubuntu"
 UBUNTU_HOME="${UBUNTU_PATH}/home"
 FILE_SWAP_IMG="${UBUNTU_PATH}/swap.img"
 FILE_VIMRC_VIM="${CAVAN_HOME}/script/vim/vimrc.vim"
+
+CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
+CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
+CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
+CMD_TCP_PROXY="${CAVAN_OUT_DEBUG}/cavan-tcp_proxy"
+CMD_CAVAN_SERVICE="${CAVAN_OUT_DEBUG}/cavan-service --start -s 0 --exec"
 
 NFS_RW_CONFIG="*(rw,sync,no_subtree_check)"
 NFS_RO_CONFIG="*(ro,sync,no_subtree_check)"
@@ -249,6 +256,8 @@ function config_aptget()
 function config_git()
 {
 	local CMD_GIT_CONFIG="git config --global"
+	local GIT_EXEC_PATH="$(git --exec-path)"
+	local CMD_GIT_DAEMON="${GIT_EXEC_PATH}/git-daemon --verbose --export-all --enable=receive-pack --enable=upload-pack --enable=upload-archive --base-path=/git"
 
 	${CMD_GIT_CONFIG} user.name Fuang.Cao || return 1
 	${CMD_GIT_CONFIG} user.email cavan.cfa@gmail.com || return 1
@@ -268,16 +277,26 @@ function config_git()
 		chown ${user}:${user} ${home}/.gitconfig -v
 	done
 
-	mkdir $(dirname ${FILE_GIT_DAEMON_RUN}) -pv || return 1
-
-	cat > ${FILE_GIT_DAEMON_RUN} << EOF
+	if [ -e "${FILE_GIT_DAEMON_RUN}" ]
+	then
+		cat > ${FILE_GIT_DAEMON_RUN} << EOF
 #!/bin/sh
 
 exec 2>&1
 echo 'git-daemon starting.'
-exec chpst -ugitdaemon \
-  "$(git --exec-path)"/git-daemon --verbose --export-all --enable=receive-pack --enable=upload-pack --enable=upload-archive --base-path=/git
+exec chpst -ugitdaemon ${CMD_GIT_DAEMON}
 EOF
+	else
+		cat > ${FILE_GIT_DAEMON_CONF} << EOF
+description "git daemon"
+
+start on runlevel [2345] or net-device-up
+
+exec ${CMD_CAVAN_SERVICE} "${CMD_GIT_DAEMON}"
+EOF
+
+		chmod 0644 ${FILE_GIT_DAEMON_CONF} || return 1
+	fi
 }
 
 function install_applications()
@@ -335,11 +354,6 @@ function config_stardict()
 
 function config_service()
 {
-	CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
-	CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
-	CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
-	CMD_TCP_PROXY="${CAVAN_OUT_DEBUG}/cavan-tcp_proxy"
-
 	cat > ${FILE_CAVAN_SERVICE} << EOF
 #!/bin/sh
 
