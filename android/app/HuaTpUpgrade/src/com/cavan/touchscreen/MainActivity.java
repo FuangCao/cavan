@@ -236,7 +236,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			}
 
 			mPreferenceScreenFwID.setSummary(String.format("%02x%02x", devID.getVendorID(), devID.getFwVersion()));
-			mPreferenceScreenVendorName.setSummary(devID.getVendorName());
+			mPreferenceScreenVendorName.setSummary(devID.getVendorNameResId());
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
