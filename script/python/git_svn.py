@@ -303,6 +303,9 @@ class GitSvnManager(CavanCommandBase):
 				continue
 
 			if os.path.isdir(self.getAbsPath(line)):
+				if line in [".git", ".svn"]:
+					continue
+
 				if self.mVerbose:
 					print "[DIR]  Add " + line
 				listDir.append(line + "/")

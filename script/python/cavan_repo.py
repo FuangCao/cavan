@@ -201,14 +201,18 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if not lines:
 			return lines != None
 
-		if depth > 2:
+		if depth > 2 or path in ["kernel", "u-boot", "build", "dalvik", "bionic", "cts", "ndk", "pdk", "sdk", "frameworks/base"]:
 			return self.mManifest.appendProject(path) != None
 
 		listDir = []
 		listFile = []
 
 		for line in lines:
-			line = os.path.join(path, line.rstrip("\r\n"))
+			line = line.rstrip("\r\n")
+			if line in [".git/"]:
+				return self.mManifest.appendProject(path) != None
+
+			line = os.path.join(path, line)
 			if line.endswith("/"):
 				listDir.append(line.rstrip("/"))
 			elif depth <= 0:
