@@ -312,9 +312,12 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 				self.prBoldInfo(url, " => ", pathname)
 
 			manager = GitSvnManager(pathname, self.mVerbose)
-			if (manager.isInitialized() or manager.doInitBase(url)) and manager.doSync(url):
+			if (manager.isInitialized() or manager.doInitBase(url)) and (manager.doSync(url) or manager.doDcommit(url)):
 				self.addProgress()
 				return 1
+
+			if not self.doExecute(["svn", "info", url], of = "/dev/null"):
+				return -1
 
 			self.prRedInfo("Retry count = %d" % count)
 			self.doExecute(["rm", "-rf", pathname])
