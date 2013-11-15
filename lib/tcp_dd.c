@@ -56,9 +56,37 @@ static int __printf_format_34__ tcp_dd_send_response(int sockfd, int code, const
 		va_start(ap, fmt);
 		ret = vsprintf(pkg.res_pkg.message, fmt, ap) + 1;
 		va_end(ap);
+
+		if (code < 0)
+		{
+			pr_error_info("%s", pkg.res_pkg.message);
+		}
 	}
 
 	return inet_send(sockfd, (char *)&pkg, MOFS(struct tcp_dd_package, res_pkg.message) + ret);
+}
+
+static int tcp_dd_recv_response(int sockfd)
+{
+	ssize_t rdlen;
+	struct tcp_dd_package pkg;
+
+	rdlen = inet_recv(sockfd, &pkg, sizeof(pkg));
+	if (rdlen < 0)
+	{
+		pr_red_info("inet_recv");
+		return rdlen;
+	}
+
+	if (pkg.type != TCP_DD_RESPONSE)
+	{
+		pr_red_info("pkg.type = %d", pkg.type);
+		return -EINVAL;
+	}
+
+	tcp_dd_show_response(&pkg.res_pkg);
+
+	return pkg.res_pkg.code;
 }
 
 static int tcp_dd_send_read_request(int sockfd, const char *filename, off_t offset, off_t size, struct tcp_dd_package *pkg)
@@ -430,17 +458,8 @@ static int tcp_dd_handle_alarm_add_request(struct cavan_alarm_thread *alarm, int
 		goto out_free_node;
 	}
 
-	ret = tcp_dd_send_response(sockfd, 0, "[Server] add alarm successfull");
-	if (ret < 0)
-	{
-		pr_red_info("tcp_dd_send_response");
-		goto out_cavan_alarm_delete_node;
-	}
-
 	return 0;
 
-out_cavan_alarm_delete_node:
-	cavan_alarm_delete_node(alarm, node);
 out_free_node:
 	free(node);
 	return ret;
@@ -448,7 +467,6 @@ out_free_node:
 
 static int tcp_dd_handle_alarm_remove_request(struct cavan_alarm_thread *alarm, int sockfd, struct tcp_alarm_query_request *req, struct sockaddr_in *addr)
 {
-	int ret;
 	struct double_link_node *node;
 
 	node = double_link_get_node(&alarm->link, req->index);
@@ -460,13 +478,7 @@ static int tcp_dd_handle_alarm_remove_request(struct cavan_alarm_thread *alarm, 
 
 	cavan_alarm_delete_node(alarm, double_link_get_container(&alarm->link, node));
 
-	ret = tcp_dd_send_response(sockfd, 0, "[Server] remove alarm successfull");
-	if (ret < 0)
-	{
-		pr_red_info("tcp_dd_send_response");
-	}
-
-	return ret;
+	return 0;
 }
 
 static int tcp_dd_handle_alarm_list_request(struct cavan_alarm_thread *alarm, int sockfd, struct tcp_alarm_query_request *req, struct sockaddr_in *addr)
@@ -493,6 +505,7 @@ static int tcp_dd_handle_alarm_list_request(struct cavan_alarm_thread *alarm, in
 		ret = inet_send(sockfd, (char *)&item, MOFS(struct tcp_alarm_add_request, command) + text_len(item.command) + 1);
 		if (ret < 0)
 		{
+			pr_red_info("inet_send");
 			link_foreach_return(&alarm->link, ret);
 		}
 	}
@@ -566,6 +579,7 @@ static void tcp_dd_service_stop_handler(struct cavan_dynamic_service *service)
 static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, void *conn)
 {
 	int ret;
+	bool need_response;
 	struct tcp_dd_package pkg;
 	struct inet_connect *client = conn;
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
@@ -577,6 +591,8 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 		return ret;
 	}
 
+	need_response = false;
+
 	switch (pkg.type)
 	{
 	case TCP_DD_READ:
@@ -587,6 +603,7 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	case TCP_DD_WRITE:
 		pr_bold_info("TCP_DD_WRITE");
 		ret = tcp_dd_handle_write_request(client->sockfd, &pkg.file_req);
+		need_response = true;
 		break;
 
 	case TCP_DD_EXEC:
@@ -597,11 +614,13 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	case TCP_ALARM_ADD:
 		pr_bold_info("TCP_ALARM_ADD");
 		ret = tcp_dd_handle_alarm_add_request(&dd_service->alarm, client->sockfd, &pkg.alarm_add, &client->addr);
+		need_response = true;
 		break;
 
 	case TCP_ALARM_REMOVE:
 		pr_bold_info("TCP_ALARM_REMOVE");
 		ret = tcp_dd_handle_alarm_remove_request(&dd_service->alarm, client->sockfd, &pkg.alarm_query, &client->addr);
+		need_response = true;
 		break;
 
 	case TCP_ALARM_LIST:
@@ -612,6 +631,11 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	default:
 		pr_red_info("Unknown package type %d", pkg.type);
 		return -EINVAL;
+	}
+
+	if (need_response)
+	{
+		tcp_dd_send_response(client->sockfd, ret, NULL);
 	}
 
 	msleep(100);
@@ -729,6 +753,13 @@ int tcp_dd_send_file(struct inet_file_request *file_req)
 	println("offset = %s", size2text(file_req->src_offset));
 	println("size = %s", size2text(file_req->size));
 	ret = ffile_ncopy(fd, sockfd, file_req->size);
+	if (ret < 0)
+	{
+		pr_red_info("ffile_ncopy");
+		goto out_close_fd;
+	}
+
+	ret = tcp_dd_recv_response(sockfd);
 
 out_close_sockfd:
 	msleep(100);
@@ -774,6 +805,7 @@ int tcp_dd_receive_file(struct inet_file_request *file_req)
 	fd = open(dest_file, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, pkg.file_req.mode);
 	if (fd < 0)
 	{
+		ret = fd;
 		tcp_dd_send_response(sockfd, fd, "[Client] Open file `%s' failed", dest_file);
 		goto out_close_sockfd;
 	}
@@ -855,10 +887,13 @@ int tcp_alarm_add(struct inet_file_request *file_req, time_t time, time_t repeat
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_alarm_add_request");
+		goto out_close_sockfd;
 	}
 
-	file_req->close_connect(sockfd);
+	ret = tcp_dd_recv_response(sockfd);
 
+out_close_sockfd:
+	file_req->close_connect(sockfd);
 	return ret;
 }
 
@@ -878,10 +913,13 @@ int tcp_alarm_remove(struct inet_file_request *file_req, int index)
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_alarm_query_request");
+		goto out_close_sockfd;
 	}
 
-	file_req->close_connect(sockfd);
+	ret = tcp_dd_recv_response(sockfd);
 
+out_close_sockfd:
+	file_req->close_connect(sockfd);
 	return ret;
 }
 

@@ -134,8 +134,7 @@ int main(int argc, char *argv[])
 	cavan_get_server_ip(file_req.ip);
 	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
-	while ((c = getopt_long(argc, argv, "vVhHlLr:R:d:D:t:T:i:I:p:P:", long_option, &option_index)) != EOF)
-
+	while ((c = getopt_long(argc, argv, "vVhHlLaAr:R:d:D:t:T:i:I:p:P:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{

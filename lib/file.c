@@ -617,6 +617,17 @@ int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 		size -= writelen;
 	}
 
+	if (size)
+	{
+#if __WORDSIZE == 64
+		pr_red_info("size = %ld != 0", size);
+#else
+		pr_red_info("size = %d != 0", size);
+#endif
+
+		return -EINVAL;
+	}
+
 	return 0;
 }
 
@@ -663,7 +674,13 @@ int ffile_ncopy(int src_fd, int dest_fd, size_t size)
 
 	if (size)
 	{
-		warning_msg("size != 0");
+#if __WORDSIZE == 64
+		pr_red_info("size = %ld != 0", size);
+#else
+		pr_red_info("size = %d != 0", size);
+#endif
+
+		return -EINVAL;
 	}
 
 	return 0;
