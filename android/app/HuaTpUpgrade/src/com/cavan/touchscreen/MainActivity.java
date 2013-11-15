@@ -30,6 +30,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private static final String KEY_TP_DEV_NAME = "dev_name";
 	private static final String KEY_TP_DEV_PATH = "dev_path";
 	private static final String KEY_TP_FW_ID = "fw_id";
+	private static final String KEY_TP_FW_NAME = "fw_name";
 	private static final String KEY_TP_VENDOR_NAME = "vendor_name";
 	private static final String KEY_TP_FW_UPGRADE = "fw_upgrade";
 	private static final String KEY_TP_FW_LIST = "fw_list";
@@ -37,6 +38,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private PreferenceScreen mPreferenceScreenDevName;
 	private PreferenceScreen mPreferenceScreenDevPath;
 	private PreferenceScreen mPreferenceScreenFwID;
+	private PreferenceScreen mPreferenceScreenFwName;
 	private PreferenceScreen mPreferenceScreenVendorName;
 	private FirmwarePathPreference mPreferenceFwUpgrade;
 	private PreferenceCategory mPreferenceCategoryFwList;
@@ -76,6 +78,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				case TouchscreenService.FW_STATE_START:
 					mPreferenceFwUpgrade.setSummary(R.string.fw_upgrade_start);
 					mPreferenceScreenFwID.setEnabled(false);
+					mPreferenceScreenFwName.setEnabled(false);
 					mPreferenceScreenVendorName.setEnabled(false);
 					break;
 
@@ -86,6 +89,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				case TouchscreenService.FW_STATE_FAILED:
 					mPreferenceFwUpgrade.setEnabled(true);
 					mPreferenceScreenFwID.setEnabled(true);
+					mPreferenceScreenFwName.setEnabled(true);
 					mPreferenceScreenVendorName.setEnabled(true);
 					mPreferenceFwUpgrade.setSummary(R.string.fw_upgrade_failed);
 					break;
@@ -93,6 +97,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				case TouchscreenService.FW_STATE_SUCCESS:
 					mPreferenceFwUpgrade.setEnabled(true);
 					mPreferenceScreenFwID.setEnabled(true);
+					mPreferenceScreenFwName.setEnabled(true);
 					mPreferenceScreenVendorName.setEnabled(true);
 					updateFirmwareID();
 					mPreferenceFwUpgrade.setSummary(R.string.fw_upgrade_success);
@@ -113,6 +118,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceScreenDevPath = (PreferenceScreen) findPreference(KEY_TP_DEV_PATH);
 		mPreferenceScreenFwID = (PreferenceScreen) findPreference(KEY_TP_FW_ID);
 		mPreferenceScreenFwID.setOnPreferenceClickListener(this);
+		mPreferenceScreenFwName = (PreferenceScreen) findPreference(KEY_TP_FW_NAME);
+		mPreferenceScreenFwName.setOnPreferenceClickListener(this);
 		mPreferenceScreenVendorName = (PreferenceScreen) findPreference(KEY_TP_VENDOR_NAME);
 		mPreferenceScreenVendorName.setOnPreferenceClickListener(this);
 
@@ -217,7 +224,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	@Override
 	public boolean onPreferenceClick(Preference preference) {
-		if (preference.equals(mPreferenceScreenFwID) || preference.equals(mPreferenceScreenVendorName)) {
+		if (preference.equals(mPreferenceScreenFwID) || preference.equals(mPreferenceScreenFwName) || preference.equals(mPreferenceScreenVendorName)) {
 			updateFirmwareID();
 		}
 
@@ -237,6 +244,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 			mPreferenceScreenFwID.setSummary(String.format("%02x%02x", devID.getVendorID(), devID.getFwVersion()));
 			mPreferenceScreenVendorName.setSummary(devID.getVendorNameResId());
+			mPreferenceScreenFwName.setSummary(mService.getFwName());
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}

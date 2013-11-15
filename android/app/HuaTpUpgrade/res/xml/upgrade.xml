@@ -24,6 +24,11 @@
 		android:title="@string/vendor_name"
 		android:persistent="false"/>
 
+	<PreferenceScreen
+		android:key="fw_name"
+		android:title="@string/fw_name"
+		android:persistent="false"/>
+
 	<com.cavan.touchscreen.FirmwarePathPreference
 		android:key="fw_upgrade"
 		android:title="@string/fw_upgrade"

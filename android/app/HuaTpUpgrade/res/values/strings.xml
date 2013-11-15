@@ -6,6 +6,7 @@
     <string name="dev_name">DeviceName</string>
     <string name="dev_path">DevicePath</string>
     <string name="fw_id">Firmware ID</string>
+    <string name="fw_name">Firmware Name</string>
     <string name="fw_upgrade">Firmware Upgrade</string>
     <string name="fw_upgrade_summary">please select a firmware file</string>
     <string name="fw_upgrade_start">upgrade please wait ...</string>

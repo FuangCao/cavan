@@ -6,6 +6,7 @@
     <string name="dev_name">设备名称</string>
     <string name="dev_path">设备路径</string>
     <string name="fw_id">固件版本号</string>
+    <string name="fw_name">固件名称</string>
     <string name="fw_upgrade">固件升级</string>
     <string name="fw_upgrade_summary">请选择一个固件文件</string>
     <string name="fw_upgrade_start">正在升级，请稍候 ...</string>
@@ -23,4 +24,7 @@
     <string name="vendor_name_yingmao">莹茂</string>
     <string name="vendor_name_lihaojie">利豪捷</string>
     <string name="vendor_name_lihe">力合</string>
+    <string name="vendor_name_junda">骏达</string>
+    <string name="vendor_name_dianmian">点面</string>
+    <string name="vendor_name_chuangshi">创世</string>
 </resources>

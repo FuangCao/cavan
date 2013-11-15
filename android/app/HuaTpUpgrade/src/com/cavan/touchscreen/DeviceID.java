@@ -151,6 +151,8 @@ public class DeviceID implements Parcelable {
 			new VendorNameMap(0xba, R.string.vendor_name_dianjing),
 			new VendorNameMap(0x11, R.string.vendor_name_lihaojie),
 			new VendorNameMap(0x74, R.string.vendor_name_yuansheng),
+			new VendorNameMap(0x9b, R.string.vendor_name_yuansheng),
+			new VendorNameMap(0x94, R.string.vendor_name_yingmao),
 		}),
 		new VendorMap("h5", new VendorNameMap[] {
 			new VendorNameMap(0x32, R.string.vendor_name_lianchuang),
@@ -161,6 +163,17 @@ public class DeviceID implements Parcelable {
 			new VendorNameMap(0x58, R.string.vendor_name_lihe),
 			new VendorNameMap(0x59, R.string.vendor_name_dianjing),
 			new VendorNameMap(0x32, R.string.vendor_name_lianchuang),
+		}),
+		new VendorMap("cp8076", new VendorNameMap[] {
+			new VendorNameMap(0x76, R.string.vendor_name_yingmao),
+			new VendorNameMap(0x66, R.string.vendor_name_yingmao),
+			new VendorNameMap(0x80, R.string.vendor_name_yeji),
+			new VendorNameMap(0x79, R.string.vendor_name_chuangshi),
+			new VendorNameMap(0x78, R.string.vendor_name_chuangshi),
+			new VendorNameMap(0x77, R.string.vendor_name_dianmian),
+			new VendorNameMap(0x81, R.string.vendor_name_junda),
+			new VendorNameMap(0x82, R.string.vendor_name_dianjing),
+			new VendorNameMap(0x83, R.string.vendor_name_lihe),
 		}),
 	};
 
