@@ -10,7 +10,7 @@ SDK_HOME="${TOOLS_HOME}/${SDK_NAME}"
 
 [ -d ${JAVA_HOME} -o -d ${JRE_HOME} ] &&
 {
-	CLASS_PATH=".$(find ${JAVA_HOME}/lib ${JRE_HOME}/lib -maxdepth 1 -name "*.jar" | while read line; do echo -n :${line}; done)"
+	CLASSPATH=".$(find ${JAVA_HOME}/lib ${JRE_HOME}/lib -maxdepth 1 -name "*.jar" | while read line; do echo -n :${line}; done)"
 }
 
 CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
@@ -33,7 +33,7 @@ MAKE_UBOOT="make -C ${UBOOT_HOME} arch=arm cross_compile=${CAVAN_CROSS_COMPILE}"
 
 TARGET_DEVICE="/dev/sdb"
 
-export JAVA_HOME JRE_HOME CLASS_PATH PATH
+export JAVA_HOME JRE_HOME CLASSPATH PATH SDK_HOME
 export KERNEL_HOME UBOOT_HOME FSLDROID_HOME PRODUCT_HOME
 export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE CAVAN_OUT_DEBUG
 export CAVAN_HOME CAVAN_SERVER_IP CAVAN_SERVER_PORT
