@@ -420,7 +420,7 @@ static void *cavan_dynamic_service_handler(void *data)
 	pthread_mutex_lock(&service->lock);
 	index = ++service->count;
 
-	conn = malloc(service->conn_size);
+	conn = alloca(service->conn_size);
 	if (conn == NULL)
 	{
 		pr_error_info("malloc");
@@ -491,8 +491,6 @@ static void *cavan_dynamic_service_handler(void *data)
 			break;
 		}
 	}
-
-	free(conn);
 
 	service->count--;
 	pr_green_info("service %s daemon %d exit (%d/%d)", service->name, index, service->used, service->count);
