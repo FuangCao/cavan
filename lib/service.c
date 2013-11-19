@@ -581,13 +581,6 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		return ret;
 	}
 
-	homepath = getenv("HOME");
-	if (homepath)
-	{
-		pr_bold_info("change current work directory to %s", homepath);
-		ret = chdir(homepath);
-	}
-
 	umask(0);
 
 	if (service->logfile)
@@ -606,7 +599,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	{
 		pr_blue_info("Run %s as daemon", service->name);
 
-		ret = daemon(0, service->verbose);
+		ret = daemon(1, service->verbose);
 		if (ret < 0)
 		{
 			pr_red_info("daemon");
@@ -614,6 +607,13 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		}
 
 		sync = true;
+	}
+
+	homepath = getenv("HOME");
+	if (homepath)
+	{
+		pr_bold_info("change current work directory to %s", homepath);
+		ret = chdir(homepath);
 	}
 
 	service->count = 0;
