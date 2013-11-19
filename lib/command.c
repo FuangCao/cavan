@@ -221,6 +221,7 @@ int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, 
 
 	if (isatty(ttyfd) && lines > 0 && columns > 0)
 	{
+		char buff[64];
 		struct winsize wsize =
 		{
 			.ws_row = lines,
@@ -228,7 +229,6 @@ int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, 
 			.ws_xpixel = 0,
 			.ws_ypixel = 0
 		};
-		char buff[64];
 
 		ret = ioctl(ttyfd, TIOCSWINSZ, &wsize);
 		if (ret < 0)

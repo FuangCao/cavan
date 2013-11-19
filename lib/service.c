@@ -514,6 +514,7 @@ static void *cavan_dynamic_service_handler(void *data)
 int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync)
 {
 	int ret;
+	const char *homepath;
 
 	if (service == NULL)
 	{
@@ -579,6 +580,15 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	{
 		return ret;
 	}
+
+	homepath = getenv("HOME");
+	if (homepath)
+	{
+		pr_bold_info("change current work directory to %s", homepath);
+		ret = chdir(homepath);
+	}
+
+	umask(0);
 
 	if (service->logfile)
 	{
