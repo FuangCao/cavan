@@ -361,7 +361,7 @@ class GitSvnManager(CavanCommandBase):
 				continue
 
 			if match.group(1) == "D":
-				if not self.removeSafe(match.group(2)):
+				if not os.path.exists(match.group(2)) and not self.removeSafe(match.group(2)):
 					return None
 			else:
 				listUpdate.append(match.group(2))
@@ -423,6 +423,7 @@ class GitSvnManager(CavanCommandBase):
 
 	def doSync(self, url = None, branch = None):
 		if not os.path.isdir(self.mPathSvnRepo) and os.path.isdir(self.mPathGitSvn):
+			self.removeSafe(self.mPathSvnRepo)
 			os.makedirs(os.path.join(self.mPathSvnRepo, "tmp"))
 			relPath = os.path.join("..", self.getRelPath(self.mPathGitSvn))
 			for filename in os.listdir(self.mPathGitSvn):
