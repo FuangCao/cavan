@@ -82,6 +82,15 @@ function cavan-git-daemon-run()
 function cavan-daemon-run()
 {
 	cavan-tcp_dd_server -ds0
+
+	while cavan-alarm remove 0 -l 2>&1 > /dev/null
+	do
+		echo "Remove a alarm succesfually"
+	done
+
+	cavan-alarm add cavan-sprd-compile ${CAVAN_HOME}/script/configs/project.cfg -lt 23:00 -r 1d
+	cavan-alarm list -l
+
 	cavan-tcp_proxy -adp 9999
 	cavan-tcp_proxy --daemon --pip 119.188.36.70 --pport 80 --port 6666
 	squid
