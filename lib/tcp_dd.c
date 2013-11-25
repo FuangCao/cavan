@@ -341,20 +341,20 @@ static int tcp_dd_handle_exec_request(int sockfd, struct tcp_dd_exec_request *re
 {
 	int ret;
 
+#ifndef CAVAN_ARCH_ARM
+	if (text_lhcmp("reboot", req->command) == 0 || text_lhcmp("halt", req->command) == 0)
+	{
+		tcp_dd_send_response(sockfd, -EPERM, "[Server] Don't allow to execute command %s", req->command);
+		ERROR_RETURN(EPERM);
+	}
+#endif
+
 	ret = tcp_dd_send_response(sockfd, 0, "[Server] start execute command");
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_response");
 		return ret;
 	}
-
-#ifndef CAVAN_ARCH_ARM
-	if (text_lhcmp("reboot", req->command) == 0 || text_lhcmp("halt", req->command) == 0)
-	{
-		pr_red_info("Don't allow to execute command %s", req->command);
-		ERROR_RETURN(EPERM);
-	}
-#endif
 
 	setenv(CAVAN_IP_ENV_NAME, inet_ntoa(addr->sin_addr), 1);
 
