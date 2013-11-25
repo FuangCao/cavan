@@ -1,6 +1,6 @@
 LOCAL_PATH := $(call my-dir)
 
-CAVAN_CFLAGS := -DCONFIG_BUILD_FOR_ANDROID=1 -Werror
+CAVAN_CFLAGS := -DCONFIG_BUILD_FOR_ANDROID=1 -DCAVAN_ARCH_ARM -Werror
 CAVAN_C_INCLUDES := $(LOCAL_PATH)/../include
 CAVAN_SRC_FILES := \
 	$(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/*.c))
