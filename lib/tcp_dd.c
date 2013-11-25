@@ -348,6 +348,14 @@ static int tcp_dd_handle_exec_request(int sockfd, struct tcp_dd_exec_request *re
 		return ret;
 	}
 
+#ifndef CAVAN_ARCH_ARM
+	if (text_lhcmp("reboot", req->command) == 0 || text_lhcmp("halt", req->command) == 0)
+	{
+		pr_red_info("Don't allow to execute command %s", req->command);
+		ERROR_RETURN(EPERM);
+	}
+#endif
+
 	setenv(CAVAN_IP_ENV_NAME, inet_ntoa(addr->sin_addr), 1);
 
 	return cavan_exec_redirect_stdio_main(req->command, req->lines, req->columns, sockfd, sockfd);
@@ -508,10 +516,6 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		pr_red_info("cavan_alarm_thread_start");
 		goto out_cavan_alarm_thread_deinit;
 	}
-
-#ifndef CAVAN_ARCH_ARM
-	cavan_daemon_permission_clear(1 << CAP_SYS_BOOT);
-#endif
 
 	return 0;
 
