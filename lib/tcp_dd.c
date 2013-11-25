@@ -509,6 +509,10 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		goto out_cavan_alarm_thread_deinit;
 	}
 
+#ifndef CAVAN_ARCH_ARM
+	cavan_daemon_permission_clear(1 << CAP_SYS_BOOT);
+#endif
+
 	return 0;
 
 out_cavan_alarm_thread_deinit:

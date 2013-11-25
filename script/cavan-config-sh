@@ -52,5 +52,5 @@ CFLAGS =
 LDFLAGS = ${LDFLAGS}
 Q = @
 
-include build/core/main2.mk
+include build/core/main3.mk
 EOF

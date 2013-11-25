@@ -38,6 +38,8 @@ CFLAGS +=	-Wall -Wundef -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,-
 			-fgcse-after-reload -frerun-cse-after-loop -frename-registers -fomit-frame-pointer -finline-limit=64 \
 			-g -Os -I$(INCLUDE_PATH) -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\"
 
+CFLAGS += -DCAVAN_ARCH_$(shell echo $(ARCH) | tr '[a-z]' '[A-Z]')
+
 ifeq ($(BUILD_TYPE),debug)
 CFLAGS += -DCAVAN_DEBUG
 endif
