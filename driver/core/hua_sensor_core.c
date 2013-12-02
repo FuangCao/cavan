@@ -45,16 +45,16 @@ int hua_sensor_device_probe(struct hua_input_device *dev)
 	case HUA_INPUT_DEVICE_TYPE_GRAVITY:
 	case HUA_INPUT_DEVICE_TYPE_ROTATION_VECTOR:
 	case HUA_INPUT_DEVICE_TYPE_LINEAR_ACCELERATION:
-		input_set_abs_params(input, ABS_X, 0, sensor->max_range, dev->fuzz, dev->flat);
-		input_set_abs_params(input, ABS_Y, 0, sensor->max_range, dev->fuzz, dev->flat);
-		input_set_abs_params(input, ABS_Z, 0, sensor->max_range, dev->fuzz, dev->flat);
+		input_set_abs_params(input, ABS_X, 0, sensor->resolution, dev->fuzz, dev->flat);
+		input_set_abs_params(input, ABS_Y, 0, sensor->resolution, dev->fuzz, dev->flat);
+		input_set_abs_params(input, ABS_Z, 0, sensor->resolution, dev->fuzz, dev->flat);
 		break;
 
 	case HUA_INPUT_DEVICE_TYPE_LIGHT:
 	case HUA_INPUT_DEVICE_TYPE_PRESSURE:
 	case HUA_INPUT_DEVICE_TYPE_TEMPERATURE:
 	case HUA_INPUT_DEVICE_TYPE_PROXIMITY:
-		input_set_abs_params(input, ABS_MISC, 0, sensor->max_range, dev->fuzz, dev->flat);
+		input_set_abs_params(input, ABS_MISC, 0, sensor->resolution, dev->fuzz, dev->flat);
 		break;
 
 	default:

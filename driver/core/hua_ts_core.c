@@ -139,6 +139,8 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 	input->open = hua_ts_device_open;
 	dev->remove = hua_ts_device_remove;
 
+	ts->touch_count = 0;
+
 	pr_green_info("huamobile touch screen %s probe complete", dev->name);
 
 	return 0;

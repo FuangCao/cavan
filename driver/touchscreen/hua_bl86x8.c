@@ -71,6 +71,7 @@ static int bl86x8_ts_event_handler(struct hua_input_chip *chip, struct hua_input
 	struct input_dev *input = dev->input;
 	struct bl86x8_data_package package;
 	struct bl86x8_touch_point *p, *p_end;
+	struct hua_ts_device *ts = (struct hua_ts_device *)dev;
 
 	ret = bl86x8_read_data_package(chip, &package);
 	if (ret < 0)
@@ -83,7 +84,12 @@ static int bl86x8_ts_event_handler(struct hua_input_chip *chip, struct hua_input
 	count = package.td_status & 0x07;
 	if (count == 0)
 	{
-		hua_ts_mt_touch_release(input);
+		if (ts->touch_count)
+		{
+			hua_ts_mt_touch_release(input);
+			ts->touch_count = 0;
+		}
+
 		return 0;
 	}
 
@@ -100,6 +106,7 @@ static int bl86x8_ts_event_handler(struct hua_input_chip *chip, struct hua_input
 	}
 
 	input_sync(input);
+	ts->touch_count = count;
 
 	return 0;
 }

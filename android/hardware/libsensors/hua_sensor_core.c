@@ -185,6 +185,43 @@ static void hua_sensor_device_destory(struct hua_sensor_device *sensor)
 	free(sensor);
 }
 
+static int hua_sensor_event_load_absinfo(struct hua_sensor_device *sensor, ...)
+{
+	int count;
+	va_list ap;
+
+	va_start(ap, sensor);
+
+	for (count = 0; ; count++)
+	{
+		int ret;
+		struct input_absinfo absinfo;
+		int code;
+
+		code = va_arg(ap, int);
+		if (code < 0)
+		{
+			break;
+		}
+
+		ret = ioctl(sensor->data_fd, EVIOCGABS(code), &absinfo);
+		if (ret < 0)
+		{
+			pr_error_info("ioctl EVIOCGABS(%d)", code);
+			return ret;
+		}
+
+		pr_green_info("code = %d, value = %d, maximum = %d, minimum = %d, flat = %d, fuzz = %d",
+			code, absinfo.value, absinfo.maximum, absinfo.minimum, absinfo.flat, absinfo.fuzz);
+
+		sensor->event.data[count] = sensor->scale * absinfo.value;
+	}
+
+	va_end(ap);
+
+	return 0;
+}
+
 static int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *hal_sensor, int handle)
 {
 	int ret;
@@ -248,9 +285,20 @@ static int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sens
 
 	pr_green_info("Name = %s, Vendor = %s, Handle = %d", hal_sensor->name, hal_sensor->vendor, hal_sensor->handle);
 	pr_green_info("maxRange = %f, Resolution = %f", hal_sensor->maxRange, hal_sensor->resolution);
-	pr_green_info("Power = %f, minDelay = %d", hal_sensor->power, hal_sensor->minDelay);
+	pr_green_info("Power = %f, minDelay = %d, scale = %f", hal_sensor->power, hal_sensor->minDelay, sensor->scale);
 
-	return 0;
+	switch (sensor->event.type)
+	{
+	case SENSOR_TYPE_LIGHT:
+	case SENSOR_TYPE_PRESSURE:
+	case SENSOR_TYPE_TEMPERATURE:
+	case SENSOR_TYPE_PROXIMITY:
+		return hua_sensor_event_load_absinfo(sensor, ABS_MISC, -1);
+		break;
+
+	default:
+		return hua_sensor_event_load_absinfo(sensor, ABS_X, ABS_Y, ABS_Z, -1);
+	}
 }
 
 static struct hua_sensor_device *hua_sensor_device_add(struct hua_sensor_device *head, struct hua_sensor_device *sensor)
@@ -683,7 +731,7 @@ static int hua_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t *
 
 		timestamp = systemTime(SYSTEM_TIME_MONOTONIC);
 
-		for (sensor = pdev->active_head; sensor; sensor = sensor->next)
+		for (sensor = pdev->active_head; sensor && data < data_end; sensor = sensor->next)
 		{
 			if (sensor->pfd->revents == 0)
 			{
@@ -698,15 +746,18 @@ static int hua_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t *
 				continue;
 			}
 
-			for (ep = evbuff, ep_end = ep + rdlen / sizeof(evbuff[0]); ep < ep_end && data < data_end; ep++)
+			for (ep = evbuff, ep_end = ep + rdlen / sizeof(evbuff[0]); ep < ep_end; ep++)
 			{
 				switch (ep->type)
 				{
 				case EV_SYN:
-					*data = sensor->event;
-					data->timestamp = timestamp;
-					// pr_std_info("%s [%f, %f, %f]", sensor->name, data->data[0], data->data[1], data->data[2]);
-					data++;
+					if (data < data_end)
+					{
+						*data = sensor->event;
+						data->timestamp = timestamp;
+						// pr_std_info("%s [%f, %f, %f]", sensor->name, data->data[0], data->data[1], data->data[2]);
+						data++;
+					}
 					break;
 
 				case EV_ABS:

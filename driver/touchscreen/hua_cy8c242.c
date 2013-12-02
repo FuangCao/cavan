@@ -110,6 +110,7 @@ static int cy8c242_ts_event_handler(struct hua_input_chip *chip, struct hua_inpu
 	struct input_dev *input = dev->input;
 	struct cy8c242_data_package package;
 	struct cy8c242_touch_point *p, *p_end;
+	struct hua_ts_device *ts = (struct hua_ts_device *)dev;
 
 	ret = cy8c242_read_data_package(chip, &package);
 	if (ret < 0)
@@ -122,7 +123,12 @@ static int cy8c242_ts_event_handler(struct hua_input_chip *chip, struct hua_inpu
 	count = package.td_status & 0x0F;
 	if (count == 0)
 	{
-		hua_ts_mt_touch_release(input);
+		if (ts->touch_count)
+		{
+			hua_ts_mt_touch_release(input);
+			ts->touch_count = 0;
+		}
+
 		return 0;
 	}
 
@@ -139,6 +145,7 @@ static int cy8c242_ts_event_handler(struct hua_input_chip *chip, struct hua_inpu
 	}
 
 	input_sync(input);
+	ts->touch_count = count;
 
 	return 0;
 }
@@ -156,7 +163,7 @@ static int cy8c242_set_power(struct hua_input_chip *chip, bool enable)
 		msleep(50);
 		sprd_ts_reset_enable(false);
 
-		msleep(200);
+		msleep(100);
 	}
 	else
 	{
@@ -189,7 +196,7 @@ static struct hua_ts_touch_key cy8c242_touch_keys[] =
 {
 #if CONFIG_HUAMOBILE_LCD_WIDTH == 480
 	{
-		.code = KEY_BACK,
+		.code = KEY_MENU,
 		.x = 70,
 		.y = 880,
 		.width = 120,
@@ -203,7 +210,7 @@ static struct hua_ts_touch_key cy8c242_touch_keys[] =
 		.height = 80,
 	},
 	{
-		.code = KEY_MENU,
+		.code = KEY_BACK,
 		.x = 410,
 		.y = 880,
 		.width = 120,
