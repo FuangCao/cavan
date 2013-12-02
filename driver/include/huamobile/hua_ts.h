@@ -21,6 +21,7 @@ struct hua_ts_device
 	u32 ymax, ymin;
 	u32 pmax, pmin;
 	int point_count;
+	int touch_count;
 
 	u32 key_count;
 	const struct hua_ts_touch_key *keys;
