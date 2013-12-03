@@ -42,7 +42,7 @@ int file_copy_main(const char *src, const char *dest)
 	ret = file_lstat(src, &st);
 	if (ret < 0)
 	{
-		error_msg("file_lstat");
+		pr_error_info("file_lstat");
 		return ret;
 	}
 
@@ -72,7 +72,7 @@ int file_copy_main(const char *src, const char *dest)
 		return file_copy(src, dest, write_flags);
 
 	default:
-		error_msg("unknown file type");
+		pr_red_info("unknown file type");
 		return 0;
 	}
 
@@ -110,7 +110,7 @@ int directory_copy_main(const char *src, const char *dest)
 	ret = directory_copy_only(src, dest);
 	if (ret < 0)
 	{
-		error_msg("create directory failed");
+		pr_red_info("create directory failed");
 		return ret;
 	}
 
@@ -157,7 +157,7 @@ int directory_copy_main(const char *src, const char *dest)
 			ret = directory_copy_main(tmp_dirname_src, tmp_dirname_dest);
 			if (ret < 0)
 			{
-				error_msg("directory_copy_main");
+				pr_red_info("directory_copy_main");
 				goto out_close_dir;
 			}
 		}
@@ -166,7 +166,7 @@ int directory_copy_main(const char *src, const char *dest)
 			ret = file_copy_main(tmp_dirname_src, tmp_dirname_dest);
 			if (ret < 0)
 			{
-				error_msg("file_copy_main");
+				pr_red_info("file_copy_main");
 				goto out_close_dir;
 			}
 		}

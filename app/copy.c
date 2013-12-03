@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 		ret = copy_main(argv[i], dest_path);
 		if (ret < 0)
 		{
-			error_msg("copy \"%s\" to \"%s\" failed", argv[i], dest_path);
+			pr_red_info("copy \"%s\" to \"%s\" failed", argv[i], dest_path);
 			goto out_umount_dest;
 		}
 	}
