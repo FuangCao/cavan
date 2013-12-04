@@ -80,6 +80,7 @@ $(info ============================================================)
 
 include $(MAKEFILE_DEFINES)
 
+ifeq ($(filter $(GLIBC_VERSION),2.17 2.18),)
 define decompression_glibc
 if ! test -d "$(SRC_GLIBC)"; \
 then \
@@ -88,6 +89,15 @@ then \
 	$(call apply_patchs,$(GLIBC_NAME),$(SRC_GLIBC)); \
 fi
 endef
+else
+define decompression_glibc
+if ! test -d "$(SRC_GLIBC)"; \
+then \
+	$(call simple_decompression_file,$(GLIBC_NAME),$(SRC_GLIBC),$(GLIBC_URL)); \
+	$(call apply_patchs,$(GLIBC_NAME),$(SRC_GLIBC)); \
+fi
+endef
+endif
 
 define decompression_gcc
 if ! test -d $(SRC_GCC); \
