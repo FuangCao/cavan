@@ -35,6 +35,10 @@ ifeq "$(GCC_VERSION)" "4.8.1"
 GCC_OPTION1 += --disable-libatomic
 endif
 
+ifeq "$(GCC_VERSION)" "4.8.2"
+GCC_OPTION1 += --disable-libatomic
+endif
+
 stage1:
 	$(Q)$(SRC_GCC)/configure $(GCC_OPTION1)
 	$(Q)+make
