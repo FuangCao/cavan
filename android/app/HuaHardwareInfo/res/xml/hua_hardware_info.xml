@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
+    android:key="parent">
+	<PreferenceCategory
+	    android:key="lcd_info"
+	    android:persistent="false"
+	    android:title="@string/lcd_info"/>
+
+	<PreferenceCategory
+	    android:key="tp_info"
+	    android:persistent="false"
+	    android:title="@string/tp_info"/>
+
+	<PreferenceCategory
+	    android:key="camera_info"
+	    android:persistent="false"
+	    android:title="@string/camera_info"/>
+
+	<PreferenceCategory
+	    android:key="flash_info"
+	    android:persistent="false"
+	    android:title="@string/flash_info"/>
+
+	<PreferenceCategory
+	    android:key="gsensor_info"
+	    android:persistent="false"
+	    android:title="@string/gsensor_info"/>
+</PreferenceScreen>
