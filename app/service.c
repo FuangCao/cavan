@@ -20,7 +20,6 @@ enum
 	LOCAL_COMMAND_OPTION_EXEC,
 	LOCAL_COMMAND_OPTION_PIDFILE,
 	LOCAL_COMMAND_OPTION_LOGFILE,
-	LOCAL_COMMAND_OPTION_DAEMON,
 	LOCAL_COMMAND_OPTION_SUPER,
 	LOCAL_COMMAND_OPTION_VERBOSE
 };
@@ -32,7 +31,6 @@ static void show_usage(const char *command)
 	println("--stop:\t\t\tstop a server");
 	println("--help, -h, -H\t\tshow this help");
 	println("--version\t\tshow version");
-	println("--daemon, -d, -D\trun as a daemon");
 	println("--verbose, -v, -V\tshow log message");
 	println("--super, -s, -S\t\tneed super permission");
 	println("--exec, -e, -E\t\tservice command name");
@@ -90,12 +88,6 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_LOGFILE,
 		},
 		{
-			.name = "daemon",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON,
-		},
-		{
 			.name = "super",
 			.has_arg = required_argument,
 			.flag = NULL,
@@ -123,7 +115,7 @@ int main(int argc, char *argv[])
 
 	handler = cavan_daemon_run;
 
-	while ((c = getopt_long(argc, argv, "vVhHd:D:e:E:p:P:s:S:l:L:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHe:E:p:P:s:S:l:L:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -154,12 +146,6 @@ int main(int argc, char *argv[])
 		case 'L':
 		case LOCAL_COMMAND_OPTION_LOGFILE:
 			desc.logfile = optarg;
-			break;
-
-		case 'd':
-		case 'D':
-		case LOCAL_COMMAND_OPTION_DAEMON:
-			desc.as_daemon = text_bool_value(optarg);
 			break;
 
 		case 's':
