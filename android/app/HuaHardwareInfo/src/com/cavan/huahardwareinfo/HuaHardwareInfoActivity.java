@@ -30,7 +30,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	private OnPreferenceClickListener mClickListenerLcdInfo = new OnPreferenceClickListener() {
 		@Override
 		public boolean onPreferenceClick(Preference preference) {
-			loadLcdInfo();
+			loadLcdInfo(5);
 			return false;
 		}
 	};
@@ -78,7 +78,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		mPreferenceCategoryFlashInfo = (PreferenceCategory) findPreference("flash_info");
 		mPreferenceCategoryGsensorInfo = (PreferenceCategory) findPreference("gsensor_info");
 
-		loadLcdInfo();
+		loadLcdInfo(5);
 		loadTpInfo();
 		loadCameraInfo();
 		loadFlashInfo();
@@ -136,7 +136,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		return parseFile(content);
 	}
 
-	private boolean loadLcdInfo() {
+	private boolean loadLcdInfo(int retry) {
 		mPreferenceCategoryLcdInfo.removeAll();
 
 		HashMap<String, String> hashMap = parseFile(mFileLcdInfo);
@@ -168,6 +168,9 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 				preference.setSummary(ic);
 				preference.setOnPreferenceClickListener(mClickListenerLcdInfo);
 				mPreferenceCategoryLcdInfo.addPreference(preference);
+			} else if (retry > 0) {
+				Log.w(TAG, "Lcd IC unknown retry now.");
+				return loadLcdInfo(--retry);
 			}
 
 			HuaLcdVendorInfo vendorInfo = lcdInfo.getVendorInfo();

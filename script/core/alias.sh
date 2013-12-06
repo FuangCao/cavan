@@ -154,3 +154,13 @@ function cavan-format-code()
 {
 	sed -i 's/\s\+$//g' $*
 }
+
+function cavan-make-apk()
+{
+	[ -f Makefile ] ||
+	{
+		ln -sf ${CAVAN_HOME}/build/core/apk_main.mk Makefile
+	}
+
+	make
+}
