@@ -21,7 +21,7 @@ PACKAGE_NAME = $(shell cat $(FILE_MANIFEST) | grep package='".*"' | sed s/.*pack
 PACKAGE_PATH = $(subst .,/,$(PACKAGE_NAME))
 TARGET_R_JAVA = $(OUT_GEN)/$(PACKAGE_PATH)/R.java
 
-CLASSPATH := $(CLASSPATH):$(OUT_BIN)
+CLASSPATH := $(CLASSPATH):$(OUT_BIN):$(SRC_PATH):$(OUT_GEN)
 
 AIDL_SOURCE = $(shell find $(SRC_PATH) -name I*.aidl)
 AIDL_TARGET = $(patsubst $(SRC_PATH)/%,$(OUT_GEN)/%.java,$(basename $(AIDL_SOURCE)))
@@ -34,22 +34,22 @@ all: $(TARGET_APK)
 
 $(TARGET_APK): $(TARGET_UNSIGNED_APK) $(TARGET_KEYSTORE)
 	@echo "$@ <= $^"
-	$(Q)jarsigner -verbose -storepass $(KEYSTORE_PASS) -keystore $(TARGET_KEYSTORE) -signedjar $@ $^
+	$(Q)jarsigner -storepass $(KEYSTORE_PASS) -keystore $(TARGET_KEYSTORE) -signedjar $@ $^
 
 $(TARGET_KEYSTORE):
-	$(Q)keytool -genkey -storepass $(KEYSTORE_PASS) -alias $(TARGET_KEYSTORE) -keyalg RSA -keystore $(TARGET_KEYSTORE)
+	$(Q)keytool -genkey -validity 80000 -storepass $(KEYSTORE_PASS) -alias $(TARGET_KEYSTORE) -keyalg RSA -keystore $(TARGET_KEYSTORE)
 
 $(TARGET_UNSIGNED_APK): $(TARGET_DEX) | $(OUT_GEN) $(OUT_TARGET)
 	$(Q)aapt package -fM $(FILE_MANIFEST) -S $(RES_PATH) -I $(FILE_ANDROID_JAR) -F $(TARGET_RES)
-	$(Q)apkbuilder $@ -v -u -z $(TARGET_RES) -f $(TARGET_DEX) -rf $(SRC_PATH)
+	$(Q)apkbuilder $@ -u -z $(TARGET_RES) -f $(TARGET_DEX) -rf $(SRC_PATH)
 
 $(OUT_BIN)/%.class: $(SRC_PATH)/%.java | $(OUT_BIN)
 	@echo "[JAVAC]  $^"
-	$(Q)javac -encoding GB18030 -target 1.5 -sourcepath $(SRC_PATH) -bootclasspath $(FILE_ANDROID_JAR) -d $(OUT_BIN) $^
+	$(Q)javac -encoding GB18030 -target 1.6 -bootclasspath $(FILE_ANDROID_JAR) -d $(OUT_BIN) $^
 
 $(OUT_BIN)/%.class: $(OUT_GEN)/%.java | $(OUT_BIN)
 	@echo "[JAVAC]  $^"
-	$(Q)javac -encoding GB18030 -target 1.5 -sourcepath $(SRC_PATH) -bootclasspath $(FILE_ANDROID_JAR) -d $(OUT_BIN) $^
+	$(Q)javac -encoding GB18030 -target 1.6 -bootclasspath $(FILE_ANDROID_JAR) -d $(OUT_BIN) $^
 
 $(TARGET_DEX): $(JAVA_TARGET)
 	@echo "$@ <= $^"
@@ -65,6 +65,10 @@ $(OUT_GEN)/%.java: $(SRC_PATH)/%.aidl | $(OUT_GEN)
 
 $(OUT_BIN) $(OUT_GEN) $(OUT_TARGET):
 	$(Q)mkdir $@ -pv
+
+install: $(TARGET_APK)
+	$(Q)adb uninstall $(PACKAGE_NAME)
+	$(Q)adb install $(TARGET_APK)
 
 clean:
 	$(Q)rm $(OUT_PATH) -rf
