@@ -9,7 +9,9 @@ RES_PATH = $(LOCAL_PATH)/res
 SRC_PATH = $(LOCAL_PATH)/src
 
 FILE_MANIFEST = $(LOCAL_PATH)/AndroidManifest.xml
-FILE_ANDROID_JAR = $(SDK_HOME)/platforms/android-8/android.jar
+FILE_PROJ_PROPS = $(LOCAL_PATH)/project.properties
+TARGET_PLATFORM = $(shell cat $(FILE_PROJ_PROPS) | grep '^\s*target\s*=' | sed 's/^\s*target\s*=\s*//g')
+FILE_ANDROID_JAR = $(SDK_HOME)/platforms/$(TARGET_PLATFORM)/android.jar
 TARGET_APK = $(OUT_TARGET)/cavan.apk
 TARGET_UNSIGNED_APK = $(OUT_TARGET)/cavan_unsigned.apk
 TARGET_DEX = $(OUT_BIN)/classes.dex
@@ -66,8 +68,10 @@ $(OUT_GEN)/%.java: $(SRC_PATH)/%.aidl | $(OUT_GEN)
 $(OUT_BIN) $(OUT_GEN) $(OUT_TARGET):
 	$(Q)mkdir $@ -pv
 
-install: $(TARGET_APK)
+uninstall:
 	$(Q)adb uninstall $(PACKAGE_NAME)
+
+install: uninstall $(TARGET_APK)
 	$(Q)adb install $(TARGET_APK)
 
 clean:

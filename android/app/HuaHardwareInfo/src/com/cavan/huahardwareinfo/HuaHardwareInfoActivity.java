@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import android.os.Bundle;
 import android.preference.Preference;
-import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
@@ -16,6 +17,11 @@ import android.util.Log;
 
 public class HuaHardwareInfoActivity extends PreferenceActivity {
 	private static final String TAG = "Cavan";
+	private static final String KEY_LCD_INFO = "lcd_info";
+	private static final String KEY_TP_INFO = "tp_info";
+	private static final String KEY_CAMERA_INFO = "camera_info";
+	private static final String KEY_FLASH_INFO = "flash_info";
+	private static final String KEY_GSENSOR_INFO = "gsensor_info";
 
 	private File mFileLcdInfo = new File("/sys/devices/platform/sprdfb.0/dev_info");
 	private File mFileCameraInfo = new File("/sys/devices/platform/sc8800g_dcam.0/dev_info");
@@ -27,62 +33,43 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	private PreferenceCategory mPreferenceCategoryFlashInfo;
 	private PreferenceCategory mPreferenceCategoryGsensorInfo;
 
-	private OnPreferenceClickListener mClickListenerLcdInfo = new OnPreferenceClickListener() {
-		@Override
-		public boolean onPreferenceClick(Preference preference) {
-			loadLcdInfo(5);
-			return false;
-		}
-	};
-
-	private OnPreferenceClickListener mClickListenerTpInfo = new OnPreferenceClickListener() {
-		@Override
-		public boolean onPreferenceClick(Preference preference) {
-			loadTpInfo();
-			return false;
-		}
-	};
-
-	private OnPreferenceClickListener mClickListenerCameraInfo = new OnPreferenceClickListener() {
-		@Override
-		public boolean onPreferenceClick(Preference preference) {
-			loadCameraInfo();
-			return false;
-		}
-	};
-
-	private OnPreferenceClickListener mClickListenerFlashInfo = new OnPreferenceClickListener() {
-		@Override
-		public boolean onPreferenceClick(Preference preference) {
-			loadFlashInfo();
-			return false;
-		}
-	};
-
-	private OnPreferenceClickListener mClickListenerGsensorInfo = new OnPreferenceClickListener() {
-		@Override
-		public boolean onPreferenceClick(Preference preference) {
-			loadGsensorInfo();
-			return false;
-		}
-	};
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.hua_hardware_info);
 
-		mPreferenceCategoryLcdInfo = (PreferenceCategory) findPreference("lcd_info");
-		mPreferenceCategoryTpInfo = (PreferenceCategory) findPreference("tp_info");
-		mPreferenceCategoryCameraInfo = (PreferenceCategory) findPreference("camera_info");
-		mPreferenceCategoryFlashInfo = (PreferenceCategory) findPreference("flash_info");
-		mPreferenceCategoryGsensorInfo = (PreferenceCategory) findPreference("gsensor_info");
+		mPreferenceCategoryLcdInfo = (PreferenceCategory) findPreference(KEY_LCD_INFO);
+		mPreferenceCategoryTpInfo = (PreferenceCategory) findPreference(KEY_TP_INFO);
+		mPreferenceCategoryCameraInfo = (PreferenceCategory) findPreference(KEY_CAMERA_INFO);
+		mPreferenceCategoryFlashInfo = (PreferenceCategory) findPreference(KEY_FLASH_INFO);
+		mPreferenceCategoryGsensorInfo = (PreferenceCategory) findPreference(KEY_GSENSOR_INFO);
 
-		loadLcdInfo(5);
+		loadLcdInfo(0);
 		loadTpInfo();
 		loadCameraInfo();
 		loadFlashInfo();
 		loadGsensorInfo();
+	}
+
+	@Override
+	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+		String key = preference.getKey();
+
+		Log.d(TAG, "key = " + preference.getKey());
+
+		if (KEY_LCD_INFO.equals(key)) {
+			loadLcdInfo(0);
+		} else if (KEY_TP_INFO.equals(key)) {
+			loadTpInfo();
+		} else if (KEY_CAMERA_INFO.equals(key)) {
+			loadCameraInfo();
+		} else if (KEY_FLASH_INFO.equals(key)) {
+			loadFlashInfo();
+		} else if (KEY_GSENSOR_INFO.equals(key)) {
+			loadGsensorInfo();
+		}
+
+		return super.onPreferenceTreeClick(preferenceScreen, preference);
 	}
 
 	private String readFile(File file) {
@@ -137,6 +124,8 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	}
 
 	private boolean loadLcdInfo(int retry) {
+		Log.w(TAG, "loadLcdInfo retry = " + retry);
+
 		mPreferenceCategoryLcdInfo.removeAll();
 
 		HashMap<String, String> hashMap = parseFile(mFileLcdInfo);
@@ -144,13 +133,14 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			return false;
 		}
 
+		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
+
 		String id = hashMap.get("id");
 		if (id != null) {
 			PreferenceScreen preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
 			preference.setTitle(R.string.info_id);
 			preference.setSummary(id);
-			preference.setOnPreferenceClickListener(mClickListenerLcdInfo);
-			mPreferenceCategoryLcdInfo.addPreference(preference);
+			preferenceScreens.add(preference);
 
 			String vendorIdContent = hashMap.get("vendor_id");
 			int vendorId;
@@ -166,11 +156,9 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 				preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);
 				preference.setTitle(R.string.info_ic);
 				preference.setSummary(ic);
-				preference.setOnPreferenceClickListener(mClickListenerLcdInfo);
-				mPreferenceCategoryLcdInfo.addPreference(preference);
-			} else if (retry > 0) {
-				Log.w(TAG, "Lcd IC unknown retry now.");
-				return loadLcdInfo(--retry);
+				preferenceScreens.add(preference);
+			} else if (retry < 20) {
+				return loadLcdInfo(++retry);
 			}
 
 			HuaLcdVendorInfo vendorInfo = lcdInfo.getVendorInfo();
@@ -178,11 +166,9 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 				preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);
 				preference.setTitle(R.string.info_module_vendor);
 				preference.setSummary(vendorInfo.getVendorName());
-				preference.setOnPreferenceClickListener(mClickListenerLcdInfo);
-				mPreferenceCategoryLcdInfo.addPreference(preference);
+				preferenceScreens.add(preference);
 			}
 		}
-
 
 		String width = hashMap.get("width");
 		String height = hashMap.get("height");
@@ -190,8 +176,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			PreferenceScreen preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
 			preference.setTitle(R.string.info_resolution);
 			preference.setSummary(width + " * " + height);
-			preference.setOnPreferenceClickListener(mClickListenerLcdInfo);
-			mPreferenceCategoryLcdInfo.addPreference(preference);
+			preferenceScreens.add(preference);
 		}
 
 		String bus_width = hashMap.get("bus_width");
@@ -199,8 +184,12 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			PreferenceScreen preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
 			preference.setTitle(R.string.info_bus_width);
 			preference.setSummary(bus_width);
-			preference.setOnPreferenceClickListener(mClickListenerLcdInfo);
-			mPreferenceCategoryLcdInfo.addPreference(preference);
+			preferenceScreens.add(preference);
+		}
+
+		for (PreferenceScreen preferenceScreen : preferenceScreens) {
+			preferenceScreen.setKey(mPreferenceCategoryLcdInfo.getKey());
+			mPreferenceCategoryLcdInfo.addPreference(preferenceScreen);
 		}
 
 		return true;
@@ -214,25 +203,24 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			return false;
 		}
 
+		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
+
 		PreferenceScreen preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_ic);
 		preference.setSummary(device.getIcName());
-		preference.setOnPreferenceClickListener(mClickListenerTpInfo);
-		mPreferenceCategoryTpInfo.addPreference(preference);
+		preferenceScreens.add(preference);
 
 		preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_fw_id);
 		preference.setSummary(Integer.toString(device.getFwId(), 16));
-		preference.setOnPreferenceClickListener(mClickListenerTpInfo);
-		mPreferenceCategoryTpInfo.addPreference(preference);
+		preferenceScreens.add(preference);
 
 		HuaTouchScreenVendorInfo info = device.getVendorInfo();
 		if (info != null) {
 			preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 			preference.setTitle(R.string.info_module_vendor);
 			preference.setSummary(info.getVendorName());
-			preference.setOnPreferenceClickListener(mClickListenerTpInfo);
-			mPreferenceCategoryTpInfo.addPreference(preference);
+			preferenceScreens.add(preference);
 		}
 
 		String fwName = device.getFwName();
@@ -240,15 +228,18 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 			preference.setTitle(R.string.info_fw_name);
 			preference.setSummary(fwName);
-			preference.setOnPreferenceClickListener(mClickListenerTpInfo);
-			mPreferenceCategoryTpInfo.addPreference(preference);
+			preferenceScreens.add(preference);
 		}
 
 		preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_dev_path);
 		preference.setSummary(device.getFileDevice().getPath());
-		preference.setOnPreferenceClickListener(mClickListenerTpInfo);
-		mPreferenceCategoryTpInfo.addPreference(preference);
+		preferenceScreens.add(preference);
+
+		for (PreferenceScreen preferenceScreen : preferenceScreens) {
+			preferenceScreen.setKey(mPreferenceCategoryTpInfo.getKey());
+			mPreferenceCategoryTpInfo.addPreference(preferenceScreen);
+		}
 
 		return true;
 	}
@@ -260,6 +251,8 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		if (content == null) {
 			return false;
 		}
+
+		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
 
 		for (String info : content.split("\\s*\\n\\s*")) {
 			String[] map = info.split("\\s*:\\s*");
@@ -287,22 +280,19 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 				PreferenceScreen preference = mPreferenceCategoryCameraInfo.getPreferenceManager().createPreferenceScreen(this);
 				preference.setTitle(prefix + getResources().getString(R.string.info_ic));
 				preference.setSummary(name);
-				preference.setOnPreferenceClickListener(mClickListenerCameraInfo);
-				mPreferenceCategoryCameraInfo.addPreference(preference);
+				preferenceScreens.add(preference);
 
 				HuaCameraInfo cameraInfo = HuaCameraInfo.getCameraInfo(name);
 				if (cameraInfo != null) {
 					preference = mPreferenceCategoryCameraInfo.getPreferenceManager().createPreferenceScreen(this);
 					preference.setTitle(prefix + getResources().getString(R.string.info_ic_vendor));
 					preference.setSummary(cameraInfo.getIcVendor());
-					preference.setOnPreferenceClickListener(mClickListenerCameraInfo);
-					mPreferenceCategoryCameraInfo.addPreference(preference);
+					preferenceScreens.add(preference);
 
 					preference = mPreferenceCategoryCameraInfo.getPreferenceManager().createPreferenceScreen(this);
 					preference.setTitle(prefix + getResources().getString(R.string.info_module_vendor));
 					preference.setSummary(cameraInfo.getVendorName());
-					preference.setOnPreferenceClickListener(mClickListenerCameraInfo);
-					mPreferenceCategoryCameraInfo.addPreference(preference);
+					preferenceScreens.add(preference);
 				}
 			}
 
@@ -312,9 +302,13 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 				PreferenceScreen preference = mPreferenceCategoryCameraInfo.getPreferenceManager().createPreferenceScreen(this);
 				preference.setTitle(prefix + getResources().getString(R.string.info_resolution));
 				preference.setSummary(width + " * " + height);
-				preference.setOnPreferenceClickListener(mClickListenerCameraInfo);
-				mPreferenceCategoryCameraInfo.addPreference(preference);
+				preferenceScreens.add(preference);
 			}
+		}
+
+		for (PreferenceScreen preferenceScreen : preferenceScreens) {
+			preferenceScreen.setKey(mPreferenceCategoryCameraInfo.getKey());
+			mPreferenceCategoryCameraInfo.addPreference(preferenceScreen);
 		}
 
 		return true;
@@ -328,34 +322,37 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			return false;
 		}
 
+		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
+
 		String id = hashMap.get("id");
 		if (id != null) {
 			PreferenceScreen preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
 			preference.setTitle(R.string.info_id);
 			preference.setSummary(id.toUpperCase());
-			preference.setOnPreferenceClickListener(mClickListenerFlashInfo);
-			mPreferenceCategoryFlashInfo.addPreference(preference);
+			preferenceScreens.add(preference);
 
 			HuaFlashInfo info = HuaFlashInfo.getFlashInfo(id);
 			if (info != null) {
 				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
 				preference.setTitle(R.string.info_ic);
 				preference.setSummary(info.getIc());
-				preference.setOnPreferenceClickListener(mClickListenerFlashInfo);
-				mPreferenceCategoryFlashInfo.addPreference(preference);
+				preferenceScreens.add(preference);
 
 				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
 				preference.setTitle(R.string.info_vendor);
 				preference.setSummary(info.getVendorName());
-				preference.setOnPreferenceClickListener(mClickListenerFlashInfo);
-				mPreferenceCategoryFlashInfo.addPreference(preference);
+				preferenceScreens.add(preference);
 
 				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
 				preference.setTitle(R.string.info_capacity);
 				preference.setSummary(info.getCapacity());
-				preference.setOnPreferenceClickListener(mClickListenerFlashInfo);
-				mPreferenceCategoryFlashInfo.addPreference(preference);
+				preferenceScreens.add(preference);
 			}
+		}
+
+		for (PreferenceScreen preferenceScreen : preferenceScreens) {
+			preferenceScreen.setKey(mPreferenceCategoryFlashInfo.getKey());
+			mPreferenceCategoryFlashInfo.addPreference(preferenceScreen);
 		}
 
 		return true;
@@ -369,23 +366,27 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			return false;
 		}
 
+		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
+
 		PreferenceScreen preference = mPreferenceCategoryGsensorInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_ic);
 		preference.setSummary(device.getIcName());
-		preference.setOnPreferenceClickListener(mClickListenerGsensorInfo);
-		mPreferenceCategoryGsensorInfo.addPreference(preference);
+		preferenceScreens.add(preference);
 
 		preference = mPreferenceCategoryGsensorInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_axis_count);
 		preference.setSummary(Integer.toString(device.getAxisCount()));
-		preference.setOnPreferenceClickListener(mClickListenerGsensorInfo);
-		mPreferenceCategoryGsensorInfo.addPreference(preference);
+		preferenceScreens.add(preference);
 
 		preference = mPreferenceCategoryGsensorInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_dev_path);
 		preference.setSummary(device.getFileDevice().getPath());
-		preference.setOnPreferenceClickListener(mClickListenerGsensorInfo);
-		mPreferenceCategoryGsensorInfo.addPreference(preference);
+		preferenceScreens.add(preference);
+
+		for (PreferenceScreen preferenceScreen : preferenceScreens) {
+			preferenceScreen.setKey(mPreferenceCategoryGsensorInfo.getKey());
+			mPreferenceCategoryGsensorInfo.addPreference(preferenceScreen);
+		}
 
 		return true;
 	}

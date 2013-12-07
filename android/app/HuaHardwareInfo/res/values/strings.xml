@@ -18,7 +18,7 @@
     <string name="info_capacity">容量</string>
 	<string name="info_ic">芯片型号</string>
 	<string name="info_resolution">分辨率</string>
-	<string name="info_bus_width">总线宽度</string>
+	<string name="info_bus_width">总线位宽</string>
 	<string name="info_dev_path">设备路径</string>
 	<string name="info_axis_count">坐标数量</string>
     <string name="vendor_name_unknown">未知</string>
