@@ -7,7 +7,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-public class HuaTouchScreenVendorInfo {
+public class HuaTouchscreenVendorInfo {
 	private static final String TAG = "Cavan";
 	private static HashMap<Integer, String> mHashMapShortName = new HashMap<Integer, String>();
 	private static HashMap<Integer, Integer> mHashMapVendor = new HashMap<Integer,Integer>();
@@ -52,6 +52,7 @@ public class HuaTouchScreenVendorInfo {
 			mHashMapVendor.put(0x13, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x30, R.string.vendor_name_simcom);
 		} else if (Build.BOARD.equals("hs8801")) {
+			mHashMapVendor.put(0x70, R.string.vendor_name_lihe);
 			mHashMapVendor.put(0x58, R.string.vendor_name_lihe);
 			mHashMapVendor.put(0x59, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x32, R.string.vendor_name_lianchuang);
@@ -68,7 +69,7 @@ public class HuaTouchScreenVendorInfo {
 		}
 	}
 
-	public HuaTouchScreenVendorInfo(int fwId) {
+	public HuaTouchscreenVendorInfo(int fwId) {
 		super();
 
 		mVendorId = (fwId >> 8) & 0xFF;

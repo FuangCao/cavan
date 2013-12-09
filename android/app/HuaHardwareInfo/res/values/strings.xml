@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
 
+<resources>
     <string name="app_name">硬件信息</string>
     <string name="lcd_info">LCD显示屏</string>
     <string name="flash_info">内部存储器</string>
@@ -16,11 +16,11 @@
     <string name="info_ic_vendor">IC厂商</string>
     <string name="info_module_vendor">模组厂商</string>
     <string name="info_capacity">容量</string>
-	<string name="info_ic">芯片型号</string>
-	<string name="info_resolution">分辨率</string>
-	<string name="info_bus_width">总线位宽</string>
-	<string name="info_dev_path">设备路径</string>
-	<string name="info_axis_count">坐标数量</string>
+    <string name="info_ic">芯片型号</string>
+    <string name="info_resolution">分辨率</string>
+    <string name="info_bus_width">总线位宽</string>
+    <string name="info_dev_path">设备路径</string>
+    <string name="info_axis_count">坐标数量</string>
     <string name="vendor_name_unknown">未知</string>
     <string name="vendor_name_simcom">希姆通</string>
     <string name="vendor_name_dianjing">点睛</string>

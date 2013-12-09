@@ -19,7 +19,7 @@ public class HuaTouchscreenDevice {
 	private File mFileDevice;
 	private File mFileFwId;
 	private int mFwId;
-	private HuaTouchScreenVendorInfo mVendorInfo;
+	private HuaTouchscreenVendorInfo mVendorInfo;
 
 	public HuaTouchscreenDevice(String icName, String devPath, String fwIdPath, String fwName) {
 		super();
@@ -69,7 +69,7 @@ public class HuaTouchscreenDevice {
 			mFwId = Integer.parseInt(fwIdContent, 16);
 		}
 
-		mVendorInfo = new HuaTouchScreenVendorInfo(mFwId);
+		mVendorInfo = new HuaTouchscreenVendorInfo(mFwId);
 	}
 
 	public static HuaTouchscreenDevice getTouchscreenDevice() {
@@ -107,7 +107,7 @@ public class HuaTouchscreenDevice {
 		return Build.BOARD + "_" + mFwName + "_" + mVendorInfo.getShortName();
 	}
 
-	public HuaTouchScreenVendorInfo getVendorInfo() {
+	public HuaTouchscreenVendorInfo getVendorInfo() {
 		return mVendorInfo;
 	}
 }

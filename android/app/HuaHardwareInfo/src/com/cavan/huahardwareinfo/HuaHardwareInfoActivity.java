@@ -44,11 +44,15 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		mPreferenceCategoryFlashInfo = (PreferenceCategory) findPreference(KEY_FLASH_INFO);
 		mPreferenceCategoryGsensorInfo = (PreferenceCategory) findPreference(KEY_GSENSOR_INFO);
 
-		loadLcdInfo(0);
-		loadTpInfo();
-		loadCameraInfo();
-		loadFlashInfo();
-		loadGsensorInfo();
+		new Thread() {
+			public void run() {
+				loadLcdInfo(0);
+				loadTpInfo();
+				loadCameraInfo();
+				loadFlashInfo();
+				loadGsensorInfo();
+			}
+		}.start();
 	}
 
 	@Override
@@ -215,7 +219,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		preference.setSummary(Integer.toString(device.getFwId(), 16));
 		preferenceScreens.add(preference);
 
-		HuaTouchScreenVendorInfo info = device.getVendorInfo();
+		HuaTouchscreenVendorInfo info = device.getVendorInfo();
 		if (info != null) {
 			preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 			preference.setTitle(R.string.info_module_vendor);
