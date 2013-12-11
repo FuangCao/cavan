@@ -131,13 +131,15 @@ class GitSvnManager(CavanCommandBase):
 
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
-		self.mFileSvnIgnore = self.getAbsPath(".svn/.gitignore")
 
-		self.mPathGitSvn = self.getAbsPath(".git/cavan-svn")
-		self.mPathPatch = self.getAbsPath(".git/cavan-patch")
+		self.mPathGitRepo = self.getAbsPath(".git")
+		self.mPathGitSvn = os.path.join(self.mPathGitRepo, "cavan-svn")
+		self.mPathPatch = os.path.join(self.mPathGitRepo, "cavan-patch")
 		self.mPathSvnRepo = self.getAbsPath(".svn")
+
 		self.mFileSvnLog = os.path.join(self.mPathGitSvn, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mPathGitSvn, "svn_info.xml")
+		self.mFileSvnIgnore = os.path.join(self.mPathSvnRepo, ".gitignore")
 
 	def findRootPath(self):
 		pathname = self.mPathRoot
@@ -662,6 +664,30 @@ class GitSvnManager(CavanCommandBase):
 
 		return self.doSync()
 
+	def doSymlink(self, dirTarget):
+		self.mkdirSafe(dirTarget)
+
+		if not os.path.exists(self.mPathGitRepo):
+			self.mPathGitRepo = self.mPathRoot
+
+		for filename in os.listdir(self.mPathGitRepo):
+			destPath = os.path.join(dirTarget, filename)
+			srcPath = os.path.join(self.mPathGitRepo, filename)
+
+			if os.path.exists(destPath):
+				self.removeSafe(destPath)
+
+			if os.path.isdir(srcPath):
+				os.symlink(srcPath, destPath)
+			elif not self.doCopyFile(srcPath, destPath):
+				return False
+
+		if not self.doExecute(["git", "config", "--file", os.path.join(dirTarget, "config"), "core.bare", "true"], verbose = False):
+			return False
+
+		return True
+
+
 	def main(self, argv):
 		length = len(argv)
 		if length < 2:
@@ -671,10 +697,14 @@ class GitSvnManager(CavanCommandBase):
 		subcmd = argv[1]
 		if subcmd in ["init"]:
 			return self.doInit(argv[2:])
-		if subcmd in ["clone"]:
+		elif subcmd in ["clone"]:
 			return self.doClone(argv[2:])
-		if subcmd in ["clean", "cleanup"]:
+		elif subcmd in ["clean", "cleanup"]:
 			return self.doGitClean()
+		elif subcmd in ["ln", "link", "symlink", "push"]:
+			if len(argv) < 3:
+				return False
+			return self.doSymlink(argv[2])
 		elif subcmd in ["update", "sync", "rebase", "dcommit"]:
 			if length > 2:
 				url = argv[2]

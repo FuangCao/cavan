@@ -282,7 +282,7 @@ class CavanCommandBase:
 	def removeSafe(self, pathname):
 		pathname = self.getAbsPath(pathname)
 		if os.path.exists(pathname) or self.doExecute(["touch", pathname], ef = "/dev/null") or self.mkdirSafe(pathname):
-			return self.doExecute(["rm", "-rf", pathname])
+			return self.doExecute(["rm", "-rf", pathname], verbose = False)
 
 		return False
 
@@ -306,6 +306,23 @@ class CavanCommandBase:
 
 			if not self.removeSafe(line):
 				return False
+
+		return True
+
+	def doCopyFile(self, srcPath, destPath):
+		fpSrc = open(srcPath, "r")
+		if not fpSrc:
+			return False
+		fpDest = open(destPath, "w")
+		if not fpDest:
+			fpSrc.close()
+			return False
+
+		lines = fpSrc.readlines()
+		fpDest.writelines(lines)
+
+		fpDest.close()
+		fpSrc.close()
 
 		return True
 

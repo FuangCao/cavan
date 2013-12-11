@@ -638,18 +638,15 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			relPath = node[0] + ".git"
 			localPath = os.path.join(self.mPathProjects, relPath)
 			if not os.path.isdir(localPath):
+				self.prRedInfo(localPath, " is not a directory")
 				return False
 
 			symlinkPath = os.path.join(self.mPathBackup, relPath)
-			if os.path.exists(symlinkPath):
-				if not os.path.islink(symlinkPath):
-					return False
-				os.remove(symlinkPath)
-			elif not self.mkdirSafe(os.path.dirname(symlinkPath)):
-				return False
+			self.prBoldInfo(localPath, " => ", symlinkPath)
 
-			self.prBoldInfo(localPath, " <= ", symlinkPath)
-			os.symlink(localPath, symlinkPath)
+			manager = GitSvnManager(localPath, self.mVerbose)
+			if not manager.doSymlink(symlinkPath):
+				return False
 
 		return True
 
@@ -662,7 +659,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		subcmd = argv[1]
 		if subcmd in ["init"]:
 			return self.doInit(argv[2:])
-		if subcmd in ["clone"]:
+		elif subcmd in ["clone"]:
 			return self.doClone(argv[2:])
 		elif subcmd in ["update", "sync"]:
 			return self.doSync()
