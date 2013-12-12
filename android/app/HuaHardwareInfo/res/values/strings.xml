@@ -12,6 +12,7 @@
     <string name="info_id">ID号</string>
     <string name="info_fw_id">固件版本号</string>
     <string name="info_fw_name">固件名称</string>
+    <string name="info_fw_upgrade">固件升级</string>
     <string name="info_vendor">厂商</string>
     <string name="info_ic_vendor">IC厂商</string>
     <string name="info_module_vendor">模组厂商</string>
@@ -21,6 +22,12 @@
     <string name="info_bus_width">总线位宽</string>
     <string name="info_dev_path">设备路径</string>
     <string name="info_axis_count">坐标数量</string>
+    <string name="msg_tp_fw_upgrade_waring">警告：固件升级过程中不能拔电池，不能退出升级程序，否则，触摸屏将无法使用。</string>
+    <string name="msg_fw_upgrade_pepare">正在准备升级，请稍等 ...</string>
+    <string name="msg_fw_upgrade_complete">固件升级成功</string>
+    <string name="msg_fw_upgrade_faild">固件升级失败</string>
+    <string name="start_upgrade">开始升级</string>
+    <string name="cancel">取消</string>
     <string name="vendor_name_unknown">未知</string>
     <string name="vendor_name_simcom">希姆通</string>
     <string name="vendor_name_dianjing">点睛</string>

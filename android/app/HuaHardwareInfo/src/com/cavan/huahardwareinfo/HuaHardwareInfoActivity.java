@@ -10,6 +10,7 @@ import java.util.List;
 
 import android.os.Bundle;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
@@ -32,6 +33,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	private PreferenceCategory mPreferenceCategoryCameraInfo;
 	private PreferenceCategory mPreferenceCategoryFlashInfo;
 	private PreferenceCategory mPreferenceCategoryGsensorInfo;
+	private HuaTouchscreenDevice mTouchscreenDevice;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -199,27 +201,30 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		return true;
 	}
 
-	private boolean loadTpInfo() {
+	public boolean loadTpInfo() {
 		mPreferenceCategoryTpInfo.removeAll();
 
-		HuaTouchscreenDevice device = HuaTouchscreenDevice.getTouchscreenDevice();
-		if (device == null) {
-			return false;
+		if (mTouchscreenDevice == null) {
+			mTouchscreenDevice = HuaTouchscreenDevice.getTouchscreenDevice();
+
+			if (mTouchscreenDevice == null) {
+				return false;
+			}
 		}
 
 		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
 
 		PreferenceScreen preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_ic);
-		preference.setSummary(device.getIcName());
+		preference.setSummary(mTouchscreenDevice.getIcName());
 		preferenceScreens.add(preference);
 
 		preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_fw_id);
-		preference.setSummary(Integer.toString(device.getFwId(), 16));
+		preference.setSummary(Integer.toString(mTouchscreenDevice.getFwId(), 16));
 		preferenceScreens.add(preference);
 
-		HuaTouchscreenVendorInfo info = device.getVendorInfo();
+		HuaTouchscreenVendorInfo info = mTouchscreenDevice.getVendorInfo();
 		if (info != null) {
 			preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 			preference.setTitle(R.string.info_module_vendor);
@@ -227,17 +232,33 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			preferenceScreens.add(preference);
 		}
 
-		String fwName = device.getFwName();
+		String fwName = mTouchscreenDevice.getFwName();
 		if (fwName != null) {
 			preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
-			preference.setTitle(R.string.info_fw_name);
-			preference.setSummary(fwName);
+			File fileFw = new File("/data", fwName);
+			if (fileFw != null && fileFw.canRead()) {
+				mTouchscreenDevice.setFileFw(fileFw);
+				preference.setTitle(R.string.info_fw_upgrade);
+				preference.setSummary(fileFw.getPath());
+				preference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+					@Override
+					public boolean onPreferenceClick(Preference preference) {
+						HuaTpUpgradeDialog dialog = new HuaTpUpgradeDialog(HuaHardwareInfoActivity.this);
+						dialog.show();
+						return true;
+					}
+				});
+			} else {
+				preference.setTitle(R.string.info_fw_name);
+				preference.setSummary(fwName);
+			}
+
 			preferenceScreens.add(preference);
 		}
 
 		preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_dev_path);
-		preference.setSummary(device.getFileDevice().getPath());
+		preference.setSummary(mTouchscreenDevice.getFileDevice().getPath());
 		preferenceScreens.add(preference);
 
 		for (PreferenceScreen preferenceScreen : preferenceScreens) {
@@ -393,5 +414,9 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		}
 
 		return true;
+	}
+
+	public HuaTouchscreenDevice getTouchscreenDevice() {
+		return mTouchscreenDevice;
 	}
 }
