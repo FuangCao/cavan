@@ -198,6 +198,10 @@ public class HuaTouchscreenDevice {
 		mFileFw = fileFw;
 	}
 
+	public File getFileFw() {
+		return mFileFw;
+	}
+
 	public void fwUpgrade(int maxProgress, Handler handler) {
 		mProgress = 0;
 		mMaxProgress = maxProgress;
