@@ -54,7 +54,7 @@ public class HuaTouchscreenDevice {
 		byte[] buff = new byte[4];
 
 		try {
-			int length = inputStream.read(buff);
+			inputStream.read(buff);
 			return new String(buff);
 		} catch (IOException e) {
 			e.printStackTrace();

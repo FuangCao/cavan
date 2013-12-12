@@ -3,9 +3,6 @@ package com.cavan.huahardwareinfo;
 import java.util.HashMap;
 
 import android.os.Build;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.util.Log;
 
 public class HuaTouchscreenVendorInfo {
 	private static final String TAG = "Cavan";

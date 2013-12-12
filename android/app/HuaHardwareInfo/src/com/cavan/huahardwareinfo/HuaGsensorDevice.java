@@ -2,8 +2,6 @@ package com.cavan.huahardwareinfo;
 
 import java.io.File;
 
-import android.util.Log;
-
 public class HuaGsensorDevice {
 	private static final HuaGsensorDevice[] mGsensorDeviceList = {
 		new HuaGsensorDevice("ADXL346", 0, 3),
