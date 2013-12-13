@@ -26,6 +26,7 @@
     <string name="msg_fw_upgrade_pepare">正在准备升级，请稍等 ...</string>
     <string name="msg_fw_upgrade_complete">固件升级成功</string>
     <string name="msg_fw_upgrade_faild">固件升级失败</string>
+    <string name="msg_fw_not_found">没有找到可用的固件</string>
     <string name="msg_select_fw">请选择一个固件文件</string>
     <string name="start_upgrade">开始升级</string>
     <string name="cancel">取消</string>

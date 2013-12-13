@@ -4,12 +4,12 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity" >
 
-    <ListView
-        android:id="@+id/listView"
+    <RadioGroup
+        android:id="@+id/radioGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" />
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/listView" />
+        android:layout_below="@+id/radioGroup" />
 
     <TextView
         android:id="@+id/textView"

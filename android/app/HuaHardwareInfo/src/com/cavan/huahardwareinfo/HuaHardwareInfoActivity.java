@@ -235,24 +235,16 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		String fwName = mTouchscreenDevice.getFwName();
 		if (fwName != null) {
 			preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
-			File fileFw = new File("/data", fwName);
-			if (fileFw != null && fileFw.canRead()) {
-				mTouchscreenDevice.setFileFw(fileFw);
-				preference.setTitle(R.string.info_fw_upgrade);
-				preference.setSummary(fileFw.getPath());
-				preference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-					@Override
-					public boolean onPreferenceClick(Preference preference) {
-						HuaTpUpgradeDialog dialog = new HuaTpUpgradeDialog(HuaHardwareInfoActivity.this);
-						dialog.show();
-						return true;
-					}
-				});
-			} else {
-				preference.setTitle(R.string.info_fw_name);
-				preference.setSummary(fwName);
-			}
-
+			preference.setTitle(R.string.info_fw_upgrade);
+			preference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
+					HuaTpUpgradeDialog dialog = new HuaTpUpgradeDialog(HuaHardwareInfoActivity.this);
+					dialog.show();
+					return true;
+				}
+			});
+			preference.setSummary(fwName);
 			preferenceScreens.add(preference);
 		}
 

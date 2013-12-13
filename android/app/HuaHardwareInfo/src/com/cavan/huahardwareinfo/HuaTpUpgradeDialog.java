@@ -5,23 +5,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.BaseAdapter;
-import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.CompoundButton;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,13 +30,12 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	public static final int MAX_PROGRESS = 100;
 
 	private View mView;
+	private Toast mToast;
 	private ProgressBar mProgressBar;
 	private TextView mTextView;
-	private ListView mListView;
+	private RadioGroup mRadioGroup;
 	private HuaHardwareInfoActivity mActivity;
 	private HuaTouchscreenDevice mTouchscreenDevice;
-	private List<File> mListFw = new ArrayList<File>();
-	private File mFileSelected;
 	private Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -51,6 +46,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 				mTextView.setText(Integer.toString(msg.arg1) + "%");
 				mProgressBar.setProgress(msg.arg1);
 				break;
+
 			case MSG_STATE_CHANGED:
 				int resId;
 				if (msg.arg1 < 0) {
@@ -60,53 +56,28 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 					mActivity.loadTpInfo();
 				}
 
-				Toast.makeText(getContext(), getContext().getString(resId), Toast.LENGTH_SHORT).show();
+				showToast(resId, Toast.LENGTH_SHORT);
 				dismiss();
 				break;
+
 			case MSG_SCAN_COMPLETE:
+				List<File> files = (List<File>) msg.obj;
+				if (files != null && files.size() > 0) {
+					mRadioGroup.removeAllViews();
+					for (File file : files) {
+						FirmwareRadioButton button = new FirmwareRadioButton(getContext(), file);
+						mRadioGroup.addView(button);
+					}
+
+					mRadioGroup.check(mRadioGroup.getChildAt(0).getId());
+				} else {
+					showToast(R.string.msg_fw_not_found, Toast.LENGTH_SHORT);
+					dismiss();
+				}
 				break;
 			}
 
 			super.handleMessage(msg);
-		}
-	};
-
-	private ListAdapter mAdapter = new BaseAdapter() {
-		private CompoundButton mButtonSelected;
-		private OnCheckedChangeListener mListener = new OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (mButtonSelected != null) {
-					mButtonSelected.setChecked(false);
-				}
-
-				mButtonSelected = buttonView;
-				mFileSelected = mListFw.get(mButtonSelected.getId());
-			}
-		};
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			RadioButton button = new RadioButton(getContext());
-			button.setText(mListFw.get(position).getPath());
-			button.setOnCheckedChangeListener(mListener);
-			button.setId(position);
-			return button;
-		}
-
-		@Override
-		public long getItemId(int position) {
-			return 0;
-		}
-
-		@Override
-		public Object getItem(int position) {
-			return null;
-		}
-
-		@Override
-		public int getCount() {
-			return mListFw.size();
 		}
 	};
 
@@ -115,6 +86,22 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 		mActivity = activity;
 		mTouchscreenDevice = activity.getTouchscreenDevice();
+	}
+
+	private void showToast(String message, int duration) {
+		if (mToast != null) {
+			mToast.cancel();
+		}
+
+		Log.d(TAG, message);
+
+		mToast = Toast.makeText(getContext(), message, duration);
+		mToast.setGravity(Gravity.BOTTOM, 0, 0);
+		mToast.show();
+	}
+
+	private void showToast(int resId, int duration) {
+		showToast(getContext().getResources().getString(resId), duration);
 	}
 
 	@Override
@@ -128,10 +115,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		mProgressBar.setProgress(0);
 
 		mTextView = (TextView) mView.findViewById(R.id.textView);
-
-		mListView = (ListView) mView.findViewById(R.id.listView);
-		mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-		mListView.setAdapter(mAdapter);
+		mRadioGroup = (RadioGroup) mView.findViewById(R.id.radioGroup);
 
 		Resources resources = getContext().getResources();
 		setTitle(resources.getString(R.string.info_fw_upgrade));
@@ -144,17 +128,22 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		getButton(BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (mFileSelected == null) {
-					Toast.makeText(getContext(), getContext().getResources().getString(R.string.msg_select_fw), Toast.LENGTH_SHORT).show();
+				int id = mRadioGroup.getCheckedRadioButtonId();
+				Log.d(TAG, "index = " + id + ", count = " + mRadioGroup.getChildCount());
+				if (id < 0) {
+					showToast(R.string.msg_select_fw, Toast.LENGTH_SHORT);
 				} else {
-					mTouchscreenDevice.setFileFw(mFileSelected);
+					showToast(R.string.msg_tp_fw_upgrade_waring, Toast.LENGTH_SHORT);
+					FirmwareRadioButton button = (FirmwareRadioButton) mRadioGroup.findViewById(id);
+					File file = button.getFileFirmware();
+					Log.d(TAG, "firmware path = " + file.getPath());
+					mTouchscreenDevice.setFileFw(file);
 					setCancelable(false);
-					mListView.setEnabled(false);
+					mRadioGroup.setEnabled(false);
 					getButton(BUTTON_POSITIVE).setEnabled(false);
 					getButton(BUTTON_NEGATIVE).setEnabled(false);
 					mTextView.setText(R.string.msg_fw_upgrade_pepare);
 					mTouchscreenDevice.fwUpgrade(MAX_PROGRESS, mHandler);
-					Toast.makeText(getContext(), getContext().getString(R.string.msg_tp_fw_upgrade_waring), Toast.LENGTH_SHORT).show();
 				}
 			}
 		});
@@ -162,26 +151,59 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		scanFirmware();
 	}
 
-	private void scanFirmware(File dir, String filename) {
+	private void scanFirmware(List<File> list, File dir, String filename, int depth) {
+		File fileFw = new File(dir, filename);
+		if (fileFw.canRead()) {
+			list.add(fileFw);
+		}
+
+		if (depth < 2) {
+			return;
+		}
+
 		File[] files = dir.listFiles();
 		if (files == null) {
 			return;
 		}
 
 		for (File file : files) {
-			if (file.isDirectory()) {
-				if (file.getName().startsWith(".") == false) {
-					scanFirmware(file, filename);
-				}
-			} else if (filename.equals(file.getName())) {
-				mListFw.add(file);
+			if (file.isDirectory() && file.getName().startsWith(".") == false) {
+				scanFirmware(list, file, filename, depth - 1);
 			}
 		}
 	}
 
 	private void scanFirmware() {
-		mListFw.add(mTouchscreenDevice.getFileFw());
-		scanFirmware(Environment.getExternalStorageDirectory(), mTouchscreenDevice.getFwName());
-		mHandler.sendEmptyMessage(MSG_SCAN_COMPLETE);
+		String fwName = mTouchscreenDevice.getFwName();
+		List<File> list = new ArrayList<File>();
+
+		File dir = Environment.getDataDirectory();
+		scanFirmware(list, dir, fwName, 1);
+		scanFirmware(list, new File(dir, "internal_memory"), fwName, 1);
+
+		dir = Environment.getExternalStorageDirectory();
+		scanFirmware(list, dir, fwName, 1);
+		scanFirmware(list, new File(dir, "tp/firmware"), fwName, 2);
+
+		Message message = mHandler.obtainMessage(MSG_SCAN_COMPLETE, list);
+		message.sendToTarget();
+	}
+
+	class FirmwareRadioButton extends RadioButton {
+		private File mFileFirmware;
+
+		public FirmwareRadioButton(Context context, File fileFirmware) {
+			super(context);
+			setFileFirmware(fileFirmware);
+		}
+
+		public void setFileFirmware(File fileFirmware) {
+			mFileFirmware = fileFirmware;
+			setText(mFileFirmware.getPath());
+		}
+
+		public File getFileFirmware() {
+			return mFileFirmware;
+		}
 	}
 }
