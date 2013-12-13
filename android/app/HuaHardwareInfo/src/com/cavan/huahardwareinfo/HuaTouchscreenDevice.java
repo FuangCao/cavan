@@ -9,10 +9,12 @@ import java.io.IOException;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.util.Log;
 
 public class HuaTouchscreenDevice {
 	private static final String TAG = "Cavan";
+	private static final String PROP_TP_FW_UPGRADE_PENDING = "persist.sys.tp.fw.pending";
 	private static final HuaTouchscreenDevice[] mTouchscreenList = {
 		new HuaTouchscreenDevice("CY8C242", "/sys/bus/i2c/devices/i2c-2/2-0024/firmware_id", "cy8c242.iic"),
 		new HuaTouchscreenDevice("FT6306", "/dev/FT5216", "/sys/bus/i2c/devices/i2c-2/2-0038/firmware_id", "FT6306.bin")
@@ -209,7 +211,9 @@ public class HuaTouchscreenDevice {
 
 		Thread thread = new Thread() {
 			public void run() {
+				SystemProperties.set(PROP_TP_FW_UPGRADE_PENDING, mFwName);
 				boolean result = fwUpgrade();
+				SystemProperties.set(PROP_TP_FW_UPGRADE_PENDING, "");
 
 				if (mHandler != null) {
 					Message message = mHandler.obtainMessage(HuaTpUpgradeDialog.MSG_STATE_CHANGED, result ? 0 : -1, 0);

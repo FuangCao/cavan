@@ -133,7 +133,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 				if (id < 0) {
 					showToast(R.string.msg_select_fw, Toast.LENGTH_SHORT);
 				} else {
-					showToast(R.string.msg_tp_fw_upgrade_waring, Toast.LENGTH_SHORT);
+					showToast(R.string.msg_tp_fw_upgrade_waring, Toast.LENGTH_LONG);
 					FirmwareRadioButton button = (FirmwareRadioButton) mRadioGroup.findViewById(id);
 					File file = button.getFileFirmware();
 					Log.d(TAG, "firmware path = " + file.getPath());
