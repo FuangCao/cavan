@@ -11,6 +11,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+import android.os.ServiceManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -36,6 +39,8 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	private RadioGroup mRadioGroup;
 	private HuaHardwareInfoActivity mActivity;
 	private HuaTouchscreenDevice mTouchscreenDevice;
+	private PowerManager mPowerManager;
+	private WakeLock mWakeLock;
 	private Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -48,12 +53,16 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 				break;
 
 			case MSG_STATE_CHANGED:
+				mWakeLock.release();
+
 				int resId;
 				if (msg.arg1 < 0) {
 					resId = R.string.msg_fw_upgrade_faild;
 				} else {
 					resId = R.string.msg_fw_upgrade_complete;
-					mActivity.loadTpInfo();
+					if (mActivity != null) {
+						mActivity.loadTpInfo();
+					}
 				}
 
 				showToast(resId, Toast.LENGTH_SHORT);
@@ -70,6 +79,10 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 					}
 
 					mRadioGroup.check(mRadioGroup.getChildAt(0).getId());
+
+					if (mActivity == null) {
+						upgradeFirmware();
+					}
 				} else {
 					showToast(R.string.msg_fw_not_found, Toast.LENGTH_SHORT);
 					dismiss();
@@ -86,6 +99,13 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 		mActivity = activity;
 		mTouchscreenDevice = activity.getTouchscreenDevice();
+	}
+
+	protected HuaTpUpgradeDialog(Context context) {
+		super(context);
+
+		mActivity = null;
+		mTouchscreenDevice = HuaTouchscreenDevice.getTouchscreenDevice();
 	}
 
 	private void showToast(String message, int duration) {
@@ -106,6 +126,8 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		mPowerManager = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+		mWakeLock = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
 		mView = getLayoutInflater().inflate(R.layout.tp_upgrade_progress, null);
 		setView(mView);
 		getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
@@ -128,27 +150,33 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		getButton(BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				int id = mRadioGroup.getCheckedRadioButtonId();
-				Log.d(TAG, "index = " + id + ", count = " + mRadioGroup.getChildCount());
-				if (id < 0) {
-					showToast(R.string.msg_select_fw, Toast.LENGTH_SHORT);
-				} else {
-					showToast(R.string.msg_tp_fw_upgrade_waring, Toast.LENGTH_LONG);
-					FirmwareRadioButton button = (FirmwareRadioButton) mRadioGroup.findViewById(id);
-					File file = button.getFileFirmware();
-					Log.d(TAG, "firmware path = " + file.getPath());
-					mTouchscreenDevice.setFileFw(file);
-					setCancelable(false);
-					mRadioGroup.setEnabled(false);
-					getButton(BUTTON_POSITIVE).setEnabled(false);
-					getButton(BUTTON_NEGATIVE).setEnabled(false);
-					mTextView.setText(R.string.msg_fw_upgrade_pepare);
-					mTouchscreenDevice.fwUpgrade(MAX_PROGRESS, mHandler);
-				}
+				upgradeFirmware();
 			}
 		});
 
 		scanFirmware();
+	}
+
+	private void upgradeFirmware() {
+		int id = mRadioGroup.getCheckedRadioButtonId();
+		Log.d(TAG, "index = " + id + ", count = " + mRadioGroup.getChildCount());
+		if (id < 0) {
+			showToast(R.string.msg_select_fw, Toast.LENGTH_SHORT);
+		} else {
+			showToast(R.string.msg_tp_fw_upgrade_waring, Toast.LENGTH_LONG);
+			FirmwareRadioButton button = (FirmwareRadioButton) mRadioGroup.findViewById(id);
+			File file = button.getFileFirmware();
+			Log.d(TAG, "firmware path = " + file.getPath());
+			mTouchscreenDevice.setFileFw(file);
+			setCancelable(false);
+			mRadioGroup.setEnabled(false);
+			getButton(BUTTON_POSITIVE).setEnabled(false);
+			getButton(BUTTON_NEGATIVE).setEnabled(false);
+			mTextView.setText(R.string.msg_fw_upgrade_pepare);
+
+			mWakeLock.acquire();
+			mTouchscreenDevice.fwUpgrade(MAX_PROGRESS, mHandler);
+		}
 	}
 
 	private void scanFirmware(List<File> list, File dir, String filename, int depth) {

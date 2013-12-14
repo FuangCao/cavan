@@ -9,6 +9,7 @@ import java.io.IOException;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.os.SystemProperties;
 import android.util.Log;
 
@@ -211,9 +212,9 @@ public class HuaTouchscreenDevice {
 
 		Thread thread = new Thread() {
 			public void run() {
-				SystemProperties.set(PROP_TP_FW_UPGRADE_PENDING, mFwName);
+				setPendingFirmware(getFwName());
 				boolean result = fwUpgrade();
-				SystemProperties.set(PROP_TP_FW_UPGRADE_PENDING, "");
+				setPendingFirmware("");
 
 				if (mHandler != null) {
 					Message message = mHandler.obtainMessage(HuaTpUpgradeDialog.MSG_STATE_CHANGED, result ? 0 : -1, 0);
@@ -223,5 +224,13 @@ public class HuaTouchscreenDevice {
 		};
 
 		thread.start();
+	}
+
+	public static String getPendingFirmware() {
+		return SystemProperties.get(PROP_TP_FW_UPGRADE_PENDING);
+	}
+
+	public static void setPendingFirmware(String fwName) {
+		SystemProperties.set(PROP_TP_FW_UPGRADE_PENDING, fwName);
 	}
 }
