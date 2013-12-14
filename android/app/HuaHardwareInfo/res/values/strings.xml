@@ -24,6 +24,7 @@
     <string name="info_axis_count">坐标数量</string>
     <string name="msg_tp_fw_upgrade_waring">警告：固件升级过程中不能拔电池，不能退出升级程序，否则，触摸屏将无法使用。</string>
     <string name="msg_fw_upgrade_pepare">正在准备升级，请稍等 ...</string>
+    <string name="msg_fw_upgrade_stopping">正在完成升级，请稍等 ...</string>
     <string name="msg_fw_upgrade_complete">固件升级成功</string>
     <string name="msg_fw_upgrade_faild">固件升级失败</string>
     <string name="msg_fw_not_found">没有找到可用的固件</string>
