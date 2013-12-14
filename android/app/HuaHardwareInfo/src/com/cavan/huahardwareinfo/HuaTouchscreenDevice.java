@@ -15,6 +15,12 @@ import android.util.Log;
 
 public class HuaTouchscreenDevice {
 	private static final String TAG = "Cavan";
+
+	public static final int FW_STATE_UPGRADE_FAILED = -1;
+	public static final int FW_STATE_UPGRADE_PREPARE = 0;
+	public static final int FW_STATE_UPGRADE_STOPPING = 1;
+	public static final int FW_STATE_UPGRADE_COMPLETE = 2;
+
 	private static final String PROP_TP_FW_UPGRADE_PENDING = "persist.sys.tp.fw.pending";
 	private static final HuaTouchscreenDevice[] mTouchscreenList = {
 		new HuaTouchscreenDevice("CY8C242", "/sys/bus/i2c/devices/i2c-2/2-0024/firmware_id", "cy8c242.iic"),
@@ -124,6 +130,8 @@ public class HuaTouchscreenDevice {
 	}
 
 	private boolean fwUpgrade() {
+		sendFwUpgradeState(FW_STATE_UPGRADE_PREPARE);
+
 		FileInputStream inputStream;
 
 		try {
@@ -164,6 +172,8 @@ public class HuaTouchscreenDevice {
 				wrTotal += rdLen;
 				updateProgress(wrTotal * mMaxProgress / available);
 			}
+
+			sendFwUpgradeState(FW_STATE_UPGRADE_STOPPING);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			result = false;
@@ -197,6 +207,13 @@ public class HuaTouchscreenDevice {
 		}
 	}
 
+	private void sendFwUpgradeState(int state) {
+		if (mHandler != null) {
+			Message message = mHandler.obtainMessage(HuaTpUpgradeDialog.MSG_STATE_CHANGED, state, 0);
+			message.sendToTarget();
+		}
+	}
+
 	public void setFileFw(File fileFw) {
 		mFileFw = fileFw;
 	}
@@ -216,10 +233,7 @@ public class HuaTouchscreenDevice {
 				boolean result = fwUpgrade();
 				setPendingFirmware("");
 
-				if (mHandler != null) {
-					Message message = mHandler.obtainMessage(HuaTpUpgradeDialog.MSG_STATE_CHANGED, result ? 0 : -1, 0);
-					message.sendToTarget();
-				}
+				sendFwUpgradeState(result ? FW_STATE_UPGRADE_COMPLETE : FW_STATE_UPGRADE_FAILED);
 			}
 		};
 

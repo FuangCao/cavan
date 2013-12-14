@@ -54,20 +54,28 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 				break;
 
 			case MSG_STATE_CHANGED:
-				mWakeLock.release();
+				switch (msg.arg1) {
+				case HuaTouchscreenDevice.FW_STATE_UPGRADE_FAILED:
+					showToast(R.string.msg_fw_upgrade_faild, Toast.LENGTH_SHORT);
+					dismiss();
+					break;
 
-				int resId;
-				if (msg.arg1 < 0) {
-					resId = R.string.msg_fw_upgrade_faild;
-				} else {
-					resId = R.string.msg_fw_upgrade_complete;
+				case HuaTouchscreenDevice.FW_STATE_UPGRADE_COMPLETE:
+					showToast(R.string.msg_fw_upgrade_complete, Toast.LENGTH_SHORT);
 					if (mActivity != null) {
 						mActivity.loadTpInfo();
 					}
-				}
+					dismiss();
+					break;
 
-				showToast(resId, Toast.LENGTH_SHORT);
-				dismiss();
+				case HuaTouchscreenDevice.FW_STATE_UPGRADE_PREPARE:
+					mTextView.setText(R.string.msg_fw_upgrade_pepare);
+					break;
+
+				case HuaTouchscreenDevice.FW_STATE_UPGRADE_STOPPING:
+					mTextView.setText(R.string.msg_fw_upgrade_stopping);
+					break;
+				}
 				break;
 
 			case MSG_SCAN_COMPLETE:
@@ -130,7 +138,9 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		mPowerManager = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
-		mWakeLock = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
+		mWakeLock = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getClass().getName());
+		mWakeLock.acquire();
+
 		mView = getLayoutInflater().inflate(R.layout.tp_upgrade_progress, null);
 		setView(mView);
 		getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
@@ -160,6 +170,12 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		scanFirmware();
 	}
 
+	@Override
+	public void dismiss() {
+		mWakeLock.release();
+		super.dismiss();
+	}
+
 	private void upgradeFirmware() {
 		int id = mRadioGroup.getCheckedRadioButtonId();
 		Log.d(TAG, "index = " + id + ", count = " + mRadioGroup.getChildCount());
@@ -176,8 +192,6 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 			getButton(BUTTON_POSITIVE).setEnabled(false);
 			getButton(BUTTON_NEGATIVE).setEnabled(false);
 			mTextView.setText(R.string.msg_fw_upgrade_pepare);
-
-			mWakeLock.acquire();
 			mTouchscreenDevice.fwUpgrade(MAX_PROGRESS, mHandler);
 		}
 	}
