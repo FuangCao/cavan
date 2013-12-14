@@ -212,7 +212,7 @@ public class HuaTouchscreenDevice {
 
 		Thread thread = new Thread() {
 			public void run() {
-				setPendingFirmware(getFwName());
+				setPendingFirmware(mFileFw.getName());
 				boolean result = fwUpgrade();
 				setPendingFirmware("");
 

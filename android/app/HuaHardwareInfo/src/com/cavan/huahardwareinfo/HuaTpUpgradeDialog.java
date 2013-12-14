@@ -38,6 +38,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	private TextView mTextView;
 	private RadioGroup mRadioGroup;
 	private HuaHardwareInfoActivity mActivity;
+	private String mFwName;
 	private HuaTouchscreenDevice mTouchscreenDevice;
 	private PowerManager mPowerManager;
 	private WakeLock mWakeLock;
@@ -99,12 +100,14 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 		mActivity = activity;
 		mTouchscreenDevice = activity.getTouchscreenDevice();
+		mFwName = mTouchscreenDevice.getFwName();
 	}
 
-	protected HuaTpUpgradeDialog(Context context) {
+	protected HuaTpUpgradeDialog(Context context, String fwName) {
 		super(context);
 
 		mActivity = null;
+		mFwName = fwName;
 		mTouchscreenDevice = HuaTouchscreenDevice.getTouchscreenDevice();
 	}
 
@@ -179,8 +182,8 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		}
 	}
 
-	private void scanFirmware(List<File> list, File dir, String filename, int depth) {
-		File fileFw = new File(dir, filename);
+	private void scanFirmware(List<File> list, File dir, int depth) {
+		File fileFw = new File(dir, mFwName);
 		if (fileFw.canRead()) {
 			list.add(fileFw);
 		}
@@ -196,22 +199,21 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 		for (File file : files) {
 			if (file.isDirectory() && file.getName().startsWith(".") == false) {
-				scanFirmware(list, file, filename, depth - 1);
+				scanFirmware(list, file, depth - 1);
 			}
 		}
 	}
 
 	private void scanFirmware() {
-		String fwName = mTouchscreenDevice.getFwName();
 		List<File> list = new ArrayList<File>();
 
 		File dir = Environment.getDataDirectory();
-		scanFirmware(list, dir, fwName, 1);
-		scanFirmware(list, new File(dir, "internal_memory"), fwName, 1);
+		scanFirmware(list, dir, 1);
+		scanFirmware(list, new File(dir, "internal_memory"), 1);
 
 		dir = Environment.getExternalStorageDirectory();
-		scanFirmware(list, dir, fwName, 1);
-		scanFirmware(list, new File(dir, "tp/firmware"), fwName, 2);
+		scanFirmware(list, dir, 1);
+		scanFirmware(list, new File(dir, "tp/firmware"), 2);
 
 		Message message = mHandler.obtainMessage(MSG_SCAN_COMPLETE, list);
 		message.sendToTarget();

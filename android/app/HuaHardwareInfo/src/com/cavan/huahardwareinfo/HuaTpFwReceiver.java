@@ -16,11 +16,11 @@ public class HuaTpFwReceiver extends BroadcastReceiver {
 		String fwName = HuaTouchscreenDevice.getPendingFirmware();
 		Log.d(TAG, "action = " + action + ", fwName = " + fwName);
 
-		if (Intent.ACTION_BOOT_COMPLETED.equals(action) && fwName != null && fwName.length() > 0) {
+		if (fwName != null && fwName.length() > 0) {
 			KeyguardManager keyguardManager  = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
 			KeyguardLock lock = keyguardManager.newKeyguardLock(getClass().getName());
 			lock.disableKeyguard();
-			HuaTpUpgradeDialog dialog = new HuaTpUpgradeDialog(context);
+			HuaTpUpgradeDialog dialog = new HuaTpUpgradeDialog(context, fwName);
 			dialog.show();
 		}
 	}
