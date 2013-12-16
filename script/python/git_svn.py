@@ -187,7 +187,7 @@ class GitSvnManager(CavanGitManager):
 		return logParser
 
 	def gitCheckoutVersion(self, commit = None, option = None):
-		listCommand = ["git", "checkout", "--quiet"]
+		listCommand = ["checkout", "--quiet"]
 		if commit != None:
 			listCommand.append(commit)
 
@@ -195,7 +195,7 @@ class GitSvnManager(CavanGitManager):
 			for item in option:
 				listCommand.append(item)
 
-		return self.doExecute(listCommand, ef = "/dev/null")
+		return self.doExecGitCmd(listCommand, ef = "/dev/null")
 
 	def genGitRepo(self):
 		if not CavanGitManager.genGitRepo(self):
@@ -251,8 +251,10 @@ class GitSvnManager(CavanGitManager):
 			listFile = []
 			for line in lines:
 				line = line.rstrip("\n")
-				if line.endswith("/"):
+				if line.endswith("/") or line.startswith(".git/") or line.find("/.git/") >= 0:
 					continue
+
+				print "line = %s" % line
 
 				listFile.append(os.path.join(path, line))
 

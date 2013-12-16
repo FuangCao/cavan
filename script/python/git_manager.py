@@ -221,8 +221,7 @@ class CavanGitManager(CavanCommandBase):
 		elif not os.path.isdir(destRoot):
 			return False
 
-		if not self.doExecGitCmd(["config", "--unset", "core.worktree"]):
-			return False
+		self.doExecGitCmd(["config", "--unset", "core.worktree"])
 
 		for filename in os.listdir(self.mPathGitRepo):
 			srcPath = os.path.join(self.mPathGitRepo, filename)

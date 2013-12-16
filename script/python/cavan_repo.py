@@ -179,7 +179,7 @@ class CavanCheckoutThread(threading.Thread):
 
 class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 	def __init__(self, pathname = ".", verbose = False):
-		CavanCommandBase.__init__(self, pathname, verbose)
+		CavanCommandBase.__init__(self, pathname, True)
 		CavanProgressBar.__init__(self)
 
 		self.mErrorCount = 0
@@ -210,11 +210,13 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		listDir = []
 		listFile = []
+		hasDotGit = False
 
 		for line in lines:
 			line = line.rstrip("\r\n")
 			if line in [".git/"]:
-				return self.mManifest.appendProject(path) != None
+				hasDotGit = True
+				continue
 
 			line = os.path.join(path, line)
 			if line.endswith("/"):
@@ -223,6 +225,9 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 				listFile.append(line)
 			else:
 				return self.mManifest.appendProject(path) != None
+
+		if hasDotGit and len(listDir) > 0:
+			return self.mManifest.appendProject(path) != None
 
 		for line in listFile:
 			if not self.mManifest.appendFile(line):
@@ -334,6 +339,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			if manager.doInitBase(url) and manager.doSync(url) and self.doExecute(["mv", tmpPathname, pathname]):
 				self.addProgress()
 				return 1
+
 			self.doExecute(["rm", "-rf", tmpPathname])
 
 		self.prRedInfo("Checkout ", pathname, " Failed")
@@ -372,7 +378,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if not manager.doBackup(destPath):
 			return -1
 
-		return 0
+		return iResult
 
 	def doSync(self):
 		if not self.loadManifest():
