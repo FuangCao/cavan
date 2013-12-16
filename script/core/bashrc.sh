@@ -22,6 +22,7 @@ JAVA_BIN="${JAVA_HOME}/bin:${JRE_HOME}/bin"
 FSLDROID_BIN="${FSLDROID_HOME}/out/host/linux-x86/bin"
 UBOOT_BIN="${UBOOT_HOME}/tools"
 PATH="${CAVAN_BIN}:${TOOLCHIAN_BIN}:${JAVA_BIN}:${SDK_BIN}:${FSLDROID_BIN}:${UBOOT_BIN}:${PATH}"
+PATH="${HOME}/local/bin:${HOME}/local/sbin:${HOME}/bin:${HOME}/sbin:${PATH}"
 
 CMD_TCP_COPY='cavan-tcp_copy'
 CMD_TCP_DD='cavan-tcp_dd'
