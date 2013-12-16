@@ -211,37 +211,6 @@ class CavanCommandBase:
 
 		return self.doPopen(self.buildSystemArgs(command), cwd, ef, False)
 
-	def genGitRepo(self, pathname = None, option = None):
-		if not pathname:
-			pathname = self.mPathRoot
-		elif not os.path.isdir(pathname):
-			os.makedirs(pathname)
-
-		if self.doExecute(["git", "branch"], of = "/dev/null", ef = "/dev/null", cwd = pathname):
-			return True
-
-		listCommand = ["git", "init"]
-		if not self.mVerbose:
-			listCommand.append("--quiet")
-
-		if option != None:
-			for node in option:
-				listCommand.append(node)
-
-		if not self.doExecute(listCommand, cwd = pathname):
-			return False
-
-		if not self.doExecute(["git", "config", "user.name", "Fuang.Cao"], cwd = pathname):
-			return False
-
-		return self.doExecute(["git", "config", "user.email", "cavan.cfa@gmail.com"], cwd = pathname)
-
-	def gitAutoCommit(self, pathname = None):
-		if not self.doExecute(["git", "add", "-f", "."], cwd = pathname):
-			return False
-
-		return self.doExecute(["git", "commit", "-asm", "Auto commit by Fuang.Cao"], cwd = pathname)
-
 	def mkdirSafe(self, pathname):
 		pathname = self.getAbsPath(pathname)
 		if os.path.exists(pathname):
@@ -325,6 +294,12 @@ class CavanCommandBase:
 		fpSrc.close()
 
 		return True
+
+	def listHasPath(self, listPath, path):
+		for item in listPath:
+			if path.startswith(item):
+				return True
+		return False
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1:

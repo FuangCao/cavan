@@ -181,3 +181,15 @@ function cavan-git-config()
 		git config --global color.${cmd} auto;
 	done
 }
+
+function cavan-git()
+{
+	if [ -d ".cavan-git" ]
+	then
+		git --git-dir .cavan-git --work-tree . $*
+	else
+		git $*
+	fi
+}
+
+alias git="cavan-git"

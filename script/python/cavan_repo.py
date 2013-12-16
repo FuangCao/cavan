@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys, os, threading, errno
+from git_manager import CavanGitManager
 from git_svn import GitSvnManager
 from cavan_file import file_append_line
 from cavan_xml import CavanXmlBase
@@ -189,6 +190,9 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		CavanCommandBase.setRootPath(self, pathname)
 
 		self.mPathSvnRepo = self.getAbsPath(".svn_repo")
+		if os.path.exists(self.mPathSvnRepo):
+			self.mkdirSafe(self.mPathSvnRepo)
+
 		self.mPathProjects = os.path.join(self.mPathSvnRepo, "projects")
 		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
 		self.mFileFailed = os.path.join(self.mPathSvnRepo, "failed.txt")
@@ -301,17 +305,13 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		return None
 
-	def fetchProjectBase(self, pathname, name):
+	def fetchProjectBase(self, manager, name):
 		url = os.path.join(self.mUrl, name)
 
 		for count in range(2):
 			if self.mErrorCount > 0:
 				return -1
 
-			if self.mVerbose:
-				self.prBoldInfo(url, " => ", pathname)
-
-			manager = GitSvnManager(pathname, self.mVerbose)
 			if (manager.isInitialized() or manager.doInitBase(url)) and (manager.doSync(url) or manager.doDcommit(url)):
 				self.addProgress()
 				return 1
@@ -320,7 +320,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 				return -1
 
 			self.prRedInfo("Retry count = %d" % count)
-			self.doExecute(["rm", "-rf", pathname])
+			manager.removeSelf()
 
 		self.mLockProject.acquire()
 		tmpPathname = self.getTempProjectPath()
@@ -359,40 +359,20 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		relPath = self.getProjectRelPath(node)
 		srcPath = self.getAbsPath(relPath)
-		srcGitPath = os.path.join(srcPath, ".git")
+		manager = GitSvnManager(srcPath, self.mVerbose)
+
+		iResult = self.fetchProjectBase(manager, node[0])
+		if iResult < 1:
+			return iResult
 
 		destPath = os.path.join(self.mPathProjects, relPath + ".git")
 		relDestPath = self.getRelPath(destPath)
 		relDestPath = os.path.join(self.getRelRoot(relPath), relDestPath)
 
-		if not os.path.exists(srcGitPath) and os.path.isdir(destPath):
-			try:
-				os.makedirs(os.path.dirname(srcGitPath))
-			except OSError, e:
-				if e.errno != errno.EEXIST:
-					return -1
-			os.symlink(relDestPath, srcGitPath)
+		if not manager.doBackup(destPath):
+			return -1
 
-		iResult = self.fetchProjectBase(srcPath, node[0])
-		if iResult < 1:
-			return iResult
-
-		if os.path.islink(srcGitPath):
-			return iResult
-
-		if os.path.exists(destPath):
-			self.doExecute(["rm", "-rf", destPath])
-		else:
-			try:
-				os.makedirs(os.path.dirname(destPath))
-			except OSError, e:
-				if e.errno != errno.EEXIST:
-					return -1
-
-		os.rename(srcGitPath, destPath)
-		os.symlink(relDestPath, srcGitPath)
-
-		return iResult
+		return 0
 
 	def doSync(self):
 		if not self.loadManifest():
@@ -489,24 +469,31 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		return True
 
 	def genManifestRepo(self):
-		if not self.genGitRepo(self.mPathManifestRepo):
+		manager = CavanGitManager(self.mPathManifestRepo, self.mVerbose, name = None)
+		if not manager.genGitRepo():
 			return False
 
 		if not self.mManifest.save(os.path.join(self.mPathManifestRepo, "default.xml")):
 			return False
 
-		self.gitAutoCommit(self.mPathManifestRepo)
+		manager.gitAutoCommit()
+
 		return True
 
 	def genFileRepo(self):
+		manager = CavanGitManager(self.mPathFileRepo, self.mVerbose, name = None)
+		if not manager.genGitRepo():
+			return False
+
+		listFile = self.mManifest.getFiles()
+		if not listFile:
+			return listFile != None
+
 		nodeProject = self.mManifest.appendProject("platform/copyfile", self.getRelPath(self.mPathFileRepo))
 		if not nodeProject:
 			return False
 
-		if not self.genGitRepo(self.mPathFileRepo):
-			return False
-
-		for node in self.mManifest.getFiles():
+		for node in listFile:
 			pathname = self.getProjectRelPath(node)
 			dirname = os.path.dirname(pathname)
 			if not dirname:
@@ -527,19 +514,20 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			copyfile.setAttribute("src", pathname)
 			nodeProject.appendChild(copyfile)
 
-		self.gitAutoCommit(self.mPathFileRepo)
-		return True
+		return manager.gitAutoCommit()
 
 	def gitPushProject(self, localPath, backupPath):
+		managerLocal = CavanGitManager(localPath, self.mVerbose)
+		managerBackup = CavanGitManager(backupPath, self.mVerbose, bare = True)
 		for index in range(2):
-			if not self.genGitRepo(backupPath, ["--shared", "--bare"]):
+			if not managerBackup.genGitRepo():
 				return False
 
-			if self.doExecute(["git", "push", "--all", backupPath], cwd = localPath):
+			if managerLocal.doPush([backupPath]):
 				return True
 
 			self.prRedInfo("Remove git repo ", backupPath)
-			self.doExecute(["rm", "-rf", backupPath])
+			managerBackup.removeSelf();
 
 		return False
 
@@ -632,21 +620,12 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if not self.genManifestRepo():
 			return False
 
-		listProject = self.mManifest.getProjects()
-		listProject.insert(0, ("platform/manifest", self.mPathManifestRepo))
-		for node in listProject:
-			relPath = node[0] + ".git"
-			localPath = os.path.join(self.mPathProjects, relPath)
-			if not os.path.isdir(localPath):
-				self.prRedInfo(localPath, " is not a directory")
-				return False
+		if os.path.exists(self.mPathBackup):
+			self.removeSafe(self.mPathBackup)
+		else:
+			self.mkdirSafe(os.path.dirname(self.mPathBackup))
 
-			symlinkPath = os.path.join(self.mPathBackup, relPath)
-			self.prBoldInfo(localPath, " => ", symlinkPath)
-
-			manager = GitSvnManager(localPath, self.mVerbose)
-			if not manager.doSymlink(symlinkPath):
-				return False
+		os.symlink(self.mPathProjects, self.mPathBackup)
 
 		return True
 
@@ -665,11 +644,9 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			return self.doSync()
 		elif subcmd in ["command", "cmd"]:
 			return self.doCommand(argv[2:])
-		elif subcmd in ["backup"]:
-			return self.doBackup(argv[2:])
 		elif subcmd in ["clean", "cleanup"]:
 			return self.doCleanup()
-		elif subcmd in ["ln", "link", "symlink"]:
+		elif subcmd in ["backup", "ln", "link", "symlink"]:
 			return self.doSymlink(argv[2:])
 		else:
 			self.prRedInfo("unknown subcmd ", subcmd)
