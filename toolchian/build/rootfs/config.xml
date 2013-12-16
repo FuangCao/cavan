@@ -38,7 +38,7 @@
 			 url="http://ftp.gnu.org/gnu/gmp">
 	</package>
 
-	<package name="zlib" version="1.2.7" depend="bash"
+	<package name="zlib" version="1.2.8" depend="bash"
 			 config="--prefix=/usr"
 	         url="http://zlib.net">
 	</package>

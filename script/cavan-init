@@ -50,6 +50,7 @@ source /etc/lsb-release
 source ${CORE_PATH}/file.sh
 source ${CORE_PATH}/device.sh
 source ${CORE_PATH}/stdio.sh
+source ${CORE_PATH}/alias.sh
 
 LOCAL_UBUNTU="${UBUNTU_PATH}-${DISTRIB_RELEASE}"
 
@@ -255,19 +256,10 @@ function config_aptget()
 
 function config_git()
 {
-	local CMD_GIT_CONFIG="git config --global"
 	local GIT_EXEC_PATH="$(git --exec-path)"
 	local CMD_GIT_DAEMON="${GIT_EXEC_PATH}/git-daemon --verbose --export-all --enable=receive-pack --enable=upload-pack --enable=upload-archive --base-path=/git"
 
-	${CMD_GIT_CONFIG} user.name Fuang.Cao || return 1
-	${CMD_GIT_CONFIG} user.email cavan.cfa@gmail.com || return 1
-	${CMD_GIT_CONFIG} core.editor vim || return 1
-	${CMD_GIT_CONFIG} push.default matching || return 1
-
-	for cmd in branch  interactive ui diff grep status
-	do
-		${CMD_GIT_CONFIG} color.${cmd} auto || return 1
-	done
+	cavan-git-config || return 1
 
 	for home in /home/*
 	do

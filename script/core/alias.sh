@@ -164,3 +164,20 @@ function cavan-make-apk()
 
 	make
 }
+
+function cavan-git-config()
+{
+	local CMD_GIT_CONFIG="git config --global"
+
+	${CMD_GIT_CONFIG} user.name Fuang.Cao || return 1
+	${CMD_GIT_CONFIG} user.email cavan.cfa@gmail.com || return 1
+	${CMD_GIT_CONFIG} core.editor vim || return 1
+	${CMD_GIT_CONFIG} push.default matching || return 1
+
+	for cmd in branch  interactive ui diff grep status
+
+	do
+		echo "git config color.${cmd} auto"
+		git config --global color.${cmd} auto;
+	done
+}

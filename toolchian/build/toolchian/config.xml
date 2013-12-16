@@ -1,5 +1,5 @@
 <packages>
-	<package name="zlib" version="1.2.7" depend=""
+	<package name="zlib" version="1.2.8" depend=""
 			 config="--shared"
 			 url="http://zlib.net">
 	</package>
