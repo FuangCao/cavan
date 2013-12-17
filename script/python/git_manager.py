@@ -189,10 +189,22 @@ class CavanGitManager(CavanCommandBase):
 		if not self.doExecGitCmd(["add", "-f", "."]):
 			return False
 
-		return self.doExecGitCmd(["commit", "-asm", "Auto commit by Fuang.Cao"])
+		if self.doExecGitCmd(["commit", "-asm", "Auto commit by Fuang.Cao"]):
+			return True
+
+		lines = self.doGitStatus()
+		if lines == None:
+			return False
+
+		return len(lines) == 0
 
 	def doGitStatus(self):
 		return self.doPopenGitCmd(["status", "-s", "-uno"])
+
+	def isChanged(self):
+		if not self.doGitStatus():
+			return False
+		return True
 
 	def doGitCommit(self, message, author = None, date = None):
 		listCommand = ["commit", "--all", "--message", message]

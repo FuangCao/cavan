@@ -554,9 +554,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if not self.mManifest.save(os.path.join(self.mPathManifestRepo, "default.xml")):
 			return False
 
-		manager.gitAutoCommit()
-
-		return True
+		return manager.gitAutoCommit()
 
 	def genFileRepo(self):
 		manager = CavanGitManager(self.mPathFileRepo, self.mVerbose, name = None)
@@ -693,9 +691,11 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			os.makedirs(self.mPathBackup)
 
 		if not self.genFileRepo():
+			self.prRedInfo("generate ", self.mPathFileRepo, " failed")
 			return False
 
 		if not self.genManifestRepo():
+			self.prRedInfo("generate ", self.mPathManifestRepo, " failed")
 			return False
 
 		if os.path.exists(self.mPathBackup):
