@@ -134,7 +134,7 @@ class CavanGitManager(CavanCommandBase):
 	def isInitialized(self):
 		if not os.path.isdir(self.mPathRoot):
 			return False
-		return self.doExecGitCmd(["branch"], of = "/dev/null", ef = "/dev/null")
+		return self.doExecGitCmd(["log", "-1"], of = "/dev/null", ef = "/dev/null")
 
 	def doGitReset(self, branch):
 		if not self.gitCheckoutVersion(branch):

@@ -75,6 +75,11 @@ class CavanXmlBase:
 			parent = self.mRootElement
 		return parent.getElementsByTagName(name)
 
+	def removeChild(self, child, parent = None):
+		if not parent:
+			parent = self.mRootElement
+		return parent.removeChild(child)
+
 	def getFirstElement(self, name, parent = None):
 		tags = self.getElementsByTagName(name, parent)
 		if not tags:

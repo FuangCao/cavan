@@ -120,6 +120,30 @@ class AndroidManifest(CavanXmlBase):
 
 		return listProject
 
+	def findProjectTag(self, typeName, name):
+		tagProject = self.getElementsByTagName(typeName)
+		if not tagProject:
+			return None
+
+		for tag in tagProject:
+			if tag.getAttribute("name") == name:
+				return tag
+
+		return None
+
+	def removeProjectTag(self, typeName, name):
+		count = 0
+		tagProject = self.getElementsByTagName(typeName)
+		if not tagProject:
+			return count
+
+		for tag in tagProject:
+			if tag.getAttribute("name") == name:
+				self.removeChild(tag)
+				count = count + 1;
+
+		return count
+
 	def getProjects(self):
 		return self.getProjectBase("project")
 
@@ -151,6 +175,12 @@ class AndroidManifest(CavanXmlBase):
 
 	def removeAllFile(self):
 		self.removeAllChildByName("file")
+
+	def removeProject(self, name):
+		return self.removeProjectTag("project", name)
+
+	def removeFile(self, name):
+		return self.removeProjectTag("file", name)
 
 class CavanCheckoutThread(threading.Thread):
 	def __init__(self, index, manager):
@@ -402,6 +432,10 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if iResult < 1:
 			return iResult
 
+		if not manager.isInitialized():
+			self.mListEmpty.append(node)
+			return iResult
+
 		destPath = os.path.join(self.mPathProjects, relPath + ".git")
 		relDestPath = self.getRelPath(destPath)
 		relDestPath = os.path.join(self.getRelRoot(relPath), relDestPath)
@@ -422,6 +456,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		self.mListFile = self.mManifest.getFiles()
 		self.mListProject = self.mManifest.getProjects()
 
+		self.mListEmpty = []
 		listThread = []
 
 		for index in range(MAX_THREAD_COUNT):
@@ -460,6 +495,12 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		if iResult < 0 or self.mErrorCount > 0:
 			return False
+
+		if len(self.mListEmpty) > 0:
+			for node in self.mListEmpty:
+				self.prBrownInfo("Remove empty project ", node[0], " from manifest.xml")
+				self.mManifest.removeProject(node[0])
+			self.mManifest.save(self.mFileManifest)
 
 		self.finishProgress()
 
