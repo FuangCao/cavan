@@ -151,6 +151,11 @@ class GitSvnManager(CavanGitManager):
 		if url != None:
 			listCommand.append(url)
 
+		if not os.path.exists(self.mFileSvnInfo):
+			dirname = os.path.dirname(self.mFileSvnInfo)
+			if not os.path.exists(dirname):
+				self.mkdirSafe(dirname)
+
 		return self.doExecute(listCommand, of = self.mFileSvnInfo)
 
 	def getSvnInfo(self, url = None):
@@ -228,7 +233,8 @@ class GitSvnManager(CavanGitManager):
 			if self.listHasPath(listDir, line):
 				continue
 
-			if os.path.isdir(self.getAbsPath(line)):
+			absPath = self.getAbsPath(line)
+			if os.path.isdir(absPath) and not os.path.islink(absPath):
 				if line in [".git", ".svn"]:
 					continue
 
@@ -253,8 +259,6 @@ class GitSvnManager(CavanGitManager):
 				line = line.rstrip("\n")
 				if line.endswith("/") or line.startswith(".git/") or line.find("/.git/") >= 0:
 					continue
-
-				print "line = %s" % line
 
 				listFile.append(os.path.join(path, line))
 

@@ -35,12 +35,13 @@ class CavanCommandBase:
 		reload(sys)
 		sys.setdefaultencoding("utf-8")
 
-		self.setRootPath(pathname)
 		self.setShellName(shell)
 
 		self.setStdoutFp(stdout)
 		self.setStderrFp(stderr)
 		self.setVerbose(verbose)
+
+		self.setRootPath(pathname)
 
 	def setVerbose(self, verbose):
 		self.mVerbose = verbose
@@ -52,6 +53,9 @@ class CavanCommandBase:
 			if e.errno != errno.EEXIST:
 				raise
 		self.mPathRoot = os.path.abspath(pathname)
+
+	def getRootPath(self):
+		return self.mPathRoot
 
 	def setShellName(self, name):
 		self.mShellName = name

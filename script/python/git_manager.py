@@ -132,6 +132,8 @@ class CavanGitManager(CavanCommandBase):
 		return self.doExecGitCmd(listFile, verbose = True)
 
 	def isInitialized(self):
+		if not os.path.isdir(self.mPathRoot):
+			return False
 		return self.doExecGitCmd(["branch"], of = "/dev/null", ef = "/dev/null")
 
 	def doGitReset(self, branch):
@@ -228,18 +230,21 @@ class CavanGitManager(CavanCommandBase):
 			destPath = os.path.join(destRoot, filename)
 			if os.path.islink(srcPath):
 				if not os.path.exists(destPath):
+					self.prRedInfo(destPath, " is not exists")
 					return False
 				os.remove(srcPath)
 				os.symlink(destPath, srcPath)
 			elif os.path.isdir(srcPath):
 				if os.path.exists(destPath):
-					return False
+					if not self.removeSafe(destPath):
+						return False
 				os.rename(srcPath, destPath)
 				os.symlink(destPath, srcPath)
 			else:
 				self.doCopyFile(srcPath, destPath)
 
 		if not self.doExecute(["git", "config", "--file", os.path.join(destRoot, "config"), "core.bare", "true"], verbose = False):
+			self.prRedInfo("set config core.bare to true failed")
 			return False
 
 		return True

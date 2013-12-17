@@ -179,12 +179,34 @@ class CavanCheckoutThread(threading.Thread):
 
 class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 	def __init__(self, pathname = ".", verbose = False):
-		CavanCommandBase.__init__(self, pathname, True)
+		CavanCommandBase.__init__(self, pathname, verbose)
 		CavanProgressBar.__init__(self)
 
 		self.mErrorCount = 0
 		self.mLockProject = threading.Lock()
 		self.mPathTempProject = "/tmp/cavan-git-svn-repo"
+
+		self.mDepthMap = {}
+		self.mDepthMap["build"] = 0
+		self.mDepthMap["libcore"] = 0
+		self.mDepthMap["pdk"] = 0
+		self.mDepthMap["abi"] = 0
+		self.mDepthMap["development"] = 0
+		self.mDepthMap["bionic"] = 0
+		self.mDepthMap["cts"] = 0
+		self.mDepthMap["dalvik"] = 0
+		self.mDepthMap["gdk"] = 0
+		self.mDepthMap["sdk"] = 0
+		self.mDepthMap["tools"] = 1
+		self.mDepthMap["system"] = 1
+		self.mDepthMap["external"] = 1
+		self.mDepthMap["packages"] = 2
+		self.mDepthMap["hardware"] = 2
+		self.mDepthMap["device"] = 2
+		self.mDepthMap["bootable"] = 2
+		self.mDepthMap["frameworks"] = 2
+		self.mDepthMap["frameworks/base"] = 0
+		self.mDepthMap["prebuilts"] = 4
 
 	def setRootPath(self, pathname):
 		CavanCommandBase.setRootPath(self, pathname)
@@ -199,13 +221,22 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		self.mPathManifestRepo = os.path.join(self.mPathProjects, "platform/manifest.git")
 		self.mPathFileRepo = os.path.join(self.mPathProjects, "platform/copyfile.git")
 
-	def genProjectNode(self, depth = 0, path = ""):
+	def genProjectNode(self, depth = 3, path = ""):
 		url = os.path.join(self.mUrl, path)
 		lines = self.doPopen(["svn", "list", url])
 		if not lines:
 			return lines != None
 
-		if depth > 2 or path in ["kernel", "u-boot", "build", "dalvik", "bionic", "cts", "ndk", "pdk", "sdk", "frameworks/base"]:
+		if self.mDepthMap.has_key(path):
+			depth = self.mDepthMap[path]
+			self.prGreenInfo("Depth of ", path, " is %d" % depth)
+		elif depth > 0:
+			basename = os.path.basename(path)
+			if basename.startswith("lib"):
+				depth = 0
+				self.prGreenInfo(path, " is a library, set depth to %d" % depth)
+
+		if depth < 1:
 			return self.mManifest.appendProject(path) != None
 
 		listDir = []
@@ -221,7 +252,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			line = os.path.join(path, line)
 			if line.endswith("/"):
 				listDir.append(line.rstrip("/"))
-			elif depth <= 0:
+			elif not path:
 				listFile.append(line)
 			else:
 				return self.mManifest.appendProject(path) != None
@@ -234,7 +265,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 				return False
 
 		for line in listDir:
-			if not self.genProjectNode(depth + 1, line):
+			if not self.genProjectNode(depth - 1, line):
 				return False
 
 		return True
@@ -335,18 +366,18 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			if self.mVerbose:
 				self.prRedInfo(url, " => ", tmpPathname)
 
-			manager = GitSvnManager(tmpPathname, self.mVerbose)
-			if manager.doInitBase(url) and manager.doSync(url) and self.doExecute(["mv", tmpPathname, pathname]):
+			managerTemp = GitSvnManager(tmpPathname, self.mVerbose)
+			if managerTemp.doInitBase(url) and managerTemp.doSync(url) and self.doExecute(["mv", managerTemp.getRootPath(), manager.getRootPath]):
 				self.addProgress()
 				return 1
 
-			self.doExecute(["rm", "-rf", tmpPathname])
+			managerTemp.removeSelf()
 
-		self.prRedInfo("Checkout ", pathname, " Failed")
+		self.prRedInfo("Checkout ", manager.getRootPath(), " Failed")
 
 		self.mLockProject.acquire()
 		self.mErrorCount = self.mErrorCount + 1
-		file_append_line(self.mFileFailed, "%s => %s" % (pathname, url))
+		file_append_line(self.mFileFailed, "%s => %s" % (manager.getRootPath(), url))
 		self.mLockProject.release()
 
 		return -1
