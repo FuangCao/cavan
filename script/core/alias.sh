@@ -10,7 +10,7 @@ alias mkconfig='make menuconfig'
 alias ls='ls --color=auto'
 alias dir='dir --color=auto'
 alias vdir='vdir --color=auto'
-alias grep='grep --color=auto --exclude-dir .git --exclude-dir .svn'
+alias grep='grep --color=auto --exclude-dir .git --exclude-dir .svn --exclude-dir .cavan-git'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 alias ll='ls -alhF'
@@ -19,6 +19,7 @@ alias l='ls -CF'
 alias mkae='make'
 alias mkea='make'
 alias cavan-daemon-command='cavan-service -s 0 --'
+alias git='git $([ -d .cavan-git ] && echo "--git-dir=.cavan-git --work-tree=.")'
 
 CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
 CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
@@ -181,15 +182,3 @@ function cavan-git-config()
 		git config --global color.${cmd} auto;
 	done
 }
-
-function cavan-git()
-{
-	if [ -d ".cavan-git" ]
-	then
-		git --git-dir .cavan-git --work-tree . $*
-	else
-		git $*
-	fi
-}
-
-alias git="cavan-git"
