@@ -209,7 +209,9 @@ class CavanCheckoutThread(threading.Thread):
 		return iResult
 
 class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
-	def __init__(self, pathname = ".", verbose = False):
+	def __init__(self, pathname = None, verbose = False):
+		self.mGitSvnRepoName = ".cavan-git-svn-repo"
+
 		CavanCommandBase.__init__(self, pathname, verbose)
 		CavanProgressBar.__init__(self)
 
@@ -239,18 +241,29 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		self.mDepthMap["frameworks/base"] = 0
 		self.mDepthMap["prebuilts"] = 4
 
-	def setRootPath(self, pathname):
-		CavanCommandBase.setRootPath(self, pathname)
+	def setRootPath(self, pathname, auto_create = False):
+		CavanCommandBase.setRootPath(self, pathname, auto_create)
 
-		self.mPathSvnRepo = self.getAbsPath(".svn_repo")
-		if os.path.exists(self.mPathSvnRepo):
+		self.mPathSvnRepo = self.getAbsPath(self.mGitSvnRepoName)
+		if auto_create and not os.path.isdir(self.mPathSvnRepo):
 			self.mkdirSafe(self.mPathSvnRepo)
 
 		self.mPathProjects = os.path.join(self.mPathSvnRepo, "projects")
+		if auto_create and not self.mPathProjects:
+			self.mkdirSafe(self.mPathProjects)
+
 		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
 		self.mFileFailed = os.path.join(self.mPathSvnRepo, "failed.txt")
-		self.mPathManifestRepo = os.path.join(self.mPathProjects, "platform/manifest.git")
-		self.mPathFileRepo = os.path.join(self.mPathProjects, "platform/copyfile.git")
+
+		self.mPathPlatform = os.path.join(self.mPathProjects, "platform")
+		if auto_create and not os.path.isdir(self.mPathPlatform):
+			self.mkdirSafe(self.mPathPlatform)
+
+		self.mPathManifestRepo = os.path.join(self.mPathPlatform, "manifest.git")
+		self.mPathFileRepo = os.path.join(self.mPathPlatform, "copyfile.git")
+
+	def findRootPath(self):
+		return self.findRootPathByFilename(self.mGitSvnRepoName)
 
 	def genProjectNode(self, depth = 3, path = ""):
 		url = os.path.join(self.mUrl, path)
@@ -349,7 +362,11 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		length = len(argv)
 		if length > 1:
-			self.setRootPath(argv[1])
+			pathname = argv[1]
+		else:
+			pathname = self.getRootPath()
+
+		self.setRootPath(pathname, True)
 
 		if not os.path.isdir(self.mPathProjects):
 			os.makedirs(self.mPathProjects)

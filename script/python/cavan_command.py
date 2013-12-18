@@ -31,7 +31,7 @@ def single_arg2(argument):
 	return "\"" + argument.replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "'\\''") + "\""
 
 class CavanCommandBase:
-	def __init__(self, pathname = ".", verbose = True, shell = "sh", stdout = None, stderr = None):
+	def __init__(self, pathname = None, verbose = True, shell = "sh", stdout = None, stderr = None):
 		reload(sys)
 		sys.setdefaultencoding("utf-8")
 
@@ -41,21 +41,38 @@ class CavanCommandBase:
 		self.setStderrFp(stderr)
 		self.setVerbose(verbose)
 
+		if not pathname:
+			pathname = self.findRootPath()
+			if not pathname:
+				pathname = "."
 		self.setRootPath(pathname)
 
 	def setVerbose(self, verbose):
 		self.mVerbose = verbose
 
-	def setRootPath(self, pathname):
-		try:
-			os.makedirs(pathname)
-		except OSError, e:
-			if e.errno != errno.EEXIST:
-				raise
+	def setRootPath(self, pathname, auto_create = False):
 		self.mPathRoot = os.path.abspath(pathname)
+		if self.mVerbose:
+			self.prStdInfo("set root path to ", self.mPathRoot)
+
+		if auto_create and not os.path.isdir(self.mPathRoot):
+			self.mkdirSafe(self.mPathRoot)
 
 	def getRootPath(self):
 		return self.mPathRoot
+
+	def findRootPath(self):
+		return None
+
+	def findRootPathByFilename(self, filename):
+		pathname = os.path.abspath(".")
+		while not os.path.exists(os.path.join(pathname, filename)):
+			if not pathname or pathname == '/':
+				return None
+
+			pathname = os.path.dirname(pathname)
+
+		return pathname
 
 	def setShellName(self, name):
 		self.mShellName = name
@@ -226,6 +243,9 @@ class CavanCommandBase:
 		dirname = os.path.dirname(pathname)
 		if len(dirname) > 0 and not self.mkdirSafe(dirname):
 			return False
+
+		if self.mVerbose:
+			self.prStdInfo("create directory ", pathname)
 
 		try:
 			os.mkdir(pathname)

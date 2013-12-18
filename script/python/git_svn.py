@@ -121,7 +121,7 @@ class SvnLogEntry:
 		return getFirstElementData(self.mRootElement, "msg")
 
 class GitSvnManager(CavanGitManager):
-	def __init__(self, pathname = ".", verbose = True):
+	def __init__(self, pathname = None, verbose = True):
 		CavanGitManager.__init__(self, pathname, verbose)
 		self.mRemoteName = "cavan-svn"
 		self.mBranchMaster = "master"
@@ -129,14 +129,16 @@ class GitSvnManager(CavanGitManager):
 		self.mPatternSvnUpdate = re.compile('^([AD])[UCGER ]{4}(.*)$')
 		self.mPatternGitWhatChanged = re.compile('^:([0-9]{3}[0-7]{3} ){2}([0-9a-f]{7}\.{3} ){2}([AMD])\t(.*)$')
 
-	def setRootPath(self, pathname):
-		CavanGitManager.setRootPath(self, pathname)
+	def setRootPath(self, pathname, auto_create = False):
+		CavanGitManager.setRootPath(self, pathname, auto_create)
 
 		self.mPathGitSvn = os.path.join(self.mPathGitRepo, "cavan-svn")
-		if not os.path.exists(self.mPathGitSvn):
+		if auto_create and not os.path.isdir(self.mPathGitSvn):
 			self.mkdirSafe(self.mPathGitSvn)
 
 		self.mPathSvnRepo = self.getAbsPath(".svn")
+		if auto_create and not os.path.isdir(self.mPathSvnRepo):
+			self.mkdirSafe(self.mPathSvnRepo)
 
 		self.mFileSvnLog = os.path.join(self.mPathGitSvn, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mPathGitSvn, "svn_info.xml")
@@ -150,11 +152,6 @@ class GitSvnManager(CavanGitManager):
 
 		if url != None:
 			listCommand.append(url)
-
-		if not os.path.exists(self.mFileSvnInfo):
-			dirname = os.path.dirname(self.mFileSvnInfo)
-			if not os.path.exists(dirname):
-				self.mkdirSafe(dirname)
 
 		return self.doExecute(listCommand, of = self.mFileSvnInfo)
 
@@ -533,8 +530,10 @@ class GitSvnManager(CavanGitManager):
 
 	def doInitBase(self, url, pathname = None):
 		self.mUrl = url
-		if pathname != None:
-			self.setRootPath(pathname)
+
+		if not pathname:
+			pathname = self.getRootPath()
+		self.setRootPath(pathname, True)
 
 		if self.isInitialized():
 			self.prRedInfo("Has been initialized")
@@ -590,13 +589,6 @@ class GitSvnManager(CavanGitManager):
 				url = argv[2]
 			else:
 				url = None
-
-			pathname = self.findRootPath()
-			if not pathname:
-				self.prRedInfo("Please init this repo first")
-				return False
-
-			self.setRootPath(pathname)
 
 			if subcmd in ["dcommit"]:
 				return self.doDcommit(url)

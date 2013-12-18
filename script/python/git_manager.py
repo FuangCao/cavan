@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, os, errno
+import sys, os, time, errno
 
 from cavan_file import file_read_line, file_read_lines, \
 		file_write_line, file_write_lines, file_append_line, file_append_lines
@@ -16,15 +16,15 @@ class CavanGitManager(CavanCommandBase):
 		self.mBare = bare;
 		CavanCommandBase.__init__(self, pathname, verbose)
 
-	def setRootPath(self, pathname):
-		CavanCommandBase.setRootPath(self, pathname)
+	def setRootPath(self, pathname, auto_create = False):
+		CavanCommandBase.setRootPath(self, pathname, auto_create)
 
 		if self.mBare:
-			self.mPathGitRepo = self.getAbsPath(".")
+			self.mPathGitRepo = self.mPathRoot
 		else:
 			self.mPathGitRepo = self.getAbsPath(self.mGitRepoName)
 			self.mPathPatch = os.path.join(self.mPathGitRepo, "cavan-patch")
-			if not os.path.isdir(self.mPathPatch):
+			if auto_create and not os.path.isdir(self.mPathPatch):
 				self.mkdirSafe(self.mPathPatch)
 
 	def addGitCmdHeader(self, args):
@@ -45,14 +45,7 @@ class CavanGitManager(CavanCommandBase):
 		return self.doPopen(args, None, ef, verbose)
 
 	def findRootPath(self):
-		pathname = self.mPathRoot
-		while not os.path.isdir(os.path.join(pathname, ".cavan-git")):
-			if not pathname or pathname == '/':
-				return None
-
-			pathname = os.path.dirname(pathname)
-
-		return pathname
+		return self.findRootPathByFilename(self.mGitRepoName)
 
 	def setRemoteUrl(self, url = None):
 		if not url:
@@ -132,7 +125,7 @@ class CavanGitManager(CavanCommandBase):
 		return self.doExecGitCmd(listFile, verbose = True)
 
 	def isInitialized(self):
-		if not os.path.isdir(self.mPathRoot):
+		if not os.path.isdir(self.mPathGitRepo):
 			return False
 		return self.doExecGitCmd(["log", "-1"], of = "/dev/null", ef = "/dev/null")
 
