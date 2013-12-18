@@ -11,6 +11,8 @@ struct cavan_xml_attribute *cavan_xml_attribute_alloc(char *name, char *value)
 {
 	struct cavan_xml_attribute *attr;
 
+	pr_std_info("attr: name = %s, value = %s", name, value);
+
 	attr = malloc(sizeof(*attr));
 	if (attr == NULL)
 	{
@@ -44,6 +46,8 @@ void cavan_xml_attribute_free(struct cavan_xml_attribute *attr)
 struct cavan_xml_tag *cavan_xml_tag_alloc(char *name)
 {
 	struct cavan_xml_tag *tag;
+
+	pr_std_info("tag: name = %s", name);
 
 	tag = malloc(sizeof(*tag));
 	if (tag == NULL)
@@ -127,24 +131,176 @@ void cavan_xml_document_free(struct cavan_xml_document *doc)
 	free(doc);
 }
 
+static char *cavan_xml_skip_space(char *content, char *content_end)
+{
+	while (content < content_end)
+	{
+		switch (*content)
+		{
+		case ' ':
+		case '\t':
+		case '\r':
+		case '\n':
+		case '\f':
+			break;
+
+		default:
+			return content;
+		}
+
+		content++;
+	}
+
+	return NULL;
+}
+
+static char *cavan_xml_find_space(char *content, char *content_end)
+{
+	while (content < content_end)
+	{
+		switch (*content)
+		{
+		case ' ':
+		case '\t':
+		case '\r':
+		case '\n':
+		case '\f':
+			return content;
+		}
+
+		content++;
+	}
+
+	return NULL;
+}
+
 static struct cavan_xml_attribute *cavan_xml_attribute_parse(char **content, char *content_end)
 {
+	char quote = 0;
+	int quote_count;
+	char *p;
+	char *name;
+	char *value;
+
+	name = cavan_xml_skip_space(*content, content_end);
+	if (name == NULL)
+	{
+		pr_red_info("cavan_xml_skip_space");
+		return NULL;
+	}
+
+	for (p = name, value = NULL, quote_count = 0; p < content_end; p++)
+	{
+		switch (*p)
+		{
+		case '\n':
+		case '\f':
+		case '\t':
+			pr_pos_info();
+			return NULL;
+
+		case '=':
+			*p = 0;
+			value = p + 1;
+			break;
+
+		case '"':
+		case '\'':
+			if (quote_count == 0)
+			{
+				if (value == NULL)
+				{
+					pr_pos_info();
+					return NULL;
+				}
+
+				quote = *p;
+				value = p + 1;
+			}
+			else if (quote_count == 1)
+			{
+				if (quote != *p)
+				{
+					pr_pos_info();
+					return NULL;
+				}
+
+				*p = 0;
+			}
+			else
+			{
+				pr_pos_info();
+				return NULL;
+			}
+
+			quote_count++;
+			break;
+
+		case ' ':
+			if (quote_count == 0)
+			{
+				pr_pos_info();
+				return NULL;
+			}
+
+			if (quote_count == 2)
+			{
+				struct cavan_xml_attribute *attr = cavan_xml_attribute_alloc(name, value);
+				if (attr == NULL)
+				{
+					pr_pos_info();
+					return NULL;
+				}
+
+				*content = p + 1;
+				return attr;
+			}
+		}
+	}
+
 	return NULL;
 }
 
 static struct cavan_xml_tag *cavan_xml_tag_parse(char **content, char *content_end)
 {
+	char *p;
+	char *name;
+	int namelen;
 	struct cavan_xml_attribute *tail = NULL, *attr;
-	struct cavan_xml_tag *tag = cavan_xml_tag_alloc(NULL);
+	struct cavan_xml_tag *tag;
 
+	name = cavan_xml_skip_space(*content, content_end);
+	if (name == NULL || *name != '<')
+	{
+		pr_pos_info();
+		return NULL;
+	}
+
+	p = cavan_xml_find_space(++name, content_end);
+	if (p == NULL || p == name)
+	{
+		pr_pos_info();
+		return NULL;
+	}
+
+	if (*(p - 1) == '>')
+	{
+		p--;
+	}
+
+	namelen = p - name;
+	*p++ = 0;
+
+	tag = cavan_xml_tag_alloc(name);
 	if (tag == NULL)
 	{
+		pr_pos_info();
 		return NULL;
 	}
 
 	while (1)
 	{
-		attr = cavan_xml_attribute_parse(content, content_end);
+		attr = cavan_xml_attribute_parse(&p, content_end);
 		if (attr == NULL)
 		{
 			break;
@@ -158,15 +314,54 @@ static struct cavan_xml_tag *cavan_xml_tag_parse(char **content, char *content_e
 		tail = attr;
 	}
 
+	p = cavan_xml_skip_space(p, content_end);
+	if (p == NULL)
+	{
+		pr_pos_info();
+		return NULL;
+	}
+
+	if (*p == '>')
+	{
+	}
+	else if (text_lhcmp("/>", p) == 0)
+	{
+		p += 2;
+	}
+	else if (text_lhcmp(name, p) == 0)
+	{
+		p += namelen;
+
+		if (*p != '>')
+		{
+			pr_pos_info();
+			goto out_cavan_xml_tag_free;
+		}
+
+		p++;
+	}
+	else
+	{
+		pr_pos_info();
+		goto out_cavan_xml_tag_free;
+	}
+
+	*content = p;
+
 	return tag;
+
+out_cavan_xml_tag_free:
+	cavan_xml_tag_free(tag);
+	return NULL;
 }
 
 static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, size_t size)
 {
 	char *content_end = content + size;
 	struct cavan_xml_tag *tail = NULL, *tag;
-	struct cavan_xml_document *doc = cavan_xml_document_alloc();
+	struct cavan_xml_document *doc;
 
+	doc = cavan_xml_document_alloc();
 	if (doc == NULL)
 	{
 		return NULL;
