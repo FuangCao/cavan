@@ -274,7 +274,7 @@ class CavanCommandBase:
 
 	def removeSafe(self, pathname):
 		pathname = self.getAbsPath(pathname)
-		if os.path.exists(pathname) or self.doExecute(["touch", pathname], ef = "/dev/null") or self.mkdirSafe(pathname):
+		if os.path.exists(pathname) or os.path.islink(pathname) or self.doExecute(["touch", pathname], ef = "/dev/null") or self.mkdirSafe(pathname):
 			return self.doExecute(["rm", "-rf", pathname], verbose = False)
 
 		return False

@@ -444,7 +444,13 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		relPath = self.getProjectRelPath(node)
 		srcPath = self.getAbsPath(relPath)
+
+		destPath = os.path.join(self.mPathProjects, relPath + ".git")
+		relDestPath = self.getRelPath(destPath)
+		relDestPath = os.path.join(self.getRelRoot(relPath), relDestPath)
+
 		manager = GitSvnManager(srcPath, self.mVerbose)
+		manager.doBackup(destPath)
 
 		iResult = self.fetchProjectBase(manager, node[0])
 		if iResult < 1:
@@ -453,10 +459,6 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if not manager.isInitialized():
 			self.mListEmpty.append(node)
 			return iResult
-
-		destPath = os.path.join(self.mPathProjects, relPath + ".git")
-		relDestPath = self.getRelPath(destPath)
-		relDestPath = os.path.join(self.getRelRoot(relPath), relDestPath)
 
 		if not manager.doBackup(destPath):
 			return -1
@@ -733,9 +735,6 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		self.setVerbose(True)
 		self.mManifest.save(self.mFileManifest)
 
-		if not os.path.isdir(self.mPathBackup):
-			os.makedirs(self.mPathBackup)
-
 		if not self.genFileRepo():
 			self.prRedInfo("generate ", self.mPathFileRepo, " failed")
 			return False
@@ -744,7 +743,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			self.prRedInfo("generate ", self.mPathManifestRepo, " failed")
 			return False
 
-		if os.path.exists(self.mPathBackup):
+		if os.path.exists(self.mPathBackup) or os.path.islink(self.mPathBackup):
 			self.removeSafe(self.mPathBackup)
 		else:
 			self.mkdirSafe(os.path.dirname(self.mPathBackup))

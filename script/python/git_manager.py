@@ -223,6 +223,9 @@ class CavanGitManager(CavanCommandBase):
 		return True
 
 	def doBackup(self, destRoot):
+		if not os.path.isdir(self.mPathGitRepo):
+			return False
+
 		if not os.path.exists(destRoot):
 			os.makedirs(destRoot)
 		elif not os.path.isdir(destRoot):
