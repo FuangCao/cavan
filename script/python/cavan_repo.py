@@ -450,7 +450,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		relDestPath = os.path.join(self.getRelRoot(relPath), relDestPath)
 
 		manager = GitSvnManager(srcPath, self.mVerbose)
-		manager.doBackup(destPath)
+		manager.doRecovery(destPath)
 
 		iResult = self.fetchProjectBase(manager, node[0])
 		if iResult < 1:

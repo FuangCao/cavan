@@ -27,6 +27,8 @@ class CavanGitManager(CavanCommandBase):
 			if auto_create and not os.path.isdir(self.mPathPatch):
 				self.mkdirSafe(self.mPathPatch)
 
+		self.mFileExclude = os.path.join(self.mPathGitRepo, "info/exclude")
+
 	def addGitCmdHeader(self, args):
 		args.insert(0, "git")
 
@@ -172,8 +174,7 @@ class CavanGitManager(CavanCommandBase):
 			if not self.doExecGitCmd(["config", "user.email", "cavan.cfa@gmail.com"]):
 				return False
 
-			pathIgnore = os.path.join(self.mPathGitRepo, ".gitignore")
-			if not file_write_line(pathIgnore, "*"):
+			if not file_write_line(self.mFileExclude, "\n".join([self.mGitRepoName, ".svn"])):
 				return False
 
 		return True
@@ -222,19 +223,20 @@ class CavanGitManager(CavanCommandBase):
 
 		return True
 
-	def doBackup(self, destRoot):
-		if not os.path.isdir(self.mPathGitRepo):
+	def doBackupBase(self, srcRoot, destRoot):
+		if not os.path.isdir(srcRoot):
 			return False
 
 		if not os.path.exists(destRoot):
 			os.makedirs(destRoot)
 		elif not os.path.isdir(destRoot):
+			self.prRedInfo(destRoot, " is not a directory")
 			return False
 
 		self.doExecGitCmd(["config", "--unset", "core.worktree"])
 
-		for filename in os.listdir(self.mPathGitRepo):
-			srcPath = os.path.join(self.mPathGitRepo, filename)
+		for filename in os.listdir(srcRoot):
+			srcPath = os.path.join(srcRoot, filename)
 			destPath = os.path.join(destRoot, filename)
 			if os.path.islink(srcPath):
 				if not os.path.exists(destPath):
@@ -245,14 +247,31 @@ class CavanGitManager(CavanCommandBase):
 			elif os.path.isdir(srcPath):
 				if os.path.exists(destPath):
 					if not self.removeSafe(destPath):
+						self.prRedInfo("remove ", destPath, " failed")
 						return False
 				os.rename(srcPath, destPath)
 				os.symlink(destPath, srcPath)
 			else:
 				self.doCopyFile(srcPath, destPath)
 
+		return True
+
+	def doBackup(self, destRoot):
+		if not self.doBackupBase(self.mPathGitRepo, destRoot):
+			return False
+
 		if not self.doExecute(["git", "config", "--file", os.path.join(destRoot, "config"), "core.bare", "true"], verbose = False):
 			self.prRedInfo("set config core.bare to true failed")
+			return False
+
+		return True
+
+	def doRecovery(self, srcRoot):
+		if not self.doBackupBase(srcRoot, self.mPathGitRepo):
+			return False
+
+		if not self.doExecute(["git", "config", "--file", os.path.join(self.mPathGitRepo, "config"), "core.bare", "false"], verbose = False):
+			self.prRedInfo("set config core.bare to false failed")
 			return False
 
 		return True
@@ -266,3 +285,26 @@ class CavanGitManager(CavanCommandBase):
 			listCommand.extend(option)
 
 		return self.doExecGitCmd(listCommand)
+
+	def doGitClean(self, pathname = "."):
+		lines = self.doPopenGitCmd(["clean", "-xdf", "-e", ".svn", "-e", self.mGitRepoName, self.getRelPath(pathname)])
+		if lines == None:
+			return False
+
+		for line in lines:
+			if not line.startswith("Removing"):
+				continue
+
+			line = line.rstrip()
+			if not line.endswith("/"):
+				continue
+
+			line = line[9:]
+
+			if pathname != None:
+				line = os.path.join(pathname, line)
+
+			if not self.removeSafe(line):
+				return False
+
+		return True

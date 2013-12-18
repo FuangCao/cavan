@@ -142,7 +142,6 @@ class GitSvnManager(CavanGitManager):
 
 		self.mFileSvnLog = os.path.join(self.mPathGitSvn, "svn_log.xml")
 		self.mFileSvnInfo = os.path.join(self.mPathGitSvn, "svn_info.xml")
-		self.mFileSvnIgnore = os.path.join(self.mPathSvnRepo, ".gitignore")
 
 	def genSvnInfoXml(self, url = None):
 		if url == None:
@@ -306,9 +305,6 @@ class GitSvnManager(CavanGitManager):
 			if not self.doExecute(["svn", "checkout", "--force", "--quiet", url, "."], of = "/dev/null"):
 				return False
 
-			if not file_write_line(self.mFileSvnIgnore, "*"):
-				return False
-
 			listUpdate = self.doPopen(["svn", "list"])
 			if not listUpdate:
 				return listUpdate != None
@@ -345,10 +341,6 @@ class GitSvnManager(CavanGitManager):
 
 		if not branch:
 			branch = self.mBranchMaster
-
-		if not os.path.exists(self.mFileSvnIgnore) and os.path.isdir(self.mPathSvnRepo):
-			if not file_write_line(self.mFileSvnIgnore, "*"):
-				return False
 
 		self.mGitRevision = self.getGitHeadSvnRevision(branch)
 		if self.mGitRevision < 0 and self.doExecGitCmd(["log", "-1"], of = "/dev/null", ef = "/dev/null"):
@@ -579,6 +571,8 @@ class GitSvnManager(CavanGitManager):
 		elif subcmd in ["clone"]:
 			return self.doClone(argv[2:])
 		elif subcmd in ["clean", "cleanup"]:
+			if length > 2:
+				return self.doGitClean(argv[2])
 			return self.doGitClean()
 		elif subcmd in ["ln", "link", "symlink", "push"]:
 			if len(argv) < 3:
