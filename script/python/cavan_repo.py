@@ -3,6 +3,7 @@
 import sys, os, threading, errno
 from git_manager import CavanGitManager
 from git_svn import GitSvnManager
+from net_manager import CavanNetManager
 from cavan_file import file_append_line
 from cavan_xml import CavanXmlBase
 from cavan_command import CavanCommandBase
@@ -658,6 +659,26 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		return True
 
+	def getDefaultBackupPath(self):
+		if os.access("/git", os.W_OK):
+			gitRepoPath = "/git"
+		else:
+			homePath = os.getenv("HOME", None)
+			if not homePath:
+				self.prRedInfo("get HOME failed")
+				return None
+			gitRepoPath = os.path.join(homePath, "git")
+
+		return os.path.join(gitRepoPath, os.path.basename(self.mPathRoot))
+
+	def getDefaultGitRepoUrl(self):
+		manager = CavanNetManager();
+		ipList = manager.getLinkIpAddrList()
+		if not ipList:
+			self.prRedInfo("getLinkIpAddrList failed")
+			return None
+		return "git://%s:7777/%s" % (ipList[0], os.path.basename(self.mPathRoot))
+
 	def doSymlink(self, argv):
 		if not self.loadManifest():
 			return False
@@ -671,8 +692,12 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			self.mPathBackup = self.mManifest.getBackup()
 
 		if not self.mPathBackup:
-			self.prRedInfo("Please give symlink path")
-			return False
+			self.mPathBackup = self.getDefaultBackupPath()
+			if not self.mPathBackup:
+				self.prRedInfo("Please give symlink path")
+				return False
+			self.mManifest.setBackup(self.mPathBackup)
+			self.prBrownInfo("Use default backup path ", self.mPathBackup)
 
 		if length > 1:
 			self.mUrlFetch = argv[1]
@@ -681,8 +706,12 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			self.mUrlFetch = self.mManifest.getFetch()
 
 		if not self.mUrlFetch:
-			self.prRedInfo("Please give fetch url")
-			return False
+			self.mUrlFetch = self.getDefaultGitRepoUrl()
+			if not self.mUrlFetch:
+				self.prRedInfo("Please give fetch url")
+				return False
+			self.mManifest.setFetch(self.mUrlFetch)
+			self.prBrownInfo("Use default fetch url ", self.mUrlFetch)
 
 		self.setVerbose(True)
 		self.mManifest.save(self.mFileManifest)
