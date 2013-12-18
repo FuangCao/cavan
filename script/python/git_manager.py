@@ -223,7 +223,7 @@ class CavanGitManager(CavanCommandBase):
 
 		return True
 
-	def doBackupBase(self, srcRoot, destRoot):
+	def doBackupBase(self, srcRoot, destRoot, force = True):
 		if not os.path.isdir(srcRoot):
 			return False
 
@@ -251,7 +251,7 @@ class CavanGitManager(CavanCommandBase):
 						return False
 				os.rename(srcPath, destPath)
 				os.symlink(destPath, srcPath)
-			else:
+			elif force:
 				self.doCopyFile(srcPath, destPath)
 
 		return True
@@ -267,7 +267,7 @@ class CavanGitManager(CavanCommandBase):
 		return True
 
 	def doRecovery(self, srcRoot):
-		if not self.doBackupBase(srcRoot, self.mPathGitRepo):
+		if not self.doBackupBase(srcRoot, self.mPathGitRepo, False):
 			return False
 
 		if not self.doExecute(["git", "config", "--file", os.path.join(self.mPathGitRepo, "config"), "core.bare", "false"], verbose = False):
