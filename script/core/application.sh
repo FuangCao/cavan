@@ -94,6 +94,7 @@ function cavan-daemon-run()
 	cavan-tcp_proxy -adp 9999
 	cavan-tcp_proxy --daemon --pip 119.188.36.70 --pport 80 --port 6666
 	squid
+	cavan-web_proxy -dp 9090
 	cavan-git-daemon-run
 
 	return 0

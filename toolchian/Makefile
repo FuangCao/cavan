@@ -8,7 +8,7 @@ PACKAGE_VERSION_STRING = Fuang.Cao <cavan.cfa@gmail.com>
 ifeq ($(CAVAN_TARGET_ARCH),arm)
   CPU_BINUTILS_OPTION =
   # --with-float=soft
-  CPU_GCC_OPTION = --with-arch=armv7-a --with-tune=cortex-a8
+  CPU_GCC_OPTION = --with-arch=armv7-a --with-tune=cortex-a5
   # --with-float=soft
 endif
 

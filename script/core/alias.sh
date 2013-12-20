@@ -136,7 +136,7 @@ function cavan-adb-build-env()
 {
 	adb remount || return 1
 	adb push ${CMD_ARM_CAVAN_MAIN} ${CMD_SYSTEM_CAVAN_MAIN} || return 1
-	adb shell chmod 777 ${CMD_SYSTEM_CAVAN_MAIN} || return 1
+	adb shell chmod 06777 ${CMD_SYSTEM_CAVAN_MAIN} || return 1
 
 	adb shell chmod 777 /data/bin/bash || return 1
 	adb shell cp /data/bin/bash /system/bin/sh || return 1

@@ -123,8 +123,8 @@ function _fastboot_completion()
 		2)
 			case ${COMP_WORDS[1]} in
 				flash | erase | format)
-					COMPREPLY=($(compgen -W "boot system cache misc userdata persist recovery spl 2ndbl params fixnv backupfixnv runtimenv \
-								modem dsp vmjaluna boot_logo fastboot_logo productinfo kpanic simlock intmemory" -- ${cur}))
+					COMPREPLY=($(compgen -W "boot system cache misc userdata persist recovery spl 2ndbl params fixnv backupfixnv runtimenv modem dsp vmjaluna boot_logo fastboot_logo productinfo kpanic simlock intmemory
+								uboot lcboot logo fota panic amt modemarm modemdsp0 modemdsp1 kernel ramdisk ramdisk_amt1 ramdisk_amt3 ramdisk_recovery kernel_recovery udisk" -- ${cur}))
 					;;
 				update | boot)
 					_filedir
