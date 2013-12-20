@@ -21,7 +21,13 @@ function sprd_compile_once()
 	else
 		source build/envsetup.sh
 		cavan_visual_command lunch $1 || return 1
-		cavan_visual_command kheader || return 1
+
+		[ -d "device/sprd" ] &&
+		{
+			cavan_visual_command kheader || return 1
+		}
+
+		cavan_visual_command make update-api -j16 || return 1
 		cavan_visual_command make -j16 || return 1
 		ln -vsf out/target/product/$1 .
 	fi
