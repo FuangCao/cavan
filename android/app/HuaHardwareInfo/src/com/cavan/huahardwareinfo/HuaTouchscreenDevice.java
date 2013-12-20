@@ -6,11 +6,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import android.os.PowerManager;
 import android.os.SystemProperties;
+import android.provider.Settings;
 import android.util.Log;
 
 public class HuaTouchscreenDevice {
@@ -22,6 +23,8 @@ public class HuaTouchscreenDevice {
 	public static final int FW_STATE_UPGRADE_COMPLETE = 2;
 
 	private static final String PROP_TP_FW_UPGRADE_PENDING = "persist.sys.tp.fw.pending";
+	private static final String SETTING_TP_FW_UPGRADE_PENDING = "hua_tp_fw_pending";
+
 	private static final HuaTouchscreenDevice[] mTouchscreenList = {
 		new HuaTouchscreenDevice("CY8C242", "/sys/bus/i2c/devices/i2c-2/2-0024/firmware_id", "cy8c242.iic"),
 		new HuaTouchscreenDevice("FT6306", "/dev/FT5216", "/sys/bus/i2c/devices/i2c-2/2-0038/firmware_id", "FT6306.bin")
@@ -222,16 +225,24 @@ public class HuaTouchscreenDevice {
 		return mFileFw;
 	}
 
-	public void fwUpgrade(int maxProgress, Handler handler) {
+	public void fwUpgrade(final Context context, int maxProgress, Handler handler) {
 		mProgress = 0;
 		mMaxProgress = maxProgress;
 		mHandler = handler;
 
 		Thread thread = new Thread() {
 			public void run() {
-				setPendingFirmware(mFileFw.getName());
+				String fwName;
+
+				if (mVendorInfo != null && mVendorInfo.getVendorName() != R.string.vendor_name_unknown) {
+					fwName = getFwName();
+				} else {
+					fwName = mFileFw.getName();
+				}
+
+				setPendingFirmware(context, fwName);
 				boolean result = fwUpgrade();
-				setPendingFirmware("");
+				setPendingFirmware(context, "");
 
 				sendFwUpgradeState(result ? FW_STATE_UPGRADE_COMPLETE : FW_STATE_UPGRADE_FAILED);
 			}
@@ -240,11 +251,17 @@ public class HuaTouchscreenDevice {
 		thread.start();
 	}
 
-	public static String getPendingFirmware() {
-		return SystemProperties.get(PROP_TP_FW_UPGRADE_PENDING);
+	public static String getPendingFirmware(final Context context) {
+		String value = SystemProperties.get(PROP_TP_FW_UPGRADE_PENDING);
+		if (value != null && value.length() > 0) {
+			return value;
+		}
+
+		return Settings.System.getString(context.getContentResolver(), SETTING_TP_FW_UPGRADE_PENDING);
 	}
 
-	public static void setPendingFirmware(String fwName) {
+	public static void setPendingFirmware(final Context context, String fwName) {
+		Settings.System.putString(context.getContentResolver(), SETTING_TP_FW_UPGRADE_PENDING, fwName);
 		SystemProperties.set(PROP_TP_FW_UPGRADE_PENDING, fwName);
 	}
 }

@@ -13,7 +13,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.os.ServiceManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -28,6 +27,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	public static final int MSG_PROGRESS_CHANGED = 0;
 	public static final int MSG_STATE_CHANGED = 1;
 	public static final int MSG_SCAN_COMPLETE = 3;
+	public static final int MSG_DISMISS = 4;
 
 	private static final String TAG = "Cavan";
 	public static final int MAX_PROGRESS = 100;
@@ -56,16 +56,16 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 			case MSG_STATE_CHANGED:
 				switch (msg.arg1) {
 				case HuaTouchscreenDevice.FW_STATE_UPGRADE_FAILED:
-					showToast(R.string.msg_fw_upgrade_faild, Toast.LENGTH_SHORT);
-					dismiss();
+					showToast(R.string.msg_fw_upgrade_faild, Toast.LENGTH_SHORT, true);
+					mHandler.sendEmptyMessageDelayed(MSG_DISMISS, 2000);
 					break;
 
 				case HuaTouchscreenDevice.FW_STATE_UPGRADE_COMPLETE:
-					showToast(R.string.msg_fw_upgrade_complete, Toast.LENGTH_SHORT);
+					showToast(R.string.msg_fw_upgrade_complete, Toast.LENGTH_SHORT, true);
 					if (mActivity != null) {
 						mActivity.loadTpInfo();
 					}
-					dismiss();
+					mHandler.sendEmptyMessageDelayed(MSG_DISMISS, 1000);
 					break;
 
 				case HuaTouchscreenDevice.FW_STATE_UPGRADE_PREPARE:
@@ -93,9 +93,13 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 						upgradeFirmware();
 					}
 				} else {
-					showToast(R.string.msg_fw_not_found, Toast.LENGTH_SHORT);
-					dismiss();
+					showToast(R.string.msg_fw_not_found, Toast.LENGTH_SHORT, true);
+					mHandler.sendEmptyMessageDelayed(MSG_DISMISS, 1000);
 				}
+				break;
+
+			case MSG_DISMISS:
+				dismiss();
 				break;
 			}
 
@@ -119,20 +123,24 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		mTouchscreenDevice = HuaTouchscreenDevice.getTouchscreenDevice();
 	}
 
-	private void showToast(String message, int duration) {
+	private void showToast(String message, int duration, boolean updateTextView) {
 		if (mToast != null) {
 			mToast.cancel();
 		}
 
 		Log.d(TAG, message);
 
+		if (updateTextView) {
+			mTextView.setText(message);
+		}
+
 		mToast = Toast.makeText(getContext(), message, duration);
 		mToast.setGravity(Gravity.BOTTOM, 0, 0);
 		mToast.show();
 	}
 
-	private void showToast(int resId, int duration) {
-		showToast(getContext().getResources().getString(resId), duration);
+	private void showToast(int resId, int duration, boolean updateTextView) {
+		showToast(getContext().getResources().getString(resId), duration, updateTextView);
 	}
 
 	@Override
@@ -180,9 +188,9 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		int id = mRadioGroup.getCheckedRadioButtonId();
 		Log.d(TAG, "index = " + id + ", count = " + mRadioGroup.getChildCount());
 		if (id < 0) {
-			showToast(R.string.msg_select_fw, Toast.LENGTH_SHORT);
+			showToast(R.string.msg_select_fw, Toast.LENGTH_SHORT, false);
 		} else {
-			showToast(R.string.msg_tp_fw_upgrade_waring, Toast.LENGTH_LONG);
+			showToast(R.string.msg_tp_fw_upgrade_waring, Toast.LENGTH_LONG, false);
 			FirmwareRadioButton button = (FirmwareRadioButton) mRadioGroup.findViewById(id);
 			File file = button.getFileFirmware();
 			Log.d(TAG, "firmware path = " + file.getPath());
@@ -192,7 +200,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 			getButton(BUTTON_POSITIVE).setEnabled(false);
 			getButton(BUTTON_NEGATIVE).setEnabled(false);
 			mTextView.setText(R.string.msg_fw_upgrade_pepare);
-			mTouchscreenDevice.fwUpgrade(MAX_PROGRESS, mHandler);
+			mTouchscreenDevice.fwUpgrade(getContext(), MAX_PROGRESS, mHandler);
 		}
 	}
 

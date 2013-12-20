@@ -13,7 +13,7 @@ public class HuaTpFwReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		String action = intent.getAction();
-		String fwName = HuaTouchscreenDevice.getPendingFirmware();
+		String fwName = HuaTouchscreenDevice.getPendingFirmware(context);
 		Log.d(TAG, "action = " + action + ", fwName = " + fwName);
 
 		if (fwName != null && fwName.length() > 0) {
