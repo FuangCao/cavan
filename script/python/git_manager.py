@@ -245,7 +245,7 @@ class CavanGitManager(CavanCommandBase):
 				os.remove(srcPath)
 				os.symlink(destPath, srcPath)
 			elif os.path.isdir(srcPath):
-				if os.path.exists(destPath):
+				if os.path.exists(destPath) or os.path.islink(destPath):
 					if not self.removeSafe(destPath):
 						self.prRedInfo("remove ", destPath, " failed")
 						return False
