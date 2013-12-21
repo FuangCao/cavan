@@ -6,6 +6,7 @@
 
 #include <cavan.h>
 #include <cavan/xml.h>
+#include <cavan/stack.h>
 
 struct cavan_xml_attribute *cavan_xml_attribute_alloc(char *name, char *value)
 {
@@ -43,6 +44,11 @@ void cavan_xml_attribute_free(struct cavan_xml_attribute *attr)
 	free(attr);
 }
 
+static char *cavan_xml_attribute_tostring(struct cavan_xml_attribute *attr, char *buff, char *buff_end)
+{
+	return buff + snprintf(buff, buff_end - buff, "%s=\"%s\"", attr->name, attr->value);
+}
+
 struct cavan_xml_tag *cavan_xml_tag_alloc(char *name)
 {
 	struct cavan_xml_tag *tag;
@@ -58,6 +64,7 @@ struct cavan_xml_tag *cavan_xml_tag_alloc(char *name)
 
 	tag->flags = 0;
 	tag->name = name;
+	tag->child = NULL;
 	tag->next = NULL;
 	tag->attr = NULL;
 	tag->content = NULL;
@@ -83,6 +90,31 @@ void cavan_xml_tag_free(struct cavan_xml_tag *tag)
 	}
 
 	free(tag);
+}
+
+static char *cavan_xml_tag_tostring(struct cavan_xml_tag *tag, char *buff, char *buff_end)
+{
+	buff += snprintf(buff, buff_end - buff, "<%s ", tag->name);
+
+	if (tag->child)
+	{
+		struct cavan_xml_tag *child;
+
+		*buff++ = '>';
+
+		for (child = tag->child; child; child = child->next)
+		{
+			buff = cavan_xml_tag_tostring(tag, buff, buff_end);
+		}
+
+		buff += snprintf(buff, buff_end - buff, "</%s>", tag->name);
+	}
+	else
+	{
+		buff += snprintf(buff, buff_end - buff, "/>");
+	}
+
+	return buff;
 }
 
 struct cavan_xml_document *cavan_xml_document_alloc(void)
@@ -365,9 +397,25 @@ out_cavan_xml_token_error:
 
 static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, size_t size)
 {
+	int ret;
+	char *name;
 	cavan_xml_token_t token;
 	struct cavan_xml_parser parser;
+	struct general_stack stack;
+	struct cavan_xml_document *doc;
+	struct cavan_xml_tag *tag_head, *tag;
+	struct cavan_xml_attribute *attr;
 
+	ret = general_stack_init_fd(&stack, 10);
+	if (ret < 0)
+	{
+		pr_red_info("general_stack_init_fd");
+		return NULL;
+	}
+
+	doc = NULL;
+	attr = NULL;
+	tag_head = NULL;
 	parser.pos = content;
 	parser.pos_end = content + size;
 	parser.next_token = CAVAN_XML_TOKEN_NONE;
@@ -379,27 +427,55 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 		switch (token)
 		{
 		case CAVAN_XML_TOKEN_EOF:
-			return NULL;
+			goto out_cavan_xml_document_alloc;
 
 		case CAVAN_XML_TOKEN_TAG_BEGIN:
+			general_stack_push_fd(&stack, parser.name);
+		case CAVAN_XML_TOKEN_TAG_SINGLE:
 			pr_green_info("name = %s", parser.name);
+
+			if (attr == NULL && strcmp(parser.name, "?xml") == 0)
+			{
+				attr = parser.attr;
+				continue;
+			}
+
+			tag = cavan_xml_tag_alloc(parser.name);
+			if (tag == NULL)
+			{
+				pr_red_info("cavan_xml_tag_alloc");
+				goto out_general_stack_free;
+			}
+			tag->attr = parser.attr;
+			tag->next = tag_head;
+			tag_head = tag;
 			break;
 
 		case CAVAN_XML_TOKEN_TAG_END:
-			pr_green_info("name = %s", parser.name);
-			break;
-
-		case CAVAN_XML_TOKEN_TAG_SINGLE:
-			pr_green_info("name = %s", parser.name);
+			name = general_stack_pop_fd(&stack);
+			if (name == NULL || strcmp(parser.name, name))
+			{
+				pr_red_info("tag (%s <> %s) match", name, parser.name);
+				goto out_general_stack_free;
+			}
 			break;
 
 		default:
 			pr_red_info("unknown token %d", token);
-			return NULL;
+			goto out_general_stack_free;
 		}
 	}
+out_cavan_xml_document_alloc:
+	doc = cavan_xml_document_alloc();
+	if (doc != NULL)
+	{
+		doc->tag = tag_head;
+		doc->attr = attr;
+	}
 
-	return NULL;
+out_general_stack_free:
+	general_stack_free(&stack);
+	return doc;
 }
 
 struct cavan_xml_document *cavan_xml_parse(const char *pathname)
@@ -425,4 +501,30 @@ struct cavan_xml_document *cavan_xml_parse(const char *pathname)
 out_free_content:
 	free(content);
 	return NULL;
+}
+
+char *cavan_xml_tostring(struct cavan_xml_document *doc, char *buff, size_t size)
+{
+	char *buff_end = buff + size;
+	struct cavan_xml_tag *tag;
+	struct cavan_xml_attribute *attr;
+
+	if (doc->attr != NULL)
+	{
+		buff += snprintf(buff, buff_end - buff, "<?xml ");
+
+		for (attr = doc->attr; attr; attr = attr->next)
+		{
+			buff = cavan_xml_attribute_tostring(attr, buff, buff_end);
+		}
+
+		buff += snprintf(buff, buff_end - buff, " ?>");
+	}
+
+	for (tag = doc->tag; tag; tag = tag->next)
+	{
+		buff = cavan_xml_tag_tostring(tag, buff, buff_end);
+	}
+
+	return buff;
 }
