@@ -34,6 +34,11 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
+	if (argc > 2)
+	{
+		cavan_xml_remove_all_tag_by_name(&doc->tag, argv[2], true);
+	}
+
 	print_ntext(buff, cavan_xml_tostring(doc, buff, sizeof(buff)) - buff);
 
 	cavan_xml_document_free(doc);

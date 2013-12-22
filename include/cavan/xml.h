@@ -76,3 +76,8 @@ void cavan_xml_document_free(struct cavan_xml_document *doc);
 struct cavan_xml_document *cavan_xml_parse(const char *pathname);
 void cavan_xml_document_invert(struct cavan_xml_document *doc);
 char *cavan_xml_tostring(struct cavan_xml_document *doc, char *buff, size_t size);
+struct cavan_xml_tag *cavan_xml_find_tag(struct cavan_xml_tag *head, const char *name);
+struct cavan_xml_attribute *cavan_xml_find_attribute(struct cavan_xml_attribute *attr, const char *name);
+bool cavan_xml_remove_tag(struct cavan_xml_tag **head, struct cavan_xml_tag *tag);
+int cavan_xml_remove_all_tag_by_name(struct cavan_xml_tag **head, const char *name, bool recursion);
+bool cavan_xml_remove_attribute(struct cavan_xml_attribute **head, struct cavan_xml_attribute *attr);

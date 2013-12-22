@@ -721,3 +721,95 @@ char *cavan_xml_tostring(struct cavan_xml_document *doc, char *buff, size_t size
 
 	return buff;
 }
+
+struct cavan_xml_tag *cavan_xml_find_tag(struct cavan_xml_tag *head, const char *name)
+{
+	while (head)
+	{
+		if (text_cmp(head->name, name) == 0)
+		{
+			return head;
+		}
+
+		head = head->next;
+	}
+
+	return NULL;
+}
+
+struct cavan_xml_attribute *cavan_xml_find_attribute(struct cavan_xml_attribute *head, const char *name)
+{
+	while (head)
+	{
+		if (text_cmp(head->name, name) == 0)
+		{
+			return head;
+		}
+
+		head = head->next;
+	}
+
+	return NULL;
+}
+
+bool cavan_xml_remove_tag(struct cavan_xml_tag **head, struct cavan_xml_tag *tag)
+{
+	while (*head)
+	{
+		if (*head == tag)
+		{
+			*head = tag->next;
+			return true;
+		}
+
+		head = &(*head)->next;
+	}
+
+	return false;
+}
+
+int cavan_xml_remove_all_tag_by_name(struct cavan_xml_tag **head, const char *name, bool recursion)
+{
+	int count = 0;
+
+	while (*head)
+	{
+		if (text_cmp((*head)->name, name) == 0)
+		{
+			struct cavan_xml_tag *tag;
+
+			tag = *head;
+			*head = (*head)->next;
+
+			cavan_xml_tag_free(tag);
+			count++;
+		}
+		else
+		{
+			if (recursion)
+			{
+				count += cavan_xml_remove_all_tag_by_name(&(*head)->child, name, recursion);
+			}
+
+			head = &(*head)->next;
+		}
+	}
+
+	return count;
+}
+
+bool cavan_xml_remove_attribute(struct cavan_xml_attribute **head, struct cavan_xml_attribute *attr)
+{
+	while (*head)
+	{
+		if (*head == attr)
+		{
+			*head = attr->next;
+			return true;
+		}
+
+		head = &(*head)->next;
+	}
+
+	return false;
+}
