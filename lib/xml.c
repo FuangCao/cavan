@@ -227,6 +227,9 @@ static cavan_xml_token_t cavan_xml_get_next_token(struct cavan_xml_parser *parse
 	{
 		switch (*p)
 		{
+		case '\\':
+			break;
+
 		case '\n':
 			parser->lineno++;
 #if CONFIG_CAVAN_XML_DEBUG
@@ -272,13 +275,47 @@ static cavan_xml_token_t cavan_xml_get_next_token(struct cavan_xml_parser *parse
 				goto out_cavan_xml_token_error;
 			}
 
-			if (p[1] == '/')
+			switch (p[1])
 			{
+			case '/':
 				p++;
 				token = CAVAN_XML_TOKEN_TAG_END;
-			}
-			else
-			{
+				break;
+
+			case '!':
+				if (text_lhcmp("--", p + 2) == 0)
+				{
+					while (p < p_end)
+					{
+						switch (*p)
+						{
+						case '\n':
+							parser->lineno++;
+#if CONFIG_CAVAN_XML_DEBUG
+							pr_green_info("lineno = %d", parser->lineno);
+#endif
+							break;
+
+						case '-':
+							if (text_lhcmp("->", p + 1) == 0)
+							{
+								goto label_comment_end;
+							}
+						}
+
+						p++;
+					}
+
+					pr_parser_error_info(parser, "invalid comment");
+					token = CAVAN_XML_TOKEN_ERROR;
+					goto out_cavan_xml_token_error;
+
+label_comment_end:
+					p += 2;
+					head = tail = p + 1;
+					continue;
+				}
+			default:
 				token = CAVAN_XML_TOKEN_TAG_BEGIN;
 			}
 
