@@ -280,24 +280,21 @@ static cavan_xml_token_t cavan_xml_get_next_token(struct cavan_xml_parser *parse
 		case '\r':
 			*tail = 0;
 			head = tail = p + 1;
-			if (token != CAVAN_XML_TOKEN_NONE)
+			if (token != CAVAN_XML_TOKEN_NONE && name && value)
 			{
-				if (name && value)
+				attr = cavan_xml_attribute_alloc(name, value);
+				if (attr == NULL)
 				{
-					attr = cavan_xml_attribute_alloc(name, value);
-					if (attr == NULL)
-					{
-						pr_parser_error_info(parser, "cavan_xml_attribute_alloc");
-						token = CAVAN_XML_TOKEN_ERROR;
-						goto out_cavan_xml_token_error;
-					}
-
-					attr->next = parser->attr;
-					parser->attr = attr;
-
-					name = NULL;
-					value = NULL;
+					pr_parser_error_info(parser, "cavan_xml_attribute_alloc");
+					token = CAVAN_XML_TOKEN_ERROR;
+					goto out_cavan_xml_token_error;
 				}
+
+				attr->next = parser->attr;
+				parser->attr = attr;
+
+				name = NULL;
+				value = NULL;
 			}
 			break;
 
@@ -475,7 +472,7 @@ out_label_content_complete:
 					}
 					else
 					{
-						pr_parser_error_info(parser, "\" not match");
+						pr_parser_error_info(parser, "\" is not pair");
 						token = CAVAN_XML_TOKEN_ERROR;
 						goto out_cavan_xml_token_error;
 					}
@@ -612,7 +609,7 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 			tag = general_stack_pop_fd(&stack);
 			if (tag == NULL || strcmp(parser.name, tag->name))
 			{
-				pr_parser_error_info(&parser, "tag (%s <> %s) match", tag ? tag->name : "null", parser.name);
+				pr_parser_error_info(&parser, "tag (%s <> %s) is not pair", tag ? tag->name : "null", parser.name);
 				goto out_cavan_xml_document_free;
 			}
 			break;
