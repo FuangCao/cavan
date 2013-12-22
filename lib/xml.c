@@ -8,7 +8,7 @@
 #include <cavan/xml.h>
 #include <cavan/stack.h>
 
-#define CONFIG_CAVAN_XML_DEBUG		1
+#define CONFIG_CAVAN_XML_DEBUG		0
 
 struct cavan_xml_attribute *cavan_xml_attribute_alloc(char *name, char *value)
 {
@@ -139,11 +139,15 @@ static char *cavan_xml_tag_tostring(struct cavan_xml_document *doc, struct cavan
 			buff = text_ncopy(buff, doc->newline, buff_end - buff);
 		}
 
-		buff += snprintf(buff, buff_end - buff, "</%s>", tag->name);
+		buff += snprintf(buff, buff_end - buff, "%s</%s>", prefix, tag->name);
+	}
+	else if (tag->content)
+	{
+		buff += snprintf(buff, buff_end - buff, ">%s</%s>", tag->content, tag->name);
 	}
 	else
 	{
-		buff += snprintf(buff, buff_end - buff, "/>");
+		buff = text_ncopy(buff, "/>", buff_end - buff);
 	}
 
 	return buff;
@@ -216,6 +220,7 @@ static cavan_xml_token_t cavan_xml_get_next_token(struct cavan_xml_parser *parse
 
 	parser->name = NULL;
 	parser->attr = NULL;
+	parser->content = NULL;
 	token = CAVAN_XML_TOKEN_NONE;
 
 	for (p = parser->pos, p_end = parser->pos_end, head = tail = p; p < p_end; p++)
@@ -254,6 +259,11 @@ static cavan_xml_token_t cavan_xml_get_next_token(struct cavan_xml_parser *parse
 			}
 			break;
 
+		case 0:
+			if (parser->prev_token != CAVAN_XML_TOKEN_CONTENT)
+			{
+				goto out_cavan_xml_eof;
+			}
 		case '<':
 			if (token != CAVAN_XML_TOKEN_NONE)
 			{
@@ -309,7 +319,58 @@ static cavan_xml_token_t cavan_xml_get_next_token(struct cavan_xml_parser *parse
 				parser->attr = attr;
 			}
 
-			parser->pos = p + 1;
+			p++;
+
+			if (token == CAVAN_XML_TOKEN_TAG_BEGIN)
+			{
+				int lineno = 0;
+				bool has_letter = false;
+
+				for (head = tail = p; p < p_end; p++)
+				{
+					switch (*p)
+					{
+					case '<':
+						goto out_label_content_complete;
+
+					case '\n':
+						lineno++;
+					case ' ':
+					case '\t':
+					case '\f':
+					case '\r':
+						*tail++ = *p;
+						break;
+
+					default:
+						has_letter = true;
+						*tail++ = *p;
+					}
+				}
+out_label_content_complete:
+				if (has_letter)
+				{
+					*tail = 0;
+
+					parser->lineno += lineno;
+					parser->content = head;
+#if CONFIG_CAVAN_XML_DEBUG
+					pr_green_info("content = %s", parser->content);
+#endif
+					parser->next_token = CAVAN_XML_TOKEN_CONTENT;
+
+					parser->pos = p;
+				}
+				else
+				{
+					parser->pos = head;
+				}
+			}
+			else
+			{
+				parser->pos = p;
+			}
+
 			return token;
 
 		case '=':
@@ -334,7 +395,7 @@ static cavan_xml_token_t cavan_xml_get_next_token(struct cavan_xml_parser *parse
 					p++;
 					if (p < p_end)
 					{
-						*tail++ = *p;
+						*tail++ = text_get_escope_letter(*p);
 					}
 					else
 					{
@@ -370,8 +431,8 @@ label_value_end:
 		}
 	}
 
+out_cavan_xml_eof:
 	token = CAVAN_XML_TOKEN_EOF;
-
 out_cavan_xml_token_error:
 	attr = parser->attr;
 	while (attr)
@@ -407,13 +468,14 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 		goto out_general_stack_free;
 	}
 
-	parser.lineno = 0;
+	parser.lineno = 1;
 	parser.pos = content;
 	parser.pos_end = content + size;
-	parser.next_token = CAVAN_XML_TOKEN_NONE;
+	parser.next_token = token = CAVAN_XML_TOKEN_NONE;
 
 	while (1)
 	{
+		parser.prev_token = token;
 		token = cavan_xml_get_next_token(&parser);
 #if CONFIG_CAVAN_XML_DEBUG
 		pr_green_info("token = %d", token);
@@ -449,6 +511,12 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 			parent = general_stack_get_top_fd(&stack);
 			if (parent)
 			{
+				if (parent->content)
+				{
+					pr_parser_error_info(&parser, "tag %s has content %s", parent->name, parent->content);
+					goto out_cavan_xml_document_free;
+				}
+
 				tag->next = parent->child;
 				parent->child = tag;
 			}
@@ -468,9 +536,32 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 			tag = general_stack_pop_fd(&stack);
 			if (tag == NULL || strcmp(parser.name, tag->name))
 			{
-				pr_red_info("tag (%s <> %s) match", tag ? tag->name : "null", parser.name);
+				pr_parser_error_info(&parser, "tag (%s <> %s) match", tag ? tag->name : "null", parser.name);
 				goto out_cavan_xml_document_free;
 			}
+			break;
+
+		case CAVAN_XML_TOKEN_CONTENT:
+			parent = general_stack_get_top_fd(&stack);
+			if (parent == NULL)
+			{
+				pr_parser_error_info(&parser, "parser is null");
+				goto out_cavan_xml_document_free;
+			}
+
+			if (parent->child)
+			{
+				pr_parser_error_info(&parser, "tag %s has child", parent->name);
+				goto out_cavan_xml_document_free;
+			}
+
+			if (parent->content)
+			{
+				pr_parser_error_info(&parser, "tag %s already has content %s", parent->name, parent->content);
+				goto out_cavan_xml_document_free;
+			}
+
+			parent->content = parser.content;
 			break;
 
 		default:
@@ -531,15 +622,15 @@ char *cavan_xml_tostring(struct cavan_xml_document *doc, char *buff, size_t size
 
 	if (doc->attr != NULL)
 	{
-		buff += snprintf(buff, buff_end - buff, "<?xml ");
+		buff = text_ncopy(buff, "<?xml", buff_end - buff);
 
 		for (attr = doc->attr; attr; attr = attr->next)
 		{
-			buff = cavan_xml_attribute_tostring(attr, buff, buff_end);
 			buff = text_ncopy(buff, doc->word_sep, buff_end - buff);
+			buff = cavan_xml_attribute_tostring(attr, buff, buff_end);
 		}
 
-		buff += snprintf(buff, buff_end - buff, " ?>%s", doc->newline);
+		buff += snprintf(buff, buff_end - buff, "?>%s%s", doc->newline, doc->newline);
 	}
 
 	for (tag = doc->tag; tag; tag = tag->next)

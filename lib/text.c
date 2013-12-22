@@ -2953,3 +2953,27 @@ char text_get_char(const char *text, int index)
 
 	return *(text + index);
 }
+
+char text_get_escope_letter(char c)
+{
+	switch (c)
+	{
+	case 't':
+		return '\t';
+
+	case 'n':
+		return '\n';
+
+	case 'r':
+		return '\r';
+
+	case 'f':
+		return '\f';
+
+	case 'b':
+		return '\b';
+
+	default:
+		return c;
+	}
+}
