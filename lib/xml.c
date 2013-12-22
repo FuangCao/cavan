@@ -112,6 +112,21 @@ static char *cavan_xml_get_line_prefix(const char *prefix, int level, char *buff
 	return buff;
 }
 
+static struct cavan_xml_attribute *cavan_xml_attribute_list_invert(struct cavan_xml_attribute *head)
+{
+	struct cavan_xml_attribute *next, *prev = NULL;
+
+	while (head)
+	{
+		next = head->next;
+		head->next = prev;
+		prev = head;
+		head = next;
+	}
+
+	return prev;
+}
+
 static char *cavan_xml_tag_tostring(struct cavan_xml_document *doc, struct cavan_xml_tag *tag, int level, char *buff, char *buff_end)
 {
 	char prefix[32];
@@ -200,6 +215,30 @@ void cavan_xml_document_free(struct cavan_xml_document *doc)
 	}
 
 	free(doc);
+}
+
+static struct cavan_xml_tag *cavan_xml_tag_list_invert(struct cavan_xml_tag *head)
+{
+	struct cavan_xml_tag *next, *prev = NULL;
+
+	while (head)
+	{
+		next = head->next;
+		head->next = prev;
+		head->attr = cavan_xml_attribute_list_invert(head->attr);
+		head->child = cavan_xml_tag_list_invert(head->child);
+
+		prev = head;
+		head = next;
+	}
+
+	return prev;
+}
+
+void cavan_xml_document_invert(struct cavan_xml_document *doc)
+{
+	doc->attr = cavan_xml_attribute_list_invert(doc->attr);
+	doc->tag = cavan_xml_tag_list_invert(doc->tag);
 }
 
 static cavan_xml_token_t cavan_xml_get_next_token(struct cavan_xml_parser *parser)
@@ -643,6 +682,8 @@ struct cavan_xml_document *cavan_xml_parse(const char *pathname)
 	{
 		goto out_free_content;
 	}
+
+	cavan_xml_document_invert(doc);
 
 	return doc;
 

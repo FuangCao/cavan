@@ -74,4 +74,5 @@ void cavan_xml_tag_free(struct cavan_xml_tag *tag);
 struct cavan_xml_document *cavan_xml_document_alloc(void);
 void cavan_xml_document_free(struct cavan_xml_document *doc);
 struct cavan_xml_document *cavan_xml_parse(const char *pathname);
+void cavan_xml_document_invert(struct cavan_xml_document *doc);
 char *cavan_xml_tostring(struct cavan_xml_document *doc, char *buff, size_t size);
