@@ -12,6 +12,9 @@
 #define CAVAN_XML_FLAG_VALUE_ALLOC		(1 << 1)
 #define CAVAN_XML_FLAG_CONTENT_ALLOC	(1 << 2)
 
+#define pr_parser_error_info(parser, fmt, args ...) \
+	pr_red_info("(" fmt ") line[%d]", ##args, parser->lineno)
+
 typedef enum cavan_xml_token
 {
 	CAVAN_XML_TOKEN_ERROR = -1,
@@ -19,8 +22,7 @@ typedef enum cavan_xml_token
 	CAVAN_XML_TOKEN_TAG_SINGLE,
 	CAVAN_XML_TOKEN_TAG_BEGIN,
 	CAVAN_XML_TOKEN_TAG_END,
-	CAVAN_XML_TOKEN_TAG_NAME,
-	CAVAN_XML_TOKEN_TAG_ATTR,
+	CAVAN_XML_TOKEN_TAG_CONTENT,
 	CAVAN_XML_TOKEN_EOF,
 } cavan_xml_token_t;
 
@@ -44,14 +46,17 @@ struct cavan_xml_tag
 
 struct cavan_xml_document
 {
-	size_t size;
 	char *content;
+	const char *newline;
+	const char *line_prefix;
+	const char *word_sep;
 	struct cavan_xml_attribute *attr;
 	struct cavan_xml_tag *tag;
 };
 
 struct cavan_xml_parser
 {
+	int lineno;
 	char *pos;
 	char *pos_end;
 	char *name;

@@ -22,6 +22,7 @@
 
 int main(int argc, char *argv[])
 {
+	char buff[MB(1)];
 	struct cavan_xml_document *doc;
 
 	assert(argc > 1);
@@ -32,6 +33,8 @@ int main(int argc, char *argv[])
 		pr_red_info("cavan_xml_parse");
 		return -EFAULT;
 	}
+
+	print_ntext(buff, cavan_xml_tostring(doc, buff, sizeof(buff)) - buff);
 
 	cavan_xml_document_free(doc);
 
