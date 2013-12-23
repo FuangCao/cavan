@@ -13,8 +13,8 @@
 #define CAVAN_XML_FLAG_CONTENT_ALLOC		(1 << 2)
 #define CAVAN_XML_FLAG_CONTENT_MULTI_LINE	(1 << 2)
 
-#define pr_parser_error_info(parser, fmt, args ...) \
-	pr_red_info("(" fmt ") at line[%d]", ##args, (parser)->lineno)
+#define pr_parser_error_info(lineno, fmt, args ...) \
+	pr_red_info("(" fmt ") at line[%d]", ##args, lineno)
 
 typedef enum cavan_xml_token
 {
@@ -23,7 +23,7 @@ typedef enum cavan_xml_token
 	CAVAN_XML_TOKEN_TAG_SINGLE,
 	CAVAN_XML_TOKEN_TAG_BEGIN,
 	CAVAN_XML_TOKEN_TAG_END,
-	CAVAN_XML_TOKEN_CONTENT,
+	CAVAN_XML_TOKEN_COMMENT,
 	CAVAN_XML_TOKEN_EOF,
 } cavan_xml_token_t;
 

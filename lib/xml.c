@@ -283,6 +283,7 @@ void cavan_xml_document_invert(struct cavan_xml_document *doc)
 static int cavan_xml_get_next_token(struct cavan_xml_parser *parser, bool verbose)
 {
 	int ret;
+	int lineno;
 	char *name = NULL;
 	char *value = NULL;
 	char *p, *p_end;
@@ -299,6 +300,7 @@ static int cavan_xml_get_next_token(struct cavan_xml_parser *parser, bool verbos
 	}
 
 	ret = -EFAULT;
+	lineno = 0;
 	parser->name = NULL;
 	parser->attr = NULL;
 	parser->content = NULL;
@@ -313,9 +315,9 @@ static int cavan_xml_get_next_token(struct cavan_xml_parser *parser, bool verbos
 			break;
 
 		case '\n':
-			parser->lineno++;
+			lineno++;
 #if CONFIG_CAVAN_XML_DEBUG
-			pr_green_info("lineno = %d", parser->lineno);
+			pr_green_info("lineno = %d", parser->lineno + lineno);
 #endif
 		case ' ':
 		case '\t':
@@ -336,7 +338,7 @@ static int cavan_xml_get_next_token(struct cavan_xml_parser *parser, bool verbos
 				{
 					if (verbose)
 					{
-						pr_parser_error_info(parser, "cavan_xml_attribute_alloc");
+						pr_parser_error_info(parser->lineno + lineno, "cavan_xml_attribute_alloc");
 					}
 
 					goto out_cavan_xml_token_error;
@@ -355,7 +357,7 @@ static int cavan_xml_get_next_token(struct cavan_xml_parser *parser, bool verbos
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(parser, "token = %d", parser->token);
+					pr_parser_error_info(parser->lineno + lineno, "token = %d", parser->token);
 				}
 
 				goto out_cavan_xml_token_error;
@@ -371,38 +373,10 @@ static int cavan_xml_get_next_token(struct cavan_xml_parser *parser, bool verbos
 			case '!':
 				if (text_lhcmp("--", p + 2) == 0)
 				{
-					while (p < p_end)
-					{
-						switch (*p)
-						{
-						case '\n':
-							parser->lineno++;
-#if CONFIG_CAVAN_XML_DEBUG
-							pr_green_info("lineno = %d", parser->lineno);
-#endif
-							break;
-
-						case '-':
-							if (text_lhcmp("->", p + 1) == 0)
-							{
-								goto label_comment_end;
-							}
-						}
-
-						p++;
-					}
-
-					if (verbose)
-					{
-						pr_parser_error_info(parser, "invalid comment");
-					}
-
-					goto out_cavan_xml_token_error;
-
-label_comment_end:
-					p += 2;
-					head = tail = p + 1;
-					continue;
+					parser->token = CAVAN_XML_TOKEN_COMMENT;
+					parser->pos = p + 4;
+					parser->lineno += lineno;
+					return 0;
 				}
 			default:
 				parser->token = CAVAN_XML_TOKEN_TAG_BEGIN;
@@ -416,7 +390,7 @@ label_comment_end:
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(parser, "invalid '?'");
+					pr_parser_error_info(parser->lineno + lineno, "invalid '?'");
 				}
 
 				goto out_cavan_xml_token_error;
@@ -435,7 +409,7 @@ label_comment_end:
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(parser, "invalid '/'");
+					pr_parser_error_info(parser->lineno + lineno, "invalid '/'");
 				}
 
 				goto out_cavan_xml_token_error;
@@ -448,7 +422,7 @@ label_tag_single:
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(parser, "need '>' by has '%c'", *p);
+					pr_parser_error_info(parser->lineno + lineno, "need '>' by has '%c'", *p);
 				}
 
 				goto out_cavan_xml_token_error;
@@ -461,7 +435,7 @@ label_tag_single:
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(parser, "invalid '>'");
+					pr_parser_error_info(parser->lineno + lineno, "invalid '>'");
 				}
 
 				goto out_cavan_xml_token_error;
@@ -477,7 +451,7 @@ label_tag_end:
 				{
 					if (verbose)
 					{
-						pr_parser_error_info(parser, "cavan_xml_attribute_alloc");
+						pr_parser_error_info(parser->lineno + lineno, "cavan_xml_attribute_alloc");
 					}
 
 					goto out_cavan_xml_token_error;
@@ -488,6 +462,7 @@ label_tag_end:
 			}
 
 			parser->pos = ++p;
+			parser->lineno += lineno;
 			return 0;
 
 		case '=':
@@ -501,7 +476,7 @@ label_tag_end:
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(parser, "name is null");
+					pr_parser_error_info(parser->lineno + lineno, "name is null");
 				}
 
 				goto out_cavan_xml_token_error;
@@ -521,7 +496,7 @@ label_tag_end:
 					{
 						if (verbose)
 						{
-							pr_parser_error_info(parser, "\" is not pair");
+							pr_parser_error_info(parser->lineno + lineno, "\" is not pair");
 						}
 
 						goto out_cavan_xml_token_error;
@@ -529,9 +504,9 @@ label_tag_end:
 					break;
 
 				case '\n':
-					parser->lineno++;
+					lineno++;
 #if CONFIG_CAVAN_XML_DEBUG
-					pr_green_info("lineno = %d", parser->lineno);
+					pr_green_info("lineno = %d", parser->lineno + lineno);
 #endif
 				case '\r':
 				case '\f':
@@ -554,7 +529,7 @@ label_value_end:
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(parser, "invalid content");
+					pr_parser_error_info(parser->lineno + lineno, "invalid content");
 				}
 
 				goto out_cavan_xml_token_error;
@@ -577,6 +552,39 @@ out_cavan_xml_token_error:
 	}
 
 	return ret;
+}
+
+static int cavan_xml_get_comment(struct cavan_xml_parser *parser, char *buff, size_t size)
+{
+	int lineno;
+	char *p, *p_end;
+
+	for (p = parser->pos, p_end = parser->pos_end, lineno = 0; p < p_end; p++)
+	{
+		switch (*p)
+		{
+		case '\n':
+			lineno++;
+			break;
+
+		case '-':
+			if (text_lhcmp("->", p + 1) == 0)
+			{
+				*p = 0;
+
+				if (buff && size > 0)
+				{
+					text_ncopy(buff, parser->pos, size);
+				}
+
+				parser->pos = p + 3;
+				parser->lineno += lineno;
+				return 0;
+			}
+		}
+	}
+
+	return -1;
 }
 
 static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, size_t size)
@@ -611,7 +619,7 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 		ret = cavan_xml_get_next_token(&parser, true);
 		if (ret < 0)
 		{
-			pr_parser_error_info(&parser, "cavan_xml_get_next_token");
+			pr_parser_error_info(parser.lineno, "cavan_xml_get_next_token");
 			goto out_cavan_xml_document_free;
 		}
 #if CONFIG_CAVAN_XML_DEBUG
@@ -652,7 +660,7 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 				{
 					if (parent->content)
 					{
-						pr_parser_error_info(&parser, "tag %s has content %s", parent->name, parent->content);
+						pr_parser_error_info(parser.lineno, "tag %s has content %s", parent->name, parent->content);
 						goto out_cavan_xml_document_free;
 					}
 
@@ -681,7 +689,7 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 						p = mem_kmp_find(pos, buff, parser.pos_end - pos, length);
 						if (p == NULL)
 						{
-							pr_parser_error_info(&parser, "tag %s is not pair", tag->name);
+							pr_parser_error_info(parser.lineno, "tag %s is not pair", tag->name);
 							goto out_cavan_xml_document_free;
 						}
 
@@ -717,32 +725,18 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 			tag = general_stack_pop_fd(&stack);
 			if (tag == NULL || strcmp(parser.name, tag->name))
 			{
-				pr_parser_error_info(&parser, "tag (%s <> %s) is not pair", tag ? tag->name : "null", parser.name);
+				pr_parser_error_info(parser.lineno, "tag (%s <> %s) is not pair", tag ? tag->name : "null", parser.name);
 				goto out_cavan_xml_document_free;
 			}
 			break;
 
-		case CAVAN_XML_TOKEN_CONTENT:
-			parent = general_stack_get_top_fd(&stack);
-			if (parent == NULL)
+		case CAVAN_XML_TOKEN_COMMENT:
+			ret = cavan_xml_get_comment(&parser, NULL, 0);
+			if (ret < 0)
 			{
-				pr_parser_error_info(&parser, "parser is null");
+				pr_parser_error_info(parser.lineno, "cavan_xml_get_comment");
 				goto out_cavan_xml_document_free;
 			}
-
-			if (parent->child)
-			{
-				pr_parser_error_info(&parser, "tag %s has child", parent->name);
-				goto out_cavan_xml_document_free;
-			}
-
-			if (parent->content)
-			{
-				pr_parser_error_info(&parser, "tag %s already has content %s", parent->name, parent->content);
-				goto out_cavan_xml_document_free;
-			}
-
-			parent->content = parser.content;
 			break;
 
 		default:
