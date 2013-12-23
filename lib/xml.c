@@ -359,23 +359,50 @@ label_comment_end:
 			break;
 
 		case '?':
-			if (parser->name == p)
+			if (token == CAVAN_XML_TOKEN_NONE)
 			{
-				*tail++ = *p;
-				continue;
+				pr_parser_error_info(parser, "invalid '?'");
+				token = CAVAN_XML_TOKEN_ERROR;
+				goto out_cavan_xml_token_error;
 			}
 
-		case '/':
-			p++;
-			if (*p != '>')
+			if (parser->name < p)
 			{
-				pr_parser_error_info(parser, "*p = %c", *p);
+				goto label_tag_single;
+			}
+
+			token = CAVAN_XML_TOKEN_TAG_ATTR;
+			break;
+
+		case '/':
+			if (token == CAVAN_XML_TOKEN_NONE)
+			{
+				pr_parser_error_info(parser, "invalid '/'");
 				token = CAVAN_XML_TOKEN_ERROR;
 				goto out_cavan_xml_token_error;
 			}
 
 			token = CAVAN_XML_TOKEN_TAG_SINGLE;
+
+label_tag_single:
+			if (*++p != '>')
+			{
+				pr_parser_error_info(parser, "need '>' by has '%c'", *p);
+				token = CAVAN_XML_TOKEN_ERROR;
+				goto out_cavan_xml_token_error;
+			}
+
+			goto label_tag_end;
+
 		case '>':
+			if (token == CAVAN_XML_TOKEN_NONE)
+			{
+				pr_parser_error_info(parser, "invalid '>'");
+				token = CAVAN_XML_TOKEN_ERROR;
+				goto out_cavan_xml_token_error;
+			}
+
+label_tag_end:
 			*tail = 0;
 
 			if (name && value)
@@ -500,6 +527,13 @@ label_value_end:
 			break;
 
 		default:
+			if (token == CAVAN_XML_TOKEN_NONE)
+			{
+				pr_parser_error_info(parser, "invalid content");
+				token = CAVAN_XML_TOKEN_ERROR;
+				goto out_cavan_xml_token_error;
+			}
+
 			*tail++ = *p;
 		}
 	}
@@ -558,20 +592,39 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 		case CAVAN_XML_TOKEN_ERROR:
 			goto out_cavan_xml_document_free;
 
+		case CAVAN_XML_TOKEN_NONE:
+			break;
+
 		case CAVAN_XML_TOKEN_EOF:
 			goto out_parse_complete;
+
+		case CAVAN_XML_TOKEN_TAG_ATTR:
+			if (doc->attr != NULL)
+			{
+				pr_parser_error_info(&parser, "doc->attr = %p", doc->attr);
+				goto out_cavan_xml_document_free;
+			}
+
+			if (doc->tag)
+			{
+				pr_parser_error_info(&parser, "document attribute must be in the first line");
+				goto out_cavan_xml_document_free;
+			}
+
+			if (text_cmp(parser.name, "xml"))
+			{
+				pr_parser_error_info(&parser, "parser.name = %s", parser.name);
+				goto out_cavan_xml_document_free;
+			}
+
+			doc->attr = parser.attr;
+			break;
 
 		case CAVAN_XML_TOKEN_TAG_BEGIN:
 		case CAVAN_XML_TOKEN_TAG_SINGLE:
 #if CONFIG_CAVAN_XML_DEBUG
 			pr_green_info("name = %s", parser.name);
 #endif
-			if (doc->attr == NULL && strcmp(parser.name, "?xml") == 0)
-			{
-				doc->attr = parser.attr;
-				continue;
-			}
-
 			tag = cavan_xml_tag_alloc(parser.name);
 			if (tag == NULL)
 			{
