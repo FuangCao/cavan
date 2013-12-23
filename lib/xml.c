@@ -133,13 +133,13 @@ bool cavan_xml_attribute_set_name(struct cavan_xml_attribute *attr, char *name, 
 
 	attr->name = name;
 
-		if ((flags & CAVAN_XML_FLAG_NAME_ALLOC))
-		{
-			attr->flags |= CAVAN_XML_FLAG_NAME_ALLOC;
-		}
+	if ((flags & CAVAN_XML_FLAG_NAME_ALLOC))
+	{
+		attr->flags |= CAVAN_XML_FLAG_NAME_ALLOC;
+	}
 	else
 	{
-			attr->flags &= ~CAVAN_XML_FLAG_NAME_ALLOC;
+		attr->flags &= ~CAVAN_XML_FLAG_NAME_ALLOC;
 	}
 
 	return true;
@@ -147,7 +147,7 @@ bool cavan_xml_attribute_set_name(struct cavan_xml_attribute *attr, char *name, 
 
 bool cavan_xml_attribute_set_value(struct cavan_xml_attribute *attr, char *value, int flags)
 {
-		if (value && (flags & CAVAN_XML_FLAG_VALUE_ALLOC))
+	if (value && (flags & CAVAN_XML_FLAG_VALUE_ALLOC))
 	{
 		value = strdup(value);
 		if (value == NULL)
@@ -163,13 +163,13 @@ bool cavan_xml_attribute_set_value(struct cavan_xml_attribute *attr, char *value
 
 	attr->value = value;
 
-		if ((flags & CAVAN_XML_FLAG_VALUE_ALLOC))
-		{
-			attr->flags |= CAVAN_XML_FLAG_VALUE_ALLOC;
-		}
+	if ((flags & CAVAN_XML_FLAG_VALUE_ALLOC))
+	{
+		attr->flags |= CAVAN_XML_FLAG_VALUE_ALLOC;
+	}
 	else
 	{
-			attr->flags &= ~CAVAN_XML_FLAG_VALUE_ALLOC;
+		attr->flags &= ~CAVAN_XML_FLAG_VALUE_ALLOC;
 	}
 
 	return true;
@@ -215,7 +215,7 @@ bool cavan_xml_attribute_remove(struct cavan_xml_attribute **head, struct cavan_
 
 // ============================================================
 
-struct cavan_xml_tag *cavan_xml_tag_alloc(char *name)
+struct cavan_xml_tag *cavan_xml_tag_alloc(char *name, char *content, int flags)
 {
 	struct cavan_xml_tag *tag;
 
@@ -231,13 +231,45 @@ struct cavan_xml_tag *cavan_xml_tag_alloc(char *name)
 	}
 
 	tag->flags = 0;
+
+	if (name && (flags & CAVAN_XML_FLAG_NAME_ALLOC))
+	{
+		name = strdup(name);
+		if (name == NULL)
+		{
+			goto out_free_tag;
+		}
+
+		tag->flags |= CAVAN_XML_FLAG_NAME_ALLOC;
+	}
+
+	if (content && (flags & CAVAN_XML_FLAG_CONTENT_ALLOC))
+	{
+		content = strdup(content);
+		if (content == NULL)
+		{
+			goto out_free_name;
+		}
+
+		tag->flags |= CAVAN_XML_FLAG_CONTENT_ALLOC;
+	}
+
 	tag->name = name;
+	tag->content = content;
 	tag->child = NULL;
 	tag->next = NULL;
 	tag->attr = NULL;
-	tag->content = NULL;
 
 	return tag;
+
+out_free_name:
+	if ((flags & CAVAN_XML_FLAG_NAME_ALLOC))
+	{
+		free(name);
+	}
+out_free_tag:
+	free(tag);
+	return NULL;
 }
 
 void cavan_xml_tag_free(struct cavan_xml_tag *tag)
@@ -252,12 +284,77 @@ void cavan_xml_tag_free(struct cavan_xml_tag *tag)
 		attr = next;
 	}
 
+	if (tag->name && (tag->flags & CAVAN_XML_FLAG_NAME_ALLOC))
+	{
+		free(tag->name);
+	}
+
 	if (tag->content && (tag->flags & CAVAN_XML_FLAG_CONTENT_ALLOC))
 	{
 		free(tag->content);
 	}
 
 	free(tag);
+}
+
+bool cavan_xml_tag_set_name(struct cavan_xml_tag *tag, char *name, int flags)
+{
+	if (name && (flags & CAVAN_XML_FLAG_NAME_ALLOC))
+	{
+		name = strdup(name);
+		if (name == NULL)
+		{
+			return false;
+		}
+	}
+
+	if (tag->name && (tag->flags & CAVAN_XML_FLAG_NAME_ALLOC))
+	{
+		free(tag->name);
+	}
+
+	tag->name = name;
+
+	if ((flags & CAVAN_XML_FLAG_NAME_ALLOC))
+	{
+		tag->flags |= CAVAN_XML_FLAG_NAME_ALLOC;
+	}
+	else
+	{
+		tag->flags &= ~CAVAN_XML_FLAG_NAME_ALLOC;
+	}
+
+	return true;
+}
+
+bool cavan_xml_tag_set_content(struct cavan_xml_tag *tag, char *content, int flags)
+{
+	if (content && (flags & CAVAN_XML_FLAG_CONTENT_ALLOC))
+	{
+		content = strdup(content);
+		if (content == NULL)
+		{
+			return false;
+		}
+	}
+
+	if (tag->content && (tag->flags & CAVAN_XML_FLAG_CONTENT_ALLOC))
+	{
+		free(tag->content);
+	}
+
+	tag->content = content;
+
+	if ((flags & CAVAN_XML_FLAG_CONTENT_ALLOC))
+	{
+		tag->flags |= CAVAN_XML_FLAG_CONTENT_ALLOC;
+	}
+	else
+	{
+		tag->flags &= ~CAVAN_XML_FLAG_CONTENT_ALLOC;
+	}
+
+	return true;
 }
 
 static char *cavan_xml_tag_get_line_prefix(const char *prefix, int level, char *buff, size_t size)
@@ -841,7 +938,7 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 #if CONFIG_CAVAN_XML_DEBUG
 			pr_green_info("name = %s", parser.name);
 #endif
-			tag = cavan_xml_tag_alloc(parser.name);
+			tag = cavan_xml_tag_alloc(parser.name, NULL, 0);
 			if (tag == NULL)
 			{
 				pr_red_info("cavan_xml_tag_alloc");
