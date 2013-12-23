@@ -69,17 +69,22 @@ struct cavan_xml_parser
 	cavan_xml_token_t next_token;
 };
 
-struct cavan_xml_attribute *cavan_xml_attribute_alloc(char *name, char *value);
+struct cavan_xml_attribute *cavan_xml_attribute_alloc(char *name, char *value, int flags);
 void cavan_xml_attribute_free(struct cavan_xml_attribute *attr);
+struct cavan_xml_attribute *cavan_xml_attribute_find(struct cavan_xml_attribute *head, const char *name);
+bool cavan_xml_attribute_set_name(struct cavan_xml_attribute *attr, char *name, int flags);
+bool cavan_xml_attribute_set_value(struct cavan_xml_attribute *attr, char *value, int flags);
+bool cavan_xml_attribute_set(struct cavan_xml_attribute **head, char *name, char *value, int flags);
+bool cavan_xml_attribute_remove(struct cavan_xml_attribute **head, struct cavan_xml_attribute *attr);
+
 struct cavan_xml_tag *cavan_xml_tag_alloc(char *name);
 void cavan_xml_tag_free(struct cavan_xml_tag *tag);
+struct cavan_xml_tag *cavan_xml_tag_find(struct cavan_xml_tag *head, const char *name);
+bool cavan_xml_tag_remove(struct cavan_xml_tag **head, struct cavan_xml_tag *tag);
+int cavan_xml_tag_remove_all_by_name(struct cavan_xml_tag **head, const char *name, bool recursion);
+
 struct cavan_xml_document *cavan_xml_document_alloc(void);
 void cavan_xml_document_free(struct cavan_xml_document *doc);
-struct cavan_xml_document *cavan_xml_parse(const char *pathname);
 void cavan_xml_document_invert(struct cavan_xml_document *doc);
-char *cavan_xml_tostring(struct cavan_xml_document *doc, char *buff, size_t size);
-struct cavan_xml_tag *cavan_xml_find_tag(struct cavan_xml_tag *head, const char *name);
-struct cavan_xml_attribute *cavan_xml_find_attribute(struct cavan_xml_attribute *attr, const char *name);
-bool cavan_xml_remove_tag(struct cavan_xml_tag **head, struct cavan_xml_tag *tag);
-int cavan_xml_remove_all_tag_by_name(struct cavan_xml_tag **head, const char *name, bool recursion);
-bool cavan_xml_remove_attribute(struct cavan_xml_attribute **head, struct cavan_xml_attribute *attr);
+struct cavan_xml_document *cavan_xml_document_parse(const char *pathname);
+char *cavan_xml_document_tostring(struct cavan_xml_document *doc, char *buff, size_t size);

@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
 	assert(argc > 1);
 
-	doc = cavan_xml_parse(argv[1]);
+	doc = cavan_xml_document_parse(argv[1]);
 	if (doc == NULL)
 	{
 		pr_red_info("cavan_xml_parse");
@@ -36,10 +36,10 @@ int main(int argc, char *argv[])
 
 	if (argc > 2)
 	{
-		cavan_xml_remove_all_tag_by_name(&doc->tag, argv[2], true);
+		cavan_xml_tag_remove_all_by_name(&doc->tag, argv[2], true);
 	}
 
-	print_ntext(buff, cavan_xml_tostring(doc, buff, sizeof(buff)) - buff);
+	print_ntext(buff, cavan_xml_document_tostring(doc, buff, sizeof(buff)) - buff);
 
 	cavan_xml_document_free(doc);
 
