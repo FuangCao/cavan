@@ -17,7 +17,6 @@
 
 typedef enum cavan_xml_token
 {
-	CAVAN_XML_TOKEN_ERROR = -1,
 	CAVAN_XML_TOKEN_NONE,
 	CAVAN_XML_TOKEN_TAG_ATTR,
 	CAVAN_XML_TOKEN_TAG_SINGLE,
@@ -64,6 +63,7 @@ struct cavan_xml_parser
 	char *content;
 	struct cavan_xml_attribute *attr;
 
+	cavan_xml_token_t token;
 	cavan_xml_token_t prev_token;
 	cavan_xml_token_t next_token;
 };
