@@ -417,9 +417,9 @@ label_tag_end:
 				int lineno = 0;
 				bool has_letter = false;
 
-				for (head = tail = p; p < p_end; p++)
+				for (tail = p; tail < p_end; tail++)
 				{
-					switch (*p)
+					switch (*tail)
 					{
 					case '<':
 						goto out_label_content_complete;
@@ -430,12 +430,10 @@ label_tag_end:
 					case '\t':
 					case '\f':
 					case '\r':
-						*tail++ = *p;
 						break;
 
 					default:
 						has_letter = true;
-						*tail++ = *p;
 					}
 				}
 out_label_content_complete:
@@ -444,17 +442,17 @@ out_label_content_complete:
 					*tail = 0;
 
 					parser->lineno += lineno;
-					parser->content = head;
+					parser->content = p;
 #if CONFIG_CAVAN_XML_DEBUG
 					pr_green_info("content = %s", parser->content);
 #endif
 					parser->next_token = CAVAN_XML_TOKEN_CONTENT;
 
-					parser->pos = p;
+					parser->pos = tail;
 				}
 				else
 				{
-					parser->pos = head;
+					parser->pos = p;
 				}
 			}
 			else
