@@ -50,7 +50,7 @@ struct cavan_xml_document
 	const char *newline;
 	const char *line_prefix;
 	const char *word_sep;
-	struct cavan_xml_attribute *attr;
+	struct cavan_xml_tag *attr;
 	struct cavan_xml_tag *tag;
 };
 
