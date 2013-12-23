@@ -1008,7 +1008,7 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 							parser.lineno += lineno;
 						}
 
-						tag->content = parser.pos;
+						cavan_xml_tag_set_content(tag, parser.pos, 0);
 						parser.pos = p + length;
 					}
 					else

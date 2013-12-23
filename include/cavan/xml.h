@@ -11,7 +11,7 @@
 #define CAVAN_XML_FLAG_NAME_ALLOC			(1 << 0)
 #define CAVAN_XML_FLAG_VALUE_ALLOC			(1 << 1)
 #define CAVAN_XML_FLAG_CONTENT_ALLOC		(1 << 2)
-#define CAVAN_XML_FLAG_CONTENT_MULTI_LINE	(1 << 2)
+#define CAVAN_XML_FLAG_CONTENT_MULTI_LINE	(1 << 3)
 
 #define pr_parser_error_info(lineno, fmt, args ...) \
 	pr_red_info("(" fmt ") at line[%d]", ##args, lineno)
