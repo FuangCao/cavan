@@ -57,7 +57,7 @@ void bits_set(char *mem, int start, int end, u32 value);
 
 void mem_build_kmp_array(const char *sub, int *steps, const size_t size);
 char *mem_kmp_find_base(const char *mem, const char *mem_end, const char *sub, const size_t sublen, const int *steps);
-char *mem_kmp_find(const char *mem, const char *sub, const size_t memlen, const size_t sublen);
+char *mem_kmp_find(const char *mem, const char *sub, size_t memlen, size_t sublen);
 int mem_kmp_find_all(const char *mem, const char *sub, size_t memlen, size_t sublen, char **results, size_t size);
 
 size_t mem_delete_char_base(const char *mem_in, char *mem_out, const size_t size, const char c);

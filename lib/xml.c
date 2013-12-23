@@ -237,6 +237,13 @@ void cavan_xml_document_invert(struct cavan_xml_document *doc)
 	doc->tag = cavan_xml_tag_list_invert(doc->tag);
 }
 
+static char *cavan_xml_find_tag_end(const char *name, const char *text, size_t size)
+{
+	char buff[512];
+
+	return mem_kmp_find(text, buff, size, snprintf(buff, sizeof(buff), "</%s>", name));
+}
+
 static int cavan_xml_get_next_token(struct cavan_xml_parser *parser)
 {
 	int ret;
@@ -411,18 +418,30 @@ label_tag_end:
 			}
 
 			p++;
+			parser->pos = p;
 
 			if (parser->token == CAVAN_XML_TOKEN_TAG_BEGIN)
 			{
 				int lineno = 0;
 				bool has_letter = false;
 
+				p_end = cavan_xml_find_tag_end(parser->name, p, p_end - p);
+				if (p_end == NULL)
+				{
+					pr_parser_error_info(parser, "tag end of \"%s\" not found", parser->name);
+					goto out_cavan_xml_token_error;
+				}
+
 				for (tail = p; tail < p_end; tail++)
 				{
 					switch (*tail)
 					{
 					case '<':
-						goto out_label_content_complete;
+						if (has_letter == false)
+						{
+							return 0;
+						}
+						break;
 
 					case '\n':
 						lineno++;
@@ -436,7 +455,7 @@ label_tag_end:
 						has_letter = true;
 					}
 				}
-out_label_content_complete:
+
 				if (has_letter)
 				{
 					*tail = 0;
@@ -450,14 +469,6 @@ out_label_content_complete:
 
 					parser->pos = tail;
 				}
-				else
-				{
-					parser->pos = p;
-				}
-			}
-			else
-			{
-				parser->pos = p;
 			}
 
 			return 0;

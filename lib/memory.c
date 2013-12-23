@@ -343,7 +343,7 @@ void bits_set(char *mem, int start, int end, u32 value)
 	}
 }
 
-void mem_build_kmp_array(const char *sub, int *steps, const size_t size)
+void mem_build_kmp_array(const char *sub, int *steps, size_t size)
 {
 	unsigned int i, j, k;
 
@@ -411,7 +411,7 @@ char *mem_kmp_find_base(const char *mem, const char *mem_end, const char *sub, s
 	return (char *)(mem - sublen);
 }
 
-char *mem_kmp_find(const char *mem, const char *sub, const size_t memlen, const size_t sublen)
+char *mem_kmp_find(const char *mem, const char *sub, size_t memlen, size_t sublen)
 {
 	int steps[sublen];
 
