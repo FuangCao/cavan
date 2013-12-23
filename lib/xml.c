@@ -165,14 +165,15 @@ static char *cavan_xml_tag_tostring(struct cavan_xml_document *doc, struct cavan
 			size_t length;
 
 			length = strlen(tag->content);
-			content = alloca(length);
+			content = alloca(length + 100);
 			if (content == NULL)
 			{
+				pr_error_info("alloca");
 				return buff;
 			}
 
 			p = content;
-			p_end = p + length;
+			p_end = p + length + 100;
 
 			q = tag->content;
 			q_end = q + length;
