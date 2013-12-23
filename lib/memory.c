@@ -576,3 +576,47 @@ void mem_reverse(byte *start, byte *end)
 		mem_reverse_simple(end, start);
 	}
 }
+
+bool byte_is_space(byte b)
+{
+	switch (b)
+	{
+	case ' ':
+	case '\t':
+	case '\f':
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool byte_is_lf(byte b)
+{
+	switch (b)
+	{
+	case '\r':
+	case '\n':
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool byte_is_space_or_lf(byte b)
+{
+	switch (b)
+	{
+	case ' ':
+	case '\t':
+	case '\f':
+	case '\r':
+	case '\n':
+		return true;
+
+	default:
+		return false;
+	}
+}
+

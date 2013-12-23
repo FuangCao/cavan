@@ -2896,9 +2896,9 @@ int text_array_find(const char *text, char *buff[], int size)
 	return -1;
 }
 
-char *text_skip_space_head(const char *text, const char *line_end)
+char *text_skip_space(const char *text, const char *line_end)
 {
-	while (text < line_end && BYTE_IS_SPACE(*text))
+	while (text < line_end && byte_is_space(*text))
 	{
 		text++;
 	}
@@ -2906,9 +2906,29 @@ char *text_skip_space_head(const char *text, const char *line_end)
 	return (char *)text;
 }
 
-char *text_skip_space_tail(const char *text, const char *line)
+char *text_skip_space_invert(const char *text, const char *line)
 {
-	while (text > line && BYTE_IS_SPACE(*text))
+	while (text >= line && byte_is_space(*text))
+	{
+		text--;
+	}
+
+	return (char *)text;
+}
+
+char *text_skip_space_and_lf(const char *text, const char *text_end)
+{
+	while (text < text_end && byte_is_space_or_lf(*text))
+	{
+		text++;
+	}
+
+	return (char *)text;
+}
+
+char *text_skip_space_and_lf_invert(const char *text, const char *start)
+{
+	while (text >= start && byte_is_space_or_lf(*text))
 	{
 		text--;
 	}

@@ -158,7 +158,49 @@ static char *cavan_xml_tag_tostring(struct cavan_xml_document *doc, struct cavan
 	}
 	else if (tag->content)
 	{
-		buff += snprintf(buff, buff_end - buff, ">%s</%s>", tag->content, tag->name);
+		if ((tag->flags & CAVAN_XML_FLAG_CONTENT_MULTI_LINE))
+		{
+			char *content, *p, *p_end;
+			char *q, *q_end;
+			size_t length;
+
+			length = strlen(tag->content);
+			content = alloca(length);
+			if (content == NULL)
+			{
+				return buff;
+			}
+
+			p = content;
+			p_end = p + length;
+
+			q = tag->content;
+			q_end = q + length;
+			q = text_skip_space_and_lf(q, q_end);
+
+			while (q < q_end && p < p_end)
+			{
+				switch (*q)
+				{
+				case '\n':
+					q = text_skip_space(q + 1, q_end);
+					p += snprintf(p, p_end - p, "%s%s%s", doc->newline, prefix, doc->line_prefix);
+					break;
+
+				default:
+					*p++ = *q++;
+				}
+			}
+
+			p = text_skip_space_and_lf_invert(p - 1, content);
+			p[1] = 0;
+
+			buff += snprintf(buff, buff_end - buff, ">%s%s%s%s%s%s</%s>", doc->newline, prefix, doc->line_prefix, content, doc->newline, prefix, tag->name);
+		}
+		else
+		{
+			buff += snprintf(buff, buff_end - buff, ">%s</%s>", tag->content, tag->name);
+		}
 	}
 	else
 	{
@@ -237,14 +279,7 @@ void cavan_xml_document_invert(struct cavan_xml_document *doc)
 	doc->tag = cavan_xml_tag_list_invert(doc->tag);
 }
 
-static char *cavan_xml_find_tag_end(const char *name, const char *text, size_t size)
-{
-	char buff[512];
-
-	return mem_kmp_find(text, buff, size, snprintf(buff, sizeof(buff), "</%s>", name));
-}
-
-static int cavan_xml_get_next_token(struct cavan_xml_parser *parser)
+static int cavan_xml_get_next_token(struct cavan_xml_parser *parser, bool verbose)
 {
 	int ret;
 	char *name = NULL;
@@ -272,6 +307,7 @@ static int cavan_xml_get_next_token(struct cavan_xml_parser *parser)
 	{
 		switch (*p)
 		{
+		case 0:
 		case '\\':
 			break;
 
@@ -284,14 +320,24 @@ static int cavan_xml_get_next_token(struct cavan_xml_parser *parser)
 		case '\t':
 		case '\f':
 		case '\r':
+			if (parser->token == CAVAN_XML_TOKEN_NONE)
+			{
+				break;
+			}
+
 			*tail = 0;
 			head = tail = p + 1;
-			if (parser->token != CAVAN_XML_TOKEN_NONE && name && value)
+
+			if (name && value)
 			{
 				attr = cavan_xml_attribute_alloc(name, value);
 				if (attr == NULL)
 				{
-					pr_parser_error_info(parser, "cavan_xml_attribute_alloc");
+					if (verbose)
+					{
+						pr_parser_error_info(parser, "cavan_xml_attribute_alloc");
+					}
+
 					goto out_cavan_xml_token_error;
 				}
 
@@ -303,15 +349,14 @@ static int cavan_xml_get_next_token(struct cavan_xml_parser *parser)
 			}
 			break;
 
-		case 0:
-			if (parser->prev_token != CAVAN_XML_TOKEN_CONTENT)
-			{
-				goto out_cavan_xml_eof;
-			}
 		case '<':
 			if (parser->token != CAVAN_XML_TOKEN_NONE)
 			{
-				pr_parser_error_info(parser, "token = %d", parser->token);
+				if (verbose)
+				{
+					pr_parser_error_info(parser, "token = %d", parser->token);
+				}
+
 				goto out_cavan_xml_token_error;
 			}
 
@@ -346,7 +391,11 @@ static int cavan_xml_get_next_token(struct cavan_xml_parser *parser)
 						p++;
 					}
 
-					pr_parser_error_info(parser, "invalid comment");
+					if (verbose)
+					{
+						pr_parser_error_info(parser, "invalid comment");
+					}
+
 					goto out_cavan_xml_token_error;
 
 label_comment_end:
@@ -364,7 +413,11 @@ label_comment_end:
 		case '?':
 			if (parser->token == CAVAN_XML_TOKEN_NONE)
 			{
-				pr_parser_error_info(parser, "invalid '?'");
+				if (verbose)
+				{
+					pr_parser_error_info(parser, "invalid '?'");
+				}
+
 				goto out_cavan_xml_token_error;
 			}
 
@@ -379,7 +432,11 @@ label_comment_end:
 		case '/':
 			if (parser->token == CAVAN_XML_TOKEN_NONE)
 			{
-				pr_parser_error_info(parser, "invalid '/'");
+				if (verbose)
+				{
+					pr_parser_error_info(parser, "invalid '/'");
+				}
+
 				goto out_cavan_xml_token_error;
 			}
 
@@ -388,7 +445,11 @@ label_comment_end:
 label_tag_single:
 			if (*++p != '>')
 			{
-				pr_parser_error_info(parser, "need '>' by has '%c'", *p);
+				if (verbose)
+				{
+					pr_parser_error_info(parser, "need '>' by has '%c'", *p);
+				}
+
 				goto out_cavan_xml_token_error;
 			}
 
@@ -397,7 +458,11 @@ label_tag_single:
 		case '>':
 			if (parser->token == CAVAN_XML_TOKEN_NONE)
 			{
-				pr_parser_error_info(parser, "invalid '>'");
+				if (verbose)
+				{
+					pr_parser_error_info(parser, "invalid '>'");
+				}
+
 				goto out_cavan_xml_token_error;
 			}
 
@@ -409,7 +474,11 @@ label_tag_end:
 				attr = cavan_xml_attribute_alloc(name, value);
 				if (attr == NULL)
 				{
-					pr_parser_error_info(parser, "cavan_xml_attribute_alloc");
+					if (verbose)
+					{
+						pr_parser_error_info(parser, "cavan_xml_attribute_alloc");
+					}
+
 					goto out_cavan_xml_token_error;
 				}
 
@@ -417,60 +486,7 @@ label_tag_end:
 				parser->attr = attr;
 			}
 
-			p++;
-			parser->pos = p;
-
-			if (parser->token == CAVAN_XML_TOKEN_TAG_BEGIN)
-			{
-				int lineno = 0;
-				bool has_letter = false;
-
-				p_end = cavan_xml_find_tag_end(parser->name, p, p_end - p);
-				if (p_end == NULL)
-				{
-					pr_parser_error_info(parser, "tag end of \"%s\" not found", parser->name);
-					goto out_cavan_xml_token_error;
-				}
-
-				for (tail = p; tail < p_end; tail++)
-				{
-					switch (*tail)
-					{
-					case '<':
-						if (has_letter == false)
-						{
-							return 0;
-						}
-						break;
-
-					case '\n':
-						lineno++;
-					case ' ':
-					case '\t':
-					case '\f':
-					case '\r':
-						break;
-
-					default:
-						has_letter = true;
-					}
-				}
-
-				if (has_letter)
-				{
-					*tail = 0;
-
-					parser->lineno += lineno;
-					parser->content = p;
-#if CONFIG_CAVAN_XML_DEBUG
-					pr_green_info("content = %s", parser->content);
-#endif
-					parser->next_token = CAVAN_XML_TOKEN_CONTENT;
-
-					parser->pos = tail;
-				}
-			}
-
+			parser->pos = ++p;
 			return 0;
 
 		case '=':
@@ -482,7 +498,11 @@ label_tag_end:
 		case '"':
 			if (name == NULL)
 			{
-				pr_parser_error_info(parser, "name is null");
+				if (verbose)
+				{
+					pr_parser_error_info(parser, "name is null");
+				}
+
 				goto out_cavan_xml_token_error;
 			}
 
@@ -498,7 +518,11 @@ label_tag_end:
 					}
 					else
 					{
-						pr_parser_error_info(parser, "\" is not pair");
+						if (verbose)
+						{
+							pr_parser_error_info(parser, "\" is not pair");
+						}
+
 						goto out_cavan_xml_token_error;
 					}
 					break;
@@ -527,7 +551,11 @@ label_value_end:
 		default:
 			if (parser->token == CAVAN_XML_TOKEN_NONE)
 			{
-				pr_parser_error_info(parser, "invalid content");
+				if (verbose)
+				{
+					pr_parser_error_info(parser, "invalid content");
+				}
+
 				goto out_cavan_xml_token_error;
 			}
 
@@ -535,9 +563,9 @@ label_value_end:
 		}
 	}
 
-out_cavan_xml_eof:
 	ret = 0;
 	parser->token = CAVAN_XML_TOKEN_EOF;
+
 out_cavan_xml_token_error:
 	attr = parser->attr;
 	while (attr)
@@ -579,7 +607,7 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 
 	while (1)
 	{
-		ret = cavan_xml_get_next_token(&parser);
+		ret = cavan_xml_get_next_token(&parser, true);
 		if (ret < 0)
 		{
 			pr_parser_error_info(&parser, "cavan_xml_get_next_token");
@@ -638,7 +666,48 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 
 				if (parser.token == CAVAN_XML_TOKEN_TAG_BEGIN)
 				{
-					general_stack_push_fd(&stack, tag);
+					ret = cavan_xml_get_next_token(&parser, false);
+					if (ret < 0)
+					{
+						int lineno;
+						size_t length;
+						char *pos, *p;
+						char buff[512];
+
+						pos = parser.pos;
+						length = snprintf(buff, sizeof(buff), "</%s>", tag->name);
+
+						p = mem_kmp_find(pos, buff, parser.pos_end - pos, length);
+						if (p == NULL)
+						{
+							pr_parser_error_info(&parser, "tag %s is not pair", tag->name);
+							goto out_cavan_xml_document_free;
+						}
+
+						*p = 0;
+
+						for (lineno = 0; pos < p; pos++)
+						{
+							if (*pos == '\n')
+							{
+								lineno++;
+							}
+						}
+
+						if (lineno)
+						{
+							tag->flags |= CAVAN_XML_FLAG_CONTENT_MULTI_LINE;
+							parser.lineno += lineno;
+						}
+
+						tag->content = parser.pos;
+						parser.pos = p + length;
+					}
+					else
+					{
+						general_stack_push_fd(&stack, tag);
+						parser.next_token = parser.token;
+					}
 				}
 			}
 			break;

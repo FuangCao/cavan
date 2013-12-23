@@ -163,8 +163,11 @@ int text_cmp_nocase(const char *text1, const char *text2);
 int text_ncmp_nocase(const char *text1, const char *text2, size_t size);
 int text_bool_value(const char *text);
 
-char *text_skip_space_head(const char *text, const char *line_end);
-char *text_skip_space_tail(const char *text, const char *line);
+char *text_skip_space(const char *text, const char *line_end);
+char *text_skip_space_invert(const char *text, const char *line);
+char *text_skip_space_and_lf(const char *text, const char *text_end);
+char *text_skip_space_and_lf_invert(const char *text, const char *start);
+
 char *text_find_line_end(const char *text, const char *file_end);
 char *text_skip_line_end(const char *text, const char *file_end);
 

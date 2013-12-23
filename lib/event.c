@@ -461,7 +461,7 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 	pr_bold_info("Parse virtual key file %s", pathname);
 
 	file_end = mem + size;
-	p = text_skip_space_head(mem, file_end);
+	p = text_skip_space(mem, file_end);
 
 	while (p < file_end)
 	{
@@ -599,7 +599,7 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 	while (p < file_end)
 	{
 		line_end = text_find_line_end(p, file_end);
-		p = text_skip_space_head(p, line_end);
+		p = text_skip_space(p, line_end);
 		if (p == line_end || *p == '#')
 		{
 			goto label_goto_next_line;
