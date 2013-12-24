@@ -12,6 +12,8 @@
 #define CAVAN_XML_FLAG_VALUE_ALLOC			(1 << 1)
 #define CAVAN_XML_FLAG_CONTENT_ALLOC		(1 << 2)
 #define CAVAN_XML_FLAG_CONTENT_MULTI_LINE	(1 << 3)
+#define CAVAN_XML_FLAG_UNIQUE				(1 << 4)
+
 
 #define pr_parser_error_info(lineno, fmt, args ...) \
 	pr_red_info("(" fmt ") at line[%d]", ##args, lineno)
@@ -30,16 +32,16 @@ typedef enum cavan_xml_token
 struct cavan_xml_attribute
 {
 	int flags;
-	char *name;
-	char *value;
+	const char *name;
+	const char *value;
 	struct cavan_xml_attribute *next;
 };
 
 struct cavan_xml_tag
 {
 	int flags;
-	char *name;
-	char *content;
+	const char *name;
+	const char *content;
 	struct cavan_xml_attribute *attr;
 	struct cavan_xml_tag *next;
 	struct cavan_xml_tag *child;
@@ -70,18 +72,19 @@ struct cavan_xml_parser
 	cavan_xml_token_t next_token;
 };
 
-struct cavan_xml_attribute *cavan_xml_attribute_alloc(char *name, char *value, int flags);
+struct cavan_xml_attribute *cavan_xml_attribute_alloc(const char *name, const char *value, int flags);
 void cavan_xml_attribute_free(struct cavan_xml_attribute *attr);
 struct cavan_xml_attribute *cavan_xml_attribute_find(struct cavan_xml_attribute *head, const char *name);
-bool cavan_xml_attribute_set_name(struct cavan_xml_attribute *attr, char *name, int flags);
-bool cavan_xml_attribute_set_value(struct cavan_xml_attribute *attr, char *value, int flags);
-bool cavan_xml_attribute_set(struct cavan_xml_attribute **head, char *name, char *value, int flags);
+bool cavan_xml_attribute_set_name(struct cavan_xml_attribute *attr, const char *name, int flags);
+bool cavan_xml_attribute_set_value(struct cavan_xml_attribute *attr, const char *value, int flags);
+bool cavan_xml_attribute_set(struct cavan_xml_attribute **head, const char *name, const char *value, int flags);
 bool cavan_xml_attribute_remove(struct cavan_xml_attribute **head, struct cavan_xml_attribute *attr);
 
-struct cavan_xml_tag *cavan_xml_tag_alloc(char *name, char *content, int flags);
+struct cavan_xml_tag *cavan_xml_tag_alloc(const char *name, const char *content, int flags);
 void cavan_xml_tag_free(struct cavan_xml_tag *tag);
-bool cavan_xml_tag_set_name(struct cavan_xml_tag *tag, char *name, int flags);
-bool cavan_xml_tag_set_content(struct cavan_xml_tag *tag, char *content, int flags);
+bool cavan_xml_tag_set_name(struct cavan_xml_tag *tag, const char *name, int flags);
+bool cavan_xml_tag_set_content(struct cavan_xml_tag *tag, const char *content, int flags);
+struct cavan_xml_tag *cavan_xml_tag_create(struct cavan_xml_tag **head, const char *name, int flags);
 struct cavan_xml_tag *cavan_xml_tag_find(struct cavan_xml_tag *head, const char *name);
 bool cavan_xml_tag_remove(struct cavan_xml_tag **head, struct cavan_xml_tag *tag);
 int cavan_xml_tag_remove_all_by_name(struct cavan_xml_tag **head, const char *name, bool recursion);
