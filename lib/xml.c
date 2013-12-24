@@ -213,7 +213,7 @@ bool cavan_xml_attribute_remove(struct cavan_xml_attribute **head, struct cavan_
 	return false;
 }
 
-static int cavan_xml_attribute_parse_value(char **ptext, char *text_end)
+static int cavan_xml_attribute_parse_value(char c, char **ptext, char *text_end)
 {
 	int lineno;
 	char *value, *text;
@@ -222,10 +222,6 @@ static int cavan_xml_attribute_parse_value(char **ptext, char *text_end)
 	{
 		switch (*text)
 		{
-		case '"':
-			*value = 0;
-			*ptext = text;
-			return lineno;
 
 		case '\n':
 			lineno++;
@@ -245,6 +241,14 @@ static int cavan_xml_attribute_parse_value(char **ptext, char *text_end)
 			}
 			break;
 
+		case '\'':
+		case '"':
+			if (c == *text)
+			{
+				*value = 0;
+				*ptext = text;
+				return lineno;
+			}
 		default:
 			*value++ = *text;
 		}
@@ -612,6 +616,23 @@ int cavan_xml_tag_remove_all_by_name(struct cavan_xml_tag **head, const char *na
 	return count;
 }
 
+static bool cavan_xml_tag_is_content(const char *name)
+{
+	int i;
+	const char *content_tags[] =
+	{"b", "br"};
+
+	for (i = 0; i < NELEM(content_tags); i++)
+	{
+		if (strcmp(name, content_tags[i]) == 0)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 // ============================================================
 
 struct cavan_xml_document *cavan_xml_document_alloc(void)
@@ -712,6 +733,7 @@ static int cavan_xml_document_parse_comment(char **ptext, char *text_end)
 
 static int cavan_xml_document_get_next_token(struct cavan_xml_parser *parser, bool verbose)
 {
+	char c;
 	int ret;
 	int lineno;
 	char *p, *p_end;
@@ -909,17 +931,26 @@ label_tag_single:
 
 label_tag_end:
 			*tail = 0;
-			parser->pos = ++p;
-			parser->lineno = lineno;
+			if (cavan_xml_tag_is_content(parser->name))
+			{
+				*tail = '>';
+				parser->token = CAVAN_XML_TOKEN_COTENT;
+			}
+			else
+			{
+				parser->pos = ++p;
+				parser->lineno = lineno;
+			}
 			return 0;
 
 		case '=':
 			p = text_skip_space_and_lf(p + 1, p_end);
-			if (*p != '"')
+			c = *p;
+			if (c != '"' && c != '\'')
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(lineno, "need a '\"'");
+					pr_parser_error_info(lineno, "need a '\"' or '");
 				}
 
 				ret = -EFAULT;
@@ -928,7 +959,7 @@ label_tag_end:
 
 			value = ++p;
 
-			ret = cavan_xml_attribute_parse_value(&p, p_end);
+			ret = cavan_xml_attribute_parse_value(c, &p, p_end);
 			if (ret < 0)
 			{
 				if (verbose)
@@ -1075,7 +1106,7 @@ static struct cavan_xml_document *cavan_xml_document_parse_base(char *content, s
 			if (parser.token == CAVAN_XML_TOKEN_TAG_BEGIN)
 			{
 				ret = cavan_xml_document_get_next_token(&parser, false);
-				if (ret < 0)
+				if (ret < 0 || parser.token == CAVAN_XML_TOKEN_COTENT)
 				{
 					int lineno;
 					size_t length;
