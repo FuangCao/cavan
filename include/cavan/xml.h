@@ -62,6 +62,7 @@ struct cavan_xml_parser
 	char *pos_end;
 	char *name;
 	char *content;
+	char *comment;
 	struct cavan_xml_attribute *attr;
 
 	cavan_xml_token_t token;
