@@ -734,7 +734,11 @@ static int cavan_xml_document_get_next_token(struct cavan_xml_parser *parser, bo
 	parser->comment = NULL;
 	parser->token = CAVAN_XML_TOKEN_NONE;
 
-	for (p = parser->pos, p_end = parser->pos_end, head = tail = p; p < p_end; p++)
+	p = parser->pos;
+	p_end = parser->pos_end;
+	head = tail = p;
+
+	while (p < p_end)
 	{
 		switch (*p)
 		{
@@ -751,19 +755,23 @@ static int cavan_xml_document_get_next_token(struct cavan_xml_parser *parser, bo
 		case '\t':
 		case '\f':
 		case '\r':
+			p++;
+
 			if (parser->token == CAVAN_XML_TOKEN_NONE)
 			{
-				break;
+				head = p;
 			}
-
-			if (byte_is_space_or_lf(*head))
+			else
 			{
-				head = p + 1;
+				if (byte_is_space_or_lf(*head))
+				{
+					head = p;
+				}
+
+				*tail = 0;
 			}
 
-			*tail = 0;
-			tail = p + 1;
-
+			tail = p;
 			break;
 
 		case '<':
@@ -827,7 +835,7 @@ static int cavan_xml_document_get_next_token(struct cavan_xml_parser *parser, bo
 				goto out_cavan_xml_token_error;
 			}
 
-			head = p;
+			parser->name = p;
 
 			p = text_skip_name(p, p_end);
 			if (tail == NULL)
@@ -841,23 +849,7 @@ static int cavan_xml_document_get_next_token(struct cavan_xml_parser *parser, bo
 				goto out_cavan_xml_token_error;
 			}
 
-			parser->name = head;
-			ret = *p;
-			*p = 0;
-
-			switch (ret)
-			{
-			case '?':
-				goto label_tag_attr;
-
-			case '/':
-				goto label_tag_single1;
-
-			case '>':
-				goto label_tag_end;
-			}
-
-			head = tail = p + 1;
+			head = tail = p;
 			break;
 
 		case '?':
@@ -872,9 +864,8 @@ static int cavan_xml_document_get_next_token(struct cavan_xml_parser *parser, bo
 				goto out_cavan_xml_token_error;
 			}
 
-label_tag_attr:
 			parser->token = CAVAN_XML_TOKEN_TAG_ATTR;
-			goto label_tag_single2;
+			goto label_tag_single;
 
 		case '/':
 			if (parser->token == CAVAN_XML_TOKEN_NONE)
@@ -887,9 +878,10 @@ label_tag_attr:
 				ret = -EFAULT;
 				goto out_cavan_xml_token_error;
 			}
-label_tag_single1:
+
 			parser->token = CAVAN_XML_TOKEN_TAG_SINGLE;
-label_tag_single2:
+
+label_tag_single:
 			if (*++p != '>')
 			{
 				if (verbose)
@@ -975,7 +967,7 @@ label_tag_end:
 				goto out_cavan_xml_token_error;
 			}
 
-			head = tail = p + 1;
+			head = tail = ++p;
 			break;
 
 		default:
@@ -990,7 +982,7 @@ label_tag_end:
 				goto out_cavan_xml_token_error;
 			}
 
-			*tail++ = *p;
+			tail++, p++;
 		}
 	}
 
