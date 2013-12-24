@@ -715,7 +715,7 @@ static int cavan_xml_document_get_next_token(struct cavan_xml_parser *parser, bo
 	int ret;
 	int lineno;
 	char *p, *p_end;
-	char *head, *tail;
+	char *head, *tail, *value;
 	struct cavan_xml_attribute *attr;
 
 	parser->prev_token = parser->token;
@@ -828,7 +828,7 @@ static int cavan_xml_document_get_next_token(struct cavan_xml_parser *parser, bo
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(lineno, "'%c' is not a named letter", *p);
+					pr_parser_error_info(lineno, "tag name is empty");
 				}
 
 				ret = -EFAULT;
@@ -838,11 +838,11 @@ static int cavan_xml_document_get_next_token(struct cavan_xml_parser *parser, bo
 			parser->name = p;
 
 			p = text_skip_name(p, p_end);
-			if (tail == NULL)
+			if (parser->name == p)
 			{
 				if (verbose)
 				{
-					pr_parser_error_info(lineno, "text_skip_name");
+					pr_parser_error_info(lineno, "tag name is empty");
 				}
 
 				ret = -EFAULT;
@@ -909,25 +909,11 @@ label_tag_single:
 
 label_tag_end:
 			*tail = 0;
-
-			if (parser->name[0] == 0)
-			{
-				if (verbose)
-				{
-					pr_parser_error_info(lineno, "tag name is empty");
-				}
-
-				ret = -EFAULT;
-				goto out_cavan_xml_token_error;
-			}
-
 			parser->pos = ++p;
 			parser->lineno = lineno;
 			return 0;
 
 		case '=':
-			*tail = 0;
-
 			p = text_skip_space_and_lf(p + 1, p_end);
 			if (*p != '"')
 			{
@@ -940,7 +926,7 @@ label_tag_end:
 				goto out_cavan_xml_token_error;
 			}
 
-			tail = ++p;
+			value = ++p;
 
 			ret = cavan_xml_attribute_parse_value(&p, p_end);
 			if (ret < 0)
@@ -955,8 +941,9 @@ label_tag_end:
 			}
 
 			lineno += ret;
+			*tail = 0;
 
-			if (cavan_xml_attribute_set(&parser->attr, head, tail, 0) == false)
+			if (cavan_xml_attribute_set(&parser->attr, head, value, 0) == false)
 			{
 				if (verbose)
 				{
