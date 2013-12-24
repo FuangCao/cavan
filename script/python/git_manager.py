@@ -124,7 +124,7 @@ class CavanGitManager(CavanCommandBase):
 		listFile.insert(0, "add")
 		listFile.insert(1, "-f")
 
-		return self.doExecGitCmd(listFile, verbose = True)
+		return self.doExecGitCmd(listFile, verbose = False)
 
 	def isInitialized(self):
 		if not os.path.isdir(self.mPathGitRepo):
