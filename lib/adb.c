@@ -186,7 +186,7 @@ char *adb_parse_sms_single(const char *buff, const char *end, char *segments[], 
 	unsigned int i;
 	char *p;
 
-	end = text_find_line_end(buff, end);
+	end = text_find_lf(buff, end);
 	if (end == NULL)
 	{
 		return NULL;

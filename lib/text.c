@@ -2896,9 +2896,9 @@ int text_array_find(const char *text, char *buff[], int size)
 	return -1;
 }
 
-char *text_skip_space(const char *text, const char *line_end)
+char *text_skip_space(const char *text, const char *text_end)
 {
-	while (text < line_end && byte_is_space(*text))
+	while (text < text_end && byte_is_space(*text))
 	{
 		text++;
 	}
@@ -2906,9 +2906,29 @@ char *text_skip_space(const char *text, const char *line_end)
 	return (char *)text;
 }
 
-char *text_skip_space_invert(const char *text, const char *line)
+char *text_skip_space_invert(const char *text, const char *head)
 {
-	while (text >= line && byte_is_space(*text))
+	while (text >= head && byte_is_space(*text))
+	{
+		text--;
+	}
+
+	return (char *)text;
+}
+
+char *text_skip_lf(const char *text, const char *text_end)
+{
+	while (text < text_end && byte_is_lf(*text))
+	{
+		text++;
+	}
+
+	return (char *)text;
+}
+
+char *text_skip_lf_invert(const char *text, const char *head)
+{
+	while (text >= head && byte_is_lf(*text))
 	{
 		text--;
 	}
@@ -2926,9 +2946,9 @@ char *text_skip_space_and_lf(const char *text, const char *text_end)
 	return (char *)text;
 }
 
-char *text_skip_space_and_lf_invert(const char *text, const char *start)
+char *text_skip_space_and_lf_invert(const char *text, const char *head)
 {
-	while (text >= start && byte_is_space_or_lf(*text))
+	while (text >= head && byte_is_space_or_lf(*text))
 	{
 		text--;
 	}
@@ -2936,29 +2956,144 @@ char *text_skip_space_and_lf_invert(const char *text, const char *start)
 	return (char *)text;
 }
 
-char *text_find_line_end(const char *text, const char *file_end)
+char *text_skip_name(const char *text, const char *text_end)
 {
-	while (text < file_end)
+	while (text < text_end && byte_is_named(*text))
 	{
-		if (BYTE_IS_LF(*text))
-		{
-			break;
-		}
-
 		text++;
 	}
 
 	return (char *)text;
 }
 
-char *text_skip_line_end(const char *text, const char *file_end)
+char *text_skip_name_invert(const char *text, const char *head)
 {
-	while (text < file_end && BYTE_IS_LF(*text))
+	while (text >= head && byte_is_named(*text))
 	{
-		text++;
+		text--;
 	}
 
 	return (char *)text;
+}
+
+char *text_find_space(const char *text, const char *text_end)
+{
+	while (text < text_end)
+	{
+		if (byte_is_space(*text))
+		{
+			return (char *)text;
+		}
+
+		text++;
+	}
+
+	return NULL;
+}
+
+char *text_find_space_invert(const char *text, const char *head)
+{
+	while (text >= head)
+	{
+		if (byte_is_space(*text))
+		{
+			return (char *)text;
+		}
+
+		text--;
+	}
+
+	return NULL;
+}
+
+char *text_find_lf(const char *text, const char *text_end)
+{
+	while (text < text_end)
+	{
+		if (byte_is_lf(*text))
+		{
+			return (char *)text;
+		}
+
+		text++;
+	}
+
+	return NULL;
+}
+
+char *text_find_lf_invert(const char *text, const char *head)
+{
+	while (text >= head)
+	{
+		if (byte_is_lf(*text))
+		{
+			return (char *)text;
+		}
+
+		text--;
+	}
+
+	return NULL;
+}
+
+char *text_find_space_or_lf(const char *text, const char *text_end)
+{
+	while (text < text_end)
+	{
+		if (byte_is_space_or_lf(*text))
+		{
+			return (char *)text;
+		}
+
+		text++;
+	}
+
+	return NULL;
+}
+
+char *text_find_space_or_lf_invert(const char *text, const char *head)
+{
+	while (text >= head)
+	{
+		if (byte_is_space_or_lf(*text))
+		{
+			return (char *)text;
+		}
+
+		text--;
+	}
+
+	return NULL;
+}
+
+char *text_find_name(const char *text, const char *text_end)
+{
+	while (text < text_end)
+	{
+		if (byte_is_named(*text))
+		{
+			return (char *)text;
+		}
+
+		text++;
+	}
+
+	return NULL;
+}
+
+char *text_find_name_invert(const char *text, const char *head)
+{
+	while (text >= head)
+	{
+		if (byte_is_named(*text))
+		{
+			return (char *)text;
+		}
+
+		text--;
+	}
+
+	return NULL;
 }
 
 char text_get_char(const char *text, int index)

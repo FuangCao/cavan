@@ -79,6 +79,7 @@ void mem_reverse(byte *start, byte *end);
 bool byte_is_space(byte b);
 bool byte_is_lf(byte b);
 bool byte_is_space_or_lf(byte b);
+bool byte_is_named(byte b);
 
 static inline char *mem_trans(char *text, size_t size)
 {

@@ -79,6 +79,7 @@ bool cavan_xml_attribute_set_name(struct cavan_xml_attribute *attr, const char *
 bool cavan_xml_attribute_set_value(struct cavan_xml_attribute *attr, const char *value, int flags);
 bool cavan_xml_attribute_set(struct cavan_xml_attribute **head, const char *name, const char *value, int flags);
 bool cavan_xml_attribute_remove(struct cavan_xml_attribute **head, struct cavan_xml_attribute *attr);
+void cavan_xml_attribute_extend(struct cavan_xml_attribute **phead, struct cavan_xml_attribute *extra);
 
 struct cavan_xml_tag *cavan_xml_tag_alloc(const char *name, const char *content, int flags);
 void cavan_xml_tag_free(struct cavan_xml_tag *tag);

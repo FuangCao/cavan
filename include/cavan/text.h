@@ -163,13 +163,23 @@ int text_cmp_nocase(const char *text1, const char *text2);
 int text_ncmp_nocase(const char *text1, const char *text2, size_t size);
 int text_bool_value(const char *text);
 
-char *text_skip_space(const char *text, const char *line_end);
+char *text_skip_space(const char *text, const char *text_end);
 char *text_skip_space_invert(const char *text, const char *line);
+char *text_skip_lf(const char *text, const char *text_end);
+char *text_skip_lf_invert(const char *text, const char *head);
 char *text_skip_space_and_lf(const char *text, const char *text_end);
-char *text_skip_space_and_lf_invert(const char *text, const char *start);
+char *text_skip_space_and_lf_invert(const char *text, const char *head);
+char *text_skip_name(const char *text, const char *text_end);
+char *text_skip_name_invert(const char *text, const char *head);
 
-char *text_find_line_end(const char *text, const char *file_end);
-char *text_skip_line_end(const char *text, const char *file_end);
+char *text_find_space(const char *text, const char *text_end);
+char *text_find_space_invert(const char *text, const char *head);
+char *text_find_lf(const char *text, const char *text_end);
+char *text_find_lf_invert(const char *text, const char *head);
+char *text_find_space_or_lf(const char *text, const char *text_end);
+char *text_find_space_or_lf_invert(const char *text, const char *head);
+char *text_find_name(const char *text, const char *text_end);
+char *text_find_name_invert(const char *text, const char *head);
 
 __printf_format_30__ char *vformat_text (char *buff, size_t size, const char *fmt, va_list args);
 __printf_format_12__ char *format_text(const char *fmt, ...);
@@ -215,7 +225,6 @@ size_t text_split_by_text(const char *text, const char *sep, char *buff, size_t 
 char *text_join_by_text(char *text[], size_t size1, const char *sep, char *buff, size_t size2);
 
 int text_array_find(const char *text, char *buff[], int size);
-char *text_find_line_end(const char *text, const char *end);
 char text_get_char(const char *text, int index);
 char text_get_escope_letter(char c);
 

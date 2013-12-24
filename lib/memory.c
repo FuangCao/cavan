@@ -620,3 +620,18 @@ bool byte_is_space_or_lf(byte b)
 	}
 }
 
+bool byte_is_named(byte b)
+{
+	switch (b)
+	{
+	case '-':
+	case '_':
+	case '0' ... '9':
+	case 'a' ... 'z':
+	case 'A' ... 'Z':
+		return true;
+
+	default:
+		return false;
+	}
+}
