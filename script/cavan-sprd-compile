@@ -37,7 +37,7 @@ function sprd_compile_once()
 
 [ -f "$1" ] ||
 {
-	sprd_compile_once $1 || exit 1
+	(sprd_compile_once $1) || exit 1
 	exit 0
 }
 
@@ -58,7 +58,7 @@ do
 	do
 		shift
 		[ "$1" ] || break
-		sprd_compile_once $1
+		(sprd_compile_once $1)
 	done
 
 	for fn in u-boot/u-boot-*.bin u-boot/nand_fdl/fdl2.bin u-boot/nand_spl/u-boot-spl-16k.bin
