@@ -157,11 +157,11 @@ int file_join(const char *dest_file, char *src_files[], int count)
 				break;
 			}
 
-			writelen = write(dest_fd, buff, readlen);
+			writelen = ffile_write(dest_fd, buff, readlen);
 			if (writelen != readlen)
 			{
 				ret = writelen < 0 ? writelen : -EFAULT;
-				pr_error_info("write \"%s\"", dest_file);
+				pr_error_info("ffile_write \"%s\"", dest_file);
 				goto out_close_src;
 			}
 
@@ -243,11 +243,11 @@ int file_split(const char *file_name, const char *dest_dir, int count)
 				break;
 			}
 
-			writelen = write(dest_fd, buff, readlen);
+			writelen = ffile_write(dest_fd, buff, readlen);
 			if (writelen != readlen)
 			{
 				ret = writelen < 0 ? writelen : -EFAULT;
-				pr_error_info("write");
+				pr_error_info("ffile_write");
 				goto out_close_dest;
 			}
 
@@ -291,10 +291,10 @@ int ffile_copy_simple(int src_fd, int dest_fd)
 			break;
 		}
 
-		writelen = write(dest_fd, buff, readlen);
+		writelen = ffile_write(dest_fd, buff, readlen);
 		if (writelen != readlen)
 		{
-			pr_error_info("write");
+			pr_error_info("ffile_write");
 			return writelen < 0 ? writelen : -EFAULT;
 		}
 	}
@@ -333,10 +333,10 @@ int ffile_copy(int src_fd, int dest_fd)
 			break;
 		}
 
-		writelen = write(dest_fd, buff, readlen);
+		writelen = ffile_write(dest_fd, buff, readlen);
 		if (writelen != readlen)
 		{
-			pr_error_info("write");
+			pr_error_info("ffile_write");
 			return writelen < 0 ? writelen : -EFAULT;
 		}
 
@@ -607,10 +607,10 @@ int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 			break;
 		}
 
-		writelen = write(dest_fd, buff, readlen);
+		writelen = ffile_write(dest_fd, buff, readlen);
 		if (writelen != readlen)
 		{
-			pr_error_info("write");
+			pr_error_info("ffile_write");
 			return writelen < 0 ? writelen : -EFAULT;
 		}
 
@@ -659,10 +659,10 @@ int ffile_ncopy(int src_fd, int dest_fd, size_t size)
 			break;
 		}
 
-		writelen = write(dest_fd, buff, readlen);
+		writelen = ffile_write(dest_fd, buff, readlen);
 		if (writelen != readlen)
 		{
-			pr_error_info("write");
+			pr_error_info("ffile_write");
 			return writelen < 0 ? writelen : -EFAULT;
 		}
 
@@ -2148,10 +2148,10 @@ int ffile_delete_char(int fd_in, int fd_out, char c)
 		}
 
 		readlen = mem_delete_char(buff, readlen, c);
-		writelen = write(fd_out, buff, readlen);
+		writelen = ffile_write(fd_out, buff, readlen);
 		if (writelen != readlen)
 		{
-			pr_error_info("write");
+			pr_error_info("ffile_write");
 			if (writelen < 0)
 			{
 				return writelen;
