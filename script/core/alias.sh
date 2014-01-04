@@ -176,9 +176,64 @@ function cavan-git-config()
 	${CMD_GIT_CONFIG} push.default matching || return 1
 
 	for cmd in branch  interactive ui diff grep status
-
 	do
 		echo "git config color.${cmd} auto"
 		git config --global color.${cmd} auto;
 	done
+}
+
+function cavan-sign-update-zip()
+{
+	local KEY_DIR KEY_NAME FILE_SIGNAPK FILE_INPUT FILE_OUTPUT
+
+	[ "$1" ] ||
+	{
+		echo "Usage: sign-update-zip update.zip [keyname]"
+		return 1
+	}
+
+	FILE_INPUT="$1"
+	[[ "${FILE_INPUT}" == *.zip ]] ||
+	{
+		echo "input file '${FILE_INPUT}' is not a .zip file"
+		return 1
+	}
+
+	[ -f "${FILE_INPUT}" ] ||
+	{
+		echo "input file '${FILE_INPUT}' is not exists"
+		return 1
+	}
+
+	FILE_OUTPUT="${FILE_INPUT%.zip}-sign.zip"
+	[ -e "${FILE_OUTPUT}" ] &&
+	{
+		echo "output file '${FILE_OUTPUT}' is exists"
+		return 1
+	}
+
+	KEY_DIR="build/target/product/security"
+	[ -d "${KEY_DIR}" ] ||
+	{
+		echo "directory '${KEY_DIR}' is not exists"
+		return 1
+	}
+
+	FILE_SIGNAPK="out/host/linux-x86/framework/signapk.jar"
+	[ -f "${FILE_SIGNAPK}" ] ||
+	{
+		echo "file '${FILE_SIGNAPK}' is not exists"
+		return 1
+	}
+
+	if [ "$2" ]
+	then
+		KEY_NAME="$2"
+	else
+		KEY_NAME="testkey"
+	fi
+
+	java -jar "${FILE_SIGNAPK}" -w "${KEY_DIR}/${KEY_NAME}.x509.pem" "${KEY_DIR}/${KEY_NAME}.pk8" "${FILE_INPUT}" "${FILE_OUTPUT}" || return 1
+
+	return 0
 }

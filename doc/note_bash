@@ -17,3 +17,20 @@ $LINENO
 AA=1234567890
 ${AA:8:1} => 9
 ${AA:8:2} => 90
+
+AA="11.zip.22.zip"
+${AA/.zip/-sign.zip} => 11-sign.zip.22.zip
+${AA//.zip/-sign.zip} => 11-sign.zip.22-sign.zip
+
+FILE_NAME="11/22/33/44/55/66"
+${FILE_NAME##*/} => 66
+${FILE_NAME#*/} => 22/33/44/55/66
+${FILE_NAME%%/*} => 11
+${FILE_NAME%/*} => 11/22/33/44/55
+
+AA="123456"
+${#AA} => 6 -- length of AA
+
+ARRAY=(11 22 33 44 55)
+${#ARRAY} => 5 -- element count of ARRAY
+${#ARRAY[0]} => 2 -- length of ARRAY[0]
