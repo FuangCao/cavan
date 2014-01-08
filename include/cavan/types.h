@@ -7,14 +7,14 @@
 typedef uint64_t u64, dword;
 typedef int64_t s64;
 
-typedef uint32_t u32, word;
-typedef int32_t s32, sword;
+typedef uint32_t u4, u32, word;
+typedef int32_t s4, s32, sword;
 
-typedef uint16_t u16, hword;
-typedef int16_t s16;
+typedef uint16_t u2, u16, hword;
+typedef int16_t s2, s16;
 
-typedef uint8_t u8, byte;
-typedef int8_t s8;
+typedef uint8_t u1, u8, byte;
+typedef int8_t s1, s8;
 
 typedef unsigned long int ulong;
 typedef unsigned short int ushort;
