@@ -345,25 +345,36 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		if (id != null) {
 			PreferenceScreen preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
 			preference.setTitle(R.string.info_id);
-			preference.setSummary(id.toUpperCase());
+			preference.setSummary(id.toLowerCase());
 			preferenceScreens.add(preference);
 
 			HuaFlashInfo info = HuaFlashInfo.getFlashInfo(id);
 			if (info != null) {
-				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
-				preference.setTitle(R.string.info_ic);
-				preference.setSummary(info.getIc());
-				preferenceScreens.add(preference);
+				String ic = info.getIc();
+				if (ic != null) {
+					preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+					preference.setTitle(R.string.info_ic);
+					preference.setSummary(ic);
+					preferenceScreens.add(preference);
+				}
 
 				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
 				preference.setTitle(R.string.info_vendor);
-				preference.setSummary(info.getVendorName());
+				preference.setSummary(info.getVendor());
 				preferenceScreens.add(preference);
 
-				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
-				preference.setTitle(R.string.info_capacity);
-				preference.setSummary(info.getCapacity());
-				preferenceScreens.add(preference);
+				NandFlashDevice device = info.getFlashDevice();
+				if (device != null) {
+					preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+					preference.setTitle(R.string.info_capacity);
+					preference.setSummary(device.getChipSizeString());
+					preferenceScreens.add(preference);
+
+					preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+					preference.setTitle(R.string.info_detail);
+					preference.setSummary(device.getName());
+					preferenceScreens.add(preference);
+				}
 			}
 		}
 
