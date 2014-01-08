@@ -478,15 +478,21 @@ static int web_proxy_send_connect_filed(int sockfd, struct network_url *url)
 	int ret;
 	char buff[1024];
 
-	fd = web_proxy_open_html_file("connect failed", NULL);
+	fd = web_proxy_open_html_file("connection failure", NULL);
 	if (fd < 0)
 	{
 		pr_red_info("web_proxy_open_html_file");
 		return fd;
 	}
 
-	ffile_printf(fd, "\t\t<h1>Can't connect to %s</h1>\r\n", network_url_tostring(url, buff, sizeof(buff), NULL));
-	ffile_puts(fd, "\t\t<h2>Fuang.Cao <a href=\"http://mail.google.com\">cavan.cfa@gmail.com</a></h2>\r\n");
+	ffile_printf(fd, "\t\t<h1>Unable to connect to %s</h1>\r\n", network_url_tostring(url, buff, sizeof(buff), NULL));
+	ffile_puts(fd, "\t\t<h1>Please contact with Fuang.Cao</h1>\r\n");
+	ffile_puts(fd, "\t\t<table>\r\n");
+	ffile_puts(fd, "\t\t\t<tr><td><strong>E-mail: </strong></td><td><a href=\"http://mail.google.com\">cavan.cfa@gmail.com</a>; <a href=\"http://mail.hipad.hk:6080\">caofuang@hipad.hk</a></td></tr>\r\n");
+	ffile_puts(fd, "\t\t\t<tr><td><strong>QQ: </strong></td><td><a href=\"http://web2.qq.com/\">870863613</a></td></tr>\r\n");
+	ffile_puts(fd, "\t\t\t<tr><td><strong>Website: </strong></td><td><a href=\"http://www.hipad.hk\">http://www.hipad.hk</a></td></tr>\r\n");
+	ffile_puts(fd, "\t\t\t<tr><td><strong>Source: </strong></td><td><a href=\"https://github.com/FuangCao/cavan.git\">https://github.com/FuangCao/cavan.git</a></td></tr>\r\n");
+	ffile_puts(fd, "\t\t</table>\r\n");
 
 	ret = web_proxy_flush_html_file(fd);
 	if (ret < 0)
