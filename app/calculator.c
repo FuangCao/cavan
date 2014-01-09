@@ -18,12 +18,21 @@ enum
 	LOCAL_COMMAND_OPTION_BASE,
 	LOCAL_COMMAND_OPTION_LENGTH,
 	LOCAL_COMMAND_OPTION_PREFIX,
-	LOCAL_COMMAND_OPTION_LONG
+	LOCAL_COMMAND_OPTION_LONG,
+	LOCAL_COMMAND_OPTION_MASK
 };
 
-static void show_usage(void)
+static void show_usage(const char *command)
 {
 	println("Usage:");
+	println("%s [option] port", command);
+	println("--help, -h, -H\t\tshow this help");
+	println("--version, -v, -V\tshow command version");
+	println("--base, -b, -B\t\tset out radix");
+	println("--length, -l, -L\tset value bit count");
+	println("--prefix, -p, -P\tshow value prefix");
+	println("--long\t\t\tuse my math library");
+	println("--mask, -m, -M\t\tshow bit location");
 }
 
 int main(int argc, char *argv[])
@@ -69,6 +78,12 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_LONG,
 		},
 		{
+			.name = "mask",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_MASK,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -78,10 +93,11 @@ int main(int argc, char *argv[])
 	int length[2];
 	int flags = 0;
 	bool long_cal = false;
+	bool show_bitmask = false;
 
 	length[0] = length[1] = 0;
 
-	while ((c = getopt_long(argc, argv, "vVhHb:B:l:L:pP", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHb:B:l:L:pPmM", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -95,7 +111,7 @@ int main(int argc, char *argv[])
 		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
-			show_usage();
+			show_usage(argv[0]);
 			return 0;
 
 		case 'b':
@@ -121,8 +137,14 @@ int main(int argc, char *argv[])
 			long_cal = true;
 			break;
 
+		case 'm':
+		case 'M':
+		case LOCAL_COMMAND_OPTION_MASK:
+			show_bitmask = true;
+			break;
+
 		default:
-			show_usage();
+			show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}
@@ -154,7 +176,7 @@ int main(int argc, char *argv[])
 			{
 				char format[64];
 
-				sprintf(format, "%%%d.%dlf", length[0], length[1]);
+				sprintf(format, "%%0%d.%dlf", length[0], length[1]);
 				println(format, result);
 			}
 			else
@@ -165,6 +187,13 @@ int main(int argc, char *argv[])
 		else
 		{
 			double2text(&result, buff, length[0], 0, base | flags);
+			println("%s", buff);
+		}
+
+		if (show_bitmask)
+		{
+			value2bitlist((u64)result, buff, sizeof(buff), " | ");
+
 			println("%s", buff);
 		}
 	}

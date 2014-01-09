@@ -99,6 +99,7 @@ char *simple_value2text(s64 value, char *buff, size_t size, int base);
 
 char *value2text_base(s64 value, char *text, int size, char fill, int flags);
 char *value2text(u64 value, int flags);
+char *value2bitlist(u64 value, char *buff, size_t size, const char *sep);
 
 char *base2prefix(int base, char *prefix);
 char *base2prefix_reverse(char *text, size_t size, int base);

@@ -1221,6 +1221,38 @@ char *value2text(u64 value, int flags)
 	return buff;
 }
 
+char *value2bitlist(u64 value, char *buff, size_t size, const char *sep)
+{
+	int i;
+	int count;
+	char *buff_end = buff + size - 1;
+
+	buff = text_ncopy(buff, "[ ", buff_end - buff);
+
+	for (i = sizeof(value) * 8 - 1, count = 0; i >= 0 && buff < buff_end; i--)
+	{
+		if ((value & (((u64)1) << i)) == 0)
+		{
+			continue;
+		}
+
+		if (count > 0)
+		{
+			buff += snprintf(buff, buff_end - buff, "%s%d", sep, i);
+		}
+		else
+		{
+			buff += snprintf(buff, buff_end - buff, "%d", i);
+		}
+
+		count++;
+	}
+
+	buff = text_ncopy(buff, " ]", buff_end - buff);
+
+	return buff;
+}
+
 double text2size_single(const char *text, const char **last)
 {
 	double size;
