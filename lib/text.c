@@ -812,7 +812,6 @@ int prefix2base(const char *prefix, const char *prefix_end, const char **last, i
 	default:
 		prefix--;
 		base = -EINVAL;
-		pr_red_info("Invalid prefix");
 	}
 
 out_return:
@@ -897,11 +896,10 @@ double text2double_unsigned(const char *text, const char *text_end, const char *
 		goto out_return;
 	}
 
-	base = prefix2base(text, text_end, &text, base);
-	if (base < 0)
+	value = prefix2base(text, text_end, &text, base);
+	if (value > 1)
 	{
-		result = 0;
-		goto out_return;
+		base = value;
 	}
 
 	for (result = 0; text < text_end; text++)
