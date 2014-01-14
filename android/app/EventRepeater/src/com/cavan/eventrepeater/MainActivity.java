@@ -1,17 +1,16 @@
 package com.cavan.eventrepeater;
 
-import android.os.Bundle;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.RadioButton;
 
 public class MainActivity extends Activity implements OnCheckedChangeListener {
 	private static final String TAG = "Cavan";
@@ -55,6 +54,7 @@ public class MainActivity extends Activity implements OnCheckedChangeListener {
 
 		mCheckBoxStartService = (CheckBox) findViewById(R.id.checkBoxStartService);
 		mCheckBoxStartService.setOnCheckedChangeListener(this);
+		mCheckBoxStartService.setChecked(true);
 	}
 
 	@Override

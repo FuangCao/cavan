@@ -1,20 +1,21 @@
 package com.cavan.eventrepeater;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import org.apache.http.entity.InputStreamEntity;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.app.Service;
 import android.content.Intent;
-import android.media.MediaRecorder.OutputFormat;
 import android.os.IBinder;
+import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.util.Log;
+import android.view.IWindowManager;
+import android.view.KeyEvent;
 
 public class EventRepeater extends Service {
 	private static final String TAG = "Cavan";
@@ -31,6 +32,9 @@ public class EventRepeater extends Service {
 	private int mDaemonCount;
 	private int mDaemonUsed;
 
+	private IWindowManager mWindowManager;
+	private static final Pattern mPatternKey = Pattern.compile("key:\\s*name\\s*=\\s*(.*),\\s*code\\s*=\\s*(.*),\\s*value\\s*=\\s*(.*)");
+
 	@Override
 	public IBinder onBind(Intent arg0) {
 		return null;
@@ -39,6 +43,9 @@ public class EventRepeater extends Service {
 	@Override
 	public void onCreate() {
 		Log.d(TAG, "onCreate()");
+
+		mWindowManager = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
+
 		super.onCreate();
 	}
 
@@ -106,9 +113,23 @@ public class EventRepeater extends Service {
 				break;
 			}
 
-			Log.d(TAG, new String(buff));
+			String event = new String(buff);
+			Log.d(TAG, event);
+
+			Matcher matcher = mPatternKey.matcher(event);
+			if (matcher != null && matcher.find()) {
+				Log.d(TAG, "code = " + matcher.group(2) + ", value = " + matcher.group(3));
+				int code = Integer.decode(matcher.group(2));
+				int value = Integer.decode(matcher.group(3));
+				KeyEvent keyEvent = new KeyEvent(value > 0 ? KeyEvent.ACTION_DOWN : KeyEvent.ACTION_UP, code);
+				try {
+					mWindowManager.injectKeyEvent(keyEvent, true);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
 		}
-		
+
 		return true;
 	}
 
