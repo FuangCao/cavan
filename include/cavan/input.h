@@ -140,6 +140,7 @@ bool cavan_input_service_append_key_message(struct cavan_input_service *service,
 bool cavan_input_service_append_vector_message(struct cavan_input_service *service, int type, int x, int y, int z);
 bool cavan_input_service_append_point_message(struct cavan_input_service *service, int type, struct cavan_input_message_point *point);
 char cavan_keycode2ascii(int code, bool shift_down);
+int cavan_input_message_tostring(cavan_input_message_t *message, char *buff, size_t size);
 
 static inline int cavan_input_service_join(struct cavan_input_service *service)
 {

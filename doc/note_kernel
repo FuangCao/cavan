@@ -1,1 +1,4 @@
 dump_stack
+lookup_symbol_name
+__print_symbol
+sprint_symbol

@@ -217,99 +217,95 @@ static void cavan_input_message_queue_handler(void *addr, void *data)
 	service->handler(addr, service->private_data);
 }
 
-static void cavan_input_message_queue_handler_dummy(void *addr, void *data)
+int cavan_input_message_tostring(cavan_input_message_t *message, char *buff, size_t size)
 {
 	struct cavan_input_message_key *key;
 	struct cavan_input_message_point *point;
 	struct cavan_input_message_vector *vector;
-	cavan_input_message_t *message = addr;
 
 	switch (message->type)
 	{
 	case CAVAN_INPUT_MESSAGE_KEY:
 		key = &message->key;
-		pr_std_info("key: name = %s, code = %d, value = %d", key->name, key->code, key->value);
-		break;
+		return snprintf(buff, size, "key: name = %s, code = %d, value = %d", key->name, key->code, key->value);
 
 	case CAVAN_INPUT_MESSAGE_MOVE:
 		point = &message->point;
-		pr_std_info("move[%d] = [%d, %d]", point->id, point->x, point->y);
-		break;
+		return snprintf(buff, size, "move[%d] = [%d, %d]", point->id, point->x, point->y);
 
 	case CAVAN_INPUT_MESSAGE_TOUCH:
 		point = &message->point;
-		pr_std_info("touch[%d] = [%d, %d]", point->id, point->x, point->y);
-		break;
+		return snprintf(buff, size, "touch[%d] = [%d, %d]", point->id, point->x, point->y);
 
 	case CAVAN_INPUT_MESSAGE_WHEEL:
 		key = &message->key;
-		pr_std_info("wheel[%d] = %d", key->code, key->value);
-		break;
+		return snprintf(buff, size, "wheel[%d] = %d", key->code, key->value);
 
 	case CAVAN_INPUT_MESSAGE_MOUSE_MOVE:
 		vector = &message->vector;
-		pr_std_info("mouse_move = [%d, %d]", vector->x, vector->y);
-		break;
+		return snprintf(buff, size, "mouse_move = [%d, %d]", vector->x, vector->y);
 
 	case CAVAN_INPUT_MESSAGE_MOUSE_TOUCH:
 		key = &message->key;
-		pr_std_info("mouse_touch[%d] = %d", key->code, key->value);
-		break;
+		return snprintf(buff, size, "mouse_touch[%d] = %d", key->code, key->value);
 
 	case CAVAN_INPUT_MESSAGE_ACCELEROMETER:
 		vector = &message->vector;
-		pr_std_info("Accelerometer = [%d, %d, %d]", vector->x, vector->y, vector->z);
-		break;
+		return snprintf(buff, size, "Accelerometer = [%d, %d, %d]", vector->x, vector->y, vector->z);
 
 	case CAVAN_INPUT_MESSAGE_MAGNETIC_FIELD:
 		vector = &message->vector;
-		pr_std_info("Magnetic_Field = [%d, %d, %d]", vector->x, vector->y, vector->z);
-		break;
+		return snprintf(buff, size, "Magnetic_Field = [%d, %d, %d]", vector->x, vector->y, vector->z);
 
 	case CAVAN_INPUT_MESSAGE_ORIENTATION:
 		vector = &message->vector;
-		pr_std_info("Orientation = [%d, %d, %d]", vector->x, vector->y, vector->z);
-		break;
+		return snprintf(buff, size, "Orientation = [%d, %d, %d]", vector->x, vector->y, vector->z);
 
 	case CAVAN_INPUT_MESSAGE_GYROSCOPE:
 		vector = &message->vector;
-		pr_std_info("Gyroscope = [%d, %d, %d]", vector->x, vector->y, vector->z);
-		break;
+		return snprintf(buff, size, "Gyroscope = [%d, %d, %d]", vector->x, vector->y, vector->z);
 
 	case CAVAN_INPUT_MESSAGE_GRAVITY:
 		vector = &message->vector;
-		pr_std_info("Gravity = [%d, %d, %d]", vector->x, vector->y, vector->z);
-		break;
+		return snprintf(buff, size, "Gravity = [%d, %d, %d]", vector->x, vector->y, vector->z);
 
 	case CAVAN_INPUT_MESSAGE_LINEAR_ACCELERATION:
 		vector = &message->vector;
-		pr_std_info("Linear_Acceleration = [%d, %d, %d]", vector->x, vector->y, vector->z);
-		break;
+		return snprintf(buff, size, "Linear_Acceleration = [%d, %d, %d]", vector->x, vector->y, vector->z);
 
 	case CAVAN_INPUT_MESSAGE_ROTATION_VECTOR:
 		vector = &message->vector;
-		pr_std_info("Rotation_Vector = [%d, %d, %d]", vector->x, vector->y, vector->z);
-		break;
+		return snprintf(buff, size, "Rotation_Vector = [%d, %d, %d]", vector->x, vector->y, vector->z);
 
 	case CAVAN_INPUT_MESSAGE_LIGHT:
-		pr_std_info("Light = [%d]", message->value);
-		break;
+		return snprintf(buff, size, "Light = [%d]", message->value);
 
 	case CAVAN_INPUT_MESSAGE_PRESSURE:
-		pr_std_info("Pressure = [%d]", message->value);
-		break;
+		return snprintf(buff, size, "Pressure = [%d]", message->value);
 
 	case CAVAN_INPUT_MESSAGE_TEMPERATURE:
-		pr_std_info("Temperature = [%d]", message->value);
-		break;
+		return snprintf(buff, size, "Temperature = [%d]", message->value);
 
 	case CAVAN_INPUT_MESSAGE_PROXIMITY:
-		pr_std_info("Proximity = [%d]", message->value);
-		break;
+		return snprintf(buff, size, "Proximity = [%d]", message->value);
 
 	default:
-		pr_red_info("Invalid message type %d", message->type);
+		return snprintf(buff, size, "Invalid message type %d", message->type);
 	}
+}
+
+static void cavan_input_message_queue_handler_dummy(void *addr, void *data)
+{
+	int length;
+	char buff[1024];
+
+	length = cavan_input_message_tostring(addr, buff, sizeof(buff));
+	if (length < (int)sizeof(buff))
+	{
+		buff[length++] = '\n';
+	}
+
+	print_ntext(buff, length);
 }
 
 int cavan_input_service_start(struct cavan_input_service *service, void *data)
