@@ -95,3 +95,24 @@ static inline size_t mem_delete_char(char *mem, const size_t size, const char c)
 {
 	return mem_delete_char_base(mem, mem, size, c);
 }
+
+static inline void *mem_write8(void *mem, u8 value)
+{
+	*(volatile u8 *)mem = value;
+
+	return (u8 *)mem + 1;
+}
+
+static inline void *mem_write16(void *mem, u16 value)
+{
+	*(volatile u16 *)mem = value;
+
+	return (u16 *)mem + 1;
+}
+
+static inline void *mem_write32(void *mem, u32 value)
+{
+	*(volatile u32 *)mem = value;
+
+	return (u32 *)mem + 1;
+}

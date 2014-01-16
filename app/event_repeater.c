@@ -55,13 +55,29 @@ static void show_usage(const char *command)
 
 static void event_repeater_input_handler(cavan_input_message_t *message, void *data)
 {
-	u16 length;
-	char buff[1024];
+	byte buff[1024], *p;
 	struct event_repeater_data *repeater = data;
 
-	length = cavan_input_message_tostring(message, buff, sizeof(buff));
-	ffile_write(repeater->sockfd, &length, sizeof(length));
-	ffile_write(repeater->sockfd, buff, length);
+	p = mem_write8(buff, message->type);
+
+	switch (message->type)
+	{
+	case CAVAN_INPUT_MESSAGE_KEY:
+	case CAVAN_INPUT_MESSAGE_MOUSE_TOUCH:
+		p = mem_write16(p, message->key.code);
+		p = mem_write16(p, message->key.value);
+		break;
+
+	case CAVAN_INPUT_MESSAGE_MOUSE_MOVE:
+		p = mem_write8(p, message->vector.x);
+		p = mem_write8(p, message->vector.y);
+		break;
+
+	default:
+		return;
+	}
+
+	ffile_write(repeater->sockfd, buff, p - buff);
 }
 
 static int event_repeater_run(struct event_repeater_data *data)
