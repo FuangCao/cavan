@@ -10,6 +10,7 @@
 
 #define MAX_BUFF_LEN	KB(4)
 #define MIN_FILE_SIZE	KB(1)
+#define CONFIG_ERROR_IF_COPY_REMAIN	0
 
 static const u32 crc16_table[256] =
 {
@@ -141,26 +142,26 @@ int file_join(const char *dest_file, char *src_files[], int count)
 
 		while (1)
 		{
-			ssize_t readlen, writelen;
+			ssize_t rdlen, wrlen;
 			char buff[MAX_BUFF_LEN];
 
-			readlen = read(src_fd, buff, sizeof(buff));
-			if (readlen < 0)
+			rdlen = read(src_fd, buff, sizeof(buff));
+			if (rdlen < 0)
 			{
-				ret = readlen;
+				ret = rdlen;
 				pr_error_info("read \"%s\"", src_files[i]);
 				goto out_close_src;
 			}
 
-			if (readlen == 0)
+			if (rdlen == 0)
 			{
 				break;
 			}
 
-			writelen = ffile_write(dest_fd, buff, readlen);
-			if (writelen != readlen)
+			wrlen = ffile_write(dest_fd, buff, rdlen);
+			if (wrlen != rdlen)
 			{
-				ret = writelen < 0 ? writelen : -EFAULT;
+				ret = wrlen < 0 ? wrlen : -EFAULT;
 				pr_error_info("ffile_write \"%s\"", dest_file);
 				goto out_close_src;
 			}
@@ -184,16 +185,27 @@ out_close_dest:
 	return ret;
 }
 
-int file_split(const char *file_name, const char *dest_dir, int count)
+int file_split(const char *file_name, const char *dest_dir, size_t size, int count)
 {
 	int ret;
 	int i;
 	int src_fd, dest_fd;
-	size_t dest_size, remain_size;
+	size_t remain_size;
 	struct stat st;
-	struct progress_bar bar;
+	char dest_pathname[1024], *dest_filename;
 
-	mkdir(dest_dir, 0);
+	if (size == 0 && count == 0)
+	{
+		pr_red_info("Please give the size or count");
+		ERROR_RETURN(EINVAL);
+	}
+
+	ret = mkdir_hierarchy(dest_dir, 0777);
+	if (ret < 0)
+	{
+		pr_error_info("Create directory `%s' failed", dest_dir);
+		return ret;
+	}
 
 	src_fd = open(file_name, O_RDONLY | O_BINARY);
 	if (src_fd < 0)
@@ -209,102 +221,93 @@ int file_split(const char *file_name, const char *dest_dir, int count)
 		goto out_close_src;
 	}
 
-	progress_bar_init(&bar, st.st_size);
+	remain_size = st.st_size;
 
-	dest_size = st.st_size / count;
-	dest_size = (st.st_size + dest_size - 1) / count;
-
-	for (i = 0; i < count; i++)
+	if (size == 0)
 	{
-		remain_size = dest_size;
-
-		dest_fd = open(format_text("%s/%d", dest_dir, i), O_WRONLY | O_CREAT | O_TRUNC | O_SYNC | O_BINARY, 0777);
-		if (dest_fd < 0)
+		size = (remain_size + count - 1) / count;
+		if (size == 0)
 		{
-			pr_error_info("open");
-			goto out_close_dest;
+			ret = -EINVAL;
+			pr_red_info("count to large");
+			goto out_close_src;
 		}
-
-		while (remain_size)
-		{
-			ssize_t readlen, writelen;
-			char buff[MAX_BUFF_LEN];
-
-			readlen = read(src_fd, buff, remain_size > sizeof(buff) ? sizeof(buff) : remain_size);
-			if (ret < 0)
-			{
-				ret = readlen;
-				pr_error_info("read");
-				goto out_close_dest;
-			}
-
-			if (readlen == 0)
-			{
-				break;
-			}
-
-			writelen = ffile_write(dest_fd, buff, readlen);
-			if (writelen != readlen)
-			{
-				ret = writelen < 0 ? writelen : -EFAULT;
-				pr_error_info("ffile_write");
-				goto out_close_dest;
-			}
-
-			progress_bar_add(&bar, writelen);
-
-			remain_size -= writelen;
-		}
-
-		close(dest_fd);
 	}
 
-	progress_bar_finish(&bar);
+	dest_filename = text_path_cat(dest_pathname, dest_dir, text_basename(file_name));
+
+	for (i = 1; remain_size; i++)
+	{
+		ssize_t cpylen;
+
+		sprintf(dest_filename, "-part%02d", i);
+		pr_std_info("%s => %s", file_name, dest_pathname);
+
+		dest_fd = open(dest_pathname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0777);
+		if (dest_fd < 0)
+		{
+			pr_error_info("open file `%s' failed", dest_pathname);
+			goto out_close_src;
+		}
+
+		cpylen = ffile_ncopy(src_fd, dest_fd, remain_size > size ? size : remain_size);
+		close(dest_fd);
+		if (cpylen < 0)
+		{
+			ret = cpylen;
+			pr_red_info("ffile_ncopy");
+			goto out_close_src;
+		}
+
+		remain_size -= cpylen;
+	}
 
 	ret = 0;
-	goto out_close_src;
 
-out_close_dest:
-	close(dest_fd);
 out_close_src:
 	close(src_fd);
 
 	return ret;
 }
 
-int ffile_copy_simple(int src_fd, int dest_fd)
+ssize_t ffile_copy_simple(int src_fd, int dest_fd)
 {
+	size_t cpylen = 0;
+
 	while (1)
 	{
-		ssize_t readlen, writelen;
+		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
-		readlen = read(src_fd, buff, sizeof(buff));
-		if (readlen < 0)
+		rdlen = read(src_fd, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		writelen = ffile_write(dest_fd, buff, readlen);
-		if (writelen != readlen)
+		wrlen = ffile_write(dest_fd, buff, rdlen);
+		if (wrlen != rdlen)
 		{
 			pr_error_info("ffile_write");
-			return writelen < 0 ? writelen : -EFAULT;
+			return wrlen < 0 ? wrlen : -EFAULT;
 		}
+
+		cpylen += wrlen;
 	}
 
-	return 0;
+	return cpylen;
 }
 
-int ffile_copy(int src_fd, int dest_fd)
+ssize_t ffile_copy(int src_fd, int dest_fd)
 {
 	int ret;
+	size_t cpylen;
 	struct stat st;
 	struct progress_bar bar;
 
@@ -314,67 +317,69 @@ int ffile_copy(int src_fd, int dest_fd)
 		return ffile_copy_simple(src_fd, dest_fd);
 	}
 
+	cpylen = 0;
 	progress_bar_init(&bar, st.st_size);
 
 	while (1)
 	{
-		ssize_t readlen, writelen;
+		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
-		readlen = read(src_fd, buff, sizeof(buff));
-		if (readlen < 0)
+		rdlen = read(src_fd, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		writelen = ffile_write(dest_fd, buff, readlen);
-		if (writelen != readlen)
+		wrlen = ffile_write(dest_fd, buff, rdlen);
+		if (wrlen != rdlen)
 		{
 			pr_error_info("ffile_write");
-			return writelen < 0 ? writelen : -EFAULT;
+			return wrlen < 0 ? wrlen : -EFAULT;
 		}
 
-		progress_bar_add(&bar, writelen);
+		cpylen += wrlen;
+		progress_bar_set(&bar, cpylen);
 	}
 
 	progress_bar_finish(&bar);
 
-	return 0;
+	return cpylen;
 }
 
-int file_append(const char *file_src, const char *file_dest)
+ssize_t file_append(const char *file_src, const char *file_dest)
 {
+	ssize_t res;
 	int fd_src, fd_dest;
-	int ret;
 
 	fd_src = open(file_src, READ_FLAGS);
 	if (fd_src < 0)
 	{
 		pr_error_info("open \"%s\"", file_src);
-		return -1;
+		return fd_src;
 	}
 
 	fd_dest = open(file_dest, WRITE_FLAGS | O_APPEND, 0777);
 	if (fd_dest < 0)
 	{
-		ret = -1;
+		res = fd_dest;
 		pr_error_info("open \"%s\"", file_dest);
 		goto out_close_fd_src;
 	}
 
-	ret = ffile_copy(fd_src, fd_dest);
+	res = ffile_copy(fd_src, fd_dest);
 
 	close(fd_dest);
 out_close_fd_src:
 	close(fd_src);
 
-	return ret;
+	return res;
 }
 
 int file_open_rw_ro(const char *pathname, int flags)
@@ -438,28 +443,25 @@ out_close_src_fd:
 	return ret;
 }
 
-int file_copy(const char *src_file, const char *dest_file, int flags)
+ssize_t file_copy(const char *src_file, const char *dest_file, int flags)
 {
-	int src_fd, dest_fd;
 	int ret;
+	ssize_t cpylen;
+	int src_fd, dest_fd;
 
 	ret = open_files(src_file, dest_file, &src_fd, &dest_fd, flags);
 	if (ret < 0)
 	{
-		error_msg("open_files");
+		pr_error_info("open_files");
 		return ret;
 	}
 
-	ret = ffile_copy(src_fd, dest_fd);
-	if (ret < 0)
-	{
-		error_msg("ffile_copy");
-	}
+	cpylen = ffile_copy(src_fd, dest_fd);
 
 	close(src_fd);
 	close(dest_fd);
 
-	return ret;
+	return cpylen;
 }
 
 off_t ffile_get_size(int fd)
@@ -588,35 +590,38 @@ int file_create_open(const char *pathname, int flags, mode_t mode)
 	return open(pathname, O_CREAT | O_BINARY | flags, mode);
 }
 
-int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
+ssize_t ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 {
+	size_t size_bak = size;
+
 	while (size)
 	{
-		ssize_t readlen, writelen;
+		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
-		readlen = read(src_fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (readlen < 0)
+		rdlen = read(src_fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		writelen = ffile_write(dest_fd, buff, readlen);
-		if (writelen != readlen)
+		wrlen = ffile_write(dest_fd, buff, rdlen);
+		if (wrlen != rdlen)
 		{
 			pr_error_info("ffile_write");
-			return writelen < 0 ? writelen : -EFAULT;
+			return wrlen < 0 ? wrlen : -EFAULT;
 		}
 
-		size -= writelen;
+		size -= wrlen;
 	}
 
+#if CONFIG_ERROR_IF_COPY_REMAIN
 	if (size)
 	{
 #if __WORDSIZE == 64
@@ -628,11 +633,15 @@ int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 		return -EINVAL;
 	}
 
-	return 0;
+	return size_bak;
+#else
+	return size_bak - size;
+#endif
 }
 
-int ffile_ncopy(int src_fd, int dest_fd, size_t size)
+ssize_t ffile_ncopy(int src_fd, int dest_fd, size_t size)
 {
+	size_t size_bak;
 	struct progress_bar bar;
 
 	if (size < MIN_FILE_SIZE)
@@ -640,38 +649,40 @@ int ffile_ncopy(int src_fd, int dest_fd, size_t size)
 		return ffile_ncopy_simple(src_fd, dest_fd, size);
 	}
 
+	size_bak = size;
 	progress_bar_init(&bar, size);
 
 	while (size)
 	{
-		ssize_t readlen, writelen;
+		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
-		readlen = read(src_fd, buff, size < sizeof(buff) ? size : sizeof(buff));
-		if (readlen < 0)
+		rdlen = read(src_fd, buff, size < sizeof(buff) ? size : sizeof(buff));
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		writelen = ffile_write(dest_fd, buff, readlen);
-		if (writelen != readlen)
+		wrlen = ffile_write(dest_fd, buff, rdlen);
+		if (wrlen != rdlen)
 		{
 			pr_error_info("ffile_write");
-			return writelen < 0 ? writelen : -EFAULT;
+			return wrlen < 0 ? wrlen : -EFAULT;
 		}
 
-		progress_bar_add(&bar, writelen);
-		size -= writelen;
+		progress_bar_add(&bar, wrlen);
+		size -= wrlen;
 	}
 
 	progress_bar_finish(&bar);
 
+#if CONFIG_ERROR_IF_COPY_REMAIN
 	if (size)
 	{
 #if __WORDSIZE == 64
@@ -683,31 +694,31 @@ int ffile_ncopy(int src_fd, int dest_fd, size_t size)
 		return -EINVAL;
 	}
 
-	return 0;
+	return size_bak;
+#else
+	return size_bak - size;
+#endif
 }
 
-int file_ncopy(const char *src_file, const char *dest_file, size_t size, int flags)
+ssize_t file_ncopy(const char *src_file, const char *dest_file, size_t size, int flags)
 {
-	int src_fd, dest_fd;
 	int ret;
+	ssize_t res;
+	int src_fd, dest_fd;
 
 	ret = open_files(src_file, dest_file, &src_fd, &dest_fd, flags);
 	if (ret < 0)
 	{
-		error_msg("open_files");
+		pr_red_info("open_files");
 		return ret;
 	}
 
-	ret = ffile_ncopy(src_fd, dest_fd, size);
-	if (ret < 0)
-	{
-		error_msg("ffile_ncopy");
-	}
+	res = ffile_ncopy(src_fd, dest_fd, size);
 
 	close(src_fd);
 	close(dest_fd);
 
-	return ret;
+	return res;
 }
 
 int vtry_to_open(int flags, va_list ap)
@@ -753,19 +764,19 @@ ssize_t ffile_read(int fd, void *buff, size_t size)
 
 	while (buff < buff_end)
 	{
-		ssize_t readlen = read(fd, buff, (char *)buff_end - (char *)buff);
+		ssize_t rdlen = read(fd, buff, (char *)buff_end - (char *)buff);
 
-		if (readlen < 0)
+		if (rdlen < 0)
 		{
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		buff = (char *)buff + readlen;
+		buff = (char *)buff + rdlen;
 	}
 
 	return (char *)buff - (char *)buff_bak;
@@ -777,19 +788,19 @@ ssize_t ffile_write(int fd, const void *buff, size_t size)
 
 	while (buff < buff_end)
 	{
-		ssize_t writelen = write(fd, buff, (char *)buff_end - (char *)buff);
+		ssize_t wrlen = write(fd, buff, (char *)buff_end - (char *)buff);
 
-		if (writelen < 0)
+		if (wrlen < 0)
 		{
-			return writelen;
+			return wrlen;
 		}
 
-		if (writelen == 0)
+		if (wrlen == 0)
 		{
 			break;
 		}
 
-		buff = (char *)buff + writelen;
+		buff = (char *)buff + wrlen;
 	}
 
 	return (char *)buff - (char *)buff_bak;
@@ -814,7 +825,7 @@ ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
 
 ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t offset, int flags)
 {
-	ssize_t writelen;
+	ssize_t wrlen;
 	int fd;
 
 #ifdef CAVAN_DEBUG
@@ -832,11 +843,11 @@ ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t
 		return -1;
 	}
 
-	writelen = ffile_writeto(fd, buff, size, offset);
+	wrlen = ffile_writeto(fd, buff, size, offset);
 
 	close(fd);
 
-	return writelen;
+	return wrlen;
 }
 
 ssize_t ffile_readfrom(int fd, void *buff, size_t size, off_t offset)
@@ -856,7 +867,7 @@ ssize_t ffile_readfrom(int fd, void *buff, size_t size, off_t offset)
 
 ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offset, int flags)
 {
-	ssize_t readlen;
+	ssize_t rdlen;
 	int fd;
 
 #ifdef CAVAN_DEBUG
@@ -874,11 +885,11 @@ ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offs
 		return -1;
 	}
 
-	readlen = ffile_readfrom(fd, buff, size, offset);
+	rdlen = ffile_readfrom(fd, buff, size, offset);
 
 	close(fd);
 
-	return readlen;
+	return rdlen;
 }
 
 int file_test_read(const char *filename)
@@ -892,22 +903,22 @@ int ffile_show(int fd)
 {
 	while (1)
 	{
-		ssize_t readlen;
+		ssize_t rdlen;
 		char buff[16];
 
-		readlen = read(fd, buff, sizeof(buff));
-		if (readlen < 0)
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		text_show(buff, readlen);
+		text_show(buff, rdlen);
 	}
 
 	print_char('\n');
@@ -924,24 +935,24 @@ int ffile_nshow(int fd, size_t size)
 
 	while (size)
 	{
-		ssize_t readlen;
+		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
-		readlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (readlen < 0)
+		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		text_show(buff, readlen);
+		text_show(buff, rdlen);
 
-		size -= readlen;
+		size -= rdlen;
 	}
 
 	print_char('\n');
@@ -1062,22 +1073,22 @@ int ffile_cat(int fd)
 {
 	while (1)
 	{
-		ssize_t readlen;
+		ssize_t rdlen;
 		char buff[MAX_BUFFER_LEN];
 
-		readlen = read(fd, buff, sizeof(buff));
-		if (readlen < 0)
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		print_ntext(buff, readlen);
+		print_ntext(buff, rdlen);
 	}
 
 	print_char('\n');
@@ -1094,23 +1105,23 @@ int ffile_ncat(int fd, size_t size)
 
 	while (size)
 	{
-		ssize_t readlen;
+		ssize_t rdlen;
 		char buff[MAX_BUFFER_LEN];
 
-		readlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (readlen < 0)
+		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		print_ntext(buff, readlen);
-		size -= readlen;
+		print_ntext(buff, rdlen);
+		size -= rdlen;
 	}
 
 	print_char('\n');
@@ -1127,35 +1138,35 @@ int ffile_cmp(int fd1, int fd2, size_t size)
 
 	while (size)
 	{
-		ssize_t readlen;
+		ssize_t rdlen;
 		char buff1[MAX_BUFF_LEN];
 		char buff2[MAX_BUFF_LEN];
 
-		readlen = read(fd1, buff1, size > sizeof(buff1) ? sizeof(buff1) : size);
-		if (readlen < 0)
+		rdlen = read(fd1, buff1, size > sizeof(buff1) ? sizeof(buff1) : size);
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		readlen = read(fd2, buff2, readlen);
-		if (readlen < 0)
+		rdlen = read(fd2, buff2, rdlen);
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (memcmp(buff1, buff2, readlen) != 0)
+		if (memcmp(buff1, buff2, rdlen) != 0)
 		{
 			return 1;
 		}
 
-		size -= readlen;
+		size -= rdlen;
 	}
 
 	return 0;
@@ -1226,22 +1237,22 @@ int ffile_crc32(int fd, u32 *crc)
 
 	while (1)
 	{
-		ssize_t readlen;
+		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
-		readlen = read(fd, buff, sizeof(buff));
-		if (readlen < 0)
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		crc[0] = mem_crc32(crc[0], buff, readlen);
+		crc[0] = mem_crc32(crc[0], buff, rdlen);
 
 		print_char('.');
 	}
@@ -1282,24 +1293,24 @@ int ffile_ncrc32(int fd, size_t size, u32 *crc)
 
 	while (size)
 	{
-		ssize_t readlen;
+		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
-		readlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (readlen < 0)
+		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		crc[0] = mem_crc32(crc[0], buff, readlen);
-		size -= readlen;
-		progress_bar_add(&bar, readlen);
+		crc[0] = mem_crc32(crc[0], buff, rdlen);
+		size -= rdlen;
+		progress_bar_add(&bar, rdlen);
 	}
 
 	progress_bar_finish(&bar);
@@ -1841,23 +1852,23 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 
 	while (1)
 	{
-		ssize_t readlen;
+		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
-		readlen = read(fd, buff, sizeof(buff));
-		if (readlen < 0)
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
-			ret = readlen;
+			ret = rdlen;
 			goto out_return;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		checksum += mem_checksum32_simple(buff, readlen);
-		progress_bar_add(&bar, readlen);
+		checksum += mem_checksum32_simple(buff, rdlen);
+		progress_bar_add(&bar, rdlen);
 	}
 
 	progress_bar_finish(&bar);
@@ -1945,47 +1956,47 @@ u8 file_checksum8(const char *filename, off_t offset, size_t size)
 ssize_t ffile_vprintf(int fd, const char *fmt, va_list ap)
 {
 	char buff[1024];
-	ssize_t writelen;
+	ssize_t wrlen;
 
-	writelen = vsnprintf(buff, sizeof(buff), fmt, ap);
-	writelen = ffile_write(fd, buff, writelen);
+	wrlen = vsnprintf(buff, sizeof(buff), fmt, ap);
+	wrlen = ffile_write(fd, buff, wrlen);
 
-	return writelen;
+	return wrlen;
 }
 
 ssize_t ffile_printf(int fd, const char *fmt, ...)
 {
-	ssize_t writelen;
+	ssize_t wrlen;
 	va_list ap;
 
 	va_start(ap, fmt);
-	writelen = ffile_vprintf(fd, fmt, ap);
+	wrlen = ffile_vprintf(fd, fmt, ap);
 	va_end(ap);
 
-	return writelen;
+	return wrlen;
 }
 
 ssize_t file_vprintf(const char *filename, const char *fmt, va_list ap)
 {
 	char buff[1024];
-	ssize_t writelen;
+	ssize_t wrlen;
 
-	writelen = vsnprintf(buff, sizeof(buff), fmt, ap);
-	writelen = file_writeto(filename, buff, writelen, 0, 0);
+	wrlen = vsnprintf(buff, sizeof(buff), fmt, ap);
+	wrlen = file_writeto(filename, buff, wrlen, 0, 0);
 
-	return writelen;
+	return wrlen;
 }
 
 ssize_t file_printf(const char *filename, const char *fmt, ...)
 {
-	ssize_t writelen;
+	ssize_t wrlen;
 	va_list ap;
 
 	va_start(ap, fmt);
-	writelen = file_vprintf(filename, fmt, ap);
+	wrlen = file_vprintf(filename, fmt, ap);
 	va_end(ap);
 
-	return writelen;
+	return wrlen;
 }
 
 int file_set_loop(const char *filename, char *loop_path, u64 offset)
@@ -2133,28 +2144,28 @@ int ffile_delete_char(int fd_in, int fd_out, char c)
 	while (1)
 	{
 		char buff[MAX_BUFFER_LEN];
-		ssize_t readlen, writelen;
+		ssize_t rdlen, wrlen;
 
-		readlen = read(fd_in, buff, sizeof(buff));
-		if (readlen < 0)
+		rdlen = read(fd_in, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
-			return readlen;
+			return rdlen;
 		}
 
-		if (readlen == 0)
+		if (rdlen == 0)
 		{
 			return 0;
 		}
 
-		readlen = mem_delete_char(buff, readlen, c);
-		writelen = ffile_write(fd_out, buff, readlen);
-		if (writelen != readlen)
+		rdlen = mem_delete_char(buff, rdlen, c);
+		wrlen = ffile_write(fd_out, buff, rdlen);
+		if (wrlen != rdlen)
 		{
 			pr_error_info("ffile_write");
-			if (writelen < 0)
+			if (wrlen < 0)
 			{
-				return writelen;
+				return wrlen;
 			}
 
 			ERROR_RETURN(ENOMEDIUM);
@@ -2590,7 +2601,7 @@ int file_open_format(int flags, mode_t mode, const char *fmt, ...)
 size_t ffile_line_count(int fd)
 {
 	char buff[1024];
-	ssize_t readlen;
+	ssize_t rdlen;
 	size_t count;
 
 	if (lseek(fd, 0, SEEK_SET) < 0)
@@ -2603,16 +2614,16 @@ size_t ffile_line_count(int fd)
 
 	while (1)
 	{
-		readlen = read(fd, buff, sizeof(buff));
-		if (readlen < 0)
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
 			pr_error_info("read");
 			return 0;
 		}
 
-		if (readlen)
+		if (rdlen)
 		{
-			count += mem_byte_count(buff, '\n', readlen);
+			count += mem_byte_count(buff, '\n', rdlen);
 #if __WORDSIZE == 64
 			println("count = %ld", count);
 #else

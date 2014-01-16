@@ -60,19 +60,19 @@ int mkdir_hierarchy(const char *pathname, mode_t mode);
 int file_create_open(const char *pathname, int flags, mode_t mode);
 
 int file_join(const char *dest_file, char *src_files[], int count);
-int file_split(const char *file_name, const char *dest_dir, int count);
+int file_split(const char *file_name, const char *dest_dir, size_t size, int count);
 
-int ffile_copy(int src_fd, int dest_fd);
-int ffile_copy_simple(int src_fd, int dest_fd);
-int file_copy(const char *src_file, const char *dest_file, int flags);
-int file_append(const char *file_src, const char *file_dest);
+ssize_t ffile_copy(int src_fd, int dest_fd);
+ssize_t ffile_copy_simple(int src_fd, int dest_fd);
+ssize_t file_copy(const char *src_file, const char *dest_file, int flags);
+ssize_t file_append(const char *file_src, const char *file_dest);
 
 off_t ffile_get_size(int fd);
 off_t file_get_size(const char *filepath);
 
-int ffile_ncopy(int src_fd, int dest_fd, size_t size);
-int ffile_ncopy_simple(int src_fd, int dest_fd, size_t size);
-int file_ncopy(const char *src_file, const char *dest_file, size_t size, int flags);
+ssize_t ffile_ncopy(int src_fd, int dest_fd, size_t size);
+ssize_t ffile_ncopy_simple(int src_fd, int dest_fd, size_t size);
+ssize_t file_ncopy(const char *src_file, const char *dest_file, size_t size, int flags);
 
 int vtry_to_open(int flags, va_list ap);
 int try_to_open(int flags, ...);
