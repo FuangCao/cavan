@@ -237,3 +237,24 @@ function cavan-sign-update-zip()
 
 	return 0
 }
+
+function cavan-firefox-flash-install()
+{
+	local work_path plugins_path
+
+	[ "$1" ] ||
+	{
+		echo "Please give flash plugin pathname"
+		return 1
+	}
+
+	work_path="$(mktemp -d)"
+	tar -xvf "$1" -C "${work_path}" || return 1
+	plugins_path="/usr/lib/firefox/browser/plugins"
+	sudo cp ${work_path}/usr/* /usr -av || return 1
+	sudo mkdir ${plugins_path} -pv || return 1
+	sudo cp ${work_path}/lib*.so ${plugins_path} -av || return 1
+	rm ${work_path} -rfv
+
+	return 1
+}
