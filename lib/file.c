@@ -795,10 +795,12 @@ ssize_t ffile_write(int fd, const void *buff, size_t size)
 			return wrlen;
 		}
 
+#if 0
 		if (wrlen == 0)
 		{
 			break;
 		}
+#endif
 
 		buff = (char *)buff + wrlen;
 	}
