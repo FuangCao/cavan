@@ -752,6 +752,29 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		return True
 
+	def doRecovery(self):
+		if not self.loadManifest():
+			return False
+
+		self.mListProject = self.mManifest.getProjects()
+		if self.mListProject == None:
+			return False
+
+		self.initProgress(len(self.mListProject))
+
+		for node in self.mManifest.getProjects():
+			relPath = self.getProjectRelPath(node)
+			srcPath = self.getAbsPath(relPath)
+			destPath = os.path.join(self.mPathProjects, relPath + ".git")
+			manager = GitSvnManager(srcPath, self.mVerbose)
+			if not manager.doRecovery(destPath):
+				return False
+			self.addProgress()
+
+		self.finishProgress()
+
+		return True
+
 	def main(self, argv):
 		length = len(argv)
 		if length < 2:
@@ -771,6 +794,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			return self.doCleanup()
 		elif subcmd in ["backup", "ln", "link", "symlink"]:
 			return self.doSymlink(argv[2:])
+		elif subcmd in ["recovery"]:
+			return self.doRecovery()
 		else:
 			self.prRedInfo("unknown subcmd ", subcmd)
 			return False

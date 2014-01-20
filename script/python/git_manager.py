@@ -7,6 +7,8 @@ from cavan_file import file_read_line, file_read_lines, \
 
 from cavan_command import CavanCommandBase
 
+MAX_FILELIST_SIZE = 200
+
 class CavanGitManager(CavanCommandBase):
 	def __init__(self, pathname = ".", verbose = True, name = ".cavan-git", bare = False):
 		if not name:
@@ -118,8 +120,15 @@ class CavanGitManager(CavanCommandBase):
 		return (revision, listMessage)
 
 	def gitAddFileList(self, listFile):
-		if len(listFile) == 0:
+		length = len(listFile)
+		if length == 0:
 			return True
+
+		if length > MAX_FILELIST_SIZE:
+			self.prBrownInfo("file count = %d" % length, " is too much")
+			if not self.gitAddFileList(listFile[MAX_FILELIST_SIZE:]):
+				return False
+			listFile = listFile[0:MAX_FILELIST_SIZE]
 
 		listFile.insert(0, "add")
 		listFile.insert(1, "-f")
@@ -228,7 +237,7 @@ class CavanGitManager(CavanCommandBase):
 			return False
 
 		if not os.path.exists(destRoot):
-			os.makedirs(destRoot)
+			self.mkdirSafe(destRoot)
 		elif not os.path.isdir(destRoot):
 			self.prRedInfo(destRoot, " is not a directory")
 			return False
