@@ -187,11 +187,23 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 			break;
 
 		case ABS_MT_POSITION_X:
-			ts->points[ts->point_count].x = event->value;
+			p = ts->points + ts->point_count;
+			if (p->pressure <= 0)
+			{
+				p->pressure = 1;
+			}
+
+			p->x = event->value;
 			break;
 
 		case ABS_MT_POSITION_Y:
-			ts->points[ts->point_count].y = event->value;
+			p = ts->points + ts->point_count;
+			if (p->pressure <= 0)
+			{
+				p->pressure = 1;
+			}
+
+			p->y = event->value;
 			break;
 
 		case ABS_MT_TOUCH_MAJOR:
