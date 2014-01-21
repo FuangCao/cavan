@@ -258,3 +258,45 @@ function cavan-firefox-flash-install()
 
 	return 1
 }
+
+function cavan-kernel-config()
+{
+	local ARCH CMD_MAKE DEF_CONFIG SAVE_CONFIG KERNEL_PATH BOARD_NAME
+
+	BOARD_NAME="${1-${TARGET_PRODUCT}}"
+
+	[ "${BOARD_NAME}" ] ||
+	{
+		echo "Please give the board name"
+		return 1
+	}
+
+	ARCH="${2-arm}"
+	DEF_CONFIG="${BOARD_NAME}_defconfig"
+	CMD_MAKE="make ARCH=${ARCH} CROSS_COMPILE=arm-eabi-"
+	KERNEL_PATH="${OUT}/obj/KERNEL_OBJ"
+
+	[ -d "${KERNEL_PATH}" ] &&
+	{
+		CMD_MAKE="${CMD_MAKE} -C ${KERNEL_PATH}"
+	}
+
+	echo "BOARD_NAME = ${BOARD_NAME}"
+	echo "ARCH = ${ARCH}"
+	echo "DEF_CONFIG = ${DEF_CONFIG}"
+	echo "CMD_MAKE = ${CMD_MAKE}"
+	echo "KERNEL_PATH = ${KERNEL_PATH}"
+
+	${CMD_MAKE} ${DEF_CONFIG} || return 1
+	${CMD_MAKE} menuconfig || return 1
+	if ${CMD_MAKE} savedefconfig
+	then
+		SAVE_CONFIG="defconfig"
+	else
+		SAVE_CONFIG=".config"
+	fi
+
+	cp ${SAVE_CONFIG} arch/${ARCH}/configs/${DEF_CONFIG} -av && return 0
+
+	return 1
+}
