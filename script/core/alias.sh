@@ -296,7 +296,7 @@ function cavan-kernel-config()
 		SAVE_CONFIG=".config"
 	fi
 
-	cp ${SAVE_CONFIG} arch/${ARCH}/configs/${DEF_CONFIG} -av && return 0
+	cp ${KERNEL_PATH}/${SAVE_CONFIG} arch/${ARCH}/configs/${DEF_CONFIG} -av && return 0
 
 	return 1
 }
