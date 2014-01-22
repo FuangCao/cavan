@@ -24,6 +24,11 @@ public class HuaTouchscreenVendorInfo {
 		mHashMapShortName.put(R.string.vendor_name_yingmao, "yingmao");
 		mHashMapShortName.put(R.string.vendor_name_yuansheng, "yuansheng");
 		mHashMapShortName.put(R.string.vendor_name_lihe, "lihe");
+		mHashMapShortName.put(R.string.vendor_name_dianmian, "dianmian");
+		mHashMapShortName.put(R.string.vendor_name_chuangshi, "chuangshi");
+		mHashMapShortName.put(R.string.vendor_name_yuda, "yuda");
+		mHashMapShortName.put(R.string.vendor_name_oufei, "oufei");
+		mHashMapShortName.put(R.string.vendor_name_junda, "junda");
 
 		if (Build.BOARD.equals("h1")) {
 			mHashMapVendor.put(0x13, R.string.vendor_name_dianjing);
