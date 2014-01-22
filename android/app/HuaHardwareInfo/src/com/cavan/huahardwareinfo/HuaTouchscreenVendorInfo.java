@@ -53,6 +53,10 @@ public class HuaTouchscreenVendorInfo {
 			mHashMapVendor.put(0x58, R.string.vendor_name_lihe);
 			mHashMapVendor.put(0x59, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x32, R.string.vendor_name_lianchuang);
+			mHashMapVendor.put(0x18, R.string.vendor_name_yuda);
+			mHashMapVendor.put(0xdb, R.string.vendor_name_oufei);
+			mHashMapVendor.put(0x19, R.string.vendor_name_yeji);
+			mHashMapVendor.put(0x20, R.string.vendor_name_junda);
 		} else if (Build.BOARD.equals("cp8076")) {
 			mHashMapVendor.put(0x76, R.string.vendor_name_yingmao);
 			mHashMapVendor.put(0x66, R.string.vendor_name_yingmao);
