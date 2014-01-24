@@ -72,6 +72,7 @@ public class HuaTouchscreenVendorInfo {
 			mHashMapVendor.put(0x81, R.string.vendor_name_junda);
 			mHashMapVendor.put(0x82, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x83, R.string.vendor_name_lihe);
+		} else if (Build.DEVICE.equals("P810N30")) {
 		}
 	}
 

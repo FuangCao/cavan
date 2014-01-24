@@ -27,7 +27,8 @@ public class HuaTouchscreenDevice {
 
 	private static final HuaTouchscreenDevice[] mTouchscreenList = {
 		new HuaTouchscreenDevice("CY8C242", "/sys/bus/i2c/devices/i2c-2/2-0024/firmware_id", "cy8c242.iic"),
-		new HuaTouchscreenDevice("FT6306", "/dev/FT5216", "/sys/bus/i2c/devices/i2c-2/2-0038/firmware_id", "FT6306.bin")
+		new HuaTouchscreenDevice("FT6306", "/dev/FT5216", "/sys/bus/i2c/devices/i2c-2/2-0038/firmware_id", "FT6306.bin"),
+		new HuaTouchscreenDevice("MSG21XX", "/sys/bus/i2c/devices/1-0026/firmware_id", "msg21xx.bin")
 	};
 
 	private String mIcName;
@@ -63,11 +64,21 @@ public class HuaTouchscreenDevice {
 			return null;
 		}
 
-		byte[] buff = new byte[4];
+		byte[] buff;
+		try {
+			buff = new byte[inputStream.available()];
+		} catch (IOException e1) {
+			try {
+				inputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
 
 		try {
-			inputStream.read(buff);
-			return new String(buff);
+			int rdLen = inputStream.read(buff);
+			return new String(buff, 0, rdLen);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -87,7 +98,18 @@ public class HuaTouchscreenDevice {
 		if (fwIdContent == null) {
 			mFwId = 0;
 		} else {
-			mFwId = Integer.parseInt(fwIdContent, 16);
+			Log.d(TAG, "fwIdContent = " + fwIdContent);
+			String[] ids = fwIdContent.split("\\.");
+			Log.d(TAG, "ids = " + ids + ", length = " + ids.length);
+			if (ids.length > 1) {
+				mFwId = Integer.parseInt(ids[0].trim()) << 8 | Integer.parseInt(ids[1].trim());
+			} else if (ids.length > 0) {
+				mFwId = Integer.parseInt(ids[0].trim(), 16);
+			} else {
+				mFwId = 0;
+			}
+
+			Log.d(TAG, "mFwId = " + mFwId);
 		}
 
 		mVendorInfo = new HuaTouchscreenVendorInfo(mFwId);
@@ -125,7 +147,15 @@ public class HuaTouchscreenDevice {
 			return null;
 		}
 
-		return Build.BOARD + "_" + mFwName + "_" + mVendorInfo.getShortName();
+		String project;
+
+		if (Build.DEVICE.equals("P810N30")) {
+			project = "zc2501";
+		} else {
+			project = Build.BOARD;
+		}
+
+		return project + "_" + mFwName + "_" + mVendorInfo.getShortName();
 	}
 
 	public HuaTouchscreenVendorInfo getVendorInfo() {

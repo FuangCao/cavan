@@ -12,7 +12,8 @@ public class HuaGsensorDevice {
 		new HuaGsensorDevice("MMA845X", 0, 3),
 		new HuaGsensorDevice("MXC6225XC", 0, 2),
 		new HuaGsensorDevice("MXC6225XU", 0, 2),
-		new HuaGsensorDevice("STK8313", 0, 3)
+		new HuaGsensorDevice("STK8313", 0, 3),
+		new HuaGsensorDevice("BMA2XX", 0, 3)
 	};
 
 	private File mFileDevice;

@@ -221,7 +221,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 
 		preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 		preference.setTitle(R.string.info_fw_id);
-		preference.setSummary(Integer.toString(mTouchscreenDevice.getFwId(), 16));
+		preference.setSummary(String.format("%04x", mTouchscreenDevice.getFwId()));
 		preferenceScreens.add(preference);
 
 		HuaTouchscreenVendorInfo info = mTouchscreenDevice.getVendorInfo();
