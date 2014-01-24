@@ -28,7 +28,8 @@ public class HuaTouchscreenDevice {
 	private static final HuaTouchscreenDevice[] mTouchscreenList = {
 		new HuaTouchscreenDevice("CY8C242", "/sys/bus/i2c/devices/i2c-2/2-0024/firmware_id", "cy8c242.iic"),
 		new HuaTouchscreenDevice("FT6306", "/dev/FT5216", "/sys/bus/i2c/devices/i2c-2/2-0038/firmware_id", "FT6306.bin"),
-		new HuaTouchscreenDevice("MSG21XX", "/sys/bus/i2c/devices/1-0026/firmware_id", "msg21xx.bin")
+		new HuaTouchscreenDevice("MSG21XX", "/sys/bus/i2c/devices/1-0026/firmware_id", "msg21xx.bin"),
+		new HuaTouchscreenDevice("MSG21XX", "/sys/bus/i2c/devices/2-0026/firmware_id", "msg21xx.bin"),
 	};
 
 	private String mIcName;
@@ -117,7 +118,7 @@ public class HuaTouchscreenDevice {
 
 	public static HuaTouchscreenDevice getTouchscreenDevice() {
 		for (HuaTouchscreenDevice device : mTouchscreenList) {
-			if (device.mFileDevice.exists()) {
+			if (device.mFileDevice.exists() && device.mFileFwId.exists()) {
 				device.fillVendorInfo();
 				return device;
 			}
