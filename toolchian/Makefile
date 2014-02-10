@@ -6,10 +6,8 @@ CAVAN_TARGET_PLAT = $(CAVAN_TARGET_ARCH)-cavan-linux-gnueabi
 PACKAGE_VERSION_STRING = Fuang.Cao <cavan.cfa@gmail.com>
 
 ifeq ($(CAVAN_TARGET_ARCH),arm)
-  CPU_BINUTILS_OPTION =
-  # --with-float=soft
-  CPU_GCC_OPTION = --with-arch=armv7-a --with-tune=cortex-a5
-  # --with-float=soft
+  CPU_BINUTILS_OPTION = --with-float=soft
+  CPU_GCC_OPTION = --with-arch=armv5te --with-float=soft --with-fpu=vfp --with-abi=aapcs --enable-target-optspace
 endif
 
 Q = @
