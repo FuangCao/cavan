@@ -180,7 +180,10 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 	@Override
 	public void dismiss() {
-		mWakeLock.release();
+		if (mWakeLock.isHeld()) {
+			mWakeLock.release();
+		}
+
 		super.dismiss();
 	}
 

@@ -73,6 +73,14 @@ public class HuaTouchscreenVendorInfo {
 			mHashMapVendor.put(0x82, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x83, R.string.vendor_name_lihe);
 		} else if (Build.DEVICE.equals("P810N30")) {
+			mHashMapVendor.put(0x58, R.string.vendor_name_lihe);
+			mHashMapVendor.put(0x59, R.string.vendor_name_dianjing);
+			mHashMapVendor.put(0x32, R.string.vendor_name_lianchuang);
+			mHashMapVendor.put(0x18, R.string.vendor_name_yuda);
+			mHashMapVendor.put(0x01, R.string.vendor_name_oufei);
+			mHashMapVendor.put(0xdb, R.string.vendor_name_oufei);
+			mHashMapVendor.put(0x19, R.string.vendor_name_yeji);
+			mHashMapVendor.put(0x20, R.string.vendor_name_junda);
 		}
 	}
 
