@@ -219,13 +219,13 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		preference.setSummary(mTouchscreenDevice.getIcName());
 		preferenceScreens.add(preference);
 
-		preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
-		preference.setTitle(R.string.info_fw_id);
-		preference.setSummary(String.format("%04x", mTouchscreenDevice.getFwId()));
-		preferenceScreens.add(preference);
-
 		HuaTouchscreenVendorInfo info = mTouchscreenDevice.getVendorInfo();
 		if (info != null) {
+			preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
+			preference.setTitle(R.string.info_fw_id);
+			preference.setSummary(info.toString());
+			preferenceScreens.add(preference);
+
 			preference = mPreferenceCategoryTpInfo.getPreferenceManager().createPreferenceScreen(this);
 			preference.setTitle(R.string.info_module_vendor);
 			preference.setSummary(info.getVendorName());

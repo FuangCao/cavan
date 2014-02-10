@@ -37,7 +37,6 @@ public class HuaTouchscreenDevice {
 	private File mFileDevice;
 	private File mFileFwId;
 	private File mFileFw;
-	private int mFwId;
 	int mMaxProgress;
 	int mProgress;
 	private HuaTouchscreenVendorInfo mVendorInfo;
@@ -94,26 +93,25 @@ public class HuaTouchscreenDevice {
 	}
 
 	private void fillVendorInfo() {
-		String fwIdContent = readFwId();
+		int vendorId = 0;
+		int fwId = 0;
 
-		if (fwIdContent == null) {
-			mFwId = 0;
-		} else {
+		String fwIdContent = readFwId();
+		if (fwIdContent != null) {
 			Log.d(TAG, "fwIdContent = " + fwIdContent);
 			String[] ids = fwIdContent.split("\\.");
 			Log.d(TAG, "ids = " + ids + ", length = " + ids.length);
 			if (ids.length > 1) {
-				mFwId = Integer.parseInt(ids[0].trim()) << 8 | Integer.parseInt(ids[1].trim());
+				vendorId = Integer.parseInt(ids[0].trim());
+				fwId = Integer.parseInt(ids[1].trim());
 			} else if (ids.length > 0) {
-				mFwId = Integer.parseInt(ids[0].trim(), 16);
-			} else {
-				mFwId = 0;
+				int id = Integer.parseInt(ids[0].trim(), 16);
+				vendorId = (id >> 8) & 0xFF;
+				fwId = id & 0xFF;
 			}
-
-			Log.d(TAG, "mFwId = " + mFwId);
 		}
 
-		mVendorInfo = new HuaTouchscreenVendorInfo(mFwId);
+		mVendorInfo = new HuaTouchscreenVendorInfo(vendorId, fwId);
 	}
 
 	public static HuaTouchscreenDevice getTouchscreenDevice() {
@@ -137,10 +135,6 @@ public class HuaTouchscreenDevice {
 
 	public File getFileFwId() {
 		return mFileFwId;
-	}
-
-	public int getFwId() {
-		return mFwId;
 	}
 
 	public String getFwName() {

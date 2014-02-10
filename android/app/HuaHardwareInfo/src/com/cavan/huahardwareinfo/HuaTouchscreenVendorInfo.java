@@ -84,11 +84,11 @@ public class HuaTouchscreenVendorInfo {
 		}
 	}
 
-	public HuaTouchscreenVendorInfo(int fwId) {
+	public HuaTouchscreenVendorInfo(int vendorId, int fwVersion) {
 		super();
 
-		mVendorId = (fwId >> 8) & 0xFF;
-		mFwVersion = fwId & 0xFF;
+		mVendorId = vendorId;
+		mFwVersion = fwVersion;
 
 		Integer vendorName = mHashMapVendor.get(mVendorId);
 		if (vendorName == null) {
@@ -117,5 +117,28 @@ public class HuaTouchscreenVendorInfo {
 
 	public String getShortName() {
 		return mShortName;
+	}
+
+	@Override
+	public String toString() {
+		int length;
+
+		if (mVendorId < (1 << 8) && mFwVersion < (1 << 8)) {
+			length = 2;
+		} else if (mVendorId < (1 << 12) && mFwVersion < (1 << 12)) {
+			length = 3;
+		} else if (mVendorId < (1 << 16) && mFwVersion < (1 << 16)) {
+			length = 4;
+		} else if (mVendorId < (1 << 20) && mFwVersion < (1 << 20)) {
+			length = 5;
+		} else if (mVendorId < (1 << 24) && mFwVersion < (1 << 24)) {
+			length = 6;
+		} else if (mVendorId < (1 << 28) && mFwVersion < (1 << 28)) {
+			length = 7;
+		} else {
+			length = 8;
+		}
+
+		return String.format("%0" + length + "x%0" + length + "x", mVendorId, mFwVersion);
 	}
 }
