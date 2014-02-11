@@ -210,6 +210,8 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			if (mTouchscreenDevice == null) {
 				return false;
 			}
+		} else {
+			mTouchscreenDevice.fillVendorInfo();
 		}
 
 		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();

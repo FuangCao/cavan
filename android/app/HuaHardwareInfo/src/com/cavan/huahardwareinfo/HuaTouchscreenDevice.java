@@ -92,7 +92,7 @@ public class HuaTouchscreenDevice {
 		return null;
 	}
 
-	private void fillVendorInfo() {
+	public void fillVendorInfo() {
 		int vendorId = 0;
 		int fwId = 0;
 
