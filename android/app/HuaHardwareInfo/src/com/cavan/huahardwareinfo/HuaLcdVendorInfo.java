@@ -10,6 +10,11 @@ public class HuaLcdVendorInfo {
 		new HuaLcdVendorInfo(0x9806, 0, R.string.vendor_name_tongxinda)
 	};
 
+	private static final HuaLcdVendorInfo[] mVendorInfo_ZC2501 = {
+		new HuaLcdVendorInfo(0x9816, 0, R.string.vendor_name_tongxinda),
+		new HuaLcdVendorInfo(0x5512, 0, R.string.vendor_name_lide)
+	};
+
 	private int mId;
 	private int mVendorId;
 	private int mVendorName;
@@ -38,6 +43,8 @@ public class HuaLcdVendorInfo {
 
 		if (Build.BOARD.equals("hs8801")) {
 			vendorInfos = mVendorInfo_HS8801;
+		} else if (Build.DEVICE.equals("P810N30")) {
+			vendorInfos = mVendorInfo_ZC2501;
 		} else {
 			return null;
 		}

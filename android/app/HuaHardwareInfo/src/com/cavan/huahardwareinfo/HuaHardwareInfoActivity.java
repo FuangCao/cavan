@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceClickListener;
@@ -24,9 +25,9 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	private static final String KEY_FLASH_INFO = "flash_info";
 	private static final String KEY_GSENSOR_INFO = "gsensor_info";
 
-	private File mFileLcdInfo = new File("/sys/devices/platform/sprdfb.0/dev_info");
-	private File mFileCameraInfo = new File("/sys/devices/platform/sc8800g_dcam.0/dev_info");
-	private File mFileFlashInfo = new File("/sys/devices/platform/sprd_nand/dev_info");
+	private static File mFileLcdInfo;
+	private static File mFileCameraInfo;
+	private static File mFileFlashInfo;
 
 	private PreferenceCategory mPreferenceCategoryLcdInfo;
 	private PreferenceCategory mPreferenceCategoryTpInfo;
@@ -34,6 +35,16 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	private PreferenceCategory mPreferenceCategoryFlashInfo;
 	private PreferenceCategory mPreferenceCategoryGsensorInfo;
 	private HuaTouchscreenDevice mTouchscreenDevice;
+
+	static {
+		if (Build.HARDWARE.equals("sp8810")) {
+			mFileLcdInfo = new File("/sys/devices/platform/sprdfb.0/dev_info");
+			mFileCameraInfo = new File("/sys/devices/platform/sc8800g_dcam.0/dev_info");
+			mFileFlashInfo = new File("/sys/devices/platform/sprd_nand/dev_info");
+		} else {
+			mFileLcdInfo = new File("/sys/devices/virtual/graphics/fb0/dev_info");
+		}
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +90,10 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	}
 
 	private String readFile(File file) {
+		if (file == null) {
+			return null;
+		}
+
 		FileInputStream inputStream;
 		try {
 			inputStream = new FileInputStream(file);
@@ -110,7 +125,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	private HashMap<String, String> parseFile(String content) {
 		HashMap<String, String> hashMap = new HashMap<String, String>();
 
-		for (String item : content.split("\\s*,\\s*")) {
+		for (String item : content.split("\\s*,\\s+")) {
 			String[] map = item.split("\\s*=\\s*");
 			if (map != null && map.length == 2) {
 				hashMap.put(map[0], map[1]);
@@ -139,11 +154,13 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			return false;
 		}
 
+		HuaLcdInfo lcdInfo;
+		PreferenceScreen preference;
 		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
 
 		String id = hashMap.get("id");
 		if (id != null) {
-			PreferenceScreen preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
+			preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
 			preference.setTitle(R.string.info_id);
 			preference.setSummary(id);
 			preferenceScreens.add(preference);
@@ -156,7 +173,22 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 				vendorId = Integer.parseInt(vendorIdContent);
 			}
 
-			HuaLcdInfo lcdInfo = new HuaLcdInfo(Integer.parseInt(id, 16), vendorId);
+			lcdInfo = new HuaLcdInfo(Integer.parseInt(id, 16), vendorId);
+		} else {
+			String name = hashMap.get("name");
+			if (name != null) {
+				preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);
+				preference.setTitle(R.string.info_name);
+				preference.setSummary(name);
+				preferenceScreens.add(preference);
+
+				lcdInfo = new HuaLcdInfo(name);
+			} else {
+				lcdInfo = null;
+			}
+		}
+
+		if (lcdInfo != null) {
 			String ic = lcdInfo.getIc();
 			if (ic != null) {
 				preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);
@@ -176,10 +208,18 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			}
 		}
 
+		String type = hashMap.get("type");
+		if (type != null) {
+			preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
+			preference.setTitle(R.string.info_type);
+			preference.setSummary(type);
+			preferenceScreens.add(preference);
+		}
+
 		String width = hashMap.get("width");
 		String height = hashMap.get("height");
 		if (width != null && height != null) {
-			PreferenceScreen preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
+			preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
 			preference.setTitle(R.string.info_resolution);
 			preference.setSummary(width + " * " + height);
 			preferenceScreens.add(preference);
@@ -187,7 +227,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 
 		String bus_width = hashMap.get("bus_width");
 		if (bus_width != null) {
-			PreferenceScreen preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
+			preference = mPreferenceCategoryLcdInfo.getPreferenceManager().createPreferenceScreen(this);;
 			preference.setTitle(R.string.info_bus_width);
 			preference.setSummary(bus_width);
 			preferenceScreens.add(preference);

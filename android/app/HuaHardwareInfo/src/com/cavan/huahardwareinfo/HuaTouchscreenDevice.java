@@ -105,9 +105,11 @@ public class HuaTouchscreenDevice {
 				vendorId = Integer.parseInt(ids[0].trim());
 				fwId = Integer.parseInt(ids[1].trim());
 			} else if (ids.length > 0) {
-				int id = Integer.parseInt(ids[0].trim(), 16);
-				vendorId = (id >> 8) & 0xFF;
-				fwId = id & 0xFF;
+				String idContent = ids[0].trim();
+				int length = idContent.length() / 2;
+				int base = length == 2 ? 16 : 10;
+				vendorId = Integer.parseInt(idContent.substring(0, length), base);
+				fwId = Integer.parseInt(idContent.substring(length), base);
 			}
 		}
 

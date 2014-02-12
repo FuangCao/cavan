@@ -22,7 +22,9 @@
     <string name="info_bus_width">Bus Width</string>
     <string name="info_dev_path">Device Path</string>
     <string name="info_axis_count">Axis Count</string>
-    <string name="info_detail">Detailed Information </string>
+    <string name="info_detail">Detailed Information</string>
+    <string name="info_name">Name</string>
+    <string name="info_type">Type</string>
     <string name="msg_tp_fw_upgrade_waring">"Warning: during the firmware writing operation, don't plug out the battery, don't quit the upgrade program, otherwise, the touch screen will not be able to use."</string>
     <string name="msg_fw_upgrade_pepare">"Preparing to upgrade, please wait ..."</string>
     <string name="msg_fw_upgrade_stopping">"Complete the upgrade, please wait ..."</string>
@@ -46,6 +48,7 @@
     <string name="vendor_name_chuangshi">ChuangShi</string>
     <string name="vendor_name_yuda">YuDa</string>
     <string name="vendor_name_oufei">OuFei</string>
+    <string name="vendor_name_huaxingda">HuaXingDa</string>
     <string name="vendor_name_lide">LiDe</string>
     <string name="vendor_name_boyi">BoYi</string>
     <string name="vendor_name_hengkaihui">HengKaiHui</string>
