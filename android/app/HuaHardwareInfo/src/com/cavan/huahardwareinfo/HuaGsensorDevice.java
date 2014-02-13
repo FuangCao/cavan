@@ -13,7 +13,18 @@ public class HuaGsensorDevice {
 		new HuaGsensorDevice("MXC6225XC", 0, 2),
 		new HuaGsensorDevice("MXC6225XU", 0, 2),
 		new HuaGsensorDevice("STK8313", 0, 3),
-		new HuaGsensorDevice("BMA2XX", 0, 3)
+		new HuaGsensorDevice("BMA2XX", 0, 3),
+		new HuaGsensorDevice("MC3210", 0, 3),
+		new HuaGsensorDevice("MC3230", 0, 3),
+		new HuaGsensorDevice("MC3250", 0, 3),
+		new HuaGsensorDevice("MC3410", 0, 3),
+		new HuaGsensorDevice("MC3410N", 0, 3),
+		new HuaGsensorDevice("MC3430", 0, 3),
+		new HuaGsensorDevice("MC3430N", 0, 3),
+		new HuaGsensorDevice("MC3510B", 0, 3),
+		new HuaGsensorDevice("MC3530B", 0, 3),
+		new HuaGsensorDevice("MC3510C", 0, 3),
+		new HuaGsensorDevice("MC3530C", 0, 3),
 	};
 
 	private File mFileDevice;

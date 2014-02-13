@@ -45,6 +45,7 @@ public class HuaTouchscreenVendorInfo {
 			mHashMapVendor.put(0xda, R.string.vendor_name_tongxincheng);
 			mHashMapVendor.put(0x30, R.string.vendor_name_simcom);
 			mHashMapVendor.put(0xdc, R.string.vendor_name_huaxingda);
+			mHashMapVendor.put(0x01, R.string.vendor_name_huaxingda);
 		} else if (Build.BOARD.equals("h4")) {
 			mHashMapVendor.put(0xba, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x11, R.string.vendor_name_lihaojie);
