@@ -43,6 +43,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			mFileFlashInfo = new File("/sys/devices/platform/sprd_nand/dev_info");
 		} else {
 			mFileLcdInfo = new File("/sys/devices/virtual/graphics/fb0/dev_info");
+			mFileCameraInfo = new File("/sys/class/video4linux/v4l-subdev4/dev_info");
 		}
 	}
 
@@ -314,22 +315,32 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
 
 		for (String info : content.split("\\s*\\n\\s*")) {
-			String[] map = info.split("\\s*:\\s*");
-			if (map == null || map.length != 2) {
+			String[] map = info.split("\\s*:\\s+");
+			if (map == null) {
 				continue;
 			}
 
-			String prefix = map[0];
+			String prefix;
+			String description;
 
-			if (prefix.equals("SENSOR_MAIN")) {
-				prefix = getResources().getString(R.string.back_camera);
-			} else if (prefix.equals("SENSOR_SUB")) {
-				prefix = getResources().getString(R.string.front_camera);
+			if (map.length > 1) {
+				prefix = map[0];
+
+				if (prefix.equals("SENSOR_MAIN")) {
+					prefix = getResources().getString(R.string.back_camera);
+				} else if (prefix.equals("SENSOR_SUB")) {
+					prefix = getResources().getString(R.string.front_camera);
+				} else {
+					continue;
+				}
+
+				description = map[1];
 			} else {
-				continue;
+				description = map[0];
+				prefix = "";
 			}
 
-			HashMap<String, String> hashMap = parseFile(map[1]);
+			HashMap<String, String> hashMap = parseFile(description);
 			if (hashMap == null) {
 				continue;
 			}
@@ -338,7 +349,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			if (name != null) {
 				PreferenceScreen preference = mPreferenceCategoryCameraInfo.getPreferenceManager().createPreferenceScreen(this);
 				preference.setTitle(prefix + getResources().getString(R.string.info_ic));
-				preference.setSummary(name);
+				preference.setSummary(name.toUpperCase());
 				preferenceScreens.add(preference);
 
 				HuaCameraInfo cameraInfo = HuaCameraInfo.getCameraInfo(name);

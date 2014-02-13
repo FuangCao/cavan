@@ -7,6 +7,10 @@ public class HuaCameraInfo {
 		new HuaCameraInfo("AT2250", R.string.vendor_name_hongtu, R.string.vendor_name_sanglaishi),
 		new HuaCameraInfo("SP2518", R.string.vendor_name_sibike, R.string.vendor_name_boyi)
 	};
+	private static final HuaCameraInfo[] mCameraInfo_ZC2501 = {
+		new HuaCameraInfo("GC2035", R.string.vendor_name_geke, R.string.vendor_name_sanglaishi),
+		new HuaCameraInfo("SP2529", R.string.vendor_name_sibike, R.string.vendor_name_boyi)
+	};
 
 	private String mName;
 	private int mIcVendor;
@@ -36,6 +40,8 @@ public class HuaCameraInfo {
 
 		if (Build.BOARD.equals("hs8801")) {
 			infos = mCameraInfo_HS8801;
+		} else if (Build.DEVICE.equals("P810N30")) {
+			infos = mCameraInfo_ZC2501;
 		} else {
 			return null;
 		}
