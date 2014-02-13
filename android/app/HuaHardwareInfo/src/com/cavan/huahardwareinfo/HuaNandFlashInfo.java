@@ -45,7 +45,7 @@ class NandFlashDevice {
 	}
 };
 
-public class HuaFlashInfo {
+public class HuaNandFlashInfo {
 	private static HashMap<Integer, Integer> mHashMapVendor = new HashMap<Integer, Integer>();
 	private static HashMap<Integer, NandFlashDevice> mHashMapNandDevice = new HashMap<Integer, NandFlashDevice>();
 	private static HashMap<String, String> mHashMapChipName = new HashMap<String, String>();
@@ -144,7 +144,7 @@ public class HuaFlashInfo {
 	private int mVendor;
 	private NandFlashDevice mFlashDevice;
 
-	public HuaFlashInfo(String id, int vendor) {
+	public HuaNandFlashInfo(String id, int vendor) {
 		super();
 		mVendor = vendor;
 	}
@@ -173,7 +173,7 @@ public class HuaFlashInfo {
 		mFlashDevice = flashDevice;
 	}
 
-	public static HuaFlashInfo getFlashInfo(String id) {
+	public static HuaNandFlashInfo getFlashInfo(String id) {
 		String[] ids = id.split(":");
 		if (ids == null || ids.length != 5) {
 			return null;
@@ -184,7 +184,7 @@ public class HuaFlashInfo {
 			return null;
 		}
 
-		HuaFlashInfo info = new HuaFlashInfo(id, vendor);
+		HuaNandFlashInfo info = new HuaNandFlashInfo(id, vendor);
 		if (info == null) {
 			return null;
 		}

@@ -14,7 +14,7 @@
     <string name="info_fw_name">固件名称</string>
     <string name="info_fw_upgrade">固件升级</string>
     <string name="info_vendor">厂商</string>
-    <string name="info_ic_vendor">IC厂商</string>
+    <string name="info_ic_vendor">芯片厂商</string>
     <string name="info_module_vendor">模组厂商</string>
     <string name="info_capacity">容量</string>
     <string name="info_ic">芯片型号</string>
@@ -65,6 +65,7 @@
     <string name="vendor_name_st_micro">意法半导体</string>
     <string name="vendor_name_micron">美光</string>
     <string name="vendor_name_amd">AMD</string>
+    <string name="vendor_name_sandisk">闪迪</string>
     <string name="vendor_name_sanglaishi">桑来士</string>
     <string name="vendor_name_huadesen">华德森</string>
     <string name="vendor_name_hongtu">鸿图</string>

@@ -28,6 +28,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	private static File mFileLcdInfo;
 	private static File mFileCameraInfo;
 	private static File mFileFlashInfo;
+	private static File mFileFlashSize;
 
 	private PreferenceCategory mPreferenceCategoryLcdInfo;
 	private PreferenceCategory mPreferenceCategoryTpInfo;
@@ -44,6 +45,8 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		} else {
 			mFileLcdInfo = new File("/sys/devices/virtual/graphics/fb0/dev_info");
 			mFileCameraInfo = new File("/sys/class/video4linux/v4l-subdev4/dev_info");
+			mFileFlashInfo = new File("/sys/bus/mmc/devices/mmc0:0001");
+			mFileFlashSize = new File(mFileFlashInfo, "block/mmcblk0/size");
 		}
 	}
 
@@ -91,7 +94,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	}
 
 	private String readFile(File file) {
-		if (file == null) {
+		if (file == null || file.exists() == false) {
 			return null;
 		}
 
@@ -120,7 +123,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 
 		Log.d(TAG, content);
 
-		return content;
+		return content.trim();
 	}
 
 	private HashMap<String, String> parseFile(String content) {
@@ -384,50 +387,112 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		return true;
 	}
 
-	private boolean loadFlashInfo() {
-		mPreferenceCategoryFlashInfo.removeAll();
-
+	private boolean loadNandInfo(List<PreferenceScreen> preferenceScreens) {
 		HashMap<String, String> hashMap = parseFile(mFileFlashInfo);
 		if (hashMap == null) {
 			return false;
 		}
 
-		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
-
 		String id = hashMap.get("id");
-		if (id != null) {
-			PreferenceScreen preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
-			preference.setTitle(R.string.info_id);
-			preference.setSummary(id.toLowerCase());
+		if (id == null) {
+			return false;
+		}
+
+		PreferenceScreen preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+		preference.setTitle(R.string.info_id);
+		preference.setSummary(id.toLowerCase());
+		preferenceScreens.add(preference);
+
+		HuaNandFlashInfo info = HuaNandFlashInfo.getFlashInfo(id);
+		if (info != null) {
+			String ic = info.getIc();
+			if (ic != null) {
+				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+				preference.setTitle(R.string.info_ic);
+				preference.setSummary(ic);
+				preferenceScreens.add(preference);
+			}
+
+			preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+			preference.setTitle(R.string.info_vendor);
+			preference.setSummary(info.getVendor());
 			preferenceScreens.add(preference);
 
-			HuaFlashInfo info = HuaFlashInfo.getFlashInfo(id);
-			if (info != null) {
-				String ic = info.getIc();
-				if (ic != null) {
-					preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
-					preference.setTitle(R.string.info_ic);
-					preference.setSummary(ic);
-					preferenceScreens.add(preference);
-				}
-
+			NandFlashDevice device = info.getFlashDevice();
+			if (device != null) {
 				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
-				preference.setTitle(R.string.info_vendor);
-				preference.setSummary(info.getVendor());
+				preference.setTitle(R.string.info_capacity);
+				preference.setSummary(device.getChipSizeString());
 				preferenceScreens.add(preference);
 
-				NandFlashDevice device = info.getFlashDevice();
-				if (device != null) {
-					preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
-					preference.setTitle(R.string.info_capacity);
-					preference.setSummary(device.getChipSizeString());
-					preferenceScreens.add(preference);
+				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+				preference.setTitle(R.string.info_detail);
+				preference.setSummary(device.getName());
+				preferenceScreens.add(preference);
+			}
+		}
 
-					preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
-					preference.setTitle(R.string.info_detail);
-					preference.setSummary(device.getName());
-					preferenceScreens.add(preference);
-				}
+		return true;
+	}
+
+	private boolean loadEmmcInfo(List<PreferenceScreen> preferenceScreens) {
+		String content = readFile(new File(mFileFlashInfo, "name"));
+		if (content != null) {
+			PreferenceScreen preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+			preference.setTitle(R.string.info_name);
+			preference.setSummary(content);
+			preferenceScreens.add(preference);
+		}
+
+		content = readFile(new File(mFileFlashInfo, "type"));
+		if (content != null) {
+			PreferenceScreen preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+			preference.setTitle(R.string.info_type);
+			preference.setSummary(content);
+			preferenceScreens.add(preference);
+		}
+
+		content = readFile(new File(mFileFlashInfo, "manfid"));
+		if (content != null) {
+			int manfind = Integer.parseInt(content.substring(2), 16);
+			PreferenceScreen preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+			preference.setTitle(R.string.info_id);
+			preference.setSummary(String.format("%02x", manfind));
+			preferenceScreens.add(preference);
+
+			Integer vendor = HuaMmcInfo.getVendorNameById(manfind);
+			if (vendor != null) {
+				preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+				preference.setTitle(R.string.info_vendor);
+				preference.setSummary(vendor);
+				preferenceScreens.add(preference);
+			}
+		}
+
+		content = readFile(mFileFlashSize);
+		if (content != null) {
+			PreferenceScreen preference = mPreferenceCategoryFlashInfo.getPreferenceManager().createPreferenceScreen(this);
+			preference.setTitle(R.string.info_capacity);
+			double capicity = Integer.parseInt(content);
+			preference.setSummary(String.format("%.2f Gib", capicity * 512 / 1024 / 1024 / 1024));
+			preferenceScreens.add(preference);
+		}
+
+		return true;
+	}
+
+	private boolean loadFlashInfo() {
+		mPreferenceCategoryFlashInfo.removeAll();
+
+		List<PreferenceScreen> preferenceScreens = new ArrayList<PreferenceScreen>();
+
+		if (mFileFlashInfo.isDirectory()) {
+			if (loadEmmcInfo(preferenceScreens) == false) {
+				return false;
+			}
+		} else {
+			if (loadNandInfo(preferenceScreens) == false) {
+				return false;
 			}
 		}
 
