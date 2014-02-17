@@ -83,9 +83,10 @@
 #define HUA_INPUT_SENSOR_IOC_GET_MAX_RANGE		HUA_INPUT_IOC('S', 0x01, 0)
 #define HUA_INPUT_SENSOR_IOC_GET_RESOLUTION		HUA_INPUT_IOC('S', 0x02, 0)
 #define HUA_INPUT_SENSOR_IOC_GET_POWER_CONSUME	HUA_INPUT_IOC('S', 0x03, 0)
+#define HUA_INPUT_SENSOR_IOC_GET_AXIS_COUNT		HUA_INPUT_IOC('S', 0x04, 0)
 
 #define pr_std_info(fmt, args ...) \
-	LOGD(fmt "\n", ##args)
+	ALOGD(fmt "\n", ##args)
 
 #define pr_pos_info() \
 	pr_std_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
@@ -140,6 +141,7 @@ struct hua_sensor_device
 	char vensor[128];
 
 	float scale;
+	float fake;
 	pthread_mutex_t lock;
 
 	bool enabled;

@@ -18,6 +18,7 @@
  */
 
 #include <hua_sensor.h>
+#include <math.h>
 
 char *text_copy(char *dest, const char *src)
 {
@@ -225,7 +226,7 @@ static int hua_sensor_event_load_absinfo(struct hua_sensor_device *sensor, ...)
 static int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sensor_t *hal_sensor, int handle)
 {
 	int ret;
-	unsigned int min_delay, max_range, power_consume, resolution;
+	unsigned int min_delay, max_range, power_consume, resolution, axis_count;
 	int ctrl_fd = sensor->ctrl_fd;
 	struct sensors_event_t *event = &sensor->event;
 
@@ -272,7 +273,7 @@ static int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sens
 	}
 	else
 	{
-		hal_sensor->maxRange = max_range;
+		hal_sensor->maxRange = 1;
 	}
 
 	hal_sensor->resolution = hal_sensor->maxRange / resolution;
@@ -282,10 +283,7 @@ static int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sens
 	event->acceleration.status = SENSOR_STATUS_ACCURACY_HIGH;
 
 	sensor->scale = hal_sensor->resolution;
-
-	pr_green_info("Name = %s, Vendor = %s, Handle = %d", hal_sensor->name, hal_sensor->vendor, hal_sensor->handle);
-	pr_green_info("maxRange = %f, Resolution = %f", hal_sensor->maxRange, hal_sensor->resolution);
-	pr_green_info("Power = %f, minDelay = %d, scale = %f", hal_sensor->power, hal_sensor->minDelay, sensor->scale);
+	sensor->fake = 0;
 
 	switch (sensor->event.type)
 	{
@@ -293,12 +291,37 @@ static int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sens
 	case SENSOR_TYPE_PRESSURE:
 	case SENSOR_TYPE_TEMPERATURE:
 	case SENSOR_TYPE_PROXIMITY:
-		return hua_sensor_event_load_absinfo(sensor, ABS_MISC, -1);
+		ret = hua_sensor_event_load_absinfo(sensor, ABS_MISC, -1);
 		break;
 
+	case SENSOR_TYPE_ACCELEROMETER:
+		ret = ioctl(ctrl_fd, HUA_INPUT_SENSOR_IOC_GET_AXIS_COUNT, &axis_count);
+		if (ret < 0)
+		{
+			pr_red_info("ioctl HUA_INPUT_SENSOR_IOC_GET_MAX_RANGE");
+			return ret;
+		}
+
+		if (axis_count < 3)
+		{
+			sensor->fake = GRAVITY_EARTH * GRAVITY_EARTH;
+		}
 	default:
-		return hua_sensor_event_load_absinfo(sensor, ABS_X, ABS_Y, ABS_Z, -1);
+		ret = hua_sensor_event_load_absinfo(sensor, ABS_X, ABS_Y, ABS_Z, -1);
 	}
+
+	if (ret < 0)
+	{
+		pr_red_info("hua_sensor_event_load_absinfo");
+		return ret;
+	}
+
+	pr_green_info("Name = %s, Vendor = %s, Handle = %d", hal_sensor->name, hal_sensor->vendor, hal_sensor->handle);
+	pr_green_info("maxRange = %f, Resolution = %f", hal_sensor->maxRange, hal_sensor->resolution);
+	pr_green_info("Power = %f, minDelay = %d", hal_sensor->power, hal_sensor->minDelay);
+	pr_green_info("scale = %f, fake = %f", sensor->scale, sensor->fake);
+
+	return 0;
 }
 
 static struct hua_sensor_device *hua_sensor_device_add(struct hua_sensor_device *head, struct hua_sensor_device *sensor)
@@ -717,6 +740,12 @@ static int hua_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t *
 		if (ret < 0)
 		{
 			pr_error_info("poll");
+
+			if (errno == EINTR)
+			{
+				continue;
+			}
+
 			return ret;
 		}
 
@@ -753,6 +782,21 @@ static int hua_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t *
 				case EV_SYN:
 					if (data < data_end)
 					{
+						if (sensor->fake > 0)
+						{
+							float *event_data = sensor->event.data;
+							float a = powf(event_data[0], 2) + powf(event_data[1], 2);
+
+							if (sensor->fake > a)
+							{
+								event_data[2] = sqrtf(sensor->fake - a);
+							}
+							else
+							{
+								event_data[2] = 0;
+							}
+						}
+
 						*data = sensor->event;
 						data->timestamp = timestamp;
 						// pr_std_info("%s [%f, %f, %f]", sensor->name, data->data[0], data->data[1], data->data[2]);
