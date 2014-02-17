@@ -31,6 +31,12 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 	private static final String TAG = "Cavan";
 	public static final int MAX_PROGRESS = 100;
+	private File[] mDirScanList = {
+		Environment.getDataDirectory(),
+		new File(Environment.getDataDirectory(), "internal_memory"),
+		Environment.getExternalStorageDirectory(),
+		new File("/storage/sdcard1")
+	};
 
 	private View mView;
 	private Toast mToast;
@@ -209,7 +215,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 	private void scanFirmware(List<File> list, File dir, int depth) {
 		File fileFw = new File(dir, mFwName);
-		if (fileFw.canRead()) {
+		if (fileFw.canRead() && list.contains(fileFw) == false) {
 			list.add(fileFw);
 		}
 
@@ -232,13 +238,11 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	private void scanFirmware() {
 		List<File> list = new ArrayList<File>();
 
-		File dir = Environment.getDataDirectory();
-		scanFirmware(list, dir, 1);
-		scanFirmware(list, new File(dir, "internal_memory"), 1);
-
-		dir = Environment.getExternalStorageDirectory();
-		scanFirmware(list, dir, 1);
-		scanFirmware(list, new File(dir, "tp/firmware"), 2);
+		for (File dir : mDirScanList) {
+			scanFirmware(list, dir, 1);
+			scanFirmware(list, new File(dir, "firmware"), 2);
+			scanFirmware(list, new File(dir, "tp/firmware"), 2);
+		}
 
 		Message message = mHandler.obtainMessage(MSG_SCAN_COMPLETE, list);
 		message.sendToTarget();
