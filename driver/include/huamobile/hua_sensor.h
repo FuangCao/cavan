@@ -17,11 +17,13 @@
 #define HUA_INPUT_SENSOR_IOC_GET_MAX_RANGE		HUA_INPUT_IOC('S', 0x01, 0)
 #define HUA_INPUT_SENSOR_IOC_GET_RESOLUTION		HUA_INPUT_IOC('S', 0x02, 0)
 #define HUA_INPUT_SENSOR_IOC_GET_POWER_CONSUME	HUA_INPUT_IOC('S', 0x03, 0)
+#define HUA_INPUT_SENSOR_IOC_GET_AXIS_COUNT		HUA_INPUT_IOC('S', 0x04, 0)
 
 struct hua_sensor_device
 {
 	struct hua_input_device dev;
 
+	u32 axis_count;
 	u32 min_delay;
 	u32 max_range;
 	u32 resolution;

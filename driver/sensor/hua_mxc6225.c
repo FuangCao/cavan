@@ -128,8 +128,9 @@ static int mxc6225_input_chip_probe(struct hua_input_chip *chip)
 	dev->type = HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
 	dev->poll_delay = 200;
 
-	dev->fuzz = 2;
-	dev->flat = 2;
+	dev->fuzz = 4;
+	dev->flat = 4;
+	sensor->axis_count = 2;
 	sensor->max_range = 4;
 	sensor->resolution = 256;
 

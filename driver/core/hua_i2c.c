@@ -93,13 +93,12 @@ int hua_input_write_register_i2c_smbus(struct hua_input_chip *chip, u8 addr, u8 
 
 EXPORT_SYMBOL_GPL(hua_input_write_register_i2c_smbus);
 
-int hua_input_master_recv_i2c(struct hua_input_chip *chip, void *buff, size_t size)
+int hua_input_master_recv_from_i2c(struct i2c_client *client, short addr, void *buff, size_t size)
 {
 	int ret;
-	struct i2c_client *client = chip->bus_data;
 	struct i2c_msg msg =
 	{
-		.addr = client->addr,
+		.addr = addr,
 		.flags = (client->flags & I2C_M_TEN) | I2C_M_RD,
 		.len = size,
 		.buf = buff
@@ -114,15 +113,23 @@ int hua_input_master_recv_i2c(struct hua_input_chip *chip, void *buff, size_t si
 	return likely(ret < 0) ? ret : -EFAULT;
 }
 
+EXPORT_SYMBOL_GPL(hua_input_master_recv_from_i2c);
+
+int hua_input_master_recv_i2c(struct hua_input_chip *chip, void *buff, size_t size)
+{
+	struct i2c_client *client = hua_input_chip_get_bus_data(chip);
+
+	return hua_input_master_recv_from_i2c(client, client->addr, buff, size);
+}
+
 EXPORT_SYMBOL_GPL(hua_input_master_recv_i2c);
 
-int hua_input_master_send_i2c(struct hua_input_chip *chip, const void *buff, size_t size)
+int hua_input_master_send_to_i2c(struct i2c_client *client, short addr, const void *buff, size_t size)
 {
 	int ret;
-	struct i2c_client *client = chip->bus_data;
 	struct i2c_msg msg =
 	{
-		.addr = client->addr,
+		.addr = addr,
 		.flags = client->flags & I2C_M_TEN,
 		.len = size,
 		.buf = (__u8 *)buff
@@ -135,6 +142,15 @@ int hua_input_master_send_i2c(struct hua_input_chip *chip, const void *buff, siz
 	}
 
 	return likely(ret < 0) ? ret : -EFAULT;
+}
+
+EXPORT_SYMBOL_GPL(hua_input_master_send_to_i2c);
+
+int hua_input_master_send_i2c(struct hua_input_chip *chip, const void *buff, size_t size)
+{
+	struct i2c_client *client = hua_input_chip_get_bus_data(chip);
+
+	return hua_input_master_send_to_i2c(client, client->addr, buff, size);
 }
 
 EXPORT_SYMBOL_GPL(hua_input_master_send_i2c);

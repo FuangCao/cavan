@@ -9,6 +9,8 @@
 #include <linux/wakelock.h>
 #include <linux/interrupt.h>
 #include <linux/miscdevice.h>
+#include <linux/module.h>
+#include <linux/version.h>
 #include <huamobile/hua_thread.h>
 #include <huamobile/hua_firmware.h>
 
@@ -78,13 +80,13 @@
 #define HUA_INPUT_DEVICE_IOC_SET_ENABLE		HUA_INPUT_IOC('I', 0x13, 0)
 
 #define pr_pos_info() \
-	printk(KERN_INFO "%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__)
+	pr_info("%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__)
 
 #define pr_func_info(fmt, args ...) \
-	printk(KERN_INFO "%s[%d]: " fmt "\n", __FUNCTION__, __LINE__, ##args)
+	pr_info("%s[%d]: " fmt "\n", __FUNCTION__, __LINE__, ##args)
 
 #define pr_color_info(color, fmt, args ...) \
-	printk(KERN_INFO "\033[" color "m%s[%d]: " fmt "\033[0m\n", __FUNCTION__, __LINE__, ##args)
+	pr_info("\033[" color "m%s[%d]: " fmt "\033[0m\n", __FUNCTION__, __LINE__, ##args)
 
 #define pr_red_info(fmt, args ...) \
 	pr_color_info("31", fmt, ##args)

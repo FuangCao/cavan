@@ -171,7 +171,11 @@ static ssize_t hua_misc_device_write(struct file *file, const char __user *buff,
 	return dev->write ? dev->write(dev, buff, size, offset) : -EIO;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 0, 0)
 static int hua_misc_device_ioctl(struct inode *inode, struct file *file, unsigned int command, unsigned long args)
+#else
+static long hua_misc_device_ioctl(struct file *file, unsigned int command, unsigned long args)
+#endif
 {
 	struct hua_misc_device *dev = file->private_data;
 
@@ -187,7 +191,12 @@ int hua_misc_device_register(struct hua_misc_device *dev, const char *name)
 	fops->release = hua_misc_device_release;
 	fops->read = hua_misc_device_read;
 	fops->write = hua_misc_device_write;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 0, 0)
 	fops->ioctl = hua_misc_device_ioctl;
+#else
+	fops->unlocked_ioctl = hua_misc_device_ioctl;
+#endif
 
 	mdev->name = name;
 	mdev->minor = MISC_DYNAMIC_MINOR;
@@ -403,6 +412,7 @@ int hua_input_chip_set_power(struct hua_input_chip *chip, bool enable)
 	}
 
 	chip->powered = enable;
+	chip->recovery_count = 0;
 
 	pr_bold_info("huamobie input chip %s power %s", chip->name, enable ? "enable" : "disable");
 
@@ -682,29 +692,34 @@ EXPORT_SYMBOL_GPL(hua_input_device_set_enable_lock);
 
 static void hua_input_chip_recovery_devices(struct hua_input_chip *chip, struct hua_input_list *list)
 {
-	int locked;
+	int list_locked;
 	struct list_head *head;
 	struct hua_input_device *dev;
 
-	locked = mutex_trylock(&list->lock);
+	list_locked = mutex_trylock(&list->lock);
 
 	head = &list->head;
 
 	list_for_each_entry(dev, head, node)
 	{
+		int dev_locked;
+
 		hua_input_chip_set_active(chip, true);
 
-		mutex_lock(&dev->lock);
+		dev_locked = mutex_trylock(&dev->lock);
 
 		if (dev->set_enable)
 		{
 			dev->set_enable(dev, true);
 		}
 
-		mutex_unlock(&dev->lock);
+		if (dev_locked)
+		{
+			mutex_unlock(&dev->lock);
+		}
 	}
 
-	if (locked)
+	if (list_locked)
 	{
 		mutex_unlock(&list->lock);
 	}

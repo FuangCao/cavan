@@ -31,7 +31,7 @@ config HUAMOBILE_GSENSOR_SIGN_Z
 
 config HUAMOBILE_GSENSOR_ADXL34X
     tristate "Huamobile adxl346 g-sensor"
-    default y
+    default n
     help
       Say Y here if you have a adxl346 g-sendor connected to
       your system.
@@ -39,11 +39,11 @@ config HUAMOBILE_GSENSOR_ADXL34X
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hampshire.
+      module will be called hua_adxl34x.
 
 config HUAMOBILE_GSENSOR_KIONIX
     tristate "Huamobile kxcjk kxtik g-sensor"
-    default y
+    default n
     help
       Say Y here if you have a kionix kxcjk kxtik g-sendor connected to
       your system.
@@ -51,11 +51,11 @@ config HUAMOBILE_GSENSOR_KIONIX
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hampshire.
+      module will be called hua_kionix.
 
 config HUAMOBILE_GSENSOR_LIS3DH
     tristate "Huamobile lis3dh lis3de g-sensor"
-    default y
+    default n
     help
       Say Y here if you have lis3dh or lis3de g-sendor connected to
       your system.
@@ -63,11 +63,11 @@ config HUAMOBILE_GSENSOR_LIS3DH
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hampshire.
+      module will be called hua_lis3dh.
 
 config HUAMOBILE_GSENSOR_MMA845X
     tristate "Huamobile mma845x g-sensor"
-    default y
+    default n
     help
       Say Y here if you have a mma845x g-sendor connected to
       your system.
@@ -75,11 +75,11 @@ config HUAMOBILE_GSENSOR_MMA845X
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hampshire.
+      module will be called hua_mma845x.
 
 config HUAMOBILE_GSENSOR_MXC6225
     tristate "Huamobile mxc6225-xc mxc6225-xu g-sensor"
-    default y
+    default n
     help
       Say Y here if you have a mxc6225-xc or mxc6225-xu g-sendor connected to
       your system.
@@ -87,11 +87,11 @@ config HUAMOBILE_GSENSOR_MXC6225
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hampshire.
+      module will be called hua_mxc6225.
 
 config HUAMOBILE_GSENSOR_STK8313
     tristate "Huamobile stk8313 g-sensor"
-    default y
+    default n
     help
       Say Y here if you have a stk8313 g-sendor connected to
       your system.
@@ -99,6 +99,30 @@ config HUAMOBILE_GSENSOR_STK8313
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hampshire.
+      module will be called hua_stk8313.
+
+config HUAMOBILE_GSENSOR_BMA2XX
+    tristate "Huamobile bma2xx g-sensor"
+    default n
+    help
+      Say Y here if you have a bma2xx g-sendor connected to
+      your system.
+
+      If unsure, say Y.
+
+      To compile this driver as a module, choose M here: the
+      module will be called hua_bma2xx.
+
+config HUAMOBILE_GSENSOR_MC3XXX
+    tristate "Huamobile mc3xxx g-sensor"
+    default n
+    help
+      Say Y here if you have a mc3xxx g-sendor connected to
+      your system.
+
+      If unsure, say Y.
+
+      To compile this driver as a module, choose M here: the
+      module will be called hua_mc3xxx.
 
 endmenu

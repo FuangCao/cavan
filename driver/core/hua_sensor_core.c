@@ -18,6 +18,9 @@ static int hua_sensor_device_ioctl(struct hua_input_device *dev, unsigned int co
 	case HUA_INPUT_SENSOR_IOC_GET_POWER_CONSUME:
 		return hua_input_copy_to_user_uint(args, sensor->power_consume);
 
+	case HUA_INPUT_SENSOR_IOC_GET_AXIS_COUNT:
+		return hua_input_copy_to_user_uint(args, sensor->axis_count);
+
 	default:
 		pr_red_info("Invalid IOCTL 0x%08x", command);
 		return -EINVAL;
@@ -45,6 +48,11 @@ int hua_sensor_device_probe(struct hua_input_device *dev)
 	case HUA_INPUT_DEVICE_TYPE_GRAVITY:
 	case HUA_INPUT_DEVICE_TYPE_ROTATION_VECTOR:
 	case HUA_INPUT_DEVICE_TYPE_LINEAR_ACCELERATION:
+		if (sensor->axis_count < 2)
+		{
+			sensor->axis_count = 3;
+		}
+
 		input_set_abs_params(input, ABS_X, 0, sensor->resolution, dev->fuzz, dev->flat);
 		input_set_abs_params(input, ABS_Y, 0, sensor->resolution, dev->fuzz, dev->flat);
 		input_set_abs_params(input, ABS_Z, 0, sensor->resolution, dev->fuzz, dev->flat);
@@ -54,6 +62,7 @@ int hua_sensor_device_probe(struct hua_input_device *dev)
 	case HUA_INPUT_DEVICE_TYPE_PRESSURE:
 	case HUA_INPUT_DEVICE_TYPE_TEMPERATURE:
 	case HUA_INPUT_DEVICE_TYPE_PROXIMITY:
+		sensor->axis_count = 1;
 		input_set_abs_params(input, ABS_MISC, 0, sensor->resolution, dev->fuzz, dev->flat);
 		break;
 

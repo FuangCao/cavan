@@ -2,7 +2,7 @@ menu "Huamobile touchscreen driver config"
 
 config HUAMOBILE_TOUCHSCREEN_BL86X8
     tristate "Huamobile bl86x8 touchscreen"
-    default y
+    default n
     help
       Say Y here if you have a bl86x8 touchscreen connected to
       your system.
@@ -14,7 +14,7 @@ config HUAMOBILE_TOUCHSCREEN_BL86X8
 
 config HUAMOBILE_TOUCHSCREEN_CY8C242
     tristate "Huamobile cy8c242 touchscreen"
-    default y
+    default n
     help
       Say Y here if you have a cy8c242 touchscreen connected to
       your system.
@@ -26,9 +26,21 @@ config HUAMOBILE_TOUCHSCREEN_CY8C242
 
 config HUAMOBILE_TOUCHSCREEN_FT5126
     tristate "Huamobile ft5216 ft6306 touchscreen"
-    default y
+    default n
     help
       Say Y here if you have a ft5216 touchscreen connected to
+      your system.
+
+      If unsure, say Y.
+
+      To compile this driver as a module, choose M here: the
+      module will be called hampshire.
+
+config HUAMOBILE_TOUCHSCREEN_MSG21XX
+    tristate "Huamobile msg21xx touchscreen"
+    default n
+    help
+      Say Y here if you have a msg21xx touchscreen connected to
       your system.
 
       If unsure, say Y.

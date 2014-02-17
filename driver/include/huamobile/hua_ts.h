@@ -2,7 +2,13 @@
 
 #include <huamobile/hua_input.h>
 #include <huamobile/hua_sysfs.h>
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
+#elif defined(CONFIG_FB)
+#include <linux/notifier.h>
+#include <linux/fb.h>
+#endif
 
 struct hua_ts_touch_key
 {
@@ -28,6 +34,8 @@ struct hua_ts_device
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	struct early_suspend early_suspend;
+#elif defined(CONFIG_FB)
+	struct notifier_block notifier;
 #endif
 };
 
@@ -39,45 +47,23 @@ struct hua_i2c_request
 	size_t size;
 };
 
-extern int sprd_ts_power_enable(bool enable);
-extern void sprd_ts_reset_enable(bool enable);
-extern void sprd_ts_irq_output(int value);
-
 static inline void hua_ts_mt_touch_release(struct input_dev *input)
 {
 	input_event(input, EV_SYN, SYN_MT_REPORT, 0);
+	input_event(input, EV_KEY, BTN_TOUCH, 0);
 	input_event(input, EV_SYN, SYN_REPORT, 0);
-}
-
-static inline void hua_ts_report_mt_pressure(struct input_dev *input, int pressure)
-{
-	input_event(input, EV_ABS, ABS_MT_WIDTH_MAJOR, pressure);
-	input_event(input, EV_ABS, ABS_MT_TOUCH_MAJOR, pressure);
-}
-
-static inline void hua_ts_report_mt_axis(struct input_dev *input, int x, int y)
-{
-	input_event(input, EV_ABS, ABS_MT_POSITION_X, x);
-	input_event(input, EV_ABS, ABS_MT_POSITION_Y, y);
-	input_event(input, EV_SYN, SYN_MT_REPORT, 0);
-}
-
-static inline void hua_ts_report_mt_axis2(struct input_dev *input, int id, int x, int y)
-{
-	input_event(input, EV_ABS, ABS_MT_TRACKING_ID, id);
-	hua_ts_report_mt_axis(input, x, y);
 }
 
 static inline void hua_ts_report_mt_data(struct input_dev *input, int x, int y)
 {
-	input_event(input, EV_ABS, ABS_MT_WIDTH_MAJOR, 1);
-	input_event(input, EV_ABS, ABS_MT_TOUCH_MAJOR, 1);
-	hua_ts_report_mt_axis(input, x, y);
+	input_event(input, EV_ABS, ABS_MT_POSITION_X, x);
+	input_event(input, EV_ABS, ABS_MT_POSITION_Y, y);
+	input_event(input, EV_SYN, SYN_MT_REPORT, 0);
+	input_event(input, EV_KEY, BTN_TOUCH, 1);
 }
 
 static inline void hua_ts_report_mt_data2(struct input_dev *input, int id, int x, int y)
 {
-	input_event(input, EV_ABS, ABS_MT_WIDTH_MAJOR, 1);
-	input_event(input, EV_ABS, ABS_MT_TOUCH_MAJOR, 1);
-	hua_ts_report_mt_axis2(input, id, x, y);
+	input_event(input, EV_ABS, ABS_MT_TRACKING_ID, id);
+	hua_ts_report_mt_data(input, x, y);
 }

@@ -286,8 +286,15 @@ ssize_t hua_firmware_write(struct hua_firmware *fw, const char *buff, size_t siz
 			size_t lcount = length - rcount;
 
 			if ((flags & HUA_FW_FLAG_USER)) {
-				copy_from_user(fw->tail, buff, rcount);
-				copy_from_user(fw->mem, buff + rcount, lcount);
+				if (copy_from_user(fw->tail, buff, rcount)) {
+					pr_red_info("copy_from_user");
+					return -EFAULT;
+				}
+
+				if (copy_from_user(fw->mem, buff + rcount, lcount)) {
+					pr_red_info("copy_from_user");
+					return -EFAULT;
+				}
 			} else {
 				memcpy(fw->tail, buff, rcount);
 				memcpy(fw->mem, buff + rcount, lcount);
@@ -298,7 +305,10 @@ ssize_t hua_firmware_write(struct hua_firmware *fw, const char *buff, size_t siz
 		else
 		{
 			if ((flags & HUA_FW_FLAG_USER)) {
-				copy_from_user(fw->tail, buff, length);
+				if (copy_from_user(fw->tail, buff, length)) {
+					pr_red_info("copy_from_user");
+					return -EFAULT;
+				}
 			} else {
 				memcpy(fw->tail, buff, length);
 			}
