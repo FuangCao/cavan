@@ -7,6 +7,7 @@ public class HuaLcdVendorInfo {
 		new HuaLcdVendorInfo(0x8012, 0, R.string.vendor_name_lide),
 		new HuaLcdVendorInfo(0x8012, 1, R.string.vendor_name_boyi),
 		new HuaLcdVendorInfo(0x8009, 1, R.string.vendor_name_apex),
+		new HuaLcdVendorInfo(0x9826, 0, R.string.vendor_name_tongxinda),
 		new HuaLcdVendorInfo(0x9806, 0, R.string.vendor_name_tongxinda)
 	};
 
