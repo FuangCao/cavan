@@ -1,8 +1,8 @@
-obj-m += hua_adxl34x.o
-obj-m += hua_kionix.o
-obj-m += hua_lis3dh.o
-obj-m += hua_mma845x.o
-obj-m += hua_mxc6225.o
-obj-m += hua_stk8313.o
-obj-m += hua_bma2xx.o
-obj-m += hua_mc3xxx.o
+obj-$(CONFIG_HUAMOBILE_GSENSOR_ADXL34X) += hua_adxl34x.o
+obj-$(CONFIG_HUAMOBILE_GSENSOR_KIONIX) += hua_kionix.o
+obj-$(CONFIG_HUAMOBILE_GSENSOR_LIS3DH) += hua_lis3dh.o
+obj-$(CONFIG_HUAMOBILE_GSENSOR_MMA845X) += hua_mma845x.o
+obj-$(CONFIG_HUAMOBILE_GSENSOR_MXC6225) += hua_mxc6225.o
+obj-$(CONFIG_HUAMOBILE_GSENSOR_STK8313) += hua_stk8313.o
+obj-$(CONFIG_HUAMOBILE_GSENSOR_BMA2XX) += hua_bma2xx.o
+obj-$(CONFIG_HUAMOBILE_GSENSOR_MC3XXX) += hua_mc3xxx.o

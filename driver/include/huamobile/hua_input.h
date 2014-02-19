@@ -169,6 +169,7 @@ struct hua_input_device
 
 	void *private_data;
 	struct hua_misc_device misc_dev;
+	struct work_struct resume_work;
 
 	struct list_head node;
 
@@ -252,6 +253,7 @@ struct hua_input_core
 	struct mutex lock;
 	struct hua_input_thread detect_thread;
 	struct kobject prop_kobj;
+	struct workqueue_struct *resume_wq;
 
 	struct hua_input_list chip_list;
 	struct hua_input_list work_list;
@@ -270,6 +272,7 @@ int hua_input_chip_set_active_lock(struct hua_input_chip *chip, bool enable);
 void hua_input_chip_recovery(struct hua_input_chip *chip, bool force);
 int hua_input_chip_firmware_upgrade(struct hua_input_chip *chip, void *buff, size_t size, int flags);
 int hua_input_device_set_enable_lock(struct hua_input_device *dev, bool enable);
+int hua_input_device_set_enable_no_sync(struct hua_input_device *dev, bool enable);
 
 int hua_input_device_register(struct hua_input_chip *chip, struct hua_input_device *dev);
 void hua_input_device_unregister(struct hua_input_chip *chip, struct hua_input_device *dev);

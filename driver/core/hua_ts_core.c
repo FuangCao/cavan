@@ -8,7 +8,7 @@ static void hua_ts_suspend(struct hua_ts_device *ts)
 
 static void hua_ts_resume(struct hua_ts_device *ts)
 {
-	hua_input_device_set_enable_lock(&ts->dev, true);
+	hua_input_device_set_enable_no_sync(&ts->dev, true);
 }
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -168,7 +168,7 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 	}
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
-	ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN - 1;
+	ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
 	ts->early_suspend.suspend = hua_ts_suspend;
 	ts->early_suspend.resume = hua_ts_resume;
 	register_early_suspend(&ts->early_suspend);

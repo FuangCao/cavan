@@ -690,6 +690,21 @@ int hua_input_device_set_enable_lock(struct hua_input_device *dev, bool enable)
 
 EXPORT_SYMBOL_GPL(hua_input_device_set_enable_lock);
 
+int hua_input_device_set_enable_no_sync(struct hua_input_device *dev, bool enable)
+{
+	struct hua_input_core *core = dev->chip->core;
+
+	if (enable && core->resume_wq)
+	{
+		queue_work(core->resume_wq, &dev->resume_work);
+		return 0;
+	}
+
+	return hua_input_device_set_enable_lock(dev, enable);
+}
+
+EXPORT_SYMBOL_GPL(hua_input_device_set_enable_no_sync);
+
 static void hua_input_chip_recovery_devices(struct hua_input_chip *chip, struct hua_input_list *list)
 {
 	int list_locked;
@@ -1178,10 +1193,10 @@ static ssize_t hua_input_device_write(struct hua_misc_device *dev, const char __
 	int ret;
 	struct hua_input_device *idev = hua_misc_device_get_data(dev);
 
-	ret = hua_input_device_set_enable_lock(idev, size > 0 && buff[0] > '0');
+	ret = hua_input_device_set_enable_no_sync(idev, size > 0 && buff[0] > '0');
 	if (ret < 0)
 	{
-		pr_red_info("hua_input_device_set_enable_lock");
+		pr_red_info("hua_input_device_set_enable_no_sync");
 		return ret;
 	}
 
@@ -1210,7 +1225,7 @@ static int hua_input_device_ioctl(struct hua_misc_device *dev, unsigned int comm
 		return hua_input_device_set_delay_lock(idev, args);
 
 	case HUA_INPUT_DEVICE_IOC_SET_ENABLE:
-		return hua_input_device_set_enable_lock(idev, args > 0);
+		return hua_input_device_set_enable_no_sync(idev, args > 0);
 
 	default:
 		if (idev->ioctl)
@@ -1355,6 +1370,15 @@ static void hua_input_device_remove(struct hua_input_chip *chip, struct hua_inpu
 	mutex_destroy(&dev->lock);
 }
 
+static void hua_input_device_resume_work_func(struct work_struct *work)
+{
+	struct hua_input_device *dev = container_of(work, struct hua_input_device, resume_work);
+
+	pr_pos_info();
+
+	hua_input_device_set_enable_lock(dev, true);
+}
+
 int hua_input_device_register(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
@@ -1367,6 +1391,8 @@ int hua_input_device_register(struct hua_input_chip *chip, struct hua_input_devi
 		pr_red_info("hua_input_device_probe");
 		goto out_list_del;
 	}
+
+	INIT_WORK(&dev->resume_work, hua_input_device_resume_work_func);
 
 	pr_green_info("huamobile input deivce %s register complete", dev->name);
 
@@ -1528,6 +1554,13 @@ static int __init hua_input_core_init(void)
 
 	mutex_init(&input_core.lock);
 
+	input_core.resume_wq = create_singlethread_workqueue("hua-resume-wq");
+	if (input_core.resume_wq == NULL)
+	{
+		ret = -EFAULT;
+		goto out_mutex_destroy;
+	}
+
 	thread = &input_core.detect_thread;
 	hua_input_thread_set_data(thread, &input_core);
 	thread->priority = 0;
@@ -1539,11 +1572,13 @@ static int __init hua_input_core_init(void)
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_thread_init");
-		goto out_mutex_destroy;
+		goto out_destroy_workqueue;
 	}
 
 	return 0;
 
+out_destroy_workqueue:
+	destroy_workqueue(input_core.resume_wq);
 out_mutex_destroy:
 	mutex_destroy(&input_core.lock);
 	hua_input_list_destory(&input_core.chip_list);
@@ -1558,6 +1593,8 @@ static void __exit hua_input_core_exit(void)
 
 	hua_input_thread_stop(&input_core.detect_thread);
 	hua_input_thread_destroy(&input_core.detect_thread);
+
+	destroy_workqueue(input_core.resume_wq);
 
 	mutex_destroy(&input_core.lock);
 
