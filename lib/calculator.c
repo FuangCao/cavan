@@ -854,7 +854,7 @@ static const struct calculator_operator_descriptor operator_descs[] =
 		.calculation = complete_operation1_left,
 	},
 	{
-		.symbols = {"^", "pow", NULL},
+		.symbols = {"^", "**", "pow", NULL},
 		.id = OPERATOR_POW_ID,
 		.priority = OPERATOR_PRIORITY_POW,
 		.need_push = true,
