@@ -58,7 +58,7 @@ do
 	do
 		shift
 		[ "$1" ] || break
-		(sprd_compile_once $1)
+		(sprd_compile_once $1) > $1-compile.log 2>$1-error.log
 	done
 
 	for fn in u-boot/u-boot-*.bin u-boot/nand_fdl/fdl2.bin u-boot/nand_spl/u-boot-spl-16k.bin
