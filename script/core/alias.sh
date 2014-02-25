@@ -261,7 +261,7 @@ function cavan-firefox-flash-install()
 
 function cavan-kernel-config()
 {
-	local ARCH CMD_MAKE DEF_CONFIG SAVE_CONFIG KERNEL_PATH BOARD_NAME
+	local ARCH CMD_MAKE DEF_CONFIG SAVE_CONFIG KERNEL_PATH BOARD_NAME KERNEL_SOURCE
 
 	BOARD_NAME="${1-${TARGET_PRODUCT}}"
 
@@ -296,7 +296,10 @@ function cavan-kernel-config()
 		SAVE_CONFIG=".config"
 	fi
 
-	cp ${KERNEL_PATH}/${SAVE_CONFIG} arch/${ARCH}/configs/${DEF_CONFIG} -av && return 0
+	KERNEL_SOURCE="${KERNEL_PATH}/source"
+	[ -e ${KERNEL_SOURCE} ] || KERNEL_SOURCE="${KERNEL_PATH}"
+
+	cp ${KERNEL_PATH}/${SAVE_CONFIG} ${KERNEL_SOURCE}/arch/${ARCH}/configs/${DEF_CONFIG} -av && return 0
 
 	return 1
 }

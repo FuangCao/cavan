@@ -599,6 +599,11 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 	while (p < file_end)
 	{
 		line_end = text_find_lf(p, file_end);
+		if (line_end == NULL)
+		{
+			line_end = file_end;
+		}
+
 		p = text_skip_space(p, line_end);
 		if (p == line_end || *p == '#')
 		{
