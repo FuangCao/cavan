@@ -33,6 +33,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	public static final int MAX_PROGRESS = 100;
 	private File[] mDirScanList = {
 		new File("/system"),
+		new File("/system/etc"),
 		Environment.getDataDirectory(),
 		new File(Environment.getDataDirectory(), "internal_memory"),
 		Environment.getExternalStorageDirectory(),
@@ -215,6 +216,8 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	}
 
 	private void scanFirmware(List<File> list, File dir, int depth) {
+		Log.d(TAG, "scan firmware from " + dir.getPath());
+
 		File fileFw = new File(dir, mFwName);
 		if (fileFw.canRead() && list.contains(fileFw) == false) {
 			list.add(fileFw);
