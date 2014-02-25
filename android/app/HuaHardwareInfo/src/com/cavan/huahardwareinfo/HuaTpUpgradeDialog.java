@@ -32,6 +32,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	private static final String TAG = "Cavan";
 	public static final int MAX_PROGRESS = 100;
 	private File[] mDirScanList = {
+		new File("/system"),
 		Environment.getDataDirectory(),
 		new File(Environment.getDataDirectory(), "internal_memory"),
 		Environment.getExternalStorageDirectory(),

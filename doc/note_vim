@@ -73,6 +73,9 @@ J{3,5}     JJJ或JJJJ或JJJJJ
 J|A     J或A
 Java|Hello     Java或Hello
 
+删除C语言块注释
+%s#/\*\_.\{-}\*/##g
+
 apt-get install ctags cscope
 
 cscope -Rbq

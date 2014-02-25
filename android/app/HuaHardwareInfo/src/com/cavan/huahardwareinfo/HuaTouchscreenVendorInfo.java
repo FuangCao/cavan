@@ -30,6 +30,7 @@ public class HuaTouchscreenVendorInfo {
 		mHashMapShortName.put(R.string.vendor_name_oufei, "oufei");
 		mHashMapShortName.put(R.string.vendor_name_junda, "junda");
 		mHashMapShortName.put(R.string.vendor_name_huaxingda, "huaxingda");
+		mHashMapShortName.put(R.string.vendor_name_huangye, "huangye");
 
 		if (Build.BOARD.equals("h1")) {
 			mHashMapVendor.put(0x13, R.string.vendor_name_dianjing);
@@ -84,6 +85,7 @@ public class HuaTouchscreenVendorInfo {
 			mHashMapVendor.put(0xdb, R.string.vendor_name_oufei);
 			mHashMapVendor.put(0x19, R.string.vendor_name_yeji);
 			mHashMapVendor.put(0x20, R.string.vendor_name_junda);
+			mHashMapVendor.put(0x21, R.string.vendor_name_huangye);
 		}
 	}
 
