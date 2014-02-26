@@ -12,7 +12,8 @@ public class HuaLcdVendorInfo {
 	};
 
 	private static final HuaLcdVendorInfo[] mVendorInfo_ZC2501 = {
-		new HuaLcdVendorInfo(0x9816, 0, R.string.vendor_name_tongxinda),
+		new HuaLcdVendorInfo(0x9806E, 0, R.string.vendor_name_tongxinda),
+		new HuaLcdVendorInfo(0x8018B, 0, R.string.vendor_name_zhongyi),
 		new HuaLcdVendorInfo(0x5512, 0, R.string.vendor_name_lide)
 	};
 
