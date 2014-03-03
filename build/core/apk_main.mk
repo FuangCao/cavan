@@ -12,6 +12,15 @@ FILE_MANIFEST = $(LOCAL_PATH)/AndroidManifest.xml
 FILE_PROJ_PROPS = $(LOCAL_PATH)/project.properties
 TARGET_PLATFORM = $(shell cat $(FILE_PROJ_PROPS) | grep '^\s*target\s*=' | sed 's/^\s*target\s*=\s*//g')
 FILE_ANDROID_JAR = $(SDK_HOME)/platforms/$(TARGET_PLATFORM)/android.jar
+FILE_ANDROID_JAR := $(firstword $(wildcard $(FILE_ANDROID_JAR) $(SDK_HOME)/platforms/*/android.jar))
+
+ifeq ($(FILE_ANDROID_JAR),)
+$(error No android.jar found)
+endif
+
+PLATFORM_PATH := $(dir $(FILE_ANDROID_JAR))
+$(foreach jar,$(shell find $(PLATFORM_PATH) -name *.jar),$(eval CLASSPATH := $(CLASSPATH):$(jar)))
+
 TARGET_APK = $(OUT_TARGET)/cavan.apk
 TARGET_UNSIGNED_APK = $(OUT_TARGET)/cavan_unsigned.apk
 TARGET_DEX = $(OUT_BIN)/classes.dex
