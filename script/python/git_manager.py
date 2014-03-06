@@ -125,7 +125,8 @@ class CavanGitManager(CavanCommandBase):
 			return True
 
 		if length > MAX_FILELIST_SIZE:
-			self.prBrownInfo("file count = %d" % length, " is too much")
+			if self.mVerbose:
+				self.prBrownInfo("file count = %d" % length, " is too much")
 			if not self.gitAddFileList(listFile[MAX_FILELIST_SIZE:]):
 				return False
 			listFile = listFile[0:MAX_FILELIST_SIZE]

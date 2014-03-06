@@ -114,8 +114,18 @@ class SvnLogEntry:
 	def getAuthor(self):
 		return getFirstElementData(self.mRootElement, "author")
 
-	def getDate(self):
+	def getDateGMT(self):
 		return getFirstElementData(self.mRootElement, "date")
+
+	def getDate(self):
+		dateGMT = self.getDateGMT()
+		if not dateGMT:
+			return None
+		date = time.strptime(dateGMT[0:19], "%Y-%m-%dT%H:%M:%S")
+		if not date:
+			return None
+		second = time.mktime(date) - time.timezone
+		return time.ctime(second)
 
 	def getMessage(self):
 		return getFirstElementData(self.mRootElement, "msg")
