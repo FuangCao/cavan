@@ -234,8 +234,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		self.mDepthMap["system"] = 1
 		self.mDepthMap["external"] = 1
 		self.mDepthMap["packages"] = 2
-		self.mDepthMap["hardware"] = 2
-		self.mDepthMap["device"] = 2
+		self.mDepthMap["hardware"] = 1
+		self.mDepthMap["device"] = 1
 		self.mDepthMap["bootable"] = 2
 		self.mDepthMap["frameworks"] = 2
 		self.mDepthMap["frameworks/base"] = 0
@@ -331,12 +331,22 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		else:
 			self.mManifest.setUrl(url)
 
+		listOldProjects = self.mManifest.getProjects()
+
 		self.mUrl = url
 		self.mManifest.removeAllProject()
 		self.mManifest.removeAllFile()
 
 		if not self.genProjectNode():
 			return False
+
+		listNewProjects = self.mManifest.getProjects()
+
+		for project in listOldProjects:
+			if project in listNewProjects:
+				continue
+			if not self.removeProject(project):
+				return False
 
 		return self.mManifest.save(self.mFileManifest)
 
@@ -356,6 +366,15 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 	def getProjectAbsPath(self, nodeProject):
 		pathname = self.getProjectRelPath(nodeProject)
 		return self.getAbsPath(pathname)
+
+	def removeProject(self, node):
+		relPath = self.getProjectRelPath(node)
+		destPath = os.path.join(self.mPathProjects, relPath + ".git")
+
+		if not self.doExecute(["rm", "-rf", relPath]):
+			return False
+
+		return self.doExecute(["rm", "-rf", destPath])
 
 	def doInit(self, argv):
 		self.setVerbose(True)
