@@ -195,13 +195,16 @@ const char *ip_protocol_type_tostring(int type)
 
 void show_mac_header(struct mac_header *hdr)
 {
+	pr_bold_info("MAC Header:");
 	println("dest_mac = %s", mac_address_tostring((char *)hdr->dest_mac, sizeof(hdr->dest_mac)));
 	println("src_mac = %s", mac_address_tostring((char *)hdr->src_mac, sizeof(hdr->src_mac)));
-	pr_bold_info("protocol_type = %s", mac_protocol_type_tostring(ntohs(hdr->protocol_type)));
+	println("protocol_type = %s", mac_protocol_type_tostring(ntohs(hdr->protocol_type)));
 }
 
 void show_ip_header(struct ip_header *hdr, int simple)
 {
+	pr_bold_info("IP Header:");
+
 	if (simple == 0)
 	{
 		println("version = %d", hdr->version);
@@ -214,13 +217,14 @@ void show_ip_header(struct ip_header *hdr, int simple)
 		println("header_checksum = 0x%04x", ntohs(hdr->header_checksum));
 	}
 
-	pr_bold_info("protocol_type = %s", ip_protocol_type_tostring(hdr->protocol_type));
+	println("protocol_type = %s", ip_protocol_type_tostring(hdr->protocol_type));
 	println("src_ip = %s", inet_ntoa(*(struct in_addr *)&hdr->src_ip));
 	println("dest_ip = %s", inet_ntoa(*(struct in_addr *)&hdr->dest_ip));
 }
 
 void show_tcp_header(struct tcp_header *hdr)
 {
+	pr_bold_info("TCP Header:");
 	println("src_port = %d", ntohs(hdr->src_port));
 	println("dest_port = %d", ntohs(hdr->dest_port));
 	println("sequence = %d", ntohl(hdr->sequence));
@@ -239,6 +243,7 @@ void show_tcp_header(struct tcp_header *hdr)
 
 void show_udp_header(struct udp_header *hdr)
 {
+	pr_bold_info("UDP Header:");
 	println("src_port = %d", ntohs(hdr->src_port));
 	println("dest_port = %d", ntohs(hdr->dest_port));
 	println("udp_length = %d", ntohs(hdr->udp_length));
@@ -247,6 +252,8 @@ void show_udp_header(struct udp_header *hdr)
 
 void show_arp_header(struct arp_header *hdr, int simple)
 {
+	pr_bold_info("ARP Header:");
+
 	if (simple == 0)
 	{
 		println("hardware_type = %d", ntohs(hdr->hardware_type));
@@ -264,6 +271,8 @@ void show_arp_header(struct arp_header *hdr, int simple)
 
 void show_dhcp_header(struct dhcp_header *hdr)
 {
+	pr_bold_info("DHCP Header:");
+
 	println("opcode = %d", hdr->opcode);
 	println("htype = %d", hdr->htype);
 	println("hlen = %d", hdr->hlen);
@@ -281,6 +290,8 @@ void show_dhcp_header(struct dhcp_header *hdr)
 
 void show_icmp_header(struct icmp_header *hdr)
 {
+	pr_bold_info("ICMP Header:");
+
 	println("type = %d", hdr->type);
 	println("code = %d", hdr->code);
 	println("checksum = 0x%04x", hdr->checksum);

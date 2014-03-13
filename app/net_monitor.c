@@ -14,7 +14,6 @@ static void show_usage(void)
 static int net_monitor_run(const char *net_dev, const char *text_src_ip, const char *text_dest_ip)
 {
 	int ret;
-	struct cavan_net_bridge_descriptor desc;
 	char buff[4096];
 	struct mac_header *mac_hdr = (void *)buff;
 	struct ip_header *ip_hdr = (void *)(mac_hdr + 1);
@@ -23,40 +22,37 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	struct tcp_header *tcp_hdr = (void *)(ip_hdr + 1);
 	struct dhcp_header *dhcp_hdr = (void *)(udp_hdr + 1);
 	struct icmp_header *icmp_hdr = (void *)(ip_hdr + 1);
-	struct sockaddr_ll remote_addr;
-	socklen_t addr_len;
 	int sockfd;
 	u32 src_ip, dest_ip;
 
-	ret = cavan_net_bridge_init(&desc, net_dev);
-	if (ret < 0)
+	sockfd = cavan_create_socket_raw(net_dev);
+	if (sockfd < 0)
 	{
-		pr_red_info("cavan_net_bridge_init");
-		return ret;
+		pr_red_info("cavan_create_socket_raw");
+		return sockfd;
 	}
 
-	sockfd = desc.sockfd;
 	src_ip = inet_addr(text_src_ip);
 	dest_ip = inet_addr(text_dest_ip);
 
-	println("net device = %s, host mac = %s", net_dev, mac_address_tostring((char *)desc.host_hwaddr, MAC_ADDRESS_LEN));
 	println("src_ip = %s", inet_ntoa(*(struct in_addr *)&src_ip));
 	println("dest_ip = %s", inet_ntoa(*(struct in_addr *)&dest_ip));
 
 	while (1)
 	{
-		addr_len = sizeof(remote_addr);
-		ret = recvfrom(sockfd, buff, sizeof(buff), 0, (struct sockaddr *)&remote_addr, &addr_len);
+		ret = recv(sockfd, buff, sizeof(buff), 0);
 		if (ret < 0)
 		{
 			print_error("recvfrom");
 			break;
 		}
 
+		show_mac_header(mac_hdr);
+
 		switch (ntohs(mac_hdr->protocol_type))
 		{
 		case ETH_P_IP:
-			if (ip_hdr->src_ip != src_ip && ip_hdr->dest_ip != dest_ip)
+			if (src_ip && dest_ip && ip_hdr->src_ip != src_ip && ip_hdr->dest_ip != dest_ip)
 			{
 				continue;
 			}
@@ -85,7 +81,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 
 		case ETH_P_ARP:
 		case ETH_P_RARP:
-			if (arp_hdr->src_ip != src_ip && arp_hdr->dest_ip != dest_ip)
+			if (src_ip && dest_ip && arp_hdr->src_ip != src_ip && arp_hdr->dest_ip != dest_ip)
 			{
 				continue;
 			}
@@ -96,11 +92,10 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 			continue;
 		}
 
-		show_mac_header(mac_hdr);
 		print_sep(60);
 	}
 
-	cavan_net_bridge_deinit(&desc);
+	close(sockfd);
 
 	return -1;
 }
@@ -151,8 +146,11 @@ int main(int argc, char *argv[])
 
 	switch (argc - optind)
 	{
+	case 0:
+		return net_monitor_run(NULL, "0.0.0.0", "0.0.0.0");
+
 	case 1:
-		return net_monitor_run(DEFAULT_NET_DEVICE, argv[optind], argv[optind]);
+		return net_monitor_run(argv[optind], "0.0.0.0", "0.0.0.0");
 
 	case 2:
 		return net_monitor_run(argv[optind], argv[optind + 1], argv[optind + 1]);
