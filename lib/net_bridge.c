@@ -28,7 +28,7 @@ int cavan_create_socket_raw(const char *if_name)
 	ret = ioctl(sockfd, SIOCGIFINDEX, &req);
 	if (ret < 0)
 	{
-		print_error("ioctl SIOCGIFINDEX");
+		pr_error_info("ioctl SIOCGIFINDEX");
 		goto out_close_socket;
 	}
 

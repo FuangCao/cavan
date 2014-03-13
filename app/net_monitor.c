@@ -47,8 +47,6 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 			break;
 		}
 
-		show_mac_header(mac_hdr);
-
 		switch (ntohs(mac_hdr->protocol_type))
 		{
 		case ETH_P_IP:
@@ -57,6 +55,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 				continue;
 			}
 
+			show_mac_header(mac_hdr);
 			show_ip_header(ip_hdr, 0);
 
 			switch (ip_hdr->protocol_type)
@@ -85,6 +84,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 			{
 				continue;
 			}
+			show_mac_header(mac_hdr);
 			show_arp_header(arp_hdr, 0);
 			break;
 
