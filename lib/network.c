@@ -1109,3 +1109,192 @@ bool network_url_equals(const struct network_url *url1, const struct network_url
 
 	return text_cmp(url1->port, url2->port) == 0;
 }
+
+// ============================================================
+
+static void network_udp_close(struct network_connect *conn)
+{
+	close(conn->sockfd);
+}
+
+static ssize_t network_udp_send(struct network_connect *conn, const void *buff, size_t size)
+{
+	return sendto(conn->sockfd, buff, size, 0, &conn->addr, sizeof(conn->addr));
+}
+
+static ssize_t network_udp_recv(struct network_connect *conn, void *buff, size_t size)
+{
+	socklen_t addrlen = sizeof(conn->addr);
+
+	return recvfrom(conn->sockfd, buff, size, 0, &conn->addr, &addrlen);
+}
+
+static int network_udp_create_connect(struct network_connect *conn, const char *hostname, u16 port)
+{
+	int ret;
+	int sockfd;
+
+	ret = inet_hostname2sockaddr(hostname, (struct sockaddr_in *)&conn->addr);
+	if (ret < 0)
+	{
+		pr_red_info("inet_hostname2sockaddr");
+		return ret;
+	}
+
+	sockfd = inet_socket(SOCK_DGRAM);
+	if (sockfd < 0)
+	{
+		pr_error_info("inet_socket");
+		return sockfd;
+	}
+
+	conn->type = NETWORK_CONNECT_UDP;
+	conn->sockfd = sockfd;
+	conn->close = network_udp_close;
+	conn->send = network_udp_send;
+	conn->recv = network_udp_recv;
+
+	((struct sockaddr_in *)&conn->addr)->sin_port = htons(port);
+
+	return 0;
+}
+
+static void network_tcp_close(struct network_connect *conn)
+{
+	shutdown(conn->sockfd, SHUT_RDWR);
+	close(conn->sockfd);
+}
+
+static ssize_t network_tcp_send(struct network_connect *conn, const void *buff, size_t size)
+{
+	return send(conn->sockfd, buff, size, 0);
+}
+
+static ssize_t network_tcp_recv(struct network_connect *conn, void *buff, size_t size)
+{
+	return recv(conn->sockfd, buff, size, 0);
+}
+
+static int network_tcp_create_connect(struct network_connect *conn, const char *hostname, u16 port)
+{
+	int sockfd;
+
+	sockfd = inet_create_tcp_link2(hostname, port);
+	if (sockfd < 0)
+	{
+		pr_red_info("inet_socket");
+		return sockfd;
+	}
+
+	conn->type = NETWORK_CONNECT_TCP;
+	conn->sockfd = sockfd;
+	conn->close = network_tcp_close;
+	conn->send = network_tcp_send;
+	conn->recv = network_tcp_recv;
+
+	return 0;
+}
+
+static int network_adb_create_connect(struct network_connect *conn, const char *hostname, u16 port)
+{
+	int sockfd;
+
+	sockfd = adb_create_tcp_link(hostname, 0, port);
+	if (sockfd < 0)
+	{
+		pr_red_info("inet_socket");
+		return sockfd;
+	}
+
+	conn->type = NETWORK_CONNECT_TCP;
+	conn->sockfd = sockfd;
+	conn->close = network_tcp_close;
+	conn->send = network_tcp_send;
+	conn->recv = network_tcp_recv;
+
+	return 0;
+}
+
+static network_connect_type_t network_get_connect_type_by_name(const char *name)
+{
+	switch (name[0])
+	{
+	case 't':
+		if (text_cmp(name + 1, "cp") == 0)
+		{
+			return NETWORK_CONNECT_TCP;
+		}
+		break;
+
+	case 'u':
+		if (text_cmp(name + 1, "dp") == 0)
+		{
+			return NETWORK_CONNECT_UDP;
+		}
+		break;
+
+	case 'a':
+		if (text_cmp(name + 1, "db") == 0)
+		{
+			return NETWORK_CONNECT_ADB;
+		}
+		break;
+	}
+
+	return NETWORK_CONNECT_UNKNOWN;
+}
+
+int network_connect_open(struct network_connect *conn, const char *url_content)
+{
+	int ret;
+	u16 port;
+	struct network_url url;
+	network_connect_type_t type;
+
+	if (url_content == NULL || network_parse_url(url_content, &url) == NULL)
+	{
+		pr_red_info("network_parse_url");
+		return -EINVAL;
+	}
+
+	if (url.port[0] == 0)
+	{
+		pr_red_info("url is invalid: need port");
+		return -EINVAL;
+	}
+
+	port = text2value_unsigned(url.port, NULL, 10);
+	type = network_get_connect_type_by_name(url.protocol);
+	switch (type)
+	{
+	case NETWORK_CONNECT_TCP:
+		ret = network_tcp_create_connect(conn, url.hostname, port);
+		break;
+
+	case NETWORK_CONNECT_UDP:
+		ret = network_udp_create_connect(conn, url.hostname, port);
+		break;
+
+	case NETWORK_CONNECT_ADB:
+		ret = network_adb_create_connect(conn, url.hostname, port);
+		break;
+
+	default:
+		pr_red_info("unknown connect type");
+		ret = -EINVAL;
+	}
+
+	return ret;
+}
+
+void network_connect_close(struct network_connect *conn)
+{
+	if (conn->close)
+	{
+		conn->close(conn);
+	}
+	else
+	{
+		close(conn->sockfd);
+	}
+}

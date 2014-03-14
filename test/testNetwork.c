@@ -23,6 +23,7 @@
 
 int main(int argc, char *argv[])
 {
+#if 0
 	struct network_url url;
 
 	assert(argc > 1);
@@ -35,6 +36,21 @@ int main(int argc, char *argv[])
 	{
 		println("%s", network_url_tostring(&url, NULL, 0, NULL));
 	}
+#else
+	int ret;
+	struct network_connect conn;
+
+	assert(argc > 1);
+
+	ret = network_connect_open(&conn, argv[1]);
+	if (ret < 0)
+	{
+		pr_red_info("network_connect_open");
+		return ret;
+	}
+
+	network_connect_close(&conn);
+#endif
 
 	return 0;
 }

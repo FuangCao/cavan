@@ -212,6 +212,28 @@ struct inet_connect
 	struct sockaddr_in addr;
 };
 
+typedef enum
+{
+	NETWORK_CONNECT_UNKNOWN,
+	NETWORK_CONNECT_TCP,
+	NETWORK_CONNECT_UDP,
+	NETWORK_CONNECT_ADB,
+} network_connect_type_t;
+
+struct network_connect
+{
+	int sockfd;
+	struct sockaddr addr;
+	void *private_data;
+	network_connect_type_t type;
+
+	void (*close)(struct network_connect *conn);
+	ssize_t (*send)(struct network_connect *conn, const void *buff, size_t size);
+	ssize_t (*recv)(struct network_connect *conn, void *buff, size_t size);
+};
+
+extern int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port);
+
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
 ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);
 
@@ -271,6 +293,9 @@ const struct network_protocol *network_get_protocol_by_type(network_protocol_typ
 const struct network_protocol *network_get_protocol_by_port(u16 port);
 int network_get_port_by_url(const struct network_url *url, const struct network_protocol *protocol);
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
+
+int network_connect_open(struct network_connect *conn, const char *url_content);
+void network_connect_close(struct network_connect *conn);
 
 static inline int inet_socket(int type)
 {
@@ -377,4 +402,14 @@ static inline void inet_show_sockaddr(const struct sockaddr_in *addr)
 static inline bool inet_sockaddr_equals(const struct sockaddr_in *left, const struct sockaddr_in *right)
 {
 	return memcmp(&left->sin_addr, &right->sin_addr, sizeof(left->sin_addr)) == 0 && left->sin_port == right->sin_port;
+}
+
+static inline void network_connect_set_data(struct network_connect *conn, void *data)
+{
+	conn->private_data = data;
+}
+
+static inline void *network_connect_get_data(struct network_connect *conn)
+{
+	return conn->private_data;
 }
