@@ -2,95 +2,132 @@
 
 #include <cavan.h>
 #include <cavan/net_bridge.h>
-#include <cavan/network.h>
 
-int cavan_net_bridge_init(struct cavan_net_bridge_descriptor *desc, const char *if_name)
+static int cavan_net_bridge_thread_handler(struct cavan_thread *thread, void *data)
+{
+	struct cavan_net_bridge_service *service = data;
+	struct pollfd pfds[service->port_count + 1], *pfd;
+	struct cavan_net_bridge_port *port;
+
+	pfds[0] = thread->pfd;
+	pfd = pfds + 1;
+
+	double_link_foreach(&service->port_table, port)
+	{
+		pfd->fd = port->conn.sockfd;
+		pfd->events = POLLIN;
+		pfd->revents = 0;
+		port->pfd = pfd;
+		pfd++;
+	}
+	end_link_foreach(&service->port_table);
+
+	while (1)
+	{
+		int ret;
+
+		ret = poll(pfds, NELEM(pfds), -1);
+		if (ret < 0)
+		{
+			pr_error_info("poll");
+			return ret;
+		}
+
+		if (pfds[0].revents)
+		{
+			u32 event;
+			cavan_thread_recv_event(thread, &event);
+			break;
+		}
+
+		double_link_foreach(&service->port_table, port)
+		{
+			if (port->pfd->revents)
+			{
+				char buff[4096];
+				ssize_t rdlen;
+				struct mac_header *mac = (struct mac_header *)buff;
+
+				rdlen = port->conn.recv(&port->conn, buff, sizeof(buff));
+				if (rdlen < 0)
+				{
+					pr_red_info("port->conn.recv");
+					return rdlen;
+				}
+
+				memcpy(port->mac_addr, mac->src_mac, sizeof(port->mac_addr));
+			}
+		}
+		end_link_foreach(&service->port_table);
+	}
+
+	return 0;
+}
+
+int cavan_net_bridge_init(struct cavan_net_bridge_service *service)
 {
 	int ret;
-	int sockfd;
-	struct ifreq req;
-	struct sockaddr_ll bind_addr;
+	struct cavan_thread *thread;
 
-	sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-	if (sockfd < 0)
-	{
-		print_error("socket");
-		return sockfd;
-	}
+	thread = &service->thread;
+	thread->name = "NET_BRIDGE";
+	thread->wake_handker = NULL;
+	thread->handler = cavan_net_bridge_thread_handler;
 
-	strcpy(req.ifr_name, if_name);
-
-	ret = ioctl(sockfd, SIOCGIFHWADDR, &req);
+	ret = cavan_thread_init(&service->thread, service);
 	if (ret < 0)
 	{
-		print_error("ioctl SIOCGIFHWADDR");
-		goto out_close_socket;
+		pr_red_info("cavan_thread_init");
+		return ret;
 	}
 
-	memcpy(desc->host_hwaddr, req.ifr_ifru.ifru_hwaddr.sa_data, MAC_ADDRESS_LEN);
-
-	ret = ioctl(sockfd, SIOCGIFINDEX, &req);
+	ret = double_link_init(&service->port_table, MOFS(struct cavan_net_bridge_port, node));
 	if (ret < 0)
 	{
-		print_error("ioctl SIOCGIFINDEX");
-		goto out_close_socket;
+		pr_red_info("double_link_init");
+		goto out_cavan_thread_deinit;
 	}
 
-	bind_addr.sll_family = PF_PACKET;
-	bind_addr.sll_ifindex = req.ifr_ifindex;
-	bind_addr.sll_protocol = htons(ETH_P_ALL);
-
-	ret = bind(sockfd, (struct sockaddr *)&bind_addr, sizeof(bind_addr));
-	if (ret < 0)
-	{
-		print_error("bind");
-		goto out_close_socket;
-	}
-
-	ret = ioctl(sockfd, SIOCGIFADDR, &req);
-	if (ret < 0)
-	{
-		print_error("ioctl SIOCGIFADDR");
-		goto out_close_socket;
-	}
-
-	memcpy(&desc->host_ifaddr, &req.ifr_ifru.ifru_addr, sizeof(desc->host_ifaddr));
-
-	ret = cavan_route_table_init(&desc->route_table, ROUTE_TABLE_SIZE);
-	if (ret < 0)
-	{
-		error_msg("cavan_route_table_init");
-		goto out_close_socket;
-	}
-
-	desc->sockfd = sockfd;
+	service->port_count = 0;
 
 	return 0;
 
-out_close_socket:
-	close(sockfd);
-
+out_cavan_thread_deinit:
+	cavan_thread_deinit(&service->thread);
 	return ret;
 }
 
-void cavan_net_bridge_deinit(struct cavan_net_bridge_descriptor *desc)
+void cavan_net_bridge_deinit(struct cavan_net_bridge_service *service)
 {
-	if (desc == NULL)
+	double_link_free_all(&service->port_table);
+	double_link_deinit(&service->port_table);
+}
+
+int cavan_net_bridge_register_port(struct cavan_net_bridge_service *service, const char *url)
+{
+	int ret;
+	struct cavan_net_bridge_port *port;
+
+	port = malloc(sizeof(*port));
+	if (port == NULL)
 	{
-		return;
+		pr_error_info("malloc");
+		return -ENOMEM;
 	}
 
-	cavan_route_table_deinit(&desc->route_table);
-	close(desc->sockfd);
-}
+	ret = network_connect_open(&port->conn, url);
+	if (ret < 0)
+	{
+		pr_red_info("network_connect_open");
+		goto out_free_port;
+	}
 
-int cavan_net_bridge_recv_daemon(struct cavan_net_bridge_descriptor *desc, ssize_t (*write_handle)(void *data, const char *buff, size_t size))
-{
+	double_link_append(&service->port_table, &port->node);
+	service->port_count++;
+
 	return 0;
-}
 
-int cavan_net_bridge_send_daemon(struct cavan_net_bridge_descriptor *desc, ssize_t (*read_handle)(void *data, const char *buff, size_t size))
-{
-	return 0;
+out_free_port:
+	free(port);
+	return ret;
 }
-

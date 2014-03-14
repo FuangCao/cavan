@@ -1110,14 +1110,14 @@ bool network_url_equals(const struct network_url *url1, const struct network_url
 	return text_cmp(url1->port, url2->port) == 0;
 }
 
-int network_create_socket_mac(const char *if_name)
+int network_create_socket_mac(const char *if_name, int protocol)
 {
 	int ret;
 	int sockfd;
 	struct ifreq req;
 	struct sockaddr_ll bind_addr;
 
-	sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+	sockfd = socket(PF_PACKET, SOCK_RAW, htons(protocol ? protocol : ETH_P_ALL));
 	if (sockfd < 0)
 	{
 		pr_error_info("socket PF_PACKET SOCK_RAW");
@@ -1321,7 +1321,7 @@ static int network_mac_create_connect(struct network_connect *conn, const char *
 {
 	int sockfd;
 
-	sockfd = network_create_socket_mac(if_name);
+	sockfd = network_create_socket_mac(if_name, ETH_P_IP | ETH_P_ARP | ETH_P_RARP);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_socket");

@@ -25,7 +25,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	int sockfd;
 	u32 src_ip, dest_ip;
 
-	sockfd = network_create_socket_mac(net_dev);
+	sockfd = network_create_socket_mac(net_dev, 0);
 	if (sockfd < 0)
 	{
 		pr_red_info("cavan_create_socket_raw");
