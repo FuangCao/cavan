@@ -4,52 +4,6 @@
 #include <cavan/net_bridge.h>
 #include <cavan/network.h>
 
-int cavan_create_socket_raw(const char *if_name)
-{
-	int ret;
-	int sockfd;
-	struct ifreq req;
-	struct sockaddr_ll bind_addr;
-
-	sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-	if (sockfd < 0)
-	{
-		pr_error_info("socket PF_PACKET SOCK_RAW");
-		return sockfd;
-	}
-
-	if (if_name == NULL)
-	{
-		return sockfd;
-	}
-
-	strcpy(req.ifr_name, if_name);
-
-	ret = ioctl(sockfd, SIOCGIFINDEX, &req);
-	if (ret < 0)
-	{
-		pr_error_info("ioctl SIOCGIFINDEX");
-		goto out_close_socket;
-	}
-
-	bind_addr.sll_family = PF_PACKET;
-	bind_addr.sll_ifindex = req.ifr_ifindex;
-	bind_addr.sll_protocol = htons(ETH_P_ALL);
-
-	ret = bind(sockfd, (struct sockaddr *)&bind_addr, sizeof(bind_addr));
-	if (ret < 0)
-	{
-		pr_error_info("bind");
-		goto out_close_socket;
-	}
-
-	return sockfd;
-
-out_close_socket:
-	close(sockfd);
-	return ret;
-}
-
 int cavan_net_bridge_init(struct cavan_net_bridge_descriptor *desc, const char *if_name)
 {
 	int ret;

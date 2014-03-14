@@ -1,7 +1,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Fri Sep 16 15:25:24 CST 2011
 
 #include <cavan.h>
-#include <cavan/net_bridge.h>
+#include <cavan/network.h>
 
 #define FILE_CREATE_DATE	"Fri Sep 16 15:25:24 CST 2011"
 #define DEFAULT_NET_DEVICE	"eth0"
@@ -25,7 +25,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	int sockfd;
 	u32 src_ip, dest_ip;
 
-	sockfd = cavan_create_socket_raw(net_dev);
+	sockfd = network_create_socket_mac(net_dev);
 	if (sockfd < 0)
 	{
 		pr_red_info("cavan_create_socket_raw");

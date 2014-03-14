@@ -218,6 +218,9 @@ typedef enum
 	NETWORK_CONNECT_TCP,
 	NETWORK_CONNECT_UDP,
 	NETWORK_CONNECT_ADB,
+	NETWORK_CONNECT_ICMP,
+	NETWORK_CONNECT_IP,
+	NETWORK_CONNECT_MAC,
 } network_connect_type_t;
 
 struct network_connect
@@ -293,6 +296,7 @@ const struct network_protocol *network_get_protocol_by_type(network_protocol_typ
 const struct network_protocol *network_get_protocol_by_port(u16 port);
 int network_get_port_by_url(const struct network_url *url, const struct network_protocol *protocol);
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
+int network_create_socket_mac(const char *if_name);
 
 int network_connect_open(struct network_connect *conn, const char *url_content);
 void network_connect_close(struct network_connect *conn);

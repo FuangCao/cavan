@@ -1110,6 +1110,52 @@ bool network_url_equals(const struct network_url *url1, const struct network_url
 	return text_cmp(url1->port, url2->port) == 0;
 }
 
+int network_create_socket_mac(const char *if_name)
+{
+	int ret;
+	int sockfd;
+	struct ifreq req;
+	struct sockaddr_ll bind_addr;
+
+	sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+	if (sockfd < 0)
+	{
+		pr_error_info("socket PF_PACKET SOCK_RAW");
+		return sockfd;
+	}
+
+	if (if_name == NULL || if_name[0] == 0)
+	{
+		return sockfd;
+	}
+
+	strcpy(req.ifr_name, if_name);
+
+	ret = ioctl(sockfd, SIOCGIFINDEX, &req);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl SIOCGIFINDEX");
+		goto out_close_socket;
+	}
+
+	bind_addr.sll_family = PF_PACKET;
+	bind_addr.sll_ifindex = req.ifr_ifindex;
+	bind_addr.sll_protocol = htons(ETH_P_ALL);
+
+	ret = bind(sockfd, (struct sockaddr *)&bind_addr, sizeof(bind_addr));
+	if (ret < 0)
+	{
+		pr_error_info("bind");
+		goto out_close_socket;
+	}
+
+	return sockfd;
+
+out_close_socket:
+	close(sockfd);
+	return ret;
+}
+
 // ============================================================
 
 static void network_udp_close(struct network_connect *conn)
@@ -1206,9 +1252,85 @@ static int network_adb_create_connect(struct network_connect *conn, const char *
 		return sockfd;
 	}
 
-	conn->type = NETWORK_CONNECT_TCP;
+	conn->type = NETWORK_CONNECT_ADB;
 	conn->sockfd = sockfd;
 	conn->close = network_tcp_close;
+	conn->send = network_tcp_send;
+	conn->recv = network_tcp_recv;
+
+	return 0;
+}
+
+static int network_icmp_create_connect(struct network_connect *conn, const char *hostname)
+{
+	int ret;
+	int sockfd;
+
+	ret = inet_hostname2sockaddr(hostname, (struct sockaddr_in *)&conn->addr);
+	if (ret < 0)
+	{
+		pr_red_info("inet_hostname2sockaddr");
+		return ret;
+	}
+
+	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	if (sockfd < 0)
+	{
+		pr_error_info("inet_socket");
+		return sockfd;
+	}
+
+	conn->type = NETWORK_CONNECT_ICMP;
+	conn->sockfd = sockfd;
+	conn->close = network_udp_close;
+	conn->send = network_udp_send;
+	conn->recv = network_udp_recv;
+
+	return 0;
+}
+
+static int network_ip_create_connect(struct network_connect *conn, const char *hostname)
+{
+	int ret;
+	int sockfd;
+
+	ret = inet_hostname2sockaddr(hostname, (struct sockaddr_in *)&conn->addr);
+	if (ret < 0)
+	{
+		pr_red_info("inet_hostname2sockaddr");
+		return ret;
+	}
+
+	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+	if (sockfd < 0)
+	{
+		pr_error_info("inet_socket");
+		return sockfd;
+	}
+
+	conn->type = NETWORK_CONNECT_IP;
+	conn->sockfd = sockfd;
+	conn->close = network_udp_close;
+	conn->send = network_udp_send;
+	conn->recv = network_udp_recv;
+
+	return 0;
+}
+
+static int network_mac_create_connect(struct network_connect *conn, const char *if_name)
+{
+	int sockfd;
+
+	sockfd = network_create_socket_mac(if_name);
+	if (sockfd < 0)
+	{
+		pr_red_info("inet_socket");
+		return sockfd;
+	}
+
+	conn->type = NETWORK_CONNECT_MAC;
+	conn->sockfd = sockfd;
+	conn->close = network_udp_close;
 	conn->send = network_tcp_send;
 	conn->recv = network_tcp_recv;
 
@@ -1239,6 +1361,24 @@ static network_connect_type_t network_get_connect_type_by_name(const char *name)
 			return NETWORK_CONNECT_ADB;
 		}
 		break;
+
+	case 'i':
+		if (text_cmp(name + 1, "p") == 0)
+		{
+			return NETWORK_CONNECT_IP;
+		}
+		else if (text_cmp(name + 1, "cmp") == 0)
+		{
+			return NETWORK_CONNECT_ICMP;
+		}
+		break;
+
+	case 'm':
+		if (text_cmp(name + 1, "ac") == 0)
+		{
+			return NETWORK_CONNECT_MAC;
+		}
+		break;
 	}
 
 	return NETWORK_CONNECT_UNKNOWN;
@@ -1257,12 +1397,6 @@ int network_connect_open(struct network_connect *conn, const char *url_content)
 		return -EINVAL;
 	}
 
-	if (url.port[0] == 0)
-	{
-		pr_red_info("url is invalid: need port");
-		return -EINVAL;
-	}
-
 	port = text2value_unsigned(url.port, NULL, 10);
 	type = network_get_connect_type_by_name(url.protocol);
 	switch (type)
@@ -1277,6 +1411,18 @@ int network_connect_open(struct network_connect *conn, const char *url_content)
 
 	case NETWORK_CONNECT_ADB:
 		ret = network_adb_create_connect(conn, url.hostname, port);
+		break;
+
+	case NETWORK_CONNECT_ICMP:
+		ret = network_icmp_create_connect(conn, url.hostname);
+		break;
+
+	case NETWORK_CONNECT_IP:
+		ret = network_ip_create_connect(conn, url.hostname);
+		break;
+
+	case NETWORK_CONNECT_MAC:
+		ret = network_mac_create_connect(conn, url.hostname);
 		break;
 
 	default:
