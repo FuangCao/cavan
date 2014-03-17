@@ -4,26 +4,51 @@
 
 #include <cavan.h>
 #include <cavan/list.h>
+#include <cavan/pool.h>
 #include <cavan/thread.h>
 #include <cavan/network.h>
 
-#define ROUTE_TABLE_SIZE	16
+#define NET_BRIDGE_ADDR_TIMEOUT		(5 * 60)
+
+struct cavan_net_bridge_addr
+{
+	time_t time;
+	u8 addr[MAC_ADDRESS_LEN];
+	struct cavan_data_pool_node node;
+};
 
 struct cavan_net_bridge_port
 {
-	u8 mac_addr[MAC_ADDRESS_LEN];
 	struct pollfd *pfd;
 	struct network_connect conn;
-	struct double_link_node node;
+	struct double_link addr_list;
+	struct cavan_data_pool addr_pool;
+
+	struct cavan_net_bridge_port *next;
+	struct cavan_net_bridge_port *prev;
 };
 
-struct cavan_net_bridge_service
+struct cavan_net_bridge
 {
 	struct cavan_thread thread;
-	int port_count;
-	struct double_link port_table;
+	pthread_mutex_t lock;
+	bool port_changed;
+	struct cavan_net_bridge_port *head;
 };
 
-int cavan_net_bridge_init(struct cavan_net_bridge_service *service);
-void cavan_net_bridge_deinit(struct cavan_net_bridge_service *service);
-int cavan_net_bridge_register_port(struct cavan_net_bridge_service *service, const char *url);
+int cavan_net_bridge_port_init(struct cavan_net_bridge_port *port, const char *url);
+void cavan_net_bridge_port_deinit(struct cavan_net_bridge_port *port);
+
+int cavan_net_bridge_init(struct cavan_net_bridge *bridge);
+void cavan_net_bridge_deinit(struct cavan_net_bridge *bridge);
+int cavan_net_bridge_register_port(struct cavan_net_bridge *bridge, const char *url);
+
+static inline void cavan_net_bridge_lock(struct cavan_net_bridge *bridge)
+{
+	pthread_mutex_lock(&bridge->lock);
+}
+
+static inline void cavan_net_bridge_unlock(struct cavan_net_bridge *bridge)
+{
+	pthread_mutex_unlock(&bridge->lock);
+}

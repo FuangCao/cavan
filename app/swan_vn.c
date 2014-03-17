@@ -39,6 +39,7 @@ static void show_usage(const char *command)
 int main(int argc, char *argv[])
 {
 	int c;
+	int ret;
 	int option_index;
 	struct option long_option[] =
 	{
@@ -58,6 +59,7 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
+	struct cavan_net_bridge bridge;
 
 	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
 	{
@@ -81,6 +83,22 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 	}
+
+	ret = cavan_net_bridge_init(&bridge);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_net_bridge_init");
+		return ret;
+	}
+
+	while (optind < argc)
+	{
+		cavan_net_bridge_register_port(&bridge, argv[optind]);
+		optind++;
+	}
+
+	cavan_thread_join(&bridge.thread);
+	cavan_net_bridge_deinit(&bridge);
 
 	return 0;
 }

@@ -1321,7 +1321,7 @@ static int network_mac_create_connect(struct network_connect *conn, const char *
 {
 	int sockfd;
 
-	sockfd = network_create_socket_mac(if_name, ETH_P_IP | ETH_P_ARP | ETH_P_RARP);
+	sockfd = network_create_socket_mac(if_name, 0);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_socket");

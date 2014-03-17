@@ -22,6 +22,9 @@
 #include <cavan.h>
 #include <cavan/list.h>
 
+#define CAVAN_DATA_POOL_INIT(pool, type, name, count) \
+	cavan_data_pool_init(pool, MOFS(type, name), sizeof(type), count)
+
 struct cavan_data_pool_node
 {
 	void *private_data;

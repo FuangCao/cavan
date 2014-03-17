@@ -46,6 +46,24 @@
 			__next = __node->next; \
 			entry = double_link_get_container(__link, __node);
 
+#define single_link_foreach_end(link) \
+	end_link_foreach(link)
+
+#define circle_link_foreach_end(link) \
+	end_link_foreach(link)
+
+#define double_link_foreach_end(link) \
+	end_link_foreach(link)
+
+#define SINGLE_LINK_INIT(link, type, name) \
+	single_link_init(link, MOFS(type, name))
+
+#define CIRCLE_LINK_INIT(link, type, name) \
+	circle_link_init(link, MOFS(type, name))
+
+#define DOUBLE_LINK_INIT(link, type, name) \
+	double_link_init(link, MOFS(type, name))
+
 struct single_link_node
 {
 	struct single_link_node *next;
