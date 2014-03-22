@@ -128,7 +128,7 @@ function _fastboot_completion()
 						abl1 boot_logo fota lcboot modemdsp0 productinfo recovery spl udisk
 						aboot cache intmemory logo modemdsp1 ramdisk rpm splash userdata
 						amt dsp kernel misc panic ramdisk_amt1 runtimenv system vmjaluna
-						backupfixnv fastboot_logo kernel_recovery modem params ramdisk_amt3 sdi tz
+						backupfixnv fastboot_logo kernel_recovery modem params ramdisk_amt3 sdi tz sbl1 usbmsc wcnss
 						" -- ${cur}))
 					;;
 				update | boot)

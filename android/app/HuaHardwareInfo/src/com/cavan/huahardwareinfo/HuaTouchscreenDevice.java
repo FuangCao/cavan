@@ -148,6 +148,8 @@ public class HuaTouchscreenDevice {
 
 		if (Build.DEVICE.equals("P810N30")) {
 			project = "zc2501";
+		} else if (Build.DEVICE.equals("P810E01")) {
+			project = "zc2351";
 		} else {
 			project = Build.BOARD;
 		}
