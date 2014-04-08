@@ -296,7 +296,8 @@ class GitSvnManager(CavanGitManager):
 				continue
 
 			if match.group(1) == "D":
-				if not os.path.exists(match.group(2)) and not self.removeSafe(match.group(2)):
+				absPath = self.getAbsPath(match.group(2))
+				if not os.path.exists(absPath) and not self.removeSafe(absPath):
 					return None
 			else:
 				listUpdate.append(match.group(2))
