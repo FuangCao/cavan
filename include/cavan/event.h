@@ -107,6 +107,7 @@ void cavan_event_service_stop(struct cavan_event_service *service);
 bool cavan_event_simple_matcher(struct cavan_event_matcher *matcher, void *data);
 bool cavan_event_name_matcher(const char *devname, ...);
 int cavan_event_get_absinfo(int fd, int axis, int *min, int *max);
+const char *cavan_event_key_code_tostring(int code);
 char *cavan_event_tostring(struct input_event *event, char *text);
 
 static inline char *cavan_event_tostring_simple(struct input_event *event, char *text)
