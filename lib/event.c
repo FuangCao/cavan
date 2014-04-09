@@ -1306,7 +1306,7 @@ char *cavan_event_tostring(struct input_event *event, char *text)
 		return cavan_event_tostring_simple(event, text);
 	}
 
-	sprintf(text, "%s = %d", event_code, event->value);
+	sprintf(text, "%s[%d] = %d", event_code, event->code, event->value);
 
 	return text;
 }
@@ -1415,7 +1415,6 @@ const char *cavan_event_find_key_name_base(struct single_link *link, int code)
 			link_foreach_return(link, key->name);
 		}
 	}
-
 	end_link_foreach(link);
 
 	name = cavan_event_key_code_tostring(code);
