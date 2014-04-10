@@ -56,3 +56,6 @@
 			i--; \
 		} while (i && (condition)); \
 	} while (0)
+
+char *dump_backtrace(char *buff, size_t size);
+int dump_stack(int (*print_func)(const char *, ...));
