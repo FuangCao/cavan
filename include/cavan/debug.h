@@ -58,5 +58,6 @@
 	} while (0)
 
 char *dump_backtrace(char *buff, size_t size);
-int dump_stack(int (*print_func)(const char *, ...));
+int dump_stack(void);
 char *address_to_symbol(void *addr, char *buff, size_t size);
+int catch_sigsegv(void);

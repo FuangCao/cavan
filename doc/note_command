@@ -15,3 +15,5 @@ whereis sudo
 xrandr - 更改屏幕分辨率
 lsof -i :8888
 netstat -anp | grep 8888
+addr2line  -f -e segment_trace 0x8974
+objdump -S -l -z  -j .text /tmp/segment_trace > /tmp/1.txt

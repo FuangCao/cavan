@@ -41,7 +41,7 @@ CFLAGS +=	-Wall -Wundef -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,-
 CFLAGS += -DCAVAN_ARCH_$(shell echo $(ARCH) | tr '[a-z]' '[A-Z]')
 
 ifeq ($(BUILD_TYPE),debug)
-CFLAGS += -DCAVAN_DEBUG
+CFLAGS += -DCAVAN_DEBUG -rdynamic
 SUB_DIRS += test
 endif
 

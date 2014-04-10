@@ -21,7 +21,7 @@
 
 static void function1(void)
 {
-	dump_stack(printf);
+	dump_stack();
 }
 
 static void function2(void)
@@ -38,6 +38,9 @@ int main(int argc, char *argv[])
 	{
 		println("symbol = %s", buff);
 	}
+
+	catch_sigsegv();
+	*(int *)0 = 100;
 
 	return 0;
 }

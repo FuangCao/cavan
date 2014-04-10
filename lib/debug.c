@@ -47,21 +47,16 @@ char *dump_backtrace(char *buff, size_t size)
 	return buff;
 }
 
-int dump_stack(int (*print_func)(const char *, ...))
+int dump_stack(void)
 {
 	char buff[4096];
-
-	if (print_func == NULL)
-	{
-		print_func = printf;
-	}
 
 	if (dump_backtrace(buff, sizeof(buff))== NULL)
 	{
 		return -EFAULT;
 	}
 
-	print_func("%s", buff);
+	printf("%s", buff);
 
 	return 0;
 }
@@ -83,4 +78,31 @@ char *address_to_symbol(void *addr, char *buff, size_t size)
 	free(strings);
 
 	return buff;
+}
+
+static void sigsegv_handler(int signum, siginfo_t *info, void *ptr)
+{
+	static const char *si_codes[] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
+
+	printf("Segmentation Fault Trace:\n");
+	printf("info.si_signo = %d\n", signum);
+	printf("info.si_errno = %d\n", info->si_errno);
+	printf("info.si_code  = %d (%s)\n", info->si_code, si_codes[info->si_code]);
+	printf("info.si_addr  = %p\n", info->si_addr);
+
+	dump_stack();
+
+	exit(-1);
+}
+
+int catch_sigsegv(void)
+{
+	struct sigaction action;
+
+	memset(&action, 0, sizeof(action));
+
+	action.sa_sigaction = sigsegv_handler;
+	action.sa_flags = SA_SIGINFO;
+
+	return sigaction(SIGSEGV, &action, NULL);
 }
