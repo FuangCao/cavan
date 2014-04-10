@@ -31,7 +31,13 @@ static void function2(void)
 
 int main(int argc, char *argv[])
 {
+	char buff[1024];
+
 	function2();
+	if (address_to_symbol(printf, buff, sizeof(buff)))
+	{
+		println("symbol = %s", buff);
+	}
 
 	return 0;
 }

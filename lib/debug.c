@@ -65,3 +65,22 @@ int dump_stack(int (*print_func)(const char *, ...))
 
 	return 0;
 }
+
+char *address_to_symbol(void *addr, char *buff, size_t size)
+{
+	char **strings;
+	void *ptrs[] = {addr};
+
+	strings = backtrace_symbols(ptrs, 1);
+	if (strings == NULL)
+	{
+		pr_error_info("backtrace_symbols");
+		return NULL;
+	}
+
+	strncpy(buff, strings[0], size);
+
+	free(strings);
+
+	return buff;
+}
