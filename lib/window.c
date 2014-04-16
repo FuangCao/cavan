@@ -647,7 +647,7 @@ int cavan_label_init(struct cavan_label *label, struct cavan_application_context
 
 	if (win->height < 1)
 	{
-		win->height = context->display->font.cheight + win->border_width * 4;
+		win->height = context->display->font->cheight + win->border_width * 4;
 	}
 
 	if (win->width < 1 && text)
@@ -779,12 +779,12 @@ static void cavan_textview_cursor_set_visual(struct cavan_cursor *cursor, bool v
 	struct cavan_display_device *display = win->context->display;
 
 	win->get_rect_handler(win, &rect);
-	rect.x += win->xabs + display->font.cwidth * (view->cursor - view->head) - 2;
-	rect.y += win->yabs + (rect.height - display->font.cheight) / 2;
+	rect.x += win->xabs + display->font->cwidth * (view->cursor - view->head) - 2;
+	rect.y += win->yabs + (rect.height - display->font->cheight) / 2;
 
 	cavan_display_lock(display);
 	display->set_color(display, visual ? win->fore_color : win->back_color);
-	display->fill_rect(display, rect.x, rect.y, 1, display->font.cheight);
+	display->fill_rect(display, rect.x, rect.y, 1, display->font->cheight);
 	cavan_display_unlock(display);
 
 	cavan_display_refresh(display);
@@ -826,7 +826,7 @@ int cavan_textview_init(struct cavan_textview *view, struct cavan_application_co
 	view->shift_down = false;
 	view->caps_lock = false;
 
-	view->size = (view->label.window.width / context->display->font.cwidth) - 1;
+	view->size = (view->label.window.width / context->display->font->cwidth) - 1;
 	if (view->size >= NELEM(view->text))
 	{
 		view->size = NELEM(view->text) - 1;

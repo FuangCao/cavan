@@ -61,7 +61,7 @@ struct cavan_display_device
 
 	void *fb_base;
 	void *private_data;
-	struct cavan_font font;
+	struct cavan_font *font;
 	cavan_display_color_t pen_color;
 
 	pthread_mutex_t lock;
@@ -210,4 +210,9 @@ static inline void cavan_display_unlock(struct cavan_display_device *display)
 static inline void cavan_display_refresh(struct cavan_display_device *display)
 {
 	cavan_thread_resume(&display->thread);
+}
+
+static inline void cavan_display_flush(struct cavan_display_device *display)
+{
+	cavan_display_refresh(display);
 }

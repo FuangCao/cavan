@@ -1,11 +1,9 @@
-#pragma once
-
 /*
- * File:		font.h
+ * File:			testFont.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2013-07-17 10:54:57
+ * Created:		2014-04-16 12:54:05
  *
- * Copyright (c) 2013 Fuang.Cao <cavan.cfa@gmail.com>
+ * Copyright (c) 2014 Fuang.Cao <cavan.cfa@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,28 +18,25 @@
  */
 
 #include <cavan.h>
+#include <cavan/fb.h>
 
-typedef enum cavan_font_type
+int main(int argc, char *argv[])
 {
-	CAVAN_FONT_10X18,
-	CAVAN_FONT_COUNT
-} cavan_font_type_t;
+	struct cavan_display_device *display;
 
-struct cavan_font
-{
-	const char *name;
-	int lines;
-	int width;
-	int height;
-	int cwidth;
-	int cheight;
-	int stride;
-	byte *body;
-	size_t rundata_size;
-	const byte *rundata;
-};
+	display = cavan_fb_display_start();
+	if (display == NULL)
+	{
+		pr_red_info("cavan_display_init");
+		return -EFAULT;
+	}
 
-int cavan_font_init(struct cavan_font *font);
-void cavan_font_deinit(struct cavan_font *font);
-struct cavan_font *cavan_font_get(cavan_font_type_t type);
-void cavan_font_put(struct cavan_font *font);
+	cavan_display_set_color3f(display, 1, 0, 0);
+
+	display->draw_rect(display, 200, 200, 300, 300);
+	display->draw_text(display, 300, 300, "Hello world!");
+	cavan_display_flush(display);
+	msleep(200);
+
+	return 0;
+}

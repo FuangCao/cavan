@@ -1023,13 +1023,13 @@ size_t cavan_display_mesure_text_dummy(struct cavan_display_device *display, con
 		return 0;
 	}
 
-	return text_len(text) * display->font.cwidth;
+	return text_len(text) * display->font->cwidth;
 }
 
 int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, int y, const char *text)
 {
 	int x_bak = x;
-	struct cavan_font *font = &display->font;
+	struct cavan_font *font = display->font;
 	cavan_display_color_t color = display->pen_color;
 	cavan_display_draw_point_handler_t handler = display->draw_point;
 
@@ -1088,7 +1088,7 @@ void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_d
 
 void cavan_display_destroy_dummy(struct cavan_display_device *display)
 {
-	cavan_font_deinit(&display->font);
+	cavan_font_put(display->font);
 	pthread_mutex_destroy(&display->lock);
 }
 
@@ -1105,9 +1105,10 @@ int cavan_display_init(struct cavan_display_device *display)
 		return ret;
 	}
 
-	ret = cavan_font_init(&display->font);
-	if (ret < 0)
+	display->font = cavan_font_get(CAVAN_FONT_10X18);
+	if (display->font == NULL)
 	{
+		ret = -EFAULT;
 		pr_red_info("cavan_font_init");
 		goto out_pthread_mutex_destroy;
 	}
