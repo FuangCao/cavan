@@ -1413,3 +1413,11 @@ int cavan_display_draw_text_center(struct cavan_display_device *display, struct 
 
 	return display->draw_text(display, x, y, text);
 }
+
+void cavan_display_set_font(struct cavan_display_device *display, struct cavan_font *font)
+{
+	cavan_display_lock(display);
+	cavan_font_put(display->font);
+	display->font = font;
+	cavan_display_unlock(display);
+}

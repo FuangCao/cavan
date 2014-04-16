@@ -117,7 +117,7 @@ $(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(addprefix $(LOCAL_PATH)/,$(1))))
 endef
 
 define strip_files
-$(Q)$(STRIP) -s $(1)
+$(Q)[ "$(BUILD_TYPE)" = "debug" ] || $(STRIP) -s $(1)
 endef
 
 define build_as_execute

@@ -22,6 +22,7 @@
 
 int main(int argc, char *argv[])
 {
+	struct cavan_font font;
 	struct cavan_display_device *display;
 
 	display = cavan_fb_display_start();
@@ -31,12 +32,19 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
+	if (argc > 1 && cavan_font_load_bmp(&font, argv[1], 2) == 0)
+	{
+		cavan_display_set_font(display, &font);
+	}
+
 	cavan_display_set_color3f(display, 1, 0, 0);
 
 	display->draw_rect(display, 200, 200, 300, 300);
 	display->draw_text(display, 300, 300, "Hello world!");
 	cavan_display_flush(display);
 	msleep(200);
+
+	cavan_display_stop(display);
 
 	return 0;
 }

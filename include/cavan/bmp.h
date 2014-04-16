@@ -4,7 +4,7 @@
 #include <linux/fb.h>
 
 #pragma pack(1)
-struct file_header
+struct bmp_file_header
 {
 	u8 type[2];
 	u32 size;
@@ -12,7 +12,7 @@ struct file_header
 	u32 offset;
 };
 
-struct info_header
+struct bmp_info_header
 {
 	u32 size;
 	u32 width;
@@ -25,6 +25,12 @@ struct info_header
 	u32 y_pels_per_meter;
 	u32 clr_used;
 	u32 clr_important;
+};
+
+struct bmp_header
+{
+	struct bmp_file_header file_hdr;
+	struct bmp_info_header info_hdr;
 };
 
 struct pixel555
@@ -58,8 +64,7 @@ struct pixel8888
 #pragma pack()
 
 int bmp_view(const char *file_name, const char *fb_name);
-void show_file_header(struct file_header *file_hdr);
-void show_info_header(struct info_header *info_hdr);
-int read_file_header(int fd, struct file_header *file_hdr);
-int read_info_header(int fd, struct info_header *info_hdr);
-
+void bmp_show_file_header(struct bmp_file_header *file_hdr);
+void bmp_show_info_header(struct bmp_info_header *info_hdr);
+int bmp_read_file_header(int fd, struct bmp_file_header *file_hdr);
+int bmp_read_info_header(int fd, struct bmp_info_header *info_hdr);

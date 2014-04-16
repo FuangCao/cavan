@@ -4,7 +4,7 @@
 #include <cavan/file.h>
 #include <cavan/fb.h>
 
-void show_file_header(struct file_header *file_hdr)
+void bmp_show_file_header(struct bmp_file_header *file_hdr)
 {
 	print_sep(60);
 	println("file_hdr->type = %c%c", file_hdr->type[0], file_hdr->type[1]);
@@ -12,7 +12,7 @@ void show_file_header(struct file_header *file_hdr)
 	println("file_hdr->offset = %d", file_hdr->offset);
 }
 
-void show_info_header(struct info_header *info_hdr)
+void bmp_show_info_header(struct bmp_info_header *info_hdr)
 {
 	print_sep(60);
 	println("info_hdr->size = %d", info_hdr->size);
@@ -28,7 +28,7 @@ void show_info_header(struct info_header *info_hdr)
 	println("info_hdr->clr_important = %d", info_hdr->clr_important);
 }
 
-int read_file_header(int fd, struct file_header *file_hdr)
+int bmp_read_file_header(int fd, struct bmp_file_header *file_hdr)
 {
 	int ret;
 
@@ -45,12 +45,12 @@ int read_file_header(int fd, struct file_header *file_hdr)
 		return -1;
 	}
 
-	show_file_header(file_hdr);
+	bmp_show_file_header(file_hdr);
 
 	return ret;
 }
 
-int read_info_header(int fd, struct info_header *info_hdr)
+int bmp_read_info_header(int fd, struct bmp_info_header *info_hdr)
 {
 	int ret;
 
@@ -61,7 +61,7 @@ int read_info_header(int fd, struct info_header *info_hdr)
 		return ret;
 	}
 
-	show_info_header(info_hdr);
+	bmp_show_info_header(info_hdr);
 
 	return ret;
 }
@@ -428,8 +428,8 @@ int bmp_view(const char *file_name, const char *fb_name)
 	int ret;
 	void *screen;
 	int fd, fb;
-	struct file_header file_hdr;
-	struct info_header info_hdr;
+	struct bmp_file_header file_hdr;
+	struct bmp_info_header info_hdr;
 	struct fb_fix_screeninfo fix;
 	struct fb_var_screeninfo var;
 
@@ -442,14 +442,14 @@ int bmp_view(const char *file_name, const char *fb_name)
 		return -1;
 	}
 
-	ret = read_file_header(fd, &file_hdr);
+	ret = bmp_read_file_header(fd, &file_hdr);
 	if (ret < 0)
 	{
 		error_msg("read_file_header");
 		goto out_close_fd;
 	}
 
-	ret = read_info_header(fd, &info_hdr);
+	ret = bmp_read_info_header(fd, &info_hdr);
 	if (ret < 0)
 	{
 		error_msg("read_info_header");

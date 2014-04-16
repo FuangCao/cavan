@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 	int ret;
 	int fd_in;
 	int fd_out;
-	struct file_header file_hdr;
+	struct bmp_file_header file_hdr;
 
 	assert(argc == 3);
 
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
 	for (i = 0; i < 10; i++)
 	{
-		ret = read_file_header(fd_in, &file_hdr);
+		ret = bmp_read_file_header(fd_in, &file_hdr);
 		if (ret < 0)
 		{
 			break;
