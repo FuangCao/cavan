@@ -635,3 +635,41 @@ bool byte_is_named(byte b)
 		return false;
 	}
 }
+
+void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep, const char *new_line)
+{
+	const byte *mem_end;
+
+	if (sep == NULL)
+	{
+		sep = " ";
+	}
+
+	if (new_line == NULL)
+	{
+		new_line = "\n";
+	}
+
+	if (width < 1)
+	{
+		width = 10;
+	}
+
+	mem_end = mem + size;
+
+	while (mem < mem_end)
+	{
+		const byte *line_end = mem + width - 1;
+		if (line_end >= mem_end)
+		{
+			line_end = mem_end - 1;
+		}
+
+		while (mem < line_end)
+		{
+			printf("0x%02x%s", *mem++, sep);
+		}
+
+		printf("0x%02x%s", *mem++, new_line);
+	}
+}

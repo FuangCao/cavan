@@ -41,8 +41,10 @@ struct cavan_font
 	const byte *rundata;
 };
 
+void cavan_font_dump(struct cavan_font *font);
 int cavan_font_init(struct cavan_font *font);
 void cavan_font_deinit(struct cavan_font *font);
 struct cavan_font *cavan_font_get(cavan_font_type_t type);
 void cavan_font_put(struct cavan_font *font);
 int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines);
+ssize_t cavan_font_comp(struct cavan_font *font, byte *buff, size_t size);

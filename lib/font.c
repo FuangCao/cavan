@@ -23,6 +23,18 @@
 #include <cavan/font.h>
 #include <cavan/font_10x18.h>
 
+void cavan_font_dump(struct cavan_font *font)
+{
+	println("name = %s", font->name);
+	println("lines = %d", font->lines);
+	println("width = %d", font->width);
+	println("height = %d", font->height);
+	println("cwidth = %d", font->cwidth);
+	println("cheight = %d", font->cheight);
+	println("stride = %d", font->stride);
+	println("rundata_size = " CAVAN_SIZE_FORMAT, font->rundata_size);
+}
+
 int cavan_font_init(struct cavan_font *font)
 {
 	byte *body;
@@ -120,6 +132,7 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 	bmp_show_file_header(file_hdr);
 	bmp_show_info_header(info_hdr);
 
+	font->name = "BMP";
 	font->lines = lines;
 	font->width = info_hdr->width;
 	font->height = info_hdr->height;
@@ -293,4 +306,56 @@ out_cavan_font_deinit:
 out_file_unmap:
 	file_unmap(fd, header, size);
 	return ret;
+}
+
+ssize_t cavan_font_comp(struct cavan_font *font, byte *buff, size_t size)
+{
+	byte *buff_bak, *buff_end;
+	const byte *body, *body_end;
+
+	if (font == NULL)
+	{
+		pr_red_info("font == NULL");
+		return -EINVAL;
+	}
+
+	body = font->body;
+	body_end = body + font->width * font->height;
+
+	for (buff_bak = buff, buff_end = buff + size; body < body_end && buff < buff_end; buff++)
+	{
+		int value;
+		const byte *body_bak, *body_last;
+
+		body_last = body + 0x7F;
+		if (body_last > body_end)
+		{
+			body_last = body_end;
+		}
+
+		body_bak = body++;
+
+		if (*body_bak)
+		{
+			value = 1;
+
+			while (body < body_last && *body)
+			{
+				body++;
+			}
+		}
+		else
+		{
+			value = 0;
+
+			while (body < body_last && *body == 0)
+			{
+				body++;
+			}
+		}
+
+		*buff = value << 7 | (body - body_bak);
+	}
+
+	return buff - buff_bak;
 }

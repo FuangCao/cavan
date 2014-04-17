@@ -22,6 +22,8 @@
 
 int main(int argc, char *argv[])
 {
+	byte *mem;
+	ssize_t ssize;
 	struct cavan_font font;
 	struct cavan_display_device *display;
 
@@ -36,6 +38,13 @@ int main(int argc, char *argv[])
 	{
 		cavan_display_set_font(display, &font);
 	}
+
+	cavan_font_dump(display->font);
+	ssize = display->font->width * display->font->height;
+	mem = alloca(ssize);
+	ssize = cavan_font_comp(display->font, mem, (size_t)ssize);
+	println("ssize = %ld", ssize);
+	cavan_mem_dump(mem, ssize, 15, ", ", ",\n");
 
 	cavan_display_set_color3f(display, 1, 0, 0);
 

@@ -80,6 +80,7 @@ bool byte_is_space(byte b);
 bool byte_is_lf(byte b);
 bool byte_is_space_or_lf(byte b);
 bool byte_is_named(byte b);
+void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep, const char *new_line);
 
 static inline char *mem_trans(char *text, size_t size)
 {

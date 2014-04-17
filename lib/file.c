@@ -3024,3 +3024,23 @@ out_complete:
 	*buff = 0;
 	return buff - buff_bak;
 }
+
+int cavan_file_dump(const char *pathname, size_t width, const char *sep, const char *new_line)
+{
+	int fd;
+	void *addr;
+	size_t size;
+
+	fd = file_mmap(pathname, &addr, &size, 0);
+	if (fd < 0)
+	{
+		pr_red_info("file_mmap");
+		return fd;
+	}
+
+	cavan_mem_dump(addr, size, width, sep, new_line);
+
+	file_unmap(fd,addr, size);
+
+	return 0;
+}

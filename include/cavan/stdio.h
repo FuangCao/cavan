@@ -93,6 +93,12 @@ using namespace std;
 #define CAVAN_COLOR_BLUE				"\033[34m"
 #define CAVAN_COLOR_MAGENTA				"\033[35m"
 
+#if __WORDSIZE == 64
+#define CAVAN_SIZE_FORMAT				"%ld"
+#else
+#define CAVAN_SIZE_FORMAT				"%d"
+#endif
+
 #define pr_std_info(fmt, args ...) \
 	printf(fmt "\n", ##args)
 

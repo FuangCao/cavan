@@ -200,6 +200,7 @@ int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option 
 int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *option);
 
 ssize_t file_read_line(int fd, char *buff, size_t size);
+int cavan_file_dump(const char *pathname, size_t width, const char *sep, const char *new_line);
 
 // ============================================================
 
