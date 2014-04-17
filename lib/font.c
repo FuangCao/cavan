@@ -22,6 +22,10 @@
 #include <cavan/file.h>
 #include <cavan/font.h>
 #include <cavan/font_10x18.h>
+#include <cavan/font_12x22.h>
+#include <cavan/font_18x32.h>
+
+#define CAVAN_DEFAULT_FONT	CAVAN_FONT_18X32
 
 void cavan_font_dump(struct cavan_font *font)
 {
@@ -84,10 +88,23 @@ struct cavan_font *cavan_font_get(cavan_font_type_t type)
 	int ret;
 	struct cavan_font *font;
 
+	if ((int)type < 0)
+	{
+		type = CAVAN_DEFAULT_FONT;
+	}
+
 	switch (type)
 	{
 	case CAVAN_FONT_10X18:
 		font = &cavan_font_10x18;
+		break;
+
+	case CAVAN_FONT_12X22:
+		font = &cavan_font_12x22;
+		break;
+
+	case CAVAN_FONT_18X32:
+		font = &cavan_font_18x32;
 		break;
 
 	default:
@@ -320,7 +337,12 @@ ssize_t cavan_font_comp(struct cavan_font *font, byte *buff, size_t size)
 	}
 
 	body = font->body;
+
+#if 0
+	body_end = body + font->stride;
+#else
 	body_end = body + font->width * font->height;
+#endif
 
 	for (buff_bak = buff, buff_end = buff + size; body < body_end && buff < buff_end; buff++)
 	{

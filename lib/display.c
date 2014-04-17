@@ -1105,7 +1105,7 @@ int cavan_display_init(struct cavan_display_device *display)
 		return ret;
 	}
 
-	display->font = cavan_font_get(CAVAN_FONT_10X18);
+	display->font = cavan_font_get(-1);
 	if (display->font == NULL)
 	{
 		ret = -EFAULT;

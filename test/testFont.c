@@ -20,10 +20,14 @@
 #include <cavan.h>
 #include <cavan/fb.h>
 
+#define DUMP_FONT 0
+
 int main(int argc, char *argv[])
 {
+#if DUMP_FONT
 	byte *mem;
 	ssize_t ssize;
+#endif
 	struct cavan_font font;
 	struct cavan_display_device *display;
 
@@ -39,12 +43,14 @@ int main(int argc, char *argv[])
 		cavan_display_set_font(display, &font);
 	}
 
+#if DUMP_FONT
 	cavan_font_dump(display->font);
 	ssize = display->font->width * display->font->height;
 	mem = alloca(ssize);
 	ssize = cavan_font_comp(display->font, mem, (size_t)ssize);
 	println("ssize = %ld", ssize);
 	cavan_mem_dump(mem, ssize, 15, ", ", ",\n");
+#endif
 
 	cavan_display_set_color3f(display, 1, 0, 0);
 
