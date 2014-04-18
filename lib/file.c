@@ -2666,6 +2666,11 @@ int file_mmap(const char *pathname, void **addr, size_t *size, int flags)
 	struct stat st;
 	void *mem;
 
+	if (flags & O_WRONLY)
+	{
+		flags = (flags & (~O_WRONLY)) | O_RDWR;
+	}
+
 	fd = open(pathname, flags, 0777);
 	if (fd < 0)
 	{
@@ -2679,13 +2684,6 @@ int file_mmap(const char *pathname, void **addr, size_t *size, int flags)
 		goto out_close_fd;
 	}
 
-	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
-		pr_error_info("fstat");
-		goto out_unlock_fd;
-	}
-
 	if (flags & O_RDWR)
 	{
 		flags = PROT_READ | PROT_WRITE;
@@ -2697,6 +2695,26 @@ int file_mmap(const char *pathname, void **addr, size_t *size, int flags)
 	else
 	{
 		flags = PROT_READ;
+	}
+
+	if (flags & PROT_WRITE)
+	{
+		st.st_size = *size;
+		ret = ftruncate(fd, st.st_size);
+		if (ret < 0)
+		{
+			pr_error_info("ftruncate");
+			goto out_unlock_fd;
+		}
+	}
+	else
+	{
+		ret = fstat(fd, &st);
+		if (ret < 0)
+		{
+			pr_error_info("fstat");
+			goto out_unlock_fd;
+		}
 	}
 
 	mem = mmap(NULL, st.st_size, flags, MAP_SHARED, fd, 0);

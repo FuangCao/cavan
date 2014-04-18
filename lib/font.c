@@ -325,6 +325,149 @@ out_file_unmap:
 	return ret;
 }
 
+int cavan_font_save_bmp(struct cavan_font *font, const char *pathname, int bit_count)
+{
+	int fd;
+	int ret;
+	size_t size;
+	struct bmp_header *header;
+
+	size = sizeof(*header) + font->width * font->height * bit_count;
+	fd = file_mmap(pathname, (void **)&header, &size, O_RDWR | O_CREAT | O_TRUNC);
+	if (fd < 0)
+	{
+		pr_red_info("file_mmap");
+		return fd;
+	}
+
+	bmp_header_init(header, font->width, font->height, bit_count);
+
+	switch (bit_count)
+	{
+	case 8:
+		{
+			u8 *pixel = (u8 *)(header + 1);
+			const byte *body;
+
+			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2)
+			{
+				const byte *body_end;
+
+				for (body_end = body + font->width; body < body_end; body++, pixel++)
+				{
+					u8 value;
+
+					if (*body)
+					{
+						value = 0xFF;
+					}
+					else
+					{
+						value = 0x00;
+					}
+
+					*pixel = value;
+				}
+			}
+		}
+		break;
+
+	case 16:
+		{
+			u16 *pixel = (u16 *)(header + 1);
+			const byte *body;
+
+			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2)
+			{
+				const byte *body_end;
+
+				for (body_end = body + font->width; body < body_end; body++, pixel++)
+				{
+					u16 value;
+
+					if (*body)
+					{
+						value = 0xFFFF;
+					}
+					else
+					{
+						value = 0x0000;
+					}
+
+					*pixel = value;
+				}
+			}
+		}
+		break;
+
+	case 24:
+		{
+			byte *pixel = (byte *)(header + 1);
+			const byte *body;
+
+			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2)
+			{
+				const byte *body_end;
+
+				for (body_end = body + font->width; body < body_end; body++, pixel += 3)
+				{
+					byte value;
+
+					if (*body)
+					{
+						value = 0xFF;
+					}
+					else
+					{
+						value = 0x00;
+					}
+
+					pixel[0] = pixel[1] = pixel[2] = value;
+				}
+			}
+		}
+		break;
+
+	case 32:
+		{
+			u32 *pixel = (u32 *)(header + 1);
+			const byte *body;
+
+			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2)
+			{
+				const byte *body_end;
+
+				for (body_end = body + font->width; body < body_end; body++, pixel++)
+				{
+					u32 value;
+
+					if (*body)
+					{
+						value = 0xFFFFFFFF;
+					}
+					else
+					{
+						value = 0x00000000;
+					}
+
+					*pixel = value;
+				}
+			}
+		}
+		break;
+
+	default:
+		pr_red_info("unknown bit_count = %d", bit_count);
+		ret = -EINVAL;
+		goto out_file_unmap;
+	}
+
+	ret = 0;
+out_file_unmap:
+	file_unmap(fd, header, size);
+	return ret;
+}
+
 ssize_t cavan_font_comp(struct cavan_font *font, byte *buff, size_t size)
 {
 	byte *buff_bak, *buff_end;

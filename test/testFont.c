@@ -21,6 +21,7 @@
 #include <cavan/fb.h>
 
 #define DUMP_FONT 0
+#define SAVE_FONT 1
 
 int main(int argc, char *argv[])
 {
@@ -28,7 +29,9 @@ int main(int argc, char *argv[])
 	byte *mem;
 	ssize_t ssize;
 #endif
+#if SAVE_FONT == 0
 	struct cavan_font font;
+#endif
 	struct cavan_display_device *display;
 
 	display = cavan_fb_display_start();
@@ -38,9 +41,16 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-	if (argc > 1 && cavan_font_load_bmp(&font, argv[1], 2) == 0)
+	if (argc > 1)
 	{
-		cavan_display_set_font(display, &font);
+#if SAVE_FONT
+		cavan_font_save_bmp(display->font, argv[1], 8);
+#else
+		if (cavan_font_load_bmp(&font, argv[1], 2) == 0)
+		{
+			cavan_display_set_font(display, &font);
+		}
+#endif
 	}
 
 #if DUMP_FONT

@@ -68,3 +68,6 @@ void bmp_show_file_header(struct bmp_file_header *file_hdr);
 void bmp_show_info_header(struct bmp_info_header *info_hdr);
 int bmp_read_file_header(int fd, struct bmp_file_header *file_hdr);
 int bmp_read_info_header(int fd, struct bmp_info_header *info_hdr);
+void bmp_file_header_init(struct bmp_file_header *file_hdr, size_t size);
+void bmp_info_header_init(struct bmp_info_header *info_hdr, int width, int height, int bit_count);
+void bmp_header_init(struct bmp_header *header, int width, int height, int bit_count);

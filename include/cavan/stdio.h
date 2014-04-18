@@ -120,7 +120,7 @@ using namespace std;
 
 #define pr_error_info(fmt, args ...) \
 	if (errno) { \
-		pr_color_info(CAVAN_COLOR_RED, "%s[%d] (" fmt "): %s", __FUNCTION__, __LINE__, ##args, strerror(errno)); \
+		pr_color_info(CAVAN_COLOR_RED, "%s[%d] (" fmt "): %s (%d)", __FUNCTION__, __LINE__, ##args, strerror(errno), errno); \
 	} else { \
 		pr_red_info(fmt, ##args); \
 	}

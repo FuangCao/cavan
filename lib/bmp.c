@@ -562,3 +562,33 @@ out_close_fd:
 
 	return ret;
 }
+
+void bmp_file_header_init(struct bmp_file_header *file_hdr, size_t size)
+{
+	file_hdr->type[0] = 'B';
+	file_hdr->type[1] = 'M';
+	file_hdr->size = size;
+	memset(file_hdr->reserved, 0, sizeof(file_hdr->reserved));
+	file_hdr->offset = sizeof(struct bmp_header);
+}
+
+void bmp_info_header_init(struct bmp_info_header *info_hdr, int width, int height, int bit_count)
+{
+	info_hdr->size = sizeof(*info_hdr);
+	info_hdr->width = width;
+	info_hdr->height = height;
+	info_hdr->planes = 1;
+	info_hdr->bit_count = bit_count;
+	info_hdr->compress = 0;
+	info_hdr->size_image = width * height * bit_count;
+	info_hdr->x_pels_per_meter = 2834;
+	info_hdr->y_pels_per_meter = 2834;
+	info_hdr->clr_used = 0;
+	info_hdr->clr_important = 0;
+}
+
+void bmp_header_init(struct bmp_header *header, int width, int height, int bit_count)
+{
+	bmp_file_header_init(&header->file_hdr, width * height * bit_count);
+	bmp_info_header_init(&header->info_hdr, width, height, bit_count);
+}
