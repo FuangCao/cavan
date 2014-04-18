@@ -8,7 +8,7 @@ void bmp_show_file_header(struct bmp_file_header *file_hdr)
 {
 	print_sep(60);
 	println("file_hdr->type = %c%c", file_hdr->type[0], file_hdr->type[1]);
-	println("file_hdr->size = %dk", file_hdr->size >> 10);
+	println("file_hdr->size = %s", size2text(file_hdr->size));
 	println("file_hdr->offset = %d", file_hdr->offset);
 }
 
@@ -21,7 +21,7 @@ void bmp_show_info_header(struct bmp_info_header *info_hdr)
 	println("info_hdr->planes = %d", info_hdr->planes);
 	println("info_hdr->bit_count = %d", info_hdr->bit_count);
 	println("info_hdr->compress = %d", info_hdr->compress);
-	println("info_hdr->size_image = %dk", info_hdr->size_image >> 10);
+	println("info_hdr->size_image = %s", size2text(info_hdr->size_image));
 	println("info_hdr->x_pels_per_meter = %d", info_hdr->x_pels_per_meter);
 	println("info_hdr->y_pels_per_meter = %d", info_hdr->y_pels_per_meter);
 	println("info_hdr->clr_used = %d", info_hdr->clr_used);
@@ -563,32 +563,39 @@ out_close_fd:
 	return ret;
 }
 
-void bmp_file_header_init(struct bmp_file_header *file_hdr, size_t size)
+size_t bmp_get_color_table_size(int bit_count)
 {
-	file_hdr->type[0] = 'B';
-	file_hdr->type[1] = 'M';
-	file_hdr->size = size;
-	memset(file_hdr->reserved, 0, sizeof(file_hdr->reserved));
-	file_hdr->offset = sizeof(struct bmp_header);
+	if (bit_count > 8)
+	{
+		return 0;
+	}
+
+	return 1 << bit_count;
 }
 
-void bmp_info_header_init(struct bmp_info_header *info_hdr, int width, int height, int bit_count)
+void bmp_header_init(struct bmp_header *header, int width, int height, int bit_count)
 {
+	size_t table_size;
+	struct bmp_file_header *file_hdr = &header->file_hdr;
+	struct bmp_info_header *info_hdr = &header->info_hdr;
+
+	table_size = bmp_get_color_table_size(bit_count) * sizeof(struct bmp_color_table_entry);
+
 	info_hdr->size = sizeof(*info_hdr);
 	info_hdr->width = width;
 	info_hdr->height = height;
 	info_hdr->planes = 1;
 	info_hdr->bit_count = bit_count;
 	info_hdr->compress = 0;
-	info_hdr->size_image = width * height * bit_count;
+	info_hdr->size_image = width * height * bit_count / 8;
 	info_hdr->x_pels_per_meter = 2834;
 	info_hdr->y_pels_per_meter = 2834;
 	info_hdr->clr_used = 0;
 	info_hdr->clr_important = 0;
-}
 
-void bmp_header_init(struct bmp_header *header, int width, int height, int bit_count)
-{
-	bmp_file_header_init(&header->file_hdr, width * height * bit_count);
-	bmp_info_header_init(&header->info_hdr, width, height, bit_count);
+	file_hdr->type[0] = 'B';
+	file_hdr->type[1] = 'M';
+	file_hdr->size = info_hdr->size_image + sizeof(*header) + table_size;
+	memset(file_hdr->reserved, 0, sizeof(file_hdr->reserved));
+	file_hdr->offset = file_hdr->size - info_hdr->size_image;
 }

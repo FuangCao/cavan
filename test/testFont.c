@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	if (argc > 1)
 	{
 #if SAVE_FONT
-		cavan_font_save_bmp(display->font, argv[1], 8);
+		cavan_font_save_bmp(display->font, argv[1], 16);
 #else
 		if (cavan_font_load_bmp(&font, argv[1], 2) == 0)
 		{
