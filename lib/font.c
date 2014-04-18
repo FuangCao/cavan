@@ -171,7 +171,8 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 	case 8:
 		{
 			const u8 *p, *file_end;
-			byte *body = font->body;
+			byte *body = font->body + font->width * font->height;
+			struct bmp_color_table_entry *colors = (struct bmp_color_table_entry *)(header + 1);
 
 			p = ((u8 *)header) + file_hdr->offset;
 			file_end = p + font->width * font->height;
@@ -184,9 +185,13 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 					break;
 				}
 
+				body -= font->width;
+
 				while (p < line_end)
 				{
-					if (*p)
+					struct bmp_color_table_entry *color = colors + (*p);
+
+					if (color->red > 128 && color->green > 128 && color->blue > 128)
 					{
 						*body = 0xFF;
 					}
@@ -198,6 +203,8 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 					p++;
 					body++;
 				}
+
+				body -= font->width;
 			}
 		}
 		break;
@@ -205,7 +212,7 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 	case 16:
 		{
 			const u16 *p, *file_end;
-			byte *body = font->body;
+			byte *body = font->body + font->width * font->height;
 
 			p = (u16 *)(((byte *)header) + file_hdr->offset);
 			file_end = p + font->width * font->height;
@@ -218,6 +225,8 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 					break;
 				}
 
+				body -= font->width;
+
 				while (p < line_end)
 				{
 					if (*p)
@@ -232,6 +241,8 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 					p++;
 					body++;
 				}
+
+				body -= font->width;
 			}
 		}
 		break;
@@ -276,23 +287,25 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 
 	case 32:
 		{
-			const u32 *p, *file_end;
-			byte *body = font->body;
+			const u8 *p, *file_end;
+			byte *body = font->body + font->width * font->height;
 
-			p = (u32 *)(((byte *)header) + file_hdr->offset);
-			file_end = p + font->width * font->height;
+			p = (u8 *)(((byte *)header) + file_hdr->offset);
+			file_end = p + font->width * font->height * 4;
 
 			while (1)
 			{
-				const u32 *line_end = p + font->width;
+				const u8 *line_end = p + font->width * 4;
 				if (line_end > file_end)
 				{
 					break;
 				}
 
+				body -= font->width;
+
 				while (p < line_end)
 				{
-					if (*p)
+					if (p[0] > 128 && p[1] > 128 && p[2] > 128)
 					{
 						*body = 0xFF;
 					}
@@ -301,9 +314,11 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 						*body = 0;
 					}
 
-					p++;
+					p += 4;
 					body++;
 				}
+
+				body -= font->width;
 			}
 		}
 		break;
