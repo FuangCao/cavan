@@ -126,7 +126,7 @@ function create_symlinks()
 	cavan-symlink ${GPAN_PATH} /gpan || return 1
 	cavan-symlink ${UBUNTU_PATH} /ubuntu || return 1
 
-	for dir in cavan work git svn book project tools app
+	for dir in cavan work git svn book project tools app temp
 	do
 		cavan-symlink ${UBUNTU_PATH}/${dir} /${dir} || return 1
 	done
@@ -293,31 +293,31 @@ EOF
 
 function install_applications()
 {
+	local line app_list
+
 	dpkg --configure -a || return 1
 	apt-get update --fix-missing || return 1
-
-	: > ${FILE_APP_FEILED}
 
 	while read line
 	do
 		for app in ${line}
 		do
-			case "${app}" in
-				*\#*)
-					echo "skip ${app}"
-					break
-					;;
-				*)
-					pr_title "Install application ${app}"
-					apt-get install -y ${app} ||
-					{
-						pr_red_info "Install application '${app}' failed"
-						echo ${app} >> ${FILE_APP_FEILED}
-					}
-					;;
-			esac
+			[[ "${app}" == *'#'* ]] && break
+			app_list="${app_list} ${app}"
 		done
 	done < ${FILE_APP_CONFIG}
+
+	: > ${FILE_APP_FEILED}
+
+	for app in ${app_list}
+	do
+		pr_title "Install application ${app}"
+		apt-get install -y ${app} ||
+		{
+			pr_red_info "Install application '${app}' failed"
+			echo ${app} >> ${FILE_APP_FEILED}
+		}
+	done
 
 	mkdir -pv /etc/cavan || return 1
 	cp ${FILE_APP_FEILED} /etc/cavan -av || return 1
@@ -413,8 +413,6 @@ function config_grub()
 
 function config_others()
 {
-	mkdir /temp -pv || return 1
-
 	return 0
 }
 
