@@ -21,11 +21,13 @@
 #include <cavan/bmp.h>
 #include <cavan/file.h>
 #include <cavan/font.h>
+#include <cavan/display.h>
 #include <cavan/font_10x18.h>
 #include <cavan/font_12x22.h>
 #include <cavan/font_18x32.h>
+#include <cavan/font_20x36.h>
 
-#define CAVAN_DEFAULT_FONT	CAVAN_FONT_18X32
+#define CAVAN_DEFAULT_FONT	CAVAN_FONT_20X36
 
 void cavan_font_dump(struct cavan_font *font)
 {
@@ -105,6 +107,10 @@ struct cavan_font *cavan_font_get(cavan_font_type_t type)
 
 	case CAVAN_FONT_18X32:
 		font = &cavan_font_18x32;
+		break;
+
+	case CAVAN_FONT_20X36:
+		font = &cavan_font_20x36;
 		break;
 
 	default:
@@ -267,7 +273,10 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 
 				while (p < line_end)
 				{
-					if (p[0] > 128 && p[1] > 128 && p[2] > 128)
+					int brightness;
+
+					brightness = cavan_display_cal_brightness(p[0], p[1], p[2]);
+					if (brightness > 64)
 					{
 						*body = 0xFF;
 					}

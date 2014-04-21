@@ -126,7 +126,7 @@ function create_symlinks()
 	cavan-symlink ${GPAN_PATH} /gpan || return 1
 	cavan-symlink ${UBUNTU_PATH} /ubuntu || return 1
 
-	for dir in cavan work git svn book project tools app temp
+	for dir in cavan work git svn book project tools app temp logs
 	do
 		cavan-symlink ${UBUNTU_PATH}/${dir} /${dir} || return 1
 	done

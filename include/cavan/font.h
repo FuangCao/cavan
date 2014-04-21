@@ -26,6 +26,7 @@ typedef enum cavan_font_type
 	CAVAN_FONT_10X18,
 	CAVAN_FONT_12X22,
 	CAVAN_FONT_18X32,
+	CAVAN_FONT_20X36,
 	CAVAN_FONT_COUNT
 } cavan_font_type_t;
 
