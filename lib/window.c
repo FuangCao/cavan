@@ -409,31 +409,28 @@ void cavan_window_paint_handler(struct cavan_window *win)
 
 	if (width > 0 && height > 0)
 	{
-		display->set_color(display, win->back_color);
-		display->fill_rect(display, x, y, width, height);
+		display->fill_rect(display, x, y, width, height, win->back_color);
 	}
-
-	display->set_color(display, win->border_color);
 
 	border_width = MIN(win->height, win->border_width);
 	if (border_width > 0)
 	{
-		display->fill_rect(display, win->xabs, win->yabs, win->width, border_width);
+		display->fill_rect(display, win->xabs, win->yabs, win->width, border_width, win->border_color);
 
 		if (border_width > 1)
 		{
-			display->fill_rect(display, win->xabs, y + height, win->width, border_width);
+			display->fill_rect(display, win->xabs, y + height, win->width, border_width, win->border_color);
 		}
 	}
 
 	border_width = MIN(win->width, win->border_width);
 	if (border_width > 0)
 	{
-		display->fill_rect(display, win->xabs, y, border_width, height);
+		display->fill_rect(display, win->xabs, y, border_width, height, win->border_color);
 
 		if (border_width > 1)
 		{
-			display->fill_rect(display, x + width, y, border_width, height);
+			display->fill_rect(display, x + width, y, border_width, height, win->border_color);
 		}
 	}
 }
@@ -482,8 +479,7 @@ static void cavan_window_set_abs_position(struct cavan_window *win, int xo, int 
 		struct cavan_display_device *display = context->display;
 
 		cavan_display_lock(display);
-		display->set_color(display, context->back_color);
-		display->fill_rect(display, xo, yo, win->width, win->height);
+		display->fill_rect(display, xo, yo, win->width, win->height, context->back_color);
 		cavan_display_unlock(display);
 	}
 
@@ -615,7 +611,6 @@ void cavan_label_paint_handler(struct cavan_window *win)
 	}
 
 	display = win->context->display;
-	display->set_color(display, win->fore_color);
 
 	switch (label->align)
 	{
@@ -631,7 +626,7 @@ void cavan_label_paint_handler(struct cavan_window *win)
 		x = win->xabs + 2;
 	}
 
-	display->draw_text(display, x, win->yabs + win->height / 2, label->text);
+	display->draw_text(display, x, win->yabs + win->height / 2, label->text, win->fore_color);
 }
 
 int cavan_label_init(struct cavan_label *label, struct cavan_application_context *context, const char *text)
@@ -783,8 +778,7 @@ static void cavan_textview_cursor_set_visual(struct cavan_cursor *cursor, bool v
 	rect.y += win->yabs + (rect.height - display->font->cheight) / 2;
 
 	cavan_display_lock(display);
-	display->set_color(display, visual ? win->fore_color : win->back_color);
-	display->fill_rect(display, rect.x, rect.y, 1, display->font->cheight);
+	display->fill_rect(display, rect.x, rect.y, 1, display->font->cheight, visual ? win->fore_color : win->back_color);
 	cavan_display_unlock(display);
 
 	cavan_display_refresh(display);
@@ -928,8 +922,7 @@ void cavan_dialog_move_handler(struct cavan_window *win, struct cavan_input_mess
 		cavan_display_memory_rect_backup(display, mem, point->x - dialog->xofs, point->y - dialog->yofs);
 		cavan_window_set_abs_position_base(win, x, y);
 
-		display->set_color(display, context->move_color);
-		display->draw_rect(display, mem->x, mem->y, mem->width, mem->height);
+		display->draw_rect(display, mem->x, mem->y, mem->width, mem->height, context->move_color);
 
 		cavan_display_unlock(display);
 
@@ -1130,12 +1123,10 @@ void cavan_progress_bar_paint_handler(struct cavan_window *win)
 	display = win->context->display;
 
 	width = rect.width * percent;
-	display->set_color(display, bar->complete_color);
-	display->fill_rect(display, rect.x, rect.y, width, rect.height);
+	display->fill_rect(display, rect.x, rect.y, width, rect.height, bar->complete_color);
 
 	sprintf(buff, "%2.2lf%%", percent * 100);
-	display->set_color(display, win->fore_color);
-	cavan_display_draw_text_center(display, &rect, buff);
+	cavan_display_draw_text_center(display, &rect, buff, win->fore_color);
 }
 
 int cavan_progress_bar_init(struct cavan_progress_bar *bar, struct cavan_application_context *context, double total)
@@ -1220,8 +1211,7 @@ static void cavan_application_draw_mouse(struct cavan_application_context *conte
 
 	cavan_display_lock(display);
 	cavan_display_memory_backup(display, mem, context->x, context->y);
-	display->set_color(display, context->mouse_color);
-	display->draw_rect(display, context->x, context->y, CAVAN_MOUSE_SIZE, CAVAN_MOUSE_SIZE);
+	display->draw_rect(display, context->x, context->y, CAVAN_MOUSE_SIZE, CAVAN_MOUSE_SIZE, context->mouse_color);
 	cavan_display_unlock(display);
 
 	cavan_display_refresh(display);
@@ -1730,8 +1720,7 @@ void cavan_application_update_data(struct cavan_application_context *context)
 
 	cavan_display_lock(display);
 
-	display->set_color(display, context->back_color);
-	display->fill_rect(display, 0, 0, display->xres, display->yres);
+	display->fill_rect(display, 0, 0, display->xres, display->yres, context->back_color);
 
 	cavan_window_paint_child(&context->win_link);
 

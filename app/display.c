@@ -32,11 +32,11 @@ static int cavan_display_rect_main(int argc, char *argv[])
 
 	if (strcmp(argv[0], "draw_rect") == 0)
 	{
-		ret = display->draw_rect(display, left, top, width, height);
+		ret = display->draw_rect(display, left, top, width, height, display->pen_color);
 	}
 	else
 	{
-		ret = display->fill_rect(display, left, top, width, height);
+		ret = display->fill_rect(display, left, top, width, height, display->pen_color);
 	}
 
 	cavan_display_refresh(display);
@@ -80,7 +80,7 @@ static int cavan_display_test_main(int argc, char *argv[])
 		for (j = 0; j < 3; j++)
 		{
 			display->set_color(display, color_map[i][j]);
-			display->fill_rect(display, i * width, j * height, width, height);
+			display->fill_rect(display, i * width, j * height, width, height, display->pen_color);
 		}
 	}
 

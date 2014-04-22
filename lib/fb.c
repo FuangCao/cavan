@@ -242,6 +242,38 @@ static void cavan_fb_display_draw_point_handler(struct cavan_display_device *dis
 	cavan_fb_draw_point(display->private_data, x, y, color);
 }
 
+static bool cavan_fb_display_scroll_screen_handler(struct cavan_display_device *display, int width, int height, cavan_display_color_t color)
+{
+	int width_byte;
+	byte *py, *py_end;
+	struct cavan_fb_device *dev;
+
+	if (width < 0 || height < 0)
+	{
+		return false;
+	}
+
+	dev = display->private_data;
+	width_byte = width * dev->bpp_byte;
+
+	for (py = dev->fb_cache, py_end = py + (dev->yres - height) * dev->line_size; py < py_end; py += dev->line_size)
+	{
+		mem_copy(py, py + height * dev->line_size + width_byte, dev->line_size - width_byte);
+	}
+
+	if (width > 0)
+	{
+		display->fill_rect(display, display->xres - width, 0, width, display->yres, color);
+	}
+
+	if (height > 0)
+	{
+		display->fill_rect(display, 0, display->yres - height, display->xres - width, height, color);
+	}
+
+	return true;
+}
+
 static void cavan_fb_display_destroy_handler1(struct cavan_display_device *display)
 {
 	cavan_fb_deinit(display->private_data);
@@ -278,6 +310,7 @@ int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_
 	display->refresh = cavan_fb_display_refresh_handler;
 	display->build_color = cavan_fb_display_build_color_handler;
 	display->draw_point = cavan_fb_display_draw_point_handler;
+	display->scroll_screen = cavan_fb_display_scroll_screen_handler;
 
 	return 0;
 }

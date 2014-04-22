@@ -75,12 +75,14 @@ int main(int argc, char *argv[])
 
 	cavan_display_set_color3f(display, 1, 0, 0);
 
-	display->draw_rect(display, 200, 200, 300, 300);
+	display->draw_rect(display, 200, 200, 300, 300, display->pen_color);
 
 #if 1
 	for (i = 32; i < 127; i++)
 	{
 		cavan_display_printf(display, "i = %d = %c\n", i, i);
+		cavan_display_flush(display);
+		msleep(100);
 	}
 
 	cavan_display_flush(display);

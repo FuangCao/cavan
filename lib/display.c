@@ -23,13 +23,11 @@ int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double 
 	return 0;
 }
 
-static void cavan_display_draw_line_horizon_stand(struct cavan_display_device *display, int x1, int x2, int y)
+static void cavan_display_draw_line_horizon_stand(struct cavan_display_device *display, int x1, int x2, int y, cavan_display_color_t color)
 {
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	handler = display->draw_point;
-	color = display->pen_color;
 
 	if (x1 < x2)
 	{
@@ -49,14 +47,12 @@ static void cavan_display_draw_line_horizon_stand(struct cavan_display_device *d
 	}
 }
 
-static void cavan_display_draw_line_horizon(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
+static void cavan_display_draw_line_horizon(struct cavan_display_device *display, int x1, int y1, int x2, int y2, cavan_display_color_t color)
 {
 	double a, b;
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	handler = display->draw_point;
-	color = display->pen_color;
 
 	cavan_build_line_equation(x1, y1, x2, y2, &a, &b);
 
@@ -78,13 +74,11 @@ static void cavan_display_draw_line_horizon(struct cavan_display_device *display
 	}
 }
 
-static void cavan_display_draw_line_vertical_stand(struct cavan_display_device *display, int x, int y1, int y2)
+static void cavan_display_draw_line_vertical_stand(struct cavan_display_device *display, int x, int y1, int y2, cavan_display_color_t color)
 {
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	handler = display->draw_point;
-	color = display->pen_color;
 
 	if (y1 < y2)
 	{
@@ -104,14 +98,12 @@ static void cavan_display_draw_line_vertical_stand(struct cavan_display_device *
 	}
 }
 
-static void cavan_display_draw_line_vertical(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
+static void cavan_display_draw_line_vertical(struct cavan_display_device *display, int x1, int y1, int x2, int y2, cavan_display_color_t color)
 {
 	double a, b;
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	handler = display->draw_point;
-	color = display->pen_color;
 
 	cavan_build_line_equation(y1, x1, y2, x2, &a, &b);
 
@@ -149,7 +141,7 @@ static int cavan_display_adjust_value(int value, int res)
 	}
 }
 
-int cavan_display_draw_line_dummy(struct cavan_display_device *display, int x1, int y1, int x2, int y2)
+int cavan_display_draw_line_dummy(struct cavan_display_device *display, int x1, int y1, int x2, int y2, cavan_display_color_t color)
 {
 	int diffx, diffy;
 
@@ -175,37 +167,35 @@ int cavan_display_draw_line_dummy(struct cavan_display_device *display, int x1, 
 	{
 		if (diffy < 2)
 		{
-			cavan_display_draw_line_horizon_stand(display, x1, x2, y1);
+			cavan_display_draw_line_horizon_stand(display, x1, x2, y1, color);
 		}
 		else
 		{
-			cavan_display_draw_line_horizon(display, x1, y1, x2, y2);
+			cavan_display_draw_line_horizon(display, x1, y1, x2, y2, color);
 		}
 	}
 	else
 	{
 		if (diffx < 2)
 		{
-			cavan_display_draw_line_vertical_stand(display, x1, y1, y2);
+			cavan_display_draw_line_vertical_stand(display, x1, y1, y2, color);
 		}
 		else
 		{
-			cavan_display_draw_line_vertical(display, x1, y1, x2, y2);
+			cavan_display_draw_line_vertical(display, x1, y1, x2, y2, color);
 		}
 	}
 
 	return 0;
 }
 
-int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left, int top, int width, int height)
+int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left, int top, int width, int height, cavan_display_color_t color)
 {
 	int i;
 	int right, bottom;
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	handler = display->draw_point;
-	color = display->pen_color;
 
 	right = left + width - 1;
 	if (right >= display->xres)
@@ -244,15 +234,13 @@ int cavan_display_draw_rect_dummy(struct cavan_display_device *display, int left
 	return 0;
 }
 
-int cavan_display_fill_rect_dummy(struct cavan_display_device *display, int left, int top, int width, int height)
+int cavan_display_fill_rect_dummy(struct cavan_display_device *display, int left, int top, int width, int height, cavan_display_color_t color)
 {
 	int right, bottom;
 	int x, y;
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	handler = display->draw_point;
-	color = display->pen_color;
 
 	right = left + width - 1;
 	if (right >= display->xres)
@@ -287,12 +275,11 @@ int cavan_display_fill_rect_dummy(struct cavan_display_device *display, int left
 	return 0;
 }
 
-int cavan_display_draw_circle_dummy(struct cavan_display_device *display, int x, int y, int r)
+int cavan_display_draw_circle_dummy(struct cavan_display_device *display, int x, int y, int r, cavan_display_color_t color)
 {
 	int rr;
 	int i;
 	int tmp;
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	if (x - r < 0 || x + r >= display->xres || y - r < 0 || y + r >= display->yres)
@@ -301,7 +288,6 @@ int cavan_display_draw_circle_dummy(struct cavan_display_device *display, int x,
 	}
 
 	handler = display->draw_point;
-	color = display->pen_color;
 	rr = r * r;
 
 	for (i = 0; i < r; i++)
@@ -322,12 +308,11 @@ int cavan_display_draw_circle_dummy(struct cavan_display_device *display, int x,
 	return 0;
 }
 
-int cavan_display_fill_circle_dummy(struct cavan_display_device *display, int x, int y, int r)
+int cavan_display_fill_circle_dummy(struct cavan_display_device *display, int x, int y, int r, cavan_display_color_t color)
 {
 	int rr;
 	int i;
 	int tmp, left, right, top, bottom;
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	if (x - r < 0 || x + r >= display->xres || y - r < 0 || y + r >= display->yres)
@@ -336,7 +321,6 @@ int cavan_display_fill_circle_dummy(struct cavan_display_device *display, int x,
 	}
 
 	handler = display->draw_point;
-	color = display->pen_color;
 	rr = r * r;
 
 	for (i = 0; i < r; i++)
@@ -359,12 +343,11 @@ int cavan_display_fill_circle_dummy(struct cavan_display_device *display, int x,
 	return 0;
 }
 
-int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x, int y, int width, int height)
+int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x, int y, int width, int height, cavan_display_color_t color)
 {
 	double aa, bb;
 	int tmp;
 	int i;
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	aa = ((double)width) / 2;
@@ -379,7 +362,6 @@ int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x
 	bb *= bb;
 
 	handler = display->draw_point;
-	color = display->pen_color;
 
 	for (i = width >> 1; i >= 0; i--)
 	{
@@ -404,12 +386,11 @@ int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x
 	return 0;
 }
 
-int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x, int y, int width, int height)
+int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x, int y, int width, int height, cavan_display_color_t color)
 {
 	double aa, bb;
 	int tmp, left, right, top, bottom;
 	int i;
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	aa = ((double)width) / 2;
@@ -424,7 +405,6 @@ int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x
 	bb *= bb;
 
 	handler = display->draw_point;
-	color = display->pen_color;
 
 	for (i = width >> 1; i >= 0; i--)
 	{
@@ -451,7 +431,7 @@ int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x
 	return 0;
 }
 
-int cavan_display_draw_polygon_dummy(struct cavan_display_device *display, cavan_display_point_t *points, size_t count)
+int cavan_display_draw_polygon_dummy(struct cavan_display_device *display, cavan_display_point_t *points, size_t count, cavan_display_color_t color)
 {
 	unsigned int i;
 	int ret;
@@ -463,14 +443,14 @@ int cavan_display_draw_polygon_dummy(struct cavan_display_device *display, cavan
 
 	for (i = 0, count--; i < count; i++)
 	{
-		ret = cavan_display_draw_line_dummy(display, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+		ret = cavan_display_draw_line_dummy(display, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, color);
 		if (ret < 0)
 		{
 			return ret;
 		}
 	}
 
-	return cavan_display_draw_line_dummy(display, points[0].x, points[0].y, points[count].x, points[count].y);
+	return cavan_display_draw_line_dummy(display, points[0].x, points[0].y, points[count].x, points[count].y, color);
 }
 
 int max3i(int a, int b, int c)
@@ -552,17 +532,15 @@ void cavan_display_point_sort_x(cavan_display_point_t *start, cavan_display_poin
 	}
 }
 
-int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan_display_point_t *p1, cavan_display_point_t *p2, double a1, double b1, double a2, double b2)
+int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan_display_point_t *p1, cavan_display_point_t *p2, double a1, double b1, double a2, double b2, cavan_display_color_t color)
 {
 	int left, right, top, bottom;
-	cavan_display_color_t color;
 	cavan_display_draw_point_handler_t handler;
 
 	// println("left = %d, right = %d", left, right);
 	// println("a1 = %lf, b1 = %lf, a2 = %lf, b2 = %lf", a1, b1, a2, b2);
 
 	handler = display->draw_point;
-	color = display->pen_color;
 
 	left = p1->x;
 	right = p2->x;
@@ -612,7 +590,7 @@ int cavan_display_fill_triangle_half(struct cavan_display_device *display, cavan
 	return 0;
 }
 
-int cavan_display_fill_triangle_dummy(struct cavan_display_device *display, cavan_display_point_t *points)
+int cavan_display_fill_triangle_dummy(struct cavan_display_device *display, cavan_display_point_t *points, cavan_display_color_t color)
 {
 	double a[3], b[3];
 	cavan_display_point_t *p0, *p1, *p2;
@@ -656,20 +634,20 @@ int cavan_display_fill_triangle_dummy(struct cavan_display_device *display, cava
 	if (p1->y < (p1->x * a[1] + b[1]))
 	{
 		// pr_bold_pos();
-		cavan_display_fill_triangle_half(display, p0, p1, a[0], b[0], a[1], b[1]);
-		cavan_display_fill_triangle_half(display, p1, p2, a[2], b[2], a[1], b[1]);
+		cavan_display_fill_triangle_half(display, p0, p1, a[0], b[0], a[1], b[1], color);
+		cavan_display_fill_triangle_half(display, p1, p2, a[2], b[2], a[1], b[1], color);
 	}
 	else
 	{
 		// pr_bold_pos();
-		cavan_display_fill_triangle_half(display, p0, p1, a[1], b[1], a[0], b[0]);
-		cavan_display_fill_triangle_half(display, p1, p2, a[1], b[1], a[2], b[2]);
+		cavan_display_fill_triangle_half(display, p0, p1, a[1], b[1], a[0], b[0], color);
+		cavan_display_fill_triangle_half(display, p1, p2, a[1], b[1], a[2], b[2], color);
 	}
 
 	return 0;
 }
 
-int cavan_display_fill_polygon_dummy(struct cavan_display_device *display, cavan_display_point_t *points, size_t count)
+int cavan_display_fill_polygon_dummy(struct cavan_display_device *display, cavan_display_point_t *points, size_t count, cavan_display_color_t color)
 {
 	int ret;
 	cavan_display_point_t *p, *p_end;
@@ -686,7 +664,7 @@ int cavan_display_fill_polygon_dummy(struct cavan_display_device *display, cavan
 		point_buff[1] = p[0];
 		point_buff[2] = p[1];
 
-		ret = cavan_display_fill_triangle_dummy(display, point_buff);
+		ret = cavan_display_fill_triangle_dummy(display, point_buff, color);
 		if (ret < 0)
 		{
 			return ret;
@@ -717,27 +695,27 @@ int cavan_build_polygon_points(struct cavan_display_device *display, cavan_displ
 	return 0;
 }
 
-int cavan_display_draw_polygon_standard(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation)
+int cavan_display_draw_polygon_standard(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation, cavan_display_color_t color)
 {
 	int ret;
 	cavan_display_point_t points[count];
 
 	ret = cavan_build_polygon_points(display, points, count, x, y, r, rotation);
 
-	return ret < 0 ? ret : cavan_display_draw_polygon_dummy(display, points, count);
+	return ret < 0 ? ret : cavan_display_draw_polygon_dummy(display, points, count, color);
 }
 
-int cavan_display_fill_polygon_standard(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation)
+int cavan_display_fill_polygon_standard(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation, cavan_display_color_t color)
 {
 	int ret;
 	cavan_display_point_t points[count];
 
 	ret = cavan_build_polygon_points(display, points, count, x, y, r, rotation);
 
-	return ret < 0 ? ret : cavan_display_fill_polygon_dummy(display, points, count);
+	return ret < 0 ? ret : cavan_display_fill_polygon_dummy(display, points, count, color);
 }
 
-int cavan_display_draw_polygon_standard2(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation)
+int cavan_display_draw_polygon_standard2(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation, cavan_display_color_t color)
 {
 	int ret;
 	cavan_display_point_t points[count];
@@ -753,7 +731,7 @@ int cavan_display_draw_polygon_standard2(struct cavan_display_device *display, s
 	{
 		for (p2 = points; p2 < p1; p2++)
 		{
-			ret = cavan_display_draw_line_dummy(display, p1->x, p1->y, p2->x, p2->y);
+			ret = cavan_display_draw_line_dummy(display, p1->x, p1->y, p2->x, p2->y, color);
 			if (ret < 0)
 			{
 				return ret;
@@ -762,7 +740,7 @@ int cavan_display_draw_polygon_standard2(struct cavan_display_device *display, s
 
 		for (p2 = p1 + 1; p2 < end_p; p2++)
 		{
-			ret = cavan_display_draw_line_dummy(display, p1->x, p1->y, p2->x, p2->y);
+			ret = cavan_display_draw_line_dummy(display, p1->x, p1->y, p2->x, p2->y, color);
 			if (ret < 0)
 			{
 				return ret;
@@ -831,7 +809,7 @@ int cavan_calculate_polygo_cross_points(cavan_display_point_t *points, cavan_dis
 	return 0;
 }
 
-int cavan_display_fill_polygon_standard2(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation)
+int cavan_display_fill_polygon_standard2(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation, cavan_display_color_t color)
 {
 	int ret;
 	size_t i;
@@ -841,7 +819,7 @@ int cavan_display_fill_polygon_standard2(struct cavan_display_device *display, s
 
 	if (count < 5)
 	{
-		return cavan_display_fill_polygon_standard(display, count, x, y, r, rotation);
+		return cavan_display_fill_polygon_standard(display, count, x, y, r, rotation, color);
 	}
 
 	ret = cavan_build_polygon_points(display, points, count, x, y, r, rotation);
@@ -862,13 +840,13 @@ int cavan_display_fill_polygon_standard2(struct cavan_display_device *display, s
 		triangle_points[1] = cross_points[(i + 1) % count];
 		triangle_points[2] = points[(i + 2) % count];
 
-		cavan_display_fill_triangle_dummy(display, triangle_points);
+		cavan_display_fill_triangle_dummy(display, triangle_points, color);
 	}
 
 	return 0;
 }
 
-int cavan_display_draw_polygon_standard3(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation)
+int cavan_display_draw_polygon_standard3(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation, cavan_display_color_t color)
 {
 	int ret;
 	cavan_display_point_t points[count];
@@ -884,7 +862,7 @@ int cavan_display_draw_polygon_standard3(struct cavan_display_device *display, s
 	{
 		j = (i + 2) % count;
 
-		ret = cavan_display_draw_line_dummy(display, points[i].x, points[i].y, points[j].x, points[j].y);
+		ret = cavan_display_draw_line_dummy(display, points[i].x, points[i].y, points[j].x, points[j].y, color);
 		if (ret < 0)
 		{
 			return ret;
@@ -894,7 +872,7 @@ int cavan_display_draw_polygon_standard3(struct cavan_display_device *display, s
 	return 0;
 }
 
-int cavan_display_fill_polygon_standard3(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation)
+int cavan_display_fill_polygon_standard3(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation, cavan_display_color_t color)
 {
 	int ret;
 	unsigned int i;
@@ -903,7 +881,7 @@ int cavan_display_fill_polygon_standard3(struct cavan_display_device *display, s
 
 	if (count < 5)
 	{
-		return cavan_display_fill_polygon_standard(display, count, x, y, r, rotation);
+		return cavan_display_fill_polygon_standard(display, count, x, y, r, rotation, color);
 	}
 
 	ret = cavan_build_polygon_points(display, points, count, x, y, r, rotation);
@@ -918,7 +896,7 @@ int cavan_display_fill_polygon_standard3(struct cavan_display_device *display, s
 		return ret;
 	}
 
-	cavan_display_fill_polygon_dummy(display, cross_points, count);
+	cavan_display_fill_polygon_dummy(display, cross_points, count, color);
 
 	for (i = 0; i < count; i++)
 	{
@@ -928,23 +906,23 @@ int cavan_display_fill_polygon_standard3(struct cavan_display_device *display, s
 		triangle_points[1] = cross_points[(i + 1) % count];
 		triangle_points[2] = points[(i + 2) % count];
 
-		cavan_display_fill_triangle_dummy(display, triangle_points);
+		cavan_display_fill_triangle_dummy(display, triangle_points, color);
 	}
 
 	return 0;
 }
 
-int cavan_display_draw_polygon_standard4(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation)
+int cavan_display_draw_polygon_standard4(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation, cavan_display_color_t color)
 {
 	int ret;
 
-	ret = cavan_display_draw_polygon_standard3(display, count, x, y, r, rotation);
+	ret = cavan_display_draw_polygon_standard3(display, count, x, y, r, rotation, color);
 	if (ret < 0)
 	{
 		return ret;
 	}
 
-	return cavan_display_draw_circle_dummy(display, x, y, r);
+	return cavan_display_draw_circle_dummy(display, x, y, r, color);
 }
 
 int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct cavan_display_memory *mem, bool read)
@@ -1060,7 +1038,7 @@ bool cavan_display_draw_char_dummy(struct cavan_display_device *display, int x, 
 	return true;
 }
 
-int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, int y, const char *text)
+int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, int y, const char *text, cavan_display_color_t color)
 {
 	int left = x;
 	struct cavan_font *font;
@@ -1085,7 +1063,7 @@ int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, i
 			break;
 
 		default:
-			if (display->draw_char(display, x, y, *text, display->pen_color))
+			if (display->draw_char(display, x, y, *text, color))
 			{
 				x += font->cwidth;
 			}
@@ -1095,6 +1073,11 @@ int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, i
 	}
 
 	return 0;
+}
+
+bool cavan_display_scroll_screen_dummy(struct cavan_display_device *display, int width, int height, cavan_display_color_t color)
+{
+	return false;
 }
 
 void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_display_color_t color)
@@ -1255,6 +1238,11 @@ int cavan_display_start(struct cavan_display_device *display)
 		display->display_memory_xfer = cavan_display_memory_xfer_dummy;
 	}
 
+	if (display->scroll_screen == NULL)
+	{
+		display->scroll_screen = cavan_display_scroll_screen_dummy;
+	}
+
 	if (display->set_color == NULL)
 	{
 		display->set_color = cavan_display_set_color_dummy;
@@ -1272,6 +1260,9 @@ int cavan_display_start(struct cavan_display_device *display)
 		pr_red_info("cavan_font_init");
 		goto out_cavan_thread_deinit;
 	}
+
+	display->pen_color = cavan_display_build_color3f(display, 1.0, 1.0, 1.0);
+	display->bg_color = cavan_display_build_color3f(display, 0.0, 0.0, 0.0);
 
 	display->cx = display->cy = 0;
 	display->cx_min = display->cy_min = 0;
@@ -1428,14 +1419,14 @@ int cavan_display_memory_rect_restore(struct cavan_display_device *display, stru
 	return 0;
 }
 
-int cavan_display_draw_text_center(struct cavan_display_device *display, struct cavan_display_rect *rect, const char *text)
+int cavan_display_draw_text_center(struct cavan_display_device *display, struct cavan_display_rect *rect, const char *text, cavan_display_color_t color)
 {
 	int x, y;
 
 	x = rect->x + (rect->width - (int)display->mesure_text(display, text)) / 2;
 	y = rect->y + rect->height / 2;
 
-	return display->draw_text(display, x, y, text);
+	return display->draw_text(display, x, y, text, color);
 }
 
 void cavan_display_set_font(struct cavan_display_device *display, struct cavan_font *font)
@@ -1486,6 +1477,10 @@ void cavan_display_print_char(struct cavan_display_device *display, char c)
 		if (display->cy < display->cy_max)
 		{
 			display->cy++;
+		}
+		else
+		{
+			display->scroll_screen(display, 0, display->font->cheight, display->bg_color);
 		}
 	case '\r':
 		display->cx = display->cx_min;
@@ -1557,4 +1552,3 @@ int cavan_display_printf(struct cavan_display_device *display, const char *fmt, 
 
 	return ret;
 }
-

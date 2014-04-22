@@ -27,7 +27,7 @@
 #include <cavan/font_18x32.h>
 #include <cavan/font_20x36.h>
 
-#define CAVAN_DEFAULT_FONT	CAVAN_FONT_20X36
+#define CAVAN_DEFAULT_FONT	CAVAN_FONT_18X32
 
 void cavan_font_dump(struct cavan_font *font)
 {
