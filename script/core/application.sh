@@ -92,7 +92,7 @@ function cavan-daemon-run()
 	cavan-alarm list -l
 
 	cavan-tcp_proxy -adp 9999
-	cavan-tcp_proxy --daemon --pip 119.188.36.70 --pport 80 --port 6666
+	cavan-tcp_proxy --daemon --host mirrors.ustc.edu.cn --pport 80 --port 6666
 	squid
 	cavan-web_proxy -dp 9090
 	cavan-git-daemon-run
