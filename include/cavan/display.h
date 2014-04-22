@@ -67,12 +67,17 @@ struct cavan_display_device
 	pthread_mutex_t lock;
 	struct cavan_thread thread;
 
+	int cx, cy;
+	int cx_min, cy_min;
+	int cx_max, cy_max;
+
 	void (*destroy)(struct cavan_display_device *display);
 	void (*refresh)(struct cavan_display_device *display);
 	cavan_display_color_t (*build_color)(struct cavan_display_device *display, float red, float green, float blue, float transp);
 	void (*set_color)(struct cavan_display_device *display, cavan_display_color_t color);
 
 	size_t (*mesure_text)(struct cavan_display_device *display, const char *text);
+	bool (*draw_char)(struct cavan_display_device *display, int x, int y, char c, cavan_display_color_t color);
 	int (*draw_text)(struct cavan_display_device *display, int x, int y, const char *text);
 
 	void (*draw_point)(struct cavan_display_device *display, int x, int y, cavan_display_color_t color);
@@ -124,6 +129,7 @@ int cavan_display_fill_polygon_standard3(struct cavan_display_device *display, s
 int cavan_display_draw_polygon_standard4(struct cavan_display_device *display, size_t count, int x, int y, int r, int rotation);
 int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct cavan_display_memory *mem, bool read);
 size_t cavan_display_mesure_text_dummy(struct cavan_display_device *display, const char *text);
+bool cavan_display_draw_char_dummy(struct cavan_display_device *display, int x, int y, char c, cavan_display_color_t color);
 int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, int y, const char *text);
 void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_display_color_t color);
 void cavan_display_destroy_dummy(struct cavan_display_device *display);
@@ -139,6 +145,11 @@ int cavan_display_memory_rect_backup(struct cavan_display_device *display, struc
 int cavan_display_memory_rect_restore(struct cavan_display_device *display, struct cavan_display_memory_rect *mem_rect);
 int cavan_display_draw_text_center(struct cavan_display_device *display, struct cavan_display_rect *rect, const char *text);
 void cavan_display_set_font(struct cavan_display_device *display, struct cavan_font *font);
+
+void cavan_display_print_char(struct cavan_display_device *display, char c);
+int cavan_display_print_ntext(struct cavan_display_device *display, const char *text, size_t size);
+int cavan_display_print_text(struct cavan_display_device *display, const char *text);
+int cavan_display_printf(struct cavan_display_device *display, const char *fmt, ...);
 
 static inline void cavan_display_memory_free(struct cavan_display_memory *mem)
 {
@@ -216,4 +227,9 @@ static inline void cavan_display_refresh(struct cavan_display_device *display)
 static inline void cavan_display_flush(struct cavan_display_device *display)
 {
 	cavan_display_refresh(display);
+}
+
+static inline double cavan_display_cal_brightness(int red, int green, int blue)
+{
+	return 0.3 * red + 0.59 * green + 0.11 * blue;
 }

@@ -25,6 +25,11 @@
 
 int main(int argc, char *argv[])
 {
+#if 1
+	int i;
+#else
+	int x, y;
+#endif
 #if DUMP_FONT
 	byte *mem;
 	ssize_t ssize;
@@ -49,12 +54,18 @@ int main(int argc, char *argv[])
 		if (cavan_font_load_bmp(&font, argv[1], 1) == 0)
 		{
 			cavan_display_set_font(display, &font);
+
+			if (argc > 2)
+			{
+				cavan_font_save_bmp(display->font, argv[2], 16);
+			}
 		}
 #endif
 	}
 
-#if DUMP_FONT
 	cavan_font_dump(display->font);
+
+#if DUMP_FONT
 	ssize = display->font->width * display->font->height;
 	mem = alloca(ssize);
 	ssize = cavan_font_comp(display->font, mem, (size_t)ssize);
@@ -65,8 +76,25 @@ int main(int argc, char *argv[])
 	cavan_display_set_color3f(display, 1, 0, 0);
 
 	display->draw_rect(display, 200, 200, 300, 300);
-	display->draw_text(display, 300, 300, "Hello world!");
+
+#if 1
+	for (i = 32; i < 127; i++)
+	{
+		cavan_display_printf(display, "i = %d = %c\n", i, i);
+	}
+
 	cavan_display_flush(display);
+#else
+	x = y = 300;
+
+	while (1)
+	{
+		display->draw_char(display, getchar(), display->pen_color);
+		x += display->font->cwidth;
+		cavan_display_flush(display);
+	}
+#endif
+
 	msleep(200);
 
 	cavan_display_stop(display);

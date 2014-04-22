@@ -7,6 +7,7 @@
 #include <cavan.h>
 #include <cavan/display.h>
 #include <cavan/calculator.h>
+#include <cavan/environment.h>
 #include <math.h>
 
 int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double *b)
@@ -1026,59 +1027,74 @@ size_t cavan_display_mesure_text_dummy(struct cavan_display_device *display, con
 	return text_len(text) * display->font->cwidth;
 }
 
-int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, int y, const char *text)
+bool cavan_display_draw_char_dummy(struct cavan_display_device *display, int x, int y, char c, cavan_display_color_t color)
 {
-	int x_bak = x;
-	struct cavan_font *font = display->font;
-	cavan_display_color_t color = display->pen_color;
-	cavan_display_draw_point_handler_t handler = display->draw_point;
+	const byte *p, *p_end;
+	struct cavan_font *font;
+	cavan_display_draw_point_handler_t handler;
 
-	y -= font->cheight / 2;
-
-	while (1)
+	if (c < 32 || c >= 127)
 	{
-		if (*text < 32)
-		{
-			switch (*text)
-			{
-			case 0:
-				return 0;
+		return false;
+	}
 
-			case '\n':
-				y += font->cheight;
-			case '\r':
-				x = x_bak;
-				break;
+	font = display->font;
+	handler = display->draw_point;
+
+	p = font->body + ((c - 32) * font->cwidth);
+
+	for (p_end = p + font->stride; p < p_end; p += font->width, y++)
+	{
+		int left = x;
+		const byte *q, *q_end;
+
+		for (q = p, q_end = q + font->cwidth; q < q_end; q++, left++)
+		{
+			if (*q)
+			{
+				handler(display, left, y, color);
 			}
 		}
-		else if (*text < 128)
+	}
+
+	return true;
+}
+
+int cavan_display_draw_text_dummy(struct cavan_display_device *display, int x, int y, const char *text)
+{
+	int left = x;
+	struct cavan_font *font;
+
+	font = display->font;
+
+	while (*text)
+	{
+		switch (*text)
 		{
-			int top;
-			const byte *p, *p_end;
+		case 0:
+			return 0;
 
-			p = font->body + ((*text - 32) * font->cwidth);
+		case '\n':
+			y += font->cheight;
+		case '\r':
+			x = left;
+			break;
 
-			for (p_end = p + font->stride, top = y; p < p_end; p += font->width, top++)
+		case '\t':
+			x += 4 * font->cwidth;
+			break;
+
+		default:
+			if (display->draw_char(display, x, y, *text, display->pen_color))
 			{
-				int left;
-				const byte *q, *q_end;
-
-				for (q = p, q_end = q + font->cwidth, left = x; q < q_end; q++, left++)
-				{
-					if (*q)
-					{
-						handler(display, left, top, color);
-					}
-				}
+				x += font->cwidth;
 			}
-
-			x += font->cwidth;
 		}
 
 		text++;
 	}
 
-	return x - x_bak;
+	return 0;
 }
 
 void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_display_color_t color)
@@ -1105,19 +1121,7 @@ int cavan_display_init(struct cavan_display_device *display)
 		return ret;
 	}
 
-	display->font = cavan_font_get(-1);
-	if (display->font == NULL)
-	{
-		ret = -EFAULT;
-		pr_red_info("cavan_font_init");
-		goto out_pthread_mutex_destroy;
-	}
-
 	return 0;
-
-out_pthread_mutex_destroy:
-	pthread_mutex_destroy(&display->lock);
-	return ret;
 }
 
 static int cavan_display_refresh_thread_handler(struct cavan_thread *thread, void *data)
@@ -1136,6 +1140,7 @@ static int cavan_display_refresh_thread_handler(struct cavan_thread *thread, voi
 int cavan_display_start(struct cavan_display_device *display)
 {
 	int ret;
+	struct cavan_font *font;
 	struct cavan_thread *thread;
 
 	if (display == NULL)
@@ -1183,6 +1188,11 @@ int cavan_display_start(struct cavan_display_device *display)
 	if (display->mesure_text == NULL)
 	{
 		display->mesure_text = cavan_display_mesure_text_dummy;
+	}
+
+	if (display->draw_char == NULL)
+	{
+		display->draw_char = cavan_display_draw_char_dummy;
 	}
 
 	if (display->draw_text == NULL)
@@ -1255,15 +1265,29 @@ int cavan_display_start(struct cavan_display_device *display)
 		display->destroy = cavan_display_destroy_dummy;
 	}
 
+	font = cavan_font_get(-1);
+	if (font == NULL)
+	{
+		ret = -EFAULT;
+		pr_red_info("cavan_font_init");
+		goto out_cavan_thread_deinit;
+	}
+
+	display->cx = display->cy = 0;
+	display->cx_min = display->cy_min = 0;
+	cavan_display_set_font(display, font);
+
 	ret = cavan_thread_start(thread);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_thread_start");
-		goto out_cavan_thread_deinit;
+		goto out_cavan_font_put;
 	}
 
 	return 0;
 
+out_cavan_font_put:
+	cavan_font_put(font);
 out_cavan_thread_deinit:
 	cavan_thread_deinit(thread);
 	return ret;
@@ -1417,7 +1441,120 @@ int cavan_display_draw_text_center(struct cavan_display_device *display, struct 
 void cavan_display_set_font(struct cavan_display_device *display, struct cavan_font *font)
 {
 	cavan_display_lock(display);
-	cavan_font_put(display->font);
+
+	println("xres = %d, yres = %d", display->xres, display->yres);
+
+	if (display->font)
+	{
+		cavan_font_put(display->font);
+	}
+
+	display->cx_max = display->xres / font->cwidth - 1;
+	if (display->cx_max <= 0 && cavan_getenv_int("COLUMNS", &display->cx_max) < 0)
+	{
+		display->cx_max = 100;
+	}
+
+	if (display->cx_min > display->cx_max)
+	{
+		display->cx_min = display->cx_max;
+	}
+
+	display->cy_max = display->yres / font->cheight - 1;
+	if (display->cy_max <= 0 && cavan_getenv_int("LINES", &display->cx_max) < 0)
+	{
+		display->cy_max = 20;
+	}
+
+	if (display->cy_min > display->cy_max)
+	{
+		display->cy_min = display->cy_max;
+	}
+
 	display->font = font;
+
 	cavan_display_unlock(display);
 }
+
+void cavan_display_print_char(struct cavan_display_device *display, char c)
+{
+	struct cavan_font *font;
+
+	switch (c)
+	{
+	case '\n':
+		if (display->cy < display->cy_max)
+		{
+			display->cy++;
+		}
+	case '\r':
+		display->cx = display->cx_min;
+		break;
+
+	case '\t':
+		display->cx += 4;
+		if (display->cx > display->cx_max)
+		{
+			cavan_display_print_char(display, '\n');
+		}
+		break;
+
+	default:
+		font = display->font;
+		if (display->draw_char(display, display->cx * font->cwidth, display->cy * font->cheight, c, display->pen_color) == false)
+		{
+			break;
+		}
+
+		if (display->cx < display->cx_max)
+		{
+			display->cx++;
+		}
+		else
+		{
+			cavan_display_print_char(display, '\n');
+		}
+	}
+}
+
+int cavan_display_print_ntext(struct cavan_display_device *display, const char *text, size_t size)
+{
+	const char *text_end;
+
+	for (text_end = text + size; text < text_end; text++)
+	{
+		cavan_display_print_char(display, *text);
+	}
+
+	return 0;
+}
+
+int cavan_display_print_text(struct cavan_display_device *display, const char *text)
+{
+	while (*text)
+	{
+		cavan_display_print_char(display, *text);
+		text++;
+	}
+
+	return 0;
+}
+
+int cavan_display_printf(struct cavan_display_device *display, const char *fmt, ...)
+{
+	int ret;
+	va_list ap;
+	char buff[2018];
+
+	va_start(ap, fmt);
+	ret = vsnprintf(buff, sizeof(buff), fmt, ap);
+	va_end(ap);
+
+	if (ret > 0)
+	{
+		cavan_display_print_ntext(display, buff, ret);
+	}
+
+	return ret;
+}
+
