@@ -8,7 +8,7 @@ public class HuaCameraInfo {
 		new HuaCameraInfo("SP2518", R.string.vendor_name_sibike, R.string.vendor_name_boyi)
 	};
 	private static final HuaCameraInfo[] mCameraInfo_ZC2501 = {
-		new HuaCameraInfo("GC2035", R.string.vendor_name_geke, R.string.vendor_name_sanglaishi),
+		new HuaCameraInfo("GC2035", R.string.vendor_name_geke, R.string.vendor_name_tongju),
 		new HuaCameraInfo("SP2529", R.string.vendor_name_sibike, R.string.vendor_name_boyi)
 	};
 

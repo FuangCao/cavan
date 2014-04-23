@@ -413,6 +413,8 @@ function config_grub()
 
 function config_others()
 {
+	ln -sf /tools/eclipse /usr/bin || return 1
+
 	return 0
 }
 

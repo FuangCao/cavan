@@ -26,6 +26,10 @@
     <string name="info_name">名称</string>
     <string name="info_type">类型</string>
     <string name="msg_tp_fw_upgrade_waring">警告：固件升级过程中不能拔电池，不能退出升级程序，否则，触摸屏将无法使用。</string>
+    <string name="msg_tp_fw_not_match_waring">升级前后固件名称不匹配，可能固件文件有问题，触摸屏不能用时重启手机可自动恢复，是否应用此固件？</string>
+    <string name="msg_apply_fw">应用此固件</string>
+    <string name="msg_recovery_fw">恢复固件</string>
+    <string name="msg_fw_not_match">固件不匹配</string>
     <string name="msg_fw_upgrade_pepare">正在准备升级，请稍等 ...</string>
     <string name="msg_fw_upgrade_stopping">正在完成升级，请稍等 ...</string>
     <string name="msg_fw_upgrade_complete">固件升级成功</string>
@@ -46,15 +50,14 @@
     <string name="vendor_name_junda">骏达</string>
     <string name="vendor_name_dianmian">点面</string>
     <string name="vendor_name_chuangshi">创世</string>
-    <string name="vendor_name_yuda">驭达</string>
+    <string name="vendor_name_yuye">煜烨</string>
     <string name="vendor_name_oufei">欧菲</string>
-    <string name="vendor_name_huangye">煌烨</string>
     <string name="vendor_name_huaxingda">华兴达</string>
     <string name="vendor_name_lide">立德</string>
     <string name="vendor_name_boyi">博一</string>
     <string name="vendor_name_hengkaihui">恒凯辉</string>
     <string name="vendor_name_tongxinda">同心达</string>
-    <string name="vendor_name_zhongyi">眾毅</string>
+    <string name="vendor_name_zhongxianwei">中显微</string>
     <string name="vendor_name_huayu">华宇</string>
     <string name="vendor_name_huayulongteng">华宇龙腾</string>
     <string name="vendor_name_samsung">三星</string>
@@ -73,5 +76,8 @@
     <string name="vendor_name_hongtu">鸿图</string>
     <string name="vendor_name_sibike">思比科</string>
     <string name="vendor_name_geke">格科</string>
+    <string name="vendor_name_tongju">统聚</string>
+    <string name="vendor_name_daling">大凌</string>
+    <string name="vendor_name_ov">豪威</string>
     <string name="vendor_name_apex">艾卓尔泰</string>
 </resources>

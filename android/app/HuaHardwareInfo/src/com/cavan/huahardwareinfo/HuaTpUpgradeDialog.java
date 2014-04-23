@@ -6,6 +6,7 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Environment;
@@ -69,11 +70,33 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 					break;
 
 				case HuaTouchscreenDevice.FW_STATE_UPGRADE_COMPLETE:
-					showToast(R.string.msg_fw_upgrade_complete, Toast.LENGTH_SHORT, true);
-					if (mActivity != null) {
-						mActivity.loadTpInfo();
+					mTouchscreenDevice.fillVendorInfo();
+					String newName = mTouchscreenDevice.getFwName();
+					String oldName = HuaTouchscreenDevice.getPendingFirmware(mActivity);
+					Log.d(TAG, "newName = " + newName + ", oldName = " + oldName);
+					if (mActivity != null && (newName == null || newName.equals(oldName) == false)) {
+						AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+						builder.setTitle(R.string.msg_fw_not_match);
+						builder.setMessage(R.string.msg_tp_fw_not_match_waring);
+						builder.setNegativeButton(R.string.msg_recovery_fw, null);
+						builder.setCancelable(false);
+						builder.setPositiveButton(R.string.msg_apply_fw, new OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								HuaTouchscreenDevice.setPendingFirmware(mActivity, "");
+							}
+						});
+
+						dismiss();
+						builder.show();
+					} else {
+						HuaTouchscreenDevice.setPendingFirmware(getContext(), "");
+						showToast(R.string.msg_fw_upgrade_complete, Toast.LENGTH_SHORT, true);
+						if (mActivity != null) {
+							mActivity.loadTpInfo();
+						}
+						mHandler.sendEmptyMessageDelayed(MSG_DISMISS, 1000);
 					}
-					mHandler.sendEmptyMessageDelayed(MSG_DISMISS, 1000);
 					break;
 
 				case HuaTouchscreenDevice.FW_STATE_UPGRADE_PREPARE:

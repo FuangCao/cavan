@@ -92,28 +92,38 @@ public class HuaTouchscreenDevice {
 		return null;
 	}
 
-	public void fillVendorInfo() {
-		int vendorId = 0;
-		int fwId = 0;
-
+	public HuaTouchscreenVendorInfo readVendorInfo() {
 		String fwIdContent = readFwId();
-		if (fwIdContent != null) {
-			Log.d(TAG, "fwIdContent = " + fwIdContent);
-			String[] ids = fwIdContent.split("\\.");
-			Log.d(TAG, "ids = " + ids + ", length = " + ids.length);
-			if (ids.length > 1) {
-				vendorId = Integer.parseInt(ids[0].trim());
-				fwId = Integer.parseInt(ids[1].trim());
-			} else if (ids.length > 0) {
-				String idContent = ids[0].trim();
-				int length = idContent.length() / 2;
-				int base = length == 2 ? 16 : 10;
-				vendorId = Integer.parseInt(idContent.substring(0, length), base);
-				fwId = Integer.parseInt(idContent.substring(length), base);
-			}
+		if (fwIdContent == null) {
+			return null;
 		}
 
-		mVendorInfo = new HuaTouchscreenVendorInfo(vendorId, fwId);
+		int vendorId, fwId;
+
+		Log.d(TAG, "fwIdContent = " + fwIdContent);
+		String[] ids = fwIdContent.split("\\.");
+		Log.d(TAG, "ids = " + ids + ", length = " + ids.length);
+		if (ids.length > 1) {
+			vendorId = Integer.parseInt(ids[0].trim());
+			fwId = Integer.parseInt(ids[1].trim());
+		} else if (ids.length > 0) {
+			String idContent = ids[0].trim();
+			int length = idContent.length() / 2;
+			int base = length == 2 ? 16 : 10;
+			vendorId = Integer.parseInt(idContent.substring(0, length), base);
+			fwId = Integer.parseInt(idContent.substring(length), base);
+		} else {
+			return null;
+		}
+
+		return new HuaTouchscreenVendorInfo(vendorId, fwId);
+	}
+
+	public void fillVendorInfo() {
+		mVendorInfo = readVendorInfo();
+		if (mVendorInfo == null) {
+			mVendorInfo = new HuaTouchscreenVendorInfo(-1, -1);
+		}
 	}
 
 	public static HuaTouchscreenDevice getTouchscreenDevice() {
@@ -261,18 +271,8 @@ public class HuaTouchscreenDevice {
 
 		Thread thread = new Thread() {
 			public void run() {
-				String fwName;
-
-				if (mVendorInfo != null && mVendorInfo.getVendorName() != R.string.vendor_name_unknown) {
-					fwName = getFwName();
-				} else {
-					fwName = mFileFw.getName();
-				}
-
-				setPendingFirmware(context, fwName);
+				setPendingFirmware(context, mFileFw.getName());
 				boolean result = fwUpgrade();
-				setPendingFirmware(context, "");
-
 				sendFwUpgradeState(result ? FW_STATE_UPGRADE_COMPLETE : FW_STATE_UPGRADE_FAILED);
 			}
 		};

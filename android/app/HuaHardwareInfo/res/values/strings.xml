@@ -26,6 +26,10 @@
     <string name="info_name">Name</string>
     <string name="info_type">Type</string>
     <string name="msg_tp_fw_upgrade_waring">"Warning: during the firmware writing operation, don't plug out the battery, don't quit the upgrade program, otherwise, the touch screen will not be able to use."</string>
+    <string name="msg_tp_fw_not_match_waring">Before and after the firmware upgrade the firmware file name is not match, may have problems, when the touch screen can not be used to restart the mobile phone automatic recovery, whether apply this firmware?</string>
+    <string name="msg_apply_fw">Apply this firmware</string>
+    <string name="msg_recovery_fw">Recovery the firmware</string>
+    <string name="msg_fw_not_match">The firmware is not match</string>
     <string name="msg_fw_upgrade_pepare">"Preparing to upgrade, please wait ..."</string>
     <string name="msg_fw_upgrade_stopping">"Complete the upgrade, please wait ..."</string>
     <string name="msg_fw_upgrade_complete">Firmware upgrade successfully</string>
@@ -46,15 +50,14 @@
     <string name="vendor_name_junda">JunDa</string>
     <string name="vendor_name_dianmian">DianMian</string>
     <string name="vendor_name_chuangshi">ChuangShi</string>
-    <string name="vendor_name_yuda">YuDa</string>
+    <string name="vendor_name_yuye">YuYe</string>
     <string name="vendor_name_oufei">OuFei</string>
-    <string name="vendor_name_huangye">HuangYe</string>
     <string name="vendor_name_huaxingda">HuaXingDa</string>
     <string name="vendor_name_lide">LiDe</string>
     <string name="vendor_name_boyi">BoYi</string>
     <string name="vendor_name_hengkaihui">HengKaiHui</string>
     <string name="vendor_name_tongxinda">TongXinDa</string>
-    <string name="vendor_name_zhongyi">ZhongYi</string>
+    <string name="vendor_name_zhongyi">ZhongXianWei</string>
     <string name="vendor_name_huayu">HuaYu</string>
     <string name="vendor_name_huayulongteng">HuaYuLongTeng</string>
     <string name="vendor_name_samsung">Samsung</string>
@@ -68,10 +71,13 @@
     <string name="vendor_name_micron">Micron</string>
     <string name="vendor_name_amd">AMD</string>
     <string name="vendor_name_sandisk">Scandisk</string>
-    <string name="vendor_name_sanglaishi">SangLaiShi</string>
-    <string name="vendor_name_huadesen">HuaDeSen</string>
-    <string name="vendor_name_hongtu">HongTu</string>
-    <string name="vendor_name_sibike">SiBiKe</string>
-    <string name="vendor_name_geke">GeKe</string>
+    <string name="vendor_name_sanglaishi">SunRise</string>
+    <string name="vendor_name_huadesen">Wdsen</string>
+    <string name="vendor_name_hongtu">Artvision</string>
+    <string name="vendor_name_sibike">SuperPix</string>
+    <string name="vendor_name_geke">GalaxyCore</string>
+    <string name="vendor_name_tongju">3wingroup</string>
+    <string name="vendor_name_daling">DarLing</string>
+    <string name="vendor_name_ov">OmniVision</string>
     <string name="vendor_name_apex">Apex</string>
 </resources>

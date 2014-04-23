@@ -26,11 +26,10 @@ public class HuaTouchscreenVendorInfo {
 		mHashMapShortName.put(R.string.vendor_name_lihe, "lihe");
 		mHashMapShortName.put(R.string.vendor_name_dianmian, "dianmian");
 		mHashMapShortName.put(R.string.vendor_name_chuangshi, "chuangshi");
-		mHashMapShortName.put(R.string.vendor_name_yuda, "yuda");
+		mHashMapShortName.put(R.string.vendor_name_yuye, "yuye");
 		mHashMapShortName.put(R.string.vendor_name_oufei, "oufei");
 		mHashMapShortName.put(R.string.vendor_name_junda, "junda");
 		mHashMapShortName.put(R.string.vendor_name_huaxingda, "huaxingda");
-		mHashMapShortName.put(R.string.vendor_name_huangye, "huangye");
 
 		if (Build.BOARD.equals("h1")) {
 			mHashMapVendor.put(0x13, R.string.vendor_name_dianjing);
@@ -62,7 +61,7 @@ public class HuaTouchscreenVendorInfo {
 			mHashMapVendor.put(0x58, R.string.vendor_name_lihe);
 			mHashMapVendor.put(0x59, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x32, R.string.vendor_name_lianchuang);
-			mHashMapVendor.put(0x18, R.string.vendor_name_yuda);
+			mHashMapVendor.put(0x18, R.string.vendor_name_yuye);
 			mHashMapVendor.put(0xdb, R.string.vendor_name_oufei);
 			mHashMapVendor.put(0x19, R.string.vendor_name_yeji);
 			mHashMapVendor.put(0x20, R.string.vendor_name_junda);
@@ -80,14 +79,11 @@ public class HuaTouchscreenVendorInfo {
 			mHashMapVendor.put(0x58, R.string.vendor_name_lihe);
 			mHashMapVendor.put(0x59, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x32, R.string.vendor_name_lianchuang);
-			mHashMapVendor.put(0x18, R.string.vendor_name_yuda);
+			mHashMapVendor.put(0x18, R.string.vendor_name_yuye);
 			mHashMapVendor.put(0x01, R.string.vendor_name_oufei);
 			mHashMapVendor.put(0xdb, R.string.vendor_name_oufei);
 			mHashMapVendor.put(0x19, R.string.vendor_name_yeji);
 			mHashMapVendor.put(0x20, R.string.vendor_name_junda);
-			mHashMapVendor.put(0x21, R.string.vendor_name_huangye);
-		} else if (Build.DEVICE.equals("P810E01")) {
-			mHashMapVendor.put(0x01, R.string.vendor_name_yeji);
 		}
 	}
 
