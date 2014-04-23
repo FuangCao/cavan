@@ -42,6 +42,74 @@
 #define ABS_MT_DISTANCE		0x3b	/* Contact hover distance */
 #endif
 
+#ifndef KEY_MICMUTE
+#define KEY_MICMUTE		248	/* Mute / unmute the microphone */
+#endif
+
+#ifndef BTN_TOOL_QUINTTAP
+#define BTN_TOOL_QUINTTAP	0x148	/* Five fingers on trackpad */
+#endif
+
+#ifndef KEY_IMAGES
+#define KEY_IMAGES		0x1ba	/* AL Image Browser */
+#endif
+
+#ifndef KEY_CAMERA_ZOOMIN
+#define KEY_CAMERA_ZOOMIN	0x215
+#endif
+
+#ifndef KEY_CAMERA_ZOOMOUT
+#define KEY_CAMERA_ZOOMOUT	0x216
+#endif
+
+#ifndef KEY_CAMERA_UP
+#define KEY_CAMERA_UP		0x217
+#endif
+
+#ifndef KEY_CAMERA_DOWN
+#define KEY_CAMERA_DOWN		0x218
+#endif
+
+#ifndef KEY_CAMERA_LEFT
+#define KEY_CAMERA_LEFT		0x219
+#endif
+
+#ifndef KEY_CAMERA_RIGHT
+#define KEY_CAMERA_RIGHT	0x21a
+#endif
+
+#ifndef KEY_ATTENDANT_ON
+#define KEY_ATTENDANT_ON	0x21b
+#endif
+
+#ifndef KEY_ATTENDANT_OFF
+#define KEY_ATTENDANT_OFF	0x21c
+#endif
+
+#ifndef KEY_ATTENDANT_TOGGLE
+#define KEY_ATTENDANT_TOGGLE	0x21d	/* Attendant call on or off */
+#endif
+
+#ifndef KEY_LIGHTS_TOGGLE
+#define KEY_LIGHTS_TOGGLE	0x21e	/* Reading light on or off */
+#endif
+
+#ifndef BTN_DPAD_UP
+#define BTN_DPAD_UP		0x220
+#endif
+
+#ifndef BTN_DPAD_DOWN
+#define BTN_DPAD_DOWN		0x221
+#endif
+
+#ifndef BTN_DPAD_LEFT
+#define BTN_DPAD_LEFT		0x222
+#endif
+
+#ifndef BTN_DPAD_RIGHT
+#define BTN_DPAD_RIGHT		0x223
+#endif
+
 typedef enum cavan_input_message_type
 {
 	CAVAN_INPUT_MESSAGE_KEY,

@@ -230,7 +230,15 @@ static inline void cavan_display_flush(struct cavan_display_device *display)
 	cavan_display_refresh(display);
 }
 
+#if 0
 static inline double cavan_display_cal_brightness(int red, int green, int blue)
 {
 	return 0.3 * red + 0.59 * green + 0.11 * blue;
 }
+#else
+static inline int cavan_display_cal_brightness(int red, int green, int blue)
+{
+	return (77 * red + 150 * green + 29 * blue) >> 8;
+}
+#endif
+
