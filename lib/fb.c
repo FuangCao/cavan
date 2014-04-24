@@ -184,8 +184,14 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 
 	show_fb_fix_info(fix);
 
+	if (fix->smem_len == 0)
+	{
+		pr_red_info("fix->smem_len is zero");
+		goto out_close_fb;
+	}
+
 	dev->fb_base = mmap(NULL, fix->smem_len, PROT_WRITE | PROT_READ, MAP_SHARED, fb, 0);
-	if (dev->fb_base == NULL)
+	if (dev->fb_base == NULL || dev->fb_base == MAP_FAILED)
 	{
 		print_error("map framebuffer failed");
 		ret = -1;
