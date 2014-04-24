@@ -78,7 +78,7 @@ static int hua_firmware_close(struct hua_firmware *fw)
 	if (fw->closed == 0) {
 		fw->closed = -1;
 
-		for (i = 0; i < 100; i++) {
+		for (i = 0; i < 1000; i++) {
 			if (fw->rdtask) {
 				wake_up_process(fw->rdtask);
 			}

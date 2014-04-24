@@ -114,11 +114,10 @@ static void msg21xx_chip_reset(struct hua_msg21xx_chip *msg21xx)
 {
 	gpio_direction_output(msg21xx->gpio_reset, 1);
 	gpio_set_value(msg21xx->gpio_reset, 1);
-	msleep(10);
 	gpio_set_value(msg21xx->gpio_reset, 0);
-	msleep(150);
+	msleep(10);
 	gpio_set_value(msg21xx->gpio_reset, 1);
-	msleep(150);
+	msleep(20);
 }
 
 static ssize_t msg21xx_read_data_package(struct hua_input_chip *chip, struct msg21xx_data_package *package)
@@ -243,21 +242,51 @@ static struct hua_ts_touch_key msg21xx_touch_keys[] =
 	}
 };
 
-static int msg21xx_readid(struct hua_input_chip *chip)
+static int msg21xx_read_firmware_id(struct hua_input_chip *chip, u16 version[2])
 {
 	int ret;
-	char buff[8];
+	char command[] = {0x53, 0x00, 0x2A};
 
-	pr_pos_info();
-
-	ret = chip->master_recv(chip, buff, sizeof(buff));
+	ret = chip->write_data(chip, FW_ADDR_MSG21XX_TP, command, sizeof(command));
 	if (ret < 0)
 	{
-		pr_red_info("huamobile_i2c_read_data");
+		pr_red_info("chip->write_data");
 		return ret;
 	}
 
-	hua_input_print_memory(buff, ret);
+	ret = chip->read_data(chip, FW_ADDR_MSG21XX_TP, version, sizeof(version));
+	if (ret < 0)
+	{
+		pr_red_info("chip->read_data");
+		return ret;
+	}
+
+	return 0;
+}
+
+static int msg21xx_readid(struct hua_input_chip *chip)
+{
+	int ret;
+	char buff[32];
+	u16 version[2];
+
+	pr_pos_info();
+
+	ret = hua_ts_read_pending_firmware_name(buff, sizeof(buff));
+	if (ret > 0 && strstr(buff, "msg21xx.bin"))
+	{
+		pr_green_info("pending firmware name is %s", buff);
+		return 0;
+	}
+
+	ret = msg21xx_read_firmware_id(chip, version);
+	if (ret < 0)
+	{
+		pr_red_info("msg21xx_read_firmware_id");
+		return ret;
+	}
+
+	pr_bold_info("Firmware ID = %02x%02x", version[0], version[1]);
 
 	return 0;
 }
@@ -269,7 +298,6 @@ static ssize_t msg21xx_firmware_id_show(struct device *dev, struct device_attrib
 	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
 	struct hua_msg21xx_chip *msg21xx = i2c_get_clientdata(client);
 	struct hua_input_chip *chip = &msg21xx->chip;
-	char command[] = {0x53, 0x00, 0x2A};
 
 	mutex_lock(&chip->lock);
 
@@ -280,17 +308,10 @@ static ssize_t msg21xx_firmware_id_show(struct device *dev, struct device_attrib
 		goto out_mutex_unlock;
 	}
 
-	ret = chip->write_data(chip, FW_ADDR_MSG21XX_TP, command, sizeof(command));
+	ret = msg21xx_read_firmware_id(chip, version);
 	if (ret < 0)
 	{
-		pr_red_info("master_send");
-		goto out_mutex_unlock;
-	}
-
-	ret = chip->read_data(chip, FW_ADDR_MSG21XX_TP, version, sizeof(version));
-	if (ret < 0)
-	{
-		pr_red_info("master_recv");
+		pr_red_info("msg21xx_read_firmware_id");
 		goto out_mutex_unlock;
 	}
 
@@ -399,7 +420,7 @@ static inline int msg21xx_is_touch_key(u8 *buff)
 #endif
 }
 
-static void msg21xx_chip_event_handler(struct hua_input_chip *chip)
+static int msg21xx_chip_event_handler(struct hua_input_chip *chip)
 {
 	int ret;
 	struct msg21xx_data_package package;
@@ -410,14 +431,14 @@ static void msg21xx_chip_event_handler(struct hua_input_chip *chip)
 	{
 		pr_red_info("msg21xx_read_data_package");
 		hua_input_chip_recovery(chip, false);
-		return;
+		return ret;
 	}
 
 	// hua_input_print_memory(&package, sizeof(package));
 
 	if (package.magic != 0x52)
 	{
-		return;
+		return 0;
 	}
 
 	if (msg21xx_is_touch_key((u8 *)&package))
@@ -461,7 +482,7 @@ static void msg21xx_chip_event_handler(struct hua_input_chip *chip)
 
 		default:
 			pr_red_info("invalid keycode = %d", code);
-			return;
+			return -EINVAL;
 		}
 	}
 	else
@@ -506,7 +527,7 @@ static void msg21xx_chip_event_handler(struct hua_input_chip *chip)
 		}
 	}
 
-	hua_input_chip_report_events(chip, &chip->isr_list);
+	return hua_input_chip_report_events(chip, &chip->isr_list);
 }
 
 static void msg21xx_input_chip_remove(struct hua_input_chip *chip)
@@ -578,6 +599,7 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		goto out_kfree_msg21xx;
 	}
 
+	gpio_request(ret, "TP-RST");
 	msg21xx->gpio_reset = ret;
 
 	ret = of_get_named_gpio_flags(of_node, "irq-gpio-pin", 0, NULL);
@@ -587,6 +609,7 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		goto out_kfree_msg21xx;
 	}
 
+	gpio_request(ret, "TP-IRQ");
 	msg21xx->gpio_irq = ret;
 
 	pr_bold_info("msg21xx->gpio_reset = %d", msg21xx->gpio_reset);

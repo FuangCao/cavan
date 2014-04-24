@@ -317,7 +317,6 @@ static int mc3xxx_input_chip_probe(struct hua_input_chip *chip)
 	hua_input_chip_set_dev_data(chip, sensor);
 
 	sensor->min_delay = 20;
-	sensor->max_range = 4;
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
@@ -334,8 +333,14 @@ static int mc3xxx_input_chip_probe(struct hua_input_chip *chip)
     case MC3XXX_PCODE_3230:
     case MC3XXX_PCODE_3430:
     case MC3XXX_PCODE_3430N:
-    case MC3XXX_PCODE_3530B:
+		sensor->max_range = 3;
+		sensor->resolution = 256;
+		dev->event_handler = mc3xxx_acceleration_event_handler_low;
+		break;
+
+	case MC3XXX_PCODE_3530B:
 	case MC3XXX_PCODE_3530C:
+		sensor->max_range = 4;
 		sensor->resolution = 256;
 		dev->event_handler = mc3xxx_acceleration_event_handler_low;
 		break;

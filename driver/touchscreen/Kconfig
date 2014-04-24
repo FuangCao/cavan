@@ -1,5 +1,13 @@
 menu "Huamobile touchscreen driver config"
 
+config HUAMOBILE_USE_FB_NOTIFILER
+    bool "Use fb notifiter control touchscreen power"
+    default n
+	help
+      Say Y here if you want to use fb notifiter control touchscreen power.
+
+      If unsure, say N.
+
 config HUAMOBILE_TOUCHSCREEN_BL86X8
     tristate "Huamobile bl86x8 touchscreen"
     default n

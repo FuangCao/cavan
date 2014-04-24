@@ -26,7 +26,7 @@
     <string name="info_name">Name</string>
     <string name="info_type">Type</string>
     <string name="msg_tp_fw_upgrade_waring">"Warning: during the firmware writing operation, don't plug out the battery, don't quit the upgrade program, otherwise, the touch screen will not be able to use."</string>
-	<string name="msg_auto_recovery">"Automatic recovery after <xliff:g>%1$d</xliff:g> seconds"</string>
+    <string name="msg_auto_recovery">"Automatic recovery after <xliff:g>%1$d</xliff:g> seconds"</string>
     <string name="msg_donot_recovery">Don\'t recovery</string>
     <string name="msg_recovery_immediate">Immediate recovery</string>
     <string name="msg_fw_not_match">The firmware is not match</string>

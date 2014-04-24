@@ -1,14 +1,15 @@
 #include <huamobile/hua_ts.h>
+#include <linux/suspend.h>
 
 static void hua_ts_suspend(struct hua_ts_device *ts)
 {
-	hua_ts_mt_touch_release(ts->dev.input);
 	hua_input_device_set_enable_lock(&ts->dev, false);
+	hua_ts_mt_touch_release(ts->dev.input);
 }
 
 static void hua_ts_resume(struct hua_ts_device *ts)
 {
-	hua_input_device_set_enable_no_sync(&ts->dev, true);
+	hua_input_device_set_enable_lock(&ts->dev, true);
 }
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -21,22 +22,13 @@ static void hua_ts_later_resume(struct early_suspend *h)
 {
 	hua_ts_resume(container_of(h, struct hua_ts_device, early_suspend));
 }
-#elif defined(CONFIG_FB)
-static void hua_ts_early_suspend(struct notifier_block *h)
-{
-	hua_ts_suspend(container_of(h, struct hua_ts_device, notifier));
-}
-
-static void hua_ts_later_resume(struct notifier_block *h)
-{
-	hua_ts_resume(container_of(h, struct hua_ts_device, notifier));
-}
-
-static int hua_ts_notifier_call(struct notifier_block *notifier, unsigned long event, void *data)
+#elif defined(CONFIG_FB) && defined(CONFIG_HUAMOBILE_USE_FB_NOTIFILER)
+static int hua_ts_fb_notifier_call(struct notifier_block *notifier, unsigned long event, void *data)
 {
 	struct fb_event *evdata = data;
+	struct hua_ts_device *ts = container_of(notifier, struct hua_ts_device, fb_notifier);
 
-	pr_pos_info();
+	pr_bold_info("event = %ld", event);
 
 	if (evdata && event == FB_EVENT_BLANK)
 	{
@@ -45,16 +37,36 @@ static int hua_ts_notifier_call(struct notifier_block *notifier, unsigned long e
 		{
 			if (*blank == FB_BLANK_UNBLANK)
 			{
-				hua_ts_later_resume(notifier);
+				hua_ts_resume(ts);
 			}
 			else if (*blank == FB_BLANK_POWERDOWN)
 			{
-				hua_ts_early_suspend(notifier);
+				hua_ts_suspend(ts);
 			}
 		}
 	}
 
-	pr_pos_info();
+	return 0;
+}
+#else
+static int hua_ts_pm_notifier_call(struct notifier_block *notifier, unsigned long event, void *data)
+{
+	struct hua_ts_device *ts = container_of(notifier, struct hua_ts_device, pm_notifier);
+
+	pr_bold_info("event = %ld", event);
+
+	switch (event)
+	{
+	case PM_HIBERNATION_PREPARE:
+	case PM_SUSPEND_PREPARE:
+		hua_ts_suspend(ts);
+		break;
+
+	case PM_POST_HIBERNATION:
+	case PM_POST_SUSPEND:
+		hua_ts_resume(ts);
+		break;
+	}
 
 	return 0;
 }
@@ -99,16 +111,16 @@ static struct hua_input_attribute hua_ts_board_properties_attr =
 
 static void hua_ts_device_remove(struct hua_input_device *dev)
 {
-#if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_FB)
 	struct hua_ts_device *ts = (struct hua_ts_device *)dev;
-#endif
 	struct hua_input_chip *chip = dev->chip;
 	struct hua_input_core *core = chip->core;
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&ts->early_suspend);
-#elif defined(CONFIG_FB)
-	fb_unregister_client(&ts->notifier);
+#elif defined(CONFIG_FB) && defined(CONFIG_HUAMOBILE_USE_FB_NOTIFILER)
+	fb_unregister_client(&ts->fb_notifier);
+#else
+	unregister_pm_notifier(&ts->pm_notifier);
 #endif
 
 	hua_input_remove_sysfs_files(&core->prop_kobj, &hua_ts_board_properties_attr, 1);
@@ -172,12 +184,19 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 	ts->early_suspend.suspend = hua_ts_suspend;
 	ts->early_suspend.resume = hua_ts_resume;
 	register_early_suspend(&ts->early_suspend);
-#elif defined(CONFIG_FB)
-	ts->notifier.notifier_call = hua_ts_notifier_call;
-	ret = fb_register_client(&ts->notifier);
+#elif defined(CONFIG_FB) && defined(CONFIG_HUAMOBILE_USE_FB_NOTIFILER)
+	ts->fb_notifier.notifier_call = hua_ts_fb_notifier_call;
+	ret = fb_register_client(&ts->fb_notifier);
 	if (ret < 0)
 	{
 		pr_red_info("fb_register_client");
+	}
+#else
+	ts->pm_notifier.notifier_call = hua_ts_pm_notifier_call;
+	ret = register_pm_notifier(&ts->pm_notifier);
+	if (ret < 0)
+	{
+		pr_red_info("register_pm_notifier");
 	}
 #endif
 
@@ -214,6 +233,30 @@ out_hua_input_remove_kobject:
 	hua_input_remove_kobject(&core->prop_kobj);
 	return ret;
 }
+
+int hua_ts_read_pending_firmware_name(char *buff, size_t size)
+{
+	int ret;
+	struct file *fp;
+
+	fp = filp_open("/data/property/persist.sys.tp.fw.pending", O_RDONLY, 0);
+	if (IS_ERR(fp))
+	{
+		return -1;
+	}
+
+	ret = kernel_read(fp, 0, buff, size - 1);
+	filp_close(fp, NULL);
+
+	if (ret > 0)
+	{
+		buff[ret] = 0;
+	}
+
+	return ret;
+}
+
+EXPORT_SYMBOL_GPL(hua_ts_read_pending_firmware_name);
 
 MODULE_AUTHOR("Fuang.Cao <cavan.cfa@gmail.com>");
 MODULE_DESCRIPTION("Huamobile TouchScreen Subsystem");

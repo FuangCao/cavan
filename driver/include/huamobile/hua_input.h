@@ -14,6 +14,8 @@
 #include <huamobile/hua_thread.h>
 #include <huamobile/hua_firmware.h>
 
+#define HUA_INPUT_CORE_DEBUG	1
+
 #define KB(size)	((size) << 10)
 #define MB(size)	((size) << 20)
 #define GB(size)	((size) << 30)
@@ -79,23 +81,30 @@
 #define HUA_INPUT_DEVICE_IOC_SET_DELAY		HUA_INPUT_IOC('I', 0x12, 0)
 #define HUA_INPUT_DEVICE_IOC_SET_ENABLE		HUA_INPUT_IOC('I', 0x13, 0)
 
-#define pr_pos_info() \
-	pr_info("%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__)
-
-#define pr_func_info(fmt, args ...) \
-	pr_info("%s[%d]: " fmt "\n", __FUNCTION__, __LINE__, ##args)
-
 #define pr_color_info(color, fmt, args ...) \
 	pr_info("\033[" color "m%s[%d]: " fmt "\033[0m\n", __FUNCTION__, __LINE__, ##args)
 
 #define pr_red_info(fmt, args ...) \
 	pr_color_info("31", fmt, ##args)
 
+#if HUA_INPUT_CORE_DEBUG
+#define pr_pos_info() \
+	pr_info("%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__)
+
+#define pr_func_info(fmt, args ...) \
+	pr_info("%s[%d]: " fmt "\n", __FUNCTION__, __LINE__, ##args)
+
 #define pr_green_info(fmt, args ...) \
 	pr_color_info("32", fmt, ##args)
 
 #define pr_bold_info(fmt, args ...) \
 	pr_color_info("1", fmt, ##args)
+#else
+#define pr_pos_info()
+#define pr_func_info(fmt, args ...)
+#define pr_green_info(fmt, args ...)
+#define pr_bold_info(fmt, args ...)
+#endif
 
 struct hua_input_core;
 struct hua_input_chip;
@@ -170,6 +179,7 @@ struct hua_input_device
 	void *private_data;
 	struct hua_misc_device misc_dev;
 	struct work_struct resume_work;
+	struct work_struct set_delay_work;
 
 	struct list_head node;
 
@@ -204,6 +214,7 @@ struct hua_input_chip
 	void *dev_data;
 	void *misc_data;
 
+	bool dead;
 	bool powered;
 	bool actived;
 	int recovery_count;
@@ -229,7 +240,7 @@ struct hua_input_chip
 	int (*set_active)(struct hua_input_chip *chip, bool enable);
 	int (*probe)(struct hua_input_chip *chip);
 	void (*remove)(struct hua_input_chip *chip);
-	void (*event_handler)(struct hua_input_chip *chip);
+	int (*event_handler)(struct hua_input_chip *chip);
 
 	ssize_t (*read_data)(struct hua_input_chip *chip, u8 addr, void *buff, size_t size);
 	ssize_t (*write_data)(struct hua_input_chip *chip, u8 addr, const void *buff, size_t size);
@@ -253,7 +264,7 @@ struct hua_input_core
 	struct mutex lock;
 	struct hua_input_thread detect_thread;
 	struct kobject prop_kobj;
-	struct workqueue_struct *resume_wq;
+	struct workqueue_struct *workqueue;
 
 	struct hua_input_list chip_list;
 	struct hua_input_list work_list;
@@ -261,6 +272,7 @@ struct hua_input_core
 };
 
 char *hua_input_print_memory(const void *mem, size_t size);
+const char *hua_input_irq_trigger_type_tostring(unsigned long irq_flags);
 
 int hua_input_copy_to_user_text(unsigned int command, unsigned long args, const char *text);
 int hua_input_copy_to_user_uint(unsigned long args, unsigned int value);
@@ -279,7 +291,7 @@ void hua_input_device_unregister(struct hua_input_chip *chip, struct hua_input_d
 
 int hua_input_chip_register(struct hua_input_chip *chip);
 void hua_input_chip_unregister(struct hua_input_chip *chip);
-void hua_input_chip_report_events(struct hua_input_chip *chip, struct hua_input_list *list);
+int hua_input_chip_report_events(struct hua_input_chip *chip, struct hua_input_list *list);
 
 static inline void hua_input_chip_set_bus_data(struct hua_input_chip *chip, void *data)
 {

@@ -153,7 +153,7 @@ static int bma2xx_sensor_chip_set_power(struct hua_input_chip *chip, bool enable
 	return 0;
 }
 
-static int bma2xx_sensor_chip_set_active_base(struct hua_input_chip *chip, bool enable)
+static int bma2xx_sensor_chip_set_active(struct hua_input_chip *chip, bool enable)
 {
 	int ret;
 	u8 value;
@@ -186,24 +186,6 @@ static int bma2xx_sensor_chip_set_active_base(struct hua_input_chip *chip, bool 
 	}
 
 	return 0;
-}
-
-static int bma2xx_sensor_chip_set_active(struct hua_input_chip *chip, bool enable)
-{
-	int i;
-
-	for (i = 0; i < 10; i++)
-	{
-		int ret = bma2xx_sensor_chip_set_active_base(chip, enable);
-		if (ret >= 0)
-		{
-			return ret;
-		}
-
-		msleep(10);
-	}
-
-	return -EFAULT;
 }
 
 static int bma2xx_acceleration_set_delay(struct hua_input_device *dev, unsigned int delay)
@@ -272,8 +254,8 @@ static int bma2xx_input_chip_probe(struct hua_input_chip *chip)
 
 	dev = &sensor->dev;
 	dev->name = "Three-Axis Digital Accelerometer";
-	dev->fuzz = 0;
-	dev->flat = 0;
+	dev->fuzz = 4;
+	dev->flat = 4;
 	dev->use_irq = false;
 	dev->type = HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
 	dev->poll_delay = 200;

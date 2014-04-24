@@ -34,8 +34,11 @@ struct hua_ts_device
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	struct early_suspend early_suspend;
-#elif defined(CONFIG_FB)
-	struct notifier_block notifier;
+#else
+#if defined(CONFIG_FB) && defined(CONFIG_HUAMOBILE_USE_FB_NOTIFILER)
+	struct notifier_block fb_notifier;
+#endif
+	struct notifier_block pm_notifier;
 #endif
 };
 
@@ -46,6 +49,8 @@ struct hua_i2c_request
 	void *data;
 	size_t size;
 };
+
+int hua_ts_read_pending_firmware_name(char *buff, size_t size);
 
 static inline void hua_ts_mt_touch_release(struct input_dev *input)
 {

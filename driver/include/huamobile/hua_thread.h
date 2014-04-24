@@ -23,7 +23,8 @@ struct hua_input_thread
 
 	void (*stop)(struct hua_input_thread *thread);
 	void (*prepare)(struct hua_input_thread *thread, bool enable);
-	void (*event_handle)(struct hua_input_thread *thread);
+	int (*event_handle)(struct hua_input_thread *thread);
+	void (*error_handle)(struct hua_input_thread *thread);
 	void (*wait_for_event)(struct hua_input_thread *thread);
 };
 

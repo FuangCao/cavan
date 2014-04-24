@@ -249,7 +249,7 @@ static const char *hua_input_device_type_tostring(enum hua_input_device_type typ
 	}
 }
 
-static const char *hua_input_irq_trigger_type_tostring(unsigned long irq_flags)
+const char *hua_input_irq_trigger_type_tostring(unsigned long irq_flags)
 {
 	switch (irq_flags & IRQF_TRIGGER_MASK)
 	{
@@ -450,10 +450,28 @@ int hua_input_chip_set_active(struct hua_input_chip *chip, bool enable)
 		return ret;
 	}
 
-	if (chip->set_active && (ret = chip->set_active(chip, enable)) < 0)
+	if (chip->set_active)
 	{
-		pr_red_info("chip->set_active");
-		enable = false;
+		ret = chip->set_active(chip, enable);
+		if (ret < 0)
+		{
+			pr_red_info("chip->set_active");
+
+			if (enable)
+			{
+				enable = false;
+			}
+			else
+			{
+				ret = 0;
+			}
+
+			chip->dead = true;
+		}
+		else if (enable)
+		{
+			chip->dead = false;
+		}
 	}
 
 	if (enable == false)
@@ -485,7 +503,7 @@ EXPORT_SYMBOL_GPL(hua_input_chip_set_active_lock);
 
 static int hua_input_chip_update_delay(struct hua_input_chip *chip)
 {
-	int ret;
+	int ret = 0;
 	int count;
 	int locked;
 	unsigned int delay;
@@ -498,6 +516,7 @@ static int hua_input_chip_update_delay(struct hua_input_chip *chip)
 	head = &list->head;
 	if (list_empty(head))
 	{
+		pr_func_info("Nothing to be done");
 		chip->poll_jiffies = MAX_SCHEDULE_TIMEOUT;
 		goto out_mutex_unlock;
 	}
@@ -519,11 +538,16 @@ static int hua_input_chip_update_delay(struct hua_input_chip *chip)
 
 	list_for_each_entry(dev, head, node)
 	{
+		if (dev->enabled == false)
+		{
+			pr_red_info("device %s is not enable skipping", dev->name);
+			continue;
+		}
+
 		if (dev->set_delay && (ret = dev->set_delay(dev, delay)))
 		{
 			pr_red_info("dev->set_delay");
-			mutex_unlock(&list->lock);
-			return ret;
+			goto out_mutex_unlock;
 		}
 	}
 
@@ -537,7 +561,7 @@ out_mutex_unlock:
 		mutex_unlock(&list->lock);
 	}
 
-	return 0;
+	return ret;
 }
 
 static int hua_input_chip_update_thread_state(struct hua_input_chip *chip)
@@ -574,15 +598,33 @@ static int hua_input_device_set_delay(struct hua_input_device *dev, struct hua_i
 	int ret;
 	unsigned int delay_bak;
 
+	if (chip->dead)
+	{
+		pr_red_info("chip %s is dead", chip->name);
+		return -EIO;
+	}
+
 	pr_func_info("name = %s, delay = %d", dev->name, delay);
 
 	delay_bak = dev->poll_delay;
 	dev->poll_delay = delay;
 
-	ret = hua_input_chip_update_delay(chip);
+	if (dev->use_irq)
+	{
+		ret = (dev->set_delay && dev->enabled) ? dev->set_delay(dev, delay) : 0;
+	}
+	else
+	{
+		ret = hua_input_chip_update_delay(chip);
+
+		if (dev->enabled && chip->poll_thread.task)
+		{
+			wake_up_process(chip->poll_thread.task);
+		}
+	}
+
 	if (ret < 0)
 	{
-		pr_red_info("hua_input_chip_update_delay");
 		dev->poll_delay = delay_bak;
 		return ret;
 	}
@@ -605,6 +647,26 @@ static int hua_input_device_set_delay_lock(struct hua_input_device *dev, unsigne
 	mutex_unlock(&dev->lock);
 
 	return ret;
+}
+
+static int hua_input_device_set_delay_no_sync(struct hua_input_device *dev, unsigned int delay)
+{
+	struct hua_input_core *core = dev->chip->core;
+
+	pr_pos_info();
+
+	if (core->workqueue == NULL)
+	{
+		return hua_input_device_set_delay_lock(dev, delay);
+	}
+
+	mutex_lock(&dev->lock);
+	dev->poll_delay = delay;
+	mutex_unlock(&dev->lock);
+
+	queue_work(core->workqueue, &dev->set_delay_work);
+
+	return 0;
 }
 
 static int hua_input_device_set_enable(struct hua_input_device *dev, struct hua_input_chip *chip, bool enable)
@@ -649,11 +711,6 @@ static int hua_input_device_set_enable(struct hua_input_device *dev, struct hua_
 			hua_input_list_del(&chip->dev_list, &dev->node);
 			hua_input_list_add(work_list, &dev->node);
 		}
-
-		if (dev->use_irq == false)
-		{
-			hua_input_chip_update_delay(chip);
-		}
 	}
 
 	if (enable == false && dev->set_enable)
@@ -661,8 +718,9 @@ static int hua_input_device_set_enable(struct hua_input_device *dev, struct hua_
 		dev->set_enable(dev, false);
 	}
 
-	hua_input_chip_update_thread_state(chip);
 	dev->enabled = enable;
+	hua_input_device_set_delay(dev, chip, dev->poll_delay);
+	hua_input_chip_update_thread_state(chip);
 
 	pr_bold_info("huamobie input device %s-%s %s", chip->name, dev->name, enable ? "enable" : "disable");
 
@@ -694,9 +752,11 @@ int hua_input_device_set_enable_no_sync(struct hua_input_device *dev, bool enabl
 {
 	struct hua_input_core *core = dev->chip->core;
 
-	if (enable && core->resume_wq)
+	pr_pos_info();
+
+	if (enable && core->workqueue)
 	{
-		queue_work(core->resume_wq, &dev->resume_work);
+		queue_work(core->workqueue, &dev->resume_work);
 		return 0;
 	}
 
@@ -742,7 +802,9 @@ static void hua_input_chip_recovery_devices(struct hua_input_chip *chip, struct 
 
 void hua_input_chip_recovery(struct hua_input_chip *chip, bool force)
 {
-	mutex_lock(&chip->lock);
+	int locked;
+
+	locked = mutex_trylock(&chip->lock);
 
 	chip->recovery_count++;
 	pr_bold_info("recovery_count = %d", chip->recovery_count);
@@ -757,7 +819,10 @@ void hua_input_chip_recovery(struct hua_input_chip *chip, bool force)
 		chip->recovery_count = 0;
 	}
 
-	mutex_unlock(&chip->lock);
+	if (locked)
+	{
+		mutex_unlock(&chip->lock);
+	}
 }
 
 EXPORT_SYMBOL_GPL(hua_input_chip_recovery);
@@ -985,8 +1050,9 @@ static void hua_input_chip_remove(struct hua_input_chip *chip)
 	hua_input_chip_set_active_lock(chip, false);
 }
 
-void hua_input_chip_report_events(struct hua_input_chip *chip, struct hua_input_list *list)
+int hua_input_chip_report_events(struct hua_input_chip *chip, struct hua_input_list *list)
 {
+	int count = 0;
 	struct hua_input_device *dev;
 	struct list_head *head;
 
@@ -996,33 +1062,47 @@ void hua_input_chip_report_events(struct hua_input_chip *chip, struct hua_input_
 
 	list_for_each_entry(dev, head, node)
 	{
-		dev->event_handler(chip, dev);
+		if (dev->event_handler(chip, dev) < 0)
+		{
+			count++;
+		}
 	}
 
 	mutex_unlock(&list->lock);
+
+	return count > 0 ? -EFAULT : 0;
 }
 
 EXPORT_SYMBOL_GPL(hua_input_chip_report_events);
 
-static void hua_input_chip_event_handler_isr(struct hua_input_thread *thread)
+static int hua_input_chip_event_handler_isr(struct hua_input_thread *thread)
 {
 	struct hua_input_chip *chip = hua_input_thread_get_data(thread);
 
-	hua_input_chip_report_events(chip, &chip->isr_list);
+	return hua_input_chip_report_events(chip, &chip->isr_list);
 }
 
-static void hua_input_chip_event_handler_isr_user(struct hua_input_thread *thread)
+static int hua_input_chip_event_handler_isr_user(struct hua_input_thread *thread)
 {
 	struct hua_input_chip *chip = hua_input_thread_get_data(thread);
 
-	chip->event_handler(chip);
+	return chip->event_handler(chip);
 }
 
-static void hua_input_chip_event_handler_poll(struct hua_input_thread *thread)
+static int hua_input_chip_event_handler_poll(struct hua_input_thread *thread)
 {
 	struct hua_input_chip *chip = hua_input_thread_get_data(thread);
 
-	hua_input_chip_report_events(chip, &chip->poll_list);
+	return hua_input_chip_report_events(chip, &chip->poll_list);
+}
+
+static void hua_input_chip_error_handler(struct hua_input_thread *thread)
+{
+	struct hua_input_chip *chip = hua_input_thread_get_data(thread);
+
+	mutex_lock(&chip->lock);
+	chip->dead = true;
+	mutex_unlock(&chip->lock);
 }
 
 static void hua_input_chip_isr_thread_stop(struct hua_input_thread *thread)
@@ -1100,6 +1180,7 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 	}
 
 	chip->core = core;
+	chip->dead = false;
 	chip->powered = false;
 	chip->actived = false;
 	chip->recovery_count = 0;
@@ -1115,6 +1196,7 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 	hua_input_thread_set_data(thread, chip);
 	thread->stop = hua_input_chip_isr_thread_stop;
 	thread->prepare = hua_input_chip_isr_thread_prepare;
+	thread->error_handle = hua_input_chip_error_handler;
 	thread->wait_for_event = hua_input_chip_wait_for_event_edge;
 	if (chip->event_handler)
 	{
@@ -1137,6 +1219,7 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 	hua_input_thread_set_data(thread, chip);
 	thread->stop = NULL;
 	thread->prepare = NULL;
+	thread->error_handle = hua_input_chip_error_handler;
 	thread->wait_for_event = hua_input_chip_wait_for_event_poll;
 	thread->event_handle = hua_input_chip_event_handler_poll;
 
@@ -1222,7 +1305,7 @@ static int hua_input_device_ioctl(struct hua_misc_device *dev, unsigned int comm
 		return hua_input_copy_to_user_text(command, args, idev->name);
 
 	case HUA_INPUT_DEVICE_IOC_SET_DELAY:
-		return hua_input_device_set_delay_lock(idev, args);
+		return hua_input_device_set_delay_no_sync(idev, args);
 
 	case HUA_INPUT_DEVICE_IOC_SET_ENABLE:
 		return hua_input_device_set_enable_no_sync(idev, args > 0);
@@ -1379,6 +1462,15 @@ static void hua_input_device_resume_work_func(struct work_struct *work)
 	hua_input_device_set_enable_lock(dev, true);
 }
 
+static void hua_input_device_set_delay_work_func(struct work_struct *work)
+{
+	struct hua_input_device *dev = container_of(work, struct hua_input_device, set_delay_work);
+
+	pr_pos_info();
+
+	hua_input_device_set_delay_lock(dev, dev->poll_delay);
+}
+
 int hua_input_device_register(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
@@ -1393,6 +1485,7 @@ int hua_input_device_register(struct hua_input_chip *chip, struct hua_input_devi
 	}
 
 	INIT_WORK(&dev->resume_work, hua_input_device_resume_work_func);
+	INIT_WORK(&dev->set_delay_work, hua_input_device_set_delay_work_func);
 
 	pr_green_info("huamobile input deivce %s register complete", dev->name);
 
@@ -1429,8 +1522,6 @@ int hua_input_chip_register(struct hua_input_chip *chip)
 
 	pr_pos_info();
 
-	hua_input_list_add(&input_core.chip_list, &chip->node);
-
 	ret = hua_input_chip_init(&input_core, chip);
 	if (ret < 0)
 	{
@@ -1438,6 +1529,7 @@ int hua_input_chip_register(struct hua_input_chip *chip)
 		goto out_list_del;
 	}
 
+	hua_input_list_add(&input_core.chip_list, &chip->node);
 	hua_input_thread_resume(&input_core.detect_thread);
 
 	return 0;
@@ -1481,7 +1573,7 @@ static void hua_input_core_wait_for_event(struct hua_input_thread *thread)
 	schedule_timeout(core->poll_jiffies);
 }
 
-static void hua_input_core_event_handler(struct hua_input_thread *thread)
+static int hua_input_core_event_handler(struct hua_input_thread *thread)
 {
 	struct hua_input_chip *chip;
 	struct hua_input_core *core = hua_input_thread_get_data(thread);
@@ -1539,6 +1631,8 @@ static void hua_input_core_event_handler(struct hua_input_thread *thread)
 	mutex_unlock(&core->lock);
 
 	mutex_unlock(&list->lock);
+
+	return 0;
 }
 
 static int __init hua_input_core_init(void)
@@ -1554,8 +1648,8 @@ static int __init hua_input_core_init(void)
 
 	mutex_init(&input_core.lock);
 
-	input_core.resume_wq = create_singlethread_workqueue("hua-resume-wq");
-	if (input_core.resume_wq == NULL)
+	input_core.workqueue = create_singlethread_workqueue("hua-input-wq");
+	if (input_core.workqueue == NULL)
 	{
 		ret = -EFAULT;
 		goto out_mutex_destroy;
@@ -1566,6 +1660,7 @@ static int __init hua_input_core_init(void)
 	thread->priority = 0;
 	thread->stop = NULL;
 	thread->prepare = NULL;
+	thread->error_handle = NULL;
 	thread->event_handle = hua_input_core_event_handler;
 	thread->wait_for_event = hua_input_core_wait_for_event;
 	ret = hua_input_thread_init(thread, input_core.name);
@@ -1578,7 +1673,7 @@ static int __init hua_input_core_init(void)
 	return 0;
 
 out_destroy_workqueue:
-	destroy_workqueue(input_core.resume_wq);
+	destroy_workqueue(input_core.workqueue);
 out_mutex_destroy:
 	mutex_destroy(&input_core.lock);
 	hua_input_list_destory(&input_core.chip_list);
@@ -1594,7 +1689,7 @@ static void __exit hua_input_core_exit(void)
 	hua_input_thread_stop(&input_core.detect_thread);
 	hua_input_thread_destroy(&input_core.detect_thread);
 
-	destroy_workqueue(input_core.resume_wq);
+	destroy_workqueue(input_core.workqueue);
 
 	mutex_destroy(&input_core.lock);
 

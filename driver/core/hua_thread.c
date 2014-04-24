@@ -3,6 +3,7 @@
 
 static int hua_input_thread_handler(void *data)
 {
+	int err_count;
 	struct hua_input_thread *thread = data;
 
 	pr_pos_info();
@@ -34,6 +35,8 @@ static int hua_input_thread_handler(void *data)
 			thread->prepare(thread, true);
 		}
 
+		err_count = 0;
+
 		while (1)
 		{
 			mutex_unlock(&thread->lock);
@@ -45,7 +48,24 @@ static int hua_input_thread_handler(void *data)
 				break;
 			}
 
-			thread->event_handle(thread);
+			if (unlikely(thread->event_handle(thread) < 0))
+			{
+				err_count++;
+				pr_red_info("err_count = %d", err_count);
+
+				if (err_count < 20)
+				{
+					continue;
+				}
+
+				if (thread->error_handle)
+				{
+					thread->error_handle(thread);
+				}
+
+				thread->state = HUA_INPUT_THREAD_STATE_SUSPEND;
+				break;
+			}
 		}
 
 		if (thread->prepare)
