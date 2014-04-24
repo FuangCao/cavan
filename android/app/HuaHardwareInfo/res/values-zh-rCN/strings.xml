@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">硬件信息</string>
     <string name="lcd_info">LCD显示屏</string>
     <string name="flash_info">内部存储器</string>
@@ -26,9 +26,9 @@
     <string name="info_name">名称</string>
     <string name="info_type">类型</string>
     <string name="msg_tp_fw_upgrade_waring">警告：固件升级过程中不能拔电池，不能退出升级程序，否则，触摸屏将无法使用。</string>
-    <string name="msg_tp_fw_not_match_waring">升级前后固件名称不匹配，可能固件文件有问题，触摸屏不能用时重启手机可自动恢复，是否应用此固件？</string>
-    <string name="msg_apply_fw">应用此固件</string>
-    <string name="msg_recovery_fw">恢复固件</string>
+    <string name="msg_auto_recovery">"<xliff:g>%1$d</xliff:g> 秒钟后自动恢复固件"</string>
+    <string name="msg_donot_recovery">不恢复</string>
+    <string name="msg_recovery_immediate">立即恢复</string>
     <string name="msg_fw_not_match">固件不匹配</string>
     <string name="msg_fw_upgrade_pepare">正在准备升级，请稍等 ...</string>
     <string name="msg_fw_upgrade_stopping">正在完成升级，请稍等 ...</string>

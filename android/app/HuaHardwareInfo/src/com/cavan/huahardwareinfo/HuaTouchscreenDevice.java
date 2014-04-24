@@ -272,8 +272,7 @@ public class HuaTouchscreenDevice {
 		Thread thread = new Thread() {
 			public void run() {
 				setPendingFirmware(context, mFileFw.getName());
-				boolean result = fwUpgrade();
-				sendFwUpgradeState(result ? FW_STATE_UPGRADE_COMPLETE : FW_STATE_UPGRADE_FAILED);
+				sendFwUpgradeState(fwUpgrade() ? FW_STATE_UPGRADE_COMPLETE : FW_STATE_UPGRADE_FAILED);
 			}
 		};
 

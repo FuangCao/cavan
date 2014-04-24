@@ -29,6 +29,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	public static final int MSG_STATE_CHANGED = 1;
 	public static final int MSG_SCAN_COMPLETE = 3;
 	public static final int MSG_DISMISS = 4;
+	public static final int MSG_FW_RECOVERY = 5;
 
 	private static final String TAG = "Cavan";
 	public static final int MAX_PROGRESS = 100;
@@ -41,6 +42,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		new File("/storage/sdcard1")
 	};
 
+	private AlertDialog mDialog;
 	private View mView;
 	private Toast mToast;
 	private ProgressBar mProgressBar;
@@ -65,8 +67,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 			case MSG_STATE_CHANGED:
 				switch (msg.arg1) {
 				case HuaTouchscreenDevice.FW_STATE_UPGRADE_FAILED:
-					showToast(R.string.msg_fw_upgrade_faild, Toast.LENGTH_SHORT, true);
-					mHandler.sendEmptyMessageDelayed(MSG_DISMISS, 2000);
+					showWarningDialog(true, 20);
 					break;
 
 				case HuaTouchscreenDevice.FW_STATE_UPGRADE_COMPLETE:
@@ -75,20 +76,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 					String oldName = HuaTouchscreenDevice.getPendingFirmware(mActivity);
 					Log.d(TAG, "newName = " + newName + ", oldName = " + oldName);
 					if (mActivity != null && (newName == null || newName.equals(oldName) == false)) {
-						AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-						builder.setTitle(R.string.msg_fw_not_match);
-						builder.setMessage(R.string.msg_tp_fw_not_match_waring);
-						builder.setNegativeButton(R.string.msg_recovery_fw, null);
-						builder.setCancelable(false);
-						builder.setPositiveButton(R.string.msg_apply_fw, new OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								HuaTouchscreenDevice.setPendingFirmware(mActivity, "");
-							}
-						});
-
-						dismiss();
-						builder.show();
+						showWarningDialog(false, 30);
 					} else {
 						HuaTouchscreenDevice.setPendingFirmware(getContext(), "");
 						showToast(R.string.msg_fw_upgrade_complete, Toast.LENGTH_SHORT, true);
@@ -132,9 +120,45 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 			case MSG_DISMISS:
 				dismiss();
 				break;
+
+			case MSG_FW_RECOVERY:
+				if (msg.arg1 > 0) {
+					if (mDialog != null) {
+						String message = getContext().getResources().getString(R.string.msg_auto_recovery, msg.arg1);
+						mDialog.setMessage(message);
+					}
+
+					sendRecoveryMessage(msg.arg1 - 1);
+				} else {
+					recoveryFirmware();
+				}
+				break;
 			}
 
 			super.handleMessage(msg);
+		}
+	};
+
+	private OnClickListener mClickListener = new OnClickListener() {
+		@Override
+		public void onClick(DialogInterface dialog, int which) {
+			mHandler.removeMessages(MSG_FW_RECOVERY);
+
+			if (mToast != null) {
+				mToast.cancel();
+			}
+
+			switch (which) {
+			case DialogInterface.BUTTON_POSITIVE:
+				recoveryFirmware();
+				break;
+
+			case DialogInterface.BUTTON_NEGATIVE:
+				HuaTouchscreenDevice.setPendingFirmware(mActivity, "");
+				break;
+			}
+
+			dialog.dismiss();
 		}
 	};
 
@@ -238,6 +262,23 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		}
 	}
 
+	private boolean recoveryFirmware() {
+		View view = mRadioGroup.getChildAt(0);
+		if (view == null) {
+			return false;
+		}
+
+		if (mDialog != null) {
+			mDialog.dismiss();
+		}
+
+		show();
+		mRadioGroup.check(view.getId());
+		upgradeFirmware();
+
+		return true;
+	}
+
 	private void scanFirmware(List<File> list, File dir, int depth) {
 		Log.d(TAG, "scan firmware from " + dir.getPath());
 
@@ -291,5 +332,52 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		public File getFileFirmware() {
 			return mFileFirmware;
 		}
+	}
+
+	private void sendRecoveryMessage(int delaySecond) {
+		if (mDialog != null) {
+			String message = getContext().getResources().getString(R.string.msg_auto_recovery, delaySecond);
+			if (message != null) {
+				mDialog.setMessage(message);
+			}
+		}
+
+		Message message = mHandler.obtainMessage(MSG_FW_RECOVERY);
+		message.arg1 = delaySecond;
+		mHandler.sendMessageDelayed(message, 1000);
+	}
+
+	private boolean showWarningDialog(boolean isFailed, int delaySecond)
+	{
+		if (mDialog == null) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+			builder.setTitle(R.string.msg_fw_not_match);
+			builder.setNegativeButton(R.string.msg_donot_recovery, mClickListener);
+			builder.setCancelable(false);
+			builder.setPositiveButton(R.string.msg_recovery_immediate, mClickListener);
+
+			mDialog = builder.create();
+		}
+
+		if (mDialog == null) {
+			return false;
+		}
+
+		if (isFailed) {
+			mDialog.setTitle(R.string.msg_fw_upgrade_faild);
+		} else {
+			mDialog.setTitle(R.string.msg_fw_not_match);
+		}
+
+		if (mToast != null) {
+			mToast.cancel();
+		}
+
+		sendRecoveryMessage(delaySecond);
+
+		dismiss();
+		mDialog.show();
+
+		return true;
 	}
 }
