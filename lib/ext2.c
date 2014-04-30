@@ -164,7 +164,7 @@ void show_ext2_inode(struct ext2_inode *inode)
 {
 	int i;
 
-	println("mode = %d", inode->mode);
+	println("mode = 0x%05o", inode->mode);
 	println("uid = %d", inode->uid);
 	println("size = %d", inode->size);
 	println("atime = %d", inode->atime);
@@ -174,7 +174,7 @@ void show_ext2_inode(struct ext2_inode *inode)
 	println("gid = %d", inode->gid);
 	println("links_count = %d", inode->links_count);
 	println("blocks = %d", inode->blocks);
-	println("flags = %d", inode->flags);
+	println("flags = 0x%08x", inode->flags);
 	println("version = %d", inode->version);
 	println("file_acl = %d", inode->file_acl);
 	println("dir_acl = %d", inode->dir_acl);
@@ -190,11 +190,10 @@ int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_
 {
 	ssize_t rdlen;
 
-	offset = lseek(desc->fd, offset, SEEK_SET);
-	if (offset < 0)
+	if (lseek(desc->fd, offset, SEEK_SET) != offset)
 	{
 		pr_error_info("lseek");
-		return offset;
+		return -EFAULT;
 	}
 
 	rdlen = read(desc->fd, entry, EXT2_DIR_ENTRY_HEADER_SIZE);
@@ -202,6 +201,12 @@ int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_
 	{
 		pr_error_info("read");
 		return rdlen;
+	}
+
+	if (entry->inode == 0)
+	{
+		pr_red_info("inode is zero");
+		return -EINVAL;
 	}
 
 	if (entry->name_len == 0)
@@ -274,6 +279,10 @@ int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_ino
 			print_error("ext2_read_inode");
 			return readlen;
 		}
+
+#if CAVAN_EXT2_DEBUG
+		show_ext2_inode(inode);
+#endif
 
 		while (*p == '/')
 		{
