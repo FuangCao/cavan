@@ -15,6 +15,8 @@
 #define EXT2_GDT_OFFSET(log_block_size) \
 	(BOOT_BLOCK_SIZE + EXT2_CAL_BLOCK_SIZE(log_block_size))
 
+#define EXT2_DIR_ENTRY_HEADER_SIZE	8
+
 enum ext2_file_type
 {
 	EXT_FILE_TYPE_UNKNOWN,
@@ -139,6 +141,7 @@ void ext2_deinit(struct ext2_desc *desc);
 void show_ext2_super_block(struct ext2_super_block *super_block);
 void show_ext2_group_desc(struct ext2_group_desc *gdt);
 void show_ext2_desc(struct ext2_desc *desc);
+int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_directory_entry *entry);
 int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_inode *inode);
 int ext2_list_directory_base(struct ext2_desc *desc, struct ext2_inode *inode);
 int ext2_list_directory(struct ext2_desc *desc, const char *pathname);

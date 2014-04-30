@@ -4,6 +4,8 @@
 #include <cavan/ext2.h>
 #include <cavan/text.h>
 
+#define CAVAN_EXT2_DEBUG	1
+
 int ext2_init(struct ext2_desc *desc, const char *dev_path)
 {
 	int ret;
@@ -50,7 +52,9 @@ int ext2_init(struct ext2_desc *desc, const char *dev_path)
 		goto out_free_gdt;
 	}
 
-	// show_ext2_desc(desc);
+#if CAVAN_EXT2_DEBUG
+	show_ext2_desc(desc);
+#endif
 
 	return 0;
 
@@ -182,6 +186,52 @@ void show_ext2_inode(struct ext2_inode *inode)
 	}
 }
 
+int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_directory_entry *entry)
+{
+	ssize_t rdlen;
+
+	offset = lseek(desc->fd, offset, SEEK_SET);
+	if (offset < 0)
+	{
+		pr_error_info("lseek");
+		return offset;
+	}
+
+	rdlen = read(desc->fd, entry, EXT2_DIR_ENTRY_HEADER_SIZE);
+	if (rdlen < 0)
+	{
+		pr_error_info("read");
+		return rdlen;
+	}
+
+	if (entry->name_len == 0)
+	{
+		pr_red_info("name length is zero");
+		return -EINVAL;
+	}
+
+	if (entry->rec_len < EXT2_DIR_ENTRY_HEADER_SIZE + entry->name_len)
+	{
+		pr_red_info("rec_len = %d", entry->rec_len);
+		return -EINVAL;
+	}
+
+	rdlen = read(desc->fd, entry->name, entry->name_len);
+	if (rdlen < 0)
+	{
+		pr_error_info("read");
+		return rdlen;
+	}
+
+	entry->name[rdlen] = 0;
+
+#if CAVAN_EXT2_DEBUG
+	show_ext2_directory_entry(entry);
+#endif
+
+	return 0;
+}
+
 const char *ext2_filetype_to_text(int type)
 {
 	const char *ext2_filetypes[] = {"Unknown", "Regular", "Directory", "Char_dev", "Block_dev", "Pipe", "Socket", "Symlink"};
@@ -255,22 +305,18 @@ int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_ino
 
 			while (seek_value < seek_end)
 			{
-				seek_value = lseek(desc->fd, seek_value, SEEK_SET);
-				if (seek_value < 0)
+				int ret;
+
+				ret = ext2_read_directory_entry(desc, seek_value, &dir_entry);
+				if (ret < 0)
 				{
-					print_error("lseek");
-					return seek_value;
+					pr_red_info("ext2_read_directory_entry");
+					return ret;
 				}
 
-				readlen = read(desc->fd, &dir_entry, sizeof(dir_entry));
-				if (readlen < 0)
-				{
-					print_error("read");
-					return readlen;
-				}
-
-				dir_entry.name[dir_entry.name_len] = 0;
-				// println("%s[%d]: %s", ext2_filetype_to_text(dir_entry.file_type), dir_entry.inode, dir_entry.name);
+#if CAVAN_EXT2_DEBUG
+				println("%s[%d]: %s", ext2_filetype_to_text(dir_entry.file_type), dir_entry.inode, dir_entry.name);
+#endif
 
 				if (text_ncmp(p, dir_entry.name, sizeof(dir_entry.name)) == 0)
 				{
@@ -301,7 +347,6 @@ int ext2_list_directory_base(struct ext2_desc *desc, struct ext2_inode *inode)
 	for (i = 0; i < block_count; i++)
 	{
 		off_t seek_end;
-		ssize_t readlen;
 		struct ext2_directory_entry dir_entry;
 
 		seek_value = block_index_to_offset(desc, inode->block[i]);
@@ -309,21 +354,15 @@ int ext2_list_directory_base(struct ext2_desc *desc, struct ext2_inode *inode)
 
 		while (seek_value < seek_end)
 		{
-			seek_value = lseek(desc->fd, seek_value, SEEK_SET);
-			if (seek_value < 0)
+			int ret;
+
+			ret = ext2_read_directory_entry(desc, seek_value, &dir_entry);
+			if (ret < 0)
 			{
-				print_error("lseek");
-				return seek_value;
+				pr_red_info("ext2_read_directory_entry");
+				return ret;
 			}
 
-			readlen = read(desc->fd, &dir_entry, sizeof(dir_entry));
-			if (readlen < 0)
-			{
-				print_error("read");
-				return readlen;
-			}
-
-			dir_entry.name[dir_entry.name_len] = 0;
 			println("%s[%d]: %s", ext2_filetype_to_text(dir_entry.file_type), dir_entry.inode, dir_entry.name);
 
 			seek_value += dir_entry.rec_len;

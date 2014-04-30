@@ -31,6 +31,7 @@ void show_fb_var_info(struct fb_var_screeninfo *var)
 void show_fb_fix_info(struct fb_fix_screeninfo *fix)
 {
 	print_sep(60);
+	println("id = %s", fix->id);
 	println("smem_start = 0x%08lx", fix->smem_start);
 	println("smem_len = 0x%08x", fix->smem_len);
 }
