@@ -810,16 +810,12 @@ ssize_t ffile_write(int fd, const void *buff, size_t size)
 
 ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
 {
-	if (offset > 0)
+	if (lseek(fd, offset, SEEK_SET) != offset)
 	{
-		offset = lseek(fd, offset, SEEK_SET);
-		if (offset < 0)
-		{
 #ifdef CAVAN_DEBUG
-			pr_error_info("lseek");
+		pr_error_info("lseek");
 #endif
-			return offset;
-		}
+		return -EFAULT;
 	}
 
 	return ffile_write(fd, buff, size);
@@ -854,14 +850,10 @@ ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t
 
 ssize_t ffile_readfrom(int fd, void *buff, size_t size, off_t offset)
 {
-	if (offset > 0)
+	if (lseek(fd, offset, SEEK_SET) != offset)
 	{
-		offset = lseek(fd, offset, SEEK_SET);
-		if (offset < 0)
-		{
-			pr_error_info("lseek");
-			return offset;
-		}
+		pr_error_info("lseek");
+		return -EFAULT;
 	}
 
 	return ffile_read(fd, buff, size);
@@ -1349,10 +1341,10 @@ int ffile_crc32_seek(int fd, off_t offset, int whence, u32 *crc)
 	s64 offset_bak;
 
 	offset_bak = lseek(fd, offset, whence);
-	if (offset_bak < 0)
+	if (offset_bak != offset)
 	{
 		pr_error_info("lseek");
-		return -1;
+		return -EFAULT;
 	}
 
 	ret = ffile_crc32(fd, crc);
@@ -1362,11 +1354,10 @@ int ffile_crc32_seek(int fd, off_t offset, int whence, u32 *crc)
 		return ret;
 	}
 
-	ret = lseek(fd, offset_bak, SEEK_SET);
-	if (ret < 0)
+	if (lseek(fd, offset_bak, SEEK_SET) != offset_bak)
 	{
 		pr_error_info("lseek");
-		return ret;
+		return -EFAULT;
 	}
 
 	return 0;
@@ -1401,10 +1392,10 @@ int ffile_ncrc32_seek(int fd, off_t offset, int whence, size_t size, u32 *crc)
 	s64 offset_bak;
 
 	offset_bak = lseek(fd, offset, whence);
-	if (offset_bak < 0)
+	if (offset_bak != offset_bak)
 	{
 		pr_error_info("lseek");
-		return -1;
+		return -EFAULT;
 	}
 
 	ret = ffile_ncrc32(fd, size, crc);
@@ -1414,11 +1405,10 @@ int ffile_ncrc32_seek(int fd, off_t offset, int whence, size_t size, u32 *crc)
 		return ret;
 	}
 
-	ret = lseek(fd, offset_bak, SEEK_SET);
-	if (ret < 0)
+	if (lseek(fd, offset_bak, SEEK_SET) != offset_bak)
 	{
 		pr_error_info("lseek");
-		return ret;
+		return -EFAULT;
 	}
 
 	return 0;
@@ -1816,7 +1806,6 @@ u8 mem_checksum8_simple(const char *mem, size_t count)
 
 u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 {
-	int ret;
 	struct progress_bar bar;
 	u64 checksum = 0;
 
@@ -1836,15 +1825,14 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 
 	if ((size_t)offset >= size)
 	{
-		goto out_return;
+		return -EINVAL;
 	}
 
 	if (offset > 0)
 	{
-		ret = lseek(fd, offset, SEEK_SET);
-		if (ret < 0)
+		if (lseek(fd, offset, SEEK_SET) != offset)
 		{
-			goto out_return;
+			return -EFAULT;
 		}
 
 		size -= offset;
@@ -1860,8 +1848,8 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 		rdlen = read(fd, buff, sizeof(buff));
 		if (rdlen < 0)
 		{
-			ret = rdlen;
-			goto out_return;
+			pr_error_info("read");
+			return rdlen;
 		}
 
 		if (rdlen == 0)
@@ -1875,8 +1863,8 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 
 	progress_bar_finish(&bar);
 
-out_return:
 	checksum = (checksum >> 32) + (checksum & 0xFFFFFFFF);
+
 	return (u32)((checksum >> 32) + checksum);
 }
 

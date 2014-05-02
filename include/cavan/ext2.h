@@ -17,6 +17,8 @@
 
 #define EXT2_DIR_ENTRY_HEADER_SIZE	8
 
+#define EXT2_INODE_FLAG_EXTENTS		(1 << 19)
+
 enum ext2_file_type
 {
 	EXT_FILE_TYPE_UNKNOWN,
@@ -136,20 +138,49 @@ struct ext2_desc
 	struct ext2_group_desc *gdt;
 };
 
+struct ext4_extent_header
+{
+	u16 magic;
+	u16 entries;
+	u16 max_entries;
+	u16 depth;
+	u32 generations;
+};
+
+struct ext4_extent_index
+{
+	u32 block;
+	u32 leaf_lo;
+	u16 leaf_hi;
+	u16 unused;
+};
+
+struct ext4_extent_leaf
+{
+	u32 block;
+	u16 length;
+	u16 start_hi;
+	u32 start_lo;
+};
+
 int ext2_init(struct ext2_desc *desc, const char *dev_path);
 void ext2_deinit(struct ext2_desc *desc);
-void show_ext2_super_block(struct ext2_super_block *super_block);
-void show_ext2_group_desc(struct ext2_group_desc *gdt);
-void show_ext2_desc(struct ext2_desc *desc);
-int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_directory_entry *entry);
+
+void show_ext2_super_block(const struct ext2_super_block *super_block);
+void show_ext2_group_desc(const struct ext2_group_desc *gdt);
+void show_ext2_desc(const struct ext2_desc *desc);
+void show_ext4_extent_header(const struct ext4_extent_header *header);
+void show_ext4_extent_index(const struct ext4_extent_index *index);
+void show_ext4_extent_leaf(const struct ext4_extent_leaf *leaf);
+void show_ext2_directory_entry(const struct ext2_directory_entry *dir_entry);
+void show_ext2_inode(const struct ext2_inode *inode);
+
 int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_inode *inode);
 int ext2_list_directory_base(struct ext2_desc *desc, struct ext2_inode *inode);
 int ext2_list_directory(struct ext2_desc *desc, const char *pathname);
 ssize_t ext2_read_file_base(struct ext2_desc *desc, struct ext2_inode *inode, void *buff, size_t size);
 ssize_t ext2_read_file(struct ext2_desc *desc, const char *pathname, void *buff, size_t size);
 
-void show_ext2_directory_entry(struct ext2_directory_entry *dir_entry);
-void show_ext2_inode(struct ext2_inode *inode);
 const char *ext2_filetype_to_text(int type);
 
 static inline int ext2_read_super_block(struct ext2_desc *desc, struct ext2_super_block *super_block)
@@ -214,4 +245,3 @@ static inline u32 cal_ext2_block_count(struct ext2_desc *desc, struct ext2_inode
 {
 	return inode->blocks / (desc->block_shift - 8);
 }
-

@@ -72,7 +72,7 @@ void ext2_deinit(struct ext2_desc *desc)
 	close(desc->fd);
 }
 
-void show_ext2_desc(struct ext2_desc *desc)
+void show_ext2_desc(const struct ext2_desc *desc)
 {
 	unsigned int i;
 
@@ -98,7 +98,7 @@ void show_ext2_desc(struct ext2_desc *desc)
 	print_sep(60);
 }
 
-void show_ext2_super_block(struct ext2_super_block *super_block)
+void show_ext2_super_block(const struct ext2_super_block *super_block)
 {
 	println("inodes_count = %d", super_block->inodes_count);
 	println("blocks_count = %d", super_block->blocks_count);
@@ -140,7 +140,7 @@ void show_ext2_super_block(struct ext2_super_block *super_block)
 	println("padding1 = %d", super_block->padding1);
 }
 
-void show_ext2_group_desc(struct ext2_group_desc *group_desc)
+void show_ext2_group_desc(const struct ext2_group_desc *group_desc)
 {
 	println("block_bitmap = %d", group_desc->block_bitmap);
 	println("inode_bitmap = %d", group_desc->inode_bitmap);
@@ -151,7 +151,7 @@ void show_ext2_group_desc(struct ext2_group_desc *group_desc)
 	println("pad = %d", group_desc->pad);
 }
 
-void show_ext2_directory_entry(struct ext2_directory_entry *dir_entry)
+void show_ext2_directory_entry(const struct ext2_directory_entry *dir_entry)
 {
 	println("file_type = %d", dir_entry->file_type);
 	println("inode = %d", dir_entry->inode);
@@ -160,7 +160,7 @@ void show_ext2_directory_entry(struct ext2_directory_entry *dir_entry)
 	println("rec_len = %d", dir_entry->rec_len);
 }
 
-void show_ext2_inode(struct ext2_inode *inode)
+void show_ext2_inode(const struct ext2_inode *inode)
 {
 	int i;
 
@@ -186,17 +186,33 @@ void show_ext2_inode(struct ext2_inode *inode)
 	}
 }
 
-int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_directory_entry *entry)
+void show_ext4_extent_header(const struct ext4_extent_header *header)
+{
+	println("magic = 0x%04x", header->magic);
+	println("entries = %d", header->entries);
+	println("max_entries = %d", header->max_entries);
+	println("depth = %d", header->depth);
+	println("generations = %d", header->generations);
+}
+
+void show_ext4_extent_index(const struct ext4_extent_index *index)
+{
+	println("block = %d", index->block);
+	println("leaf = %Ld", ((u64)index->leaf_hi << 32) | index->leaf_lo);
+}
+
+void show_ext4_extent_leaf(const struct ext4_extent_leaf *leaf)
+{
+	println("block = %d", leaf->block);
+	println("length = %d", leaf->length);
+	println("start = %Ld", ((u64)leaf->start_hi << 32) | leaf->start_lo);
+}
+
+static int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_directory_entry *entry)
 {
 	ssize_t rdlen;
 
-	if (lseek(desc->fd, offset, SEEK_SET) != offset)
-	{
-		pr_error_info("lseek");
-		return -EFAULT;
-	}
-
-	rdlen = read(desc->fd, entry, EXT2_DIR_ENTRY_HEADER_SIZE);
+	rdlen = ffile_readfrom(desc->fd, entry, EXT2_DIR_ENTRY_HEADER_SIZE, offset);
 	if (rdlen < 0)
 	{
 		pr_error_info("read");
@@ -221,7 +237,7 @@ int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_
 		return -EINVAL;
 	}
 
-	rdlen = read(desc->fd, entry->name, entry->name_len);
+	rdlen = ffile_read(desc->fd, entry->name, entry->name_len);
 	if (rdlen < 0)
 	{
 		pr_error_info("read");
@@ -251,8 +267,6 @@ const char *ext2_filetype_to_text(int type)
 
 int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_inode *inode)
 {
-	int i;
-	ssize_t readlen;
 	struct ext2_directory_entry dir_entry;
 	off_t seek_value;
 	char path_temp[1024], *p, *q;
@@ -264,20 +278,14 @@ int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_ino
 
 	while (1)
 	{
+		ssize_t rdlen;
 		int block_count;
 
-		seek_value = lseek(desc->fd, get_inode_offset(desc, dir_entry.inode), SEEK_SET);
-		if (seek_value < 0)
-		{
-			print_error("lseek");
-			return seek_value;
-		}
-
-		readlen = read(desc->fd, inode, sizeof(*inode));
-		if (readlen < 0)
+		rdlen = ext2_read_inode(desc, dir_entry.inode, inode);
+		if (rdlen < 0)
 		{
 			print_error("ext2_read_inode");
-			return readlen;
+			return rdlen;
 		}
 
 #if CAVAN_EXT2_DEBUG
@@ -305,34 +313,58 @@ int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_ino
 
 		block_count = cal_ext2_block_count(desc, inode);
 
-		for (i = 0; i < block_count; i++)
+		if (inode->flags & EXT2_INODE_FLAG_EXTENTS)
 		{
-			off_t seek_end;
+			struct ext4_extent_header *header = (struct ext4_extent_header *)inode->block;
 
-			seek_value = block_index_to_offset(desc, inode->block[i]);
-			seek_end = seek_value + desc->block_size;
+			show_ext4_extent_header(header);
 
-			while (seek_value < seek_end)
+			if (header->depth > 0)
 			{
-				int ret;
+				struct ext4_extent_index *index = (struct ext4_extent_index *)(header + 1);
+				show_ext4_extent_index(index);
+			}
+			else
+			{
+				struct ext4_extent_leaf *leaf = (struct ext4_extent_leaf *)(header + 1);
+				show_ext4_extent_leaf(leaf);
+			}
 
-				ret = ext2_read_directory_entry(desc, seek_value, &dir_entry);
-				if (ret < 0)
+			return -ENOENT;
+		}
+		else
+		{
+			int i;
+
+			for (i = 0; i < block_count; i++)
+			{
+				off_t seek_end;
+
+				seek_value = block_index_to_offset(desc, inode->block[i]);
+				seek_end = seek_value + desc->block_size;
+
+				while (seek_value < seek_end)
 				{
-					pr_red_info("ext2_read_directory_entry");
-					return ret;
+					int ret;
+
+					ret = ext2_read_directory_entry(desc, seek_value, &dir_entry);
+					if (ret < 0)
+					{
+						pr_red_info("ext2_read_directory_entry");
+						return ret;
+					}
+
+	#if CAVAN_EXT2_DEBUG
+					println("%s[%d]: %s", ext2_filetype_to_text(dir_entry.file_type), dir_entry.inode, dir_entry.name);
+	#endif
+
+					if (text_ncmp(p, dir_entry.name, sizeof(dir_entry.name)) == 0)
+					{
+						goto label_find_next_path;
+					}
+
+					seek_value += dir_entry.rec_len;
 				}
-
-#if CAVAN_EXT2_DEBUG
-				println("%s[%d]: %s", ext2_filetype_to_text(dir_entry.file_type), dir_entry.inode, dir_entry.name);
-#endif
-
-				if (text_ncmp(p, dir_entry.name, sizeof(dir_entry.name)) == 0)
-				{
-					goto label_find_next_path;
-				}
-
-				seek_value += dir_entry.rec_len;
 			}
 		}
 
