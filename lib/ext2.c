@@ -599,3 +599,303 @@ ssize_t ext2_read_file(struct ext2_desc *desc, const char *pathname, void *buff,
 	return ext2_read_file_base(desc, &inode, buff, size);
 }
 
+// ================================================================================
+
+static int cavan_ext4_data_block_traversal(struct ext2_desc *desc, struct ext4_extent_header *header, struct cavan_ext2_traversal_option *option)
+{
+	int ret = CAVAN_EXT2_TRAVERSAL_EOF;
+	ssize_t rdlen;
+
+	show_ext4_extent_header(header);
+
+	if (header->depth > 0)
+	{
+		char buff[desc->block_size];
+		struct ext4_extent_index *index_end;
+		struct ext4_extent_index *index = (struct ext4_extent_index *)(header + 1);
+
+		for (index_end = index + header->entries; index < index_end; index++)
+		{
+			show_ext4_extent_index(index);
+
+			rdlen = desc->read_block(desc, (u64)index->leaf_hi << 32 | index->leaf_lo, buff, 1);
+			if (rdlen < 0)
+			{
+				pr_error_info("desc->read_block");
+				return rdlen;
+			}
+
+			ret = cavan_ext4_data_block_traversal(desc, (struct ext4_extent_header *)buff, option);
+			if (ret < 0)
+			{
+				pr_red_info("cavan_ext4_data_block_traversal");
+				return ret;
+			}
+
+			if (ret != CAVAN_EXT2_TRAVERSAL_CONTINUE)
+			{
+				break;
+			}
+		}
+	}
+	else
+	{
+		struct ext4_extent_leaf *leaf_end;
+		struct ext4_extent_leaf *leaf = (struct ext4_extent_leaf *)(header + 1);
+
+		for (leaf_end = leaf + header->entries; leaf < leaf_end; leaf++)
+		{
+			char buff[desc->block_size * leaf->length];
+
+			show_ext4_extent_leaf(leaf);
+
+			rdlen = desc->read_block(desc, (u64)leaf->start_hi << 32 | leaf->start_lo, buff, leaf->length);
+			if (rdlen < 0)
+			{
+				pr_error_info("desc->read_block");
+				return rdlen;
+			}
+
+			ret = option->func(desc, buff, leaf->length, option);
+			if (ret < 0)
+			{
+				pr_red_info("option->func");
+				return ret;
+			}
+
+			if (ret != CAVAN_EXT2_TRAVERSAL_CONTINUE)
+			{
+				break;
+			}
+		}
+	}
+
+	return ret;
+}
+
+static int cavan_ext4_find_file_handler(struct ext2_desc *desc, void *block, size_t count, struct cavan_ext2_traversal_option *_option)
+{
+	struct ext2_directory_entry *entry, *entry_end;
+	struct cavan_ext4_find_file_option *option = (struct cavan_ext4_find_file_option *)_option;
+
+	entry = block;
+	entry_end = ADDR_ADD(entry, desc->block_size * count);
+
+	while (entry < entry_end)
+	{
+#if CAVAN_EXT2_DEBUG
+		entry->name[entry->name_len] = 0;
+		show_ext2_directory_entry(entry);
+#endif
+
+		if (text_ncmp(option->filename, entry->name, entry->name_len) == 0)
+		{
+			mem_copy(option->entry, entry, EXT2_DIR_ENTRY_HEADER_SIZE);
+			text_ncopy(option->entry->name, entry->name, entry->name_len);
+			return CAVAN_EXT2_TRAVERSAL_FOUND;
+		}
+
+		entry = ADDR_ADD(entry, entry->rec_len);
+	}
+
+	return CAVAN_EXT2_TRAVERSAL_CONTINUE;
+}
+
+static int cavan_ext4_find_file_base(struct ext2_desc *desc, const char *filename, struct ext4_extent_header *header, struct ext2_directory_entry *entry)
+{
+	int ret;
+	struct cavan_ext4_find_file_option option =
+	{
+		.option =
+		{
+			.func = cavan_ext4_find_file_handler
+		},
+		.filename = filename,
+		.entry = entry
+	};
+
+	ret = cavan_ext4_data_block_traversal(desc, header, &option.option);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_ext4_data_block_traversal");
+		return ret;
+	}
+
+	if (ret != CAVAN_EXT2_TRAVERSAL_FOUND)
+	{
+		ERROR_RETURN(ENOENT);
+	}
+
+	return 0;
+}
+
+static int cavan_ext2_find_file_base(void)
+{
+	return -ENOENT;
+}
+
+static int cavan_ext2_find_file(struct ext2_desc *desc, struct cavan_ext2_file *file)
+{
+	struct ext2_directory_entry entry;
+	char *filename, *p;
+
+	filename = p = file->pathname;
+
+	entry.inode = 2;
+	entry.file_type = EXT_FILE_TYPE_DIRECTORY;
+
+	while (1)
+	{
+		int ret;
+		ssize_t rdlen;
+
+		rdlen = ext2_read_inode(desc, entry.inode, &file->inode);
+		if (rdlen < 0)
+		{
+			print_error("ext2_read_inode");
+			return rdlen;
+		}
+
+#if CAVAN_EXT2_DEBUG
+		show_ext2_inode(&file->inode);
+#endif
+
+		while (*filename == '/')
+		{
+			filename++;
+		}
+
+		if (*filename == 0)
+		{
+			break;
+		}
+
+		if (entry.file_type != EXT_FILE_TYPE_DIRECTORY)
+		{
+			ERROR_RETURN(ENOENT);
+		}
+
+		for (p = filename; *p && *p != '/'; p++);
+
+		if (file->inode.flags & EXT2_INODE_FLAG_EXTENTS)
+		{
+			ret = cavan_ext4_find_file_base(desc, filename, (struct ext4_extent_header *)file->inode.block, &entry);
+		}
+		else
+		{
+			ret = cavan_ext2_find_file_base();
+		}
+
+		if (ret < 0)
+		{
+			ERROR_RETURN(ENOENT);
+		}
+
+		filename = p + 1;
+	}
+
+	return 0;
+}
+
+struct cavan_ext2_file *cavan_ext2_open_file(struct ext2_desc *desc, const char *pathname, int flags, mode_t mode)
+{
+	int ret;
+	struct cavan_ext2_file *fp;
+
+	fp = malloc(sizeof(*fp));
+	if (fp == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	text_copy(fp->pathname, pathname);
+
+	ret = cavan_ext2_find_file(desc, fp);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_ext2_find_file");
+		goto out_free_fp;
+	}
+
+	fp->desc = desc;
+
+	return fp;
+
+out_free_fp:
+	free(fp);
+	return NULL;
+}
+
+void cavan_ext2_close_file(struct cavan_ext2_file *file)
+{
+	free(file);
+}
+
+static int cavan_ext4_read_file_handler(struct ext2_desc *desc, void *block, size_t count, struct cavan_ext2_traversal_option *_option)
+{
+	int ret;
+	struct cavan_ext4_read_file_option *option = (struct cavan_ext4_read_file_option *)_option;
+	size_t size = desc->block_size * count;
+	size_t remain = ADDR_SUB2(option->buff_end, option->buff);
+
+	if (remain < size)
+	{
+		ret = CAVAN_EXT2_TRAVERSAL_COMPLETE;
+		size = remain;
+	}
+	else
+	{
+		ret = CAVAN_EXT2_TRAVERSAL_CONTINUE;
+	}
+
+	mem_copy(option->buff, block, size);
+	option->buff = ADDR_ADD(option->buff, size);
+
+	return ret;
+}
+
+static ssize_t cavan_ext4_read_file_base(struct cavan_ext2_file *file, void *buff, size_t size)
+{
+	int ret;
+	struct cavan_ext4_read_file_option option =
+	{
+		.option =
+		{
+			.func = cavan_ext4_read_file_handler
+		},
+		.file = file,
+		.buff = buff,
+		.buff_end = ADDR_ADD(buff, size > file->inode.size ? file->inode.size : size)
+	};
+
+	ret = cavan_ext4_data_block_traversal(file->desc, (struct ext4_extent_header *)file->inode.block, &option.option);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_ext4_data_block_traversal");
+		return ret;
+	}
+
+	return ADDR_SUB2(option.buff, buff);
+}
+
+static ssize_t cavan_ext2_read_file_base(void)
+{
+	return 0;
+}
+
+ssize_t cavan_ext2_read_file(struct cavan_ext2_file *file, void *buff, size_t size)
+{
+	ssize_t rdlen;
+
+	if (file->inode.flags & EXT2_INODE_FLAG_EXTENTS)
+	{
+		rdlen = cavan_ext4_read_file_base(file, buff, size);
+	}
+	else
+	{
+		rdlen = cavan_ext2_read_file_base();
+	}
+
+	return rdlen;
+}

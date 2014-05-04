@@ -14,7 +14,8 @@ int main(int argc, char *argv[])
 	int ret;
 	int c, action = -1;
 	struct ext2_desc desc;
-	char pathname[1024];
+	const char *pathname;
+	struct cavan_ext2_file *fp;
 
 	while ((c = getopt(argc, argv, "r:R:l:L:")) != EOF)
 	{
@@ -23,13 +24,13 @@ int main(int argc, char *argv[])
 		case 'r':
 		case 'R':
 			action = 'r';
-			text_copy(pathname, optarg);
+			pathname = optarg;
 			break;
 
 		case 'l':
 		case 'L':
 			action = 'l';
-			text_copy(pathname, optarg);
+			pathname = optarg;
 			break;
 
 		default:
@@ -62,26 +63,36 @@ int main(int argc, char *argv[])
 	println("volume = %s", desc.super_block.volume_name);
 	println("pathname = %s", pathname);
 
+	fp = cavan_ext2_open_file(&desc, pathname, O_RDONLY, 0777);
+	if (fp == NULL)
+	{
+		ret = -ENOENT;
+		pr_red_info("cavan_ext2_open_file");
+		goto out_fat_deinit;
+	}
+
 	if (action == 'r')
 	{
-		char buff[1024];
+		char *data = alloca(fp->inode.size);
 
-		ret = ext2_read_file(&desc, pathname, buff, sizeof(buff));
+		ret = cavan_ext2_read_file(fp, data, fp->inode.size);
 		if (ret < 0)
 		{
-			error_msg("ext2_read_file");
-			goto out_fat_deinit;
+			pr_red_info("cavan_ext2_read_file");
+			goto out_cavan_ext2_close_file;
 		}
 
-		println("file \"%s\" is:", pathname);
-		print_ntext(buff, ret);
+		println("file \"%s\" is %d:", pathname, ret);
+		print_ntext(data, ret);
 		print_char('\n');
 	}
 	else
 	{
-		ret = ext2_list_directory(&desc, pathname);
+		ret = 0;
 	}
 
+out_cavan_ext2_close_file:
+	cavan_ext2_close_file(fp);
 out_fat_deinit:
 	ext2_deinit(&desc);
 

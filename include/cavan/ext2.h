@@ -31,6 +31,15 @@ enum ext2_file_type
 	EXT_FILE_TYPE_SYMLINK,
 };
 
+enum cavan_ext2_traversal_action
+{
+	CAVAN_EXT2_TRAVERSAL_COMPLETE,
+	CAVAN_EXT2_TRAVERSAL_CONTINUE,
+	CAVAN_EXT2_TRAVERSAL_FOUND,
+	CAVAN_EXT2_TRAVERSAL_ABORT,
+	CAVAN_EXT2_TRAVERSAL_EOF,
+};
+
 struct ext2_super_block
 {
 	u32 inodes_count; // 索引节点的总数
@@ -193,6 +202,33 @@ struct ext4_extent_leaf
 	u32 start_lo;
 };
 
+struct cavan_ext2_file
+{
+	char pathname[1024];
+	struct ext2_desc *desc;
+	struct ext2_inode inode;
+};
+
+struct cavan_ext2_traversal_option
+{
+	int (*func)(struct ext2_desc *desc, void *block, size_t count, struct cavan_ext2_traversal_option *option);
+};
+
+struct cavan_ext4_find_file_option
+{
+	struct cavan_ext2_traversal_option option;
+	const char *filename;
+	struct ext2_directory_entry *entry;
+};
+
+struct cavan_ext4_read_file_option
+{
+	struct cavan_ext2_traversal_option option;
+	struct cavan_ext2_file *file;
+	void *buff;
+	void *buff_end;
+};
+
 int ext2_init(struct ext2_desc *desc, const char *dev_path);
 void ext2_deinit(struct ext2_desc *desc);
 
@@ -212,6 +248,10 @@ ssize_t ext2_read_file_base(struct ext2_desc *desc, struct ext2_inode *inode, vo
 ssize_t ext2_read_file(struct ext2_desc *desc, const char *pathname, void *buff, size_t size);
 
 const char *ext2_filetype_to_text(int type);
+
+struct cavan_ext2_file *cavan_ext2_open_file(struct ext2_desc *desc, const char *pathname, int flags, mode_t mode);
+void cavan_ext2_close_file(struct cavan_ext2_file *file);
+ssize_t cavan_ext2_read_file(struct cavan_ext2_file *file, void *buff, size_t size);
 
 static inline int ext2_read_super_block(struct ext2_desc *desc, struct ext2_super_block *super_block)
 {
