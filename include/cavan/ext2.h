@@ -77,10 +77,64 @@ struct ext2_super_block
 	char volume_name[16]; // 卷名
 	char last_mounted[64]; // 最后一个安装点的路径名
 	u32 algorithm_usage_bitmap; // 用于压缩
-	u8 prealloc_blocks; // 预分配的块数
-	u8 prealloc_dir_blocks; // 为目录预分配的块数
-	u16 padding1; // 按字对齐
-	u32 reserved[1024]; // 用 null 填充 1024 字节
+	/*
+	 * Performance hints.  Directory preallocation should only
+	 * happen if the EXT2_FEATURE_COMPAT_DIR_PREALLOC flag is on.
+	 */
+	u8	prealloc_blocks;	/* Nr of blocks to try to preallocate*/
+	u8	prealloc_dir_blocks;	/* Nr to preallocate for dirs */
+	u16	reserved_gdt_blocks;	/* Per group table for online growth */
+	/*
+	 * Journaling support valid if EXT2_FEATURE_COMPAT_HAS_JOURNAL set.
+	 */
+	u8	journal_uuid[16]; /* uuid of journal superblock */
+	u32	journal_inum;		/* inode number of journal file */
+	u32	journal_dev;		/* device number of journal file */
+	u32	last_orphan;		/* start of list of inodes to delete */
+	u32	hash_seed[4];		/* HTREE hash seed */
+	u8	def_hash_version; /* Default hash version to use */
+	u8	jnl_backup_type;	/* Default type of journal backup */
+	u16	desc_size;		/* Group desc. size: INCOMPAT_64BIT */
+	u32	default_mount_opts;
+	u32	first_meta_bg;	/* First metablock group */
+	u32	mkfs_time;		/* When the filesystem was created */
+	u32	jnl_blocks[17];	/* Backup of the journal inode */
+	u32	blocks_count_hi;	/* Blocks count high 32bits */
+	u32	r_blocks_count_hi;	/* Reserved blocks count high 32 bits*/
+	u32	free_blocks_hi;	/* Free blocks count */
+	u16	min_extra_isize;	/* All inodes have at least # bytes */
+	u16	want_extra_isize;	/* New inodes should reserve # bytes */
+	u32	flags;		/* Miscellaneous flags */
+	u16	raid_stride;		/* RAID stride */
+	u16	mmp_update_interval;	/* # seconds to wait in MMP checking */
+	u64	mmp_block;			/* Block for multi-mount protection */
+	u32	raid_stripe_width;	/* blocks on all data disks (N*stride)*/
+	u8	log_groups_per_flex;	/* FLEX_BG group size */
+	u8	reserved_char_pad;
+	u16	reserved_pad;		/* Padding to next 32bits */
+	u64	kbytes_written;	/* nr of lifetime kilobytes written */
+	u32	snapshot_inum;	/* Inode number of active snapshot */
+	u32	snapshot_id;		/* sequential ID of active snapshot */
+	u64	snapshot_r_blocks_count; /* reserved blocks for active snapshot's future use */
+	u32	snapshot_list;	/* inode number of the head of the on-disk snapshot list */
+	u32	error_count;		/* number of fs errors */
+	u32	first_error_time; /* first time an error happened */
+	u32	first_error_ino;	/* inode involved in first error */
+	u64	first_error_block;	/* block involved of first error */
+	u8	first_error_func[32]; /* function where the error happened */
+	u32	first_error_line; /* line number where error happened */
+	u32	last_error_time;	/* most recent time of an error */
+	u32	last_error_ino;	/* inode involved in last error */
+	u32	last_error_line;	/* line number where error happened */
+	u64	last_error_block; /* block involved of last error */
+	u8	last_error_func[32];	/* function where the error happened */
+	u8	mount_opts[64];
+	u32	usr_quota_inum;	/* inode number of user quota file */
+	u32	grp_quota_inum;	/* inode number of group quota file */
+	u32	overhead_blocks;	/* overhead blocks/clusters in fs */
+	u32	backup_bgs[2];	/* If sparse_super2 enabled */
+	u32	reserved[106];		/* Padding to the end of the block */
+	u32	checksum;		/* crc32c(superblock) */
 };
 
 struct ext2_group_desc

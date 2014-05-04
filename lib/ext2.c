@@ -157,7 +157,56 @@ void show_ext2_super_block(const struct ext2_super_block *super_block)
 	println("algorithm_usage_bitmap = %d", super_block->algorithm_usage_bitmap);
 	println("prealloc_blocks = %d", super_block->prealloc_blocks);
 	println("prealloc_dir_blocks = %d", super_block->prealloc_dir_blocks);
-	println("padding1 = %d", super_block->padding1);
+
+	println("reserved_gdt_blocks = %d", super_block->reserved_gdt_blocks);
+	// println("journal_uuid[16] = %d", super_block->journal_uuid[16]);
+	println("journal_inum = %d", super_block->journal_inum);
+	println("journal_dev = %d", super_block->journal_dev);
+	println("last_orphan = %d", super_block->last_orphan);
+	// println("hash_seed[4] = %d", super_block->hash_seed[4]);
+	println("def_hash_version = %d", super_block->def_hash_version);
+	println("jnl_backup_type = %d", super_block->jnl_backup_type);
+	println("desc_size = %d", super_block->desc_size);
+	println("default_mount_opts = %d", super_block->default_mount_opts);
+	println("first_meta_bg = %d", super_block->first_meta_bg);
+	println("mkfs_time = %d", super_block->mkfs_time);
+	// println("jnl_blocks[17] = %d", super_block->jnl_blocks[17]);
+	println("blocks_count_hi = %d", super_block->blocks_count_hi);
+	println("r_blocks_count_hi = %d", super_block->r_blocks_count_hi);
+	println("free_blocks_hi = %d", super_block->free_blocks_hi);
+	println("min_extra_isize = %d", super_block->min_extra_isize);
+	println("want_extra_isize = %d", super_block->want_extra_isize);
+	println("flags = %d", super_block->flags);
+	println("raid_stride = %d", super_block->raid_stride);
+	println("mmp_update_interval = %d", super_block->mmp_update_interval);
+	println("mmp_block = " PRINT_FORMAT_INT64, super_block->mmp_block);
+	println("raid_stripe_width = %d", super_block->raid_stripe_width);
+	println("log_groups_per_flex = %d", super_block->log_groups_per_flex);
+	println("reserved_char_pad = %d", super_block->reserved_char_pad);
+	println("reserved_pad = %d", super_block->reserved_pad);
+	println("kbytes_written = " PRINT_FORMAT_INT64, super_block->kbytes_written);
+	println("snapshot_inum = %d", super_block->snapshot_inum);
+	println("snapshot_id = %d", super_block->snapshot_id);
+	println("snapshot_r_blocks_count = " PRINT_FORMAT_INT64, super_block->snapshot_r_blocks_count);
+	println("snapshot_list = %d", super_block->snapshot_list);
+	println("error_count = %d", super_block->error_count);
+	println("first_error_time = %d", super_block->first_error_time);
+	println("first_error_ino = %d", super_block->first_error_ino);
+	println("first_error_block = " PRINT_FORMAT_INT64, super_block->first_error_block);
+	// println("first_error_func[32] = %d", super_block->first_error_func[32]);
+	println("first_error_line = %d", super_block->first_error_line);
+	println("last_error_time = %d", super_block->last_error_time);
+	println("last_error_ino = %d", super_block->last_error_ino);
+	println("last_error_line = %d", super_block->last_error_line);
+	println("last_error_block = " PRINT_FORMAT_INT64, super_block->last_error_block);
+	// println("last_error_func[32] = %d", super_block->last_error_func[32]);
+	// println("mount_opts[64] = %d", super_block->mount_opts[64]);
+	println("usr_quota_inum = %d", super_block->usr_quota_inum);
+	println("grp_quota_inum = %d", super_block->grp_quota_inum);
+	println("overhead_blocks = %d", super_block->overhead_blocks);
+	// println("backup_bgs[2] = %d", super_block->backup_bgs[2]);
+	// println("reserved[106] = %d", super_block->reserved[106]);
+	println("checksum = %d", super_block->checksum);
 }
 
 void show_ext2_group_desc(const struct ext2_group_desc *group_desc)
