@@ -209,9 +209,12 @@ void show_ext2_inode(const struct ext2_inode *inode)
 	println("dir_acl = %d", inode->dir_acl);
 	println("faddr = %d", inode->faddr);
 
-	for (i = 0; i < EXT2_N_BLOCKS; i++)
+	if ((inode->flags & EXT2_INODE_FLAG_EXTENTS) == 0)
 	{
-		println("inode->block[%d] = %d", i, inode->block[i]);
+		for (i = 0; i < EXT2_N_BLOCKS; i++)
+		{
+			println("inode->block[%d] = %d", i, inode->block[i]);
+		}
 	}
 }
 
@@ -683,12 +686,13 @@ static int cavan_ext4_find_file_handler(struct ext2_desc *desc, void *block, siz
 
 	while (entry < entry_end)
 	{
-#if CAVAN_EXT2_DEBUG
 		entry->name[entry->name_len] = 0;
+
+#if CAVAN_EXT2_DEBUG
 		show_ext2_directory_entry(entry);
 #endif
 
-		if (text_ncmp(option->filename, entry->name, entry->name_len) == 0)
+		if (text_cmp(option->filename, entry->name) == 0)
 		{
 			mem_copy(option->entry, entry, EXT2_DIR_ENTRY_HEADER_SIZE);
 			text_ncopy(option->entry->name, entry->name, entry->name_len);
@@ -746,6 +750,7 @@ static int cavan_ext2_find_file(struct ext2_desc *desc, struct cavan_ext2_file *
 
 	while (1)
 	{
+		char c;
 		int ret;
 		ssize_t rdlen;
 
@@ -777,6 +782,9 @@ static int cavan_ext2_find_file(struct ext2_desc *desc, struct cavan_ext2_file *
 
 		for (p = filename; *p && *p != '/'; p++);
 
+		c = *p;
+		*p = 0;
+
 		if (file->inode.flags & EXT2_INODE_FLAG_EXTENTS)
 		{
 			ret = cavan_ext4_find_file_base(desc, filename, (struct ext4_extent_header *)file->inode.block, &entry);
@@ -785,6 +793,8 @@ static int cavan_ext2_find_file(struct ext2_desc *desc, struct cavan_ext2_file *
 		{
 			ret = cavan_ext2_find_file_base();
 		}
+
+		*p = c;
 
 		if (ret < 0)
 		{
@@ -887,6 +897,12 @@ static ssize_t cavan_ext2_read_file_base(void)
 ssize_t cavan_ext2_read_file(struct cavan_ext2_file *file, void *buff, size_t size)
 {
 	ssize_t rdlen;
+
+	if (!S_ISREG(file->inode.mode))
+	{
+		error_msg("%s is not a file", file->pathname);
+		ERROR_RETURN(EISDIR);
+	}
 
 	if (file->inode.flags & EXT2_INODE_FLAG_EXTENTS)
 	{
