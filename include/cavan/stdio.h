@@ -94,9 +94,11 @@ using namespace std;
 #define CAVAN_COLOR_MAGENTA				"\033[35m"
 
 #if __WORDSIZE == 64
-#define CAVAN_SIZE_FORMAT				"%ld"
+#define PRINT_FORMAT_SIZE				"%ld"
+#define PRINT_FORMAT_INT64				"%ld"
 #else
-#define CAVAN_SIZE_FORMAT				"%d"
+#define PRINT_FORMAT_SIZE				"%d"
+#define PRINT_FORMAT_INT64				"%Ld"
 #endif
 
 #define pr_std_info(fmt, args ...) \

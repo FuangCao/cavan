@@ -86,6 +86,33 @@ struct ext2_group_desc
 	u32 reserved[3]; // 用 null 填充 24 个字节
 };
 
+struct ext4_group_desc
+{
+	u32	block_bitmap;	/* Blocks bitmap block */
+	u32	inode_bitmap;	/* Inodes bitmap block */
+	u32	inode_table;		/* Inodes table block */
+	u16	free_blocks_count;	/* Free blocks count */
+	u16	free_inodes_count;	/* Free inodes count */
+	u16	used_dirs_count;	/* Directories count */
+	u16	flags;		/* EXT4_BG_flags (INODE_UNINIT, etc) */
+	u32	exclude_bitmap_lo;	/* Exclude bitmap for snapshots */
+	u16	block_bitmap_csum_lo;/* crc32c(s_uuid+grp_num+bitmap) LSB */
+	u16	inode_bitmap_csum_lo;/* crc32c(s_uuid+grp_num+bitmap) LSB */
+	u16	itable_unused;	/* Unused inodes count */
+	u16	checksum;		/* crc16(sb_uuid+group+desc) */
+	u32	block_bitmap_hi;	/* Blocks bitmap block MSB */
+	u32	inode_bitmap_hi;	/* Inodes bitmap block MSB */
+	u32	inode_table_hi;	/* Inodes table block MSB */
+	u16	free_blocks_count_hi;/* Free blocks count MSB */
+	u16	free_inodes_count_hi;/* Free inodes count MSB */
+	u16	used_dirs_count_hi;	/* Directories count MSB */
+	u16	itable_unused_hi;	/* Unused inodes count MSB */
+	u32	exclude_bitmap_hi;	/* Exclude bitmap block MSB */
+	u16	block_bitmap_csum_hi;/* crc32c(s_uuid+grp_num+bitmap) MSB */
+	u16	inode_bitmap_csum_hi;/* crc32c(s_uuid+grp_num+bitmap) MSB */
+	u32	reserved;
+};
+
 struct ext2_inode
 {
 	u16 mode; // 文件类型和访问权限
@@ -136,6 +163,9 @@ struct ext2_desc
 
 	struct ext2_super_block super_block;
 	struct ext2_group_desc *gdt;
+
+	ssize_t (*read_block)(struct ext2_desc *desc, u64 index, void *blocks, size_t count);
+	ssize_t (*write_block)(struct ext2_desc *desc, u64 index, const void *blocks, size_t count);
 };
 
 struct ext4_extent_header
