@@ -20,6 +20,33 @@ static ssize_t ext2_write_block(struct ext2_desc *desc, u64 index, const void *b
 	return ffile_writeto(desc->fd, blocks, desc->block_size * count, offset);
 }
 
+static struct ext2_group_desc *ext2_read_gdt(struct ext2_desc *desc)
+{
+	ssize_t rdlen;
+	struct ext2_group_desc *gdt;
+	size_t gdt_size = desc->group_count * sizeof(*gdt);
+
+	gdt = malloc(gdt_size);
+	if (gdt == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	rdlen = ffile_readfrom(desc->fd, gdt, gdt_size, BOOT_BLOCK_SIZE + desc->block_size);
+	if ((size_t)rdlen != gdt_size)
+	{
+		pr_error_info("ffile_readfrom");
+		goto out_free_gdt;
+	}
+
+	return gdt;
+
+out_free_gdt:
+	free(gdt);
+	return NULL;
+}
+
 int ext2_init(struct ext2_desc *desc, const char *dev_path)
 {
 	int ret;
@@ -37,6 +64,14 @@ int ext2_init(struct ext2_desc *desc, const char *dev_path)
 	ret = ext2_read_super_block(desc, super_block);
 	if (ret < 0)
 	{
+		pr_red_info("ext2_read_super_block");
+		goto out_close_device;
+	}
+
+	if (super_block->magic_number != EXT2_SUPER_BLOCK_MAGIC)
+	{
+		ret = -EINVAL;
+		pr_red_info("magic_number = 0x%04x", super_block->magic_number);
 		goto out_close_device;
 	}
 
@@ -51,18 +86,16 @@ int ext2_init(struct ext2_desc *desc, const char *dev_path)
 	desc->inode_size = super_block->inode_size;
 	desc->blocks_per_inode_table = (super_block->inodes_count * super_block->inode_size + desc->block_size - 1) >> desc->block_shift;
 
+	desc->group_flex_shift = super_block->log_groups_per_flex;
+	desc->groups_per_flex = 1 << desc->group_flex_shift;
 	desc->group_count = (super_block->blocks_count + super_block->blocks_per_group - 1) / super_block->blocks_per_group;
+	desc->flex_count = (desc->group_count + desc->group_flex_shift - 1) / desc->group_flex_shift;
 
-	desc->gdt = malloc(desc->group_count * sizeof(*desc->gdt));
+	desc->gdt = ext2_read_gdt(desc);
 	if (desc->gdt == NULL)
 	{
-		ret = -ENOMEM;
-		goto out_close_device;
-	}
-
-	ret = ext2_read_gdt(desc, desc->gdt);
-	if (ret < 0)
-	{
+		ret = -EFAULT;
+		pr_red_info("ext2_read_gdt");
 		goto out_free_gdt;
 	}
 
@@ -96,15 +129,12 @@ void show_ext2_desc(const struct ext2_desc *desc)
 	print_sep(60);
 	pr_bold_info("ext2 desc %p", desc);
 
-#if __WORDSIZE == 64
-	println("block_shift = %ld", desc->block_shift);
-	println("block_size = %ld", desc->block_size);
-	println("group_count = %ld", desc->group_count);
-#else
-	println("block_shift = %d", desc->block_shift);
-	println("block_size = %d", desc->block_size);
-	println("group_count = %d", desc->group_count);
-#endif
+	println("block_shift = " PRINT_FORMAT_SIZE, desc->block_shift);
+	println("block_size = " PRINT_FORMAT_SIZE, desc->block_size);
+	println("flex_count = " PRINT_FORMAT_SIZE, desc->flex_count);
+	println("group_count = " PRINT_FORMAT_SIZE, desc->group_count);
+	println("groups_per_flex = " PRINT_FORMAT_SIZE, desc->groups_per_flex);
+	println("group_flex_shift = " PRINT_FORMAT_SIZE, desc->group_flex_shift);
 
 	show_ext2_super_block(&desc->super_block);
 
@@ -135,7 +165,7 @@ void show_ext2_super_block(const struct ext2_super_block *super_block)
 	println("wtime = %d", super_block->wtime);
 	println("mnt_count = %d", super_block->mnt_count);
 	println("max_mnt_count = %d", super_block->max_mnt_count);
-	println("magic_number = %d", super_block->magic_number);
+	println("magic_number = 0x%04x", super_block->magic_number);
 	println("state = %d", super_block->state);
 	println("errors = %d", super_block->errors);
 	println("minor_rev_level = %d", super_block->minor_rev_level);
@@ -148,9 +178,9 @@ void show_ext2_super_block(const struct ext2_super_block *super_block)
 	println("first_inode = %d", super_block->first_inode);
 	println("inode_size = %d", super_block->inode_size);
 	println("block_group_nr = %d", super_block->block_group_nr);
-	println("feature_compat = %d", super_block->feature_compat);
-	println("feature_incompat = %d", super_block->feature_incompat);
-	println("feature_ro_compat = %d", super_block->feature_ro_compat);
+	println("feature_compat = 0x%08x", super_block->feature_compat);
+	println("feature_incompat = 0x%08x", super_block->feature_incompat);
+	println("feature_ro_compat = 0x%08x", super_block->feature_ro_compat);
 	println("uuid[16] = %s", text_header((char *)super_block->uuid, 16));
 	println("volume_name[16] = %s", text_header(super_block->volume_name, 16));
 	println("last_mounted[64] = %s", text_header(super_block->last_mounted, 64));

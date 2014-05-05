@@ -15,8 +15,8 @@
 #define EXT2_GDT_OFFSET(log_block_size) \
 	(BOOT_BLOCK_SIZE + EXT2_CAL_BLOCK_SIZE(log_block_size))
 
+#define EXT2_SUPER_BLOCK_MAGIC		0xEF53
 #define EXT2_DIR_ENTRY_HEADER_SIZE	8
-
 #define EXT2_INODE_FLAG_EXTENTS		(1 << 19)
 
 enum ext2_file_type
@@ -211,7 +211,10 @@ struct ext2_desc
 {
 	int fd;
 
+	size_t flex_count;
 	size_t group_count;
+	size_t groups_per_flex;
+	size_t group_flex_shift;
 
 	size_t block_size;
 	size_t block_shift;
@@ -310,13 +313,6 @@ ssize_t cavan_ext2_read_file(struct cavan_ext2_file *file, void *buff, size_t si
 static inline int ext2_read_super_block(struct ext2_desc *desc, struct ext2_super_block *super_block)
 {
 	return ffile_readfrom(desc->fd, super_block, sizeof(*super_block), BOOT_BLOCK_SIZE) == sizeof(*super_block) ? 0 : -EFAULT;
-}
-
-static inline int ext2_read_gdt(struct ext2_desc *desc, struct ext2_group_desc *gdt)
-{
-	size_t gdt_size = desc->group_count * sizeof(*gdt);
-
-	return (size_t)ffile_readfrom(desc->fd, gdt, gdt_size, BOOT_BLOCK_SIZE + desc->block_size) == gdt_size ? 0 : -EFAULT;
 }
 
 static inline off_t block_index_to_offset(struct ext2_desc *desc, u32 block_index)
