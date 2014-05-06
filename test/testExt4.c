@@ -32,10 +32,8 @@ static ssize_t test_ext4_device_read_block(struct cavan_ext4_fs *fs, size_t inde
 	off_t location = index * fs->hw_block_size;
 	struct test_ext4_device *dev = fs->hw_data;
 
-#if 0
 	pr_bold_info("read_block: index = " PRINT_FORMAT_SIZE ", count = " PRINT_FORMAT_SIZE, index, count);
 	pr_bold_info("location = %ld", location);
-#endif
 
 	return ffile_readfrom(dev->fd, buff, count * fs->hw_block_size, location);
 }

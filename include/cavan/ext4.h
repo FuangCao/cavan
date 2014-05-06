@@ -898,11 +898,14 @@ struct cavan_ext4_fs
 	void *hw_data;
 	int hw_block_shift;
 	u16 hw_block_size;
+	u32 hw_block_mask;
 
 	int block_shift;
 	u16 block_size;
+	u32 block_mask;
 
 	u16 hw_boot_block_count;
+	u16 hw_boot_block_size;
 	int hw_blocks_per_block_shift;
 	u16 hw_blocks_per_block_count;
 
