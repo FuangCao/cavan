@@ -88,6 +88,7 @@ struct cavan_ext4_fs
 struct cavan_ext4_file
 {
 	struct cavan_ext4_fs *fs;
+	const char *pathname;
 
 	union
 	{

@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
 			{
 				println("rdlen = " PRINT_FORMAT_SIZE, rdlen);
 				print_ntext(buff, rdlen);
+				putchar('\n');
 			}
 
 			cavan_ext4_close_file(fp);

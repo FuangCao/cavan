@@ -21,7 +21,7 @@
 #include <cavan/math.h>
 #include <cavan/ext4.h>
 
-#define CAVAN_EXT4_DEBUG	1
+#define CAVAN_EXT4_DEBUG	0
 
 static inline size_t cavan_ext4_get_block_hw_addr(struct cavan_ext4_fs *fs, size_t index)
 {
@@ -320,6 +320,10 @@ static void cavan_ext4_dump_ext2_inode_base(const struct ext2_inode *inode)
 	if (inode->i_flags & EXT4_EXTENTS_FL)
 	{
 		cavan_ext4_dump_ext4_extent_list((struct ext4_extent_header *)inode->i_block);
+	}
+	else if (S_ISLNK(inode->i_mode))
+	{
+		println("i_block = %s", (char *)inode->i_block);
 	}
 	else
 	{
@@ -960,6 +964,8 @@ struct cavan_ext4_file *cavan_ext4_open_file(struct cavan_ext4_fs *fs, const cha
 		goto out_free_file;
 	}
 
+	file->pathname = pathname;
+
 	return file;
 
 out_free_file:
@@ -998,6 +1004,17 @@ ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t si
 	struct cavan_ext4_walker walker;
 	struct cavan_ext4_read_file_context context;
 
+	if (size > file->inode.i_size)
+	{
+		size = file->inode.i_size;
+	}
+
+	if (S_ISLNK(file->inode.i_mode))
+	{
+		text_ncopy(buff, (char *)file->inode.i_block, size + 1);
+		return size;
+	}
+
 	if (S_ISREG(file->inode.i_mode) == 0)
 	{
 		pr_red_info("this isn't a file");
@@ -1008,11 +1025,6 @@ ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t si
 
 	context.buff = buff;
 	context.file = file;
-	if (size > file->inode.i_size)
-	{
-		size = file->inode.i_size;
-	}
-
 	context.buff_end = ADDR_ADD(buff, size);
 
 	ret = cavan_ext4_traversal_inode(file->fs, &file->inode, &walker, &context);
