@@ -346,7 +346,7 @@ void cavan_ext4_dump_ext4_new_group_input(const struct ext4_new_group_input *inp
 
 static void cavan_ext4_dump_ext2_inode_base(const struct ext2_inode *inode)
 {
-	println("i_mode = %05o", inode->i_mode);
+	println("i_mode = %06o", inode->i_mode);
 	println("i_uid = %d", inode->i_uid);
 	println("i_size = %d", inode->i_size);
 	println("i_atime = %d", inode->i_atime);

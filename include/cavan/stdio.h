@@ -96,9 +96,11 @@ using namespace std;
 #if __WORDSIZE == 64
 #define PRINT_FORMAT_SIZE				"%ld"
 #define PRINT_FORMAT_INT64				"%ld"
+#define PRINT_FORMAT_OFF				"%ld"
 #else
 #define PRINT_FORMAT_SIZE				"%d"
 #define PRINT_FORMAT_INT64				"%Ld"
+#define PRINT_FORMAT_OFF				"%Ld"
 #endif
 
 #define pr_std_info(fmt, args ...) \
