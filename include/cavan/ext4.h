@@ -22,7 +22,9 @@
 #include <cavan.h>
 #include <ext2fs/ext2fs.h>
 
-#define CAVAN_EXT4_BOOT_BLOCK_SIZE		1024
+#define CAVAN_EXT4_BOOT_BLOCK_SIZE			1024
+#define CAVAN_EXT4_DIR_ENTRY_HEADER_LEN		MOFS(struct ext2_dir_entry_2, name)
+#define CAVAN_EXT4_DIR_ENTRY_MIN_LEN		(CAVAN_EXT4_DIR_ENTRY_HEADER_LEN + 1)
 
 typedef enum
 {
