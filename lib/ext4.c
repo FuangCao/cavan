@@ -295,9 +295,9 @@ void cavan_ext4_dump_ext4_new_group_input(const struct ext4_new_group_input *inp
 	pr_bold_info("ext4 new group input %p", input);
 
 	println("group = %d", input->group);
-	println("block_bitmap = %Ld", input->block_bitmap);
-	println("inode_bitmap = %Ld", input->inode_bitmap);
-	println("inode_table = %Ld", input->inode_table);
+	println("block_bitmap = " PRINT_FORMAT_INT64, input->block_bitmap);
+	println("inode_bitmap = " PRINT_FORMAT_INT64, input->inode_bitmap);
+	println("inode_table = " PRINT_FORMAT_INT64, input->inode_table);
 	println("blocks_count = %d", input->blocks_count);
 	println("reserved_blocks = %d", input->reserved_blocks);
 	println("unused = %d", input->unused);
@@ -441,26 +441,26 @@ void cavan_ext4_dump_ext2_super_block(const struct ext2_super_block *super)
 	println("s_flags = %d", super->s_flags);
 	println("s_raid_stride = %d", super->s_raid_stride);
 	println("s_mmp_update_interval = %d", super->s_mmp_update_interval);
-	println("s_mmp_block = %Ld", super->s_mmp_block);
+	println("s_mmp_block = " PRINT_FORMAT_INT64, super->s_mmp_block);
 	println("s_raid_stripe_width = %d", super->s_raid_stripe_width);
 	println("s_log_groups_per_flex = %d", super->s_log_groups_per_flex);
 	println("s_reserved_char_pad = %d", super->s_reserved_char_pad);
 	println("s_reserved_pad = %d", super->s_reserved_pad);
-	println("s_kbytes_written = %Ld", super->s_kbytes_written);
+	println("s_kbytes_written = " PRINT_FORMAT_INT64, super->s_kbytes_written);
 	println("s_snapshot_inum = %d", super->s_snapshot_inum);
 	println("s_snapshot_id = %d", super->s_snapshot_id);
-	println("s_snapshot_r_blocks_count = %Ld", super->s_snapshot_r_blocks_count);
+	println("s_snapshot_r_blocks_count = " PRINT_FORMAT_INT64, super->s_snapshot_r_blocks_count);
 	println("s_snapshot_list = %d", super->s_snapshot_list);
 	println("s_error_count = %d", super->s_error_count);
 	println("s_first_error_time = %d", super->s_first_error_time);
 	println("s_first_error_ino = %d", super->s_first_error_ino);
-	println("s_first_error_block = %Ld", super->s_first_error_block);
+	println("s_first_error_block = " PRINT_FORMAT_INT64, super->s_first_error_block);
 	// println("s_first_error_func[32] = %d", super->s_first_error_func[32]);
 	println("s_first_error_line = %d", super->s_first_error_line);
 	println("s_last_error_time = %d", super->s_last_error_time);
 	println("s_last_error_ino = %d", super->s_last_error_ino);
 	println("s_last_error_line = %d", super->s_last_error_line);
-	println("s_last_error_block = %Ld", super->s_last_error_block);
+	println("s_last_error_block = " PRINT_FORMAT_INT64, super->s_last_error_block);
 	// println("s_last_error_func[32] = %d", super->s_last_error_func[32]);
 	// println("s_mount_opts[64] = %d", super->s_mount_opts[64]);
 	println("s_usr_quota_inum = %d", super->s_usr_quota_inum);
@@ -501,7 +501,7 @@ void cavan_ext4_dump_mmp_struct(const struct mmp_struct *mmp)
 
 	println("mmp_magic = %d", mmp->mmp_magic);
 	println("mmp_seq = %d", mmp->mmp_seq);
-	println("mmp_time = %Ld", mmp->mmp_time);
+	println("mmp_time = " PRINT_FORMAT_INT64, mmp->mmp_time);
 	println("mmp_nodename[64] = %s", mmp->mmp_nodename);
 	println("mmp_bdevname[32] = %s", mmp->mmp_bdevname);
 	println("mmp_check_interval = %d", mmp->mmp_check_interval);
@@ -780,9 +780,9 @@ static int cavan_ext4_traversal_extent(struct cavan_ext4_fs *fs, struct ext4_ext
 	return WALKER_ACTION_CONTINUE;
 }
 
-static int cavan_ext4_traversal_indirect(struct cavan_ext4_fs *fs, __u32 *blocks, size_t count, int level, struct cavan_ext4_walker *walker)
+static int cavan_ext4_traversal_indirect(struct cavan_ext4_fs *fs, u32 *blocks, size_t count, int level, struct cavan_ext4_walker *walker)
 {
-	__u32 *block_end;
+	u32 *block_end;
 
 	for (block_end = blocks + count; blocks < block_end && *blocks; blocks++)
 	{
@@ -799,7 +799,7 @@ static int cavan_ext4_traversal_indirect(struct cavan_ext4_fs *fs, __u32 *blocks
 
 		if (level > 0)
 		{
-			ret = cavan_ext4_traversal_indirect(fs, (__u32 *)buff, fs->block_size >> 2, level - 1, walker);
+			ret = cavan_ext4_traversal_indirect(fs, (u32 *)buff, fs->block_size >> 2, level - 1, walker);
 		}
 		else
 		{
@@ -815,7 +815,7 @@ static int cavan_ext4_traversal_indirect(struct cavan_ext4_fs *fs, __u32 *blocks
 	return WALKER_ACTION_CONTINUE;
 }
 
-static int cavan_ext4_traversal_direct_indirect(struct cavan_ext4_fs *fs, __u32 *blocks, struct cavan_ext4_walker *walker)
+static int cavan_ext4_traversal_direct_indirect(struct cavan_ext4_fs *fs, u32 *blocks, struct cavan_ext4_walker *walker)
 {
 	int i;
 	int steps[] = {12, 1, 1, 1};
