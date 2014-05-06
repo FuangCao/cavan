@@ -18,7 +18,72 @@
  */
 
 #include <cavan.h>
+#include <cavan/math.h>
 #include <cavan/ext4.h>
+
+#define CAVAN_EXT4_DEBUG	0
+
+static inline size_t cavan_ext4_get_block_hw_addr(struct cavan_ext4_fs *fs, size_t index)
+{
+	return ((index - fs->first_data_block) << fs->hw_blocks_per_block_shift) + fs->hw_boot_block_count;
+}
+
+static inline ssize_t cavan_ext4_read_block(struct cavan_ext4_fs *fs, size_t index, void *buff, size_t count)
+{
+	index = cavan_ext4_get_block_hw_addr(fs, index);
+	return fs->read_block(fs, index, buff, count << fs->hw_blocks_per_block_shift);
+}
+
+static inline ssize_t cavan_ext4_write_block(struct cavan_ext4_fs *fs, size_t index, const void *buff, size_t count)
+{
+	index = cavan_ext4_get_block_hw_addr(fs, index);
+	return fs->write_block(fs, index, buff, count << fs->hw_blocks_per_block_shift);
+}
+
+static struct ext2_group_desc *cavan_ext4_get_group(struct cavan_ext4_fs *fs, u32 index)
+{
+	if (fs->gdt32)
+	{
+		return fs->gdt32 + index;
+	}
+
+	return (struct ext2_group_desc *)(fs->gdt64 + index);
+}
+
+static inline u32 cavan_ext4_inode_index_to_group(struct cavan_ext4_fs *fs, u32 index)
+{
+	return index / fs->inodes_per_group;
+}
+
+static inline u32 cavan_ext4_inode_index_to_table(struct cavan_ext4_fs *fs, u32 index)
+{
+	u32 group = cavan_ext4_inode_index_to_group(fs, index);
+
+	return cavan_ext4_get_group(fs, group)->bg_inode_table;
+}
+
+static ssize_t cavan_ext4_read_inode(struct cavan_ext4_fs *fs, u32 index, struct ext2_inode_large *inode)
+{
+	ssize_t rdlen;
+	u32 table = cavan_ext4_inode_index_to_table(fs, index);
+	u32 offset = (index - 1) % fs->inodes_per_group;
+	size_t block_index = table + offset / fs->inodes_per_block;
+	char buff[fs->block_size];
+
+	rdlen = cavan_ext4_read_block(fs, block_index, buff, 1);
+	if (rdlen < 0)
+	{
+		pr_red_info("cavan_ext4_read_block");
+		return rdlen;
+	}
+
+	offset %= fs->inodes_per_block;
+	mem_copy(inode, buff + offset % fs->inodes_per_block * fs->inode_size, fs->inode_size);
+
+	return 0;
+}
+
+// ================================================================================
 
 char *cavan_ext4_uuid_tostring(const u8 uuid[16], char *buff, size_t size)
 {
@@ -235,7 +300,7 @@ void cavan_ext4_dump_ext4_new_group_input(const struct ext4_new_group_input *inp
 
 static void cavan_ext4_dump_ext2_inode_base(const struct ext2_inode *inode)
 {
-	println("i_mode = %d", inode->i_mode);
+	println("i_mode = %05o", inode->i_mode);
 	println("i_uid = %d", inode->i_uid);
 	println("i_size = %d", inode->i_size);
 	println("i_atime = %d", inode->i_atime);
@@ -460,34 +525,33 @@ void cavan_ext4_dump_gdt(struct cavan_ext4_fs *fs)
 static ssize_t cavan_ext4_read_super_block(struct cavan_ext4_fs *fs, struct ext2_super_block *super)
 {
 	size_t count = (sizeof(*super) + fs->hw_block_size - 1) >> fs->hw_block_shift;
-	return fs->read_block(fs, fs->hw_boot_block_count, super, count);
+	return fs->read_block(fs, CAVAN_EXT4_BOOT_BLOCK_SIZE >> fs->hw_block_shift, super, count);
 }
 
-static void *cavan_ext4_read_gdt(struct cavan_ext4_fs *fs, size_t item_size)
+static void *cavan_ext4_read_gdt(struct cavan_ext4_fs *fs)
 {
-	size_t index;
-	ssize_t rdlen;
-	size_t count, size;
 	void *gdt;
+	size_t size;
+	size_t count;
+	ssize_t rdlen;
 
-	count = (fs->group_count * item_size + fs->hw_block_size - 1) >> fs->hw_block_shift;
-	size = count << fs->hw_block_shift;
-	gdt = malloc(size);
+	size = fs->super.s_desc_size * fs->group_count;
+	count = RIGHT_SHIFT_CEIL(size, fs->block_shift);
+	gdt = malloc(count << fs->block_shift);
 	if (gdt == NULL)
 	{
 		pr_error_info("malloc");
 		return NULL;
 	}
 
-	index = cavan_ext4_get_block_hw_addr(fs, 1);
-	rdlen = fs->read_block(fs, index, gdt, count);
+	rdlen = cavan_ext4_read_block(fs, fs->first_data_block + 1, gdt, count);
 	if (rdlen < 0)
 	{
 		pr_red_info("fs->read_block");
 		goto out_free_gdt;
 	}
 
-	return gdt;
+	return realloc(gdt, size);
 
 out_free_gdt:
 	free(gdt);
@@ -497,6 +561,7 @@ out_free_gdt:
 int cavan_ext4_init(struct cavan_ext4_fs *fs)
 {
 	int ret;
+	void *gdt;
 	struct ext2_super_block *super;
 
 	if (fs->read_block == NULL || fs->write_block == NULL)
@@ -529,11 +594,12 @@ int cavan_ext4_init(struct cavan_ext4_fs *fs)
 		return -EINVAL;
 	}
 
+#if CAVAN_EXT4_DEBUG
 	println("hw_block_shift = %d", fs->hw_block_shift);
-	println("hw_block_shift = " PRINT_FORMAT_SIZE, fs->hw_block_size);
+	println("hw_block_size = %d", fs->hw_block_size);
+#endif
 
 	super = &fs->super;
-	fs->hw_boot_block_count = CAVAN_EXT4_BOOT_BLOCK_SIZE >> fs->hw_block_shift;
 
 	ret = cavan_ext4_read_super_block(fs, super);
 	if (ret < 0)
@@ -548,13 +614,22 @@ int cavan_ext4_init(struct cavan_ext4_fs *fs)
 		return -EINVAL;
 	}
 
+	if ((super->s_feature_incompat & EXT4_FEATURE_INCOMPAT_64BIT) == 0 || super->s_desc_size == 0)
+	{
+		super->s_desc_size = EXT2_MIN_DESC_SIZE;
+	}
+
+#if CAVAN_EXT4_DEBUG
 	cavan_ext4_dump_ext2_super_block(super);
+#endif
 
 	fs->block_shift = super->s_log_block_size + 10;
 	fs->block_size = 1 << fs->block_shift;
 
+#if CAVAN_EXT4_DEBUG
 	println("block_shift = %d", fs->block_shift);
-	println("block_size = " PRINT_FORMAT_SIZE, fs->block_size);
+	println("block_size = %d", fs->block_size);
+#endif
 
 	if (fs->block_size < fs->hw_block_size)
 	{
@@ -562,42 +637,379 @@ int cavan_ext4_init(struct cavan_ext4_fs *fs)
 		return -EINVAL;
 	}
 
+	fs->hw_boot_block_count = fs->block_size > CAVAN_EXT4_BOOT_BLOCK_SIZE ? 0 : (CAVAN_EXT4_BOOT_BLOCK_SIZE >> fs->hw_block_shift);
 	fs->hw_blocks_per_block_shift = fs->block_shift - fs->hw_block_shift;
 	fs->hw_blocks_per_block_count = 1 << fs->hw_blocks_per_block_shift;
-	fs->group_count = (super->s_blocks_count + super->s_blocks_per_group - 1) / super->s_blocks_per_group;
+	fs->group_count = DIV_CEIL(super->s_blocks_count - super->s_first_data_block, super->s_blocks_per_group);
 
+#if CAVAN_EXT4_DEBUG
+	println("hw_boot_block_count = %d", fs->hw_boot_block_count);
 	println("hw_blocks_per_block_shift = %d", fs->hw_blocks_per_block_shift);
-	println("hw_blocks_per_block_count = " PRINT_FORMAT_SIZE, fs->hw_blocks_per_block_count);
-	println("group_count = " PRINT_FORMAT_SIZE, fs->group_count);
+	println("hw_blocks_per_block_count = %d", fs->hw_blocks_per_block_count);
+	println("group_count = %d", fs->group_count);
+#endif
 
-	if (super->s_feature_incompat & EXT4_FEATURE_INCOMPAT_64BIT)
+	gdt = cavan_ext4_read_gdt(fs);
+	if (gdt == NULL)
 	{
-		fs->gdt64 = cavan_ext4_read_gdt(fs, sizeof(struct ext4_group_desc));
-		if (fs->gdt64 == NULL)
-		{
-			pr_red_info("cavan_ext4_read_gdt");
-			return -EFAULT;
-		}
+		pr_red_info("cavan_ext4_read_gdt");
+		return -EIO;
+	}
 
-		fs->gdt32 = NULL;
+	if (super->s_desc_size < EXT2_MIN_DESC_SIZE_64BIT)
+	{
+		fs->gdt32 = gdt;
+		fs->gdt64 = NULL;
 	}
 	else
 	{
-		fs->gdt32 = cavan_ext4_read_gdt(fs, sizeof(struct ext4_group_desc));
-		if (fs->gdt32 == NULL)
-		{
-			pr_red_info("cavan_ext4_read_gdt");
-			return -EFAULT;
-		}
-
-		fs->gdt64 = NULL;
+		fs->gdt64 = gdt;
+		fs->gdt32 = NULL;
 	}
 
+#if CAVAN_EXT4_DEBUG
 	cavan_ext4_dump_gdt(fs);
+#endif
+
+	fs->first_data_block = super->s_first_data_block;
+	fs->inode_size = super->s_inode_size;
+	fs->inodes_per_group = super->s_inodes_per_group;
+	fs->inodes_per_block = fs->block_size / fs->inode_size;
 
 	return 0;
 }
 
 void cavan_ext4_deinit(struct cavan_ext4_fs *fs)
 {
+	if (fs->gdt64)
+	{
+		free(fs->gdt64);
+	}
+	else
+	{
+		free(fs->gdt32);
+	}
+}
+
+static int cavan_ext4_walker_put_block(struct cavan_ext4_walker *walker, struct cavan_ext4_fs *fs, void *data, size_t count)
+{
+	int ret;
+
+	ret = walker->put_block(walker, fs, data, count);
+	if (ret < 0)
+	{
+		pr_red_info("walker->put_block");
+		return ret;
+	}
+
+	walker->count += count;
+	if (walker->count < walker->max_count)
+	{
+		return ret;
+	}
+
+	return WALKER_ACTION_EOF;
+}
+
+static int cavan_ext4_traversal_extent(struct cavan_ext4_fs *fs, struct ext4_extent_header *header, struct cavan_ext4_walker *walker)
+{
+	int ret;
+	size_t addr;
+	ssize_t rdlen;
+
+	if (header->depth > 0)
+	{
+		struct ext4_extent_index *index_end;
+		struct ext4_extent_index *index = (struct ext4_extent_index *)(header + 1);
+
+		for (index_end = index + header->entries; index < index_end; index++)
+		{
+			char buff[fs->block_size];
+
+			addr = (u64)index->leaf_hi << 32 | index->leaf_lo;
+			rdlen = cavan_ext4_read_block(fs, addr, buff, 1);
+			if (rdlen < 0)
+			{
+				pr_red_info("cavan_ext4_read_block");
+				return rdlen;
+			}
+
+			ret = cavan_ext4_traversal_extent(fs, (struct ext4_extent_header *)buff, walker);
+			if (ret != WALKER_ACTION_CONTINUE)
+			{
+				return ret;
+			}
+		}
+	}
+	else
+	{
+		struct ext4_extent_leaf *leaf_end;
+		struct ext4_extent_leaf *leaf = (struct ext4_extent_leaf *)(header + 1);
+
+		for (leaf_end = leaf + header->entries; leaf < leaf_end; leaf++)
+		{
+			char buff[leaf->length << fs->block_shift];
+
+			addr = (u64)leaf->start_hi << 32 | leaf->start_lo;
+			rdlen = cavan_ext4_read_block(fs, addr, buff, leaf->length);
+			if (rdlen < 0)
+			{
+				pr_red_info("cavan_ext4_read_block");
+				return rdlen;
+			}
+
+			ret = cavan_ext4_walker_put_block(walker, fs, buff, leaf->length);
+			if (ret != WALKER_ACTION_CONTINUE)
+			{
+				return ret;
+			}
+		}
+	}
+
+	return WALKER_ACTION_CONTINUE;
+}
+
+static int cavan_ext4_traversal_indirect(struct cavan_ext4_fs *fs, __u32 *blocks, size_t count, int level, struct cavan_ext4_walker *walker)
+{
+	__u32 *block_end;
+
+	for (block_end = blocks + count; blocks < block_end; blocks++)
+	{
+		int ret;
+		ssize_t rdlen;
+		char buff[fs->block_size];
+
+		rdlen = cavan_ext4_read_block(fs, *blocks, buff, 1);
+		if (rdlen < 0)
+		{
+			pr_red_info("cavan_ext4_read_block");
+			return rdlen;
+		}
+
+		if (level > 0)
+		{
+			ret = cavan_ext4_traversal_indirect(fs, (__u32 *)buff, fs->block_size >> 2, level - 1, walker);
+		}
+		else
+		{
+			ret = cavan_ext4_walker_put_block(walker, fs, buff, 1);
+		}
+
+		if (ret != WALKER_ACTION_CONTINUE)
+		{
+			return ret;
+		}
+	}
+
+	return WALKER_ACTION_CONTINUE;
+}
+
+static int cavan_ext4_traversal_direct_indirect(struct cavan_ext4_fs *fs, __u32 *blocks, struct cavan_ext4_walker *walker)
+{
+	int i;
+	int steps[] = {12, 1, 1, 1};
+
+	for (i = 0; i < NELEM(steps); i++)
+	{
+		int ret;
+
+		ret = cavan_ext4_traversal_indirect(fs, blocks, steps[i], i, walker);
+		if (ret != WALKER_ACTION_CONTINUE)
+		{
+			return ret;
+		}
+
+		blocks += steps[i];
+	}
+
+	return 0;
+}
+
+static int cavan_ext4_traversal_inode(struct cavan_ext4_fs *fs, struct ext2_inode *inode, struct cavan_ext4_walker *walker, void *context)
+{
+	walker->count = 0;
+	walker->context = context;
+	walker->max_count = inode->i_blocks;
+
+	if (inode->i_flags & EXT4_EXTENTS_FL)
+	{
+		return cavan_ext4_traversal_extent(fs, (struct ext4_extent_header *)inode->i_block, walker);
+	}
+	else
+	{
+		return cavan_ext4_traversal_direct_indirect(fs, inode->i_block, walker);
+	}
+}
+
+static int cavan_ext4_find_file_put_block(struct cavan_ext4_walker *walker, struct cavan_ext4_fs *fs, void *data, size_t count)
+{
+	struct ext2_dir_entry_2 *entry, *entry_end;
+	struct cavan_ext4_find_file_context *context = walker->context;
+
+	for (entry = data, entry_end = ADDR_ADD(entry, count << fs->block_shift); entry < entry_end; entry = ADDR_ADD(entry, entry->rec_len))
+	{
+#if CAVAN_EXT4_DEBUG
+		entry->name[entry->name_len] = 0;
+		cavan_ext4_dump_ext2_dir_entry_2(entry);
+#endif
+
+		if (entry->name_len == context->name_len && strncmp(entry->name, context->filename, context->name_len) == 0)
+		{
+			context->found = true;
+			mem_copy(&context->entry, entry, entry->rec_len);
+			return WALKER_ACTION_STOP;
+		}
+	}
+
+	return 0;
+}
+
+static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file *file, const char *pathname)
+{
+	struct cavan_ext4_find_file_context context;
+	struct ext2_dir_entry_2 *entry = &context.entry;
+	struct cavan_ext4_walker walker =
+	{
+		.put_block = cavan_ext4_find_file_put_block
+	};
+
+	entry->inode = EXT2_ROOT_INO;
+	entry->file_type = EXT2_FT_DIR;
+
+	while (1)
+	{
+		int ret;
+		ssize_t rdlen;
+		const char *p;
+
+		rdlen = cavan_ext4_read_inode(fs, entry->inode, &file->inode_large);
+		if (rdlen < 0)
+		{
+			print_error("cavan_ext4_read_inode");
+			return rdlen;
+		}
+
+#if CAVAN_EXT4_DEBUG
+		cavan_ext4_dump_ext2_inode(&file->inode);
+#endif
+
+		while (*pathname == '/')
+		{
+			pathname++;
+		}
+
+		if (*pathname == 0)
+		{
+			break;
+		}
+
+		if (entry->file_type != EXT2_FT_DIR)
+		{
+			ERROR_RETURN(ENOENT);
+		}
+
+		for (p = pathname; *p && *p != '/'; p++);
+
+		context.found = false;
+		context.filename = pathname;
+		context.name_len = p - pathname;
+		ret = cavan_ext4_traversal_inode(fs, &file->inode, &walker, &context);
+
+		if (ret < 0 || context.found == false)
+		{
+			ERROR_RETURN(ENOENT);
+		}
+
+		pathname = p;
+	}
+
+	return 0;
+}
+
+struct cavan_ext4_file *cavan_ext4_open_file(struct cavan_ext4_fs *fs, const char *pathname)
+{
+	int ret;
+	struct cavan_ext4_file *file;
+
+	file = malloc(sizeof(*file));
+	if (file == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	file->fs = fs;
+
+	ret = cavan_ext4_find_file(fs, file, pathname);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_ext4_find_file");
+		goto out_free_file;
+	}
+
+	return file;
+
+out_free_file:
+	free(file);
+	return NULL;
+}
+
+static int cavan_ext4_read_file_put_block(struct cavan_ext4_walker *walker, struct cavan_ext4_fs *fs, void *data, size_t count)
+{
+	int ret;
+	size_t size, buff_size;
+	struct cavan_ext4_read_file_context *context = walker->context;
+
+	size = count << fs->block_shift;
+	buff_size = ADDR_SUB2(context->buff_end, context->buff);
+
+	if (size < buff_size)
+	{
+		ret = WALKER_ACTION_CONTINUE;
+	}
+	else
+	{
+		ret = WALKER_ACTION_STOP;
+		size = buff_size;
+	}
+
+	mem_copy(context->buff, data, size);
+	context->buff = ADDR_ADD(context->buff, size);
+
+	return ret;
+}
+
+ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t size)
+{
+	int ret;
+	struct cavan_ext4_walker walker =
+	{
+		.put_block = cavan_ext4_read_file_put_block
+	};
+	struct cavan_ext4_read_file_context context =
+	{
+		.buff = buff,
+		.file = file
+	};
+
+	if (size > file->inode.i_size)
+	{
+		size = file->inode.i_size;
+	}
+
+	context.buff_end = ADDR_ADD(buff, size);
+
+	ret = cavan_ext4_traversal_inode(file->fs, &file->inode, &walker, &context);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_ext4_traversal_inode");
+		return ret;
+	}
+
+	return ADDR_SUB2(context.buff, buff);
+}
+
+void cavan_ext4_close_file(struct cavan_ext4_file *file)
+{
+	free(file);
 }

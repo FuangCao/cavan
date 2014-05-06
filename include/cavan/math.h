@@ -17,6 +17,12 @@
 #define ABS(a) \
 	((a) < 0 ? -(a) : (a))
 
+#define DIV_CEIL(a, b) \
+	(((a) - 1) / (b) + 1)
+
+#define RIGHT_SHIFT_CEIL(a, shift) \
+	((((a) - 1) >> (shift)) + 1)
+
 byte *math_memory_shrink(const byte *mem, size_t size);
 void math_memory_exchange(const byte *mem, byte *res, size_t size);
 void math_memory_copy(byte *dest, size_t dest_size, const byte *src, size_t src_size);

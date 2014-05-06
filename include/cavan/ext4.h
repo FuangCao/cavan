@@ -24,6 +24,13 @@
 
 #define CAVAN_EXT4_BOOT_BLOCK_SIZE		1024
 
+typedef enum
+{
+	WALKER_ACTION_CONTINUE,
+	WALKER_ACTION_EOF,
+	WALKER_ACTION_STOP
+} walker_action_t;
+
 struct ext4_extent_header
 {
 	u16 magic;
@@ -53,16 +60,20 @@ struct cavan_ext4_fs
 {
 	void *hw_data;
 	int hw_block_shift;
-	size_t hw_block_size;
+	u16 hw_block_size;
 
 	int block_shift;
-	size_t block_size;
+	u16 block_size;
 
-	size_t hw_boot_block_count;
+	u16 hw_boot_block_count;
 	int hw_blocks_per_block_shift;
-	size_t hw_blocks_per_block_count;
+	u16 hw_blocks_per_block_count;
 
-	size_t group_count;
+	u32 group_count;
+	u16 inode_size;
+	u32 inodes_per_group;
+	u32 inodes_per_block;
+	u32 first_data_block;
 
 	struct ext2_super_block super;
 	struct ext2_group_desc *gdt32;
@@ -74,8 +85,37 @@ struct cavan_ext4_fs
 
 struct cavan_ext4_file
 {
-	struct ext2_inode *inode;
-	char pathname[1024];
+	struct cavan_ext4_fs *fs;
+
+	union
+	{
+		char inode_data[256];
+		struct ext2_inode inode;
+		struct ext2_inode_large inode_large;
+	};
+};
+
+struct cavan_ext4_walker
+{
+	void *context;
+	size_t count;
+	size_t max_count;
+	int (*put_block)(struct cavan_ext4_walker *walker, struct cavan_ext4_fs *fs, void *data, size_t count);
+};
+
+struct cavan_ext4_find_file_context
+{
+	bool found;
+	u16 name_len;
+	const char *filename;
+	struct ext2_dir_entry_2 entry;
+};
+
+struct cavan_ext4_read_file_context
+{
+	void *buff;
+	void *buff_end;
+	struct cavan_ext4_file *file;
 };
 
 // ================================================================================
@@ -106,20 +146,6 @@ void cavan_ext4_dump_gdt(struct cavan_ext4_fs *fs);
 
 int cavan_ext4_init(struct cavan_ext4_fs *fs);
 void cavan_ext4_deinit(struct cavan_ext4_fs *fs);
-
-static inline size_t cavan_ext4_get_block_hw_addr(struct cavan_ext4_fs *fs, size_t index)
-{
-	return (index << fs->hw_blocks_per_block_shift) + fs->hw_boot_block_count;
-}
-
-static inline ssize_t cavan_ext4_read_block(struct cavan_ext4_fs *fs, size_t index, void *buff, size_t count)
-{
-	index = cavan_ext4_get_block_hw_addr(fs, index);
-	return fs->read_block(fs, index, buff, count << fs->hw_blocks_per_block_shift);
-}
-
-static inline ssize_t cavan_ext4_write_block(struct cavan_ext4_fs *fs, size_t index, const void *buff, size_t count)
-{
-	index = cavan_ext4_get_block_hw_addr(fs, index);
-	return fs->write_block(fs, index, buff, count << fs->hw_blocks_per_block_shift);
-}
+struct cavan_ext4_file *cavan_ext4_open_file(struct cavan_ext4_fs *fs, const char *pathname);
+ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t size);
+void cavan_ext4_close_file(struct cavan_ext4_file *file);

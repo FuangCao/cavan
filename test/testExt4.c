@@ -29,11 +29,15 @@ struct test_ext4_device
 
 static ssize_t test_ext4_device_read_block(struct cavan_ext4_fs *fs, size_t index, void *buff, size_t count)
 {
+	off_t location = index * fs->hw_block_size;
 	struct test_ext4_device *dev = fs->hw_data;
 
+#if 0
 	pr_bold_info("read_block: index = " PRINT_FORMAT_SIZE ", count = " PRINT_FORMAT_SIZE, index, count);
+	pr_bold_info("location = %ld", location);
+#endif
 
-	return ffile_readfrom(dev->fd, buff, count * fs->hw_block_size, index * fs->hw_block_size);
+	return ffile_readfrom(dev->fd, buff, count * fs->hw_block_size, location);
 }
 
 static ssize_t test_ext4_device_write_block(struct cavan_ext4_fs *fs, size_t index, const void *buff, size_t count)
@@ -73,6 +77,35 @@ int main(int argc, char *argv[])
 	{
 		pr_red_info("cavan_ext4_init");
 		goto out_close_fd;
+	}
+
+	if (argc > 2)
+	{
+		struct cavan_ext4_file *fp;
+
+		fp = cavan_ext4_open_file(&fs, argv[2]);
+		if (fp == NULL)
+		{
+			pr_red_info("cavan_ext4_open_file");
+		}
+		else
+		{
+			ssize_t rdlen;
+			char buff[fp->inode.i_size];
+
+			rdlen = cavan_ext4_read_file(fp, buff, sizeof(buff));
+			if (rdlen < 0)
+			{
+				pr_red_info("cavan_ext4_read_file");
+			}
+			else
+			{
+				println("rdlen = " PRINT_FORMAT_SIZE, rdlen);
+				print_ntext(buff, rdlen);
+			}
+
+			cavan_ext4_close_file(fp);
+		}
 	}
 
 	cavan_ext4_deinit(&fs);
