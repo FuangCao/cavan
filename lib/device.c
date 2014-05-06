@@ -2030,3 +2030,67 @@ int get_device_statfs(const char *devpath, const char *fstype, struct statfs *st
 
 	return ret;
 }
+
+// ================================================================================
+
+static ssize_t cavan_block_device_read_data_dummy(struct cavan_block_device *dev, off_t offset, void *buff, size_t count)
+{
+	return -EFAULT;
+}
+
+static ssize_t cavan_block_device_write_data_dummy(struct cavan_block_device *dev, off_t offset, const void *buff, size_t count)
+{
+	return -EFAULT;
+}
+
+int cavan_block_device_init(struct cavan_block_device *dev, void *context)
+{
+	if (dev->read_block == NULL || dev->write_block == NULL)
+	{
+		pr_red_info("Please set read_block and write_block");
+		return -EINVAL;
+	}
+
+	if (dev->block_size)
+	{
+		int shift;
+
+		for (shift = 0; ((1 << shift) & dev->block_size) == 0; shift++);
+
+		if (dev->block_shift && dev->block_shift != shift)
+		{
+			pr_red_info("block shift not match");
+			return -EINVAL;
+		}
+
+		dev->block_shift = shift;
+	}
+	else if (dev->block_shift)
+	{
+		dev->block_size = 1 << dev->block_shift;
+	}
+	else
+	{
+		pr_red_info("Please give block_size or block shift");
+		return -EINVAL;
+	}
+
+	if (dev->read_data == NULL)
+	{
+		dev->read_data = cavan_block_device_read_data_dummy;
+	}
+
+	if (dev->write_data == NULL)
+	{
+		dev->write_data = cavan_block_device_write_data_dummy;
+	}
+
+	dev->context = context;
+	dev->block_mask = dev->block_size - 1;
+
+	return 0;
+}
+
+void cavan_block_device_deinit(struct cavan_block_device *dev)
+{
+}

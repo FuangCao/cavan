@@ -96,6 +96,21 @@ struct mtd_descriptor
 	size_t erase_size;
 };
 
+struct cavan_block_device
+{
+	void *context;
+	int block_shift;
+	u16 block_size;
+	u32 block_mask;
+
+	ssize_t (*read_block)(struct cavan_block_device *dev, size_t index, void *buff, size_t count);
+	ssize_t (*write_block)(struct cavan_block_device *dev, size_t index, const void *buff, size_t count);
+	ssize_t (*read_data)(struct cavan_block_device *dev, off_t offset, void *buff, size_t count);
+	ssize_t (*write_data)(struct cavan_block_device *dev, off_t offset, const void *buff, size_t count);
+};
+
+// ================================================================================
+
 void visual_usleep(u32 usec);
 void visual_msleep(u32 msec);
 void visual_ssleep(u32 sec);
@@ -204,6 +219,9 @@ char *get_device_real_path(char *dest, const char *src);
 
 void show_statfs(struct statfs *stfs);
 int get_device_statfs(const char *devpath, const char *fstype, struct statfs *stfs);
+
+int cavan_block_device_init(struct cavan_block_device *dev, void *context);
+void cavan_block_device_deinit(struct cavan_block_device *dev);
 
 static inline int parse_mount_table_simple(const char *buff, struct mount_table *mtab)
 {
