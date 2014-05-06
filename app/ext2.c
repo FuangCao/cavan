@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	int ret;
 	int c, action = -1;
 	struct ext2_desc desc;
-	const char *pathname;
+	const char *pathname = NULL;
 	struct cavan_ext2_file *fp;
 
 	while ((c = getopt(argc, argv, "r:R:l:L:")) != EOF)
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (action < 0)
+	if (action < 0 || pathname == NULL)
 	{
 		error_msg("no action");
 		show_usage();

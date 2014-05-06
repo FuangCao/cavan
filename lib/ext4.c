@@ -506,7 +506,7 @@ void cavan_ext4_dump_mmp_struct(const struct mmp_struct *mmp)
 	println("mmp_bdevname[32] = %s", mmp->mmp_bdevname);
 	println("mmp_check_interval = %d", mmp->mmp_check_interval);
 	println("mmp_pad1 = %d", mmp->mmp_pad1);
-	println("mmp_pad2[227] = %d", mmp->mmp_pad2[227]);
+	// println("mmp_pad2[227] = %d", mmp->mmp_pad2[227]);
 }
 
 void cavan_ext4_dump_gdt(struct cavan_ext4_fs *fs)
