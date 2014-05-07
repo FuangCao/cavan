@@ -824,7 +824,17 @@ static int cavan_ext4_traversal_inode(struct cavan_ext4_fs *fs, struct ext2_inod
 	walker->blocks= 0;
 	walker->max_blocks = inode->i_blocks;
 
-	if (inode->i_flags & EXT4_EXTENTS_FL)
+	if (inode->i_blocks == 0)
+	{
+		if (S_ISLNK(inode->i_mode))
+		{
+			walker->put_block(walker, inode->i_block, 1);
+			return inode->i_size;
+		}
+
+		return 0;
+	}
+	else if (inode->i_flags & EXT4_EXTENTS_FL)
 	{
 		return cavan_ext4_traversal_extent(walker, (struct ext4_extent_header *)inode->i_block);
 	}
@@ -958,29 +968,43 @@ out_free_file:
 static int cavan_ext4_read_file_put_block(struct cavan_ext4_walker *walker, void *data, size_t count)
 {
 	int ret;
-	size_t size, buff_size;
+	int action;
+	size_t size;
+	size_t remain;
 	struct cavan_ext4_read_file_context *context = walker->context;
 
 	size = count << walker->fs->block_shift;
-	buff_size = ADDR_SUB2(context->buff_end, context->buff);
-
-	if (size < buff_size)
+	remain = context->size - context->length;
+	if (size < remain)
 	{
-		ret = WALKER_ACTION_CONTINUE;
+		action = WALKER_ACTION_CONTINUE;
 	}
 	else
 	{
-		ret = WALKER_ACTION_STOP;
-		size = buff_size;
+		action = WALKER_ACTION_STOP;
+		size = remain;
 	}
 
-	mem_copy(context->buff, data, size);
-	context->buff = ADDR_ADD(context->buff, size);
+	ret = context->write(context, data, context->length, size);
+	if (ret < 0)
+	{
+		pr_red_info("context->write");
+		return ret;
+	}
 
-	return ret;
+	context->length += size;
+
+	return action;
 }
 
-ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t size)
+static int cavan_ext4_read_file_to_buff(struct cavan_ext4_read_file_context *context, void *buff, off_t offset, size_t size)
+{
+	mem_copy(ADDR_ADD(context->buff, offset), buff, size);
+
+	return size;
+}
+
+static ssize_t cavan_ext4_read_file_base(struct cavan_ext4_file *file, void *buff, size_t size, int (*write)(struct cavan_ext4_read_file_context *context, void *buff, off_t offset, size_t size), void *data)
 {
 	int ret;
 	struct cavan_ext4_walker walker;
@@ -991,23 +1015,38 @@ ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t si
 		size = file->inode.i_size;
 	}
 
-	if (S_ISLNK(file->inode.i_mode))
+	if (S_ISDIR(file->inode.i_mode))
 	{
-		text_ncopy(buff, (char *)file->inode.i_block, size + 1);
-		return size;
+		pr_red_info("this is a directory");
+		return -EISDIR;
 	}
 
-	if (S_ISREG(file->inode.i_mode) == 0)
+	if (buff)
 	{
-		pr_red_info("this isn't a file");
-		return -ENOTDIR;
+		context.write = cavan_ext4_read_file_to_buff;
+	}
+	else if (write)
+	{
+		if (size == 0)
+		{
+			size = file->inode.i_size;
+		}
+
+		context.write = write;
+	}
+	else
+	{
+		pr_red_info("buff and write mast set one");
+		return -EINVAL;
 	}
 
 	walker.put_block = cavan_ext4_read_file_put_block;
 
-	context.buff = buff;
 	context.file = file;
-	context.buff_end = ADDR_ADD(buff, size);
+	context.data = data;
+	context.length = 0;
+	context.size = size;
+	context.buff = buff;
 
 	ret = cavan_ext4_traversal_inode(file->fs, &file->inode, &walker, &context);
 	if (ret < 0)
@@ -1016,7 +1055,46 @@ ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t si
 		return ret;
 	}
 
-	return ADDR_SUB2(context.buff, buff);
+	return context.length;
+}
+
+static int cavan_ext4_read_file_to_file(struct cavan_ext4_read_file_context *context, void *buff, off_t offset, size_t size)
+{
+	return ffile_write(*(int *)context->data, buff, size);
+}
+
+inline ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t size)
+{
+	return cavan_ext4_read_file_base(file, buff, size, NULL, NULL);
+}
+
+ssize_t cavan_ext4_read_file2(struct cavan_ext4_file *file, int fd)
+{
+	return cavan_ext4_read_file_base(file, NULL, 0, cavan_ext4_read_file_to_file, &fd);
+}
+
+ssize_t cavan_ext4_read_file3(struct cavan_ext4_file *file, const char *pathname, int flags)
+{
+	int fd;
+	ssize_t rdlen;
+
+	fd = open(pathname, O_WRONLY | O_CREAT | flags, 0777);
+	if (fd < 0)
+	{
+		pr_error_info("open file %s", pathname);
+		return fd;
+	}
+
+	rdlen = cavan_ext4_read_file2(file, fd);
+
+	close(fd);
+
+	return rdlen;
+}
+
+inline ssize_t cavan_ext4_read_file4(struct cavan_ext4_file *file, size_t size, int (*write)(struct cavan_ext4_read_file_context *context, void *buff, off_t offset, size_t size), void *data)
+{
+	return cavan_ext4_read_file_base(file, NULL, size, write, data);
 }
 
 static int cavan_ext4_list_dir_put_block(struct cavan_ext4_walker *walker, void *data, size_t count)

@@ -131,20 +131,6 @@ int main(int argc, char *argv[])
 		{
 			ssize_t rdlen;
 
-			content = malloc(fp->inode.i_size);
-			if (content == NULL)
-			{
-				pr_error_info("malloc");
-				goto out_cavan_ext4_deinit;
-			}
-
-			rdlen = cavan_ext4_read_file(fp, content, fp->inode.i_size);
-			if (rdlen < 0)
-			{
-				pr_red_info("cavan_ext4_read_file");
-				goto out_free_content;
-			}
-
 			if (argc > 3)
 			{
 				char path_buff[1024];
@@ -161,10 +147,30 @@ int main(int argc, char *argv[])
 				}
 
 				println("%s@%s => %s", argv[1], argv[2], pathname);
-				file_writeto(pathname, content, rdlen, 0, O_TRUNC);
+
+				rdlen = cavan_ext4_read_file3(fp, pathname, O_TRUNC);
+				if (rdlen < 0)
+				{
+					pr_red_info("cavan_ext4_read_file3");
+					goto out_cavan_ext4_deinit;
+				}
 			}
 			else
 			{
+				content = malloc(fp->inode.i_size);
+				if (content == NULL)
+				{
+					pr_error_info("malloc");
+					goto out_cavan_ext4_deinit;
+				}
+
+				rdlen = cavan_ext4_read_file(fp, content, fp->inode.i_size);
+				if (rdlen < 0)
+				{
+					pr_red_info("cavan_ext4_read_file");
+					goto out_free_content;
+				}
+
 				print_ntext(content, rdlen);
 			}
 		}
