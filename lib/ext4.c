@@ -797,7 +797,7 @@ static int cavan_ext4_traversal_indirect(struct cavan_ext4_walker *walker, u32 *
 static int cavan_ext4_traversal_direct_indirect(struct cavan_ext4_walker *walker, u32 *blocks)
 {
 	int i;
-	int steps[] = {12, 1, 1, 1};
+	const static char steps[] = {12, 1, 1, 1};
 
 	for (i = 0; i < NELEM(steps); i++)
 	{
@@ -829,7 +829,6 @@ static int cavan_ext4_traversal_inode(struct cavan_ext4_fs *fs, struct ext2_inod
 		if (inode->i_size <= sizeof(inode->i_block))
 		{
 			walker->put_block(walker, inode->i_block, 1);
-			return inode->i_size;
 		}
 
 		return 0;
