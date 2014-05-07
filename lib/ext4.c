@@ -21,7 +21,8 @@
 #include <cavan/math.h>
 #include <cavan/ext4.h>
 
-#define CAVAN_EXT4_DEBUG	0
+#define CAVAN_EXT4_DEBUG				0
+#define CAVAN_DUMP_DIR_ENTRY_DETAIL		0
 
 char *cavan_ext4_uuid_tostring(const u8 uuid[16], char *buff, size_t size)
 {
@@ -406,25 +407,29 @@ void cavan_ext4_dump_ext2_super_block(const struct ext2_super_block *super)
 
 void cavan_ext4_dump_ext2_dir_entry(const struct ext2_dir_entry *entry)
 {
+#if CAVAN_DUMP_DIR_ENTRY_DETAIL
 	print_sep(60);
 	pr_bold_info("ext2 dir entry %p", entry);
 
 	println("inode = %d", entry->inode);
 	println("rec_len = %d", entry->rec_len);
-	println("name_len = %d", entry->name_len);
+#endif
+
 	println("name[%d] = %s", entry->name_len, entry->name);
 }
 
 void cavan_ext4_dump_ext2_dir_entry_2(const struct ext2_dir_entry_2 *entry)
 {
+#if CAVAN_DUMP_DIR_ENTRY_DETAIL
 	print_sep(60);
 	pr_bold_info("ext2 dir entry2 %p", entry);
 
 	println("inode = %d", entry->inode);
 	println("rec_len = %d", entry->rec_len);
-	println("name_len = %d", entry->name_len);
 	println("file_type = %d", entry->file_type);
-	println("name[%d] = %s", entry->name_len, entry->name);
+#endif
+
+	println("name[%d] = %s", entry->name_len, text_header(entry->name, entry->name_len));
 }
 
 void cavan_ext4_dump_mmp_struct(const struct mmp_struct *mmp)
@@ -843,6 +848,49 @@ static int cavan_ext4_traversal_inode(struct cavan_ext4_fs *fs, struct ext2_inod
 	}
 }
 
+static ssize_t cavan_ext4_read_symlink(struct cavan_ext4_fs *fs, struct ext2_inode_large *inode, char *buff, size_t size)
+{
+	size_t length;
+
+	if (size > inode->i_size)
+	{
+		size = inode->i_size;
+	}
+
+	length = sizeof(inode->i_block);
+	if (length > size)
+	{
+		length = size;
+	}
+
+	mem_copy(buff, inode->i_block, length);
+
+	return length;
+}
+
+static ssize_t cavan_ext4_read_symlink2(struct cavan_ext4_fs *fs, u32 inode_index, char *buff, size_t size)
+{
+	ssize_t rdlen;
+	struct ext2_inode_large inode;
+
+#if CAVAN_EXT4_DEBUG
+	println("inode_index = %d", inode_index);
+#endif
+
+	rdlen = cavan_ext4_read_inode(fs, inode_index, &inode);
+	if (rdlen < 0)
+	{
+		pr_red_info("cavan_ext4_read_inode");
+		return rdlen;
+	}
+
+#if CAVAN_EXT4_DEBUG
+	cavan_ext4_dump_ext2_inode((struct ext2_inode *)&inode);
+#endif
+
+	return cavan_ext4_read_symlink(fs, &inode, buff, size);
+}
+
 static int cavan_ext4_find_file_put_block(struct cavan_ext4_walker *walker, void *data, size_t count)
 {
 	struct ext2_dir_entry_2 *entry, *entry_end;
@@ -851,7 +899,6 @@ static int cavan_ext4_find_file_put_block(struct cavan_ext4_walker *walker, void
 	for (entry = data, entry_end = ADDR_ADD(entry, (count << walker->fs->block_shift) - CAVAN_EXT4_DIR_ENTRY_MIN_LEN); entry < entry_end; entry = ADDR_ADD(entry, entry->rec_len))
 	{
 #if CAVAN_EXT4_DEBUG
-		entry->name[entry->name_len] = 0;
 		cavan_ext4_dump_ext2_dir_entry_2(entry);
 #endif
 
@@ -874,6 +921,7 @@ static int cavan_ext4_find_file_put_block(struct cavan_ext4_walker *walker, void
 
 static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file *file, const char *pathname)
 {
+	char symlink[1024];
 	struct cavan_ext4_find_file_context context;
 	struct ext2_dir_entry_2 *entry = &context.entry;
 	struct cavan_ext4_walker walker =
@@ -881,6 +929,7 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 		.put_block = cavan_ext4_find_file_put_block
 	};
 
+label_find_from_root:
 	entry->inode = EXT2_ROOT_INO;
 	entry->file_type = EXT2_FT_DIR;
 
@@ -901,10 +950,15 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 		cavan_ext4_dump_ext2_inode(&file->inode);
 #endif
 
+label_skip_path_sep:
 		while (*pathname == '/')
 		{
 			pathname++;
 		}
+
+#if CAVAN_EXT4_DEBUG
+		println("pathname = %s", pathname);
+#endif
 
 		if (*pathname == 0)
 		{
@@ -926,6 +980,44 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 		if (ret < 0 || context.found == false)
 		{
 			ERROR_RETURN(ENOENT);
+		}
+
+		if (entry->file_type == EXT2_FT_SYMLINK)
+		{
+			rdlen = cavan_ext4_read_symlink2(fs, entry->inode, symlink, sizeof(symlink));
+			if (rdlen < 0)
+			{
+				pr_red_info("cavan_ext4_read_inode");
+				return rdlen;
+			}
+
+#if CAVAN_EXT4_DEBUG
+			symlink[rdlen] = 0;
+			println("symlink = %s", symlink);
+#endif
+
+			if (rdlen > 1 && symlink[rdlen - 1] == '/')
+			{
+				rdlen--;
+			}
+
+			text_ncopy(symlink + rdlen, p, sizeof(symlink) - rdlen);
+
+#if CAVAN_EXT4_DEBUG
+			println("set symlink path %s", symlink);
+#endif
+
+			pathname = symlink;
+			entry->file_type = EXT2_FT_DIR;
+
+			if (pathname[0] == '/')
+			{
+				goto label_find_from_root;
+			}
+			else
+			{
+				goto label_skip_path_sep;
+			}
 		}
 
 		pathname = p;
