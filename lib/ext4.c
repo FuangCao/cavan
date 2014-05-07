@@ -679,8 +679,14 @@ static int cavan_ext4_walker_put_block(struct cavan_ext4_walker *walker, struct 
 static int cavan_ext4_traversal_extent(struct cavan_ext4_fs *fs, struct ext4_extent_header *header, struct cavan_ext4_walker *walker)
 {
 	int ret;
-	size_t addr;
+	u64 start;
 	ssize_t rdlen;
+
+	if (header->magic != CAVAN_EXT4_EXTENT_MAGIC)
+	{
+		pr_red_info("invalid magic 0x%04x", header->magic);
+		return -EINVAL;
+	}
 
 	if (header->depth > 0)
 	{
@@ -691,8 +697,8 @@ static int cavan_ext4_traversal_extent(struct cavan_ext4_fs *fs, struct ext4_ext
 		{
 			char buff[fs->block_size];
 
-			addr = (u64)index->leaf_hi << 32 | index->leaf_lo;
-			rdlen = cavan_ext4_read_block(fs, addr, buff, 1);
+			start = (u64)index->leaf_hi << 32 | index->leaf_lo;
+			rdlen = cavan_ext4_read_block(fs, start, buff, 1);
 			if (rdlen < 0)
 			{
 				pr_red_info("cavan_ext4_read_block");
@@ -713,20 +719,24 @@ static int cavan_ext4_traversal_extent(struct cavan_ext4_fs *fs, struct ext4_ext
 
 		for (leaf_end = leaf + header->entries; leaf < leaf_end; leaf++)
 		{
-			char buff[leaf->length << fs->block_shift];
+			u64 end;
+			char buff[fs->block_size];
 
-			addr = (u64)leaf->start_hi << 32 | leaf->start_lo;
-			rdlen = cavan_ext4_read_block(fs, addr, buff, leaf->length);
-			if (rdlen < 0)
+			start = (u64)leaf->start_hi << 32 | leaf->start_lo;
+			for (end = start + leaf->length; start < end; start++)
 			{
-				pr_red_info("cavan_ext4_read_block");
-				return rdlen;
-			}
+				rdlen = cavan_ext4_read_block(fs, start, buff, 1);
+				if (rdlen < 0)
+				{
+					pr_red_info("cavan_ext4_read_block");
+					return rdlen;
+				}
 
-			ret = cavan_ext4_walker_put_block(walker, fs, buff, leaf->length);
-			if (ret != WALKER_ACTION_CONTINUE)
-			{
-				return ret;
+				ret = cavan_ext4_walker_put_block(walker, fs, buff, 1);
+				if (ret != WALKER_ACTION_CONTINUE)
+				{
+					return ret;
+				}
 			}
 		}
 	}

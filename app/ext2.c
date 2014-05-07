@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
 {
 	int fd;
 	int ret;
+	char *content = NULL;
 	struct cavan_ext4_fs fs;
 	struct ext2_app_device_context context;
 	struct cavan_block_device bdev =
@@ -123,48 +124,59 @@ int main(int argc, char *argv[])
 			if (ret < 0)
 			{
 				pr_red_info("cavan_ext4_list_dir");
+				goto out_cavan_ext4_deinit;
 			}
 		}
 		else
 		{
 			ssize_t rdlen;
-			char content[fp->inode.i_size];
 
-			rdlen = cavan_ext4_read_file(fp, content, sizeof(content));
+			content = malloc(fp->inode.i_size);
+			if (content == NULL)
+			{
+				pr_error_info("malloc");
+				goto out_cavan_ext4_deinit;
+			}
+
+			rdlen = cavan_ext4_read_file(fp, content, fp->inode.i_size);
 			if (rdlen < 0)
 			{
 				pr_red_info("cavan_ext4_read_file");
+				goto out_free_content;
 			}
-			else
+
+			if (argc > 3)
 			{
-				if (argc > 3)
+				char path_buff[1024];
+				const char *pathname;
+
+				if (file_type_test(argv[3], S_IFDIR))
 				{
-					char path_buff[1024];
-					const char *pathname;
-
-					if (file_type_test(argv[3], S_IFDIR))
-					{
-						text_basename_base(text_path_cat(path_buff, argv[3], NULL), argv[2]);
-						pathname = path_buff;
-					}
-					else
-					{
-						pathname = argv[3];
-					}
-
-					println("%s => %s", argv[2], pathname);
-					file_writeto(pathname, content, rdlen, 0, O_TRUNC);
+					text_basename_base(text_path_cat(path_buff, argv[3], NULL), argv[2]);
+					pathname = path_buff;
 				}
 				else
 				{
-					print_ntext(content, rdlen);
+					pathname = argv[3];
 				}
+
+				println("%s => %s", argv[2], pathname);
+				file_writeto(pathname, content, rdlen, 0, O_TRUNC);
+			}
+			else
+			{
+				print_ntext(content, rdlen);
 			}
 		}
 
 		cavan_ext4_close_file(fp);
 	}
 
+out_free_content:
+	if (content)
+	{
+		free(content);
+	}
 out_cavan_ext4_deinit:
 	cavan_ext4_deinit(&fs);
 out_cavan_block_device_deinit:
