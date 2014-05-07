@@ -20,6 +20,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/device.h>
 
 #define CAVAN_EXT4_BOOT_BLOCK_SIZE			1024
 #define CAVAN_EXT4_DIR_ENTRY_HEADER_LEN		MOFS(struct ext2_dir_entry_2, name)
@@ -895,11 +896,6 @@ struct ext4_extent_leaf
 
 struct cavan_ext4_fs
 {
-	void *hw_data;
-	int hw_block_shift;
-	u16 hw_block_size;
-	u32 hw_block_mask;
-
 	int block_shift;
 	u16 block_size;
 	u32 block_mask;
@@ -918,9 +914,7 @@ struct cavan_ext4_fs
 	struct ext2_super_block super;
 	struct ext2_group_desc *gdt32;
 	struct ext4_group_desc *gdt64;
-
-	ssize_t (*read_block)(struct cavan_ext4_fs *fs, size_t index, void *buff, size_t count);
-	ssize_t (*write_block)(struct cavan_ext4_fs *fs, size_t index, const void *buff, size_t count);
+	struct cavan_block_device *bdev;
 };
 
 struct cavan_ext4_file
@@ -985,7 +979,7 @@ void cavan_ext4_dump_gdt(struct cavan_ext4_fs *fs);
 
 // ================================================================================
 
-int cavan_ext4_init(struct cavan_ext4_fs *fs);
+int cavan_ext4_init(struct cavan_ext4_fs *fs, struct cavan_block_device *bdev);
 void cavan_ext4_deinit(struct cavan_ext4_fs *fs);
 struct cavan_ext4_file *cavan_ext4_open_file(struct cavan_ext4_fs *fs, const char *pathname);
 ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t size);

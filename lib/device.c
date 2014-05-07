@@ -2033,41 +2033,121 @@ int get_device_statfs(const char *devpath, const char *fstype, struct statfs *st
 
 // ================================================================================
 
-static ssize_t cavan_block_device_read_data_dummy(struct cavan_block_device *dev, off_t offset, void *buff, size_t count)
+static ssize_t cavan_block_device_read_byte_dummy(struct cavan_block_device *bdev, off_t offset, void *buff, size_t size)
 {
-	return -EFAULT;
+	off_t index;
+	void *buff_end;
+
+	index = offset >> bdev->block_shift;
+	offset &= bdev->block_mask;
+
+	for (buff_end = ADDR_ADD(buff, size); buff < buff_end; index++, offset = 0)
+	{
+		ssize_t rdlen;
+		size_t remain, length;
+		char block[bdev->block_size];
+
+		rdlen = bdev->read_block(bdev, index, block, 1);
+		if (rdlen < 0)
+		{
+			pr_red_info("dev->read_block");
+			return rdlen;
+		}
+
+		length = bdev->block_size - offset;
+		remain = ADDR_SUB2(buff_end, buff);
+		if (length > remain)
+		{
+			length = remain;
+		}
+
+		mem_copy(buff, block + offset, length);
+		buff = ADDR_ADD(buff, length);
+	}
+
+	return size;
 }
 
-static ssize_t cavan_block_device_write_data_dummy(struct cavan_block_device *dev, off_t offset, const void *buff, size_t count)
+static ssize_t cavan_block_device_write_byte_dummy(struct cavan_block_device *bdev, off_t offset, const void *buff, size_t size)
 {
-	return -EFAULT;
+	off_t index;
+	const void *buff_end;
+
+	index = offset >> bdev->block_shift;
+	offset &= bdev->block_mask;
+
+	for (buff_end = ADDR_ADD(buff, size); buff < buff_end; index++, offset = 0)
+	{
+		ssize_t wrlen;
+		size_t remain;
+		size_t length;
+
+		remain = ADDR_SUB2(buff_end, buff);
+
+		if (offset > 0 || remain < bdev->block_size)
+		{
+			ssize_t rdlen;
+			char block[bdev->block_size];
+
+			rdlen = bdev->read_block(bdev, index, block, 1);
+			if (rdlen < 0)
+			{
+				pr_red_info("dev->read_block");
+				return rdlen;
+			}
+
+			length = bdev->block_size - offset;
+			if (length > remain)
+			{
+				length = remain;
+			}
+
+			mem_copy(block + offset, buff, length);
+			wrlen = bdev->write_block(bdev, index, block, 1);
+		}
+		else
+		{
+			wrlen = bdev->write_block(bdev, index, buff, 1);
+			length = bdev->block_size;
+		}
+
+		if (wrlen < 0)
+		{
+			pr_red_info("dev->write_block");
+			return wrlen;
+		}
+
+		buff = ADDR_ADD(buff, length);
+	}
+
+	return size;
 }
 
-int cavan_block_device_init(struct cavan_block_device *dev, void *context)
+int cavan_block_device_init(struct cavan_block_device *bdev, void *context)
 {
-	if (dev->read_block == NULL || dev->write_block == NULL)
+	if (bdev->read_block == NULL || bdev->write_block == NULL)
 	{
 		pr_red_info("Please set read_block and write_block");
 		return -EINVAL;
 	}
 
-	if (dev->block_size)
+	if (bdev->block_size)
 	{
 		int shift;
 
-		for (shift = 0; ((1 << shift) & dev->block_size) == 0; shift++);
+		for (shift = 0; ((1 << shift) & bdev->block_size) == 0; shift++);
 
-		if (dev->block_shift && dev->block_shift != shift)
+		if (bdev->block_shift && bdev->block_shift != shift)
 		{
 			pr_red_info("block shift not match");
 			return -EINVAL;
 		}
 
-		dev->block_shift = shift;
+		bdev->block_shift = shift;
 	}
-	else if (dev->block_shift)
+	else if (bdev->block_shift)
 	{
-		dev->block_size = 1 << dev->block_shift;
+		bdev->block_size = 1 << bdev->block_shift;
 	}
 	else
 	{
@@ -2075,22 +2155,26 @@ int cavan_block_device_init(struct cavan_block_device *dev, void *context)
 		return -EINVAL;
 	}
 
-	if (dev->read_data == NULL)
+	if (bdev->read_byte == NULL)
 	{
-		dev->read_data = cavan_block_device_read_data_dummy;
+		bdev->read_byte = cavan_block_device_read_byte_dummy;
 	}
 
-	if (dev->write_data == NULL)
+	if (bdev->write_byte == NULL)
 	{
-		dev->write_data = cavan_block_device_write_data_dummy;
+		bdev->write_byte = cavan_block_device_write_byte_dummy;
 	}
 
-	dev->context = context;
-	dev->block_mask = dev->block_size - 1;
+	bdev->context = context;
+	bdev->block_mask = bdev->block_size - 1;
+
+	println("block_size = %d", bdev->block_size);
+	println("block_shift = %d", bdev->block_shift);
+	println("block_mask = 0x%08x", bdev->block_mask);
 
 	return 0;
 }
 
-void cavan_block_device_deinit(struct cavan_block_device *dev)
+void cavan_block_device_deinit(struct cavan_block_device *bdev)
 {
 }

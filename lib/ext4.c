@@ -21,7 +21,7 @@
 #include <cavan/math.h>
 #include <cavan/ext4.h>
 
-#define CAVAN_EXT4_DEBUG	1
+#define CAVAN_EXT4_DEBUG	0
 
 static inline size_t cavan_ext4_get_block_hw_addr(struct cavan_ext4_fs *fs, size_t index)
 {
@@ -36,44 +36,13 @@ static inline size_t cavan_ext4_get_block_hw_offset(struct cavan_ext4_fs *fs, si
 static inline ssize_t cavan_ext4_read_block(struct cavan_ext4_fs *fs, size_t index, void *buff, size_t count)
 {
 	index = cavan_ext4_get_block_hw_addr(fs, index);
-	return fs->read_block(fs, index, buff, count << fs->hw_blocks_per_block_shift);
+	return fs->bdev->read_block(fs->bdev, index, buff, count << fs->hw_blocks_per_block_shift);
 }
 
 static inline ssize_t cavan_ext4_write_block(struct cavan_ext4_fs *fs, size_t index, const void *buff, size_t count)
 {
 	index = cavan_ext4_get_block_hw_addr(fs, index);
-	return fs->write_block(fs, index, buff, count << fs->hw_blocks_per_block_shift);
-}
-
-static ssize_t cavan_ext4_read_partital_data(struct cavan_ext4_fs *fs, off_t offset, void *buff, size_t size)
-{
-	char *blocks;
-	size_t count;
-	ssize_t rdlen;
-	size_t start, end;
-
-	start = offset >> fs->hw_block_shift;
-	end = RIGHT_SHIFT_CEIL(offset + size, fs->hw_block_shift);
-	count = end - start + 1;
-
-	blocks = alloca(count << fs->hw_block_shift);
-	if (blocks == NULL)
-	{
-		pr_error_info("alloca");
-		return -ENOMEM;
-	}
-
-	rdlen = fs->read_block(fs, start, blocks, count);
-	if (rdlen < 0)
-	{
-		pr_red_info("fs->read_block");
-		return rdlen;
-	}
-
-	offset &= fs->hw_block_mask;
-	mem_copy(buff, blocks + offset, size);
-
-	return size;
+	return fs->bdev->write_block(fs->bdev, index, buff, count << fs->hw_blocks_per_block_shift);
 }
 
 static struct ext2_group_desc *cavan_ext4_get_group(struct cavan_ext4_fs *fs, u32 index)
@@ -105,28 +74,10 @@ static inline int cavan_ext4_get_dir_entry_length(struct ext2_dir_entry_2 *entry
 
 static ssize_t cavan_ext4_read_inode(struct cavan_ext4_fs *fs, u32 index, struct ext2_inode_large *inode)
 {
-#if 0
-	ssize_t rdlen;
-	u32 table = cavan_ext4_inode_index_to_table(fs, index);
-	u32 offset = (index - 1) % fs->inodes_per_group;
-	size_t block_index = table + offset / fs->inodes_per_block;
-	char buff[fs->block_size];
-
-	rdlen = cavan_ext4_read_block(fs, block_index, buff, 1);
-	if (rdlen < 0)
-	{
-		pr_red_info("cavan_ext4_read_block");
-		return rdlen;
-	}
-
-	offset %= fs->inodes_per_block;
-	mem_copy(inode, buff + offset % fs->inodes_per_block * fs->inode_size, fs->inode_size);
-#else
 	u32 table = cavan_ext4_inode_index_to_table(fs, index);
 	off_t offset = cavan_ext4_get_block_hw_offset(fs, table) + ((index - 1) % fs->inodes_per_group) * fs->inode_size;
 
-	return cavan_ext4_read_partital_data(fs, offset, inode, fs->inode_size);
-#endif
+	return fs->bdev->read_byte(fs->bdev, offset, inode, fs->inode_size);
 }
 
 // ================================================================================
@@ -574,86 +525,46 @@ void cavan_ext4_dump_gdt(struct cavan_ext4_fs *fs)
 
 // ================================================================================
 
-static ssize_t cavan_ext4_read_super_block(struct cavan_ext4_fs *fs, struct ext2_super_block *super)
+static inline ssize_t cavan_ext4_read_super_block(struct cavan_ext4_fs *fs, struct ext2_super_block *super)
 {
-	size_t count = (sizeof(*super) + fs->hw_block_size - 1) >> fs->hw_block_shift;
-	return fs->read_block(fs, CAVAN_EXT4_BOOT_BLOCK_SIZE >> fs->hw_block_shift, super, count);
+	return fs->bdev->read_byte(fs->bdev, CAVAN_EXT4_BOOT_BLOCK_SIZE, super, sizeof(*super));
 }
 
 static void *cavan_ext4_read_gdt(struct cavan_ext4_fs *fs)
 {
 	void *gdt;
 	size_t size;
-	size_t count;
 	ssize_t rdlen;
 
 	size = fs->super.s_desc_size * fs->group_count;
-	count = RIGHT_SHIFT_CEIL(size, fs->block_shift);
-	gdt = malloc(count << fs->block_shift);
+	gdt = malloc(size);
 	if (gdt == NULL)
 	{
 		pr_error_info("malloc");
 		return NULL;
 	}
 
-	rdlen = cavan_ext4_read_block(fs, fs->first_data_block + 1, gdt, count);
+	rdlen = fs->bdev->read_byte(fs->bdev, fs->block_size + fs->hw_boot_block_size, gdt, size);
 	if (rdlen < 0)
 	{
 		pr_red_info("fs->read_block");
 		goto out_free_gdt;
 	}
 
-	return realloc(gdt, size);
+	return gdt;
 
 out_free_gdt:
 	free(gdt);
 	return NULL;
 }
 
-int cavan_ext4_init(struct cavan_ext4_fs *fs)
+int cavan_ext4_init(struct cavan_ext4_fs *fs, struct cavan_block_device *bdev)
 {
 	int ret;
 	void *gdt;
-	struct ext2_super_block *super;
+	struct ext2_super_block *super = &fs->super;
 
-	if (fs->read_block == NULL || fs->write_block == NULL)
-	{
-		pr_red_info("Please set read_block and write_block method");
-		return -EINVAL;
-	}
-
-	if (fs->hw_block_size)
-	{
-		int shift;
-
-		for (shift = 0; ((1 << shift) & fs->hw_block_size) == 0; shift++);
-
-		if (fs->hw_block_shift && fs->hw_block_shift != shift)
-		{
-			pr_red_info("hw block shift not match!");
-			return -EINVAL;
-		}
-
-		fs->hw_block_shift = shift;
-	}
-	else if (fs->hw_block_shift)
-	{
-		fs->hw_block_size = 1 << fs->hw_block_shift;
-	}
-	else
-	{
-		pr_red_info("Pleave give block size or block shift");
-		return -EINVAL;
-	}
-
-	fs->hw_block_mask = fs->hw_block_size - 1;
-
-#if CAVAN_EXT4_DEBUG
-	println("hw_block_shift = %d", fs->hw_block_shift);
-	println("hw_block_size = %d", fs->hw_block_size);
-#endif
-
-	super = &fs->super;
+	fs->bdev = bdev;
 
 	ret = cavan_ext4_read_super_block(fs, super);
 	if (ret < 0)
@@ -686,15 +597,15 @@ int cavan_ext4_init(struct cavan_ext4_fs *fs)
 	println("block_size = %d", fs->block_size);
 #endif
 
-	if (fs->block_size < fs->hw_block_size)
+	if (fs->block_size < fs->bdev->block_size)
 	{
-		pr_red_info("hw block size to large");
+		pr_red_info("block device block size to large");
 		return -EINVAL;
 	}
 
-	fs->hw_boot_block_count = fs->block_size > CAVAN_EXT4_BOOT_BLOCK_SIZE ? 0 : (CAVAN_EXT4_BOOT_BLOCK_SIZE >> fs->hw_block_shift);
-	fs->hw_boot_block_size = fs->hw_boot_block_count << fs->hw_block_shift;
-	fs->hw_blocks_per_block_shift = fs->block_shift - fs->hw_block_shift;
+	fs->hw_boot_block_count = fs->block_size > CAVAN_EXT4_BOOT_BLOCK_SIZE ? 0 : (CAVAN_EXT4_BOOT_BLOCK_SIZE >> fs->bdev->block_shift);
+	fs->hw_boot_block_size = fs->hw_boot_block_count << fs->bdev->block_shift;
+	fs->hw_blocks_per_block_shift = fs->block_shift - fs->bdev->block_shift;
 	fs->hw_blocks_per_block_count = 1 << fs->hw_blocks_per_block_shift;
 	fs->group_count = DIV_CEIL(super->s_blocks_count - super->s_first_data_block, super->s_blocks_per_group);
 
