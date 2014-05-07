@@ -26,38 +26,35 @@
 
 #if __WORDSIZE > 32
 #define CAVAN_WORD_BYTES			8
-#define CAVAN_WORD_MASK				0x07
 #elif __WORDSIZE > 16
 #define CAVAN_WORD_BYTES			4
-#define CAVAN_WORD_MASK				0x03
 #else
 #define CAVAN_WORD_BYTES			2
-#define CAVAN_WORD_MASK				0x01
 #endif
 
-#define CAVAN_SIZE_ALIGN(size, bytes, mask) \
-	(((size) + (bytes) - 1) & (~(typeof(size))(mask)))
+#define CAVAN_SIZE_ALIGN(size, mask) \
+	(((size) + (mask)) & (~(typeof(size))(mask)))
 
 #define CAVAN_SIZE_ALIGN_DOWN(size, mask) \
 	((size) & (~(typeof(size))(mask)))
 
-#define CAVAN_ADDR_ALIGN(addr, bytes, mask) \
-	((typeof(addr))CAVAN_SIZE_ALIGN((long)(addr), bytes, mask))
+#define CAVAN_ADDR_ALIGN(addr, bytes) \
+	((typeof(addr))CAVAN_SIZE_ALIGN((long)(addr), bytes - 1))
 
-#define CAVAN_ADDR_ALIGN_DOWN(addr, mask) \
-	((typeof(addr))CAVAN_SIZE_ALIGN_DOWN((long)(addr), mask)))
+#define CAVAN_ADDR_ALIGN_DOWN(addr, bytes) \
+	((typeof(addr))CAVAN_SIZE_ALIGN_DOWN((long)(addr), bytes - 1)))
 
 #define CAVAN_SIZE_WORD_ALIGN(size) \
-	CAVAN_SIZE_ALIGN(size, CAVAN_WORD_BYTES, CAVAN_WORD_MASK)
+	CAVAN_SIZE_ALIGN(size, CAVAN_WORD_BYTES)
 
 #define CAVAN_SIZE_WORD_ALIGN_DOWN(size) \
-	CAVAN_SIZE_ALIGN_DOWN(size, CAVAN_WORD_MASK)
+	CAVAN_SIZE_ALIGN_DOWN(size, CAVAN_WORD_BYTES)
 
 #define CAVAN_ADDR_WORD_ALIGN(addr) \
-	CAVAN_ADDR_ALIGN(addr, CAVAN_WORD_BYTES, CAVAN_WORD_MASK)
+	CAVAN_ADDR_ALIGN(addr, CAVAN_WORD_BYTES)
 
 #define CAVAN_ADDR_WORD_ALIGN_DOWN(addr) \
-	CAVAN_ADDR_ALIGN_DOWN(addr, CAVAN_WORD_BYTES, CAVAN_WORD_MASK)
+	CAVAN_ADDR_ALIGN_DOWN(addr, CAVAN_WORD_BYTES)
 
 #define CAVAN_NODE_IS_FREE(size) \
 	(((size) & CAVAN_NODE_ALLOCATED_MASK) == 0)
