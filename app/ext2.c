@@ -22,33 +22,24 @@
 
 #define EXT2_APP_DEVICE_BLOCK_SIZE		512
 
-struct ext2_app_device_context
-{
-	int fd;
-};
-
 static ssize_t ext2_app_device_read_block(struct cavan_block_device *bdev, size_t index, void *buff, size_t count)
 {
-	struct ext2_app_device_context *context = bdev->context;
-	return ffile_readfrom(context->fd, buff, count * bdev->block_size, index * bdev->block_size);
+	return ffile_readfrom(*(int *)bdev->context, buff, count * bdev->block_size, index * bdev->block_size);
 }
 
 static ssize_t ext2_app_device_write_block(struct cavan_block_device *bdev, size_t index, const void *buff, size_t count)
 {
-	struct ext2_app_device_context *context = bdev->context;
-	return ffile_writeto(context->fd, buff, count * bdev->block_size, index * bdev->block_size);
+	return ffile_writeto(*(int *)bdev->context, buff, count * bdev->block_size, index * bdev->block_size);
 }
 
 static ssize_t ext2_app_device_read_byte(struct cavan_block_device *bdev, off_t offset, void *buff, size_t size)
 {
-	struct ext2_app_device_context *context = bdev->context;
-	return ffile_readfrom(context->fd, buff, size, offset);
+	return ffile_readfrom(*(int *)bdev->context, buff, size, offset);
 }
 
 static ssize_t ext2_app_device_write_byte(struct cavan_block_device *bdev, off_t offset, const void *buff, size_t size)
 {
-	struct ext2_app_device_context *context = bdev->context;
-	return ffile_writeto(context->fd, buff, size, offset);
+	return ffile_writeto(*(int *)bdev->context, buff, size, offset);
 }
 
 static void ext2_app_device_list_dir_handler(struct ext2_dir_entry_2 *entry, void *data)
@@ -69,7 +60,6 @@ int main(int argc, char *argv[])
 	int ret;
 	char *content = NULL;
 	struct cavan_ext4_fs fs;
-	struct ext2_app_device_context context;
 	struct cavan_block_device bdev =
 	{
 		.block_shift = 0,
@@ -90,9 +80,7 @@ int main(int argc, char *argv[])
 		return fd;
 	}
 
-	context.fd = fd;
-
-	ret = cavan_block_device_init(&bdev, &context);
+	ret = cavan_block_device_init(&bdev, &fd);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_block_device_init");
@@ -189,6 +177,6 @@ out_cavan_ext4_deinit:
 out_cavan_block_device_deinit:
 	cavan_block_device_deinit(&bdev);
 out_close_fd:
-	close(context.fd);
+	close(fd);
 	return ret;
 }
