@@ -944,10 +944,9 @@ struct cavan_ext4_walker
 
 struct cavan_ext4_find_file_context
 {
-	bool found;
+	u32 inode;
 	u16 name_len;
 	const char *filename;
-	struct ext2_dir_entry_2 entry;
 };
 
 struct cavan_ext4_read_file_context

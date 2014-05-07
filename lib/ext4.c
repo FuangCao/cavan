@@ -249,7 +249,7 @@ static void cavan_ext4_dump_ext2_inode_base(const struct ext2_inode *inode)
 	println("i_gid = %d", inode->i_gid);
 	println("i_links_count = %d", inode->i_links_count);
 	println("i_blocks = %d", inode->i_blocks);
-	println("i_flags = %d", inode->i_flags);
+	println("i_flags = 0x%08x", inode->i_flags);
 
 	if (inode->i_flags & EXT4_EXTENTS_FL)
 	{
@@ -868,6 +868,7 @@ static ssize_t cavan_ext4_read_symlink(struct cavan_ext4_fs *fs, struct ext2_ino
 	return length;
 }
 
+#if 0
 static ssize_t cavan_ext4_read_symlink2(struct cavan_ext4_fs *fs, u32 inode_index, char *buff, size_t size)
 {
 	ssize_t rdlen;
@@ -890,6 +891,7 @@ static ssize_t cavan_ext4_read_symlink2(struct cavan_ext4_fs *fs, u32 inode_inde
 
 	return cavan_ext4_read_symlink(fs, &inode, buff, size);
 }
+#endif
 
 static int cavan_ext4_find_file_put_block(struct cavan_ext4_walker *walker, void *data, size_t count)
 {
@@ -910,8 +912,7 @@ static int cavan_ext4_find_file_put_block(struct cavan_ext4_walker *walker, void
 
 		if (entry->name_len == context->name_len && strncmp(entry->name, context->filename, context->name_len) == 0)
 		{
-			context->found = true;
-			mem_copy(&context->entry, entry, cavan_ext4_get_dir_entry_length(entry));
+			context->inode = entry->inode;
 			return WALKER_ACTION_STOP;
 		}
 	}
@@ -921,17 +922,16 @@ static int cavan_ext4_find_file_put_block(struct cavan_ext4_walker *walker, void
 
 static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file *file, const char *pathname)
 {
+	u32 inode_index;
 	char symlink[1024];
+	struct ext2_inode *inode = &file->inode;
 	struct cavan_ext4_find_file_context context;
-	struct ext2_dir_entry_2 *entry = &context.entry;
 	struct cavan_ext4_walker walker =
 	{
 		.put_block = cavan_ext4_find_file_put_block
 	};
 
-label_find_from_root:
-	entry->inode = EXT2_ROOT_INO;
-	entry->file_type = EXT2_FT_DIR;
+	context.inode = inode_index = EXT2_ROOT_INO;
 
 	while (1)
 	{
@@ -939,7 +939,7 @@ label_find_from_root:
 		ssize_t rdlen;
 		const char *p;
 
-		rdlen = cavan_ext4_read_inode(fs, entry->inode, &file->inode_large);
+		rdlen = cavan_ext4_read_inode(fs, context.inode, &file->inode_large);
 		if (rdlen < 0)
 		{
 			print_error("cavan_ext4_read_inode");
@@ -947,44 +947,12 @@ label_find_from_root:
 		}
 
 #if CAVAN_EXT4_DEBUG
-		cavan_ext4_dump_ext2_inode(&file->inode);
+		cavan_ext4_dump_ext2_inode(inode);
 #endif
 
-label_skip_path_sep:
-		while (*pathname == '/')
+		if (S_ISLNK(inode->i_mode))
 		{
-			pathname++;
-		}
-
-#if CAVAN_EXT4_DEBUG
-		println("pathname = %s", pathname);
-#endif
-
-		if (*pathname == 0)
-		{
-			break;
-		}
-
-		if (entry->file_type != EXT2_FT_DIR)
-		{
-			ERROR_RETURN(ENOENT);
-		}
-
-		for (p = pathname; *p && *p != '/'; p++);
-
-		context.found = false;
-		context.filename = pathname;
-		context.name_len = p - pathname;
-
-		ret = cavan_ext4_traversal_inode(fs, &file->inode, &walker, &context);
-		if (ret < 0 || context.found == false)
-		{
-			ERROR_RETURN(ENOENT);
-		}
-
-		if (entry->file_type == EXT2_FT_SYMLINK)
-		{
-			rdlen = cavan_ext4_read_symlink2(fs, entry->inode, symlink, sizeof(symlink));
+			rdlen = cavan_ext4_read_symlink(fs, &file->inode_large, symlink, sizeof(symlink));
 			if (rdlen < 0)
 			{
 				pr_red_info("cavan_ext4_read_inode");
@@ -1001,23 +969,45 @@ label_skip_path_sep:
 				rdlen--;
 			}
 
-			text_ncopy(symlink + rdlen, p, sizeof(symlink) - rdlen);
-
-#if CAVAN_EXT4_DEBUG
-			println("set symlink path %s", symlink);
-#endif
+			text_ncopy(symlink + rdlen, pathname, sizeof(symlink) - rdlen);
+			println("symlink full path = %s", symlink);
 
 			pathname = symlink;
-			entry->file_type = EXT2_FT_DIR;
+			context.inode = pathname[0] == '/' ? EXT2_ROOT_INO : inode_index;
+			continue;
+		}
 
-			if (pathname[0] == '/')
-			{
-				goto label_find_from_root;
-			}
-			else
-			{
-				goto label_skip_path_sep;
-			}
+		while (*pathname == '/')
+		{
+			pathname++;
+		}
+
+#if CAVAN_EXT4_DEBUG
+		println("pathname = %s", pathname);
+#endif
+
+		if (*pathname == 0)
+		{
+			break;
+		}
+
+		if (S_ISDIR(inode->i_mode) == 0)
+		{
+			ERROR_RETURN(ENOENT);
+		}
+
+		for (p = pathname; *p && *p != '/'; p++);
+
+		context.filename = pathname;
+		context.name_len = p - pathname;
+
+		inode_index = context.inode;
+		context.inode = 0;
+
+		ret = cavan_ext4_traversal_inode(fs, &file->inode, &walker, &context);
+		if (ret < 0 || context.inode == 0)
+		{
+			ERROR_RETURN(ENOENT);
 		}
 
 		pathname = p;
@@ -1222,7 +1212,6 @@ static int cavan_ext4_list_dir_put_block(struct cavan_ext4_walker *walker, void 
 	for (entry = data, entry_end = ADDR_ADD(entry, (count << walker->fs->block_shift) - CAVAN_EXT4_DIR_ENTRY_MIN_LEN); entry < entry_end; entry = ADDR_ADD(entry, entry->rec_len))
 	{
 #if CAVAN_EXT4_DEBUG
-		entry->name[entry->name_len] = 0;
 		cavan_ext4_dump_ext2_dir_entry_2(entry);
 #endif
 
