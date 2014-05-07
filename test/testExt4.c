@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 				ssize_t rdlen;
 				char buff[fp->inode.i_size];
 
-				rdlen = cavan_ext4_read_file(fp, buff, sizeof(buff));
+				rdlen = cavan_ext4_read_file(fp, 10, buff, sizeof(buff));
 				if (rdlen < 0)
 				{
 					pr_red_info("cavan_ext4_read_file");
@@ -141,6 +141,7 @@ int main(int argc, char *argv[])
 					println("rdlen = " PRINT_FORMAT_SIZE, rdlen);
 #endif
 					print_ntext(buff, rdlen);
+					print_char('\n');
 				}
 			}
 

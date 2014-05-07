@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 
 				println("%s@%s => %s", argv[1], argv[2], pathname);
 
-				rdlen = cavan_ext4_read_file3(fp, pathname, O_TRUNC);
+				rdlen = cavan_ext4_read_file3(fp, 0, pathname, O_TRUNC);
 				if (rdlen < 0)
 				{
 					pr_red_info("cavan_ext4_read_file3");
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 					goto out_cavan_ext4_deinit;
 				}
 
-				rdlen = cavan_ext4_read_file(fp, content, fp->inode.i_size);
+				rdlen = cavan_ext4_read_file(fp, 0, content, fp->inode.i_size);
 				if (rdlen < 0)
 				{
 					pr_red_info("cavan_ext4_read_file");
@@ -172,6 +172,7 @@ int main(int argc, char *argv[])
 				}
 
 				print_ntext(content, rdlen);
+				print_char('\n');
 			}
 		}
 

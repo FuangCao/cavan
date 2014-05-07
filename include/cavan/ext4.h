@@ -956,7 +956,9 @@ struct cavan_ext4_read_file_context
 	struct cavan_ext4_file *file;
 
 	void *buff;
+	size_t skip;
 	size_t size;
+	size_t remain;
 	size_t length;
 
 	int (*write)(struct cavan_ext4_read_file_context *context, void *buff, off_t offset, size_t size);
@@ -1000,9 +1002,9 @@ ssize_t cavan_ext4_read_inode(struct cavan_ext4_fs *fs, u32 index, struct ext2_i
 int cavan_ext4_init(struct cavan_ext4_fs *fs, struct cavan_block_device *bdev);
 void cavan_ext4_deinit(struct cavan_ext4_fs *fs);
 struct cavan_ext4_file *cavan_ext4_open_file(struct cavan_ext4_fs *fs, const char *pathname);
-ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t size);
-ssize_t cavan_ext4_read_file2(struct cavan_ext4_file *file, int fd);
-ssize_t cavan_ext4_read_file3(struct cavan_ext4_file *file, const char *pathname, int flags);
-ssize_t cavan_ext4_read_file4(struct cavan_ext4_file *file, size_t size, int (*write)(struct cavan_ext4_read_file_context *context, void *buff, off_t offset, size_t size), void *data);
+ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, size_t skip, void *buff, size_t size);
+ssize_t cavan_ext4_read_file2(struct cavan_ext4_file *file, size_t skip, int fd);
+ssize_t cavan_ext4_read_file3(struct cavan_ext4_file *file, size_t skip, const char *pathname, int flags);
+ssize_t cavan_ext4_read_file4(struct cavan_ext4_file *file, size_t skip, size_t size, int (*write)(struct cavan_ext4_read_file_context *context, void *buff, off_t offset, size_t size), void *data);
 int cavan_ext4_list_dir(struct cavan_ext4_file *file, void (*handler)(struct ext2_dir_entry_2 *entry, void *data), void *data);
 void cavan_ext4_close_file(struct cavan_ext4_file *file);
