@@ -20,6 +20,7 @@
 #include <cavan.h>
 #include <cavan/ext4.h>
 
+#define TEST_EXT4_DEBUG					0
 #define TEST_EXT4_DEVICE_BLOCK_SIZE		512
 
 struct test_ext4_device_context
@@ -32,8 +33,10 @@ static ssize_t test_ext4_device_read_block(struct cavan_block_device *dev, size_
 	off_t location = index * dev->block_size;
 	struct test_ext4_device_context *context = dev->context;
 
+#if TEST_EXT4_DEBUG
 	pr_bold_info("read_block: index = " PRINT_FORMAT_SIZE ", count = " PRINT_FORMAT_SIZE, index, count);
 	pr_bold_info("location = " PRINT_FORMAT_OFF, location);
+#endif
 
 	return ffile_readfrom(context->fd, buff, count * dev->block_size, location);
 }
@@ -42,9 +45,23 @@ static ssize_t test_ext4_device_write_block(struct cavan_block_device *dev, size
 {
 	struct test_ext4_device_context *context = dev->context;
 
+#if TEST_EXT4_DEBUG
 	pr_bold_info("write_block: index = " PRINT_FORMAT_SIZE ", count = " PRINT_FORMAT_SIZE, index, count);
+#endif
 
 	return ffile_writeto(context->fd, buff, count * dev->block_size, index * dev->block_size);
+}
+
+static void test_ext4_device_list_dir_handler(struct ext2_dir_entry_2 *entry, void *data)
+{
+	print_ntext(entry->name, entry->name_len);
+
+	if (entry->file_type == EXT2_FT_DIR)
+	{
+		print_char('/');
+	}
+
+	print_char('\n');
 }
 
 int main(int argc, char *argv[])
@@ -100,19 +117,31 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			ssize_t rdlen;
-			char buff[fp->inode.i_size];
-
-			rdlen = cavan_ext4_read_file(fp, buff, sizeof(buff));
-			if (rdlen < 0)
+			if (S_ISDIR(fp->inode.i_mode))
 			{
-				pr_red_info("cavan_ext4_read_file");
+				ret = cavan_ext4_list_dir(fp, test_ext4_device_list_dir_handler, fp);
+				if (ret < 0)
+				{
+					pr_red_info("cavan_ext4_list_dir");
+				}
 			}
 			else
 			{
-				println("rdlen = " PRINT_FORMAT_SIZE, rdlen);
-				print_ntext(buff, rdlen);
-				putchar('\n');
+				ssize_t rdlen;
+				char buff[fp->inode.i_size];
+
+				rdlen = cavan_ext4_read_file(fp, buff, sizeof(buff));
+				if (rdlen < 0)
+				{
+					pr_red_info("cavan_ext4_read_file");
+				}
+				else
+				{
+#if TEST_EXT4_DEBUG
+					println("rdlen = " PRINT_FORMAT_SIZE, rdlen);
+#endif
+					print_ntext(buff, rdlen);
+				}
 			}
 
 			cavan_ext4_close_file(fp);

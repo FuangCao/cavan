@@ -4,7 +4,8 @@
 #include <cavan/file.h>
 #include <sys/vfs.h>
 
-#define MAX_MOUNT_COUNT		100
+#define MAX_MOUNT_COUNT				100
+#define CAVAN_BLOCK_DEVICE_DEBUG	0
 
 int fget_device_size(int dev_fd, u64 *size)
 {
@@ -2168,9 +2169,11 @@ int cavan_block_device_init(struct cavan_block_device *bdev, void *context)
 	bdev->context = context;
 	bdev->block_mask = bdev->block_size - 1;
 
+#if CAVAN_BLOCK_DEVICE_DEBUG
 	println("block_size = %d", bdev->block_size);
 	println("block_shift = %d", bdev->block_shift);
 	println("block_mask = 0x%08x", bdev->block_mask);
+#endif
 
 	return 0;
 }

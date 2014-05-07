@@ -1,101 +1,154 @@
-// Fuang.Cao <cavan.cfa@gmail.com> Wed Jun 22 17:08:27 CST 2011
+/*
+ * File:			ext2.c
+ * Author:		Fuang.Cao <cavan.cfa@gmail.com>
+ * Created:		2014-05-05 10:30:09
+ *
+ * Copyright (c) 2014 Fuang.Cao <cavan.cfa@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
 #include <cavan.h>
-#include <cavan/ext2.h>
+#include <cavan/ext4.h>
 
-static void show_usage(void)
+#define EXT2_APP_DEVICE_BLOCK_SIZE		512
+
+struct ext2_app_device_context
 {
-	println("Usage:");
-	println("ext2 -rRlL pathname device");
+	int fd;
+};
+
+static ssize_t ext2_app_device_read_block(struct cavan_block_device *bdev, size_t index, void *buff, size_t count)
+{
+	struct ext2_app_device_context *context = bdev->context;
+	return ffile_readfrom(context->fd, buff, count * bdev->block_size, index * bdev->block_size);
+}
+
+static ssize_t ext2_app_device_write_block(struct cavan_block_device *bdev, size_t index, const void *buff, size_t count)
+{
+	struct ext2_app_device_context *context = bdev->context;
+	return ffile_writeto(context->fd, buff, count * bdev->block_size, index * bdev->block_size);
+}
+
+static ssize_t ext2_app_device_read_byte(struct cavan_block_device *bdev, off_t offset, void *buff, size_t size)
+{
+	struct ext2_app_device_context *context = bdev->context;
+	return ffile_readfrom(context->fd, buff, size, offset);
+}
+
+static ssize_t ext2_app_device_write_byte(struct cavan_block_device *bdev, off_t offset, const void *buff, size_t size)
+{
+	struct ext2_app_device_context *context = bdev->context;
+	return ffile_writeto(context->fd, buff, size, offset);
+}
+
+static void ext2_app_device_list_dir_handler(struct ext2_dir_entry_2 *entry, void *data)
+{
+	print_ntext(entry->name, entry->name_len);
+
+	if (entry->file_type == EXT2_FT_DIR)
+	{
+		print_char('/');
+	}
+
+	print_char('\n');
 }
 
 int main(int argc, char *argv[])
 {
+	int fd;
 	int ret;
-	int c, action = -1;
-	struct ext2_desc desc;
-	const char *pathname = NULL;
-	struct cavan_ext2_file *fp;
-
-	while ((c = getopt(argc, argv, "r:R:l:L:")) != EOF)
+	struct cavan_ext4_fs fs;
+	struct ext2_app_device_context context;
+	struct cavan_block_device bdev =
 	{
-		switch (c)
-		{
-		case 'r':
-		case 'R':
-			action = 'r';
-			pathname = optarg;
-			break;
+		.block_shift = 0,
+		.block_size = EXT2_APP_DEVICE_BLOCK_SIZE,
+		.block_mask = 0,
+		.read_block = ext2_app_device_read_block,
+		.write_block = ext2_app_device_write_block,
+		.read_byte = ext2_app_device_read_byte,
+		.write_byte = ext2_app_device_write_byte
+	};
 
-		case 'l':
-		case 'L':
-			action = 'l';
-			pathname = optarg;
-			break;
+	assert(argc > 1);
 
-		default:
-			show_usage();
-			return -EINVAL;
-		}
+	fd = open(argv[1], O_RDONLY);
+	if (fd < 0)
+	{
+		pr_error_info("open");
+		return fd;
 	}
 
-	if (action < 0 || pathname == NULL)
-	{
-		error_msg("no action");
-		show_usage();
-		return -EINVAL;
-	}
+	context.fd = fd;
 
-	if (optind >= argc)
-	{
-		error_msg("please input deivce name");
-		show_usage();
-		return -ENOENT;
-	}
-
-	ret = ext2_init(&desc, argv[optind]);
+	ret = cavan_block_device_init(&bdev, &context);
 	if (ret < 0)
 	{
-		error_msg("fat_init");
-		return ret;
+		pr_red_info("cavan_block_device_init");
+		goto out_close_fd;
 	}
 
-	println("volume = %s", desc.super_block.volume_name);
-	println("pathname = %s", pathname);
-
-	fp = cavan_ext2_open_file(&desc, pathname, O_RDONLY, 0777);
-	if (fp == NULL)
+	ret = cavan_ext4_init(&fs, &bdev);
+	if (ret < 0)
 	{
-		ret = -ENOENT;
-		pr_red_info("cavan_ext2_open_file");
-		goto out_fat_deinit;
+		pr_red_info("cavan_ext4_init");
+		goto out_cavan_block_device_deinit;
 	}
 
-	if (action == 'r')
+	if (argc > 2)
 	{
-		char *data = alloca(fp->inode.size);
+		struct cavan_ext4_file *fp;
 
-		ret = cavan_ext2_read_file(fp, data, fp->inode.size);
-		if (ret < 0)
+		fp = cavan_ext4_open_file(&fs, argv[2]);
+		if (fp == NULL)
 		{
-			pr_red_info("cavan_ext2_read_file");
-			goto out_cavan_ext2_close_file;
+			pr_red_info("cavan_ext4_open_file");
 		}
+		else
+		{
+			if (S_ISDIR(fp->inode.i_mode))
+			{
+				ret = cavan_ext4_list_dir(fp, ext2_app_device_list_dir_handler, fp);
+				if (ret < 0)
+				{
+					pr_red_info("cavan_ext4_list_dir");
+				}
+			}
+			else
+			{
+				ssize_t rdlen;
+				char buff[fp->inode.i_size];
 
-		println("file \"%s\" is %d:", pathname, ret);
-		print_ntext(data, ret);
-		print_char('\n');
+				rdlen = cavan_ext4_read_file(fp, buff, sizeof(buff));
+				if (rdlen < 0)
+				{
+					pr_red_info("cavan_ext4_read_file");
+				}
+				else
+				{
+					print_ntext(buff, rdlen);
+				}
+			}
+
+			cavan_ext4_close_file(fp);
+		}
 	}
-	else
-	{
-		ret = 0;
-	}
 
-out_cavan_ext2_close_file:
-	cavan_ext2_close_file(fp);
-out_fat_deinit:
-	ext2_deinit(&desc);
+	cavan_ext4_deinit(&fs);
 
+out_cavan_block_device_deinit:
+	cavan_block_device_deinit(&bdev);
+out_close_fd:
+	close(fd);
 	return ret;
 }
-

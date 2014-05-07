@@ -23,65 +23,6 @@
 
 #define CAVAN_EXT4_DEBUG	0
 
-static inline size_t cavan_ext4_get_block_hw_addr(struct cavan_ext4_fs *fs, size_t index)
-{
-	return ((index - fs->first_data_block) << fs->hw_blocks_per_block_shift) + fs->hw_boot_block_count;
-}
-
-static inline size_t cavan_ext4_get_block_hw_offset(struct cavan_ext4_fs *fs, size_t index)
-{
-	return ((index - fs->first_data_block) << fs->block_shift) + fs->hw_boot_block_size;
-}
-
-static inline ssize_t cavan_ext4_read_block(struct cavan_ext4_fs *fs, size_t index, void *buff, size_t count)
-{
-	index = cavan_ext4_get_block_hw_addr(fs, index);
-	return fs->bdev->read_block(fs->bdev, index, buff, count << fs->hw_blocks_per_block_shift);
-}
-
-static inline ssize_t cavan_ext4_write_block(struct cavan_ext4_fs *fs, size_t index, const void *buff, size_t count)
-{
-	index = cavan_ext4_get_block_hw_addr(fs, index);
-	return fs->bdev->write_block(fs->bdev, index, buff, count << fs->hw_blocks_per_block_shift);
-}
-
-static struct ext2_group_desc *cavan_ext4_get_group(struct cavan_ext4_fs *fs, u32 index)
-{
-	if (fs->gdt32)
-	{
-		return fs->gdt32 + index;
-	}
-
-	return (struct ext2_group_desc *)(fs->gdt64 + index);
-}
-
-static inline u32 cavan_ext4_inode_index_to_group(struct cavan_ext4_fs *fs, u32 index)
-{
-	return index / fs->inodes_per_group;
-}
-
-static inline u32 cavan_ext4_inode_index_to_table(struct cavan_ext4_fs *fs, u32 index)
-{
-	u32 group = cavan_ext4_inode_index_to_group(fs, index);
-
-	return cavan_ext4_get_group(fs, group)->bg_inode_table;
-}
-
-static inline int cavan_ext4_get_dir_entry_length(struct ext2_dir_entry_2 *entry)
-{
-	return CAVAN_EXT4_DIR_ENTRY_HEADER_LEN + entry->name_len;
-}
-
-static ssize_t cavan_ext4_read_inode(struct cavan_ext4_fs *fs, u32 index, struct ext2_inode_large *inode)
-{
-	u32 table = cavan_ext4_inode_index_to_table(fs, index);
-	off_t offset = cavan_ext4_get_block_hw_offset(fs, table) + ((index - 1) % fs->inodes_per_group) * fs->inode_size;
-
-	return fs->bdev->read_byte(fs->bdev, offset, inode, fs->inode_size);
-}
-
-// ================================================================================
-
 char *cavan_ext4_uuid_tostring(const u8 uuid[16], char *buff, size_t size)
 {
 	int i = 0;
@@ -524,6 +465,63 @@ void cavan_ext4_dump_gdt(struct cavan_ext4_fs *fs)
 }
 
 // ================================================================================
+
+static inline size_t cavan_ext4_get_block_hw_addr(struct cavan_ext4_fs *fs, size_t index)
+{
+	return ((index - fs->first_data_block) << fs->hw_blocks_per_block_shift) + fs->hw_boot_block_count;
+}
+
+static inline size_t cavan_ext4_get_block_hw_offset(struct cavan_ext4_fs *fs, size_t index)
+{
+	return ((index - fs->first_data_block) << fs->block_shift) + fs->hw_boot_block_size;
+}
+
+static inline ssize_t cavan_ext4_read_block(struct cavan_ext4_fs *fs, size_t index, void *buff, size_t count)
+{
+	index = cavan_ext4_get_block_hw_addr(fs, index);
+	return fs->bdev->read_block(fs->bdev, index, buff, count << fs->hw_blocks_per_block_shift);
+}
+
+static inline ssize_t cavan_ext4_write_block(struct cavan_ext4_fs *fs, size_t index, const void *buff, size_t count)
+{
+	index = cavan_ext4_get_block_hw_addr(fs, index);
+	return fs->bdev->write_block(fs->bdev, index, buff, count << fs->hw_blocks_per_block_shift);
+}
+
+static struct ext2_group_desc *cavan_ext4_get_group(struct cavan_ext4_fs *fs, u32 index)
+{
+	if (fs->gdt32)
+	{
+		return fs->gdt32 + index;
+	}
+
+	return (struct ext2_group_desc *)(fs->gdt64 + index);
+}
+
+static inline u32 cavan_ext4_inode_index_to_group(struct cavan_ext4_fs *fs, u32 index)
+{
+	return index / fs->inodes_per_group;
+}
+
+static inline u32 cavan_ext4_inode_index_to_table(struct cavan_ext4_fs *fs, u32 index)
+{
+	u32 group = cavan_ext4_inode_index_to_group(fs, index);
+
+	return cavan_ext4_get_group(fs, group)->bg_inode_table;
+}
+
+static inline int cavan_ext4_get_dir_entry_length(struct ext2_dir_entry_2 *entry)
+{
+	return CAVAN_EXT4_DIR_ENTRY_HEADER_LEN + entry->name_len;
+}
+
+ssize_t cavan_ext4_read_inode(struct cavan_ext4_fs *fs, u32 index, struct ext2_inode_large *inode)
+{
+	u32 table = cavan_ext4_inode_index_to_table(fs, index);
+	off_t offset = cavan_ext4_get_block_hw_offset(fs, table) + ((index - 1) % fs->inodes_per_group) * fs->inode_size;
+
+	return fs->bdev->read_byte(fs->bdev, offset, inode, fs->inode_size);
+}
 
 static inline ssize_t cavan_ext4_read_super_block(struct cavan_ext4_fs *fs, struct ext2_super_block *super)
 {
@@ -991,6 +989,56 @@ ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t si
 	}
 
 	return ADDR_SUB2(context.buff, buff);
+}
+
+static int cavan_ext4_list_dir_put_block(struct cavan_ext4_walker *walker, struct cavan_ext4_fs *fs, void *data, size_t count)
+{
+	struct ext2_dir_entry_2 *entry, *entry_end;
+	struct cavan_ext4_list_dir_context *context = walker->context;
+
+	for (entry = data, entry_end = ADDR_ADD(entry, (count << fs->block_shift) - CAVAN_EXT4_DIR_ENTRY_MIN_LEN); entry < entry_end; entry = ADDR_ADD(entry, entry->rec_len))
+	{
+#if CAVAN_EXT4_DEBUG
+		entry->name[entry->name_len] = 0;
+		cavan_ext4_dump_ext2_dir_entry_2(entry);
+#endif
+
+		if (entry->name_len == 0 || entry->rec_len == 0)
+		{
+			pr_red_info("invalid directory entry");
+			return -EINVAL;
+		}
+
+		context->handler(entry, context->data);
+	}
+
+	return 0;
+}
+
+int cavan_ext4_list_dir(struct cavan_ext4_file *file, void (*handler)(struct ext2_dir_entry_2 *entry, void *data), void *data)
+{
+	struct cavan_ext4_walker walker;
+	struct cavan_ext4_list_dir_context context;
+
+	if (handler == NULL)
+	{
+		pr_red_info("handler is null");
+		return -EINVAL;
+	}
+
+	if (S_ISDIR(file->inode.i_mode) == 0)
+	{
+		pr_red_info("this is not a directory");
+		return -ENOTDIR;
+	}
+
+	walker.put_block = cavan_ext4_list_dir_put_block;
+
+	context.data = data;
+	context.file = file;
+	context.handler = handler;
+
+	return cavan_ext4_traversal_inode(file->fs, &file->inode, &walker, &context);
 }
 
 void cavan_ext4_close_file(struct cavan_ext4_file *file)

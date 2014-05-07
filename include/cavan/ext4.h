@@ -953,6 +953,14 @@ struct cavan_ext4_read_file_context
 	struct cavan_ext4_file *file;
 };
 
+struct cavan_ext4_list_dir_context
+{
+	void *data;
+	struct cavan_ext4_file *file;
+
+	void (*handler)(struct ext2_dir_entry_2 *entry, void *data);
+};
+
 // ================================================================================
 
 char *cavan_ext4_uuid_tostring(const u8 uuid[16], char *buff, size_t size);
@@ -979,8 +987,10 @@ void cavan_ext4_dump_gdt(struct cavan_ext4_fs *fs);
 
 // ================================================================================
 
+ssize_t cavan_ext4_read_inode(struct cavan_ext4_fs *fs, u32 index, struct ext2_inode_large *inode);
 int cavan_ext4_init(struct cavan_ext4_fs *fs, struct cavan_block_device *bdev);
 void cavan_ext4_deinit(struct cavan_ext4_fs *fs);
 struct cavan_ext4_file *cavan_ext4_open_file(struct cavan_ext4_fs *fs, const char *pathname);
 ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, void *buff, size_t size);
+int cavan_ext4_list_dir(struct cavan_ext4_file *file, void (*handler)(struct ext2_dir_entry_2 *entry, void *data), void *data);
 void cavan_ext4_close_file(struct cavan_ext4_file *file);
