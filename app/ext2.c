@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 					pathname = argv[3];
 				}
 
-				println("%s => %s", argv[2], pathname);
+				println("%s@%s => %s", argv[1], argv[2], pathname);
 				file_writeto(pathname, content, rdlen, 0, O_TRUNC);
 			}
 			else

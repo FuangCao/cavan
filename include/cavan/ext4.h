@@ -934,9 +934,12 @@ struct cavan_ext4_file
 struct cavan_ext4_walker
 {
 	void *context;
-	size_t count;
-	size_t max_count;
-	int (*put_block)(struct cavan_ext4_walker *walker, struct cavan_ext4_fs *fs, void *data, size_t count);
+	size_t blocks;
+	size_t max_blocks;
+	struct cavan_ext4_fs *fs;
+	struct ext2_inode *inode;
+
+	int (*put_block)(struct cavan_ext4_walker *walker, void *block, size_t count);
 };
 
 struct cavan_ext4_find_file_context
