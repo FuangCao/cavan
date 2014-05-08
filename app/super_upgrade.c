@@ -62,7 +62,7 @@ static int swan_install(const char *dirpath)
 	char busybox_path[1024];
 	char pkg_path[1024];
 
-	text_path_cat(busybox_path, dirpath, "busybox.ext4");
+	text_path_cat(busybox_path, sizeof(busybox_path), dirpath, "busybox.ext4");
 
 	ret = file_mount_to(busybox_path, BUSYBOX_MOUNT_POINT, "ext4", 0, NULL);
 	if (ret < 0)
@@ -71,7 +71,7 @@ static int swan_install(const char *dirpath)
 		return ret;
 	}
 
-	text_path_cat(pkg_path, dirpath, "upgrade.swan");
+	text_path_cat(pkg_path, sizeof(pkg_path), dirpath, "upgrade.swan");
 
 	fd = open(pkg_path, O_RDWR);
 	if (fd < 0)

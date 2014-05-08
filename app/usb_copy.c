@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 	cftp_desc.receive = cftp_usb_receive_data;
 	cftp_desc.max_xfer_length = CAVAN_USB_MAX_XFER_SIZE;
 
-	p_name = text_path_cat(temp_name, argv[--argc], NULL);
+	p_name = text_path_cat(temp_name, sizeof(temp_name), argv[--argc], NULL);
 
 	for (i = optind; i < argc; i++)
 	{

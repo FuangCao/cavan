@@ -140,7 +140,7 @@ char *to_abs_path2(const char *rel_path);
 char *prettify_pathname_base(const char *src_path, char *dest_path, size_t size);
 char *prettify_pathname(const char *src_path);
 
-char *text_path_cat(char *pathname, const char *dirname, const char *basename);
+char *text_path_cat(char *pathname, size_t size, const char *dirname, const char *basename);
 
 char *text_delete_char_base(const char *text_in, char *text_out, char c);
 char *text_delete_sub_base(const char *text_in, char *text_out, const char *sub, const size_t sublen);

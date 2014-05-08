@@ -544,7 +544,7 @@ int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *des
 		return 0;
 	}
 
-	p1 = text_path_cat(tmp_path, USB_DEVICE_DIR, NULL);
+	p1 = text_path_cat(tmp_path, sizeof(tmp_path), USB_DEVICE_DIR, NULL);
 
 	dir1 = opendir(tmp_path);
 	if (dir1 == NULL)

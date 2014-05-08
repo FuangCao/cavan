@@ -95,7 +95,7 @@ pid_t process_find_by_cmdline(const char *proc_path, const char *cmdline)
 	}
 
 	pid = -1;
-	p_name = text_path_cat(pathname, proc_path, NULL);
+	p_name = text_path_cat(pathname, sizeof(pathname), proc_path, NULL);
 
 	while ((en = readdir(dir_proc)))
 	{

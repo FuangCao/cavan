@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 
 				if (file_type_test(argv[3], S_IFDIR))
 				{
-					text_basename_base(text_path_cat(path_buff, argv[3], NULL), argv[2]);
+					text_basename_base(text_path_cat(path_buff, sizeof(path_buff), argv[3], NULL), argv[2]);
 					pathname = path_buff;
 				}
 				else

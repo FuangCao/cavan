@@ -231,7 +231,7 @@ int read_resource_image(int pkg_fd, struct swan_package_info *pkg_p, const char 
 		return 0;
 	}
 
-	text_path_cat(img_path, img_dir, get_resource_name_by_board_type(pkg_p->board_type));
+	text_path_cat(img_path, sizeof(img_path), img_dir, get_resource_name_by_board_type(pkg_p->board_type));
 	println("decompression resource image to \"%s\"", img_path);
 
 	img_fd = open(img_path, O_WRONLY | O_CREAT | O_SYNC | O_TRUNC | O_BINARY, 0777);
@@ -269,7 +269,7 @@ int vwrite_resource_image(int pkg_fd, struct swan_package_info *pkg_p, const cha
 	struct stat st;
 	char tmp_path[1024], *p;
 
-	p = text_path_cat(tmp_path, dir_name, NULL);
+	p = text_path_cat(tmp_path, sizeof(tmp_path), dir_name, NULL);
 
 	while (1)
 	{
@@ -366,7 +366,7 @@ int swan_shrink_image(const char *dirname, struct swan_image_info *img_p)
 {
 	char img_path[1024];
 
-	text_path_cat(img_path, dirname, img_p->filename);
+	text_path_cat(img_path, sizeof(img_path), dirname, img_p->filename);
 
 	return image_shrink(img_path);
 }
@@ -379,7 +379,7 @@ int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info 
 	char img_path[1024];
 	ssize_t part_size;
 
-	text_path_cat(img_path, dir_name, img_p->filename);
+	text_path_cat(img_path, sizeof(img_path), dir_name, img_p->filename);
 
 	img_fd = open(img_path, O_RDONLY | O_BINARY);
 	if (img_fd < 0)

@@ -115,13 +115,13 @@ static int read_oem_info(const char *emmc_dev, struct oem_info *oem_info)
 	return 0;
 }
 
-static char *get_bt_mac_file(const char *system_mnt_point, char *pathname)
+static char *get_bt_mac_file(const char *system_mnt_point, char *pathname, size_t size)
 {
 	unsigned int i;
 	const char *bt_mac_files[] = {I600_BT_MAC_FILE, I200_BT_MAC_FILE};
 	char *name_p;
 
-	name_p = text_path_cat(pathname, system_mnt_point, NULL);
+	name_p = text_path_cat(pathname, size, system_mnt_point, NULL);
 
 	for (i = 0; i < ARRAY_SIZE(bt_mac_files); i++)
 	{
@@ -140,7 +140,7 @@ static ssize_t write_bt_mac(const char *system_mnt_point, char *mac, size_t size
 {
 	char bt_mac_file[1024];
 
-	if (get_bt_mac_file(system_mnt_point, bt_mac_file) == NULL)
+	if (get_bt_mac_file(system_mnt_point, bt_mac_file, sizeof(bt_mac_file)) == NULL)
 	{
 		ERROR_RETURN(ENOENT);
 	}
@@ -166,7 +166,7 @@ static ssize_t write_wifi_mac(const char *system_mnt_point, char *mac, size_t si
 	int ret;
 	char i600_wifi_mac[1024], i200_wifi_mac[1024];
 
-	text_path_cat(i200_wifi_mac, system_mnt_point, I200_WIFI_MAC_FILE);
+	text_path_cat(i200_wifi_mac, sizeof(i200_wifi_mac), system_mnt_point, I200_WIFI_MAC_FILE);
 
 	ret = file_writeto(i200_wifi_mac, mac, size, 0, O_TRUNC);
 	if (ret < 0)
@@ -175,7 +175,7 @@ static ssize_t write_wifi_mac(const char *system_mnt_point, char *mac, size_t si
 		return ret;
 	}
 
-	text_path_cat(i600_wifi_mac, system_mnt_point, I600_WIFI_MAC_FILE);
+	text_path_cat(i600_wifi_mac, sizeof(i600_wifi_mac), system_mnt_point, I600_WIFI_MAC_FILE);
 
 	return file_hardlink(i600_wifi_mac, i200_wifi_mac);
 }

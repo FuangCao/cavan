@@ -325,8 +325,8 @@ static int cftp_client_send_directory(struct cftp_descriptor *desc, const char *
 		return -EFAULT;
 	}
 
-	p_in = text_path_cat(tmp_file_in, dir_in, NULL);
-	p_out = text_path_cat(tmp_file_out, dir_out, NULL);
+	p_in = text_path_cat(tmp_file_in, sizeof(tmp_file_in), dir_in, NULL);
+	p_out = text_path_cat(tmp_file_out, sizeof(tmp_file_out), dir_out, NULL);
 
 	while ((entry = readdir(dp)))
 	{

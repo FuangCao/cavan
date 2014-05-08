@@ -121,8 +121,8 @@ int directory_copy_main(const char *src, const char *dest)
 		return -1;
 	}
 
-	src_p = text_path_cat(tmp_dirname_src, src, NULL);
-	dest_p = text_path_cat(tmp_dirname_dest, dest, NULL);
+	src_p = text_path_cat(tmp_dirname_src, sizeof(tmp_dirname_src), src, NULL);
+	dest_p = text_path_cat(tmp_dirname_dest, sizeof(tmp_dirname_dest), dest, NULL);
 
 	while (1)
 	{
@@ -191,7 +191,7 @@ int copy_main(const char *src, const char *dest)
 
 	if (file_test(dest, "d") == 0)
 	{
-		text_path_cat(dest_path, dest, text_basename(src));
+		text_path_cat(dest_path, sizeof(dest_path), dest, text_basename(src));
 	}
 	else
 	{
@@ -216,7 +216,7 @@ int move_auto(const char *srcpath, const char *destpath)
 	switch (st.st_mode & S_IFMT)
 	{
 	case S_IFDIR:
-		p = text_path_cat(tmppath, destpath, NULL);
+		p = text_path_cat(tmppath, sizeof(tmppath), destpath, NULL);
 		text_basename_base(p, srcpath);
 		destpath = tmppath;
 		break;

@@ -231,7 +231,7 @@ int package(const char *pkg_name, const char *dir_name)
 	};
 	struct swan_image_info *p, *p_end;
 
-	name_p = text_path_cat(tmp_path, dir_name, NULL);
+	name_p = text_path_cat(tmp_path, sizeof(tmp_path), dir_name, NULL);
 
 	if (swan_machine_type == SWAN_BOARD_UNKNOWN)
 	{
@@ -403,7 +403,7 @@ int unpack(const char *pkg_name, const char *dir_name)
 		goto out_close_pkg;
 	}
 
-	text_path_cat(tmp_path, dir_name, HEADER_BIN_NAME);
+	text_path_cat(tmp_path, sizeof(tmp_path), dir_name, HEADER_BIN_NAME);
 	ret = read_upgrade_program(pkg_fd, &file_info, tmp_path);
 	if (ret < 0)
 	{
@@ -427,7 +427,7 @@ int unpack(const char *pkg_name, const char *dir_name)
 			goto out_close_pkg;
 		}
 
-		text_path_cat(tmp_path, dir_name, img_info.filename);
+		text_path_cat(tmp_path, sizeof(tmp_path), dir_name, img_info.filename);
 		img_fd = open(tmp_path, O_WRONLY | O_CREAT | O_SYNC | O_TRUNC | O_BINARY, 0777);
 		if (img_fd < 0)
 		{
@@ -1200,7 +1200,7 @@ ssize_t swan_write_version(const char *system_mnt_point, u32 version)
 	char buff[128];
 	char version_file[1024];
 
-	text_path_cat(version_file, system_mnt_point, SWAN_VERSION_PATH);
+	text_path_cat(version_file, sizeof(version_file), system_mnt_point, SWAN_VERSION_PATH);
 
 	writelen = value2text_base(version, buff, 0, 0, 16) - buff;
 	writelen = file_writeto(version_file, buff, writelen, 0, O_TRUNC);

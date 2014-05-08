@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 
 	assert(argc - optind > 1);
 
-	pname = text_path_cat(file_req.dest_file, argv[--argc], NULL);
+	pname = text_path_cat(file_req.dest_file, sizeof(file_req.dest_file), argv[--argc], NULL);
 
 	for (i = optind; i < argc; i++)
 	{

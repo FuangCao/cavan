@@ -255,7 +255,7 @@ static char *ftp_list_directory1(const char *dirpath, char *text)
 		return NULL;
 	}
 
-	name_p = text_path_cat(tmp_path, dirpath, NULL);
+	name_p = text_path_cat(tmp_path, sizeof(tmp_path), dirpath, NULL);
 
 	while ((ep = readdir(dp)))
 	{
@@ -437,15 +437,15 @@ static int ftp_service_login(int sockfd)
 	}
 }
 
-static char *ftp_get_abs_path(const char *root_path, const char *curr_path, const char *path, char *abs_path)
+static char *ftp_get_abs_path(const char *root_path, const char *curr_path, const char *path, char *abs_path, size_t size)
 {
 	if (*path == '/')
 	{
-		text_path_cat(abs_path, root_path, path);
+		text_path_cat(abs_path, size, root_path, path);
 	}
 	else
 	{
-		text_path_cat(abs_path, curr_path, path);
+		text_path_cat(abs_path, size, curr_path, path);
 	}
 
 #if FTP_DEBUG
@@ -626,7 +626,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 				}
 				else
 				{
-					ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, curr_path);
+					ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, curr_path, sizeof(curr_path));
 				}
 			}
 			else
@@ -689,7 +689,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* size */
 		case 0x657a6973:
 		case 0x455a4953:
-			if (*cmd_arg == 0 || stat(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path), &st))
+			if (*cmd_arg == 0 || stat(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st))
 			{
 				sprintf(rep_buff, "550 get file size failed: %s", strerror(errno));
 			}
@@ -706,7 +706,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* retr */
 		case 0x72746572:
 		case 0x52544552:
-			fd = open(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path), O_RDONLY);
+			fd = open(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_RDONLY);
 			if (fd < 0)
 			{
 				reply = "550 Open file failed";
@@ -737,7 +737,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* stor */
 		case 0x726f7473:
 		case 0x524f5453:
-			fd = open(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path), O_WRONLY | O_CREAT, 0777);
+			fd = open(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_WRONLY | O_CREAT, 0777);
 			if (fd < 0)
 			{
 				reply = "550 Open file failed";
@@ -819,7 +819,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* dele */
 		case 0x656c6564:
 		case 0x454c4544:
-			ret = remove(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path));
+			ret = remove(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)));
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 remove %s failed: %s", cmd_arg, strerror(errno));
@@ -833,7 +833,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* rmd */
 		case 0x20646d72:
 		case 0x20444d52:
-			ret = rmdir(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path));
+			ret = rmdir(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)));
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 remove %s failed: %s", cmd_arg, strerror(errno));
@@ -847,7 +847,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* mkd */
 		case 0x20646b6d:
 		case 0x20444b4d:
-			ret = mkdir(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path), 0777);
+			ret = mkdir(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), 0777);
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 create directory %s failed: %s", cmd_arg, strerror(errno));
@@ -861,7 +861,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* mdtm */
 		case 0x6d74646d:
 		case 0x4d54444d:
-			ret = stat(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path), &st);
+			ret = stat(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st);
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 get file stat failed: %s", strerror(errno));
@@ -891,14 +891,14 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* rnfr */
 		case 0x76666E72:
 		case 0x52464E52:
-			ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, rnfr_path);
+			ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, rnfr_path, sizeof(rnfr_path));
 			reply = "350 RNFR command complete";
 			break;
 
 		/* rnto */
 		case 0x6F746E72:
 		case 0x4F544E52:
-			ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path);
+			ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path));
 			ret = rename(rnfr_path, abs_path);
 			if (ret < 0)
 			{

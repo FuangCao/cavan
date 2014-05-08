@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 	{
 		char path_tmp[1024];
 
-		text_path_cat(path_tmp, dir_path, p->in);
+		text_path_cat(path_tmp, sizeof(path_tmp), dir_path, p->in);
 
 		if (file_test(path_tmp, "r") == 0)
 		{

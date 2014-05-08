@@ -37,7 +37,7 @@ static ssize_t parse_string_list(const char *dirname, struct modem_prop *props, 
 	size_t prop_count;
 	ssize_t readlen;
 
-	text_path_cat(pathname, dirname, STRING_LIST_NAME);
+	text_path_cat(pathname, sizeof(pathname), dirname, STRING_LIST_NAME);
 
 	readlen = file_read(pathname, buff, sizeof(buff));
 	if (readlen < 0)
@@ -311,7 +311,7 @@ static int upgrade_modem(const char *resource)
 	pid_t pid;
 	pthread_t usb_thread;
 
-	text_path_cat(update_wizard, resource, UPDATE_WIZARD_NAME);
+	text_path_cat(update_wizard, sizeof(update_wizard), resource, UPDATE_WIZARD_NAME);
 
 	ret = chmod(update_wizard, 0777);
 	if (ret < 0)
@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-	text_path_cat(resource_path, argv[optind], NULL);
+	text_path_cat(resource_path, sizeof(resource_path), argv[optind], NULL);
 
 	ret = modem_if_need_upgrade(resource_path, 10);
 	if (ret < 0)

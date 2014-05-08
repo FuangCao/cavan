@@ -680,8 +680,8 @@ int tftp_client_send_directory(const char *ip, u16 port, const char *dir_in, con
 		goto out_close_dir;
 	}
 
-	p_in = text_path_cat(temp_name_in, dir_in, NULL);
-	p_out = text_path_cat(temp_name_out, dir_out, NULL);
+	p_in = text_path_cat(temp_name_in, sizeof(temp_name_in), dir_in, NULL);
+	p_out = text_path_cat(temp_name_out, sizeof(temp_name_out), dir_out, NULL);
 
 	while (1)
 	{

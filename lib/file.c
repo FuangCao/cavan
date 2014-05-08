@@ -234,7 +234,7 @@ int file_split(const char *file_name, const char *dest_dir, size_t size, int cou
 		}
 	}
 
-	dest_filename = text_path_cat(dest_pathname, dest_dir, text_basename(file_name));
+	dest_filename = text_path_cat(dest_pathname, sizeof(dest_pathname), dest_dir, text_basename(file_name));
 
 	for (i = 1; remain_size; i++)
 	{
@@ -2425,7 +2425,7 @@ int remove_directory(const char *pathname)
 		return -ENOENT;
 	}
 
-	name_p = text_path_cat(tmppath, pathname, NULL);
+	name_p = text_path_cat(tmppath, sizeof(tmppath), pathname, NULL);
 
 	while ((en = readdir(dp)))
 	{

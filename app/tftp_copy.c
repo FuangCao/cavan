@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 		port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
-	p_name = text_path_cat(temp_name, argv[--argc], NULL);
+	p_name = text_path_cat(temp_name, sizeof(temp_name), argv[--argc], NULL);
 
 	for (i = optind; i < argc; i++)
 	{
