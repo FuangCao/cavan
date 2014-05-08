@@ -476,7 +476,7 @@ static inline size_t cavan_ext4_get_block_hw_addr(struct cavan_ext4_fs *fs, size
 	return ((index - fs->first_data_block) << fs->hw_blocks_per_block_shift) + fs->hw_boot_block_count;
 }
 
-static inline size_t cavan_ext4_get_block_hw_offset(struct cavan_ext4_fs *fs, size_t index)
+static inline u64 cavan_ext4_get_block_hw_offset(struct cavan_ext4_fs *fs, u64 index)
 {
 	return ((index - fs->first_data_block) << fs->block_shift) + fs->hw_boot_block_size;
 }
@@ -523,7 +523,7 @@ static inline int cavan_ext4_get_dir_entry_length(struct ext2_dir_entry_2 *entry
 ssize_t cavan_ext4_read_inode(struct cavan_ext4_fs *fs, u32 index, struct ext2_inode_large *inode)
 {
 	u32 table = cavan_ext4_inode_index_to_table(fs, index);
-	off_t offset = cavan_ext4_get_block_hw_offset(fs, table) + ((index - 1) % fs->inodes_per_group) * fs->inode_size;
+	u64 offset = cavan_ext4_get_block_hw_offset(fs, table) + ((index - 1) % fs->inodes_per_group) * fs->inode_size;
 
 	return fs->bdev->read_byte(fs->bdev, offset, inode, fs->inode_size);
 }

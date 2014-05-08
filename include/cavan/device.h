@@ -103,10 +103,10 @@ struct cavan_block_device
 	u16 block_size;
 	u32 block_mask;
 
-	ssize_t (*read_block)(struct cavan_block_device *bdev, size_t index, void *buff, size_t count);
-	ssize_t (*write_block)(struct cavan_block_device *bdev, size_t index, const void *buff, size_t count);
-	ssize_t (*read_byte)(struct cavan_block_device *bdev, off_t offset, void *buff, size_t size);
-	ssize_t (*write_byte)(struct cavan_block_device *bdev, off_t offset, const void *buff, size_t size);
+	ssize_t (*read_block)(struct cavan_block_device *bdev, u64 index, void *buff, size_t count);
+	ssize_t (*write_block)(struct cavan_block_device *bdev, u64 index, const void *buff, size_t count);
+	ssize_t (*read_byte)(struct cavan_block_device *bdev, u64 offset, void *buff, size_t size);
+	ssize_t (*write_byte)(struct cavan_block_device *bdev, u64 offset, const void *buff, size_t size);
 };
 
 // ================================================================================

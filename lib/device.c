@@ -2034,9 +2034,9 @@ int get_device_statfs(const char *devpath, const char *fstype, struct statfs *st
 
 // ================================================================================
 
-static ssize_t cavan_block_device_read_byte_dummy(struct cavan_block_device *bdev, off_t offset, void *buff, size_t size)
+static ssize_t cavan_block_device_read_byte_dummy(struct cavan_block_device *bdev, u64 offset, void *buff, size_t size)
 {
-	off_t index;
+	u32 index;
 	void *buff_end;
 
 	index = offset >> bdev->block_shift;
@@ -2069,9 +2069,9 @@ static ssize_t cavan_block_device_read_byte_dummy(struct cavan_block_device *bde
 	return size;
 }
 
-static ssize_t cavan_block_device_write_byte_dummy(struct cavan_block_device *bdev, off_t offset, const void *buff, size_t size)
+static ssize_t cavan_block_device_write_byte_dummy(struct cavan_block_device *bdev, u64 offset, const void *buff, size_t size)
 {
-	off_t index;
+	u32 index;
 	const void *buff_end;
 
 	index = offset >> bdev->block_shift;

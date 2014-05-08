@@ -28,7 +28,7 @@ struct test_ext4_device_context
 	int fd;
 };
 
-static ssize_t test_ext4_device_read_block(struct cavan_block_device *dev, size_t index, void *buff, size_t count)
+static ssize_t test_ext4_device_read_block(struct cavan_block_device *dev, u64 index, void *buff, size_t count)
 {
 	off_t location = index * dev->block_size;
 	struct test_ext4_device_context *context = dev->context;
@@ -41,7 +41,7 @@ static ssize_t test_ext4_device_read_block(struct cavan_block_device *dev, size_
 	return ffile_readfrom(context->fd, buff, count * dev->block_size, location);
 }
 
-static ssize_t test_ext4_device_write_block(struct cavan_block_device *dev, size_t index, const void *buff, size_t count)
+static ssize_t test_ext4_device_write_block(struct cavan_block_device *dev, u64 index, const void *buff, size_t count)
 {
 	struct test_ext4_device_context *context = dev->context;
 
