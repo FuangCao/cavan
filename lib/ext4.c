@@ -799,7 +799,7 @@ static int cavan_ext4_traversal_indirect(struct cavan_ext4_walker *walker, u32 *
 static int cavan_ext4_traversal_direct_indirect(struct cavan_ext4_walker *walker, u32 *blocks)
 {
 	int i;
-	const static char steps[] = {12, 1, 1, 1};
+	static const char steps[] = {12, 1, 1, 1};
 
 	for (i = 0; i < NELEM(steps); i++)
 	{
@@ -915,7 +915,7 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 		rdlen = cavan_ext4_read_inode(fs, context.inode, &file->inode_large);
 		if (rdlen < 0)
 		{
-			print_error("cavan_ext4_read_inode");
+			pr_error_info("cavan_ext4_read_inode");
 			return rdlen;
 		}
 

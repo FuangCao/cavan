@@ -1006,6 +1006,6 @@ ssize_t cavan_ext4_read_symlink(struct cavan_ext4_file *file, char *buff, size_t
 ssize_t cavan_ext4_read_file(struct cavan_ext4_file *file, size_t skip, void *buff, size_t size);
 ssize_t cavan_ext4_read_file2(struct cavan_ext4_file *file, size_t skip, int fd);
 ssize_t cavan_ext4_read_file3(struct cavan_ext4_file *file, size_t skip, const char *pathname, int flags);
-inline ssize_t cavan_ext4_read_file4(struct cavan_ext4_file *file, size_t skip, size_t size, int (*handler)(struct cavan_ext4_read_inode_data_context *context, void *buff, off_t offset, size_t size), void *data);
+ssize_t cavan_ext4_read_file4(struct cavan_ext4_file *file, size_t skip, size_t size, int (*handler)(struct cavan_ext4_read_inode_data_context *context, void *buff, off_t offset, size_t size), void *data);
 int cavan_ext4_list_dir(struct cavan_ext4_file *file, void (*handler)(struct ext2_dir_entry_2 *entry, void *data), void *data);
 void cavan_ext4_close_file(struct cavan_ext4_file *file);
