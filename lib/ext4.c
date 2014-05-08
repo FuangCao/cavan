@@ -322,7 +322,7 @@ void cavan_ext4_dump_ext2_super_block(const struct ext2_super_block *super)
 	println("s_wtime = %d", super->s_wtime);
 	println("s_mnt_count = %d", super->s_mnt_count);
 	println("s_max_mnt_count = %d", super->s_max_mnt_count);
-	println("s_magic = %d", super->s_magic);
+	println("s_magic = 0x%04x", super->s_magic);
 	println("s_state = %d", super->s_state);
 	println("s_errors = %d", super->s_errors);
 	println("s_minor_rev_level = %d", super->s_minor_rev_level);
@@ -437,7 +437,7 @@ void cavan_ext4_dump_mmp_struct(const struct mmp_struct *mmp)
 	print_sep(60);
 	pr_bold_info("mmap struct %p", mmp);
 
-	println("mmp_magic = %d", mmp->mmp_magic);
+	println("mmp_magic = 0x%08x", mmp->mmp_magic);
 	println("mmp_seq = %d", mmp->mmp_seq);
 	println("mmp_time = " PRINT_FORMAT_INT64, mmp->mmp_time);
 	println("mmp_nodename[64] = %s", mmp->mmp_nodename);
@@ -858,12 +858,15 @@ static ssize_t cavan_ext4_read_symlink(struct cavan_ext4_fs *fs, struct ext2_ino
 	}
 
 	length = sizeof(inode->i_block);
-	if (length > size)
+	if (length < size)
+	{
+		length = 0;
+	}
+	else
 	{
 		length = size;
+		mem_copy(buff, inode->i_block, length);
 	}
-
-	mem_copy(buff, inode->i_block, length);
 
 	return length;
 }
@@ -964,7 +967,7 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 			println("symlink = %s", symlink);
 #endif
 
-			if (rdlen > 1 && symlink[rdlen - 1] == '/')
+			if (rdlen > 1 && symlink[rdlen - 1] == CAVAN_EXT4_PATH_SEP)
 			{
 				rdlen--;
 			}
@@ -973,11 +976,11 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 			println("symlink full path = %s", symlink);
 
 			pathname = symlink;
-			context.inode = pathname[0] == '/' ? EXT2_ROOT_INO : inode_index;
+			context.inode = pathname[0] == CAVAN_EXT4_PATH_SEP ? EXT2_ROOT_INO : inode_index;
 			continue;
 		}
 
-		while (*pathname == '/')
+		while (*pathname == CAVAN_EXT4_PATH_SEP)
 		{
 			pathname++;
 		}
@@ -996,7 +999,7 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 			ERROR_RETURN(ENOENT);
 		}
 
-		for (p = pathname; *p && *p != '/'; p++);
+		for (p = pathname; *p && *p != CAVAN_EXT4_PATH_SEP; p++);
 
 		context.filename = pathname;
 		context.name_len = p - pathname;

@@ -22,6 +22,7 @@
 #include <cavan.h>
 #include <cavan/device.h>
 
+#define CAVAN_EXT4_PATH_SEP					'/'
 #define CAVAN_EXT4_EXTENT_MAGIC				0xF30A
 #define CAVAN_EXT4_BOOT_BLOCK_SIZE			1024
 #define CAVAN_EXT4_DIR_ENTRY_HEADER_LEN		MOFS(struct ext2_dir_entry_2, name)
