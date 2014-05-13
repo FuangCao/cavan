@@ -29,3 +29,59 @@ int check_super_permission(bool def_choose, int timeout_ms)
 
 	ERROR_RETURN(EPERM);
 }
+
+int cavan_permission_set(u32 permission)
+{
+	int ret;
+	struct __user_cap_data_struct data =
+	{
+		.permitted = permission,
+		.effective = permission
+	};
+	struct __user_cap_header_struct header =
+	{
+		.pid = 0,
+		.version = _LINUX_CAPABILITY_VERSION,
+	};
+
+	ret = capset(&header, &data);
+	if (ret < 0)
+	{
+		pr_error_info("capset");
+		return ret;
+	}
+
+	return 0;
+}
+
+int cavan_permission_clear(u32 permission)
+{
+	int ret;
+	struct __user_cap_data_struct data;
+	struct __user_cap_header_struct header =
+	{
+		.pid = 0,
+		.version = _LINUX_CAPABILITY_VERSION,
+	};
+
+	ret = capget(&header, &data);
+	if (ret < 0)
+	{
+		pr_error_info("capget");
+		return ret;
+	}
+
+	println("permitted = 0x%08x, effective = 0x%08x", data.permitted, data.effective);
+
+	data.permitted &= ~permission;
+	data.effective = data.permitted;
+
+	ret = capset(&header, &data);
+	if (ret < 0)
+	{
+		pr_error_info("capset");
+		return ret;
+	}
+
+	return 0;
+}

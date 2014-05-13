@@ -218,29 +218,6 @@ int cavan_service_stop(struct cavan_service_description *desc)
 	return 0;
 }
 
-int cavan_daemon_permission_clear(u32 permission)
-{
-	int ret;
-	struct __user_cap_data_struct data;
-	struct __user_cap_header_struct header =
-	{
-		.pid = 0,
-		.version = _LINUX_CAPABILITY_VERSION,
-	};
-
-	ret = capget(&header, &data);
-	if (ret < 0)
-	{
-		pr_error_info("capget");
-		return ret;
-	}
-
-	data.permitted &= ~permission;
-	data.effective = data.permitted;
-
-	return capset(&header, &data);
-}
-
 int cavan_daemon_run(struct cavan_daemon_description *desc)
 {
 	int ret;

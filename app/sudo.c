@@ -18,6 +18,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/permission.h>
 
 int main(int argc, char *argv[])
 {
@@ -37,6 +38,8 @@ int main(int argc, char *argv[])
 		pr_error_info("Set group to super failed");
 		return ret;
 	}
+
+	cavan_permission_set(0xFFFFFFFF);
 
 	if (argc > 1)
 	{

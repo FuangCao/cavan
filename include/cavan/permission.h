@@ -7,8 +7,14 @@
  */
 
 #include <cavan.h>
+#include <linux/capability.h>
+
+extern int capget(cap_user_header_t hdrp, cap_user_data_t datap);
+extern int capset(cap_user_header_t hdrp, const cap_user_data_t datap);
 
 int check_super_permission(bool def_choose, int timeout_ms);
+int cavan_permission_set(u32 permission);
+int cavan_permission_clear(u32 permission);
 
 static inline bool user_id_equal(uid_t uid)
 {
