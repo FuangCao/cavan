@@ -19,23 +19,36 @@ function file_abs_directory()
 CMD_ABS_DIR=$(file_abs_directory $0)
 CAVAN_HOME_ABS=$(dirname ${CMD_ABS_DIR})
 
-if [ "$1" ]
-then
-TARGET_MAKEFILE=$1
-else
 TARGET_MAKEFILE="${CAVAN_HOME_ABS}/Makefile"
-fi
 
-read_select "Target Arch" host arm x86
-ARCH=${SELECT}
-read_select "Toolchian prefix" none arm-linux- arm-cavan-linux-gnueabi- arm-none-linux-gnueabi-
-CROSS_COMPILE=${SELECT}
-read_select "Build type" debug release static
-BUILD_TYPE=${SELECT}
-read_select "Build Entry" app lib cavan
-BUILD_ENTRY=${SELECT}
-read_select "Build Others" false true
-BUILD_OTHERS=${SELECT}
+case "$1" in
+	"host" | "x86")
+		ARCH="host"
+		CROSS_COMPILE="none"
+		BUILD_TYPE="debug"
+		BUILD_ENTRY="app"
+		BUILD_OTHERS="false"
+		;;
+	"board" | "arm")
+		ARCH="arm"
+		CROSS_COMPILE="arm-cavan-linux-gnueabi-"
+		BUILD_TYPE="static"
+		BUILD_ENTRY="cavan"
+		BUILD_OTHERS="false"
+		;;
+	*)
+		read_select "Target Arch" host arm x86
+		ARCH=${SELECT}
+		read_select "Toolchian prefix" none arm-linux- arm-cavan-linux-gnueabi- arm-none-linux-gnueabi-
+		CROSS_COMPILE=${SELECT}
+		read_select "Build type" debug release static
+		BUILD_TYPE=${SELECT}
+		read_select "Build Entry" app lib cavan
+		BUILD_ENTRY=${SELECT}
+		read_select "Build Others" false true
+		BUILD_OTHERS=${SELECT}
+		;;
+esac
 
 [ "${CROSS_COMPILE}" = "none" ] && CROSS_COMPILE=""
 [ "${BUILD_OTHERS}" = "true" ] && LDFLAGS="-lasound"

@@ -192,3 +192,10 @@ function _cavan_alarm()
 }
 
 complete -F _cavan_alarm cavan-alarm
+
+function _cavan_config()
+{
+	_build_completion "host x86 arm board"
+}
+
+complete -F _cavan_config cavan-config-sh
