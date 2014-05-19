@@ -580,7 +580,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		for node in self.mManifest.getProjects():
 			pathname = self.getProjectAbsPath(node)
 			self.prBrownInfo("Cleaning ", pathname)
-			if not self.doGitClean(pathname):
+			manager = GitSvnManager(pathname, self.mVerbose)
+			if not manager.doGitClean(pathname):
 				return False
 
 		return True

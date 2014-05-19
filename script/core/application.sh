@@ -94,6 +94,7 @@ function cavan-daemon-run()
 	cavan-tcp_proxy -adp 9999
 	cavan-tcp_proxy --daemon --host mirrors.ustc.edu.cn --pport 80 --port 6666
 	squid
+	distccd --allow "0.0.0.0/0" --port 3333 --daemon
 	cavan-web_proxy -dp 9090
 	cavan-git-daemon-run
 
