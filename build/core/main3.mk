@@ -36,7 +36,7 @@ CFLAGS +=	-Wall -Wundef -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,-
 			-fno-strict-aliasing -fno-exceptions -fno-inline-functions-called-once \
 			-ffunction-sections -funwind-tables -fstack-protector -finline-functions \
 			-fgcse-after-reload -frerun-cse-after-loop -frename-registers -fomit-frame-pointer -finline-limit=64 \
-			-g -Os -I$(INCLUDE_PATH) -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\"
+			-g -Os -I$(INCLUDE_PATH) -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\" -include cavan/config.h
 
 CFLAGS += -DCAVAN_ARCH_$(shell echo $(ARCH) | tr '[a-z]' '[A-Z]')
 

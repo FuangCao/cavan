@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cavan/config.h>
 #include <linux/version.h>
 #include <assert.h>
 #include <dirent.h>
