@@ -41,6 +41,7 @@ public class HuaLcdInfo {
 
 	private int mId;
 	private String mName;
+	private String mShortName;
 	private int mVendorId;
 	private String mIc;
 	private HuaLcdVendorInfo mVendorInfo;
@@ -55,7 +56,15 @@ public class HuaLcdInfo {
 	public HuaLcdInfo(String name) {
 		super();
 		mName = name.toLowerCase();
-		mVendorId = 0;
+
+		String fields[] = mName.split("\\s*,\\s*");
+		if (fields != null && fields.length > 2) {
+			mVendorId = -1;
+			mShortName = fields[2];
+		} else {
+			mVendorId = 0;
+			mShortName = null;
+		}
 
 		Integer id = mHashMapNameId.get(mName);
 		if (id == null) {
@@ -74,7 +83,11 @@ public class HuaLcdInfo {
 
 	private void fillVendorInfo() {
 		mIc = mHashMapIdIc.get(mId);
-		mVendorInfo = HuaLcdVendorInfo.getLcdVendorInfo(mId, mVendorId);
+		if (mShortName == null) {
+			mVendorInfo = HuaLcdVendorInfo.getLcdVendorInfo(mId, mVendorId);
+		} else {
+			mVendorInfo = HuaLcdVendorInfo.getLcdVendorInfo(mId, mShortName);
+		}
 	}
 
 	public int getId() {

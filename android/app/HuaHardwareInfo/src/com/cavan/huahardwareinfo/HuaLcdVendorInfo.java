@@ -13,6 +13,7 @@ public class HuaLcdVendorInfo {
 
 	private static final HuaLcdVendorInfo[] mVendorInfo_ZC2501 = {
 		new HuaLcdVendorInfo(0x9806E, 0, R.string.vendor_name_tongxingda),
+		new HuaLcdVendorInfo(0x9806E, R.string.vendor_name_yashi, "yashi"),
 		new HuaLcdVendorInfo(0x8018B, 0, R.string.vendor_name_zhongxianwei),
 		new HuaLcdVendorInfo(0x5512, 0, R.string.vendor_name_lide)
 	};
@@ -20,12 +21,22 @@ public class HuaLcdVendorInfo {
 	private int mId;
 	private int mVendorId;
 	private int mVendorName;
+	private String mShortName;
 
-	public HuaLcdVendorInfo(int id, int vendorId, int vendorName) {
+	public HuaLcdVendorInfo(int id, int vendorId, int vendorName, String shortName) {
 		super();
 		mId = id;
 		mVendorId = vendorId;
 		mVendorName = vendorName;
+		mShortName = shortName;
+	}
+
+	public HuaLcdVendorInfo(int id, int vendorId, int vendorName) {
+		this(id, vendorId, vendorName, null);
+	}
+
+	public HuaLcdVendorInfo(int id, int vendorName, String shortName) {
+		this(id, -1, vendorName, shortName);
 	}
 
 	public int getId() {
@@ -40,19 +51,39 @@ public class HuaLcdVendorInfo {
 		return mVendorName;
 	}
 
-	public static HuaLcdVendorInfo getLcdVendorInfo(int id, int vendorId) {
-		HuaLcdVendorInfo[] vendorInfos;
-
+	public static HuaLcdVendorInfo[] getVendorInfoList() {
 		if (Build.BOARD.equals("hs8801")) {
-			vendorInfos = mVendorInfo_HS8801;
+			return mVendorInfo_HS8801;
 		} else if (Build.DEVICE.equals("P810N30")) {
-			vendorInfos = mVendorInfo_ZC2501;
+			return mVendorInfo_ZC2501;
 		} else {
+			return null;
+		}
+	}
+
+	public static HuaLcdVendorInfo getLcdVendorInfo(int id, int vendorId) {
+		HuaLcdVendorInfo[] vendorInfos = getVendorInfoList();
+		if (vendorInfos == null) {
 			return null;
 		}
 
 		for (HuaLcdVendorInfo vendorInfo : vendorInfos) {
 			if (vendorInfo.getId() == id && vendorInfo.getVendorId() == vendorId) {
+				return vendorInfo;
+			}
+		}
+
+		return null;
+	}
+
+	public static HuaLcdVendorInfo getLcdVendorInfo(int id, String shortName) {
+		HuaLcdVendorInfo[] vendorInfos = getVendorInfoList();
+		if (vendorInfos == null) {
+			return null;
+		}
+
+		for (HuaLcdVendorInfo vendorInfo : vendorInfos) {
+			if (vendorInfo.getId() == id && shortName.equals(vendorInfo.mShortName)) {
 				return vendorInfo;
 			}
 		}
