@@ -310,6 +310,8 @@ class GitSvnManager(CavanGitManager):
 		if os.path.isdir(self.mPathSvnRepo):
 			listUpdate = self.svnUpdate(revision)
 			if listUpdate == None:
+				if not self.doExecute(["svn", "info", "-r", revision]):
+					return True
 				return False
 		else:
 			url = "%s@%s" % (self.mUrl, revision)
