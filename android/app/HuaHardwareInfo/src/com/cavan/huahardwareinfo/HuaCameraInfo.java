@@ -9,6 +9,9 @@ public class HuaCameraInfo {
 	};
 	private static final HuaCameraInfo[] mCameraInfo_ZC2501 = {
 		new HuaCameraInfo("GC2035", R.string.vendor_name_geke, R.string.vendor_name_tongju),
+		new HuaCameraInfo("GC0339", R.string.vendor_name_geke, R.string.vendor_name_boyi),
+		new HuaCameraInfo("GC5004", R.string.vendor_name_geke, R.string.vendor_name_geke),
+		new HuaCameraInfo("OV5648", R.string.vendor_name_ov, R.string.vendor_name_ov),
 		new HuaCameraInfo("SP2529", R.string.vendor_name_sibike, R.string.vendor_name_boyi)
 	};
 
@@ -49,7 +52,7 @@ public class HuaCameraInfo {
 		name = name.toUpperCase();
 
 		for (HuaCameraInfo info : infos) {
-			if (info.getName().equals(name)) {
+			if (name.contains(info.getName())) {
 				return info;
 			}
 		}

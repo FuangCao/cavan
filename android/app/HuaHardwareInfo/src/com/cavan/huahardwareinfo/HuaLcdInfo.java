@@ -11,6 +11,7 @@ public class HuaLcdInfo {
 		mHashMapIdIc.put(0x8009, "OTM8009");
 		mHashMapIdIc.put(0x8012, "OTM8012A");
 		mHashMapIdIc.put(0x8018B, "OTM8018B");
+		mHashMapIdIc.put(0x8019A, "OTM8019A");
 
 		mHashMapIdIc.put(0x9488, "ILI9488");
 		mHashMapIdIc.put(0x9805, "ILI9805");

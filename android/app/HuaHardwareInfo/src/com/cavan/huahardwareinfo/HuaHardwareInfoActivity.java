@@ -44,7 +44,7 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			mFileFlashInfo = new File("/sys/devices/platform/sprd_nand/dev_info");
 		} else {
 			mFileLcdInfo = new File("/sys/devices/virtual/graphics/fb0/dev_info");
-			mFileCameraInfo = new File("/sys/class/video4linux/v4l-subdev4/dev_info");
+			mFileCameraInfo = new File("/sys/class/video4linux");
 			mFileFlashInfo = new File("/sys/bus/mmc/devices/mmc0:0001");
 			mFileFlashSize = new File(mFileFlashInfo, "block/mmcblk0/size");
 		}
@@ -124,6 +124,31 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 		Log.d(TAG, content);
 
 		return content.trim();
+	}
+
+	private String readDirectory(File dir, int depth) {
+		if (depth > 1) {
+			File[] files = dir.listFiles();
+			if (files == null) {
+				return null;
+			}
+
+			StringBuilder builder = new StringBuilder();
+
+			for (File file : files) {
+				if (file.isDirectory()) {
+					String content = readDirectory(file, depth - 1);
+					if (content != null) {
+						builder.append(content);
+						builder.append('\n');
+					}
+				}
+			}
+
+			return builder.toString();
+		} else {
+			return readFile(new File(dir, "dev_info"));
+		}
 	}
 
 	private HashMap<String, String> parseFile(String content) {
@@ -310,7 +335,14 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	private boolean loadCameraInfo() {
 		mPreferenceCategoryCameraInfo.removeAll();
 
-		String content = readFile(mFileCameraInfo);
+		String content;
+
+		if (mFileCameraInfo.isDirectory()) {
+			content = readDirectory(mFileCameraInfo, 2);
+		} else {
+			content = readFile(mFileCameraInfo);
+		}
+
 		if (content == null) {
 			return false;
 		}
@@ -346,6 +378,16 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 			HashMap<String, String> hashMap = parseFile(description);
 			if (hashMap == null) {
 				continue;
+			}
+
+			String strPosition = hashMap.get("position");
+			if (strPosition != null) {
+				int position = Integer.parseInt(strPosition);
+				if (position == 0) {
+					prefix = getResources().getString(R.string.back_camera);
+				} else {
+					prefix = getResources().getString(R.string.front_camera);
+				}
 			}
 
 			String name = hashMap.get("name");

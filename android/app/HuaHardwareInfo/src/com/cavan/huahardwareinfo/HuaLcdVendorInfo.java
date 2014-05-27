@@ -13,9 +13,13 @@ public class HuaLcdVendorInfo {
 
 	private static final HuaLcdVendorInfo[] mVendorInfo_ZC2501 = {
 		new HuaLcdVendorInfo(0x9806E, 0, R.string.vendor_name_tongxingda),
+		new HuaLcdVendorInfo(0x9806E, R.string.vendor_name_tongxingda, "txd"),
 		new HuaLcdVendorInfo(0x9806E, R.string.vendor_name_yashi, "yashi"),
 		new HuaLcdVendorInfo(0x8018B, 0, R.string.vendor_name_zhongxianwei),
-		new HuaLcdVendorInfo(0x5512, 0, R.string.vendor_name_lide)
+		new HuaLcdVendorInfo(0x8018B, R.string.vendor_name_zhongxianwei, "cdt"),
+		new HuaLcdVendorInfo(0x8019A, 0, R.string.vendor_name_huayu),
+		new HuaLcdVendorInfo(0x5512, 0, R.string.vendor_name_lide),
+		new HuaLcdVendorInfo(0x5512, R.string.vendor_name_lide, "lide")
 	};
 
 	private int mId;
