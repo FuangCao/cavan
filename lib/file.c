@@ -2724,9 +2724,9 @@ out_close_fd:
 	return ret;
 }
 
-void file_unmap(int fd, void *map, size_t size)
+void file_unmap(int fd, void *addr, size_t size)
 {
-	munmap(map, size);
+	munmap(addr, size);
 	flock(fd, LOCK_UN);
 	close(fd);
 }
