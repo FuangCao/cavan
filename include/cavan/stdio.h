@@ -103,21 +103,21 @@ using namespace std;
 #define PRINT_FORMAT_OFF				"%Ld"
 #endif
 
-#define pr_std_info(fmt, args ...) \
+#define pr_info(fmt, args ...) \
 	printf(fmt "\n", ##args)
 
 #ifdef CAVAN_DEBUG
 #define pr_debug_info(fmt, args ...) \
-	pr_std_info(fmt, ##args)
+	pr_info(fmt, ##args)
 #else
 #define pr_debug_info(fmt, args ...)
 #endif
 
 #define pr_func_info(fmt, args ...) \
-	pr_std_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+	pr_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
 
 #define pr_color_info(color, fmt, args ...) \
-	pr_std_info(color fmt CAVAN_COLOR_STAND, ##args)
+	pr_info(color fmt CAVAN_COLOR_STAND, ##args)
 
 #define pr_red_info(fmt, args ...) \
 	pr_color_info(CAVAN_COLOR_RED, "%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
@@ -142,7 +142,7 @@ using namespace std;
 	pr_color_info(CAVAN_COLOR_BOLD, fmt, ##args)
 
 #define pr_std_pos(fmt) \
-	pr_std_info(fmt, __FILE__, __FUNCTION__, __LINE__)
+	pr_info(fmt, __FILE__, __FUNCTION__, __LINE__)
 
 #define pr_pos_info() \
 	pr_std_pos("%s => %s[%d]")

@@ -116,7 +116,7 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 				continue;
 			}
 
-			pr_std_info("Try port %04d", ports[i]);
+			pr_info("Try port %04d", ports[i]);
 			addr.sin_port = htons(ports[i]);
 
 			if (inet_connect(sockfd, &addr) >= 0)

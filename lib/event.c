@@ -1586,7 +1586,7 @@ ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data
 			continue;
 		}
 
-		pr_std_info("============================================================");
+		pr_info("============================================================");
 
 		text_copy(filename, entry->d_name);
 		fd = open(matcher->pathname, O_RDONLY);

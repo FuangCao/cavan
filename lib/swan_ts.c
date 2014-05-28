@@ -38,7 +38,7 @@ static int swan_ts_match_handler(struct cavan_event_matcher *matcher, void *data
 {
 	int ret;
 
-	pr_std_info("Device \"%s\" is named \"%s\"", matcher->pathname, matcher->devname);
+	pr_info("Device \"%s\" is named \"%s\"", matcher->pathname, matcher->devname);
 	pr_bold_info("Calibration, don't touch the screen");
 
 	ret = ioctl(matcher->fd, SWAN_TS_INPUT_IOCTL_CALIBRATION);

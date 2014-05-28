@@ -241,7 +241,7 @@ int file_split(const char *file_name, const char *dest_dir, size_t size, int cou
 		ssize_t cpylen;
 
 		sprintf(dest_filename, "-part%02d", i);
-		pr_std_info("%s => %s", file_name, dest_pathname);
+		pr_info("%s => %s", file_name, dest_pathname);
 
 		dest_fd = open(dest_pathname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0777);
 		if (dest_fd < 0)
@@ -2869,7 +2869,7 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 
 	if (option->verbose)
 	{
-		pr_std_info("create directory `%s'", pathname);
+		pr_info("create directory `%s'", pathname);
 	}
 
 	ret = mkdir(pathname, option->mode);

@@ -612,7 +612,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			break;
 		}
 
-		pr_std_info("%s[%d](%d) => %s", buff, type, count, network_url_tostring(url, NULL, 0, NULL));
+		pr_info("%s[%d](%d) => %s", buff, type, count, network_url_tostring(url, NULL, 0, NULL));
 
 		if (proxy_sockfd < 0 || network_url_equals(url_bak, url) == false)
 		{

@@ -299,15 +299,26 @@ static int tcp_dd_handle_write_request(int sockfd, struct tcp_dd_file_request *r
 {
 	int fd;
 	int ret;
+	mode_t mode;
 
-	if (file_test(req->filename, "b") == 0)
+	mode = file_get_mode(req->filename);
+	switch (mode & S_IFMT)
 	{
+	case S_IFREG:
+		pr_info("remove regular file %s", req->filename);
+		unlink(req->filename);
+		break;
+
+	case S_IFBLK:
+		pr_info("umount block device %s", req->filename);
 		umount_device(req->filename, MNT_DETACH);
+		break;
 	}
 
 	fd = open(req->filename, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, req->mode);
 	if (fd < 0)
 	{
+
 		tcp_dd_send_response(sockfd, fd, "[Server] Open file `%s' failed", req->filename);
 		return fd;
 	}
