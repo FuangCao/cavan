@@ -21,13 +21,8 @@
 
 #include <cavan.h>
 
-#define SHA_DIGEST_SIZE 20
-
-#define ROR(value, bits) \
-	((value) >> (bits) | (value) << ((sizeof(value) << 3) - (bits)))
-
-#define ROL(value, bits) \
-	((value) << (bits) | (value) >> ((sizeof(value) << 3) - (bits)))
+#define SHA1_DIGEST_SIZE	20
+#define MD5_DIGEST_SIZE		16
 
 struct cavan_sha1_context
 {
@@ -38,9 +33,13 @@ struct cavan_sha1_context
 	u32 state[5];
 };
 
-int cavan_sha1sum(const void *buff, size_t size, u8 *digest);
-int cavan_file_sha1sum_mmap(const char *pathname, u8 *digest);
-int cavan_file_sha1sum(const char *pathname, u8 *digest);
+int cavan_sha1sum(const void *buff, size_t size, u8 digest[SHA1_DIGEST_SIZE]);
+int cavan_file_sha1sum_mmap(const char *pathname, u8 digest[SHA1_DIGEST_SIZE]);
+int cavan_file_sha1sum(const char *pathname, u8 digest[SHA1_DIGEST_SIZE]);
+
+int cavan_md5sum(const void *buff, size_t size, u8 digest[MD5_DIGEST_SIZE]);
+int cavan_file_md5sum_mmap(const char *pathname, u8 digest[MD5_DIGEST_SIZE]);
+int cavan_file_md5sum(const char *pathname, u8 digest[MD5_DIGEST_SIZE]);
 
 static inline char *cavan_shasum_tostring(const u8 *digest, size_t size, char *buff, size_t buff_size)
 {

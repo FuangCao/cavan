@@ -118,7 +118,7 @@ typedef struct
 #define BYTES_DWORD(b1, b2, b3, b4) \
 	WORDS_DWORD(BYTES_WORD(b1, b2), BYTES_WORD(b3, b4))
 
-#define SWAP16(value)(value) \
+#define SWAP16(value) \
 	((value) >> 8 | (value) << 8)
 
 #define SWAP32(value) \

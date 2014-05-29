@@ -673,3 +673,23 @@ void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep,
 		printf("0x%02x%s", *mem++, new_line);
 	}
 }
+
+void mem_swap16(u16 *dest, const u16 *src, size_t count)
+{
+	const u16 *src_end;
+
+	for (src_end = src + count; src < src_end; dest++, src++)
+	{
+		*dest = SWAP16(*src);
+	}
+}
+
+void mem_swap32(u32 *dest, const u32 *src, size_t count)
+{
+	const u32 *src_end;
+
+	for (src_end = src + count; src < src_end; dest++, src++)
+	{
+		*dest = SWAP32(*src);
+	}
+}
