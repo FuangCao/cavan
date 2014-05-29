@@ -68,6 +68,23 @@
 		} \
 	} while (0)
 
+#define MD5_FUNC1(B, C, D) \
+	(((B) & (C)) | (~(B) & (D)))
+
+#define MD5_FUNC2(B, C, D) \
+	(((B) & (D)) | ((C) & ~(D)))
+
+#define MD5_FUNC3(B, C, D) \
+	((B) ^ (C) ^ (D))
+
+#define MD5_FUNC4(B, C, D) \
+	((C) ^ ((B) | ~(D)))
+
+#define MD5_TRANSFORM(A, B, C, D, K, S, I, F) \
+	do { \
+		(A) = (B) + ROL((A) + MD5_FUNC##F(B, C, D) + (K) + (I), S); \
+	} while (0)
+
 static void cavan_sha1_transform(struct cavan_sha1_context *context, const u32 *buff)
 {
 	int i;
@@ -141,20 +158,26 @@ static void cavan_sha1_update(struct cavan_sha1_context *context, const void *bu
 
 static void cavan_sha1_finish(struct cavan_sha1_context *context, u8 digest[SHA1_DIGEST_SIZE])
 {
-	int i;
-	u8 *p;
+	u8 *p, *ps;
+	const u8 *q;
 	u64 bits = context->count << 3;
 
 	cavan_sha1_update(context, "\x80", 1);
 
-	while (context->remain != sizeof(context->buff) - 8)
+	if (context->remain > sizeof(context->buff) - 8)
 	{
-		cavan_sha1_update(context, "\0", 1);
+		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain);
+		cavan_sha1_transform(context, (u32 *) context->buff);
+		memset(context->buff, 0, context->remain);
+	}
+	else
+	{
+		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain - 8);
 	}
 
-	for (i = 0, p = context->buff + context->remain; i < 8; i++)
+	for (p = context->buff + sizeof(context->buff) - 1, ps = p - 8, q = (u8 *) &bits; p > ps; p--, q++)
 	{
-		p[i] = bits >> ((7 - i) << 3);
+		*p = *q;
 	}
 
 	cavan_sha1_transform(context, (u32 *) context->buff);
@@ -250,255 +273,189 @@ int cavan_file_sha1sum(const char *pathname, u8 digest[SHA1_DIGEST_SIZE])
 
 // ========================================================
 
-struct md5 {
-  unsigned int sz[2];
-  u_int32_t counter[4];
-  unsigned char save[64];
-};
-
-#define A m->counter[0]
-#define B m->counter[1]
-#define C m->counter[2]
-#define D m->counter[3]
-#define X data
-
-static void
-MD5_Init (struct md5 *m)
+static void cavan_md5_init (struct cavan_md5_context *context)
 {
-  m->sz[0] = 0;
-  m->sz[1] = 0;
-  D = 0x10325476;
-  C = 0x98badcfe;
-  B = 0xefcdab89;
-  A = 0x67452301;
+	context->count = 0;
+	context->remain = 0;
+	context->state[0] = 0x67452301;
+	context->state[1] = 0xEFCDAB89;
+	context->state[2] = 0x98BADCFE;
+	context->state[3] = 0x10325476;
 }
 
-#define F(x,y,z) ((x & y) | (~x & z))
-#define G(x,y,z) ((x & z) | (y & ~z))
-#define H(x,y,z) (x ^ y ^ z)
-#define I(x,y,z) (y ^ (x | ~z))
-
-#define DOIT(a,b,c,d,k,s,i,OP) \
-a = b + ROL(a + OP(b,c,d) + X[k] + (i), s)
-
-#define DO1(a,b,c,d,k,s,i) DOIT(a,b,c,d,k,s,i,F)
-#define DO2(a,b,c,d,k,s,i) DOIT(a,b,c,d,k,s,i,G)
-#define DO3(a,b,c,d,k,s,i) DOIT(a,b,c,d,k,s,i,H)
-#define DO4(a,b,c,d,k,s,i) DOIT(a,b,c,d,k,s,i,I)
-
-static inline void
-calc (struct md5 *m, u_int32_t *data)
+static void cavan_md5_transform (struct cavan_md5_context *context, const u32 *buff)
 {
-  u_int32_t AA, BB, CC, DD;
+	register u32 A, B, C, D;
 
-  AA = A;
-  BB = B;
-  CC = C;
-  DD = D;
+	A = context->state[0];
+	B = context->state[1];
+	C = context->state[2];
+	D = context->state[3];
 
-  /* Round 1 */
+	/* Round 1 */
 
-  DO1(A,B,C,D,0,7,0xd76aa478);
-  DO1(D,A,B,C,1,12,0xe8c7b756);
-  DO1(C,D,A,B,2,17,0x242070db);
-  DO1(B,C,D,A,3,22,0xc1bdceee);
+	MD5_TRANSFORM(A, B, C, D, buff[0], 7, 0xD76AA478, 1);
+	MD5_TRANSFORM(D, A, B, C, buff[1], 12, 0xE8C7B756, 1);
+	MD5_TRANSFORM(C, D, A, B, buff[2], 17, 0x242070DB, 1);
+	MD5_TRANSFORM(B, C, D, A, buff[3], 22, 0xC1BDCEEE, 1);
 
-  DO1(A,B,C,D,4,7,0xf57c0faf);
-  DO1(D,A,B,C,5,12,0x4787c62a);
-  DO1(C,D,A,B,6,17,0xa8304613);
-  DO1(B,C,D,A,7,22,0xfd469501);
+	MD5_TRANSFORM(A, B, C, D, buff[4], 7, 0xF57C0FAF, 1);
+	MD5_TRANSFORM(D, A, B, C, buff[5], 12, 0x4787C62A, 1);
+	MD5_TRANSFORM(C, D, A, B, buff[6], 17, 0xA8304613, 1);
+	MD5_TRANSFORM(B, C, D, A, buff[7], 22, 0xFD469501, 1);
 
-  DO1(A,B,C,D,8,7,0x698098d8);
-  DO1(D,A,B,C,9,12,0x8b44f7af);
-  DO1(C,D,A,B,10,17,0xffff5bb1);
-  DO1(B,C,D,A,11,22,0x895cd7be);
+	MD5_TRANSFORM(A, B, C, D, buff[8], 7, 0x698098D8, 1);
+	MD5_TRANSFORM(D, A, B, C, buff[9], 12, 0x8B44F7AF, 1);
+	MD5_TRANSFORM(C, D, A, B, buff[10], 17, 0xFFFF5BB1, 1);
+	MD5_TRANSFORM(B, C, D, A, buff[11], 22, 0x895CD7BE, 1);
 
-  DO1(A,B,C,D,12,7,0x6b901122);
-  DO1(D,A,B,C,13,12,0xfd987193);
-  DO1(C,D,A,B,14,17,0xa679438e);
-  DO1(B,C,D,A,15,22,0x49b40821);
+	MD5_TRANSFORM(A, B, C, D, buff[12], 7, 0x6B901122, 1);
+	MD5_TRANSFORM(D, A, B, C, buff[13], 12, 0xFD987193, 1);
+	MD5_TRANSFORM(C, D, A, B, buff[14], 17, 0xA679438E, 1);
+	MD5_TRANSFORM(B, C, D, A, buff[15], 22, 0x49B40821, 1);
 
-  /* Round 2 */
+	/* Round 2 */
 
-  DO2(A,B,C,D,1,5,0xf61e2562);
-  DO2(D,A,B,C,6,9,0xc040b340);
-  DO2(C,D,A,B,11,14,0x265e5a51);
-  DO2(B,C,D,A,0,20,0xe9b6c7aa);
+	MD5_TRANSFORM(A, B, C, D, buff[1], 5, 0xF61E2562, 2);
+	MD5_TRANSFORM(D, A, B, C, buff[6], 9, 0xC040B340, 2);
+	MD5_TRANSFORM(C, D, A, B, buff[11], 14, 0x265E5A51, 2);
+	MD5_TRANSFORM(B, C, D, A, buff[0], 20, 0xE9B6C7AA, 2);
 
-  DO2(A,B,C,D,5,5,0xd62f105d);
-  DO2(D,A,B,C,10,9,0x2441453);
-  DO2(C,D,A,B,15,14,0xd8a1e681);
-  DO2(B,C,D,A,4,20,0xe7d3fbc8);
+	MD5_TRANSFORM(A, B, C, D, buff[5], 5, 0xD62F105D, 2);
+	MD5_TRANSFORM(D, A, B, C, buff[10], 9, 0x2441453, 2);
+	MD5_TRANSFORM(C, D, A, B, buff[15], 14, 0xD8A1E681, 2);
+	MD5_TRANSFORM(B, C, D, A, buff[4], 20, 0xE7D3FBC8, 2);
 
-  DO2(A,B,C,D,9,5,0x21e1cde6);
-  DO2(D,A,B,C,14,9,0xc33707d6);
-  DO2(C,D,A,B,3,14,0xf4d50d87);
-  DO2(B,C,D,A,8,20,0x455a14ed);
+	MD5_TRANSFORM(A, B, C, D, buff[9], 5, 0x21E1CDE6, 2);
+	MD5_TRANSFORM(D, A, B, C, buff[14], 9, 0xC33707D6, 2);
+	MD5_TRANSFORM(C, D, A, B, buff[3], 14, 0xF4D50D87, 2);
+	MD5_TRANSFORM(B, C, D, A, buff[8], 20, 0x455A14ED, 2);
 
-  DO2(A,B,C,D,13,5,0xa9e3e905);
-  DO2(D,A,B,C,2,9,0xfcefa3f8);
-  DO2(C,D,A,B,7,14,0x676f02d9);
-  DO2(B,C,D,A,12,20,0x8d2a4c8a);
+	MD5_TRANSFORM(A, B, C, D, buff[13], 5, 0xA9E3E905, 2);
+	MD5_TRANSFORM(D, A, B, C, buff[2], 9, 0xFCEFA3F8, 2);
+	MD5_TRANSFORM(C, D, A, B, buff[7], 14, 0x676F02D9, 2);
+	MD5_TRANSFORM(B, C, D, A, buff[12], 20, 0x8D2A4C8A, 2);
 
-  /* Round 3 */
+	/* Round 3 */
 
-  DO3(A,B,C,D,5,4,0xfffa3942);
-  DO3(D,A,B,C,8,11,0x8771f681);
-  DO3(C,D,A,B,11,16,0x6d9d6122);
-  DO3(B,C,D,A,14,23,0xfde5380c);
+	MD5_TRANSFORM(A, B, C, D, buff[5], 4, 0xFFFA3942, 3);
+	MD5_TRANSFORM(D, A, B, C, buff[8], 11, 0x8771F681, 3);
+	MD5_TRANSFORM(C, D, A, B, buff[11], 16, 0x6D9D6122, 3);
+	MD5_TRANSFORM(B, C, D, A, buff[14], 23, 0xFDE5380C, 3);
 
-  DO3(A,B,C,D,1,4,0xa4beea44);
-  DO3(D,A,B,C,4,11,0x4bdecfa9);
-  DO3(C,D,A,B,7,16,0xf6bb4b60);
-  DO3(B,C,D,A,10,23,0xbebfbc70);
+	MD5_TRANSFORM(A, B, C, D, buff[1], 4, 0xA4BEEA44, 3);
+	MD5_TRANSFORM(D, A, B, C, buff[4], 11, 0x4BDECFA9, 3);
+	MD5_TRANSFORM(C, D, A, B, buff[7], 16, 0xF6BB4B60, 3);
+	MD5_TRANSFORM(B, C, D, A, buff[10], 23, 0xBEBFBC70, 3);
 
-  DO3(A,B,C,D,13,4,0x289b7ec6);
-  DO3(D,A,B,C,0,11,0xeaa127fa);
-  DO3(C,D,A,B,3,16,0xd4ef3085);
-  DO3(B,C,D,A,6,23,0x4881d05);
+	MD5_TRANSFORM(A, B, C, D, buff[13], 4, 0x289B7EC6, 3);
+	MD5_TRANSFORM(D, A, B, C, buff[0], 11, 0xEAA127FA, 3);
+	MD5_TRANSFORM(C, D, A, B, buff[3], 16, 0xD4EF3085, 3);
+	MD5_TRANSFORM(B, C, D, A, buff[6], 23, 0x4881D05, 3);
 
-  DO3(A,B,C,D,9,4,0xd9d4d039);
-  DO3(D,A,B,C,12,11,0xe6db99e5);
-  DO3(C,D,A,B,15,16,0x1fa27cf8);
-  DO3(B,C,D,A,2,23,0xc4ac5665);
+	MD5_TRANSFORM(A, B, C, D, buff[9], 4, 0xD9D4D039, 3);
+	MD5_TRANSFORM(D, A, B, C, buff[12], 11, 0xE6DB99E5, 3);
+	MD5_TRANSFORM(C, D, A, B, buff[15], 16, 0x1FA27CF8, 3);
+	MD5_TRANSFORM(B, C, D, A, buff[2], 23, 0xC4AC5665, 3);
 
-  /* Round 4 */
+	/* Round 4 */
 
-  DO4(A,B,C,D,0,6,0xf4292244);
-  DO4(D,A,B,C,7,10,0x432aff97);
-  DO4(C,D,A,B,14,15,0xab9423a7);
-  DO4(B,C,D,A,5,21,0xfc93a039);
+	MD5_TRANSFORM(A, B, C, D, buff[0], 6, 0xF4292244, 4);
+	MD5_TRANSFORM(D, A, B, C, buff[7], 10, 0x432AFF97, 4);
+	MD5_TRANSFORM(C, D, A, B, buff[14], 15, 0xAB9423A7, 4);
+	MD5_TRANSFORM(B, C, D, A, buff[5], 21, 0xFC93A039, 4);
 
-  DO4(A,B,C,D,12,6,0x655b59c3);
-  DO4(D,A,B,C,3,10,0x8f0ccc92);
-  DO4(C,D,A,B,10,15,0xffeff47d);
-  DO4(B,C,D,A,1,21,0x85845dd1);
+	MD5_TRANSFORM(A, B, C, D, buff[12], 6, 0x655B59C3, 4);
+	MD5_TRANSFORM(D, A, B, C, buff[3], 10, 0x8F0CCC92, 4);
+	MD5_TRANSFORM(C, D, A, B, buff[10], 15, 0xFFEFF47D, 4);
+	MD5_TRANSFORM(B, C, D, A, buff[1], 21, 0x85845DD1, 4);
 
-  DO4(A,B,C,D,8,6,0x6fa87e4f);
-  DO4(D,A,B,C,15,10,0xfe2ce6e0);
-  DO4(C,D,A,B,6,15,0xa3014314);
-  DO4(B,C,D,A,13,21,0x4e0811a1);
+	MD5_TRANSFORM(A, B, C, D, buff[8], 6, 0x6FA87E4F, 4);
+	MD5_TRANSFORM(D, A, B, C, buff[15], 10, 0xFE2CE6E0, 4);
+	MD5_TRANSFORM(C, D, A, B, buff[6], 15, 0xA3014314, 4);
+	MD5_TRANSFORM(B, C, D, A, buff[13], 21, 0x4E0811A1, 4);
 
-  DO4(A,B,C,D,4,6,0xf7537e82);
-  DO4(D,A,B,C,11,10,0xbd3af235);
-  DO4(C,D,A,B,2,15,0x2ad7d2bb);
-  DO4(B,C,D,A,9,21,0xeb86d391);
+	MD5_TRANSFORM(A, B, C, D, buff[4], 6, 0xF7537E82, 4);
+	MD5_TRANSFORM(D, A, B, C, buff[11], 10, 0xBD3AF235, 4);
+	MD5_TRANSFORM(C, D, A, B, buff[2], 15, 0x2AD7D2BB, 4);
+	MD5_TRANSFORM(B, C, D, A, buff[9], 21, 0xEB86D391, 4);
 
-  A += AA;
-  B += BB;
-  C += CC;
-  D += DD;
+	context->state[0] += A;
+	context->state[1] += B;
+	context->state[2] += C;
+	context->state[3] += D;
 }
 
-/*
- * From `Performance analysis of MD5' by Joseph D. Touch <touch@isi.edu>
- */
-#if !defined(__BYTE_ORDER) || !defined (__BIG_ENDIAN)
-#error __BYTE_ORDER macros not defined
-#endif
-
-#if __BYTE_ORDER == __BIG_ENDIAN
-static inline u_int32_t
-swap_u_int32_t (u_int32_t t)
+static void cavan_md5_update(struct cavan_md5_context *context, const void *buff, size_t size)
 {
-  u_int32_t temp1, temp2;
+	size_t remain;
+	const void *buff_end = ADDR_ADD(buff, size);
 
-  temp1   = ROL(t, 16);
-  temp2   = temp1 >> 8;
-  temp1  &= 0x00ff00ff;
-  temp2  &= 0x00ff00ff;
-  temp1 <<= 8;
-  return temp1 | temp2;
-}
-#endif
+	if (context->remain > 0)
+	{
+		size_t padding;
 
-struct x32{
-  unsigned int a:32;
-  unsigned int b:32;
-};
+		padding = sizeof(context->buff) - context->remain;
+		if (padding <= size)
+		{
+			mem_copy(context->buff + context->remain, buff, padding);
+			cavan_md5_transform(context, (u32 *) context->buff);
+			buff = ADDR_ADD(buff, padding);
+			context->remain = 0;
+		}
+	}
 
-static void
-MD5_Update (struct md5 *m, const void *v, size_t len)
-{
-  const unsigned char *p = v;
-  size_t old_sz = m->sz[0];
-  size_t offset;
+	while (1)
+	{
+		remain = ADDR_SUB2(buff_end, buff);
+		if (remain < sizeof(context->buff))
+		{
+			break;
+		}
 
-  m->sz[0] += len * 8;
-  if (m->sz[0] < old_sz)
-      ++m->sz[1];
-  offset = (old_sz / 8)  % 64;
-  while(len > 0){
-    size_t l = MIN(len, 64 - offset);
-    memcpy(m->save + offset, p, l);
-    offset += l;
-    p += l;
-    len -= l;
-    if(offset == 64){
-#if __BYTE_ORDER == __BIG_ENDIAN
-      int i;
-      u_int32_t current[16];
-      struct x32 *u = (struct x32*)m->save;
-      for(i = 0; i < 8; i++){
-	current[2*i+0] = swap_u_int32_t(u[i].a);
-	current[2*i+1] = swap_u_int32_t(u[i].b);
-      }
-      calc(m, current);
-#else
-      calc(m, (u_int32_t*)m->save);
-#endif
-      offset = 0;
-    }
-  }
+		cavan_md5_transform(context, buff);
+		buff = ADDR_ADD(buff, sizeof(context->buff));
+	}
+
+	if (remain)
+	{
+		mem_copy(context->buff + context->remain, buff, remain);
+		context->remain += remain;
+	}
+
+	context->count += size;
 }
 
-static void
-MD5_Final (void *res, struct md5 *m)
+static void cavan_md5_finish(struct cavan_md5_context *context, u8 digest[MD5_DIGEST_SIZE])
 {
-  unsigned char zeros[72];
-  unsigned offset = (m->sz[0] / 8) % 64;
-  unsigned int dstart = (120 - offset - 1) % 64 + 1;
+	u64 bits = context->count << 3;
 
-  *zeros = 0x80;
-  memset (zeros + 1, 0, sizeof(zeros) - 1);
-  zeros[dstart+0] = (m->sz[0] >> 0) & 0xff;
-  zeros[dstart+1] = (m->sz[0] >> 8) & 0xff;
-  zeros[dstart+2] = (m->sz[0] >> 16) & 0xff;
-  zeros[dstart+3] = (m->sz[0] >> 24) & 0xff;
-  zeros[dstart+4] = (m->sz[1] >> 0) & 0xff;
-  zeros[dstart+5] = (m->sz[1] >> 8) & 0xff;
-  zeros[dstart+6] = (m->sz[1] >> 16) & 0xff;
-  zeros[dstart+7] = (m->sz[1] >> 24) & 0xff;
-  MD5_Update (m, zeros, dstart + 8);
-  {
-      int i;
-      unsigned char *r = (unsigned char *)res;
+	cavan_md5_update(context, "\x80", 1);
 
-      for (i = 0; i < 4; ++i) {
-	  r[4*i]   = m->counter[i] & 0xFF;
-	  r[4*i+1] = (m->counter[i] >> 8) & 0xFF;
-	  r[4*i+2] = (m->counter[i] >> 16) & 0xFF;
-	  r[4*i+3] = (m->counter[i] >> 24) & 0xFF;
-      }
-  }
-#if 0
-  {
-    int i;
-    u_int32_t *r = (u_int32_t *)res;
+	if (context->remain > sizeof(context->buff) - 8)
+	{
+		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain);
+		cavan_md5_transform(context, (u32 *) context->buff);
+		memset(context->buff, 0, context->remain);
+	}
+	else
+	{
+		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain - 8);
+	}
 
-    for (i = 0; i < 4; ++i)
-      r[i] = swap_u_int32_t (m->counter[i]);
-  }
-#endif
+	mem_copy(context->buff + sizeof(context->buff) - 8, (void *) &bits, sizeof(bits));
+
+	cavan_md5_transform(context, (u32 *) context->buff);
+	mem_copy(digest, context->state, sizeof(context->state));
 }
 
 int cavan_md5sum(const void *buff, size_t size, u8 digest[MD5_DIGEST_SIZE])
 {
-	struct md5 context;
+	struct cavan_md5_context context;
 
-	MD5_Init(&context);
-	MD5_Update(&context, (char *)buff, size);
-	MD5_Final(digest, &context);
+	cavan_md5_init(&context);
+	cavan_md5_update(&context, buff, size);
+	cavan_md5_finish(&context, digest);
 
 	return 0;
 }

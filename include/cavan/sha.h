@@ -33,6 +33,15 @@ struct cavan_sha1_context
 	u32 state[5];
 };
 
+struct cavan_md5_context
+{
+	u64 count;
+	size_t remain;
+
+	u8 buff[64];
+	u32 state[4];
+};
+
 int cavan_sha1sum(const void *buff, size_t size, u8 digest[SHA1_DIGEST_SIZE]);
 int cavan_file_sha1sum_mmap(const char *pathname, u8 digest[SHA1_DIGEST_SIZE]);
 int cavan_file_sha1sum(const char *pathname, u8 digest[SHA1_DIGEST_SIZE]);
