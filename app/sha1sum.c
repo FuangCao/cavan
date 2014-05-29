@@ -23,8 +23,8 @@
 int main(int argc, char *argv[])
 {
 	int i;
-	u8 digest[20];
 	char buff[1024];
+	u8 digest[SHA_DIGEST_SIZE];
 
 	for (i = 1; i < argc; i++)
 	{

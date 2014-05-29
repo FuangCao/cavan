@@ -2709,7 +2709,7 @@ int file_mmap(const char *pathname, void **addr, size_t *size, int flags)
 	if (mem == NULL || mem == MAP_FAILED)
 	{
 		ret = -EFAULT;
-		pr_error_info("mmap");
+		// pr_error_info("mmap");
 		goto out_unlock_fd;
 	};
 

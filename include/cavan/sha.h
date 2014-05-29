@@ -32,9 +32,10 @@
 struct cavan_sha1_context
 {
 	u64 count;
+	size_t remain;
+
 	u8 buff[64];
 	u32 state[5];
-	size_t remain;
 };
 
 int cavan_sha1sum(const void *buff, size_t size, u8 *digest);

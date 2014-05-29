@@ -182,7 +182,7 @@ int cavan_file_sha1sum_mmap(const char *pathname, u8 *digest)
 	fd = file_mmap(pathname, &addr, &size, O_RDONLY);
 	if (fd < 0)
 	{
-		pr_red_info("file_mmap");
+		// pr_red_info("file_mmap");
 		return fd;
 	}
 
