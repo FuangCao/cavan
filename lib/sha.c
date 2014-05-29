@@ -67,15 +67,15 @@
 		} \
 	} while (0)
 
-static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *buff)
+static void cavan_sha1_transform(struct cavan_sha1_context *context, const u32 *buff)
 {
 	int i;
 	u32 W[80];
 	register u32 A, B, C, D, E;
 
-	for (i = 0; i < 16; i++, buff += 4)
+	for (i = 0; i < 16; i++)
 	{
-		W[i] = BYTES_DWORD(buff[0], buff[1], buff[2], buff[3]);
+		W[i] = SWAP32(buff[i]);
 	}
 
 	for(; i < 80; i++)
@@ -114,7 +114,7 @@ static void cavan_sha1_update(struct cavan_sha1_context *context, const void *bu
 		if (padding <= size)
 		{
 			mem_copy(context->buff + context->remain, buff, padding);
-			cavan_sha1_transform(context, context->buff);
+			cavan_sha1_transform(context, (u32 *) context->buff);
 			buff = ADDR_ADD(buff, padding);
 			context->remain = 0;
 		}
@@ -159,7 +159,7 @@ static void cavan_sha1_finish(struct cavan_sha1_context *context, u8 *digest)
 		p[i] = bits >> ((7 - i) << 3);
 	}
 
-	cavan_sha1_transform(context, context->buff);
+	cavan_sha1_transform(context, (u32 *) context->buff);
 
 	for (p = (u8 *)context->state, p_end = p + sizeof(context->state); p < p_end; p += 4, digest += 4)
 	{
