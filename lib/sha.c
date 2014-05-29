@@ -20,11 +20,23 @@
 #include <cavan.h>
 #include <cavan/sha.h>
 
+#define SHA1_FUNC1(B, C, D) \
+	(((D) ^ ((B) & ((C) ^ (D)))) + 0x5A827999)
+
+#define SHA1_FUNC2(B, C, D) \
+	(((B) ^ (C) ^ (D)) + 0x6ED9EBA1)
+
+#define SHA1_FUNC3(B, C, D) \
+	((((B) & (C)) | ((D) & ((B) | (C)))) + 0x8F1BBCDC)
+
+#define SHA1_FUNC4(B, C, D) \
+	(((B) ^ (C) ^ (D)) + 0xCA62C1D6)
+
 static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *buff)
 {
 	int i;
 	u32 W[80];
-	u32 A, B, C, D, E;
+	register u32 A, B, C, D, E;
 
 	for (i = 0; i < 16; i++, buff += 4)
 	{
@@ -33,7 +45,7 @@ static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *b
 
 	for(; i < 80; i++)
 	{
-		u32 temp = W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16];
+		register u32 temp = W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16];
 		W[i] = ROL(temp, 1);
 	}
 
@@ -45,23 +57,23 @@ static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *b
 
 	for(i = 0; i < 80; i++)
 	{
-		u32 temp = ROL(A, 5) + E + W[i];
+		register u32 temp = ROL(A, 5) + E + W[i];
 
 		if (i < 20)
 		{
-			temp += (D ^ (B & (C ^ D))) + 0x5A827999;
+			temp += SHA1_FUNC1(B , C, D);
 		}
 		else if ( i < 40)
 		{
-			temp += (B ^ C ^ D) + 0x6ED9EBA1;
+			temp += SHA1_FUNC2(B, C, D);
 		}
 		else if ( i < 60)
 		{
-			temp += ((B & C)|(D & (B | C))) + 0x8F1BBCDC;
+			temp += SHA1_FUNC3(B, C, D);
 		}
 		else
 		{
-			temp += (B ^ C ^ D) + 0xCA62C1D6;
+			temp += SHA1_FUNC4(B, C, D);
 		}
 
 		E = D;
@@ -80,42 +92,49 @@ static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *b
 
 static void cavan_sha1_update(struct cavan_sha1_context *context, const void *buff, size_t size)
 {
-	context->count += size;
+	size_t remain;
+	const void *buff_end = ADDR_ADD(buff, size);
 
 	if (context->remain > 0)
 	{
-		size_t padding = sizeof(context->buff) - context->remain;
+		size_t padding;
 
+		padding = sizeof(context->buff) - context->remain;
 		if (padding <= size)
 		{
 			mem_copy(context->buff + context->remain, buff, padding);
-
 			cavan_sha1_transform(context, context->buff);
 			buff = ADDR_ADD(buff, padding);
-			size -= padding;
 			context->remain = 0;
 		}
 	}
 
-	while (size >= sizeof(context->buff))
+	while (1)
 	{
+		remain = ADDR_SUB2(buff_end, buff);
+		if (remain < sizeof(context->buff))
+		{
+			break;
+		}
+
 		cavan_sha1_transform(context, buff);
 		buff = ADDR_ADD(buff, sizeof(context->buff));
-		size -= sizeof(context->buff);
 	}
 
-	if (size)
+	if (remain)
 	{
-		mem_copy(context->buff + context->remain, buff, size);
-		context->remain += size;
+		mem_copy(context->buff + context->remain, buff, remain);
+		context->remain += remain;
 	}
+
+	context->count += size;
 }
 
 static void cavan_sha1_finish(struct cavan_sha1_context *context, u8 *digest)
 {
 	int i;
-	const u8 *p, *p_end;
-	u64 count = context->count << 3;
+	u8 *p, *p_end;
+	u64 bits = context->count << 3;
 
 	cavan_sha1_update(context, "\x80", 1);
 
@@ -124,11 +143,12 @@ static void cavan_sha1_finish(struct cavan_sha1_context *context, u8 *digest)
 		cavan_sha1_update(context, "\0", 1);
 	}
 
-	for (i = 0; i < 8; i++)
+	for (i = 0, p = context->buff + context->remain; i < 8; i++)
 	{
-		u8 temp = count >> ((7 - i) << 3);
-		cavan_sha1_update(context, &temp, 1);
+		p[i] = bits >> ((7 - i) << 3);
 	}
+
+	cavan_sha1_transform(context, context->buff);
 
 	for (p = (u8 *)context->state, p_end = p + sizeof(context->state); p < p_end; p += 4, digest += 4)
 	{
