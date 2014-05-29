@@ -273,7 +273,7 @@ int cavan_file_sha1sum(const char *pathname, u8 digest[SHA1_DIGEST_SIZE])
 
 // ========================================================
 
-static void cavan_md5_init (struct cavan_md5_context *context)
+static void cavan_md5_init(struct cavan_md5_context *context)
 {
 	context->count = 0;
 	context->remain = 0;
@@ -283,7 +283,7 @@ static void cavan_md5_init (struct cavan_md5_context *context)
 	context->state[3] = 0x10325476;
 }
 
-static void cavan_md5_transform (struct cavan_md5_context *context, const u32 *buff)
+static void cavan_md5_transform(struct cavan_md5_context *context, const u32 *buff)
 {
 	register u32 A, B, C, D;
 
@@ -481,5 +481,46 @@ int cavan_file_md5sum_mmap(const char *pathname, u8 digest[MD5_DIGEST_SIZE])
 
 int cavan_file_md5sum(const char *pathname, u8 digest[MD5_DIGEST_SIZE])
 {
-	return cavan_file_md5sum_mmap(pathname, digest);
+	int fd;
+	int ret;
+	struct cavan_md5_context context;
+
+	ret = cavan_file_md5sum_mmap(pathname, digest);
+	if (ret >= 0)
+	{
+		return ret;
+	}
+
+	fd = open(pathname, O_RDONLY);
+	if (fd < 0)
+	{
+		pr_error_info("open file %s failed", pathname);
+		return fd;
+	}
+
+	cavan_md5_init(&context);
+
+	while (1)
+	{
+		ssize_t rdlen;
+		char buff[1024];
+
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen <= 0)
+		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
+			pr_error_info("read file %s", pathname);
+			return rdlen;
+		}
+
+		cavan_md5_update(&context, buff, rdlen);
+	}
+
+	cavan_md5_finish(&context, digest);
+
+	return 0;
 }
