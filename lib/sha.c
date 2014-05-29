@@ -20,30 +20,50 @@
 #include <cavan.h>
 #include <cavan/sha.h>
 
-#define SHA1_FUNC1(B, C, D) \
-	(((D) ^ ((B) & ((C) ^ (D)))) + 0x5A827999)
+#define SHA1_FUNC1_BASE(A, E, V) \
+	(ROL(A, 5) + (V))
 
-#define SHA1_FUNC2(B, C, D) \
-	(((B) ^ (C) ^ (D)) + 0x6ED9EBA1)
-
-#define SHA1_FUNC3(B, C, D) \
-	((((B) & (C)) | ((D) & ((B) | (C)))) + 0x8F1BBCDC)
-
-#define SHA1_FUNC4(B, C, D) \
-	(((B) ^ (C) ^ (D)) + 0xCA62C1D6)
-
-#define SHA1_TRANSFROM(A, B, C, D, E, W, F) \
+#define SHA1_FUNC2_BASE(B, E, V) \
 	do \
 	{ \
+		(E) += (V); \
+		(B) = ROR(B, 2); \
+	} while (0)
+
+#define SHA1_FUNC11(A, B, C, D, E, V) \
+	SHA1_FUNC1_BASE(A, E, (V) + (((D) ^ ((B) & ((C) ^ (D)))) + 0x5A827999))
+
+#define SHA1_FUNC21(A, B, C, D, E, V) \
+	SHA1_FUNC2_BASE(B, E, SHA1_FUNC11(A, B, C, D, E, V))
+
+#define SHA1_FUNC12(A, B, C, D, E, V) \
+	SHA1_FUNC1_BASE(A, E, (V) + (((B) ^ (C) ^ (D)) + 0x6ED9EBA1))
+
+#define SHA1_FUNC22(A, B, C, D, E, V) \
+	SHA1_FUNC2_BASE(B, E, SHA1_FUNC12(A, B, C, D, E, V))
+
+#define SHA1_FUNC13(A, B, C, D, E, V) \
+	SHA1_FUNC1_BASE(A, E, (V) + ((((B) & (C)) | ((D) & ((B) | (C)))) + 0x8F1BBCDC))
+
+#define SHA1_FUNC23(A, B, C, D, E, V) \
+	SHA1_FUNC2_BASE(B, E, SHA1_FUNC13(A, B, C, D, E, V))
+
+#define SHA1_FUNC14(A, B, C, D, E, V) \
+	SHA1_FUNC1_BASE(A, E, (V) + (((B) ^ (C) ^ (D)) + 0xCA62C1D6))
+
+#define SHA1_FUNC24(A, B, C, D, E, V) \
+	SHA1_FUNC2_BASE(B, E, SHA1_FUNC14(A, B, C, D, E, V))
+
+#define SHA1_TRANSFROM(A, B, C, D, E, W, F) \
+	do { \
 		register const u32 *p, *ep; \
-		for (p = W, ep = p + 20; p < ep; p++) \
+		for (p = W, ep = p + 20; p < ep; p += 5) \
 		{ \
-			register u32 temp = ROL(A, 5) + E + *p + SHA1_FUNC##F(B, C, D); \
-			E = D; \
-			D = C; \
-			C = ROL(B, 30); \
-			B = A; \
-			A = temp; \
+			SHA1_FUNC2##F(A, B, C, D, E, p[0]); \
+			SHA1_FUNC2##F(E, A, B, C, D, p[1]); \
+			SHA1_FUNC2##F(D, E, A, B, C, p[2]); \
+			SHA1_FUNC2##F(C, D, E, A, B, p[3]); \
+			SHA1_FUNC2##F(B, C, D, E, A, p[4]); \
 		} \
 	} while (0)
 
@@ -60,8 +80,7 @@ static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *b
 
 	for(; i < 80; i++)
 	{
-		register u32 temp = W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16];
-		W[i] = ROL(temp, 1);
+		W[i] = ROL(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
 	}
 
 	A = context->state[0];
