@@ -21,6 +21,8 @@
 
 #include <cavan.h>
 
+#define SHA_DIGEST_SIZE 20
+
 #define ROR(value, bits) \
 	((value) >> (bits) | (value) << ((sizeof(value) << 3) - (bits)))
 
@@ -29,11 +31,18 @@
 
 struct cavan_sha1_context
 {
-	size_t remain;
+	u64 count;
 	u8 buff[64];
 	u32 state[5];
+	size_t remain;
 };
 
-char *cavan_shasum_tostring(const u8 *digest, size_t size, char *buff, size_t buff_size);
-u8 *cavan_sha1sum(const void *buff, size_t size, u8 *digest);
-u8 *cavan_file_sha1sum(const char *pathname, u8 *digest);
+int cavan_sha1sum(const void *buff, size_t size, u8 *digest);
+int cavan_file_sha1sum_mmap(const char *pathname, u8 *digest);
+int cavan_file_sha1sum(const char *pathname, u8 *digest);
+
+static inline char *cavan_shasum_tostring(const u8 *digest, size_t size, char *buff, size_t buff_size)
+{
+	mem2text_base(digest, size, buff, buff_size);
+	return buff;
+}

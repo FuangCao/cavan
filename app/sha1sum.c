@@ -28,8 +28,17 @@ int main(int argc, char *argv[])
 
 	for (i = 1; i < argc; i++)
 	{
-		cavan_file_sha1sum(argv[i], digest);
-		println("%s  %s", cavan_shasum_tostring(digest, sizeof(digest), buff, sizeof(buff)), argv[i]);
+		int ret;
+
+		ret = cavan_file_sha1sum(argv[i], digest);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_file_sha1sum %s", argv[i]);
+		}
+		else
+		{
+			println("%s  %s", cavan_shasum_tostring(digest, sizeof(digest), buff, sizeof(buff)), argv[i]);
+		}
 	}
 
 	return 0;

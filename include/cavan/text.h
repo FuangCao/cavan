@@ -128,7 +128,7 @@ char *get_text_region(const char *src, int start, int end);
 
 void system_sync(void);
 
-char *mem2text_base(const void *mem, char *buff, int size);
+char *mem2text_base(const void *mem, size_t mem_size, char *buff, int size);
 char *mem2text(const void *mem, int size);
 
 char *to_abs_path_base(const char *rel_path, char *abs_path, size_t size);

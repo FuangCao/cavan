@@ -20,20 +20,6 @@
 #include <cavan.h>
 #include <cavan/sha.h>
 
-char *cavan_shasum_tostring(const u8 *digest, size_t size, char *buff, size_t buff_size)
-{
-	const u8 *digest_end;
-	char *buff_bak = buff;
-	char *buff_end = buff + buff_size;
-
-	for (digest_end = digest + size; digest < digest_end; digest++)
-	{
-		buff = simple_value2text_unsigned(*digest, buff, buff_end - buff, 16);
-	}
-
-	return buff_bak;
-}
-
 static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *buff)
 {
 	int i;
@@ -94,6 +80,8 @@ static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *b
 
 static void cavan_sha1_update(struct cavan_sha1_context *context, const void *buff, size_t size)
 {
+	context->count += size;
+
 	if (context->remain > 0)
 	{
 		size_t padding = sizeof(context->buff) - context->remain;
@@ -123,12 +111,11 @@ static void cavan_sha1_update(struct cavan_sha1_context *context, const void *bu
 	}
 }
 
-static u8 *cavan_sha1_finish(struct cavan_sha1_context *context, u8 *digest)
+static void cavan_sha1_finish(struct cavan_sha1_context *context, u8 *digest)
 {
 	int i;
 	const u8 *p, *p_end;
-	u8 *digest_bak = digest;
-	size_t count = context->remain << 3;
+	u64 count = context->count << 3;
 
 	cavan_sha1_update(context, "\x80", 1);
 
@@ -150,12 +137,11 @@ static u8 *cavan_sha1_finish(struct cavan_sha1_context *context, u8 *digest)
 		digest[2] = p[1];
 		digest[3] = p[0];
 	}
-
-	return digest_bak;
 }
 
 static void cavan_sha1_init(struct cavan_sha1_context *context)
 {
+	context->count = 0;
 	context->remain = 0;
 	context->state[0] = 0x67452301;
 	context->state[1] = 0xEFCDAB89;
@@ -164,17 +150,18 @@ static void cavan_sha1_init(struct cavan_sha1_context *context)
 	context->state[4] = 0xC3D2E1F0;
 }
 
-u8 *cavan_sha1sum(const void *buff, size_t size, u8 *digest)
+int cavan_sha1sum(const void *buff, size_t size, u8 *digest)
 {
 	struct cavan_sha1_context context;
 
 	cavan_sha1_init(&context);
 	cavan_sha1_update(&context, buff, size);
+	cavan_sha1_finish(&context, digest);
 
-	return cavan_sha1_finish(&context, digest);
+	return 0;
 }
 
-u8 *cavan_file_sha1sum(const char *pathname, u8 *digest)
+int cavan_file_sha1sum_mmap(const char *pathname, u8 *digest)
 {
 	int fd;
 	void *addr;
@@ -184,11 +171,57 @@ u8 *cavan_file_sha1sum(const char *pathname, u8 *digest)
 	if (fd < 0)
 	{
 		pr_red_info("file_mmap");
-		return NULL;
+		return fd;
 	}
 
-	digest = cavan_sha1sum(addr, size, digest);
+	cavan_sha1sum(addr, size, digest);
 	file_unmap(fd, addr, size);
 
-	return digest;
+	return 0;
+}
+
+int cavan_file_sha1sum(const char *pathname, u8 *digest)
+{
+	int fd;
+	int ret;
+	struct cavan_sha1_context context;
+
+	ret = cavan_file_sha1sum_mmap(pathname, digest);
+	if (ret >= 0)
+	{
+		return ret;
+	}
+
+	fd = open(pathname, O_RDONLY);
+	if (fd < 0)
+	{
+		pr_error_info("open file %s failed", pathname);
+		return fd;
+	}
+
+	cavan_sha1_init(&context);
+
+	while (1)
+	{
+		ssize_t rdlen;
+		char buff[1024];
+
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen <= 0)
+		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
+			pr_error_info("read file %s", pathname);
+			return rdlen;
+		}
+
+		cavan_sha1_update(&context, buff, rdlen);
+	}
+
+	cavan_sha1_finish(&context, digest);
+
+	return 0;
 }

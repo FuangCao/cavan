@@ -2101,14 +2101,16 @@ int system_command_path(const char *path, const char *command, ...)
 	return ret;
 }
 
-char *mem2text_base(const void *mem, char *buff, int size)
+char *mem2text_base(const void *mem, size_t mem_size, char *buff, int size)
 {
-	const uchar *p, *endp;
+	const uchar *p, *ep;
+	char *buff_end;
 
 	p = mem;
-	endp = p + size;
+	ep = p + mem_size;
+	buff_end = buff + size - 1;
 
-	while (p < endp)
+	while (p < ep && buff < buff_end)
 	{
 		buff = value2text_base(*p++, buff, 2, 0, 16);
 	}
@@ -2122,7 +2124,7 @@ char *mem2text(const void *mem, int size)
 {
 	static char buff[1024];
 
-	mem2text_base(mem, buff, size);
+	mem2text_base(mem, size, buff, sizeof(buff));
 
 	return buff;
 }
