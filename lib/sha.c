@@ -32,6 +32,21 @@
 #define SHA1_FUNC4(B, C, D) \
 	(((B) ^ (C) ^ (D)) + 0xCA62C1D6)
 
+#define SHA1_TRANSFROM(A, B, C, D, E, W, F) \
+	do \
+	{ \
+		register const u32 *p, *ep; \
+		for (p = W, ep = p + 20; p < ep; p++) \
+		{ \
+			register u32 temp = ROL(A, 5) + E + *p + SHA1_FUNC##F(B, C, D); \
+			E = D; \
+			D = C; \
+			C = ROL(B, 30); \
+			B = A; \
+			A = temp; \
+		} \
+	} while (0)
+
 static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *buff)
 {
 	int i;
@@ -55,33 +70,10 @@ static void cavan_sha1_transform(struct cavan_sha1_context *context, const u8 *b
 	D = context->state[3];
 	E = context->state[4];
 
-	for(i = 0; i < 80; i++)
-	{
-		register u32 temp = ROL(A, 5) + E + W[i];
-
-		if (i < 20)
-		{
-			temp += SHA1_FUNC1(B , C, D);
-		}
-		else if ( i < 40)
-		{
-			temp += SHA1_FUNC2(B, C, D);
-		}
-		else if ( i < 60)
-		{
-			temp += SHA1_FUNC3(B, C, D);
-		}
-		else
-		{
-			temp += SHA1_FUNC4(B, C, D);
-		}
-
-		E = D;
-		D = C;
-		C = ROL(B, 30);
-		B = A;
-		A = temp;
-	}
+	SHA1_TRANSFROM(A, B, C, D, E, W, 1);
+	SHA1_TRANSFROM(A, B, C, D, E, W + 20, 2);
+	SHA1_TRANSFROM(A, B, C, D, E, W + 40, 3);
+	SHA1_TRANSFROM(A, B, C, D, E, W + 60, 4);
 
 	context->state[0] += A;
 	context->state[1] += B;
