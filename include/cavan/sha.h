@@ -21,34 +21,39 @@
 
 #include <cavan.h>
 
+#define SHA_FLAG_SWAP		(1 << 0)
+
 #define SHA1_DIGEST_SIZE	20
 #define MD5_DIGEST_SIZE		16
 
-struct cavan_sha1_context
+struct cavan_sha_context
 {
 	u64 count;
+	int flags;
+	u32 digest[8];
 	size_t remain;
+	size_t digest_size;
 
-	u8 buff[64];
-	u32 state[5];
+	union
+	{
+		u8 buff[64];
+		u16 wbuff[32];
+		u32 dwbuff[16];
+	};
+
+	void (*init)(struct cavan_sha_context *context, u32 *digest);
+	void (*transform)(u32 *digest, const u32 *buff);
 };
 
-struct cavan_md5_context
-{
-	u64 count;
-	size_t remain;
+int cavan_sha_init(struct cavan_sha_context *context);
+void cavan_sha_update(struct cavan_sha_context *context, const void *buff, size_t size);
+void cavan_sha_finish(struct cavan_sha_context *context, u8 *digest);
+int cavan_shasum(struct cavan_sha_context *context, const void *buff, size_t size, u8 *digest);
+int cavan_file_shasum_mmap(struct cavan_sha_context *context, const char *pathname, u8 *digest);
+int cavan_file_shasum(struct cavan_sha_context *context, const char *pathname, u8 *digest);
 
-	u8 buff[64];
-	u32 state[4];
-};
-
-int cavan_sha1sum(const void *buff, size_t size, u8 digest[SHA1_DIGEST_SIZE]);
-int cavan_file_sha1sum_mmap(const char *pathname, u8 digest[SHA1_DIGEST_SIZE]);
-int cavan_file_sha1sum(const char *pathname, u8 digest[SHA1_DIGEST_SIZE]);
-
-int cavan_md5sum(const void *buff, size_t size, u8 digest[MD5_DIGEST_SIZE]);
-int cavan_file_md5sum_mmap(const char *pathname, u8 digest[MD5_DIGEST_SIZE]);
-int cavan_file_md5sum(const char *pathname, u8 digest[MD5_DIGEST_SIZE]);
+void cavan_md5_init_context(struct cavan_sha_context *context);
+void cavan_sha1_context_init(struct cavan_sha_context *context);
 
 static inline char *cavan_shasum_tostring(const u8 *digest, size_t size, char *buff, size_t buff_size)
 {

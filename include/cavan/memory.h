@@ -41,11 +41,16 @@ void mem_copy32(u32 *dest, const u32 *src, size_t count);
 void mem_copy64(u64 *dest, const u64 *src, size_t count);
 void *mem_copy(void *dest, const void *src, size_t size);
 
+void mem_copy_invert8(u8 *dest, const u8 *src, size_t count);
+void mem_copy_invert16(u16 *dest, const u16 *src, size_t count);
+void mem_copy_invert32(u32 *dest, const u32 *src, size_t count);
+void mem_copy_invert64(u64 *dest, const u64 *src, size_t count);
+
 void mem_move8(u8 *dest, const u8 *src, size_t count);
 void mem_move16(u16 *dest, const u16 *src, size_t count);
 void mem_move32(u32 *dest, const u32 *src, size_t count);
 void mem_move64(u64 *dest, const u64 *src, size_t count);
-void mem_move(void *dest, const void *src, size_t size);
+void *mem_move(void *dest, const void *src, size_t size);
 
 void mem_set8(u8 *mem, u8 value, size_t count);
 void mem_set16(u16 *mem, u16 value, size_t count);
@@ -65,6 +70,7 @@ size_t mem_delete_char_base(const char *mem_in, char *mem_out, const size_t size
 void number_swap8(u8 *num1, u8 *num2);
 void number_swap16(u16 *num1, u16 *num2);
 void number_swap32(u32 *num1, u32 *num2);
+void number_swap64(u64 *num1, u64 *num2);
 
 int mem_is_set(const char *mem, int value, size_t size);
 int mem_is_noset(const char *mem, int value, size_t size);

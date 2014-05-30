@@ -3,265 +3,134 @@
 #include <cavan.h>
 #include <cavan/memory.h>
 
-void mem_copy8(u8 *dest, const u8 *src, size_t count)
-{
-	const u8 *end;
-
-	for (end = src + count; src < end; src++, dest++)
-	{
-		*dest = *src;
-	}
-}
-
-void mem_copy16(u16 *dest, const u16 *src, size_t count)
-{
-	const u16 *end;
-
-	for (end = src + count; src < end; src++, dest++)
-	{
-		*dest = *src;
-	}
-}
-
-void mem_copy32(u32 *dest, const u32 *src, size_t count)
-{
-	const u32 *end;
-
-	for (end = src + count; src < end; src++, dest++)
-	{
-		*dest = *src;
-	}
-}
-
-void mem_copy64(u64 *dest, const u64 *src, size_t count)
-{
-	const u64 *end;
-
-	for (end = src + count; src < end; src++, dest++)
-	{
-		*dest = *src;
-	}
-}
-
-void *mem_copy(void *dest, const void *src, size_t size)
-{
-	size_t count;
-
-	if (dest == src)
-	{
-		return dest;
+#define MEM_COPY_FUNC(name, bits) \
+	void name##bits(u##bits *dest, const u##bits *src, size_t count) \
+	{ \
+		const u##bits *end; \
+		for (end = src + count; src < end; src++, dest++) \
+		{ \
+			*dest = *src; \
+		} \
 	}
 
-	if (((long)dest & 0x07) == 0 && ((long)src & 0x07) == 0)
-	{
-		count = size >> 3;
-		mem_copy64(dest, src, count);
-
-		count <<= 3;
-		dest = (u8 *)dest + count;
-		src = (const u8 *)src + count;
-
-		count = size & 0x07;
-	}
-	else if (((long)dest & 0x03) == 0 && ((long)src & 0x03) == 0)
-	{
-		count = size >> 2;
-		mem_copy32(dest, src, count);
-
-		count <<= 2;
-		dest = (u8 *)dest + count;
-		src = (const u8 *)src + count;
-
-		count = size & 0x03;
-	}
-	else if (((long)dest & 0x01) == 0 && ((long)src & 0x01) == 0)
-	{
-		count = size >> 1;
-		mem_copy16(dest, src, count);
-
-		count <<= 1;
-		dest = (u8 *)dest + count;
-		src = (const u8 *)src + count;
-
-		count = size & 0x01;
-	}
-	else
-	{
-		count = size;
+#define MEM_COPY_INVERT_FUNC(name, bits) \
+	void name##bits(u##bits *dest, const u##bits *src, size_t count) \
+	{ \
+		const u##bits *last; \
+		for (last = src + count - 1; last >= src; dest++, last--) \
+		{ \
+			*dest = *last; \
+		} \
 	}
 
-	if (count)
-	{
-		mem_copy8(dest, src, count);
+#define MEM_MOVE_FUNC(name, bits) \
+	void name##bits(u##bits *dest, const u##bits *src, size_t count) \
+	{ \
+		const u##bits *start; \
+		if (dest < src) \
+		{ \
+			mem_copy##bits(dest, src, count); \
+		} \
+		else if (dest > src) \
+		{ \
+			for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--) \
+			{ \
+				*dest = *src; \
+			} \
+		} \
 	}
 
-	return (u8 *)dest + count;
-}
+#define MEM_SET_FUNC(name, bits) \
+	void name##bits(u##bits *mem, u##bits value, size_t count) \
+	{ \
+		u##bits *mem_end; \
+		for (mem_end = mem + count; mem < mem_end; mem++) \
+		{ \
+			*mem = value; \
+		} \
+	}
+
+#define NUMBER_SWAP_FUNC(name, bits) \
+	void name##bits(u##bits *num1, u##bits *num2) \
+	{ \
+		u##bits temp; \
+		temp = *num1; \
+		*num1 = *num2; \
+		*num2 = temp; \
+	}
+
+#define MEM_SWAP_FUNC(bits) \
+	void mem_swap##bits(u##bits *dest, const u##bits *src, size_t count) \
+	{ \
+		const u##bits *src_end; \
+		for (src_end = src + count; src < src_end; dest++, src++) \
+		{ \
+			*dest = SWAP##bits(*src); \
+		} \
+	}
+
+#define MEM_FUNC_DECLARE(name, func) \
+	func(name, 8) \
+	func(name, 16) \
+	func(name, 32) \
+	func(name, 64)
+
+#define MEM_COPY_FUNC_DELARE(name, func) \
+	MEM_FUNC_DECLARE(name, func) \
+	void *name(void *dest, const void *src, size_t size) \
+	{ \
+		size_t count; \
+		if (dest == src) \
+		{ \
+			return dest; \
+		} \
+		if (((long)dest & 0x07) == 0 && ((long)src & 0x07) == 0) \
+		{ \
+			count = size >> 3; \
+			mem_copy64(dest, src, count); \
+			count <<= 3; \
+			dest = (u8 *)dest + count; \
+			src = (const u8 *)src + count; \
+			count = size & 0x07; \
+		} \
+		else if (((long)dest & 0x03) == 0 && ((long)src & 0x03) == 0) \
+		{ \
+			count = size >> 2; \
+			mem_copy32(dest, src, count); \
+			count <<= 2; \
+			dest = (u8 *)dest + count; \
+			src = (const u8 *)src + count; \
+			count = size & 0x03; \
+		} \
+		else if (((long)dest & 0x01) == 0 && ((long)src & 0x01) == 0) \
+		{ \
+			count = size >> 1; \
+			mem_copy16(dest, src, count); \
+			count <<= 1; \
+			dest = (u8 *)dest + count; \
+			src = (const u8 *)src + count; \
+			count = size & 0x01; \
+		} \
+		else \
+		{ \
+			count = size; \
+		} \
+		if (count) \
+		{ \
+			mem_copy8(dest, src, count); \
+		} \
+		return ADDR_ADD(dest, count); \
+	}
+
+MEM_COPY_FUNC_DELARE(mem_copy, MEM_COPY_FUNC);
+MEM_FUNC_DECLARE(mem_copy_invert, MEM_COPY_INVERT_FUNC);
+MEM_COPY_FUNC_DELARE(mem_move, MEM_MOVE_FUNC);
+MEM_FUNC_DECLARE(mem_set, MEM_SET_FUNC);
+MEM_FUNC_DECLARE(number_swap, NUMBER_SWAP_FUNC);
+MEM_SWAP_FUNC(16);
+MEM_SWAP_FUNC(32);
 
 // ================================================================================
-
-void mem_move8(u8 *dest, const u8 *src, size_t count)
-{
-	const u8 *start;
-
-	if (dest < src)
-	{
-		mem_copy8(dest, src, count);
-	}
-	else if (dest > src)
-	{
-		for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
-		{
-			*dest = *src;
-		}
-	}
-}
-
-void mem_move16(u16 *dest, const u16 *src, size_t count)
-{
-	const u16 *start;
-
-	if (dest < src)
-	{
-		mem_copy16(dest, src, count);
-	}
-	else if (dest > src)
-	{
-		for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
-		{
-			*dest = *src;
-		}
-	}
-}
-
-void mem_move32(u32 *dest, const u32 *src, size_t count)
-{
-	const u32 *start;
-
-	if (dest < src)
-	{
-		mem_copy32(dest, src, count);
-	}
-	else if (dest > src)
-	{
-		for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
-		{
-			*dest = *src;
-		}
-	}
-}
-
-void mem_move64(u64 *dest, const u64 *src, size_t count)
-{
-	const u64 *start;
-
-	if (dest < src)
-	{
-		mem_copy64(dest, src, count);
-	}
-	else if (dest > src)
-	{
-		for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--)
-		{
-			*dest = *src;
-		}
-	}
-}
-
-void mem_move(void *dest, const void *src, size_t size)
-{
-	size_t count;
-
-	if (dest == src)
-	{
-		return;
-	}
-
-	if (((long)dest & 0x07) == 0 && ((long)src & 0x07) == 0)
-	{
-		count = size >> 3;
-		mem_move64(dest, src, count);
-
-		count <<= 3;
-		dest = (u8 *)dest + count;
-		src = (const u8 *)src + count;
-
-		count = size & 0x07;
-	}
-	else if (((long)dest & 0x03) == 0 && ((long)src & 0x03) == 0)
-	{
-		count = size >> 2;
-		mem_move32(dest, src, count);
-
-		count <<= 2;
-		dest = (u8 *)dest + count;
-		src = (const u8 *)src + count;
-
-		count = size & 0x03;
-	}
-	else if (((long)dest & 0x01) == 0 && ((long)src & 0x01) == 0)
-	{
-		count = size >> 1;
-		mem_move16(dest, src, count);
-
-		count <<= 1;
-		dest = (u8 *)dest + count;
-		src = (const u8 *)src + count;
-
-		count = size & 0x01;
-	}
-	else
-	{
-		count = size;
-	}
-
-	if (count)
-	{
-		mem_move8(dest, src, count);
-	}
-}
-
-// ================================================================================
-
-void mem_set8(u8 *mem, u8 value, size_t count)
-{
-	u8 *mem_end;
-
-	for (mem_end = mem + count; mem < mem_end; mem++)
-	{
-		*mem = value;
-	}
-}
-
-void mem_set16(u16 *mem, u16 value, size_t count)
-{
-	u16 *mem_end;
-
-	for (mem_end = mem + count; mem < mem_end; mem++)
-	{
-		*mem = value;
-	}
-}
-
-void mem_set32(u32 *mem, u32 value, size_t count)
-{
-	u32 *mem_end;
-
-	for (mem_end = mem + count; mem < mem_end; mem++)
-	{
-		*mem = value;
-	}
-}
-
-void mem_set64(u64 *mem, u64 value, size_t count)
-{
-	u64 *mem_end;
-
-	for (mem_end = mem + count; mem < mem_end; mem++)
-	{
-		*mem = value;
-	}
-}
 
 void mem_set(void *mem, int value, size_t size)
 {
@@ -469,33 +338,6 @@ size_t mem_delete_char_base(const char *mem_in, char *mem_out, const size_t size
 	return mem_out - mem_bak;
 }
 
-void number_swap8(u8 *num1, u8 *num2)
-{
-	u8 temp;
-
-	temp = *num1;
-	*num1 = *num2;
-	*num2 = temp;
-}
-
-void number_swap16(u16 *num1, u16 *num2)
-{
-	u16 temp;
-
-	temp = *num1;
-	*num1 = *num2;
-	*num2 = temp;
-}
-
-void number_swap32(u32 *num1, u32 *num2)
-{
-	u32 temp;
-
-	temp = *num1;
-	*num1 = *num2;
-	*num2 = temp;
-}
-
 int mem_is_set(const char *mem, int value, size_t size)
 {
 	const char *mem_end;
@@ -671,25 +513,5 @@ void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep,
 		}
 
 		printf("0x%02x%s", *mem++, new_line);
-	}
-}
-
-void mem_swap16(u16 *dest, const u16 *src, size_t count)
-{
-	const u16 *src_end;
-
-	for (src_end = src + count; src < src_end; dest++, src++)
-	{
-		*dest = SWAP16(*src);
-	}
-}
-
-void mem_swap32(u32 *dest, const u32 *src, size_t count)
-{
-	const u32 *src_end;
-
-	for (src_end = src + count; src < src_end; dest++, src++)
-	{
-		*dest = SWAP32(*src);
 	}
 }

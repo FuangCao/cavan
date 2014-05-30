@@ -68,6 +68,8 @@
 		} \
 	} while (0)
 
+// ============================================================
+
 #define MD5_FUNC1(B, C, D) \
 	(((B) & (C)) | (~(B) & (D)))
 
@@ -85,38 +87,30 @@
 		(A) = (B) + ROL((A) + MD5_FUNC##F(B, C, D) + (K) + (I), S); \
 	} while (0)
 
-static void cavan_sha1_transform(struct cavan_sha1_context *context, const u32 *buff)
+// ============================================================
+
+int cavan_sha_init(struct cavan_sha_context *context)
 {
-	int i;
-	u32 W[80];
-	register u32 A, B, C, D, E;
-
-	mem_swap32(W, buff, 16);
-
-	for(i = 16; i < 80; i++)
+	if (context->init == NULL)
 	{
-		W[i] = ROL(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
+		pr_red_info("context->init == NULL");
+		ERROR_RETURN(EINVAL);
 	}
 
-	A = context->state[0];
-	B = context->state[1];
-	C = context->state[2];
-	D = context->state[3];
-	E = context->state[4];
+	if (context->transform == NULL)
+	{
+		pr_red_info("context->transform == NULL");
+		ERROR_RETURN(EINVAL);
+	}
 
-	SHA1_TRANSFROM(A, B, C, D, E, W, 1);
-	SHA1_TRANSFROM(A, B, C, D, E, W + 20, 2);
-	SHA1_TRANSFROM(A, B, C, D, E, W + 40, 3);
-	SHA1_TRANSFROM(A, B, C, D, E, W + 60, 4);
+	context->count = 0;
+	context->remain = 0;
+	context->init(context, context->digest);
 
-	context->state[0] += A;
-	context->state[1] += B;
-	context->state[2] += C;
-	context->state[3] += D;
-	context->state[4] += E;
+	return 0;
 }
 
-static void cavan_sha1_update(struct cavan_sha1_context *context, const void *buff, size_t size)
+void cavan_sha_update(struct cavan_sha_context *context, const void *buff, size_t size)
 {
 	size_t remain;
 	const void *buff_end = ADDR_ADD(buff, size);
@@ -129,7 +123,7 @@ static void cavan_sha1_update(struct cavan_sha1_context *context, const void *bu
 		if (padding <= size)
 		{
 			mem_copy(context->buff + context->remain, buff, padding);
-			cavan_sha1_transform(context, (u32 *) context->buff);
+			context->transform(context->digest, context->dwbuff);
 			buff = ADDR_ADD(buff, padding);
 			context->remain = 0;
 		}
@@ -143,7 +137,7 @@ static void cavan_sha1_update(struct cavan_sha1_context *context, const void *bu
 			break;
 		}
 
-		cavan_sha1_transform(context, buff);
+		context->transform(context->digest, buff);
 		buff = ADDR_ADD(buff, sizeof(context->buff));
 	}
 
@@ -156,57 +150,62 @@ static void cavan_sha1_update(struct cavan_sha1_context *context, const void *bu
 	context->count += size;
 }
 
-static void cavan_sha1_finish(struct cavan_sha1_context *context, u8 digest[SHA1_DIGEST_SIZE])
+void cavan_sha_finish(struct cavan_sha_context *context, u8 *digest)
 {
-	u8 *p, *ps;
-	const u8 *q;
 	u64 bits = context->count << 3;
 
-	cavan_sha1_update(context, "\x80", 1);
+	cavan_sha_update(context, "\x80", 1);
 
-	if (context->remain > sizeof(context->buff) - 8)
+	if (context->remain > sizeof(context->buff) - sizeof(bits))
 	{
 		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain);
-		cavan_sha1_transform(context, (u32 *) context->buff);
+		context->transform(context->digest, context->dwbuff);
 		memset(context->buff, 0, context->remain);
 	}
 	else
 	{
-		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain - 8);
+		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain - sizeof(bits));
 	}
 
-	for (p = context->buff + sizeof(context->buff) - 1, ps = p - 8, q = (u8 *) &bits; p > ps; p--, q++)
+	if (context->flags & SHA_FLAG_SWAP)
 	{
-		*p = *q;
+		mem_copy_invert8(context->buff + sizeof(context->buff) - sizeof(bits), (void *) &bits, sizeof(bits));
+	}
+	else
+	{
+		mem_copy(context->buff + sizeof(context->buff) - sizeof(bits), (void *) &bits, sizeof(bits));
 	}
 
-	cavan_sha1_transform(context, (u32 *) context->buff);
-	mem_swap32((u32 *) digest, context->state, NELEM(context->state));
+	context->transform(context->digest, context->dwbuff);
+
+	if (context->flags & SHA_FLAG_SWAP)
+	{
+		mem_swap32((u32 *) digest, context->digest, context->digest_size >> 2);
+	}
+	else
+	{
+		mem_copy(digest, context->digest, context->digest_size);
+	}
 }
 
-static void cavan_sha1_init(struct cavan_sha1_context *context)
+int cavan_shasum(struct cavan_sha_context *context, const void *buff, size_t size, u8 *digest)
 {
-	context->count = 0;
-	context->remain = 0;
-	context->state[0] = 0x67452301;
-	context->state[1] = 0xEFCDAB89;
-	context->state[2] = 0x98BADCFE;
-	context->state[3] = 0x10325476;
-	context->state[4] = 0xC3D2E1F0;
-}
+	int ret;
 
-int cavan_sha1sum(const void *buff, size_t size, u8 digest[SHA1_DIGEST_SIZE])
-{
-	struct cavan_sha1_context context;
+	ret = cavan_sha_init(context);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_sha_init");
+		return ret;
+	}
 
-	cavan_sha1_init(&context);
-	cavan_sha1_update(&context, buff, size);
-	cavan_sha1_finish(&context, digest);
+	cavan_sha_update(context, buff, size);
+	cavan_sha_finish(context, digest);
 
 	return 0;
 }
 
-int cavan_file_sha1sum_mmap(const char *pathname, u8 digest[SHA1_DIGEST_SIZE])
+int cavan_file_shasum_mmap(struct cavan_sha_context *context, const char *pathname, u8 *digest)
 {
 	int fd;
 	void *addr;
@@ -215,23 +214,21 @@ int cavan_file_sha1sum_mmap(const char *pathname, u8 digest[SHA1_DIGEST_SIZE])
 	fd = file_mmap(pathname, &addr, &size, O_RDONLY);
 	if (fd < 0)
 	{
-		// pr_red_info("file_mmap");
 		return fd;
 	}
 
-	cavan_sha1sum(addr, size, digest);
+	cavan_shasum(context, addr, size, digest);
 	file_unmap(fd, addr, size);
 
 	return 0;
 }
 
-int cavan_file_sha1sum(const char *pathname, u8 digest[SHA1_DIGEST_SIZE])
+int cavan_file_shasum(struct cavan_sha_context *context, const char *pathname, u8 *digest)
 {
 	int fd;
 	int ret;
-	struct cavan_sha1_context context;
 
-	ret = cavan_file_sha1sum_mmap(pathname, digest);
+	ret = cavan_file_shasum_mmap(context, pathname, digest);
 	if (ret >= 0)
 	{
 		return ret;
@@ -244,7 +241,7 @@ int cavan_file_sha1sum(const char *pathname, u8 digest[SHA1_DIGEST_SIZE])
 		return fd;
 	}
 
-	cavan_sha1_init(&context);
+	cavan_sha_init(context);
 
 	while (1)
 	{
@@ -263,34 +260,35 @@ int cavan_file_sha1sum(const char *pathname, u8 digest[SHA1_DIGEST_SIZE])
 			return rdlen;
 		}
 
-		cavan_sha1_update(&context, buff, rdlen);
+		cavan_sha_update(context, buff, rdlen);
 	}
 
-	cavan_sha1_finish(&context, digest);
+	cavan_sha_finish(context, digest);
 
 	return 0;
 }
 
-// ========================================================
+// ============================================================
 
-static void cavan_md5_init(struct cavan_md5_context *context)
+static void cavan_md5_init(struct cavan_sha_context *context, u32 digest[4])
 {
-	context->count = 0;
-	context->remain = 0;
-	context->state[0] = 0x67452301;
-	context->state[1] = 0xEFCDAB89;
-	context->state[2] = 0x98BADCFE;
-	context->state[3] = 0x10325476;
+	context->flags = 0;
+	context->digest_size = MD5_DIGEST_SIZE;
+
+	digest[0] = 0x67452301;
+	digest[1] = 0xEFCDAB89;
+	digest[2] = 0x98BADCFE;
+	digest[3] = 0x10325476;
 }
 
-static void cavan_md5_transform(struct cavan_md5_context *context, const u32 *buff)
+static void cavan_md5_transform(u32 digest[4], const u32 *buff)
 {
 	register u32 A, B, C, D;
 
-	A = context->state[0];
-	B = context->state[1];
-	C = context->state[2];
-	D = context->state[3];
+	A = digest[0];
+	B = digest[1];
+	C = digest[2];
+	D = digest[3];
 
 	/* Round 1 */
 
@@ -380,147 +378,65 @@ static void cavan_md5_transform(struct cavan_md5_context *context, const u32 *bu
 	MD5_TRANSFORM(C, D, A, B, buff[2], 15, 0x2AD7D2BB, 4);
 	MD5_TRANSFORM(B, C, D, A, buff[9], 21, 0xEB86D391, 4);
 
-	context->state[0] += A;
-	context->state[1] += B;
-	context->state[2] += C;
-	context->state[3] += D;
+	digest[0] += A;
+	digest[1] += B;
+	digest[2] += C;
+	digest[3] += D;
 }
 
-static void cavan_md5_update(struct cavan_md5_context *context, const void *buff, size_t size)
+void cavan_md5_init_context(struct cavan_sha_context *context)
 {
-	size_t remain;
-	const void *buff_end = ADDR_ADD(buff, size);
-
-	if (context->remain > 0)
-	{
-		size_t padding;
-
-		padding = sizeof(context->buff) - context->remain;
-		if (padding <= size)
-		{
-			mem_copy(context->buff + context->remain, buff, padding);
-			cavan_md5_transform(context, (u32 *) context->buff);
-			buff = ADDR_ADD(buff, padding);
-			context->remain = 0;
-		}
-	}
-
-	while (1)
-	{
-		remain = ADDR_SUB2(buff_end, buff);
-		if (remain < sizeof(context->buff))
-		{
-			break;
-		}
-
-		cavan_md5_transform(context, buff);
-		buff = ADDR_ADD(buff, sizeof(context->buff));
-	}
-
-	if (remain)
-	{
-		mem_copy(context->buff + context->remain, buff, remain);
-		context->remain += remain;
-	}
-
-	context->count += size;
+	context->init = cavan_md5_init;
+	context->transform = cavan_md5_transform;
 }
 
-static void cavan_md5_finish(struct cavan_md5_context *context, u8 digest[MD5_DIGEST_SIZE])
+// ============================================================
+
+static void cavan_sha1_init(struct cavan_sha_context *context, u32 digest[5])
 {
-	u64 bits = context->count << 3;
+	context->flags = SHA_FLAG_SWAP;
+	context->digest_size = SHA1_DIGEST_SIZE;
 
-	cavan_md5_update(context, "\x80", 1);
-
-	if (context->remain > sizeof(context->buff) - 8)
-	{
-		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain);
-		cavan_md5_transform(context, (u32 *) context->buff);
-		memset(context->buff, 0, context->remain);
-	}
-	else
-	{
-		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain - 8);
-	}
-
-	mem_copy(context->buff + sizeof(context->buff) - 8, (void *) &bits, sizeof(bits));
-
-	cavan_md5_transform(context, (u32 *) context->buff);
-	mem_copy(digest, context->state, sizeof(context->state));
+	digest[0] = 0x67452301;
+	digest[1] = 0xEFCDAB89;
+	digest[2] = 0x98BADCFE;
+	digest[3] = 0x10325476;
+	digest[4] = 0xC3D2E1F0;
 }
 
-int cavan_md5sum(const void *buff, size_t size, u8 digest[MD5_DIGEST_SIZE])
+static void cavan_sha1_transform(u32 digest[5], const u32 *buff)
 {
-	struct cavan_md5_context context;
+	int i;
+	u32 W[80];
+	register u32 A, B, C, D, E;
 
-	cavan_md5_init(&context);
-	cavan_md5_update(&context, buff, size);
-	cavan_md5_finish(&context, digest);
+	mem_swap32(W, buff, 16);
 
-	return 0;
+	for(i = 16; i < 80; i++)
+	{
+		W[i] = ROL(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
+	}
+
+	A = digest[0];
+	B = digest[1];
+	C = digest[2];
+	D = digest[3];
+	E = digest[4];
+
+	SHA1_TRANSFROM(A, B, C, D, E, W, 1);
+	SHA1_TRANSFROM(A, B, C, D, E, W + 20, 2);
+	SHA1_TRANSFROM(A, B, C, D, E, W + 40, 3);
+	SHA1_TRANSFROM(A, B, C, D, E, W + 60, 4);
+
+	digest[0] += A;
+	digest[1] += B;
+	digest[2] += C;
+	digest[3] += D;
+	digest[4] += E;
 }
 
-int cavan_file_md5sum_mmap(const char *pathname, u8 digest[MD5_DIGEST_SIZE])
+void cavan_sha1_context_init(struct cavan_sha_context *context)
 {
-	int fd;
-	void *addr;
-	size_t size;
-
-	fd = file_mmap(pathname, &addr, &size, O_RDONLY);
-	if (fd < 0)
-	{
-		// pr_red_info("file_mmap");
-		return fd;
-	}
-
-	cavan_md5sum(addr, size, digest);
-	file_unmap(fd, addr, size);
-
-	return 0;
-}
-
-int cavan_file_md5sum(const char *pathname, u8 digest[MD5_DIGEST_SIZE])
-{
-	int fd;
-	int ret;
-	struct cavan_md5_context context;
-
-	ret = cavan_file_md5sum_mmap(pathname, digest);
-	if (ret >= 0)
-	{
-		return ret;
-	}
-
-	fd = open(pathname, O_RDONLY);
-	if (fd < 0)
-	{
-		pr_error_info("open file %s failed", pathname);
-		return fd;
-	}
-
-	cavan_md5_init(&context);
-
-	while (1)
-	{
-		ssize_t rdlen;
-		char buff[1024];
-
-		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
-				break;
-			}
-
-			pr_error_info("read file %s", pathname);
-			return rdlen;
-		}
-
-		cavan_md5_update(&context, buff, rdlen);
-	}
-
-	cavan_md5_finish(&context, digest);
-
-	return 0;
+	context->init = cavan_sha1_init;
+	context->transform = cavan_sha1_transform;
 }

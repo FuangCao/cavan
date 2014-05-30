@@ -25,12 +25,15 @@ int main(int argc, char *argv[])
 	int i;
 	char buff[1024];
 	u8 digest[SHA1_DIGEST_SIZE];
+	struct cavan_sha_context context;
+
+	cavan_sha1_context_init(&context);
 
 	for (i = 1; i < argc; i++)
 	{
 		int ret;
 
-		ret = cavan_file_sha1sum(argv[i], digest);
+		ret = cavan_file_shasum(&context, argv[i], digest);
 		if (ret < 0)
 		{
 			pr_red_info("cavan_file_sha1sum %s", argv[i]);
