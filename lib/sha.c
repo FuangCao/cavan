@@ -82,9 +82,9 @@
 #define MD5_FUNC4(B, C, D) \
 	((C) ^ ((B) | ~(D)))
 
-#define MD5_TRANSFORM(A, B, C, D, K, S, I, F) \
+#define MD5_TRANSFORM(A, B, C, D, V, S, I, F) \
 	do { \
-		(A) = (B) + ROL((A) + MD5_FUNC##F(B, C, D) + (K) + (I), S); \
+		(A) = (B) + ROL((A) + MD5_FUNC##F(B, C, D) + (V) + (I), S); \
 	} while (0)
 
 // ============================================================
@@ -158,13 +158,13 @@ void cavan_sha_finish(struct cavan_sha_context *context, u8 *digest)
 
 	if (context->remain > sizeof(context->buff) - sizeof(bits))
 	{
-		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain);
+		mem_set(context->buff + context->remain, 0, sizeof(context->buff) - context->remain);
 		context->transform(context->digest, context->dwbuff);
-		memset(context->buff, 0, context->remain);
+		mem_set(context->buff, 0, context->remain);
 	}
 	else
 	{
-		memset(context->buff + context->remain, 0, sizeof(context->buff) - context->remain - sizeof(bits));
+		mem_set(context->buff + context->remain, 0, sizeof(context->buff) - context->remain - sizeof(bits));
 	}
 
 	if (context->flags & SHA_FLAG_SWAP)

@@ -129,6 +129,7 @@ MEM_FUNC_DECLARE(mem_set, MEM_SET_FUNC);
 MEM_FUNC_DECLARE(number_swap, NUMBER_SWAP_FUNC);
 MEM_SWAP_FUNC(16);
 MEM_SWAP_FUNC(32);
+MEM_SWAP_FUNC(64);
 
 // ================================================================================
 

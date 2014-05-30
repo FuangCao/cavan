@@ -90,6 +90,7 @@ void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep,
 
 void mem_swap16(u16 *dest, const u16 *src, size_t count);
 void mem_swap32(u32 *dest, const u32 *src, size_t count);
+void mem_swap64(u64 *dest, const u64 *src, size_t count);
 
 static inline char *mem_trans(char *text, size_t size)
 {

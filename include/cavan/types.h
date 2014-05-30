@@ -73,6 +73,9 @@ typedef struct
 #define NELEM(a)					((int)ARRAY_SIZE(a))
 #define MOFS(type, member)			MEMBER_OFFSET(type, member)
 
+#define BUILD_MASK(type, count) \
+	((((type) 1) << (count)) - 1)
+
 #define BYTE_IS_LF(b) \
 	((b) == '\r' || (b) == '\n')
 
@@ -126,3 +129,11 @@ typedef struct
 
 #define VALUE_DIFF(a, b) \
 	((a) > (b) ? (a) - (b) : (b) - (a))
+
+static inline u64 SWAP64(u64 value)
+{
+	u32 H = value >> 32;
+	u32 L = value & BUILD_MASK(u64, 32);
+
+	return ((u64) SWAP32(L)) << 32 | SWAP32(H);
+}
