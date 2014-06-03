@@ -108,17 +108,30 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 	}
 	else
 	{
-		const char *q;
+		const char *q = pcmd = argv[0];
 
-		for (pcmd = argv[0], q = pcmd; *q; q++)
+		while (1)
 		{
-			if (*q == '/')
+			switch (*q)
 			{
-				pcmd = q + 1;
+			case '/':
+				while (*++q == '/');
+
+				if (*q)
+				{
+					pcmd = q;
+					break;
+				}
+
+			case 0:
+				goto label_start_match;
 			}
+
+			q++;
 		}
 	}
 
+label_start_match:
 	p = match_command_by_name(map, map + count, pcmd);
 	if (p == NULL && argc > 1 && file_test(argv[0], "l") < 0)
 	{
