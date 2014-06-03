@@ -157,6 +157,9 @@ struct cavan_vfat_fs
 	int bytes_per_cluster_shift;
 	int sectors_per_cluster_shift;
 
+	u32 entrys_per_sector;
+	u32 entrys_per_cluster;
+
 	u32 data_sectors;
 	u32 data_clusters;
 	u32 data_first_sector;

@@ -1039,11 +1039,6 @@ int list_directory(struct fat_info *info_p, const char *pathname)
 
 static u32 cavan_vfat_get_cluster_first_sector(struct cavan_vfat_fs *fs, u32 index)
 {
-	if (index < 2)
-	{
-		return fs->data_first_sector - ((2 - index) << fs->sectors_per_cluster_shift);
-	}
-
 	return ((index - 2) << fs->sectors_per_cluster_shift) + fs->data_first_sector;
 }
 
@@ -1208,6 +1203,9 @@ int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev)
 	fs->bytes_per_cluster = dbr->sectors_per_cluster * dbr->bytes_per_sector;
 	fs->root_dir_sectors = DIV_CEIL(dbr->root_entry_count * sizeof(struct vfat_dir_entry), dbr->bytes_per_sector);
 
+	fs->entrys_per_sector = fs->bytes_per_sector / sizeof(struct vfat_dir_entry);
+	fs->entrys_per_cluster = fs->entrys_per_sector << fs->sectors_per_cluster_shift;
+
 #if CAVAN_VFAT_DEBUG
 	pr_info("bytes_per_sector = %d", fs->bytes_per_sector);
 	pr_info("bytes_per_sector_shift = %d", fs->bytes_per_sector_shift);
@@ -1217,6 +1215,8 @@ int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev)
 	pr_info("blocks_per_sector = %d", fs->blocks_per_sector);
 	pr_info("bytes_per_cluster = %d", fs->bytes_per_cluster);
 	pr_info("root_dir_sectors = %d", fs->root_dir_sectors);
+	pr_info("entrys_per_sector = %d", fs->entrys_per_sector);
+	pr_info("entrys_per_cluster = %d", fs->entrys_per_cluster);
 #endif
 
 	if (dbr->fat_size16)
@@ -1292,23 +1292,57 @@ void cavan_vfat_deinit(struct cavan_vfat_fs *fs)
 {
 }
 
-static int cavan_vfat_find_file_simple(struct cavan_vfat_fs *fs, u32 cluster, const char *filename, size_t namelen)
+static int cavan_vfat_directory_entry_traversal(const struct vfat_dir_entry *entry, size_t count)
 {
+	const struct vfat_dir_entry *entry_end;
+
+	for (entry_end = entry + count; entry < entry_end; entry++)
+	{
+		switch (entry->name[0])
+		{
+		case 0:
+			return -EFAULT;
+
+		case 0xE5:
+			break;
+
+		default:
+			if (VFAT_IS_LONG_NAME(entry))
+			{
+
+			}
+			else if (VFAT_IS_VOLUME_LABEL(entry))
+			{
+				cavan_vfat_dir_entry_long_dump((struct vfat_dir_entry_long *) entry);
+			}
+			else
+			{
+				cavan_vfat_dir_entry_dump(entry);
+			}
+		}
+	}
+
+	return 0;
+}
+
+static int cavan_vfat_directory_traversal(struct cavan_vfat_fs *fs, u32 cluster)
+{
+	int ret;
 	ssize_t rdlen;
-	const struct vfat_dir_entry *entry, *entry_end;
 
 	if (cluster < 2)
 	{
 		u32 index;
-		size_t count, max;
+		u32 remain;
 		char buff[fs->bytes_per_sector];
 
-		count = 0;
-		max = fs->dbr.root_entry_count;
+		remain = fs->dbr.root_entry_count;
 		index = fs->root_first_sector;
 
 		while (1)
 		{
+			u32 count;
+
 			rdlen = cavan_vfat_read_sector(fs, index, buff, 1);
 			if (rdlen < 0)
 			{
@@ -1316,22 +1350,16 @@ static int cavan_vfat_find_file_simple(struct cavan_vfat_fs *fs, u32 cluster, co
 				return rdlen;
 			}
 
-			for (entry = (struct vfat_dir_entry *) buff, entry_end = ADDR_ADD(buff, sizeof(buff)); entry < entry_end; entry++)
+			count = remain > fs->entrys_per_sector ? fs->entrys_per_sector : remain;
+			ret = cavan_vfat_directory_entry_traversal((struct vfat_dir_entry *) buff, count);
+			if (ret < 0)
 			{
-				if (++count > max)
-				{
-					return -EFAULT;
-				}
-
-				if (entry->name[0] == 0xE5)
-				{
-					continue;
-				}
-
-				cavan_vfat_dir_entry_dump(entry); msleep(200);
+				pr_red_info("cavan_vfat_directory_entry_traversal");
+				return ret;
 			}
 
 			index++;
+			remain -= count;
 		}
 	}
 	else
@@ -1345,18 +1373,20 @@ static int cavan_vfat_find_file_simple(struct cavan_vfat_fs *fs, u32 cluster, co
 			return rdlen;
 		}
 
-		for (entry = (struct vfat_dir_entry *) buff, entry_end = ADDR_ADD(buff, sizeof(buff) - sizeof(struct vfat_dir_entry)); entry < entry_end; entry++)
+		ret = cavan_vfat_directory_entry_traversal((struct vfat_dir_entry *)buff, fs->entrys_per_cluster);
+		if (ret < 0)
 		{
-			if (entry->name[0] == 0xE5)
-			{
-				continue;
-			}
-
-			cavan_vfat_dir_entry_dump(entry); msleep(200);
+			pr_red_info("cavan_vfat_directory_entry_traversal");
+			return ret;
 		}
 	}
 
-	return -EFAULT;
+	return 0;
+}
+
+static int cavan_vfat_find_file_simple(struct cavan_vfat_fs *fs, u32 cluster, const char *filename, size_t namelen)
+{
+	return cavan_vfat_directory_traversal(fs, cluster);
 }
 
 static int cavan_vfat_find_file(struct cavan_vfat_fs *fs, struct cavan_vfat_file *file, const char *pathname)
