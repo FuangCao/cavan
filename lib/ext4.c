@@ -476,11 +476,6 @@ static inline size_t cavan_ext4_get_block_hw_addr(struct cavan_ext4_fs *fs, size
 	return ((index - fs->first_data_block) << fs->hw_blocks_per_block_shift) + fs->hw_boot_block_count;
 }
 
-static inline u64 cavan_ext4_get_block_hw_offset(struct cavan_ext4_fs *fs, u64 index)
-{
-	return ((index - fs->first_data_block) << fs->block_shift) + fs->hw_boot_block_size;
-}
-
 static inline ssize_t cavan_ext4_read_block(struct cavan_ext4_fs *fs, size_t index, void *buff, size_t count)
 {
 	index = cavan_ext4_get_block_hw_addr(fs, index);
@@ -503,7 +498,7 @@ static struct ext2_group_desc *cavan_ext4_get_group(struct cavan_ext4_fs *fs, u3
 	return (struct ext2_group_desc *)(fs->gdt64 + index);
 }
 
-static inline u32 cavan_ext4_inode_index_to_group(struct cavan_ext4_fs *fs, u32 index)
+static inline u64 cavan_ext4_inode_index_to_group(struct cavan_ext4_fs *fs, u32 index)
 {
 	return index / fs->inodes_per_group;
 }
@@ -523,14 +518,14 @@ static inline int cavan_ext4_get_dir_entry_length(struct ext2_dir_entry_2 *entry
 ssize_t cavan_ext4_read_inode(struct cavan_ext4_fs *fs, u32 index, struct ext2_inode_large *inode)
 {
 	u32 table = cavan_ext4_inode_index_to_table(fs, index);
-	u64 offset = cavan_ext4_get_block_hw_offset(fs, table) + ((index - 1) % fs->inodes_per_group) * fs->inode_size;
+	u64 offset = ((index - 1) % fs->inodes_per_group) * fs->inode_size;
 
-	return fs->bdev->read_byte(fs->bdev, offset, inode, fs->inode_size);
+	return fs->bdev->read_byte(fs->bdev, cavan_ext4_get_block_hw_addr(fs, table) + (offset >> fs->bdev->block_shift), offset & fs->bdev->block_mask, inode, fs->inode_size);
 }
 
 static inline ssize_t cavan_ext4_read_super_block(struct cavan_ext4_fs *fs, struct ext2_super_block *super)
 {
-	return fs->bdev->read_byte(fs->bdev, CAVAN_EXT4_BOOT_BLOCK_SIZE, super, sizeof(*super));
+	return fs->bdev->read_byte(fs->bdev, CAVAN_EXT4_BOOT_BLOCK_SIZE >> fs->bdev->block_shift, 0, super, sizeof(*super));
 }
 
 static void *cavan_ext4_read_gdt(struct cavan_ext4_fs *fs)
@@ -547,7 +542,7 @@ static void *cavan_ext4_read_gdt(struct cavan_ext4_fs *fs)
 		return NULL;
 	}
 
-	rdlen = fs->bdev->read_byte(fs->bdev, fs->block_size + fs->hw_boot_block_size, gdt, size);
+	rdlen = fs->bdev->read_byte(fs->bdev, cavan_ext4_get_block_hw_addr(fs, fs->first_data_block + 1), 0, gdt, size);
 	if (rdlen < 0)
 	{
 		pr_red_info("fs->read_block");

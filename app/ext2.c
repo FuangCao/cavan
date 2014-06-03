@@ -21,6 +21,7 @@
 #include <cavan/ext4.h>
 
 #define EXT2_APP_DEVICE_BLOCK_SIZE		512
+#define EXT2_APP_USB_DEFAULT_READ_BYTE	0
 
 static ssize_t ext2_app_device_read_block(struct cavan_block_device *bdev, u64 index, void *buff, size_t count)
 {
@@ -32,15 +33,20 @@ static ssize_t ext2_app_device_write_block(struct cavan_block_device *bdev, u64 
 	return ffile_writeto(*(int *)bdev->context, buff, count << bdev->block_shift, index << bdev->block_shift);
 }
 
-static ssize_t ext2_app_device_read_byte(struct cavan_block_device *bdev, u64 offset, void *buff, size_t size)
+#if EXT2_APP_USB_DEFAULT_READ_BYTE
+#define ext2_app_device_read_byte		NULL
+#define ext2_app_device_write_byte		NULL
+#else
+static ssize_t ext2_app_device_read_byte(struct cavan_block_device *bdev, u64 index, u32 offset, void *buff, size_t size)
 {
-	return ffile_readfrom(*(int *)bdev->context, buff, size, offset);
+	return ffile_readfrom(*(int *)bdev->context, buff, size, (index << bdev->block_shift) + offset);
 }
 
-static ssize_t ext2_app_device_write_byte(struct cavan_block_device *bdev, u64 offset, const void *buff, size_t size)
+static ssize_t ext2_app_device_write_byte(struct cavan_block_device *bdev, u64 index, u32 offset, const void *buff, size_t size)
 {
-	return ffile_writeto(*(int *)bdev->context, buff, size, offset);
+	return ffile_writeto(*(int *)bdev->context, buff, size, (index << bdev->block_shift) + offset);
 }
+#endif
 
 static void ext2_app_device_list_dir_handler(struct ext2_dir_entry_2 *entry, void *data)
 {
