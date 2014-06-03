@@ -3,59 +3,61 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Sat May  7 00:23:47 CST 2011
 
 #include <cavan.h>
-#include <cavan/file.h>
+#include <cavan/device.h>
 
-#define ATTR_READ_ONLY	(1 << 0)
-#define ATTR_HIDDEN		(1 << 1)
-#define ATTR_SYSTEM		(1 << 2)
-#define ATTR_VOLUME_ID	(1 << 3)
-#define ATTR_DIRECTORY	(1 << 4)
-#define ATTR_AECHIVE	(1 << 5)
-#define LAST_LONG_ENTRY	0x40
+#define CAVAN_VFAT_PATH_SEP					'/'
 
-#define ATTR_LONG_NAME \
-	(ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
+#define VFAT_ATTR_READ_ONLY		(1 << 0)
+#define VFAT_ATTR_HIDDEN		(1 << 1)
+#define VFAT_ATTR_SYSTEM		(1 << 2)
+#define VFAT_ATTR_VOLUME_ID		(1 << 3)
+#define VFAT_ATTR_DIRECTORY		(1 << 4)
+#define VFAT_ATTR_AECHIVE		(1 << 5)
+#define VFAT_LAST_LONG_ENTRY	0x40
 
-#define ATTR_LONG_NAME_MASK \
-	(ATTR_LONG_NAME | ATTR_DIRECTORY | ATTR_AECHIVE)
+#define VFAT_ATTR_LONG_NAME \
+	(VFAT_ATTR_READ_ONLY | VFAT_ATTR_HIDDEN | VFAT_ATTR_SYSTEM | VFAT_ATTR_VOLUME_ID)
 
-#define IS_LONG_NAME(desc) \
-	((((desc)->attribute) & ATTR_LONG_NAME_MASK) == ATTR_LONG_NAME)
+#define VFAT_ATTR_LONG_NAME_MASK \
+	(VFAT_ATTR_LONG_NAME | VFAT_ATTR_DIRECTORY | VFAT_ATTR_AECHIVE)
 
-#define IS_DIRECTORY(desc) \
-	(((desc)->attribute) & ATTR_DIRECTORY)
+#define VFAT_IS_LONG_NAME(desc) \
+	((((desc)->attribute) & VFAT_ATTR_LONG_NAME_MASK) == VFAT_ATTR_LONG_NAME)
 
-#define IS_NOT_FILE(desc) \
-	((desc)->attribute & (ATTR_DIRECTORY | ATTR_VOLUME_ID))
+#define VFAT_IS_DIRECTORY(desc) \
+	(((desc)->attribute) & VFAT_ATTR_DIRECTORY)
 
-#define IS_FILE(desc) \
-	(!IS_NOT_FILE(desc))
+#define VFAT_IS_NOT_FILE(desc) \
+	((desc)->attribute & (VFAT_ATTR_DIRECTORY | VFAT_ATTR_VOLUME_ID))
 
-#define IS_VOLUME_LABEL(desc) \
-	((desc)->attribute & ATTR_VOLUME_ID)
+#define VFAT_IS_FILE(desc) \
+	(!VFAT_IS_NOT_FILE(desc))
 
-#define BUILD_START_CLUSTER(desc) \
+#define VFAT_IS_VOLUME_LABEL(desc) \
+	((desc)->attribute & VFAT_ATTR_VOLUME_ID)
+
+#define VFAT_BUILD_START_CLUSTER(desc) \
 	WORDS_DWORD((desc)->first_cluster_HW, (desc)->first_cluster_LW)
 
-enum fat_type
+typedef enum
 {
 	FAT12,
 	FAT16,
 	FAT32,
-};
+} fat_type_t;
 
 #pragma pack(1)
-struct fat16_dbr_tail
+struct fat16_dbr
 {
-	u8 driver_number;
+	u8 drive_number;
 	u8 reserved1;
-	u8 boot_signal;
-	u8 volume_id[4];
+	u8 boot_signature;
+	u32 serial_number;
 	u8 volume_label[11];
 	u8 fs_type[8];
 };
 
-struct fat32_dbr_tail
+struct fat32_dbr
 {
 	u32 fat_size32;
 	u16 extern_flags;
@@ -64,12 +66,7 @@ struct fat32_dbr_tail
 	u16 fs_info_sectors;
 	u16 backup_boot_sectors;
 	u8 reserved1[12];
-	u8 driver_number;
-	u8 reserved2;
-	u8 boot_signal;
-	u32 volume_index;
-	u8 volume_label[11];
-	u8 fs_type[8];
+	struct fat16_dbr dbr16;
 	u8 reserved3[420];
 };
 
@@ -85,15 +82,15 @@ struct fat_dbr
 	u16 total_sector16;
 	u8 medium_describe;
 	u16 fat_size16;
-	u16 sectors_per_cylinder;
-	u16 header_count;
-	u32 hide_sectors;
+	u16 sectors_per_track;
+	u16 head_count;
+	u32 hidden_sectors;
 	u32 total_sectors32;
 
 	union
 	{
-		struct fat16_dbr_tail tail16;
-		struct fat32_dbr_tail tail32;
+		struct fat16_dbr dbr16;
+		struct fat32_dbr dbr32;
 	};
 
 	u16 boot_flags;
@@ -110,7 +107,7 @@ struct fat32_fsinfo
 	u32 trail_signal;
 };
 
-struct fat_directory
+struct vfat_dir_entry
 {
 	u8 name[11];
 	u8 attribute;
@@ -126,7 +123,7 @@ struct fat_directory
 	u32 file_size;
 };
 
-struct fat_long_directory
+struct vfat_dir_entry_long
 {
 	u8 order;
 	u8 name1[10];
@@ -139,32 +136,44 @@ struct fat_long_directory
 };
 #pragma pack()
 
-struct fat_soft_direcory
+struct cavan_vfat_fs
 {
-	char name[1024];
-	struct fat_directory short_dir;
-};
-
-struct fat_info
-{
+	struct cavan_block_device *bdev;
 	struct fat_dbr dbr;
-	enum fat_type type;
-	void *fat_table;
-	int fat_fd;
+	const u8 *fat_table;
+
+	fat_type_t type;
+	u32 eof_flag;
 	u32 fat_size;
+	u32 total_sectors;
+
+	u32 blocks_per_sector;
+	int blocks_per_sector_shift;
+
+	u32 bytes_per_sector;
+	int bytes_per_sector_shift;
 
 	u32 bytes_per_cluster;
-	u32 total_sector_count;
-	u32 descs_per_cluster;
+	int bytes_per_cluster_shift;
+	int sectors_per_cluster_shift;
 
-	u32 data_sector_count;
-	u32 data_cluster_count;
+	u32 data_sectors;
+	u32 data_clusters;
 	u32 data_first_sector;
 
-	u32 root_sector_count;
-	u32 root_first_cluster;
+	u32 root_dir_sectors;
 	u32 root_first_sector;
+	u32 root_first_cluster;
 };
+
+struct cavan_vfat_file
+{
+	const char *pathname;
+	struct cavan_vfat_fs *fs;
+	struct vfat_dir_entry entry;
+};
+
+#if 0
 
 ssize_t ffat_read_dbr(int fd, struct fat_dbr *dbr);
 const char *fat_type_to_string(enum fat_type type);
@@ -241,4 +250,17 @@ static inline ssize_t read_fat_table(struct fat_info *info_p)
 {
 	return fat_read_sectors(info_p, info_p->dbr.reserve_sector_count, info_p->fat_size, info_p->fat_table);
 }
+#endif
+void cavan_vfat_dbr_dump(const struct fat_dbr *dbr, fat_type_t type);
+void cavan_vfat_dir_entry_dump(const struct vfat_dir_entry *entry);
+void cavan_vfat_dir_entry_long_dump(const struct vfat_dir_entry_long *entry);
 
+int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev);
+void cavan_vfat_deinit(struct cavan_vfat_fs *fs);
+
+struct cavan_vfat_file *cavan_vfat_open_file(struct cavan_vfat_fs *fs, const char *pathname);
+void cavan_vfat_close_file(struct cavan_vfat_file *fp);
+
+int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(struct vfat_dir_entry *entry, void *data), void *data);
+ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, off_t offset, char *buff, size_t size);
+ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, off_t offset, const char *pathname, int flags);

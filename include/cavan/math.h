@@ -80,6 +80,7 @@ size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize
 size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size, int base);
 
 int math_memory_calculator(const char *formula, byte *res, size_t res_size, int base, char fill, int size);
+int math_get_value_shift(u64 value);
 
 static inline bool math_memory_is_negative(const byte *mem, size_t size)
 {

@@ -4,7 +4,9 @@
 #include <cavan/vfat.h>
 #include <cavan/memory.h>
 #include <cavan/text.h>
+#include <cavan/math.h>
 
+#if 0
 ssize_t ffat_read_dbr(int fd, struct fat_dbr *dbr)
 {
 	ssize_t readlen;
@@ -1032,4 +1034,414 @@ int list_directory(struct fat_info *info_p, const char *pathname)
 
 	return print_directory(info_p, start_cluster);
 }
+#endif
+#define CAVAN_VFAT_DEBUG	1
 
+static u32 cavan_vfat_get_cluster_first_sector(struct cavan_vfat_fs *fs, u32 index)
+{
+	if (index < 2)
+	{
+		return fs->data_first_sector - ((2 - index) << fs->sectors_per_cluster_shift);
+	}
+
+	return ((index - 2) << fs->sectors_per_cluster_shift) + fs->data_first_sector;
+}
+
+static ssize_t cavan_vfat_read_sector(struct cavan_vfat_fs *fs, u32 index, char *buff, u32 count)
+{
+	pr_info("cavan_vfat_read_sector: index = %d, count = %d", index, count);
+	return fs->bdev->read_block(fs->bdev, index >> fs->blocks_per_sector_shift, buff, count << fs->blocks_per_sector_shift);
+}
+
+static ssize_t cavan_vfat_read_cluster(struct cavan_vfat_fs *fs, u32 index, char *buff, u32 count)
+{
+	u32 sector = cavan_vfat_get_cluster_first_sector(fs, index);
+
+	return cavan_vfat_read_sector(fs, sector, buff, count << fs->sectors_per_cluster_shift);
+}
+
+static const char *cavan_vfat_type_to_string(fat_type_t type)
+{
+	switch (type)
+	{
+	case FAT12:
+		return "FAT12";
+
+	case FAT16:
+		return "FAT16";
+
+	case FAT32:
+		return "FAT32";
+
+	default:
+		return "Unknown";
+	}
+}
+
+static void cavan_vfat16_dbr_dump(const struct fat16_dbr *dbr)
+{
+	pr_info("drive_number = 0x%02x", dbr->drive_number);
+	pr_info("boot_signature = 0x%02x", dbr->boot_signature);
+	pr_info("serial_number = 0x%08x", dbr->serial_number);
+	pr_info("volume_label = %s", text_header((char *) dbr->volume_label, sizeof(dbr->volume_label)));
+	pr_info("fs_type = %s", text_header((char *) dbr->fs_type, sizeof(dbr->fs_type)));
+}
+
+static void cavan_vfat32_dbr_dump(const struct fat32_dbr *dbr)
+{
+	pr_info("fat_size32 = %d", dbr->fat_size32);
+	pr_info("extern_flags = %d", dbr->extern_flags);
+	pr_info("fs_version = %d", dbr->fs_version);
+	pr_info("root_first_cluster = %d", dbr->root_first_cluster);
+	pr_info("fs_info_sectors = %d", dbr->fs_info_sectors);
+	pr_info("backup_boot_sectors = %d", dbr->backup_boot_sectors);
+	cavan_vfat16_dbr_dump(&dbr->dbr16);
+}
+
+void cavan_vfat_dbr_dump(const struct fat_dbr *dbr, fat_type_t type)
+{
+	print_sep(60);
+	pr_bold_info("fat dbr %p", dbr);
+
+	// pr_info("jmp_boot[3] = %d", dbr->jmp_boot[3]);
+	pr_info("oem_name = %s", dbr->oem_name);
+	pr_info("bytes_per_sector = %d", dbr->bytes_per_sector);
+	pr_info("sectors_per_cluster = %d", dbr->sectors_per_cluster);
+	pr_info("reserve_sector_count = %d", dbr->reserve_sector_count);
+	pr_info("fat_table_count = %d", dbr->fat_table_count);
+	pr_info("root_entry_count = %d", dbr->root_entry_count);
+	pr_info("total_sector16 = %d", dbr->total_sector16);
+	pr_info("medium_describe = 0x%02x", dbr->medium_describe);
+	pr_info("fat_size16 = %d", dbr->fat_size16);
+	pr_info("sectors_per_track = %d", dbr->sectors_per_track);
+	pr_info("head_count = %d", dbr->head_count);
+	pr_info("hidden_sectors = %d", dbr->hidden_sectors);
+	pr_info("total_sectors32 = %d", dbr->total_sectors32);
+
+	if (type == FAT32)
+	{
+		cavan_vfat32_dbr_dump(&dbr->dbr32);
+	}
+	else
+	{
+		cavan_vfat16_dbr_dump(&dbr->dbr16);
+	}
+}
+
+void cavan_vfat_dir_entry_dump(const struct vfat_dir_entry *entry)
+{
+	print_sep(60);
+	pr_bold_info("vfat dir entry %p", entry);
+
+	pr_info("name[11] = %s", text_header((char *) entry->name, sizeof(entry->name)));
+	pr_info("attribute = %d", entry->attribute);
+	pr_info("nt_reserved = %d", entry->nt_reserved);
+	pr_info("current_time_teenth = %d", entry->current_time_teenth);
+	pr_info("current_time = %d", entry->current_time);
+	pr_info("current_date = %d", entry->current_date);
+	pr_info("last_access_date = %d", entry->last_access_date);
+	pr_info("first_cluster_HW = %d", entry->first_cluster_HW);
+	pr_info("write_time = %d", entry->write_time);
+	pr_info("write_date = %d", entry->write_date);
+	pr_info("first_cluster_LW = %d", entry->first_cluster_LW);
+	pr_info("file_size = %d", entry->file_size);
+}
+
+void cavan_vfat_dir_entry_long_dump(const struct vfat_dir_entry_long *entry)
+{
+	print_sep(60);
+	pr_bold_info("vfat dir entry long %p", entry);
+
+	pr_info("order = %d", entry->order);
+	pr_info("name1[10] = %s", text_header((char *) entry->name1, sizeof(entry->name1)));
+	pr_info("attribute = %d", entry->attribute);
+	pr_info("type = %d", entry->type);
+	pr_info("chesksum = %d", entry->chesksum);
+	pr_info("name2[12] = %s", text_header((char *) entry->name2, sizeof(entry->name2)));
+	pr_info("first_cluster_LW = %d", entry->first_cluster_LW);
+	pr_info("name3[4] = %s", text_header((char *) entry->name3, sizeof(entry->name3)));
+}
+
+static int cavan_vfat_read_dbr(struct cavan_block_device *bdev, struct fat_dbr *dbr)
+{
+	ssize_t rdlen;
+
+	rdlen = bdev->read_byte(bdev, 0, 0, dbr, sizeof(*dbr));
+	if (rdlen < 0)
+	{
+		pr_red_info("bdev->read_byte");
+		return rdlen;
+	}
+
+	if (dbr->boot_flags != 0xAA55)
+	{
+		pr_red_info("dbr->boot_flags = 0x%04x", dbr->boot_flags);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev)
+{
+	int ret;
+	struct fat_dbr *dbr;
+
+	fs->bdev = bdev;
+
+	dbr = &fs->dbr;
+	ret = cavan_vfat_read_dbr(bdev, dbr);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_vfat_read_dbr");
+		return ret;
+	}
+
+	fs->bytes_per_sector = dbr->bytes_per_sector;
+	fs->bytes_per_sector_shift = math_get_value_shift(fs->bytes_per_sector);
+
+	fs->blocks_per_sector = dbr->bytes_per_sector >> bdev->block_shift;
+	fs->blocks_per_sector_shift = fs->bytes_per_sector_shift - bdev->block_shift;
+
+	fs->sectors_per_cluster_shift = math_get_value_shift(dbr->sectors_per_cluster);
+	fs->bytes_per_cluster_shift = fs->sectors_per_cluster_shift + fs->bytes_per_sector_shift;
+	fs->bytes_per_cluster = dbr->sectors_per_cluster * dbr->bytes_per_sector;
+	fs->root_dir_sectors = DIV_CEIL(dbr->root_entry_count * sizeof(struct vfat_dir_entry), dbr->bytes_per_sector);
+
+#if CAVAN_VFAT_DEBUG
+	pr_info("bytes_per_sector = %d", fs->bytes_per_sector);
+	pr_info("bytes_per_sector_shift = %d", fs->bytes_per_sector_shift);
+	pr_info("blocks_per_sector_shift = %d", fs->blocks_per_sector_shift);
+	pr_info("sectors_per_cluster_shift = %d", fs->sectors_per_cluster_shift);
+	pr_info("bytes_per_cluster_shift = %d", fs->bytes_per_cluster_shift);
+	pr_info("blocks_per_sector = %d", fs->blocks_per_sector);
+	pr_info("bytes_per_cluster = %d", fs->bytes_per_cluster);
+	pr_info("root_dir_sectors = %d", fs->root_dir_sectors);
+#endif
+
+	if (dbr->fat_size16)
+	{
+		fs->fat_size = dbr->fat_size16;
+	}
+	else
+	{
+		fs->fat_size = dbr->dbr32.fat_size32;
+	}
+
+	fs->root_first_sector = dbr->reserve_sector_count + (dbr->fat_table_count * fs->fat_size);
+	fs->data_first_sector = fs->root_first_sector + fs->root_dir_sectors;
+
+#if CAVAN_VFAT_DEBUG
+	pr_info("root_first_sector = %d", fs->root_first_sector);
+	pr_info("data_first_sector = %d", fs->data_first_sector);
+#endif
+
+	if (dbr->total_sector16)
+	{
+		fs->total_sectors = dbr->total_sector16;
+	}
+	else
+	{
+		fs->total_sectors = dbr->total_sectors32;
+	}
+
+	fs->data_sectors = fs->total_sectors - fs->data_first_sector;
+	fs->data_clusters = fs->data_sectors / dbr->sectors_per_cluster;
+
+#if CAVAN_VFAT_DEBUG
+	pr_info("data_sectors = %d", fs->data_sectors);
+	pr_info("data_clusters = %d", fs->data_clusters);
+#endif
+
+	if (fs->data_clusters < 4085)
+	{
+		fs->type = FAT12;
+		fs->eof_flag = 0x0FF8;
+	}
+	else if (fs->data_clusters < 65525)
+	{
+		fs->type = FAT16;
+		fs->eof_flag = 0xFFF8;
+	}
+	else
+	{
+		fs->type = FAT32;
+		fs->eof_flag = 0x0FFFFFF8;
+	}
+
+	if (fs->type == FAT32)
+	{
+		fs->root_first_cluster = dbr->dbr32.root_first_cluster;
+	}
+	else
+	{
+		fs->root_first_cluster = 0;
+	}
+
+#if CAVAN_VFAT_DEBUG
+	pr_info("type = %s", cavan_vfat_type_to_string(fs->type));
+	pr_info("eof_flag = 0x%08x", fs->eof_flag);
+	pr_info("root_first_cluster = %d", fs->root_first_cluster);
+	cavan_vfat_dbr_dump(dbr, fs->type);
+#endif
+
+	return 0;
+}
+
+void cavan_vfat_deinit(struct cavan_vfat_fs *fs)
+{
+}
+
+static int cavan_vfat_find_file_simple(struct cavan_vfat_fs *fs, u32 cluster, const char *filename, size_t namelen)
+{
+	ssize_t rdlen;
+	const struct vfat_dir_entry *entry, *entry_end;
+
+	if (cluster < 2)
+	{
+		u32 index;
+		size_t count, max;
+		char buff[fs->bytes_per_sector];
+
+		count = 0;
+		max = fs->dbr.root_entry_count;
+		index = fs->root_first_sector;
+
+		while (1)
+		{
+			rdlen = cavan_vfat_read_sector(fs, index, buff, 1);
+			if (rdlen < 0)
+			{
+				pr_red_info("cavan_vfat_read_sector");
+				return rdlen;
+			}
+
+			for (entry = (struct vfat_dir_entry *) buff, entry_end = ADDR_ADD(buff, sizeof(buff)); entry < entry_end; entry++)
+			{
+				if (++count > max)
+				{
+					return -EFAULT;
+				}
+
+				if (entry->name[0] == 0xE5)
+				{
+					continue;
+				}
+
+				cavan_vfat_dir_entry_dump(entry); msleep(200);
+			}
+
+			index++;
+		}
+	}
+	else
+	{
+		char buff[fs->bytes_per_cluster];
+
+		rdlen = cavan_vfat_read_cluster(fs, cluster, buff, 1);
+		if (rdlen < 0)
+		{
+			pr_red_info("cavan_vfat_read_cluster");
+			return rdlen;
+		}
+
+		for (entry = (struct vfat_dir_entry *) buff, entry_end = ADDR_ADD(buff, sizeof(buff) - sizeof(struct vfat_dir_entry)); entry < entry_end; entry++)
+		{
+			if (entry->name[0] == 0xE5)
+			{
+				continue;
+			}
+
+			cavan_vfat_dir_entry_dump(entry); msleep(200);
+		}
+	}
+
+	return -EFAULT;
+}
+
+static int cavan_vfat_find_file(struct cavan_vfat_fs *fs, struct cavan_vfat_file *file, const char *pathname)
+{
+	u32 cluster = fs->root_first_cluster;
+
+	while (1)
+	{
+		int ret;
+		const char *p;
+
+		while (*pathname == CAVAN_VFAT_PATH_SEP)
+		{
+			pathname++;
+		}
+
+#if CAVAN_VFAT_DEBUG
+		println("pathname = %s", pathname);
+#endif
+
+		if (*pathname == 0)
+		{
+			break;
+		}
+
+		ret = cavan_vfat_find_file_simple(fs, cluster, pathname, p - pathname);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_vfat_find_file_simple");
+			return ret;
+		}
+
+		for (p = pathname; *p && *p != CAVAN_VFAT_PATH_SEP; p++);
+
+		pathname = p;
+	}
+
+	return 0;
+}
+
+struct cavan_vfat_file *cavan_vfat_open_file(struct cavan_vfat_fs *fs, const char *pathname)
+{
+	int ret;
+	struct cavan_vfat_file *file;
+
+	file = malloc(sizeof(*file));
+	if (file == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	file->fs = fs;
+	file->pathname = pathname;
+
+	ret = cavan_vfat_find_file(fs, file, pathname);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_vfat_find_file");
+		goto out_free_file;
+	}
+
+	return file;
+
+out_free_file:
+	free(file);
+	return NULL;
+}
+
+void cavan_vfat_close_file(struct cavan_vfat_file *fp)
+{
+	free(fp);
+}
+
+int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(struct vfat_dir_entry *entry, void *data), void *data)
+{
+	return 0;
+}
+
+ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, off_t offset, char *buff, size_t size)
+{
+	return 0;
+}
+
+ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, off_t offset, const char *pathname, int flags)
+{
+	return 0;
+}

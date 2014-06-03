@@ -2,6 +2,7 @@
 #include <cavan/device.h>
 #include <cavan/text.h>
 #include <cavan/file.h>
+#include <cavan/math.h>
 #include <sys/vfs.h>
 
 #define MAX_MOUNT_COUNT				100
@@ -2132,9 +2133,7 @@ int cavan_block_device_init(struct cavan_block_device *bdev, void *context)
 
 	if (bdev->block_size)
 	{
-		int shift;
-
-		for (shift = 0; ((1 << shift) & bdev->block_size) == 0; shift++);
+		int shift = math_get_value_shift(bdev->block_size);
 
 		if (bdev->block_shift && bdev->block_shift != shift)
 		{

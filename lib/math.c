@@ -1393,3 +1393,12 @@ int math_memory_calculator(const char *formula, byte *res, size_t res_size, int 
 
 	return 0;
 }
+
+int math_get_value_shift(u64 value)
+{
+	int count;
+
+	for (count = -1; value; value >>= 1, count++);
+
+	return count;
+}
