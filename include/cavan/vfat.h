@@ -217,5 +217,6 @@ struct cavan_vfat_file *cavan_vfat_open_file(struct cavan_vfat_fs *fs, const cha
 void cavan_vfat_close_file(struct cavan_vfat_file *fp);
 
 int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data), void *data);
-ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, off_t offset, char *buff, size_t size);
-ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, off_t offset, const char *pathname, int flags);
+ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, size_t skip, char *buff, size_t size);
+ssize_t cavan_vfat_read_file2(struct cavan_vfat_file *fp, size_t skip, int fd);
+ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, size_t skip, const char *pathname, int flags);

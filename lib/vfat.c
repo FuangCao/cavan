@@ -676,13 +676,21 @@ int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(struct vfat_
 	return cavan_vfat_scan_dir(fp->fs, VFAT_BUILD_START_CLUSTER(&fp->entry), &walker);
 }
 
-static int cavan_vfat_read_file_base(struct cavan_vfat_file *fp, size_t skip, size_t size, int (*handler)(const char *buff, size_t size, void *date), void *data)
+static ssize_t cavan_vfat_read_file_base(struct cavan_vfat_file *fp, size_t skip, size_t size, int (*handler)(const char *buff, size_t size, void *date), void *data)
 {
+	size_t remain;
 	struct cavan_vfat_fs *fs = fp->fs;
-	size_t remain = fp->entry.file_size;
+	size_t file_remain = fp->entry.file_size;
 	u32 cluster = VFAT_BUILD_START_CLUSTER(&fp->entry);
 
-	while (remain && size && cluster < fs->eof_flag)
+	if (size == 0)
+	{
+		size = file_remain;
+	}
+
+	remain = size;
+
+	while (file_remain && remain && cluster < fs->eof_flag)
 	{
 		int ret;
 		char *p;
@@ -696,15 +704,15 @@ static int cavan_vfat_read_file_base(struct cavan_vfat_file *fp, size_t skip, si
 			return rdlen;
 		}
 
-		if (remain > sizeof(buff))
+		if (file_remain > sizeof(buff))
 		{
 			rdlen = sizeof(buff);
-			remain -= rdlen;
+			file_remain -= rdlen;
 		}
 		else
 		{
-			rdlen = remain;
-			remain = 0;
+			rdlen = file_remain;
+			file_remain = 0;
 		}
 
 		p = buff;
@@ -722,14 +730,14 @@ static int cavan_vfat_read_file_base(struct cavan_vfat_file *fp, size_t skip, si
 			skip = 0;
 		}
 
-		if ((size_t) rdlen > size)
+		if ((size_t) rdlen > remain)
 		{
-			rdlen = size;
-			size = 0;
+			rdlen = remain;
+			remain = 0;
 		}
 		else
 		{
-			size -= rdlen;
+			remain -= rdlen;
 		}
 
 		ret = handler(p, rdlen, data);
@@ -738,9 +746,11 @@ static int cavan_vfat_read_file_base(struct cavan_vfat_file *fp, size_t skip, si
 			pr_red_info("handler");
 			return ret;
 		}
+
+		cluster = cavan_vfat_get_next_cluster(fs, cluster);
 	}
 
-	return 0;
+	return size - remain;
 }
 
 static int cavan_vfat_read_file_to_buff_handler(const char *buff, size_t size, void *data)
@@ -753,27 +763,43 @@ static int cavan_vfat_read_file_to_buff_handler(const char *buff, size_t size, v
 	return 0;
 }
 
-ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, off_t offset, char *buff, size_t size)
+ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, size_t skip, char *buff, size_t size)
 {
-	int ret;
 	struct cavan_vfat_read_file_context context =
 	{
 		.buff = buff,
 		.size = 0
 	};
 
-	ret = cavan_vfat_read_file_base(fp, offset, size, cavan_vfat_read_file_to_buff_handler, &context);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_vfat_read_file_base");
-		return ret;
-	}
-
-	return context.size;
+	return cavan_vfat_read_file_base(fp, skip, size, cavan_vfat_read_file_to_buff_handler, &context);
 }
 
-ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, off_t offset, const char *pathname, int flags)
+static int cavan_vfat_read_file_to_file_handler(const char *buff, size_t size, void *data)
 {
-	pr_pos_info();
+	return ffile_write(*(int *) data, buff, size);
+}
+
+ssize_t cavan_vfat_read_file2(struct cavan_vfat_file *fp, size_t skip, int fd)
+{
+	return cavan_vfat_read_file_base(fp, skip, 0, cavan_vfat_read_file_to_file_handler, &fd);
+}
+
+ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, size_t skip, const char *pathname, int flags)
+{
+	int fd;
+	ssize_t rdlen;
+
+	fd = open(pathname, O_WRONLY | O_CREAT | flags, 0777);
+	if (fd < 0)
+	{
+		pr_error_info("open file %s", pathname);
+		return fd;
+	}
+
+	rdlen = cavan_vfat_read_file2(fp, skip, fd);
+	close(fd);
+
+	return rdlen;
+
 	return 0;
 }
