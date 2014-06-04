@@ -864,13 +864,6 @@ struct mmp_struct {
 
 // ================================================================================
 
-typedef enum
-{
-	WALKER_ACTION_CONTINUE,
-	WALKER_ACTION_EOF,
-	WALKER_ACTION_STOP
-} walker_action_t;
-
 struct ext4_extent_header
 {
 	u16 magic;

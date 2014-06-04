@@ -37,8 +37,8 @@
 #define VFAT_IS_VOLUME_LABEL(desc) \
 	((desc)->attribute & VFAT_ATTR_VOLUME_ID)
 
-#define VFAT_BUILD_START_CLUSTER(desc) \
-	WORDS_DWORD((desc)->first_cluster_HW, (desc)->first_cluster_LW)
+#define VFAT_BUILD_START_CLUSTER(entry) \
+	WORDS_DWORD((entry)->first_cluster_hi, (entry)->first_cluster_lo)
 
 typedef enum
 {
@@ -78,7 +78,7 @@ struct fat_dbr
 	u16 bytes_per_sector;
 	u8 sectors_per_cluster;
 	u16 reserve_sector_count;
-	u8 fat_table_count;
+	u8 fat_count;
 	u16 root_entry_count;
 	u16 total_sector16;
 	u8 medium_describe;
@@ -113,48 +113,57 @@ struct vfat_dir_entry
 	u8 name[11];
 	u8 attribute;
 	u8 nt_reserved;
-	u8 current_time_teenth;
+	u8 current_time_tenth;
 	u16 current_time;
 	u16 current_date;
 	u16 last_access_date;
-	u16 first_cluster_HW;
+	u16 first_cluster_hi;
 	u16 write_time;
 	u16 write_date;
-	u16 first_cluster_LW;
+	u16 first_cluster_lo;
 	u32 file_size;
 };
 
 struct vfat_dir_entry_long
 {
 	u8 order;
-	u8 name1[10];
+	u16 name1[5];
 	u8 attribute;
 	u8 type;
 	u8 chesksum;
-	u8 name2[12];
+	u16 name2[6];
 	u16 first_cluster_LW;
-	u8 name3[4];
+	u16 name3[2];
 };
 #pragma pack()
 
-struct cavan_vfat_dir_context
+struct cavan_vfat_walker
 {
-	char name[256];
+	char buff[256];
 	char *tail;
-	void *data;
+	char *filename;
+	void *context;
 
-	int (*handler)(const char *filename, void *data);
+	int (*handler)(struct cavan_vfat_walker *walker, struct vfat_dir_entry *entry, const char *filename, size_t namelen);
+};
+
+struct cavan_vfat_find_file_context
+{
+	const char *filename;
+	size_t namelen;
+	u32 cluster;
+	struct vfat_dir_entry *entry;
 };
 
 struct cavan_vfat_fs
 {
 	struct cavan_block_device *bdev;
 	struct fat_dbr dbr;
-	const u8 *fat_table;
+	u8 *fat_table;
 
 	fat_type_t type;
 	u32 eof_flag;
-	u32 fat_size;
+	u32 fat_sectors;
 	u32 total_sectors;
 
 	u32 blocks_per_sector;
@@ -186,84 +195,6 @@ struct cavan_vfat_file
 	struct vfat_dir_entry entry;
 };
 
-#if 0
-
-ssize_t ffat_read_dbr(int fd, struct fat_dbr *dbr);
-const char *fat_type_to_string(enum fat_type type);
-
-u32 get_fat_table_entry(struct fat_info *info_p, u32 cluster_index);
-int set_fat_table_entry(struct fat_info *info_p, u32 cluster_index, u32 fat_entry);
-int entry_is_eof(struct fat_info *info_p, u32 entry_cotent);
-
-u64 get_first_sector_of_cluster(struct fat_info *info_p, u32 cluster_index);
-
-int ffat_init(int fd, struct fat_info *info_p);
-int fat_init(const char *pathname, struct fat_info *info_p);
-void fat_deinit(struct fat_info *info_p);
-
-void get_fat_volume_label(struct fat_info *info_p, char *volume);
-struct fat_directory *get_file_name(struct fat_directory *dir_p, char *buff);
-const char *attribute_to_string(u8 attribute);
-ssize_t load_directory(struct fat_info *info_p, u32 cluster_index, struct fat_soft_direcory *soft_dir, size_t size);
-int find_path(struct fat_info *info_p, const char *pathname, struct fat_directory *file_desc);
-int fat16_root_find(struct fat_info *info_p, const char *filename, struct fat_directory *file_desc);
-int find_path2_simple(struct fat_info *info_p, u32 cluster_index, const char *filename, struct fat_directory *file_desc);
-int find_path2(struct fat_info *info_p, const char *pathname, struct fat_directory *file_desc);
-
-ssize_t load_data(struct fat_info *info_p, u32 start_cluster, void *buff, size_t size);
-ssize_t load_file(struct fat_info *info_p, const char *filename, void *buff, size_t size);
-ssize_t load_root_directory(struct fat_info *info_p, struct fat_soft_direcory *soft_dirs, size_t size);
-ssize_t fat16_load_root_directory(struct fat_info *info_p, struct fat_soft_direcory *soft_dirs, size_t size);
-int fat16_print_root(struct fat_info *info_p);
-
-int print_directory(struct fat_info *info_p, u32 cluster_index);
-int list_directory(struct fat_info *info_p, const char *pathname);
-
-static inline int cluster_is_eof(struct fat_info *info_p, u32 cluster_index)
-{
-	u32 entry_cotent = get_fat_table_entry(info_p, cluster_index);
-
-	return entry_is_eof(info_p, entry_cotent);
-}
-
-static inline u32 get_next_cluster_index(struct fat_info * info_p, u32 cluster_index)
-{
-	return get_fat_table_entry(info_p, cluster_index);
-}
-
-static inline ssize_t fat_read_sectors(struct fat_info *info_p, u64 sector_index, size_t count, void *buff)
-{
-	u64 bytes_per_sector = info_p->dbr.bytes_per_sector;
-
-	return ffile_readfrom(info_p->fat_fd, buff, bytes_per_sector * count, bytes_per_sector * sector_index);
-}
-
-static inline ssize_t fat_write_sectors(struct fat_info *info_p, u64 sector_index, size_t count, const void *buff)
-{
-	u64 bytes_per_sector = info_p->dbr.bytes_per_sector;
-
-	return ffile_writeto(info_p->fat_fd, buff, bytes_per_sector * count, bytes_per_sector * sector_index);
-}
-
-static inline ssize_t fat_read_clusters(struct fat_info *info_p, u32 cluster_index, size_t count, void *buff)
-{
-	u64 first_sector = get_first_sector_of_cluster(info_p, cluster_index);
-
-	return fat_read_sectors(info_p, first_sector, info_p->dbr.sectors_per_cluster * count, buff);
-}
-
-static inline ssize_t fat_write_clusters(struct fat_info *info_p, u32 cluster_index, size_t count, const void *buff)
-{
-	u64 first_sector = get_first_sector_of_cluster(info_p, cluster_index);
-
-	return fat_write_sectors(info_p, first_sector, info_p->dbr.sectors_per_cluster * count, buff);
-}
-
-static inline ssize_t read_fat_table(struct fat_info *info_p)
-{
-	return fat_read_sectors(info_p, info_p->dbr.reserve_sector_count, info_p->fat_size, info_p->fat_table);
-}
-#endif
 void cavan_vfat_dbr_dump(const struct fat_dbr *dbr, fat_type_t type);
 void cavan_vfat_dir_entry_dump(const struct vfat_dir_entry *entry);
 void cavan_vfat_dir_entry_long_dump(const struct vfat_dir_entry_long *entry);

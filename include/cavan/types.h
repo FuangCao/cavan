@@ -48,6 +48,14 @@ typedef enum
 	TRUE,
 } BOOL;
 
+typedef enum
+{
+	WALKER_ACTION_CONTINUE,
+	WALKER_ACTION_COMPLETE,
+	WALKER_ACTION_EOF,
+	WALKER_ACTION_STOP
+} walker_action_t;
+
 typedef union
 {
 	void *type_void;
