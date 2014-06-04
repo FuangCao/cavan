@@ -137,24 +137,6 @@ struct vfat_dir_entry_long
 };
 #pragma pack()
 
-struct cavan_vfat_walker
-{
-	char buff[256];
-	char *tail;
-	char *filename;
-	void *context;
-
-	int (*handler)(struct cavan_vfat_walker *walker, struct vfat_dir_entry *entry, const char *filename, size_t namelen);
-};
-
-struct cavan_vfat_find_file_context
-{
-	const char *filename;
-	size_t namelen;
-	u32 cluster;
-	struct vfat_dir_entry *entry;
-};
-
 struct cavan_vfat_fs
 {
 	struct cavan_block_device *bdev;
@@ -195,6 +177,35 @@ struct cavan_vfat_file
 	struct vfat_dir_entry entry;
 };
 
+struct cavan_vfat_scan_dir_walker
+{
+	char buff[256];
+	char *tail;
+	char *filename;
+	void *context;
+
+	int (*handler)(struct cavan_vfat_scan_dir_walker *walker, struct vfat_dir_entry *entry, const char *filename, size_t namelen);
+};
+
+struct cavan_vfat_find_file_context
+{
+	const char *filename;
+	size_t namelen;
+	struct vfat_dir_entry *entry;
+};
+
+struct cavan_vfat_list_dir_context
+{
+	void *private_data;
+	void (*handler)(struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data);
+};
+
+struct cavan_vfat_read_file_context
+{
+	void *buff;
+	size_t size;
+};
+
 void cavan_vfat_dbr_dump(const struct fat_dbr *dbr, fat_type_t type);
 void cavan_vfat_dir_entry_dump(const struct vfat_dir_entry *entry);
 void cavan_vfat_dir_entry_long_dump(const struct vfat_dir_entry_long *entry);
@@ -205,6 +216,6 @@ void cavan_vfat_deinit(struct cavan_vfat_fs *fs);
 struct cavan_vfat_file *cavan_vfat_open_file(struct cavan_vfat_fs *fs, const char *pathname);
 void cavan_vfat_close_file(struct cavan_vfat_file *fp);
 
-int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(struct vfat_dir_entry *entry, void *data), void *data);
+int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data), void *data);
 ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, off_t offset, char *buff, size_t size);
 ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, off_t offset, const char *pathname, int flags);

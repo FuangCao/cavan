@@ -48,18 +48,16 @@ static ssize_t vfat_app_device_write_byte(struct cavan_block_device *bdev, u64 i
 }
 #endif
 
-static void vfat_app_device_list_dir_handler(struct vfat_dir_entry *entry, void *data)
+static void vfat_app_device_list_dir_handler(struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data)
 {
-#if 0
-	print_ntext(entry->name, entry->name_len);
+	print_ntext(filename, namelen);
 
-	if (IS_DIRECTORY(desc))
+	if (VFAT_IS_DIRECTORY(entry))
 	{
 		print_char('/');
 	}
 
 	print_char('\n');
-#endif
 }
 
 int main(int argc, char *argv[])

@@ -30,7 +30,17 @@ static u32 cavan_vfat_get_next_cluster(struct cavan_vfat_fs *fs, u32 cluster)
 	switch (fs->type)
 	{
 	case FAT12:
-		return 0;
+		{
+			u16 value = *(u16 *) (fs->fat_table + cluster + (cluster >> 1));
+			if (cluster & 1)
+			{
+				return value >> 4;
+			}
+			else
+			{
+				return value & 0x0FFF;
+			}
+		}
 
 	case FAT16:
 		return ((u16 *) fs->fat_table)[cluster];
@@ -39,7 +49,7 @@ static u32 cavan_vfat_get_next_cluster(struct cavan_vfat_fs *fs, u32 cluster)
 		return ((u32 *) fs->fat_table)[cluster] & 0x0FFFFFFF;
 
 	default:
-		return 0;
+		return fs->eof_flag;
 	}
 }
 
@@ -392,7 +402,7 @@ static char *cavan_vfat_build_long_name(const struct vfat_dir_entry_long *entry,
 	return buff + 1;
 }
 
-static void cavan_vfat_walker_init(struct cavan_vfat_walker *walker, int (*handler)(struct cavan_vfat_walker *walker, struct vfat_dir_entry *entry, const char *filename, size_t namelen), void *context)
+static void cavan_vfat_scan_dir_walker_init(struct cavan_vfat_scan_dir_walker *walker, int (*handler)(struct cavan_vfat_scan_dir_walker *walker, struct vfat_dir_entry *entry, const char *filename, size_t namelen), void *context)
 {
 	walker->context = context;
 	walker->handler = handler;
@@ -400,7 +410,7 @@ static void cavan_vfat_walker_init(struct cavan_vfat_walker *walker, int (*handl
 	walker->tail = walker->buff + sizeof(walker->buff) - 2;
 }
 
-static int cavan_vfat_directory_entry_traversal(struct vfat_dir_entry *entry, size_t count, struct cavan_vfat_walker *walker)
+static int cavan_vfat_scan_dir_entrys(struct vfat_dir_entry *entry, size_t count, struct cavan_vfat_scan_dir_walker *walker)
 {
 	struct vfat_dir_entry *entry_end;
 
@@ -475,7 +485,7 @@ static int cavan_vfat_directory_entry_traversal(struct vfat_dir_entry *entry, si
 	return WALKER_ACTION_CONTINUE;
 }
 
-static int cavan_vfat_directory_traversal(struct cavan_vfat_fs *fs, u32 cluster, struct cavan_vfat_walker *walker)
+static int cavan_vfat_scan_dir(struct cavan_vfat_fs *fs, u32 cluster, struct cavan_vfat_scan_dir_walker *walker)
 {
 	int ret;
 	ssize_t rdlen;
@@ -489,7 +499,7 @@ static int cavan_vfat_directory_traversal(struct cavan_vfat_fs *fs, u32 cluster,
 		remain = fs->dbr.root_entry_count;
 		index = fs->root_first_sector;
 
-		while (1)
+		while (remain)
 		{
 			u32 count;
 
@@ -501,14 +511,14 @@ static int cavan_vfat_directory_traversal(struct cavan_vfat_fs *fs, u32 cluster,
 			}
 
 			count = remain > fs->entrys_per_sector ? fs->entrys_per_sector : remain;
-			ret = cavan_vfat_directory_entry_traversal((struct vfat_dir_entry *) buff, count, walker);
+			ret = cavan_vfat_scan_dir_entrys((struct vfat_dir_entry *) buff, count, walker);
 			if (ret != WALKER_ACTION_CONTINUE)
 			{
 				return ret;
 			}
 
-			index++;
 			remain -= count;
+			index++;
 		}
 	}
 	else
@@ -524,22 +534,20 @@ static int cavan_vfat_directory_traversal(struct cavan_vfat_fs *fs, u32 cluster,
 				return rdlen;
 			}
 
-			ret = cavan_vfat_directory_entry_traversal((struct vfat_dir_entry *) buff, fs->entrys_per_cluster, walker);
+			ret = cavan_vfat_scan_dir_entrys((struct vfat_dir_entry *) buff, fs->entrys_per_cluster, walker);
 			if (ret != WALKER_ACTION_CONTINUE)
 			{
 				return ret;
 			}
-			pr_pos_info();
 
 			cluster = cavan_vfat_get_next_cluster(fs, cluster);
-			println("cluster = 0x%08x", cluster);
 		}
 	}
 
 	return WALKER_ACTION_EOF;
 }
 
-static int cavan_vfat_find_file_handler(struct cavan_vfat_walker *walker, struct vfat_dir_entry *entry, const char *filename, size_t namelen)
+static int cavan_vfat_find_file_handler(struct cavan_vfat_scan_dir_walker *walker, struct vfat_dir_entry *entry, const char *filename, size_t namelen)
 {
 	struct cavan_vfat_find_file_context *context = walker->context;
 
@@ -548,29 +556,27 @@ static int cavan_vfat_find_file_handler(struct cavan_vfat_walker *walker, struct
 		return WALKER_ACTION_CONTINUE;
 	}
 
-	println("filename = %s, length = " PRINT_FORMAT_SIZE, filename, namelen);
-
 	if (namelen != context->namelen || text_ncmp(context->filename, filename, namelen))
 	{
 		return WALKER_ACTION_CONTINUE;
 	}
 
 	mem_copy(context->entry, entry, sizeof(*entry));
-	context->cluster = VFAT_BUILD_START_CLUSTER(entry);
 
 	return WALKER_ACTION_COMPLETE;
 }
 
 static int cavan_vfat_find_file(struct cavan_vfat_fs *fs, struct cavan_vfat_file *file, const char *pathname)
 {
-	struct cavan_vfat_walker walker;
+	struct cavan_vfat_scan_dir_walker walker;
 	struct vfat_dir_entry *entry = &file->entry;
 	struct cavan_vfat_find_file_context context;
 
-	entry->attribute |= VFAT_ATTR_DIRECTORY;
 	context.entry = entry;
-	context.cluster = fs->root_first_cluster;
-	cavan_vfat_walker_init(&walker, cavan_vfat_find_file_handler, &context);
+	entry->attribute |= VFAT_ATTR_DIRECTORY;
+	entry->first_cluster_hi = fs->root_first_cluster >> 16;
+	entry->first_cluster_lo = fs->root_first_cluster & 0xFFFF;
+	cavan_vfat_scan_dir_walker_init(&walker, cavan_vfat_find_file_handler, &context);
 
 	while (1)
 	{
@@ -581,10 +587,6 @@ static int cavan_vfat_find_file(struct cavan_vfat_fs *fs, struct cavan_vfat_file
 		{
 			pathname++;
 		}
-
-#if CAVAN_VFAT_DEBUG
-		println("pathname = %s", pathname);
-#endif
 
 		if (*pathname == 0)
 		{
@@ -600,7 +602,7 @@ static int cavan_vfat_find_file(struct cavan_vfat_fs *fs, struct cavan_vfat_file
 
 		context.filename = pathname;
 		context.namelen = p - pathname;
-		ret = cavan_vfat_directory_traversal(fs, context.cluster, &walker);
+		ret = cavan_vfat_scan_dir(fs, VFAT_BUILD_START_CLUSTER(entry), &walker);
 		if (ret != WALKER_ACTION_COMPLETE)
 		{
 			return ret < 0 ? ret : -EFAULT;
@@ -646,17 +648,132 @@ void cavan_vfat_close_file(struct cavan_vfat_file *fp)
 	free(fp);
 }
 
-int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(struct vfat_dir_entry *entry, void *data), void *data)
+static int cavan_vfat_list_dir_handler(struct cavan_vfat_scan_dir_walker *walker, struct vfat_dir_entry *entry, const char *filename, size_t namelen)
 {
+	struct cavan_vfat_list_dir_context *context = walker->context;
+
+	context->handler(entry, filename, namelen, context->private_data);
+
+	return WALKER_ACTION_CONTINUE;
+}
+
+int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data), void *data)
+{
+	struct cavan_vfat_scan_dir_walker walker;
+	struct cavan_vfat_list_dir_context context =
+	{
+		.private_data = data,
+		.handler = handler
+	};
+
+	if (VFAT_IS_DIRECTORY(&fp->entry) == 0)
+	{
+		return -ENOTDIR;
+	}
+
+	cavan_vfat_scan_dir_walker_init(&walker, cavan_vfat_list_dir_handler, &context);
+
+	return cavan_vfat_scan_dir(fp->fs, VFAT_BUILD_START_CLUSTER(&fp->entry), &walker);
+}
+
+static int cavan_vfat_read_file_base(struct cavan_vfat_file *fp, size_t skip, size_t size, int (*handler)(const char *buff, size_t size, void *date), void *data)
+{
+	struct cavan_vfat_fs *fs = fp->fs;
+	size_t remain = fp->entry.file_size;
+	u32 cluster = VFAT_BUILD_START_CLUSTER(&fp->entry);
+
+	while (remain && size && cluster < fs->eof_flag)
+	{
+		int ret;
+		char *p;
+		ssize_t rdlen;
+		char buff[fs->bytes_per_cluster];
+
+		rdlen = cavan_vfat_read_cluster(fs, cluster, buff, 1);
+		if (rdlen < 0)
+		{
+			pr_red_info("cavan_vfat_read_cluster");
+			return rdlen;
+		}
+
+		if (remain > sizeof(buff))
+		{
+			rdlen = sizeof(buff);
+			remain -= rdlen;
+		}
+		else
+		{
+			rdlen = remain;
+			remain = 0;
+		}
+
+		p = buff;
+
+		if (skip)
+		{
+			if ((size_t) rdlen <= skip)
+			{
+				skip -= rdlen;
+				continue;
+			}
+
+			rdlen -= skip;
+			p += skip;
+			skip = 0;
+		}
+
+		if ((size_t) rdlen > size)
+		{
+			rdlen = size;
+			size = 0;
+		}
+		else
+		{
+			size -= rdlen;
+		}
+
+		ret = handler(p, rdlen, data);
+		if (ret < 0)
+		{
+			pr_red_info("handler");
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+static int cavan_vfat_read_file_to_buff_handler(const char *buff, size_t size, void *data)
+{
+	struct cavan_vfat_read_file_context *context = data;
+
+	mem_copy(ADDR_ADD(context->buff, context->size), buff, size);
+	context->size += size;
+
 	return 0;
 }
 
 ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, off_t offset, char *buff, size_t size)
 {
-	return 0;
+	int ret;
+	struct cavan_vfat_read_file_context context =
+	{
+		.buff = buff,
+		.size = 0
+	};
+
+	ret = cavan_vfat_read_file_base(fp, offset, size, cavan_vfat_read_file_to_buff_handler, &context);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_vfat_read_file_base");
+		return ret;
+	}
+
+	return context.size;
 }
 
 ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, off_t offset, const char *pathname, int flags)
 {
+	pr_pos_info();
 	return 0;
 }
