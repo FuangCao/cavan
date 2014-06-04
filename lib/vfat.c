@@ -1147,7 +1147,7 @@ void cavan_vfat_dir_entry_long_dump(const struct vfat_dir_entry_long *entry)
 	print_sep(60);
 	pr_bold_info("vfat dir entry long %p", entry);
 
-	pr_info("order = %d", entry->order);
+	pr_info("order = 0x%02x", entry->order);
 	pr_info("name1[10] = %s", text_header((char *) entry->name1, sizeof(entry->name1)));
 	pr_info("attribute = %d", entry->attribute);
 	pr_info("type = %d", entry->type);
@@ -1292,7 +1292,93 @@ void cavan_vfat_deinit(struct cavan_vfat_fs *fs)
 {
 }
 
-static int cavan_vfat_directory_entry_traversal(const struct vfat_dir_entry *entry, size_t count)
+static char *cavan_vfat_build_short_name(const u8 *name, char *buff, size_t size)
+{
+	int i;
+	char *buff_end = buff + size - 1;
+	static const int size_array[] = {8, 3};
+
+	for (i = 0; i < 2; i++)
+	{
+		const u8 *start, *p;
+
+		for (start = name + 8 * i, p = start + size_array[i] - 1; p >= start; p--)
+		{
+			if (*p != 0x20)
+			{
+				int count;
+
+				if (i > 0 && buff < buff_end)
+				{
+					*buff++ = '.';
+				}
+
+				count = p - start + 1;
+				if (buff + count >= buff_end)
+				{
+					count = buff_end - buff;
+				}
+
+				buff = mem_copy(buff, start, count);
+				break;
+			}
+		}
+	}
+
+	*buff = 0;
+
+	return buff;
+}
+
+static char *cavan_vfat_copy_name(char *dest, const char *src, size_t size)
+{
+	const char *last;
+
+	for (last = src + size - 1; last >= src; last--)
+	{
+		if (*last)
+		{
+			*dest-- = *last;
+		}
+
+		*dest-- = *--last;
+	}
+
+	return dest;
+}
+
+static char *cavan_vfat_build_long_name(const struct vfat_dir_entry_long *entry, char *buff, char *head)
+{
+	int i;
+	const u8 *buff_array[] = {entry->name3, entry->name2, entry->name1};
+	static const int size_array[] = {sizeof(entry->name3), sizeof(entry->name2), sizeof(entry->name1)};
+
+	for (i = 0; i < 3; i++)
+	{
+		int size;
+
+		size = buff - head + 1;
+		if (size > size_array[i])
+		{
+			size = size_array[i];
+		}
+		else if (size == 0)
+		{
+			break;
+		}
+
+		buff = cavan_vfat_copy_name(buff, (char *) buff_array[i], size);
+	}
+
+	return buff + 1;
+}
+
+static void cavan_vfat_dir_context_init(struct cavan_vfat_dir_context *context)
+{
+	context->tail = NULL;
+}
+
+static int cavan_vfat_directory_entry_traversal(const struct vfat_dir_entry *entry, size_t count, struct cavan_vfat_dir_context *context)
 {
 	const struct vfat_dir_entry *entry_end;
 
@@ -1309,15 +1395,29 @@ static int cavan_vfat_directory_entry_traversal(const struct vfat_dir_entry *ent
 		default:
 			if (VFAT_IS_LONG_NAME(entry))
 			{
+				const struct vfat_dir_entry_long *entry_long = (struct vfat_dir_entry_long *) entry;
 
+				if ((entry_long->order & VFAT_LAST_LONG_ENTRY) || context->tail == NULL)
+				{
+					context->tail = context->name + sizeof(context->name) - 1;
+					context->tail[0] = 0;
+				}
+
+				context->tail = cavan_vfat_build_long_name(entry_long, context->tail - 1, context->name);
+
+				if ((entry_long->order & VFAT_LONG_ENTRY_INDEX_MASK) < 2)
+				{
+					println("name = %s", context->tail);
+				}
 			}
 			else if (VFAT_IS_VOLUME_LABEL(entry))
 			{
-				cavan_vfat_dir_entry_long_dump((struct vfat_dir_entry_long *) entry);
 			}
 			else
 			{
-				cavan_vfat_dir_entry_dump(entry);
+				cavan_vfat_build_short_name(entry->name, context->name, sizeof(context->name));
+				println("name = %s", context->name);
+				// cavan_vfat_dir_entry_dump(entry);
 			}
 		}
 	}
@@ -1329,6 +1429,9 @@ static int cavan_vfat_directory_traversal(struct cavan_vfat_fs *fs, u32 cluster)
 {
 	int ret;
 	ssize_t rdlen;
+	struct cavan_vfat_dir_context context;
+
+	cavan_vfat_dir_context_init(&context);
 
 	if (cluster < 2)
 	{
@@ -1351,7 +1454,7 @@ static int cavan_vfat_directory_traversal(struct cavan_vfat_fs *fs, u32 cluster)
 			}
 
 			count = remain > fs->entrys_per_sector ? fs->entrys_per_sector : remain;
-			ret = cavan_vfat_directory_entry_traversal((struct vfat_dir_entry *) buff, count);
+			ret = cavan_vfat_directory_entry_traversal((struct vfat_dir_entry *) buff, count, &context);
 			if (ret < 0)
 			{
 				pr_red_info("cavan_vfat_directory_entry_traversal");
@@ -1373,7 +1476,7 @@ static int cavan_vfat_directory_traversal(struct cavan_vfat_fs *fs, u32 cluster)
 			return rdlen;
 		}
 
-		ret = cavan_vfat_directory_entry_traversal((struct vfat_dir_entry *)buff, fs->entrys_per_cluster);
+		ret = cavan_vfat_directory_entry_traversal((struct vfat_dir_entry *) buff, fs->entrys_per_cluster, &context);
 		if (ret < 0)
 		{
 			pr_red_info("cavan_vfat_directory_entry_traversal");

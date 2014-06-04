@@ -7,13 +7,14 @@
 
 #define CAVAN_VFAT_PATH_SEP					'/'
 
-#define VFAT_ATTR_READ_ONLY		(1 << 0)
-#define VFAT_ATTR_HIDDEN		(1 << 1)
-#define VFAT_ATTR_SYSTEM		(1 << 2)
-#define VFAT_ATTR_VOLUME_ID		(1 << 3)
-#define VFAT_ATTR_DIRECTORY		(1 << 4)
-#define VFAT_ATTR_AECHIVE		(1 << 5)
-#define VFAT_LAST_LONG_ENTRY	0x40
+#define VFAT_ATTR_READ_ONLY			(1 << 0)
+#define VFAT_ATTR_HIDDEN			(1 << 1)
+#define VFAT_ATTR_SYSTEM			(1 << 2)
+#define VFAT_ATTR_VOLUME_ID			(1 << 3)
+#define VFAT_ATTR_DIRECTORY			(1 << 4)
+#define VFAT_ATTR_AECHIVE			(1 << 5)
+#define VFAT_LAST_LONG_ENTRY		0x40
+#define VFAT_LONG_ENTRY_INDEX_MASK	(VFAT_LAST_LONG_ENTRY - 1)
 
 #define VFAT_ATTR_LONG_NAME \
 	(VFAT_ATTR_READ_ONLY | VFAT_ATTR_HIDDEN | VFAT_ATTR_SYSTEM | VFAT_ATTR_VOLUME_ID)
@@ -135,6 +136,15 @@ struct vfat_dir_entry_long
 	u8 name3[4];
 };
 #pragma pack()
+
+struct cavan_vfat_dir_context
+{
+	char name[256];
+	char *tail;
+	void *data;
+
+	int (*handler)(const char *filename, void *data);
+};
 
 struct cavan_vfat_fs
 {
