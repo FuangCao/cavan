@@ -2,21 +2,14 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([fuang-cao-cavan], [1.0], [cavan.cfa@gmail.com])
+AC_INIT([fuang-cao-cavan], [1.1], [cavan.cfa@gmail.com])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 
-AM_INIT_AUTOMAKE([cavan], [1.0])
+AM_INIT_AUTOMAKE
 
 # Checks for programs.
-AC_PROG_CXX
-AC_PROG_AWK
 AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PROG_MAKE_SET
-AC_PROG_RANLIB
 AM_PROG_LIBTOOL
 
 # Checks for libraries.
@@ -28,7 +21,7 @@ AC_CHECK_LIB([pthread], [-lpthread])
 AC_CHECK_LIB([rt], [-lrt])
 
 # Checks for header files.
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h malloc.h netinet/in.h stdint.h stdlib.h string.h sys/file.h sys/ioctl.h sys/mount.h sys/socket.h sys/time.h sys/vfs.h termios.h unistd.h utime.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h malloc.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/file.h sys/ioctl.h sys/mount.h sys/socket.h sys/time.h sys/vfs.h termios.h unistd.h utime.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -49,7 +42,6 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
-LT_INIT
 AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for library functions.
@@ -58,8 +50,9 @@ AC_FUNC_FORK
 AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_HEADER_MAJOR
 AC_FUNC_MALLOC
+AC_FUNC_MKTIME
 AC_FUNC_MMAP
-AC_CHECK_FUNCS([clock_gettime ftruncate getcwd gettimeofday inet_ntoa localtime_r memset mkdir mkfifo munmap pow realpath rmdir select setenv socket sqrt strerror utime])
+AC_CHECK_FUNCS([alarm clock_gettime dup2 ftruncate getcwd gettimeofday inet_ntoa localtime_r memset mkdir mkfifo munmap pow putenv realpath rmdir select setenv socket sqrt strdup strerror utime])
 
 AC_CONFIG_FILES([Makefile
                  app/Makefile
