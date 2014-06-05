@@ -165,6 +165,21 @@ int main(int argc, char *argv[])
 
 		cavan_vfat_close_file(fp);
 	}
+	else
+	{
+		char buff[32];
+		ssize_t rdlen;
+
+		rdlen = cavan_vfat_read_volume_label(&fs, buff, sizeof(buff) - 1);
+		if (rdlen < 0)
+		{
+			pr_red_info("cavan_vfat_read_volume_label");
+			goto out_cavan_vfat_deinit;
+		}
+
+		buff[rdlen] = 0;
+		println("volume label = %s", buff);
+	}
 
 out_free_content:
 	if (content)

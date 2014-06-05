@@ -222,3 +222,4 @@ int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(const struct
 ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, size_t skip, char *buff, size_t size);
 ssize_t cavan_vfat_read_file2(struct cavan_vfat_file *fp, size_t skip, int fd);
 ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, size_t skip, const char *pathname, int flags);
+ssize_t cavan_vfat_read_volume_label(struct cavan_vfat_fs *fs, char *buff, size_t size);

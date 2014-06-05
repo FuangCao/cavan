@@ -849,3 +849,50 @@ ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, size_t skip, const cha
 
 	return 0;
 }
+
+static int cavan_vfat_read_volume_label_handler(struct cavan_vfat_scan_dir_walker *walker, const char *label, size_t length)
+{
+	struct cavan_vfat_read_file_context *context = walker->context;
+
+	if (length > context->size)
+	{
+		length = context->size;
+	}
+
+	mem_copy(context->buff, label, length);
+	context->size = length;
+
+	return WALKER_ACTION_COMPLETE;
+}
+
+ssize_t cavan_vfat_read_volume_label(struct cavan_vfat_fs *fs, char *buff, size_t size)
+{
+	int ret;
+	const u8 *name;
+	struct cavan_vfat_scan_dir_walker walker;
+	struct cavan_vfat_read_file_context context =
+	{
+		.buff = buff,
+		.size = size
+	};
+
+	cavan_vfat_scan_dir_walker_init(&walker, &context);
+	walker.label_handler = cavan_vfat_read_volume_label_handler;
+
+	ret = cavan_vfat_scan_dir(fs, fs->root_first_cluster, &walker);
+	if (ret == WALKER_ACTION_COMPLETE)
+	{
+		return context.size;
+	}
+
+	if (fs->type == FAT32)
+	{
+		name = fs->dbr.dbr32.dbr16.volume_label;
+	}
+	else
+	{
+		name = fs->dbr.dbr16.volume_label;
+	}
+
+	return cavan_vfat_build_volume_label(name, buff, size) - buff;
+}
