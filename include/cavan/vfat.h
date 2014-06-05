@@ -184,7 +184,8 @@ struct cavan_vfat_scan_dir_walker
 	char *filename;
 	void *context;
 
-	int (*handler)(struct cavan_vfat_scan_dir_walker *walker, struct vfat_dir_entry *entry, const char *filename, size_t namelen);
+	int (*label_handler)(struct cavan_vfat_scan_dir_walker *walker, const char *label, size_t length);
+	int (*entry_handler)(struct cavan_vfat_scan_dir_walker *walker, const struct vfat_dir_entry *entry, const char *filename, size_t namelen);
 };
 
 struct cavan_vfat_find_file_context
@@ -197,7 +198,7 @@ struct cavan_vfat_find_file_context
 struct cavan_vfat_list_dir_context
 {
 	void *private_data;
-	void (*handler)(struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data);
+	void (*handler)(const struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data);
 };
 
 struct cavan_vfat_read_file_context
@@ -206,6 +207,7 @@ struct cavan_vfat_read_file_context
 	size_t size;
 };
 
+const char *cavan_vfat_type_to_string(fat_type_t type);
 void cavan_vfat_dbr_dump(const struct fat_dbr *dbr, fat_type_t type);
 void cavan_vfat_dir_entry_dump(const struct vfat_dir_entry *entry);
 void cavan_vfat_dir_entry_long_dump(const struct vfat_dir_entry_long *entry);
@@ -216,7 +218,7 @@ void cavan_vfat_deinit(struct cavan_vfat_fs *fs);
 struct cavan_vfat_file *cavan_vfat_open_file(struct cavan_vfat_fs *fs, const char *pathname);
 void cavan_vfat_close_file(struct cavan_vfat_file *fp);
 
-int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data), void *data);
+int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(const struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data), void *data);
 ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, size_t skip, char *buff, size_t size);
 ssize_t cavan_vfat_read_file2(struct cavan_vfat_file *fp, size_t skip, int fd);
 ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, size_t skip, const char *pathname, int flags);
