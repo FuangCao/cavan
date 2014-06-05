@@ -547,11 +547,7 @@ int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
 		return bufflen;
 	}
 
-#if __WORDSIZE == 64 || CONFIG_BUILD_FOR_ANDROID
-	println("bufflen = %ld", bufflen);
-#else
-	println("bufflen = %d", bufflen);
-#endif
+	println("bufflen = " PRINT_FORMAT_SIZE, bufflen);
 
 	ret = ft5406_upgrade_enter(dev_fd);
 	if (ret < 0)

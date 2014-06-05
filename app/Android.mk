@@ -23,13 +23,15 @@ $(intermediates)/core/%.o: PRIVATE_CFLAGS += -Umain
 $(CAVAN_APP_CORE_FILES): $(CAVAN_MAP_H) $(CAVAN_MAP_C)
 
 $(CAVAN_MAP_H): $(CAVAN_APP_SRC_FILES)
-	$(hide)for app in $(basename $(notdir $^)); \
+	$(hide) mkdir -pv $(dir $@)
+	$(hide) for app in $(basename $(notdir $^)); \
 	do \
 		echo "int do_cavan_$${app}(int argc, char *argv[]);"; \
 	done > $@
 
 $(CAVAN_MAP_C): $(CAVAN_APP_SRC_FILES)
-	$(hide)for app in $(basename $(notdir $^)); \
+	$(hide) mkdir -pv $(dir $@)
+	$(hide) for app in $(basename $(notdir $^)); \
 	do \
 		echo "{\"$${app}\", do_cavan_$${app}},"; \
 	done > $@

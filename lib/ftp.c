@@ -1337,11 +1337,8 @@ int ftp_client_run(const char *hostname, u16 port, const char *username, const c
 				ret = sendlen;
 				break;
 			}
-#if __WORDSIZE == 64 || CONFIG_BUILD_FOR_ANDROID
-			println("send buff[%ld] = %s", sendlen, buff);
-#else
-			println("send buff[%d] = %s", sendlen, buff);
-#endif
+
+			println("send buff[" PRINT_FORMAT_SIZE "] = %s", sendlen, buff);
 		}
 
 		recvlen = inet_recv(sockfd, buff, sizeof(buff));

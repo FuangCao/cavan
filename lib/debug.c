@@ -18,6 +18,25 @@
  */
 
 #include <cavan.h>
+
+#ifdef CONFIG_BUILD_FOR_ANDROID
+char *dump_backtrace(char *buff, size_t size)
+{
+	*buff = 0;
+	return buff;
+}
+
+int dump_stack(void)
+{
+	return 0;
+}
+
+char *address_to_symbol(void *addr, char *buff, size_t size)
+{
+	*buff = 0;
+	return buff;
+}
+#else
 #include <execinfo.h>
 
 char *dump_backtrace(char *buff, size_t size)
@@ -79,6 +98,7 @@ char *address_to_symbol(void *addr, char *buff, size_t size)
 
 	return buff;
 }
+#endif
 
 static void sigsegv_handler(int signum, siginfo_t *info, void *ptr)
 {
