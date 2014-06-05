@@ -328,7 +328,7 @@ label_decode_data:
 	rdlen = message.length - sizeof(message);
 	if (reslen != (size_t)rdlen)
 	{
-		pr_red_info("reslen(%d) != rdlen(" PRINT_FORMAT_SIZE ")", reslen, rdlen);
+		pr_red_info("reslen(" PRINT_FORMAT_SIZE ") != rdlen(" PRINT_FORMAT_SIZE ")", reslen, rdlen);
 		return -EINVAL;
 	}
 
