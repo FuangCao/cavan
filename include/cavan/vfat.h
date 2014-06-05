@@ -184,8 +184,8 @@ struct cavan_vfat_scan_dir_walker
 	char *filename;
 	void *context;
 
-	int (*label_handler)(struct cavan_vfat_scan_dir_walker *walker, const char *label, size_t length);
-	int (*entry_handler)(struct cavan_vfat_scan_dir_walker *walker, const struct vfat_dir_entry *entry, const char *filename, size_t namelen);
+	int (*label_handler)(struct cavan_vfat_scan_dir_walker *walker, const char *label);
+	int (*entry_handler)(struct cavan_vfat_scan_dir_walker *walker, const struct vfat_dir_entry *entry, const char *filename);
 };
 
 struct cavan_vfat_find_file_context
@@ -198,7 +198,7 @@ struct cavan_vfat_find_file_context
 struct cavan_vfat_list_dir_context
 {
 	void *private_data;
-	void (*handler)(const struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data);
+	void (*handler)(const struct vfat_dir_entry *entry, const char *filename, void *data);
 };
 
 struct cavan_vfat_read_file_context
@@ -218,7 +218,7 @@ void cavan_vfat_deinit(struct cavan_vfat_fs *fs);
 struct cavan_vfat_file *cavan_vfat_open_file(struct cavan_vfat_fs *fs, const char *pathname);
 void cavan_vfat_close_file(struct cavan_vfat_file *fp);
 
-int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(const struct vfat_dir_entry *entry, const char *filename, size_t namelen, void *data), void *data);
+int cavan_vfat_list_dir(struct cavan_vfat_file *fp, void (*handler)(const struct vfat_dir_entry *entry, const char *filename, void *data), void *data);
 ssize_t cavan_vfat_read_file(struct cavan_vfat_file *fp, size_t skip, char *buff, size_t size);
 ssize_t cavan_vfat_read_file2(struct cavan_vfat_file *fp, size_t skip, int fd);
 ssize_t cavan_vfat_read_file3(struct cavan_vfat_file *fp, size_t skip, const char *pathname, int flags);
