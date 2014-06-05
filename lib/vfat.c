@@ -435,6 +435,7 @@ static void cavan_vfat_scan_dir_walker_init(struct cavan_vfat_scan_dir_walker *w
 	walker->context = context;
 	walker->filename = NULL;
 	walker->tail = walker->buff + sizeof(walker->buff) - 1;
+	walker->tail[0] = 0;
 
 	walker->entry_handler = cavan_vfat_scan_dir_entry_handler_dummy;
 	walker->label_handler = cavan_vfat_scan_dir_label_handler_dummy;
@@ -462,10 +463,8 @@ static int cavan_vfat_scan_dir_entrys(const struct vfat_dir_entry *entry, size_t
 				if (entry_long->order & VFAT_LAST_LONG_ENTRY)
 				{
 					walker->filename = walker->tail;
-					walker->filename[0] = 0;
 				}
-
-				if (walker->filename == NULL)
+				else if (walker->filename == NULL)
 				{
 					return -EFAULT;
 				}
