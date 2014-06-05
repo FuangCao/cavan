@@ -3,7 +3,7 @@
 #include <cavan.h>
 #include <stdarg.h>
 
-#if CONFIG_BUILD_FOR_ANDROID
+#ifdef CONFIG_BUILD_FOR_ANDROID
 // #include <utils/Log.h>
 // #define printf	LOGD
 #define CAVAN_TEMP_PATH		"/data"

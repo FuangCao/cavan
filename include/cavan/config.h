@@ -18,7 +18,3 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE			500
 #endif
-
-#ifndef CONFIG_BUILD_FOR_ANDROID
-#define CONFIG_BUILD_FOR_ANDROID	0
-#endif

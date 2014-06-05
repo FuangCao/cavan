@@ -18,10 +18,10 @@
 	((a) < 0 ? -(a) : (a))
 
 #define DIV_CEIL(a, b) \
-	(((a) - 1) / (b) + 1)
+	(((a) + (b) - 1) / (b))
 
 #define RIGHT_SHIFT_CEIL(a, shift) \
-	((((a) - 1) >> (shift)) + 1)
+	((a) < 1 ? 0 : (((a) - 1) >> (shift)) + 1)
 
 #define ROR(value, bits) \
 	((value) >> (bits) | (value) << ((sizeof(value) << 3) - (bits)))

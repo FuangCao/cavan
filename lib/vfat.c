@@ -6,7 +6,7 @@
 #include <cavan/text.h>
 #include <cavan/math.h>
 
-#define CAVAN_VFAT_DEBUG	0
+#define CAVAN_VFAT_DEBUG	1
 
 static inline u32 cavan_vfat_get_cluster_first_sector(struct cavan_vfat_fs *fs, u32 index)
 {
@@ -200,7 +200,7 @@ int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev)
 	fs->sectors_per_cluster_shift = math_get_value_shift(dbr->sectors_per_cluster);
 	fs->bytes_per_cluster_shift = fs->sectors_per_cluster_shift + fs->bytes_per_sector_shift;
 	fs->bytes_per_cluster = dbr->sectors_per_cluster * dbr->bytes_per_sector;
-	fs->root_dir_sectors = DIV_CEIL(dbr->root_entry_count * sizeof(struct vfat_dir_entry), dbr->bytes_per_sector);
+	fs->root_dir_sectors = RIGHT_SHIFT_CEIL(dbr->root_entry_count * sizeof(struct vfat_dir_entry), fs->bytes_per_sector_shift);
 
 	fs->entrys_per_sector = fs->bytes_per_sector / sizeof(struct vfat_dir_entry);
 	fs->entrys_per_cluster = fs->entrys_per_sector << fs->sectors_per_cluster_shift;
@@ -316,7 +316,7 @@ static char *cavan_vfat_build_volume_label(const u8 name[11], char *buff, size_t
 {
 	const u8 *p;
 
-	for (p = name + sizeof(name) - 1; p >= name; p--)
+	for (p = name + 11 - 1; p >= name; p--)
 	{
 		if (*p != 0x20)
 		{
@@ -382,6 +382,7 @@ static char *cavan_vfat_copy_name(char *dest, char *head, const u16 *src, size_t
 
 	for (last = src + count - 1; last >= src && dest >= head; dest--, last--)
 	{
+#if 1
 		u16 value = *last;
 
 		if (value & 0xFF00)
@@ -394,6 +395,9 @@ static char *cavan_vfat_copy_name(char *dest, char *head, const u16 *src, size_t
 		}
 
 		*dest = value;
+#else
+		*dest = *last;
+#endif
 	}
 
 	return dest;
@@ -430,7 +434,7 @@ static void cavan_vfat_scan_dir_walker_init(struct cavan_vfat_scan_dir_walker *w
 {
 	walker->context = context;
 	walker->filename = NULL;
-	walker->tail = walker->buff + sizeof(walker->buff) - 2;
+	walker->tail = walker->buff + sizeof(walker->buff) - 1;
 
 	walker->entry_handler = cavan_vfat_scan_dir_entry_handler_dummy;
 	walker->label_handler = cavan_vfat_scan_dir_label_handler_dummy;
@@ -458,7 +462,7 @@ static int cavan_vfat_scan_dir_entrys(const struct vfat_dir_entry *entry, size_t
 				if (entry_long->order & VFAT_LAST_LONG_ENTRY)
 				{
 					walker->filename = walker->tail;
-					walker->filename[1] = 0;
+					walker->filename[0] = 0;
 				}
 
 				if (walker->filename == NULL)

@@ -17,7 +17,7 @@ int set_tty_attr(int fd, int action, struct termios *attr)
 		return ret;
 	}
 
-#if CONFIG_BUILD_FOR_ANDROID == 0
+#ifndef CONFIG_BUILD_FOR_ANDROID
 	tcdrain(fd);
 #endif
 
