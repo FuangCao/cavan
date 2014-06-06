@@ -146,16 +146,16 @@ int file_join(const char *dest_file, char *src_files[], int count)
 			char buff[MAX_BUFF_LEN];
 
 			rdlen = read(src_fd, buff, sizeof(buff));
-			if (rdlen < 0)
+			if (rdlen <= 0)
 			{
+				if (rdlen == 0)
+				{
+					break;
+				}
+
 				ret = rdlen;
 				pr_error_info("read \"%s\"", src_files[i]);
 				goto out_close_src;
-			}
-
-			if (rdlen == 0)
-			{
-				break;
 			}
 
 			wrlen = ffile_write(dest_fd, buff, rdlen);
@@ -280,15 +280,15 @@ ssize_t ffile_copy_simple(int src_fd, int dest_fd)
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(src_fd, buff, sizeof(buff));
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		wrlen = ffile_write(dest_fd, buff, rdlen);
@@ -326,15 +326,15 @@ ssize_t ffile_copy(int src_fd, int dest_fd)
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(src_fd, buff, sizeof(buff));
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		wrlen = ffile_write(dest_fd, buff, rdlen);
@@ -600,15 +600,15 @@ ssize_t ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(src_fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		wrlen = ffile_write(dest_fd, buff, rdlen);
@@ -658,15 +658,15 @@ ssize_t ffile_ncopy(int src_fd, int dest_fd, size_t size)
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(src_fd, buff, size < sizeof(buff) ? size : sizeof(buff));
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		wrlen = ffile_write(dest_fd, buff, rdlen);
@@ -766,14 +766,14 @@ ssize_t ffile_read(int fd, void *buff, size_t size)
 	{
 		ssize_t rdlen = read(fd, buff, (char *)buff_end - (char *)buff);
 
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
-			return rdlen;
-		}
+			if (rdlen == 0)
+			{
+				break;
+			}
 
-		if (rdlen == 0)
-		{
-			break;
+			return rdlen;
 		}
 
 		buff = (char *)buff + rdlen;
@@ -901,15 +901,15 @@ int ffile_show(int fd)
 		char buff[16];
 
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		text_show(buff, rdlen);
@@ -933,15 +933,15 @@ int ffile_nshow(int fd, size_t size)
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		text_show(buff, rdlen);
@@ -1071,15 +1071,15 @@ int ffile_cat(int fd)
 		char buff[MAX_BUFFER_LEN];
 
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		print_ntext(buff, rdlen);
@@ -1103,15 +1103,15 @@ int ffile_ncat(int fd, size_t size)
 		char buff[MAX_BUFFER_LEN];
 
 		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		print_ntext(buff, rdlen);
@@ -1137,15 +1137,15 @@ int ffile_cmp(int fd1, int fd2, size_t size)
 		char buff2[MAX_BUFF_LEN];
 
 		rdlen = read(fd1, buff1, size > sizeof(buff1) ? sizeof(buff1) : size);
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		rdlen = read(fd2, buff2, rdlen);
@@ -1235,15 +1235,15 @@ int ffile_crc32(int fd, u32 *crc)
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		crc[0] = mem_crc32(crc[0], buff, rdlen);
@@ -1291,15 +1291,15 @@ int ffile_ncrc32(int fd, size_t size, u32 *crc)
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		crc[0] = mem_crc32(crc[0], buff, rdlen);
@@ -1846,15 +1846,15 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			break;
 		}
 
 		checksum += mem_checksum32_simple(buff, rdlen);
@@ -2137,15 +2137,15 @@ int ffile_delete_char(int fd_in, int fd_out, char c)
 		ssize_t rdlen, wrlen;
 
 		rdlen = read(fd_in, buff, sizeof(buff));
-		if (rdlen < 0)
+		if (rdlen <= 0)
 		{
+			if (rdlen == 0)
+			{
+				break;
+			}
+
 			pr_error_info("read");
 			return rdlen;
-		}
-
-		if (rdlen == 0)
-		{
-			return 0;
 		}
 
 		rdlen = mem_delete_char(buff, rdlen, c);

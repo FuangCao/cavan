@@ -6,7 +6,7 @@
 #include <cavan/text.h>
 #include <cavan/math.h>
 
-#define CAVAN_VFAT_DEBUG	1
+#define CAVAN_VFAT_DEBUG	0
 
 static inline u32 cavan_vfat_get_cluster_first_sector(struct cavan_vfat_fs *fs, u32 index)
 {
@@ -15,42 +15,14 @@ static inline u32 cavan_vfat_get_cluster_first_sector(struct cavan_vfat_fs *fs, 
 
 static inline ssize_t cavan_vfat_read_sector(struct cavan_vfat_fs *fs, u32 index, void *buff, u32 count)
 {
-	return fs->bdev->read_block(fs->bdev, index >> fs->blocks_per_sector_shift, buff, count << fs->blocks_per_sector_shift);
+	return fs->bdev->read_block(fs->bdev, index << fs->blocks_per_sector_shift, buff, count << fs->blocks_per_sector_shift);
 }
 
-static inline ssize_t cavan_vfat_read_cluster(struct cavan_vfat_fs *fs, u32 index, void *buff, u32 count)
+static inline ssize_t cavan_vfat_read_cluster(struct cavan_vfat_fs *fs, u32 index, void *buff)
 {
 	u32 sector = cavan_vfat_get_cluster_first_sector(fs, index);
 
-	return cavan_vfat_read_sector(fs, sector, buff, count << fs->sectors_per_cluster_shift);
-}
-
-static u32 cavan_vfat_get_next_cluster(struct cavan_vfat_fs *fs, u32 cluster)
-{
-	switch (fs->type)
-	{
-	case FAT12:
-		{
-			u16 value = *(u16 *) (fs->fat_table + cluster + (cluster >> 1));
-			if (cluster & 1)
-			{
-				return value >> 4;
-			}
-			else
-			{
-				return value & 0x0FFF;
-			}
-		}
-
-	case FAT16:
-		return ((u16 *) fs->fat_table)[cluster];
-
-	case FAT32:
-		return ((u32 *) fs->fat_table)[cluster] & 0x0FFFFFFF;
-
-	default:
-		return fs->eof_flag;
-	}
+	return fs->bdev->read_block(fs->bdev, sector << fs->blocks_per_sector_shift, buff, fs->blocks_per_cluster);
 }
 
 const char *cavan_vfat_type_to_string(fat_type_t type)
@@ -175,6 +147,27 @@ static int cavan_vfat_read_dbr(struct cavan_block_device *bdev, struct fat_dbr *
 	return 0;
 }
 
+static u32 cavan_vfat_get_next_cluster_fat12(const struct cavan_vfat_fs *fs, u32 cluster)
+{
+	u16 value = *(u16 *) (fs->fat_table + cluster + (cluster >> 1));
+	if (cluster & 1)
+	{
+		return value >> 4;
+	}
+
+	return value & 0x0FFF;
+}
+
+static u32 cavan_vfat_get_next_cluster_fat16(const struct cavan_vfat_fs *fs, u32 cluster)
+{
+	return ((u16 *) fs->fat_table)[cluster];
+}
+
+static u32 cavan_vfat_get_next_cluster_fat32(const struct cavan_vfat_fs *fs, u32 cluster)
+{
+	return ((u32 *) fs->fat_table)[cluster] & 0x0FFFFFFF;
+}
+
 int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev)
 {
 	int ret;
@@ -193,26 +186,34 @@ int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev)
 
 	fs->bytes_per_sector = dbr->bytes_per_sector;
 	fs->bytes_per_sector_shift = math_get_value_shift(fs->bytes_per_sector);
-
 	fs->blocks_per_sector = dbr->bytes_per_sector >> bdev->block_shift;
 	fs->blocks_per_sector_shift = fs->bytes_per_sector_shift - bdev->block_shift;
+
+#if CAVAN_VFAT_DEBUG
+	pr_info("bytes_per_sector = %d", fs->bytes_per_sector);
+	pr_info("bytes_per_sector_shift = %d", fs->bytes_per_sector_shift);
+	pr_info("blocks_per_sector = %d", fs->blocks_per_sector);
+	pr_info("blocks_per_sector_shift = %d", fs->blocks_per_sector_shift);
+#endif
 
 	fs->sectors_per_cluster_shift = math_get_value_shift(dbr->sectors_per_cluster);
 	fs->bytes_per_cluster_shift = fs->sectors_per_cluster_shift + fs->bytes_per_sector_shift;
 	fs->bytes_per_cluster = dbr->sectors_per_cluster * dbr->bytes_per_sector;
+	fs->blocks_per_cluster = dbr->sectors_per_cluster << fs->blocks_per_sector_shift;
+
+#if CAVAN_VFAT_DEBUG
+	pr_info("sectors_per_cluster_shift = %d", fs->sectors_per_cluster_shift);
+	pr_info("bytes_per_cluster_shift = %d", fs->bytes_per_cluster_shift);
+	pr_info("bytes_per_cluster = %d", fs->bytes_per_cluster);
+	pr_info("blocks_per_cluster = %d", fs->blocks_per_cluster);
+#endif
+
 	fs->root_dir_sectors = RIGHT_SHIFT_CEIL(dbr->root_entry_count * sizeof(struct vfat_dir_entry), fs->bytes_per_sector_shift);
 
 	fs->entrys_per_sector = fs->bytes_per_sector / sizeof(struct vfat_dir_entry);
 	fs->entrys_per_cluster = fs->entrys_per_sector << fs->sectors_per_cluster_shift;
 
 #if CAVAN_VFAT_DEBUG
-	pr_info("bytes_per_sector = %d", fs->bytes_per_sector);
-	pr_info("bytes_per_sector_shift = %d", fs->bytes_per_sector_shift);
-	pr_info("blocks_per_sector_shift = %d", fs->blocks_per_sector_shift);
-	pr_info("sectors_per_cluster_shift = %d", fs->sectors_per_cluster_shift);
-	pr_info("bytes_per_cluster_shift = %d", fs->bytes_per_cluster_shift);
-	pr_info("blocks_per_sector = %d", fs->blocks_per_sector);
-	pr_info("bytes_per_cluster = %d", fs->bytes_per_cluster);
 	pr_info("root_dir_sectors = %d", fs->root_dir_sectors);
 	pr_info("entrys_per_sector = %d", fs->entrys_per_sector);
 	pr_info("entrys_per_cluster = %d", fs->entrys_per_cluster);
@@ -258,16 +259,19 @@ int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev)
 	{
 		fs->type = FAT12;
 		fs->eof_flag = 0x0FF8;
+		fs->get_next_cluster = cavan_vfat_get_next_cluster_fat12;
 	}
 	else if (fs->data_clusters < 65525)
 	{
 		fs->type = FAT16;
 		fs->eof_flag = 0xFFF8;
+		fs->get_next_cluster = cavan_vfat_get_next_cluster_fat16;
 	}
 	else
 	{
 		fs->type = FAT32;
 		fs->eof_flag = 0x0FFFFFF8;
+		fs->get_next_cluster = cavan_vfat_get_next_cluster_fat32;
 	}
 
 	if (fs->type == FAT32)
@@ -568,7 +572,7 @@ label_scan_general:
 		{
 			char buff[fs->bytes_per_cluster];
 
-			rdlen = cavan_vfat_read_cluster(fs, cluster, buff, 1);
+			rdlen = cavan_vfat_read_cluster(fs, cluster, buff);
 			if (rdlen < 0)
 			{
 				pr_red_info("cavan_vfat_read_cluster");
@@ -581,7 +585,7 @@ label_scan_general:
 				return ret;
 			}
 
-			cluster = cavan_vfat_get_next_cluster(fs, cluster);
+			cluster = fs->get_next_cluster(fs, cluster);
 		}
 	}
 
@@ -743,7 +747,7 @@ static ssize_t cavan_vfat_read_file_base(struct cavan_vfat_file *fp, size_t skip
 		ssize_t rdlen;
 		char buff[fs->bytes_per_cluster];
 
-		rdlen = cavan_vfat_read_cluster(fs, cluster, buff, 1);
+		rdlen = cavan_vfat_read_cluster(fs, cluster, buff);
 		if (rdlen < 0)
 		{
 			pr_red_info("cavan_vfat_read_cluster");
@@ -793,7 +797,7 @@ static ssize_t cavan_vfat_read_file_base(struct cavan_vfat_file *fp, size_t skip
 			return ret;
 		}
 
-		cluster = cavan_vfat_get_next_cluster(fs, cluster);
+		cluster = fs->get_next_cluster(fs, cluster);
 	}
 
 	return size - remain;

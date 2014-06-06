@@ -150,13 +150,13 @@ struct cavan_vfat_fs
 
 	u32 blocks_per_sector;
 	int blocks_per_sector_shift;
-
 	u32 bytes_per_sector;
 	int bytes_per_sector_shift;
 
 	u32 bytes_per_cluster;
 	int bytes_per_cluster_shift;
 	int sectors_per_cluster_shift;
+	u32 blocks_per_cluster;
 
 	u32 entrys_per_sector;
 	u32 entrys_per_cluster;
@@ -168,6 +168,8 @@ struct cavan_vfat_fs
 	u32 root_dir_sectors;
 	u32 root_first_sector;
 	u32 root_first_cluster;
+
+	u32 (*get_next_cluster)(const struct cavan_vfat_fs *fs, u32 cluster);
 };
 
 struct cavan_vfat_file

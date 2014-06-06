@@ -170,6 +170,8 @@ int main(int argc, char *argv[])
 		char buff[32];
 		ssize_t rdlen;
 
+		println("type = %s", cavan_vfat_type_to_string(fs.type));
+
 		rdlen = cavan_vfat_read_volume_label(&fs, buff, sizeof(buff) - 1);
 		if (rdlen < 0)
 		{
