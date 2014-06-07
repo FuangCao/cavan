@@ -9,14 +9,12 @@
 *.log
 *.diff
 /libtool
-/m4
 /config.*
 /*.patch
 !.gitignore
 /out
 /tags
 /cscope*
-/compile
 /autom4te.cache
 /config.h
 /config.log
