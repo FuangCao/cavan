@@ -16,7 +16,7 @@
 /out
 /tags
 /cscope*
-/aclocal.m4
+/compile
 /autom4te.cache
 /config.h
 /config.log

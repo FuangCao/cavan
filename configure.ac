@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([fuang-cao-cavan], [1.1], [cavan.cfa@gmail.com])
+AC_INIT([cavan], [1.1], [cavan.cfa@gmail.com])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 

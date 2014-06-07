@@ -35,8 +35,8 @@ function gen_app_makefile_am()
 
 bin_PROGRAMS = ${bin_all}
 
-LDFLAGS = -L@abs_top_builddir@/lib/_libs -L@abs_top_builddir@/lib/.libs -Wl,-rpath -Wl,@libdir@
-LIBS = -l${CAVAN_NAME} -lpthread -lm -lrt
+AM_CPPFLAGS = -I@abs_top_srcdir@/include
+AM_LDFLAGS = -L@abs_top_builddir@/lib/_libs -L@abs_top_builddir@/lib/.libs -Wl,-rpath -Wl,@libdir@ -l${CAVAN_NAME} -lpthread -lm -lrt
 
 install: install-am
 	for fn in ${SUID_BINS}; \\
@@ -57,7 +57,7 @@ function gen_lib_makefile_am()
 	cat >> ${MAKEFILE_AM} << EOF
 ACLOCAL_AMFLAGS = -I m4
 
-CFLAGS = -fPIC
+AM_CPPFLAGS = -I@abs_top_srcdir@/include -fPIC
 
 lib_LTLIBRARIES = lib${CAVAN_NAME}.la
 EOF
