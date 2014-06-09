@@ -6,15 +6,19 @@ MAINTAINERCLEANFILES = Makefile.am Makefile.in
 
 APP_SRC_FILES = abspath.c alarm.c auto_dd.c auto_mount.c battery.c battery_level.c bdata.c bkernel.c bmp_view.c bramdisk.c brecovery.c bsystem.c buboot.c calculator.c chroot.c chtty.c copy.c dd.c df.c display.c dos2unix.c eavoo_sell_statistic.c ecc.c event_repeater.c ext2.c fdisk.c file_crc32.c file_join.c file_loop.c file_split.c ftp.c ftp_server.c git_daemon.c image_dd.c inotify.c loop_run.c md5sum.c mkdir.c mknp.c mksdcard.c modem_upgrade.c mount.c move.c mtd.c net_monitor.c part_probe.c part_show.c part_table.c poll_event.c poll_input.c ramdisk.c remove.c resize.c rle.c screen_mirror.c service.c sha1sum.c show_file.c shrink.c sprd_at.c sprd_write_imei.c sudo.c super_upgrade.c swan_check.c swan_emmc.c swan_fac.c swan_ipu.c swan_mac.c swan_md5.c swan_mkfs.c swan_sfdisk.c swan_ts.c swan_upgrade.c swan_vk.c swan_vn.c system_init.c tcp_copy.c tcp_dd.c tcp_dd_server.c tcp_exec.c tcp_proxy.c textlen.c tftp_auto_dd.c tftp_command.c tftp_copy.c tftp_dd.c tftp_dd_server.c touch.c tty_mode.c umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c vfat.c web_proxy.c
 APP_CORE_SRC_FILES = core/cavan_main.c
+LIB_OBJ_FILES = $(wildcard @top_builddir@/lib/*.o)
 APP_CORE_DEPDIR = core/@DEPDIR@
 FILE_CAVAN_MAP_C = $(APP_CORE_DEPDIR)/cavan_map.c
 FILE_CAVAN_MAP_H = $(APP_CORE_DEPDIR)/cavan_map.h
 
-cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_SRC_FILES)
-bin_PROGRAMS = cavan-main
-
-AM_CPPFLAGS = -I@abs_top_srcdir@/include
+AM_CPPFLAGS = -I@top_srcdir@/include
 AM_LDFLAGS = -lpthread -lm -lrt
+
+cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_SRC_FILES)
+cavan_main_LDADD = $(LIB_OBJ_FILES)
+cavan_main_DEPENDENCIES = $(LIB_OBJ_FILES)
+
+bin_PROGRAMS = cavan-main
 
 install: install-am
 	chmod -f 06755 $(addprefix $(DESTDIR)$(bindir)/,$(bin_PROGRAMS))
@@ -35,4 +39,3 @@ $(FILE_CAVAN_MAP_H): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
 
 %.o: AM_CFLAGS += -Dmain=do_cavan_$(basename $@)
 core/%.o: AM_CFLAGS += -Umain -I$(APP_CORE_DEPDIR)
-$(bin_PROGRAMS): AM_LDFLAGS += $(wildcard @abs_top_builddir@/lib/*.o)

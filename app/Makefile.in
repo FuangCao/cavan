@@ -134,7 +134,6 @@ am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_2 = core/cavan_main.$(OBJEXT)
 am_cavan_main_OBJECTS = $(am__objects_1) $(am__objects_2)
 cavan_main_OBJECTS = $(am_cavan_main_OBJECTS)
-cavan_main_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -337,12 +336,15 @@ APP_SRC_FILES = abspath.c alarm.c auto_dd.c auto_mount.c battery.c \
 	umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c vfat.c \
 	web_proxy.c
 APP_CORE_SRC_FILES = core/cavan_main.c
+LIB_OBJ_FILES = $(wildcard @top_builddir@/lib/*.o)
 APP_CORE_DEPDIR = core/@DEPDIR@
 FILE_CAVAN_MAP_C = $(APP_CORE_DEPDIR)/cavan_map.c
 FILE_CAVAN_MAP_H = $(APP_CORE_DEPDIR)/cavan_map.h
-cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_SRC_FILES)
-AM_CPPFLAGS = -I@abs_top_srcdir@/include
+AM_CPPFLAGS = -I@top_srcdir@/include
 AM_LDFLAGS = -lpthread -lm -lrt
+cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_SRC_FILES)
+cavan_main_LDADD = $(LIB_OBJ_FILES)
+cavan_main_DEPENDENCIES = $(LIB_OBJ_FILES)
 all: all-am
 
 .SUFFIXES:
@@ -801,7 +803,6 @@ $(FILE_CAVAN_MAP_H): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
 
 %.o: AM_CFLAGS += -Dmain=do_cavan_$(basename $@)
 core/%.o: AM_CFLAGS += -Umain -I$(APP_CORE_DEPDIR)
-$(bin_PROGRAMS): AM_LDFLAGS += $(wildcard @abs_top_builddir@/lib/*.o)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
