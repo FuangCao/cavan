@@ -6,7 +6,7 @@ MAINTAINERCLEANFILES = Makefile.am Makefile.in
 
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CPPFLAGS = -I@top_srcdir@/include -fPIC
+AM_CFLAGS = -I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h -fPIC
 
 lib_LTLIBRARIES = libcavan.la
 libcavan_la_SOURCES = adb.c alarm.c bmp.c cache.c calculator.c cftp.c command.c copy.c dd.c debug.c device.c display.c ecc.c environment.c event.c ext2.c ext4.c fb.c file.c font.c ftp.c gsensor.c image.c inotify.c input.c keypad.c list.c malloc.c math.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c pool.c process.c progress.c queue.c rle.c screen_mirror.c service.c sha.c sort.c sprd_diag.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c tcp_proxy.c text.c tftp.c thread.c timer.c touchpad.c touchscreen.c tree.c uevent.c usb.c vfat.c web_proxy.c window.c xml.c
