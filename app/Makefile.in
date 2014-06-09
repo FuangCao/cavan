@@ -80,52 +80,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = cavan-web_proxy$(EXEEXT) cavan-vfat$(EXEEXT) \
-	cavan-usb_dd_server$(EXEEXT) cavan-usb_dd$(EXEEXT) \
-	cavan-usb_copy$(EXEEXT) cavan-usb$(EXEEXT) \
-	cavan-umount$(EXEEXT) cavan-tty_mode$(EXEEXT) \
-	cavan-touch$(EXEEXT) cavan-tftp_dd_server$(EXEEXT) \
-	cavan-tftp_dd$(EXEEXT) cavan-tftp_copy$(EXEEXT) \
-	cavan-tftp_command$(EXEEXT) cavan-tftp_auto_dd$(EXEEXT) \
-	cavan-textlen$(EXEEXT) cavan-tcp_proxy$(EXEEXT) \
-	cavan-tcp_exec$(EXEEXT) cavan-tcp_dd_server$(EXEEXT) \
-	cavan-tcp_dd$(EXEEXT) cavan-tcp_copy$(EXEEXT) \
-	cavan-system_init$(EXEEXT) cavan-swan_vn$(EXEEXT) \
-	cavan-swan_vk$(EXEEXT) cavan-swan_upgrade$(EXEEXT) \
-	cavan-swan_ts$(EXEEXT) cavan-swan_sfdisk$(EXEEXT) \
-	cavan-swan_mkfs$(EXEEXT) cavan-swan_md5$(EXEEXT) \
-	cavan-swan_mac$(EXEEXT) cavan-swan_ipu$(EXEEXT) \
-	cavan-swan_fac$(EXEEXT) cavan-swan_emmc$(EXEEXT) \
-	cavan-swan_check$(EXEEXT) cavan-super_upgrade$(EXEEXT) \
-	cavan-sudo$(EXEEXT) cavan-sprd_write_imei$(EXEEXT) \
-	cavan-sprd_at$(EXEEXT) cavan-shrink$(EXEEXT) \
-	cavan-show_file$(EXEEXT) cavan-sha1sum$(EXEEXT) \
-	cavan-service$(EXEEXT) cavan-screen_mirror$(EXEEXT) \
-	cavan-rle$(EXEEXT) cavan-resize$(EXEEXT) cavan-remove$(EXEEXT) \
-	cavan-ramdisk$(EXEEXT) cavan-poll_input$(EXEEXT) \
-	cavan-poll_event$(EXEEXT) cavan-part_table$(EXEEXT) \
-	cavan-part_show$(EXEEXT) cavan-part_probe$(EXEEXT) \
-	cavan-net_monitor$(EXEEXT) cavan-mtd$(EXEEXT) \
-	cavan-move$(EXEEXT) cavan-mount$(EXEEXT) \
-	cavan-modem_upgrade$(EXEEXT) cavan-mksdcard$(EXEEXT) \
-	cavan-mknp$(EXEEXT) cavan-mkdir$(EXEEXT) cavan-md5sum$(EXEEXT) \
-	cavan-loop_run$(EXEEXT) cavan-inotify$(EXEEXT) \
-	cavan-image_dd$(EXEEXT) cavan-git_daemon$(EXEEXT) \
-	cavan-ftp_server$(EXEEXT) cavan-ftp$(EXEEXT) \
-	cavan-file_split$(EXEEXT) cavan-file_loop$(EXEEXT) \
-	cavan-file_join$(EXEEXT) cavan-file_crc32$(EXEEXT) \
-	cavan-fdisk$(EXEEXT) cavan-ext2$(EXEEXT) \
-	cavan-event_repeater$(EXEEXT) cavan-ecc$(EXEEXT) \
-	cavan-eavoo_sell_statistic$(EXEEXT) cavan-dos2unix$(EXEEXT) \
-	cavan-display$(EXEEXT) cavan-df$(EXEEXT) cavan-dd$(EXEEXT) \
-	cavan-copy$(EXEEXT) cavan-chtty$(EXEEXT) cavan-chroot$(EXEEXT) \
-	cavan-calculator$(EXEEXT) cavan-buboot$(EXEEXT) \
-	cavan-bsystem$(EXEEXT) cavan-brecovery$(EXEEXT) \
-	cavan-bramdisk$(EXEEXT) cavan-bmp_view$(EXEEXT) \
-	cavan-bkernel$(EXEEXT) cavan-bdata$(EXEEXT) \
-	cavan-battery_level$(EXEEXT) cavan-battery$(EXEEXT) \
-	cavan-auto_mount$(EXEEXT) cavan-auto_dd$(EXEEXT) \
-	cavan-alarm$(EXEEXT) cavan-abspath$(EXEEXT)
+bin_PROGRAMS = cavan-main$(EXEEXT)
 subdir = app
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -142,300 +97,48 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_cavan_abspath_OBJECTS = abspath.$(OBJEXT)
-cavan_abspath_OBJECTS = $(am_cavan_abspath_OBJECTS)
-cavan_abspath_LDADD = $(LDADD)
+am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) auto_dd.$(OBJEXT) \
+	auto_mount.$(OBJEXT) battery.$(OBJEXT) battery_level.$(OBJEXT) \
+	bdata.$(OBJEXT) bkernel.$(OBJEXT) bmp_view.$(OBJEXT) \
+	bramdisk.$(OBJEXT) brecovery.$(OBJEXT) bsystem.$(OBJEXT) \
+	buboot.$(OBJEXT) calculator.$(OBJEXT) chroot.$(OBJEXT) \
+	chtty.$(OBJEXT) copy.$(OBJEXT) dd.$(OBJEXT) df.$(OBJEXT) \
+	display.$(OBJEXT) dos2unix.$(OBJEXT) \
+	eavoo_sell_statistic.$(OBJEXT) ecc.$(OBJEXT) \
+	event_repeater.$(OBJEXT) ext2.$(OBJEXT) fdisk.$(OBJEXT) \
+	file_crc32.$(OBJEXT) file_join.$(OBJEXT) file_loop.$(OBJEXT) \
+	file_split.$(OBJEXT) ftp.$(OBJEXT) ftp_server.$(OBJEXT) \
+	git_daemon.$(OBJEXT) image_dd.$(OBJEXT) inotify.$(OBJEXT) \
+	loop_run.$(OBJEXT) md5sum.$(OBJEXT) mkdir.$(OBJEXT) \
+	mknp.$(OBJEXT) mksdcard.$(OBJEXT) modem_upgrade.$(OBJEXT) \
+	mount.$(OBJEXT) move.$(OBJEXT) mtd.$(OBJEXT) \
+	net_monitor.$(OBJEXT) part_probe.$(OBJEXT) part_show.$(OBJEXT) \
+	part_table.$(OBJEXT) poll_event.$(OBJEXT) poll_input.$(OBJEXT) \
+	ramdisk.$(OBJEXT) remove.$(OBJEXT) resize.$(OBJEXT) \
+	rle.$(OBJEXT) screen_mirror.$(OBJEXT) service.$(OBJEXT) \
+	sha1sum.$(OBJEXT) show_file.$(OBJEXT) shrink.$(OBJEXT) \
+	sprd_at.$(OBJEXT) sprd_write_imei.$(OBJEXT) sudo.$(OBJEXT) \
+	super_upgrade.$(OBJEXT) swan_check.$(OBJEXT) \
+	swan_emmc.$(OBJEXT) swan_fac.$(OBJEXT) swan_ipu.$(OBJEXT) \
+	swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) swan_mkfs.$(OBJEXT) \
+	swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) swan_upgrade.$(OBJEXT) \
+	swan_vk.$(OBJEXT) swan_vn.$(OBJEXT) system_init.$(OBJEXT) \
+	tcp_copy.$(OBJEXT) tcp_dd.$(OBJEXT) tcp_dd_server.$(OBJEXT) \
+	tcp_exec.$(OBJEXT) tcp_proxy.$(OBJEXT) textlen.$(OBJEXT) \
+	tftp_auto_dd.$(OBJEXT) tftp_command.$(OBJEXT) \
+	tftp_copy.$(OBJEXT) tftp_dd.$(OBJEXT) tftp_dd_server.$(OBJEXT) \
+	touch.$(OBJEXT) tty_mode.$(OBJEXT) umount.$(OBJEXT) \
+	usb.$(OBJEXT) usb_copy.$(OBJEXT) usb_dd.$(OBJEXT) \
+	usb_dd_server.$(OBJEXT) vfat.$(OBJEXT) web_proxy.$(OBJEXT)
+am__dirstamp = $(am__leading_dot)dirstamp
+am__objects_2 = core/cavan_main.$(OBJEXT)
+am_cavan_main_OBJECTS = $(am__objects_1) $(am__objects_2)
+cavan_main_OBJECTS = $(am_cavan_main_OBJECTS)
+cavan_main_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am_cavan_alarm_OBJECTS = alarm.$(OBJEXT)
-cavan_alarm_OBJECTS = $(am_cavan_alarm_OBJECTS)
-cavan_alarm_LDADD = $(LDADD)
-am_cavan_auto_dd_OBJECTS = auto_dd.$(OBJEXT)
-cavan_auto_dd_OBJECTS = $(am_cavan_auto_dd_OBJECTS)
-cavan_auto_dd_LDADD = $(LDADD)
-am_cavan_auto_mount_OBJECTS = auto_mount.$(OBJEXT)
-cavan_auto_mount_OBJECTS = $(am_cavan_auto_mount_OBJECTS)
-cavan_auto_mount_LDADD = $(LDADD)
-am_cavan_battery_OBJECTS = battery.$(OBJEXT)
-cavan_battery_OBJECTS = $(am_cavan_battery_OBJECTS)
-cavan_battery_LDADD = $(LDADD)
-am_cavan_battery_level_OBJECTS = battery_level.$(OBJEXT)
-cavan_battery_level_OBJECTS = $(am_cavan_battery_level_OBJECTS)
-cavan_battery_level_LDADD = $(LDADD)
-am_cavan_bdata_OBJECTS = bdata.$(OBJEXT)
-cavan_bdata_OBJECTS = $(am_cavan_bdata_OBJECTS)
-cavan_bdata_LDADD = $(LDADD)
-am_cavan_bkernel_OBJECTS = bkernel.$(OBJEXT)
-cavan_bkernel_OBJECTS = $(am_cavan_bkernel_OBJECTS)
-cavan_bkernel_LDADD = $(LDADD)
-am_cavan_bmp_view_OBJECTS = bmp_view.$(OBJEXT)
-cavan_bmp_view_OBJECTS = $(am_cavan_bmp_view_OBJECTS)
-cavan_bmp_view_LDADD = $(LDADD)
-am_cavan_bramdisk_OBJECTS = bramdisk.$(OBJEXT)
-cavan_bramdisk_OBJECTS = $(am_cavan_bramdisk_OBJECTS)
-cavan_bramdisk_LDADD = $(LDADD)
-am_cavan_brecovery_OBJECTS = brecovery.$(OBJEXT)
-cavan_brecovery_OBJECTS = $(am_cavan_brecovery_OBJECTS)
-cavan_brecovery_LDADD = $(LDADD)
-am_cavan_bsystem_OBJECTS = bsystem.$(OBJEXT)
-cavan_bsystem_OBJECTS = $(am_cavan_bsystem_OBJECTS)
-cavan_bsystem_LDADD = $(LDADD)
-am_cavan_buboot_OBJECTS = buboot.$(OBJEXT)
-cavan_buboot_OBJECTS = $(am_cavan_buboot_OBJECTS)
-cavan_buboot_LDADD = $(LDADD)
-am_cavan_calculator_OBJECTS = calculator.$(OBJEXT)
-cavan_calculator_OBJECTS = $(am_cavan_calculator_OBJECTS)
-cavan_calculator_LDADD = $(LDADD)
-am_cavan_chroot_OBJECTS = chroot.$(OBJEXT)
-cavan_chroot_OBJECTS = $(am_cavan_chroot_OBJECTS)
-cavan_chroot_LDADD = $(LDADD)
-am_cavan_chtty_OBJECTS = chtty.$(OBJEXT)
-cavan_chtty_OBJECTS = $(am_cavan_chtty_OBJECTS)
-cavan_chtty_LDADD = $(LDADD)
-am_cavan_copy_OBJECTS = copy.$(OBJEXT)
-cavan_copy_OBJECTS = $(am_cavan_copy_OBJECTS)
-cavan_copy_LDADD = $(LDADD)
-am_cavan_dd_OBJECTS = dd.$(OBJEXT)
-cavan_dd_OBJECTS = $(am_cavan_dd_OBJECTS)
-cavan_dd_LDADD = $(LDADD)
-am_cavan_df_OBJECTS = df.$(OBJEXT)
-cavan_df_OBJECTS = $(am_cavan_df_OBJECTS)
-cavan_df_LDADD = $(LDADD)
-am_cavan_display_OBJECTS = display.$(OBJEXT)
-cavan_display_OBJECTS = $(am_cavan_display_OBJECTS)
-cavan_display_LDADD = $(LDADD)
-am_cavan_dos2unix_OBJECTS = dos2unix.$(OBJEXT)
-cavan_dos2unix_OBJECTS = $(am_cavan_dos2unix_OBJECTS)
-cavan_dos2unix_LDADD = $(LDADD)
-am_cavan_eavoo_sell_statistic_OBJECTS =  \
-	eavoo_sell_statistic.$(OBJEXT)
-cavan_eavoo_sell_statistic_OBJECTS =  \
-	$(am_cavan_eavoo_sell_statistic_OBJECTS)
-cavan_eavoo_sell_statistic_LDADD = $(LDADD)
-am_cavan_ecc_OBJECTS = ecc.$(OBJEXT)
-cavan_ecc_OBJECTS = $(am_cavan_ecc_OBJECTS)
-cavan_ecc_LDADD = $(LDADD)
-am_cavan_event_repeater_OBJECTS = event_repeater.$(OBJEXT)
-cavan_event_repeater_OBJECTS = $(am_cavan_event_repeater_OBJECTS)
-cavan_event_repeater_LDADD = $(LDADD)
-am_cavan_ext2_OBJECTS = ext2.$(OBJEXT)
-cavan_ext2_OBJECTS = $(am_cavan_ext2_OBJECTS)
-cavan_ext2_LDADD = $(LDADD)
-am_cavan_fdisk_OBJECTS = fdisk.$(OBJEXT)
-cavan_fdisk_OBJECTS = $(am_cavan_fdisk_OBJECTS)
-cavan_fdisk_LDADD = $(LDADD)
-am_cavan_file_crc32_OBJECTS = file_crc32.$(OBJEXT)
-cavan_file_crc32_OBJECTS = $(am_cavan_file_crc32_OBJECTS)
-cavan_file_crc32_LDADD = $(LDADD)
-am_cavan_file_join_OBJECTS = file_join.$(OBJEXT)
-cavan_file_join_OBJECTS = $(am_cavan_file_join_OBJECTS)
-cavan_file_join_LDADD = $(LDADD)
-am_cavan_file_loop_OBJECTS = file_loop.$(OBJEXT)
-cavan_file_loop_OBJECTS = $(am_cavan_file_loop_OBJECTS)
-cavan_file_loop_LDADD = $(LDADD)
-am_cavan_file_split_OBJECTS = file_split.$(OBJEXT)
-cavan_file_split_OBJECTS = $(am_cavan_file_split_OBJECTS)
-cavan_file_split_LDADD = $(LDADD)
-am_cavan_ftp_OBJECTS = ftp.$(OBJEXT)
-cavan_ftp_OBJECTS = $(am_cavan_ftp_OBJECTS)
-cavan_ftp_LDADD = $(LDADD)
-am_cavan_ftp_server_OBJECTS = ftp_server.$(OBJEXT)
-cavan_ftp_server_OBJECTS = $(am_cavan_ftp_server_OBJECTS)
-cavan_ftp_server_LDADD = $(LDADD)
-am_cavan_git_daemon_OBJECTS = git_daemon.$(OBJEXT)
-cavan_git_daemon_OBJECTS = $(am_cavan_git_daemon_OBJECTS)
-cavan_git_daemon_LDADD = $(LDADD)
-am_cavan_image_dd_OBJECTS = image_dd.$(OBJEXT)
-cavan_image_dd_OBJECTS = $(am_cavan_image_dd_OBJECTS)
-cavan_image_dd_LDADD = $(LDADD)
-am_cavan_inotify_OBJECTS = inotify.$(OBJEXT)
-cavan_inotify_OBJECTS = $(am_cavan_inotify_OBJECTS)
-cavan_inotify_LDADD = $(LDADD)
-am_cavan_loop_run_OBJECTS = loop_run.$(OBJEXT)
-cavan_loop_run_OBJECTS = $(am_cavan_loop_run_OBJECTS)
-cavan_loop_run_LDADD = $(LDADD)
-am_cavan_md5sum_OBJECTS = md5sum.$(OBJEXT)
-cavan_md5sum_OBJECTS = $(am_cavan_md5sum_OBJECTS)
-cavan_md5sum_LDADD = $(LDADD)
-am_cavan_mkdir_OBJECTS = mkdir.$(OBJEXT)
-cavan_mkdir_OBJECTS = $(am_cavan_mkdir_OBJECTS)
-cavan_mkdir_LDADD = $(LDADD)
-am_cavan_mknp_OBJECTS = mknp.$(OBJEXT)
-cavan_mknp_OBJECTS = $(am_cavan_mknp_OBJECTS)
-cavan_mknp_LDADD = $(LDADD)
-am_cavan_mksdcard_OBJECTS = mksdcard.$(OBJEXT)
-cavan_mksdcard_OBJECTS = $(am_cavan_mksdcard_OBJECTS)
-cavan_mksdcard_LDADD = $(LDADD)
-am_cavan_modem_upgrade_OBJECTS = modem_upgrade.$(OBJEXT)
-cavan_modem_upgrade_OBJECTS = $(am_cavan_modem_upgrade_OBJECTS)
-cavan_modem_upgrade_LDADD = $(LDADD)
-am_cavan_mount_OBJECTS = mount.$(OBJEXT)
-cavan_mount_OBJECTS = $(am_cavan_mount_OBJECTS)
-cavan_mount_LDADD = $(LDADD)
-am_cavan_move_OBJECTS = move.$(OBJEXT)
-cavan_move_OBJECTS = $(am_cavan_move_OBJECTS)
-cavan_move_LDADD = $(LDADD)
-am_cavan_mtd_OBJECTS = mtd.$(OBJEXT)
-cavan_mtd_OBJECTS = $(am_cavan_mtd_OBJECTS)
-cavan_mtd_LDADD = $(LDADD)
-am_cavan_net_monitor_OBJECTS = net_monitor.$(OBJEXT)
-cavan_net_monitor_OBJECTS = $(am_cavan_net_monitor_OBJECTS)
-cavan_net_monitor_LDADD = $(LDADD)
-am_cavan_part_probe_OBJECTS = part_probe.$(OBJEXT)
-cavan_part_probe_OBJECTS = $(am_cavan_part_probe_OBJECTS)
-cavan_part_probe_LDADD = $(LDADD)
-am_cavan_part_show_OBJECTS = part_show.$(OBJEXT)
-cavan_part_show_OBJECTS = $(am_cavan_part_show_OBJECTS)
-cavan_part_show_LDADD = $(LDADD)
-am_cavan_part_table_OBJECTS = part_table.$(OBJEXT)
-cavan_part_table_OBJECTS = $(am_cavan_part_table_OBJECTS)
-cavan_part_table_LDADD = $(LDADD)
-am_cavan_poll_event_OBJECTS = poll_event.$(OBJEXT)
-cavan_poll_event_OBJECTS = $(am_cavan_poll_event_OBJECTS)
-cavan_poll_event_LDADD = $(LDADD)
-am_cavan_poll_input_OBJECTS = poll_input.$(OBJEXT)
-cavan_poll_input_OBJECTS = $(am_cavan_poll_input_OBJECTS)
-cavan_poll_input_LDADD = $(LDADD)
-am_cavan_ramdisk_OBJECTS = ramdisk.$(OBJEXT)
-cavan_ramdisk_OBJECTS = $(am_cavan_ramdisk_OBJECTS)
-cavan_ramdisk_LDADD = $(LDADD)
-am_cavan_remove_OBJECTS = remove.$(OBJEXT)
-cavan_remove_OBJECTS = $(am_cavan_remove_OBJECTS)
-cavan_remove_LDADD = $(LDADD)
-am_cavan_resize_OBJECTS = resize.$(OBJEXT)
-cavan_resize_OBJECTS = $(am_cavan_resize_OBJECTS)
-cavan_resize_LDADD = $(LDADD)
-am_cavan_rle_OBJECTS = rle.$(OBJEXT)
-cavan_rle_OBJECTS = $(am_cavan_rle_OBJECTS)
-cavan_rle_LDADD = $(LDADD)
-am_cavan_screen_mirror_OBJECTS = screen_mirror.$(OBJEXT)
-cavan_screen_mirror_OBJECTS = $(am_cavan_screen_mirror_OBJECTS)
-cavan_screen_mirror_LDADD = $(LDADD)
-am_cavan_service_OBJECTS = service.$(OBJEXT)
-cavan_service_OBJECTS = $(am_cavan_service_OBJECTS)
-cavan_service_LDADD = $(LDADD)
-am_cavan_sha1sum_OBJECTS = sha1sum.$(OBJEXT)
-cavan_sha1sum_OBJECTS = $(am_cavan_sha1sum_OBJECTS)
-cavan_sha1sum_LDADD = $(LDADD)
-am_cavan_show_file_OBJECTS = show_file.$(OBJEXT)
-cavan_show_file_OBJECTS = $(am_cavan_show_file_OBJECTS)
-cavan_show_file_LDADD = $(LDADD)
-am_cavan_shrink_OBJECTS = shrink.$(OBJEXT)
-cavan_shrink_OBJECTS = $(am_cavan_shrink_OBJECTS)
-cavan_shrink_LDADD = $(LDADD)
-am_cavan_sprd_at_OBJECTS = sprd_at.$(OBJEXT)
-cavan_sprd_at_OBJECTS = $(am_cavan_sprd_at_OBJECTS)
-cavan_sprd_at_LDADD = $(LDADD)
-am_cavan_sprd_write_imei_OBJECTS = sprd_write_imei.$(OBJEXT)
-cavan_sprd_write_imei_OBJECTS = $(am_cavan_sprd_write_imei_OBJECTS)
-cavan_sprd_write_imei_LDADD = $(LDADD)
-am_cavan_sudo_OBJECTS = sudo.$(OBJEXT)
-cavan_sudo_OBJECTS = $(am_cavan_sudo_OBJECTS)
-cavan_sudo_LDADD = $(LDADD)
-am_cavan_super_upgrade_OBJECTS = super_upgrade.$(OBJEXT)
-cavan_super_upgrade_OBJECTS = $(am_cavan_super_upgrade_OBJECTS)
-cavan_super_upgrade_LDADD = $(LDADD)
-am_cavan_swan_check_OBJECTS = swan_check.$(OBJEXT)
-cavan_swan_check_OBJECTS = $(am_cavan_swan_check_OBJECTS)
-cavan_swan_check_LDADD = $(LDADD)
-am_cavan_swan_emmc_OBJECTS = swan_emmc.$(OBJEXT)
-cavan_swan_emmc_OBJECTS = $(am_cavan_swan_emmc_OBJECTS)
-cavan_swan_emmc_LDADD = $(LDADD)
-am_cavan_swan_fac_OBJECTS = swan_fac.$(OBJEXT)
-cavan_swan_fac_OBJECTS = $(am_cavan_swan_fac_OBJECTS)
-cavan_swan_fac_LDADD = $(LDADD)
-am_cavan_swan_ipu_OBJECTS = swan_ipu.$(OBJEXT)
-cavan_swan_ipu_OBJECTS = $(am_cavan_swan_ipu_OBJECTS)
-cavan_swan_ipu_LDADD = $(LDADD)
-am_cavan_swan_mac_OBJECTS = swan_mac.$(OBJEXT)
-cavan_swan_mac_OBJECTS = $(am_cavan_swan_mac_OBJECTS)
-cavan_swan_mac_LDADD = $(LDADD)
-am_cavan_swan_md5_OBJECTS = swan_md5.$(OBJEXT)
-cavan_swan_md5_OBJECTS = $(am_cavan_swan_md5_OBJECTS)
-cavan_swan_md5_LDADD = $(LDADD)
-am_cavan_swan_mkfs_OBJECTS = swan_mkfs.$(OBJEXT)
-cavan_swan_mkfs_OBJECTS = $(am_cavan_swan_mkfs_OBJECTS)
-cavan_swan_mkfs_LDADD = $(LDADD)
-am_cavan_swan_sfdisk_OBJECTS = swan_sfdisk.$(OBJEXT)
-cavan_swan_sfdisk_OBJECTS = $(am_cavan_swan_sfdisk_OBJECTS)
-cavan_swan_sfdisk_LDADD = $(LDADD)
-am_cavan_swan_ts_OBJECTS = swan_ts.$(OBJEXT)
-cavan_swan_ts_OBJECTS = $(am_cavan_swan_ts_OBJECTS)
-cavan_swan_ts_LDADD = $(LDADD)
-am_cavan_swan_upgrade_OBJECTS = swan_upgrade.$(OBJEXT)
-cavan_swan_upgrade_OBJECTS = $(am_cavan_swan_upgrade_OBJECTS)
-cavan_swan_upgrade_LDADD = $(LDADD)
-am_cavan_swan_vk_OBJECTS = swan_vk.$(OBJEXT)
-cavan_swan_vk_OBJECTS = $(am_cavan_swan_vk_OBJECTS)
-cavan_swan_vk_LDADD = $(LDADD)
-am_cavan_swan_vn_OBJECTS = swan_vn.$(OBJEXT)
-cavan_swan_vn_OBJECTS = $(am_cavan_swan_vn_OBJECTS)
-cavan_swan_vn_LDADD = $(LDADD)
-am_cavan_system_init_OBJECTS = system_init.$(OBJEXT)
-cavan_system_init_OBJECTS = $(am_cavan_system_init_OBJECTS)
-cavan_system_init_LDADD = $(LDADD)
-am_cavan_tcp_copy_OBJECTS = tcp_copy.$(OBJEXT)
-cavan_tcp_copy_OBJECTS = $(am_cavan_tcp_copy_OBJECTS)
-cavan_tcp_copy_LDADD = $(LDADD)
-am_cavan_tcp_dd_OBJECTS = tcp_dd.$(OBJEXT)
-cavan_tcp_dd_OBJECTS = $(am_cavan_tcp_dd_OBJECTS)
-cavan_tcp_dd_LDADD = $(LDADD)
-am_cavan_tcp_dd_server_OBJECTS = tcp_dd_server.$(OBJEXT)
-cavan_tcp_dd_server_OBJECTS = $(am_cavan_tcp_dd_server_OBJECTS)
-cavan_tcp_dd_server_LDADD = $(LDADD)
-am_cavan_tcp_exec_OBJECTS = tcp_exec.$(OBJEXT)
-cavan_tcp_exec_OBJECTS = $(am_cavan_tcp_exec_OBJECTS)
-cavan_tcp_exec_LDADD = $(LDADD)
-am_cavan_tcp_proxy_OBJECTS = tcp_proxy.$(OBJEXT)
-cavan_tcp_proxy_OBJECTS = $(am_cavan_tcp_proxy_OBJECTS)
-cavan_tcp_proxy_LDADD = $(LDADD)
-am_cavan_textlen_OBJECTS = textlen.$(OBJEXT)
-cavan_textlen_OBJECTS = $(am_cavan_textlen_OBJECTS)
-cavan_textlen_LDADD = $(LDADD)
-am_cavan_tftp_auto_dd_OBJECTS = tftp_auto_dd.$(OBJEXT)
-cavan_tftp_auto_dd_OBJECTS = $(am_cavan_tftp_auto_dd_OBJECTS)
-cavan_tftp_auto_dd_LDADD = $(LDADD)
-am_cavan_tftp_command_OBJECTS = tftp_command.$(OBJEXT)
-cavan_tftp_command_OBJECTS = $(am_cavan_tftp_command_OBJECTS)
-cavan_tftp_command_LDADD = $(LDADD)
-am_cavan_tftp_copy_OBJECTS = tftp_copy.$(OBJEXT)
-cavan_tftp_copy_OBJECTS = $(am_cavan_tftp_copy_OBJECTS)
-cavan_tftp_copy_LDADD = $(LDADD)
-am_cavan_tftp_dd_OBJECTS = tftp_dd.$(OBJEXT)
-cavan_tftp_dd_OBJECTS = $(am_cavan_tftp_dd_OBJECTS)
-cavan_tftp_dd_LDADD = $(LDADD)
-am_cavan_tftp_dd_server_OBJECTS = tftp_dd_server.$(OBJEXT)
-cavan_tftp_dd_server_OBJECTS = $(am_cavan_tftp_dd_server_OBJECTS)
-cavan_tftp_dd_server_LDADD = $(LDADD)
-am_cavan_touch_OBJECTS = touch.$(OBJEXT)
-cavan_touch_OBJECTS = $(am_cavan_touch_OBJECTS)
-cavan_touch_LDADD = $(LDADD)
-am_cavan_tty_mode_OBJECTS = tty_mode.$(OBJEXT)
-cavan_tty_mode_OBJECTS = $(am_cavan_tty_mode_OBJECTS)
-cavan_tty_mode_LDADD = $(LDADD)
-am_cavan_umount_OBJECTS = umount.$(OBJEXT)
-cavan_umount_OBJECTS = $(am_cavan_umount_OBJECTS)
-cavan_umount_LDADD = $(LDADD)
-am_cavan_usb_OBJECTS = usb.$(OBJEXT)
-cavan_usb_OBJECTS = $(am_cavan_usb_OBJECTS)
-cavan_usb_LDADD = $(LDADD)
-am_cavan_usb_copy_OBJECTS = usb_copy.$(OBJEXT)
-cavan_usb_copy_OBJECTS = $(am_cavan_usb_copy_OBJECTS)
-cavan_usb_copy_LDADD = $(LDADD)
-am_cavan_usb_dd_OBJECTS = usb_dd.$(OBJEXT)
-cavan_usb_dd_OBJECTS = $(am_cavan_usb_dd_OBJECTS)
-cavan_usb_dd_LDADD = $(LDADD)
-am_cavan_usb_dd_server_OBJECTS = usb_dd_server.$(OBJEXT)
-cavan_usb_dd_server_OBJECTS = $(am_cavan_usb_dd_server_OBJECTS)
-cavan_usb_dd_server_LDADD = $(LDADD)
-am_cavan_vfat_OBJECTS = vfat.$(OBJEXT)
-cavan_vfat_OBJECTS = $(am_cavan_vfat_OBJECTS)
-cavan_vfat_LDADD = $(LDADD)
-am_cavan_web_proxy_OBJECTS = web_proxy.$(OBJEXT)
-cavan_web_proxy_OBJECTS = $(am_cavan_web_proxy_OBJECTS)
-cavan_web_proxy_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -470,102 +173,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(cavan_abspath_SOURCES) $(cavan_alarm_SOURCES) \
-	$(cavan_auto_dd_SOURCES) $(cavan_auto_mount_SOURCES) \
-	$(cavan_battery_SOURCES) $(cavan_battery_level_SOURCES) \
-	$(cavan_bdata_SOURCES) $(cavan_bkernel_SOURCES) \
-	$(cavan_bmp_view_SOURCES) $(cavan_bramdisk_SOURCES) \
-	$(cavan_brecovery_SOURCES) $(cavan_bsystem_SOURCES) \
-	$(cavan_buboot_SOURCES) $(cavan_calculator_SOURCES) \
-	$(cavan_chroot_SOURCES) $(cavan_chtty_SOURCES) \
-	$(cavan_copy_SOURCES) $(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
-	$(cavan_display_SOURCES) $(cavan_dos2unix_SOURCES) \
-	$(cavan_eavoo_sell_statistic_SOURCES) $(cavan_ecc_SOURCES) \
-	$(cavan_event_repeater_SOURCES) $(cavan_ext2_SOURCES) \
-	$(cavan_fdisk_SOURCES) $(cavan_file_crc32_SOURCES) \
-	$(cavan_file_join_SOURCES) $(cavan_file_loop_SOURCES) \
-	$(cavan_file_split_SOURCES) $(cavan_ftp_SOURCES) \
-	$(cavan_ftp_server_SOURCES) $(cavan_git_daemon_SOURCES) \
-	$(cavan_image_dd_SOURCES) $(cavan_inotify_SOURCES) \
-	$(cavan_loop_run_SOURCES) $(cavan_md5sum_SOURCES) \
-	$(cavan_mkdir_SOURCES) $(cavan_mknp_SOURCES) \
-	$(cavan_mksdcard_SOURCES) $(cavan_modem_upgrade_SOURCES) \
-	$(cavan_mount_SOURCES) $(cavan_move_SOURCES) \
-	$(cavan_mtd_SOURCES) $(cavan_net_monitor_SOURCES) \
-	$(cavan_part_probe_SOURCES) $(cavan_part_show_SOURCES) \
-	$(cavan_part_table_SOURCES) $(cavan_poll_event_SOURCES) \
-	$(cavan_poll_input_SOURCES) $(cavan_ramdisk_SOURCES) \
-	$(cavan_remove_SOURCES) $(cavan_resize_SOURCES) \
-	$(cavan_rle_SOURCES) $(cavan_screen_mirror_SOURCES) \
-	$(cavan_service_SOURCES) $(cavan_sha1sum_SOURCES) \
-	$(cavan_show_file_SOURCES) $(cavan_shrink_SOURCES) \
-	$(cavan_sprd_at_SOURCES) $(cavan_sprd_write_imei_SOURCES) \
-	$(cavan_sudo_SOURCES) $(cavan_super_upgrade_SOURCES) \
-	$(cavan_swan_check_SOURCES) $(cavan_swan_emmc_SOURCES) \
-	$(cavan_swan_fac_SOURCES) $(cavan_swan_ipu_SOURCES) \
-	$(cavan_swan_mac_SOURCES) $(cavan_swan_md5_SOURCES) \
-	$(cavan_swan_mkfs_SOURCES) $(cavan_swan_sfdisk_SOURCES) \
-	$(cavan_swan_ts_SOURCES) $(cavan_swan_upgrade_SOURCES) \
-	$(cavan_swan_vk_SOURCES) $(cavan_swan_vn_SOURCES) \
-	$(cavan_system_init_SOURCES) $(cavan_tcp_copy_SOURCES) \
-	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
-	$(cavan_tcp_exec_SOURCES) $(cavan_tcp_proxy_SOURCES) \
-	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
-	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
-	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
-	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
-	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
-	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
-	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES) \
-	$(cavan_web_proxy_SOURCES)
-DIST_SOURCES = $(cavan_abspath_SOURCES) $(cavan_alarm_SOURCES) \
-	$(cavan_auto_dd_SOURCES) $(cavan_auto_mount_SOURCES) \
-	$(cavan_battery_SOURCES) $(cavan_battery_level_SOURCES) \
-	$(cavan_bdata_SOURCES) $(cavan_bkernel_SOURCES) \
-	$(cavan_bmp_view_SOURCES) $(cavan_bramdisk_SOURCES) \
-	$(cavan_brecovery_SOURCES) $(cavan_bsystem_SOURCES) \
-	$(cavan_buboot_SOURCES) $(cavan_calculator_SOURCES) \
-	$(cavan_chroot_SOURCES) $(cavan_chtty_SOURCES) \
-	$(cavan_copy_SOURCES) $(cavan_dd_SOURCES) $(cavan_df_SOURCES) \
-	$(cavan_display_SOURCES) $(cavan_dos2unix_SOURCES) \
-	$(cavan_eavoo_sell_statistic_SOURCES) $(cavan_ecc_SOURCES) \
-	$(cavan_event_repeater_SOURCES) $(cavan_ext2_SOURCES) \
-	$(cavan_fdisk_SOURCES) $(cavan_file_crc32_SOURCES) \
-	$(cavan_file_join_SOURCES) $(cavan_file_loop_SOURCES) \
-	$(cavan_file_split_SOURCES) $(cavan_ftp_SOURCES) \
-	$(cavan_ftp_server_SOURCES) $(cavan_git_daemon_SOURCES) \
-	$(cavan_image_dd_SOURCES) $(cavan_inotify_SOURCES) \
-	$(cavan_loop_run_SOURCES) $(cavan_md5sum_SOURCES) \
-	$(cavan_mkdir_SOURCES) $(cavan_mknp_SOURCES) \
-	$(cavan_mksdcard_SOURCES) $(cavan_modem_upgrade_SOURCES) \
-	$(cavan_mount_SOURCES) $(cavan_move_SOURCES) \
-	$(cavan_mtd_SOURCES) $(cavan_net_monitor_SOURCES) \
-	$(cavan_part_probe_SOURCES) $(cavan_part_show_SOURCES) \
-	$(cavan_part_table_SOURCES) $(cavan_poll_event_SOURCES) \
-	$(cavan_poll_input_SOURCES) $(cavan_ramdisk_SOURCES) \
-	$(cavan_remove_SOURCES) $(cavan_resize_SOURCES) \
-	$(cavan_rle_SOURCES) $(cavan_screen_mirror_SOURCES) \
-	$(cavan_service_SOURCES) $(cavan_sha1sum_SOURCES) \
-	$(cavan_show_file_SOURCES) $(cavan_shrink_SOURCES) \
-	$(cavan_sprd_at_SOURCES) $(cavan_sprd_write_imei_SOURCES) \
-	$(cavan_sudo_SOURCES) $(cavan_super_upgrade_SOURCES) \
-	$(cavan_swan_check_SOURCES) $(cavan_swan_emmc_SOURCES) \
-	$(cavan_swan_fac_SOURCES) $(cavan_swan_ipu_SOURCES) \
-	$(cavan_swan_mac_SOURCES) $(cavan_swan_md5_SOURCES) \
-	$(cavan_swan_mkfs_SOURCES) $(cavan_swan_sfdisk_SOURCES) \
-	$(cavan_swan_ts_SOURCES) $(cavan_swan_upgrade_SOURCES) \
-	$(cavan_swan_vk_SOURCES) $(cavan_swan_vn_SOURCES) \
-	$(cavan_system_init_SOURCES) $(cavan_tcp_copy_SOURCES) \
-	$(cavan_tcp_dd_SOURCES) $(cavan_tcp_dd_server_SOURCES) \
-	$(cavan_tcp_exec_SOURCES) $(cavan_tcp_proxy_SOURCES) \
-	$(cavan_textlen_SOURCES) $(cavan_tftp_auto_dd_SOURCES) \
-	$(cavan_tftp_command_SOURCES) $(cavan_tftp_copy_SOURCES) \
-	$(cavan_tftp_dd_SOURCES) $(cavan_tftp_dd_server_SOURCES) \
-	$(cavan_touch_SOURCES) $(cavan_tty_mode_SOURCES) \
-	$(cavan_umount_SOURCES) $(cavan_usb_SOURCES) \
-	$(cavan_usb_copy_SOURCES) $(cavan_usb_dd_SOURCES) \
-	$(cavan_usb_dd_server_SOURCES) $(cavan_vfat_SOURCES) \
-	$(cavan_web_proxy_SOURCES)
+SOURCES = $(cavan_main_SOURCES)
+DIST_SOURCES = $(cavan_main_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -706,106 +315,34 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AUTOMAKE_OPTIONS = foreign
+AUTOMAKE_OPTIONS = foreign subdir-objects
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
-cavan_abspath_SOURCES = abspath.c
-cavan_alarm_SOURCES = alarm.c
-cavan_auto_dd_SOURCES = auto_dd.c
-cavan_auto_mount_SOURCES = auto_mount.c
-cavan_battery_SOURCES = battery.c
-cavan_battery_level_SOURCES = battery_level.c
-cavan_bdata_SOURCES = bdata.c
-cavan_bkernel_SOURCES = bkernel.c
-cavan_bmp_view_SOURCES = bmp_view.c
-cavan_bramdisk_SOURCES = bramdisk.c
-cavan_brecovery_SOURCES = brecovery.c
-cavan_bsystem_SOURCES = bsystem.c
-cavan_buboot_SOURCES = buboot.c
-cavan_calculator_SOURCES = calculator.c
-cavan_chroot_SOURCES = chroot.c
-cavan_chtty_SOURCES = chtty.c
-cavan_copy_SOURCES = copy.c
-cavan_dd_SOURCES = dd.c
-cavan_df_SOURCES = df.c
-cavan_display_SOURCES = display.c
-cavan_dos2unix_SOURCES = dos2unix.c
-cavan_eavoo_sell_statistic_SOURCES = eavoo_sell_statistic.c
-cavan_ecc_SOURCES = ecc.c
-cavan_event_repeater_SOURCES = event_repeater.c
-cavan_ext2_SOURCES = ext2.c
-cavan_fdisk_SOURCES = fdisk.c
-cavan_file_crc32_SOURCES = file_crc32.c
-cavan_file_join_SOURCES = file_join.c
-cavan_file_loop_SOURCES = file_loop.c
-cavan_file_split_SOURCES = file_split.c
-cavan_ftp_SOURCES = ftp.c
-cavan_ftp_server_SOURCES = ftp_server.c
-cavan_git_daemon_SOURCES = git_daemon.c
-cavan_image_dd_SOURCES = image_dd.c
-cavan_inotify_SOURCES = inotify.c
-cavan_loop_run_SOURCES = loop_run.c
-cavan_md5sum_SOURCES = md5sum.c
-cavan_mkdir_SOURCES = mkdir.c
-cavan_mknp_SOURCES = mknp.c
-cavan_mksdcard_SOURCES = mksdcard.c
-cavan_modem_upgrade_SOURCES = modem_upgrade.c
-cavan_mount_SOURCES = mount.c
-cavan_move_SOURCES = move.c
-cavan_mtd_SOURCES = mtd.c
-cavan_net_monitor_SOURCES = net_monitor.c
-cavan_part_probe_SOURCES = part_probe.c
-cavan_part_show_SOURCES = part_show.c
-cavan_part_table_SOURCES = part_table.c
-cavan_poll_event_SOURCES = poll_event.c
-cavan_poll_input_SOURCES = poll_input.c
-cavan_ramdisk_SOURCES = ramdisk.c
-cavan_remove_SOURCES = remove.c
-cavan_resize_SOURCES = resize.c
-cavan_rle_SOURCES = rle.c
-cavan_screen_mirror_SOURCES = screen_mirror.c
-cavan_service_SOURCES = service.c
-cavan_sha1sum_SOURCES = sha1sum.c
-cavan_show_file_SOURCES = show_file.c
-cavan_shrink_SOURCES = shrink.c
-cavan_sprd_at_SOURCES = sprd_at.c
-cavan_sprd_write_imei_SOURCES = sprd_write_imei.c
-cavan_sudo_SOURCES = sudo.c
-cavan_super_upgrade_SOURCES = super_upgrade.c
-cavan_swan_check_SOURCES = swan_check.c
-cavan_swan_emmc_SOURCES = swan_emmc.c
-cavan_swan_fac_SOURCES = swan_fac.c
-cavan_swan_ipu_SOURCES = swan_ipu.c
-cavan_swan_mac_SOURCES = swan_mac.c
-cavan_swan_md5_SOURCES = swan_md5.c
-cavan_swan_mkfs_SOURCES = swan_mkfs.c
-cavan_swan_sfdisk_SOURCES = swan_sfdisk.c
-cavan_swan_ts_SOURCES = swan_ts.c
-cavan_swan_upgrade_SOURCES = swan_upgrade.c
-cavan_swan_vk_SOURCES = swan_vk.c
-cavan_swan_vn_SOURCES = swan_vn.c
-cavan_system_init_SOURCES = system_init.c
-cavan_tcp_copy_SOURCES = tcp_copy.c
-cavan_tcp_dd_SOURCES = tcp_dd.c
-cavan_tcp_dd_server_SOURCES = tcp_dd_server.c
-cavan_tcp_exec_SOURCES = tcp_exec.c
-cavan_tcp_proxy_SOURCES = tcp_proxy.c
-cavan_textlen_SOURCES = textlen.c
-cavan_tftp_auto_dd_SOURCES = tftp_auto_dd.c
-cavan_tftp_command_SOURCES = tftp_command.c
-cavan_tftp_copy_SOURCES = tftp_copy.c
-cavan_tftp_dd_SOURCES = tftp_dd.c
-cavan_tftp_dd_server_SOURCES = tftp_dd_server.c
-cavan_touch_SOURCES = touch.c
-cavan_tty_mode_SOURCES = tty_mode.c
-cavan_umount_SOURCES = umount.c
-cavan_usb_SOURCES = usb.c
-cavan_usb_copy_SOURCES = usb_copy.c
-cavan_usb_dd_SOURCES = usb_dd.c
-cavan_usb_dd_server_SOURCES = usb_dd_server.c
-cavan_vfat_SOURCES = vfat.c
-cavan_web_proxy_SOURCES = web_proxy.c
+APP_SRC_FILES = abspath.c alarm.c auto_dd.c auto_mount.c battery.c \
+	battery_level.c bdata.c bkernel.c bmp_view.c bramdisk.c \
+	brecovery.c bsystem.c buboot.c calculator.c chroot.c chtty.c \
+	copy.c dd.c df.c display.c dos2unix.c eavoo_sell_statistic.c \
+	ecc.c event_repeater.c ext2.c fdisk.c file_crc32.c file_join.c \
+	file_loop.c file_split.c ftp.c ftp_server.c git_daemon.c \
+	image_dd.c inotify.c loop_run.c md5sum.c mkdir.c mknp.c \
+	mksdcard.c modem_upgrade.c mount.c move.c mtd.c net_monitor.c \
+	part_probe.c part_show.c part_table.c poll_event.c \
+	poll_input.c ramdisk.c remove.c resize.c rle.c screen_mirror.c \
+	service.c sha1sum.c show_file.c shrink.c sprd_at.c \
+	sprd_write_imei.c sudo.c super_upgrade.c swan_check.c \
+	swan_emmc.c swan_fac.c swan_ipu.c swan_mac.c swan_md5.c \
+	swan_mkfs.c swan_sfdisk.c swan_ts.c swan_upgrade.c swan_vk.c \
+	swan_vn.c system_init.c tcp_copy.c tcp_dd.c tcp_dd_server.c \
+	tcp_exec.c tcp_proxy.c textlen.c tftp_auto_dd.c tftp_command.c \
+	tftp_copy.c tftp_dd.c tftp_dd_server.c touch.c tty_mode.c \
+	umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c vfat.c \
+	web_proxy.c
+APP_CORE_SRC_FILES = core/cavan_main.c
+APP_CORE_DEPDIR = core/@DEPDIR@
+FILE_CAVAN_MAP_C = $(APP_CORE_DEPDIR)/cavan_map.c
+FILE_CAVAN_MAP_H = $(APP_CORE_DEPDIR)/cavan_map.h
+cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_SRC_FILES)
 AM_CPPFLAGS = -I@abs_top_srcdir@/include
-AM_LDFLAGS = -L@abs_top_builddir@/lib/_libs -L@abs_top_builddir@/lib/.libs -Wl,-rpath -Wl,@libdir@ -lcavan -lpthread -lm -lrt
+AM_LDFLAGS = -lpthread -lm -lrt
 all: all-am
 
 .SUFFIXES:
@@ -889,393 +426,22 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-
-cavan-abspath$(EXEEXT): $(cavan_abspath_OBJECTS) $(cavan_abspath_DEPENDENCIES) $(EXTRA_cavan_abspath_DEPENDENCIES) 
-	@rm -f cavan-abspath$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_abspath_OBJECTS) $(cavan_abspath_LDADD) $(LIBS)
-
-cavan-alarm$(EXEEXT): $(cavan_alarm_OBJECTS) $(cavan_alarm_DEPENDENCIES) $(EXTRA_cavan_alarm_DEPENDENCIES) 
-	@rm -f cavan-alarm$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_alarm_OBJECTS) $(cavan_alarm_LDADD) $(LIBS)
-
-cavan-auto_dd$(EXEEXT): $(cavan_auto_dd_OBJECTS) $(cavan_auto_dd_DEPENDENCIES) $(EXTRA_cavan_auto_dd_DEPENDENCIES) 
-	@rm -f cavan-auto_dd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_auto_dd_OBJECTS) $(cavan_auto_dd_LDADD) $(LIBS)
-
-cavan-auto_mount$(EXEEXT): $(cavan_auto_mount_OBJECTS) $(cavan_auto_mount_DEPENDENCIES) $(EXTRA_cavan_auto_mount_DEPENDENCIES) 
-	@rm -f cavan-auto_mount$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_auto_mount_OBJECTS) $(cavan_auto_mount_LDADD) $(LIBS)
-
-cavan-battery$(EXEEXT): $(cavan_battery_OBJECTS) $(cavan_battery_DEPENDENCIES) $(EXTRA_cavan_battery_DEPENDENCIES) 
-	@rm -f cavan-battery$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_battery_OBJECTS) $(cavan_battery_LDADD) $(LIBS)
-
-cavan-battery_level$(EXEEXT): $(cavan_battery_level_OBJECTS) $(cavan_battery_level_DEPENDENCIES) $(EXTRA_cavan_battery_level_DEPENDENCIES) 
-	@rm -f cavan-battery_level$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_battery_level_OBJECTS) $(cavan_battery_level_LDADD) $(LIBS)
-
-cavan-bdata$(EXEEXT): $(cavan_bdata_OBJECTS) $(cavan_bdata_DEPENDENCIES) $(EXTRA_cavan_bdata_DEPENDENCIES) 
-	@rm -f cavan-bdata$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_bdata_OBJECTS) $(cavan_bdata_LDADD) $(LIBS)
-
-cavan-bkernel$(EXEEXT): $(cavan_bkernel_OBJECTS) $(cavan_bkernel_DEPENDENCIES) $(EXTRA_cavan_bkernel_DEPENDENCIES) 
-	@rm -f cavan-bkernel$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_bkernel_OBJECTS) $(cavan_bkernel_LDADD) $(LIBS)
-
-cavan-bmp_view$(EXEEXT): $(cavan_bmp_view_OBJECTS) $(cavan_bmp_view_DEPENDENCIES) $(EXTRA_cavan_bmp_view_DEPENDENCIES) 
-	@rm -f cavan-bmp_view$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_bmp_view_OBJECTS) $(cavan_bmp_view_LDADD) $(LIBS)
-
-cavan-bramdisk$(EXEEXT): $(cavan_bramdisk_OBJECTS) $(cavan_bramdisk_DEPENDENCIES) $(EXTRA_cavan_bramdisk_DEPENDENCIES) 
-	@rm -f cavan-bramdisk$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_bramdisk_OBJECTS) $(cavan_bramdisk_LDADD) $(LIBS)
-
-cavan-brecovery$(EXEEXT): $(cavan_brecovery_OBJECTS) $(cavan_brecovery_DEPENDENCIES) $(EXTRA_cavan_brecovery_DEPENDENCIES) 
-	@rm -f cavan-brecovery$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_brecovery_OBJECTS) $(cavan_brecovery_LDADD) $(LIBS)
-
-cavan-bsystem$(EXEEXT): $(cavan_bsystem_OBJECTS) $(cavan_bsystem_DEPENDENCIES) $(EXTRA_cavan_bsystem_DEPENDENCIES) 
-	@rm -f cavan-bsystem$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_bsystem_OBJECTS) $(cavan_bsystem_LDADD) $(LIBS)
-
-cavan-buboot$(EXEEXT): $(cavan_buboot_OBJECTS) $(cavan_buboot_DEPENDENCIES) $(EXTRA_cavan_buboot_DEPENDENCIES) 
-	@rm -f cavan-buboot$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_buboot_OBJECTS) $(cavan_buboot_LDADD) $(LIBS)
-
-cavan-calculator$(EXEEXT): $(cavan_calculator_OBJECTS) $(cavan_calculator_DEPENDENCIES) $(EXTRA_cavan_calculator_DEPENDENCIES) 
-	@rm -f cavan-calculator$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_calculator_OBJECTS) $(cavan_calculator_LDADD) $(LIBS)
-
-cavan-chroot$(EXEEXT): $(cavan_chroot_OBJECTS) $(cavan_chroot_DEPENDENCIES) $(EXTRA_cavan_chroot_DEPENDENCIES) 
-	@rm -f cavan-chroot$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_chroot_OBJECTS) $(cavan_chroot_LDADD) $(LIBS)
-
-cavan-chtty$(EXEEXT): $(cavan_chtty_OBJECTS) $(cavan_chtty_DEPENDENCIES) $(EXTRA_cavan_chtty_DEPENDENCIES) 
-	@rm -f cavan-chtty$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_chtty_OBJECTS) $(cavan_chtty_LDADD) $(LIBS)
-
-cavan-copy$(EXEEXT): $(cavan_copy_OBJECTS) $(cavan_copy_DEPENDENCIES) $(EXTRA_cavan_copy_DEPENDENCIES) 
-	@rm -f cavan-copy$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_copy_OBJECTS) $(cavan_copy_LDADD) $(LIBS)
-
-cavan-dd$(EXEEXT): $(cavan_dd_OBJECTS) $(cavan_dd_DEPENDENCIES) $(EXTRA_cavan_dd_DEPENDENCIES) 
-	@rm -f cavan-dd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_dd_OBJECTS) $(cavan_dd_LDADD) $(LIBS)
-
-cavan-df$(EXEEXT): $(cavan_df_OBJECTS) $(cavan_df_DEPENDENCIES) $(EXTRA_cavan_df_DEPENDENCIES) 
-	@rm -f cavan-df$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_df_OBJECTS) $(cavan_df_LDADD) $(LIBS)
-
-cavan-display$(EXEEXT): $(cavan_display_OBJECTS) $(cavan_display_DEPENDENCIES) $(EXTRA_cavan_display_DEPENDENCIES) 
-	@rm -f cavan-display$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_display_OBJECTS) $(cavan_display_LDADD) $(LIBS)
-
-cavan-dos2unix$(EXEEXT): $(cavan_dos2unix_OBJECTS) $(cavan_dos2unix_DEPENDENCIES) $(EXTRA_cavan_dos2unix_DEPENDENCIES) 
-	@rm -f cavan-dos2unix$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_dos2unix_OBJECTS) $(cavan_dos2unix_LDADD) $(LIBS)
-
-cavan-eavoo_sell_statistic$(EXEEXT): $(cavan_eavoo_sell_statistic_OBJECTS) $(cavan_eavoo_sell_statistic_DEPENDENCIES) $(EXTRA_cavan_eavoo_sell_statistic_DEPENDENCIES) 
-	@rm -f cavan-eavoo_sell_statistic$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_eavoo_sell_statistic_OBJECTS) $(cavan_eavoo_sell_statistic_LDADD) $(LIBS)
-
-cavan-ecc$(EXEEXT): $(cavan_ecc_OBJECTS) $(cavan_ecc_DEPENDENCIES) $(EXTRA_cavan_ecc_DEPENDENCIES) 
-	@rm -f cavan-ecc$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_ecc_OBJECTS) $(cavan_ecc_LDADD) $(LIBS)
-
-cavan-event_repeater$(EXEEXT): $(cavan_event_repeater_OBJECTS) $(cavan_event_repeater_DEPENDENCIES) $(EXTRA_cavan_event_repeater_DEPENDENCIES) 
-	@rm -f cavan-event_repeater$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_event_repeater_OBJECTS) $(cavan_event_repeater_LDADD) $(LIBS)
-
-cavan-ext2$(EXEEXT): $(cavan_ext2_OBJECTS) $(cavan_ext2_DEPENDENCIES) $(EXTRA_cavan_ext2_DEPENDENCIES) 
-	@rm -f cavan-ext2$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_ext2_OBJECTS) $(cavan_ext2_LDADD) $(LIBS)
-
-cavan-fdisk$(EXEEXT): $(cavan_fdisk_OBJECTS) $(cavan_fdisk_DEPENDENCIES) $(EXTRA_cavan_fdisk_DEPENDENCIES) 
-	@rm -f cavan-fdisk$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_fdisk_OBJECTS) $(cavan_fdisk_LDADD) $(LIBS)
-
-cavan-file_crc32$(EXEEXT): $(cavan_file_crc32_OBJECTS) $(cavan_file_crc32_DEPENDENCIES) $(EXTRA_cavan_file_crc32_DEPENDENCIES) 
-	@rm -f cavan-file_crc32$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_file_crc32_OBJECTS) $(cavan_file_crc32_LDADD) $(LIBS)
-
-cavan-file_join$(EXEEXT): $(cavan_file_join_OBJECTS) $(cavan_file_join_DEPENDENCIES) $(EXTRA_cavan_file_join_DEPENDENCIES) 
-	@rm -f cavan-file_join$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_file_join_OBJECTS) $(cavan_file_join_LDADD) $(LIBS)
-
-cavan-file_loop$(EXEEXT): $(cavan_file_loop_OBJECTS) $(cavan_file_loop_DEPENDENCIES) $(EXTRA_cavan_file_loop_DEPENDENCIES) 
-	@rm -f cavan-file_loop$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_file_loop_OBJECTS) $(cavan_file_loop_LDADD) $(LIBS)
-
-cavan-file_split$(EXEEXT): $(cavan_file_split_OBJECTS) $(cavan_file_split_DEPENDENCIES) $(EXTRA_cavan_file_split_DEPENDENCIES) 
-	@rm -f cavan-file_split$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_file_split_OBJECTS) $(cavan_file_split_LDADD) $(LIBS)
-
-cavan-ftp$(EXEEXT): $(cavan_ftp_OBJECTS) $(cavan_ftp_DEPENDENCIES) $(EXTRA_cavan_ftp_DEPENDENCIES) 
-	@rm -f cavan-ftp$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_ftp_OBJECTS) $(cavan_ftp_LDADD) $(LIBS)
-
-cavan-ftp_server$(EXEEXT): $(cavan_ftp_server_OBJECTS) $(cavan_ftp_server_DEPENDENCIES) $(EXTRA_cavan_ftp_server_DEPENDENCIES) 
-	@rm -f cavan-ftp_server$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_ftp_server_OBJECTS) $(cavan_ftp_server_LDADD) $(LIBS)
-
-cavan-git_daemon$(EXEEXT): $(cavan_git_daemon_OBJECTS) $(cavan_git_daemon_DEPENDENCIES) $(EXTRA_cavan_git_daemon_DEPENDENCIES) 
-	@rm -f cavan-git_daemon$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_git_daemon_OBJECTS) $(cavan_git_daemon_LDADD) $(LIBS)
-
-cavan-image_dd$(EXEEXT): $(cavan_image_dd_OBJECTS) $(cavan_image_dd_DEPENDENCIES) $(EXTRA_cavan_image_dd_DEPENDENCIES) 
-	@rm -f cavan-image_dd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_image_dd_OBJECTS) $(cavan_image_dd_LDADD) $(LIBS)
-
-cavan-inotify$(EXEEXT): $(cavan_inotify_OBJECTS) $(cavan_inotify_DEPENDENCIES) $(EXTRA_cavan_inotify_DEPENDENCIES) 
-	@rm -f cavan-inotify$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_inotify_OBJECTS) $(cavan_inotify_LDADD) $(LIBS)
-
-cavan-loop_run$(EXEEXT): $(cavan_loop_run_OBJECTS) $(cavan_loop_run_DEPENDENCIES) $(EXTRA_cavan_loop_run_DEPENDENCIES) 
-	@rm -f cavan-loop_run$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_loop_run_OBJECTS) $(cavan_loop_run_LDADD) $(LIBS)
-
-cavan-md5sum$(EXEEXT): $(cavan_md5sum_OBJECTS) $(cavan_md5sum_DEPENDENCIES) $(EXTRA_cavan_md5sum_DEPENDENCIES) 
-	@rm -f cavan-md5sum$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_md5sum_OBJECTS) $(cavan_md5sum_LDADD) $(LIBS)
-
-cavan-mkdir$(EXEEXT): $(cavan_mkdir_OBJECTS) $(cavan_mkdir_DEPENDENCIES) $(EXTRA_cavan_mkdir_DEPENDENCIES) 
-	@rm -f cavan-mkdir$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_mkdir_OBJECTS) $(cavan_mkdir_LDADD) $(LIBS)
-
-cavan-mknp$(EXEEXT): $(cavan_mknp_OBJECTS) $(cavan_mknp_DEPENDENCIES) $(EXTRA_cavan_mknp_DEPENDENCIES) 
-	@rm -f cavan-mknp$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_mknp_OBJECTS) $(cavan_mknp_LDADD) $(LIBS)
-
-cavan-mksdcard$(EXEEXT): $(cavan_mksdcard_OBJECTS) $(cavan_mksdcard_DEPENDENCIES) $(EXTRA_cavan_mksdcard_DEPENDENCIES) 
-	@rm -f cavan-mksdcard$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_mksdcard_OBJECTS) $(cavan_mksdcard_LDADD) $(LIBS)
-
-cavan-modem_upgrade$(EXEEXT): $(cavan_modem_upgrade_OBJECTS) $(cavan_modem_upgrade_DEPENDENCIES) $(EXTRA_cavan_modem_upgrade_DEPENDENCIES) 
-	@rm -f cavan-modem_upgrade$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_modem_upgrade_OBJECTS) $(cavan_modem_upgrade_LDADD) $(LIBS)
-
-cavan-mount$(EXEEXT): $(cavan_mount_OBJECTS) $(cavan_mount_DEPENDENCIES) $(EXTRA_cavan_mount_DEPENDENCIES) 
-	@rm -f cavan-mount$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_mount_OBJECTS) $(cavan_mount_LDADD) $(LIBS)
-
-cavan-move$(EXEEXT): $(cavan_move_OBJECTS) $(cavan_move_DEPENDENCIES) $(EXTRA_cavan_move_DEPENDENCIES) 
-	@rm -f cavan-move$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_move_OBJECTS) $(cavan_move_LDADD) $(LIBS)
-
-cavan-mtd$(EXEEXT): $(cavan_mtd_OBJECTS) $(cavan_mtd_DEPENDENCIES) $(EXTRA_cavan_mtd_DEPENDENCIES) 
-	@rm -f cavan-mtd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_mtd_OBJECTS) $(cavan_mtd_LDADD) $(LIBS)
-
-cavan-net_monitor$(EXEEXT): $(cavan_net_monitor_OBJECTS) $(cavan_net_monitor_DEPENDENCIES) $(EXTRA_cavan_net_monitor_DEPENDENCIES) 
-	@rm -f cavan-net_monitor$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_net_monitor_OBJECTS) $(cavan_net_monitor_LDADD) $(LIBS)
-
-cavan-part_probe$(EXEEXT): $(cavan_part_probe_OBJECTS) $(cavan_part_probe_DEPENDENCIES) $(EXTRA_cavan_part_probe_DEPENDENCIES) 
-	@rm -f cavan-part_probe$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_part_probe_OBJECTS) $(cavan_part_probe_LDADD) $(LIBS)
-
-cavan-part_show$(EXEEXT): $(cavan_part_show_OBJECTS) $(cavan_part_show_DEPENDENCIES) $(EXTRA_cavan_part_show_DEPENDENCIES) 
-	@rm -f cavan-part_show$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_part_show_OBJECTS) $(cavan_part_show_LDADD) $(LIBS)
-
-cavan-part_table$(EXEEXT): $(cavan_part_table_OBJECTS) $(cavan_part_table_DEPENDENCIES) $(EXTRA_cavan_part_table_DEPENDENCIES) 
-	@rm -f cavan-part_table$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_part_table_OBJECTS) $(cavan_part_table_LDADD) $(LIBS)
-
-cavan-poll_event$(EXEEXT): $(cavan_poll_event_OBJECTS) $(cavan_poll_event_DEPENDENCIES) $(EXTRA_cavan_poll_event_DEPENDENCIES) 
-	@rm -f cavan-poll_event$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_poll_event_OBJECTS) $(cavan_poll_event_LDADD) $(LIBS)
-
-cavan-poll_input$(EXEEXT): $(cavan_poll_input_OBJECTS) $(cavan_poll_input_DEPENDENCIES) $(EXTRA_cavan_poll_input_DEPENDENCIES) 
-	@rm -f cavan-poll_input$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_poll_input_OBJECTS) $(cavan_poll_input_LDADD) $(LIBS)
-
-cavan-ramdisk$(EXEEXT): $(cavan_ramdisk_OBJECTS) $(cavan_ramdisk_DEPENDENCIES) $(EXTRA_cavan_ramdisk_DEPENDENCIES) 
-	@rm -f cavan-ramdisk$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_ramdisk_OBJECTS) $(cavan_ramdisk_LDADD) $(LIBS)
-
-cavan-remove$(EXEEXT): $(cavan_remove_OBJECTS) $(cavan_remove_DEPENDENCIES) $(EXTRA_cavan_remove_DEPENDENCIES) 
-	@rm -f cavan-remove$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_remove_OBJECTS) $(cavan_remove_LDADD) $(LIBS)
-
-cavan-resize$(EXEEXT): $(cavan_resize_OBJECTS) $(cavan_resize_DEPENDENCIES) $(EXTRA_cavan_resize_DEPENDENCIES) 
-	@rm -f cavan-resize$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_resize_OBJECTS) $(cavan_resize_LDADD) $(LIBS)
-
-cavan-rle$(EXEEXT): $(cavan_rle_OBJECTS) $(cavan_rle_DEPENDENCIES) $(EXTRA_cavan_rle_DEPENDENCIES) 
-	@rm -f cavan-rle$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_rle_OBJECTS) $(cavan_rle_LDADD) $(LIBS)
-
-cavan-screen_mirror$(EXEEXT): $(cavan_screen_mirror_OBJECTS) $(cavan_screen_mirror_DEPENDENCIES) $(EXTRA_cavan_screen_mirror_DEPENDENCIES) 
-	@rm -f cavan-screen_mirror$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_screen_mirror_OBJECTS) $(cavan_screen_mirror_LDADD) $(LIBS)
-
-cavan-service$(EXEEXT): $(cavan_service_OBJECTS) $(cavan_service_DEPENDENCIES) $(EXTRA_cavan_service_DEPENDENCIES) 
-	@rm -f cavan-service$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_service_OBJECTS) $(cavan_service_LDADD) $(LIBS)
-
-cavan-sha1sum$(EXEEXT): $(cavan_sha1sum_OBJECTS) $(cavan_sha1sum_DEPENDENCIES) $(EXTRA_cavan_sha1sum_DEPENDENCIES) 
-	@rm -f cavan-sha1sum$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_sha1sum_OBJECTS) $(cavan_sha1sum_LDADD) $(LIBS)
-
-cavan-show_file$(EXEEXT): $(cavan_show_file_OBJECTS) $(cavan_show_file_DEPENDENCIES) $(EXTRA_cavan_show_file_DEPENDENCIES) 
-	@rm -f cavan-show_file$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_show_file_OBJECTS) $(cavan_show_file_LDADD) $(LIBS)
-
-cavan-shrink$(EXEEXT): $(cavan_shrink_OBJECTS) $(cavan_shrink_DEPENDENCIES) $(EXTRA_cavan_shrink_DEPENDENCIES) 
-	@rm -f cavan-shrink$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_shrink_OBJECTS) $(cavan_shrink_LDADD) $(LIBS)
-
-cavan-sprd_at$(EXEEXT): $(cavan_sprd_at_OBJECTS) $(cavan_sprd_at_DEPENDENCIES) $(EXTRA_cavan_sprd_at_DEPENDENCIES) 
-	@rm -f cavan-sprd_at$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_sprd_at_OBJECTS) $(cavan_sprd_at_LDADD) $(LIBS)
-
-cavan-sprd_write_imei$(EXEEXT): $(cavan_sprd_write_imei_OBJECTS) $(cavan_sprd_write_imei_DEPENDENCIES) $(EXTRA_cavan_sprd_write_imei_DEPENDENCIES) 
-	@rm -f cavan-sprd_write_imei$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_sprd_write_imei_OBJECTS) $(cavan_sprd_write_imei_LDADD) $(LIBS)
-
-cavan-sudo$(EXEEXT): $(cavan_sudo_OBJECTS) $(cavan_sudo_DEPENDENCIES) $(EXTRA_cavan_sudo_DEPENDENCIES) 
-	@rm -f cavan-sudo$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_sudo_OBJECTS) $(cavan_sudo_LDADD) $(LIBS)
-
-cavan-super_upgrade$(EXEEXT): $(cavan_super_upgrade_OBJECTS) $(cavan_super_upgrade_DEPENDENCIES) $(EXTRA_cavan_super_upgrade_DEPENDENCIES) 
-	@rm -f cavan-super_upgrade$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_super_upgrade_OBJECTS) $(cavan_super_upgrade_LDADD) $(LIBS)
-
-cavan-swan_check$(EXEEXT): $(cavan_swan_check_OBJECTS) $(cavan_swan_check_DEPENDENCIES) $(EXTRA_cavan_swan_check_DEPENDENCIES) 
-	@rm -f cavan-swan_check$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_check_OBJECTS) $(cavan_swan_check_LDADD) $(LIBS)
-
-cavan-swan_emmc$(EXEEXT): $(cavan_swan_emmc_OBJECTS) $(cavan_swan_emmc_DEPENDENCIES) $(EXTRA_cavan_swan_emmc_DEPENDENCIES) 
-	@rm -f cavan-swan_emmc$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_emmc_OBJECTS) $(cavan_swan_emmc_LDADD) $(LIBS)
-
-cavan-swan_fac$(EXEEXT): $(cavan_swan_fac_OBJECTS) $(cavan_swan_fac_DEPENDENCIES) $(EXTRA_cavan_swan_fac_DEPENDENCIES) 
-	@rm -f cavan-swan_fac$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_fac_OBJECTS) $(cavan_swan_fac_LDADD) $(LIBS)
-
-cavan-swan_ipu$(EXEEXT): $(cavan_swan_ipu_OBJECTS) $(cavan_swan_ipu_DEPENDENCIES) $(EXTRA_cavan_swan_ipu_DEPENDENCIES) 
-	@rm -f cavan-swan_ipu$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_ipu_OBJECTS) $(cavan_swan_ipu_LDADD) $(LIBS)
-
-cavan-swan_mac$(EXEEXT): $(cavan_swan_mac_OBJECTS) $(cavan_swan_mac_DEPENDENCIES) $(EXTRA_cavan_swan_mac_DEPENDENCIES) 
-	@rm -f cavan-swan_mac$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_mac_OBJECTS) $(cavan_swan_mac_LDADD) $(LIBS)
-
-cavan-swan_md5$(EXEEXT): $(cavan_swan_md5_OBJECTS) $(cavan_swan_md5_DEPENDENCIES) $(EXTRA_cavan_swan_md5_DEPENDENCIES) 
-	@rm -f cavan-swan_md5$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_md5_OBJECTS) $(cavan_swan_md5_LDADD) $(LIBS)
-
-cavan-swan_mkfs$(EXEEXT): $(cavan_swan_mkfs_OBJECTS) $(cavan_swan_mkfs_DEPENDENCIES) $(EXTRA_cavan_swan_mkfs_DEPENDENCIES) 
-	@rm -f cavan-swan_mkfs$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_mkfs_OBJECTS) $(cavan_swan_mkfs_LDADD) $(LIBS)
-
-cavan-swan_sfdisk$(EXEEXT): $(cavan_swan_sfdisk_OBJECTS) $(cavan_swan_sfdisk_DEPENDENCIES) $(EXTRA_cavan_swan_sfdisk_DEPENDENCIES) 
-	@rm -f cavan-swan_sfdisk$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_sfdisk_OBJECTS) $(cavan_swan_sfdisk_LDADD) $(LIBS)
-
-cavan-swan_ts$(EXEEXT): $(cavan_swan_ts_OBJECTS) $(cavan_swan_ts_DEPENDENCIES) $(EXTRA_cavan_swan_ts_DEPENDENCIES) 
-	@rm -f cavan-swan_ts$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_ts_OBJECTS) $(cavan_swan_ts_LDADD) $(LIBS)
-
-cavan-swan_upgrade$(EXEEXT): $(cavan_swan_upgrade_OBJECTS) $(cavan_swan_upgrade_DEPENDENCIES) $(EXTRA_cavan_swan_upgrade_DEPENDENCIES) 
-	@rm -f cavan-swan_upgrade$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_upgrade_OBJECTS) $(cavan_swan_upgrade_LDADD) $(LIBS)
-
-cavan-swan_vk$(EXEEXT): $(cavan_swan_vk_OBJECTS) $(cavan_swan_vk_DEPENDENCIES) $(EXTRA_cavan_swan_vk_DEPENDENCIES) 
-	@rm -f cavan-swan_vk$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_vk_OBJECTS) $(cavan_swan_vk_LDADD) $(LIBS)
-
-cavan-swan_vn$(EXEEXT): $(cavan_swan_vn_OBJECTS) $(cavan_swan_vn_DEPENDENCIES) $(EXTRA_cavan_swan_vn_DEPENDENCIES) 
-	@rm -f cavan-swan_vn$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_swan_vn_OBJECTS) $(cavan_swan_vn_LDADD) $(LIBS)
-
-cavan-system_init$(EXEEXT): $(cavan_system_init_OBJECTS) $(cavan_system_init_DEPENDENCIES) $(EXTRA_cavan_system_init_DEPENDENCIES) 
-	@rm -f cavan-system_init$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_system_init_OBJECTS) $(cavan_system_init_LDADD) $(LIBS)
-
-cavan-tcp_copy$(EXEEXT): $(cavan_tcp_copy_OBJECTS) $(cavan_tcp_copy_DEPENDENCIES) $(EXTRA_cavan_tcp_copy_DEPENDENCIES) 
-	@rm -f cavan-tcp_copy$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tcp_copy_OBJECTS) $(cavan_tcp_copy_LDADD) $(LIBS)
-
-cavan-tcp_dd$(EXEEXT): $(cavan_tcp_dd_OBJECTS) $(cavan_tcp_dd_DEPENDENCIES) $(EXTRA_cavan_tcp_dd_DEPENDENCIES) 
-	@rm -f cavan-tcp_dd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tcp_dd_OBJECTS) $(cavan_tcp_dd_LDADD) $(LIBS)
-
-cavan-tcp_dd_server$(EXEEXT): $(cavan_tcp_dd_server_OBJECTS) $(cavan_tcp_dd_server_DEPENDENCIES) $(EXTRA_cavan_tcp_dd_server_DEPENDENCIES) 
-	@rm -f cavan-tcp_dd_server$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tcp_dd_server_OBJECTS) $(cavan_tcp_dd_server_LDADD) $(LIBS)
-
-cavan-tcp_exec$(EXEEXT): $(cavan_tcp_exec_OBJECTS) $(cavan_tcp_exec_DEPENDENCIES) $(EXTRA_cavan_tcp_exec_DEPENDENCIES) 
-	@rm -f cavan-tcp_exec$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tcp_exec_OBJECTS) $(cavan_tcp_exec_LDADD) $(LIBS)
-
-cavan-tcp_proxy$(EXEEXT): $(cavan_tcp_proxy_OBJECTS) $(cavan_tcp_proxy_DEPENDENCIES) $(EXTRA_cavan_tcp_proxy_DEPENDENCIES) 
-	@rm -f cavan-tcp_proxy$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tcp_proxy_OBJECTS) $(cavan_tcp_proxy_LDADD) $(LIBS)
-
-cavan-textlen$(EXEEXT): $(cavan_textlen_OBJECTS) $(cavan_textlen_DEPENDENCIES) $(EXTRA_cavan_textlen_DEPENDENCIES) 
-	@rm -f cavan-textlen$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_textlen_OBJECTS) $(cavan_textlen_LDADD) $(LIBS)
-
-cavan-tftp_auto_dd$(EXEEXT): $(cavan_tftp_auto_dd_OBJECTS) $(cavan_tftp_auto_dd_DEPENDENCIES) $(EXTRA_cavan_tftp_auto_dd_DEPENDENCIES) 
-	@rm -f cavan-tftp_auto_dd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tftp_auto_dd_OBJECTS) $(cavan_tftp_auto_dd_LDADD) $(LIBS)
-
-cavan-tftp_command$(EXEEXT): $(cavan_tftp_command_OBJECTS) $(cavan_tftp_command_DEPENDENCIES) $(EXTRA_cavan_tftp_command_DEPENDENCIES) 
-	@rm -f cavan-tftp_command$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tftp_command_OBJECTS) $(cavan_tftp_command_LDADD) $(LIBS)
-
-cavan-tftp_copy$(EXEEXT): $(cavan_tftp_copy_OBJECTS) $(cavan_tftp_copy_DEPENDENCIES) $(EXTRA_cavan_tftp_copy_DEPENDENCIES) 
-	@rm -f cavan-tftp_copy$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tftp_copy_OBJECTS) $(cavan_tftp_copy_LDADD) $(LIBS)
-
-cavan-tftp_dd$(EXEEXT): $(cavan_tftp_dd_OBJECTS) $(cavan_tftp_dd_DEPENDENCIES) $(EXTRA_cavan_tftp_dd_DEPENDENCIES) 
-	@rm -f cavan-tftp_dd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tftp_dd_OBJECTS) $(cavan_tftp_dd_LDADD) $(LIBS)
-
-cavan-tftp_dd_server$(EXEEXT): $(cavan_tftp_dd_server_OBJECTS) $(cavan_tftp_dd_server_DEPENDENCIES) $(EXTRA_cavan_tftp_dd_server_DEPENDENCIES) 
-	@rm -f cavan-tftp_dd_server$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tftp_dd_server_OBJECTS) $(cavan_tftp_dd_server_LDADD) $(LIBS)
-
-cavan-touch$(EXEEXT): $(cavan_touch_OBJECTS) $(cavan_touch_DEPENDENCIES) $(EXTRA_cavan_touch_DEPENDENCIES) 
-	@rm -f cavan-touch$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_touch_OBJECTS) $(cavan_touch_LDADD) $(LIBS)
-
-cavan-tty_mode$(EXEEXT): $(cavan_tty_mode_OBJECTS) $(cavan_tty_mode_DEPENDENCIES) $(EXTRA_cavan_tty_mode_DEPENDENCIES) 
-	@rm -f cavan-tty_mode$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_tty_mode_OBJECTS) $(cavan_tty_mode_LDADD) $(LIBS)
-
-cavan-umount$(EXEEXT): $(cavan_umount_OBJECTS) $(cavan_umount_DEPENDENCIES) $(EXTRA_cavan_umount_DEPENDENCIES) 
-	@rm -f cavan-umount$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_umount_OBJECTS) $(cavan_umount_LDADD) $(LIBS)
-
-cavan-usb$(EXEEXT): $(cavan_usb_OBJECTS) $(cavan_usb_DEPENDENCIES) $(EXTRA_cavan_usb_DEPENDENCIES) 
-	@rm -f cavan-usb$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_usb_OBJECTS) $(cavan_usb_LDADD) $(LIBS)
-
-cavan-usb_copy$(EXEEXT): $(cavan_usb_copy_OBJECTS) $(cavan_usb_copy_DEPENDENCIES) $(EXTRA_cavan_usb_copy_DEPENDENCIES) 
-	@rm -f cavan-usb_copy$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_usb_copy_OBJECTS) $(cavan_usb_copy_LDADD) $(LIBS)
-
-cavan-usb_dd$(EXEEXT): $(cavan_usb_dd_OBJECTS) $(cavan_usb_dd_DEPENDENCIES) $(EXTRA_cavan_usb_dd_DEPENDENCIES) 
-	@rm -f cavan-usb_dd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_usb_dd_OBJECTS) $(cavan_usb_dd_LDADD) $(LIBS)
-
-cavan-usb_dd_server$(EXEEXT): $(cavan_usb_dd_server_OBJECTS) $(cavan_usb_dd_server_DEPENDENCIES) $(EXTRA_cavan_usb_dd_server_DEPENDENCIES) 
-	@rm -f cavan-usb_dd_server$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_usb_dd_server_OBJECTS) $(cavan_usb_dd_server_LDADD) $(LIBS)
-
-cavan-vfat$(EXEEXT): $(cavan_vfat_OBJECTS) $(cavan_vfat_DEPENDENCIES) $(EXTRA_cavan_vfat_DEPENDENCIES) 
-	@rm -f cavan-vfat$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_vfat_OBJECTS) $(cavan_vfat_LDADD) $(LIBS)
-
-cavan-web_proxy$(EXEEXT): $(cavan_web_proxy_OBJECTS) $(cavan_web_proxy_DEPENDENCIES) $(EXTRA_cavan_web_proxy_DEPENDENCIES) 
-	@rm -f cavan-web_proxy$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cavan_web_proxy_OBJECTS) $(cavan_web_proxy_LDADD) $(LIBS)
+core/$(am__dirstamp):
+	@$(MKDIR_P) core
+	@: > core/$(am__dirstamp)
+core/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) core/$(DEPDIR)
+	@: > core/$(DEPDIR)/$(am__dirstamp)
+core/cavan_main.$(OBJEXT): core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
+
+cavan-main$(EXEEXT): $(cavan_main_OBJECTS) $(cavan_main_DEPENDENCIES) $(EXTRA_cavan_main_DEPENDENCIES) 
+	@rm -f cavan-main$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(cavan_main_OBJECTS) $(cavan_main_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f core/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -1376,24 +542,28 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usb_dd_server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vfat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/web_proxy.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/cavan_main.Po@am__quote@
 
 .c.o:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
 
 .c.obj:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .c.lo:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
@@ -1518,6 +688,8 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f core/$(DEPDIR)/$(am__dirstamp)
+	-rm -f core/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1528,7 +700,7 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR) core/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1574,7 +746,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR) core/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1611,10 +783,25 @@ uninstall-am: uninstall-binPROGRAMS
 
 
 install: install-am
-	for fn in sudo service; \
+	chmod -f 06755 $(addprefix $(DESTDIR)$(bindir)/,$(bin_PROGRAMS))
+
+$(APP_CORE_SRC_FILES): $(FILE_CAVAN_MAP_C) $(FILE_CAVAN_MAP_H)
+
+$(FILE_CAVAN_MAP_C): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
+	for app in $(basename $(notdir $^)); \
 	do \
-		chmod -f 04755 $(DESTDIR)$(bindir)/cavan-$${fn}; \
-	done
+		echo "{\"$${app}\", do_cavan_$${app}},"; \
+	done > $@
+
+$(FILE_CAVAN_MAP_H): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
+	for app in $(basename $(notdir $^)); \
+	do \
+		echo "int do_cavan_$${app}(int argc, char *argv[]);"; \
+	done > $@
+
+%.o: AM_CFLAGS += -Dmain=do_cavan_$(basename $@)
+core/%.o: AM_CFLAGS += -Umain -I$(APP_CORE_DEPDIR)
+$(bin_PROGRAMS): AM_LDFLAGS += $(wildcard @abs_top_builddir@/lib/*.o)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
