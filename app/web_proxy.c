@@ -34,6 +34,8 @@ enum
 	LOCAL_COMMAND_OPTION_DAEMON_MAX,
 	LOCAL_COMMAND_OPTION_VERBOSE,
 	LOCAL_COMMAND_OPTION_LOGFILE,
+	LOCAL_COMMAND_OPTION_PROXY_HOST,
+	LOCAL_COMMAND_OPTION_PROXY_PORT,
 };
 
 static void show_usage(const char *command)
@@ -49,6 +51,8 @@ static void show_usage(const char *command)
 	println("--max, -M, -C\t\t\tmax daemon count");
 	println("--verbose\t\t\tshow log message");
 	println("--log, -l, -L\t\t\tsave log to file");
+	println("--pip, --host\t\t\tproxy host or ip address");
+	println("--pport, --pp\t\t\tproxy port");
 }
 
 int main(int argc, char *argv[])
@@ -107,6 +111,30 @@ int main(int argc, char *argv[])
 			.val = LOCAL_COMMAND_OPTION_LOGFILE,
 		},
 		{
+			.name = "host",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_PROXY_HOST,
+		},
+		{
+			.name = "pip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_PROXY_HOST,
+		},
+		{
+			.name = "pport",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_PROXY_PORT,
+		},
+		{
+			.name = "pp",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = LOCAL_COMMAND_OPTION_PROXY_PORT,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -125,6 +153,8 @@ int main(int argc, char *argv[])
 
 	proxy_service = cavan_dynamic_service_get_data(service);
 	proxy_service->port = 9090;
+	proxy_service->proxy_host = "127.0.0.1";
+	proxy_service->proxy_port = 80;
 
 	while ((c = getopt_long(argc, argv, "vVhHp:P:c:C:m:M:dDl:L:", long_option, &option_index)) != EOF)
 	{
@@ -177,6 +207,14 @@ int main(int argc, char *argv[])
 		case 'L':
 		case LOCAL_COMMAND_OPTION_LOGFILE:
 			service->logfile = optarg;
+			break;
+
+		case LOCAL_COMMAND_OPTION_PROXY_HOST:
+			proxy_service->proxy_host = optarg;
+			break;
+
+		case LOCAL_COMMAND_OPTION_PROXY_PORT:
+			proxy_service->proxy_port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		default:

@@ -38,7 +38,10 @@ struct web_proxy_service
 {
 	int sockfd;
 	u16 port;
+	u16 proxy_port;
+	int proxy_host_len;
+	const char *proxy_host;
 };
 
-int web_proxy_get_request_type(const char *req);
+int web_proxy_get_request_type(const char *req, size_t length);
 int web_proxy_service_run(struct cavan_dynamic_service *service);

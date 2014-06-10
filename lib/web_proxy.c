@@ -25,58 +25,58 @@
 
 #define WEB_PROXY_DEBUG		0
 
-int web_proxy_get_request_type(const char *req)
+int web_proxy_get_request_type(const char *req, size_t length)
 {
 	switch (req[0])
 	{
 	case 'C':
-		if (strcmp(req + 1, "ONNECT") == 0)
+		if (length == 7 && text_lhcmp("ONNECT", req + 1) == 0)
 		{
 			return HTTP_REQ_CONNECT;
 		}
 		break;
 
 	case 'D':
-		if (strcmp(req + 1, "ELETE") == 0)
+		if (length == 6 && text_lhcmp("ELETE", req + 1) == 0)
 		{
 			return HTTP_REQ_DELETE;
 		}
 		break;
 
 	case 'G':
-		if (strcmp(req + 1, "ET") == 0)
+		if (length == 3 && text_lhcmp("ET", req + 1) == 0)
 		{
 			return HTTP_REQ_GET;
 		}
 		break;
 
 	case 'H':
-		if (strcmp(req + 1, "EAD") == 0)
+		if (length == 4 && text_lhcmp("EAD", req + 1) == 0)
 		{
 			return HTTP_REQ_HEAD;
 		}
 		break;
 
 	case 'O':
-		if (strcmp(req + 1, "PTIONS") == 0)
+		if (length == 7 && text_lhcmp("PTIONS", req + 1) == 0)
 		{
 			return HTTP_REQ_OPTIONS;
 		}
 		break;
 
 	case 'P':
-		if (strcmp(req + 1, "UT") == 0)
+		if (length == 3 && text_lhcmp("UT", req + 1) == 0)
 		{
 			return HTTP_REQ_PUT;
 		}
-		else if (strcmp(req + 1, "OST") == 0)
+		else if (length == 4 && text_lhcmp("OST", req + 1) == 0)
 		{
 			return HTTP_REQ_POST;
 		}
 		break;
 
 	case 'T':
-		if (strcmp(req + 1, "RACE") == 0)
+		if (length == 5 && text_lhcmp("RACE", req + 1) == 0)
 		{
 			return HTTP_REQ_TRACE;
 		}
@@ -557,6 +557,21 @@ static void web_proxy_stop_handler(struct cavan_dynamic_service *service)
 	inet_close_tcp_socket(proxy->sockfd);
 }
 
+static char *web_proxy_find_http_prop(const char *req, const char *req_end, const char *prop)
+{
+	while (req < req_end)
+	{
+		while (req < req_end && *req++ != '\n');
+
+		if (text_lhcmp(prop, req) == 0)
+		{
+			return (char *) req;
+		}
+	}
+
+	return NULL;
+}
+
 static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *conn)
 {
 	int ret;
@@ -571,6 +586,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 	struct network_url urls[2], *url, *url_bak;
 	const struct network_protocol *protocol = NULL;
 	struct inet_connect *client = conn;
+	struct web_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
 	count = 0;
 	ftp_login = false;
@@ -580,6 +596,9 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 
 	while (1)
 	{
+		u16 port;
+		const char *hostname;
+
 		rwlen = inet_recv(client->sockfd, buff, sizeof(buff) - 1);
 		if (rwlen <= 0)
 		{
@@ -595,10 +614,8 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 
 		for (url_text = buff; url_text < buff_end && *url_text != ' '; url_text++);
 
-		cmdlen = url_text - buff;
-		*url_text++ = 0;
-
-		type = web_proxy_get_request_type(buff);
+		cmdlen = url_text++ - buff;
+		type = web_proxy_get_request_type(buff, cmdlen);
 		if (type < 0)
 		{
 			pr_red_info("invalid request %s", buff);
@@ -612,7 +629,20 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			break;
 		}
 
-		pr_info("%s[%d](%d) => %s", buff, type, count, network_url_tostring(url, NULL, 0, NULL));
+		if (url->protocol[0] == 0 && url->port[0] == 0)
+		{
+			port = proxy->proxy_port;
+			hostname = proxy->proxy_host;
+
+			pr_info("Default proxy => %s:%d", hostname, port);
+		}
+		else
+		{
+			port = 0;
+			hostname = url->hostname;
+
+			pr_info("%s[%d](%d) => %s", buff, type, count, network_url_tostring(url, NULL, 0, NULL));
+		}
 
 		if (proxy_sockfd < 0 || network_url_equals(url_bak, url) == false)
 		{
@@ -621,15 +651,23 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 				inet_close_tcp_socket(proxy_sockfd);
 			}
 
-			protocol = network_get_protocol_by_name(url->protocol);
-			ret = network_get_port_by_url(url, protocol);
-			if (ret < 0)
+			if (port)
 			{
-				pr_red_info("network_get_port_by_url");
-				break;
+				protocol = network_get_protocol_by_type(NETWORK_PROTOCOL_HTTP);
+				ret = port;
+			}
+			else
+			{
+				protocol = network_get_protocol_by_name(url->protocol);
+				ret = network_get_port_by_url(url, protocol);
+				if (ret < 0)
+				{
+					pr_red_info("network_get_port_by_url");
+					break;
+				}
 			}
 
-			proxy_sockfd = inet_create_tcp_link2(url->hostname, ret);
+			proxy_sockfd = inet_create_tcp_link2(hostname, ret);
 			if (proxy_sockfd < 0)
 			{
 				pr_red_info("inet_create_tcp_link2");
@@ -682,9 +720,38 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 				goto out_close_client_sockfd;
 
 			default:
-				req -= cmdlen + 1;
-				memcpy(req, buff, cmdlen);
-				req[cmdlen] = ' ';
+				if (port)
+				{
+					char *prop;
+
+					prop = web_proxy_find_http_prop(buff + cmdlen + 1, buff_end, "Host:");
+					if (prop)
+					{
+						int prop_len;
+						char *prop_end;
+
+						prop += 6;
+
+						for (prop_end = prop + 1; prop_end < buff_end && *prop_end != '\n'; prop_end++);
+
+						prop_len = prop_end - prop;
+						if (prop_len != proxy->proxy_host_len)
+						{
+							memmove(prop + proxy->proxy_host_len, prop_end, buff_end - prop_end);
+							buff_end += proxy->proxy_host_len - prop_len;
+						}
+
+						mem_copy(prop, proxy->proxy_host, proxy->proxy_host_len);
+					}
+
+					req = buff;
+				}
+				else
+				{
+					req -= cmdlen + 1;
+					memcpy(req, buff, cmdlen);
+					req[cmdlen] = ' ';
+				}
 
 #if WEB_PROXY_DEBUG
 				println("New request is:\n%s", req);
@@ -810,6 +877,8 @@ out_close_client_sockfd:
 
 int web_proxy_service_run(struct cavan_dynamic_service *service)
 {
+	struct web_proxy_service *proxy = cavan_dynamic_service_get_data(service);
+
 	service->name = "WEB_PROXY";
 	service->conn_size = sizeof(struct inet_connect);
 	service->open_connect = web_proxy_open_connect;
@@ -817,6 +886,8 @@ int web_proxy_service_run(struct cavan_dynamic_service *service)
 	service->start = web_proxy_start_handler;
 	service->stop = web_proxy_stop_handler;
 	service->run = web_proxy_run_handler;
+
+	proxy->proxy_host_len = text_len(proxy->proxy_host);
 
 	return cavan_dynamic_service_run(service);
 }

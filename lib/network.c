@@ -990,7 +990,7 @@ char *network_parse_url(const char *text, struct network_url *url)
 		case ' ':
 		case '/':
 			*p = 0;
-			return (char *)text;
+			return (char *) text;
 
 		case ':':
 			*p = 0;
