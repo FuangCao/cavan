@@ -39,7 +39,7 @@ struct web_proxy_service
 	int sockfd;
 	u16 port;
 	u16 proxy_port;
-	int proxy_host_len;
+	int proxy_hostlen;
 	const char *proxy_host;
 };
 

@@ -35,16 +35,22 @@
 #define assign64(addr, value) \
 	assign(addr, value, u64)
 
-void mem_copy8(u8 *dest, const u8 *src, size_t count);
-void mem_copy16(u16 *dest, const u16 *src, size_t count);
-void mem_copy32(u32 *dest, const u32 *src, size_t count);
-void mem_copy64(u64 *dest, const u64 *src, size_t count);
+u8 *mem_copy8(u8 *dest, const u8 *src, size_t count);
+u16 *mem_copy16(u16 *dest, const u16 *src, size_t count);
+u32 *mem_copy32(u32 *dest, const u32 *src, size_t count);
+u64 *mem_copy64(u64 *dest, const u64 *src, size_t count);
 void *mem_copy(void *dest, const void *src, size_t size);
 
-void mem_copy_invert8(u8 *dest, const u8 *src, size_t count);
-void mem_copy_invert16(u16 *dest, const u16 *src, size_t count);
-void mem_copy_invert32(u32 *dest, const u32 *src, size_t count);
-void mem_copy_invert64(u64 *dest, const u64 *src, size_t count);
+u8 *mem_copy_invert8(u8 *dest, const u8 *src, size_t count);
+u16 *mem_copy_invert16(u16 *dest, const u16 *src, size_t count);
+u32 *mem_copy_invert32(u32 *dest, const u32 *src, size_t count);
+u64 *mem_copy_invert64(u64 *dest, const u64 *src, size_t count);
+
+u8 *mem_copy_decrease8(u8 *dest, const u8 *src, size_t count);
+u16 *mem_copy_decrease16(u16 *dest, const u16 *src, size_t count);
+u32 *mem_copy_decrease32(u32 *dest, const u32 *src, size_t count);
+u64 *mem_copy_decrease64(u64 *dest, const u64 *src, size_t count);
+void *mem_copy_decrease(void *dest, const void *src, size_t count);
 
 void mem_move8(u8 *dest, const u8 *src, size_t count);
 void mem_move16(u16 *dest, const u16 *src, size_t count);

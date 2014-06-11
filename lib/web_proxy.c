@@ -557,19 +557,56 @@ static void web_proxy_stop_handler(struct cavan_dynamic_service *service)
 	inet_close_tcp_socket(proxy->sockfd);
 }
 
-static char *web_proxy_find_http_prop(const char *req, const char *req_end, const char *prop)
+static char *web_proxy_find_http_prop(const char *req, const char *req_end, const char *name, size_t namelen)
 {
-	while (req < req_end)
+	while ((size_t) (req_end - req) > namelen)
 	{
-		while (req < req_end && *req++ != '\n');
-
-		if (text_lhcmp(prop, req) == 0)
+		if (text_ncmp(req, name, namelen) == 0)
 		{
-			return (char *) req;
+			for (req += namelen; req < req_end && byte_is_space(*req); req++);
+
+			if (*req == ':')
+			{
+				while (byte_is_space(*++req));
+
+				return (char *) req;
+			}
 		}
+
+		if (byte_is_lf(*req))
+		{
+			break;
+		}
+
+		while (req < req_end && *req++ != '\n');
 	}
 
 	return NULL;
+}
+
+static char *web_proxy_set_http_prop(char *req, char *req_end, const char *name, int namelen, const char *value, int valuelen)
+{
+	char *prop;
+	int proplen;
+	char *prop_end;
+
+	prop = web_proxy_find_http_prop(req, req_end, name, namelen);
+	if (prop == NULL)
+	{
+		return req_end;
+	}
+
+	for (prop_end = prop; prop_end < req_end && *prop_end != '\n'; prop_end++);
+
+	proplen = prop_end - prop;
+	if (proplen != valuelen)
+	{
+		mem_move(prop + valuelen, prop_end, req_end - prop_end);
+	}
+
+	mem_copy(prop, value, valuelen);
+
+	return req_end + (valuelen - proplen);
 }
 
 static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *conn)
@@ -599,16 +636,16 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		u16 port;
 		const char *hostname;
 
-		rwlen = inet_recv(client->sockfd, buff, sizeof(buff) - 1);
+		rwlen = inet_recv(client->sockfd, buff, sizeof(buff) - proxy->proxy_hostlen - 1);
 		if (rwlen <= 0)
 		{
 			break;
 		}
 
-		buff[rwlen] = 0;
 		buff_end = buff + rwlen;
 
 #if WEB_PROXY_DEBUG
+		*buff_end = 0;
 		println("request is:\n%s", buff);
 #endif
 
@@ -722,28 +759,10 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			default:
 				if (port)
 				{
-					char *prop;
-
-					prop = web_proxy_find_http_prop(buff + cmdlen + 1, buff_end, "Host:");
-					if (prop)
-					{
-						int prop_len;
-						char *prop_end;
-
-						prop += 6;
-
-						for (prop_end = prop + 1; prop_end < buff_end && *prop_end != '\n'; prop_end++);
-
-						prop_len = prop_end - prop;
-						if (prop_len != proxy->proxy_host_len)
-						{
-							memmove(prop + proxy->proxy_host_len, prop_end, buff_end - prop_end);
-							buff_end += proxy->proxy_host_len - prop_len;
-						}
-
-						mem_copy(prop, proxy->proxy_host, proxy->proxy_host_len);
-					}
-
+					buff_end = web_proxy_set_http_prop(buff, buff_end, "Host", 4, proxy->proxy_host, proxy->proxy_hostlen);
+#if WEB_PROXY_DEBUG
+					*buff_end = 0;
+#endif
 					req = buff;
 				}
 				else
@@ -887,7 +906,7 @@ int web_proxy_service_run(struct cavan_dynamic_service *service)
 	service->stop = web_proxy_stop_handler;
 	service->run = web_proxy_run_handler;
 
-	proxy->proxy_host_len = text_len(proxy->proxy_host);
+	proxy->proxy_hostlen = text_len(proxy->proxy_host);
 
 	return cavan_dynamic_service_run(service);
 }

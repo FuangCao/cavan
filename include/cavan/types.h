@@ -117,6 +117,12 @@ typedef struct
 #define ADDR_SUB2(addr1, addr2) \
 	((byte *)(addr1) - (byte *)(addr2))
 
+#define ADDR_IS_ALIGN(addr, bits) \
+	((((long) (addr)) & ((bits) - 1)) == 0)
+
+#define ADDR_IS_LEFT_ALIGN(addr, bits) \
+	ADDR_IS_ALIGN(ADDR_SUB(addr, (bits) - 1), bits)
+
 #define MLC_TO(p) \
 	(p) = malloc(sizeof(*p))
 

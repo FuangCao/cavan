@@ -22,6 +22,7 @@
 
 int main(int argc, char *argv[])
 {
+#if 0
 	int i;
 	int ret;
 	char *texts[10];
@@ -33,6 +34,24 @@ int main(int argc, char *argv[])
 	{
 		println("text[%d] = %s", i, texts[i]);
 	}
+#else
+	int i;
+	char buff[1024] = "----\n";
+
+	println("buff = %p", buff);
+
+	for (i = 5; i < 288 + 5; i++)
+	{
+		buff[i] = '8';
+	}
+
+	mem_move(buff + 8, buff + 4, 288);
+	for (i = 0; i < 8; i++)
+	{
+		buff[i] = '0';
+	}
+	println("buff = %s", buff);
+#endif
 
 	return 0;
 }

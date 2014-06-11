@@ -4,40 +4,32 @@
 #include <cavan/memory.h>
 
 #define MEM_COPY_FUNC(name, bits) \
-	void name##bits(u##bits *dest, const u##bits *src, size_t count) \
+	u##bits *name##bits(u##bits *dest, const u##bits *src, size_t count) \
 	{ \
 		const u##bits *end; \
 		for (end = src + count; src < end; src++, dest++) \
 		{ \
 			*dest = *src; \
 		} \
-	}
-
-#define MEM_COPY_INVERT_FUNC(name, bits) \
-	void name##bits(u##bits *dest, const u##bits *src, size_t count) \
+		return dest; \
+	} \
+	u##bits *name##_invert##bits(u##bits *dest, const u##bits *src, size_t count) \
 	{ \
 		const u##bits *last; \
 		for (last = src + count - 1; last >= src; dest++, last--) \
 		{ \
 			*dest = *last; \
 		} \
-	}
-
-#define MEM_MOVE_FUNC(name, bits) \
-	void name##bits(u##bits *dest, const u##bits *src, size_t count) \
+		return dest; \
+	} \
+	u##bits *name##_decrease##bits(u##bits *dest, const u##bits *src, size_t count) \
 	{ \
 		const u##bits *start; \
-		if (dest < src) \
+		for (start = src - count; src > start; src--, dest--) \
 		{ \
-			mem_copy##bits(dest, src, count); \
+			*dest = *src; \
 		} \
-		else if (dest > src) \
-		{ \
-			for (start = src, src += count - 1, dest += count - 1; src >= start; src--, dest--) \
-			{ \
-				*dest = *src; \
-			} \
-		} \
+		return ADDR_ADD(dest, ((bits) >> 3) - 1); \
 	}
 
 #define MEM_SET_FUNC(name, bits) \
@@ -75,56 +67,7 @@
 	func(name, 32) \
 	func(name, 64)
 
-#define MEM_COPY_FUNC_DELARE(name, func) \
-	MEM_FUNC_DECLARE(name, func) \
-	void *name(void *dest, const void *src, size_t size) \
-	{ \
-		size_t count; \
-		if (dest == src) \
-		{ \
-			return dest; \
-		} \
-		if (((long)dest & 0x07) == 0 && ((long)src & 0x07) == 0) \
-		{ \
-			count = size >> 3; \
-			mem_copy64(dest, src, count); \
-			count <<= 3; \
-			dest = (u8 *)dest + count; \
-			src = (const u8 *)src + count; \
-			count = size & 0x07; \
-		} \
-		else if (((long)dest & 0x03) == 0 && ((long)src & 0x03) == 0) \
-		{ \
-			count = size >> 2; \
-			mem_copy32(dest, src, count); \
-			count <<= 2; \
-			dest = (u8 *)dest + count; \
-			src = (const u8 *)src + count; \
-			count = size & 0x03; \
-		} \
-		else if (((long)dest & 0x01) == 0 && ((long)src & 0x01) == 0) \
-		{ \
-			count = size >> 1; \
-			mem_copy16(dest, src, count); \
-			count <<= 1; \
-			dest = (u8 *)dest + count; \
-			src = (const u8 *)src + count; \
-			count = size & 0x01; \
-		} \
-		else \
-		{ \
-			count = size; \
-		} \
-		if (count) \
-		{ \
-			mem_copy8(dest, src, count); \
-		} \
-		return ADDR_ADD(dest, count); \
-	}
-
-MEM_COPY_FUNC_DELARE(mem_copy, MEM_COPY_FUNC);
-MEM_FUNC_DECLARE(mem_copy_invert, MEM_COPY_INVERT_FUNC);
-MEM_COPY_FUNC_DELARE(mem_move, MEM_MOVE_FUNC);
+MEM_FUNC_DECLARE(mem_copy, MEM_COPY_FUNC);
 MEM_FUNC_DECLARE(mem_set, MEM_SET_FUNC);
 MEM_FUNC_DECLARE(number_swap, NUMBER_SWAP_FUNC);
 MEM_SWAP_FUNC(16);
@@ -132,6 +75,98 @@ MEM_SWAP_FUNC(32);
 MEM_SWAP_FUNC(64);
 
 // ================================================================================
+
+void *mem_copy(void *dest, const void *src, size_t size)
+{
+	size_t count;
+
+	if (dest == src)
+	{
+		return ((u8 *) dest) + size;
+	}
+
+	if (ADDR_IS_ALIGN(src, 8) && ADDR_IS_ALIGN(dest, 8))
+	{
+		count = size >> 3;
+		dest = mem_copy64(dest, src, count);
+		src = ((const u64 *) src) + count;
+		count = size & 0x07;
+	}
+	else if (ADDR_IS_ALIGN(src, 4) && ADDR_IS_ALIGN(dest, 4))
+	{
+		count = size >> 2;
+		dest = mem_copy32(dest, src, count);
+		src = ((const u32 *) src) + count;
+		count = size & 0x03;
+	}
+	else if (ADDR_IS_ALIGN(src, 2) && ADDR_IS_ALIGN(dest, 2))
+	{
+		count = size >> 1;
+		dest = mem_copy16(dest, src, count);
+		src = ((const u16 *) src) + count;
+		count = size & 0x01;
+	}
+	else
+	{
+		count = size;
+	}
+
+	return mem_copy8(dest, src, count);
+}
+
+void *mem_copy_decrease(void *dest, const void *src, size_t size)
+{
+	size_t count;
+
+	if (dest == src)
+	{
+		return ((u8 *) dest) + size;
+	}
+
+	if (size >= 8 && ADDR_IS_LEFT_ALIGN(src, 8) && ADDR_IS_LEFT_ALIGN(dest, 8))
+	{
+		count = size >> 3;
+		dest = mem_copy_decrease64(ADDR_SUB(dest, 7), ADDR_SUB(src, 7), count);
+		src = ADDR_SUB(src, count << 3);
+		count = size & 0x07;
+	}
+	else if (size >= 4 && ADDR_IS_LEFT_ALIGN(src, 4) && ADDR_IS_LEFT_ALIGN(dest, 4))
+	{
+		count = size >> 2;
+		dest = mem_copy_decrease32(ADDR_SUB(dest, 3), ADDR_SUB(src, 3), count);
+		src = ADDR_SUB(src, count << 2);
+		count = size & 0x03;
+	}
+	else if (size >= 2 && ADDR_IS_LEFT_ALIGN(src, 2) && ADDR_IS_LEFT_ALIGN(dest, 2))
+	{
+		count = size >> 1;
+		dest = mem_copy_decrease16(ADDR_SUB(dest, 1), ADDR_SUB(src, 1), count);
+		src = ADDR_SUB(src, count << 1);
+		count = size & 0x01;
+	}
+	else
+	{
+		count = size;
+	}
+
+	return mem_copy_decrease8(dest, src, count);
+}
+
+
+void *mem_move(void *dest, const void *src, size_t size)
+{
+	if (dest < src)
+	{
+		return mem_copy(dest, src, size);
+	}
+
+	dest = ADDR_ADD(dest, size - 1);
+	src = ADDR_ADD(src, size - 1);
+
+	mem_copy_decrease(dest, src, size);
+
+	return ADDR_ADD(dest, 1);
+}
 
 void mem_set(void *mem, int value, size_t size)
 {
