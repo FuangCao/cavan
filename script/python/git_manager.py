@@ -141,11 +141,12 @@ class CavanGitManager(CavanCommandBase):
 			return False
 		return self.doExecGitCmd(["log", "-1"], of = "/dev/null", ef = "/dev/null")
 
-	def doGitReset(self, branch):
-		if not self.gitCheckoutVersion(branch):
-			return False
+	def doGitReset(self, revision = None):
+		command = ["diff"]
+		if revision != None:
+			command.append(revision)
 
-		lines = self.doPopenGitCmd(["diff"])
+		lines = self.doPopenGitCmd(command)
 		if not lines:
 			return True
 

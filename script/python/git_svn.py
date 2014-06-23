@@ -366,7 +366,10 @@ class GitSvnManager(CavanGitManager):
 			return True
 
 		if self.mGitRevision > 0:
-			self.doGitReset(branch)
+			self.doGitReset()
+			if not self.gitCheckoutVersion(branch):
+				return False
+
 			self.doExecute(["svn", "unlock", "--force", "."], ef = "/dev/null", of = "/dev/null")
 
 			if self.mUrl != self.mSvnUrl:

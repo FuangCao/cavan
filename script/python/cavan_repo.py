@@ -698,6 +698,13 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		return True
 
+	def getDefaultGitRepoName(self):
+		name = os.path.basename(self.mPathRoot)
+		if name.find("-") < 0 and name.find("_") < 0:
+			return os.path.basename(os.path.dirname(self.mPathRoot)) + "-" + name
+
+		return name
+
 	def getDefaultBackupPath(self):
 		if os.access("/git", os.W_OK):
 			gitRepoPath = "/git"
@@ -708,7 +715,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 				return None
 			gitRepoPath = os.path.join(homePath, "git")
 
-		return os.path.join(gitRepoPath, os.path.basename(self.mPathRoot))
+		return os.path.join(gitRepoPath, self.getDefaultGitRepoName())
 
 	def getDefaultGitRepoUrl(self):
 		manager = CavanNetManager();
@@ -716,7 +723,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if not ipList:
 			self.prRedInfo("getLinkIpAddrList failed")
 			return None
-		return "git://%s:7777/%s" % (ipList[0], os.path.basename(self.mPathRoot))
+		return "git://%s:7777/%s" % (ipList[0], self.getDefaultGitRepoName())
 
 	def doSymlink(self, argv):
 		if not self.loadManifest():
