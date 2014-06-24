@@ -147,12 +147,10 @@ class CavanGitManager(CavanCommandBase):
 			command.append(revision)
 
 		lines = self.doPopenGitCmd(command)
-		if not lines:
-			return True
-
-		tmNow = time.localtime()
-		filename = "%04d-%02d%02d-%02d%02d%02d.diff" % (tmNow.tm_year, tmNow.tm_mon, tmNow.tm_mday, tmNow.tm_hour, tmNow.tm_min, tmNow.tm_sec)
-		file_write_lines(os.path.join(self.mPathPatch, filename), lines)
+		if lines != None and len(lines) > 0:
+			tmNow = time.localtime()
+			filename = "%04d-%02d%02d-%02d%02d%02d.diff" % (tmNow.tm_year, tmNow.tm_mon, tmNow.tm_mday, tmNow.tm_hour, tmNow.tm_min, tmNow.tm_sec)
+			file_write_lines(os.path.join(self.mPathPatch, filename), lines)
 
 		return self.doExecGitCmd(["reset", "--hard"], of = "/dev/null")
 
@@ -260,9 +258,12 @@ class CavanGitManager(CavanCommandBase):
 					if not self.removeSafe(destPath):
 						self.prRedInfo("remove ", destPath, " failed")
 						return False
-				os.rename(srcPath, destPath)
-				os.symlink(destPath, srcPath)
-			elif force:
+				if force:
+					os.rename(srcPath, destPath)
+					os.symlink(destPath, srcPath)
+				else:
+					os.symlink(srcPath, destPath)
+			elif force or not os.path.exists(destPath):
 				self.doCopyFile(srcPath, destPath)
 
 		return True

@@ -162,6 +162,9 @@ class GitSvnManager(CavanGitManager):
 		if url != None:
 			listCommand.append(url)
 
+		if not os.path.exists(self.mPathGitSvn):
+			self.mkdirSafe(self.mPathGitSvn)
+
 		return self.doExecute(listCommand, of = self.mFileSvnInfo)
 
 	def getSvnInfo(self, url = None):
@@ -185,6 +188,10 @@ class GitSvnManager(CavanGitManager):
 	def genSvnLogXml(self):
 		if self.mGitRevision >= self.mSvnRevision:
 			return False
+
+		if not os.path.exists(self.mPathGitSvn):
+			self.mkdirSafe(self.mPathGitSvn)
+
 		return self.doExecute(["svn", "log", "--xml", "-r", "%d:%d" % (self.mGitRevision + 1, self.mSvnRevision), self.mUrl], of = self.mFileSvnLog)
 
 	def getSvnLog(self):
@@ -366,6 +373,12 @@ class GitSvnManager(CavanGitManager):
 			return True
 
 		if self.mGitRevision > 0:
+			if not self.doExecute(["svn", "info"], of = "/dev/null"):
+				self.removeSafe(self.mPathSvnRepo)
+				url = "%s@%s" % (self.mUrl, self.mGitRevision)
+				if not self.doExecute(["svn", "checkout", "--force", "--quiet", url, "."], of = "/dev/null"):
+					return False
+
 			self.doGitReset()
 			if not self.gitCheckoutVersion(branch):
 				return False
@@ -379,7 +392,7 @@ class GitSvnManager(CavanGitManager):
 			elif self.svnUpdate("%s" % self.mGitRevision) == None:
 				return False
 		else:
-			self.doExecute(["rm", "-rf", ".svn"])
+			self.removeSafe(self.mPathSvnRepo)
 
 			minRevision = 0
 			maxRevision = self.mSvnRevision

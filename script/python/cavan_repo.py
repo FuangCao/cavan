@@ -787,7 +787,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if self.mListProject == None:
 			return False
 
-		self.initProgress(len(self.mListProject))
+		if not self.mVerbose:
+			self.initProgress(len(self.mListProject))
 
 		for node in self.mManifest.getProjects():
 			relPath = self.getProjectRelPath(node)
@@ -796,9 +797,12 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			manager = GitSvnManager(srcPath, self.mVerbose)
 			if not manager.doRecovery(destPath):
 				return False
-			self.addProgress()
 
-		self.finishProgress()
+			if not self.mVerbose:
+				self.addProgress()
+
+		if not self.mVerbose:
+			self.finishProgress()
 
 		return True
 
