@@ -1,0 +1,27 @@
+#!/bin/bash
+
+ROOT_DIR="${ANDROID_BUILD_TOP-${PWD}}"
+ICU4C_PATH="${ROOT_DIR}/external/icu4c"
+ICU4C_RUN_CONFIG="${ICU4C_PATH}/runConfigureICU"
+ICU4C_STUBDATA_PATH="${ICU4C_PATH}/stubdata"
+CMD_ICU_DAT_GENERATOR="${ICU4C_STUBDATA_PATH}/icu_dat_generator.py"
+ICU4C_OUT="${ROOT_DIR}/out/icu4c"
+DIR_ICU4C_TMP="${ICU4C_PATH}/tmp"
+
+mkdir -pv ${ICU4C_OUT} || exit 1
+(cd ${ICU4C_OUT} && ${ICU4C_RUN_CONFIG} Linux && make -j16) || exit 1
+
+for fn in ${ICU4C_OUT}/data/out/tmp/*.dat
+do
+	nfn=${ICU4C_STUBDATA_PATH}/$(basename ${fn} | sed 's/\(.*\)\.dat$/\1-all.dat/g')
+	cp "${fn}" "${nfn}" -av
+done
+
+mkdir -pv "${DIR_ICU4C_TMP}" ||
+{
+	mkdir -pv "${DIR_ICU4C_TMP}_123" && mv -v "${DIR_ICU4C_TMP}_123" "${DIR_ICU4C_TMP}"
+}
+
+rm "${DIR_ICU4C_TMP}" -rf
+
+ANDROID_BUILD_TOP="${ROOT_DIR}" ${CMD_ICU_DAT_GENERATOR}

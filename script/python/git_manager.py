@@ -150,6 +150,8 @@ class CavanGitManager(CavanCommandBase):
 		if lines != None and len(lines) > 0:
 			tmNow = time.localtime()
 			filename = "%04d-%02d%02d-%02d%02d%02d.diff" % (tmNow.tm_year, tmNow.tm_mon, tmNow.tm_mday, tmNow.tm_hour, tmNow.tm_min, tmNow.tm_sec)
+			if not os.path.exists(self.mPathPatch):
+				self.mkdirSafe(self.mPathPatch);
 			file_write_lines(os.path.join(self.mPathPatch, filename), lines)
 
 		return self.doExecGitCmd(["reset", "--hard"], of = "/dev/null")
