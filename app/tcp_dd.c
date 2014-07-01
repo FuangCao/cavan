@@ -5,19 +5,12 @@
  */
 
 #include <cavan.h>
+#include <cavan/adb.h>
 #include <cavan/tcp_dd.h>
 #include <cavan/parser.h>
-#include <cavan/adb.h>
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2012-01-14 14:09:55"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_LOCAL
-};
 
 static void show_usage(const char *command)
 {
@@ -47,13 +40,13 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "ip",
@@ -77,7 +70,7 @@ int main(int argc, char *argv[])
 			.name = "local",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_LOCAL,
+			.val = CAVAN_COMMAND_OPTION_LOCAL,
 		},
 		{
 			0, 0, 0, 0
@@ -100,14 +93,14 @@ int main(int argc, char *argv[])
 		{
 		case 'v':
 		case 'V':
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
@@ -116,7 +109,7 @@ int main(int argc, char *argv[])
 			file_req.open_connect = adb_create_tcp_link2;
 		case 'l':
 		case 'L':
-		case LOCAL_COMMAND_OPTION_LOCAL:
+		case CAVAN_COMMAND_OPTION_LOCAL:
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':

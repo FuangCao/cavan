@@ -5,24 +5,11 @@
  */
 
 #include <cavan.h>
-#include <cavan/service.h>
 #include <cavan/text.h>
+#include <cavan/service.h>
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2012-05-17 11:18:13"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_START,
-	LOCAL_COMMAND_OPTION_STOP,
-	LOCAL_COMMAND_OPTION_EXEC,
-	LOCAL_COMMAND_OPTION_PIDFILE,
-	LOCAL_COMMAND_OPTION_LOGFILE,
-	LOCAL_COMMAND_OPTION_SUPER,
-	LOCAL_COMMAND_OPTION_VERBOSE
-};
 
 static void show_usage(const char *command)
 {
@@ -49,55 +36,55 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "start",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_START,
+			.val = CAVAN_COMMAND_OPTION_START,
 		},
 		{
 			.name = "stop",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_STOP,
+			.val = CAVAN_COMMAND_OPTION_STOP,
 		},
 		{
 			.name = "exec",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_EXEC,
+			.val = CAVAN_COMMAND_OPTION_EXEC,
 		},
 		{
 			.name = "pidfile",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PIDFILE,
+			.val = CAVAN_COMMAND_OPTION_PIDFILE,
 		},
 		{
 			.name = "logfile",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_LOGFILE,
+			.val = CAVAN_COMMAND_OPTION_LOGFILE,
 		},
 		{
 			.name = "super",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_SUPER,
+			.val = CAVAN_COMMAND_OPTION_SUPER,
 		},
 		{
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERBOSE,
+			.val = CAVAN_COMMAND_OPTION_VERBOSE,
 		},
 	};
 	int ret;
@@ -119,52 +106,52 @@ int main(int argc, char *argv[])
 	{
 		switch (c)
 		{
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
 		case 'e':
 		case 'E':
-		case LOCAL_COMMAND_OPTION_EXEC:
+		case CAVAN_COMMAND_OPTION_EXEC:
 			desc.command = optarg;
 			break;
 
 		case 'p':
 		case 'P':
-		case LOCAL_COMMAND_OPTION_PIDFILE:
+		case CAVAN_COMMAND_OPTION_PIDFILE:
 			desc.pidfile = optarg;
 			break;
 
 		case 'l':
 		case 'L':
-		case LOCAL_COMMAND_OPTION_LOGFILE:
+		case CAVAN_COMMAND_OPTION_LOGFILE:
 			desc.logfile = optarg;
 			break;
 
 		case 's':
 		case 'S':
-		case LOCAL_COMMAND_OPTION_SUPER:
+		case CAVAN_COMMAND_OPTION_SUPER:
 			desc.super_permission = text_bool_value(optarg);
 			break;
 
 		case 'v':
 		case 'V':
-		case LOCAL_COMMAND_OPTION_VERBOSE:
+		case CAVAN_COMMAND_OPTION_VERBOSE:
 			desc.verbose = 1;
 			break;
 
-		case LOCAL_COMMAND_OPTION_START:
+		case CAVAN_COMMAND_OPTION_START:
 			handler = cavan_daemon_run;
 			break;
 
-		case LOCAL_COMMAND_OPTION_STOP:
+		case CAVAN_COMMAND_OPTION_STOP:
 			handler = cavan_daemon_stop;
 			break;
 

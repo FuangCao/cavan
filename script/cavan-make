@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
 EOF
 			else
 				cat >> ${SOURCE_FILE_NAME} << EOF
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "${CREATE_DATE}"
 

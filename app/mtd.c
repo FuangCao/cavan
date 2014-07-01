@@ -2,18 +2,9 @@
 
 #include <cavan.h>
 #include <cavan/mtd.h>
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2011-12-06 19:11:21"
-
-enum cavan_mtd_action
-{
-	CAVAN_MTD_ACTION_NONE,
-	CAVAN_MTD_ACTION_ERASE,
-	CAVAN_MTD_ACTION_READ,
-	CAVAN_MTD_ACTION_WRITE,
-	CAVAN_MTD_ACTION_LIST,
-	CAVAN_MTD_ACTION_IMAGE,
-};
 
 static void show_usage(void)
 {
@@ -80,10 +71,10 @@ int main(int argc, char *argv[])
 	int ret;
 	struct cavan_mtd_descriptor desc;
 	struct mtd_partition_descriptor *part;
-	enum cavan_mtd_action action;
+	int action;
 	char partname[64];
 
-	action = CAVAN_MTD_ACTION_NONE;
+	action = CAVAN_COMMAND_OPTION_NONE;
 	partname[0] = 0;
 
 	while ((c = getopt_long(argc, argv, "vVhHlLw:W:e:E:r:R:i:I:", long_option, &option_index)) != EOF)
@@ -103,30 +94,30 @@ int main(int argc, char *argv[])
 
 		case 'r':
 		case 'R':
-			action = CAVAN_MTD_ACTION_READ;
+			action = CAVAN_COMMAND_OPTION_READ;
 			text_copy(partname, optarg);
 			break;
 
 		case 'w':
 		case 'W':
-			action = CAVAN_MTD_ACTION_WRITE;
+			action = CAVAN_COMMAND_OPTION_WRITE;
 			text_copy(partname, optarg);
 			break;
 
 		case 'e':
 		case 'E':
-			action = CAVAN_MTD_ACTION_ERASE;
+			action = CAVAN_COMMAND_OPTION_ERASE;
 			text_copy(partname, optarg);
 			break;
 
 		case 'l':
 		case 'L':
-			action = CAVAN_MTD_ACTION_LIST;
+			action = CAVAN_COMMAND_OPTION_LIST;
 			break;
 
 		case 'i':
 		case 'I':
-			action = CAVAN_MTD_ACTION_IMAGE;
+			action = CAVAN_COMMAND_OPTION_IMAGE;
 			text_copy(partname, optarg);
 			break;
 
@@ -143,7 +134,7 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	if (action == CAVAN_MTD_ACTION_LIST)
+	if (action == CAVAN_COMMAND_OPTION_LIST)
 	{
 		if (optind < argc)
 		{
@@ -186,15 +177,15 @@ int main(int argc, char *argv[])
 
 	switch (action)
 	{
-	case CAVAN_MTD_ACTION_ERASE:
+	case CAVAN_COMMAND_OPTION_ERASE:
 		ret = cavan_mtd_erase_partition(part);
 		break;
 
-	case CAVAN_MTD_ACTION_READ:
+	case CAVAN_COMMAND_OPTION_READ:
 		ret = 0;
 		break;
 
-	case CAVAN_MTD_ACTION_WRITE:
+	case CAVAN_COMMAND_OPTION_WRITE:
 		if (optind < argc)
 		{
 			ret = cavan_mtd_write_partition2(part, argv[optind]);
@@ -206,7 +197,7 @@ int main(int argc, char *argv[])
 		}
 		break;
 
-	case CAVAN_MTD_ACTION_IMAGE:
+	case CAVAN_COMMAND_OPTION_IMAGE:
 		if (optind < argc)
 		{
 			ret = cavan_mtd_write_image2(part, argv[optind]);

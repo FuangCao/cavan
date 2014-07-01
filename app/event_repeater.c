@@ -21,18 +21,9 @@
 #include <cavan/adb.h>
 #include <cavan/input.h>
 #include <cavan/network.h>
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2014-01-14 14:04:48"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_IP,
-	LOCAL_COMMAND_OPTION_PORT,
-	LOCAL_COMMAND_OPTION_ADB,
-};
 
 struct event_repeater_data
 {
@@ -124,31 +115,31 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_IP,
+			.val = CAVAN_COMMAND_OPTION_IP,
 		},
 		{
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PORT,
+			.val = CAVAN_COMMAND_OPTION_PORT,
 		},
 		{
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_ADB,
+			.val = CAVAN_COMMAND_OPTION_ADB,
 		},
 		{
 			0, 0, 0, 0
@@ -168,31 +159,31 @@ int main(int argc, char *argv[])
 		{
 		case 'v':
 		case 'V':
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
 		case 'a':
 		case 'A':
-		case LOCAL_COMMAND_OPTION_ADB:
+		case CAVAN_COMMAND_OPTION_ADB:
 			data.open_connect = adb_create_tcp_link2;
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
-		case LOCAL_COMMAND_OPTION_IP:
+		case CAVAN_COMMAND_OPTION_IP:
 			data.addr = optarg;
 			break;
 
 		case 'p':
 		case 'P':
-		case LOCAL_COMMAND_OPTION_PORT:
+		case CAVAN_COMMAND_OPTION_PORT:
 			data.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 

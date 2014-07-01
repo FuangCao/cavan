@@ -19,19 +19,9 @@
 
 #include <cavan.h>
 #include <cavan/file.h>
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2013-04-25 19:01:40"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_MODE,
-	LOCAL_COMMAND_OPTION_PARENTS,
-	LOCAL_COMMAND_OPTION_VERBOSE,
-	LOCAL_COMMAND_OPTION_CONTEXT
-};
 
 static void show_usage(const char *command)
 {
@@ -54,37 +44,37 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERBOSE,
+			.val = CAVAN_COMMAND_OPTION_VERBOSE,
 		},
 		{
 			.name = "parents",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PARENTS,
+			.val = CAVAN_COMMAND_OPTION_PARENTS,
 		},
 		{
 			.name = "mode",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERBOSE,
+			.val = CAVAN_COMMAND_OPTION_VERBOSE,
 		},
 		{
 			.name = "context",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_CONTEXT,
+			.val = CAVAN_COMMAND_OPTION_CONTEXT,
 		},
 		{
 			0, 0, 0, 0
@@ -102,34 +92,34 @@ int main(int argc, char *argv[])
 		switch (c)
 		{
 		case 'V':
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
 		case 'v':
-		case LOCAL_COMMAND_OPTION_VERBOSE:
+		case CAVAN_COMMAND_OPTION_VERBOSE:
 			option.verbose = true;
 			break;
 
 		case 'p':
-		case LOCAL_COMMAND_OPTION_PARENTS:
+		case CAVAN_COMMAND_OPTION_PARENTS:
 			option.parents = true;
 			break;
 
 		case 'm':
-		case LOCAL_COMMAND_OPTION_MODE:
+		case CAVAN_COMMAND_OPTION_MODE:
 			option.mode = file_mode2value(optarg);
 			break;
 
 		case 'Z':
-		case LOCAL_COMMAND_OPTION_CONTEXT:
+		case CAVAN_COMMAND_OPTION_CONTEXT:
 			break;
 
 		default:

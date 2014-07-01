@@ -7,19 +7,9 @@
 #include <cavan.h>
 #include <cavan/adb.h>
 #include <cavan/tcp_dd.h>
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2012-12-18 15:10:21"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_IP,
-	LOCAL_COMMAND_OPTION_PORT,
-	LOCAL_COMMAND_OPTION_ADB,
-	LOCAL_COMMAND_OPTION_LOCAL
-};
 
 static void show_usage(const char *command)
 {
@@ -42,37 +32,37 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_IP,
+			.val = CAVAN_COMMAND_OPTION_IP,
 		},
 		{
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PORT,
+			.val = CAVAN_COMMAND_OPTION_PORT,
 		},
 		{
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_ADB,
+			.val = CAVAN_COMMAND_OPTION_ADB,
 		},
 		{
 			.name = "local",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_LOCAL,
+			.val = CAVAN_COMMAND_OPTION_LOCAL,
 		},
 		{
 			0, 0, 0, 0
@@ -93,34 +83,34 @@ int main(int argc, char *argv[])
 		{
 		case 'v':
 		case 'V':
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
 		case 'a':
 		case 'A':
-		case LOCAL_COMMAND_OPTION_ADB:
+		case CAVAN_COMMAND_OPTION_ADB:
 			file_req.open_connect = adb_create_tcp_link2;
 		case 'l':
 		case 'L':
-		case LOCAL_COMMAND_OPTION_LOCAL:
+		case CAVAN_COMMAND_OPTION_LOCAL:
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
-		case LOCAL_COMMAND_OPTION_IP:
+		case CAVAN_COMMAND_OPTION_IP:
 			text_copy(file_req.ip, optarg);
 			break;
 
 		case 'p':
 		case 'P':
-		case LOCAL_COMMAND_OPTION_PORT:
+		case CAVAN_COMMAND_OPTION_PORT:
 			file_req.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 

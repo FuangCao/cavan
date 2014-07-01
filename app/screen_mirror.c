@@ -10,13 +10,6 @@
 
 #define FILE_CREATE_DATE "2013-03-27 18:27:03"
 
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-};
-
 static int screen_mirror_service_main(int argc, char *argv[])
 {
 	struct screen_mirror_service service;

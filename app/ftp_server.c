@@ -2,21 +2,9 @@
 
 #include <cavan.h>
 #include <cavan/ftp.h>
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2011-10-28 12:46:16"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_PORT,
-	LOCAL_COMMAND_OPTION_COUNT,
-	LOCAL_COMMAND_OPTION_ROOT,
-	LOCAL_COMMAND_OPTION_DAEMON,
-	LOCAL_COMMAND_OPTION_VERBOSE,
-	LOCAL_COMMAND_OPTION_SUPER
-};
 
 static void show_usage(const char *command)
 {
@@ -40,49 +28,49 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "root",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_ROOT,
+			.val = CAVAN_COMMAND_OPTION_ROOT,
 		},
 		{
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PORT,
+			.val = CAVAN_COMMAND_OPTION_PORT,
 		},
 		{
 			.name = "count",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_COUNT,
+			.val = CAVAN_COMMAND_OPTION_COUNT,
 		},
 		{
 			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON,
+			.val = CAVAN_COMMAND_OPTION_DAEMON,
 		},
 		{
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERBOSE,
+			.val = CAVAN_COMMAND_OPTION_VERBOSE,
 		},
 		{
 			.name = "super",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_SUPER,
+			.val = CAVAN_COMMAND_OPTION_SUPER,
 		},
 		{0, 0, 0, 0},
 	};
@@ -100,20 +88,20 @@ int main(int argc, char *argv[])
 	{
 		switch (c)
 		{
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
 		case 'r':
 		case 'R':
-		case LOCAL_COMMAND_OPTION_ROOT:
+		case CAVAN_COMMAND_OPTION_ROOT:
 			if (realpath(optarg, ftp_root_path) == NULL)
 			{
 				error_msg("Get directory `%s' realpath failed", optarg);
@@ -123,27 +111,27 @@ int main(int argc, char *argv[])
 
 		case 'p':
 		case 'P':
-		case LOCAL_COMMAND_OPTION_PORT:
+		case CAVAN_COMMAND_OPTION_PORT:
 			port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'c':
 		case 'C':
-		case LOCAL_COMMAND_OPTION_COUNT:
+		case CAVAN_COMMAND_OPTION_COUNT:
 			desc.daemon_count = text2value_unsigned(optarg, NULL, 10);
 			break;
 
-		case LOCAL_COMMAND_OPTION_DAEMON:
+		case CAVAN_COMMAND_OPTION_DAEMON:
 			desc.as_daemon = 1;
 			break;
 
-		case LOCAL_COMMAND_OPTION_VERBOSE:
+		case CAVAN_COMMAND_OPTION_VERBOSE:
 			desc.show_verbose = 1;
 			break;
 
 		case 's':
 		case 'S':
-		case LOCAL_COMMAND_OPTION_SUPER:
+		case CAVAN_COMMAND_OPTION_SUPER:
 			desc.super_permission = text_bool_value(optarg);
 			break;
 

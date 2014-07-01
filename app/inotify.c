@@ -2,16 +2,9 @@
 
 #include <cavan.h>
 #include <cavan/inotify.h>
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2011-12-22 14:17:52"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_COMMAND,
-};
 
 static void show_usage(void)
 {
@@ -43,19 +36,19 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "command",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_COMMAND,
+			.val = CAVAN_COMMAND_OPTION_COMMAND,
 		},
 		{
 			0, 0, 0, 0
@@ -73,20 +66,20 @@ int main(int argc, char *argv[])
 		{
 		case 'v':
 		case 'V':
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage();
 			return 0;
 
 		case 'c':
 		case 'C':
-		case LOCAL_COMMAND_OPTION_COMMAND:
+		case CAVAN_COMMAND_OPTION_COMMAND:
 			text_copy(command, optarg);
 			break;
 

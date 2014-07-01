@@ -6,25 +6,10 @@
 
 #include <cavan.h>
 #include <cavan/adb.h>
+#include <cavan/command.h>
 #include <cavan/tcp_proxy.h>
 
 #define FILE_CREATE_DATE "2012-12-17 15:10:39"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_PORT,
-	LOCAL_COMMAND_OPTION_PROXY_PORT,
-	LOCAL_COMMAND_OPTION_PROXY_HOST,
-	LOCAL_COMMAND_OPTION_DAEMON,
-	LOCAL_COMMAND_OPTION_DAEMON_MIN,
-	LOCAL_COMMAND_OPTION_DAEMON_MAX,
-	LOCAL_COMMAND_OPTION_VERBOSE,
-	LOCAL_COMMAND_OPTION_LOGFILE,
-	LOCAL_COMMAND_OPTION_ADB
-};
 
 static void show_usage(const char *command)
 {
@@ -54,85 +39,85 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PORT,
+			.val = CAVAN_COMMAND_OPTION_PORT,
 		},
 		{
 			.name = "host",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PROXY_HOST,
+			.val = CAVAN_COMMAND_OPTION_PROXY_HOST,
 		},
 		{
 			.name = "pip",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PROXY_HOST,
+			.val = CAVAN_COMMAND_OPTION_PROXY_HOST,
 		},
 		{
 			.name = "proxy_port",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PROXY_PORT,
+			.val = CAVAN_COMMAND_OPTION_PROXY_PORT,
 		},
 		{
 			.name = "pport",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PROXY_PORT,
+			.val = CAVAN_COMMAND_OPTION_PROXY_PORT,
 		},
 		{
 			.name = "pp",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PROXY_PORT,
+			.val = CAVAN_COMMAND_OPTION_PROXY_PORT,
 		},
 		{
 			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON,
+			.val = CAVAN_COMMAND_OPTION_DAEMON,
 		},
 		{
 			.name = "min",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON_MIN,
+			.val = CAVAN_COMMAND_OPTION_DAEMON_MIN,
 		},
 		{
 			.name = "max",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON_MAX,
+			.val = CAVAN_COMMAND_OPTION_DAEMON_MAX,
 		},
 		{
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERBOSE,
+			.val = CAVAN_COMMAND_OPTION_VERBOSE,
 		},
 		{
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_ADB,
+			.val = CAVAN_COMMAND_OPTION_ADB,
 		},
 		{
 			.name = "log",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_LOGFILE,
+			.val = CAVAN_COMMAND_OPTION_LOGFILE,
 		},
 		{
 			0, 0, 0, 0
@@ -162,64 +147,64 @@ int main(int argc, char *argv[])
 		{
 		case 'v':
 		case 'V':
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'l':
 		case 'L':
-		case LOCAL_COMMAND_OPTION_LOGFILE:
+		case CAVAN_COMMAND_OPTION_LOGFILE:
 			service->logfile = optarg;
 			break;
 
 		case 'h':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
 		case 'p':
 		case 'P':
-		case LOCAL_COMMAND_OPTION_PORT:
+		case CAVAN_COMMAND_OPTION_PORT:
 			proxy->port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
-		case LOCAL_COMMAND_OPTION_PROXY_PORT:
+		case CAVAN_COMMAND_OPTION_PROXY_PORT:
 			proxy->proxy_port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'i':
 		case 'I':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_PROXY_HOST:
+		case CAVAN_COMMAND_OPTION_PROXY_HOST:
 			proxy->proxy_host = optarg;
 			break;
 
 		case 'd':
 		case 'D':
-		case LOCAL_COMMAND_OPTION_DAEMON:
+		case CAVAN_COMMAND_OPTION_DAEMON:
 			service->as_daemon = 1;
 			break;
 
 		case 'c':
 		case 'm':
-		case LOCAL_COMMAND_OPTION_DAEMON_MIN:
+		case CAVAN_COMMAND_OPTION_DAEMON_MIN:
 			service->min = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'C':
 		case 'M':
-		case LOCAL_COMMAND_OPTION_DAEMON_MAX:
+		case CAVAN_COMMAND_OPTION_DAEMON_MAX:
 			service->max = text2value_unsigned(optarg, NULL, 10);
 			break;
 
-		case LOCAL_COMMAND_OPTION_VERBOSE:
+		case CAVAN_COMMAND_OPTION_VERBOSE:
 			service->verbose = 1;
 			break;
 
 		case 'a':
 		case 'A':
-		case LOCAL_COMMAND_OPTION_ADB:
+		case CAVAN_COMMAND_OPTION_ADB:
 			proxy->open_connect = adb_create_tcp_link2;
 			break;
 

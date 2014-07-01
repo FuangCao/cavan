@@ -6,23 +6,10 @@
 
 #include <cavan.h>
 #include <cavan/tcp_dd.h>
+#include <cavan/command.h>
 #include <cavan/permission.h>
 
 #define FILE_CREATE_DATE "2012-01-14 14:09:50"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_DAEMON,
-	LOCAL_COMMAND_OPTION_DAEMON_MIN,
-	LOCAL_COMMAND_OPTION_DAEMON_MAX,
-	LOCAL_COMMAND_OPTION_VERBOSE,
-	LOCAL_COMMAND_OPTION_SUPER,
-	LOCAL_COMMAND_OPTION_LOGFILE,
-	LOCAL_COMMAND_OPTION_PORT
-};
 
 static void show_usage(const char *command)
 {
@@ -48,55 +35,55 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON,
+			.val = CAVAN_COMMAND_OPTION_DAEMON,
 		},
 		{
 			.name = "min",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON_MIN,
+			.val = CAVAN_COMMAND_OPTION_DAEMON_MIN,
 		},
 		{
 			.name = "max",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DAEMON_MAX,
+			.val = CAVAN_COMMAND_OPTION_DAEMON_MAX,
 		},
 		{
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERBOSE,
+			.val = CAVAN_COMMAND_OPTION_VERBOSE,
 		},
 		{
 			.name = "super",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_SUPER,
+			.val = CAVAN_COMMAND_OPTION_SUPER,
 		},
 		{
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PORT,
+			.val = CAVAN_COMMAND_OPTION_PORT,
 		},
 		{
 			.name = "log",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_LOGFILE,
+			.val = CAVAN_COMMAND_OPTION_LOGFILE,
 		},
 		{
 			0, 0, 0, 0
@@ -125,55 +112,55 @@ int main(int argc, char *argv[])
 		{
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'v':
 		case 'V':
-		case LOCAL_COMMAND_OPTION_VERBOSE:
+		case CAVAN_COMMAND_OPTION_VERBOSE:
 			service->verbose = 1;
 			break;
 
 		case 'd':
 		case 'D':
-		case LOCAL_COMMAND_OPTION_DAEMON:
+		case CAVAN_COMMAND_OPTION_DAEMON:
 			service->as_daemon = 1;
 			break;
 
 		case 'c':
 		case 'm':
-		case LOCAL_COMMAND_OPTION_DAEMON_MIN:
+		case CAVAN_COMMAND_OPTION_DAEMON_MIN:
 			service->min = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'C':
 		case 'M':
-		case LOCAL_COMMAND_OPTION_DAEMON_MAX:
+		case CAVAN_COMMAND_OPTION_DAEMON_MAX:
 			service->max = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'l':
 		case 'L':
-		case LOCAL_COMMAND_OPTION_LOGFILE:
+		case CAVAN_COMMAND_OPTION_LOGFILE:
 			service->logfile = optarg;
 			break;
 
 
 		case 's':
 		case 'S':
-		case LOCAL_COMMAND_OPTION_SUPER:
+		case CAVAN_COMMAND_OPTION_SUPER:
 			service->super_permission = text_bool_value(optarg);
 			break;
 
 		case 'p':
 		case 'P':
-		case LOCAL_COMMAND_OPTION_PORT:
+		case CAVAN_COMMAND_OPTION_PORT:
 			dd_service->port = text2value_unsigned(optarg, NULL, 10);
 			break;
 

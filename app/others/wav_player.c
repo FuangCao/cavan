@@ -10,13 +10,6 @@
 
 #define FILE_CREATE_DATE "2012-09-06 10:14:09"
 
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-};
-
 int main(int argc, char *argv[])
 {
 	return cavan_wav_playback(argv[1]);

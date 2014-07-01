@@ -6,21 +6,10 @@
 
 #include <cavan.h>
 #include <cavan/math.h>
+#include <cavan/command.h>
 #include <cavan/calculator.h>
 
 #define FILE_CREATE_DATE "2012-06-11 10:49:18"
-
-enum
-{
-	LOCAL_COMMAND_OPTION_UNKNOWN,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_VERSION,
-	LOCAL_COMMAND_OPTION_BASE,
-	LOCAL_COMMAND_OPTION_LENGTH,
-	LOCAL_COMMAND_OPTION_PREFIX,
-	LOCAL_COMMAND_OPTION_LONG,
-	LOCAL_COMMAND_OPTION_MASK
-};
 
 static void show_usage(const char *command)
 {
@@ -45,43 +34,43 @@ int main(int argc, char *argv[])
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		},
 		{
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_VERSION,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
 			.name = "base",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_BASE,
+			.val = CAVAN_COMMAND_OPTION_BASE,
 		},
 		{
 			.name = "length",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_LENGTH,
+			.val = CAVAN_COMMAND_OPTION_LENGTH,
 		},
 		{
 			.name = "prefix",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_PREFIX,
+			.val = CAVAN_COMMAND_OPTION_PREFIX,
 		},
 		{
 			.name = "long",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_LONG,
+			.val = CAVAN_COMMAND_OPTION_LONG,
 		},
 		{
 			.name = "mask",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_MASK,
+			.val = CAVAN_COMMAND_OPTION_MASK,
 		},
 		{
 			0, 0, 0, 0
@@ -103,43 +92,43 @@ int main(int argc, char *argv[])
 		{
 		case 'v':
 		case 'V':
-		case LOCAL_COMMAND_OPTION_VERSION:
+		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
 			return 0;
 
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
 		case 'b':
 		case 'B':
-		case LOCAL_COMMAND_OPTION_BASE:
+		case CAVAN_COMMAND_OPTION_BASE:
 			base = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'l':
 		case 'L':
-		case LOCAL_COMMAND_OPTION_LENGTH:
+		case CAVAN_COMMAND_OPTION_LENGTH:
 			length[0] = text2value_unsigned(optarg, (const char **)&optarg, 10);
 			length[1] = text2value_unsigned(optarg + 1, NULL, 10);
 			break;
 
 		case 'p':
 		case 'P':
-		case LOCAL_COMMAND_OPTION_PREFIX:
+		case CAVAN_COMMAND_OPTION_PREFIX:
 			flags |= TEXT_FLAG_PREFIX;
 			break;
 
-		case LOCAL_COMMAND_OPTION_LONG:
+		case CAVAN_COMMAND_OPTION_LONG:
 			long_cal = true;
 			break;
 
 		case 'm':
 		case 'M':
-		case LOCAL_COMMAND_OPTION_MASK:
+		case CAVAN_COMMAND_OPTION_MASK:
 			show_bitmask = true;
 			break;
 
