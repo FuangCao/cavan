@@ -551,7 +551,7 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 		return sockfd;
 	}
 
-	println("%s => %s:%d", hostname, inet_ntoa(addr.sin_addr), port);
+	// println("%s => %s:%d", hostname, inet_ntoa(addr.sin_addr), port);
 
 	return sockfd;
 }

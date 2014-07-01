@@ -84,7 +84,7 @@ static int tcp_dd_recv_response(int sockfd)
 		return -EINVAL;
 	}
 
-	tcp_dd_show_response(&pkg.res_pkg);
+	// tcp_dd_show_response(&pkg.res_pkg);
 
 	return pkg.res_pkg.code;
 }
