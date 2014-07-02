@@ -37,6 +37,8 @@ static void show_usage(const char *command)
 	println("--local, -L\t\t\tuse localhost ip");
 	println("--port, -P PORT\t\t\tserver port");
 	println("--adb, -a, -A\t\t\tuse adb procotol instead of tcp");
+	println("--tcp, -t, -T\t\t\tuse tcp procotol instead of adb");
+	println("--unix, -u, -U [PATHNAME]\t\t\tuse named socket");
 }
 
 int main(int argc, char *argv[])
@@ -106,14 +108,26 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_ADB,
 		},
 		{
+			.name = "tcp",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_TCP,
+		},
+		{
+			.name = "unix",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
 	struct inet_file_request file_req =
 	{
-		.hostname = "127.0.0.1",
+		.hostname = TCP_DD_DEFAULT_SOCKET,
 		.port = TCP_DD_DEFAULT_PORT,
-		.open_connect = inet_create_tcp_link2,
+		.open_connect = unix_create_tcp_link,
 		.close_connect = inet_close_tcp_socket
 	};
 
@@ -170,9 +184,30 @@ int main(int argc, char *argv[])
 			file_req.hostname = optarg;
 			break;
 
+		case 't':
+		case 'T':
+		case CAVAN_COMMAND_OPTION_TCP:
+			file_req.open_connect = inet_create_tcp_link2;
+			break;
+
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
 			file_req.port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'u':
+		case 'U':
+		case CAVAN_COMMAND_OPTION_UNIX:
+			if (optarg)
+			{
+				file_req.hostname = optarg;
+			}
+			else
+			{
+				file_req.hostname = TCP_DD_DEFAULT_SOCKET;
+			}
+
+			file_req.open_connect = unix_create_tcp_link;
 			break;
 
 		default:

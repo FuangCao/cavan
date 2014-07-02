@@ -487,7 +487,10 @@ static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, vo
 		return client->sockfd;
 	}
 
-	inet_show_sockaddr(&client->addr);
+	if (dd_service->sun_path == NULL)
+	{
+		inet_show_sockaddr(&client->addr);
+	}
 
 	return 0;
 }
@@ -505,11 +508,25 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 	int sockfd;
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	sockfd = inet_create_tcp_service(dd_service->port);
-	if (sockfd < 0)
+	if (dd_service->sun_path)
 	{
-		pr_red_info("inet_create_tcp_service");
-		return sockfd;
+		sockfd = unix_create_tcp_service(dd_service->sun_path);
+		if (sockfd < 0)
+		{
+			pr_red_info("unix_create_tcp_service");
+			return sockfd;
+		}
+
+		pr_info("sun_path = %s", dd_service->sun_path);
+	}
+	else
+	{
+		sockfd = inet_create_tcp_service(dd_service->port);
+		if (sockfd < 0)
+		{
+			pr_red_info("inet_create_tcp_service");
+			return sockfd;
+		}
 	}
 
 	dd_service->sockfd = sockfd;

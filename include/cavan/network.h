@@ -8,6 +8,7 @@
 // #include <bits/sockaddr.h>
 #include <linux/netlink.h>
 #include <linux/if.h>
+#include <linux/un.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
 #include <arpa/inet.h>
@@ -268,6 +269,11 @@ int inet_create_tcp_link_by_addrinfo(struct addrinfo *info, u16 port, struct soc
 int inet_create_service(int type, u16 port);
 int inet_create_tcp_service(u16 port);
 
+void unix_sockaddr_init(struct sockaddr_un *addr, const char *pathname);
+int unix_create_service(int type, const char *pathname);
+int unix_create_tcp_service(const char *pathname);
+int unix_create_tcp_link(const char *hostname, u16 port);
+
 ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size);
 
 u32 get_rand_value(void);
@@ -303,17 +309,32 @@ void network_connect_close(struct network_connect *conn);
 
 static inline int inet_socket(int type)
 {
-	return socket(AF_INET, type, 0);
+	return socket(PF_INET, type, 0);
+}
+
+static inline int unix_socket(int type)
+{
+	return socket(PF_UNIX, type, 0);
 }
 
 static inline int inet_bind(int sockfd, const struct sockaddr_in *addr)
 {
-	return bind(sockfd, (const struct sockaddr *)addr, sizeof(*addr));
+	return bind(sockfd, (const struct sockaddr *) addr, sizeof(*addr));
+}
+
+static inline int unix_bind(int sockfd, const struct sockaddr_un *addr)
+{
+	return bind(sockfd, (const struct sockaddr *) addr, sizeof(*addr));
 }
 
 static inline int inet_connect(int sockfd, const struct sockaddr_in *addr)
 {
-	return connect(sockfd, (const struct sockaddr *)addr, sizeof(*addr));
+	return connect(sockfd, (const struct sockaddr *) addr, sizeof(*addr));
+}
+
+static inline int unix_connect(int sockfd, const struct sockaddr_un *addr)
+{
+	return connect(sockfd, (const struct sockaddr *) addr, sizeof(*addr));
 }
 
 static inline int inet_accept(int sockfd, struct sockaddr_in *addr, socklen_t *addrlen)
@@ -401,6 +422,11 @@ static inline int inet_getsockname(int sockfd, struct sockaddr_in *addr, socklen
 static inline void inet_show_sockaddr(const struct sockaddr_in *addr)
 {
 	println("IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
+}
+
+static inline void unix_show_sockaddr(const struct sockaddr_un *addr)
+{
+	println("PATH = %s", addr->sun_path);
 }
 
 static inline bool inet_sockaddr_equals(const struct sockaddr_in *left, const struct sockaddr_in *right)

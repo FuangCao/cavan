@@ -23,7 +23,7 @@ static void show_usage(const char *command)
 	println("--verbose, -v, -V\tshow log message");
 	println("--port, -p, -P\t\tserver port");
 	println("--log, -l, -L\t\tsave log to file");
-	println("--pipe [PATHNAME]\t\tlisten to a pipe");
+	println("--pipe, -u, -U [PATHNAME]\t\tlisten to a named socket");
 }
 
 int main(int argc, char *argv[])
@@ -87,10 +87,10 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_LOGFILE,
 		},
 		{
-			.name = "pipe",
+			.name = "unix",
 			.has_arg = optional_argument,
 			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_PIPE,
+			.val = CAVAN_COMMAND_OPTION_UNIX,
 		},
 		{
 			0, 0, 0, 0
@@ -112,9 +112,9 @@ int main(int argc, char *argv[])
 
 	dd_service = cavan_dynamic_service_get_data(service);
 	dd_service->port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
-	dd_service->pipe_pathname = NULL;
+	dd_service->sun_path = NULL;
 
-	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:m:M:l:L:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:m:M:l:L:u::U::", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -172,14 +172,16 @@ int main(int argc, char *argv[])
 			dd_service->port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
-		case CAVAN_COMMAND_OPTION_PIPE:
+		case 'u':
+		case 'U':
+		case CAVAN_COMMAND_OPTION_UNIX:
 			if (optarg)
 			{
-				dd_service->pipe_pathname = optarg;
+				dd_service->sun_path = optarg;
 			}
 			else
 			{
-				dd_service->pipe_pathname = TCP_DD_DEFAULT_PIPE;
+				dd_service->sun_path = TCP_DD_DEFAULT_SOCKET;
 			}
 			break;
 

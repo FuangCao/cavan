@@ -449,6 +449,12 @@ void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port)
 	addr->sin_addr.s_addr = ip ? inet_addr(ip) : htonl(INADDR_ANY);
 }
 
+void unix_sockaddr_init(struct sockaddr_un *addr, const char *pathname)
+{
+	addr->sun_family = AF_UNIX;
+	strncpy(addr->sun_path, pathname, sizeof(addr->sun_path));
+}
+
 int inet_create_tcp_link1(const struct sockaddr_in *addr)
 {
 	int ret;
@@ -462,6 +468,32 @@ int inet_create_tcp_link1(const struct sockaddr_in *addr)
 	}
 
 	ret = inet_connect(sockfd, addr);
+	if (ret < 0)
+	{
+		print_error("inet_connect");
+		close(sockfd);
+		return ret;
+	}
+
+	return sockfd;
+}
+
+int unix_create_tcp_link(const char *hostname, u16 port)
+{
+	int ret;
+	int sockfd;
+	struct sockaddr_un addr;
+
+	sockfd = unix_socket(SOCK_STREAM);
+	if (sockfd < 0)
+	{
+		pr_error_info("socket");
+		return sockfd;
+	}
+
+	unix_sockaddr_init(&addr, hostname);
+
+	ret = unix_connect(sockfd, &addr);
 	if (ret < 0)
 	{
 		print_error("inet_connect");
@@ -582,6 +614,33 @@ int inet_create_service(int type, u16 port)
 	return sockfd;
 }
 
+int unix_create_service(int type, const char *pathname)
+{
+	int ret;
+	int sockfd;
+	struct sockaddr_un addr;
+
+	sockfd = unix_socket(type);
+	if (sockfd < 0)
+	{
+		print_error("socket");
+		return sockfd;
+	}
+
+	unlink(pathname);
+	unix_sockaddr_init(&addr, pathname);
+
+	ret = unix_bind(sockfd, &addr);
+	if (ret < 0)
+	{
+		print_error("bind to pathname %s failed", pathname);
+		close(sockfd);
+		return ret;
+	}
+
+	return sockfd;
+}
+
 int inet_create_tcp_service(u16 port)
 {
 	int ret;
@@ -596,7 +655,29 @@ int inet_create_tcp_service(u16 port)
 	ret = inet_listen(sockfd);
 	if (ret < 0)
 	{
-		print_error("listen to port %d failed", port);
+		pr_error_info("listen to port %d failed", port);
+		close(sockfd);
+		return ret;
+	}
+
+	return sockfd;
+}
+
+int unix_create_tcp_service(const char *pathname)
+{
+	int ret;
+	int sockfd;
+
+	sockfd = unix_create_service(SOCK_STREAM, pathname);
+	if (sockfd < 0)
+	{
+		return sockfd;
+	}
+
+	ret = inet_listen(sockfd);
+	if (ret < 0)
+	{
+		pr_error_info("listen to socket %s failed", pathname);
 		close(sockfd);
 		return ret;
 	}
