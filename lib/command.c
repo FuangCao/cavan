@@ -227,33 +227,9 @@ static int cavan_exec_command(const char *command)
 	}
 }
 
-int cavan_exec_redirect_stdio_base(int ttyfd, int lines, int columns, const char *command)
+int cavan_exec_redirect_stdio_base(int ttyfd, const char *command)
 {
 	int ret;
-
-	if (isatty(ttyfd) && lines > 0 && columns > 0 && lines != 0xFFFF && columns != 0xFFFF)
-	{
-		char buff[64];
-		struct winsize wsize =
-		{
-			.ws_row = lines,
-			.ws_col = columns,
-			.ws_xpixel = 0,
-			.ws_ypixel = 0
-		};
-
-		ret = ioctl(ttyfd, TIOCSWINSZ, &wsize);
-		if (ret < 0)
-		{
-			pr_error_info("ioctl TIOCSWINSZ");
-			return ret;
-		}
-
-		sprintf(buff, "LINES=%d", lines);
-		putenv(buff);
-		sprintf(buff, "COLUMNS=%d", columns);
-		putenv(buff);
-	}
 
 	ret = cavan_redirect_stdio_base(ttyfd, 0x07);
 	if (ret < 0)
@@ -284,20 +260,86 @@ int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const
 		return ttyfd;
 	}
 
-	ret = cavan_exec_redirect_stdio_base(ttyfd, lines, columns, command);
+	if (isatty(ttyfd) && lines > 0 && columns > 0)
+	{
+		char buff[64];
+		struct winsize wsize =
+		{
+			.ws_row = lines,
+			.ws_col = columns,
+			.ws_xpixel = 0,
+			.ws_ypixel = 0
+		};
+
+		ret = ioctl(ttyfd, TIOCSWINSZ, &wsize);
+		if (ret < 0)
+		{
+			pr_error_info("ioctl TIOCSWINSZ");
+			return ret;
+		}
+
+		sprintf(buff, "LINES=%d", lines);
+		putenv(buff);
+		sprintf(buff, "COLUMNS=%d", columns);
+		putenv(buff);
+	}
+
+	ret = cavan_exec_redirect_stdio_base(ttyfd, command);
 	close(ttyfd);
 
 	return ret;
 }
 
-int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd)
+int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout)
+{
+	int ret;
+	ssize_t rdlen;
+	char buff[1024];
+	struct pollfd pfds[2];
+
+	pfds[0].events = POLLIN;
+	pfds[0].fd = ttyin;
+
+	pfds[1].events = POLLIN;
+	pfds[1].fd = ttyfd;
+
+	while (1)
+	{
+		ret = poll(pfds, NELEM(pfds), -1);
+		if (ret <= 0)
+		{
+			return -ETIMEDOUT;
+		}
+
+		if (pfds[0].revents)
+		{
+			rdlen = read(ttyin, buff, sizeof(buff));
+			if (rdlen <= 0 || write(ttyfd, buff, rdlen) < rdlen)
+			{
+				break;
+			}
+		}
+
+		if (pfds[1].revents)
+		{
+			rdlen = read(ttyfd, buff, sizeof(buff));
+			if (rdlen <= 0 || write(ttyout, buff, rdlen) < rdlen)
+			{
+				break;
+			}
+
+			fsync(ttyout);
+		}
+	}
+
+	return 0;
+}
+
+int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int ttyin, int ttyout)
 {
 	int ret;
 	pid_t pid;
 	int ptm_fd;
-	ssize_t rwlen;
-	char buff[1024];
-	struct pollfd pfds[2];
 
 	if (lines == 0xFFFF && columns == 0xFFFF)
 	{
@@ -325,7 +367,7 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 		{
 			close(pair[1]);
 
-			return cavan_exec_redirect_stdio_base(pair[0], lines, columns, command);
+			return cavan_exec_redirect_stdio_base(pair[0], command);
 		}
 
 		close(pair[0]);
@@ -388,57 +430,32 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 		}
 	}
 
-	sprintf(buff, "/proc/%d/oom_adj", pid);
-	file_write(buff, "0", 1);
-
-	if (in_fd < 0)
 	{
-		in_fd = fileno(stdin);
+		char pathname[32];
+
+		snprintf(pathname, sizeof(pathname), "/proc/%d/oom_adj", pid);
+		file_write(pathname, "0", 1);
 	}
 
-	if (out_fd < 0)
+	if (ttyin < 0)
 	{
-		out_fd = fileno(stdout);
+		ttyin = fileno(stdin);
 	}
 
-	pfds[0].events = POLLIN;
-	pfds[0].fd = ptm_fd;
-
-	pfds[1].events = POLLIN;
-	pfds[1].fd = in_fd;
-
-	while (1)
+	if (ttyout < 0)
 	{
-		ret = poll(pfds, NELEM(pfds), -1);
-		if (ret <= 0)
-		{
-			goto out_close_ptm;
-		}
+		ttyout = fileno(stdout);
+	}
 
-		if (pfds[0].revents)
-		{
-			rwlen = read(ptm_fd, buff, sizeof(buff));
-			if (rwlen <= 0 || write(out_fd, buff, rwlen) < rwlen)
-			{
-				break;
-			}
-
-			fsync(out_fd);
-		}
-
-		if (pfds[1].revents)
-		{
-			rwlen = read(in_fd, buff, sizeof(buff));
-			if (rwlen <= 0 || write(ptm_fd, buff, rwlen) < rwlen)
-			{
-				break;
-			}
-		}
+	ret = cavan_tty_redirect_loop(ptm_fd, ttyin, ttyout);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_tty_redirect_loop");
+		goto out_close_ptm;
 	}
 
 	waitpid(pid, &ret, WNOHANG);
-	ret = (char)WEXITSTATUS(ret);
-
+	ret = (char) WEXITSTATUS(ret);
 out_close_ptm:
 	close(ptm_fd);
 	return ret;
@@ -447,60 +464,18 @@ out_close_ptm:
 int cavan_tty_redirect_base(int ttyfd)
 {
 	int ret;
-	ssize_t rwlen;
-	char buff[1024];
-	struct pollfd pfds[2];
-	int tty_in, tty_out;
 	struct termios tty_attr;
 
-	tty_in = fileno(stdin);
-	tty_out = fileno(stdout);
-
-	ret = set_tty_mode(tty_in, 5, &tty_attr);
+	ret = set_tty_mode(fileno(stdin), 5, &tty_attr);
 	if (ret < 0)
 	{
 		pr_red_info("set_tty_mode");
 		return ret;
 	}
 
-	pfds[0].events = POLLIN;
-	pfds[0].fd = tty_in;
+	ret = cavan_tty_redirect_loop(ttyfd, fileno(stdin), fileno(stdout));
+	restore_tty_attr(fileno(stdin), &tty_attr);
 
-	pfds[1].events = POLLIN;
-	pfds[1].fd = ttyfd;
-
-	while (1)
-	{
-		ret = poll(pfds, NELEM(pfds), -1);
-		if (ret <= 0)
-		{
-			goto out_restore_tty_attr;
-		}
-
-		if (pfds[0].revents)
-		{
-			rwlen = read(tty_in, buff, sizeof(buff));
-			if (rwlen <= 0 || write(ttyfd, buff, rwlen) < rwlen)
-			{
-				break;
-			}
-		}
-
-		if (pfds[1].revents)
-		{
-			rwlen = read(ttyfd, buff, sizeof(buff));
-			if (rwlen <= 0 || write(tty_out, buff, rwlen) < rwlen)
-			{
-				break;
-			}
-
-			fsync(tty_out);
-		}
-	}
-
-	ret = 0;
-out_restore_tty_attr:
-	restore_tty_attr(tty_in, &tty_attr);
 	return ret;
 }
 

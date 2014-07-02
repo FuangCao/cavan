@@ -187,13 +187,13 @@ static int tcp_dd_send_exec_request(int sockfd, int ttyfd, const char *command)
 	}
 	else
 	{
-		LOGD("%d is not a terminal", ttyfd);
+		LOGD("this is not a terminal\n");
 
 		pkg.exec_req.lines = 0xFFFF;
 		pkg.exec_req.columns = 0xFFFF;
 	}
 
-	LOGD("terminal size = %d x %d", pkg.exec_req.lines, pkg.exec_req.columns);
+	LOGD("terminal size = %d x %d\n", pkg.exec_req.lines, pkg.exec_req.columns);
 
 	pkg.type = TCP_DD_EXEC;
 	p = text_copy(pkg.exec_req.command, command);

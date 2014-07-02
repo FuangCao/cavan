@@ -81,9 +81,10 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 
 int cavan_redirect_stdio_base(int ttyfd, int flags);
 int cavan_redirect_stdio(const char *pathname, int flags);
-int cavan_exec_redirect_stdio_base(int ttyfd, int lines, int columns, const char *command);
+int cavan_exec_redirect_stdio_base(int ttyfd, const char *command);
 int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command);
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
 
+int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout);
 int cavan_tty_redirect_base(int ttyfd);
 int cavan_tty_redirect(const char *ttypath);
