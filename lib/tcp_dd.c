@@ -166,14 +166,34 @@ static int tcp_dd_send_exec_request(int sockfd, int ttyfd, const char *command)
 
 		pkg.exec_req.lines = wsize.ws_row;
 		pkg.exec_req.columns = wsize.ws_col;
+
+		if (pkg.exec_req.lines == 0)
+		{
+			p = getenv("LINES");
+			if (p)
+			{
+				pkg.exec_req.lines = text2value_unsigned(p, NULL, 10);
+			}
+		}
+
+		if (pkg.exec_req.columns == 0)
+		{
+			p = getenv("COLUMNS");
+			if (p)
+			{
+				pkg.exec_req.columns = text2value_unsigned(p, NULL, 10);
+			}
+		}
 	}
 	else
 	{
-		pr_red_info("%d is not a terminal", ttyfd);
+		LOGD("%d is not a terminal", ttyfd);
 
-		pkg.exec_req.lines = 0;
-		pkg.exec_req.columns = 0;
+		pkg.exec_req.lines = 0xFFFF;
+		pkg.exec_req.columns = 0xFFFF;
 	}
+
+	LOGD("terminal size = %d x %d", pkg.exec_req.lines, pkg.exec_req.columns);
 
 	pkg.type = TCP_DD_EXEC;
 	p = text_copy(pkg.exec_req.command, command);

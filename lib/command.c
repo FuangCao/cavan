@@ -231,7 +231,7 @@ int cavan_exec_redirect_stdio_base(int ttyfd, int lines, int columns, const char
 {
 	int ret;
 
-	if (isatty(ttyfd) && lines > 0 && columns > 0)
+	if (isatty(ttyfd) && lines > 0 && columns > 0 && lines != 0xFFFF && columns != 0xFFFF)
 	{
 		char buff[64];
 		struct winsize wsize =
@@ -299,7 +299,7 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 	char buff[1024];
 	struct pollfd pfds[2];
 
-	if (lines == 0 && columns == 0)
+	if (lines == 0xFFFF && columns == 0xFFFF)
 	{
 		int pair[2];
 
