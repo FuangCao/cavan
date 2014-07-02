@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 	int i;
 	int c;
 	int ret;
-	char ip[20];
+	const char *hostname;
 	u16 port = 0;
 	char input_file[128];
 	char output_file[128];
@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
 		},
 	};
 
-	ip[0] = 0;
 	port = 0;
+	hostname = NULL;
 	handle = NULL;
 
 	while ((c = getopt_long(argc, argv, "rRgGwWsSpPhH", long_options, &option_index)) != EOF)
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 		switch (c)
 		{
 			case 0:
-				strcpy(ip, optarg);
+				hostname = optarg;
 				break;
 
 			case 1:
@@ -100,9 +100,9 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	if (ip[0] == 0)
+	if (hostname == NULL)
 	{
-		cavan_get_server_ip(ip);
+		hostname = cavan_get_server_hostname();
 	}
 
 	if (port == 0)
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 			}
 			else if (strcmp(p, "p") == 0)
 			{
-				strcpy(ip, para_value);
+				hostname = strdup(para_value);
 			}
 			else
 			{
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	ret = handle(ip, port, input_file, output_file, skip * bs, seek * bs, count * bs);
+	ret = handle(hostname, port, input_file, output_file, skip * bs, seek * bs, count * bs);
 	if (ret < 0)
 	{
 		error_msg("tftp dd failed");

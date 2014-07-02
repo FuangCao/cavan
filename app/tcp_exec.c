@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 		.close_connect = inet_close_tcp_socket
 	};
 
-	cavan_get_server_ip(file_req.ip);
+	file_req.hostname = cavan_get_server_hostname();
 	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
 	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lL", long_option, &option_index)) != EOF)
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
-			text_copy(file_req.ip, optarg);
+			file_req.hostname = optarg;
 			break;
 
 		case 'p':

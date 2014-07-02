@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 	};
 	struct inet_file_request file_req =
 	{
-		.ip = "127.0.0.1",
+		.hostname = "127.0.0.1",
 		.port = TCP_DD_DEFAULT_PORT,
 		.open_connect = inet_create_tcp_link2,
 		.close_connect = inet_close_tcp_socket
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
-			text_copy(file_req.ip, optarg);
+			file_req.hostname = optarg;
 			break;
 
 		case 'P':

@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 	int c;
 	int ret;
 	int delay;
-	char ip[20];
+	const char *hostname;
 	u16 port = 0;
 	int option_index;
 	struct option long_options[] =
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	struct dd_desc descs[6], *p, *end_p;
 	struct uevent_desc udesc;
 
-	ip[0] = 0;
+	hostname = NULL;
 	end_p = descs + ARRAY_SIZE(descs);
 	p = descs;
 	delay = 0;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 		switch (c)
 		{
 			case 0:
-				strcpy(ip, optarg);
+				hostname = optarg;
 				break;
 
 			case 1:
@@ -162,9 +162,9 @@ int main(int argc, char *argv[])
 
 	end_p = p;
 
-	if (ip[0] == 0)
+	if (hostname == NULL)
 	{
-		cavan_get_server_ip(ip);
+		hostname = cavan_get_server_hostname();
 	}
 
 	if (port == 0)
@@ -172,11 +172,7 @@ int main(int argc, char *argv[])
 		port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
-#if __WORDSIZE == 64
-	println("ip address = %s, port = %d, image count = %ld", ip, port, end_p - descs);
-#else
-	println("ip address = %s, port = %d, image count = %d", ip, port, end_p - descs);
-#endif
+	println("ip address = %s, port = %d, image count = " PRINT_FORMAT_SIZE, hostname, port, end_p - descs);
 
 	ret = uevent_init(&udesc);
 	if (ret < 0)
@@ -224,7 +220,7 @@ int main(int argc, char *argv[])
 			}
 
 			umount_partition(p->out, MNT_DETACH);
-			ret |= tftp_client_receive_file(ip, port, p->in, p->out, \
+			ret |= tftp_client_receive_file(hostname, port, p->in, p->out, \
 					p->skip * p->bs, p->seek * p->bs, p->count * p->bs);
 		}
 

@@ -23,6 +23,7 @@ static void show_usage(const char *command)
 	println("--verbose, -v, -V\tshow log message");
 	println("--port, -p, -P\t\tserver port");
 	println("--log, -l, -L\t\tsave log to file");
+	println("--pipe [PATHNAME]\t\tlisten to a pipe");
 }
 
 int main(int argc, char *argv[])
@@ -86,6 +87,12 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_LOGFILE,
 		},
 		{
+			.name = "pipe",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PIPE,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -105,6 +112,7 @@ int main(int argc, char *argv[])
 
 	dd_service = cavan_dynamic_service_get_data(service);
 	dd_service->port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	dd_service->pipe_pathname = NULL;
 
 	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:m:M:l:L:", long_option, &option_index)) != EOF)
 	{
@@ -162,6 +170,17 @@ int main(int argc, char *argv[])
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
 			dd_service->port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case CAVAN_COMMAND_OPTION_PIPE:
+			if (optarg)
+			{
+				dd_service->pipe_pathname = optarg;
+			}
+			else
+			{
+				dd_service->pipe_pathname = TCP_DD_DEFAULT_PIPE;
+			}
 			break;
 
 		default:

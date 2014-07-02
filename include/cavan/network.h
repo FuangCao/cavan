@@ -163,7 +163,7 @@ struct cavan_route_table
 
 struct inet_file_request
 {
-	char ip[20];
+	const char *hostname;
 	u16 port;
 
 	union
@@ -180,7 +180,7 @@ struct inet_file_request
 		char command[2048];
 	};
 
-	int (*open_connect)(const char *ip, u16 port);
+	int (*open_connect)(const char *hostname, u16 port);
 	void (*close_connect)(int sockfd);
 };
 
@@ -283,7 +283,7 @@ int inet_tcp_transfer(int src_sockfd, int dest_sockfd, size_t size);
 int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_addr);
 int inet_get_devname(int sockfd, int index, char *devname);
 
-char *cavan_get_server_ip(char *buff);
+const char *cavan_get_server_hostname(void);
 u16 cavan_get_server_port(u16 default_port);
 
 int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd);

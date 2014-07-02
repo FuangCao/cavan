@@ -18,16 +18,10 @@
  */
 
 #include <cavan.h>
+#include <cavan/command.h>
 #include <cavan/net_bridge.h>
 
 #define FILE_CREATE_DATE "2014-03-14 14:30:54"
-
-enum
-{
-	CAVAN_COMMAND_OPTION_UNKNOWN,
-	CAVAN_COMMAND_OPTION_HELP,
-	CAVAN_COMMAND_OPTION_VERSION,
-};
 
 static void show_usage(const char *command)
 {

@@ -6,17 +6,9 @@
 
 #include <cavan.h>
 #include <cavan/adb.h>
+#include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2012-07-19 10:30:57"
-
-enum
-{
-	CAVAN_COMMAND_OPTION_UNKNOWN,
-	CAVAN_COMMAND_OPTION_HELP,
-	CAVAN_COMMAND_OPTION_VERSION,
-	CAVAN_COMMAND_OPTION_IP,
-	CAVAN_COMMAND_OPTION_PORT,
-};
 
 static void show_usage(void)
 {

@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 		int i;
 		int ret;
 		u16 port = 0;
-		char ip[20];
+		const char *hostname;
 		char command[1024], *p;
 		struct option long_options[] =
 		{
@@ -42,14 +42,14 @@ int main(int argc, char *argv[])
 		int c;
 		int option_index;
 
-		ip[0] = 0;
+		hostname = NULL;
 
 		while ((c = getopt_long(argc, argv, "hH", long_options, &option_index)) != EOF)
 		{
 			switch (c)
 			{
 				case 0:
-					strcpy(ip, optarg);
+					hostname = optarg;
 					break;
 
 				case 1:
@@ -70,9 +70,9 @@ int main(int argc, char *argv[])
 
 		assert(argc > optind);
 
-		if (ip[0] == 0)
+		if (hostname == NULL)
 		{
-			cavan_get_server_ip(ip);
+			hostname = cavan_get_server_hostname();
 		}
 
 		if (port == 0)
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 
-		ret = send_command_request_show(ip, port, command);
+		ret = send_command_request_show(hostname, port, command);
 		if (ret < 0)
 		{
 			error_msg("Send command request failed");

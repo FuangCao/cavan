@@ -22,16 +22,16 @@ static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 	{
 		if (res->number)
 		{
-			pr_red_info("%s [%s]", res->message, strerror(res->number));
+			LOGD("%s [%s]\n", res->message, strerror(res->number));
 		}
 		else
 		{
-			pr_red_info("%s", res->message);
+			LOGD("%s\n", res->message);
 		}
 	}
 	else
 	{
-		pr_green_info("%s", res->message);
+		LOGD("%s\n", res->message);
 	}
 }
 
@@ -84,7 +84,7 @@ static int tcp_dd_recv_response(int sockfd)
 		return -EINVAL;
 	}
 
-	// tcp_dd_show_response(&pkg.res_pkg);
+	tcp_dd_show_response(&pkg.res_pkg);
 
 	return pkg.res_pkg.code;
 }
@@ -705,7 +705,7 @@ int tcp_dd_send_file(struct inet_file_request *file_req)
 
 	file_req->size -= file_req->src_offset;
 
-	sockfd = file_req->open_connect(file_req->ip, file_req->port);
+	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_create_tcp_link2");
@@ -758,7 +758,7 @@ int tcp_dd_receive_file(struct inet_file_request *file_req)
 		umount_partition(dest_file, MNT_DETACH);
 	}
 
-	sockfd = file_req->open_connect(file_req->ip, file_req->port);
+	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_create_tcp_link2");
@@ -817,7 +817,7 @@ int tcp_dd_exec_command(struct inet_file_request *file_req)
 	int ret;
 	int sockfd;
 
-	sockfd = file_req->open_connect(file_req->ip, file_req->port);
+	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
 	if (sockfd < 0)
 	{
 		pr_red_info("file_req->open_connect");
@@ -842,7 +842,7 @@ int tcp_alarm_add(struct inet_file_request *file_req, time_t time, time_t repeat
 	int ret;
 	int sockfd;
 
-	sockfd = file_req->open_connect(file_req->ip, file_req->port);
+	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
 	if (sockfd < 0)
 	{
 		pr_red_info("file_req->open_connect");
@@ -864,7 +864,7 @@ int tcp_alarm_remove(struct inet_file_request *file_req, int index)
 	int ret;
 	int sockfd;
 
-	sockfd = file_req->open_connect(file_req->ip, file_req->port);
+	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
 	if (sockfd < 0)
 	{
 		pr_red_info("file_req->open_connect");
@@ -883,7 +883,7 @@ int tcp_alarm_list(struct inet_file_request *file_req, int index)
 	int sockfd;
 	struct tcp_alarm_add_request alarm;
 
-	sockfd = file_req->open_connect(file_req->ip, file_req->port);
+	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
 	if (sockfd < 0)
 	{
 		pr_red_info("file_req->open_connect");

@@ -18,3 +18,13 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE			500
 #endif
+
+#ifdef ANDROID
+#ifndef CONFIG_BUILD_FOR_ANDROID
+#define CONFIG_BUILD_FOR_ANDROID	1
+#endif
+
+#ifndef CAVAN_ARCH_ARM
+#define CAVAN_ARCH_ARM				1
+#endif
+#endif

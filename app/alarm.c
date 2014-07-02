@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 	repeat = 0;
 	localtime_r(&curr_time, &date);
 
-	cavan_get_server_ip(file_req.ip);
+	file_req.hostname = cavan_get_server_hostname();
 	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
 	while ((c = getopt_long(argc, argv, "vVhHlLaAr:R:d:D:t:T:i:I:p:P:", long_option, &option_index)) != EOF)
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
-			text_copy(file_req.ip, optarg);
+			file_req.hostname = optarg;
 			break;
 
 		case 'p':

@@ -12,6 +12,7 @@
 #include <cavan/alarm.h>
 
 #define TCP_DD_DEFAULT_PORT		8888
+#define TCP_DD_DEFAULT_PIPE		CAVAN_TEMP_PATH "/pipe-tcp-dd"
 #define TCP_DD_DAEMON_COUNT		10
 #define TCP_DD_TIMEOUT			5000
 
@@ -79,6 +80,7 @@ struct cavan_tcp_dd_service
 {
 	int sockfd;
 	u16 port;
+	const char *pipe_pathname;
 	struct cavan_alarm_thread alarm;
 };
 
@@ -90,3 +92,6 @@ int tcp_dd_exec_command(struct inet_file_request *file_req);
 int tcp_alarm_add(struct inet_file_request *file_req, time_t time, time_t repeat);
 int tcp_alarm_remove(struct inet_file_request *file_req, int index);
 int tcp_alarm_list(struct inet_file_request *file_req, int index);
+
+int tcp_dd_pipe_open_connect(const char *hostname, u16 port);
+void tcp_dd_pipe_close_connect(int sockfd);

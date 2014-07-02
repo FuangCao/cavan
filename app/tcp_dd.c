@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	off_t bs, seek, skip, count;
 	int (*handler)(struct inet_file_request *) = NULL;
 
-	cavan_get_server_ip(file_req.ip);
+	file_req.hostname = cavan_get_server_hostname();
 	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
 	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaAlL", long_option, &option_index)) != EOF)
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
-			text_copy(file_req.ip, optarg);
+			file_req.hostname = optarg;
 			break;
 
 		case 'p':
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 			}
 			else if (text_cmp(p, "p") == 0)
 			{
-				text_copy(file_req.ip, para_value);
+				file_req.hostname = strdup(para_value);
 			}
 			else
 			{

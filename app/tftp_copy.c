@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 	int i;
 	int c;
 	u16 port = 0;
-	char ip[20];
+	const char *hostname;
 	int (*tftp_handle)(const char *, u16, const char *, const char *);
 	int option_index;
 	struct option long_options[] =
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	};
 	char temp_name[512], *p_name;
 
-	ip[0] = 0;
+	hostname = NULL;
 	tftp_handle = NULL;
 
 	while ((c = getopt_long(argc, argv, "rRgGwWsSpP", long_options, &option_index)) != EOF)
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		switch (c)
 		{
 		case 0:
-			strcpy(ip, optarg);
+			hostname = optarg;
 			break;
 
 		case 1:
@@ -75,9 +75,9 @@ int main(int argc, char *argv[])
 
 	assert(argc - optind >= 2 && tftp_handle != NULL);
 
-	if (ip[0] == 0)
+	if (hostname == NULL)
 	{
-		cavan_get_server_ip(ip);
+		hostname = cavan_get_server_hostname();
 	}
 
 	if (port == 0)
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 
 		text_basename_base(p_name, argv[i]);
 
-		ret = tftp_handle(ip, port, argv[i], temp_name);
+		ret = tftp_handle(hostname, port, argv[i], temp_name);
 		if (ret < 0)
 		{
 			error_msg("tftp send or receive file \"%s\" failed", argv[i]);

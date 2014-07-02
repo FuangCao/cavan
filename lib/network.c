@@ -443,7 +443,7 @@ u16 udp_checksum(struct ip_header *ip_hdr)
 
 void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port)
 {
-	println("IP = %s, PORT = %d", ip ? ip : "INADDR_ANY", port);
+	LOGD("IP = %s, PORT = %d\n", ip ? ip : "INADDR_ANY", port);
 	addr->sin_family = AF_INET;
 	addr->sin_port = htons(port);
 	addr->sin_addr.s_addr = ip ? inet_addr(ip) : htonl(INADDR_ANY);
@@ -551,7 +551,7 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 		return sockfd;
 	}
 
-	// println("%s => %s:%d", hostname, inet_ntoa(addr.sin_addr), port);
+	LOGD("%s => %s:%d\n", hostname, inet_ntoa(addr.sin_addr), port);
 
 	return sockfd;
 }
@@ -822,17 +822,17 @@ int inet_get_devname(int sockfd, int index, char *devname)
 	return 0;
 }
 
-char *cavan_get_server_ip(char *buff)
+const char *cavan_get_server_hostname(void)
 {
-	const char *ip;
+	const char *hostname;
 
-	ip = getenv(CAVAN_IP_ENV_NAME);
-	if (ip == NULL)
+	hostname = getenv(CAVAN_IP_ENV_NAME);
+	if (hostname)
 	{
-		ip = CAVAN_DEFAULT_IP;
+		return hostname;
 	}
 
-	return text_copy(buff, ip);
+	return CAVAN_DEFAULT_IP;
 }
 
 u16 cavan_get_server_port(u16 default_port)

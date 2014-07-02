@@ -32,6 +32,11 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 	int ret;
 	struct termios attr;
 
+	if (isatty(fd) != 1)
+	{
+		return 0;
+	}
+
 	ret = get_tty_attr(fd, attr_bak);
 	if (ret < 0)
 	{
