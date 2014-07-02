@@ -5,6 +5,7 @@
  */
 
 #include <cavan.h>
+#include <sys/socket.h>
 #include <cavan/command.h>
 
 void print_command_table(const struct cavan_command_map *p, size_t size)
@@ -212,25 +213,23 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 	return ret;
 }
 
-int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, const char *command)
+static int cavan_exec_command(const char *command)
 {
-	int ret;
-	int ttyfd;
 	const char *shell_command = "sh";
 
-	ret = setsid();
-	if (ret < 0)
+	if (command && command[0] && text_cmp("shell", command))
 	{
-		pr_error_info("setsid");
-		return ret;
+		return execlp(shell_command, shell_command, "-c", command, NULL);
 	}
+	else
+	{
+		return execlp(shell_command, shell_command, "-", NULL);
+	}
+}
 
-	ttyfd = open(ttypath, O_RDWR);
-	if (ttyfd < 0)
-	{
-		pr_error_info("open file %s", ttypath);
-		return ttyfd;
-	}
+int cavan_exec_redirect_stdio_base(int ttyfd, int lines, int columns, const char *command)
+{
+	int ret;
 
 	if (isatty(ttyfd) && lines > 0 && columns > 0)
 	{
@@ -260,22 +259,34 @@ int cavan_exec_redirect_stdio_base(const char *ttypath, int lines, int columns, 
 	if (ret < 0)
 	{
 		pr_error_info("cavan_redirect_stdio_base");
-		goto out_close_ttyfd;
+		return ret;
 	}
 
+	return cavan_exec_command(command);
+}
+
+int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command)
+{
+	int ret;
+	int ttyfd;
+
+	ret = setsid();
+	if (ret < 0)
+	{
+		pr_error_info("setsid");
+		return ret;
+	}
+
+	ttyfd = open(ttypath, O_RDWR);
+	if (ttyfd < 0)
+	{
+		pr_error_info("open file %s", ttypath);
+		return ttyfd;
+	}
+
+	ret = cavan_exec_redirect_stdio_base(ttyfd, lines, columns, command);
 	close(ttyfd);
 
-	if (command && command[0] && text_cmp("shell", command))
-	{
-		return execlp(shell_command, shell_command, "-c", command, NULL);
-	}
-	else
-	{
-		return execlp(shell_command, shell_command, "-", NULL);
-	}
-
-out_close_ttyfd:
-	close(ttyfd);
 	return ret;
 }
 
@@ -286,67 +297,99 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 	int ptm_fd;
 	ssize_t rwlen;
 	char buff[1024];
-	const char *ptspath;
-	const char *ptmpath = "/dev/ptmx";
 	struct pollfd pfds[2];
 
-	ptm_fd = open(ptmpath, O_RDWR);
-	if (ptm_fd < 0)
+	if (lines == 0 && columns == 0)
 	{
-		pr_error_info("open %s", ptmpath);
-		return ptm_fd;
-	}
+		int pair[2];
 
-	ret = fcntl(ptm_fd, F_SETFD, FD_CLOEXEC);
-	if (ret < 0)
-	{
-		pr_error_info("fcntl");
-		goto out_close_ptm;
-	}
+		ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
+		if (ret < 0)
+		{
+			pr_error_info("socketpair");
+			return ret;
+		}
 
-	ret = grantpt(ptm_fd);
-	if (ret < 0)
-	{
-		pr_error_info("grantpt");
-		goto out_close_ptm;
-	}
+		pid = fork();
+		if (pid < 0)
+		{
+			pr_error_info("fork");
 
-	ret = unlockpt(ptm_fd);
-	if (ret < 0)
-	{
-		pr_error_info("unlockpt");
-		goto out_close_ptm;
-	}
+			close(pair[0]);
+			close(pair[1]);
 
-	ptspath = ptsname(ptm_fd);
-	if (ptspath == NULL)
-	{
-		pr_error_info("ptsname");
-		ret = -EFAULT;
-		goto out_close_ptm;
-	}
+			return pid;
+		}
 
-	pid = fork();
-	if (pid < 0)
-	{
-		pr_error_info("fork");
-		ret = pid;
-		goto out_close_ptm;
-	}
+		if (pid == 0)
+		{
+			close(pair[1]);
 
-	if (pid == 0)
-	{
-		close(ptm_fd);
+			return cavan_exec_redirect_stdio_base(pair[0], lines, columns, command);
+		}
 
-		return cavan_exec_redirect_stdio_base(ptspath, lines, columns, command);
+		close(pair[0]);
+		ptm_fd = pair[1];
 	}
 	else
 	{
-		char oompath[64];
+		const char *ptspath;
+		const char *ptmpath = "/dev/ptmx";
 
-		sprintf(oompath, "/proc/%d/oom_adj", pid);
-		file_write(oompath, "0", 1);
+		ptm_fd = open(ptmpath, O_RDWR);
+		if (ptm_fd < 0)
+		{
+			pr_error_info("open %s", ptmpath);
+			return ptm_fd;
+		}
+
+		ret = fcntl(ptm_fd, F_SETFD, FD_CLOEXEC);
+		if (ret < 0)
+		{
+			pr_error_info("fcntl");
+			goto out_close_ptm;
+		}
+
+		ret = grantpt(ptm_fd);
+		if (ret < 0)
+		{
+			pr_error_info("grantpt");
+			goto out_close_ptm;
+		}
+
+		ret = unlockpt(ptm_fd);
+		if (ret < 0)
+		{
+			pr_error_info("unlockpt");
+			goto out_close_ptm;
+		}
+
+		ptspath = ptsname(ptm_fd);
+		if (ptspath == NULL)
+		{
+			pr_error_info("ptsname");
+			ret = -EFAULT;
+			goto out_close_ptm;
+		}
+
+		pid = fork();
+		if (pid < 0)
+		{
+			pr_error_info("fork");
+			ret = pid;
+			goto out_close_ptm;
+		}
+
+		if (pid == 0)
+		{
+			close(ptm_fd);
+
+			return cavan_exec_redirect_stdio(ptspath, lines, columns, command);
+		}
 	}
+
+	sprintf(buff, "/proc/%d/oom_adj", pid);
+	file_write(buff, "0", 1);
 
 	if (in_fd < 0)
 	{
@@ -379,6 +422,8 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 			{
 				break;
 			}
+
+			fsync(out_fd);
 		}
 
 		if (pfds[1].revents)
