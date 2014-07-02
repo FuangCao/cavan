@@ -8,6 +8,9 @@
 #ifndef ALOGD
 #define ALOGD				LOGD
 #endif
+#ifndef LOGD
+#define LOGD				ALOGD
+#endif
 #define CAVAN_TEMP_PATH		"/data/local/tmp"
 #else
 #define LOGD				printf
