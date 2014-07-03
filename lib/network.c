@@ -1107,6 +1107,35 @@ char *network_parse_url(const char *text, struct network_url *url)
 	return NULL;
 }
 
+char *network_url_build(char *buff, size_t size, const char *protocol, const char *hostname, u16 port, const char *pathname)
+{
+	char *buff_end = buff + size;
+
+	if (protocol == NULL || protocol[0] == 0)
+	{
+		protocol = "tcp";
+	}
+
+	if (hostname == NULL || hostname[0] == 0)
+	{
+		hostname = "127.0.0.1";
+	}
+
+	buff += snprintf(buff, buff_end - buff, "%s://%s", protocol, hostname);
+
+	if (port)
+	{
+		buff += snprintf(buff, buff_end - buff, ":%d", port);
+	}
+
+	if (pathname && pathname[0])
+	{
+		return text_ncopy(buff, pathname, buff_end - buff);
+	}
+
+	return buff;
+}
+
 const struct network_protocol *network_get_protocol_by_name(const char *name)
 {
 	const struct network_protocol *p, *p_end;

@@ -36,6 +36,7 @@ static void show_usage(const char *command)
 	println("--local, -l, -L\t\tuse localhost ip");
 	println("--port, -p, -P\t\tserver port");
 	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
+	println("--url, -u, -U [URL]\t\tservice url");
 	println("--date, -d, -D");
 	println("--time, -t, -T");
 	println("--repeat, -r, -R");
@@ -63,57 +64,63 @@ int main(int argc, char *argv[])
 			.name = "date",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 'd',
+			.val = CAVAN_COMMAND_OPTION_DATE,
 		},
 		{
 			.name = "time",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 't',
+			.val = CAVAN_COMMAND_OPTION_TIME,
 		},
 		{
 			.name = "repeat",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 'r',
+			.val = CAVAN_COMMAND_OPTION_REPEAT,
 		},
 		{
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 'i',
+			.val = CAVAN_COMMAND_OPTION_IP,
 		},
 		{
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 'p',
+			.val = CAVAN_COMMAND_OPTION_PORT,
 		},
 		{
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = 'a',
+			.val = CAVAN_COMMAND_OPTION_ADB,
+		},
+		{
+			.name = "url",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_URL,
 		},
 		{
 			.name = "local",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = 'l',
+			.val = CAVAN_COMMAND_OPTION_LOCAL,
 		},
 		{
 			0, 0, 0, 0
 		},
 	};
 	int ret;
+	u16 port;
+	const char *url;
+	char url_buff[1024];
 	time_t curr_time, repeat;
 	struct tm date;
 	const char *subcmd;
-	struct inet_file_request file_req =
-	{
-		.open_connect = inet_create_tcp_link2,
-		.close_connect = inet_close_tcp_socket,
-	};
+	const char *protocol;
+	const char *hostname;
 
 	curr_time = time(NULL);
 	if (curr_time == ((time_t)-1))
@@ -125,10 +132,12 @@ int main(int argc, char *argv[])
 	repeat = 0;
 	localtime_r(&curr_time, &date);
 
-	file_req.hostname = cavan_get_server_hostname();
-	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	url = NULL;
+	protocol = "tcp";
+	hostname = cavan_get_server_hostname();
+	port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
-	while ((c = getopt_long(argc, argv, "vVhHlLaAr:R:d:D:t:T:i:I:p:P:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHlLaAr:R:d:D:t:T:i:I:p:P:u:U:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -147,6 +156,7 @@ int main(int argc, char *argv[])
 
 		case 'd':
 		case 'D':
+		case CAVAN_COMMAND_OPTION_DATE:
 			ret = text2date(optarg, &date, "%Y-%m-%d", "%m-%d", NULL);
 			if (ret < 0)
 			{
@@ -157,6 +167,7 @@ int main(int argc, char *argv[])
 
 		case 't':
 		case 'T':
+		case CAVAN_COMMAND_OPTION_TIME:
 			date.tm_sec = 0;
 			ret = text2date(optarg, &date, "%H:%M:%S", "%H:%M", NULL);
 			if (ret < 0)
@@ -168,23 +179,34 @@ int main(int argc, char *argv[])
 
 		case 'r':
 		case 'R':
+		case CAVAN_COMMAND_OPTION_REPEAT:
 			repeat = text2time(optarg, NULL);
 			break;
 
 		case 'a':
 		case 'A':
-			file_req.open_connect = adb_create_tcp_link2;
+		case CAVAN_COMMAND_OPTION_ADB:
+			protocol = "adb";
 		case 'l':
 		case 'L':
+		case CAVAN_COMMAND_OPTION_LOCAL:
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
-			file_req.hostname = optarg;
+		case CAVAN_COMMAND_OPTION_IP:
+			hostname = optarg;
 			break;
 
 		case 'p':
 		case 'P':
-			file_req.port = text2value_unsigned(optarg, NULL, 10);
+		case CAVAN_COMMAND_OPTION_PORT:
+			port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'u':
+		case 'U':
+		case CAVAN_COMMAND_OPTION_URL:
+			url = optarg;
 			break;
 
 		default:
@@ -202,12 +224,22 @@ int main(int argc, char *argv[])
 
 	subcmd = argv[optind++];
 
+	if (url == NULL)
+	{
+		network_url_build(url_buff, sizeof(url_buff), protocol, hostname, port, NULL);
+		url = url_buff;
+	}
+
+	println("url = %s", url);
+
 	if (strcmp(subcmd, "add") == 0)
 	{
 		if (optind < argc)
 		{
-			text_join_by_char(argv + optind, argc - optind, ' ', file_req.command, sizeof(file_req.command));
-			ret = tcp_alarm_add(&file_req, mktime(&date), repeat);
+			char command[1024];
+
+			text_join_by_char(argv + optind, argc - optind, ' ', command, sizeof(command));
+			ret = tcp_alarm_add(url, command, mktime(&date), repeat);
 			if (ret < 0)
 			{
 				pr_red_info("cavan_tcp_alarm_add");
@@ -226,7 +258,7 @@ int main(int argc, char *argv[])
 		{
 			int index = text2value_unsigned(argv[optind], NULL, 10);
 
-			ret = tcp_alarm_remove(&file_req, index);
+			ret = tcp_alarm_remove(url, index);
 			if (ret < 0)
 			{
 				pr_red_info("cavan_tcp_alarm_remove");
@@ -257,7 +289,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		ret = tcp_alarm_list(&file_req, index);
+		ret = tcp_alarm_list(url, index);
 		if (ret < 0)
 		{
 			pr_red_info("cavan_tcp_alarm_list");
