@@ -569,18 +569,18 @@ static void tcp_dd_service_stop_handler(struct cavan_dynamic_service *service)
 	network_service_close(&dd_service->service);
 }
 
-static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, void *_conn)
+static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, void *conn)
 {
 	int ret;
 	bool need_response;
 	struct tcp_dd_package pkg;
-	struct network_client *client = _conn;
+	struct network_client *client = conn;
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
 	ret = client->recv(client, &pkg, sizeof(pkg));
 	if (ret < 0)
 	{
-		pr_red_info("client->recv");
+		pr_error_info("client->recv");
 		return ret;
 	}
 

@@ -1271,6 +1271,10 @@ out_close_socket:
 
 // ============================================================
 
+static void network_client_close_none(struct network_client *client)
+{
+}
+
 static void network_client_udp_close(struct network_client *client)
 {
 	close(client->sockfd);
@@ -1732,9 +1736,11 @@ static int network_service_udp_accept(struct network_service *service, struct ne
 {
 	client->sockfd = service->sockfd;
 	client->addrlen = sizeof(client->addr);
-	client->close = network_client_udp_close;
+	client->close = network_client_close_none;
 	client->send = network_client_udp_send;
 	client->recv = network_client_udp_recv;
+
+	file_poll_input(client->sockfd, -1);
 
 	return 0;
 }
