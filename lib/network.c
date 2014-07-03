@@ -1322,6 +1322,26 @@ static int network_tcp_create_connect(struct network_connect *conn, const char *
 	return 0;
 }
 
+static int network_unix_create_connect(struct network_connect *conn, const char *hostname)
+{
+	int sockfd;
+
+	sockfd = unix_create_tcp_link(hostname, 0);
+	if (sockfd < 0)
+	{
+		pr_error_info("unix_socket");
+		return sockfd;
+	}
+
+	conn->type = NETWORK_CONNECT_UNIX;
+	conn->sockfd = sockfd;
+	conn->close = network_tcp_close;
+	conn->send = network_tcp_send;
+	conn->recv = network_tcp_recv;
+
+	return 0;
+}
+
 static int network_adb_create_connect(struct network_connect *conn, const char *hostname, u16 port)
 {
 	int sockfd;
@@ -1434,6 +1454,10 @@ static network_connect_type_t network_get_connect_type_by_name(const char *name)
 		{
 			return NETWORK_CONNECT_UDP;
 		}
+		else if (text_cmp(name + 1, "nix") == 0)
+		{
+			return NETWORK_CONNECT_UNIX;
+		}
 		break;
 
 	case 'a':
@@ -1488,6 +1512,10 @@ int network_connect_open(struct network_connect *conn, const char *url_content)
 
 	case NETWORK_CONNECT_UDP:
 		ret = network_udp_create_connect(conn, url.hostname, port);
+		break;
+
+	case NETWORK_CONNECT_UNIX:
+		ret = network_unix_create_connect(conn, url.hostname);
 		break;
 
 	case NETWORK_CONNECT_ADB:
