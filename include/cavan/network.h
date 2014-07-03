@@ -229,24 +229,13 @@ struct network_client
 {
 	int sockfd;
 	socklen_t addrlen;
-	struct sockaddr addr;
 	void *private_data;
+	struct sockaddr addr;
 	network_connect_type_t type;
 
 	void (*close)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
-};
-
-struct network_connect
-{
-	int sockfd;
-	socklen_t addrlen;
-	struct sockaddr addr;
-
-	void (*close)(struct network_connect *conn);
-	ssize_t (*send)(struct network_connect *conn, const void *buff, size_t size);
-	ssize_t (*recv)(struct network_connect *conn, void *buff, size_t size);
 };
 
 struct network_service
@@ -255,8 +244,17 @@ struct network_service
 	void *private_data;
 	network_connect_type_t type;
 
-	int (*accept)(struct network_service *service, struct network_connect *conn);
+	int (*accept)(struct network_service *service, struct network_client *conn);
 	void (*close)(struct network_service *service);
+};
+
+struct network_file_request
+{
+	char src_file[1024];
+	char dest_file[1024];
+	off_t src_offset;
+	off_t dest_offset;
+	off_t size;
 };
 
 extern int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port);
@@ -330,6 +328,11 @@ int network_create_socket_mac(const char *if_name, int protocol);
 int network_client_open(struct network_client *client, network_connect_type_t type, const char *hostname, u16 port, const char *pathname);
 int network_client_open2(struct network_client *client, const char *url);
 void network_client_close(struct network_client *client);
+ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size);
+ssize_t network_client_send(struct network_client *client, const char *buff, size_t size);
+ssize_t network_client_send_file(struct network_client *client, int fd, size_t size);
+int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout);
+int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns);
 
 int network_service_open(struct network_service *service, network_connect_type_t type, u16 port, const char *pathname);
 int network_service_open2(struct network_service *service, const char *url);
@@ -470,4 +473,14 @@ static inline void network_client_set_data(struct network_client *client, void *
 static inline void *network_client_get_data(struct network_client *client)
 {
 	return client->private_data;
+}
+
+static inline void network_service_set_data(struct network_service *service, void *data)
+{
+	service->private_data = data;
+}
+
+static inline void *network_service_get_data(struct network_service *service)
+{
+	return service->private_data;
 }

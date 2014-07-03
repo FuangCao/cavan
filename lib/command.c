@@ -335,11 +335,12 @@ int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout)
 	return 0;
 }
 
-int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int ttyin, int ttyout)
+int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid)
 {
 	int ret;
 	pid_t pid;
-	int ptm_fd;
+	int ttyfd;
+	char pathname[32];
 
 	if (lines == 0xFFFF && columns == 0xFFFF)
 	{
@@ -371,47 +372,47 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 		}
 
 		close(pair[0]);
-		ptm_fd = pair[1];
+		ttyfd = pair[1];
 	}
 	else
 	{
 		const char *ptspath;
 		const char *ptmpath = "/dev/ptmx";
 
-		ptm_fd = open(ptmpath, O_RDWR);
-		if (ptm_fd < 0)
+		ttyfd = open(ptmpath, O_RDWR);
+		if (ttyfd < 0)
 		{
 			pr_error_info("open %s", ptmpath);
-			return ptm_fd;
+			return ttyfd;
 		}
 
-		ret = fcntl(ptm_fd, F_SETFD, FD_CLOEXEC);
+		ret = fcntl(ttyfd, F_SETFD, FD_CLOEXEC);
 		if (ret < 0)
 		{
 			pr_error_info("fcntl");
-			goto out_close_ptm;
+			goto out_close_ttyfd;
 		}
 
-		ret = grantpt(ptm_fd);
+		ret = grantpt(ttyfd);
 		if (ret < 0)
 		{
 			pr_error_info("grantpt");
-			goto out_close_ptm;
+			goto out_close_ttyfd;
 		}
 
-		ret = unlockpt(ptm_fd);
+		ret = unlockpt(ttyfd);
 		if (ret < 0)
 		{
 			pr_error_info("unlockpt");
-			goto out_close_ptm;
+			goto out_close_ttyfd;
 		}
 
-		ptspath = ptsname(ptm_fd);
+		ptspath = ptsname(ttyfd);
 		if (ptspath == NULL)
 		{
 			pr_error_info("ptsname");
 			ret = -EFAULT;
-			goto out_close_ptm;
+			goto out_close_ttyfd;
 		}
 
 		pid = fork();
@@ -419,22 +420,39 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 		{
 			pr_error_info("fork");
 			ret = pid;
-			goto out_close_ptm;
+			goto out_close_ttyfd;
 		}
 
 		if (pid == 0)
 		{
-			close(ptm_fd);
+			close(ttyfd);
 
 			return cavan_exec_redirect_stdio(ptspath, lines, columns, command);
 		}
 	}
 
-	{
-		char pathname[32];
+	snprintf(pathname, sizeof(pathname), "/proc/%d/oom_adj", pid);
+	file_write(pathname, "0", 1);
 
-		snprintf(pathname, sizeof(pathname), "/proc/%d/oom_adj", pid);
-		file_write(pathname, "0", 1);
+	*ppid = pid;
+	return ttyfd;
+
+out_close_ttyfd:
+	close(ttyfd);
+	return ret;
+}
+
+int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int ttyin, int ttyout)
+{
+	int ret;
+	int ttyfd;
+	pid_t pid;
+
+	ttyfd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid);
+	if (ttyfd < 0)
+	{
+		pr_red_info("cavan_exec_redirect_stdio_popen");
+		return ttyfd;
 	}
 
 	if (ttyin < 0)
@@ -447,17 +465,17 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 		ttyout = fileno(stdout);
 	}
 
-	ret = cavan_tty_redirect_loop(ptm_fd, ttyin, ttyout);
+	ret = cavan_tty_redirect_loop(ttyfd, ttyin, ttyout);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_tty_redirect_loop");
-		goto out_close_ptm;
+		goto out_close_ttyfd;
 	}
 
-	waitpid(pid, &ret, WNOHANG);
-	ret = (char) WEXITSTATUS(ret);
-out_close_ptm:
-	close(ptm_fd);
+	ret = cavan_exec_waitpid(pid);
+
+out_close_ttyfd:
+	close(ttyfd);
 	return ret;
 }
 

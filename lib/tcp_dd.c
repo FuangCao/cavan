@@ -35,7 +35,7 @@ static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 	}
 }
 
-static int __printf_format_34__ tcp_dd_send_response(int sockfd, int code, const char *fmt, ...)
+static int __printf_format_34__ tcp_dd_send_response(struct network_client *client, int code, const char *fmt, ...)
 {
 	struct tcp_dd_package pkg;
 	int ret;
@@ -63,15 +63,15 @@ static int __printf_format_34__ tcp_dd_send_response(int sockfd, int code, const
 		}
 	}
 
-	return inet_send(sockfd, (char *)&pkg, MOFS(struct tcp_dd_package, res_pkg.message) + ret);
+	return client->send(client, (char *)&pkg, MOFS(struct tcp_dd_package, res_pkg.message) + ret);
 }
 
-static int tcp_dd_recv_response(int sockfd)
+static int tcp_dd_recv_response(struct network_client *client)
 {
 	ssize_t rdlen;
 	struct tcp_dd_package pkg;
 
-	rdlen = inet_recv(sockfd, &pkg, sizeof(pkg));
+	rdlen = client->recv(client, &pkg, sizeof(pkg));
 	if (rdlen < 0)
 	{
 		pr_red_info("inet_recv");
@@ -89,7 +89,7 @@ static int tcp_dd_recv_response(int sockfd)
 	return pkg.res_pkg.code;
 }
 
-static int tcp_dd_send_read_request(int sockfd, const char *filename, off_t offset, off_t size, struct tcp_dd_package *pkg)
+static int tcp_dd_send_read_request(struct network_client *client, const char *filename, off_t offset, off_t size, struct tcp_dd_package *pkg)
 {
 	int ret;
 
@@ -98,14 +98,14 @@ static int tcp_dd_send_read_request(int sockfd, const char *filename, off_t offs
 	pkg->file_req.size = size;
 	ret = text_copy(pkg->file_req.filename, filename) - (char *)&pkg + 1;
 
-	ret = inet_send(sockfd, (char *)pkg, ret);
+	ret = client->send(client, (char *)pkg, ret);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
 		return ret;
 	}
 
-	ret = inet_recv(sockfd, pkg, sizeof(*pkg));
+	ret = client->recv(client, pkg, sizeof(*pkg));
 	if (ret < 0)
 	{
 		pr_red_info("inet_recv");
@@ -126,7 +126,7 @@ static int tcp_dd_send_read_request(int sockfd, const char *filename, off_t offs
 	}
 }
 
-static int tcp_dd_send_write_request(int sockfd, const char *filename, off_t offset, off_t size, mode_t mode)
+static int tcp_dd_send_write_request(struct network_client *client, const char *filename, off_t offset, off_t size, mode_t mode)
 {
 	int ret;
 	struct tcp_dd_package pkg;
@@ -137,17 +137,17 @@ static int tcp_dd_send_write_request(int sockfd, const char *filename, off_t off
 	pkg.file_req.mode = mode;
 
 	ret = text_copy(pkg.file_req.filename, filename) - (char *)&pkg + 1;
-	ret = inet_send(sockfd, (char *)&pkg, ret);
+	ret = client->send(client, (char *)&pkg, ret);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
 		return ret;
 	}
 
-	return tcp_dd_recv_response(sockfd);
+	return tcp_dd_recv_response(client);
 }
 
-static int tcp_dd_send_exec_request(int sockfd, int ttyfd, const char *command)
+static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, const char *command)
 {
 	int ret;
 	struct tcp_dd_package pkg;
@@ -199,17 +199,17 @@ static int tcp_dd_send_exec_request(int sockfd, int ttyfd, const char *command)
 	p = text_copy(pkg.exec_req.command, command);
 
 	ret = p - (char *)&pkg;
-	ret = inet_send(sockfd, (char *)&pkg, ret + 1);
+	client->send(client, (char *)&pkg, ret + 1);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
 		return ret;
 	}
 
-	return tcp_dd_recv_response(sockfd);
+	return tcp_dd_recv_response(client);
 }
 
-static int tcp_dd_send_alarm_add_request(int sockfd, time_t time, time_t repeat, const char *command)
+static int tcp_dd_send_alarm_add_request(struct network_client *client, time_t time, time_t repeat, const char *command)
 {
 	int ret;
 	struct tcp_dd_package pkg;
@@ -221,17 +221,17 @@ static int tcp_dd_send_alarm_add_request(int sockfd, time_t time, time_t repeat,
 	p = text_copy(pkg.alarm_add.command, command);
 
 	ret = p - (char *)&pkg;
-	ret = inet_send(sockfd, (char *)&pkg, ret + 1);
+	ret = client->send(client, (char *)&pkg, ret + 1);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
 		return ret;
 	}
 
-	return tcp_dd_recv_response(sockfd);
+	return tcp_dd_recv_response(client);
 }
 
-static int tcp_dd_send_alarm_query_request(int sockfd, int type, int index)
+static int tcp_dd_send_alarm_query_request(struct network_client *client, int type, int index)
 {
 	int ret;
 	struct tcp_dd_package pkg;
@@ -240,17 +240,17 @@ static int tcp_dd_send_alarm_query_request(int sockfd, int type, int index)
 	pkg.alarm_query.index = index;
 
 	ret = sizeof(pkg.alarm_query) + MOFS(struct tcp_dd_package, alarm_query);
-	ret = inet_send(sockfd, (char *)&pkg, ret);
+	ret = client->send(client, (char *)&pkg, ret);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
 		return ret;
 	}
 
-	return tcp_dd_recv_response(sockfd);
+	return tcp_dd_recv_response(client);
 }
 
-static int tcp_dd_handle_read_request(int sockfd, struct tcp_dd_file_request *req)
+static int tcp_dd_handle_read_request(struct network_client *client, struct tcp_dd_file_request *req)
 {
 	int fd;
 	int ret;
@@ -260,7 +260,7 @@ static int tcp_dd_handle_read_request(int sockfd, struct tcp_dd_file_request *re
 	fd = open(req->filename, O_RDONLY);
 	if (fd < 0)
 	{
-		tcp_dd_send_response(sockfd, fd, "[Server] Open file `%s' failed", req->filename);
+		tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", req->filename);
 		return fd;
 	}
 
@@ -276,14 +276,14 @@ static int tcp_dd_handle_read_request(int sockfd, struct tcp_dd_file_request *re
 	if (size < (off_t)req->offset)
 	{
 		ret = -EINVAL;
-		tcp_dd_send_response(sockfd, ret, "[Server] No data to be sent");
+		tcp_dd_send_response(client, ret, "[Server] No data to be sent");
 		goto out_close_fd;
 	}
 
 	ret = lseek(fd, req->offset, SEEK_SET);
 	if (ret < 0)
 	{
-		tcp_dd_send_response(sockfd, ret, "[Server] Seek file `%s' failed", req->filename);
+		tcp_dd_send_response(client, ret, "[Server] Seek file `%s' failed", req->filename);
 		goto out_close_fd;
 	}
 
@@ -293,11 +293,11 @@ static int tcp_dd_handle_read_request(int sockfd, struct tcp_dd_file_request *re
 	if (mode == 0)
 	{
 		ret = -EFAULT;
-		tcp_dd_send_response(sockfd, ret, "[Server] Get file `%s' mode failed", req->filename);
+		tcp_dd_send_response(client, ret, "[Server] Get file `%s' mode failed", req->filename);
 		goto out_close_fd;
 	}
 
-	ret = tcp_dd_send_write_request(sockfd, req->filename, req->offset, size, mode);
+	ret = tcp_dd_send_write_request(client, req->filename, req->offset, size, mode);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_write_request");
@@ -307,7 +307,8 @@ static int tcp_dd_handle_read_request(int sockfd, struct tcp_dd_file_request *re
 	println("filename = %s", req->filename);
 	println("offset = %s", size2text(req->offset));
 	println("size = %s", size2text(size));
-	ret = ffile_ncopy(fd, sockfd, size);
+
+	ret = network_client_send_file(client, fd, size);
 
 out_close_fd:
 	close(fd);
@@ -315,7 +316,7 @@ out_close_fd:
 	return ret;
 }
 
-static int tcp_dd_handle_write_request(int sockfd, struct tcp_dd_file_request *req)
+static int tcp_dd_handle_write_request(struct network_client *client, struct tcp_dd_file_request *req)
 {
 	int fd;
 	int ret;
@@ -339,18 +340,18 @@ static int tcp_dd_handle_write_request(int sockfd, struct tcp_dd_file_request *r
 	if (fd < 0)
 	{
 
-		tcp_dd_send_response(sockfd, fd, "[Server] Open file `%s' failed", req->filename);
+		tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", req->filename);
 		return fd;
 	}
 
 	ret = lseek(fd, req->offset, SEEK_SET);
 	if (ret < 0)
 	{
-		tcp_dd_send_response(sockfd, ret, "[Server] Seek file failed");
+		tcp_dd_send_response(client, ret, "[Server] Seek file failed");
 		goto out_close_fd;
 	}
 
-	ret = tcp_dd_send_response(sockfd, 0, "[Server] Start receive file");
+	ret = tcp_dd_send_response(client, 0, "[Server] Start receive file");
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_response");
@@ -360,7 +361,8 @@ static int tcp_dd_handle_write_request(int sockfd, struct tcp_dd_file_request *r
 	println("filename = %s", req->filename);
 	println("offset = %s", size2text(req->offset));
 	println("size = %s", size2text(req->size));
-	ret = ffile_ncopy(sockfd, fd, req->size);
+
+	ret = network_client_recv_file(client, fd, req->size);
 
 out_close_fd:
 	close(fd);
@@ -368,28 +370,31 @@ out_close_fd:
 	return ret;
 }
 
-static int tcp_dd_handle_exec_request(int sockfd, struct tcp_dd_exec_request *req, struct sockaddr_in *addr)
+static int tcp_dd_handle_exec_request(struct network_client *client, struct tcp_dd_exec_request *req)
 {
 	int ret;
 
 #ifndef CAVAN_ARCH_ARM
 	if (text_lhcmp("reboot", req->command) == 0 || text_lhcmp("halt", req->command) == 0)
 	{
-		tcp_dd_send_response(sockfd, -EPERM, "[Server] Don't allow to execute command %s", req->command);
+		tcp_dd_send_response(client, -EPERM, "[Server] Don't allow to execute command %s", req->command);
 		ERROR_RETURN(EPERM);
 	}
 #endif
 
-	ret = tcp_dd_send_response(sockfd, 0, "[Server] start execute command");
+	ret = tcp_dd_send_response(client, 0, "[Server] start execute command");
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_response");
 		return ret;
 	}
 
-	setenv(CAVAN_IP_ENV_NAME, inet_ntoa(addr->sin_addr), 1);
+	if (client->type == NETWORK_CONNECT_TCP || client->type == NETWORK_CONNECT_UDP)
+	{
+		setenv(CAVAN_IP_ENV_NAME, inet_ntoa(((struct sockaddr_in *) &client->addr)->sin_addr), 1);
+	}
 
-	return cavan_exec_redirect_stdio_main(req->command, req->lines, req->columns, sockfd, sockfd);
+	return network_client_exec_main(client, req->command, req->lines, req->columns);
 }
 
 static void tcp_dd_alarm_handler(struct cavan_alarm_node *alarm, struct cavan_alarm_thread *thread, void *data)
@@ -410,7 +415,7 @@ static void tcp_dd_alarm_destroy(struct cavan_alarm_node *node, void *data)
 	free(node);
 }
 
-static int tcp_dd_handle_alarm_add_request(struct cavan_alarm_thread *alarm, int sockfd, struct tcp_alarm_add_request *req, struct sockaddr_in *addr)
+static int tcp_dd_handle_alarm_add_request(struct network_client *client, struct cavan_alarm_thread *alarm, struct tcp_alarm_add_request *req)
 {
 	int ret;
 	char *command;
@@ -434,7 +439,7 @@ static int tcp_dd_handle_alarm_add_request(struct cavan_alarm_thread *alarm, int
 	ret = cavan_alarm_insert_node(alarm, node, NULL);
 	if (ret < 0)
 	{
-		tcp_dd_send_response(sockfd, ret, "[Server] cavan_alarm_insert_node");
+		tcp_dd_send_response(client, ret, "[Server] cavan_alarm_insert_node");
 		goto out_free_node;
 	}
 
@@ -445,14 +450,14 @@ out_free_node:
 	return ret;
 }
 
-static int tcp_dd_handle_alarm_remove_request(struct cavan_alarm_thread *alarm, int sockfd, struct tcp_alarm_query_request *req, struct sockaddr_in *addr)
+static int tcp_dd_handle_alarm_remove_request(struct network_client *client, struct cavan_alarm_thread *alarm, struct tcp_alarm_query_request *req)
 {
 	struct double_link_node *node;
 
 	node = double_link_get_node(&alarm->link, req->index);
 	if (node == NULL)
 	{
-		tcp_dd_send_response(sockfd, -ENOENT, "[Server] alarm not found");
+		tcp_dd_send_response(client, -ENOENT, "[Server] alarm not found");
 		return -ENOENT;
 	}
 
@@ -461,13 +466,13 @@ static int tcp_dd_handle_alarm_remove_request(struct cavan_alarm_thread *alarm, 
 	return 0;
 }
 
-static int tcp_dd_handle_alarm_list_request(struct cavan_alarm_thread *alarm, int sockfd, struct tcp_alarm_query_request *req, struct sockaddr_in *addr)
+static int tcp_dd_handle_alarm_list_request(struct network_client *client, struct cavan_alarm_thread *alarm, struct tcp_alarm_query_request *req)
 {
 	int ret;
 	struct cavan_alarm_node *node;
 	struct tcp_alarm_add_request item;
 
-	ret = tcp_dd_send_response(sockfd, 0, "[Server] start send alarm list");
+	ret = tcp_dd_send_response(client, 0, "[Server] start send alarm list");
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_response");
@@ -482,7 +487,7 @@ static int tcp_dd_handle_alarm_list_request(struct cavan_alarm_thread *alarm, in
 		item.repeat = node->repeat;
 		text_copy(item.command, node->private_data);
 
-		ret = inet_send(sockfd, (char *)&item, MOFS(struct tcp_alarm_add_request, command) + text_len(item.command) + 1);
+		ret = client->send(client, (char *)&item, MOFS(struct tcp_alarm_add_request, command) + text_len(item.command) + 1);
 		if (ret < 0)
 		{
 			pr_red_info("inet_send");
@@ -496,64 +501,47 @@ static int tcp_dd_handle_alarm_list_request(struct cavan_alarm_thread *alarm, in
 
 static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
-	socklen_t addrlen;
-	struct inet_connect *client = conn;
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	client->sockfd = inet_accept(dd_service->sockfd, &client->addr, &addrlen);
-	if (client->sockfd < 0)
-	{
-		pr_error_info("inet_accept");
-		return client->sockfd;
-	}
-
-	if (dd_service->sun_path == NULL)
-	{
-		inet_show_sockaddr(&client->addr);
-	}
-
-	return 0;
+	return dd_service->service.accept(&dd_service->service, conn);
 }
 
 static void tcp_dd_service_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
-	struct inet_connect *client = conn;
+	struct network_client *client = conn;
 
-	inet_close_tcp_socket(client->sockfd);
+	client->close(client);
 }
 
 static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 {
 	int ret;
-	int sockfd;
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	if (dd_service->sun_path)
+	if (dd_service->url)
 	{
-		sockfd = unix_create_tcp_service(dd_service->sun_path);
-		if (sockfd < 0)
+		ret = network_service_open2(&dd_service->service, dd_service->url);
+		if (ret < 0)
 		{
-			pr_red_info("unix_create_tcp_service");
-			return sockfd;
+			pr_red_info("network_service_open2");
+			return ret;
 		}
 	}
 	else
 	{
-		sockfd = inet_create_tcp_service(dd_service->port);
-		if (sockfd < 0)
+		ret = network_service_open(&dd_service->service, dd_service->type, dd_service->port, dd_service->sun_path);
+		if (ret < 0)
 		{
-			pr_red_info("inet_create_tcp_service");
-			return sockfd;
+			pr_red_info("network_service_open");
+			return ret;
 		}
 	}
-
-	dd_service->sockfd = sockfd;
 
 	ret = cavan_alarm_thread_init(&dd_service->alarm);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_alarm_thread_init");
-		goto out_inet_close_tcp_socket;
+		goto out_network_service_close;
 	}
 
 	ret = cavan_alarm_thread_start(&dd_service->alarm);
@@ -567,8 +555,8 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 
 out_cavan_alarm_thread_deinit:
 	cavan_alarm_thread_deinit(&dd_service->alarm);
-out_inet_close_tcp_socket:
-	inet_close_tcp_socket(sockfd);
+out_network_service_close:
+	network_service_close(&dd_service->service);
 	return ret;
 }
 
@@ -578,21 +566,21 @@ static void tcp_dd_service_stop_handler(struct cavan_dynamic_service *service)
 
 	cavan_alarm_thread_stop(&dd_service->alarm);
 	cavan_alarm_thread_deinit(&dd_service->alarm);
-	inet_close_tcp_socket(dd_service->sockfd);
+	network_service_close(&dd_service->service);
 }
 
-static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, void *conn)
+static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, void *_conn)
 {
 	int ret;
 	bool need_response;
 	struct tcp_dd_package pkg;
-	struct inet_connect *client = conn;
+	struct network_client *client = _conn;
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	ret = inet_recv(client->sockfd, &pkg, sizeof(pkg));
+	ret = client->recv(client, &pkg, sizeof(pkg));
 	if (ret < 0)
 	{
-		pr_red_info("inet_recv");
+		pr_red_info("client->recv");
 		return ret;
 	}
 
@@ -602,35 +590,35 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	{
 	case TCP_DD_READ:
 		pr_bold_info("TCP_DD_READ");
-		ret = tcp_dd_handle_read_request(client->sockfd, &pkg.file_req);
+		ret = tcp_dd_handle_read_request(client, &pkg.file_req);
 		break;
 
 	case TCP_DD_WRITE:
 		pr_bold_info("TCP_DD_WRITE");
-		ret = tcp_dd_handle_write_request(client->sockfd, &pkg.file_req);
+		ret = tcp_dd_handle_write_request(client, &pkg.file_req);
 		need_response = true;
 		break;
 
 	case TCP_DD_EXEC:
 		pr_bold_info("TCP_DD_EXEC");
-		ret = tcp_dd_handle_exec_request(client->sockfd, &pkg.exec_req, &client->addr);
+		ret = tcp_dd_handle_exec_request(client, &pkg.exec_req);
 		break;
 
 	case TCP_ALARM_ADD:
 		pr_bold_info("TCP_ALARM_ADD");
-		ret = tcp_dd_handle_alarm_add_request(&dd_service->alarm, client->sockfd, &pkg.alarm_add, &client->addr);
+		ret = tcp_dd_handle_alarm_add_request(client, &dd_service->alarm, &pkg.alarm_add);
 		need_response = true;
 		break;
 
 	case TCP_ALARM_REMOVE:
 		pr_bold_info("TCP_ALARM_REMOVE");
-		ret = tcp_dd_handle_alarm_remove_request(&dd_service->alarm, client->sockfd, &pkg.alarm_query, &client->addr);
+		ret = tcp_dd_handle_alarm_remove_request(client, &dd_service->alarm, &pkg.alarm_query);
 		need_response = true;
 		break;
 
 	case TCP_ALARM_LIST:
 		pr_bold_info("TCP_ALARM_LIST");
-		ret = tcp_dd_handle_alarm_list_request(&dd_service->alarm, client->sockfd, &pkg.alarm_query, &client->addr);
+		ret = tcp_dd_handle_alarm_list_request(client, &dd_service->alarm, &pkg.alarm_query);
 		break;
 
 	default:
@@ -640,7 +628,7 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 
 	if (need_response)
 	{
-		tcp_dd_send_response(client->sockfd, ret, NULL);
+		tcp_dd_send_response(client, ret, NULL);
 	}
 
 	msleep(100);
@@ -661,17 +649,11 @@ int tcp_dd_service_run(struct cavan_dynamic_service *service)
 	return cavan_dynamic_service_run(service);
 }
 
-static int tcp_dd_check_file_request(struct inet_file_request *file_req, const char **src_file, const char **dest_file)
+static int tcp_dd_check_file_request(struct network_file_request *file_req, const char **src_file, const char **dest_file)
 {
 	if (file_req->src_file[0] == 0 && file_req->dest_file[0] == 0)
 	{
 		pr_red_info("src_file == NULL && dest_file == NULL");
-		ERROR_RETURN(EINVAL);
-	}
-
-	if (file_req->open_connect == NULL || file_req->close_connect == NULL)
-	{
-		pr_red_info("file_req->open_connect == NULL || file_req->close_connect == NULL");
 		ERROR_RETURN(EINVAL);
 	}
 
@@ -692,13 +674,14 @@ static int tcp_dd_check_file_request(struct inet_file_request *file_req, const c
 	return 0;
 }
 
-int tcp_dd_send_file(struct inet_file_request *file_req)
+int tcp_dd_send_file(struct network_file_request *file_req, const char *url)
 {
-	int sockfd;
 	int fd;
 	int ret;
 	struct stat st;
-	const char *src_file, *dest_file;
+	struct network_client client;
+	const char *src_file = NULL;
+	const char *dest_file = NULL;
 
 	ret = tcp_dd_check_file_request(file_req, &src_file, &dest_file);
 	if (ret < 0)
@@ -740,47 +723,49 @@ int tcp_dd_send_file(struct inet_file_request *file_req)
 
 	file_req->size -= file_req->src_offset;
 
-	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
-	if (sockfd < 0)
+	ret = network_client_open2(&client, url);
+	if (ret < 0)
 	{
-		pr_red_info("inet_create_tcp_link2");
+		pr_red_info("network_client_open2");
 		goto out_close_fd;
 	}
 
-	ret = tcp_dd_send_write_request(sockfd, dest_file, file_req->dest_offset, file_req->size, st.st_mode);
+	ret = tcp_dd_send_write_request(&client, dest_file, file_req->dest_offset, file_req->size, st.st_mode);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_write_request2");
-		goto out_close_sockfd;
+		goto out_client_close;
 	}
 
 	println("filename = %s", src_file);
 	println("offset = %s", size2text(file_req->src_offset));
 	println("size = %s", size2text(file_req->size));
-	ret = ffile_ncopy(fd, sockfd, file_req->size);
+
+	ret = network_client_send_file(&client, fd, file_req->size);
 	if (ret < 0)
 	{
-		pr_red_info("ffile_ncopy");
+		pr_red_info("network_client_send_file");
 		goto out_close_fd;
 	}
 
-	ret = tcp_dd_recv_response(sockfd);
+	ret = tcp_dd_recv_response(&client);
 
-out_close_sockfd:
+out_client_close:
 	msleep(100);
-	file_req->close_connect(sockfd);
+	client.close(&client);
 out_close_fd:
 	close(fd);
 	return ret;
 }
 
-int tcp_dd_receive_file(struct inet_file_request *file_req)
+int tcp_dd_receive_file(struct network_file_request *file_req, const char *url)
 {
 	int fd;
-	int sockfd;
 	int ret;
 	struct tcp_dd_package pkg;
-	const char *src_file, *dest_file;
+	struct network_client client;
+	const char *src_file = NULL;
+	const char *dest_file = NULL;
 
 	ret = tcp_dd_check_file_request(file_req, &src_file, &dest_file);
 	if (ret < 0)
@@ -793,26 +778,26 @@ int tcp_dd_receive_file(struct inet_file_request *file_req)
 		umount_partition(dest_file, MNT_DETACH);
 	}
 
-	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
-	if (sockfd < 0)
+	ret = network_client_open2(&client, url);
+	if (ret < 0)
 	{
 		pr_red_info("inet_create_tcp_link2");
-		return sockfd;
+		return ret;
 	}
 
-	ret = tcp_dd_send_read_request(sockfd, src_file, file_req->src_offset, file_req->size, &pkg);
+	ret = tcp_dd_send_read_request(&client, src_file, file_req->src_offset, file_req->size, &pkg);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_read_request");
-		goto out_close_sockfd;
+		goto out_client_close;
 	}
 
 	fd = open(dest_file, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, pkg.file_req.mode);
 	if (fd < 0)
 	{
 		ret = fd;
-		tcp_dd_send_response(sockfd, fd, "[Client] Open file `%s' failed", dest_file);
-		goto out_close_sockfd;
+		tcp_dd_send_response(&client, fd, "[Client] Open file `%s' failed", dest_file);
+		goto out_client_close;
 	}
 
 	if (file_req->size == 0)
@@ -823,11 +808,11 @@ int tcp_dd_receive_file(struct inet_file_request *file_req)
 	ret = lseek(fd, file_req->dest_offset, SEEK_SET);
 	if (ret < 0)
 	{
-		tcp_dd_send_response(sockfd, ret, "[Client] Seek file `%s' failed", dest_file);
+		tcp_dd_send_response(&client, ret, "[Client] Seek file `%s' failed", dest_file);
 		goto out_close_fd;
 	}
 
-	ret = tcp_dd_send_response(sockfd, 0, "[Client] Start receive file");
+	ret = tcp_dd_send_response(&client, 0, "[Client] Start receive file");
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_response");
@@ -837,99 +822,109 @@ int tcp_dd_receive_file(struct inet_file_request *file_req)
 	println("filename = %s", dest_file);
 	println("offset = %s", size2text(file_req->dest_offset));
 	println("size = %s", size2text(file_req->size));
-	ret = ffile_ncopy(sockfd, fd, file_req->size);
+
+	ret = network_client_recv_file(&client, fd, file_req->size);
 
 out_close_fd:
 	close(fd);
-out_close_sockfd:
+out_client_close:
 	msleep(100);
-	file_req->close_connect(sockfd);
+	client.close(&client);
 	return ret;
 }
 
-int tcp_dd_exec_command(struct inet_file_request *file_req)
+int tcp_dd_exec_command(const char *command, const char *url)
 {
 	int ret;
-	int sockfd;
+	struct termios tty_attr;
+	struct network_client client;
 
-	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
-	if (sockfd < 0)
+	ret = network_client_open2(&client, url);
+	if (ret < 0)
 	{
-		pr_red_info("file_req->open_connect");
-		return sockfd;
+		pr_red_info("network_client_open2");
+		return ret;
 	}
 
-	ret = tcp_dd_send_exec_request(sockfd, fileno(stdout), file_req->command);
+	ret = tcp_dd_send_exec_request(&client, fileno(stdout), command);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_exec_request");
-		goto out_close_sockfd;
+		goto out_client_close;
 	}
 
-	ret = cavan_tty_redirect_base(sockfd);
-out_close_sockfd:
-	file_req->close_connect(sockfd);
+	ret = set_tty_mode(fileno(stdin), 5, &tty_attr);
+	if (ret < 0)
+	{
+		pr_red_info("set_tty_mode");
+		goto out_client_close;
+	}
+
+	ret = network_client_exec_redirect(&client, fileno(stdin), fileno(stdout));
+	restore_tty_attr(fileno(stdin), &tty_attr);
+out_client_close:
+	client.close(&client);
 	return ret;
 }
 
-int tcp_alarm_add(struct inet_file_request *file_req, time_t time, time_t repeat)
+int tcp_alarm_add(const char *url, const char *command, time_t time, time_t repeat)
 {
 	int ret;
-	int sockfd;
+	struct network_client client;
 
-	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
-	if (sockfd < 0)
+	ret = network_client_open2(&client, url);
+	if (ret < 0)
 	{
-		pr_red_info("file_req->open_connect");
-		return sockfd;
+		pr_red_info("network_client_open2");
+		return ret;
 	}
 
 	cavan_show_date2(time, "date = ");
 	pr_bold_info("repeat = %lds", repeat);
-	pr_bold_info("command = %s", file_req->command);
+	pr_bold_info("command = %s", command);
 
-	ret = tcp_dd_send_alarm_add_request(sockfd, time, repeat, file_req->command);
-	file_req->close_connect(sockfd);
+	ret = tcp_dd_send_alarm_add_request(&client, time, repeat, command);
+	client.close(&client);
 
 	return ret;
 }
 
-int tcp_alarm_remove(struct inet_file_request *file_req, int index)
+int tcp_alarm_remove(const char *url, int index)
 {
 	int ret;
-	int sockfd;
+	struct network_client client;
 
-	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
-	if (sockfd < 0)
+	ret = network_client_open2(&client, url);
+	if (ret < 0)
 	{
-		pr_red_info("file_req->open_connect");
-		return sockfd;
+		pr_red_info("network_client_open2");
+		return ret;
 	}
 
-	ret = tcp_dd_send_alarm_query_request(sockfd, TCP_ALARM_REMOVE, index);
-	file_req->close_connect(sockfd);
+	ret = tcp_dd_send_alarm_query_request(&client, TCP_ALARM_REMOVE, index);
+	client.close(&client);
 
 	return ret;
 }
 
-int tcp_alarm_list(struct inet_file_request *file_req, int index)
+int tcp_alarm_list(const char *url, int index)
 {
 	int ret;
-	int sockfd;
+	struct network_client client;
 	struct tcp_alarm_add_request alarm;
 
-	sockfd = file_req->open_connect(file_req->hostname, file_req->port);
-	if (sockfd < 0)
+	ret = network_client_open2(&client, url);
+	if (ret < 0)
 	{
-		pr_red_info("file_req->open_connect");
-		return sockfd;
+		pr_red_info("network_client_open2");
+		return ret;
 	}
 
-	ret = tcp_dd_send_alarm_query_request(sockfd, TCP_ALARM_LIST, index);
+	ret = tcp_dd_send_alarm_query_request(&client, TCP_ALARM_LIST, index);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_alarm_query_request");
-		goto out_close_sockfd;
+		goto out_client_close;
 	}
 
 	index = 0;
@@ -938,7 +933,7 @@ int tcp_alarm_list(struct inet_file_request *file_req, int index)
 	{
 		char prompt[1024];
 
-		ret = inet_recv(sockfd, &alarm, sizeof(alarm));
+		ret = client.recv(&client, &alarm, sizeof(alarm));
 		if (ret <= 0)
 		{
 			break;
@@ -948,7 +943,7 @@ int tcp_alarm_list(struct inet_file_request *file_req, int index)
 		cavan_show_date2(alarm.time, prompt);
 	}
 
-out_close_sockfd:
-	file_req->close_connect(sockfd);
+out_client_close:
+	client.close(&client);
 	return ret;
 }

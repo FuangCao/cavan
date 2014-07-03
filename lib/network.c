@@ -1,8 +1,9 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Apr 21 10:08:25 CST 2011
 
 #include <cavan.h>
-#include <cavan/network.h>
 #include <cavan/file.h>
+#include <cavan/command.h>
+#include <cavan/network.h>
 
 static struct network_protocol protocols[] =
 {
@@ -1558,36 +1559,135 @@ void network_client_close(struct network_client *client)
 	}
 }
 
-// ============================================================
-
-static void network_connect_udp_close(struct network_connect *conn)
+ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size)
 {
-	close(conn->sockfd);
+	char buff[1024];
+	ssize_t rdlen;
+	size_t size_bak = size;
+
+	while (size)
+	{
+		rdlen = client->recv(client, buff, sizeof(buff));
+		if (rdlen <= 0 || ffile_write(fd, buff, rdlen) < rdlen)
+		{
+			return -EFAULT;
+		}
+
+		size -= rdlen;
+	}
+
+	return size_bak;
 }
 
-static ssize_t network_connect_udp_send(struct network_connect *conn, const void *buff, size_t size)
+ssize_t network_client_send(struct network_client *client, const char *buff, size_t size)
 {
-	return sendto(conn->sockfd, buff, size, 0, &conn->addr, sizeof(conn->addr));
+	ssize_t wrlen;
+	const char *buff_end = buff + size;
+
+	for (buff_end = buff + size; buff < buff_end; buff += wrlen)
+	{
+		wrlen = client->send(client, buff, buff_end - buff);
+		if (wrlen <= 0)
+		{
+			return -EFAULT;
+		}
+	}
+
+	return size;
 }
 
-static ssize_t network_connect_udp_recv(struct network_connect *conn, void *buff, size_t size)
+ssize_t network_client_send_file(struct network_client *client, int fd, size_t size)
 {
-	return recvfrom(conn->sockfd, buff, size, 0, &conn->addr, &conn->addrlen);
+	char buff[1024];
+	ssize_t rdlen;
+	size_t size_bak = size;
+
+	while (size)
+	{
+		rdlen = ffile_read(fd, buff, size);
+		if (rdlen <= 0 || network_client_send(client, buff, rdlen) < rdlen)
+		{
+			return -EFAULT;
+		}
+
+		size -= rdlen;
+	}
+
+	return size_bak;
 }
 
-static void network_connect_tcp_close(struct network_connect *conn)
+int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout)
 {
-	inet_close_tcp_socket(conn->sockfd);
+	int ret;
+	ssize_t rdlen;
+	char buff[1024];
+	struct pollfd pfds[2];
+
+	pfds[0].events = POLLIN;
+	pfds[0].fd = client->sockfd;
+
+	pfds[1].events = POLLIN;
+	pfds[1].fd = ttyin;
+
+	while (1)
+	{
+		ret = poll(pfds, NELEM(pfds), -1);
+		if (ret <= 0)
+		{
+			return -ETIMEDOUT;
+		}
+
+		if (pfds[0].revents)
+		{
+			rdlen = client->recv(client, buff, sizeof(buff));
+			if (rdlen <= 0 || write(ttyout, buff, rdlen) < rdlen)
+			{
+				break;
+			}
+
+			fsync(ttyout);
+		}
+
+		if (pfds[1].revents)
+		{
+			rdlen = read(ttyin, buff, sizeof(buff));
+			if (rdlen <= 0 || network_client_send(client, buff, rdlen) < rdlen)
+			{
+				break;
+			}
+
+			fsync(client->sockfd);
+		}
+	}
+
+	return 0;
 }
 
-static ssize_t network_connect_tcp_send(struct network_connect *conn, const void *buff, size_t size)
+int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns)
 {
-	return inet_send(conn->sockfd, buff, size);
-}
+	int ret;
+	int ttyfd;
+	pid_t pid;
 
-static ssize_t network_connect_tcp_recv(struct network_connect *conn, void *buff, size_t size)
-{
-	return inet_recv(conn->sockfd, buff, size);
+	ttyfd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid);
+	if (ttyfd < 0)
+	{
+		pr_red_info("cavan_exec_redirect_stdio_popen");
+		return ttyfd;
+	}
+
+	ret = network_client_exec_redirect(client, ttyfd, ttyfd);
+	if (ret < 0)
+	{
+		pr_red_info("tcp_dd_exec_redirect_loop");
+		goto out_close_ttyfd;
+	}
+
+	ret = cavan_exec_waitpid(pid);
+
+out_close_ttyfd:
+	close(ttyfd);
+	return ret;
 }
 
 // ============================================================
@@ -1597,13 +1697,13 @@ static void network_service_udp_close(struct network_service *service)
 	close(service->sockfd);
 }
 
-static int network_service_udp_accept(struct network_service *service, struct network_connect *conn)
+static int network_service_udp_accept(struct network_service *service, struct network_client *client)
 {
-	conn->sockfd = service->sockfd;
-	conn->addrlen = sizeof(conn->addr);
-	conn->close = network_connect_udp_close;
-	conn->send = network_connect_udp_send;
-	conn->recv = network_connect_udp_recv;
+	client->sockfd = service->sockfd;
+	client->addrlen = sizeof(client->addr);
+	client->close = network_client_udp_close;
+	client->send = network_client_udp_send;
+	client->recv = network_client_udp_recv;
 
 	return 0;
 }
@@ -1629,20 +1729,20 @@ static void network_service_tcp_close(struct network_service *service)
 	inet_close_tcp_socket(service->sockfd);
 }
 
-static int network_service_tcp_accept(struct network_service *service, struct network_connect *conn)
+static int network_service_tcp_accept(struct network_service *service, struct network_client *client)
 {
-	conn->addrlen = sizeof(conn->addr);
+	client->addrlen = sizeof(client->addr);
 
-	conn->sockfd = accept(service->sockfd, &conn->addr, &conn->addrlen);
-	if (conn->sockfd < 0)
+	client->sockfd = accept(service->sockfd, &client->addr, &client->addrlen);
+	if (client->sockfd < 0)
 	{
 		pr_error_info("accept");
-		return conn->sockfd;
+		return client->sockfd;
 	}
 
-	conn->close = network_connect_tcp_close;
-	conn->send = network_connect_tcp_send;
-	conn->recv = network_connect_tcp_recv;
+	client->close = network_client_tcp_close;
+	client->send = network_client_tcp_send;
+	client->recv = network_client_tcp_recv;
 
 	return 0;
 }

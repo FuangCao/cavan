@@ -83,8 +83,17 @@ int cavan_redirect_stdio_base(int ttyfd, int flags);
 int cavan_redirect_stdio(const char *pathname, int flags);
 int cavan_exec_redirect_stdio_base(int ttyfd, const char *command);
 int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command);
+int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid);
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
 
 int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout);
 int cavan_tty_redirect_base(int ttyfd);
 int cavan_tty_redirect(const char *ttypath);
+
+static inline int cavan_exec_waitpid(pid_t pid)
+{
+	int status;
+
+	waitpid(pid, &status, WNOHANG);
+	return (char) WEXITSTATUS(status);
+}
