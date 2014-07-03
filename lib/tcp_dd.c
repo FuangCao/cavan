@@ -536,8 +536,6 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 			pr_red_info("unix_create_tcp_service");
 			return sockfd;
 		}
-
-		pr_info("sun_path = %s", dd_service->sun_path);
 	}
 	else
 	{

@@ -1241,29 +1241,29 @@ out_close_socket:
 
 // ============================================================
 
-static void network_udp_close(struct network_connect *conn)
+static void network_udp_close(struct network_client *client)
 {
-	close(conn->sockfd);
+	close(client->sockfd);
 }
 
-static ssize_t network_udp_send(struct network_connect *conn, const void *buff, size_t size)
+static ssize_t network_udp_send(struct network_client *client, const void *buff, size_t size)
 {
-	return sendto(conn->sockfd, buff, size, 0, &conn->addr, sizeof(conn->addr));
+	return sendto(client->sockfd, buff, size, 0, &client->addr, sizeof(client->addr));
 }
 
-static ssize_t network_udp_recv(struct network_connect *conn, void *buff, size_t size)
+static ssize_t network_udp_recv(struct network_client *client, void *buff, size_t size)
 {
-	socklen_t addrlen = sizeof(conn->addr);
+	socklen_t addrlen = sizeof(client->addr);
 
-	return recvfrom(conn->sockfd, buff, size, 0, &conn->addr, &addrlen);
+	return recvfrom(client->sockfd, buff, size, 0, &client->addr, &addrlen);
 }
 
-static int network_udp_create_connect(struct network_connect *conn, const char *hostname, u16 port)
+static int network_udp_create_connect(struct network_client *client, const char *hostname, u16 port)
 {
 	int ret;
 	int sockfd;
 
-	ret = inet_hostname2sockaddr(hostname, (struct sockaddr_in *)&conn->addr);
+	ret = inet_hostname2sockaddr(hostname, (struct sockaddr_in *)&client->addr);
 	if (ret < 0)
 	{
 		pr_red_info("inet_hostname2sockaddr");
@@ -1277,34 +1277,34 @@ static int network_udp_create_connect(struct network_connect *conn, const char *
 		return sockfd;
 	}
 
-	conn->type = NETWORK_CONNECT_UDP;
-	conn->sockfd = sockfd;
-	conn->close = network_udp_close;
-	conn->send = network_udp_send;
-	conn->recv = network_udp_recv;
+	client->type = NETWORK_CONNECT_UDP;
+	client->sockfd = sockfd;
+	client->close = network_udp_close;
+	client->send = network_udp_send;
+	client->recv = network_udp_recv;
 
-	((struct sockaddr_in *)&conn->addr)->sin_port = htons(port);
+	((struct sockaddr_in *)&client->addr)->sin_port = htons(port);
 
 	return 0;
 }
 
-static void network_tcp_close(struct network_connect *conn)
+static void network_tcp_close(struct network_client *client)
 {
-	shutdown(conn->sockfd, SHUT_RDWR);
-	close(conn->sockfd);
+	shutdown(client->sockfd, SHUT_RDWR);
+	close(client->sockfd);
 }
 
-static ssize_t network_tcp_send(struct network_connect *conn, const void *buff, size_t size)
+static ssize_t network_tcp_send(struct network_client *client, const void *buff, size_t size)
 {
-	return send(conn->sockfd, buff, size, 0);
+	return send(client->sockfd, buff, size, 0);
 }
 
-static ssize_t network_tcp_recv(struct network_connect *conn, void *buff, size_t size)
+static ssize_t network_tcp_recv(struct network_client *client, void *buff, size_t size)
 {
-	return recv(conn->sockfd, buff, size, 0);
+	return recv(client->sockfd, buff, size, 0);
 }
 
-static int network_tcp_create_connect(struct network_connect *conn, const char *hostname, u16 port)
+static int network_tcp_create_connect(struct network_client *client, const char *hostname, u16 port)
 {
 	int sockfd;
 
@@ -1315,16 +1315,16 @@ static int network_tcp_create_connect(struct network_connect *conn, const char *
 		return sockfd;
 	}
 
-	conn->type = NETWORK_CONNECT_TCP;
-	conn->sockfd = sockfd;
-	conn->close = network_tcp_close;
-	conn->send = network_tcp_send;
-	conn->recv = network_tcp_recv;
+	client->type = NETWORK_CONNECT_TCP;
+	client->sockfd = sockfd;
+	client->close = network_tcp_close;
+	client->send = network_tcp_send;
+	client->recv = network_tcp_recv;
 
 	return 0;
 }
 
-static int network_unix_create_connect(struct network_connect *conn, const char *hostname)
+static int network_unix_create_connect(struct network_client *client, const char *hostname)
 {
 	int sockfd;
 
@@ -1335,16 +1335,16 @@ static int network_unix_create_connect(struct network_connect *conn, const char 
 		return sockfd;
 	}
 
-	conn->type = NETWORK_CONNECT_UNIX;
-	conn->sockfd = sockfd;
-	conn->close = network_tcp_close;
-	conn->send = network_tcp_send;
-	conn->recv = network_tcp_recv;
+	client->type = NETWORK_CONNECT_UNIX;
+	client->sockfd = sockfd;
+	client->close = network_tcp_close;
+	client->send = network_tcp_send;
+	client->recv = network_tcp_recv;
 
 	return 0;
 }
 
-static int network_adb_create_connect(struct network_connect *conn, const char *hostname, u16 port)
+static int network_adb_create_connect(struct network_client *client, const char *hostname, u16 port)
 {
 	int sockfd;
 
@@ -1355,21 +1355,21 @@ static int network_adb_create_connect(struct network_connect *conn, const char *
 		return sockfd;
 	}
 
-	conn->type = NETWORK_CONNECT_ADB;
-	conn->sockfd = sockfd;
-	conn->close = network_tcp_close;
-	conn->send = network_tcp_send;
-	conn->recv = network_tcp_recv;
+	client->type = NETWORK_CONNECT_ADB;
+	client->sockfd = sockfd;
+	client->close = network_tcp_close;
+	client->send = network_tcp_send;
+	client->recv = network_tcp_recv;
 
 	return 0;
 }
 
-static int network_icmp_create_connect(struct network_connect *conn, const char *hostname)
+static int network_icmp_create_connect(struct network_client *client, const char *hostname)
 {
 	int ret;
 	int sockfd;
 
-	ret = inet_hostname2sockaddr(hostname, (struct sockaddr_in *)&conn->addr);
+	ret = inet_hostname2sockaddr(hostname, (struct sockaddr_in *)&client->addr);
 	if (ret < 0)
 	{
 		pr_red_info("inet_hostname2sockaddr");
@@ -1383,21 +1383,21 @@ static int network_icmp_create_connect(struct network_connect *conn, const char 
 		return sockfd;
 	}
 
-	conn->type = NETWORK_CONNECT_ICMP;
-	conn->sockfd = sockfd;
-	conn->close = network_udp_close;
-	conn->send = network_udp_send;
-	conn->recv = network_udp_recv;
+	client->type = NETWORK_CONNECT_ICMP;
+	client->sockfd = sockfd;
+	client->close = network_udp_close;
+	client->send = network_udp_send;
+	client->recv = network_udp_recv;
 
 	return 0;
 }
 
-static int network_ip_create_connect(struct network_connect *conn, const char *hostname)
+static int network_ip_create_connect(struct network_client *client, const char *hostname)
 {
 	int ret;
 	int sockfd;
 
-	ret = inet_hostname2sockaddr(hostname, (struct sockaddr_in *)&conn->addr);
+	ret = inet_hostname2sockaddr(hostname, (struct sockaddr_in *)&client->addr);
 	if (ret < 0)
 	{
 		pr_red_info("inet_hostname2sockaddr");
@@ -1411,16 +1411,16 @@ static int network_ip_create_connect(struct network_connect *conn, const char *h
 		return sockfd;
 	}
 
-	conn->type = NETWORK_CONNECT_IP;
-	conn->sockfd = sockfd;
-	conn->close = network_udp_close;
-	conn->send = network_udp_send;
-	conn->recv = network_udp_recv;
+	client->type = NETWORK_CONNECT_IP;
+	client->sockfd = sockfd;
+	client->close = network_udp_close;
+	client->send = network_udp_send;
+	client->recv = network_udp_recv;
 
 	return 0;
 }
 
-static int network_mac_create_connect(struct network_connect *conn, const char *if_name)
+static int network_mac_create_connect(struct network_client *client, const char *if_name)
 {
 	int sockfd;
 
@@ -1431,11 +1431,11 @@ static int network_mac_create_connect(struct network_connect *conn, const char *
 		return sockfd;
 	}
 
-	conn->type = NETWORK_CONNECT_MAC;
-	conn->sockfd = sockfd;
-	conn->close = network_udp_close;
-	conn->send = network_tcp_send;
-	conn->recv = network_tcp_recv;
+	client->type = NETWORK_CONNECT_MAC;
+	client->sockfd = sockfd;
+	client->close = network_udp_close;
+	client->send = network_tcp_send;
+	client->recv = network_tcp_recv;
 
 	return 0;
 }
@@ -1491,30 +1491,30 @@ static network_connect_type_t network_get_connect_type_by_name(const char *name)
 	return NETWORK_CONNECT_UNKNOWN;
 }
 
-int network_connect_open(struct network_connect *conn, network_connect_type_t type, const char *hostname, u16 port, const char *pathname)
+int network_connect_open(struct network_client *client, network_connect_type_t type, const char *hostname, u16 port, const char *pathname)
 {
 	switch (type)
 	{
 	case NETWORK_CONNECT_TCP:
-		return network_tcp_create_connect(conn, hostname, port);
+		return network_tcp_create_connect(client, hostname, port);
 
 	case NETWORK_CONNECT_UDP:
-		return network_udp_create_connect(conn, hostname, port);
+		return network_udp_create_connect(client, hostname, port);
 
 	case NETWORK_CONNECT_UNIX:
-		return network_unix_create_connect(conn, pathname);
+		return network_unix_create_connect(client, pathname);
 
 	case NETWORK_CONNECT_ADB:
-		return network_adb_create_connect(conn, hostname, port);
+		return network_adb_create_connect(client, hostname, port);
 
 	case NETWORK_CONNECT_ICMP:
-		return network_icmp_create_connect(conn, hostname);
+		return network_icmp_create_connect(client, hostname);
 
 	case NETWORK_CONNECT_IP:
-		return network_ip_create_connect(conn, hostname);
+		return network_ip_create_connect(client, hostname);
 
 	case NETWORK_CONNECT_MAC:
-		return network_mac_create_connect(conn, hostname);
+		return network_mac_create_connect(client, hostname);
 
 	default:
 		pr_red_info("unknown connect type");
@@ -1522,7 +1522,7 @@ int network_connect_open(struct network_connect *conn, network_connect_type_t ty
 	}
 }
 
-int network_connect_open2(struct network_connect *conn, const char *_url)
+int network_connect_open2(struct network_client *client, const char *_url)
 {
 	u16 port;
 	const char *pathname;
@@ -1545,17 +1545,17 @@ int network_connect_open2(struct network_connect *conn, const char *_url)
 	port = text2value_unsigned(url.port, NULL, 10);
 	type = network_get_connect_type_by_name(url.protocol);
 
-	return network_connect_open(conn, type, url.hostname, port, pathname);
+	return network_connect_open(client, type, url.hostname, port, pathname);
 }
 
-void network_connect_close(struct network_connect *conn)
+void network_connect_close(struct network_client *client)
 {
-	if (conn->close)
+	if (client->close)
 	{
-		conn->close(conn);
+		client->close(client);
 	}
 	else
 	{
-		close(conn->sockfd);
+		close(client->sockfd);
 	}
 }
