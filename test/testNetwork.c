@@ -42,14 +42,14 @@ int main(int argc, char *argv[])
 
 	assert(argc > 1);
 
-	ret = network_connect_open2(&client, argv[1]);
+	ret = network_client_open2(&client, argv[1]);
 	if (ret < 0)
 	{
-		pr_red_info("network_connect_open");
+		pr_red_info("network_client_open");
 		return ret;
 	}
 
-	network_connect_close(&client);
+	network_client_close(&client);
 #endif
 
 	return 0;

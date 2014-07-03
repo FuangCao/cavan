@@ -1491,7 +1491,7 @@ static network_connect_type_t network_get_connect_type_by_name(const char *name)
 	return NETWORK_CONNECT_UNKNOWN;
 }
 
-int network_connect_open(struct network_client *client, network_connect_type_t type, const char *hostname, u16 port, const char *pathname)
+int network_client_open(struct network_client *client, network_connect_type_t type, const char *hostname, u16 port, const char *pathname)
 {
 	switch (type)
 	{
@@ -1522,7 +1522,7 @@ int network_connect_open(struct network_client *client, network_connect_type_t t
 	}
 }
 
-int network_connect_open2(struct network_client *client, const char *_url)
+int network_client_open2(struct network_client *client, const char *_url)
 {
 	u16 port;
 	const char *pathname;
@@ -1545,10 +1545,10 @@ int network_connect_open2(struct network_client *client, const char *_url)
 	port = text2value_unsigned(url.port, NULL, 10);
 	type = network_get_connect_type_by_name(url.protocol);
 
-	return network_connect_open(client, type, url.hostname, port, pathname);
+	return network_client_open(client, type, url.hostname, port, pathname);
 }
 
-void network_connect_close(struct network_client *client)
+void network_client_close(struct network_client *client)
 {
 	if (client->close)
 	{

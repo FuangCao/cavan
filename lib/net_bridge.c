@@ -69,10 +69,10 @@ int cavan_net_bridge_port_init(struct cavan_net_bridge_port *port, const char *u
 {
 	int ret;
 
-	ret = network_connect_open2(&port->client, url);
+	ret = network_client_open2(&port->client, url);
 	if (ret < 0)
 	{
-		pr_red_info("network_connect_open");
+		pr_red_info("network_client_open");
 		return ret;
 	}
 
@@ -80,7 +80,7 @@ int cavan_net_bridge_port_init(struct cavan_net_bridge_port *port, const char *u
 	if (ret < 0)
 	{
 		pr_red_info("CAVAN_DATA_POOL_INIT");
-		goto out_network_connect_close;
+		goto out_network_client_close;
 	}
 
 	ret = DOUBLE_LINK_INIT(&port->addr_list, struct cavan_net_bridge_addr, node.node);
@@ -96,8 +96,8 @@ int cavan_net_bridge_port_init(struct cavan_net_bridge_port *port, const char *u
 
 out_cavan_data_pool_deinit:
 	cavan_data_pool_deinit(&port->addr_pool);
-out_network_connect_close:
-	network_connect_close(&port->client);
+out_network_client_close:
+	network_client_close(&port->client);
 	return ret;
 }
 
@@ -106,7 +106,7 @@ void cavan_net_bridge_port_deinit(struct cavan_net_bridge_port *port)
 	cavan_net_bridge_port_addr_free_all(port);
 	double_link_deinit(&port->addr_list);
 	cavan_data_pool_deinit(&port->addr_pool);
-	network_connect_close(&port->client);
+	network_client_close(&port->client);
 }
 
 static int cavan_net_bridge_transfer(struct cavan_net_bridge_port *port)
