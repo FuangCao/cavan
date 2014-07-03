@@ -231,5 +231,5 @@ int main(int argc, char *argv[])
 		url = url_buff;
 	}
 
-	return tcp_dd_exec_command(url, command ? command : "");
+	return tcp_dd_exec_command(command ? command : "", url);
 }

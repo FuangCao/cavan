@@ -98,6 +98,10 @@ static inline int cavan_exec_waitpid(pid_t pid)
 {
 	int status;
 
-	waitpid(pid, &status, WNOHANG);
-	return (char) WEXITSTATUS(status);
+	if (waitpid(pid, &status, WNOHANG) == pid)
+	{
+		return WEXITSTATUS(status);
+	}
+
+	return 0;
 }
