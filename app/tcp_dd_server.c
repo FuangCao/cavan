@@ -23,7 +23,9 @@ static void show_usage(const char *command)
 	println("--verbose, -v, -V\tshow log message");
 	println("--port, -p, -P\t\tserver port");
 	println("--log, -l, -L\t\tsave log to file");
-	println("--pipe, -u, -U [PATHNAME]\t\tlisten to a named socket");
+	println("--udp\t\trun as udp service");
+	println("--url\t\tservice url");
+	println("--unix, -u, -U [PATHNAME]\t\tlisten to a named socket, default path is %s", TCP_DD_DEFAULT_SOCKET);
 }
 
 int main(int argc, char *argv[])
@@ -93,6 +95,18 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_UNIX,
 		},
 		{
+			.name = "udp",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UDP,
+		},
+		{
+			.name = "url",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_URL,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -111,8 +125,9 @@ int main(int argc, char *argv[])
 	service->super_permission = 1;
 
 	dd_service = cavan_dynamic_service_get_data(service);
-	dd_service->port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 	dd_service->sun_path = NULL;
+	dd_service->type = NETWORK_CONNECT_TCP;
+	dd_service->port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
 	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:m:M:l:L:u::U::", long_option, &option_index)) != EOF)
 	{
@@ -175,6 +190,8 @@ int main(int argc, char *argv[])
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_UNIX:
+			dd_service->type = NETWORK_CONNECT_UNIX;
+
 			if (optarg)
 			{
 				dd_service->sun_path = optarg;
@@ -183,6 +200,14 @@ int main(int argc, char *argv[])
 			{
 				dd_service->sun_path = TCP_DD_DEFAULT_SOCKET;
 			}
+			break;
+
+		case CAVAN_COMMAND_OPTION_UDP:
+			dd_service->type = NETWORK_CONNECT_UDP;
+			break;
+
+		case CAVAN_COMMAND_OPTION_URL:
+			dd_service->url = optarg;
 			break;
 
 		default:

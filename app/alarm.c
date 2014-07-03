@@ -230,8 +230,6 @@ int main(int argc, char *argv[])
 		url = url_buff;
 	}
 
-	println("url = %s", url);
-
 	if (strcmp(subcmd, "add") == 0)
 	{
 		if (optind < argc)

@@ -639,7 +639,7 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 int tcp_dd_service_run(struct cavan_dynamic_service *service)
 {
 	service->name = "TCP_DD";
-	service->conn_size = sizeof(struct inet_connect);
+	service->conn_size = sizeof(struct network_client);
 	service->start = tcp_dd_service_start_handler;
 	service->stop = tcp_dd_service_stop_handler;
 	service->run = tcp_dd_service_run_handler;

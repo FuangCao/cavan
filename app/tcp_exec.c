@@ -20,6 +20,7 @@ static void show_usage(const char *command)
 	println("--local, -l, -L\t\tuse localhost ip");
 	println("--port, -p, -P\t\tserver port");
 	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
+	println("--url, -u, -U [URL]\tservice url");
 }
 
 int main(int argc, char *argv[])
@@ -59,6 +60,12 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_ADB,
 		},
 		{
+			.name = "url",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_URL,
+		},
+		{
 			.name = "local",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -68,16 +75,19 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	struct inet_file_request file_req =
-	{
-		.open_connect = inet_create_tcp_link2,
-		.close_connect = inet_close_tcp_socket
-	};
+	u16 port;
+	const char *url;
+	char url_buff[1024];
+	const char *protocol;
+	const char *hostname;
+	char command[1024];
 
-	file_req.hostname = cavan_get_server_hostname();
-	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	url = NULL;
+	protocol = "tcp";
+	hostname = cavan_get_server_hostname();
+	port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
-	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lL", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -97,7 +107,7 @@ int main(int argc, char *argv[])
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
-			file_req.open_connect = adb_create_tcp_link2;
+			protocol = "adb";
 		case 'l':
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
@@ -105,13 +115,19 @@ int main(int argc, char *argv[])
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
-			file_req.hostname = optarg;
+			hostname = optarg;
 			break;
 
 		case 'p':
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			file_req.port = text2value_unsigned(optarg, NULL, 10);
+			port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'u':
+		case 'U':
+		case CAVAN_COMMAND_OPTION_URL:
+			url = optarg;
 			break;
 
 		default:
@@ -120,7 +136,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	text_join_by_char(argv + optind, argc - optind, ' ', file_req.command, sizeof(file_req.command));
+	if (url == NULL)
+	{
+		network_url_build(url_buff, sizeof(url_buff), protocol, hostname, port, NULL);
+		url = url_buff;
+	}
 
-	return tcp_dd_exec_command(&file_req);
+	text_join_by_char(argv + optind, argc - optind, ' ', command, sizeof(command));
+
+	return tcp_dd_exec_command(command, url);
 }

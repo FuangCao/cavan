@@ -60,7 +60,7 @@ static int network_service_test(const char *url)
 {
 	int ret;
 	char buff[1024];
-	struct network_connect conn;
+	struct network_client client;
 	struct network_service service;
 
 	ret = network_service_open2(&service, url);
@@ -70,34 +70,34 @@ static int network_service_test(const char *url)
 		return ret;
 	}
 
-	ret = service.accept(&service, &conn);
+	ret = service.accept(&service, &client);
 	if (ret < 0)
 	{
 		pr_red_info("service->accept");
 		goto out_network_service_close;
 	}
 
-	ret = conn.recv(&conn, buff, sizeof(buff));
+	ret = client.recv(&client, buff, sizeof(buff));
 	if (ret < 0)
 	{
-		pr_red_info("conn.recv");
-		goto out_conn_close;
+		pr_red_info("client.recv");
+		goto out_client_close;
 	}
 
 	buff[ret] = 0;
 	println("buff[%d] = %s", ret, buff);
 
-	ret = conn.send(&conn, "8888", 4);
+	ret = client.send(&client, "8888", 4);
 	if (ret < 0)
 	{
-		pr_red_info("conn.send");
-		goto out_conn_close;
+		pr_red_info("client.send");
+		goto out_client_close;
 	}
 
 	msleep(500);
 
-out_conn_close:
-	conn.close(&conn);
+out_client_close:
+	client.close(&client);
 out_network_service_close:
 	network_service_close(&service);
 	return ret;

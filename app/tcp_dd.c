@@ -26,6 +26,7 @@ static void show_usage(const char *command)
 	println("--local, -l, -L\t\tuse localhost ip");
 	println("--port, -p, -P\t\tserver port");
 	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
+	println("--url, -u, -A [URL]\t\tservice url");
 	println("-w, -W, -s, -S\t\tsend file");
 	println("-r, -R\t\t\treceive file");
 }
@@ -52,19 +53,25 @@ int main(int argc, char *argv[])
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 'i',
+			.val = CAVAN_COMMAND_OPTION_IP,
 		},
 		{
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = 'p',
+			.val = CAVAN_COMMAND_OPTION_PORT,
+		},
+		{
+			.name = "url",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_URL,
 		},
 		{
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = 'a',
+			.val = CAVAN_COMMAND_OPTION_ADB,
 		},
 		{
 			.name = "local",
@@ -76,18 +83,21 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	struct inet_file_request file_req =
-	{
-		.open_connect = inet_create_tcp_link2,
-		.close_connect = inet_close_tcp_socket,
-	};
+	u16 port;
+	const char *url;
+	char url_buff[1024];
+	const char *protocol;
+	const char *hostname;
 	off_t bs, seek, skip, count;
-	int (*handler)(struct inet_file_request *) = NULL;
+	struct network_file_request file_req;
+	int (*handler)(struct network_file_request *, const char *) = NULL;
 
-	file_req.hostname = cavan_get_server_hostname();
-	file_req.port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	url = NULL;
+	protocol = "tcp";
+	hostname = cavan_get_server_hostname();
+	port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
-	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaAlL", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaAlLu:U:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -106,19 +116,28 @@ int main(int argc, char *argv[])
 
 		case 'a':
 		case 'A':
-			file_req.open_connect = adb_create_tcp_link2;
+		case CAVAN_COMMAND_OPTION_ADB:
+			protocol = "adb";
 		case 'l':
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
-			file_req.hostname = optarg;
+		case CAVAN_COMMAND_OPTION_IP:
+			hostname = optarg;
 			break;
 
 		case 'p':
 		case 'P':
-			file_req.port = text2value_unsigned(optarg, NULL, 10);
+		case CAVAN_COMMAND_OPTION_PORT:
+			port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'u':
+		case 'U':
+		case CAVAN_COMMAND_OPTION_URL:
+			url = optarg;
 			break;
 
 		case 'w':
@@ -145,6 +164,12 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
+	if (url == NULL)
+	{
+		network_url_build(url_buff, sizeof(url_buff), protocol, hostname, port, NULL);
+		url = url_buff;
+	}
+
 	file_req.src_file[0] = file_req.dest_file[0] = 0;
 
 	for (bs = 1, count = seek = skip = 0; optind < argc; optind++)
@@ -165,7 +190,7 @@ int main(int argc, char *argv[])
 			}
 			else if (text_cmp(p, "p") == 0)
 			{
-				file_req.hostname = strdup(para_value);
+				hostname = strdup(para_value);
 			}
 			else
 			{
@@ -215,7 +240,7 @@ int main(int argc, char *argv[])
 		case 'p':
 			if (text_cmp(p, "ort") == 0)
 			{
-				file_req.port = text2value_unsigned(para_value, NULL, 10);
+				port = text2value_unsigned(para_value, NULL, 10);
 				break;
 			}
 			goto label_parse_complete;
@@ -250,5 +275,5 @@ label_parse_complete:
 	file_req.dest_offset = seek * bs;
 	file_req.size = count * bs;
 
-	return handler(&file_req);
+	return handler(&file_req, url);
 }

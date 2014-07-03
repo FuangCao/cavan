@@ -1563,6 +1563,8 @@ int network_client_open2(struct network_client *client, const char *_url)
 		return -EINVAL;
 	}
 
+	LOGD("URL = %s\n", _url);
+
 	pathname = network_parse_url(_url, &url);
 	if (pathname == NULL)
 	{

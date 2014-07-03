@@ -36,9 +36,10 @@ static void show_usage(const char *command)
 	println("--ip, -i, -I, -H, --host HOST\tserver host address");
 	println("--local, -L\t\t\tuse localhost ip");
 	println("--port, -P PORT\t\t\tserver port");
-	println("--adb, -a, -A\t\t\tuse adb procotol instead of tcp");
-	println("--tcp, -t, -T\t\t\tuse tcp procotol instead of adb");
-	println("--unix, -u, -U [PATHNAME]\t\t\tuse named socket");
+	println("--adb, -a, -A\t\t\tuse adb protocol instead of tcp");
+	println("--tcp, -t, -T\t\t\tuse tcp protocol instead of adb");
+	println("--unix, -u, -U [PATHNAME]\tuse named socket, default path is %s", TCP_DD_DEFAULT_SOCKET);
+	println("--url [URL]\t\t\tservice url");
 }
 
 int main(int argc, char *argv[])
@@ -120,18 +121,22 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_UNIX,
 		},
 		{
+			.name = "url",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_URL,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
-	struct inet_file_request file_req =
-	{
-		.hostname = TCP_DD_DEFAULT_SOCKET,
-		.port = TCP_DD_DEFAULT_PORT,
-		.open_connect = unix_create_tcp_link,
-		.close_connect = inet_close_tcp_socket
-	};
-
-	file_req.command[0] = 0;
+	char url_buff[1024];
+	u16 port = TCP_DD_DEFAULT_PORT;
+	const char *url = NULL;
+	const char *command = NULL;
+	const char *protocol = "unix";
+	const char *hostname = "127.0.0.1";
+	const char *pathname = TCP_DD_DEFAULT_SOCKET;
 
 	while ((c = getopt_long(argc, argv, "vVhHc:lmps:i:I:P:LaA", long_option, &option_index)) != EOF)
 	{
@@ -152,7 +157,7 @@ int main(int argc, char *argv[])
 
 		case 'c':
 		case CAVAN_COMMAND_OPTION_COMMAND:
-			text_copy(file_req.command, optarg);
+			command = optarg;
 			break;
 
 		case 'l':
@@ -174,41 +179,45 @@ int main(int argc, char *argv[])
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
-			file_req.open_connect = adb_create_tcp_link2;
+			protocol = "adb";
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
-			file_req.hostname = optarg;
+			hostname = optarg;
 			break;
 
 		case 't':
 		case 'T':
 		case CAVAN_COMMAND_OPTION_TCP:
-			file_req.open_connect = inet_create_tcp_link2;
+			protocol = "tcp";
 			break;
 
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			file_req.port = text2value_unsigned(optarg, NULL, 10);
+			port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_UNIX:
+			protocol = "unix";
+
 			if (optarg)
 			{
-				file_req.hostname = optarg;
+				pathname = optarg;
 			}
 			else
 			{
-				file_req.hostname = TCP_DD_DEFAULT_SOCKET;
+				pathname = TCP_DD_DEFAULT_SOCKET;
 			}
 
-			file_req.open_connect = unix_create_tcp_link;
 			break;
+
+		case CAVAN_COMMAND_OPTION_URL:
+			url = optarg;
 
 		default:
 			show_usage(argv[0]);
@@ -216,5 +225,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	return tcp_dd_exec_command(&file_req);
+	if (url == NULL)
+	{
+		network_url_build(url_buff, sizeof(url_buff), protocol, hostname, port, pathname);
+		url = url_buff;
+	}
+
+	return tcp_dd_exec_command(url, command ? command : "");
 }
