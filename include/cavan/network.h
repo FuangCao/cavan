@@ -305,7 +305,8 @@ int network_get_port_by_url(const struct network_url *url, const struct network_
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
 int network_create_socket_mac(const char *if_name, int protocol);
 
-int network_connect_open(struct network_connect *conn, const char *url_content);
+int network_connect_open(struct network_connect *conn, network_connect_type_t type, const char *hostname, u16 port, const char *pathname);
+int network_connect_open2(struct network_connect *conn, const char *url);
 void network_connect_close(struct network_connect *conn);
 
 static inline int inet_socket(int type)

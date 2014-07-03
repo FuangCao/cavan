@@ -451,6 +451,8 @@ void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port)
 
 void unix_sockaddr_init(struct sockaddr_un *addr, const char *pathname)
 {
+	LOGD("SUN_PATH = %s\n", pathname);
+
 	addr->sun_family = AF_UNIX;
 	strncpy(addr->sun_path, pathname, sizeof(addr->sun_path));
 }
@@ -1489,57 +1491,61 @@ static network_connect_type_t network_get_connect_type_by_name(const char *name)
 	return NETWORK_CONNECT_UNKNOWN;
 }
 
-int network_connect_open(struct network_connect *conn, const char *url_content)
+int network_connect_open(struct network_connect *conn, network_connect_type_t type, const char *hostname, u16 port, const char *pathname)
 {
-	int ret;
+	switch (type)
+	{
+	case NETWORK_CONNECT_TCP:
+		return network_tcp_create_connect(conn, hostname, port);
+
+	case NETWORK_CONNECT_UDP:
+		return network_udp_create_connect(conn, hostname, port);
+
+	case NETWORK_CONNECT_UNIX:
+		return network_unix_create_connect(conn, pathname);
+
+	case NETWORK_CONNECT_ADB:
+		return network_adb_create_connect(conn, hostname, port);
+
+	case NETWORK_CONNECT_ICMP:
+		return network_icmp_create_connect(conn, hostname);
+
+	case NETWORK_CONNECT_IP:
+		return network_ip_create_connect(conn, hostname);
+
+	case NETWORK_CONNECT_MAC:
+		return network_mac_create_connect(conn, hostname);
+
+	default:
+		pr_red_info("unknown connect type");
+		return -EINVAL;
+	}
+}
+
+int network_connect_open2(struct network_connect *conn, const char *_url)
+{
 	u16 port;
+	const char *pathname;
 	struct network_url url;
 	network_connect_type_t type;
 
-	if (url_content == NULL || network_parse_url(url_content, &url) == NULL)
+	if (_url == NULL)
+	{
+		pr_red_info("_url == NULL");
+		return -EINVAL;
+	}
+
+	pathname = network_parse_url(_url, &url);
+	if (pathname == NULL)
 	{
 		pr_red_info("network_parse_url");
-		return -EINVAL;
+		return -EFAULT;
 	}
 
 	port = text2value_unsigned(url.port, NULL, 10);
 	type = network_get_connect_type_by_name(url.protocol);
-	switch (type)
-	{
-	case NETWORK_CONNECT_TCP:
-		ret = network_tcp_create_connect(conn, url.hostname, port);
-		break;
 
-	case NETWORK_CONNECT_UDP:
-		ret = network_udp_create_connect(conn, url.hostname, port);
-		break;
-
-	case NETWORK_CONNECT_UNIX:
-		ret = network_unix_create_connect(conn, url.hostname);
-		break;
-
-	case NETWORK_CONNECT_ADB:
-		ret = network_adb_create_connect(conn, url.hostname, port);
-		break;
-
-	case NETWORK_CONNECT_ICMP:
-		ret = network_icmp_create_connect(conn, url.hostname);
-		break;
-
-	case NETWORK_CONNECT_IP:
-		ret = network_ip_create_connect(conn, url.hostname);
-		break;
-
-	case NETWORK_CONNECT_MAC:
-		ret = network_mac_create_connect(conn, url.hostname);
-		break;
-
-	default:
-		pr_red_info("unknown connect type");
-		ret = -EINVAL;
-	}
-
-	return ret;
+	return network_connect_open(conn, type, url.hostname, port, pathname);
 }
 
 void network_connect_close(struct network_connect *conn)
