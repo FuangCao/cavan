@@ -21,6 +21,88 @@
 #include <cavan/tcp_proxy.h>
 #include <cavan/network.h>
 
+static int network_client_test(const char *url)
+{
+	int ret;
+	char buff[1024] = "123456789";
+	struct network_client client;
+
+	ret = network_client_open2(&client, url);
+	if (ret < 0)
+	{
+		pr_red_info("network_client_open");
+		return ret;
+	}
+
+	ret = client.send(&client, buff, strlen(buff));
+	if (ret < 0)
+	{
+		pr_red_info("client.send");
+		goto out_network_client_close;
+	}
+
+	ret = client.recv(&client, buff, sizeof(buff));
+	if (ret < 0)
+	{
+		pr_red_info("client.recv");
+		goto out_network_client_close;
+	}
+
+	buff[ret] = 0;
+	println("buff[%d] = %s", ret, buff);
+
+out_network_client_close:
+	network_client_close(&client);
+	return ret;
+}
+
+static int network_service_test(const char *url)
+{
+	int ret;
+	char buff[1024];
+	struct network_connect conn;
+	struct network_service service;
+
+	ret = network_service_open2(&service, url);
+	if (ret < 0)
+	{
+		pr_red_info("network_service_open");
+		return ret;
+	}
+
+	ret = service.accept(&service, &conn);
+	if (ret < 0)
+	{
+		pr_red_info("service->accept");
+		goto out_network_service_close;
+	}
+
+	ret = conn.recv(&conn, buff, sizeof(buff));
+	if (ret < 0)
+	{
+		pr_red_info("conn.recv");
+		goto out_conn_close;
+	}
+
+	buff[ret] = 0;
+	println("buff[%d] = %s", ret, buff);
+
+	ret = conn.send(&conn, "8888", 4);
+	if (ret < 0)
+	{
+		pr_red_info("conn.send");
+		goto out_conn_close;
+	}
+
+	msleep(500);
+
+out_conn_close:
+	conn.close(&conn);
+out_network_service_close:
+	network_service_close(&service);
+	return ret;
+}
+
 int main(int argc, char *argv[])
 {
 #if 0
@@ -37,19 +119,20 @@ int main(int argc, char *argv[])
 		println("%s", network_url_tostring(&url, NULL, 0, NULL));
 	}
 #else
-	int ret;
-	struct network_client client;
+	assert(argc > 2);
 
-	assert(argc > 1);
-
-	ret = network_client_open2(&client, argv[1]);
-	if (ret < 0)
+	if (strcmp(argv[1], "client") == 0)
 	{
-		pr_red_info("network_client_open");
-		return ret;
+		return network_client_test(argv[2]);
 	}
-
-	network_client_close(&client);
+	else if (strcmp(argv[1], "service") == 0)
+	{
+		return network_service_test(argv[2]);
+	}
+	else
+	{
+		pr_red_info("unknown command %s", argv[1]);
+	}
 #endif
 
 	return 0;

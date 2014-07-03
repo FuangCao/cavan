@@ -77,6 +77,8 @@ Java|Hello     Java或Hello
 删除C语言块注释
 %s#/\*\_.\{-}\*/##g
 
+echo "aa_123_bb aa_456_cc" | sed 's/aa_\([^ ]*\)_\(bb\|cc\)/\1/g' => 123 456
+
 apt-get install ctags cscope
 
 cscope -Rbq
