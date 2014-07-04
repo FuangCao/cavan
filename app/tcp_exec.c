@@ -19,7 +19,8 @@ static void show_usage(const char *command)
 	println("--ip, -i, -I\t\tserver ip address");
 	println("--local, -l, -L\t\tuse localhost ip");
 	println("--port, -p, -P\t\tserver port");
-	println("--adb, -a, -A\t\tuse adb procotol instead of tcp");
+	println("--adb, -a, -A\t\tuse adb protocol instead of tcp");
+	println("--udp\t\t\tuse udp protocol");
 	println("--url, -u, -U [URL]\tservice url");
 }
 
@@ -58,6 +59,12 @@ int main(int argc, char *argv[])
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_ADB,
+		},
+		{
+			.name = "udp",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UDP,
 		},
 		{
 			.name = "url",
@@ -116,6 +123,10 @@ int main(int argc, char *argv[])
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
 			hostname = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_UDP:
+			protocol = "udp";
 			break;
 
 		case 'p':

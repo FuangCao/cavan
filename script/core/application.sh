@@ -82,6 +82,7 @@ function cavan-git-daemon-run()
 function cavan-daemon-run()
 {
 	cavan-tcp_dd_server -ds0
+	cavan-tcp_dd_server -ds0 --udp
 
 	while cavan-alarm remove 0 -l 2>&1 > /dev/null
 	do

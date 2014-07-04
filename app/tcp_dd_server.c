@@ -15,17 +15,17 @@ static void show_usage(const char *command)
 {
 	println("Usage:");
 	println("%s [option] port", command);
-	println("--help, -h, -H\t\tshow this help");
-	println("--super, -s, -S\t\tneed super permission");
-	println("--daemon, -d, -D\trun as a daemon");
-	println("--min, -m, -c\t\tmin daemon count");
-	println("--max, -M, -C\t\tmax daemon count");
-	println("--verbose, -v, -V\tshow log message");
-	println("--port, -p, -P\t\tserver port");
-	println("--log, -l, -L\t\tsave log to file");
-	println("--udp\t\trun as udp service");
-	println("--url\t\tservice url");
-	println("--unix, -u, -U [PATHNAME]\t\tlisten to a named socket, default path is %s", TCP_DD_DEFAULT_SOCKET);
+	println("--help, -h, -H\t\t\tshow this help");
+	println("--super, -s, -S\t\t\tneed super permission");
+	println("--daemon, -d, -D\t\trun as a daemon");
+	println("--min, -m, -c\t\t\tmin daemon count");
+	println("--max, -M, -C\t\t\tmax daemon count");
+	println("--verbose, -v, -V\t\tshow log message");
+	println("--port, -p, -P\t\t\tserver port");
+	println("--log, -l, -L\t\t\tsave log to file");
+	println("--udp\t\t\t\trun as udp service");
+	println("--url\t\t\t\tservice url");
+	println("--unix, -u, -U [PATHNAME]\tlisten to a named socket, default path is %s", TCP_DD_DEFAULT_SOCKET);
 }
 
 int main(int argc, char *argv[])

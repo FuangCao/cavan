@@ -38,6 +38,7 @@ static void show_usage(const char *command)
 	println("--port, -P PORT\t\t\tserver port");
 	println("--adb, -a, -A\t\t\tuse adb protocol instead of tcp");
 	println("--tcp, -t, -T\t\t\tuse tcp protocol instead of adb");
+	println("--udp\t\t\t\tuse udp protocol");
 	println("--unix, -u, -U [PATHNAME]\tuse named socket, default path is %s", TCP_DD_DEFAULT_SOCKET);
 	println("--url [URL]\t\t\tservice url");
 }
@@ -107,6 +108,12 @@ int main(int argc, char *argv[])
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_ADB,
+		},
+		{
+			.name = "udp",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UDP,
 		},
 		{
 			.name = "tcp",
@@ -190,6 +197,10 @@ int main(int argc, char *argv[])
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
 			hostname = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_UDP:
+			protocol = "udp";
 			break;
 
 		case 't':
