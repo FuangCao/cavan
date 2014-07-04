@@ -1290,6 +1290,34 @@ static ssize_t network_client_udp_recv(struct network_client *client, void *buff
 	return recvfrom(client->sockfd, buff, size, 0, &client->addr, &client->addrlen);
 }
 
+static int network_client_udp_talk(struct network_client *client)
+{
+	u32 magic;
+	ssize_t rwlen;
+
+	rwlen = network_client_send_message(client, CAVAN_NETWORK_MAGIC);
+	if (rwlen < 4)
+	{
+		pr_red_info("network_client_send_message");
+		return rwlen < 0 ? rwlen : -EFAULT;
+	}
+
+	rwlen = network_client_recv_message(client, &magic);
+	if (rwlen < 4)
+	{
+		pr_red_info("network_client_recv_message");
+		return rwlen < 0 ? rwlen : -EFAULT;
+	}
+
+	if (magic != CAVAN_NETWORK_MAGIC)
+	{
+		pr_red_info("invalid magic = 0x%08x", magic);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static int network_client_udp_open(struct network_client *client, const char *hostname, u16 port)
 {
 	int ret;
@@ -1318,7 +1346,18 @@ static int network_client_udp_open(struct network_client *client, const char *ho
 
 	((struct sockaddr_in *)&client->addr)->sin_port = htons(port);
 
+	ret = network_client_udp_talk(client);
+	if (ret < 0)
+	{
+		pr_red_info("network_client_udp_talk");
+		goto out_close_sockfd;
+	}
+
 	return 0;
+
+out_close_sockfd:
+	close(sockfd);
+	return ret;
 }
 
 static void network_client_tcp_close(struct network_client *client)
@@ -1594,6 +1633,40 @@ void network_client_close(struct network_client *client)
 	}
 }
 
+ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size)
+{
+	ssize_t rdlen;
+	const char *buff_end = buff + size;
+
+	for (buff_end = buff + size; buff < buff_end; buff += rdlen)
+	{
+		rdlen = client->recv(client, buff, buff_end - buff);
+		if (rdlen <= 0)
+		{
+			return -EFAULT;
+		}
+	}
+
+	return size;
+}
+
+ssize_t network_client_send_buff(struct network_client *client, const char *buff, size_t size)
+{
+	ssize_t wrlen;
+	const char *buff_end = buff + size;
+
+	for (buff_end = buff + size; buff < buff_end; buff += wrlen)
+	{
+		wrlen = client->send(client, buff, buff_end - buff);
+		if (wrlen <= 0)
+		{
+			return -EFAULT;
+		}
+	}
+
+	return size;
+}
+
 ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size)
 {
 	char buff[1024];
@@ -1614,23 +1687,6 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 	return size_bak;
 }
 
-ssize_t network_client_send(struct network_client *client, const char *buff, size_t size)
-{
-	ssize_t wrlen;
-	const char *buff_end = buff + size;
-
-	for (buff_end = buff + size; buff < buff_end; buff += wrlen)
-	{
-		wrlen = client->send(client, buff, buff_end - buff);
-		if (wrlen <= 0)
-		{
-			return -EFAULT;
-		}
-	}
-
-	return size;
-}
-
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size)
 {
 	char buff[1024];
@@ -1640,7 +1696,7 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 	while (size)
 	{
 		rdlen = ffile_read(fd, buff, size);
-		if (rdlen <= 0 || network_client_send(client, buff, rdlen) < rdlen)
+		if (rdlen <= 0 || network_client_send_buff(client, buff, rdlen) < rdlen)
 		{
 			return -EFAULT;
 		}
@@ -1686,7 +1742,7 @@ int network_client_exec_redirect(struct network_client *client, int ttyin, int t
 		if (pfds[1].revents)
 		{
 			rdlen = read(ttyin, buff, sizeof(buff));
-			if (rdlen <= 0 || network_client_send(client, buff, rdlen) < rdlen)
+			if (rdlen <= 0 || network_client_send_buff(client, buff, rdlen) < rdlen)
 			{
 				break;
 			}
@@ -1732,17 +1788,67 @@ static void network_service_udp_close(struct network_service *service)
 	close(service->sockfd);
 }
 
+static int network_service_udp_talk(struct network_service *service, struct network_client *client)
+{
+	u32 magic;
+	int rwlen;
+
+	rwlen = recvfrom(service->sockfd, &magic, sizeof(magic), 0, &client->addr, &client->addrlen);
+	if (rwlen < 4)
+	{
+		pr_error_info("recvfrom");
+		return rwlen < 0 ? rwlen : -EFAULT;
+	}
+
+	LOGD("magic = 0x%08x\n", magic);
+
+	if (magic != CAVAN_NETWORK_MAGIC)
+	{
+		pr_red_info("invalid magic = 0x%08x", magic);
+		return -EINVAL;
+	}
+
+	client->sockfd = inet_socket(SOCK_DGRAM);
+	if (client->sockfd < 0)
+	{
+		pr_error_info("inet_socket");
+		return client->sockfd;
+	}
+
+	rwlen = network_client_send_message(client, CAVAN_NETWORK_MAGIC);
+	if (rwlen < 4)
+	{
+		pr_red_info("network_client_send_message");
+
+		if (rwlen >= 0)
+		{
+			rwlen = -EFAULT;
+		}
+
+		goto out_close_client_sockfd;
+	}
+
+	return 0;
+
+out_close_client_sockfd:
+	close(client->sockfd);
+	return rwlen;
+}
+
 static int network_service_udp_accept(struct network_service *service, struct network_client *client)
 {
-	client->sockfd = service->sockfd;
+	ssize_t ret;
+
 	client->addrlen = sizeof(client->addr);
 	client->close = network_client_close_none;
 	client->send = network_client_udp_send;
 	client->recv = network_client_udp_recv;
 
-	file_poll_input(client->sockfd, -1);
+	network_service_lock(service);
+	ret = network_service_udp_talk(service, client);
+	network_service_unlock(service);
 
-	return 0;
+	return ret;
 }
 
 static int network_service_udp_open(struct network_service *service, u16 port)
@@ -1818,6 +1924,15 @@ static int network_service_unix_open(struct network_service *service, const char
 
 int network_service_open(struct network_service *service, network_connect_type_t type, u16 port, const char *pathname)
 {
+	int ret;
+
+	ret = pthread_mutex_init(&service->lock, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_mutex_init");
+		return ret;
+	}
+
 	switch (type)
 	{
 	case NETWORK_CONNECT_TCP:
@@ -1832,8 +1947,12 @@ int network_service_open(struct network_service *service, network_connect_type_t
 
 	default:
 		pr_red_info("unsupport connect type %d", type);
-		return -EINVAL;
+		ret = -EINVAL;
 	}
+
+	pthread_mutex_destroy(&service->lock);
+
+	return ret;
 }
 
 int network_service_open2(struct network_service *service, const char *_url)
@@ -1872,4 +1991,6 @@ void network_service_close(struct network_service *service)
 	{
 		close(service->sockfd);
 	}
+
+	pthread_mutex_destroy(&service->lock);
 }

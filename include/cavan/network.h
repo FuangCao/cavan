@@ -20,6 +20,7 @@
 #define ROUTE_TABLE_SIZE		16
 #define MAC_ADDRESS_LEN			6
 #define CAVAN_LISTEN_BACKLOG	32
+#define CAVAN_NETWORK_MAGIC		0x88888888
 
 #define SYS_NET_DIRECTORY		"/sys/class/net"
 #define LOCAL_HOST_IP			"127.0.0.1"
@@ -242,6 +243,7 @@ struct network_service
 {
 	int sockfd;
 	void *private_data;
+	pthread_mutex_t lock;
 	network_connect_type_t type;
 
 	int (*accept)(struct network_service *service, struct network_client *conn);
@@ -329,8 +331,9 @@ int network_create_socket_mac(const char *if_name, int protocol);
 int network_client_open(struct network_client *client, network_connect_type_t type, const char *hostname, u16 port, const char *pathname);
 int network_client_open2(struct network_client *client, const char *url);
 void network_client_close(struct network_client *client);
+ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size);
+ssize_t network_client_send_buff(struct network_client *client, const char *buff, size_t size);
 ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size);
-ssize_t network_client_send(struct network_client *client, const char *buff, size_t size);
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size);
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout);
 int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns);
@@ -476,6 +479,16 @@ static inline void *network_client_get_data(struct network_client *client)
 	return client->private_data;
 }
 
+static inline ssize_t network_client_send_message(struct network_client *client, u32 message)
+{
+	return network_client_send_buff(client, (char *) &message, sizeof(message));
+}
+
+static inline ssize_t network_client_recv_message(struct network_client *client, u32 *message)
+{
+	return network_client_fill_buff(client, (char *) message, sizeof(*message));
+}
+
 static inline void network_service_set_data(struct network_service *service, void *data)
 {
 	service->private_data = data;
@@ -484,4 +497,14 @@ static inline void network_service_set_data(struct network_service *service, voi
 static inline void *network_service_get_data(struct network_service *service)
 {
 	return service->private_data;
+}
+
+static inline void network_service_lock(struct network_service *service)
+{
+	pthread_mutex_lock(&service->lock);
+}
+
+static inline void network_service_unlock(struct network_service *service)
+{
+	pthread_mutex_unlock(&service->lock);
 }
