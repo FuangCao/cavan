@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_UNIX:
-			dd_service->type = NETWORK_CONNECT_UNIX;
+			dd_service->type = NETWORK_CONNECT_UNIX_TCP;
 
 			if (optarg)
 			{

@@ -130,13 +130,16 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
+	u16 port;
 	char url_buff[1024];
-	u16 port = TCP_DD_DEFAULT_PORT;
 	const char *url = NULL;
 	const char *command = NULL;
-	const char *protocol = "unix";
-	const char *hostname = "127.0.0.1";
+	const char *hostname = NULL;
+	const char *protocol = "unix-tcp";
 	const char *pathname = TCP_DD_DEFAULT_SOCKET;
+
+	hostname = cavan_get_server_hostname();
+	port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
 
 	while ((c = getopt_long(argc, argv, "vVhHc:lmps:i:I:P:LaA", long_option, &option_index)) != EOF)
 	{
@@ -203,7 +206,7 @@ int main(int argc, char *argv[])
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_UNIX:
-			protocol = "unix";
+			protocol = "unix-tcp";
 
 			if (optarg)
 			{
@@ -218,6 +221,7 @@ int main(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_URL:
 			url = optarg;
+			break;
 
 		default:
 			show_usage(argv[0]);

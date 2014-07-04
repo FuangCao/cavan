@@ -27,6 +27,7 @@
 #define CAVAN_DEFAULT_IP		LOCAL_HOST_IP
 #define CAVAN_IP_ENV_NAME		"CAVAN_SERVER_IP"
 #define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
+#define CAVAN_NETWORK_TEMP_PATH	CAVAN_TEMP_PATH "/cavan/network"
 
 #pragma pack(1)
 struct mac_header
@@ -220,11 +221,12 @@ typedef enum
 	NETWORK_CONNECT_UNKNOWN,
 	NETWORK_CONNECT_TCP,
 	NETWORK_CONNECT_UDP,
-	NETWORK_CONNECT_UNIX,
 	NETWORK_CONNECT_ADB,
 	NETWORK_CONNECT_ICMP,
 	NETWORK_CONNECT_IP,
 	NETWORK_CONNECT_MAC,
+	NETWORK_CONNECT_UNIX_TCP,
+	NETWORK_CONNECT_UNIX_UDP,
 } network_connect_type_t;
 
 struct network_client
@@ -232,7 +234,14 @@ struct network_client
 	int sockfd;
 	socklen_t addrlen;
 	void *private_data;
-	struct sockaddr addr;
+
+	union
+	{
+		struct sockaddr addr;
+		struct sockaddr_in addr_in;
+		struct sockaddr_un addr_un;
+	};
+
 	network_connect_type_t type;
 
 	void (*close)(struct network_client *client);
@@ -325,6 +334,8 @@ char *network_parse_url(const char *text, struct network_url *url);
 const struct network_protocol *network_get_protocol_by_name(const char *name);
 const struct network_protocol *network_get_protocol_by_type(network_protocol_type_t type);
 const struct network_protocol *network_get_protocol_by_port(u16 port);
+network_connect_type_t network_connect_type_parse(const char *name, const char *name2);
+const char *network_connect_type_tostring(network_connect_type_t type);
 int network_get_port_by_url(const struct network_url *url, const struct network_protocol *protocol);
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
 int network_create_socket_mac(const char *if_name, int protocol);
@@ -395,6 +406,11 @@ static inline ssize_t inet_recvfrom(int sockfd, void *buff, size_t size, struct 
 static inline int inet_create_udp_service(u16 port)
 {
 	return inet_create_service(SOCK_DGRAM, port);
+}
+
+static inline int unix_create_udp_service(const char *pathname)
+{
+	return unix_create_service(SOCK_DGRAM, pathname);
 }
 
 static inline int inet_listen(int sockfd)

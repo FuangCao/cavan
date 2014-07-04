@@ -274,7 +274,7 @@ static int web_proxy_open_html_file(const char *title, char *pathname)
 		return fd;
 	}
 
-	unlink(buff);
+	unlink(pathname);
 
 	println("pathname = %s, title = %s", pathname, title);
 

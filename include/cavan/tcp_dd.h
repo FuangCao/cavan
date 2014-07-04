@@ -12,7 +12,7 @@
 #include <cavan/alarm.h>
 
 #define TCP_DD_DEFAULT_PORT		8888
-#define TCP_DD_DEFAULT_SOCKET	CAVAN_TEMP_PATH "/socket-tcp-dd"
+#define TCP_DD_DEFAULT_SOCKET	CAVAN_NETWORK_TEMP_PATH "/socket-service"
 #define TCP_DD_DAEMON_COUNT		10
 #define TCP_DD_TIMEOUT			5000
 
