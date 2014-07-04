@@ -4,6 +4,7 @@
 #include <cavan/file.h>
 #include <cavan/command.h>
 #include <cavan/network.h>
+#include <cavan/progress.h>
 
 static struct network_protocol protocols[] =
 {
@@ -1681,6 +1682,9 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 	char buff[1024];
 	ssize_t rdlen;
 	size_t size_bak = size;
+	struct progress_bar bar;
+
+	progress_bar_init(&bar, size);
 
 	while (size)
 	{
@@ -1691,7 +1695,10 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 		}
 
 		size -= rdlen;
+		progress_bar_add(&bar, rdlen);
 	}
+
+	progress_bar_finish(&bar);
 
 	return size_bak;
 }
@@ -1701,17 +1708,23 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 	char buff[1024];
 	ssize_t rdlen;
 	size_t size_bak = size;
+	struct progress_bar bar;
+
+	progress_bar_init(&bar, size);
 
 	while (size)
 	{
-		rdlen = ffile_read(fd, buff, size);
+		rdlen = ffile_read(fd, buff, sizeof(buff));
 		if (rdlen <= 0 || network_client_send_buff(client, buff, rdlen) < rdlen)
 		{
 			return -EFAULT;
 		}
 
 		size -= rdlen;
+		progress_bar_add(&bar, rdlen);
 	}
+
+	progress_bar_finish(&bar);
 
 	return size_bak;
 }
