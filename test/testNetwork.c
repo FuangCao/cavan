@@ -103,22 +103,27 @@ out_network_service_close:
 	return ret;
 }
 
-int main(int argc, char *argv[])
+static int network_url_test(const char *_url)
 {
-#if 0
+	const char *pathname;
 	struct network_url url;
 
-	assert(argc > 1);
-
-	if (network_parse_url(argv[1], &url) == NULL)
+	pathname = network_parse_url(_url, &url);
+	if (pathname == NULL)
 	{
 		pr_red_info("web_proxy_parse_url");
 	}
 	else
 	{
 		println("%s", network_url_tostring(&url, NULL, 0, NULL));
+		println("pathname = %s", pathname);
 	}
-#else
+
+	return 0;
+}
+
+int main(int argc, char *argv[])
+{
 	assert(argc > 2);
 
 	if (strcmp(argv[1], "client") == 0)
@@ -129,11 +134,14 @@ int main(int argc, char *argv[])
 	{
 		return network_service_test(argv[2]);
 	}
+	else if (strcmp(argv[1], "url") == 0)
+	{
+		return network_url_test(argv[2]);
+	}
 	else
 	{
 		pr_red_info("unknown command %s", argv[1]);
 	}
-#endif
 
 	return 0;
 }

@@ -1059,12 +1059,12 @@ char *network_url_tostring(const struct network_url *url, char *buff, size_t siz
 
 char *network_parse_url(const char *text, struct network_url *url)
 {
-	int step = 0;
-	char *p = url->hostname;
-	char *p_end = p + sizeof(url->hostname);
+	char *p = url->memory;
+	char *p_end = p + sizeof(url->memory);
 
-	url->port[0] = 0;
-	url->protocol[0] = 0;
+	url->port = NULL;
+	url->protocol = NULL;
+	url->hostname = url->memory;
 
 	while (p < p_end)
 	{
@@ -1074,29 +1074,38 @@ char *network_parse_url(const char *text, struct network_url *url)
 		case ' ':
 		case '/':
 			*p = 0;
+
+			if (url->port == NULL)
+			{
+				url->port = p;
+			}
+
+			if (url->protocol == NULL)
+			{
+				url->protocol = p;
+			}
+
 			return (char *) text;
 
 		case ':':
 			*p = 0;
+			text++;
 
-			if (step == 0 && text_lhcmp("//", text + 1) == 0)
+			if (url->protocol == NULL && text_lhcmp("//", text) == 0)
 			{
-				text += 3;
-				p = url->hostname;
-				text_ncopy(url->protocol, url->hostname, sizeof(url->protocol));
+				url->protocol = url->hostname;
+				url->hostname = ++p;
+				text += 2;
 			}
-			else if (IS_NUMBER(text[1]))
+			else if (IS_NUMBER(*text))
 			{
-				text++;
-				p = url->port;
-				p_end = p + sizeof(url->port);
+				url->port = ++p;
 			}
 			else
 			{
 				return NULL;
 			}
 
-			step++;
 			break;
 
 		default:

@@ -203,9 +203,10 @@ struct network_protocol
 
 struct network_url
 {
-	char port[8];
-	char protocol[8];
-	char hostname[512];
+	char *port;
+	char *protocol;
+	char *hostname;
+	char memory[512];
 };
 
 struct inet_connect
