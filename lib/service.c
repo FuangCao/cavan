@@ -541,16 +541,6 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		return -EINVAL;
 	}
 
-	if (service->conn_size <= 0)
-	{
-#if __WORDSIZE == 64
-		pr_red_info("invalid conn_size = %ld", service->conn_size);
-#else
-		pr_red_info("invalid conn_size = %d", service->conn_size);
-#endif
-		return -EINVAL;
-	}
-
 	if (service->super_permission && (ret = check_super_permission(true, 5000)) < 0)
 	{
 		return ret;
@@ -601,6 +591,15 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		pr_red_info("service->start");
 		return ret;
 	}
+
+	if (service->conn_size <= 0)
+	{
+		ret = -EINVAL;
+		pr_red_info("invalid conn_size = " PRINT_FORMAT_SIZE, service->conn_size);
+		goto out_service_stop;
+	}
+
+	pr_bold_info("conn_size = " PRINT_FORMAT_SIZE, service->conn_size);
 
 	if (sync)
 	{

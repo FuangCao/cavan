@@ -20,7 +20,7 @@ struct cavan_net_bridge_addr
 struct cavan_net_bridge_port
 {
 	struct pollfd *pfd;
-	struct network_client client;
+	struct network_client *client;
 	struct double_link addr_list;
 	struct cavan_data_pool addr_pool;
 

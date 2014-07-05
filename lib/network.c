@@ -1294,12 +1294,16 @@ static void network_client_udp_close(struct network_client *client)
 
 static ssize_t network_client_udp_send(struct network_client *client, const void *buff, size_t size)
 {
-	return sendto(client->sockfd, buff, size, 0, &client->addr, client->addrlen);
+	struct network_client_inet *inet = (struct network_client_inet *) client;
+
+	return sendto(client->sockfd, buff, size, 0, &inet->addr, client->addrlen);
 }
 
 static ssize_t network_client_udp_recv(struct network_client *client, void *buff, size_t size)
 {
-	return recvfrom(client->sockfd, buff, size, 0, &client->addr, &client->addrlen);
+	struct network_client_inet *inet = (struct network_client_inet *) client;
+
+	return recvfrom(client->sockfd, buff, size, 0, &inet->addr, &client->addrlen);
 }
 
 static int network_client_udp_talk(struct network_client *client)
@@ -1338,30 +1342,41 @@ static int network_client_udp_common_open(struct network_client *client)
 	return network_client_udp_talk(client);
 }
 
-static int network_client_udp_open(struct network_client *client, const char *hostname, u16 port)
+static struct network_client *network_client_udp_open(const char *hostname, u16 port)
 {
 	int ret;
 	int sockfd;
+	struct network_client *client;
+	struct network_client_inet *inet;
 
-	ret = inet_hostname2sockaddr(hostname, &client->addr_in);
+	inet = malloc(sizeof(*inet));
+	if (inet == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	ret = inet_hostname2sockaddr(hostname, &inet->addr);
 	if (ret < 0)
 	{
 		pr_red_info("inet_hostname2sockaddr");
-		return ret;
+		goto out_free_inet;
 	}
 
 	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		pr_error_info("inet_socket");
-		return sockfd;
+		goto out_free_inet;
 	}
 
+	client = &inet->client;
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_UDP;
-	client->addrlen = sizeof(client->addr_in);
-	client->addr_in.sin_port = htons(port);
 	client->close = network_client_udp_close;
+	client->addrlen = sizeof(inet->addr);
+	inet->addr.sin_port = htons(port);
+
 
 	ret = network_client_udp_common_open(client);
 	if (ret < 0)
@@ -1370,11 +1385,13 @@ static int network_client_udp_open(struct network_client *client, const char *ho
 		goto out_client_close;
 	}
 
-	return 0;
+	return client;
 
 out_client_close:
 	client->close(client);
-	return ret;
+out_free_inet:
+	free(inet);
+	return NULL;
 }
 
 static void network_client_tcp_close(struct network_client *client)
@@ -1392,55 +1409,65 @@ static ssize_t network_client_tcp_recv(struct network_client *client, void *buff
 	return recv(client->sockfd, buff, size, 0);
 }
 
-static int network_client_tcp_open(struct network_client *client, const char *hostname, u16 port)
+static struct network_client *network_client_tcp_open(const char *hostname, u16 port)
 {
 	int sockfd;
+	struct network_client *client;
 
 	sockfd = inet_create_tcp_link2(hostname, port);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_socket");
-		return sockfd;
+		return NULL;
+	}
+
+	client = malloc(sizeof(*client));
+	if (client == NULL)
+	{
+		pr_error_info("malloc");
+		goto out_close_sockfd;
 	}
 
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_TCP;
+	client->addrlen = sizeof(struct sockaddr_in);
 	client->close = network_client_tcp_close;
 	client->send = network_client_tcp_send;
 	client->recv = network_client_tcp_recv;
 
-	return 0;
+	return client;
+
+out_close_sockfd:
+	close(sockfd);
+	return NULL;
 }
 
 static void network_client_unix_udp_close(struct network_client *client)
 {
-	const char *pathname;
+	struct network_client_unix_udp *udp = (struct network_client_unix_udp *) client;
 
 	network_client_udp_close(client);
-
-	pathname = network_client_get_data(client);
-	unlink(pathname);
-	free((void *) pathname);
+	unlink(udp->pathname);
 }
 
-static int network_create_unix_udp_client(struct network_client *client)
+static int network_create_unix_udp_client(struct network_client_unix_udp *udp)
 {
 	int fd;
 	int ret;
-	char pathname[512];
+	struct network_client *client = &udp->client;
 
-	text_ncopy(pathname, CAVAN_NETWORK_TEMP_PATH "/socket-client-XXXXXX", sizeof(pathname));
+	text_ncopy(udp->pathname, CAVAN_NETWORK_TEMP_PATH "/socket-client-XXXXXX", sizeof(udp->pathname));
 
-	fd = mkstemp(pathname);
+	fd = mkstemp(udp->pathname);
 	if (fd < 0)
 	{
-		pr_error_info("mkstemp `%s'", pathname);
+		pr_error_info("mkstemp `%s'", udp->pathname);
 		return fd;
 	}
 
 	close(fd);
 
-	ret = unix_create_service(SOCK_DGRAM, pathname);
+	ret = unix_create_service(SOCK_DGRAM, udp->pathname);
 	if (ret < 0)
 	{
 		pr_red_info("unix_create_service");
@@ -1448,50 +1475,73 @@ static int network_create_unix_udp_client(struct network_client *client)
 	}
 
 	client->sockfd = ret;
+	client->addrlen = sizeof(udp->addr);
 	client->type = NETWORK_CONNECT_UNIX_UDP;
-	client->addrlen = sizeof(client->addr_un);
 	client->close = network_client_unix_udp_close;
-	network_client_set_data(client, strdup(pathname));
 
 	return 0;
 
 out_unlink_pathname:
-	unlink(pathname);
+	unlink(udp->pathname);
 	return ret;
 }
 
-static int network_client_unix_tcp_open(struct network_client *client, const char *hostname)
+static struct network_client *network_client_unix_tcp_open(const char *hostname)
 {
 	int sockfd;
+	struct network_client *client;
 
 	sockfd = unix_create_tcp_link(hostname, 0);
 	if (sockfd < 0)
 	{
 		pr_error_info("unix_socket");
-		return sockfd;
+		return NULL;
+	}
+
+	client = malloc(sizeof(*client));
+	if (client == NULL)
+	{
+		pr_error_info("malloc");
+		goto out_close_sockfd;
 	}
 
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_UNIX_TCP;
+	client->addrlen = sizeof(struct sockaddr_un);
 	client->close = network_client_tcp_close;
 	client->send = network_client_tcp_send;
 	client->recv = network_client_tcp_recv;
 
-	return 0;
+	return client;
+
+out_close_sockfd:
+	close(sockfd);
+	return NULL;
 }
 
-static int network_client_unix_udp_open(struct network_client *client, const char *hostname)
+static struct network_client *network_client_unix_udp_open(const char *hostname)
 {
 	int ret;
+	struct network_client *client;
+	struct network_client_unix_udp *udp;
 
-	ret = network_create_unix_udp_client(client);
+	udp = malloc(sizeof(*udp));
+	if (udp == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	ret = network_create_unix_udp_client(udp);
 	if (ret < 0)
 	{
 		pr_error_info("inet_socket");
-		return ret;
+		goto out_free_udp;
 	}
 
-	unix_sockaddr_init(&client->addr_un, hostname);
+	unix_sockaddr_init(&udp->addr, hostname);
+
+	client = &udp->client;
 
 	ret = network_client_udp_common_open(client);
 	if (ret < 0)
@@ -1500,109 +1550,165 @@ static int network_client_unix_udp_open(struct network_client *client, const cha
 		goto out_client_close;
 	}
 
-
-	return 0;
+	return client;
 
 out_client_close:
 	client->close(client);
-	return ret;
+out_free_udp:
+	free(udp);
+	return NULL;
 }
 
 
-static int network_client_adb_open(struct network_client *client, const char *hostname, u16 port)
+static struct network_client *network_client_adb_open(const char *hostname, u16 port)
 {
 	int sockfd;
+	struct network_client *client;
 
 	sockfd = adb_create_tcp_link(hostname, 0, port);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_socket");
-		return sockfd;
+		return NULL;
+	}
+
+	client = malloc(sizeof(*client));
+	if (client == NULL)
+	{
+		pr_error_info("malloc");
+		goto out_close_sockfd;
 	}
 
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_ADB;
+	client->addrlen = sizeof(struct sockaddr_in);
 	client->close = network_client_tcp_close;
 	client->send = network_client_tcp_send;
 	client->recv = network_client_tcp_recv;
 
-	return 0;
+	return client;
+
+out_close_sockfd:
+	close(sockfd);
+	return NULL;
 }
 
-static int network_client_icmp_open(struct network_client *client, const char *hostname)
+static struct network_client *network_client_icmp_open(const char *hostname)
 {
 	int ret;
 	int sockfd;
+	struct network_client *client;
+	struct network_client_inet *inet;
 
-	ret = inet_hostname2sockaddr(hostname, &client->addr_in);
+	inet = malloc(sizeof(*inet));
+	if (inet == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	ret = inet_hostname2sockaddr(hostname, &inet->addr);
 	if (ret < 0)
 	{
 		pr_red_info("inet_hostname2sockaddr");
-		return ret;
+		goto out_free_inet;
 	}
 
 	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd < 0)
 	{
 		pr_error_info("inet_socket");
-		return sockfd;
+		goto out_free_inet;
 	}
 
+	client = &inet->client;
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_ICMP;
+	client->addrlen = sizeof(inet->addr);
 	client->close = network_client_udp_close;
 	client->send = network_client_udp_send;
 	client->recv = network_client_udp_recv;
 
-	return 0;
+	return client;
+
+out_free_inet:
+	free(inet);
+	return NULL;
 }
 
-static int network_client_ip_open(struct network_client *client, const char *hostname)
+static struct network_client *network_client_ip_open(const char *hostname)
 {
 	int ret;
 	int sockfd;
+	struct network_client *client;
+	struct network_client_inet *inet;
 
-	ret = inet_hostname2sockaddr(hostname, &client->addr_in);
+	inet = malloc(sizeof(*inet));
+	if (inet == NULL)
+	{
+		pr_error_info("malloc");
+		return NULL;
+	}
+
+	ret = inet_hostname2sockaddr(hostname, &inet->addr);
 	if (ret < 0)
 	{
 		pr_red_info("inet_hostname2sockaddr");
-		return ret;
+		goto out_free_inet;
 	}
 
 	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
 	if (sockfd < 0)
 	{
 		pr_error_info("inet_socket");
-		return sockfd;
+		goto out_free_inet;
 	}
 
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_IP;
+	client->addrlen = sizeof(inet->addr);
 	client->close = network_client_udp_close;
 	client->send = network_client_udp_send;
 	client->recv = network_client_udp_recv;
 
-	return 0;
+	return client;
+
+out_free_inet:
+	free(inet);
+	return NULL;
 }
 
-static int network_client_mac_open(struct network_client *client, const char *if_name)
+static struct network_client *network_client_mac_open(const char *if_name)
 {
 	int sockfd;
+	struct network_client *client;
 
 	sockfd = network_create_socket_mac(if_name, 0);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_socket");
-		return sockfd;
+		return NULL;
+	}
+
+	client = malloc(sizeof(*client));
+	if (client == NULL)
+	{
+		pr_error_info("malloc");
+		goto out_close_sockfd;
 	}
 
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_MAC;
+	client->addrlen = sizeof(struct sockaddr_in);
 	client->close = network_client_udp_close;
 	client->send = network_client_tcp_send;
 	client->recv = network_client_tcp_recv;
 
-	return 0;
+	return client;
+
+out_close_sockfd:
+	close(sockfd);
+	return NULL;
 }
 
 network_connect_type_t network_connect_type_parse(const char *name, const char *name2)
@@ -1697,60 +1803,60 @@ const char *network_connect_type_tostring(network_connect_type_t type)
 	}
 }
 
-int network_client_open(struct network_client *client, network_connect_type_t type, const char *hostname, u16 port, const char *pathname)
+struct network_client *network_client_open(network_connect_type_t type, const char *hostname, u16 port, const char *pathname)
 {
 	switch (type)
 	{
 	case NETWORK_CONNECT_TCP:
-		return network_client_tcp_open(client, hostname, port);
+		return network_client_tcp_open(hostname, port);
 
 	case NETWORK_CONNECT_UDP:
-		return network_client_udp_open(client, hostname, port);
+		return network_client_udp_open(hostname, port);
 
 	case NETWORK_CONNECT_UNIX_TCP:
-		return network_client_unix_tcp_open(client, pathname);
+		return network_client_unix_tcp_open(pathname);
 
 	case NETWORK_CONNECT_UNIX_UDP:
-		return network_client_unix_udp_open(client, pathname);
+		return network_client_unix_udp_open(pathname);
 
 	case NETWORK_CONNECT_ADB:
-		return network_client_adb_open(client, hostname, port);
+		return network_client_adb_open(hostname, port);
 
 	case NETWORK_CONNECT_ICMP:
-		return network_client_icmp_open(client, hostname);
+		return network_client_icmp_open(hostname);
 
 	case NETWORK_CONNECT_IP:
-		return network_client_ip_open(client, hostname);
+		return network_client_ip_open(hostname);
 
 	case NETWORK_CONNECT_MAC:
-		return network_client_mac_open(client, hostname);
+		return network_client_mac_open(hostname);
 
 	default:
 		pr_red_info("unknown connect type");
-		return -EINVAL;
+		return NULL;
 	}
 }
 
-int network_client_open2(struct network_client *client, struct network_url *url)
+struct network_client *network_client_open2(struct network_url *url)
 {
 	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
 
 	LOGD("URL = %s\n", network_url_tostring(url, NULL, 0, NULL));
 
-	return network_client_open(client, type, url->hostname, url->port, url->pathname);
+	return network_client_open(type, url->hostname, url->port, url->pathname);
 }
 
-int network_client_open3(struct network_client *client, const char *url_text)
+struct network_client *network_client_open3(const char *url_text)
 {
 	struct network_url url;
 
 	if (url_text == NULL || network_url_parse(&url, url_text) == NULL)
 	{
 		pr_red_info("network_parse_url");
-		return -EFAULT;
+		return NULL;
 	}
 
-	return network_client_open2(client, &url);
+	return network_client_open2(&url);
 }
 
 void network_client_close(struct network_client *client)
@@ -1763,6 +1869,8 @@ void network_client_close(struct network_client *client)
 	{
 		close(client->sockfd);
 	}
+
+	free(client);
 }
 
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size)
@@ -1936,8 +2044,9 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 {
 	u32 magic;
 	int rwlen;
+	struct network_client_inet *inet = (struct network_client_inet *) client;
 
-	rwlen = recvfrom(service->sockfd, &magic, sizeof(magic), 0, &client->addr, &client->addrlen);
+	rwlen = recvfrom(service->sockfd, &magic, sizeof(magic), 0, &inet->addr, &client->addrlen);
 	if (rwlen < 4)
 	{
 		pr_error_info("recvfrom");
@@ -1956,7 +2065,7 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 	{
 		int ret;
 
-		ret = network_create_unix_udp_client(client);
+		ret = network_create_unix_udp_client((struct network_client_unix_udp *) client);
 		if (ret < 0)
 		{
 			pr_red_info("network_create_unix_udp_client");
@@ -1995,26 +2104,12 @@ out_client_close:
 
 static int network_service_udp_accept(struct network_service *service, struct network_client *client)
 {
-	ssize_t ret;
-
-	if (service->type == NETWORK_CONNECT_UNIX_UDP)
-	{
-		client->addrlen = sizeof(client->addr_un);
-	}
-	else
-	{
-		client->addrlen = sizeof(client->addr_in);
-	}
-
+	client->addrlen = service->addrlen;
 	client->send = network_client_udp_send;
 	client->recv = network_client_udp_recv;
 	client->close = network_client_udp_close;
 
-	network_service_lock(service);
-	ret = network_service_udp_talk(service, client);
-	network_service_unlock(service);
-
-	return ret;
+	return network_service_udp_talk(service, client);
 }
 
 static int network_service_udp_open(struct network_service *service, u16 port)
@@ -2027,6 +2122,9 @@ static int network_service_udp_open(struct network_service *service, u16 port)
 	}
 
 	service->type = NETWORK_CONNECT_UDP;
+	service->addrlen = sizeof(struct sockaddr_in);
+	service->client_size = sizeof(struct network_client_inet);
+
 	service->accept = network_service_udp_accept;
 	service->close = network_service_udp_close;
 
@@ -2040,9 +2138,10 @@ static void network_service_tcp_close(struct network_service *service)
 
 static int network_service_tcp_accept(struct network_service *service, struct network_client *client)
 {
-	client->addrlen = sizeof(client->addr);
+	struct network_client_inet *inet = (struct network_client_inet *) client;
 
-	client->sockfd = accept(service->sockfd, &client->addr, &client->addrlen);
+	client->addrlen = service->addrlen;
+	client->sockfd = accept(service->sockfd, &inet->addr, &client->addrlen);
 	if (client->sockfd < 0)
 	{
 		pr_error_info("accept");
@@ -2066,6 +2165,9 @@ static int network_service_tcp_open(struct network_service *service, u16 port)
 	}
 
 	service->type = NETWORK_CONNECT_TCP;
+	service->addrlen = sizeof(struct sockaddr_in);
+	service->client_size = sizeof(struct network_client_inet);
+
 	service->accept = network_service_tcp_accept;
 	service->close = network_service_tcp_close;
 
@@ -2082,6 +2184,9 @@ static int network_service_unix_tcp_open(struct network_service *service, const 
 	}
 
 	service->type = NETWORK_CONNECT_UNIX_TCP;
+	service->addrlen = sizeof(struct sockaddr_un);
+	service->client_size = sizeof(struct network_client_unix);
+
 	service->accept = network_service_tcp_accept;
 	service->close = network_service_tcp_close;
 
@@ -2098,6 +2203,9 @@ static int network_service_unix_udp_open(struct network_service *service, const 
 	}
 
 	service->type = NETWORK_CONNECT_UNIX_UDP;
+	service->addrlen = sizeof(struct sockaddr_un);
+	service->client_size = sizeof(struct network_client_unix_udp);
+
 	service->accept = network_service_udp_accept;
 	service->close = network_service_udp_close;
 

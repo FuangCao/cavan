@@ -212,7 +212,7 @@ struct network_url
 	const char *protocol;
 	const char *hostname;
 	const char *pathname;
-	char memory[512];
+	char memory[1024];
 };
 
 struct inet_connect
@@ -239,14 +239,6 @@ struct network_client
 	int sockfd;
 	socklen_t addrlen;
 	void *private_data;
-
-	union
-	{
-		struct sockaddr addr;
-		struct sockaddr_in addr_in;
-		struct sockaddr_un addr_un;
-	};
-
 	network_connect_type_t type;
 
 	void (*close)(struct network_client *client);
@@ -254,9 +246,30 @@ struct network_client
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
 };
 
+struct network_client_inet
+{
+	struct network_client client;
+	struct sockaddr_in addr;
+};
+
+struct network_client_unix
+{
+	struct network_client client;
+	struct sockaddr_un addr;
+};
+
+struct network_client_unix_udp
+{
+	struct network_client client;
+	struct sockaddr_un addr;
+	char pathname[UNIX_PATH_MAX];
+};
+
 struct network_service
 {
 	int sockfd;
+	socklen_t addrlen;
+	size_t client_size;
 	void *private_data;
 	pthread_mutex_t lock;
 	network_connect_type_t type;
@@ -344,9 +357,9 @@ int network_get_port_by_url(const struct network_url *url, const struct network_
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
 int network_create_socket_mac(const char *if_name, int protocol);
 
-int network_client_open(struct network_client *client, network_connect_type_t type, const char *hostname, u16 port, const char *pathname);
-int network_client_open2(struct network_client *client, struct network_url *url);
-int network_client_open3(struct network_client *client, const char *url_text);
+struct network_client *network_client_open(network_connect_type_t type, const char *hostname, u16 port, const char *pathname);
+struct network_client *network_client_open2(struct network_url *url);
+struct network_client *network_client_open3(const char *url_text);
 void network_client_close(struct network_client *client);
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size);
 ssize_t network_client_send_buff(struct network_client *client, const char *buff, size_t size);

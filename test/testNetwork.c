@@ -25,23 +25,23 @@ static int network_client_test(const char *url)
 {
 	int ret;
 	char buff[1024] = "123456789";
-	struct network_client client;
+	struct network_client *client;
 
-	ret = network_client_open3(&client, url);
-	if (ret < 0)
+	client = network_client_open3(url);
+	if (client == NULL)
 	{
 		pr_red_info("network_client_open");
-		return ret;
+		return -EFAULT;
 	}
 
-	ret = client.send(&client, buff, strlen(buff));
+	ret = client->send(client, buff, strlen(buff));
 	if (ret < 0)
 	{
 		pr_red_info("client.send");
 		goto out_network_client_close;
 	}
 
-	ret = client.recv(&client, buff, sizeof(buff));
+	ret = client->recv(client, buff, sizeof(buff));
 	if (ret < 0)
 	{
 		pr_red_info("client.recv");
@@ -52,7 +52,7 @@ static int network_client_test(const char *url)
 	println("buff[%d] = %s", ret, buff);
 
 out_network_client_close:
-	network_client_close(&client);
+	network_client_close(client);
 	return ret;
 }
 
