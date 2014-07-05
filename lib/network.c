@@ -1064,6 +1064,7 @@ char *network_url_tostring(const struct network_url *url, char *buff, size_t siz
 char *network_url_parse(struct network_url *url, const char *text)
 {
 	int slash = 0;
+	int colon = 0;
 	const char *port = NULL;
 	char *p = url->memory;
 	char *p_end = p + sizeof(url->memory);
@@ -1077,10 +1078,11 @@ char *network_url_parse(struct network_url *url, const char *text)
 		{
 		case '/':
 			slash++;
-			if (text[1] == '/' && slash == 1)
+			if (text[1] == '/' && slash == 1 && port == NULL)
 			{
-				if (p > url->memory && url->protocol == NULL )
+				if (p > url->memory && url->protocol == NULL)
 				{
+					pr_red_info("Invalid `/' at %s", text);
 					return NULL;
 				}
 
@@ -1091,6 +1093,13 @@ char *network_url_parse(struct network_url *url, const char *text)
 		case 0 ... 31:
 		case ' ':
 			*p = 0;
+
+			if (slash == 0 && colon == 1 && url->protocol && p > url->hostname)
+			{
+				port = url->hostname;
+				url->hostname = url->protocol;
+				url->protocol = NULL;
+			}
 
 			url->port = port ? text2value_unsigned(port, NULL, 10) : NETWORK_INVALID_PORT;
 
@@ -1104,23 +1113,35 @@ char *network_url_parse(struct network_url *url, const char *text)
 			return (char *) text;
 
 		case ':':
-			*p = 0;
-
-			if (url->protocol == NULL && slash == 0)
+			colon++;
+			if (colon > 2)
 			{
-				url->protocol = url->hostname;
-				url->hostname = ++p;
-			}
-			else if (IS_NUMBER(text[1]))
-			{
-				port = ++p;
-			}
-			else
-			{
+				pr_red_info("Too much `:' at %s", text);
 				return NULL;
 			}
 
 			text++;
+			*p = 0;
+
+			if (colon == 1 && slash == 0 && url->protocol == NULL && url->hostname < p)
+			{
+				url->protocol = url->hostname;
+				url->hostname = ++p;
+			}
+			else
+			{
+				for (port = ++p; p < p_end && IS_NUMBER(*text); p++, text++)
+				{
+					*p = *text;
+				}
+
+				if (p == port)
+				{
+					pr_red_info("Please give the port");
+					return NULL;
+				}
+			}
+
 			break;
 
 		default:
