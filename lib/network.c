@@ -1063,11 +1063,11 @@ char *network_url_tostring(const struct network_url *url, char *buff, size_t siz
 
 char *network_url_parse(struct network_url *url, const char *text)
 {
-	const char *port;
+	int slash = 0;
+	const char *port = NULL;
 	char *p = url->memory;
 	char *p_end = p + sizeof(url->memory);
 
-	port = NULL;
 	url->hostname = p;
 	url->protocol = NULL;
 
@@ -1075,15 +1075,21 @@ char *network_url_parse(struct network_url *url, const char *text)
 	{
 		switch (*text)
 		{
-		case 0 ... 31:
-		case ' ':
 		case '/':
-			if (text[1] == '/' && url->hostname == p)
+			slash++;
+			if (text[1] == '/' && slash == 1)
 			{
+				if (p > url->memory && url->protocol == NULL )
+				{
+					return NULL;
+				}
+
+				slash = 2;
 				text += 2;
 				break;
 			}
-
+		case 0 ... 31:
+		case ' ':
 			*p = 0;
 
 			url->port = port ? text2value_unsigned(port, NULL, 10) : NETWORK_INVALID_PORT;
@@ -1100,7 +1106,7 @@ char *network_url_parse(struct network_url *url, const char *text)
 		case ':':
 			*p = 0;
 
-			if (url->protocol == NULL)
+			if (url->protocol == NULL && slash == 0)
 			{
 				url->protocol = url->hostname;
 				url->hostname = ++p;
