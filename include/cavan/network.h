@@ -3,6 +3,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Apr 21 10:08:25 CST 2011
 
 #include <cavan.h>
+#include <cavan/command.h>
 #include <netdb.h>
 #include <sys/socket.h>
 // #include <bits/sockaddr.h>
@@ -17,6 +18,7 @@
 
 #define NETWORK_TIMEOUT_VALUE	5000
 #define NETWORK_RETRY_COUNT		5
+#define NETWORK_INVALID_PORT	0xFFFF
 #define ROUTE_TABLE_SIZE		16
 #define MAC_ADDRESS_LEN			6
 #define CAVAN_LISTEN_BACKLOG	32
@@ -25,6 +27,8 @@
 #define SYS_NET_DIRECTORY		"/sys/class/net"
 #define LOCAL_HOST_IP			"127.0.0.1"
 #define CAVAN_DEFAULT_IP		LOCAL_HOST_IP
+#define CAVAN_DEFAULT_PORT		8888
+#define CAVAN_DEFAULT_PROTOCOL	"tcp"
 #define CAVAN_IP_ENV_NAME		"CAVAN_SERVER_IP"
 #define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
 #define CAVAN_NETWORK_TEMP_PATH	CAVAN_TEMP_PATH "/cavan/network"
@@ -204,9 +208,10 @@ struct network_protocol
 
 struct network_url
 {
-	char *port;
-	char *protocol;
-	char *hostname;
+	u16 port;
+	const char *protocol;
+	const char *hostname;
+	const char *pathname;
 	char memory[512];
 };
 
@@ -322,15 +327,14 @@ int inet_tcp_transfer(int src_sockfd, int dest_sockfd, size_t size);
 int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_addr);
 int inet_get_devname(int sockfd, int index, char *devname);
 
-const char *cavan_get_server_hostname(void);
-u16 cavan_get_server_port(u16 default_port);
-
 int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd);
 int inet_hostname2sockaddr(const char *host, struct sockaddr_in *addr);
 
+void network_url_init(struct network_url *url, const char *protocol, const char *hostname, u16 port, const char *pathname);
+char *network_url_get_pathname(const struct network_url *url, char *buff, size_t size);
 char *network_url_tostring(const struct network_url *url, char *buff, size_t size, char **tail);
-char *network_url_build(char *buff, size_t size, const char *protocol, const char *hostname, u16 port, const char *pathname);
-char *network_parse_url(const char *text, struct network_url *url);
+char *network_url_parse(struct network_url *url, const char *text);
+
 const struct network_protocol *network_get_protocol_by_name(const char *name);
 const struct network_protocol *network_get_protocol_by_type(network_protocol_type_t type);
 const struct network_protocol *network_get_protocol_by_port(u16 port);
@@ -341,7 +345,8 @@ bool network_url_equals(const struct network_url *url1, const struct network_url
 int network_create_socket_mac(const char *if_name, int protocol);
 
 int network_client_open(struct network_client *client, network_connect_type_t type, const char *hostname, u16 port, const char *pathname);
-int network_client_open2(struct network_client *client, const char *url);
+int network_client_open2(struct network_client *client, struct network_url *url);
+int network_client_open3(struct network_client *client, const char *url_text);
 void network_client_close(struct network_client *client);
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size);
 ssize_t network_client_send_buff(struct network_client *client, const char *buff, size_t size);
@@ -351,7 +356,8 @@ int network_client_exec_redirect(struct network_client *client, int ttyin, int t
 int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns);
 
 int network_service_open(struct network_service *service, network_connect_type_t type, u16 port, const char *pathname);
-int network_service_open2(struct network_service *service, const char *url);
+int network_service_open2(struct network_service *service, struct network_url *url);
+int network_service_open3(struct network_service *service, const char *url);
 void network_service_close(struct network_service *service);
 
 static inline int inet_socket(int type)
@@ -524,4 +530,14 @@ static inline void network_service_lock(struct network_service *service)
 static inline void network_service_unlock(struct network_service *service)
 {
 	pthread_mutex_unlock(&service->lock);
+}
+
+static inline const char *cavan_get_server_hostname(void)
+{
+	return cavan_getenv(CAVAN_IP_ENV_NAME, CAVAN_DEFAULT_IP);
+}
+
+static inline u16 cavan_get_server_port(u16 default_value)
+{
+	return cavan_getenv_u32(CAVAN_PORT_ENV_NAME, default_value);
 }

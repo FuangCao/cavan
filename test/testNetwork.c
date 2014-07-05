@@ -27,7 +27,7 @@ static int network_client_test(const char *url)
 	char buff[1024] = "123456789";
 	struct network_client client;
 
-	ret = network_client_open2(&client, url);
+	ret = network_client_open3(&client, url);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open");
@@ -63,7 +63,7 @@ static int network_service_test(const char *url)
 	struct network_client client;
 	struct network_service service;
 
-	ret = network_service_open2(&service, url);
+	ret = network_service_open3(&service, url);
 	if (ret < 0)
 	{
 		pr_red_info("network_service_open");
@@ -105,18 +105,19 @@ out_network_service_close:
 
 static int network_url_test(const char *_url)
 {
-	const char *pathname;
 	struct network_url url;
 
-	pathname = network_parse_url(_url, &url);
-	if (pathname == NULL)
+	if (network_url_parse(&url, _url) == NULL)
 	{
 		pr_red_info("web_proxy_parse_url");
 	}
 	else
 	{
-		println("%s", network_url_tostring(&url, NULL, 0, NULL));
-		println("pathname = %s", pathname);
+		println("protocol = %s", url.protocol);
+		println("hostname = %s", url.hostname);
+		println("port = %d", url.port);
+		println("pathname = %s", url.pathname);
+		println("url = %s", network_url_tostring(&url, NULL, 0, NULL));
 	}
 
 	return 0;

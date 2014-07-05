@@ -120,14 +120,10 @@ int main(int argc, char *argv[])
 		},
 	};
 	int ret;
-	u16 port;
-	const char *url;
-	char url_buff[1024];
-	time_t curr_time, repeat;
 	struct tm date;
 	const char *subcmd;
-	const char *protocol;
-	const char *hostname;
+	time_t curr_time, repeat;
+	struct network_url url;
 
 	curr_time = time(NULL);
 	if (curr_time == ((time_t)-1))
@@ -138,11 +134,7 @@ int main(int argc, char *argv[])
 
 	repeat = 0;
 	localtime_r(&curr_time, &date);
-
-	url = NULL;
-	protocol = "tcp";
-	hostname = cavan_get_server_hostname();
-	port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
 
 	while ((c = getopt_long(argc, argv, "vVhHlLaAr:R:d:D:t:T:i:I:p:P:u:U:", long_option, &option_index)) != EOF)
 	{
@@ -193,7 +185,7 @@ int main(int argc, char *argv[])
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
-			protocol = "adb";
+			url.protocol = "adb";
 		case 'l':
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
@@ -201,23 +193,27 @@ int main(int argc, char *argv[])
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
-			hostname = optarg;
+			url.hostname = optarg;
 			break;
 
 		case CAVAN_COMMAND_OPTION_UDP:
-			protocol = "udp";
+			url.protocol = "udp";
 			break;
 
 		case 'p':
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			port = text2value_unsigned(optarg, NULL, 10);
+			url.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_URL:
-			url = optarg;
+			if (network_url_parse(&url, optarg) == NULL)
+			{
+				pr_red_info("invalid url %s", optarg);
+				return -EINVAL;
+			}
 			break;
 
 		default:
@@ -235,12 +231,6 @@ int main(int argc, char *argv[])
 
 	subcmd = argv[optind++];
 
-	if (url == NULL)
-	{
-		network_url_build(url_buff, sizeof(url_buff), protocol, hostname, port, NULL);
-		url = url_buff;
-	}
-
 	if (strcmp(subcmd, "add") == 0)
 	{
 		if (optind < argc)
@@ -248,7 +238,7 @@ int main(int argc, char *argv[])
 			char command[1024];
 
 			text_join_by_char(argv + optind, argc - optind, ' ', command, sizeof(command));
-			ret = tcp_alarm_add(url, command, mktime(&date), repeat);
+			ret = tcp_alarm_add(&url, command, mktime(&date), repeat);
 			if (ret < 0)
 			{
 				pr_red_info("cavan_tcp_alarm_add");
@@ -267,7 +257,7 @@ int main(int argc, char *argv[])
 		{
 			int index = text2value_unsigned(argv[optind], NULL, 10);
 
-			ret = tcp_alarm_remove(url, index);
+			ret = tcp_alarm_remove(&url, index);
 			if (ret < 0)
 			{
 				pr_red_info("cavan_tcp_alarm_remove");
@@ -298,7 +288,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		ret = tcp_alarm_list(url, index);
+		ret = tcp_alarm_list(&url, index);
 		if (ret < 0)
 		{
 			pr_red_info("cavan_tcp_alarm_list");

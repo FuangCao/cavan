@@ -78,22 +78,16 @@ struct tcp_dd_package
 
 struct cavan_tcp_dd_service
 {
-	u16 port;
-	const char *url;
-	const char *sun_path;
-	network_connect_type_t type;
 	struct network_service service;
 	struct cavan_alarm_thread alarm;
+	struct network_url url;
 };
 
 int tcp_dd_service_run(struct cavan_dynamic_service *service);
-int tcp_dd_send_file(struct network_file_request *file_req, const char *url);
-int tcp_dd_receive_file(struct network_file_request *file_req, const char *url);
-int tcp_dd_exec_command(const char *command, const char *url);
+int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req);
+int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req);
+int tcp_dd_exec_command(struct network_url *url, const char *command);
 
-int tcp_alarm_add(const char *url, const char *command, time_t time, time_t repeat);
-int tcp_alarm_remove(const char *url, int index);
-int tcp_alarm_list(const char *url, int index);
-
-int tcp_dd_pipe_open_connect(const char *hostname, u16 port);
-void tcp_dd_pipe_close_connect(int sockfd);
+int tcp_alarm_add(struct network_url *url, const char *command, time_t time, time_t repeat);
+int tcp_alarm_remove(struct network_url *url, int index);
+int tcp_alarm_list(struct network_url *url, int index);

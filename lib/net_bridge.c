@@ -69,7 +69,7 @@ int cavan_net_bridge_port_init(struct cavan_net_bridge_port *port, const char *u
 {
 	int ret;
 
-	ret = network_client_open2(&port->client, url);
+	ret = network_client_open3(&port->client, url);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open");

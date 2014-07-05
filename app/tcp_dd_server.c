@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
+	struct network_url *url;
 	struct cavan_dynamic_service *service;
 	struct cavan_tcp_dd_service *dd_service;
 
@@ -125,9 +126,8 @@ int main(int argc, char *argv[])
 	service->super_permission = 1;
 
 	dd_service = cavan_dynamic_service_get_data(service);
-	dd_service->sun_path = NULL;
-	dd_service->type = NETWORK_CONNECT_TCP;
-	dd_service->port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	url = &dd_service->url;
+	network_url_init(url, "tcp", "any", TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
 
 	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:m:M:l:L:u::U::", long_option, &option_index)) != EOF)
 	{
@@ -184,30 +184,29 @@ int main(int argc, char *argv[])
 		case 'p':
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			dd_service->port = text2value_unsigned(optarg, NULL, 10);
+			url->port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_UNIX:
-			dd_service->type = NETWORK_CONNECT_UNIX_TCP;
-
+			url->protocol = "unix-tcp";
 			if (optarg)
 			{
-				dd_service->sun_path = optarg;
-			}
-			else
-			{
-				dd_service->sun_path = TCP_DD_DEFAULT_SOCKET;
+				url->pathname = optarg;
 			}
 			break;
 
 		case CAVAN_COMMAND_OPTION_UDP:
-			dd_service->type = NETWORK_CONNECT_UDP;
+			url->protocol = "udp";
 			break;
 
 		case CAVAN_COMMAND_OPTION_URL:
-			dd_service->url = optarg;
+			if (network_url_parse(url, optarg) == NULL)
+			{
+				pr_red_info("invalid url %s", optarg);
+				return -EINVAL;
+			}
 			break;
 
 		default:
@@ -218,7 +217,7 @@ int main(int argc, char *argv[])
 
 	if (argc > optind)
 	{
-		dd_service->port = text2value_unsigned(argv[optind], NULL, 10);
+		url->port = text2value_unsigned(argv[optind], NULL, 10);
 	}
 
 	return tcp_dd_service_run(service);

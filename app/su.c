@@ -137,16 +137,11 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	u16 port;
-	char url_buff[1024];
-	const char *url = NULL;
-	const char *command = NULL;
-	const char *hostname = NULL;
-	const char *protocol = "unix-tcp";
-	const char *pathname = TCP_DD_DEFAULT_SOCKET;
+	const char *command;
+	struct network_url url;
 
-	hostname = cavan_get_server_hostname();
-	port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	command = NULL;
+	network_url_init(&url, "unix-tcp", NULL, TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
 
 	while ((c = getopt_long(argc, argv, "vVhHc:lmps:i:I:P:LaA", long_option, &option_index)) != EOF)
 	{
@@ -189,49 +184,53 @@ int main(int argc, char *argv[])
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
-			protocol = "adb";
+			url.protocol = "adb";
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
-			hostname = optarg;
+			url.hostname = optarg;
 			break;
 
 		case CAVAN_COMMAND_OPTION_UDP:
-			protocol = "udp";
+			url.protocol = "udp";
 			break;
 
 		case 't':
 		case 'T':
 		case CAVAN_COMMAND_OPTION_TCP:
-			protocol = "tcp";
+			url.protocol = "tcp";
 			break;
 
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			port = text2value_unsigned(optarg, NULL, 10);
+			url.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_UNIX:
-			protocol = "unix-tcp";
+			url.protocol = "unix-tcp";
 
 			if (optarg)
 			{
-				pathname = optarg;
+				url.pathname = optarg;
 			}
 			else
 			{
-				pathname = TCP_DD_DEFAULT_SOCKET;
+				url.pathname = TCP_DD_DEFAULT_SOCKET;
 			}
 
 			break;
 
 		case CAVAN_COMMAND_OPTION_URL:
-			url = optarg;
+			if (network_url_parse(&url, optarg) == NULL)
+			{
+				pr_red_info("Invalid url %s", optarg);
+				return -EINVAL;
+			}
 			break;
 
 		default:
@@ -240,11 +239,5 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (url == NULL)
-	{
-		network_url_build(url_buff, sizeof(url_buff), protocol, hostname, port, pathname);
-		url = url_buff;
-	}
-
-	return tcp_dd_exec_command(command ? command : "", url);
+	return tcp_dd_exec_command(&url, command);
 }

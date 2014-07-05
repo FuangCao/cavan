@@ -90,19 +90,12 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	u16 port;
-	const char *url;
-	char url_buff[1024];
-	const char *protocol;
-	const char *hostname;
+	struct network_url url;
 	off_t bs, seek, skip, count;
 	struct network_file_request file_req;
-	int (*handler)(struct network_file_request *, const char *) = NULL;
+	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
 
-	url = NULL;
-	protocol = "tcp";
-	hostname = cavan_get_server_hostname();
-	port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
 
 	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaAlLu:U:", long_option, &option_index)) != EOF)
 	{
@@ -124,7 +117,7 @@ int main(int argc, char *argv[])
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
-			protocol = "adb";
+			url.protocol = "adb";
 		case 'l':
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
@@ -132,23 +125,27 @@ int main(int argc, char *argv[])
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
-			hostname = optarg;
+			url.hostname = optarg;
 			break;
 
 		case CAVAN_COMMAND_OPTION_UDP:
-			protocol = "udp";
+			url.protocol = "udp";
 			break;
 
 		case 'p':
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			port = text2value_unsigned(optarg, NULL, 10);
+			url.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_URL:
-			url = optarg;
+			if (network_url_parse(&url, optarg) == NULL)
+			{
+				pr_red_info("invalid url %s", optarg);
+				return -EINVAL;
+			}
 			break;
 
 		case 'w':
@@ -175,12 +172,6 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	if (url == NULL)
-	{
-		network_url_build(url_buff, sizeof(url_buff), protocol, hostname, port, NULL);
-		url = url_buff;
-	}
-
 	file_req.src_file[0] = file_req.dest_file[0] = 0;
 
 	for (bs = 1, count = seek = skip = 0; optind < argc; optind++)
@@ -201,7 +192,7 @@ int main(int argc, char *argv[])
 			}
 			else if (text_cmp(p, "p") == 0)
 			{
-				hostname = strdup(para_value);
+				url.hostname = strdup(para_value);
 			}
 			else
 			{
@@ -251,7 +242,7 @@ int main(int argc, char *argv[])
 		case 'p':
 			if (text_cmp(p, "ort") == 0)
 			{
-				port = text2value_unsigned(para_value, NULL, 10);
+				url.port = text2value_unsigned(para_value, NULL, 10);
 				break;
 			}
 			goto label_parse_complete;
@@ -286,5 +277,5 @@ label_parse_complete:
 	file_req.dest_offset = seek * bs;
 	file_req.size = count * bs;
 
-	return handler(&file_req, url);
+	return handler(&url, &file_req);
 }

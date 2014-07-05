@@ -551,7 +551,7 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 	int sockfd;
 	struct sockaddr_in addr;
 
-	if (text_cmp(hostname, "localhost") == 0)
+	if (hostname == NULL || hostname[0] == 0 || text_cmp(hostname, "localhost") == 0)
 	{
 		hostname = "127.0.0.1";
 	}
@@ -907,32 +907,6 @@ int inet_get_devname(int sockfd, int index, char *devname)
 	return 0;
 }
 
-const char *cavan_get_server_hostname(void)
-{
-	const char *hostname;
-
-	hostname = getenv(CAVAN_IP_ENV_NAME);
-	if (hostname)
-	{
-		return hostname;
-	}
-
-	return CAVAN_DEFAULT_IP;
-}
-
-u16 cavan_get_server_port(u16 default_port)
-{
-	const char *port;
-
-	port = getenv(CAVAN_PORT_ENV_NAME);
-	if (port == NULL)
-	{
-		return default_port;
-	}
-
-	return text2value_unsigned(port, NULL, 10);
-}
-
 int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd)
 {
 	char buff[1024];
@@ -1011,9 +985,42 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 	return 0;
 }
 
+void network_url_init(struct network_url *url, const char *protocol, const char *hostname, u16 port, const char *pathname)
+{
+	url->port = port;
+	url->pathname = pathname;
+	url->protocol = protocol ? protocol : CAVAN_DEFAULT_PROTOCOL;
+	url->hostname = hostname ? hostname : cavan_get_server_hostname();
+}
+
+char *network_url_get_pathname(const struct network_url *url, char *buff, size_t size)
+{
+	const char *p;
+	char *buff_end = buff + size;
+
+	for (p = url->pathname; buff < buff_end; p++, buff++)
+	{
+		switch (*p)
+		{
+		case '\0':
+		case '\r':
+		case '\n':
+		case '\f':
+			*buff = 0;
+			return buff;
+
+		default:
+			*buff = *p;
+		}
+
+	}
+
+	return buff;
+}
+
 char *network_url_tostring(const struct network_url *url, char *buff, size_t size, char **tail)
 {
-	int ret;
+	char *buff_bak, *buff_end;
 
 	if (buff == NULL || size == 0)
 	{
@@ -1023,49 +1030,46 @@ char *network_url_tostring(const struct network_url *url, char *buff, size_t siz
 		size = sizeof(static_buff);
 	}
 
-	if (url->protocol[0])
+	buff_bak = buff;
+	buff_end = buff + size;
+
+	if (url->protocol && url->protocol[0])
 	{
-		if (url->port[0])
-		{
-			ret = snprintf(buff, size, "%s://%s:%s", url->protocol, url->hostname, url->port);
-		}
-		else
-		{
-			ret = snprintf(buff, size, "%s://%s", url->protocol, url->hostname);
-		}
+		buff += snprintf(buff, buff_end - buff, "%s:", url->protocol);
 	}
-	else if (url->port[0])
+
+	if (url->hostname && url->hostname[0])
 	{
-		ret = snprintf(buff, size, "%s:%s", url->hostname, url->port);
+		buff += snprintf(buff, buff_end - buff, "//%s", url->hostname);
 	}
-	else
+
+	if (url->port != NETWORK_INVALID_PORT)
 	{
-		ret = snprintf(buff, size, "%s", url->hostname);
+		buff += snprintf(buff, buff_end - buff, ":%d", url->port);
+	}
+
+	if (url->pathname && url->pathname[0])
+	{
+		buff = network_url_get_pathname(url, buff, buff_end - buff);
 	}
 
 	if (tail)
 	{
-		if (ret > 0)
-		{
-			*tail = buff + ret;
-		}
-		else
-		{
-			*tail = buff;
-		}
+		*tail = buff;
 	}
 
-	return buff;
+	return buff_bak;
 }
 
-char *network_parse_url(const char *text, struct network_url *url)
+char *network_url_parse(struct network_url *url, const char *text)
 {
+	const char *port;
 	char *p = url->memory;
 	char *p_end = p + sizeof(url->memory);
 
-	url->port = NULL;
+	port = NULL;
+	url->hostname = p;
 	url->protocol = NULL;
-	url->hostname = url->memory;
 
 	while (p < p_end)
 	{
@@ -1074,39 +1078,43 @@ char *network_parse_url(const char *text, struct network_url *url)
 		case 0 ... 31:
 		case ' ':
 		case '/':
+			if (text[1] == '/' && url->hostname == p)
+			{
+				text += 2;
+				break;
+			}
+
 			*p = 0;
 
-			if (url->port == NULL)
-			{
-				url->port = p;
-			}
+			url->port = port ? text2value_unsigned(port, NULL, 10) : NETWORK_INVALID_PORT;
 
 			if (url->protocol == NULL)
 			{
 				url->protocol = p;
 			}
 
+			url->pathname = text;
+
 			return (char *) text;
 
 		case ':':
 			*p = 0;
-			text++;
 
-			if (url->protocol == NULL && text_lhcmp("//", text) == 0)
+			if (url->protocol == NULL)
 			{
 				url->protocol = url->hostname;
 				url->hostname = ++p;
-				text += 2;
 			}
-			else if (IS_NUMBER(*text))
+			else if (IS_NUMBER(text[1]))
 			{
-				url->port = ++p;
+				port = ++p;
 			}
 			else
 			{
 				return NULL;
 			}
 
+			text++;
 			break;
 
 		default:
@@ -1115,37 +1123,6 @@ char *network_parse_url(const char *text, struct network_url *url)
 	}
 
 	return NULL;
-}
-
-char *network_url_build(char *buff, size_t size, const char *protocol, const char *hostname, u16 port, const char *pathname)
-{
-	char *buff_end = buff + size;
-
-	if (protocol == NULL || protocol[0] == 0)
-	{
-		protocol = "tcp";
-	}
-
-	if (hostname && hostname[0])
-	{
-		buff += snprintf(buff, buff_end - buff, "%s://%s", protocol, hostname);
-	}
-	else
-	{
-		buff += snprintf(buff, buff_end - buff, "%s://", protocol);
-	}
-
-	if (port)
-	{
-		buff += snprintf(buff, buff_end - buff, ":%d", port);
-	}
-
-	if (pathname && pathname[0])
-	{
-		return text_ncopy(buff, pathname, buff_end - buff);
-	}
-
-	return buff;
 }
 
 const struct network_protocol *network_get_protocol_by_name(const char *name)
@@ -1195,9 +1172,9 @@ const struct network_protocol *network_get_protocol_by_port(u16 port)
 
 int network_get_port_by_url(const struct network_url *url, const struct network_protocol *protocol)
 {
-	if (url->port[0])
+	if (url->port != NETWORK_INVALID_PORT)
 	{
-		return text2value_unsigned(url->port, NULL, 10);
+		return url->port;
 	}
 	else if (url->protocol[0])
 	{
@@ -1232,7 +1209,7 @@ bool network_url_equals(const struct network_url *url1, const struct network_url
 		return false;
 	}
 
-	return text_cmp(url1->port, url2->port) == 0;
+	return url1->port == url2->port;
 }
 
 int network_create_socket_mac(const char *if_name, int protocol)
@@ -1695,8 +1672,6 @@ const char *network_connect_type_tostring(network_connect_type_t type)
 
 int network_client_open(struct network_client *client, network_connect_type_t type, const char *hostname, u16 port, const char *pathname)
 {
-	LOGD("network connect type = %s\n", network_connect_type_tostring(type));
-
 	switch (type)
 	{
 	case NETWORK_CONNECT_TCP:
@@ -1729,32 +1704,26 @@ int network_client_open(struct network_client *client, network_connect_type_t ty
 	}
 }
 
-int network_client_open2(struct network_client *client, const char *_url)
+int network_client_open2(struct network_client *client, struct network_url *url)
 {
-	u16 port;
-	const char *pathname;
+	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
+
+	LOGD("URL = %s\n", network_url_tostring(url, NULL, 0, NULL));
+
+	return network_client_open(client, type, url->hostname, url->port, url->pathname);
+}
+
+int network_client_open3(struct network_client *client, const char *url_text)
+{
 	struct network_url url;
-	network_connect_type_t type;
 
-	if (_url == NULL)
-	{
-		pr_red_info("_url == NULL");
-		return -EINVAL;
-	}
-
-	LOGD("URL = %s\n", _url);
-
-	pathname = network_parse_url(_url, &url);
-	if (pathname == NULL)
+	if (url_text == NULL || network_url_parse(&url, url_text) == NULL)
 	{
 		pr_red_info("network_parse_url");
 		return -EFAULT;
 	}
 
-	port = text2value_unsigned(url.port, NULL, 10);
-	type = network_connect_type_parse(url.protocol, url.hostname);
-
-	return network_client_open(client, type, url.hostname, port, pathname);
+	return network_client_open2(client, &url);
 }
 
 void network_client_close(struct network_client *client)
@@ -2119,8 +2088,6 @@ int network_service_open(struct network_service *service, network_connect_type_t
 		return ret;
 	}
 
-	LOGD("network connect type = %s\n", network_connect_type_tostring(type));
-
 	ret = pthread_mutex_init(&service->lock, NULL);
 	if (ret < 0)
 	{
@@ -2153,30 +2120,26 @@ int network_service_open(struct network_service *service, network_connect_type_t
 	return ret;
 }
 
-int network_service_open2(struct network_service *service, const char *_url)
+int network_service_open2(struct network_service *service, struct network_url *url)
 {
-	u16 port;
-	const char *pathname;
+	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
+
+	LOGD("URL = %s\n", network_url_tostring(url, NULL, 0, NULL));
+
+	return network_service_open(service, type, url->port, url->pathname);
+}
+
+int network_service_open3(struct network_service *service, const char *url_text)
+{
 	struct network_url url;
-	network_connect_type_t type;
 
-	if (_url == NULL)
-	{
-		pr_red_info("_url == NULL");
-		return -EINVAL;
-	}
-
-	pathname = network_parse_url(_url, &url);
-	if (pathname == NULL)
+	if (url_text == NULL || network_url_parse(&url, url_text) == NULL)
 	{
 		pr_red_info("network_parse_url");
 		return -EFAULT;
 	}
 
-	port = text2value_unsigned(url.port, NULL, 10);
-	type = network_connect_type_parse(url.protocol, url.hostname);
-
-	return network_service_open(service, type, port, pathname);
+	return network_service_open2(service, &url);
 }
 
 void network_service_close(struct network_service *service)

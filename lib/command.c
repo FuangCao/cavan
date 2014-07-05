@@ -515,3 +515,29 @@ int cavan_tty_redirect(const char *ttypath)
 
 	return ret;
 }
+
+const char *cavan_getenv(const char *name, const char *default_value)
+{
+	const char *value;
+
+	value = getenv(name);
+	if (value)
+	{
+		return value;
+	}
+
+	return default_value;
+}
+
+u32 cavan_getenv_u32(const char *name, u32 default_value)
+{
+	const char *value;
+
+	value = cavan_getenv(name, NULL);
+	if (value == NULL)
+	{
+		return default_value;
+	}
+
+	return text2value_unsigned(value, NULL, 10);
+}

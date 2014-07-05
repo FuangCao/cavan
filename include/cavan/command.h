@@ -94,6 +94,9 @@ int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout);
 int cavan_tty_redirect_base(int ttyfd);
 int cavan_tty_redirect(const char *ttypath);
 
+const char *cavan_getenv(const char *name, const char *default_value);
+u32 cavan_getenv_u32(const char *name, u32 default_value);
+
 static inline int cavan_exec_waitpid(pid_t pid)
 {
 	int status;

@@ -82,17 +82,10 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	u16 port;
-	const char *url;
-	char url_buff[1024];
-	const char *protocol;
-	const char *hostname;
 	char command[1024];
+	struct network_url url;
 
-	url = NULL;
-	protocol = "tcp";
-	hostname = cavan_get_server_hostname();
-	port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
 
 	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF)
 	{
@@ -114,7 +107,7 @@ int main(int argc, char *argv[])
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
-			protocol = "adb";
+			url.protocol = "adb";
 		case 'l':
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
@@ -122,23 +115,27 @@ int main(int argc, char *argv[])
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
-			hostname = optarg;
+			url.hostname = optarg;
 			break;
 
 		case CAVAN_COMMAND_OPTION_UDP:
-			protocol = "udp";
+			url.protocol = "udp";
 			break;
 
 		case 'p':
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			port = text2value_unsigned(optarg, NULL, 10);
+			url.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_URL:
-			url = optarg;
+			if (network_url_parse(&url, optarg) == NULL)
+			{
+				pr_red_info("invalid url %s", optarg);
+				return -EINVAL;
+			}
 			break;
 
 		default:
@@ -147,13 +144,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (url == NULL)
-	{
-		network_url_build(url_buff, sizeof(url_buff), protocol, hostname, port, NULL);
-		url = url_buff;
-	}
-
 	text_join_by_char(argv + optind, argc - optind, ' ', command, sizeof(command));
 
-	return tcp_dd_exec_command(command, url);
+	return tcp_dd_exec_command(&url, command);
 }

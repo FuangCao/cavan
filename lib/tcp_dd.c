@@ -196,7 +196,16 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 	LOGD("terminal size = %d x %d\n", pkg.exec_req.lines, pkg.exec_req.columns);
 
 	pkg.type = TCP_DD_EXEC;
-	p = text_copy(pkg.exec_req.command, command);
+
+	if (command)
+	{
+		p = text_copy(pkg.exec_req.command, command);
+	}
+	else
+	{
+		p = pkg.exec_req.command;
+		*p = 0;
+	}
 
 	ret = p - (char *)&pkg;
 	client->send(client, (char *)&pkg, ret + 1);
@@ -518,23 +527,11 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 	int ret;
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	if (dd_service->url)
+	ret = network_service_open2(&dd_service->service, &dd_service->url);
+	if (ret < 0)
 	{
-		ret = network_service_open2(&dd_service->service, dd_service->url);
-		if (ret < 0)
-		{
-			pr_red_info("network_service_open2");
-			return ret;
-		}
-	}
-	else
-	{
-		ret = network_service_open(&dd_service->service, dd_service->type, dd_service->port, dd_service->sun_path);
-		if (ret < 0)
-		{
-			pr_red_info("network_service_open");
-			return ret;
-		}
+		pr_red_info("network_service_open2");
+		return ret;
 	}
 
 	ret = cavan_alarm_thread_init(&dd_service->alarm);
@@ -674,7 +671,7 @@ static int tcp_dd_check_file_request(struct network_file_request *file_req, cons
 	return 0;
 }
 
-int tcp_dd_send_file(struct network_file_request *file_req, const char *url)
+int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req)
 {
 	int fd;
 	int ret;
@@ -758,7 +755,7 @@ out_close_fd:
 	return ret;
 }
 
-int tcp_dd_receive_file(struct network_file_request *file_req, const char *url)
+int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req)
 {
 	int fd;
 	int ret;
@@ -833,7 +830,7 @@ out_client_close:
 	return ret;
 }
 
-int tcp_dd_exec_command(const char *command, const char *url)
+int tcp_dd_exec_command(struct network_url *url, const char *command)
 {
 	int ret;
 	struct termios tty_attr;
@@ -867,7 +864,7 @@ out_client_close:
 	return ret;
 }
 
-int tcp_alarm_add(const char *url, const char *command, time_t time, time_t repeat)
+int tcp_alarm_add(struct network_url *url, const char *command, time_t time, time_t repeat)
 {
 	int ret;
 	struct network_client client;
@@ -889,7 +886,7 @@ int tcp_alarm_add(const char *url, const char *command, time_t time, time_t repe
 	return ret;
 }
 
-int tcp_alarm_remove(const char *url, int index)
+int tcp_alarm_remove(struct network_url *url, int index)
 {
 	int ret;
 	struct network_client client;
@@ -907,7 +904,7 @@ int tcp_alarm_remove(const char *url, int index)
 	return ret;
 }
 
-int tcp_alarm_list(const char *url, int index)
+int tcp_alarm_list(struct network_url *url, int index)
 {
 	int ret;
 	struct network_client client;

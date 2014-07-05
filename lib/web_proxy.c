@@ -659,14 +659,14 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			break;
 		}
 
-		req = network_parse_url(url_text, url);
+		req = network_url_parse(url, url_text);
 		if (req == NULL)
 		{
 			pr_red_info("web_proxy_parse_url:\n%s", url_text);
 			break;
 		}
 
-		if (url->protocol[0] == 0 && url->port[0] == 0)
+		if (url->protocol[0] == 0 && url->port == 0xFFFF)
 		{
 			port = proxy->proxy_port;
 			hostname = proxy->proxy_host;

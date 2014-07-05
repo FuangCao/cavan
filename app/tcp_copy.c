@@ -86,19 +86,12 @@ int main(int argc, char *argv[])
 		},
 	};
 	int i;
-	u16 port;
 	char *pname;
-	const char *url;
-	char url_buff[1024];
-	const char *hostname;
-	const char *protocol;
+	struct network_url url;
 	struct network_file_request file_req;
-	int (*handler)(struct network_file_request *, const char *) = NULL;
+	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
 
-	url = NULL;
-	protocol = "tcp";
-	hostname = cavan_get_server_hostname();
-	port = cavan_get_server_port(TCP_DD_DEFAULT_PORT);
+	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
 
 	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRAalLu:U:", long_option, &option_index)) != EOF)
 	{
@@ -120,7 +113,7 @@ int main(int argc, char *argv[])
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
-			protocol = "adb";
+			url.protocol = "adb";
 		case 'l':
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
@@ -128,23 +121,27 @@ int main(int argc, char *argv[])
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
-			hostname = optarg;
+			url.hostname = optarg;
 			break;
 
 		case CAVAN_COMMAND_OPTION_UDP:
-			protocol = "udp";
+			url.protocol = "udp";
 			break;
 
 		case 'p':
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			port = text2value_unsigned(optarg, NULL, 10);
+			url.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_URL:
-			url = optarg;
+			if (network_url_parse(&url, optarg) == NULL)
+			{
+				pr_red_info("invalid url %s", optarg);
+				return -EINVAL;
+			}
 			break;
 
 		case 'w':
@@ -173,12 +170,6 @@ int main(int argc, char *argv[])
 
 	assert(argc - optind > 1);
 
-	if (url == NULL)
-	{
-		network_url_build(url_buff, sizeof(url_buff), protocol, hostname, port, NULL);
-		url = url_buff;
-	}
-
 	pname = text_path_cat(file_req.dest_file, sizeof(file_req.dest_file), argv[--argc], NULL);
 
 	for (i = optind; i < argc; i++)
@@ -193,7 +184,7 @@ int main(int argc, char *argv[])
 
 		println("%s => %s", argv[i], file_req.dest_file);
 
-		ret = handler(&file_req, url);
+		ret = handler(&url, &file_req);
 		if (ret < 0)
 		{
 			pr_red_info("Copy file %s to %s failed!", argv[i], file_req.dest_file);
