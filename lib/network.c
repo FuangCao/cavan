@@ -1287,6 +1287,111 @@ out_close_socket:
 
 // ============================================================
 
+static ssize_t network_client_send_sync(struct network_client *client, const void *buff, size_t size)
+{
+	int retry = 0;
+	char message[size + 4];
+	const void *buff_end = ADDR_ADD(buff, size);
+
+	while (buff < buff_end)
+	{
+		u32 index;
+		ssize_t rdlen, wrlen;
+
+		wrlen = ADDR_SUB2(buff_end, buff);
+		mem_copy(message + 4, buff, wrlen);
+		*(u32 *) message = client->pkg_index;
+
+		wrlen = client->send_raw(client, message, wrlen + 4);
+		if (wrlen < 4)
+		{
+			return -EFAULT;
+		}
+
+		if (file_poll_input(client->sockfd, CAVAN_NET_UDP_TIMEOUT) == false)
+		{
+			if (++retry > CAVAN_NET_UDP_TIMEOUT)
+			{
+				return -ETIMEDOUT;
+			}
+
+			continue;
+		}
+
+		rdlen = client->recv_raw(client, &index, sizeof(index));
+		if (rdlen != sizeof(index))
+		{
+			continue;
+		}
+
+		if (client->pkg_index != index)
+		{
+			if (client->pkg_index < index)
+			{
+				client->pkg_index = index;
+			}
+
+			continue;
+		}
+
+		client->pkg_index++;
+		buff = ADDR_ADD(buff, wrlen);
+	}
+
+	return size;
+}
+
+static ssize_t network_client_recv_sync(struct network_client *client, void *buff, size_t size)
+{
+	u32 index;
+	ssize_t rdlen, wrlen;
+	char message[size + 4];
+
+	while (1)
+	{
+		rdlen = client->recv_raw(client, message, sizeof(message));
+		if (rdlen < 4)
+		{
+			return -EFAULT;
+		}
+
+		index = *(u32 *) message;
+
+		wrlen = client->send_raw(client, &client->pkg_index, sizeof(client->pkg_index));
+		if (wrlen != sizeof(client->pkg_index))
+		{
+			return -EFAULT;
+		}
+
+		if (index == client->pkg_index)
+		{
+			break;
+		}
+	}
+
+	size = rdlen - 4;
+	client->pkg_index++;
+	mem_copy(buff, message + 4, size);
+
+	return size;
+}
+
+static void network_client_set_sync(struct network_client *client, bool enable)
+{
+	if (enable)
+	{
+		client->send_raw = client->send;
+		client->recv_raw = client->recv;
+		client->send = network_client_send_sync;
+		client->recv = network_client_recv_sync;
+	}
+	else if (client->send_raw && client->recv_raw)
+	{
+		client->send = client->send_raw;
+		client->recv = client->recv_raw;
+	}
+}
+
 static void network_client_udp_close(struct network_client *client)
 {
 	close(client->sockfd);
@@ -1336,15 +1441,28 @@ static int network_client_udp_talk(struct network_client *client)
 
 static int network_client_udp_common_open(struct network_client *client, int flags)
 {
+	client->pkg_index = 0;
 	client->send = network_client_udp_send;
 	client->recv = network_client_udp_recv;
 
-	if ((flags & CAVAN_NET_FLAG_UDP_TALK) == 0)
+	if (flags & CAVAN_NET_FLAG_TALK)
 	{
-		return 0;
+		int ret;
+
+		ret = network_client_udp_talk(client);
+		if (ret < 0)
+		{
+			pr_red_info("network_client_udp_talk");
+			return ret;
+		}
 	}
 
-	return network_client_udp_talk(client);
+	if (flags & CAVAN_NET_FLAG_SYNC)
+	{
+		network_client_set_sync(client, true);
+	}
+
+	return 0;
 }
 
 static struct network_client *network_client_udp_open(const char *hostname, u16 port, int flags)
@@ -2061,8 +2179,6 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 	{
 		int ret;
 
-		pr_pos_info();
-
 		ret = network_create_unix_udp_client((struct network_client_unix_udp *) client);
 		if (ret < 0)
 		{
@@ -2102,12 +2218,24 @@ out_client_close:
 
 static int network_service_udp_accept(struct network_service *service, struct network_client *client)
 {
+	int ret;
+
+	client->pkg_index = 0;
 	client->addrlen = service->addrlen;
 	client->send = network_client_udp_send;
 	client->recv = network_client_udp_recv;
 	client->close = network_client_udp_close;
 
-	return network_service_udp_talk(service, client);
+	ret = network_service_udp_talk(service, client);
+	if (ret < 0)
+	{
+		pr_red_info("network_service_udp_talk");
+		return ret;
+	}
+
+	network_client_set_sync(client, true);
+
+	return 0;
 }
 
 static int network_service_udp_open(struct network_service *service, u16 port)

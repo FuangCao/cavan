@@ -27,7 +27,7 @@ static int network_client_test(const char *url)
 	char buff[1024] = "123456789";
 	struct network_client *client;
 
-	client = network_client_open2(url, CAVAN_NET_FLAG_UDP_TALK);
+	client = network_client_open2(url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
 	if (client == NULL)
 	{
 		pr_red_info("network_client_open");

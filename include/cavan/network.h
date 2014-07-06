@@ -33,7 +33,10 @@
 #define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
 #define CAVAN_NETWORK_TEMP_PATH	CAVAN_TEMP_PATH "/cavan/network"
 
-#define CAVAN_NET_FLAG_UDP_TALK	(1 << 0)
+#define CAVAN_NET_UDP_RETRY		5
+#define CAVAN_NET_UDP_TIMEOUT	200
+#define CAVAN_NET_FLAG_TALK		(1 << 0)
+#define CAVAN_NET_FLAG_SYNC		(1 << 1)
 
 #pragma pack(1)
 struct mac_header
@@ -239,6 +242,7 @@ typedef enum
 struct network_client
 {
 	int sockfd;
+	u32 pkg_index;
 	socklen_t addrlen;
 	void *private_data;
 	network_connect_type_t type;
@@ -246,6 +250,8 @@ struct network_client
 	void (*close)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
+	ssize_t (*send_raw)(struct network_client *client, const void *buff, size_t size);
+	ssize_t (*recv_raw)(struct network_client *client, void *buff, size_t size);
 };
 
 struct network_client_inet

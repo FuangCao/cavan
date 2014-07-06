@@ -218,6 +218,11 @@ int main(int argc, char *argv[])
 	if (argc > optind)
 	{
 		url->port = text2value_unsigned(argv[optind], NULL, 10);
+		if (url->port == 0)
+		{
+			pr_red_info("Invalid port %s", argv[optind]);
+			return -EINVAL;
+		}
 	}
 
 	return tcp_dd_service_run(service);
