@@ -33,10 +33,11 @@
 #define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
 #define CAVAN_NETWORK_TEMP_PATH	CAVAN_TEMP_PATH "/cavan/network"
 
-#define CAVAN_NET_UDP_RETRY		5
-#define CAVAN_NET_UDP_TIMEOUT	200
-#define CAVAN_NET_FLAG_TALK		(1 << 0)
-#define CAVAN_NET_FLAG_SYNC		(1 << 1)
+#define CAVAN_NET_UDP_RETRY			10
+#define CAVAN_NET_UDP_TIMEOUT		200
+#define CAVAN_NET_UDP_ACTIVE_TIME	(1000 * 60 * 20)
+#define CAVAN_NET_FLAG_TALK			(1 << 0)
+#define CAVAN_NET_FLAG_SYNC			(1 << 1)
 
 #pragma pack(1)
 struct mac_header

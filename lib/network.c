@@ -1289,53 +1289,57 @@ out_close_socket:
 
 static ssize_t network_client_send_sync(struct network_client *client, const void *buff, size_t size)
 {
-	int retry = 0;
 	char message[size + 4];
 	const void *buff_end = ADDR_ADD(buff, size);
 
 	while (buff < buff_end)
 	{
-		u32 index;
-		ssize_t rdlen, wrlen;
+		size_t datalen;
+		int retry = CAVAN_NET_UDP_RETRY;
 
-		wrlen = ADDR_SUB2(buff_end, buff);
-		mem_copy(message + 4, buff, wrlen);
+		datalen = ADDR_SUB2(buff_end, buff);
+		mem_copy(message + 4, buff, datalen);
 		*(u32 *) message = client->pkg_index;
 
-		wrlen = client->send_raw(client, message, wrlen + 4);
-		if (wrlen < 4)
+		while (1)
 		{
-			return -EFAULT;
-		}
+			u32 index;
+			ssize_t rdlen, wrlen;
 
-		if (file_poll_input(client->sockfd, CAVAN_NET_UDP_TIMEOUT) == false)
-		{
-			if (++retry > CAVAN_NET_UDP_TIMEOUT)
+			wrlen = client->send_raw(client, message, datalen + 4);
+			if (wrlen < 4)
 			{
+				return -EFAULT;
+			}
+
+			if (file_poll_input(client->sockfd, CAVAN_NET_UDP_TIMEOUT) == false)
+			{
+				LOGD("file_poll_input retry = %d\n", retry);
+
+				if (--retry > 0)
+				{
+					continue;
+				}
+
 				return -ETIMEDOUT;
 			}
 
-			continue;
-		}
-
-		rdlen = client->recv_raw(client, &index, sizeof(index));
-		if (rdlen != sizeof(index))
-		{
-			continue;
-		}
-
-		if (client->pkg_index != index)
-		{
-			if (client->pkg_index < index)
+			rdlen = client->recv_raw(client, &index, sizeof(index));
+			if (rdlen != sizeof(index))
 			{
-				client->pkg_index = index;
+				return -EFAULT;
 			}
 
-			continue;
+			if (client->pkg_index == index)
+			{
+				break;
+			}
+
+			LOGD("index not match, pkg_index = %d, index = %d\n", client->pkg_index, index);
 		}
 
 		client->pkg_index++;
-		buff = ADDR_ADD(buff, wrlen);
+		buff = ADDR_ADD(buff, datalen);
 	}
 
 	return size;
@@ -1343,12 +1347,19 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 
 static ssize_t network_client_recv_sync(struct network_client *client, void *buff, size_t size)
 {
-	u32 index;
 	ssize_t rdlen, wrlen;
 	char message[size + 4];
 
 	while (1)
 	{
+		u32 index;
+
+		if (file_poll_input(client->sockfd, CAVAN_NET_UDP_ACTIVE_TIME) == false)
+		{
+			pr_red_info("file_poll_input");
+			return -ETIMEDOUT;
+		}
+
 		rdlen = client->recv_raw(client, message, sizeof(message));
 		if (rdlen < 4)
 		{
@@ -1356,17 +1367,18 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 		}
 
 		index = *(u32 *) message;
-
-		wrlen = client->send_raw(client, &client->pkg_index, sizeof(client->pkg_index));
-		if (wrlen != sizeof(client->pkg_index))
-		{
-			return -EFAULT;
-		}
-
 		if (index == client->pkg_index)
 		{
 			break;
 		}
+
+		LOGD("index not match, pkg_index = %d, index = %d\n", client->pkg_index, index);
+	}
+
+	wrlen = client->send_raw(client, &client->pkg_index, sizeof(client->pkg_index));
+	if (wrlen != sizeof(client->pkg_index))
+	{
+		return -EFAULT;
 	}
 
 	size = rdlen - 4;
@@ -1421,6 +1433,12 @@ static int network_client_udp_talk(struct network_client *client)
 	{
 		pr_red_info("network_client_send_message");
 		return rwlen < 0 ? rwlen : -EFAULT;
+	}
+
+	if (file_poll_input(client->sockfd, CAVAN_NET_UDP_TIMEOUT) == false)
+	{
+		pr_red_info("file_poll_input");
+		return -EFAULT;
 	}
 
 	rwlen = network_client_recv_message(client, &magic);
@@ -2023,8 +2041,6 @@ ssize_t network_client_send_buff(struct network_client *client, const char *buff
 
 ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size)
 {
-	char buff[1024];
-	ssize_t rdlen;
 	size_t size_bak = size;
 	struct progress_bar bar;
 
@@ -2032,6 +2048,9 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 
 	while (size)
 	{
+		ssize_t rdlen;
+		char buff[2048];
+
 		rdlen = client->recv(client, buff, sizeof(buff));
 		if (rdlen <= 0 || ffile_write(fd, buff, rdlen) < rdlen)
 		{
@@ -2049,8 +2068,6 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size)
 {
-	char buff[1024];
-	ssize_t rdlen;
 	size_t size_bak = size;
 	struct progress_bar bar;
 
@@ -2058,6 +2075,9 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 
 	while (size)
 	{
+		ssize_t rdlen;
+		char buff[2048];
+
 		rdlen = ffile_read(fd, buff, sizeof(buff));
 		if (rdlen <= 0 || network_client_send_buff(client, buff, rdlen) < rdlen)
 		{
@@ -2075,9 +2095,6 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout)
 {
-	int ret;
-	ssize_t rdlen;
-	char buff[1024];
 	struct pollfd pfds[2];
 
 	pfds[0].events = POLLIN;
@@ -2088,6 +2105,10 @@ int network_client_exec_redirect(struct network_client *client, int ttyin, int t
 
 	while (1)
 	{
+		int ret;
+		ssize_t rdlen;
+		char buff[1024];
+
 		ret = poll(pfds, NELEM(pfds), -1);
 		if (ret <= 0)
 		{

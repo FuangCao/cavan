@@ -627,7 +627,7 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 		return -EINVAL;
 	}
 
-	if (need_response)
+	if (need_response && ret >= 0)
 	{
 		tcp_dd_send_response(client, ret, NULL);
 	}
