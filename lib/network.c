@@ -1334,17 +1334,21 @@ static int network_client_udp_talk(struct network_client *client)
 	return 0;
 }
 
-static int network_client_udp_common_open(struct network_client *client)
+static int network_client_udp_common_open(struct network_client *client, int flags)
 {
 	client->send = network_client_udp_send;
 	client->recv = network_client_udp_recv;
 
+	if ((flags & CAVAN_NET_FLAG_UDP_TALK) == 0)
+	{
+		return 0;
+	}
+
 	return network_client_udp_talk(client);
 }
 
-static struct network_client *network_client_udp_open(const char *hostname, u16 port)
+static struct network_client *network_client_udp_open(const char *hostname, u16 port, int flags)
 {
-	int ret;
 	int sockfd;
 	struct network_client *client;
 	struct network_client_inet *inet;
@@ -1356,8 +1360,7 @@ static struct network_client *network_client_udp_open(const char *hostname, u16 
 		return NULL;
 	}
 
-	ret = inet_hostname2sockaddr(hostname, &inet->addr);
-	if (ret < 0)
+	if (inet_hostname2sockaddr(hostname, &inet->addr) < 0)
 	{
 		pr_red_info("inet_hostname2sockaddr");
 		goto out_free_inet;
@@ -1377,9 +1380,7 @@ static struct network_client *network_client_udp_open(const char *hostname, u16 
 	client->addrlen = sizeof(inet->addr);
 	inet->addr.sin_port = htons(port);
 
-
-	ret = network_client_udp_common_open(client);
-	if (ret < 0)
+	if (network_client_udp_common_open(client, flags) < 0)
 	{
 		pr_red_info("network_client_udp_common_open");
 		goto out_client_close;
@@ -1519,7 +1520,7 @@ out_close_sockfd:
 	return NULL;
 }
 
-static struct network_client *network_client_unix_udp_open(const char *hostname)
+static struct network_client *network_client_unix_udp_open(const char *hostname, int flags)
 {
 	int ret;
 	struct network_client *client;
@@ -1543,7 +1544,7 @@ static struct network_client *network_client_unix_udp_open(const char *hostname)
 
 	client = &udp->client;
 
-	ret = network_client_udp_common_open(client);
+	ret = network_client_udp_common_open(client, flags);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_udp_common_open");
@@ -1803,33 +1804,37 @@ const char *network_connect_type_tostring(network_connect_type_t type)
 	}
 }
 
-struct network_client *network_client_open(network_connect_type_t type, const char *hostname, u16 port, const char *pathname)
+struct network_client *network_client_open(struct network_url *url, int flags)
 {
+	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
+
+	LOGD("URL = %s\n", network_url_tostring(url, NULL, 0, NULL));
+
 	switch (type)
 	{
 	case NETWORK_CONNECT_TCP:
-		return network_client_tcp_open(hostname, port);
+		return network_client_tcp_open(url->hostname, url->port);
 
 	case NETWORK_CONNECT_UDP:
-		return network_client_udp_open(hostname, port);
+		return network_client_udp_open(url->hostname, url->port, flags);
 
 	case NETWORK_CONNECT_UNIX_TCP:
-		return network_client_unix_tcp_open(pathname);
+		return network_client_unix_tcp_open(url->pathname);
 
 	case NETWORK_CONNECT_UNIX_UDP:
-		return network_client_unix_udp_open(pathname);
+		return network_client_unix_udp_open(url->pathname, flags);
 
 	case NETWORK_CONNECT_ADB:
-		return network_client_adb_open(hostname, port);
+		return network_client_adb_open(url->hostname, url->port);
 
 	case NETWORK_CONNECT_ICMP:
-		return network_client_icmp_open(hostname);
+		return network_client_icmp_open(url->hostname);
 
 	case NETWORK_CONNECT_IP:
-		return network_client_ip_open(hostname);
+		return network_client_ip_open(url->hostname);
 
 	case NETWORK_CONNECT_MAC:
-		return network_client_mac_open(hostname);
+		return network_client_mac_open(url->hostname);
 
 	default:
 		pr_red_info("unknown connect type");
@@ -1837,16 +1842,7 @@ struct network_client *network_client_open(network_connect_type_t type, const ch
 	}
 }
 
-struct network_client *network_client_open2(struct network_url *url)
-{
-	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
-
-	LOGD("URL = %s\n", network_url_tostring(url, NULL, 0, NULL));
-
-	return network_client_open(type, url->hostname, url->port, url->pathname);
-}
-
-struct network_client *network_client_open3(const char *url_text)
+struct network_client *network_client_open2(const char *url_text, int flags)
 {
 	struct network_url url;
 
@@ -1856,7 +1852,7 @@ struct network_client *network_client_open3(const char *url_text)
 		return NULL;
 	}
 
-	return network_client_open2(&url);
+	return network_client_open(&url, flags);
 }
 
 void network_client_close(struct network_client *client)
@@ -2053,7 +2049,7 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 		return rwlen < 0 ? rwlen : -EFAULT;
 	}
 
-	LOGD("magic = 0x%08x\n", magic);
+	LOGD("magic = 0x%08x, family = %d, type = %d\n", magic, inet->addr.sin_family, service->type);
 
 	if (magic != CAVAN_NETWORK_MAGIC)
 	{
@@ -2064,6 +2060,8 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 	if (service->type == NETWORK_CONNECT_UNIX_UDP)
 	{
 		int ret;
+
+		pr_pos_info();
 
 		ret = network_create_unix_udp_client((struct network_client_unix_udp *) client);
 		if (ret < 0)
@@ -2212,9 +2210,12 @@ static int network_service_unix_udp_open(struct network_service *service, const 
 	return 0;
 }
 
-int network_service_open(struct network_service *service, network_connect_type_t type, u16 port, const char *pathname)
+int network_service_open(struct network_service *service, struct network_url *url)
 {
 	int ret;
+	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
+
+	LOGD("URL = %s\n", network_url_tostring(url, NULL, 0, NULL));
 
 	ret = mkdir_hierarchy(CAVAN_NETWORK_TEMP_PATH, 0777);
 	if (ret < 0)
@@ -2234,16 +2235,16 @@ int network_service_open(struct network_service *service, network_connect_type_t
 	{
 	case NETWORK_CONNECT_TCP:
 	case NETWORK_CONNECT_ADB:
-		return network_service_tcp_open(service, port);
+		return network_service_tcp_open(service, url->port);
 
 	case NETWORK_CONNECT_UDP:
-		return network_service_udp_open(service, port);
+		return network_service_udp_open(service, url->port);
 
 	case NETWORK_CONNECT_UNIX_TCP:
-		return network_service_unix_tcp_open(service, pathname);
+		return network_service_unix_tcp_open(service, url->pathname);
 
 	case NETWORK_CONNECT_UNIX_UDP:
-		return network_service_unix_udp_open(service, pathname);
+		return network_service_unix_udp_open(service, url->pathname);
 
 	default:
 		pr_red_info("unsupport connect type %d", type);
@@ -2255,16 +2256,7 @@ int network_service_open(struct network_service *service, network_connect_type_t
 	return ret;
 }
 
-int network_service_open2(struct network_service *service, struct network_url *url)
-{
-	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
-
-	LOGD("URL = %s\n", network_url_tostring(url, NULL, 0, NULL));
-
-	return network_service_open(service, type, url->port, url->pathname);
-}
-
-int network_service_open3(struct network_service *service, const char *url_text)
+int network_service_open2(struct network_service *service, const char *url_text)
 {
 	struct network_url url;
 
@@ -2274,7 +2266,7 @@ int network_service_open3(struct network_service *service, const char *url_text)
 		return -EFAULT;
 	}
 
-	return network_service_open2(service, &url);
+	return network_service_open(service, &url);
 }
 
 void network_service_close(struct network_service *service)

@@ -33,6 +33,8 @@
 #define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
 #define CAVAN_NETWORK_TEMP_PATH	CAVAN_TEMP_PATH "/cavan/network"
 
+#define CAVAN_NET_FLAG_UDP_TALK	(1 << 0)
+
 #pragma pack(1)
 struct mac_header
 {
@@ -357,9 +359,8 @@ int network_get_port_by_url(const struct network_url *url, const struct network_
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
 int network_create_socket_mac(const char *if_name, int protocol);
 
-struct network_client *network_client_open(network_connect_type_t type, const char *hostname, u16 port, const char *pathname);
-struct network_client *network_client_open2(struct network_url *url);
-struct network_client *network_client_open3(const char *url_text);
+struct network_client *network_client_open(struct network_url *url, int flags);
+struct network_client *network_client_open2(const char *url, int flags);
 void network_client_close(struct network_client *client);
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size);
 ssize_t network_client_send_buff(struct network_client *client, const char *buff, size_t size);
@@ -368,9 +369,8 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout);
 int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns);
 
-int network_service_open(struct network_service *service, network_connect_type_t type, u16 port, const char *pathname);
-int network_service_open2(struct network_service *service, struct network_url *url);
-int network_service_open3(struct network_service *service, const char *url);
+int network_service_open(struct network_service *service, struct network_url *url);
+int network_service_open2(struct network_service *service, const char *url);
 void network_service_close(struct network_service *service);
 
 static inline int inet_socket(int type)
@@ -553,4 +553,9 @@ static inline const char *cavan_get_server_hostname(void)
 static inline u16 cavan_get_server_port(u16 default_value)
 {
 	return cavan_getenv_u32(CAVAN_PORT_ENV_NAME, default_value);
+}
+
+static inline struct network_client *network_service_alloc_client(struct network_service *service)
+{
+	return malloc(service->client_size);
 }

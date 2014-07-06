@@ -69,7 +69,7 @@ int cavan_net_bridge_port_init(struct cavan_net_bridge_port *port, const char *u
 {
 	int ret;
 
-	port->client = network_client_open3(url);
+	port->client = network_client_open2(url, CAVAN_NET_FLAG_UDP_TALK);
 	if (port->client == NULL)
 	{
 		pr_red_info("network_client_open3");

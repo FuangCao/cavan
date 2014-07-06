@@ -27,7 +27,7 @@ static int network_client_test(const char *url)
 	char buff[1024] = "123456789";
 	struct network_client *client;
 
-	client = network_client_open3(url);
+	client = network_client_open2(url, CAVAN_NET_FLAG_UDP_TALK);
 	if (client == NULL)
 	{
 		pr_red_info("network_client_open");
@@ -60,24 +60,31 @@ static int network_service_test(const char *url)
 {
 	int ret;
 	char buff[1024];
-	struct network_client client;
+	struct network_client *client;
 	struct network_service service;
 
-	ret = network_service_open3(&service, url);
+	ret = network_service_open2(&service, url);
 	if (ret < 0)
 	{
 		pr_red_info("network_service_open");
 		return ret;
 	}
 
-	ret = service.accept(&service, &client);
-	if (ret < 0)
+	client = network_service_alloc_client(&service);
+	if (client == NULL)
 	{
-		pr_red_info("service->accept");
+		pr_error_info("network_service_alloc_client");
 		goto out_network_service_close;
 	}
 
-	ret = client.recv(&client, buff, sizeof(buff));
+	ret = service.accept(&service, client);
+	if (ret < 0)
+	{
+		pr_red_info("service.accept");
+		goto out_free_client;
+	}
+
+	ret = client->recv(client, buff, sizeof(buff));
 	if (ret < 0)
 	{
 		pr_red_info("client.recv");
@@ -87,7 +94,7 @@ static int network_service_test(const char *url)
 	buff[ret] = 0;
 	println("buff[%d] = %s", ret, buff);
 
-	ret = client.send(&client, "8888", 4);
+	ret = client->send(client, "8888", 4);
 	if (ret < 0)
 	{
 		pr_red_info("client.send");
@@ -97,7 +104,9 @@ static int network_service_test(const char *url)
 	msleep(500);
 
 out_client_close:
-	client.close(&client);
+	client->close(client);
+out_free_client:
+	free(client);
 out_network_service_close:
 	network_service_close(&service);
 	return ret;
