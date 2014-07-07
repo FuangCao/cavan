@@ -187,13 +187,13 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 	}
 	else
 	{
-		pd_red_info("this is not a terminal");
+		pd_info("output tty is not a terminal");
 
 		pkg.exec_req.lines = 0xFFFF;
 		pkg.exec_req.columns = 0xFFFF;
 	}
 
-	pd_bold_info("terminal size = %d x %d", pkg.exec_req.lines, pkg.exec_req.columns);
+	pd_info("terminal size = %d x %d", pkg.exec_req.lines, pkg.exec_req.columns);
 
 	pkg.type = TCP_DD_EXEC;
 
@@ -382,6 +382,8 @@ out_close_fd:
 static int tcp_dd_handle_exec_request(struct network_client *client, struct tcp_dd_exec_request *req)
 {
 	int ret;
+
+	pd_info("command = `%s'", req->command);
 
 #ifndef CAVAN_ARCH_ARM
 	if (text_lhcmp("reboot", req->command) == 0 || text_lhcmp("halt", req->command) == 0)
