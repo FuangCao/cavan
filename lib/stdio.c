@@ -614,6 +614,7 @@ void show_author_info(void)
 	println("Fuang.Cao <fuang.cao@eavoo.com>");
 	println("Fuang.Cao <caofuang@huamobile.com>");
 	println("Fuang.Cao <caofuang@hipad.hk>");
+	println("https://github.com/FuangCao/cavan.git");
 }
 
 bool cavan_get_choose_yesno(const char *prompt, bool def_choose, int timeout_ms)

@@ -17,7 +17,7 @@ void print_command_table(const struct cavan_command_map *p, size_t size)
 		return;
 	}
 
-	pr_bold_info("Available command is:");
+	println("Available command is:");
 
 	for (p_end = p + size - 1; p < p_end; p++)
 	{

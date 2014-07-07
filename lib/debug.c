@@ -18,6 +18,9 @@
  */
 
 #include <cavan.h>
+#include <time.h>
+
+static const char *buid_time_string = __DATE__ " " __TIME__;
 
 #ifdef CONFIG_BUILD_FOR_ANDROID
 char *dump_backtrace(char *buff, size_t size)
@@ -125,4 +128,25 @@ int catch_sigsegv(void)
 	action.sa_flags = SA_SIGINFO;
 
 	return sigaction(SIGSEGV, &action, NULL);
+}
+
+int cavan_get_build_time(struct tm *time)
+{
+	return strptime(buid_time_string, "%h %d %Y %T", time) ? 0 : -EFAULT;
+}
+
+const char *cavan_get_build_time_string(void)
+{
+	struct tm time;
+	static char buff[24];
+
+	if (cavan_get_build_time(&time) < 0)
+	{
+		return buid_time_string;
+	}
+
+	snprintf(buff, sizeof(buff), "%04d-%02d-%02d %02d:%02d:%02d",
+		time.tm_year + 1900, time.tm_mon, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
+
+	return buff;
 }

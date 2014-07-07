@@ -49,6 +49,9 @@ static int cavan_main(int argc, char *argv[])
 		return main(argc - 1, argv + 1);
 	}
 
+	println("%s %s", argv[0], cavan_get_build_time_string());
+	println("Usage: %s [[subcommand] [arguments] ...]\n", argv[0]);
+	println("https://github.com/FuangCao/cavan.git\n");
 	print_command_table(cmd_map_table + 1, ARRAY_SIZE(cmd_map_table) - 1);
 
 	return -EINVAL;
