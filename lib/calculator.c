@@ -82,7 +82,7 @@ char *get_bracket_pair(const char *formula, const char *formula_end)
 		{
 			if (counter <= 1)
 			{
-				return (char *)formula;
+				return (char *) formula;
 			}
 
 			counter--;
@@ -1082,7 +1082,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 			}
 			else
 			{
-				ret = general_stack_push_fd(&stack_operator, (void *)desc);
+				ret = general_stack_push_fd(&stack_operator, (void *) desc);
 				if (ret < 0)
 				{
 					pr_red_info("Operator stack overflow");

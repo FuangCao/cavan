@@ -215,7 +215,7 @@ char *adb_parse_sms_single(const char *buff, const char *end, char *segments[], 
 
 	*p = 0;
 
-	return (char *)end;
+	return (char *) end;
 }
 
 char *adb_parse_sms_multi(const char *buff, const char *end)
@@ -243,7 +243,7 @@ char *adb_parse_sms_multi(const char *buff, const char *end)
 		for (buff = temp; buff < end && (*buff == '\r' || *buff == '\n'); buff++);
 	}
 
-	return (char *)buff;
+	return (char *) buff;
 }
 
 char *adb_parse_sms_main(char *buff, char *end)
@@ -311,7 +311,7 @@ int recv_text_and_write(int sockfd, const char *filename)
 
 ssize_t sms_receive_value(int sockfd, void *value, size_t size)
 {
-	return (size_t)recv(sockfd, value, size, 0) == size ? (ssize_t)size : -1;
+	return (size_t) recv(sockfd, value, size, 0) == size ? (ssize_t) size : -1;
 }
 
 ssize_t sms_receive_text(int sockfd, char *buff)

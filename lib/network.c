@@ -524,7 +524,7 @@ int inet_create_tcp_link_by_addrinfo(struct addrinfo *info, u16 port, struct soc
 	{
 		if (info->ai_family == AF_INET)
 		{
-			struct sockaddr_in *p = (struct sockaddr_in *)info->ai_addr;
+			struct sockaddr_in *p = (struct sockaddr_in *) info->ai_addr;
 
 			p->sin_port = htons(port);
 			if (inet_connect(sockfd, p) == 0)
@@ -739,7 +739,7 @@ int inet_bind_rand(int sockfd, int retry)
 		ret = inet_bind(sockfd, &addr);
 	} while (ret < 0 && retry--);
 
-	return ret < 0 ? ret : (int)ntohs(addr.sin_port);
+	return ret < 0 ? ret : (int) ntohs(addr.sin_port);
 }
 
 ssize_t inet_send(int sockfd, const char *buff, size_t size)

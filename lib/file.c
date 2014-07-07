@@ -760,11 +760,11 @@ int try_to_open(int flags, ...)
 
 ssize_t ffile_read(int fd, void *buff, size_t size)
 {
-	void *buff_bak = buff, *buff_end = (char *)buff + size;
+	void *buff_bak = buff, *buff_end = (char *) buff + size;
 
 	while (buff < buff_end)
 	{
-		ssize_t rdlen = read(fd, buff, (char *)buff_end - (char *)buff);
+		ssize_t rdlen = read(fd, buff, (char *) buff_end - (char *) buff);
 
 		if (rdlen <= 0)
 		{
@@ -776,19 +776,19 @@ ssize_t ffile_read(int fd, void *buff, size_t size)
 			return rdlen;
 		}
 
-		buff = (char *)buff + rdlen;
+		buff = (char *) buff + rdlen;
 	}
 
-	return (char *)buff - (char *)buff_bak;
+	return (char *) buff - (char *) buff_bak;
 }
 
 ssize_t ffile_write(int fd, const void *buff, size_t size)
 {
-	const void *buff_bak = buff, *buff_end = (char *)buff + size;
+	const void *buff_bak = buff, *buff_end = (char *) buff + size;
 
 	while (buff < buff_end)
 	{
-		ssize_t wrlen = write(fd, buff, (char *)buff_end - (char *)buff);
+		ssize_t wrlen = write(fd, buff, (char *) buff_end - (char *) buff);
 
 		if (wrlen < 0)
 		{
@@ -802,10 +802,10 @@ ssize_t ffile_write(int fd, const void *buff, size_t size)
 		}
 #endif
 
-		buff = (char *)buff + wrlen;
+		buff = (char *) buff + wrlen;
 	}
 
-	return (char *)buff - (char *)buff_bak;
+	return (char *) buff - (char *) buff_bak;
 }
 
 ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
@@ -2018,7 +2018,7 @@ int file_set_loop(const char *filename, char *loop_path, u64 offset)
 	}
 
 	mem_set8((u8 *)&loopinfo, 0, sizeof(loopinfo));
-	if (to_abs_path2_base(filename, (char *)loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL)
+	if (to_abs_path2_base(filename, (char *) loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL)
 	{
 		ret = -ENOENT;
 		goto out_close_loop;
@@ -2328,7 +2328,7 @@ bool file_discard_all(int fd)
 			return false;
 		}
 
-		if (rdlen < (ssize_t)sizeof(buff))
+		if (rdlen < (ssize_t) sizeof(buff))
 		{
 			break;
 		}
@@ -2391,7 +2391,7 @@ const char *month_tostring(int month)
 {
 	const char *month_table[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-	if (month >= 0 && month < (int)ARRAY_SIZE(month_table))
+	if (month >= 0 && month < (int) ARRAY_SIZE(month_table))
 	{
 		return month_table[month];
 	}
@@ -2403,7 +2403,7 @@ const char *week_tostring(int week)
 {
 	const char *week_table[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
-	if (week >= 0 && week < (int)ARRAY_SIZE(week_table))
+	if (week >= 0 && week < (int) ARRAY_SIZE(week_table))
 	{
 		return week_table[week];
 	}
@@ -2510,7 +2510,7 @@ size_t fscan_directory1(DIR *dp, void *buff, size_t size)
 	void *buff_end;
 	struct dirent *en;
 
-	buff_end = (char *)buff + size;
+	buff_end = (char *) buff + size;
 	size = 0;
 
 	while (buff < buff_end && (en = readdir(dp)))
@@ -2532,7 +2532,7 @@ size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2)
 	void *buff_end;
 	struct dirent *en;
 
-	buff_end = (char *)buff + (size1 * size2);
+	buff_end = (char *) buff + (size1 * size2);
 	size1 = 0;
 
 	while (buff < buff_end && (en = readdir(dp)))
@@ -2544,7 +2544,7 @@ size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2)
 
 		text_ncopy(buff, en->d_name, size2);
 
-		buff = (char *)buff + size2;
+		buff = (char *) buff + size2;
 		size1++;
 	}
 

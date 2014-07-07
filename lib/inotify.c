@@ -146,7 +146,7 @@ int cavan_inotify_event_loop(struct cavan_inotify_descriptor *desc, int (*handle
 			return readlen;
 		}
 
-		p = (struct inotify_event *)buff;
+		p = (struct inotify_event *) buff;
 		p_end = (struct inotify_event *)(buff + readlen);
 
 		while (p < p_end)

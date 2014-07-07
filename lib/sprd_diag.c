@@ -137,7 +137,7 @@ char *sprd_diag_text2mac(const char *text, byte *mac, size_t size)
 	text = math_text2memory(text, mac, size, 16);
 	mem_reverse_simple(mac, mac + size - 1);
 
-	return (char *)text;
+	return (char *) text;
 }
 
 void sprd_diag_show_imei(const struct sprd_diag_imei_data *imei)
@@ -156,8 +156,8 @@ void sprd_diag_show_imei(const struct sprd_diag_imei_data *imei)
 	sprd_diag_imei_tostring(imei->imei4, sizeof(imei->imei4), buff, sizeof(buff));
 	println("IMEI4 = %s", buff);
 
-	sprd_diag_show_data("WIFI-MAC", (char *)imei->wifi_mac, sizeof(imei->wifi_mac));
-	sprd_diag_show_data("BT-MAC", (char *)imei->bt_mac, sizeof(imei->bt_mac));
+	sprd_diag_show_data("WIFI-MAC", (char *) imei->wifi_mac, sizeof(imei->wifi_mac));
+	sprd_diag_show_data("BT-MAC", (char *) imei->bt_mac, sizeof(imei->bt_mac));
 }
 
 char *sprd_diag_encode_data(const char *src, size_t srclen, char *dest, size_t destlen)
@@ -223,7 +223,7 @@ char *sprd_diag_decode_data(const char *src, size_t srclen, char *dest, size_t d
 		*reslen = dest - dest_bak;
 	}
 
-	return (char *)src;
+	return (char *) src;
 }
 
 ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command)
@@ -326,7 +326,7 @@ label_decode_data:
 	sprd_diag_decode_data(pos, pos_end - pos, command->reply, command->reply_len, &reslen);
 
 	rdlen = message.length - sizeof(message);
-	if (reslen != (size_t)rdlen)
+	if (reslen != (size_t) rdlen)
 	{
 		pr_red_info("reslen(" PRINT_FORMAT_SIZE ") != rdlen(" PRINT_FORMAT_SIZE ")", reslen, rdlen);
 		return -EINVAL;
@@ -410,7 +410,7 @@ int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 		.reply_subtype = SPRD_DIAG_OPER_SUCCESS_FLAG,
 		.command = (char *)&data,
 		.command_len = sizeof(data),
-		.reply = (char *)imei,
+		.reply = (char *) imei,
 		.reply_len = sizeof(*imei)
 	};
 
@@ -428,7 +428,7 @@ int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 			continue;
 		}
 
-		crc = sprd_diag_crc16(0, (u8 *)imei, sizeof(*imei) - sizeof(imei->crc16));
+		crc = sprd_diag_crc16(0, (u8 *) imei, sizeof(*imei) - sizeof(imei->crc16));
 		println("CRC16 = 0x%04x = 0x%04x", imei->crc16, crc);
 		if (crc == imei->crc16)
 		{
@@ -448,13 +448,13 @@ int sprd_diag_write_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 		.cmd_subtype = mask,
 		.reply_type = SPRD_DIAG_DIRECT_NV,
 		.reply_subtype = SPRD_DIAG_OPER_SUCCESS_FLAG,
-		.command = (char *)imei,
+		.command = (char *) imei,
 		.command_len = sizeof(*imei),
 		.reply = reply,
 		.reply_len = sizeof(reply)
 	};
 
-	imei->crc16 = sprd_diag_crc16(0, (u8 *)imei, sizeof(*imei) - sizeof(imei->crc16));
+	imei->crc16 = sprd_diag_crc16(0, (u8 *) imei, sizeof(*imei) - sizeof(imei->crc16));
 
 	return sprd_diag_send_command(fd, &command, 10);
 }

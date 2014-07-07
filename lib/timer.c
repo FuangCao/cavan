@@ -202,7 +202,7 @@ int cavan_timer_service_stop(struct cavan_timer_service *service)
 
 static int cavan_cursor_timer_handler(struct cavan_timer *timer, void *data)
 {
-	struct cavan_cursor *cursor = (struct cavan_cursor *)timer;
+	struct cavan_cursor *cursor = (struct cavan_cursor *) timer;
 
 	cursor->visual = !cursor->visual;
 	cursor->set_visual(cursor, cursor->visual, cursor->private_data);

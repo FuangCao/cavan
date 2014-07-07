@@ -176,7 +176,7 @@ static int cavan_touch_device_probe(struct cavan_touch_device *dev, void *data)
 static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
 {
 	struct cavan_input_message_point *p, *p_end;
-	struct cavan_multi_touch_device *ts = (struct cavan_multi_touch_device *)dev;
+	struct cavan_multi_touch_device *ts = (struct cavan_multi_touch_device *) dev;
 
 	switch (event->type)
 	{
@@ -331,7 +331,7 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 
 static int cavan_multi_touch_device_probe(struct cavan_input_device *dev, void *data)
 {
-	struct cavan_multi_touch_device *ts = (struct cavan_multi_touch_device *)dev;
+	struct cavan_multi_touch_device *ts = (struct cavan_multi_touch_device *) dev;
 
 	return cavan_touch_device_probe(&ts->touch_dev, data);
 }
@@ -376,7 +376,7 @@ struct cavan_input_device *cavan_multi_touch_device_create(void)
 
 static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
 {
-	struct cavan_single_touch_device *ts = (struct cavan_single_touch_device *)dev;
+	struct cavan_single_touch_device *ts = (struct cavan_single_touch_device *) dev;
 	struct cavan_input_message_point *p = &ts->point;
 
 	switch (event->type)
@@ -479,7 +479,7 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 
 static int cavan_single_touch_device_probe(struct cavan_input_device *dev, void *data)
 {
-	struct cavan_single_touch_device *ts = (struct cavan_single_touch_device *)dev;
+	struct cavan_single_touch_device *ts = (struct cavan_single_touch_device *) dev;
 
 	return cavan_touch_device_probe(&ts->touch_dev, data);
 }

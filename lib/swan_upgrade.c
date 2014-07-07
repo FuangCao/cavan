@@ -296,7 +296,7 @@ int package(const char *pkg_name, const char *dir_name)
 	{
 		text_copy(name_p, p->filename);
 
-		if (array_has_element(p->type, (int *)swan_exclude_images, swan_exclude_image_count) || file_test(tmp_path, "r") < 0)
+		if (array_has_element(p->type, (int *) swan_exclude_images, swan_exclude_image_count) || file_test(tmp_path, "r") < 0)
 		{
 			println_cyan("exclude image \"%s\"", tmp_path);
 			continue;
@@ -505,7 +505,7 @@ static int write2emmc(int pkg_fd, int img_count, int retry_count, enum swan_imag
 			return ret;
 		}
 
-		if (array_has_element(img_info.type, (int *)skip_types, skip_img_count))
+		if (array_has_element(img_info.type, (int *) skip_types, skip_img_count))
 		{
 			ret = lseek(pkg_fd, img_info.length, SEEK_CUR);
 			if (ret < 0)

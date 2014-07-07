@@ -98,7 +98,7 @@ static int tcp_dd_send_read_request(struct network_client *client, const char *f
 	pkg->file_req.size = size;
 	ret = text_copy(pkg->file_req.filename, filename) - (char *)&pkg + 1;
 
-	ret = client->send(client, (char *)pkg, ret);
+	ret = client->send(client, (char *) pkg, ret);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
@@ -282,7 +282,7 @@ static int tcp_dd_handle_read_request(struct network_client *client, struct tcp_
 		size = req->size;
 	}
 
-	if (size < (off_t)req->offset)
+	if (size < (off_t) req->offset)
 	{
 		ret = -EINVAL;
 		tcp_dd_send_response(client, ret, "[Server] No data to be sent");

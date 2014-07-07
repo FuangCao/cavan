@@ -184,7 +184,7 @@ void mem_set(void *mem, int value, size_t size)
 		count = size >> 3;
 		mem_set64(mem, value64, count);
 
-		mem = (u8 *)mem + (count << 3);
+		mem = (u8 *) mem + (count << 3);
 		count = size & 0x07;
 	}
 	else if (((long)mem & 0x03) == 0)
@@ -198,7 +198,7 @@ void mem_set(void *mem, int value, size_t size)
 		count = size >> 2;
 		mem_set32(mem, value32, count);
 
-		mem = (u8 *)mem + (count << 2);
+		mem = (u8 *) mem + (count << 2);
 		count = size & 0x03;
 	}
 	else if (((long)mem & 0x01) == 0)
@@ -211,7 +211,7 @@ void mem_set(void *mem, int value, size_t size)
 		count = size >> 1;
 		mem_set16(mem, value16, count);
 
-		mem = (u8 *)mem + (count << 1);
+		mem = (u8 *) mem + (count << 1);
 		count = size & 0x01;
 	}
 	else
@@ -344,7 +344,7 @@ int mem_kmp_find_all(const char *mem, const char *sub, size_t memlen, size_t sub
 			break;
 		}
 
-		*results = (char *)mem;
+		*results = (char *) mem;
 		mem += sublen;
 		results++;
 	}

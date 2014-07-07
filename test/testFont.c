@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 #if DUMP_FONT
 	ssize = display->font->width * display->font->height;
 	mem = alloca(ssize);
-	ssize = cavan_font_comp(display->font, mem, (size_t)ssize);
+	ssize = cavan_font_comp(display->font, mem, (size_t) ssize);
 	println("ssize = %ld", ssize);
 	cavan_mem_dump(mem, ssize, 15, ", ", ",\n");
 #endif

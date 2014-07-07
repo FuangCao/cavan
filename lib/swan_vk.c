@@ -683,7 +683,7 @@ static int swan_vk_release_all_key(int sockfd)
 	for (code = 0; code < KEY_MAX; code++)
 	{
 		events[0].code = code;
-		wrlen = inet_send(sockfd, (char *)events, sizeof(events));
+		wrlen = inet_send(sockfd, (char *) events, sizeof(events));
 		if (wrlen < 0)
 		{
 			return wrlen;
@@ -808,7 +808,7 @@ static int swan_vk_server_handler(struct cavan_service_description *service, int
 	while (1)
 	{
 		rdlen = recv(sockfd_client, events, sizeof(events), 0);
-		if (rdlen < (ssize_t)sizeof(events[0]))
+		if (rdlen < (ssize_t) sizeof(events[0]))
 		{
 			pr_red_info("inet_recv");
 			return rdlen;

@@ -232,9 +232,9 @@ char *ftp_file_stat_tostring(const char *filepath, char *text)
 	*text++ = file_type_to_char(st.st_mode);
 	text = file_permition_tostring(st.st_mode, text);
 #if __WORDSIZE == 64
-	text += sprintf(text, " %-5ld %-5ld %-5ld %-10ld ", (u64)st.st_nlink, (u64)st.st_uid, (u64)st.st_gid, (u64)st.st_size);
+	text += sprintf(text, " %-5ld %-5ld %-5ld %-10ld ", (u64) st.st_nlink, (u64) st.st_uid, (u64) st.st_gid, (u64) st.st_size);
 #else
-	text += sprintf(text, " %-5Ld %-5Ld %-5Ld %-10Ld ", (u64)st.st_nlink, (u64)st.st_uid, (u64)st.st_gid, (u64)st.st_size);
+	text += sprintf(text, " %-5Ld %-5Ld %-5Ld %-10Ld ", (u64) st.st_nlink, (u64) st.st_uid, (u64) st.st_gid, (u64) st.st_size);
 #endif
 	text = ftp_file_time_tostring((time_t *)&st.st_mtime, text);
 

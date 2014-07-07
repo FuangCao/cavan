@@ -67,7 +67,7 @@ int swan_ts_input_calibration(const char *devname)
 		devname = SWAN_TS_DEVICE_NAME;
 	}
 
-	count = cavan_event_scan_devices(&matcher, (void *)devname);
+	count = cavan_event_scan_devices(&matcher, (void *) devname);
 	if (count <= 0)
 	{
 		pr_red_info("cavan_event_scan_devices");
@@ -162,7 +162,7 @@ int swan_ts_write_registers_fd(int fd, u16 addr, const void *buff, size_t size)
 	{
 		.offset = addr,
 		.size = size,
-		.data = (void *)buff
+		.data = (void *) buff
 	};
 
 	return ioctl(fd, SWAN_TS_IOCTL_WRITE_REGISTERS, &req);
@@ -192,7 +192,7 @@ int swan_ts_write_data_fd(int fd, const void *buff, size_t size)
 	{
 		.offset = 0,
 		.size = size,
-		.data = (void *)buff
+		.data = (void *) buff
 	};
 
 	return ioctl(fd, SWAN_TS_IOCTL_WRITE_DATA, &req);
@@ -404,7 +404,7 @@ ssize_t ft5406_read_firmware_data2(const char *cfgpath, char *buff, size_t size)
 		}
 
 		println("value = 0x%02x", value);
-		*buff = (u8)value;
+		*buff = (u8) value;
 	}
 
 	fclose(file);
@@ -527,7 +527,7 @@ int ft5406_firmware_write_last_data(int fd, const void *buff, size_t size)
 	struct ft5406_firmware_data_package pkg =
 	{
 		.size = size,
-		.data = (void *)buff
+		.data = (void *) buff
 	};
 
 	return ioctl(fd, FT5406_IOCTL_SINGLE_WRITE, &pkg);

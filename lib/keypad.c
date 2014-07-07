@@ -64,7 +64,7 @@ static bool cavan_keypad_event_handler(struct cavan_input_device *dev, struct in
 #if CONFIG_CAVAN_KEYPAD_DROP_REPORT
 	bool pressed, keydown;
 #endif
-	struct cavan_keypad_device *keypad = (struct cavan_keypad_device *)dev;
+	struct cavan_keypad_device *keypad = (struct cavan_keypad_device *) dev;
 
 	switch (event->type)
 	{

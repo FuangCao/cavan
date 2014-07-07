@@ -469,7 +469,7 @@ int system_mount(const char *mnt_dev, const char *mnt_point, const void *data)
 	{
 		if (data && *(const char *)data)
 		{
-			return system_command("mount %s %s -o %s", mnt_dev, mnt_point, (const char *)data);
+			return system_command("mount %s %s -o %s", mnt_dev, mnt_point, (const char *) data);
 		}
 		else
 		{
@@ -480,7 +480,7 @@ int system_mount(const char *mnt_dev, const char *mnt_point, const void *data)
 	{
 		if (data && *(const char *)data)
 		{
-			return system_command("mount %s %s -o loop,%s", mnt_dev, mnt_point, (const char *)data);
+			return system_command("mount %s %s -o loop,%s", mnt_dev, mnt_point, (const char *) data);
 		}
 		else
 		{
@@ -927,7 +927,7 @@ int fwrite_master_boot_sector(int dev_fd, struct master_boot_sector *mbs_p)
 	}
 
 	ret = ffile_write(dev_fd, mbs_p, sizeof(*mbs_p));
-	if (ret < (int)sizeof(*mbs_p))
+	if (ret < (int) sizeof(*mbs_p))
 	{
 		print_error("ffile_write");
 		return ret;

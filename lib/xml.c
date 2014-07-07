@@ -519,7 +519,7 @@ static char *cavan_xml_tag_tostring(struct cavan_xml_document *doc, struct cavan
 			p = content;
 			p_end = p + length + 100;
 
-			q = (char *)tag->content;
+			q = (char *) tag->content;
 			q_end = q + length;
 			q = text_skip_space_and_lf(q, q_end);
 

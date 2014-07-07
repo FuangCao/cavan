@@ -174,7 +174,7 @@ static ssize_t cftp_send_file_reuest(struct cftp_descriptor *desc, struct cftp_f
 	req->size = size;
 	req->offset = offset;
 
-	sendlen = text_copy(req->filename, filename) - (char *)req + 1;
+	sendlen = text_copy(req->filename, filename) - (char *) req + 1;
 
 	return cftp_send_data_retry(desc, req, sendlen, desc->retry_count);
 }
@@ -221,7 +221,7 @@ int cftp_client_receive_file(struct cftp_descriptor *desc, const char *file_in, 
 		goto out_close_file;
 	}
 
-	sendlen = cftp_send_file_reuest(desc, (void *)msg, file_in, NULL, offset_in, size, 1);
+	sendlen = cftp_send_file_reuest(desc, (void *) msg, file_in, NULL, offset_in, size, 1);
 	if (sendlen < 0)
 	{
 		error_msg("cftp_send_data_retry");
@@ -260,7 +260,7 @@ int cftp_client_receive_file(struct cftp_descriptor *desc, const char *file_in, 
 				if (sendlen < 0)
 				{
 					print_error("write");
-					cftp_send_error_message(desc, (struct cftp_error_message *)msg, "write file failed");
+					cftp_send_error_message(desc, (struct cftp_error_message *) msg, "write file failed");
 					ret = sendlen;
 					goto out_free_msg;
 				}
@@ -275,7 +275,7 @@ int cftp_client_receive_file(struct cftp_descriptor *desc, const char *file_in, 
 				if ((size_t)recvlen < max_xfer_length)
 				{
 					println(" Receive data complete");
-					cftp_send_ack_message(desc, (struct cftp_ack_message *)msg, blk_num, 0);
+					cftp_send_ack_message(desc, (struct cftp_ack_message *) msg, blk_num, 0);
 					ret = 0;
 					goto out_free_msg;
 				}
@@ -285,7 +285,7 @@ int cftp_client_receive_file(struct cftp_descriptor *desc, const char *file_in, 
 				warning_msg("%d != %d", msg->data_pkg.blk_num, blk_num);
 			}
 
-			sendlen = cftp_send_ack_message(desc, (struct cftp_ack_message *)msg, blk_num, desc->retry_count);
+			sendlen = cftp_send_ack_message(desc, (struct cftp_ack_message *) msg, blk_num, desc->retry_count);
 			if (sendlen < 0)
 			{
 				error_msg("cftp_send_ack_message");
@@ -296,7 +296,7 @@ int cftp_client_receive_file(struct cftp_descriptor *desc, const char *file_in, 
 
 		default:
 			error_msg("invalid package type");
-			cftp_send_error_message(desc, (struct cftp_error_message *)msg, "invalid package type");
+			cftp_send_error_message(desc, (struct cftp_error_message *) msg, "invalid package type");
 			ret = -EINVAL;
 			goto out_free_msg;
 		}
@@ -369,7 +369,7 @@ static int cftp_client_send_special_file(struct cftp_descriptor * desc, struct s
 		return sendlen;
 	}
 
-	msg = (union cftp_message *)req;
+	msg = (union cftp_message *) req;
 
 	recvlen = cftp_receive_data(desc, msg, desc->max_xfer_length);
 	if (recvlen < 0)
@@ -496,7 +496,7 @@ int cftp_client_send_file(struct cftp_descriptor *desc, const char *file_in, u32
 		goto out_close_file;
 	}
 
-	sendlen = cftp_send_file_reuest(desc, (void *)msg, file_out, &st, offset_out, size, 0);
+	sendlen = cftp_send_file_reuest(desc, (void *) msg, file_out, &st, offset_out, size, 0);
 	if (sendlen < 0)
 	{
 		ret = sendlen;
@@ -546,7 +546,7 @@ int cftp_client_send_file(struct cftp_descriptor *desc, const char *file_in, u32
 				if (readlen < 0)
 				{
 					print_error("read");
-					cftp_send_error_message(desc, (struct cftp_error_message *)msg, "read file failed");
+					cftp_send_error_message(desc, (struct cftp_error_message *) msg, "read file failed");
 					ret = readlen;
 					goto out_free_data_msg;
 				}
@@ -574,7 +574,7 @@ int cftp_client_send_file(struct cftp_descriptor *desc, const char *file_in, u32
 
 		default:
 			error_msg("invalid package type");
-			cftp_send_error_message(desc, (struct cftp_error_message *)msg, "invalid package type");
+			cftp_send_error_message(desc, (struct cftp_error_message *) msg, "invalid package type");
 			ret = -EINVAL;
 			goto out_free_data_msg;
 		}
@@ -613,7 +613,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 	if (fd < 0)
 	{
 		print_error("open file %s faild", filename);
-		cftp_send_error_message(desc, (struct cftp_error_message *)msg, "open file %s faild", filename);
+		cftp_send_error_message(desc, (struct cftp_error_message *) msg, "open file %s faild", filename);
 		ret = fd;
 		goto out_free_msg;
 	}
@@ -624,7 +624,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 		if (ret < 0)
 		{
 			print_error("lseek");
-			cftp_send_error_message(desc, (struct cftp_error_message *)msg, "seek file %s faild", filename);
+			cftp_send_error_message(desc, (struct cftp_error_message *) msg, "seek file %s faild", filename);
 			goto out_free_msg;
 		}
 	}
@@ -637,7 +637,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 
 	while (1)
 	{
-		sendlen = cftp_send_ack_message(desc, (struct cftp_ack_message *)msg, blk_num, desc->retry_count);
+		sendlen = cftp_send_ack_message(desc, (struct cftp_ack_message *) msg, blk_num, desc->retry_count);
 		if (sendlen < 0)
 		{
 			print_error("cftp_send_ack_message");
@@ -649,7 +649,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 		if (recvlen < 0)
 		{
 			print_error("cftp_receive_data");
-			cftp_send_error_message(desc, (struct cftp_error_message *)msg, "receive file failed");
+			cftp_send_error_message(desc, (struct cftp_error_message *) msg, "receive file failed");
 			ret = recvlen;
 			goto out_close_file;
 		}
@@ -672,7 +672,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 			if (sendlen < 0)
 			{
 				print_error("write");
-				cftp_send_error_message(desc, (struct cftp_error_message *)msg, "write file failed");
+				cftp_send_error_message(desc, (struct cftp_error_message *) msg, "write file failed");
 				ret = sendlen;
 				goto out_close_file;
 			}
@@ -681,7 +681,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 
 			if ((size_t)recvlen < max_xfer_length)
 			{
-				cftp_send_ack_message(desc, (struct cftp_ack_message *)msg, blk_num, 0);
+				cftp_send_ack_message(desc, (struct cftp_ack_message *) msg, blk_num, 0);
 				progress_bar_finish(&bar);
 				println("Receive data complete");
 				ret = 0;
@@ -695,7 +695,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 
 		default:
 			error_msg("invalid package type");
-			cftp_send_error_message(desc, (struct cftp_error_message *)msg, "invalid package type");
+			cftp_send_error_message(desc, (struct cftp_error_message *) msg, "invalid package type");
 			ret = -EINVAL;
 			goto out_close_file;
 		}
@@ -735,7 +735,7 @@ int cftp_server_send_file(struct cftp_descriptor *desc, const char *filename, u3
 	if (fd < 0)
 	{
 		print_error("open file %s faild", filename);
-		cftp_send_error_message(desc, (struct cftp_error_message *)msg, "open file %s faild", filename);
+		cftp_send_error_message(desc, (struct cftp_error_message *) msg, "open file %s faild", filename);
 		ret = fd;
 		goto out_free_msg;
 	}
@@ -744,7 +744,7 @@ int cftp_server_send_file(struct cftp_descriptor *desc, const char *filename, u3
 	if (ret < 0)
 	{
 		print_error("fstat");
-		cftp_send_error_message(desc, (struct cftp_error_message *)msg, "fstat");
+		cftp_send_error_message(desc, (struct cftp_error_message *) msg, "fstat");
 		goto out_close_file;
 	}
 
@@ -754,7 +754,7 @@ int cftp_server_send_file(struct cftp_descriptor *desc, const char *filename, u3
 		if (ret < 0)
 		{
 			print_error("lseek");
-			cftp_send_error_message(desc, (struct cftp_error_message *)msg, "seek file %s faild", filename);
+			cftp_send_error_message(desc, (struct cftp_error_message *) msg, "seek file %s faild", filename);
 			goto out_close_file;
 		}
 	}
@@ -768,7 +768,7 @@ int cftp_server_send_file(struct cftp_descriptor *desc, const char *filename, u3
 	if (data_pkg == NULL)
 	{
 		print_error("malloc");
-		cftp_send_error_message(desc, (struct cftp_error_message *)msg, "malloc");
+		cftp_send_error_message(desc, (struct cftp_error_message *) msg, "malloc");
 		ret = -ENOMEM;
 		goto out_close_file;
 	}
@@ -787,7 +787,7 @@ int cftp_server_send_file(struct cftp_descriptor *desc, const char *filename, u3
 		if (readlen < 0)
 		{
 			print_error("read file failed");
-			cftp_send_error_message(desc, (struct cftp_error_message *)msg, "read file failed");
+			cftp_send_error_message(desc, (struct cftp_error_message *) msg, "read file failed");
 			ret = readlen;
 			goto out_free_data_pkg;
 		}
@@ -807,7 +807,7 @@ label_send_data:
 		if (recvlen < 0)
 		{
 			error_msg("cftp_receive_data");
-			cftp_send_error_message(desc, (struct cftp_error_message *)msg, "receive file failed");
+			cftp_send_error_message(desc, (struct cftp_error_message *) msg, "receive file failed");
 			ret = recvlen;
 			goto out_free_data_pkg;
 		}
@@ -839,7 +839,7 @@ label_send_data:
 
 		default:
 			error_msg("invalid package type");
-			cftp_send_error_message(desc, (struct cftp_error_message *)msg, "invalid package type");
+			cftp_send_error_message(desc, (struct cftp_error_message *) msg, "invalid package type");
 			ret = -EINVAL;
 			goto out_free_data_pkg;
 		}
@@ -898,17 +898,17 @@ static int cftp_receive_handle(struct cftp_descriptor *desc, struct cftp_file_re
 
 	default:
 		error_msg("unknown file type");
-		cftp_send_error_message(desc, (struct cftp_error_message *)req, "unknown file type");
+		cftp_send_error_message(desc, (struct cftp_error_message *) req, "unknown file type");
 		return -EINVAL;
 	}
 
 	if (ret < 0)
 	{
-		cftp_send_error_message(desc, (struct cftp_error_message *)req, __FUNCTION__);
+		cftp_send_error_message(desc, (struct cftp_error_message *) req, __FUNCTION__);
 	}
 	else
 	{
-		cftp_send_ack_message(desc, (struct cftp_ack_message *)req, 0, 0);
+		cftp_send_ack_message(desc, (struct cftp_ack_message *) req, 0, 0);
 	}
 
 	return ret;
@@ -931,11 +931,11 @@ static int cftp_command_handle(struct cftp_descriptor *desc, struct cftp_command
 	ret = system(req->command);
 	if (ret < 0)
 	{
-		cftp_send_error_message(desc, (struct cftp_error_message *)req, "system");
+		cftp_send_error_message(desc, (struct cftp_error_message *) req, "system");
 	}
 	else
 	{
-		cftp_send_ack_message(desc, (struct cftp_ack_message *)req, 0, 0);
+		cftp_send_ack_message(desc, (struct cftp_ack_message *) req, 0, 0);
 	}
 
 	return ret;
@@ -969,15 +969,15 @@ void *cftp_service_heandle(void *data)
 		switch (msg->type)
 		{
 		case CFTP_PACKAGE_FILE_READ:
-			cftp_send_handle(desc, (struct cftp_file_request *)msg);
+			cftp_send_handle(desc, (struct cftp_file_request *) msg);
 			break;
 
 		case CFTP_PACKAGE_FILE_WRITE:
-			cftp_receive_handle(desc, (struct cftp_file_request *)msg);
+			cftp_receive_handle(desc, (struct cftp_file_request *) msg);
 			break;
 
 		case CFTP_PACKAGE_COMMAND:
-			cftp_command_handle(desc, (struct cftp_command_request *)msg);
+			cftp_command_handle(desc, (struct cftp_command_request *) msg);
 			break;
 
 		default:

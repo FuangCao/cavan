@@ -315,7 +315,7 @@ void show_ext4_extent_index(const struct ext4_extent_index *index)
 	pr_bold_info("ext4 extent index %p", index);
 
 	println("block = %d", index->block);
-	println("leaf = " PRINT_FORMAT_INT64, (u64)index->leaf_hi << 32 | index->leaf_lo);
+	println("leaf = " PRINT_FORMAT_INT64, (u64) index->leaf_hi << 32 | index->leaf_lo);
 }
 
 void show_ext4_extent_leaf(const struct ext4_extent_leaf *leaf)
@@ -325,7 +325,7 @@ void show_ext4_extent_leaf(const struct ext4_extent_leaf *leaf)
 
 	println("block = %d", leaf->block);
 	println("length = %d", leaf->length);
-	println("start = " PRINT_FORMAT_INT64, (u64)leaf->start_hi << 32 | leaf->start_lo);
+	println("start = " PRINT_FORMAT_INT64, (u64) leaf->start_hi << 32 | leaf->start_lo);
 }
 
 static int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_directory_entry *entry)
@@ -377,7 +377,7 @@ const char *ext2_filetype_to_text(int type)
 {
 	const char *ext2_filetypes[] = {"Unknown", "Regular", "Directory", "Char_dev", "Block_dev", "Pipe", "Socket", "Symlink"};
 
-	if (type < 0 || (size_t)type >= ARRAY_SIZE(ext2_filetypes))
+	if (type < 0 || (size_t) type >= ARRAY_SIZE(ext2_filetypes))
 	{
 		return ext2_filetypes[0];
 	}
@@ -402,14 +402,14 @@ static int ext4_find_file_base(struct ext2_desc *desc, const char *filename, str
 
 			show_ext4_extent_index(index);
 
-			rdlen = desc->read_block(desc, (u64)index->leaf_hi << 32 | index->leaf_lo, buff, 1);
+			rdlen = desc->read_block(desc, (u64) index->leaf_hi << 32 | index->leaf_lo, buff, 1);
 			if (rdlen < 0)
 			{
 				pr_error_info("desc->read_block");
 				return rdlen;
 			}
 
-			if (ext4_find_file_base(desc, filename, (struct ext4_extent_header *)buff, entry) == 0)
+			if (ext4_find_file_base(desc, filename, (struct ext4_extent_header *) buff, entry) == 0)
 			{
 				return 0;
 			}
@@ -428,7 +428,7 @@ static int ext4_find_file_base(struct ext2_desc *desc, const char *filename, str
 		{
 			show_ext4_extent_leaf(leaf);
 
-			rdlen = desc->read_block(desc, (u64)leaf->start_hi << 32 | leaf->start_lo, p, 1);
+			rdlen = desc->read_block(desc, (u64) leaf->start_hi << 32 | leaf->start_lo, p, 1);
 			if (rdlen < 0)
 			{
 				pr_error_info("desc->read_block");
@@ -542,7 +542,7 @@ int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_ino
 
 		if (inode->flags & EXT2_INODE_FLAG_EXTENTS)
 		{
-			ret = ext4_find_file_base(desc, filename, (struct ext4_extent_header *)inode->block, &entry);
+			ret = ext4_find_file_base(desc, filename, (struct ext4_extent_header *) inode->block, &entry);
 		}
 		else
 		{
@@ -654,7 +654,7 @@ ssize_t ext2_read_file_base(struct ext2_desc *desc, struct ext2_inode *inode, vo
 			return readlen;
 		}
 
-		buff = (char *)buff + readlen;
+		buff = (char *) buff + readlen;
 	}
 
 	return total_len;
@@ -700,14 +700,14 @@ static int cavan_ext4_data_block_traversal(struct ext2_desc *desc, struct ext4_e
 		{
 			show_ext4_extent_index(index);
 
-			rdlen = desc->read_block(desc, (u64)index->leaf_hi << 32 | index->leaf_lo, buff, 1);
+			rdlen = desc->read_block(desc, (u64) index->leaf_hi << 32 | index->leaf_lo, buff, 1);
 			if (rdlen < 0)
 			{
 				pr_error_info("desc->read_block");
 				return rdlen;
 			}
 
-			ret = cavan_ext4_data_block_traversal(desc, (struct ext4_extent_header *)buff, option);
+			ret = cavan_ext4_data_block_traversal(desc, (struct ext4_extent_header *) buff, option);
 			if (ret < 0)
 			{
 				pr_red_info("cavan_ext4_data_block_traversal");
@@ -731,7 +731,7 @@ static int cavan_ext4_data_block_traversal(struct ext2_desc *desc, struct ext4_e
 
 			show_ext4_extent_leaf(leaf);
 
-			rdlen = desc->read_block(desc, (u64)leaf->start_hi << 32 | leaf->start_lo, buff, leaf->length);
+			rdlen = desc->read_block(desc, (u64) leaf->start_hi << 32 | leaf->start_lo, buff, leaf->length);
 			if (rdlen < 0)
 			{
 				pr_error_info("desc->read_block");
@@ -758,7 +758,7 @@ static int cavan_ext4_data_block_traversal(struct ext2_desc *desc, struct ext4_e
 static int cavan_ext4_find_file_handler(struct ext2_desc *desc, void *block, size_t count, struct cavan_ext2_traversal_option *_option)
 {
 	struct ext2_directory_entry *entry, *entry_end;
-	struct cavan_ext4_find_file_option *option = (struct cavan_ext4_find_file_option *)_option;
+	struct cavan_ext4_find_file_option *option = (struct cavan_ext4_find_file_option *) _option;
 
 	entry = block;
 	entry_end = ADDR_ADD(entry, desc->block_size * count);
@@ -866,7 +866,7 @@ static int cavan_ext2_find_file(struct ext2_desc *desc, struct cavan_ext2_file *
 
 		if (file->inode.flags & EXT2_INODE_FLAG_EXTENTS)
 		{
-			ret = cavan_ext4_find_file_base(desc, filename, (struct ext4_extent_header *)file->inode.block, &entry);
+			ret = cavan_ext4_find_file_base(desc, filename, (struct ext4_extent_header *) file->inode.block, &entry);
 		}
 		else
 		{
@@ -924,7 +924,7 @@ void cavan_ext2_close_file(struct cavan_ext2_file *file)
 static int cavan_ext4_read_file_handler(struct ext2_desc *desc, void *block, size_t count, struct cavan_ext2_traversal_option *_option)
 {
 	int ret;
-	struct cavan_ext4_read_file_option *option = (struct cavan_ext4_read_file_option *)_option;
+	struct cavan_ext4_read_file_option *option = (struct cavan_ext4_read_file_option *) _option;
 	size_t size = desc->block_size * count;
 	size_t remain = ADDR_SUB2(option->buff_end, option->buff);
 
@@ -958,7 +958,7 @@ static ssize_t cavan_ext4_read_file_base(struct cavan_ext2_file *file, void *buf
 		.buff_end = ADDR_ADD(buff, size > file->inode.size ? file->inode.size : size)
 	};
 
-	ret = cavan_ext4_data_block_traversal(file->desc, (struct ext4_extent_header *)file->inode.block, &option.option);
+	ret = cavan_ext4_data_block_traversal(file->desc, (struct ext4_extent_header *) file->inode.block, &option.option);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_ext4_data_block_traversal");

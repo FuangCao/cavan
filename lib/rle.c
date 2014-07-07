@@ -58,7 +58,7 @@ char *frle_data_to(const u8 *data, ssize_t size, int fd_out)
 		}
 	}
 
-	return (char *)data;
+	return (char *) data;
 }
 
 int frle_to(int fd_in, int fd_out)
@@ -172,7 +172,7 @@ char *funrle_data_to(const u8 *data, ssize_t size, int fd_out)
 		}
 	}
 
-	return (char *)data;
+	return (char *) data;
 }
 
 int funrle_to(int fd_in, int fd_out)

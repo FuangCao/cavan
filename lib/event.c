@@ -1391,7 +1391,7 @@ static char *cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, 
 	{dev->name, "Generic", "qwerty"};
 
 	filename = text_copy(pathname, "/system/usr/keylayout/");
-	for (i = 0; i < (int)NELEM(filenames); i++)
+	for (i = 0; i < (int) NELEM(filenames); i++)
 	{
 		sprintf(filename, "%s.kl", filenames[i]);
 		if (access(pathname, R_OK) == 0)

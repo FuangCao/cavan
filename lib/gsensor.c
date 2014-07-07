@@ -53,7 +53,7 @@ static bool cavan_gsensor_event_handler(struct cavan_input_device *dev, struct i
 {
 	cavan_input_message_t *message;
 	struct cavan_input_service *service = data;
-	struct cavan_gsensor_device *sensor = (struct cavan_gsensor_device *)dev;
+	struct cavan_gsensor_device *sensor = (struct cavan_gsensor_device *) dev;
 
 	switch (event->type)
 	{

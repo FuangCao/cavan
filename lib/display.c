@@ -966,7 +966,7 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 	width = mem->width * display->bpp_byte;
 	line_size = display->bpp_byte * display->xres;
 
-	p = (byte *)display->fb_base + mem->y * line_size + mem->x * display->bpp_byte;
+	p = (byte *) display->fb_base + mem->y * line_size + mem->x * display->bpp_byte;
 	p_end = p + mem->height * line_size;
 
 	data = mem->data;
@@ -1423,7 +1423,7 @@ int cavan_display_draw_text_center(struct cavan_display_device *display, struct 
 {
 	int x, y;
 
-	x = rect->x + (rect->width - (int)display->mesure_text(display, text)) / 2;
+	x = rect->x + (rect->width - (int) display->mesure_text(display, text)) / 2;
 	y = rect->y + rect->height / 2;
 
 	return display->draw_text(display, x, y, text, color);

@@ -25,7 +25,7 @@ char *text_find(const char *text, char c)
 	{
 		if (text[0] == c)
 		{
-			return (char *)text;
+			return (char *) text;
 		}
 
 		text++;
@@ -46,7 +46,7 @@ char *text_nfind(const char *text, char c, size_t count)
 			}
 			else
 			{
-				return (char *)text;
+				return (char *) text;
 			}
 		}
 
@@ -68,14 +68,14 @@ char *text_nfind2(const char *text, const char *end, char c, size_t count)
 			}
 			else
 			{
-				return (char *)text;
+				return (char *) text;
 			}
 		}
 
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_find_tail(const char *text, char c)
@@ -92,7 +92,7 @@ char *text_find_tail(const char *text, char c)
 		text++;
 	}
 
-	return (char *)tmp;
+	return (char *) tmp;
 }
 
 char *text_ntrans(char *text, size_t size)
@@ -1079,7 +1079,7 @@ char *simple_value2text_unsigned(u64 value, char *buff, size_t size, int base)
 	char *tail;
 
 	tail = simple_value2text_reverse(value, buff, size, base);
-	mem_reverse_simple((byte *)buff, (byte *)tail - 1);
+	mem_reverse_simple((byte *)buff, (byte *) tail - 1);
 
 	return tail;
 }
@@ -2260,7 +2260,7 @@ char *prettify_pathname_base(const char *src_path, char *dest_path, size_t size)
 			src_path++;
 		}
 
-		src_temp = (char *)src_path;
+		src_temp = (char *) src_path;
 
 		while (*src_temp && *src_temp != '/')
 		{
@@ -2406,7 +2406,7 @@ char *text_find_next_line(const char *text)
 		}
 	} while (*text++ != '\n');
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_find_line(const char *text, int index)
@@ -2422,7 +2422,7 @@ char *text_find_line(const char *text, int index)
 		index--;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_get_line(const char *text, char *buff, int index)
@@ -2499,7 +2499,7 @@ char *text_skip_char(const char *text, char c)
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_skip_chars(const char *text, const char *chars)
@@ -2509,7 +2509,7 @@ char *text_skip_chars(const char *text, const char *chars)
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_to_uppercase(const char *src, char *dest)
@@ -2939,7 +2939,7 @@ char *text_skip_space(const char *text, const char *text_end)
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_skip_space_invert(const char *text, const char *head)
@@ -2949,7 +2949,7 @@ char *text_skip_space_invert(const char *text, const char *head)
 		text--;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_skip_lf(const char *text, const char *text_end)
@@ -2959,7 +2959,7 @@ char *text_skip_lf(const char *text, const char *text_end)
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_skip_lf_invert(const char *text, const char *head)
@@ -2969,7 +2969,7 @@ char *text_skip_lf_invert(const char *text, const char *head)
 		text--;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_skip_space_and_lf(const char *text, const char *text_end)
@@ -2979,7 +2979,7 @@ char *text_skip_space_and_lf(const char *text, const char *text_end)
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_skip_space_and_lf_invert(const char *text, const char *head)
@@ -2989,7 +2989,7 @@ char *text_skip_space_and_lf_invert(const char *text, const char *head)
 		text--;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_skip_name(const char *text, const char *text_end)
@@ -2999,7 +2999,7 @@ char *text_skip_name(const char *text, const char *text_end)
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_skip_name_invert(const char *text, const char *head)
@@ -3009,7 +3009,7 @@ char *text_skip_name_invert(const char *text, const char *head)
 		text--;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *text_find_space(const char *text, const char *text_end)
@@ -3018,7 +3018,7 @@ char *text_find_space(const char *text, const char *text_end)
 	{
 		if (byte_is_space(*text))
 		{
-			return (char *)text;
+			return (char *) text;
 		}
 
 		text++;
@@ -3033,7 +3033,7 @@ char *text_find_space_invert(const char *text, const char *head)
 	{
 		if (byte_is_space(*text))
 		{
-			return (char *)text;
+			return (char *) text;
 		}
 
 		text--;
@@ -3048,7 +3048,7 @@ char *text_find_lf(const char *text, const char *text_end)
 	{
 		if (byte_is_lf(*text))
 		{
-			return (char *)text;
+			return (char *) text;
 		}
 
 		text++;
@@ -3063,7 +3063,7 @@ char *text_find_lf_invert(const char *text, const char *head)
 	{
 		if (byte_is_lf(*text))
 		{
-			return (char *)text;
+			return (char *) text;
 		}
 
 		text--;
@@ -3078,7 +3078,7 @@ char *text_find_space_or_lf(const char *text, const char *text_end)
 	{
 		if (byte_is_space_or_lf(*text))
 		{
-			return (char *)text;
+			return (char *) text;
 		}
 
 		text++;
@@ -3093,7 +3093,7 @@ char *text_find_space_or_lf_invert(const char *text, const char *head)
 	{
 		if (byte_is_space_or_lf(*text))
 		{
-			return (char *)text;
+			return (char *) text;
 		}
 
 		text--;
@@ -3108,7 +3108,7 @@ char *text_find_name(const char *text, const char *text_end)
 	{
 		if (byte_is_named(*text))
 		{
-			return (char *)text;
+			return (char *) text;
 		}
 
 		text++;
@@ -3123,7 +3123,7 @@ char *text_find_name_invert(const char *text, const char *head)
 	{
 		if (byte_is_named(*text))
 		{
-			return (char *)text;
+			return (char *) text;
 		}
 
 		text--;

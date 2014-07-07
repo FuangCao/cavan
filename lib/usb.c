@@ -494,7 +494,7 @@ int cavan_usb_bluk_write(struct cavan_usb_descriptor *desc, const void *buff, si
 		return -EINVAL;
 	}
 
-	return cavan_usb_bluk_rw(desc, (void *)buff, length, 0);
+	return cavan_usb_bluk_rw(desc, (void *) buff, length, 0);
 }
 
 int cavan_usb_bluk_xfer(struct cavan_usb_descriptor *desc, void *buff, size_t length, int ep)
@@ -528,7 +528,7 @@ int cavan_usb_bluk_write2(struct cavan_usb_descriptor *desc, const void *buff, s
 		return -EINVAL;
 	}
 
-	return cavan_usb_bluk_xfer(desc, (void *)buff, length, desc->epout_curr);
+	return cavan_usb_bluk_xfer(desc, (void *) buff, length, desc->epout_curr);
 }
 
 int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *desc)
@@ -607,7 +607,7 @@ ssize_t cavan_usb_read_data(struct cavan_usb_descriptor *desc, void *buff, size_
 	struct cavan_usb_data_header hdr;
 
 	readlen = cavan_usb_bluk_read(desc, &hdr, sizeof(hdr));
-	if (readlen < (ssize_t)sizeof(hdr))
+	if (readlen < (ssize_t) sizeof(hdr))
 	{
 		pr_red_pos();
 		return readlen < 0 ? readlen : -ENOMEDIUM;
@@ -632,7 +632,7 @@ ssize_t cavan_usb_write_data(struct cavan_usb_descriptor *desc, const void *buff
 	};
 
 	writelen = cavan_usb_bluk_write(desc, &hdr, sizeof(hdr));
-	if (writelen < (ssize_t)sizeof(hdr))
+	if (writelen < (ssize_t) sizeof(hdr))
 	{
 		pr_red_pos();
 		return writelen < 0 ? writelen : -ENOMEDIUM;
@@ -647,7 +647,7 @@ ssize_t cavan_adb_read_data(int fd_adb, void *buff, size_t size)
 	struct cavan_usb_data_header hdr;
 
 	readlen = read(fd_adb, &hdr, sizeof(hdr));
-	if (readlen < (ssize_t)sizeof(hdr))
+	if (readlen < (ssize_t) sizeof(hdr))
 	{
 		pr_red_pos();
 		return readlen < 0 ? readlen : -ENOMEDIUM;
@@ -672,7 +672,7 @@ ssize_t cavan_adb_write_data(int fd_adb, const void *buff, size_t size)
 	};
 
 	writelen = write(fd_adb, &hdr, sizeof(hdr));
-	if (writelen < (ssize_t)sizeof(hdr))
+	if (writelen < (ssize_t) sizeof(hdr))
 	{
 		print_error("write");
 		return writelen < 0 ? writelen : -ENOMEDIUM;

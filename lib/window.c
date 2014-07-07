@@ -601,7 +601,7 @@ void cavan_label_paint_handler(struct cavan_window *win)
 {
 	int x;
 	struct cavan_display_device *display;
-	struct cavan_label *label = (struct cavan_label *)win;
+	struct cavan_label *label = (struct cavan_label *) win;
 
 	cavan_window_paint_handler(win);
 
@@ -615,11 +615,11 @@ void cavan_label_paint_handler(struct cavan_window *win)
 	switch (label->align)
 	{
 	case CAVAN_WIN_TEXT_ALIGN_CENTER:
-		x = win->xabs + (win->width - (int)display->mesure_text(display, label->text)) / 2;
+		x = win->xabs + (win->width - (int) display->mesure_text(display, label->text)) / 2;
 		break;
 
 	case CAVAN_WIN_TEXT_ALIGN_RIGHT:
-		x = win->xabs + (win->width - (int)display->mesure_text(display, label->text)) - 2;
+		x = win->xabs + (win->width - (int) display->mesure_text(display, label->text)) - 2;
 		break;
 
 	default:
@@ -661,7 +661,7 @@ int cavan_label_init(struct cavan_label *label, struct cavan_application_context
 
 static void cavan_textview_key_handler(struct cavan_window *win, struct cavan_input_message_key *message)
 {
-	struct cavan_textview *view = (struct cavan_textview *)win;
+	struct cavan_textview *view = (struct cavan_textview *) win;
 
 	switch (message->code)
 	{
@@ -842,7 +842,7 @@ int cavan_textview_init(struct cavan_textview *view, struct cavan_application_co
 
 void cavan_dialog_paint_handler(struct cavan_window *win)
 {
-	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
+	struct cavan_dialog *dialog = (struct cavan_dialog *) win;
 
 	cavan_window_paint_handler(win);
 	cavan_label_paint_handler(&dialog->title.window);
@@ -850,7 +850,7 @@ void cavan_dialog_paint_handler(struct cavan_window *win)
 
 bool cavan_dialog_click_handler(struct cavan_window *win, struct cavan_input_message_point *point)
 {
-	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
+	struct cavan_dialog *dialog = (struct cavan_dialog *) win;
 
 	if (win->pressed)
 	{
@@ -887,7 +887,7 @@ bool cavan_dialog_click_handler(struct cavan_window *win, struct cavan_input_mes
 
 void cavan_dialog_move_handler(struct cavan_window *win, struct cavan_input_message_point *point)
 {
-	struct cavan_dialog *dialog = (struct cavan_dialog *)win;
+	struct cavan_dialog *dialog = (struct cavan_dialog *) win;
 
 	if (dialog->move_able && win->pressed && dialog->backup == NULL)
 	{
@@ -1044,7 +1044,7 @@ bool cavan_button_click_handler(struct cavan_window *win, struct cavan_input_mes
 	struct cavan_display_device *display;
 
 	display = win->context->display;
-	button = (struct cavan_button *)win;
+	button = (struct cavan_button *) win;
 
 	if (win->pressed)
 	{

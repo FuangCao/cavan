@@ -123,7 +123,7 @@ static int cavan_net_bridge_transfer(struct cavan_net_bridge_port *port)
 		return rdlen;
 	}
 
-	mac = (struct mac_header *)buff;
+	mac = (struct mac_header *) buff;
 	cavan_net_bridge_port_addr_put(port, mac->src_mac);
 
 	if (cavan_net_bridge_port_addr_get(port, mac->dest_mac, true))

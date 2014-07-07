@@ -110,7 +110,7 @@ int cavan_service_start(struct cavan_service_description *desc)
 	}
 
 	count = desc->daemon_count;
-	threads = (pthread_t *)malloc(sizeof(pthread_t) * count);
+	threads = (pthread_t *) malloc(sizeof(pthread_t) * count);
 	if (threads == NULL)
 	{
 		pr_red_info("malloc");

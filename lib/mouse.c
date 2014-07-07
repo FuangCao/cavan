@@ -62,7 +62,7 @@ bool cavan_mouse_device_matcher(struct cavan_event_matcher *matcher, void *data)
 
 static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct input_event *event, void *data)
 {
-	struct cavan_mouse_device *mouse = (struct cavan_mouse_device *)dev;
+	struct cavan_mouse_device *mouse = (struct cavan_mouse_device *) dev;
 
 	switch (event->type)
 	{

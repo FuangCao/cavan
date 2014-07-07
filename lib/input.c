@@ -300,7 +300,7 @@ static void cavan_input_message_queue_handler_dummy(void *addr, void *data)
 	char buff[1024];
 
 	length = cavan_input_message_tostring(addr, buff, sizeof(buff));
-	if (length < (int)sizeof(buff))
+	if (length < (int) sizeof(buff))
 	{
 		buff[length++] = '\n';
 	}

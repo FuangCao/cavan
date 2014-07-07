@@ -109,7 +109,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 {
 	int xdiff, ydiff;
 	struct cavan_input_service *service = data;
-	struct cavan_touchpad_device *touchpad = (struct cavan_touchpad_device *)dev;
+	struct cavan_touchpad_device *touchpad = (struct cavan_touchpad_device *) dev;
 
 	switch (event->type)
 	{
@@ -274,7 +274,7 @@ static int cavan_touchpad_probe(struct cavan_input_device *dev, void *data)
 	int min, max, diff;
 	int width, height;
 	int fd = dev->event_dev->fd;
-	struct cavan_touchpad_device *touchpad = (struct cavan_touchpad_device *)dev;
+	struct cavan_touchpad_device *touchpad = (struct cavan_touchpad_device *) dev;
 	struct cavan_input_service *service = data;
 
 	pr_bold_info("LCD: width = %d, height = %d", service->lcd_width, service->lcd_height);

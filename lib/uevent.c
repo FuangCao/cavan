@@ -63,7 +63,7 @@ size_t uevent_split_base(const char *event, size_t event_len, char *props[], siz
 	{
 		if (IS_LETTER(*event))
 		{
-			props[count++] = (char *)event;
+			props[count++] = (char *) event;
 		}
 
 		while (*event++);
