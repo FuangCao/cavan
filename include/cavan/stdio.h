@@ -5,17 +5,14 @@
 
 #ifdef CONFIG_BUILD_FOR_ANDROID
 #include <utils/Log.h>
-#ifndef ALOGD
-#define ALOGD				LOGD
-#endif
 #ifndef LOGD
-#define LOGD				ALOGD
+#define LOGD					ALOGD
 #endif
-#define CAVAN_TEMP_PATH		"/data/local/tmp"
+#define pd_info(fmt, args ...)	LOGD(fmt "\n", ##args)
+#define CAVAN_TEMP_PATH			"/data/local/tmp"
 #else
-#define LOGD				printf
-#define ALOGD				LOGD
-#define CAVAN_TEMP_PATH		"/tmp"
+#define pd_info(fmt, args ...)	fprintf(stderr, fmt "\n", ##args)
+#define CAVAN_TEMP_PATH			"/tmp"
 #endif
 
 #ifdef __cplusplus
@@ -110,15 +107,33 @@ using namespace std;
 #define PRINT_FORMAT_OFF				"%Ld"
 #endif
 
+// ============================================================
+
+#define pd_color_info(color, fmt, args ...) \
+	pd_info(color fmt CAVAN_COLOR_STAND, ##args)
+
+#define pd_red_info(fmt, args ...) \
+	pd_color_info(CAVAN_COLOR_RED, "%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+
+#define pd_green_info(fmt, args ...) \
+	pd_color_info(CAVAN_COLOR_GREEN, fmt, ##args)
+
+#define pd_blue_info(fmt, args ...) \
+	pd_color_info(CAVAN_COLOR_BLUE, fmt, ##args)
+
+#define pd_bold_info(fmt, args ...) \
+	pd_color_info(CAVAN_COLOR_BOLD, fmt, ##args)
+
+#define pd_std_pos(fmt) \
+	pd_info(fmt, __FILE__, __FUNCTION__, __LINE__)
+
+#define pd_pos_info() \
+	pd_std_pos("%s => %s[%d]")
+
+// ============================================================
+
 #define pr_info(fmt, args ...) \
 	printf(fmt "\n", ##args)
-
-#ifdef CAVAN_DEBUG
-#define pr_debug_info(fmt, args ...) \
-	pr_info(fmt, ##args)
-#else
-#define pr_debug_info(fmt, args ...)
-#endif
 
 #define pr_func_info(fmt, args ...) \
 	pr_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)

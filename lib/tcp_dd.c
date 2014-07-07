@@ -22,16 +22,16 @@ static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 	{
 		if (res->number)
 		{
-			LOGD("%s [%s]\n", res->message, strerror(res->number));
+			pd_red_info("%s [%s]", res->message, strerror(res->number));
 		}
 		else
 		{
-			LOGD("%s\n", res->message);
+			pd_red_info("%s", res->message);
 		}
 	}
 	else
 	{
-		LOGD("%s\n", res->message);
+		pd_green_info("%s", res->message);
 	}
 }
 
@@ -187,13 +187,13 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 	}
 	else
 	{
-		LOGD("this is not a terminal\n");
+		pd_red_info("this is not a terminal");
 
 		pkg.exec_req.lines = 0xFFFF;
 		pkg.exec_req.columns = 0xFFFF;
 	}
 
-	LOGD("terminal size = %d x %d\n", pkg.exec_req.lines, pkg.exec_req.columns);
+	pd_bold_info("terminal size = %d x %d", pkg.exec_req.lines, pkg.exec_req.columns);
 
 	pkg.type = TCP_DD_EXEC;
 

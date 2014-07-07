@@ -445,7 +445,8 @@ u16 udp_checksum(struct ip_header *ip_hdr)
 
 void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port)
 {
-	LOGD("IP = %s, PORT = %d\n", ip ? ip : "INADDR_ANY", port);
+	pd_bold_info("IP = %s, PORT = %d", ip ? ip : "INADDR_ANY", port);
+
 	addr->sin_family = AF_INET;
 	addr->sin_port = htons(port);
 	addr->sin_addr.s_addr = ip ? inet_addr(ip) : htonl(INADDR_ANY);
@@ -453,7 +454,7 @@ void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port)
 
 void unix_sockaddr_init(struct sockaddr_un *addr, const char *pathname)
 {
-	LOGD("SUN_PATH = %s\n", pathname);
+	pd_bold_info("SUN_PATH = %s", pathname);
 
 	addr->sun_family = AF_UNIX;
 	strncpy(addr->sun_path, pathname, sizeof(addr->sun_path));
@@ -587,7 +588,7 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 		return sockfd;
 	}
 
-	LOGD("%s => %s:%d\n", hostname, inet_ntoa(addr.sin_addr), port);
+	pd_info("%s => %s:%d", hostname, inet_ntoa(addr.sin_addr), port);
 
 	return sockfd;
 }
@@ -1315,7 +1316,7 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 
 			if (file_poll_input(client->sockfd, CAVAN_NET_UDP_TIMEOUT) == false)
 			{
-				LOGD("file_poll_input retry = %d\n", retry);
+				pd_red_info("file_poll_input retry = %d", retry);
 
 				if (--retry > 0)
 				{
@@ -1336,7 +1337,7 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 				break;
 			}
 
-			LOGD("index not match, pkg_index = %d, index = %d\n", client->pkg_index, index);
+			pd_red_info("index not match, pkg_index = %d, index = %d", client->pkg_index, index);
 		}
 
 		client->pkg_index++;
@@ -1373,7 +1374,7 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 			break;
 		}
 
-		LOGD("index not match, pkg_index = %d, index = %d\n", client->pkg_index, index);
+		pd_red_info("index not match, pkg_index = %d, index = %d", client->pkg_index, index);
 	}
 
 	wrlen = client->send_raw(client, &client->pkg_index, sizeof(client->pkg_index));
@@ -1431,14 +1432,14 @@ static ssize_t network_client_udp_send(struct network_client *client, const void
 {
 	struct network_client_inet *inet = (struct network_client_inet *) client;
 
-	return sendto(client->sockfd, buff, size, 0, &inet->addr, client->addrlen);
+	return sendto(client->sockfd, buff, size, 0, (struct sockaddr *) &inet->addr, client->addrlen);
 }
 
 static ssize_t network_client_udp_recv(struct network_client *client, void *buff, size_t size)
 {
 	struct network_client_inet *inet = (struct network_client_inet *) client;
 
-	return recvfrom(client->sockfd, buff, size, 0, &inet->addr, &client->addrlen);
+	return recvfrom(client->sockfd, buff, size, 0, (struct sockaddr *) &inet->addr, &client->addrlen);
 }
 
 static int network_client_udp_talk(struct network_client *client)
@@ -1963,7 +1964,7 @@ struct network_client *network_client_open(struct network_url *url, int flags)
 {
 	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
 
-	LOGD("URL = %s\n", network_url_tostring(url, NULL, 0, NULL));
+	pd_bold_info("URL = %s", network_url_tostring(url, NULL, 0, NULL));
 
 	switch (type)
 	{
@@ -2200,14 +2201,14 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 	int rwlen;
 	struct network_client_inet *inet = (struct network_client_inet *) client;
 
-	rwlen = recvfrom(service->sockfd, &magic, sizeof(magic), 0, &inet->addr, &client->addrlen);
+	rwlen = recvfrom(service->sockfd, &magic, sizeof(magic), 0, (struct sockaddr *) &inet->addr, &client->addrlen);
 	if (rwlen < 4)
 	{
 		pr_error_info("recvfrom");
 		return rwlen < 0 ? rwlen : -EFAULT;
 	}
 
-	LOGD("magic = 0x%08x, family = %d, type = %d\n", magic, inet->addr.sin_family, service->type);
+	pd_bold_info("magic = 0x%08x, family = %d, type = %d", magic, inet->addr.sin_family, service->type);
 
 	if (magic != CAVAN_NETWORK_MAGIC)
 	{
@@ -2307,7 +2308,7 @@ static int network_service_tcp_accept(struct network_service *service, struct ne
 	struct network_client_inet *inet = (struct network_client_inet *) client;
 
 	client->addrlen = service->addrlen;
-	client->sockfd = accept(service->sockfd, &inet->addr, &client->addrlen);
+	client->sockfd = accept(service->sockfd, (struct sockaddr *) &inet->addr, &client->addrlen);
 	if (client->sockfd < 0)
 	{
 		pr_error_info("accept");
@@ -2383,7 +2384,7 @@ int network_service_open(struct network_service *service, struct network_url *ur
 	int ret;
 	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
 
-	LOGD("URL = %s\n", network_url_tostring(url, NULL, 0, NULL));
+	pd_bold_info("URL = %s", network_url_tostring(url, NULL, 0, NULL));
 
 	ret = mkdir_hierarchy(CAVAN_NETWORK_TEMP_PATH, 0777);
 	if (ret < 0)
