@@ -20,23 +20,50 @@
 #include <cavan.h>
 #include <time.h>
 
-static const char *buid_time_string = __DATE__ " " __TIME__;
+static const char *build_time_string = __DATE__ " " __TIME__;
 
 #ifdef CONFIG_BUILD_FOR_ANDROID
+#include <corkscrew/backtrace.h>
+
 char *dump_backtrace(char *buff, size_t size)
 {
-	*buff = 0;
+	ssize_t count;
+	backtrace_frame_t stack[32];
+	char *buff_end = buff + size;
+
+	count = unwind_backtrace(stack, 2, NELEM(stack));
+	buff += snprintf(buff, buff_end - buff, "backtrace() returned " PRINT_FORMAT_SIZE " addresses\n", count);
+
+	if (count > 0)
+	{
+		int i;
+		backtrace_symbol_t symbols[count];
+
+		get_backtrace_symbols(stack, count, symbols);
+
+		for (i = 0; i < count; i++)
+		{
+			char line[1024];
+
+			format_backtrace_line(i, stack + i, &symbols[i], line, sizeof(line));
+			buff += snprintf(buff, buff_end - buff, "%s\n", line);
+		}
+
+		free_backtrace_symbols(symbols, count);
+	}
+
 	return buff;
 }
 
-int dump_stack(void)
+char *address_to_symbol(const void *addr, char *buff, size_t size)
 {
-	return 0;
-}
+	backtrace_symbol_t symbol;
+	backtrace_frame_t stack = {(uintptr_t) addr, 0, 0};
 
-char *address_to_symbol(void *addr, char *buff, size_t size)
-{
-	*buff = 0;
+	get_backtrace_symbols(&stack, 1, &symbol);
+	format_backtrace_line(0, &stack, &symbol, buff, size);
+	free_backtrace_symbols(&symbol, 1);
+
 	return buff;
 }
 #else
@@ -69,24 +96,10 @@ char *dump_backtrace(char *buff, size_t size)
 	return buff;
 }
 
-int dump_stack(void)
-{
-	char buff[4096];
-
-	if (dump_backtrace(buff, sizeof(buff))== NULL)
-	{
-		return -EFAULT;
-	}
-
-	printf("%s", buff);
-
-	return 0;
-}
-
-char *address_to_symbol(void *addr, char *buff, size_t size)
+char *address_to_symbol(const void *addr, char *buff, size_t size)
 {
 	char **strings;
-	void *ptrs[] = {addr};
+	void *ptrs[] = {(void *) addr};
 
 	strings = backtrace_symbols(ptrs, 1);
 	if (strings == NULL)
@@ -102,6 +115,20 @@ char *address_to_symbol(void *addr, char *buff, size_t size)
 	return buff;
 }
 #endif
+
+int dump_stack(void)
+{
+	char buff[4096];
+
+	if (dump_backtrace(buff, sizeof(buff))== NULL)
+	{
+		return -EFAULT;
+	}
+
+	printf("%s", buff);
+
+	return 0;
+}
 
 static void sigsegv_handler(int signum, siginfo_t *info, void *ptr)
 {
@@ -132,7 +159,7 @@ int catch_sigsegv(void)
 
 int cavan_get_build_time(struct tm *time)
 {
-	return strptime(buid_time_string, "%h %d %Y %T", time) ? 0 : -EFAULT;
+	return strptime(build_time_string, "%h %d %Y %T", time) ? 0 : -EFAULT;
 }
 
 const char *cavan_get_build_time_string(void)
@@ -142,7 +169,7 @@ const char *cavan_get_build_time_string(void)
 
 	if (cavan_get_build_time(&time) < 0)
 	{
-		return buid_time_string;
+		return build_time_string;
 	}
 
 	snprintf(buff, sizeof(buff), "%04d-%02d-%02d %02d:%02d:%02d",

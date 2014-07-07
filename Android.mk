@@ -9,7 +9,7 @@ CAVAN_APP_SRC_FILES := $(call cavan-all-files-under,app/*.c)
 CAVAN_APP_CORE_SRC_FILES := $(call cavan-all-files-under,app/core/*.c)
 
 CAVAN_C_INCLUDES := $(LOCAL_PATH)/include
-CAVAN_SHARED_LIBRARIES := libutils liblog
+CAVAN_SHARED_LIBRARIES := libutils liblog libcorkscrew
 CAVAN_CFLAGS := -DCONFIG_BUILD_FOR_ANDROID=1 -DCAVAN_ARCH_ARM -Werror -include $(LOCAL_PATH)/include/cavan/config.h
 
 include $(CLEAR_VARS)
