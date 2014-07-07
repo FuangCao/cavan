@@ -117,8 +117,8 @@ am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) auto_dd.$(OBJEXT) \
 	ramdisk.$(OBJEXT) remove.$(OBJEXT) resize.$(OBJEXT) \
 	rle.$(OBJEXT) screen_mirror.$(OBJEXT) service.$(OBJEXT) \
 	sha1sum.$(OBJEXT) show_file.$(OBJEXT) shrink.$(OBJEXT) \
-	sprd_at.$(OBJEXT) sprd_write_imei.$(OBJEXT) sudo.$(OBJEXT) \
-	super_upgrade.$(OBJEXT) swan_check.$(OBJEXT) \
+	sprd_at.$(OBJEXT) sprd_write_imei.$(OBJEXT) su.$(OBJEXT) \
+	sudo.$(OBJEXT) super_upgrade.$(OBJEXT) swan_check.$(OBJEXT) \
 	swan_emmc.$(OBJEXT) swan_fac.$(OBJEXT) swan_ipu.$(OBJEXT) \
 	swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) swan_mkfs.$(OBJEXT) \
 	swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) swan_upgrade.$(OBJEXT) \
@@ -327,7 +327,7 @@ APP_SRC_FILES = abspath.c alarm.c auto_dd.c auto_mount.c battery.c \
 	part_probe.c part_show.c part_table.c poll_event.c \
 	poll_input.c ramdisk.c remove.c resize.c rle.c screen_mirror.c \
 	service.c sha1sum.c show_file.c shrink.c sprd_at.c \
-	sprd_write_imei.c sudo.c super_upgrade.c swan_check.c \
+	sprd_write_imei.c su.c sudo.c super_upgrade.c swan_check.c \
 	swan_emmc.c swan_fac.c swan_ipu.c swan_mac.c swan_md5.c \
 	swan_mkfs.c swan_sfdisk.c swan_ts.c swan_upgrade.c swan_vk.c \
 	swan_vn.c system_init.c tcp_copy.c tcp_dd.c tcp_dd_server.c \
@@ -509,6 +509,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shrink.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sprd_at.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sprd_write_imei.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/su.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sudo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/super_upgrade.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_check.Po@am__quote@
