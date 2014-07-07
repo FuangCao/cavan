@@ -15,17 +15,18 @@ static void show_usage(const char *command)
 {
 	println("Usage:");
 	println("%s [option] port", command);
-	println("--help, -h, -H\t\t\tshow this help");
-	println("--super, -s, -S\t\t\tneed super permission");
-	println("--daemon, -d, -D\t\trun as a daemon");
-	println("--min, -m, -c\t\t\tmin daemon count");
-	println("--max, -M, -C\t\t\tmax daemon count");
-	println("--verbose, -v, -V\t\tshow log message");
-	println("--port, -p, -P\t\t\tserver port");
-	println("--log, -l, -L\t\t\tsave log to file");
-	println("--udp\t\t\t\trun as udp service");
-	println("--url\t\t\t\tservice url");
-	println("--unix, -u, -U [PATHNAME]\tlisten to a named socket, default path is %s", TCP_DD_DEFAULT_SOCKET);
+	println("--help, -h, -H\t\t\t\t%s", cavan_help_message_help);
+	println("--super, -s, -S\t\t\t\t%s", cavan_help_message_super);
+	println("--daemon, -d, -D\t\t\t%s", cavan_help_message_daemon);
+	println("--min, -m, -c\t\t\t\t%s", cavan_help_message_daemon_min);
+	println("--max, -M, -C\t\t\t\t%s", cavan_help_message_daemon_max);
+	println("--verbose, -v, -V\t\t\t%s", cavan_help_message_verbose);
+	println("--port, -p, -P\t\t\t\t%s", cavan_help_message_port);
+	println("--log, -l, -L [PATHNAME]\t\t%s", cavan_help_message_logfile);
+	println("--udp\t\t\t\t\t%s", cavan_help_message_udp);
+	println("--url [URL]\t\t\t\t%s", cavan_help_message_url);
+	println("--unix, --unix-tcp, -u, -U [PATHNAME]\t%s", cavan_help_message_unix_tcp);
+	println("--unix-udp [PATHNAME]\t\t\t%s", cavan_help_message_unix_udp);
 }
 
 int main(int argc, char *argv[])
@@ -93,6 +94,18 @@ int main(int argc, char *argv[])
 			.has_arg = optional_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UNIX,
+		},
+		{
+			.name = "unix-tcp",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX_TCP,
+		},
+		{
+			.name = "unix-udp",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
 		},
 		{
 			.name = "udp",
@@ -190,7 +203,16 @@ int main(int argc, char *argv[])
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_UNIX:
+		case CAVAN_COMMAND_OPTION_UNIX_TCP:
 			url->protocol = "unix-tcp";
+			if (optarg)
+			{
+				url->pathname = optarg;
+			}
+			break;
+
+		case CAVAN_COMMAND_OPTION_UNIX_UDP:
+			url->protocol = "unix-udp";
 			if (optarg)
 			{
 				url->pathname = optarg;

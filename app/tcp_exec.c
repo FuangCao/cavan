@@ -14,14 +14,17 @@
 static void show_usage(const char *command)
 {
 	println("Usage: %s [option] command", command);
-	println("--help, -h, -H\t\tshow this help");
-	println("--version, -v, -V\tshow version");
-	println("--ip, -i, -I\t\tserver ip address");
-	println("--local, -l, -L\t\tuse localhost ip");
-	println("--port, -p, -P\t\tserver port");
-	println("--adb, -a, -A\t\tuse adb protocol instead of tcp");
-	println("--udp\t\t\tuse udp protocol");
-	println("--url, -u, -U [URL]\tservice url");
+	println("--help, -h, -H\t\t\t%s", cavan_help_message_help);
+	println("--version, -v, -V\t\t%s", cavan_help_message_version);
+	println("--ip, -i, -I [IP]\t\t%s", cavan_help_message_ip);
+	println("--host [HOSTNAME]\t\t%s", cavan_help_message_hostname);
+	println("--local, -l, -L\t\t\t%s", cavan_help_message_local);
+	println("--port, -p, -P [PORT]\t\t%s", cavan_help_message_port);
+	println("--adb, -a, -A\t\t\t%s", cavan_help_message_adb);
+	println("--udp\t\t\t\t%s", cavan_help_message_udp);
+	println("--unix, --unix-tcp [PATHNAME]\t%s", cavan_help_message_unix_tcp);
+	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
+	println("--url, -u, -U [URL]\t\t%s", cavan_help_message_url);
 }
 
 int main(int argc, char *argv[])
@@ -79,6 +82,30 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_LOCAL,
 		},
 		{
+			.name = "host",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_HOST,
+		},
+		{
+			.name = "unix",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX,
+		},
+		{
+			.name = "unix-tcp",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX_TCP,
+		},
+		{
+			.name = "unix-udp",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -115,6 +142,7 @@ int main(int argc, char *argv[])
 		case 'i':
 		case 'I':
 		case CAVAN_COMMAND_OPTION_IP:
+		case CAVAN_COMMAND_OPTION_HOST:
 			url.hostname = optarg;
 			break;
 
@@ -135,6 +163,23 @@ int main(int argc, char *argv[])
 			{
 				pr_red_info("invalid url %s", optarg);
 				return -EINVAL;
+			}
+			break;
+
+		case CAVAN_COMMAND_OPTION_UNIX:
+		case CAVAN_COMMAND_OPTION_UNIX_TCP:
+			url.protocol = "unix-tcp";
+			if (optarg)
+			{
+				url.pathname = optarg;
+			}
+			break;
+
+		case CAVAN_COMMAND_OPTION_UNIX_UDP:
+			url.protocol = "unix-udp";
+			if (optarg)
+			{
+				url.pathname = optarg;
 			}
 			break;
 

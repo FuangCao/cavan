@@ -27,20 +27,24 @@
 static void show_usage(const char *command)
 {
 	println("Usage: %s [option] [username]", command);
-	println("--help, -h\t\t\tdisplay this help message and exit");
-	println("--version, -v, -V\t\tshow version");
-	println("-c, --command COMMAND\t\tpass COMMAND to the invoked shell");
-	println("-l, --login\t\t\tmake the shell a login shell");
-	println("-m, -p, --preserve-environment\tdo not reset environment variables, and keep the same shell");
-	println("-s, --shell SHELL\t\tuse SHELL instead of the default in passwd");
-	println("--ip, -i, -I, -H, --host HOST\tserver host address");
-	println("--local, -L\t\t\tuse localhost ip");
-	println("--port, -P PORT\t\t\tserver port");
-	println("--adb, -a, -A\t\t\tuse adb protocol instead of tcp");
-	println("--tcp, -t, -T\t\t\tuse tcp protocol instead of adb");
-	println("--udp\t\t\t\tuse udp protocol");
-	println("--unix, -u, -U [PATHNAME]\tuse named socket, default path is %s", TCP_DD_DEFAULT_SOCKET);
-	println("--url [URL]\t\t\tservice url");
+	println("--help, -h\t\t\t\t%s", cavan_help_message_help);
+	println("--version, -v, -V\t\t\t%s", cavan_help_message_version);
+	println("--ip, -i, -I [IP]\t\t\t%s", cavan_help_message_ip);
+	println("--host, -H [HOSTNAME]\t\t\t%s", cavan_help_message_hostname);
+	println("--local, -L\t\t\t\t%s", cavan_help_message_local);
+	println("--port, -P [PORT]\t\t\t%s", cavan_help_message_port);
+	println("--adb, -a, -A\t\t\t\t%s", cavan_help_message_adb);
+	println("--udp\t\t\t\t\t%s", cavan_help_message_udp);
+	println("--tcp\t\t\t\t\t%s", cavan_help_message_tcp);
+	println("--unix, --unix-tcp, -u, -U [PATHNAME]\t%s", cavan_help_message_unix_tcp);
+	println("--unix-udp [PATHNAME]\t\t\t%s", cavan_help_message_unix_udp);
+	println("--url [URL]\t\t\t\t%s", cavan_help_message_url);
+	println("-w, -W, -s, -S\t\t\t\t%s", cavan_help_message_send_file);
+	println("-r, -R\t\t\t\t\t%s", cavan_help_message_recv_file);
+	println("-c, --command COMMAND\t\t\t%s", cavan_help_message_command);
+	println("-l, --login\t\t\t\t%s", cavan_help_message_login);
+	println("-m, -p, --preserve-environment\t\t%s", cavan_help_message_preserve_environment);
+	println("-s, --shell SHELL\t\t\t%s", cavan_help_message_shell);
 }
 
 int main(int argc, char *argv[])
@@ -122,10 +126,28 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_TCP,
 		},
 		{
+			.name = "host",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_HOST,
+		},
+		{
 			.name = "unix",
 			.has_arg = optional_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UNIX,
+		},
+		{
+			.name = "unix-tcp",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX_TCP,
+		},
+		{
+			.name = "unix-udp",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
 		},
 		{
 			.name = "url",
@@ -143,7 +165,7 @@ int main(int argc, char *argv[])
 	command = NULL;
 	network_url_init(&url, "unix-tcp", NULL, TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
 
-	while ((c = getopt_long(argc, argv, "vVhHc:lmps:i:I:P:LaA", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhH:c:lmps:i:I:P:LaA", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -155,7 +177,6 @@ int main(int argc, char *argv[])
 			return 0;
 
 		case 'h':
-		case 'H':
 		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
@@ -190,7 +211,9 @@ int main(int argc, char *argv[])
 			optarg = "127.0.0.1";
 		case 'i':
 		case 'I':
+		case 'H':
 		case CAVAN_COMMAND_OPTION_IP:
+		case CAVAN_COMMAND_OPTION_HOST:
 			url.hostname = optarg;
 			break;
 
@@ -212,17 +235,20 @@ int main(int argc, char *argv[])
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_UNIX:
+		case CAVAN_COMMAND_OPTION_UNIX_TCP:
 			url.protocol = "unix-tcp";
-
 			if (optarg)
 			{
 				url.pathname = optarg;
 			}
-			else
-			{
-				url.pathname = TCP_DD_DEFAULT_SOCKET;
-			}
+			break;
 
+		case CAVAN_COMMAND_OPTION_UNIX_UDP:
+			url.protocol = "unix-udp";
+			if (optarg)
+			{
+				url.pathname = optarg;
+			}
 			break;
 
 		case CAVAN_COMMAND_OPTION_URL:
