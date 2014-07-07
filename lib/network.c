@@ -1309,6 +1309,7 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 			wrlen = client->send_raw(client, message, datalen + 4);
 			if (wrlen < 4)
 			{
+				pr_red_info("client->send_raw");
 				return -EFAULT;
 			}
 
@@ -1378,6 +1379,7 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 	wrlen = client->send_raw(client, &client->pkg_index, sizeof(client->pkg_index));
 	if (wrlen != sizeof(client->pkg_index))
 	{
+		pr_red_info("client->send_raw");
 		return -EFAULT;
 	}
 
@@ -1388,19 +1390,35 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 	return size;
 }
 
+static void network_client_close_sync(struct network_client *client)
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+		client->send_raw(client, "E", 1);
+		fsync(client->sockfd);
+	}
+
+	client->close_raw(client);
+}
+
 static void network_client_set_sync(struct network_client *client, bool enable)
 {
 	if (enable)
 	{
 		client->send_raw = client->send;
 		client->recv_raw = client->recv;
+		client->close_raw = client->close;
 		client->send = network_client_send_sync;
 		client->recv = network_client_recv_sync;
+		client->close = network_client_close_sync;
 	}
-	else if (client->send_raw && client->recv_raw)
+	else if (client->send_raw && client->recv_raw && client->close_raw)
 	{
 		client->send = client->send_raw;
 		client->recv = client->recv_raw;
+		client->close = client->close_raw;
 	}
 }
 
@@ -1801,6 +1819,7 @@ static struct network_client *network_client_ip_open(const char *hostname)
 		goto out_free_inet;
 	}
 
+	client = &inet->client;
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_IP;
 	client->addrlen = sizeof(inet->addr);

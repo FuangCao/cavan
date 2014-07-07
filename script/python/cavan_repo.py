@@ -700,7 +700,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 	def getDefaultGitRepoName(self):
 		name = os.path.basename(self.mPathRoot)
-		if name.find("-") < 0 and name.find("_") < 0:
+		if name in ["android", "modem", "kernel"] and name.find("-") < 0 and name.find("_") < 0:
 			return os.path.basename(os.path.dirname(self.mPathRoot)) + "-" + name
 
 		return name

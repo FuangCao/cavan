@@ -251,6 +251,7 @@ struct network_client
 	void (*close)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
+	void (*close_raw)(struct network_client *client);
 	ssize_t (*send_raw)(struct network_client *client, const void *buff, size_t size);
 	ssize_t (*recv_raw)(struct network_client *client, void *buff, size_t size);
 };
