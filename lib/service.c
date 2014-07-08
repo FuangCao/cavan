@@ -389,20 +389,27 @@ void cavan_dynamic_service_destroy(struct cavan_dynamic_service *service)
 static void *cavan_dynamic_service_handler(void *data)
 {
 	int ret;
-	int index;
+	u32 index;
 	void *conn;
 	pthread_t thread;
 	struct cavan_dynamic_service *service = data;
 
-	pthread_mutex_lock(&service->lock);
-	index = ++service->count;
-
-	conn = alloca(service->conn_size);
-	if (conn == NULL)
+	while (1)
 	{
+		conn = malloc(service->conn_size);
+		if (conn)
+		{
+			break;
+		}
+
 		pr_error_info("malloc");
-		return NULL;
+		msleep(100);
 	}
+
+	pthread_mutex_lock(&service->lock);
+	service->count++;
+	index = ++service->index;
+
 
 	while (service->state == CAVAN_SERVICE_STATE_RUNNING)
 	{
@@ -483,6 +490,8 @@ static void *cavan_dynamic_service_handler(void *data)
 
 	pthread_mutex_unlock(&service->lock);
 
+	free(conn);
+
 	return NULL;
 }
 
@@ -557,7 +566,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 			return ret;
 		}
 
-		service->verbose = 1;
+		service->verbose = true;
 	}
 
 	if (service->as_daemon)
@@ -583,6 +592,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	service->count = 0;
 	service->used = 0;
+	service->index = 0;
 	service->state = CAVAN_SERVICE_STATE_RUNNING;
 
 	ret = service->start(service);

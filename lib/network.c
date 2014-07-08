@@ -1293,6 +1293,8 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 	char message[size + 4];
 	const void *buff_end = ADDR_ADD(buff, size);
 
+	network_client_lock(client);
+
 	while (buff < buff_end)
 	{
 		size_t datalen;
@@ -1311,6 +1313,7 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 			if (wrlen < 4)
 			{
 				pr_red_info("client->send_raw");
+				network_client_unlock(client);
 				return -EFAULT;
 			}
 
@@ -1323,12 +1326,14 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 					continue;
 				}
 
+				network_client_unlock(client);
 				return -ETIMEDOUT;
 			}
 
 			rdlen = client->recv_raw(client, &index, sizeof(index));
 			if (rdlen != sizeof(index))
 			{
+				network_client_unlock(client);
 				return -EFAULT;
 			}
 
@@ -1344,6 +1349,8 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 		buff = ADDR_ADD(buff, datalen);
 	}
 
+	network_client_unlock(client);
+
 	return size;
 }
 
@@ -1352,15 +1359,21 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 	ssize_t rdlen, wrlen;
 	char message[size + 4];
 
+	network_client_lock(client);
+
 	while (1)
 	{
 		u32 index;
+
+		network_client_unlock(client);
 
 		if (file_poll_input(client->sockfd, CAVAN_NET_UDP_ACTIVE_TIME) == false)
 		{
 			pr_red_info("file_poll_input");
 			return -ETIMEDOUT;
 		}
+
+		network_client_lock(client);
 
 		rdlen = client->recv_raw(client, message, sizeof(message));
 		if (rdlen < 4)
@@ -1381,11 +1394,15 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 	if (wrlen != sizeof(client->pkg_index))
 	{
 		pr_red_info("client->send_raw");
+		network_client_unlock(client);
 		return -EFAULT;
 	}
 
-	size = rdlen - 4;
 	client->pkg_index++;
+
+	network_client_unlock(client);
+
+	size = rdlen - 4;
 	mem_copy(buff, message + 4, size);
 
 	return size;
@@ -1426,6 +1443,7 @@ static void network_client_set_sync(struct network_client *client, bool enable)
 static void network_client_udp_close(struct network_client *client)
 {
 	close(client->sockfd);
+	pthread_mutex_destroy(&client->lock);
 }
 
 static ssize_t network_client_udp_send(struct network_client *client, const void *buff, size_t size)
@@ -1521,14 +1539,20 @@ static struct network_client *network_client_udp_open(const char *hostname, u16 
 		goto out_free_inet;
 	}
 
+	client = &inet->client;
+	if (pthread_mutex_init(&client->lock, NULL) < 0)
+	{
+		pr_error_info("pthread_mutex_init");
+		goto out_free_inet;
+	}
+
 	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0)
 	{
 		pr_error_info("inet_socket");
-		goto out_free_inet;
+		goto out_pthread_mutex_destroy;
 	}
 
-	client = &inet->client;
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_UDP;
 	client->close = network_client_udp_close;
@@ -1545,6 +1569,8 @@ static struct network_client *network_client_udp_open(const char *hostname, u16 
 
 out_client_close:
 	client->close(client);
+out_pthread_mutex_destroy:
+	pthread_mutex_destroy(&client->lock);
 out_free_inet:
 	free(inet);
 	return NULL;
@@ -1770,14 +1796,20 @@ static struct network_client *network_client_icmp_open(const char *hostname)
 		goto out_free_inet;
 	}
 
+	client = &inet->client;
+	if (pthread_mutex_init(&client->lock, NULL) < 0)
+	{
+		pr_error_info("pthread_mutex_init");
+		goto out_free_inet;
+	}
+
 	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd < 0)
 	{
 		pr_error_info("inet_socket");
-		goto out_free_inet;
+		goto out_pthread_mutex_destroy;
 	}
 
-	client = &inet->client;
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_ICMP;
 	client->addrlen = sizeof(inet->addr);
@@ -1787,6 +1819,8 @@ static struct network_client *network_client_icmp_open(const char *hostname)
 
 	return client;
 
+out_pthread_mutex_destroy:
+	pthread_mutex_destroy(&client->lock);
 out_free_inet:
 	free(inet);
 	return NULL;
@@ -2261,6 +2295,13 @@ static int network_service_udp_accept(struct network_service *service, struct ne
 {
 	int ret;
 
+	ret = pthread_mutex_init(&client->lock, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_mutex_init");
+		return ret;
+	}
+
 	client->pkg_index = 0;
 	client->addrlen = service->addrlen;
 	client->send = network_client_udp_send;
@@ -2271,12 +2312,16 @@ static int network_service_udp_accept(struct network_service *service, struct ne
 	if (ret < 0)
 	{
 		pr_red_info("network_service_udp_talk");
-		return ret;
+		goto out_pthread_mutex_destroy;
 	}
 
 	network_client_set_sync(client, true);
 
 	return 0;
+
+out_pthread_mutex_destroy:
+	pthread_mutex_destroy(&client->lock);
+	return ret;
 }
 
 static int network_service_udp_open(struct network_service *service, u16 port)

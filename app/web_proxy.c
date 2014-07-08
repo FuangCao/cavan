@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 		case 'd':
 		case 'D':
 		case CAVAN_COMMAND_OPTION_DAEMON:
-			service->as_daemon = 1;
+			service->as_daemon = true;
 			break;
 
 		case 'c':
@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case CAVAN_COMMAND_OPTION_VERBOSE:
-			service->verbose = 1;
+			service->verbose = true;
 			break;
 
 		case 'l':

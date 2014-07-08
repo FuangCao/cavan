@@ -246,6 +246,7 @@ struct network_client
 	u32 pkg_index;
 	socklen_t addrlen;
 	void *private_data;
+	pthread_mutex_t lock;
 	network_connect_type_t type;
 
 	void (*close)(struct network_client *client);
@@ -521,6 +522,16 @@ static inline void network_client_set_data(struct network_client *client, void *
 static inline void *network_client_get_data(struct network_client *client)
 {
 	return client->private_data;
+}
+
+static inline void network_client_lock(struct network_client *client)
+{
+	pthread_mutex_lock(&client->lock);
+}
+
+static inline void network_client_unlock(struct network_client *client)
+{
+	pthread_mutex_unlock(&client->lock);
 }
 
 static inline ssize_t network_client_send_message(struct network_client *client, u32 message)

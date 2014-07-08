@@ -21,10 +21,35 @@
 #include <cavan/tcp_proxy.h>
 #include <cavan/network.h>
 
+static void *network_client_recv_handler(void *data)
+{
+	struct network_client *client = data;
+
+	while (1)
+	{
+		u32 value;
+		ssize_t rdlen;
+
+		println("client recv -");
+
+		rdlen = client->recv(client, &value, sizeof(value));
+		if (rdlen != sizeof(value))
+		{
+			pr_red_info("client->recv");
+			break;
+		}
+
+		println("client recv %d", value);
+	}
+
+	return NULL;
+}
+
 static int network_client_test(const char *url)
 {
 	int ret;
-	char buff[1024] = "123456789";
+	u32 value;
+	pthread_t thread_recv;
 	struct network_client *client;
 
 	client = network_client_open2(url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
@@ -34,22 +59,27 @@ static int network_client_test(const char *url)
 		return -EFAULT;
 	}
 
-	ret = client->send(client, buff, strlen(buff));
-	if (ret < 0)
+	pthread_create(&thread_recv, NULL, network_client_recv_handler, client);
+
+	for (value = 0; value < 2000; value++)
 	{
-		pr_red_info("client.send");
-		goto out_network_client_close;
+		println("client send %d", value);
+
+		ret = client->send(client, &value, sizeof(value));
+		if (ret != sizeof(value))
+		{
+			pr_red_info("client->send");
+			goto out_network_client_close;
+		}
 	}
 
-	ret = client->recv(client, buff, sizeof(buff));
-	if (ret < 0)
-	{
-		pr_red_info("client.recv");
-		goto out_network_client_close;
-	}
+	msleep(1000);
 
-	buff[ret] = 0;
-	println("buff[%d] = %s", ret, buff);
+	network_client_close(client);
+
+	pthread_join(thread_recv, NULL);
+
+	return 0;
 
 out_network_client_close:
 	network_client_close(client);
@@ -59,7 +89,6 @@ out_network_client_close:
 static int network_service_test(const char *url)
 {
 	int ret;
-	char buff[1024];
 	struct network_client *client;
 	struct network_service service;
 
@@ -84,24 +113,28 @@ static int network_service_test(const char *url)
 		goto out_free_client;
 	}
 
-	ret = client->recv(client, buff, sizeof(buff));
-	if (ret < 0)
+	while (1)
 	{
-		pr_red_info("client.recv");
-		goto out_client_close;
+		u32 value;
+
+		println("service recv -");
+
+		ret = client->recv(client, &value, sizeof(value));
+		if (ret != sizeof(value))
+		{
+			pr_red_info("client->recv");
+			goto out_client_close;
+		}
+
+		println("service send %d", value);
+
+		ret = client->send(client, &value, sizeof(value));
+		if (ret < 0)
+		{
+			pr_red_info("client->send");
+			goto out_client_close;
+		}
 	}
-
-	buff[ret] = 0;
-	println("buff[%d] = %s", ret, buff);
-
-	ret = client->send(client, "8888", 4);
-	if (ret < 0)
-	{
-		pr_red_info("client.send");
-		goto out_client_close;
-	}
-
-	msleep(500);
 
 out_client_close:
 	client->close(client);

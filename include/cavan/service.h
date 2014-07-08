@@ -43,10 +43,11 @@ struct cavan_daemon_description
 struct cavan_dynamic_service
 {
 	const char *name;
-	int min, max;
-	int count, used;
-	int as_daemon;
-	int verbose;
+	u32 index;
+	u32 min, max;
+	u32 count, used;
+	bool as_daemon;
+	bool verbose;
 	size_t conn_size;
 	int super_permission;
 	void *private_data;
