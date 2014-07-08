@@ -20,19 +20,19 @@ static void show_usage(const char *command)
 	println("bs=BYTES\t\t\t%s", cavan_help_message_bs);
 	println("seek=BLOCKS\t\t\t%s", cavan_help_message_seek);
 	println("skip=BLOCKS\t\t\t%s", cavan_help_message_skip);
-	println("--help, -h, -H\t\t\t%s", cavan_help_message_help);
-	println("--version, -v, -V\t\t%s", cavan_help_message_version);
-	println("--ip, -i, -I [IP]\t\t%s", cavan_help_message_ip);
+	println("--help, -H, -h\t\t\t%s", cavan_help_message_help);
+	println("--version, -V, -v\t\t%s", cavan_help_message_version);
+	println("--ip, -I, -i IP\t\t\t%s", cavan_help_message_ip);
 	println("--host [HOSTNAME]\t\t%s", cavan_help_message_hostname);
-	println("--local, -l, -L\t\t\t%s", cavan_help_message_local);
-	println("--port, -p, -P [PORT]\t\t%s", cavan_help_message_port);
-	println("--adb, -a, -A\t\t\t%s", cavan_help_message_adb);
+	println("--local, -L, -l\t\t\t%s", cavan_help_message_local);
+	println("--port, -P, -p PORT\t\t%s", cavan_help_message_port);
+	println("--adb, -A, -a\t\t\t%s", cavan_help_message_adb);
 	println("--udp\t\t\t\t%s", cavan_help_message_udp);
 	println("--unix, --unix-tcp [PATHNAME]\t%s", cavan_help_message_unix_tcp);
 	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
-	println("--url, -u, -U [URL]\t\t%s", cavan_help_message_url);
-	println("-w, -W, -s, -S\t\t\t%s", cavan_help_message_send_file);
-	println("-r, -R\t\t\t\t%s", cavan_help_message_recv_file);
+	println("--url, -U, -u [URL]\t\t%s", cavan_help_message_url);
+	println("-W, -S, -w, -s\t\t\t%s", cavan_help_message_send_file);
+	println("-R, -r\t\t\t\t%s", cavan_help_message_recv_file);
 }
 
 int main(int argc, char *argv[])

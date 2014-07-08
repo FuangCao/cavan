@@ -14,17 +14,17 @@
 static void show_usage(const char *command)
 {
 	println("Usage: %s [option] command", command);
-	println("--help, -h, -H\t\t\t%s", cavan_help_message_help);
-	println("--version, -v, -V\t\t%s", cavan_help_message_version);
-	println("--ip, -i, -I [IP]\t\t%s", cavan_help_message_ip);
-	println("--host [HOSTNAME]\t\t%s", cavan_help_message_hostname);
-	println("--local, -l, -L\t\t\t%s", cavan_help_message_local);
-	println("--port, -p, -P [PORT]\t\t%s", cavan_help_message_port);
-	println("--adb, -a, -A\t\t\t%s", cavan_help_message_adb);
+	println("--help, -H, -h\t\t\t%s", cavan_help_message_help);
+	println("--version, -V, -v\t\t%s", cavan_help_message_version);
+	println("--ip, -I, -i IP\t\t\t%s", cavan_help_message_ip);
+	println("--host HOSTNAME\t\t\t%s", cavan_help_message_hostname);
+	println("--local, -L, -l\t\t\t%s", cavan_help_message_local);
+	println("--port, -P, -p PORT\t\t%s", cavan_help_message_port);
+	println("--adb, -A, -a\t\t\t%s", cavan_help_message_adb);
 	println("--udp\t\t\t\t%s", cavan_help_message_udp);
 	println("--unix, --unix-tcp [PATHNAME]\t%s", cavan_help_message_unix_tcp);
 	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
-	println("--url, -u, -U [URL]\t\t%s", cavan_help_message_url);
+	println("--url, -U, -u [URL]\t\t%s", cavan_help_message_url);
 }
 
 int main(int argc, char *argv[])

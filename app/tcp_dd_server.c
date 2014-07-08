@@ -15,17 +15,17 @@ static void show_usage(const char *command)
 {
 	println("Usage:");
 	println("%s [option] port", command);
-	println("--help, -h, -H\t\t\t\t%s", cavan_help_message_help);
-	println("--super, -s, -S\t\t\t\t%s", cavan_help_message_super);
-	println("--daemon, -d, -D\t\t\t%s", cavan_help_message_daemon);
+	println("--help, -H, -h\t\t\t\t%s", cavan_help_message_help);
+	println("--super, -S, -s\t\t\t\t%s", cavan_help_message_super);
+	println("--daemon, -D, -d\t\t\t%s", cavan_help_message_daemon);
 	println("--min, -m, -c\t\t\t\t%s", cavan_help_message_daemon_min);
 	println("--max, -M, -C\t\t\t\t%s", cavan_help_message_daemon_max);
-	println("--verbose, -v, -V\t\t\t%s", cavan_help_message_verbose);
-	println("--port, -p, -P\t\t\t\t%s", cavan_help_message_port);
-	println("--log, -l, -L [PATHNAME]\t\t%s", cavan_help_message_logfile);
+	println("--verbose, -V, -v\t\t\t%s", cavan_help_message_verbose);
+	println("--port, -P, -p PORT\t\t\t%s", cavan_help_message_port);
+	println("--log, -L, -l [PATHNAME]\t\t%s", cavan_help_message_logfile);
 	println("--udp\t\t\t\t\t%s", cavan_help_message_udp);
 	println("--url [URL]\t\t\t\t%s", cavan_help_message_url);
-	println("--unix, --unix-tcp, -u, -U [PATHNAME]\t%s", cavan_help_message_unix_tcp);
+	println("--unix, --unix-tcp, -U, -u [PATHNAME]\t%s", cavan_help_message_unix_tcp);
 	println("--unix-udp [PATHNAME]\t\t\t%s", cavan_help_message_unix_udp);
 }
 

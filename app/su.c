@@ -28,19 +28,17 @@ static void show_usage(const char *command)
 {
 	println("Usage: %s [option] [username]", command);
 	println("--help, -h\t\t\t\t%s", cavan_help_message_help);
-	println("--version, -v, -V\t\t\t%s", cavan_help_message_version);
-	println("--ip, -i, -I [IP]\t\t\t%s", cavan_help_message_ip);
-	println("--host, -H [HOSTNAME]\t\t\t%s", cavan_help_message_hostname);
+	println("--version, -V, -v\t\t\t%s", cavan_help_message_version);
+	println("--ip, -I, -i IP\t\t\t\t%s", cavan_help_message_ip);
+	println("--host, -H HOSTNAME\t\t\t%s", cavan_help_message_hostname);
 	println("--local, -L\t\t\t\t%s", cavan_help_message_local);
-	println("--port, -P [PORT]\t\t\t%s", cavan_help_message_port);
-	println("--adb, -a, -A\t\t\t\t%s", cavan_help_message_adb);
+	println("--port, -P PORT\t\t\t\t%s", cavan_help_message_port);
+	println("--adb, -A, -a\t\t\t\t%s", cavan_help_message_adb);
 	println("--udp\t\t\t\t\t%s", cavan_help_message_udp);
 	println("--tcp\t\t\t\t\t%s", cavan_help_message_tcp);
-	println("--unix, --unix-tcp, -u, -U [PATHNAME]\t%s", cavan_help_message_unix_tcp);
+	println("--unix, --unix-tcp, -U, -u [PATHNAME]\t%s", cavan_help_message_unix_tcp);
 	println("--unix-udp [PATHNAME]\t\t\t%s", cavan_help_message_unix_udp);
 	println("--url [URL]\t\t\t\t%s", cavan_help_message_url);
-	println("-w, -W, -s, -S\t\t\t\t%s", cavan_help_message_send_file);
-	println("-r, -R\t\t\t\t\t%s", cavan_help_message_recv_file);
 	println("-c, --command COMMAND\t\t\t%s", cavan_help_message_command);
 	println("-l, --login\t\t\t\t%s", cavan_help_message_login);
 	println("-m, -p, --preserve-environment\t\t%s", cavan_help_message_preserve_environment);
