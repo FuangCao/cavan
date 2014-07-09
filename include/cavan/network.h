@@ -261,6 +261,7 @@ struct network_client
 	void *private_data;
 	pthread_mutex_t lock;
 	u8 send_index, recv_index;
+	u16 recv_pending;
 	network_connect_type_t type;
 
 	void (*close)(struct network_client *client);

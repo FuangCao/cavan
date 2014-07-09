@@ -1303,7 +1303,6 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 
 	while (buff < buff_end)
 	{
-		int retry = CAVAN_NET_UDP_RETRY;
 		struct cavan_sync_package *package;
 		size_t datalen = ADDR_SUB2(buff_end, buff);
 
@@ -1317,6 +1316,7 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 
 		while (1)
 		{
+			int retry;
 			ssize_t rdlen, wrlen;
 
 			package->index = client->send_index;
@@ -1324,28 +1324,34 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 			package->length = datalen;
 			mem_copy(package->data, buff, datalen);
 
-			wrlen = client->send_raw(client, package, datalen + sizeof(struct cavan_sync_package));
-			if (wrlen < (ssize_t) sizeof(struct cavan_sync_package))
+			for (retry = CAVAN_NET_UDP_RETRY; ; retry--)
 			{
-				pr_red_info("client->send_raw");
-				network_client_unlock(client);
-				return -EFAULT;
-			}
+				int ret;
 
-			if (poll(&pfd, 1, CAVAN_NET_UDP_TIMEOUT) < 1)
-			{
-				pr_red_info("retry = %d", retry);
-
-				if (retry > 0)
+				wrlen = client->send_raw(client, package, datalen + sizeof(struct cavan_sync_package));
+				if (wrlen < (ssize_t) sizeof(struct cavan_sync_package))
 				{
-					retry--;
-					continue;
+					pr_red_info("client->send_raw");
+					network_client_unlock(client);
+					return -EFAULT;
 				}
 
-				network_client_unlock(client);
-				return -ETIMEDOUT;
+				ret = poll(&pfd, 1, CAVAN_NET_UDP_TIMEOUT);
+				if (ret > 0)
+				{
+					break;
+				}
+
+				pr_red_info("retry = %d", retry);
+
+				if (ret < 0 || retry < 1)
+				{
+					network_client_unlock(client);
+					return -ETIMEDOUT;
+				}
 			}
 
+label_recv_ack:
 			rdlen = client->recv_raw(client, package, sizeof(struct cavan_sync_package));
 			if (rdlen != sizeof(struct cavan_sync_package))
 			{
@@ -1360,13 +1366,26 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 					break;
 				}
 
-				client->send_index = package->index;
+				if (poll(&pfd, 1, CAVAN_NET_UDP_TIMEOUT) > 0)
+				{
+#if CAVAN_NETWORK_DEBUG
+					pr_red_info("retry receive ack");
+#endif
+					goto label_recv_ack;
+				}
 			}
-			else
+			else if (package->type == CAVAN_SYNC_TYPE_DATA)
 			{
-				network_client_unlock(client);
-				usleep(200);
-				network_client_lock(client);
+				u8 index = client->recv_index;
+
+				do {
+					network_client_unlock(client);
+					usleep(1);
+					network_client_lock(client);
+#if CAVAN_NETWORK_DEBUG
+					pr_warning_info("wait for receive: recv_pending = %d, recv_index = %d, index = %d", client->recv_pending, client->recv_index, index);
+#endif
+				} while (client->recv_pending && client->recv_index == index);
 			}
 
 #if CAVAN_NETWORK_DEBUG
@@ -1386,7 +1405,7 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 
 static ssize_t network_client_recv_sync(struct network_client *client, void *buff, size_t size)
 {
-	size_t length;
+	ssize_t length;
 	struct cavan_sync_package *package;
 	struct pollfd pfd =
 	{
@@ -1403,25 +1422,28 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 
 	network_client_lock(client);
 
+	client->recv_pending++;
+
 	while (1)
 	{
+		int ret;
 		ssize_t rdlen, wrlen;
 
 		network_client_unlock(client);
-
-		if (poll(&pfd, 1, CAVAN_NET_UDP_ACTIVE_TIME) < 1)
+		ret = poll(&pfd, 1, CAVAN_NET_UDP_ACTIVE_TIME);
+		network_client_lock(client);
+		if (ret < 1)
 		{
 			pr_red_info("file_poll_input");
-			return -ETIMEDOUT;
+			length = -ETIMEDOUT;
+			goto out_clean_pending;
 		}
-
-		network_client_lock(client);
 
 		rdlen = client->recv_raw(client, package, size + sizeof(struct cavan_sync_package));
 		if (rdlen < (ssize_t) sizeof(struct cavan_sync_package))
 		{
-			network_client_unlock(client);
-			return -EFAULT;
+			length = -EFAULT;
+			goto out_clean_pending;
 		}
 
 		length = package->length;
@@ -1435,8 +1457,8 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 			if (wrlen != sizeof(struct cavan_sync_package))
 			{
 				pr_red_info("client->send_raw");
-				network_client_unlock(client);
-				return -EFAULT;
+				length = -EFAULT;
+				goto out_clean_pending;
 			}
 
 			if (package->index == client->recv_index)
@@ -1452,10 +1474,11 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 	}
 
 	client->recv_index++;
-	network_client_unlock(client);
-
 	mem_copy(buff, package->data, length);
 
+out_clean_pending:
+	client->recv_pending--;
+	network_client_unlock(client);
 	return length;
 }
 
@@ -1478,6 +1501,7 @@ static void network_client_set_sync(struct network_client *client, bool enable)
 	{
 		client->send_index = 0;
 		client->recv_index = 0;
+		client->recv_pending = 0;
 
 		client->send_raw = client->send;
 		client->recv_raw = client->recv;
