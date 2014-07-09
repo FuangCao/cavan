@@ -123,7 +123,7 @@ static int network_service_test(const char *url)
 		if (ret != sizeof(value))
 		{
 			pr_red_info("client->recv");
-			goto out_client_close;
+			break;
 		}
 
 		println("service send %d", value);
@@ -136,6 +136,7 @@ static int network_service_test(const char *url)
 		}
 	}
 
+	ret = 0;
 out_client_close:
 	client->close(client);
 out_free_client:
@@ -175,7 +176,7 @@ int main(int argc, char *argv[])
 	}
 	else if (strcmp(argv[1], "service") == 0)
 	{
-		return network_service_test(argv[2]);
+		while (network_service_test(argv[2]) >= 0);
 	}
 	else if (strcmp(argv[1], "url") == 0)
 	{

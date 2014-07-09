@@ -240,13 +240,27 @@ typedef enum
 	NETWORK_CONNECT_UNIX_UDP,
 } network_connect_type_t;
 
+typedef enum
+{
+	CAVAN_SYNC_TYPE_ACK,
+	CAVAN_SYNC_TYPE_DATA,
+} cavan_sync_type_t;
+
+struct cavan_sync_package
+{
+	u8 type;
+	u8 index;
+	u16 length;
+	char data[0];
+};
+
 struct network_client
 {
 	int sockfd;
-	u32 pkg_index;
 	socklen_t addrlen;
 	void *private_data;
 	pthread_mutex_t lock;
+	u8 send_index, recv_index;
 	network_connect_type_t type;
 
 	void (*close)(struct network_client *client);
@@ -527,6 +541,11 @@ static inline void *network_client_get_data(struct network_client *client)
 static inline void network_client_lock(struct network_client *client)
 {
 	pthread_mutex_lock(&client->lock);
+}
+
+static inline bool network_client_trylock(struct network_client *client)
+{
+	return pthread_mutex_trylock(&client->lock) == 0;
 }
 
 static inline void network_client_unlock(struct network_client *client)
