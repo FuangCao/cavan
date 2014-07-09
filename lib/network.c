@@ -1386,6 +1386,7 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 
 static ssize_t network_client_recv_sync(struct network_client *client, void *buff, size_t size)
 {
+	size_t length;
 	struct cavan_sync_package *package;
 	struct pollfd pfd =
 	{
@@ -1423,9 +1424,10 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 			return -EFAULT;
 		}
 
-		if (package->type == CAVAN_SYNC_TYPE_DATA)
+		length = package->length;
+
+		if (package->type == CAVAN_SYNC_TYPE_DATA && (size_t) rdlen == length + sizeof(struct cavan_sync_package))
 		{
-			size = package->length;
 			package->length = 0;
 			package->type = CAVAN_SYNC_TYPE_ACK;
 
@@ -1452,9 +1454,9 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 	client->recv_index++;
 	network_client_unlock(client);
 
-	mem_copy(buff, package->data, size);
+	mem_copy(buff, package->data, length);
 
-	return size;
+	return length;
 }
 
 static void network_client_close_sync(struct network_client *client)
