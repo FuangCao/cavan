@@ -284,13 +284,6 @@ struct network_client_unix
 	struct sockaddr_un addr;
 };
 
-struct network_client_unix_udp
-{
-	struct network_client client;
-	struct sockaddr_un addr;
-	char pathname[UNIX_PATH_MAX];
-};
-
 struct network_service
 {
 	int sockfd;
