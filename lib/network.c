@@ -951,6 +951,11 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 
 	addr->sin_family = AF_INET;
 
+	if (hostname == NULL || hostname[0] == 0)
+	{
+		hostname = "127.0.0.1";
+	}
+
 	if (inet_aton(hostname, &addr->sin_addr))
 	{
 		return 0;
@@ -1522,6 +1527,7 @@ static void network_client_set_sync(struct network_client *client, bool enable)
 static void network_client_udp_close(struct network_client *client)
 {
 	close(client->sockfd);
+	client->sockfd = -1;
 	pthread_mutex_destroy(&client->lock);
 }
 
@@ -1657,6 +1663,7 @@ out_free_inet:
 static void network_client_tcp_close(struct network_client *client)
 {
 	inet_close_tcp_socket(client->sockfd);
+	client->sockfd = -1;
 }
 
 static ssize_t network_client_tcp_send(struct network_client *client, const void *buff, size_t size)
@@ -2305,6 +2312,7 @@ out_close_ttyfd:
 static void network_service_udp_close(struct network_service *service)
 {
 	close(service->sockfd);
+	service->sockfd = -1;
 }
 
 static int network_service_udp_talk(struct network_service *service, struct network_client *client)
@@ -2423,6 +2431,7 @@ static int network_service_udp_open(struct network_service *service, u16 port)
 static void network_service_tcp_close(struct network_service *service)
 {
 	inet_close_tcp_socket(service->sockfd);
+	service->sockfd = -1;
 }
 
 static int network_service_tcp_accept(struct network_service *service, struct network_client *client)
