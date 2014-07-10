@@ -625,7 +625,7 @@ int unix_create_service(int type, const char *pathname)
 {
 	int ret;
 	int sockfd;
-	size_t length;
+	socklen_t addrlen;
 	struct sockaddr_un addr;
 
 	sockfd = unix_socket(type);
@@ -639,15 +639,15 @@ int unix_create_service(int type, const char *pathname)
 	{
 		unlink(pathname);
 		unix_sockaddr_init(&addr, pathname);
-		length = sizeof(struct sockaddr_un);
+		addrlen = sizeof(struct sockaddr_un);
 	}
 	else
 	{
 		addr.sun_family = AF_UNIX;
-		length = sizeof(addr.sun_family);
+		addrlen = sizeof(addr.sun_family);
 	}
 
-	ret = bind(sockfd, &addr, length);
+	ret = bind(sockfd, &addr, addrlen);
 	if (ret < 0)
 	{
 		print_error("bind");
@@ -1721,16 +1721,16 @@ out_close_sockfd:
 
 static int network_create_unix_udp_client(struct network_client *client)
 {
-	int ret;
+	int sockfd;
 
-	ret = unix_create_service(SOCK_DGRAM, NULL);
-	if (ret < 0)
+	sockfd = unix_create_service(SOCK_DGRAM, NULL);
+	if (sockfd < 0)
 	{
 		pr_red_info("unix_create_service");
-		return ret;
+		return sockfd;
 	}
 
-	client->sockfd = ret;
+	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_UNIX_UDP;
 	client->close = network_client_udp_close;
 
