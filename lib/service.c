@@ -408,11 +408,6 @@ static void *cavan_dynamic_service_handler(void *data)
 
 	pthread_mutex_lock(&service->lock);
 
-	if (service->count > 0 && service->index == 0)
-	{
-		service->index = service->min;
-	}
-
 	service->count++;
 	index = ++service->index;
 
@@ -423,7 +418,6 @@ static void *cavan_dynamic_service_handler(void *data)
 		pthread_mutex_unlock(&service->lock);
 		ret = service->open_connect(service, conn);
 		pthread_mutex_lock(&service->lock);
-
 		if (ret < 0)
 		{
 			pr_red_info("open_connect");
@@ -475,7 +469,7 @@ static void *cavan_dynamic_service_handler(void *data)
 		pthread_mutex_lock(&service->lock);
 		service->used--;
 
-		if (index > service->min && service->count > service->used)
+		if (service->count - service->used > service->min)
 		{
 			break;
 		}
