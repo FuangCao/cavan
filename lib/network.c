@@ -647,7 +647,7 @@ int unix_create_service(int type, const char *pathname)
 		addrlen = sizeof(addr.sun_family);
 	}
 
-	ret = bind(sockfd, &addr, addrlen);
+	ret = bind(sockfd, (struct sockaddr *) &addr, addrlen);
 	if (ret < 0)
 	{
 		print_error("bind");
@@ -740,18 +740,52 @@ u32 get_rand_value(void)
 int inet_bind_rand(int sockfd, int retry)
 {
 	int ret;
+	socklen_t addrlen;
 	struct sockaddr_in addr;
 
+	addrlen = sizeof(addr);
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	do {
+#if 0
+	while (1)
+	{
 		addr.sin_port = get_rand_value() & 0xFFFF;
 
-		ret = inet_bind(sockfd, &addr);
-	} while (ret < 0 && retry--);
+		ret = bind(sockfd, (struct sockaddr *) &addr, addrlen);
+		if (ret == 0)
+		{
+			break;
+		}
 
-	return ret < 0 ? ret : (int) ntohs(addr.sin_port);
+		if (retry < 1)
+		{
+			return ret;
+		}
+
+		retry--;
+	}
+#else
+	addr.sin_port = 0;
+
+	ret = bind(sockfd, (struct sockaddr *) &addr, addrlen);
+	if (ret < 0)
+	{
+		pr_error_info("inet_bind");
+		return ret;
+	}
+
+	ret = getsockname(sockfd, (struct sockaddr *) &addr, &addrlen);
+	if (ret < 0)
+	{
+		pr_error_info("inet_getsockname");
+		return ret;
+	}
+#endif
+
+	inet_show_sockaddr(&addr);
+
+	return (int) ntohs(addr.sin_port);
 }
 
 ssize_t inet_send(int sockfd, const char *buff, size_t size)
