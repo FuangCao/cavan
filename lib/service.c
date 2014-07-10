@@ -407,9 +407,14 @@ static void *cavan_dynamic_service_handler(void *data)
 	}
 
 	pthread_mutex_lock(&service->lock);
+
+	if (service->count > 0 && service->index == 0)
+	{
+		service->index = service->min;
+	}
+
 	service->count++;
 	index = ++service->index;
-
 
 	while (service->state == CAVAN_SERVICE_STATE_RUNNING)
 	{
@@ -470,7 +475,7 @@ static void *cavan_dynamic_service_handler(void *data)
 		pthread_mutex_lock(&service->lock);
 		service->used--;
 
-		if (index > service->min && service->count - service->used > 1)
+		if (index > service->min && service->count > service->used)
 		{
 			break;
 		}
