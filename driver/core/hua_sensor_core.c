@@ -81,6 +81,19 @@ int hua_sensor_device_probe(struct hua_input_device *dev)
 	return 0;
 }
 
+const struct hua_sensor_rate_table_node *hua_sensor_find_rate_value(const struct hua_sensor_rate_table_node *table, size_t count, u32 delay_ns)
+{
+	const struct hua_sensor_rate_table_node *p;
+
+	for (p = table + count - 1; p > table && p->delay_ns > delay_ns; p--);
+
+	pr_bold_info("value = 0x%02x, delay = %d, relly_delay = %d", p->value, delay_ns, p->delay_ns);
+
+	return p;
+}
+
+EXPORT_SYMBOL_GPL(hua_sensor_find_rate_value);
+
 MODULE_AUTHOR("Fuang.Cao <cavan.cfa@gmail.com>");
 MODULE_DESCRIPTION("Huamobile Sensor Subsystem");
 MODULE_LICENSE("GPL");

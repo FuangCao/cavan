@@ -250,6 +250,8 @@ struct hua_input_chip
 
 	int (*read_register)(struct hua_input_chip *chip, u8 addr, u8 *value);
 	int (*write_register)(struct hua_input_chip *chip, u8 addr, u8 value);
+	int (*read_register16)(struct hua_input_chip *chip, u8 addr, u16 *value);
+	int (*write_register16)(struct hua_input_chip *chip, u8 addr, u16 value);
 
 	int (*firmware_upgrade)(struct hua_input_chip *chip, struct hua_firmware *fw);
 	int (*calibration)(struct hua_input_chip *chip, const void *buff, size_t size);
@@ -341,6 +343,16 @@ static inline int hua_input_read_register_dummy(struct hua_input_chip *chip, u8 
 static inline int hua_input_write_register_dummy(struct hua_input_chip *chip, u8 addr, u8 value)
 {
 	return chip->write_data(chip, addr, &value, 1);
+}
+
+static inline int hua_input_read_register16_dummy(struct hua_input_chip *chip, u8 addr, u16 *value)
+{
+	return chip->read_data(chip, addr, value, 2);
+}
+
+static inline int hua_input_write_register16_dummy(struct hua_input_chip *chip, u8 addr, u16 value)
+{
+	return chip->write_data(chip, addr, &value, 2);
 }
 
 static inline struct hua_misc_device *hua_input_file_to_misc_device(struct file *file)

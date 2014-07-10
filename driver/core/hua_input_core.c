@@ -1169,6 +1169,16 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 		chip->write_register = hua_input_write_register_dummy;
 	}
 
+	if (chip->read_register16 == NULL)
+	{
+		chip->read_register16 = hua_input_read_register16_dummy;
+	}
+
+	if (chip->write_register16 == NULL)
+	{
+		chip->write_register16 = hua_input_write_register16_dummy;
+	}
+
 	if (chip->master_recv == NULL)
 	{
 		chip->master_recv = hua_input_master_recv_i2c;

@@ -93,6 +93,37 @@ int hua_input_write_register_i2c_smbus(struct hua_input_chip *chip, u8 addr, u8 
 
 EXPORT_SYMBOL_GPL(hua_input_write_register_i2c_smbus);
 
+int hua_input_read_register16_i2c_smbus(struct hua_input_chip *chip, u8 addr, u16 *value)
+{
+	int ret;
+	union i2c_smbus_data data;
+	struct i2c_client *client = chip->bus_data;
+
+	ret = i2c_smbus_xfer(client->adapter, client->addr, client->flags, I2C_SMBUS_READ, addr, I2C_SMBUS_WORD_DATA, &data);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	*value = data.word;
+
+	return 0;
+}
+
+EXPORT_SYMBOL_GPL(hua_input_read_register16_i2c_smbus);
+
+int hua_input_write_register16_i2c_smbus(struct hua_input_chip *chip, u8 addr, u16 value)
+{
+	union i2c_smbus_data data;
+	struct i2c_client *client = chip->bus_data;
+
+	data.word = value;
+
+	return i2c_smbus_xfer(client->adapter, client->addr, client->flags, I2C_SMBUS_WRITE, addr, I2C_SMBUS_WORD_DATA, &data);
+}
+
+EXPORT_SYMBOL_GPL(hua_input_write_register16_i2c_smbus);
+
 int hua_input_master_recv_from_i2c(struct i2c_client *client, short addr, void *buff, size_t size)
 {
 	int ret;

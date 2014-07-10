@@ -30,6 +30,14 @@ struct hua_sensor_device
 	u32 power_consume;
 };
 
+struct hua_sensor_rate_table_node
+{
+	u8 value;
+	u32 delay_ns;
+};
+
+const struct hua_sensor_rate_table_node *hua_sensor_find_rate_value(const struct hua_sensor_rate_table_node *table, size_t count, u32 delay_ns);
+
 static inline void hua_sensor_report_value(struct input_dev *input, int value)
 {
 	input_report_abs(input, HUA_SENSOR_EVENT_VALUE, value);

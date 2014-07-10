@@ -273,7 +273,7 @@ static int hua_sensor_device_probe(struct hua_sensor_device *sensor, struct sens
 	}
 	else
 	{
-		hal_sensor->maxRange = 1;
+		hal_sensor->maxRange = max_range;
 	}
 
 	hal_sensor->resolution = hal_sensor->maxRange / resolution;
