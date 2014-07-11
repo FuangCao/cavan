@@ -404,7 +404,7 @@ u16 checksum16(const u16 *buff, size_t size)
 
 	if (size & 1)
 	{
-		checksum += *(u8 *)buff;
+		checksum += *(u8 *) buff;
 	}
 
 	checksum = (checksum >> 16) + (checksum & 0xFFFF);

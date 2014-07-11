@@ -18,7 +18,7 @@
 
 #define NETWORK_TIMEOUT_VALUE	5000
 #define NETWORK_RETRY_COUNT		5
-#define NETWORK_INVALID_PORT	0xFFFF
+#define NETWORK_PORT_INVALID	0xFFFF
 #define ROUTE_TABLE_SIZE		16
 #define MAC_ADDRESS_LEN			6
 #define CAVAN_LISTEN_BACKLOG	32
@@ -122,6 +122,14 @@ struct icmp_header
 	u8 type;
 	u8 code;
 	u16 checksum;
+
+	u8 data[0];
+};
+
+struct ping_header
+{
+	u16 id;
+	u16 seq;
 
 	u8 data[0];
 };
@@ -321,6 +329,7 @@ void show_udp_header(struct udp_header *hdr);
 void show_arp_header(struct arp_header *hdr, int simple);
 void show_dhcp_header(struct dhcp_header *hdr);
 void show_icmp_header(struct icmp_header *hdr);
+void show_ping_header(struct ping_header *hdr);
 
 int cavan_route_table_init(struct cavan_route_table *table, size_t table_size);
 void cavan_route_table_deinit(struct cavan_route_table *table);

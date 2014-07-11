@@ -14,6 +14,7 @@ static void show_usage(void)
 static int net_monitor_run(const char *net_dev, const char *text_src_ip, const char *text_dest_ip)
 {
 	int ret;
+	u16 checksum;
 	char buff[4096];
 	struct mac_header *mac_hdr = (void *)buff;
 	struct ip_header *ip_hdr = (void *)(mac_hdr + 1);
@@ -22,6 +23,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	struct tcp_header *tcp_hdr = (void *)(ip_hdr + 1);
 	struct dhcp_header *dhcp_hdr = (void *)(udp_hdr + 1);
 	struct icmp_header *icmp_hdr = (void *)(ip_hdr + 1);
+	struct ping_header *ping_hdr = (void *)(icmp_hdr + 1);
 	int sockfd;
 	u32 src_ip, dest_ip;
 
@@ -74,6 +76,20 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 
 			case IPPROTO_ICMP:
 				show_icmp_header(icmp_hdr);
+
+				ret -= ((char *) icmp_hdr) - buff;
+				println("icmp length = %d", ret);
+				icmp_hdr->checksum = 0;
+				checksum = mem_checksum16(icmp_hdr, ret);
+				println("icmp checksum = 0x%04x", checksum);
+
+				switch (icmp_hdr->type)
+				{
+				case 8:
+				case 0:
+					show_ping_header(ping_hdr);
+					break;
+				}
 				break;
 			}
 			break;

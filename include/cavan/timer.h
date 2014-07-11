@@ -45,6 +45,10 @@ struct cavan_cursor
 	void (*set_visual)(struct cavan_cursor *cursor, bool enable, void *data);
 };
 
+u64 clock_gettime_ns(clockid_t clk);
+u64 clock_gettime_us(clockid_t clk);
+u64 clock_gettime_ms(clockid_t clk);
+
 int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2);
 int cavan_timespec_diff(const struct timespec *t1, const struct timespec *t2);
 int cavan_real_timespec_diff(const struct timespec *time);
@@ -93,6 +97,36 @@ static inline void cavan_cursor_stop(struct cavan_cursor *cursor)
 	{
 		cursor->set_visual(cursor, false, cursor->private_data);
 	}
+}
+
+static inline u64 clock_gettime_ns_mono(void)
+{
+	return clock_gettime_ns(CLOCK_MONOTONIC);
+}
+
+static inline u64 clock_gettime_us_mono(void)
+{
+	return clock_gettime_us(CLOCK_MONOTONIC);
+}
+
+static inline u64 clock_gettime_ms_mono(void)
+{
+	return clock_gettime_ms(CLOCK_MONOTONIC);
+}
+
+static inline u64 clock_gettime_ns_real(void)
+{
+	return clock_gettime_ns(CLOCK_REALTIME);
+}
+
+static inline u64 clock_gettime_us_real(void)
+{
+	return clock_gettime_us(CLOCK_REALTIME);
+}
+
+static inline u64 clock_gettime_ms_real(void)
+{
+	return clock_gettime_ms(CLOCK_REALTIME);
 }
 
 #ifdef __cplusplus

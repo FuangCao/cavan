@@ -1771,9 +1771,9 @@ int file_select_read(int fd, int timeout_ms)
 	return select(fd + 1, &set_read, NULL, NULL, &time);
 }
 
-u32 mem_checksum32_simple(const char *mem, size_t count)
+u32 mem_checksum32_simple(const u8 *mem, size_t count)
 {
-	const char *mem_end = mem + count;
+	const u8 *mem_end = mem + count;
 	u64 checksum = 0;
 
 	while (mem < mem_end)
@@ -1783,25 +1783,42 @@ u32 mem_checksum32_simple(const char *mem, size_t count)
 
 	checksum = (checksum >> 32) + (checksum & 0xFFFFFFFF);
 
-	return (u32)((checksum >> 32) + checksum);
+	return (u32) ((checksum >> 32) + checksum);
 }
 
-u16 mem_checksum16_simple(const char *mem, size_t count)
+u16 mem_checksum16_simple(const u16 *mem, size_t size)
 {
-	u32 checksum = mem_checksum32_simple(mem, count);
+	u32 checksum = 0;
+	const u16 *mem_end;
+
+	for (mem_end = mem + (size >> 1); mem < mem_end; mem++)
+	{
+		checksum += *mem;
+	}
+
+	if (size & 1)
+	{
+		checksum += *(u8 *) mem;
+	}
 
 	checksum = (checksum >> 16) + (checksum & 0xFFFF);
 
-	return (u16)((checksum >> 16) + checksum);
+	return (u16) ((checksum >> 16) + checksum);
 }
 
-u8 mem_checksum8_simple(const char *mem, size_t count)
+u8 mem_checksum8_simple(const u8 *mem, size_t size)
 {
-	u16 checksum = mem_checksum16_simple(mem, count);
+	u16 checksum = 0;
+	const u8 *mem_end;
+
+	for (mem_end = mem + size; mem < mem_end; mem++)
+	{
+		checksum += *mem;
+	}
 
 	checksum = (checksum >> 8) + (checksum & 0xFF);
 
-	return (u8)((checksum >> 8) + checksum);
+	return (u8) ((checksum >> 8) + checksum);
 }
 
 u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
@@ -1843,7 +1860,7 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 	while (1)
 	{
 		ssize_t rdlen;
-		char buff[MAX_BUFF_LEN];
+		u8 buff[MAX_BUFF_LEN];
 
 		rdlen = read(fd, buff, sizeof(buff));
 		if (rdlen <= 0)

@@ -301,6 +301,14 @@ void show_icmp_header(struct icmp_header *hdr)
 	println("checksum = 0x%04x", hdr->checksum);
 }
 
+void show_ping_header(struct ping_header *hdr)
+{
+	pr_bold_info("PING Header:");
+
+	println("id = 0x%04x", hdr->id);
+	println("seq = 0x%04x", hdr->seq);
+}
+
 int cavan_route_table_init(struct cavan_route_table *table, size_t table_size)
 {
 	struct cavan_route_node **pp, **pp_end;
@@ -1034,6 +1042,8 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 	memcpy(addr, res->ai_addr, res->ai_addrlen);
 	freeaddrinfo(res);
 
+	inet_show_sockaddr(addr);
+
 	return 0;
 }
 
@@ -1095,7 +1105,7 @@ char *network_url_tostring(const struct network_url *url, char *buff, size_t siz
 		buff += snprintf(buff, buff_end - buff, "//%s", url->hostname);
 	}
 
-	if (url->port != NETWORK_INVALID_PORT)
+	if (url->port != NETWORK_PORT_INVALID)
 	{
 		buff += snprintf(buff, buff_end - buff, ":%d", url->port);
 	}
@@ -1153,7 +1163,7 @@ char *network_url_parse(struct network_url *url, const char *text)
 				url->protocol = NULL;
 			}
 
-			url->port = port ? text2value_unsigned(port, NULL, 10) : NETWORK_INVALID_PORT;
+			url->port = port ? text2value_unsigned(port, NULL, 10) : NETWORK_PORT_INVALID;
 
 			if (url->protocol == NULL)
 			{
@@ -1251,7 +1261,7 @@ const struct network_protocol *network_get_protocol_by_port(u16 port)
 
 int network_get_port_by_url(const struct network_url *url, const struct network_protocol *protocol)
 {
-	if (url->port != NETWORK_INVALID_PORT)
+	if (url->port != NETWORK_PORT_INVALID)
 	{
 		return url->port;
 	}

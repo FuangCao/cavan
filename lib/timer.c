@@ -7,6 +7,51 @@
 #include <cavan.h>
 #include <cavan/timer.h>
 
+u64 clock_gettime_ns(clockid_t clk)
+{
+	int ret;
+	struct timespec time;
+
+	ret = clock_gettime(clk, &time);
+	if (ret < 0)
+	{
+		pr_error_info("clock_gettime");
+		return ret;
+	}
+
+	return (u64) time.tv_sec * 1000 * 1000 * 1000 + time.tv_nsec;
+}
+
+u64 clock_gettime_us(clockid_t clk)
+{
+	int ret;
+	struct timespec time;
+
+	ret = clock_gettime(clk, &time);
+	if (ret < 0)
+	{
+		pr_error_info("clock_gettime");
+		return ret;
+	}
+
+	return (u64) time.tv_sec * 1000 * 1000 + time.tv_nsec / 1000;
+}
+
+u64 clock_gettime_ms(clockid_t clk)
+{
+	int ret;
+	struct timespec time;
+
+	ret = clock_gettime(clk, &time);
+	if (ret < 0)
+	{
+		pr_error_info("clock_gettime");
+		return ret;
+	}
+
+	return (u64) time.tv_sec * 1000 + time.tv_nsec / (1000 * 1000);
+}
+
 int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2)
 {
 	if (t1->tv_sec > t2->tv_sec)
