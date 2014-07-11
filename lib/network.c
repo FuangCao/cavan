@@ -1542,6 +1542,8 @@ static void network_client_close_sync(struct network_client *client)
 	}
 
 	client->close_raw(client);
+
+	pthread_mutex_destroy(&client->lock);
 }
 
 static void network_client_set_sync(struct network_client *client, bool enable)
@@ -1559,6 +1561,8 @@ static void network_client_set_sync(struct network_client *client, bool enable)
 		client->send = network_client_send_sync;
 		client->recv = network_client_recv_sync;
 		client->close = network_client_close_sync;
+
+		pthread_mutex_init(&client->lock, NULL);
 	}
 	else if (client->send_raw && client->recv_raw && client->close_raw)
 	{
@@ -1568,11 +1572,11 @@ static void network_client_set_sync(struct network_client *client, bool enable)
 	}
 }
 
+#if 0
 static void network_client_udp_close(struct network_client *client)
 {
 	close(client->sockfd);
 	client->sockfd = -1;
-	pthread_mutex_destroy(&client->lock);
 }
 
 static ssize_t network_client_udp_send(struct network_client *client, const void *buff, size_t size)
@@ -1588,121 +1592,7 @@ static ssize_t network_client_udp_recv(struct network_client *client, void *buff
 
 	return recvfrom(client->sockfd, buff, size, 0, (struct sockaddr *) &inet->addr, &client->addrlen);
 }
-
-static int network_client_udp_talk(struct network_client *client)
-{
-	u32 magic;
-	ssize_t rwlen;
-
-	rwlen = network_client_send_message(client, CAVAN_NETWORK_MAGIC);
-	if (rwlen < (ssize_t) sizeof(magic))
-	{
-		pr_red_info("network_client_send_message");
-		return rwlen < 0 ? rwlen : -EFAULT;
-	}
-
-	if (file_poll_input(client->sockfd, CAVAN_NET_UDP_TIMEOUT) == false)
-	{
-		pr_red_info("file_poll_input");
-		return -EFAULT;
-	}
-
-	rwlen = network_client_recv_message(client, &magic);
-	if (rwlen < (ssize_t) sizeof(magic))
-	{
-		pr_red_info("network_client_recv_message");
-		return rwlen < 0 ? rwlen : -EFAULT;
-	}
-
-	if (magic != CAVAN_NETWORK_MAGIC)
-	{
-		pr_red_info("invalid magic = 0x%08x", magic);
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-static int network_client_udp_common_open(struct network_client *client, int flags)
-{
-	client->send = network_client_udp_send;
-	client->recv = network_client_udp_recv;
-
-	if (flags & CAVAN_NET_FLAG_TALK)
-	{
-		int ret;
-
-		ret = network_client_udp_talk(client);
-		if (ret < 0)
-		{
-			pr_red_info("network_client_udp_talk");
-			return ret;
-		}
-	}
-
-	if (flags & CAVAN_NET_FLAG_SYNC)
-	{
-		network_client_set_sync(client, true);
-	}
-
-	return 0;
-}
-
-static struct network_client *network_client_udp_open(const char *hostname, u16 port, int flags)
-{
-	int sockfd;
-	struct network_client *client;
-	struct network_client_inet *inet;
-
-	inet = malloc(sizeof(*inet));
-	if (inet == NULL)
-	{
-		pr_error_info("malloc");
-		return NULL;
-	}
-
-	if (inet_hostname2sockaddr(hostname, &inet->addr) < 0)
-	{
-		pr_red_info("inet_hostname2sockaddr");
-		goto out_free_inet;
-	}
-
-	client = &inet->client;
-	if (pthread_mutex_init(&client->lock, NULL) < 0)
-	{
-		pr_error_info("pthread_mutex_init");
-		goto out_free_inet;
-	}
-
-	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
-		pr_error_info("inet_socket");
-		goto out_pthread_mutex_destroy;
-	}
-
-	client->sockfd = sockfd;
-	client->type = NETWORK_CONNECT_UDP;
-	client->close = network_client_udp_close;
-	client->addrlen = sizeof(inet->addr);
-	inet->addr.sin_port = htons(port);
-
-	if (network_client_udp_common_open(client, flags) < 0)
-	{
-		pr_red_info("network_client_udp_common_open");
-		goto out_client_close;
-	}
-
-	return client;
-
-out_client_close:
-	client->close(client);
-out_pthread_mutex_destroy:
-	pthread_mutex_destroy(&client->lock);
-out_free_inet:
-	free(inet);
-	return NULL;
-}
+#endif
 
 static void network_client_tcp_close(struct network_client *client)
 {
@@ -1720,23 +1610,140 @@ static ssize_t network_client_tcp_recv(struct network_client *client, void *buff
 	return recv(client->sockfd, buff, size, 0);
 }
 
-static struct network_client *network_client_tcp_open(const char *hostname, u16 port)
+static int network_client_udp_talk(struct network_client *client, struct sockaddr *remote_addr)
+{
+	int ret;
+	u32 magic;
+	struct sockaddr *addr;
+
+	addr = alloca(client->addrlen);
+	if (addr == NULL)
+	{
+		pr_error_info("alloca");
+		return -ENOMEM;
+	}
+
+	magic = CAVAN_NETWORK_MAGIC;
+	ret = sendto(client->sockfd, &magic, sizeof(magic), 0, remote_addr, client->addrlen);
+	if (ret < (ssize_t) sizeof(magic))
+	{
+		pr_red_info("network_client_send_message");
+		return -EFAULT;
+	}
+
+	if (file_poll_input(client->sockfd, CAVAN_NET_UDP_TIMEOUT) == false)
+	{
+		pr_red_info("file_poll_input");
+		return -EFAULT;
+	}
+
+	ret = recvfrom(client->sockfd, &magic, sizeof(magic), 0, addr, &client->addrlen);
+	if (ret < (ssize_t) sizeof(magic))
+	{
+		pr_red_info("network_client_recv_message");
+		return -EFAULT;
+	}
+
+	if (magic != CAVAN_NETWORK_MAGIC)
+	{
+		pr_red_info("invalid magic = 0x%08x", magic);
+		return -EINVAL;
+	}
+
+	ret = connect(client->sockfd, addr, client->addrlen);
+	if (ret < 0)
+	{
+		pr_error_info("connect");
+		return ret;
+	}
+
+	return 0;
+}
+
+static int network_client_udp_common_open(struct network_client *client, struct sockaddr *addr, int flags)
+{
+	int ret;
+
+	if (flags & CAVAN_NET_FLAG_TALK)
+	{
+
+		ret = network_client_udp_talk(client, addr);
+		if (ret < 0)
+		{
+			pr_red_info("network_client_udp_talk");
+			return ret;
+		}
+	}
+	else
+	{
+		ret = connect(client->sockfd, addr, client->addrlen);
+		if (ret < 0)
+		{
+			pr_error_info("connect");
+			return ret;
+		}
+	}
+
+	client->send = network_client_tcp_send;
+	client->recv = network_client_tcp_recv;
+	client->close = network_client_tcp_close;
+
+	if (flags & CAVAN_NET_FLAG_SYNC)
+	{
+		network_client_set_sync(client, true);
+	}
+
+	return 0;
+}
+
+static int network_client_udp_open(struct network_client *client, const char *hostname, u16 port, int flags)
+{
+	int ret;
+	int sockfd;
+	struct sockaddr_in addr;
+
+	ret = inet_hostname2sockaddr(hostname, &addr);
+	if (ret < 0)
+	{
+		pr_red_info("inet_hostname2sockaddr");
+		return ret;
+	}
+
+	sockfd = inet_socket(SOCK_DGRAM);
+	if (sockfd < 0)
+	{
+		pr_error_info("inet_socket");
+		return sockfd;
+	}
+
+	client->sockfd = sockfd;
+	client->type = NETWORK_CONNECT_UDP;
+	client->addrlen = sizeof(addr);
+	addr.sin_port = htons(port);
+
+	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, flags);
+	if (ret < 0)
+	{
+		pr_red_info("network_client_udp_common_open");
+		goto out_client_close;
+	}
+
+	return 0;
+
+out_client_close:
+	client->close(client);
+	return ret;
+}
+
+static int network_client_tcp_open(struct network_client *client, const char *hostname, u16 port)
 {
 	int sockfd;
-	struct network_client *client;
 
 	sockfd = inet_create_tcp_link2(hostname, port);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_socket");
-		return NULL;
-	}
-
-	client = malloc(sizeof(*client));
-	if (client == NULL)
-	{
-		pr_error_info("malloc");
-		goto out_close_sockfd;
+		return sockfd;
 	}
 
 	client->sockfd = sockfd;
@@ -1746,11 +1753,7 @@ static struct network_client *network_client_tcp_open(const char *hostname, u16 
 	client->send = network_client_tcp_send;
 	client->recv = network_client_tcp_recv;
 
-	return client;
-
-out_close_sockfd:
-	close(sockfd);
-	return NULL;
+	return 0;
 }
 
 static int network_create_unix_udp_client(struct network_client *client)
@@ -1766,28 +1769,19 @@ static int network_create_unix_udp_client(struct network_client *client)
 
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_UNIX_UDP;
-	client->close = network_client_udp_close;
 
 	return 0;
 }
 
-static struct network_client *network_client_unix_tcp_open(const char *hostname)
+static int network_client_unix_tcp_open(struct network_client *client, const char *hostname)
 {
 	int sockfd;
-	struct network_client *client;
 
 	sockfd = unix_create_tcp_link(hostname, 0);
 	if (sockfd < 0)
 	{
 		pr_error_info("unix_socket");
-		return NULL;
-	}
-
-	client = malloc(sizeof(*client));
-	if (client == NULL)
-	{
-		pr_error_info("malloc");
-		goto out_close_sockfd;
+		return sockfd;
 	}
 
 	client->sockfd = sockfd;
@@ -1797,71 +1791,47 @@ static struct network_client *network_client_unix_tcp_open(const char *hostname)
 	client->send = network_client_tcp_send;
 	client->recv = network_client_tcp_recv;
 
-	return client;
-
-out_close_sockfd:
-	close(sockfd);
-	return NULL;
+	return 0;
 }
 
-static struct network_client *network_client_unix_udp_open(const char *hostname, int flags)
+static int network_client_unix_udp_open(struct network_client *client, const char *hostname, int flags)
 {
 	int ret;
-	struct network_client *client;
-	struct network_client_unix *udp;
-
-	udp = malloc(sizeof(*udp));
-	if (udp == NULL)
-	{
-		pr_error_info("malloc");
-		return NULL;
-	}
-
-	client = &udp->client;
+	struct sockaddr_un addr;
 
 	ret = network_create_unix_udp_client(client);
 	if (ret < 0)
 	{
 		pr_error_info("inet_socket");
-		goto out_free_udp;
+		return ret;
 	}
 
-	unix_sockaddr_init(&udp->addr, hostname);
-	client->addrlen = sizeof(struct sockaddr_un);
+	unix_sockaddr_init(&addr, hostname);
+	client->addrlen = sizeof(addr);
 
-	ret = network_client_udp_common_open(client, flags);
+	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, flags);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_udp_common_open");
 		goto out_client_close;
 	}
 
-	return client;
+	return 0;
 
 out_client_close:
 	client->close(client);
-out_free_udp:
-	free(udp);
-	return NULL;
+	return ret;
 }
 
-static struct network_client *network_client_adb_open(const char *hostname, u16 port)
+static int network_client_adb_open(struct network_client *client, const char *hostname, u16 port)
 {
 	int sockfd;
-	struct network_client *client;
 
 	sockfd = adb_create_tcp_link(hostname, 0, port);
 	if (sockfd < 0)
 	{
-		pr_red_info("inet_socket");
-		return NULL;
-	}
-
-	client = malloc(sizeof(*client));
-	if (client == NULL)
-	{
-		pr_error_info("malloc");
-		goto out_close_sockfd;
+		pr_red_info("adb_create_tcp_link");
+		return sockfd;
 	}
 
 	client->sockfd = sockfd;
@@ -1871,138 +1841,104 @@ static struct network_client *network_client_adb_open(const char *hostname, u16 
 	client->send = network_client_tcp_send;
 	client->recv = network_client_tcp_recv;
 
-	return client;
-
-out_close_sockfd:
-	close(sockfd);
-	return NULL;
+	return 0;
 }
 
-static struct network_client *network_client_icmp_open(const char *hostname)
+static int network_client_icmp_open(struct network_client *client, const char *hostname)
 {
 	int ret;
 	int sockfd;
-	struct network_client *client;
-	struct network_client_inet *inet;
+	struct sockaddr_in addr;
 
-	inet = malloc(sizeof(*inet));
-	if (inet == NULL)
-	{
-		pr_error_info("malloc");
-		return NULL;
-	}
-
-	ret = inet_hostname2sockaddr(hostname, &inet->addr);
+	ret = inet_hostname2sockaddr(hostname, &addr);
 	if (ret < 0)
 	{
 		pr_red_info("inet_hostname2sockaddr");
-		goto out_free_inet;
-	}
-
-	client = &inet->client;
-	if (pthread_mutex_init(&client->lock, NULL) < 0)
-	{
-		pr_error_info("pthread_mutex_init");
-		goto out_free_inet;
+		return ret;
 	}
 
 	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd < 0)
 	{
 		pr_error_info("inet_socket");
-		goto out_pthread_mutex_destroy;
+		return sockfd;
 	}
 
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_ICMP;
-	client->addrlen = sizeof(inet->addr);
-	client->close = network_client_udp_close;
-	client->send = network_client_udp_send;
-	client->recv = network_client_udp_recv;
+	client->addrlen = sizeof(addr);
 
-	return client;
+	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, 0);
+	if (ret < 0)
+	{
+		pr_red_info("network_client_udp_common_open");
+		goto out_close_sockfd;
+	}
 
-out_pthread_mutex_destroy:
-	pthread_mutex_destroy(&client->lock);
-out_free_inet:
-	free(inet);
-	return NULL;
+	return 0;
+
+out_close_sockfd:
+	close(sockfd);
+	return ret;
 }
 
-static struct network_client *network_client_ip_open(const char *hostname)
+static int network_client_ip_open(struct network_client *client, const char *hostname)
 {
 	int ret;
 	int sockfd;
-	struct network_client *client;
-	struct network_client_inet *inet;
+	struct sockaddr_in addr;
 
-	inet = malloc(sizeof(*inet));
-	if (inet == NULL)
-	{
-		pr_error_info("malloc");
-		return NULL;
-	}
-
-	ret = inet_hostname2sockaddr(hostname, &inet->addr);
+	ret = inet_hostname2sockaddr(hostname, &addr);
 	if (ret < 0)
 	{
 		pr_red_info("inet_hostname2sockaddr");
-		goto out_free_inet;
+		return ret;
 	}
 
 	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
 	if (sockfd < 0)
 	{
 		pr_error_info("inet_socket");
-		goto out_free_inet;
+		return sockfd;
 	}
 
-	client = &inet->client;
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_IP;
-	client->addrlen = sizeof(inet->addr);
-	client->close = network_client_udp_close;
-	client->send = network_client_udp_send;
-	client->recv = network_client_udp_recv;
+	client->addrlen = sizeof(addr);
 
-	return client;
+	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, 0);
+	if (ret < 0)
+	{
+		pr_red_info("network_client_udp_common_open");
+		goto out_close_sockfd;
+	}
 
-out_free_inet:
-	free(inet);
-	return NULL;
+	return 0;
+
+out_close_sockfd:
+	close(sockfd);
+	return ret;
 }
 
-static struct network_client *network_client_mac_open(const char *if_name)
+static int network_client_mac_open(struct network_client *client, const char *if_name)
 {
 	int sockfd;
-	struct network_client *client;
 
 	sockfd = network_create_socket_mac(if_name, 0);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_socket");
-		return NULL;
-	}
-
-	client = malloc(sizeof(*client));
-	if (client == NULL)
-	{
-		pr_error_info("malloc");
-		goto out_close_sockfd;
+		return sockfd;
 	}
 
 	client->sockfd = sockfd;
 	client->type = NETWORK_CONNECT_MAC;
 	client->addrlen = sizeof(struct sockaddr_in);
-	client->close = network_client_udp_close;
+	client->close = network_client_tcp_close;
 	client->send = network_client_tcp_send;
 	client->recv = network_client_tcp_recv;
 
-	return client;
-
-out_close_sockfd:
-	close(sockfd);
-	return NULL;
+	return 0;
 }
 
 network_connect_type_t network_connect_type_parse(const char *name, const char *name2)
@@ -2097,7 +2033,7 @@ const char *network_connect_type_tostring(network_connect_type_t type)
 	}
 }
 
-struct network_client *network_client_open(struct network_url *url, int flags)
+int network_client_open(struct network_client *client, struct network_url *url, int flags)
 {
 	network_connect_type_t type = network_connect_type_parse(url->protocol, url->hostname);
 
@@ -2106,46 +2042,46 @@ struct network_client *network_client_open(struct network_url *url, int flags)
 	switch (type)
 	{
 	case NETWORK_CONNECT_TCP:
-		return network_client_tcp_open(url->hostname, url->port);
+		return network_client_tcp_open(client, url->hostname, url->port);
 
 	case NETWORK_CONNECT_UDP:
-		return network_client_udp_open(url->hostname, url->port, flags);
+		return network_client_udp_open(client, url->hostname, url->port, flags);
 
 	case NETWORK_CONNECT_UNIX_TCP:
-		return network_client_unix_tcp_open(url->pathname);
+		return network_client_unix_tcp_open(client, url->pathname);
 
 	case NETWORK_CONNECT_UNIX_UDP:
-		return network_client_unix_udp_open(url->pathname, flags);
+		return network_client_unix_udp_open(client, url->pathname, flags);
 
 	case NETWORK_CONNECT_ADB:
-		return network_client_adb_open(url->hostname, url->port);
+		return network_client_adb_open(client, url->hostname, url->port);
 
 	case NETWORK_CONNECT_ICMP:
-		return network_client_icmp_open(url->hostname);
+		return network_client_icmp_open(client, url->hostname);
 
 	case NETWORK_CONNECT_IP:
-		return network_client_ip_open(url->hostname);
+		return network_client_ip_open(client, url->hostname);
 
 	case NETWORK_CONNECT_MAC:
-		return network_client_mac_open(url->hostname);
+		return network_client_mac_open(client, url->hostname);
 
 	default:
 		pr_red_info("unknown connect type");
-		return NULL;
+		return -EINVAL;
 	}
 }
 
-struct network_client *network_client_open2(const char *url_text, int flags)
+int network_client_open2(struct network_client *client, const char *url_text, int flags)
 {
 	struct network_url url;
 
 	if (url_text == NULL || network_url_parse(&url, url_text) == NULL)
 	{
 		pr_red_info("network_parse_url");
-		return NULL;
+		return -EINVAL;
 	}
 
-	return network_client_open(&url, flags);
+	return network_client_open(client, &url, flags);
 }
 
 void network_client_close(struct network_client *client)
@@ -2158,8 +2094,6 @@ void network_client_close(struct network_client *client)
 	{
 		close(client->sockfd);
 	}
-
-	free(client);
 }
 
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size)
@@ -2335,18 +2269,26 @@ static void network_service_udp_close(struct network_service *service)
 
 static int network_service_udp_talk(struct network_service *service, struct network_client *client)
 {
+	int ret;
 	u32 magic;
-	int rwlen;
-	struct network_client_inet *inet = (struct network_client_inet *) client;
+	struct sockaddr *addr;
 
-	rwlen = recvfrom(service->sockfd, &magic, sizeof(magic), 0, (struct sockaddr *) &inet->addr, &client->addrlen);
-	if (rwlen < (ssize_t) sizeof(magic))
+	addr = alloca(service->addrlen);
+	if (addr == NULL)
 	{
-		pr_error_info("recvfrom");
-		return rwlen < 0 ? rwlen : -EFAULT;
+		pr_error_info("alloca");
+		return -ENOMEM;
 	}
 
-	pd_bold_info("magic = 0x%08x, family = %d, type = %d", magic, inet->addr.sin_family, service->type);
+	client->addrlen = service->addrlen;
+	ret = recvfrom(service->sockfd, &magic, sizeof(magic), 0, addr, &client->addrlen);
+	if (ret < (ssize_t) sizeof(magic))
+	{
+		pr_error_info("recvfrom");
+		return -EFAULT;
+	}
+
+	pd_bold_info("magic = 0x%08x, type = %d", magic, service->type);
 
 	if (magic != CAVAN_NETWORK_MAGIC)
 	{
@@ -2375,56 +2317,51 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 		}
 	}
 
-	rwlen = network_client_send_message(client, CAVAN_NETWORK_MAGIC);
-	if (rwlen < (ssize_t) sizeof(magic))
+	ret = sendto(client->sockfd, &magic, sizeof(magic), 0, addr, client->addrlen);
+	if (ret < (ssize_t) sizeof(magic))
 	{
 		pr_error_info("network_client_send_message");
 
-		if (rwlen >= 0)
+		if (ret >= 0)
 		{
-			rwlen = -EFAULT;
+			ret = -EFAULT;
 		}
 
 		goto out_client_close;
 	}
 
+	ret = connect(client->sockfd, addr, client->addrlen);
+	if (ret < 0)
+	{
+		pr_error_info("connect");
+		goto out_client_close;
+	}
+
+	client->send = network_client_tcp_send;
+	client->recv = network_client_tcp_recv;
+	client->close = network_client_tcp_close;
+
 	return 0;
 
 out_client_close:
 	client->close(client);
-	return rwlen;
+	return ret;
 }
 
 static int network_service_udp_accept(struct network_service *service, struct network_client *client)
 {
 	int ret;
 
-	ret = pthread_mutex_init(&client->lock, NULL);
-	if (ret < 0)
-	{
-		pr_error_info("pthread_mutex_init");
-		return ret;
-	}
-
-	client->addrlen = service->addrlen;
-	client->send = network_client_udp_send;
-	client->recv = network_client_udp_recv;
-	client->close = network_client_udp_close;
-
 	ret = network_service_udp_talk(service, client);
 	if (ret < 0)
 	{
 		pr_red_info("network_service_udp_talk");
-		goto out_pthread_mutex_destroy;
+		return ret;
 	}
 
 	network_client_set_sync(client, true);
 
 	return 0;
-
-out_pthread_mutex_destroy:
-	pthread_mutex_destroy(&client->lock);
-	return ret;
 }
 
 static int network_service_udp_open(struct network_service *service, u16 port)
@@ -2438,7 +2375,6 @@ static int network_service_udp_open(struct network_service *service, u16 port)
 
 	service->type = NETWORK_CONNECT_UDP;
 	service->addrlen = sizeof(struct sockaddr_in);
-	service->client_size = sizeof(struct network_client_inet);
 
 	service->accept = network_service_udp_accept;
 	service->close = network_service_udp_close;
@@ -2454,10 +2390,10 @@ static void network_service_tcp_close(struct network_service *service)
 
 static int network_service_tcp_accept(struct network_service *service, struct network_client *client)
 {
-	struct network_client_inet *inet = (struct network_client_inet *) client;
+	struct sockaddr_in addr;
 
 	client->addrlen = service->addrlen;
-	client->sockfd = accept(service->sockfd, (struct sockaddr *) &inet->addr, &client->addrlen);
+	client->sockfd = accept(service->sockfd, (struct sockaddr *) &addr, &client->addrlen);
 	if (client->sockfd < 0)
 	{
 		pr_error_info("accept");
@@ -2482,7 +2418,6 @@ static int network_service_tcp_open(struct network_service *service, u16 port)
 
 	service->type = NETWORK_CONNECT_TCP;
 	service->addrlen = sizeof(struct sockaddr_in);
-	service->client_size = sizeof(struct network_client_inet);
 
 	service->accept = network_service_tcp_accept;
 	service->close = network_service_tcp_close;
@@ -2501,7 +2436,6 @@ static int network_service_unix_tcp_open(struct network_service *service, const 
 
 	service->type = NETWORK_CONNECT_UNIX_TCP;
 	service->addrlen = sizeof(struct sockaddr_un);
-	service->client_size = sizeof(struct network_client_unix);
 
 	service->accept = network_service_tcp_accept;
 	service->close = network_service_tcp_close;
@@ -2520,7 +2454,6 @@ static int network_service_unix_udp_open(struct network_service *service, const 
 
 	service->type = NETWORK_CONNECT_UNIX_UDP;
 	service->addrlen = sizeof(struct sockaddr_un);
-	service->client_size = sizeof(struct network_client_unix);
 
 	service->accept = network_service_udp_accept;
 	service->close = network_service_udp_close;

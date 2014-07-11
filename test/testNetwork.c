@@ -50,22 +50,22 @@ static int network_client_test(const char *url)
 	int ret;
 	u32 value;
 	pthread_t thread_recv;
-	struct network_client *client;
+	struct network_client client;
 
-	client = network_client_open2(url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
-	if (client == NULL)
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	if (ret < 0)
 	{
 		pr_red_info("network_client_open");
 		return -EFAULT;
 	}
 
-	pthread_create(&thread_recv, NULL, network_client_recv_handler, client);
+	pthread_create(&thread_recv, NULL, network_client_recv_handler, &client);
 
 	for (value = 0; value < 2000; value++)
 	{
 		println("client send %d", value);
 
-		ret = client->send(client, &value, sizeof(value));
+		ret = client.send(&client, &value, sizeof(value));
 		if (ret != sizeof(value))
 		{
 			pr_red_info("client->send");
@@ -75,21 +75,21 @@ static int network_client_test(const char *url)
 
 	msleep(1000);
 
-	network_client_close(client);
+	network_client_close(&client);
 
 	pthread_join(thread_recv, NULL);
 
 	return 0;
 
 out_network_client_close:
-	network_client_close(client);
+	network_client_close(&client);
 	return ret;
 }
 
 static int network_service_test(const char *url)
 {
 	int ret;
-	struct network_client *client;
+	struct network_client client;
 	struct network_service service;
 
 	ret = network_service_open2(&service, url);
@@ -99,18 +99,11 @@ static int network_service_test(const char *url)
 		return ret;
 	}
 
-	client = network_service_alloc_client(&service);
-	if (client == NULL)
-	{
-		pr_error_info("network_service_alloc_client");
-		goto out_network_service_close;
-	}
-
-	ret = service.accept(&service, client);
+	ret = service.accept(&service, &client);
 	if (ret < 0)
 	{
 		pr_red_info("service.accept");
-		goto out_free_client;
+		goto out_network_service_close;
 	}
 
 	while (1)
@@ -119,7 +112,7 @@ static int network_service_test(const char *url)
 
 		println("service recv -");
 
-		ret = client->recv(client, &value, sizeof(value));
+		ret = client.recv(&client, &value, sizeof(value));
 		if (ret != sizeof(value))
 		{
 			pr_red_info("client->recv");
@@ -128,7 +121,7 @@ static int network_service_test(const char *url)
 
 		println("service send %d", value);
 
-		ret = client->send(client, &value, sizeof(value));
+		ret = client.send(&client, &value, sizeof(value));
 		if (ret < 0)
 		{
 			pr_red_info("client->send");
@@ -138,9 +131,7 @@ static int network_service_test(const char *url)
 
 	ret = 0;
 out_client_close:
-	client->close(client);
-out_free_client:
-	free(client);
+	client.close(&client);
 out_network_service_close:
 	network_service_close(&service);
 	return ret;

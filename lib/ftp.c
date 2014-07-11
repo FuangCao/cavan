@@ -486,7 +486,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 	reply = "230 User login successfull";
 	text_copy(curr_path, ftp_root_path);
 
-	ret = inet_getsockname(sockfd, &local_addr, &addrlen);
+	ret = inet_getsockname(sockfd, &local_addr);
 	if (ret < 0)
 	{
 		pr_red_info("inet_getsockname");

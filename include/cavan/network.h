@@ -272,6 +272,7 @@ struct network_client
 	ssize_t (*recv_raw)(struct network_client *client, void *buff, size_t size);
 };
 
+#if 0
 struct network_client_inet
 {
 	struct network_client client;
@@ -283,12 +284,12 @@ struct network_client_unix
 	struct network_client client;
 	struct sockaddr_un addr;
 };
+#endif
 
 struct network_service
 {
 	int sockfd;
 	socklen_t addrlen;
-	size_t client_size;
 	void *private_data;
 	pthread_mutex_t lock;
 	network_connect_type_t type;
@@ -376,8 +377,8 @@ int network_get_port_by_url(const struct network_url *url, const struct network_
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
 int network_create_socket_mac(const char *if_name, int protocol);
 
-struct network_client *network_client_open(struct network_url *url, int flags);
-struct network_client *network_client_open2(const char *url, int flags);
+int network_client_open(struct network_client *client, struct network_url *url, int flags);
+int network_client_open2(struct network_client *client, const char *url, int flags);
 void network_client_close(struct network_client *client);
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size);
 ssize_t network_client_send_buff(struct network_client *client, const char *buff, size_t size);
@@ -501,10 +502,18 @@ static inline void inet_close_tcp_socket(int sockfd)
 	close(sockfd);
 }
 
-static inline int inet_getsockname(int sockfd, struct sockaddr_in *addr, socklen_t *addrlen)
+static inline int inet_getsockname(int sockfd, struct sockaddr_in *addr)
 {
-	*addrlen = sizeof(struct sockaddr_in);
-	return getsockname(sockfd, (struct sockaddr *)addr, addrlen);
+	socklen_t addrlen = sizeof(struct sockaddr_in);
+
+	return getsockname(sockfd, (struct sockaddr *) addr, &addrlen);
+}
+
+static inline int inet_getpeername(int sockfd, struct sockaddr_in *addr)
+{
+	socklen_t addrlen = sizeof(struct sockaddr_in);
+
+	return getpeername(sockfd, (struct sockaddr *) addr, &addrlen);
 }
 
 static inline void inet_show_sockaddr(const struct sockaddr_in *addr)
@@ -585,9 +594,4 @@ static inline const char *cavan_get_server_hostname(void)
 static inline u16 cavan_get_server_port(u16 default_value)
 {
 	return cavan_getenv_u32(CAVAN_PORT_ENV_NAME, default_value);
-}
-
-static inline struct network_client *network_service_alloc_client(struct network_service *service)
-{
-	return malloc(service->client_size);
 }
