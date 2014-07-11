@@ -435,19 +435,19 @@ static inline int inet_accept(int sockfd, struct sockaddr_in *addr, socklen_t *a
 {
 	*addrlen = sizeof(struct sockaddr_in);
 
-	return accept(sockfd, (struct sockaddr *)addr, addrlen);
+	return accept(sockfd, (struct sockaddr *) addr, addrlen);
 }
 
 static inline ssize_t inet_sendto(int sockfd, const void *buff, size_t size, const struct sockaddr_in *addr)
 {
-	return sendto(sockfd, buff, size, 0, (const struct sockaddr *)addr, sizeof(*addr));
+	return sendto(sockfd, buff, size, 0, (const struct sockaddr *) addr, sizeof(*addr));
 }
 
 static inline ssize_t inet_recvfrom(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen)
 {
 	*addrlen = sizeof(struct sockaddr_in);
 
-	return recvfrom(sockfd, buff, size, 0, (struct sockaddr *)addr, addrlen);
+	return recvfrom(sockfd, buff, size, 0, (struct sockaddr *) addr, addrlen);
 }
 
 static inline int inet_create_udp_service(u16 port)

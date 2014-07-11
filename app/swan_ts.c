@@ -53,7 +53,7 @@ static int swan_ts_read_registers_main(int argc, char *argv[])
 		goto out_free_buff;
 	}
 
-	print_mem((u8 *)buff, count);
+	print_mem((u8 *) buff, count);
 
 out_free_buff:
 	free(buff);
@@ -105,7 +105,7 @@ static int swan_ts_poll_registers_main(int argc, char *argv[])
 			continue;
 		}
 
-		print_mem((u8 *)buff, count);
+		print_mem((u8 *) buff, count);
 	}
 
 	close(fd);
@@ -138,7 +138,7 @@ static int swan_ts_write_registers_main(int argc, char *argv[])
 
 	println("offset = %d, count = %d", offset, count);
 	println("The data is:");
-	print_mem((u8 *)buff, count);
+	print_mem((u8 *) buff, count);
 
 	ret = swan_ts_write_registers(NULL, offset, buff, count);
 	if (ret < 0)
@@ -179,7 +179,7 @@ static int swan_ts_read_data_main(int argc, char *argv[])
 		goto out_free_buff;
 	}
 
-	print_mem((u8 *)buff, count);
+	print_mem((u8 *) buff, count);
 
 out_free_buff:
 	free(buff);
@@ -229,7 +229,7 @@ static int swan_ts_poll_data_main(int argc, char *argv[])
 			continue;
 		}
 
-		print_mem((u8 *)buff, count);
+		print_mem((u8 *) buff, count);
 	}
 
 	close(fd);
@@ -260,7 +260,7 @@ static int swan_ts_write_data_main(int argc, char *argv[])
 
 	println("count = %d", count);
 	println("The data is:");
-	print_mem((u8 *)buff, count);
+	print_mem((u8 *) buff, count);
 
 	ret = swan_ts_write_data(NULL, buff, count);
 	if (ret < 0)

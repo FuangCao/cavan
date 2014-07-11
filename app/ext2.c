@@ -25,12 +25,12 @@
 
 static ssize_t ext2_app_device_read_block(struct cavan_block_device *bdev, u64 index, void *buff, size_t count)
 {
-	return ffile_readfrom(*(int *)bdev->context, buff, count << bdev->block_shift, index << bdev->block_shift);
+	return ffile_readfrom(*(int *) bdev->context, buff, count << bdev->block_shift, index << bdev->block_shift);
 }
 
 static ssize_t ext2_app_device_write_block(struct cavan_block_device *bdev, u64 index, const void *buff, size_t count)
 {
-	return ffile_writeto(*(int *)bdev->context, buff, count << bdev->block_shift, index << bdev->block_shift);
+	return ffile_writeto(*(int *) bdev->context, buff, count << bdev->block_shift, index << bdev->block_shift);
 }
 
 #if EXT2_APP_USB_DEFAULT_READ_BYTE
@@ -39,12 +39,12 @@ static ssize_t ext2_app_device_write_block(struct cavan_block_device *bdev, u64 
 #else
 static ssize_t ext2_app_device_read_byte(struct cavan_block_device *bdev, u64 index, u32 offset, void *buff, size_t size)
 {
-	return ffile_readfrom(*(int *)bdev->context, buff, size, (index << bdev->block_shift) + offset);
+	return ffile_readfrom(*(int *) bdev->context, buff, size, (index << bdev->block_shift) + offset);
 }
 
 static ssize_t ext2_app_device_write_byte(struct cavan_block_device *bdev, u64 index, u32 offset, const void *buff, size_t size)
 {
-	return ffile_writeto(*(int *)bdev->context, buff, size, (index << bdev->block_shift) + offset);
+	return ffile_writeto(*(int *) bdev->context, buff, size, (index << bdev->block_shift) + offset);
 }
 #endif
 

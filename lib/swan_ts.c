@@ -516,7 +516,7 @@ u8 ft5406_calculate_checksum(const char *buff, size_t size)
 
 	for (buff_end = buff + size, checksum = 0; buff < buff_end; buff++)
 	{
-		checksum ^= *(u8 *)buff;
+		checksum ^= *(u8 *) buff;
 	}
 
 	return checksum;

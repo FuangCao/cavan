@@ -467,7 +467,7 @@ int system_mount(const char *mnt_dev, const char *mnt_point, const void *data)
 
 	if (file_test(mnt_dev, "b") == 0)
 	{
-		if (data && *(const char *)data)
+		if (data && *(const char *) data)
 		{
 			return system_command("mount %s %s -o %s", mnt_dev, mnt_point, (const char *) data);
 		}
@@ -478,7 +478,7 @@ int system_mount(const char *mnt_dev, const char *mnt_point, const void *data)
 	}
 	else
 	{
-		if (data && *(const char *)data)
+		if (data && *(const char *) data)
 		{
 			return system_command("mount %s %s -o loop,%s", mnt_dev, mnt_point, (const char *) data);
 		}
@@ -1850,7 +1850,7 @@ int loop_get_fd(const char *filename, char *loop_path, u64 offset)
 			return loop_fd;
 		}
 
-		if (text_cmp((char *)loopinfo.lo_file_name, file_abs_path) == 0 && loopinfo.lo_offset == offset)
+		if (text_cmp((char *) loopinfo.lo_file_name, file_abs_path) == 0 && loopinfo.lo_offset == offset)
 		{
 			if (ioctl(loop_fd, LOOP_CLR_FD, 0) == 0)
 			{

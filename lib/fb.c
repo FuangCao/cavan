@@ -61,19 +61,19 @@ void cavan_fb_bitfield2element(struct fb_bitfield *field, struct cavan_fb_color_
 
 static void cavan_fb_draw_point8(struct cavan_fb_device *dev,int x, int y, u32 color)
 {
-	(((u8 *)dev->fb_cache) + y * dev->xres)[x] = color;
+	(((u8 *) dev->fb_cache) + y * dev->xres)[x] = color;
 }
 
 static void cavan_fb_draw_point16(struct cavan_fb_device *dev,int x, int y, u32 color)
 {
-	(((u16 *)dev->fb_cache) + y * dev->xres)[x] = color;
+	(((u16 *) dev->fb_cache) + y * dev->xres)[x] = color;
 }
 
 static void cavan_fb_draw_point24(struct cavan_fb_device *dev, int x, int y, u32 color)
 {
 	u8 *p;
 
-	p = ((u8 *)dev->fb_cache) + (y * dev->xres + x) * 3;
+	p = ((u8 *) dev->fb_cache) + (y * dev->xres + x) * 3;
 	p[dev->red.index] = (color & dev->red.mask) >> dev->red.offset;
 	p[dev->green.index] = (color & dev->green.mask) >> dev->green.offset;
 	p[dev->blue.index] = (color & dev->blue.mask) >> dev->blue.offset;
@@ -81,7 +81,7 @@ static void cavan_fb_draw_point24(struct cavan_fb_device *dev, int x, int y, u32
 
 static void cavan_fb_draw_point32(struct cavan_fb_device *dev, int x, int y, u32 color)
 {
-	(((u32 *)dev->fb_cache) + y * dev->xres)[x] = color;
+	(((u32 *) dev->fb_cache) + y * dev->xres)[x] = color;
 }
 
 int cavan_fb_refresh(struct cavan_fb_device *dev)
@@ -90,7 +90,7 @@ int cavan_fb_refresh(struct cavan_fb_device *dev)
 	int index = (dev->fb_active + 1) % dev->fb_count;
 	struct fb_var_screeninfo *var = &dev->var_info;
 
-	mem_copy((byte *)dev->fb_base + dev->fb_size * index, dev->fb_cache, dev->fb_size);
+	mem_copy((byte *) dev->fb_base + dev->fb_size * index, dev->fb_cache, dev->fb_size);
 
 	if (dev->fb_active == index)
 	{
@@ -335,7 +335,7 @@ struct cavan_display_device *cavan_fb_display_create(void)
 		return NULL;
 	}
 
-	fb_dev = (struct cavan_fb_device *)(display + 1);
+	fb_dev = (struct cavan_fb_device *) (display + 1);
 	ret = cavan_fb_display_init(display, fb_dev);
 	if (ret < 0)
 	{

@@ -138,8 +138,8 @@ static int cavan_touch_device_probe(struct cavan_touch_device *dev, void *data)
 
 		pr_bold_info("x-min = %d, x-max = %d", min, max);
 		diff = max - min;
-		dev->xscale = ((double)service->lcd_width) / diff;
-		dev->xoffset = ((double)service->lcd_width) * min / diff;
+		dev->xscale = ((double) service->lcd_width) / diff;
+		dev->xoffset = ((double) service->lcd_width) * min / diff;
 	}
 	else
 	{
@@ -158,8 +158,8 @@ static int cavan_touch_device_probe(struct cavan_touch_device *dev, void *data)
 
 		pr_bold_info("y-min = %d, y-max = %d", min, max);
 		diff = max - min;
-		dev->yscale = ((double)service->lcd_height) / diff;
-		dev->yoffset = ((double)service->lcd_height) * min / diff;
+		dev->yscale = ((double) service->lcd_height) / diff;
+		dev->yoffset = ((double) service->lcd_height) * min / diff;
 	}
 	else
 	{

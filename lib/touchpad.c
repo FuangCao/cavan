@@ -290,7 +290,7 @@ static int cavan_touchpad_probe(struct cavan_input_device *dev, void *data)
 	width = service->lcd_height > 0 ? service->lcd_height : diff;
 	pr_bold_info("x-min = %d, x-max = %d, diff = %d, width = %d", min, max, diff, width);
 
-	touchpad->xspeed = ((double)width) / diff;
+	touchpad->xspeed = ((double) width) / diff;
 	touchpad->right = max - (diff >> CAVAN_TOUCHPAD_EDGE_SHIFT);
 	pr_bold_info("xspeed = %lf, right = %d", touchpad->xspeed, touchpad->right);
 
@@ -305,7 +305,7 @@ static int cavan_touchpad_probe(struct cavan_input_device *dev, void *data)
 	height = service->lcd_height > 0 ? service->lcd_height : diff;
 	pr_bold_info("y-min = %d, y-max = %d, diff = %d, height = %d", min, max, diff, height);
 
-	touchpad->yspeed = ((double)height) / diff;
+	touchpad->yspeed = ((double) height) / diff;
 	touchpad->bottom = max - (diff >> CAVAN_TOUCHPAD_EDGE_SHIFT);
 	pr_bold_info("yspeed = %lf, bottom = %d", touchpad->yspeed, touchpad->bottom);
 

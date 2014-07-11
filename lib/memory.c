@@ -172,7 +172,7 @@ void mem_set(void *mem, int value, size_t size)
 {
 	size_t count;
 
-	if (((long)mem & 0x07) == 0)
+	if (((long) mem & 0x07) == 0)
 	{
 		u64 value64;
 
@@ -187,7 +187,7 @@ void mem_set(void *mem, int value, size_t size)
 		mem = (u8 *) mem + (count << 3);
 		count = size & 0x07;
 	}
-	else if (((long)mem & 0x03) == 0)
+	else if (((long) mem & 0x03) == 0)
 	{
 		u32 value32;
 
@@ -201,7 +201,7 @@ void mem_set(void *mem, int value, size_t size)
 		mem = (u8 *) mem + (count << 2);
 		count = size & 0x03;
 	}
-	else if (((long)mem & 0x01) == 0)
+	else if (((long) mem & 0x01) == 0)
 	{
 		u16 value16;
 
@@ -259,7 +259,7 @@ void mem_build_kmp_array(const char *sub, int *steps, size_t size)
 
 		while (j < i)
 		{
-			if (((char *)sub)[j] == ((char *)sub)[k])
+			if (((char *) sub)[j] == ((char *) sub)[k])
 			{
 				j++;
 				k++;
@@ -275,7 +275,7 @@ void mem_build_kmp_array(const char *sub, int *steps, size_t size)
 			}
 		}
 
-		if (((char *)sub)[k] == ((char *)sub)[i])
+		if (((char *) sub)[k] == ((char *) sub)[i])
 		{
 			steps[i] = steps[k];
 		}
@@ -292,7 +292,7 @@ char *mem_kmp_find_base(const char *mem, const char *mem_end, const char *sub, s
 
 	while (mem < mem_end && i < sublen)
 	{
-		if (*(char *)mem == ((char *)sub)[i])
+		if (*(char *) mem == ((char *) sub)[i])
 		{
 			mem++;
 			i++;
@@ -313,7 +313,7 @@ char *mem_kmp_find_base(const char *mem, const char *mem_end, const char *sub, s
 		return NULL;
 	}
 
-	return (char *)(mem - sublen);
+	return (char *) (mem - sublen);
 }
 
 char *mem_kmp_find(const char *mem, const char *sub, size_t memlen, size_t sublen)
@@ -362,13 +362,13 @@ size_t mem_delete_char_base(const char *mem_in, char *mem_out, const size_t size
 
 	while (mem_in < mem_end)
 	{
-		if (*(const char *)mem_in == c)
+		if (*(const char *) mem_in == c)
 		{
 			mem_in++;
 			continue;
 		}
 
-		*(char *)mem_out++ = *(const char *)mem_in++;
+		*(char *) mem_out++ = *(const char *) mem_in++;
 	}
 
 	return mem_out - mem_bak;
@@ -378,7 +378,7 @@ int mem_is_set(const char *mem, int value, size_t size)
 {
 	const char *mem_end;
 
-	for (mem_end = mem + size; mem < mem_end && *(u8 *)mem == value; mem++);
+	for (mem_end = mem + size; mem < mem_end && *(u8 *) mem == value; mem++);
 
 	return mem >= mem_end;
 }
@@ -387,7 +387,7 @@ int mem_is_noset(const char *mem, int value, size_t size)
 {
 	const char *mem_end;
 
-	for (mem_end = mem + size; mem < mem_end && *(u8 *)mem == value; mem++);
+	for (mem_end = mem + size; mem < mem_end && *(u8 *) mem == value; mem++);
 
 	return mem < mem_end;
 }
@@ -449,7 +449,7 @@ size_t mem_byte_count(const char *mem, byte c, size_t size)
 
 	for (mem_end = mem + size, count = 0; mem < mem_end; mem++)
 	{
-		if ((*(byte *)mem) == c)
+		if ((*(byte *) mem) == c)
 		{
 			count++;
 		}

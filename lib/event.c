@@ -1378,7 +1378,7 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 	}
 
 out_free_mem:
-	free((char *)mem);
+	free((char *) mem);
 
 	return 0;
 }

@@ -16,14 +16,14 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	int ret;
 	u16 checksum;
 	char buff[4096];
-	struct mac_header *mac_hdr = (void *)buff;
-	struct ip_header *ip_hdr = (void *)(mac_hdr + 1);
-	struct arp_header *arp_hdr = (void *)(mac_hdr + 1);
-	struct udp_header *udp_hdr = (void *)(ip_hdr + 1);
-	struct tcp_header *tcp_hdr = (void *)(ip_hdr + 1);
-	struct dhcp_header *dhcp_hdr = (void *)(udp_hdr + 1);
-	struct icmp_header *icmp_hdr = (void *)(ip_hdr + 1);
-	struct ping_header *ping_hdr = (void *)(icmp_hdr + 1);
+	struct mac_header *mac_hdr = (void *) buff;
+	struct ip_header *ip_hdr = (void *) (mac_hdr + 1);
+	struct arp_header *arp_hdr = (void *) (mac_hdr + 1);
+	struct udp_header *udp_hdr = (void *) (ip_hdr + 1);
+	struct tcp_header *tcp_hdr = (void *) (ip_hdr + 1);
+	struct dhcp_header *dhcp_hdr = (void *) (udp_hdr + 1);
+	struct icmp_header *icmp_hdr = (void *) (ip_hdr + 1);
+	struct ping_header *ping_hdr = (void *) (icmp_hdr + 1);
 	int sockfd;
 	u32 src_ip, dest_ip;
 

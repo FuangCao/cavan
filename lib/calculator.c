@@ -523,13 +523,13 @@ static int complete_operation2(const struct calculator_operator_descriptor *desc
 		result = fmod(left_operand, right_operand);
 		break;
 	case OPERATOR_AND_ID:
-		result = ((u32)left_operand) & ((u32)right_operand);
+		result = ((u32) left_operand) & ((u32) right_operand);
 		break;
 	case OPERATOR_OR_ID:
-		result = ((u32)left_operand) | ((u32)right_operand);
+		result = ((u32) left_operand) | ((u32) right_operand);
 		break;
 	case OPERATOR_XOR_ID:
-		result = ((u32)left_operand) ^ ((u32)right_operand);
+		result = ((u32) left_operand) ^ ((u32) right_operand);
 		break;
 	case OPERATOR_LEFT_ID:
 		if (right_operand > 0)
@@ -604,7 +604,7 @@ static int complete_operation1_left(const struct calculator_operator_descriptor 
 	switch (desc->id)
 	{
 	case OPERATOR_NEG_ID:
-		result = ~((u32)operand);
+		result = ~((u32) operand);
 		break;
 	case OPERATOR_SIN_ID:
 		operand = angle_adjust(operand, 0, 180, 360);

@@ -249,7 +249,7 @@ int cftp_client_receive_file(struct cftp_descriptor *desc, const char *file_in, 
 		switch (msg->type)
 		{
 		case CFTP_PACKAGE_ERROR:
-			show_error_message((struct cftp_error_message *)msg);
+			show_error_message((struct cftp_error_message *) msg);
 			ret = -EFAULT;
 			goto out_free_msg;
 
@@ -272,7 +272,7 @@ int cftp_client_receive_file(struct cftp_descriptor *desc, const char *file_in, 
 					print_char('.');
 				}
 
-				if ((size_t)recvlen < max_xfer_length)
+				if ((size_t) recvlen < max_xfer_length)
 				{
 					println(" Receive data complete");
 					cftp_send_ack_message(desc, (struct cftp_ack_message *) msg, blk_num, 0);
@@ -527,14 +527,14 @@ int cftp_client_send_file(struct cftp_descriptor *desc, const char *file_in, u32
 		switch (msg->type)
 		{
 		case CFTP_PACKAGE_ERROR:
-			show_error_message((struct cftp_error_message *)msg);
+			show_error_message((struct cftp_error_message *) msg);
 			ret = -EFAULT;
 			goto out_free_data_msg;
 
 		case CFTP_PACKAGE_ACK:
 			if (msg->ack_msg.blk_num == blk_num)
 			{
-				if ((size_t)readlen < max_data_length)
+				if ((size_t) readlen < max_data_length)
 				{
 					ret = 0;
 					progress_bar_finish(&bar);
@@ -657,7 +657,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 		switch (msg->type)
 		{
 		case CFTP_PACKAGE_ERROR:
-			show_error_message((struct cftp_error_message *)msg);
+			show_error_message((struct cftp_error_message *) msg);
 			ret = -EFAULT;
 			goto out_close_file;
 
@@ -679,7 +679,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 
 			blk_num++;
 
-			if ((size_t)recvlen < max_xfer_length)
+			if ((size_t) recvlen < max_xfer_length)
 			{
 				cftp_send_ack_message(desc, (struct cftp_ack_message *) msg, blk_num, 0);
 				progress_bar_finish(&bar);
@@ -815,7 +815,7 @@ label_send_data:
 		switch (msg->type)
 		{
 		case CFTP_PACKAGE_ERROR:
-			show_error_message((struct cftp_error_message *)msg);
+			show_error_message((struct cftp_error_message *) msg);
 			ret = -EFAULT;
 			goto out_free_data_pkg;
 
@@ -826,7 +826,7 @@ label_send_data:
 				goto label_send_data;
 			}
 
-			if ((size_t)readlen < max_data_length)
+			if ((size_t) readlen < max_data_length)
 			{
 				progress_bar_finish(&bar);
 				println("Send data complete");

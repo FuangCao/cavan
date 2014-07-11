@@ -55,7 +55,7 @@ public:
 
 		for (PoolNode<T> *node = mNodes + mSize - 1; node >= mNodes; node--)
 		{
-			mLink.push((LinkNode *)node);
+			mLink.push((LinkNode *) node);
 		}
 
 		mFree = mSize;
@@ -108,7 +108,7 @@ public:
 	{
 		AutoLock lock(mLock);
 
-		T *data = (T *)mLink.pop();
+		T *data = (T *) mLink.pop();
 		if (data == NULL)
 		{
 			return NULL;
@@ -123,7 +123,7 @@ public:
 	{
 		AutoLock lock(mLock);
 
-		mLink.push((LinkNode *)data);
+		mLink.push((LinkNode *) data);
 		mFree++;
 	}
 };
@@ -222,7 +222,7 @@ public:
 			}
 
 			node->pool = pool;
-			return (T *)node;
+			return (T *) node;
 		}
 
 		return NULL;
@@ -232,7 +232,7 @@ public:
 	{
 		AutoLock lock(mLock);
 
-		LinkPoolNode<T> *node = (LinkPoolNode<T> *)data;
+		LinkPoolNode<T> *node = (LinkPoolNode<T> *) data;
 		DataPool<LinkPoolNode<T> > *pool = node->pool;
 		pool->putNode(node);
 		if (pool->getFree() == 1)

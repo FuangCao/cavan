@@ -95,7 +95,7 @@ void cavan_ext4_dump_ext4_extent_list(const struct ext4_extent_header *header)
 	{
 		struct ext4_extent_index *p;
 
-		for (i = 0, p = (struct ext4_extent_index *)(header + 1); i < header->entries; i++)
+		for (i = 0, p = (struct ext4_extent_index *) (header + 1); i < header->entries; i++)
 		{
 			cavan_ext4_dump_ext4_extent_index(p + i);
 			println("index = %d", i);
@@ -105,7 +105,7 @@ void cavan_ext4_dump_ext4_extent_list(const struct ext4_extent_header *header)
 	{
 		struct ext4_extent_leaf *p;
 
-		for (i = 0, p = (struct ext4_extent_leaf *)(header + 1); i < header->entries; i++)
+		for (i = 0, p = (struct ext4_extent_leaf *) (header + 1); i < header->entries; i++)
 		{
 			cavan_ext4_dump_ext4_extent_leaf(p + i);
 			println("index = %d", i);
@@ -165,7 +165,7 @@ void cavan_ext4_dump_ext4_group_desc(const struct ext4_group_desc *desc)
 	print_sep(60);
 	pr_bold_info("ext4 group desc %p", desc);
 
-	cavan_ext4_dump_ext2_group_desc_base((const struct ext2_group_desc *)desc);
+	cavan_ext4_dump_ext2_group_desc_base((const struct ext2_group_desc *) desc);
 	println("bg_block_bitmap_hi = %d", desc->bg_block_bitmap_hi);
 	println("bg_inode_bitmap_hi = %d", desc->bg_inode_bitmap_hi);
 	println("bg_inode_table_hi = %d", desc->bg_inode_table_hi);
@@ -253,7 +253,7 @@ static void cavan_ext4_dump_ext2_inode_base(const struct ext2_inode *inode)
 
 	if (inode->i_flags & EXT4_EXTENTS_FL)
 	{
-		cavan_ext4_dump_ext4_extent_list((struct ext4_extent_header *)inode->i_block);
+		cavan_ext4_dump_ext4_extent_list((struct ext4_extent_header *) inode->i_block);
 	}
 	else if (S_ISLNK(inode->i_mode))
 	{
@@ -287,7 +287,7 @@ void cavan_ext4_dump_ext2_inode_large(const struct ext2_inode_large *inode)
 	print_sep(60);
 	pr_bold_info("ext2 inode large %p", inode);
 
-	cavan_ext4_dump_ext2_inode_base((const struct ext2_inode *)inode);
+	cavan_ext4_dump_ext2_inode_base((const struct ext2_inode *) inode);
 
 	println("i_extra_isize = %d", inode->i_extra_isize);
 	println("i_checksum_hi = %d", inode->i_checksum_hi);
@@ -495,7 +495,7 @@ static struct ext2_group_desc *cavan_ext4_get_group(struct cavan_ext4_fs *fs, u3
 		return fs->gdt32 + index;
 	}
 
-	return (struct ext2_group_desc *)(fs->gdt64 + index);
+	return (struct ext2_group_desc *) (fs->gdt64 + index);
 }
 
 static inline u64 cavan_ext4_inode_index_to_group(struct cavan_ext4_fs *fs, u32 index)
@@ -703,7 +703,7 @@ static int cavan_ext4_traversal_extent(struct cavan_ext4_walker *walker, struct 
 	if (header->depth > 0)
 	{
 		struct ext4_extent_index *index_end;
-		struct ext4_extent_index *index = (struct ext4_extent_index *)(header + 1);
+		struct ext4_extent_index *index = (struct ext4_extent_index *) (header + 1);
 
 		for (index_end = index + header->entries; index < index_end; index++)
 		{
@@ -727,7 +727,7 @@ static int cavan_ext4_traversal_extent(struct cavan_ext4_walker *walker, struct 
 	else
 	{
 		struct ext4_extent_leaf *leaf_end;
-		struct ext4_extent_leaf *leaf = (struct ext4_extent_leaf *)(header + 1);
+		struct ext4_extent_leaf *leaf = (struct ext4_extent_leaf *) (header + 1);
 
 		for (leaf_end = leaf + header->entries; leaf < leaf_end; leaf++)
 		{
@@ -1055,7 +1055,7 @@ static int cavan_ext4_read_inode_data_to_buff_handler(struct cavan_ext4_read_ino
 
 static int cavan_ext4_read_inode_data_to_file_handler(struct cavan_ext4_read_inode_data_context *context, void *buff, off_t offset, size_t size)
 {
-	return ffile_write(*(int *)context->data, buff, size);
+	return ffile_write(*(int *) context->data, buff, size);
 }
 
 ssize_t cavan_ext4_read_inode_data(struct cavan_ext4_fs *fs, struct ext2_inode_large *inode, size_t skip, void *buff, size_t size, int (*handler)(struct cavan_ext4_read_inode_data_context *context, void *buff, off_t offset, size_t size), void *data)

@@ -219,16 +219,16 @@ using namespace std;
 		switch (sizeof(a[0])) \
 		{ \
 		case 8: \
-			text_show64((const u64 *)a, ARRAY_SIZE(a)); \
+			text_show64((const u64 *) a, ARRAY_SIZE(a)); \
 			break; \
 		case 4: \
-			text_show32((const u32 *)a, ARRAY_SIZE(a)); \
+			text_show32((const u32 *) a, ARRAY_SIZE(a)); \
 			break; \
 		case 2: \
-			text_show16((const u16 *)a, ARRAY_SIZE(a)); \
+			text_show16((const u16 *) a, ARRAY_SIZE(a)); \
 			break; \
 		default: \
-			text_show((const char *)a, sizeof(a)); \
+			text_show((const char *) a, sizeof(a)); \
 		} \
 	} while (0)
 

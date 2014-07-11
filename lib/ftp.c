@@ -92,7 +92,7 @@ static ssize_t ftp_send_text_data(int sockfd, const char *text, size_t size)
 
 	for (p = buff, text_end = text + size; text < text_end; p++, text++)
 	{
-		switch (*(const char *)text)
+		switch (*(const char *) text)
 		{
 		case '\r':
 			break;
@@ -100,7 +100,7 @@ static ssize_t ftp_send_text_data(int sockfd, const char *text, size_t size)
 		case '\n':
 			*p++ = '\r';
 		default:
-			*p = *(const char *)text;
+			*p = *(const char *) text;
 		}
 	}
 
@@ -393,7 +393,7 @@ static int ftp_service_login(int sockfd)
 			return recvlen;
 		}
 
-		switch (*(u32 *)buff)
+		switch (*(u32 *) buff)
 		{
 		/* quit */
 		case 0x74697571:
@@ -546,7 +546,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		}
 #endif
 
-		switch (*(u32 *)cmd_buff)
+		switch (*(u32 *) cmd_buff)
 		{
 		/* quit */
 		case 0x74697571:
@@ -1215,7 +1215,7 @@ int ftp_client_send_pasv_command(int sockfd, struct sockaddr_in *addr)
 
 	addr->sin_family = AF_INET;
 	addr->sin_addr.s_addr = htonl(data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3]);
-	addr->sin_port = htons((u16)(data[4] << 8 | data[5]));
+	addr->sin_port = htons((u16) (data[4] << 8 | data[5]));
 
 	inet_show_sockaddr(addr);
 

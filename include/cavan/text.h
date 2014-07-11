@@ -301,7 +301,7 @@ static inline int text_contain_char(const char *text, char c)
 
 static inline void text_reverse2(char *text, size_t size)
 {
-	mem_reverse_simple((byte *)text, (byte *)text + size - 1);
+	mem_reverse_simple((byte *) text, (byte *) text + size - 1);
 }
 
 static inline void text_reverse3(char *text)

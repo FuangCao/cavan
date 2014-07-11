@@ -78,7 +78,7 @@ typedef struct
 } cavan_point_t;
 
 #define ARRAY_SIZE(a)				(sizeof(a) / sizeof((a)[0]))
-#define NELEM(a)					((int)ARRAY_SIZE(a))
+#define NELEM(a)					((int) ARRAY_SIZE(a))
 #define MOFS(type, member)			MEMBER_OFFSET(type, member)
 
 #define BUILD_MASK(type, count) \
@@ -91,7 +91,7 @@ typedef struct
 	((b) == ' ' || (b) == '\t')
 
 #define POINTER_ASSIGN_CASE(dest, src) \
-	((dest) = (typeof(dest))(src))
+	((dest) = (typeof(dest)) (src))
 
 #define MEMBER_OFFSET(type, member) \
 	((long)&((type *)0)->member)
@@ -100,13 +100,13 @@ typedef struct
 	MEMBER_OFFSET(type, member)
 
 #define MEMBER_TO_STRUCT(addr, type, member) \
-	((type *)((byte *)(addr) - MEMBER_OFFSET(type, member)))
+	((type *) ((byte *) (addr) - MEMBER_OFFSET(type, member)))
 
 #define POINTER_ADD(pointer, offset) \
-	((void *)(((byte *)(pointer)) + (offset)))
+	((void *) (((byte *) (pointer)) + (offset)))
 
 #define POINTER_SUB(pointer, offset) \
-	((void *)(((byte *)(pointer)) - (offset)))
+	((void *) (((byte *) (pointer)) - (offset)))
 
 #define ADDR_ADD(addr, offset) \
 	POINTER_ADD(addr, offset)
@@ -115,7 +115,7 @@ typedef struct
 	POINTER_SUB(addr, offset)
 
 #define ADDR_SUB2(addr1, addr2) \
-	((byte *)(addr1) - (byte *)(addr2))
+	((byte *) (addr1) - (byte *) (addr2))
 
 #define ADDR_IS_ALIGN(addr, bits) \
 	((((long) (addr)) & ((bits) - 1)) == 0)
@@ -127,10 +127,10 @@ typedef struct
 	(p) = malloc(sizeof(*p))
 
 #define BYTES_WORD(h, l) \
-	(((u16)(h)) << 8 | (l))
+	(((u16) (h)) << 8 | (l))
 
 #define WORDS_DWORD(h, l) \
-	(((u32)(h)) << 16 | (l))
+	(((u32) (h)) << 16 | (l))
 
 #define BYTES_DWORD(b1, b2, b3, b4) \
 	WORDS_DWORD(BYTES_WORD(b1, b2), BYTES_WORD(b3, b4))

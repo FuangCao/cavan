@@ -14,7 +14,7 @@ static struct cavan_net_bridge_addr *cavan_net_bridge_port_addr_get(struct cavan
 	{
 		if (auto_remove && second - node->time > NET_BRIDGE_ADDR_TIMEOUT)
 		{
-			pr_bold_info("[REMOVE] %s => %d", mac_address_tostring((char *)node->addr, MAC_ADDRESS_LEN), port->client.sockfd);
+			pr_bold_info("[REMOVE] %s => %d", mac_address_tostring((char *) node->addr, MAC_ADDRESS_LEN), port->client.sockfd);
 			double_link_remove_base(&node->node.node);
 			cavan_data_pool_node_free(&port->addr_pool, node);
 		}
@@ -46,7 +46,7 @@ static int cavan_net_bridge_port_addr_put(struct cavan_net_bridge_port *port, co
 		memcpy(node->addr, addr, MAC_ADDRESS_LEN);
 		double_link_append(&port->addr_list, &node->node.node);
 
-		pr_bold_info("[ADD] %s => %d", mac_address_tostring((char *)addr, MAC_ADDRESS_LEN), port->client.sockfd);
+		pr_bold_info("[ADD] %s => %d", mac_address_tostring((char *) addr, MAC_ADDRESS_LEN), port->client.sockfd);
 	}
 
 	node->time = time(NULL);

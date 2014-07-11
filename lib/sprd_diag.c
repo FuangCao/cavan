@@ -64,7 +64,7 @@ void sprd_diag_show_data(const char *prompt, const char *data, size_t size)
 
 	for (p = buff, data_end = data + size; data < data_end; data++)
 	{
-		p += sprintf(p, "%02x", *(u8 *)data);
+		p += sprintf(p, "%02x", *(u8 *) data);
 	}
 
 	*p = 0;
@@ -192,7 +192,7 @@ size_t sprd_diag_encode_message(const struct sprd_diag_message_desc *message, co
 
 	p = dest;
 	*p++ = SPRD_DIAG_FLAG_BYTE;
-	p = sprd_diag_encode_data((const char *)message, sizeof(*message), p, dest_end - p);
+	p = sprd_diag_encode_data((const char *) message, sizeof(*message), p, dest_end - p);
 	p = sprd_diag_encode_data(src, srclen, p, dest_end - p);
 	*p++ = SPRD_DIAG_FLAG_BYTE;
 

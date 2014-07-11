@@ -34,7 +34,7 @@ static struct ext2_group_desc *ext2_read_gdt(struct ext2_desc *desc)
 	}
 
 	rdlen = ffile_readfrom(desc->fd, gdt, gdt_size, BOOT_BLOCK_SIZE + desc->block_size);
-	if ((size_t)rdlen != gdt_size)
+	if ((size_t) rdlen != gdt_size)
 	{
 		pr_error_info("ffile_readfrom");
 		goto out_free_gdt;
@@ -181,7 +181,7 @@ void show_ext2_super_block(const struct ext2_super_block *super_block)
 	println("feature_compat = 0x%08x", super_block->feature_compat);
 	println("feature_incompat = 0x%08x", super_block->feature_incompat);
 	println("feature_ro_compat = 0x%08x", super_block->feature_ro_compat);
-	println("uuid[16] = %s", text_header((char *)super_block->uuid, 16));
+	println("uuid[16] = %s", text_header((char *) super_block->uuid, 16));
 	println("volume_name[16] = %s", text_header(super_block->volume_name, 16));
 	println("last_mounted[64] = %s", text_header(super_block->last_mounted, 64));
 	println("algorithm_usage_bitmap = %d", super_block->algorithm_usage_bitmap);
@@ -394,7 +394,7 @@ static int ext4_find_file_base(struct ext2_desc *desc, const char *filename, str
 	if (header->depth > 0)
 	{
 		struct ext4_extent_index *index_end;
-		struct ext4_extent_index *index = (struct ext4_extent_index *)(header + 1);
+		struct ext4_extent_index *index = (struct ext4_extent_index *) (header + 1);
 
 		for (index_end = index + header->entries; index < index_end; index++)
 		{
@@ -419,7 +419,7 @@ static int ext4_find_file_base(struct ext2_desc *desc, const char *filename, str
 	{
 		struct ext2_directory_entry *p, *p_end;
 		struct ext4_extent_leaf *leaf_end;
-		struct ext4_extent_leaf *leaf = (struct ext4_extent_leaf *)(header + 1);
+		struct ext4_extent_leaf *leaf = (struct ext4_extent_leaf *) (header + 1);
 
 		p = alloca(desc->block_size);
 		p_end = ADDR_ADD(p, desc->block_size);
@@ -694,7 +694,7 @@ static int cavan_ext4_data_block_traversal(struct ext2_desc *desc, struct ext4_e
 	{
 		char buff[desc->block_size];
 		struct ext4_extent_index *index_end;
-		struct ext4_extent_index *index = (struct ext4_extent_index *)(header + 1);
+		struct ext4_extent_index *index = (struct ext4_extent_index *) (header + 1);
 
 		for (index_end = index + header->entries; index < index_end; index++)
 		{
@@ -723,7 +723,7 @@ static int cavan_ext4_data_block_traversal(struct ext2_desc *desc, struct ext4_e
 	else
 	{
 		struct ext4_extent_leaf *leaf_end;
-		struct ext4_extent_leaf *leaf = (struct ext4_extent_leaf *)(header + 1);
+		struct ext4_extent_leaf *leaf = (struct ext4_extent_leaf *) (header + 1);
 
 		for (leaf_end = leaf + header->entries; leaf < leaf_end; leaf++)
 		{

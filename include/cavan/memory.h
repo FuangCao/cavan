@@ -21,7 +21,7 @@
 	} while (0)
 
 #define assign(addr, value, type) \
-	(*(type *)(addr) = (type)(value))
+	(*(type *) (addr) = (type) (value))
 
 #define assign8(addr, value) \
 	assign(addr, value, u8)
@@ -117,23 +117,23 @@ static inline size_t mem_delete_char(char *mem, const size_t size, const char c)
 
 static inline void *mem_write8(void *mem, u8 value)
 {
-	*(volatile u8 *)mem = value;
+	*(volatile u8 *) mem = value;
 
-	return (u8 *)mem + 1;
+	return (u8 *) mem + 1;
 }
 
 static inline void *mem_write16(void *mem, u16 value)
 {
-	*(volatile u16 *)mem = value;
+	*(volatile u16 *) mem = value;
 
-	return (u16 *)mem + 1;
+	return (u16 *) mem + 1;
 }
 
 static inline void *mem_write32(void *mem, u32 value)
 {
-	*(volatile u32 *)mem = value;
+	*(volatile u32 *) mem = value;
 
-	return (u32 *)mem + 1;
+	return (u32 *) mem + 1;
 }
 
 static inline u8 mem_checksum8(const void *mem, size_t count)

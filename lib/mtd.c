@@ -329,7 +329,7 @@ ssize_t cavan_mtd_write_block(struct mtd_partition_descriptor *desc, const void 
 		}
 
 		writelen = write(fd, buff, erase_size);
-		if ((size_t)writelen != erase_size)
+		if ((size_t) writelen != erase_size)
 		{
 			print_error("write");
 			return writelen;

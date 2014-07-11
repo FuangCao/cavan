@@ -49,7 +49,7 @@ struct ColorComponent
 
 	u32 build(float value)
 	{
-		return ((u32)(value * max)) << offset;
+		return ((u32) (value * max)) << offset;
 	}
 };
 
@@ -62,7 +62,7 @@ private:
 public:
 	LineEquation(int x1, int y1, int x2, int y2)
 	{
-		a = (x1 == x2) ? 1 : ((double)(y2 - y1)) / ((double)(x2 - x1));
+		a = (x1 == x2) ? 1 : ((double) (y2 - y1)) / ((double) (x2 - x1));
 		b = y1 - x1 * a;
 	}
 
@@ -73,7 +73,7 @@ public:
 
 	int getX(int y)
 	{
-		return ((double)(y - b)) / a;
+		return ((double) (y - b)) / a;
 	}
 };
 

@@ -86,7 +86,7 @@ int frle_to(int fd_in, int fd_out)
 		ret = -1;
 	}
 
-	munmap((void *)data_in, st.st_size);
+	munmap((void *) data_in, st.st_size);
 
 	return ret;
 }
@@ -200,7 +200,7 @@ int funrle_to(int fd_in, int fd_out)
 		ret = -1;
 	}
 
-	munmap((void *)data_in, st.st_size);
+	munmap((void *) data_in, st.st_size);
 
 	return ret;
 }

@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
 
 		if (show_bitmask)
 		{
-			value2bitlist((u64)result, buff, sizeof(buff), " | ");
+			value2bitlist((u64) result, buff, sizeof(buff), " | ");
 
 			println("%s", buff);
 		}

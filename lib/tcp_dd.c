@@ -18,7 +18,7 @@ static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 		return;
 	}
 
-	if ((int)res->code < 0)
+	if ((int) res->code < 0)
 	{
 		if (res->number)
 		{
@@ -444,7 +444,7 @@ static int tcp_dd_handle_alarm_add_request(struct network_client *client, struct
 		return -ENOMEM;
 	}
 
-	command = (char *)(node + 1);
+	command = (char *) (node + 1);
 	text_copy(command, req->command);
 
 	cavan_alarm_node_init(node, command, tcp_dd_alarm_handler);

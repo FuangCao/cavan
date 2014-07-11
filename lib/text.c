@@ -567,10 +567,10 @@ void text_show(const char *text, size_t size)
 
 	for (end_text = text + size - 1; text < end_text; text++)
 	{
-		print("%02x ", *(u8 *)text);
+		print("%02x ", *(u8 *) text);
 	}
 
-	print("%02x\n", *(u8 *)text);
+	print("%02x\n", *(u8 *) text);
 }
 
 void text_show16(const u16 *text, size_t count)
@@ -1048,7 +1048,7 @@ char *simple_value2text_reverse(u64 value, char *buff, size_t size, int base)
 {
 	if (value == 0)
 	{
-		*(u16 *)buff = 0x0030;
+		*(u16 *) buff = 0x0030;
 		return buff + 1;
 	}
 
@@ -1079,7 +1079,7 @@ char *simple_value2text_unsigned(u64 value, char *buff, size_t size, int base)
 	char *tail;
 
 	tail = simple_value2text_reverse(value, buff, size, base);
-	mem_reverse_simple((byte *)buff, (byte *) tail - 1);
+	mem_reverse_simple((byte *) buff, (byte *) tail - 1);
 
 	return tail;
 }
@@ -1100,7 +1100,7 @@ char *base2prefix(int base, char *prefix)
 	switch (base)
 	{
 	case 2:
-		*(u16 *)prefix = 0x4230;
+		*(u16 *) prefix = 0x4230;
 		prefix += 2;
 		break;
 
@@ -1109,12 +1109,12 @@ char *base2prefix(int base, char *prefix)
 		break;
 
 	case 10:
-		*(u16 *)prefix = 0x4430;
+		*(u16 *) prefix = 0x4430;
 		prefix += 2;
 		break;
 
 	case 16:
-		*(u16 *)prefix = 0x7830;
+		*(u16 *) prefix = 0x7830;
 		prefix += 2;
 		break;
 	}
@@ -1139,7 +1139,7 @@ char *base2prefix_reverse(char *text, size_t size, int base)
 	switch (base)
 	{
 	case 2:
-		*(u16 *)text = 0x3042;
+		*(u16 *) text = 0x3042;
 		text += 2;
 		break;
 
@@ -1148,12 +1148,12 @@ char *base2prefix_reverse(char *text, size_t size, int base)
 		break;
 
 	case 10:
-		*(u16 *)text = 0x3044;
+		*(u16 *) text = 0x3044;
 		text += 2;
 		break;
 
 	case 16:
-		*(u16 *)text = 0x3078;
+		*(u16 *) text = 0x3078;
 		text += 2;
 		break;
 	}
@@ -1521,19 +1521,19 @@ static u64 get_argument(char *args, int size)
 	switch (size)
 	{
 	case 1:
-		value = *(u8 *)args;
+		value = *(u8 *) args;
 		break;
 
 	case 2:
-		value = *(u16 *)args;
+		value = *(u16 *) args;
 		break;
 
 	case 4:
-		value = *(u32 *)args;
+		value = *(u32 *) args;
 		break;
 
 	case 8:
-		value = *(u64 *)args;
+		value = *(u64 *) args;
 		break;
 
 	default:
@@ -1628,7 +1628,7 @@ start_parse:
 
 			case 'c':
 			case 'C':
-				*buff++ = *(char *)args;
+				*buff++ = *(char *) args;
 				break;
 
 			case '%':
@@ -1637,7 +1637,7 @@ start_parse:
 
 			case 's':
 			case 'S':
-				buff = text_copy(buff, *(char **)args);
+				buff = text_copy(buff, *(char **) args);
 				break;
 
 			default:
@@ -2608,10 +2608,10 @@ char *mac_address_tostring_base(const char *mac, size_t maclen, char *buff)
 
 	for (mac_end = mac + maclen - 1, p = buff; mac < mac_end; mac++)
 	{
-		p += sprintf(p, "%02x:", *(u8 *)mac);
+		p += sprintf(p, "%02x:", *(u8 *) mac);
 	}
 
-	return p + sprintf(p, "%02x", *(u8 *)mac);
+	return p + sprintf(p, "%02x", *(u8 *) mac);
 }
 
 char *mac_address_tostring(const char *mac, size_t maclen)

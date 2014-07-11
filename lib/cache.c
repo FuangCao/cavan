@@ -479,7 +479,7 @@ struct cavan_cache *cavan_cache_create(size_t size)
 		return NULL;
 	}
 
-	if (cavan_cache_init(cache, (void *)(cache + 1), size) < 0)
+	if (cavan_cache_init(cache, (void *) (cache + 1), size) < 0)
 	{
 		pr_red_info("cavan_cache_init");
 		free(cache);

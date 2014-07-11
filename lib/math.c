@@ -173,7 +173,7 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 		*text++ = '-';
 	}
 
-	mem_reverse_simple((byte *)text_bak, (byte *) text - 1);
+	mem_reverse_simple((byte *) text_bak, (byte *) text - 1);
 
 	*text = 0;
 
@@ -1022,7 +1022,7 @@ byte math_memory_mul_unsigned(const byte *left, size_t lsize, const byte *right,
 				return 0xFF;
 			}
 
-			math_memory_copy((byte *)right, rsize, right_bak, rsize);
+			math_memory_copy((byte *) right, rsize, right_bak, rsize);
 		}
 
 		math_memory_copy(buff, lsize, left, lsize);
@@ -1316,9 +1316,9 @@ size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsiz
 	}
 	else
 	{
-		res_size = math_memory_div((byte *)left, lsize, right, rsize, buff, lsize);
+		res_size = math_memory_div((byte *) left, lsize, right, rsize, buff, lsize);
 		math_memory_show("Remainder = ", left, lsize, base);
-		math_memory_copy((byte *)left, lsize, buff, lsize);
+		math_memory_copy((byte *) left, lsize, buff, lsize);
 	}
 
 	return res_size;

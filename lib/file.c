@@ -1790,7 +1790,7 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 		size = tmp;
 	}
 
-	if ((size_t)offset >= size)
+	if ((size_t) offset >= size)
 	{
 		return -EINVAL;
 	}
@@ -1832,7 +1832,7 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 
 	checksum = (checksum >> 32) + (checksum & 0xFFFFFFFF);
 
-	return (u32)((checksum >> 32) + checksum);
+	return (u32) ((checksum >> 32) + checksum);
 }
 
 u16 ffile_checksum16_simple(int fd, off_t offset, size_t size)
@@ -1841,7 +1841,7 @@ u16 ffile_checksum16_simple(int fd, off_t offset, size_t size)
 
 	checksum = (checksum >> 16) + (checksum & 0xFFFF);
 
-	return (u16)((checksum >> 16) + checksum);
+	return (u16) ((checksum >> 16) + checksum);
 }
 
 u8 ffile_checksum8_simple(int fd, off_t offset, size_t size)
@@ -1850,7 +1850,7 @@ u8 ffile_checksum8_simple(int fd, off_t offset, size_t size)
 
 	checksum = (checksum >> 8) + (checksum & 0xFF);
 
-	return (u8)((checksum >> 8) + checksum);
+	return (u8) ((checksum >> 8) + checksum);
 }
 
 u32 file_checksum32(const char *filename, off_t offset, size_t size)

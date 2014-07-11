@@ -58,7 +58,7 @@ struct cavan_xml_attribute *cavan_xml_attribute_alloc(const char *name, const ch
 out_free_name:
 	if ((flags & CAVAN_XML_FLAG_NAME_ALLOC))
 	{
-		free((char *)name);
+		free((char *) name);
 	}
 out_free_attr:
 	free(attr);
@@ -69,12 +69,12 @@ void cavan_xml_attribute_free(struct cavan_xml_attribute *attr)
 {
 	if (attr->name && (attr->flags & CAVAN_XML_FLAG_NAME_ALLOC))
 	{
-		free((char *)attr->name);
+		free((char *) attr->name);
 	}
 
 	if (attr->value && (attr->flags & CAVAN_XML_FLAG_VALUE_ALLOC))
 	{
-		free((char *)attr->value);
+		free((char *) attr->value);
 	}
 
 	free(attr);
@@ -128,7 +128,7 @@ bool cavan_xml_attribute_set_name(struct cavan_xml_attribute *attr, const char *
 
 	if (attr->name && (attr->flags & CAVAN_XML_FLAG_NAME_ALLOC))
 	{
-		free((char *)attr->name);
+		free((char *) attr->name);
 	}
 
 	attr->name = name;
@@ -158,7 +158,7 @@ bool cavan_xml_attribute_set_value(struct cavan_xml_attribute *attr, const char 
 
 	if (attr->value && (attr->flags & CAVAN_XML_FLAG_VALUE_ALLOC))
 	{
-		free((char *)attr->value);
+		free((char *) attr->value);
 	}
 
 	attr->value = value;
@@ -340,7 +340,7 @@ struct cavan_xml_tag *cavan_xml_tag_alloc(const char *name, const char *content,
 out_free_name:
 	if ((flags & CAVAN_XML_FLAG_NAME_ALLOC))
 	{
-		free((char *)name);
+		free((char *) name);
 	}
 out_free_tag:
 	free(tag);
@@ -361,12 +361,12 @@ void cavan_xml_tag_free(struct cavan_xml_tag *tag)
 
 	if (tag->name && (tag->flags & CAVAN_XML_FLAG_NAME_ALLOC))
 	{
-		free((char *)tag->name);
+		free((char *) tag->name);
 	}
 
 	if (tag->content && (tag->flags & CAVAN_XML_FLAG_CONTENT_ALLOC))
 	{
-		free((char *)tag->content);
+		free((char *) tag->content);
 	}
 
 	free(tag);
@@ -385,7 +385,7 @@ bool cavan_xml_tag_set_name(struct cavan_xml_tag *tag, const char *name, int fla
 
 	if (tag->name && (tag->flags & CAVAN_XML_FLAG_NAME_ALLOC))
 	{
-		free((char *)tag->name);
+		free((char *) tag->name);
 	}
 
 	tag->name = name;
@@ -415,7 +415,7 @@ bool cavan_xml_tag_set_content(struct cavan_xml_tag *tag, const char *content, i
 
 	if (tag->content && (tag->flags & CAVAN_XML_FLAG_CONTENT_ALLOC))
 	{
-		free((char *)tag->content);
+		free((char *) tag->content);
 	}
 
 	tag->content = content;

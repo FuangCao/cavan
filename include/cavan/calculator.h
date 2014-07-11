@@ -137,20 +137,20 @@ static inline int double_exponent_part_value_base(u64 value)
 
 static inline int double_exponent_part_value(double *value)
 {
-	return double_exponent_part_value_base(*(u64 *)value);
+	return double_exponent_part_value_base(*(u64 *) value);
 }
 
 static inline u64 double_integer_part_value(double *value)
 {
-	return double_integer_part_value_base(*(u64 *)value);
+	return double_integer_part_value_base(*(u64 *) value);
 }
 
 static inline u64 double_fractional_part_value(double *value)
 {
-	return double_fractional_part_value_base(*(u64 *)value);
+	return double_fractional_part_value_base(*(u64 *) value);
 }
 
 static inline char *double2text(double *value, char *text, int size, char fill, int flags)
 {
-	return double2text_base(*(u64 *)value, text, size, fill, flags);
+	return double2text_base(*(u64 *) value, text, size, fill, flags);
 }

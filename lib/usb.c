@@ -18,7 +18,7 @@ int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *des
 
 	dev_desc = &desc->dev_desc;
 
-	if (is_usb_device_descriptor((struct usb_device_descriptor *)buff))
+	if (is_usb_device_descriptor((struct usb_device_descriptor *) buff))
 	{
 		memcpy(dev_desc, buff, USB_DT_DEVICE_SIZE);
 		buff += USB_DT_DEVICE_SIZE;
@@ -31,7 +31,7 @@ int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *des
 
 	for (cfg_desc = desc->cfg_descs, cfg_desc_end = cfg_desc + dev_desc->bNumConfigurations; cfg_desc < cfg_desc_end; cfg_desc++)
 	{
-		if (is_usb_config_descriptor((struct usb_config_descriptor *)buff))
+		if (is_usb_config_descriptor((struct usb_config_descriptor *) buff))
 		{
 			memcpy(cfg_desc, buff, USB_DT_CONFIG_SIZE);
 			buff += USB_DT_CONFIG_SIZE;
@@ -46,7 +46,7 @@ int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *des
 	desc->if_count = 0;
 	end_buff = buff + length - USB_DT_INTERFACE_SIZE;
 
-	while (buff <= end_buff && is_usb_interface_descriptor((struct usb_interface_descriptor *)buff))
+	while (buff <= end_buff && is_usb_interface_descriptor((struct usb_interface_descriptor *) buff))
 	{
 		struct usb_interface_descriptor *if_desc;
 		struct cavan_usb_interface_descriptor *cavan_if_desc;

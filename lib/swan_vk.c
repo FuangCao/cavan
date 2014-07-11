@@ -433,7 +433,7 @@ static int swan_vk_send_line_base(int fd, int x0, int y0, int x1, int y1)
 
 	pr_bold_info("%s: [%d, %d] => [%d, %d]", __FUNCTION__, x0, y0, x1, y1);
 
-	if (((u32)x0) >= 100 || ((u32)x1) >= 100 || ((u32)y0) >= 100 || ((u32)y1) >= 100)
+	if (((u32) x0) >= 100 || ((u32) x1) >= 100 || ((u32) y0) >= 100 || ((u32) y1) >= 100)
 	{
 		pr_red_info("some axis is wrong");
 		return -EINVAL;
@@ -555,7 +555,7 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 			break;
 		}
 
-		if (*(u32 *)events == SWAN_VK_STOP_VALUE)
+		if (*(u32 *) events == SWAN_VK_STOP_VALUE)
 		{
 			break;
 		}

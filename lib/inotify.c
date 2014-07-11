@@ -147,7 +147,7 @@ int cavan_inotify_event_loop(struct cavan_inotify_descriptor *desc, int (*handle
 		}
 
 		p = (struct inotify_event *) buff;
-		p_end = (struct inotify_event *)(buff + readlen);
+		p_end = (struct inotify_event *) (buff + readlen);
 
 		while (p < p_end)
 		{
@@ -157,7 +157,7 @@ int cavan_inotify_event_loop(struct cavan_inotify_descriptor *desc, int (*handle
 				handle(watch->pathname, p, watch->data);
 			}
 
-			p = (struct inotify_event *)((char *)(p + 1) + p->len);
+			p = (struct inotify_event *) ((char *) (p + 1) + p->len);
 		}
 	}
 

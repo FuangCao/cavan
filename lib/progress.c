@@ -9,7 +9,7 @@ static void progress_bar_fflush(struct progress_bar *bar)
 
 static int update_percent(struct progress_bar *bar)
 {
-	int percent = (int)(((double)bar->current) * 100 / bar->total);
+	int percent = (int) (((double) bar->current) * 100 / bar->total);
 
 	if (percent == bar->percent)
 	{
@@ -47,7 +47,7 @@ static int update_content(struct progress_bar *bar)
 {
 	int length;
 
-	length = (int)(((double)bar->current) * HALF_LENGTH * 2 / bar->total);
+	length = (int) (((double) bar->current) * HALF_LENGTH * 2 / bar->total);
 
 	if (length == bar->length)
 	{

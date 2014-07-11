@@ -264,7 +264,7 @@ char *mem_area_copy(char *dest, const char *src, const char *src_end)
 {
 	while (src <= src_end)
 	{
-		*(char *)dest++ = *(char *)src++;
+		*(char *) dest++ = *(char *) src++;
 	}
 
 	return dest;

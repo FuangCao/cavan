@@ -840,7 +840,7 @@ lable_send_ack:
 		switch (ntohs(pkg.op_code))
 		{
 		case TFTP_DATA:
-			if ((int)ntohs(pkg.data.blk_num) != blk_num + 1)
+			if ((int) ntohs(pkg.data.blk_num) != blk_num + 1)
 			{
 				warning_msg("data blk_num != %d", blk_num + 1);
 				goto lable_send_ack;
@@ -978,7 +978,7 @@ lable_send_data:
 		switch (ntohs(pkg.op_code))
 		{
 		case TFTP_ACK:
-			if ((int)ntohs(pkg.ack.blk_num) != blk_num + 1)
+			if ((int) ntohs(pkg.ack.blk_num) != blk_num + 1)
 			{
 				warning_msg("blk_num %d != %d", ntohs(pkg.ack.blk_num), blk_num + 1);
 				goto lable_send_data;

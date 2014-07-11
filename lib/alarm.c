@@ -135,7 +135,7 @@ static bool cavan_alarm_insert_matcher(struct double_link *link, struct double_l
 {
 	struct cavan_alarm_node *alarm_node = double_link_get_container(link, node);
 
-	return alarm_node->time > *(time_t *)data;
+	return alarm_node->time > *(time_t *) data;
 }
 
 static inline void cavan_alarm_insert_node_base(struct cavan_alarm_thread *thread, struct cavan_alarm_node *node)

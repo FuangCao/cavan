@@ -17,7 +17,7 @@ int cavan_build_line_equation(int x1, int y1, int x2, int y2, double *a, double 
 	// println("x1 = %d, y1 = %d, x2 = %d, y2 = %d", x1, y1, x2, y2);
 
 	x_diff = x2 - x1;
-	*a = ((double)(y2 - y1)) / x_diff;
+	*a = ((double) (y2 - y1)) / x_diff;
 	*b = y1 - *a * x1;
 
 	return 0;
@@ -350,8 +350,8 @@ int cavan_display_draw_ellipse_dummy(struct cavan_display_device *display, int x
 	int i;
 	cavan_display_draw_point_handler_t handler;
 
-	aa = ((double)width) / 2;
-	bb = ((double)height) / 2;
+	aa = ((double) width) / 2;
+	bb = ((double) height) / 2;
 
 	if (x - aa < 0 || x + aa >= display->xres || y - bb < 0 || y + bb >= display->yres)
 	{
@@ -393,8 +393,8 @@ int cavan_display_fill_ellipse_dummy(struct cavan_display_device *display, int x
 	int i;
 	cavan_display_draw_point_handler_t handler;
 
-	aa = ((double)width) / 2;
-	bb = ((double)height) / 2;
+	aa = ((double) width) / 2;
+	bb = ((double) height) / 2;
 
 	if (x - aa < 0 || x + aa >= display->xres || y - bb < 0 || y + bb >= display->yres)
 	{
@@ -1326,25 +1326,25 @@ struct cavan_display_memory_rect *cavan_display_memory_rect_alloc(struct cavan_d
 		return mem_rect;
 	}
 
-	mem = (struct cavan_display_memory *)(mem_rect + 1);
+	mem = (struct cavan_display_memory *) (mem_rect + 1);
 	mem->width = mem->height = 0;
 	mem->width_max = width;
 	mem->height_max = border_width;
 	mem_rect->mems[0] = mem;
 
-	mem = (struct cavan_display_memory *)(((byte *)mem) + hsize);
+	mem = (struct cavan_display_memory *) (((byte *) mem) + hsize);
 	mem->width = mem->height = 0;
 	mem->width_max = width;
 	mem->height_max = border_width;
 	mem_rect->mems[1] = mem;
 
-	mem = (struct cavan_display_memory *)(((byte *)mem) + hsize);
+	mem = (struct cavan_display_memory *) (((byte *) mem) + hsize);
 	mem->width = mem->height = 0;
 	mem->width_max = border_width;
 	mem->height_max = height - border_width * 2;
 	mem_rect->mems[2] = mem;
 
-	mem = (struct cavan_display_memory *)(((byte *)mem) + vsize);
+	mem = (struct cavan_display_memory *) (((byte *) mem) + vsize);
 	mem->width = mem->height = 0;
 	mem->width_max = border_width;
 	mem->height_max = height - border_width * 2;

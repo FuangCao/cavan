@@ -33,16 +33,16 @@
 #endif
 
 #define CAVAN_SIZE_ALIGN(size, mask) \
-	(((size) + (mask)) & (~(typeof(size))(mask)))
+	(((size) + (mask)) & (~(typeof(size)) (mask)))
 
 #define CAVAN_SIZE_ALIGN_DOWN(size, mask) \
-	((size) & (~(typeof(size))(mask)))
+	((size) & (~(typeof(size)) (mask)))
 
 #define CAVAN_ADDR_ALIGN(addr, bytes) \
-	((typeof(addr))CAVAN_SIZE_ALIGN((long)(addr), bytes - 1))
+	((typeof(addr)) CAVAN_SIZE_ALIGN((long) (addr), bytes - 1))
 
 #define CAVAN_ADDR_ALIGN_DOWN(addr, bytes) \
-	((typeof(addr))CAVAN_SIZE_ALIGN_DOWN((long)(addr), bytes - 1)))
+	((typeof(addr)) CAVAN_SIZE_ALIGN_DOWN((long) (addr), bytes - 1)))
 
 #define CAVAN_SIZE_WORD_ALIGN(size) \
 	CAVAN_SIZE_ALIGN(size, CAVAN_WORD_BYTES)
@@ -63,7 +63,7 @@
 	((size) |= CAVAN_NODE_ALLOCATED_MASK)
 
 #define CAVAN_NODE_GET_REAL_SIZE(size) \
-	((size) & (~(typeof(size))CAVAN_NODE_ALLOCATED_MASK))
+	((size) & (~(typeof(size)) CAVAN_NODE_ALLOCATED_MASK))
 
 struct cavan_malloc_node
 {

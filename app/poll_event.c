@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	}
 
 	cavan_event_service_init(&service, cavan_event_simple_matcher);
-	ret = cavan_event_service_start(&service, (void *)dev_path);
+	ret = cavan_event_service_start(&service, (void *) dev_path);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_event_service_start");

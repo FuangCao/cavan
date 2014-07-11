@@ -294,14 +294,14 @@ static inline void *double_link_get_container(struct double_link *link, struct d
 
 static inline struct double_link_node *double_link_get_to_node(struct double_link *link, void *addr)
 {
-	return (struct double_link_node *)ADDR_ADD(addr, link->offset);
+	return (struct double_link_node *) ADDR_ADD(addr, link->offset);
 }
 
 // ================================================================================
 
 static inline bool single_link_node_match_equal(struct single_link *link, struct single_link_node *node, void *data)
 {
-	return node == (struct single_link_node *)data;
+	return node == (struct single_link_node *) data;
 }
 
 static inline void single_link_free_handler(struct single_link *link, struct single_link_node *node, void *data)
@@ -311,7 +311,7 @@ static inline void single_link_free_handler(struct single_link *link, struct sin
 
 static inline bool circle_link_node_match_equal(struct circle_link *link, struct single_link_node *node, void *data)
 {
-	return node == (struct single_link_node *)data;
+	return node == (struct single_link_node *) data;
 }
 
 static inline void circle_link_free_handler(struct circle_link *link, struct single_link_node *node, void *data)
@@ -321,7 +321,7 @@ static inline void circle_link_free_handler(struct circle_link *link, struct sin
 
 static inline bool double_link_node_match_equal(struct double_link *link, struct double_link_node *node, void *data)
 {
-	return node == (struct double_link_node *)data;
+	return node == (struct double_link_node *) data;
 }
 
 static inline void double_link_free_handler(struct double_link *link, struct double_link_node *node, void *data)
