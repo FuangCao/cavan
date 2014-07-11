@@ -81,8 +81,6 @@ void number_swap64(u64 *num1, u64 *num2);
 int mem_is_set(const char *mem, int value, size_t size);
 int mem_is_noset(const char *mem, int value, size_t size);
 
-u16 checksum16(const u16 *buff, size_t size);
-
 size_t mem_byte_count(const char *mem, byte c, size_t size);
 
 void mem_reverse_simple(byte *start, byte *end);
@@ -97,6 +95,10 @@ void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep,
 void mem_swap16(u16 *dest, const u16 *src, size_t count);
 void mem_swap32(u32 *dest, const u32 *src, size_t count);
 void mem_swap64(u64 *dest, const u64 *src, size_t count);
+
+u32 mem_checksum32_simple(const u8 *mem, size_t count);
+u16 mem_checksum16_simple(const u16 *mem, size_t size);
+u8 mem_checksum8_simple(const u8 *mem, size_t count);
 
 static inline char *mem_trans(char *text, size_t size)
 {
@@ -132,4 +134,19 @@ static inline void *mem_write32(void *mem, u32 value)
 	*(volatile u32 *)mem = value;
 
 	return (u32 *)mem + 1;
+}
+
+static inline u8 mem_checksum8(const void *mem, size_t count)
+{
+	return ~(mem_checksum8_simple((u8 *) mem, count));
+}
+
+static inline u16 mem_checksum16(const void *mem, size_t count)
+{
+	return ~(mem_checksum16_simple((u16 *) mem, count));
+}
+
+static inline u32 mem_checksum32(const void *mem, size_t count)
+{
+	return ~(mem_checksum32_simple((u8 *) mem, count));
 }

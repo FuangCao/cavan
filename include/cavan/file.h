@@ -134,10 +134,6 @@ int file_select_read(int fd, int timeout_ms);
 bool file_poll(int fd, short events, int timeout_ms);
 bool file_discard_all(int fd);
 
-u32 mem_checksum32_simple(const u8 *mem, size_t count);
-u16 mem_checksum16_simple(const u16 *mem, size_t size);
-u8 mem_checksum8_simple(const u8 *mem, size_t count);
-
 u32 ffile_checksum32_simple(int fd, off_t offset, size_t size);
 u16 ffile_checksum16_simple(int fd, off_t offset, size_t size);
 u8 ffile_checksum8_simple(int fd, off_t offset, size_t size);
@@ -269,21 +265,6 @@ static inline int ffile_ncrc32_back(int fd, size_t size, u32 *crc)
 static inline int file_ncrc32_back(const char *file_name, size_t size, u32 *crc)
 {
 	return file_ncrc32_seek(file_name, 0, SEEK_CUR, size, crc);
-}
-
-static inline u8 mem_checksum8(const void *mem, size_t count)
-{
-	return ~(mem_checksum8_simple((u8 *) mem, count));
-}
-
-static inline u16 mem_checksum16(const void *mem, size_t count)
-{
-	return ~(mem_checksum16_simple((u16 *) mem, count));
-}
-
-static inline u32 mem_checksum32(const void *mem, size_t count)
-{
-	return ~(mem_checksum32_simple((u8 *) mem, count));
 }
 
 static inline u32 ffile_checksum32(int fd, off_t offset, size_t size)

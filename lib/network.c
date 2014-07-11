@@ -309,6 +309,20 @@ void show_ping_header(struct ping_header *hdr)
 	println("seq = 0x%04x", hdr->seq);
 }
 
+void inet_show_sockaddr(const struct sockaddr_in *addr)
+{
+	u16 port = ntohs(addr->sin_port);
+
+	if (port && port != NETWORK_PORT_INVALID)
+	{
+		println("IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), port);
+	}
+	else
+	{
+		println("IP = %s", inet_ntoa(addr->sin_addr));
+	}
+}
+
 int cavan_route_table_init(struct cavan_route_table *table, size_t table_size)
 {
 	struct cavan_route_node **pp, **pp_end;
@@ -447,8 +461,8 @@ u16 udp_checksum(struct ip_header *ip_hdr)
 	udp_pseudo_hdr.udp_length = udp_hdr->udp_length;
 	udp_hdr->udp_checksum = 0;
 
-	checksum = checksum16((u16 *)&udp_pseudo_hdr, sizeof(udp_pseudo_hdr));
-	checksum += checksum16((u16 *)udp_hdr, ntohs(udp_hdr->udp_length));
+	checksum = mem_checksum16_simple((u16 *) &udp_pseudo_hdr, sizeof(udp_pseudo_hdr));
+	checksum += mem_checksum16_simple((u16 *) udp_hdr, ntohs(udp_hdr->udp_length));
 
 	return ~((checksum + (checksum >> 16)) & 0xFFFF);
 }

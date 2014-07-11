@@ -38,6 +38,7 @@ struct ping_recv_package
 
 static void *ping_recv_thread(void *data)
 {
+	u16 seq = 0;
 	struct network_client *client = data;
 	struct ping_recv_package pkg;
 	struct ip_header *ip = &pkg.ip;
@@ -65,8 +66,15 @@ static void *ping_recv_thread(void *data)
 			continue;
 		}
 
+		if (ping->seq <= seq)
+		{
+			continue;
+		}
+
+		seq = ping->seq;
+
 		println(PRINT_FORMAT_SIZE " bytes from %s: icmp_seq=%d ttl=%d time=%lf ms",
-			rdlen, inet_ntoa(*(struct in_addr *) &ip->src_ip), ping->seq, ip->ttl, (double) (clock_gettime_ns_mono() - pkg.pkg.time) / (1000 * 1000));
+			rdlen, inet_ntoa(*(struct in_addr *) &ip->src_ip), seq, ip->ttl, (double) (clock_gettime_ns_mono() - pkg.pkg.time) / (1000 * 1000));
 	}
 
 	return NULL;

@@ -392,24 +392,54 @@ int mem_is_noset(const char *mem, int value, size_t size)
 	return mem < mem_end;
 }
 
-u16 checksum16(const u16 *buff, size_t size)
+u32 mem_checksum32_simple(const u8 *mem, size_t count)
 {
-	const u16 *buff_end;
-	u32 checksum;
+	const u8 *mem_end = mem + count;
+	u64 checksum = 0;
 
-	for (checksum = 0, buff_end = buff + (size >> 1); buff < buff_end; buff++)
+	while (mem < mem_end)
 	{
-		checksum += *buff;
+		checksum += *mem++;
+	}
+
+	checksum = (checksum >> 32) + (checksum & 0xFFFFFFFF);
+
+	return (u32) ((checksum >> 32) + checksum);
+}
+
+u16 mem_checksum16_simple(const u16 *mem, size_t size)
+{
+	u32 checksum = 0;
+	const u16 *mem_end;
+
+	for (mem_end = mem + (size >> 1); mem < mem_end; mem++)
+	{
+		checksum += *mem;
 	}
 
 	if (size & 1)
 	{
-		checksum += *(u8 *) buff;
+		checksum += *(u8 *) mem;
 	}
 
 	checksum = (checksum >> 16) + (checksum & 0xFFFF);
 
-	return (checksum + (checksum >> 16)) & 0xFFFF;
+	return (u16) ((checksum >> 16) + checksum);
+}
+
+u8 mem_checksum8_simple(const u8 *mem, size_t size)
+{
+	u16 checksum = 0;
+	const u8 *mem_end;
+
+	for (mem_end = mem + size; mem < mem_end; mem++)
+	{
+		checksum += *mem;
+	}
+
+	checksum = (checksum >> 8) + (checksum & 0xFF);
+
+	return (u8) ((checksum >> 8) + checksum);
 }
 
 size_t mem_byte_count(const char *mem, byte c, size_t size)

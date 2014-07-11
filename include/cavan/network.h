@@ -330,6 +330,7 @@ void show_arp_header(struct arp_header *hdr, int simple);
 void show_dhcp_header(struct dhcp_header *hdr);
 void show_icmp_header(struct icmp_header *hdr);
 void show_ping_header(struct ping_header *hdr);
+void inet_show_sockaddr(const struct sockaddr_in *addr);
 
 int cavan_route_table_init(struct cavan_route_table *table, size_t table_size);
 void cavan_route_table_deinit(struct cavan_route_table *table);
@@ -523,11 +524,6 @@ static inline int inet_getpeername(int sockfd, struct sockaddr_in *addr)
 	socklen_t addrlen = sizeof(struct sockaddr_in);
 
 	return getpeername(sockfd, (struct sockaddr *) addr, &addrlen);
-}
-
-static inline void inet_show_sockaddr(const struct sockaddr_in *addr)
-{
-	println("IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
 }
 
 static inline void unix_show_sockaddr(const struct sockaddr_un *addr)
