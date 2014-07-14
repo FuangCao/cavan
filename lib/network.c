@@ -1365,14 +1365,17 @@ out_close_socket:
 
 static ssize_t network_client_send_sync(struct network_client *client, const void *buff, size_t size)
 {
+	ssize_t length;
 	const void *buff_end = ADDR_ADD(buff, size);
+	struct network_client_sync_data *data = network_client_get_data(client);
 	struct pollfd pfd =
 	{
 		.fd = client->sockfd,
 		.events = POLLIN,
 	};
 
-	network_client_lock(client);
+	pthread_mutex_lock(&data->lock);
+	data->send_pending++;
 
 	while (buff < buff_end)
 	{
@@ -1383,8 +1386,8 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 		if (package == NULL)
 		{
 			pr_error_info("alloca");
-			network_client_unlock(client);
-			return -ENOMEM;
+			length = -ENOMEM;
+			goto out_clean_pending;
 		}
 
 		while (1)
@@ -1392,7 +1395,7 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 			int retry;
 			ssize_t rdlen, wrlen;
 
-			package->index = client->send_index;
+			package->index = data->send_index;
 			package->type = CAVAN_SYNC_TYPE_DATA;
 			package->length = datalen;
 			mem_copy(package->data, buff, datalen);
@@ -1401,12 +1404,12 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 			{
 				int ret;
 
-				wrlen = client->send_raw(client, package, datalen + sizeof(struct cavan_sync_package));
+				wrlen = data->send(client, package, datalen + sizeof(struct cavan_sync_package));
 				if (wrlen < (ssize_t) sizeof(struct cavan_sync_package))
 				{
-					pr_red_info("client->send_raw");
-					network_client_unlock(client);
-					return -EFAULT;
+					pr_red_info("data->send");
+					length = -EFAULT;
+					goto out_clean_pending;
 				}
 
 				ret = poll(&pfd, 1, CAVAN_NET_UDP_TIMEOUT);
@@ -1419,22 +1422,22 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 
 				if (ret < 0 || retry < 1)
 				{
-					network_client_unlock(client);
-					return -ETIMEDOUT;
+					length = -ETIMEDOUT;
+					goto out_clean_pending;
 				}
 			}
 
 label_recv_ack:
-			rdlen = client->recv_raw(client, package, sizeof(struct cavan_sync_package));
+			rdlen = data->recv(client, package, sizeof(struct cavan_sync_package));
 			if (rdlen != sizeof(struct cavan_sync_package))
 			{
-				network_client_unlock(client);
-				return -EFAULT;
+				length = -EFAULT;
+				goto out_clean_pending;
 			}
 
 			if (package->type == CAVAN_SYNC_TYPE_ACK)
 			{
-				if (package->index == client->send_index)
+				if (package->index == data->send_index)
 				{
 					break;
 				}
@@ -1449,37 +1452,41 @@ label_recv_ack:
 			}
 			else if (package->type == CAVAN_SYNC_TYPE_DATA)
 			{
-				u8 index = client->recv_index;
+				u8 index = data->recv_index;
 
 				do {
-					network_client_unlock(client);
+					pthread_mutex_unlock(&data->lock);
 					usleep(1);
-					network_client_lock(client);
+					pthread_mutex_lock(&data->lock);
 #if CAVAN_NETWORK_DEBUG
-					pr_warning_info("wait for receive: recv_pending = %d, recv_index = %d, index = %d", client->recv_pending, client->recv_index, index);
+					pr_warning_info("wait for receive: recv_pending = %d, recv_index = %d, index = %d", data->recv_pending, data->recv_index, index);
 #endif
-				} while (client->recv_pending && client->recv_index == index);
+				} while (data->recv_pending && data->recv_index == index);
 			}
 
 #if CAVAN_NETWORK_DEBUG
 			pd_red_info("index not match, send_index = %d, index = %d, type = %d, length = %d",
-				client->send_index, package->index, package->type, package->length);
+				data->send_index, package->index, package->type, package->length);
 #endif
 		}
 
-		client->send_index++;
+		data->send_index++;
 		buff = ADDR_ADD(buff, datalen);
 	}
 
-	network_client_unlock(client);
+	length = size;
 
-	return size;
+out_clean_pending:
+	data->send_pending--;
+	pthread_mutex_unlock(&data->lock);
+	return length;
 }
 
 static ssize_t network_client_recv_sync(struct network_client *client, void *buff, size_t size)
 {
 	ssize_t length;
 	struct cavan_sync_package *package;
+	struct network_client_sync_data *data = network_client_get_data(client);
 	struct pollfd pfd =
 	{
 		.fd = client->sockfd,
@@ -1493,18 +1500,18 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 		return -ENOMEM;
 	}
 
-	network_client_lock(client);
+	pthread_mutex_lock(&data->lock);
 
-	client->recv_pending++;
+	data->recv_pending++;
 
 	while (1)
 	{
 		int ret;
 		ssize_t rdlen, wrlen;
 
-		network_client_unlock(client);
+		pthread_mutex_unlock(&data->lock);
 		ret = poll(&pfd, 1, CAVAN_NET_UDP_ACTIVE_TIME);
-		network_client_lock(client);
+		pthread_mutex_lock(&data->lock);
 		if (ret < 1)
 		{
 			pr_red_info("file_poll_input");
@@ -1512,7 +1519,7 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 			goto out_clean_pending;
 		}
 
-		rdlen = client->recv_raw(client, package, size + sizeof(struct cavan_sync_package));
+		rdlen = data->recv(client, package, size + sizeof(struct cavan_sync_package));
 		if (rdlen < (ssize_t) sizeof(struct cavan_sync_package))
 		{
 			length = -EFAULT;
@@ -1526,15 +1533,15 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 			package->length = 0;
 			package->type = CAVAN_SYNC_TYPE_ACK;
 
-			wrlen = client->send_raw(client, package, sizeof(struct cavan_sync_package));
+			wrlen = data->send(client, package, sizeof(struct cavan_sync_package));
 			if (wrlen != sizeof(struct cavan_sync_package))
 			{
-				pr_red_info("client->send_raw");
+				pr_red_info("data->send");
 				length = -EFAULT;
 				goto out_clean_pending;
 			}
 
-			if (package->index == client->recv_index)
+			if (package->index == data->recv_index)
 			{
 				break;
 			}
@@ -1542,58 +1549,108 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 
 #if CAVAN_NETWORK_DEBUG
 		pd_red_info("index not match, recv_index = %d, index = %d, type = %d, length = %d",
-			client->recv_index, package->index, package->type, package->length);
+			data->recv_index, package->index, package->type, package->length);
 #endif
 	}
 
-	client->recv_index++;
+	data->recv_index++;
 	mem_copy(buff, package->data, length);
 
 out_clean_pending:
-	client->recv_pending--;
-	network_client_unlock(client);
+	data->recv_pending--;
+	pthread_mutex_unlock(&data->lock);
 	return length;
 }
 
 static void network_client_close_sync(struct network_client *client)
 {
 	int i;
+	struct network_client_sync_data *data = network_client_get_data(client);
 
-	for (i = 0; i < 3; i++)
+	if (data == NULL)
 	{
-		client->send_raw(client, "E", 1);
+		return;
+	}
+
+	client->send = data->send;
+	client->recv = data->recv;
+	client->close = data->close;
+
+	for (i = 0; i < 10; i++)
+	{
+		client->send(client, "E", 1);
 		fsync(client->sockfd);
 	}
 
-	client->close_raw(client);
+	client->close(client);
 
-	pthread_mutex_destroy(&client->lock);
+	for (i = 0; i < 100; i++)
+	{
+		bool ready;
+
+		usleep(1);
+
+		if (pthread_mutex_trylock(&data->lock) < 0)
+		{
+			continue;
+		}
+
+		ready = data->send_pending == 0 && data->recv_pending == 0;
+
+		pthread_mutex_unlock(&data->lock);
+
+		if (ready)
+		{
+			break;
+		}
+
+#if CAVAN_NETWORK_DEBUG
+		pr_red_info("%d. data->send_pending = %d, data->recv_pending = %d", i, data->send_pending, data->recv_pending);
+#endif
+	}
+
+	pthread_mutex_destroy(&data->lock);
+
+	free(data);
+	network_client_set_data(client, NULL);
 }
 
-static void network_client_set_sync(struct network_client *client, bool enable)
+static int network_client_set_sync(struct network_client *client)
 {
-	if (enable)
+	int ret;
+	struct network_client_sync_data *data;
+
+	data = malloc(sizeof(*data));
+	if (data == NULL)
 	{
-		client->send_index = 0;
-		client->recv_index = 0;
-		client->recv_pending = 0;
-
-		client->send_raw = client->send;
-		client->recv_raw = client->recv;
-		client->close_raw = client->close;
-
-		client->send = network_client_send_sync;
-		client->recv = network_client_recv_sync;
-		client->close = network_client_close_sync;
-
-		pthread_mutex_init(&client->lock, NULL);
+		pr_error_info("malloc");
+		return -ENOMEM;
 	}
-	else if (client->send_raw && client->recv_raw && client->close_raw)
+
+	ret = pthread_mutex_init(&data->lock, NULL);
+	if (ret < 0)
 	{
-		client->send = client->send_raw;
-		client->recv = client->recv_raw;
-		client->close = client->close_raw;
+		pr_error_info("pthread_mutex_init");
+		free(data);
+		return ret;
 	}
+
+	data->send_index = 0;
+	data->recv_index = 0;
+	data->send_pending = 0;
+	data->recv_pending = 0;
+
+	data->send = client->send;
+	data->recv = client->recv;
+	data->close = client->close;
+
+	client->send = network_client_send_sync;
+	client->recv = network_client_recv_sync;
+	client->close = network_client_close_sync;
+
+	network_client_set_data(client, data);
+
+	return 0;
 }
 
 #if 0
@@ -1696,7 +1753,12 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 
 	if (flags & CAVAN_NET_FLAG_SYNC)
 	{
-		network_client_set_sync(client, true);
+		ret = network_client_set_sync(client);
+		if (ret < 0)
+		{
+			pr_red_info("network_client_set_sync");
+			return ret;
+		}
 	}
 
 	return 0;
@@ -2365,7 +2427,12 @@ static int network_service_udp_accept(struct network_service *service, struct ne
 		return ret;
 	}
 
-	network_client_set_sync(client, true);
+	ret = network_client_set_sync(client);
+	if (ret < 0)
+	{
+		pr_red_info("network_client_set_sync");
+		return ret;
+	}
 
 	return 0;
 }
@@ -2481,13 +2548,6 @@ int network_service_open(struct network_service *service, struct network_url *ur
 		return ret;
 	}
 
-	ret = pthread_mutex_init(&service->lock, NULL);
-	if (ret < 0)
-	{
-		pr_error_info("pthread_mutex_init");
-		return ret;
-	}
-
 	switch (type)
 	{
 	case NETWORK_CONNECT_TCP:
@@ -2507,8 +2567,6 @@ int network_service_open(struct network_service *service, struct network_url *ur
 		pr_red_info("unsupport connect type %d", type);
 		ret = -EINVAL;
 	}
-
-	pthread_mutex_destroy(&service->lock);
 
 	return ret;
 }
@@ -2536,8 +2594,6 @@ void network_service_close(struct network_service *service)
 	{
 		close(service->sockfd);
 	}
-
-	pthread_mutex_destroy(&service->lock);
 
 	remove_directory(CAVAN_NETWORK_TEMP_PATH);
 }

@@ -18,7 +18,7 @@
 
 #define NETWORK_TIMEOUT_VALUE	5000
 #define NETWORK_RETRY_COUNT		5
-#define NETWORK_PORT_INVALID	0xFFFF
+#define NETWORK_PORT_INVALID	0
 #define ROUTE_TABLE_SIZE		16
 #define MAC_ADDRESS_LEN			6
 #define CAVAN_LISTEN_BACKLOG	32
@@ -267,17 +267,22 @@ struct network_client
 	int sockfd;
 	socklen_t addrlen;
 	void *private_data;
-	pthread_mutex_t lock;
-	u8 send_index, recv_index;
-	u16 recv_pending;
 	network_connect_type_t type;
 
 	void (*close)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
-	void (*close_raw)(struct network_client *client);
-	ssize_t (*send_raw)(struct network_client *client, const void *buff, size_t size);
-	ssize_t (*recv_raw)(struct network_client *client, void *buff, size_t size);
+};
+
+struct network_client_sync_data
+{
+	pthread_mutex_t lock;
+	u8 send_index, recv_index;
+	u8 send_pending, recv_pending;
+
+	void (*close)(struct network_client *client);
+	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
+	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
 };
 
 #if 0
@@ -299,7 +304,6 @@ struct network_service
 	int sockfd;
 	socklen_t addrlen;
 	void *private_data;
-	pthread_mutex_t lock;
 	network_connect_type_t type;
 
 	int (*accept)(struct network_service *service, struct network_client *conn);
@@ -546,21 +550,6 @@ static inline void *network_client_get_data(struct network_client *client)
 	return client->private_data;
 }
 
-static inline void network_client_lock(struct network_client *client)
-{
-	pthread_mutex_lock(&client->lock);
-}
-
-static inline bool network_client_trylock(struct network_client *client)
-{
-	return pthread_mutex_trylock(&client->lock) == 0;
-}
-
-static inline void network_client_unlock(struct network_client *client)
-{
-	pthread_mutex_unlock(&client->lock);
-}
-
 static inline ssize_t network_client_send_message(struct network_client *client, u32 message)
 {
 	return network_client_send_buff(client, (char *) &message, sizeof(message));
@@ -579,16 +568,6 @@ static inline void network_service_set_data(struct network_service *service, voi
 static inline void *network_service_get_data(struct network_service *service)
 {
 	return service->private_data;
-}
-
-static inline void network_service_lock(struct network_service *service)
-{
-	pthread_mutex_lock(&service->lock);
-}
-
-static inline void network_service_unlock(struct network_service *service)
-{
-	pthread_mutex_unlock(&service->lock);
 }
 
 static inline const char *cavan_get_server_hostname(void)
