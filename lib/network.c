@@ -1634,21 +1634,13 @@ static ssize_t network_client_tcp_recv(struct network_client *client, void *buff
 	return recv(client->sockfd, buff, size, 0);
 }
 
-static int network_client_udp_talk(struct network_client *client, struct sockaddr *remote_addr)
+static int network_client_udp_talk(struct network_client *client, struct sockaddr *addr)
 {
 	int ret;
 	u32 magic;
-	struct sockaddr *addr;
-
-	addr = alloca(client->addrlen);
-	if (addr == NULL)
-	{
-		pr_error_info("alloca");
-		return -ENOMEM;
-	}
 
 	magic = CAVAN_NETWORK_MAGIC;
-	ret = sendto(client->sockfd, &magic, sizeof(magic), 0, remote_addr, client->addrlen);
+	ret = sendto(client->sockfd, &magic, sizeof(magic), 0, addr, client->addrlen);
 	if (ret < (ssize_t) sizeof(magic))
 	{
 		pr_red_info("network_client_send_message");
@@ -1674,13 +1666,6 @@ static int network_client_udp_talk(struct network_client *client, struct sockadd
 		return -EINVAL;
 	}
 
-	ret = connect(client->sockfd, addr, client->addrlen);
-	if (ret < 0)
-	{
-		pr_error_info("connect");
-		return ret;
-	}
-
 	return 0;
 }
 
@@ -1690,7 +1675,6 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 
 	if (flags & CAVAN_NET_FLAG_TALK)
 	{
-
 		ret = network_client_udp_talk(client, addr);
 		if (ret < 0)
 		{
@@ -1698,14 +1682,12 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 			return ret;
 		}
 	}
-	else
+
+	ret = connect(client->sockfd, addr, client->addrlen);
+	if (ret < 0)
 	{
-		ret = connect(client->sockfd, addr, client->addrlen);
-		if (ret < 0)
-		{
-			pr_error_info("connect");
-			return ret;
-		}
+		pr_error_info("connect");
+		return ret;
 	}
 
 	client->send = network_client_tcp_send;
@@ -1749,13 +1731,13 @@ static int network_client_udp_open(struct network_client *client, const char *ho
 	if (ret < 0)
 	{
 		pr_red_info("network_client_udp_common_open");
-		goto out_client_close;
+		goto out_close_sockfd;
 	}
 
 	return 0;
 
-out_client_close:
-	client->close(client);
+out_close_sockfd:
+	close(sockfd);
 	return ret;
 }
 
@@ -1837,13 +1819,13 @@ static int network_client_unix_udp_open(struct network_client *client, const cha
 	if (ret < 0)
 	{
 		pr_red_info("network_client_udp_common_open");
-		goto out_client_close;
+		goto out_close_sockfd;
 	}
 
 	return 0;
 
-out_client_close:
-	client->close(client);
+out_close_sockfd:
+	close(client->sockfd);
 	return ret;
 }
 
