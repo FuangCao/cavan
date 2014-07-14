@@ -64,7 +64,7 @@ class CavanGitManager(CavanCommandBase):
 
 		return True
 
-	def gitCheckoutVersion(self, commit = None, option = None):
+	def gitCheckout(self, commit = None, option = None):
 		listCommand = ["checkout", "--quiet"]
 		if commit != None:
 			listCommand.append(commit)
@@ -322,3 +322,42 @@ class CavanGitManager(CavanCommandBase):
 				return False
 
 		return True
+
+	def hasBranch(self, branch):
+		lines = self.doPopenGitCmd(["branch"], ef = "/dev/null")
+		if lines == None:
+			return False
+
+		for line in lines:
+			line = line[2:].rstrip()
+			if line == branch:
+				return True
+
+		if self.mVerbose:
+			self.prBrownInfo("don't have branch %s" % branch)
+
+		return False
+
+	def doGitCheckout(self, branch):
+		if self.gitCheckout(branch):
+			return True
+
+		if not self.hasBranch(branch):
+			return True
+
+		if not self.doGitReset():
+			return False
+
+		return self.gitCheckout(branch)
+
+	def gitMerge(self, branch):
+		return self.doExecGitCmd(["merge", branch], of = "/dev/null")
+
+	def doGitMerge(self, branch, destBranch = None):
+		if destBranch != None:
+			if not self.hasBranch(destBranch):
+				return True
+			if not self.doGitCheckout(destBranch):
+				return False
+
+		return self.gitMerge(branch)

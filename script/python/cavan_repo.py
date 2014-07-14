@@ -806,6 +806,72 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		return True
 
+	def doCheckout(self, argv):
+		if len(argv) < 1:
+			self.prRedInfo("Please give the branch name")
+			return False
+
+		branch = argv[0]
+
+		if not self.loadManifest():
+			return False
+
+		self.mListProject = self.mManifest.getProjects()
+		if self.mListProject == None:
+			return False
+
+		if not self.mVerbose:
+			self.initProgress(len(self.mListProject))
+
+		for node in self.mManifest.getProjects():
+			manager = GitSvnManager(self.getProjectAbsPath(node), self.mVerbose)
+			if not manager.doGitCheckout(branch):
+				self.prRedInfo("checkout %s to %s failed" % (manager.getRootPath(), branch))
+				return False
+
+			if not self.mVerbose:
+				self.addProgress()
+
+		if not self.mVerbose:
+			self.finishProgress()
+
+		return True
+
+	def doMerge(self, argv):
+		if len(argv) < 1:
+			self.prRedInfo("Please give the branch name")
+			return False
+
+		branch = argv[0]
+		if len(argv) > 1:
+			destBranch = argv[1]
+		else:
+			destBranch = None
+
+		if not self.loadManifest():
+			return False
+
+		self.mListProject = self.mManifest.getProjects()
+		if self.mListProject == None:
+			return False
+
+		if not self.mVerbose:
+			self.initProgress(len(self.mListProject))
+
+		for node in self.mManifest.getProjects():
+			manager = GitSvnManager(self.getProjectAbsPath(node), self.mVerbose)
+			if not manager.doGitMerge(branch, destBranch):
+				self.prRedInfo("checkout %s to %s failed" % (manager.getRootPath(), branch))
+				return False
+
+			if not self.mVerbose:
+				self.addProgress()
+
+		if not self.mVerbose:
+			self.finishProgress()
+
+		return True
+
 	def main(self, argv):
 		length = len(argv)
 		if length < 2:
@@ -827,6 +893,10 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			return self.doSymlink(argv[2:])
 		elif subcmd in ["recovery"]:
 			return self.doRecovery()
+		elif subcmd in ["co", "checkout"]:
+			return self.doCheckout(argv[2:])
+		elif subcmd in ["merge"]:
+			return self.doMerge(argv[2:])
 		else:
 			self.prRedInfo("unknown subcmd ", subcmd)
 			return False

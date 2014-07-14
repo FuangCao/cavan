@@ -204,7 +204,7 @@ class GitSvnManager(CavanGitManager):
 
 		return logParser
 
-	def gitCheckoutVersion(self, commit = None, option = None):
+	def gitCheckout(self, commit = None, option = None):
 		listCommand = ["checkout", "--quiet"]
 		if commit != None:
 			listCommand.append(commit)
@@ -380,7 +380,7 @@ class GitSvnManager(CavanGitManager):
 					return False
 
 			self.doGitReset()
-			if not self.gitCheckoutVersion(branch):
+			if not self.gitCheckout(branch):
 				return False
 
 			self.doExecute(["svn", "unlock", "--force", "."], ef = "/dev/null", of = "/dev/null")
@@ -502,10 +502,10 @@ class GitSvnManager(CavanGitManager):
 		if len(listPendLog) == 0:
 			return True
 
-		if not self.gitCheckoutVersion(self.mBranchMaster):
+		if not self.gitCheckout(self.mBranchMaster):
 			return False
 
-		if not self.gitCheckoutVersion(hashHead, ["-B", self.mBranchMerge]):
+		if not self.gitCheckout(hashHead, ["-B", self.mBranchMerge]):
 			return False
 
 		if not self.doExecute(["svn", "revert", "--quiet", "-R", "."]):
@@ -604,7 +604,7 @@ class GitSvnManager(CavanGitManager):
 				return self.doGitClean(argv[2])
 			return self.doGitClean()
 		elif subcmd in ["ln", "link", "symlink", "push"]:
-			if len(argv) < 3:
+			if length < 3:
 				return False
 			return self.doSymlinkBare(argv[2])
 		elif subcmd in ["update", "sync", "rebase", "dcommit"]:
@@ -617,6 +617,16 @@ class GitSvnManager(CavanGitManager):
 				return self.doDcommit(url)
 
 			return self.doSync(url)
+		elif subcmd in ["co", "checkout"]:
+			if length < 3:
+				return False
+			return self.doGitCheckout(argv[2])
+		elif subcmd in ["merge"]:
+			if length < 3:
+				return False
+			if length < 4:
+				return self.doGitMerge(argv[2])
+			return self.doGitMerge(argv[2], argv[3])
 		else:
 			self.prRedInfo("unknown subcmd " + subcmd)
 			return False
