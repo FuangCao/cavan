@@ -838,15 +838,19 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		return True
 
 	def doMerge(self, argv):
-		if len(argv) < 1:
-			self.prRedInfo("Please give the branch name")
-			return False
 
-		branch = argv[0]
 		if len(argv) > 1:
+			branch = argv[0]
 			destBranch = argv[1]
 		else:
-			destBranch = None
+			if len(argv) > 0:
+				branch = argv[0]
+			else:
+				branch = "master"
+			destBranch = "cavan"
+
+		if not self.getChoice("Merge branch %s to %s" % (branch, destBranch)):
+			return False
 
 		if not self.loadManifest():
 			return False

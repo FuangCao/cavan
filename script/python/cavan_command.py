@@ -302,6 +302,16 @@ class CavanCommandBase:
 				return True
 		return False
 
+	def getChoice(self, message = "Please input you choice", defValue = False):
+		while True:
+			choice = raw_input("%s? [%s] " % (message, defValue and "Y/n" or "y/N")).lower()
+			if not choice:
+				return defValue
+			if choice in ["yes", "y"]:
+				return True
+			elif choice in ["no", "n"]:
+				return False
+
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		print popen_tostring(sys.argv[1])
