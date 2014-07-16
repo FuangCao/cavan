@@ -2340,7 +2340,7 @@ static int network_service_unix_udp_open(struct network_service *service, struct
 
 // ============================================================
 
-static struct network_protocol_desc protocol_descs[] =
+static const struct network_protocol_desc protocol_descs[] =
 {
 	[NETWORK_PROTOCOL_FTP] =
 	{
@@ -2518,33 +2518,15 @@ network_protocol_t network_protocol_parse(const char *name)
 
 const char *network_protocol_tostring(network_protocol_t type)
 {
-	switch (type)
+	const struct network_protocol_desc *desc;
+
+	desc = network_get_protocol_by_type(type);
+	if (desc == NULL)
 	{
-	case NETWORK_PROTOCOL_FTP:
-		return "ftp";
-	case NETWORK_PROTOCOL_HTTP:
-		return "http";
-	case NETWORK_PROTOCOL_HTTPS:
-		return "https";
-	case NETWORK_PROTOCOL_TCP:
-		return "tcp";
-	case NETWORK_PROTOCOL_UDP:
-		return "udp";
-	case NETWORK_PROTOCOL_ADB:
-		return "adb";
-	case NETWORK_PROTOCOL_ICMP:
-		return "icmp";
-	case NETWORK_PROTOCOL_IP:
-		return "ip";
-	case NETWORK_PROTOCOL_MAC:
-		return "mac";
-	case NETWORK_PROTOCOL_UNIX_TCP:
-		return "unix-tcp";
-	case NETWORK_PROTOCOL_UNIX_UDP:
-		return "unix-udp";
-	default:
 		return "unknown";
 	}
+
+	return desc->name;
 }
 
 const struct network_protocol_desc *network_get_protocol_by_name(const char *name)
