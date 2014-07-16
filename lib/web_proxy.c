@@ -86,6 +86,31 @@ int web_proxy_get_request_type(const char *req, size_t length)
 	return -EINVAL;
 }
 
+const char *web_proxy_request_type_tostring(int type)
+{
+	switch (type)
+	{
+	case HTTP_REQ_CONNECT:
+		return "CONNECT";
+	case HTTP_REQ_DELETE:
+		return "DELETE";
+	case HTTP_REQ_GET:
+		return "GET";
+	case HTTP_REQ_HEAD:
+		return "HEAD";
+	case HTTP_REQ_OPTIONS:
+		return "OPTIONS";
+	case HTTP_REQ_PUT:
+		return "PUT";
+	case HTTP_REQ_POST:
+		return "POST";
+	case HTTP_REQ_TRACE:
+		return "TRACE";
+	default:
+		return "UNKNOWN";
+	}
+}
+
 static int web_proxy_main_loop(int srcfd, int destfd, int timeout)
 {
 	int ret;
@@ -666,7 +691,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			break;
 		}
 
-		if (url->protocol[0] == 0 && url->port == 0xFFFF)
+		if (url->protocol[0] == 0 && url->port == NETWORK_PORT_INVALID)
 		{
 			port = proxy->proxy_port;
 			hostname = proxy->proxy_host;
@@ -678,7 +703,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			port = 0;
 			hostname = url->hostname;
 
-			pr_info("%s[%d](%d) => %s", buff, type, count, network_url_tostring(url, NULL, 0, NULL));
+			pr_info("%s[%d](%d) => %s", web_proxy_request_type_tostring(type), type, count, network_url_tostring(url, NULL, 0, NULL));
 		}
 
 		if (proxy_sockfd < 0 || network_url_equals(url_bak, url) == false)

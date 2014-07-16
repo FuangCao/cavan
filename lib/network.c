@@ -377,7 +377,7 @@ struct cavan_route_node **cavan_find_route_by_mac(struct cavan_route_table *tabl
 	{
 		p = *pp;
 
-		if (p && memcmp(mac, p->mac_addr, sizeof(MAC_ADDRESS_LEN)))
+		if (p && memcmp(mac, p->mac_addr, sizeof(p->mac_addr)))
 		{
 			return pp;
 		}
