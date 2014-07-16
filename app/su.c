@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 	struct network_url url;
 
 	command = NULL;
-	network_url_init(&url, "unix-tcp", NULL, TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
+	network_url_init(&url, "unix-tcp", NULL, TCP_DD_DEFAULT_PORT, CAVAN_NETWORK_SOCKET);
 
 	while ((c = getopt_long(argc, argv, "vVhH:c:lmps:i:I:P:LaA", long_option, &option_index)) != EOF)
 	{

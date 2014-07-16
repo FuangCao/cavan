@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 	char command[1024];
 	struct network_url url;
 
-	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
+	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, NULL);
 
 	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF)
 	{

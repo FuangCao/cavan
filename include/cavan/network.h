@@ -36,6 +36,7 @@
 #define CAVAN_IP_ENV_NAME		"CAVAN_SERVER_IP"
 #define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
 #define CAVAN_NETWORK_TEMP_PATH	CAVAN_TEMP_PATH "/cavan/network"
+#define CAVAN_NETWORK_SOCKET	CAVAN_NETWORK_TEMP_PATH "/socket-service"
 
 #define CAVAN_NET_UDP_RETRY			10
 #define CAVAN_NET_UDP_TIMEOUT		200
@@ -231,7 +232,7 @@ struct network_url
 	const char *protocol;
 	const char *hostname;
 	const char *pathname;
-	char memory[1024];
+	char memory[128];
 };
 
 struct inet_connect
@@ -393,6 +394,8 @@ int network_create_socket_mac(const char *if_name, int protocol);
 
 network_protocol_t network_protocol_parse(const char *name);
 const char *network_protocol_tostring(network_protocol_t type);
+int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, struct network_url *url, int flags);
+int network_protocol_open_service(const struct network_protocol_desc *desc, struct network_service *service, struct network_url *url, int flags);
 
 int network_client_open(struct network_client *client, struct network_url *url, int flags);
 int network_client_open2(struct network_client *client, const char *url, int flags);
@@ -401,6 +404,9 @@ ssize_t network_client_fill_buff(struct network_client *client, char *buff, size
 ssize_t network_client_send_buff(struct network_client *client, const char *buff, size_t size);
 ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size);
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size);
+ssize_t network_client_timed_recv(struct network_client *client, void *buff, size_t size, int timeout);
+bool network_client_discard_all(struct network_client *client);
+ssize_t network_client_recv_line(struct network_client *client, char *buff, size_t size);
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout);
 int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns);
 
@@ -553,6 +559,16 @@ static inline void *network_client_get_data(struct network_client *client)
 	return client->private_data;
 }
 
+static inline ssize_t network_client_send(struct network_client *client, const void *buff, size_t size)
+{
+	return client->send(client, buff, size);
+}
+
+static inline ssize_t network_client_recv(struct network_client *client, void *buff, size_t size)
+{
+	return client->recv(client, buff, size);
+}
+
 static inline ssize_t network_client_send_message(struct network_client *client, u32 message)
 {
 	return network_client_send_buff(client, (char *) &message, sizeof(message));
@@ -571,6 +587,11 @@ static inline void network_service_set_data(struct network_service *service, voi
 static inline void *network_service_get_data(struct network_service *service)
 {
 	return service->private_data;
+}
+
+static inline int network_service_accept(struct network_service *service, struct network_client *client)
+{
+	return service->accept(service, client);
 }
 
 static inline const char *cavan_get_server_hostname(void)

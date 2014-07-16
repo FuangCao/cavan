@@ -1057,7 +1057,7 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 void network_url_init(struct network_url *url, const char *protocol, const char *hostname, u16 port, const char *pathname)
 {
 	url->port = port;
-	url->pathname = pathname;
+	url->pathname = pathname ? pathname : CAVAN_NETWORK_SOCKET;
 	url->protocol = protocol ? protocol : CAVAN_DEFAULT_PROTOCOL;
 	url->hostname = hostname ? hostname : cavan_get_server_hostname();
 }
@@ -1609,7 +1609,6 @@ static int network_client_set_sync(struct network_client *client)
 static void network_client_udp_close(struct network_client *client)
 {
 	close(client->sockfd);
-	client->sockfd = -1;
 }
 
 static ssize_t network_client_udp_send(struct network_client *client, const void *buff, size_t size)
@@ -1630,7 +1629,6 @@ static ssize_t network_client_udp_recv(struct network_client *client, void *buff
 static void network_client_tcp_close(struct network_client *client)
 {
 	inet_close_tcp_socket(client->sockfd);
-	client->sockfd = -1;
 }
 
 static ssize_t network_client_tcp_send(struct network_client *client, const void *buff, size_t size)
@@ -1737,7 +1735,6 @@ static int network_client_udp_open(struct network_client *client, struct network
 	}
 
 	client->sockfd = sockfd;
-	client->type = NETWORK_PROTOCOL_UDP;
 	client->addrlen = sizeof(addr);
 	addr.sin_port = htons(url->port);
 
@@ -1767,7 +1764,6 @@ static int network_client_tcp_open(struct network_client *client, struct network
 	}
 
 	client->sockfd = sockfd;
-	client->type = NETWORK_PROTOCOL_TCP;
 	client->addrlen = sizeof(struct sockaddr_in);
 	client->close = network_client_tcp_close;
 	client->send = network_client_tcp_send;
@@ -1788,7 +1784,6 @@ static int network_create_unix_udp_client(struct network_client *client)
 	}
 
 	client->sockfd = sockfd;
-	client->type = NETWORK_PROTOCOL_UNIX_UDP;
 
 	return 0;
 }
@@ -1805,7 +1800,6 @@ static int network_client_unix_tcp_open(struct network_client *client, struct ne
 	}
 
 	client->sockfd = sockfd;
-	client->type = NETWORK_PROTOCOL_UNIX_TCP;
 	client->addrlen = sizeof(struct sockaddr_un);
 	client->close = network_client_tcp_close;
 	client->send = network_client_tcp_send;
@@ -1855,7 +1849,6 @@ static int network_client_adb_open(struct network_client *client, struct network
 	}
 
 	client->sockfd = sockfd;
-	client->type = NETWORK_PROTOCOL_ADB;
 	client->addrlen = sizeof(struct sockaddr_in);
 	client->close = network_client_tcp_close;
 	client->send = network_client_tcp_send;
@@ -1885,7 +1878,6 @@ static int network_client_icmp_open(struct network_client *client, struct networ
 	}
 
 	client->sockfd = sockfd;
-	client->type = NETWORK_PROTOCOL_ICMP;
 	client->addrlen = sizeof(addr);
 
 	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, 0);
@@ -1923,7 +1915,6 @@ static int network_client_ip_open(struct network_client *client, struct network_
 	}
 
 	client->sockfd = sockfd;
-	client->type = NETWORK_PROTOCOL_IP;
 	client->addrlen = sizeof(addr);
 
 	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, 0);
@@ -1952,7 +1943,6 @@ static int network_client_mac_open(struct network_client *client, struct network
 	}
 
 	client->sockfd = sockfd;
-	client->type = NETWORK_PROTOCOL_MAC;
 	client->addrlen = sizeof(struct sockaddr_in);
 	client->close = network_client_tcp_close;
 	client->send = network_client_tcp_send;
@@ -2049,6 +2039,99 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 	return size_bak;
 }
 
+ssize_t network_client_timed_recv(struct network_client *client, void *buff, size_t size, int timeout)
+{
+	if (file_poll_input(client->sockfd, timeout))
+	{
+		return client->recv(client, buff, size);
+	}
+
+	return -ETIMEDOUT;
+}
+
+bool network_client_discard_all(struct network_client *client)
+{
+	int ret;
+	ssize_t rdlen;
+	char buff[1024];
+	struct pollfd pfd =
+	{
+		.fd = client->sockfd,
+		.events = POLLIN,
+	};
+
+	while (1)
+	{
+		ret = poll(&pfd, 1, 0);
+		if (ret < 0)
+		{
+			pr_error_info("poll");
+			return false;
+		}
+
+		if (ret < 1)
+		{
+			break;
+		}
+
+		rdlen = client->recv(client, buff, sizeof(buff));
+		if (rdlen < 0)
+		{
+			pr_error_info("read");
+			return false;
+		}
+
+		if (rdlen < (ssize_t) sizeof(buff))
+		{
+			break;
+		}
+	}
+
+	return true;
+}
+
+ssize_t network_client_recv_line(struct network_client *client, char *buff, size_t size)
+{
+	char c;
+	ssize_t rdlen;
+	char *buff_bak = buff;
+	char *buff_end = buff + size - 1;
+
+	while (buff < buff_end)
+	{
+		rdlen = client->recv(client, &c, 1);
+		if (rdlen < 1)
+		{
+			if (rdlen < 0)
+			{
+				return rdlen;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		switch (c)
+		{
+		case '\n':
+			if (buff > buff_bak)
+			{
+				goto out_complete;
+			}
+		case '\r':
+			break;
+
+		default:
+			*buff++ = c;
+		}
+	}
+
+out_complete:
+	*buff = 0;
+	return buff - buff_bak;
+}
+
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout)
 {
 	struct pollfd pfds[2];
@@ -2136,7 +2219,6 @@ static int network_service_open_dummy(struct network_service *service, struct ne
 static void network_service_udp_close(struct network_service *service)
 {
 	close(service->sockfd);
-	service->sockfd = -1;
 }
 
 static int network_service_udp_talk(struct network_service *service, struct network_client *client)
@@ -2250,7 +2332,6 @@ static int network_service_udp_open(struct network_service *service, struct netw
 		return service->sockfd;
 	}
 
-	service->type = NETWORK_PROTOCOL_UDP;
 	service->addrlen = sizeof(struct sockaddr_in);
 
 	service->accept = network_service_udp_accept;
@@ -2262,7 +2343,6 @@ static int network_service_udp_open(struct network_service *service, struct netw
 static void network_service_tcp_close(struct network_service *service)
 {
 	inet_close_tcp_socket(service->sockfd);
-	service->sockfd = -1;
 }
 
 static int network_service_tcp_accept(struct network_service *service, struct network_client *client)
@@ -2293,7 +2373,6 @@ static int network_service_tcp_open(struct network_service *service, struct netw
 		return service->sockfd;
 	}
 
-	service->type = NETWORK_PROTOCOL_TCP;
 	service->addrlen = sizeof(struct sockaddr_in);
 
 	service->accept = network_service_tcp_accept;
@@ -2311,7 +2390,6 @@ static int network_service_unix_tcp_open(struct network_service *service, struct
 		return service->sockfd;
 	}
 
-	service->type = NETWORK_PROTOCOL_UNIX_TCP;
 	service->addrlen = sizeof(struct sockaddr_un);
 
 	service->accept = network_service_tcp_accept;
@@ -2329,7 +2407,6 @@ static int network_service_unix_udp_open(struct network_service *service, struct
 		return service->sockfd;
 	}
 
-	service->type = NETWORK_PROTOCOL_UNIX_UDP;
 	service->addrlen = sizeof(struct sockaddr_un);
 
 	service->accept = network_service_udp_accept;
@@ -2434,6 +2511,8 @@ static const struct network_protocol_desc protocol_descs[] =
 
 network_protocol_t network_protocol_parse(const char *name)
 {
+	const struct network_protocol_desc *p, *p_end;
+
 	switch (name[0])
 	{
 	case 't':
@@ -2511,6 +2590,14 @@ network_protocol_t network_protocol_parse(const char *name)
 			}
 		}
 		break;
+	}
+
+	for (p = protocol_descs, p_end = p + NELEM(protocol_descs); p < p_end; p++)
+	{
+		if (strcmp(name, p->name) == 0)
+		{
+			return p->type;
+		}
 	}
 
 	return NETWORK_PROTOCOL_INVALID;
@@ -2594,6 +2681,30 @@ int network_get_port_by_url(const struct network_url *url, const struct network_
 	}
 }
 
+int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, struct network_url *url, int flags)
+{
+	client->type = desc->type;
+
+	if (url->port == NETWORK_PORT_INVALID)
+	{
+		url->port = desc->port;
+	}
+
+	return desc->open_client(client, url, flags);
+}
+
+int network_protocol_open_service(const struct network_protocol_desc *desc, struct network_service *service, struct network_url *url, int flags)
+{
+	service->type = desc->type;
+
+	if (url->port == NETWORK_PORT_INVALID)
+	{
+		url->port = desc->port;
+	}
+
+	return desc->open_service(service, url, flags);
+}
+
 int network_client_open(struct network_client *client, struct network_url *url, int flags)
 {
 	const struct network_protocol_desc *desc;
@@ -2607,12 +2718,7 @@ int network_client_open(struct network_client *client, struct network_url *url, 
 		return -EINVAL;
 	}
 
-	if (url->port == NETWORK_PORT_INVALID)
-	{
-		url->port = desc->port;
-	}
-
-	return desc->open_client(client, url, flags);
+	return network_protocol_open_client(desc, client, url, flags);
 }
 
 int network_client_open2(struct network_client *client, const char *url_text, int flags)
@@ -2638,6 +2744,8 @@ void network_client_close(struct network_client *client)
 	{
 		close(client->sockfd);
 	}
+
+	client->sockfd = -1;
 }
 
 int network_service_open(struct network_service *service, struct network_url *url, int flags)
@@ -2661,12 +2769,7 @@ int network_service_open(struct network_service *service, struct network_url *ur
 		return -EINVAL;
 	}
 
-	if (url->port == NETWORK_PORT_INVALID)
-	{
-		url->port = desc->port;
-	}
-
-	return desc->open_service(service, url, flags);
+	return network_protocol_open_service(desc, service, url, flags);
 }
 
 int network_service_open2(struct network_service *service, const char *url_text, int flags)
@@ -2693,5 +2796,6 @@ void network_service_close(struct network_service *service)
 		close(service->sockfd);
 	}
 
+	service->sockfd = -1;
 	remove_directory(CAVAN_NETWORK_TEMP_PATH);
 }

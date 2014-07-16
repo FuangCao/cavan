@@ -22,6 +22,8 @@
 #include <cavan.h>
 #include <cavan/service.h>
 
+#define CAVAN_WEB_PROXY_PORT	9090
+
 typedef enum
 {
 	HTTP_REQ_CONNECT,
@@ -36,11 +38,10 @@ typedef enum
 
 struct web_proxy_service
 {
-	int sockfd;
-	u16 port;
-	u16 proxy_port;
-	int proxy_hostlen;
-	const char *proxy_host;
+	struct network_service service;
+	struct network_url url;
+	struct network_url url_proxy;
+	size_t proxy_hostlen;
 };
 
 const char *web_proxy_request_type_tostring(int type);

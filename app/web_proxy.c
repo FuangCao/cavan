@@ -138,9 +138,9 @@ int main(int argc, char *argv[])
 	service->max = 1000;
 
 	proxy_service = cavan_dynamic_service_get_data(service);
-	proxy_service->port = 9090;
-	proxy_service->proxy_host = "127.0.0.1";
-	proxy_service->proxy_port = 80;
+
+	network_url_init(&proxy_service->url, "tcp", "any", CAVAN_WEB_PROXY_PORT, NULL);
+	network_url_init(&proxy_service->url_proxy, "tcp", NULL, NETWORK_PORT_HTTP, NULL);
 
 	while ((c = getopt_long(argc, argv, "vVhHp:P:c:C:m:M:dDl:L:", long_option, &option_index)) != EOF)
 	{
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 		case 'p':
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			proxy_service->port = text2value_unsigned(optarg, NULL, 10);
+			proxy_service->url.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'd':
@@ -196,11 +196,11 @@ int main(int argc, char *argv[])
 			break;
 
 		case CAVAN_COMMAND_OPTION_PROXY_HOST:
-			proxy_service->proxy_host = optarg;
+			proxy_service->url_proxy.hostname = optarg;
 			break;
 
 		case CAVAN_COMMAND_OPTION_PROXY_PORT:
-			proxy_service->proxy_port = text2value_unsigned(optarg, NULL, 10);
+			proxy_service->url_proxy.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		default:
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
 
 	if (optind < argc)
 	{
-		proxy_service->port = text2value_unsigned(argv[optind], NULL, 10);
+		proxy_service->url.port = text2value_unsigned(argv[optind], NULL, 10);
 	}
 
 	ret = web_proxy_service_run(service);

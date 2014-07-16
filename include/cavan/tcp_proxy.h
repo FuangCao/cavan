@@ -10,16 +10,14 @@
 #include <cavan/network.h>
 #include <cavan/service.h>
 
+#define CAVAN_TCP_PROXY_PORT		9099
+
 struct tcp_proxy_service
 {
-	int sockfd;
-	u16 port;
-	u16 proxy_port;
-	const char *proxy_host;
-
-	int (*open_connect)(const char *hostname, u16 port);
-	void (*close_connect)(int sockfd);
+	struct network_service service;
+	struct network_url url;
+	struct network_url url_proxy;
 };
 
-int tcp_proxy_main_loop(int localfd, int remotefd);
+int tcp_proxy_main_loop(struct network_client *client_local, struct network_client *client_remote);
 int tcp_proxy_service_run(struct cavan_dynamic_service *service);

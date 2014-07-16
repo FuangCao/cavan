@@ -56,8 +56,7 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	const char *server_ip;
-	u16 server_port;
+	struct network_url url;
 	const char *username = NULL;
 	const char *password = NULL;
 
@@ -97,19 +96,22 @@ int main(int argc, char *argv[])
 	switch (argc - optind)
 	{
 	case 0:
-		server_ip = "127.0.0.1";
-		server_port = FTP_CTRL_PORT;
+		url.hostname = "127.0.0.1";
+		url.port = FTP_CTRL_PORT;
 		break;
 
 	case 1:
-		server_ip = argv[0];
-		server_port = FTP_CTRL_PORT;
+		url.hostname = argv[0];
+		url.port = FTP_CTRL_PORT;
 		break;
 
 	default:
-		server_ip = argv[0];
-		server_port = text2value_unsigned(argv[1], NULL, 10);
+		url.hostname = argv[0];
+		url.port = text2value_unsigned(argv[1], NULL, 10);
 	}
 
-	return ftp_client_run(server_ip, server_port, username, password);
+	url.protocol = "ftp";
+	url.pathname = NULL;
+
+	return ftp_client_run(&url, username, password);
 }

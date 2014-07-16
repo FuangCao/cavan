@@ -137,9 +137,9 @@ int main(int argc, char *argv[])
 	service->max = 1000;
 
 	proxy = cavan_dynamic_service_get_data(service);
-	proxy->port = 8888;
-	proxy->proxy_host = "127.0.0.1";
-	proxy->proxy_port = 8888;
+
+	network_url_init(&proxy->url, "tcp", "any", CAVAN_TCP_PROXY_PORT, NULL);
+	network_url_init(&proxy->url_proxy, "tcp", NULL, NETWORK_PORT_HTTP, NULL);
 
 	while ((c = getopt_long(argc, argv, "vVhH:i:I:p:P:c:C:m:M:dDaAl:L:", long_option, &option_index)) != EOF)
 	{
@@ -166,18 +166,18 @@ int main(int argc, char *argv[])
 		case 'p':
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
-			proxy->port = text2value_unsigned(optarg, NULL, 10);
+			proxy->url.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case CAVAN_COMMAND_OPTION_PROXY_PORT:
-			proxy->proxy_port = text2value_unsigned(optarg, NULL, 10);
+			proxy->url_proxy.port = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'i':
 		case 'I':
 		case 'H':
 		case CAVAN_COMMAND_OPTION_PROXY_HOST:
-			proxy->proxy_host = optarg;
+			proxy->url_proxy.hostname = optarg;
 			break;
 
 		case 'd':
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
-			proxy->open_connect = adb_create_tcp_link2;
+			proxy->url_proxy.protocol = "adb";
 			break;
 
 		default:
@@ -216,13 +216,7 @@ int main(int argc, char *argv[])
 
 	if (optind < argc)
 	{
-		proxy->proxy_port = text2value_unsigned(argv[optind], NULL, 10);
-	}
-
-	if (proxy->open_connect != adb_create_tcp_link2 && proxy->proxy_port == proxy->port && inet_addr(proxy->proxy_host) == htonl(INADDR_LOOPBACK))
-	{
-		pr_red_info("Can't proxy yourself, please change proxy port");
-		return -EINVAL;
+		proxy->url_proxy.port = text2value_unsigned(argv[optind], NULL, 10);
 	}
 
 	ret = tcp_proxy_service_run(service);

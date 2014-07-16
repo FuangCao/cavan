@@ -524,9 +524,7 @@ static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, vo
 
 static void tcp_dd_service_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
-	struct network_client *client = conn;
-
-	client->close(client);
+	network_client_close(conn);
 }
 
 static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)

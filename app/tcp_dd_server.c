@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 
 	dd_service = cavan_dynamic_service_get_data(service);
 	url = &dd_service->url;
-	network_url_init(url, "tcp", "any", TCP_DD_DEFAULT_PORT, TCP_DD_DEFAULT_SOCKET);
+	network_url_init(url, "tcp", "any", TCP_DD_DEFAULT_PORT, NULL);
 
 	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:m:M:l:L:u::U::", long_option, &option_index)) != EOF)
 	{

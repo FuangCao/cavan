@@ -32,10 +32,10 @@ char *ftp_list_directory(const char *dirpath, char *text);
 
 int ftp_service_run(struct cavan_service_description *service_desc, u16 port);
 
-int ftp_client_read_response(int sockfd, char *response, size_t size);
-int ftp_client_send_command(int sockfd, const char *command, size_t cmdsize, char *response, size_t repsize);
-int ftp_client_send_command2(int sockfd, char *response, size_t repsize, const char *command, ...);
-int ftp_client_send_pasv_command(int sockfd, struct sockaddr_in *addr);
-int ftp_client_create_pasv_link(int ctrl_sockfd);
-int ftp_client_login(int sockfd, const char *username, const char *password);
-int ftp_client_run(const char *hostname, u16 port, const char *username, const char *password);
+int ftp_client_read_response(struct network_client *client, char *response, size_t size);
+int ftp_client_send_command(struct network_client *client, const char *command, size_t cmdsize, char *response, size_t repsize);
+int ftp_client_send_command2(struct network_client *client, char *response, size_t repsize, const char *command, ...);
+int ftp_client_send_pasv_command(struct network_client *client, struct network_url *url);
+int ftp_client_create_pasv_link(struct network_client *client_ctrl, struct network_client *client_data);
+int ftp_client_login(struct network_client *client, const char *username, const char *password);
+int ftp_client_run(struct network_url *url, const char *username, const char *password);
