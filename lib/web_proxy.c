@@ -646,7 +646,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 	int proxy_sockfd;
 	char buff[2048], *buff_end, *req, *url_text;
 	struct network_url urls[2], *url, *url_bak;
-	const struct network_protocol *protocol = NULL;
+	const struct network_protocol_desc *protocol = NULL;
 	struct inet_connect *client = conn;
 	struct web_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 

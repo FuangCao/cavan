@@ -16,9 +16,13 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 
+#define NETWORK_PORT_INVALID	0
+#define NETWORK_PORT_FTP		21
+#define NETWORK_PORT_HTTP		80
+#define NETWORK_PORT_HTTPS		445
+
 #define NETWORK_TIMEOUT_VALUE	5000
 #define NETWORK_RETRY_COUNT		5
-#define NETWORK_PORT_INVALID	0
 #define ROUTE_TABLE_SIZE		16
 #define MAC_ADDRESS_LEN			6
 #define CAVAN_LISTEN_BACKLOG	32
@@ -208,17 +212,18 @@ struct inet_file_request
 typedef enum
 {
 	NETWORK_PROTOCOL_INVALID = -1,
+	NETWORK_PROTOCOL_FTP,
 	NETWORK_PROTOCOL_HTTP,
 	NETWORK_PROTOCOL_HTTPS,
-	NETWORK_PROTOCOL_FTP,
-} network_protocol_type_t;
-
-struct network_protocol
-{
-	const char *name;
-	u16 port;
-	network_protocol_type_t type;
-};
+	NETWORK_PROTOCOL_TCP,
+	NETWORK_PROTOCOL_UDP,
+	NETWORK_PROTOCOL_ADB,
+	NETWORK_PROTOCOL_ICMP,
+	NETWORK_PROTOCOL_IP,
+	NETWORK_PROTOCOL_MAC,
+	NETWORK_PROTOCOL_UNIX_TCP,
+	NETWORK_PROTOCOL_UNIX_UDP,
+} network_protocol_t;
 
 struct network_url
 {
@@ -234,19 +239,6 @@ struct inet_connect
 	int sockfd;
 	struct sockaddr_in addr;
 };
-
-typedef enum
-{
-	NETWORK_CONNECT_UNKNOWN,
-	NETWORK_CONNECT_TCP,
-	NETWORK_CONNECT_UDP,
-	NETWORK_CONNECT_ADB,
-	NETWORK_CONNECT_ICMP,
-	NETWORK_CONNECT_IP,
-	NETWORK_CONNECT_MAC,
-	NETWORK_CONNECT_UNIX_TCP,
-	NETWORK_CONNECT_UNIX_UDP,
-} network_connect_type_t;
 
 typedef enum
 {
@@ -267,7 +259,7 @@ struct network_client
 	int sockfd;
 	socklen_t addrlen;
 	void *private_data;
-	network_connect_type_t type;
+	network_protocol_t type;
 
 	void (*close)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
@@ -304,7 +296,7 @@ struct network_service
 	int sockfd;
 	socklen_t addrlen;
 	void *private_data;
-	network_connect_type_t type;
+	network_protocol_t type;
 
 	int (*accept)(struct network_service *service, struct network_client *conn);
 	void (*close)(struct network_service *service);
@@ -317,6 +309,16 @@ struct network_file_request
 	off_t src_offset;
 	off_t dest_offset;
 	off_t size;
+};
+
+struct network_protocol_desc
+{
+	const char *name;
+	u16 port;
+	network_protocol_t type;
+
+	int (*open_client)(struct network_client *client, struct network_url *url, int flags);
+	int (*open_service)(struct network_service *service, struct network_url *url, int flags);
 };
 
 extern int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port);
@@ -382,14 +384,15 @@ char *network_url_get_pathname(const struct network_url *url, char *buff, size_t
 char *network_url_tostring(const struct network_url *url, char *buff, size_t size, char **tail);
 char *network_url_parse(struct network_url *url, const char *text);
 
-const struct network_protocol *network_get_protocol_by_name(const char *name);
-const struct network_protocol *network_get_protocol_by_type(network_protocol_type_t type);
-const struct network_protocol *network_get_protocol_by_port(u16 port);
-network_connect_type_t network_connect_type_parse(const char *name, const char *name2);
-const char *network_connect_type_tostring(network_connect_type_t type);
-int network_get_port_by_url(const struct network_url *url, const struct network_protocol *protocol);
+const struct network_protocol_desc *network_get_protocol_by_name(const char *name);
+const struct network_protocol_desc *network_get_protocol_by_type(network_protocol_t type);
+const struct network_protocol_desc *network_get_protocol_by_port(u16 port);
+int network_get_port_by_url(const struct network_url *url, const struct network_protocol_desc *protocol);
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
 int network_create_socket_mac(const char *if_name, int protocol);
+
+network_protocol_t network_protocol_parse(const char *name);
+const char *network_protocol_tostring(network_protocol_t type);
 
 int network_client_open(struct network_client *client, struct network_url *url, int flags);
 int network_client_open2(struct network_client *client, const char *url, int flags);
@@ -401,8 +404,8 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout);
 int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns);
 
-int network_service_open(struct network_service *service, struct network_url *url);
-int network_service_open2(struct network_service *service, const char *url);
+int network_service_open(struct network_service *service, struct network_url *url, int flags);
+int network_service_open2(struct network_service *service, const char *url, int flags);
 void network_service_close(struct network_service *service);
 
 static inline int inet_socket(int type)

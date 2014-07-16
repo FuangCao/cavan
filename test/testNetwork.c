@@ -96,7 +96,7 @@ static int network_service_test(const char *url)
 	struct network_client client;
 	struct network_service service;
 
-	ret = network_service_open2(&service, url);
+	ret = network_service_open2(&service, url, 0);
 	if (ret < 0)
 	{
 		pr_red_info("network_service_open");

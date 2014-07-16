@@ -400,7 +400,7 @@ static int tcp_dd_handle_exec_request(struct network_client *client, struct tcp_
 		return ret;
 	}
 
-	if (client->type == NETWORK_CONNECT_TCP || client->type == NETWORK_CONNECT_UDP)
+	if (client->type == NETWORK_PROTOCOL_TCP || client->type == NETWORK_PROTOCOL_UDP)
 	{
 		struct sockaddr_in addr;
 
@@ -534,7 +534,7 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 	int ret;
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	ret = network_service_open(&dd_service->service, &dd_service->url);
+	ret = network_service_open(&dd_service->service, &dd_service->url, 0);
 	if (ret < 0)
 	{
 		pr_red_info("network_service_open2");
