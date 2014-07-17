@@ -1054,6 +1054,52 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 	return 0;
 }
 
+static int network_sockaddr_in_tostring(const struct sockaddr_in *addr, char *buff, size_t size)
+{
+	u16 port = ntohs(addr->sin_port);
+
+	if (port && port != NETWORK_PORT_INVALID)
+	{
+		return snprintf(buff, size, "IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), port);
+	}
+	else
+	{
+		return snprintf(buff, size, "IP = %s", inet_ntoa(addr->sin_addr));
+	}
+}
+
+static int network_sockaddr_un_tostring(const struct sockaddr_un *addr, char *buff, size_t size)
+{
+	return snprintf(buff, size, "SUN_PATH = %s", addr->sun_path);
+}
+
+char *network_sockaddr_tostring(const struct sockaddr *addr, char *buff, size_t size)
+{
+	if (buff == NULL || size == 0)
+	{
+		static char static_buff[128];
+
+		buff = static_buff;
+		size = sizeof(static_buff);
+	}
+
+	switch (addr->sa_family)
+	{
+	case AF_INET:
+		network_sockaddr_in_tostring((const struct sockaddr_in *) addr, buff, size);
+		break;
+
+	case AF_UNIX:
+		network_sockaddr_un_tostring((const struct sockaddr_un *) addr, buff, size);
+		break;
+
+	default:
+		*buff = 0;
+	}
+
+	return buff;
+}
+
 void network_url_init(struct network_url *url, const char *protocol, const char *hostname, u16 port, const char *pathname)
 {
 	url->port = port;
@@ -2247,6 +2293,7 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 		return -EFAULT;
 	}
 
+	pd_info("%s", network_sockaddr_tostring(addr, NULL, 0));
 	pd_bold_info("magic = 0x%08x, type = %d", magic, service->type);
 
 	if (magic != CAVAN_NETWORK_MAGIC)
@@ -2352,15 +2399,24 @@ static void network_service_tcp_close(struct network_service *service)
 
 static int network_service_tcp_accept(struct network_service *service, struct network_client *client)
 {
-	struct sockaddr_in addr;
+	struct sockaddr *addr;
+
+	addr = alloca(service->addrlen);
+	if (addr == NULL)
+	{
+		pr_error_info("alloca");
+		return -ENOMEM;
+	}
 
 	client->addrlen = service->addrlen;
-	client->sockfd = accept(service->sockfd, (struct sockaddr *) &addr, &client->addrlen);
+	client->sockfd = accept(service->sockfd, addr, &client->addrlen);
 	if (client->sockfd < 0)
 	{
 		pr_error_info("accept");
 		return client->sockfd;
 	}
+
+	pd_info("%s", network_sockaddr_tostring(addr, NULL, 0));
 
 	client->close = network_client_tcp_close;
 	client->send = network_client_tcp_send;
