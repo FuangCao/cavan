@@ -14,19 +14,20 @@
 static void show_usage(const char *command)
 {
 	println("Usage:");
-	println("%s [option] port", command);
-	println("--help, -H, -h\t\t\t\t%s", cavan_help_message_help);
-	println("--super, -S, -s\t\t\t\t%s", cavan_help_message_super);
-	println("--daemon, -D, -d\t\t\t%s", cavan_help_message_daemon);
-	println("--min, -m, -c\t\t\t\t%s", cavan_help_message_daemon_min);
-	println("--max, -M, -C\t\t\t\t%s", cavan_help_message_daemon_max);
-	println("--verbose, -V, -v\t\t\t%s", cavan_help_message_verbose);
-	println("--port, -P, -p PORT\t\t\t%s", cavan_help_message_port);
-	println("--log, -L, -l [PATHNAME]\t\t%s", cavan_help_message_logfile);
+	println("%s [option] [PORT]", command);
+	println("-H, -h, --help\t\t\t\t%s", cavan_help_message_help);
+	println("-S, -s, --super\t\t\t\t%s", cavan_help_message_super);
+	println("-D, -d, --daemon\t\t\t%s", cavan_help_message_daemon);
+	println("-m, -c, --min\t\t\t\t%s", cavan_help_message_daemon_min);
+	println("-M, -C, --max\t\t\t\t%s", cavan_help_message_daemon_max);
+	println("-V, -v, --verbose\t\t\t%s", cavan_help_message_verbose);
+	println("-p, --port PORT\t\t\t\t%s", cavan_help_message_port);
+	println("-L, -l, --log [PATHNAME]\t\t%s", cavan_help_message_logfile);
 	println("--udp\t\t\t\t\t%s", cavan_help_message_udp);
 	println("--url [URL]\t\t\t\t%s", cavan_help_message_url);
-	println("--unix, --unix-tcp, -U, -u [PATHNAME]\t%s", cavan_help_message_unix_tcp);
+	println("-U, -u, --unix, --unix-tcp [PATHNAME]\t%s", cavan_help_message_unix_tcp);
 	println("--unix-udp [PATHNAME]\t\t\t%s", cavan_help_message_unix_udp);
+	println("-P, --pt, --protocol PROTOCOL\t\t%s", cavan_help_message_protocol);
 }
 
 int main(int argc, char *argv[])
@@ -120,6 +121,18 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_URL,
 		},
 		{
+			.name = "protocol",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+		},
+		{
+			.name = "pt",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -195,7 +208,6 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'p':
-		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
 			url->port = text2value_unsigned(optarg, NULL, 10);
 			break;
@@ -229,6 +241,11 @@ int main(int argc, char *argv[])
 				pr_red_info("invalid url %s", optarg);
 				return -EINVAL;
 			}
+			break;
+
+		case 'P':
+		case CAVAN_COMMAND_OPTION_PROTOCOL:
+			url->protocol = optarg;
 			break;
 
 		default:

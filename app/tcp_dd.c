@@ -20,17 +20,18 @@ static void show_usage(const char *command)
 	println("bs=BYTES\t\t\t%s", cavan_help_message_bs);
 	println("seek=BLOCKS\t\t\t%s", cavan_help_message_seek);
 	println("skip=BLOCKS\t\t\t%s", cavan_help_message_skip);
-	println("--help, -H, -h\t\t\t%s", cavan_help_message_help);
-	println("--version, -V, -v\t\t%s", cavan_help_message_version);
-	println("--ip, -I, -i IP\t\t\t%s", cavan_help_message_ip);
+	println("-H, -h, --help\t\t\t%s", cavan_help_message_help);
+	println("-V, -v, --version\t\t%s", cavan_help_message_version);
+	println("-I, -i, --ip IP\t\t\t%s", cavan_help_message_ip);
 	println("--host [HOSTNAME]\t\t%s", cavan_help_message_hostname);
-	println("--local, -L, -l\t\t\t%s", cavan_help_message_local);
-	println("--port, -P, -p PORT\t\t%s", cavan_help_message_port);
-	println("--adb, -A, -a\t\t\t%s", cavan_help_message_adb);
+	println("-L, ---locall\t\t\t%s", cavan_help_message_local);
+	println("-p, --port PORT\t\t\t%s", cavan_help_message_port);
+	println("-A, -a, --adb\t\t\t%s", cavan_help_message_adb);
 	println("--udp\t\t\t\t%s", cavan_help_message_udp);
 	println("--unix, --unix-tcp [PATHNAME]\t%s", cavan_help_message_unix_tcp);
 	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
-	println("--url, -U, -u [URL]\t\t%s", cavan_help_message_url);
+	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
+	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
 	println("-W, -S, -w, -s\t\t\t%s", cavan_help_message_send_file);
 	println("-R, -r\t\t\t\t%s", cavan_help_message_recv_file);
 }
@@ -114,6 +115,18 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
 		},
 		{
+			.name = "protocol",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+		},
+		{
+			.name = "pt",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -161,7 +174,6 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'p':
-		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
 			url.port = text2value_unsigned(optarg, NULL, 10);
 			break;
@@ -191,6 +203,11 @@ int main(int argc, char *argv[])
 			{
 				url.pathname = optarg;
 			}
+			break;
+
+		case 'P':
+		case CAVAN_COMMAND_OPTION_PROTOCOL:
+			url.protocol = optarg;
 			break;
 
 		case 'w':

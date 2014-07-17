@@ -46,8 +46,10 @@ typedef enum
 	CAVAN_COMMAND_OPTION_PIPE,
 	CAVAN_COMMAND_OPTION_PORT,
 	CAVAN_COMMAND_OPTION_PREFIX,
+	CAVAN_COMMAND_OPTION_PROTOCOL,
 	CAVAN_COMMAND_OPTION_PROXY_HOST,
 	CAVAN_COMMAND_OPTION_PROXY_PORT,
+	CAVAN_COMMAND_OPTION_PROXY_PROTOCOL,
 	CAVAN_COMMAND_OPTION_PROXY_URL,
 	CAVAN_COMMAND_OPTION_READ,
 	CAVAN_COMMAND_OPTION_REPEAT,
@@ -116,6 +118,8 @@ extern const char *cavan_help_message_proxy_ip;
 extern const char *cavan_help_message_proxy_hostname;
 extern const char *cavan_help_message_proxy_port;
 extern const char *cavan_help_message_proxy_url;
+extern const char *cavan_help_message_protocol;
+extern const char *cavan_help_message_proxy_protocol;
 
 // ============================================================
 

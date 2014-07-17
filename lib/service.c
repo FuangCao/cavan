@@ -15,7 +15,7 @@
 
 static void cavan_service_sighandler(int signum)
 {
-	pr_bold_info("signum = %d", signum);
+	pd_bold_info("signum = %d", signum);
 
 	if (signum == SIGUSR1)
 	{
@@ -39,16 +39,16 @@ static void *cavan_service_handler(void *data)
 	{
 		int ret;
 
-		pr_bold_info("%s daemon %d ready", desc->name, index);
+		pd_bold_info("%s daemon %d ready", desc->name, index);
 
 		ret = desc->handler(desc, index, desc->data);
 		if (ret < 0)
 		{
-			pr_red_info("%s daemon %d fault", desc->name, index);
+			pd_red_info("%s daemon %d fault", desc->name, index);
 		}
 		else
 		{
-			pr_green_info("%s daemon %d complete", desc->name, index);
+			pd_green_info("%s daemon %d complete", desc->name, index);
 		}
 	}
 
@@ -68,7 +68,7 @@ void cavan_service_set_busy(struct cavan_service_description *desc, int index, b
 		desc->used_count--;
 	}
 
-	pr_green_info("%s daemon %d %s [%d/%d]", desc->name, index, busy ? "busy" : "idle", desc->used_count, desc->daemon_count);
+	pd_green_info("%s daemon %d %s [%d/%d]", desc->name, index, busy ? "busy" : "idle", desc->used_count, desc->daemon_count);
 
 	pthread_mutex_unlock(&desc->mutex_lock);
 }
@@ -100,7 +100,7 @@ int cavan_service_start(struct cavan_service_description *desc)
 
 	if (desc->as_daemon)
 	{
-		pr_blue_info("Run %s as daemon", desc->name);
+		pd_blue_info("Run %s as daemon", desc->name);
 		ret = daemon(0, desc->show_verbose);
 		if (ret < 0)
 		{
@@ -229,7 +229,7 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 		ERROR_RETURN(EINVAL);
 	}
 
-	pr_bold_info("command = %s", desc->command);
+	pd_bold_info("command = %s", desc->command);
 
 	if (desc->super_permission)
 	{
@@ -413,7 +413,7 @@ static void *cavan_dynamic_service_handler(void *data)
 
 	while (service->state == CAVAN_SERVICE_STATE_RUNNING)
 	{
-		pr_bold_info("service %s daemon %d ready (%d/%d)", service->name, index, service->used, service->count);
+		pd_bold_info("service %s daemon %d ready (%d/%d)", service->name, index, service->used, service->count);
 
 		pthread_mutex_unlock(&service->lock);
 		ret = service->open_connect(service, conn);
@@ -428,7 +428,7 @@ static void *cavan_dynamic_service_handler(void *data)
 
 		if (service->used < service->count)
 		{
-			pr_green_info("don't need create daemon");
+			pd_green_info("don't need create daemon");
 		}
 		else
 		{
@@ -439,31 +439,31 @@ static void *cavan_dynamic_service_handler(void *data)
 				ret = pthread_create(&thread, NULL, cavan_dynamic_service_handler, service);
 				if (ret < 0)
 				{
-					pr_red_info("create daemon faild");
+					pd_red_info("create daemon faild");
 				}
 				else
 				{
-					pr_green_info("create daemon successfully");
+					pd_green_info("create daemon successfully");
 				}
 			}
 			else
 			{
-				pr_red_info("too match deamon count = %d", service->count);
+				pd_red_info("too match deamon count = %d", service->count);
 			}
 		}
 
-		pr_bold_info("service %s daemon %d running (%d/%d)", service->name, index, service->used, service->count);
+		pd_bold_info("service %s daemon %d running (%d/%d)", service->name, index, service->used, service->count);
 
 		pthread_mutex_unlock(&service->lock);
 		ret = service->run(service, conn);
 		service->close_connect(service, conn);
 		if (ret < 0)
 		{
-			pr_red_info("service %s daemon %d fault", service->name, index);
+			pd_red_info("service %s daemon %d fault", service->name, index);
 		}
 		else
 		{
-			pr_green_info("service %s daemon %d complete", service->name, index);
+			pd_green_info("service %s daemon %d complete", service->name, index);
 		}
 
 		pthread_mutex_lock(&service->lock);
@@ -476,11 +476,11 @@ static void *cavan_dynamic_service_handler(void *data)
 	}
 
 	service->count--;
-	pr_green_info("service %s daemon %d exit (%d/%d)", service->name, index, service->used, service->count);
+	pd_green_info("service %s daemon %d exit (%d/%d)", service->name, index, service->used, service->count);
 
 	if (service->count == 0)
 	{
-		pr_red_info("service %s stopped", service->name);
+		pd_red_info("service %s stopped", service->name);
 
 		service->state = CAVAN_SERVICE_STATE_STOPPED;
 
@@ -541,7 +541,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		return -EINVAL;
 	}
 
-	pr_bold_info("service %s daemon (%d/%d)", service->name, service->min, service->max);
+	pd_bold_info("service %s daemon (%d/%d)", service->name, service->min, service->max);
 
 	if (service->min <= 0 || service->max < service->min)
 	{
@@ -570,7 +570,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	if (service->as_daemon)
 	{
-		pr_blue_info("Run %s as daemon", service->name);
+		pd_blue_info("Run %s as daemon", service->name);
 
 		ret = daemon(1, service->verbose);
 		if (ret < 0)
@@ -585,7 +585,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	homepath = getenv("HOME");
 	if (homepath)
 	{
-		pr_bold_info("change current work directory to %s", homepath);
+		pd_bold_info("change current work directory to %s", homepath);
 		ret = chdir(homepath);
 	}
 
@@ -608,7 +608,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		goto out_service_stop;
 	}
 
-	pr_bold_info("conn_size = " PRINT_FORMAT_SIZE, service->conn_size);
+	pd_bold_info("conn_size = " PRINT_FORMAT_SIZE, service->conn_size);
 
 	if (sync)
 	{
@@ -639,7 +639,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 				break;
 			}
 
-			pr_bold_info("service %s not ready", service->name);
+			pd_bold_info("service %s not ready", service->name);
 		}
 
 		pthread_mutex_unlock(&service->lock);
@@ -658,7 +658,7 @@ void cavan_dynamic_service_join(struct cavan_dynamic_service *service)
 
 	while (service->count)
 	{
-		pr_bold_info("service %s daemon count %d", service->name, service->count);
+		pd_bold_info("service %s daemon count %d", service->name, service->count);
 		pthread_cond_wait(&service->cond, &service->lock);
 	}
 
@@ -671,7 +671,7 @@ void cavan_dynamic_service_join(struct cavan_dynamic_service *service)
 
 	pthread_mutex_unlock(&service->lock);
 
-	pr_bold_info("service %s stopped", service->name);
+	pd_bold_info("service %s stopped", service->name);
 }
 
 int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
@@ -711,7 +711,7 @@ int cavan_dynamic_service_stop(struct cavan_dynamic_service *service)
 				break;
 			}
 
-			pr_red_info("wait service stop %d", i);
+			pd_red_info("wait service stop %d", i);
 		}
 	}
 

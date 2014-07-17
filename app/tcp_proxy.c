@@ -15,19 +15,21 @@ static void show_usage(const char *command)
 {
 	println("Usage:");
 	println("%s [option] [PORT]", command);
-	println("--help, -H, -h\t\t\t%s", cavan_help_message_help);
-	println("--version, -V, -v\t\t%s", cavan_help_message_version);
-	println("--port, -P, -p PORT\t\t%s", cavan_help_message_port);
-	println("--adb, -A, -a\t\t\t%s", cavan_help_message_adb);
-	println("--daemon, -D, -d\t\t%s", cavan_help_message_daemon);
-	println("--min, -m, -c\t\t\t%s", cavan_help_message_daemon_min);
-	println("--max, -M, -C\t\t\t%s", cavan_help_message_daemon_max);
+	println("-H, -h, --help\t\t\t%s", cavan_help_message_help);
+	println("-V, -v, --version\t\t%s", cavan_help_message_version);
+	println("-p, --port PORT\t\t\t%s", cavan_help_message_port);
+	println("-A, -a, --adb\t\t\t%s", cavan_help_message_adb);
+	println("-D, -d, --daemon\t\t%s", cavan_help_message_daemon);
+	println("-m, -c, --min\t\t\t%s", cavan_help_message_daemon_min);
+	println("-M, -C, --max\t\t\t%s", cavan_help_message_daemon_max);
 	println("--verbose\t\t\t%s", cavan_help_message_verbose);
-	println("--log, -L, -l\t\t\t%s", cavan_help_message_logfile);
+	println("-L, -l, --log\t\t\t%s", cavan_help_message_logfile);
 	println("--pip, --host HOSTNAME\t\t%s", cavan_help_message_proxy_hostname);
-	println("--pport, --pp PORT\t\t%s", cavan_help_message_proxy_port);
-	println("--url, -u URL\t\t\t%s", cavan_help_message_url);
-	println("--purl, --pu, -U URL\t\t%s", cavan_help_message_proxy_url);
+	println("--pp, --pport PORT\t\t%s", cavan_help_message_proxy_port);
+	println("-u, --url URL\t\t\t%s", cavan_help_message_url);
+	println("-U, --purl, --pu URL\t\t%s", cavan_help_message_proxy_url);
+	println("-P, --protocol, --pt PROTOCOL\t%s", cavan_help_message_protocol);
+	println("--ppt, --pprotocol PROTOCOL\t%s", cavan_help_message_proxy_protocol);
 }
 
 int main(int argc, char *argv[])
@@ -140,6 +142,30 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_PROXY_URL,
 		},
 		{
+			.name = "protocol",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+		},
+		{
+			.name = "pt",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+		},
+		{
+			.name = "pprotocol",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROXY_PROTOCOL,
+		},
+		{
+			.name = "ppt",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROXY_PROTOCOL,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -184,7 +210,6 @@ int main(int argc, char *argv[])
 			return 0;
 
 		case 'p':
-		case 'P':
 		case CAVAN_COMMAND_OPTION_PORT:
 			proxy->url.port = text2value_unsigned(optarg, NULL, 10);
 			break;
@@ -242,6 +267,15 @@ int main(int argc, char *argv[])
 			{
 				return -EINVAL;
 			}
+			break;
+
+		case 'P':
+		case CAVAN_COMMAND_OPTION_PROTOCOL:
+			proxy->url.protocol = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_PROXY_PROTOCOL:
+			proxy->url_proxy.protocol = optarg;
 			break;
 
 		default:

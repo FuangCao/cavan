@@ -877,7 +877,7 @@ int web_proxy_service_run(struct cavan_dynamic_service *service)
 {
 	struct web_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
-	pr_bold_info("PROXY_URL = %s", network_url_tostring(&proxy->url_proxy, NULL, 0, NULL));
+	pd_bold_info("PROXY_URL = %s", network_url_tostring(&proxy->url_proxy, NULL, 0, NULL));
 
 	service->name = "WEB_PROXY";
 	service->conn_size = sizeof(struct network_client);

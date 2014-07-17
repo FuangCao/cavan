@@ -41,6 +41,8 @@ const char *cavan_help_message_proxy_ip = "set proxy ip address to IP";
 const char *cavan_help_message_proxy_hostname = "set proxy hostname to HOSTNAME, this option same as --pip";
 const char *cavan_help_message_proxy_port = "set proxy port to PORT";
 const char *cavan_help_message_proxy_url = "set proxy url to URL";
+const char *cavan_help_message_protocol = "set service protocol to PROTOCOL";
+const char *cavan_help_message_proxy_protocol = "set proxy protocol to PROTOCOL";
 
 void print_command_table(const struct cavan_command_map *p, size_t size)
 {
