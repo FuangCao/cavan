@@ -63,6 +63,8 @@ static int network_client_test_base(struct network_client *client)
 			pr_red_info("client->send");
 			goto out_network_client_close;
 		}
+
+		msleep(10);
 	}
 
 	msleep(1000);

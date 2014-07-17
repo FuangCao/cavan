@@ -22,36 +22,6 @@
 
 static const char *build_time_string = __DATE__ " " __TIME__;
 
-const char *cavan_help_message_help = "display this information";
-const char *cavan_help_message_version = "display command version information";
-const char *cavan_help_message_ip = "service ip address to IP";
-const char *cavan_help_message_hostname = "service hostname to HOSTNAME, this option same as --ip";
-const char *cavan_help_message_local = "set ip address to 127.0.0.1";
-const char *cavan_help_message_adb = "set service protocol to adb";
-const char *cavan_help_message_tcp = "set service protocol to tcp";
-const char *cavan_help_message_udp = "set service protocol to udp";
-const char *cavan_help_message_unix_tcp = "set service protocol to unix tcp";
-const char *cavan_help_message_unix_udp = "set service protocol to unix udp";
-const char *cavan_help_message_port = "set service port to PORT";
-const char *cavan_help_message_url = "set service url";
-const char *cavan_help_message_send_file = "send file to server";
-const char *cavan_help_message_recv_file = "receive file from server";
-const char *cavan_help_message_command = "pass COMMAND to the invoked shell";
-const char *cavan_help_message_login = "make the shell a login shell";
-const char *cavan_help_message_preserve_environment = "do not reset environment variables, and keep the same shell";
-const char *cavan_help_message_shell = "use SHELL instead of the default in passwd";
-const char *cavan_help_message_input_file = "input file pathname";
-const char *cavan_help_message_output_file = "output file pathname";
-const char *cavan_help_message_bs = "block size";
-const char *cavan_help_message_seek = "offset of input file";
-const char *cavan_help_message_skip = "offset of output file";
-const char *cavan_help_message_super = "need super permission";
-const char *cavan_help_message_daemon = "run as a daemon";
-const char *cavan_help_message_daemon_min = "min daemon count";
-const char *cavan_help_message_daemon_max = "max daemon count";
-const char *cavan_help_message_verbose = "explain what is being done";
-const char *cavan_help_message_logfile = "save log to file";
-
 #ifdef CONFIG_BUILD_FOR_ANDROID
 #include <corkscrew/backtrace.h>
 

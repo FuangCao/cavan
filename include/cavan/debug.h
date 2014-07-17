@@ -59,38 +59,6 @@
 
 // ============================================================
 
-extern const char *cavan_help_message_help;
-extern const char *cavan_help_message_version;
-extern const char *cavan_help_message_ip;
-extern const char *cavan_help_message_hostname;
-extern const char *cavan_help_message_local;
-extern const char *cavan_help_message_adb;
-extern const char *cavan_help_message_tcp;
-extern const char *cavan_help_message_udp;
-extern const char *cavan_help_message_unix_tcp;
-extern const char *cavan_help_message_unix_udp;
-extern const char *cavan_help_message_port;
-extern const char *cavan_help_message_url;
-extern const char *cavan_help_message_send_file;
-extern const char *cavan_help_message_recv_file;
-extern const char *cavan_help_message_command;
-extern const char *cavan_help_message_login;
-extern const char *cavan_help_message_preserve_environment;
-extern const char *cavan_help_message_shell;
-extern const char *cavan_help_message_input_file;
-extern const char *cavan_help_message_output_file;
-extern const char *cavan_help_message_bs;
-extern const char *cavan_help_message_seek;
-extern const char *cavan_help_message_skip;
-extern const char *cavan_help_message_super;
-extern const char *cavan_help_message_daemon;
-extern const char *cavan_help_message_daemon_min;
-extern const char *cavan_help_message_daemon_max;
-extern const char *cavan_help_message_verbose;
-extern const char *cavan_help_message_logfile;
-
-// ============================================================
-
 char *dump_backtrace(char *buff, size_t size);
 int dump_stack(void);
 char *address_to_symbol(const void *addr, char *buff, size_t size);

@@ -8,6 +8,40 @@
 #include <sys/socket.h>
 #include <cavan/command.h>
 
+const char *cavan_help_message_help = "display this information";
+const char *cavan_help_message_version = "display command version information";
+const char *cavan_help_message_ip = "set service ip address to IP";
+const char *cavan_help_message_hostname = "set service hostname to HOSTNAME, this option same as --ip";
+const char *cavan_help_message_local = "set ip address to 127.0.0.1";
+const char *cavan_help_message_adb = "set service protocol to adb";
+const char *cavan_help_message_tcp = "set service protocol to tcp";
+const char *cavan_help_message_udp = "set service protocol to udp";
+const char *cavan_help_message_unix_tcp = "set service protocol to unix tcp";
+const char *cavan_help_message_unix_udp = "set service protocol to unix udp";
+const char *cavan_help_message_port = "set service port to PORT";
+const char *cavan_help_message_url = "set service url to URL";
+const char *cavan_help_message_send_file = "send file to server";
+const char *cavan_help_message_recv_file = "receive file from server";
+const char *cavan_help_message_command = "pass COMMAND to the invoked shell";
+const char *cavan_help_message_login = "make the shell a login shell";
+const char *cavan_help_message_preserve_environment = "do not reset environment variables, and keep the same shell";
+const char *cavan_help_message_shell = "use SHELL instead of the default in passwd";
+const char *cavan_help_message_input_file = "input file pathname";
+const char *cavan_help_message_output_file = "output file pathname";
+const char *cavan_help_message_bs = "block size";
+const char *cavan_help_message_seek = "offset of input file";
+const char *cavan_help_message_skip = "offset of output file";
+const char *cavan_help_message_super = "need super permission";
+const char *cavan_help_message_daemon = "run as a daemon";
+const char *cavan_help_message_daemon_min = "min daemon count";
+const char *cavan_help_message_daemon_max = "max daemon count";
+const char *cavan_help_message_verbose = "explain what is being done";
+const char *cavan_help_message_logfile = "save log to file";
+const char *cavan_help_message_proxy_ip = "set proxy ip address to IP";
+const char *cavan_help_message_proxy_hostname = "set proxy hostname to HOSTNAME, this option same as --pip";
+const char *cavan_help_message_proxy_port = "set proxy port to PORT";
+const char *cavan_help_message_proxy_url = "set proxy url to URL";
+
 void print_command_table(const struct cavan_command_map *p, size_t size)
 {
 	const struct cavan_command_map *p_end;
