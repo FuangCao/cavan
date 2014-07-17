@@ -1057,7 +1057,7 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 void network_url_init(struct network_url *url, const char *protocol, const char *hostname, u16 port, const char *pathname)
 {
 	url->port = port;
-	url->pathname = pathname ? pathname : CAVAN_NETWORK_SOCKET;
+	url->pathname = pathname ? pathname : "";
 	url->protocol = protocol ? protocol : CAVAN_DEFAULT_PROTOCOL;
 	url->hostname = hostname ? hostname : cavan_get_server_hostname();
 }
