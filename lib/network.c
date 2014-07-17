@@ -1223,6 +1223,11 @@ char *network_url_parse(struct network_url *url, const char *text)
 
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2)
 {
+	if (url1->port != url2->port)
+	{
+		return false;
+	}
+
 	if (text_cmp(url1->hostname, url2->hostname))
 	{
 		return false;
@@ -1233,7 +1238,7 @@ bool network_url_equals(const struct network_url *url1, const struct network_url
 		return false;
 	}
 
-	return url1->port == url2->port;
+	return true;
 }
 
 int network_create_socket_mac(const char *if_name, int protocol)
@@ -1633,12 +1638,12 @@ static void network_client_tcp_close(struct network_client *client)
 
 static ssize_t network_client_tcp_send(struct network_client *client, const void *buff, size_t size)
 {
-	return send(client->sockfd, buff, size, 0);
+	return inet_send(client->sockfd, buff, size);
 }
 
 static ssize_t network_client_tcp_recv(struct network_client *client, void *buff, size_t size)
 {
-	return recv(client->sockfd, buff, size, 0);
+	return inet_recv(client->sockfd, buff, size);
 }
 
 static int network_client_udp_talk(struct network_client *client, struct sockaddr *addr)
@@ -1714,7 +1719,7 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 	return 0;
 }
 
-static int network_client_udp_open(struct network_client *client, struct network_url *url, int flags)
+static int network_client_udp_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int ret;
 	int sockfd;
@@ -1736,7 +1741,7 @@ static int network_client_udp_open(struct network_client *client, struct network
 
 	client->sockfd = sockfd;
 	client->addrlen = sizeof(addr);
-	addr.sin_port = htons(url->port);
+	addr.sin_port = htons(port);
 
 	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, flags);
 	if (ret < 0)
@@ -1752,11 +1757,11 @@ out_close_sockfd:
 	return ret;
 }
 
-static int network_client_tcp_open(struct network_client *client, struct network_url *url, int flags)
+static int network_client_tcp_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int sockfd;
 
-	sockfd = inet_create_tcp_link2(url->hostname, url->port);
+	sockfd = inet_create_tcp_link2(url->hostname, port);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_socket");
@@ -1788,7 +1793,7 @@ static int network_create_unix_udp_client(struct network_client *client)
 	return 0;
 }
 
-static int network_client_unix_tcp_open(struct network_client *client, struct network_url *url, int flags)
+static int network_client_unix_tcp_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int sockfd;
 
@@ -1808,7 +1813,7 @@ static int network_client_unix_tcp_open(struct network_client *client, struct ne
 	return 0;
 }
 
-static int network_client_unix_udp_open(struct network_client *client, struct network_url *url, int flags)
+static int network_client_unix_udp_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int ret;
 	struct sockaddr_un addr;
@@ -1837,11 +1842,11 @@ out_close_sockfd:
 	return ret;
 }
 
-static int network_client_adb_open(struct network_client *client, struct network_url *url, int flags)
+static int network_client_adb_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int sockfd;
 
-	sockfd = adb_create_tcp_link(url->hostname, 0, url->port);
+	sockfd = adb_create_tcp_link(url->hostname, 0, port);
 	if (sockfd < 0)
 	{
 		pr_red_info("adb_create_tcp_link");
@@ -1857,7 +1862,7 @@ static int network_client_adb_open(struct network_client *client, struct network
 	return 0;
 }
 
-static int network_client_icmp_open(struct network_client *client, struct network_url *url, int flags)
+static int network_client_icmp_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int ret;
 	int sockfd;
@@ -1894,7 +1899,7 @@ out_close_sockfd:
 	return ret;
 }
 
-static int network_client_ip_open(struct network_client *client, struct network_url *url, int flags)
+static int network_client_ip_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int ret;
 	int sockfd;
@@ -1931,7 +1936,7 @@ out_close_sockfd:
 	return ret;
 }
 
-static int network_client_mac_open(struct network_client *client, struct network_url *url, int flags)
+static int network_client_mac_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int sockfd;
 
@@ -2209,7 +2214,7 @@ out_close_ttyfd:
 
 // ============================================================
 
-static int network_service_open_dummy(struct network_service *service, struct network_url *url, int flags)
+static int network_service_open_dummy(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	pr_red_info("No implement");
 
@@ -2323,9 +2328,9 @@ static int network_service_udp_accept(struct network_service *service, struct ne
 	return 0;
 }
 
-static int network_service_udp_open(struct network_service *service, struct network_url *url, int flags)
+static int network_service_udp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
-	service->sockfd = inet_create_udp_service(url->port);
+	service->sockfd = inet_create_udp_service(port);
 	if (service->sockfd < 0)
 	{
 		pr_red_info("inet_create_udp_service");
@@ -2364,9 +2369,9 @@ static int network_service_tcp_accept(struct network_service *service, struct ne
 	return 0;
 }
 
-static int network_service_tcp_open(struct network_service *service, struct network_url *url, int flags)
+static int network_service_tcp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
-	service->sockfd = inet_create_tcp_service(url->port);
+	service->sockfd = inet_create_tcp_service(port);
 	if (service->sockfd < 0)
 	{
 		pr_red_info("inet_create_tcp_service");
@@ -2381,7 +2386,7 @@ static int network_service_tcp_open(struct network_service *service, struct netw
 	return 0;
 }
 
-static int network_service_unix_tcp_open(struct network_service *service, struct network_url *url, int flags)
+static int network_service_unix_tcp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	service->sockfd = unix_create_tcp_service(url->pathname);
 	if (service->sockfd < 0)
@@ -2398,7 +2403,7 @@ static int network_service_unix_tcp_open(struct network_service *service, struct
 	return 0;
 }
 
-static int network_service_unix_udp_open(struct network_service *service, struct network_url *url, int flags)
+static int network_service_unix_udp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	service->sockfd = unix_create_udp_service(url->pathname);
 	if (service->sockfd < 0)
@@ -2660,52 +2665,25 @@ int network_get_port_by_url(const struct network_url *url, const struct network_
 	{
 		return url->port;
 	}
-	else if (url->protocol[0])
+	else if (protocol)
 	{
-		if (protocol == NULL)
-		{
-			protocol = network_get_protocol_by_name(url->protocol);
-		}
-
-		if (protocol == NULL)
-		{
-			pr_red_info("unknown protocol %s", url->protocol);
-			return -EINVAL;
-		}
-
 		return protocol->port;
 	}
-	else
+	else if (url->protocol[0])
 	{
-		return -EINVAL;
-	}
-}
+		protocol = network_get_protocol_by_name(url->protocol);
+		if (protocol)
+		{
+			return protocol->port;
+		}
 
-int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, struct network_url *url, int flags)
-{
-	client->type = desc->type;
-
-	if (url->port == NETWORK_PORT_INVALID)
-	{
-		url->port = desc->port;
+		pr_red_info("unknown protocol %s", url->protocol);
 	}
 
-	return desc->open_client(client, url, flags);
+	return -EINVAL;
 }
 
-int network_protocol_open_service(const struct network_protocol_desc *desc, struct network_service *service, struct network_url *url, int flags)
-{
-	service->type = desc->type;
-
-	if (url->port == NETWORK_PORT_INVALID)
-	{
-		url->port = desc->port;
-	}
-
-	return desc->open_service(service, url, flags);
-}
-
-int network_client_open(struct network_client *client, struct network_url *url, int flags)
+int network_client_open(struct network_client *client, const struct network_url *url, int flags)
 {
 	const struct network_protocol_desc *desc;
 
@@ -2748,7 +2726,7 @@ void network_client_close(struct network_client *client)
 	client->sockfd = -1;
 }
 
-int network_service_open(struct network_service *service, struct network_url *url, int flags)
+int network_service_open(struct network_service *service, const struct network_url *url, int flags)
 {
 	int ret;
 	const struct network_protocol_desc *desc;

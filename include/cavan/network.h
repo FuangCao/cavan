@@ -318,8 +318,8 @@ struct network_protocol_desc
 	u16 port;
 	network_protocol_t type;
 
-	int (*open_client)(struct network_client *client, struct network_url *url, int flags);
-	int (*open_service)(struct network_service *service, struct network_url *url, int flags);
+	int (*open_client)(struct network_client *client, const struct network_url *url, u16 port, int flags);
+	int (*open_service)(struct network_service *service, const struct network_url *url, u16 port, int flags);
 };
 
 extern int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port);
@@ -394,10 +394,8 @@ int network_create_socket_mac(const char *if_name, int protocol);
 
 network_protocol_t network_protocol_parse(const char *name);
 const char *network_protocol_tostring(network_protocol_t type);
-int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, struct network_url *url, int flags);
-int network_protocol_open_service(const struct network_protocol_desc *desc, struct network_service *service, struct network_url *url, int flags);
 
-int network_client_open(struct network_client *client, struct network_url *url, int flags);
+int network_client_open(struct network_client *client, const struct network_url *url, int flags);
 int network_client_open2(struct network_client *client, const char *url, int flags);
 void network_client_close(struct network_client *client);
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size);
@@ -410,7 +408,7 @@ ssize_t network_client_recv_line(struct network_client *client, char *buff, size
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout);
 int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns);
 
-int network_service_open(struct network_service *service, struct network_url *url, int flags);
+int network_service_open(struct network_service *service, const struct network_url *url, int flags);
 int network_service_open2(struct network_service *service, const char *url, int flags);
 void network_service_close(struct network_service *service);
 
@@ -549,6 +547,20 @@ static inline bool inet_sockaddr_equals(const struct sockaddr_in *left, const st
 	return memcmp(&left->sin_addr, &right->sin_addr, sizeof(left->sin_addr)) == 0 && left->sin_port == right->sin_port;
 }
 
+static inline int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, const struct network_url *url, int flags)
+{
+	client->type = desc->type;
+
+	return desc->open_client(client, url, network_get_port_by_url(url, desc), flags);
+}
+
+static inline int network_protocol_open_service(const struct network_protocol_desc *desc, struct network_service *service, const struct network_url *url, int flags)
+{
+	service->type = desc->type;
+
+	return desc->open_service(service, url, network_get_port_by_url(url, desc), flags);
+}
+
 static inline void network_client_set_data(struct network_client *client, void *data)
 {
 	client->private_data = data;
@@ -577,6 +589,11 @@ static inline ssize_t network_client_send_message(struct network_client *client,
 static inline ssize_t network_client_recv_message(struct network_client *client, u32 *message)
 {
 	return network_client_fill_buff(client, (char *) message, sizeof(*message));
+}
+
+static inline ssize_t network_client_send_text(struct network_client *client, const char *text)
+{
+	return client->send(client, text, text_len(text));
 }
 
 static inline void network_service_set_data(struct network_service *service, void *data)
