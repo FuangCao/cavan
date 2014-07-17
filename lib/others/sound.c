@@ -52,8 +52,8 @@ void show_wav_riff_chunk(struct wav_riff_chunk *chk)
 {
 	print_sep(60);
 	pr_bold_info("wav_riff_chunk:");
-	println("ID = %s", text_header((char *)&chk->id, sizeof(chk->id)));
-	println("Type = %s", text_header((char *)&chk->type, sizeof(chk->type)));
+	println("ID = %s", text_header((char *) &chk->id, sizeof(chk->id)));
+	println("Type = %s", text_header((char *) &chk->type, sizeof(chk->type)));
 	println("File Size = %d = %s", chk->file_length, size2text(chk->file_length));
 	print_sep(60);
 }
@@ -62,7 +62,7 @@ void show_wav_format_chunk(struct wav_format_chunk *chk)
 {
 	print_sep(60);
 	pr_bold_info("wav_format_chunk:");
-	println("ID = %s", text_header((char *)&chk->id, 3));
+	println("ID = %s", text_header((char *) &chk->id, 3));
 	println("Size = %d", chk->size);
 	println("Format = %s", wav_fmt_tosring(chk->format));
 	println("Channel Count = %d", chk->channels);
@@ -78,7 +78,7 @@ void show_wav_fact_chunk(struct wav_fact_chunk *chk)
 {
 	print_sep(60);
 	pr_bold_info("wav_fact_chunk:");
-	println("ID = %s", text_header((char *)&chk->id, sizeof(chk->id)));
+	println("ID = %s", text_header((char *) &chk->id, sizeof(chk->id)));
 	println("Size = 0x%04x", chk->size);
 	println("Data = 0x%04x", chk->data);
 	print_sep(60);
@@ -95,7 +95,7 @@ void show_wav_data_chunk(struct wav_data_chunk *chk)
 {
 	print_sep(60);
 	pr_bold_info("wav_data_chunk:");
-	println("ID = %s", text_header((char *)&chk->id, sizeof(chk->id)));
+	println("ID = %s", text_header((char *) &chk->id, sizeof(chk->id)));
 	println("data_length = %d = %s", chk->data_length, size2text(chk->data_length));
 	print_sep(60);
 }

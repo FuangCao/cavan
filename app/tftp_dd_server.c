@@ -50,8 +50,8 @@ static int service_handle(struct cavan_service_description *service, int index, 
 	int ret;
 	int sockfd = data.type_int;
 	union tftp_pkg pkg;
-	struct tftp_request_pkg *req_pkg_p = (void *)&pkg;
-	struct tftp_dd_request_pkg *dd_req_pkg_p = (void *)&pkg;
+	struct tftp_request_pkg *req_pkg_p = (void *) &pkg;
+	struct tftp_dd_request_pkg *dd_req_pkg_p = (void *) &pkg;
 	struct tftp_request req;
 	socklen_t addr_len = sizeof(struct sockaddr_in);
 

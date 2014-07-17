@@ -27,7 +27,7 @@
 #define value_trans(value) \
 	({ \
 		typeof_base(value) __tmp = value; \
-		text_ntrans((char *)&__tmp, sizeof(__tmp)); \
+		text_ntrans((char *) &__tmp, sizeof(__tmp)); \
 		__tmp = __tmp; \
 	})
 

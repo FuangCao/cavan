@@ -94,7 +94,7 @@ typedef struct
 	((dest) = (typeof(dest)) (src))
 
 #define MEMBER_OFFSET(type, member) \
-	((long)&((type *)0)->member)
+	((long) &((type *)0)->member)
 
 #define OFFSETOF(type, member) \
 	MEMBER_OFFSET(type, member)

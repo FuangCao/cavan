@@ -3,7 +3,7 @@
 
 static void progress_bar_fflush(struct progress_bar *bar)
 {
-	print_ntext((char *)&bar->body, sizeof(struct progress_bar_body));
+	print_ntext((char *) &bar->body, sizeof(struct progress_bar_body));
 	print_char('\r');
 }
 

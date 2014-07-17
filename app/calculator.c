@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 		case 'l':
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LENGTH:
-			length[0] = text2value_unsigned(optarg, (const char **)&optarg, 10);
+			length[0] = text2value_unsigned(optarg, (const char **) &optarg, 10);
 			length[1] = text2value_unsigned(optarg + 1, NULL, 10);
 			break;
 

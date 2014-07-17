@@ -402,7 +402,7 @@ void show_eavoo_short_message(struct eavoo_short_message *message)
 	println("Address = %s", message->address);
 	println("Body = %s", message->body);
 	println("Date = 0x%08x", message->date);
-	println("Date = %s", asctime(localtime((time_t *)&message->date)));
+	println("Date = %s", asctime(localtime((time_t *) &message->date)));
 }
 
 int fsms_receive_and_write(int sockfd, int fd)

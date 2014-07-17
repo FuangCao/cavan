@@ -215,8 +215,8 @@ void show_ip_header(struct ip_header *hdr, int simple)
 	}
 
 	println("protocol_type = %s", ip_protocol_type_tostring(hdr->protocol_type));
-	println("src_ip = %s", inet_ntoa(*(struct in_addr *)&hdr->src_ip));
-	println("dest_ip = %s", inet_ntoa(*(struct in_addr *)&hdr->dest_ip));
+	println("src_ip = %s", inet_ntoa(*(struct in_addr *) &hdr->src_ip));
+	println("dest_ip = %s", inet_ntoa(*(struct in_addr *) &hdr->dest_ip));
 }
 
 void show_tcp_header(struct tcp_header *hdr)
@@ -261,9 +261,9 @@ void show_arp_header(struct arp_header *hdr, int simple)
 	}
 
 	println("src_mac = %s", mac_address_tostring((char *) hdr->src_mac, sizeof(hdr->src_mac)));
-	println("src_ip = %s", inet_ntoa(*(struct in_addr *)&hdr->src_ip));
+	println("src_ip = %s", inet_ntoa(*(struct in_addr *) &hdr->src_ip));
 	println("dest_mac = %s", mac_address_tostring((char *) hdr->dest_mac, sizeof(hdr->dest_mac)));
-	println("dest_ip = %s", inet_ntoa(*(struct in_addr *)&hdr->dest_ip));
+	println("dest_ip = %s", inet_ntoa(*(struct in_addr *) &hdr->dest_ip));
 }
 
 void show_dhcp_header(struct dhcp_header *hdr)
@@ -277,10 +277,10 @@ void show_dhcp_header(struct dhcp_header *hdr)
 	println("transction_id = 0x%08x", ntohl(hdr->transction_id));
 	println("seconds = %d", ntohs(hdr->seconds));
 	println("flags = 0x%04x", ntohs(hdr->flags));
-	println("ciaddr = %s", inet_ntoa(*(struct in_addr *)&hdr->ciaddr));
-	println("yiaddr = %s", inet_ntoa(*(struct in_addr *)&hdr->yiaddr));
-	println("siaddr = %s", inet_ntoa(*(struct in_addr *)&hdr->siaddr));
-	println("giaddr = %s", inet_ntoa(*(struct in_addr *)&hdr->giaddr));
+	println("ciaddr = %s", inet_ntoa(*(struct in_addr *) &hdr->ciaddr));
+	println("yiaddr = %s", inet_ntoa(*(struct in_addr *) &hdr->yiaddr));
+	println("siaddr = %s", inet_ntoa(*(struct in_addr *) &hdr->siaddr));
+	println("giaddr = %s", inet_ntoa(*(struct in_addr *) &hdr->giaddr));
 	println("chaddr = %s", mac_address_tostring((char *) hdr->chaddr, MAC_ADDRESS_LEN));
 	println("sname = %s", hdr->sname);
 }
@@ -946,7 +946,7 @@ int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_a
 		return ret;
 	}
 
-	*sin_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
+	*sin_addr = *(struct sockaddr_in *) &ifr.ifr_addr;
 
 	return 0;
 }
@@ -1273,7 +1273,7 @@ int network_create_socket_mac(const char *if_name, int protocol)
 	bind_addr.sll_ifindex = req.ifr_ifindex;
 	bind_addr.sll_protocol = htons(ETH_P_ALL);
 
-	ret = bind(sockfd, (struct sockaddr *)&bind_addr, sizeof(bind_addr));
+	ret = bind(sockfd, (struct sockaddr *) &bind_addr, sizeof(bind_addr));
 	if (ret < 0)
 	{
 		pr_error_info("bind");

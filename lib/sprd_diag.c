@@ -304,7 +304,7 @@ label_found_one:
 	if (reslen >= sizeof(message) + 2)
 	{
 		pos_end = pos;
-		pos = sprd_diag_decode_data(useful, reslen, (char *)&message, sizeof(message), NULL);
+		pos = sprd_diag_decode_data(useful, reslen, (char *) &message, sizeof(message), NULL);
 
 		if (message.type == command->reply_type && message.subtype == command->reply_subtype && message.seq_num == command->seq_num)
 		{
@@ -408,7 +408,7 @@ int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 		.cmd_subtype = mask | 1 << 7,
 		.reply_type = SPRD_DIAG_DIRECT_NV,
 		.reply_subtype = SPRD_DIAG_OPER_SUCCESS_FLAG,
-		.command = (char *)&data,
+		.command = (char *) &data,
 		.command_len = sizeof(data),
 		.reply = (char *) imei,
 		.reply_len = sizeof(*imei)

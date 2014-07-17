@@ -1984,7 +1984,7 @@ int file_set_loop(const char *filename, char *loop_path, u64 offset)
 		goto out_close_loop;
 	}
 
-	mem_set8((u8 *)&loopinfo, 0, sizeof(loopinfo));
+	mem_set8((u8 *) &loopinfo, 0, sizeof(loopinfo));
 	if (to_abs_path2_base(filename, (char *) loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL)
 	{
 		ret = -ENOENT;

@@ -109,7 +109,7 @@ static inline int wav_riff_check(struct wav_riff_chunk *chk)
 
 static inline int wav_format_check(struct wav_format_chunk *chk)
 {
-	return text_lhcmp("fmt", (char *)&chk->id) == 0;
+	return text_lhcmp("fmt", (char *) &chk->id) == 0;
 }
 
 static inline int wav_fact_check(struct wav_fact_chunk *chk)

@@ -10,7 +10,7 @@
 void show_file_info(struct swan_file_info *file_p)
 {
 	println("version = 0x%08x", file_p->version);
-	print("Package build date = %s", asctime(localtime((time_t *)&file_p->version)));
+	print("Package build date = %s", asctime(localtime((time_t *) &file_p->version)));
 	// println("check_pattern = %s", file_p->check_pattern);
 	println("md5sum = %s", text_header(file_p->md5sum, MD5SUM_LEN));
 	println("header_size = %s", size2text(file_p->header_size));
@@ -136,7 +136,7 @@ int write_upgrade_program(int pkg_fd, struct swan_file_info *file_p, const char 
 		goto out_close_prm;
 	}
 
-	time((time_t *)&file_p->version);
+	time((time_t *) &file_p->version);
 	file_p->header_size = st.st_size;
 	strncpy(file_p->check_pattern, DEFAULT_CHECK_PATTERN, sizeof(file_p->check_pattern));
 

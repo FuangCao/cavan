@@ -211,7 +211,7 @@ static char *ftp_file_time_tostring(const time_t *time, char *text)
 
 	if (localtime_r(time, &ti) == NULL)
 	{
-		mem_set8((u8 *)&ti, 0, sizeof(ti));
+		mem_set8((u8 *) &ti, 0, sizeof(ti));
 	}
 
 	return text + sprintf(text, "%s %02d %02d:%02d", month_tostring(ti.tm_mon), ti.tm_mday, ti.tm_hour, ti.tm_min);
@@ -236,7 +236,7 @@ char *ftp_file_stat_tostring(const char *filepath, char *text)
 #else
 	text += sprintf(text, " %-5Ld %-5Ld %-5Ld %-10Ld ", (u64) st.st_nlink, (u64) st.st_uid, (u64) st.st_gid, (u64) st.st_size);
 #endif
-	text = ftp_file_time_tostring((time_t *)&st.st_mtime, text);
+	text = ftp_file_time_tostring((time_t *) &st.st_mtime, text);
 
 	return text;
 }
@@ -870,7 +870,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 			{
 				struct tm ti;
 
-				if (localtime_r((time_t *)&st.st_atime, &ti) == NULL)
+				if (localtime_r((time_t *) &st.st_atime, &ti) == NULL)
 				{
 					sprintf(rep_buff, "550 get localtime failed: %s", strerror(errno));
 				}
@@ -961,7 +961,7 @@ int ftp_service_run(struct cavan_service_description *service_desc, u16 port)
 
 	pr_bold_info("FTP Root Path = %s", ftp_root_path);
 
-	service_desc->data.type_void = (void *)&ftp_desc;
+	service_desc->data.type_void = (void *) &ftp_desc;
 	service_desc->handler = ftp_service_handle;
 	ret = cavan_service_run(service_desc);
 	cavan_service_stop(service_desc);
@@ -1149,7 +1149,7 @@ label_read_complete:
 #if FTP_DEBUG
 	print_ntext(buff, p - buff);
 #endif
-	state = text2value_unsigned(buff, (const char **)&p, 10);
+	state = text2value_unsigned(buff, (const char **) &p, 10);
 
 	if (response && size > 0)
 	{

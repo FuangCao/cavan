@@ -142,7 +142,7 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 	struct bmp_info_header *info_hdr;
 	struct bmp_header *header;
 
-	fd = file_mmap(bmp, (void **)&header, &size, 0);
+	fd = file_mmap(bmp, (void **) &header, &size, 0);
 	if (fd < 0)
 	{
 		pr_red_info("file_mmap");
@@ -360,7 +360,7 @@ int cavan_font_save_bmp(struct cavan_font *font, const char *pathname, int bit_c
 	color_table_size = bmp_get_color_table_size(bit_count);
 	size = sizeof(*header) + font->width * font->height * bit_count / 8;
 	size += color_table_size * sizeof(struct bmp_color_table_entry);
-	fd = file_mmap(pathname, (void **)&header, &size, O_RDWR | O_CREAT | O_TRUNC);
+	fd = file_mmap(pathname, (void **) &header, &size, O_RDWR | O_CREAT | O_TRUNC);
 	if (fd < 0)
 	{
 		pr_red_info("file_mmap");

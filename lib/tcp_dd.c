@@ -63,7 +63,7 @@ static int __printf_format_34__ tcp_dd_send_response(struct network_client *clie
 		}
 	}
 
-	return client->send(client, (char *)&pkg, MOFS(struct tcp_dd_package, res_pkg.message) + ret);
+	return client->send(client, (char *) &pkg, MOFS(struct tcp_dd_package, res_pkg.message) + ret);
 }
 
 static int tcp_dd_recv_response(struct network_client *client)
@@ -96,7 +96,7 @@ static int tcp_dd_send_read_request(struct network_client *client, const char *f
 	pkg->type = TCP_DD_READ;
 	pkg->file_req.offset = offset;
 	pkg->file_req.size = size;
-	ret = text_copy(pkg->file_req.filename, filename) - (char *)&pkg + 1;
+	ret = text_copy(pkg->file_req.filename, filename) - (char *) &pkg + 1;
 
 	ret = client->send(client, (char *) pkg, ret);
 	if (ret < 0)
@@ -136,8 +136,8 @@ static int tcp_dd_send_write_request(struct network_client *client, const char *
 	pkg.file_req.size = size;
 	pkg.file_req.mode = mode;
 
-	ret = text_copy(pkg.file_req.filename, filename) - (char *)&pkg + 1;
-	ret = client->send(client, (char *)&pkg, ret);
+	ret = text_copy(pkg.file_req.filename, filename) - (char *) &pkg + 1;
+	ret = client->send(client, (char *) &pkg, ret);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
@@ -207,8 +207,8 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 		*p = 0;
 	}
 
-	ret = p - (char *)&pkg;
-	client->send(client, (char *)&pkg, ret + 1);
+	ret = p - (char *) &pkg;
+	client->send(client, (char *) &pkg, ret + 1);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
@@ -229,8 +229,8 @@ static int tcp_dd_send_alarm_add_request(struct network_client *client, time_t t
 	pkg.alarm_add.repeat = repeat;
 	p = text_copy(pkg.alarm_add.command, command);
 
-	ret = p - (char *)&pkg;
-	ret = client->send(client, (char *)&pkg, ret + 1);
+	ret = p - (char *) &pkg;
+	ret = client->send(client, (char *) &pkg, ret + 1);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
@@ -249,7 +249,7 @@ static int tcp_dd_send_alarm_query_request(struct network_client *client, int ty
 	pkg.alarm_query.index = index;
 
 	ret = sizeof(pkg.alarm_query) + MOFS(struct tcp_dd_package, alarm_query);
-	ret = client->send(client, (char *)&pkg, ret);
+	ret = client->send(client, (char *) &pkg, ret);
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
@@ -503,7 +503,7 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 		item.repeat = node->repeat;
 		text_copy(item.command, node->private_data);
 
-		ret = client->send(client, (char *)&item, MOFS(struct tcp_alarm_add_request, command) + text_len(item.command) + 1);
+		ret = client->send(client, (char *) &item, MOFS(struct tcp_alarm_add_request, command) + text_len(item.command) + 1);
 		if (ret < 0)
 		{
 			pr_red_info("inet_send");

@@ -37,8 +37,8 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	src_ip = inet_addr(text_src_ip);
 	dest_ip = inet_addr(text_dest_ip);
 
-	println("src_ip = %s", inet_ntoa(*(struct in_addr *)&src_ip));
-	println("dest_ip = %s", inet_ntoa(*(struct in_addr *)&dest_ip));
+	println("src_ip = %s", inet_ntoa(*(struct in_addr *) &src_ip));
+	println("dest_ip = %s", inet_ntoa(*(struct in_addr *) &dest_ip));
 
 	while (1)
 	{

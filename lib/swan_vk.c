@@ -858,7 +858,7 @@ int swan_vk_adb_server(struct cavan_service_description *desc, const char *data_
 	vk_desc.datafd = datafd;
 	vk_desc.sockfd = sockfd;
 	desc->handler = swan_vk_server_handler;
-	desc->data.type_void = (void *)&vk_desc;
+	desc->data.type_void = (void *) &vk_desc;
 	ret = cavan_service_run(desc);
 	cavan_service_stop(desc);
 	inet_close_tcp_socket(sockfd);
@@ -934,7 +934,7 @@ int swan_vk_commandline(const char *data_path)
 label_repo_key:
 		pr_bold_info("repo key = %s = %d", old_p->name, old_p->code);
 
-		wrlen = write(fd_data, (void *)&old_p->code, sizeof(old_p->code));
+		wrlen = write(fd_data, (void *) &old_p->code, sizeof(old_p->code));
 		if (wrlen < 0)
 		{
 			print_error("write");

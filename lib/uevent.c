@@ -32,7 +32,7 @@ int uevent_init(struct uevent_desc *desc)
 	addr.nl_groups = 0xFFFFFFFF;
 	addr.nl_pad = 0;
 
-	ret = bind(sockfd, (struct sockaddr *)&addr, sizeof(addr));
+	ret = bind(sockfd, (struct sockaddr *) &addr, sizeof(addr));
 	if (ret < 0)
 	{
 		print_error("bind");
