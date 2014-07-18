@@ -1269,6 +1269,11 @@ char *network_url_parse(struct network_url *url, const char *text)
 
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2)
 {
+	if (url1 == url2)
+	{
+		return true;
+	}
+
 	if (url1->port != url2->port)
 	{
 		return false;
