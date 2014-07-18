@@ -656,6 +656,21 @@ out_return:
 	return buff - buff_bak;
 }
 
+static void web_proxy_close_proxy_client(struct network_client *client, bool ftp_login)
+{
+	if (client->sockfd < 0)
+	{
+		return;
+	}
+
+	if (ftp_login)
+	{
+		ftp_client_send_command2(client, NULL, 0, "QUIT\r\n");
+	}
+
+	network_client_close(client);
+}
+
 static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *conn)
 {
 	int ret;
@@ -682,7 +697,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		ret = web_proxy_read_http_request(client, buff, sizeof(buff) - proxy->proxy_hostlen - 1);
 		if (ret <= 0)
 		{
-			break;
+			goto out_network_client_close_proxy;
 		}
 
 		buff_end = buff + ret;
@@ -703,14 +718,14 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			if (client_proxy.sockfd < 0)
 			{
 				ret = -EINVAL;
-				break;
+				goto out_return;
 			}
 
 			ret = network_client_send(&client_proxy, buff, buff_end - buff);
 			if (ret <= 0)
 			{
 				pr_red_info("network_client_send");
-				break;
+				goto out_network_client_close_proxy;
 			}
 
 			goto label_web_proxy_main_loop;
@@ -724,7 +739,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		{
 			pr_red_info("web_proxy_parse_url:\n%s", url_text);
 			ret = -EINVAL;
-			break;
+			goto out_network_client_close_proxy;
 		}
 
 		if (url->hostname[0])
@@ -735,7 +750,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 				{
 					pr_red_info("invalid url %s", network_url_tostring(url, NULL, 0, NULL));
 					ret = -EINVAL;
-					break;
+					goto label_web_proxy_main_loop;
 				}
 
 				url->protocol = "http";
@@ -752,17 +767,14 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 
 		if (url_prev == NULL || network_url_equals(url_prev, url) == false)
 		{
-			if (client_proxy.sockfd >= 0)
-			{
-				network_client_close(&client_proxy);
-			}
+			web_proxy_close_proxy_client(&client_proxy, ftp_login);
 
 			ret = network_client_open(&client_proxy, url, 0);
 			if (ret < 0)
 			{
 				pr_red_info("network_client_open");
 				web_proxy_send_connect_failed(client, url);
-				break;
+				goto out_return;
 			}
 
 			count = 0;
@@ -918,16 +930,8 @@ label_change_dir:
 	}
 
 out_network_client_close_proxy:
-	if (client_proxy.sockfd >= 0)
-	{
-		if (ftp_login)
-		{
-			ftp_client_send_command2(&client_proxy, NULL, 0, "QUIT\r\n");
-		}
-
-		network_client_close(&client_proxy);
-	}
-
+	web_proxy_close_proxy_client(&client_proxy, ftp_login);
+out_return:
 	return ret;
 }
 
