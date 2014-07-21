@@ -113,23 +113,24 @@ am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) auto_dd.$(OBJEXT) \
 	mknp.$(OBJEXT) mksdcard.$(OBJEXT) modem_upgrade.$(OBJEXT) \
 	mount.$(OBJEXT) move.$(OBJEXT) mtd.$(OBJEXT) \
 	net_monitor.$(OBJEXT) part_probe.$(OBJEXT) part_show.$(OBJEXT) \
-	part_table.$(OBJEXT) poll_event.$(OBJEXT) poll_input.$(OBJEXT) \
-	ramdisk.$(OBJEXT) remove.$(OBJEXT) resize.$(OBJEXT) \
-	rle.$(OBJEXT) screen_mirror.$(OBJEXT) service.$(OBJEXT) \
-	sha1sum.$(OBJEXT) show_file.$(OBJEXT) shrink.$(OBJEXT) \
-	sprd_at.$(OBJEXT) sprd_write_imei.$(OBJEXT) su.$(OBJEXT) \
-	sudo.$(OBJEXT) super_upgrade.$(OBJEXT) swan_check.$(OBJEXT) \
-	swan_emmc.$(OBJEXT) swan_fac.$(OBJEXT) swan_ipu.$(OBJEXT) \
-	swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) swan_mkfs.$(OBJEXT) \
-	swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) swan_upgrade.$(OBJEXT) \
-	swan_vk.$(OBJEXT) swan_vn.$(OBJEXT) system_init.$(OBJEXT) \
-	tcp_copy.$(OBJEXT) tcp_dd.$(OBJEXT) tcp_dd_server.$(OBJEXT) \
-	tcp_exec.$(OBJEXT) tcp_proxy.$(OBJEXT) textlen.$(OBJEXT) \
-	tftp_auto_dd.$(OBJEXT) tftp_command.$(OBJEXT) \
-	tftp_copy.$(OBJEXT) tftp_dd.$(OBJEXT) tftp_dd_server.$(OBJEXT) \
-	touch.$(OBJEXT) tty_mode.$(OBJEXT) umount.$(OBJEXT) \
-	usb.$(OBJEXT) usb_copy.$(OBJEXT) usb_dd.$(OBJEXT) \
-	usb_dd_server.$(OBJEXT) vfat.$(OBJEXT) web_proxy.$(OBJEXT)
+	part_table.$(OBJEXT) ping.$(OBJEXT) poll_event.$(OBJEXT) \
+	poll_input.$(OBJEXT) ramdisk.$(OBJEXT) remove.$(OBJEXT) \
+	resize.$(OBJEXT) rle.$(OBJEXT) screen_mirror.$(OBJEXT) \
+	service.$(OBJEXT) sha1sum.$(OBJEXT) show_file.$(OBJEXT) \
+	shrink.$(OBJEXT) sprd_at.$(OBJEXT) sprd_write_imei.$(OBJEXT) \
+	su.$(OBJEXT) sudo.$(OBJEXT) super_upgrade.$(OBJEXT) \
+	swan_check.$(OBJEXT) swan_emmc.$(OBJEXT) swan_fac.$(OBJEXT) \
+	swan_ipu.$(OBJEXT) swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) \
+	swan_mkfs.$(OBJEXT) swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) \
+	swan_upgrade.$(OBJEXT) swan_vk.$(OBJEXT) swan_vn.$(OBJEXT) \
+	system_init.$(OBJEXT) tcp_copy.$(OBJEXT) tcp_dd.$(OBJEXT) \
+	tcp_dd_server.$(OBJEXT) tcp_exec.$(OBJEXT) tcp_proxy.$(OBJEXT) \
+	textlen.$(OBJEXT) tftp_auto_dd.$(OBJEXT) \
+	tftp_command.$(OBJEXT) tftp_copy.$(OBJEXT) tftp_dd.$(OBJEXT) \
+	tftp_dd_server.$(OBJEXT) touch.$(OBJEXT) tty_mode.$(OBJEXT) \
+	umount.$(OBJEXT) usb.$(OBJEXT) usb_copy.$(OBJEXT) \
+	usb_dd.$(OBJEXT) usb_dd_server.$(OBJEXT) vfat.$(OBJEXT) \
+	web_proxy.$(OBJEXT)
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_2 = core/cavan_main.$(OBJEXT)
 am_cavan_main_OBJECTS = $(am__objects_1) $(am__objects_2)
@@ -324,7 +325,7 @@ APP_SRC_FILES = abspath.c alarm.c auto_dd.c auto_mount.c battery.c \
 	file_loop.c file_split.c ftp.c ftp_server.c git_daemon.c \
 	image_dd.c inotify.c loop_run.c md5sum.c mkdir.c mknp.c \
 	mksdcard.c modem_upgrade.c mount.c move.c mtd.c net_monitor.c \
-	part_probe.c part_show.c part_table.c poll_event.c \
+	part_probe.c part_show.c part_table.c ping.c poll_event.c \
 	poll_input.c ramdisk.c remove.c resize.c rle.c screen_mirror.c \
 	service.c sha1sum.c show_file.c shrink.c sprd_at.c \
 	sprd_write_imei.c su.c sudo.c super_upgrade.c swan_check.c \
@@ -496,6 +497,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/part_probe.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/part_show.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/part_table.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ping.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/poll_event.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/poll_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ramdisk.Po@am__quote@
