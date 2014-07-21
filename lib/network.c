@@ -583,13 +583,13 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 	else
 	{
 		struct addrinfo *info;
-		struct addrinfo nints;
+		struct addrinfo hints;
 
-		memset(&nints, 0, sizeof(nints));
-		nints.ai_family = AF_INET;
-		nints.ai_socktype = SOCK_STREAM;
-		nints.ai_flags = 0;
-		ret = getaddrinfo(hostname, NULL, &nints, &info);
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_flags = 0;
+		ret = getaddrinfo(hostname, NULL, &hints, &info);
 		if (ret < 0 || info == NULL)
 		{
 			pr_error_info("getaddrinfo");
@@ -1006,7 +1006,7 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 {
 	int ret;
 	struct addrinfo *res, *p;
-	struct addrinfo nints;
+	struct addrinfo hints;
 
 	addr->sin_family = AF_INET;
 
@@ -1020,11 +1020,11 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 		return 0;
 	}
 
-	memset(&nints, 0, sizeof(nints));
-	nints.ai_family = AF_INET;
-	nints.ai_socktype = SOCK_STREAM;
-	nints.ai_flags = 0;
-	ret = getaddrinfo(hostname, NULL, &nints, &res);
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = 0;
+	ret = getaddrinfo(hostname, NULL, &hints, &res);
 	if (ret < 0)
 	{
 		pr_error_info("getaddrinfo");
@@ -1052,6 +1052,97 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 	inet_show_sockaddr(addr);
 
 	return 0;
+}
+
+int inet_create_link(const struct sockaddr_in *addr, int socktype, int protocol)
+{
+	int ret;
+	int sockfd;
+
+	sockfd = socket(PF_INET, socktype, protocol);
+	if (sockfd < 0)
+	{
+		pr_error_info("socket");
+		return sockfd;
+	}
+
+	ret = inet_connect(sockfd, addr);
+	if (ret < 0)
+	{
+		pr_error_info("inet_connect");
+		close(sockfd);
+		return ret;
+	}
+
+	return sockfd;
+}
+
+int network_create_link(const char *hostname, u16 port, int socktype, int protocol)
+{
+	int ret;
+	int sockfd;
+	struct addrinfo hints;
+	struct addrinfo *res, *p;
+
+	if (hostname == NULL || hostname[0] == 0)
+	{
+		hostname = "127.0.0.1";
+	}
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = socktype;
+	hints.ai_protocol = protocol;
+
+	ret = getaddrinfo(hostname, NULL, &hints, &res);
+	if (ret < 0 || res == NULL)
+	{
+		struct sockaddr_in addr;
+
+		ret = inet_aton(hostname, &addr.sin_addr);
+		if (ret < 0)
+		{
+			pr_error_info("inet_aton");
+			return ret;
+		}
+
+		addr.sin_port = htons(port);
+
+		return inet_create_link(&addr, socktype, protocol);
+	}
+
+	for (p = res; p; p = p->ai_next)
+	{
+		sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+		if (sockfd < 0)
+		{
+			continue;
+		}
+
+		if (p->ai_family == AF_INET && port != NETWORK_PORT_INVALID)
+		{
+			struct sockaddr_in *addr = (struct sockaddr_in *) p->ai_addr;
+
+			addr->sin_port = htons(port);
+		}
+
+		ret = connect(sockfd, p->ai_addr, p->ai_addrlen);
+		if (ret < 0)
+		{
+			close(sockfd);
+		}
+		else
+		{
+			pr_info("HOST = %s, %s", hostname, network_sockaddr_tostring(p->ai_addr, NULL, 0));
+			goto out_freeaddrinfo;
+		}
+	}
+
+	sockfd = -EFAULT;
+
+out_freeaddrinfo:
+	freeaddrinfo(res);
+	return sockfd;
 }
 
 static int network_sockaddr_in_tostring(const struct sockaddr_in *addr, char *buff, size_t size)
@@ -1706,7 +1797,7 @@ static int network_client_udp_talk(struct network_client *client, struct sockadd
 	ret = sendto(client->sockfd, &magic, sizeof(magic), 0, addr, client->addrlen);
 	if (ret < (ssize_t) sizeof(magic))
 	{
-		pr_red_info("network_client_send_message");
+		pr_error_info("sendto");
 		return -EFAULT;
 	}
 
@@ -1719,7 +1810,7 @@ static int network_client_udp_talk(struct network_client *client, struct sockadd
 	ret = recvfrom(client->sockfd, &magic, sizeof(magic), 0, addr, &client->addrlen);
 	if (ret < (ssize_t) sizeof(magic))
 	{
-		pr_red_info("network_client_recv_message");
+		pr_red_info("recvfrom");
 		return -EFAULT;
 	}
 
@@ -1736,7 +1827,7 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 {
 	int ret;
 
-	if (flags & CAVAN_NET_FLAG_TALK)
+	if (addr && (flags & CAVAN_NET_FLAG_TALK))
 	{
 		ret = network_client_udp_talk(client, addr);
 		if (ret < 0)
@@ -1744,13 +1835,13 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 			pr_red_info("network_client_udp_talk");
 			return ret;
 		}
-	}
 
-	ret = connect(client->sockfd, addr, client->addrlen);
-	if (ret < 0)
-	{
-		pr_error_info("connect");
-		return ret;
+		ret = connect(client->sockfd, addr, client->addrlen);
+		if (ret < 0)
+		{
+			pr_error_info("connect");
+			return ret;
+		}
 	}
 
 	client->send = network_client_tcp_send;
@@ -1791,7 +1882,7 @@ static int network_client_udp_open(struct network_client *client, const struct n
 	}
 
 	client->sockfd = sockfd;
-	client->addrlen = sizeof(addr);
+	client->addrlen = sizeof(struct sockaddr_in);
 	addr.sin_port = htons(port);
 
 	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, flags);
@@ -1812,7 +1903,7 @@ static int network_client_tcp_open(struct network_client *client, const struct n
 {
 	int sockfd;
 
-	sockfd = inet_create_tcp_link2(url->hostname, port);
+	sockfd = network_create_link(url->hostname, port, SOCK_STREAM, 0);
 	if (sockfd < 0)
 	{
 		pr_red_info("inet_socket");
@@ -1877,7 +1968,7 @@ static int network_client_unix_udp_open(struct network_client *client, const str
 	}
 
 	unix_sockaddr_init(&addr, url->pathname);
-	client->addrlen = sizeof(addr);
+	client->addrlen = sizeof(struct sockaddr_un);
 
 	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, flags);
 	if (ret < 0)
@@ -1917,16 +2008,8 @@ static int network_client_icmp_open(struct network_client *client, const struct 
 {
 	int ret;
 	int sockfd;
-	struct sockaddr_in addr;
 
-	ret = inet_hostname2sockaddr(url->hostname, &addr);
-	if (ret < 0)
-	{
-		pr_red_info("inet_hostname2sockaddr");
-		return ret;
-	}
-
-	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	sockfd = network_create_link(url->hostname, port, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd < 0)
 	{
 		pr_error_info("inet_socket");
@@ -1934,9 +2017,9 @@ static int network_client_icmp_open(struct network_client *client, const struct 
 	}
 
 	client->sockfd = sockfd;
-	client->addrlen = sizeof(addr);
+	client->addrlen = sizeof(struct sockaddr_in);
 
-	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, 0);
+	ret = network_client_udp_common_open(client, NULL, 0);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_udp_common_open");
@@ -1954,16 +2037,8 @@ static int network_client_ip_open(struct network_client *client, const struct ne
 {
 	int ret;
 	int sockfd;
-	struct sockaddr_in addr;
 
-	ret = inet_hostname2sockaddr(url->hostname, &addr);
-	if (ret < 0)
-	{
-		pr_red_info("inet_hostname2sockaddr");
-		return ret;
-	}
-
-	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+	sockfd = network_create_link(url->hostname, port, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd < 0)
 	{
 		pr_error_info("inet_socket");
@@ -1971,9 +2046,9 @@ static int network_client_ip_open(struct network_client *client, const struct ne
 	}
 
 	client->sockfd = sockfd;
-	client->addrlen = sizeof(addr);
+	client->addrlen = sizeof(struct sockaddr_in);
 
-	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, 0);
+	ret = network_client_udp_common_open(client, NULL, 0);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_udp_common_open");

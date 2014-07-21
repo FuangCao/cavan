@@ -85,12 +85,12 @@ void cavan_font_deinit(struct cavan_font *font)
 	}
 }
 
-struct cavan_font *cavan_font_get(cavan_font_type_t type)
+struct cavan_font *cavan_font_get(int type)
 {
 	int ret;
 	struct cavan_font *font;
 
-	if ((int) type < 0)
+	if (type < 0)
 	{
 		type = CAVAN_DEFAULT_FONT;
 	}

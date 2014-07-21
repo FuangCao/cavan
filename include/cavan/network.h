@@ -380,6 +380,9 @@ int inet_get_devname(int sockfd, int index, char *devname);
 int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd);
 int inet_hostname2sockaddr(const char *host, struct sockaddr_in *addr);
 
+int inet_create_link(const struct sockaddr_in *addr, int socktype, int protocol);
+int network_create_link(const char *hostname, u16 port, int socktype, int protocol);
+
 char *network_sockaddr_tostring(const struct sockaddr *addr, char *buff, size_t size);
 void network_url_init(struct network_url *url, const char *protocol, const char *hostname, u16 port, const char *pathname);
 char *network_url_get_pathname(const struct network_url *url, char *buff, size_t size);
