@@ -351,7 +351,7 @@ static int web_proxy_send_file(struct network_client *client, int fd, const char
 	return network_client_send_file(client, fd, st.st_size);
 }
 
-static int web_proxy_ftp_list_directory(struct network_client *client, struct network_client *client_proxy, struct network_url *url, const char *dirname)
+static int web_proxy_ftp_list_directory(struct network_client *client, struct network_client *client_proxy, const struct network_url *url)
 {
 	int fd;
 	int ret;
@@ -373,8 +373,7 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 		goto out_close_data_sockfd;
 	}
 
-	network_url_tostring(url, buff, sizeof(buff), &p);
-	text_copy(p, dirname);
+	network_url_tostring(url, buff, sizeof(buff), NULL);
 
 	fd = web_proxy_open_html_file(buff, NULL);
 	if (fd < 0)
@@ -384,12 +383,10 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 		goto out_close_data_sockfd;
 	}
 
-	*p = 0;
-
 	ffile_puts(fd, "\t\t<h1>FTP Proxy Server (Fuang.Cao <a href=\"http://mail.google.com\">cavan.cfa@gmail.com</a>)</h1>\r\n");
-	ffile_printf(fd, "\t\t<h2>Directory: <a href=\"%s%s/\">%s%s</a></h2>\r\n", buff, dirname, buff, dirname);
+	ffile_printf(fd, "\t\t<h2>Directory: <a href=\"%s/\">%s</a></h2>\r\n", buff, buff);
 
-	p = text_dirname_base(buff, dirname);
+	p = text_dirname_base(buff, url->pathname);
 	if (p == buff || p[-1] != '/')
 	{
 		*p++ = '/';
@@ -908,7 +905,7 @@ label_change_dir:
 				}
 				else
 				{
-					ret = web_proxy_ftp_list_directory(client, &client_proxy, url, req);
+					ret = web_proxy_ftp_list_directory(client, &client_proxy, url);
 					if (ret < 0)
 					{
 						pr_red_info("web_proxy_ftp_list_directory `%s'", req);
