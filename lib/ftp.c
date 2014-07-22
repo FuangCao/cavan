@@ -81,7 +81,13 @@ char *ftp_file_stat_tostring(const char *filepath, char *buff, char *buff_end)
 	}
 
 	buff = file_permition_tostring(st.st_mode, buff, buff_end);
-	buff += snprintf(buff, buff_end - buff, " %-5ld %-5d %-5d %-10ld ", st.st_nlink, st.st_uid, st.st_gid, st.st_size);
+
+#if __WORDSIZE == 64
+	buff += snprintf(buff, buff_end - buff, " %-5ld %-5d %-5d %-10ld", st.st_nlink, st.st_uid, st.st_gid, st.st_size);
+#else
+	buff += snprintf(buff, buff_end - buff, " %-5d %-5d %-5d %-10Ld", st.st_nlink, st.st_uid, st.st_gid, st.st_size);
+#endif
+
 	buff = ftp_file_time_tostring((time_t *) &st.st_mtime, buff, buff_end);
 
 	return buff;
@@ -447,7 +453,7 @@ static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network
 			}
 			else
 			{
-				sprintf(rep_buff, "213 " PRINT_FORMAT_SIZE, st.st_size);
+				sprintf(rep_buff, "213 " PRINT_FORMAT_OFF, st.st_size);
 			}
 
 			break;
