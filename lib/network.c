@@ -2099,75 +2099,111 @@ ssize_t network_client_fill_buff(struct network_client *client, char *buff, size
 	return size;
 }
 
-ssize_t network_client_send_buff(struct network_client *client, const char *buff, size_t size)
-{
-	ssize_t wrlen;
-	const char *buff_end = buff + size;
-
-	for (buff_end = buff + size; buff < buff_end; buff += wrlen)
-	{
-		wrlen = client->send(client, buff, buff_end - buff);
-		if (wrlen <= 0)
-		{
-			return -EFAULT;
-		}
-	}
-
-	return size;
-}
-
 ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size)
 {
-	size_t size_bak = size;
-	struct progress_bar bar;
+	ssize_t rdlen;
+	char buff[2048];
 
-	progress_bar_init(&bar, size);
-
-	while (size)
+	if (size == 0)
 	{
-		ssize_t rdlen;
-		char buff[2048];
-
-		rdlen = client->recv(client, buff, sizeof(buff));
-		if (rdlen <= 0 || ffile_write(fd, buff, rdlen) < rdlen)
+		while (1)
 		{
-			return -EFAULT;
+			rdlen = client->recv(client, buff, sizeof(buff));
+			if (rdlen <= 0)
+			{
+				if (rdlen < 0)
+				{
+					return rdlen;
+				}
+
+				return size;
+			}
+
+			if (ffile_write(fd, buff, rdlen) < rdlen)
+			{
+				return -EIO;
+			}
+
+			size += rdlen;
+		}
+	}
+	else
+	{
+		size_t size_bak = size;
+		struct progress_bar bar;
+
+		progress_bar_init(&bar, size);
+
+		while (size)
+		{
+
+			rdlen = client->recv(client, buff, sizeof(buff));
+			if (rdlen <= 0 || ffile_write(fd, buff, rdlen) < rdlen)
+			{
+				return -EIO;
+			}
+
+			size -= rdlen;
+			progress_bar_add(&bar, rdlen);
 		}
 
-		size -= rdlen;
-		progress_bar_add(&bar, rdlen);
+		progress_bar_finish(&bar);
+
+		return size_bak;
 	}
-
-	progress_bar_finish(&bar);
-
-	return size_bak;
 }
 
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size)
 {
-	size_t size_bak = size;
-	struct progress_bar bar;
+	ssize_t rdlen;
+	char buff[2048];
 
-	progress_bar_init(&bar, size);
-
-	while (size)
+	if (size == 0)
 	{
-		ssize_t rdlen;
-		char buff[2048];
-
-		rdlen = ffile_read(fd, buff, sizeof(buff));
-		if (rdlen <= 0 || network_client_send_buff(client, buff, rdlen) < rdlen)
+		while (1)
 		{
-			return -EFAULT;
+			rdlen = ffile_read(fd, buff, sizeof(buff));
+			if (rdlen <= 0)
+			{
+				if (rdlen < 0)
+				{
+					return rdlen;
+				}
+
+				return size;
+			}
+
+			if (client->send(client, buff, rdlen) < rdlen)
+			{
+				return -EIO;
+			}
+
+			size += rdlen;
+		}
+	}
+	else
+	{
+		size_t size_bak = size;
+		struct progress_bar bar;
+
+		progress_bar_init(&bar, size);
+
+		while (size)
+		{
+			rdlen = ffile_read(fd, buff, sizeof(buff));
+			if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen)
+			{
+				return -EFAULT;
+			}
+
+			size -= rdlen;
+			progress_bar_add(&bar, rdlen);
 		}
 
-		size -= rdlen;
-		progress_bar_add(&bar, rdlen);
+		progress_bar_finish(&bar);
+
+		return size_bak;
 	}
-
-	progress_bar_finish(&bar);
-
-	return size_bak;
 }
 
 ssize_t network_client_timed_recv(struct network_client *client, void *buff, size_t size, int timeout)
@@ -2263,6 +2299,30 @@ out_complete:
 	return buff - buff_bak;
 }
 
+int network_client_vprintf(struct network_client *client, const char *format, va_list ap)
+{
+	int length;
+	char buff[2048];
+
+	length = vsnprintf(buff, sizeof(buff), format, ap);
+
+	print_ntext(buff, length);
+
+	return client->send(client, buff, length);
+}
+
+int network_client_printf(struct network_client *client, const char *format, ...)
+{
+	int ret;
+	va_list ap;
+
+	va_start(ap, format);
+	ret = network_client_vprintf(client, format, ap);
+	va_end(ap);
+
+	return ret;
+}
+
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout)
 {
 	struct pollfd pfds[2];
@@ -2299,7 +2359,7 @@ int network_client_exec_redirect(struct network_client *client, int ttyin, int t
 		if (pfds[1].revents)
 		{
 			rdlen = read(ttyin, buff, sizeof(buff));
-			if (rdlen <= 0 || network_client_send_buff(client, buff, rdlen) < rdlen)
+			if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen)
 			{
 				break;
 			}
@@ -2587,7 +2647,6 @@ static const struct network_protocol_desc protocol_descs[] =
 	[NETWORK_PROTOCOL_TCP] =
 	{
 		.name = "tcp",
-		.port = CAVAN_DEFAULT_PORT,
 		.type = NETWORK_PROTOCOL_TCP,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_tcp_open,
@@ -2595,7 +2654,6 @@ static const struct network_protocol_desc protocol_descs[] =
 	[NETWORK_PROTOCOL_UDP] =
 	{
 		.name = "udp",
-		.port = CAVAN_DEFAULT_PORT,
 		.type = NETWORK_PROTOCOL_UDP,
 		.open_service = network_service_udp_open,
 		.open_client = network_client_udp_open,
@@ -2603,7 +2661,6 @@ static const struct network_protocol_desc protocol_descs[] =
 	[NETWORK_PROTOCOL_ADB] =
 	{
 		.name = "adb",
-		.port = CAVAN_DEFAULT_PORT,
 		.type = NETWORK_PROTOCOL_ADB,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_adb_open,
@@ -2611,7 +2668,6 @@ static const struct network_protocol_desc protocol_descs[] =
 	[NETWORK_PROTOCOL_ICMP] =
 	{
 		.name = "icmp",
-		.port = CAVAN_DEFAULT_PORT,
 		.type = NETWORK_PROTOCOL_ICMP,
 		.open_service = network_service_open_dummy,
 		.open_client = network_client_icmp_open,
@@ -2619,7 +2675,6 @@ static const struct network_protocol_desc protocol_descs[] =
 	[NETWORK_PROTOCOL_IP] =
 	{
 		.name = "ip",
-		.port = CAVAN_DEFAULT_PORT,
 		.type = NETWORK_PROTOCOL_IP,
 		.open_service = network_service_open_dummy,
 		.open_client = network_client_ip_open,
@@ -2627,7 +2682,6 @@ static const struct network_protocol_desc protocol_descs[] =
 	[NETWORK_PROTOCOL_MAC] =
 	{
 		.name = "mac",
-		.port = CAVAN_DEFAULT_PORT,
 		.type = NETWORK_PROTOCOL_MAC,
 		.open_service = network_service_open_dummy,
 		.open_client = network_client_mac_open,
@@ -2635,7 +2689,6 @@ static const struct network_protocol_desc protocol_descs[] =
 	[NETWORK_PROTOCOL_UNIX_TCP] =
 	{
 		.name = "unix-tcp",
-		.port = CAVAN_DEFAULT_PORT,
 		.type = NETWORK_PROTOCOL_UNIX_TCP,
 		.open_service = network_service_unix_tcp_open,
 		.open_client = network_client_unix_tcp_open,
@@ -2643,7 +2696,6 @@ static const struct network_protocol_desc protocol_descs[] =
 	[NETWORK_PROTOCOL_UNIX_UDP] =
 	{
 		.name = "unix-udp",
-		.port = CAVAN_DEFAULT_PORT,
 		.type = NETWORK_PROTOCOL_UNIX_UDP,
 		.open_service = network_service_unix_udp_open,
 		.open_client = network_client_unix_udp_open,
@@ -2862,6 +2914,66 @@ void network_client_close(struct network_client *client)
 	client->sockfd = -1;
 }
 
+int network_client_get_local_port(struct network_client *client)
+{
+	int ret;
+	struct sockaddr_in addr;
+
+	ret = network_client_get_local_addr(client, (struct sockaddr *) &addr, sizeof(addr));
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	return addr.sin_port;
+}
+
+int network_client_get_remote_port(struct network_client *client)
+{
+	int ret;
+	struct sockaddr_in addr;
+
+	ret = network_client_get_remote_addr(client, (struct sockaddr *) &addr, sizeof(addr));
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	return addr.sin_port;
+}
+
+int network_client_get_local_ip(struct network_client *client, struct in_addr *sin_addr)
+{
+	int ret;
+	struct sockaddr_in addr;
+
+	ret = network_client_get_local_addr(client, (struct sockaddr *) &addr, sizeof(addr));
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	*sin_addr = addr.sin_addr;
+
+	return 0;
+}
+
+int network_client_get_remote_ip(struct network_client *client, struct in_addr *sin_addr)
+{
+	int ret;
+	struct sockaddr_in addr;
+
+	ret = network_client_get_remote_addr(client, (struct sockaddr *) &addr, sizeof(addr));
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	*sin_addr = addr.sin_addr;
+
+	return 0;
+}
+
 int network_service_open(struct network_service *service, const struct network_url *url, int flags)
 {
 	int ret;
@@ -2869,11 +2981,14 @@ int network_service_open(struct network_service *service, const struct network_u
 
 	pd_bold_info("URL = %s", network_url_tostring(url, NULL, 0, NULL));
 
-	ret = mkdir_hierarchy(CAVAN_NETWORK_TEMP_PATH, 0777);
-	if (ret < 0)
+	if (service->type == NETWORK_PROTOCOL_UNIX_TCP || service->type == NETWORK_PROTOCOL_UNIX_UDP)
 	{
-		pr_red_info("mkdir_hierarchy %s", CAVAN_NETWORK_TEMP_PATH);
-		return ret;
+		ret = mkdir_hierarchy(CAVAN_NETWORK_TEMP_PATH, 0777);
+		if (ret < 0)
+		{
+			pr_red_info("mkdir_hierarchy %s", CAVAN_NETWORK_TEMP_PATH);
+			return ret;
+		}
 	}
 
 	desc = network_get_protocol_by_name(url->protocol);
@@ -2911,5 +3026,23 @@ void network_service_close(struct network_service *service)
 	}
 
 	service->sockfd = -1;
-	remove_directory(CAVAN_NETWORK_TEMP_PATH);
+
+	if (service->type == NETWORK_PROTOCOL_UNIX_TCP || service->type == NETWORK_PROTOCOL_UNIX_UDP)
+	{
+		remove_directory(CAVAN_NETWORK_TEMP_PATH);
+	}
+}
+
+int network_service_get_local_port(struct network_service *service)
+{
+	int ret;
+	struct sockaddr_in addr;
+
+	ret = network_service_get_local_addr(service, (struct sockaddr *) &addr, sizeof(addr));
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	return addr.sin_port;
 }

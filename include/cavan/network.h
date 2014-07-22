@@ -402,8 +402,9 @@ const char *network_protocol_tostring(network_protocol_t type);
 int network_client_open(struct network_client *client, const struct network_url *url, int flags);
 int network_client_open2(struct network_client *client, const char *url, int flags);
 void network_client_close(struct network_client *client);
+int network_client_vprintf(struct network_client *client, const char *format, va_list ap);
+int network_client_printf(struct network_client *client, const char *format, ...);
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size);
-ssize_t network_client_send_buff(struct network_client *client, const char *buff, size_t size);
 ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size);
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size);
 ssize_t network_client_timed_recv(struct network_client *client, void *buff, size_t size, int timeout);
@@ -411,10 +412,15 @@ bool network_client_discard_all(struct network_client *client);
 ssize_t network_client_recv_line(struct network_client *client, char *buff, size_t size);
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout);
 int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns);
+int network_client_get_local_port(struct network_client *client);
+int network_client_get_remote_port(struct network_client *client);
+int network_client_get_local_ip(struct network_client *client, struct in_addr *sin_addr);
+int network_client_get_remote_ip(struct network_client *client, struct in_addr *sin_addr);
 
 int network_service_open(struct network_service *service, const struct network_url *url, int flags);
 int network_service_open2(struct network_service *service, const char *url, int flags);
 void network_service_close(struct network_service *service);
+int network_service_get_local_port(struct network_service *service);
 
 static inline int inet_socket(int type)
 {
@@ -587,7 +593,7 @@ static inline ssize_t network_client_recv(struct network_client *client, void *b
 
 static inline ssize_t network_client_send_message(struct network_client *client, u32 message)
 {
-	return network_client_send_buff(client, (char *) &message, sizeof(message));
+	return client->send(client, (char *) &message, sizeof(message));
 }
 
 static inline ssize_t network_client_recv_message(struct network_client *client, u32 *message)
@@ -598,6 +604,16 @@ static inline ssize_t network_client_recv_message(struct network_client *client,
 static inline ssize_t network_client_send_text(struct network_client *client, const char *text)
 {
 	return client->send(client, text, text_len(text));
+}
+
+static inline int network_client_get_local_addr(struct network_client *client, struct sockaddr *addr, socklen_t addrlen)
+{
+	return getsockname(client->sockfd, addr, &addrlen);
+}
+
+static inline int network_client_get_remote_addr(struct network_client *client, struct sockaddr *addr, socklen_t addrlen)
+{
+	return getpeername(client->sockfd, addr, &addrlen);
 }
 
 static inline void network_service_set_data(struct network_service *service, void *data)
@@ -613,6 +629,11 @@ static inline void *network_service_get_data(struct network_service *service)
 static inline int network_service_accept(struct network_service *service, struct network_client *client)
 {
 	return service->accept(service, client);
+}
+
+static inline int network_service_get_local_addr(struct network_service *service, struct sockaddr *addr, socklen_t addrlen)
+{
+	return getsockname(service->sockfd, addr, &addrlen);
 }
 
 static inline const char *cavan_get_server_hostname(void)

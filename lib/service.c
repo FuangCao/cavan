@@ -339,6 +339,9 @@ int cavan_dynamic_service_init(struct cavan_dynamic_service *service)
 		goto out_pthread_mutex_destroy;
 	}
 
+	service->min = 10;
+	service->max = 1000;
+
 	return 0;
 
 out_pthread_mutex_destroy:

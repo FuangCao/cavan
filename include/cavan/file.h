@@ -168,7 +168,7 @@ __printf_format_34__ int file_open_format(int flags, mode_t mode, const char *fm
 int file_find_and_open(const char *prefix, char *last_path, int start, int end, int flags);
 
 char file_type_to_char(mode_t mode);
-char *file_permition_tostring(mode_t mode, char *text);
+char *file_permition_tostring(mode_t mode, char *buff, char *buff_end);
 const char *month_tostring(int month);
 const char *week_tostring(int week);
 
@@ -197,6 +197,7 @@ int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *op
 
 ssize_t file_read_line(int fd, char *buff, size_t size);
 int cavan_file_dump(const char *pathname, size_t width, const char *sep, const char *new_line);
+int cavan_temp_file_open(char *pathname, size_t size, const char *filename);
 
 // ============================================================
 

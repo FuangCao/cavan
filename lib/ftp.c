@@ -3,209 +3,56 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
-#define FTP_TIMEOUT_MS	0
+#define FTP_TIMEOUT_MS	5000
 #define FTP_DEBUG		0
 
-char ftp_root_path[1024] = "/";
-
-static inline int ftp_check_socket(int sockfd, const struct sockaddr_in *addr)
+static inline int ftp_create_data_link(struct network_client *client, const struct network_url *url)
 {
-	return sockfd < 0 ? inet_create_tcp_link1(addr) : sockfd;
-}
-
-static int ftp_server_send_file1(int sockfd, const struct sockaddr_in *addr, int fd)
-{
-	int ret;
-	int sockfd_bak = sockfd;
-
-	sockfd = ftp_check_socket(sockfd, addr);
-	if (sockfd < 0)
+	if (client->sockfd < 0)
 	{
-		error_msg("ftp_check_socket");
-		return sockfd;
-	}
-
-	ret = inet_tcp_send_file1(sockfd, fd);
-
-	if (sockfd_bak != sockfd)
-	{
-		inet_close_tcp_socket(sockfd);
-	}
-
-	return ret;
-}
-
-#if 0
-static int ftp_server_send_file2(int sockfd, const struct sockaddr_in *addr, const char *filename)
-{
-	int fd;
-	int ret;
-
-	fd = open(filename, O_RDONLY);
-	if (fd < 0)
-	{
-		print_error("open file %s failed", filename);
-		return fd;
-	}
-
-	ret = ftp_server_send_file1(sockfd, addr, fd);
-
-	close(fd);
-
-	return ret;
-}
-#endif
-
-static int ftp_server_receive_file1(int sockfd, const struct sockaddr_in *addr, int fd)
-{
-	int ret;
-	int sockfd_bak = sockfd;
-
-	sockfd = ftp_check_socket(sockfd, addr);
-	if (sockfd < 0)
-	{
-		error_msg("ftp_check_socket");
-		return sockfd;
-	}
-
-	ret = inet_tcp_receive_file1(sockfd, fd);
-
-	if (sockfd_bak != sockfd)
-	{
-		inet_close_tcp_socket(sockfd);
-	}
-
-	return ret;
-}
-
-#if 0
-static int ftp_server_receive_file2(int sockfd, const struct sockaddr_in *addr, const char *fllename)
-{
-	return 0;
-}
-#endif
-
-static ssize_t ftp_send_text_data(int sockfd, const char *text, size_t size)
-{
-	const char *text_end;
-	char buff[size << 1], *p;
-
-	for (p = buff, text_end = text + size; text < text_end; p++, text++)
-	{
-		switch (*(const char *) text)
-		{
-		case '\r':
-			break;
-
-		case '\n':
-			*p++ = '\r';
-		default:
-			*p = *(const char *) text;
-		}
-	}
-
-	return inet_send(sockfd, buff, p - buff);
-}
-
-static ssize_t ftp_send_data(int sockfd, const struct sockaddr_in *addr, const void *buff, size_t size, char type)
-{
-	int ret;
-	int sockfd_bak = sockfd;
-
-	sockfd = ftp_check_socket(sockfd, addr);
-	if (sockfd < 0)
-	{
-		error_msg("ftp_check_socket");
-		return sockfd;
-	}
-
-	if (type == 'I')
-	{
-		ret = inet_send(sockfd, buff, size);
-	}
-	else
-	{
-		ret = ftp_send_text_data(sockfd, buff, size);
-	}
-
-	if (sockfd_bak != sockfd)
-	{
-		inet_close_tcp_socket(sockfd);
-	}
-
-	return ret;
-}
-
-#if 0
-static int ftp_send_text_file1(int sockfd, int fd)
-{
-	int sendlen, readlen;
-	char buff[1024];
-
-	while (1)
-	{
-		readlen = read(fd, buff, sizeof(buff));
-		if (readlen < 0)
-		{
-			print_error("read");
-			return readlen;
-		}
-
-		if (readlen == 0)
-		{
-			break;
-		}
-
-		sendlen = ftp_send_text_data(sockfd, buff, readlen);
-		if (sendlen < 0)
-		{
-			print_error("ftp_send_text_data");
-			return sendlen;
-		}
+		return network_client_open(client, url, 0);
 	}
 
 	return 0;
 }
 
-static int ftp_send_text_file2(int sockfd, const struct sockaddr_in *addr, int fd)
+static int ftp_server_send_file1(struct network_client *client, const struct network_url *url, int fd)
 {
 	int ret;
 
-	sockfd = ftp_check_socket(sockfd, addr);
-	if (sockfd < 0)
+	ret = ftp_create_data_link(client, url);
+	if (ret < 0)
 	{
-		error_msg("inet_create_tcp_link1");
-		return sockfd;
+		pr_red_info("ftp_create_data_link");
+		return ret;
 	}
 
-	ret = ftp_send_text_file1(sockfd, fd);
+	ret = network_client_send_file(client, fd, 0);
 
-	inet_close_tcp_socket(sockfd);
+	network_client_close(client);
 
 	return ret;
 }
 
-static int ftp_send_text_file3(int sockfd, struct sockaddr_in *addr, const char *filename)
+static int ftp_server_receive_file1(struct network_client *client, const struct network_url *url, int fd)
 {
 	int ret;
-	int fd;
 
-	fd = open(filename, O_RDONLY);
-	if (fd < 0)
+	ret = ftp_create_data_link(client, url);
+	if (ret < 0)
 	{
-		print_error("open");
-		return fd;
+		pr_red_info("ftp_create_data_link");
+		return ret;
 	}
 
-	ret = ftp_send_text_file2(sockfd, addr, fd);
+	ret = network_client_recv_file(client, fd, 0);
 
-	close(fd);
+	network_client_close(client);
 
 	return ret;
 }
-#endif
 
-static char *ftp_file_time_tostring(const time_t *time, char *text)
+static char *ftp_file_time_tostring(const time_t *time, char *buff, char *buff_end)
 {
 	struct tm ti;
 
@@ -214,10 +61,10 @@ static char *ftp_file_time_tostring(const time_t *time, char *text)
 		mem_set8((u8 *) &ti, 0, sizeof(ti));
 	}
 
-	return text + sprintf(text, "%s %02d %02d:%02d", month_tostring(ti.tm_mon), ti.tm_mday, ti.tm_hour, ti.tm_min);
+	return buff + snprintf(buff, buff_end - buff, "%s %02d %02d:%02d", month_tostring(ti.tm_mon), ti.tm_mday, ti.tm_hour, ti.tm_min);
 }
 
-char *ftp_file_stat_tostring(const char *filepath, char *text)
+char *ftp_file_stat_tostring(const char *filepath, char *buff, char *buff_end)
 {
 	int ret;
 	struct stat st;
@@ -225,153 +72,93 @@ char *ftp_file_stat_tostring(const char *filepath, char *text)
 	ret = stat(filepath, &st);
 	if (ret < 0)
 	{
-		print_error("get file %s stat", filepath);
 		return NULL;
 	}
 
-	*text++ = file_type_to_char(st.st_mode);
-	text = file_permition_tostring(st.st_mode, text);
-#if __WORDSIZE == 64
-	text += sprintf(text, " %-5ld %-5ld %-5ld %-10ld ", (u64) st.st_nlink, (u64) st.st_uid, (u64) st.st_gid, (u64) st.st_size);
-#else
-	text += sprintf(text, " %-5Ld %-5Ld %-5Ld %-10Ld ", (u64) st.st_nlink, (u64) st.st_uid, (u64) st.st_gid, (u64) st.st_size);
-#endif
-	text = ftp_file_time_tostring((time_t *) &st.st_mtime, text);
+	if (buff < buff_end)
+	{
+		*buff++ = file_type_to_char(st.st_mode);
+	}
 
-	return text;
+	buff = file_permition_tostring(st.st_mode, buff, buff_end);
+	buff += snprintf(buff, buff_end - buff, " %-5ld %-5d %-5d %-10ld ", st.st_nlink, st.st_uid, st.st_gid, st.st_size);
+	buff = ftp_file_time_tostring((time_t *) &st.st_mtime, buff, buff_end);
+
+	return buff;
 }
 
-static char *ftp_list_directory1(const char *dirpath, char *text)
+static int ftp_list_directory1(const char *dirpath, const char *newline)
 {
+	int fd;
 	DIR *dp;
+	int ret;
 	struct dirent *ep;
-	char tmp_path[1024], *name_p;
-	char *text_p;
+	char *filename;
+	char pathname[1024];
+	char buff[1024];
+	char *buff_end = buff + sizeof(buff);
 
 	dp = opendir(dirpath);
 	if (dp == NULL)
 	{
-		print_error("opendir failed");
-		return NULL;
+		pr_red_info("opendir failed");
+		return -EFAULT;
 	}
 
-	name_p = text_path_cat(tmp_path, sizeof(tmp_path), dirpath, NULL);
+	fd = cavan_temp_file_open(pathname, sizeof(pathname), "cavan-ftp-XXXXXX");
+	if (fd < 0)
+	{
+		pr_red_info("cavan_temp_file_open");
+		ret = fd;
+		goto out_closedir;
+	}
+
+	filename = text_path_cat(pathname, sizeof(pathname), dirpath, NULL);
 
 	while ((ep = readdir(dp)))
 	{
-		text_copy(name_p, ep->d_name);
+		char *p;
 
-		text_p = ftp_file_stat_tostring(tmp_path, text);
-		if (text_p == NULL)
+		text_copy(filename, ep->d_name);
+
+		p = ftp_file_stat_tostring(pathname, buff, buff_end);
+		if (p == NULL)
 		{
 			continue;
 		}
-		text = text_p;
-		*text++ = ' ';
-		text = text_copy(text, ep->d_name);
-		*text++ = '\n';
+
+		p += snprintf(p, buff_end - p, " %s%s", ep->d_name, newline);
+
+		ret = ffile_write(fd, buff, p - buff);
+		if (ret < 0)
+		{
+			pr_red_info("ffile_write");
+			goto out_close_fd;
+		}
 	}
 
-	*text = 0;
-
-	return text;
-}
-
-#if 0
-static ssize_t ftp_list_directory2(int sockfd, const struct sockaddr_in *addr, const char *dirpath)
-{
-	int ret;
-	char buff[MB(1)], *p;
-
-	sockfd = ftp_check_socket(sockfd, addr);
-	if (sockfd < 0)
+	if (lseek(fd, 0, SEEK_SET) != 0)
 	{
-		error_msg("ftp_check_socket");
-		return sockfd;
+		pr_error_info("lseek");
+		ret = -EFAULT;
+		goto out_close_fd;
 	}
 
-	p = ftp_list_directory1(dirpath, buff);
-	if (p == NULL)
-	{
-		ret = -1;
-		goto out_close_sockfd;
-	}
+	closedir(dp);
+	return fd;
 
-	ret = inet_send(sockfd, buff, p - buff);
-
-out_close_sockfd:
-	inet_close_tcp_socket(sockfd);
-
+out_close_fd:
+	close(fd);
+out_closedir:
+	closedir(dp);
 	return ret;
 }
-#endif
 
-static int ftp_send_text(int sockfd, const char *format, ...)
-{
-	int ret;
-	char buff[1024];
-	va_list ap;
-
-	va_start(ap, format);
-	ret = vsprintf(buff, format, ap);
-	va_end(ap);
-
-#if FTP_DEBUG
-	print_ntext(buff, ret);
-#endif
-
-	return inet_send(sockfd, buff, ret);
-}
-
-static ssize_t ftp_receive_timeout(int sockfd, void *buff, size_t size)
-#if FTP_TIMEOUT_MS > 0
-{
-	while (1)
-	{
-		int i;
-		ssize_t recvlen;
-		time_t start_time, stop_time;
-
-		start_time = time(NULL);
-
-		for (i = 0; i < 2; i++)
-		{
-			recvlen = inet_recv_timeout(sockfd, buff, size, FTP_TIMEOUT_MS);
-			if (recvlen)
-			{
-				return recvlen;
-			}
-		}
-
-		stop_time = time(NULL);
-
-		if (stop_time - start_time == 0)
-		{
-			break;
-		}
-	}
-
-	return -ETIMEDOUT;
-}
-#else
-{
-	ssize_t recvlen = inet_recv(sockfd, buff, size);
-#if FTP_DEBUG
-	if (recvlen > 0)
-	{
-		print_ntext(buff, recvlen);
-	}
-#endif
-
-	return recvlen;
-}
-#endif
-
-static int ftp_service_login(int sockfd)
+static int ftp_service_login(struct network_client *client)
 {
 	char buff[1024];
 	const char *reply;
-	ssize_t sendlen, recvlen;
+	ssize_t wrlen, rdlen;
 	enum cavan_ftp_state state;
 
 	reply = "220 Cavan ftp server ready";
@@ -379,18 +166,18 @@ static int ftp_service_login(int sockfd)
 
 	while (1)
 	{
-		sendlen = ftp_send_text(sockfd, "%s\r\n", reply);
-		if (sendlen < 0)
+		wrlen = network_client_printf(client, "%s\r\n", reply);
+		if (wrlen < 0)
 		{
-			print_error("inet_send_text");
-			return sendlen;
+			pr_red_info("inet_send_text");
+			return wrlen;
 		}
 
-		recvlen = ftp_receive_timeout(sockfd, buff, sizeof(buff));
-		if (recvlen <= 0)
+		rdlen = network_client_timed_recv(client, buff, sizeof(buff), FTP_TIMEOUT_MS);
+		if (rdlen <= 0)
 		{
-			error_msg("inet_recv_timeout");
-			return recvlen;
+			pr_red_info("inet_recv_timeout");
+			return rdlen;
 		}
 
 		switch (*(u32 *) buff)
@@ -398,7 +185,7 @@ static int ftp_service_login(int sockfd)
 		/* quit */
 		case 0x74697571:
 		case 0x54495551:
-			ftp_send_text(sockfd, "221 Goodbye\r\n");
+			network_client_send_text(client, "221 Goodbye\r\n");
 			return 0;
 
 		/* user */
@@ -437,11 +224,11 @@ static int ftp_service_login(int sockfd)
 	}
 }
 
-static char *ftp_get_abs_path(const char *root_path, const char *curr_path, const char *path, char *abs_path, size_t size)
+static char *ftp_get_abs_path(const char *curr_path, const char *path, char *abs_path, size_t size)
 {
 	if (*path == '/')
 	{
-		text_path_cat(abs_path, size, root_path, path);
+		text_ncopy(abs_path, path, size);
 	}
 	else
 	{
@@ -449,92 +236,72 @@ static char *ftp_get_abs_path(const char *root_path, const char *curr_path, cons
 	}
 
 #if FTP_DEBUG
-	println("root_path = %s, curr_path = %s, abs_path = %s, path = %s", root_path, curr_path, abs_path, path);
+	println("curr_path = %s, abs_path = %s, path = %s", curr_path, abs_path, path);
 #endif
 
 	return abs_path;
 }
 
-static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, struct sockaddr_in *addr)
+static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network_client *client)
 {
-	ssize_t sendlen, recvlen;
-	char cmd_buff[1024], rep_buff[1024], *cmd_arg;
-	char list_buff[1024 * 1024], *list_p;
-	char abs_path[1024], curr_path[1024];
-	char rnfr_path[1024];
-	char local_ip[32];
-	struct sockaddr_in local_addr;
-	const char *reply;
+	int fd;
 	int ret;
 	char file_type;
-	struct stat st;
-	int pasv_port;
-	int data_sockfd;
-	socklen_t addrlen;
-	int fd;
+	const char *reply;
+	ssize_t wrlen, rdlen;
+	struct network_url url_port;
+	struct network_client client_data;
+	char abs_path[1024], curr_path[1024];
+	char cmd_buff[1024], rep_buff[1024], *cmd_arg;
 
-	ret = ftp_service_login(sockfd);
+	ret = ftp_service_login(client);
 	if (ret <= 0)
 	{
 		return ret;
 	}
 
-	data_sockfd = -1;
 	file_type = 0;
-	pasv_port = 0;
+	client_data.sockfd = -1;
+	network_url_init(&url_port, "tcp", NULL, 0, NULL);
 
 	reply = "230 User login successfull";
-	text_copy(curr_path, ftp_root_path);
-
-	ret = inet_getsockname(sockfd, &local_addr);
-	if (ret < 0)
-	{
-		pr_red_info("inet_getsockname");
-		return ret;
-	}
-
-#if FTP_DEBUG
-	pr_bold_info("Local Address:");
-	inet_show_sockaddr(&local_addr);
-#endif
-
-	text_replace_char2(inet_ntoa(local_addr.sin_addr), local_ip, '.', ',');
+	text_copy(curr_path, service->home);
 
 	while (1)
 	{
 		if (reply)
 		{
-			sendlen = ftp_send_text(sockfd, "%s\r\n", reply);
-			if (sendlen < 0)
+			wrlen = network_client_printf(client, "%s\r\n", reply);
+			if (wrlen < 0)
 			{
-				print_error("inet_send_text");
+				pr_red_info("inet_send_text");
 				goto out_close_data_sockfd;
 			}
 		}
 
-		recvlen = ftp_receive_timeout(sockfd, cmd_buff, sizeof(cmd_buff));
-		if (recvlen <= 0)
+		rdlen = client->recv(client, cmd_buff, sizeof(cmd_buff));
+		if (rdlen <= 0)
 		{
-			error_msg("ftp_receive_timeout");
 			goto out_close_data_sockfd;
 		}
 
-		while (recvlen >= 0)
+		while (rdlen >= 0)
 		{
-			char c = cmd_buff[recvlen - 1];
+			char c = cmd_buff[rdlen - 1];
 			if (c != '\r' && c != '\n')
 			{
 				break;
 			}
 
-			recvlen--;
+			rdlen--;
 		}
 
-		cmd_buff[recvlen] = 0;
+		cmd_buff[rdlen] = 0;
 		reply = rep_buff;
 
-		for (cmd_arg = cmd_buff; *cmd_arg && !is_empty_character(*cmd_arg); cmd_arg++);
-		while (is_empty_character(*cmd_arg))
+		for (cmd_arg = cmd_buff; *cmd_arg && !byte_is_space(*cmd_arg); cmd_arg++);
+
+		while (byte_is_space(*cmd_arg))
 		{
 			cmd_arg++;
 		}
@@ -551,7 +318,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* quit */
 		case 0x74697571:
 		case 0x54495551:
-			ftp_send_text(sockfd, "221 Goodbye\r\n");
+			network_client_send_text(client, "221 Goodbye\r\n");
 			goto out_close_data_sockfd;
 
 		/* user */
@@ -575,10 +342,9 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 			ret = sscanf(cmd_arg, "%d,%d,%d,%d,%d,%d", temp, temp + 1, temp + 2, temp + 3, temp + 4, temp + 5);
 			if (ret == 6)
 			{
-				addr->sin_addr.s_addr = temp[3] << 24 | temp[2] << 16 | temp[1] << 8 | temp[0];
-				addr->sin_port = temp[5] << 8 | temp[4];
-				inet_show_sockaddr(addr);
-				pasv_port = 1;
+				snprintf(url_port.memory, sizeof(url_port.memory), "%d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+				url_port.hostname = url_port.memory;
+				url_port.port = temp[4] << 8 | temp[5];
 				reply = "200 PORT command complete";
 			}
 			else
@@ -620,18 +386,12 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		case 0x20445743:
 			if (*cmd_arg)
 			{
-				if (cmd_arg[0] == '/')
-				{
-					text_copy(curr_path, cmd_arg);
-				}
-				else
-				{
-					ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, curr_path, sizeof(curr_path));
-				}
+				ftp_get_abs_path(curr_path, cmd_arg, curr_path, sizeof(curr_path));
+				prettify_pathname_base(curr_path, curr_path, sizeof(curr_path));
 			}
 			else
 			{
-				text_copy(curr_path, ftp_root_path);
+				text_copy(curr_path, service->home);
 			}
 
 			reply = "250 CWD commnd complete";
@@ -640,41 +400,30 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* list */
 		case 0x7473696c:
 		case 0x5453494c:
-			if (!pasv_port)
+			if (client_data.sockfd < 0 && url_port.port == 0)
 			{
 				reply = "550 Please run PORT or PASV first";
 				continue;
 			}
 
-#if 0
-			if (*cmd_arg)
-			{
-				list_p = ftp_list_directory1(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path), list_buff);
-			}
-			else
-			{
-				list_p = ftp_list_directory1(curr_path, list_buff);
-			}
-#else
-			list_p = ftp_list_directory1(curr_path, list_buff);
-#endif
-
-			if (list_p == NULL)
+			fd = ftp_list_directory1(curr_path, file_type == 'I' ? "\n" : "\r\n");
+			if (fd < 0)
 			{
 				sprintf(rep_buff, "550 List directory failed: %s", strerror(errno));
 				continue;
 			}
 
-			sendlen = ftp_send_text(sockfd, "150 List directory complete\r\n");
-			if (sendlen < 0)
+			wrlen = network_client_send_text(client, "150 List directory complete\r\n");
+			if (wrlen < 0)
 			{
-				print_error("ftp_send_text");
+				pr_red_info("ftp_send_text");
+				close(fd);
 				goto out_close_data_sockfd;
 			}
 
-			ret = ftp_send_data(data_sockfd, addr, list_buff, list_p - list_buff, file_type);
-			inet_close_tcp_socket(data_sockfd);
-			data_sockfd = -1;
+			ret = ftp_server_send_file1(&client_data, &url_port, fd);
+			close(fd);
+
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 Send list failed: %s", strerror(errno));
@@ -689,38 +438,42 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* size */
 		case 0x657a6973:
 		case 0x455a4953:
-			if (*cmd_arg == 0 || stat(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st))
+		{
+			struct stat st;
+
+			if (*cmd_arg == 0 || stat(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st))
 			{
 				sprintf(rep_buff, "550 get file size failed: %s", strerror(errno));
 			}
 			else
 			{
-#if __WORDSIZE == 64
-				sprintf(rep_buff, "213 %ld", st.st_size);
-#else
-				sprintf(rep_buff, "213 %lld", st.st_size);
-#endif
+				sprintf(rep_buff, "213 " PRINT_FORMAT_SIZE, st.st_size);
 			}
+
 			break;
+		}
 
 		/* retr */
 		case 0x72746572:
 		case 0x52544552:
-			fd = open(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_RDONLY);
+			fd = open(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_RDONLY);
 			if (fd < 0)
 			{
 				reply = "550 Open file failed";
 				continue;
 			}
 
-			sendlen = ftp_send_text(sockfd, "125 Starting transfer\r\n");
-			if (sendlen < 0)
+			wrlen = network_client_send_text(client, "125 Starting transfer\r\n");
+			if (wrlen < 0)
 			{
-				error_msg("ftp_send_text");
+				pr_red_info("network_client_send_text");
+				close(fd);
 				goto out_close_data_sockfd;
 			}
 
-			ret = ftp_server_send_file1(data_sockfd, addr, fd);
+			ret = ftp_server_send_file1(&client_data, &url_port, fd);
+			close(fd);
+
 			if (ret < 0)
 			{
 				reply = "550 Send file failed";
@@ -730,28 +483,29 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 				reply = "226 Transfer complete";
 			}
 
-			inet_close_tcp_socket(data_sockfd);
-			data_sockfd = -1;
 			break;
 
 		/* stor */
 		case 0x726f7473:
 		case 0x524f5453:
-			fd = open(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_WRONLY | O_CREAT, 0777);
+			fd = open(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_WRONLY | O_CREAT, 0777);
 			if (fd < 0)
 			{
 				reply = "550 Open file failed";
 				continue;
 			}
 
-			sendlen = ftp_send_text(sockfd, "125 Starting transfer\r\n");
-			if (sendlen < 0)
+			wrlen = network_client_send_text(client, "125 Starting transfer\r\n");
+			if (wrlen < 0)
 			{
-				error_msg("ftp_send_text");
+				pr_error_info("ftp_send_text");
+				close(fd);
 				goto out_close_data_sockfd;
 			}
 
-			ret = ftp_server_receive_file1(data_sockfd, addr, fd);
+			ret = ftp_server_receive_file1(&client_data, &url_port, fd);
+			close(fd);
+
 			if (ret < 0)
 			{
 				reply = "550 Receive file failed";
@@ -761,65 +515,75 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 				reply = "226 Transfer complete";
 			}
 
-			inet_close_tcp_socket(data_sockfd);
-			data_sockfd = -1;
 			break;
 
 		/* pasv */
 		case 0x76736170:
 		case 0x56534150:
-			if (data_sockfd >= 0)
+		{
+			u8 *ip;
+			u16 port;
+			struct in_addr addr;
+			struct network_service service_data;
+
+			if (client_data.sockfd > 0)
 			{
-				inet_close_tcp_socket(data_sockfd);
+				network_client_close(&client_data);
 			}
 
-			data_sockfd = inet_socket(SOCK_STREAM);
-			if (data_sockfd < 0)
+			url_port.port = 0;
+			ret = network_service_open(&service_data, &url_port, 0);
+			if (ret < 0)
 			{
 				sprintf(rep_buff, "425 Create socket failed: %s", strerror(errno));
 				continue;
 			}
 
-			ret = inet_bind_rand(data_sockfd, 10);
+			ret = network_service_get_local_port(&service_data);
 			if (ret < 0)
 			{
-				inet_close_tcp_socket(data_sockfd);
-				data_sockfd = -1;
-				sprintf(rep_buff, "425 Bind socket failed: %s", strerror(errno));
-				continue;
+				pr_error_info("network_service_getsockname");
+				network_service_close(&service_data);
+				return ret;
 			}
 
-			sendlen = ftp_send_text(sockfd, "227 Entering Passive Mode (%s,%d,%d)\r\n", local_ip, (ret >> 8) & 0xFF, ret & 0xFF);
-			if (sendlen < 0)
+			port = ret;
+
+			ret = network_client_get_local_ip(client, &addr);
+			if (ret < 0)
 			{
-				print_error("ftp_send_text");
-				goto out_close_data_sockfd;
+				pr_error_info("network_client_getsockname");
+				network_service_close(&service_data);
+				return ret;
 			}
 
-			ret = inet_listen(data_sockfd);
-			if (ret >= 0)
+			ip = (u8 *) &addr;
+
+			wrlen = network_client_printf(client, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\r\n", ip[0], ip[1], ip[2], ip[3], port & 0xFF, (port >> 8) & 0xFF);
+			if (wrlen < 0)
 			{
-				ret = inet_accept(data_sockfd, addr, &addrlen);
+				pr_red_info("ftp_send_text");
+				network_service_close(&service_data);
+				return wrlen;
 			}
 
-			inet_close_tcp_socket(data_sockfd);
+			ret = network_service_accept(&service_data, &client_data);
+			network_service_close(&service_data);
 
 			if (ret < 0)
 			{
-				data_sockfd = -1;
+				pr_red_info("network_service_accept");
+				return ret;
 			}
-			else
-			{
-				data_sockfd = ret;
-				pasv_port = 1;
-			}
+
 			reply = NULL;
 			break;
+		}
 
 		/* dele */
 		case 0x656c6564:
 		case 0x454c4544:
-			ret = remove(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)));
+			ret = remove(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)));
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 remove %s failed: %s", cmd_arg, strerror(errno));
@@ -833,7 +597,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* rmd */
 		case 0x20646d72:
 		case 0x20444d52:
-			ret = rmdir(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)));
+			ret = rmdir(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)));
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 remove %s failed: %s", cmd_arg, strerror(errno));
@@ -847,7 +611,7 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* mkd */
 		case 0x20646b6d:
 		case 0x20444b4d:
-			ret = mkdir(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), 0777);
+			ret = mkdir(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), 0777);
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 create directory %s failed: %s", cmd_arg, strerror(errno));
@@ -861,7 +625,10 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* mdtm */
 		case 0x6d74646d:
 		case 0x4d54444d:
-			ret = stat(ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st);
+		{
+			struct stat st;
+
+			ret = stat(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st);
 			if (ret < 0)
 			{
 				sprintf(rep_buff, "550 get file stat failed: %s", strerror(errno));
@@ -880,7 +647,9 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 						ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec);
 				}
 			}
+
 			break;
+		}
 
 		/* noop */
 		case 0x706f6f6e:
@@ -891,14 +660,21 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 		/* rnfr */
 		case 0x76666E72:
 		case 0x52464E52:
-			ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, rnfr_path, sizeof(rnfr_path));
+		{
+			char rnfr_path[1024];
+
+			ftp_get_abs_path(curr_path, cmd_arg, rnfr_path, sizeof(rnfr_path));
 			reply = "350 RNFR command complete";
 			break;
+		}
 
 		/* rnto */
 		case 0x6F746E72:
 		case 0x4F544E52:
-			ftp_get_abs_path(ftp_root_path, curr_path, cmd_arg, abs_path, sizeof(abs_path));
+		{
+			char rnfr_path[1024];
+
+			ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path));
 			ret = rename(rnfr_path, abs_path);
 			if (ret < 0)
 			{
@@ -908,7 +684,9 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 			{
 				sprintf(rep_buff, "250 Rename %s to %s successfully", rnfr_path, abs_path);
 			}
+
 			break;
+		}
 
 		default:
 			pr_red_info("unsupport command: %s", cmd_buff);
@@ -917,116 +695,66 @@ static int ftp_service_cmdline(struct cavan_ftp_descriptor *desc, int sockfd, st
 	}
 
 out_close_data_sockfd:
-	if (data_sockfd >= 0)
+	if (client_data.sockfd >= 0)
 	{
-		inet_close_tcp_socket(data_sockfd);
+		network_client_close(&client_data);
 	}
 
 	return 0;
 }
 
-static int ftp_service_handle(struct cavan_service_description *service, int index, cavan_shared_data_t data)
+static int ftp_service_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
-	struct sockaddr_in client_addr;
-	socklen_t addrlen;
-	int sockfd;
-	struct cavan_ftp_descriptor *desc = data.type_void;
+	struct cavan_ftp_service *ftp = cavan_dynamic_service_get_data(service);
 
-	sockfd = inet_accept(desc->ctrl_sockfd, &client_addr, &addrlen);
-	if (sockfd < 0)
-	{
-		print_error("inet_accept");
-		return sockfd;
-	}
-
-	inet_show_sockaddr(&client_addr);
-	ftp_service_cmdline(desc, sockfd, &client_addr);
-
-	inet_close_tcp_socket(sockfd);
-
-	return 0;
+	return network_service_accept(&ftp->service, conn);
 }
 
-int ftp_service_run(struct cavan_service_description *service_desc, u16 port)
+static void ftp_service_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
-	int ret;
-	struct cavan_ftp_descriptor ftp_desc;
-
-	ftp_desc.ctrl_sockfd = inet_create_tcp_service(port);
-	if (ftp_desc.ctrl_sockfd < 0)
-	{
-		error_msg("inet_create_tcp_service");
-		return ftp_desc.ctrl_sockfd;
-	}
-
-	pr_bold_info("FTP Root Path = %s", ftp_root_path);
-
-	service_desc->data.type_void = (void *) &ftp_desc;
-	service_desc->handler = ftp_service_handle;
-	ret = cavan_service_run(service_desc);
-	cavan_service_stop(service_desc);
-
-	inet_close_tcp_socket(ftp_desc.ctrl_sockfd);
-
-	return ret;
+	network_client_close(conn);
 }
 
-static int ftp_send_command_retry(struct network_client *client, const char *send_buff, size_t sendlen, char *recv_buff, size_t recvlen, int retry)
+static int ftp_service_start_handler(struct cavan_dynamic_service *service)
 {
-	int ret;
+	struct cavan_ftp_service *ftp = cavan_dynamic_service_get_data(service);
 
-	if (sendlen == 0)
-	{
-		sendlen = text_len(send_buff);
-	}
+	return network_service_open(&ftp->service, &ftp->url, 0);
+}
 
-	println("send_buff = %s", send_buff);
+static void ftp_service_stop_handler(struct cavan_dynamic_service *service)
+{
+	struct cavan_ftp_service *ftp = cavan_dynamic_service_get_data(service);
 
-	while (retry--)
-	{
-		ret = client->send(client, send_buff, sendlen);
-		if (ret < 0)
-		{
-			print_error("client->send");
-			return ret;
-		}
+	network_service_close(&ftp->service);
+}
 
-		ret = file_poll_input(client->sockfd, 5000);
-		if (ret < 0)
-		{
-			error_msg("file_poll_read");
-			return ret;
-		}
+static int ftp_service_run_handler(struct cavan_dynamic_service *service, void *conn)
+{
+	struct cavan_ftp_service *ftp = cavan_dynamic_service_get_data(service);
 
-		if (ret & POLLIN)
-		{
-			break;
-		}
-	}
+	return ftp_service_cmdline(ftp, conn);
+}
 
-	if (retry < 0)
-	{
-		return -ETIMEDOUT;
-	}
+int ftp_service_run(struct cavan_dynamic_service *service)
+{
+	service->name = "FTP";
+	service->conn_size = sizeof(struct network_client);
 
-	ret = client->recv(client, recv_buff, recvlen);
-	if (ret < 0)
-	{
-		print_error("client->recv");
-		return ret;
-	}
+	service->start = ftp_service_start_handler;
+	service->stop = ftp_service_stop_handler;
+	service->run = ftp_service_run_handler;
+	service->open_connect = ftp_service_open_connect;
+	service->close_connect = ftp_service_close_connect;
 
-	recv_buff[ret] = 0;
-	println("recv_buff = %s", recv_buff);
-
-	return ret;
+	return cavan_dynamic_service_run(service);
 }
 
 static int ftp_client_receive_file(struct network_client *client, const char *ip, u16 port)
 {
 	int ret;
 	int sockfd, data_sockfd;
-	ssize_t recvlen;
+	ssize_t rdlen;
 	char buff[1024], *p;
 	struct sockaddr_in addr;
 	socklen_t addrlen;
@@ -1034,7 +762,7 @@ static int ftp_client_receive_file(struct network_client *client, const char *ip
 	sockfd = inet_create_tcp_service(port);
 	if (sockfd < 0)
 	{
-		error_msg("inet_create_tcp_service");
+		pr_red_info("inet_create_tcp_service");
 		return sockfd;
 	}
 
@@ -1042,46 +770,46 @@ static int ftp_client_receive_file(struct network_client *client, const char *ip
 	p = text_replace_char2(ip, p, '.', ',');
 	p += sprintf(p, ",%d,%d\r\n", port >> 8, port & 0xFF);
 
-	recvlen = ftp_send_command_retry(client, buff, p - buff, buff, sizeof(buff), 5);
-	if (recvlen < 0)
+	rdlen = ftp_client_send_command(client, buff, p - buff, buff, sizeof(buff));
+	if (rdlen < 0)
 	{
-		error_msg("ftp_send_command_retry");
-		return recvlen;
+		pr_red_info("ftp_client_send_command");
+		return rdlen;
 	}
 
-	recvlen = ftp_send_command_retry(client, "LIST\r\n", 0, buff, sizeof(buff), 5);
-	if (recvlen < 0)
+	rdlen = ftp_client_send_command(client, "LIST\r\n", 0, buff, sizeof(buff));
+	if (rdlen < 0)
 	{
-		error_msg("ftp_send_command_retry");
-		return recvlen;
+		pr_red_info("ftp_client_send_command");
+		return rdlen;
 	}
 
 	data_sockfd = inet_accept(sockfd, &addr, &addrlen);
 	if (data_sockfd < 0)
 	{
-		print_error("inet_accept");
+		pr_red_info("inet_accept");
 		ret = data_sockfd;
 		goto out_close_sockfd;
 	}
 
 	while (1)
 	{
-		recvlen = inet_recv(data_sockfd, buff, sizeof(buff));
-		if (recvlen < 0)
+		rdlen = inet_recv(data_sockfd, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
-			print_error("inet_recv");
-			ret = recvlen;
+			pr_red_info("inet_recv");
+			ret = rdlen;
 			goto out_close_data_sockfd;
 		}
 
-		if (recvlen == 0)
+		if (rdlen == 0)
 		{
 			pr_green_info("data receive complete");
 			break;
 		}
 
 #if FTP_DEBUG
-		print_ntext(buff, recvlen);
+		print_ntext(buff, rdlen);
 #endif
 	}
 
@@ -1293,13 +1021,13 @@ int ftp_client_run(struct network_url *url, const char *username, const char *pa
 {
 	int ret;
 	char buff[1024], *p;
-	ssize_t sendlen, recvlen;
+	ssize_t wrlen, rdlen;
 	struct network_client client;
 
 	ret = network_client_open(&client, url, 0);
 	if (ret < 0)
 	{
-		error_msg("network_client_open");
+		pr_red_info("network_client_open");
 		return ret;
 	}
 
@@ -1330,26 +1058,26 @@ int ftp_client_run(struct network_url *url, const char *username, const char *pa
 		}
 		else
 		{
-			sendlen = client.send(&client, buff, p - buff);
-			if (sendlen < 0)
+			wrlen = client.send(&client, buff, p - buff);
+			if (wrlen < 0)
 			{
-				print_error("inet_send");
-				ret = sendlen;
+				pr_red_info("inet_send");
+				ret = wrlen;
 				break;
 			}
 
-			println("send buff[" PRINT_FORMAT_SIZE "] = %s", sendlen, buff);
+			println("send buff[" PRINT_FORMAT_SIZE "] = %s", wrlen, buff);
 		}
 
-		recvlen = client.recv(&client, buff, sizeof(buff));
-		if (recvlen < 0)
+		rdlen = client.recv(&client, buff, sizeof(buff));
+		if (rdlen < 0)
 		{
-			print_error("client.recv");
-			ret = recvlen;
+			pr_red_info("client.recv");
+			ret = rdlen;
 			break;
 		}
 
-		buff[recvlen] = 0;
+		buff[rdlen] = 0;
 		println("%s", buff);
 	}
 

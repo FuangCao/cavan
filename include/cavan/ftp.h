@@ -19,18 +19,17 @@ enum cavan_ftp_state
 	FTP_STATE_PORT_RECVED,
 };
 
-struct cavan_ftp_descriptor
+struct cavan_ftp_service
 {
-	int ctrl_sockfd;
-	int data_sockfd;
+	struct network_service service;
+	struct network_url url;
+	char home[1024];
 };
 
-extern char ftp_root_path[];
-
-char *ftp_file_stat_tostring(const char *filepath, char *text);
+char *ftp_file_stat_tostring(const char *filepath, char *buff, char *buff_end);
 char *ftp_list_directory(const char *dirpath, char *text);
 
-int ftp_service_run(struct cavan_service_description *service_desc, u16 port);
+int ftp_service_run(struct cavan_dynamic_service *service);
 
 int ftp_client_read_response(struct network_client *client, char *response, size_t size);
 int ftp_client_send_command(struct network_client *client, const char *command, size_t cmdsize, char *response, size_t repsize);

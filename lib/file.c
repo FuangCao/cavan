@@ -2328,7 +2328,7 @@ char file_type_to_char(mode_t mode)
 	}
 }
 
-char *file_permition_tostring(mode_t mode, char *text)
+char *file_permition_tostring(mode_t mode, char *buff, char *buff_end)
 {
 	int i;
 	u32 shift;
@@ -2338,20 +2338,20 @@ char *file_permition_tostring(mode_t mode, char *text)
 
 	while (shift)
 	{
-		for (i = 0; i < 3; i++, shift >>= 1, text++)
+		for (i = 0; i < 3 && buff < buff_end; i++, shift >>= 1, buff++)
 		{
 			if (mode & shift)
 			{
-				*text = permition_table[i];
+				*buff = permition_table[i];
 			}
 			else
 			{
-				*text = '-';
+				*buff = '-';
 			}
 		}
 	}
 
-	return text;
+	return buff;
 }
 
 const char *month_tostring(int month)
@@ -3016,4 +3016,24 @@ int cavan_file_dump(const char *pathname, size_t width, const char *sep, const c
 	file_unmap(fd,addr, size);
 
 	return 0;
+}
+
+int cavan_temp_file_open(char *pathname, size_t size, const char *filename)
+{
+	int fd;
+
+	text_path_cat(pathname, size, CAVAN_TEMP_PATH, filename);
+
+	fd = mkstemp(pathname);
+	if (fd < 0)
+	{
+		pr_error_info("mkstemp `%s'", pathname);
+		return fd;
+	}
+
+	unlink(pathname);
+
+	println("pathname = %s", pathname);
+
+	return fd;
 }

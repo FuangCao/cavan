@@ -13,8 +13,7 @@
 
 static void show_usage(const char *command)
 {
-	println("Usage:");
-	println("%s [option] [PORT]", command);
+	println("Usage: %s [OPTION] [PORT]", command);
 	println("-H, -h, --help\t\t\t\t%s", cavan_help_message_help);
 	println("-S, -s, --super\t\t\t\t%s", cavan_help_message_super);
 	println("-D, -d, --daemon\t\t\t%s", cavan_help_message_daemon);
@@ -33,6 +32,7 @@ static void show_usage(const char *command)
 int main(int argc, char *argv[])
 {
 	int c;
+	int ret;
 	int option_index;
 	struct option long_option[] =
 	{
@@ -163,12 +163,14 @@ int main(int argc, char *argv[])
 		case 'H':
 		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
-			return 0;
+			ret = 0;
+			goto out_cavan_dynamic_service_destroy;
 
 		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
-			return 0;
+			ret = 0;
+			goto out_cavan_dynamic_service_destroy;
 
 		case 'v':
 		case 'V':
@@ -250,7 +252,8 @@ int main(int argc, char *argv[])
 
 		default:
 			show_usage(argv[0]);
-			return -EINVAL;
+			ret = -EINVAL;
+			goto out_cavan_dynamic_service_destroy;
 		}
 	}
 
@@ -260,9 +263,13 @@ int main(int argc, char *argv[])
 		if (url->port == 0)
 		{
 			pr_red_info("Invalid port %s", argv[optind]);
-			return -EINVAL;
+			ret = -EINVAL;
+			goto out_cavan_dynamic_service_destroy;
 		}
 	}
 
-	return tcp_dd_service_run(service);
+	ret = tcp_dd_service_run(service);
+out_cavan_dynamic_service_destroy:
+	cavan_dynamic_service_destroy(service);
+	return ret;
 }
