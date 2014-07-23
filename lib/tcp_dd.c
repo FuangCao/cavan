@@ -72,10 +72,10 @@ static int tcp_dd_recv_response(struct network_client *client)
 	struct tcp_dd_package pkg;
 
 	rdlen = client->recv(client, &pkg, sizeof(pkg));
-	if (rdlen < 0)
+	if (rdlen < (ssize_t) sizeof(pkg.type))
 	{
 		pr_red_info("inet_recv");
-		return rdlen;
+		return -EFAULT;
 	}
 
 	if (pkg.type != TCP_DD_RESPONSE)
@@ -106,7 +106,7 @@ static int tcp_dd_send_read_request(struct network_client *client, const char *f
 	}
 
 	ret = client->recv(client, pkg, sizeof(*pkg));
-	if (ret < 0)
+	if (ret < (int) sizeof(pkg->type))
 	{
 		pr_red_info("inet_recv");
 		return ret;
@@ -580,7 +580,7 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
 	ret = client->recv(client, &pkg, sizeof(pkg));
-	if (ret < 1)
+	if (ret < (int) sizeof(pkg.type))
 	{
 		pr_error_info("client->recv");
 		return ret < 0 ? ret : -EFAULT;
