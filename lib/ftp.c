@@ -4,7 +4,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
 #define FTP_TIMEOUT_MS	5000
-#define FTP_DEBUG		1
+#define FTP_DEBUG		0
 
 static inline int ftp_create_data_link(struct network_client *client, const struct network_url *url)
 {
@@ -185,8 +185,8 @@ static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network
 	char file_type;
 	const char *reply;
 	enum cavan_ftp_state state;
-	ssize_t wrlen, rdlen, replen;
 	struct network_url url_port;
+	ssize_t wrlen, rdlen, replen;
 	struct network_client client_data;
 	char abs_path[1024], curr_path[1024];
 	char cmd_buff[1024], rep_buff[1024], *cmd_arg, *cmd_end;
@@ -219,7 +219,7 @@ static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network
 		}
 
 		rdlen = client->recv(client, cmd_buff, sizeof(cmd_buff) - 1);
-		if (rdlen <= 0)
+		if (rdlen < 3)
 		{
 			goto out_close_data_sockfd;
 		}
