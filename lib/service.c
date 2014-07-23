@@ -607,11 +607,11 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	if (service->conn_size <= 0)
 	{
 		ret = -EINVAL;
-		pr_red_info("invalid conn_size = " PRINT_FORMAT_SIZE, service->conn_size);
+		pr_red_info("invalid conn_size = %" PRINT_FORMAT_SIZE, service->conn_size);
 		goto out_service_stop;
 	}
 
-	pd_bold_info("conn_size = " PRINT_FORMAT_SIZE, service->conn_size);
+	pd_bold_info("conn_size = %" PRINT_FORMAT_SIZE, service->conn_size);
 
 	if (sync)
 	{

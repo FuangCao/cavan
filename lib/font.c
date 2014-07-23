@@ -38,7 +38,7 @@ void cavan_font_dump(struct cavan_font *font)
 	println("cwidth = %d", font->cwidth);
 	println("cheight = %d", font->cheight);
 	println("stride = %d", font->stride);
-	println("rundata_size = " PRINT_FORMAT_SIZE, font->rundata_size);
+	println("rundata_size = %" PRINT_FORMAT_SIZE, font->rundata_size);
 }
 
 int cavan_font_init(struct cavan_font *font)

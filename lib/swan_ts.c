@@ -547,7 +547,7 @@ int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
 		return bufflen;
 	}
 
-	println("bufflen = " PRINT_FORMAT_SIZE, bufflen);
+	println("bufflen = %" PRINT_FORMAT_SIZE, bufflen);
 
 	ret = ft5406_upgrade_enter(dev_fd);
 	if (ret < 0)

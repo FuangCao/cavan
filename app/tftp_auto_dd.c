@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 		port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
-	println("ip address = %s, port = %d, image count = " PRINT_FORMAT_SIZE, hostname, port, end_p - descs);
+	println("ip address = %s, port = %d, image count = %" PRINT_FORMAT_SIZE, hostname, port, end_p - descs);
 
 	ret = uevent_init(&udesc);
 	if (ret < 0)

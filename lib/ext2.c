@@ -129,12 +129,12 @@ void show_ext2_desc(const struct ext2_desc *desc)
 	print_sep(60);
 	pr_bold_info("ext2 desc %p", desc);
 
-	println("block_shift = " PRINT_FORMAT_SIZE, desc->block_shift);
-	println("block_size = " PRINT_FORMAT_SIZE, desc->block_size);
-	println("flex_count = " PRINT_FORMAT_SIZE, desc->flex_count);
-	println("group_count = " PRINT_FORMAT_SIZE, desc->group_count);
-	println("groups_per_flex = " PRINT_FORMAT_SIZE, desc->groups_per_flex);
-	println("group_flex_shift = " PRINT_FORMAT_SIZE, desc->group_flex_shift);
+	println("block_shift = %" PRINT_FORMAT_SIZE, desc->block_shift);
+	println("block_size = %" PRINT_FORMAT_SIZE, desc->block_size);
+	println("flex_count = %" PRINT_FORMAT_SIZE, desc->flex_count);
+	println("group_count = %" PRINT_FORMAT_SIZE, desc->group_count);
+	println("groups_per_flex = %" PRINT_FORMAT_SIZE, desc->groups_per_flex);
+	println("group_flex_shift = %" PRINT_FORMAT_SIZE, desc->group_flex_shift);
 
 	show_ext2_super_block(&desc->super_block);
 
@@ -209,26 +209,26 @@ void show_ext2_super_block(const struct ext2_super_block *super_block)
 	println("flags = %d", super_block->flags);
 	println("raid_stride = %d", super_block->raid_stride);
 	println("mmp_update_interval = %d", super_block->mmp_update_interval);
-	println("mmp_block = " PRINT_FORMAT_INT64, super_block->mmp_block);
+	println("mmp_block = %" PRINT_FORMAT_INT64, super_block->mmp_block);
 	println("raid_stripe_width = %d", super_block->raid_stripe_width);
 	println("log_groups_per_flex = %d", super_block->log_groups_per_flex);
 	println("reserved_char_pad = %d", super_block->reserved_char_pad);
 	println("reserved_pad = %d", super_block->reserved_pad);
-	println("kbytes_written = " PRINT_FORMAT_INT64, super_block->kbytes_written);
+	println("kbytes_written = %" PRINT_FORMAT_INT64, super_block->kbytes_written);
 	println("snapshot_inum = %d", super_block->snapshot_inum);
 	println("snapshot_id = %d", super_block->snapshot_id);
-	println("snapshot_r_blocks_count = " PRINT_FORMAT_INT64, super_block->snapshot_r_blocks_count);
+	println("snapshot_r_blocks_count = %" PRINT_FORMAT_INT64, super_block->snapshot_r_blocks_count);
 	println("snapshot_list = %d", super_block->snapshot_list);
 	println("error_count = %d", super_block->error_count);
 	println("first_error_time = %d", super_block->first_error_time);
 	println("first_error_ino = %d", super_block->first_error_ino);
-	println("first_error_block = " PRINT_FORMAT_INT64, super_block->first_error_block);
+	println("first_error_block = %" PRINT_FORMAT_INT64, super_block->first_error_block);
 	// println("first_error_func[32] = %d", super_block->first_error_func[32]);
 	println("first_error_line = %d", super_block->first_error_line);
 	println("last_error_time = %d", super_block->last_error_time);
 	println("last_error_ino = %d", super_block->last_error_ino);
 	println("last_error_line = %d", super_block->last_error_line);
-	println("last_error_block = " PRINT_FORMAT_INT64, super_block->last_error_block);
+	println("last_error_block = %" PRINT_FORMAT_INT64, super_block->last_error_block);
 	// println("last_error_func[32] = %d", super_block->last_error_func[32]);
 	// println("mount_opts[64] = %d", super_block->mount_opts[64]);
 	println("usr_quota_inum = %d", super_block->usr_quota_inum);
@@ -315,7 +315,7 @@ void show_ext4_extent_index(const struct ext4_extent_index *index)
 	pr_bold_info("ext4 extent index %p", index);
 
 	println("block = %d", index->block);
-	println("leaf = " PRINT_FORMAT_INT64, (u64) index->leaf_hi << 32 | index->leaf_lo);
+	println("leaf = %" PRINT_FORMAT_INT64, (u64) index->leaf_hi << 32 | index->leaf_lo);
 }
 
 void show_ext4_extent_leaf(const struct ext4_extent_leaf *leaf)
@@ -325,7 +325,7 @@ void show_ext4_extent_leaf(const struct ext4_extent_leaf *leaf)
 
 	println("block = %d", leaf->block);
 	println("length = %d", leaf->length);
-	println("start = " PRINT_FORMAT_INT64, (u64) leaf->start_hi << 32 | leaf->start_lo);
+	println("start = %" PRINT_FORMAT_INT64, (u64) leaf->start_hi << 32 | leaf->start_lo);
 }
 
 static int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struct ext2_directory_entry *entry)

@@ -4,7 +4,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
 #define FTP_TIMEOUT_MS	5000
-#define FTP_DEBUG		0
+#define FTP_DEBUG		1
 
 static inline int ftp_create_data_link(struct network_client *client, const struct network_url *url)
 {
@@ -81,13 +81,8 @@ char *ftp_file_stat_tostring(const char *filepath, char *buff, char *buff_end)
 	}
 
 	buff = file_permition_tostring(st.st_mode, buff, buff_end);
-
-#if __WORDSIZE == 64
-	buff += snprintf(buff, buff_end - buff, " %-5ld %-5d %-5d %-10ld", st.st_nlink, st.st_uid, st.st_gid, st.st_size);
-#else
-	buff += snprintf(buff, buff_end - buff, " %-5d %-5d %-5d %-10Ld", st.st_nlink, st.st_uid, st.st_gid, st.st_size);
-#endif
-
+	// buff += snprintf(buff, buff_end - buff, " %-5ld %-5d %-5d " PRINT_FORMAT_OFF("-10"), st.st_nlink, st.st_uid, st.st_gid, st.st_size);
+	buff += snprintf(buff, buff_end - buff, " %-5" PRINT_FORMAT_SIZE " %-5" PRINT_FORMAT_UID " %-5" PRINT_FORMAT_UID " %-10" PRINT_FORMAT_OFF, st.st_nlink, st.st_uid, st.st_gid, st.st_size);
 	buff = ftp_file_time_tostring((time_t *) &st.st_mtime, buff, buff_end);
 
 	return buff;
@@ -103,6 +98,10 @@ static int ftp_list_directory1(const char *dirpath, const char *newline)
 	char pathname[1024];
 	char buff[1024];
 	char *buff_end = buff + sizeof(buff);
+
+#if FTP_DEBUG
+	pr_bold_info("dirpath = `%s'", dirpath);
+#endif
 
 	dp = opendir(dirpath);
 	if (dp == NULL)
@@ -160,76 +159,6 @@ out_closedir:
 	return ret;
 }
 
-static int ftp_service_login(struct network_client *client)
-{
-	char buff[1024];
-	const char *reply;
-	ssize_t wrlen, rdlen;
-	enum cavan_ftp_state state;
-
-	reply = "220 Cavan ftp server ready";
-	state = FTP_STATE_READY;
-
-	while (1)
-	{
-		wrlen = network_client_printf(client, "%s\r\n", reply);
-		if (wrlen < 0)
-		{
-			pr_red_info("inet_send_text");
-			return wrlen;
-		}
-
-		rdlen = network_client_timed_recv(client, buff, sizeof(buff), FTP_TIMEOUT_MS);
-		if (rdlen <= 0)
-		{
-			pr_red_info("inet_recv_timeout");
-			return rdlen;
-		}
-
-		switch (*(u32 *) buff)
-		{
-		/* quit */
-		case 0x74697571:
-		case 0x54495551:
-			network_client_send_text(client, "221 Goodbye\r\n");
-			return 0;
-
-		/* user */
-		case 0x72657375:
-		case 0x52455355:
-			if (state == FTP_STATE_READY)
-			{
-				state = FTP_STATE_USER_RECVED;
-				reply = "331 Please input password";
-			}
-			else
-			{
-				reply = "331 Any password will do";
-			}
-			break;
-
-		/* pass */
-		case 0x73736170:
-		case 0x53534150:
-			if (state == FTP_STATE_USER_RECVED)
-			{
-				return 1;
-			}
-			else
-			{
-				if (state < FTP_STATE_USER_RECVED)
-				{
-					reply = "530 Please input username";
-				}
-			}
-			break;
-
-		default:
-			reply = "530 Please login with USER and PASS";
-		}
-	}
-}
-
 static char *ftp_get_abs_path(const char *curr_path, const char *path, char *abs_path, size_t size)
 {
 	if (*path == '/')
@@ -252,32 +181,36 @@ static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network
 {
 	int fd;
 	int ret;
+	u32 command;
 	char file_type;
 	const char *reply;
-	ssize_t wrlen, rdlen;
+	enum cavan_ftp_state state;
+	ssize_t wrlen, rdlen, replen;
 	struct network_url url_port;
 	struct network_client client_data;
 	char abs_path[1024], curr_path[1024];
-	char cmd_buff[1024], rep_buff[1024], *cmd_arg;
-
-	ret = ftp_service_login(client);
-	if (ret <= 0)
-	{
-		return ret;
-	}
+	char cmd_buff[1024], rep_buff[1024], *cmd_arg, *cmd_end;
 
 	file_type = 0;
 	client_data.sockfd = -1;
 	network_url_init(&url_port, "tcp", NULL, 0, NULL);
 
-	reply = "230 User login successfull";
+	replen = 0;
+	reply = "220 Cavan ftp server ready.\r\n";
+
+	state = FTP_STATE_READY;
 	text_copy(curr_path, service->home);
 
 	while (1)
 	{
 		if (reply)
 		{
-			wrlen = network_client_printf(client, "%s\r\n", reply);
+			if (replen == 0)
+			{
+				replen = strlen(reply);
+			}
+
+			wrlen = client->send(client, reply, replen);
 			if (wrlen < 0)
 			{
 				pr_red_info("inet_send_text");
@@ -285,418 +218,436 @@ static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network
 			}
 		}
 
-		rdlen = client->recv(client, cmd_buff, sizeof(cmd_buff));
+		rdlen = client->recv(client, cmd_buff, sizeof(cmd_buff) - 1);
 		if (rdlen <= 0)
 		{
 			goto out_close_data_sockfd;
 		}
 
-		while (rdlen >= 0)
+		for (cmd_end = cmd_buff + rdlen - 1; cmd_end > cmd_buff && byte_is_lf(*cmd_end); cmd_end--);
+
+		*++cmd_end = 0;
+
+		for (cmd_arg = cmd_buff; cmd_arg < cmd_end && !byte_is_space(*cmd_arg); cmd_arg++);
+
+		while ( cmd_arg < cmd_end && byte_is_space(*cmd_arg))
 		{
-			char c = cmd_buff[rdlen - 1];
-			if (c != '\r' && c != '\n')
-			{
-				break;
-			}
-
-			rdlen--;
-		}
-
-		cmd_buff[rdlen] = 0;
-		reply = rep_buff;
-
-		for (cmd_arg = cmd_buff; *cmd_arg && !byte_is_space(*cmd_arg); cmd_arg++);
-
-		while (byte_is_space(*cmd_arg))
-		{
-			cmd_arg++;
+			*cmd_arg++ = 0;
 		}
 
 #if FTP_DEBUG
-		if (*cmd_arg)
-		{
-			println("cmd_arg = %s", cmd_arg);
-		}
+		println("command = `%s', args = `%s'", cmd_buff, cmd_arg);
 #endif
 
-		switch (*(u32 *) cmd_buff)
+		replen = 0;
+		reply = rep_buff;
+		command = *(u32 *) cmd_buff;
+
+		switch (command)
 		{
-		/* quit */
-		case 0x74697571:
-		case 0x54495551:
-			network_client_send_text(client, "221 Goodbye\r\n");
-			goto out_close_data_sockfd;
+		case FTP_BUILD_CMD('q', 'u', 'i', 't'):
+		case FTP_BUILD_CMD('Q', 'U', 'I', 'T'):
+			network_client_send_text(client, "221 Goodbye.\r\n");
+			return 0;
 
-		/* user */
-		case 0x72657375:
-		case 0x52455355:
-			reply = "331 Any password will do";
-			break;
-
-		/* pass */
-		case 0x73736170:
-		case 0x53534150:
-			reply = "530 Please input username";
-			break;
-
-		/* port */
-		case 0x74726f70:
-		case 0x54524f50:
-		{
-			int temp[6];
-
-			ret = sscanf(cmd_arg, "%d,%d,%d,%d,%d,%d", temp, temp + 1, temp + 2, temp + 3, temp + 4, temp + 5);
-			if (ret == 6)
+		case FTP_BUILD_CMD('u', 's', 'e', 'r'):
+		case FTP_BUILD_CMD('U', 'S', 'E', 'R'):
+			if (state < FTP_STATE_USER_RECVED)
 			{
-				snprintf(url_port.memory, sizeof(url_port.memory), "%d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
-				url_port.hostname = url_port.memory;
-				url_port.port = temp[4] << 8 | temp[5];
-				reply = "200 PORT command complete";
+				state = FTP_STATE_USER_RECVED;
+				reply = "331 Please input password.\r\n";
 			}
 			else
 			{
-				reply = "501 Argument error";
+				reply = "331 Any password will do.\r\n";
 			}
-			break;
-		}
 
-		/* opts */
-		case 0x7374706f:
-		case 0x5354504f:
-			reply = "200 OPTS command complete";
 			break;
 
-		/* pwd */
-		case 0x00647770:
-		case 0x00445750:
-		case 0x64777078:
-		case 0x44575058:
-			sprintf(rep_buff, "257 \"%s\"", curr_path);
-			break;
-
-		/* type */
-		case 0x65707974:
-		case 0x45505954:
-			reply = "200 TYPE commnd complete";
-			file_type = cmd_buff[5];
-			break;
-
-		/* syst */
-		case 0x74737973:
-		case 0x54535953:
-			reply = "215 UNIX Type L8";
-			break;
-
-		/* cwd */
-		case 0x20647763:
-		case 0x20445743:
-			if (*cmd_arg)
+		case FTP_BUILD_CMD('p', 'a', 's', 's'):
+		case FTP_BUILD_CMD('P', 'A', 'S', 'S'):
+			if (state < FTP_STATE_USER_RECVED)
 			{
-				ftp_get_abs_path(curr_path, cmd_arg, curr_path, sizeof(curr_path));
-				prettify_pathname_base(curr_path, curr_path, sizeof(curr_path));
+				reply = "530 Please input username.\r\n";
 			}
 			else
 			{
-				text_copy(curr_path, service->home);
-			}
-
-			reply = "250 CWD commnd complete";
-			break;
-
-		/* list */
-		case 0x7473696c:
-		case 0x5453494c:
-			if (client_data.sockfd < 0 && url_port.port == 0)
-			{
-				reply = "550 Please run PORT or PASV first";
-				continue;
-			}
-
-			fd = ftp_list_directory1(curr_path, file_type == 'I' ? "\n" : "\r\n");
-			if (fd < 0)
-			{
-				sprintf(rep_buff, "550 List directory failed: %s", strerror(errno));
-				continue;
-			}
-
-			wrlen = network_client_send_text(client, "150 List directory complete\r\n");
-			if (wrlen < 0)
-			{
-				pr_red_info("ftp_send_text");
-				close(fd);
-				goto out_close_data_sockfd;
-			}
-
-			ret = ftp_server_send_file1(&client_data, &url_port, fd);
-			close(fd);
-
-			if (ret < 0)
-			{
-				sprintf(rep_buff, "550 Send list failed: %s", strerror(errno));
-			}
-			else
-			{
-				reply = "226 List send complete";
+				state = FTP_STATE_LOGINED;
+				reply = "230 User login successfull.\r\n";
 			}
 
 			break;
 
-		/* size */
-		case 0x657a6973:
-		case 0x455a4953:
-		{
-			struct stat st;
-
-			if (*cmd_arg == 0 || stat(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st))
+		default:
+			if (state < FTP_STATE_LOGINED)
 			{
-				sprintf(rep_buff, "550 get file size failed: %s", strerror(errno));
-			}
-			else
-			{
-				sprintf(rep_buff, "213 " PRINT_FORMAT_OFF, st.st_size);
-			}
-
-			break;
-		}
-
-		/* retr */
-		case 0x72746572:
-		case 0x52544552:
-			fd = open(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_RDONLY);
-			if (fd < 0)
-			{
-				reply = "550 Open file failed";
-				continue;
-			}
-
-			wrlen = network_client_send_text(client, "125 Starting transfer\r\n");
-			if (wrlen < 0)
-			{
-				pr_red_info("network_client_send_text");
-				close(fd);
-				goto out_close_data_sockfd;
-			}
-
-			ret = ftp_server_send_file1(&client_data, &url_port, fd);
-			close(fd);
-
-			if (ret < 0)
-			{
-				reply = "550 Send file failed";
-			}
-			else
-			{
-				reply = "226 Transfer complete";
-			}
-
-			break;
-
-		/* stor */
-		case 0x726f7473:
-		case 0x524f5453:
-			fd = open(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_WRONLY | O_CREAT, 0777);
-			if (fd < 0)
-			{
-				reply = "550 Open file failed";
-				continue;
-			}
-
-			wrlen = network_client_send_text(client, "125 Starting transfer\r\n");
-			if (wrlen < 0)
-			{
-				pr_error_info("ftp_send_text");
-				close(fd);
-				goto out_close_data_sockfd;
-			}
-
-			ret = ftp_server_receive_file1(&client_data, &url_port, fd);
-			close(fd);
-
-			if (ret < 0)
-			{
-				reply = "550 Receive file failed";
-			}
-			else
-			{
-				reply = "226 Transfer complete";
-			}
-
-			break;
-
-		/* pasv */
-		case 0x76736170:
-		case 0x56534150:
-		{
-			u8 *ip;
-			u16 port;
-			struct in_addr addr;
-			struct network_service service_data;
-
-			if (client_data.sockfd > 0)
-			{
-				network_client_close(&client_data);
-			}
-
-			url_port.port = 0;
-			ret = network_service_open(&service_data, &url_port, 0);
-			if (ret < 0)
-			{
-				sprintf(rep_buff, "425 Create socket failed: %s", strerror(errno));
-				continue;
-			}
-
-			ret = network_service_get_local_port(&service_data);
-			if (ret < 0)
-			{
-				pr_error_info("network_service_getsockname");
-				network_service_close(&service_data);
-				return ret;
-			}
-
-			port = ret;
-
-			ret = network_client_get_local_ip(client, &addr);
-			if (ret < 0)
-			{
-				pr_error_info("network_client_getsockname");
-				network_service_close(&service_data);
-				return ret;
-			}
-
-			ip = (u8 *) &addr;
-
-			wrlen = network_client_printf(client, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\r\n", ip[0], ip[1], ip[2], ip[3], port & 0xFF, (port >> 8) & 0xFF);
-			if (wrlen < 0)
-			{
-				pr_red_info("ftp_send_text");
-				network_service_close(&service_data);
-				return wrlen;
-			}
-
-			ret = network_service_accept(&service_data, &client_data);
-			network_service_close(&service_data);
-
-			if (ret < 0)
-			{
-				pr_red_info("network_service_accept");
-				return ret;
-			}
-
-			reply = NULL;
-			break;
-		}
-
-		/* dele */
-		case 0x656c6564:
-		case 0x454c4544:
-			ret = remove(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)));
-			if (ret < 0)
-			{
-				sprintf(rep_buff, "550 remove %s failed: %s", cmd_arg, strerror(errno));
-			}
-			else
-			{
-				reply = "200 DELE command complete";
-			}
-			break;
-
-		/* rmd */
-		case 0x20646d72:
-		case 0x20444d52:
-			ret = rmdir(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)));
-			if (ret < 0)
-			{
-				sprintf(rep_buff, "550 remove %s failed: %s", cmd_arg, strerror(errno));
-			}
-			else
-			{
-				reply = "200 DELE command complete";
-			}
-			break;
-
-		/* mkd */
-		case 0x20646b6d:
-		case 0x20444b4d:
-			ret = mkdir(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), 0777);
-			if (ret < 0)
-			{
-				sprintf(rep_buff, "550 create directory %s failed: %s", cmd_arg, strerror(errno));
-			}
-			else
-			{
-				reply = "200 MKD command complete";
-			}
-			break;
-
-		/* mdtm */
-		case 0x6d74646d:
-		case 0x4d54444d:
-		{
-			struct stat st;
-
-			ret = stat(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st);
-			if (ret < 0)
-			{
-				sprintf(rep_buff, "550 get file stat failed: %s", strerror(errno));
-			}
-			else
-			{
-				struct tm ti;
-
-				if (localtime_r((time_t *) &st.st_atime, &ti) == NULL)
+				if (state < FTP_STATE_USER_RECVED)
 				{
-					sprintf(rep_buff, "550 get localtime failed: %s", strerror(errno));
+					reply = "530 Please login with USER and PASS.\r\n";
 				}
 				else
 				{
-					sprintf(rep_buff, "213 %04d%02d%02d%02d%02d%02d", \
-						ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec);
+					reply = "530 Please login with PASS.\r\n";
 				}
+
+				break;
 			}
 
-			break;
-		}
-
-		/* noop */
-		case 0x706f6f6e:
-		case 0x504f4f4e:
-			reply = "200 NOOP commnd complete";
-			break;
-
-		/* rnfr */
-		case 0x76666E72:
-		case 0x52464E52:
-		{
-			char rnfr_path[1024];
-
-			ftp_get_abs_path(curr_path, cmd_arg, rnfr_path, sizeof(rnfr_path));
-			reply = "350 RNFR command complete";
-			break;
-		}
-
-		/* rnto */
-		case 0x6F746E72:
-		case 0x4F544E52:
-		{
-			char rnfr_path[1024];
-
-			ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path));
-			ret = rename(rnfr_path, abs_path);
-			if (ret < 0)
+			switch (command)
 			{
-				sprintf(rep_buff, "550 Rename %s to %s failed[%s]", rnfr_path, abs_path, strerror(errno));
-			}
-			else
+			case FTP_BUILD_CMD('p', 'o', 'r', 't'):
+			case FTP_BUILD_CMD('P', 'O', 'R', 'T'):
 			{
-				sprintf(rep_buff, "250 Rename %s to %s successfully", rnfr_path, abs_path);
+				int temp[6];
+
+				ret = sscanf(cmd_arg, "%d,%d,%d,%d,%d,%d", temp, temp + 1, temp + 2, temp + 3, temp + 4, temp + 5);
+				if (ret == 6)
+				{
+					snprintf(url_port.memory, sizeof(url_port.memory), "%d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+					url_port.hostname = url_port.memory;
+					url_port.port = temp[4] << 8 | temp[5];
+					reply = "200 PORT command complete.\r\n";
+				}
+				else
+				{
+					reply = "501 Argument error.\r\n";
+				}
+
+				break;
 			}
 
-			break;
-		}
+			case FTP_BUILD_CMD('o', 'p', 't', 's'):
+			case FTP_BUILD_CMD('O', 'P', 'T', 'S'):
+				reply = "200 OPTS command complete.\r\n";
+				break;
 
-		default:
-			pr_red_info("unsupport command: %s", cmd_buff);
-			reply = "500 Unknown command";
+			case FTP_BUILD_CMD('p', 'w', 'd', 0):
+			case FTP_BUILD_CMD('P', 'W', 'D', 0):
+			case FTP_BUILD_CMD('x', 'p', 'w', 'd'):
+			case FTP_BUILD_CMD('X', 'P', 'W', 'D'):
+				replen = snprintf(rep_buff, sizeof(rep_buff), "257 \"%s\"\r\n", curr_path);
+				break;
+
+			case FTP_BUILD_CMD('t', 'y', 'p', 'e'):
+			case FTP_BUILD_CMD('T', 'Y', 'P', 'E'):
+				reply = "200 TYPE commnd complete.\r\n";
+				file_type = cmd_buff[5];
+				break;
+
+			case FTP_BUILD_CMD('s', 'y', 's', 't'):
+			case FTP_BUILD_CMD('S', 'Y', 'S', 'T'):
+				reply = "215 UNIX Type L8.\r\n";
+				break;
+
+			case FTP_BUILD_CMD('c', 'w', 'd', 0):
+			case FTP_BUILD_CMD('C', 'W', 'D', 0):
+			case FTP_BUILD_CMD('x', 'c', 'w', 'd'):
+			case FTP_BUILD_CMD('X', 'C', 'W', 'D'):
+				if (*cmd_arg)
+				{
+					ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path));
+					if (access(abs_path, F_OK) < 0)
+					{
+						reply = "550 Failed to change directory.\r\n";
+						break;
+					}
+
+					prettify_pathname_base(abs_path, curr_path, sizeof(curr_path));
+				}
+				else
+				{
+					text_copy(curr_path, service->home);
+				}
+
+				reply = "250 CWD commnd complete.\r\n";
+				break;
+
+			case FTP_BUILD_CMD('l', 'i', 's', 't'):
+			case FTP_BUILD_CMD('L', 'I', 'S', 'T'):
+				if (client_data.sockfd < 0 && url_port.port == 0)
+				{
+					reply = "550 Please run PORT or PASV first.\r\n";
+					break;
+				}
+
+				fd = ftp_list_directory1(curr_path, file_type == 'I' ? "\n" : "\r\n");
+				if (fd < 0)
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "550 List directory failed: %s.\r\n", strerror(errno));
+					break;
+				}
+
+				wrlen = network_client_send_text(client, "150 List directory complete.\r\n");
+				if (wrlen < 0)
+				{
+					pr_red_info("ftp_send_text");
+					close(fd);
+					goto out_close_data_sockfd;
+				}
+
+				ret = ftp_server_send_file1(&client_data, &url_port, fd);
+				close(fd);
+
+				if (ret < 0)
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "550 Send list failed: %s.\r\n", strerror(errno));
+				}
+				else
+				{
+					reply = "226 List send complete.\r\n";
+				}
+
+				break;
+
+			case FTP_BUILD_CMD('s', 'i', 'z', 'e'):
+			case FTP_BUILD_CMD('S', 'I', 'Z', 'E'):
+			{
+				struct stat st;
+
+				if (*cmd_arg == 0 || stat(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st))
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "550 get file size failed: %s.\r\n", strerror(errno));
+				}
+				else
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "213 %" PRINT_FORMAT_OFF "\r\n", st.st_size);
+				}
+
+				break;
+			}
+
+			case FTP_BUILD_CMD('r', 'e', 't', 'r'):
+			case FTP_BUILD_CMD('R', 'E', 'T', 'R'):
+				fd = open(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_RDONLY);
+				if (fd < 0)
+				{
+					reply = "550 Open file failed.\r\n";
+					break;
+				}
+
+				wrlen = network_client_send_text(client, "125 Starting transfer\r\n");
+				if (wrlen < 0)
+				{
+					pr_red_info("network_client_send_text");
+					close(fd);
+					goto out_close_data_sockfd;
+				}
+
+				ret = ftp_server_send_file1(&client_data, &url_port, fd);
+				close(fd);
+
+				if (ret < 0)
+				{
+					reply = "550 Send file failed.\r\n";
+				}
+				else
+				{
+					reply = "226 Transfer complete.\r\n";
+				}
+
+				break;
+
+			case FTP_BUILD_CMD('s', 't', 'o', 'r'):
+			case FTP_BUILD_CMD('S', 'T', 'O', 'R'):
+				fd = open(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), O_WRONLY | O_CREAT, 0777);
+				if (fd < 0)
+				{
+					reply = "550 Open file failed.\r\n";
+					break;
+				}
+
+				wrlen = network_client_send_text(client, "125 Starting transfer\r\n");
+				if (wrlen < 0)
+				{
+					pr_error_info("ftp_send_text");
+					close(fd);
+					goto out_close_data_sockfd;
+				}
+
+				ret = ftp_server_receive_file1(&client_data, &url_port, fd);
+				close(fd);
+
+				if (ret < 0)
+				{
+					reply = "550 Receive file failed.\r\n";
+				}
+				else
+				{
+					reply = "226 Transfer complete.\r\n";
+				}
+
+				break;
+
+			case FTP_BUILD_CMD('p', 'a', 's', 'v'):
+			case FTP_BUILD_CMD('P', 'A', 'S', 'V'):
+			{
+				u8 *ip;
+				u16 port;
+				struct in_addr addr;
+				struct network_service service_data;
+
+				if (client_data.sockfd > 0)
+				{
+					network_client_close(&client_data);
+				}
+
+				url_port.port = 0;
+				ret = network_service_open(&service_data, &url_port, 0);
+				if (ret < 0)
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "425 Create socket failed: %s.\r\n", strerror(errno));
+					break;
+				}
+
+				ret = network_service_get_local_port(&service_data);
+				if (ret < 0)
+				{
+					pr_error_info("network_service_getsockname");
+					network_service_close(&service_data);
+					return ret;
+				}
+
+				port = ret;
+
+				ret = network_client_get_local_ip(client, &addr);
+				if (ret < 0)
+				{
+					pr_error_info("network_client_getsockname");
+					network_service_close(&service_data);
+					return ret;
+				}
+
+				ip = (u8 *) &addr;
+
+				wrlen = network_client_printf(client, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\r\n", ip[0], ip[1], ip[2], ip[3], port & 0xFF, (port >> 8) & 0xFF);
+				if (wrlen < 0)
+				{
+					pr_red_info("ftp_send_text");
+					network_service_close(&service_data);
+					return wrlen;
+				}
+
+				ret = network_service_accept(&service_data, &client_data);
+				network_service_close(&service_data);
+
+				if (ret < 0)
+				{
+					pr_red_info("network_service_accept");
+					return ret;
+				}
+
+				reply = NULL;
+				break;
+			}
+
+			case FTP_BUILD_CMD('d', 'e', 'l', 'e'):
+			case FTP_BUILD_CMD('D', 'E', 'L', 'E'):
+				ret = remove(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)));
+				if (ret < 0)
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "550 remove %s failed: %s.\r\n", cmd_arg, strerror(errno));
+				}
+				else
+				{
+					reply = "200 DELE command complete.\r\n";
+				}
+
+				break;
+
+			case FTP_BUILD_CMD('r', 'm', 'd', 0):
+			case FTP_BUILD_CMD('R', 'M', 'D', 0):
+				ret = rmdir(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)));
+				if (ret < 0)
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "550 remove %s failed: %s.\r\n", cmd_arg, strerror(errno));
+				}
+				else
+				{
+					reply = "200 DELE command complete.\r\n";
+				}
+
+				break;
+
+			case FTP_BUILD_CMD('m', 'k', 'd', 0):
+			case FTP_BUILD_CMD('M', 'K', 'D', 0):
+				ret = mkdir(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), 0777);
+				if (ret < 0)
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "550 create directory %s failed: %s.\r\n", cmd_arg, strerror(errno));
+				}
+				else
+				{
+					reply = "200 MKD command complete.\r\n";
+				}
+
+				break;
+
+			case FTP_BUILD_CMD('m', 'd', 't', 'm'):
+			case FTP_BUILD_CMD('M', 'D', 'T', 'M'):
+			{
+				struct stat st;
+
+				ret = stat(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st);
+				if (ret < 0)
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "550 get file stat failed: %s.\r\n", strerror(errno));
+				}
+				else
+				{
+					struct tm ti;
+
+					if (localtime_r((time_t *) &st.st_atime, &ti) == NULL)
+					{
+						replen = snprintf(rep_buff, sizeof(rep_buff), "550 get localtime failed: %s.\r\n", strerror(errno));
+					}
+					else
+					{
+						replen = snprintf(rep_buff, sizeof(rep_buff), "213 %04d%02d%02d%02d%02d%02d\r\n", \
+							ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec);
+					}
+				}
+
+				break;
+			}
+
+			case FTP_BUILD_CMD('n', 'o', 'o', 'p'):
+			case FTP_BUILD_CMD('N', 'O', 'O', 'P'):
+				reply = "200 NOOP commnd complete.\r\n";
+				break;
+
+			case FTP_BUILD_CMD('r', 'n', 'f', 'r'):
+			case FTP_BUILD_CMD('R', 'N', 'F', 'R'):
+			{
+				char rnfr_path[1024];
+
+				ftp_get_abs_path(curr_path, cmd_arg, rnfr_path, sizeof(rnfr_path));
+				reply = "350 RNFR command complete.\r\n";
+				break;
+			}
+
+			case FTP_BUILD_CMD('r', 'n', 't', 'o'):
+			case FTP_BUILD_CMD('R', 'N', 'T', 'O'):
+			{
+				char rnfr_path[1024];
+
+				ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path));
+				ret = rename(rnfr_path, abs_path);
+				if (ret < 0)
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "550 Rename %s to %s failed[%s].\r\n", rnfr_path, abs_path, strerror(errno));
+				}
+				else
+				{
+					replen = snprintf(rep_buff, sizeof(rep_buff), "250 Rename %s to %s successfully.\r\n", rnfr_path, abs_path);
+				}
+
+				break;
+			}
+
+			default:
+				pr_red_info("unsupport command: `%s'", cmd_buff);
+				reply = "500 Unknown command.\r\n";
+			}
 		}
 	}
 
@@ -1072,7 +1023,7 @@ int ftp_client_run(struct network_url *url, const char *username, const char *pa
 				break;
 			}
 
-			println("send buff[" PRINT_FORMAT_SIZE "] = %s", wrlen, buff);
+			println("send buff[%" PRINT_FORMAT_SIZE "] = %s", wrlen, buff);
 		}
 
 		rdlen = client.recv(&client, buff, sizeof(buff));

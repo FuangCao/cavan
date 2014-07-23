@@ -710,7 +710,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		type = web_proxy_get_request_type(buff, cmdlen);
 		if (type < 0)
 		{
-			pr_red_info("invalid request[" PRINT_FORMAT_SIZE "] `%s'", cmdlen, buff);
+			pr_red_info("invalid request[%" PRINT_FORMAT_SIZE "] `%s'", cmdlen, buff);
 
 			if (client_proxy.sockfd < 0)
 			{

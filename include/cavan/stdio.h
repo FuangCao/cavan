@@ -98,13 +98,19 @@ using namespace std;
 #define CAVAN_COLOR_MAGENTA				"\033[35m"
 
 #if __WORDSIZE == 64
-#define PRINT_FORMAT_SIZE				"%ld"
-#define PRINT_FORMAT_INT64				"%ld"
-#define PRINT_FORMAT_OFF				"%ld"
+#define PRINT_FORMAT_SIZE				"ld"
+#define PRINT_FORMAT_INT64				"ld"
+#define PRINT_FORMAT_OFF				"ld"
 #else
-#define PRINT_FORMAT_SIZE				"%d"
-#define PRINT_FORMAT_INT64				"%Ld"
-#define PRINT_FORMAT_OFF				"%Ld"
+#define PRINT_FORMAT_SIZE				"d"
+#define PRINT_FORMAT_INT64				"Ld"
+#define PRINT_FORMAT_OFF				"Ld"
+#endif
+
+#ifdef CONFIG_BUILD_FOR_ANDROID
+#define PRINT_FORMAT_UID				"ld"
+#else
+#define PRINT_FORMAT_UID				"d"
 #endif
 
 // ============================================================

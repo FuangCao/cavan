@@ -73,7 +73,7 @@ static void *ping_recv_thread(void *data)
 
 		seq = ping->seq;
 
-		println(PRINT_FORMAT_SIZE " bytes from %s: icmp_seq=%d ttl=%d time=%lf ms",
+		println("%" PRINT_FORMAT_SIZE " bytes from %s: icmp_seq=%d ttl=%d time=%lf ms",
 			rdlen, inet_ntoa(*(struct in_addr *) &ip->src_ip), seq, ip->ttl, (double) (clock_gettime_ns_mono() - pkg.pkg.time) / (1000 * 1000));
 	}
 

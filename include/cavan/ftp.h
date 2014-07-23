@@ -10,11 +10,13 @@
 #define FTP_CTRL_PORT		21
 #define FTP_DAEMON_COUNT	10
 
+#define FTP_BUILD_CMD(a, b, c, d) \
+	BYTES_DWORD(d, c, b, a)
+
 enum cavan_ftp_state
 {
 	FTP_STATE_READY,
 	FTP_STATE_USER_RECVED,
-	FTP_STATE_PASS_FAULT,
 	FTP_STATE_LOGINED,
 	FTP_STATE_PORT_RECVED,
 };

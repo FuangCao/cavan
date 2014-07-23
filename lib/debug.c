@@ -32,7 +32,7 @@ char *dump_backtrace(char *buff, size_t size)
 	char *buff_end = buff + size;
 
 	count = unwind_backtrace(stack, 2, NELEM(stack));
-	buff += snprintf(buff, buff_end - buff, "backtrace() returned " PRINT_FORMAT_SIZE " addresses\n", count);
+	buff += snprintf(buff, buff_end - buff, "backtrace() returned %" PRINT_FORMAT_SIZE " addresses\n", count);
 
 	if (count > 0)
 	{
