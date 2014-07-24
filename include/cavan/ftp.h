@@ -9,6 +9,7 @@
 #define FTP_DATA_PORT		20
 #define FTP_CTRL_PORT		21
 #define FTP_DAEMON_COUNT	10
+#define FTP_TIMEOUT_MS		(1000 * 60 * 20)
 
 #define FTP_BUILD_CMD(a, b, c, d) \
 	BYTES_DWORD(d, c, b, a)

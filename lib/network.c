@@ -2306,7 +2306,9 @@ int network_client_vprintf(struct network_client *client, const char *format, va
 
 	length = vsnprintf(buff, sizeof(buff), format, ap);
 
+#if CAVAN_NETWORK_DEBUG
 	print_ntext(buff, length);
+#endif
 
 	return client->send(client, buff, length);
 }
