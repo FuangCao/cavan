@@ -47,6 +47,20 @@ struct cavan_cache
 	pthread_cond_t wrcond;
 };
 
+struct cavan_fifo
+{
+	char *mem;
+	char *mem_end;
+	char *data;
+	char *data_end;
+	size_t size;
+	void *private_data;
+	pthread_mutex_t lock;
+
+	ssize_t (*read)(struct cavan_fifo *fifo, void *buff, size_t size);
+	ssize_t (*write)(struct cavan_fifo *fifo, const void *buff, size_t size);
+};
+
 int mem_cache_init(struct mem_cache *cache, size_t size);
 void mem_cache_reinit(struct mem_cache *cache);
 void mem_cache_deinit(struct mem_cache *cache);
@@ -77,3 +91,24 @@ ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t si
 ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout);
 ssize_t cavan_cache_fill(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout);
 ssize_t cavan_cache_read_line(struct cavan_cache *cache, char *buff, size_t size, size_t reserved, u32 timeout);
+
+int cavan_fifo_init(struct cavan_fifo *fifo, size_t size, void *data);
+void cavan_fifo_deinit(struct cavan_fifo *fifo);
+ssize_t cavan_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size);
+ssize_t cavan_fifo_read_cache(struct cavan_fifo *fifo, void *buff, size_t size);
+ssize_t cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size);
+ssize_t cavan_fifo_fill(struct cavan_fifo *fifo, void *buff, size_t size);
+ssize_t cavan_fifo_write(struct cavan_fifo *fifo, void *buff, size_t size);
+ssize_t cavan_fifo_fflush(struct cavan_fifo *fifo);
+size_t cavan_fifo_vprintf(struct cavan_fifo *fifo, const char *format, va_list ap);
+size_t cavan_fifo_printf(struct cavan_fifo *fifo, const char *format, ...);
+
+static inline void cavan_fifo_lock(struct cavan_fifo *fifo)
+{
+	pthread_mutex_lock(&fifo->lock);
+}
+
+static inline void cavan_fifo_unlock(struct cavan_fifo *fifo)
+{
+	pthread_mutex_unlock(&fifo->lock);
+}

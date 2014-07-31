@@ -3,6 +3,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Apr 21 10:08:25 CST 2011
 
 #include <cavan.h>
+#include <cavan/cache.h>
 #include <cavan/command.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -614,6 +615,16 @@ static inline int network_client_get_local_addr(struct network_client *client, s
 static inline int network_client_get_remote_addr(struct network_client *client, struct sockaddr *addr, socklen_t addrlen)
 {
 	return getpeername(client->sockfd, addr, &addrlen);
+}
+
+static inline ssize_t network_client_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	return network_client_recv(fifo->private_data, buff, size);
+}
+
+static inline ssize_t network_client_fifo_write(struct cavan_fifo *fifo, const void *buff, size_t size)
+{
+	return network_client_send(fifo->private_data, buff, size);
 }
 
 static inline void network_service_set_data(struct network_service *service, void *data)

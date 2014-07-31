@@ -786,3 +786,264 @@ out_return:
 	*buff = 0;
 	return buff - buff_bak;
 }
+
+// ============================================================
+
+static ssize_t cavan_fifo_read_dummy(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	pr_red_info("fifo->read no implement!");
+
+	return -EFAULT;
+}
+
+static ssize_t cavan_fifo_write_dummy(struct cavan_fifo *fifo, const void *buff, size_t size)
+{
+	pr_red_info("fifo->write no implement!");
+
+	return -EFAULT;
+}
+
+int cavan_fifo_init(struct cavan_fifo *fifo, size_t size, void *data)
+{
+	int ret;
+
+	ret = pthread_mutex_init(&fifo->lock, NULL);
+	if (ret < 0)
+	{
+		pr_error_info("pthread_mutex_init");
+		return ret;
+	}
+
+	fifo->mem = malloc(size);
+	if (fifo->mem == NULL)
+	{
+		pr_error_info("malloc");
+		ret = -ENOMEM;
+		goto out_pthread_mutex_destroy;
+	}
+
+	fifo->size = size;
+	fifo->private_data = data;
+
+	fifo->mem_end = fifo->mem + size;
+	fifo->data = fifo->data_end = fifo->mem;
+
+	fifo->read = cavan_fifo_read_dummy;
+	fifo->write = cavan_fifo_write_dummy;
+
+	return 0;
+
+out_pthread_mutex_destroy:
+	pthread_mutex_destroy(&fifo->lock);
+	return ret;
+}
+
+void cavan_fifo_deinit(struct cavan_fifo *fifo)
+{
+	pthread_mutex_destroy(&fifo->lock);
+	free(fifo->mem);
+}
+
+ssize_t cavan_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	ssize_t rdlen;
+
+	cavan_fifo_lock(fifo);
+
+	if (fifo->data >= fifo->data_end)
+	{
+		cavan_fifo_unlock(fifo);
+		rdlen = fifo->read(fifo, fifo->mem, fifo->size);
+		cavan_fifo_lock(fifo);
+		if (rdlen <= 0)
+		{
+			cavan_fifo_unlock(fifo);
+			return rdlen;
+		}
+
+		fifo->data = fifo->mem;
+		fifo->data_end = fifo->data + rdlen;
+	}
+
+	rdlen = fifo->data_end - fifo->data;
+	if (rdlen > (ssize_t) size)
+	{
+		rdlen = size;
+	}
+
+	mem_copy(buff, fifo->data, rdlen);
+	fifo->data += rdlen;
+
+	cavan_fifo_unlock(fifo);
+
+	return rdlen;
+}
+
+ssize_t cavan_fifo_read_cache(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	ssize_t rdlen;
+
+	cavan_fifo_lock(fifo);
+
+	if (fifo->data_end > fifo->data)
+	{
+		rdlen = fifo->data_end - fifo->data;
+		if (rdlen > (ssize_t) size)
+		{
+			rdlen = size;
+		}
+
+		mem_copy(buff, fifo->data, rdlen);
+		fifo->data += rdlen;
+	}
+	else
+	{
+		rdlen = 0;
+	}
+
+	cavan_fifo_unlock(fifo);
+
+	return rdlen;
+}
+
+ssize_t cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size)
+{
+	char *buff_bak = buff;
+	char *buff_end = buff + size - 1;
+
+	while (buff < buff_end)
+	{
+		ssize_t rdlen;
+
+		rdlen = cavan_fifo_read(fifo, buff, 1);
+		if (rdlen < 1)
+		{
+			if (rdlen < 0)
+			{
+				return rdlen;
+			}
+
+			goto out_found;
+		}
+
+		switch (*buff)
+		{
+		case '\n':
+			if (buff > buff_bak)
+			{
+				goto out_found;
+			}
+		case '\r':
+			break;
+
+		default:
+			buff++;
+		}
+	}
+
+out_found:
+	*(char *) buff = 0;
+	return ADDR_SUB2(buff, buff_bak);
+}
+
+ssize_t cavan_fifo_fill(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	void *buff_end = ADDR_ADD(buff, size);
+
+	while (buff < buff_end)
+	{
+		ssize_t rdlen;
+
+		rdlen = cavan_fifo_read(fifo, buff, ADDR_SUB2(buff_end, buff));
+		if (rdlen <= 0)
+		{
+			return -EFAULT;
+		}
+
+		buff = ADDR_ADD(buff, rdlen);
+	}
+
+	return size;
+}
+
+ssize_t cavan_fifo_write(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	size_t size_bak = size;
+
+	cavan_fifo_lock(fifo);
+
+	while (size)
+	{
+		ssize_t wrlen;
+
+		if (fifo->data_end >= fifo->mem_end)
+		{
+			wrlen = fifo->write(fifo, fifo->mem, fifo->size);
+			if (wrlen != (ssize_t) fifo->size)
+			{
+				cavan_fifo_unlock(fifo);
+				return -EFAULT;
+			}
+
+			fifo->data_end = fifo->mem;
+		}
+
+		wrlen = fifo->mem_end - fifo->data_end;
+		if (wrlen > (ssize_t) size)
+		{
+			wrlen = size;
+		}
+
+		mem_copy(fifo->data_end, buff, wrlen);
+		fifo->data_end += size;
+
+		size -= wrlen;
+		buff = ADDR_ADD(buff, wrlen);
+	}
+
+	cavan_fifo_unlock(fifo);
+
+	return size_bak;
+}
+
+ssize_t cavan_fifo_fflush(struct cavan_fifo *fifo)
+{
+	if (fifo->data_end > fifo->mem)
+	{
+		ssize_t wrlen;
+
+		wrlen = fifo->data_end - fifo->mem;
+		if (fifo->write(fifo, fifo->mem, wrlen) != wrlen)
+		{
+			return -EFAULT;
+		}
+
+		fifo->data_end = fifo->mem;
+
+		return wrlen;
+	}
+
+	return 0;
+}
+
+size_t cavan_fifo_vprintf(struct cavan_fifo *fifo, const char *format, va_list ap)
+{
+	size_t size;
+	char buff[2048];
+
+	size = vsnprintf(buff, sizeof(buff), format, ap);
+
+	return cavan_fifo_write(fifo, buff, size);
+}
+
+size_t cavan_fifo_printf(struct cavan_fifo *fifo, const char *format, ...)
+{
+	va_list ap;
+	ssize_t wrlen;
+
+	va_start(ap, format);
+	wrlen = cavan_fifo_vprintf(fifo, format, ap);
+	va_end(ap);
+
+	return wrlen;
+}

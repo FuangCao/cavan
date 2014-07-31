@@ -356,6 +356,7 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	int fd;
 	int ret;
 	char *p, buff[2048];
+	struct cavan_fifo fifo;
 	struct network_client client_data;
 
 	ret = ftp_client_create_pasv_link(client_proxy, &client_data);
@@ -397,16 +398,25 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
 	ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
 
+	ret = cavan_fifo_init(&fifo, sizeof(buff), &client_data);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_fifo_init");
+		goto out_close_fd;
+	}
+
+	fifo.read = network_client_fifo_read;
+
 	while (1)
 	{
 		int count;
 		char *texts[16];
 
-		ret = network_client_recv_line(&client_data, buff, sizeof(buff));
+		ret = cavan_fifo_read_line(&fifo, buff, sizeof(buff));
 		if (ret < 0)
 		{
 			pr_red_info("file_read_line");
-			goto out_close_fd;
+			goto out_cavan_fifo_deinit;
 		}
 
 		if (ret == 0)
@@ -478,7 +488,7 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	{
 		ret = -EFAULT;
 		pr_red_info("ftp_client_read_response");
-		goto out_close_fd;
+		goto out_cavan_fifo_deinit;
 	}
 
 	ret = web_proxy_send_file(client, fd, NULL);
@@ -487,6 +497,8 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 		pr_red_info("stat");
 	}
 
+out_cavan_fifo_deinit:
+	cavan_fifo_deinit(&fifo);
 out_close_fd:
 	close(fd);
 out_close_data_sockfd:
