@@ -2,6 +2,7 @@
 
 #include <cavan.h>
 #include <cavan/text.h>
+#include <cavan/cache.h>
 #include <sys/file.h>
 #include <poll.h>
 
@@ -195,7 +196,6 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option *option);
 int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *option);
 
-ssize_t file_read_line(int fd, char *buff, size_t size);
 int cavan_file_dump(const char *pathname, size_t width, const char *sep, const char *new_line);
 int cavan_temp_file_open(char *pathname, size_t size, const char *filename);
 
@@ -469,4 +469,14 @@ static inline int file_lstat(const char *filename, struct stat *st)
 static inline ssize_t file_read_byte(int fd, void *buff)
 {
 	return read(fd, buff, 1);
+}
+
+static inline ssize_t file_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	return read(*(int *) fifo->private_data, buff, size);
+}
+
+static inline ssize_t file_fifo_write(struct cavan_fifo *fifo, const void *buff, size_t size)
+{
+	return write(*(int *) fifo->private_data, buff, size);
 }

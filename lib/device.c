@@ -491,35 +491,49 @@ int system_mount(const char *mnt_dev, const char *mnt_point, const void *data)
 
 ssize_t parse_filesystems(int fd, char (*fstypes)[FSTYPE_NAME_LEN], size_t fstype_size)
 {
+	int ret;
+	char buff[512];
+	struct cavan_fifo fifo;
 	char (*fstypes_bak)[FSTYPE_NAME_LEN] = fstypes;
 	char (*end_fstypes)[FSTYPE_NAME_LEN] = fstypes + fstype_size;
 
+	ret = cavan_fifo_init(&fifo, sizeof(buff), &fd);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_fifo_init");
+		return ret;
+	}
+
+	fifo.read = file_fifo_read;
+
 	while (fstypes < end_fstypes)
 	{
-		ssize_t rdlen;
-		char buff[512];
 		char temp[FSTYPE_NAME_LEN];
 
-		rdlen = file_read_line(fd, buff, sizeof(buff));
-		if (rdlen < 1)
+		ret = cavan_fifo_read_line(&fifo, buff, sizeof(buff));
+		if (ret < 1)
 		{
-			if (rdlen < 0)
+			if (ret < 0)
 			{
-				pr_red_info("file_read_line");
-				return rdlen;
+				pr_red_info("cavan_fifo_read_line");
+				goto out_cavan_fifo_deinit;
 			}
 
 			break;
 		}
 
-		rdlen = sscanf(buff, "%s %s", *fstypes, temp);
-		if (rdlen == 1 || text_lhcmp("nodev", *fstypes))
+		ret = sscanf(buff, "%s %s", *fstypes, temp);
+		if (ret == 1 || text_lhcmp("nodev", *fstypes))
 		{
 			fstypes++;
 		}
 	}
 
-	return fstypes - fstypes_bak;
+	ret = fstypes - fstypes_bak;
+
+out_cavan_fifo_deinit:
+	cavan_fifo_deinit(&fifo);
+	return ret;
 }
 
 ssize_t read_filesystems(char (*fstypes)[FSTYPE_NAME_LEN], size_t fstype_size)
@@ -1565,37 +1579,49 @@ void show_mount_table(struct mount_table *mtab)
 
 ssize_t parse_mount_table(int fd, struct mount_table *mtab, size_t mtab_size)
 {
+	int ret;
+	char buff[1024];
+	struct cavan_fifo fifo;
 	struct mount_table *end_mtab = mtab + mtab_size, *mtab_bak = mtab;;
+
+	ret = cavan_fifo_init(&fifo, sizeof(buff), &fd);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_fifo_init");
+		return ret;
+	}
+
+	fifo.read = file_fifo_read;
 
 	while (mtab < end_mtab)
 	{
-		ssize_t rdlen;
-		char buff[1024];
-
-		rdlen = file_read_line(fd, buff, sizeof(buff));
-		if (rdlen < 1)
+		ret = cavan_fifo_read_line(&fifo, buff, sizeof(buff));
+		if (ret < 1)
 		{
-			if (rdlen == 0)
+			if (ret == 0)
 			{
 				break;
 			}
 
 			pr_red_info("file_read_line");
-
-			return rdlen;
+			goto out_cavan_fifo_deinit;
 		}
 
-		rdlen = parse_mount_table_simple(buff, mtab);
-		if (rdlen < 0)
+		ret = parse_mount_table_simple(buff, mtab);
+		if (ret < 0)
 		{
 			pr_red_info("parse_mount_table_simple");
-			return rdlen;
+			goto out_cavan_fifo_deinit;
 		}
 
 		mtab++;
 	}
 
-	return mtab - mtab_bak;
+	ret = mtab - mtab_bak;
+
+out_cavan_fifo_deinit:
+	cavan_fifo_deinit(&fifo);
+	return ret;
 }
 
 ssize_t read_mount_table(struct mount_table *mtab, size_t size)

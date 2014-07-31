@@ -844,37 +844,18 @@ void cavan_fifo_deinit(struct cavan_fifo *fifo)
 	free(fifo->mem);
 }
 
-ssize_t cavan_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size)
+static ssize_t cavan_fifo_read_cache_raw(struct cavan_fifo *fifo, void *buff, size_t size)
 {
-	ssize_t rdlen;
-
-	cavan_fifo_lock(fifo);
-
-	if (fifo->data >= fifo->data_end)
-	{
-		cavan_fifo_unlock(fifo);
-		rdlen = fifo->read(fifo, fifo->mem, fifo->size);
-		cavan_fifo_lock(fifo);
-		if (rdlen <= 0)
-		{
-			cavan_fifo_unlock(fifo);
-			return rdlen;
-		}
-
-		fifo->data = fifo->mem;
-		fifo->data_end = fifo->data + rdlen;
-	}
+	size_t rdlen;
 
 	rdlen = fifo->data_end - fifo->data;
-	if (rdlen > (ssize_t) size)
+	if (rdlen > size)
 	{
 		rdlen = size;
 	}
 
 	mem_copy(buff, fifo->data, rdlen);
 	fifo->data += rdlen;
-
-	cavan_fifo_unlock(fifo);
 
 	return rdlen;
 }
@@ -884,29 +865,56 @@ ssize_t cavan_fifo_read_cache(struct cavan_fifo *fifo, void *buff, size_t size)
 	ssize_t rdlen;
 
 	cavan_fifo_lock(fifo);
-
-	if (fifo->data_end > fifo->data)
-	{
-		rdlen = fifo->data_end - fifo->data;
-		if (rdlen > (ssize_t) size)
-		{
-			rdlen = size;
-		}
-
-		mem_copy(buff, fifo->data, rdlen);
-		fifo->data += rdlen;
-	}
-	else
-	{
-		rdlen = 0;
-	}
-
+	rdlen = cavan_fifo_read_cache_raw(fifo, buff, size);
 	cavan_fifo_unlock(fifo);
 
 	return rdlen;
 }
 
-ssize_t cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size)
+static ssize_t cavan_fifo_read_raw(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	ssize_t rdlen;
+
+	if (fifo->data < fifo->data_end)
+	{
+		rdlen = fifo->data_end - fifo->data;
+	}
+	else
+	{
+		rdlen = fifo->read(fifo, fifo->mem, fifo->size);
+		if (rdlen <= 0)
+		{
+			return rdlen;
+		}
+
+		fifo->data = fifo->mem;
+		fifo->data_end = fifo->data + rdlen;
+	}
+
+	if (rdlen > (ssize_t) size)
+	{
+		rdlen = size;
+	}
+
+	mem_copy(buff, fifo->data, rdlen);
+	fifo->data += rdlen;
+
+	return rdlen;
+}
+
+
+ssize_t cavan_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	ssize_t rdlen;
+
+	cavan_fifo_lock(fifo);
+	rdlen = cavan_fifo_read_raw(fifo, buff, size);
+	cavan_fifo_unlock(fifo);
+
+	return rdlen;
+}
+
+static ssize_t cavan_fifo_read_line_raw(struct cavan_fifo *fifo, char *buff, size_t size)
 {
 	char *buff_bak = buff;
 	char *buff_end = buff + size - 1;
@@ -915,7 +923,7 @@ ssize_t cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size)
 	{
 		ssize_t rdlen;
 
-		rdlen = cavan_fifo_read(fifo, buff, 1);
+		rdlen = cavan_fifo_read_raw(fifo, buff, 1);
 		if (rdlen < 1)
 		{
 			if (rdlen < 0)
@@ -942,53 +950,76 @@ ssize_t cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size)
 	}
 
 out_found:
-	*(char *) buff = 0;
-	return ADDR_SUB2(buff, buff_bak);
+	*buff = 0;
+	return buff - buff_bak;
 }
 
-ssize_t cavan_fifo_fill(struct cavan_fifo *fifo, void *buff, size_t size)
+ssize_t cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size)
 {
-	void *buff_end = ADDR_ADD(buff, size);
+	ssize_t rdlen;
+
+	cavan_fifo_lock(fifo);
+	rdlen = cavan_fifo_read_line_raw(fifo, buff, size);
+	cavan_fifo_unlock(fifo);
+
+	return rdlen;
+}
+
+static ssize_t cavan_fifo_fill_raw(struct cavan_fifo *fifo, char *buff, size_t size)
+{
+	char *buff_end = buff + size;
 
 	while (buff < buff_end)
 	{
 		ssize_t rdlen;
 
-		rdlen = cavan_fifo_read(fifo, buff, ADDR_SUB2(buff_end, buff));
+		rdlen = cavan_fifo_read_raw(fifo, buff, buff_end - buff);
 		if (rdlen <= 0)
 		{
 			return -EFAULT;
 		}
 
-		buff = ADDR_ADD(buff, rdlen);
+		buff += rdlen;
 	}
 
 	return size;
 }
 
-ssize_t cavan_fifo_write(struct cavan_fifo *fifo, void *buff, size_t size)
+ssize_t cavan_fifo_fill(struct cavan_fifo *fifo, void *buff, size_t size)
 {
-	size_t size_bak = size;
+	ssize_t rdlen;
 
 	cavan_fifo_lock(fifo);
+	rdlen = cavan_fifo_fill_raw(fifo, buff, size);
+	cavan_fifo_unlock(fifo);
+
+	return rdlen;
+}
+
+static ssize_t cavan_fifo_write_raw(struct cavan_fifo *fifo, const char *buff, size_t size)
+{
+	size_t size_bak = size;
 
 	while (size)
 	{
 		ssize_t wrlen;
 
-		if (fifo->data_end >= fifo->mem_end)
+		if (fifo->data_end < fifo->mem_end)
+		{
+			wrlen = fifo->mem_end - fifo->data_end;
+		}
+		else
 		{
 			wrlen = fifo->write(fifo, fifo->mem, fifo->size);
 			if (wrlen != (ssize_t) fifo->size)
 			{
-				cavan_fifo_unlock(fifo);
 				return -EFAULT;
 			}
 
 			fifo->data_end = fifo->mem;
+			wrlen = fifo->size;
 		}
 
-		wrlen = fifo->mem_end - fifo->data_end;
 		if (wrlen > (ssize_t) size)
 		{
 			wrlen = size;
@@ -998,15 +1029,24 @@ ssize_t cavan_fifo_write(struct cavan_fifo *fifo, void *buff, size_t size)
 		fifo->data_end += size;
 
 		size -= wrlen;
-		buff = ADDR_ADD(buff, wrlen);
+		buff += wrlen;
 	}
-
-	cavan_fifo_unlock(fifo);
 
 	return size_bak;
 }
 
-ssize_t cavan_fifo_fflush(struct cavan_fifo *fifo)
+ssize_t cavan_fifo_write(struct cavan_fifo *fifo, const void *buff, size_t size)
+{
+	ssize_t wrlen;
+
+	cavan_fifo_lock(fifo);
+	wrlen = cavan_fifo_write_raw(fifo, buff, size);
+	cavan_fifo_unlock(fifo);
+
+	return wrlen;
+}
+
+static ssize_t cavan_fifo_fflush_raw(struct cavan_fifo *fifo)
 {
 	if (fifo->data_end > fifo->mem)
 	{
@@ -1024,6 +1064,17 @@ ssize_t cavan_fifo_fflush(struct cavan_fifo *fifo)
 	}
 
 	return 0;
+}
+
+ssize_t cavan_fifo_fflush(struct cavan_fifo *fifo)
+{
+	ssize_t wrlen;
+
+	cavan_fifo_lock(fifo);
+	wrlen = cavan_fifo_fflush_raw(fifo);
+	cavan_fifo_unlock(fifo);
+
+	return wrlen;
 }
 
 size_t cavan_fifo_vprintf(struct cavan_fifo *fifo, const char *format, va_list ap)

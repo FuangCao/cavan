@@ -98,7 +98,7 @@ ssize_t cavan_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size);
 ssize_t cavan_fifo_read_cache(struct cavan_fifo *fifo, void *buff, size_t size);
 ssize_t cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size);
 ssize_t cavan_fifo_fill(struct cavan_fifo *fifo, void *buff, size_t size);
-ssize_t cavan_fifo_write(struct cavan_fifo *fifo, void *buff, size_t size);
+ssize_t cavan_fifo_write(struct cavan_fifo *fifo, const void *buff, size_t size);
 ssize_t cavan_fifo_fflush(struct cavan_fifo *fifo);
 size_t cavan_fifo_vprintf(struct cavan_fifo *fifo, const char *format, va_list ap);
 size_t cavan_fifo_printf(struct cavan_fifo *fifo, const char *format, ...);

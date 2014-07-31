@@ -2257,48 +2257,6 @@ bool network_client_discard_all(struct network_client *client)
 	return true;
 }
 
-ssize_t network_client_recv_line(struct network_client *client, char *buff, size_t size)
-{
-	char c;
-	ssize_t rdlen;
-	char *buff_bak = buff;
-	char *buff_end = buff + size - 1;
-
-	while (buff < buff_end)
-	{
-		rdlen = client->recv(client, &c, 1);
-		if (rdlen < 1)
-		{
-			if (rdlen < 0)
-			{
-				return rdlen;
-			}
-			else
-			{
-				break;
-			}
-		}
-
-		switch (c)
-		{
-		case '\n':
-			if (buff > buff_bak)
-			{
-				goto out_complete;
-			}
-		case '\r':
-			break;
-
-		default:
-			*buff++ = c;
-		}
-	}
-
-out_complete:
-	*buff = 0;
-	return buff - buff_bak;
-}
-
 int network_client_vprintf(struct network_client *client, const char *format, va_list ap)
 {
 	int length;

@@ -81,7 +81,7 @@ char *ftp_file_stat_tostring(const char *filepath, char *buff, char *buff_end)
 
 	buff = file_permition_tostring(st.st_mode, buff, buff_end);
 	// buff += snprintf(buff, buff_end - buff, " %-5ld %-5d %-5d " PRINT_FORMAT_OFF("-10"), st.st_nlink, st.st_uid, st.st_gid, st.st_size);
-	buff += snprintf(buff, buff_end - buff, " %-5" PRINT_FORMAT_SIZE " %-5" PRINT_FORMAT_UID " %-5" PRINT_FORMAT_UID " %-10" PRINT_FORMAT_OFF, st.st_nlink, st.st_uid, st.st_gid, st.st_size);
+	buff += snprintf(buff, buff_end - buff, " %-5" PRINT_FORMAT_SIZE " %-5" PRINT_FORMAT_UID " %-5" PRINT_FORMAT_UID " %-10" PRINT_FORMAT_OFF " ", st.st_nlink, st.st_uid, st.st_gid, st.st_size);
 	buff = ftp_file_time_tostring((time_t *) &st.st_mtime, buff, buff_end);
 
 	return buff;

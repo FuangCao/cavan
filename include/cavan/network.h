@@ -410,7 +410,6 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size);
 ssize_t network_client_timed_recv(struct network_client *client, void *buff, size_t size, int timeout);
 bool network_client_discard_all(struct network_client *client);
-ssize_t network_client_recv_line(struct network_client *client, char *buff, size_t size);
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout);
 int network_client_exec_main(struct network_client *client, const char *command, int lines, int columns);
 int network_client_get_local_port(struct network_client *client);

@@ -23,7 +23,9 @@
 int main(int argc, char *argv[])
 {
 	int fd;
+	int ret;
 	char buff[1024];
+	struct cavan_fifo fifo;
 
 	assert(argc > 1);
 
@@ -34,9 +36,18 @@ int main(int argc, char *argv[])
 		return fd;
 	}
 
+	ret = cavan_fifo_init(&fifo, sizeof(buff), &fd);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_fifo_init");
+		goto out_close_fd;
+	}
+
+	fifo.read = file_fifo_read;
+
 	while (1)
 	{
-		int ret = file_read_line(fd, buff, sizeof(buff));
+		int ret = cavan_fifo_read_line(&fifo, buff, sizeof(buff));
 		if (ret <= 0)
 		{
 			break;
@@ -45,7 +56,9 @@ int main(int argc, char *argv[])
 		println("line = \"%s\"", buff);
 	}
 
-	close(fd);
+	cavan_fifo_deinit(&fifo);
 
+out_close_fd:
+	close(fd);
 	return 0;
 }
