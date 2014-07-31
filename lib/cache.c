@@ -902,7 +902,6 @@ static ssize_t cavan_fifo_read_raw(struct cavan_fifo *fifo, void *buff, size_t s
 	return rdlen;
 }
 
-
 ssize_t cavan_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size)
 {
 	ssize_t rdlen;
@@ -1010,14 +1009,27 @@ static ssize_t cavan_fifo_write_raw(struct cavan_fifo *fifo, const char *buff, s
 		}
 		else
 		{
-			wrlen = fifo->write(fifo, fifo->mem, fifo->size);
-			if (wrlen != (ssize_t) fifo->size)
+			if (fifo->write(fifo, fifo->mem, fifo->size) != (ssize_t) fifo->size)
 			{
 				return -EFAULT;
 			}
 
-			fifo->data_end = fifo->mem;
 			wrlen = fifo->size;
+			fifo->data_end = fifo->mem;
+		}
+
+		if (fifo->data_end == fifo->mem)
+		{
+			while (size >= fifo->size)
+			{
+				if (fifo->write(fifo, buff, fifo->size) != (ssize_t) fifo->size)
+				{
+					return -EFAULT;
+				}
+
+				buff += fifo->size;
+				size -= fifo->size;
+			}
 		}
 
 		if (wrlen > (ssize_t) size)
@@ -1026,7 +1038,7 @@ static ssize_t cavan_fifo_write_raw(struct cavan_fifo *fifo, const char *buff, s
 		}
 
 		mem_copy(fifo->data_end, buff, wrlen);
-		fifo->data_end += size;
+		fifo->data_end += wrlen;
 
 		size -= wrlen;
 		buff += wrlen;
