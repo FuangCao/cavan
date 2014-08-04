@@ -31,7 +31,7 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--disable-multilib \
 					--disable-bootstrap
 
-ifneq ($(filter $(GCC_VERSION),4.8.1 4.8.2),)
+ifneq ($(filter $(GCC_VERSION),4.8.1 4.8.2 4.9.1),)
 GCC_OPTION1 += --disable-libatomic
 endif
 

@@ -80,7 +80,7 @@ $(info ============================================================)
 
 include $(MAKEFILE_DEFINES)
 
-ifeq ($(filter $(GLIBC_VERSION),2.17 2.18),)
+ifeq ($(filter $(GLIBC_VERSION),2.17 2.18 2.19),)
 define decompression_glibc
 if ! test -d "$(SRC_GLIBC)"; \
 then \
