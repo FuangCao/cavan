@@ -1,0 +1,81 @@
+#!/bin/bash
+
+function error_exit()
+{
+	echo -e "\033[31mFailed!\033[0m"
+	exit 1
+}
+
+function do_checkout_revision()
+{
+	local dn url revision outpath file_delete
+
+	revision="$1"
+	outpath="${ROOT_PATH}/svn${revision}"
+	file_delete="${outpath}/delete.txt"
+
+	rm -rf "${outpath}"
+	mkdir -p "${outpath}" || return 1
+
+	: > "${file_delete}"
+
+	while read line
+	do
+		dn="${outpath}/$(dirname "${line}")"
+		mkdir -p "${dn}" || return 1
+		url="${SVN_URL}/${line}@${revision}"
+		svn export --force "${url}" "${dn}" && continue
+		svn info "${url}" && return 1
+		echo "${line}" >> "${file_delete}"
+	done < "${FILE_INDEX}" 2>/dev/null
+
+	return 0
+}
+
+[[ $# < 2 ]] &&
+{
+	echo "$0 URL REV1 [REV2]"
+	exit 1
+}
+
+SVN_URL="$1"
+REV1="$2"
+REV2="$3"
+
+[ "${REV2}" ] ||
+{
+	REV2=$(svn info "${SVN_URL}" | grep "^Revision:" | sed 's/.*:\s*//g')
+}
+
+[[ ${REV1} > ${REV2} ]] &&
+{
+	TEMP=${REV1}
+	REV1=${REV2}
+	REV2=${TEMP}
+}
+
+PATCH_NAME="patch-${REV1}-${REV2}"
+ROOT_PATH="${PWD}/${PATCH_NAME}"
+FILE_INDEX="${ROOT_PATH}/index.txt"
+
+echo "SVN_URL = ${SVN_URL}"
+echo "Patch: ${REV1} -> ${REV2}"
+echo "ROOT_PATH = ${ROOT_PATH}"
+
+rm -rf "${ROOT_PATH}" || error_exit
+mkdir -p "${ROOT_PATH}" || error_exit
+
+svn diff "${SVN_URL}" -r ${REV1}:${REV2} | grep "^Index:" | sed '/_ota.zip$/d' | sed 's/^Index:\s\+//g' | sort -u > "${FILE_INDEX}" || error_exit
+
+do_checkout_revision ${REV1} || error_exit
+do_checkout_revision ${REV2} || error_exit
+
+cd "${ROOT_PATH}" || error_exit
+git init || error_exit
+git config user.email "cavan.cfa@gmail.com" || error_exit
+git config user.name "Fuang.Cao" || error_exit
+git add -f . || error_exit
+git commit -asm "Add all file to git repo" || error_exit
+tar -cjf "${PATCH_NAME}.tar.bz2" .git || error_exit
+
+echo -e "\033[32mOK\033[0m"
