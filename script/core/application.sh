@@ -101,3 +101,14 @@ function cavan-daemon-run()
 
 	return 0
 }
+
+function cavan-apk-rename()
+{
+	local fn nfn
+
+	for fn in *-[0-9].apk
+	do
+		nfn="${fn%-*.apk}.apk"
+		mv -v "${fn}" "${nfn}"
+	done
+}

@@ -393,7 +393,7 @@ description "cavan daemon"
 
 start on runlevel [2345] or net-device-up
 
-exec ${CMD_TCP_DD_SERVER} -d & ${CMD_TCP_PROXY} -adp 9999 & ${CMD_TCP_PROXY} -adp 9090 --pport 9090
+exec ${CMD_TCP_DD_SERVER} -d & ${CMD_TCP_PROXY} -adp 9999 --pp 8888 & ${CMD_TCP_PROXY} -adp 9090 --pp 9090 & ${CMD_TCP_PROXY} -dp 8080 -i 10.1.1.153 --pp 9090
 EOF
 
 	chmod 0644 ${FILE_CAVAN_SERVICE_CONF} || return 1
