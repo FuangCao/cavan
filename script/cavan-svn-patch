@@ -24,7 +24,7 @@ function do_checkout_revision()
 		dn="${outpath}/$(dirname "${line}")"
 		mkdir -p "${dn}" || return 1
 		url="${SVN_URL}/${line}@${revision}"
-		svn export --force "${url}" "${dn}" && continue
+		svn export --depth empty --force "${url}" "${dn}" && continue
 		svn info "${url}" && return 1
 		echo "${line}" >> "${file_delete}"
 	done < "${FILE_INDEX}" 2>/dev/null
