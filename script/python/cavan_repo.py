@@ -434,7 +434,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 				self.prRedInfo(url, " => ", tmpPathname)
 
 			managerTemp = GitSvnManager(tmpPathname, self.mVerbose)
-			if managerTemp.doInitBase(url) and managerTemp.doSync(url) and self.doExecute(["mv", managerTemp.getRootPath(), manager.getRootPath]):
+			if managerTemp.doInitBase(url) and managerTemp.doSync(url) and self.doExecute(["mv", managerTemp.getRootPath(), manager.getRootPath()]):
 				self.addProgress()
 				return 1
 
