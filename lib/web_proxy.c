@@ -568,7 +568,7 @@ static void web_proxy_stop_handler(struct cavan_dynamic_service *service)
 	network_service_close(&proxy->service);
 }
 
-static char *web_proxy_find_http_prop(const char *req, const char *req_end, const char *name, size_t namelen)
+char *web_proxy_find_http_prop(const char *req, const char *req_end, const char *name, size_t namelen)
 {
 	while ((size_t) (req_end - req) > namelen)
 	{
@@ -595,7 +595,7 @@ static char *web_proxy_find_http_prop(const char *req, const char *req_end, cons
 	return NULL;
 }
 
-static char *web_proxy_set_http_prop(char *req, char *req_end, const char *name, int namelen, const char *value, int valuelen)
+char *web_proxy_set_http_prop(char *req, char *req_end, const char *name, int namelen, const char *value, int valuelen)
 {
 	char *prop;
 	int proplen;

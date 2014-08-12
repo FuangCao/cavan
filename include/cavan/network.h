@@ -407,7 +407,9 @@ int network_client_vprintf(struct network_client *client, const char *format, va
 int network_client_printf(struct network_client *client, const char *format, ...);
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size);
 ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size);
+ssize_t network_client_recv_file2(struct network_client *client, const char *pathname, size_t size, int flags);
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size);
+ssize_t network_client_send_file2(struct network_client *client, const char *pathname, size_t size);
 ssize_t network_client_timed_recv(struct network_client *client, void *buff, size_t size, int timeout);
 bool network_client_discard_all(struct network_client *client);
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout);

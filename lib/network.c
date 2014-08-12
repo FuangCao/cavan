@@ -2153,6 +2153,29 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 	}
 }
 
+ssize_t network_client_recv_file2(struct network_client *client, const char *pathname, size_t size, int flags)
+{
+	int fd;
+	ssize_t rdlen;
+
+	fd = open(pathname, flags | O_WRONLY | O_CREAT, 0777);
+	if (fd < 0)
+	{
+		pr_error_info("open `%s'", pathname);
+		return fd;
+	}
+
+	rdlen = network_client_recv_file(client, fd, size);
+	if (rdlen < 0)
+	{
+		pr_red_info("network_client_recv_file");
+	}
+
+	close(fd);
+
+	return rdlen;
+}
+
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size)
 {
 	ssize_t rdlen;
@@ -2204,6 +2227,29 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 
 		return size_bak;
 	}
+}
+
+ssize_t network_client_send_file2(struct network_client *client, const char *pathname, size_t size)
+{
+	int fd;
+	ssize_t wrlen;
+
+	fd = open(pathname, O_RDONLY);
+	if (fd < 0)
+	{
+		pr_error_info("open `%s'", pathname);
+		return fd;
+	}
+
+	wrlen = network_client_send_file(client, fd, size);
+	if (wrlen < 0)
+	{
+		pr_red_info("network_client_send_file");
+	}
+
+	close(fd);
+
+	return wrlen;
 }
 
 ssize_t network_client_timed_recv(struct network_client *client, void *buff, size_t size, int timeout)

@@ -139,6 +139,87 @@ static int network_url_test(const char *_url)
 	return 0;
 }
 
+static int network_dump_data(const char *url)
+{
+	int ret;
+	struct network_client client;
+	struct network_service service;
+
+	ret = network_service_open2(&service, url, 0);
+	if (ret < 0)
+	{
+		pr_red_info("network_service_open2");
+		return ret;
+	}
+
+	while (1)
+	{
+		ret = network_service_accept(&service, &client);
+		if (ret < 0)
+		{
+			pr_red_info("network_service_accept");
+			goto out_network_service_close;
+		}
+
+		while (1)
+		{
+			char buff[1024];
+
+			ret = client.recv(&client, buff, sizeof(buff));
+			if (ret <= 0)
+			{
+				pr_red_info("client->recv");
+				break;
+			}
+
+			print_ntext(buff, ret);
+		}
+
+		network_client_close(&client);
+	}
+
+out_network_service_close:
+	network_service_close(&service);
+	return ret;
+}
+
+static int network_test_send(const char *url, const char *pathname)
+{
+	int ret;
+	struct network_client client;
+
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	if (ret < 0)
+	{
+		pr_red_info("network_client_open");
+		return -EFAULT;
+	}
+
+	ret = network_client_send_file2(&client, pathname, 0);
+	if (ret < 0)
+	{
+		pr_red_info("network_client_send_file2");
+	}
+	else
+	{
+		char buff[1024];
+
+		ret = client.recv(&client, buff, sizeof(buff));
+		if (ret > 0)
+		{
+			print_ntext(buff, ret);
+		}
+		else
+		{
+			pr_red_info("client.recv");
+		}
+	}
+
+	network_client_close(&client);
+
+	return ret;
+}
+
 int main(int argc, char *argv[])
 {
 	assert(argc > 2);
@@ -154,6 +235,16 @@ int main(int argc, char *argv[])
 	else if (strcmp(argv[1], "url") == 0)
 	{
 		return network_url_test(argv[2]);
+	}
+	else if (strcmp(argv[1], "dump") == 0)
+	{
+		return network_dump_data(argv[2]);
+	}
+	else if (strcmp(argv[1], "send") == 0)
+	{
+		assert(argc > 3);
+
+		return network_test_send(argv[2], argv[3]);
 	}
 	else
 	{

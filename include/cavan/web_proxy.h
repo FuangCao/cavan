@@ -46,5 +46,7 @@ struct web_proxy_service
 
 const char *web_proxy_request_type_tostring(int type);
 int web_proxy_get_request_type(const char *req, size_t length);
+char *web_proxy_find_http_prop(const char *req, const char *req_end, const char *name, size_t namelen);
+char *web_proxy_set_http_prop(char *req, char *req_end, const char *name, int namelen, const char *value, int valuelen);
 ssize_t web_proxy_read_http_request(struct network_client *client, char *buff, size_t size);
 int web_proxy_service_run(struct cavan_dynamic_service *service);
