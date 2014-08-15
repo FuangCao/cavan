@@ -1137,7 +1137,7 @@ static ssize_t hua_input_chip_attr_enable_store(struct device *device, struct de
 
 static struct device_attribute hua_input_chip_attr_firmware_id = __ATTR(firmware_id, S_IRUGO, hua_input_chip_attr_firmware_id_show, NULL);
 static struct device_attribute hua_input_chip_attr_info = __ATTR(info, S_IRUGO, hua_input_chip_attr_info_show, NULL);
-static struct device_attribute hua_input_chip_attr_enable = __ATTR(enable, S_IRUGO | S_IWUGO, hua_input_chip_attr_enable_show, hua_input_chip_attr_enable_store);
+static struct device_attribute hua_input_chip_attr_enable = __ATTR(enable, S_IRWXU | S_IRWXG | S_IRUGO, hua_input_chip_attr_enable_show, hua_input_chip_attr_enable_store);
 
 static const struct attribute *hua_input_chip_attributes[] =
 {
@@ -1628,10 +1628,10 @@ static ssize_t hua_input_device_attr_delay_store(struct device *device, struct d
 	return size;
 }
 
-static struct device_attribute hua_input_device_attr_calibration = __ATTR(calibration, S_IWUSR | S_IRUGO, hua_input_device_attr_calibration_show, hua_input_device_attr_calibration_store);
+static struct device_attribute hua_input_device_attr_calibration = __ATTR(calibration, S_IRWXU | S_IRWXG | S_IRUGO, hua_input_device_attr_calibration_show, hua_input_device_attr_calibration_store);
 static struct device_attribute hua_input_device_attr_info = __ATTR(info, S_IRUGO, hua_input_device_attr_info_show, NULL);
-static struct device_attribute hua_input_device_attr_enable = __ATTR(enable, S_IWUSR | S_IRUGO, hua_input_device_attr_enable_show, hua_input_device_attr_enable_store);
-static struct device_attribute hua_input_device_attr_delay = __ATTR(delay, S_IWUSR | S_IRUGO, hua_input_device_attr_delay_show, hua_input_device_attr_delay_store);
+static struct device_attribute hua_input_device_attr_enable = __ATTR(enable, S_IRWXU | S_IRWXG | S_IRUGO, hua_input_device_attr_enable_show, hua_input_device_attr_enable_store);
+static struct device_attribute hua_input_device_attr_delay = __ATTR(delay, S_IRWXU | S_IRWXG | S_IRUGO, hua_input_device_attr_delay_show, hua_input_device_attr_delay_store);
 
 static const struct attribute *hua_input_device_attributes[] =
 {
