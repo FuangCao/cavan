@@ -29,15 +29,74 @@ static int hua_sensor_device_ioctl(struct hua_input_device *dev, unsigned int co
 	return -EFAULT;
 }
 
+static ssize_t hua_sensor_device_attr_min_delay_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *) hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", sensor->min_delay);
+}
+
+static ssize_t hua_sensor_device_attr_max_range_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *) hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", sensor->max_range);
+}
+
+static ssize_t hua_sensor_device_attr_resolution_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *) hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", sensor->resolution);
+}
+
+static ssize_t hua_sensor_device_attr_power_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *) hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", sensor->power_consume);
+}
+
+static ssize_t hua_sensor_device_attr_axis_count_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *) hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", sensor->axis_count);
+}
+
+static struct device_attribute hua_sensor_device_attr_min_delay = __ATTR(min_delay, S_IRUGO, hua_sensor_device_attr_min_delay_show, NULL);
+static struct device_attribute hua_sensor_device_attr_max_range = __ATTR(max_range, S_IRUGO, hua_sensor_device_attr_max_range_show, NULL);
+static struct device_attribute hua_sensor_device_attr_resolution = __ATTR(resolution, S_IRUGO, hua_sensor_device_attr_resolution_show, NULL);
+static struct device_attribute hua_sensor_device_attr_power_consume = __ATTR(power_consume, S_IRUGO, hua_sensor_device_attr_power_show, NULL);
+static struct device_attribute hua_sensor_device_attr_axis_count = __ATTR(axis_count, S_IRUGO, hua_sensor_device_attr_axis_count_show, NULL);
+
+static const struct attribute *hua_sensor_device_attributes[] =
+{
+	&hua_sensor_device_attr_min_delay.attr,
+	&hua_sensor_device_attr_max_range.attr,
+	&hua_sensor_device_attr_resolution.attr,
+	&hua_sensor_device_attr_power_consume.attr,
+	&hua_sensor_device_attr_axis_count.attr,
+	NULL
+};
+
 static void hua_sensor_device_remove(struct hua_input_device *dev)
 {
 	pr_pos_info();
+
+	sysfs_remove_files(&dev->misc_dev.dev->kobj, hua_sensor_device_attributes);
 }
 
 int hua_sensor_device_probe(struct hua_input_device *dev)
 {
+	int ret;
 	struct input_dev *input = dev->input;
-	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *) dev;
 
 	switch (dev->type)
 	{
@@ -73,6 +132,13 @@ int hua_sensor_device_probe(struct hua_input_device *dev)
 
 	set_bit(EV_ABS, input->evbit);
 
+	ret = sysfs_create_files(&dev->misc_dev.dev->kobj, hua_sensor_device_attributes);
+	if (ret < 0)
+	{
+		pr_red_info("sysfs_create_files");
+		return ret;
+	}
+
 	dev->remove = hua_sensor_device_remove;
 	dev->ioctl = hua_sensor_device_ioctl;
 
@@ -80,6 +146,8 @@ int hua_sensor_device_probe(struct hua_input_device *dev)
 
 	return 0;
 }
+
+EXPORT_SYMBOL_GPL(hua_sensor_device_probe);
 
 const struct hua_sensor_rate_table_node *hua_sensor_find_rate_value(const struct hua_sensor_rate_table_node *table, size_t count, u32 delay_ns)
 {

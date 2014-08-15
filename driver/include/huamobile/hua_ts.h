@@ -50,7 +50,10 @@ struct hua_i2c_request
 	size_t size;
 };
 
-int hua_ts_read_pending_firmware_name(char *buff, size_t size);
+static inline int hua_ts_read_pending_firmware_name(char *buff, size_t size)
+{
+	return hua_io_read_write_file("/data/property/persist.sys.tp.fw.pending", buff, size, false);
+}
 
 static inline void hua_ts_mt_touch_release(struct input_dev *input)
 {

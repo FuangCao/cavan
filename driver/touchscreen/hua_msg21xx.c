@@ -6,7 +6,7 @@
 #include <linux/regulator/consumer.h>
 #include "msg21xx_vendor_api.c"
 
-#define HUA_SUPPORT_PROXIMITY		1
+#define HUA_SUPPORT_PROXIMITY		0   /* 1:open the tp proximity  0:close the tp proximity,closed by chenzili at 2014-5-28 for zc2501_tw*/
 
 #define FW_ADDR_MSG21XX				(0xC4 >> 1)
 #define FW_ADDR_MSG21XX_TP			(0x4C >> 1)
@@ -242,9 +242,10 @@ static struct hua_ts_touch_key msg21xx_touch_keys[] =
 	}
 };
 
-static int msg21xx_read_firmware_id(struct hua_input_chip *chip, u16 version[2])
+static int msg21xx_read_firmware_id(struct hua_input_chip *chip, char *buff, size_t size)
 {
 	int ret;
+	u16 version[2];
 	char command[] = {0x53, 0x00, 0x2A};
 
 	ret = chip->write_data(chip, FW_ADDR_MSG21XX_TP, command, sizeof(command));
@@ -261,14 +262,13 @@ static int msg21xx_read_firmware_id(struct hua_input_chip *chip, u16 version[2])
 		return ret;
 	}
 
-	return 0;
+	return snprintf(buff, size, "%03d.%03d\n", version[0], version[1]);
 }
 
 static int msg21xx_readid(struct hua_input_chip *chip)
 {
 	int ret;
 	char buff[32];
-	u16 version[2];
 
 	pr_pos_info();
 
@@ -279,47 +279,24 @@ static int msg21xx_readid(struct hua_input_chip *chip)
 		return 0;
 	}
 
-	ret = msg21xx_read_firmware_id(chip, version);
+	ret = chip->read_firmware_id(chip, buff, sizeof(buff));
 	if (ret < 0)
 	{
-		pr_red_info("msg21xx_read_firmware_id");
+		pr_red_info("chip->read_firmware_id");
 		return ret;
 	}
 
-	pr_bold_info("Firmware ID = %02x%02x", version[0], version[1]);
+	pr_bold_info("Firmware ID = %s", buff);
 
 	return 0;
 }
 
 static ssize_t msg21xx_firmware_id_show(struct device *dev, struct device_attribute *attr, char *buff)
 {
-	int ret;
-	u16 version[2];
 	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
 	struct hua_msg21xx_chip *msg21xx = i2c_get_clientdata(client);
-	struct hua_input_chip *chip = &msg21xx->chip;
 
-	mutex_lock(&chip->lock);
-
-	ret = hua_input_chip_set_power(chip, true);
-	if (ret < 0)
-	{
-		pr_red_info("hua_input_chip_set_power_lock");
-		goto out_mutex_unlock;
-	}
-
-	ret = msg21xx_read_firmware_id(chip, version);
-	if (ret < 0)
-	{
-		pr_red_info("msg21xx_read_firmware_id");
-		goto out_mutex_unlock;
-	}
-
-	ret = sprintf(buff, "%03d.%03d\n", version[0], version[1]);
-
-out_mutex_unlock:
-	mutex_unlock(&chip->lock);
-	return ret;
+	return hua_input_chip_read_firmware_id_lock(&msg21xx->chip, buff, 1024);
 }
 
 static DEVICE_ATTR(firmware_id, S_IRUGO, msg21xx_firmware_id_show, NULL);
@@ -647,6 +624,7 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->event_handler = msg21xx_chip_event_handler;
 	chip->firmware_upgrade = msg21xx_chip_firmware_upgrade;
+	chip->read_firmware_id = msg21xx_read_firmware_id;
 
 	ret = hua_input_chip_register(chip);
 	if (ret < 0)

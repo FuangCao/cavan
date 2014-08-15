@@ -43,6 +43,39 @@ int hua_io_write_register16_masked(struct hua_input_chip *chip, u8 addr, u16 val
 
 EXPORT_SYMBOL_GPL(hua_io_write_register16_masked);
 
+ssize_t hua_io_read_write_file(const char *pathname, const char *buff, size_t size, bool store)
+{
+	loff_t pos;
+	ssize_t rwlen;
+	mm_segment_t fs;
+	struct file *fp;
+
+	fp = filp_open(pathname, store ? (O_WRONLY | O_CREAT | O_TRUNC) : O_RDONLY, 0644);
+	if (IS_ERR(fp))
+	{
+		if (store)
+		{
+			pr_red_info("write file `%s' failed", pathname);
+		}
+
+		return PTR_ERR(fp);
+	}
+
+	pos = 0;
+	fs = get_fs();
+	set_fs(get_ds());
+
+	rwlen =  store ? vfs_write(fp, (char __user *) buff, size, &pos) : vfs_read(fp, (char __user *) buff, size, &pos);
+
+	set_fs(fs);
+
+	filp_close(fp, NULL);
+
+	return rwlen;
+}
+
+EXPORT_SYMBOL_GPL(hua_io_read_write_file);
+
 MODULE_AUTHOR("Fuang.Cao <cavan.cfa@gmail.com>");
 MODULE_DESCRIPTION("Huamobile IO");
 MODULE_LICENSE("GPL");

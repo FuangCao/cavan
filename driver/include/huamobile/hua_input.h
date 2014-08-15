@@ -1,6 +1,7 @@
 #pragma once
 
 #include <asm/uaccess.h>
+#include <linux/device.h>
 #include <linux/i2c.h>
 #include <linux/slab.h>
 #include <linux/input.h>
@@ -14,7 +15,12 @@
 #include <huamobile/hua_thread.h>
 #include <huamobile/hua_firmware.h>
 
-#define HUA_INPUT_CORE_DEBUG	1
+#define HUA_INPUT_CORE_DEBUG	0
+
+#define HUA_INPUT_MAJOR			280
+#define HUA_INPUT_MINORS		32
+#define HUA_INPUT_CLASS_NAME	"hua_input"
+#define HUA_INPUT_CAL_DATA_DIR	"/persist"
 
 #define KB(size)	((size) << 10)
 #define MB(size)	((size) << 20)
@@ -73,13 +79,15 @@
 	((nr) & HUA_INPUT_IOC_NR_MASK) << HUA_INPUT_IOC_NR_SHIFT | \
 	((size) & HUA_INPUT_IOC_SIZE_MASK) << HUA_INPUT_IOC_SIZE_SHIFT)
 
-#define HUA_INPUT_CHIP_IOC_GET_NAME(len)	HUA_INPUT_IOC('I', 0x00, len)
-#define HUA_INPUT_CHIP_IOC_GET_VENDOR(len)	HUA_INPUT_IOC('I', 0x01, len)
+#define HUA_INPUT_CHIP_IOC_GET_NAME(len)		HUA_INPUT_IOC('I', 0x00, len)
+#define HUA_INPUT_CHIP_IOC_GET_VENDOR(len)		HUA_INPUT_IOC('I', 0x01, len)
 
-#define HUA_INPUT_DEVICE_IOC_GET_TYPE		HUA_INPUT_IOC('I', 0x10, 0)
-#define HUA_INPUT_DEVICE_IOC_GET_NAME(len)	HUA_INPUT_IOC('I', 0x11, len)
-#define HUA_INPUT_DEVICE_IOC_SET_DELAY		HUA_INPUT_IOC('I', 0x12, 0)
-#define HUA_INPUT_DEVICE_IOC_SET_ENABLE		HUA_INPUT_IOC('I', 0x13, 0)
+#define HUA_INPUT_DEVICE_IOC_GET_TYPE			HUA_INPUT_IOC('I', 0x10, 0)
+#define HUA_INPUT_DEVICE_IOC_GET_NAME(len)		HUA_INPUT_IOC('I', 0x11, len)
+#define HUA_INPUT_DEVICE_IOC_SET_DELAY			HUA_INPUT_IOC('I', 0x12, 0)
+#define HUA_INPUT_DEVICE_IOC_SET_ENABLE			HUA_INPUT_IOC('I', 0x13, 0)
+#define HUA_INPUT_DEVICE_IOC_GET_OFFSET(len)	HUA_INPUT_IOC('I', 0x14, len)
+#define HUA_INPUT_DEVICE_IOC_SET_OFFSET(len)	HUA_INPUT_IOC('I', 0x15, len)
 
 #define pr_color_info(color, fmt, args ...) \
 	pr_info("\033[" color "m%s[%d]: " fmt "\033[0m\n", __FUNCTION__, __LINE__, ##args)
@@ -150,8 +158,9 @@ struct hua_input_init_data
 struct hua_misc_device
 {
 	void *private_data;
-	struct miscdevice dev;
-	struct file_operations fops;
+
+	int minor;
+	struct device *dev;
 
 	int (*open)(struct hua_misc_device *dev);
 	int (*release)(struct hua_misc_device *dev);
@@ -186,6 +195,7 @@ struct hua_input_device
 	int (*event_handler)(struct hua_input_chip *chip, struct hua_input_device *dev);
 	int (*set_enable)(struct hua_input_device *dev, bool enable);
 	int (*set_delay)(struct hua_input_device *dev, unsigned int delay);
+	ssize_t (*calibration)(struct hua_input_device *dev, char *buff, size_t size, bool store);
 
 	void (*remove)(struct hua_input_device *dev);
 	int (*ioctl)(struct hua_input_device *dev, unsigned int command, unsigned long args);
@@ -253,8 +263,8 @@ struct hua_input_chip
 	int (*read_register16)(struct hua_input_chip *chip, u8 addr, u16 *value);
 	int (*write_register16)(struct hua_input_chip *chip, u8 addr, u16 value);
 
+	ssize_t (*read_firmware_id)(struct hua_input_chip *chip, char *buff, size_t size);
 	int (*firmware_upgrade)(struct hua_input_chip *chip, struct hua_firmware *fw);
-	int (*calibration)(struct hua_input_chip *chip, const void *buff, size_t size);
 };
 
 struct hua_input_core
@@ -273,6 +283,8 @@ struct hua_input_core
 	struct hua_input_list exclude_list;
 };
 
+extern ssize_t hua_io_read_write_file(const char *pathname, const char *buff, size_t size, bool store);
+
 char *hua_input_print_memory(const void *mem, size_t size);
 const char *hua_input_irq_trigger_type_tostring(unsigned long irq_flags);
 
@@ -287,9 +299,14 @@ void hua_input_chip_recovery(struct hua_input_chip *chip, bool force);
 int hua_input_chip_firmware_upgrade(struct hua_input_chip *chip, void *buff, size_t size, int flags);
 int hua_input_device_set_enable_lock(struct hua_input_device *dev, bool enable);
 int hua_input_device_set_enable_no_sync(struct hua_input_device *dev, bool enable);
+int hua_input_device_calibration(struct hua_input_device *dev, struct hua_input_chip *chip, char *buff, size_t size, bool write);
+int hua_input_device_calibration_lock(struct hua_input_device *dev, char *buff, size_t size, bool write);
 
 int hua_input_device_register(struct hua_input_chip *chip, struct hua_input_device *dev);
 void hua_input_device_unregister(struct hua_input_chip *chip, struct hua_input_device *dev);
+
+int hua_input_chip_read_firmware_id(struct hua_input_chip *chip, char *buff, size_t size);
+int hua_input_chip_read_firmware_id_lock(struct hua_input_chip *chip, char *buff, size_t size);
 
 int hua_input_chip_register(struct hua_input_chip *chip);
 void hua_input_chip_unregister(struct hua_input_chip *chip);
@@ -335,6 +352,20 @@ static inline void *hua_input_device_get_data(struct hua_input_device *dev)
 	return dev->private_data;
 }
 
+static inline int hua_input_device_get_offset_pathname(struct hua_input_device *dev, char *pathname, size_t size)
+{
+	return snprintf(pathname, size, "%s/%s-Offset", HUA_INPUT_CAL_DATA_DIR, dev->misc_name);
+}
+
+static inline ssize_t hua_input_device_read_write_offset(struct hua_input_device *dev, char *buff, size_t size, bool store)
+{
+	char pathname[512];
+
+	hua_input_device_get_offset_pathname(dev, pathname, sizeof(pathname));
+
+	return hua_io_read_write_file(pathname, buff, size, store);
+}
+
 static inline int hua_input_read_register_dummy(struct hua_input_chip *chip, u8 addr, u8 *value)
 {
 	return chip->read_data(chip, addr, value, 1);
@@ -353,11 +384,6 @@ static inline int hua_input_read_register16_dummy(struct hua_input_chip *chip, u
 static inline int hua_input_write_register16_dummy(struct hua_input_chip *chip, u8 addr, u16 value)
 {
 	return chip->write_data(chip, addr, &value, 2);
-}
-
-static inline struct hua_misc_device *hua_input_file_to_misc_device(struct file *file)
-{
-	return container_of(file->f_op, struct hua_misc_device, fops);
 }
 
 static inline bool hua_input_thread_running(struct hua_input_thread *thread)

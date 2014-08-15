@@ -109,6 +109,64 @@ static struct hua_input_attribute hua_ts_board_properties_attr =
 	.show = hua_ts_board_properties_show,
 };
 
+static ssize_t hua_ts_device_attr_xrange_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_ts_device *ts = (struct hua_ts_device *) hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "(%d, %d)\n", ts->xmin, ts->xmax);
+}
+
+static ssize_t hua_ts_device_attr_yrange_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_ts_device *ts = (struct hua_ts_device *) hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "(%d, %d)\n", ts->ymin, ts->ymax);
+}
+
+static ssize_t hua_ts_device_attr_point_count_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_ts_device *ts = (struct hua_ts_device *) hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", ts->point_count);
+}
+
+static ssize_t hua_ts_device_attr_keys_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	char *buff_bak = buff;
+	const struct hua_ts_touch_key *key, *key_end;
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_ts_device *ts = (struct hua_ts_device *) hua_misc_device_get_data(mdev);
+
+	if (ts->keys == NULL || ts->key_count == 0)
+	{
+		return 0;
+	}
+
+	for (key = ts->keys, key_end = key + ts->key_count; key < key_end; key++)
+	{
+		buff += sprintf(buff, "x = %d, y = %d, width = %d, height = %d, code = %d\n", key->x, key->y, key->width, key->height, key->code);
+	}
+
+	return buff - buff_bak;
+}
+
+static struct device_attribute hua_ts_device_attr_xrange = __ATTR(xrange, S_IRUGO, hua_ts_device_attr_xrange_show, NULL);
+static struct device_attribute hua_ts_device_attr_yrange = __ATTR(yrange, S_IRUGO, hua_ts_device_attr_yrange_show, NULL);
+static struct device_attribute hua_ts_device_attr_point_count = __ATTR(point_count, S_IRUGO, hua_ts_device_attr_point_count_show, NULL);
+static struct device_attribute hua_ts_device_attr_keys = __ATTR(keys, S_IRUGO, hua_ts_device_attr_keys_show, NULL);
+
+static const struct attribute *hua_ts_device_attributes[] =
+{
+	&hua_ts_device_attr_xrange.attr,
+	&hua_ts_device_attr_yrange.attr,
+	&hua_ts_device_attr_point_count.attr,
+	&hua_ts_device_attr_keys.attr,
+	NULL
+};
+
 static void hua_ts_device_remove(struct hua_input_device *dev)
 {
 	struct hua_ts_device *ts = (struct hua_ts_device *)dev;
@@ -123,6 +181,7 @@ static void hua_ts_device_remove(struct hua_input_device *dev)
 	unregister_pm_notifier(&ts->pm_notifier);
 #endif
 
+	sysfs_remove_files(&dev->misc_dev.dev->kobj, hua_ts_device_attributes);
 	hua_input_remove_sysfs_files(&core->prop_kobj, &hua_ts_board_properties_attr, 1);
 	kfree(hua_ts_board_properties_attr.attr.name);
 	hua_input_remove_kobject(&core->prop_kobj);
@@ -148,7 +207,7 @@ static int hua_ts_device_open(struct input_dev *dev)
 int hua_ts_device_probe(struct hua_input_device *dev)
 {
 	int ret;
-	struct hua_ts_device *ts = (struct hua_ts_device *)dev;
+	struct hua_ts_device *ts = (struct hua_ts_device *) dev;
 	struct hua_input_chip *chip = dev->chip;
 	struct hua_input_core *core = chip->core;
 	struct input_dev *input = dev->input;
@@ -177,6 +236,13 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 	{
 		pr_red_info("hua_input_add_kobject");
 		goto out_kfree_name;
+	}
+
+	ret = sysfs_create_files(&dev->misc_dev.dev->kobj, hua_ts_device_attributes);
+	if (ret < 0)
+	{
+		pr_red_info("sysfs_create_files");
+		goto out_hua_input_remove_sysfs_files;
 	}
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -227,6 +293,8 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 
 	return 0;
 
+out_hua_input_remove_sysfs_files:
+	hua_input_remove_sysfs_files(&core->prop_kobj, &hua_ts_board_properties_attr, 1);
 out_kfree_name:
 	kfree(name);
 out_hua_input_remove_kobject:
@@ -234,29 +302,7 @@ out_hua_input_remove_kobject:
 	return ret;
 }
 
-int hua_ts_read_pending_firmware_name(char *buff, size_t size)
-{
-	int ret;
-	struct file *fp;
-
-	fp = filp_open("/data/property/persist.sys.tp.fw.pending", O_RDONLY, 0);
-	if (IS_ERR(fp))
-	{
-		return -1;
-	}
-
-	ret = kernel_read(fp, 0, buff, size - 1);
-	filp_close(fp, NULL);
-
-	if (ret > 0)
-	{
-		buff[ret] = 0;
-	}
-
-	return ret;
-}
-
-EXPORT_SYMBOL_GPL(hua_ts_read_pending_firmware_name);
+EXPORT_SYMBOL_GPL(hua_ts_device_probe);
 
 MODULE_AUTHOR("Fuang.Cao <cavan.cfa@gmail.com>");
 MODULE_DESCRIPTION("Huamobile TouchScreen Subsystem");

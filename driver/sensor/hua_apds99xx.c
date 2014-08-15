@@ -91,6 +91,7 @@ enum apds99xx_register_map
 	REG_CH1DATAH,
 	REG_PDATAL,
 	REG_PDATAH,
+	REG_POFFSET = 0x1E,
 };
 
 struct hua_apds99xx_chip
@@ -302,6 +303,148 @@ static int apds99xx_proximity_set_delay(struct hua_input_device *dev, unsigned i
 	pr_pos_info();
 
 	return dev->chip->write_register(dev->chip, REG_PTIME, 0xFF);
+}
+
+static ssize_t apds99xx_proximity_calibration(struct hua_input_device *dev, char *buff, size_t size, bool store)
+{
+	int ret;
+	s8 offset;
+	struct hua_input_chip *chip = dev->chip;
+
+	pr_pos_info();
+
+	if (store)
+	{
+		offset = simple_strtol(buff, NULL, 10);
+
+		pr_bold_info("offset = %d", offset);
+
+		ret = chip->write_register(chip, REG_POFFSET, offset);
+		if (ret < 0)
+		{
+			pr_red_info("chip->write_register");
+			return ret;
+		}
+
+		return size;
+	}
+	else
+	{
+		offset = 0;
+
+		while (1)
+		{
+			int i;
+			u8 status;
+			u16 value;
+			int retry;
+			u32 avg_value;
+
+			ret = chip->write_register(chip, REG_POFFSET, offset);
+			if (ret < 0)
+			{
+				pr_red_info("chip->write_register");
+				return ret;
+			}
+
+			for (i = 0, avg_value = 0; i < 5; i++)
+			{
+				apds99xx_send_command(chip, APDS99XX_COMMAND_IAPCLEAR);
+
+				retry = 100;
+
+				while (1)
+				{
+					msleep(10);
+
+					ret = chip->read_register(chip, REG_STATUS, &status);
+					if (ret >= 0 && (status & APDS99XX_STATE_PVALID))
+					{
+						break;
+					}
+
+					if (--retry < 1)
+					{
+						return -ETIMEDOUT;
+					}
+				}
+
+				ret = chip->read_register16(chip, REG_PDATAL, &value);
+				if (ret < 0)
+				{
+					pr_red_info("chip->read_register16");
+					return ret;
+				}
+
+				if (i == 0)
+				{
+					avg_value = value;
+				}
+				else
+				{
+					avg_value = (avg_value + value) >> 1;
+				}
+			}
+
+			if (avg_value > 0 && avg_value < 10)
+			{
+				break;
+			}
+
+			if (avg_value > 0)
+			{
+				if (offset < 0)
+				{
+					if (offset > -127)
+					{
+						offset--;
+					}
+					else
+					{
+						offset = 0;
+					}
+				}
+				else
+				{
+					if (offset < 127)
+					{
+						offset++;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				if (offset < 0)
+				{
+					if (offset < -1)
+					{
+						offset++;
+					}
+					else
+					{
+						break;
+					}
+				}
+				else
+				{
+					if (offset > 0)
+					{
+						offset--;
+					}
+					else
+					{
+						offset = -127;
+					}
+				}
+			}
+		}
+
+		return sprintf(buff, "%d\n", offset);
+	}
 }
 
 static int apds99xx_proximity_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
@@ -633,6 +776,7 @@ static int apds99xx_input_chip_probe(struct hua_input_chip *chip)
 
 	dev->set_enable = apds99xx_proximity_set_enable;
 	dev->set_delay = apds99xx_proximity_set_delay;
+	dev->calibration = apds99xx_proximity_calibration;
 	dev->event_handler = apds99xx_proximity_event_handler;
 
 	ret = hua_input_device_register(chip, dev);

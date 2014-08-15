@@ -11,6 +11,9 @@ static struct hua_input_core input_core =
 	.name = "HUA-INPUT-CORE"
 };
 
+struct class *hua_input_class;
+struct hua_misc_device *hua_misc_dev_map[HUA_INPUT_MINORS];
+
 // ================================================================================
 
 static void hua_input_list_init(struct hua_input_list *list)
@@ -139,9 +142,15 @@ static int hua_input_chip_write_init_data(struct hua_input_chip *chip)
 
 static int hua_misc_device_open(struct inode *inode, struct file *file)
 {
-	struct hua_misc_device *dev = container_of(file->f_op, struct hua_misc_device, fops);
+	int minor = iminor(inode);
+	struct hua_misc_device *dev = hua_misc_dev_map[minor];
 
 	pr_pos_info();
+
+	if (dev == NULL)
+	{
+		return -ENOENT;
+	}
 
 	file->private_data = dev;
 
@@ -182,34 +191,56 @@ static long hua_misc_device_ioctl(struct file *file, unsigned int command, unsig
 	return dev->ioctl ? dev->ioctl(dev, command, args) : -EINVAL;
 }
 
+static int hua_misc_find_minor(void)
+{
+	int minor;
+
+	for (minor = 0; minor < ARRAY_SIZE(hua_misc_dev_map); minor++)
+	{
+		if (hua_misc_dev_map[minor] == NULL)
+		{
+			return minor;
+		}
+	}
+
+	return -EBUSY;
+}
+
 int hua_misc_device_register(struct hua_misc_device *dev, const char *name)
 {
-	struct miscdevice *mdev = &dev->dev;
-	struct file_operations *fops = &dev->fops;
+	int minor;
 
-	fops->open = hua_misc_device_open;
-	fops->release = hua_misc_device_release;
-	fops->read = hua_misc_device_read;
-	fops->write = hua_misc_device_write;
+	if (hua_input_class == NULL)
+	{
+		pr_red_info("hua_input_class is null");
+		return -EBUSY;
+	}
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 0, 0)
-	fops->ioctl = hua_misc_device_ioctl;
-#else
-	fops->unlocked_ioctl = hua_misc_device_ioctl;
-#endif
+	minor = hua_misc_find_minor();
+	if (minor < 0) {
+		pr_red_info("hua_misc_find_minor");
+		return minor;
+	}
 
-	mdev->name = name;
-	mdev->minor = MISC_DYNAMIC_MINOR;
-	mdev->fops = fops;
+	dev->dev = device_create(hua_input_class, NULL, MKDEV(HUA_INPUT_MAJOR, minor), dev, name);
+	if (IS_ERR(dev->dev))
+	{
+		pr_red_info("device_create");
+		return PTR_ERR(dev->dev);
+	}
 
-	return misc_register(mdev);
+	dev->minor = minor;
+	hua_misc_dev_map[minor] = dev;
+
+	return 0;
 }
 
 EXPORT_SYMBOL_GPL(hua_misc_device_register);
 
 void hua_misc_device_unregister(struct hua_misc_device *dev)
 {
-	misc_deregister(&dev->dev);
+	device_destroy(hua_input_class, MKDEV(HUA_INPUT_MAJOR, dev->minor));
+	hua_misc_dev_map[dev->minor] = NULL;
 }
 
 EXPORT_SYMBOL_GPL(hua_misc_device_unregister);
@@ -695,6 +726,18 @@ static int hua_input_device_set_enable(struct hua_input_device *dev, struct hua_
 			pr_red_info("dev->set_enable");
 			enable = false;
 		}
+
+		if (dev->calibration)
+		{
+			ssize_t rdlen;
+			char buff[32];
+
+			rdlen = hua_input_device_read_write_offset(dev, buff, sizeof(buff), false);
+			if (rdlen > 0)
+			{
+				dev->calibration(dev, buff, ret, true);
+			}
+		}
 	}
 
 	if (dev->enabled != enable)
@@ -764,6 +807,55 @@ int hua_input_device_set_enable_no_sync(struct hua_input_device *dev, bool enabl
 }
 
 EXPORT_SYMBOL_GPL(hua_input_device_set_enable_no_sync);
+
+int hua_input_device_calibration(struct hua_input_device *dev, struct hua_input_chip *chip, char *buff, size_t size, bool store)
+{
+	int ret;
+
+	if (dev->calibration == NULL)
+	{
+		pr_red_info("dev->calibration is null");
+		return -EINVAL;
+	}
+
+	ret = hua_input_device_set_enable(dev, chip, true);
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_device_set_enable");
+		return ret;
+	}
+
+	hua_input_thread_set_state(&chip->isr_thread, HUA_INPUT_THREAD_STATE_SUSPEND);
+	hua_input_thread_set_state(&chip->poll_thread, HUA_INPUT_THREAD_STATE_SUSPEND);
+	ret = dev->calibration(dev, buff, size, store);
+	hua_input_chip_update_thread_state(chip);
+
+	if (ret > 0)
+	{
+		hua_input_device_read_write_offset(dev, buff, ret, true);
+	}
+
+	return ret;
+}
+
+EXPORT_SYMBOL_GPL(hua_input_device_calibration);
+
+int hua_input_device_calibration_lock(struct hua_input_device *dev, char *buff, size_t size, bool store)
+{
+	int ret;
+	struct hua_input_chip *chip;
+
+	mutex_lock(&dev->lock);
+	chip = dev->chip;
+	mutex_lock(&chip->lock);
+	ret = hua_input_device_calibration(dev, chip, buff, size, store);
+	mutex_unlock(&chip->lock);
+	mutex_unlock(&dev->lock);
+
+	return ret;
+}
+
+EXPORT_SYMBOL_GPL(hua_input_device_calibration_lock);
 
 static void hua_input_chip_recovery_devices(struct hua_input_chip *chip, struct hua_input_list *list)
 {
@@ -869,7 +961,8 @@ static struct hua_firmware *hua_input_chip_firmware_create(struct hua_input_chip
 	struct hua_firmware *fw;
 
 	fw = hua_firmware_create(HUA_INPUT_CHIP_FW_CACHE_SIZE, hua_input_chip_firmware_upgrade_handler);
-	if (fw == NULL) {
+	if (fw == NULL)
+	{
 		pr_red_info("hua_firmware_create");
 		return NULL;
 	}
@@ -884,7 +977,8 @@ int hua_input_chip_firmware_upgrade(struct hua_input_chip *chip, void *buff, siz
 	struct hua_firmware *fw;
 
 	fw = hua_input_chip_firmware_create(chip);
-	if (fw == NULL) {
+	if (fw == NULL)
+	{
 		pr_red_info("hua_input_chip_firmware_create");
 		return -ENOMEM;
 	}
@@ -895,6 +989,41 @@ int hua_input_chip_firmware_upgrade(struct hua_input_chip *chip, void *buff, siz
 }
 
 EXPORT_SYMBOL_GPL(hua_input_chip_firmware_upgrade);
+
+int hua_input_chip_read_firmware_id(struct hua_input_chip *chip, char *buff, size_t size)
+{
+	int ret;
+
+	if (chip->read_firmware_id == NULL)
+	{
+		pr_red_info("dev->read_firmware_id is null");
+		return -EINVAL;
+	}
+
+	ret = hua_input_chip_set_power(chip, true);
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_chip_set_power");
+		return ret;
+	}
+
+	return chip->read_firmware_id(chip, buff, size);
+}
+
+EXPORT_SYMBOL_GPL(hua_input_chip_read_firmware_id);
+
+int hua_input_chip_read_firmware_id_lock(struct hua_input_chip *chip, char *buff, size_t size)
+{
+	int ret;
+
+	mutex_lock(&chip->lock);
+	ret = hua_input_chip_read_firmware_id(chip, buff, size);
+	mutex_unlock(&chip->lock);
+
+	return ret;
+}
+
+EXPORT_SYMBOL_GPL(hua_input_chip_read_firmware_id_lock);
 
 static int hua_input_chip_open(struct hua_misc_device *dev)
 {
@@ -908,7 +1037,8 @@ static int hua_input_chip_release(struct hua_misc_device *dev)
 	struct hua_input_chip *chip = hua_misc_device_get_data(dev);
 	struct hua_firmware *fw = hua_input_chip_get_misc_data(chip);
 
-	if (fw) {
+	if (fw)
+	{
 		int ret;
 
 		ret = hua_firmware_destroy(fw);
@@ -926,15 +1056,18 @@ static ssize_t hua_input_chip_write(struct hua_misc_device *dev, const char __us
 	struct hua_input_chip *chip = hua_misc_device_get_data(dev);
 	struct hua_firmware *fw = hua_input_chip_get_misc_data(chip);
 
-	if (chip->firmware_upgrade == NULL) {
+	if (chip->firmware_upgrade == NULL)
+	{
 		pr_red_info("Please implement firmware_upgrade method");
 		return -EINVAL;
 	}
 
 	fw = hua_input_chip_get_misc_data(chip);
-	if (fw == NULL) {
+	if (fw == NULL)
+	{
 		fw = hua_input_chip_firmware_create(chip);
-		if (fw == NULL) {
+		if (fw == NULL)
+		{
 			pr_red_info("hua_input_chip_firmware_create");
 			return -ENOMEM;
 		}
@@ -943,7 +1076,8 @@ static ssize_t hua_input_chip_write(struct hua_misc_device *dev, const char __us
 	}
 
 	wrlen = hua_firmware_write(fw, buff, size, HUA_FW_FLAG_USER);
-	if (wrlen < 0) {
+	if (wrlen < 0)
+	{
 		pr_red_info("hua_firmware_write");
 		return wrlen;
 	}
@@ -952,6 +1086,66 @@ static ssize_t hua_input_chip_write(struct hua_misc_device *dev, const char __us
 
 	return wrlen;
 }
+
+static ssize_t hua_input_chip_attr_firmware_id_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_chip *chip = hua_misc_device_get_data(mdev);
+
+	return hua_input_chip_read_firmware_id_lock(chip, buff, 1024);
+}
+
+static ssize_t hua_input_chip_attr_info_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	char *buff_bak = buff;
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_chip *chip = hua_misc_device_get_data(mdev);
+
+	buff += sprintf(buff, "chip: %s\n", chip->name);
+	buff += sprintf(buff, "irq: %d\n", chip->irq);
+	buff += sprintf(buff, "irq_type: %d\n", chip->irq_type);
+	buff += sprintf(buff, "irq_flags: 0x%08lx\n", chip->irq_flags);
+	buff += sprintf(buff, "powered: %d\n", chip->powered);
+	buff += sprintf(buff, "poweron_init: %d\n", chip->poweron_init);
+
+	return buff - buff_bak;
+}
+
+static ssize_t hua_input_chip_attr_enable_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_chip *chip = hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", chip->powered);
+}
+
+static ssize_t hua_input_chip_attr_enable_store(struct device *device, struct device_attribute *attr, const char *buff, size_t size)
+{
+	int ret;
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_chip *chip = hua_misc_device_get_data(mdev);
+
+	ret = hua_input_chip_set_power_lock(chip, simple_strtoul(buff, NULL, 10) > 0);
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_chip_set_power_lock");
+		return ret;
+	}
+
+	return size;
+}
+
+static struct device_attribute hua_input_chip_attr_firmware_id = __ATTR(firmware_id, S_IRUGO, hua_input_chip_attr_firmware_id_show, NULL);
+static struct device_attribute hua_input_chip_attr_info = __ATTR(info, S_IRUGO, hua_input_chip_attr_info_show, NULL);
+static struct device_attribute hua_input_chip_attr_enable = __ATTR(enable, S_IRUGO | S_IWUGO, hua_input_chip_attr_enable_show, hua_input_chip_attr_enable_store);
+
+static const struct attribute *hua_input_chip_attributes[] =
+{
+	&hua_input_chip_attr_firmware_id.attr,
+	&hua_input_chip_attr_info.attr,
+	&hua_input_chip_attr_enable.attr,
+	NULL
+};
 
 static int hua_input_chip_probe(struct hua_input_chip *chip)
 {
@@ -1017,10 +1211,19 @@ static int hua_input_chip_probe(struct hua_input_chip *chip)
 		goto out_kfree_chip_misc_name;
 	}
 
+	ret = sysfs_create_files(&mdev->dev->kobj, hua_input_chip_attributes);
+	if (ret < 0)
+	{
+		pr_red_info("sysfs_create_group");
+		goto out_hua_misc_device_unregister;
+	}
+
 	pr_green_info("huamobile input chip %s probe complete", chip->name);
 
 	return 0;
 
+out_hua_misc_device_unregister:
+	hua_misc_device_unregister(mdev);
 out_kfree_chip_misc_name:
 	kfree(chip->misc_name);
 out_chip_remove:
@@ -1035,6 +1238,7 @@ out_power_down:
 
 static void hua_input_chip_remove(struct hua_input_chip *chip)
 {
+	sysfs_remove_files(&chip->misc_dev.dev->kobj, hua_input_chip_attributes);
 	hua_misc_device_unregister(&chip->misc_dev);
 	kfree(chip->misc_name);
 
@@ -1320,6 +1524,10 @@ static int hua_input_device_ioctl(struct hua_misc_device *dev, unsigned int comm
 	case HUA_INPUT_DEVICE_IOC_SET_ENABLE:
 		return hua_input_device_set_enable_no_sync(idev, args > 0);
 
+	case HUA_INPUT_DEVICE_IOC_GET_OFFSET(0):
+	case HUA_INPUT_DEVICE_IOC_SET_OFFSET(0):
+		return hua_input_device_calibration_lock(idev, (void __user *)args, HUA_INPUT_IOC_GET_SIZE(command), HUA_INPUT_IOC_GET_CMD_RAW(command) == HUA_INPUT_DEVICE_IOC_SET_OFFSET(0));
+
 	default:
 		if (idev->ioctl)
 		{
@@ -1332,12 +1540,114 @@ static int hua_input_device_ioctl(struct hua_misc_device *dev, unsigned int comm
 	return -EINVAL;
 }
 
+static ssize_t hua_input_device_attr_calibration_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_device *idev = hua_misc_device_get_data(mdev);
+
+	return hua_input_device_calibration_lock(idev, buff, 1024, false);
+}
+
+static ssize_t hua_input_device_attr_calibration_store(struct device *device, struct device_attribute *attr, const char *buff, size_t size)
+{
+	int ret;
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_device *idev = hua_misc_device_get_data(mdev);
+
+	ret = hua_input_device_calibration_lock(idev, (char *) buff, size, true);
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_device_calibration_lock");
+		return ret;
+	}
+
+	return size;
+}
+
+static ssize_t hua_input_device_attr_info_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	char *buff_bak = buff;
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_device *idev = hua_misc_device_get_data(mdev);
+
+	buff += sprintf(buff, "name: %s\n", idev->name);
+	buff += sprintf(buff, "type: %s\n", hua_input_device_type_tostring(idev->type));
+	buff += sprintf(buff, "enabled: %d\n", idev->enabled);
+	buff += sprintf(buff, "delay: %d\n", idev->poll_delay);
+	buff += sprintf(buff, "use_irq: %d\n", idev->use_irq);
+	buff += sprintf(buff, "minor: %d\n", idev->misc_dev.minor);
+
+	return buff - buff_bak;
+}
+
+static ssize_t hua_input_device_attr_enable_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_device *idev = hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", idev->enabled);
+}
+
+static ssize_t hua_input_device_attr_enable_store(struct device *device, struct device_attribute *attr, const char *buff, size_t size)
+{
+	int ret;
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_device *idev = hua_misc_device_get_data(mdev);
+
+	ret = hua_input_device_set_enable_no_sync(idev, simple_strtoul(buff, NULL, 10) > 0);
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_device_set_enable_no_sync");
+		return ret;
+	}
+
+	return size;
+}
+
+static ssize_t hua_input_device_attr_delay_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_device *idev = hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", idev->poll_delay);
+}
+
+static ssize_t hua_input_device_attr_delay_store(struct device *device, struct device_attribute *attr, const char *buff, size_t size)
+{
+	int ret;
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_device *idev = hua_misc_device_get_data(mdev);
+
+	ret = hua_input_device_set_delay_no_sync(idev, simple_strtoul(buff, NULL, 10));
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_device_set_delay_no_sync");
+		return ret;
+	}
+
+	return size;
+}
+
+static struct device_attribute hua_input_device_attr_calibration = __ATTR(calibration, S_IWUSR | S_IRUGO, hua_input_device_attr_calibration_show, hua_input_device_attr_calibration_store);
+static struct device_attribute hua_input_device_attr_info = __ATTR(info, S_IRUGO, hua_input_device_attr_info_show, NULL);
+static struct device_attribute hua_input_device_attr_enable = __ATTR(enable, S_IWUSR | S_IRUGO, hua_input_device_attr_enable_show, hua_input_device_attr_enable_store);
+static struct device_attribute hua_input_device_attr_delay = __ATTR(delay, S_IWUSR | S_IRUGO, hua_input_device_attr_delay_show, hua_input_device_attr_delay_store);
+
+static const struct attribute *hua_input_device_attributes[] =
+{
+	&hua_input_device_attr_calibration.attr,
+	&hua_input_device_attr_info.attr,
+	&hua_input_device_attr_enable.attr,
+	&hua_input_device_attr_delay.attr,
+	NULL
+};
+
 static int hua_input_device_probe(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
-	struct input_dev *input;
 	const char *devname;
-	struct hua_misc_device *mdev = &dev->misc_dev;
+	struct input_dev *input;
+	struct hua_misc_device *mdev;
 
 	pr_pos_info();
 
@@ -1391,6 +1701,19 @@ static int hua_input_device_probe(struct hua_input_chip *chip, struct hua_input_
 	dev->input = input;
 	input_set_drvdata(input, dev);
 
+	mdev = &dev->misc_dev;
+	hua_misc_device_set_data(mdev, dev);
+	mdev->read = hua_input_device_read;
+	mdev->write = hua_input_device_write;
+	mdev->ioctl = hua_input_device_ioctl;
+
+	ret = hua_misc_device_register(mdev, dev->misc_name);
+	if (ret < 0)
+	{
+		pr_red_info("hua_misc_device_register");
+		goto out_kfree_input_name;
+	}
+
 	if (dev->type == HUA_INPUT_DEVICE_TYPE_TOUCHSCREEN)
 	{
 		ret = hua_ts_device_probe(dev);
@@ -1403,7 +1726,7 @@ static int hua_input_device_probe(struct hua_input_chip *chip, struct hua_input_
 	if (ret < 0)
 	{
 		pr_red_info("probe device failed");
-		goto out_kfree_input_name;
+		goto out_hua_misc_device_unregister;
 	}
 
 	ret = input_register_device(input);
@@ -1413,16 +1736,10 @@ static int hua_input_device_probe(struct hua_input_chip *chip, struct hua_input_
 		goto out_device_remove;
 	}
 
-	hua_misc_device_set_data(mdev, dev);
-	mdev = &dev->misc_dev;
-	mdev->read = hua_input_device_read;
-	mdev->write = hua_input_device_write;
-	mdev->ioctl = hua_input_device_ioctl;
-
-	ret = hua_misc_device_register(mdev, dev->misc_name);
+	ret = sysfs_create_files(&dev->misc_dev.dev->kobj, hua_input_device_attributes);
 	if (ret < 0)
 	{
-		pr_red_info("hua_misc_device_register");
+		pr_red_info("sysfs_create_group");
 		goto out_input_unregister_device;
 	}
 
@@ -1437,6 +1754,8 @@ out_device_remove:
 	{
 		dev->remove(dev);
 	}
+out_hua_misc_device_unregister:
+	hua_misc_device_unregister(mdev);
 out_kfree_input_name:
 	kfree(dev->misc_name);
 out_input_free_device:
@@ -1450,6 +1769,7 @@ static void hua_input_device_remove(struct hua_input_chip *chip, struct hua_inpu
 {
 	struct input_dev *input = dev->input;
 
+	sysfs_remove_files(&dev->misc_dev.dev->kobj, hua_input_device_attributes);
 	hua_misc_device_unregister(&dev->misc_dev);
 	input_unregister_device(input);
 
@@ -1645,6 +1965,22 @@ static int hua_input_core_event_handler(struct hua_input_thread *thread)
 	return 0;
 }
 
+static const struct file_operations hua_input_class_fops =
+{
+	.owner		= THIS_MODULE,
+	.open = hua_misc_device_open,
+	.release = hua_misc_device_release,
+	.read = hua_misc_device_read,
+	.write = hua_misc_device_write,
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 0, 0)
+	.ioctl = hua_misc_device_ioctl,
+#else
+	.unlocked_ioctl = hua_misc_device_ioctl,
+#endif
+	.llseek		= noop_llseek,
+};
+
 static int __init hua_input_core_init(void)
 {
 	int ret;
@@ -1658,11 +1994,27 @@ static int __init hua_input_core_init(void)
 
 	mutex_init(&input_core.lock);
 
+	hua_input_class = class_create(THIS_MODULE, HUA_INPUT_CLASS_NAME);
+	if (IS_ERR(hua_input_class))
+	{
+		pr_red_info("class_create");
+		ret = PTR_ERR(hua_input_class);
+		hua_input_class = NULL;
+		goto out_mutex_destroy;
+	}
+
+	ret = register_chrdev(HUA_INPUT_MAJOR, HUA_INPUT_CLASS_NAME, &hua_input_class_fops);
+	if (ret < 0)
+	{
+		pr_red_info("register_chrdev");
+		goto out_class_destroy;
+	}
+
 	input_core.workqueue = create_singlethread_workqueue("hua-input-wq");
 	if (input_core.workqueue == NULL)
 	{
 		ret = -EFAULT;
-		goto out_mutex_destroy;
+		goto out_unregister_chrdev;
 	}
 
 	thread = &input_core.detect_thread;
@@ -1684,6 +2036,10 @@ static int __init hua_input_core_init(void)
 
 out_destroy_workqueue:
 	destroy_workqueue(input_core.workqueue);
+out_unregister_chrdev:
+	unregister_chrdev(HUA_INPUT_MAJOR, HUA_INPUT_CLASS_NAME);
+out_class_destroy:
+	class_destroy(hua_input_class);
 out_mutex_destroy:
 	mutex_destroy(&input_core.lock);
 	hua_input_list_destory(&input_core.chip_list);
@@ -1700,6 +2056,9 @@ static void __exit hua_input_core_exit(void)
 	hua_input_thread_destroy(&input_core.detect_thread);
 
 	destroy_workqueue(input_core.workqueue);
+
+	unregister_chrdev(HUA_INPUT_MAJOR, HUA_INPUT_CLASS_NAME);
+	class_destroy(hua_input_class);
 
 	mutex_destroy(&input_core.lock);
 
