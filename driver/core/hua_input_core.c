@@ -217,7 +217,8 @@ int hua_misc_device_register(struct hua_misc_device *dev, const char *name)
 	}
 
 	minor = hua_misc_find_minor();
-	if (minor < 0) {
+	if (minor < 0)
+	{
 		pr_red_info("hua_misc_find_minor");
 		return minor;
 	}
@@ -1092,7 +1093,7 @@ static ssize_t hua_input_chip_attr_firmware_id_show(struct device *device, struc
 	struct hua_misc_device *mdev = dev_get_drvdata(device);
 	struct hua_input_chip *chip = hua_misc_device_get_data(mdev);
 
-	return hua_input_chip_read_firmware_id_lock(chip, buff, 1024);
+	return hua_input_chip_read_firmware_id_lock(chip, buff, PAGE_SIZE);
 }
 
 static ssize_t hua_input_chip_attr_info_show(struct device *device, struct device_attribute *attr, char *buff)
@@ -1545,7 +1546,7 @@ static ssize_t hua_input_device_attr_calibration_show(struct device *device, str
 	struct hua_misc_device *mdev = dev_get_drvdata(device);
 	struct hua_input_device *idev = hua_misc_device_get_data(mdev);
 
-	return hua_input_device_calibration_lock(idev, buff, 1024, false);
+	return hua_input_device_calibration_lock(idev, buff, PAGE_SIZE, false);
 }
 
 static ssize_t hua_input_device_attr_calibration_store(struct device *device, struct device_attribute *attr, const char *buff, size_t size)

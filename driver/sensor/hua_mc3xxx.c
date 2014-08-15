@@ -85,7 +85,8 @@ struct mc3xxx_rate_map_node
 
 static const char *mc3xxx_get_chip_name_by_id(u8 id)
 {
-	switch (id) {
+	switch (id)
+	{
 	case MC3XXX_PCODE_3210:
 		return "MC3210";
 	case MC3XXX_PCODE_3230:
@@ -244,7 +245,8 @@ static int mc3xxx_acceleration_set_delay(struct hua_input_device *dev, unsigned 
 	u8 value;
 	struct hua_input_chip *chip = dev->chip;
 
-	switch (chip->devid) {
+	switch (chip->devid)
+	{
 	case MC3XXX_PCODE_3510B:
 	case MC3XXX_PCODE_3510C:
 	case MC3XXX_PCODE_3530B:

@@ -386,21 +386,25 @@ static int cy8c242_firmware_write_data(struct hua_input_chip *chip, struct hua_f
 
 	pr_pos_info();
 
-	while (1) {
+	while (1)
+	{
 		rdlen = hua_firmware_read_line(fw, buff, sizeof(buff), 0, 5000);
-		if (rdlen < 0) {
+		if (rdlen < 0)
+		{
 			pr_red_info("hua_firmware_read_line");
 			return rdlen;
 		}
 
-		if (rdlen == 0) {
+		if (rdlen == 0)
+		{
 			pr_green_info("Firmware upgrade successfully");
 			break;
 		}
 
 		for (line = buff, line_end = line + rdlen; line < line_end && BYTE_IS_SPACE(*line); line++);
 
-		if (line_end - line == 0) {
+		if (line_end - line == 0)
+		{
 			continue;
 		}
 

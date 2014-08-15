@@ -43,7 +43,8 @@
 #define AUTO_UPDATA_FRIMWARE 0
 
 #if AUTO_UPDATA_FRIMWARE
-static unsigned char frimwar_data[] = {
+static unsigned char frimwar_data[] =
+{
 	#include "D58_FT6306_YESH_app.i"
 };
 #endif
@@ -93,12 +94,14 @@ static int ft5216_send_command(struct hua_input_chip *chip, u8 *command, size_t 
 	int ret;
 
 	ret = chip->master_send(chip, command, wrlen);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("master_send");
 		return ret;
 	}
 
-	if (rdlen > 0) {
+	if (rdlen > 0)
+	{
 		return chip->master_recv(chip, command, rdlen);
 	}
 
@@ -323,7 +326,8 @@ static int ft5216_read_firmware_id(struct hua_input_chip *chip)
 	u8 command = 0xa6;
 
 	ret = ft5216_send_command(chip, &command, 1, 1);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
@@ -337,7 +341,8 @@ static int ft5216_read_vendor_id(struct hua_input_chip *chip)
 	u8 command = 0xa8;
 
 	ret = ft5216_send_command(chip, &command, 1, 1);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
@@ -363,7 +368,8 @@ static int ft5216_upgrade_prepare(struct hua_input_chip *chip)
 	command[0] = 0xbc;
 	command[1] = 0xaa;
 	ret = ft5216_send_command(chip, command, 2, 0);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
@@ -373,7 +379,8 @@ static int ft5216_upgrade_prepare(struct hua_input_chip *chip)
 	command[0] = 0xbc;
 	command[1] = 0x55;
 	ret = ft5216_send_command(chip, command, 2, 0);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
@@ -389,11 +396,15 @@ static int ft5216_enter_upgrade_mode(struct hua_input_chip *chip, int retry)
 
 	pr_pos_info();
 
-	while (retry--) {
+	while (retry--)
+	{
 		int ret = ft5216_send_command(chip, command, sizeof(command), 0);
-		if (ret < 0) {
+		if (ret < 0)
+		{
 			msleep(5);
-		} else {
+		}
+		else
+		{
 			msleep(10);
 			return 0;
 		}
@@ -410,7 +421,8 @@ static int ft5216_check_hardware_id(struct hua_input_chip *chip)
 	pr_pos_info();
 
 	ret = ft5216_send_command(chip, command, sizeof(command), 2);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
@@ -448,7 +460,8 @@ static int ft5216_firmware_reset(struct hua_input_chip *chip)
 	pr_pos_info();
 
 	ret = ft5216_send_command_simple(chip, 0x07);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_send_command_simple");
 		return ret;
 	}
@@ -463,7 +476,8 @@ static u8 ft5216_firmware_calculate_ecc(u8 ecc, const u8 *buff, size_t size)
 {
 	const u8 *buff_end = buff + size;
 
-	while (buff < buff_end) {
+	while (buff < buff_end)
+	{
 		ecc ^= *buff++;
 	}
 
@@ -483,25 +497,29 @@ static int ft5216_firmware_upgrade(struct hua_input_chip *chip, struct hua_firmw
 	pr_bold_info("firmware old version = 0x%02x\n", ft5216_read_firmware_id(chip));
 
 	ret = ft5216_upgrade_prepare(chip);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_upgrade_prepare");
 		return ret;
 	}
 
 	ret = ft5216_enter_upgrade_mode(chip, 10);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_enter_upgrade_mode");
 		return ret;
 	}
 
 	ret = ft5216_check_hardware_id(chip);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_check_hardware_id");
 		return ret;
 	}
 
 	ret = ft5216_firmware_erase_app(chip);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_firmware_erase_app");
 		return ret;
 	}
@@ -517,12 +535,14 @@ static int ft5216_firmware_upgrade(struct hua_input_chip *chip, struct hua_firmw
 	while (1)
     {
 		rdlen = hua_firmware_fill(fw, block.data, sizeof(block.data), 8, 5000);
-		if (rdlen < 0) {
+		if (rdlen < 0)
+		{
 			pr_red_info("hua_firmware_fill");
 			return rdlen;
 		}
 
-		if (rdlen == 0) {
+		if (rdlen == 0)
+		{
 			break;
 		}
 
@@ -542,15 +562,18 @@ static int ft5216_firmware_upgrade(struct hua_input_chip *chip, struct hua_firmw
 	pr_green_info("Write block data complete");
 	pr_green_info("Start write last 6 byte");
 
-	for (addr = 0x6ffa; addr < 0x6ffa + 6; addr++) {
+	for (addr = 0x6ffa; addr < 0x6ffa + 6; addr++)
+	{
 		rdlen = hua_firmware_read(fw, block.data, 1, 0, 5000);
-		if (rdlen < 1) {
+		if (rdlen < 1)
+		{
 			pr_red_info("hua_firmware_fill");
 			return rdlen < 0 ? rdlen : -EFAULT;
 		}
 
 		ret = ft5216_firmware_write_block(chip, &block, addr, 1);
-		if (ret < 0) {
+		if (ret < 0)
+		{
 			pr_red_info("ft5216_firmware_write_data");
 			return ret;
 		}
@@ -563,20 +586,23 @@ static int ft5216_firmware_upgrade(struct hua_input_chip *chip, struct hua_firmw
 	pr_green_info("Write last 6 byte complete");
 
 	ret = ft5216_firmware_read_ecc(chip, &ecc_read);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_firmware_read_ecc");
 		return ret;
 	}
 
 	pr_bold_info("ecc = 0x%02x, ecc_read = 0x%02x", ecc, ecc_read);
 
-	if (ecc != ecc_read) {
+	if (ecc != ecc_read)
+	{
 		pr_red_info("ecc not match");
 		return -EINVAL;
 	}
 
 	ret = ft5216_firmware_reset(chip);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		pr_red_info("ft5216_firmware_reset");
 		return ret;
 	}

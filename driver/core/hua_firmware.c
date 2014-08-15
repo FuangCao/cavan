@@ -35,7 +35,8 @@ static int hua_firmware_thread_handler(void *data)
 	fw->closed = 1;
 	fw->status = ret;
 
-	if (fw->wrtask) {
+	if (fw->wrtask)
+	{
 		wake_up_process(fw->wrtask);
 	}
 
@@ -58,7 +59,8 @@ static int hua_firmware_open(struct hua_firmware *fw, int (*upgrade)(struct hua_
 
 	fw->upgrade = upgrade;
 	fw->rdtask = kthread_create(hua_firmware_thread_handler, fw, "HUA-FIRMWARE");
-	if (fw->rdtask == NULL) {
+	if (fw->rdtask == NULL)
+	{
 		ret = -EFAULT;
 		pr_red_info("kthread_create");
 	}
@@ -75,15 +77,19 @@ static int hua_firmware_close(struct hua_firmware *fw)
 
 	mutex_lock(&fw->lock);
 
-	if (fw->closed == 0) {
+	if (fw->closed == 0)
+	{
 		fw->closed = -1;
 
-		for (i = 0; i < 1000; i++) {
-			if (fw->rdtask) {
+		for (i = 0; i < 1000; i++)
+		{
+			if (fw->rdtask)
+			{
 				wake_up_process(fw->rdtask);
 			}
 
-			if (fw->wrtask) {
+			if (fw->wrtask)
+			{
 				wake_up_process(fw->wrtask);
 			}
 
@@ -91,7 +97,8 @@ static int hua_firmware_close(struct hua_firmware *fw)
 			msleep(200);
 			mutex_lock(&fw->lock);
 
-			if (fw->closed > 0) {
+			if (fw->closed > 0)
+			{
 				break;
 			}
 
@@ -100,13 +107,16 @@ static int hua_firmware_close(struct hua_firmware *fw)
 #endif
 		}
 
-		if (fw->closed < 0) {
-			if (fw->rdtask) {
+		if (fw->closed < 0)
+		{
+			if (fw->rdtask)
+			{
 				pr_red_info("kill read process");
 				send_sig(SIGKILL, fw->rdtask, 0);
 			}
 
-			if (fw->wrtask) {
+			if (fw->wrtask)
+			{
 				pr_red_info("kill write process");
 				send_sig(SIGKILL, fw->wrtask, 0);
 			}
@@ -124,7 +134,8 @@ struct hua_firmware *hua_firmware_create(size_t size, int (*upgrade)(struct hua_
 {
 	struct hua_firmware *fw;
 
-	if (upgrade == NULL) {
+	if (upgrade == NULL)
+	{
 		pr_red_info("Please implement upgrade method");
 		return NULL;
 	}
@@ -142,7 +153,8 @@ struct hua_firmware *hua_firmware_create(size_t size, int (*upgrade)(struct hua_
 		goto out_kfree_fw;
 	}
 
-	if (hua_firmware_open(fw, upgrade) < 0) {
+	if (hua_firmware_open(fw, upgrade) < 0)
+	{
 		pr_red_info("hua_firmware_open");
 		goto out_hua_firmware_deinit;
 	}
@@ -285,17 +297,22 @@ ssize_t hua_firmware_write(struct hua_firmware *fw, const char *buff, size_t siz
 		{
 			size_t lcount = length - rcount;
 
-			if ((flags & HUA_FW_FLAG_USER)) {
-				if (copy_from_user(fw->tail, buff, rcount)) {
+			if ((flags & HUA_FW_FLAG_USER))
+			{
+				if (copy_from_user(fw->tail, buff, rcount))
+				{
 					pr_red_info("copy_from_user");
 					return -EFAULT;
 				}
 
-				if (copy_from_user(fw->mem, buff + rcount, lcount)) {
+				if (copy_from_user(fw->mem, buff + rcount, lcount))
+				{
 					pr_red_info("copy_from_user");
 					return -EFAULT;
 				}
-			} else {
+			}
+			else
+			{
 				memcpy(fw->tail, buff, rcount);
 				memcpy(fw->mem, buff + rcount, lcount);
 			}
@@ -304,12 +321,16 @@ ssize_t hua_firmware_write(struct hua_firmware *fw, const char *buff, size_t siz
 		}
 		else
 		{
-			if ((flags & HUA_FW_FLAG_USER)) {
-				if (copy_from_user(fw->tail, buff, length)) {
+			if ((flags & HUA_FW_FLAG_USER))
+			{
+				if (copy_from_user(fw->tail, buff, length))
+				{
 					pr_red_info("copy_from_user");
 					return -EFAULT;
 				}
-			} else {
+			}
+			else
+			{
 				memcpy(fw->tail, buff, length);
 			}
 
@@ -322,7 +343,8 @@ ssize_t hua_firmware_write(struct hua_firmware *fw, const char *buff, size_t siz
 
 		buff += length;
 
-		if (fw->rdtask) {
+		if (fw->rdtask)
+		{
 			wake_up_process(fw->rdtask);
 		}
 	}
@@ -371,12 +393,16 @@ ssize_t hua_firmware_read(struct hua_firmware *fw, char *buff, size_t size, size
 
 		fw->rdtask = current;
 
-		if (timeout > 0) {
-			if (hua_firmware_timedwait(fw, timeout) == 0) {
+		if (timeout > 0)
+		{
+			if (hua_firmware_timedwait(fw, timeout) == 0)
+			{
 				length = -ETIMEDOUT;
 				goto out_mutex_unlock;
 			}
-		} else {
+		}
+		else
+		{
 			hua_firmware_wait(fw);
 		}
 
@@ -407,7 +433,8 @@ ssize_t hua_firmware_read(struct hua_firmware *fw, char *buff, size_t size, size
 		}
 	}
 
-	if (fw->wrtask) {
+	if (fw->wrtask)
+	{
 		wake_up_process(fw->wrtask);
 	}
 
