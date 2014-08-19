@@ -10,7 +10,7 @@ from cavan_command import CavanCommandBase
 MAX_FILELIST_SIZE = 200
 
 class CavanGitManager(CavanCommandBase):
-	def __init__(self, pathname = ".", verbose = True, name = ".cavan-git", bare = False):
+	def __init__(self, pathname = ".", verbose = True, name = None, bare = False):
 		if not name:
 			name = ".git"
 

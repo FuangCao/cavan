@@ -230,7 +230,7 @@ char *adb_parse_sms_multi(const char *buff, const char *end)
 
 	while (1)
 	{
- 		const char *temp = adb_parse_sms_single(buff, end, segments, NELEM(segments));
+		const char *temp = adb_parse_sms_single(buff, end, segments, NELEM(segments));
 		if (temp == NULL)
 		{
 			break;

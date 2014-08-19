@@ -28,7 +28,7 @@ complete -F _cavan_svn_repo cavan-svn-repo svn-repo.py
 
 function _cavan_git_svn_repo()
 {
-	_build_completion "init clone update sync command cmd backup clean cleanup symlink link ln recovery co checkout merge"
+	_build_completion "init clone update sync command cmd backup clean cleanup symlink link ln recovery co checkout merge pull fetch"
 }
 
 complete -F _cavan_git_svn_repo cavan-git-svn-repo git-svn-repo.py

@@ -253,6 +253,13 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			self.mkdirSafe(self.mPathProjects)
 
 		self.mFileManifest = os.path.join(self.mPathSvnRepo, "manifest.xml")
+		if not os.path.exists(self.mFileManifest):
+			pathname = self.getAbsPath(".repo")
+			if os.path.exists(pathname):
+				pathname = os.path.join(pathname, "manifest.xml")
+				if os.path.exists(pathname):
+					self.mFileManifest = pathname
+
 		self.mFileFailed = os.path.join(self.mPathSvnRepo, "failed.txt")
 
 		self.mPathPlatform = os.path.join(self.mPathProjects, "platform")
@@ -263,7 +270,10 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		self.mPathFileRepo = os.path.join(self.mPathPlatform, "copyfile.git")
 
 	def findRootPath(self):
-		return self.findRootPathByFilename(self.mGitSvnRepoName)
+		pathname = self.findRootPathByFilename(self.mGitSvnRepoName)
+		if not pathname:
+			return self.findRootPathByFilename(".repo")
+		return pathname
 
 	def genProjectNode(self, depth = 3, path = ""):
 		url = os.path.join(self.mUrl, path)
@@ -820,14 +830,20 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if self.mListProject == None:
 			return False
 
+		remote = self.mManifest.getRemoteName()
+		if not remote:
+			remote = "cavan-svn"
+
 		if not self.mVerbose:
 			self.initProgress(len(self.mListProject))
 
 		for node in self.mManifest.getProjects():
-			manager = GitSvnManager(self.getProjectAbsPath(node), self.mVerbose)
-			if not manager.doGitCheckout(branch):
-				self.prRedInfo("checkout %s to %s failed" % (manager.getRootPath(), branch))
-				return False
+			manager = GitSvnManager(self.getProjectAbsPath(node), self.mVerbose, name = None)
+			if not manager.gitCheckout(branch):
+				if manager.hasBranch(branch):
+					self.prRedInfo("checkout %s to %s failed" % (manager.getRootPath(), branch))
+					return False
+				manager.doExecGitCmd(["checkout", "-b", branch, os.path.join(remote, branch)], of = "/dev/null", ef = "/dev/null")
 
 			if not self.mVerbose:
 				self.addProgress()
@@ -838,7 +854,6 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		return True
 
 	def doMerge(self, argv):
-
 		if len(argv) > 1:
 			branch = argv[0]
 			destBranch = argv[1]
@@ -876,6 +891,39 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		return True
 
+	def doPull(self, branch = "master"):
+		if not self.loadManifest():
+			return False
+
+		self.mListProject = self.mManifest.getProjects()
+		if self.mListProject == None:
+			return False
+
+		remote = self.mManifest.getRemoteName()
+		if not remote:
+			remote = "cavan-svn"
+
+		if not self.mVerbose:
+			self.initProgress(len(self.mListProject))
+
+		for node in self.mManifest.getProjects():
+			manager = GitSvnManager(self.getProjectAbsPath(node), self.mVerbose)
+			if manager.gitCheckout(branch):
+				if not manager.doExecGitCmd(["pull", remote, branch], of = "/dev/null", ef = "/dev/null"):
+					self.prRedInfo("fetch %s failed" % manager.getRootPath())
+					return False
+			elif manager.hasBranch(branch):
+				self.prRedInfo("checkout %s to %s failed" % (manager.getRootPath(), branch))
+				return False
+
+			if not self.mVerbose:
+				self.addProgress()
+
+		if not self.mVerbose:
+			self.finishProgress()
+
+		return True
+
 	def main(self, argv):
 		length = len(argv)
 		if length < 2:
@@ -901,6 +949,10 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			return self.doCheckout(argv[2:])
 		elif subcmd in ["merge"]:
 			return self.doMerge(argv[2:])
+		elif subcmd in ["pull", "fetch"]:
+			if length > 2:
+				return self.doPull(argv[2])
+			return self.doPull()
 		else:
 			self.prRedInfo("unknown subcmd ", subcmd)
 			return False
