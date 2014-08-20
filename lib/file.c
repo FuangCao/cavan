@@ -515,60 +515,140 @@ int mkdir_all(const char *pathname)
 	return mkdir(pathname, 0777);
 }
 
-int mkdir_hierarchy(const char *pathname, mode_t mode)
+int mkdir_hierarchy_length(const char *pathname, size_t length, mode_t mode)
 {
-	int ret;
-	char temp_path[1024], *p;
+	const char *end = pathname + length;
+	char pathname_rw[length], *p = pathname_rw;
 
-	if (mkdir(pathname, mode) == 0 || errno == EEXIST)
+	if (pathname < end && *pathname == '/')
 	{
-		return 0;
-	}
-
-	p = text_copy(temp_path, pathname) - 1;
-	while (p > temp_path && *p == '/')
-	{
-		*p-- = 0;
-	}
-
-	p = temp_path;
-
-	while (*p && *p == '/')
-	{
-		p++;
+		*p++ = '/';
 	}
 
 	while (1)
 	{
+		int ret;
+
+		while (1)
+		{
+			if (pathname >= end)
+			{
+				return 0;
+			}
+
+			if (*pathname != '/')
+			{
+				break;
+			}
+
+			pathname++;
+		}
+
+		while (pathname < end && *pathname != '/')
+		{
+			*p++ = *pathname++;
+		}
+
+		*p = 0;
+
+		ret = mkdir(pathname_rw, mode);
+		if (ret < 0 && errno != EEXIST)
+		{
+			return ret;
+		}
+
+		*p++ = '/';
+	}
+
+	return 0;
+}
+
+int mkdir_parent_hierarchy(const char *pathname, mode_t mode)
+{
+	const char *p = pathname + strlen(pathname) - 1;
+
+	while (p > pathname && *p == '/')
+	{
+		p--;
+	}
+
+	while (p > pathname && *p != '/')
+	{
+		p--;
+	}
+
+	if (p == pathname)
+	{
+		return 0;
+	}
+
+	return mkdir_hierarchy_length(pathname, p - pathname, mode);
+}
+
+int mkdir_hierarchy2(char *pathname, mode_t mode)
+{
+	char *p = pathname;
+
+	while (1)
+	{
+		char c;
+		int ret;
+
+		while (*p == '/')
+		{
+			p++;
+		}
+
+		if (*p == 0)
+		{
+			break;
+		}
+
 		while (*p && *p != '/')
 		{
 			p++;
 		}
 
-		if (*p)
-		{
-			*p = 0;
-		}
-		else
-		{
-			break;
-		}
+		c = *p;
+		*p = 0;
 
-		ret = mkdir(temp_path, mode);
+		ret = mkdir(pathname, mode);
 		if (ret < 0 && errno != EEXIST)
 		{
 			return ret;
 		}
-		*p++ = '/';
-	}
 
-	ret = mkdir(pathname, mode);
-	if (ret < 0 && errno != EEXIST)
-	{
-		return ret;
+		*p = c;
 	}
 
 	return 0;
+}
+
+int mkdir_parent_hierarchy2(char *pathname, mode_t mode)
+{
+	int ret;
+	char *p = pathname + strlen(pathname) - 1;
+
+	while (p > pathname && *p == '/')
+	{
+		p--;
+	}
+
+	while (p > pathname && *p != '/')
+	{
+		p--;
+	}
+
+	if (p == pathname)
+	{
+		return 0;
+	}
+
+	*p = 0;
+	ret = mkdir_hierarchy2(pathname, mode);
+	*p = '/';
+
+	return ret;
 }
 
 int file_create_open(const char *pathname, int flags, mode_t mode)

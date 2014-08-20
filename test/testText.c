@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	{
 		println("text[%d] = %s", i, texts[i]);
 	}
-#else
+#elif 0
 	int i;
 	char buff[1024] = "----\n";
 
@@ -51,6 +51,10 @@ int main(int argc, char *argv[])
 		buff[i] = '0';
 	}
 	println("buff = %s", buff);
+#else
+	assert(argc > 1);
+
+	mkdir_parent_hierarchy(argv[1], 0777);
 #endif
 
 	return 0;

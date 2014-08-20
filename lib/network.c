@@ -658,11 +658,7 @@ int unix_create_service(int type, const char *pathname)
 		}
 		else
 		{
-			char dirname[PATH_MAX];
-
-			text_dirname_base(dirname, pathname);
-
-			ret = mkdir_hierarchy(dirname, 0777);
+			ret = mkdir_parent_hierarchy(pathname, 0777);
 			if (ret < 0)
 			{
 				pr_red_info("mkdir_hierarchy");

@@ -57,7 +57,10 @@ int file_operation_rw(const char *filename, int (*handle)(int fd));
 int file_noperation_rw(const char *filename, size_t size, int (*handle)(int fd, size_t size));
 
 int mkdir_all(const char *pathname);
-int mkdir_hierarchy(const char *pathname, mode_t mode);
+int mkdir_hierarchy_length(const char *pathname, size_t length, mode_t mode);
+int mkdir_hierarchy2(char *pathname, mode_t mode);
+int mkdir_parent_hierarchy(const char *pathname, mode_t mode);
+int mkdir_parent_hierarchy2(char *pathname, mode_t mode);
 int file_create_open(const char *pathname, int flags, mode_t mode);
 
 int file_join(const char *dest_file, char *src_files[], int count);
@@ -479,4 +482,9 @@ static inline ssize_t file_fifo_read(struct cavan_fifo *fifo, void *buff, size_t
 static inline ssize_t file_fifo_write(struct cavan_fifo *fifo, const void *buff, size_t size)
 {
 	return write(*(int *) fifo->private_data, buff, size);
+}
+
+static inline int mkdir_hierarchy(const char *pathname, mode_t mode)
+{
+	return mkdir_hierarchy_length(pathname, strlen(pathname), mode);
 }
