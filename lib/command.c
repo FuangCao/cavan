@@ -263,11 +263,11 @@ static int cavan_exec_command(const char *command)
 	}
 }
 
-int cavan_exec_redirect_stdio_base(int ttyfd, const char *command)
+int cavan_exec_redirect_stdio_base(int ttyfd, const char *command, int flags)
 {
 	int ret;
 
-	ret = cavan_redirect_stdio_base(ttyfd, 0x07);
+	ret = cavan_redirect_stdio_base(ttyfd, flags);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_redirect_stdio_base");
@@ -277,7 +277,7 @@ int cavan_exec_redirect_stdio_base(int ttyfd, const char *command)
 	return cavan_exec_command(command);
 }
 
-int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command)
+int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command, int flags)
 {
 	int ret;
 	int ttyfd;
@@ -320,7 +320,7 @@ int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const
 		putenv(buff);
 	}
 
-	ret = cavan_exec_redirect_stdio_base(ttyfd, command);
+	ret = cavan_exec_redirect_stdio_base(ttyfd, command, flags);
 	close(ttyfd);
 
 	return ret;
@@ -371,7 +371,7 @@ int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout)
 	return 0;
 }
 
-int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid)
+int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid, int flags)
 {
 	int ret;
 	pid_t pid;
@@ -404,7 +404,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		{
 			close(pair[1]);
 
-			return cavan_exec_redirect_stdio_base(pair[0], command);
+			return cavan_exec_redirect_stdio_base(pair[0], command, flags);
 		}
 
 		close(pair[0]);
@@ -463,14 +463,18 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		{
 			close(ttyfd);
 
-			return cavan_exec_redirect_stdio(ptspath, lines, columns, command);
+			return cavan_exec_redirect_stdio(ptspath, lines, columns, command, flags);
 		}
 	}
 
 	snprintf(pathname, sizeof(pathname), "/proc/%d/oom_adj", pid);
 	file_write(pathname, "0", 1);
 
-	*ppid = pid;
+	if (ppid)
+	{
+		*ppid = pid;
+	}
+
 	return ttyfd;
 
 out_close_ttyfd:
@@ -484,7 +488,7 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 	int ttyfd;
 	pid_t pid;
 
-	ttyfd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid);
+	ttyfd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid, 0x07);
 	if (ttyfd < 0)
 	{
 		pr_red_info("cavan_exec_redirect_stdio_popen");

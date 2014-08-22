@@ -2399,7 +2399,7 @@ int network_client_exec_main(struct network_client *client, const char *command,
 	int ttyfd;
 	pid_t pid;
 
-	ttyfd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid);
+	ttyfd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid, 0x07);
 	if (ttyfd < 0)
 	{
 		pr_red_info("cavan_exec_redirect_stdio_popen");

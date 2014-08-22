@@ -46,3 +46,6 @@ static inline void ssleep(useconds_t sec)
 #include <cavan/text.h>
 #include <cavan/memory.h>
 #include <cavan/file.h>
+
+#define likely(exp)		(__builtin_expect(!!(exp), true))
+#define unlikely(exp)	(__builtin_expect(!!(exp), false))

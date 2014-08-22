@@ -131,9 +131,9 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 
 int cavan_redirect_stdio_base(int ttyfd, int flags);
 int cavan_redirect_stdio(const char *pathname, int flags);
-int cavan_exec_redirect_stdio_base(int ttyfd, const char *command);
-int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command);
-int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid);
+int cavan_exec_redirect_stdio_base(int ttyfd, const char *command, int flags);
+int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command, int flags);
+int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid, int flags);
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
 
 int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout);
@@ -147,7 +147,7 @@ static inline int cavan_exec_waitpid(pid_t pid)
 {
 	int status;
 
-	if (waitpid(pid, &status, WNOHANG) == pid)
+	if (waitpid(pid, &status, 0) == pid)
 	{
 		return WEXITSTATUS(status);
 	}
