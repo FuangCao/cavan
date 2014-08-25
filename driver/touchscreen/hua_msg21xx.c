@@ -272,13 +272,6 @@ static int msg21xx_readid(struct hua_input_chip *chip)
 
 	pr_pos_info();
 
-	ret = hua_ts_read_pending_firmware_name(buff, sizeof(buff));
-	if (ret > 0 && strstr(buff, "msg21xx.bin"))
-	{
-		pr_green_info("pending firmware name is %s", buff);
-		return 0;
-	}
-
 	ret = chip->read_firmware_id(chip, buff, sizeof(buff));
 	if (ret < 0)
 	{

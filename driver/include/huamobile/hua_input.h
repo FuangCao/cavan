@@ -15,12 +15,15 @@
 #include <huamobile/hua_thread.h>
 #include <huamobile/hua_firmware.h>
 
-#define HUA_INPUT_CORE_DEBUG	0
+#define HUA_INPUT_CORE_DEBUG			0
 
-#define HUA_INPUT_MAJOR			280
-#define HUA_INPUT_MINORS		32
-#define HUA_INPUT_CLASS_NAME	"hua_input"
-#define HUA_INPUT_CAL_DATA_DIR	"/persist"
+#define HUA_INPUT_MAJOR					280
+#define HUA_INPUT_MINORS				32
+#define HUA_INPUT_CLASS_NAME			"hua_input"
+#define HUA_INPUT_CAL_DATA_DIR			"/persist"
+#define HUA_INPUT_ONLINE_DATA_DIR		"/data"
+
+#define HUA_INPUT_CHIP_MAX_PROBE_COUNT	20
 
 #define KB(size)	((size) << 10)
 #define MB(size)	((size) << 20)
@@ -227,6 +230,7 @@ struct hua_input_chip
 	bool dead;
 	bool powered;
 	bool actived;
+	int probe_count;
 	int recovery_count;
 
 	struct mutex lock;
@@ -270,12 +274,14 @@ struct hua_input_chip
 struct hua_input_core
 {
 	const char *name;
+	const char *chip_online[HUA_INPUT_MINORS];
 	u32 devmask;
 	u32 poll_jiffies;
 
 	struct mutex lock;
 	struct hua_input_thread detect_thread;
 	struct kobject prop_kobj;
+	struct delayed_work write_online_work;
 	struct workqueue_struct *workqueue;
 
 	struct hua_input_list chip_list;
@@ -296,11 +302,14 @@ int hua_input_chip_set_power_lock(struct hua_input_chip *chip, bool enable);
 int hua_input_chip_set_active(struct hua_input_chip *chip, bool enable);
 int hua_input_chip_set_active_lock(struct hua_input_chip *chip, bool enable);
 void hua_input_chip_recovery(struct hua_input_chip *chip, bool force);
+ssize_t hua_input_chip_write_online(const char *chip_name, bool online);
+ssize_t hua_input_chip_read_online(const char *chip_name);
 int hua_input_chip_firmware_upgrade(struct hua_input_chip *chip, void *buff, size_t size, int flags);
 int hua_input_device_set_enable_lock(struct hua_input_device *dev, bool enable);
 int hua_input_device_set_enable_no_sync(struct hua_input_device *dev, bool enable);
 int hua_input_device_calibration(struct hua_input_device *dev, struct hua_input_chip *chip, char *buff, size_t size, bool write);
 int hua_input_device_calibration_lock(struct hua_input_device *dev, char *buff, size_t size, bool write);
+ssize_t hua_input_device_read_write_offset(struct hua_input_device *dev, char *buff, size_t size, bool store);
 
 int hua_input_device_register(struct hua_input_chip *chip, struct hua_input_device *dev);
 void hua_input_device_unregister(struct hua_input_chip *chip, struct hua_input_device *dev);
@@ -342,6 +351,11 @@ static inline void *hua_input_chip_get_misc_data(struct hua_input_chip *chip)
 	return chip->misc_data;
 }
 
+static inline int hua_input_chip_get_online_pathname(const char *chip_name, char *pathname, size_t size)
+{
+	return snprintf(pathname, size, "%s/Chip-%s-Online", HUA_INPUT_ONLINE_DATA_DIR, chip_name);
+}
+
 static inline void hua_input_device_set_data(struct hua_input_device *dev, void *data)
 {
 	dev->private_data = data;
@@ -355,15 +369,6 @@ static inline void *hua_input_device_get_data(struct hua_input_device *dev)
 static inline int hua_input_device_get_offset_pathname(struct hua_input_device *dev, char *pathname, size_t size)
 {
 	return snprintf(pathname, size, "%s/%s-Offset", HUA_INPUT_CAL_DATA_DIR, dev->misc_name);
-}
-
-static inline ssize_t hua_input_device_read_write_offset(struct hua_input_device *dev, char *buff, size_t size, bool store)
-{
-	char pathname[512];
-
-	hua_input_device_get_offset_pathname(dev, pathname, sizeof(pathname));
-
-	return hua_io_read_write_file(pathname, buff, size, store);
 }
 
 static inline int hua_input_read_register_dummy(struct hua_input_chip *chip, u8 addr, u8 *value)

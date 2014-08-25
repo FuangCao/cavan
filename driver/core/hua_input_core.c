@@ -16,6 +16,59 @@ struct hua_misc_device *hua_misc_dev_map[HUA_INPUT_MINORS];
 
 // ================================================================================
 
+static void hua_input_core_write_online_work(struct work_struct *data)
+{
+	int i;
+	int err_count;
+	struct hua_input_chip *chip;
+	struct hua_input_list *list = &input_core.exclude_list;
+	struct list_head *head = &list->head;
+
+	for (i = 0, err_count = 0; i < ARRAY_SIZE(input_core.chip_online); i++)
+	{
+		if (input_core.chip_online[i] && hua_input_chip_write_online(input_core.chip_online[i], true) < 0)
+		{
+			err_count++;
+		}
+	}
+
+	mutex_lock(&list->lock);
+
+	list_for_each_entry(chip, head, node)
+	{
+		if (hua_input_chip_write_online(chip->name, false) < 0)
+		{
+			err_count++;
+		}
+	}
+
+	mutex_unlock(&list->lock);
+
+	if (err_count > 0)
+	{
+		queue_delayed_work(input_core.workqueue, &input_core.write_online_work, 10 * HZ);
+	}
+}
+
+static int hua_input_core_add_online_chip(const char *chip_name)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(input_core.chip_online); i++)
+	{
+		if (input_core.chip_online[i] == NULL)
+		{
+			input_core.chip_online[i] = chip_name;
+			queue_delayed_work(input_core.workqueue, &input_core.write_online_work, 60 * HZ);
+			return i;
+		}
+	}
+
+	return -EBUSY;
+}
+
+// ================================================================================
+
 static void hua_input_list_init(struct hua_input_list *list)
 {
 	mutex_init(&list->lock);
@@ -920,6 +973,35 @@ void hua_input_chip_recovery(struct hua_input_chip *chip, bool force)
 
 EXPORT_SYMBOL_GPL(hua_input_chip_recovery);
 
+ssize_t hua_input_chip_write_online(const char *chip_name, bool online)
+{
+	char pathname[512];
+
+	hua_input_chip_get_online_pathname(chip_name, pathname, sizeof(pathname));
+
+	return hua_io_read_write_file(pathname, online ? "1" : "0", 1, true);
+}
+
+EXPORT_SYMBOL_GPL(hua_input_chip_write_online);
+
+ssize_t hua_input_chip_read_online(const char *chip_name)
+{
+	char buff[4];
+	ssize_t rdlen;
+	char pathname[512];
+
+	hua_input_chip_get_online_pathname(chip_name, pathname, sizeof(pathname));
+	rdlen = hua_io_read_write_file(pathname, buff, sizeof(buff), false);
+	if (rdlen < 0)
+	{
+		return rdlen;
+	}
+
+	return rdlen > 0 && buff[0] != '0';
+}
+
+EXPORT_SYMBOL_GPL(hua_input_chip_read_online);
+
 static int hua_input_chip_firmware_upgrade_handler(struct hua_firmware *fw)
 {
 	int ret;
@@ -1151,6 +1233,7 @@ static const struct attribute *hua_input_chip_attributes[] =
 static int hua_input_chip_probe(struct hua_input_chip *chip)
 {
 	int ret;
+	const char *chip_name;
 	struct hua_misc_device *mdev;
 
 	pr_pos_info();
@@ -1164,12 +1247,26 @@ static int hua_input_chip_probe(struct hua_input_chip *chip)
 		return ret;
 	}
 
+	chip_name = chip->name;
+
+	if (chip->probe_count > 5)
+	{
+		if (hua_input_chip_read_online(chip_name) > 0)
+		{
+			pr_green_info("chip %s is online", chip_name);
+			goto label_write_init_data;
+		}
+	}
+
 	if (chip->readid && (ret = chip->readid(chip)) < 0)
 	{
 		pr_red_info("chip->readid");
 		goto out_power_down;
 	}
 
+	hua_input_core_add_online_chip(chip_name);
+
+label_write_init_data:
 	if (chip->poweron_init == false && (ret = hua_input_chip_write_init_data(chip)) < 0)
 	{
 		pr_red_info("hua_input_chip_write_init_data");
@@ -1398,6 +1495,7 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 	chip->dead = false;
 	chip->powered = false;
 	chip->actived = false;
+	chip->probe_count = 0;
 	chip->recovery_count = 0;
 
 	hua_input_list_init(&chip->isr_list);
@@ -1459,6 +1557,17 @@ static void hua_input_chip_destroy(struct hua_input_chip *chip)
 	hua_input_list_destory(&chip->poll_list);
 	hua_input_list_destory(&chip->dev_list);
 }
+
+ssize_t hua_input_device_read_write_offset(struct hua_input_device *dev, char *buff, size_t size, bool store)
+{
+	char pathname[512];
+
+	hua_input_device_get_offset_pathname(dev, pathname, sizeof(pathname));
+
+	return hua_io_read_write_file(pathname, buff, size, store);
+}
+
+EXPORT_SYMBOL_GPL(hua_input_device_read_write_offset);
 
 static ssize_t hua_input_device_read(struct hua_misc_device *dev, char __user *buff, size_t size, loff_t *offset)
 {
@@ -1918,8 +2027,9 @@ static int hua_input_core_event_handler(struct hua_input_thread *thread)
 	list_for_each_entry(chip, head, node)
 	{
 		mutex_lock(&chip->lock);
+		chip->probe_count++;
 
-		if ((chip->devmask & core->devmask))
+		if ((chip->devmask & core->devmask) || chip->probe_count > HUA_INPUT_CHIP_MAX_PROBE_COUNT)
 		{
 			list_del(&chip->node);
 			hua_input_list_add(&core->exclude_list, &chip->node);
@@ -1988,6 +2098,8 @@ static int __init hua_input_core_init(void)
 	struct hua_input_thread *thread;
 
 	pr_pos_info();
+
+	INIT_DELAYED_WORK(&input_core.write_online_work, hua_input_core_write_online_work);
 
 	hua_input_list_init(&input_core.chip_list);
 	hua_input_list_init(&input_core.work_list);
