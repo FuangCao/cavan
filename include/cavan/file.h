@@ -34,7 +34,7 @@
 #define FILE_ETC_MTAB				"/etc/mtab"
 
 #define TEMP_DOS2UNIX_FILE			"/tmp/dos2unix_tmp_file"
-#define CAVAN_TEMP_FILENAME			".__CAVAN__"
+#define CAVAN_TEMP_FILENAME			"cavan-XXXXXX"
 
 #define FILE_PROC_MOUNTS_MAX_SIZE	MB(1)
 #define FILE_PROC_FILESYSTEMS_SIZE	MB(1)

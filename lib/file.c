@@ -2940,7 +2940,11 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 	*filename = '/';
 	text_copy(filename + 1, CAVAN_TEMP_FILENAME);
 
-	mkdir(buff, option->mode);
+	if (mkdtemp(buff) == NULL)
+	{
+		pr_error_info("mkdtemp `%s'", buff);
+		return -EFAULT;
+	}
 
 	pr_warning_info("rename %s => %s", buff, pathname);
 
