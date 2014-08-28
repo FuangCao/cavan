@@ -264,6 +264,12 @@ function cavan-kernel-config()
 {
 	local ARCH CMD_MAKE DEF_CONFIG SAVE_CONFIG KERNEL_PATH BOARD_NAME KERNEL_SOURCE
 
+	[ "${ANDROID_BUILD_TOP}" ] ||
+	{
+		echo "please run source build/envsetup"
+		return 1
+	}
+
 	BOARD_NAME="${1-${TARGET_PRODUCT}}"
 
 	[ "${BOARD_NAME}" ] ||
@@ -273,14 +279,31 @@ function cavan-kernel-config()
 	}
 
 	ARCH="${2-arm}"
-	DEF_CONFIG="${BOARD_NAME}_defconfig"
-	CMD_MAKE="make ARCH=${ARCH} CROSS_COMPILE=arm-eabi-"
-	KERNEL_PATH="${OUT}/obj/KERNEL_OBJ"
 
-	[ -d "${KERNEL_PATH}" ] &&
+	if [ -d "${ANDROID_BUILD_TOP}/device/marvell" ]
+	then
+		KERNEL_PATH="${OUT}/obj/kernel"
+		if [[ ${BOARD_NAME} = pxa1L88H* ]]
+		then
+			DEF_CONFIG="${BOARD_NAME/H/_h}_defconfig"
+		elif [[ ${BOARD_NAME} = pxa1L88X* ]]
+		then
+			DEF_CONFIG="${BOARD_NAME/X/_x}_defconfig"
+		else
+			DEF_CONFIG="${BOARD_NAME}_defconfig"
+		fi
+	else
+		KERNEL_PATH="${OUT}/obj/KERNEL_OBJ"
+		DEF_CONFIG="${BOARD_NAME}_defconfig"
+	fi
+
+	[ -d "${KERNEL_PATH}" ] ||
 	{
-		CMD_MAKE="${CMD_MAKE} -C ${KERNEL_PATH}"
+		echo "kernel path ${KERNEL_PATH} not found!"
+		return 1
 	}
+
+	CMD_MAKE="make -C ${KERNEL_PATH} ARCH=${ARCH} CROSS_COMPILE=arm-eabi-"
 
 	echo "BOARD_NAME = ${BOARD_NAME}"
 	echo "ARCH = ${ARCH}"
