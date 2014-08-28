@@ -191,7 +191,7 @@ static int mma845x_input_chip_probe(struct hua_input_chip *chip)
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
-	dev->name = "Three-Axis Digital Accelerometer";
+	dev->name = "MMA845X Three-Axis Digital Accelerometer";
 	dev->fuzz = 0;
 	dev->flat = 0;
 	dev->use_irq = false;
@@ -266,7 +266,7 @@ static int mma845x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->probe = mma845x_input_chip_probe;
 	chip->remove = mma845x_input_chip_remove;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
@@ -298,6 +298,16 @@ static const struct i2c_device_id mma845x_id[] =
 	{"mma845x", 0}, {}
 };
 
+#ifdef CONFIG_OF
+static struct of_device_id mma845x_match_table[] =
+{
+	{
+		.compatible = "freescale,mma845x"
+	},
+	{}
+};
+#endif
+
 MODULE_DEVICE_TABLE(i2c, mma845x_id);
 
 static struct i2c_driver mma845x_driver =
@@ -306,6 +316,9 @@ static struct i2c_driver mma845x_driver =
 	{
 		.name = "mma845x",
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
+		.of_match_table = mma845x_match_table,
+#endif
 	},
 
 	.probe = mma845x_i2c_probe,

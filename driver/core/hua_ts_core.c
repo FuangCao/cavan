@@ -25,25 +25,39 @@ static void hua_ts_later_resume(struct early_suspend *h)
 #elif defined(CONFIG_FB) && defined(CONFIG_HUAMOBILE_USE_FB_NOTIFILER)
 static int hua_ts_fb_notifier_call(struct notifier_block *notifier, unsigned long event, void *data)
 {
-	struct fb_event *evdata = data;
 	struct hua_ts_device *ts = container_of(notifier, struct hua_ts_device, fb_notifier);
 
 	pr_bold_info("event = %ld", event);
 
-	if (evdata && event == FB_EVENT_BLANK)
+	switch (event)
 	{
-		int *blank = evdata->data;
-		if (blank)
+	case FB_EVENT_BLANK:
+		if (data)
 		{
-			if (*blank == FB_BLANK_UNBLANK)
+			int *blank = ((struct fb_event *) data)->data;
+
+			if (blank)
 			{
-				hua_ts_resume(ts);
-			}
-			else if (*blank == FB_BLANK_POWERDOWN)
-			{
-				hua_ts_suspend(ts);
+				if (*blank == FB_BLANK_UNBLANK)
+				{
+					hua_ts_resume(ts);
+				}
+				else if (*blank == FB_BLANK_POWERDOWN)
+				{
+					hua_ts_suspend(ts);
+				}
 			}
 		}
+
+		break;
+
+	case FB_EVENT_SUSPEND:
+		hua_ts_suspend(ts);
+		break;
+
+	case FB_EVENT_RESUME:
+		hua_ts_resume(ts);
+		break;
 	}
 
 	return 0;
@@ -207,12 +221,16 @@ static int hua_ts_device_open(struct input_dev *dev)
 int hua_ts_device_probe(struct hua_input_device *dev)
 {
 	int ret;
+	u32 range[2];
+	const char *name;
 	struct hua_ts_device *ts = (struct hua_ts_device *) dev;
 	struct hua_input_chip *chip = dev->chip;
 	struct hua_input_core *core = chip->core;
 	struct input_dev *input = dev->input;
-	const struct hua_ts_touch_key *key, *key_end;
-	const char *name;
+	struct hua_ts_touch_key *key, *key_end;
+#ifdef CONFIG_OF
+	struct device_node *of_node = chip->dev->of_node;
+#endif
 
 	ret = hua_input_add_kobject(&core->prop_kobj, "board_properties");
 	if (ret < 0 && ret != -EEXIST)
@@ -273,11 +291,39 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 
 	if (ts->keys && ts->key_count)
 	{
+#ifdef CONFIG_OF
+		u32 keycode[ts->key_count];
+
+		if (of_property_read_u32_array(of_node, "key-code", keycode, ts->key_count) >= 0)
+		{
+			int i;
+
+			for (key = ts->keys, i = ts->key_count - 1; i >= 0; i--)
+			{
+				key[i].code = keycode[i];
+			}
+		}
+#endif
+
 		for (key = ts->keys, key_end = key + ts->key_count; key < key_end; key++)
 		{
 			set_bit(key->code, input->keybit);
 		}
 	}
+
+#ifdef CONFIG_OF
+	if (of_property_read_u32_array(of_node, "xrange", range, ARRAY_SIZE(range)) >= 0)
+	{
+		ts->xmin = range[0];
+		ts->xmax = range[1];
+	}
+
+	if (of_property_read_u32_array(of_node, "yrange", range, ARRAY_SIZE(range)) >= 0)
+	{
+		ts->ymin = range[0];
+		ts->ymax = range[1];
+	}
+#endif
 
 	set_bit(EV_ABS, input->evbit);
 	input_set_abs_params(input, ABS_MT_POSITION_X, ts->xmin, ts->xmax, dev->fuzz, dev->flat);

@@ -1,6 +1,7 @@
 #include <huamobile/hua_ts.h>
 #include <huamobile/hua_sensor.h>
 #include <huamobile/hua_i2c.h>
+#include <huamobile/hua_io.h>
 
 #define HUA_SUPPORT_PROXIMITY		1
 
@@ -115,20 +116,20 @@ static int bl86x8_set_power(struct hua_input_chip *chip, bool enable)
 {
 	if (enable)
 	{
-		sprd_ts_reset_enable(false);
-		sprd_ts_power_enable(true);
+		hua_io_reset_gpio_set_value(chip, 0);
+		hua_io_set_power_regulator(chip, true);
 
 		msleep(50);
 
-		sprd_ts_reset_enable(false);
+		hua_io_reset_gpio_set_value(chip, 0);
 		msleep(50);
-		sprd_ts_reset_enable(true);
+		hua_io_reset_gpio_set_value(chip, 1);
 
 		msleep(200);
 	}
 	else
 	{
-		sprd_ts_power_enable(false);
+		hua_io_set_power_regulator(chip, false);
 	}
 
 	return 0;
@@ -267,7 +268,7 @@ static int bl86x8_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->read_register = hua_input_read_register_i2c_smbus;
 	chip->write_register = hua_input_write_register_i2c_smbus;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
@@ -301,6 +302,16 @@ static const struct i2c_device_id bl86x8_ts_id_table[] =
 	{}
 };
 
+#ifdef CONFIG_OF
+static struct of_device_id bl86x8_match_table[] =
+{
+	{
+		.compatible = "batterlift,bl86x8"
+	},
+	{}
+};
+#endif
+
 static struct i2c_driver bl86x8_ts_driver =
 {
 	.probe = bl86x8_i2c_probe,
@@ -311,6 +322,9 @@ static struct i2c_driver bl86x8_ts_driver =
 	{
 		.name = BL86X8_DEVICE_NAME,
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
+		.of_match_table = bl86x8_match_table,
+#endif
 	}
 };
 

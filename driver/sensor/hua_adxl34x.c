@@ -234,7 +234,7 @@ static int adxl34x_sensor_chip_set_active(struct hua_input_chip *chip, bool enab
 	return 0;
 }
 
-static void adxl34x_sensor_chip_event_handler(struct hua_input_chip *chip)
+static int adxl34x_sensor_chip_event_handler(struct hua_input_chip *chip)
 {
 	int ret;
 	u8 irq_state;
@@ -243,11 +243,13 @@ static void adxl34x_sensor_chip_event_handler(struct hua_input_chip *chip)
 	if (ret < 0)
 	{
 		pr_red_info("sensor->read_register INT_SOURCE");
-		return;
+		return ret;
 	}
 
 	chip->irq_state = irq_state;
 	hua_input_chip_report_events(chip, &chip->isr_list);
+
+	return 0;
 }
 
 static int adxl34x_acceleration_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
@@ -306,7 +308,7 @@ static int adxl34x_input_chip_probe(struct hua_input_chip *chip)
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
-	dev->name = "Three-Axis Digital Accelerometer";
+	dev->name = "ADXL34X Three-Axis Digital Accelerometer";
 	dev->fuzz = 3;
 	dev->flat = 3;
 	dev->use_irq = true;
@@ -382,7 +384,9 @@ static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	i2c_set_clientdata(client, chip);
 	hua_input_chip_set_bus_data(chip, client);
 
-#if defined(ADXL346_GINT2) || defined(ADXL346_GINT1)
+#ifdef CONFIG_OF
+	chip->irq = client->irq;
+#elif defined(CONFIG_ARCH_SC8810) && (defined(ADXL346_GINT2) || defined(ADXL346_GINT1))
 #ifdef ADXL346_GINT2
 	ret = sprd_alloc_eic_irq(ADXL346_GINT2);
 #else
@@ -413,7 +417,7 @@ static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->probe = adxl34x_input_chip_probe;
 	chip->remove = adxl34x_input_chip_remove;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
@@ -425,9 +429,13 @@ static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 out_free_eic_irq:
 	if (chip->irq > 0)
 	{
+#ifdef CONFIG_ARCH_SC8810
 		sprd_free_eic_irq(chip->irq);
+#endif
 	}
+#ifndef CONFIG_OF
 out_kfree_sensor:
+#endif
 	kfree(chip);
 	return ret;
 }
@@ -442,7 +450,9 @@ static int adxl34x_i2c_remove(struct i2c_client *client)
 
 	if (chip->irq > 0)
 	{
+#ifdef CONFIG_ARCH_SC8810
 		sprd_free_eic_irq(chip->irq);
+#endif
 	}
 
 	kfree(chip);
@@ -455,6 +465,16 @@ static const struct i2c_device_id adxl34x_id[] =
 	{"adxl34x", 0}, {}
 };
 
+#ifdef CONFIG_OF
+static struct of_device_id adxl34x_match_table[] =
+{
+	{
+		.compatible = "analog,adxl34x"
+	},
+	{}
+};
+#endif
+
 MODULE_DEVICE_TABLE(i2c, adxl34x_id);
 
 static struct i2c_driver adxl34x_driver =
@@ -463,6 +483,9 @@ static struct i2c_driver adxl34x_driver =
 	{
 		.name = "adxl34x",
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
+		.of_match_table = adxl34x_match_table,
+#endif
 	},
 
 	.probe = adxl34x_i2c_probe,

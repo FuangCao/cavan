@@ -30,7 +30,7 @@ struct hua_ts_device
 	int touch_count;
 
 	u32 key_count;
-	const struct hua_ts_touch_key *keys;
+	struct hua_ts_touch_key *keys;
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	struct early_suspend early_suspend;

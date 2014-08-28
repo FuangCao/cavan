@@ -333,7 +333,7 @@ static int lis3dh_input_chip_probe(struct hua_input_chip *chip)
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
-	dev->name = "Three-Axis Digital Accelerometer";
+	dev->name = "LIS3DH Three-Axis Digital Accelerometer";
 	dev->type = HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
 	dev->poll_delay = 200;
 	dev->set_delay = lis3dh_acceleration_set_delay;
@@ -394,7 +394,11 @@ static int lis3dh_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	i2c_set_clientdata(client, chip);
 	hua_input_chip_set_bus_data(chip, client);
 
+#ifdef CONFIG_OF
+	if (strcmp(client->dev.of_node->name, "st,lis3dh") == 0)
+#else
 	if (strcmp(client->name, "lis3dh") == 0)
+#endif
 	{
 		chip->name = "LIS3DH";
 	}
@@ -417,7 +421,7 @@ static int lis3dh_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->probe = lis3dh_input_chip_probe;
 	chip->remove = lis3dh_input_chip_remove;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
@@ -448,6 +452,19 @@ static const struct i2c_device_id lis3dh_id[] =
 	{"lis3dh", 0}, {"lis3de", 0}, {}
 };
 
+#ifdef CONFIG_OF
+static struct of_device_id lis3dh_match_table[] =
+{
+	{
+		.compatible = "st,lis3dh"
+	},
+	{
+		.compatible = "st,lis3de"
+	},
+	{}
+};
+#endif
+
 MODULE_DEVICE_TABLE(i2c, lis3dh_id);
 
 static struct i2c_driver lis3dh_driver =
@@ -456,6 +473,9 @@ static struct i2c_driver lis3dh_driver =
 	{
 		.name = "lis3dh",
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
+		.of_match_table = lis3dh_match_table,
+#endif
 	},
 
 	.probe = lis3dh_i2c_probe,

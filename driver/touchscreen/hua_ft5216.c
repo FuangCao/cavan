@@ -1,6 +1,7 @@
 #include <huamobile/hua_ts.h>
 #include <huamobile/hua_sensor.h>
 #include <huamobile/hua_i2c.h>
+#include <huamobile/hua_io.h>
 
 #if defined CONFIG_HUAMOBILE_D58 || defined CONFIG_HUAMOBILE_H2 || defined CONFIG_HUAMOBILE_H4
 #define TOUCHSCREEN_CHIP_IS_FT5616	1
@@ -239,23 +240,23 @@ static int ft5216_set_power(struct hua_input_chip *chip, bool enable)
 	if (enable)
 	{
 #if TOUCHSCREEN_CHIP_IS_FT5616
-		sprd_ts_reset_enable(false);
+		hua_io_reset_gpio_set_value(chip, 0);
 		msleep(5);
-		sprd_ts_power_enable(true);
+		hua_io_set_power_regulator(chip, true);
 		msleep(5);
-		sprd_ts_reset_enable(true);
+		hua_io_reset_gpio_set_value(chip, 1);
 		msleep(300);
 #else
-		sprd_ts_reset_enable(false);
-		sprd_ts_power_enable(true);
+		hua_io_reset_gpio_set_value(chip, 0);
+		hua_io_set_power_regulator(chip, true);
 		msleep(50);
-		sprd_ts_reset_enable(true);
+		hua_io_reset_gpio_set_value(chip, 1);
 		msleep(200);
 #endif
 	}
 	else
 	{
-		sprd_ts_power_enable(false);
+		hua_io_set_power_regulator(chip, false);
 	}
 
 	return 0;
@@ -614,13 +615,13 @@ static int ft5216_firmware_upgrade(struct hua_input_chip *chip, struct hua_firmw
 	return 0;
 }
 
-static int ft5216_calibration(struct hua_input_chip *chip, const void *buff, size_t size)
+static ssize_t ft5216_ts_calibration(struct hua_input_device *dev, char *buff, size_t size, bool store)
 {
 	int ret;
 	u8 value;
 	int i;
-	struct i2c_client *client = hua_input_chip_get_bus_data(chip);
 	char data[2] = {0x1C, 0x01};
+	struct hua_input_chip *chip = dev->chip;
 
 	pr_pos_info();
 
@@ -631,7 +632,7 @@ static int ft5216_calibration(struct hua_input_chip *chip, const void *buff, siz
 
 		msleep(100);
 
-		ret = i2c_master_send(client, data, sizeof(data));
+		ret = chip->master_send(chip, data, sizeof(data));
 		if (ret < 0)
 		{
 			pr_red_info("i2c_master_send");
@@ -640,14 +641,14 @@ static int ft5216_calibration(struct hua_input_chip *chip, const void *buff, siz
 
 		msleep(1000);
 
-		ret = i2c_master_send(client, data, 1);
+		ret = chip->master_send(chip, data, 1);
 		if (ret < 0)
 		{
 			pr_red_info("i2c_master_send");
 			return ret;
 		}
 
-		ret = i2c_master_recv(client, &value, 1);
+		ret = chip->master_recv(chip, &value, 1);
 		if (ret < 0)
 		{
 			pr_red_info("i2c_master_recv");
@@ -714,27 +715,16 @@ static struct hua_ts_touch_key ft5216_touch_keys[] =
 #endif
 };
 
-static ssize_t ft5216_firmware_id_show(struct device *dev, struct device_attribute *attr, char *buff)
+static ssize_t ft5216_chip_read_firmware_id(struct hua_input_chip *chip, char *buff, size_t size)
 {
 	int ret;
 	u8 vendor, version;
-	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
-	struct hua_input_chip *chip = i2c_get_clientdata(client);
-
-	mutex_lock(&chip->lock);
-
-	ret = hua_input_chip_set_power(chip, true);
-	if (ret < 0)
-	{
-		pr_red_info("hua_input_chip_set_power_lock");
-		goto out_mutex_unlock;
-	}
 
 	ret = ft5216_read_vendor_id(chip);
 	if (ret < 0)
 	{
 		pr_red_info("read_register");
-		goto out_mutex_unlock;
+		return ret;
 	}
 
 	vendor = ret;
@@ -743,16 +733,20 @@ static ssize_t ft5216_firmware_id_show(struct device *dev, struct device_attribu
 	if (ret < 0)
 	{
 		pr_red_info("read_register");
-		goto out_mutex_unlock;
+		return ret;
 	}
 
 	version = ret;
 
-	ret = sprintf(buff, "%02x%02x\n", vendor, version);
+	return sprintf(buff, "%02x%02x\n", vendor, version);
+}
 
-out_mutex_unlock:
-	mutex_unlock(&chip->lock);
-	return ret;
+static ssize_t ft5216_firmware_id_show(struct device *dev, struct device_attribute *attr, char *buff)
+{
+	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
+	struct hua_input_chip *chip = i2c_get_clientdata(client);
+
+	return hua_input_chip_read_firmware_id_lock(chip, buff, PAGE_SIZE);
 }
 
 static DEVICE_ATTR(firmware_id, 0664, ft5216_firmware_id_show, NULL);
@@ -789,6 +783,7 @@ static int ft5216_input_chip_probe(struct hua_input_chip *chip)
 	dev->type = HUA_INPUT_DEVICE_TYPE_TOUCHSCREEN;
 	dev->use_irq = true;
 	dev->event_handler = ft5216_ts_event_handler;
+	dev->calibration = ft5216_ts_calibration;
 
 	ret = hua_input_device_register(chip, dev);
 	if (ret < 0)
@@ -888,9 +883,9 @@ static int ft5216_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->read_register = hua_input_read_register_i2c_smbus;
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->firmware_upgrade = ft5216_firmware_upgrade;
-	chip->calibration = ft5216_calibration;
+	chip->read_firmware_id = ft5216_chip_read_firmware_id;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
@@ -921,6 +916,16 @@ static const struct i2c_device_id ft5216_ts_id_table[] =
 	{FT5216_DEVICE_NAME, 0}, {}
 };
 
+#ifdef CONFIG_OF
+static struct of_device_id ft5216_match_table[] =
+{
+	{
+		.compatible = "focaltech,ft5216"
+	},
+	{}
+};
+#endif
+
 static struct i2c_driver ft5216_ts_driver =
 {
 	.probe = ft5216_i2c_probe,
@@ -931,6 +936,9 @@ static struct i2c_driver ft5216_ts_driver =
 	{
 		.name = FT5216_DEVICE_NAME,
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
+		.of_match_table = ft5216_match_table,
+#endif
 	}
 };
 

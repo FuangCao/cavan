@@ -64,17 +64,6 @@ enum bma2xx_register_map
 	REG_SPARE_1
 };
 
-struct hua_bma2xx_chip
-{
-	struct hua_input_chip chip;
-	struct regulator *vdd;
-	struct regulator *vio;
-};
-
-#ifdef CONFIG_ARCH_SC8810
-#include <mach/eic.h>
-#endif
-
 #pragma pack(1)
 struct bma2xx_data_package
 {
@@ -115,40 +104,6 @@ static int bma2xx_sensor_chip_readid(struct hua_input_chip *chip)
 	}
 
 	pr_bold_info("REG_CHIP_ID = 0x%02x", value);
-
-	return 0;
-}
-
-static int bma2xx_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
-{
-	struct hua_bma2xx_chip *bma2xx = (struct hua_bma2xx_chip *) chip;
-
-	if (enable)
-	{
-		if (bma2xx->vio)
-		{
-			regulator_enable(bma2xx->vio);
-		}
-
-		if (bma2xx->vdd)
-		{
-			regulator_enable(bma2xx->vdd);
-		}
-	}
-	else
-	{
-		if (bma2xx->vio)
-		{
-			regulator_disable(bma2xx->vio);
-		}
-
-		if (bma2xx->vdd)
-		{
-			regulator_disable(bma2xx->vdd);
-		}
-	}
-
-	msleep(20);
 
 	return 0;
 }
@@ -253,7 +208,7 @@ static int bma2xx_input_chip_probe(struct hua_input_chip *chip)
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
-	dev->name = "Three-Axis Digital Accelerometer";
+	dev->name = "BMA2XX Three-Axis Digital Accelerometer";
 	dev->fuzz = 4;
 	dev->flat = 4;
 	dev->use_irq = false;
@@ -305,22 +260,17 @@ static int bma2xx_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 {
 	int ret;
 	struct hua_input_chip *chip;
-	struct hua_bma2xx_chip *bma2xx;
 
 	pr_pos_info();
 
-	bma2xx = kzalloc(sizeof(*bma2xx), GFP_KERNEL);
-	if (bma2xx == NULL)
+	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
+	if (chip == NULL)
 	{
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
 
-	bma2xx->vdd = regulator_get(&client->dev, "vdd");
-	bma2xx->vio = regulator_get(&client->dev, "vio");
-
-	i2c_set_clientdata(client, bma2xx);
-	chip = &bma2xx->chip;
+	i2c_set_clientdata(client, chip);
 	hua_input_chip_set_bus_data(chip, client);
 
 	chip->irq = -1;
@@ -333,55 +283,32 @@ static int bma2xx_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->readid = bma2xx_sensor_chip_readid;
 	chip->set_active = bma2xx_sensor_chip_set_active;
-	chip->set_power = bma2xx_sensor_chip_set_power;
 
 	chip->probe = bma2xx_input_chip_probe;
 	chip->remove = bma2xx_input_chip_remove;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
-		goto out_regulator_put;
+		goto out_kfree_chip;
 	}
 
 	return 0;
 
-out_regulator_put:
-	if (bma2xx->vio)
-	{
-		regulator_put(bma2xx->vio);
-	}
-
-	if (bma2xx->vdd)
-	{
-		regulator_put(bma2xx->vdd);
-	}
-
+out_kfree_chip:
 	kfree(chip);
 	return ret;
 }
 
 static int bma2xx_i2c_remove(struct i2c_client *client)
 {
-	struct hua_bma2xx_chip *bma2xx = i2c_get_clientdata(client);
-	struct hua_input_chip *chip = &bma2xx->chip;
+	struct hua_input_chip *chip = i2c_get_clientdata(client);
 
 	pr_pos_info();
 
 	hua_input_chip_unregister(chip);
-
-	if (bma2xx->vio)
-	{
-		regulator_put(bma2xx->vio);
-	}
-
-	if (bma2xx->vdd)
-	{
-		regulator_put(bma2xx->vdd);
-	}
-
-	kfree(bma2xx);
+	kfree(chip);
 
 	return 0;
 }

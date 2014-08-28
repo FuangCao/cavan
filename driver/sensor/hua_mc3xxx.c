@@ -50,17 +50,6 @@ enum mc3xxx_register_map
 	REG_CHIP_ID = 0x3B,
 };
 
-struct hua_mc3xxx_chip
-{
-	struct hua_input_chip chip;
-	struct regulator *vdd;
-	struct regulator *vio;
-};
-
-#ifdef CONFIG_ARCH_SC8810
-#include <mach/eic.h>
-#endif
-
 #pragma pack(1)
 struct mc3xxx_data_package_low
 {
@@ -152,40 +141,6 @@ static int mc3xxx_sensor_chip_readid(struct hua_input_chip *chip)
 	}
 
 	return -EFAULT;
-}
-
-static int mc3xxx_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
-{
-	struct hua_mc3xxx_chip *mc3xxx = (struct hua_mc3xxx_chip *) chip;
-
-	if (enable)
-	{
-		if (mc3xxx->vio)
-		{
-			regulator_enable(mc3xxx->vio);
-		}
-
-		if (mc3xxx->vdd)
-		{
-			regulator_enable(mc3xxx->vdd);
-		}
-
-		msleep(20);
-	}
-	else
-	{
-		if (mc3xxx->vio)
-		{
-			regulator_disable(mc3xxx->vio);
-		}
-
-		if (mc3xxx->vdd)
-		{
-			regulator_disable(mc3xxx->vdd);
-		}
-	}
-
-	return 0;
 }
 
 static int mc3xxx_sensor_chip_set_active_base(struct hua_input_chip *chip, bool enable)
@@ -322,7 +277,7 @@ static int mc3xxx_input_chip_probe(struct hua_input_chip *chip)
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
-	dev->name = "Three-Axis Digital Accelerometer";
+	dev->name = "MC3XXX Three-Axis Digital Accelerometer";
 	dev->fuzz = 0;
 	dev->flat = 0;
 	dev->use_irq = false;
@@ -380,22 +335,17 @@ static int mc3xxx_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 {
 	int ret;
 	struct hua_input_chip *chip;
-	struct hua_mc3xxx_chip *mc3xxx;
 
 	pr_pos_info();
 
-	mc3xxx = kzalloc(sizeof(*mc3xxx), GFP_KERNEL);
-	if (mc3xxx == NULL)
+	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
+	if (chip == NULL)
 	{
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
 
-	mc3xxx->vdd = regulator_get(&client->dev, "vdd");
-	mc3xxx->vio = regulator_get(&client->dev, "vio");
-
-	i2c_set_clientdata(client, mc3xxx);
-	chip = &mc3xxx->chip;
+	i2c_set_clientdata(client, chip);
 	hua_input_chip_set_bus_data(chip, client);
 
 	chip->irq = -1;
@@ -406,55 +356,32 @@ static int mc3xxx_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->readid = mc3xxx_sensor_chip_readid;
 	chip->set_active = mc3xxx_sensor_chip_set_active;
-	chip->set_power = mc3xxx_sensor_chip_set_power;
 
 	chip->probe = mc3xxx_input_chip_probe;
 	chip->remove = mc3xxx_input_chip_remove;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
-		goto out_regulator_put;
+		goto out_kfree_chip;
 	}
 
 	return 0;
 
-out_regulator_put:
-	if (mc3xxx->vio)
-	{
-		regulator_put(mc3xxx->vio);
-	}
-
-	if (mc3xxx->vdd)
-	{
-		regulator_put(mc3xxx->vdd);
-	}
-
+out_kfree_chip:
 	kfree(chip);
 	return ret;
 }
 
 static int mc3xxx_i2c_remove(struct i2c_client *client)
 {
-	struct hua_mc3xxx_chip *mc3xxx = i2c_get_clientdata(client);
-	struct hua_input_chip *chip = &mc3xxx->chip;
+	struct hua_input_chip *chip = i2c_get_clientdata(client);
 
 	pr_pos_info();
 
 	hua_input_chip_unregister(chip);
-
-	if (mc3xxx->vio)
-	{
-		regulator_put(mc3xxx->vio);
-	}
-
-	if (mc3xxx->vdd)
-	{
-		regulator_put(mc3xxx->vdd);
-	}
-
-	kfree(mc3xxx);
+	kfree(chip);
 
 	return 0;
 }

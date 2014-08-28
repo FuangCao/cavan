@@ -94,13 +94,6 @@ enum apds99xx_register_map
 	REG_POFFSET = 0x1E,
 };
 
-struct hua_apds99xx_chip
-{
-	struct hua_input_chip chip;
-	struct regulator *vdd;
-	struct regulator *vio;
-};
-
 struct hua_apds99xx_device
 {
 	u32 alpc;
@@ -201,40 +194,6 @@ static int apds99xx_sensor_chip_readid(struct hua_input_chip *chip)
 
 	chip->name = name;
 	chip->devid = value;
-
-	return 0;
-}
-
-static int apds99xx_sensor_chip_set_power(struct hua_input_chip *chip, bool enable)
-{
-	struct hua_apds99xx_chip *apds99xx = (struct hua_apds99xx_chip *) chip;
-
-	if (enable)
-	{
-		if (apds99xx->vio)
-		{
-			regulator_enable(apds99xx->vio);
-		}
-
-		if (apds99xx->vdd)
-		{
-			regulator_enable(apds99xx->vdd);
-		}
-
-		msleep(20);
-	}
-	else
-	{
-		if (apds99xx->vio)
-		{
-			regulator_disable(apds99xx->vio);
-		}
-
-		if (apds99xx->vdd)
-		{
-			regulator_disable(apds99xx->vdd);
-		}
-	}
 
 	return 0;
 }
@@ -758,7 +717,7 @@ static int apds99xx_input_chip_probe(struct hua_input_chip *chip)
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
-	dev->name = "ADPS99XX-PS";
+	dev->name = "ADPS99XX Proximity";
 	dev->fuzz = 0;
 	dev->flat = 0;
 
@@ -791,7 +750,7 @@ static int apds99xx_input_chip_probe(struct hua_input_chip *chip)
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
-	dev->name = "ADPS99XX-LS";
+	dev->name = "ADPS99XX Light";
 	dev->fuzz = 0;
 	dev->flat = 0;
 
@@ -850,22 +809,17 @@ static int apds99xx_i2c_probe(struct i2c_client *client, const struct i2c_device
 {
 	int ret;
 	struct hua_input_chip *chip;
-	struct hua_apds99xx_chip *apds99xx;
 
 	pr_pos_info();
 
-	apds99xx = kzalloc(sizeof(*apds99xx), GFP_KERNEL);
-	if (apds99xx == NULL)
+	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
+	if (chip == NULL)
 	{
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
 
-	apds99xx->vdd = regulator_get(&client->dev, "vdd");
-	apds99xx->vio = regulator_get(&client->dev, "vio");
-
-	i2c_set_clientdata(client, apds99xx);
-	chip = &apds99xx->chip;
+	i2c_set_clientdata(client, chip);
 	hua_input_chip_set_bus_data(chip, client);
 
 #if APDS99XX_SUPPORT_IRQ
@@ -890,7 +844,6 @@ static int apds99xx_i2c_probe(struct i2c_client *client, const struct i2c_device
 	chip->write_register16 = apds99xx_write_register16;
 	chip->readid = apds99xx_sensor_chip_readid;
 	chip->set_active = apds99xx_sensor_chip_set_active;
-	chip->set_power = apds99xx_sensor_chip_set_power;
 
 #if APDS99XX_SUPPORT_IRQ
 	chip->event_handler = apds99xx_chip_event_handler;
@@ -899,50 +852,28 @@ static int apds99xx_i2c_probe(struct i2c_client *client, const struct i2c_device
 	chip->probe = apds99xx_input_chip_probe;
 	chip->remove = apds99xx_input_chip_remove;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
-		goto out_regulator_put;
+		goto out_kfree_chip;
 	}
 
 	return 0;
 
-out_regulator_put:
-	if (apds99xx->vio)
-	{
-		regulator_put(apds99xx->vio);
-	}
-
-	if (apds99xx->vdd)
-	{
-		regulator_put(apds99xx->vdd);
-	}
-
+out_kfree_chip:
 	kfree(chip);
 	return ret;
 }
 
 static int apds99xx_i2c_remove(struct i2c_client *client)
 {
-	struct hua_apds99xx_chip *apds99xx = i2c_get_clientdata(client);
-	struct hua_input_chip *chip = &apds99xx->chip;
+	struct hua_input_chip *chip = i2c_get_clientdata(client);
 
 	pr_pos_info();
 
 	hua_input_chip_unregister(chip);
-
-	if (apds99xx->vio)
-	{
-		regulator_put(apds99xx->vio);
-	}
-
-	if (apds99xx->vdd)
-	{
-		regulator_put(apds99xx->vdd);
-	}
-
-	kfree(apds99xx);
+	kfree(chip);
 
 	return 0;
 }

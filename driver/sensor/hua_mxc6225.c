@@ -124,7 +124,7 @@ static int mxc6225_input_chip_probe(struct hua_input_chip *chip)
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
-	dev->name = "Three-Axis Digital Accelerometer";
+	dev->name = "MXC6225 Two-Axis Digital Accelerometer";
 	dev->type = HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
 	dev->poll_delay = 200;
 
@@ -195,7 +195,7 @@ static int mxc6225_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->probe = mxc6225_input_chip_probe;
 	chip->remove = mxc6225_input_chip_remove;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
@@ -226,6 +226,16 @@ static const struct i2c_device_id mxc6225_id[] =
 	{"mxc6225", 0}, {}
 };
 
+#ifdef CONFIG_OF
+static struct of_device_id mxc6225_match_table[] =
+{
+	{
+		.compatible = "freescale,mxc6225"
+	},
+	{}
+};
+#endif
+
 MODULE_DEVICE_TABLE(i2c, mxc6225_id);
 
 static struct i2c_driver mxc6225_driver =
@@ -234,6 +244,9 @@ static struct i2c_driver mxc6225_driver =
 	{
 		.name = "mxc6225",
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
+		.of_match_table = mxc6225_match_table,
+#endif
 	},
 
 	.probe = mxc6225_i2c_probe,

@@ -1,6 +1,7 @@
 #include <huamobile/hua_ts.h>
 #include <huamobile/hua_sensor.h>
 #include <huamobile/hua_i2c.h>
+#include <huamobile/hua_io.h>
 
 #define HUA_SUPPORT_PROXIMITY		1
 
@@ -154,20 +155,20 @@ static int cy8c242_set_power(struct hua_input_chip *chip, bool enable)
 {
 	if (enable)
 	{
-		sprd_ts_reset_enable(false);
-		sprd_ts_power_enable(true);
+		hua_io_reset_gpio_set_value(chip, 0);
+		hua_io_set_power_regulator(chip, true);
 
 		msleep(50);
 
-		sprd_ts_reset_enable(true);
+		hua_io_reset_gpio_set_value(chip, 1);
 		msleep(50);
-		sprd_ts_reset_enable(false);
+		hua_io_reset_gpio_set_value(chip, 0);
 
 		msleep(100);
 	}
 	else
 	{
-		sprd_ts_power_enable(false);
+		hua_io_set_power_regulator(chip, false);
 	}
 
 	return 0;
@@ -267,12 +268,12 @@ static int cy8c242_enter_upgrade_mode(struct hua_input_chip *chip, int retry)
 		int ret;
 		u8 value;
 
-		sprd_ts_power_enable(false);
-		sprd_ts_irq_output(0);
+		hua_io_set_power_regulator(chip, false);
+		hua_io_irq_gpio_set_value(chip, 0);
 		msleep(10);
-		sprd_ts_power_enable(true);
+		hua_io_set_power_regulator(chip, true);
 		msleep(50);
-		sprd_ts_irq_output(-1);
+		hua_io_irq_gpio_set_value(chip, -1);
 
 		ret = chip->read_register(chip, 0x01, &value);
 		if (ret < 0)
@@ -292,11 +293,11 @@ static int cy8c242_enter_upgrade_mode(struct hua_input_chip *chip, int retry)
 	return -ETIMEDOUT;
 }
 
-static void cy8c242_ts_reset(void)
+static void cy8c242_ts_reset(struct hua_input_chip *chip)
 {
-	sprd_ts_reset_enable(true);
+	hua_io_reset_gpio_set_value(chip, 1);
 	msleep(100);
-	sprd_ts_reset_enable(false);
+	hua_io_reset_gpio_set_value(chip, 0);
 }
 
 static int cy8c242_exit_upgrade_mode(struct hua_input_chip *chip, int retry)
@@ -308,7 +309,7 @@ static int cy8c242_exit_upgrade_mode(struct hua_input_chip *chip, int retry)
 
 	while (retry--)
 	{
-		cy8c242_ts_reset();
+		cy8c242_ts_reset(chip);
 
 		msleep(100);
 
@@ -493,18 +494,19 @@ static int cy8c242_firmware_upgrade(struct hua_input_chip *chip, struct hua_firm
 	return 0;
 }
 
-static int cy8c242_calibration(struct hua_input_chip *chip, const void *buff, size_t size)
+ssize_t cy8c242_ts_calibration(struct hua_input_device *dev, char *buff, size_t size, bool store)
 {
 	int ret;
 	u8 value;
 	int i;
 	char data[2] = {0x1C, 0x01};
+	struct hua_input_chip *chip = dev->chip;
 
 	pr_pos_info();
 
 	for (i = 0; i < 5; i++)
 	{
-		cy8c242_ts_reset();
+		cy8c242_ts_reset(chip);
 
 		msleep(100);
 
@@ -535,7 +537,7 @@ static int cy8c242_calibration(struct hua_input_chip *chip, const void *buff, si
 
 		if (value == 0)
 		{
-			return 0;
+			return snprintf(buff, size, "%s calibration complete.\n", chip->name);
 		}
 	}
 
@@ -570,41 +572,34 @@ static int cy8c242_proximity_set_enable(struct hua_input_device *dev, bool enabl
 	return chip->write_register(chip, 0x12, value);
 }
 
-static ssize_t cy8c242_firmware_id_show(struct device *dev, struct device_attribute *attr, char *buff)
+static ssize_t cy8c242_read_firmware_id(struct hua_input_chip *chip, char *buff, size_t size)
 {
 	int ret;
 	u8 vendor, version;
-	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
-	struct hua_input_chip *chip = i2c_get_clientdata(client);
-
-	mutex_lock(&chip->lock);
-
-	ret = hua_input_chip_set_power(chip, true);
-	if (ret < 0)
-	{
-		pr_red_info("hua_input_chip_set_power_lock");
-		goto out_mutex_unlock;
-	}
 
 	ret = chip->read_register(chip, 0x10, &vendor);
 	if (ret < 0)
 	{
 		pr_red_info("read_register");
-		goto out_mutex_unlock;
+		return ret;
 	}
 
 	ret = chip->read_register(chip, 0x11, &version);
 	if (ret < 0)
 	{
 		pr_red_info("read_register");
-		goto out_mutex_unlock;
+		return ret;
 	}
 
-	ret = sprintf(buff, "%02x%02x\n", vendor, version);
+	return sprintf(buff, "%02x%02x\n", vendor, version);
+}
 
-out_mutex_unlock:
-	mutex_unlock(&chip->lock);
-	return ret;
+static ssize_t cy8c242_firmware_id_show(struct device *dev, struct device_attribute *attr, char *buff)
+{
+	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
+	struct hua_input_chip *chip = i2c_get_clientdata(client);
+
+	return hua_input_chip_read_firmware_id_lock(chip, buff, PAGE_SIZE);
 }
 
 static DEVICE_ATTR(firmware_id, S_IRUGO, cy8c242_firmware_id_show, NULL);
@@ -642,6 +637,7 @@ static int cy8c242_input_chip_probe(struct hua_input_chip *chip)
 	base_dev->type = HUA_INPUT_DEVICE_TYPE_TOUCHSCREEN;
 	base_dev->use_irq = true;
 	base_dev->event_handler = cy8c242_ts_event_handler;
+	base_dev->calibration = cy8c242_ts_calibration;
 
 	ret = hua_input_device_register(chip, base_dev);
 	if (ret < 0)
@@ -659,6 +655,7 @@ static int cy8c242_input_chip_probe(struct hua_input_chip *chip)
 	prox->power_consume = 0;
 
 	base_dev = &prox->dev;
+	base_dev->name = "CY8C242 Proximity";
 	base_dev->type = HUA_INPUT_DEVICE_TYPE_PROXIMITY;
 	base_dev->poll_delay = 200;
 	base_dev->set_enable = cy8c242_proximity_set_enable;
@@ -734,9 +731,9 @@ static int cy8c242_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->read_register = hua_input_read_register_i2c_smbus;
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->firmware_upgrade = cy8c242_firmware_upgrade;
-	chip->calibration = cy8c242_calibration;
+	chip->read_firmware_id = cy8c242_read_firmware_id;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
@@ -766,9 +763,18 @@ static int cy8c242_i2c_remove(struct i2c_client *client)
 
 static const struct i2c_device_id cy8c242_ts_id_table[] =
 {
-	{CY8C242_DEVICE_NAME, 0},
+	{CY8C242_DEVICE_NAME, 0}, {}
+};
+
+#ifdef CONFIG_OF
+static struct of_device_id cy8c242_match_table[] =
+{
+	{
+		.compatible = "cypress,cy8c242"
+	},
 	{}
 };
+#endif
 
 static struct i2c_driver cy8c242_ts_driver =
 {
@@ -780,6 +786,9 @@ static struct i2c_driver cy8c242_ts_driver =
 	{
 		.name = CY8C242_DEVICE_NAME,
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
+		.of_match_table = cy8c242_match_table,
+#endif
 	}
 };
 

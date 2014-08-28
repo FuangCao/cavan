@@ -97,7 +97,7 @@ static int kionix_input_chip_probe(struct hua_input_chip *chip)
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
-	dev->name = "Three-Axis Digital Accelerometer";
+	dev->name = "KIONIX Three-Axis Digital Accelerometer";
 	dev->fuzz = 32;
 	dev->flat = 32;
 	dev->use_irq = false;
@@ -156,7 +156,11 @@ static int kionix_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 
 	chip->irq = -1;
 
+#ifdef CONFIG_OF
+	if (strcmp(client->dev.of_node->name, "kionix,kxcjk") == 0)
+#else
 	if (strcmp(client->name, "kxcjk") == 0)
+#endif
 	{
 		chip->name = "KXCJK";
 	}
@@ -176,7 +180,7 @@ static int kionix_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->probe = kionix_input_chip_probe;
 	chip->remove = kionix_input_chip_remove;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
@@ -208,6 +212,19 @@ static const struct i2c_device_id kionix_id[] =
 	{"kxtik", 0}, {"kxcjk", 0}, {}
 };
 
+#ifdef CONFIG_OF
+static struct of_device_id kionix_match_table[] =
+{
+	{
+		.compatible = "kionix,kxtik"
+	},
+	{
+		.compatible = "kionix,kxcjk"
+	},
+	{}
+};
+#endif
+
 MODULE_DEVICE_TABLE(i2c, kionix_id);
 
 static struct i2c_driver kionix_driver =
@@ -216,6 +233,9 @@ static struct i2c_driver kionix_driver =
 	{
 		.name = "kionix",
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
+		.of_match_table = kionix_match_table,
+#endif
 	},
 
 	.probe = kionix_i2c_probe,

@@ -14,6 +14,10 @@ static struct hua_input_core input_core =
 struct class *hua_input_class;
 struct hua_misc_device *hua_misc_dev_map[HUA_INPUT_MINORS];
 
+int hua_input_debug_enable = HUA_INPUT_DEBUG;
+
+module_param_named(debug_enable, hua_input_debug_enable, int, S_IRUGO | S_IWUSR | S_IWGRP);
+
 // ================================================================================
 
 static void hua_input_core_write_online_work(struct work_struct *data)
@@ -465,6 +469,7 @@ char *hua_input_print_memory(const void *mem, size_t size)
 
 	return (char *)p;
 }
+
 EXPORT_SYMBOL_GPL(hua_input_print_memory);
 
 // ================================================================================
@@ -479,16 +484,19 @@ int hua_input_chip_set_power(struct hua_input_chip *chip, bool enable)
 		return 0;
 	}
 
-	if (enable && chip->set_power && (ret = chip->set_power(chip, true)) < 0)
+	if (enable)
 	{
-		pr_red_info("chip->set_power");
-		return ret;
-	}
+		if (chip->set_power && (ret = chip->set_power(chip, true)) < 0)
+		{
+			pr_red_info("chip->set_power");
+			return ret;
+		}
 
-	if (enable && chip->poweron_init && (ret = hua_input_chip_write_init_data(chip)) < 0)
-	{
-		pr_red_info("hua_input_chip_write_init_data");
-		enable = false;
+		if (chip->poweron_init && (ret = hua_input_chip_write_init_data(chip)) < 0)
+		{
+			pr_red_info("hua_input_chip_write_init_data");
+			enable = false;
+		}
 	}
 
 	if (enable == false && chip->set_power)
@@ -1431,6 +1439,34 @@ static void hua_input_chip_isr_thread_prepare(struct hua_input_thread *thread, b
 	}
 }
 
+static int hua_input_chip_set_power_dummy(struct hua_input_chip *chip, bool enable)
+{
+	pr_pos_info();
+
+	if (enable)
+	{
+		int ret;
+
+		hua_io_gpio_set_value(chip->gpio_reset, 0);
+
+		ret = hua_io_set_power_regulator(chip, true);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		msleep(20);
+
+		hua_io_gpio_set_value(chip->gpio_reset, 1);
+	}
+	else
+	{
+		return hua_io_set_power_regulator(chip, false);
+	}
+
+	return 0;
+}
+
 static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chip *chip)
 {
 	int ret;
@@ -1454,6 +1490,13 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 	{
 		pr_red_info("chip->read_data == NULL || chip->write_data == NULL");
 		return -EINVAL;
+	}
+
+	ret = hua_input_chip_io_init(chip);
+	if (ret < 0)
+	{
+		pr_red_info("hua_input_chip_io_init");
+		return ret;
 	}
 
 	if (chip->vendor == NULL)
@@ -1491,6 +1534,11 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 		chip->master_send = hua_input_master_send_i2c;
 	}
 
+	if (chip->set_power == NULL)
+	{
+		chip->set_power = hua_input_chip_set_power_dummy;
+	}
+
 	chip->core = core;
 	chip->dead = false;
 	chip->powered = false;
@@ -1524,7 +1572,7 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_thread_init");
-		return ret;
+		goto out_hua_input_chip_io_deinit;
 	}
 
 	thread = &chip->poll_thread;
@@ -1540,11 +1588,16 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_thread_init");
-		hua_input_thread_destroy(&chip->isr_thread);
-		return ret;
+		goto out_hua_input_thread_destroy_isr;
 	}
 
 	return 0;
+
+out_hua_input_thread_destroy_isr:
+	hua_input_thread_destroy(&chip->isr_thread);
+out_hua_input_chip_io_deinit:
+	hua_input_chip_io_deinit(chip);
+	return ret;
 }
 
 static void hua_input_chip_destroy(struct hua_input_chip *chip)
@@ -1556,6 +1609,8 @@ static void hua_input_chip_destroy(struct hua_input_chip *chip)
 	hua_input_list_destory(&chip->isr_list);
 	hua_input_list_destory(&chip->poll_list);
 	hua_input_list_destory(&chip->dev_list);
+
+	hua_input_chip_io_deinit(chip);
 }
 
 ssize_t hua_input_device_read_write_offset(struct hua_input_device *dev, char *buff, size_t size, bool store)
@@ -1755,6 +1810,7 @@ static const struct attribute *hua_input_device_attributes[] =
 static int hua_input_device_probe(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
+	u32 debound[2];
 	const char *devname;
 	struct input_dev *input;
 	struct hua_misc_device *mdev;
@@ -1823,6 +1879,14 @@ static int hua_input_device_probe(struct hua_input_chip *chip, struct hua_input_
 		pr_red_info("hua_misc_device_register");
 		goto out_kfree_input_name;
 	}
+
+#ifdef CONFIG_OF
+	if (of_property_read_u32_array(chip->dev->of_node, "debound", debound, ARRAY_SIZE(debound)) >= 0)
+	{
+		dev->fuzz = debound[0];
+		dev->flat = debound[1];
+	}
+#endif
 
 	if (dev->type == HUA_INPUT_DEVICE_TYPE_TOUCHSCREEN)
 	{
@@ -1956,11 +2020,13 @@ EXPORT_SYMBOL_GPL(hua_input_device_unregister);
 
 // ================================================================================
 
-int hua_input_chip_register(struct hua_input_chip *chip)
+int hua_input_chip_register(struct hua_input_chip *chip, struct device *dev)
 {
 	int ret;
 
 	pr_pos_info();
+
+	chip->dev = dev;
 
 	ret = hua_input_chip_init(&input_core, chip);
 	if (ret < 0)
@@ -2089,6 +2155,7 @@ static const struct file_operations hua_input_class_fops =
 #else
 	.unlocked_ioctl = hua_misc_device_ioctl,
 #endif
+
 	.llseek		= noop_llseek,
 };
 

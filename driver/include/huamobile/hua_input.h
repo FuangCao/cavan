@@ -12,15 +12,32 @@
 #include <linux/miscdevice.h>
 #include <linux/module.h>
 #include <linux/version.h>
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 8, 0)
+#include <linux/sched/rt.h>
+#endif
+
+#ifdef CONFIG_ARCH_SC8810
+#include <mach/eic.h>
+#endif
+
 #include <huamobile/hua_thread.h>
 #include <huamobile/hua_firmware.h>
 
-#define HUA_INPUT_CORE_DEBUG			0
+#define HUA_INPUT_DEBUG					0
 
 #define HUA_INPUT_MAJOR					280
 #define HUA_INPUT_MINORS				32
 #define HUA_INPUT_CLASS_NAME			"hua_input"
+
+#ifdef CONFIG_ARCH_MSM
 #define HUA_INPUT_CAL_DATA_DIR			"/persist"
+#elif defined(CONFIG_ARCH_SC8810)
+#define HUA_INPUT_CAL_DATA_DIR			"/productinfo"
+#else
+#define HUA_INPUT_CAL_DATA_DIR			"/NVM"
+#endif
+
 #define HUA_INPUT_ONLINE_DATA_DIR		"/data"
 
 #define HUA_INPUT_CHIP_MAX_PROBE_COUNT	20
@@ -98,24 +115,29 @@
 #define pr_red_info(fmt, args ...) \
 	pr_color_info("31", fmt, ##args)
 
-#if HUA_INPUT_CORE_DEBUG
 #define pr_pos_info() \
-	pr_info("%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__)
+	do { \
+		if (hua_input_debug_enable) \
+			pr_info("%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__); \
+	} while (0)
 
 #define pr_func_info(fmt, args ...) \
-	pr_info("%s[%d]: " fmt "\n", __FUNCTION__, __LINE__, ##args)
+	do { \
+		if (hua_input_debug_enable) \
+			pr_info("%s[%d]: " fmt "\n", __FUNCTION__, __LINE__, ##args); \
+	} while (0)
 
 #define pr_green_info(fmt, args ...) \
-	pr_color_info("32", fmt, ##args)
+	do { \
+		if (hua_input_debug_enable) \
+			pr_color_info("32", fmt, ##args); \
+	} while (0)
 
 #define pr_bold_info(fmt, args ...) \
-	pr_color_info("1", fmt, ##args)
-#else
-#define pr_pos_info()
-#define pr_func_info(fmt, args ...)
-#define pr_green_info(fmt, args ...)
-#define pr_bold_info(fmt, args ...)
-#endif
+	do { \
+		if (hua_input_debug_enable) \
+			pr_color_info("1", fmt, ##args); \
+	} while (0)
 
 struct hua_input_core;
 struct hua_input_chip;
@@ -206,6 +228,7 @@ struct hua_input_device
 
 struct hua_input_chip
 {
+	struct device *dev;
 	const char *vendor;
 	const char *name;
 	const char *misc_name;
@@ -249,6 +272,15 @@ struct hua_input_chip
 
 	struct list_head node;
 
+	int gpio_reset;
+	int gpio_irq;
+	int gpio_power;
+	struct regulator *vdd;
+	struct regulator *vio;
+
+	int vdd_vol_min, vdd_vol_max;
+	int vio_vol_min, vio_vol_max;
+
 	int (*readid)(struct hua_input_chip *chip);
 	int (*set_power)(struct hua_input_chip *chip, bool enable);
 	int (*set_active)(struct hua_input_chip *chip, bool enable);
@@ -289,7 +321,13 @@ struct hua_input_core
 	struct hua_input_list exclude_list;
 };
 
+extern int hua_input_debug_enable;
+
 extern ssize_t hua_io_read_write_file(const char *pathname, const char *buff, size_t size, bool store);
+extern int hua_io_gpio_set_value(int gpio, int value);
+extern int hua_io_set_power_regulator(struct hua_input_chip *chip, bool enable);
+extern int hua_input_chip_io_init(struct hua_input_chip *chip);
+extern void hua_input_chip_io_deinit(struct hua_input_chip *chip);
 
 char *hua_input_print_memory(const void *mem, size_t size);
 const char *hua_input_irq_trigger_type_tostring(unsigned long irq_flags);
@@ -317,7 +355,7 @@ void hua_input_device_unregister(struct hua_input_chip *chip, struct hua_input_d
 int hua_input_chip_read_firmware_id(struct hua_input_chip *chip, char *buff, size_t size);
 int hua_input_chip_read_firmware_id_lock(struct hua_input_chip *chip, char *buff, size_t size);
 
-int hua_input_chip_register(struct hua_input_chip *chip);
+int hua_input_chip_register(struct hua_input_chip *chip, struct device *dev);
 void hua_input_chip_unregister(struct hua_input_chip *chip);
 int hua_input_chip_report_events(struct hua_input_chip *chip, struct hua_input_list *list);
 

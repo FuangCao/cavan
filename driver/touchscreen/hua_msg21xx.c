@@ -1,9 +1,7 @@
 #include <huamobile/hua_ts.h>
 #include <huamobile/hua_sensor.h>
 #include <huamobile/hua_i2c.h>
-#include <linux/gpio.h>
-#include <linux/of_gpio.h>
-#include <linux/regulator/consumer.h>
+#include <huamobile/hua_io.h>
 #include "msg21xx_vendor_api.c"
 
 #define HUA_SUPPORT_PROXIMITY		0   /* 1:open the tp proximity  0:close the tp proximity,closed by chenzili at 2014-5-28 for zc2501_tw*/
@@ -90,11 +88,6 @@ struct msg21xx_touch_point
 struct hua_msg21xx_chip
 {
 	struct hua_input_chip chip;
-	int gpio_reset;
-	int gpio_irq;
-	struct regulator *vdd;
-	struct regulator *vcc_i2c;
-
 	int distance;
 	int touch_count;
 	struct msg21xx_touch_point points[MSG21XX_POINT_COUNT];
@@ -108,16 +101,6 @@ static ssize_t msg21xx_read_data(struct hua_input_chip *chip, u8 addr, void *buf
 static ssize_t msg21xx_write_data(struct hua_input_chip *chip, u8 addr, const void *buff, size_t size)
 {
 	return hua_input_master_send_to_i2c(hua_input_chip_get_bus_data(chip), addr, buff, size);
-}
-
-static void msg21xx_chip_reset(struct hua_msg21xx_chip *msg21xx)
-{
-	gpio_direction_output(msg21xx->gpio_reset, 1);
-	gpio_set_value(msg21xx->gpio_reset, 1);
-	gpio_set_value(msg21xx->gpio_reset, 0);
-	msleep(10);
-	gpio_set_value(msg21xx->gpio_reset, 1);
-	msleep(20);
 }
 
 static ssize_t msg21xx_read_data_package(struct hua_input_chip *chip, struct msg21xx_data_package *package)
@@ -180,38 +163,24 @@ static int msg21xx_proximity_set_enable(struct hua_input_device *dev, bool enabl
 }
 #endif
 
+static void msg21xx_chip_reset(struct hua_input_chip *chip)
+{
+	hua_io_reset_gpio_set_value(chip, 0);
+	msleep(10);
+	hua_io_reset_gpio_set_value(chip, 1);
+	msleep(20);
+}
+
 static int msg21xx_set_power(struct hua_input_chip *chip, bool enable)
 {
-	struct hua_msg21xx_chip *msg21xx = container_of(chip, struct hua_msg21xx_chip, chip);
-
 	if (enable)
 	{
-		if (msg21xx->vcc_i2c)
-		{
-			regulator_enable(msg21xx->vcc_i2c);
-		}
-
-		if (msg21xx->vdd)
-		{
-			regulator_enable(msg21xx->vdd);
-		}
-
-		msg21xx_chip_reset(msg21xx);
+		hua_io_set_power_regulator(chip, true);
+		msg21xx_chip_reset(chip);
 	}
 	else
 	{
-		if (msg21xx->vcc_i2c)
-		{
-			regulator_disable(msg21xx->vcc_i2c);
-		}
-
-		if (msg21xx->vdd)
-		{
-			regulator_disable(msg21xx->vdd);
-		}
-
-		gpio_direction_output(msg21xx->gpio_reset, 0);
-		gpio_set_value(msg21xx->gpio_reset, 0);
+		hua_io_set_power_regulator(chip, false);
 	}
 
 	return 0;
@@ -347,6 +316,7 @@ static int msg21xx_input_chip_probe(struct hua_input_chip *chip)
 	prox->power_consume = 0;
 
 	base_dev = &prox->dev;
+	base_dev->name = "MSG21XX Proximity";
 	base_dev->type = HUA_INPUT_DEVICE_TYPE_PROXIMITY;
 	base_dev->use_irq = true;
 	base_dev->poll_delay = 200;
@@ -562,34 +532,6 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		goto out_kfree_msg21xx;
 	}
 
-	ret = of_get_named_gpio_flags(of_node, "reset-gpio-pin", 0, NULL);
-	if (ret < 0)
-	{
-		pr_red_info("of_get_named_gpio_flags reset-gpio-pin");
-		goto out_kfree_msg21xx;
-	}
-
-	gpio_request(ret, "TP-RST");
-	msg21xx->gpio_reset = ret;
-
-	ret = of_get_named_gpio_flags(of_node, "irq-gpio-pin", 0, NULL);
-	if (ret < 0)
-	{
-		pr_red_info("of_get_named_gpio_flags irq-gpio-pin");
-		goto out_kfree_msg21xx;
-	}
-
-	gpio_request(ret, "TP-IRQ");
-	msg21xx->gpio_irq = ret;
-
-	pr_bold_info("msg21xx->gpio_reset = %d", msg21xx->gpio_reset);
-	pr_bold_info("msg21xx->gpio_irq = %d", msg21xx->gpio_irq);
-
-	gpio_direction_input(msg21xx->gpio_irq);
-
-	msg21xx->vdd = regulator_get(&client->dev, "vdd");
-	msg21xx->vcc_i2c = regulator_get(&client->dev, "vcc_i2c");
-
 	chip = &msg21xx->chip;
 	hua_input_chip_set_bus_data(chip, client);
 
@@ -619,11 +561,11 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->firmware_upgrade = msg21xx_chip_firmware_upgrade;
 	chip->read_firmware_id = msg21xx_read_firmware_id;
 
-	ret = hua_input_chip_register(chip);
+	ret = hua_input_chip_register(chip, &client->dev);
 	if (ret < 0)
 	{
 		pr_red_info("hua_input_chip_register");
-		goto out_regulator_put;
+		goto out_kfree_msg21xx;
 	}
 
 	msg21xx->distance = 1;
@@ -633,16 +575,6 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 
 	return 0;
 
-out_regulator_put:
-	if (msg21xx->vdd)
-	{
-		regulator_put(msg21xx->vdd);
-	}
-
-	if (msg21xx->vcc_i2c)
-	{
-		regulator_put(msg21xx->vcc_i2c);
-	}
 out_kfree_msg21xx:
 	kfree(msg21xx);
 	return ret;
@@ -656,17 +588,6 @@ static int msg21xx_i2c_remove(struct i2c_client *client)
 	pr_pos_info();
 
 	hua_input_chip_unregister(chip);
-
-	if (msg21xx->vdd)
-	{
-		regulator_put(msg21xx->vdd);
-	}
-
-	if (msg21xx->vcc_i2c)
-	{
-		regulator_put(msg21xx->vcc_i2c);
-	}
-
 	kfree(msg21xx);
 
 	return 0;
@@ -678,6 +599,7 @@ static const struct i2c_device_id msg21xx_ts_id_table[] =
 	{}
 };
 
+#ifdef CONFIG_OF
 static struct of_device_id msg21xx_match_table[] =
 {
 	{
@@ -685,6 +607,7 @@ static struct of_device_id msg21xx_match_table[] =
 	},
 	{}
 };
+#endif
 
 static struct i2c_driver msg21xx_ts_driver =
 {
@@ -696,7 +619,9 @@ static struct i2c_driver msg21xx_ts_driver =
 	{
 		.name = MSG21XX_DEVICE_NAME,
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
 		.of_match_table = msg21xx_match_table,
+#endif
 	}
 };
 
