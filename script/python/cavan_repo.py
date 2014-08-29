@@ -769,6 +769,8 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			self.mManifest.setFetch(self.mUrlFetch)
 			self.prBrownInfo("Use default fetch url ", self.mUrlFetch)
 
+		self.prGreenInfo("URL = " + os.path.join(self.mUrlFetch, "platform/manifest.git"))
+
 		self.setVerbose(True)
 		self.mManifest.save(self.mFileManifest)
 
