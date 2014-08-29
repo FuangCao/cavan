@@ -137,4 +137,16 @@ config HUAMOBILE_LPSENSOR_APDS99XX
       To compile this driver as a module, choose M here: the
       module will be called hua_apds99xx.
 
+config HUAMOBILE_LPSENSOR_EPL2182
+    tristate "Huamobile epl2182 l-sensor and p-sensor"
+    default n
+    help
+      Say Y here if you have a epl2182 light or proximity sendor connected to
+      your system.
+
+      If unsure, say Y.
+
+      To compile this driver as a module, choose M here: the
+      module will be called hua_epl2182.
+
 endmenu
