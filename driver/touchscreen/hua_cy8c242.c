@@ -649,7 +649,6 @@ static int cy8c242_input_chip_probe(struct hua_input_chip *chip)
 	// ============================================================
 
 	prox = &dev->prox;
-	prox->min_delay = 20;
 	prox->max_range = 1;
 	prox->resolution = 1;
 	prox->power_consume = 0;
@@ -657,6 +656,7 @@ static int cy8c242_input_chip_probe(struct hua_input_chip *chip)
 	base_dev = &prox->dev;
 	base_dev->name = "CY8C242 Proximity";
 	base_dev->type = HUA_INPUT_DEVICE_TYPE_PROXIMITY;
+	base_dev->min_delay = 20;
 	base_dev->poll_delay = 200;
 	base_dev->set_enable = cy8c242_proximity_set_enable;
 	base_dev->event_handler = cy8c242_proximity_event_handler;

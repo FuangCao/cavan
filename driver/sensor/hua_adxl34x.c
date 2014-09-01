@@ -302,7 +302,6 @@ static int adxl34x_input_chip_probe(struct hua_input_chip *chip)
 
 	hua_input_chip_set_dev_data(chip, sensor);
 
-	sensor->min_delay = 20;
 	sensor->max_range = 16;
 	sensor->resolution = 4096;
 	sensor->power_consume = 145;
@@ -313,6 +312,7 @@ static int adxl34x_input_chip_probe(struct hua_input_chip *chip)
 	dev->flat = 3;
 	dev->use_irq = true;
 	dev->type = HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
+	dev->min_delay = 20;
 	dev->poll_delay = 200;
 	dev->event_handler = adxl34x_acceleration_event_handler;
 
@@ -412,7 +412,7 @@ static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->write_register = hua_input_write_register_i2c_smbus;
 	chip->readid = adxl34x_sensor_chip_readid;
 	chip->set_active = adxl34x_sensor_chip_set_active;
-	chip->event_handler = adxl34x_sensor_chip_event_handler;
+	chip->event_handler_isr = adxl34x_sensor_chip_event_handler;
 
 	chip->probe = adxl34x_input_chip_probe;
 	chip->remove = adxl34x_input_chip_remove;

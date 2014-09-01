@@ -17,6 +17,7 @@ struct hua_misc_device *hua_misc_dev_map[HUA_INPUT_MINORS];
 int hua_input_debug_enable = HUA_INPUT_DEBUG;
 
 module_param_named(debug_enable, hua_input_debug_enable, int, S_IRUGO | S_IWUSR | S_IWGRP);
+EXPORT_SYMBOL_GPL(hua_input_debug_enable);
 
 // ================================================================================
 
@@ -385,6 +386,10 @@ static inline void hua_input_chip_wait_for_event_edge(struct hua_input_thread *t
 	wait_for_completion_timeout(&chip->event_completion, 5 * HZ);
 }
 
+static inline void hua_input_chip_wait_for_event_none(struct hua_input_thread *thread)
+{
+}
+
 static inline void hua_input_chip_wait_for_event_level(struct hua_input_thread *thread)
 {
 	struct hua_input_chip *chip = hua_input_thread_get_data(thread);
@@ -492,7 +497,7 @@ int hua_input_chip_set_power(struct hua_input_chip *chip, bool enable)
 			return ret;
 		}
 
-		if (chip->poweron_init && (ret = hua_input_chip_write_init_data(chip)) < 0)
+		if ((chip->flags & HUA_INPUT_CHIP_FLAG_POWERON_INIT) && (ret = hua_input_chip_write_init_data(chip)) < 0)
 		{
 			pr_red_info("hua_input_chip_write_init_data");
 			enable = false;
@@ -627,6 +632,14 @@ static int hua_input_chip_update_delay(struct hua_input_chip *chip)
 		count++;
 	}
 
+	list_for_each_entry(dev, head, node)
+	{
+		if (delay < dev->min_delay)
+		{
+			delay = dev->min_delay;
+		}
+	}
+
 	pr_green_info("haumobile input chip poll count = %d, delay = %d(ms)", count, delay);
 
 	list_for_each_entry(dev, head, node)
@@ -644,7 +657,7 @@ static int hua_input_chip_update_delay(struct hua_input_chip *chip)
 		}
 	}
 
-	chip->poll_jiffies = msecs_to_jiffies(delay);
+	chip->poll_jiffies = msecs_to_jiffies(delay) + 1;
 
 	pr_func_info("delay = %d(ms)", delay);
 
@@ -1197,7 +1210,8 @@ static ssize_t hua_input_chip_attr_info_show(struct device *device, struct devic
 	buff += sprintf(buff, "irq_type: %d\n", chip->irq_type);
 	buff += sprintf(buff, "irq_flags: 0x%08lx\n", chip->irq_flags);
 	buff += sprintf(buff, "powered: %d\n", chip->powered);
-	buff += sprintf(buff, "poweron_init: %d\n", chip->poweron_init);
+	buff += sprintf(buff, "flags: 0x%08lx\n", chip->flags);
+	buff += sprintf(buff, "delay: %d\n", jiffies_to_msecs(chip->poll_jiffies - 1));
 
 	return buff - buff_bak;
 }
@@ -1275,7 +1289,7 @@ static int hua_input_chip_probe(struct hua_input_chip *chip)
 	hua_input_core_add_online_chip(chip_name);
 
 label_write_init_data:
-	if (chip->poweron_init == false && (ret = hua_input_chip_write_init_data(chip)) < 0)
+	if ((chip->flags & HUA_INPUT_CHIP_FLAG_POWERON_INIT) == 0 && (ret = hua_input_chip_write_init_data(chip)) < 0)
 	{
 		pr_red_info("hua_input_chip_write_init_data");
 		goto out_power_down;
@@ -1392,11 +1406,18 @@ static int hua_input_chip_event_handler_isr(struct hua_input_thread *thread)
 	return hua_input_chip_report_events(chip, &chip->isr_list);
 }
 
-static int hua_input_chip_event_handler_isr_user(struct hua_input_thread *thread)
+static int hua_input_chip_event_handler_user_isr(struct hua_input_thread *thread)
 {
 	struct hua_input_chip *chip = hua_input_thread_get_data(thread);
 
-	return chip->event_handler(chip);
+	return chip->event_handler_isr(chip);
+}
+
+static int hua_input_chip_event_handler_user_poll(struct hua_input_thread *thread)
+{
+	struct hua_input_chip *chip = hua_input_thread_get_data(thread);
+
+	return chip->event_handler_poll(chip);
 }
 
 static int hua_input_chip_event_handler_poll(struct hua_input_thread *thread)
@@ -1559,9 +1580,9 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 	thread->prepare = hua_input_chip_isr_thread_prepare;
 	thread->error_handle = hua_input_chip_error_handler;
 	thread->wait_for_event = hua_input_chip_wait_for_event_edge;
-	if (chip->event_handler)
+	if (chip->event_handler_isr)
 	{
-		thread->event_handle = hua_input_chip_event_handler_isr_user;
+		thread->event_handle = hua_input_chip_event_handler_user_isr;
 	}
 	else
 	{
@@ -1581,8 +1602,23 @@ static int hua_input_chip_init(struct hua_input_core *core, struct hua_input_chi
 	thread->stop = NULL;
 	thread->prepare = NULL;
 	thread->error_handle = hua_input_chip_error_handler;
-	thread->wait_for_event = hua_input_chip_wait_for_event_poll;
-	thread->event_handle = hua_input_chip_event_handler_poll;
+	if (chip->flags & HUA_INPUT_CHIP_FLAG_NO_WAIT)
+	{
+		thread->wait_for_event = hua_input_chip_wait_for_event_none;
+	}
+	else
+	{
+		thread->wait_for_event = hua_input_chip_wait_for_event_poll;
+	}
+
+	if (chip->event_handler_poll)
+	{
+		thread->event_handle = hua_input_chip_event_handler_user_poll;
+	}
+	else
+	{
+		thread->event_handle = hua_input_chip_event_handler_poll;
+	}
 
 	ret = hua_input_thread_init(thread, "%s-POLL", chip->name);
 	if (ret < 0)
@@ -1793,10 +1829,19 @@ static ssize_t hua_input_device_attr_delay_store(struct device *device, struct d
 	return size;
 }
 
+static ssize_t hua_input_device_attr_min_delay_show(struct device *device, struct device_attribute *attr, char *buff)
+{
+	struct hua_misc_device *mdev = dev_get_drvdata(device);
+	struct hua_input_device *idev = hua_misc_device_get_data(mdev);
+
+	return sprintf(buff, "%d\n", idev->min_delay);
+}
+
 static struct device_attribute hua_input_device_attr_calibration = __ATTR(calibration, S_IRWXU | S_IRWXG | S_IRUGO, hua_input_device_attr_calibration_show, hua_input_device_attr_calibration_store);
 static struct device_attribute hua_input_device_attr_info = __ATTR(info, S_IRUGO, hua_input_device_attr_info_show, NULL);
 static struct device_attribute hua_input_device_attr_enable = __ATTR(enable, S_IRWXU | S_IRWXG | S_IRUGO, hua_input_device_attr_enable_show, hua_input_device_attr_enable_store);
 static struct device_attribute hua_input_device_attr_delay = __ATTR(delay, S_IRWXU | S_IRWXG | S_IRUGO, hua_input_device_attr_delay_show, hua_input_device_attr_delay_store);
+static struct device_attribute hua_input_device_attr_min_delay = __ATTR(min_delay, S_IRUGO, hua_input_device_attr_min_delay_show, NULL);
 
 static const struct attribute *hua_input_device_attributes[] =
 {
@@ -1804,6 +1849,7 @@ static const struct attribute *hua_input_device_attributes[] =
 	&hua_input_device_attr_info.attr,
 	&hua_input_device_attr_enable.attr,
 	&hua_input_device_attr_delay.attr,
+	&hua_input_device_attr_min_delay.attr,
 	NULL
 };
 

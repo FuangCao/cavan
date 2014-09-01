@@ -19,5 +19,3 @@ clean:
 			rm -rfv .tmp_versions modules.order Module.symvers; \
 		}; \
 	done
-
-

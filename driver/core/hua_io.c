@@ -281,6 +281,11 @@ int hua_input_chip_io_init(struct hua_input_chip *chip)
 
 	pr_bold_info("%s: vio = %p, vdd = %p", chip->name, chip->vio, chip->vdd);
 
+	if (chip->vio || chip->vdd || chip->gpio_power >= 0)
+	{
+		chip->flags |= HUA_INPUT_CHIP_FLAG_POWERON_INIT;
+	}
+
 	return 0;
 }
 #else

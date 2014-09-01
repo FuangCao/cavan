@@ -251,8 +251,10 @@ static int apds99xx_proximity_set_enable(struct hua_input_device *dev, bool enab
 		return ret;
 	}
 
+#if APDS99XX_SUPPORT_IRQ
 	msleep(20);
-	chip->event_handler(chip);
+	chip->event_handler_isr(chip);
+#endif
 
 	return 0;
 }
@@ -713,7 +715,6 @@ static int apds99xx_input_chip_probe(struct hua_input_chip *chip)
 	hua_input_chip_set_dev_data(chip, apds99xx);
 
 	sensor = &apds99xx->proxi;
-	sensor->min_delay = 2;
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
@@ -728,6 +729,7 @@ static int apds99xx_input_chip_probe(struct hua_input_chip *chip)
 #endif
 
 	dev->type = HUA_INPUT_DEVICE_TYPE_PROXIMITY;
+	dev->min_delay = 2;
 	dev->poll_delay = 200;
 
 	sensor->max_range = APDS99XX_PROXI_MAX_VALUE >> APDS99XX_PROXI_STEP;
@@ -746,7 +748,6 @@ static int apds99xx_input_chip_probe(struct hua_input_chip *chip)
 	}
 
 	sensor = &apds99xx->light;
-	sensor->min_delay = 2;
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
@@ -761,6 +762,7 @@ static int apds99xx_input_chip_probe(struct hua_input_chip *chip)
 #endif
 
 	dev->type = HUA_INPUT_DEVICE_TYPE_LIGHT;
+	dev->min_delay = 2;
 	dev->poll_delay = 200;
 	sensor->max_range = APDS99XX_LIGHT_MAX_VALUE;
 	sensor->resolution = APDS99XX_LIGHT_MAX_VALUE;
@@ -832,7 +834,7 @@ static int apds99xx_i2c_probe(struct i2c_client *client, const struct i2c_device
 	pr_bold_info("chip->irq = %d", chip->irq);
 
 	chip->name = "APDS99XX";
-	chip->poweron_init = true;
+	chip->flags = HUA_INPUT_CHIP_FLAG_POWERON_INIT;
 	chip->devmask = 1 << HUA_INPUT_DEVICE_TYPE_PROXIMITY | 1 << HUA_INPUT_DEVICE_TYPE_LIGHT;
 	chip->init_data = apds99xx_init_data;
 	chip->init_data_size = ARRAY_SIZE(apds99xx_init_data);
@@ -846,7 +848,7 @@ static int apds99xx_i2c_probe(struct i2c_client *client, const struct i2c_device
 	chip->set_active = apds99xx_sensor_chip_set_active;
 
 #if APDS99XX_SUPPORT_IRQ
-	chip->event_handler = apds99xx_chip_event_handler;
+	chip->event_handler_isr = apds99xx_chip_event_handler;
 #endif
 
 	chip->probe = apds99xx_input_chip_probe;

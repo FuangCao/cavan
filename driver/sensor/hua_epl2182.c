@@ -8,7 +8,6 @@
 
 #define EPL2182_DEVICE_NAME			"epl2182"
 
-#define EPL_SENSOR_MIN_DELAY		55
 #define PS_INTT						4
 #define ALS_INTT					6		//5-8
 #define P_SENSOR_LTHD				120		//100
@@ -101,35 +100,39 @@
 #define EPL_LIGHT_MAX_VALUE \
 	EPL_CAL_LIGHT_VALUE(0xFFFF)
 
+enum epl2182_mode
+{
+	EPL2182_MODE_NONE,
+	EPL2182_MODE_ALS,
+	EPL2182_MODE_PROXI,
+};
+
 enum epl2182_register_map
 {
 	REG_00 = 0x00,
 	REG_01,
-	REG_02,
-	REG_03,
-	REG_04,
-	REG_05,
-	REG_06,
+	REG_HTHDL,
+	REG_HTHDH,
+	REG_LTHDL,
+	REG_LTHDH,
+	REG_PSL,
 	REG_07,
 	REG_08,
 	REG_09,
-	REG_10,
-	REG_11,
-	REG_12,
-	REG_13,
-	REG_14,
-	REG_15,
-	REG_16,
-	REG_17,
-	REG_18,
-	REG_19,
-	REG_20,
-	REG_21,
+	REG_GO_MID,
+	REG_GO_LOW,
+	REG_13 = 0x0D,
+	REG_CH0_DL,
+	REG_CH0_DH,
+	REG_CH1_DL,
+	REG_CH1_DH,
+	REG_REVISION = 0x13,
 };
 
 struct hua_epl2182_device
 {
-	int proxi_count;
+	int mode;
+	unsigned long light_jiffies;
 	struct hua_sensor_device proxi;
 	struct hua_sensor_device light;
 };
@@ -195,13 +198,17 @@ static inline int epl2182_sensor_chip_set_active(struct hua_input_chip *chip, bo
 {
 	if (enable)
 	{
+		struct hua_epl2182_device *epl2182 = hua_input_chip_get_dev_data(chip);
+
+		epl2182->mode = EPL2182_MODE_NONE;
+
 		return 0;
 	}
 
 	return chip->write_register(chip, REG_07,  EPL_C_P_DOWN);
 }
 
-static int epl2182_sensor_chip_set_mode(struct hua_input_chip *chip, bool als)
+static int epl2182_sensor_chip_set_mode(struct hua_input_chip *chip, int mode)
 {
 	int ret;
 	struct hua_epl2182_device *epl2182 = hua_input_chip_get_dev_data(chip);
@@ -215,7 +222,7 @@ static int epl2182_sensor_chip_set_mode(struct hua_input_chip *chip, bool als)
 	}
 #endif
 
-	if (als)
+	if (mode == EPL2182_MODE_ALS)
 	{
 		ret = chip->write_register(chip, REG_00, EPL_S_SENSING_MODE | EPL_SENSING_8_TIME | EPL_ALS_MODE | EPL_AUTO_GAIN);
 		if (ret < 0)
@@ -230,8 +237,6 @@ static int epl2182_sensor_chip_set_mode(struct hua_input_chip *chip, bool als)
 			pr_red_info("chip->write_register REG_01");
 			return ret;
 		}
-
-		epl2182->proxi_count = 0;
 	}
 	else
 	{
@@ -248,8 +253,6 @@ static int epl2182_sensor_chip_set_mode(struct hua_input_chip *chip, bool als)
 			pr_red_info("chip->write_register REG_01");
 			return ret;
 		}
-
-		epl2182->proxi_count = 5;
 	}
 
 	ret = chip->write_register(chip, REG_07, EPL_C_RESET);
@@ -266,7 +269,9 @@ static int epl2182_sensor_chip_set_mode(struct hua_input_chip *chip, bool als)
 		return ret;
 	}
 
-	msleep(EPL_SENSOR_MIN_DELAY);
+	epl2182->mode = mode;
+
+	pr_bold_info("mode is %s", mode == EPL2182_MODE_ALS ? "als" : "proximity");
 
 	return 0;
 }
@@ -283,21 +288,21 @@ static int epl2182_proximity_set_enable(struct hua_input_device *dev, bool enabl
 
 	chip = dev->chip;
 
-	ret = chip->write_register16(chip, REG_02, P_SENSOR_HTHD);
+	ret = chip->write_register16(chip, REG_HTHDL, P_SENSOR_HTHD);
 	if (ret < 0)
 	{
-		pr_red_info("chip->write_register16 REG_02");
+		pr_red_info("chip->write_register16 REG_HTHDL");
 		return ret;
 	}
 
-	ret = chip->write_register16(chip, REG_04, P_SENSOR_LTHD);
+	ret = chip->write_register16(chip, REG_LTHDL, P_SENSOR_LTHD);
 	if (ret < 0)
 	{
-		pr_red_info("chip->write_register16 REG_04");
+		pr_red_info("chip->write_register16 REG_LTHDL");
 		return ret;
 	}
 
-	return epl2182_sensor_chip_set_mode(chip, false);
+	return 0;
 }
 
 static int epl2182_proximity_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
@@ -306,14 +311,15 @@ static int epl2182_proximity_event_handler(struct hua_input_chip *chip, struct h
 	u8 value;
 	struct hua_epl2182_device *epl2182 = hua_input_chip_get_dev_data(chip);
 
-	if (epl2182->proxi_count == 0)
+	if (epl2182->mode != EPL2182_MODE_PROXI)
 	{
-		if (epl2182->light.dev.enabled)
+		ret = epl2182_sensor_chip_set_mode(chip, EPL2182_MODE_PROXI);
+		if (ret < 0)
 		{
-			return 0;
+			return ret;
 		}
 
-		return epl2182_sensor_chip_set_mode(chip, false);
+		msleep(dev->min_delay);
 	}
 
 	ret = chip->write_register(chip, REG_07, EPL_DATA_LOCK);
@@ -332,18 +338,6 @@ static int epl2182_proximity_event_handler(struct hua_input_chip *chip, struct h
 
 	hua_sensor_report_value(dev->input, (value & 0x04) == 0);
 
-	if (epl2182->light.dev.enabled)
-	{
-		if (epl2182->proxi_count > 1)
-		{
-			epl2182->proxi_count--;
-		}
-		else
-		{
-			return epl2182_sensor_chip_set_mode(chip, true);
-		}
-	}
-
 	return chip->write_register(chip, REG_07, EPL_DATA_UNLOCK);
 }
 
@@ -359,37 +353,44 @@ static int epl2182_light_set_enable(struct hua_input_device *dev, bool enable)
 
 	chip = dev->chip;
 
-	ret = chip->write_register(chip, REG_10, EPL_GO_MID);
+	ret = chip->write_register(chip, REG_GO_MID, EPL_GO_MID);
 	if (ret < 0)
 	{
-		pr_red_info("chip->write_register REG_10");
+		pr_red_info("chip->write_register REG_GO_MID");
 		return ret;
 	}
 
-	ret = chip->write_register(chip, REG_11, EPL_GO_LOW);
+	ret = chip->write_register(chip, REG_GO_LOW, EPL_GO_LOW);
 	if (ret < 0)
 	{
-		pr_red_info("chip->write_register REG_11");
+		pr_red_info("chip->write_register REG_GO_LOW");
 		return ret;
 	}
 
-	return epl2182_sensor_chip_set_mode(chip, true);
+	return 0;
 }
 
 static int epl2182_light_event_handler(struct hua_input_chip *chip, struct hua_input_device *dev)
 {
 	int ret;
-	u16 value16;
+	u16 ch1data;
 	struct hua_epl2182_device *epl2182 = hua_input_chip_get_dev_data(chip);
 
-	if (epl2182->proxi_count > 0)
+	if (epl2182->mode != EPL2182_MODE_ALS)
 	{
-		if (epl2182->proxi.dev.enabled)
+		if (jiffies - epl2182->light_jiffies < msecs_to_jiffies(dev->poll_delay))
 		{
 			return 0;
 		}
 
-		return epl2182_sensor_chip_set_mode(chip, true);
+		ret = epl2182_sensor_chip_set_mode(chip, EPL2182_MODE_ALS);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		msleep(dev->min_delay);
+		epl2182->light_jiffies = jiffies;
 	}
 
 	ret = chip->write_register(chip, REG_07, EPL_DATA_LOCK);
@@ -399,19 +400,14 @@ static int epl2182_light_event_handler(struct hua_input_chip *chip, struct hua_i
 		return ret;
 	}
 
-	ret = chip->read_register16(chip, REG_16, &value16);
+	ret = chip->read_register16(chip, REG_CH1_DL, &ch1data);
 	if (ret < 0)
 	{
-		pr_red_info("chip->read_register16 REG_16");
+		pr_red_info("chip->read_register16 REG_CH1_DL");
 		return ret;
 	}
 
-	hua_sensor_report_value(dev->input, EPL_CAL_LIGHT_VALUE(value16));
-
-	if (epl2182->proxi.dev.enabled)
-	{
-		return epl2182_sensor_chip_set_mode(chip, false);
-	}
+	hua_sensor_report_value(dev->input, EPL_CAL_LIGHT_VALUE(ch1data));
 
 	return chip->write_register(chip, REG_07, EPL_DATA_UNLOCK);
 }
@@ -435,7 +431,6 @@ static int epl2182_input_chip_probe(struct hua_input_chip *chip)
 	hua_input_chip_set_dev_data(chip, epl2182);
 
 	sensor = &epl2182->proxi;
-	sensor->min_delay = EPL_SENSOR_MIN_DELAY;
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
@@ -450,6 +445,7 @@ static int epl2182_input_chip_probe(struct hua_input_chip *chip)
 #endif
 
 	dev->type = HUA_INPUT_DEVICE_TYPE_PROXIMITY;
+	dev->min_delay = 50;
 	dev->poll_delay = 200;
 
 	sensor->max_range = 1;
@@ -466,7 +462,6 @@ static int epl2182_input_chip_probe(struct hua_input_chip *chip)
 	}
 
 	sensor = &epl2182->light;
-	sensor->min_delay = EPL_SENSOR_MIN_DELAY;
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
@@ -481,6 +476,7 @@ static int epl2182_input_chip_probe(struct hua_input_chip *chip)
 #endif
 
 	dev->type = HUA_INPUT_DEVICE_TYPE_LIGHT;
+	dev->min_delay = 55;
 	dev->poll_delay = 200;
 	sensor->max_range = EPL_LIGHT_MAX_VALUE;
 	sensor->resolution = EPL_LIGHT_MAX_VALUE;
@@ -548,7 +544,7 @@ static int epl2182_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	pr_bold_info("chip->irq = %d", chip->irq);
 
 	chip->name = "EPL2182";
-	chip->poweron_init = true;
+	chip->flags = HUA_INPUT_CHIP_FLAG_POWERON_INIT;
 	chip->devmask = 1 << HUA_INPUT_DEVICE_TYPE_PROXIMITY | 1 << HUA_INPUT_DEVICE_TYPE_LIGHT;
 	chip->init_data = epl2182_init_data;
 	chip->init_data_size = ARRAY_SIZE(epl2182_init_data);

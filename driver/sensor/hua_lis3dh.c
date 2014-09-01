@@ -329,12 +329,12 @@ static int lis3dh_input_chip_probe(struct hua_input_chip *chip)
 
 	hua_input_chip_set_dev_data(chip, sensor);
 
-	sensor->min_delay = 20;
 	sensor->power_consume = 145;
 
 	dev = &sensor->dev;
 	dev->name = "LIS3DH Three-Axis Digital Accelerometer";
 	dev->type = HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
+	dev->min_delay = 20;
 	dev->poll_delay = 200;
 	dev->set_delay = lis3dh_acceleration_set_delay;
 

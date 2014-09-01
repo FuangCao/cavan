@@ -24,7 +24,6 @@ struct hua_sensor_device
 	struct hua_input_device dev;
 
 	u32 axis_count;
-	u32 min_delay;
 	u32 max_range;
 	u32 resolution;
 	u32 power_consume;

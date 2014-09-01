@@ -794,13 +794,13 @@ static int ft5216_input_chip_probe(struct hua_input_chip *chip)
 
 #if SUPPORT_PROXIMITY_SENSOR
 	prox = &data->prox;
-	prox->min_delay = 20;
 	prox->max_range = 1;
 	prox->resolution = 1;
 	prox->power_consume = 0;
 
 	dev = &prox->dev;
 	dev->type = HUA_INPUT_DEVICE_TYPE_PROXIMITY;
+	dev->min_delay = 20;
 	dev->poll_delay = 200;
 	dev->set_enable = ft5216_proximity_set_enable;
 	dev->event_handler = ft5216_proximity_event_handler;

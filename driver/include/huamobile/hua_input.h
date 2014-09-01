@@ -46,6 +46,9 @@
 #define MB(size)	((size) << 20)
 #define GB(size)	((size) << 30)
 
+#define HUA_INPUT_CHIP_FLAG_NO_WAIT			(1 << 0)
+#define HUA_INPUT_CHIP_FLAG_POWERON_INIT	(1 << 1)
+
 #define BUILD_WORD(hb, lb) \
 	((short)((hb) << 8 | (lb)))
 
@@ -202,6 +205,7 @@ struct hua_input_device
 
 	int fuzz, flat;
 	bool use_irq;
+	u32 min_delay;
 	u32 poll_delay;
 
 	bool enabled;
@@ -234,6 +238,7 @@ struct hua_input_chip
 	const char *misc_name;
 	u32 devid;
 	u32 devmask;
+	unsigned long flags;
 
 	int irq;
 	u32 irq_state;
@@ -242,7 +247,6 @@ struct hua_input_chip
 	struct completion event_completion;
 
 	long poll_jiffies;
-	bool poweron_init;
 	size_t init_data_size;
 	const struct hua_input_init_data *init_data;
 
@@ -286,7 +290,8 @@ struct hua_input_chip
 	int (*set_active)(struct hua_input_chip *chip, bool enable);
 	int (*probe)(struct hua_input_chip *chip);
 	void (*remove)(struct hua_input_chip *chip);
-	int (*event_handler)(struct hua_input_chip *chip);
+	int (*event_handler_isr)(struct hua_input_chip *chip);
+	int (*event_handler_poll)(struct hua_input_chip *chip);
 
 	ssize_t (*read_data)(struct hua_input_chip *chip, u8 addr, void *buff, size_t size);
 	ssize_t (*write_data)(struct hua_input_chip *chip, u8 addr, const void *buff, size_t size);

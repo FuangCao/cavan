@@ -185,7 +185,6 @@ static int mma845x_input_chip_probe(struct hua_input_chip *chip)
 
 	hua_input_chip_set_dev_data(chip, sensor);
 
-	sensor->min_delay = 20;
 	sensor->max_range = 4;
 	sensor->resolution = 4096;
 	sensor->power_consume = 145;
@@ -196,6 +195,7 @@ static int mma845x_input_chip_probe(struct hua_input_chip *chip)
 	dev->flat = 0;
 	dev->use_irq = false;
 	dev->type = HUA_INPUT_DEVICE_TYPE_ACCELEROMETER;
+	dev->min_delay = 20;
 	dev->poll_delay = 200;
 	dev->set_enable = mma845x_acceleration_set_enable;
 	dev->set_delay = mma845x_acceleration_set_delay;

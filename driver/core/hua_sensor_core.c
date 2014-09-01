@@ -2,12 +2,12 @@
 
 static int hua_sensor_device_ioctl(struct hua_input_device *dev, unsigned int command, unsigned long args)
 {
-	struct hua_sensor_device *sensor = (struct hua_sensor_device *)dev;
+	struct hua_sensor_device *sensor = (struct hua_sensor_device *) dev;
 
 	switch (command)
 	{
 	case HUA_INPUT_SENSOR_IOC_GET_MIN_DELAY:
-		return hua_input_copy_to_user_uint(args, sensor->min_delay);
+		return hua_input_copy_to_user_uint(args, dev->min_delay);
 
 	case HUA_INPUT_SENSOR_IOC_GET_MAX_RANGE:
 		return hua_input_copy_to_user_uint(args, sensor->max_range);
@@ -27,14 +27,6 @@ static int hua_sensor_device_ioctl(struct hua_input_device *dev, unsigned int co
 	}
 
 	return -EFAULT;
-}
-
-static ssize_t hua_sensor_device_attr_min_delay_show(struct device *device, struct device_attribute *attr, char *buff)
-{
-	struct hua_misc_device *mdev = dev_get_drvdata(device);
-	struct hua_sensor_device *sensor = (struct hua_sensor_device *) hua_misc_device_get_data(mdev);
-
-	return sprintf(buff, "%d\n", sensor->min_delay);
 }
 
 static ssize_t hua_sensor_device_attr_max_range_show(struct device *device, struct device_attribute *attr, char *buff)
@@ -69,7 +61,6 @@ static ssize_t hua_sensor_device_attr_axis_count_show(struct device *device, str
 	return sprintf(buff, "%d\n", sensor->axis_count);
 }
 
-static struct device_attribute hua_sensor_device_attr_min_delay = __ATTR(min_delay, S_IRUGO, hua_sensor_device_attr_min_delay_show, NULL);
 static struct device_attribute hua_sensor_device_attr_max_range = __ATTR(max_range, S_IRUGO, hua_sensor_device_attr_max_range_show, NULL);
 static struct device_attribute hua_sensor_device_attr_resolution = __ATTR(resolution, S_IRUGO, hua_sensor_device_attr_resolution_show, NULL);
 static struct device_attribute hua_sensor_device_attr_power_consume = __ATTR(power_consume, S_IRUGO, hua_sensor_device_attr_power_show, NULL);
@@ -77,7 +68,6 @@ static struct device_attribute hua_sensor_device_attr_axis_count = __ATTR(axis_c
 
 static const struct attribute *hua_sensor_device_attributes[] =
 {
-	&hua_sensor_device_attr_min_delay.attr,
 	&hua_sensor_device_attr_max_range.attr,
 	&hua_sensor_device_attr_resolution.attr,
 	&hua_sensor_device_attr_power_consume.attr,

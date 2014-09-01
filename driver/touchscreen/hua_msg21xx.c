@@ -310,7 +310,6 @@ static int msg21xx_input_chip_probe(struct hua_input_chip *chip)
 
 #if HUA_SUPPORT_PROXIMITY
 	prox = &dev->prox;
-	prox->min_delay = 20;
 	prox->max_range = 1;
 	prox->resolution = 1;
 	prox->power_consume = 0;
@@ -319,6 +318,7 @@ static int msg21xx_input_chip_probe(struct hua_input_chip *chip)
 	base_dev->name = "MSG21XX Proximity";
 	base_dev->type = HUA_INPUT_DEVICE_TYPE_PROXIMITY;
 	base_dev->use_irq = true;
+	base_dev->min_delay = 20;
 	base_dev->poll_delay = 200;
 	base_dev->set_enable = msg21xx_proximity_set_enable;
 	base_dev->event_handler = msg21xx_proximity_event_handler;
@@ -557,7 +557,7 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->write_data = msg21xx_write_data;
 	chip->read_register = hua_input_read_register_i2c_smbus;
 	chip->write_register = hua_input_write_register_i2c_smbus;
-	chip->event_handler = msg21xx_chip_event_handler;
+	chip->event_handler_isr = msg21xx_chip_event_handler;
 	chip->firmware_upgrade = msg21xx_chip_firmware_upgrade;
 	chip->read_firmware_id = msg21xx_read_firmware_id;
 
