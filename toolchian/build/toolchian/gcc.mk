@@ -27,9 +27,21 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--enable-languages=c,c++ \
 					--enable-c99 \
 					--enable-long-long \
+					--enable-plugins \
+					--enable-libgomp \
+					--enable-graphite=yes \
+					--enable-gold=default \
+					--enable-cloog-backend=isl \
+					--enable-target-optspace \
+					--enable-initfini-array \
 					--disable-nls \
-					--disable-multilib \
-					--disable-bootstrap
+					--disable-bootstrap \
+					--disable-ppl-version-check \
+					--disable-cloog-version-check \
+					--with-binutils-version=$(BINUTILS_VERSION) \
+					--with-mpfr-version=$(MPFR_VERSION) \
+					--with-mpc-version=$(MPC_VERSION) \
+					--with-gmp-version=$(GMP_VERSION)
 
 ifneq ($(filter $(GCC_VERSION),4.8.1 4.8.2 4.9.1),)
 GCC_OPTION1 += --disable-libatomic
