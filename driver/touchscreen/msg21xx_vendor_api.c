@@ -82,7 +82,7 @@ static char tmp_str[50];
 #define FT_I2C_VTG_MAX_UV	1800000
 #define CFG_MAX_TOUCH_POINTS 	2	//add by zg
 
-static int msg21xx_irq;
+// static int msg21xx_irq;
 static struct i2c_client *msg21xx_i2c_client;
 
 #ifdef __FIRMWARE_UPDATE__
@@ -327,16 +327,12 @@ static u32 Get_CRC(u32 text,u32 prevCRC)
 	return ulCRC ;
 }
 
-static void _HalTscrHWReset(void)
+static void _HalTscrHWReset(struct hua_input_chip *chip)
 {
-	//gpio_direction_output(MSG21XX_RESET_GPIO, 1);
-	gpio_set_value(MSG21XX_RESET_GPIO, 1);	
-	gpio_direction_output(MSG21XX_RESET_GPIO, 1);
-	gpio_set_value(MSG21XX_RESET_GPIO, 0);
-	gpio_direction_output(MSG21XX_RESET_GPIO, 0);
+	hua_io_reset_gpio_set_value(chip, 1);	
+	hua_io_reset_gpio_set_value(chip, 0);
     mdelay(20);  /* Note that the RST must be in LOW 10ms at least */
-	gpio_direction_output(MSG21XX_RESET_GPIO, 1);
-	gpio_set_value(MSG21XX_RESET_GPIO, 1);
+	hua_io_reset_gpio_set_value(chip, 1);
     /* Enable the interrupt service thread/routine for INT after 50ms */
     mdelay(350);
 }
@@ -613,13 +609,12 @@ static void drvISP_Verify(U16 k, U8* pDataToVerify)
 }
 
 
-static void _HalTscrHWReset(void)
+static void _HalTscrHWReset(struct hua_input_chip *chip)
 {
-	gpio_direction_output(MSG21XX_RESET_GPIO, 1);
-	gpio_set_value(MSG21XX_RESET_GPIO, 1);	
-	gpio_set_value(MSG21XX_RESET_GPIO, 0);
+	hua_io_reset_gpio_set_value(chip, 1);
+	hua_io_reset_gpio_set_value(chip, 0);
     mdelay(10);  /* Note that the RST must be in LOW 10ms at least */
-	gpio_set_value(MSG21XX_RESET_GPIO, 1);
+	hua_io_reset_gpio_set_value(chip, 1);
     /* Enable the interrupt service thread/routine for INT after 50ms */
     mdelay(50);
 }
@@ -627,7 +622,7 @@ static void _HalTscrHWReset(void)
 
 #ifdef __FIRMWARE_UPDATE__
 #ifdef __AUTO_UPDATE__
-static int firmware_auto_update_c33(EMEM_TYPE_t emem_type)
+static int firmware_auto_update_c33(struct hua_input_chip *chip, EMEM_TYPE_t emem_type)
 {
     u8  life_counter[2];
     u32 i, j;
@@ -689,7 +684,7 @@ static int firmware_auto_update_c33(EMEM_TYPE_t emem_type)
     drvTP_erase_emem_A ( EMEM_MAIN );
     mdelay ( 1000 );
     //ResetSlave();
-    _HalTscrHWReset();
+    _HalTscrHWReset(chip);
 	//	mdelay ( 300 );
     //drvDB_EnterDBBUS();
     dbbusDWIICEnterSerialDebugMode();
@@ -845,28 +840,28 @@ static int firmware_auto_update_c33(EMEM_TYPE_t emem_type)
     if ( !update_pass )
     {
         printk ( "update FAILED\n" );
-		_HalTscrHWReset();
+		_HalTscrHWReset(chip);
         FwDataCnt = 0;
-    	enable_irq(msg21xx_irq);
+    	// enable_irq(msg21xx_irq);
         return ( 0 );
     }
 
     printk ( "update OK\n" );
-	_HalTscrHWReset();
+	_HalTscrHWReset(chip);
     FwDataCnt = 0;
-    enable_irq(msg21xx_irq);
+    // enable_irq(msg21xx_irq);
 	
     return ( 1 );
 }
 
-static int firmware_auto_update(void)
+static int firmware_auto_update(struct hua_input_chip *chip)
 {
    u8 dbbus_tx_data[4];
     unsigned char dbbus_rx_data[2] = {0};
 
-	disable_irq(msg21xx_irq);
+	// disable_irq(msg21xx_irq);
 
-    _HalTscrHWReset();
+    _HalTscrHWReset(chip);
 
     // Erase TP Flash first
     dbbusDWIICEnterSerialDebugMode();
@@ -913,10 +908,10 @@ static int firmware_auto_update(void)
         TP_DEBUG ( "dbbus_rx version[0]=0x%x", dbbus_rx_data[0] );
 
         if ( dbbus_rx_data[0] == 3 ){
-            return firmware_auto_update_c33(EMEM_MAIN );
+            return firmware_auto_update_c33(chip, EMEM_MAIN );
 		}
     }
-    enable_irq(msg21xx_irq);
+    // enable_irq(msg21xx_irq);
     return 0;
 }
 #endif
@@ -940,7 +935,7 @@ static int Check_Device(void)
     unsigned char dbbus_rx_data[2] = {0};
     u8 curr_ic_type;
 	
-	_HalTscrHWReset();
+	_HalTscrHWReset(chip);
     disable_irq(msg21xx_irq);
     mdelay ( 100 );
     

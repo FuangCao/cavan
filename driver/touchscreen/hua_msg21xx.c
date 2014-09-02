@@ -489,14 +489,14 @@ int msg21xx_chip_firmware_upgrade(struct hua_input_chip *chip, struct hua_firmwa
 #ifdef MSG21XX_VENDOR_API
 	int ret;
 
-	ret = hua_firmware_fill(fw, (char *)temp, sizeof(temp), 0, 0);
+	ret = hua_firmware_fill(fw, (char *) temp, sizeof(temp), 0, 0);
 	if (ret < 0)
 	{
 		pr_red_info("hua_firmware_fill");
 		return ret;
 	}
 
-	if (firmware_auto_update())
+	if (firmware_auto_update(chip))
 	{
 		return 0;
 	}
@@ -537,7 +537,6 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 
 #ifdef MSG21XX_VENDOR_API
 	msg21xx_i2c_client = client;
-	msg21xx_irq = client->irq;
 #endif
 
 	chip->irq = client->irq;
