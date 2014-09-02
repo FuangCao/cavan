@@ -147,7 +147,11 @@ $(MARK_GLIBC): $(MARK_GCC2)
 	$(Q)+make -C $(OUT_GLIBC) -f $(MAKEFILE_GLIBC)
 	$(call generate_mark)
 else
+ifeq ($(CAVAN_TARGET_EABI),androideabi)
+$(MARK_GCC2): $(MARK_BINUTILS)
+else
 $(MARK_GCC2): $(MARK_GLIBC)
+endif
 	$(call decompression_gcc)
 	$(call remake_directory,$(OUT_GCC2))
 	$(Q)+make AS_FOR_TARGET="$(CAVAN_TARGET_PLAT)-as" LD_FOR_TARGET="$(CAVAN_TARGET_PLAT)-ld" -C $(OUT_GCC2) -f $(MAKEFILE_GCC) stage2

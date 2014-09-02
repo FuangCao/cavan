@@ -1,7 +1,9 @@
 CAVAN_BUILD_ARCH = $(shell uname -m)
 CAVAN_BUILD_PLAT = $(shell gcc -dumpmachine)
 CAVAN_TARGET_ARCH = arm
-CAVAN_TARGET_PLAT = $(CAVAN_TARGET_ARCH)-cavan-linux-gnueabi
+CAVAN_TARGET_EABI = gnueabi
+# CAVAN_TARGET_EABI = androideabi
+CAVAN_TARGET_PLAT = $(CAVAN_TARGET_ARCH)-cavan-linux-$(CAVAN_TARGET_EABI)
 
 PACKAGE_VERSION_STRING = Fuang.Cao <cavan.cfa@gmail.com>
 
