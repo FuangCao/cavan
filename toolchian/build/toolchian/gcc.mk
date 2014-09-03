@@ -24,7 +24,7 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--enable-languages=c,c++ \
 					--enable-plugins \
 					--enable-c99 \
-					--enable-long-long
+					--enable-long-long \
 					--enable-graphite=yes \
 					--enable-gold=default \
 					--enable-cloog-backend=isl \
@@ -45,15 +45,12 @@ GCC_OPTION2 +=		--with-gnu-as \
 					--with-host-libstdcxx='-static-libgcc -Wl,-Bstatic,-lstdc++,-Bdynamic -lm' \
 					--enable-threads \
 					--disable-libssp \
-					--disable-libmudflap \
-					--disable-libstdc__-v3 \
-					--disable-sjlj-exceptions \
 					--disable-shared \
-					--disable-tls \
 					--disable-libgomp \
 					--disable-libatomic \
 					--disable-libitm \
 					--disable-libsanitizer \
+					--disable-libstdc__-v3 \
 					--disable-libquadmath
 else
 GCC_OPTION2 +=		--enable-clocale=gnu \
