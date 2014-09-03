@@ -187,11 +187,6 @@ int hua_io_set_power_regulator(struct hua_input_chip *chip, bool enable)
 		return 0;
 	}
 
-	if (chip->gpio_power >= 0)
-	{
-		gpio_direction_output(chip->gpio_power, 0);
-	}
-
 	if (chip->vdd)
 	{
 		regulator_disable(chip->vdd);
@@ -214,36 +209,34 @@ EXPORT_SYMBOL_GPL(hua_io_set_power_regulator);
 #ifdef CONFIG_OF
 int hua_input_chip_io_init(struct hua_input_chip *chip)
 {
-	int ret;
+	int gpio;
 	u32 voltag[2];
 	struct device_node *of_node = chip->dev->of_node;
 
-	ret = of_get_named_gpio_flags(of_node, "reset-gpio-pin", 0, NULL);
-	if (ret >= 0)
+	gpio = of_get_named_gpio_flags(of_node, "reset-gpio-pin", 0, NULL);
+	if (gpio >= 0)
 	{
-		gpio_request(ret, "HUA-RESET");
-		gpio_direction_output(chip->gpio_reset, 0);
+		gpio_request(gpio, "HUA-RESET");
 	}
 
-	chip->gpio_reset = ret;
+	chip->gpio_reset = gpio;
 
-	ret = of_get_named_gpio_flags(of_node, "irq-gpio-pin", 0, NULL);
-	if (ret >= 0)
+	gpio = of_get_named_gpio_flags(of_node, "irq-gpio-pin", 0, NULL);
+	if (gpio >= 0)
 	{
-		gpio_request(ret, "HUA-IRQ");
-		gpio_direction_input(chip->gpio_irq);
+		gpio_request(gpio, "HUA-IRQ");
+		gpio_direction_input(gpio);
 	}
 
-	chip->gpio_irq = ret;
+	chip->gpio_irq = gpio;
 
-	ret = of_get_named_gpio_flags(of_node, "power-gpio-pin", 0, NULL);
-	if (ret >= 0)
+	gpio = of_get_named_gpio_flags(of_node, "power-gpio-pin", 0, NULL);
+	if (gpio >= 0)
 	{
-		gpio_request(ret, "HUA-POWER");
-		gpio_direction_output(chip->gpio_power, 0);
+		gpio_request(gpio, "HUA-POWER");
 	}
 
-	chip->gpio_power = ret;
+	chip->gpio_power = gpio;
 
 	pr_bold_info("%s: gpio_reset = %d, gpio_irq = %d, gpio_power = %d", chip->name, chip->gpio_reset, chip->gpio_irq, chip->gpio_power);
 
