@@ -117,11 +117,16 @@ endef
 all: $(MARK_TOOLCHIAN_READY)
 	$(Q)echo "Toolchian compile successfull"
 
+$(MARK_TOOLCHIAN_BT_GLIBC): $(MARK_GLIBC)
+	$(Q)echo "$@ compile successfull"
+	$(call generate_mark)
+
 ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
 $(MARK_TOOLCHIAN_READY): $(MARK_GLIBC)
 else
 $(MARK_TOOLCHIAN_READY): $(MARK_GCC2)
 endif
+ifneq ($(CAVAN_TARGET_EABI),androideabi)
 	$(Q)cd $(TOOLCHIAN_PATH)/bin && for tool in $(CAVAN_TARGET_PLAT)-*; \
 	do \
 		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-linux$${tool##$(CAVAN_TARGET_PLAT)}"; \
@@ -130,9 +135,9 @@ endif
 ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 	$(Q)sed 's/\<__packed\>/__attribute__ ((__packed__))/g' $(SYSROOT_PATH)/usr/include/mtd/ubi-user.h -i
 	$(call auto_make,install_library,$(MARK_TOOLCHIAN),$(OUT_TOOLCHIAN),$(XML_CONFIG))
-else
-	$(call generate_mark)
 endif
+endif
+	$(call generate_mark)
 
 ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
 $(MARK_GCC2): $(MARK_BINUTILS)
@@ -183,11 +188,16 @@ $(MARK_BINUTILS): $(MARK_HEADER)
 	$(call generate_mark)
 
 $(MARK_HEADER):
+ifeq ($(CAVAN_TARGET_EABI),androideabi)
+	$(Q)+make glibc CAVAN_TARGET_EABI="gnueabi"
+	$(Q)rm -rf "$(SYSROOT_PATH)" && cp "$(subst androideabi,gnueabi,$(SYSROOT_PATH))" "$(SYSROOT_PATH)" -av
+else
 ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 else
 	$(Q)rm $(SYSROOT_PATH) -rfv
 	$(Q)cp $(SYSROOT_BT_PATH) $(SYSROOT_PATH) -av
+endif
 endif
 	$(call generate_mark)

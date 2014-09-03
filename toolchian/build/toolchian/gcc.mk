@@ -9,6 +9,7 @@ GCC_OPTION1 =		$(GCC_COMMON_OPTION) \
 					--disable-libmudflap \
 					--disable-libssp \
 					--disable-libgomp \
+					--disable-libatomic \
 					--disable-libquadmath \
 					--disable-target-libiberty \
 					--disable-target-zlib \
@@ -22,7 +23,8 @@ GCC_OPTION1 =		$(GCC_COMMON_OPTION) \
 GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--enable-languages=c,c++ \
 					--enable-plugins \
-					--enable-libgomp \
+					--enable-c99 \
+					--enable-long-long
 					--enable-graphite=yes \
 					--enable-gold=default \
 					--enable-cloog-backend=isl \
@@ -48,19 +50,17 @@ GCC_OPTION2 +=		--with-gnu-as \
 					--disable-sjlj-exceptions \
 					--disable-shared \
 					--disable-tls \
+					--disable-libgomp \
+					--disable-libatomic \
 					--disable-libitm \
+					--disable-libsanitizer \
 					--disable-libquadmath
 else
 GCC_OPTION2 +=		--enable-clocale=gnu \
 					--enable-shared \
+					--enable-libgomp \
 					--enable-threads=posix \
-					--enable-__cxa_atexit \
-					--enable-c99 \
-					--enable-long-long
-endif
-
-ifneq ($(filter $(GCC_VERSION),4.8.1 4.8.2 4.9.1),)
-GCC_OPTION1 += --disable-libatomic
+					--enable-__cxa_atexit
 endif
 
 stage1:
