@@ -21,7 +21,13 @@ define download_package
 			fi; \
 			;; \
 		*) \
-			for type in $(DOWNLOAD_TYPES); \
+			if [ "$3" ]; \
+			then \
+				type_list="$3"; \
+			else \
+				type_list="$(DOWNLOAD_TYPES)"; \
+			fi; \
+			for type in $${type_list}; \
 			do \
 				file_list="$1.$${type}"; \
 				$(DOWNLOAD_COMMAND) "$2/$${file_list}" && \
@@ -44,7 +50,7 @@ endef
 define simple_decompression_file
 temp_decomp="$(DECOMP_PATH)/$1"; \
 file_list="$(strip $(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.*$(type) $(DOWNLOAD_PATH)/$1.*$(type))))"; \
-[ -z "$${file_list}" ] && $(call download_package,$1,$3); \
+[ -z "$${file_list}" ] && $(call download_package,$1,$3,$4); \
 for pkg in $${file_list}; \
 do \
 	echo "Decompression $${pkg} => $${temp_decomp}"; \
@@ -82,7 +88,7 @@ define decompression_file
 $(eval pkg_name = $(notdir $1))
 if [ ! -d "$1" -o "$(FORCE_DECOMPRESSION)" = "yes" ]; \
 then \
-	$(call simple_decompression_file,$(pkg_name),$1,$2); \
+	$(call simple_decompression_file,$(pkg_name),$1,$2,$3); \
 	$(call apply_patchs,$(pkg_name),$1); \
 fi
 endef
@@ -110,28 +116,35 @@ $(eval export PACKAGE_NAME = $(notdir $@))
 $(eval export PACKAGE_BASENAME = $(firstword $(subst -, ,$(PACKAGE_NAME))))
 $(eval export PACKAGE_SOURCE = $(SRC_PATH)/$(PACKAGE_NAME))
 rm $(PACKAGE_SOURCE) -rf
-$(call decompression_file,$(PACKAGE_SOURCE),$1)
+$(call decompression_file,$(PACKAGE_SOURCE),$1,$2)
 test -f "$(PACKAGE_SOURCE)/configure" && sed 's#^\s*(./conftest\s*$$#(#g' $(PACKAGE_SOURCE)/configure -i || echo "No configure script"
-$(eval makefile-path = $(firstword $(wildcard $2/$(PACKAGE_NAME).mk $2/$(PACKAGE_BASENAME)*.mk)))
+$(eval makefile-path = $(firstword $(wildcard $3/$(PACKAGE_NAME).mk $3/$(PACKAGE_BASENAME)*.mk)))
 +if test -n "$(makefile-path)"; \
 then \
 	make -C $(PACKAGE_SOURCE) -f $(makefile-path); \
 else \
-	cd $(PACKAGE_SOURCE) && $3; \
+	cd $(PACKAGE_SOURCE) && ($4); \
 fi
 $(call generate_mark)
 endef
 
+define execute_retry
+for i in 1 2 3; \
+do \
+	($1) && break; \
+done
+endef
+
 define install_utils
-$(call install_application,$2,$(BUILD_UTILS),./configure $(UTILS_COMMON_CONFIG) $1 && make && make install)
+$(call install_application,$2,$3,$(BUILD_UTILS),$(call execute_retry,./configure $(UTILS_COMMON_CONFIG) $1 && make && make install))
 endef
 
 define install_library
-$(call install_application,$2,$(BUILD_TOOLCHIAN),./configure $(LIBRARY_COMMON_CONFIG) $1 && make && make DESTDIR="$(ROOTFS_PATH)" install)
+$(call install_application,$2,$3,$(BUILD_TOOLCHIAN),./configure $(LIBRARY_COMMON_CONFIG) $1 && $(call execute_retry,make && make DESTDIR="$(ROOTFS_PATH)" install))
 endef
 
 define install_rootfs
-$(call install_application,$2,$(BUILD_ROOTFS),CFLAGS="-fPIC" sb2 ./configure $1 && sb2 make && sb2 -m install make install)
+$(call install_application,$2,$3,$(BUILD_ROOTFS),CFLAGS="-fPIC" sb2 ./configure $1 && sb2 make && sb2 -m install make install)
 endef
 
 define auto_make

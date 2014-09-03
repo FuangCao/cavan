@@ -69,6 +69,7 @@ def GenerateMakeFile():
 		listAppNames.append(prefix + "MARK = " + MarkDir + "/$(" + lastname + ")\n")
 		listAppNames.append(prefix + "URL = " + tagPackage.getAttribute("url") + "\n")
 		listAppNames.append(prefix + "CONFIG = " + tagPackage.getAttribute("config") + "\n")
+		listAppNames.append(prefix + "TYPE = " + tagPackage.getAttribute("type") + "\n")
 		depends = prefix + "DEPEND ="
 		for depend in tagPackage.getAttribute("depend").split(" "):
 			depend = depend.strip()
@@ -78,7 +79,7 @@ def GenerateMakeFile():
 		listAppNames.append("PACKAGES_ALL += $(" + prefix + "MARK)\n\n")
 
 		listAppDepends.append("$(" + prefix + "MARK): " + "$(" + prefix + "DEPEND)\n")
-		listAppDepends.append("\t$(call " + InstallFunction + ",$(" + prefix + "CONFIG),$(" + prefix + "URL))\n\n")
+		listAppDepends.append("\t$(call %s,$(%sCONFIG),$(%sURL),$(%sTYPE))\n\n" % (InstallFunction, prefix, prefix, prefix))
 
 	listAppNames.append("all: $(PACKAGES_ALL)")
 
