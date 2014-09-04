@@ -1,17 +1,10 @@
-ifeq ($(filter 4.9%,$(GCC_VERSION)),)
-export TEXINFO_VERSION = 4.13a
-endif
-
-ifneq ($(filter 4.7%,$(GCC_VERSION)),)
-GMP_VERSION = 5.0.5
-MPFR_VERSION = 3.0.1
-MPC_VERSION = 1.0.1
-BINUTILS_VERSION = 2.23.1
-GLIBC_VERSION = 2.16.0
-KERNEL_VERSION = 3.8.4
-endif
-
 LOWEST_KERNEL_VERSION = 2.6.15
+GCC_VERSION_LIST = $(patsubst config-%.mk,%,$(notdir $(wildcard build/toolchian/config-*.mk)))
+
+include build/toolchian/config-$(GCC_VERSION).mk
+
+export BINUTILS_VERSION GCC_VERSION GLIBC_VERSION KERNEL_VERSION LOWEST_KERNEL_VERSION
+export GMP_VERSION MPFR_VERSION MPC_VERSION
 
 ROOT_PATH = $(shell pwd)
 BUILD_PATH = $(ROOT_PATH)/build
@@ -101,12 +94,6 @@ $(info CAVAN_BUILD_ARCH = $(CAVAN_BUILD_ARCH))
 $(info CAVAN_BUILD_PLAT = $(CAVAN_BUILD_PLAT))
 $(info CAVAN_TARGET_ARCH = $(CAVAN_TARGET_ARCH))
 $(info CAVAN_TARGET_PLAT = $(CAVAN_TARGET_PLAT))
-$(info CPU_BINUTILS_OPTION = $(CPU_BINUTILS_OPTION))
-$(info CPU_GCC_OPTION = $(CPU_GCC_OPTION))
-$(info KERNEL_VERSION = $(KERNEL_VERSION))
-$(info BINUTILS_VERSION = $(BINUTILS_VERSION))
-$(info GCC_VERSION = $(GCC_VERSION))
-$(info GLIBC_VERSION = $(GLIBC_VERSION))
 $(info PACKAGE_PATH = $(PACKAGE_PATH))
 $(info PATCH_PATH = $(PATCH_PATH))
 $(info ============================================================)
@@ -183,18 +170,10 @@ build_env:
 gnueabi androideabi:
 	$(Q)+make CAVAN_TARGET_EABI=$@
 
-gcc-4.7.1:
-gcc-4.7.2:
-gcc-4.8.2:
-gcc-4.9.1:
-gcc-%:
+$(addprefix gcc-,$(GCC_VERSION_LIST)):
 	$(Q)+make GCC_VERSION=$(patsubst gcc-%,%,$@)
 
-android-gcc-4.7.1:
-android-gcc-4.7.2:
-android-gcc-4.8.2:
-android-gcc-4.9.1:
-android-gcc-%:
+$(addprefix android-gcc-,$(GCC_VERSION_LIST)):
 	$(Q)+make GCC_VERSION=$(patsubst android-gcc-%,%,$@) CAVAN_TARGET_EABI=androideabi
 
 .PHONY: build_env
