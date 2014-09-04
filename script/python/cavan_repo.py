@@ -240,6 +240,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		self.mDepthMap["frameworks"] = 2
 		self.mDepthMap["frameworks/base"] = 0
 		self.mDepthMap["prebuilts"] = 4
+		self.mDepthMap["release"] = -1
 
 	def setRootPath(self, pathname, auto_create = False):
 		CavanCommandBase.setRootPath(self, pathname, auto_create)
@@ -283,6 +284,9 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		if self.mDepthMap.has_key(path):
 			depth = self.mDepthMap[path]
+			if depth < 0:
+				self.prBrownInfo("Skipping project ", path)
+				return True
 			self.prGreenInfo("Depth of ", path, " is %d" % depth)
 		elif depth > 0:
 			basename = os.path.basename(path)
