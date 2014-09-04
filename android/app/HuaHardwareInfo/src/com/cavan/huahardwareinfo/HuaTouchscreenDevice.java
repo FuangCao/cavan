@@ -6,6 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -13,6 +16,7 @@ import android.os.Message;
 import android.os.SystemProperties;
 import android.provider.Settings;
 import android.util.Log;
+import android.util.Xml;
 
 public class HuaTouchscreenDevice {
 	private static final String TAG = "Cavan";
@@ -135,6 +139,58 @@ public class HuaTouchscreenDevice {
 		}
 
 		return null;
+	}
+
+	public static int getFwVersionFromXml(String fwName, String xmlPath) throws XmlPullParserException, IOException {
+		if (xmlPath == null) {
+			xmlPath = "/system/firmware/version.xml";
+		}
+
+		FileInputStream inputStream = new FileInputStream(xmlPath);
+		XmlPullParser parser = Xml.newPullParser();
+		parser.setInput(inputStream, "UTF-8");
+
+		int event;
+		try {
+			event = parser.getEventType();
+		} catch (XmlPullParserException e) {
+			e.printStackTrace();
+			return -1;
+		}
+
+		while (true) {
+			switch (event) {
+			case XmlPullParser.END_DOCUMENT:
+				return -1;
+
+			case XmlPullParser.START_TAG:
+				if (parser.getName().equals("firmware") == false) {
+					break;
+				}
+
+				String name = null;
+				String version = null;
+
+				for (int i = parser.getAttributeCount() - 1; i >= 0; i--) {
+					if (parser.getAttributeName(i).equals("name")) {
+						name = parser.getAttributeValue(i);
+					} else if (parser.getAttributeName(i).equals("version")) {
+						version = parser.getAttributeValue(i);
+					}
+				}
+
+				if (name != null && version != null && name.equals(fwName)) {
+					return Integer.parseInt(version);
+				}
+				break;
+			}
+
+			event = parser.next();
+		}
+	}
+
+	public static int getFwVersionFromXml(String fwName) throws XmlPullParserException, IOException {
+		return getFwVersionFromXml(fwName, null);
 	}
 
 	public String getIcName() {

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
+import android.app.KeyguardManager;
+import android.app.KeyguardManager.KeyguardLock;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
@@ -33,6 +35,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 	private static final String TAG = "Cavan";
 	public static final int MAX_PROGRESS = 100;
+	private File mDirScanAuto = new File("/system/firmware");
 	private File[] mDirScanList = {
 		new File("/system"),
 		new File("/system/etc"),
@@ -50,9 +53,11 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	private RadioGroup mRadioGroup;
 	private HuaHardwareInfoActivity mActivity;
 	private String mFwName;
+	private boolean mAutoUpgrade;
 	private HuaTouchscreenDevice mTouchscreenDevice;
 	private PowerManager mPowerManager;
 	private WakeLock mWakeLock;
+	private KeyguardLock mKeyguardLock;
 	private Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -170,12 +175,18 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		mFwName = mTouchscreenDevice.getFwName();
 	}
 
-	protected HuaTpUpgradeDialog(Context context, String fwName) {
+	protected HuaTpUpgradeDialog(Context context, HuaTouchscreenDevice touchscreenDevice, String fwName) {
 		super(context);
 
 		mActivity = null;
-		mFwName = fwName;
-		mTouchscreenDevice = HuaTouchscreenDevice.getTouchscreenDevice();
+		mTouchscreenDevice = touchscreenDevice;
+
+		if (mFwName == null) {
+			mAutoUpgrade = true;
+			mFwName = mTouchscreenDevice.getFwName();
+		} else {
+			mFwName = fwName;
+		}
 	}
 
 	private void showToast(String message, int duration, boolean updateTextView) {
@@ -203,6 +214,14 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		mPowerManager = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
 		mWakeLock = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getClass().getName());
 		mWakeLock.acquire();
+
+		if (mActivity == null) {
+			KeyguardManager keyguardManager  = (KeyguardManager) getContext().getSystemService(Context.KEYGUARD_SERVICE);
+			mKeyguardLock = keyguardManager.newKeyguardLock(getClass().getName());
+			if (mKeyguardLock != null) {
+				mKeyguardLock.disableKeyguard();
+			}
+		}
 
 		mView = getLayoutInflater().inflate(R.layout.tp_upgrade_progress, null);
 		setView(mView);
@@ -237,6 +256,10 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	public void dismiss() {
 		if (mWakeLock.isHeld()) {
 			mWakeLock.release();
+		}
+
+		if (mKeyguardLock != null) {
+			mKeyguardLock.reenableKeyguard();
 		}
 
 		super.dismiss();
@@ -306,10 +329,14 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	private void scanFirmware() {
 		List<File> list = new ArrayList<File>();
 
-		for (File dir : mDirScanList) {
-			scanFirmware(list, dir, 1);
-			scanFirmware(list, new File(dir, "firmware"), 2);
-			scanFirmware(list, new File(dir, "tp/firmware"), 2);
+		if (mAutoUpgrade) {
+			scanFirmware(list, mDirScanAuto, 1);
+		} else {
+			for (File dir : mDirScanList) {
+				scanFirmware(list, dir, 1);
+				scanFirmware(list, new File(dir, "firmware"), 2);
+				scanFirmware(list, new File(dir, "tp/firmware"), 2);
+			}
 		}
 
 		Message message = mHandler.obtainMessage(MSG_SCAN_COMPLETE, list);
