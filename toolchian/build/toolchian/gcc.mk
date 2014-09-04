@@ -50,6 +50,9 @@ GCC_OPTION2 +=		--with-gnu-as \
 					--disable-libsanitizer \
 					--disable-libstdc__-v3 \
 					--disable-libquadmath
+ifneq ($(filter 4.7%,$(GCC_VERSION)),)
+GCC_OPTION2 +=		--disable-libmudflap
+endif
 else
 GCC_OPTION2 +=		--enable-clocale=gnu \
 					--enable-shared \

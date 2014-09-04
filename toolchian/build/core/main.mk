@@ -1,6 +1,5 @@
 ifeq ($(filter 4.9%,$(GCC_VERSION)),)
-TEXINFO_VERSION = 4.13a
-export TEXINFO_VERSION
+export TEXINFO_VERSION = 4.13a
 endif
 
 ifneq ($(filter 4.7%,$(GCC_VERSION)),)
@@ -184,9 +183,17 @@ build_env:
 gnueabi androideabi:
 	$(Q)+make CAVAN_TARGET_EABI=$@
 
+gcc-4.7.1:
+gcc-4.7.2:
+gcc-4.8.2:
+gcc-4.9.1:
 gcc-%:
 	$(Q)+make GCC_VERSION=$(patsubst gcc-%,%,$@)
 
+android-gcc-4.7.1:
+android-gcc-4.7.2:
+android-gcc-4.8.2:
+android-gcc-4.9.1:
 android-gcc-%:
 	$(Q)+make GCC_VERSION=$(patsubst android-gcc-%,%,$@) CAVAN_TARGET_EABI=androideabi
 
