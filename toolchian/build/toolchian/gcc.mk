@@ -51,7 +51,7 @@ GCC_OPTION2 +=		--with-gnu-as \
 					--disable-libstdc__-v3 \
 					--disable-libquadmath
 
-ifneq ($(filter 4.7% 4.8%,$(GCC_VERSION)),)
+ifeq ($(filter 4.9%,$(GCC_VERSION)),)
 GCC_OPTION2 +=		--disable-libmudflap
 endif
 else
