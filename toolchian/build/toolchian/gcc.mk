@@ -32,8 +32,6 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--enable-initfini-array \
 					--disable-nls \
 					--disable-bootstrap \
-					--disable-ppl-version-check \
-					--disable-cloog-version-check \
 					--with-binutils-version=$(BINUTILS_VERSION) \
 					--with-mpfr-version=$(MPFR_VERSION) \
 					--with-mpc-version=$(MPC_VERSION) \

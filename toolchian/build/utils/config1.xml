@@ -13,16 +13,16 @@
 	</package>
 	-->
 
-	<package name="autoconf" version="2.69" depend="gawk" config=""
-			 url="http://ftp.gnu.org/gnu/autoconf">
-	</package>
-
 	<package name="texinfo" version="5.2" depend="gawk"
 			 config="LDFLAGS=-L$(UTILS_PATH)/usr/lib"
 			 url="http://ftp.gnu.org/gnu/texinfo">
 	</package>
 
-	<package name="automake" version="1.14.1" depend="texinfo" config=""
+	<package name="autoconf" version="2.69" depend="texinfo" config=""
+			 url="http://ftp.gnu.org/gnu/autoconf">
+	</package>
+
+	<package name="automake" version="1.14.1" depend="autoconf" config=""
 			 url="ftp://ftp.gnu.org/gnu/automake">
 	</package>
 

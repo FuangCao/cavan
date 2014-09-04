@@ -1,3 +1,19 @@
+ifeq ($(filter 4.9%,$(GCC_VERSION)),)
+TEXINFO_VERSION = 4.13a
+export TEXINFO_VERSION
+endif
+
+ifneq ($(filter 4.7%,$(GCC_VERSION)),)
+GMP_VERSION = 5.0.5
+MPFR_VERSION = 3.0.1
+MPC_VERSION = 1.0.1
+BINUTILS_VERSION = 2.23.1
+GLIBC_VERSION = 2.16.0
+KERNEL_VERSION = 3.8.4
+endif
+
+LOWEST_KERNEL_VERSION = 2.6.15
+
 ROOT_PATH = $(shell pwd)
 BUILD_PATH = $(ROOT_PATH)/build
 PACKAGE_PATH = $(ROOT_PATH)/package
@@ -167,5 +183,11 @@ build_env:
 
 gnueabi androideabi:
 	$(Q)+make CAVAN_TARGET_EABI=$@
+
+gcc-%:
+	$(Q)+make GCC_VERSION=$(patsubst gcc-%,%,$@)
+
+android-gcc-%:
+	$(Q)+make GCC_VERSION=$(patsubst android-gcc-%,%,$@) CAVAN_TARGET_EABI=androideabi
 
 .PHONY: build_env

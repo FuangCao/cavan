@@ -64,7 +64,7 @@ def GenerateMakeFile():
 		lastname = prefix + "NAME"
 		lastversion = prefix + "VERSION"
 
-		listAppNames.append(lastversion + " = " + version + "\n")
+		listAppNames.append(lastversion + " ?= " + version + "\n")
 		listAppNames.append(lastname + " = " + name + "-$(" + lastversion + ")\n")
 		listAppNames.append(prefix + "MARK = " + MarkDir + "/$(" + lastname + ")\n")
 		listAppNames.append(prefix + "URL = " + tagPackage.getAttribute("url") + "\n")
