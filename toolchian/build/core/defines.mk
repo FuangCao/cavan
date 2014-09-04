@@ -136,7 +136,7 @@ done
 endef
 
 define install_utils
-$(call install_application,$2,$3,$(BUILD_UTILS),$(call execute_retry,./configure $(UTILS_COMMON_CONFIG) $1 && make && make install))
+$(call install_application,$2,$3,$(BUILD_UTILS),./configure $(UTILS_COMMON_CONFIG) $1 && $(call execute_retry,make && make install))
 endef
 
 define install_library
