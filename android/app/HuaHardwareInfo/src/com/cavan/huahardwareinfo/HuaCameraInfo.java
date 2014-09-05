@@ -1,4 +1,4 @@
-package com.cavan.huamobile;
+package com.cavan.huahardwareinfo;
 
 import com.cavan.huahardwareinfo.R;
 

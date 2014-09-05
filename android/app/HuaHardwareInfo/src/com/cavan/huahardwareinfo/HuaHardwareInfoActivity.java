@@ -1,4 +1,4 @@
-package com.cavan.huamobile;
+package com.cavan.huahardwareinfo;
 
 import java.io.File;
 import java.io.FileInputStream;

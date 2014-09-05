@@ -1,4 +1,4 @@
-package com.cavan.huamobile;
+package com.cavan.huahardwareinfo;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
