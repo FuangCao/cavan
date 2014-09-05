@@ -135,12 +135,14 @@ $(MARK_TOOLCHIAN_READY): $(MARK_GLIBC)
 else
 $(MARK_TOOLCHIAN_READY): $(MARK_GCC2)
 endif
-ifneq ($(CAVAN_TARGET_EABI),androideabi)
 	$(Q)cd $(TOOLCHIAN_PATH)/bin && for tool in $(CAVAN_TARGET_PLAT)-*; \
 	do \
-		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-linux$${tool##$(CAVAN_TARGET_PLAT)}"; \
-		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-eabi$${tool##$(CAVAN_TARGET_PLAT)}"; \
+		suffix="$${tool##$(CAVAN_TARGET_PLAT)}"; \
+		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-linux$${suffix}"; \
+		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-eabi$${suffix}"; \
+		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-$(CAVAN_TARGET_EABI)$${suffix}"; \
 	done
+ifneq ($(CAVAN_TARGET_EABI),androideabi)
 ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 	$(Q)sed 's/\<__packed\>/__attribute__ ((__packed__))/g' $(SYSROOT_PATH)/usr/include/mtd/ubi-user.h -i
 	$(call auto_make,install_library,$(MARK_TOOLCHIAN),$(OUT_TOOLCHIAN),$(XML_CONFIG))
