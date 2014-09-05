@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-	<string name="adb_super_user">ADB超级用户</string>
+    <string name="adb_super_user">ADB超级用户</string>
     <string name="app_name">硬件信息</string>
     <string name="lcd_info">LCD显示屏</string>
     <string name="flash_info">内部存储器</string>
     <string name="tp_info">触摸屏</string>
     <string name="gsensor_info">重力感应</string>
+    <string name="psensor_info">距离感应</string>
     <string name="camera_info">摄像头</string>
     <string name="front_camera">前置摄像头</string>
     <string name="back_camera">后置摄像头</string>
@@ -89,4 +90,7 @@
     <string name="vendor_name_daling">大凌</string>
     <string name="vendor_name_ov">豪威</string>
     <string name="vendor_name_apex">艾卓尔泰</string>
+    <string name="vendor_name_hongneng">宏能</string>
+    <string name="vendor_name_avago">安华高</string>
+    <string name="vendor_name_mcube">矽立</string>
 </resources>

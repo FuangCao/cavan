@@ -2,8 +2,6 @@ package com.cavan.huahardwareinfo;
 
 import java.util.HashMap;
 
-import com.cavan.huahardwareinfo.R;
-
 class NandFlashDevice {
 	private String name;
 	int mPageSize;

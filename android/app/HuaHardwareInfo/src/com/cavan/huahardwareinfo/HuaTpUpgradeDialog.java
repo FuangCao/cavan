@@ -30,8 +30,6 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.cavan.huahardwareinfo.R;
-
 public class HuaTpUpgradeDialog extends AlertDialog implements OnCheckedChangeListener {
 	public static final int MSG_PROGRESS_CHANGED = 0;
 	public static final int MSG_STATE_CHANGED = 1;
@@ -256,17 +254,17 @@ public class HuaTpUpgradeDialog extends AlertDialog implements OnCheckedChangeLi
 		super.onCreate(savedInstanceState);
 
 		if (ActivityManager.isUserAMonkey()) {
-    		Log.d(TAG, getClass() + "in monkey test mode");
-    	} else {
-	    	getButton(BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+			Log.d(TAG, getClass() + "in monkey test mode");
+		} else {
+			getButton(BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					upgradeFirmware();
 				}
 			});
 
-    		scanFirmware();
-    	}
+			scanFirmware();
+		}
 	}
 
 	@Override

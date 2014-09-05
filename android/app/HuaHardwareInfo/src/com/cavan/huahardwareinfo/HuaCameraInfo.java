@@ -1,7 +1,5 @@
 package com.cavan.huahardwareinfo;
 
-import com.cavan.huahardwareinfo.R;
-
 import android.os.Build;
 
 public class HuaCameraInfo {
@@ -9,12 +7,24 @@ public class HuaCameraInfo {
 		new HuaCameraInfo("AT2250", R.string.vendor_name_hongtu, R.string.vendor_name_sanglaishi),
 		new HuaCameraInfo("SP2518", R.string.vendor_name_sibike, R.string.vendor_name_boyi)
 	};
+
 	private static final HuaCameraInfo[] mCameraInfo_ZC2501 = {
 		new HuaCameraInfo("GC2035", R.string.vendor_name_geke, R.string.vendor_name_tongju),
+		new HuaCameraInfo("SP2529", R.string.vendor_name_sibike, R.string.vendor_name_boyi),
 		new HuaCameraInfo("GC0339", R.string.vendor_name_geke, R.string.vendor_name_boyi),
-		new HuaCameraInfo("GC5004", R.string.vendor_name_geke, R.string.vendor_name_geke),
-		new HuaCameraInfo("OV5648", R.string.vendor_name_ov, R.string.vendor_name_ov),
-		new HuaCameraInfo("SP2529", R.string.vendor_name_sibike, R.string.vendor_name_boyi)
+		new HuaCameraInfo("GC5004", R.string.vendor_name_geke, R.string.vendor_name_tongju),
+		new HuaCameraInfo("GC0310", R.string.vendor_name_geke, R.string.vendor_name_tongju),
+		new HuaCameraInfo("OV5648", R.string.vendor_name_ov, R.string.vendor_name_boyi),
+		new HuaCameraInfo("SP5408", R.string.vendor_name_sibike, R.string.vendor_name_boyi),
+		new HuaCameraInfo("SP0A20", R.string.vendor_name_sibike, R.string.vendor_name_boyi)
+	};
+
+    private static final HuaCameraInfo[] mCameraInfo_ZC2501_TW = {
+		new HuaCameraInfo("GC5004", R.string.vendor_name_geke, R.string.vendor_name_tongju),
+		new HuaCameraInfo("GC0310", R.string.vendor_name_geke, R.string.vendor_name_tongju),
+		new HuaCameraInfo("OV5648", R.string.vendor_name_ov, R.string.vendor_name_boyi),
+		new HuaCameraInfo("SP5408", R.string.vendor_name_sibike, R.string.vendor_name_boyi),
+		new HuaCameraInfo("SP0A20", R.string.vendor_name_sibike, R.string.vendor_name_boyi)
 	};
 
 	private String mName;
@@ -45,8 +55,10 @@ public class HuaCameraInfo {
 
 		if (Build.BOARD.equals("hs8801")) {
 			infos = mCameraInfo_HS8801;
-		} else if (Build.DEVICE.equals("P810N30") || Build.DEVICE.equals("APT_TW_P810N30")) {
+		} else if (Build.DEVICE.equals("P810N30")) {
 			infos = mCameraInfo_ZC2501;
+		}else if (Build.DEVICE.equals("APT_TW_P810N30")) {
+			infos = mCameraInfo_ZC2501_TW;
 		} else {
 			return null;
 		}

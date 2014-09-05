@@ -2,8 +2,6 @@ package com.cavan.huahardwareinfo;
 
 import java.util.HashMap;
 
-import com.cavan.huahardwareinfo.R;
-
 public class HuaMmcInfo {
 	static private HashMap<Integer, Integer> mHashMapVendorName = new HashMap<Integer, Integer>();
 

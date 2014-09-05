@@ -35,9 +35,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name="com.cavan.huamobile.HuaTpFwReceiver">
+        <receiver android:name="com.cavan.huahardwareinfo.HuaTpFwReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <!-- action android:name="android.provider.Telephony.SECRET_CODE"/ -->
+                <!-- data android:scheme="android_secret_code" android:host="837802"/ -->
+            </intent-filter>
+        </receiver>
+        <receiver android:name="com.cavan.huamobile.HuaAdbRootReceiver">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SECRET_CODE"/>
+                <data android:scheme="android_secret_code" android:host="0000"/>
             </intent-filter>
         </receiver>
     </application>

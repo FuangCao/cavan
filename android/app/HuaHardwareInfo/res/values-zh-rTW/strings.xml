@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-	<string name="adb_super_user">ADB超級用戶</string>
+    <string name="adb_super_user">ADB超級用戶</string>
     <string name="app_name">硬件信息</string>
     <string name="lcd_info">LCD顯示屏</string>
     <string name="flash_info">內部存儲器</string>
     <string name="tp_info">觸摸屏</string>
     <string name="gsensor_info">重力感應</string>
+    <string name="psensor_info">距離感應</string>
     <string name="camera_info">攝像頭</string>
     <string name="front_camera">前置攝像頭</string>
     <string name="back_camera">後置攝像頭</string>
@@ -38,7 +39,7 @@
     <string name="msg_fw_upgrade_complete">固件升級成功</string>
     <string name="msg_fw_upgrade_faild">固件升級失敗</string>
     <string name="msg_fw_not_found">沒有找到可用的固件</string>
-	<string name="msg_new_fw_found">發現新固件</string>
+    <string name="msg_new_fw_found">發現新固件</string>
     <string name="msg_select_fw">請選擇一個固件文件</string>
     <string name="start_upgrade">開始升級</string>
     <string name="enable_adb_root_permission">允許ADB以ROOT權限運行</string>
@@ -87,4 +88,7 @@
     <string name="vendor_name_daling">大淩</string>
     <string name="vendor_name_ov">豪威</string>
     <string name="vendor_name_apex">艾卓爾泰</string>
+    <string name="vendor_name_hongneng">宏能</string>
+    <string name="vendor_name_avago">安華高</string>
+    <string name="vendor_name_mcube">矽立</string>
 </resources>

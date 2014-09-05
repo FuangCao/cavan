@@ -1,7 +1,5 @@
 package com.cavan.huahardwareinfo;
 
-import com.cavan.huahardwareinfo.R;
-
 import android.os.Build;
 
 public class HuaLcdVendorInfo {
@@ -23,6 +21,14 @@ public class HuaLcdVendorInfo {
 		new HuaLcdVendorInfo(0x5512, 0, R.string.vendor_name_lide),
 		new HuaLcdVendorInfo(0x5512, R.string.vendor_name_lide, "lide")
 	};
+
+	private static final HuaLcdVendorInfo[] mVendorInfo_ZC2501_TW = {
+			new HuaLcdVendorInfo(0x9806E, R.string.vendor_name_tongxingda, "txd"),
+			new HuaLcdVendorInfo(0x9806E, R.string.vendor_name_yashi, "yashi"),
+			new HuaLcdVendorInfo(0x8018B, R.string.vendor_name_zhongxianwei, "cdt"),
+			new HuaLcdVendorInfo(0x5512, R.string.vendor_name_lide, "lide")
+	};
+
 
 	private int mId;
 	private int mVendorId;
@@ -60,9 +66,11 @@ public class HuaLcdVendorInfo {
 	public static HuaLcdVendorInfo[] getVendorInfoList() {
 		if (Build.BOARD.equals("hs8801")) {
 			return mVendorInfo_HS8801;
-		} else if (Build.DEVICE.equals("P810N30") || Build.DEVICE.equals("APT_TW_P810N30")) {
+		} else if (Build.DEVICE.equals("P810N30")) {
 			return mVendorInfo_ZC2501;
-		} else {
+		} else if (Build.DEVICE.equals("APT_TW_P810N30")) {
+			return mVendorInfo_ZC2501_TW;
+		}else {
 			return null;
 		}
 	}

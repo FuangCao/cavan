@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-	<string name="adb_super_user">Adb Super User</string>
+    <string name="adb_super_user">Adb Super User</string>
     <string name="app_name">Hardware Info</string>
     <string name="lcd_info">LCD</string>
     <string name="flash_info">Flash</string>
     <string name="tp_info">Touchscreen</string>
     <string name="gsensor_info">Accelerometer</string>
+    <string name="psensor_info">Proximity</string>
     <string name="camera_info">Camera</string>
     <string name="front_camera">Front Camera</string>
     <string name="back_camera">Back Camera</string>
@@ -89,4 +90,7 @@
     <string name="vendor_name_daling">DarLing</string>
     <string name="vendor_name_ov">OmniVision</string>
     <string name="vendor_name_apex">Apex</string>
+    <string name="vendor_name_hongneng">HongNeng</string>
+    <string name="vendor_name_avago">Avago</string>
+    <string name="vendor_name_mcube">mCube</string>
 </resources>

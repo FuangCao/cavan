@@ -2,8 +2,6 @@ package com.cavan.huahardwareinfo;
 
 import java.util.HashMap;
 
-import com.cavan.huahardwareinfo.R;
-
 import android.os.Build;
 
 public class HuaTouchscreenVendorInfo {
