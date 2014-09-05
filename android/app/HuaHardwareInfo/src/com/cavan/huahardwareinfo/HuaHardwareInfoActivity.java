@@ -78,9 +78,9 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 		if (ActivityManager.isUserAMonkey()) {
-    		Log.d(TAG, getClass() + "in monkey test mode");
-    		return true;
-    	}
+			Log.d(TAG, getClass() + "in monkey test mode");
+			return true;
+		}
 
 		String key = preference.getKey();
 
