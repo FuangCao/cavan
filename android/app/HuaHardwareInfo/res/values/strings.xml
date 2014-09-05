@@ -26,6 +26,7 @@
     <string name="info_detail">详细信息</string>
     <string name="info_name">名称</string>
     <string name="info_type">类型</string>
+    <string name="poweron_auto_upgrade">开机自动升级固件</string>
     <string name="msg_tp_fw_upgrade_waring">警告：固件升级过程中不能拔电池，不能退出升级程序，否则，触摸屏将无法使用。</string>
     <string name="msg_auto_recovery">"<xliff:g>%1$d</xliff:g> 秒钟后自动恢复固件"</string>
     <string name="msg_auto_upgrade">"<xliff:g>%1$d</xliff:g> 秒钟后自动升级固件"</string>

@@ -19,10 +19,17 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/radioGroup" />
 
+    <CheckBox
+        android:id="@+id/checkBoxAutoUpgrade"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/poweron_auto_upgrade"
+        android:layout_below="@+id/progressBar" />
+
     <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/progressBar" />
+        android:layout_below="@+id/checkBoxAutoUpgrade" />
 </RelativeLayout>

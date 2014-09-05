@@ -26,6 +26,7 @@
     <string name="info_detail">Detailed Information</string>
     <string name="info_name">Name</string>
     <string name="info_type">Type</string>
+    <string name="poweron_auto_upgrade">Poweron auto upgrade firmware</string>
     <string name="msg_tp_fw_upgrade_waring">"Warning: during the firmware writing operation, don't plug out the battery, don't quit the upgrade program, otherwise, the touch screen will not be able to use."</string>
     <string name="msg_auto_recovery">"Automatic recovery after <xliff:g>%1$d</xliff:g> seconds"</string>
     <string name="msg_auto_upgrade">"Automatic upgrade after <xliff:g>%1$d</xliff:g> seconds"</string>

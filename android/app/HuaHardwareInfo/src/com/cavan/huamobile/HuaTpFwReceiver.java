@@ -23,7 +23,7 @@ public class HuaTpFwReceiver extends BroadcastReceiver {
 
 		if (fwName != null && fwName.length() > 0) {
 			recovery = true;
-		} else if (touchscreenDevice.ifNeedAutoUpgrade()) {
+		} else if (HuaTouchscreenDevice.getAutoUpgrade(context) && touchscreenDevice.ifNeedAutoUpgrade()) {
 			recovery = false;
 			fwName = null;
 		} else {

@@ -1,13 +1,8 @@
 package com.cavan.huamobile;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.xmlpull.v1.XmlPullParserException;
-
-import com.cavan.huahardwareinfo.R;
 
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -26,13 +21,18 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class HuaTpUpgradeDialog extends AlertDialog {
+import com.cavan.huahardwareinfo.R;
+
+public class HuaTpUpgradeDialog extends AlertDialog implements OnCheckedChangeListener {
 	public static final int MSG_PROGRESS_CHANGED = 0;
 	public static final int MSG_STATE_CHANGED = 1;
 	public static final int MSG_SCAN_COMPLETE = 3;
@@ -57,6 +57,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	private ProgressBar mProgressBar;
 	private TextView mTextView;
 	private RadioGroup mRadioGroup;
+	private CheckBox mCheckBoxAutoUpgrade;
 	private HuaHardwareInfoActivity mActivity;
 	private String mFwName;
 	private boolean mAutoUpgrade;
@@ -176,7 +177,6 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		mActivity = activity;
 		mTouchscreenDevice = activity.getTouchscreenDevice();
 		mFwName = mTouchscreenDevice.getFwName();
-		mAutoUpgrade = mTouchscreenDevice.ifNeedAutoUpgrade();
 	}
 
 	protected HuaTpUpgradeDialog(Context context, HuaTouchscreenDevice touchscreenDevice, String fwName) {
@@ -191,6 +191,8 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 			mAutoRecovery = true;
 			mFwName = fwName;
 		}
+
+		setCancelable(false);
 	}
 
 	private void showToast(String message, int duration, boolean updateTextView) {
@@ -222,7 +224,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		mWakeLock = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getClass().getName());
 		mWakeLock.acquire();
 
-		if (mAutoRecovery) {
+		if (mAutoRecovery || mAutoUpgrade) {
 			KeyguardManager keyguardManager  = (KeyguardManager) getContext().getSystemService(Context.KEYGUARD_SERVICE);
 			mKeyguardLock = keyguardManager.newKeyguardLock(getClass().getName());
 			if (mKeyguardLock != null) {
@@ -240,6 +242,10 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 		mTextView = (TextView) mView.findViewById(R.id.textView);
 		mRadioGroup = (RadioGroup) mView.findViewById(R.id.radioGroup);
+
+		mCheckBoxAutoUpgrade = (CheckBox) mView.findViewById(R.id.checkBoxAutoUpgrade);
+		mCheckBoxAutoUpgrade.setChecked(HuaTouchscreenDevice.getAutoUpgrade(getContext()));
+		mCheckBoxAutoUpgrade.setOnCheckedChangeListener(this);
 
 		Resources resources = getContext().getResources();
 		setTitle(resources.getString(R.string.info_fw_upgrade));
@@ -265,6 +271,8 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 	@Override
 	public void dismiss() {
+		Log.d(TAG, getClass() + " dismiss()");
+
 		mHandler.removeMessages(MSG_FW_RECOVERY);
 
 		if (mWakeLock.isHeld()) {
@@ -432,5 +440,11 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		sendRecoveryMessage(delaySecond);
 
 		return true;
+	}
+
+	@Override
+	public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
+		Log.d(TAG, "onCheckedChanged");
+		HuaTouchscreenDevice.setAutoUpgrade(getContext(), arg1);
 	}
 }

@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemProperties;
 import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
 import android.util.Log;
 import android.util.Xml;
 
@@ -28,6 +29,7 @@ public class HuaTouchscreenDevice {
 
 	private static final String PROP_TP_FW_UPGRADE_PENDING = "persist.sys.tp.fw.pending";
 	private static final String SETTING_TP_FW_UPGRADE_PENDING = "hua_tp_fw_pending";
+	private static final String SETTING_TP_FW_UPGRADE_AUTO = "hua_tp_fw_upgrade_auto";
 
 	private static final File mFileVersionXml = new File("/system/firmware/version.xml");
 
@@ -374,5 +376,19 @@ public class HuaTouchscreenDevice {
 	public static void setPendingFirmware(final Context context, String fwName) {
 		Settings.System.putString(context.getContentResolver(), SETTING_TP_FW_UPGRADE_PENDING, fwName);
 		SystemProperties.set(PROP_TP_FW_UPGRADE_PENDING, fwName);
+	}
+
+	public static boolean getAutoUpgrade(final Context context) {
+		try {
+			return Settings.System.getInt(context.getContentResolver(), SETTING_TP_FW_UPGRADE_AUTO) > 0;
+		} catch (SettingNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		return true;
+	}
+
+	public static void setAutoUpgrade(final Context context, boolean auto) {
+		Settings.System.putInt(context.getContentResolver(), SETTING_TP_FW_UPGRADE_AUTO, auto ? 1 : 0);
 	}
 }
