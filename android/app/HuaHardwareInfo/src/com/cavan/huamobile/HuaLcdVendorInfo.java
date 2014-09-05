@@ -1,4 +1,6 @@
-package com.cavan.huahardwareinfo;
+package com.cavan.huamobile;
+
+import com.cavan.huahardwareinfo.R;
 
 import android.os.Build;
 
@@ -58,7 +60,7 @@ public class HuaLcdVendorInfo {
 	public static HuaLcdVendorInfo[] getVendorInfoList() {
 		if (Build.BOARD.equals("hs8801")) {
 			return mVendorInfo_HS8801;
-		} else if (Build.DEVICE.equals("P810N30")) {
+		} else if (Build.DEVICE.equals("P810N30") || Build.DEVICE.equals("APT_TW_P810N30")) {
 			return mVendorInfo_ZC2501;
 		} else {
 			return null;

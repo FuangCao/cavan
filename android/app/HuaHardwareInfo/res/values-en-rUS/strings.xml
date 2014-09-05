@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+	<string name="adb_super_user">Adb Super User</string>
     <string name="app_name">Hardware Info</string>
     <string name="lcd_info">LCD</string>
     <string name="flash_info">Flash</string>
@@ -27,16 +28,21 @@
     <string name="info_type">Type</string>
     <string name="msg_tp_fw_upgrade_waring">"Warning: during the firmware writing operation, don't plug out the battery, don't quit the upgrade program, otherwise, the touch screen will not be able to use."</string>
     <string name="msg_auto_recovery">"Automatic recovery after <xliff:g>%1$d</xliff:g> seconds"</string>
+    <string name="msg_auto_upgrade">"Automatic upgrade after <xliff:g>%1$d</xliff:g> seconds"</string>
     <string name="msg_donot_recovery">Don\'t recovery</string>
-    <string name="msg_recovery_immediate">Immediate recovery</string>
+    <string name="msg_recovery_immediate">Recovery immediate</string>
     <string name="msg_fw_not_match">The firmware is not match</string>
     <string name="msg_fw_upgrade_pepare">"Preparing to upgrade, please wait ..."</string>
     <string name="msg_fw_upgrade_stopping">"Complete the upgrade, please wait ..."</string>
     <string name="msg_fw_upgrade_complete">Firmware upgrade successfully</string>
     <string name="msg_fw_upgrade_faild">Firmware update failed</string>
     <string name="msg_fw_not_found">Firmware not found</string>
+    <string name="msg_new_fw_found">New firmware found</string>
     <string name="msg_select_fw">Please select a firmware</string>
+    <string name="donot_upgrade">Don\'t upgrade</string>
+    <string name="upgrade_immediate">Upgrade immediate</string>
     <string name="start_upgrade">Start upgrade</string>
+    <string name="enable_adb_root_permission">Allow adb run as root</string>
     <string name="vendor_name_unknown">unknown</string>
     <string name="vendor_name_simcom">Simcom</string>
     <string name="vendor_name_dianjing">DianJing</string>

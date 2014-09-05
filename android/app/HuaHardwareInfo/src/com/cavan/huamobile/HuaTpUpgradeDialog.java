@@ -1,9 +1,15 @@
-package com.cavan.huahardwareinfo;
+package com.cavan.huamobile;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.xmlpull.v1.XmlPullParserException;
+
+import com.cavan.huahardwareinfo.R;
+
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.KeyguardManager;
 import android.app.KeyguardManager.KeyguardLock;
@@ -54,6 +60,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	private HuaHardwareInfoActivity mActivity;
 	private String mFwName;
 	private boolean mAutoUpgrade;
+	private boolean mAutoRecovery;
 	private HuaTouchscreenDevice mTouchscreenDevice;
 	private PowerManager mPowerManager;
 	private WakeLock mWakeLock;
@@ -78,7 +85,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 				case HuaTouchscreenDevice.FW_STATE_UPGRADE_COMPLETE:
 					mTouchscreenDevice.fillVendorInfo();
 					String newName = mTouchscreenDevice.getFwName();
-					String oldName = HuaTouchscreenDevice.getPendingFirmware(mActivity);
+					String oldName = HuaTouchscreenDevice.getPendingFirmware(getContext());
 					Log.d(TAG, "newName = " + newName + ", oldName = " + oldName);
 					if (mActivity != null && (newName == null || newName.equals(oldName) == false)) {
 						showWarningDialog(false, 30);
@@ -112,9 +119,10 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 					}
 
 					mRadioGroup.check(mRadioGroup.getChildAt(0).getId());
-
-					if (mActivity == null) {
+					if (mAutoRecovery) {
 						upgradeFirmware();
+					} else if (mAutoUpgrade) {
+						showWarningDialog(false, 30);
 					}
 				} else {
 					showToast(R.string.msg_fw_not_found, Toast.LENGTH_SHORT, true);
@@ -128,11 +136,6 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 			case MSG_FW_RECOVERY:
 				if (msg.arg1 > 0) {
-					if (mDialog != null) {
-						String message = getContext().getResources().getString(R.string.msg_auto_recovery, msg.arg1);
-						mDialog.setMessage(message);
-					}
-
 					sendRecoveryMessage(msg.arg1 - 1);
 				} else {
 					recoveryFirmware();
@@ -159,7 +162,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 				break;
 
 			case DialogInterface.BUTTON_NEGATIVE:
-				HuaTouchscreenDevice.setPendingFirmware(mActivity, "");
+				HuaTouchscreenDevice.setPendingFirmware(getContext(), "");
 				break;
 			}
 
@@ -173,6 +176,7 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 		mActivity = activity;
 		mTouchscreenDevice = activity.getTouchscreenDevice();
 		mFwName = mTouchscreenDevice.getFwName();
+		mAutoUpgrade = mTouchscreenDevice.ifNeedAutoUpgrade();
 	}
 
 	protected HuaTpUpgradeDialog(Context context, HuaTouchscreenDevice touchscreenDevice, String fwName) {
@@ -180,11 +184,11 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 		mActivity = null;
 		mTouchscreenDevice = touchscreenDevice;
-
-		if (mFwName == null) {
+		if (fwName == null) {
 			mAutoUpgrade = true;
 			mFwName = mTouchscreenDevice.getFwName();
 		} else {
+			mAutoRecovery = true;
 			mFwName = fwName;
 		}
 	}
@@ -211,11 +215,14 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG, "mAutoUpgrade = " + mAutoUpgrade);
+		Log.d(TAG, "mAutoRecovery = " + mAutoRecovery);
+
 		mPowerManager = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
 		mWakeLock = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getClass().getName());
 		mWakeLock.acquire();
 
-		if (mActivity == null) {
+		if (mAutoRecovery) {
 			KeyguardManager keyguardManager  = (KeyguardManager) getContext().getSystemService(Context.KEYGUARD_SERVICE);
 			mKeyguardLock = keyguardManager.newKeyguardLock(getClass().getName());
 			if (mKeyguardLock != null) {
@@ -242,18 +249,24 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 		super.onCreate(savedInstanceState);
 
-		getButton(BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				upgradeFirmware();
-			}
-		});
+		if (ActivityManager.isUserAMonkey()) {
+    		Log.d(TAG, getClass() + "in monkey test mode");
+    	} else {
+	    	getButton(BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					upgradeFirmware();
+				}
+			});
 
-		scanFirmware();
+    		scanFirmware();
+    	}
 	}
 
 	@Override
 	public void dismiss() {
+		mHandler.removeMessages(MSG_FW_RECOVERY);
+
 		if (mWakeLock.isHeld()) {
 			mWakeLock.release();
 		}
@@ -362,10 +375,17 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 	}
 
 	private void sendRecoveryMessage(int delaySecond) {
-		if (mDialog != null) {
-			String message = getContext().getResources().getString(R.string.msg_auto_recovery, delaySecond);
-			if (message != null) {
-				mDialog.setMessage(message);
+		int id = mAutoUpgrade ? R.string.msg_auto_upgrade : R.string.msg_auto_recovery;
+		String text = getContext().getResources().getString(id, delaySecond);
+		Log.d(TAG, text);
+		if (text != null) {
+			if (mDialog != null) {
+				mDialog.setMessage(text);
+				if (mDialog.isShowing() == false) {
+					mDialog.show();
+				}
+			} else {
+				mTextView.setText(text);
 			}
 		}
 
@@ -376,34 +396,40 @@ public class HuaTpUpgradeDialog extends AlertDialog {
 
 	private boolean showWarningDialog(boolean isFailed, int delaySecond)
 	{
-		if (mDialog == null) {
-			AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-			builder.setTitle(R.string.msg_fw_not_match);
-			builder.setNegativeButton(R.string.msg_donot_recovery, mClickListener);
-			builder.setCancelable(false);
-			builder.setPositiveButton(R.string.msg_recovery_immediate, mClickListener);
-
-			mDialog = builder.create();
-		}
-
-		if (mDialog == null) {
-			return false;
-		}
-
-		if (isFailed) {
-			mDialog.setTitle(R.string.msg_fw_upgrade_faild);
-		} else {
-			mDialog.setTitle(R.string.msg_fw_not_match);
-		}
-
 		if (mToast != null) {
 			mToast.cancel();
 		}
 
-		sendRecoveryMessage(delaySecond);
+		if (mDialog == null && mActivity != null) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
 
-		dismiss();
-		mDialog.show();
+			if (mAutoUpgrade) {
+				builder.setNegativeButton(R.string.donot_upgrade, mClickListener);
+				builder.setPositiveButton(R.string.upgrade_immediate, mClickListener);
+			} else {
+				builder.setNegativeButton(R.string.msg_donot_recovery, mClickListener);
+				builder.setPositiveButton(R.string.msg_recovery_immediate, mClickListener);
+			}
+
+			builder.setCancelable(false);
+			mDialog = builder.create();
+		}
+
+		if (mDialog != null) {
+			if (isFailed) {
+				mDialog.setTitle(R.string.msg_fw_upgrade_faild);
+			} else if (mAutoUpgrade) {
+				mDialog.setTitle(R.string.msg_new_fw_found);
+			} else {
+				mDialog.setTitle(R.string.msg_fw_not_match);
+			}
+
+			dismiss();
+		} else {
+			getButton(BUTTON_NEGATIVE).setEnabled(true);
+		}
+
+		sendRecoveryMessage(delaySecond);
 
 		return true;
 	}

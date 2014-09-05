@@ -1,4 +1,4 @@
-package com.cavan.huahardwareinfo;
+package com.cavan.huamobile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +28,8 @@ public class HuaTouchscreenDevice {
 
 	private static final String PROP_TP_FW_UPGRADE_PENDING = "persist.sys.tp.fw.pending";
 	private static final String SETTING_TP_FW_UPGRADE_PENDING = "hua_tp_fw_pending";
+
+	private static final File mFileVersionXml = new File("/system/firmware/version.xml");
 
 	private static final HuaTouchscreenDevice[] mTouchscreenList = {
 		new HuaTouchscreenDevice("CY8C242", "/sys/bus/i2c/devices/i2c-2/2-0024/firmware_id", "cy8c242.iic"),
@@ -141,12 +143,13 @@ public class HuaTouchscreenDevice {
 		return null;
 	}
 
-	public static int getFwVersionFromXml(String fwName, String xmlPath) throws XmlPullParserException, IOException {
-		if (xmlPath == null) {
-			xmlPath = "/system/firmware/version.xml";
+	public int getFwVersionFromXml() throws XmlPullParserException, IOException, NumberFormatException {
+		String fwName = getFwName();
+		if (fwName == null) {
+			return -1;
 		}
 
-		FileInputStream inputStream = new FileInputStream(xmlPath);
+		FileInputStream inputStream = new FileInputStream(mFileVersionXml );
 		XmlPullParser parser = Xml.newPullParser();
 		parser.setInput(inputStream, "UTF-8");
 
@@ -179,18 +182,42 @@ public class HuaTouchscreenDevice {
 					}
 				}
 
+				Log.d(TAG, "name = " + name + ", version = " + version);
+
 				if (name != null && version != null && name.equals(fwName)) {
-					return Integer.parseInt(version);
+					if (version.startsWith("0x") || version.startsWith("0X")) {
+						version = version.substring(2);
+					}
+
+					return Integer.parseInt(version, 16);
 				}
 				break;
 			}
 
-			event = parser.next();
+			event = parser.nextTag();
 		}
 	}
 
-	public static int getFwVersionFromXml(String fwName) throws XmlPullParserException, IOException {
-		return getFwVersionFromXml(fwName, null);
+	public boolean ifNeedAutoUpgrade() {
+		if (mVendorInfo == null) {
+			return false;
+		}
+
+		try {
+			int version_new = getFwVersionFromXml();
+			Log.d(TAG, "version new = " + version_new);
+			int version_now = mVendorInfo.getFwVersion();
+			Log.d(TAG, "version now = " + version_now);
+			return version_new > version_now;
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (XmlPullParserException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return false;
 	}
 
 	public String getIcName() {
@@ -212,7 +239,7 @@ public class HuaTouchscreenDevice {
 
 		String project;
 
-		if (Build.DEVICE.equals("P810N30")) {
+		if (Build.DEVICE.equals("P810N30") || Build.DEVICE.equals("APT_TW_P810N30")) {
 			project = "zc2501";
 		} else if (Build.DEVICE.equals("P810E01")) {
 			project = "zc2351";

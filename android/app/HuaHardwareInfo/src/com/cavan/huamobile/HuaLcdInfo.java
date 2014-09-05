@@ -1,4 +1,4 @@
-package com.cavan.huahardwareinfo;
+package com.cavan.huamobile;
 
 import java.util.HashMap;
 import java.util.Map.Entry;

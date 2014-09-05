@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+	<string name="adb_super_user">ADB超级用户</string>
     <string name="app_name">硬件信息</string>
     <string name="lcd_info">LCD显示屏</string>
     <string name="flash_info">内部存储器</string>
@@ -27,6 +28,7 @@
     <string name="info_type">类型</string>
     <string name="msg_tp_fw_upgrade_waring">警告：固件升级过程中不能拔电池，不能退出升级程序，否则，触摸屏将无法使用。</string>
     <string name="msg_auto_recovery">"<xliff:g>%1$d</xliff:g> 秒钟后自动恢复固件"</string>
+    <string name="msg_auto_upgrade">"<xliff:g>%1$d</xliff:g> 秒钟后自动升级固件"</string>
     <string name="msg_donot_recovery">不恢复</string>
     <string name="msg_recovery_immediate">立即恢复</string>
     <string name="msg_fw_not_match">固件不匹配</string>
@@ -35,8 +37,12 @@
     <string name="msg_fw_upgrade_complete">固件升级成功</string>
     <string name="msg_fw_upgrade_faild">固件升级失败</string>
     <string name="msg_fw_not_found">没有找到可用的固件</string>
+    <string name="msg_new_fw_found">发现新固件</string>
     <string name="msg_select_fw">请选择一个固件文件</string>
+    <string name="donot_upgrade">不升级</string>
+    <string name="upgrade_immediate">立即升级</string>
     <string name="start_upgrade">开始升级</string>
+    <string name="enable_adb_root_permission">允许ADB以ROOT权限运行</string>
     <string name="vendor_name_unknown">未知</string>
     <string name="vendor_name_simcom">希姆通</string>
     <string name="vendor_name_dianjing">点睛</string>

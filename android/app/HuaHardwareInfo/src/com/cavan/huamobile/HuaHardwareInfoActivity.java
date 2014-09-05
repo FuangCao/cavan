@@ -1,4 +1,4 @@
-package com.cavan.huahardwareinfo;
+package com.cavan.huamobile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.cavan.huahardwareinfo.R;
+
+import android.app.ActivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -74,6 +77,11 @@ public class HuaHardwareInfoActivity extends PreferenceActivity {
 
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+		if (ActivityManager.isUserAMonkey()) {
+    		Log.d(TAG, getClass() + "in monkey test mode");
+    		return true;
+    	}
+
 		String key = preference.getKey();
 
 		Log.d(TAG, "key = " + preference.getKey());

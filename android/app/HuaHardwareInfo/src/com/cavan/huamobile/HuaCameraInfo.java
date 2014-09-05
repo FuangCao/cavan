@@ -1,4 +1,6 @@
-package com.cavan.huahardwareinfo;
+package com.cavan.huamobile;
+
+import com.cavan.huahardwareinfo.R;
 
 import android.os.Build;
 
@@ -43,7 +45,7 @@ public class HuaCameraInfo {
 
 		if (Build.BOARD.equals("hs8801")) {
 			infos = mCameraInfo_HS8801;
-		} else if (Build.DEVICE.equals("P810N30")) {
+		} else if (Build.DEVICE.equals("P810N30") || Build.DEVICE.equals("APT_TW_P810N30")) {
 			infos = mCameraInfo_ZC2501;
 		} else {
 			return null;

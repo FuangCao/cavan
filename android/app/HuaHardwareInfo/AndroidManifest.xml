@@ -20,15 +20,22 @@
         android:theme="@style/AppTheme"
         android:persistent="true" >
         <activity
-            android:name="com.cavan.huahardwareinfo.HuaHardwareInfoActivity"
+            android:name="com.cavan.huamobile.HuaHardwareInfoActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name="com.cavan.huahardwareinfo.HuaTpFwReceiver">
+        <activity
+            android:name="com.cavan.huamobile.HuaAdbRootActivity"
+            android:label="@string/adb_super_user" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <receiver android:name="com.cavan.huamobile.HuaTpFwReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

@@ -1,6 +1,8 @@
-package com.cavan.huahardwareinfo;
+package com.cavan.huamobile;
 
 import java.util.HashMap;
+
+import com.cavan.huahardwareinfo.R;
 
 import android.os.Build;
 
@@ -76,7 +78,7 @@ public class HuaTouchscreenVendorInfo {
 			mHashMapVendor.put(0x81, R.string.vendor_name_junda);
 			mHashMapVendor.put(0x82, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x83, R.string.vendor_name_lihe);
-		} else if (Build.DEVICE.equals("P810N30")) {
+		} else if (Build.DEVICE.equals("P810N30") || Build.DEVICE.equals("APT_TW_P810N30")) {
 			mHashMapVendor.put(0x58, R.string.vendor_name_lihe);
 			mHashMapVendor.put(0x59, R.string.vendor_name_dianjing);
 			mHashMapVendor.put(0x32, R.string.vendor_name_lianchuang);

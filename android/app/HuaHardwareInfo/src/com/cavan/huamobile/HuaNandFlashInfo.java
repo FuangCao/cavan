@@ -1,6 +1,8 @@
-package com.cavan.huahardwareinfo;
+package com.cavan.huamobile;
 
 import java.util.HashMap;
+
+import com.cavan.huahardwareinfo.R;
 
 class NandFlashDevice {
 	private String name;
