@@ -115,21 +115,41 @@ function cavan-apk-rename()
 
 function cavan-android-buildenv()
 {
-	export TARGET_GCC_VERSION_EXP="4.6.4"
+	export TARGET_GCC_VERSION_EXP="${1-4.7.4}-$(uname -m)"
 
-	ANDROID_PREBUILT_ARM_GCC_DIR="prebuilts/gcc/linux-x86/arm"
+	echo "TARGET_GCC_VERSION_EXP = ${TARGET_GCC_VERSION_EXP}"
 
-	[ -d "${CAVAN_TOOLCHIAN_GNUEABI}-${TARGET_GCC_VERSION_EXP}" ] && CAVAN_TOOLCHIAN_GNUEABI="${CAVAN_TOOLCHIAN_GNUEABI}-${TARGET_GCC_VERSION_EXP}"
-	[ -d "${CAVAN_TOOLCHIAN_ANDROIDEABI}-${TARGET_GCC_VERSION_EXP}" ] && CAVAN_TOOLCHIAN_ANDROIDEABI="${CAVAN_TOOLCHIAN_ANDROIDEABI}-${TARGET_GCC_VERSION_EXP}"
+	TOOLCHIAN_GNUEABI="${CAVAN_TOOLCHIAN_GNUEABI}-${TARGET_GCC_VERSION_EXP}"
+	TOOLCHIAN_ANDROIDEABI="${CAVAN_TOOLCHIAN_ANDROIDEABI}-${TARGET_GCC_VERSION_EXP}"
+
+	echo "TOOLCHIAN_GNUEABI = ${TOOLCHIAN_GNUEABI}"
+	echo "TOOLCHIAN_ANDROIDEABI = ${TOOLCHIAN_ANDROIDEABI}"
+
+	[ -d "${TOOLCHIAN_GNUEABI}" ] && [ -d "${TOOLCHIAN_ANDROIDEABI}" ] ||
+	{
+		echo "${TOOLCHIAN_GNUEABI} or ${TOOLCHIAN_ANDROIDEABI} not found"
+		return 1
+	}
+
+	DIR_ANDROID_PREBUILT_ARM_GCC="prebuilts/gcc/linux-x86/arm"
 
 	(
-		cd "${ANDROID_PREBUILT_ARM_GCC_DIR}" &&
+		cd "${DIR_ANDROID_PREBUILT_ARM_GCC}" &&
 		{
-			[ -e "arm-eabi-${TARGET_GCC_VERSION_EXP}" ] || ln -vsf "${CAVAN_TOOLCHIAN_GNUEABI}" "arm-eabi-${TARGET_GCC_VERSION_EXP}" || return 1
-			[ -e "arm-linux-androideabi-${TARGET_GCC_VERSION_EXP}" ] || ln -vsf "${CAVAN_TOOLCHIAN_ANDROIDEABI}" "arm-linux-androideabi-${TARGET_GCC_VERSION_EXP}" || return 1
+			rm -f "arm-eabi-${TARGET_GCC_VERSION_EXP}" && ln -vsf "${TOOLCHIAN_GNUEABI}" "arm-eabi-${TARGET_GCC_VERSION_EXP}" || return 1
+			rm -f "arm-linux-androideabi-${TARGET_GCC_VERSION_EXP}" ] && ln -vsf "${TOOLCHIAN_ANDROIDEABI}" "arm-linux-androideabi-${TARGET_GCC_VERSION_EXP}" || return 1
 		}
 	)
 
-	export TARGET_TOOLS_PREFIX="${TOOLS_HOME}/arm-cavan-linux-androideabi/bin/arm-cavan-linux-androideabi-"
+	DIR_INCLUDE_SYS="$(find /usr/include/ -maxdepth 2 -type d -name sys)"
+	FILE_CAPABILITY_H="${DIR_INCLUDE_SYS}/capability.h"
+
+	echo "DIR_INCLUDE_SYS = ${DIR_INCLUDE_SYS}"
+	echo "FILE_CAPABILITY_H = ${FILE_CAPABILITY_H}"
+
+	[ -f "${FILE_CAPABILITY_H}" ] || su -c "echo \"#include <sys/resource.h>\" > \"${FILE_CAPABILITY_H}\""
+
 	export HOST_TOOLCHAIN_PREFIX="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6"
+
+	echo "HOST_TOOLCHAIN_PREFIX = ${HOST_TOOLCHAIN_PREFIX}"
 }
