@@ -63,6 +63,11 @@ ifneq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
 TOOLCHIAN_COMMON_CONFIG += --with-sysroot=$(SYSROOT_PATH)
 endif
 
+CAVAN_TOOLCHIAN_PREFIXS = $(CAVAN_TARGET_ARCH)-linux-$(CAVAN_TARGET_EABI)
+ifneq ($(CAVAN_TARGET_EABI),androideabi)
+CAVAN_TOOLCHIAN_PREFIXS += $(CAVAN_TARGET_ARCH)-linux $(CAVAN_TARGET_ARCH)-eabi
+endif
+
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
 export SYSROOT_PATH TOOLCHIAN_COMMON_CONFIG LIBRARY_COMMON_CONFIG
 export CAVAN_HOST_ARCH CAVAN_HOST_PLAT
@@ -85,6 +90,7 @@ $(info GLIBC_VERSION = $(GLIBC_VERSION))
 $(info GMP_VERSION = $(GMP_VERSION))
 $(info MPC_VERSION = $(MPC_VERSION))
 $(info MPFR_VERSION = $(MPFR_VERSION))
+$(info CAVAN_TOOLCHIAN_PREFIXS = $(CAVAN_TOOLCHIAN_PREFIXS))
 $(info ============================================================)
 
 include $(MAKEFILE_DEFINES)
@@ -138,9 +144,10 @@ endif
 	$(Q)cd $(TOOLCHIAN_PATH)/bin && for tool in $(CAVAN_TARGET_PLAT)-*; \
 	do \
 		suffix="$${tool##$(CAVAN_TARGET_PLAT)}"; \
-		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-linux$${suffix}"; \
-		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-eabi$${suffix}"; \
-		ln -vsf "$${tool}" "$(CAVAN_TARGET_ARCH)-$(CAVAN_TARGET_EABI)$${suffix}"; \
+		for prefix in $(CAVAN_TOOLCHIAN_PREFIXS); \
+		do \
+			ln -vsf "$${tool}" "$${prefix}$${suffix}"; \
+		done; \
 	done
 ifneq ($(CAVAN_TARGET_EABI),androideabi)
 ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))

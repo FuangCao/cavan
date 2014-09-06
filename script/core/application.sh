@@ -112,3 +112,21 @@ function cavan-apk-rename()
 		mv -v "${fn}" "${nfn}"
 	done
 }
+
+function cavan-android-buildenv()
+{
+	export TARGET_GCC_VERSION_EXP="4.6.4"
+
+	ANDROID_PREBUILT_ARM_GCC_DIR="prebuilts/gcc/linux-x86/arm"
+
+	(
+		cd "${ANDROID_PREBUILT_ARM_GCC_DIR}" &&
+		{
+			[ -e "arm-eabi-${TARGET_GCC_VERSION_EXP}" ] || ln -vsf "${CAVAN_TOOLCHIAN_GNUEABI}" "arm-eabi-${TARGET_GCC_VERSION_EXP}" || return 1
+			[ -e "arm-linux-androideabi-${TARGET_GCC_VERSION_EXP}" ] || ln -vsf "${CAVAN_TOOLCHIAN_ANDROIDEABI}" "arm-linux-androideabi-${TARGET_GCC_VERSION_EXP}" || return 1
+		}
+	)
+
+	export TARGET_TOOLS_PREFIX="${TOOLS_HOME}/arm-cavan-linux-androideabi/bin/arm-cavan-linux-androideabi-"
+	export HOST_TOOLCHAIN_PREFIX="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6"
+}

@@ -13,10 +13,14 @@ SDK_HOME="${TOOLS_HOME}/${SDK_NAME}"
 	CLASSPATH=".$(find ${JAVA_HOME}/lib ${JRE_HOME}/lib -maxdepth 1 -name "*.jar" | while read line; do echo -n :${line}; done)"
 }
 
+CAVAN_TOOLCHIAN_NAME="arm-cavan-linux"
+CAVAN_TOOLCHIAN_GNUEABI="${TOOLS_HOME}/${CAVAN_TOOLCHIAN_NAME}-gnueabi"
+CAVAN_TOOLCHIAN_ANDROIDEABI="${TOOLS_HOME}/${CAVAN_TOOLCHIAN_NAME}-androideabi"
+
 CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
 CAVAN_OUT_ARM="${CAVAN_HOME}/out/arm/static"
 CAVAN_BIN="${CAVAN_OUT_DEBUG}:${CAVAN_HOME}/script"
-TOOLCHIAN_BIN="${TOOLS_HOME}/arm-cavan-linux-gnueabi/bin:${TOOLS_HOME}/arm-cavan-linux-androideabi/bin:${TOOLS_HOME}/gcc-4.1.2-glibc-2.5-nptl-3/arm-none-linux-gnueabi/bin"
+TOOLCHIAN_BIN="${CAVAN_TOOLCHIAN_GNUEABI}/bin:${CAVAN_TOOLCHIAN_ANDROIDEABI}/bin"
 SDK_BIN="${SDK_HOME}/platform-tools:${SDK_HOME}/tools"
 JAVA_BIN="${JAVA_HOME}/bin:${JRE_HOME}/bin"
 FSLDROID_BIN="${FSLDROID_HOME}/out/host/linux-x86/bin"
@@ -38,6 +42,7 @@ export JAVA_HOME JRE_HOME CLASSPATH PATH SDK_HOME
 export KERNEL_HOME UBOOT_HOME FSLDROID_HOME PRODUCT_HOME
 export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE CAVAN_OUT_DEBUG
 export CAVAN_HOME CAVAN_SERVER_IP CAVAN_SERVER_PORT
+export CAVAN_TOOLCHIAN_NAME CAVAN_TOOLCHIAN_GNUEABI CAVAN_TOOLCHIAN_ANDROIDEABI
 
 for fn in alias.sh file.sh bash_completion application.sh ${FSLDROID_HOME}/build/envsetup.sh
 do
