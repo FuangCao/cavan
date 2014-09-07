@@ -25,10 +25,17 @@ function tcp_copy_download()
 
 function download_main()
 {
-	local pkg_name pkg_path
+	local pkg_url pkg_name pkg_path mime_type
 
-	pkg_name="$(basename $1)"
+	[ "$1" ] || return 1
+
+	pkg_url="$1"
+	pkg_name="$(basename ${pkg_url})"
 	pkg_path="${TEMP_DOWNLOAD_PATH}/${pkg_name}"
+
+	echo "pkg_url = ${pkg_url}"
+	echo "pkg_name = ${pkg_name}"
+	echo "pkg_path = ${pkg_path}"
 
 	case "${DOWNLOAD_WAY}" in
 		tftp)
@@ -46,7 +53,7 @@ function download_main()
 			}
 			;;
 		*)
-			wget_download $1 ||
+			wget_download "${pkg_url}" ||
 			{
 				rm ${pkg_path} -rfv
 				return 1
@@ -54,7 +61,32 @@ function download_main()
 			;;
 	esac
 
-	mv ${pkg_path} . -v || return 1
+	mime_type=$(file -b --mime-type "${pkg_path}")
+
+	echo "mime_type = ${mime_type}"
+
+	case "${pkg_name}" in
+		*.xz | *.txz)
+			[ "${mime_type}" = "application/x-xz" ] || return 1
+			;;
+		*.bz2 | *.tbz)
+			[ "${mime_type}" = "application/x-bzip2" ] || return 1
+			;;
+		*.gz | *.tgz)
+			[ "${mime_type}" = "application/gzip" ] || return 1
+			;;
+		*.zip)
+			[ "${mime_type}" = "application/zip" ] || return 1
+			;;
+		*.rar)
+			[ "${mime_type}" = "application/x-rar" ] || return 1
+			;;
+		*)
+			echo "package ${pkg_name} type unknown"
+			;;
+	esac
+
+	mv -v "${pkg_path}" . || return 1
 
 	return 0
 }
