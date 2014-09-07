@@ -9,36 +9,40 @@ define download_package
 		$(call pr_red_info,Entry to directory $(DOWNLOAD_PATH) failed); \
 		exit 1; \
 	}; \
-	case "$2" in \
-		*.rar | *.zip | *.bz2 | *.gz | *.xz) \
-			file_list="$(notdir $2)"; \
-			if test -f "$(PACKAGE_PATH)/$${file_list}"; \
-			then \
-				file_list="$(PACKAGE_PATH)/$${file_list}"; \
-			else \
-				test -f "$${file_list}" || $(DOWNLOAD_COMMAND) $2 || exit 1; \
-				file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
-			fi; \
-			;; \
-		*) \
-			if [ "$3" ]; \
-			then \
-				type_list="$3"; \
-			else \
-				type_list="$(DOWNLOAD_TYPES)"; \
-			fi; \
-			for type in $${type_list}; \
-			do \
-				file_list="$1.$${type}"; \
-				$(DOWNLOAD_COMMAND) "$2/$${file_list}" && \
-				{ \
+	for url in $2; \
+	do \
+		case "$${url}" in \
+			*.rar | *.zip | *.bz2 | *.gz | *.xz) \
+				file_list="$$(basename $${url})"; \
+				if test -f "$(PACKAGE_PATH)/$${file_list}"; \
+				then \
+					file_list="$(PACKAGE_PATH)/$${file_list}"; \
+				else \
+					test -f "$${file_list}" || $(DOWNLOAD_COMMAND) $${url} || exit 1; \
 					file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
-					break; \
-				}; \
-				rm $${file_list} -rf; \
-			done; \
-			;; \
-	esac; \
+				fi; \
+				;; \
+			*) \
+				if [ "$3" ]; \
+				then \
+					type_list="$3"; \
+				else \
+					type_list="$(DOWNLOAD_TYPES)"; \
+				fi; \
+				for type in $${type_list}; \
+				do \
+					file_list="$1.$${type}"; \
+					$(DOWNLOAD_COMMAND) "$${url}/$${file_list}" && \
+					{ \
+						file_list="$(DOWNLOAD_PATH)/$${file_list}"; \
+						break; \
+					}; \
+					rm $${file_list} -rf; \
+				done; \
+				;; \
+		esac; \
+		[ -f "$${file_list}" ] && break; \
+	done; \
 	[ -f "$${file_list}" ] || \
 	{ \
 		$(call pr_red_info,Download $1 from $2 failed); \
@@ -49,21 +53,21 @@ endef
 
 define simple_decompression_file
 temp_decomp="$(DECOMP_PATH)/$1"; \
-file_list="$(strip $(foreach type,${PACKAGE_TYPES},$(wildcard $(PACKAGE_PATH)/$1.*$(type) $(DOWNLOAD_PATH)/$1.*$(type))))"; \
+file_list="$$(find $(wildcard $(PACKAGE_PATH)/ $(DOWNLOAD_PATH)/) -type f -and -name $1 $(foreach type,$(PACKAGE_TYPES),-or -name $1.$(type)))"; \
 [ -z "$${file_list}" ] && $(call download_package,$1,$3,$4); \
 for pkg in $${file_list}; \
 do \
 	echo "Decompression $${pkg} => $${temp_decomp}"; \
 	rm $${temp_decomp} -rf && mkdir $${temp_decomp} -pv && cd $${temp_decomp} || continue; \
-	while test -f $${pkg}; \
+	while [ -f "$${pkg}" ]; \
 	do \
 		case "$${pkg}" in \
-			*.tar.bz2) tar --use-compress-program bzip2 -xf $${pkg} || tar -xf $${pkg} || exit 1;; \
-			*.tar.gz) tar --use-compress-program gzip -xf $${pkg} || tar -xf $${pkg} || exit 1;; \
-			*.tar.xz) tar --use-compress-program xz -xf $${pkg} || tar -xf $${pkg} || exit 1;; \
-			*.zip) unzip -o $${pkg} || exit 1;; \
-			*.rar) rar x -o+ $${pkg} || exit 1;; \
-			*) tar -xf $${pkg} || exit 1;; \
+			*.tar.bz2) tar --use-compress-program bzip2 -xf $${pkg} || tar -xf $${pkg} || break;; \
+			*.tar.gz) tar --use-compress-program gzip -xf $${pkg} || tar -xf $${pkg} || break;; \
+			*.tar.xz) tar --use-compress-program xz -xf $${pkg} || tar -xf $${pkg} || break;; \
+			*.zip) unzip -o $${pkg} || break;; \
+			*.rar) rar x -o+ $${pkg} || break;; \
+			*) tar -xf $${pkg} || break;; \
 		esac; \
 		for pkg in *; \
 		do \

@@ -1,16 +1,28 @@
-ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
-CAVAN_HOST_PLAT = $(CAVAN_BUILD_PLAT)
-TOOLCHIAN_PATH = $(TOOLCHIAN_BT_PATH)
-OUT_TOOLCHIAN = $(OUT_TOOLCHIAN_BT)
-MARK_TOOLCHIAN = $(MARK_TOOLCHIAN_BT)
-MARK_TOOLCHIAN_READY = $(MARK_TOOLCHIAN_BT_READY)
-else
+ifeq ($(CAVAN_HOST_PLAT),$(CAVAN_TARGET_ARCH))
 CAVAN_HOST_PLAT = $(CAVAN_TARGET_PLAT)
-TOOLCHIAN_PATH = $(TOOLCHIAN_TT_PATH)
-OUT_TOOLCHIAN = $(OUT_TOOLCHIAN_TT)
-MARK_TOOLCHIAN = $(MARK_TOOLCHIAN_TT)
-MARK_TOOLCHIAN_READY = $(MARK_TOOLCHIAN_TT_READY)
+else
+CAVAN_HOST_PLAT = $(CAVAN_BUILD_PLAT)
 endif
+
+OUT_TOOLCHIAN = $(OUT_PATH)/toolchian/$(TOOLCHIAN_NAME)
+MARK_TOOLCHIAN = $(MARK_PATH)/toolchian/$(TOOLCHIAN_NAME)
+MARK_TOOLCHIAN_READY = $(MARK_TOOLCHIAN)/ready
+
+$(info ============================================================)
+$(info KERNEL_VERSION = $(KERNEL_VERSION))
+$(info BINUTILS_VERSION = $(BINUTILS_VERSION))
+$(info GCC_VERSION = $(GCC_VERSION))
+$(info GLIBC_VERSION = $(GLIBC_VERSION))
+$(info GMP_VERSION = $(GMP_VERSION))
+$(info MPC_VERSION = $(MPC_VERSION))
+$(info MPFR_VERSION = $(MPFR_VERSION))
+$(info CAVAN_BUILD_ARCH = $(CAVAN_BUILD_ARCH))
+$(info CAVAN_BUILD_PLAT = $(CAVAN_BUILD_PLAT))
+$(info CAVAN_HOST_ARCH = $(CAVAN_HOST_ARCH))
+$(info CAVAN_HOST_PLAT = $(CAVAN_HOST_PLAT))
+$(info CAVAN_TARGET_ARCH = $(CAVAN_TARGET_ARCH))
+$(info CAVAN_TARGET_PLAT = $(CAVAN_TARGET_PLAT))
+$(info ============================================================)
 
 BINUTILS_NAME = binutils-$(BINUTILS_VERSION)
 GCC_NAME = gcc-$(GCC_VERSION)
@@ -47,7 +59,7 @@ MAKEFILE_GLIBC = $(call find_makefile,$(BUILD_TOOLCHIAN)/$(GLIBC_NAME).mk $(BUIL
 MAKEFILE_HEADER = $(BUILD_TOOLCHIAN)/$(HEADER_NAME).mk
 XML_CONFIG = $(BUILD_TOOLCHIAN)/config.xml
 
-GCC_URL = http://ftp.gnu.org/gnu/gcc/$(GCC_NAME)
+GCC_URL = http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/$(GCC_NAME) http://ftp.gnu.org/gnu/gcc/$(GCC_NAME)
 GLIBC_URL = http://ftp.gnu.org/gnu/glibc
 BINUTILS_URL = http://ftp.gnu.org/gnu/binutils
 GMP_URL = http://ftp.gnu.org/gnu/gmp
@@ -64,7 +76,12 @@ TOOLCHIAN_COMMON_CONFIG += --with-sysroot=$(SYSROOT_PATH)
 endif
 
 CAVAN_TOOLCHIAN_PREFIXS = $(CAVAN_TARGET_ARCH)-linux-$(CAVAN_TARGET_EABI)
-ifneq ($(CAVAN_TARGET_EABI),androideabi)
+
+ifeq ($(CAVAN_TARGET_EABI),androideabi)
+ifneq ($(filter 4.5% 4.4% 4.3% 4.2% 4.1% 4.0%,$(GCC_VERSION)),)
+$(error $(GCC_NAME) do not support androideabi)
+endif
+else
 CAVAN_TOOLCHIAN_PREFIXS += $(CAVAN_TARGET_ARCH)-linux $(CAVAN_TARGET_ARCH)-eabi
 endif
 
@@ -74,8 +91,6 @@ export CAVAN_HOST_ARCH CAVAN_HOST_PLAT
 export TOOLCHIAN_PATH OUT_TOOLCHIAN MARK_TOOLCHIAN MARK_TOOLCHIAN_READY
 
 $(info ============================================================)
-$(info CAVAN_HOST_ARCH = $(CAVAN_HOST_ARCH))
-$(info CAVAN_HOST_PLAT = $(CAVAN_HOST_PLAT))
 $(info TOOLCHIAN_PATH = $(TOOLCHIAN_PATH))
 $(info SYSROOT_PATH = $(SYSROOT_PATH))
 $(info OUT_TOOLCHIAN = $(OUT_TOOLCHIAN))
@@ -83,13 +98,6 @@ $(info MARK_TOOLCHIAN = $(MARK_TOOLCHIAN))
 $(info MARK_TOOLCHIAN_READY = $(MARK_TOOLCHIAN_READY))
 $(info CPU_BINUTILS_OPTION = $(CPU_BINUTILS_OPTION))
 $(info CPU_GCC_OPTION = $(CPU_GCC_OPTION))
-$(info KERNEL_VERSION = $(KERNEL_VERSION))
-$(info BINUTILS_VERSION = $(BINUTILS_VERSION))
-$(info GCC_VERSION = $(GCC_VERSION))
-$(info GLIBC_VERSION = $(GLIBC_VERSION))
-$(info GMP_VERSION = $(GMP_VERSION))
-$(info MPC_VERSION = $(MPC_VERSION))
-$(info MPFR_VERSION = $(MPFR_VERSION))
 $(info CAVAN_TOOLCHIAN_PREFIXS = $(CAVAN_TOOLCHIAN_PREFIXS))
 $(info ============================================================)
 
@@ -129,12 +137,11 @@ then \
 fi
 endef
 
-all: $(MARK_TOOLCHIAN_READY)
-	$(Q)echo "Toolchian compile successfull"
-
-$(MARK_TOOLCHIAN_BT_GLIBC): $(MARK_GLIBC)
+$(CAVAN_TARGET_EABI): $(MARK_TOOLCHIAN_READY)
 	$(Q)echo "$@ compile successfull"
-	$(call generate_mark)
+
+glibc: $(MARK_GLIBC)
+	$(Q)echo "$@ compile successfull"
 
 ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
 $(MARK_TOOLCHIAN_READY): $(MARK_GLIBC)
@@ -205,17 +212,20 @@ $(MARK_BINUTILS): $(MARK_HEADER)
 	$(Q)+make -C $(OUT_BINUTILS) -f $(MAKEFILE_BINUTILS)
 	$(call generate_mark)
 
-$(MARK_HEADER):
+$(MARK_HEADER): | $(OUT_TOOLCHIAN) $(MARK_TOOLCHIAN) $(TOOLCHIAN_PATH)
 ifeq ($(CAVAN_TARGET_EABI),androideabi)
-	$(Q)+make glibc CAVAN_TARGET_EABI="gnueabi"
-	$(Q)rm -rf "$(SYSROOT_PATH)" && cp "$(subst androideabi,gnueabi,$(SYSROOT_PATH))" "$(SYSROOT_PATH)" -av
+	$(Q)+make CAVAN_TARGET_EABI="gnueabi" glibc
+	$(Q)rm -rf "$(SYSROOT_PATH)" && cp -av "$(subst androideabi,gnueabi,$(SYSROOT_PATH))" "$(SYSROOT_PATH)"
 else
 ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 else
-	$(Q)rm $(SYSROOT_PATH) -rfv
-	$(Q)cp $(SYSROOT_BT_PATH) $(SYSROOT_PATH) -av
+	$(Q)+make CAVAN_HOST_ARCH=$(CAVAN_BUILD_ARCH) -f $(MAKEFILE_TOOLCHIAN)
+	$(Q)rm -rf "$(SYSROOT_PATH)" && cp -av "$(patsubst %-$(CAVAN_TARGET_ARCH)/sysroot$,%-$(CAVAN_BUILD_ARCH)/sysroot,(SYSROOT_PATH)" "$(SYSROOT_PATH)"
 endif
 endif
 	$(call generate_mark)
+
+$(OUT_TOOLCHIAN) $(MARK_TOOLCHIAN) $(TOOLCHIAN_PATH):
+	$(Q)mkdir -pv $@

@@ -25,8 +25,8 @@ $(SB2_INIT_MARK):
 	$(Q)rm $(ROOTFS_PATH) -rf && cp $(ROOTFS_BASE) $(ROOTFS_PATH) -a
 	$(Q)cd $(ROOTFS_PATH) && mkdir bin sbin root home/cavan lib usr/lib libexec tmp proc sys dev etc usr/bin usr/sbin var/run -pv
 	$(Q)ln -vsf bash $(ROOTFS_PATH)/bin/sh
-	$(Q)cp $(SYSROOT_BT_PATH)/* $(TOOLCHIAN_BT_PATH)/$(CAVAN_TARGET_PLAT)/lib $(ROOTFS_PATH) -a
-	$(Q)cp $(TOOLCHIAN_BT_PATH)/$(CAVAN_TARGET_PLAT)/include $(ROOTFS_PATH)/usr -a
+	$(Q)cp $(SYSROOT_PATH)/* $(TOOLCHIAN_PATH)/$(CAVAN_TARGET_PLAT)/lib $(ROOTFS_PATH) -a
+	$(Q)cp $(TOOLCHIAN_PATH)/$(CAVAN_TARGET_PLAT)/include $(ROOTFS_PATH)/usr -a
 	$(Q)[ "$(SB2_LIBTOOL_PACKAGE)" ] || $(call download_package,$(SB2_LIBTOOL_NAME),$(SB2_LIBTOOL_URL))
 	$(eval SB2_LIBTOOL_PACKAGE = $(call find_libtool_package))
 	$(Q)[ "$(SB2_LIBTOOL_PACKAGE)" ] || \
