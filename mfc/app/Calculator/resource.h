@@ -1,0 +1,122 @@
+//{{NO_DEPENDENCIES}}
+// Microsoft Developer Studio generated include file.
+// Used by compute.rc
+//
+#define IDM_ABOUTBOX                    0x0010
+#define IDD_ABOUTBOX                    100
+#define IDS_ABOUTBOX                    101
+#define IDD_COMPUTE_DIALOG              102
+#define IDR_MAINFRAME                   128
+#define IDI_ICON1                       131
+#define IDC_CURSOR1                     133
+#define IDC_CURSOR2                     134
+#define IDC_CURSOR3                     137
+#define IDC_BUTTON_0                    1000
+#define IDC_BUTTON_1                    1001
+#define IDC_BUTTON_2                    1002
+#define IDC_BUTTON_3                    1003
+#define IDC_BUTTON_4                    1004
+#define IDC_BUTTON_5                    1005
+#define IDC_BUTTON_6                    1006
+#define IDC_BUTTON_7                    1007
+#define IDC_BUTTON_8                    1008
+#define IDC_BUTTON_9                    1009
+#define IDC_BUTTON_A                    1010
+#define IDC_BUTTON_B                    1011
+#define IDC_BUTTON_C                    1012
+#define IDC_BUTTON_D                    1013
+#define IDC_BUTTON_E                    1014
+#define IDC_BUTTON_F                    1015
+#define IDC_BUTTON_G                    1016
+#define IDC_BUTTON_H                    1017
+#define IDC_BUTTON_I                    1018
+#define IDC_BUTTON_J                    1019
+#define IDC_BUTTON_K                    1020
+#define IDC_BUTTON_L                    1021
+#define IDC_BUTTON_M                    1022
+#define IDC_BUTTON_N                    1023
+#define IDC_BUTTON_O                    1024
+#define IDC_BUTTON_P                    1025
+#define IDC_BUTTON_Q                    1026
+#define IDC_BUTTON_R                    1027
+#define IDC_BUTTON_S                    1028
+#define IDC_BUTTON_T                    1029
+#define IDC_BUTTON_U                    1030
+#define IDC_BUTTON_V                    1031
+#define IDC_BUTTON_W                    1032
+#define IDC_BUTTON_X                    1033
+#define IDC_BUTTON_Y                    1034
+#define IDC_BUTTON_Z                    1035
+#define IDC_BUTTON_Pi                   1036
+#define IDC_BUTTON_KH1                  1037
+#define IDC_BUTTON_KH2                  1038
+#define IDC_BUTTON_point                1039
+#define IDC_BUTTON_Add                  1040
+#define IDC_BUTTON_subtration           1041
+#define IDC_BUTTON_multipe              1042
+#define IDC_BUTTON_division             1043
+#define IDC_BUTTON_mod                  1044
+#define IDC_BUTTON_nn                   1045
+#define IDC_BUTTON_Index                1046
+#define IDC_BUTTON_X2                   1047
+#define IDC_BUTTON_x3                   1048
+#define IDC_BUTTON_sin                  1049
+#define IDC_BUTTON_cos                  1050
+#define IDC_BUTTON_tan                  1051
+#define IDC_BUTTON_cot                  1052
+#define IDC_BUTTON_arcsin               1053
+#define IDC_BUTTON_arccos               1054
+#define IDC_BUTTON_arctan               1055
+#define IDC_BUTTON_arccot               1056
+#define IDC_BUTTON_Ln                   1057
+#define IDC_BUTTON_Log                  1058
+#define IDC_BUTTON_ex                   1059
+#define IDC_BUTTON_sqr                  1060
+#define IDC_BUTTON_sqrt                 1061
+#define IDC_BUTTON_Sqrtn                1062
+#define IDC_BUTTON_nCr                  1063
+#define IDC_BUTTON_nAr                  1064
+#define IDC_BUTTON_compute              1065
+#define IDC_BUTTON_back                 1066
+#define IDC_BUTTON_cls                  1067
+#define IDC_BUTTON_Right                1068
+#define IDC_BUTTON_Left                 1069
+#define IDC_BUTTON_Down                 1070
+#define IDC_BUTTON_Up                   1071
+#define IDC_BUTTON_OFF                  1072
+#define IDC_BUTTON_Result               1073
+#define IDC_BUTTON_PreviousFormula      1074
+#define IDC_BUTTON_NextFormula          1075
+#define IDC_BUTTON_memorizer1           1076
+#define IDC_BUTTON_memorizer4           1077
+#define IDC_BUTTON_memorizer5           1078
+#define IDC_BUTTON_memorizer3           1079
+#define IDC_BUTTON_memorizer2           1080
+#define IDC_BUTTON_memorizer6           1081
+#define IDC_EDIT_compute                1082
+#define IDC_EDIT_result                 1083
+#define IDC_RADIO_compute1              1084
+#define IDC_RADIO_compute2              1085
+#define IDC_RADIO_angle                 1086
+#define IDC_RADIO_radian                1087
+#define IDC_RADIO_Write                 1088
+#define IDC_RADIO_Read                  1089
+#define IDC_STATIC_CFA                  1090
+#define IDC_STATIC_Type                 1091
+#define IDC_STATIC_angle                1092
+#define IDC_STATIC_State                1093
+#define IDC_LIST2                       1094
+#define IDC_DATETIMEPICKER2             1095
+#define IDC_EDIT_Time                   1127
+#define IDC_EDIT1                       1128
+
+// Next default values for new objects
+// 
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NEXT_RESOURCE_VALUE        138
+#define _APS_NEXT_COMMAND_VALUE         32778
+#define _APS_NEXT_CONTROL_VALUE         1129
+#define _APS_NEXT_SYMED_VALUE           101
+#endif
+#endif

@@ -1,0 +1,406 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (中国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\compute.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""l.chs\\afxres.rc""          // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\compute.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 250, 71
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于科学计算器"
+FONT 9, "宋体"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,21,21
+    LTEXT           "compute 1.0 版",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "版权所有 (C) 2008",IDC_STATIC,40,25,119,8
+    DEFPUSHBUTTON   "确定",IDOK,193,7,50,14,WS_GROUP
+    LTEXT           "广西工学院 计算机工程系 计Y062班 曹福昂 200600404071",
+                    IDC_STATIC_CFA,18,46,217,13
+END
+
+IDD_COMPUTE_DIALOG DIALOGEX 0, 0, 386, 311
+STYLE DS_ABSALIGN | DS_SYSMODAL | DS_NOIDLEMSG | DS_SETFOREGROUND | 
+    DS_3DLOOK | DS_NOFAILCREATE | DS_CENTER | WS_MINIMIZEBOX | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_ACCEPTFILES | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE | 
+    WS_EX_APPWINDOW
+CAPTION 
+"多功能科学计算器--广西工学院  计算机工程系  计Y062班  曹福昂  200600404071"
+
+FONT 12, "新宋体"
+BEGIN
+    EDITTEXT        IDC_EDIT_compute,8,9,371,18,ES_MULTILINE | ES_WANTRETURN | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    PUSHBUTTON      "计  算",IDC_BUTTON_compute,147,121,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "清  除",IDC_BUTTON_cls,100,121,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "算术运算",IDC_RADIO_compute1,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,218,54,51,13
+    CONTROL         "多项式运算",IDC_RADIO_compute2,"Button",
+                    BS_AUTORADIOBUTTON,322,54,51,13
+    PUSHBUTTON      "7",IDC_BUTTON_7,6,169,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "8",IDC_BUTTON_8,53,169,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "9",IDC_BUTTON_9,100,169,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "4",IDC_BUTTON_4,6,193,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "5",IDC_BUTTON_5,53,193,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "6",IDC_BUTTON_6,100,193,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "1",IDC_BUTTON_1,6,217,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "2",IDC_BUTTON_2,53,217,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "3",IDC_BUTTON_3,100,217,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "＋",IDC_BUTTON_Add,147,145,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "－",IDC_BUTTON_subtration,147,169,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "×",IDC_BUTTON_multipe,147,193,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      ")",IDC_BUTTON_KH2,100,241,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      ".",IDC_BUTTON_point,147,241,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "(",IDC_BUTTON_KH1,53,241,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "0",IDC_BUTTON_0,6,241,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "／",IDC_BUTTON_division,147,217,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "∧",IDC_BUTTON_Index,194,193,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "sin",IDC_BUTTON_sin,288,121,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "cos",IDC_BUTTON_cos,288,145,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "tan",IDC_BUTTON_tan,288,169,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "cot",IDC_BUTTON_cot,288,193,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "arcsin",IDC_BUTTON_arcsin,335,121,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "arccos",IDC_BUTTON_arccos,335,145,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "arctan",IDC_BUTTON_arctan,335,169,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "arccot",IDC_BUTTON_arccot,335,193,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "A",IDC_BUTTON_A,6,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "N",IDC_BUTTON_N,6,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "B",IDC_BUTTON_B,35,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "O",IDC_BUTTON_O,35,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Y",IDC_BUTTON_Y,325,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "C",IDC_BUTTON_C,64,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "D",IDC_BUTTON_D,93,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "E",IDC_BUTTON_E,122,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Z",IDC_BUTTON_Z,354,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "M",IDC_BUTTON_M,354,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "X",IDC_BUTTON_X,296,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "L",IDC_BUTTON_L,325,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "K",IDC_BUTTON_K,296,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "W",IDC_BUTTON_W,267,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "V",IDC_BUTTON_V,238,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "U",IDC_BUTTON_U,209,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "T",IDC_BUTTON_T,180,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "S",IDC_BUTTON_S,151,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "R",IDC_BUTTON_R,122,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Q",IDC_BUTTON_Q,93,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "P",IDC_BUTTON_P,64,286,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "J",IDC_BUTTON_J,267,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "I",IDC_BUTTON_I,238,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "H",IDC_BUTTON_H,209,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "G",IDC_BUTTON_G,180,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "F",IDC_BUTTON_F,151,265,26,19,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Ln",IDC_BUTTON_Ln,6,145,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Log",IDC_BUTTON_Log,53,145,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "n!",IDC_BUTTON_nn,241,217,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "关  闭",IDC_BUTTON_OFF,6,121,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "开平方",IDC_BUTTON_sqr,241,145,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "平  方",IDC_BUTTON_X2,194,145,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "立  方",IDC_BUTTON_x3,194,169,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "e^x",IDC_BUTTON_ex,100,145,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "π",IDC_BUTTON_Pi,241,121,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "nAr",IDC_BUTTON_nAr,194,241,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "←",IDC_BUTTON_back,194,121,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Mod",IDC_BUTTON_mod,335,217,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "开立方",IDC_BUTTON_sqrt,241,169,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "nCr",IDC_BUTTON_nCr,194,217,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    GROUPBOX        "操作类型",IDC_STATIC_Type,178,48,202,20
+    CONTROL         "角度制",IDC_RADIO_angle,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,10,55,40,10
+    CONTROL         "弧度制",IDC_RADIO_radian,"Button",BS_AUTORADIOBUTTON,
+                    131,55,40,10
+    GROUPBOX        "",IDC_STATIC_angle,7,48,168,20
+    PUSHBUTTON      "↑",IDC_BUTTON_Up,288,217,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "↓",IDC_BUTTON_Down,288,241,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "←",IDC_BUTTON_Left,241,241,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "→",IDC_BUTTON_Right,335,241,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "结  果",IDC_BUTTON_Result,53,121,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "上一算式",IDC_BUTTON_PreviousFormula,288,97,45,22,NOT 
+                    WS_TABSTOP,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_EDIT_result,8,25,371,18,ES_AUTOHSCROLL | NOT 
+                    WS_BORDER | NOT WS_TABSTOP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "下一算式",IDC_BUTTON_NextFormula,335,97,45,22,NOT 
+                    WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "存储器 1",IDC_BUTTON_memorizer1,6,97,45,22,NOT 
+                    WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "存储器 4",IDC_BUTTON_memorizer4,147,97,45,22,NOT 
+                    WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "存储器 5",IDC_BUTTON_memorizer5,194,97,45,22,NOT 
+                    WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "存储器 3",IDC_BUTTON_memorizer3,100,97,45,22,NOT 
+                    WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "存储器 2",IDC_BUTTON_memorizer2,53,97,45,22,NOT 
+                    WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "存储器 6",IDC_BUTTON_memorizer6,241,97,45,22,NOT 
+                    WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "开  方",IDC_BUTTON_Sqrtn,241,193,45,22,NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    GROUPBOX        "读写控制",IDC_STATIC_State,178,71,202,20
+    CONTROL         "存储数据",IDC_RADIO_Write,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,218,77,51,13
+    CONTROL         "读取数据",IDC_RADIO_Read,"Button",BS_AUTORADIOBUTTON,
+                    322,77,51,13
+    EDITTEXT        IDC_EDIT_Time,7,75,168,16,ES_READONLY | NOT WS_TABSTOP,
+                    WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_EDIT1,7,8,373,36,NOT WS_TABSTOP,WS_EX_TRANSPARENT | 
+                    WS_EX_CLIENTEDGE
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "compute Microsoft 基础类应用程序\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "compute\0"
+            VALUE "LegalCopyright", "版权所有 (C) 2008\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "compute.EXE\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "compute 应用程序\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 64
+    END
+
+    IDD_COMPUTE_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 9
+        RIGHTMARGIN, 380
+        TOPMARGIN, 11
+        BOTTOMMARGIN, 308
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_CURSOR1             CURSOR  DISCARDABLE     "res\\aero_link.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "关于 compute(&A)..."
+END
+
+#endif    // Chinese (中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE 4, 2
+#pragma code_page(936)
+#endif //_WIN32
+#include "res\compute.rc2"  // non-Microsoft Visual C++ edited resources
+#include "l.chs\afxres.rc"          // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
