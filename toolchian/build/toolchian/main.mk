@@ -4,6 +4,10 @@ else
 CAVAN_HOST_PLAT = $(CAVAN_BUILD_PLAT)
 endif
 
+ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
+CAVAN_HOST_PLAT = $(CAVAN_BUILD_PLAT)
+endif
+
 OUT_TOOLCHIAN = $(OUT_PATH)/toolchian/$(TOOLCHIAN_NAME)
 MARK_TOOLCHIAN = $(MARK_PATH)/toolchian/$(TOOLCHIAN_NAME)
 MARK_TOOLCHIAN_READY = $(MARK_TOOLCHIAN)/ready
@@ -68,12 +72,8 @@ MPC_URL = http://www.multiprecision.org/mpc/download
 KERNEL_URL = http://www.kernel.org/pub/linux/kernel/v3.0
 
 SYSROOT_PATH = $(TOOLCHIAN_PATH)/sysroot
-TOOLCHIAN_COMMON_CONFIG = --prefix=$(TOOLCHIAN_PATH) --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT)
+TOOLCHIAN_COMMON_CONFIG = --prefix=$(TOOLCHIAN_PATH) --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT) --with-sysroot=$(SYSROOT_PATH)
 LIBRARY_COMMON_CONFIG = --prefix=/usr --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_TARGET_PLAT)
-
-ifneq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
-TOOLCHIAN_COMMON_CONFIG += --with-sysroot=$(SYSROOT_PATH)
-endif
 
 CAVAN_TOOLCHIAN_PREFIXS = $(CAVAN_TARGET_ARCH)-linux-$(CAVAN_TARGET_EABI)
 
@@ -143,10 +143,10 @@ $(CAVAN_TARGET_EABI): $(MARK_TOOLCHIAN_READY)
 glibc: $(MARK_GLIBC)
 	$(Q)echo "$@ compile successfull"
 
-ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
-$(MARK_TOOLCHIAN_READY): $(MARK_GLIBC)
-else
+ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_HOST_ARCH))
 $(MARK_TOOLCHIAN_READY): $(MARK_GCC2)
+else
+$(MARK_TOOLCHIAN_READY): $(MARK_GLIBC)
 endif
 	$(Q)cd $(TOOLCHIAN_PATH)/bin && for tool in $(CAVAN_TARGET_PLAT)-*; \
 	do \
@@ -157,26 +157,14 @@ endif
 		done; \
 	done
 ifneq ($(CAVAN_TARGET_EABI),androideabi)
-ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
+ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_HOST_ARCH))
 	$(Q)sed 's/\<__packed\>/__attribute__ ((__packed__))/g' $(SYSROOT_PATH)/usr/include/mtd/ubi-user.h -i
 	$(call auto_make,install_library,$(MARK_TOOLCHIAN),$(OUT_TOOLCHIAN),$(XML_CONFIG))
 endif
 endif
 	$(call generate_mark)
 
-ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
-$(MARK_GCC2): $(MARK_BINUTILS)
-	$(call decompression_gcc)
-	$(call remake_directory,$(OUT_GCC2))
-	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) stage2
-	$(call generate_mark)
-
-$(MARK_GLIBC): $(MARK_GCC2)
-	$(call decompression_glibc,$(SRC_GLIBC))
-	$(call remake_directory,$(OUT_GLIBC))
-	$(Q)+make -C $(OUT_GLIBC) -f $(MAKEFILE_GLIBC)
-	$(call generate_mark)
-else
+ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_HOST_ARCH))
 ifeq ($(CAVAN_TARGET_EABI),androideabi)
 $(MARK_GCC2): $(MARK_BINUTILS)
 else
@@ -187,7 +175,6 @@ endif
 	$(Q)+make AS_FOR_TARGET="$(CAVAN_TARGET_PLAT)-as" LD_FOR_TARGET="$(CAVAN_TARGET_PLAT)-ld" -C $(OUT_GCC2) -f $(MAKEFILE_GCC) stage2
 	$(call generate_mark)
 
-ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 $(MARK_GLIBC): $(MARK_GCC1)
 	$(call decompression_glibc,$(SRC_GLIBC))
 	$(call remake_directory,$(OUT_GLIBC))
@@ -200,10 +187,17 @@ $(MARK_GCC1): $(MARK_BINUTILS)
 	$(Q)+make -C $(OUT_GCC1) -f $(MAKEFILE_GCC) stage1
 	$(call generate_mark)
 else
-$(MARK_GLIBC): $(MARK_BINUTILS)
-	$(Q)echo "Nothing to be done"
+$(MARK_GCC2): $(MARK_BINUTILS)
+	$(call decompression_gcc)
+	$(call remake_directory,$(OUT_GCC2))
+	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) stage2
 	$(call generate_mark)
-endif
+
+$(MARK_GLIBC): $(MARK_GCC2)
+	$(call decompression_glibc,$(SRC_GLIBC))
+	$(call remake_directory,$(OUT_GLIBC))
+	$(Q)+make -C $(OUT_GLIBC) -f $(MAKEFILE_GLIBC)
+	$(call generate_mark)
 endif
 
 $(MARK_BINUTILS): $(MARK_HEADER)
@@ -217,12 +211,12 @@ ifeq ($(CAVAN_TARGET_EABI),androideabi)
 	$(Q)+make CAVAN_TARGET_EABI="gnueabi" glibc
 	$(Q)rm -rf "$(SYSROOT_PATH)" && cp -av "$(subst androideabi,gnueabi,$(SYSROOT_PATH))" "$(SYSROOT_PATH)"
 else
-ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
+ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_HOST_ARCH))
 	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 else
 	$(Q)+make CAVAN_HOST_ARCH=$(CAVAN_BUILD_ARCH)
-	$(Q)rm -rf "$(SYSROOT_PATH)" && cp -av "$(patsubst %-$(CAVAN_TARGET_ARCH)/sysroot$,%-$(CAVAN_BUILD_ARCH)/sysroot,$(SYSROOT_PATH))" "$(SYSROOT_PATH)"
+	$(Q)rm -rf "$(SYSROOT_PATH)" && cp -av "$(patsubst %/sysroot,%-$(CAVAN_BUILD_ARCH)/sysroot,$(SYSROOT_PATH))" "$(SYSROOT_PATH)"
 endif
 endif
 	$(call generate_mark)
