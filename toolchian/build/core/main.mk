@@ -17,7 +17,6 @@ ifeq ($(DOWNLOAD_PATH),)
 DOWNLOAD_PATH = $(HOME)/download
 endif
 
-PACKAGE_VERSION_STRING = Fuang.Cao <cavan.cfa@gmail.com>
 CAVAN_TARGET_PLAT = $(CAVAN_TARGET_ARCH)-cavan-linux-$(CAVAN_TARGET_EABI)
 
 WORK_PATH = $(HOME)/cavan-toolchian
@@ -152,7 +151,7 @@ $(addprefix android-gcc-,$(GCC_VERSION_LIST)):
 	$(Q)+make GCC_VERSION=$(patsubst android-gcc-%,%,$@) CAVAN_TARGET_EABI=androideabi
 
 $(addprefix host-gcc-,$(GCC_VERSION_LIST)):
-	$(Q)+make GCC_VERSION=$(patsubst host-gcc-%,%,$@) CAVAN_TARGET_ARCH=$(CAVAN_BUILD_ARCH) CAVAN_TARGET_EABI=gnu
+	$(Q)+make GCC_VERSION=$(patsubst host-gcc-%,%,$@) CAVAN_TARGET_ARCH=$(CAVAN_BUILD_ARCH)
 
 $(addprefix target-gcc-,$(GCC_VERSION_LIST)):
 	$(Q)+make GCC_VERSION=$(patsubst target-gcc-%,%,$@) CAVAN_HOST_ARCH=$(CAVAN_TARGET_ARCH)

@@ -8,6 +8,13 @@ ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
 CAVAN_HOST_PLAT = $(CAVAN_BUILD_PLAT)
 endif
 
+ifeq ($(CAVAN_TARGET_ARCH),arm)
+CPU_BINUTILS_OPTION = --with-float=soft
+CPU_GCC_OPTION = --with-arch=armv5te --with-float=soft --with-fpu=vfp --with-abi=aapcs
+endif
+
+PACKAGE_VERSION_STRING = Fuang.Cao <cavan.cfa@gmail.com>
+
 OUT_TOOLCHIAN = $(OUT_PATH)/toolchian/$(TOOLCHIAN_NAME)
 MARK_TOOLCHIAN = $(MARK_PATH)/toolchian/$(TOOLCHIAN_NAME)
 MARK_TOOLCHIAN_READY = $(MARK_TOOLCHIAN)/ready
@@ -89,6 +96,7 @@ export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
 export SYSROOT_PATH TOOLCHIAN_COMMON_CONFIG LIBRARY_COMMON_CONFIG
 export CAVAN_HOST_ARCH CAVAN_HOST_PLAT
 export TOOLCHIAN_PATH OUT_TOOLCHIAN MARK_TOOLCHIAN MARK_TOOLCHIAN_READY
+export CPU_GCC_OPTION CPU_BINUTILS_OPTION PACKAGE_VERSION_STRING
 
 $(info ============================================================)
 $(info TOOLCHIAN_PATH = $(TOOLCHIAN_PATH))
@@ -133,6 +141,7 @@ then \
 	$(call apply_patchs,$(GMP_NAME),$(SRC_GCC)/gmp); \
 	$(call apply_patchs,$(MPFR_NAME),$(SRC_GCC)/mpfr); \
 	$(call apply_patchs,$(MPC_NAME),$(SRC_GCC)/mpc); \
+	sed -i '/stack protector/agcc_cv_libc_provides_ssp=yes' $(SRC_GCC)/gcc/configure; \
 	sed -i 's,\s*\(const\s\+char\s\+pkgversion_string.*=\).*;\s*$$,\1 "[$(PACKAGE_VERSION_STRING)] ";,g' $(SRC_GCC)/gcc/version.c; \
 fi
 endef
