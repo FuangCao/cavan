@@ -14,7 +14,7 @@ SCRIPT_PATH = $(BUILD_PATH)/script
 
 DOWNLOAD_PATH = $(word 1,$(wildcard /source /work/source $(HOME)/source $(HOME)/work/source))
 ifeq ($(DOWNLOAD_PATH),)
-DOWNLOAD_PATH = ${HOME}/download
+DOWNLOAD_PATH = $(HOME)/download
 endif
 
 PACKAGE_VERSION_STRING = Fuang.Cao <cavan.cfa@gmail.com>
@@ -27,8 +27,9 @@ DECOMP_PATH = $(WORK_PATH)/decomp
 MARK_PATH = $(WORK_PATH)/mark
 OUT_PATH = $(WORK_PATH)/out
 
+CAVAN_HOST_ARCH = $(CAVAN_BUILD_ARCH)
 TOOLCHIAN_PREFIX = $(WORK_PATH)/toolchian
-TOOLCHIAN_NAME = $(CAVAN_TARGET_PLAT)-$(GCC_VERSION)-$(CAVAN_BUILD_ARCH)
+TOOLCHIAN_NAME = $(CAVAN_TARGET_PLAT)-$(GCC_VERSION)-$(CAVAN_HOST_ARCH)
 TOOLCHIAN_PATH = $(TOOLCHIAN_PREFIX)/$(TOOLCHIAN_NAME)
 SYSROOT_PATH = $(TOOLCHIAN_PATH)/sysroot
 
@@ -53,16 +54,22 @@ MAKEFILE_UTILS = $(BUILD_UTILS)/main.mk
 MAKEFILE_DEFINES = $(BUILD_CORE)/defines.mk
 
 PYTHON_PARSER = $(SCRIPT_PATH)/parser.py
-BASH_DOWNLOAD = ${SCRIPT_PATH}/download.sh
+BASH_DOWNLOAD = $(SCRIPT_PATH)/download.sh
 
 MARK_HOST_APPS = $(MARK_UTILS)/environment
 
-define set_path
-PATH := $1/usr/local/sbin:$1/usr/local/bin:$1/usr/sbin:$1/usr/bin:$1/sbin:$1/bin:$(PATH)
+ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
+define export_path
+$(foreach path,/ /usr/ /usr/local/,$(eval export PATH := $1$(path)sbin:$1$(path)bin:$(PATH)))
 endef
+else
+define export_path
+$(warning export path $1, nothing to be done)
+endef
+endif
 
-$(eval $(call set_path,$(UTILS_PATH)))
-$(eval $(call set_path,$(TOOLCHIAN_PATH)))
+$(call export_path,$(UTILS_PATH))
+$(call export_path,$(TOOLCHIAN_PATH))
 
 DOWNLOAD_COMMAND = bash $(BASH_DOWNLOAD)
 
@@ -72,7 +79,7 @@ export OUT_PATH OUT_UTILS OUT_ROOTFS
 export BUILD_CORE BUILD_TOOLCHIAN BUILD_ROOTFS BUILD_UTILS
 export MARK_PATH MARK_ROOTFS MARK_UTILS
 export MARK_ROOTFS_READY MARK_UTILS_READY1 MARK_UTILS_READY2
-export MAKEFILE_DEFINES MAKEFILE_TOOLCHIAN
+export MAKEFILE_DEFINES MAKEFILE_TOOLCHIAN CAVAN_HOST_ARCH
 export PYTHON_PARSER XML_APPLICATION BASH_DOWNLOAD DOWNLOAD_COMMAND
 export TOOLCHIAN_PREFIX TOOLCHIAN_NAME TOOLCHIAN_PATH SYSROOT_PATH
 
@@ -85,7 +92,7 @@ $(info ============================================================)
 include $(MAKEFILE_DEFINES)
 
 $(CAVAN_TARGET_EABI) glibc: $(MARK_UTILS_READY1)
-	$(Q)+make -f $(MAKEFILE_TOOLCHIAN) CAVAN_HOST_ARCH=$(CAVAN_BUILD_ARCH) $@
+	$(Q)+make -f $(MAKEFILE_TOOLCHIAN) $@
 
 rootfs: $(MARK_ROOTFS_READY)
 	$(Q)echo "$@ compile successfull"
@@ -129,7 +136,7 @@ build_env:
 		rm $(WORK_PATH) -rfv  && mkdir $(WORK_PATH) -pv; \
 	fi
 	$(Q)mkdir $(SRC_PATH) $(UTILS_PATH) $(OUT_UTILS) $(OUT_ROOTFS) $(DECOMP_PATH) -pv
-	$(Q)[ -d "${DOWNLOAD_PATH}" ] || mkdir -pv "$(DOWNLOAD_PATH)"
+	$(Q)[ -d "$(DOWNLOAD_PATH)" ] || mkdir -pv "$(DOWNLOAD_PATH)"
 	$(Q)mkdir $(MARK_ROOTFS) $(MARK_UTILS) -pv
 
 $(addprefix gcc-,$(GCC_VERSION_LIST)):
@@ -142,6 +149,6 @@ $(addprefix host-gcc-,$(GCC_VERSION_LIST)):
 	$(Q)+make GCC_VERSION=$(patsubst host-gcc-%,%,$@) CAVAN_TARGET_ARCH=$(CAVAN_BUILD_ARCH) CAVAN_TARGET_EABI=gnu
 
 $(addprefix target-gcc-,$(GCC_VERSION_LIST)):
-	$(Q)+make -f $(MAKEFILE_TOOLCHIAN) GCC_VERSION=$(patsubst target-gcc-%,%,$@) CAVAN_HOST_ARCH=$(CAVAN_TARGET_ARCH)
+	$(Q)+make GCC_VERSION=$(patsubst target-gcc-%,%,$@) CAVAN_HOST_ARCH=$(CAVAN_TARGET_ARCH)
 
 .PHONY: build_env $(CAVAN_TARGET_EABI)

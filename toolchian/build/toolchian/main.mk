@@ -1,4 +1,4 @@
-ifeq ($(CAVAN_HOST_PLAT),$(CAVAN_TARGET_ARCH))
+ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_TARGET_ARCH))
 CAVAN_HOST_PLAT = $(CAVAN_TARGET_PLAT)
 else
 CAVAN_HOST_PLAT = $(CAVAN_BUILD_PLAT)
@@ -221,8 +221,8 @@ ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_BUILD_ARCH))
 	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 else
-	$(Q)+make CAVAN_HOST_ARCH=$(CAVAN_BUILD_ARCH) -f $(MAKEFILE_TOOLCHIAN)
-	$(Q)rm -rf "$(SYSROOT_PATH)" && cp -av "$(patsubst %-$(CAVAN_TARGET_ARCH)/sysroot$,%-$(CAVAN_BUILD_ARCH)/sysroot,(SYSROOT_PATH)" "$(SYSROOT_PATH)"
+	$(Q)+make CAVAN_HOST_ARCH=$(CAVAN_BUILD_ARCH)
+	$(Q)rm -rf "$(SYSROOT_PATH)" && cp -av "$(patsubst %-$(CAVAN_TARGET_ARCH)/sysroot$,%-$(CAVAN_BUILD_ARCH)/sysroot,$(SYSROOT_PATH))" "$(SYSROOT_PATH)"
 endif
 endif
 	$(call generate_mark)
