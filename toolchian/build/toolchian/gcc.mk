@@ -30,8 +30,11 @@ GCC_OPTION2 =		$(GCC_COMMON_OPTION) \
 					--enable-cloog-backend=isl \
 					--enable-target-optspace \
 					--enable-initfini-array \
+					--enable-checking=release \
+					--enable-objc-gc \
 					--disable-nls \
 					--disable-bootstrap \
+					--with-newlib \
 					--with-binutils-version=$(BINUTILS_VERSION) \
 					--with-mpfr-version=$(MPFR_VERSION) \
 					--with-mpc-version=$(MPC_VERSION) \
@@ -60,6 +63,10 @@ GCC_OPTION2 +=		--enable-clocale=gnu \
 					--enable-libgomp \
 					--enable-threads=posix \
 					--enable-__cxa_atexit
+endif
+
+ifneq ($(filter amd64 x86_64,$(CAVAN_TARGET_ARCH)),)
+GCC_OPTION2 +=		--disable-multilib
 endif
 
 stage1:

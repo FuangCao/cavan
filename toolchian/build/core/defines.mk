@@ -62,10 +62,10 @@ do \
 	while [ -f "$${pkg}" ]; \
 	do \
 		case "$${pkg}" in \
-			*.tar.bz2) tar --use-compress-program bzip2 -xf $${pkg} || tar -xf $${pkg} || break;; \
-			*.tar.gz) tar --use-compress-program gzip -xf $${pkg} || tar -xf $${pkg} || break;; \
-			*.tar.xz) tar --use-compress-program xz -xf $${pkg} || tar -xf $${pkg} || break;; \
-			*.zip) unzip -o $${pkg} || break;; \
+			*.tar.bz2 | *.tbz) tar --use-compress-program bzip2 -xf $${pkg} || tar -xf $${pkg} || break;; \
+			*.tar.gz | *.tgz) tar --use-compress-program gzip -xf $${pkg} || tar -xf $${pkg} || break;; \
+			*.tar.xz | *.txz) tar --use-compress-program xz -xf $${pkg} || tar -xf $${pkg} || break;; \
+			*.zip | *.apk) unzip -o $${pkg} || break;; \
 			*.rar) rar x -o+ $${pkg} || break;; \
 			*) tar -xf $${pkg} || break;; \
 		esac; \

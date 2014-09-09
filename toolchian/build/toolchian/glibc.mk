@@ -22,10 +22,11 @@ all:
 	libc_cv_c_cleanup=yes \
 	libc_cv_gnu99_inline=yes \
 	libc_cv_ctors_header=yes \
+	libc_cv_slibdir=/lib \
 	BUILD_CC=gcc \
-	CC=$(CAVAN_TARGET_PLAT)-gcc \
-	AR=$(CAVAN_TARGET_PLAT)-ar \
-	RANLIB=$(CAVAN_TARGET_PLAT)-ranlib \
+	CC="$(CAVAN_TARGET_PLAT)-gcc" \
+	AR="$(CAVAN_TARGET_PLAT)-ar" \
+	RANLIB="$(CAVAN_TARGET_PLAT)-ranlib" \
 	$(SRC_GLIBC)/configure $(GLIBC_OPTION)
 	$(Q)+make
 	$(Q)+make install

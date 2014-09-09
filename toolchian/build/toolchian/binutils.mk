@@ -2,8 +2,7 @@ BINUTILS_OPTION =	$(CPU_BINUTILS_OPTION) $(TOOLCHIAN_COMMON_CONFIG) \
 					--with-mpfr=$(UTILS_PATH)/usr \
 					--with-gmp=$(UTILS_PATH)/usr \
 					--disable-nls \
-					--disable-werror \
-					--disable-mutilib
+					--disable-werror
 
 all:
 	$(Q)$(SRC_BINUTILS)/configure $(BINUTILS_OPTION)

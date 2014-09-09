@@ -13,6 +13,10 @@ CPU_BINUTILS_OPTION = --with-float=soft
 CPU_GCC_OPTION = --with-arch=armv5te --with-float=soft --with-fpu=vfp --with-abi=aapcs
 endif
 
+ifneq ($(filter amd64 x86_64,$(CAVAN_TARGET_ARCH)),)
+CPU_GCC_OPTION = --enable-multiarch --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --with-tune=generic
+endif
+
 PACKAGE_VERSION_STRING = Fuang.Cao <cavan.cfa@gmail.com>
 
 OUT_TOOLCHIAN = $(OUT_PATH)/toolchian/$(TOOLCHIAN_NAME)
@@ -79,7 +83,8 @@ MPC_URL = http://www.multiprecision.org/mpc/download
 KERNEL_URL = http://www.kernel.org/pub/linux/kernel/v3.0
 
 SYSROOT_PATH = $(TOOLCHIAN_PATH)/sysroot
-TOOLCHIAN_COMMON_CONFIG = --prefix=$(TOOLCHIAN_PATH) --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT) --with-sysroot=$(SYSROOT_PATH)
+TOOLCHIAN_COMMON_CONFIG = --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT)
+TOOLCHIAN_COMMON_CONFIG += --prefix=$(TOOLCHIAN_PATH) --with-sysroot=$(SYSROOT_PATH) --with-pkgversion="Fuang.Cao"
 LIBRARY_COMMON_CONFIG = --prefix=/usr --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_TARGET_PLAT)
 
 CAVAN_TOOLCHIAN_PREFIXS = $(CAVAN_TARGET_ARCH)-linux-$(CAVAN_TARGET_EABI)
@@ -111,7 +116,7 @@ $(info ============================================================)
 
 include $(MAKEFILE_DEFINES)
 
-ifeq ($(filter $(GLIBC_VERSION),2.17 2.18 2.19),)
+ifeq ($(filter 2.17 2.18 2.19 2.2%,$(GLIBC_VERSION)),)
 define decompression_glibc
 if ! test -d "$(SRC_GLIBC)"; \
 then \
@@ -141,7 +146,8 @@ then \
 	$(call apply_patchs,$(GMP_NAME),$(SRC_GCC)/gmp); \
 	$(call apply_patchs,$(MPFR_NAME),$(SRC_GCC)/mpfr); \
 	$(call apply_patchs,$(MPC_NAME),$(SRC_GCC)/mpc); \
-	sed -i '/stack protector/agcc_cv_libc_provides_ssp=yes' $(SRC_GCC)/gcc/configure; \
+	sed -i '/k prot/agcc_cv_libc_provides_ssp=yes' $(SRC_GCC)/gcc/configure; \
+	sed -i 's/if \((code.*))\)/if (\1 \&\& \!DEBUG_INSN_P (insn))/' $(SRC_GCC)/gcc/sched-deps.c; \
 	sed -i 's,\s*\(const\s\+char\s\+pkgversion_string.*=\).*;\s*$$,\1 "[$(PACKAGE_VERSION_STRING)] ";,g' $(SRC_GCC)/gcc/version.c; \
 fi
 endef
