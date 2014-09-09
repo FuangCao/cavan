@@ -74,12 +74,12 @@ MAKEFILE_GLIBC = $(call find_makefile,$(BUILD_TOOLCHIAN)/$(GLIBC_NAME).mk $(BUIL
 MAKEFILE_HEADER = $(BUILD_TOOLCHIAN)/$(HEADER_NAME).mk
 XML_CONFIG = $(BUILD_TOOLCHIAN)/config.xml
 
-GCC_URL = http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/$(GCC_NAME) http://ftp.gnu.org/gnu/gcc/$(GCC_NAME)
-GLIBC_URL = http://ftp.gnu.org/gnu/glibc
-BINUTILS_URL = http://ftp.gnu.org/gnu/binutils
-GMP_URL = http://ftp.gnu.org/gnu/gmp
-MPFR_URL = http://ftp.gnu.org/gnu/mpfr
-MPC_URL = http://www.multiprecision.org/mpc/download
+GCC_URL = http://mirrors.ustc.edu.cn/gnu/gcc/$(GCC_NAME) http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/$(GCC_NAME) http://ftp.gnu.org/gnu/gcc/$(GCC_NAME)
+GLIBC_URL = http://mirrors.ustc.edu.cn/gnu/glibc http://ftp.gnu.org/gnu/glibc
+BINUTILS_URL = http://mirrors.ustc.edu.cn/gnu/binutils http://ftp.gnu.org/gnu/binutils
+GMP_URL = http://mirrors.ustc.edu.cn/gnu/gmp http://ftp.gnu.org/gnu/gmp
+MPFR_URL = http://mirrors.ustc.edu.cn/gnu/mpfr http://ftp.gnu.org/gnu/mpfr
+MPC_URL = http://mirrors.ustc.edu.cn/gnu/mpc http://www.multiprecision.org/mpc/download
 KERNEL_URL = http://www.kernel.org/pub/linux/kernel/v3.0
 
 SYSROOT_PATH = $(TOOLCHIAN_PATH)/sysroot

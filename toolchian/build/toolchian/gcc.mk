@@ -64,8 +64,7 @@ endif
 
 ifneq ($(filter i%86 amd64 x86_64,$(CAVAN_TARGET_ARCH)),)
 GCC_OPTION2 +=		--enable-objc-gc \
-					--enable-checking=release \
-					--with-newlib
+					--enable-checking=release
 endif
 
 ifneq ($(filter amd64 x86_64,$(CAVAN_TARGET_ARCH)),)
