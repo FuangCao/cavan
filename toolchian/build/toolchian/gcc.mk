@@ -67,12 +67,8 @@ GCC_OPTION2 +=		--enable-objc-gc \
 					--enable-checking=release
 endif
 
-# ifneq ($(filter amd64 x86_64,$(CAVAN_TARGET_ARCH)),)
-# GCC_OPTION2 +=		--disable-multilib
-# endif
-
-ifeq ($(GLIBC_LIB_NAME),libx32)
-GCC_ENV = libc_cv_x32=yes
+ifeq ($(CAVAN_HOST_ARCH),arm)
+GCC_OPTION2 +=		CFLAGS="-DLONGLONG_STANDALONE"
 endif
 
 stage1:

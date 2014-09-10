@@ -170,11 +170,7 @@ $(CAVAN_TARGET_EABI): $(MARK_TOOLCHIAN_READY)
 glibc: $(MARK_GLIBC)
 	$(Q)echo "$@ compile successfull"
 
-ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_HOST_ARCH))
 $(MARK_TOOLCHIAN_READY): $(MARK_GCC2)
-else
-$(MARK_TOOLCHIAN_READY): $(MARK_GLIBC)
-endif
 	$(Q)cd $(TOOLCHIAN_PATH)/bin && for tool in $(CAVAN_TARGET_PLAT)-*; \
 	do \
 		suffix="$${tool##$(CAVAN_TARGET_PLAT)}"; \
@@ -218,12 +214,6 @@ $(MARK_GCC2): $(MARK_BINUTILS)
 	$(call decompression_gcc)
 	$(call remake_directory,$(OUT_GCC2))
 	$(Q)+make -C $(OUT_GCC2) -f $(MAKEFILE_GCC) stage2
-	$(call generate_mark)
-
-$(MARK_GLIBC): $(MARK_GCC2)
-	$(call decompression_glibc,$(SRC_GLIBC))
-	$(call remake_directory,$(OUT_GLIBC))
-	$(Q)+make -C $(OUT_GLIBC) -f $(MAKEFILE_GLIBC)
 	$(call generate_mark)
 endif
 
