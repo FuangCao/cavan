@@ -8,13 +8,24 @@ ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_TARGET_ARCH))
 CAVAN_HOST_PLAT = $(CAVAN_BUILD_PLAT)
 endif
 
+CPU_BINUTILS_OPTION =
+CPU_GCC_OPTION =
+GLIBC_LIB_NAME = lib
+
 ifeq ($(CAVAN_TARGET_ARCH),arm)
-CPU_BINUTILS_OPTION = --with-float=soft
-CPU_GCC_OPTION = --with-arch=armv5te --with-float=soft --with-fpu=vfp --with-abi=aapcs
+CPU_BINUTILS_OPTION += --with-float=soft
+CPU_GCC_OPTION += --with-arch=armv5te --with-float=soft --with-fpu=vfp --with-abi=aapcs
 endif
 
 ifneq ($(filter amd64 x86_64,$(CAVAN_TARGET_ARCH)),)
-CPU_GCC_OPTION = --enable-multiarch --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --with-tune=generic
+ifeq ($(CAVAN_HOST_ARCH_32),)
+$(error you must defind CAVAN_HOST_ARCH_32)
+endif
+ifneq ($(CAVAN_TARGET_MX32),)
+CPU_GCC_OPTION += --with-abi=$(CAVAN_TARGET_MX32)
+else
+CPU_GCC_OPTION += --enable-multiarch --with-arch-32=$(CAVAN_HOST_ARCH_32) --with-abi=m64 --with-multilib-list=m32,m64 --with-tune=generic
+endif
 endif
 
 PACKAGE_VERSION_STRING = Fuang.Cao <cavan.cfa@gmail.com>
@@ -99,11 +110,12 @@ endif
 
 export GCC_NAME SRC_BINUTILS SRC_GCC SRC_KERNEL SRC_GLIBC
 export SYSROOT_PATH TOOLCHIAN_COMMON_CONFIG LIBRARY_COMMON_CONFIG
-export CAVAN_HOST_ARCH CAVAN_HOST_PLAT
+export CAVAN_HOST_ARCH CAVAN_HOST_PLAT GLIBC_LIB_NAME
 export TOOLCHIAN_PATH OUT_TOOLCHIAN MARK_TOOLCHIAN MARK_TOOLCHIAN_READY
 export CPU_GCC_OPTION CPU_BINUTILS_OPTION PACKAGE_VERSION_STRING
 
 $(info ============================================================)
+$(info GLIBC_LIB_NAME = $(GLIBC_LIB_NAME))
 $(info TOOLCHIAN_PATH = $(TOOLCHIAN_PATH))
 $(info SYSROOT_PATH = $(SYSROOT_PATH))
 $(info OUT_TOOLCHIAN = $(OUT_TOOLCHIAN))
@@ -227,6 +239,15 @@ ifeq ($(CAVAN_TARGET_EABI),androideabi)
 	$(Q)rm -rf "$(SYSROOT_PATH)" && cp -av "$(subst androideabi,gnueabi,$(SYSROOT_PATH))" "$(SYSROOT_PATH)"
 else
 ifeq ($(CAVAN_BUILD_ARCH),$(CAVAN_HOST_ARCH))
+ifeq ($(CAVAN_HOST_ARCH),$(CAVAN_TARGET_ARCH))
+ifneq ($(CAVAN_HOST_ARCH_32),)
+ifeq ($(CAVAN_TARGET_MX32),)
+	$(Q)rm -rf "$(SYSROOT_PATH)"
+	$(Q)+make CAVAN_TARGET_ARCH=$(CAVAN_HOST_ARCH_32) GLIBC_LIB_NAME=lib32 glibc
+	$(Q)cp -av "$(patsubst %/$(TOOLCHIAN_NAME)/sysroot,%/$(patsubst $(CAVAN_TARGET_ARCH)-%,$(CAVAN_HOST_ARCH_32)-%-$(CAVAN_BUILD_ARCH),$(TOOLCHIAN_NAME))/sysroot,$(SYSROOT_PATH))" "$(SYSROOT_PATH)"
+endif
+endif
+endif
 	$(call decompression_file,$(SRC_KERNEL),$(KERNEL_URL))
 	$(Q)+make -C $(SRC_KERNEL) -f $(MAKEFILE_HEADER)
 else
