@@ -1,6 +1,6 @@
 <packages>
 	<package name="Python" version="2.7.2" depend=""
-			 config="CFLAGS=-I$(UTILS_PATH)/usr/include/ncurses LDFLAGS=-L$(UTILS_PATH)/usr/lib"
+			 config="CFLAGS='-I$(UTILS_PATH)/usr/include/ncurses -fPIC' LDFLAGS=-L$(UTILS_PATH)/usr/lib"
 			 url="http://www.python.org/ftp/python/$(PYTHON_VERSION)">
 	</package>
 
@@ -28,14 +28,18 @@
 			 url="http://zlib.net">
 	</package>
 
-	<package name="qemu" version="0.15.0" depend="zlib SDL glib"
+	<package name="pixman" version="0.32.6" depend="libtool" config=""
+			 url="http://cairographics.org/releases">
+	</package>
+
+	<package name="qemu" version="2.1.1" depend="zlib SDL2 glib pixman"
 			 config="--target-list=$(CAVAN_TARGET_ARCH)-softmmu,$(CAVAN_TARGET_ARCH)-linux-user
 					 --cc='$(CAVAN_BUILD_PLAT)-gcc -I$(UTILS_PATH)/usr/include -L$(UTILS_PATH)/usr/lib'
 					 --disable-kvm"
-			 url="http://wiki.qemu.org/download">
+			 url="http://wiki.qemu-project.org/download http://wiki.qemu.org/download">
 	</package>
 
-	<package name="SDL" version="1.2.14" depend="libtool"
+	<package name="SDL2" version="2.0.3" depend="libtool"
 			 config="--enable-shared --enable-static"
 			 url="http://www.libsdl.org/release">
 	</package>
@@ -44,8 +48,12 @@
 			 url="ftp://sourceware.org/pub/libffi">
 	</package>
 
-	<package name="gettext" version="0.18.1.1" depend="libtool" config=""
-			 url="http://ftp.gnu.org/pub/gnu/gettext">
+	<package name="libxml2" version="2.9.1" depend="libtool Python" config=""
+			 url="ftp://xmlsoft.org/libxml2">
+	</package>
+
+	<package name="gettext" version="0.19.2" depend="libtool libxml2" config=""
+			 url="http://mirrors.ustc.edu.cn/gnu/gettext http://ftp.gnu.org/pub/gnu/gettext">
 	</package>
 
 	<package name="glib" version="2.30.0" depend="libffi gettext"

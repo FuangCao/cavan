@@ -1,5 +1,5 @@
 <packages>
-	<package name="xz" version="5.0.4" depend="" config=""
+	<package name="xz" version="5.0.5" depend="" config=""
 			 url="http://tukaani.org/xz" type="tar.bz2 tar.gz">
 	</package>
 
