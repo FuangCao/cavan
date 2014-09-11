@@ -30,14 +30,8 @@
 			 url="http://ftp.gnu.org/gnu/gperf">
 	</package>
 
-	<!--
-	<package name="gettext" version="0.18.1.1" depend="gperf" config=""
-			 url="http://ftp.gnu.org/pub/gnu/gettext">
-	</package>
-	-->
-
 	<package name="ncurses" version="5.9" depend="automake"
-			 config="--enable-pc-files"
+			 config="--enable-pc-files CFLAGS='-fPIC'"
 			 url="http://ftp.gnu.org/gnu/ncurses">
 	</package>
 </packages>

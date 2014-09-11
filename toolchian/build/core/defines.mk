@@ -152,7 +152,7 @@ $(call install_application,$2,$3,$(BUILD_TOOLCHIAN),./configure $(LIBRARY_COMMON
 endef
 
 define install_rootfs
-$(call install_application,$2,$3,$(BUILD_ROOTFS),CFLAGS="-fPIC" sb2 ./configure $1 && sb2 make && sb2 -m install make install)
+$(call install_application,$2,$3,$(BUILD_ROOTFS),CFLAGS="-fPIC" sb2 ./configure $1 && sb2 make && { sb2 -m install make install || sb2 make DESTDIR="$(ROOTFS_PATH)" install; })
 endef
 
 define auto_make

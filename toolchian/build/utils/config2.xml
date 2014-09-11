@@ -44,6 +44,10 @@
 			 url="ftp://sourceware.org/pub/libffi">
 	</package>
 
+	<package name="gettext" version="0.18.1.1" depend="libtool" config=""
+			 url="http://ftp.gnu.org/pub/gnu/gettext">
+	</package>
+
 	<package name="glib" version="2.30.0" depend="libffi gettext"
 			 config="--with-sysroot=$(UTILS_PATH)"
 			 url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30">
