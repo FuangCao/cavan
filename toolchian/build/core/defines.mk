@@ -52,40 +52,44 @@ define download_package
 endef
 
 define simple_decompression_file
-temp_decomp="$(DECOMP_PATH)/$1"; \
-file_list="$$(find $(wildcard $(PACKAGE_PATH)/ $(DOWNLOAD_PATH)/) -type f -and -name $1 $(foreach type,$(PACKAGE_TYPES),-or -name $1.$(type)))"; \
-[ -z "$${file_list}" ] && $(call download_package,$1,$3,$4); \
-for pkg in $${file_list}; \
-do \
-	echo "Decompression $${pkg} => $${temp_decomp}"; \
-	rm $${temp_decomp} -rf && mkdir $${temp_decomp} -pv && cd $${temp_decomp} || continue; \
-	while [ -f "$${pkg}" ]; \
+{ \
+	temp_decomp="$(DECOMP_PATH)/$1"; \
+	file_list="$$(find $(wildcard $(PACKAGE_PATH)/ $(DOWNLOAD_PATH)/) -type f -and -name $1 $(foreach type,$(PACKAGE_TYPES),-or -name $1.$(type)))"; \
+	[ -z "$${file_list}" ] && $(call download_package,$1,$3,$4); \
+	for pkg in $${file_list}; \
 	do \
-		case "$${pkg}" in \
-			*.tar.bz2 | *.tbz) tar --use-compress-program bzip2 -xf $${pkg} || tar -xf $${pkg} || break;; \
-			*.tar.gz | *.tgz) tar --use-compress-program gzip -xf $${pkg} || tar -xf $${pkg} || break;; \
-			*.tar.xz | *.txz) tar --use-compress-program xz -xf $${pkg} || tar -xf $${pkg} || break;; \
-			*.zip | *.apk) unzip -o $${pkg} || break;; \
-			*.rar) rar x -o+ $${pkg} || break;; \
-			*) tar -xf $${pkg} || break;; \
-		esac; \
-		for pkg in *; \
+		echo "Decompression $${pkg} => $${temp_decomp}"; \
+		rm $${temp_decomp} -rf && mkdir $${temp_decomp} -pv && cd $${temp_decomp} || continue; \
+		while [ -f "$${pkg}" ]; \
 		do \
-			[ -d "$${pkg}" ] && break; \
+			case "$${pkg}" in \
+				*.tar.bz2 | *.tbz) tar --use-compress-program bzip2 -xf $${pkg} || tar -xf $${pkg} || break;; \
+				*.tar.gz | *.tgz) tar --use-compress-program gzip -xf $${pkg} || tar -xf $${pkg} || break;; \
+				*.tar.xz | *.txz) tar --use-compress-program xz -xf $${pkg} || tar -xf $${pkg} || break;; \
+				*.zip | *.apk) unzip -o $${pkg} || break;; \
+				*.rar) rar x -o+ $${pkg} || break;; \
+				*) tar -xf $${pkg} || break;; \
+			esac; \
+			for pkg in *; \
+			do \
+				[ -d "$${pkg}" ] && break; \
+			done; \
 		done; \
+		test -d "$${pkg}" && rm $2 -rf && mv $${pkg} $2 -v && break; \
+		rm $${temp_decomp} -rf; \
 	done; \
-	test -d "$${pkg}" && rm $2 -rf && mv $${pkg} $2 -v && break; \
-	rm $${temp_decomp} -rf; \
-done
+}
 endef
 
 define apply_patchs
-cd $2 && \
-for fn in $(wildcard $(PATCH_PATH)/$1*.patch); \
-do \
-	echo "Apply patch $${fn} => $2"; \
-	patch -p1 -i $${fn}; \
-done
+{ \
+	cd $2 && \
+	for fn in $(wildcard $(PATCH_PATH)/$1*.patch); \
+	do \
+		echo "Apply patch $${fn} => $2"; \
+		patch -p1 -i $${fn}; \
+	done; \
+}
 endef
 
 define decompression_file

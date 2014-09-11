@@ -154,12 +154,12 @@ endef
 endif
 
 define decompression_gcc
-if ! test -d $(SRC_GCC); \
-then \
-	$(call simple_decompression_file,$(GCC_NAME),$(SRC_GCC),$(GCC_URL)); \
-	$(call simple_decompression_file,$(GMP_NAME),$(SRC_GCC)/gmp,$(GMP_URL)); \
-	$(call simple_decompression_file,$(MPFR_NAME),$(SRC_GCC)/mpfr,$(MPFR_URL)); \
-	$(call simple_decompression_file,$(MPC_NAME),$(SRC_GCC)/mpc,$(MPC_URL)); \
+[ -d "$(SRC_GMP)" ] && [ -d "$(SRC_GCC)/gmp" ] && [ -d "$(SRC_GCC)/mpfr" ] && [ -d "$(SRC_GCC)/mpc" ] || \
+{ \
+	[ -d "$(SRC_GCC)" ] || $(call simple_decompression_file,$(GCC_NAME),$(SRC_GCC),$(GCC_URL)); \
+	[ -d "$(SRC_GCC)/gmp" ] || $(call simple_decompression_file,$(GMP_NAME),$(SRC_GCC)/gmp,$(GMP_URL)); \
+	[ -d "$(SRC_GCC)/mpfr" ] || $(call simple_decompression_file,$(MPFR_NAME),$(SRC_GCC)/mpfr,$(MPFR_URL)); \
+	[ -d "$(SRC_GCC)/mpc" ] || $(call simple_decompression_file,$(MPC_NAME),$(SRC_GCC)/mpc,$(MPC_URL)); \
 	$(call apply_patchs,$(GCC_NAME),$(SRC_GCC)); \
 	$(call apply_patchs,$(GMP_NAME),$(SRC_GCC)/gmp); \
 	$(call apply_patchs,$(MPFR_NAME),$(SRC_GCC)/mpfr); \
@@ -167,7 +167,7 @@ then \
 	sed -i '/k prot/agcc_cv_libc_provides_ssp=yes' $(SRC_GCC)/gcc/configure; \
 	sed -i 's/if \((code.*))\)/if (\1 \&\& \!DEBUG_INSN_P (insn))/' $(SRC_GCC)/gcc/sched-deps.c; \
 	sed -i 's,\s*\(const\s\+char\s\+pkgversion_string.*=\).*;\s*$$,\1 "[$(PACKAGE_VERSION_STRING)] ";,g' $(SRC_GCC)/gcc/version.c; \
-fi
+}
 endef
 
 $(CAVAN_TARGET_EABI): $(MARK_TOOLCHIAN_READY)

@@ -109,7 +109,7 @@ function cavan-ssh()
 
 function cavan-adb-loop_run()
 {
-	cavan-loop_run -wd2 "adb shell $*" || return 1
+	cavan-loop_run -wd2 "adb root && adb wait-for-device && adb remount; adb shell $*" || return 1
 }
 
 function cavan-adb-cavan-main()

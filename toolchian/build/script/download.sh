@@ -66,20 +66,23 @@ function download_main()
 	echo "mime_type = ${mime_type}"
 
 	case "${pkg_name}" in
+		*.tar)
+			[[ "${mime_type}" = application/*tar ]] || return 1
+			;;
 		*.xz | *.txz)
-			[ "${mime_type}" = "application/x-xz" ] || return 1
+			[[ "${mime_type}" = application/*xz ]] || return 1
 			;;
 		*.bz2 | *.tbz)
-			[ "${mime_type}" = "application/x-bzip2" ] || return 1
+			[[ "${mime_type}" = application/*bzip2 ]] || return 1
 			;;
 		*.gz | *.tgz)
-			[ "${mime_type}" = "application/gzip" ] || return 1
+			[[ "${mime_type}" = application/*gzip ]] || return 1
 			;;
 		*.zip)
-			[ "${mime_type}" = "application/zip" ] || return 1
+			[[ "${mime_type}" = application/*zip ]] || return 1
 			;;
 		*.rar)
-			[ "${mime_type}" = "application/x-rar" ] || return 1
+			[[ "${mime_type}" = application/*rar ]] || return 1
 			;;
 		*)
 			echo "package ${pkg_name} type unknown"
