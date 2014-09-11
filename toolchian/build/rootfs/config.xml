@@ -1,10 +1,10 @@
 <packages>
-	<package name="bash" version="4.2" depend=""
+	<package name="bash" version="4.3" depend=""
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://ftp.gnu.org/gnu/bash">
+			 url="http://mirrors.ustc.edu.cn/gnu/bash http://ftp.gnu.org/gnu/bash">
 	</package>
 
-	<package name="busybox" version="1.20.2" depend="bash" config=""
+	<package name="busybox" version="1.22.1" depend="bash" config=""
 			 url="http://busybox.net/downloads/$(BUSYBOX_NAME).tar.bz2">
 	</package>
 
@@ -15,12 +15,12 @@
 
 	<package name="libtool" version="2.4" depend="bash"
 			 config="--prefix=/usr --enable-ltdl-install"
-			 url="http://ftp.gnu.org/gnu/libtool">
+			 url="http://mirrors.ustc.edu.cn/gnu/libtool http://ftp.gnu.org/gnu/libtool">
 	</package>
 
 	<package name="texinfo" version="4.13a" depend="ncurses"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/texinfo">
+			 url="http://mirrors.ustc.edu.cn/gnu/texinfo http://ftp.gnu.org/gnu/texinfo">
 	</package>
 
 	<package name="mpc" version="0.9" depend="mpfr"
@@ -30,12 +30,12 @@
 
 	<package name="mpfr" version="3.0.1" depend="gmp"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/mpfr">
+			 url="http://mirrors.ustc.edu.cn/gnu/mpfr http://ftp.gnu.org/gnu/mpfr">
 	</package>
 
 	<package name="gmp" version="5.0.2" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/gmp">
+			 url="http://mirrors.ustc.edu.cn/gnu/gmp http://ftp.gnu.org/gnu/gmp">
 	</package>
 
 	<package name="zlib" version="1.2.8" depend="bash"
@@ -45,7 +45,7 @@
 
 	<package name="ncurses" version="5.9" depend="bash"
 	         config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/ncurses">
+			 url="http://mirrors.ustc.edu.cn/gnu/ncurses http://ftp.gnu.org/gnu/ncurses">
 	</package>
 
 	<package name="libffi" version="3.0.9" depend="bash"
@@ -105,17 +105,17 @@
 
 	<package name="grep" version="2.9" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/grep">
+			 url="http://mirrors.ustc.edu.cn/gnu/grep http://ftp.gnu.org/gnu/grep">
 	</package>
 
-	<package name="tar" version="1.26" depend="bash"
+	<package name="tar" version="1.28" depend="bash"
 			 config="FORCE_UNSAFE_CONFIGURE=1 --prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/tar">
+			 url="http://mirrors.ustc.edu.cn/gnu/tar http://ftp.gnu.org/gnu/tar">
 	</package>
 
-	<package name="gzip" version="1.4" depend="bash"
+	<package name="gzip" version="1.6" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/gzip">
+			 url="http://mirrors.ustc.edu.cn/gnu/gzip http://ftp.gnu.org/gnu/gzip">
 	</package>
 
 	<package name="xz" version="5.0.4" depend="bash"
@@ -130,12 +130,12 @@
 
 	<package name="sed" version="4.2" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://ftp.gnu.org/gnu/sed">
+			 url="http://mirrors.ustc.edu.cn/gnu/sed http://ftp.gnu.org/gnu/sed">
 	</package>
 
-	<package name="gawk" version="4.0.0" depend="bash"
+	<package name="gawk" version="4.1.1" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/gawk">
+			 url="http://mirrors.ustc.edu.cn/gnu/gawk http://ftp.gnu.org/gnu/gawk">
 	</package>
 
 	<package name="module-init-tools" version="3.15" depend="bash"
@@ -145,32 +145,32 @@
 
 	<package name="findutils" version="4.4.2" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/findutils">
+			 url="http://mirrors.ustc.edu.cn/gnu/findutils http://ftp.gnu.org/gnu/findutils">
 	</package>
 
-	<package name="make" version="3.82" depend="bash"
+	<package name="make" version="4.0" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/make">
+			 url="http://mirrors.ustc.edu.cn/gnu/make http://ftp.gnu.org/gnu/make">
 	</package>
 
-	<package name="m4" version="1.4.16" depend="bash"
+	<package name="m4" version="1.4.17" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/m4">
+			 url="http://mirrors.ustc.edu.cn/gnu/m4 http://ftp.gnu.org/gnu/m4">
 	</package>
 
 	<package name="autoconf" version="2.68" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/autoconf">
+			 url="http://mirrors.ustc.edu.cn/gnu/autoconf http://ftp.gnu.org/gnu/autoconf">
 	</package>
 
 	<package name="automake" version="1.11.1" depend="bash"
 			 config="--prefix=/usr"
-			 url="ftp://ftp.gnu.org/gnu/automake">
+			 url="http://mirrors.ustc.edu.cn/gnu/automake ftp://ftp.gnu.org/gnu/automake">
 	</package>
 
 	<package name="gperf" version="3.0.4" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ftp.gnu.org/gnu/gperf">
+			 url="http://mirrors.ustc.edu.cn/gnu/gperf http://ftp.gnu.org/gnu/gperf">
 	</package>
 
 	<package name="Python" version="2.7.2" depend="bash"
@@ -205,7 +205,7 @@
 
 	<package name="coreutils" version="8.13" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
-			 url="http://ftp.gnu.org/gnu/coreutils">
+			 url="http://mirrors.ustc.edu.cn/gnu/coreutils http://ftp.gnu.org/gnu/coreutils">
 	</package>
 
 	<package name="jpegsrc" version="v8b" depend="bash"
