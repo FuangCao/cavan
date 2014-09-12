@@ -189,26 +189,33 @@ static int msg21xx_set_power(struct hua_input_chip *chip, bool enable)
 static struct hua_ts_touch_key msg21xx_touch_keys[] =
 {
 	{
-		.code = KEY_BACK,
+		.code = KEY_MENU,
 		.x = MSG21XX_XAXIS_KEY1,
 		.y = MSG21XX_YAXIS_KEY,
 		.width = 80,
 		.height = 100,
 	},
 	{
-		.code = KEY_HOMEPAGE,
+		.code = KEY_BACK,
 		.x = MSG21XX_XAXIS_KEY2,
 		.y = MSG21XX_YAXIS_KEY,
 		.width = 80,
 		.height = 100,
 	},
 	{
-		.code = KEY_MENU,
+		.code = KEY_HOMEPAGE,
 		.x = MSG21XX_XAXIS_KEY3,
 		.y = MSG21XX_YAXIS_KEY,
 		.width = 80,
 		.height = 100,
-	}
+	},
+	{
+		.code = KEY_SEARCH,
+		.x = MSG21XX_XAXIS_KEY4,
+		.y = MSG21XX_YAXIS_KEY,
+		.width = 80,
+		.height = 100,
+	},
 };
 
 static int msg21xx_read_firmware_id(struct hua_input_chip *chip, char *buff, size_t size)
@@ -387,24 +394,6 @@ static int msg21xx_chip_event_handler(struct hua_input_chip *chip)
 
 		switch (code)
 		{
-		case 1:
-			msg21xx->points[0].x = MSG21XX_XAXIS_KEY3;
-			msg21xx->points[0].y = MSG21XX_YAXIS_KEY;
-			msg21xx->touch_count = 1;
-			break;
-
-		case 2:
-			msg21xx->points[0].x = MSG21XX_XAXIS_KEY1;
-			msg21xx->points[0].y = MSG21XX_YAXIS_KEY;
-			msg21xx->touch_count = 1;
-			break;
-
-		case 4:
-			msg21xx->points[0].x = MSG21XX_XAXIS_KEY2;
-			msg21xx->points[0].y = MSG21XX_YAXIS_KEY;
-			msg21xx->touch_count = 1;
-			break;
-
 		case 0x40:
 			msg21xx->distance = 1;
 			msg21xx->touch_count = -1;
@@ -421,8 +410,27 @@ static int msg21xx_chip_event_handler(struct hua_input_chip *chip)
 			break;
 
 		default:
-			pr_red_info("invalid keycode = %d", code);
-			return -EINVAL;
+			if ((code & 0x0F) == 0)
+			{
+				msg21xx->touch_count = 0;
+			}
+			else
+			{
+				int i;
+				int count;
+
+				for (i = 0, count = 0; i < ARRAY_SIZE(msg21xx_touch_keys); i++)
+				{
+					if (code & (1 << i))
+					{
+						msg21xx->points[count].x = msg21xx_touch_keys[i].x;
+						msg21xx->points[count].y = msg21xx_touch_keys[i].y;
+						count++;
+					}
+				}
+
+				msg21xx->touch_count = count;
+			}
 		}
 	}
 	else

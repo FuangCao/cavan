@@ -292,15 +292,23 @@ int hua_ts_device_probe(struct hua_input_device *dev)
 	if (ts->keys && ts->key_count)
 	{
 #ifdef CONFIG_OF
-		u32 keycode[ts->key_count];
+		struct property *prop;
 
-		if (of_property_read_u32_array(of_node, "key-code", keycode, ts->key_count) >= 0)
+		prop = of_find_property(of_node, "key-code", NULL);
+		if (prop)
 		{
-			int i;
+			const __be32 *value = prop->value;
+			size_t count = prop->length / sizeof(*value);
 
-			for (key = ts->keys, i = ts->key_count - 1; i >= 0; i--)
+			if (count > ts->key_count)
 			{
-				key[i].code = keycode[i];
+				count = ts->key_count;
+			}
+
+			while (count > 0)
+			{
+				count--;
+				ts->keys[count].code = be32_to_cpup(value + count);
 			}
 		}
 #endif
