@@ -173,7 +173,7 @@
 			 url="http://mirrors.ustc.edu.cn/gnu/gperf http://ftp.gnu.org/gnu/gperf">
 	</package>
 
-	<package name="Python" version="2.7.2" depend="bash"
+	<package name="Python" version="2.7.8" depend="bash"
 			 config="--prefix=/usr"
 			 url="http://www.python.org/ftp/python/$(PYTHON_VERSION)">
 	</package>
@@ -203,7 +203,7 @@
 			 url="http://www.rarlab.com/rar_CN/unrarsrc-3.4.3.tar.gz">
 	</package>
 
-	<package name="coreutils" version="8.13" depend="bash"
+	<package name="coreutils" version="8.23" depend="bash"
 			 config="--prefix=/usr --exec-prefix=/ --sysconfdir=/etc"
 			 url="http://mirrors.ustc.edu.cn/gnu/coreutils http://ftp.gnu.org/gnu/coreutils">
 	</package>
@@ -213,24 +213,24 @@
 			 url="http://www.ijg.org/files/jpegsrc.v8b.tar.gz">
 	</package>
 
-	<package name="giflib" version="4.1.6" depend="bash"
+	<package name="giflib" version="5.1.0" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ncu.dl.sourceforge.net/project/giflib/giflib%204.x/$(GIFLIB_NAME)">
+			 url="http://jaist.dl.sourceforge.net/project/giflib">
 	</package>
 
 	<package name="libungif" version="4.1.4" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ncu.dl.sourceforge.net/project/giflib/libungif%204.x/$(LIBUNGIT_NAME)">
+			 url="http://nchc.dl.sourceforge.net/project/giflib/libungif-4.x/$(LIBUNGIF_NAME)">
 	</package>
 
-	<package name="libpng" version="1.2.46" depend="bash"
+	<package name="libpng" version="1.6.12" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://ncu.dl.sourceforge.net/project/libpng/libpng12/$(LIBPNG_VERSION)">
+			 url="http://jaist.dl.sourceforge.net/project/libpng/libpng16/$(LIBPNG_VERSION)">
 	</package>
 
-	<package name="tiff" version="3.8.2" depend="bash"
+	<package name="tiff" version="4.0.3" depend="bash"
 			 config="--prefix=/usr"
-			 url="http://dl.maptools.org/dl/libtiff">
+			 url="http://download.osgeo.org/libtiff http://dl.maptools.org/dl/libtiff">
 	</package>
 
 	<package name="fbv" version="1.0b" depend="jpegsrc giflib libungif libpng tiff zlib"

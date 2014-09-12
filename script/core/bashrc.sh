@@ -27,9 +27,9 @@ FSLDROID_BIN="${FSLDROID_HOME}/out/host/linux-x86/bin"
 UBOOT_BIN="${UBOOT_HOME}/tools"
 PATH="${CAVAN_BIN}:${TOOLCHIAN_BIN}:${JAVA_BIN}:${SDK_BIN}:${FSLDROID_BIN}:${UBOOT_BIN}:${PATH}"
 
-for path in ${HOME} ${HOME}/cavan-toolchian/utils
+for dn in ${HOME} ${HOME}/cavan-toolchian/utils
 do
-	PATH="${path}/usr/local/bin:${path}/usr/local/sbin:${path}/usr/bin:${path}/usr/sbin:${path}/bin:${path}/sbin:${PATH}"
+	PATH="${PATH}:${dn}/usr/local/bin:${dn}/usr/local/sbin:${dn}/usr/bin:${dn}/usr/sbin:${dn}/bin:${dn}/sbin"
 done
 
 CMD_TCP_COPY='cavan-tcp_copy'
