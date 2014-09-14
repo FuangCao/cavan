@@ -89,6 +89,12 @@ class CavanXmlBase:
 	def getAttribute(self, name):
 		return self.mRootElement.getAttribute(name)
 
+	def getAttributeSafe(self, name):
+		attr = self.getAttribute(name)
+		if not attr:
+			return ""
+		return attr
+
 	def createElement(self, name):
 		return self.mDocument.createElement(name)
 
