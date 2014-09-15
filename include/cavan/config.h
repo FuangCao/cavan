@@ -15,6 +15,10 @@
 #define _BSD_SOURCE			1
 #endif
 
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE		1
+#endif
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE			500
 #endif
