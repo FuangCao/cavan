@@ -1,0 +1,88 @@
+<packages>
+	<package name="binutils"			version="2.24"					url="http://mirrors.ustc.edu.cn/gnu/binutils http://ftp.gnu.org/gnu/binutils"/>
+	<package name="gmp"					version="5.0.2"					url="http://mirrors.ustc.edu.cn/gnu/gmp http://ftp.gnu.org/gnu/gmp"/>
+	<package name="mpc"					version="0.9"					url="http://mirrors.ustc.edu.cn/gnu/mpc http://www.multiprecision.org/mpc/download"/>
+	<package name="mpfr"				version="3.0.1"					url="http://mirrors.ustc.edu.cn/gnu/mpfr http://ftp.gnu.org/gnu/mpfr"/>
+	<package name="gcc"					version="4.9.1"					url="http://mirrors.ustc.edu.cn/gnu/gcc http://ftp.gnu.org/gnu/gcc"/>
+	<package name="glibc"				version="2.20"					url="http://mirrors.ustc.edu.cn/gnu/glibc http://ftp.gnu.org/gnu/glibc"/>
+	<package name="kernel"				version="3.16.2"				url="http://www.kernel.org/pub/linux/kernel/v3.0"/>
+	<package name="alsa-lib"			version="1.0.24.1" 				url="ftp://ftp.alsa-project.org/pub/lib"/>
+	<package name="alsa-utils"			version="1.0.24.2"				url="ftp://ftp.alsa-project.org/pub/utils"/>
+	<package name="audiofile"			version="0.3.1"					url="http://www.68k.org/~michael/audiofile"/>
+	<package name="autoconf"			version="2.69"					url="http://mirrors.ustc.edu.cn/gnu/autoconf http://ftp.gnu.org/gnu/autoconf"/>
+	<package name="automake"			version="1.14.1"				url="http://mirrors.ustc.edu.cn/gnu/automake ftp://ftp.gnu.org/gnu/automake"/>
+	<package name="bash"				version="4.3"					url="http://mirrors.ustc.edu.cn/gnu/bash http://ftp.gnu.org/gnu/bash"/>
+	<package name="busybox"				version="1.22.1"				url="http://busybox.net/downloads/$(BUSYBOX_NAME).tar.bz2"/>
+	<package name="bzip2"				version="1.0.6"					url="http://bzip.org/$(BZIP2_VERSION)"/>
+	<package name="coreutils"			version="8.23"					url="http://mirrors.ustc.edu.cn/gnu/coreutils http://ftp.gnu.org/gnu/coreutils"/>
+	<package name="debianutils"			version="4.0.4"					url="http://ftp.de.debian.org/debian/pool/main/d/debianutils/debianutils_$(DEBIANUTILS_VERSION).tar.gz"/>
+	<package name="DirectFB"			version="1.5.3"					url="http://www.directfb.org/downloads/Core/DirectFB-1.5"/>
+	<package name="dosfstools"			version="3.0.11"				url="http://fossies.org/linux/misc"/>
+	<package name="e2fsprogs"			version="1.41.14"				url="http://ncu.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/$(E2FSPROGS_VERSION)"/>
+	<package name="esound"				version="0.2.41"				url="http://ftp.acc.umu.se/pub/GNOME/sources/esound/0.2"/>
+	<package name="faad2"				version="2.7"					url="http://ncu.dl.sourceforge.net/project/faac/faad2-src/$(FAAD2_NAME)"/>
+	<package name="fbv"					version="1.0b"					url="http://s-tech.elsat.net.pl/fbv" type="tar.gz"/>
+	<package name="ffmpeg"				version="snapshot"				url="http://ffmpeg.org/releases"/>
+	<package name="file"				version="5.09"					url="ftp://ftp.astron.com/pub/file"/>
+	<package name="findutils"			version="4.4.2"					url="http://mirrors.ustc.edu.cn/gnu/findutils http://ftp.gnu.org/gnu/findutils"/>
+	<package name="freetype"			version="2.4.6"					url="http://mirror.yongbok.net/nongnu/freetype"/>
+	<package name="gawk"				version="4.1.1"					url="http://mirrors.ustc.edu.cn/gnu/gawk http://ftp.gnu.org/gnu/gawk"/>
+	<package name="gettext"				version="0.19.2"				url="http://mirrors.ustc.edu.cn/gnu/gettext http://ftp.gnu.org/pub/gnu/gettext"/>
+	<package name="giflib"				version="5.1.0"					url="http://jaist.dl.sourceforge.net/project/giflib"/>
+	<package name="glib"				version="2.30.0"				url="http://ftp.gnome.org/pub/gnome/sources/glib/2.30"/>
+	<package name="gperf"				version="3.0.4"					url="http://mirrors.ustc.edu.cn/gnu/gperf http://ftp.gnu.org/gnu/gperf"/>
+	<package name="grep"				version="2.9"					url="http://mirrors.ustc.edu.cn/gnu/grep http://ftp.gnu.org/gnu/grep"/>
+	<package name="gzip"				version="1.6"					url="http://mirrors.ustc.edu.cn/gnu/gzip http://ftp.gnu.org/gnu/gzip"/>
+	<package name="jpegsrc"				version="v8b"					url="http://www.ijg.org/files" type="tar.gz"/>
+	<package name="lcms"				version="1.19"					url="http://ncu.dl.sourceforge.net/project/lcms/lcms/$(LCMS_VERSION)"/>
+	<package name="libffi"				version="3.0.9"					url="ftp://sourceware.org/pub/libffi"/>
+	<package name="libmad"				version="0.15.1b"				url="http://ncu.dl.sourceforge.net/project/mad/libmad/$(LIBMAD_VERSION)"/>
+	<package name="libmng"				version="1.0.10"				url="http://ncu.dl.sourceforge.net/project/libmng/libmng-devel/$(LIBMNG_VERSION)"/>
+	<package name="libpng"				version="1.6.12"				url="http://jaist.dl.sourceforge.net/project/libpng/libpng16/$(LIBPNG_VERSION)"/>
+	<package name="libtool"				version="2.4"					url="http://mirrors.ustc.edu.cn/gnu/libtool http://ftp.gnu.org/gnu/libtool"/>
+	<package name="libungif"			version="4.1.4"					url="http://nchc.dl.sourceforge.net/project/giflib/libungif-4.x/$(LIBUNGIF_NAME)"/>
+	<package name="libusb"				version="1.0.9"					url="http://sourceforge.net/projects/libusb/files/libusb-1.0/$(LIBUSB_NAME)" type="tar.bz2"/>
+	<package name="LibVNCServer"		version="0.9.8.1"				url="http://ncu.dl.sourceforge.net/project/libvncserver/libvncserver/$(LIBVNCSERVER_VERSION)"/>
+	<package name="libX11"				version="1.3.2"					url="http://xorg.freedesktop.org/releases/X11R7.5/src/lib"/>
+	<package name="libxcb"				version="1.7"					url="http://xcb.freedesktop.org/dist"/>
+	<package name="libXext"				version="1.1.1"					url="http://xorg.freedesktop.org/releases/X11R7.5/src/lib"/>
+	<package name="libxml2"				version="2.9.1"					url="ftp://xmlsoft.org/libxml2"/>
+	<package name="libXmu"				version="1.0.5"					url="http://xorg.freedesktop.org/releases/X11R7.5/src/lib"/>
+	<package name="libxslt"				version="git-snapshot"			url="ftp://xmlsoft.org/libxml2"/>
+	<package name="libXt"				version="1.0.7"					url="http://xorg.freedesktop.org/releases/X11R7.5/src/lib"/>
+	<package name="lrzsz"				version="0.12.20"				url="http://ohse.de/uwe/releases/$(LRZSZ_NAME).tar.gz"/>
+	<package name="m4"					version="1.4.17"				url="http://mirrors.ustc.edu.cn/gnu/m4 http://ftp.gnu.org/gnu/m4"/>
+	<package name="make"				version="4.0"					url="http://mirrors.ustc.edu.cn/gnu/make http://ftp.gnu.org/gnu/make"/>
+	<package name="module-init-tools"	version="3.15"					url="ftp://ftp.kernel.org/pub/linux/utils/kernel/module-init-tools"/>
+	<package name="mpg123"				version="1.13.4"				url="http://ncu.dl.sourceforge.net/project/mpg123/mpg123/$(MPG123_VERSION)"/>
+	<package name="mplayer"				version="export-snapshot"		url="http://mplayerhq.hu/MPlayer/releases"/>
+	<package name="ncurses"				version="5.9"					url="http://mirrors.ustc.edu.cn/gnu/ncurses http://ftp.gnu.org/gnu/ncurses"/>
+	<package name="pciids"				version="0.1"					url="http://vorner.ucw.cz/download/pciids_$(PCIIDS_VERSION).tar.bz2"/>
+	<package name="perl"				version="5.14.2"				url="http://www.cpan.org/src/5.0"/>
+	<package name="pixman"				version="0.32.6"				url="http://cairographics.org/releases"/>
+	<package name="pkgconfig"			version="0.18"					url="http://pkgconfig.freedesktop.org/releases"/>
+	<package name="procps"				version="3.2.8"					url="http://procps.sourceforge.net"/>
+	<package name="Python"				version="2.7.8"					url="http://www.python.org/ftp/python/$(PYTHON_VERSION)"/>
+	<package name="qemu"				version="2.1.1"					url="http://wiki.qemu-project.org/download http://wiki.qemu.org/download"/>
+	<package name="sbox2"				version="2.0"					url="http://cgit.freedesktop.org/sbox2/snapshot"/>
+	<package name="SDL2"				version="2.0.3"					url="http://www.libsdl.org/release"/>
+	<package name="sed"					version="4.2"					url="http://mirrors.ustc.edu.cn/gnu/sed http://ftp.gnu.org/gnu/sed"/>
+	<package name="sudo"				version="1.8.2"					url="http://www.sudo.ws/sudo/dist"/>
+	<package name="sysfsutils"			version="2.1.0"					url="http://ncu.dl.sourceforge.net/project/linux-diag/sysfsutils/$(SYSFSUTILS_VERSION)"/>
+	<package name="sysvinit"			version="2.88dsf"				url="http://download.savannah.gnu.org/releases/sysvinit"/>
+	<package name="tar"					version="1.28"					url="http://mirrors.ustc.edu.cn/gnu/tar http://ftp.gnu.org/gnu/tar"/>
+	<package name="texinfo"				version="5.2"					url="http://mirrors.ustc.edu.cn/gnu/texinfo http://ftp.gnu.org/gnu/texinfo"/>
+	<package name="texlive"				version="20110705"				url="http://mirror.neu.edu.cn/CTAN/systems/texlive/Source/texlive-$(TEXLIVE_VERSION)-source.tar.xz"/>
+	<package name="tiff"				version="4.0.3"					url="http://download.osgeo.org/libtiff http://dl.maptools.org/dl/libtiff"/>
+	<package name="tslib"				version="1.0"					url="http://download.berlios.de/tslib"/>
+	<package name="udev"				version="172"					url="http://ncu.dl.sourceforge.net/project/buluoos/0.3/src"/>
+	<package name="unrar"				version="3.4.3"					url="http://www.rarlab.com/rar_CN/unrarsrc-$(UNRAR_VERSION).tar.gz"/>
+	<package name="usbutils"			version="006"					url="http://www.kernel.org/pub/linux/utils/usb/usbutils"/>
+	<package name="util-linux-ng"		version="2.18"					url="http://jaist.dl.sourceforge.net/project/buluoos/0.2/src"/>
+	<package name="vim"					version="7.3"					url="ftp://ftp.vim.org/pub/vim/unix"/>
+	<package name="xextproto"			version="7.2.0"					url="ftp://ftp.freedesktop.org/pub/individual/proto"/>
+	<package name="xproto"				version="7.0.22"				url="http://xorg.freedesktop.org/archive/individual/proto"/>
+	<package name="xtrans"				version="1.0.4"					url="http://xorg.freedesktop.org/releases/individual/lib"/>
+	<package name="xz"					version="5.0.5"					url="http://tukaani.org/xz" type="tar.bz2 tar.gz"/>
+	<package name="zlib"				version="1.2.8"					url="http://zlib.net"/>
+</packages>

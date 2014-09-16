@@ -93,7 +93,7 @@ class CavanPackageXml(cavan_xml.CavanXmlBase):
 	def getUpperName(self):
 		return self.getName().upper()
 
-class CavanPackageParser(cavan_command.CavanCommandBase):
+class CavanPackageParser:
 	def showUsage(self, command):
 		print "Usage: %s [package | depend] [pathname]" % command
 		return False
@@ -112,6 +112,18 @@ class CavanPackageParser(cavan_command.CavanCommandBase):
 			self.write("%s_NAME = %s-$(%s_VERSION)\n" % (upperName, package.getName(), upperName))
 			self.write("%s_TYPE = %s\n" % (upperName, package.getType()))
 			self.write("%s_URL = %s\n\n" % (upperName, package.getUrl()))
+
+		return True
+
+	def genDownloadMakeFile(self):
+		for package in self.mXml.getPackageList():
+			upperName = package.getUpperName()
+			self.write("%s_VERSION ?= %s\n" % (upperName, package.getVersion()))
+			self.write("%s_NAME = %s-$(%s_VERSION)\n" % (upperName, package.getName(), upperName))
+			self.write("%s_TYPE = %s\n" % (upperName, package.getType()))
+			self.write("%s_URL = %s\n" % (upperName, package.getUrl()))
+			self.write("%s_MARK = $(MARK_DOWNLOAD)/$(%s_NAME)\n" % (upperName, upperName))
+			self.write("$(%s_MARK):\n\t$(call download_package,$(%s_NAME),$(%s_URL),$(%s_TYPE))\n\n" % (upperName, upperName, upperName, upperName))
 
 		return True
 
@@ -170,6 +182,8 @@ class CavanPackageParser(cavan_command.CavanCommandBase):
 		subcmd = argv[1]
 		if subcmd in ["package"]:
 			action = self.genPackageMakeFile
+		elif subcmd in ["download"]:
+			action = self.genDownloadMakeFile
 		elif subcmd in ["build"]:
 			action = self.genBuildMakeFile
 		else:

@@ -179,3 +179,7 @@ endef
 define find_makefile
 $(word 1,$(wildcard $1))
 endef
+
+define generate_makefile
+test "$3" -nt "$2" -a "$3" -nt "$(PYTHON_PARSER)" || python "$(PYTHON_PARSER)" "$1" "$2" "$3"
+endef

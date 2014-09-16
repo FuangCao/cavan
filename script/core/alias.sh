@@ -251,10 +251,17 @@ function cavan-firefox-flash-install()
 
 	work_path="$(mktemp -d)"
 	tar -xvf "$1" -C "${work_path}" || return 1
+
+	(
+		cd "${work_path}/usr" && find -type f | while read line
+		do
+			sudo cp -av "${line}" "/usr/${line}" || return 1
+		done
+	)
+
 	plugins_path="/usr/lib/firefox/browser/plugins"
-	sudo cp ${work_path}/usr/* /usr -av || return 1
-	sudo mkdir ${plugins_path} -pv || return 1
-	sudo cp ${work_path}/lib*.so ${plugins_path} -av || return 1
+	sudo mkdir -pv ${plugins_path} && sudo cp -av ${work_path}/lib*.so ${plugins_path} || return 1
+
 	rm ${work_path} -rfv
 
 	return 1
