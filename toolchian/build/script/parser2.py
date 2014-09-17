@@ -93,9 +93,9 @@ class CavanPackageXml(cavan_xml.CavanXmlBase):
 	def getUpperName(self):
 		return self.getName().upper()
 
-class CavanPackageParser:
+class CavanPackageParser(cavan_command.CavanCommandBase):
 	def showUsage(self, command):
-		print "Usage: %s [package | depend] [pathname]" % command
+		print "Usage: %s [package|depend] [pathname]" % command
 		return False
 
 	def write(self, data):
@@ -115,31 +115,34 @@ class CavanPackageParser:
 
 		return True
 
-	def genDownloadMakeFile(self):
-		for package in self.mXml.getPackageList():
-			upperName = package.getUpperName()
-			self.write("%s_VERSION ?= %s\n" % (upperName, package.getVersion()))
-			self.write("%s_NAME = %s-$(%s_VERSION)\n" % (upperName, package.getName(), upperName))
-			self.write("%s_TYPE = %s\n" % (upperName, package.getType()))
-			self.write("%s_URL = %s\n" % (upperName, package.getUrl()))
-			self.write("%s_MARK = $(MARK_DOWNLOAD)/$(%s_NAME)\n" % (upperName, upperName))
-			self.write("$(%s_MARK):\n\t$(call download_package,$(%s_NAME),$(%s_URL),$(%s_TYPE))\n\n" % (upperName, upperName, upperName, upperName))
-
-		return True
-
 	def genBuildMakeFile(self):
-		self.write("OUT_PATH := %s\n" % self.mXml.getOutPath())
-		self.write("MARK_PATH := %s\n" % self.mXml.getMarkPath())
+		dirOut = self.mXml.getOutPath()
+		if not dirOut:
+			self.prRedInfo("Please set attribute out")
+			return False
+
+		dirMark = self.mXml.getMarkPath()
+		if not dirMark:
+			self.prRedInfo("Please set attribute mark_path")
+			return False
+
+		self.write("OUT_PATH := %s\n" % dirOut)
+		self.write("MARK_PATH := %s\n" % dirMark)
 
 		source = self.mXml.getSourcePath()
 		if not not source:
 			self.write("SOURCE_PATH := %s\n" % source)
 
-		self.write("BUILD := %s\n" % self.mXml.getBuildMethod())
+		build = self.mXml.getBuildMethod()
+		if not build:
+			self.prRedInfo("Please set build method")
+			return False
+
+		self.write("BUILD := %s\n" % build)
 
 		markName = self.mXml.getMarkName()
 		if not markName:
-			markName = ready
+			markName = "ready"
 		self.write("MARK_READY := $(MARK_PATH)/%s\n\n" % markName)
 
 		listMark = []
@@ -158,7 +161,7 @@ class CavanPackageParser:
 			self.write("$(%s):\n" % markName)
 			actions = package.getAction()
 			if not actions:
-				self.write("\t$(Q)$(call $(BUILD))\n")
+				self.write("\t$(Q)$(call $(BUILD),$(%s_NAME),$(%s_URL),$(%s_TYPE),$(%s_CONFIG))\n" % (upperName, upperName, upperName, upperName))
 			else:
 				for action in actions:
 					self.write("\t$(Q)" + action + "\n")
@@ -168,10 +171,12 @@ class CavanPackageParser:
 
 		self.writelines(listDepend)
 
-		self.write("\nall $(MARK_READY):")
+		self.write("\nall: $(MARK_READY)\n\n$(MARK_READY):")
 		for mark in listMark:
 			self.write(" $(%s)" % mark)
 		self.write("\n")
+
+		return True
 
 	def main(self):
 		argv = sys.argv
@@ -182,8 +187,6 @@ class CavanPackageParser:
 		subcmd = argv[1]
 		if subcmd in ["package"]:
 			action = self.genPackageMakeFile
-		elif subcmd in ["download"]:
-			action = self.genDownloadMakeFile
 		elif subcmd in ["build"]:
 			action = self.genBuildMakeFile
 		else:
@@ -202,4 +205,5 @@ class CavanPackageParser:
 
 if __name__ == "__main__":
 	parser = CavanPackageParser()
-	parser.main()
+	if not parser.main():
+		sys.exit(-1)

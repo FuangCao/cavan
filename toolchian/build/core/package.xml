@@ -1,11 +1,11 @@
-<packages>
+<packages out="$(DOWNLOAD_PATH)" mark_path="$(MARK_DOWNLOAD)" build="download_package">
 	<package name="binutils"			version="2.24"					url="http://mirrors.ustc.edu.cn/gnu/binutils http://ftp.gnu.org/gnu/binutils"/>
-	<package name="gmp"					version="5.0.2"					url="http://mirrors.ustc.edu.cn/gnu/gmp http://ftp.gnu.org/gnu/gmp"/>
-	<package name="mpc"					version="0.9"					url="http://mirrors.ustc.edu.cn/gnu/mpc http://www.multiprecision.org/mpc/download"/>
-	<package name="mpfr"				version="3.0.1"					url="http://mirrors.ustc.edu.cn/gnu/mpfr http://ftp.gnu.org/gnu/mpfr"/>
+	<package name="gmp"					version="6.0.0a"					url="http://mirrors.ustc.edu.cn/gnu/gmp http://ftp.gnu.org/gnu/gmp"/>
+	<package name="mpc"					version="1.0.2"					url="http://mirrors.ustc.edu.cn/gnu/mpc http://www.multiprecision.org/mpc/download"/>
+	<package name="mpfr"				version="3.1.2"					url="http://mirrors.ustc.edu.cn/gnu/mpfr http://ftp.gnu.org/gnu/mpfr"/>
 	<package name="gcc"					version="4.9.1"					url="http://mirrors.ustc.edu.cn/gnu/gcc http://ftp.gnu.org/gnu/gcc"/>
 	<package name="glibc"				version="2.20"					url="http://mirrors.ustc.edu.cn/gnu/glibc http://ftp.gnu.org/gnu/glibc"/>
-	<package name="kernel"				version="3.16.2"				url="http://www.kernel.org/pub/linux/kernel/v3.0"/>
+	<package name="linux"				version="3.16.2"				url="http://www.kernel.org/pub/linux/kernel/v3.0"/>
 	<package name="alsa-lib"			version="1.0.24.1" 				url="ftp://ftp.alsa-project.org/pub/lib"/>
 	<package name="alsa-utils"			version="1.0.24.2"				url="ftp://ftp.alsa-project.org/pub/utils"/>
 	<package name="audiofile"			version="0.3.1"					url="http://www.68k.org/~michael/audiofile"/>

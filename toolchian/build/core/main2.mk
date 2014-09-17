@@ -120,8 +120,13 @@ all:
 download: $(MARK_DOWNLOAD_READY)
 	@echo make $@ successfully
 
-$(MARK_DOWNLOAD_READY):
-	$(Q)$(call generate_makefile,download,$(XML_PACKAGE),$(MAKEFILE_DOWNLOAD))
-	$(Q)+make -f $(MAKEFILE_DOWNLOAD)
-	$(Q)$(call generate_mark)
-	@echo make $@ successfully
+$(MARK_DOWNLOAD_READY): | $(DOWNLOAD_PATH) $(MARK_DOWNLOAD)
+	$(Q)$(call generate_makefile,package,$(XML_PACKAGE),$(MAKEFILE_PACKAGE))
+	$(Q)$(call generate_makefile,build,$(XML_PACKAGE),$(MAKEFILE_DOWNLOAD))
+	$(Q)+while :; \
+	do \
+		make -f $(MAKEFILE_DEFINES) -f $(MAKEFILE_PACKAGE) -f $(MAKEFILE_DOWNLOAD) all && break; \
+	done
+
+$(OUT_PATH) $(MARK_PATH) $(DOWNLOAD_PATH) $(MARK_DOWNLOAD):
+	$(Q)mkdir -pv $@
