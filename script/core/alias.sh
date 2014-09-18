@@ -167,6 +167,42 @@ function cavan-make-apk()
 	make
 }
 
+function cavan-mm-apk()
+{
+	local pkg_name apk_name
+
+	[ -f "AndroidManifest.xml" ] || return 1
+
+	pkg_name=$(cat AndroidManifest.xml | grep "package=" | sed 's/.*package="\([^"]\+\)"/\1/g')
+	apk_name=$(basename ${PWD})
+
+	echo "pkg_name = ${pkg_name}"
+
+	[ -e "Android.mk" ] || cat > Android.mk << EOF
+LOCAL_PATH := \$(call my-dir)
+
+include \$(CLEAR_VARS)
+
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := \$(call all-java-files-under, src)
+
+LOCAL_PACKAGE_NAME := ${apk_name}
+LOCAL_CERTIFICATE := platform
+
+include \$(BUILD_PACKAGE)
+EOF
+
+	[ -e "Makefile" ] || cat > Makefile << EOF
+install: uninstall
+	adb install \$(ANDROID_PRODUCT_OUT)/system/app/${apk_name}.apk
+
+uninstall:
+	adb uninstall ${pkg_name}
+
+.PHONE: uninstall
+EOF
+}
+
 function cavan-git-config()
 {
 	local CMD_GIT_CONFIG="git config --global"
