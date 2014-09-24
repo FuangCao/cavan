@@ -1897,6 +1897,20 @@ static int network_client_udp_open(struct network_client *client, const struct n
 		return sockfd;
 	}
 
+	if ((ntohl(addr.sin_addr.s_addr) & 0xFF) == 0xFF)
+	{
+		int broadcast = 1;
+
+		ret = setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
+		if (ret < 0)
+		{
+			pr_red_info("setsockopt SO_BROADCAST");
+			goto out_close_sockfd;
+		}
+
+		pr_bold_info("set socket type to broadcast successfully");
+	}
+
 	client->sockfd = sockfd;
 	client->addrlen = sizeof(struct sockaddr_in);
 	addr.sin_port = htons(port);
