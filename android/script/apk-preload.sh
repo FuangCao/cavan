@@ -28,17 +28,6 @@ done 2>&1 > /dev/kmsg
 
 cd "${DEST_PATH}" || exit 1
 
-for apk in *-[0-9].apk
-do
-	apk_name="${apk/-[0-9].apk/.apk}"
-	apk_preload="${SRC_PATH}/${apk_name}"
-	[ "${apk_preload}" -nt "${apk}" ] || continue
-	echo "Remove: ${apk}"
-	rm "${apk}"
-	echo "Symlink: ${apk_preload} -> ${apk_name}"
-	ln -s "${apk_preload}" "${apk_name}"
-done 2>&1 > /dev/kmsg
-
 for apk in *.apk
 do
 	[ -L "${apk}" ] || continue
@@ -46,3 +35,30 @@ do
 	echo "Remove: ${apk}"
 	rm "${apk}"
 done 2>&1 > /dev/kmsg
+
+mount -o remount,rw /system
+
+for apk in *-[0-9].apk
+do
+	apk_name="${apk/-[0-9].apk/.apk}"
+	apk_preload="${SRC_PATH}/${apk_name}"
+
+	[ -e "${apk_preload}" ] || continue
+
+	if [ "${apk_preload}" -nt "${apk}" ]
+	then
+		echo "Remove: ${apk}" && rm "${apk}" || continue
+	elif [ "${apk_preload}" -ot "${apk}" ]
+	then
+		echo "Remove: ${apk_preload}" && rm "${apk_preload}" || continue
+		echo "Move: ${apk} -> ${apk_preload}"
+		cp -av "${apk}" "${apk_preload}" && rm "${apk}" || continue
+	else
+		continue
+	fi
+
+	echo "Symlink: ${apk_preload} -> ${apk_name}"
+	ln -s "${apk_preload}" "${apk_name}"
+done 2>&1 > /dev/kmsg
+
+mount -o remount,ro /system
