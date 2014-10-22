@@ -44,17 +44,17 @@ do
 	apk_preload="${SRC_PATH}/${apk_name}"
 
 	[ -e "${apk_preload}" ] || continue
+	[ -L "${apk}" ] && continue
 
-	if [ "${apk_preload}" -nt "${apk}" ]
+	if [ "${apk_preload}" -ot "${apk}" ]
 	then
-		echo "Remove: ${apk}" && rm "${apk}" || continue
-	elif [ "${apk_preload}" -ot "${apk}" ]
-	then
-		echo "Remove: ${apk_preload}" && rm "${apk_preload}" || continue
 		echo "Move: ${apk} -> ${apk_preload}"
-		cp -av "${apk}" "${apk_preload}" && rm "${apk}" || continue
+		rm "${apk_preload}" || continue
+		cp -av "${apk}" "${apk_preload}" || continue
+		rm "${apk}" || continue
 	else
-		continue
+		echo "Remove: ${apk}"
+		rm "${apk}" || continue
 	fi
 
 	echo "Symlink: ${apk_preload} -> ${apk_name}"
