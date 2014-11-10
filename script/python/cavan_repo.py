@@ -257,6 +257,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 		if not os.path.exists(self.mFileManifest):
 			pathname = self.getAbsPath(".repo")
 			if os.path.exists(pathname):
+				self.mPathSvnRepo = pathname
 				pathname = os.path.join(pathname, "manifest.xml")
 				if os.path.exists(pathname):
 					self.mFileManifest = pathname
@@ -269,6 +270,7 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 
 		self.mPathManifestRepo = os.path.join(self.mPathPlatform, "manifest.git")
 		self.mPathFileRepo = os.path.join(self.mPathPlatform, "copyfile.git")
+		self.mPathManifests = os.path.join(self.mPathSvnRepo, "manifests")
 
 	def findRootPath(self):
 		pathname = self.findRootPathByFilename(self.mGitSvnRepoName)
@@ -389,6 +391,16 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			return False
 
 		return self.doExecute(["rm", "-rf", destPath])
+
+	def isMirrorRepo(self):
+		if not os.path.exists(self.mPathManifests):
+			return False
+
+		lines = self.doPopen(["git", "config", "repo.mirror"], cwd = self.mPathManifests)
+		if not lines:
+			return False
+
+		return lines[0].strip() == "true"
 
 	def doInit(self, argv):
 		self.setVerbose(True)
@@ -577,9 +589,14 @@ class CavanGitSvnRepoManager(CavanCommandBase, CavanProgressBar):
 			return False
 
 		commandRaw = " ".join(argv)
+		mirror = self.isMirrorRepo()
 
 		for node in self.mManifest.getProjects():
-			pathname = self.getProjectAbsPath(node)
+			if not mirror:
+				pathname = self.getProjectAbsPath(node)
+			else:
+				pathname = self.getAbsPath(node[0]) + ".git"
+
 			command = commandRaw.replace("<path>", pathname).replace("<name>", node[0]).replace("<all>", "*")
 			self.prBrownInfo(command, " => ", pathname)
 			if not self.doSystemExec(command, cwd = pathname):
