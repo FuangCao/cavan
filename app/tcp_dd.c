@@ -420,6 +420,20 @@ int main(int argc, char *argv[])
 	}
 
 label_parse_complete:
+	if (part_name && part_image)
+	{
+		if (handler == tcp_dd_send_file)
+		{
+			text_copy(file_req.src_file, part_image);
+			text_copy(file_req.dest_file, part_name);
+		}
+		else
+		{
+			text_copy(file_req.src_file, part_name);
+			text_copy(file_req.dest_file, part_image);
+		}
+	}
+
 	switch (argc - optind)
 	{
 	case 2:
@@ -427,19 +441,6 @@ label_parse_complete:
 	case 1:
 		text_copy(file_req.dest_file, argv[optind++]);
 	case 0:
-		if (part_name && part_image)
-		{
-			if (handler == tcp_dd_send_file)
-			{
-				text_copy(file_req.src_file, part_image);
-				text_copy(file_req.dest_file, part_name);
-			}
-			else
-			{
-				text_copy(file_req.src_file, part_name);
-				text_copy(file_req.dest_file, part_image);
-			}
-		}
 		break;
 
 	default:
