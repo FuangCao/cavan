@@ -11,6 +11,107 @@
 #include <cavan/device.h>
 #include <cavan/command.h>
 
+static char *tcp_dd_find_platform_by_name_path(char *pathname, char *filename, size_t size)
+{
+	DIR *dp;
+	struct dirent *entry;
+
+	if (filename == NULL)
+	{
+		filename = text_ncopy(pathname, "/dev/block/platform/", size);
+	}
+
+	dp = opendir(pathname);
+	if (dp == NULL)
+	{
+		return NULL;
+	}
+
+	while ((entry = readdir(dp)))
+	{
+		char *filename_next;
+
+		if (entry->d_type != DT_DIR)
+		{
+			continue;
+		}
+
+		if (text_is_dot_name(entry->d_name))
+		{
+			continue;
+		}
+
+		filename_next = text_copy(filename, entry->d_name);
+		*filename_next++ = '/';
+		*filename_next = 0;
+
+		if (strcmp(entry->d_name, "by-name") == 0)
+		{
+			filename = filename_next;
+			goto out_closedir;
+		}
+
+		filename_next = tcp_dd_find_platform_by_name_path(pathname, filename_next, size);
+		if (filename_next)
+		{
+			filename = filename_next;
+			goto out_closedir;
+		}
+	}
+
+	filename = NULL;
+
+out_closedir:
+	closedir(dp);
+	return filename;
+}
+
+static int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size)
+{
+	char *buff_end;
+	const char *last;
+
+	if (name[0] != '@')
+	{
+		return 0;
+	}
+
+	for (last = ++name; *last; last++);
+
+	if (last - name < 1)
+	{
+		return 0;
+	}
+
+	if (*--last != '@')
+	{
+		return 0;
+	}
+
+	if (buff == NULL)
+	{
+		return -EFAULT;
+	}
+
+	for (buff_end = buff + size - 1; name < last && buff < buff_end; name++, buff++)
+	{
+		char c = *name;
+
+		if (c >= 'A' && c <= 'Z')
+		{
+			*buff = c + ('a' - 'A');
+		}
+		else
+		{
+			*buff = c;
+		}
+	}
+
+	*buff = 0;
+
+	return 1;
+}
+
 static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
 	if (res->message[0] == 0)
@@ -259,17 +360,34 @@ static int tcp_dd_send_alarm_query_request(struct network_client *client, int ty
 	return tcp_dd_recv_response(client);
 }
 
-static int tcp_dd_handle_read_request(struct network_client *client, struct tcp_dd_file_request *req)
+static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, struct network_client *client, struct tcp_dd_file_request *req)
 {
 	int fd;
 	int ret;
 	off_t size;
 	mode_t mode;
+	const char *pathname;
 
-	fd = open(req->filename, O_RDONLY);
+	ret = tcp_dd_get_partition_filename(req->filename, service->filename, sizeof(service->pathname));
+	if (ret < 0)
+	{
+		tcp_dd_send_response(client, ret, "[Server] `%s' is not a partition", req->filename);
+		return ret;
+	}
+
+	if (ret == 0)
+	{
+		pathname = req->filename;
+	}
+	else
+	{
+		pathname = service->pathname;
+	}
+
+	fd = open(pathname, O_RDONLY);
 	if (fd < 0)
 	{
-		tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", req->filename);
+		tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", pathname);
 		return fd;
 	}
 
@@ -292,7 +410,7 @@ static int tcp_dd_handle_read_request(struct network_client *client, struct tcp_
 	ret = lseek(fd, req->offset, SEEK_SET);
 	if (ret < 0)
 	{
-		tcp_dd_send_response(client, ret, "[Server] Seek file `%s' failed", req->filename);
+		tcp_dd_send_response(client, ret, "[Server] Seek file `%s' failed", pathname);
 		goto out_close_fd;
 	}
 
@@ -302,18 +420,18 @@ static int tcp_dd_handle_read_request(struct network_client *client, struct tcp_
 	if (mode == 0)
 	{
 		ret = -EFAULT;
-		tcp_dd_send_response(client, ret, "[Server] Get file `%s' mode failed", req->filename);
+		tcp_dd_send_response(client, ret, "[Server] Get file `%s' mode failed", pathname);
 		goto out_close_fd;
 	}
 
-	ret = tcp_dd_send_write_request(client, req->filename, req->offset, size, mode);
+	ret = tcp_dd_send_write_request(client, pathname, req->offset, size, mode);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_write_request");
 		return ret;
 	}
 
-	println("filename = %s", req->filename);
+	println("filename = %s", pathname);
 	println("offset = %s", size2text(req->offset));
 	println("size = %s", size2text(size));
 
@@ -325,31 +443,59 @@ out_close_fd:
 	return ret;
 }
 
-static int tcp_dd_handle_write_request(struct network_client *client, struct tcp_dd_file_request *req)
+static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, struct network_client *client, struct tcp_dd_file_request *req)
 {
 	int fd;
 	int ret;
 	mode_t mode;
+	const char *pathname;
 
-	mode = file_get_mode(req->filename);
-	switch (mode & S_IFMT)
+	ret = tcp_dd_get_partition_filename(req->filename, service->filename, sizeof(service->pathname));
+	if (ret < 0)
 	{
-	case S_IFREG:
-		pr_info("remove regular file %s", req->filename);
-		unlink(req->filename);
-		break;
-
-	case S_IFBLK:
-		pr_info("umount block device %s", req->filename);
-		umount_device(req->filename, MNT_DETACH);
-		break;
+		tcp_dd_send_response(client, ret, "[Server] `%s' is not a partition", req->filename);
+		return ret;
 	}
 
-	fd = open(req->filename, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, req->mode);
+	if (ret == 0)
+	{
+		pathname = req->filename;
+
+		mode = file_get_mode(pathname);
+		switch (mode & S_IFMT)
+		{
+		case S_IFREG:
+			pr_info("remove regular file %s", pathname);
+			unlink(pathname);
+			break;
+
+		case S_IFBLK:
+			pr_info("umount block device %s", pathname);
+			umount_device(pathname, MNT_DETACH);
+			break;
+		}
+	}
+	else
+	{
+		pathname = service->pathname;
+
+		mode = file_get_mode(pathname);
+		if (mode == 0 || (mode & S_IFMT) != S_IFBLK)
+		{
+			ret = -ENOTBLK;
+
+			tcp_dd_send_response(client, ret, "[Server] `%s' is not a block device", pathname);
+			return ret;
+		}
+
+		pr_info("umount block device %s", pathname);
+		umount_device(pathname, MNT_DETACH);
+	}
+
+	fd = open(pathname, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, req->mode);
 	if (fd < 0)
 	{
-
-		tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", req->filename);
+		tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", pathname);
 		return fd;
 	}
 
@@ -367,7 +513,7 @@ static int tcp_dd_handle_write_request(struct network_client *client, struct tcp
 		return ret;
 	}
 
-	println("filename = %s", req->filename);
+	println("filename = %s", pathname);
 	println("offset = %s", size2text(req->offset));
 	println("size = %s", size2text(req->size));
 
@@ -553,6 +699,12 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		goto out_cavan_alarm_thread_deinit;
 	}
 
+	dd_service->filename = tcp_dd_find_platform_by_name_path(dd_service->pathname, NULL, sizeof(dd_service->pathname));
+	if (dd_service->filename)
+	{
+		pr_green_info("pathname = %s", dd_service->pathname);
+	}
+
 	return 0;
 
 out_cavan_alarm_thread_deinit:
@@ -592,12 +744,12 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	{
 	case TCP_DD_READ:
 		pr_bold_info("TCP_DD_READ");
-		ret = tcp_dd_handle_read_request(client, &pkg.file_req);
+		ret = tcp_dd_handle_read_request(dd_service, client, &pkg.file_req);
 		break;
 
 	case TCP_DD_WRITE:
 		pr_bold_info("TCP_DD_WRITE");
-		ret = tcp_dd_handle_write_request(client, &pkg.file_req);
+		ret = tcp_dd_handle_write_request(dd_service, client, &pkg.file_req);
 		need_response = true;
 		break;
 

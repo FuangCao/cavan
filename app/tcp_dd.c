@@ -34,6 +34,14 @@ static void show_usage(const char *command)
 	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
 	println("-W, -S, -w, -s\t\t\t%s", cavan_help_message_send_file);
 	println("-R, -r\t\t\t\t%s", cavan_help_message_recv_file);
+	println("--system [IMAGE]\t\t%s", cavan_help_message_system);
+	println("--userdata, --data [IMAGE]\t%s", cavan_help_message_userdata);
+	println("--recovery [IMAGE]\t\t%s", cavan_help_message_recovery);
+	println("--misc [IMAGE]\t\t\t%s", cavan_help_message_misc);
+	println("--boot [IMAGE]\t\t\t%s", cavan_help_message_boot);
+	println("--kernel [IMAGE]\t\t%s", cavan_help_message_kernel);
+	println("--uboot [IMAGE]\t\t\t%s", cavan_help_message_uboot);
+	println("--resource [IMAGE]\t\t%s", cavan_help_message_resource);
 }
 
 int main(int argc, char *argv[])
@@ -127,13 +135,72 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
 		},
 		{
+			.name = "system",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_SYSTEM,
+		},
+		{
+			.name = "userdata",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_USERDATA,
+		},
+		{
+			.name = "data",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_USERDATA,
+		},
+		{
+			.name = "recovery",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_RECOVERY,
+		},
+		{
+			.name = "misc",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_MISC,
+		},
+		{
+			.name = "boot",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_BOOT,
+		},
+		{
+			.name = "kernel",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_KERNEL,
+		},
+		{
+			.name = "uboot",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UBOOT,
+		},
+		{
+			.name = "resource",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_RESOURCE,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
+	const char *part_name;
+	const char *part_image;
 	struct network_url url;
 	off_t bs, seek, skip, count;
 	struct network_file_request file_req;
 	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
+
+	part_name = part_image = NULL;
+	file_req.src_file[0] = file_req.dest_file[0] = 0;
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, CAVAN_NETWORK_SOCKET);
 
@@ -222,6 +289,46 @@ int main(int argc, char *argv[])
 			handler = tcp_dd_receive_file;
 			break;
 
+		case CAVAN_COMMAND_OPTION_SYSTEM:
+			part_name = "@SYSTEM@";
+			part_image = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_USERDATA:
+			part_name = "@USERDATA@";
+			part_image = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_RECOVERY:
+			part_name = "@RECOVERY@";
+			part_image = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_MISC:
+			part_name = "@MISC@";
+			part_image = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_BOOT:
+			part_name = "@BOOT@";
+			part_image = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_KERNEL:
+			part_name = "@KERNEL@";
+			part_image = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_UBOOT:
+			part_name = "@UBOOT@";
+			part_image = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_RESOURCE:
+			part_name = "@RESOURCE@";
+			part_image = optarg;
+			break;
+
 		default:
 			show_usage(argv[0]);
 			return -EINVAL;
@@ -233,8 +340,6 @@ int main(int argc, char *argv[])
 		pr_red_info("Please select action type");
 		return -EINVAL;
 	}
-
-	file_req.src_file[0] = file_req.dest_file[0] = 0;
 
 	for (bs = 1, count = seek = skip = 0; optind < argc; optind++)
 	{
@@ -322,6 +427,19 @@ label_parse_complete:
 	case 1:
 		text_copy(file_req.dest_file, argv[optind++]);
 	case 0:
+		if (part_name && part_image)
+		{
+			if (handler == tcp_dd_send_file)
+			{
+				text_copy(file_req.src_file, part_image);
+				text_copy(file_req.dest_file, part_name);
+			}
+			else
+			{
+				text_copy(file_req.src_file, part_name);
+				text_copy(file_req.dest_file, part_image);
+			}
+		}
 		break;
 
 	default:

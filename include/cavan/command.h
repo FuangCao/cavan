@@ -72,6 +72,14 @@ typedef enum
 	CAVAN_COMMAND_OPTION_VERSION,
 	CAVAN_COMMAND_OPTION_WIFI_MAC,
 	CAVAN_COMMAND_OPTION_WRITE,
+	CAVAN_COMMAND_OPTION_SYSTEM,
+	CAVAN_COMMAND_OPTION_USERDATA,
+	CAVAN_COMMAND_OPTION_RECOVERY,
+	CAVAN_COMMAND_OPTION_MISC,
+	CAVAN_COMMAND_OPTION_BOOT,
+	CAVAN_COMMAND_OPTION_KERNEL,
+	CAVAN_COMMAND_OPTION_UBOOT,
+	CAVAN_COMMAND_OPTION_RESOURCE
 } cavan_command_option_t;
 
 struct cavan_command_map
@@ -120,6 +128,14 @@ extern const char *cavan_help_message_proxy_port;
 extern const char *cavan_help_message_proxy_url;
 extern const char *cavan_help_message_protocol;
 extern const char *cavan_help_message_proxy_protocol;
+extern const char *cavan_help_message_system;
+extern const char *cavan_help_message_userdata;
+extern const char *cavan_help_message_recovery;
+extern const char *cavan_help_message_misc;
+extern const char *cavan_help_message_boot;
+extern const char *cavan_help_message_kernel;
+extern const char *cavan_help_message_uboot;
+extern const char *cavan_help_message_resource;
 
 // ============================================================
 

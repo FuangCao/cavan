@@ -43,6 +43,14 @@ const char *cavan_help_message_proxy_port = "set proxy port to PORT";
 const char *cavan_help_message_proxy_url = "set proxy url to URL";
 const char *cavan_help_message_protocol = "set service protocol to PROTOCOL";
 const char *cavan_help_message_proxy_protocol = "set proxy protocol to PROTOCOL";
+const char *cavan_help_message_system = "R/W system partition";
+const char *cavan_help_message_userdata = "R/W userdata partition";
+const char *cavan_help_message_recovery = "R/W recovery partition";
+const char *cavan_help_message_misc = "R/W misc partition";
+const char *cavan_help_message_boot = "R/W boot partition";
+const char *cavan_help_message_kernel = "R/W kernel partition";
+const char *cavan_help_message_uboot = "R/W uboot partition";
+const char *cavan_help_message_resource = "R/W resource partition";
 
 void print_command_table(const struct cavan_command_map *p, size_t size)
 {

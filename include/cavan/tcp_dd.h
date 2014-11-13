@@ -80,6 +80,8 @@ struct cavan_tcp_dd_service
 	struct network_service service;
 	struct cavan_alarm_thread alarm;
 	struct network_url url;
+	char *filename;
+	char pathname[1024];
 };
 
 int tcp_dd_service_run(struct cavan_dynamic_service *service);
