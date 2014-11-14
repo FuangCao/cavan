@@ -160,6 +160,12 @@ static const struct option command_long_option[] =
 		.val = CAVAN_COMMAND_OPTION_RESOURCE,
 	},
 	{
+		.name = "image",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_IMAGE,
+	},
+	{
 		0, 0, 0, 0
 	},
 };
@@ -194,6 +200,7 @@ static void show_usage(const char *command)
 	println("--kernel [IMAGE]\t\t%s", cavan_help_message_kernel);
 	println("--uboot [IMAGE]\t\t\t%s", cavan_help_message_uboot);
 	println("--resource [IMAGE]\t\t%s", cavan_help_message_resource);
+	println("--image [s|d|r|m|b|k|u|R]\t%s", cavan_help_message_rw_image);
 }
 
 int main(int argc, char *argv[])
@@ -202,7 +209,8 @@ int main(int argc, char *argv[])
 	int ret;
 	int option_index;
 	int image_count;
-	const char *image_name;
+	const char *part_name;
+	const char *image_mask;
 	struct network_url url;
 	off_t bs, seek, skip, count;
 	struct network_file_request file_req;
@@ -210,6 +218,7 @@ int main(int argc, char *argv[])
 	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
 
 	image_count = 0;
+	image_mask = NULL;
 	file_req.src_file[0] = file_req.dest_file[0] = 0;
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, CAVAN_NETWORK_SOCKET);
@@ -300,11 +309,11 @@ int main(int argc, char *argv[])
 			break;
 
 		case CAVAN_COMMAND_OPTION_SYSTEM:
-			image_name = "@SYSTEM@";
+			part_name = "@SYSTEM@";
 label_add_image:
 			if (image_count < NELEM(images))
 			{
-				images[image_count].name = image_name;
+				images[image_count].name = part_name;
 				images[image_count].pathname = optarg;
 			}
 			else
@@ -317,32 +326,36 @@ label_add_image:
 			break;
 
 		case CAVAN_COMMAND_OPTION_USERDATA:
-			image_name = "@USERDATA@";
+			part_name = "@USERDATA@";
 			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_RECOVERY:
-			image_name = "@RECOVERY@";
+			part_name = "@RECOVERY@";
 			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_MISC:
-			image_name = "@MISC@";
+			part_name = "@MISC@";
 			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_BOOT:
-			image_name = "@BOOT@";
+			part_name = "@BOOT@";
 			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_KERNEL:
-			image_name = "@KERNEL@";
+			part_name = "@KERNEL@";
 			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_UBOOT:
-			image_name = "@UBOOT@";
+			part_name = "@UBOOT@";
 			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_RESOURCE:
-			image_name = "@RESOURCE@";
+			part_name = "@RESOURCE@";
 			goto label_add_image;
+
+		case CAVAN_COMMAND_OPTION_IMAGE:
+			image_mask = optarg;
+			break;
 
 		default:
 			show_usage(argv[0]);
@@ -435,36 +448,126 @@ label_add_image:
 	}
 
 label_parse_complete:
-	switch (argc - optind)
+	if (image_mask)
 	{
-	case 2:
-		text_copy(file_req.src_file, argv[optind++]);
-	case 1:
-		text_copy(file_req.dest_file, argv[optind++]);
-	case 0:
-		break;
+		const char *dirname;
+		const char *image_name;
 
-	default:
-		show_usage(argv[0]);
-		return -EINVAL;
-	}
-
-	if (file_req.src_file[0] && file_req.dest_file[0])
-	{
-		file_req.src_offset = skip * bs;
-		file_req.dest_offset = seek * bs;
-		file_req.size = count * bs;
-
-		ret = handler(&url, &file_req);
-		if (ret < 0)
+		if (argc - optind < 1)
 		{
-			return ret;
+			pr_red_info("Too a few argument!");
+			return -EINVAL;
+		}
+
+		dirname = argv[optind++];
+
+		while (*image_mask)
+		{
+			c = *image_mask;
+
+			switch (c)
+			{
+			case 's':
+				part_name = "@SYSTEM@";
+				image_name = "system.img";
+				break;
+
+			case 'd':
+				part_name = "@USERDATA@";
+				image_name = "userdata.img";
+				break;
+
+			case 'r':
+				part_name = "@RECOVERY@";
+				image_name = "recovery.img";
+				break;
+
+			case 'm':
+				part_name = "@MISC@";
+				image_name = "misc.img";
+				break;
+
+			case 'b':
+				part_name = "@BOOT@";
+				image_name = "boot.img";
+				break;
+
+			case 'k':
+				part_name = "@KERNEL@";
+				image_name = "kernel.img";
+				break;
+
+			case 'u':
+				part_name = "@UBOOT@";
+				image_name = "uboot.bin";
+				break;
+
+			case 'R':
+				part_name = "@RESOURCE@";
+				image_name = "resource.img";
+				break;
+
+			default:
+				pr_red_info("invalid image type `%c'", c);
+				return -EINVAL;
+			}
+
+			if (handler == tcp_dd_send_file)
+			{
+				text_path_cat(file_req.src_file, sizeof(file_req.src_file), dirname, image_name);
+				strcpy(file_req.dest_file, part_name);
+			}
+			else
+			{
+				strcpy(file_req.src_file, part_name);
+				text_path_cat(file_req.dest_file, sizeof(file_req.src_file), dirname, image_name);
+			}
+
+			file_req.size = 0;
+			file_req.dest_offset = file_req.src_offset = 0;
+
+			ret = handler(&url, &file_req);
+			if (ret < 0)
+			{
+				return ret;
+			}
+
+			image_mask++;
 		}
 	}
-	else if (image_count == 0)
+	else
 	{
-		pr_red_info("Please input src_file and dest_file");
-		return -EINVAL;
+		switch (argc - optind)
+		{
+		case 2:
+			text_copy(file_req.src_file, argv[optind++]);
+		case 1:
+			text_copy(file_req.dest_file, argv[optind++]);
+		case 0:
+			break;
+
+		default:
+			show_usage(argv[0]);
+			return -EINVAL;
+		}
+
+		if (file_req.src_file[0] && file_req.dest_file[0])
+		{
+			file_req.src_offset = skip * bs;
+			file_req.dest_offset = seek * bs;
+			file_req.size = count * bs;
+
+			ret = handler(&url, &file_req);
+			if (ret < 0)
+			{
+				return ret;
+			}
+		}
+		else if (image_count == 0)
+		{
+			pr_red_info("Please input src_file and dest_file");
+			return -EINVAL;
+		}
 	}
 
 	if (image_count > 0)

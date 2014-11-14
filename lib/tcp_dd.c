@@ -847,14 +847,14 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 	fd = open(src_file, O_RDONLY);
 	if (fd < 0)
 	{
-		pr_red_info("Open file `%s' failed", src_file);
+		pr_error_info("Open file `%s' failed", src_file);
 		return fd;
 	}
 
 	ret = fstat(fd, &st);
 	if (ret < 0)
 	{
-		pr_red_info("Get file `%s' stat failed", src_file);
+		pr_error_info("Get file `%s' stat failed", src_file);
 		goto out_close_fd;
 	}
 
@@ -872,7 +872,7 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 	ret = lseek(fd, file_req->src_offset, SEEK_SET);
 	if (ret < 0)
 	{
-		pr_red_info("Seek file `%s' failed", src_file);
+		pr_error_info("Seek file `%s' failed", src_file);
 		goto out_close_fd;
 	}
 
