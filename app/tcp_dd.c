@@ -10,7 +10,159 @@
 #include <cavan/parser.h>
 #include <cavan/command.h>
 
-#define FILE_CREATE_DATE "2012-01-14 14:09:55"
+#define FILE_CREATE_DATE		"2012-01-14 14:09:55"
+#define TCP_DD_MAX_IMAGE_COUNT	10
+
+struct cavan_tcp_dd_image
+{
+	const char *name;
+	const char *pathname;
+};
+
+static const struct option command_long_option[] =
+{
+	{
+		.name = "help",
+		.has_arg = no_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_HELP,
+	},
+	{
+		.name = "version",
+		.has_arg = no_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_VERSION,
+	},
+	{
+		.name = "ip",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_IP,
+	},
+	{
+		.name = "port",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_PORT,
+	},
+	{
+		.name = "url",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_URL,
+	},
+	{
+		.name = "adb",
+		.has_arg = no_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_ADB,
+	},
+	{
+		.name = "udp",
+		.has_arg = no_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_UDP,
+	},
+	{
+		.name = "local",
+		.has_arg = no_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_LOCAL,
+	},
+	{
+		.name = "host",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_HOST,
+	},
+	{
+		.name = "unix",
+		.has_arg = optional_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_UNIX,
+	},
+	{
+		.name = "unix-tcp",
+		.has_arg = optional_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_UNIX_TCP,
+	},
+	{
+		.name = "unix-udp",
+		.has_arg = optional_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
+	},
+	{
+		.name = "protocol",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+	},
+	{
+		.name = "pt",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+	},
+	{
+		.name = "system",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_SYSTEM,
+	},
+	{
+		.name = "userdata",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_USERDATA,
+	},
+	{
+		.name = "data",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_USERDATA,
+	},
+	{
+		.name = "recovery",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_RECOVERY,
+	},
+	{
+		.name = "misc",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_MISC,
+	},
+	{
+		.name = "boot",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_BOOT,
+	},
+	{
+		.name = "kernel",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_KERNEL,
+	},
+	{
+		.name = "uboot",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_UBOOT,
+	},
+	{
+		.name = "resource",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_RESOURCE,
+	},
+	{
+		0, 0, 0, 0
+	},
+};
 
 static void show_usage(const char *command)
 {
@@ -47,164 +199,22 @@ static void show_usage(const char *command)
 int main(int argc, char *argv[])
 {
 	int c;
+	int ret;
 	int option_index;
-	struct option long_option[] =
-	{
-		{
-			.name = "help",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
-			.name = "version",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
-			.name = "ip",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_IP,
-		},
-		{
-			.name = "port",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_PORT,
-		},
-		{
-			.name = "url",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_URL,
-		},
-		{
-			.name = "adb",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_ADB,
-		},
-		{
-			.name = "udp",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_UDP,
-		},
-		{
-			.name = "local",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_LOCAL,
-		},
-		{
-			.name = "host",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_HOST,
-		},
-		{
-			.name = "unix",
-			.has_arg = optional_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_UNIX,
-		},
-		{
-			.name = "unix-tcp",
-			.has_arg = optional_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_UNIX_TCP,
-		},
-		{
-			.name = "unix-udp",
-			.has_arg = optional_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
-		},
-		{
-			.name = "protocol",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
-		},
-		{
-			.name = "pt",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
-		},
-		{
-			.name = "system",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_SYSTEM,
-		},
-		{
-			.name = "userdata",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_USERDATA,
-		},
-		{
-			.name = "data",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_USERDATA,
-		},
-		{
-			.name = "recovery",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_RECOVERY,
-		},
-		{
-			.name = "misc",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_MISC,
-		},
-		{
-			.name = "boot",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_BOOT,
-		},
-		{
-			.name = "kernel",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_KERNEL,
-		},
-		{
-			.name = "uboot",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_UBOOT,
-		},
-		{
-			.name = "resource",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_RESOURCE,
-		},
-		{
-			0, 0, 0, 0
-		},
-	};
-	const char *part_name;
-	const char *part_image;
+	int image_count;
+	const char *image_name;
 	struct network_url url;
 	off_t bs, seek, skip, count;
 	struct network_file_request file_req;
+	struct cavan_tcp_dd_image images[TCP_DD_MAX_IMAGE_COUNT];
 	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
 
-	part_name = part_image = NULL;
+	image_count = 0;
 	file_req.src_file[0] = file_req.dest_file[0] = 0;
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, CAVAN_NETWORK_SOCKET);
 
-	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaAlLu:U:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaAlLu:U:", command_long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -290,44 +300,49 @@ int main(int argc, char *argv[])
 			break;
 
 		case CAVAN_COMMAND_OPTION_SYSTEM:
-			part_name = "@SYSTEM@";
-			part_image = optarg;
+			image_name = "@SYSTEM@";
+label_add_image:
+			if (image_count < NELEM(images))
+			{
+				images[image_count].name = image_name;
+				images[image_count].pathname = optarg;
+			}
+			else
+			{
+				pr_red_info("Too much image");
+				return -ENOMEM;
+			}
+
+			image_count++;
 			break;
 
 		case CAVAN_COMMAND_OPTION_USERDATA:
-			part_name = "@USERDATA@";
-			part_image = optarg;
-			break;
+			image_name = "@USERDATA@";
+			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_RECOVERY:
-			part_name = "@RECOVERY@";
-			part_image = optarg;
-			break;
+			image_name = "@RECOVERY@";
+			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_MISC:
-			part_name = "@MISC@";
-			part_image = optarg;
-			break;
+			image_name = "@MISC@";
+			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_BOOT:
-			part_name = "@BOOT@";
-			part_image = optarg;
-			break;
+			image_name = "@BOOT@";
+			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_KERNEL:
-			part_name = "@KERNEL@";
-			part_image = optarg;
-			break;
+			image_name = "@KERNEL@";
+			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_UBOOT:
-			part_name = "@UBOOT@";
-			part_image = optarg;
-			break;
+			image_name = "@UBOOT@";
+			goto label_add_image;
 
 		case CAVAN_COMMAND_OPTION_RESOURCE:
-			part_name = "@RESOURCE@";
-			part_image = optarg;
-			break;
+			image_name = "@RESOURCE@";
+			goto label_add_image;
 
 		default:
 			show_usage(argv[0]);
@@ -420,20 +435,6 @@ int main(int argc, char *argv[])
 	}
 
 label_parse_complete:
-	if (part_name && part_image)
-	{
-		if (handler == tcp_dd_send_file)
-		{
-			text_copy(file_req.src_file, part_image);
-			text_copy(file_req.dest_file, part_name);
-		}
-		else
-		{
-			text_copy(file_req.src_file, part_name);
-			text_copy(file_req.dest_file, part_image);
-		}
-	}
-
 	switch (argc - optind)
 	{
 	case 2:
@@ -448,15 +449,74 @@ label_parse_complete:
 		return -EINVAL;
 	}
 
-	if (file_req.src_file[0] == 0 || file_req.dest_file[0] == 0)
+	if (file_req.src_file[0] && file_req.dest_file[0])
+	{
+		file_req.src_offset = skip * bs;
+		file_req.dest_offset = seek * bs;
+		file_req.size = count * bs;
+
+		ret = handler(&url, &file_req);
+		if (ret < 0)
+		{
+			return ret;
+		}
+	}
+	else if (image_count == 0)
 	{
 		pr_red_info("Please input src_file and dest_file");
 		return -EINVAL;
 	}
 
-	file_req.src_offset = skip * bs;
-	file_req.dest_offset = seek * bs;
-	file_req.size = count * bs;
+	if (image_count > 0)
+	{
+		struct cavan_tcp_dd_image *p, *p_end;
 
-	return handler(&url, &file_req);
+		for (p = images, p_end = p + image_count; p < p_end; p++)
+		{
+			if (handler == tcp_dd_send_file)
+			{
+				strcpy(file_req.src_file, p->pathname);
+				strcpy(file_req.dest_file, p->name);
+			}
+			else
+			{
+				strcpy(file_req.src_file, p->name);
+				strcpy(file_req.dest_file, p->pathname);
+
+				if (file_is_directory(p->pathname))
+				{
+					char *filename;
+
+					for (filename = file_req.dest_file; *filename; filename++);
+
+					*filename++ = '/';
+
+					ret = tcp_dd_get_partition_filename(p->name, filename, sizeof(file_req.dest_file));
+					if (ret <= 0)
+					{
+						pr_red_info("tcp_dd_get_partition_filename %s", p->name);
+						return -EINVAL;
+					}
+
+					while (*filename)
+					{
+						filename++;
+					}
+
+					strcpy(filename, ".img");
+				}
+			}
+
+			file_req.size = 0;
+			file_req.dest_offset = file_req.src_offset = 0;
+
+			ret = handler(&url, &file_req);
+			if (ret < 0)
+			{
+				return ret;
+			}
+		}
+	}
+
+	return 0;
 }

@@ -84,6 +84,8 @@ struct cavan_tcp_dd_service
 	char pathname[1024];
 };
 
+int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size);
+
 int tcp_dd_service_run(struct cavan_dynamic_service *service);
 int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req);
 int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req);

@@ -66,7 +66,7 @@ out_closedir:
 	return filename;
 }
 
-static int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size)
+int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size)
 {
 	char *buff_end;
 	const char *last;
