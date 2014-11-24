@@ -289,9 +289,10 @@ function cavan-firefox-flash-install()
 	tar -xvf "$1" -C "${work_path}" || return 1
 
 	(
-		cd "${work_path}/usr" && find -type f | while read line
+		cd "${work_path}" && find usr -type f | while read line
 		do
-			sudo cp -av "${line}" "/usr/${line}" || return 1
+			sudo mkdir -pv "/$(dirname "${line}")" || return 1
+			sudo cp -av "${line}" "/${line}" || return 1
 		done
 	)
 
