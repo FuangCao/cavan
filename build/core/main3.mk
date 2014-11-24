@@ -77,7 +77,7 @@ $(foreach path,$(OUT_LIB) $(OUT_BIN),$(shell [ -d $(path) ] || $(MKDIR) $(path))
 all: all-modules
 
 clean distclean:
-	@rm $(OUT_PATH) -rf
+	@rm -rf "$(OUT_PATH)"
 
 $(foreach sub,$(SUB_DIRS),$(eval $(call build_sub_module,$(sub))))
 

@@ -88,17 +88,22 @@ $(Q)$(CC) -o $@ $(CFLAGS) -MD $(1) -c $<
 endef
 
 define link_c_execute
+@echo "[LD]    $@ <= $(notdir $^)"
+$(Q)$(CC) -o $@ $^ $(LDFLAGS)
+$(call strip_files,$@)
+endef
+
+define link_c_execute_action
 ifeq ($$(findstring -static,$$(LDFLAGS)),)
 LOCAL_DEPEND := $$(foreach lib,$$(LOCAL_LIBRARY),$$(OUT_LIB)/$$(lib).so)
 $$(LOCAL_MODULE_PATH): LDFLAGS := $$(patsubst lib%,-l%,$$(LOCAL_LIBRARY)) $$(LDFLAGS)
 $$(LOCAL_MODULE_PATH): $$(LOCAL_OBJECT) | $$(LOCAL_DEPEND)
+	$$(call link_c_execute)
 else
 LOCAL_DEPEND := $$(foreach lib,$$(LOCAL_LIBRARY),$$(OUT_LIB)/$$(lib).a)
 $$(LOCAL_MODULE_PATH): $$(LOCAL_OBJECT) $$(LOCAL_DEPEND)
+	$$(call link_c_execute)
 endif
-	@echo "[LD]    $$@ <= $$(notdir $$^)"
-	$$(Q)$$(CC) -o $$@ $$^ $$(LDFLAGS)
-	$$(call strip_files,$$@)
 endef
 
 define link_c_libso
