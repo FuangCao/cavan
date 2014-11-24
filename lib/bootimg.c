@@ -26,6 +26,7 @@ void bootimg_header_dump(struct bootimg_header *hdr)
 	char buff[64];
 
 	println("magic = %s", text_substring((char *) hdr->magic, buff, 0, sizeof(hdr->magic)));
+	println("base = 0x%x", hdr->kernel_addr - BOOTIMG_DEFAULT_KERNEL_OFFSET);
 	println("kernel_size = %d", hdr->kernel_size);
 	println("kernel_addr = 0x%08x", hdr->kernel_addr);
 	println("ramdisk_size = %d", hdr->ramdisk_size);
@@ -35,9 +36,10 @@ void bootimg_header_dump(struct bootimg_header *hdr)
 	println("tags_addr = 0x%08x", hdr->tags_addr);
 	println("page_size = %d", hdr->page_size);
 	println("dt_size = %d", hdr->dt_size);
-	println("unused = 0x%08x", hdr->unused);
-	println("name = %s", hdr->name);
-	println("cmdline = %s", hdr->cmdline);
+	println("unused = 0x%08x 0x%08x", hdr->unused[0], hdr->unused[1]);
+	println("name = \"%s\"", hdr->name);
+	println("cmdline = \"%s\"", hdr->cmdline);
+	println("extra_cmdline = \"%s\"", hdr->extra_cmdline);
 	println("id = %s", cavan_shasum_tostring((u8 *) hdr->id, sizeof(hdr->id), buff, sizeof(buff)));
 }
 
@@ -94,7 +96,7 @@ int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *path
 
 	if (hdr->dt_size > 0)
 	{
-		ret |= ffile_printf(fd, " --dt dt.bin");
+		ret |= ffile_printf(fd, " --dt remain.bin");
 	}
 
 	if (hdr->name[0])
@@ -104,7 +106,7 @@ int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *path
 
 	if (hdr->cmdline[0])
 	{
-		ret |= ffile_printf(fd, " --cmdline \"%s\"", hdr->cmdline);
+		ret |= ffile_printf(fd, " --cmdline \"%s%s\"", hdr->cmdline, hdr->extra_cmdline);
 	}
 
 	if (ret < 0)
@@ -164,11 +166,8 @@ int bootimg_unpack(const char *input, const char *output)
 		images[count++].name = "second.bin";
 	}
 
-	if (hdr.dt_size > 0)
-	{
-		images[count].size = hdr.dt_size;
-		images[count++].name = "dt.bin";
-	}
+	images[count].size = 0;
+	images[count++].name = "remain.bin";
 
 	filename = text_copy(pathname, output);
 	ret = mkdir_hierarchy(pathname, 0777);
@@ -196,7 +195,19 @@ int bootimg_unpack(const char *input, const char *output)
 			strcpy(filename, p->name);
 			println("%s -> %s", p->name, pathname);
 
-			ret = file_ncopy2(fd, pathname, p->size, O_WRONLY | O_TRUNC | O_CREAT, 0777);
+			if (p->size > 0)
+			{
+				ret = file_ncopy2(fd, pathname, p->size, O_WRONLY | O_TRUNC | O_CREAT, 0777);
+			}
+			else
+			{
+				ret = file_copy2(fd, pathname, O_WRONLY | O_TRUNC | O_CREAT, 0777);
+				if (ret != (ssize_t) hdr.dt_size)
+				{
+					hdr.dt_size = 0;
+				}
+			}
+
 			if (ret < 0)
 			{
 				pr_red_info("file_copy2");

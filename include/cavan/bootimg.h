@@ -25,6 +25,13 @@
 #define BOOT_MAGIC_SIZE 8
 #define BOOT_NAME_SIZE 16
 #define BOOT_ARGS_SIZE 512
+#define BOOT_EXTRA_ARGS_SIZE 1024
+
+#define BOOTIMG_DEFAULT_BASE			0x10000000
+#define BOOTIMG_DEFAULT_KERNEL_OFFSET	0x00008000
+#define BOOTIMG_DEFAULT_RAMDISK_OFFSET	0x01000000
+#define BOOTIMG_DEFAULT_SECOND_OFFSET	0x00f00000
+#define BOOTIMG_DEFAULT_TAGS_OFFSET		0x00000100
 
 struct bootimg_header
 {
@@ -41,14 +48,22 @@ struct bootimg_header
 
     unsigned tags_addr;    /* physical addr for kernel tags */
     unsigned page_size;    /* flash page size we assume */
-    unsigned dt_size;      /* device tree in bytes */
-    unsigned unused;       /* future expansion: should be 0 */
+
+    union
+    {
+        unsigned dt_size;	   /* device tree in bytes */
+        unsigned unused[2];       /* future expansion: should be 0 */
+    };
 
     unsigned char name[BOOT_NAME_SIZE]; /* asciiz product name */
 
     unsigned char cmdline[BOOT_ARGS_SIZE];
 
     unsigned id[8]; /* timestamp / checksum / sha1 / etc */
+
+    /* Supplemental command line data; kept here to maintain
+     * binary compatibility with older versions of mkbootimg */
+    unsigned char extra_cmdline[BOOT_EXTRA_ARGS_SIZE];
 };
 
 struct bootimg_image
