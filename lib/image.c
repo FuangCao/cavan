@@ -341,10 +341,14 @@ int create_ramdisk(const char *ramdisk_dir, const char *ramdisk_path)
 		return ret;
 	}
 
-	ret = system_command("find | cpio -o -H newc | gzip > %s", abs_ramdisk_path);
+	ret = system_command("mkbootfs . | minigzip > %s", abs_ramdisk_path);
 	if (ret < 0)
 	{
-		print_error("system_command");
+		ret = system_command("find | cpio -o -H newc | gzip > %s", abs_ramdisk_path);
+		if (ret < 0)
+		{
+			print_error("system_command");
+		}
 	}
 
 	chdir_backup(NULL);

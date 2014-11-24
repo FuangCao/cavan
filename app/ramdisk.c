@@ -53,20 +53,13 @@ int main(int argc, char *argv[])
 			return dump_uramdisk(argv[1], argv[2]);
 		}
 	}
-	else if (image_is(argv[1], "ramdisk.img"))
+	else if (image_is_uramdisk(argv[2]))
 	{
-		if (image_is_uramdisk(argv[2]))
-		{
-			return ramdisk2uramdisk(argv[1], argv[2]);
-		}
-		else
-		{
-			return dump_ramdisk(argv[1], argv[2]);
-		}
+		return ramdisk2uramdisk(argv[1], argv[2]);
 	}
 	else
 	{
-		error_msg("argument error");
+		return dump_ramdisk(argv[1], argv[2]);
 	}
 
 	return -1;
