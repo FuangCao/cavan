@@ -464,6 +464,44 @@ ssize_t file_copy(const char *src_file, const char *dest_file, int flags)
 	return cpylen;
 }
 
+ssize_t file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode)
+{
+	int dest_fd;
+	ssize_t cpylen;
+
+	dest_fd = open(dest_file, flags, mode);
+	if (dest_fd < 0)
+	{
+		pr_error_info("open file `%s'", dest_file);
+		return dest_fd;
+	}
+
+	cpylen = ffile_copy(src_fd, dest_fd);
+
+	close(dest_fd);
+
+	return cpylen;
+}
+
+ssize_t file_copy3(const char *src_file, int dest_fd)
+{
+	int src_fd;
+	ssize_t cpylen;
+
+	src_fd = open(src_file, O_RDONLY);
+	if (src_fd < 0)
+	{
+		pr_error_info("open file `%s'", src_file);
+		return src_fd;
+	}
+
+	cpylen = ffile_copy(src_fd, dest_fd);
+
+	close(src_fd);
+
+	return cpylen;
+}
+
 off_t ffile_get_size(int fd)
 {
 	int ret;
@@ -799,6 +837,25 @@ ssize_t file_ncopy(const char *src_file, const char *dest_file, size_t size, int
 	close(dest_fd);
 
 	return res;
+}
+
+ssize_t file_ncopy2(int src_fd, const char *dest_file, size_t size, int flags, mode_t mode)
+{
+	int dest_fd;
+	ssize_t cpylen;
+
+	dest_fd = open(dest_file, flags, mode);
+	if (dest_fd < 0)
+	{
+		pr_error_info("open file `%s'", dest_file);
+		return dest_fd;
+	}
+
+	cpylen = ffile_ncopy(src_fd, dest_fd, size);
+
+	close(dest_fd);
+
+	return cpylen;
 }
 
 int vtry_to_open(int flags, va_list ap)
@@ -3078,4 +3135,17 @@ int cavan_temp_file_open(char *pathname, size_t size, const char *filename)
 	println("pathname = %s", pathname);
 
 	return fd;
+}
+
+off_t cavan_file_seek_next_page(int fd, size_t page_size)
+{
+	off_t page_mask = page_size - 1;
+	off_t offset = lseek(fd, 0, SEEK_CUR);
+
+	if ((offset & page_mask) == 0)
+	{
+		return offset;
+	}
+
+	return lseek(fd, page_size - (offset & page_mask), SEEK_CUR);
 }

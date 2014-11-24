@@ -308,3 +308,11 @@ static inline void text_reverse3(char *text)
 {
 	text_reverse2(text, text_len(text));
 }
+
+static inline char *text_substring(const char *text, char *sub, int start, int count)
+{
+	get_ntext_base(text, sub, start, count);
+	sub[count] = 0;
+
+	return sub;
+}
