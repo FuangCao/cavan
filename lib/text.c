@@ -2108,7 +2108,7 @@ char *mem2text_base(const void *mem, size_t mem_size, char *buff, int size)
 
 	p = mem;
 	ep = p + mem_size;
-	buff_end = buff + size - 1;
+	buff_end = buff + size - 2;
 
 	while (p < ep && buff < buff_end)
 	{

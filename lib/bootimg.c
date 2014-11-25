@@ -23,7 +23,7 @@
 
 void bootimg_header_dump(struct bootimg_header *hdr)
 {
-	char buff[64];
+	char buff[128];
 
 	println("magic = %s", text_substring((char *) hdr->magic, buff, 0, sizeof(hdr->magic)));
 	println("base = 0x%x", hdr->kernel_addr - BOOTIMG_DEFAULT_KERNEL_OFFSET);
