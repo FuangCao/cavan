@@ -66,11 +66,11 @@ int file_create_open(const char *pathname, int flags, mode_t mode);
 int file_join(const char *dest_file, char *src_files[], int count);
 int file_split(const char *file_name, const char *dest_dir, size_t size, int count);
 
-int ffile_copy(int src_fd, int dest_fd);
-int ffile_copy_simple(int src_fd, int dest_fd);
-int file_copy(const char *src_file, const char *dest_file, int flags);
-int file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode);
-int file_copy3(const char *src_file, int dest_fd);
+ssize_t ffile_copy(int src_fd, int dest_fd);
+ssize_t ffile_copy_simple(int src_fd, int dest_fd);
+ssize_t file_copy(const char *src_file, const char *dest_file, int flags);
+ssize_t file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode);
+ssize_t file_copy3(const char *src_file, int dest_fd);
 ssize_t file_append(const char *file_src, const char *file_dest);
 
 off_t ffile_get_size(int fd);

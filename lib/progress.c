@@ -24,7 +24,6 @@ static void progress_bar_fflush(struct progress_bar *bar, struct speed_detector 
 	}
 
 	p += HALF_LENGTH;
-
 	p += snprintf(p, p_end - p, " %d%% ", bar->percent);
 
 	if (bar->progress > HALF_LENGTH)

@@ -69,7 +69,7 @@ int file_copy_main(const char *src, const char *dest)
 
 	case S_IFREG:
 		println("File: %s [copy]-> %s", src, dest);
-		return file_copy(src, dest, write_flags);
+		return file_copy(src, dest, write_flags) < 0 ? -EFAULT : 0;
 
 	default:
 		pr_red_info("unknown file type");
