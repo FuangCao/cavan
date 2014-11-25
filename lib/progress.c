@@ -172,7 +172,14 @@ void progress_bar_finish(struct progress_bar *bar)
 	bar->current = bar->total;
 	progress_bar_update(bar);
 
-	println("\nTime consume: %" PRINT_FORMAT_INT64 " ms", speed_detector_get_times_consume(detector));
-	mem_size_tostring(speed_detector_get_speed_avg(detector), buff, sizeof(buff));
-	println("Average speed: %s/s", buff);
+	if (detector->times_consume > 0)
+	{
+		println("\nTime consume: %" PRINT_FORMAT_INT64 " ms", speed_detector_get_times_consume(detector));
+		mem_size_tostring(speed_detector_get_speed_avg(detector), buff, sizeof(buff));
+		println("Average speed: %s/s", buff);
+	}
+	else
+	{
+		print_char('\n');
+	}
 }
