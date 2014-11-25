@@ -1,6 +1,8 @@
 #include <cavan.h>
 #include <cavan/progress.h>
 
+#define PROGRESS_BAR_SPEED_UPDATE_INTERVAL	500
+
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 static void progress_bar_fflush(struct progress_bar *bar, struct speed_detector *detector)
@@ -43,7 +45,7 @@ static void progress_bar_fflush(struct progress_bar *bar, struct speed_detector 
 	if (detector->times_consume > 0)
 	{
 		*p++ = ' ';
-		p = mem_size_tostring(detector->speed, p, p_end - p - 2);
+		p = mem_size_tostring(detector->speed * 1000 / PROGRESS_BAR_SPEED_UPDATE_INTERVAL, p, p_end - p - 2);
 		*p++ = '/';
 		*p++ = 's';
 	}
@@ -138,7 +140,7 @@ void progress_bar_init(struct progress_bar *bar, double total)
 
 	bar->speed = 0;
 	detector->notify = progress_bar_speed_notify;
-	speed_detector_start(detector, 1000);
+	speed_detector_start(detector, PROGRESS_BAR_SPEED_UPDATE_INTERVAL);
 
 	progress_bar_update(bar);
 }
@@ -175,7 +177,7 @@ void progress_bar_finish(struct progress_bar *bar)
 	if (detector->times_consume > 0)
 	{
 		println("\nTime consume: %" PRINT_FORMAT_INT64 " ms", speed_detector_get_times_consume(detector));
-		mem_size_tostring(speed_detector_get_speed_avg(detector), buff, sizeof(buff));
+		mem_size_tostring(speed_detector_get_speed_avg(detector) * 1000 / PROGRESS_BAR_SPEED_UPDATE_INTERVAL, buff, sizeof(buff));
 		println("Average speed: %s/s", buff);
 	}
 	else
