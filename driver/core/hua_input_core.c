@@ -1026,6 +1026,7 @@ EXPORT_SYMBOL_GPL(hua_input_chip_read_online);
 static int hua_input_chip_firmware_upgrade_handler(struct hua_firmware *fw)
 {
 	int ret;
+	bool powered;
 	struct hua_input_chip *chip = hua_firmware_get_data(fw);
 
 	hua_input_thread_set_state(&chip->isr_thread, HUA_INPUT_THREAD_STATE_SUSPEND);
@@ -1033,6 +1034,8 @@ static int hua_input_chip_firmware_upgrade_handler(struct hua_firmware *fw)
 
 	mutex_lock(&chip->lock);
 	wake_lock(&chip->wake_lock);
+
+	powered = chip->powered;
 
 	ret = hua_input_chip_set_power(chip, true);
 	if (ret < 0)
@@ -1053,6 +1056,8 @@ static int hua_input_chip_firmware_upgrade_handler(struct hua_firmware *fw)
 	}
 
 	hua_input_chip_update_thread_state(chip);
+
+	hua_input_chip_set_power(chip, powered);
 
 	wake_unlock(&chip->wake_lock);
 	mutex_unlock(&chip->lock);
@@ -1097,12 +1102,15 @@ EXPORT_SYMBOL_GPL(hua_input_chip_firmware_upgrade);
 int hua_input_chip_read_firmware_id(struct hua_input_chip *chip, char *buff, size_t size)
 {
 	int ret;
+	bool powered;
 
 	if (chip->read_firmware_id == NULL)
 	{
 		pr_red_info("dev->read_firmware_id is null");
 		return -EINVAL;
 	}
+
+	powered = chip->powered;
 
 	ret = hua_input_chip_set_power(chip, true);
 	if (ret < 0)
@@ -1111,7 +1119,11 @@ int hua_input_chip_read_firmware_id(struct hua_input_chip *chip, char *buff, siz
 		return ret;
 	}
 
-	return chip->read_firmware_id(chip, buff, size);
+	ret = chip->read_firmware_id(chip, buff, size);
+
+	hua_input_chip_set_power(chip, powered);
+
+	return ret;
 }
 
 EXPORT_SYMBOL_GPL(hua_input_chip_read_firmware_id);
