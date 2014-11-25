@@ -36,7 +36,4 @@ static const struct cavan_command_map cmd_map_table[] =
 	}
 };
 
-int main(int argc, char *argv[])
-{
-	return FIND_EXEC_COMMAND(cmd_map_table);
-}
+FIND_EXEC_COMMAND_MAIN(cmd_map_table, false);

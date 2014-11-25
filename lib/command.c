@@ -53,23 +53,23 @@ const char *cavan_help_message_uboot = "R/W uboot partition";
 const char *cavan_help_message_resource = "R/W resource partition";
 const char *cavan_help_message_rw_image = "R/W partition by image short name";
 
-void print_command_table(const struct cavan_command_map *p, size_t size)
+int print_command_table(const struct cavan_command_map *p, const struct cavan_command_map *p_end)
 {
-	const struct cavan_command_map *p_end;
-
-	if (size == 0)
+	if (p >= p_end)
 	{
-		return;
+		return 0;
 	}
 
-	println("Available command is:");
+	print("Available command is:\n%s", p++->name);
 
-	for (p_end = p + size - 1; p < p_end; p++)
+	while (p < p_end)
 	{
-		print("%s, ", p->name);
+		print(", %s", p++->name);
 	}
 
-	print_string(p->name);
+	print_char('\n');
+
+	return 0;
 }
 
 const struct cavan_command_map *find_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname, size_t size)
@@ -122,7 +122,7 @@ void print_maybe_command(const struct cavan_command_map *p, const struct cavan_c
 	}
 	else
 	{
-		pr_red_info("`%s' No such command", cmdname);
+		print_command_table(p, p_end);
 	}
 }
 

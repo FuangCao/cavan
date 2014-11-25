@@ -40,7 +40,4 @@ static struct cavan_command_map map[] =
 	}
 };
 
-int main(int argc, char *argv[])
-{
-	return FIND_EXEC_COMMAND(map);
-}
+FIND_EXEC_COMMAND_MAIN(map, false);

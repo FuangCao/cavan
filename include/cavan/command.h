@@ -9,6 +9,16 @@
 #include <cavan.h>
 #include <sys/wait.h>
 
+#define FIND_EXEC_COMMAND_MAIN(map, link) \
+	int main(int argc, char *argv[]) \
+	{ \
+		if (link || argc > 1) \
+		{ \
+			return find_and_exec_command(map, ARRAY_SIZE(map), argc, argv); \
+		} \
+		return print_command_table(map, map + ARRAY_SIZE(map)); \
+	}
+
 typedef enum
 {
 	CAVAN_COMMAND_OPTION_ADB = 0x256,
@@ -88,9 +98,6 @@ struct cavan_command_map
 	int (*main_func)(int argc, char *argv[]);
 };
 
-#define FIND_EXEC_COMMAND(map) \
-	find_and_exec_command(map, ARRAY_SIZE(map), argc, argv);
-
 // ============================================================
 
 extern const char *cavan_help_message_help;
@@ -140,7 +147,7 @@ extern const char *cavan_help_message_rw_image;
 
 // ============================================================
 
-void print_command_table(const struct cavan_command_map *p, size_t size);
+int print_command_table(const struct cavan_command_map *p, const struct cavan_command_map *p_end);
 const struct cavan_command_map *find_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname, size_t size);
 void print_maybe_command(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname);
 const struct cavan_command_map *match_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname);

@@ -28,19 +28,7 @@ const struct cavan_command_map cmd_map_table[] =
 	#include CONFIG_CAVAN_MAP_C
 };
 
-int main(int argc, char *argv[])
-{
-#if 0
-	int i;
-
-	for (i = 0; i < argc; i++)
-	{
-		println("argv[%d] = %s", i, argv[i]);
-	}
-#endif
-
-	return FIND_EXEC_COMMAND(cmd_map_table);
-}
+FIND_EXEC_COMMAND_MAIN(cmd_map_table, true);
 
 static int cavan_main(int argc, char *argv[])
 {
@@ -52,7 +40,7 @@ static int cavan_main(int argc, char *argv[])
 	println("%s %s", argv[0], cavan_get_build_time_string());
 	println("Usage: %s [[subcommand] [arguments] ...]\n", argv[0]);
 	println("https://github.com/FuangCao/cavan.git\n");
-	print_command_table(cmd_map_table + 1, ARRAY_SIZE(cmd_map_table) - 1);
+	print_command_table(cmd_map_table + 1, cmd_map_table + ARRAY_SIZE(cmd_map_table) - 1);
 
 	return -EINVAL;
 }

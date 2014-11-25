@@ -23,14 +23,14 @@
 
 #define FILE_CREATE_DATE "2014-11-24 13:35:23"
 
-static void show_usage(const char *command)
+static void show_usage_unpack(const char *command)
 {
-	println("Usage: %s [option]", command);
-	println("--help, -h, -H\t\tshow this help");
-	println("--version, -v, -V\tshow version");
+	println("Usage: %s [option] boot.img [output]", command);
+	println("--help, -h, -H\t\t%s", cavan_help_message_help);
+	println("--version, -v, -V\t%s", cavan_help_message_version);
 }
 
-int main(int argc, char *argv[])
+static int cavan_bootimg_unpack(int argc, char *argv[])
 {
 	int c;
 	int option_index;
@@ -67,16 +67,46 @@ int main(int argc, char *argv[])
 		case 'h':
 		case 'H':
 		case CAVAN_COMMAND_OPTION_HELP:
-			show_usage(argv[0]);
+			show_usage_unpack(argv[0]);
 			return 0;
 
 		default:
-			show_usage(argv[0]);
+			show_usage_unpack(argv[0]);
 			return -EINVAL;
 		}
 	}
 
-	assert(argc > 2);
+	argv += optind;
+	argv -= optind;
 
-	return bootimg_unpack(argv[1], argv[2]);
+	if (argc < 2)
+	{
+		show_usage_unpack(argv[0]);
+		return -EINVAL;
+	}
+
+	return bootimg_unpack(argv[1], argc > 2 ? argv[2] : ".");
 }
+
+static int cavan_bootimg_repack(int argc, char *argv[])
+{
+	pr_pos_info();
+
+	return 0;
+}
+
+static int cavan_bootimg_pack(int argc, char *argv[])
+{
+	pr_pos_info();
+
+	return 0;
+}
+
+static struct cavan_command_map cmd_map[] =
+{
+	{"unpack", cavan_bootimg_unpack},
+	{"repack", cavan_bootimg_repack},
+	{"pack", cavan_bootimg_pack}
+};
+
+FIND_EXEC_COMMAND_MAIN(cmd_map, false);
