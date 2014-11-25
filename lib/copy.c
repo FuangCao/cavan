@@ -189,7 +189,7 @@ int copy_main(const char *src, const char *dest)
 		return 0;
 	}
 
-	if (file_test(dest, "d") == 0)
+	if (S_ISDIR(file_get_mode(dest)))
 	{
 		text_path_cat(dest_path, sizeof(dest_path), dest, text_basename(src));
 	}

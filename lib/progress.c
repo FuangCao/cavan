@@ -1,73 +1,104 @@
 #include <cavan.h>
 #include <cavan/progress.h>
 
-static void progress_bar_fflush(struct progress_bar *bar)
-{
-	print_ntext((char *) &bar->body, sizeof(struct progress_bar_body));
-	print_char('\r');
-}
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-static int update_percent(struct progress_bar *bar)
-{
-	int percent = (int) (((double) bar->current) * 100 / bar->total);
-
-	if (percent == bar->percent)
-	{
-		return 0;
-	}
-
-	bar->percent = percent;
-	sprintf(bar->body.percent, " %d%%", percent);
-	bar->body.percent[5] = ' ';
-
-	return 1;
-}
-
-static void fill_buffer(char *content, int fill, int size)
-{
-	char *end = content + size;
-
-	while (content < end)
-	{
-		if (fill > 0)
-		{
-			*content = FULL_CHAR;
-			fill--;
-		}
-		else
-		{
-			*content = FREE_CHAR;
-		}
-
-		content++;
-	}
-}
-
-static int update_content(struct progress_bar *bar)
+static void progress_bar_fflush(struct progress_bar *bar, struct speed_detector *detector)
 {
 	int length;
+	char buff[1024];
+	char *p = buff, *p_end = p + sizeof(buff);
 
-	length = (int) (((double) bar->current) * HALF_LENGTH * 2 / bar->total);
+	*p++ = '[';
 
-	if (length == bar->length)
+	if (bar->progress < HALF_LENGTH)
 	{
-		return 0;
-	}
-
-	bar->length = length;
-
-	if (length <= HALF_LENGTH)
-	{
-		fill_buffer(bar->body.content1, length, HALF_LENGTH);
-		memset(bar->body.content2, FREE_CHAR, HALF_LENGTH);
+		memset(p, FULL_CHAR, bar->progress);
+		memset(p + bar->progress, FREE_CHAR, HALF_LENGTH - bar->progress);
 	}
 	else
 	{
-		memset(bar->body.content1, FULL_CHAR, HALF_LENGTH);
-		fill_buffer(bar->body.content2, length - HALF_LENGTH, HALF_LENGTH);
+		memset(p, FULL_CHAR, HALF_LENGTH);
 	}
 
-	return 1;
+	p += HALF_LENGTH;
+
+	p += snprintf(p, p_end - p, " %d%% ", bar->percent);
+
+	if (bar->progress > HALF_LENGTH)
+	{
+		int progress = bar->progress - HALF_LENGTH;
+
+		memset(p, FULL_CHAR, progress);
+		memset(p + progress, FREE_CHAR, HALF_LENGTH - progress);
+	}
+	else
+	{
+		memset(p, FREE_CHAR, HALF_LENGTH);
+	}
+
+	p += HALF_LENGTH;
+	*p++ = ']';
+
+	if (detector->times_consume > 0)
+	{
+		*p++ = ' ';
+		p = mem_size_tostring(detector->speed, p, p_end - p - 2);
+		*p++ = '/';
+		*p++ = 's';
+	}
+
+	length = p - buff;
+	if (length < bar->length)
+	{
+		char *q = p + (bar->length - length);
+
+		if (q > p_end)
+		{
+			q = p_end;
+		}
+
+		while (p < q)
+		{
+			*p++ = ' ';
+		}
+	}
+
+	*p++ = '\r';
+
+	bar->length = length;
+
+	pthread_mutex_lock(&lock);
+	print_ntext(buff, p - buff);
+	pthread_mutex_unlock(&lock);
+}
+
+static bool update_percent(struct progress_bar *bar)
+{
+	int percent = bar->current * 100 / bar->total;
+
+	if (percent == bar->percent)
+	{
+		return false;
+	}
+
+	bar->percent = percent;
+
+	return true;
+}
+
+static bool update_content(struct progress_bar *bar)
+{
+	int progress = bar->current * HALF_LENGTH * 2 / bar->total;
+
+	if (progress == bar->progress)
+	{
+		return false;
+	}
+
+	bar->progress = progress;
+
+	return true;
 }
 
 void progress_bar_update(struct progress_bar *bar)
@@ -79,46 +110,69 @@ void progress_bar_update(struct progress_bar *bar)
 
 	if (update_percent(bar) | update_content(bar))
 	{
-		progress_bar_fflush(bar);
+		progress_bar_fflush(bar, &bar->detector);
 	}
 }
 
-void progress_bar_init(struct progress_bar *bar, u64 total)
+static void progress_bar_speed_notify(struct speed_detector *detector, u32 speed)
 {
-	struct progress_bar_body *body = &bar->body;
+	struct progress_bar *bar = (struct progress_bar *) detector;
+
+	if (bar->speed == speed)
+	{
+		return;
+	}
+
+	bar->speed = speed;
+	progress_bar_fflush(bar, detector);
+}
+
+void progress_bar_init(struct progress_bar *bar, double total)
+{
+	struct speed_detector *detector = &bar->detector;
 
 	bar->total = total == 0 ? 1 : total;
 	bar->current = 0;
-	bar->percent = -1;
-	bar->length = -1;
+	bar->percent = 0;
+	bar->length = 0;
 
-	body->head = '[';
-	memset(body->percent, 0, sizeof(body->percent));
-	body->tail = ']';
+	bar->speed = 0;
+	detector->notify = progress_bar_speed_notify;
+	speed_detector_start(detector, 1000);
 
 	progress_bar_update(bar);
 }
 
-void progress_bar_add(struct progress_bar *bar, u64 val)
+void progress_bar_add(struct progress_bar *bar, double val)
 {
+	speed_detector_post(&bar->detector, val);
+
 	bar->current += val;
-
 	progress_bar_update(bar);
 }
 
-void progress_bar_set(struct progress_bar *bar, u64 val)
+void progress_bar_set(struct progress_bar *bar, double val)
 {
-	bar->current = val;
+	if (val > bar->current)
+	{
+		speed_detector_post(&bar->detector, val - bar->current);
+	}
 
+	bar->current = val;
 	progress_bar_update(bar);
 }
 
 void progress_bar_finish(struct progress_bar *bar)
 {
-	bar->current = bar->total;
+	char buff[32];
+	struct speed_detector *detector = &bar->detector;
 
+	speed_detector_stop(&bar->detector);
+
+	bar->current = bar->total;
 	progress_bar_update(bar);
 
-	print_char('\n');
+	println("\nTime consume: %" PRINT_FORMAT_INT64 " ms", speed_detector_get_times_consume(detector));
+	mem_size_tostring(speed_detector_get_speed_avg(detector), buff, sizeof(buff));
+	println("Average speed: %s/s", buff);
 }
-

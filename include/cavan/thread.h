@@ -88,3 +88,9 @@ static inline int cavan_thread_wakeup(struct cavan_thread *thread)
 {
 	return thread->wake_handker(thread, thread->private_data);
 }
+
+static inline void cavan_thread_exit(struct cavan_thread *thread)
+{
+	cavan_thread_stop(thread);
+	cavan_thread_deinit(thread);
+}

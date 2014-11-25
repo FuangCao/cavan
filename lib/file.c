@@ -270,10 +270,8 @@ out_close_src:
 	return ret;
 }
 
-ssize_t ffile_copy_simple(int src_fd, int dest_fd)
+int ffile_copy_simple(int src_fd, int dest_fd)
 {
-	size_t cpylen = 0;
-
 	while (1)
 	{
 		ssize_t rdlen, wrlen;
@@ -297,17 +295,14 @@ ssize_t ffile_copy_simple(int src_fd, int dest_fd)
 			pr_error_info("ffile_write");
 			return wrlen < 0 ? wrlen : -EFAULT;
 		}
-
-		cpylen += wrlen;
 	}
 
-	return cpylen;
+	return 0;
 }
 
-ssize_t ffile_copy(int src_fd, int dest_fd)
+int ffile_copy(int src_fd, int dest_fd)
 {
 	int ret;
-	size_t cpylen;
 	struct stat st;
 	struct progress_bar bar;
 
@@ -317,7 +312,6 @@ ssize_t ffile_copy(int src_fd, int dest_fd)
 		return ffile_copy_simple(src_fd, dest_fd);
 	}
 
-	cpylen = 0;
 	progress_bar_init(&bar, st.st_size);
 
 	while (1)
@@ -344,13 +338,12 @@ ssize_t ffile_copy(int src_fd, int dest_fd)
 			return wrlen < 0 ? wrlen : -EFAULT;
 		}
 
-		cpylen += wrlen;
-		progress_bar_set(&bar, cpylen);
+		progress_bar_add(&bar, wrlen);
 	}
 
 	progress_bar_finish(&bar);
 
-	return cpylen;
+	return 0;
 }
 
 ssize_t file_append(const char *file_src, const char *file_dest)
@@ -443,10 +436,9 @@ out_close_src_fd:
 	return ret;
 }
 
-ssize_t file_copy(const char *src_file, const char *dest_file, int flags)
+int file_copy(const char *src_file, const char *dest_file, int flags)
 {
 	int ret;
-	ssize_t cpylen;
 	int src_fd, dest_fd;
 
 	ret = open_files(src_file, dest_file, &src_fd, &dest_fd, flags);
@@ -456,18 +448,18 @@ ssize_t file_copy(const char *src_file, const char *dest_file, int flags)
 		return ret;
 	}
 
-	cpylen = ffile_copy(src_fd, dest_fd);
+	ret = ffile_copy(src_fd, dest_fd);
 
 	close(src_fd);
 	close(dest_fd);
 
-	return cpylen;
+	return ret;
 }
 
-ssize_t file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode)
+int file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode)
 {
+	int ret;
 	int dest_fd;
-	ssize_t cpylen;
 
 	dest_fd = open(dest_file, flags, mode);
 	if (dest_fd < 0)
@@ -476,17 +468,17 @@ ssize_t file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode)
 		return dest_fd;
 	}
 
-	cpylen = ffile_copy(src_fd, dest_fd);
+	ret = ffile_copy(src_fd, dest_fd);
 
 	close(dest_fd);
 
-	return cpylen;
+	return ret;
 }
 
-ssize_t file_copy3(const char *src_file, int dest_fd)
+int file_copy3(const char *src_file, int dest_fd)
 {
+	int ret;
 	int src_fd;
-	ssize_t cpylen;
 
 	src_fd = open(src_file, O_RDONLY);
 	if (src_fd < 0)
@@ -495,11 +487,11 @@ ssize_t file_copy3(const char *src_file, int dest_fd)
 		return src_fd;
 	}
 
-	cpylen = ffile_copy(src_fd, dest_fd);
+	ret = ffile_copy(src_fd, dest_fd);
 
 	close(src_fd);
 
-	return cpylen;
+	return ret;
 }
 
 off_t ffile_get_size(int fd)

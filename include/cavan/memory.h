@@ -100,6 +100,8 @@ u32 mem_checksum32_simple(const u8 *mem, size_t count);
 u16 mem_checksum16_simple(const u16 *mem, size_t size);
 u8 mem_checksum8_simple(const u8 *mem, size_t count);
 
+char *mem_size_tostring(double value, char *buff, size_t size);
+
 static inline char *mem_trans(char *text, size_t size)
 {
 	return text_ntrans(text, size);
