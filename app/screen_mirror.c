@@ -40,4 +40,4 @@ static struct cavan_command_map map[] =
 	}
 };
 
-FIND_EXEC_COMMAND_MAIN(map, false);
+FIND_EXEC_COMMAND_MAIN(map);

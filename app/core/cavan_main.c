@@ -28,7 +28,10 @@ const struct cavan_command_map cmd_map_table[] =
 	#include CONFIG_CAVAN_MAP_C
 };
 
-FIND_EXEC_COMMAND_MAIN(cmd_map_table, true);
+int main(int argc, char *argv[])
+{
+	return find_and_exec_command(cmd_map_table, NELEM(cmd_map_table), argc, argv);
+}
 
 static int cavan_main(int argc, char *argv[])
 {

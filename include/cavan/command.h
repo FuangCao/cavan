@@ -9,10 +9,10 @@
 #include <cavan.h>
 #include <sys/wait.h>
 
-#define FIND_EXEC_COMMAND_MAIN(map, link) \
+#define FIND_EXEC_COMMAND_MAIN(map) \
 	int main(int argc, char *argv[]) \
 	{ \
-		if (link || argc > 1) \
+		if (argc > 1) \
 		{ \
 			return find_and_exec_command(map, ARRAY_SIZE(map), argc, argv); \
 		} \
