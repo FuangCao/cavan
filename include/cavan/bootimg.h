@@ -69,7 +69,7 @@ struct bootimg_header
 
 struct bootimg_image
 {
-	size_t size;
+	unsigned size;
 	const char *name;
 	unsigned *size_addr;
 };

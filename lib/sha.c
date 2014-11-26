@@ -169,6 +169,25 @@ int cavan_sha_update2(struct cavan_sha_context *context, int fd)
 	return 0;
 }
 
+int cavan_sha_update3(struct cavan_sha_context *context, const char *pathname)
+{
+	int fd;
+	int ret;
+
+	fd = open(pathname, O_RDONLY);
+	if (fd < 0)
+	{
+		pr_error_info("open file %s", pathname);
+		return fd;
+	}
+
+	ret = cavan_sha_update2(context, fd);
+
+	close(fd);
+
+	return ret;
+}
+
 void cavan_sha_finish(struct cavan_sha_context *context, u8 *digest)
 {
 	u64 bits = context->count << 3;
@@ -245,7 +264,6 @@ int cavan_file_shasum_mmap(struct cavan_sha_context *context, const char *pathna
 
 int cavan_file_shasum(struct cavan_sha_context *context, const char *pathname, u8 *digest)
 {
-	int fd;
 	int ret;
 
 	ret = cavan_file_shasum_mmap(context, pathname, digest);
@@ -254,32 +272,23 @@ int cavan_file_shasum(struct cavan_sha_context *context, const char *pathname, u
 		return ret;
 	}
 
-	fd = open(pathname, O_RDONLY);
-	if (fd < 0)
-	{
-		pr_error_info("open file %s failed", pathname);
-		return fd;
-	}
-
 	ret = cavan_sha_init(context);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_sha_init");
-		goto out_close_fd;
+		return ret;
 	}
 
-	ret = cavan_sha_update2(context, fd);
+	ret = cavan_sha_update3(context, pathname);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_sha_update2");
-		goto out_close_fd;
+		return ret;
 	}
 
 	cavan_sha_finish(context, digest);
 
-out_close_fd:
-	close(fd);
-	return ret;
+	return 0;
 }
 
 // ============================================================
