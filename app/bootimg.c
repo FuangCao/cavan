@@ -104,7 +104,7 @@ static void show_usage_pack(const char *command)
 	println("Usage: %s [option] [input] [output]", command);
 	println("--help, -h, -H\t\t\t\t%s", cavan_help_message_help);
 	println("--version, -v, -V\t\t\t%s", cavan_help_message_version);
-	println("--name, -n <boardname>");
+	println("--name, --board, -n <boardname>");
 	println("--cmdline, -c <kernel-cmdline>");
 	println("--kernel, -k <filename>");
 	println("--ramdisk, -r <filename>");
@@ -228,6 +228,12 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_NAME,
 		},
 		{
+			.name = "board",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_BOARD,
+		},
+		{
 			.name = "page_size",
 			.has_arg = required_argument,
 			.flag = NULL,
@@ -291,6 +297,7 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 
 		case 'n':
 		case CAVAN_COMMAND_OPTION_NAME:
+		case CAVAN_COMMAND_OPTION_BOARD:
 			option.name = optarg;
 			break;
 

@@ -8,6 +8,8 @@
 #include <cavan/device.h>
 #include <cavan/memory.h>
 
+#define CAVAN_FILE_DEBUG	0
+
 #define MAX_BUFF_LEN	KB(4)
 #define MIN_FILE_SIZE	KB(1)
 #define CONFIG_ERROR_IF_COPY_REMAIN	0
@@ -391,13 +393,13 @@ int file_open_rw_ro(const char *pathname, int flags)
 		return fd;
 	}
 
-#ifdef CAVAN_DEBUG
+#if CAVAN_FILE_DEBUG
 	warning_msg("rw open file \"%s\" faild, retry use ro", pathname);
 #endif
 
 	fd = open(pathname, O_RDONLY | flags);
 
-#ifdef CAVAN_DEBUG
+#if CAVAN_FILE_DEBUG
 	if (fd < 0)
 	{
 		pr_error_info("open file \"%s\"", pathname);
@@ -948,7 +950,7 @@ ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
 {
 	if (lseek(fd, offset, SEEK_SET) != offset)
 	{
-#ifdef CAVAN_DEBUG
+#if CAVAN_FILE_DEBUG
 		pr_error_info("lseek");
 #endif
 		return -EFAULT;
@@ -962,7 +964,7 @@ ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t
 	ssize_t wrlen;
 	int fd;
 
-#ifdef CAVAN_DEBUG
+#if CAVAN_FILE_DEBUG
 	println("write file = %s", file_name);
 	println("size = %s", size2text(size));
 	println("offset = %s", size2text(offset));
@@ -971,7 +973,7 @@ ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t
 	fd = file_create_open(file_name, O_WRONLY | O_SYNC | flags, 0777);
 	if (fd < 0)
 	{
-#ifdef CAVAN_DEBUG
+#if CAVAN_FILE_DEBUG
 		pr_error_info("open \"%s\"", file_name);
 #endif
 		return -1;
@@ -1000,7 +1002,7 @@ ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offs
 	ssize_t rdlen;
 	int fd;
 
-#ifdef CAVAN_DEBUG
+#if CAVAN_FILE_DEBUG
 	println("read file = %s", file_name);
 	println("size = %s", size2text(size));
 	println("offset = %s", size2text(offset));
@@ -1009,7 +1011,7 @@ ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offs
 	fd = open(file_name, O_RDONLY | O_BINARY | flags);
 	if (fd < 0)
 	{
-#ifdef CAVAN_DEBUG
+#if CAVAN_FILE_DEBUG
 		pr_error_info("open \"%s\"", file_name);
 #endif
 		return -1;
@@ -2155,7 +2157,7 @@ int file_mount_to(const char *source, const char *target, const char *fs_type, u
 	ret = file_set_loop(source, loop_path, 0);
 	if (ret < 0)
 	{
-#ifdef CAVAN_DEBUG
+#if CAVAN_FILE_DEBUG
 		error_msg("file set loop");
 #endif
 		return ret;
@@ -2164,7 +2166,7 @@ int file_mount_to(const char *source, const char *target, const char *fs_type, u
 	ret = libc_mount_to(loop_path, target, fs_type, flags, data);
 	if (ret < 0)
 	{
-#ifdef CAVAN_DEBUG
+#if CAVAN_FILE_DEBUG
 		pr_error_info("libc_mount_to");
 #endif
 		loop_clr_fd(loop_path);

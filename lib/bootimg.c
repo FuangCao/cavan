@@ -216,6 +216,50 @@ int bootimg_unpack(const char *input, const char *output)
 		}
 	}
 
+	if (hdr.cmdline[0])
+	{
+		strcpy(filename, "cmdline.txt");
+		println("cmdline -> %s", pathname);
+
+		if (hdr.extra_cmdline[0])
+		{
+			char *p;
+			char buff[sizeof(hdr.cmdline) + sizeof(hdr.extra_cmdline)];
+
+			p = text_copy(buff, (char *) hdr.cmdline);
+			p = text_copy(p, (char *) hdr.extra_cmdline);
+
+			ret = file_writeto(pathname, buff, p - buff, 0, O_TRUNC);
+			if (ret < 0)
+			{
+				pr_red_info("file_writeto");
+				goto out_close_fd;
+			}
+		}
+		else
+		{
+			ret = file_writeto(pathname, hdr.cmdline, strlen((char *) hdr.cmdline), 0, O_TRUNC);
+			if (ret < 0)
+			{
+				pr_red_info("file_writeto");
+				goto out_close_fd;
+			}
+		}
+	}
+
+	if (hdr.name[0])
+	{
+		strcpy(filename, "board.txt");
+		println("board name -> %s", pathname);
+
+		ret = file_writeto(pathname, hdr.name, strlen((char *) hdr.name), 0, O_TRUNC);
+		if (ret < 0)
+		{
+			pr_red_info("file_writeto");
+			goto out_close_fd;
+		}
+	}
+
 	strcpy(filename, "repack.sh");
 
 	ret = bootimg_gen_repack_script(&hdr, pathname);
