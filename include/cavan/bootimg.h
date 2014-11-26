@@ -27,6 +27,7 @@
 #define BOOT_ARGS_SIZE 512
 #define BOOT_EXTRA_ARGS_SIZE 1024
 
+#define BOOTIMG_DEFAULT_PAGE_SIZE		2048
 #define BOOTIMG_DEFAULT_BASE			0x10000000
 #define BOOTIMG_DEFAULT_KERNEL_OFFSET	0x00008000
 #define BOOTIMG_DEFAULT_RAMDISK_OFFSET	0x01000000
@@ -70,11 +71,33 @@ struct bootimg_image
 {
 	size_t size;
 	const char *name;
+	unsigned *size_addr;
+};
+
+struct bootimg_pack_option
+{
+	const char *kernel;
+	const char *ramdisk;
+	const char *second;
+	const char *dt;
+	const char *cmdline;
+	const char *name;
+	const char *output;
+
+	u32 page_size;
+
+	u32 base;
+	u32 kernel_offset;
+	u32 ramdisk_offset;
+	u32 second_offset;
+	u32 tags_offset;
+	u32 unused[2];
 };
 
 void bootimg_header_dump(struct bootimg_header *hdr);
 int bootimg_unpack(const char *input, const char *output);
 int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *pathname);
+int bootimg_pack(struct bootimg_pack_option *option);
 
 static inline ssize_t bootimg_read_header(int fd, struct bootimg_header *hdr)
 {

@@ -150,6 +150,25 @@ void cavan_sha_update(struct cavan_sha_context *context, const void *buff, size_
 	context->count += size;
 }
 
+int cavan_sha_update2(struct cavan_sha_context *context, int fd)
+{
+	while (1)
+	{
+		ssize_t rdlen;
+		char buff[4096];
+
+		rdlen = ffile_read(fd, buff, sizeof(buff));
+		if (rdlen <= 0)
+		{
+			return rdlen;
+		}
+
+		cavan_sha_update(context, buff, rdlen);
+	}
+
+	return 0;
+}
+
 void cavan_sha_finish(struct cavan_sha_context *context, u8 *digest)
 {
 	u64 bits = context->count << 3;
@@ -208,6 +227,7 @@ int cavan_shasum(struct cavan_sha_context *context, const void *buff, size_t siz
 int cavan_file_shasum_mmap(struct cavan_sha_context *context, const char *pathname, u8 *digest)
 {
 	int fd;
+	int ret;
 	void *addr;
 	size_t size;
 
@@ -217,10 +237,10 @@ int cavan_file_shasum_mmap(struct cavan_sha_context *context, const char *pathna
 		return fd;
 	}
 
-	cavan_shasum(context, addr, size, digest);
+	ret = cavan_shasum(context, addr, size, digest);
 	file_unmap(fd, addr, size);
 
-	return 0;
+	return ret;
 }
 
 int cavan_file_shasum(struct cavan_sha_context *context, const char *pathname, u8 *digest)
@@ -241,31 +261,25 @@ int cavan_file_shasum(struct cavan_sha_context *context, const char *pathname, u
 		return fd;
 	}
 
-	cavan_sha_init(context);
-
-	while (1)
+	ret = cavan_sha_init(context);
+	if (ret < 0)
 	{
-		ssize_t rdlen;
-		char buff[1024];
+		pr_red_info("cavan_sha_init");
+		goto out_close_fd;
+	}
 
-		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
-				break;
-			}
-
-			pr_error_info("read file %s", pathname);
-			return rdlen;
-		}
-
-		cavan_sha_update(context, buff, rdlen);
+	ret = cavan_sha_update2(context, fd);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_sha_update2");
+		goto out_close_fd;
 	}
 
 	cavan_sha_finish(context, digest);
 
-	return 0;
+out_close_fd:
+	close(fd);
+	return ret;
 }
 
 // ============================================================

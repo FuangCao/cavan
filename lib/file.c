@@ -3148,3 +3148,15 @@ off_t cavan_file_seek_next_page(int fd, size_t page_size)
 
 	return lseek(fd, page_size - (offset & page_mask), SEEK_CUR);
 }
+
+off_t cavan_file_seek_page_align(int fd, off_t offset, size_t page_size)
+{
+	off_t page_mask = page_size - 1;
+
+	if (offset & page_mask)
+	{
+		offset = (offset & page_mask) + page_size;
+	}
+
+	return lseek(fd, offset, SEEK_SET);
+}

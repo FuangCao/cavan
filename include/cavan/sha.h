@@ -47,6 +47,7 @@ struct cavan_sha_context
 
 int cavan_sha_init(struct cavan_sha_context *context);
 void cavan_sha_update(struct cavan_sha_context *context, const void *buff, size_t size);
+int cavan_sha_update2(struct cavan_sha_context *context, int fd);
 void cavan_sha_finish(struct cavan_sha_context *context, u8 *digest);
 int cavan_shasum(struct cavan_sha_context *context, const void *buff, size_t size, u8 *digest);
 int cavan_file_shasum_mmap(struct cavan_sha_context *context, const char *pathname, u8 *digest);

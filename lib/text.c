@@ -3168,3 +3168,29 @@ char text_get_escope_letter(char c)
 		return c;
 	}
 }
+
+int text2array(char *text, u32 *array, size_t size, char sep)
+{
+	u32 *ap, *ap_end;
+
+	for (ap = array, ap_end = ap + size; ap < ap_end; ap++)
+	{
+		char *p;
+
+		for (p = text; *p != sep; p++)
+		{
+			if (*p == 0)
+			{
+				*ap = text2value_unsigned(text, NULL, 10);
+
+				return ap - array + 1;
+			}
+		}
+
+		*p = 0;
+		*ap = text2value_unsigned(text, NULL, 10);
+		text = p + 1;
+	}
+
+	return ap - array;
+}

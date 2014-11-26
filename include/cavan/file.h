@@ -205,6 +205,7 @@ int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *op
 int cavan_file_dump(const char *pathname, size_t width, const char *sep, const char *new_line);
 int cavan_temp_file_open(char *pathname, size_t size, const char *filename);
 off_t cavan_file_seek_next_page(int fd, size_t page_size);
+off_t cavan_file_seek_page_align(int fd, off_t offset, size_t page_size);
 
 // ============================================================
 

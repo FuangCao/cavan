@@ -231,6 +231,7 @@ char text_get_escope_letter(char c);
 
 extern void mem_reverse_simple(byte *start, byte *end);
 extern void mem_reverse(byte *start, byte *end);
+int text2array(char *text, u32 *array, size_t size, char sep);
 
 // ============================================================
 

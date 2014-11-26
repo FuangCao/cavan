@@ -230,3 +230,179 @@ out_close_fd:
 	close(fd);
 	return ret;
 }
+
+static int bootimg_write_image(int fd, const char *pathname, unsigned *size, unsigned page_size, struct cavan_sha_context *context)
+{
+	int ret;
+	int img_fd;
+	ssize_t wrlen;
+
+	img_fd = open(pathname, O_RDONLY);
+	if (img_fd < 0)
+	{
+		pr_error_info("open file `%s'", pathname);
+		return img_fd;
+	}
+
+	wrlen = ffile_copy(img_fd, fd);
+	if (wrlen < 0)
+	{
+		ret = wrlen;
+		pr_red_info("ffile_copy");
+		goto out_close_img_fd;
+	}
+
+	if (lseek(img_fd, 0, SEEK_SET) != 0)
+	{
+		pr_error_info("lseek");
+
+		ret = -EFAULT;
+		goto out_close_img_fd;
+	}
+
+	ret = cavan_sha_update2(context, img_fd);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_sha_update2");
+		goto out_close_img_fd;
+	}
+
+	ret = cavan_file_seek_next_page(fd, page_size);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_file_seek_next_page");
+		goto out_close_img_fd;
+	}
+
+	*size = wrlen;
+	cavan_sha_update(context, size, sizeof(*size));
+
+out_close_img_fd:
+	close(img_fd);
+	return ret;
+}
+
+int bootimg_pack(struct bootimg_pack_option *option)
+{
+	int i;
+	int fd;
+	int ret;
+	int image_count;
+	struct bootimg_header hdr;
+	struct bootimg_image images[4];
+	struct cavan_sha_context context;
+
+	if (option->kernel == NULL || option->ramdisk == NULL)
+	{
+        pr_red_info("no kernel or ramdisk image specified");
+		return -EINVAL;
+	}
+
+	fd = open(option->output, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	if (fd < 0)
+	{
+		pr_error_info("open file `%s' failed", option->output);
+		return fd;
+	}
+
+	ret = cavan_file_seek_page_align(fd, sizeof(hdr), option->page_size);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_file_seek_page_align");
+		goto out_close_fd;
+	}
+
+	cavan_sha1_context_init(&context);
+
+	ret = cavan_sha_init(&context);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_sha_init");
+		goto out_close_fd;
+	}
+
+	memset(&hdr, 0, sizeof(hdr));
+	memcpy(hdr.unused, option->unused, sizeof(hdr.unused));
+
+	images[0].size_addr = &hdr.kernel_size;
+	images[0].name = option->kernel;
+
+	images[1].size_addr = &hdr.ramdisk_size;
+	images[1].name = option->ramdisk;
+
+	image_count = 2;
+
+	if (option->second)
+	{
+		images[image_count].size_addr = &hdr.second_size;
+		images[image_count++].name = option->second;
+	}
+
+	if (option->dt)
+	{
+		images[image_count].size_addr = &hdr.dt_size;
+		images[image_count++].name = option->dt;
+	}
+
+	for (i = 0; i < image_count; i++)
+	{
+		println("write image %s", images[i].name);
+
+		ret = bootimg_write_image(fd, images[i].name, images[i].size_addr, option->page_size, &context);
+		if (ret < 0)
+		{
+			pr_red_info("bootimg_write_image");
+			goto out_close_fd;
+		}
+	}
+
+	cavan_sha_finish(&context, (u8 *) hdr.id);
+
+	hdr.page_size = option->page_size;
+	memcpy(hdr.magic, BOOT_MAGIC, sizeof(hdr.magic));
+
+	if (option->name)
+	{
+		strncpy((char *) hdr.name, option->name, sizeof(hdr.name));
+	}
+
+	if (option->cmdline)
+	{
+		char *p, *p_end;
+		const char *cmdline = option->cmdline;
+
+		for (p = (char *) hdr.cmdline, p_end = p + sizeof(hdr.cmdline) - 1; p < p_end && *cmdline; p++, cmdline++)
+		{
+			*p = *cmdline;
+		}
+
+		*p = 0;
+
+		for (p = (char *) hdr.extra_cmdline, p_end = p + sizeof(hdr.extra_cmdline) - 1; p < p_end && *cmdline; p++, cmdline++)
+		{
+			*p = *cmdline;
+		}
+
+		*p = 0;
+	}
+
+	hdr.kernel_addr = option->base + option->kernel_offset;
+	hdr.ramdisk_addr = option->base + option->ramdisk_offset;
+	hdr.second_addr = option->base + option->second_offset;
+	hdr.tags_addr = option->base + option->tags_offset;
+
+	bootimg_header_dump(&hdr);
+
+	ret = ffile_writeto(fd, &hdr, sizeof(hdr), 0);
+	if (ret < 0)
+	{
+		pr_red_info("ffile_writeto");
+		goto out_close_fd;
+	}
+
+	pr_green_info("pack %s successfull", option->output);
+
+out_close_fd:
+	close(fd);
+	return ret;
+}
