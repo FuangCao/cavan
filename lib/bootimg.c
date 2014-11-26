@@ -128,7 +128,7 @@ int bootimg_unpack(const char *input, const char *output)
 	char *filename;
 	char pathname[1024];
 	struct bootimg_header hdr;
-	struct bootimg_image images[4];
+	struct bootimg_image images[5];
 
 	fd = open(input, O_RDONLY);
 	if (fd < 0)
@@ -164,6 +164,12 @@ int bootimg_unpack(const char *input, const char *output)
 	{
 		images[count].size = hdr.second_size;
 		images[count++].name = "second.bin";
+	}
+
+	if (hdr.dt_size > 0)
+	{
+		images[count].size = hdr.dt_size;
+		images[count++].name = "dt.bin";
 	}
 
 	images[count].size = 0;
@@ -202,10 +208,6 @@ int bootimg_unpack(const char *input, const char *output)
 			else
 			{
 				ret = file_copy2(fd, pathname, O_WRONLY | O_TRUNC | O_CREAT, 0777);
-				if (ret != (ssize_t) hdr.dt_size)
-				{
-					hdr.dt_size = 0;
-				}
 			}
 
 			if (ret < 0)
