@@ -115,8 +115,8 @@ static int cavan_bootimg_repack(int argc, char *argv[])
 static void show_usage_pack(const char *command)
 {
 	println("Usage: %s [option] [input] [output]", command);
-	println("--help, -h, -H\t\t\t\t%s", cavan_help_message_help);
-	println("--version, -v, -V\t\t\t%s", cavan_help_message_version);
+	println("--help, -h, -H\t\t\t\t\t%s", cavan_help_message_help);
+	println("--version, -v, -V\t\t\t\t%s", cavan_help_message_version);
 	println("--name, --board, -n <boardname>");
 	println("--cmdline, -c <kernel-cmdline>");
 	println("--kernel, -k <filename>");
@@ -127,11 +127,15 @@ static void show_usage_pack(const char *command)
 	println("--unused, u <value,value>");
 	println("--page_size, --pagesize, --ps, -p <size>");
 	println("--check_all, --check-all, --ca, -a\t\tcheck header full sha1sum");
-	println("--base, -b <address>\t\t\tbase load address");
-	println("--kernel_offset, --ko <address>\t\toffset address of --base");
-	println("--ramdisk_offset, --ro <address>\toffset address of --base");
-	println("--second_offset, --so <address>\t\toffset address of --base");
-	println("--tags_offset, --to <address>\t\toffset address of --base");
+	println("--base, -b <address>\t\t\t\tbase load address");
+	println("--kernel_offset, --ko <address>\t\t\toffset of base address");
+	println("--ramdisk_offset, --ro <address>\t\toffset of base address");
+	println("--second_offset, --so <address>\t\t\toffset of base address");
+	println("--tags_offset, --to <address>\t\t\toffset of base address");
+	println("--kernel_addr, --ka <address>\t\t\tphysical load addr");
+	println("--ramdisk_addr, --ra <address>\t\t\tphysical load addr");
+	println("--second_addr, --sa <address>\t\t\tphysical load addr");
+	println("--tags_addr, --ta <address>\t\t\tphysical load addr");
 }
 
 static int cavan_bootimg_pack(int argc, char *argv[])
@@ -218,6 +222,54 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_TAGS_OFFSET,
+		},
+		{
+			.name = "kernel_addr",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_KERNEL_ADDR,
+		},
+		{
+			.name = "ka",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_KERNEL_ADDR,
+		},
+		{
+			.name = "ramdisk_addr",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_RAMDISK_ADDR,
+		},
+		{
+			.name = "ra",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_RAMDISK_ADDR,
+		},
+		{
+			.name = "second_addr",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_SECOND_ADDR,
+		},
+		{
+			.name = "sa",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_SECOND_ADDR,
+		},
+		{
+			.name = "tags_addr",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_TAGS_ADDR,
+		},
+		{
+			.name = "ta",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_TAGS_ADDR,
 		},
 		{
 			.name = "dt",
@@ -315,6 +367,10 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		.ramdisk_offset = BOOTIMG_DEFAULT_RAMDISK_OFFSET,
 		.second_offset = BOOTIMG_DEFAULT_SECOND_OFFSET,
 		.tags_offset = BOOTIMG_DEFAULT_TAGS_OFFSET,
+		.kernel_addr = 0,
+		.ramdisk_addr = 0,
+		.second_addr = 0,
+		.tags_addr = 0,
 		.unused = {0, 0},
 		.check_all = false
 	};
@@ -407,6 +463,22 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_TAGS_OFFSET:
 			option.tags_offset = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case CAVAN_COMMAND_OPTION_KERNEL_ADDR:
+			option.kernel_addr = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case CAVAN_COMMAND_OPTION_RAMDISK_ADDR:
+			option.ramdisk_addr = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case CAVAN_COMMAND_OPTION_SECOND_ADDR:
+			option.second_addr = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case CAVAN_COMMAND_OPTION_TAGS_ADDR:
+			option.tags_addr = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		default:

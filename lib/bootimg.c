@@ -424,10 +424,10 @@ int bootimg_pack(struct bootimg_pack_option *option)
 		}
 	}
 
-	hdr.kernel_addr = option->base + option->kernel_offset;
-	hdr.ramdisk_addr = option->base + option->ramdisk_offset;
-	hdr.second_addr = option->base + option->second_offset;
-	hdr.tags_addr = option->base + option->tags_offset;
+	hdr.kernel_addr = option->kernel_addr ?: option->base + option->kernel_offset;
+	hdr.ramdisk_addr = option->ramdisk_addr ?: option->base + option->ramdisk_offset;
+	hdr.second_addr = option->second_addr ?: option->base + option->second_offset;
+	hdr.tags_addr = option->tags_addr ?: option->base + option->tags_offset;
 
 	if (option->name)
 	{

@@ -98,14 +98,20 @@ struct bootimg_pack_option
 	const char *output;
 
 	u32 page_size;
+	bool check_all;
 
 	u32 base;
 	u32 kernel_offset;
 	u32 ramdisk_offset;
 	u32 second_offset;
 	u32 tags_offset;
+
+	u32 kernel_addr;
+	u32 ramdisk_addr;
+	u32 second_addr;
+	u32 tags_addr;
+
 	u32 unused[2];
-	bool check_all;
 };
 
 void bootimg_header_dump(struct bootimg_header *hdr);
