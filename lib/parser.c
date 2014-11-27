@@ -309,14 +309,17 @@ struct buffer *replace_prefix_line(struct buffer *buff, const char *prefix, int 
 	return new_buff;
 }
 
-ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, struct equation *lines, size_t count)
+ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, int (*handler)(char *key, char *value, void *data), void *data)
 {
 	const char *buff_tmp, *buff_end = buff + bufflen;
-	struct equation *line_end = lines + count, *line_bak = lines;
-	char *p, *p_bak;
 
-	while (buff < buff_end && lines < line_end)
+	while (buff < buff_end)
 	{
+		int ret;
+		char key[64];
+		char value[4096];
+		char *p, *p_bak, *p_end;
+
 		buff_tmp = buff;
 
 		while (buff_tmp < buff_end && *buff_tmp != '\n')
@@ -324,7 +327,7 @@ ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, struct equ
 			buff_tmp++;
 		}
 
-		while (buff < buff_tmp && text_has_char(" \t\r", *buff))
+		while (buff < buff_tmp && byte_is_space_or_lf(*buff))
 		{
 			buff++;
 		}
@@ -334,9 +337,10 @@ ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, struct equ
 			goto label_goto_next_line;
 		}
 
-		p_bak = p = lines->option;
+		p_bak = p = key;
+		p_end = p + sizeof(key) - 1;
 
-		while (buff < buff_tmp && *buff != sep)
+		while (buff < buff_tmp && *buff != sep && p < p_end)
 		{
 			*p++ = *buff++;
 		}
@@ -346,17 +350,18 @@ ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, struct equ
 			goto label_goto_next_line;
 		}
 
-		while (--p >= p_bak && text_has_char(" \t\r", *p));
+		while (--p >= p_bak && byte_is_space_or_lf(*p));
 
 		p[1] = 0;
 		buff++;
 
-		while (buff < buff_tmp && text_has_char(" \t\r", *buff))
+		while (buff < buff_tmp && byte_is_space_or_lf(*buff))
 		{
 			buff++;
 		}
 
-		p_bak = p = lines->value;
+		p_bak = p = value;
+		p_end = p + sizeof(value) - 1;
 
 		while (buff < buff_tmp && *buff != '\n')
 		{
@@ -368,32 +373,87 @@ ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, struct equ
 			goto label_goto_next_line;
 		}
 
-		while (--p >= p_bak && text_has_char(" \t\r", *p));
+		while (--p >= p_bak && byte_is_space_or_lf(*p));
 
 		p[1] = 0;
 
-		// println("%s = %s", lines->option, lines->value);
-		lines++;
+		ret = handler(key, value, data);
+		if (ret <= 0)
+		{
+			if (ret < 0)
+			{
+				return ret;
+			}
+
+			break;
+		}
 
 label_goto_next_line:
 		buff = buff_tmp + 1;
 	}
 
-	return lines - line_bak;
+	return 0;
 }
 
-ssize_t parse_config_file2(const char *filepath, size_t max_size, char sep, struct equation *lines, size_t count)
+ssize_t parse_config_file2(const char *pathname, char sep, int (*handler)(char *key, char *value, void *data), void *data)
 {
-	char buff[max_size];
-	ssize_t readlen;
+	ssize_t ret;
+	size_t size;
+	char *content;
 
-	readlen = file_read(filepath, buff, sizeof(buff));
-	if (readlen < 0)
+	content = file_read_all_text(pathname, &size);
+	if (content == NULL)
 	{
-		print_error("read file \"%s\"", filepath);
-		return readlen;
+		pr_red_info("file_read_all_text");
+		return -EFAULT;
 	}
 
-	return parse_config_file(buff, readlen, sep, lines, count);
+	ret = parse_config_file(content, size, sep, handler, data);
+	free(content);
+
+	return ret;
 }
 
+struct parse_config_file_simple_context
+{
+	struct equation *lines;
+	size_t size;
+	size_t count;
+};
+
+static int parse_config_file_simple_handler(char *key, char *value, void *data)
+{
+	struct parse_config_file_simple_context *context = data;
+
+	if (context->count < context->size)
+	{
+		struct equation *line = context->lines + context->count;
+
+		strncpy(line->option, key, sizeof(line->option));
+		strncpy(line->value, value, sizeof(line->value));
+		context->count++;
+
+		return 1;
+	}
+
+	return 0;
+}
+
+ssize_t parse_config_file_simple(const char *pathname, char sep, struct equation *lines, size_t size)
+{
+	ssize_t ret;
+	struct parse_config_file_simple_context context =
+	{
+		.count = 0,
+		.size = size,
+		.lines = lines,
+	};
+
+	ret = parse_config_file2(pathname, sep, parse_config_file_simple_handler, &context);
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	return context.count;
+}

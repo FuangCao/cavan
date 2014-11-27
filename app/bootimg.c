@@ -124,6 +124,7 @@ static void show_usage_pack(const char *command)
 	println("--second, -s <filename>");
 	println("--dt, -d <filename>");
 	println("--remain <filename>");
+	println("--config <filename>");
 	println("--unused, u <value,value>");
 	println("--page_size, --pagesize, --ps, -p <size>");
 	println("--check_all, --check-all, --ca, -a\t\tcheck header full sha1sum");
@@ -141,7 +142,6 @@ static void show_usage_pack(const char *command)
 static int cavan_bootimg_pack(int argc, char *argv[])
 {
 	int c;
-	int ret;
 	int option_index;
 	struct option long_option[] =
 	{
@@ -332,6 +332,12 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_REMAIN,
 		},
 		{
+			.name = "config",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_CONFIG,
+		},
+		{
 			.name = "check_all",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -361,6 +367,7 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		.dt = NULL,
 		.cmdline = NULL,
 		.name = NULL,
+		.config = NULL,
 		.page_size = BOOTIMG_DEFAULT_PAGE_SIZE,
 		.base = BOOTIMG_DEFAULT_BASE,
 		.kernel_offset = BOOTIMG_DEFAULT_KERNEL_OFFSET,
@@ -374,8 +381,6 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		.unused = {0, 0},
 		.check_all = false
 	};
-	char *board = NULL;
-	char *cmdline = NULL;
 
 	while ((c = getopt_long(argc, argv, "vVhHn:c:k:r:s:d:u:p:b:a", long_option, &option_index)) != EOF)
 	{
@@ -427,6 +432,10 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_REMAIN:
 			option.remain = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_CONFIG:
+			option.config = optarg;
 			break;
 
 		case 'u':
@@ -514,14 +523,9 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 			option.remain = FILE_REMAIN_NAME;
 		}
 
-		if (option.cmdline == NULL && file_access_e(FILE_CMDLINE_NAME))
+		if (option.config == NULL && file_access_e(FILE_CONFIG_TXT))
 		{
-			option.cmdline = cmdline = file_read_all_text(FILE_CMDLINE_NAME, NULL);
-		}
-
-		if (option.name == NULL && file_access_e(FILE_BOARD_NAME))
-		{
-			option.name = board = file_read_all_text(FILE_BOARD_NAME, NULL);
+			option.config = FILE_CONFIG_TXT;
 		}
 	}
 
@@ -534,19 +538,7 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		option.output = FILE_BOOTIMG_NAME;
 	}
 
-	ret = bootimg_pack(&option);
-
-	if (cmdline)
-	{
-		free(cmdline);
-	}
-
-	if (board)
-	{
-		free(board);
-	}
-
-	return ret;
+	return bootimg_pack(&option);
 }
 
 // ============================================================

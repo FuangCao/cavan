@@ -464,7 +464,7 @@ enum swan_board_type get_swan_board_type(void)
 	struct equation lines[100], *p, *p_end;
 	ssize_t count;
 
-	count = parse_config_file2(FILE_PROC_CPUINFO, FILE_CPUINFO_SIZE, ':', lines, ARRAY_SIZE(lines));
+	count = parse_config_file_simple(FILE_PROC_CPUINFO, ':', lines, ARRAY_SIZE(lines));
 	if (count < 0)
 	{
 		error_msg("parse_config_file2");

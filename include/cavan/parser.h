@@ -34,8 +34,9 @@ char *find_next_line(struct buffer *buff, char *line);
 char *mem_area_copy(char *dest, const char *src, const char *src_end);
 struct buffer *replace_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, const char *new_line, int new_line_size);
 
-ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, struct equation *line, size_t count);
-ssize_t parse_config_file2(const char *filepath, size_t max_size, char sep, struct equation *lines, size_t count);
+ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, int (*handler)(char *key, char *value, void *data), void *data);
+ssize_t parse_config_file2(const char *pathname, char sep, int (*handler)(char *key, char *value, void *data), void *data);
+ssize_t parse_config_file_simple(const char *filepath, char sep, struct equation *lines, size_t count);
 
 static inline void parse_parameter(const char *parameter)
 {

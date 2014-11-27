@@ -1027,7 +1027,7 @@ enum swan_board_type get_swan_board_type_by_build_prop(const char *build_prop)
 	struct equation lines[200], *p, *p_end;
 	ssize_t count;
 
-	count = parse_config_file2(build_prop, MAX_BUILD_PROP_LEN, '=', lines, ARRAY_SIZE(lines));
+	count = parse_config_file_simple(build_prop, '=', lines, ARRAY_SIZE(lines));
 	if (count < 0)
 	{
 		error_msg("parse_config_file2");

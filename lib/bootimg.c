@@ -19,6 +19,7 @@
 
 #include <cavan.h>
 #include <cavan/sha.h>
+#include <cavan/parser.h>
 #include <cavan/bootimg.h>
 
 void bootimg_header_dump(struct bootimg_header *hdr)
@@ -41,6 +42,25 @@ void bootimg_header_dump(struct bootimg_header *hdr)
 	println("cmdline = \"%s\"", hdr->cmdline);
 	println("extra_cmdline = \"%s\"", hdr->extra_cmdline);
 	println("id = %s", cavan_shasum_tostring((u8 *) hdr->id, sizeof(hdr->id), buff, sizeof(buff)));
+}
+
+static void bootimg_copy_cmdline(struct bootimg_header *hdr, const char *cmdline)
+{
+	char *p, *p_end;
+
+	for (p = (char *) hdr->cmdline, p_end = p + sizeof(hdr->cmdline) - 1; p < p_end && *cmdline; p++, cmdline++)
+	{
+		*p = *cmdline;
+	}
+
+	*p = 0;
+
+	for (p = (char *) hdr->extra_cmdline, p_end = p + sizeof(hdr->extra_cmdline) - 1; p < p_end && *cmdline; p++, cmdline++)
+	{
+		*p = *cmdline;
+	}
+
+	*p = 0;
 }
 
 int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *pathname, bool dt_support)
@@ -120,6 +140,92 @@ out_close_fd:
 	return ret;
 }
 
+int bootimg_write_config_file(const struct bootimg_header *hdr, const char *pathname)
+{
+	int fd;
+	int ret;
+
+	println("write config file `%s'", pathname);
+
+	fd = open(pathname, O_WRONLY | O_TRUNC | O_CREAT, 0777);
+	if (fd < 0)
+	{
+		pr_error_info("open file %s", pathname);
+		return fd;
+	}
+
+	ret = ffile_printf(fd, "kernel_addr: 0x%08x\n", hdr->kernel_addr);
+	ret |= ffile_printf(fd, "ramdisk_addr: 0x%08x\n", hdr->ramdisk_addr);
+	ret |= ffile_printf(fd, "second_addr: 0x%08x\n", hdr->second_addr);
+	ret |= ffile_printf(fd, "tags_addr: 0x%08x\n", hdr->tags_addr);
+	ret |= ffile_printf(fd, "page_size: %d\n", hdr->page_size);
+	ret |= ffile_printf(fd, "unused: 0x%08x,0x%08x\n", hdr->unused[0], hdr->unused[1]);
+
+	if (hdr->name[0])
+	{
+		ret |= ffile_printf(fd, "board: %s\n", hdr->name);
+	}
+
+	if (hdr->cmdline[0])
+	{
+		ret |= ffile_printf(fd, "cmdline: %s%s\n", hdr->cmdline, hdr->extra_cmdline);
+	}
+
+	close(fd);
+
+	return ret;
+}
+
+static int bootimg_parse_config_handler(char *key, char *value, void *data)
+{
+	struct bootimg_header *hdr = data;
+
+	if (strcmp(key, "kernel_addr") == 0)
+	{
+		hdr->kernel_addr = text2value_unsigned(value, NULL, 16);
+	}
+	else if (strcmp(key, "ramdisk_addr") == 0)
+	{
+		hdr->ramdisk_addr = text2value_unsigned(value, NULL, 16);
+	}
+	else if (strcmp(key, "second_addr") == 0)
+	{
+		hdr->second_addr = text2value_unsigned(value, NULL, 16);
+	}
+	else if (strcmp(key, "tags_addr") == 0)
+	{
+		hdr->tags_addr = text2value_unsigned(value, NULL, 16);
+	}
+	else if (strcmp(key, "page_size") == 0)
+	{
+		hdr->page_size = text2value_unsigned(value, NULL, 10);
+	}
+	else if (strcmp(key, "unused") == 0)
+	{
+		text2array(value, hdr->unused, 2, ',');
+	}
+	else if (strcmp(key, "board") == 0)
+	{
+		strncpy((char *) hdr->name, value, sizeof(hdr->name));
+	}
+	else if (strcmp(key, "cmdline") == 0)
+	{
+		bootimg_copy_cmdline(hdr, value);
+	}
+	else
+	{
+		pr_red_info("unknown key %s", key);
+		return -EINVAL;
+	}
+
+	return 1;
+}
+
+int bootimg_parse_config_file(struct bootimg_header *hdr, const char *pathname)
+{
+	return parse_config_file2(pathname, ':', bootimg_parse_config_handler, hdr);
+}
+
 int bootimg_unpack(const char *input, const char *output, bool dt_support)
 {
 	int fd;
@@ -175,6 +281,11 @@ int bootimg_unpack(const char *input, const char *output, bool dt_support)
 		images[count].size = hdr.second_size;
 		images[count++].name = FILE_SECOND_NAME;
 	}
+	else
+	{
+		strcpy(filename, FILE_SECOND_NAME);
+		unlink(filename);
+	}
 
 	if (hdr.dt_size > 0 && dt_support)
 	{
@@ -225,7 +336,7 @@ int bootimg_unpack(const char *input, const char *output, bool dt_support)
 
 	if (hdr.cmdline[0])
 	{
-		strcpy(filename, "cmdline.txt");
+		strcpy(filename, FILE_CMDLINE_TXT);
 		println("cmdline -> %s", pathname);
 
 		if (hdr.extra_cmdline[0])
@@ -254,25 +365,21 @@ int bootimg_unpack(const char *input, const char *output, bool dt_support)
 		}
 	}
 
-	if (hdr.name[0])
-	{
-		strcpy(filename, "board.txt");
-		println("board name -> %s", pathname);
-
-		ret = file_writeto(pathname, hdr.name, strlen((char *) hdr.name), 0, O_TRUNC);
-		if (ret < 0)
-		{
-			pr_red_info("file_writeto");
-			goto out_close_fd;
-		}
-	}
-
-	strcpy(filename, "repack.sh");
+	strcpy(filename, FILE_REPACK_SH);
 
 	ret = bootimg_gen_repack_script(&hdr, pathname, dt_support);
 	if (ret < 0)
 	{
 		pr_red_info("bootimg_gen_pack_script");
+		goto out_close_fd;
+	}
+
+	strcpy(filename, FILE_CONFIG_TXT);
+
+	ret = bootimg_write_config_file(&hdr, pathname);
+	if (ret < 0)
+	{
+		pr_red_info("bootimg_write_config_file");
 		goto out_close_fd;
 	}
 
@@ -372,7 +479,37 @@ int bootimg_pack(struct bootimg_pack_option *option)
 	}
 
 	memset(&hdr, 0, sizeof(hdr));
-	memcpy(hdr.unused, option->unused, sizeof(hdr.unused));
+	memcpy(hdr.magic, BOOT_MAGIC, sizeof(hdr.magic));
+
+	if (option->config)
+	{
+		ret = bootimg_parse_config_file(&hdr, option->config);
+		if (ret < 0)
+		{
+			pr_red_info("bootimg_parse_config_file");
+			goto out_close_fd;
+		}
+	}
+	else
+	{
+		memcpy(hdr.unused, option->unused, sizeof(hdr.unused));
+
+		hdr.page_size = option->page_size;
+		hdr.kernel_addr = option->kernel_addr ?: option->base + option->kernel_offset;
+		hdr.ramdisk_addr = option->ramdisk_addr ?: option->base + option->ramdisk_offset;
+		hdr.second_addr = option->second_addr ?: option->base + option->second_offset;
+		hdr.tags_addr = option->tags_addr ?: option->base + option->tags_offset;
+
+		if (option->name)
+		{
+			strncpy((char *) hdr.name, option->name, sizeof(hdr.name));
+		}
+
+		if (option->cmdline)
+		{
+			bootimg_copy_cmdline(&hdr, option->cmdline);
+		}
+	}
 
 	images[0].name = option->kernel;
 	images[0].size_addr = &hdr.kernel_size;
@@ -397,7 +534,7 @@ int bootimg_pack(struct bootimg_pack_option *option)
 		{
 			println("write image %s", p->name);
 
-			ret = bootimg_write_image(fd, p->name, p->size_addr, option->page_size, &context);
+			ret = bootimg_write_image(fd, p->name, p->size_addr, hdr.page_size, &context);
 			if (ret < 0)
 			{
 				pr_red_info("bootimg_write_image");
@@ -423,39 +560,6 @@ int bootimg_pack(struct bootimg_pack_option *option)
 			goto out_close_fd;
 		}
 	}
-
-	hdr.kernel_addr = option->kernel_addr ?: option->base + option->kernel_offset;
-	hdr.ramdisk_addr = option->ramdisk_addr ?: option->base + option->ramdisk_offset;
-	hdr.second_addr = option->second_addr ?: option->base + option->second_offset;
-	hdr.tags_addr = option->tags_addr ?: option->base + option->tags_offset;
-
-	if (option->name)
-	{
-		strncpy((char *) hdr.name, option->name, sizeof(hdr.name));
-	}
-
-	if (option->cmdline)
-	{
-		char *p, *p_end;
-		const char *cmdline = option->cmdline;
-
-		for (p = (char *) hdr.cmdline, p_end = p + sizeof(hdr.cmdline) - 1; p < p_end && *cmdline; p++, cmdline++)
-		{
-			*p = *cmdline;
-		}
-
-		*p = 0;
-
-		for (p = (char *) hdr.extra_cmdline, p_end = p + sizeof(hdr.extra_cmdline) - 1; p < p_end && *cmdline; p++, cmdline++)
-		{
-			*p = *cmdline;
-		}
-
-		*p = 0;
-	}
-
-	hdr.page_size = option->page_size;
-	memcpy(hdr.magic, BOOT_MAGIC, sizeof(hdr.magic));
 
 	if (option->check_all)
 	{

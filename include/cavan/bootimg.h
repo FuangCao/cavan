@@ -42,9 +42,9 @@
 #define FILE_SECOND_NAME				"second.bin"
 #define FILE_DT_NAME					"dt.img"
 #define FILE_REMAIN_NAME				"remain.bin"
-#define FILE_BOARD_NAME					"board.txt"
-#define FILE_CMDLINE_NAME				"cmdline.txt"
 #define FILE_REPACK_SH					"repack.sh"
+#define FILE_CONFIG_TXT					"config.txt"
+#define FILE_CMDLINE_TXT				"cmdline.txt"
 
 struct bootimg_header
 {
@@ -96,6 +96,7 @@ struct bootimg_pack_option
 	const char *cmdline;
 	const char *name;
 	const char *output;
+	const char *config;
 
 	u32 page_size;
 	bool check_all;
@@ -117,6 +118,8 @@ struct bootimg_pack_option
 void bootimg_header_dump(struct bootimg_header *hdr);
 int bootimg_unpack(const char *input, const char *output, bool dt_support);
 int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *pathname, bool dt_support);
+int bootimg_write_config_file(const struct bootimg_header *hdr, const char *pathname);
+int bootimg_parse_config_file(struct bootimg_header *hdr, const char *pathname);
 int bootimg_pack(struct bootimg_pack_option *option);
 
 static inline ssize_t bootimg_read_header(int fd, struct bootimg_header *hdr)
