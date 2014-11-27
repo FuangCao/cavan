@@ -50,8 +50,10 @@ u64 clock_gettime_us(clockid_t clk);
 u64 clock_gettime_ms(clockid_t clk);
 
 int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2);
-int cavan_timespec_diff(const struct timespec *t1, const struct timespec *t2);
-int cavan_real_timespec_diff(const struct timespec *time);
+s64 cavan_timespec_sub_ms(const struct timespec *t1, const struct timespec *t2);
+s64 cavan_timespec_sub_us(const struct timespec *t1, const struct timespec *t2);
+s64 cavan_timespec_sub_ns(const struct timespec *t1, const struct timespec *t2);
+s64 cavan_real_timespec_diff(const struct timespec *time);
 void cavan_timer_timespec_add(struct timespec *time, u32 timeout);
 void cavan_timer_set_timespec(struct timespec *time, u32 timeout);
 

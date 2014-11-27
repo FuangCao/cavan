@@ -37,7 +37,9 @@ struct speed_detector
 };
 
 int speed_detector_start(struct speed_detector *detector, u32 interval);
-u32 speed_detector_get_time_consume(struct speed_detector *detector);
+s64 speed_detector_get_time_consume_ms(struct speed_detector *detector);
+s64 speed_detector_get_time_consume_us(struct speed_detector *detector);
+s64 speed_detector_get_time_consume_ns(struct speed_detector *detector);
 
 static inline void speed_detector_stop(struct speed_detector *detector)
 {

@@ -163,7 +163,7 @@ void progress_bar_set(struct progress_bar *bar, double val)
 
 void progress_bar_finish(struct progress_bar *bar)
 {
-	u32 time;
+	double time;
 	struct speed_detector *detector = &bar->detector;
 
 	speed_detector_stop(&bar->detector);
@@ -173,14 +173,14 @@ void progress_bar_finish(struct progress_bar *bar)
 
 	print_char('\n');
 
-	time = speed_detector_get_time_consume(detector);
-	if (time > 0)
+	time = speed_detector_get_time_consume_ns(detector);
+	if (time > 1000)
 	{
 		char size_buff[32];
 		char speed_buff[32];
 
 		mem_size_tostring(bar->total, size_buff, sizeof(size_buff));
-		mem_speed_tostring(bar->total * 1000 / time, speed_buff, sizeof(speed_buff));
-		println("%s (%s in %d ms)", speed_buff, size_buff, time);
+		mem_speed_tostring(bar->total * 1000000000 / time, speed_buff, sizeof(speed_buff));
+		println("%s (%s in %lf ms)", speed_buff, size_buff, time / 1000000);
 	}
 }

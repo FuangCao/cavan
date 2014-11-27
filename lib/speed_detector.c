@@ -61,11 +61,29 @@ int speed_detector_start(struct speed_detector *detector, u32 interval)
 	return cavan_thread_run(thread, detector);
 }
 
-u32 speed_detector_get_time_consume(struct speed_detector *detector)
+s64 speed_detector_get_time_consume_ms(struct speed_detector *detector)
 {
 	struct timespec time_now;
 
 	clock_gettime_real(&time_now);
 
-	return cavan_timespec_diff(&time_now, &detector->time_start);
+	return cavan_timespec_sub_ms(&time_now, &detector->time_start);
+}
+
+s64 speed_detector_get_time_consume_us(struct speed_detector *detector)
+{
+	struct timespec time_now;
+
+	clock_gettime_real(&time_now);
+
+	return cavan_timespec_sub_us(&time_now, &detector->time_start);
+}
+
+s64 speed_detector_get_time_consume_ns(struct speed_detector *detector)
+{
+	struct timespec time_now;
+
+	clock_gettime_real(&time_now);
+
+	return cavan_timespec_sub_ns(&time_now, &detector->time_start);
 }

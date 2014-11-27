@@ -77,18 +77,28 @@ int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2)
 	return 0;
 }
 
-int cavan_timespec_diff(const struct timespec *t1, const struct timespec *t2)
+s64 cavan_timespec_sub_ms(const struct timespec *t1, const struct timespec *t2)
 {
-	return (t1->tv_sec - t2->tv_sec) * 1000 + (t1->tv_nsec - t2->tv_nsec) / 1000000;
+	return ((s64) (t1->tv_sec - t2->tv_sec)) * 1000 + (t1->tv_nsec - t2->tv_nsec) / 1000000;
 }
 
-int cavan_real_timespec_diff(const struct timespec *time)
+s64 cavan_timespec_sub_us(const struct timespec *t1, const struct timespec *t2)
+{
+	return ((s64) (t1->tv_sec - t2->tv_sec)) * 1000000 + (t1->tv_nsec - t2->tv_nsec) / 1000;
+}
+
+s64 cavan_timespec_sub_ns(const struct timespec *t1, const struct timespec *t2)
+{
+	return ((s64) (t1->tv_sec - t2->tv_sec)) * 1000000000 + (t1->tv_nsec - t2->tv_nsec);
+}
+
+s64 cavan_real_timespec_diff(const struct timespec *time)
 {
 	struct timespec curr_time;
 
 	clock_gettime(CLOCK_REALTIME, &curr_time);
 
-	return cavan_timespec_diff(time, &curr_time);
+	return cavan_timespec_sub_ms(time, &curr_time);
 }
 
 void cavan_timer_timespec_add(struct timespec *time, u32 timeout)
