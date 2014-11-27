@@ -34,6 +34,18 @@
 #define BOOTIMG_DEFAULT_SECOND_OFFSET	0x00f00000
 #define BOOTIMG_DEFAULT_TAGS_OFFSET		0x00000100
 
+#define CMD_MKBOOTIMG					"mkbootimg"
+#define FILE_BOOTIMG_NAME				"boot.img"
+#define FILE_BOOTIMG_REPACK_NAME		"boot-repack.img"
+#define FILE_KERNEL_NAME				"kernel.bin"
+#define FILE_RAMDISK_NAME				"ramdisk.img"
+#define FILE_SECOND_NAME				"second.bin"
+#define FILE_DT_NAME					"dt.img"
+#define FILE_REMAIN_NAME				"remain.bin"
+#define FILE_BOARD_NAME					"board.txt"
+#define FILE_CMDLINE_NAME				"cmdline.txt"
+#define FILE_REPACK_SH					"repack.sh"
+
 struct bootimg_header
 {
     unsigned char magic[BOOT_MAGIC_SIZE];
@@ -80,6 +92,7 @@ struct bootimg_pack_option
 	const char *ramdisk;
 	const char *second;
 	const char *dt;
+	const char *remain;
 	const char *cmdline;
 	const char *name;
 	const char *output;
@@ -92,11 +105,12 @@ struct bootimg_pack_option
 	u32 second_offset;
 	u32 tags_offset;
 	u32 unused[2];
+	bool check_all;
 };
 
 void bootimg_header_dump(struct bootimg_header *hdr);
-int bootimg_unpack(const char *input, const char *output);
-int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *pathname);
+int bootimg_unpack(const char *input, const char *output, bool dt_support);
+int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *pathname, bool dt_support);
 int bootimg_pack(struct bootimg_pack_option *option);
 
 static inline ssize_t bootimg_read_header(int fd, struct bootimg_header *hdr)

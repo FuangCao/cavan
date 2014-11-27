@@ -2874,7 +2874,7 @@ void *file_read_all(const char *pathname, size_t extra, size_t *size)
 		free(mem);
 		mem = NULL;
 	}
-	else
+	else if (size)
 	{
 		*size = rdlen;
 	}
@@ -2886,13 +2886,21 @@ out_close_fd:
 
 char *file_read_all_text(const char *pathname, size_t *size)
 {
-	char *file_mem = (char *) file_read_all(pathname, 1, size);
+	size_t file_size;
+
+	char *file_mem = (char *) file_read_all(pathname, 1, &file_size);
 	if (file_mem == NULL)
 	{
 		return NULL;
 	}
 
-	file_mem[*size] = 0;
+	file_mem[file_size] = 0;
+
+	if (size)
+	{
+		*size = file_size;
+	}
+
 	return file_mem;
 }
 

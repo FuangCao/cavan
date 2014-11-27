@@ -43,7 +43,7 @@ void bootimg_header_dump(struct bootimg_header *hdr)
 	println("id = %s", cavan_shasum_tostring((u8 *) hdr->id, sizeof(hdr->id), buff, sizeof(buff)));
 }
 
-int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *pathname)
+int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *pathname, bool dt_support)
 {
 	int fd;
 	int ret;
@@ -76,27 +76,27 @@ int bootimg_gen_repack_script(const struct bootimg_header *hdr, const char *path
 	}
 
 	ret = ffile_puts(fd, "#!/bin/bash\n\n");
-	ret |= ffile_puts(fd, "CMD_MKBOOTIMG=\"mkbootimg\"\n\n");
-	ret |= ffile_printf(fd, "${CMD_MKBOOTIMG} --output boot-repack.img --pagesize %d --base 0x%x --tags_offset 0x%x", hdr->page_size, base, hdr->tags_addr - base);
+	ret |= ffile_puts(fd, "CMD_MKBOOTIMG=\"" CMD_MKBOOTIMG "\"\n\n");
+	ret |= ffile_printf(fd, "${CMD_MKBOOTIMG} --output " FILE_BOOTIMG_REPACK_NAME " --pagesize %d --base 0x%x --tags_offset 0x%x", hdr->page_size, base, hdr->tags_addr - base);
 
 	if (hdr->kernel_size > 0)
 	{
-		ret |= ffile_printf(fd, " --kernel kernel.bin --kernel_offset 0x%x", hdr->kernel_addr - base);
+		ret |= ffile_printf(fd, " --kernel " FILE_KERNEL_NAME " --kernel_offset 0x%x", hdr->kernel_addr - base);
 	}
 
 	if (hdr->ramdisk_size > 0)
 	{
-		ret |= ffile_printf(fd, " --ramdisk ramdisk.img --ramdisk_offset 0x%x", hdr->ramdisk_addr - base);
+		ret |= ffile_printf(fd, " --ramdisk " FILE_RAMDISK_NAME " --ramdisk_offset 0x%x", hdr->ramdisk_addr - base);
 	}
 
 	if (hdr->second_size > 0)
 	{
-		ret |= ffile_printf(fd, " --second second.bin --second_offset 0x%x", hdr->second_addr - base);
+		ret |= ffile_printf(fd, " --second " FILE_SECOND_NAME " --second_offset 0x%x", hdr->second_addr - base);
 	}
 
-	if (hdr->dt_size > 0)
+	if (hdr->dt_size > 0 && dt_support)
 	{
-		ret |= ffile_printf(fd, " --dt remain.bin");
+		ret |= ffile_printf(fd, " --dt " FILE_DT_NAME);
 	}
 
 	if (hdr->name[0])
@@ -120,7 +120,7 @@ out_close_fd:
 	return ret;
 }
 
-int bootimg_unpack(const char *input, const char *output)
+int bootimg_unpack(const char *input, const char *output, bool dt_support)
 {
 	int fd;
 	int ret;
@@ -128,7 +128,7 @@ int bootimg_unpack(const char *input, const char *output)
 	char *filename;
 	char pathname[1024];
 	struct bootimg_header hdr;
-	struct bootimg_image images[5];
+	struct bootimg_image images[4];
 
 	fd = open(input, O_RDONLY);
 	if (fd < 0)
@@ -146,35 +146,6 @@ int bootimg_unpack(const char *input, const char *output)
 
 	bootimg_header_dump(&hdr);
 
-	count = 0;
-
-	if (hdr.kernel_size > 0)
-	{
-		images[count].size = hdr.kernel_size;
-		images[count++].name = "kernel.bin";
-	}
-
-	if (hdr.ramdisk_size > 0)
-	{
-		images[count].size = hdr.ramdisk_size;
-		images[count++].name = "ramdisk.img";
-	}
-
-	if (hdr.second_size > 0)
-	{
-		images[count].size = hdr.second_size;
-		images[count++].name = "second.bin";
-	}
-
-	if (hdr.dt_size > 0)
-	{
-		images[count].size = hdr.dt_size;
-		images[count++].name = "dt.bin";
-	}
-
-	images[count].size = 0;
-	images[count++].name = "remain.bin";
-
 	filename = text_copy(pathname, output);
 	ret = mkdir_hierarchy(pathname, 0777);
 	if (ret < 0)
@@ -185,24 +156,58 @@ int bootimg_unpack(const char *input, const char *output)
 
 	*filename++ = '/';
 
+	count = 0;
+
+	if (hdr.kernel_size > 0)
+	{
+		images[count].size = hdr.kernel_size;
+		images[count++].name = FILE_KERNEL_NAME;
+	}
+
+	if (hdr.ramdisk_size > 0)
+	{
+		images[count].size = hdr.ramdisk_size;
+		images[count++].name = FILE_RAMDISK_NAME;
+	}
+
+	if (hdr.second_size > 0)
+	{
+		images[count].size = hdr.second_size;
+		images[count++].name = FILE_SECOND_NAME;
+	}
+
+	if (hdr.dt_size > 0 && dt_support)
+	{
+		images[count].size = hdr.dt_size;
+		images[count++].name = FILE_DT_NAME;
+	}
+	else
+	{
+		strcpy(filename, FILE_DT_NAME);
+		unlink(filename);
+	}
+
+	images[count].size = 0;
+	images[count++].name = FILE_REMAIN_NAME;
+
 	if (count > 0)
 	{
 		struct bootimg_image *p, *p_end;
 
 		for (p = images, p_end = p + count; p < p_end; p++)
 		{
-			ret = cavan_file_seek_next_page(fd, hdr.page_size);
-			if (ret < 0)
-			{
-				pr_red_info("cavan_file_seek_next_page");
-				goto out_close_fd;
-			}
-
 			strcpy(filename, p->name);
 			println("%s -> %s", p->name, pathname);
 
 			if (p->size > 0)
 			{
+				ret = cavan_file_seek_next_page(fd, hdr.page_size);
+				if (ret < 0)
+				{
+					pr_red_info("cavan_file_seek_next_page");
+					goto out_close_fd;
+				}
+
 				ret = file_ncopy2(fd, pathname, p->size, O_WRONLY | O_TRUNC | O_CREAT, 0777);
 			}
 			else
@@ -264,7 +269,7 @@ int bootimg_unpack(const char *input, const char *output)
 
 	strcpy(filename, "repack.sh");
 
-	ret = bootimg_gen_repack_script(&hdr, pathname);
+	ret = bootimg_gen_repack_script(&hdr, pathname, dt_support);
 	if (ret < 0)
 	{
 		pr_red_info("bootimg_gen_pack_script");
@@ -282,6 +287,13 @@ static int bootimg_write_image(int fd, const char *pathname, unsigned *size, uns
 	int ret;
 	int img_fd;
 	ssize_t wrlen;
+
+	ret = cavan_file_seek_next_page(fd, page_size);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_file_seek_next_page");
+		return ret;
+	}
 
 	img_fd = open(pathname, O_RDONLY);
 	if (img_fd < 0)
@@ -313,15 +325,7 @@ static int bootimg_write_image(int fd, const char *pathname, unsigned *size, uns
 		goto out_close_img_fd;
 	}
 
-	ret = cavan_file_seek_next_page(fd, page_size);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_file_seek_next_page");
-		goto out_close_img_fd;
-	}
-
 	*size = wrlen;
-	cavan_sha_update(context, size, sizeof(*size));
 
 out_close_img_fd:
 	close(img_fd);
@@ -330,12 +334,12 @@ out_close_img_fd:
 
 int bootimg_pack(struct bootimg_pack_option *option)
 {
-	int i;
 	int fd;
 	int ret;
 	int image_count;
 	struct bootimg_header hdr;
 	struct bootimg_image images[4];
+	struct bootimg_image *p, *p_end;
 	struct cavan_sha_context context;
 
 	if (option->kernel == NULL || option->ramdisk == NULL)
@@ -351,7 +355,7 @@ int bootimg_pack(struct bootimg_pack_option *option)
 		return fd;
 	}
 
-	ret = cavan_file_seek_page_align(fd, sizeof(hdr), option->page_size);
+	ret = lseek(fd, sizeof(hdr), SEEK_SET);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_file_seek_page_align");
@@ -370,42 +374,60 @@ int bootimg_pack(struct bootimg_pack_option *option)
 	memset(&hdr, 0, sizeof(hdr));
 	memcpy(hdr.unused, option->unused, sizeof(hdr.unused));
 
-	images[0].size_addr = &hdr.kernel_size;
 	images[0].name = option->kernel;
+	images[0].size_addr = &hdr.kernel_size;
 
-	images[1].size_addr = &hdr.ramdisk_size;
 	images[1].name = option->ramdisk;
+	images[1].size_addr = &hdr.ramdisk_size;
 
-	image_count = 2;
+	images[2].name = option->second;
+	images[2].size_addr = &hdr.second_size;
 
-	if (option->second)
-	{
-		images[image_count].size_addr = &hdr.second_size;
-		images[image_count++].name = option->second;
-	}
+	image_count = 3;
 
 	if (option->dt)
 	{
-		images[image_count].size_addr = &hdr.dt_size;
-		images[image_count++].name = option->dt;
+		images[image_count].name = option->dt;
+		images[image_count++].size_addr = &hdr.dt_size;
 	}
 
-	for (i = 0; i < image_count; i++)
+	for (p = images, p_end = p + image_count; p < p_end; p++)
 	{
-		println("write image %s", images[i].name);
+		if (p->name)
+		{
+			println("write image %s", p->name);
 
-		ret = bootimg_write_image(fd, images[i].name, images[i].size_addr, option->page_size, &context);
+			ret = bootimg_write_image(fd, p->name, p->size_addr, option->page_size, &context);
+			if (ret < 0)
+			{
+				pr_red_info("bootimg_write_image");
+				goto out_close_fd;
+			}
+		}
+		else
+		{
+			*p->size_addr = 0;
+		}
+
+		cavan_sha_update(&context, p->size_addr, sizeof(unsigned));
+	}
+
+	if (option->remain)
+	{
+		println("write remain image %s", option->remain);
+
+		ret = file_copy3(option->remain, fd);
 		if (ret < 0)
 		{
-			pr_red_info("bootimg_write_image");
+			pr_red_info("file_copy3");
 			goto out_close_fd;
 		}
 	}
 
-	cavan_sha_finish(&context, (u8 *) hdr.id);
-
-	hdr.page_size = option->page_size;
-	memcpy(hdr.magic, BOOT_MAGIC, sizeof(hdr.magic));
+	hdr.kernel_addr = option->base + option->kernel_offset;
+	hdr.ramdisk_addr = option->base + option->ramdisk_offset;
+	hdr.second_addr = option->base + option->second_offset;
+	hdr.tags_addr = option->base + option->tags_offset;
 
 	if (option->name)
 	{
@@ -432,10 +454,24 @@ int bootimg_pack(struct bootimg_pack_option *option)
 		*p = 0;
 	}
 
-	hdr.kernel_addr = option->base + option->kernel_offset;
-	hdr.ramdisk_addr = option->base + option->ramdisk_offset;
-	hdr.second_addr = option->base + option->second_offset;
-	hdr.tags_addr = option->base + option->tags_offset;
+	hdr.page_size = option->page_size;
+	memcpy(hdr.magic, BOOT_MAGIC, sizeof(hdr.magic));
+
+	if (option->check_all)
+	{
+		cavan_sha_update(&context, &hdr.tags_addr, sizeof(hdr.tags_addr));
+		cavan_sha_update(&context, &hdr.page_size, sizeof(hdr.page_size));
+		cavan_sha_update(&context, hdr.unused, sizeof(hdr.unused));
+		cavan_sha_update(&context, hdr.name, sizeof(hdr.name));
+		cavan_sha_update(&context, hdr.cmdline, sizeof(hdr.cmdline));
+
+		if (hdr.extra_cmdline[0])
+		{
+			cavan_sha_update(&context, hdr.extra_cmdline, sizeof(hdr.extra_cmdline));
+		}
+	}
+
+	cavan_sha_finish(&context, (u8 *) hdr.id);
 
 	bootimg_header_dump(&hdr);
 

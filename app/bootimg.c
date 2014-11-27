@@ -28,12 +28,14 @@ static void show_usage_unpack(const char *command)
 	println("Usage: %s [option] boot.img [output]", command);
 	println("--help, -h, -H\t\t%s", cavan_help_message_help);
 	println("--version, -v, -V\t%s", cavan_help_message_version);
+	println("--dt, -d\t\thas dt.img");
 }
 
 static int cavan_bootimg_unpack(int argc, char *argv[])
 {
 	int c;
 	int option_index;
+	bool dt_support = false;
 	struct option long_option[] =
 	{
 		{
@@ -49,11 +51,17 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_VERSION,
 		},
 		{
+			.name = "dt",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DT,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHd", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -70,6 +78,11 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 			show_usage_unpack(argv[0]);
 			return 0;
 
+		case 'd':
+		case CAVAN_COMMAND_OPTION_DT:
+			dt_support = true;
+			break;
+
 		default:
 			show_usage_unpack(argv[0]);
 			return -EINVAL;
@@ -77,15 +90,15 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 	}
 
 	argv += optind;
-	argv -= optind;
+	argc -= optind;
 
-	if (argc < 2)
+	if (argc < 1)
 	{
 		show_usage_unpack(argv[0]);
 		return -EINVAL;
 	}
 
-	return bootimg_unpack(argv[1], argc > 2 ? argv[2] : ".");
+	return bootimg_unpack(argv[0], argc > 1 ? argv[1] : ".", dt_support);
 }
 
 // ============================================================
@@ -110,8 +123,10 @@ static void show_usage_pack(const char *command)
 	println("--ramdisk, -r <filename>");
 	println("--second, -s <filename>");
 	println("--dt, -d <filename>");
+	println("--remain <filename>");
 	println("--unused, u <value,value>");
 	println("--page_size, --pagesize, --ps, -p <size>");
+	println("--check_all, --check-all, --ca, -a\t\tcheck header full sha1sum");
 	println("--base, -b <address>\t\t\tbase load address");
 	println("--kernel_offset, --ko <address>\t\toffset address of --base");
 	println("--ramdisk_offset, --ro <address>\toffset address of --base");
@@ -122,6 +137,7 @@ static void show_usage_pack(const char *command)
 static int cavan_bootimg_pack(int argc, char *argv[])
 {
 	int c;
+	int ret;
 	int option_index;
 	struct option long_option[] =
 	{
@@ -258,6 +274,30 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_UNUSED,
 		},
 		{
+			.name = "remain",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_REMAIN,
+		},
+		{
+			.name = "check_all",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_CHECK_ALL,
+		},
+		{
+			.name = "check-all",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_CHECK_ALL,
+		},
+		{
+			.name = "ca",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_CHECK_ALL,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -275,10 +315,13 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		.ramdisk_offset = BOOTIMG_DEFAULT_RAMDISK_OFFSET,
 		.second_offset = BOOTIMG_DEFAULT_SECOND_OFFSET,
 		.tags_offset = BOOTIMG_DEFAULT_TAGS_OFFSET,
-		.unused = {0, 0}
+		.unused = {0, 0},
+		.check_all = false
 	};
+	char *board = NULL;
+	char *cmdline = NULL;
 
-	while ((c = getopt_long(argc, argv, "vVhHn:c:k:r:s:d:u:p:b:", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHn:c:k:r:s:d:u:p:b:a", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -326,6 +369,10 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 			option.dt = optarg;
 			break;
 
+		case CAVAN_COMMAND_OPTION_REMAIN:
+			option.remain = optarg;
+			break;
+
 		case 'u':
 		case CAVAN_COMMAND_OPTION_UNUSED:
 			text2array(optarg, option.unused, NELEM(option.unused), ',');
@@ -339,6 +386,11 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		case 'b':
 		case CAVAN_COMMAND_OPTION_BASE:
 			option.base = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'a':
+		case CAVAN_COMMAND_OPTION_CHECK_ALL:
+			option.check_all = true;
 			break;
 
 		case CAVAN_COMMAND_OPTION_KERNEL_OFFSET:
@@ -363,28 +415,41 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		}
 	}
 
-	println("unused = 0x%08x 0x%08x", option.unused[0], option.unused[1]);
-
 	if (option.kernel == NULL && option.ramdisk == NULL)
 	{
-		if (file_access_e("kernel.bin"))
+		if (file_access_e(FILE_KERNEL_NAME))
 		{
-			option.kernel = "kernel.bin";
+			option.kernel = FILE_KERNEL_NAME;
 		}
 
-		if (file_access_e("ramdisk.img"))
+		if (file_access_e(FILE_RAMDISK_NAME))
 		{
-			option.ramdisk = "ramdisk.img";
+			option.ramdisk = FILE_RAMDISK_NAME;
 		}
 
-		if (file_access_e("second.bin"))
+		if (option.second == NULL && file_access_e(FILE_SECOND_NAME))
 		{
-			option.second = "second.bin";
+			option.second = FILE_SECOND_NAME;
 		}
 
-		if (file_access_e("dt.bin"))
+		if (option.dt == NULL && file_access_e(FILE_DT_NAME))
 		{
-			option.dt = "dt.bin";
+			option.dt = FILE_DT_NAME;
+		}
+
+		if (option.remain == NULL && file_access_e(FILE_REMAIN_NAME))
+		{
+			option.remain = FILE_REMAIN_NAME;
+		}
+
+		if (option.cmdline == NULL && file_access_e(FILE_CMDLINE_NAME))
+		{
+			option.cmdline = cmdline = file_read_all_text(FILE_CMDLINE_NAME, NULL);
+		}
+
+		if (option.name == NULL && file_access_e(FILE_BOARD_NAME))
+		{
+			option.name = board = file_read_all_text(FILE_BOARD_NAME, NULL);
 		}
 	}
 
@@ -394,10 +459,51 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 	}
 	else
 	{
-		option.output = "boot.img";
+		option.output = FILE_BOOTIMG_NAME;
 	}
 
-	return bootimg_pack(&option);
+	ret = bootimg_pack(&option);
+
+	if (cmdline)
+	{
+		free(cmdline);
+	}
+
+	if (board)
+	{
+		free(board);
+	}
+
+	return ret;
+}
+
+// ============================================================
+
+static int cavan_bootimg_info(int argc, char *argv[])
+{
+	int ret;
+	const char *pathname;
+	struct bootimg_header hdr;
+
+	if (argc > 1)
+	{
+		pathname = argv[1];
+	}
+	else
+	{
+		pathname = "boot.img";
+	}
+
+	ret = file_read(pathname, &hdr, sizeof(hdr));
+	if (ret < 0)
+	{
+		pr_error_info("read file %s", pathname);
+		return ret;
+	}
+
+	bootimg_header_dump(&hdr);
+
+	return 0;
 }
 
 // ============================================================
@@ -406,6 +512,7 @@ static struct cavan_command_map cmd_map[] =
 {
 	{"unpack", cavan_bootimg_unpack},
 	{"repack", cavan_bootimg_repack},
+	{"info", cavan_bootimg_info},
 	{"pack", cavan_bootimg_pack}
 };
 
