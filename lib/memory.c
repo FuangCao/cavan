@@ -601,3 +601,10 @@ char *mem_size_tostring(double value, char *buff, size_t size)
 		return buff + snprintf(buff, size, "%.2lf B", value);
 	}
 }
+
+char *mem_speed_tostring(double value, char *buff, size_t size)
+{
+	char *p = mem_size_tostring(value, buff, size);
+
+	return text_ncopy(p, "/s", size - (p - buff));
+}

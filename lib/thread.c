@@ -58,18 +58,24 @@ int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32
 	return cavan_thread_recv_event(thread, event);
 }
 
-int cavan_thread_msleep(struct cavan_thread *thread, u32 ms)
+int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time)
 {
 	int ret;
+
+	pthread_mutex_lock(&thread->lock);
+	ret = pthread_cond_timedwait(&thread->cond, &thread->lock, time);
+	pthread_mutex_unlock(&thread->lock);
+
+	return ret;
+}
+
+int cavan_thread_msleep(struct cavan_thread *thread, u32 ms)
+{
 	struct timespec time;
 
 	cavan_timer_set_timespec(&time, ms);
 
-	pthread_mutex_lock(&thread->lock);
-	ret = pthread_cond_timedwait(&thread->cond, &thread->lock, &time);
-	pthread_mutex_unlock(&thread->lock);
-
-	return ret;
+	return cavan_thread_msleep_until(thread, &time);
 }
 
 int cavan_thread_init(struct cavan_thread *thread, void *data)

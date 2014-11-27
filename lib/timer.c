@@ -91,15 +91,19 @@ int cavan_real_timespec_diff(const struct timespec *time)
 	return cavan_timespec_diff(time, &curr_time);
 }
 
-void cavan_timer_set_timespec(struct timespec *time, u32 timeout)
+void cavan_timer_timespec_add(struct timespec *time, u32 timeout)
 {
 	long tmp;
-
-	clock_gettime(CLOCK_REALTIME, time);
 
 	tmp = time->tv_nsec / 1000000 + timeout;
 	time->tv_sec += tmp / 1000;
 	time->tv_nsec = (tmp % 1000) * 1000000;
+}
+
+void cavan_timer_set_timespec(struct timespec *time, u32 timeout)
+{
+	clock_gettime(CLOCK_REALTIME, time);
+	cavan_timer_timespec_add(time, timeout);
 }
 
 static bool cavan_timer_match_later(struct double_link *link, struct double_link_node *node, void *data)

@@ -52,6 +52,7 @@ u64 clock_gettime_ms(clockid_t clk);
 int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2);
 int cavan_timespec_diff(const struct timespec *t1, const struct timespec *t2);
 int cavan_real_timespec_diff(const struct timespec *time);
+void cavan_timer_timespec_add(struct timespec *time, u32 timeout);
 void cavan_timer_set_timespec(struct timespec *time, u32 timeout);
 
 int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *node, u32 timeout);
@@ -99,6 +100,11 @@ static inline void cavan_cursor_stop(struct cavan_cursor *cursor)
 	}
 }
 
+static inline int clock_gettime_mono(struct timespec *time)
+{
+	return clock_gettime(CLOCK_MONOTONIC, time);
+}
+
 static inline u64 clock_gettime_ns_mono(void)
 {
 	return clock_gettime_ns(CLOCK_MONOTONIC);
@@ -112,6 +118,11 @@ static inline u64 clock_gettime_us_mono(void)
 static inline u64 clock_gettime_ms_mono(void)
 {
 	return clock_gettime_ms(CLOCK_MONOTONIC);
+}
+
+static inline int clock_gettime_real(struct timespec *time)
+{
+	return clock_gettime(CLOCK_REALTIME, time);
 }
 
 static inline u64 clock_gettime_ns_real(void)

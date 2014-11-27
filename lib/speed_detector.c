@@ -18,22 +18,23 @@
  */
 
 #include <cavan.h>
+#include <cavan/timer.h>
 #include <cavan/speed_detector.h>
 
 static int speed_detector_handler(struct cavan_thread *thread, void *data)
 {
 	struct speed_detector *detector = data;
 
-	detector->count = 0;
-
-	if (cavan_thread_msleep(thread, detector->interval) != ETIMEDOUT)
+	cavan_timer_timespec_add(&detector->time_next, detector->interval);
+	if (cavan_thread_msleep_until(thread, &detector->time_next) != ETIMEDOUT)
 	{
 		return 0;
 	}
 
-	detector->speed = detector->count;
+	detector->speed = detector->speed_count;
+	detector->speed_count = 0;
 
-	if (detector->times_consume > 0)
+	if (detector->loop_count > 0)
 	{
 		detector->speed_avg = (detector->speed_avg + detector->speed) >> 1;
 	}
@@ -42,7 +43,7 @@ static int speed_detector_handler(struct cavan_thread *thread, void *data)
 		detector->speed_avg = detector->speed;
 	}
 
-	detector->times_consume += detector->interval;
+	detector->loop_count++;
 
 	if (detector->notify)
 	{
@@ -57,12 +58,24 @@ int speed_detector_start(struct speed_detector *detector, u32 interval)
 	struct cavan_thread *thread = &detector->thread;
 
 	detector->interval = interval;
-	detector->times_consume = 0;
-	detector->speed = detector->speed_avg = 0;
+	detector->loop_count = 0;
+	detector->speed = detector->speed_avg = detector->speed_count = 0;
+
+	clock_gettime_real(&detector->time_start);
+	detector->time_next = detector->time_start;
 
 	thread->name = "SPEED_DETECTOR";
 	thread->handler = speed_detector_handler;
 	thread->wake_handker = NULL;
 
 	return cavan_thread_run(thread, detector);
+}
+
+u32 speed_detector_get_time_consume(struct speed_detector *detector)
+{
+	struct timespec time_now;
+
+	clock_gettime_real(&time_now);
+
+	return cavan_timespec_diff(&time_now, &detector->time_start);
 }

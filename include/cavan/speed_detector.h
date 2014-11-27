@@ -27,14 +27,18 @@ struct speed_detector
 	struct cavan_thread thread;
 	u32 speed;
 	u32 speed_avg;
-	u32 count;
+	u32 speed_count;
 	u32 interval;
-	u64 times_consume;
+	u32 loop_count;
+
+	struct timespec time_start;
+	struct timespec time_next;
 
 	void (*notify)(struct speed_detector *detector, u32 speed);
 };
 
 int speed_detector_start(struct speed_detector *detector, u32 interval);
+u32 speed_detector_get_time_consume(struct speed_detector *detector);
 
 static inline void speed_detector_stop(struct speed_detector *detector)
 {
@@ -43,22 +47,17 @@ static inline void speed_detector_stop(struct speed_detector *detector)
 
 static inline void speed_detector_post(struct speed_detector *detector, u32 value)
 {
-	detector->count += value;
+	detector->speed_count += value;
 }
 
-static inline u32 speed_detector_get_speed(struct speed_detector *detector)
+static inline double speed_detector_get_speed(struct speed_detector *detector, u32 unit)
 {
-	return detector->speed;
+	return ((double) detector->speed) * detector->interval / unit;
 }
 
-static inline u32 speed_detector_get_speed_avg(struct speed_detector *detector)
+static inline u32 speed_detector_get_speed_avg(struct speed_detector *detector, u32 unit)
 {
-	return detector->speed_avg;
-}
-
-static inline u64 speed_detector_get_times_consume(struct speed_detector *detector)
-{
-	return detector->times_consume;
+	return ((double) detector->speed_avg) * detector->interval / unit;
 }
 
 static inline void speed_detector_set_interval(struct speed_detector *detector, u32 interval)

@@ -41,12 +41,10 @@ static void progress_bar_fflush(struct progress_bar *bar, struct speed_detector 
 	p += HALF_LENGTH;
 	*p++ = ']';
 
-	if (detector->times_consume > 0)
+	if (detector->loop_count > 0)
 	{
 		*p++ = ' ';
-		p = mem_size_tostring(detector->speed * 1000 / PROGRESS_BAR_SPEED_UPDATE_INTERVAL, p, p_end - p - 2);
-		*p++ = '/';
-		*p++ = 's';
+		p = mem_speed_tostring(speed_detector_get_speed(detector, 1000), p, p_end - p - 2);
 	}
 
 	length = p - buff;
@@ -173,11 +171,11 @@ void progress_bar_finish(struct progress_bar *bar)
 	bar->current = bar->total;
 	progress_bar_update(bar);
 
-	if (detector->times_consume > 0)
+	if (detector->loop_count > 0)
 	{
-		println("\nTime consume: %" PRINT_FORMAT_INT64 " ms", speed_detector_get_times_consume(detector));
-		mem_size_tostring(speed_detector_get_speed_avg(detector) * 1000 / PROGRESS_BAR_SPEED_UPDATE_INTERVAL, buff, sizeof(buff));
-		println("Average speed: %s/s", buff);
+		println("\nTime consume: %d ms", speed_detector_get_time_consume(detector));
+		mem_speed_tostring(speed_detector_get_speed_avg(detector, 1000), buff, sizeof(buff));
+		println("Average speed: %s", buff);
 	}
 	else
 	{

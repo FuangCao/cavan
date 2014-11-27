@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, CAVAN_NETWORK_SOCKET);
 
-	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaAlLu:U:", command_long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRaAlLu:U:k:b:", command_long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -337,10 +337,12 @@ label_add_image:
 			part_name = "@MISC@";
 			goto label_add_image;
 
+		case 'b':
 		case CAVAN_COMMAND_OPTION_BOOT:
 			part_name = "@BOOT@";
 			goto label_add_image;
 
+		case 'k':
 		case CAVAN_COMMAND_OPTION_KERNEL:
 			part_name = "@KERNEL@";
 			goto label_add_image;
