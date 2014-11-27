@@ -598,7 +598,7 @@ char *mem_size_tostring(double value, char *buff, size_t size)
 	}
 	else
 	{
-		return buff + snprintf(buff, size, "%.2lf B", value);
+		return buff + snprintf(buff, size, "%.2lf Byte", value);
 	}
 }
 

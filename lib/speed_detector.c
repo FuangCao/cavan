@@ -33,16 +33,6 @@ static int speed_detector_handler(struct cavan_thread *thread, void *data)
 
 	detector->speed = detector->speed_count;
 	detector->speed_count = 0;
-
-	if (detector->loop_count > 0)
-	{
-		detector->speed_avg = (detector->speed_avg + detector->speed) >> 1;
-	}
-	else
-	{
-		detector->speed_avg = detector->speed;
-	}
-
 	detector->loop_count++;
 
 	if (detector->notify)
@@ -59,7 +49,7 @@ int speed_detector_start(struct speed_detector *detector, u32 interval)
 
 	detector->interval = interval;
 	detector->loop_count = 0;
-	detector->speed = detector->speed_avg = detector->speed_count = 0;
+	detector->speed = detector->speed_count = 0;
 
 	clock_gettime_real(&detector->time_start);
 	detector->time_next = detector->time_start;

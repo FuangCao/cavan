@@ -26,7 +26,6 @@ struct speed_detector
 {
 	struct cavan_thread thread;
 	u32 speed;
-	u32 speed_avg;
 	u32 speed_count;
 	u32 interval;
 	u32 loop_count;
@@ -52,12 +51,7 @@ static inline void speed_detector_post(struct speed_detector *detector, u32 valu
 
 static inline double speed_detector_get_speed(struct speed_detector *detector, u32 unit)
 {
-	return ((double) detector->speed) * detector->interval / unit;
-}
-
-static inline u32 speed_detector_get_speed_avg(struct speed_detector *detector, u32 unit)
-{
-	return ((double) detector->speed_avg) * detector->interval / unit;
+	return ((double) detector->speed) * unit / detector->interval;
 }
 
 static inline void speed_detector_set_interval(struct speed_detector *detector, u32 interval)

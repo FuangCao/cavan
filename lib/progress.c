@@ -1,7 +1,7 @@
 #include <cavan.h>
 #include <cavan/progress.h>
 
-#define PROGRESS_BAR_SPEED_UPDATE_INTERVAL	500
+#define PROGRESS_BAR_SPEED_UPDATE_INTERVAL	1000
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -163,7 +163,7 @@ void progress_bar_set(struct progress_bar *bar, double val)
 
 void progress_bar_finish(struct progress_bar *bar)
 {
-	char buff[32];
+	u32 time;
 	struct speed_detector *detector = &bar->detector;
 
 	speed_detector_stop(&bar->detector);
@@ -171,14 +171,16 @@ void progress_bar_finish(struct progress_bar *bar)
 	bar->current = bar->total;
 	progress_bar_update(bar);
 
-	if (detector->loop_count > 0)
+	print_char('\n');
+
+	time = speed_detector_get_time_consume(detector);
+	if (time > 0)
 	{
-		println("\nTime consume: %d ms", speed_detector_get_time_consume(detector));
-		mem_speed_tostring(speed_detector_get_speed_avg(detector, 1000), buff, sizeof(buff));
-		println("Average speed: %s", buff);
-	}
-	else
-	{
-		print_char('\n');
+		char size_buff[32];
+		char speed_buff[32];
+
+		mem_size_tostring(bar->total, size_buff, sizeof(size_buff));
+		mem_speed_tostring(bar->total * 1000 / time, speed_buff, sizeof(speed_buff));
+		println("%s (%s in %d ms)", speed_buff, size_buff, time);
 	}
 }
