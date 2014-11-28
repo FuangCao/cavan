@@ -307,26 +307,12 @@ int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const
 
 	if (isatty(ttyfd) && lines > 0 && columns > 0)
 	{
-		char buff[64];
-		struct winsize wsize =
-		{
-			.ws_row = lines,
-			.ws_col = columns,
-			.ws_xpixel = 0,
-			.ws_ypixel = 0
-		};
-
-		ret = ioctl(ttyfd, TIOCSWINSZ, &wsize);
+		ret = tty_set_win_size(ttyfd, lines, columns);
 		if (ret < 0)
 		{
-			pr_error_info("ioctl TIOCSWINSZ");
+			pr_red_info("tty_set_win_size");
 			return ret;
 		}
-
-		sprintf(buff, "LINES=%d", lines);
-		putenv(buff);
-		sprintf(buff, "COLUMNS=%d", columns);
-		putenv(buff);
 	}
 
 	ret = cavan_exec_redirect_stdio_base(ttyfd, command, flags);
@@ -589,4 +575,56 @@ u32 cavan_getenv_u32(const char *name, u32 default_value)
 	}
 
 	return text2value_unsigned(value, NULL, 10);
+}
+
+int tty_get_win_size(int tty, u16 *lines, u16 *columns)
+{
+	int ret;
+	struct winsize wsize;
+
+	ret = ioctl(tty, TIOCGWINSZ, &wsize);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl TIOCGWINSZ");
+		return ret;
+	}
+
+	if (lines)
+	{
+		*lines = wsize.ws_row;
+	}
+
+	if (columns)
+	{
+		*columns = wsize.ws_col;
+	}
+
+	return 0;
+}
+
+int tty_set_win_size(int tty, u16 lines, u16 columns)
+{
+	int ret;
+	char buff[64];
+	struct winsize wsize =
+	{
+		.ws_row = lines,
+		.ws_col = columns,
+		.ws_xpixel = 0,
+		.ws_ypixel = 0
+	};
+
+	ret = ioctl(tty, TIOCSWINSZ, &wsize);
+	if (ret < 0)
+	{
+		pr_error_info("ioctl TIOCSWINSZ");
+		return ret;
+	}
+
+	sprintf(buff, "LINES=%d", lines);
+	putenv(buff);
+	sprintf(buff, "COLUMNS=%d", columns);
+	putenv(buff);
+
+	return 0;
 }

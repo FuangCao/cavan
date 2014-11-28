@@ -186,6 +186,9 @@ int cavan_tty_redirect(const char *ttypath);
 const char *cavan_getenv(const char *name, const char *default_value);
 u32 cavan_getenv_u32(const char *name, u32 default_value);
 
+int tty_get_win_size(int tty, u16 *lines, u16 *columns);
+int tty_set_win_size(int tty, u16 lines, u16 columns);
+
 static inline int cavan_exec_waitpid(pid_t pid)
 {
 	int status;

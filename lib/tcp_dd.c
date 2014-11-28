@@ -251,22 +251,17 @@ static int tcp_dd_send_write_request(struct network_client *client, const char *
 static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, const char *command)
 {
 	int ret;
-	struct tcp_dd_package pkg;
 	char *p;
+	struct tcp_dd_package pkg;
 
 	if (isatty(ttyfd))
 	{
-		struct winsize wsize;
-
-		ret = ioctl(ttyfd, TIOCGWINSZ, &wsize);
+		ret = tty_get_win_size(ttyfd, &pkg.exec_req.lines, &pkg.exec_req.columns);
 		if (ret < 0)
 		{
-			pr_error_info("ioctl TIOCGWINSZ");
+			pr_red_info("tty_get_win_size");
 			return ret;
 		}
-
-		pkg.exec_req.lines = wsize.ws_row;
-		pkg.exec_req.columns = wsize.ws_col;
 
 		if (pkg.exec_req.lines == 0)
 		{

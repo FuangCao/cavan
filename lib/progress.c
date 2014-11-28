@@ -1,4 +1,5 @@
 #include <cavan.h>
+#include <cavan/command.h>
 #include <cavan/progress.h>
 
 #define PROGRESS_BAR_SPEED_UPDATE_INTERVAL	1000
@@ -13,32 +14,32 @@ static void progress_bar_fflush(struct progress_bar *bar, struct speed_detector 
 
 	*p++ = '[';
 
-	if (bar->progress < HALF_LENGTH)
+	if (bar->fill < bar->half_length)
 	{
-		memset(p, FULL_CHAR, bar->progress);
-		memset(p + bar->progress, FREE_CHAR, HALF_LENGTH - bar->progress);
+		memset(p, BAR_FULL_CHAR, bar->fill);
+		memset(p + bar->fill, BAR_FREE_CHAR, bar->half_length - bar->fill);
 	}
 	else
 	{
-		memset(p, FULL_CHAR, HALF_LENGTH);
+		memset(p, BAR_FULL_CHAR, bar->half_length);
 	}
 
-	p += HALF_LENGTH;
+	p += bar->half_length;
 	p += snprintf(p, p_end - p, " %d%% ", bar->percent);
 
-	if (bar->progress > HALF_LENGTH)
+	if (bar->fill > bar->half_length)
 	{
-		int progress = bar->progress - HALF_LENGTH;
+		int progress = bar->fill - bar->half_length;
 
-		memset(p, FULL_CHAR, progress);
-		memset(p + progress, FREE_CHAR, HALF_LENGTH - progress);
+		memset(p, BAR_FULL_CHAR, progress);
+		memset(p + progress, BAR_FREE_CHAR, bar->half_length - progress);
 	}
 	else
 	{
-		memset(p, FREE_CHAR, HALF_LENGTH);
+		memset(p, BAR_FREE_CHAR, bar->half_length);
 	}
 
-	p += HALF_LENGTH;
+	p += bar->half_length;
 	*p++ = ']';
 
 	if (detector->loop_count > 0)
@@ -48,24 +49,17 @@ static void progress_bar_fflush(struct progress_bar *bar, struct speed_detector 
 	}
 
 	length = p - buff;
-	if (length < bar->length)
+	if (length < bar->content_length)
 	{
-		char *q = p + (bar->length - length);
-
-		if (q > p_end)
+		for (p_end = buff + bar->content_length; p < p_end; p++)
 		{
-			q = p_end;
-		}
-
-		while (p < q)
-		{
-			*p++ = ' ';
+			*p = ' ';
 		}
 	}
 
-	*p++ = '\r';
+	bar->content_length = length;
 
-	bar->length = length;
+	*p++ = '\r';
 
 	pthread_mutex_lock(&lock);
 	print_ntext(buff, p - buff);
@@ -88,14 +82,14 @@ static bool update_percent(struct progress_bar *bar)
 
 static bool update_content(struct progress_bar *bar)
 {
-	int progress = bar->current * HALF_LENGTH * 2 / bar->total;
+	int fill = bar->current * bar->full_length / bar->total;
 
-	if (progress == bar->progress)
+	if (fill == bar->fill)
 	{
 		return false;
 	}
 
-	bar->progress = progress;
+	bar->fill = fill;
 
 	return true;
 }
@@ -128,12 +122,28 @@ static void progress_bar_speed_notify(struct speed_detector *detector, u32 speed
 
 void progress_bar_init(struct progress_bar *bar, double total)
 {
+	u16 columns;
 	struct speed_detector *detector = &bar->detector;
 
 	bar->total = total == 0 ? 1 : total;
 	bar->current = 0;
 	bar->percent = 0;
-	bar->length = 0;
+	bar->fill = 0;
+
+	if (tty_get_win_size(fileno(stdout), NULL, &columns) < 0)
+	{
+		bar->half_length = BAR_DEF_HALF_LEN;
+	}
+	else if (columns < BAR_CONTENT_MIN)
+	{
+		bar->half_length = 0;
+	}
+	else
+	{
+		bar->half_length = (columns - BAR_CONTENT_MIN) / 2;
+	}
+
+	bar->full_length = bar->half_length * 2;
 
 	bar->speed = 0;
 	detector->notify = progress_bar_speed_notify;

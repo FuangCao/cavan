@@ -3,9 +3,10 @@
 #include <cavan.h>
 #include <cavan/speed_detector.h>
 
-#define HALF_LENGTH		30
-#define FREE_CHAR		'='
-#define FULL_CHAR		'H'
+#define BAR_CONTENT_MIN		22 // sizeof("[ 100% ] 1024.00 MiB/s")
+#define BAR_DEF_HALF_LEN	30
+#define BAR_FREE_CHAR		'='
+#define BAR_FULL_CHAR		'H'
 
 struct progress_bar
 {
@@ -14,8 +15,11 @@ struct progress_bar
 	double total;
 	double current;
 
-	int length;
-	int progress;
+	int fill;
+	int half_length;
+	int full_length;
+	int content_length;
+
 	int percent;
 	u32 speed;
 };

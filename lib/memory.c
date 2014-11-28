@@ -584,21 +584,21 @@ void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep,
 
 char *mem_size_tostring(double value, char *buff, size_t size)
 {
-	if (value > GB(1UL))
+	if (value >= GB(1UL))
 	{
-		return buff + snprintf(buff, size, "%.2lf GiB", value / GB(1UL));
+		return buff + snprintf(buff, size, "%0.2lf GiB", value / GB(1UL));
 	}
-	else if (value > MB(1UL))
+	else if (value >= MB(1UL))
 	{
-		return buff + snprintf(buff, size, "%.2lf MiB", value / MB(1UL));
+		return buff + snprintf(buff, size, "%0.2lf MiB", value / MB(1UL));
 	}
-	else if (value > KB(1UL))
+	else if (value >= KB(1UL))
 	{
-		return buff + snprintf(buff, size, "%.2lf KiB", value / KB(1UL));
+		return buff + snprintf(buff, size, "%0.2lf KiB", value / KB(1UL));
 	}
 	else
 	{
-		return buff + snprintf(buff, size, "%.2lf Byte", value);
+		return buff + snprintf(buff, size, "%0.2lf Byte", value);
 	}
 }
 
