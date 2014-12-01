@@ -129,6 +129,7 @@ void progress_bar_init(struct progress_bar *bar, double total)
 	bar->current = 0;
 	bar->percent = 0;
 	bar->fill = 0;
+	bar->content_length = 0;
 
 	if (tty_get_win_size(fileno(stdout), NULL, &columns) < 0 || columns == 0)
 	{
@@ -141,6 +142,10 @@ void progress_bar_init(struct progress_bar *bar, double total)
 	else
 	{
 		bar->half_length = (columns - BAR_CONTENT_MIN) / 2;
+		if (bar->half_length > BAR_MAX_HALF_LEN)
+		{
+			bar->half_length = BAR_MAX_HALF_LEN;
+		}
 	}
 
 	bar->full_length = bar->half_length * 2;
