@@ -130,7 +130,7 @@ void progress_bar_init(struct progress_bar *bar, double total)
 	bar->percent = 0;
 	bar->fill = 0;
 
-	if (tty_get_win_size(fileno(stdout), NULL, &columns) < 0)
+	if (tty_get_win_size(fileno(stdout), NULL, &columns) < 0 || columns == 0)
 	{
 		bar->half_length = BAR_DEF_HALF_LEN;
 	}
