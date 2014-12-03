@@ -1387,8 +1387,12 @@ static char *cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, 
 {
 	int i;
 	char *filename;
+	char dev_name[2][512];
 	const char *filenames[] =
-	{dev->name, "Generic", "qwerty"};
+	{dev_name[0], dev_name[1], "Generic", "qwerty"};
+
+	text_replace_char2(dev->name, dev_name[0], ' ', '_');
+	text_replace_char2(dev->name, dev_name[1], ' ', '-');
 
 	filename = text_copy(pathname, "/system/usr/keylayout/");
 	for (i = 0; i < (int) NELEM(filenames); i++)
