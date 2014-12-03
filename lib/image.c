@@ -47,69 +47,265 @@ const char *image_type_to_text(enum image_type type)
 	case IMAGE_USERDATA_IMG:
 		return "userdata.img";
 
+	case IMAGE_KERNEL_BIN:
+		return "kernel.bin";
+
+	case IMAGE_KERNEL_IMG:
+		return "kernel.img";
+
+	case IMAGE_RESOURCE_BIN:
+		return "resource.bin";
+
+	case IMAGE_RESOURCE_IMG:
+		return "resource.img";
+
+	case IMAGE_DT_BIN:
+		return "dt.bin";
+
+	case IMAGE_DT_IMG:
+		return "dt.img";
+
+	case IMAGE_BOOT_IMG:
+		return "boot.img";
+
+	case IMAGE_CACHE_IMG:
+		return "cache.img";
+
+	case IMAGE_MISC_IMG:
+		return "misc.img";
+
 	default:
 		return "unknown";
 	}
 }
 
-enum image_type path_to_image_type(const char *img_path)
+const char *image_type_to_part_name(enum image_type type)
+{
+	switch (type)
+	{
+	case IMAGE_UBOOT_BIN:
+		return "@UBOOT@";
+
+	case IMAGE_KERNEL_BIN:
+	case IMAGE_KERNEL_IMG:
+		return "@KERNEL@";
+
+	case IMAGE_RESOURCE_BIN:
+	case IMAGE_RESOURCE_IMG:
+		return "@RESOURCE@";
+
+	case IMAGE_DT_BIN:
+	case IMAGE_DT_IMG:
+		return "@DT@";
+
+	case IMAGE_BOOT_IMG:
+		return "@BOOT@";
+
+	case IMAGE_SYSTEM_IMG:
+		return "@SYSTEM@";
+
+	case IMAGE_USERDATA_IMG:
+		return "@USERDATA@";
+
+	case IMAGE_RECOVERY_IMG:
+		return "@RECOVERY@";
+
+	case IMAGE_MISC_IMG:
+		return "@MISC@";
+
+	default:
+		break;
+	}
+
+	return NULL;
+}
+
+enum image_type image_name_to_type(const char *name)
+{
+	switch (name[0])
+	{
+		case 'b':
+			if (text_cmp(name, "boot.img") == 0)
+			{
+				return IMAGE_BOOT_IMG;
+			}
+
+			if (text_cmp(name, "busybox.img") == 0)
+			{
+				return IMAGE_BUSYBOX_IMG;
+			}
+			break;
+
+		case 'c':
+			if (text_cmp(name, "cache.img") == 0)
+			{
+				return IMAGE_CACHE_IMG;
+			}
+
+			if (text_cmp(name, "charge.bmps") == 0)
+			{
+				return IMAGE_CARTOON;
+			}
+			break;
+
+		case 'd':
+			if (text_cmp(name, "dt.bin") == 0)
+			{
+				return IMAGE_DT_BIN;
+			}
+
+			if (text_cmp(name, "dt.img") == 0)
+			{
+				return IMAGE_DT_IMG;
+			}
+			break;
+
+		case 'k':
+			if (text_cmp(name, "kernel.bin") == 0)
+			{
+				return IMAGE_KERNEL_BIN;
+			}
+
+			if (text_cmp(name, "kernel.img") == 0)
+			{
+				return IMAGE_KERNEL_IMG;
+			}
+			break;
+
+		case 'l':
+			if (text_cmp(name, "logo.bmp") == 0)
+			{
+				return IMAGE_LOGO;
+			}
+			break;
+
+		case 'm':
+			if (text_cmp(name, "misc.img") == 0)
+			{
+				return IMAGE_MISC_IMG;
+			}
+			break;
+
+		case 'r':
+			if (text_cmp(name, "ramdisk.img") == 0)
+			{
+				return IMAGE_RAMDISK_IMG;
+			}
+
+			if (text_cmp(name, "recovery.img") == 0)
+			{
+				return IMAGE_RECOVERY_IMG;
+			}
+
+			if (text_cmp(name, "resource.img") == 0)
+			{
+				return IMAGE_RESOURCE_IMG;
+			}
+
+			if (text_cmp(name, "resource.bin") == 0)
+			{
+				return IMAGE_RESOURCE_BIN;
+			}
+			break;
+
+		case 's':
+			if (text_cmp(name, "system.img") == 0)
+			{
+				return IMAGE_SYSTEM_IMG;
+			}
+			break;
+
+		case 'u':
+			if (text_cmp(name, "uImage") == 0)
+			{
+				return IMAGE_UIMAGE;
+			}
+
+			if (text_cmp(name, "userdata.img") == 0)
+			{
+				return IMAGE_USERDATA_IMG;
+			}
+
+			if (text_cmp(name, "u-boot.bin") == 0)
+			{
+				return IMAGE_UBOOT_BIN;
+			}
+
+			if (text_cmp(name, "uramdisk.img") == 0)
+			{
+				return IMAGE_URAMDISK_IMG;
+			}
+
+			if (text_cmp(name, "u-boot-no-padding.bin") == 0)
+			{
+				return IMAGE_UBOOT_NO_PADDING_BIN;
+			}
+			break;
+
+		case 'z':
+			if (text_cmp(name, "zImage") == 0)
+			{
+				return IMAGE_ZIMAGE;
+			}
+			break;
+	}
+
+	return IMAGE_UNKNOWN;
+}
+
+enum image_type image_path_to_type(const char *img_path)
 {
 	char image_name[64];
 
 	text_basename_base(image_name, img_path);
 
-	if (text_cmp(image_name, "u-boot.bin") == 0)
+	return image_name_to_type(image_name);
+}
+
+const char *image_name_to_part_name(const char *name)
+{
+	const char *part;
+
+	part = image_type_to_part_name(image_name_to_type(name));
+	if (part == NULL)
 	{
-		return IMAGE_UBOOT_BIN;
+		char *p, *p_end;
+		static char part_buff[64];
+
+		part_buff[0] = '@';
+
+		for (p = part_buff + 1, p_end = p + sizeof(part_buff) - 2; p < p_end; p++, name++)
+		{
+			switch (*name)
+			{
+			case 0:
+			case '.':
+				*p++ = '@';
+				*p = 0;
+				return part_buff;
+
+			case 'a' ... 'z':
+				*p = *name - ('a' - 'A');
+				break;
+
+			default:
+				*p = *name;
+			}
+		}
+
+		part = part_buff;
 	}
-	else if (text_cmp(image_name, "u-boot-no-padding.bin") == 0)
-	{
-		return IMAGE_UBOOT_NO_PADDING_BIN;
-	}
-	else if (text_cmp(image_name, "zImage") == 0)
-	{
-		return IMAGE_ZIMAGE;
-	}
-	else if (text_cmp(image_name, "uImage") == 0)
-	{
-		return IMAGE_UIMAGE;
-	}
-	else if (text_cmp(image_name, "ramdisk.img") == 0)
-	{
-		return IMAGE_RAMDISK_IMG;
-	}
-	else if (text_cmp(image_name, "uramdisk.img") == 0)
-	{
-		return IMAGE_URAMDISK_IMG;
-	}
-	else if (text_cmp(image_name, "logo.bmp") == 0)
-	{
-		return IMAGE_LOGO;
-	}
-	else if (text_cmp(image_name, "busybox.img") == 0)
-	{
-		return IMAGE_BUSYBOX_IMG;
-	}
-	else if (text_cmp(image_name, "charge.bmps") == 0)
-	{
-		return IMAGE_CARTOON;
-	}
-	else if (text_cmp(image_name, "system.img") == 0)
-	{
-		return IMAGE_SYSTEM_IMG;
-	}
-	else if (text_cmp(image_name, "recovery.img") == 0)
-	{
-		return IMAGE_RECOVERY_IMG;
-	}
-	else if (text_cmp(image_name, "userdata.img") == 0)
-	{
-		return IMAGE_USERDATA_IMG;
-	}
-	else
-	{
-		return IMAGE_UNKNOWN;
-	}
+
+	return part;
+}
+
+const char *image_path_to_part_name(const char *pathname)
+{
+	char image_name[64];
+
+	text_basename_base(image_name, pathname);
+
+	return image_name_to_part_name(image_name);
 }
 
 int image_type_to_device_index(enum image_type type)
@@ -816,7 +1012,7 @@ int burn_swan_image_auto(const char *img_path, const char *dest_dev)
 
 	desc.in[0] = 0;
 
-	type = path_to_image_type(img_path);
+	type = image_path_to_type(img_path);
 	if (type == IMAGE_UNKNOWN)
 	{
 		if (file_test(img_path, "d") == 0)

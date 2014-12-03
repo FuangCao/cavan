@@ -52,6 +52,7 @@ const char *cavan_help_message_kernel = "R/W kernel partition";
 const char *cavan_help_message_uboot = "R/W uboot partition";
 const char *cavan_help_message_resource = "R/W resource partition";
 const char *cavan_help_message_rw_image = "R/W partition by image short name";
+const char *cavan_help_message_rw_image_auto = "R/W partition auto";
 
 int print_command_table(const struct cavan_command_map *p, const struct cavan_command_map *p_end)
 {

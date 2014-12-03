@@ -34,18 +34,31 @@ enum image_type
 	IMAGE_UBOOT_NO_PADDING_BIN,
 	IMAGE_ZIMAGE,
 	IMAGE_UIMAGE,
+	IMAGE_BOOT_IMG,
+	IMAGE_MISC_IMG,
+	IMAGE_CACHE_IMG,
+	IMAGE_KERNEL_BIN,
+	IMAGE_KERNEL_IMG,
+	IMAGE_DT_BIN,
+	IMAGE_DT_IMG,
 	IMAGE_RAMDISK_IMG,
 	IMAGE_URAMDISK_IMG,
 	IMAGE_LOGO,
 	IMAGE_BUSYBOX_IMG,
 	IMAGE_CARTOON,
 	IMAGE_SYSTEM_IMG,
+	IMAGE_RESOURCE_BIN,
+	IMAGE_RESOURCE_IMG,
 	IMAGE_RECOVERY_IMG,
 	IMAGE_USERDATA_IMG,
 };
 
 const char *image_type_to_text(enum image_type type);
-enum image_type path_to_image_type(const char *img_path);
+const char *image_type_to_part_name(enum image_type type);
+enum image_type image_name_to_type(const char *name);
+enum image_type image_path_to_type(const char *img_path);
+const char *image_name_to_part_name(const char *name);
+const char *image_path_to_part_name(const char *pathname);
 int image_type_to_device_index(enum image_type type);
 int image_type_to_partition_path(enum image_type type, const char *dev_path, char *part_path);
 int image_type_to_dd_desc(enum image_type type, struct dd_desc *desc);
@@ -83,4 +96,3 @@ int get_ramdisk(const char *dev_path, const char *file_path, int busybox);
 
 int burn_swan_image_directory(const char *dirname, const char *dest_dev);
 int burn_swan_image_auto(const char *img_path, const char *dest_dev);
-

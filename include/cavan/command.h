@@ -163,6 +163,7 @@ extern const char *cavan_help_message_kernel;
 extern const char *cavan_help_message_uboot;
 extern const char *cavan_help_message_resource;
 extern const char *cavan_help_message_rw_image;
+extern const char *cavan_help_message_rw_image_auto;
 
 // ============================================================
 
