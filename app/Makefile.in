@@ -98,39 +98,39 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) auto_dd.$(OBJEXT) \
-	auto_mount.$(OBJEXT) battery.$(OBJEXT) battery_level.$(OBJEXT) \
-	bdata.$(OBJEXT) bkernel.$(OBJEXT) bmp_view.$(OBJEXT) \
-	bramdisk.$(OBJEXT) brecovery.$(OBJEXT) bsystem.$(OBJEXT) \
-	buboot.$(OBJEXT) calculator.$(OBJEXT) chroot.$(OBJEXT) \
-	chtty.$(OBJEXT) copy.$(OBJEXT) dd.$(OBJEXT) df.$(OBJEXT) \
-	display.$(OBJEXT) dos2unix.$(OBJEXT) \
-	eavoo_sell_statistic.$(OBJEXT) ecc.$(OBJEXT) \
-	event_repeater.$(OBJEXT) ext2.$(OBJEXT) fdisk.$(OBJEXT) \
-	file_crc32.$(OBJEXT) file_join.$(OBJEXT) file_loop.$(OBJEXT) \
-	file_split.$(OBJEXT) ftp.$(OBJEXT) ftp_server.$(OBJEXT) \
-	git_daemon.$(OBJEXT) image_dd.$(OBJEXT) inotify.$(OBJEXT) \
-	loop_run.$(OBJEXT) md5sum.$(OBJEXT) mkdir.$(OBJEXT) \
-	mknp.$(OBJEXT) mksdcard.$(OBJEXT) modem_upgrade.$(OBJEXT) \
-	mount.$(OBJEXT) move.$(OBJEXT) mtd.$(OBJEXT) \
-	net_monitor.$(OBJEXT) part_probe.$(OBJEXT) part_show.$(OBJEXT) \
-	part_table.$(OBJEXT) ping.$(OBJEXT) poll_event.$(OBJEXT) \
-	poll_input.$(OBJEXT) ramdisk.$(OBJEXT) remove.$(OBJEXT) \
-	resize.$(OBJEXT) rle.$(OBJEXT) screen_mirror.$(OBJEXT) \
-	service.$(OBJEXT) sha1sum.$(OBJEXT) show_file.$(OBJEXT) \
-	shrink.$(OBJEXT) sprd_at.$(OBJEXT) sprd_write_imei.$(OBJEXT) \
-	su.$(OBJEXT) sudo.$(OBJEXT) super_upgrade.$(OBJEXT) \
-	swan_check.$(OBJEXT) swan_emmc.$(OBJEXT) swan_fac.$(OBJEXT) \
-	swan_ipu.$(OBJEXT) swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) \
-	swan_mkfs.$(OBJEXT) swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) \
-	swan_upgrade.$(OBJEXT) swan_vk.$(OBJEXT) swan_vn.$(OBJEXT) \
-	system_init.$(OBJEXT) tcp_copy.$(OBJEXT) tcp_dd.$(OBJEXT) \
-	tcp_dd_server.$(OBJEXT) tcp_exec.$(OBJEXT) tcp_proxy.$(OBJEXT) \
-	textlen.$(OBJEXT) tftp_auto_dd.$(OBJEXT) \
-	tftp_command.$(OBJEXT) tftp_copy.$(OBJEXT) tftp_dd.$(OBJEXT) \
-	tftp_dd_server.$(OBJEXT) touch.$(OBJEXT) tty_mode.$(OBJEXT) \
-	umount.$(OBJEXT) usb.$(OBJEXT) usb_copy.$(OBJEXT) \
-	usb_dd.$(OBJEXT) usb_dd_server.$(OBJEXT) vfat.$(OBJEXT) \
-	web_proxy.$(OBJEXT)
+	auto_input.$(OBJEXT) auto_mount.$(OBJEXT) battery.$(OBJEXT) \
+	battery_level.$(OBJEXT) bdata.$(OBJEXT) bkernel.$(OBJEXT) \
+	bmp_view.$(OBJEXT) bootimg.$(OBJEXT) bramdisk.$(OBJEXT) \
+	brecovery.$(OBJEXT) bsystem.$(OBJEXT) buboot.$(OBJEXT) \
+	calculator.$(OBJEXT) chroot.$(OBJEXT) chtty.$(OBJEXT) \
+	copy.$(OBJEXT) dd.$(OBJEXT) df.$(OBJEXT) display.$(OBJEXT) \
+	dos2unix.$(OBJEXT) eavoo_sell_statistic.$(OBJEXT) \
+	ecc.$(OBJEXT) event_repeater.$(OBJEXT) ext2.$(OBJEXT) \
+	fdisk.$(OBJEXT) file_crc32.$(OBJEXT) file_join.$(OBJEXT) \
+	file_loop.$(OBJEXT) file_split.$(OBJEXT) ftp.$(OBJEXT) \
+	ftp_server.$(OBJEXT) git_daemon.$(OBJEXT) image_dd.$(OBJEXT) \
+	inotify.$(OBJEXT) loop_run.$(OBJEXT) md5sum.$(OBJEXT) \
+	mkdir.$(OBJEXT) mknp.$(OBJEXT) mksdcard.$(OBJEXT) \
+	modem_upgrade.$(OBJEXT) mount.$(OBJEXT) move.$(OBJEXT) \
+	mtd.$(OBJEXT) net_monitor.$(OBJEXT) part_probe.$(OBJEXT) \
+	part_show.$(OBJEXT) part_table.$(OBJEXT) ping.$(OBJEXT) \
+	poll_event.$(OBJEXT) poll_input.$(OBJEXT) ramdisk.$(OBJEXT) \
+	remove.$(OBJEXT) resize.$(OBJEXT) rle.$(OBJEXT) \
+	screen_mirror.$(OBJEXT) service.$(OBJEXT) sha1sum.$(OBJEXT) \
+	show_file.$(OBJEXT) shrink.$(OBJEXT) sprd_at.$(OBJEXT) \
+	sprd_write_imei.$(OBJEXT) su.$(OBJEXT) sudo.$(OBJEXT) \
+	super_upgrade.$(OBJEXT) swan_check.$(OBJEXT) \
+	swan_emmc.$(OBJEXT) swan_fac.$(OBJEXT) swan_ipu.$(OBJEXT) \
+	swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) swan_mkfs.$(OBJEXT) \
+	swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) swan_upgrade.$(OBJEXT) \
+	swan_vk.$(OBJEXT) swan_vn.$(OBJEXT) system_init.$(OBJEXT) \
+	tcp_copy.$(OBJEXT) tcp_dd.$(OBJEXT) tcp_dd_server.$(OBJEXT) \
+	tcp_exec.$(OBJEXT) tcp_proxy.$(OBJEXT) textlen.$(OBJEXT) \
+	tftp_auto_dd.$(OBJEXT) tftp_command.$(OBJEXT) \
+	tftp_copy.$(OBJEXT) tftp_dd.$(OBJEXT) tftp_dd_server.$(OBJEXT) \
+	touch.$(OBJEXT) tty_mode.$(OBJEXT) umount.$(OBJEXT) \
+	usb.$(OBJEXT) usb_copy.$(OBJEXT) usb_dd.$(OBJEXT) \
+	usb_dd_server.$(OBJEXT) vfat.$(OBJEXT) web_proxy.$(OBJEXT)
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_2 = core/cavan_main.$(OBJEXT)
 am_cavan_main_OBJECTS = $(am__objects_1) $(am__objects_2)
@@ -317,14 +317,15 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
-APP_SRC_FILES = abspath.c alarm.c auto_dd.c auto_mount.c battery.c \
-	battery_level.c bdata.c bkernel.c bmp_view.c bramdisk.c \
-	brecovery.c bsystem.c buboot.c calculator.c chroot.c chtty.c \
-	copy.c dd.c df.c display.c dos2unix.c eavoo_sell_statistic.c \
-	ecc.c event_repeater.c ext2.c fdisk.c file_crc32.c file_join.c \
-	file_loop.c file_split.c ftp.c ftp_server.c git_daemon.c \
-	image_dd.c inotify.c loop_run.c md5sum.c mkdir.c mknp.c \
-	mksdcard.c modem_upgrade.c mount.c move.c mtd.c net_monitor.c \
+APP_SRC_FILES = abspath.c alarm.c auto_dd.c auto_input.c auto_mount.c \
+	battery.c battery_level.c bdata.c bkernel.c bmp_view.c \
+	bootimg.c bramdisk.c brecovery.c bsystem.c buboot.c \
+	calculator.c chroot.c chtty.c copy.c dd.c df.c display.c \
+	dos2unix.c eavoo_sell_statistic.c ecc.c event_repeater.c \
+	ext2.c fdisk.c file_crc32.c file_join.c file_loop.c \
+	file_split.c ftp.c ftp_server.c git_daemon.c image_dd.c \
+	inotify.c loop_run.c md5sum.c mkdir.c mknp.c mksdcard.c \
+	modem_upgrade.c mount.c move.c mtd.c net_monitor.c \
 	part_probe.c part_show.c part_table.c ping.c poll_event.c \
 	poll_input.c ramdisk.c remove.c resize.c rle.c screen_mirror.c \
 	service.c sha1sum.c show_file.c shrink.c sprd_at.c \
@@ -452,12 +453,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/abspath.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alarm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auto_dd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auto_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auto_mount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/battery.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/battery_level.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bdata.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bkernel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bmp_view.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bootimg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bramdisk.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/brecovery.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsystem.Po@am__quote@
