@@ -887,7 +887,7 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 		goto out_client_close;
 	}
 
-	println("filename = %s", src_file);
+	println("%s => %s", src_file, dest_file);
 	println("offset = %s", size2text(file_req->src_offset));
 	println("size = %s", size2text(file_req->size));
 
@@ -969,7 +969,7 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 		goto out_close_fd;
 	}
 
-	println("filename = %s", dest_file);
+	println("%s <= %s", dest_file, src_file);
 	println("offset = %s", size2text(file_req->dest_offset));
 	println("size = %s", size2text(file_req->size));
 

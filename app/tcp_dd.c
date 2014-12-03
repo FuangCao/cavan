@@ -202,7 +202,7 @@ static void show_usage(const char *command)
 	println("--uboot [IMAGE]\t\t\t%s", cavan_help_message_uboot);
 	println("--resource [IMAGE]\t\t%s", cavan_help_message_resource);
 	println("--image [s|d|r|m|b|k|u|R]\t%s", cavan_help_message_rw_image);
-	println("-I\t\t\t\t%s ", cavan_help_message_rw_image_auto);
+	println("-I <PATHNAMES>\t\t\t%s ", cavan_help_message_rw_image_auto);
 }
 
 int main(int argc, char *argv[])
