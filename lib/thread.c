@@ -137,8 +137,8 @@ void cavan_thread_deinit(struct cavan_thread *thread)
 	close(thread->pipefd[0]);
 	close(thread->pipefd[1]);
 
-	pthread_cond_destroy(&thread->cond);
-	pthread_mutex_destroy(&thread->lock);
+	// pthread_cond_destroy(&thread->cond);
+	// pthread_mutex_destroy(&thread->lock);
 }
 
 static void cavan_thread_sighandler(int signum)
@@ -191,6 +191,7 @@ static void *cavan_thread_main_loop(void *data)
 #if CAVAN_THREAD_DEBUG
 			pr_bold_info("Thread %s stopping", thread->name);
 #endif
+		case CAVAN_THREAD_STATE_STOPPED:
 			goto out_thread_exit;
 
 		case CAVAN_THREAD_STATE_SUSPEND:
@@ -222,7 +223,7 @@ static void *cavan_thread_main_loop(void *data)
 #if CAVAN_THREAD_DEBUG
 			pr_red_info("Thread %s invalid state %d", thread->name, thread->state);
 #endif
-			break;
+			goto out_thread_exit;
 		}
 	}
 
@@ -271,38 +272,42 @@ void cavan_thread_stop(struct cavan_thread *thread)
 
 	pthread_mutex_lock(&thread->lock);
 
-	switch (thread->state)
+	for (i = 1;i < 200; i++)
 	{
-	case CAVAN_THREAD_STATE_STOPPPING:
-	case CAVAN_THREAD_STATE_STOPPED:
-		break;
+		switch (thread->state)
+		{
+		case CAVAN_THREAD_STATE_STOPPPING:
+			break;
 
-	case CAVAN_THREAD_STATE_RUNNING:
-	case CAVAN_THREAD_STATE_SUSPEND:
-		thread->state = CAVAN_THREAD_STATE_STOPPPING;
-		break;
+		case CAVAN_THREAD_STATE_RUNNING:
+		case CAVAN_THREAD_STATE_SUSPEND:
+			thread->state = CAVAN_THREAD_STATE_STOPPPING;
+			break;
 
-	default:
-		thread->state = CAVAN_THREAD_STATE_STOPPED;
-	}
-
-	for (i = 0; thread->state != CAVAN_THREAD_STATE_STOPPED && i < 10; i++)
-	{
-		pthread_cond_broadcast(&thread->cond);
+		default:
+			thread->state = CAVAN_THREAD_STATE_STOPPED;
+			goto out_pthread_mutex_unlock;
+		}
 
 		pthread_mutex_unlock(&thread->lock);
+
+		pthread_cond_broadcast(&thread->cond);
 		thread->wake_handker(thread, thread->private_data);
-		msleep(1);
+		msleep(i);
 		pthread_mutex_lock(&thread->lock);
 	}
 
 	if (thread->state != CAVAN_THREAD_STATE_STOPPED)
 	{
+#if CAVAN_THREAD_DEBUG
+		pr_red_info("stop timeout kill it now");
+#endif
 		pthread_kill(thread->id, SIGUSR1);
 	}
 
 	thread->state = CAVAN_THREAD_STATE_STOPPED;
 
+out_pthread_mutex_unlock:
 	pthread_mutex_unlock(&thread->lock);
 }
 
