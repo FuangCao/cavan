@@ -23,12 +23,17 @@
 
 static int speed_detector_handler(struct cavan_thread *thread, void *data)
 {
+	u32 count;
 	struct speed_detector *detector = data;
 
-	cavan_timer_timespec_add(&detector->time_next, detector->interval);
-	if (cavan_thread_msleep_until(thread, &detector->time_next) != ETIMEDOUT)
+	for (count = detector->interval; count; count--)
 	{
-		return 0;
+		if (thread->state != CAVAN_THREAD_STATE_RUNNING)
+		{
+			return 0;
+		}
+
+		msleep(1);
 	}
 
 	detector->speed = detector->speed_count;
@@ -52,7 +57,6 @@ int speed_detector_start(struct speed_detector *detector, u32 interval)
 	detector->speed = detector->speed_count = 0;
 
 	clock_gettime_real(&detector->time_start);
-	detector->time_next = detector->time_start;
 
 	thread->name = "SPEED_DETECTOR";
 	thread->handler = speed_detector_handler;

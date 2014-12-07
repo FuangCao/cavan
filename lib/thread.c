@@ -137,8 +137,8 @@ void cavan_thread_deinit(struct cavan_thread *thread)
 	close(thread->pipefd[0]);
 	close(thread->pipefd[1]);
 
-	// pthread_cond_destroy(&thread->cond);
-	// pthread_mutex_destroy(&thread->lock);
+	pthread_cond_destroy(&thread->cond);
+	pthread_mutex_destroy(&thread->lock);
 }
 
 static void cavan_thread_sighandler(int signum)

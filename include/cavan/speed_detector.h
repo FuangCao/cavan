@@ -31,7 +31,6 @@ struct speed_detector
 	u32 loop_count;
 
 	struct timespec time_start;
-	struct timespec time_next;
 
 	void (*notify)(struct speed_detector *detector, u32 speed);
 };
