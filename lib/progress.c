@@ -1,12 +1,22 @@
 #include <cavan.h>
+#include <cavan/timer.h>
 #include <cavan/command.h>
 #include <cavan/progress.h>
 
-#define PROGRESS_BAR_SPEED_UPDATE_INTERVAL	1000
+#define SPEED_INTERVAL_MS	1000
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void progress_bar_fflush(struct progress_bar *bar, struct speed_detector *detector)
+s64 progress_bar_get_time_consume_ns(struct progress_bar *bar)
+{
+	struct timespec time_now;
+
+	clock_gettime_mono(&time_now);
+
+	return cavan_timespec_sub_ns(&time_now, &bar->time_start);
+}
+
+static void progress_bar_fflush(struct progress_bar *bar)
 {
 	int length;
 	char buff[1024];
@@ -42,10 +52,10 @@ static void progress_bar_fflush(struct progress_bar *bar, struct speed_detector 
 	p += bar->half_length;
 	*p++ = ']';
 
-	if (detector->loop_count > 0)
+	if (bar->speed >= 0)
 	{
 		*p++ = ' ';
-		p = mem_speed_tostring(speed_detector_get_speed(detector, 1000), p, p_end - p - 2);
+		p = mem_speed_tostring(bar->speed, p, p_end - p - 2);
 	}
 
 	length = p - buff;
@@ -94,6 +104,42 @@ static bool update_content(struct progress_bar *bar)
 	return true;
 }
 
+static bool update_speed(struct progress_bar *bar)
+{
+	s64 interval;
+	double speed;
+	struct timespec time_now;
+
+	clock_gettime_mono(&time_now);
+
+	interval = cavan_timespec_sub_ns(&time_now, &bar->time_prev);
+	if (interval < SPEED_INTERVAL_MS * 1000000)
+	{
+		return false;
+	}
+
+	if (bar->current > bar->last)
+	{
+		speed = (bar->current - bar->last) * 1000000000 / interval;
+	}
+	else
+	{
+		speed = 0;
+	}
+
+	bar->last = bar->current;
+	bar->time_prev = time_now;
+
+	if (bar->speed == speed)
+	{
+		return false;
+	}
+
+	bar->speed = speed;
+
+	return true;
+}
+
 void progress_bar_update(struct progress_bar *bar)
 {
 	if (bar->current > bar->total)
@@ -101,32 +147,18 @@ void progress_bar_update(struct progress_bar *bar)
 		return;
 	}
 
-	if (update_percent(bar) | update_content(bar))
+	if (update_percent(bar) | update_content(bar) | update_speed(bar))
 	{
-		progress_bar_fflush(bar, &bar->detector);
+		progress_bar_fflush(bar);
 	}
-}
-
-static void progress_bar_speed_notify(struct speed_detector *detector, u32 speed)
-{
-	struct progress_bar *bar = (struct progress_bar *) detector;
-
-	if (bar->speed == speed)
-	{
-		return;
-	}
-
-	bar->speed = speed;
-	progress_bar_fflush(bar, detector);
 }
 
 void progress_bar_init(struct progress_bar *bar, double total)
 {
 	u16 columns;
-	struct speed_detector *detector = &bar->detector;
 
 	bar->total = total == 0 ? 1 : total;
-	bar->current = 0;
+	bar->current = bar->last = 0;
 	bar->percent = 0;
 	bar->fill = 0;
 	bar->content_length = 0;
@@ -149,29 +181,22 @@ void progress_bar_init(struct progress_bar *bar, double total)
 	}
 
 	bar->full_length = bar->half_length * 2;
+	bar->speed = -1;
 
-	bar->speed = 0;
-	detector->notify = progress_bar_speed_notify;
-	speed_detector_start(detector, PROGRESS_BAR_SPEED_UPDATE_INTERVAL);
+	clock_gettime_mono(&bar->time_start);
+	bar->time_prev = bar->time_start;
 
 	progress_bar_update(bar);
 }
 
 void progress_bar_add(struct progress_bar *bar, double val)
 {
-	speed_detector_post(&bar->detector, val);
-
 	bar->current += val;
 	progress_bar_update(bar);
 }
 
 void progress_bar_set(struct progress_bar *bar, double val)
 {
-	if (val > bar->current)
-	{
-		speed_detector_post(&bar->detector, val - bar->current);
-	}
-
 	bar->current = val;
 	progress_bar_update(bar);
 }
@@ -179,16 +204,13 @@ void progress_bar_set(struct progress_bar *bar, double val)
 void progress_bar_finish(struct progress_bar *bar)
 {
 	double time;
-	struct speed_detector *detector = &bar->detector;
-
-	speed_detector_stop(&bar->detector);
 
 	bar->current = bar->total;
 	progress_bar_update(bar);
 
 	print_char('\n');
 
-	time = speed_detector_get_time_consume_ns(detector);
+	time = progress_bar_get_time_consume_ns(bar);
 	if (time > 1000)
 	{
 		char size_buff[32];

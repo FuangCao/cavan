@@ -11,7 +11,7 @@
 #define CAVAN_FILE_DEBUG	0
 
 #define MAX_BUFF_LEN	KB(4)
-#define MIN_FILE_SIZE	KB(1)
+#define MIN_FILE_SIZE	MB(1)
 #define CONFIG_ERROR_IF_COPY_REMAIN	0
 
 static const u32 crc16_table[256] =

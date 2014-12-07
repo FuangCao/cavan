@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cavan.h>
-#include <cavan/speed_detector.h>
 
 #define BAR_CONTENT_MIN		23 // sizeof("[ 100% ] 1024.00 Byte/s")
 #define BAR_DEF_HALF_LEN	30
@@ -11,8 +10,11 @@
 
 struct progress_bar
 {
-	struct speed_detector detector;
+	struct timespec time_prev;
+	struct timespec time_start;
 
+	double last;
+	double speed;
 	double total;
 	double current;
 
@@ -22,9 +24,9 @@ struct progress_bar
 	int content_length;
 
 	int percent;
-	u32 speed;
 };
 
+s64 progress_bar_get_time_consume_ns(struct progress_bar *bar);
 void progress_bar_update(struct progress_bar *bar);
 void progress_bar_init(struct progress_bar *bar, double total);
 void progress_bar_add(struct progress_bar *bar, double val);
