@@ -110,11 +110,11 @@ int main(int argc, char *argv[])
 		println("Freq_IN = %s", frequency_tostring(Freq_IN, buff, sizeof(buff), NULL));
 		println("Freq_OUT = %s", frequency_tostring(Freq_OUT, buff, sizeof(buff), NULL));
 
-		for (M = PLL_M_MAX; M >= PLL_M_MIN; M--)
+		for (M = PLL_M_MIN; M <= PLL_M_MAX; M++)
 		{
-			for (N = PLL_N_MAX; N >= PLL_M_MIN; N--)
+			for (N = PLL_N_MIN; N <= PLL_M_MAX; N++)
 			{
-				for (N_MODE = PLL_N_MODE_MAX; N_MODE >= PLL_N_MODE_MIN; N_MODE--)
+				for (N_MODE = PLL_N_MODE_MIN; N_MODE <= PLL_N_MODE_MAX; N_MODE++)
 				{
 					for (P = PLL_P_MIN; P <= PLL_P_MAX; P++)
 					{
