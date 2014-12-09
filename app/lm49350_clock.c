@@ -19,10 +19,18 @@
 
 #include <cavan.h>
 
+#define PLL_M_MIN		0x00
 #define PLL_M_MAX		0x7F
-#define PLL_N_MAX		0xFF
+
+#define PLL_N_MIN		10
+#define PLL_N_MAX		250
+
+#define PLL_N_MODE_MIN	0x00
 #define PLL_N_MODE_MAX	0x1F
+
+#define PLL_P_MIN		0x00
 #define PLL_P_MAX		0xFF
+
 #define FREQ_DIFF_MAX	10
 
 static void show_usage(const char *command)
@@ -102,13 +110,13 @@ int main(int argc, char *argv[])
 		println("Freq_IN = %s", frequency_tostring(Freq_IN, buff, sizeof(buff), NULL));
 		println("Freq_OUT = %s", frequency_tostring(Freq_OUT, buff, sizeof(buff), NULL));
 
-		for (M = PLL_M_MAX; M >= 0; M--)
+		for (M = PLL_M_MAX; M >= PLL_M_MIN; M--)
 		{
-			for (N = PLL_N_MAX; N >= 0; N--)
+			for (N = PLL_N_MAX; N >= PLL_M_MIN; N--)
 			{
-				for (N_MODE = 0; N_MODE <= PLL_N_MODE_MAX; N_MODE++)
+				for (N_MODE = PLL_N_MODE_MAX; N_MODE >= PLL_N_MODE_MIN; N_MODE--)
 				{
-					for (P = 0; P <= PLL_P_MAX; P++)
+					for (P = PLL_P_MIN; P <= PLL_P_MAX; P++)
 					{
 						double diff;
 						double freq = lm49350_cal_freq(Freq_IN, M, N, N_MODE, P, false);
