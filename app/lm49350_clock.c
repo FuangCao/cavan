@@ -65,7 +65,8 @@ static double lm49350_cal_freq(double Freq_IN, int M, int N, int N_MODE, int P, 
 		char buff_in[64];
 		char buff_out[64];
 
-		println("M = 0x%02x = %d, N = 0x%02x = %d, N_MODE = 0x%02x = %d, P = 0x%02x = %d", M, M, N, N, N_MODE, N_MODE, P, P);
+		println("M = 0x%02x, N = 0x%02x, N_MODE = 0x%02x, P = 0x%02x", M, N, N_MODE, P);
+		println("M = %d, N = %d, N_MODE = %d, P = %d", M, N, N_MODE, P);
 		println("M1 = %lf, N1 = %lf, P1 = %lf", M1, N1, P1);
 		println("%s => %s", frequency_tostring(Freq_IN, buff_in, sizeof(buff_in), NULL), frequency_tostring(Freq_OUT, buff_out, sizeof(buff_out), NULL));
 	}
@@ -122,10 +123,6 @@ int main(int argc, char *argv[])
 						double freq = lm49350_cal_freq(Freq_IN, M, N, N_MODE, P, false);
 
 						diff = freq > Freq_OUT ? freq - Freq_OUT : Freq_OUT - freq;
-						if (diff < FREQ_DIFF_MAX)
-						{
-							println("diff = %lf, M = 0x%02x = %d, N = 0x%02x = %d, N_MODE = 0x%02x = %d, P = 0x%02x = %d", diff, M, M, N, N, N_MODE, N_MODE, P, P);
-						}
 
 						if (diff < diff_min || diff_min < 0)
 						{
@@ -135,6 +132,11 @@ int main(int argc, char *argv[])
 							N_BEST = N;
 							N_MODE_BEST = N_MODE;
 							P_BEST = P;
+						}
+
+						if (diff == diff_min)
+						{
+							println("M = 0x%02x, N = 0x%02x, N_MODE = 0x%02x, P = 0x%02x, diff = %lf", M, N, N_MODE, P, diff);
 						}
 					}
 				}
