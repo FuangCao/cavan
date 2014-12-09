@@ -233,6 +233,10 @@ extern void mem_reverse_simple(byte *start, byte *end);
 extern void mem_reverse(byte *start, byte *end);
 int text2array(char *text, u32 *array, size_t size, char sep);
 
+char *frequency_tostring(double freq, char *buff, size_t size, char **last);
+u32 frequency_unit2value(const char *text, const char *text_end);
+double text2frequency(const char *text, const char *text_end, const char **last);
+
 // ============================================================
 
 static inline int prefix2base2(const char *prefix, const char **last, int base)

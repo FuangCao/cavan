@@ -3194,3 +3194,85 @@ int text2array(char *text, u32 *array, size_t size, char sep)
 
 	return ap - array;
 }
+
+char *frequency_tostring(double freq, char *buff, size_t size, char **last)
+{
+	if (freq < 1000)
+	{
+		size = snprintf(buff, size, "%lf Hz", freq);
+	}
+	else if (freq < 1000000)
+	{
+		size = snprintf(buff, size, "%lf kHz", freq / 1000);
+	}
+	else if (freq < 1000000000)
+	{
+		size = snprintf(buff, size, "%lf MHz", freq / 1000000);
+	}
+	else
+	{
+		size = snprintf(buff, size, "%lf GHz", freq / 1000000000);
+	}
+
+	if (last)
+	{
+		*last = buff + size;
+	}
+
+	return buff;
+}
+
+u32 frequency_unit2value(const char *text, const char *text_end)
+{
+	u32 freq;
+
+	if (text_end == NULL)
+	{
+		text_end = text + strlen(text);
+	}
+
+	text = text_skip_space(text, text_end);
+
+	switch (text[0])
+	{
+	case 'k':
+	case 'K':
+		freq = 1000;
+		text++;
+		break;
+
+	case 'm':
+	case 'M':
+		freq = 1000000;
+		text++;
+		break;
+
+	case 'g':
+	case 'G':
+		freq = 1000000000;
+		text++;
+		break;
+
+	default:
+		freq = 1;
+	}
+
+	if (*text == 0 || strcmp(text, "Hz") == 0)
+	{
+		return freq;
+	}
+
+	pr_red_info("Invalid frequency unit %s", text);
+
+	return 0;
+}
+
+double text2frequency(const char *text, const char *text_end, const char **last)
+{
+	if (text_end == NULL)
+	{
+		text_end = text + strlen(text);
+	}
+
+	return text2double_unsigned(text, text_end, &text, 10) * frequency_unit2value(text, text_end);
+}
