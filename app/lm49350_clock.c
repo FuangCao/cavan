@@ -25,21 +25,22 @@
 #define PLL_N_MIN		10
 #define PLL_N_MAX		250
 
-#define PLL_N_MODE_MIN	0x00
-#define PLL_N_MODE_MAX	0x1F
+#define PLL_N_MOD_MIN	0x00
+#define PLL_N_MOD_MAX	0x1F
 
 #define PLL_P_MIN		0x00
-#define PLL_P_MAX		0xFF
+#define PLL_P_MAX		0x1FF
 
 #define FREQ_DIFF_MAX	10
 
 static void show_usage(const char *command)
 {
 	println("Usage: %s Freq_IN Freq_OUT", command);
-	println("Usage: %s Freq_IN M N N_MODE P1 [P2]", command);
+	println("Usage: %s Freq_IN FPS OSR", command);
+	println("Usage: %s Freq_IN M N N_MOD P1 [P2]", command);
 }
 
-static double lm49350_cal_freq(double Freq_IN, int M, int N, int N_MODE, int P, bool verbose)
+static double lm49350_cal_freq(double Freq_IN, int M, int N, int N_MOD, int P, bool verbose)
 {
 	double Freq_OUT;
 	double M1, N1, P1;
@@ -56,7 +57,7 @@ static double lm49350_cal_freq(double Freq_IN, int M, int N, int N_MODE, int P, 
 		N = 250;
 	}
 
-	N1 = N + ((double) N_MODE) / 32;
+	N1 = N + ((double) N_MOD) / 32;
 
 	Freq_OUT = Freq_IN * N1 / (M1 * P1);
 
@@ -65,8 +66,8 @@ static double lm49350_cal_freq(double Freq_IN, int M, int N, int N_MODE, int P, 
 		char buff_in[64];
 		char buff_out[64];
 
-		println("M = 0x%02x, N = 0x%02x, N_MODE = 0x%02x, P = 0x%02x", M, N, N_MODE, P);
-		println("M = %d, N = %d, N_MODE = %d, P = %d", M, N, N_MODE, P);
+		println("M = 0x%02x, N = 0x%02x, N_MOD = 0x%02x, P = 0x%02x", M, N, N_MOD, P);
+		println("M = %d, N = %d, N_MOD = %d, P = %d", M, N, N_MOD, P);
 		println("M1 = %lf, N1 = %lf, P1 = %lf", M1, N1, P1);
 		println("%s => %s", frequency_tostring(Freq_IN, buff_in, sizeof(buff_in), NULL), frequency_tostring(Freq_OUT, buff_out, sizeof(buff_out), NULL));
 	}
@@ -77,22 +78,22 @@ static double lm49350_cal_freq(double Freq_IN, int M, int N, int N_MODE, int P, 
 int main(int argc, char *argv[])
 {
 	double Freq_IN;
-	int M, N, N_MODE, P;
+	int M, N, N_MOD, P;
 
 	if (argc > 5)
 	{
 		Freq_IN = text2frequency(argv[1], NULL, NULL);
 		M = text2value_unsigned(argv[2], NULL, 10);
 		N = text2value_unsigned(argv[3], NULL, 10);
-		N_MODE = text2value_unsigned(argv[4], NULL, 10);
+		N_MOD = text2value_unsigned(argv[4], NULL, 10);
 
 		P = text2value_unsigned(argv[5], NULL, 10);
-		lm49350_cal_freq(Freq_IN, M, N, N_MODE, P, true);
+		lm49350_cal_freq(Freq_IN, M, N, N_MOD, P, true);
 
 		if (argc > 6)
 		{
 			P = text2value_unsigned(argv[6], NULL, 10);
-			lm49350_cal_freq(Freq_IN, M, N, N_MODE, P, true);
+			lm49350_cal_freq(Freq_IN, M, N, N_MOD, P, true);
 		}
 	}
 	else if (argc > 2)
@@ -101,12 +102,21 @@ int main(int argc, char *argv[])
 		int M_BEST = 0;
 		int N_BEST = 0;
 		int P_BEST = 0;
-		int N_MODE_BEST = 0;
+		int N_MOD_BEST = 0;
 		double Freq_OUT;
 		double diff_min = -1;
 
 		Freq_IN = text2frequency(argv[1], NULL, NULL);
 		Freq_OUT = text2frequency(argv[2], NULL, NULL);
+
+		if (argc > 3)
+		{
+			int osr = text2value_unsigned(argv[3], NULL, 10);
+
+			println("FPS = %s, OSR = %d", frequency_tostring(Freq_OUT, buff, sizeof(buff), NULL), osr);
+
+			Freq_OUT *= osr * 2;
+		}
 
 		println("Freq_IN = %s", frequency_tostring(Freq_IN, buff, sizeof(buff), NULL));
 		println("Freq_OUT = %s", frequency_tostring(Freq_OUT, buff, sizeof(buff), NULL));
@@ -115,12 +125,12 @@ int main(int argc, char *argv[])
 		{
 			for (N = PLL_N_MIN; N <= PLL_M_MAX; N++)
 			{
-				for (N_MODE = PLL_N_MODE_MIN; N_MODE <= PLL_N_MODE_MAX; N_MODE++)
+				for (N_MOD = PLL_N_MOD_MIN; N_MOD <= PLL_N_MOD_MAX; N_MOD++)
 				{
 					for (P = PLL_P_MIN; P <= PLL_P_MAX; P++)
 					{
 						double diff;
-						double freq = lm49350_cal_freq(Freq_IN, M, N, N_MODE, P, false);
+						double freq = lm49350_cal_freq(Freq_IN, M, N, N_MOD, P, false);
 
 						diff = freq > Freq_OUT ? freq - Freq_OUT : Freq_OUT - freq;
 
@@ -130,20 +140,20 @@ int main(int argc, char *argv[])
 
 							M_BEST = M;
 							N_BEST = N;
-							N_MODE_BEST = N_MODE;
+							N_MOD_BEST = N_MOD;
 							P_BEST = P;
 						}
 
 						if (diff == diff_min)
 						{
-							println("M = 0x%02x, N = 0x%02x, N_MODE = 0x%02x, P = 0x%02x, diff = %lf", M, N, N_MODE, P, diff);
+							println("M = 0x%02x, N = 0x%02x, N_MOD = 0x%02x, P = 0x%02x, diff = %lf", M, N, N_MOD, P, diff);
 						}
 					}
 				}
 			}
 		}
 
-		lm49350_cal_freq(Freq_IN, M_BEST, N_BEST, N_MODE_BEST, P_BEST, true);
+		lm49350_cal_freq(Freq_IN, M_BEST, N_BEST, N_MOD_BEST, P_BEST, true);
 	}
 	else
 	{

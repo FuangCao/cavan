@@ -167,6 +167,12 @@ static const struct option command_long_option[] =
 		.val = CAVAN_COMMAND_OPTION_IMAGE,
 	},
 	{
+		.name = "auto",
+		.has_arg = no_argument,
+		.flag = NULL,
+		.val = CAVAN_COMMAND_OPTION_AUTO,
+	},
+	{
 		0, 0, 0, 0
 	},
 };
@@ -202,7 +208,7 @@ static void show_usage(const char *command)
 	println("--uboot [IMAGE]\t\t\t%s", cavan_help_message_uboot);
 	println("--resource [IMAGE]\t\t%s", cavan_help_message_resource);
 	println("--image [s|d|r|m|b|k|u|R]\t%s", cavan_help_message_rw_image);
-	println("-I <PATHNAMES>\t\t\t%s ", cavan_help_message_rw_image_auto);
+	println("-I, --auto <PATHNAMES>\t\t%s ", cavan_help_message_rw_image_auto);
 }
 
 int main(int argc, char *argv[])
@@ -361,6 +367,7 @@ label_add_image:
 			break;
 
 		case 'I':
+		case CAVAN_COMMAND_OPTION_AUTO:
 			image_mask = "-";
 			break;
 
