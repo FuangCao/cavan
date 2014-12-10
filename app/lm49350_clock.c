@@ -29,7 +29,12 @@
 #define PLL_N_MOD_MAX	0x1F
 
 #define PLL_P_MIN		0x00
+
+#if 0
 #define PLL_P_MAX		0x1FF
+#else
+#define PLL_P_MAX		0xFF
+#endif
 
 #define FREQ_DIFF_MAX	10
 
@@ -204,7 +209,7 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-					println("{ %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x },", fps, M_BEST, N_BEST, N_MOD_BEST, P_BEST);
+					println("{ %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x }, // %s", fps, M_BEST, N_BEST, N_MOD_BEST, P_BEST, frequency_tostring(Freq_OUT, buff, sizeof(buff), NULL));
 				}
 			}
 		}
