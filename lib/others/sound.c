@@ -486,7 +486,7 @@ out_close_fd:
 	return ret;
 }
 
-void cavan_wav_player_uninit(struct cavan_wav_player *player)
+void cavan_wav_player_deinit(struct cavan_wav_player *player)
 {
 	snd_output_close(player->pcm_log);
 	snd_pcm_close(player->pcm_handle);
@@ -527,7 +527,7 @@ int cavan_wav_player_xrun_recovery(snd_pcm_t *handle, int err)
 	return err;
 }
 
-int cavan_wav_pcm_write(snd_pcm_t *handle, u32 frame_size, const void *buff, size_t size)
+int cavan_wav_pcm_write(snd_pcm_t *handle, u32 frame_size, const char *buff, size_t size)
 {
 	int wrcount, count = size / frame_size;
 
@@ -563,7 +563,7 @@ int cavan_wav_player_run(struct cavan_wav_player *player)
 	snd_pcm_t *handle = player->pcm_handle;
 	u32 bytes_per_frame = player->bytes_per_frame;
 	size_t buff_size = player->buff_size;
-	void *buff = alloca(buff_size);
+	char *buff = alloca(buff_size);
 	size_t total_length = player->wav_hdr.data.data_length;
 	ssize_t rdlen;
 	int wrcount;
@@ -587,7 +587,7 @@ int cavan_wav_player_run(struct cavan_wav_player *player)
 
 		total_length -= rdlen;
 
-		if (rdlen < buff_size)
+		if ((size_t) rdlen < buff_size)
 		{
 			ret = snd_pcm_format_set_silence(player->format, buff + rdlen, (buff_size - rdlen) / player->bytes_per_sample);
 			if (ret < 0)
@@ -626,7 +626,7 @@ int cavan_wav_playback(const char *filename)
 
 	ret = cavan_wav_player_run(&player);
 
-	cavan_wav_player_uninit(&player);
+	cavan_wav_player_deinit(&player);
 
 	return ret;
 }

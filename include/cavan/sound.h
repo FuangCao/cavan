@@ -100,7 +100,9 @@ int cavan_wav_player_set_hwparams(struct cavan_wav_player *player);
 int cavan_wav_player_set_swparams(struct cavan_wav_player *player, int period_event);
 int cavan_wav_player_xrun_recovery(snd_pcm_t *handle, int err);
 void cavan_wav_player_deinit(struct cavan_wav_player *player);
+int cavan_wav_player_run(struct cavan_wav_player *player);
 int cavan_wav_playback(const char *filename);
+int cavan_wav_pcm_write(snd_pcm_t *handle, u32 frame_size, const char *buff, size_t size);
 
 static inline int wav_riff_check(struct wav_riff_chunk *chk)
 {
