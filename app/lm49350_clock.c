@@ -44,15 +44,15 @@ static double lm49350_osr_list[] = { 32, 64, 125, 128 };
 
 static void show_usage(const char *command)
 {
-	println("Usage: %s Freq_IN", command);
-	println("Usage: %s Freq_IN Freq_OUT", command);
-	println("Usage: %s Freq_IN FPS OSR", command);
-	println("Usage: %s Freq_IN M N N_MOD P1 [P2]", command);
+	println("Usage: %s IN", command);
+	println("Usage: %s IN OUT", command);
+	println("Usage: %s IN FPS OSR", command);
+	println("Usage: %s IN M N N_MOD P [DIV]", command);
 }
 
-static double lm49350_cal_freq(double Freq_IN, int M, int N, int N_MOD, int P, int DIV, bool verbose)
+static double lm49350_cal_freq(double IN, int M, int N, int N_MOD, int P, int DIV, bool verbose)
 {
-	double Freq_OUT;
+	double OUT;
 	double M1, N1, P1, DIV1;
 
 	M1 = ((double) M + 1) / 2;
@@ -75,7 +75,7 @@ static double lm49350_cal_freq(double Freq_IN, int M, int N, int N_MOD, int P, i
 
 	N1 = N + ((double) N_MOD) / 32;
 
-	Freq_OUT = Freq_IN * N1 / (M1 * P1) / DIV1;
+	OUT = IN * N1 / (M1 * P1) / DIV1;
 
 	if (verbose)
 	{
@@ -85,13 +85,13 @@ static double lm49350_cal_freq(double Freq_IN, int M, int N, int N_MOD, int P, i
 		println("M = 0x%02x, N = 0x%02x, N_MOD = 0x%02x, P = 0x%02x, DIV = 0x%02x", M, N, N_MOD, P, DIV);
 		println("M = %d, N = %d, N_MOD = %d, P = %d, DIV = %d", M, N, N_MOD, P, DIV);
 		println("M1 = %lf, N1 = %lf, P1 = %lf, DIV1 = %lf", M1, N1, P1, DIV1);
-		println("%s => %s", frequency_tostring(Freq_IN, buff_in, sizeof(buff_in), NULL), frequency_tostring(Freq_OUT, buff_out, sizeof(buff_out), NULL));
+		println("%s => %s", frequency_tostring(IN, buff_in, sizeof(buff_in), NULL), frequency_tostring(OUT, buff_out, sizeof(buff_out), NULL));
 	}
 
-	return Freq_OUT;
+	return OUT;
 }
 
-static double lm49350_find_pll_config(double Freq_IN, double Freq_OUT, int *M_BEST, int *N_BEST, int *N_MOD_BEST, int *P_BEST, int *DIV_BEST, bool verbose)
+static double lm49350_find_pll_config(double IN, double OUT, int *M_BEST, int *N_BEST, int *N_MOD_BEST, int *P_BEST, int *DIV_BEST, bool verbose)
 {
 	int count;
 	int M, N, N_MOD, P, DIV;
@@ -114,9 +114,9 @@ static double lm49350_find_pll_config(double Freq_IN, double Freq_OUT, int *M_BE
 					for (P = PLL_P_MIN; P <= PLL_P_MAX; P++)
 					{
 						double diff;
-						double freq = lm49350_cal_freq(Freq_IN, M, N, N_MOD, P, DIV, false);
+						double freq = lm49350_cal_freq(IN, M, N, N_MOD, P, DIV, false);
 
-						diff = freq > Freq_OUT ? freq - Freq_OUT : Freq_OUT - freq;
+						diff = freq > OUT ? freq - OUT : OUT - freq;
 
 						if (diff < diff_min || diff_min < 0)
 						{
@@ -166,13 +166,13 @@ static double lm49350_find_pll_config(double Freq_IN, double Freq_OUT, int *M_BE
 
 int main(int argc, char *argv[])
 {
-	double Freq_IN;
+	double IN;
 
 	if (argc > 5)
 	{
 		int M, N, N_MOD, P, DIV;
 
-		Freq_IN = text2frequency(argv[1], NULL, NULL);
+		IN = text2frequency(argv[1], NULL, NULL);
 		M = text2value_unsigned(argv[2], NULL, 10);
 		N = text2value_unsigned(argv[3], NULL, 10);
 		N_MOD = text2value_unsigned(argv[4], NULL, 10);
@@ -187,45 +187,45 @@ int main(int argc, char *argv[])
 			DIV = 0x00;
 		}
 
-		lm49350_cal_freq(Freq_IN, M, N, N_MOD, P, DIV, true);
+		lm49350_cal_freq(IN, M, N, N_MOD, P, DIV, true);
 	}
 	else if (argc > 2)
 	{
 		int ret;
-		char buff[64];
-		double Freq_OUT;
+		double OUT;
+		char buff_in[64];
+		char buff_out[64];
 		int M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST;
 
-		Freq_IN = text2frequency(argv[1], NULL, NULL);
-		Freq_OUT = text2frequency(argv[2], NULL, NULL);
+		IN = text2frequency(argv[1], NULL, NULL);
+		OUT = text2frequency(argv[2], NULL, NULL);
 
 		if (argc > 3)
 		{
 			int osr = text2value_unsigned(argv[3], NULL, 10);
 
-			println("FPS = %s, OSR = %d", frequency_tostring(Freq_OUT, buff, sizeof(buff), NULL), osr);
+			println("FPS = %s, OSR = %d", frequency_tostring(OUT, buff_out, sizeof(buff_out), NULL), osr);
 
-			Freq_OUT *= osr * 2;
+			OUT *= osr * 2;
 		}
 
-		println("Freq_IN = %s", frequency_tostring(Freq_IN, buff, sizeof(buff), NULL));
-		println("Freq_OUT = %s", frequency_tostring(Freq_OUT, buff, sizeof(buff), NULL));
+		println("%s => %s", frequency_tostring(IN, buff_in, sizeof(buff_in), NULL), frequency_tostring(OUT, buff_out, sizeof(buff_out), NULL));
 
-		if (lm49350_find_pll_config(Freq_IN, Freq_OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, true) != 0.00)
+		if (lm49350_find_pll_config(IN, OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, true) != 0.00)
 		{
 			pr_red_info("Not found!");
 			return ret;
 		}
 
-		lm49350_cal_freq(Freq_IN, M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST, true);
+		lm49350_cal_freq(IN, M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST, true);
 	}
 	else if (argc > 1)
 	{
 		int i, j;
 		char buff[64];
 
-		Freq_IN = text2frequency(argv[1], NULL, NULL);
-		println("Freq_IN = %s", frequency_tostring(Freq_IN, buff, sizeof(buff), NULL));
+		IN = text2frequency(argv[1], NULL, NULL);
+		println("IN = %s", frequency_tostring(IN, buff, sizeof(buff), NULL));
 
 		for (i = 0; i < NELEM(lm49350_osr_list); i++)
 		{
@@ -236,16 +236,16 @@ int main(int argc, char *argv[])
 			for (j = 0; j < NELEM(lm49350_fps_list); j++)
 			{
 				u32 fps = lm49350_fps_list[j];
-				double Freq_OUT = fps * osr * 2;
+				double OUT = fps * osr * 2;
 				int M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST;
 
-				if (lm49350_find_pll_config(Freq_IN, Freq_OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, false) != 0.00)
+				if (lm49350_find_pll_config(IN, OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, false) != 0.00)
 				{
 					pr_red_info("fps = %d not found!", fps);
 				}
 				else
 				{
-					println("{ %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x }, // %s", fps, M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST, frequency_tostring(Freq_OUT, buff, sizeof(buff), NULL));
+					println("{ %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x }, // %s", fps, M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST, frequency_tostring(OUT, buff, sizeof(buff), NULL));
 				}
 			}
 		}
