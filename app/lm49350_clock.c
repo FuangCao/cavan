@@ -39,7 +39,7 @@
 #define DIV_MIN			0x01
 #define DIV_MAX			0xFFFF
 
-static u32 lm49350_fps_list[] = { 8000, 11025, 16000, 22050, 32000, 44100, 48000, 64000, 88200, 96000, 176400, 192000 };
+static u32 lm49350_fps_list[] = { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000, 176400, 192000 };
 static double lm49350_osr_list[] = { 32, 64, 125, 128 };
 
 static void show_usage(const char *command)
