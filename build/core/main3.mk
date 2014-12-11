@@ -45,6 +45,10 @@ CFLAGS += -DCAVAN_DEBUG -rdynamic
 SUB_DIRS += test
 endif
 
+ifeq ($(BUILD_OTHERS),true)
+CFLAGS += -lasound -ldl
+endif
+
 ifneq ($(BUILD_ENTRY),cavan)
 CFLAGS += -Wmissing-declarations
 endif

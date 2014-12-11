@@ -63,19 +63,19 @@ endif
 $$(if $$(filter package,$(1)),$$(eval $$(call module_package_action)))
 
 $$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.c | $$(LOCAL_OUT_PATH)
-	$$(Q)mkdir -pv $$(@D)
+	$$(Q)$$(MKDIR) $$(@D)
 	$$(call build_c_object)
 
 $$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.cc | $$(LOCAL_OUT_PATH)
-	$$(Q)mkdir -pv $$(@D)
+	$$(Q)$$(MKDIR) $$(@D)
 	$$(call build_c_object)
 
 $$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.cpp | $$(LOCAL_OUT_PATH)
-	$$(Q)mkdir -pv $$(@D)
+	$$(Q)$$(MKDIR) $$(@D)
 	$$(call build_c_object)
 
 $$(LOCAL_OUT_PATH)/%.o: $$(LOCAL_PATH)/%.cxx | $$(LOCAL_OUT_PATH)
-	$$(Q)mkdir -pv $$(@D)
+	$$(Q)$$(MKDIR) $$(@D)
 	$$(call build_c_object)
 
 $$(LOCAL_OUT_PATH):
