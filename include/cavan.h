@@ -24,6 +24,23 @@
 #include <time.h>
 #include <unistd.h>
 
+#define GCC_VERSION		(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+
+#if GCC_VERSION >= 30300
+#define __used			__attribute__((__used__))
+#else
+#define __used			__attribute__((__unused__))
+#endif
+
+#if GCC_VERSION >= 30400
+#define __must_check	__attribute__((warn_unused_result))
+#else
+#define __must_check
+#endif
+
+#define likely(exp)		(__builtin_expect(!!(exp), true))
+#define unlikely(exp)	(__builtin_expect(!!(exp), false))
+
 static inline void msleep(useconds_t msec)
 {
 	while (msec--)
@@ -46,6 +63,3 @@ static inline void ssleep(useconds_t sec)
 #include <cavan/text.h>
 #include <cavan/memory.h>
 #include <cavan/file.h>
-
-#define likely(exp)		(__builtin_expect(!!(exp), true))
-#define unlikely(exp)	(__builtin_expect(!!(exp), false))
