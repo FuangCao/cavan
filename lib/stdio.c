@@ -678,3 +678,19 @@ bool cavan_get_choose_yesno(const char *prompt, bool def_choose, int timeout_ms)
 		pr_red_info("Please input [Y/y/N/n/Enter]");
 	}
 }
+
+const char *cavan_get_temp_path(void)
+{
+	int i;
+	const char *paths[] = { CAVAN_TEMP_PATH_PC, CAVAN_TEMP_PATH_ANDROID, "/data", "/cache" };
+
+	for (i = 0; i < NELEM(paths); i++)
+	{
+		if (file_access_w(paths[i]))
+		{
+			return paths[i];
+		}
+	}
+
+	return paths[0];
+}

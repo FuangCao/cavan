@@ -3,16 +3,23 @@
 #include <cavan.h>
 #include <stdarg.h>
 
+#define CAVAN_TEMP_PATH_PC		"/tmp"
+#define CAVAN_TEMP_PATH_ANDROID	"/data/local/tmp"
+
+#ifdef CAVAN_ARCH_ARM
+#define CAVAN_TEMP_PATH			CAVAN_TEMP_PATH_ANDROID
+#else
+#define CAVAN_TEMP_PATH			CAVAN_TEMP_PATH_PC
+#endif
+
 #ifdef CONFIG_BUILD_FOR_ANDROID
 #include <utils/Log.h>
 #ifndef LOGD
 #define LOGD					ALOGD
 #endif
 #define pd_info(fmt, args ...)	LOGD(fmt "\n", ##args)
-#define CAVAN_TEMP_PATH			"/data/local/tmp"
 #else
 #define pd_info(fmt, args ...)	fprintf(stderr, fmt "\n", ##args)
-#define CAVAN_TEMP_PATH			"/tmp"
 #endif
 
 #ifdef __cplusplus
@@ -300,6 +307,7 @@ __printf_format_23__ void print_color_text(int color, const char *fmt, ...);
 __printf_format_12__ void print_error_base(const char *fmt, ...);
 
 extern char *size2text(u64 size);
+const char *cavan_get_temp_path(void);
 bool cavan_get_choose_yesno(const char *prompt, bool def_value, int timeout_ms);
 
 // ============================================================
