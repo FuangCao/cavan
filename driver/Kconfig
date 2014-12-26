@@ -1,0 +1,160 @@
+menu "Huamobile driver config"
+choice
+    prompt "Huamobile phone type"
+    default HUAMOBILE_ZTE_HS8801
+    depends on MACH_SP8810 || MACH_SP8810G_BRCM
+    help
+      Choice huamobile phone type
+
+config HUAMOBILE_ZTE_HS8801
+    depends on MACH_SP8810
+    bool "ZTE HS8801"
+    help
+      Support for the ZTE HS8801 based phone
+endchoice
+
+config HUAMOBILE_USB_VENDOR_ID
+    hex "Huamobile USB vendor id"
+    default 0x1782
+
+config HUAMOBILE_USB_PRODUCT_ID
+    hex "Huamobile USB product id"
+    default 0x5D00
+
+config HUAMOBILE_USB_RNDIS_PRODUCT_ID
+    hex "Huamobile USB rndis product id"
+    default 0x5D20
+
+config HUAMOBILE_USB_SIMPLE_NAME
+    string "Huamobile USB simple name"
+    default "Haipai"
+
+config HUAMOBILE_USB_MANUFACTURER_NAME
+    string "Huamobile USB manufacturer name"
+    default "Haipai"
+
+config HUAMOBILE_USB_PRODUCT_NAME
+    string "Huamobile USB product name"
+    default "Haipai"
+
+config HUAMOBILE_USB_SERIAL_NUMBER
+    string "Huamobile USB serial number"
+    default "19761202"
+
+config HUAMOBILE_LCD_WIDTH
+    int "Huamobile lcd width"
+    range 0 4096
+	default 480
+    help
+      This option config lcd horizontal resolution.
+
+config HUAMOBILE_LCD_HEIGHT
+    int "Huamobile lcd height"
+    range 0 4096
+	default 800
+    help
+      This option config lcd vertical resolution.
+
+config HUAMOBILE_LCD_BUS_WIDTH
+    int "Huamobile lcd bus width"
+    range 0 32
+	default 24
+    help
+      This option config lcd bus width.
+
+choice
+    prompt "Huamobile lcd backlight type"
+    default HUAMOBILE_LCD_BACKLIGHT_GPIO
+    help
+      Choice huamobile lcd lcd backlight type
+
+config HUAMOBILE_LCD_BACKLIGHT_GPIO
+    bool "Backlight type gpio"
+    help
+      Use gpio control backlight brightness
+
+config HUAMOBILE_LCD_BACKLIGHT_ANA
+    bool "Backlight type ana"
+    help
+      Use analog control backlight brightness
+
+config HUAMOBILE_LCD_BACKLIGHT_PWM
+    bool "Backlight type pwm"
+    help
+      Use pwm control backlight brightness
+endchoice
+
+config HUAMOBILE_LCD_BACKLIGHT_MAX_BRIGHTNESS
+    int "Huamobile lcd backlight max brightness"
+    range 0 255
+	default 255
+    help
+      This option config lcd backlight max brightness.
+
+config HUAMOBILE_LCD_SUPPORT_VENDOR_ID
+    bool "Huamobile lcd support vendor id"
+	default n
+    help
+      Say Y here if your lcd support vendor id
+
+      If unsure, say N.
+
+config HUAMOBILE_BUTTON_BACKLIGHT_MAX_BRIGHTNESS
+    int "Huamobile button backlight max brightness"
+    range 0 255
+	default 255
+    help
+      This option config button backlight max brightness.
+
+config USE_EXTERNAL_POWER_AMPLIFIER
+	bool "Use external power amplifier"
+	default n
+	help
+	  Select if use external power amplifier.
+
+config MMC_DEV_TROUT
+	bool "Mmc device for trout"
+	default y
+	help
+	  Select if use trout wifi.
+
+config EXCHANGE_VOLUME_KEY
+	bool "Exchange volume key"
+	default n
+	help
+	  Select if need exchange volume key.
+
+config HUAMOBILE_CAMERA_ROTATION
+	int "Huamobile camera rotation degree"
+	range 0 270
+	default 0
+	help
+	  This option config the rotation of camera sensor
+
+config HUAMOBILE_SUPPORT_BACK_CAMERA
+	bool "Support back camera"
+	default y
+	help
+	  Select if has a back camera.
+
+config HUAMOBILE_SUPPORT_FRONT_CAMERA
+	bool "Support front camera"
+	default n
+	help
+	  Select if has a front camera.
+
+menuconfig HUAMOBILE_INPUT_CORE
+    tristate "Huamobile input subsystem"
+    default n
+    depends on INPUT
+    help
+      Say Y here if you want to use huamobile input subsystem
+
+      If unsure, say Y.
+
+if HUAMOBILE_INPUT_CORE
+source "drivers/huamobile/sensor/Kconfig"
+source "drivers/huamobile/touchscreen/Kconfig"
+endif
+
+endmenu

@@ -1,5 +1,6 @@
 #include <huamobile/hua_input.h>
 #include <huamobile/hua_i2c.h>
+#include <linux/compat.h>
 
 #define HUA_INPUT_CHIP_FW_CACHE_SIZE	1024
 
@@ -248,6 +249,15 @@ static long hua_misc_device_ioctl(struct file *file, unsigned int command, unsig
 
 	return dev->ioctl ? dev->ioctl(dev, command, args) : -EINVAL;
 }
+
+#ifdef CONFIG_COMPAT
+static long hua_misc_device_ioctl_compat(struct file *file, unsigned int command, unsigned long args)
+{
+	struct hua_misc_device *dev = file->private_data;
+
+	return dev->ioctl ? dev->ioctl(dev, command, compat_ptr(args)) : -EINVAL;
+}
+#endif
 
 static int hua_misc_find_minor(void)
 {
@@ -2212,6 +2222,9 @@ static const struct file_operations hua_input_class_fops =
 	.ioctl = hua_misc_device_ioctl,
 #else
 	.unlocked_ioctl = hua_misc_device_ioctl,
+#endif
+#ifdef CONFIG_COMPAT
+	.compat_ioctl = hua_misc_device_ioctl_compat,
 #endif
 
 	.llseek		= noop_llseek,
