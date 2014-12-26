@@ -1394,11 +1394,54 @@ int math_memory_calculator(const char *formula, byte *res, size_t res_size, int 
 	return 0;
 }
 
-int math_get_value_shift(u64 value)
+int math_find_first_non_zero_bit(ulong value)
 {
-	int count;
+	int num = 0;
 
-	for (count = -1; value; value >>= 1, count++);
+#if __WORDSIZE > 32
+	if ((value & 0xFFFFFFFF) == 0)
+	{
+		value >>= 32;
+		num += 32;
+	}
+#endif
 
-	return count;
+#if __WORDSIZE > 16
+	if ((value & 0xFFFF) == 0)
+	{
+		value >>= 16;
+		num += 16;
+	}
+#endif
+
+	if ((value & 0xFF) == 0)
+	{
+		value >>= 8;
+		num += 8;
+	}
+
+	if ((value & 0x0F) == 0)
+	{
+		value >>= 4;
+		num += 4;
+	}
+
+	if ((value & 0x03) == 0)
+	{
+		value >>= 2;
+		num += 2;
+	}
+
+	if (value & 0x01)
+	{
+		return num;
+	}
+	else if (value & 0x02)
+	{
+		return num + 1;
+	}
+	else
+	{
+		return -EINVAL;
+	}
 }
