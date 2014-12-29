@@ -891,7 +891,8 @@ static int cavan_ext4_find_file_write_byte(struct cavan_ext4_walker *walker, voi
 static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file *file, const char *pathname)
 {
 	u32 inode_index;
-	char symlink[1024];
+	char symlinks[2][PATH_MAX];
+	char *symlink = symlinks[0];
 	struct ext2_inode *inode = &file->inode;
 	struct cavan_ext4_find_file_context context;
 	struct cavan_ext4_walker walker =
@@ -929,7 +930,7 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 
 		if (S_ISLNK(inode->i_mode))
 		{
-			rdlen = cavan_ext4_read_symlink_by_inode(fs, &file->inode_large, symlink, sizeof(symlink) - 1);
+			rdlen = cavan_ext4_read_symlink_by_inode(fs, &file->inode_large, symlink, PATH_MAX - 1);
 			if (rdlen < 0)
 			{
 				pr_red_info("cavan_ext4_read_inode");
@@ -941,18 +942,18 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 				rdlen--;
 			}
 
+			symlink[rdlen] = 0;
+			println("symlink = %s", symlink);
+
 			if (*pathname)
 			{
-				text_path_cat(symlink + rdlen, sizeof(symlink) - rdlen, NULL, pathname);
+				text_path_cat(symlink + rdlen, PATH_MAX - rdlen, NULL, pathname);
 				println("%s -> %s", pathname, symlink);
-			}
-			else
-			{
-				symlink[rdlen] = 0;
-				println("symlink = %s", symlink);
 			}
 
 			pathname = symlink;
+			symlink = (symlink == symlinks[0] ? symlinks[1] : symlinks[0]);
+
 			context.inode = pathname[0] == CAVAN_EXT4_PATH_SEP ? EXT2_ROOT_INO : inode_index;
 			continue;
 		}
