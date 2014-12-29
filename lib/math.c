@@ -1394,31 +1394,9 @@ int math_memory_calculator(const char *formula, byte *res, size_t res_size, int 
 	return 0;
 }
 
-int math_find_first_non_zero_bit(ulong value)
+int math_find_first_non_zero_bit8(u8 value)
 {
 	int num = 0;
-
-#if __WORDSIZE > 32
-	if ((value & 0xFFFFFFFF) == 0)
-	{
-		value >>= 32;
-		num += 32;
-	}
-#endif
-
-#if __WORDSIZE > 16
-	if ((value & 0xFFFF) == 0)
-	{
-		value >>= 16;
-		num += 16;
-	}
-#endif
-
-	if ((value & 0xFF) == 0)
-	{
-		value >>= 8;
-		num += 8;
-	}
 
 	if ((value & 0x0F) == 0)
 	{
@@ -1443,5 +1421,107 @@ int math_find_first_non_zero_bit(ulong value)
 	else
 	{
 		return -EINVAL;
+	}
+}
+
+int math_find_first_non_zero_bit16(u16 value)
+{
+	if ((value & 0xFF) == 0)
+	{
+		return math_find_first_non_zero_bit8(value >> 8) + 8;
+	}
+	else
+	{
+		return math_find_first_non_zero_bit8(value & 0xFF);
+	}
+}
+
+int math_find_first_non_zero_bit32(u32 value)
+{
+	if ((value & 0xFFFF) == 0)
+	{
+		return math_find_first_non_zero_bit16(value >> 16) + 16;
+	}
+	else
+	{
+		return math_find_first_non_zero_bit16(value & 0xFFFF);
+	}
+}
+
+int math_find_first_non_zero_bit64(u64 value)
+{
+	if ((value & 0xFFFFFFFF) == 0)
+	{
+		return math_find_first_non_zero_bit32(value >> 32) + 32;
+	}
+	else
+	{
+		return math_find_first_non_zero_bit32(value & 0xFFFFFFFF);
+	}
+}
+
+int math_find_last_non_zero_bit8(u8 value)
+{
+	int num = 8;
+
+	if ((value & 0xF0) == 0)
+	{
+		num -= 4;
+		value <<= 4;
+	}
+
+	if ((value & 0xC0) == 0)
+	{
+		num -= 2;
+		value <<= 2;
+	}
+
+	if (value & 0x80)
+	{
+		return num;
+	}
+	else if (value & 0x40)
+	{
+		return num - 1;
+	}
+	else
+	{
+		return -EINVAL;
+	}
+}
+
+int math_find_last_non_zero_bit16(u16 value)
+{
+	if ((value & 0xFF00) == 0)
+	{
+		return math_find_last_non_zero_bit8(value & 0xFF);
+	}
+	else
+	{
+		return math_find_last_non_zero_bit8(value >> 8) + 8;
+	}
+}
+
+int math_find_last_non_zero_bit32(u32 value)
+{
+	if ((value & 0xFFFF0000) == 0)
+	{
+		return math_find_last_non_zero_bit16(value & 0xFFFF);
+	}
+	else
+	{
+		return math_find_last_non_zero_bit16(value >> 16) + 16;
+	}
+}
+
+int math_find_last_non_zero_bit64(u64 value)
+{
+	if ((value & 0xFFFFFFFF00000000) == 0)
+	{
+		return math_find_last_non_zero_bit32(value & 0xFFFFFFFF);
+	}
+	else
+	{
+		return math_find_last_non_zero_bit16(value >> 32) + 32;
 	}
 }

@@ -185,7 +185,7 @@ int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev)
 	}
 
 	fs->bytes_per_sector = dbr->bytes_per_sector;
-	fs->bytes_per_sector_shift = math_get_value_shift(fs->bytes_per_sector);
+	FFS(fs->bytes_per_sector, fs->bytes_per_sector_shift);
 	fs->blocks_per_sector = dbr->bytes_per_sector >> bdev->block_shift;
 	fs->blocks_per_sector_shift = fs->bytes_per_sector_shift - bdev->block_shift;
 
@@ -196,7 +196,7 @@ int cavan_vfat_init(struct cavan_vfat_fs *fs, struct cavan_block_device *bdev)
 	pr_info("blocks_per_sector_shift = %d", fs->blocks_per_sector_shift);
 #endif
 
-	fs->sectors_per_cluster_shift = math_get_value_shift(dbr->sectors_per_cluster);
+	FFS(dbr->sectors_per_cluster, fs->sectors_per_cluster_shift);
 	fs->bytes_per_cluster_shift = fs->sectors_per_cluster_shift + fs->bytes_per_sector_shift;
 	fs->bytes_per_cluster = dbr->sectors_per_cluster * dbr->bytes_per_sector;
 	fs->blocks_per_cluster = dbr->sectors_per_cluster << fs->blocks_per_sector_shift;

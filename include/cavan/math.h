@@ -29,8 +29,41 @@
 #define ROL(value, bits) \
 	((value) << (bits) | (value) >> ((sizeof(value) << 3) - (bits)))
 
-#define FFS(value) \
-	math_find_first_non_zero_bit(value)
+#define FFS(value, result) \
+	switch (sizeof(value)) { \
+	case 1: \
+		(result) = math_find_first_non_zero_bit8(value); \
+		break; \
+	case 2: \
+		(result) = math_find_first_non_zero_bit16(value); \
+		break; \
+	case 4: \
+		(result) = math_find_first_non_zero_bit32(value); \
+		break; \
+	case 8: \
+		(result) = math_find_first_non_zero_bit64(value); \
+		break; \
+	default: \
+		(result) = -EFAULT; \
+	}
+
+#define FLS(value, result) \
+	switch (sizeof(value)) { \
+	case 1: \
+		(result) = math_find_last_non_zero_bit8(value); \
+		break; \
+	case 2: \
+		(result) = math_find_last_non_zero_bit16(value); \
+		break; \
+	case 4: \
+		(result) = math_find_last_non_zero_bit32(value); \
+		break; \
+	case 8: \
+		(result) = math_find_last_non_zero_bit64(value); \
+		break; \
+	default: \
+		(result) = -EFAULT; \
+	}
 
 byte *math_memory_shrink(const byte *mem, size_t size);
 void math_memory_exchange(const byte *mem, byte *res, size_t size);
@@ -83,14 +116,40 @@ size_t math_memory_div(byte *left, size_t lsize, const byte *right, size_t rsize
 size_t math_memory_div2(byte *left, size_t lsize, const byte *right, size_t rsize, byte *res, size_t res_size, int base);
 
 int math_memory_calculator(const char *formula, byte *res, size_t res_size, int base, char fill, int size);
-int math_find_first_non_zero_bit(ulong value);
+
+int math_find_first_non_zero_bit8(u8 value);
+int math_find_first_non_zero_bit16(u16 value);
+int math_find_first_non_zero_bit32(u32 value);
+int math_find_first_non_zero_bit64(u64 value);
+
+int math_find_last_non_zero_bit8(u8 value);
+int math_find_last_non_zero_bit16(u16 value);
+int math_find_last_non_zero_bit32(u32 value);
+int math_find_last_non_zero_bit64(u64 value);
 
 static inline bool math_memory_is_negative(const byte *mem, size_t size)
 {
 	return mem[size - 1] & (1 << 7);
 }
 
-static inline int math_get_value_shift(ulong value)
+#if __WORDSIZE > 32
+static inline int math_get_value_shift(u64 value)
 {
-	return math_find_first_non_zero_bit(value);
+	return math_find_first_non_zero_bit64(value);
 }
+#elif __WORDSIZE > 16
+static inline int math_get_value_shift(u32 value)
+{
+	return math_find_first_non_zero_bit32(value);
+}
+#elif __WORDSIZE > 8
+static inline int math_get_value_shift(u16 value)
+{
+	return math_find_first_non_zero_bit16(value);
+}
+#else
+static inline int math_get_value_shift(u8 value)
+{
+	return math_find_first_non_zero_bit8(value);
+}
+#endif
