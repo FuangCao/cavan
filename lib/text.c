@@ -4,7 +4,6 @@
 #include <cavan/file.h>
 #include <cavan/alarm.h>
 
-#define MAX_PATH_LEN		KB(1)
 #define USE_SYSTEM_PRINTF	1
 
 size_t text_len(const char *text)

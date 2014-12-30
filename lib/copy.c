@@ -7,8 +7,6 @@
 #include <cavan/file.h>
 #include <cavan/device.h>
 
-#define MAX_PATH_LEN		KB(1)
-
 int write_flags = O_CREAT | O_BINARY;
 
 int symlink_copy(const char *src, const char *dest)

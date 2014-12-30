@@ -4,6 +4,18 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX		1024
+#endif
+
+#ifndef MAX_PATH_LEN
+#define MAX_PATH_LEN	PATH_MAX
+#endif
+
+#ifndef PATH_SIZE
+#define PATH_SIZE		PATH_MAX
+#endif
+
 typedef uint64_t u64, dword;
 typedef int64_t s64;
 
