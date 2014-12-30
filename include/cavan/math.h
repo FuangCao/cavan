@@ -29,41 +29,49 @@
 #define ROL(value, bits) \
 	((value) << (bits) | (value) >> ((sizeof(value) << 3) - (bits)))
 
-#define FFS(value, result) \
-	switch (sizeof(value)) { \
-	case 1: \
-		(result) = math_find_first_non_zero_bit8(value); \
-		break; \
-	case 2: \
-		(result) = math_find_first_non_zero_bit16(value); \
-		break; \
-	case 4: \
-		(result) = math_find_first_non_zero_bit32(value); \
-		break; \
-	case 8: \
-		(result) = math_find_first_non_zero_bit64(value); \
-		break; \
-	default: \
-		(result) = -EFAULT; \
-	}
+#define FFS(value) \
+	({ \
+		int __offset; \
+		switch (sizeof(value)) { \
+		case 1: \
+			__offset = math_find_first_non_zero_bit8(value); \
+			break; \
+		case 2: \
+			__offset = math_find_first_non_zero_bit16(value); \
+			break; \
+		case 4: \
+			__offset = math_find_first_non_zero_bit32(value); \
+			break; \
+		case 8: \
+			__offset = math_find_first_non_zero_bit64(value); \
+			break; \
+		default: \
+			__offset = -EFAULT; \
+		} \
+		__offset; \
+	})
 
-#define FLS(value, result) \
-	switch (sizeof(value)) { \
-	case 1: \
-		(result) = math_find_last_non_zero_bit8(value); \
-		break; \
-	case 2: \
-		(result) = math_find_last_non_zero_bit16(value); \
-		break; \
-	case 4: \
-		(result) = math_find_last_non_zero_bit32(value); \
-		break; \
-	case 8: \
-		(result) = math_find_last_non_zero_bit64(value); \
-		break; \
-	default: \
-		(result) = -EFAULT; \
-	}
+#define FLS(value) \
+	({ \
+		int __offset; \
+		switch (sizeof(value)) { \
+		case 1: \
+			__offset = math_find_last_non_zero_bit8(value); \
+			break; \
+		case 2: \
+			__offset = math_find_last_non_zero_bit16(value); \
+			break; \
+		case 4: \
+			__offset = math_find_last_non_zero_bit32(value); \
+			break; \
+		case 8: \
+			__offset = math_find_last_non_zero_bit64(value); \
+			break; \
+		default: \
+			__offset = -EFAULT; \
+		} \
+		__offset; \
+	})
 
 byte *math_memory_shrink(const byte *mem, size_t size);
 void math_memory_exchange(const byte *mem, byte *res, size_t size);

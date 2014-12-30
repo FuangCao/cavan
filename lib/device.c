@@ -2161,7 +2161,7 @@ int cavan_block_device_init(struct cavan_block_device *bdev, void *context)
 	{
 		int shift;
 
-		FFS(bdev->block_size, shift);
+		shift = FFS(bdev->block_size);
 		if (bdev->block_shift && bdev->block_shift != shift)
 		{
 			pr_red_info("block shift not match");

@@ -1428,41 +1428,53 @@ int math_find_first_non_zero_bit16(u16 value)
 {
 	if ((value & 0xFF) == 0)
 	{
-		return math_find_first_non_zero_bit8(value >> 8) + 8;
+		int ret = math_find_first_non_zero_bit8(value >> 8);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		return ret + 8;
 	}
-	else
-	{
-		return math_find_first_non_zero_bit8(value & 0xFF);
-	}
+
+	return math_find_first_non_zero_bit8(value & 0xFF);
 }
 
 int math_find_first_non_zero_bit32(u32 value)
 {
 	if ((value & 0xFFFF) == 0)
 	{
-		return math_find_first_non_zero_bit16(value >> 16) + 16;
+		int ret = math_find_first_non_zero_bit16(value >> 16);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		return ret + 16;
 	}
-	else
-	{
-		return math_find_first_non_zero_bit16(value & 0xFFFF);
-	}
+
+	return math_find_first_non_zero_bit16(value & 0xFFFF);
 }
 
 int math_find_first_non_zero_bit64(u64 value)
 {
 	if ((value & 0xFFFFFFFF) == 0)
 	{
-		return math_find_first_non_zero_bit32(value >> 32) + 32;
+		int ret = math_find_first_non_zero_bit32(value >> 32);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		return ret + 32;
 	}
-	else
-	{
-		return math_find_first_non_zero_bit32(value & 0xFFFFFFFF);
-	}
+
+	return math_find_first_non_zero_bit32(value & 0xFFFFFFFF);
 }
 
 int math_find_last_non_zero_bit8(u8 value)
 {
-	int num = 8;
+	int num = 7;
 
 	if ((value & 0xF0) == 0)
 	{
@@ -1492,36 +1504,48 @@ int math_find_last_non_zero_bit8(u8 value)
 
 int math_find_last_non_zero_bit16(u16 value)
 {
-	if ((value & 0xFF00) == 0)
+	if (value & 0xFF00)
 	{
-		return math_find_last_non_zero_bit8(value & 0xFF);
+		int ret = math_find_last_non_zero_bit8(value >> 8);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		return ret + 8;
 	}
-	else
-	{
-		return math_find_last_non_zero_bit8(value >> 8) + 8;
-	}
+
+	return math_find_last_non_zero_bit8(value);
 }
 
 int math_find_last_non_zero_bit32(u32 value)
 {
-	if ((value & 0xFFFF0000) == 0)
+	if (value & 0xFFFF0000)
 	{
-		return math_find_last_non_zero_bit16(value & 0xFFFF);
+		int ret = math_find_last_non_zero_bit16(value >> 16);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		return ret + 16;
 	}
-	else
-	{
-		return math_find_last_non_zero_bit16(value >> 16) + 16;
-	}
+
+	return math_find_last_non_zero_bit16(value);
 }
 
 int math_find_last_non_zero_bit64(u64 value)
 {
-	if ((value & 0xFFFFFFFF00000000) == 0)
+	if (value & 0xFFFFFFFF00000000)
 	{
-		return math_find_last_non_zero_bit32(value & 0xFFFFFFFF);
+		int ret = math_find_last_non_zero_bit32(value >> 32);
+		if (ret < 0)
+		{
+			return ret;
+		}
+
+		return ret + 32;
 	}
-	else
-	{
-		return math_find_last_non_zero_bit16(value >> 32) + 32;
-	}
+
+	return math_find_last_non_zero_bit32(value);
 }
