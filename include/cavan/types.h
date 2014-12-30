@@ -147,6 +147,15 @@ typedef struct
 #define BYTES_DWORD(b1, b2, b3, b4) \
 	WORDS_DWORD(BYTES_WORD(b1, b2), BYTES_WORD(b3, b4))
 
+#define BUILD_U16(h, l) \
+	(((u16) (h)) << 8 | (l))
+
+#define BUILD_U32(h, l) \
+	(((u32) (h)) << 16 | (l))
+
+#define BUILD_U64(h, l) \
+	(((u64) (h)) << 32 | (l))
+
 #define SWAP16(value) \
 	((value) >> 8 | (value) << 8)
 

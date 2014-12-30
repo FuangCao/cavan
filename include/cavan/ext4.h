@@ -928,8 +928,8 @@ struct cavan_ext4_file
 struct cavan_ext4_walker
 {
 	void *context;
-	size_t skip;
-	size_t remain;
+	u64 skip;
+	u64 remain;
 
 	struct cavan_ext4_fs *fs;
 	struct ext2_inode_large *inode;

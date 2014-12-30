@@ -72,7 +72,7 @@ void cavan_ext4_dump_ext4_extent_index(const struct ext4_extent_index *index)
 	pr_bold_info("ext4 extent index %p", index);
 
 	println("block = %d", index->block);
-	println("leaf = %" PRINT_FORMAT_INT64, (u64) index->leaf_hi << 32 | index->leaf_lo);
+	println("leaf = %" PRINT_FORMAT_INT64, BUILD_U64(index->leaf_hi, index->leaf_lo));
 }
 
 void cavan_ext4_dump_ext4_extent_leaf(const struct ext4_extent_leaf *leaf)
@@ -82,7 +82,7 @@ void cavan_ext4_dump_ext4_extent_leaf(const struct ext4_extent_leaf *leaf)
 
 	println("block = %d", leaf->block);
 	println("length = %d", leaf->length);
-	println("start = %" PRINT_FORMAT_INT64, (u64) leaf->start_hi << 32 | leaf->start_lo);
+	println("start = %" PRINT_FORMAT_INT64, BUILD_U64(leaf->start_hi, leaf->start_lo));
 }
 
 void cavan_ext4_dump_ext4_extent_list(const struct ext4_extent_header *header)
@@ -269,7 +269,7 @@ static void cavan_ext4_dump_ext2_inode_base(const struct ext2_inode *inode)
 		}
 	}
 
-	println("i_generation = %d", inode->i_generation);
+	println("i_generation = 0x%08x", inode->i_generation);
 	println("i_file_acl = %d", inode->i_file_acl);
 	println("i_size_high = %d", inode->i_size_high);
 	println("i_faddr = %d", inode->i_faddr);
@@ -709,7 +709,7 @@ static int cavan_ext4_traversal_extent(struct cavan_ext4_walker *walker, struct 
 		{
 			char buff[walker->fs->block_size];
 
-			start = (u64) index->leaf_hi << 32 | index->leaf_lo;
+			start = BUILD_U64(index->leaf_hi, index->leaf_lo);
 			rdlen = cavan_ext4_read_block(walker->fs, start, buff, 1);
 			if (rdlen < 0)
 			{
@@ -734,7 +734,7 @@ static int cavan_ext4_traversal_extent(struct cavan_ext4_walker *walker, struct 
 			u64 end;
 			char buff[walker->fs->block_size];
 
-			start = (u64) leaf->start_hi << 32 | leaf->start_lo;
+			start = BUILD_U64(leaf->start_hi, leaf->start_lo);
 			for (end = start + leaf->length; start < end; start++)
 			{
 				rdlen = cavan_ext4_read_block(walker->fs, start, buff, 1);
@@ -812,25 +812,30 @@ static int cavan_ext4_traversal_direct_indirect(struct cavan_ext4_walker *walker
 	return 0;
 }
 
-static int cavan_ext4_traversal_inode(struct cavan_ext4_fs *fs, struct ext2_inode_large *inode, size_t skip, struct cavan_ext4_walker *walker, void *context)
+static int cavan_ext4_traversal_inode(struct cavan_ext4_fs *fs, struct ext2_inode_large *inode, u64 skip, struct cavan_ext4_walker *walker, void *context)
 {
+	walker->remain = BUILD_U64(inode->i_size_high, inode->i_size);
+	if (walker->remain == 0)
+	{
+		return 0;
+	}
+
 	walker->fs = fs;
 	walker->inode = inode;
 	walker->context = context;
-
 	walker->skip = skip;
-	walker->remain = inode->i_size;
 
-	if (walker->remain == 0)
+	if (inode->i_blocks == 0)
 	{
-		if (walker->remain <= sizeof(inode->i_block))
+		if (walker->remain > sizeof(inode->i_block))
 		{
-			return walker->write_byte(walker, inode->i_block, walker->remain);
+			walker->remain = sizeof(inode->i_block);
 		}
 
-		return 0;
+		return walker->write_byte(walker, inode->i_block, walker->remain);
 	}
-	else if (inode->i_flags & EXT4_EXTENTS_FL)
+
+	if (inode->i_flags & EXT4_EXTENTS_FL)
 	{
 		return cavan_ext4_traversal_extent(walker, (struct ext4_extent_header *) inode->i_block);
 	}
@@ -840,12 +845,12 @@ static int cavan_ext4_traversal_inode(struct cavan_ext4_fs *fs, struct ext2_inod
 	}
 }
 
-static ssize_t cavan_ext4_read_symlink_by_inode(struct cavan_ext4_fs *fs, struct ext2_inode_large *inode, char *buff, size_t size)
+static inline ssize_t cavan_ext4_read_symlink_by_inode(struct cavan_ext4_fs *fs, struct ext2_inode_large *inode, char *buff, size_t size)
 {
+#if 0
 	size_t length;
 
-	length = sizeof(inode->i_block);
-	if (length < inode->i_size)
+	if (inode->i_size > sizeof(inode->i_block))
 	{
 		return cavan_ext4_read_inode_data(fs, inode, 0, buff, size, NULL, NULL);
 	}
@@ -854,6 +859,9 @@ static ssize_t cavan_ext4_read_symlink_by_inode(struct cavan_ext4_fs *fs, struct
 	mem_copy(buff, inode->i_block, length);
 
 	return length;
+#else
+	return cavan_ext4_read_inode_data(fs, inode, 0, buff, size, NULL, NULL);
+#endif
 }
 
 ssize_t cavan_ext4_read_symlink(struct cavan_ext4_file *file, char *buff, size_t size)
