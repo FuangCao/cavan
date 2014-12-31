@@ -67,7 +67,7 @@ const u16 cavan_ctype[] =
 	CT_P, /* * */
 	CT_P, /* + */
 	CT_P, /* , */
-	CT_P, /* - */
+	CT_P | CT_NM, /* - */
 	CT_P, /* . */
 	CT_P, /* / */
 	CT_D | CT_NM | CT_X | CT_O, /* 0 */

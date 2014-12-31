@@ -118,7 +118,11 @@ static inline char cavan_tolower(char c)
 {
 	if (cavan_isupper(c))
 	{
+#if 0
 		return c - 'A' + 'a';
+#else
+		return c | 0x20;
+#endif
 	}
 
 	return c;
@@ -128,13 +132,12 @@ static inline char cavan_toupper(char c)
 {
 	if (cavan_islower(c))
 	{
+#if 0
 		return c - 'a' + 'A';
+#else
+		return c & (~0x20);
+#endif
 	}
 
 	return c;
-}
-
-static inline char cavan_tolower_fast(char c)
-{
-	return c | 0x20;
 }
