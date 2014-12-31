@@ -109,17 +109,17 @@ am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) auto_dd.$(OBJEXT) \
 	fdisk.$(OBJEXT) file_crc32.$(OBJEXT) file_join.$(OBJEXT) \
 	file_loop.$(OBJEXT) file_split.$(OBJEXT) ftp.$(OBJEXT) \
 	ftp_server.$(OBJEXT) git_daemon.$(OBJEXT) image_dd.$(OBJEXT) \
-	inotify.$(OBJEXT) loop_run.$(OBJEXT) md5sum.$(OBJEXT) \
-	mkdir.$(OBJEXT) mknp.$(OBJEXT) mksdcard.$(OBJEXT) \
-	modem_upgrade.$(OBJEXT) mount.$(OBJEXT) move.$(OBJEXT) \
-	mtd.$(OBJEXT) net_monitor.$(OBJEXT) part_probe.$(OBJEXT) \
-	part_show.$(OBJEXT) part_table.$(OBJEXT) ping.$(OBJEXT) \
-	poll_event.$(OBJEXT) poll_input.$(OBJEXT) ramdisk.$(OBJEXT) \
-	remove.$(OBJEXT) resize.$(OBJEXT) rle.$(OBJEXT) \
-	screen_mirror.$(OBJEXT) service.$(OBJEXT) sha1sum.$(OBJEXT) \
-	show_file.$(OBJEXT) shrink.$(OBJEXT) sprd_at.$(OBJEXT) \
-	sprd_write_imei.$(OBJEXT) su.$(OBJEXT) sudo.$(OBJEXT) \
-	super_upgrade.$(OBJEXT) swan_check.$(OBJEXT) \
+	inotify.$(OBJEXT) lm49350_clock.$(OBJEXT) loop_run.$(OBJEXT) \
+	md5sum.$(OBJEXT) mkdir.$(OBJEXT) mknp.$(OBJEXT) \
+	mksdcard.$(OBJEXT) modem_upgrade.$(OBJEXT) mount.$(OBJEXT) \
+	move.$(OBJEXT) mtd.$(OBJEXT) net_monitor.$(OBJEXT) \
+	part_probe.$(OBJEXT) part_show.$(OBJEXT) part_table.$(OBJEXT) \
+	ping.$(OBJEXT) poll_event.$(OBJEXT) poll_input.$(OBJEXT) \
+	ramdisk.$(OBJEXT) remove.$(OBJEXT) resize.$(OBJEXT) \
+	rle.$(OBJEXT) screen_mirror.$(OBJEXT) service.$(OBJEXT) \
+	sha1sum.$(OBJEXT) show_file.$(OBJEXT) shrink.$(OBJEXT) \
+	sprd_at.$(OBJEXT) sprd_write_imei.$(OBJEXT) su.$(OBJEXT) \
+	sudo.$(OBJEXT) super_upgrade.$(OBJEXT) swan_check.$(OBJEXT) \
 	swan_emmc.$(OBJEXT) swan_fac.$(OBJEXT) swan_ipu.$(OBJEXT) \
 	swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) swan_mkfs.$(OBJEXT) \
 	swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) swan_upgrade.$(OBJEXT) \
@@ -324,8 +324,8 @@ APP_SRC_FILES = abspath.c alarm.c auto_dd.c auto_input.c auto_mount.c \
 	dos2unix.c eavoo_sell_statistic.c ecc.c event_repeater.c \
 	ext2.c fdisk.c file_crc32.c file_join.c file_loop.c \
 	file_split.c ftp.c ftp_server.c git_daemon.c image_dd.c \
-	inotify.c loop_run.c md5sum.c mkdir.c mknp.c mksdcard.c \
-	modem_upgrade.c mount.c move.c mtd.c net_monitor.c \
+	inotify.c lm49350_clock.c loop_run.c md5sum.c mkdir.c mknp.c \
+	mksdcard.c modem_upgrade.c mount.c move.c mtd.c net_monitor.c \
 	part_probe.c part_show.c part_table.c ping.c poll_event.c \
 	poll_input.c ramdisk.c remove.c resize.c rle.c screen_mirror.c \
 	service.c sha1sum.c show_file.c shrink.c sprd_at.c \
@@ -487,6 +487,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/git_daemon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/image_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inotify.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lm49350_clock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loop_run.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5sum.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkdir.Po@am__quote@
