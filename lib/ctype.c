@@ -70,16 +70,16 @@ const u16 cavan_ctype[] =
 	CT_P, /* - */
 	CT_P, /* . */
 	CT_P, /* / */
-	CT_D | CT_X | CT_O, /* 0 */
-	CT_D | CT_X | CT_O, /* 1 */ /* 49 */
-	CT_D | CT_X | CT_O, /* 2 */
-	CT_D | CT_X | CT_O, /* 3 */
-	CT_D | CT_X | CT_O, /* 4 */
-	CT_D | CT_X | CT_O, /* 5 */
-	CT_D | CT_X | CT_O, /* 6 */
-	CT_D | CT_X | CT_O, /* 7 */
-	CT_D | CT_X, /* 8 */
-	CT_D | CT_X, /* 9 */
+	CT_D | CT_NM | CT_X | CT_O, /* 0 */
+	CT_D | CT_NM | CT_X | CT_O, /* 1 */ /* 49 */
+	CT_D | CT_NM | CT_X | CT_O, /* 2 */
+	CT_D | CT_NM | CT_X | CT_O, /* 3 */
+	CT_D | CT_NM | CT_X | CT_O, /* 4 */
+	CT_D | CT_NM | CT_X | CT_O, /* 5 */
+	CT_D | CT_NM | CT_X | CT_O, /* 6 */
+	CT_D | CT_NM | CT_X | CT_O, /* 7 */
+	CT_D | CT_NM | CT_X, /* 8 */
+	CT_D | CT_NM | CT_X, /* 9 */
 	CT_P, /* : */
 	CT_P, /* ; */ /* 59 */
 	CT_P, /* < */
@@ -87,64 +87,64 @@ const u16 cavan_ctype[] =
 	CT_P, /* > */
 	CT_P, /* ? */
 	CT_P, /* @ */
-	CT_U | CT_X, /* A */
-	CT_U | CT_X, /* B */
-	CT_U | CT_X, /* C */
-	CT_U | CT_X, /* D */
-	CT_U | CT_X, /* E */ /* 69 */
-	CT_U | CT_X, /* F */
-	CT_U, /* G */
-	CT_U, /* H */
-	CT_U, /* I */
-	CT_U, /* J */
-	CT_U, /* K */
-	CT_U, /* L */
-	CT_U, /* M */
-	CT_U, /* N */
-	CT_U, /* O */ /* 79 */
-	CT_U, /* P */
-	CT_U, /* Q */
-	CT_U, /* R */
-	CT_U, /* S */
-	CT_U, /* T */
-	CT_U, /* U */
-	CT_U, /* V */
-	CT_U, /* W */
-	CT_U, /* X */
-	CT_U, /* Y */ /* 89 */
-	CT_U, /* Z */
+	CT_U | CT_NM | CT_X, /* A */
+	CT_U | CT_NM | CT_X, /* B */
+	CT_U | CT_NM | CT_X, /* C */
+	CT_U | CT_NM | CT_X, /* D */
+	CT_U | CT_NM | CT_X, /* E */ /* 69 */
+	CT_U | CT_NM | CT_X, /* F */
+	CT_U | CT_NM, /* G */
+	CT_U | CT_NM, /* H */
+	CT_U | CT_NM, /* I */
+	CT_U | CT_NM, /* J */
+	CT_U | CT_NM, /* K */
+	CT_U | CT_NM, /* L */
+	CT_U | CT_NM, /* M */
+	CT_U | CT_NM, /* N */
+	CT_U | CT_NM, /* O */ /* 79 */
+	CT_U | CT_NM, /* P */
+	CT_U | CT_NM, /* Q */
+	CT_U | CT_NM, /* R */
+	CT_U | CT_NM, /* S */
+	CT_U | CT_NM, /* T */
+	CT_U | CT_NM, /* U */
+	CT_U | CT_NM, /* V */
+	CT_U | CT_NM, /* W */
+	CT_U | CT_NM, /* X */
+	CT_U | CT_NM, /* Y */ /* 89 */
+	CT_U | CT_NM, /* Z */
 	CT_P, /* [ */
 	CT_P, /* \ */
 	CT_P, /* ] */
 	CT_P, /* ^ */
-	CT_P, /* _ */
+	CT_P | CT_NM, /* _ */
 	CT_P, /* ` */
-	CT_L | CT_X, /* a */
-	CT_L | CT_X, /* b */
-	CT_L | CT_X, /* c */ /* 99 */
-	CT_L | CT_X, /* d */
-	CT_L | CT_X, /* e */
-	CT_L | CT_X, /* f */
-	CT_L, /* g */
-	CT_L, /* h */
-	CT_L, /* i */
-	CT_L, /* j */
-	CT_L, /* k */
-	CT_L, /* l */
-	CT_L, /* m */ /* 109 */
-	CT_L, /* n */
-	CT_L, /* o */
-	CT_L, /* p */
-	CT_L, /* q */
-	CT_L, /* r */
-	CT_L, /* s */
-	CT_L, /* t */
-	CT_L, /* u */
-	CT_L, /* v */
-	CT_L, /* w */ /* 119 */
-	CT_L, /* x */
-	CT_L, /* y */
-	CT_L, /* z */
+	CT_L | CT_NM | CT_X, /* a */
+	CT_L | CT_NM | CT_X, /* b */
+	CT_L | CT_NM | CT_X, /* c */ /* 99 */
+	CT_L | CT_NM | CT_X, /* d */
+	CT_L | CT_NM | CT_X, /* e */
+	CT_L | CT_NM | CT_X, /* f */
+	CT_L | CT_NM, /* g */
+	CT_L | CT_NM, /* h */
+	CT_L | CT_NM, /* i */
+	CT_L | CT_NM, /* j */
+	CT_L | CT_NM, /* k */
+	CT_L | CT_NM, /* l */
+	CT_L | CT_NM, /* m */ /* 109 */
+	CT_L | CT_NM, /* n */
+	CT_L | CT_NM, /* o */
+	CT_L | CT_NM, /* p */
+	CT_L | CT_NM, /* q */
+	CT_L | CT_NM, /* r */
+	CT_L | CT_NM, /* s */
+	CT_L | CT_NM, /* t */
+	CT_L | CT_NM, /* u */
+	CT_L | CT_NM, /* v */
+	CT_L | CT_NM, /* w */ /* 119 */
+	CT_L | CT_NM, /* x */
+	CT_L | CT_NM, /* y */
+	CT_L | CT_NM, /* z */
 	CT_P, /* { */
 	CT_P, /* | */
 	CT_P, /* } */

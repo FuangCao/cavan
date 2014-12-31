@@ -34,61 +34,62 @@ enum
 	CT_SP = BIT(7), /* hard space (0x20) */
 	CT_O = BIT(8), /* octal digit */
 	CT_LF = BIT(9), /* \n \r digit */
+	CT_NM = BIT(10), /* nameable */
 };
 
 extern const u16 cavan_ctype[];
 
-static inline u16 cavan_ctype_get(int c)
+static inline u16 cavan_ctype_get(u8 c)
 {
 	return cavan_ctype[c];
 }
 
-static inline bool cavan_isalnum(int c)
+static inline bool cavan_isalnum(u8 c)
 {
 	return (cavan_ctype_get(c) & ( CT_U | CT_L | CT_D)) != 0;
 }
 
-static inline bool cavan_isalpha(int c)
+static inline bool cavan_isalpha(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_U | CT_L)) != 0;
 }
 
-static inline bool cavan_iscntrl(int c)
+static inline bool cavan_iscntrl(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_C)) != 0;
 }
 
-static inline bool cavan_isdigit(int c)
+static inline bool cavan_isdigit(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_D)) != 0;
 }
 
-static inline bool cavan_isgraph(int c)
+static inline bool cavan_isgraph(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_P | CT_U | CT_L | CT_D)) != 0;
 }
 
-static inline bool cavan_islower(int c)
+static inline bool cavan_islower(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_L)) != 0;
 }
 
-static inline bool cavan_isprint(int c)
+static inline bool cavan_isprint(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_P | CT_U | CT_L | CT_D | CT_SP)) != 0;
 }
 
-static inline bool cavan_ispunct(int c)
+static inline bool cavan_ispunct(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_P)) != 0;
 }
 
-static inline bool cavan_isspace(int c)
+static inline bool cavan_isspace(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_S)) != 0;
 }
 
-static inline bool cavan_isupper(int c)
+static inline bool cavan_isupper(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_U)) != 0;
 }
@@ -98,14 +99,19 @@ static inline int isodigit(char c)
 	return (cavan_ctype_get(c) & (CT_O)) != 0;
 }
 
-static inline bool cavan_isxdigit(int c)
+static inline bool cavan_isxdigit(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_D | CT_X)) != 0;
 }
 
-static inline bool cavan_islf(int c)
+static inline bool cavan_islf(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_LF)) != 0;
+}
+
+static inline bool cavan_isnameable(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_NM)) != 0;
 }
 
 static inline char cavan_tolower(char c)
