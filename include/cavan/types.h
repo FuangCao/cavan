@@ -16,6 +16,11 @@
 #define PATH_SIZE		PATH_MAX
 #endif
 
+#ifndef BIT
+#define BIT(offset) \
+	(1UL << (offset))
+#endif
+
 typedef uint64_t u64, dword;
 typedef int64_t s64;
 
