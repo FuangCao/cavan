@@ -280,7 +280,7 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 cavanincdir = $(includedir)/cavan
-cavaninc_HEADERS = adb.h alarm.h bmp.h bootimg.h cache.h calculator.h cftp.h command.h config.h copy.h dd.h debug.h device.h display.h ecc.h environment.h event.h ext2.h ext4.h fb.h file.h font_10x18.h font_12x22.h font_18x32.h font_20x36.h font.h ftp.h gsensor.h header.bin.h image.h inotify.h input.h keypad.h list.h malloc.h math.h memory.h mouse.h mtd.h net_bridge.h network.h parser.h permission.h pool.h process.h progress.h queue.h rle.h screen_mirror.h service.h sha.h sort.h sound.h speed_detector.h sprd_diag.h stack.h stdio.h swan_dev.h swan_mac.h swan_pkg.h swan_ts.h swan_upgrade.h swan_vk.h tcp_dd.h tcp_proxy.h text.h tftp.h thread.h time.h timer.h touchpad.h touchscreen.h tree.h types.h uevent.h usb.h vfat.h web_proxy.h window.h xml.h
+cavaninc_HEADERS = adb.h alarm.h bmp.h bootimg.h cache.h calculator.h cftp.h command.h config.h copy.h ctype.h dd.h debug.h device.h display.h ecc.h environment.h event.h ext2.h ext4.h fb.h file.h font_10x18.h font_12x22.h font_18x32.h font_20x36.h font.h ftp.h gsensor.h header.bin.h image.h inotify.h input.h keypad.h list.h malloc.h math.h memory.h mouse.h mtd.h net_bridge.h network.h parser.h permission.h pool.h process.h progress.h queue.h rle.h screen_mirror.h service.h sha.h sort.h sound.h speed_detector.h sprd_diag.h stack.h stdio.h swan_dev.h swan_mac.h swan_pkg.h swan_ts.h swan_upgrade.h swan_vk.h tcp_dd.h tcp_proxy.h text.h tftp.h thread.h time.h timer.h touchpad.h touchscreen.h tree.h types.h uevent.h usb.h vfat.h web_proxy.h window.h xml.h
 all: all-am
 
 .SUFFIXES:
