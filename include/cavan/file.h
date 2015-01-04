@@ -101,8 +101,6 @@ int ffile_ncat(int fd, size_t size);
 int ffile_cmp(int fd1, int fd2, size_t size);
 int file_cmp(const char *file1, const char *file2, size_t size);
 
-u16 mem_crc16(u16 crc, const char *buff, size_t size);
-u32 mem_crc32(u32 crc, const char *buff, size_t size);
 int ffile_crc32(int fd, u32 *crc);
 int file_crc32(const char *file_name, u32 *crc);
 
