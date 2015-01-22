@@ -21,6 +21,10 @@
 
 #include <cavan.h>
 
+typedef u8 jwp_u8;
+typedef u16 jwp_u16;
+typedef size_t jwp_size_t;
+
 #define jwp_println(fmt, args ...) \
 	println(fmt, ##args)
 
@@ -29,6 +33,8 @@
 #define JWP_MAGIC_HIGH	0x12
 #define JWP_MAGIC_LOW	0x34
 #define JWP_MAGIC		(JWP_MAGIC_HIGH << 8 | JWP_MAGIC_LOW)
+
+#define JWP_QUEUE_SIZE	512
 
 typedef enum
 {
@@ -43,20 +49,20 @@ struct jwp_header
 {
 	union
 	{
-		u16 magic;
+		jwp_u16 magic;
 		struct
 		{
-			u8 magic_low;
-			u8 magic_high;
+			jwp_u8 magic_low;
+			jwp_u8 magic_high;
 		};
 	};
 
-	u8 type;
-	u8 index;
-	u8 length;
-	u8 checksum;
+	jwp_u8 type;
+	jwp_u8 index;
+	jwp_u8 length;
+	jwp_u8 checksum;
 
-	u8 payload[0];
+	jwp_u8 payload[0];
 };
 #pragma pack()
 
@@ -65,12 +71,12 @@ struct jwp_package
 	union
 	{
 		struct jwp_header header;
-		u8 body[JWP_MTU];
+		jwp_u8 body[JWP_MTU];
 	};
 
-	u8 *head;
-	u8 header_remain;
-	u8 data_remain;
+	jwp_u8 *head;
+	jwp_u8 header_remain;
+	jwp_u8 data_remain;
 
 	struct jwp_desc *desc;
 };
@@ -81,11 +87,29 @@ struct jwp_desc
 	void (*package_received)(struct jwp_desc *desc, struct jwp_package *pkg);
 };
 
+struct jwp_data_queue
+{
+	jwp_u8 buff[JWP_QUEUE_SIZE];
+	jwp_u8 *last;
+	jwp_u8 *head;
+	jwp_u8 *tail;
+	jwp_u8 *peek;
+};
+
 void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);
 
 void jwp_package_init(struct jwp_package *pkg, struct jwp_desc *desc);
-u8 jwp_package_fill(struct jwp_package *pkg, const u8 *buff, u8 length);
+jwp_size_t jwp_package_fill(struct jwp_package *pkg, const u8 *buff, jwp_size_t size);
+
+void jwp_data_queue_init(struct jwp_data_queue *queue);
+jwp_size_t jwp_data_queue_inqueue(struct jwp_data_queue *queue, const u8 *buff, jwp_size_t size);
+jwp_size_t jwp_data_queue_peek(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size);
+void jwp_data_queue_commit(struct jwp_data_queue *queue);
+jwp_size_t jwp_data_queue_dequeue(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size);
+jwp_size_t jwp_data_queue_skip(struct jwp_data_queue *queue, jwp_size_t size);
+jwp_size_t jwp_data_queue_get_free_size(struct jwp_data_queue *queue);
+jwp_size_t jwp_data_queue_get_fill_size(struct jwp_data_queue *queue);
 
 static inline void jwp_set_private_data(struct jwp_desc *desc, void *data)
 {
