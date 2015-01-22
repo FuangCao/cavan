@@ -40,6 +40,7 @@ typedef void * jwp_timer;
 #define JWP_MAGIC_LOW		0x34
 #define JWP_MAGIC			(JWP_MAGIC_HIGH << 8 | JWP_MAGIC_LOW)
 
+#define JWP_USE_TIMER		0
 #define JWP_SEND_TIEMOUT	200
 #define JWP_QUEUE_SIZE		(JWP_MTU * 3)
 
@@ -108,14 +109,18 @@ struct jwp_desc
 	struct jwp_package pkg_send;
 	struct jwp_package pkg_recv;
 
+#if JWP_USE_TIMER
 	jwp_timer send_timer;
+#endif
 
 	jwp_size_t (*hw_read)(struct jwp_desc *desc, void *buff, jwp_size_t size);
 	jwp_size_t (*hw_write)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 	void (*data_received)(struct jwp_desc *desc, const void *data, jwp_size_t size);
 	void (*package_received)(struct jwp_desc *desc, struct jwp_package *pkg);
+#if JWP_USE_TIMER
 	jwp_timer (*create_timer)(struct jwp_desc *desc, jwp_timer timer, jwp_time_t ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer));
 	void (*delete_timer)(struct jwp_desc *desc, jwp_timer timer);
+#endif
 };
 
 void jwp_header_dump(const struct jwp_header *hdr);

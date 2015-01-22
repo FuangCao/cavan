@@ -20,6 +20,8 @@
 #include <cavan.h>
 #include <cavan/jwp.h>
 
+#define JWP_DEBUG	0
+
 void jwp_header_dump(const struct jwp_header *hdr)
 {
 	jwp_println("index = %d, type = %d, length = %d", hdr->index, hdr->type, hdr->length);
@@ -280,21 +282,24 @@ jwp_bool jwp_init(struct jwp_desc *desc, void *data)
 		return false;
 	}
 
-	if (desc->create_timer == NULL || desc->delete_timer == NULL)
-	{
-		return false;
-	}
-
 	if (desc->data_received == NULL || desc->package_received == NULL)
 	{
 		return false;
 	}
 
+#if JWP_USE_TIMER
+	if (desc->create_timer == NULL || desc->delete_timer == NULL)
+	{
+		return false;
+	}
+
+	desc->send_timer = JWP_TIMER_INVALID;
+#endif
+
 	desc->private_data = data;
 
 	desc->send_index = 0;
 	desc->recv_index = 0;
-	desc->send_timer = JWP_TIMER_INVALID;
 
 	jwp_package_init(&desc->pkg_send);
 	jwp_package_init(&desc->pkg_recv);
@@ -319,9 +324,27 @@ void jwp_send_queue_flush(struct jwp_desc *desc)
 			break;
 		}
 
-		for (p = buff, p_end = p + rdLen; p < p_end; p += desc->hw_write(desc, buff, p_end - p));
+		for (p = buff, p_end = p + rdLen; p < p_end; p += desc->hw_write(desc, p, p_end - p));
 
 		jwp_data_queue_commit(&desc->send_queue);
+	}
+}
+
+static void jwp_send_data_real(struct jwp_desc *desc, const void *data, jwp_size_t size)
+{
+	const u8 *p = data, *p_end = p + size;
+
+	while (p < p_end)
+	{
+		size = jwp_data_queue_inqueue(&desc->send_queue, p, p_end - p);
+		if (size)
+		{
+			p += size;
+		}
+		else
+		{
+			jwp_send_queue_flush(desc);
+		}
 	}
 }
 
@@ -330,11 +353,11 @@ static void jwp_send_package_real(struct jwp_desc *desc, struct jwp_header *hdr,
 	hdr->magic_high = JWP_MAGIC_HIGH;
 	hdr->magic_low = JWP_MAGIC_LOW;
 
-	jwp_data_queue_inqueue(&desc->send_queue, (u8 *) hdr, sizeof(struct jwp_header));
+	jwp_send_data_real(desc, (u8 *) hdr, sizeof(struct jwp_header));
 
 	if (data && hdr->length > 0)
 	{
-		jwp_data_queue_inqueue(&desc->send_queue, data, hdr->length);
+		jwp_send_data_real(desc, data, hdr->length);
 	}
 
 	jwp_send_queue_flush(desc);
@@ -356,6 +379,7 @@ void jwp_send_data_ack(struct jwp_desc *desc, jwp_u8 index)
 	jwp_send_package(desc, &hdr, JWP_PKG_DATA_ACK, NULL, 0);
 }
 
+#if JWP_USE_TIMER
 static void jwp_send_timeout_handler(struct jwp_desc *desc, jwp_timer timer)
 {
 	struct jwp_header *hdr = &desc->pkg_send.header;
@@ -363,6 +387,7 @@ static void jwp_send_timeout_handler(struct jwp_desc *desc, jwp_timer timer)
 	jwp_send_package_real(desc, hdr, hdr->payload);
 	desc->send_timer = desc->create_timer(desc, timer, JWP_SEND_TIEMOUT, jwp_send_timeout_handler);
 }
+#endif
 
 jwp_bool jwp_send_package_sync(struct jwp_desc *desc, jwp_u8 type, const void *data, jwp_size_t size)
 {
@@ -380,67 +405,111 @@ jwp_bool jwp_send_package_sync(struct jwp_desc *desc, jwp_u8 type, const void *d
 	hdr->type = type;
 	hdr->length = size;
 	hdr->index = desc->send_index + 1;
+	memcpy(hdr->payload, data, size);
 
+#if JWP_USE_TIMER
 	jwp_send_timeout_handler(desc, desc->send_timer);
+#else
+	while (1)
+	{
+		int i;
+
+		jwp_send_package_real(desc, hdr, hdr->payload);
+
+		for (i = 0; i < JWP_SEND_TIEMOUT; i++)
+		{
+			if (pkg->in_use == false)
+			{
+				return true;
+			}
+
+			msleep(1);
+		}
+	}
+#endif
 
 	return true;
 }
 
 static void jwp_process_package(struct jwp_desc *desc)
 {
-	struct jwp_header *hdr;
 	struct jwp_package *pkg = &desc->pkg_recv;
+	struct jwp_header *hdr = &pkg->header;
 
-	if (jwp_package_fill(pkg, &desc->recv_queue) == false)
+	while (jwp_package_fill(pkg, &desc->recv_queue))
 	{
-		return;
-	}
-
-	hdr = &pkg->header;
-	switch (hdr->type)
-	{
-	case JWP_PKG_DATA:
-		jwp_send_data_ack(desc, hdr->index);
-		if (hdr->index == desc->recv_index + 1)
+#if JWP_DEBUG
+		jwp_header_dump(hdr);
+#endif
+		switch (hdr->type)
 		{
-			desc->recv_index++;
-			desc->data_received(desc, hdr->payload, hdr->length);
-		}
-		break;
-
-	case JWP_PKG_DATA_ACK:
-		if (hdr->index == desc->send_index + 1)
-		{
-			if (desc->send_timer != JWP_TIMER_INVALID)
+		case JWP_PKG_DATA:
+			jwp_send_data_ack(desc, hdr->index);
+			if (hdr->index == desc->recv_index + 1)
 			{
-				desc->delete_timer(desc, desc->send_timer);
+				desc->recv_index++;
+				desc->data_received(desc, hdr->payload, hdr->length);
 			}
+#if JWP_DEBUG
+			else
+			{
+				pr_red_info("throw data package %d, need %d", hdr->index, desc->recv_index + 1);
+			}
+#endif
+			break;
 
-			desc->send_index++;
+		case JWP_PKG_DATA_ACK:
+			if (hdr->index == desc->send_index + 1)
+			{
+#if JWP_USE_TIMER
+				if (desc->send_timer != JWP_TIMER_INVALID)
+				{
+					desc->delete_timer(desc, desc->send_timer);
+				}
+#endif
+				desc->send_index++;
+				desc->pkg_send.in_use = false;
+			}
+#if JWP_DEBUG
+			else
+			{
+				pr_red_info("throw ack package %d, need %d", hdr->index, desc->send_index + 1);
+			}
+#endif
+			break;
+
+		default:
+			desc->package_received(desc, pkg);
 		}
-		break;
-
-	default:
-		desc->package_received(desc, pkg);
 	}
 }
 
 void jwp_write_data(struct jwp_desc *desc, const void *buff, jwp_size_t size)
 {
-	while (size)
+	const u8 *p = buff, *p_end = p + size;
+
+	while (p < p_end)
 	{
 		jwp_size_t wrLen;
 
-		wrLen = jwp_data_queue_inqueue(&desc->recv_queue, buff, size);
-		jwp_process_package(desc);
-		size -= wrLen;
+		wrLen = jwp_data_queue_inqueue(&desc->recv_queue, p, p_end - p);
+		if (wrLen)
+		{
+			p += wrLen;
+		}
+		else
+		{
+			jwp_process_package(desc);
+		}
 	}
+
+	jwp_process_package(desc);
 }
 
 void jwp_process_rx_data(struct jwp_desc *desc)
 {
+	jwp_size_t rdLen;
 	jwp_u8 buff[JWP_MTU];
-	jwp_size_t rdLen, wrLen;
 
 	while (1)
 	{
@@ -450,18 +519,6 @@ void jwp_process_rx_data(struct jwp_desc *desc)
 			break;
 		}
 
-		wrLen = jwp_data_queue_inqueue(&desc->recv_queue, buff, rdLen);
-		if (wrLen < rdLen)
-		{
-			jwp_process_package(desc);
-		}
+		jwp_write_data(desc, buff, rdLen);
 	}
-
-	jwp_process_package(desc);
 }
-
-// ============================================================
-
-// ============================================================
-
-// ============================================================

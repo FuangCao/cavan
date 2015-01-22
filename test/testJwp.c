@@ -20,11 +20,11 @@
 #include <cavan.h>
 #include <cavan/jwp.h>
 #include <cavan/timer.h>
+#include <cavan/network.h>
 
 struct jwp_test_data
 {
-	int fd_read;
-	int fd_write;
+	int fd;
 	struct cavan_timer_service timer_service;
 };
 
@@ -36,47 +36,34 @@ struct jwp_test_timer
 
 static jwp_size_t test_jwp_hw_read(struct jwp_desc *desc, void *buff, jwp_size_t size)
 {
-#if 0
 	struct jwp_test_data *data = jwp_get_private_data(desc);
 
-	return read(data->fd_read, buff, size);
-#else
-	pr_pos_info();
-
-	return 0;
-#endif
+	return read(data->fd, buff, size);
 }
 
 static jwp_size_t test_jwp_hw_write(struct jwp_desc *desc, const void *buff, jwp_size_t size)
 {
-#if 0
 	struct jwp_test_data *data = jwp_get_private_data(desc);
 
-	return write(data->fd_write, buff, size);
-#else
-	pr_pos_info();
-
-	return size;
-#endif
+	return write(data->fd, buff, size);
 }
 
 static void test_jwp_data_received(struct jwp_desc *desc, const void *data, jwp_size_t size)
 {
-	pr_pos_info();
+	((char *) data)[size] = 0;
+	pr_green_info("data = %s", (char *) data);
 }
 
 static void test_jwp_package_received(struct jwp_desc *desc, struct jwp_package *pkg)
 {
 	pr_pos_info();
-
 	jwp_package_dump(pkg);
 }
 
+#if JWP_USE_TIMER
 static int test_jwp_timer_handler(struct cavan_timer *_timer, void *data)
 {
 	struct jwp_test_timer *timer = (struct jwp_test_timer *) _timer;
-
-	pr_pos_info();
 
 	timer->handler(_timer->private_data, (jwp_timer) timer);
 
@@ -87,8 +74,6 @@ static jwp_timer test_jwp_create_timer(struct jwp_desc *desc, jwp_timer _timer, 
 {
 	struct jwp_test_data *data = jwp_get_private_data(desc);
 	struct jwp_test_timer *timer;
-
-	pr_pos_info();
 
 	if (_timer == JWP_TIMER_INVALID)
 	{
@@ -115,10 +100,38 @@ static void test_jwp_delete_timer(struct jwp_desc *desc, jwp_timer _timer)
 
 	cavan_timer_remove(&data->timer_service, timer);
 }
+#endif
 
-int main(int argc, char *argv[])
+static int test_jwp_receive_handler(struct cavan_thread *thread, void *data)
 {
+	u8 buff[1024];
+	jwp_size_t size;
+	struct jwp_desc *desc = data;
+
+	size = desc->hw_read(desc, buff, sizeof(buff));
+
+#if 0
+	if (strcmp(thread->name, "service") == 0)
+	{
+		print_mem(buff, size);
+	}
+#endif
+
+#if 0
+	msleep(500);
+#endif
+
+	jwp_write_data(desc, buff, size);
+
+	return 0;
+}
+
+static int test_jwp_run(int fd, int service)
+{
+#if JWP_USE_TIMER
 	int ret;
+#endif
+	struct cavan_thread thread;
 	struct jwp_test_data data;
 	struct jwp_desc desc =
 	{
@@ -126,17 +139,20 @@ int main(int argc, char *argv[])
 		.hw_write = test_jwp_hw_write,
 		.data_received = test_jwp_data_received,
 		.package_received = test_jwp_package_received,
+#if JWP_USE_TIMER
 		.create_timer = test_jwp_create_timer,
 		.delete_timer = test_jwp_delete_timer,
+#endif
 	};
-	u8 buff[] = { 1, 2, 3, 4, 5, JWP_MAGIC_LOW, JWP_MAGIC_HIGH, JWP_PKG_DATA, 1, 2, 0, 'A', 'B', 'C', 'D' };
 
+#if JWP_USE_TIMER
 	ret = cavan_timer_service_start(&data.timer_service);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_timer_service_start");
 		return ret;
 	}
+#endif
 
 	if (jwp_init(&desc, &data) == false)
 	{
@@ -144,12 +160,72 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-	jwp_write_data(&desc, buff, sizeof(buff));
-	jwp_send_package_sync(&desc, JWP_PKG_DATA, "12345", 5);
+	data.fd = fd;
 
-	while (1)
+	thread.name = service ? "service" : "client";
+	thread.handler = test_jwp_receive_handler;
+	thread.wake_handker = NULL;
+	cavan_thread_run(&thread, &desc);
+
+	if (service)
 	{
-		msleep(2000);
+		while (1)
+		{
+			msleep(2000);
+		}
+	}
+	else
+	{
+		while (1)
+		{
+			jwp_bool result;
+			char buff[1024];
+
+			if (scanf("%s", buff) != 1)
+			{
+				pr_error_info("scanf");
+			}
+
+			result = jwp_send_package_sync(&desc, JWP_PKG_DATA, buff, strlen(buff));
+			println("result = %s", result ? "true" : "false");
+		}
+	}
+
+	return 0;
+}
+
+int main(int argc, char *argv[])
+{
+	int ret;
+	pid_t pid;
+	int pair[2];
+
+	ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
+	if (ret < 0)
+	{
+		pr_error_info("socketpair");
+		return ret;
+	}
+
+	pid = fork();
+	if (pid == 0)
+	{
+		close(pair[1]);
+
+		test_jwp_run(pair[0], false);
+	}
+	else
+	{
+		close(pair[0]);
+#if 1
+
+		test_jwp_run(pair[1], true);
+#else
+		while (1)
+		{
+			msleep(2000);
+		}
+#endif
 	}
 
 	return 0;
