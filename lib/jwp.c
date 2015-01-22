@@ -310,6 +310,26 @@ jwp_bool jwp_init(struct jwp_desc *desc, void *data)
 	return true;
 }
 
+static void jwp_data_inqueue_and_flush(struct jwp_desc *desc, struct jwp_data_queue *queue, const void *data, jwp_size_t size, void (*flush)(struct jwp_desc *desc))
+{
+	const u8 *p = data, *p_end = p + size;
+
+	while (p < p_end)
+	{
+		size = jwp_data_queue_inqueue(queue, p, p_end - p);
+		if (size)
+		{
+			p += size;
+		}
+		else
+		{
+			flush(desc);
+		}
+	}
+
+	flush(desc);
+}
+
 void jwp_send_queue_flush(struct jwp_desc *desc)
 {
 	while (1)
@@ -330,22 +350,9 @@ void jwp_send_queue_flush(struct jwp_desc *desc)
 	}
 }
 
-static void jwp_send_data_real(struct jwp_desc *desc, const void *data, jwp_size_t size)
+static inline void jwp_send_data_real(struct jwp_desc *desc, const void *data, jwp_size_t size)
 {
-	const u8 *p = data, *p_end = p + size;
-
-	while (p < p_end)
-	{
-		size = jwp_data_queue_inqueue(&desc->send_queue, p, p_end - p);
-		if (size)
-		{
-			p += size;
-		}
-		else
-		{
-			jwp_send_queue_flush(desc);
-		}
-	}
+	jwp_data_inqueue_and_flush(desc, &desc->send_queue, data, size, jwp_send_queue_flush);
 }
 
 static void jwp_send_package_real(struct jwp_desc *desc, struct jwp_header *hdr, const void *data)
@@ -486,24 +493,7 @@ static void jwp_process_package(struct jwp_desc *desc)
 
 void jwp_write_data(struct jwp_desc *desc, const void *buff, jwp_size_t size)
 {
-	const u8 *p = buff, *p_end = p + size;
-
-	while (p < p_end)
-	{
-		jwp_size_t wrLen;
-
-		wrLen = jwp_data_queue_inqueue(&desc->recv_queue, p, p_end - p);
-		if (wrLen)
-		{
-			p += wrLen;
-		}
-		else
-		{
-			jwp_process_package(desc);
-		}
-	}
-
-	jwp_process_package(desc);
+	jwp_data_inqueue_and_flush(desc, &desc->recv_queue, buff, size, jwp_process_package);
 }
 
 void jwp_process_rx_data(struct jwp_desc *desc)
