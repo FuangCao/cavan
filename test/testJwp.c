@@ -180,14 +180,18 @@ static int test_jwp_run(int fd, int service)
 		{
 			jwp_bool result;
 			char buff[1024];
+			char *p;
 
 			if (scanf("%s", buff) != 1)
 			{
 				pr_error_info("scanf");
 			}
 
-			result = jwp_send_package_sync(&desc, JWP_PKG_DATA, buff, strlen(buff));
-			println("result = %s", result ? "true" : "false");
+			for (p = buff; *p; p++)
+			{
+				result = jwp_send_data(&desc, p, 1);
+				println("result = %s", result ? "true" : "false");
+			}
 		}
 	}
 
