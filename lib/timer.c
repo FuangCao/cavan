@@ -137,7 +137,7 @@ int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *
 {
 	if (timer->handler == NULL)
 	{
-		pr_red_info("p->handler == NULL");
+		pr_red_info("timer->handler == NULL");
 
 		return -EINVAL;
 	}
@@ -175,7 +175,9 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, void *data)
 		else
 		{
 			double_link_remove(link, node);
+			pthread_mutex_unlock(&service->lock);
 			delay = timer->handler(timer, timer->private_data);
+			pthread_mutex_lock(&service->lock);
 			if (delay > 0)
 			{
 				cavan_timer_insert_base(service, timer, delay);

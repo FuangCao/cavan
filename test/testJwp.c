@@ -19,55 +19,137 @@
 
 #include <cavan.h>
 #include <cavan/jwp.h>
+#include <cavan/timer.h>
 
-static void package_received(struct jwp_desc *desc, struct jwp_package *pkg)
+struct jwp_test_data
 {
+	int fd_read;
+	int fd_write;
+	struct cavan_timer_service timer_service;
+};
+
+struct jwp_test_timer
+{
+	struct cavan_timer timer;
+	void (*handler)(struct jwp_desc *desc, jwp_timer timer);
+};
+
+static jwp_size_t test_jwp_hw_read(struct jwp_desc *desc, void *buff, jwp_size_t size)
+{
+#if 0
+	struct jwp_test_data *data = jwp_get_private_data(desc);
+
+	return read(data->fd_read, buff, size);
+#else
+	pr_pos_info();
+
+	return 0;
+#endif
+}
+
+static jwp_size_t test_jwp_hw_write(struct jwp_desc *desc, const void *buff, jwp_size_t size)
+{
+#if 0
+	struct jwp_test_data *data = jwp_get_private_data(desc);
+
+	return write(data->fd_write, buff, size);
+#else
+	pr_pos_info();
+
+	return size;
+#endif
+}
+
+static void test_jwp_data_received(struct jwp_desc *desc, const void *data, jwp_size_t size)
+{
+	pr_pos_info();
+}
+
+static void test_jwp_package_received(struct jwp_desc *desc, struct jwp_package *pkg)
+{
+	pr_pos_info();
+
 	jwp_package_dump(pkg);
+}
+
+static int test_jwp_timer_handler(struct cavan_timer *_timer, void *data)
+{
+	struct jwp_test_timer *timer = (struct jwp_test_timer *) _timer;
+
+	pr_pos_info();
+
+	timer->handler(_timer->private_data, (jwp_timer) timer);
+
+	return 0;
+}
+
+static jwp_timer test_jwp_create_timer(struct jwp_desc *desc, jwp_timer _timer, jwp_time_t ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer))
+{
+	struct jwp_test_data *data = jwp_get_private_data(desc);
+	struct jwp_test_timer *timer;
+
+	pr_pos_info();
+
+	if (_timer == JWP_TIMER_INVALID)
+	{
+		timer = malloc(sizeof(struct jwp_test_timer));
+		cavan_timer_init(&timer->timer, desc);
+	}
+	else
+	{
+		timer = (struct jwp_test_timer *) _timer;
+	}
+
+	timer->timer.handler = test_jwp_timer_handler;
+	timer->handler = handler;
+
+	cavan_timer_insert(&data->timer_service, &timer->timer, ms);
+
+	return (jwp_timer) timer;
+}
+
+static void test_jwp_delete_timer(struct jwp_desc *desc, jwp_timer _timer)
+{
+	struct jwp_test_data *data = jwp_get_private_data(desc);
+	struct cavan_timer *timer = (struct cavan_timer *) _timer;
+
+	cavan_timer_remove(&data->timer_service, timer);
 }
 
 int main(int argc, char *argv[])
 {
-	int i;
-	int length;
+	int ret;
+	struct jwp_test_data data;
 	struct jwp_desc desc =
 	{
-		.package_received = package_received,
+		.hw_read = test_jwp_hw_read,
+		.hw_write = test_jwp_hw_write,
+		.data_received = test_jwp_data_received,
+		.package_received = test_jwp_package_received,
+		.create_timer = test_jwp_create_timer,
+		.delete_timer = test_jwp_delete_timer,
 	};
-	struct jwp_package pkg;
-	struct jwp_data_queue queue;
-	u8 buff[] = { 1, 2, 3, 4, 5, 6, JWP_MAGIC_LOW, JWP_MAGIC_HIGH, JWP_PKG_DATA, 0, 2, 0, 1, 2, 3, 4 };
+	u8 buff[] = { 1, 2, 3, 4, 5, JWP_MAGIC_LOW, JWP_MAGIC_HIGH, JWP_PKG_DATA, 1, 2, 0, 'A', 'B', 'C', 'D' };
 
-	jwp_package_init(&pkg, &desc);
-
-	length = sizeof(buff);
-	println("length = %d", length);
-	length = jwp_package_fill(&pkg, buff, length);
-	println("length = %d", length);
-
-	for (i = 0; i < (int) sizeof(buff); i++)
+	ret = cavan_timer_service_start(&data.timer_service);
+	if (ret < 0)
 	{
-		length = jwp_package_fill(&pkg, buff + i, 1);
-		println("%d. length = %d", i, length);
+		pr_red_info("cavan_timer_service_start");
+		return ret;
 	}
 
-	jwp_data_queue_init(&queue);
-	println("free_size = %ld", jwp_data_queue_get_free_size(&queue));
-	println("fill_size = %ld", jwp_data_queue_get_fill_size(&queue));
-
-	for (i = 'A'; i < 'Z'; i += 2)
+	if (jwp_init(&desc, &data) == false)
 	{
-		u8 data_out[] = "------------";
-		u8 data_in[] = { i, i + 1 };
+		pr_red_info("jwp_init");
+		return -EFAULT;
+	}
 
-		length = jwp_data_queue_inqueue(&queue, data_in, sizeof(data_in));
-		println(">>>>>>>>>> %c%c %d", data_in[0], data_in[1], length);
-		println("free_size = %ld", jwp_data_queue_get_free_size(&queue));
-		println("fill_size = %ld", jwp_data_queue_get_fill_size(&queue));
-		// jwp_data_queue_skip(&queue, 2);
-		length = jwp_data_queue_dequeue(&queue, data_out, sizeof(data_out));
-		println("<<<<<<<<<< %c%c %d", data_out[0], data_out[1], length);
-		println("free_size = %ld", jwp_data_queue_get_free_size(&queue));
-		println("fill_size = %ld", jwp_data_queue_get_fill_size(&queue));
+	jwp_write_data(&desc, buff, sizeof(buff));
+	jwp_send_package_sync(&desc, JWP_PKG_DATA, "12345", 5);
+
+	while (1)
+	{
+		msleep(2000);
 	}
 
 	return 0;

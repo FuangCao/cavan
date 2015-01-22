@@ -30,112 +30,70 @@ void jwp_package_dump(const struct jwp_package *pkg)
 	jwp_header_dump(&pkg->header);
 }
 
-void jwp_package_init(struct jwp_package *pkg, struct jwp_desc *desc)
+void jwp_package_init(struct jwp_package *pkg)
 {
-	pkg->desc = desc;
 	pkg->head = pkg->body;
 	pkg->header_remain = sizeof(pkg->header);
 }
 
-static u8 *jwp_find_package_start(const u8 *buff, jwp_size_t size)
+jwp_bool jwp_package_fill(struct jwp_package *pkg, struct jwp_data_queue *queue)
 {
-	const u8 *buff_end;
-
-	for (buff_end = buff + size - 1; buff < buff_end; buff++)
-	{
-		if (buff[0] == JWP_MAGIC_LOW && buff[1] == JWP_MAGIC_HIGH)
-		{
-			return (u8 *) buff;
-		}
-	}
-
-	return NULL;
-}
-
-jwp_size_t jwp_package_fill(struct jwp_package *pkg, const u8 *buff, jwp_size_t size)
-{
-	const u8 *buff_bak = buff;
+	jwp_size_t rdLen;
 
 	if (pkg->header_remain)
 	{
-		if (pkg->head < pkg->body + JWP_MAGIC_SIZE)
+		if (pkg->head == pkg->body)
 		{
-			if (size == 0)
+			while (1)
 			{
-				return 0;
-			}
-
-			if (pkg->head > pkg->body && buff[0] == JWP_MAGIC_HIGH)
-			{
-
-				buff++;
-				size--;
-			}
-			else
-			{
-				const u8 *p;
-
-				p = jwp_find_package_start(buff, size);
-				if (p == NULL)
+				rdLen = jwp_data_queue_peek(queue, pkg->head, JWP_MAGIC_SIZE);
+				if (rdLen < JWP_MAGIC_SIZE)
 				{
-					if (buff[size - 1] == JWP_MAGIC_LOW)
-					{
-						pkg->head = pkg->body + 1;
-						pkg->header_remain = sizeof(pkg->header) - 1;
-					}
-					else
-					{
-						pkg->head = pkg->body;
-						pkg->header_remain = sizeof(pkg->header);
-					}
-
-					return size;
+					return false;
 				}
 
-				buff = p + JWP_MAGIC_SIZE;
-				size -= (buff - buff_bak);
+				if (pkg->head[0] == JWP_MAGIC_LOW && pkg->head[1] == JWP_MAGIC_HIGH)
+				{
+					break;
+				}
+
+				jwp_data_queue_skip(queue, 1);
 			}
+
+			jwp_data_queue_commit(queue);
 
 			pkg->head = pkg->body + JWP_MAGIC_SIZE;
 			pkg->header_remain = sizeof(pkg->header) - JWP_MAGIC_SIZE;
 		}
 
-		if (size < pkg->header_remain)
+		rdLen = jwp_data_queue_dequeue(queue, pkg->head, pkg->header_remain);
+		if (rdLen < pkg->header_remain)
 		{
-			memcpy(pkg->head, buff, size);
-			pkg->head += size;
-			pkg->header_remain -= size;
-			return (buff - buff_bak) + size;
+			pkg->head += rdLen;
+			pkg->header_remain -= rdLen;
+			return false;
 		}
 		else
 		{
-			memcpy(pkg->head, buff, pkg->header_remain);
-			buff += pkg->header_remain;
-			size -= pkg->header_remain;
 			pkg->header_remain = 0;
 			pkg->data_remain = pkg->header.length;
 			pkg->head = pkg->header.payload;
 		}
 	}
 
-	if (size < pkg->data_remain)
+	rdLen = jwp_data_queue_dequeue(queue, pkg->head, pkg->data_remain);
+	if (rdLen < pkg->data_remain)
 	{
-		memcpy(pkg->head, buff, size);
-		pkg->head += size;
-		pkg->data_remain -= size;
-		return (buff - buff_bak) + size;
+		pkg->head += rdLen;
+		pkg->data_remain -= rdLen;
+		return false;
 	}
 	else
 	{
-		struct jwp_desc *desc = pkg->desc;
-
-		memcpy(pkg->head, buff, pkg->data_remain);
-		desc->package_received(desc, pkg);
-
 		pkg->head = pkg->body;
 		pkg->header_remain = sizeof(pkg->header);
 
-		return (buff - buff_bak) + pkg->data_remain;
+		return true;
 	}
 }
 
@@ -314,6 +272,193 @@ jwp_size_t jwp_data_queue_get_fill_size(struct jwp_data_queue *queue)
 }
 
 // ============================================================
+
+jwp_bool jwp_init(struct jwp_desc *desc, void *data)
+{
+	if (desc->hw_read == NULL || desc->hw_write == NULL)
+	{
+		return false;
+	}
+
+	if (desc->create_timer == NULL || desc->delete_timer == NULL)
+	{
+		return false;
+	}
+
+	if (desc->data_received == NULL || desc->package_received == NULL)
+	{
+		return false;
+	}
+
+	desc->private_data = data;
+
+	desc->send_index = 0;
+	desc->recv_index = 0;
+	desc->send_timer = JWP_TIMER_INVALID;
+
+	jwp_package_init(&desc->pkg_send);
+	jwp_package_init(&desc->pkg_recv);
+
+	jwp_data_queue_init(&desc->send_queue);
+	jwp_data_queue_init(&desc->recv_queue);
+
+	return true;
+}
+
+void jwp_send_queue_flush(struct jwp_desc *desc)
+{
+	while (1)
+	{
+		jwp_size_t rdLen;
+		jwp_u8 buff[JWP_MTU];
+		const jwp_u8 *p, *p_end;
+
+		rdLen = jwp_data_queue_peek(&desc->send_queue, buff, sizeof(buff));
+		if (rdLen == 0)
+		{
+			break;
+		}
+
+		for (p = buff, p_end = p + rdLen; p < p_end; p += desc->hw_write(desc, buff, p_end - p));
+
+		jwp_data_queue_commit(&desc->send_queue);
+	}
+}
+
+static void jwp_send_package_real(struct jwp_desc *desc, struct jwp_header *hdr, const void *data)
+{
+	hdr->magic_high = JWP_MAGIC_HIGH;
+	hdr->magic_low = JWP_MAGIC_LOW;
+
+	jwp_data_queue_inqueue(&desc->send_queue, (u8 *) hdr, sizeof(struct jwp_header));
+
+	if (data && hdr->length > 0)
+	{
+		jwp_data_queue_inqueue(&desc->send_queue, data, hdr->length);
+	}
+
+	jwp_send_queue_flush(desc);
+}
+
+void jwp_send_package(struct jwp_desc *desc, struct jwp_header *hdr, jwp_u8 type, const void *data, jwp_size_t size)
+{
+	hdr->type = type;
+	hdr->length = size;
+	jwp_send_package_real(desc, hdr, data);
+}
+
+void jwp_send_data_ack(struct jwp_desc *desc, jwp_u8 index)
+{
+	struct jwp_header hdr;
+
+	hdr.index = index;
+
+	jwp_send_package(desc, &hdr, JWP_PKG_DATA_ACK, NULL, 0);
+}
+
+static void jwp_send_timeout_handler(struct jwp_desc *desc, jwp_timer timer)
+{
+	struct jwp_header *hdr = &desc->pkg_send.header;
+
+	jwp_send_package_real(desc, hdr, hdr->payload);
+	desc->send_timer = desc->create_timer(desc, timer, JWP_SEND_TIEMOUT, jwp_send_timeout_handler);
+}
+
+jwp_bool jwp_send_package_sync(struct jwp_desc *desc, jwp_u8 type, const void *data, jwp_size_t size)
+{
+	struct jwp_package *pkg = &desc->pkg_send;
+	struct jwp_header *hdr;
+
+	if (pkg->in_use)
+	{
+		return false;
+	}
+
+	pkg->in_use = true;
+
+	hdr = &pkg->header;
+	hdr->type = type;
+	hdr->length = size;
+	hdr->index = desc->send_index + 1;
+
+	jwp_send_timeout_handler(desc, desc->send_timer);
+
+	return true;
+}
+
+static void jwp_process_package(struct jwp_desc *desc)
+{
+	struct jwp_header *hdr;
+	struct jwp_package *pkg = &desc->pkg_recv;
+
+	if (jwp_package_fill(pkg, &desc->recv_queue) == false)
+	{
+		return;
+	}
+
+	hdr = &pkg->header;
+	switch (hdr->type)
+	{
+	case JWP_PKG_DATA:
+		jwp_send_data_ack(desc, hdr->index);
+		if (hdr->index == desc->recv_index + 1)
+		{
+			desc->recv_index++;
+			desc->data_received(desc, hdr->payload, hdr->length);
+		}
+		break;
+
+	case JWP_PKG_DATA_ACK:
+		if (hdr->index == desc->send_index + 1)
+		{
+			if (desc->send_timer != JWP_TIMER_INVALID)
+			{
+				desc->delete_timer(desc, desc->send_timer);
+			}
+
+			desc->send_index++;
+		}
+		break;
+
+	default:
+		desc->package_received(desc, pkg);
+	}
+}
+
+void jwp_write_data(struct jwp_desc *desc, const void *buff, jwp_size_t size)
+{
+	while (size)
+	{
+		jwp_size_t wrLen;
+
+		wrLen = jwp_data_queue_inqueue(&desc->recv_queue, buff, size);
+		jwp_process_package(desc);
+		size -= wrLen;
+	}
+}
+
+void jwp_process_rx_data(struct jwp_desc *desc)
+{
+	jwp_u8 buff[JWP_MTU];
+	jwp_size_t rdLen, wrLen;
+
+	while (1)
+	{
+		rdLen = desc->hw_read(desc, buff, sizeof(buff));
+		if (rdLen == 0)
+		{
+			break;
+		}
+
+		wrLen = jwp_data_queue_inqueue(&desc->recv_queue, buff, rdLen);
+		if (wrLen < rdLen)
+		{
+			jwp_process_package(desc);
+		}
+	}
+
+	jwp_process_package(desc);
+}
 
 // ============================================================
 
