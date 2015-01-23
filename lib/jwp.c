@@ -277,6 +277,8 @@ jwp_size_t jwp_data_queue_get_fill_size(struct jwp_data_queue *queue)
 
 jwp_bool jwp_init(struct jwp_desc *desc, void *data)
 {
+	int i;
+
 	if (desc->hw_read == NULL || desc->hw_write == NULL)
 	{
 		return false;
@@ -304,9 +306,10 @@ jwp_bool jwp_init(struct jwp_desc *desc, void *data)
 	jwp_package_init(&desc->pkg_send);
 	jwp_package_init(&desc->pkg_recv);
 
-	jwp_data_queue_init(&desc->send_queue);
-	jwp_data_queue_init(&desc->recv_queue);
-	jwp_data_queue_init(&desc->data_queue);
+	for (i = 0; i < JWP_QUEUE_COUNT; i++)
+	{
+		jwp_data_queue_init(desc->queues + i);
+	}
 
 	return true;
 }
@@ -333,13 +336,15 @@ static void jwp_data_inqueue_and_flush(struct jwp_desc *desc, struct jwp_data_qu
 
 void jwp_send_queue_flush(struct jwp_desc *desc)
 {
+	struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_SEND);
+
 	while (1)
 	{
 		jwp_size_t rdLen;
 		jwp_u8 buff[JWP_MTU];
 		const jwp_u8 *p, *p_end;
 
-		rdLen = jwp_data_queue_peek(&desc->send_queue, buff, sizeof(buff));
+		rdLen = jwp_data_queue_peek(queue, buff, sizeof(buff));
 		if (rdLen == 0)
 		{
 			break;
@@ -347,13 +352,15 @@ void jwp_send_queue_flush(struct jwp_desc *desc)
 
 		for (p = buff, p_end = p + rdLen; p < p_end; p += desc->hw_write(desc, p, p_end - p));
 
-		jwp_data_queue_commit(&desc->send_queue);
+		jwp_data_queue_commit(queue);
 	}
 }
 
 static inline void jwp_send_data_real(struct jwp_desc *desc, const void *data, jwp_size_t size)
 {
-	jwp_data_inqueue_and_flush(desc, &desc->send_queue, data, size, jwp_send_queue_flush);
+	struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_SEND);
+
+	jwp_data_inqueue_and_flush(desc, queue, data, size, jwp_send_queue_flush);
 }
 
 static void jwp_send_package_real(struct jwp_desc *desc, struct jwp_header *hdr, const void *data)
@@ -442,13 +449,14 @@ static void jwp_data_queue_flush(struct jwp_desc *desc)
 {
 	struct jwp_package *pkg = &desc->pkg_send;
 	struct jwp_header *hdr = &pkg->header;
+	struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_SEND_DATA);
 
 	if (pkg->in_use)
 	{
 		return;
 	}
 
-	hdr->length = jwp_data_queue_peek(&desc->data_queue, hdr->payload, JWP_MAX_PAYLOAD);
+	hdr->length = jwp_data_queue_peek(queue, hdr->payload, JWP_MAX_PAYLOAD);
 	if (hdr->length == 0)
 	{
 		return;
@@ -465,18 +473,28 @@ static void jwp_data_queue_flush(struct jwp_desc *desc)
 
 jwp_size_t jwp_send_data(struct jwp_desc *desc, const void *buff, jwp_size_t size)
 {
-	size = jwp_data_queue_inqueue(&desc->data_queue, buff, size);
+	struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_SEND_DATA);
+
+	size = jwp_data_queue_inqueue(queue, buff, size);
 	jwp_data_queue_flush(desc);
 
 	return size;
+}
+
+jwp_size_t jwp_recv_data(struct jwp_desc *desc, void *buff, jwp_size_t size)
+{
+	struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_RECV_DATA);
+
+	return jwp_data_queue_dequeue(queue, buff, size);
 }
 
 static void jwp_process_package(struct jwp_desc *desc)
 {
 	struct jwp_package *pkg = &desc->pkg_recv;
 	struct jwp_header *hdr = &pkg->header;
+	struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_RECV);
 
-	while (jwp_package_fill(pkg, &desc->recv_queue))
+	while (jwp_package_fill(pkg, queue))
 	{
 #if JWP_DEBUG
 		jwp_header_dump(hdr);
@@ -487,8 +505,11 @@ static void jwp_process_package(struct jwp_desc *desc)
 			jwp_send_data_ack(desc, hdr->index);
 			if (hdr->index == desc->recv_index + 1)
 			{
+				struct jwp_data_queue *data_queue = jwp_data_queue_get(desc, JWP_QUEUE_RECV_DATA);
+
+				jwp_data_queue_inqueue(data_queue, hdr->payload, hdr->length);
 				desc->recv_index++;
-				desc->data_received(desc, hdr->payload, hdr->length);
+				desc->data_received(desc);
 			}
 #if JWP_DEBUG
 			else
@@ -501,6 +522,8 @@ static void jwp_process_package(struct jwp_desc *desc)
 		case JWP_PKG_DATA_ACK:
 			if (hdr->index == desc->send_index + 1)
 			{
+				struct jwp_data_queue *data_queue = jwp_data_queue_get(desc, JWP_QUEUE_SEND_DATA);
+
 #if JWP_USE_TIMER
 				if (desc->send_timer != JWP_TIMER_INVALID)
 				{
@@ -509,7 +532,7 @@ static void jwp_process_package(struct jwp_desc *desc)
 #endif
 				desc->send_index++;
 				desc->pkg_send.in_use = false;
-				jwp_data_queue_commit(&desc->data_queue);
+				jwp_data_queue_commit(data_queue);
 				jwp_data_queue_flush(desc);
 			}
 #if JWP_DEBUG
@@ -528,7 +551,9 @@ static void jwp_process_package(struct jwp_desc *desc)
 
 void jwp_write_data(struct jwp_desc *desc, const void *buff, jwp_size_t size)
 {
-	jwp_data_inqueue_and_flush(desc, &desc->recv_queue, buff, size, jwp_process_package);
+	struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_RECV);
+
+	jwp_data_inqueue_and_flush(desc, queue, buff, size, jwp_process_package);
 }
 
 void jwp_process_rx_data(struct jwp_desc *desc)

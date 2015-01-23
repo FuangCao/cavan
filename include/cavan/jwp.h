@@ -50,7 +50,18 @@ typedef enum
 	JWP_PKG_DATA_ACK,
 	JWP_PKG_CMD,
 	JWP_PKG_CMD_ACK,
+	JWP_PKG_SYNC,
+	JWP_PKG_COUNT
 } jwp_package_t;
+
+typedef enum
+{
+	JWP_QUEUE_SEND,
+	JWP_QUEUE_RECV,
+	JWP_QUEUE_SEND_DATA,
+	JWP_QUEUE_RECV_DATA,
+	JWP_QUEUE_COUNT
+} jwp_queue_t;
 
 #pragma pack(1)
 struct jwp_header
@@ -104,9 +115,8 @@ struct jwp_desc
 	jwp_u8 recv_index;
 	void *private_data;
 
-	struct jwp_data_queue send_queue;
-	struct jwp_data_queue recv_queue;
-	struct jwp_data_queue data_queue;
+	struct jwp_data_queue queues[JWP_QUEUE_COUNT];
+
 	struct jwp_package pkg_send;
 	struct jwp_package pkg_recv;
 
@@ -116,7 +126,7 @@ struct jwp_desc
 
 	jwp_size_t (*hw_read)(struct jwp_desc *desc, void *buff, jwp_size_t size);
 	jwp_size_t (*hw_write)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
-	void (*data_received)(struct jwp_desc *desc, const void *data, jwp_size_t size);
+	void (*data_received)(struct jwp_desc *desc);
 	void (*package_received)(struct jwp_desc *desc, struct jwp_package *pkg);
 #if JWP_USE_TIMER
 	jwp_timer (*create_timer)(struct jwp_desc *desc, jwp_timer timer, jwp_time_t ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer));
@@ -145,6 +155,7 @@ void jwp_send_package(struct jwp_desc *desc, struct jwp_header *hdr, jwp_u8 type
 void jwp_send_data_ack(struct jwp_desc *desc, jwp_u8 index);
 jwp_bool jwp_send_package_sync(struct jwp_desc *desc, jwp_u8 type, const void *data, jwp_size_t size);
 jwp_size_t jwp_send_data(struct jwp_desc *desc, const void *buff, jwp_size_t size);
+jwp_size_t jwp_recv_data(struct jwp_desc *desc, void *buff, jwp_size_t size);
 void jwp_write_data(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 void jwp_process_rx_data(struct jwp_desc *desc);
 
@@ -156,4 +167,9 @@ static inline void jwp_set_private_data(struct jwp_desc *desc, void *data)
 static inline void *jwp_get_private_data(struct jwp_desc *desc)
 {
 	return desc->private_data;
+}
+
+static inline struct jwp_data_queue *jwp_data_queue_get(struct jwp_desc *desc, jwp_queue_t id)
+{
+	return desc->queues + id;
 }

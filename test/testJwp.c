@@ -48,10 +48,22 @@ static jwp_size_t test_jwp_hw_write(struct jwp_desc *desc, const void *buff, jwp
 	return write(data->fd, buff, size);
 }
 
-static void test_jwp_data_received(struct jwp_desc *desc, const void *data, jwp_size_t size)
+static void test_jwp_data_received(struct jwp_desc *desc)
 {
-	((char *) data)[size] = 0;
-	pr_green_info("data = %s", (char *) data);
+	size_t size;
+	char buff[JWP_MTU + 1];
+
+	while (1)
+	{
+		size = jwp_recv_data(desc, buff, sizeof(buff));
+		if (size == 0)
+		{
+			break;
+		}
+
+		buff[size] = 0;
+		pr_green_info("data = %s", buff);
+	}
 }
 
 static void test_jwp_package_received(struct jwp_desc *desc, struct jwp_package *pkg)
