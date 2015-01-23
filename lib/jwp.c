@@ -48,7 +48,7 @@ jwp_bool jwp_package_fill(struct jwp_package *pkg, struct jwp_data_queue *queue)
 		{
 			while (1)
 			{
-				rdLen = jwp_data_queue_peek(queue, pkg->head, JWP_MAGIC_SIZE);
+				rdLen = jwp_data_queue_dequeue_peek(queue, pkg->head, JWP_MAGIC_SIZE);
 				if (rdLen < JWP_MAGIC_SIZE)
 				{
 					return false;
@@ -62,7 +62,7 @@ jwp_bool jwp_package_fill(struct jwp_package *pkg, struct jwp_data_queue *queue)
 				jwp_data_queue_skip(queue, 1);
 			}
 
-			jwp_data_queue_commit(queue);
+			jwp_data_queue_dequeue_commit(queue);
 
 			pkg->head = pkg->body + JWP_MAGIC_SIZE;
 			pkg->header_remain = sizeof(pkg->header) - JWP_MAGIC_SIZE;
@@ -103,18 +103,18 @@ jwp_bool jwp_package_fill(struct jwp_package *pkg, struct jwp_data_queue *queue)
 
 void jwp_data_queue_init(struct jwp_data_queue *queue)
 {
-	queue->head = queue->tail = queue->buff;
-	queue->peek = queue->head;
-	queue->last = queue->head + sizeof(queue->buff) - 1;
+	queue->tail = queue->head = queue->buff;
+	queue->tail_peek = queue->head_peek = queue->tail;
+	queue->last = queue->tail + sizeof(queue->buff) - 1;
 }
 
-jwp_size_t jwp_data_queue_inqueue(struct jwp_data_queue *queue, const u8 *buff, jwp_size_t size)
+jwp_size_t jwp_data_queue_inqueue_peek(struct jwp_data_queue *queue, const u8 *buff, jwp_size_t size)
 {
 	jwp_size_t length;
 
-	if (queue->head < queue->tail)
+	if (queue->tail < queue->head)
 	{
-		length = queue->tail - queue->head - 1;
+		length = queue->head - queue->tail - 1;
 		if (size > length)
 		{
 			size = length;
@@ -122,24 +122,24 @@ jwp_size_t jwp_data_queue_inqueue(struct jwp_data_queue *queue, const u8 *buff, 
 	}
 	else
 	{
-		length = queue->last - queue->head;
+		length = queue->last - queue->tail;
 		if (size > length)
 		{
-			if (queue->tail > queue->buff)
+			if (queue->head > queue->buff)
 			{
 				jwp_size_t left;
 
-				memcpy(queue->head, buff, ++length);
+				memcpy(queue->tail, buff, ++length);
 				size -= length;
 
-				left = queue->tail - queue->buff - 1;
+				left = queue->head - queue->buff - 1;
 				if (size < left)
 				{
 					left = size;
 				}
 
 				memcpy(queue->buff, buff + length, left);
-				queue->head = queue->buff + left;
+				queue->tail_peek = queue->buff + left;
 
 				return length + left;
 			}
@@ -148,19 +148,32 @@ jwp_size_t jwp_data_queue_inqueue(struct jwp_data_queue *queue, const u8 *buff, 
 		}
 	}
 
-	memcpy(queue->head, buff, size);
-	queue->head += size;
+	memcpy(queue->tail, buff, size);
+	queue->tail_peek = queue->tail + size;
 
 	return size;
 }
 
-jwp_size_t jwp_data_queue_peek(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size)
+void jwp_data_queue_inqueue_commit(struct jwp_data_queue *queue)
+{
+	queue->tail = queue->tail_peek;
+}
+
+jwp_size_t jwp_data_queue_inqueue(struct jwp_data_queue *queue, const u8 *buff, jwp_size_t size)
+{
+	size = jwp_data_queue_inqueue_peek(queue, buff, size);
+	jwp_data_queue_inqueue_commit(queue);
+
+	return size;
+}
+
+jwp_size_t jwp_data_queue_dequeue_peek(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size)
 {
 	jwp_size_t length;
 
-	if (queue->tail > queue->head)
+	if (queue->head > queue->tail)
 	{
-		length = queue->last - queue->tail + 1;
+		length = queue->last - queue->head + 1;
 		if (length > size)
 		{
 			length = size;
@@ -169,45 +182,45 @@ jwp_size_t jwp_data_queue_peek(struct jwp_data_queue *queue, u8 *buff, jwp_size_
 		{
 			jwp_size_t left;
 
-			memcpy(buff, queue->tail, length);
+			memcpy(buff, queue->head, length);
 
 			size -= length;
-			left = queue->head - queue->buff;
+			left = queue->tail - queue->buff;
 			if (size < left)
 			{
 				left = size;
 			}
 
 			memcpy(buff + length, queue->buff, left);
-			queue->peek = queue->buff + left;
+			queue->head_peek = queue->buff + left;
 
 			return length + left;
 		}
 	}
 	else
 	{
-		length = queue->head - queue->tail;
+		length = queue->tail - queue->head;
 		if (length > size)
 		{
 			length = size;
 		}
 	}
 
-	memcpy(buff, queue->tail, length);
-	queue->peek = queue->tail + length;
+	memcpy(buff, queue->head, length);
+	queue->head_peek = queue->head + length;
 
 	return length;
 }
 
-void jwp_data_queue_commit(struct jwp_data_queue *queue)
+void jwp_data_queue_dequeue_commit(struct jwp_data_queue *queue)
 {
-	queue->tail = queue->peek;
+	queue->head = queue->head_peek;
 }
 
 jwp_size_t jwp_data_queue_dequeue(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size)
 {
-	size = jwp_data_queue_peek(queue, buff, size);
-	jwp_data_queue_commit(queue);
+	size = jwp_data_queue_dequeue_peek(queue, buff, size);
+	jwp_data_queue_dequeue_commit(queue);
 
 	return size;
 }
@@ -216,9 +229,9 @@ jwp_size_t jwp_data_queue_skip(struct jwp_data_queue *queue, jwp_size_t size)
 {
 	jwp_size_t length;
 
-	if (queue->tail > queue->head)
+	if (queue->head > queue->tail)
 	{
-		length = queue->last - queue->tail + 1;
+		length = queue->last - queue->head + 1;
 		if (length > size)
 		{
 			length = size;
@@ -228,49 +241,49 @@ jwp_size_t jwp_data_queue_skip(struct jwp_data_queue *queue, jwp_size_t size)
 			jwp_size_t left;
 
 			size -= length;
-			left = queue->head - queue->buff;
+			left = queue->tail - queue->buff;
 			if (size < left)
 			{
 				left = size;
 			}
 
-			queue->tail = queue->buff + left;
+			queue->head = queue->buff + left;
 
 			return length + left;
 		}
 	}
 	else
 	{
-		length = queue->head - queue->tail;
+		length = queue->tail - queue->head;
 		if (length > size)
 		{
 			length = size;
 		}
 	}
 
-	queue->tail = queue->tail + length;
+	queue->head = queue->head + length;
 
 	return length;
 }
 
 jwp_size_t jwp_data_queue_get_free_size(struct jwp_data_queue *queue)
 {
-	if (queue->head < queue->tail)
+	if (queue->tail < queue->head)
 	{
-		return queue->tail - queue->head - 1;
+		return queue->head - queue->tail - 1;
 	}
 
-	return (queue->last - queue->head) + (queue->tail - queue->buff);
+	return (queue->last - queue->tail) + (queue->head - queue->buff);
 }
 
 jwp_size_t jwp_data_queue_get_fill_size(struct jwp_data_queue *queue)
 {
-	if (queue->tail > queue->head)
+	if (queue->head > queue->tail)
 	{
-		return (queue->last - queue->tail) + (queue->head - queue->buff);
+		return (queue->last - queue->head) + (queue->tail - queue->buff);
 	}
 
-	return queue->head - queue->tail;
+	return queue->tail - queue->head;
 }
 
 // ============================================================
@@ -344,7 +357,7 @@ void jwp_send_queue_flush(struct jwp_desc *desc)
 		jwp_u8 buff[JWP_MTU];
 		const jwp_u8 *p, *p_end;
 
-		rdLen = jwp_data_queue_peek(queue, buff, sizeof(buff));
+		rdLen = jwp_data_queue_dequeue_peek(queue, buff, sizeof(buff));
 		if (rdLen == 0)
 		{
 			break;
@@ -352,7 +365,7 @@ void jwp_send_queue_flush(struct jwp_desc *desc)
 
 		for (p = buff, p_end = p + rdLen; p < p_end; p += desc->hw_write(desc, p, p_end - p));
 
-		jwp_data_queue_commit(queue);
+		jwp_data_queue_dequeue_commit(queue);
 	}
 }
 
@@ -456,7 +469,7 @@ static void jwp_data_queue_flush(struct jwp_desc *desc)
 		return;
 	}
 
-	hdr->length = jwp_data_queue_peek(queue, hdr->payload, JWP_MAX_PAYLOAD);
+	hdr->length = jwp_data_queue_dequeue_peek(queue, hdr->payload, JWP_MAX_PAYLOAD);
 	if (hdr->length == 0)
 	{
 		return;
@@ -532,7 +545,7 @@ static void jwp_process_package(struct jwp_desc *desc)
 #endif
 				desc->send_index++;
 				desc->pkg_send.in_use = false;
-				jwp_data_queue_commit(data_queue);
+				jwp_data_queue_dequeue_commit(data_queue);
 				jwp_data_queue_flush(desc);
 			}
 #if JWP_DEBUG

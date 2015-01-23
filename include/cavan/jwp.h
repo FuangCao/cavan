@@ -106,7 +106,8 @@ struct jwp_data_queue
 	jwp_u8 *last;
 	jwp_u8 *head;
 	jwp_u8 *tail;
-	jwp_u8 *peek;
+	jwp_u8 *head_peek;
+	jwp_u8 *tail_peek;
 };
 
 struct jwp_desc
@@ -141,9 +142,11 @@ void jwp_package_init(struct jwp_package *pkg);
 jwp_bool jwp_package_fill(struct jwp_package *pkg, struct jwp_data_queue *queue);
 
 void jwp_data_queue_init(struct jwp_data_queue *queue);
+jwp_size_t jwp_data_queue_inqueue_peek(struct jwp_data_queue *queue, const u8 *buff, jwp_size_t size);
+void jwp_data_queue_inqueue_commit(struct jwp_data_queue *queue);
 jwp_size_t jwp_data_queue_inqueue(struct jwp_data_queue *queue, const u8 *buff, jwp_size_t size);
-jwp_size_t jwp_data_queue_peek(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size);
-void jwp_data_queue_commit(struct jwp_data_queue *queue);
+jwp_size_t jwp_data_queue_dequeue_peek(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size);
+void jwp_data_queue_dequeue_commit(struct jwp_data_queue *queue);
 jwp_size_t jwp_data_queue_dequeue(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size);
 jwp_size_t jwp_data_queue_skip(struct jwp_data_queue *queue, jwp_size_t size);
 jwp_size_t jwp_data_queue_get_free_size(struct jwp_data_queue *queue);
