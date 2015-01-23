@@ -491,3 +491,8 @@ static inline int mkdir_hierarchy(const char *pathname, mode_t mode)
 {
 	return mkdir_hierarchy_length(pathname, strlen(pathname), mode);
 }
+
+static inline bool file_throw_all(int fd)
+{
+	return file_discard_all(fd);
+}

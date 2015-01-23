@@ -358,14 +358,14 @@ void cavan_thread_resume(struct cavan_thread *thread)
 {
 	pthread_mutex_lock(&thread->lock);
 
+	thread->pending = true;
+
 	if (thread->state == CAVAN_THREAD_STATE_SUSPEND)
 	{
 		thread->state = CAVAN_THREAD_STATE_RUNNING;
+		thread->wake_handker(thread, thread->private_data);
+		pthread_cond_signal(&thread->cond);
 	}
-
-	thread->pending = true;
-	thread->wake_handker(thread, thread->private_data);
-	pthread_cond_signal(&thread->cond);
 
 	pthread_mutex_unlock(&thread->lock);
 }

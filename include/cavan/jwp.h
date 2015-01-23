@@ -25,10 +25,12 @@ typedef u8 jwp_u8;
 typedef u16 jwp_u16;
 typedef u32 jwp_u32;
 typedef size_t jwp_size_t;
-typedef u32 jwp_time_t;
 typedef bool jwp_bool;
 typedef void * jwp_timer;
 typedef pthread_mutex_t jwp_lock_t;
+
+#define jwp_memcpy(dest, src, size) \
+	memcpy(dest, src, size)
 
 #define jwp_lock_init(lock) \
 	pthread_mutex_init(&lock, NULL)
@@ -57,6 +59,7 @@ typedef pthread_mutex_t jwp_lock_t;
 
 #define JWP_USE_TIMER		1
 #define JWP_TX_LATENCY		1
+#define JWP_RX_DATA_QUEUE	1
 #define JWP_USE_TX_QUEUE	1
 #define JWP_USE_RX_QUEUE	1
 #define JWP_USE_CHECKSUM	1
@@ -95,7 +98,9 @@ typedef enum
 #if JWP_TX_LATENCY
 	JWP_QUEUE_SEND_DATA,
 #endif
+#if JWP_RX_DATA_QUEUE
 	JWP_QUEUE_RECV_DATA,
+#endif
 	JWP_QUEUE_COUNT
 } jwp_queue_t;
 
@@ -175,10 +180,10 @@ struct jwp_desc
 	jwp_size_t (*hw_read)(struct jwp_desc *desc, void *buff, jwp_size_t size);
 	jwp_size_t (*hw_write)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 	void (*send_complete)(struct jwp_desc *desc);
-	void (*data_received)(struct jwp_desc *desc);
+	void (*data_received)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 	void (*package_received)(struct jwp_desc *desc, struct jwp_package *pkg);
 #if JWP_USE_TIMER
-	jwp_timer (*create_timer)(struct jwp_desc *desc, jwp_timer timer, jwp_time_t ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer));
+	jwp_timer (*create_timer)(struct jwp_desc *desc, jwp_timer timer, jwp_u32 ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer));
 	void (*delete_timer)(struct jwp_desc *desc, jwp_timer timer);
 #endif
 };

@@ -24,7 +24,9 @@
 
 struct jwp_test_data
 {
-	int fd;
+	int dev_fd;
+	int data_fd;
+	const char *pathname;
 	struct cavan_timer_service timer_service;
 };
 
@@ -38,37 +40,55 @@ static jwp_size_t test_jwp_hw_read(struct jwp_desc *desc, void *buff, jwp_size_t
 {
 	struct jwp_test_data *data = jwp_get_private_data(desc);
 
-	return read(data->fd, buff, size);
+	return read(data->dev_fd, buff, size);
 }
 
 static jwp_size_t test_jwp_hw_write(struct jwp_desc *desc, const void *buff, jwp_size_t size)
 {
 	struct jwp_test_data *data = jwp_get_private_data(desc);
 
-	return write(data->fd, buff, size);
+	return write(data->dev_fd, buff, size);
 }
 
 static void test_jwp_send_complete(struct jwp_desc *desc)
 {
-	pr_pos_info();
+	// pr_pos_info();
 }
 
-static void test_jwp_data_received(struct jwp_desc *desc)
+static void test_jwp_data_received(struct jwp_desc *desc, const void *data, jwp_size_t size)
 {
-	size_t size;
-	char buff[JWP_MTU + 1];
+	struct jwp_test_data *test_data = jwp_get_private_data(desc);
 
+#if JWP_RX_DATA_QUEUE
 	while (1)
 	{
-		size = jwp_recv_data(desc, buff, sizeof(buff));
-		if (size == 0)
+		ssize_t rdlen, wrlen;
+		char buff[JWP_MTU + 1];
+		rdlen = jwp_recv_data(desc, buff, sizeof(buff));
+		if (rdlen == 0)
 		{
 			break;
 		}
 
-		buff[size] = 0;
-		pr_green_info("data = %s", buff);
+		print_ntext(buff, rdlen);
+
+		wrlen = write(test_data->data_fd, buff, rdlen);
+		if (wrlen < 0)
+		{
+			pr_error_info("write");
+		}
 	}
+#else
+	ssize_t wrlen;
+
+	print_ntext(data, size);
+
+	wrlen = write(test_data->data_fd, data, size);
+	if (wrlen < 0)
+	{
+		pr_error_info("write");
+	}
+#endif
 }
 
 static void test_jwp_package_received(struct jwp_desc *desc, struct jwp_package *pkg)
@@ -87,7 +107,7 @@ static int test_jwp_timer_handler(struct cavan_timer *_timer, void *data)
 	return 0;
 }
 
-static jwp_timer test_jwp_create_timer(struct jwp_desc *desc, jwp_timer _timer, jwp_time_t ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer))
+static jwp_timer test_jwp_create_timer(struct jwp_desc *desc, jwp_timer _timer, jwp_u32 ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer))
 {
 	struct jwp_test_data *data = jwp_get_private_data(desc);
 	struct jwp_test_timer *timer;
@@ -157,8 +177,9 @@ static int test_jwp_send_handler(struct cavan_thread *thread, void *data)
 }
 #endif
 
-static int test_jwp_run(int fd, int service)
+static int test_jwp_run(int dev_fd, const char *pathname, bool service)
 {
+	int data_fd;
 #if JWP_USE_TIMER
 	int ret;
 #endif
@@ -180,6 +201,8 @@ static int test_jwp_run(int fd, int service)
 #endif
 	};
 
+	println("dev_fd = %d, service = %d, pathname = %s", dev_fd, service, pathname);
+
 #if JWP_USE_TIMER
 	ret = cavan_timer_service_start(&data.timer_service);
 	if (ret < 0)
@@ -195,7 +218,15 @@ static int test_jwp_run(int fd, int service)
 		return -EFAULT;
 	}
 
-	data.fd = fd;
+	data_fd = open(pathname, service ? O_WRONLY | O_CREAT | O_TRUNC: O_RDONLY, 0777);
+	if (data_fd < 0)
+	{
+		pr_error_info("open file %s", pathname);
+		return data_fd;
+	}
+
+	data.data_fd = data_fd;
+	data.dev_fd = dev_fd;
 
 #if JWP_USE_TX_QUEUE
 	thread_send.name = service ? "service send" : "client send";
@@ -220,27 +251,35 @@ static int test_jwp_run(int fd, int service)
 	{
 		while (1)
 		{
-			int wrLen;
+			ssize_t rdlen;
 			char buff[1024];
-#if 1
-			char *p;
-#endif
+			char *p, *p_end;
 
-			if (scanf("%s", buff) != 1)
+			rdlen = read(data_fd, buff, sizeof(buff));
+			if (rdlen <= 0)
 			{
-				pr_error_info("scanf");
+				if (rdlen < 0)
+				{
+					pr_error_info("read")
+				}
+
+				break;
 			}
 
-#if 1
-			for (p = buff; *p; p++)
+			for (p = buff, p_end = p + rdlen; p < p_end; p++)
 			{
-				wrLen = jwp_send_data(&desc, p, 1);
-				println("wrLen = %d", wrLen);
+				while (jwp_send_data(&desc, p, 1) != 1)
+				{
+					// pr_red_info("jwp_send_data");
+					msleep(1);
+				}
 			}
-#else
-			wrLen = jwp_send_data(&desc, buff, strlen(buff));
-			println("wrLen = %d", wrLen);
-#endif
+		}
+
+		while (1)
+		{
+			pr_pos_info();
+			msleep(2000);
 		}
 	}
 
@@ -252,6 +291,8 @@ int main(int argc, char *argv[])
 	int ret;
 	pid_t pid;
 	int pair[2];
+
+	assert(argc > 2);
 
 	ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
 	if (ret < 0)
@@ -265,20 +306,13 @@ int main(int argc, char *argv[])
 	{
 		close(pair[1]);
 
-		test_jwp_run(pair[0], false);
+		test_jwp_run(pair[0], argv[1], false);
 	}
 	else
 	{
 		close(pair[0]);
-#if 1
 
-		test_jwp_run(pair[1], true);
-#else
-		while (1)
-		{
-			msleep(2000);
-		}
-#endif
+		test_jwp_run(pair[1], argv[2], true);
 	}
 
 	return 0;
