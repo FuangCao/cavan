@@ -38,10 +38,36 @@ void jwp_package_init(struct jwp_package *pkg)
 	pkg->header_remain = sizeof(pkg->header);
 }
 
+#if JWP_USE_CHECKSUM
+jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size)
+{
+	jwp_u16 checksum = 0;
+	const jwp_u8 *buff_end;
+
+	for (buff_end = buff + size; buff < buff_end; buff++)
+	{
+		checksum += *buff;
+	}
+
+	checksum = (checksum >> 8) + (checksum & 0xFF);
+
+	return (jwp_u8) ((checksum >> 8) + checksum);
+}
+
+jwp_u8 jwp_package_checksum(struct jwp_header *hdr)
+{
+	hdr->checksum = 0;
+
+	return jwp_checksum((jwp_u8 *) hdr, JWP_HEADER_SIZE + hdr->length);
+}
+#endif
+
 // ============================================================
 
 void jwp_data_queue_init(struct jwp_data_queue *queue)
 {
+	jwp_lock_init(queue->lock);
+
 	queue->tail = queue->head = queue->buff;
 	queue->tail_peek = queue->head_peek = queue->tail;
 	queue->last = queue->tail + sizeof(queue->buff) - 1;
@@ -50,6 +76,8 @@ void jwp_data_queue_init(struct jwp_data_queue *queue)
 jwp_size_t jwp_data_queue_inqueue_peek(struct jwp_data_queue *queue, const u8 *buff, jwp_size_t size)
 {
 	jwp_size_t length;
+
+	jwp_lock_acquire(queue->lock);
 
 	if (queue->tail < queue->head)
 	{
@@ -80,6 +108,8 @@ jwp_size_t jwp_data_queue_inqueue_peek(struct jwp_data_queue *queue, const u8 *b
 				memcpy(queue->buff, buff + length, left);
 				queue->tail_peek = queue->buff + left;
 
+				jwp_lock_release(queue->lock);
+
 				return length + left;
 			}
 
@@ -90,12 +120,16 @@ jwp_size_t jwp_data_queue_inqueue_peek(struct jwp_data_queue *queue, const u8 *b
 	memcpy(queue->tail, buff, size);
 	queue->tail_peek = queue->tail + size;
 
+	jwp_lock_release(queue->lock);
+
 	return size;
 }
 
 void jwp_data_queue_inqueue_commit(struct jwp_data_queue *queue)
 {
+	jwp_lock_acquire(queue->lock);
 	queue->tail = queue->tail_peek;
+	jwp_lock_release(queue->lock);
 }
 
 jwp_size_t jwp_data_queue_inqueue(struct jwp_data_queue *queue, const u8 *buff, jwp_size_t size)
@@ -125,6 +159,8 @@ jwp_size_t jwp_data_queue_dequeue_peek(struct jwp_data_queue *queue, u8 *buff, j
 {
 	jwp_size_t length;
 
+	jwp_lock_acquire(queue->lock);
+
 	if (queue->head > queue->tail)
 	{
 		length = queue->last - queue->head + 1;
@@ -148,6 +184,8 @@ jwp_size_t jwp_data_queue_dequeue_peek(struct jwp_data_queue *queue, u8 *buff, j
 			memcpy(buff + length, queue->buff, left);
 			queue->head_peek = queue->buff + left;
 
+			jwp_lock_release(queue->lock);
+
 			return length + left;
 		}
 	}
@@ -163,12 +201,16 @@ jwp_size_t jwp_data_queue_dequeue_peek(struct jwp_data_queue *queue, u8 *buff, j
 	memcpy(buff, queue->head, length);
 	queue->head_peek = queue->head + length;
 
+	jwp_lock_release(queue->lock);
+
 	return length;
 }
 
 void jwp_data_queue_dequeue_commit(struct jwp_data_queue *queue)
 {
+	jwp_lock_acquire(queue->lock);
 	queue->head = queue->head_peek;
+	jwp_lock_release(queue->lock);
 }
 
 jwp_size_t jwp_data_queue_dequeue(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size)
@@ -183,6 +225,8 @@ jwp_size_t jwp_data_queue_dequeue(struct jwp_data_queue *queue, u8 *buff, jwp_si
 jwp_size_t jwp_data_queue_skip(struct jwp_data_queue *queue, jwp_size_t size)
 {
 	jwp_size_t length;
+
+	jwp_lock_acquire(queue->lock);
 
 	if (queue->head > queue->tail)
 	{
@@ -204,6 +248,8 @@ jwp_size_t jwp_data_queue_skip(struct jwp_data_queue *queue, jwp_size_t size)
 
 			queue->head = queue->buff + left;
 
+			jwp_lock_release(queue->lock);
+
 			return length + left;
 		}
 	}
@@ -217,6 +263,8 @@ jwp_size_t jwp_data_queue_skip(struct jwp_data_queue *queue, jwp_size_t size)
 	}
 
 	queue->head = queue->head + length;
+
+	jwp_lock_release(queue->lock);
 
 	return length;
 }
@@ -462,6 +510,8 @@ jwp_bool jwp_init(struct jwp_desc *desc, void *data)
 #endif
 #endif
 
+	jwp_lock_init(desc->lock);
+
 #if JWP_USE_TIMER
 	desc->tx_timer = JWP_TIMER_INVALID;
 #endif
@@ -493,23 +543,42 @@ jwp_bool jwp_init(struct jwp_desc *desc, void *data)
 
 void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_package *pkg)
 {
+#if JWP_USE_CHECKSUM
+	jwp_u8 checksum, checksum_real;
+#endif
 	struct jwp_header *hdr = &pkg->header;
 
 #if JWP_DEBUG
 	jwp_header_dump(hdr);
 #endif
 
+#if JWP_USE_CHECKSUM
+	checksum = hdr->checksum;
+	checksum_real = jwp_package_checksum(hdr);
+	if (checksum != checksum_real)
+	{
+#if JWP_DEBUG
+		jwp_pr_red_info("checksum not match, 0x%02x != 0x%02x", checksum, checksum_real);
+#endif
+		return;
+	}
+#endif
+
 	switch (hdr->type)
 	{
 	case JWP_PKG_DATA:
 		jwp_send_data_ack(desc, hdr->index);
+		jwp_lock_acquire(desc->lock);
 		if (hdr->index == (jwp_u8) (desc->recv_index + 1))
 		{
 			struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_RECV_DATA);
 
+			jwp_lock_release(desc->lock);
 			jwp_data_queue_inqueue(queue, hdr->payload, hdr->length);
-			desc->recv_index++;
 			desc->data_received(desc);
+			jwp_lock_acquire(desc->lock);
+
+			desc->recv_index++;
 		}
 #if JWP_DEBUG
 		else
@@ -517,28 +586,31 @@ void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_package *pkg)
 			jwp_pr_red_info("throw data package %d, need %d", hdr->index, desc->recv_index + 1);
 		}
 #endif
+		jwp_lock_release(desc->lock);
 		break;
 
 	case JWP_PKG_DATA_ACK:
+		jwp_lock_acquire(desc->lock);
 		if (hdr->index == (jwp_u8) (desc->send_index + 1))
 		{
 #if JWP_USE_TX_QUEUE
 			struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_SEND);
 #endif
-
+			jwp_lock_release(desc->lock);
 #if JWP_USE_TIMER
 			if (desc->tx_timer != JWP_TIMER_INVALID)
 			{
 				desc->delete_timer(desc, desc->tx_timer);
 			}
 #endif
-
-			desc->send_index++;
-			desc->send_pendding = false;
 #if JWP_USE_TX_QUEUE
 			jwp_data_queue_dequeue_commit(queue);
 #endif
 			desc->send_complete(desc);
+			jwp_lock_acquire(desc->lock);
+
+			desc->send_index++;
+			desc->send_pendding = false;
 		}
 #if JWP_DEBUG
 		else
@@ -546,6 +618,7 @@ void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_package *pkg)
 			jwp_pr_red_info("throw ack package %d, need %d", hdr->index, desc->send_index + 1);
 		}
 #endif
+		jwp_lock_release(desc->lock);
 		break;
 
 	default:
@@ -604,8 +677,10 @@ static void jwp_hw_write(struct jwp_desc *desc, const u8 *buff, size_t size)
 	}
 }
 
-static inline void jwp_hw_write_package(struct jwp_desc *desc, const struct jwp_header *hdr)
+static inline void jwp_hw_write_package(struct jwp_desc *desc, struct jwp_header *hdr)
 {
+	hdr->checksum = jwp_package_checksum(hdr);
+
 	jwp_hw_write(desc, (u8 *) hdr, JWP_HEADER_SIZE + hdr->length);
 }
 

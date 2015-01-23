@@ -28,6 +28,16 @@ typedef size_t jwp_size_t;
 typedef u32 jwp_time_t;
 typedef bool jwp_bool;
 typedef void * jwp_timer;
+typedef pthread_mutex_t jwp_lock_t;
+
+#define jwp_lock_init(lock) \
+	pthread_mutex_init(&lock, NULL)
+
+#define jwp_lock_acquire(lock) \
+	pthread_mutex_lock(&lock);
+
+#define jwp_lock_release(lock) \
+	pthread_mutex_unlock(&lock);
 
 #define JWP_TIMER_INVALID	NULL
 
@@ -49,6 +59,7 @@ typedef void * jwp_timer;
 #define JWP_TX_LATENCY		1
 #define JWP_USE_TX_QUEUE	1
 #define JWP_USE_RX_QUEUE	1
+#define JWP_USE_CHECKSUM	1
 
 #define JWP_SEND_RETRY		10
 #define JWP_SEND_TIMEOUT	500
@@ -131,6 +142,8 @@ struct jwp_data_queue
 	jwp_u8 *tail;
 	jwp_u8 *head_peek;
 	jwp_u8 *tail_peek;
+
+	jwp_lock_t lock;
 };
 
 struct jwp_desc
@@ -157,6 +170,8 @@ struct jwp_desc
 	jwp_timer tx_latency_timer;
 #endif
 
+	jwp_lock_t lock;
+
 	jwp_size_t (*hw_read)(struct jwp_desc *desc, void *buff, jwp_size_t size);
 	jwp_size_t (*hw_write)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 	void (*send_complete)(struct jwp_desc *desc);
@@ -170,6 +185,8 @@ struct jwp_desc
 
 void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);
+jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size);
+jwp_u8 jwp_package_checksum(struct jwp_header *hdr);
 
 void jwp_package_init(struct jwp_package *pkg);
 
