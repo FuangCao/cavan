@@ -47,10 +47,15 @@ typedef void * jwp_timer;
 
 #define JWP_USE_TIMER		1
 #define JWP_USE_TX_QUEUE	1
+#define JWP_USE_RX_QUEUE	0
 
 #define JWP_SEND_RETRY		10
 #define JWP_SEND_TIMEOUT	500
 #define JWP_QUEUE_SIZE		(JWP_MTU * 3)
+
+#if JWP_USE_TIMER && JWP_USE_TX_QUEUE == 0
+#error "Must enable tx queue when use timer"
+#endif
 
 typedef enum
 {
@@ -67,7 +72,9 @@ typedef enum
 #if JWP_USE_TX_QUEUE
 	JWP_QUEUE_SEND,
 #endif
+#if JWP_USE_RX_QUEUE
 	JWP_QUEUE_RECV,
+#endif
 	JWP_QUEUE_RECV_DATA,
 	JWP_QUEUE_COUNT
 } jwp_queue_t;
@@ -170,6 +177,7 @@ jwp_size_t jwp_data_queue_get_fill_size(struct jwp_data_queue *queue);
 jwp_bool jwp_init(struct jwp_desc *desc, void *data);
 jwp_bool jwp_send_package(struct jwp_desc *desc, struct jwp_header *hdr, bool sync);
 void jwp_send_data_ack(struct jwp_desc *desc, jwp_u8 index);
+void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_package *pkg);
 jwp_bool jwp_process_rx_data(struct jwp_desc *desc);
 jwp_bool jwp_process_tx_data(struct jwp_desc *desc);
 jwp_size_t jwp_write_rx_data(struct jwp_desc *desc, const void *buff, jwp_size_t size);
