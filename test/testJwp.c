@@ -48,6 +48,11 @@ static jwp_size_t test_jwp_hw_write(struct jwp_desc *desc, const void *buff, jwp
 	return write(data->fd, buff, size);
 }
 
+static void test_jwp_send_complete(struct jwp_desc *desc)
+{
+	pr_pos_info();
+}
+
 static void test_jwp_data_received(struct jwp_desc *desc)
 {
 	size_t size;
@@ -133,22 +138,40 @@ static int test_jwp_receive_handler(struct cavan_thread *thread, void *data)
 	msleep(500);
 #endif
 
-	jwp_write_data(desc, buff, size);
+	jwp_write_rx_data(desc, buff, size);
 
 	return 0;
 }
+
+#if JWP_USE_TX_QUEUE
+static int test_jwp_send_handler(struct cavan_thread *thread, void *data)
+{
+	struct jwp_desc *desc = data;
+
+	if (jwp_process_tx_data(desc) == false)
+	{
+		msleep(1);
+	}
+
+	return 0;
+}
+#endif
 
 static int test_jwp_run(int fd, int service)
 {
 #if JWP_USE_TIMER
 	int ret;
 #endif
-	struct cavan_thread thread;
+#if JWP_USE_TX_QUEUE
+	struct cavan_thread thread_send;
+#endif
+	struct cavan_thread thread_recv;
 	struct jwp_test_data data;
 	struct jwp_desc desc =
 	{
 		.hw_read = test_jwp_hw_read,
 		.hw_write = test_jwp_hw_write,
+		.send_complete = test_jwp_send_complete,
 		.data_received = test_jwp_data_received,
 		.package_received = test_jwp_package_received,
 #if JWP_USE_TIMER
@@ -174,10 +197,17 @@ static int test_jwp_run(int fd, int service)
 
 	data.fd = fd;
 
-	thread.name = service ? "service" : "client";
-	thread.handler = test_jwp_receive_handler;
-	thread.wake_handker = NULL;
-	cavan_thread_run(&thread, &desc);
+#if JWP_USE_TX_QUEUE
+	thread_send.name = service ? "service send" : "client send";
+	thread_send.handler = test_jwp_send_handler;
+	thread_send.wake_handker = NULL;
+	cavan_thread_run(&thread_send, &desc);
+#endif
+
+	thread_recv.name = service ? "service recv" : "client recv";
+	thread_recv.handler = test_jwp_receive_handler;
+	thread_recv.wake_handker = NULL;
+	cavan_thread_run(&thread_recv, &desc);
 
 	if (service)
 	{
@@ -190,20 +220,27 @@ static int test_jwp_run(int fd, int service)
 	{
 		while (1)
 		{
-			jwp_bool result;
+			int wrLen;
 			char buff[1024];
+#if 1
 			char *p;
+#endif
 
 			if (scanf("%s", buff) != 1)
 			{
 				pr_error_info("scanf");
 			}
 
+#if 1
 			for (p = buff; *p; p++)
 			{
-				result = jwp_send_data(&desc, p, 1);
-				println("result = %s", result ? "true" : "false");
+				wrLen = jwp_send_data(&desc, p, 1);
+				println("wrLen = %d", wrLen);
 			}
+#else
+			wrLen = jwp_send_data(&desc, buff, strlen(buff));
+			println("wrLen = %d", wrLen);
+#endif
 		}
 	}
 
