@@ -459,12 +459,15 @@ jwp_bool jwp_init(struct jwp_desc *desc, void *data)
 		jwp_println("desc->create_timer == NULL || desc->delete_timer == NULL");
 		return false;
 	}
-	desc->tx_timer = JWP_TIMER_INVALID;
 #endif
 #endif
 
 #if JWP_USE_TIMER
 	desc->tx_timer = JWP_TIMER_INVALID;
+#endif
+
+#if JWP_TX_LATENCY
+	desc->tx_latency_timer = JWP_TIMER_INVALID;
 #endif
 
 	desc->private_data = data;
@@ -482,6 +485,8 @@ jwp_bool jwp_init(struct jwp_desc *desc, void *data)
 	{
 		jwp_data_queue_init(desc->queues + i);
 	}
+
+	desc->send_pendding = false;
 
 	return true;
 }
@@ -729,8 +734,53 @@ void jwp_send_data_ack(struct jwp_desc *desc, jwp_u8 index)
 	jwp_send_package(desc, &hdr, false);
 }
 
+#if JWP_TX_LATENCY
+static void jwp_tx_lantency_handler(struct jwp_desc *desc, jwp_timer timer)
+{
+	struct jwp_package pkg;
+	struct jwp_header *hdr = &pkg.header;
+	struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_SEND_DATA);
+
+	hdr->type = JWP_PKG_DATA;
+
+	while (1)
+	{
+		hdr->length = jwp_data_queue_dequeue_peek(queue, hdr->payload, JWP_MAX_PAYLOAD);
+		if (hdr->length == 0)
+		{
+			break;
+		}
+
+#if JWP_USE_TX_QUEUE == 0
+		hdr->index = desc->send_index + 1;
+#endif
+
+		if (jwp_send_package(desc, hdr, true))
+		{
+			jwp_data_queue_dequeue_commit(queue);
+		}
+	}
+}
+#endif
+
 jwp_size_t jwp_send_data(struct jwp_desc *desc, const void *buff, jwp_size_t size)
 {
+#if JWP_TX_LATENCY
+	struct jwp_data_queue *queue = jwp_data_queue_get(desc, JWP_QUEUE_SEND_DATA);
+
+	size = jwp_data_queue_inqueue(queue, buff, size);
+
+	if (jwp_data_queue_get_fill_size(queue) < JWP_MTU)
+	{
+		desc->tx_latency_timer = desc->create_timer(desc, desc->tx_latency_timer, JWP_LATENCY_TIME, jwp_tx_lantency_handler);
+	}
+	else
+	{
+		jwp_tx_lantency_handler(desc, desc->tx_latency_timer);
+	}
+
+	return size;
+#else
 	struct jwp_package pkg;
 	struct jwp_header *hdr = &pkg.header;
 	const u8 *p = buff, *p_end = p + size;
@@ -755,6 +805,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *desc, const void *buff, jwp_size_t siz
 	}
 
 	return p - (const u8 *) buff;
+#endif
 }
 
 jwp_size_t jwp_recv_data(struct jwp_desc *desc, void *buff, jwp_size_t size)

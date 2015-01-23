@@ -46,15 +46,21 @@ typedef void * jwp_timer;
 #define JWP_MAGIC			(JWP_MAGIC_HIGH << 8 | JWP_MAGIC_LOW)
 
 #define JWP_USE_TIMER		1
+#define JWP_TX_LATENCY		1
 #define JWP_USE_TX_QUEUE	1
-#define JWP_USE_RX_QUEUE	0
+#define JWP_USE_RX_QUEUE	1
 
 #define JWP_SEND_RETRY		10
 #define JWP_SEND_TIMEOUT	500
+#define JWP_LATENCY_TIME	200
 #define JWP_QUEUE_SIZE		(JWP_MTU * 3)
 
-#if JWP_USE_TIMER && JWP_USE_TX_QUEUE == 0
-#error "Must enable tx queue when use timer"
+#if JWP_USE_TIMER && (JWP_USE_TX_QUEUE == 0 && JWP_TX_LATENCY == 0)
+#error "Must enable tx queue or tx latency when use timer"
+#endif
+
+#if JWP_TX_LATENCY && JWP_USE_TIMER == 0
+#error "Must enable timer when use tx latency"
 #endif
 
 typedef enum
@@ -74,6 +80,9 @@ typedef enum
 #endif
 #if JWP_USE_RX_QUEUE
 	JWP_QUEUE_RECV,
+#endif
+#if JWP_TX_LATENCY
+	JWP_QUEUE_SEND_DATA,
 #endif
 	JWP_QUEUE_RECV_DATA,
 	JWP_QUEUE_COUNT
@@ -144,6 +153,10 @@ struct jwp_desc
 	jwp_timer tx_timer;
 #endif
 
+#if JWP_TX_LATENCY
+	jwp_timer tx_latency_timer;
+#endif
+
 	jwp_size_t (*hw_read)(struct jwp_desc *desc, void *buff, jwp_size_t size);
 	jwp_size_t (*hw_write)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 	void (*send_complete)(struct jwp_desc *desc);
@@ -170,7 +183,6 @@ void jwp_data_queue_dequeue_commit(struct jwp_data_queue *queue);
 jwp_size_t jwp_data_queue_dequeue(struct jwp_data_queue *queue, u8 *buff, jwp_size_t size);
 jwp_size_t jwp_data_queue_skip(struct jwp_data_queue *queue, jwp_size_t size);
 jwp_bool jwp_data_queue_dequeue_package(struct jwp_data_queue *queue, struct jwp_header *hdr);
-jwp_bool jwp_data_queue_fill_package(struct jwp_data_queue *queue, struct jwp_package *pkg);
 jwp_size_t jwp_data_queue_get_free_size(struct jwp_data_queue *queue);
 jwp_size_t jwp_data_queue_get_fill_size(struct jwp_data_queue *queue);
 
