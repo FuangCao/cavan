@@ -697,26 +697,23 @@ static jwp_bool jwp_send_and_wait_ack(struct jwp_desc *desc, struct jwp_header *
 	for (retry = JWP_SEND_RETRY; retry; retry--)
 #endif
 	{
-		jwp_u16 count;
-
 		jwp_hw_write_package(desc, hdr);
 
-		for (count = JWP_SEND_TIMEOUT; count; count--)
+		if (jwp_wait_tx_complete(desc))
 		{
-			if (desc->send_pendding == false)
-			{
-				return true;
-			}
-
-			jwp_wait_tx_complete(desc);
+			return true;
 		}
 	}
 
+#if JWP_TX_QUEUE_ENABLE == 0
 #if JWP_DEBUG
 	jwp_pr_red_info("send package timeout");
 #endif
 
+	desc->send_pendding = false;
+
 	return false;
+#endif
 }
 #endif
 
@@ -933,10 +930,6 @@ jwp_bool jwp_send_package(struct jwp_desc *desc, struct jwp_header *hdr, bool sy
 		return res;
 #endif
 #else
-#if JWP_TX_TIMER_ENABLE == 0
-		jwp_bool result;
-#endif
-
 #if JWP_WAIT_ENABLE
 		while (jwp_wait_tx_complete(desc) == false);
 #else
@@ -954,9 +947,7 @@ jwp_bool jwp_send_package(struct jwp_desc *desc, struct jwp_header *hdr, bool sy
 		jwp_send_timeout_handler(desc, desc->tx_timer);
 		return true;
 #else
-		result = jwp_send_and_wait_ack(desc, hdr);
-		desc->send_pendding = false;
-		return result;
+		return jwp_send_and_wait_ack(desc, hdr);
 #endif
 #endif
 	}
