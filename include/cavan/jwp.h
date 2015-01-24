@@ -119,32 +119,6 @@ typedef pthread_mutex_t jwp_lock_t;
 
 // ============================================================
 
-#if JWP_TIMER_ENABLE && (JWP_TX_QUEUE_ENABLE == 0 && JWP_TX_LATENCY_ENABLE == 0)
-#error "must enable tx queue or tx latency when use timer"
-#endif
-
-#if JWP_TX_LATENCY_ENABLE && (JWP_TIMER_ENABLE == 0 || JWP_TX_DATA_QUEUE_ENABLE == 0)
-#error "must enable timer and tx data queue when use tx latency"
-#endif
-
-#if JWP_TX_DATA_LOOP_ENABLE && JWP_TX_DATA_QUEUE_ENABLE == 0
-#error "must tx data queue when use tx data loop"
-#endif
-
-#if JWP_TX_DATA_LOOP_ENABLE && JWP_TX_LATENCY_ENABLE
-#error "don't enable tx data loop and tx latency at the same time"
-#endif
-
-#if JWP_TX_PKG_LOOP_ENABLE && JWP_TX_QUEUE_ENABLE == 0
-#error "must tx queue when use tx package loop"
-#endif
-
-#if JWP_RX_PKG_LOOP_ENABLE && JWP_RX_QUEUE_ENABLE == 0
-#error "must rx queue when use rx package loop"
-#endif
-
-// ============================================================
-
 typedef enum
 {
 	JWP_PKG_ACK,

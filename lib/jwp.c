@@ -22,6 +22,40 @@
 
 #define JWP_DEBUG	0
 
+// ============================================================
+
+#if JWP_TIMER_ENABLE && (JWP_TX_QUEUE_ENABLE == 0 && JWP_TX_LATENCY_ENABLE == 0)
+#error "must enable tx queue or tx latency when use timer"
+#endif
+
+#if JWP_TX_LATENCY_ENABLE && (JWP_TIMER_ENABLE == 0 || JWP_TX_DATA_QUEUE_ENABLE == 0)
+#error "must enable timer and tx data queue when use tx latency"
+#endif
+
+#if JWP_TX_LATENCY_ENABLE && JWP_TX_QUEUE_ENABLE
+#error "don't enable tx latency and tx queue at the same time"
+#endif
+
+#if JWP_TX_DATA_LOOP_ENABLE && JWP_TX_DATA_QUEUE_ENABLE == 0
+#error "must tx data queue when use tx data loop"
+#endif
+
+#if JWP_TX_DATA_LOOP_ENABLE && JWP_TX_LATENCY_ENABLE
+#error "don't enable tx data loop and tx latency at the same time"
+#endif
+
+#if JWP_TX_PKG_LOOP_ENABLE && JWP_TX_QUEUE_ENABLE == 0
+#error "must tx queue when use tx package loop"
+#endif
+
+#if JWP_RX_PKG_LOOP_ENABLE && JWP_RX_QUEUE_ENABLE == 0
+#error "must rx queue when use rx package loop"
+#endif
+
+// ============================================================
+
+static void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_package *pkg);
+
 void jwp_header_dump(const struct jwp_header *hdr)
 {
 	jwp_println("index = %d, type = %d, length = %d, checksum = 0x%02x", hdr->index, hdr->type, hdr->length, hdr->checksum);
@@ -638,7 +672,9 @@ static void jwp_hw_write(struct jwp_desc *desc, const jwp_u8 *buff, size_t size)
 
 static inline void jwp_hw_write_package(struct jwp_desc *desc, struct jwp_header *hdr)
 {
+#if JWP_CHECKSUM_ENABLE
 	hdr->checksum = jwp_package_checksum(hdr);
+#endif
 
 	jwp_hw_write(desc, (jwp_u8 *) hdr, JWP_HEADER_SIZE + hdr->length);
 }
@@ -738,13 +774,13 @@ static void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_package *pk
 
 		if (checksum != checksum_real)
 		{
-	#if JWP_DEBUG
+#if JWP_DEBUG
 			jwp_pr_red_info("checksum not match, 0x%02x != 0x%02x", checksum, checksum_real);
-	#endif
+#endif
 			return;
 		}
-	#endif
 	}
+#endif
 
 	switch (hdr->type)
 	{
@@ -984,7 +1020,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *desc, const void *buff, jwp_size_t siz
 		jwp_tx_lantency_handler(desc, desc->tx_latency_timer);
 	}
 #elif JWP_TX_DATA_LOOP_ENABLE == 0
-#error "must enable tx data loop when tx latency disabled"
+#error "must enable tx data loop or tx latency when use tx data queue"
 #endif
 
 	return size;
