@@ -35,6 +35,11 @@
 #define JWP_TX_PKG_LOOP_ENABLE		1
 #define JWP_RX_PKG_LOOP_ENABLE		1
 
+#define JWP_TX_NOTIFY_ENABLE		1
+#define JWP_RX_CMD_NOTIFY_ENABLE	1
+#define JWP_RX_DATA_NOTIFY_ENABLE	1
+#define JWP_QUEUE_NOTIFY_ENABLE		1
+
 #define JWP_MTU						0xFF
 #define JWP_SEND_RETRY				10
 #define JWP_SEND_TIMEOUT			500
@@ -55,6 +60,9 @@ typedef pthread_mutex_t jwp_lock_t;
 // ============================================================
 
 #define JWP_TIMER_INVALID	NULL
+
+#define jwp_msleep(msec) \
+	msleep(msec)
 
 #define jwp_memcpy(dest, src, size) \
 	memcpy(dest, src, size)
@@ -139,11 +147,10 @@ typedef pthread_mutex_t jwp_lock_t;
 
 typedef enum
 {
-	JWP_PKG_DATA,
-	JWP_PKG_DATA_ACK,
+	JWP_PKG_ACK,
 	JWP_PKG_CMD,
-	JWP_PKG_CMD_ACK,
 	JWP_PKG_SYNC,
+	JWP_PKG_DATA,
 	JWP_PKG_COUNT
 } jwp_package_t;
 
@@ -209,14 +216,17 @@ struct jwp_queue
 	jwp_u8 *tail_peek;
 
 	jwp_lock_t lock;
+
+#if JWP_QUEUE_NOTIFY_ENABLE
 	jwp_cond_t data_cond;
 	jwp_cond_t space_cond;
+#endif
 };
 
 struct jwp_desc
 {
-	jwp_u8 send_index;
-	jwp_u8 recv_index;
+	jwp_u8 tx_index;
+	jwp_u8 rx_index;
 	void *private_data;
 
 	struct jwp_queue queues[JWP_QUEUE_COUNT];
@@ -238,13 +248,24 @@ struct jwp_desc
 #endif
 
 	jwp_lock_t lock;
-	jwp_cond_t data_tx_cond;
-	jwp_cond_t data_rx_cond;
+
+#if JWP_TX_NOTIFY_ENABLE
+	jwp_cond_t tx_cond;
+#endif
+
+#if JWP_RX_CMD_NOTIFY_ENABLE
+	jwp_cond_t rx_cmd_cond;
+#endif
+
+#if JWP_RX_DATA_NOTIFY_ENABLE
+	jwp_cond_t rx_data_cond;
+#endif
 
 	jwp_size_t (*hw_read)(struct jwp_desc *desc, void *buff, jwp_size_t size);
 	jwp_size_t (*hw_write)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 	void (*send_complete)(struct jwp_desc *desc);
 	void (*data_received)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
+	void (*command_received)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 	void (*package_received)(struct jwp_desc *desc, struct jwp_package *pkg);
 #if JWP_TIMER_ENABLE
 	jwp_timer (*create_timer)(struct jwp_desc *desc, jwp_timer timer, jwp_u32 ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer));
@@ -282,7 +303,8 @@ jwp_bool jwp_queue_full(struct jwp_queue *queue);
 
 jwp_bool jwp_init(struct jwp_desc *desc, void *data);
 jwp_bool jwp_send_package(struct jwp_desc *desc, struct jwp_header *hdr, bool sync);
-void jwp_send_data_ack(struct jwp_desc *desc, jwp_u8 index);
+void jwp_send_ack_package(struct jwp_desc *desc, jwp_u8 index);
+void jwp_send_sync_package(struct jwp_desc *desc);
 jwp_size_t jwp_send_data(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 jwp_size_t jwp_recv_data(struct jwp_desc *desc, void *buff, jwp_size_t size);
 
@@ -302,12 +324,20 @@ static inline jwp_bool jwp_queue_inqueue_package(struct jwp_queue *queue, const 
 
 static inline void jwp_queue_wait_data(struct jwp_queue *queue)
 {
+#if JWP_QUEUE_NOTIFY_ENABLE
 	jwp_cond_wait(queue->data_cond, queue->lock);
+#else
+	jwp_msleep(1);
+#endif
 }
 
 static inline void jwp_queue_wait_space(struct jwp_queue *queue)
 {
+#if JWP_QUEUE_NOTIFY_ENABLE
 	jwp_cond_wait(queue->space_cond, queue->lock);
+#else
+	jwp_msleep(1);
+#endif
 }
 
 static inline void jwp_set_private_data(struct jwp_desc *desc, void *data)
@@ -327,12 +357,32 @@ static inline struct jwp_queue *jwp_get_queue(struct jwp_desc *desc, jwp_queue_t
 
 static inline jwp_bool jwp_wait_data_tx_complete(struct jwp_desc *desc)
 {
-	jwp_cond_timedwait(desc->data_tx_cond, desc->lock, JWP_SEND_TIMEOUT);
+#if JWP_TX_NOTIFY_ENABLE
+	jwp_cond_timedwait(desc->tx_cond, desc->lock, JWP_SEND_TIMEOUT);
 
 	return desc->send_pendding == false;
+#else
+	jwp_u32 count;
+
+	for (count = JWP_SEND_TIMEOUT; count; count--)
+	{
+		if (desc->send_pendding == false)
+		{
+			return true;
+		}
+
+		jwp_msleep(1);
+	}
+
+	return false;
+#endif
 }
 
 static inline void jwp_wait_data_rx_complete(struct jwp_desc *desc)
 {
-	jwp_cond_wait(desc->data_rx_cond, desc->lock);
+#if JWP_RX_DATA_NOTIFY_ENABLE
+	jwp_cond_wait(desc->rx_data_cond, desc->lock);
+#else
+	jwp_msleep(1);
+#endif
 }
