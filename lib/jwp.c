@@ -54,7 +54,7 @@
 
 // ============================================================
 
-static void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_package *pkg);
+static void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_header *hdr);
 
 void jwp_header_dump(const struct jwp_header *hdr)
 {
@@ -66,7 +66,7 @@ void jwp_package_dump(const struct jwp_package *pkg)
 	jwp_header_dump(&pkg->header);
 }
 
-void jwp_package_init(struct jwp_package *pkg)
+static void jwp_rx_package_init(struct jwp_rx_package *pkg)
 {
 	pkg->head = pkg->body;
 	pkg->header_remain = sizeof(pkg->header);
@@ -360,7 +360,7 @@ jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_header *h
 }
 
 #if JWP_RX_QUEUE_ENABLE
-static jwp_bool jwp_queue_fill_package(struct jwp_queue *queue, struct jwp_package *pkg)
+static jwp_bool jwp_queue_fill_package(struct jwp_queue *queue, struct jwp_rx_package *pkg)
 {
 	jwp_size_t rdlen;
 
@@ -517,7 +517,7 @@ static jwp_size_t jwp_package_write_data(struct jwp_desc *desc, struct jwp_packa
 	}
 
 	jwp_memcpy(pkg->head, buff, pkg->data_remain);
-	jwp_process_rx_package(desc, pkg);
+	jwp_process_rx_package(desc, &pkg->header);
 
 	pkg->head = pkg->body;
 	pkg->header_remain = sizeof(pkg->header);
@@ -617,11 +617,7 @@ jwp_bool jwp_init(struct jwp_desc *desc, void *data)
 	desc->tx_index = 0;
 	desc->rx_index = 0;
 
-#if JWP_TX_QUEUE_ENABLE || JWP_TX_TIMER_ENABLE
-	jwp_package_init(&desc->tx_pkg);
-#endif
-
-	jwp_package_init(&desc->rx_pkg);
+	jwp_rx_package_init(&desc->rx_pkg);
 
 	for (i = 0; i < JWP_QUEUE_COUNT; i++)
 	{
@@ -754,10 +750,8 @@ static jwp_bool jwp_process_tx_data(struct jwp_desc *desc)
 #endif
 #endif
 
-static void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_package *pkg)
+static void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_header *hdr)
 {
-	struct jwp_header *hdr = &pkg->header;
-
 #if JWP_DEBUG
 	jwp_header_dump(hdr);
 #endif
@@ -865,7 +859,7 @@ static void jwp_process_rx_package(struct jwp_desc *desc, struct jwp_package *pk
 		break;
 
 	default:
-		desc->package_received(desc, pkg);
+		desc->package_received(desc, hdr);
 	}
 }
 
@@ -1178,14 +1172,14 @@ void jwp_tx_loop(struct jwp_desc *desc)
 #if JWP_RX_LOOP_ENABLE
 void jwp_rx_loop(struct jwp_desc *desc)
 {
-	struct jwp_package *pkg = &desc->rx_pkg;
+	struct jwp_rx_package *pkg = &desc->rx_pkg;
 	struct jwp_queue *queue = jwp_get_queue(desc, JWP_QUEUE_RX);
 
 	while (1)
 	{
 		if (jwp_queue_fill_package(queue, pkg))
 		{
-			jwp_process_rx_package(desc, pkg);
+			jwp_process_rx_package(desc, &pkg->header);
 		}
 		else
 		{

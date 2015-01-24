@@ -175,6 +175,15 @@ struct jwp_package
 		struct jwp_header header;
 		jwp_u8 body[JWP_MTU];
 	};
+};
+
+struct jwp_rx_package
+{
+	union
+	{
+		struct jwp_header header;
+		jwp_u8 body[JWP_MTU];
+	};
 
 	jwp_u8 *head;
 	jwp_u8 header_remain;
@@ -208,7 +217,7 @@ struct jwp_desc
 
 	jwp_bool send_pendding;
 
-	struct jwp_package rx_pkg;
+	struct jwp_rx_package rx_pkg;
 
 #if JWP_TX_QUEUE_ENABLE || JWP_TX_TIMER_ENABLE
 	struct jwp_package tx_pkg;
@@ -241,7 +250,7 @@ struct jwp_desc
 	void (*send_complete)(struct jwp_desc *desc);
 	void (*data_received)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 	void (*command_received)(struct jwp_desc *desc, const void *command, jwp_size_t size);
-	void (*package_received)(struct jwp_desc *desc, struct jwp_package *pkg);
+	void (*package_received)(struct jwp_desc *desc, const struct jwp_header *hdr);
 	jwp_timer (*create_timer)(struct jwp_desc *desc, jwp_timer timer, jwp_u32 ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer));
 	void (*delete_timer)(struct jwp_desc *desc, jwp_timer timer);
 };
@@ -252,7 +261,6 @@ void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);
 jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size);
 jwp_u8 jwp_package_checksum(struct jwp_header *hdr);
-void jwp_package_init(struct jwp_package *pkg);
 
 // ============================================================
 

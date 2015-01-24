@@ -103,10 +103,10 @@ static void test_jwp_command_received(struct jwp_desc *desc, const void *command
 	pr_green_info("command = %s", text);
 }
 
-static void test_jwp_package_received(struct jwp_desc *desc, struct jwp_package *pkg)
+static void test_jwp_package_received(struct jwp_desc *desc, const struct jwp_header *hdr)
 {
 	pr_pos_info();
-	jwp_package_dump(pkg);
+	jwp_header_dump(hdr);
 }
 
 static int test_jwp_timer_handler(struct cavan_timer *_timer, void *data)
