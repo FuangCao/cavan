@@ -95,13 +95,20 @@ static void test_jwp_data_received(struct jwp_desc *desc, const void *data, jwp_
 #endif
 }
 
+static void test_jwp_command_received(struct jwp_desc *desc, const void *command, jwp_size_t size)
+{
+	char *text = (char *) command;
+
+	text[size] = 0;
+	pr_green_info("command = %s", text);
+}
+
 static void test_jwp_package_received(struct jwp_desc *desc, struct jwp_package *pkg)
 {
 	pr_pos_info();
 	jwp_package_dump(pkg);
 }
 
-#if JWP_TIMER_ENABLE
 static int test_jwp_timer_handler(struct cavan_timer *_timer, void *data)
 {
 	struct jwp_test_timer *timer = (struct jwp_test_timer *) _timer;
@@ -141,7 +148,6 @@ static void test_jwp_delete_timer(struct jwp_desc *desc, jwp_timer _timer)
 
 	cavan_timer_remove(&data->timer_service, timer);
 }
-#endif
 
 static void *test_jwp_rx_thread(void *data)
 {
@@ -172,19 +178,19 @@ static void *test_jwp_tx_data_loop_thread(void *data)
 }
 #endif
 
-#if JWP_TX_PKG_LOOP_ENABLE
-static void *test_jwp_tx_package_loop_thread(void *data)
+#if JWP_TX_LOOP_ENABLE
+static void *test_jwp_tx_loop_thread(void *data)
 {
-	jwp_tx_package_loop(data);
+	jwp_tx_loop(data);
 
 	return NULL;
 }
 #endif
 
-#if JWP_RX_PKG_LOOP_ENABLE
-static void *test_jwp_rx_package_loop_thread(void *data)
+#if JWP_RX_LOOP_ENABLE
+static void *test_jwp_rx_loop_thread(void *data)
 {
-	jwp_rx_package_loop(data);
+	jwp_rx_loop(data);
 
 	return NULL;
 }
@@ -194,7 +200,7 @@ static void *test_jwp_rx_package_loop_thread(void *data)
 static int test_jwp_run(int dev_fd, const char *pathname, bool service)
 {
 	int data_fd;
-#if JWP_TIMER_ENABLE
+#if JWP_TX_TIMER_ENABLE
 	int ret;
 #endif
 	pthread_t td;
@@ -205,16 +211,15 @@ static int test_jwp_run(int dev_fd, const char *pathname, bool service)
 		.hw_write = test_jwp_hw_write,
 		.send_complete = test_jwp_send_complete,
 		.data_received = test_jwp_data_received,
+		.command_received = test_jwp_command_received,
 		.package_received = test_jwp_package_received,
-#if JWP_TIMER_ENABLE
 		.create_timer = test_jwp_create_timer,
 		.delete_timer = test_jwp_delete_timer,
-#endif
 	};
 
 	println("dev_fd = %d, service = %d, pathname = %s", dev_fd, service, pathname);
 
-#if JWP_TIMER_ENABLE
+#if JWP_TX_TIMER_ENABLE
 	ret = cavan_timer_service_start(&data.timer_service);
 	if (ret < 0)
 	{
@@ -229,14 +234,6 @@ static int test_jwp_run(int dev_fd, const char *pathname, bool service)
 		return -EFAULT;
 	}
 
-	data_fd = open(pathname, service ? O_WRONLY | O_CREAT | O_TRUNC: O_RDONLY, 0777);
-	if (data_fd < 0)
-	{
-		pr_error_info("open file %s", pathname);
-		return data_fd;
-	}
-
-	data.data_fd = data_fd;
 	data.dev_fd = dev_fd;
 
 	pthread_create(&td, NULL, test_jwp_rx_thread, &desc);
@@ -245,16 +242,25 @@ static int test_jwp_run(int dev_fd, const char *pathname, bool service)
 	pthread_create(&td, NULL, test_jwp_tx_data_loop_thread, &desc);
 #endif
 
-#if JWP_TX_PKG_LOOP_ENABLE
-	pthread_create(&td, NULL, test_jwp_tx_package_loop_thread, &desc);
+#if JWP_TX_LOOP_ENABLE
+	pthread_create(&td, NULL, test_jwp_tx_loop_thread, &desc);
 #endif
 
-#if JWP_RX_PKG_LOOP_ENABLE
-	pthread_create(&td, NULL, test_jwp_rx_package_loop_thread, &desc);
+#if JWP_RX_LOOP_ENABLE
+	pthread_create(&td, NULL, test_jwp_rx_loop_thread, &desc);
 #endif
 
 	if (service)
 	{
+		data_fd = open(pathname, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		if (data_fd < 0)
+		{
+			pr_error_info("open file %s", pathname);
+			return data_fd;
+		}
+
+		data.data_fd = data_fd;
+
 		while (1)
 		{
 			msleep(2000);
@@ -262,38 +268,61 @@ static int test_jwp_run(int dev_fd, const char *pathname, bool service)
 	}
 	else
 	{
-		while (1)
+		char buff[1024];
+
+		data.data_fd = 0;
+
+		if (pathname)
 		{
-			ssize_t rdlen;
-			char buff[1024];
-			char *p, *p_end;
-
-			rdlen = read(data_fd, buff, sizeof(buff));
-			if (rdlen <= 0)
+			data_fd = open(pathname, O_RDONLY);
+			if (data_fd < 0)
 			{
-				if (rdlen < 0)
-				{
-					pr_error_info("read")
-				}
-
-				break;
+				pr_error_info("open file %s", pathname);
+				return data_fd;
 			}
 
-			for (p = buff, p_end = p + rdlen; p < p_end; p++)
+			while (1)
 			{
-				while (jwp_send_data(&desc, p, 1) != 1)
+				ssize_t rdlen;
+				char *p, *p_end;
+
+				rdlen = read(data_fd, buff, sizeof(buff));
+				if (rdlen <= 0)
 				{
+					if (rdlen < 0)
+					{
+						pr_error_info("read")
+					}
+
+					break;
+				}
+
+#if 1
+				for (p = buff, p_end = p + rdlen; p < p_end; p += jwp_send_data(&desc, p, p_end - p));
+#else
+				for (p = buff, p_end = p + rdlen; p < p_end; p++)
+				{
+					while (jwp_send_data(&desc, p, 1) != 1)
+					{
 #if TEST_JWP_DEBUG
-					pr_red_info("jwp_send_data");
+						pr_red_info("jwp_send_data");
 #endif
-					msleep(1);
+						msleep(1);
+					}
 				}
+#endif
 			}
+
+			close(data_fd);
+
+			pr_green_info("send file complete");
 		}
 
+		println("please input command");
+
 		while (1)
 		{
-			pr_pos_info();
+			char buff[1024];
 
 #if TEST_JWP_DEBUG
 			if (JWP_QUEUE_COUNT > 0)
@@ -308,7 +337,16 @@ static int test_jwp_run(int dev_fd, const char *pathname, bool service)
 			}
 #endif
 
-			msleep(2000);
+			if (scanf("%s", buff) != 1)
+			{
+				pr_error_info("scanf");
+				continue;
+			}
+
+			if (jwp_send_command(&desc, buff, strlen(buff)) == false)
+			{
+				pr_red_info("Failed");
+			}
 		}
 	}
 
@@ -320,8 +358,6 @@ int main(int argc, char *argv[])
 	int ret;
 	pid_t pid;
 	int pair[2];
-
-	assert(argc > 2);
 
 	ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
 	if (ret < 0)
@@ -335,13 +371,13 @@ int main(int argc, char *argv[])
 	{
 		close(pair[1]);
 
-		test_jwp_run(pair[0], argv[1], false);
+		test_jwp_run(pair[0], argc > 1 ? argv[1] : NULL, false);
 	}
 	else
 	{
 		close(pair[0]);
 
-		test_jwp_run(pair[1], argv[2], true);
+		test_jwp_run(pair[1], argc > 2 ? argv[2] : "/tmp/jwp.txt", true);
 	}
 
 	return 0;

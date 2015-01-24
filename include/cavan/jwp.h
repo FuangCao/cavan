@@ -22,18 +22,18 @@
 #include <cavan.h>
 
 #define JWP_WAIT_ENABLE				1
-#define JWP_TIMER_ENABLE			1
+#define JWP_TX_TIMER_ENABLE			0
 #define JWP_TX_LATENCY_ENABLE		0
 
-#define JWP_TX_QUEUE_ENABLE			1
+#define JWP_TX_QUEUE_ENABLE			0
 #define JWP_RX_QUEUE_ENABLE			1
 #define JWP_TX_DATA_QUEUE_ENABLE	1
 #define JWP_RX_DATA_QUEUE_ENABLE	1
 #define JWP_CHECKSUM_ENABLE			1
 
+#define JWP_TX_LOOP_ENABLE			0
+#define JWP_RX_LOOP_ENABLE			1
 #define JWP_TX_DATA_LOOP_ENABLE		1
-#define JWP_TX_PKG_LOOP_ENABLE		1
-#define JWP_RX_PKG_LOOP_ENABLE		1
 
 #define JWP_TX_NOTIFY_ENABLE		1
 #define JWP_RX_CMD_NOTIFY_ENABLE	1
@@ -41,8 +41,9 @@
 #define JWP_QUEUE_NOTIFY_ENABLE		1
 
 #define JWP_MTU						0xFF
+#define JWP_WAIT_TIME_MSEC			10
 #define JWP_SEND_RETRY				10
-#define JWP_SEND_TIMEOUT			500
+#define JWP_SEND_TIMEOUT			2000
 #define JWP_LATENCY_TIME			200
 #define JWP_QUEUE_SIZE				(JWP_MTU * 3)
 
@@ -209,11 +210,11 @@ struct jwp_desc
 
 	struct jwp_package rx_pkg;
 
-#if JWP_TX_QUEUE_ENABLE || JWP_TIMER_ENABLE
+#if JWP_TX_QUEUE_ENABLE || JWP_TX_TIMER_ENABLE
 	struct jwp_package tx_pkg;
 #endif
 
-#if JWP_TIMER_ENABLE
+#if JWP_TX_TIMER_ENABLE
 	jwp_timer tx_timer;
 #endif
 
@@ -228,23 +229,21 @@ struct jwp_desc
 #endif
 
 #if JWP_RX_CMD_NOTIFY_ENABLE
-	jwp_cond_t rx_cmd_cond;
+	jwp_cond_t command_rx_cond;
 #endif
 
 #if JWP_RX_DATA_NOTIFY_ENABLE
-	jwp_cond_t rx_data_cond;
+	jwp_cond_t data_rx_cond;
 #endif
 
 	jwp_size_t (*hw_read)(struct jwp_desc *desc, void *buff, jwp_size_t size);
 	jwp_size_t (*hw_write)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 	void (*send_complete)(struct jwp_desc *desc);
 	void (*data_received)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
-	void (*command_received)(struct jwp_desc *desc, const void *buff, jwp_size_t size);
+	void (*command_received)(struct jwp_desc *desc, const void *command, jwp_size_t size);
 	void (*package_received)(struct jwp_desc *desc, struct jwp_package *pkg);
-#if JWP_TIMER_ENABLE
 	jwp_timer (*create_timer)(struct jwp_desc *desc, jwp_timer timer, jwp_u32 ms, void (*handler)(struct jwp_desc *desc, jwp_timer timer));
 	void (*delete_timer)(struct jwp_desc *desc, jwp_timer timer);
-#endif
 };
 
 // ============================================================
@@ -281,13 +280,15 @@ void jwp_send_ack_package(struct jwp_desc *desc, jwp_u8 index);
 void jwp_send_sync_package(struct jwp_desc *desc);
 jwp_size_t jwp_send_data(struct jwp_desc *desc, const void *buff, jwp_size_t size);
 jwp_size_t jwp_recv_data(struct jwp_desc *desc, void *buff, jwp_size_t size);
+jwp_bool jwp_send_command(struct jwp_desc *desc, const void *command, jwp_size_t size);
 
 // ============================================================
 
-jwp_size_t jwp_write_rx_data(struct jwp_desc *desc, const void *buff, jwp_size_t size);
+jwp_bool jwp_wait_tx_complete(struct jwp_desc *desc);
+jwp_size_t jwp_write_rx_data(struct jwp_desc *desc, const jwp_u8 *buff, jwp_size_t size);
 void jwp_tx_data_loop(struct jwp_desc *desc);
-void jwp_tx_package_loop(struct jwp_desc *desc);
-void jwp_rx_package_loop(struct jwp_desc *desc);
+void jwp_tx_loop(struct jwp_desc *desc);
+void jwp_rx_loop(struct jwp_desc *desc);
 
 // ============================================================
 
@@ -301,7 +302,7 @@ static inline void jwp_queue_wait_data(struct jwp_queue *queue)
 #if JWP_QUEUE_NOTIFY_ENABLE
 	jwp_cond_wait(queue->data_cond, queue->lock);
 #else
-	jwp_msleep(1);
+	jwp_msleep(JWP_WAIT_TIME_MSEC);
 #endif
 }
 
@@ -310,7 +311,7 @@ static inline void jwp_queue_wait_space(struct jwp_queue *queue)
 #if JWP_QUEUE_NOTIFY_ENABLE
 	jwp_cond_wait(queue->space_cond, queue->lock);
 #else
-	jwp_msleep(1);
+	jwp_msleep(JWP_WAIT_TIME_MSEC);
 #endif
 }
 
@@ -329,34 +330,20 @@ static inline struct jwp_queue *jwp_get_queue(struct jwp_desc *desc, jwp_queue_t
 	return desc->queues + id;
 }
 
-static inline jwp_bool jwp_wait_data_tx_complete(struct jwp_desc *desc)
-{
-#if JWP_TX_NOTIFY_ENABLE
-	jwp_cond_timedwait(desc->tx_cond, desc->lock, JWP_SEND_TIMEOUT);
-
-	return desc->send_pendding == false;
-#else
-	jwp_u32 count;
-
-	for (count = JWP_SEND_TIMEOUT; count; count--)
-	{
-		if (desc->send_pendding == false)
-		{
-			return true;
-		}
-
-		jwp_msleep(1);
-	}
-
-	return false;
-#endif
-}
-
 static inline void jwp_wait_data_rx_complete(struct jwp_desc *desc)
 {
 #if JWP_RX_DATA_NOTIFY_ENABLE
-	jwp_cond_wait(desc->rx_data_cond, desc->lock);
+	jwp_cond_wait(desc->data_rx_cond, desc->lock);
 #else
-	jwp_msleep(1);
+	jwp_msleep(JWP_WAIT_TIME_MSEC);
+#endif
+}
+
+static inline void jwp_wait_command_rx_complete(struct jwp_desc *desc)
+{
+#if JWP_RX_DATA_NOTIFY_ENABLE
+	jwp_cond_wait(desc->command_rx_cond, desc->lock);
+#else
+	jwp_msleep(JWP_WAIT_TIME_MSEC);
 #endif
 }
