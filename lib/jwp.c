@@ -653,14 +653,13 @@ void jwp_send_sync_package(struct jwp_desc *desc)
 
 static void jwp_hw_write(struct jwp_desc *desc, const jwp_u8 *buff, size_t size)
 {
-	const jwp_u8 *buff_end = buff + size;
-
-	while (buff < buff_end)
+	while (size > 0)
 	{
 		jwp_size_t wrlen;
 
-		wrlen = desc->hw_write(desc, buff, buff_end - buff);
+		wrlen = desc->hw_write(desc, buff, size);
 		buff += wrlen;
+		size -= wrlen;
 	}
 }
 
