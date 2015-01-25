@@ -134,6 +134,7 @@ static void test_jwp_package_received(struct jwp_desc *jwp, const struct jwp_hea
 	jwp_header_dump(hdr);
 }
 
+#if JWP_TIMER_ENABLE
 static int test_jwp_timer_handler(struct cavan_timer *timer, void *data)
 {
 	struct jwp_timer *jwp_timer = data;
@@ -192,6 +193,7 @@ static void test_jwp_delete_timer(struct jwp_timer *timer)
 		cavan_timer_remove(&data->timer_service, timer->handle);
 	}
 }
+#endif
 
 #if JWP_TX_DATA_LOOP_ENABLE
 static void *test_jwp_tx_data_loop_thread(void *data)
@@ -233,9 +235,6 @@ static void *test_jwp_rx_package_loop_thread(void *data)
 static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 {
 	int data_fd;
-#if JWP_TX_TIMER_ENABLE
-	int ret;
-#endif
 	pthread_t td;
 	struct jwp_test_data data;
 	struct jwp_desc jwp =
@@ -246,18 +245,19 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 		.data_received = test_jwp_data_received,
 		.command_received = test_jwp_command_received,
 		.package_received = test_jwp_package_received,
+#if JWP_TIMER_ENABLE
 		.create_timer = test_jwp_create_timer,
 		.delete_timer = test_jwp_delete_timer,
+#endif
 	};
 
 	println("hw_fd = %d, service = %d, pathname = %s", hw_fd, service, pathname);
 
-#if JWP_TX_TIMER_ENABLE
-	ret = cavan_timer_service_start(&data.timer_service);
-	if (ret < 0)
+#if JWP_TIMER_ENABLE
+	if (cavan_timer_service_start(&data.timer_service) < 0)
 	{
 		pr_red_info("cavan_timer_service_start");
-		return ret;
+		return -EFAULT;
 	}
 #endif
 

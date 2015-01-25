@@ -31,11 +31,15 @@
 #endif
 
 #if JWP_TX_PKG_TIMER_ENABLE && (JWP_TX_TIMER_ENABLE == 0 || JWP_TX_QUEUE_ENABLE == 0)
-#error "must enable tx timer and tx queu when use tx package timer"
+#error "must enable tx timer and tx queue when use tx package timer"
 #endif
 
 #if JWP_TX_PKG_TIMER_ENABLE && JWP_TX_LOOP_ENABLE
 #error "don't enable tx package timer and tx loop at the same time"
+#endif
+
+#if JWP_RX_PKG_TIMER_ENABLE && JWP_TIMER_ENABLE == 0
+#error "must enable timer when use rx package timer"
 #endif
 
 #if JWP_RX_PKG_TIMER_ENABLE && JWP_RX_PKG_LOOP_ENABLE
@@ -371,7 +375,7 @@ jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size)
 }
 #endif
 
-#if JWP_TX_LOOP_ENABLE || JWP_TX_TIMER_ENABLE
+#if JWP_TX_LOOP_ENABLE || JWP_TX_PKG_TIMER_ENABLE
 static jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_header *hdr)
 {
 	jwp_size_t rdlen;
@@ -384,25 +388,6 @@ static jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_he
 
 	rdlen = jwp_queue_dequeue(queue, hdr->payload, hdr->length);
 	if (rdlen < hdr->length)
-	{
-		return false;
-	}
-
-	return true;
-}
-#else
-static jwp_bool jwp_queue_dequeue_package_peek(struct jwp_queue *queue, struct jwp_header *hdr)
-{
-	jwp_size_t rdlen;
-
-	rdlen = jwp_queue_dequeue_peek(queue, (jwp_u8 *) hdr, JWP_HEADER_SIZE);
-	if (rdlen < JWP_HEADER_SIZE)
-	{
-		return false;
-	}
-
-	rdlen = jwp_queue_dequeue_peek(queue, (jwp_u8 *) hdr, JWP_HEADER_SIZE + hdr->length);
-	if (rdlen < JWP_HEADER_SIZE + hdr->length)
 	{
 		return false;
 	}
@@ -493,7 +478,7 @@ static jwp_u8 *jwp_package_find_magic(const jwp_u8 *buff, jwp_size_t size)
 	return NULL;
 }
 
-static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_package *pkg, const jwp_u8 *buff, jwp_size_t size)
+static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_rx_package *pkg, const jwp_u8 *buff, jwp_size_t size)
 {
 	jwp_size_t size_bak = size;
 
@@ -848,10 +833,12 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 		jwp_queue_init(jwp->queues + i);
 	}
 
+#if JWP_TIMER_ENABLE
 	for (i = 0; i < JWP_TIMER_COUNT; i++)
 	{
 		jwp_timer_init(jwp->timers + i, jwp);
 	}
+#endif
 
 #if JWP_TX_TIMER_ENABLE
 #if JWP_DEBUG
@@ -1064,7 +1051,7 @@ jwp_size_t jwp_write_rx_data(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_
 #error "must enable rx package loop or tx package timer when use rx queue"
 #endif
 #else
-	struct jwp_package *pkg = &jwp->rx_pkg;
+	struct jwp_rx_package *pkg = &jwp->rx_pkg;
 	const jwp_u8 *buff_end = buff + size;
 
 	while (buff < buff_end)
