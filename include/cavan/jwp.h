@@ -35,7 +35,7 @@
 #define JWP_CHECKSUM_ENABLE			1
 
 #define JWP_TX_LOOP_ENABLE			0
-#define JWP_RX_LOOP_ENABLE			0
+#define JWP_RX_LOOP_ENABLE			1
 #define JWP_RX_PKG_LOOP_ENABLE		1
 #define JWP_TX_DATA_LOOP_ENABLE		1
 
@@ -64,7 +64,7 @@ typedef pthread_mutex_t jwp_lock_t;
 // ============================================================
 
 #define jwp_msleep(msec) \
-	msleep(msec)
+	msleep(msec);
 
 #define jwp_memcpy(dest, src, size) \
 	memcpy(dest, src, size)
@@ -304,7 +304,6 @@ jwp_size_t jwp_queue_dequeue_peek(struct jwp_queue *queue, jwp_u8 *buff, jwp_siz
 void jwp_queue_dequeue_commit(struct jwp_queue *queue);
 jwp_size_t jwp_queue_dequeue(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size);
-jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_header *hdr);
 jwp_size_t jwp_queue_get_free_size(struct jwp_queue *queue);
 jwp_size_t jwp_queue_get_fill_size(struct jwp_queue *queue);
 jwp_bool jwp_queue_empty(struct jwp_queue *queue);

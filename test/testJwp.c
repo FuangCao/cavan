@@ -386,12 +386,22 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 				continue;
 			}
 
-			if (jwp_send_data(&jwp, buff, strlen(buff)) == false)
+			println("send data %s", buff);
+			if (jwp_send_data(&jwp, buff, strlen(buff)), buff)
+			{
+				pr_green_info("send data %s complete", buff);
+			}
+			else
 			{
 				pr_red_info("Failed to jwp_send_data");
 			}
 
-			if (jwp_send_command(&jwp, buff, strlen(buff)) == false)
+			println("send command %s", buff);
+			if (jwp_send_command(&jwp, buff, strlen(buff)))
+			{
+				pr_green_info("send command %s complete", buff);
+			}
+			else
 			{
 				pr_red_info("Failed to jwp_send_command");
 			}

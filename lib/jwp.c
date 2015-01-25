@@ -359,7 +359,8 @@ jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size)
 }
 #endif
 
-jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_header *hdr)
+#if JWP_TX_LOOP_ENABLE || JWP_TX_TIMER_ENABLE
+static jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_header *hdr)
 {
 	jwp_size_t rdlen;
 
@@ -377,6 +378,26 @@ jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_header *h
 
 	return true;
 }
+#else
+static jwp_bool jwp_queue_dequeue_package_peek(struct jwp_queue *queue, struct jwp_header *hdr)
+{
+	jwp_size_t rdlen;
+
+	rdlen = jwp_queue_dequeue_peek(queue, (jwp_u8 *) hdr, JWP_HEADER_SIZE);
+	if (rdlen < JWP_HEADER_SIZE)
+	{
+		return false;
+	}
+
+	rdlen = jwp_queue_dequeue_peek(queue, (jwp_u8 *) hdr, JWP_HEADER_SIZE + hdr->length);
+	if (rdlen < JWP_HEADER_SIZE + hdr->length)
+	{
+		return false;
+	}
+
+	return true;
+}
+#endif
 
 #if JWP_RX_QUEUE_ENABLE
 static jwp_bool jwp_queue_fill_package(struct jwp_queue *queue, struct jwp_rx_package *pkg)
@@ -828,21 +849,30 @@ static jwp_bool jwp_process_tx_data(struct jwp_desc *jwp)
 	}
 #endif
 
+	jwp->send_pendding = true;
+
 	hdr = &jwp->tx_pkg.header;
 	queue = jwp_get_queue(jwp, JWP_QUEUE_TX);
 
+#if JWP_TX_TIMER_ENABLE
 	if (jwp_queue_dequeue_package(queue, hdr) == false)
+#else
+	if (jwp_queue_dequeue_package_peek(queue, hdr) == false)
+#endif
 	{
+		jwp->send_pendding = false;
 		return false;
 	}
 
-	jwp->send_pendding = true;
 	hdr->index = jwp->tx_index + 1;
 
 #if JWP_TX_TIMER_ENABLE
 	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX), 0);
 #else
-	jwp_send_and_wait_ack(jwp, hdr);
+	if (jwp_send_and_wait_ack(jwp, hdr))
+	{
+		jwp_queue_dequeue_commit(queue);
+	}
 #endif
 
 	return true;
