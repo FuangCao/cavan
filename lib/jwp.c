@@ -30,10 +30,6 @@
 #error "must enable timer and tx data queue when use tx latency"
 #endif
 
-#if JWP_TX_LATENCY_ENABLE && JWP_TX_QUEUE_ENABLE && JWP_TX_LOOP_ENABLE == 0
-#error "don't enable tx latency and tx queue at the same time when use tx loop"
-#endif
-
 #if JWP_TX_PKG_TIMER_ENABLE && (JWP_TX_TIMER_ENABLE == 0 || JWP_TX_QUEUE_ENABLE == 0)
 #error "must enable tx timer and tx queu when use tx package timer"
 #endif
