@@ -617,6 +617,8 @@ jwp_bool jwp_queue_full(struct jwp_queue *queue)
 #if JWP_TIMER_ENABLE
 static void jwp_timer_init(struct jwp_timer *timer, struct jwp_desc *jwp)
 {
+	jwp_lock_init(timer->lock);
+
 	timer->jwp = jwp;
 	timer->active = false;
 	timer->handler = NULL;
@@ -626,6 +628,8 @@ static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 {
 	struct jwp_desc *jwp = timer->jwp;
 
+	jwp_lock_acquire(timer->lock);
+
 	if (timer->active)
 	{
 		if (msec < timer->msec)
@@ -634,12 +638,15 @@ static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 		}
 		else
 		{
+			jwp_lock_release(timer->lock);
 			return;
 		}
 	}
 
 	timer->msec = msec;
 	timer->active = jwp->create_timer(timer);
+
+	jwp_lock_release(timer->lock);
 }
 
 #if JWP_TX_TIMER_ENABLE
@@ -647,20 +654,33 @@ static void jwp_timer_delete(struct jwp_timer *timer)
 {
 	struct jwp_desc *jwp = timer->jwp;
 
+	jwp_lock_acquire(timer->lock);
+
 	jwp->delete_timer(timer);
 	timer->active = false;
+
+	jwp_lock_release(timer->lock);
 }
 #endif
 
 void jwp_timer_run(struct jwp_timer *timer)
 {
-	timer->active = timer->handler(timer);
-	if (timer->active)
+	jwp_bool active = timer->handler(timer);
+
+	jwp_lock_acquire(timer->lock);
+
+	if (active)
 	{
 		struct jwp_desc *jwp = timer->jwp;
 
 		timer->active = jwp->create_timer(timer);
 	}
+	else
+	{
+		timer->active = false;
+	}
+
+	jwp_lock_release(timer->lock);
 }
 #endif
 
@@ -718,8 +738,11 @@ static jwp_bool jwp_tx_package_timer_handler(struct jwp_timer *timer)
 	struct jwp_queue *queue;
 	struct jwp_desc *jwp = timer->jwp;
 
+	jwp_lock_acquire(jwp->lock);
+
 	if (jwp->send_pendding)
 	{
+		jwp_lock_release(jwp->lock);
 		return false;
 	}
 
@@ -737,6 +760,8 @@ static jwp_bool jwp_tx_package_timer_handler(struct jwp_timer *timer)
 	{
 		jwp->send_pendding = false;
 	}
+
+	jwp_lock_release(jwp->lock);
 
 	return false;
 }
@@ -908,7 +933,9 @@ static jwp_bool jwp_send_and_wait_ack(struct jwp_desc *jwp, struct jwp_header *h
 	jwp_pr_red_info("send package timeout");
 #endif
 
+	jwp_lock_acquire(jwp->lock);
 	jwp->send_pendding = false;
+	jwp_lock_release(jwp->lock);
 
 	return false;
 #endif
@@ -1071,15 +1098,20 @@ jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool syn
 #else
 #if JWP_WAIT_ENABLE && JWP_TX_LATENCY_ENABLE == 0
 		while (jwp_wait_tx_complete(jwp) == false);
+		jwp_lock_acquire(jwp->lock);
 #else
+		jwp_lock_acquire(jwp->lock);
 		if (jwp->send_pendding)
 		{
+			jwp_lock_release(jwp->lock);
 			return false;
 		}
 #endif
 
 		jwp->send_pendding = true;
 		hdr->index = jwp->tx_index + 1;
+
+		jwp_lock_release(jwp->lock);
 
 #if JWP_TX_TIMER_ENABLE
 		jwp_memcpy(&jwp->tx_pkg, hdr, JWP_HEADER_SIZE + hdr->length);
@@ -1188,26 +1220,45 @@ jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t 
 jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 {
 #if JWP_TX_NOTIFY_ENABLE
+	jwp_bool res;
+
+	jwp_lock_acquire(jwp->lock);
+
 	if (jwp->send_pendding)
 	{
+		jwp_lock_release(jwp->lock);
 		jwp_cond_timedwait(jwp->tx_cond, jwp->lock, JWP_TX_TIMEOUT);
+		jwp_lock_acquire(jwp->lock);
 
-		return jwp->send_pendding == false;
+		res = jwp->send_pendding == false;
+	}
+	else
+	{
+		res = true;
 	}
 
-	return true;
+	jwp_lock_release(jwp->lock);
+
+	return res;
 #else
 	jwp_u32 count;
+
+	jwp_lock_acquire(jwp->lock);
 
 	for (count = JWP_TX_TIMEOUT; count; count--)
 	{
 		if (jwp->send_pendding == false)
 		{
+			jwp_lock_release(jwp->lock);
 			return true;
 		}
 
+		jwp_lock_release(jwp->lock);
 		jwp_msleep(1);
+		jwp_lock_acquire(jwp->lock);
 	}
+
+	jwp_lock_release(jwp->lock);
 
 	return false;
 #endif
@@ -1251,8 +1302,11 @@ void jwp_tx_loop(struct jwp_desc *jwp)
 
 	while (1)
 	{
+		jwp_lock_acquire(jwp->lock);
+
 		if (jwp_queue_dequeue_package(queue, hdr) == false)
 		{
+			jwp_lock_release(jwp->lock);
 			jwp_queue_wait_data(queue);
 			continue;
 		}
@@ -1264,10 +1318,14 @@ void jwp_tx_loop(struct jwp_desc *jwp)
 		{
 			jwp_hw_write_package(jwp, hdr);
 
+			jwp_lock_release(jwp->lock);
+
 			if (jwp_wait_tx_complete(jwp))
 			{
 				break;
 			}
+
+			jwp_lock_acquire(jwp->lock);
 		}
 	}
 }

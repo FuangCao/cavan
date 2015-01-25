@@ -23,7 +23,7 @@
 #include <cavan/network.h>
 
 #define TEST_JWP_DEBUG		0
-#define TEST_JWP_MEM_DUMP	1
+#define TEST_JWP_MEM_DUMP	0
 
 struct jwp_test_data
 {
@@ -139,7 +139,7 @@ static int test_jwp_timer_handler(struct cavan_timer *timer, void *data)
 	struct jwp_timer *jwp_timer = data;
 
 #if JWP_DEBUG
-	println("run timer %s, msec = %d", jwp_timer->name, jwp_timer->msec);
+	println("%s run timer %s, msec = %d", jwp_timer->jwp->name, jwp_timer->name, jwp_timer->msec);
 #endif
 
 	jwp_timer_run(jwp_timer);
@@ -153,7 +153,7 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 	struct jwp_test_data *data = jwp_get_private_data(timer->jwp);
 
 #if JWP_DEBUG
-	println("create timer %s, msec = %d", timer->name, timer->msec);
+	println("%s create timer %s, msec = %d", timer->jwp->name, timer->name, timer->msec);
 #endif
 
 	if (timer->handle == NULL)
@@ -182,7 +182,7 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 static void test_jwp_delete_timer(struct jwp_timer *timer)
 {
 #if JWP_DEBUG
-	println("delete timer %s, msec = %d", timer->name, timer->msec);
+	println("%s delete timer %s, msec = %d" , timer->jwp->name, timer->name, timer->msec);
 #endif
 
 	if (timer->handle != NULL)

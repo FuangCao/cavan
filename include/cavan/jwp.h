@@ -21,7 +21,7 @@
 
 #include <cavan.h>
 
-#define JWP_DEBUG	1
+#define JWP_DEBUG	0
 
 #define JWP_WAIT_ENABLE				1
 
@@ -33,14 +33,14 @@
 
 #define JWP_TX_QUEUE_ENABLE			1
 #define JWP_RX_QUEUE_ENABLE			1
-#define JWP_TX_DATA_QUEUE_ENABLE	1
+#define JWP_TX_DATA_QUEUE_ENABLE	0
 #define JWP_RX_DATA_QUEUE_ENABLE	1
 #define JWP_CHECKSUM_ENABLE			1
 
 #define JWP_TX_LOOP_ENABLE			0
 #define JWP_RX_LOOP_ENABLE			1
 #define JWP_RX_PKG_LOOP_ENABLE		0
-#define JWP_TX_DATA_LOOP_ENABLE		1
+#define JWP_TX_DATA_LOOP_ENABLE		0
 
 #define JWP_TX_NOTIFY_ENABLE		1
 #define JWP_RX_CMD_NOTIFY_ENABLE	1
@@ -238,6 +238,8 @@ struct jwp_timer
 	jwp_u32 msec;
 	jwp_bool active;
 	struct jwp_desc *jwp;
+
+	jwp_lock_t lock;
 
 #if JWP_DEBUG
 	const char *name;
