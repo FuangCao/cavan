@@ -24,8 +24,11 @@
 #define JWP_DEBUG	1
 
 #define JWP_WAIT_ENABLE				1
+
 #define JWP_TIMER_ENABLE			1
 #define JWP_TX_TIMER_ENABLE			1
+#define JWP_TX_PKG_TIMER_ENABLE		1
+#define JWP_RX_PKG_TIMER_ENABLE		1
 #define JWP_TX_LATENCY_ENABLE		0
 
 #define JWP_TX_QUEUE_ENABLE			1
@@ -36,7 +39,7 @@
 
 #define JWP_TX_LOOP_ENABLE			0
 #define JWP_RX_LOOP_ENABLE			1
-#define JWP_RX_PKG_LOOP_ENABLE		1
+#define JWP_RX_PKG_LOOP_ENABLE		0
 #define JWP_TX_DATA_LOOP_ENABLE		1
 
 #define JWP_TX_NOTIFY_ENABLE		1
@@ -154,6 +157,12 @@ typedef enum
 #endif
 #if JWP_TX_LATENCY_ENABLE
 	JWP_TIMER_TX_LATENCY,
+#endif
+#if JWP_TX_PKG_TIMER_ENABLE
+	JWP_TIMER_TX_PKG,
+#endif
+#if JWP_RX_PKG_TIMER_ENABLE
+	JWP_TIMER_RX_PKG,
 #endif
 	JWP_TIMER_COUNT
 } jwp_timer_t;
