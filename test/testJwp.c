@@ -138,7 +138,7 @@ static int test_jwp_timer_handler(struct cavan_timer *timer, void *data)
 {
 	struct jwp_timer *jwp_timer = data;
 
-#if JWP_DEBUG
+#if JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s run timer %s, msec = %d", jwp_timer->jwp->name, jwp_timer->name, jwp_timer->msec);
 #endif
 
@@ -152,7 +152,7 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 	struct cavan_timer *cavan_timer;
 	struct jwp_test_data *data = jwp_get_private_data(timer->jwp);
 
-#if JWP_DEBUG
+#if JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s create timer %s, msec = %d", timer->jwp->name, timer->name, timer->msec);
 #endif
 
@@ -181,7 +181,7 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 
 static void test_jwp_delete_timer(struct jwp_timer *timer)
 {
-#if JWP_DEBUG
+#if JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s delete timer %s, msec = %d" , timer->jwp->name, timer->name, timer->msec);
 #endif
 
@@ -317,6 +317,8 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 
 		if (pathname)
 		{
+			int i;
+
 			data_fd = open(pathname, O_RDONLY);
 			if (data_fd < 0)
 			{
@@ -358,7 +360,11 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 
 			close(data_fd);
 
-			pr_green_info("send file complete");
+			for (i = 0; i < 10; i++)
+			{
+				pr_green_info("send file complete");
+				msleep(10);
+			}
 		}
 
 		println("please input command");

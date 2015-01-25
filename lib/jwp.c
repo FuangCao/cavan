@@ -690,6 +690,13 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 	struct jwp_desc *jwp = timer->jwp;
 	struct jwp_header *hdr = &jwp->tx_pkg.header;
 
+#if JWP_DEBUG
+	if (timer->msec > 0)
+	{
+		jwp_pr_red_info("send package timeout"); msleep(5000);
+	}
+#endif
+
 	jwp_hw_write_package(jwp, hdr);
 	timer->msec = JWP_TX_TIMEOUT;
 
@@ -1230,7 +1237,7 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 		jwp_cond_timedwait(jwp->tx_cond, jwp->lock, JWP_TX_TIMEOUT);
 		jwp_lock_acquire(jwp->lock);
 
-		res = jwp->send_pendding == false;
+		res = (jwp->send_pendding == false);
 	}
 	else
 	{
