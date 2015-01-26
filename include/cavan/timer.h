@@ -29,6 +29,11 @@ struct cavan_timer_service
 {
 	struct cavan_thread thread;
 
+	u32 run_count;
+	struct cavan_timer *timer_waiting;
+	struct cavan_timer *timer_running;
+	struct cavan_timer *timer_last_run;
+
 	pthread_mutex_t lock;
 	struct double_link link;
 };
@@ -58,6 +63,7 @@ void cavan_timer_timespec_add(struct timespec *time, u32 timeout);
 void cavan_timer_set_timespec(struct timespec *time, u32 timeout);
 
 int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *node, u32 timeout);
+void cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer *timer);
 int cavan_timer_service_start(struct cavan_timer_service *service);
 int cavan_timer_service_stop(struct cavan_timer_service *service);
 
@@ -68,11 +74,6 @@ static inline void cavan_timer_init(struct cavan_timer *timer, void *data)
 	timer->private_data = data;
 	timer->handler = NULL;
 	double_link_node_init(&timer->node);
-}
-
-static inline void cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer *timer)
-{
-	double_link_remove(&service->link, &timer->node);
 }
 
 static inline int cavan_cursor_start(struct cavan_cursor *cursor, void *data)

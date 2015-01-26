@@ -22,10 +22,12 @@
 #include <cavan.h>
 
 #define JWP_DEBUG					0
-#define JWP_DEBUG_NAME				0
+#define JWP_DEBUG_NAME				1
+#define JWP_DEBUG_STATE				0
 #define JWP_SHOW_ERROR				1
 
 #define JWP_WAIT_ENABLE				0
+#define JWP_SLEEP_ENABLE			1
 #define JWP_CHECKSUM_ENABLE			1
 
 #define JWP_TIMER_ENABLE			1
@@ -61,23 +63,23 @@
 typedef u8 jwp_u8;
 typedef u16 jwp_u16;
 typedef u32 jwp_u32;
-typedef size_t jwp_size_t;
+typedef u32 jwp_size_t;
 typedef bool jwp_bool;
 typedef pthread_cond_t jwp_signal_t;
 typedef pthread_mutex_t jwp_lock_t;
 
 // ============================================================
 
-#if JWP_WAIT_ENABLE == 0 && defined(CAVAN_ARCH)
+#if JWP_SLEEP_ENABLE
+#define jwp_msleep(msec) \
+	msleep(msec)
+#else
 #define jwp_msleep(msec) \
 	while (1) { \
 		jwp_pr_red_info("jwp_msleep %d", msec); \
 		dump_stack(); \
 		msleep(2000); \
 	}
-#else
-#define jwp_msleep(msec) \
-	msleep(msec)
 #endif
 
 #define jwp_memcpy(dest, src, size) \
@@ -122,7 +124,10 @@ typedef pthread_mutex_t jwp_lock_t;
 	println(fmt, ##args)
 
 #define jwp_pr_red_info(fmt, args ...) \
-	pr_red_info(fmt, ##args);
+	pr_red_info(fmt, ##args)
+
+#define jwp_pr_pos_info() \
+	pr_pos_info()
 
 // ============================================================
 
@@ -143,6 +148,13 @@ typedef enum
 	JWP_PKG_DATA,
 	JWP_PKG_COUNT
 } jwp_package_t;
+
+typedef enum
+{
+	JWP_STATE_INIT,
+	JWP_STATE_READY,
+	JWP_STATE_FAULT
+} jwp_state_t;
 
 typedef enum
 {
@@ -265,6 +277,10 @@ struct jwp_desc
 	jwp_u8 rx_index;
 	void *private_data;
 
+#if JWP_DEBUG_STATE
+	jwp_state_t state;
+#endif
+
 #if JWP_DEBUG_NAME
 	const char *name;
 #endif
@@ -326,8 +342,8 @@ jwp_size_t jwp_queue_dequeue_peek(struct jwp_queue *queue, jwp_u8 *buff, jwp_siz
 void jwp_queue_dequeue_commit(struct jwp_queue *queue);
 jwp_size_t jwp_queue_dequeue(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size);
-jwp_size_t jwp_queue_get_free_size(struct jwp_queue *queue);
-jwp_size_t jwp_queue_get_used_size(struct jwp_queue *queue);
+jwp_size_t jwp_queue_get_free_size(const struct jwp_queue *queue);
+jwp_size_t jwp_queue_get_used_size(const struct jwp_queue *queue);
 jwp_bool jwp_queue_empty(struct jwp_queue *queue);
 jwp_bool jwp_queue_full(struct jwp_queue *queue);
 

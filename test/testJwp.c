@@ -24,6 +24,8 @@
 
 #define TEST_JWP_DEBUG		0
 #define TEST_JWP_MEM_DUMP	0
+#define TEST_JWP_SHOW_DATA	1
+#define TEST_JWP_WATCH		1
 
 struct jwp_test_data
 {
@@ -99,7 +101,9 @@ static void test_jwp_data_received(struct jwp_desc *jwp, const void *data, jwp_s
 			break;
 		}
 
+#if TEST_JWP_SHOW_DATA
 		print_ntext(buff, rdlen);
+#endif
 
 		wrlen = write(test_data->data_fd, buff, rdlen);
 		if (wrlen < 0)
@@ -110,7 +114,9 @@ static void test_jwp_data_received(struct jwp_desc *jwp, const void *data, jwp_s
 #else
 	ssize_t wrlen;
 
+#if TEST_JWP_SHOW_DATA
 	print_ntext(data, size);
+#endif
 
 	wrlen = write(test_data->data_fd, data, size);
 	if (wrlen < 0)
@@ -134,17 +140,101 @@ static void test_jwp_package_received(struct jwp_desc *jwp, const struct jwp_hea
 	jwp_header_dump(hdr);
 }
 
+#if TEST_JWP_WATCH
+static void *test_jwp_watch_thread(void *data)
+{
+	bool timer_fault;
+	u32 run_count = 0;
+	int fault_count = 0;
+	struct double_link_node *node;
+	struct jwp_desc *jwp = data;
+	struct jwp_test_data *test_data = jwp_get_private_data(jwp);
+	struct cavan_timer_service *timer_service = &test_data->timer_service;
+	struct double_link *link = &timer_service->link;
+
+	while (1)
+	{
+		int i;
+		const struct jwp_queue *p;
+		struct cavan_timer *timer;
+		struct jwp_timer *jwp_timer;
+
+		msleep(2000);
+
+		timer_fault = (run_count == timer_service->run_count);
+		run_count = timer_service->run_count;
+		if (timer_fault)
+		{
+			fault_count++;
+		}
+		else
+		{
+			fault_count = 0;
+		}
+
+		println("fault_count = %d", fault_count);
+
+		for (i = 0; i < NELEM(jwp->queues); i++)
+		{
+			p = jwp->queues + i;
+
+#if JWP_DEBUG_NAME
+			println("%s[%d]. used = %d, free = %d", p->name, i, jwp_queue_get_used_size(p), jwp_queue_get_free_size(p));
+#else
+			println("%d. used = %d, free = %d", i, jwp_queue_get_used_size(p), jwp_queue_get_free_size(p));
+#endif
+		}
+
+		if (timer_fault)
+		{
+			node = double_link_get_first_node(link);
+			if (node)
+			{
+				timer = double_link_get_container(link, node);
+				jwp_timer = timer->private_data;
+
+				println("first timer = %s, msec = %d", jwp_timer->name, jwp_timer->msec);
+			}
+
+			timer = timer_service->timer_last_run;
+			if (timer)
+			{
+				jwp_timer = timer->private_data;
+
+				println("timer_last_run = %s, msec = %d", jwp_timer->name, jwp_timer->msec);
+			}
+
+			timer = timer_service->timer_running;
+			if (timer)
+			{
+				jwp_timer = timer->private_data;
+
+				println("timer_running = %s, msec = %d", jwp_timer->name, jwp_timer->msec);
+			}
+
+			timer = timer_service->timer_waiting;
+			if (timer)
+			{
+				jwp_timer = timer->private_data;
+
+				println("timer_waiting = %s, msec = %d", jwp_timer->name, jwp_timer->msec);
+			}
+
+			println("timer_service->thread.state = %d", timer_service->thread.state);
+		}
+	}
+
+	return NULL;
+}
+#endif
+
 #if JWP_TIMER_ENABLE
 static int test_jwp_timer_handler(struct cavan_timer *timer, void *data)
 {
 	struct jwp_timer *jwp_timer = data;
 
-#if JWP_DEBUG_NAME
-#if JWP_DEBUG && TEST_JWP_DEBUG
+#if JWP_DEBUG_NAME && JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s run timer %s, msec = %d", jwp_timer->jwp->name, jwp_timer->name, jwp_timer->msec);
-#else
-	println("%s run timer %s", jwp_timer->jwp->name, jwp_timer->name);
-#endif
 #endif
 
 	jwp_timer_run(jwp_timer);
@@ -157,12 +247,8 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 	struct cavan_timer *cavan_timer;
 	struct jwp_test_data *data = jwp_get_private_data(timer->jwp);
 
-#if JWP_DEBUG_NAME
-#if JWP_DEBUG && TEST_JWP_DEBUG
+#if JWP_DEBUG_NAME && JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s create timer %s, msec = %d", timer->jwp->name, timer->name, timer->msec);
-#else
-	println("%s create timer %s", timer->jwp->name, timer->name);
-#endif
 #endif
 
 	if (timer->handle == NULL)
@@ -190,12 +276,8 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 
 static void test_jwp_delete_timer(struct jwp_timer *timer)
 {
-#if JWP_DEBUG_NAME
-#if JWP_DEBUG && TEST_JWP_DEBUG
+#if JWP_DEBUG_NAME && JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s delete timer %s, msec = %d" , timer->jwp->name, timer->name, timer->msec);
-#else
-	println("%s delete timer %s" , timer->jwp->name, timer->name);
-#endif
 #endif
 
 	if (timer->handle != NULL)
@@ -242,7 +324,6 @@ static void *test_jwp_rx_package_loop_thread(void *data)
 	return NULL;
 }
 #endif
-
 
 static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 {
@@ -325,6 +406,10 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 		jwp.name = "client";
 #endif
 
+#if TEST_JWP_WATCH
+		pthread_create(&td, NULL, test_jwp_watch_thread, &jwp);
+#endif
+
 		data.data_fd = 0;
 
 		if (pathname)
@@ -337,6 +422,8 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 				pr_error_info("open file %s", pathname);
 				return data_fd;
 			}
+
+			msleep(200);
 
 			while (1)
 			{
@@ -354,7 +441,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 					break;
 				}
 
-#if 0
+#if 1
 				for (p = buff, p_end = p + rdlen; p < p_end; p += jwp_send_data(&jwp, p, p_end - p));
 #else
 				for (p = buff, p_end = p + rdlen; p < p_end; p++)

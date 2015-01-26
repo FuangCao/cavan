@@ -63,7 +63,15 @@ int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time
 	int ret;
 
 	pthread_mutex_lock(&thread->lock);
+
+	thread->state = CAVAN_THREAD_STATE_SLEEP;
+
 	ret = pthread_cond_timedwait(&thread->cond, &thread->lock, time);
+	if (thread->state == CAVAN_THREAD_STATE_SLEEP)
+	{
+		thread->state = CAVAN_THREAD_STATE_RUNNING;
+	}
+
 	pthread_mutex_unlock(&thread->lock);
 
 	return ret;
@@ -120,7 +128,7 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 
 	if (thread->wake_handker == NULL)
 	{
-		thread->wake_handker = cavan_thread_wake_handler_send_event;
+		thread->wake_handker = cavan_thread_wake_handler_none;
 	}
 
 	return 0;
@@ -170,6 +178,9 @@ static void *cavan_thread_main_loop(void *data)
 	{
 		switch (thread->state)
 		{
+		case CAVAN_THREAD_STATE_WAIT:
+		case CAVAN_THREAD_STATE_SLEEP:
+			thread->state = CAVAN_THREAD_STATE_RUNNING;
 		case CAVAN_THREAD_STATE_RUNNING:
 #if CAVAN_THREAD_DEBUG
 			pr_bold_info("Thread %s running", thread->name);

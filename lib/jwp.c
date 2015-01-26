@@ -131,7 +131,7 @@ jwp_u8 jwp_package_checksum(struct jwp_header *hdr)
 }
 #endif
 
-#if JWP_WAIT_ENABLE == 0 || JWP_TX_LATENCY_ENABLE == 0 || JWP_TX_PKG_TIMER_ENABLE
+#if (JWP_TX_QUEUE_ENABLE == 0 && (JWP_WAIT_ENABLE == 0 || JWP_TX_LATENCY_ENABLE)) || JWP_TX_PKG_TIMER_ENABLE
 static jwp_bool jwp_check_and_set_send_pendding(struct jwp_desc *jwp)
 {
 	jwp_bool res;
@@ -162,12 +162,14 @@ static void jwp_set_send_pendding(struct jwp_desc *jwp, jwp_bool pendding)
 }
 #endif
 
+#if JWP_TX_QUEUE_ENABLE == 0 || JWP_TX_PKG_TIMER_ENABLE
 static void jwp_set_package_index(struct jwp_desc *jwp, struct jwp_header *hdr)
 {
 	jwp_lock_acquire(jwp->lock);
 	hdr->index = jwp->tx_index + 1;
 	jwp_lock_release(jwp->lock);
 }
+#endif
 
 // ============================================================
 
@@ -601,21 +603,21 @@ static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_rx_pac
 }
 #endif
 
-jwp_size_t jwp_queue_get_free_size(struct jwp_queue *queue)
+jwp_size_t jwp_queue_get_free_size(const struct jwp_queue *queue)
 {
 	if (queue->tail < queue->head)
 	{
 		return queue->head - queue->tail - 1;
 	}
 
-	return (queue->last - queue->tail) + (queue->head - queue->buff);
+	return (sizeof(queue->buff) - 1) - (queue->tail - queue->head);
 }
 
-jwp_size_t jwp_queue_get_used_size(struct jwp_queue *queue)
+jwp_size_t jwp_queue_get_used_size(const struct jwp_queue *queue)
 {
 	if (queue->head > queue->tail)
 	{
-		return (queue->last - queue->head) + (queue->tail - queue->buff);
+		return sizeof(queue->buff) - (queue->head - queue->tail);
 	}
 
 	return queue->tail - queue->head;
@@ -658,6 +660,12 @@ static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 		else
 		{
 			jwp_lock_release(timer->lock);
+#if JWP_DEBUG_STATE
+			if (jwp->state == JWP_STATE_FAULT)
+			{
+				// jwp_pr_red_info("skip create timer %s", timer->name);
+			}
+#endif
 			return;
 		}
 	}
@@ -712,7 +720,7 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 #if JWP_SHOW_ERROR
 	if (timer->msec > 0)
 	{
-		jwp_pr_red_info("send package timeout");
+		jwp_pr_red_info("send package timeout, tx_index = %d", jwp->tx_index);
 	}
 #endif
 
@@ -730,6 +738,13 @@ static jwp_bool jwp_tx_lantency_timer_handler(struct jwp_timer *timer)
 	struct jwp_header *hdr = &pkg.header;
 	struct jwp_desc *jwp = timer->jwp;
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_TX_DATA);
+
+#if JWP_DEBUG_STATE
+	if (jwp->state == JWP_STATE_FAULT)
+	{
+		jwp_pr_pos_info();
+	}
+#endif
 
 	hdr->length = jwp_queue_dequeue_peek(queue, hdr->payload, JWP_MAX_PAYLOAD);
 	if (hdr->length == 0)
@@ -810,6 +825,10 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 {
 	int i;
 
+#if JWP_DEBUG_STATE
+	jwp->state = JWP_STATE_INIT;
+#endif
+
 #if JWP_DEBUG
 	if (jwp->hw_read == NULL || jwp->hw_write == NULL)
 	{
@@ -864,6 +883,22 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 		jwp_queue_init(jwp->queues + i);
 	}
 
+#if JWP_TX_QUEUE_ENABLE && JWP_DEBUG_NAME
+jwp->queues[JWP_QUEUE_TX].name = "TX";
+#endif
+
+#if JWP_RX_QUEUE_ENABLE && JWP_DEBUG_NAME
+jwp->queues[JWP_QUEUE_RX].name = "RX";
+#endif
+
+#if JWP_TX_DATA_QUEUE_ENABLE && JWP_DEBUG_NAME
+jwp->queues[JWP_QUEUE_TX_DATA].name = "TX_DATA";
+#endif
+
+#if JWP_RX_DATA_QUEUE_ENABLE && JWP_DEBUG_NAME
+jwp->queues[JWP_QUEUE_RX_DATA].name = "RX_DATA";
+#endif
+
 #if JWP_TIMER_ENABLE
 	for (i = 0; i < JWP_TIMER_COUNT; i++)
 	{
@@ -904,6 +939,10 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 #endif
 
 	jwp->send_pendding = false;
+
+#if JWP_DEBUG_STATE
+	jwp->state = JWP_STATE_READY;
+#endif
 
 	return true;
 }
@@ -951,7 +990,7 @@ static jwp_bool jwp_send_and_wait_ack(struct jwp_desc *jwp, struct jwp_header *h
 
 #if JWP_TX_QUEUE_ENABLE == 0
 #if JWP_SHOW_ERROR
-	jwp_pr_red_info("send package timeout");
+	jwp_pr_red_info("send package timeout, tx_index = %d", jwp->tx_index);
 #endif
 
 	jwp_set_send_pendding(jwp, false);

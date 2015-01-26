@@ -13,6 +13,8 @@ typedef enum cavan_thread_state
 	CAVAN_THREAD_STATE_NONE,
 	CAVAN_THREAD_STATE_IDEL,
 	CAVAN_THREAD_STATE_RUNNING,
+	CAVAN_THREAD_STATE_WAIT,
+	CAVAN_THREAD_STATE_SLEEP,
 	CAVAN_THREAD_STATE_SUSPEND,
 	CAVAN_THREAD_STATE_STOPPPING,
 	CAVAN_THREAD_STATE_STOPPED
@@ -71,6 +73,11 @@ static inline void cavan_thread_should_stop(struct cavan_thread *thread)
 static inline int cavan_thread_wake_handler_send_event(struct cavan_thread *thread, void *data)
 {
 	return cavan_thread_send_event(thread, 0);
+}
+
+static inline int cavan_thread_wake_handler_none(struct cavan_thread *thread, void *data)
+{
+	return 0;
 }
 
 static inline int cavan_thread_wake_handler_resume(struct cavan_thread *thread, void *data)
