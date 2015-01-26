@@ -342,7 +342,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 					break;
 				}
 
-#if 1
+#if 0
 				for (p = buff, p_end = p + rdlen; p < p_end; p += jwp_send_data(&jwp, p, p_end - p));
 #else
 				for (p = buff, p_end = p + rdlen; p < p_end; p++)

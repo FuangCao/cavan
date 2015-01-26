@@ -131,6 +131,42 @@ jwp_u8 jwp_package_checksum(struct jwp_header *hdr)
 }
 #endif
 
+static jwp_bool jwp_check_and_set_send_pendding(struct jwp_desc *jwp)
+{
+	jwp_bool res;
+
+	jwp_lock_acquire(jwp->lock);
+
+	if (jwp->send_pendding)
+	{
+		res = false;
+	}
+	else
+	{
+		jwp->send_pendding = res = true;
+	}
+
+	jwp_lock_release(jwp->lock);
+
+	return res;
+}
+
+#if JWP_TX_PKG_TIMER_ENABLE || (JWP_TX_QUEUE_ENABLE == 0 && JWP_TX_LOOP_ENABLE == 0 && JWP_TX_TIMER_ENABLE == 0)
+static void jwp_set_send_pendding(struct jwp_desc *jwp, jwp_bool pendding)
+{
+	jwp_lock_acquire(jwp->lock);
+	jwp->send_pendding = pendding;
+	jwp_lock_release(jwp->lock);
+}
+#endif
+
+static void jwp_set_package_index(struct jwp_desc *jwp, struct jwp_header *hdr)
+{
+	jwp_lock_acquire(jwp->lock);
+	hdr->index = jwp->tx_index + 1;
+	jwp_lock_release(jwp->lock);
+}
+
 // ============================================================
 
 void jwp_queue_init(struct jwp_queue *queue)
@@ -702,7 +738,7 @@ static jwp_bool jwp_tx_lantency_timer_handler(struct jwp_timer *timer)
 	hdr->type = JWP_PKG_DATA;
 
 #if JWP_TX_QUEUE_ENABLE == 0
-	hdr->index = jwp->tx_index + 1;
+	jwp_set_package_index(jwp, hdr);
 #endif
 
 	if (jwp_send_package(jwp, hdr, true))
@@ -726,30 +762,23 @@ static jwp_bool jwp_tx_package_timer_handler(struct jwp_timer *timer)
 	struct jwp_queue *queue;
 	struct jwp_desc *jwp = timer->jwp;
 
-	jwp_lock_acquire(jwp->lock);
-
-	if (jwp->send_pendding)
+	if (jwp_check_and_set_send_pendding(jwp) == false)
 	{
-		jwp_lock_release(jwp->lock);
 		return false;
 	}
-
-	jwp->send_pendding = true;
 
 	hdr = &jwp->tx_pkg.header;
 	queue = jwp_get_queue(jwp, JWP_QUEUE_TX);
 
 	if (jwp_queue_dequeue_package(queue, hdr))
 	{
-		hdr->index = jwp->tx_index + 1;
+		jwp_set_package_index(jwp, hdr);
 		jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX), 0);
 	}
 	else
 	{
-		jwp->send_pendding = false;
+		jwp_set_send_pendding(jwp, false);
 	}
-
-	jwp_lock_release(jwp->lock);
 
 	return false;
 }
@@ -923,9 +952,7 @@ static jwp_bool jwp_send_and_wait_ack(struct jwp_desc *jwp, struct jwp_header *h
 	jwp_pr_red_info("send package timeout");
 #endif
 
-	jwp_lock_acquire(jwp->lock);
-	jwp->send_pendding = false;
-	jwp_lock_release(jwp->lock);
+	jwp_set_send_pendding(jwp, false);
 
 	return false;
 #endif
@@ -1088,20 +1115,14 @@ jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool syn
 #else
 #if JWP_WAIT_ENABLE && JWP_TX_LATENCY_ENABLE == 0
 		while (jwp_wait_tx_complete(jwp) == false);
-		jwp_lock_acquire(jwp->lock);
 #else
-		jwp_lock_acquire(jwp->lock);
-		if (jwp->send_pendding)
+		if (jwp_check_and_set_send_pendding(jwp) == false)
 		{
-			jwp_lock_release(jwp->lock);
 			return false;
 		}
 #endif
 
-		jwp->send_pendding = true;
-		hdr->index = jwp->tx_index + 1;
-
-		jwp_lock_release(jwp->lock);
+		jwp_set_package_index(jwp, hdr);
 
 #if JWP_TX_TIMER_ENABLE
 		jwp_memcpy(&jwp->tx_pkg, hdr, JWP_HEADER_SIZE + hdr->length);
@@ -1233,10 +1254,10 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 #else
 	jwp_u32 count;
 
-	jwp_lock_acquire(jwp->lock);
-
 	for (count = JWP_TX_TIMEOUT; count; count--)
 	{
+		jwp_lock_acquire(jwp->lock);
+
 		if (jwp->send_pendding == false)
 		{
 			jwp_lock_release(jwp->lock);
@@ -1245,10 +1266,7 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 
 		jwp_lock_release(jwp->lock);
 		jwp_msleep(1);
-		jwp_lock_acquire(jwp->lock);
 	}
-
-	jwp_lock_release(jwp->lock);
 
 	return false;
 #endif
@@ -1273,7 +1291,7 @@ void jwp_tx_data_loop(struct jwp_desc *jwp)
 		hdr->type = JWP_PKG_DATA;
 
 #if JWP_TX_QUEUE_ENABLE == 0
-		hdr->index = jwp->tx_index + 1;
+		jwp_set_package_index(jwp, hdr);
 #endif
 
 		if (jwp_send_package(jwp, hdr, true))
@@ -1292,23 +1310,22 @@ void jwp_tx_loop(struct jwp_desc *jwp)
 
 	while (1)
 	{
-		jwp_lock_acquire(jwp->lock);
-
 		if (jwp_queue_dequeue_package(queue, hdr) == false)
 		{
-			jwp_lock_release(jwp->lock);
 			jwp_queue_wait_data(queue);
 			continue;
 		}
+
+		jwp_lock_acquire(jwp->lock);
 
 		hdr->index = jwp->tx_index + 1;
 		jwp->send_pendding = true;
 
 		while (1)
 		{
-			jwp_hw_write_package(jwp, hdr);
-
 			jwp_lock_release(jwp->lock);
+
+			jwp_hw_write_package(jwp, hdr);
 
 			if (jwp_wait_tx_complete(jwp))
 			{

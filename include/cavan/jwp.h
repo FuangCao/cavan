@@ -21,7 +21,7 @@
 
 #include <cavan.h>
 
-#define JWP_DEBUG	1
+#define JWP_DEBUG	0
 
 #define JWP_WAIT_ENABLE				0
 #define JWP_CHECKSUM_ENABLE			1
