@@ -19,6 +19,14 @@
 		return print_command_table(map, map + ARRAY_SIZE(map)); \
 	}
 
+#define CAVAN_COMMAND_MAP_START \
+	static struct cavan_command_map __local_cmd_map[] = \
+	{
+
+#define CAVAN_COMMAND_MAP_END \
+	}; \
+	FIND_EXEC_COMMAND_MAIN(__local_cmd_map);
+
 typedef enum
 {
 	CAVAN_COMMAND_OPTION_ADB = 0x256,

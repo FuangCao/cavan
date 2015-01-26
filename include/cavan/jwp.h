@@ -33,10 +33,10 @@
 #define JWP_TX_TIMER_ENABLE			1
 #define JWP_TX_LATENCY_ENABLE		1
 #define JWP_TX_PKG_TIMER_ENABLE		0
-#define JWP_RX_PKG_TIMER_ENABLE		0
+#define JWP_RX_PKG_TIMER_ENABLE		1
 
 #define JWP_TX_QUEUE_ENABLE			0
-#define JWP_RX_QUEUE_ENABLE			0
+#define JWP_RX_QUEUE_ENABLE			1
 #define JWP_TX_DATA_QUEUE_ENABLE	1
 #define JWP_RX_DATA_QUEUE_ENABLE	1
 
@@ -338,11 +338,20 @@ void jwp_queue_inqueue_all(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size
 jwp_size_t jwp_queue_dequeue_peek(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 void jwp_queue_dequeue_commit(struct jwp_queue *queue);
 jwp_size_t jwp_queue_dequeue(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
-jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size);
 jwp_size_t jwp_queue_get_free_size(const struct jwp_queue *queue);
 jwp_size_t jwp_queue_get_used_size(const struct jwp_queue *queue);
 jwp_bool jwp_queue_empty(struct jwp_queue *queue);
 jwp_bool jwp_queue_full(struct jwp_queue *queue);
+
+static inline jwp_size_t jwp_queue_seek(struct jwp_queue *queue, jwp_size_t size)
+{
+	return jwp_queue_inqueue(queue, NULL, size);
+}
+
+static inline jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size)
+{
+	return jwp_queue_dequeue(queue, NULL, size);
+}
 
 // ============================================================
 

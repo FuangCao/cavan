@@ -171,50 +171,50 @@ void jwp_queue_init(struct jwp_queue *queue)
 
 jwp_size_t jwp_queue_inqueue_peek(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size)
 {
-	jwp_size_t length;
+	jwp_size_t rlen, length;
 
 	jwp_lock_acquire(queue->lock);
 
 	if (queue->tail < queue->head)
 	{
-		length = queue->head - queue->tail - 1;
-		if (size > length)
-		{
-			size = length;
-		}
+		length = rlen = queue->head - queue->tail - 1;
 	}
 	else
 	{
-		length = queue->last - queue->tail;
-		if (size > length)
-		{
-			if (queue->head > queue->buff)
-			{
-				jwp_size_t left;
-
-				jwp_memcpy(queue->tail, buff, ++length);
-				size -= length;
-
-				left = queue->head - queue->buff - 1;
-				if (size < left)
-				{
-					left = size;
-				}
-
-				jwp_memcpy(queue->buff, buff + length, left);
-				queue->tail_peek = queue->buff + left;
-
-				jwp_lock_release(queue->lock);
-
-				return length + left;
-			}
-
-			size = length;
-		}
+		rlen = queue->last - queue->tail + 1;
+		length = rlen + (queue->head - queue->buff) - 1;
 	}
 
-	jwp_memcpy(queue->tail, buff, size);
-	queue->tail_peek = queue->tail + size;
+	if (size > length)
+	{
+		size = length;
+	}
+
+	if (size > rlen)
+	{
+		length = size - rlen;
+
+		if (buff)
+		{
+			jwp_memcpy(queue->tail, buff, rlen);
+			jwp_memcpy(queue->buff, buff + rlen, length);
+		}
+
+		queue->tail_peek = queue->buff + length;
+	}
+	else
+	{
+		if (buff)
+		{
+			jwp_memcpy(queue->tail, buff, size);
+		}
+
+		queue->tail_peek = queue->tail + size;
+		if (queue->tail_peek > queue->last)
+		{
+			queue->tail_peek = queue->buff;
+		}
+	}
 
 	jwp_lock_release(queue->lock);
 
@@ -278,53 +278,54 @@ void jwp_queue_inqueue_all(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size
 
 jwp_size_t jwp_queue_dequeue_peek(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size)
 {
-	jwp_size_t length;
+	jwp_size_t rlen, length;
 
 	jwp_lock_acquire(queue->lock);
 
 	if (queue->head > queue->tail)
 	{
-		length = queue->last - queue->head + 1;
-		if (length > size)
-		{
-			length = size;
-		}
-		else
-		{
-			jwp_size_t left;
-
-			jwp_memcpy(buff, queue->head, length);
-
-			size -= length;
-			left = queue->tail - queue->buff;
-			if (size < left)
-			{
-				left = size;
-			}
-
-			jwp_memcpy(buff + length, queue->buff, left);
-			queue->head_peek = queue->buff + left;
-
-			jwp_lock_release(queue->lock);
-
-			return length + left;
-		}
+		rlen = queue->last - queue->head + 1;
+		length = rlen + (queue->tail - queue->buff);
 	}
 	else
 	{
-		length = queue->tail - queue->head;
-		if (length > size)
+		length = rlen = queue->tail - queue->head;
+	}
+
+	if (size > length)
+	{
+		size = length;
+	}
+
+	if (size > rlen)
+	{
+		length = size - rlen;
+
+		if (buff)
 		{
-			length = size;
+			jwp_memcpy(buff, queue->head, rlen);
+			jwp_memcpy(buff + rlen, queue->buff, length);
+		}
+
+		queue->head_peek = queue->buff + length;
+	}
+	else
+	{
+		if (buff)
+		{
+			jwp_memcpy(buff, queue->head, size);
+		}
+
+		queue->head_peek = queue->head + size;
+		if (queue->head_peek > queue->last)
+		{
+			queue->head_peek = queue->buff;
 		}
 	}
 
-	jwp_memcpy(buff, queue->head, length);
-	queue->head_peek = queue->head + length;
-
 	jwp_lock_release(queue->lock);
 
-	return length;
+	return size;
 }
 
 void jwp_queue_dequeue_commit(struct jwp_queue *queue)
@@ -347,55 +348,6 @@ jwp_size_t jwp_queue_dequeue(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t s
 
 	return size;
 }
-
-#if JWP_RX_QUEUE_ENABLE
-jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size)
-{
-	jwp_size_t length;
-
-	jwp_lock_acquire(queue->lock);
-
-	if (queue->head > queue->tail)
-	{
-		length = queue->last - queue->head + 1;
-		if (length > size)
-		{
-			length = size;
-		}
-		else
-		{
-			jwp_size_t left;
-
-			size -= length;
-			left = queue->tail - queue->buff;
-			if (size < left)
-			{
-				left = size;
-			}
-
-			queue->head = queue->buff + left;
-
-			jwp_lock_release(queue->lock);
-
-			return length + left;
-		}
-	}
-	else
-	{
-		length = queue->tail - queue->head;
-		if (length > size)
-		{
-			length = size;
-		}
-	}
-
-	queue->head = queue->head + length;
-
-	jwp_lock_release(queue->lock);
-
-	return length;
-}
-#endif
 
 #if JWP_TX_LOOP_ENABLE || JWP_TX_PKG_TIMER_ENABLE
 static jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_header *hdr)

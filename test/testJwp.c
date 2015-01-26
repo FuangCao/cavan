@@ -527,7 +527,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 	return 0;
 }
 
-int main(int argc, char *argv[])
+static int do_test_jwp(int argc, char *argv[])
 {
 	int ret;
 	pid_t pid;
@@ -556,3 +556,56 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+
+static int do_test_queue(int argc, char *arv[])
+{
+	int i;
+	int length;
+	u8 buff[1024];
+	struct jwp_queue queue;
+	const char *text = "123456789";
+
+	jwp_queue_init(&queue);
+
+	for (i = 'A'; i < 'Z' - 3; i += 5)
+	{
+		u8 data[] = { i, i + 1, i + 2, i + 3, i + 4, 0 };
+
+		length = jwp_queue_inqueue(&queue, data, sizeof(data) - 1);
+		println("inqueue length = %d, used = %d, free = %d, data = %s",
+				length, jwp_queue_get_used_size(&queue), jwp_queue_get_free_size(&queue), data);
+		length = jwp_queue_dequeue(&queue, buff, sizeof(buff));
+		buff[length] = 0;
+		println("dequeue length = %d, used = %d, free = %d, buff = %s",
+				length, jwp_queue_get_used_size(&queue), jwp_queue_get_free_size(&queue), buff);
+		print_sep(60);
+	}
+
+	length = jwp_queue_seek(&queue, 10);
+	println("seek length = %d, used = %d, free = %d",
+			length, jwp_queue_get_used_size(&queue), jwp_queue_get_free_size(&queue));
+
+	length = jwp_queue_skip(&queue, 1025);
+	println("skip length = %d, used = %d, free = %d",
+			length, jwp_queue_get_used_size(&queue), jwp_queue_get_free_size(&queue));
+
+	length = jwp_queue_inqueue(&queue, (jwp_u8 *) text, strlen(text));
+	println("inqueue length = %d, used = %d, free = %d, text = %s",
+			length, jwp_queue_get_used_size(&queue), jwp_queue_get_free_size(&queue), text);
+
+	length = jwp_queue_skip(&queue, 5);
+	println("skip length = %d, used = %d, free = %d",
+			length, jwp_queue_get_used_size(&queue), jwp_queue_get_free_size(&queue));
+
+	length = jwp_queue_dequeue(&queue, buff, sizeof(buff));
+	buff[length] = 0;
+	println("dequeue length = %d, used = %d, free = %d, buff = %s",
+			length, jwp_queue_get_used_size(&queue), jwp_queue_get_free_size(&queue), buff);
+
+	return 0;
+}
+
+CAVAN_COMMAND_MAP_START
+{ "jwp", do_test_jwp },
+{ "queue", do_test_queue },
+CAVAN_COMMAND_MAP_END
