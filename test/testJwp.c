@@ -90,6 +90,10 @@ static void test_jwp_data_received(struct jwp_desc *jwp, const void *data, jwp_s
 {
 	struct jwp_test_data *test_data = jwp_get_private_data(jwp);
 
+#if TEST_JWP_SHOW_DATA == 0
+	println("data received: size = %d", size);
+#endif
+
 #if JWP_RX_DATA_QUEUE_ENABLE
 	while (1)
 	{
@@ -146,18 +150,14 @@ static void *test_jwp_watch_thread(void *data)
 	bool timer_fault;
 	u32 run_count = 0;
 	int fault_count = 0;
-	struct double_link_node *node;
 	struct jwp_desc *jwp = data;
 	struct jwp_test_data *test_data = jwp_get_private_data(jwp);
 	struct cavan_timer_service *timer_service = &test_data->timer_service;
-	struct double_link *link = &timer_service->link;
 
 	while (1)
 	{
 		int i;
 		const struct jwp_queue *p;
-		struct cavan_timer *timer;
-		struct jwp_timer *jwp_timer;
 
 		msleep(2000);
 
@@ -174,11 +174,15 @@ static void *test_jwp_watch_thread(void *data)
 
 		println("fault_count = %d", fault_count);
 
+#if JWP_DEBUG_MEMBER
+		println("jwp->line = %d", jwp->line);
+#endif
+
 		for (i = 0; i < NELEM(jwp->queues); i++)
 		{
 			p = jwp->queues + i;
 
-#if JWP_DEBUG_NAME
+#if JWP_DEBUG_MEMBER
 			println("%s[%d]. used = %d, free = %d", p->name, i, jwp_queue_get_used_size(p), jwp_queue_get_free_size(p));
 #else
 			println("%d. used = %d, free = %d", i, jwp_queue_get_used_size(p), jwp_queue_get_free_size(p));
@@ -187,6 +191,12 @@ static void *test_jwp_watch_thread(void *data)
 
 		if (timer_fault)
 		{
+#if JWP_DEBUG_MEMBER
+			struct cavan_timer *timer;
+			struct jwp_timer *jwp_timer;
+			struct double_link_node *node;
+			struct double_link *link = &timer_service->link;
+
 			node = double_link_get_first_node(link);
 			if (node)
 			{
@@ -219,6 +229,7 @@ static void *test_jwp_watch_thread(void *data)
 
 				println("timer_waiting = %s, msec = %d", jwp_timer->name, jwp_timer->msec);
 			}
+#endif
 
 			println("timer_service->thread.state = %d", timer_service->thread.state);
 		}
@@ -233,7 +244,7 @@ static int test_jwp_timer_handler(struct cavan_timer *timer, void *data)
 {
 	struct jwp_timer *jwp_timer = data;
 
-#if JWP_DEBUG_NAME && JWP_DEBUG && TEST_JWP_DEBUG
+#if JWP_DEBUG_MEMBER && JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s run timer %s, msec = %d", jwp_timer->jwp->name, jwp_timer->name, jwp_timer->msec);
 #endif
 
@@ -247,7 +258,7 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 	struct cavan_timer *cavan_timer;
 	struct jwp_test_data *data = jwp_get_private_data(timer->jwp);
 
-#if JWP_DEBUG_NAME && JWP_DEBUG && TEST_JWP_DEBUG
+#if JWP_DEBUG_MEMBER && JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s create timer %s, msec = %d", timer->jwp->name, timer->name, timer->msec);
 #endif
 
@@ -276,7 +287,7 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 
 static void test_jwp_delete_timer(struct jwp_timer *timer)
 {
-#if JWP_DEBUG_NAME && JWP_DEBUG && TEST_JWP_DEBUG
+#if JWP_DEBUG_MEMBER && JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s delete timer %s, msec = %d" , timer->jwp->name, timer->name, timer->msec);
 #endif
 
@@ -380,7 +391,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 
 	if (service)
 	{
-#if JWP_DEBUG_NAME
+#if JWP_DEBUG_MEMBER
 		jwp.name = "server";
 #endif
 
@@ -402,7 +413,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 	{
 		char buff[1024];
 
-#if JWP_DEBUG_NAME
+#if JWP_DEBUG_MEMBER
 		jwp.name = "client";
 #endif
 

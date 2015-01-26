@@ -153,24 +153,6 @@ static jwp_bool jwp_check_and_set_send_pendding(struct jwp_desc *jwp)
 }
 #endif
 
-#if JWP_TX_PKG_TIMER_ENABLE || (JWP_TX_QUEUE_ENABLE == 0 && JWP_TX_LOOP_ENABLE == 0 && JWP_TX_TIMER_ENABLE == 0)
-static void jwp_set_send_pendding(struct jwp_desc *jwp, jwp_bool pendding)
-{
-	jwp_lock_acquire(jwp->lock);
-	jwp->send_pendding = pendding;
-	jwp_lock_release(jwp->lock);
-}
-#endif
-
-#if JWP_TX_QUEUE_ENABLE == 0 || JWP_TX_PKG_TIMER_ENABLE
-static void jwp_set_package_index(struct jwp_desc *jwp, struct jwp_header *hdr)
-{
-	jwp_lock_acquire(jwp->lock);
-	hdr->index = jwp->tx_index + 1;
-	jwp_lock_release(jwp->lock);
-}
-#endif
-
 // ============================================================
 
 void jwp_queue_init(struct jwp_queue *queue)
@@ -660,12 +642,6 @@ static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 		else
 		{
 			jwp_lock_release(timer->lock);
-#if JWP_DEBUG_STATE
-			if (jwp->state == JWP_STATE_FAULT)
-			{
-				// jwp_pr_red_info("skip create timer %s", timer->name);
-			}
-#endif
 			return;
 		}
 	}
@@ -718,7 +694,7 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 	struct jwp_header *hdr = &jwp->tx_pkg.header;
 
 #if JWP_SHOW_ERROR
-	if (timer->msec > 0)
+	if (timer->msec >= JWP_TX_TIMEOUT)
 	{
 		jwp_pr_red_info("send package timeout, tx_index = %d", jwp->tx_index);
 	}
@@ -738,13 +714,6 @@ static jwp_bool jwp_tx_lantency_timer_handler(struct jwp_timer *timer)
 	struct jwp_header *hdr = &pkg.header;
 	struct jwp_desc *jwp = timer->jwp;
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_TX_DATA);
-
-#if JWP_DEBUG_STATE
-	if (jwp->state == JWP_STATE_FAULT)
-	{
-		jwp_pr_pos_info();
-	}
-#endif
 
 	hdr->length = jwp_queue_dequeue_peek(queue, hdr->payload, JWP_MAX_PAYLOAD);
 	if (hdr->length == 0)
@@ -825,7 +794,7 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 {
 	int i;
 
-#if JWP_DEBUG_STATE
+#if JWP_DEBUG_MEMBER
 	jwp->state = JWP_STATE_INIT;
 #endif
 
@@ -883,22 +852,6 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 		jwp_queue_init(jwp->queues + i);
 	}
 
-#if JWP_TX_QUEUE_ENABLE && JWP_DEBUG_NAME
-jwp->queues[JWP_QUEUE_TX].name = "TX";
-#endif
-
-#if JWP_RX_QUEUE_ENABLE && JWP_DEBUG_NAME
-jwp->queues[JWP_QUEUE_RX].name = "RX";
-#endif
-
-#if JWP_TX_DATA_QUEUE_ENABLE && JWP_DEBUG_NAME
-jwp->queues[JWP_QUEUE_TX_DATA].name = "TX_DATA";
-#endif
-
-#if JWP_RX_DATA_QUEUE_ENABLE && JWP_DEBUG_NAME
-jwp->queues[JWP_QUEUE_RX_DATA].name = "RX_DATA";
-#endif
-
 #if JWP_TIMER_ENABLE
 	for (i = 0; i < JWP_TIMER_COUNT; i++)
 	{
@@ -907,40 +860,52 @@ jwp->queues[JWP_QUEUE_RX_DATA].name = "RX_DATA";
 #endif
 
 #if JWP_TX_TIMER_ENABLE
-#if JWP_DEBUG_NAME
-	jwp->timers[JWP_TIMER_TX].name = "TX";
-#endif
-
 	jwp->timers[JWP_TIMER_TX].handler = jwp_tx_timer_handler;
 #endif
 
 #if JWP_TX_LATENCY_ENABLE
-#if JWP_DEBUG_NAME
-	jwp->timers[JWP_TIMER_TX_LATENCY].name = "TX_LATENCY";
-#endif
-
 	jwp->timers[JWP_TIMER_TX_LATENCY].handler = jwp_tx_lantency_timer_handler;
 #endif
 
 #if JWP_TX_PKG_TIMER_ENABLE
-#if JWP_DEBUG_NAME
-	jwp->timers[JWP_TIMER_TX_PKG].name = "TX_PKG";
-#endif
-
 	jwp->timers[JWP_TIMER_TX_PKG].handler = jwp_tx_package_timer_handler;
 #endif
 
 #if JWP_RX_PKG_TIMER_ENABLE
-#if JWP_DEBUG_NAME
-	jwp->timers[JWP_TIMER_RX_PKG].name = "RX_PKG";
-#endif
-
 	jwp->timers[JWP_TIMER_RX_PKG].handler = jwp_rx_package_timer_handler;
 #endif
 
 	jwp->send_pendding = false;
 
-#if JWP_DEBUG_STATE
+#if JWP_DEBUG_MEMBER
+#if JWP_TX_QUEUE_ENABLE
+jwp->queues[JWP_QUEUE_TX].name = "TX";
+#endif
+
+#if JWP_RX_QUEUE_ENABLE
+jwp->queues[JWP_QUEUE_RX].name = "RX";
+#endif
+
+#if JWP_TX_DATA_QUEUE_ENABLE
+jwp->queues[JWP_QUEUE_TX_DATA].name = "TX_DATA";
+#endif
+
+#if JWP_RX_DATA_QUEUE_ENABLE
+jwp->queues[JWP_QUEUE_RX_DATA].name = "RX_DATA";
+#endif
+
+#if JWP_TX_LATENCY_ENABLE
+	jwp->timers[JWP_TIMER_TX_LATENCY].name = "TX_LATENCY";
+#endif
+
+#if JWP_TX_PKG_TIMER_ENABLE
+	jwp->timers[JWP_TIMER_TX_PKG].name = "TX_PKG";
+#endif
+
+#if JWP_RX_PKG_TIMER_ENABLE
+	jwp->timers[JWP_TIMER_RX_PKG].name = "RX_PKG";
+#endif
+
 	jwp->state = JWP_STATE_READY;
 #endif
 
@@ -1154,7 +1119,7 @@ jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool syn
 #endif
 #else
 #if JWP_WAIT_ENABLE && JWP_TX_LATENCY_ENABLE == 0
-		while (jwp_wait_tx_complete(jwp) == false);
+		while (jwp_wait_and_set_send_pendding(jwp) == false);
 #else
 		if (jwp_check_and_set_send_pendding(jwp) == false)
 		{
@@ -1204,7 +1169,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 #endif
 
 #if JWP_TX_LATENCY_ENABLE
-	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_LATENCY), jwp_queue_get_used_size(queue) < JWP_MTU ? JWP_LATENCY_TIME : 0);
+	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_LATENCY), jwp_queue_get_used_size(queue) < JWP_MTU ? JWP_LATENCY_TIME : JWP_POLL_TIME);
 #elif JWP_TX_DATA_LOOP_ENABLE == 0
 #error "please disable tx data queue when not use tx data loop and tx latency"
 #endif
@@ -1217,18 +1182,25 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 
 	while (p < p_end)
 	{
-		size = p_end - p;
+		jwp_size_t length;
+
+		length = p_end - p;
+		if (length > JWP_MAX_PAYLOAD)
+		{
+			length = JWP_MAX_PAYLOAD;
+		}
 
 		hdr->type = JWP_PKG_DATA;
-		hdr->length = size > JWP_MAX_PAYLOAD ? JWP_MAX_PAYLOAD : size;
-		jwp_memcpy(hdr->payload, buff, hdr->length);
+		hdr->length = length;
+		jwp_memcpy(hdr->payload, p, length);
 
 		if (jwp_send_package(jwp, hdr, true) == false)
 		{
+			jwp_msleep(JWP_POLL_TIME);
 			break;
 		}
 
-		p += hdr->length;
+		p += length;
 	}
 
 	return p - (const jwp_u8 *) buff;
@@ -1361,10 +1333,10 @@ void jwp_tx_loop(struct jwp_desc *jwp)
 		hdr->index = jwp->tx_index + 1;
 		jwp->send_pendding = true;
 
+		jwp_lock_release(jwp->lock);
+
 		while (1)
 		{
-			jwp_lock_release(jwp->lock);
-
 			jwp_hw_write_package(jwp, hdr);
 
 			if (jwp_wait_tx_complete(jwp))
@@ -1372,7 +1344,9 @@ void jwp_tx_loop(struct jwp_desc *jwp)
 				break;
 			}
 
-			jwp_lock_acquire(jwp->lock);
+#if JWP_SHOW_ERROR
+			jwp_pr_red_info("send package timeout, tx_index = %d", jwp->tx_index);
+#endif
 		}
 	}
 }

@@ -22,8 +22,7 @@
 #include <cavan.h>
 
 #define JWP_DEBUG					0
-#define JWP_DEBUG_NAME				1
-#define JWP_DEBUG_STATE				0
+#define JWP_DEBUG_MEMBER			0
 #define JWP_SHOW_ERROR				1
 
 #define JWP_WAIT_ENABLE				0
@@ -32,9 +31,9 @@
 
 #define JWP_TIMER_ENABLE			1
 #define JWP_TX_TIMER_ENABLE			1
+#define JWP_TX_LATENCY_ENABLE		1
 #define JWP_TX_PKG_TIMER_ENABLE		0
 #define JWP_RX_PKG_TIMER_ENABLE		0
-#define JWP_TX_LATENCY_ENABLE		1
 
 #define JWP_TX_QUEUE_ENABLE			0
 #define JWP_RX_QUEUE_ENABLE			0
@@ -243,7 +242,7 @@ struct jwp_queue
 	jwp_u8 *head_peek;
 	jwp_u8 *tail_peek;
 
-#if JWP_DEBUG_NAME
+#if JWP_DEBUG_MEMBER
 	const char *name;
 #endif
 
@@ -264,7 +263,7 @@ struct jwp_timer
 
 	jwp_lock_t lock;
 
-#if JWP_DEBUG_NAME
+#if JWP_DEBUG_MEMBER
 	const char *name;
 #endif
 
@@ -277,11 +276,9 @@ struct jwp_desc
 	jwp_u8 rx_index;
 	void *private_data;
 
-#if JWP_DEBUG_STATE
+#if JWP_DEBUG_MEMBER
+	int line;
 	jwp_state_t state;
-#endif
-
-#if JWP_DEBUG_NAME
 	const char *name;
 #endif
 
@@ -292,7 +289,7 @@ struct jwp_desc
 
 	struct jwp_rx_package rx_pkg;
 
-#if JWP_TX_TIMER_ENABLE
+#if JWP_TX_TIMER_ENABLE || JWP_TX_LOOP_ENABLE
 	struct jwp_package tx_pkg;
 #endif
 
@@ -428,4 +425,30 @@ static inline void jwp_wait_command_rx_complete(struct jwp_desc *jwp)
 #else
 	jwp_msleep(JWP_POLL_TIME);
 #endif
+}
+
+static inline void jwp_set_send_pendding(struct jwp_desc *jwp, jwp_bool pendding)
+{
+	jwp_lock_acquire(jwp->lock);
+	jwp->send_pendding = pendding;
+	jwp_lock_release(jwp->lock);
+}
+
+static inline void jwp_set_package_index(struct jwp_desc *jwp, struct jwp_header *hdr)
+{
+	jwp_lock_acquire(jwp->lock);
+	hdr->index = jwp->tx_index + 1;
+	jwp_lock_release(jwp->lock);
+}
+
+static inline jwp_bool jwp_wait_and_set_send_pendding(struct jwp_desc *jwp)
+{
+	if (!jwp_wait_tx_complete(jwp))
+	{
+		return false;
+	}
+
+	jwp_set_send_pendding(jwp, true);
+
+	return true;
 }
