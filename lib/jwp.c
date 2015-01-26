@@ -131,6 +131,7 @@ jwp_u8 jwp_package_checksum(struct jwp_header *hdr)
 }
 #endif
 
+#if JWP_WAIT_ENABLE == 0 || JWP_TX_LATENCY_ENABLE == 0 || JWP_TX_PKG_TIMER_ENABLE
 static jwp_bool jwp_check_and_set_send_pendding(struct jwp_desc *jwp)
 {
 	jwp_bool res;
@@ -150,6 +151,7 @@ static jwp_bool jwp_check_and_set_send_pendding(struct jwp_desc *jwp)
 
 	return res;
 }
+#endif
 
 #if JWP_TX_PKG_TIMER_ENABLE || (JWP_TX_QUEUE_ENABLE == 0 && JWP_TX_LOOP_ENABLE == 0 && JWP_TX_TIMER_ENABLE == 0)
 static void jwp_set_send_pendding(struct jwp_desc *jwp, jwp_bool pendding)
@@ -707,10 +709,10 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 	struct jwp_desc *jwp = timer->jwp;
 	struct jwp_header *hdr = &jwp->tx_pkg.header;
 
-#if JWP_DEBUG
+#if JWP_SHOW_ERROR
 	if (timer->msec > 0)
 	{
-		jwp_pr_red_info("send package timeout"); msleep(5000);
+		jwp_pr_red_info("send package timeout");
 	}
 #endif
 
@@ -870,7 +872,7 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 #endif
 
 #if JWP_TX_TIMER_ENABLE
-#if JWP_DEBUG
+#if JWP_DEBUG_NAME
 	jwp->timers[JWP_TIMER_TX].name = "TX";
 #endif
 
@@ -878,7 +880,7 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 #endif
 
 #if JWP_TX_LATENCY_ENABLE
-#if JWP_DEBUG
+#if JWP_DEBUG_NAME
 	jwp->timers[JWP_TIMER_TX_LATENCY].name = "TX_LATENCY";
 #endif
 
@@ -886,7 +888,7 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 #endif
 
 #if JWP_TX_PKG_TIMER_ENABLE
-#if JWP_DEBUG
+#if JWP_DEBUG_NAME
 	jwp->timers[JWP_TIMER_TX_PKG].name = "TX_PKG";
 #endif
 
@@ -894,7 +896,7 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 #endif
 
 #if JWP_RX_PKG_TIMER_ENABLE
-#if JWP_DEBUG
+#if JWP_DEBUG_NAME
 	jwp->timers[JWP_TIMER_RX_PKG].name = "RX_PKG";
 #endif
 
@@ -948,7 +950,7 @@ static jwp_bool jwp_send_and_wait_ack(struct jwp_desc *jwp, struct jwp_header *h
 	}
 
 #if JWP_TX_QUEUE_ENABLE == 0
-#if JWP_DEBUG
+#if JWP_SHOW_ERROR
 	jwp_pr_red_info("send package timeout");
 #endif
 
@@ -972,7 +974,7 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 
 		if (checksum != checksum_real)
 		{
-#if JWP_DEBUG
+#if JWP_SHOW_ERROR
 			jwp_pr_red_info("checksum not match, 0x%02x != 0x%02x", checksum, checksum_real);
 #endif
 			return;
@@ -1016,8 +1018,7 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 		else
 		{
 			jwp_lock_release(jwp->lock);
-
-#if JWP_DEBUG
+#if JWP_SHOW_ERROR
 			jwp_pr_red_info("throw data package %d, need %d", hdr->index, jwp->rx_index + 1);
 #endif
 		}
@@ -1048,7 +1049,7 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 		else
 		{
 			jwp_lock_release(jwp->lock);
-#if JWP_DEBUG
+#if JWP_SHOW_ERROR
 			jwp_pr_red_info("throw ack package %d, need %d", hdr->index, jwp->tx_index + 1);
 #endif
 		}
@@ -1211,7 +1212,7 @@ jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t 
 	struct jwp_package pkg;
 	struct jwp_header *hdr = &pkg.header;
 
-#if JWP_DEBUG
+#if JWP_SHOW_ERROR
 	if (size > JWP_MAX_PAYLOAD)
 	{
 		jwp_pr_red_info("command too large!");

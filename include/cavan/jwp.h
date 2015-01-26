@@ -21,7 +21,9 @@
 
 #include <cavan.h>
 
-#define JWP_DEBUG	0
+#define JWP_DEBUG					0
+#define JWP_DEBUG_NAME				0
+#define JWP_SHOW_ERROR				1
 
 #define JWP_WAIT_ENABLE				0
 #define JWP_CHECKSUM_ENABLE			1
@@ -66,8 +68,17 @@ typedef pthread_mutex_t jwp_lock_t;
 
 // ============================================================
 
+#if JWP_WAIT_ENABLE == 0 && defined(CAVAN_ARCH)
 #define jwp_msleep(msec) \
-	msleep(msec);
+	while (1) { \
+		jwp_pr_red_info("jwp_msleep %d", msec); \
+		dump_stack(); \
+		msleep(2000); \
+	}
+#else
+#define jwp_msleep(msec) \
+	msleep(msec)
+#endif
 
 #define jwp_memcpy(dest, src, size) \
 	memcpy(dest, src, size)
@@ -111,7 +122,7 @@ typedef pthread_mutex_t jwp_lock_t;
 	println(fmt, ##args)
 
 #define jwp_pr_red_info(fmt, args ...) \
-	pr_red_info(fmt, ##args)
+	pr_red_info(fmt, ##args);
 
 // ============================================================
 
@@ -220,7 +231,7 @@ struct jwp_queue
 	jwp_u8 *head_peek;
 	jwp_u8 *tail_peek;
 
-#if JWP_DEBUG
+#if JWP_DEBUG_NAME
 	const char *name;
 #endif
 
@@ -241,7 +252,7 @@ struct jwp_timer
 
 	jwp_lock_t lock;
 
-#if JWP_DEBUG
+#if JWP_DEBUG_NAME
 	const char *name;
 #endif
 
@@ -254,7 +265,7 @@ struct jwp_desc
 	jwp_u8 rx_index;
 	void *private_data;
 
-#if JWP_DEBUG
+#if JWP_DEBUG_NAME
 	const char *name;
 #endif
 

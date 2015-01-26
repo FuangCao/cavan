@@ -139,8 +139,12 @@ static int test_jwp_timer_handler(struct cavan_timer *timer, void *data)
 {
 	struct jwp_timer *jwp_timer = data;
 
+#if JWP_DEBUG_NAME
 #if JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s run timer %s, msec = %d", jwp_timer->jwp->name, jwp_timer->name, jwp_timer->msec);
+#else
+	println("%s run timer %s", jwp_timer->jwp->name, jwp_timer->name);
+#endif
 #endif
 
 	jwp_timer_run(jwp_timer);
@@ -153,8 +157,12 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 	struct cavan_timer *cavan_timer;
 	struct jwp_test_data *data = jwp_get_private_data(timer->jwp);
 
+#if JWP_DEBUG_NAME
 #if JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s create timer %s, msec = %d", timer->jwp->name, timer->name, timer->msec);
+#else
+	println("%s create timer %s", timer->jwp->name, timer->name);
+#endif
 #endif
 
 	if (timer->handle == NULL)
@@ -182,8 +190,12 @@ static jwp_bool test_jwp_create_timer(struct jwp_timer *timer)
 
 static void test_jwp_delete_timer(struct jwp_timer *timer)
 {
+#if JWP_DEBUG_NAME
 #if JWP_DEBUG && TEST_JWP_DEBUG
 	println("%s delete timer %s, msec = %d" , timer->jwp->name, timer->name, timer->msec);
+#else
+	println("%s delete timer %s" , timer->jwp->name, timer->name);
+#endif
 #endif
 
 	if (timer->handle != NULL)
@@ -287,7 +299,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 
 	if (service)
 	{
-#if JWP_DEBUG
+#if JWP_DEBUG_NAME
 		jwp.name = "server";
 #endif
 
@@ -309,7 +321,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 	{
 		char buff[1024];
 
-#if JWP_DEBUG
+#if JWP_DEBUG_NAME
 		jwp.name = "client";
 #endif
 
