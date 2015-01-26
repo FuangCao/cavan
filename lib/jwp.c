@@ -138,8 +138,8 @@ void jwp_queue_init(struct jwp_queue *queue)
 	jwp_lock_init(queue->lock);
 
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_cond_init(queue->data_cond);
-	jwp_cond_init(queue->space_cond);
+	jwp_signal_init(queue->data_signal);
+	jwp_signal_init(queue->space_signal);
 #endif
 
 	queue->tail = queue->head = queue->buff;
@@ -206,7 +206,7 @@ void jwp_queue_inqueue_commit(struct jwp_queue *queue)
 	queue->tail = queue->tail_peek;
 
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_cond_notify(queue->data_cond);
+	jwp_signal_notify(queue->data_signal);
 #endif
 
 	jwp_lock_release(queue->lock);
@@ -312,7 +312,7 @@ void jwp_queue_dequeue_commit(struct jwp_queue *queue)
 	queue->head = queue->head_peek;
 
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_cond_notify(queue->space_cond);
+	jwp_signal_notify(queue->space_signal);
 #endif
 
 	jwp_lock_release(queue->lock);
@@ -573,7 +573,7 @@ jwp_size_t jwp_queue_get_free_size(struct jwp_queue *queue)
 	return (queue->last - queue->tail) + (queue->head - queue->buff);
 }
 
-jwp_size_t jwp_queue_get_fill_size(struct jwp_queue *queue)
+jwp_size_t jwp_queue_get_used_size(struct jwp_queue *queue)
 {
 	if (queue->head > queue->tail)
 	{
@@ -810,15 +810,15 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 	jwp_lock_init(jwp->lock);
 
 #if JWP_TX_NOTIFY_ENABLE
-	jwp_cond_init(jwp->tx_cond);
+	jwp_signal_init(jwp->tx_signal);
 #endif
 
 #if JWP_RX_DATA_NOTIFY_ENABLE
-	jwp_cond_init(jwp->data_rx_cond);
+	jwp_signal_init(jwp->data_rx_signal);
 #endif
 
 #if JWP_RX_CMD_NOTIFY_ENABLE
-	jwp_cond_init(jwp->command_rx_cond);
+	jwp_signal_init(jwp->command_rx_signal);
 #endif
 
 	jwp->private_data = data;
@@ -974,14 +974,14 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 #endif
 
 #if JWP_RX_DATA_NOTIFY_ENABLE
-				jwp_cond_notify(jwp->data_rx_cond);
+				jwp_signal_notify(jwp->data_rx_signal);
 #endif
 				jwp->data_received(jwp, hdr->payload, hdr->length);
 			}
 			else
 			{
 #if JWP_RX_CMD_NOTIFY_ENABLE
-				jwp_cond_notify(jwp->command_rx_cond);
+				jwp_signal_notify(jwp->command_rx_signal);
 #endif
 				jwp->command_received(jwp, hdr->payload, hdr->length);
 			}
@@ -1014,7 +1014,7 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 #endif
 
 #if JWP_TX_NOTIFY_ENABLE
-			jwp_cond_notify(jwp->tx_cond);
+			jwp_signal_notify(jwp->tx_signal);
 #endif
 			jwp->send_complete(jwp);
 		}
@@ -1143,7 +1143,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 #endif
 
 #if JWP_TX_LATENCY_ENABLE
-	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_LATENCY), jwp_queue_get_fill_size(queue) < JWP_MTU ? JWP_LATENCY_TIME : 0);
+	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_LATENCY), jwp_queue_get_used_size(queue) < JWP_MTU ? JWP_LATENCY_TIME : 0);
 #elif JWP_TX_DATA_LOOP_ENABLE == 0
 #error "please disable tx data queue when not use tx data loop and tx latency"
 #endif
@@ -1217,7 +1217,7 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 	if (jwp->send_pendding)
 	{
 		jwp_lock_release(jwp->lock);
-		jwp_cond_timedwait(jwp->tx_cond, jwp->lock, JWP_TX_TIMEOUT);
+		jwp_signal_timedwait(jwp->tx_signal, jwp->lock, JWP_TX_TIMEOUT);
 		jwp_lock_acquire(jwp->lock);
 
 		res = (jwp->send_pendding == false);

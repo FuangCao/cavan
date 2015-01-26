@@ -61,7 +61,7 @@ typedef u16 jwp_u16;
 typedef u32 jwp_u32;
 typedef size_t jwp_size_t;
 typedef bool jwp_bool;
-typedef pthread_cond_t jwp_cond_t;
+typedef pthread_cond_t jwp_signal_t;
 typedef pthread_mutex_t jwp_lock_t;
 
 // ============================================================
@@ -81,17 +81,17 @@ typedef pthread_mutex_t jwp_lock_t;
 #define jwp_lock_release(lock) \
 	pthread_mutex_unlock(&lock)
 
-#define jwp_cond_init(cond) \
-	pthread_cond_init(&cond, NULL)
+#define jwp_signal_init(signal) \
+	pthread_cond_init(&signal, NULL)
 
-#define jwp_cond_wait(cond, lock) \
+#define jwp_signal_wait(signal, lock) \
 	do { \
 		jwp_lock_acquire(lock); \
-		pthread_cond_wait(&cond, &lock); \
+		pthread_cond_wait(&signal, &lock); \
 		jwp_lock_release(lock); \
 	} while (0)
 
-#define jwp_cond_timedwait(cond, lock, msec) \
+#define jwp_signal_timedwait(signal, lock, msec) \
 	do { \
 		long __msec; \
 		struct timespec __ts; \
@@ -100,12 +100,12 @@ typedef pthread_mutex_t jwp_lock_t;
 		__ts.tv_sec += __msec / 1000; \
 		__ts.tv_nsec = (__msec % 1000) * 1000000L; \
 		jwp_lock_acquire(lock); \
-		pthread_cond_timedwait(&cond, &lock, &__ts); \
+		pthread_cond_timedwait(&signal, &lock, &__ts); \
 		jwp_lock_release(lock); \
 	} while (0)
 
-#define jwp_cond_notify(cond) \
-	pthread_cond_signal(&cond)
+#define jwp_signal_notify(signal) \
+	pthread_cond_signal(&signal)
 
 #define jwp_println(fmt, args ...) \
 	println(fmt, ##args)
@@ -227,8 +227,8 @@ struct jwp_queue
 	jwp_lock_t lock;
 
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_cond_t data_cond;
-	jwp_cond_t space_cond;
+	jwp_signal_t data_signal;
+	jwp_signal_t space_signal;
 #endif
 };
 
@@ -265,22 +265,22 @@ struct jwp_desc
 
 	struct jwp_rx_package rx_pkg;
 
-#if JWP_TX_QUEUE_ENABLE || JWP_TX_TIMER_ENABLE
+#if JWP_TX_TIMER_ENABLE
 	struct jwp_package tx_pkg;
 #endif
 
 	jwp_lock_t lock;
 
 #if JWP_TX_NOTIFY_ENABLE
-	jwp_cond_t tx_cond;
+	jwp_signal_t tx_signal;
 #endif
 
 #if JWP_RX_CMD_NOTIFY_ENABLE
-	jwp_cond_t command_rx_cond;
+	jwp_signal_t command_rx_signal;
 #endif
 
 #if JWP_RX_DATA_NOTIFY_ENABLE
-	jwp_cond_t data_rx_cond;
+	jwp_signal_t data_rx_signal;
 #endif
 
 	jwp_size_t (*hw_read)(struct jwp_desc *jwp, void *buff, jwp_size_t size);
@@ -316,7 +316,7 @@ void jwp_queue_dequeue_commit(struct jwp_queue *queue);
 jwp_size_t jwp_queue_dequeue(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size);
 jwp_size_t jwp_queue_get_free_size(struct jwp_queue *queue);
-jwp_size_t jwp_queue_get_fill_size(struct jwp_queue *queue);
+jwp_size_t jwp_queue_get_used_size(struct jwp_queue *queue);
 jwp_bool jwp_queue_empty(struct jwp_queue *queue);
 jwp_bool jwp_queue_full(struct jwp_queue *queue);
 
@@ -350,7 +350,7 @@ static inline jwp_bool jwp_queue_inqueue_package(struct jwp_queue *queue, const 
 static inline void jwp_queue_wait_data(struct jwp_queue *queue)
 {
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_cond_wait(queue->data_cond, queue->lock);
+	jwp_signal_wait(queue->data_signal, queue->lock);
 #else
 	jwp_msleep(JWP_POLL_TIME);
 #endif
@@ -359,7 +359,7 @@ static inline void jwp_queue_wait_data(struct jwp_queue *queue)
 static inline void jwp_queue_wait_space(struct jwp_queue *queue)
 {
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_cond_wait(queue->space_cond, queue->lock);
+	jwp_signal_wait(queue->space_signal, queue->lock);
 #else
 	jwp_msleep(JWP_POLL_TIME);
 #endif
@@ -388,7 +388,7 @@ static inline struct jwp_timer *jwp_get_timer(struct jwp_desc *jwp, jwp_timer_t 
 static inline void jwp_wait_data_rx_complete(struct jwp_desc *jwp)
 {
 #if JWP_RX_DATA_NOTIFY_ENABLE
-	jwp_cond_wait(jwp->data_rx_cond, jwp->lock);
+	jwp_signal_wait(jwp->data_rx_signal, jwp->lock);
 #else
 	jwp_msleep(JWP_POLL_TIME);
 #endif
@@ -397,7 +397,7 @@ static inline void jwp_wait_data_rx_complete(struct jwp_desc *jwp)
 static inline void jwp_wait_command_rx_complete(struct jwp_desc *jwp)
 {
 #if JWP_RX_DATA_NOTIFY_ENABLE
-	jwp_cond_wait(jwp->command_rx_cond, jwp->lock);
+	jwp_signal_wait(jwp->command_rx_signal, jwp->lock);
 #else
 	jwp_msleep(JWP_POLL_TIME);
 #endif
