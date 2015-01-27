@@ -169,11 +169,9 @@ void jwp_queue_init(struct jwp_queue *queue)
 	queue->last = queue->tail + sizeof(queue->buff) - 1;
 }
 
-jwp_size_t jwp_queue_inqueue_peek(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size)
+static jwp_size_t jwp_queue_inqueue_peek_locked(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size)
 {
 	jwp_size_t rlen, length;
-
-	jwp_lock_acquire(queue->lock);
 
 	if (queue->tail < queue->head)
 	{
@@ -216,28 +214,40 @@ jwp_size_t jwp_queue_inqueue_peek(struct jwp_queue *queue, const jwp_u8 *buff, j
 		}
 	}
 
+	return size;
+}
+
+jwp_size_t jwp_queue_inqueue_peek(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size)
+{
+	jwp_lock_acquire(queue->lock);
+	size = jwp_queue_inqueue_peek_locked(queue, buff, size);
 	jwp_lock_release(queue->lock);
 
 	return size;
 }
 
-void jwp_queue_inqueue_commit(struct jwp_queue *queue)
+static void jwp_queue_inqueue_commit_locked(struct jwp_queue *queue)
 {
-	jwp_lock_acquire(queue->lock);
-
 	queue->tail = queue->tail_peek;
 
 #if JWP_QUEUE_NOTIFY_ENABLE
 	jwp_signal_notify(queue->data_signal);
 #endif
+}
 
+void jwp_queue_inqueue_commit(struct jwp_queue *queue)
+{
+	jwp_lock_acquire(queue->lock);
+	jwp_queue_inqueue_commit_locked(queue);
 	jwp_lock_release(queue->lock);
 }
 
 jwp_size_t jwp_queue_inqueue(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size)
 {
-	size = jwp_queue_inqueue_peek(queue, buff, size);
-	jwp_queue_inqueue_commit(queue);
+	jwp_lock_acquire(queue->lock);
+	size = jwp_queue_inqueue_peek_locked(queue, buff, size);
+	jwp_queue_inqueue_commit_locked(queue);
+	jwp_lock_release(queue->lock);
 
 	return size;
 }
@@ -246,13 +256,18 @@ jwp_bool jwp_queue_try_inqueue(struct jwp_queue *queue, const jwp_u8 *buff, jwp_
 {
 	jwp_size_t wrlen;
 
-	wrlen = jwp_queue_inqueue_peek(queue, buff, size);
+	jwp_lock_acquire(queue->lock);
+
+	wrlen = jwp_queue_inqueue_peek_locked(queue, buff, size);
 	if (wrlen < size)
 	{
+		jwp_lock_release(queue->lock);
 		return false;
 	}
 
-	jwp_queue_inqueue_commit(queue);
+	jwp_queue_inqueue_commit_locked(queue);
+
+	jwp_lock_release(queue->lock);
 
 	return true;
 }
@@ -276,11 +291,9 @@ void jwp_queue_inqueue_all(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size
 	}
 }
 
-jwp_size_t jwp_queue_dequeue_peek(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size)
+static jwp_size_t jwp_queue_dequeue_peek_locked(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size)
 {
 	jwp_size_t rlen, length;
-
-	jwp_lock_acquire(queue->lock);
 
 	if (queue->head > queue->tail)
 	{
@@ -323,30 +336,160 @@ jwp_size_t jwp_queue_dequeue_peek(struct jwp_queue *queue, jwp_u8 *buff, jwp_siz
 		}
 	}
 
+	return size;
+}
+
+jwp_size_t jwp_queue_dequeue_peek(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size)
+{
+	jwp_lock_acquire(queue->lock);
+	size = jwp_queue_dequeue_peek_locked(queue, buff, size);
 	jwp_lock_release(queue->lock);
 
 	return size;
 }
 
-void jwp_queue_dequeue_commit(struct jwp_queue *queue)
+static void jwp_queue_dequeue_commit_locked(struct jwp_queue *queue)
 {
-	jwp_lock_acquire(queue->lock);
-
 	queue->head = queue->head_peek;
 
 #if JWP_QUEUE_NOTIFY_ENABLE
 	jwp_signal_notify(queue->space_signal);
 #endif
+}
 
+void jwp_queue_dequeue_commit(struct jwp_queue *queue)
+{
+	jwp_lock_acquire(queue->lock);
+	jwp_queue_dequeue_commit_locked(queue);
 	jwp_lock_release(queue->lock);
 }
 
 jwp_size_t jwp_queue_dequeue(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size)
 {
-	size = jwp_queue_dequeue_peek(queue, buff, size);
-	jwp_queue_dequeue_commit(queue);
+	jwp_lock_acquire(queue->lock);
+	size = jwp_queue_dequeue_peek_locked(queue, buff, size);
+	jwp_queue_dequeue_commit_locked(queue);
+	jwp_lock_release(queue->lock);
 
 	return size;
+}
+
+static jwp_size_t jwp_queue_get_free_size_locked(const struct jwp_queue *queue)
+{
+	if (queue->tail < queue->head)
+	{
+		return queue->head - queue->tail - 1;
+	}
+
+	return (sizeof(queue->buff) - 1) - (queue->tail - queue->head);
+}
+
+jwp_size_t jwp_queue_get_free_size(const struct jwp_queue *queue)
+{
+	jwp_size_t size;
+
+	jwp_lock_acquire(((struct jwp_queue *) queue)->lock);
+	size = jwp_queue_get_free_size_locked(queue);
+	jwp_lock_release(((struct jwp_queue *) queue)->lock);
+
+	return size;
+}
+
+static jwp_size_t jwp_queue_get_used_size_locked(const struct jwp_queue *queue)
+{
+	if (queue->head > queue->tail)
+	{
+		return sizeof(queue->buff) - (queue->head - queue->tail);
+	}
+
+	return queue->tail - queue->head;
+}
+
+jwp_size_t jwp_queue_get_used_size(const struct jwp_queue *queue)
+{
+	jwp_size_t size;
+
+	jwp_lock_acquire(((struct jwp_queue *) queue)->lock);
+	size = jwp_queue_get_used_size_locked(queue);
+	jwp_lock_release(((struct jwp_queue *) queue)->lock);
+
+	return size;
+}
+
+static jwp_bool jwp_queue_is_empty_locked(const struct jwp_queue *queue)
+{
+	return queue->head == queue->tail;
+}
+
+jwp_bool jwp_queue_is_empty(const struct jwp_queue *queue)
+{
+	jwp_bool res;
+
+	jwp_lock_acquire(((struct jwp_queue *) queue)->lock);
+	res = jwp_queue_is_empty_locked(queue);
+	jwp_lock_release(((struct jwp_queue *) queue)->lock);
+
+	return res;
+}
+
+static jwp_bool jwp_queue_is_full_locked(const struct jwp_queue *queue)
+{
+	return queue->head == queue->tail + 1 || (queue->head == queue->buff && queue->tail == queue->last);
+}
+
+jwp_bool jwp_queue_is_full(const struct jwp_queue *queue)
+{
+	jwp_bool res;
+
+	jwp_lock_acquire(((struct jwp_queue *) queue)->lock);
+	res = jwp_queue_is_full_locked(queue);
+	jwp_lock_release(((struct jwp_queue *) queue)->lock);
+
+	return res;
+}
+
+void jwp_queue_wait_data(struct jwp_queue *queue)
+{
+	jwp_lock_acquire(queue->lock);
+
+#if JWP_WAIT_ENABLE
+	while (jwp_queue_is_empty_locked(queue))
+#else
+	if (jwp_queue_is_empty_locked(queue))
+#endif
+	{
+#if JWP_QUEUE_NOTIFY_ENABLE
+		jwp_signal_wait_locked(queue->data_signal, queue->lock);
+#else
+		jwp_lock_release(queue->lock);
+		jwp_msleep(JWP_POLL_TIME);
+		jwp_lock_acquire(queue->lock);
+#endif
+	}
+
+	jwp_lock_release(queue->lock);
+}
+
+void jwp_queue_wait_space(struct jwp_queue *queue)
+{
+	jwp_lock_acquire(queue->lock);
+
+#if JWP_WAIT_ENABLE
+	while (jwp_queue_is_full_locked(queue))
+#else
+	if (jwp_queue_is_full_locked(queue))
+#endif
+	{
+#if JWP_QUEUE_NOTIFY_ENABLE
+		jwp_signal_wait_locked(queue->space_signal, queue->lock);
+#else
+		jwp_lock_release(queue->lock);
+		jwp_msleep(JWP_POLL_TIME);
+		jwp_lock_acquire(queue->lock);
+#endif
+	}
+
+	jwp_lock_release(queue->lock);
 }
 
 #if JWP_TX_LOOP_ENABLE || JWP_TX_PKG_TIMER_ENABLE
@@ -537,36 +680,6 @@ static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_rx_pac
 }
 #endif
 
-jwp_size_t jwp_queue_get_free_size(const struct jwp_queue *queue)
-{
-	if (queue->tail < queue->head)
-	{
-		return queue->head - queue->tail - 1;
-	}
-
-	return (sizeof(queue->buff) - 1) - (queue->tail - queue->head);
-}
-
-jwp_size_t jwp_queue_get_used_size(const struct jwp_queue *queue)
-{
-	if (queue->head > queue->tail)
-	{
-		return sizeof(queue->buff) - (queue->head - queue->tail);
-	}
-
-	return queue->tail - queue->head;
-}
-
-jwp_bool jwp_queue_empty(struct jwp_queue *queue)
-{
-	return queue->head == queue->tail;
-}
-
-jwp_bool jwp_queue_full(struct jwp_queue *queue)
-{
-	return queue->head == queue->tail + 1 || (queue->head == queue->buff && queue->tail == queue->last);
-}
-
 // ============================================================
 
 #if JWP_TIMER_ENABLE
@@ -700,7 +813,7 @@ static jwp_bool jwp_tx_package_timer_handler(struct jwp_timer *timer)
 	struct jwp_queue *queue;
 	struct jwp_desc *jwp = timer->jwp;
 
-	if (jwp_check_and_set_send_pendding(jwp) == false)
+	if (!jwp_check_and_set_send_pendding(jwp))
 	{
 		return false;
 	}
@@ -729,7 +842,7 @@ static jwp_bool jwp_rx_package_timer_handler(struct jwp_timer *timer)
 	struct jwp_rx_package *pkg = &jwp->rx_pkg;
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX);
 
-	if (jwp_queue_fill_package(queue, pkg) == false)
+	if (!jwp_queue_fill_package(queue, pkg))
 	{
 		return false;
 	}
@@ -1071,9 +1184,9 @@ jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool syn
 #endif
 #else
 #if JWP_WAIT_ENABLE && JWP_TX_LATENCY_ENABLE == 0
-		while (jwp_wait_and_set_send_pendding(jwp) == false);
+		while (!jwp_wait_and_set_send_pendding(jwp));
 #else
-		if (jwp_check_and_set_send_pendding(jwp) == false)
+		if (!jwp_check_and_set_send_pendding(jwp))
 		{
 			return false;
 		}
@@ -1146,7 +1259,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 		hdr->length = length;
 		jwp_memcpy(hdr->payload, p, length);
 
-		if (jwp_send_package(jwp, hdr, true) == false)
+		if (!jwp_send_package(jwp, hdr, true))
 		{
 			jwp_msleep(JWP_POLL_TIME);
 			break;
@@ -1201,11 +1314,8 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 
 	if (jwp->send_pendding)
 	{
-		jwp_lock_release(jwp->lock);
-		jwp_signal_timedwait(jwp->tx_signal, jwp->lock, JWP_TX_TIMEOUT);
-		jwp_lock_acquire(jwp->lock);
-
-		res = (jwp->send_pendding == false);
+		jwp_signal_timedwait_locked(jwp->tx_signal, jwp->lock, JWP_TX_TIMEOUT);
+		res = !jwp->send_pendding;
 	}
 	else
 	{
@@ -1222,7 +1332,7 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 	{
 		jwp_lock_acquire(jwp->lock);
 
-		if (jwp->send_pendding == false)
+		if (!jwp->send_pendding)
 		{
 			jwp_lock_release(jwp->lock);
 			return true;
@@ -1274,7 +1384,7 @@ void jwp_tx_loop(struct jwp_desc *jwp)
 
 	while (1)
 	{
-		if (jwp_queue_dequeue_package(queue, hdr) == false)
+		if (!jwp_queue_dequeue_package(queue, hdr))
 		{
 			jwp_queue_wait_data(queue);
 			continue;

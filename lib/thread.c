@@ -18,14 +18,14 @@ int cavan_thread_send_event(struct cavan_thread *thread, u32 event)
 	pr_bold_info("send event %d", event);
 #endif
 
-	return write(thread->pipefd[1], &event, sizeof(event));
+	return write(thread->wr_event_fd, &event, sizeof(event));
 }
 
 int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event)
 {
 	int ret;
 
-	ret = read(thread->pipefd[0], event, sizeof(*event));
+	ret = read(thread->rd_event_fd, event, sizeof(*event));
 	if (ret < 0)
 	{
 		pr_red_info("read");
@@ -39,11 +39,11 @@ int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event)
 	return ret;
 }
 
-int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 ms)
+int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 msec)
 {
 	int ret;
 
-	ret = poll(&thread->pfd, 1, ms);
+	ret = poll(&thread->pfd, 1, msec);
 	if (ret < 0)
 	{
 		pr_error_info("poll");
@@ -58,11 +58,45 @@ int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32
 	return cavan_thread_recv_event(thread, event);
 }
 
+int cavan_thread_wait_event(struct cavan_thread *thread, u32 msec)
+{
+	int ret;
+
+	pthread_mutex_lock(&thread->lock);
+
+	if (thread->pending)
+	{
+		pthread_mutex_unlock(&thread->lock);
+		return 0;
+	}
+
+	thread->state = CAVAN_THREAD_STATE_WAIT_EVENT;
+
+	pthread_mutex_unlock(&thread->lock);
+	ret = poll(&thread->pfd, 1, msec);
+	pthread_mutex_lock(&thread->lock);
+
+	if (thread->state == CAVAN_THREAD_STATE_WAIT_EVENT)
+	{
+		thread->state = CAVAN_THREAD_STATE_RUNNING;
+	}
+
+	pthread_mutex_unlock(&thread->lock);
+
+	return ret;
+}
+
 int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time)
 {
 	int ret;
 
 	pthread_mutex_lock(&thread->lock);
+
+	if (thread->pending)
+	{
+		pthread_mutex_unlock(&thread->lock);
+		return 0;
+	}
 
 	thread->state = CAVAN_THREAD_STATE_SLEEP;
 
@@ -77,11 +111,11 @@ int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time
 	return ret;
 }
 
-int cavan_thread_msleep(struct cavan_thread *thread, u32 ms)
+int cavan_thread_msleep(struct cavan_thread *thread, u32 msec)
 {
 	struct timespec time;
 
-	cavan_timer_set_timespec(&time, ms);
+	cavan_timer_set_timespec(&time, msec);
 
 	return cavan_thread_msleep_until(thread, &time);
 }
@@ -178,8 +212,8 @@ static void *cavan_thread_main_loop(void *data)
 	{
 		switch (thread->state)
 		{
-		case CAVAN_THREAD_STATE_WAIT:
 		case CAVAN_THREAD_STATE_SLEEP:
+		case CAVAN_THREAD_STATE_WAIT_EVENT:
 			thread->state = CAVAN_THREAD_STATE_RUNNING;
 		case CAVAN_THREAD_STATE_RUNNING:
 #if CAVAN_THREAD_DEBUG
@@ -290,8 +324,14 @@ void cavan_thread_stop(struct cavan_thread *thread)
 		case CAVAN_THREAD_STATE_STOPPPING:
 			break;
 
-		case CAVAN_THREAD_STATE_RUNNING:
+		case CAVAN_THREAD_STATE_WAIT_EVENT:
+			cavan_thread_send_event(thread, 0);
+			thread->state = CAVAN_THREAD_STATE_STOPPPING;
+			break;
+
+		case CAVAN_THREAD_STATE_SLEEP:
 		case CAVAN_THREAD_STATE_SUSPEND:
+		case CAVAN_THREAD_STATE_RUNNING:
 			thread->state = CAVAN_THREAD_STATE_STOPPPING;
 			break;
 
@@ -300,9 +340,9 @@ void cavan_thread_stop(struct cavan_thread *thread)
 			goto out_pthread_mutex_unlock;
 		}
 
-		pthread_mutex_unlock(&thread->lock);
-
 		pthread_cond_broadcast(&thread->cond);
+
+		pthread_mutex_unlock(&thread->lock);
 		thread->wake_handker(thread, thread->private_data);
 		msleep(i);
 		pthread_mutex_lock(&thread->lock);
@@ -357,9 +397,18 @@ void cavan_thread_suspend(struct cavan_thread *thread)
 {
 	pthread_mutex_lock(&thread->lock);
 
-	if (thread->state == CAVAN_THREAD_STATE_RUNNING)
+	switch (thread->state)
 	{
+	case CAVAN_THREAD_STATE_WAIT_EVENT:
+	case CAVAN_THREAD_STATE_RUNNING:
+	case CAVAN_THREAD_STATE_SLEEP:
 		thread->state = CAVAN_THREAD_STATE_SUSPEND;
+	case CAVAN_THREAD_STATE_SUSPEND:
+		break;
+
+	default:
+		pr_red_info("Invalid state %d", thread->state);
+		break;
 	}
 
 	pthread_mutex_unlock(&thread->lock);
@@ -371,13 +420,22 @@ void cavan_thread_resume(struct cavan_thread *thread)
 
 	thread->pending = true;
 
-	if (thread->state == CAVAN_THREAD_STATE_SUSPEND)
+	switch (thread->state)
 	{
+	case CAVAN_THREAD_STATE_WAIT_EVENT:
+		cavan_thread_send_event(thread, 0);
+	case CAVAN_THREAD_STATE_SUSPEND:
+	case CAVAN_THREAD_STATE_SLEEP:
 		thread->state = CAVAN_THREAD_STATE_RUNNING;
+		pthread_cond_signal(&thread->cond);
+	case CAVAN_THREAD_STATE_RUNNING:
 		thread->wake_handker(thread, thread->private_data);
-	}
+		break;
 
-	pthread_cond_signal(&thread->cond);
+	default:
+		pr_red_info("Invalid state %d", thread->state);
+		break;
+	}
 
 	pthread_mutex_unlock(&thread->lock);
 }

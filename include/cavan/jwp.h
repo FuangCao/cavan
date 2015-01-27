@@ -96,14 +96,10 @@ typedef pthread_mutex_t jwp_lock_t;
 #define jwp_signal_init(signal) \
 	pthread_cond_init(&signal, NULL)
 
-#define jwp_signal_wait(signal, lock) \
-	do { \
-		jwp_lock_acquire(lock); \
-		pthread_cond_wait(&signal, &lock); \
-		jwp_lock_release(lock); \
-	} while (0)
+#define jwp_signal_wait_locked(signal, lock) \
+	pthread_cond_wait(&signal, &lock)
 
-#define jwp_signal_timedwait(signal, lock, msec) \
+#define jwp_signal_timedwait_locked(signal, lock, msec) \
 	do { \
 		long __msec; \
 		struct timespec __ts; \
@@ -111,13 +107,25 @@ typedef pthread_mutex_t jwp_lock_t;
 		__msec = __ts.tv_nsec / 1000000L + msec; \
 		__ts.tv_sec += __msec / 1000; \
 		__ts.tv_nsec = (__msec % 1000) * 1000000L; \
-		jwp_lock_acquire(lock); \
 		pthread_cond_timedwait(&signal, &lock, &__ts); \
-		jwp_lock_release(lock); \
 	} while (0)
 
 #define jwp_signal_notify(signal) \
 	pthread_cond_signal(&signal)
+
+#define jwp_signal_wait(signal, lock) \
+	do { \
+		jwp_lock_acquire(lock); \
+		jwp_signal_wait_locked(signal, lock); \
+		jwp_lock_release(lock); \
+	} while (0)
+
+#define jwp_signal_timedwait(signal, lock, msec) \
+	do { \
+		jwp_lock_acquire(lock); \
+		jwp_signal_timedwait_locked(signal, lock, msec); \
+		jwp_lock_release(lock); \
+	} while (0)
 
 #define jwp_println(fmt, args ...) \
 	println(fmt, ##args)
@@ -340,8 +348,10 @@ void jwp_queue_dequeue_commit(struct jwp_queue *queue);
 jwp_size_t jwp_queue_dequeue(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_get_free_size(const struct jwp_queue *queue);
 jwp_size_t jwp_queue_get_used_size(const struct jwp_queue *queue);
-jwp_bool jwp_queue_empty(struct jwp_queue *queue);
-jwp_bool jwp_queue_full(struct jwp_queue *queue);
+jwp_bool jwp_queue_is_empty(const struct jwp_queue *queue);
+jwp_bool jwp_queue_is_full(const struct jwp_queue *queue);
+void jwp_queue_wait_data(struct jwp_queue *queue);
+void jwp_queue_wait_space(struct jwp_queue *queue);
 
 static inline jwp_size_t jwp_queue_seek(struct jwp_queue *queue, jwp_size_t size)
 {
@@ -378,24 +388,6 @@ void jwp_rx_package_loop(struct jwp_desc *jwp);
 static inline jwp_bool jwp_queue_inqueue_package(struct jwp_queue *queue, const struct jwp_header *hdr)
 {
 	return jwp_queue_try_inqueue(queue, (const jwp_u8 *) hdr, JWP_HEADER_SIZE + hdr->length);
-}
-
-static inline void jwp_queue_wait_data(struct jwp_queue *queue)
-{
-#if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_signal_wait(queue->data_signal, queue->lock);
-#else
-	jwp_msleep(JWP_POLL_TIME);
-#endif
-}
-
-static inline void jwp_queue_wait_space(struct jwp_queue *queue)
-{
-#if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_signal_wait(queue->space_signal, queue->lock);
-#else
-	jwp_msleep(JWP_POLL_TIME);
-#endif
 }
 
 static inline void jwp_set_private_data(struct jwp_desc *jwp, void *data)

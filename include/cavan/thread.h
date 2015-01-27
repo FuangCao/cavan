@@ -13,9 +13,9 @@ typedef enum cavan_thread_state
 	CAVAN_THREAD_STATE_NONE,
 	CAVAN_THREAD_STATE_IDEL,
 	CAVAN_THREAD_STATE_RUNNING,
-	CAVAN_THREAD_STATE_WAIT,
 	CAVAN_THREAD_STATE_SLEEP,
 	CAVAN_THREAD_STATE_SUSPEND,
+	CAVAN_THREAD_STATE_WAIT_EVENT,
 	CAVAN_THREAD_STATE_STOPPPING,
 	CAVAN_THREAD_STATE_STOPPED
 } cavan_thread_state_t;
@@ -26,7 +26,17 @@ struct cavan_thread
 
 	bool pending;
 	pthread_t id;
-	int pipefd[2];
+
+	union
+	{
+		int pipefd[2];
+		struct
+		{
+			int rd_event_fd;
+			int wr_event_fd;
+		};
+	};
+
 	struct pollfd pfd;
 
 	pthread_cond_t cond;
@@ -41,7 +51,8 @@ struct cavan_thread
 
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
 int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event);
-int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 ms);
+int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 msec);
+int cavan_thread_wait_event(struct cavan_thread *thread, u32 msec);
 int cavan_thread_init(struct cavan_thread *thread, void *data);
 void cavan_thread_deinit(struct cavan_thread *thread);
 int cavan_thread_start(struct cavan_thread *thread);
@@ -51,7 +62,7 @@ int cavan_thread_run_self(struct cavan_thread *thread, void *data);
 void cavan_thread_suspend(struct cavan_thread *thread);
 void cavan_thread_resume(struct cavan_thread *thread);
 int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time);
-int cavan_thread_msleep(struct cavan_thread *thread, u32 ms);
+int cavan_thread_msleep(struct cavan_thread *thread, u32 msec);
 
 static inline int cavan_thread_join(struct cavan_thread *thread)
 {
