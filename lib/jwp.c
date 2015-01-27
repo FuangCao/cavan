@@ -692,6 +692,18 @@ static void jwp_timer_init(struct jwp_timer *timer, struct jwp_desc *jwp)
 	timer->handler = NULL;
 }
 
+static void jwp_hw_create_timer(struct jwp_timer *timer)
+{
+	struct jwp_desc *jwp = timer->jwp;
+
+	while (!jwp->create_timer(timer))
+	{
+#if JWP_SHOW_ERROR
+		jwp_pr_red_info("create timer fault!");
+#endif
+	}
+}
+
 static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 {
 	struct jwp_desc *jwp = timer->jwp;
@@ -712,19 +724,7 @@ static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 	}
 
 	timer->msec = msec;
-
-	while (1)
-	{
-		if (jwp->create_timer(timer))
-		{
-			break;
-		}
-
-#if JWP_SHOW_ERROR
-		jwp_pr_red_info("create timer fault!");
-#endif
-	}
-
+	jwp_hw_create_timer(timer);
 	timer->active = true;
 
 	jwp_lock_release(timer->lock);
@@ -752,9 +752,7 @@ void jwp_timer_run(struct jwp_timer *timer)
 
 	if (active)
 	{
-		struct jwp_desc *jwp = timer->jwp;
-
-		timer->active = jwp->create_timer(timer);
+		jwp_hw_create_timer(timer);
 	}
 	else
 	{
