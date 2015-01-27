@@ -52,9 +52,9 @@
 
 #define JWP_MTU						0xFF
 #define JWP_POLL_TIME				10
+#define JWP_TX_LATENCY				200
 #define JWP_TX_RETRY				10
 #define JWP_TX_TIMEOUT				2000
-#define JWP_TX_LATENCY_TIME			200
 #define JWP_QUEUE_SIZE				(JWP_MTU * 3)
 
 // ============================================================

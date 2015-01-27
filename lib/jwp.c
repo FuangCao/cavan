@@ -712,7 +712,20 @@ static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 	}
 
 	timer->msec = msec;
-	timer->active = jwp->create_timer(timer);
+
+	while (1)
+	{
+		if (jwp->create_timer(timer))
+		{
+			break;
+		}
+
+#if JWP_SHOW_ERROR
+		jwp_pr_red_info("create timer fault!");
+#endif
+	}
+
+	timer->active = true;
 
 	jwp_lock_release(timer->lock);
 }
@@ -1234,7 +1247,11 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 #endif
 
 #if JWP_TX_DATA_TIMER_ENABLE
-	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_DATA), jwp_queue_get_used_size(queue) < JWP_MAX_PAYLOAD ? JWP_TX_LATENCY_TIME : JWP_POLL_TIME);
+#if JWP_TX_LATENCY > 0
+	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_DATA), jwp_queue_get_used_size(queue) < JWP_MAX_PAYLOAD ? JWP_TX_LATENCY : JWP_POLL_TIME);
+#else
+	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_DATA), JWP_POLL_TIME);
+#endif
 #elif JWP_TX_DATA_LOOP_ENABLE == 0
 #error "please disable tx data queue when not use tx data loop and tx data timer"
 #endif
@@ -1359,10 +1376,13 @@ void jwp_tx_data_loop(struct jwp_desc *jwp)
 		if (hdr->length == 0)
 		{
 			jwp_queue_wait_data(queue);
+
+#if JWP_TX_LATENCY > 0
 			if (jwp_queue_get_used_size(queue) < JWP_MAX_PAYLOAD)
 			{
-				msleep(JWP_TX_LATENCY_TIME);
+				msleep(JWP_TX_LATENCY);
 			}
+#endif
 
 			continue;
 		}
