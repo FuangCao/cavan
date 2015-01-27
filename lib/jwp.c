@@ -26,8 +26,8 @@
 #error "must enable timer when use tx timer"
 #endif
 
-#if JWP_TX_LATENCY_ENABLE && (JWP_TIMER_ENABLE == 0 || JWP_TX_DATA_QUEUE_ENABLE == 0)
-#error "must enable timer and tx data queue when use tx latency"
+#if JWP_TX_DATA_TIMER_ENABLE && (JWP_TIMER_ENABLE == 0 || JWP_TX_DATA_QUEUE_ENABLE == 0)
+#error "must enable timer and tx data queue when use tx data timer"
 #endif
 
 #if JWP_TX_PKG_TIMER_ENABLE && (JWP_TX_TIMER_ENABLE == 0 || JWP_TX_QUEUE_ENABLE == 0)
@@ -54,8 +54,8 @@
 #error "must enable tx data queue when use tx data loop"
 #endif
 
-#if JWP_TX_DATA_LOOP_ENABLE && JWP_TX_LATENCY_ENABLE
-#error "don't enable tx data loop and tx latency at the same time"
+#if JWP_TX_DATA_LOOP_ENABLE && JWP_TX_DATA_TIMER_ENABLE
+#error "don't enable tx data loop and tx data timer at the same time"
 #endif
 
 #if JWP_TX_LOOP_ENABLE && JWP_TX_QUEUE_ENABLE == 0
@@ -131,7 +131,7 @@ jwp_u8 jwp_package_checksum(struct jwp_header *hdr)
 }
 #endif
 
-#if (JWP_TX_QUEUE_ENABLE == 0 && (JWP_WAIT_ENABLE == 0 || JWP_TX_LATENCY_ENABLE)) || JWP_TX_PKG_TIMER_ENABLE
+#if (JWP_TX_QUEUE_ENABLE == 0 && (JWP_POLL_ENABLE == 0 || JWP_TX_DATA_TIMER_ENABLE)) || JWP_TX_PKG_TIMER_ENABLE
 static jwp_bool jwp_check_and_set_send_pendding(struct jwp_desc *jwp)
 {
 	jwp_bool res;
@@ -452,7 +452,7 @@ void jwp_queue_wait_data(struct jwp_queue *queue)
 {
 	jwp_lock_acquire(queue->lock);
 
-#if JWP_WAIT_ENABLE
+#if JWP_POLL_ENABLE
 	while (jwp_queue_is_empty_locked(queue))
 #else
 	if (jwp_queue_is_empty_locked(queue))
@@ -474,7 +474,7 @@ void jwp_queue_wait_space(struct jwp_queue *queue)
 {
 	jwp_lock_acquire(queue->lock);
 
-#if JWP_WAIT_ENABLE
+#if JWP_POLL_ENABLE
 	while (jwp_queue_is_full_locked(queue))
 #else
 	if (jwp_queue_is_full_locked(queue))
@@ -772,8 +772,8 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 }
 #endif
 
-#if JWP_TX_LATENCY_ENABLE
-static jwp_bool jwp_tx_lantency_timer_handler(struct jwp_timer *timer)
+#if JWP_TX_DATA_TIMER_ENABLE
+static jwp_bool jwp_tx_data_timer_handler(struct jwp_timer *timer)
 {
 	struct jwp_package pkg;
 	struct jwp_header *hdr = &pkg.header;
@@ -928,8 +928,8 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 	jwp->timers[JWP_TIMER_TX].handler = jwp_tx_timer_handler;
 #endif
 
-#if JWP_TX_LATENCY_ENABLE
-	jwp->timers[JWP_TIMER_TX_LATENCY].handler = jwp_tx_lantency_timer_handler;
+#if JWP_TX_DATA_TIMER_ENABLE
+	jwp->timers[JWP_TIMER_TX_DATA].handler = jwp_tx_data_timer_handler;
 #endif
 
 #if JWP_TX_PKG_TIMER_ENABLE
@@ -959,8 +959,8 @@ jwp->queues[JWP_QUEUE_TX_DATA].name = "TX_DATA";
 jwp->queues[JWP_QUEUE_RX_DATA].name = "RX_DATA";
 #endif
 
-#if JWP_TX_LATENCY_ENABLE
-	jwp->timers[JWP_TIMER_TX_LATENCY].name = "TX_LATENCY";
+#if JWP_TX_DATA_TIMER_ENABLE
+	jwp->timers[JWP_TIMER_TX_DATA].name = "TX_DATA";
 #endif
 
 #if JWP_TX_PKG_TIMER_ENABLE
@@ -1183,7 +1183,7 @@ jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool syn
 #error "must enable tx loop or tx package timer when tx queue enabled"
 #endif
 #else
-#if JWP_WAIT_ENABLE && JWP_TX_LATENCY_ENABLE == 0
+#if JWP_POLL_ENABLE && JWP_TX_DATA_TIMER_ENABLE == 0
 		while (!jwp_wait_and_set_send_pendding(jwp));
 #else
 		if (!jwp_check_and_set_send_pendding(jwp))
@@ -1216,7 +1216,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 #if JWP_TX_DATA_QUEUE_ENABLE
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_TX_DATA);
 
-#if JWP_WAIT_ENABLE
+#if JWP_POLL_ENABLE
 #if JWP_TX_DATA_LOOP_ENABLE
 	jwp_queue_inqueue_all(queue, buff, size);
 #else
@@ -1233,10 +1233,10 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 	size = jwp_queue_inqueue(queue, buff, size);
 #endif
 
-#if JWP_TX_LATENCY_ENABLE
-	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_LATENCY), jwp_queue_get_used_size(queue) < JWP_MTU ? JWP_LATENCY_TIME : JWP_POLL_TIME);
+#if JWP_TX_DATA_TIMER_ENABLE
+	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_DATA), jwp_queue_get_used_size(queue) < JWP_MAX_PAYLOAD ? JWP_TX_LATENCY_TIME : JWP_POLL_TIME);
 #elif JWP_TX_DATA_LOOP_ENABLE == 0
-#error "please disable tx data queue when not use tx data loop and tx latency"
+#error "please disable tx data queue when not use tx data loop and tx data timer"
 #endif
 
 	return size;
@@ -1359,6 +1359,11 @@ void jwp_tx_data_loop(struct jwp_desc *jwp)
 		if (hdr->length == 0)
 		{
 			jwp_queue_wait_data(queue);
+			if (jwp_queue_get_used_size(queue) < JWP_MAX_PAYLOAD)
+			{
+				msleep(JWP_TX_LATENCY_TIME);
+			}
+
 			continue;
 		}
 
