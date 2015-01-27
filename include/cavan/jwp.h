@@ -132,7 +132,7 @@ typedef pthread_mutex_t jwp_lock_t;
 
 #define JWP_DEBUG					0
 #define JWP_DEBUG_MEMBER			0
-#define JWP_SHOW_ERROR				0
+#define JWP_SHOW_ERROR				1
 
 #define JWP_POLL_ENABLE				1
 #define JWP_SLEEP_ENABLE			1

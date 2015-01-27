@@ -685,7 +685,7 @@ static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_rx_pac
 		{
 			jwp_memcpy(pkg->head, buff, size);
 			pkg->head += size;
-			pkg->header_remain -= size;
+			pkg->header_remain -= (jwp_u8) size;
 
 			return size_bak;
 		}
@@ -696,14 +696,14 @@ static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_rx_pac
 
 		pkg->header_remain = 0;
 		pkg->data_remain = pkg->header.length;
-		pkg->head = pkg->header.payload;
+		pkg->head = JWP_GET_PAYLOAD(pkg);
 	}
 
 	if (size < pkg->data_remain)
 	{
 		jwp_memcpy(pkg->head, buff, size);
 		pkg->head += size;
-		pkg->data_remain -= size;
+		pkg->data_remain -= (jwp_u8) size;
 
 		return size_bak;
 	}
@@ -1300,7 +1300,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 #else
 	struct jwp_package pkg;
 	struct jwp_header *hdr = &pkg.header;
-	const jwp_u8 *p = buff, *p_end = p + size;
+	const jwp_u8 *p = (jwp_u8 *) buff, *p_end = p + size;
 
 	while (p < p_end)
 	{
@@ -1313,8 +1313,8 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 		}
 
 		hdr->type = JWP_PKG_DATA;
-		hdr->length = length;
-		jwp_memcpy(hdr->payload, p, length);
+		hdr->length = (jwp_u8) length;
+		jwp_memcpy(JWP_GET_PAYLOAD(hdr), p, length);
 
 		if (!jwp_send_package(jwp, hdr, true))
 		{

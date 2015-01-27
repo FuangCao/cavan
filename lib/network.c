@@ -2541,12 +2541,14 @@ static int network_service_udp_accept(struct network_service *service, struct ne
 		return ret;
 	}
 
+#if 0
 	ret = network_client_set_sync(client);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_set_sync");
 		return ret;
 	}
+#endif
 
 	return 0;
 }
