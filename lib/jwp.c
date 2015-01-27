@@ -17,17 +17,55 @@
  *
  */
 
+#include "stdafx.h"
+
+#ifdef _WIN32
+#include "jwp.h"
+#else
 #include <cavan.h>
 #include <cavan/jwp.h>
+#endif
 
 // ============================================================
 
-#if JWP_TX_TIMER_ENABLE && JWP_TIMER_ENABLE == 0
+#if JWP_QUEUE_ENABLE == 0
+#if JWP_TX_QUEUE_ENABLE
+#error "must enable queue when use tx queue"
+#endif
+
+#if JWP_RX_QUEUE_ENABLE
+#error "must enable queue when use rx queue"
+#endif
+
+#if JWP_TX_DATA_QUEUE_ENABLE
+#error "must enable queue when use tx data queue"
+#endif
+
+#if JWP_RX_DATA_QUEUE_ENABLE
+#error "must enable queue when use tx data queue"
+#endif
+#endif
+
+#if JWP_TIMER_ENABLE == 0
+#if JWP_TX_TIMER_ENABLE
 #error "must enable timer when use tx timer"
 #endif
 
-#if JWP_TX_DATA_TIMER_ENABLE && (JWP_TIMER_ENABLE == 0 || JWP_TX_DATA_QUEUE_ENABLE == 0)
-#error "must enable timer and tx data queue when use tx data timer"
+#if JWP_TX_DATA_TIMER_ENABLE
+#error "must enable timer when use tx data timer"
+#endif
+
+#if JWP_TX_PKG_TIMER_ENABLE
+#error "must enable timer when use tx package timer"
+#endif
+
+#if JWP_RX_PKG_TIMER_ENABLE
+#error "must enable timer when use rx package timer"
+#endif
+#endif
+
+#if JWP_TX_DATA_TIMER_ENABLE && JWP_TX_DATA_QUEUE_ENABLE == 0
+#error "must enable tx data queue when use tx data timer"
 #endif
 
 #if JWP_TX_PKG_TIMER_ENABLE && (JWP_TX_TIMER_ENABLE == 0 || JWP_TX_QUEUE_ENABLE == 0)
@@ -36,10 +74,6 @@
 
 #if JWP_TX_PKG_TIMER_ENABLE && JWP_TX_LOOP_ENABLE
 #error "don't enable tx package timer and tx loop at the same time"
-#endif
-
-#if JWP_RX_PKG_TIMER_ENABLE && JWP_TIMER_ENABLE == 0
-#error "must enable timer when use rx package timer"
 #endif
 
 #if JWP_RX_PKG_TIMER_ENABLE && JWP_RX_PKG_LOOP_ENABLE
@@ -72,7 +106,9 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 
 void jwp_header_dump(const struct jwp_header *hdr)
 {
+#ifdef jwp_println
 	jwp_println("index = %d, type = %d, length = %d, checksum = 0x%02x", hdr->index, hdr->type, hdr->length, hdr->checksum);
+#endif
 }
 
 void jwp_package_dump(const struct jwp_package *pkg)
@@ -155,6 +191,7 @@ static jwp_bool jwp_check_and_set_send_pendding(struct jwp_desc *jwp)
 
 // ============================================================
 
+#if JWP_QUEUE_ENABLE
 void jwp_queue_init(struct jwp_queue *queue)
 {
 	jwp_lock_init(queue->lock);
@@ -231,7 +268,7 @@ static void jwp_queue_inqueue_commit_locked(struct jwp_queue *queue)
 	queue->tail = queue->tail_peek;
 
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_signal_notify(queue->data_signal);
+	jwp_signal_notify_locked(queue->data_signal, queue->lock);
 #endif
 }
 
@@ -353,7 +390,7 @@ static void jwp_queue_dequeue_commit_locked(struct jwp_queue *queue)
 	queue->head = queue->head_peek;
 
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_signal_notify(queue->space_signal);
+	jwp_signal_notify_locked(queue->space_signal, queue->lock);
 #endif
 }
 
@@ -503,7 +540,7 @@ static jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_he
 		return false;
 	}
 
-	rdlen = jwp_queue_dequeue(queue, hdr->payload, hdr->length);
+	rdlen = jwp_queue_dequeue(queue, JWP_GET_PAYLOAD(hdr), hdr->length);
 	if (rdlen < hdr->length)
 	{
 		return false;
@@ -511,6 +548,7 @@ static jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_he
 
 	return true;
 }
+#endif
 #endif
 
 #if JWP_RX_QUEUE_ENABLE
@@ -548,14 +586,14 @@ static jwp_bool jwp_queue_fill_package(struct jwp_queue *queue, struct jwp_rx_pa
 		if (rdlen < pkg->header_remain)
 		{
 			pkg->head += rdlen;
-			pkg->header_remain -= rdlen;
+			pkg->header_remain -= (jwp_u8) rdlen;
 			return false;
 		}
 		else
 		{
 			pkg->header_remain = 0;
 			pkg->data_remain = pkg->header.length;
-			pkg->head = pkg->header.payload;
+			pkg->head = JWP_GET_PAYLOAD(pkg);
 		}
 	}
 
@@ -563,7 +601,7 @@ static jwp_bool jwp_queue_fill_package(struct jwp_queue *queue, struct jwp_rx_pa
 	if (rdlen < pkg->data_remain)
 	{
 		pkg->head += rdlen;
-		pkg->data_remain -= rdlen;
+		pkg->data_remain -= (jwp_u8) rdlen;
 		return false;
 	}
 	else
@@ -868,7 +906,9 @@ static jwp_bool jwp_rx_package_timer_handler(struct jwp_timer *timer)
 
 jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 {
+#if JWP_TIMER_ENABLE || JWP_QUEUE_ENABLE
 	int i;
+#endif
 
 #if JWP_DEBUG_MEMBER
 	jwp->state = JWP_STATE_INIT;
@@ -923,10 +963,12 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 
 	jwp_rx_package_init(&jwp->rx_pkg);
 
+#if JWP_QUEUE_ENABLE
 	for (i = 0; i < JWP_QUEUE_COUNT; i++)
 	{
 		jwp_queue_init(jwp->queues + i);
 	}
+#endif
 
 #if JWP_TIMER_ENABLE
 	for (i = 0; i < JWP_TIMER_COUNT; i++)
@@ -1079,20 +1121,20 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 #if JWP_RX_DATA_QUEUE_ENABLE
 				struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX_DATA);
 
-				jwp_queue_inqueue_all(queue, hdr->payload, hdr->length);
+				jwp_queue_inqueue_all(queue, JWP_GET_PAYLOAD(hdr), hdr->length);
 #endif
 
 #if JWP_RX_DATA_NOTIFY_ENABLE
-				jwp_signal_notify(jwp->data_rx_signal);
+				jwp_signal_notify(jwp->data_rx_signal, jwp->lock);
 #endif
-				jwp->data_received(jwp, hdr->payload, hdr->length);
+				jwp->data_received(jwp, JWP_GET_PAYLOAD(hdr), hdr->length);
 			}
 			else
 			{
 #if JWP_RX_CMD_NOTIFY_ENABLE
-				jwp_signal_notify(jwp->command_rx_signal);
+				jwp_signal_notify(jwp->command_rx_signal, jwp->lock);
 #endif
-				jwp->command_received(jwp, hdr->payload, hdr->length);
+				jwp->command_received(jwp, JWP_GET_PAYLOAD(hdr), hdr->length);
 			}
 		}
 		else
@@ -1122,7 +1164,7 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 #endif
 
 #if JWP_TX_NOTIFY_ENABLE
-			jwp_signal_notify(jwp->tx_signal);
+			jwp_signal_notify(jwp->tx_signal, jwp->lock);
 #endif
 			jwp->send_complete(jwp);
 		}
@@ -1229,7 +1271,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 
 #if JWP_POLL_ENABLE
 #if JWP_TX_DATA_LOOP_ENABLE
-	jwp_queue_inqueue_all(queue, buff, size);
+	jwp_queue_inqueue_all(queue, (jwp_u8 *) buff, size);
 #else
 	if (size < JWP_QUEUE_SIZE)
 	{
@@ -1292,7 +1334,7 @@ jwp_size_t jwp_recv_data(struct jwp_desc *jwp, void *buff, jwp_size_t size)
 #if JWP_RX_DATA_QUEUE_ENABLE
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX_DATA);
 
-	return jwp_queue_dequeue(queue, buff, size);
+	return jwp_queue_dequeue(queue, (jwp_u8 *) buff, size);
 #else
 	return 0;
 #endif
@@ -1312,8 +1354,8 @@ jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t 
 #endif
 
 	hdr->type = JWP_PKG_CMD;
-	hdr->length = size;
-	jwp_memcpy(hdr->payload, command, size);
+	hdr->length = (jwp_u8) size;
+	jwp_memcpy(JWP_GET_PAYLOAD(hdr), command, size);
 
 	return jwp_send_package(jwp, hdr, true);
 }
@@ -1370,7 +1412,7 @@ void jwp_tx_data_loop(struct jwp_desc *jwp)
 
 	while (1)
 	{
-		hdr->length = jwp_queue_dequeue_peek(queue, hdr->payload, JWP_MAX_PAYLOAD);
+		hdr->length = (jwp_u8) jwp_queue_dequeue_peek(queue, JWP_GET_PAYLOAD(hdr), JWP_MAX_PAYLOAD);
 		if (hdr->length == 0)
 		{
 			jwp_queue_wait_data(queue);
@@ -1378,7 +1420,7 @@ void jwp_tx_data_loop(struct jwp_desc *jwp)
 #if JWP_TX_LATENCY > 0
 			if (jwp_queue_get_used_size(queue) < JWP_MAX_PAYLOAD)
 			{
-				msleep(JWP_TX_LATENCY);
+				jwp_msleep(JWP_TX_LATENCY);
 			}
 #endif
 

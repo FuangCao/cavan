@@ -156,8 +156,10 @@ static void *test_jwp_watch_thread(void *data)
 
 	while (1)
 	{
+#if JWP_QUEUE_ENABLE
 		int i;
 		const struct jwp_queue *p;
+#endif
 
 		msleep(2000);
 
@@ -178,6 +180,7 @@ static void *test_jwp_watch_thread(void *data)
 		println("jwp->line = %d", jwp->line);
 #endif
 
+#if JWP_QUEUE_ENABLE
 		for (i = 0; i < NELEM(jwp->queues); i++)
 		{
 			p = jwp->queues + i;
@@ -188,6 +191,7 @@ static void *test_jwp_watch_thread(void *data)
 			println("%d. used = %d, free = %d", i, jwp_queue_get_used_size(p), jwp_queue_get_free_size(p));
 #endif
 		}
+#endif
 
 		if (timer_fault)
 		{
@@ -559,6 +563,7 @@ static int do_test_jwp(int argc, char *argv[])
 
 static int do_test_queue(int argc, char *arv[])
 {
+#if JWP_QUEUE_ENABLE
 	int i;
 	int length;
 	u8 buff[1024];
@@ -601,6 +606,9 @@ static int do_test_queue(int argc, char *arv[])
 	buff[length] = 0;
 	println("dequeue length = %d, used = %d, free = %d, buff = %s",
 			length, jwp_queue_get_used_size(&queue), jwp_queue_get_free_size(&queue), buff);
+#else
+	pr_red_info("jwp queue is not enabled");
+#endif
 
 	return 0;
 }
