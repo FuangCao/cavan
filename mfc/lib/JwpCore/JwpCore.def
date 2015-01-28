@@ -1,0 +1,7 @@
+; JwpCore.def : Declares the module parameters for the DLL.
+
+LIBRARY      "JwpCore"
+DESCRIPTION  'JwpCore Windows Dynamic Link Library'
+
+EXPORTS
+    ; Explicit exports can go here

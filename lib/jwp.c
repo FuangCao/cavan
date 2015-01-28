@@ -1491,7 +1491,7 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 #else
 	jwp_u32 count;
 
-	for (count = JWP_TX_TIMEOUT; count; count--)
+	for (count = JWP_TX_TIMEOUT / JWP_POLL_TIME; count; count--)
 	{
 		jwp_lock_acquire(jwp->lock);
 
@@ -1502,7 +1502,7 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 		}
 
 		jwp_lock_release(jwp->lock);
-		jwp_msleep(1);
+		jwp_msleep(JWP_POLL_TIME);
 	}
 
 	return false;

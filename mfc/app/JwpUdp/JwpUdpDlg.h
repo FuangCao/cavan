@@ -57,10 +57,6 @@ protected:
 	virtual void OnDataReceived(const void *buff, jwp_size_t size);
 	virtual void OnCommandReceived(const void *command, jwp_size_t size);
 	virtual void OnPackageReceived(const struct jwp_header *hdr);
-	virtual void OnLogReceived(const char *log, jwp_size_t size);
-
-private:
-	CFile mFileLog;
 };
 
 //{{AFX_INSERT_LOCATION}}

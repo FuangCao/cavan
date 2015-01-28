@@ -51,7 +51,7 @@
 #define JWP_QUEUE_NOTIFY_ENABLE		0
 
 #define JWP_MTU						0xFF
-#define JWP_POLL_TIME				10
+#define JWP_POLL_TIME				100
 #define JWP_TX_LATENCY				200
 #define JWP_TX_RETRY				10
 #define JWP_TX_TIMEOUT				2000
@@ -82,6 +82,7 @@
 #define jwp_signal_timedwait_locked(signal, lock, msec) \
 	do { \
 		(signal).waitting = true; \
+		jwp_lock_acquire((signal).handle); \
 		jwp_lock_release(lock); \
 		WaitForSingleObject((signal).handle, msec); \
 		jwp_lock_acquire(lock); \

@@ -1,24 +1,24 @@
-# Microsoft Developer Studio Project File - Name="JwpUdp" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="JwpCore" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
-# TARGTYPE "Win32 (x86) Application" 0x0101
+# TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
-CFG=JwpUdp - Win32 Debug
+CFG=JwpCore - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "JwpUdp.mak".
+!MESSAGE NMAKE /f "JwpCore.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "JwpUdp.mak" CFG="JwpUdp - Win32 Debug"
+!MESSAGE NMAKE /f "JwpCore.mak" CFG="JwpCore - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "JwpUdp - Win32 Release" (based on "Win32 (x86) Application")
-!MESSAGE "JwpUdp - Win32 Debug" (based on "Win32 (x86) Application")
+!MESSAGE "JwpCore - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "JwpCore - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -29,7 +29,7 @@ CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "JwpUdp - Win32 Release"
+!IF  "$(CFG)" == "JwpCore - Win32 Release"
 
 # PROP BASE Use_MFC 6
 # PROP BASE Use_Debug_Libraries 0
@@ -41,8 +41,8 @@ RSC=rc.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /c
+# ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /D "_USRDLL" /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x804 /d "NDEBUG" /d "_AFXDLL"
@@ -51,10 +51,10 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 /nologo /subsystem:windows /machine:I386
+# ADD BASE LINK32 /nologo /subsystem:windows /dll /machine:I386
+# ADD LINK32 /nologo /subsystem:windows /dll /machine:I386
 
-!ELSEIF  "$(CFG)" == "JwpUdp - Win32 Debug"
+!ELSEIF  "$(CFG)" == "JwpCore - Win32 Debug"
 
 # PROP BASE Use_MFC 6
 # PROP BASE Use_Debug_Libraries 1
@@ -66,8 +66,8 @@ LINK32=link.exe
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR /Yu"stdafx.h" /FD /GZ /c
+# ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /D "_USRDLL" /Yu"stdafx.h" /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x804 /d "_DEBUG" /d "_AFXDLL"
@@ -76,41 +76,33 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
 
 !ENDIF 
 
 # Begin Target
 
-# Name "JwpUdp - Win32 Release"
-# Name "JwpUdp - Win32 Debug"
+# Name "JwpCore - Win32 Release"
+# Name "JwpCore - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\LIB\JwpCore\jwp.cpp
+SOURCE=.\jwp.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\LIB\JwpCore\JwpCore.cpp
+SOURCE=.\JwpCore.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\JwpUdp.cpp
+SOURCE=.\JwpCore.def
 # End Source File
 # Begin Source File
 
-SOURCE=.\JwpUdp.rc
-# End Source File
-# Begin Source File
-
-SOURCE=.\JwpUdpDesc.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\JwpUdpDlg.cpp
+SOURCE=.\JwpCore.rc
 # End Source File
 # Begin Source File
 
@@ -127,14 +119,6 @@ SOURCE=.\JwpCore.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\JwpUdp.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\JwpUdpDlg.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Resource.h
 # End Source File
 # Begin Source File
@@ -147,11 +131,7 @@ SOURCE=.\StdAfx.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=.\res\JwpUdp.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\JwpUdp.rc2
+SOURCE=.\res\JwpCore.rc2
 # End Source File
 # End Group
 # Begin Source File

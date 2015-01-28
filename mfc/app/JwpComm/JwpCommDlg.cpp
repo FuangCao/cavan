@@ -1,9 +1,9 @@
-// JwpUdpDlg.cpp : implementation file
+// JwpCommDlg.cpp : implementation file
 //
 
 #include "stdafx.h"
-#include "JwpUdp.h"
-#include "JwpUdpDlg.h"
+#include "JwpComm.h"
+#include "JwpCommDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -57,50 +57,49 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CJwpUdpDlg dialog
+// CJwpCommDlg dialog
 
-CJwpUdpDlg::CJwpUdpDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CJwpUdpDlg::IDD, pParent)
+CJwpCommDlg::CJwpCommDlg(CWnd* pParent /*=NULL*/)
+	: CDialog(CJwpCommDlg::IDD, pParent)
 {
-	//{{AFX_DATA_INIT(CJwpUdpDlg)
-	m_LogValue = _T("");
-	m_PortValue = 0;
-	m_DataValue = _T("");
+	//{{AFX_DATA_INIT(CJwpCommDlg)
+	m_ComNum = 0;
 	m_StateValue = _T("");
+	m_EditCommand = _T("");
+	m_EditLog = _T("");
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
-void CJwpUdpDlg::DoDataExchange(CDataExchange* pDX)
+void CJwpCommDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CJwpUdpDlg)
-	DDX_Control(pDX, IDC_IPADDRESS, m_IpAddressCtrl);
-	DDX_Text(pDX, IDC_EDIT_LOG, m_LogValue);
-	DDX_Text(pDX, IDC_EDIT_PORT, m_PortValue);
-	DDX_Text(pDX, IDC_EDIT_DATA, m_DataValue);
+	//{{AFX_DATA_MAP(CJwpCommDlg)
+	DDX_Control(pDX, IDC_MSCOMM1, m_Comm);
+	DDX_Text(pDX, IDC_EDIT_COM, m_ComNum);
 	DDX_Text(pDX, IDC_STATIC_STATE, m_StateValue);
+	DDX_Text(pDX, IDC_EDIT_COMMAND, m_EditCommand);
+	DDX_Text(pDX, IDC_EDIT_LOG, m_EditLog);
 	//}}AFX_DATA_MAP
 }
 
-BEGIN_MESSAGE_MAP(CJwpUdpDlg, CDialog)
-	//{{AFX_MSG_MAP(CJwpUdpDlg)
+BEGIN_MESSAGE_MAP(CJwpCommDlg, CDialog)
+	//{{AFX_MSG_MAP(CJwpCommDlg)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_BUTTON_START, OnButtonStart)
-	ON_BN_CLICKED(IDC_BUTTON_STOP, OnButtonStop)
+	ON_BN_CLICKED(IDC_BUTTON_CONNECT, OnButtonConnect)
+	ON_BN_CLICKED(IDC_BUTTON_DISCONNECT, OnButtonDisconnect)
 	ON_BN_CLICKED(IDC_BUTTON_SEND_COMMAND, OnButtonSendCommand)
 	ON_BN_CLICKED(IDC_BUTTON_SEND_DATA, OnButtonSendData)
-	ON_BN_CLICKED(IDC_BUTTON_CLEAR, OnButtonClear)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CJwpUdpDlg message handlers
+// CJwpCommDlg message handlers
 
-BOOL CJwpUdpDlg::OnInitDialog()
+BOOL CJwpCommDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -128,14 +127,13 @@ BOOL CJwpUdpDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	m_IpAddressCtrl.SetAddress(192, 168, 1, 19);
-	m_PortValue = 1234;
+	m_ComNum = m_Comm.GetCommPort();
 	UpdateData(false);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
-void CJwpUdpDlg::OnSysCommand(UINT nID, LPARAM lParam)
+void CJwpCommDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
 	{
@@ -152,7 +150,7 @@ void CJwpUdpDlg::OnSysCommand(UINT nID, LPARAM lParam)
 //  to draw the icon.  For MFC applications using the document/view model,
 //  this is automatically done for you by the framework.
 
-void CJwpUdpDlg::OnPaint() 
+void CJwpCommDlg::OnPaint()
 {
 	if (IsIconic())
 	{
@@ -179,71 +177,104 @@ void CJwpUdpDlg::OnPaint()
 
 // The system calls this to obtain the cursor to display while the user drags
 //  the minimized window.
-HCURSOR CJwpUdpDlg::OnQueryDragIcon()
+HCURSOR CJwpCommDlg::OnQueryDragIcon()
 {
 	return (HCURSOR) m_hIcon;
 }
 
-void CJwpUdpDlg::OnSendComplete(void)
+int CJwpCommDlg::HwWrite(const void *buff, jwp_size_t size)
 {
-	println("OnSendComplete");
+	CByteArray bytes;
+	const UCHAR *p, *p_end;
+
+	for (p = (UCHAR *) buff, p_end = p + size; p < p_end; p++)
+	{
+		bytes.Add(*p);
+	}
+
+	m_Comm.SetOutput(COleVariant(bytes));
+
+	return size;
 }
 
-void CJwpUdpDlg::OnDataReceived(const void *buff, jwp_size_t size)
+void CJwpCommDlg::OnButtonConnect()
 {
-	println("OnDataReceived: size = %d");
-}
-
-void CJwpUdpDlg::OnCommandReceived(const void *command, jwp_size_t size)
-{
-	println("OnCommandReceived: size = %d");
-}
-
-void CJwpUdpDlg::OnPackageReceived(const struct jwp_header *hdr)
-{
-	println("OnPackageReceived: index = %d, type = %d, length = %d", hdr->index, hdr->type, hdr->length);
-}
-
-void CJwpUdpDlg::OnButtonStart() 
-{
-	DWORD addr;
+	if (m_Comm.GetPortOpen())
+	{
+		return;
+	}
 
 	UpdateData(true);
-	m_IpAddressCtrl.GetAddress(addr);
+	m_Comm.SetCommPort(m_ComNum);
 
-	if (StartJwp(addr, m_PortValue))
+	m_Comm.SetPortOpen(true);
+	if (m_Comm.GetPortOpen())
 	{
+		m_Comm.SetOutBufferCount(0);
+		StartJwp();
+
 		m_StateValue = "已连接";
 	}
 	else
 	{
-
 		m_StateValue = "连接失败";
 	}
 
 	UpdateData(false);
 }
 
-void CJwpUdpDlg::OnButtonStop() 
+void CJwpCommDlg::OnButtonDisconnect()
 {
-	StopJwp();
-	m_StateValue = "连接断开";
-}
+	if (m_Comm.GetPortOpen())
+	{
+		m_Comm.SetPortOpen(false);
+		m_StateValue = "已断开";
+	}
 
-void CJwpUdpDlg::OnButtonSendCommand() 
-{
-	UpdateData(true);
-	SendCommand(m_DataValue, m_DataValue.GetLength());
-}
-
-void CJwpUdpDlg::OnButtonSendData() 
-{
-	UpdateData(true);
-	SendData(m_DataValue, m_DataValue.GetLength());
-}
-
-void CJwpUdpDlg::OnButtonClear() 
-{
-	m_LogValue.Empty();
 	UpdateData(false);
+}
+
+BEGIN_EVENTSINK_MAP(CJwpCommDlg, CDialog)
+    //{{AFX_EVENTSINK_MAP(CJwpCommDlg)
+	ON_EVENT(CJwpCommDlg, IDC_MSCOMM1, 1 /* OnComm */, OnOnCommMscomm, VTS_NONE)
+	//}}AFX_EVENTSINK_MAP
+END_EVENTSINK_MAP()
+
+void CJwpCommDlg::OnOnCommMscomm()
+{
+	short event = m_Comm.GetCommEvent();
+	if (event == 2)
+	{
+		long i;
+		COleSafeArray input = m_Comm.GetInput();
+		int rdLen = input.GetOneDimSize();
+		char buff[1024], *p, *last;
+
+		for (i = 0, p = buff, last = p + sizeof(buff) - 1; i < rdLen; i++, p++)
+		{
+			if (p > last)
+			{
+				WriteRxData(buff, sizeof(buff));
+				p = buff;
+			}
+
+			input.GetElement(&i, p + i);
+		}
+
+		WriteRxData(buff, p - buff);
+	}
+}
+
+void CJwpCommDlg::OnButtonSendCommand()
+{
+	UpdateData(true);
+
+	SendCommand(m_EditCommand, m_EditCommand.GetLength());
+}
+
+void CJwpCommDlg::OnButtonSendData()
+{
+	UpdateData(true);
+
+	SendData(m_EditCommand, m_EditCommand.GetLength());
 }

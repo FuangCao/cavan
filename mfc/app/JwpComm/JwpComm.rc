@@ -50,7 +50,7 @@ BEGIN
     "LANGUAGE 4, 2\r\n"
     "#pragma code_page(936)\r\n"
     "#endif //_WIN32\r\n"
-    "#include ""res\\JwpUdp.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""res\\JwpComm.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
     "#include ""l.chs\\afxres.rc""          // Standard components\r\n"
     "#endif\r\n"
     "\0"
@@ -66,7 +66,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON    DISCARDABLE     "res\\JwpUdp.ico"
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\JwpComm.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -75,36 +75,35 @@ IDR_MAINFRAME           ICON    DISCARDABLE     "res\\JwpUdp.ico"
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 55
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "关于 JwpUdp"
+CAPTION "关于 JwpComm"
 FONT 9, "宋体"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "JwpUdp 1.0 版",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "JwpComm 1.0 版",IDC_STATIC,40,10,119,8,SS_NOPREFIX
     LTEXT           "版权所有 (C) 2015",IDC_STATIC,40,25,119,8
     DEFPUSHBUTTON   "确定",IDOK,178,7,50,14,WS_GROUP
 END
 
-IDD_JWPUDP_DIALOG DIALOGEX 0, 0, 380, 264
+IDD_JWPCOMM_DIALOG DIALOGEX 0, 0, 320, 308
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "JwpUdp"
+CAPTION "JwpComm"
 FONT 9, "宋体"
 BEGIN
-    DEFPUSHBUTTON   "确定",IDOK,323,243,50,14
-    CONTROL         "IPAddress1",IDC_IPADDRESS,"SysIPAddress32",WS_TABSTOP,
-                    48,16,157,15
-    EDITTEXT        IDC_EDIT_PORT,46,37,157,14,ES_AUTOHSCROLL
-    LTEXT           "IP 地址：",IDC_STATIC,7,19,37,8
-    LTEXT           "端口号：",IDC_STATIC,7,39,33,8
-    PUSHBUTTON      "开始",IDC_BUTTON_START,7,243,50,14
-    PUSHBUTTON      "停止",IDC_BUTTON_STOP,64,243,50,14
-    PUSHBUTTON      "发送数据",IDC_BUTTON_SEND_DATA,117,243,50,14
-    PUSHBUTTON      "发送命令",IDC_BUTTON_SEND_COMMAND,175,243,50,14
-    EDITTEXT        IDC_EDIT_LOG,13,67,333,117,ES_MULTILINE | ES_AUTOVSCROLL | 
+    DEFPUSHBUTTON   "确定",IDOK,205,254,50,14
+    PUSHBUTTON      "取消",IDCANCEL,263,254,50,14
+    CONTROL         "",IDC_MSCOMM1,"{648A5600-2C6E-101B-82B6-000000000014}",
+                    WS_TABSTOP,7,7,25,25
+    PUSHBUTTON      "连接",IDC_BUTTON_CONNECT,85,254,50,14
+    PUSHBUTTON      "断开",IDC_BUTTON_DISCONNECT,143,254,50,14
+    EDITTEXT        IDC_EDIT_COM,41,254,35,14,ES_AUTOHSCROLL
+    LTEXT           "COM口：",IDC_STATIC,7,260,29,8
+    LTEXT           "",IDC_STATIC_STATE,7,235,306,8
+    PUSHBUTTON      "发命令",IDC_BUTTON_SEND_COMMAND,205,280,50,14
+    PUSHBUTTON      "发数据",IDC_BUTTON_SEND_DATA,263,280,50,14
+    EDITTEXT        IDC_EDIT_LOG,7,7,306,222,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_AUTOHSCROLL | WS_VSCROLL | WS_HSCROLL
-    PUSHBUTTON      "清除",IDC_BUTTON_CLEAR,229,243,50,14
-    EDITTEXT        IDC_EDIT_DATA,14,207,331,14,ES_AUTOHSCROLL
-    LTEXT           "",IDC_STATIC_STATE,15,232,327,8
+    EDITTEXT        IDC_EDIT_COMMAND,7,280,174,14,ES_AUTOHSCROLL
 END
 
 
@@ -132,13 +131,13 @@ BEGIN
         BLOCK "080404B0"
         BEGIN
             VALUE "CompanyName", "\0"
-            VALUE "FileDescription", "JwpUdp Microsoft 基础类应用程序\0"
+            VALUE "FileDescription", "JwpComm Microsoft 基础类应用程序\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
-            VALUE "InternalName", "JwpUdp\0"
+            VALUE "InternalName", "JwpComm\0"
             VALUE "LegalCopyright", "版权所有 (C) 2015\0"
             VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "JwpUdp.EXE\0"
-            VALUE "ProductName", "JwpUdp 应用程序\0"
+            VALUE "OriginalFilename", "JwpComm.EXE\0"
+            VALUE "ProductName", "JwpComm 应用程序\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
         END
     END
@@ -167,15 +166,33 @@ BEGIN
         BOTTOMMARGIN, 48
     END
 
-    IDD_JWPUDP_DIALOG, DIALOG
+    IDD_JWPCOMM_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 373
+        RIGHTMARGIN, 313
         TOPMARGIN, 7
-        BOTTOMMARGIN, 257
+        BOTTOMMARGIN, 301
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_JWPCOMM_DIALOG DLGINIT
+BEGIN
+    IDC_MSCOMM1, 0x376, 102, 0
+0x0013, 0x0000, 0x0043, 0x006f, 0x0070, 0x0079, 0x0072, 0x0069, 0x0067, 
+0x0068, 0x0074, 0x0020, 0x0028, 0x0063, 0x0029, 0x0020, 0x0031, 0x0039, 
+0x0039, 0x0034, 0x0020, 0x4321, 0x1234, 0x0008, 0x0000, 0x03ed, 0x0000, 
+0x03ed, 0x0000, 0x5601, 0x648a, 0x0000, 0x0006, 0x0000, 0x0001, 0x0400, 
+0x0000, 0x0200, 0x0001, 0xc200, 0x0001, 0x0000, 0x0008, 0x0000, 0x0000, 
+0x0000, 0x0000, 0x003f, 0x0000, 0x0010, 0x0000, 
+    0
+END
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -185,7 +202,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ABOUTBOX            "关于 JwpUdp(&A)..."
+    IDS_ABOUTBOX            "关于 JwpComm(&A)..."
     IDP_SOCKETS_INIT_FAILED "Windows 通信端口初始化失败。"
 END
 
@@ -209,7 +226,7 @@ END
 LANGUAGE 4, 2
 #pragma code_page(936)
 #endif //_WIN32
-#include "res\JwpUdp.rc2"  // non-Microsoft Visual C++ edited resources
+#include "res\JwpComm.rc2"  // non-Microsoft Visual C++ edited resources
 #include "l.chs\afxres.rc"          // Standard components
 #endif
 

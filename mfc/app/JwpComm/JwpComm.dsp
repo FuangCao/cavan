@@ -1,24 +1,24 @@
-# Microsoft Developer Studio Project File - Name="JwpUdp" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="JwpComm" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
 
-CFG=JwpUdp - Win32 Debug
+CFG=JwpComm - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "JwpUdp.mak".
+!MESSAGE NMAKE /f "JwpComm.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "JwpUdp.mak" CFG="JwpUdp - Win32 Debug"
+!MESSAGE NMAKE /f "JwpComm.mak" CFG="JwpComm - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "JwpUdp - Win32 Release" (based on "Win32 (x86) Application")
-!MESSAGE "JwpUdp - Win32 Debug" (based on "Win32 (x86) Application")
+!MESSAGE "JwpComm - Win32 Release" (based on "Win32 (x86) Application")
+!MESSAGE "JwpComm - Win32 Debug" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -29,7 +29,7 @@ CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "JwpUdp - Win32 Release"
+!IF  "$(CFG)" == "JwpComm - Win32 Release"
 
 # PROP BASE Use_MFC 6
 # PROP BASE Use_Debug_Libraries 0
@@ -54,7 +54,7 @@ LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
 # ADD LINK32 /nologo /subsystem:windows /machine:I386
 
-!ELSEIF  "$(CFG)" == "JwpUdp - Win32 Debug"
+!ELSEIF  "$(CFG)" == "JwpComm - Win32 Debug"
 
 # PROP BASE Use_MFC 6
 # PROP BASE Use_Debug_Libraries 1
@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x804 /d "_DEBUG" /d "_AFXDLL"
@@ -83,8 +83,8 @@ LINK32=link.exe
 
 # Begin Target
 
-# Name "JwpUdp - Win32 Release"
-# Name "JwpUdp - Win32 Debug"
+# Name "JwpComm - Win32 Release"
+# Name "JwpComm - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -94,23 +94,23 @@ SOURCE=..\..\LIB\JwpCore\jwp.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\JwpComm.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\JwpComm.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\JwpCommDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\LIB\JwpCore\JwpCore.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\JwpUdp.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\JwpUdp.rc
-# End Source File
-# Begin Source File
-
-SOURCE=.\JwpUdpDesc.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\JwpUdpDlg.cpp
+SOURCE=.\mscomm.cpp
 # End Source File
 # Begin Source File
 
@@ -123,15 +123,19 @@ SOURCE=.\StdAfx.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\JwpCore.h
+SOURCE=.\JwpComm.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\JwpUdp.h
+SOURCE=.\JwpCommDesc.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\JwpUdpDlg.h
+SOURCE=.\JwpCommDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\mscomm.h
 # End Source File
 # Begin Source File
 
@@ -147,11 +151,11 @@ SOURCE=.\StdAfx.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=.\res\JwpUdp.ico
+SOURCE=.\res\JwpComm.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\JwpUdp.rc2
+SOURCE=.\res\JwpComm.rc2
 # End Source File
 # End Group
 # Begin Source File
@@ -160,3 +164,12 @@ SOURCE=.\ReadMe.txt
 # End Source File
 # End Target
 # End Project
+# Section JwpComm : {E6E17E90-DF38-11CF-8E74-00A0C90F26F8}
+# 	2:5:Class:CMSComm
+# 	2:10:HeaderFile:mscomm.h
+# 	2:8:ImplFile:mscomm.cpp
+# End Section
+# Section JwpComm : {648A5600-2C6E-101B-82B6-000000000014}
+# 	2:21:DefaultSinkHeaderFile:mscomm.h
+# 	2:16:DefaultSinkClass:CMSComm
+# End Section
