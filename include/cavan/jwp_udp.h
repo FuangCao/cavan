@@ -34,8 +34,9 @@ struct jwp_udp_service
 struct jwp_udp_client
 {
 	struct network_client client;
+	struct jwp_udp_service *service;
 	struct jwp_desc jwp;
 };
 
-int jwp_udp_client_init(struct jwp_udp_client *client);
+int jwp_udp_client_init(struct jwp_udp_client *client, struct jwp_udp_service *service);
 int jwp_udp_service_run(struct cavan_dynamic_service *service);

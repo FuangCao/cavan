@@ -20,152 +20,10 @@
  */
 
 #ifdef _WIN32
-typedef BYTE jwp_u8;
-typedef WORD jwp_u16;
-typedef DWORD jwp_u32;
-typedef DWORD jwp_size_t;
-typedef bool jwp_bool;
-typedef HANDLE jwp_lock_t;
-
-typedef struct
-{
-	HANDLE handle;
-	jwp_bool waitting;
-} jwp_signal_t;
-
-#define jwp_msleep(msec) \
-	Sleep(msec)
-
-#define jwp_memcpy(dest, src, size) \
-	memcpy(dest, src, size)
-
-#define jwp_lock_init(lock) \
-	do { \
-		lock = CreateMutex(NULL, false, NULL); \
-	} while (0)
-
-#define jwp_lock_acquire(lock) \
-	WaitForSingleObject(lock, INFINITE)
-
-#define jwp_lock_release(lock) \
-	ReleaseMutex(lock)
-
-#define jwp_signal_init(signal) \
-	jwp_lock_init((signal).handle)
-
-#define jwp_signal_timedwait_locked(signal, lock, msec) \
-	do { \
-		(signal).waitting = true; \
-		jwp_lock_release(lock); \
-		WaitForSingleObject((signal).handle, msec); \
-		jwp_lock_acquire(lock); \
-		(signal).waitting = false; \
-	} while (0)
-
-#define jwp_signal_wait_locked(signal, lock) \
-	jwp_signal_timedwait_locked(signal, lock, INFINITE)
-
-#define jwp_signal_notify_locked(signal, lock) \
-	do { \
-		if ((signal).waitting) { \
-			jwp_lock_release((signal).handle); \
-		} \
-	} while (0)
-
+#include "jwp-win32.h"
 #else
-#include <cavan.h>
-
-typedef u8 jwp_u8;
-typedef u16 jwp_u16;
-typedef u32 jwp_u32;
-typedef u32 jwp_size_t;
-typedef bool jwp_bool;
-typedef pthread_cond_t jwp_signal_t;
-typedef pthread_mutex_t jwp_lock_t;
-
-#define jwp_msleep(msec) \
-	msleep(msec)
-
-#define jwp_memcpy(dest, src, size) \
-	memcpy(dest, src, size)
-
-#define jwp_lock_init(lock) \
-	pthread_mutex_init(&lock, NULL)
-
-#define jwp_lock_acquire(lock) \
-	pthread_mutex_lock(&lock)
-
-#define jwp_lock_release(lock) \
-	pthread_mutex_unlock(&lock)
-
-#define jwp_signal_init(signal) \
-	pthread_cond_init(&signal, NULL)
-
-#define jwp_signal_wait_locked(signal, lock) \
-	pthread_cond_wait(&signal, &lock)
-
-#define jwp_signal_timedwait_locked(signal, lock, msec) \
-	do { \
-		long __msec; \
-		struct timespec __ts; \
-		clock_gettime(CLOCK_REALTIME, &__ts); \
-		__msec = __ts.tv_nsec / 1000000L + msec; \
-		__ts.tv_sec += __msec / 1000; \
-		__ts.tv_nsec = (__msec % 1000) * 1000000L; \
-		pthread_cond_timedwait(&signal, &lock, &__ts); \
-	} while (0)
-
-#define jwp_signal_notify_locked(signal, lock) \
-	pthread_cond_signal(&signal)
-
-#define jwp_println(fmt, args ...) \
-	println(fmt, ##args)
-
-#define jwp_pr_red_info(fmt, args ...) \
-	pr_red_info(fmt, ##args)
-
-#define jwp_pr_pos_info() \
-	pr_pos_info()
+#include <cavan/jwp-linux.h>
 #endif
-
-// ============================================================
-
-#define JWP_DEBUG					0
-#define JWP_DEBUG_MEMBER			0
-#define JWP_SHOW_ERROR				0
-
-#define JWP_POLL_ENABLE				1
-#define JWP_SLEEP_ENABLE			1
-#define JWP_CHECKSUM_ENABLE			1
-
-#define JWP_QUEUE_ENABLE			1
-#define JWP_TX_QUEUE_ENABLE			1
-#define JWP_RX_QUEUE_ENABLE			1
-#define JWP_TX_DATA_QUEUE_ENABLE	1
-#define JWP_RX_DATA_QUEUE_ENABLE	1
-
-#define JWP_TIMER_ENABLE			0
-#define JWP_TX_TIMER_ENABLE			0
-#define JWP_TX_DATA_TIMER_ENABLE	0
-#define JWP_TX_PKG_TIMER_ENABLE		0
-#define JWP_RX_PKG_TIMER_ENABLE		0
-
-#define JWP_TX_LOOP_ENABLE			1
-#define JWP_RX_LOOP_ENABLE			1
-#define JWP_RX_PKG_LOOP_ENABLE		1
-#define JWP_TX_DATA_LOOP_ENABLE		1
-
-#define JWP_TX_NOTIFY_ENABLE		1
-#define JWP_RX_CMD_NOTIFY_ENABLE	1
-#define JWP_RX_DATA_NOTIFY_ENABLE	1
-#define JWP_QUEUE_NOTIFY_ENABLE		1
-
-#define JWP_MTU						0xFF
-#define JWP_POLL_TIME				10
-#define JWP_TX_LATENCY				200
-#define JWP_TX_RETRY				10
-#define JWP_TX_TIMEOUT				2000
-#define JWP_QUEUE_SIZE				(JWP_MTU * 3)
 
 // ============================================================
 
@@ -189,6 +47,9 @@ typedef pthread_mutex_t jwp_lock_t;
 		jwp_signal_notify_locked(signal, lock); \
 		jwp_lock_release(lock); \
 	} while (0)
+
+#define jwp_pr_pos_info() \
+	jwp_printf("%s => %s[%d]\n", __FUNCTION__, __LINE__, __FILE__)
 
 // ============================================================
 
@@ -280,7 +141,11 @@ struct jwp_package
 {
 	union
 	{
-		struct jwp_header header;
+		struct
+		{
+			struct jwp_header header;
+			jwp_u8 payload[JWP_MTU - JWP_HEADER_SIZE];
+		};
 		jwp_u8 body[JWP_MTU];
 	};
 };
@@ -289,7 +154,11 @@ struct jwp_rx_package
 {
 	union
 	{
-		struct jwp_header header;
+		struct
+		{
+			struct jwp_header header;
+			jwp_u8 payload[JWP_MTU - JWP_HEADER_SIZE];
+		};
 		jwp_u8 body[JWP_MTU];
 	};
 
@@ -357,6 +226,11 @@ struct jwp_desc
 
 	jwp_bool send_pendding;
 
+#if JWP_RX_DATA_QUEUE_ENABLE
+	jwp_u8 *data_head;
+	jwp_u8 data_remain;
+#endif
+
 	struct jwp_rx_package rx_pkg;
 
 #if JWP_TX_TIMER_ENABLE || JWP_TX_LOOP_ENABLE
@@ -384,6 +258,10 @@ struct jwp_desc
 	void (*command_received)(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 	void (*package_received)(struct jwp_desc *jwp, const struct jwp_header *hdr);
 
+#if JWP_PRINTF_ENABLE
+	void (*write_log)(struct jwp_desc *jwp, const char *log, jwp_size_t size);
+#endif
+
 #if JWP_TIMER_ENABLE
 	jwp_bool (*create_timer)(struct jwp_timer *timer);
 	void (*delete_timer)(struct jwp_timer *timer);
@@ -392,6 +270,7 @@ struct jwp_desc
 
 // ============================================================
 
+void jwp_printf(const char *fmt, ...);
 void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);
 jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size);

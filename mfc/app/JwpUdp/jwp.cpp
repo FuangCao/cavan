@@ -97,24 +97,54 @@
 #endif
 
 #if JWP_RX_PKG_LOOP_ENABLE && JWP_RX_QUEUE_ENABLE == 0
-#error "must enable rx queue when use rx loop"
+#error "must enable rx queue when use rx package loop"
+#endif
+
+#if JWP_PRINTF_ENABLE == 0
+#if JWP_DEBUG
+#error "must enable printf when debug"
+#endif
+
+#if JWP_SHOW_ERROR
+#error "must enable printf when need show error"
+#endif
 #endif
 
 // ============================================================
 
-static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr);
+static void jwp_process_rx_package(struct jwp_desc *jwp);
+
+#if JWP_PRINTF_ENABLE
+static struct jwp_desc *jwp_global;
+
+void jwp_printf(const char *fmt, ...)
+{
+	va_list ap;
+	jwp_size_t size;
+	char buff[2048];
+
+	if (jwp_global == NULL)
+	{
+		return;
+	}
+
+	va_start(ap, fmt);
+	size = vsnprintf(buff, sizeof(buff), fmt, ap);
+	va_end(ap);
+
+	jwp_global->write_log(jwp_global, buff, size);
+}
 
 void jwp_header_dump(const struct jwp_header *hdr)
 {
-#ifdef jwp_println
-	jwp_println("index = %d, type = %d, length = %d, checksum = 0x%02x", hdr->index, hdr->type, hdr->length, hdr->checksum);
-#endif
+	jwp_printf("index = %d, type = %d, length = %d, checksum = 0x%02x\n", hdr->index, hdr->type, hdr->length, hdr->checksum);
 }
 
 void jwp_package_dump(const struct jwp_package *pkg)
 {
 	jwp_header_dump(&pkg->header);
 }
+#endif
 
 static void jwp_rx_package_init(struct jwp_rx_package *pkg)
 {
@@ -551,10 +581,56 @@ static jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_he
 #endif
 #endif
 
+#if JWP_RX_DATA_QUEUE_ENABLE
+static jwp_bool jwp_data_inqueue(struct jwp_desc *jwp)
+{
+	jwp_lock_acquire(jwp->lock);
+
+	if (jwp->data_remain > 0)
+	{
+		jwp_u8 wrlen;
+		struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX_DATA);
+
+		jwp_lock_release(jwp->lock);
+
+		wrlen = jwp_queue_inqueue(queue, jwp->data_head, jwp->data_remain);
+		if (wrlen > 0)
+		{
+			jwp->data_received(jwp, jwp->data_head, wrlen);
+#if JWP_RX_DATA_NOTIFY_ENABLE
+			jwp_signal_notify(jwp->data_rx_signal, jwp->lock);
+#endif
+
+			jwp_lock_acquire(jwp->lock);
+
+			if (wrlen < jwp->data_remain)
+			{
+				jwp->data_remain -= wrlen;
+				jwp->data_head += wrlen;
+
+				jwp_lock_release(jwp->lock);
+				return false;
+			}
+
+			jwp->data_remain = 0;
+			jwp_lock_release(jwp->lock);
+		}
+	}
+	else
+	{
+		jwp_lock_release(jwp->lock);
+	}
+
+	return true;
+}
+#endif
+
 #if JWP_RX_QUEUE_ENABLE
-static jwp_bool jwp_queue_fill_package(struct jwp_queue *queue, struct jwp_rx_package *pkg)
+static jwp_bool jwp_queue_fill_package(struct jwp_desc *jwp)
 {
 	jwp_size_t rdlen;
+	struct jwp_rx_package *pkg = &jwp->rx_pkg;
+	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX);
 
 	if (pkg->header_remain)
 	{
@@ -593,24 +669,20 @@ static jwp_bool jwp_queue_fill_package(struct jwp_queue *queue, struct jwp_rx_pa
 		{
 			pkg->header_remain = 0;
 			pkg->data_remain = pkg->header.length;
-			pkg->head = JWP_GET_PAYLOAD(pkg);
+			pkg->head = pkg->payload;
 		}
 	}
 
 	rdlen = jwp_queue_dequeue(queue, pkg->head, pkg->data_remain);
-	if (rdlen < pkg->data_remain)
+	if (rdlen == pkg->data_remain)
 	{
-		pkg->head += rdlen;
-		pkg->data_remain -= (jwp_u8) rdlen;
-		return false;
-	}
-	else
-	{
-		pkg->head = pkg->body;
-		pkg->header_remain = sizeof(pkg->header);
-
 		return true;
 	}
+
+	pkg->head += rdlen;
+	pkg->data_remain -= (jwp_u8) rdlen;
+
+	return false;
 }
 #else
 static jwp_u8 *jwp_package_find_magic(const jwp_u8 *buff, jwp_size_t size)
@@ -696,7 +768,7 @@ static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_rx_pac
 
 		pkg->header_remain = 0;
 		pkg->data_remain = pkg->header.length;
-		pkg->head = JWP_GET_PAYLOAD(pkg);
+		pkg->head = pkg->payload;
 	}
 
 	if (size < pkg->data_remain)
@@ -709,10 +781,15 @@ static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_rx_pac
 	}
 
 	jwp_memcpy(pkg->head, buff, pkg->data_remain);
-	jwp_process_rx_package(jwp, &pkg->header);
 
-	pkg->head = pkg->body;
-	pkg->header_remain = sizeof(pkg->header);
+	jwp_process_rx_package(jwp);
+
+#if JWP_RX_DATA_QUEUE_ENABLE
+	while (!jwp_data_inqueue(jwp))
+	{
+		jwp_msleep(JWP_POLL_TIME);
+	}
+#endif
 
 	return size_bak - (size - pkg->data_remain);
 }
@@ -737,7 +814,7 @@ static void jwp_hw_create_timer(struct jwp_timer *timer)
 	while (!jwp->create_timer(timer))
 	{
 #if JWP_SHOW_ERROR
-		jwp_pr_red_info("create timer fault!");
+		jwp_printf("create timer fault!\n");
 #endif
 	}
 }
@@ -810,7 +887,7 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 #if JWP_SHOW_ERROR
 	if (timer->msec >= JWP_TX_TIMEOUT)
 	{
-		jwp_pr_red_info("send package timeout, tx_index = %d", jwp->tx_index);
+		jwp_printf("send package timeout, tx_index = %d\n", jwp->tx_index);
 	}
 #endif
 
@@ -888,15 +965,20 @@ static jwp_bool jwp_tx_package_timer_handler(struct jwp_timer *timer)
 static jwp_bool jwp_rx_package_timer_handler(struct jwp_timer *timer)
 {
 	struct jwp_desc *jwp = timer->jwp;
-	struct jwp_rx_package *pkg = &jwp->rx_pkg;
-	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX);
 
-	if (!jwp_queue_fill_package(queue, pkg))
+#if JWP_RX_DATA_QUEUE_ENABLE
+	if (!jwp_data_inqueue(jwp))
+	{
+		return true;
+	}
+#endif
+
+	if (!jwp_queue_fill_package(jwp))
 	{
 		return false;
 	}
 
-	jwp_process_rx_package(jwp, &pkg->header);
+	jwp_process_rx_package(jwp);
 
 	return true;
 }
@@ -910,6 +992,10 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 	int i;
 #endif
 
+#if JWP_PRINTF_ENABLE
+	jwp_global = jwp;
+#endif
+
 #if JWP_DEBUG_MEMBER
 	jwp->state = JWP_STATE_INIT;
 #endif
@@ -917,26 +1003,26 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 #if JWP_DEBUG
 	if (jwp->hw_read == NULL || jwp->hw_write == NULL)
 	{
-		jwp_println("jwp->hw_read == NULL || jwp->hw_write == NULL");
+		jwp_printf("jwp->hw_read == NULL || jwp->hw_write == NULL\n");
 		return false;
 	}
 
 	if (jwp->data_received == NULL || jwp->package_received == NULL)
 	{
-		jwp_println("jwp->data_received == NULL || jwp->package_received == NULL");
+		jwp_printf("jwp->data_received == NULL || jwp->package_received == NULL\n");
 		return false;
 	}
 
 	if (jwp->send_complete == NULL)
 	{
-		jwp_println("jwp->send_complete == NULL");
+		jwp_printf("jwp->send_complete == NULL\n");
 		return false;
 	}
 
 #if JWP_TIMER_ENABLE
 	if (jwp->create_timer == NULL || jwp->delete_timer == NULL)
 	{
-		jwp_println("jwp->create_timer == NULL || jwp->delete_timer == NULL");
+		jwp_printf("jwp->create_timer == NULL || jwp->delete_timer == NULL\n");
 		return false;
 	}
 #endif
@@ -1027,6 +1113,10 @@ jwp->queues[JWP_QUEUE_RX_DATA].name = "RX_DATA";
 	jwp->state = JWP_STATE_READY;
 #endif
 
+#if JWP_RX_DATA_QUEUE_ENABLE
+	jwp->data_remain = 0;
+#endif
+
 	return true;
 }
 
@@ -1083,8 +1173,13 @@ static jwp_bool jwp_send_and_wait_ack(struct jwp_desc *jwp, struct jwp_header *h
 }
 #endif
 
-static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
+static void jwp_process_rx_package(struct jwp_desc *jwp)
 {
+	struct jwp_rx_package *pkg = &jwp->rx_pkg;
+	struct jwp_header *hdr = &pkg->header;
+
+	jwp_rx_package_init(pkg);
+
 #if JWP_DEBUG
 	jwp_header_dump(hdr);
 #endif
@@ -1097,7 +1192,7 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 		if (checksum != checksum_real)
 		{
 #if JWP_SHOW_ERROR
-			jwp_pr_red_info("checksum not match, 0x%02x != 0x%02x", checksum, checksum_real);
+			jwp_printf("checksum not match, 0x%02x != 0x%02x\n", checksum, checksum_real);
 #endif
 			return;
 		}
@@ -1114,34 +1209,35 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 		{
 			jwp->rx_index = hdr->index;
 
-			jwp_lock_release(jwp->lock);
-
 			if (hdr->type == JWP_PKG_DATA)
 			{
 #if JWP_RX_DATA_QUEUE_ENABLE
-				struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX_DATA);
-
-				jwp_queue_inqueue_all(queue, JWP_GET_PAYLOAD(hdr), hdr->length);
-#endif
-
+				jwp->data_head = JWP_GET_PAYLOAD(hdr);
+				jwp->data_remain = hdr->length;
+				jwp_lock_release(jwp->lock);
+#else
+				jwp_lock_release(jwp->lock);
+				jwp->data_received(jwp, JWP_GET_PAYLOAD(hdr), hdr->length);
 #if JWP_RX_DATA_NOTIFY_ENABLE
 				jwp_signal_notify(jwp->data_rx_signal, jwp->lock);
 #endif
-				jwp->data_received(jwp, JWP_GET_PAYLOAD(hdr), hdr->length);
+#endif
 			}
 			else
 			{
+				jwp_lock_release(jwp->lock);
+
+				jwp->command_received(jwp, JWP_GET_PAYLOAD(hdr), hdr->length);
 #if JWP_RX_CMD_NOTIFY_ENABLE
 				jwp_signal_notify(jwp->command_rx_signal, jwp->lock);
 #endif
-				jwp->command_received(jwp, JWP_GET_PAYLOAD(hdr), hdr->length);
 			}
 		}
 		else
 		{
 			jwp_lock_release(jwp->lock);
 #if JWP_SHOW_ERROR
-			jwp_pr_red_info("throw data package %d, need %d", hdr->index, jwp->rx_index + 1);
+			jwp_printf("throw data package %d, need %d\n", hdr->index, jwp->rx_index + 1);
 #endif
 		}
 		break;
@@ -1172,7 +1268,7 @@ static void jwp_process_rx_package(struct jwp_desc *jwp, struct jwp_header *hdr)
 		{
 			jwp_lock_release(jwp->lock);
 #if JWP_SHOW_ERROR
-			jwp_pr_red_info("throw ack package %d, need %d", hdr->index, jwp->tx_index + 1);
+			jwp_printf("throw ack package %d, need %d\n", hdr->index, jwp->tx_index + 1);
 #endif
 		}
 		break;
@@ -1348,7 +1444,7 @@ jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t 
 #if JWP_SHOW_ERROR
 	if (size > JWP_MAX_PAYLOAD)
 	{
-		jwp_pr_red_info("command too large!");
+		jwp_printf("command too large!\n");
 		return false;
 	}
 #endif
@@ -1472,7 +1568,7 @@ void jwp_tx_loop(struct jwp_desc *jwp)
 			}
 
 #if JWP_SHOW_ERROR
-			jwp_pr_red_info("send package timeout, tx_index = %d", jwp->tx_index);
+			jwp_printf("send package timeout, tx_index = %d\n", jwp->tx_index);
 #endif
 		}
 	}
@@ -1485,10 +1581,26 @@ void jwp_rx_loop(struct jwp_desc *jwp)
 	while (1)
 	{
 		jwp_size_t rdlen;
-		jwp_u8 buff[JWP_MTU];
+		jwp_u8 buff[JWP_MTU], *p;
 
 		rdlen = jwp->hw_read(jwp, buff, sizeof(buff));
-		jwp_write_rx_data(jwp, buff, rdlen);
+		p = buff;
+
+		while (1)
+		{
+			jwp_size_t wrlen;
+
+			wrlen = jwp_write_rx_data(jwp, p, rdlen);
+			if (wrlen == rdlen)
+			{
+				break;
+			}
+
+			p += wrlen;
+			rdlen -= wrlen;
+
+			jwp_msleep(JWP_POLL_TIME);
+		}
 	}
 }
 #endif
@@ -1496,19 +1608,26 @@ void jwp_rx_loop(struct jwp_desc *jwp)
 #if JWP_RX_PKG_LOOP_ENABLE
 void jwp_rx_package_loop(struct jwp_desc *jwp)
 {
-	struct jwp_rx_package *pkg = &jwp->rx_pkg;
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX);
+#if JWP_RX_DATA_QUEUE_ENABLE
+	struct jwp_queue *data_queue = jwp_get_queue(jwp, JWP_QUEUE_RX_DATA);
+#endif
 
 	while (1)
 	{
-		if (jwp_queue_fill_package(queue, pkg))
-		{
-			jwp_process_rx_package(jwp, &pkg->header);
-		}
-		else
+		while (!jwp_queue_fill_package(jwp))
 		{
 			jwp_queue_wait_data(queue);
 		}
+
+		jwp_process_rx_package(jwp);
+
+#if JWP_RX_DATA_QUEUE_ENABLE
+		while (!jwp_data_inqueue(jwp))
+		{
+			jwp_queue_wait_space(data_queue);
+		}
+#endif
 	}
 }
 #endif

@@ -80,7 +80,7 @@ static int jwp_udp_timer_handler(struct cavan_timer *timer, void *data)
 {
 	struct jwp_timer *jwp_timer = data;
 
-	println("%s run timer %s, msec = %d", jwp_timer->jwp->name, jwp_timer->name, jwp_timer->msec);
+	println("run timer %s, msec = %d", jwp_timer->name, jwp_timer->msec);
 
 	jwp_timer_run(jwp_timer);
 
@@ -90,9 +90,10 @@ static int jwp_udp_timer_handler(struct cavan_timer *timer, void *data)
 static jwp_bool jwp_udp_create_timer(struct jwp_timer *timer)
 {
 	struct cavan_timer *cavan_timer;
-	struct jwp_udp_service *service = jwp_get_private_data(timer->jwp);
+	struct jwp_udp_client *client = jwp_get_private_data(timer->jwp);
+	struct jwp_udp_service *service = client->service;
 
-	println("%s create timer %s, msec = %d", timer->jwp->name, timer->name, timer->msec);
+	println("create timer %s, msec = %d", timer->name, timer->msec);
 
 	if (timer->handle == NULL)
 	{
@@ -119,11 +120,12 @@ static jwp_bool jwp_udp_create_timer(struct jwp_timer *timer)
 
 static void jwp_udp_delete_timer(struct jwp_timer *timer)
 {
-	println("%s delete timer %s, msec = %d" , timer->jwp->name, timer->name, timer->msec);
+	println("delete timer %s, msec = %d" , timer->name, timer->msec);
 
 	if (timer->handle != NULL)
 	{
-		struct jwp_udp_service *service = jwp_get_private_data(timer->jwp);
+		struct jwp_udp_client *client = jwp_get_private_data(timer->jwp);
+		struct jwp_udp_service *service = client->service;
 
 		cavan_timer_remove(&service->timer_service, timer->handle);
 	}
@@ -168,11 +170,18 @@ static void *jwp_udp_rx_loop_thread(void *data)
 	return NULL;
 }
 
-int jwp_udp_client_init(struct jwp_udp_client *client)
+static void jwp_udp_write_log(struct jwp_desc *jwp, const char *log, jwp_size_t size)
+{
+	print_ntext(log, size);
+}
+
+int jwp_udp_client_init(struct jwp_udp_client *client, struct jwp_udp_service *service)
 {
 	int ret;
 	pthread_t td;
 	struct jwp_desc *jwp = &client->jwp;
+
+	client->service = service;
 
 	jwp->hw_read = jwp_udp_hw_read,
 	jwp->hw_write = jwp_udp_hw_write,
@@ -180,6 +189,9 @@ int jwp_udp_client_init(struct jwp_udp_client *client)
 	jwp->data_received = jwp_udp_data_received,
 	jwp->command_received = jwp_udp_command_received,
 	jwp->package_received = jwp_udp_package_received,
+#if JWP_PRINTF_ENABLE
+	jwp->write_log = jwp_udp_write_log,
+#endif
 #if JWP_TIMER_ENABLE
 	jwp->create_timer = jwp_udp_create_timer,
 	jwp->delete_timer = jwp_udp_delete_timer,
@@ -212,17 +224,17 @@ int jwp_udp_client_init(struct jwp_udp_client *client)
 static int jwp_udp_service_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	int ret;
-	struct jwp_udp_client *jwp_udp_conn = conn;
+	struct jwp_udp_client *client = conn;
 	struct jwp_udp_service *jwp_udp = cavan_dynamic_service_get_data(service);
 
-	ret = jwp_udp->service.accept(&jwp_udp->service, &jwp_udp_conn->client);
+	ret = jwp_udp->service.accept(&jwp_udp->service, &client->client);
 	if (ret < 0)
 	{
 		pr_red_info("jwp_udp->service.accept");
 		return ret;
 	}
 
-	ret = jwp_udp_client_init(jwp_udp_conn);
+	ret = jwp_udp_client_init(client, jwp_udp);
 	if (ret < 0)
 	{
 		pr_red_info("jwp_udp_client_init");
@@ -232,7 +244,7 @@ static int jwp_udp_service_open_connect(struct cavan_dynamic_service *service, v
 	return 0;
 
 out_network_client_close:
-	network_client_close(&jwp_udp_conn->client);
+	network_client_close(&client->client);
 	return ret;
 }
 
