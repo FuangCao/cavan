@@ -53,14 +53,16 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
-	virtual void OnLogReceived(const char *log);
 	virtual void OnSendComplete(void);
 	virtual void OnDataReceived(const void *buff, jwp_size_t size);
 	virtual void OnCommandReceived(const void *command, jwp_size_t size);
 	virtual void OnPackageReceived(const struct jwp_header *hdr);
+	virtual void OnLogReceived(const char *log, jwp_size_t size);
+
+private:
+	CFile mFileLog;
 };
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
-
 #endif // !defined(AFX_JWPUDPDLG_H__A1C21D89_AF3D_4E77_805F_340BC3D96836__INCLUDED_)

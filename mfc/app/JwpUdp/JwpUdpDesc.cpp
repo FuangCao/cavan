@@ -61,6 +61,13 @@ void JwpUdpDesc::OnPackageReceivedHandler(struct jwp_desc *jwp, const struct jwp
 	jwp_udp->OnPackageReceived(hdr);
 }
 
+void JwpUdpDesc::OnLogReceivedHandler(struct jwp_desc *jwp, const char *log, jwp_size_t size)
+{
+	JwpUdpDesc *jwp_udp = (JwpUdpDesc *) jwp;
+
+	jwp_udp->OnLogReceived(log, size);
+}
+
 void JwpUdpDesc::TxThread(void *data)
 {
 	JwpUdpDesc *jwp_udp = (JwpUdpDesc *) data;
@@ -105,22 +112,26 @@ JwpUdpDesc::JwpUdpDesc(void)
 	data_received = OnDataReceivedHandler;
 	command_received = OnCommandReceivedHandler;
 	package_received = OnPackageReceivedHandler;
+#if JWP_PRINTF_ENABLE
+	log_received = OnLogReceivedHandler;
+#endif
 
 	mSocket = INVALID_SOCKET;
 	mJwpInitiated = false;
 	mConnected = false;
 }
 
-void JwpUdpDesc::printf(const char *format, ...)
+void JwpUdpDesc::printf(const char *fmt, ...)
 {
+	int size;
 	va_list ap;
 	char buff[2048];
 
-	va_start(ap, format);
-	_vsnprintf(buff, sizeof(buff), format, ap);
+	va_start(ap, fmt);
+	size = _vsnprintf(buff, sizeof(buff), fmt, ap);
 	va_end(ap);
 
-	OnLogReceived(buff);
+	OnLogReceived(buff, size);
 }
 
 jwp_bool JwpUdpDesc::SendJwpUdpCommand(jwp_udp_command_t type)
@@ -172,20 +183,20 @@ jwp_bool JwpUdpDesc::Connect(void)
 	length = HwWrite(&magic, sizeof(magic));
 	if (length != sizeof(magic))
 	{
-		printf("HwWrite failed %d", length);
+		printf("HwWrite failed %d\n", length);
 		return false;
 	}
 
 	length = HwRead(&magic, sizeof(magic));
 	if (length != sizeof(magic))
 	{
-		printf("HwRead failed %d", length);
+		printf("HwRead failed %d\n", length);
 		return false;
 	}
 
 	if (magic != CAVAN_NETWORK_MAGIC)
 	{
-		printf("Invalid magic 0x%08x", magic);
+		printf("Invalid magic 0x%08x\n", magic);
 		return false;
 	}
 

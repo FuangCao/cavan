@@ -380,7 +380,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 		.command_received = test_jwp_command_received,
 		.package_received = test_jwp_package_received,
 #if JWP_PRINTF_ENABLE
-		.write_log = test_jwp_write_log,
+		.log_received = test_jwp_write_log,
 #endif
 #if JWP_TIMER_ENABLE
 		.create_timer = test_jwp_create_timer,

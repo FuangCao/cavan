@@ -190,7 +190,7 @@ int jwp_udp_client_init(struct jwp_udp_client *client, struct jwp_udp_service *s
 	jwp->command_received = jwp_udp_command_received,
 	jwp->package_received = jwp_udp_package_received,
 #if JWP_PRINTF_ENABLE
-	jwp->write_log = jwp_udp_write_log,
+	jwp->log_received = jwp_udp_write_log,
 #endif
 #if JWP_TIMER_ENABLE
 	jwp->create_timer = jwp_udp_create_timer,

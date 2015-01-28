@@ -259,7 +259,7 @@ struct jwp_desc
 	void (*package_received)(struct jwp_desc *jwp, const struct jwp_header *hdr);
 
 #if JWP_PRINTF_ENABLE
-	void (*write_log)(struct jwp_desc *jwp, const char *log, jwp_size_t size);
+	void (*log_received)(struct jwp_desc *jwp, const char *log, jwp_size_t size);
 #endif
 
 #if JWP_TIMER_ENABLE

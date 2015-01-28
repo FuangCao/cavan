@@ -129,10 +129,16 @@ void jwp_printf(const char *fmt, ...)
 	}
 
 	va_start(ap, fmt);
+
+#ifdef _WIN32
+	size = _vsnprintf(buff, sizeof(buff), fmt, ap);
+#else
 	size = vsnprintf(buff, sizeof(buff), fmt, ap);
+#endif
+
 	va_end(ap);
 
-	jwp_global->write_log(jwp_global, buff, size);
+	jwp_global->log_received(jwp_global, buff, size);
 }
 
 void jwp_header_dump(const struct jwp_header *hdr)
@@ -588,7 +594,7 @@ static jwp_bool jwp_data_inqueue(struct jwp_desc *jwp)
 
 	if (jwp->data_remain > 0)
 	{
-		jwp_u8 wrlen;
+		jwp_size_t wrlen;
 		struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX_DATA);
 
 		jwp_lock_release(jwp->lock);
@@ -605,7 +611,7 @@ static jwp_bool jwp_data_inqueue(struct jwp_desc *jwp)
 
 			if (wrlen < jwp->data_remain)
 			{
-				jwp->data_remain -= wrlen;
+				jwp->data_remain -= (jwp_u8) wrlen;
 				jwp->data_head += wrlen;
 
 				jwp_lock_release(jwp->lock);
@@ -1083,19 +1089,23 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 
 #if JWP_DEBUG_MEMBER
 #if JWP_TX_QUEUE_ENABLE
-jwp->queues[JWP_QUEUE_TX].name = "TX";
+	jwp->queues[JWP_QUEUE_TX].name = "TX";
 #endif
 
 #if JWP_RX_QUEUE_ENABLE
-jwp->queues[JWP_QUEUE_RX].name = "RX";
+	jwp->queues[JWP_QUEUE_RX].name = "RX";
 #endif
 
 #if JWP_TX_DATA_QUEUE_ENABLE
-jwp->queues[JWP_QUEUE_TX_DATA].name = "TX_DATA";
+	jwp->queues[JWP_QUEUE_TX_DATA].name = "TX_DATA";
 #endif
 
 #if JWP_RX_DATA_QUEUE_ENABLE
-jwp->queues[JWP_QUEUE_RX_DATA].name = "RX_DATA";
+	jwp->queues[JWP_QUEUE_RX_DATA].name = "RX_DATA";
+#endif
+
+#if JWP_TX_TIMER_ENABLE
+	jwp->timers[JWP_TIMER_TX].name = "TX";
 #endif
 
 #if JWP_TX_DATA_TIMER_ENABLE
@@ -1163,7 +1173,7 @@ static jwp_bool jwp_send_and_wait_ack(struct jwp_desc *jwp, struct jwp_header *h
 
 #if JWP_TX_QUEUE_ENABLE == 0
 #if JWP_SHOW_ERROR
-	jwp_pr_red_info("send package timeout, tx_index = %d", jwp->tx_index);
+	jwp_printf("send package timeout, tx_index = %d\n", jwp->tx_index);
 #endif
 
 	jwp_set_send_pendding(jwp, false);
@@ -1379,7 +1389,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 	}
 #endif
 #else
-	size = jwp_queue_inqueue(queue, buff, size);
+	size = jwp_queue_inqueue(queue, (jwp_u8 *) buff, size);
 #endif
 
 #if JWP_TX_DATA_TIMER_ENABLE

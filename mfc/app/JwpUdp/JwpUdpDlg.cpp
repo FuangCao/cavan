@@ -130,6 +130,7 @@ BOOL CJwpUdpDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 	m_IpAddressCtrl.SetAddress(192, 168, 1, 19);
 	m_PortValue = 1234;
+	mFileLog.Open("log.txt", CFile::modeWrite | CFile::modeCreate | CFile::shareDenyWrite, NULL);
 	UpdateData(false);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -184,48 +185,34 @@ HCURSOR CJwpUdpDlg::OnQueryDragIcon()
 	return (HCURSOR) m_hIcon;
 }
 
-void CJwpUdpDlg::OnLogReceived(const char *log)
+void CJwpUdpDlg::OnLogReceived(const char *log, jwp_size_t size)
 {
 	if (log == NULL)
 	{
 		return;
 	}
 
-	MessageBox(log);
+	mFileLog.Write(log, size);
 }
 
 void CJwpUdpDlg::OnSendComplete(void)
 {
+	printf("OnSendComplete\n");
 }
 
 void CJwpUdpDlg::OnDataReceived(const void *buff, jwp_size_t size)
 {
-	CString log;
-
-	log.Format("Data: size = %d\r\n", size);
-
-	m_LogValue += log;
-	UpdateData(false);
+	printf("OnDataReceived: size = %d\n");
 }
 
 void CJwpUdpDlg::OnCommandReceived(const void *command, jwp_size_t size)
 {
-	char buff[1024];
-
-	memcpy(buff, command, size);
-	buff[size] = 0;
-
-	MessageBox(buff);
+	printf("OnCommandReceived: size = %d\n");
 }
 
 void CJwpUdpDlg::OnPackageReceived(const struct jwp_header *hdr)
 {
-	CString log;
-
-	log.Format("Package: index = %d, type = %d, length = %d\r\n", hdr->index, hdr->type, hdr->length);
-
-	m_LogValue += log;
-	UpdateData(false);
+	printf("OnPackageReceived: index = %d, type = %d, length = %d\n", hdr->index, hdr->type, hdr->length);
 }
 
 void CJwpUdpDlg::OnButtonStart() 
