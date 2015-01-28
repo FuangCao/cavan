@@ -189,14 +189,24 @@ void CJwpUdpDlg::OnSendComplete(void)
 	println("OnSendComplete");
 }
 
-void CJwpUdpDlg::OnDataReceived(const void *buff, jwp_size_t size)
+void CJwpUdpDlg::OnDataReceived(const void *data, jwp_size_t size)
 {
-	println("OnDataReceived: size = %d");
+	char buff[1024];
+
+	memcpy(buff, buff, size);
+	buff[size] = 0;
+
+	println("OnDataReceived: data = %s, size = %d", buff, size);
 }
 
 void CJwpUdpDlg::OnCommandReceived(const void *command, jwp_size_t size)
 {
-	println("OnCommandReceived: size = %d");
+	char buff[1024];
+
+	memcpy(buff, command, size);
+	buff[size] = 0;
+
+	println("OnCommandReceived: command = %s, size = %d", buff, size);
 }
 
 void CJwpUdpDlg::OnPackageReceived(const struct jwp_header *hdr)
