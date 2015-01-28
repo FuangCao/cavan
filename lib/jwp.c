@@ -17,9 +17,9 @@
  *
  */
 
-#include "stdafx.h"
+// #include "stdafx.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(CSR101x)
 #include "jwp.h"
 #else
 #include <cavan.h>
@@ -158,7 +158,7 @@ static void jwp_rx_package_init(struct jwp_rx_package *pkg)
 	pkg->header_remain = sizeof(pkg->header);
 }
 
-static void jwp_hw_write(struct jwp_desc *jwp, const jwp_u8 *buff, size_t size)
+static void jwp_hw_write(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t size)
 {
 	while (size > 0)
 	{
@@ -691,7 +691,7 @@ static jwp_bool jwp_queue_fill_package(struct jwp_desc *jwp)
 	return false;
 }
 #else
-static jwp_u8 *jwp_package_find_magic(const jwp_u8 *buff, jwp_size_t size)
+static const jwp_u8 *jwp_package_find_magic(const jwp_u8 *buff, jwp_size_t size)
 {
 	const jwp_u8 *buff_end;
 
@@ -699,13 +699,13 @@ static jwp_u8 *jwp_package_find_magic(const jwp_u8 *buff, jwp_size_t size)
 	{
 		if (buff[0] == JWP_MAGIC_LOW && buff[1] == JWP_MAGIC_HIGH)
 		{
-			return (jwp_u8 *) buff;
+			return buff;
 		}
 	}
 
 	if (buff[0] == JWP_MAGIC_LOW)
 	{
-		return (jwp_u8 *) buff;
+		return buff;
 	}
 
 	return NULL;
@@ -1389,7 +1389,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 	}
 #endif
 #else
-	size = jwp_queue_inqueue(queue, (jwp_u8 *) buff, size);
+	size = jwp_queue_inqueue(queue, (const jwp_u8 *) buff, size);
 #endif
 
 #if JWP_TX_DATA_TIMER_ENABLE
@@ -1406,7 +1406,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 #else
 	struct jwp_package pkg;
 	struct jwp_header *hdr = &pkg.header;
-	const jwp_u8 *p = (jwp_u8 *) buff, *p_end = p + size;
+	const jwp_u8 *p = (const jwp_u8 *) buff, *p_end = p + size;
 
 	while (p < p_end)
 	{
