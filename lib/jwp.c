@@ -17,7 +17,7 @@
  *
  */
 
-#include "stdafx.h"
+// #include "stdafx.h"
 
 #if defined(_WIN32) || defined(CSR101x)
 #include "jwp.h"
@@ -112,7 +112,7 @@
 
 #if JWP_WRITE_LOG_ENABLE == 0
 #if JWP_PRINTF_ENABLE
-#error "must enable write when use printf"
+#error "must enable write log when use printf"
 #endif
 #endif
 
@@ -123,6 +123,15 @@ static void jwp_process_rx_package(struct jwp_desc *jwp);
 #if JWP_PRINTF_ENABLE
 static struct jwp_desc *jwp_global;
 
+#ifdef CSR101x
+void jwp_printf(const char *fmt, ...)
+{
+    const char *p;
+
+    for (p = fmt; *p; p++);
+    jwp_global->log_received(jwp_global, fmt, p - fmt);
+}
+#else
 void jwp_printf(const char *fmt, ...)
 {
 	va_list ap;
@@ -146,6 +155,7 @@ void jwp_printf(const char *fmt, ...)
 
 	jwp_global->log_received(jwp_global, buff, size);
 }
+#endif
 
 void jwp_header_dump(const struct jwp_header *hdr)
 {

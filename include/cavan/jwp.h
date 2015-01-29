@@ -21,6 +21,8 @@
 
 #ifdef _WIN32
 #include "jwp-win32.h"
+#elif defined(CSR101x)
+#include "jwp-csr101x.h"
 #else
 #include <cavan/jwp-linux.h>
 #endif
@@ -114,7 +116,9 @@ typedef enum
 	JWP_TIMER_COUNT
 } jwp_timer_t;
 
+#ifndef CSR101x
 #pragma pack(1)
+#endif
 struct jwp_header
 {
 	union
@@ -135,8 +139,12 @@ struct jwp_header
 #ifndef _WIN32
 	jwp_u8 payload[0];
 #endif
+#ifdef CSR101x
+} __attribute__((packed));
+#else
 };
 #pragma pack()
+#endif
 
 struct jwp_package
 {
@@ -191,7 +199,14 @@ struct jwp_queue
 
 struct jwp_timer
 {
-	void *handle;
+	union
+	{
+		void *handle;
+		jwp_u8 handle_u8;
+		jwp_u16 handle_u16;
+		jwp_u32 handle_u32;
+	};
+
 	jwp_u32 msec;
 	jwp_bool active;
 	struct jwp_desc *jwp;
