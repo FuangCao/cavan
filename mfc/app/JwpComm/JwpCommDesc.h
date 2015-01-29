@@ -1,10 +1,19 @@
 #pragma once
 
+#include "mscomm.h"
 #include "JwpCore.h"
 
-class JwpCommDesc : public JwpCore
+class JwpCommDesc : public CMSComm
 {
+private:
+	JwpCore *mJwp;
+
 public:
-	JwpCommDesc(void);
-	~JwpCommDesc(void);
+	void setJwp(JwpCore *jwp)
+	{
+		mJwp = jwp;
+	}
+
+	int HwWrite(const void *buff, jwp_size_t size);	
+	void WriteRxData(void);
 };

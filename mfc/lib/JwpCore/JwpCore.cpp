@@ -216,22 +216,14 @@ void JwpCore::WriteRxData(const void *buff, jwp_size_t size)
 	}
 }
 
-jwp_size_t JwpCore::SendData(const void *buff, jwp_size_t size)
+void JwpCore::OnLogReceived(jwp_device_t device, const char *log, jwp_size_t size)
 {
-	return jwp_send_data(this, buff, size);
-}
+	int length;
+	char buff[1024];
 
-jwp_size_t JwpCore::RecvData(void *buff, jwp_size_t size)
-{
-	return jwp_recv_data(this, buff, size);
-}
+	length = _snprintf(buff, sizeof(buff), "%04d. %s: ", mLogIndex, (device == JWP_DEVICE_LOCAL) ? "Local" : "Remote");
+	puts(buff, length);
+	puts(log, size);
 
-jwp_bool JwpCore::SendCommand(const void *command, jwp_size_t size)
-{
-	return jwp_send_command(this, command, size);
-}
-
-void JwpCore::SendLog(const char *log, jwp_size_t size)
-{
-	jwp_send_log(this, log, size);
+	mLogIndex++;
 }

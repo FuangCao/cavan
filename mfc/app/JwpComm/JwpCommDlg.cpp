@@ -76,6 +76,15 @@ void CJwpCommDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CJwpCommDlg)
+	DDX_Control(pDX, IDC_BUTTON_BT_RM_PAIR, m_ButtonBtRmPair);
+	DDX_Control(pDX, IDC_BUTTON_BT_IDLE, m_ButtonBtIdle);
+	DDX_Control(pDX, IDC_EDIT_COM, m_EditComCtrl);
+	DDX_Control(pDX, IDC_BUTTON_SEND_DATA, m_ButtonSendData);
+	DDX_Control(pDX, IDC_BUTTON_SEND_COMMAND, m_ButtonSendCommand);
+	DDX_Control(pDX, IDC_BUTTON_DISCONNECT, m_ButtonDisconnect);
+	DDX_Control(pDX, IDC_BUTTON_CONNECT, m_ButtonConnect);
+	DDX_Control(pDX, IDC_BUTTON_BT_DISCONNECT, m_ButtonBtDisconnect);
+	DDX_Control(pDX, IDC_BUTTON_BT_ADVERT, m_ButtunBtAdvert);
 	DDX_Control(pDX, IDC_MSCOMM1, m_Comm);
 	DDX_Text(pDX, IDC_EDIT_COM, m_ComNum);
 	DDX_Text(pDX, IDC_STATIC_STATE, m_StateValue);
@@ -93,6 +102,13 @@ BEGIN_MESSAGE_MAP(CJwpCommDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_DISCONNECT, OnButtonDisconnect)
 	ON_BN_CLICKED(IDC_BUTTON_SEND_COMMAND, OnButtonSendCommand)
 	ON_BN_CLICKED(IDC_BUTTON_SEND_DATA, OnButtonSendData)
+	ON_BN_CLICKED(IDC_BUTTON_BT_ADVERT, OnButtonBtAdvert)
+	ON_BN_CLICKED(IDC_BUTTON_BT_DISCONNECT, OnButtonBtDisconnect)
+	ON_BN_CLICKED(IDC_BUTTON_BT_IDLE, OnButtonBtIdle)
+	ON_MESSAGE(JWP_COMM_MSG_BT_STATE_CHANGED, OnBtStateChanged)
+	ON_MESSAGE(JWP_COMM_MSG_UPDATE_DATA, OnUpdateData)
+	ON_BN_CLICKED(IDC_BUTTON_BT_RM_PAIR, OnButtonBtRmPair)
+	ON_BN_CLICKED(IDC_BUTTON_CLEAR, OnButtonClear)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -127,8 +143,10 @@ BOOL CJwpCommDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+	m_Comm.setJwp(this);
 	m_ComNum = m_Comm.GetCommPort();
-	UpdateData(false);
+
+	UpdateUiState();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -182,85 +200,79 @@ HCURSOR CJwpCommDlg::OnQueryDragIcon()
 	return (HCURSOR) m_hIcon;
 }
 
-int CJwpCommDlg::HwWrite(const void *buff, jwp_size_t size)
+void CJwpCommDlg::UpdateUiState(void)
 {
-	CByteArray bytes;
-	const UCHAR *p, *p_end;
-
-	for (p = (UCHAR *) buff, p_end = p + size; p < p_end; p++)
+	if (m_Comm.GetPortOpen())
 	{
-		bytes.Add(*p);
+		m_ButtonDisconnect.EnableWindow(true);
+		m_ButtonConnect.EnableWindow(false);
+		m_EditComCtrl.EnableWindow(false);
+
+		m_ButtonBtDisconnect.EnableWindow(true);
+		m_ButtunBtAdvert.EnableWindow(true);
+		m_ButtonBtIdle.EnableWindow(true);
+		m_ButtonBtRmPair.EnableWindow(true);
+
+		m_ButtonSendCommand.EnableWindow(true);
+		m_ButtonSendData.EnableWindow(true);
+
+		m_StateValue = "串口已连接";
+	}
+	else
+	{
+		m_ButtonDisconnect.EnableWindow(false);
+		m_ButtonConnect.EnableWindow(true);
+		m_EditComCtrl.EnableWindow(true);
+
+		m_ButtonBtDisconnect.EnableWindow(false);
+		m_ButtunBtAdvert.EnableWindow(false);
+		m_ButtonBtIdle.EnableWindow(false);
+		m_ButtonBtRmPair.EnableWindow(false);
+
+		m_ButtonSendCommand.EnableWindow(false);
+		m_ButtonSendData.EnableWindow(false);
+		
+		m_StateValue = "串口已断开";
 	}
 
-	m_Comm.SetOutput(COleVariant(bytes));
-
-	return size;
-}
-
-CString CJwpCommDlg::JwpCsrStateToString(jwp_u8 state)
-{
-	switch (state)
-	{
-	case app_state_init:
-		return "蓝牙初始化";
-
-	case app_state_fast_advertising:
-		return "蓝牙快速广播";
-
-	case app_state_slow_advertising:
-		return "蓝牙低速广播";
-
-	case app_state_directed_advertising:
-		return "蓝牙定向广播";
-
-	case app_state_connected:
-		return "蓝牙已连接";
-
-	case app_state_disconnecting:
-		return "蓝牙已断开连接";
-
-	case app_state_idle:
-		return "蓝牙空闲";
-
-	default:
-		return "蓝牙状态未知";
-	}
+	UpdateData(false);
 }
 
 void CJwpCommDlg::OnDataReceived(const void *buff, jwp_size_t size)
 {
-	MessageBox("收到数据");
+	MessageBox("OnDataReceived");
 }
 
-void CJwpCommDlg::OnCommandReceived(const void *command, jwp_size_t size)
+void CJwpCommDlg::OnLogReceived(jwp_device_t device, const char *log, jwp_size_t size)
 {
-	if (size == sizeof(struct jwp_csr_command_package))
-	{
-		struct jwp_csr_command_package *pkg = (struct jwp_csr_command_package *) command;
-		switch (pkg->type)
-		{
-		case JWP_CSR_CMD_STATE:
-			m_StateValue = JwpCsrStateToString(pkg->code);
-			break;
+	CString strLog;
 
-		default:
-			println("Invalid csr command %d", pkg->type);
-		}
-	}
-	else
-	{
-		println("Invalid command size %d", size);
-	}
+	((char *) log)[size] = 0;
+	strLog.Format("%04d. %s: %s\r\n", mLogIndex, (device == JWP_DEVICE_LOCAL) ? "Local" : "Remote", log);
+	m_EditLog += strLog;
+
+	mLogIndex++;
 }
 
-jwp_bool CJwpCommDlg::SendCsrCommand(jwp_u8 type, jwp_u8 code)
+LRESULT CJwpCommDlg::OnBtStateChanged(WPARAM wParam, LPARAM lParam)
 {
-	struct jwp_csr_command_package pkg;
+	m_StateValue = GetCsrStateString();
+	
+	UpdateData(false);
 
-	pkg.type = type;
-	pkg.code = code;
+	return 0;
+}
 
-	return SendCommand(&pkg, sizeof(pkg));
+LRESULT CJwpCommDlg::OnUpdateData(WPARAM wParam, LPARAM lParam)
+{
+	UpdateData(false);
+
+	return 0;
+}
+
+void CJwpCommDlg::OnCsrStateChanged(app_state state)
+{
+	PostMessage(JWP_COMM_MSG_BT_STATE_CHANGED);
 }
 
 void CJwpCommDlg::OnButtonConnect()
@@ -278,26 +290,21 @@ void CJwpCommDlg::OnButtonConnect()
 	{
 		m_Comm.SetOutBufferCount(0);
 		StartJwp(false);
-
-		m_StateValue = "串口已连接";
-	}
-	else
-	{
-		m_StateValue = "串口打开失败";
 	}
 
-	UpdateData(false);
+	UpdateUiState();
 }
 
 void CJwpCommDlg::OnButtonDisconnect()
 {
-	if (m_Comm.GetPortOpen())
+	if (!m_Comm.GetPortOpen())
 	{
-		m_Comm.SetPortOpen(false);
-		m_StateValue = "串口已断开";
+		return;
 	}
 
-	UpdateData(false);
+	m_Comm.SetPortOpen(false);
+
+	UpdateUiState();
 }
 
 BEGIN_EVENTSINK_MAP(CJwpCommDlg, CDialog)
@@ -311,23 +318,7 @@ void CJwpCommDlg::OnOnCommMscomm()
 	short event = m_Comm.GetCommEvent();
 	if (event == 2)
 	{
-		long i;
-		COleSafeArray input = m_Comm.GetInput();
-		int rdLen = input.GetOneDimSize();
-		char buff[1024], *p, *last;
-
-		for (i = 0, p = buff, last = p + sizeof(buff) - 1; i < rdLen; i++, p++)
-		{
-			if (p > last)
-			{
-				WriteRxData(buff, sizeof(buff));
-				p = buff;
-			}
-
-			input.GetElement(&i, p);
-		}
-
-		WriteRxData(buff, p - buff);
+		WriteRxData();
 	}
 }
 
@@ -343,4 +334,31 @@ void CJwpCommDlg::OnButtonSendData()
 	UpdateData(true);
 
 	SendData(m_EditCommand, m_EditCommand.GetLength());
+}
+
+void CJwpCommDlg::OnButtonBtAdvert() 
+{
+	CsrStartAdvert();
+}
+
+void CJwpCommDlg::OnButtonBtDisconnect() 
+{
+	CsrDisconnect();
+}
+
+void CJwpCommDlg::OnButtonBtIdle() 
+{
+	CsrSetIdle();
+}
+
+void CJwpCommDlg::OnButtonBtRmPair() 
+{
+	CsrPairingRemoval();
+}
+
+void CJwpCommDlg::OnButtonClear() 
+{
+	m_EditLog.Empty();
+
+	UpdateData(false);
 }

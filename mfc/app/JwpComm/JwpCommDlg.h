@@ -11,56 +11,19 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "JwpCore.h"
-
-// ============================================================
-
-typedef enum
-{
-    /* Application initial state */
-    app_state_init = 0,
-
-    /* Application is performing fast undirected advertisements */
-    app_state_fast_advertising,
-
-    /* Application is performing slow undirected advertisements */
-    app_state_slow_advertising,
-
-    /* Application is performing directed advertisements */
-    app_state_directed_advertising,
-
-    /* Connection has been established with the host */
-    app_state_connected,
-
-    /* Disconnection initiated by the application */
-    app_state_disconnecting,
-
-    /* Application is neither advertising nor connected to a host */
-    app_state_idle
-
-} app_state;
+#include "JwpCsrDesc.h"
+#include "JwpCommDesc.h"
 
 typedef enum
 {
-	JWP_CSR_CMD_STATE,
-	JWP_CSR_CMD_SCAN,
-	JWP_CSR_CMD_DISCONNECT,
-	JWP_CSR_CMD_GET_STATE,
-	JWP_CSR_CMD_COUNT
-} jwp_csr_command_t;
-
-struct jwp_csr_command_package
-{
-	jwp_u8 type;
-	jwp_u8 code;
-};
-
-// ============================================================
+	JWP_COMM_MSG_BT_STATE_CHANGED = WM_USER + 100,
+	JWP_COMM_MSG_UPDATE_DATA,
+} jwp_comm_message_t;
 
 /////////////////////////////////////////////////////////////////////////////
 // CJwpCommDlg dialog
 
-class CJwpCommDlg : public CDialog, JwpCore
+class CJwpCommDlg : public CDialog, JwpCsrDesc
 {
 // Construction
 public:
@@ -69,7 +32,16 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CJwpCommDlg)
 	enum { IDD = IDD_JWPCOMM_DIALOG };
-	CMSComm	m_Comm;
+	CButton	m_ButtonBtRmPair;
+	CButton	m_ButtonBtIdle;
+	CEdit	m_EditComCtrl;
+	CButton	m_ButtonSendData;
+	CButton	m_ButtonSendCommand;
+	CButton	m_ButtonDisconnect;
+	CButton	m_ButtonConnect;
+	CButton	m_ButtonBtDisconnect;
+	CButton	m_ButtunBtAdvert;
+	JwpCommDesc m_Comm;
 	UINT	m_ComNum;
 	CString	m_StateValue;
 	CString	m_EditCommand;
@@ -86,8 +58,6 @@ public:
 protected:
 	HICON m_hIcon;
 
-	virtual int HwWrite(const void *buff, jwp_size_t size);
-
 	// Generated message map functions
 	//{{AFX_MSG(CJwpCommDlg)
 	virtual BOOL OnInitDialog();
@@ -99,17 +69,35 @@ protected:
 	afx_msg void OnOnCommMscomm();
 	afx_msg void OnButtonSendCommand();
 	afx_msg void OnButtonSendData();
+	afx_msg void OnButtonBtAdvert();
+	afx_msg void OnButtonBtDisconnect();
+	afx_msg void OnButtonBtIdle();
+	afx_msg LRESULT OnBtStateChanged(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpdateData(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnButtonBtRmPair();
+	afx_msg void OnButtonClear();
 	DECLARE_EVENTSINK_MAP()
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
+private:
+	void UpdateUiState(void);
+
 protected:
+	virtual int HwWrite(const void *buff, jwp_size_t size)
+	{
+		return m_Comm.HwWrite(buff, size);
+	}
+
 	virtual void OnDataReceived(const void *buff, jwp_size_t size);
-	virtual void OnCommandReceived(const void *command, jwp_size_t size);
+	virtual void OnLogReceived(jwp_device_t device, const char *log, jwp_size_t size);
+	virtual void OnCsrStateChanged(app_state state);
 
 public:
-	CString JwpCsrStateToString(jwp_u8 state);
-	jwp_bool SendCsrCommand(jwp_u8 type, jwp_u8 code);
+	void WriteRxData(void)
+	{
+		m_Comm.WriteRxData();
+	}
 };
 
 //{{AFX_INSERT_LOCATION}}
