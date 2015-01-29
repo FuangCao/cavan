@@ -147,11 +147,6 @@ void JwpCore::println(const char *fmt, ...)
 	mFileLog.Write(buff, size);
 }
 
-void JwpCore::OnLogReceived(const char *log, jwp_size_t size)
-{
-	mFileLog.Write(log, size);
-}
-
 jwp_bool JwpCore::StartJwp(jwp_bool useRxThread)
 {
 	if (mInitiated)
@@ -234,4 +229,9 @@ jwp_size_t JwpCore::RecvData(void *buff, jwp_size_t size)
 jwp_bool JwpCore::SendCommand(const void *command, jwp_size_t size)
 {
 	return jwp_send_command(this, command, size);
+}
+
+void JwpCore::SendLog(const char *log, jwp_size_t size)
+{
+	jwp_send_log(this, log, size);
 }

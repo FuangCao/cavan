@@ -50,6 +50,7 @@ protected:
 	afx_msg void OnButtonSendCommand();
 	afx_msg void OnButtonSendData();
 	afx_msg void OnButtonClear();
+	afx_msg void OnButtonSendLog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

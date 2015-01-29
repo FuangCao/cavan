@@ -94,6 +94,7 @@ BEGIN_MESSAGE_MAP(CJwpUdpDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_SEND_COMMAND, OnButtonSendCommand)
 	ON_BN_CLICKED(IDC_BUTTON_SEND_DATA, OnButtonSendData)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR, OnButtonClear)
+	ON_BN_CLICKED(IDC_BUTTON_SEND_LOG, OnButtonSendLog)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -256,4 +257,10 @@ void CJwpUdpDlg::OnButtonClear()
 {
 	m_LogValue.Empty();
 	UpdateData(false);
+}
+
+void CJwpUdpDlg::OnButtonSendLog() 
+{
+	UpdateData(true);
+	SendLog(m_DataValue, m_DataValue.GetLength());
 }

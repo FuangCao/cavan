@@ -211,7 +211,7 @@ void CJwpCommDlg::OnButtonConnect()
 	if (m_Comm.GetPortOpen())
 	{
 		m_Comm.SetOutBufferCount(0);
-		StartJwp();
+		StartJwp(false);
 
 		m_StateValue = "ÒÑÁ¬½Ó";
 	}
@@ -258,7 +258,7 @@ void CJwpCommDlg::OnOnCommMscomm()
 				p = buff;
 			}
 
-			input.GetElement(&i, p + i);
+			input.GetElement(&i, p);
 		}
 
 		WriteRxData(buff, p - buff);

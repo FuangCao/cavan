@@ -69,6 +69,7 @@ typedef enum
 	JWP_PKG_CMD,
 	JWP_PKG_SYNC,
 	JWP_PKG_DATA,
+	JWP_PKG_LOG,
 	JWP_PKG_COUNT
 } jwp_package_t;
 
@@ -313,6 +314,7 @@ void jwp_send_sync_package(struct jwp_desc *jwp);
 jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 jwp_size_t jwp_recv_data(struct jwp_desc *jwp, void *buff, jwp_size_t size);
 jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t size);
+void jwp_send_log(struct jwp_desc *jwp, const char *log, jwp_size_t size);
 
 // ============================================================
 

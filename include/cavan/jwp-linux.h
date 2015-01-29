@@ -25,6 +25,7 @@
 #define JWP_DEBUG_MEMBER			1
 #define JWP_SHOW_ERROR				1
 #define JWP_PRINTF_ENABLE			1
+#define JWP_WRITE_LOG_ENABLE		1
 
 #define JWP_POLL_ENABLE				0
 #define JWP_SLEEP_ENABLE			1
@@ -47,10 +48,10 @@
 #define JWP_RX_PKG_LOOP_ENABLE		0
 #define JWP_TX_DATA_LOOP_ENABLE		0
 
-#define JWP_TX_NOTIFY_ENABLE		0
-#define JWP_RX_CMD_NOTIFY_ENABLE	0
-#define JWP_RX_DATA_NOTIFY_ENABLE	0
-#define JWP_QUEUE_NOTIFY_ENABLE		0
+#define JWP_TX_NOTIFY_ENABLE		1
+#define JWP_RX_CMD_NOTIFY_ENABLE	1
+#define JWP_RX_DATA_NOTIFY_ENABLE	1
+#define JWP_QUEUE_NOTIFY_ENABLE		1
 
 #define JWP_MTU						0xFF
 #define JWP_POLL_TIME				10
@@ -76,7 +77,7 @@
 #define jwp_lock_release(lock) \
 	pthread_mutex_unlock(&lock)
 
-#define jwp_signal_init(signal) \
+#define jwp_signal_init(signal, available) \
 	pthread_cond_init(&signal, NULL)
 
 #define jwp_signal_wait_locked(signal, lock) \

@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
 		return -ENOMEM;
 	}
 
-	service->min = 10;
-	service->max = 1000;
+	service->min = 1;
+	service->max = 1;
 	service->super_permission = 0;
 
 	jwp_udp = cavan_dynamic_service_get_data(service);

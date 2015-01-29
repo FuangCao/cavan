@@ -189,7 +189,7 @@ int jwp_udp_client_init(struct jwp_udp_client *client, struct jwp_udp_service *s
 	jwp->data_received = jwp_udp_data_received,
 	jwp->command_received = jwp_udp_command_received,
 	jwp->package_received = jwp_udp_package_received,
-#if JWP_PRINTF_ENABLE
+#if JWP_WRITE_LOG_ENABLE
 	jwp->log_received = jwp_udp_write_log,
 #endif
 #if JWP_TIMER_ENABLE
@@ -294,6 +294,7 @@ static int jwp_udp_service_run_handler(struct cavan_dynamic_service *service, vo
 
 	while (1)
 	{
+		jwp_size_t wrlen;
 		char buff[1024];
 
 		if (scanf("%s", buff) < 1)
@@ -302,11 +303,9 @@ static int jwp_udp_service_run_handler(struct cavan_dynamic_service *service, vo
 		}
 
 		println("buff = %s", buff);
-
-		if (!jwp_send_command(jwp, buff, strlen(buff)))
-		{
-			pr_red_info("jwp_send_command failed!");
-		}
+		wrlen = strlen(buff);
+		buff[wrlen++] = '\n';
+		jwp_send_log(jwp, buff, wrlen);
 	}
 
 	return 0;

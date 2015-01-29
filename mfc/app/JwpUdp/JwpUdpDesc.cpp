@@ -15,6 +15,7 @@ jwp_bool JwpUdpDesc::Connect(void)
 		return false;
 	}
 
+#if 0
 	length = HwRead(&magic, sizeof(magic));
 	if (length != sizeof(magic))
 	{
@@ -27,6 +28,7 @@ jwp_bool JwpUdpDesc::Connect(void)
 		println("Invalid magic 0x%08x", magic);
 		return false;
 	}
+#endif
 
 	return true;
 }

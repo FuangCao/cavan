@@ -39,21 +39,38 @@ protected:
 	{
 		println("OnDataReceived: size = %d", size);
 	}
+
 	virtual void OnCommandReceived(const void *command, jwp_size_t size)
 	{
 		println("OnCommandReceived: size = %d", size);
 	}
+
 	virtual void OnPackageReceived(const struct jwp_header *hdr)
 	{
 		println("OnPackageReceived: index = %d, type = %d, length = %d", hdr->index, hdr->type, hdr->length);
 	}
 
-	virtual void OnLogReceived(const char *log, jwp_size_t size);
+	virtual void OnLogReceived(const char *log, jwp_size_t size)
+	{
+		puts("OnLogReceived: ");
+		puts(log, size);
+	}
 
 public:
+	void puts(const char *text, jwp_size_t size)
+	{
+		mFileLog.Write(text, size);
+	}
+
+	void puts(const char *text)
+	{
+		puts(text, strlen(text));
+	}
+
 	void println(const char *fmt, ...);
 	void WriteRxData(const void *buff, jwp_size_t size);
 	jwp_size_t SendData(const void *buff, jwp_size_t size);
 	jwp_size_t RecvData(void *buff, jwp_size_t size);
 	jwp_bool SendCommand(const void *command, jwp_size_t size);
+	void SendLog(const char *log, jwp_size_t size);
 };

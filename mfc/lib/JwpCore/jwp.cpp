@@ -19,7 +19,7 @@
 
 #include "stdafx.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(CSR101x)
 #include "jwp.h"
 #else
 #include <cavan.h>
@@ -110,6 +110,12 @@
 #endif
 #endif
 
+#if JWP_WRITE_LOG_ENABLE == 0
+#if JWP_PRINTF_ENABLE
+#error "must enable write when use printf"
+#endif
+#endif
+
 // ============================================================
 
 static void jwp_process_rx_package(struct jwp_desc *jwp);
@@ -158,7 +164,7 @@ static void jwp_rx_package_init(struct jwp_rx_package *pkg)
 	pkg->header_remain = sizeof(pkg->header);
 }
 
-static void jwp_hw_write(struct jwp_desc *jwp, const jwp_u8 *buff, size_t size)
+static void jwp_hw_write(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t size)
 {
 	while (size > 0)
 	{
@@ -233,8 +239,8 @@ void jwp_queue_init(struct jwp_queue *queue)
 	jwp_lock_init(queue->lock);
 
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_signal_init(queue->data_signal);
-	jwp_signal_init(queue->space_signal);
+	jwp_signal_init(queue->data_signal, false);
+	jwp_signal_init(queue->space_signal, true);
 #endif
 
 	queue->tail = queue->head = queue->buff;
@@ -691,7 +697,7 @@ static jwp_bool jwp_queue_fill_package(struct jwp_desc *jwp)
 	return false;
 }
 #else
-static jwp_u8 *jwp_package_find_magic(const jwp_u8 *buff, jwp_size_t size)
+static const jwp_u8 *jwp_package_find_magic(const jwp_u8 *buff, jwp_size_t size)
 {
 	const jwp_u8 *buff_end;
 
@@ -699,13 +705,13 @@ static jwp_u8 *jwp_package_find_magic(const jwp_u8 *buff, jwp_size_t size)
 	{
 		if (buff[0] == JWP_MAGIC_LOW && buff[1] == JWP_MAGIC_HIGH)
 		{
-			return (jwp_u8 *) buff;
+			return buff;
 		}
 	}
 
 	if (buff[0] == JWP_MAGIC_LOW)
 	{
-		return (jwp_u8 *) buff;
+		return buff;
 	}
 
 	return NULL;
@@ -1037,15 +1043,15 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 	jwp_lock_init(jwp->lock);
 
 #if JWP_TX_NOTIFY_ENABLE
-	jwp_signal_init(jwp->tx_signal);
+	jwp_signal_init(jwp->tx_signal, false);
 #endif
 
 #if JWP_RX_DATA_NOTIFY_ENABLE
-	jwp_signal_init(jwp->data_rx_signal);
+	jwp_signal_init(jwp->data_rx_signal, false);
 #endif
 
 #if JWP_RX_CMD_NOTIFY_ENABLE
-	jwp_signal_init(jwp->command_rx_signal);
+	jwp_signal_init(jwp->command_rx_signal, false);
 #endif
 
 	jwp->private_data = data;
@@ -1215,7 +1221,11 @@ static void jwp_process_rx_package(struct jwp_desc *jwp)
 	case JWP_PKG_DATA:
 		jwp_send_ack_package(jwp, hdr->index);
 		jwp_lock_acquire(jwp->lock);
+#if 0
 		if (hdr->index == (jwp_u8) (jwp->rx_index + 1))
+#else
+		if (hdr->index != jwp->rx_index)
+#endif
 		{
 			jwp->rx_index = hdr->index;
 
@@ -1288,6 +1298,12 @@ static void jwp_process_rx_package(struct jwp_desc *jwp)
 		jwp->rx_index = hdr->index;
 		jwp_lock_release(jwp->lock);
 		break;
+
+#if JWP_WRITE_LOG_ENABLE
+	case JWP_PKG_LOG:
+		jwp->log_received(jwp, (const char *) pkg->payload, hdr->length);
+		break;
+#endif
 
 	default:
 		jwp->package_received(jwp, hdr);
@@ -1389,7 +1405,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 	}
 #endif
 #else
-	size = jwp_queue_inqueue(queue, (jwp_u8 *) buff, size);
+	size = jwp_queue_inqueue(queue, (const jwp_u8 *) buff, size);
 #endif
 
 #if JWP_TX_DATA_TIMER_ENABLE
@@ -1406,7 +1422,7 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 #else
 	struct jwp_package pkg;
 	struct jwp_header *hdr = &pkg.header;
-	const jwp_u8 *p = (jwp_u8 *) buff, *p_end = p + size;
+	const jwp_u8 *p = (const jwp_u8 *) buff, *p_end = p + size;
 
 	while (p < p_end)
 	{
@@ -1464,6 +1480,24 @@ jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t 
 	jwp_memcpy(JWP_GET_PAYLOAD(hdr), command, size);
 
 	return jwp_send_package(jwp, hdr, true);
+}
+
+void jwp_send_log(struct jwp_desc *jwp, const char *log, jwp_size_t size)
+{
+	struct jwp_package pkg;
+	struct jwp_header *hdr = &pkg.header;
+
+	hdr->type = JWP_PKG_LOG;
+
+	while (size > 0)
+	{
+		hdr->length = size > JWP_MAX_PAYLOAD ? JWP_MAX_PAYLOAD : size;
+		jwp_memcpy(pkg.payload, log, hdr->length);
+		jwp_send_package(jwp, hdr, false);
+
+		log += hdr->length;
+		size -= hdr->length;
+	}
 }
 
 // ============================================================

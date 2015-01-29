@@ -17,7 +17,7 @@
  *
  */
 
-// #include "stdafx.h"
+#include "stdafx.h"
 
 #if defined(_WIN32) || defined(CSR101x)
 #include "jwp.h"
@@ -107,6 +107,12 @@
 
 #if JWP_SHOW_ERROR
 #error "must enable printf when need show error"
+#endif
+#endif
+
+#if JWP_WRITE_LOG_ENABLE == 0
+#if JWP_PRINTF_ENABLE
+#error "must enable write when use printf"
 #endif
 #endif
 
@@ -233,8 +239,8 @@ void jwp_queue_init(struct jwp_queue *queue)
 	jwp_lock_init(queue->lock);
 
 #if JWP_QUEUE_NOTIFY_ENABLE
-	jwp_signal_init(queue->data_signal);
-	jwp_signal_init(queue->space_signal);
+	jwp_signal_init(queue->data_signal, false);
+	jwp_signal_init(queue->space_signal, true);
 #endif
 
 	queue->tail = queue->head = queue->buff;
@@ -1037,15 +1043,15 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 	jwp_lock_init(jwp->lock);
 
 #if JWP_TX_NOTIFY_ENABLE
-	jwp_signal_init(jwp->tx_signal);
+	jwp_signal_init(jwp->tx_signal, false);
 #endif
 
 #if JWP_RX_DATA_NOTIFY_ENABLE
-	jwp_signal_init(jwp->data_rx_signal);
+	jwp_signal_init(jwp->data_rx_signal, false);
 #endif
 
 #if JWP_RX_CMD_NOTIFY_ENABLE
-	jwp_signal_init(jwp->command_rx_signal);
+	jwp_signal_init(jwp->command_rx_signal, false);
 #endif
 
 	jwp->private_data = data;
@@ -1215,7 +1221,11 @@ static void jwp_process_rx_package(struct jwp_desc *jwp)
 	case JWP_PKG_DATA:
 		jwp_send_ack_package(jwp, hdr->index);
 		jwp_lock_acquire(jwp->lock);
+#if 0
 		if (hdr->index == (jwp_u8) (jwp->rx_index + 1))
+#else
+		if (hdr->index != jwp->rx_index)
+#endif
 		{
 			jwp->rx_index = hdr->index;
 
@@ -1288,6 +1298,12 @@ static void jwp_process_rx_package(struct jwp_desc *jwp)
 		jwp->rx_index = hdr->index;
 		jwp_lock_release(jwp->lock);
 		break;
+
+#if JWP_WRITE_LOG_ENABLE
+	case JWP_PKG_LOG:
+		jwp->log_received(jwp, (const char *) pkg->payload, hdr->length);
+		break;
+#endif
 
 	default:
 		jwp->package_received(jwp, hdr);
@@ -1464,6 +1480,24 @@ jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t 
 	jwp_memcpy(JWP_GET_PAYLOAD(hdr), command, size);
 
 	return jwp_send_package(jwp, hdr, true);
+}
+
+void jwp_send_log(struct jwp_desc *jwp, const char *log, jwp_size_t size)
+{
+	struct jwp_package pkg;
+	struct jwp_header *hdr = &pkg.header;
+
+	hdr->type = JWP_PKG_LOG;
+
+	while (size > 0)
+	{
+		hdr->length = size > JWP_MAX_PAYLOAD ? JWP_MAX_PAYLOAD : size;
+		jwp_memcpy(pkg.payload, log, hdr->length);
+		jwp_send_package(jwp, hdr, false);
+
+		log += hdr->length;
+		size -= hdr->length;
+	}
 }
 
 // ============================================================
