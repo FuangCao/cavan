@@ -112,7 +112,7 @@
 
 #if JWP_WRITE_LOG_ENABLE == 0
 #if JWP_PRINTF_ENABLE
-#error "must enable write when use printf"
+#error "must enable write log when use printf"
 #endif
 #endif
 
@@ -123,6 +123,51 @@ static void jwp_process_rx_package(struct jwp_desc *jwp);
 #if JWP_PRINTF_ENABLE
 static struct jwp_desc *jwp_global;
 
+static char jwp_value_to_char(jwp_u8 value)
+{
+	if (value < 10)
+	{
+		return '0' + value;
+	}
+	else
+	{
+		return 'A' + (value - 10);
+	}
+}
+
+void jwp_print_value(const char *prompt, jwp_u32 value)
+{
+	int i;
+	char buff[64], *p = buff;
+
+	if (prompt)
+	{
+		while ((*p++ = *prompt++));
+	}
+
+	*p++ = '0';
+	*p++ = 'x';
+
+	for (i = sizeof(value) * 8 - 4; i >= 0; i -= 4, p++)
+	{
+		*p = jwp_value_to_char((jwp_u8) ((value >> i) & 0x0F));
+	}
+
+	*p++ = '\n';
+
+	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, buff, p - buff);
+}
+
+#ifdef CSR101x
+void jwp_printf(const char *fmt, ...)
+{
+	char buff[256], *p = buff;
+
+	while ((*p++ = *fmt++));
+
+	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, buff, p - buff);
+}
+#else
 void jwp_printf(const char *fmt, ...)
 {
 	va_list ap;
@@ -144,8 +189,9 @@ void jwp_printf(const char *fmt, ...)
 
 	va_end(ap);
 
-	jwp_global->log_received(jwp_global, buff, size);
+	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, buff, size);
 }
+#endif
 
 void jwp_header_dump(const struct jwp_header *hdr)
 {
@@ -188,6 +234,7 @@ static inline void jwp_hw_write_package(struct jwp_desc *jwp, struct jwp_header 
 #if JWP_CHECKSUM_ENABLE
 jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size)
 {
+#if 0
 	jwp_u16 checksum = 0;
 	const jwp_u8 *buff_end;
 
@@ -199,6 +246,17 @@ jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size)
 	checksum = (checksum >> 8) + (checksum & 0xFF);
 
 	return (jwp_u8) ((checksum >> 8) + checksum);
+#else
+	jwp_u8 crc = 0;
+	const jwp_u8 *buff_end;
+
+	for (buff_end = buff + size; buff < buff_end; buff++)
+	{
+		crc ^= *buff;
+	}
+
+	return crc;
+#endif
 }
 
 jwp_u8 jwp_package_checksum(struct jwp_header *hdr)
@@ -903,6 +961,11 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 	}
 #endif
 
+	if (jwp->tx_index == hdr->index)
+	{
+		return false;
+	}
+
 	jwp_hw_write_package(jwp, hdr);
 	timer->msec = JWP_TX_TIMEOUT;
 
@@ -1288,7 +1351,12 @@ static void jwp_process_rx_package(struct jwp_desc *jwp)
 		{
 			jwp_lock_release(jwp->lock);
 #if JWP_SHOW_ERROR
+#ifdef CSR101x
+			jwp_print_value("throw ack package = ", hdr->index);
+			jwp_print_value("tx_index = ", jwp->tx_index);
+#else
 			jwp_printf("throw ack package %d, need %d\n", hdr->index, jwp->tx_index + 1);
+#endif
 #endif
 		}
 		break;
@@ -1301,7 +1369,7 @@ static void jwp_process_rx_package(struct jwp_desc *jwp)
 
 #if JWP_WRITE_LOG_ENABLE
 	case JWP_PKG_LOG:
-		jwp->log_received(jwp, (const char *) pkg->payload, hdr->length);
+		jwp->log_received(jwp, JWP_DEVICE_REMOTE, (const char *) pkg->payload, hdr->length);
 		break;
 #endif
 

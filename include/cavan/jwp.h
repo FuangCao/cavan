@@ -116,6 +116,13 @@ typedef enum
 	JWP_TIMER_COUNT
 } jwp_timer_t;
 
+typedef enum
+{
+	JWP_DEVICE_LOCAL,
+	JWP_DEVICE_REMOTE,
+	JWP_DEVICE_COUNT
+} jwp_device_t;
+
 #ifndef CSR101x
 #pragma pack(1)
 #endif
@@ -274,8 +281,8 @@ struct jwp_desc
 	void (*command_received)(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 	void (*package_received)(struct jwp_desc *jwp, const struct jwp_header *hdr);
 
-#if JWP_PRINTF_ENABLE
-	void (*log_received)(struct jwp_desc *jwp, const char *log, jwp_size_t size);
+#if JWP_WRITE_LOG_ENABLE
+	void (*log_received)(struct jwp_desc *jwp, jwp_device_t device, const char *log, jwp_size_t size);
 #endif
 
 #if JWP_TIMER_ENABLE
@@ -287,6 +294,7 @@ struct jwp_desc
 // ============================================================
 
 void jwp_printf(const char *fmt, ...);
+void jwp_print_value(const char *prompt, jwp_u32 value);
 void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);
 jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size);

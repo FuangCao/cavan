@@ -62,11 +62,11 @@ void JwpCore::OnPackageReceivedHandler(struct jwp_desc *jwp, const struct jwp_he
 	jwp_core->OnPackageReceived(hdr);
 }
 
-void JwpCore::OnLogReceivedHandler(struct jwp_desc *jwp, const char *log, jwp_size_t size)
+void JwpCore::OnLogReceivedHandler(struct jwp_desc *jwp, jwp_device_t device, const char *log, jwp_size_t size)
 {
 	JwpCore *jwp_core = (JwpCore *) jwp;
 
-	jwp_core->OnLogReceived(log, size);
+	jwp_core->OnLogReceived(device, log, size);
 }
 
 // ======================================================
@@ -109,7 +109,7 @@ void JwpCore::TxDataThreadHandler(void *data)
 
 // ======================================================
 
-JwpCore::JwpCore(void)
+JwpCore::JwpCore(void) : mLogIndex(0)
 {
 	mInitiated = false;
 
@@ -119,7 +119,7 @@ JwpCore::JwpCore(void)
 	data_received = OnDataReceivedHandler;
 	command_received = OnCommandReceivedHandler;
 	package_received = OnPackageReceivedHandler;
-#if JWP_PRINTF_ENABLE
+#if JWP_WRITE_LOG_ENABLE
 	log_received = OnLogReceivedHandler;
 #endif
 

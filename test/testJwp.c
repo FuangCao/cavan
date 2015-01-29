@@ -361,7 +361,7 @@ static void *test_jwp_rx_package_loop_thread(void *data)
 }
 #endif
 
-static void test_jwp_write_log(struct jwp_desc *jwp, const char *log, jwp_size_t size)
+static void test_jwp_write_log(struct jwp_desc *jwp, jwp_device_t device, const char *log, jwp_size_t size)
 {
 	print_ntext(log, size);
 }

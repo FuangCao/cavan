@@ -5,6 +5,7 @@
 class JwpCore : public jwp_desc
 {
 protected:
+	int mLogIndex;
 	jwp_bool mInitiated;
 	CFile mFileLog;
 
@@ -18,7 +19,7 @@ private:
 	static void OnDataReceivedHandler(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 	static void OnCommandReceivedHandler(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 	static void OnPackageReceivedHandler(struct jwp_desc *jwp, const struct jwp_header *hdr);
-	static void OnLogReceivedHandler(struct jwp_desc *jwp, const char *log, jwp_size_t size);
+	static void OnLogReceivedHandler(struct jwp_desc *jwp, jwp_device_t device, const char *log, jwp_size_t size);
 	static void TxThreadHandler(void *data);
 	static void RxThreadHandler(void *data);
 	static void RxPackageThreadHandler(void *data);
@@ -50,10 +51,16 @@ protected:
 		println("OnPackageReceived: index = %d, type = %d, length = %d", hdr->index, hdr->type, hdr->length);
 	}
 
-	virtual void OnLogReceived(const char *log, jwp_size_t size)
+	virtual void OnLogReceived(jwp_device_t device, const char *log, jwp_size_t size)
 	{
-		puts("OnLogReceived: ");
+		int length;
+		char buff[1024];
+
+		length = _snprintf(buff, sizeof(buff), "%04d. %s: ", mLogIndex, (device == JWP_DEVICE_LOCAL) ? "Local" : "Remote");
+		puts(buff, length);
 		puts(log, size);
+
+		mLogIndex++;
 	}
 
 public:

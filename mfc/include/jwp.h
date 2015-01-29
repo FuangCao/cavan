@@ -21,6 +21,8 @@
 
 #ifdef _WIN32
 #include "jwp-win32.h"
+#elif defined(CSR101x)
+#include "jwp-csr101x.h"
 #else
 #include <cavan/jwp-linux.h>
 #endif
@@ -114,7 +116,16 @@ typedef enum
 	JWP_TIMER_COUNT
 } jwp_timer_t;
 
+typedef enum
+{
+	JWP_DEVICE_LOCAL,
+	JWP_DEVICE_REMOTE,
+	JWP_DEVICE_COUNT
+} jwp_device_t;
+
+#ifndef CSR101x
 #pragma pack(1)
+#endif
 struct jwp_header
 {
 	union
@@ -135,8 +146,12 @@ struct jwp_header
 #ifndef _WIN32
 	jwp_u8 payload[0];
 #endif
+#ifdef CSR101x
+} __attribute__((packed));
+#else
 };
 #pragma pack()
+#endif
 
 struct jwp_package
 {
@@ -191,7 +206,14 @@ struct jwp_queue
 
 struct jwp_timer
 {
-	void *handle;
+	union
+	{
+		void *handle;
+		jwp_u8 handle_u8;
+		jwp_u16 handle_u16;
+		jwp_u32 handle_u32;
+	};
+
 	jwp_u32 msec;
 	jwp_bool active;
 	struct jwp_desc *jwp;
@@ -259,8 +281,8 @@ struct jwp_desc
 	void (*command_received)(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 	void (*package_received)(struct jwp_desc *jwp, const struct jwp_header *hdr);
 
-#if JWP_PRINTF_ENABLE
-	void (*log_received)(struct jwp_desc *jwp, const char *log, jwp_size_t size);
+#if JWP_WRITE_LOG_ENABLE
+	void (*log_received)(struct jwp_desc *jwp, jwp_device_t device, const char *log, jwp_size_t size);
 #endif
 
 #if JWP_TIMER_ENABLE

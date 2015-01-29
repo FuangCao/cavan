@@ -197,6 +197,72 @@ int CJwpCommDlg::HwWrite(const void *buff, jwp_size_t size)
 	return size;
 }
 
+CString CJwpCommDlg::JwpCsrStateToString(jwp_u8 state)
+{
+	switch (state)
+	{
+	case app_state_init:
+		return "蓝牙初始化";
+
+	case app_state_fast_advertising:
+		return "蓝牙快速广播";
+
+	case app_state_slow_advertising:
+		return "蓝牙低速广播";
+
+	case app_state_directed_advertising:
+		return "蓝牙定向广播";
+
+	case app_state_connected:
+		return "蓝牙已连接";
+
+	case app_state_disconnecting:
+		return "蓝牙已断开连接";
+
+	case app_state_idle:
+		return "蓝牙空闲";
+
+	default:
+		return "蓝牙状态未知";
+	}
+}
+
+void CJwpCommDlg::OnDataReceived(const void *buff, jwp_size_t size)
+{
+	MessageBox("收到数据");
+}
+
+void CJwpCommDlg::OnCommandReceived(const void *command, jwp_size_t size)
+{
+	if (size == sizeof(struct jwp_csr_command_package))
+	{
+		struct jwp_csr_command_package *pkg = (struct jwp_csr_command_package *) command;
+		switch (pkg->type)
+		{
+		case JWP_CSR_CMD_STATE:
+			m_StateValue = JwpCsrStateToString(pkg->code);
+			break;
+
+		default:
+			println("Invalid csr command %d", pkg->type);
+		}
+	}
+	else
+	{
+		println("Invalid command size %d", size);
+	}
+}
+
+jwp_bool CJwpCommDlg::SendCsrCommand(jwp_u8 type, jwp_u8 code)
+{
+	struct jwp_csr_command_package pkg;
+
+	pkg.type = type;
+	pkg.code = code;
+
+	return SendCommand(&pkg, sizeof(pkg));
+}
+
 void CJwpCommDlg::OnButtonConnect()
 {
 	if (m_Comm.GetPortOpen())
@@ -213,11 +279,11 @@ void CJwpCommDlg::OnButtonConnect()
 		m_Comm.SetOutBufferCount(0);
 		StartJwp(false);
 
-		m_StateValue = "已连接";
+		m_StateValue = "串口已连接";
 	}
 	else
 	{
-		m_StateValue = "连接失败";
+		m_StateValue = "串口打开失败";
 	}
 
 	UpdateData(false);
@@ -228,7 +294,7 @@ void CJwpCommDlg::OnButtonDisconnect()
 	if (m_Comm.GetPortOpen())
 	{
 		m_Comm.SetPortOpen(false);
-		m_StateValue = "已断开";
+		m_StateValue = "串口已断开";
 	}
 
 	UpdateData(false);

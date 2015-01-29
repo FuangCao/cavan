@@ -13,6 +13,50 @@
 
 #include "JwpCore.h"
 
+// ============================================================
+
+typedef enum
+{
+    /* Application initial state */
+    app_state_init = 0,
+
+    /* Application is performing fast undirected advertisements */
+    app_state_fast_advertising,
+
+    /* Application is performing slow undirected advertisements */
+    app_state_slow_advertising,
+
+    /* Application is performing directed advertisements */
+    app_state_directed_advertising,
+
+    /* Connection has been established with the host */
+    app_state_connected,
+
+    /* Disconnection initiated by the application */
+    app_state_disconnecting,
+
+    /* Application is neither advertising nor connected to a host */
+    app_state_idle
+
+} app_state;
+
+typedef enum
+{
+	JWP_CSR_CMD_STATE,
+	JWP_CSR_CMD_SCAN,
+	JWP_CSR_CMD_DISCONNECT,
+	JWP_CSR_CMD_GET_STATE,
+	JWP_CSR_CMD_COUNT
+} jwp_csr_command_t;
+
+struct jwp_csr_command_package
+{
+	jwp_u8 type;
+	jwp_u8 code;
+};
+
+// ============================================================
+
 /////////////////////////////////////////////////////////////////////////////
 // CJwpCommDlg dialog
 
@@ -58,6 +102,14 @@ protected:
 	DECLARE_EVENTSINK_MAP()
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
+protected:
+	virtual void OnDataReceived(const void *buff, jwp_size_t size);
+	virtual void OnCommandReceived(const void *command, jwp_size_t size);
+
+public:
+	CString JwpCsrStateToString(jwp_u8 state);
+	jwp_bool SendCsrCommand(jwp_u8 type, jwp_u8 code);
 };
 
 //{{AFX_INSERT_LOCATION}}

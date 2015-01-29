@@ -19,8 +19,8 @@
  *
  */
 
-#define JWP_DEBUG					1
-#define JWP_DEBUG_MEMBER			1
+#define JWP_DEBUG					0
+#define JWP_DEBUG_MEMBER			0
 #define JWP_SHOW_ERROR				1
 #define JWP_PRINTF_ENABLE			1
 #define JWP_WRITE_LOG_ENABLE		1

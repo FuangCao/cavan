@@ -170,7 +170,7 @@ static void *jwp_udp_rx_loop_thread(void *data)
 	return NULL;
 }
 
-static void jwp_udp_write_log(struct jwp_desc *jwp, const char *log, jwp_size_t size)
+static void jwp_udp_write_log(struct jwp_desc *jwp, jwp_device_t device, const char *log, jwp_size_t size)
 {
 	print_ntext(log, size);
 }
@@ -304,7 +304,7 @@ static int jwp_udp_service_run_handler(struct cavan_dynamic_service *service, vo
 
 		println("buff = %s", buff);
 		wrlen = strlen(buff);
-		buff[wrlen++] = '\n';
+		// buff[wrlen++] = '\n';
 		jwp_send_log(jwp, buff, wrlen);
 	}
 
