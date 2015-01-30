@@ -26,7 +26,7 @@
 #define TEST_JWP_DEBUG				0
 #define TEST_JWP_MEM_DUMP			0
 #define TEST_JWP_SHOW_DATA			1
-#define TEST_JWP_CLIENT_WATCH		1
+#define TEST_JWP_CLIENT_WATCH		0
 #define TEST_JWP_SERVER_WATCH		0
 
 struct jwp_test_data
@@ -377,6 +377,9 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 				msleep(10);
 			}
 		}
+
+		jwp_pr_value("100 = ", 100, 10);
+		jwp_pr_value("0x1234 = ", 0x1234, 16);
 
 		println("please input command");
 

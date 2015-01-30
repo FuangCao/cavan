@@ -167,7 +167,7 @@ char *jwp_value2str10(jwp_u32 value, char *buff, jwp_size_t size)
 
 	while (value && p < buff_end)
 	{
-		*p++ = value % 10;
+		*p++ = jwp_value_to_char(value % 10);
 		value /= 10;
 	}
 
@@ -175,7 +175,7 @@ char *jwp_value2str10(jwp_u32 value, char *buff, jwp_size_t size)
 	{
 		char *q;
 
-		for (q = p; buff < q; buff++, q--)
+		for (q = p - 1; buff < q; buff++, q--)
 		{
 			char c = *q;
 			*q = *buff;
@@ -204,7 +204,7 @@ char *jwp_value2str16(jwp_u32 value, char *buff, jwp_size_t size)
 		*p++ = 'x';
 	}
 
-	for (i = sizeof(value) * 8 - 4; i >= 0 && p < buff_end; i--, p++)
+	for (i = sizeof(value) * 8 - 4; i >= 0 && p < buff_end; i -= 4, p++)
 	{
 		*p = jwp_value_to_char((value >> i) & 0x0F);
 	}
