@@ -21,6 +21,8 @@
 
 #include <cavan.h>
 
+#define JWP_ARCH_NAME				"linux"
+
 #define JWP_DEBUG					1
 #define JWP_DEBUG_MEMBER			1
 #define JWP_SHOW_ERROR				1
@@ -31,17 +33,17 @@
 #define JWP_SLEEP_ENABLE			1
 #define JWP_CHECKSUM_ENABLE			1
 
-#define JWP_QUEUE_ENABLE			1
-#define JWP_TX_QUEUE_ENABLE			1
-#define JWP_RX_QUEUE_ENABLE			1
-#define JWP_TX_DATA_QUEUE_ENABLE	1
-#define JWP_RX_DATA_QUEUE_ENABLE	1
+#define JWP_QUEUE_ENABLE			0
+#define JWP_TX_QUEUE_ENABLE			0
+#define JWP_RX_QUEUE_ENABLE			0
+#define JWP_TX_DATA_QUEUE_ENABLE	0
+#define JWP_RX_DATA_QUEUE_ENABLE	0
 
 #define JWP_TIMER_ENABLE			1
 #define JWP_TX_TIMER_ENABLE			1
-#define JWP_TX_DATA_TIMER_ENABLE	1
-#define JWP_TX_PKG_TIMER_ENABLE		1
-#define JWP_RX_PKG_TIMER_ENABLE		1
+#define JWP_TX_DATA_TIMER_ENABLE	0
+#define JWP_TX_PKG_TIMER_ENABLE		0
+#define JWP_RX_PKG_TIMER_ENABLE		0
 
 #define JWP_TX_LOOP_ENABLE			0
 #define JWP_RX_LOOP_ENABLE			1
@@ -106,3 +108,24 @@ typedef u32 jwp_size_t;
 typedef bool jwp_bool;
 typedef pthread_cond_t jwp_signal_t;
 typedef pthread_mutex_t jwp_lock_t;
+
+#include <cavan/jwp.h>
+#include <cavan/timer.h>
+
+struct jwp_linux_desc
+{
+	struct jwp_desc jwp;
+
+#if JWP_TIMER_ENABLE
+	struct cavan_timer_service timer_service;
+#endif
+};
+
+const char *jwp_device_to_string(jwp_device_t device);
+jwp_bool jwp_linux_init(struct jwp_linux_desc *jwp_linux, void *data);
+jwp_bool jwp_linux_start(struct jwp_linux_desc *jwp_linux);
+
+static inline struct jwp_linux_desc *jwp_to_jwp_linux(struct jwp_desc *jwp)
+{
+	return (struct jwp_linux_desc *) jwp;
+}

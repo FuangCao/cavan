@@ -19,12 +19,16 @@
 
 // #include "stdafx.h"
 
-#if defined(_WIN32) || defined(CSR101x)
-#include "jwp.h"
+#ifdef _WIN32
+#include "jwp-win32.h"
+#elif defined(CSR101x)
+#include "jwp-csr101x.h"
 #else
-#include <cavan.h>
-#include <cavan/jwp.h>
+#include <cavan/jwp-linux.h>
 #endif
+
+// ============================================================
+
 
 // ============================================================
 
@@ -123,37 +127,118 @@ static void jwp_process_rx_package(struct jwp_desc *jwp);
 #if JWP_PRINTF_ENABLE
 static struct jwp_desc *jwp_global;
 
+char *jwp_strcpy(char *dest, const char *src)
+{
+	while (*src)
+	{
+		*dest++ = *src++;
+	}
+
+	*dest = 0;
+
+	return dest;
+}
+
+jwp_size_t jwp_strlen(const char *text)
+{
+	const char *p;
+
+	for (p = text; *p; p++);
+
+	return p - text;
+}
+
 static char jwp_value_to_char(jwp_u8 value)
 {
 	if (value < 10)
 	{
-		return '0' + value;
+		return value + '0';
 	}
 	else
 	{
-		return 'A' + (value - 10);
+		return value - 10 + 'A';
 	}
 }
 
-void jwp_print_value(const char *prompt, jwp_u32 value)
+char *jwp_value2str10(jwp_u32 value, char *buff, jwp_size_t size)
+{
+	char *p = buff;
+	char *buff_end = buff + size - 1;
+
+	while (value && p < buff_end)
+	{
+		*p++ = value % 10;
+		value /= 10;
+	}
+
+	if (p > buff)
+	{
+		char *q;
+
+		for (q = p; buff < q; buff++, q--)
+		{
+			char c = *q;
+			*q = *buff;
+			*buff = c;
+		}
+	}
+	else
+	{
+		*p++ = '0';
+	}
+
+	*p = 0;
+
+	return p;
+}
+
+char *jwp_value2str16(jwp_u32 value, char *buff, jwp_size_t size)
 {
 	int i;
-	char buff[64], *p = buff;
+	char *p = buff;
+	char *buff_end = buff + size - 1;
+
+	if (size > 2)
+	{
+		*p++ = '0';
+		*p++ = 'x';
+	}
+
+	for (i = sizeof(value) * 8 - 4; i >= 0 && p < buff_end; i--, p++)
+	{
+		*p = jwp_value_to_char((value >> i) & 0x0F);
+	}
+
+	*p = 0;
+
+	return p;
+}
+
+void jwp_pr_value(const char *prompt, jwp_u32 value, jwp_u8 base)
+{
+	char buff[128];
+	char *p, *p_end = buff + sizeof(buff);
 
 	if (prompt)
 	{
-		while ((*p++ = *prompt++));
+		p = jwp_strcpy(buff, prompt);
+	}
+	else
+	{
+		p = buff;
 	}
 
-	*p++ = '0';
-	*p++ = 'x';
-
-	for (i = sizeof(value) * 8 - 4; i >= 0; i -= 4, p++)
+	if (base == 16)
 	{
-		*p = jwp_value_to_char((jwp_u8) ((value >> i) & 0x0F));
+		p = jwp_value2str16(value, p, p_end - p);
+	}
+	else
+	{
+		p = jwp_value2str10(value, p, p_end - p);
 	}
 
 	*p++ = '\n';
+	*p = 0;
 
 	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, buff, p - buff);
 }
@@ -874,19 +959,8 @@ static void jwp_timer_init(struct jwp_timer *timer, struct jwp_desc *jwp)
 
 	timer->jwp = jwp;
 	timer->active = false;
+	timer->handle = NULL;
 	timer->handler = NULL;
-}
-
-static void jwp_hw_create_timer(struct jwp_timer *timer)
-{
-	struct jwp_desc *jwp = timer->jwp;
-
-	while (!jwp->create_timer(timer))
-	{
-#if JWP_SHOW_ERROR
-		jwp_printf("create timer fault!\n");
-#endif
-	}
 }
 
 static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
@@ -909,7 +983,15 @@ static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 	}
 
 	timer->msec = msec;
-	jwp_hw_create_timer(timer);
+
+	while (!jwp->create_timer(timer))
+	{
+#if JWP_SHOW_ERROR
+		jwp_printf("create timer fault!\n");
+#endif
+		jwp_msleep(JWP_POLL_TIME);
+	}
+
 	timer->active = true;
 
 	jwp_lock_release(timer->lock);
@@ -931,20 +1013,17 @@ static void jwp_timer_delete(struct jwp_timer *timer)
 
 void jwp_timer_run(struct jwp_timer *timer)
 {
-	jwp_bool active = timer->handler(timer);
+	jwp_bool active;
 
 	jwp_lock_acquire(timer->lock);
+	timer->active = false;
+	jwp_lock_release(timer->lock);
 
+	active = timer->handler(timer);
 	if (active)
 	{
-		jwp_hw_create_timer(timer);
+		jwp_timer_create(timer, timer->msec);
 	}
-	else
-	{
-		timer->active = false;
-	}
-
-	jwp_lock_release(timer->lock);
 }
 #endif
 
@@ -1072,35 +1151,8 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 #endif
 
 #if JWP_DEBUG_MEMBER
+	jwp->line = __LINE__;
 	jwp->state = JWP_STATE_INIT;
-#endif
-
-#if JWP_DEBUG
-	if (jwp->hw_read == NULL || jwp->hw_write == NULL)
-	{
-		jwp_printf("jwp->hw_read == NULL || jwp->hw_write == NULL\n");
-		return false;
-	}
-
-	if (jwp->data_received == NULL || jwp->package_received == NULL)
-	{
-		jwp_printf("jwp->data_received == NULL || jwp->package_received == NULL\n");
-		return false;
-	}
-
-	if (jwp->send_complete == NULL)
-	{
-		jwp_printf("jwp->send_complete == NULL\n");
-		return false;
-	}
-
-#if JWP_TIMER_ENABLE
-	if (jwp->create_timer == NULL || jwp->delete_timer == NULL)
-	{
-		jwp_printf("jwp->create_timer == NULL || jwp->delete_timer == NULL\n");
-		return false;
-	}
-#endif
 #endif
 
 	jwp_lock_init(jwp->lock);
@@ -1199,23 +1251,31 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 	return true;
 }
 
-void jwp_send_ack_package(struct jwp_desc *jwp, jwp_u8 index)
+static void jwp_index_init(struct jwp_desc *jwp)
+{
+	jwp_lock_acquire(jwp->lock);
+	jwp->rx_index = jwp->tx_index = 0;
+	jwp_lock_release(jwp->lock);
+}
+
+void jwp_sync(struct jwp_desc *jwp)
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+		jwp_send_sync_package(jwp);
+	}
+
+	jwp_index_init(jwp);
+}
+
+void jwp_send_empty_package(struct jwp_desc *jwp, jwp_u8 type, jwp_u8 index)
 {
 	struct jwp_header hdr;
 
 	hdr.type = JWP_PKG_ACK;
 	hdr.index = index;
-	hdr.length = 0;
-
-	jwp_send_package(jwp, &hdr, false);
-}
-
-void jwp_send_sync_package(struct jwp_desc *jwp)
-{
-	struct jwp_header hdr;
-
-	hdr.type = JWP_PKG_SYNC;
-	hdr.index = jwp->tx_index;
 	hdr.length = 0;
 
 	jwp_send_package(jwp, &hdr, false);
@@ -1362,13 +1422,12 @@ static void jwp_process_rx_package(struct jwp_desc *jwp)
 		break;
 
 	case JWP_PKG_SYNC:
-		jwp_lock_acquire(jwp->lock);
-		jwp->rx_index = hdr->index;
-		jwp_lock_release(jwp->lock);
+		jwp_index_init(jwp);
 		break;
 
 #if JWP_WRITE_LOG_ENABLE
 	case JWP_PKG_LOG:
+		pkg->payload[hdr->length] = 0;
 		jwp->log_received(jwp, JWP_DEVICE_REMOTE, (const char *) pkg->payload, hdr->length);
 		break;
 #endif
@@ -1556,6 +1615,7 @@ void jwp_send_log(struct jwp_desc *jwp, const char *log, jwp_size_t size)
 	struct jwp_header *hdr = &pkg.header;
 
 	hdr->type = JWP_PKG_LOG;
+	hdr->index = 0;
 
 	while (size > 0)
 	{

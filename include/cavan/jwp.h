@@ -19,15 +19,9 @@
  *
  */
 
-#ifdef _WIN32
-#include "jwp-win32.h"
-#elif defined(CSR101x)
-#include "jwp-csr101x.h"
-#else
-#include <cavan/jwp-linux.h>
+#ifndef JWP_ARCH_NAME
+#error "don't include this file immediately, you must include jwp-*.h"
 #endif
-
-// ============================================================
 
 #define jwp_signal_wait(signal, lock) \
 	do { \
@@ -293,8 +287,13 @@ struct jwp_desc
 
 // ============================================================
 
+char *jwp_strcpy(char *dest, const char *src);
+jwp_size_t jwp_strlen(const char *text);
+char *jwp_value2str10(jwp_u32 value, char *buff, jwp_size_t size);
+char *jwp_value2str16(jwp_u32 value, char *buff, jwp_size_t size);
+void jwp_pr_value(const char *prompt, jwp_u32 value, jwp_u8 base);
 void jwp_printf(const char *fmt, ...);
-void jwp_print_value(const char *prompt, jwp_u32 value);
+
 void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);
 jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size);
@@ -332,12 +331,22 @@ static inline jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size
 
 jwp_bool jwp_init(struct jwp_desc *jwp, void *data);
 jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool sync);
-void jwp_send_ack_package(struct jwp_desc *jwp, jwp_u8 index);
-void jwp_send_sync_package(struct jwp_desc *jwp);
+void jwp_send_empty_package(struct jwp_desc *jwp, jwp_u8 type, jwp_u8 index);
+void jwp_sync(struct jwp_desc *jwp);
 jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 jwp_size_t jwp_recv_data(struct jwp_desc *jwp, void *buff, jwp_size_t size);
 jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 void jwp_send_log(struct jwp_desc *jwp, const char *log, jwp_size_t size);
+
+static inline void jwp_send_ack_package(struct jwp_desc *jwp, jwp_u8 index)
+{
+	jwp_send_empty_package(jwp, JWP_PKG_ACK, index);
+}
+
+static inline void jwp_send_sync_package(struct jwp_desc *jwp)
+{
+	jwp_send_empty_package(jwp, JWP_PKG_SYNC, 0);
+}
 
 // ============================================================
 

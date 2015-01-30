@@ -240,7 +240,13 @@ void CJwpCommDlg::UpdateUiState(void)
 
 void CJwpCommDlg::OnDataReceived(const void *buff, jwp_size_t size)
 {
-	MessageBox("OnDataReceived");
+	CString strLog;
+
+	((char *) buff)[size] = 0;
+	strLog.Format("OnDataReceived: %s\r\n", buff);
+	m_EditLog += strLog;
+
+	SendMessage(JWP_COMM_MSG_UPDATE_DATA);
 }
 
 void CJwpCommDlg::OnLogReceived(jwp_device_t device, const char *log, jwp_size_t size)
@@ -250,6 +256,8 @@ void CJwpCommDlg::OnLogReceived(jwp_device_t device, const char *log, jwp_size_t
 	((char *) log)[size] = 0;
 	strLog.Format("%04d. %s: %s\r\n", mLogIndex, (device == JWP_DEVICE_LOCAL) ? "Local" : "Remote", log);
 	m_EditLog += strLog;
+
+	SendMessage(JWP_COMM_MSG_UPDATE_DATA);
 
 	mLogIndex++;
 }

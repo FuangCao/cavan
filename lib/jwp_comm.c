@@ -1,9 +1,7 @@
-#pragma once
-
 /*
- * File:		jwp_udp.h
+ * File:		jwp_comm.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2015-01-27 20:06:25
+ * Created:		2015-01-30 10:51:22
  *
  * Copyright (c) 2015 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -20,23 +18,11 @@
  */
 
 #include <cavan.h>
-#include <cavan/timer.h>
-#include <cavan/network.h>
-#include <cavan/jwp-linux.h>
+#include <cavan/jwp_comm.h>
 
-struct jwp_udp_service
+int jwp_comm_init(struct jwp_comm_desc *jwp_comm, int fd)
 {
-	struct network_service service;
-	struct cavan_timer_service timer_service;
-	struct network_url url;
-};
+	jwp_comm->fd = fd;
 
-struct jwp_udp_client
-{
-	struct network_client client;
-	struct jwp_udp_service *service;
-	struct jwp_desc jwp;
-};
-
-int jwp_udp_client_init(struct jwp_udp_client *client, struct jwp_udp_service *service);
-int jwp_udp_service_run(struct cavan_dynamic_service *service);
+	return jwp_init(&jwp_comm->jwp, jwp_comm);
+}
