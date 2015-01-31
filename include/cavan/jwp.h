@@ -306,6 +306,7 @@ jwp_u8 jwp_package_checksum(struct jwp_header *hdr);
 
 // ============================================================
 
+void jwp_queue_clear(struct jwp_queue *queue);
 void jwp_queue_init(struct jwp_queue *queue);
 jwp_size_t jwp_queue_inqueue_peek(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 void jwp_queue_inqueue_commit(struct jwp_queue *queue);
@@ -340,6 +341,7 @@ void jwp_send_empty_package(struct jwp_desc *jwp, jwp_u8 type, jwp_u8 index);
 void jwp_send_sync(struct jwp_desc *jwp);
 jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 jwp_size_t jwp_recv_data(struct jwp_desc *jwp, void *buff, jwp_size_t size);
+jwp_bool jwp_send_data_all(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t size);
 jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 void jwp_send_log(struct jwp_desc *jwp, const char *log, jwp_size_t size);
 

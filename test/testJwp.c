@@ -23,6 +23,7 @@
 #include <cavan/jwp-linux.h>
 #include <cavan/jwp_comm.h>
 #include <cavan/jwp_udp.h>
+#include <cavan/jwp_mcu.h>
 
 #define TEST_JWP_DEBUG				0
 #define TEST_JWP_MEM_DUMP			0
@@ -515,8 +516,10 @@ out_network_client_close:
 static int do_test_jwp_udp(int argc, char *argv[])
 {
 	u16 port;
+	bool is_mcu;
 	const char *hostname;
 	struct jwp_udp_desc udp;
+	struct jwp_mcu_desc mcu;
 
 	if (argc > 2)
 	{
@@ -540,13 +543,47 @@ static int do_test_jwp_udp(int argc, char *argv[])
 		return -EFAULT;
 	}
 
+	is_mcu = (strcmp(argv[0], "mcu") == 0);
+
+	if (is_mcu && !jwp_mcu_init(&mcu, &udp.jwp))
+	{
+		pr_red_info("jwp_mcu_init");
+		return -EFAULT;
+	}
+
 	if (!jwp_udp_start(&udp))
 	{
 		pr_red_info("jwp_udp_start");
 		return -EFAULT;
 	}
 
-	test_jwp_cmdline(&udp.jwp);
+	if (is_mcu)
+	{
+		while (1)
+		{
+			int ret;
+			struct jwp_mcu_package pkg;
+
+			ret = scanf("%s", pkg.payload);
+			if (ret < 1)
+			{
+				continue;
+			}
+
+			if (jwp_mcu_send_package(&mcu, 0, &pkg))
+			{
+				pr_green_info("OK");
+			}
+			else
+			{
+				pr_red_info("Failed");
+			}
+		}
+	}
+	else
+	{
+		test_jwp_cmdline(&udp.jwp);
+	}
 
 	return 0;
 }
@@ -556,4 +593,5 @@ CAVAN_COMMAND_MAP_START
 { "jwp", do_test_jwp },
 { "comm", do_test_jwp_comm },
 { "udp", do_test_jwp_udp },
+{ "mcu", do_test_jwp_udp },
 CAVAN_COMMAND_MAP_END

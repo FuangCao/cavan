@@ -43,7 +43,7 @@ static int jwp_linux_timer_handler(struct cavan_timer *cavan_timer, void *data)
 	struct jwp_timer *timer = data;
 
 #if JWP_DEBUG_MEMBER && JWP_LINUX_DEBUG
-	println("%s run timer %s, msec = %d", timer->jwp->name, timer->name, timer->msec);
+	println("run timer %s, msec = %d", timer->name, timer->msec);
 #endif
 
 	jwp_timer_run(timer);
@@ -57,7 +57,7 @@ static jwp_bool jwp_linux_create_timer(struct jwp_timer *timer)
 	struct jwp_linux_desc *jwp_linux = (struct jwp_linux_desc *) timer->jwp;
 
 #if JWP_DEBUG_MEMBER && JWP_LINUX_DEBUG
-	println("%s create timer %s, msec = %d", timer->jwp->name, timer->name, timer->msec);
+	println("create timer %s, msec = %d", timer->name, timer->msec);
 #endif
 
 	if (timer->handle == NULL)
@@ -86,7 +86,7 @@ static jwp_bool jwp_linux_create_timer(struct jwp_timer *timer)
 static void jwp_linux_delete_timer(struct jwp_timer *timer)
 {
 #if JWP_DEBUG_MEMBER && JWP_LINUX_DEBUG
-	println("%s delete timer %s, msec = %d" , timer->jwp->name, timer->name, timer->msec);
+	println("delete timer %s, msec = %d", timer->name, timer->msec);
 #endif
 
 	if (timer->handle != NULL)
@@ -124,6 +124,10 @@ static void jwp_linux_remote_not_response(struct jwp_desc *jwp)
 static void jwp_linux_data_received(struct jwp_desc *jwp, const void *data, jwp_size_t size)
 {
 	println("data received: size = %d", size);
+
+#if JWP_RX_DATA_QUEUE_ENABLE
+	jwp_queue_clear(jwp_get_queue(jwp, JWP_QUEUE_RX_DATA));
+#endif
 }
 
 static void jwp_linux_command_received(struct jwp_desc *jwp, const void *command, jwp_size_t size)

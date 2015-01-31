@@ -380,6 +380,24 @@ static jwp_bool jwp_check_and_set_send_pendding(struct jwp_desc *jwp)
 // ============================================================
 
 #if JWP_QUEUE_ENABLE
+static void jwp_queue_clear_locked(struct jwp_queue *queue)
+{
+	queue->tail = queue->head = queue->buff;
+	queue->tail_peek = queue->head_peek = queue->buff;
+}
+
+void jwp_queue_clear(struct jwp_queue *queue)
+{
+	jwp_lock_acquire(queue->lock);
+
+	jwp_queue_clear_locked(queue);
+#if JWP_QUEUE_NOTIFY_ENABLE
+	jwp_signal_notify_locked(queue->space_signal, queue->lock);
+#endif
+
+	jwp_lock_release(queue->lock);
+}
+
 void jwp_queue_init(struct jwp_queue *queue)
 {
 	jwp_lock_init(queue->lock);
@@ -389,9 +407,8 @@ void jwp_queue_init(struct jwp_queue *queue)
 	jwp_signal_init(queue->space_signal, true);
 #endif
 
-	queue->tail = queue->head = queue->buff;
-	queue->tail_peek = queue->head_peek = queue->tail;
-	queue->last = queue->tail + sizeof(queue->buff) - 1;
+	queue->last = queue->buff + sizeof(queue->buff) - 1;
+	jwp_queue_clear_locked(queue);
 }
 
 static jwp_size_t jwp_queue_inqueue_peek_locked(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size)
@@ -1600,6 +1617,25 @@ jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size
 
 	return p - (const jwp_u8 *) buff;
 #endif
+}
+
+jwp_bool jwp_send_data_all(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t size)
+{
+	while (1)
+	{
+		jwp_size_t wrlen = jwp_send_data(jwp, buff, size);
+		if (wrlen >= size)
+		{
+			break;
+		}
+
+		buff += wrlen;
+		size -= wrlen;
+
+		jwp_msleep(JWP_POLL_TIME);
+	}
+
+	return true;
 }
 
 jwp_size_t jwp_recv_data(struct jwp_desc *jwp, void *buff, jwp_size_t size)
