@@ -559,20 +559,48 @@ static int do_test_jwp_udp(int argc, char *argv[])
 
 	if (is_mcu)
 	{
+		if (hostname)
+		{
+			jwp_u8 type;
+			struct jwp_mcu_package pkg;
+			struct jwp_mcu_header *hdr = &pkg.header;
+
+			hdr->magic_low = JWP_MCU_MAGIC_LOW;
+			hdr->magic_high = JWP_MCU_MAGIC_HIGH;
+
+			for (type = 0; type <= 38; type++)
+			{
+				hdr->type = type;
+
+				if (jwp_send_data(mcu.jwp, hdr, sizeof(pkg)))
+				{
+					pr_green_info("OK");
+				}
+				else
+				{
+					pr_red_info("Failed");
+				}
+
+				msleep(200);
+			}
+		}
+
 		while (1)
 		{
 			int ret;
+			int type;
 			char buff[1024];
 
-			ret = scanf("%s", buff);
-			if (ret < 1)
+			ret = scanf("%d %s", &type, buff);
+			if (ret < 2)
 			{
+				pr_error_info("scanf");
 				continue;
 			}
 
-			jwp_send_data(&udp.jwp, "123456789", 9);
+			println("type = %d, buff = %s", type, buff);
 
-			if (jwp_mcu_send_package(&mcu, 0, buff, strlen(buff) + 1))
+			if (jwp_mcu_send_package(&mcu, type, buff, strlen(buff) + 1))
 			{
 				pr_green_info("OK");
 			}

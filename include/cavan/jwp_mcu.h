@@ -168,6 +168,11 @@ struct jwp_mcu_request_owner_login
 	jwp_u32 security_code;
 };
 
+struct jwp_mcu_response_owner_login
+{
+	jwp_u32 device_sn;
+};
+
 struct jwp_mcu_response_owner_list
 {
 	jwp_u32 owner1;
@@ -271,6 +276,16 @@ struct jwp_mcu_request_practice_set
 	jwp_u8 enable;
 };
 
+struct jwp_mcu_response_vibrate_info
+{
+	jwp_u8 enable;
+};
+
+struct jwp_mcu_request_vibrate_set
+{
+	jwp_u8 enable;
+};
+
 struct jwp_mcu_request_time_set
 {
 	jwp_u32 time;
@@ -299,7 +314,7 @@ struct jwp_mcu_request_track_set
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_gsm_set
+struct jwp_mcu_request_gsm_set
 {
 	jwp_u8 enable;
 	jwp_u8 conn_enable;
@@ -333,13 +348,13 @@ struct jwp_mcu_request_keylock_set
 struct jwp_mcu_request_navi_notify_set
 {
 	jwp_u8 direction;
-	jwp_u32 diatance;
+	jwp_u32 distance;
 };
 
 struct jwp_mcu_request_bad_navi_notify_set
 {
 	jwp_u8 direction;
-	jwp_u32 diatance;
+	jwp_u32 distance;
 };
 
 struct jwp_mcu_request_file_transfer
@@ -354,7 +369,7 @@ struct jwp_mcu_request_file_transfer
 struct jwp_mcu_response_read_recent_record
 {
 	jwp_u32 time_start;
-	jwp_u32 timer_end;
+	jwp_u32 time_end;
 	jwp_u32 mileage;
 	jwp_u8 speed_max;
 	jwp_u8 heart_rate_avg;
@@ -424,3 +439,13 @@ struct jwp_mcu_desc
 
 jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp);
 jwp_bool jwp_mcu_send_package(struct jwp_mcu_desc *mcu, jwp_u8 type, const void *buff, jwp_size_t size);
+
+static inline jwp_bool jwp_mcu_send_ok_package(struct jwp_mcu_desc *mcu)
+{
+	return jwp_mcu_send_package(mcu, MCU_RSP_ERROR, NULL, 0);
+}
+
+static inline jwp_bool jwp_mcu_send_error_package(struct jwp_mcu_desc *mcu, jwp_u8 code)
+{
+	return jwp_mcu_send_package(mcu, MCU_RSP_ERROR, &code, 1);
+}
