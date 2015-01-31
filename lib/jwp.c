@@ -366,6 +366,9 @@ static jwp_bool jwp_check_and_set_send_pendding(struct jwp_desc *jwp)
 	else
 	{
 		jwp->send_pendding = res = true;
+#if JWP_TX_TIMER_ENABLE
+		jwp->send_retry = JWP_TX_RETRY_COUNT;
+#endif
 	}
 
 	jwp_lock_release(jwp->lock);
@@ -1036,9 +1039,23 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 #if JWP_SHOW_ERROR
 	if (timer->msec >= JWP_TX_TIMEOUT)
 	{
-		jwp_printf("send package timeout, tx_index = %d\n", jwp->tx_index);
+		jwp_printf("send package timeout, tx_index = %d, send_retry = %d\n", jwp->tx_index, jwp->send_retry);
 	}
 #endif
+
+	jwp_lock_acquire(jwp->lock);
+
+	if (jwp->send_retry > 0)
+	{
+		jwp->send_retry--;
+		jwp_lock_release(jwp->lock);
+	}
+	else
+	{
+		jwp->send_retry = JWP_TX_RETRY_COUNT;
+		jwp_lock_release(jwp->lock);
+		jwp->remote_not_response(jwp);
+	}
 
 	if (jwp->tx_index == hdr->index)
 	{
@@ -1255,10 +1272,13 @@ static void jwp_index_init(struct jwp_desc *jwp)
 {
 	jwp_lock_acquire(jwp->lock);
 	jwp->rx_index = jwp->tx_index = 0;
+#if JWP_TX_TIMER_ENABLE || JWP_TX_LOOP_ENABLE
+	jwp->tx_pkg.header.index = 1;
+#endif
 	jwp_lock_release(jwp->lock);
 }
 
-void jwp_sync(struct jwp_desc *jwp)
+void jwp_send_sync(struct jwp_desc *jwp)
 {
 	int i;
 
@@ -1274,23 +1294,19 @@ void jwp_send_empty_package(struct jwp_desc *jwp, jwp_u8 type, jwp_u8 index)
 {
 	struct jwp_header hdr;
 
-	hdr.type = JWP_PKG_ACK;
+	hdr.type = type;
 	hdr.index = index;
 	hdr.length = 0;
 
 	jwp_send_package(jwp, &hdr, false);
 }
 
-#if JWP_TX_LOOP_ENABLE == 0 && JWP_TX_TIMER_ENABLE == 0
+#if JWP_TX_TIMER_ENABLE == 0
 static jwp_bool jwp_send_and_wait_ack(struct jwp_desc *jwp, struct jwp_header *hdr)
 {
-#if JWP_TX_QUEUE_ENABLE
-	while (1)
-#else
-	jwp_u16 retry;
+	jwp_u8 send_retry;
 
-	for (retry = JWP_TX_RETRY; retry; retry--)
-#endif
+	for (send_retry = JWP_TX_RETRY_COUNT; send_retry > 0; send_retry--)
 	{
 		jwp_hw_write_package(jwp, hdr);
 
@@ -1298,17 +1314,18 @@ static jwp_bool jwp_send_and_wait_ack(struct jwp_desc *jwp, struct jwp_header *h
 		{
 			return true;
 		}
+
+#if JWP_SHOW_ERROR
+		jwp_printf("send package timeout, tx_index = %d, send_retry = %d\n", jwp->tx_index, send_retry);
+#endif
 	}
 
-#if JWP_TX_QUEUE_ENABLE == 0
-#if JWP_SHOW_ERROR
-	jwp_printf("send package timeout, tx_index = %d\n", jwp->tx_index);
-#endif
-
+	jwp->remote_not_response(jwp);
+#if JWP_TX_LOOP_ENABLE == 0
 	jwp_set_send_pendding(jwp, false);
+#endif
 
 	return false;
-#endif
 }
 #endif
 
@@ -1422,12 +1439,23 @@ static void jwp_process_rx_package(struct jwp_desc *jwp)
 		break;
 
 	case JWP_PKG_SYNC:
+#if JWP_DEBUG
+		jwp_printf("sync received\n");
+#endif
 		jwp_index_init(jwp);
 		break;
 
 #if JWP_WRITE_LOG_ENABLE
 	case JWP_PKG_LOG:
-		pkg->payload[hdr->length] = 0;
+		if (hdr->length < sizeof(pkg->payload))
+		{
+			pkg->payload[hdr->length] = 0;
+		}
+		else
+		{
+			pkg->payload[hdr->length - 1] = 0;
+		}
+
 		jwp->log_received(jwp, JWP_DEVICE_REMOTE, (const char *) pkg->payload, hdr->length);
 		break;
 #endif
@@ -1474,16 +1502,12 @@ jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool syn
 	{
 #if JWP_TX_QUEUE_ENABLE
 		struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_TX);
-
-#if JWP_TX_LOOP_ENABLE
-		return jwp_queue_inqueue_package(queue, hdr);
-#elif JWP_TX_PKG_TIMER_ENABLE
 		jwp_bool res = jwp_queue_inqueue_package(queue, hdr);
+
+#if JWP_TX_PKG_TIMER_ENABLE
 		jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_PKG), 0);
-		return res;
-#else
-#error "must enable tx loop or tx package timer when tx queue enabled"
 #endif
+		return res;
 #else
 #if JWP_POLL_ENABLE && JWP_TX_DATA_TIMER_ENABLE == 0
 		while (!jwp_wait_and_set_send_pendding(jwp));
@@ -1724,25 +1748,11 @@ void jwp_tx_loop(struct jwp_desc *jwp)
 		}
 
 		jwp_lock_acquire(jwp->lock);
-
 		hdr->index = jwp->tx_index + 1;
 		jwp->send_pendding = true;
-
 		jwp_lock_release(jwp->lock);
 
-		while (1)
-		{
-			jwp_hw_write_package(jwp, hdr);
-
-			if (jwp_wait_tx_complete(jwp))
-			{
-				break;
-			}
-
-#if JWP_SHOW_ERROR
-			jwp_printf("send package timeout, tx_index = %d\n", jwp->tx_index);
-#endif
-		}
+		while (!jwp_send_and_wait_ack(jwp, hdr));
 	}
 }
 #endif

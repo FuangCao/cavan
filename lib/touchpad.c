@@ -97,7 +97,7 @@ static int cavan_touchpad_timer_handler_up(struct cavan_timer *timer, void *data
 	struct cavan_touchpad_device *touchpad = MEMBER_TO_STRUCT(timer, struct cavan_touchpad_device, timer);
 	struct cavan_input_service *service = data;
 
-	touchpad->state = CAVAN_TOUCHPAD_STATE_IDEL;
+	touchpad->state = CAVAN_TOUCHPAD_STATE_IDLE;
 	cavan_touchpad_touch(touchpad, service, 0);
 
 	touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
@@ -132,7 +132,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 				}
 				else
 				{
-					touchpad->state = CAVAN_TOUCHPAD_STATE_IDEL;
+					touchpad->state = CAVAN_TOUCHPAD_STATE_IDLE;
 					touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
 				}
 				break;
@@ -159,7 +159,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 				}
 				else
 				{
-					touchpad->state = CAVAN_TOUCHPAD_STATE_IDEL;
+					touchpad->state = CAVAN_TOUCHPAD_STATE_IDLE;
 					touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
 				}
 				break;
@@ -167,7 +167,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 			case CAVAN_TOUCHPAD_STATE_UP2:
 				cavan_timer_remove(&service->timer_service, &touchpad->timer);
 				cavan_touchpad_touch(touchpad, service, 0);
-			case CAVAN_TOUCHPAD_STATE_IDEL:
+			case CAVAN_TOUCHPAD_STATE_IDLE:
 				if (event->value)
 				{
 					touchpad->state = CAVAN_TOUCHPAD_STATE_DOWN1;
@@ -178,7 +178,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 				}
 				else
 				{
-					touchpad->state = CAVAN_TOUCHPAD_STATE_IDEL;
+					touchpad->state = CAVAN_TOUCHPAD_STATE_IDLE;
 					touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
 				}
 				break;
@@ -326,7 +326,7 @@ struct cavan_input_device *cavan_touchpad_device_create(void)
 
 	touchpad->x = touchpad->xold = 0;
 	touchpad->y = touchpad->yold = 0;
-	touchpad->state = CAVAN_TOUCHPAD_STATE_IDEL;
+	touchpad->state = CAVAN_TOUCHPAD_STATE_IDLE;
 	touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
 
 	cavan_timer_init(&touchpad->timer, NULL);

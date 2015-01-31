@@ -24,9 +24,15 @@
 
 struct jwp_comm_desc
 {
-	struct jwp_desc jwp;
+	union
+	{
+		struct jwp_desc jwp;
+		struct jwp_linux_desc jwp_linux;
+	};
 
 	int fd;
 };
 
-int jwp_comm_init(struct jwp_comm_desc *jwp_comm, int fd);
+jwp_bool jwp_comm_init(struct jwp_comm_desc *comm, int fd, void *data);
+jwp_bool jwp_comm_init2(struct jwp_comm_desc *comm, const char *pathname, void *data);
+jwp_bool jwp_comm_start(struct jwp_comm_desc *comm);

@@ -24,19 +24,18 @@
 #include <cavan/network.h>
 #include <cavan/jwp-linux.h>
 
-struct jwp_udp_service
+struct jwp_udp_desc
 {
-	struct network_service service;
-	struct cavan_timer_service timer_service;
-	struct network_url url;
+	union
+	{
+		struct jwp_desc jwp;
+		struct jwp_linux_desc jwp_linux;
+	};
+
+	int sockfd;
+	socklen_t addrlen;
+	struct sockaddr_in addr;
 };
 
-struct jwp_udp_client
-{
-	struct network_client client;
-	struct jwp_udp_service *service;
-	struct jwp_desc jwp;
-};
-
-int jwp_udp_client_init(struct jwp_udp_client *client, struct jwp_udp_service *service);
-int jwp_udp_service_run(struct cavan_dynamic_service *service);
+jwp_bool jwp_udp_init(struct jwp_udp_desc *udp, const char *hostname, u16 port, void *data);
+jwp_bool jwp_udp_start(struct jwp_udp_desc *udp);

@@ -129,7 +129,7 @@ int Thread::start(void)
 {
 	AutoLock lock(mLock);
 
-	mState = CAVAN_THREAD_STATE_IDEL;
+	mState = CAVAN_THREAD_STATE_IDLE;
 
 	int ret = pthread_create(&mThread, NULL, ThreadMain, this);
 	if (ret < 0)
@@ -143,7 +143,7 @@ int Thread::start(void)
 		mLock.release();
 		msleep(10);
 		mLock.acquire();
-	} while (mState == CAVAN_THREAD_STATE_IDEL);
+	} while (mState == CAVAN_THREAD_STATE_IDLE);
 
 	return 0;
 }
@@ -156,7 +156,7 @@ int Thread::stop(void)
 	{
 	case CAVAN_THREAD_STATE_RUNNING:
 	case CAVAN_THREAD_STATE_SUSPEND:
-	case CAVAN_THREAD_STATE_IDEL:
+	case CAVAN_THREAD_STATE_IDLE:
 		mState = CAVAN_THREAD_STATE_STOPPPING;
 	case CAVAN_THREAD_STATE_STOPPPING:
 		for (int i = 100; mState != CAVAN_THREAD_STATE_STOPPED && i > 0; i--)

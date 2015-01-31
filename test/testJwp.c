@@ -22,6 +22,7 @@
 #include <cavan/network.h>
 #include <cavan/jwp-linux.h>
 #include <cavan/jwp_comm.h>
+#include <cavan/jwp_udp.h>
 
 #define TEST_JWP_DEBUG				0
 #define TEST_JWP_MEM_DUMP			0
@@ -31,54 +32,9 @@
 
 struct jwp_test_data
 {
-	int hw_fd;
 	int data_fd;
 	const char *pathname;
 };
-
-static jwp_size_t test_jwp_hw_read(struct jwp_desc *jwp, void *buff, jwp_size_t size)
-{
-	ssize_t rdlen;
-	struct jwp_test_data *data = jwp_get_private_data(jwp);
-
-	rdlen = read(data->hw_fd, buff, size);
-	if (rdlen < 0)
-	{
-		pr_error_info("read");
-		return 0;
-	}
-
-#if TEST_JWP_MEM_DUMP
-#if JWP_DEBUG
-	print("%s read >> ", jwp->name);
-#endif
-	print_mem(buff, rdlen);
-#endif
-
-	return rdlen;
-}
-
-static jwp_size_t test_jwp_hw_write(struct jwp_desc *jwp, const void *buff, jwp_size_t size)
-{
-	ssize_t wrlen;
-	struct jwp_test_data *data = jwp_get_private_data(jwp);
-
-#if TEST_JWP_MEM_DUMP
-#if JWP_DEBUG
-	print("%s write << ", jwp->name);
-#endif
-	print_mem(buff, size);
-#endif
-
-	wrlen = write(data->hw_fd, buff, size);
-	if (wrlen < 0)
-	{
-		pr_error_info("write");
-		return 0;
-	}
-
-	return wrlen;
-}
 
 static void test_jwp_data_received(struct jwp_desc *jwp, const void *data, jwp_size_t size)
 {
@@ -142,6 +98,16 @@ static void test_jwp_data_received(struct jwp_desc *jwp, const void *data, jwp_s
 #if TEST_JWP_SHOW_DATA == 0
 	println("data received: size = %d", size);
 #endif
+}
+
+static void test_jwp_command_received(struct jwp_desc *jwp, const void *command, jwp_size_t size)
+{
+	char *text = (char *) command;
+
+	text[size] = 0;
+	pr_green_info("server received command = %s", text);
+
+	jwp_send_command(jwp, "0123456789", 10);
 }
 
 #if TEST_JWP_CLIENT_WATCH || TEST_JWP_SERVER_WATCH
@@ -249,31 +215,71 @@ static void *test_jwp_watch_thread(void *data)
 }
 #endif
 
+static void test_jwp_cmdline(struct jwp_desc *jwp)
+{
+	while (1)
+	{
+		int ret;
+		char buff[1024];
+
+		ret = scanf("%s", buff);
+		if (ret < 1)
+		{
+			continue;
+		}
+
+		println("send command = %s", buff);
+
+		if (jwp_send_command(jwp, buff, strlen(buff)))
+		{
+			pr_green_info("OK");
+		}
+		else
+		{
+			pr_red_info("Failed");
+		}
+	}
+}
+
 static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 {
 	int data_fd;
 	struct jwp_test_data data;
-	struct jwp_linux_desc jwp_linux;
-	struct jwp_desc *jwp = &jwp_linux.jwp;
+	struct jwp_comm_desc comm;
+	struct jwp_desc *jwp = &comm.jwp;
 
-	jwp->hw_read = test_jwp_hw_read;
-	jwp->hw_write = test_jwp_hw_write;
-	jwp->data_received = test_jwp_data_received;
 	jwp->send_complete = NULL;
-	jwp->command_received = NULL;
 	jwp->package_received = NULL;
+	jwp->log_received = NULL;
+	jwp->remote_not_response = NULL;
+
+	if (service)
+	{
+#if JWP_DEBUG_MEMBER
+		jwp->name = "server";
+#endif
+		jwp->data_received = test_jwp_data_received;
+		jwp->command_received = test_jwp_command_received;
+	}
+	else
+	{
+#if JWP_DEBUG_MEMBER
+		jwp->name = "client";
+#endif
+		jwp->data_received = NULL;
+		jwp->command_received = NULL;
+
+	}
 
 	println("hw_fd = %d, service = %d, pathname = %s", hw_fd, service, pathname);
 
-	if (!jwp_linux_init(&jwp_linux, &data))
+	if (!jwp_comm_init(&comm, hw_fd, &data))
 	{
 		pr_red_info("jwp_init");
 		return -EFAULT;
 	}
 
-	data.hw_fd = hw_fd;
-
-	if (!jwp_linux_start(&jwp_linux))
+	if (!jwp_comm_start(&comm))
 	{
 		pr_red_info("jwp_linux_start");
 		return -EFAULT;
@@ -283,10 +289,6 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 	{
 #if TEST_JWP_SERVER_WATCH
 		pthread_t td;
-#endif
-
-#if JWP_DEBUG_MEMBER
-		jwp->name = "server";
 #endif
 
 #if TEST_JWP_SERVER_WATCH
@@ -313,10 +315,6 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 		pthread_t td;
 #endif
 		char buff[1024];
-
-#if JWP_DEBUG_MEMBER
-		jwp->name = "client";
-#endif
 
 #if TEST_JWP_CLIENT_WATCH
 		pthread_create(&td, NULL, test_jwp_watch_thread, &jwp_linux);
@@ -381,53 +379,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 		jwp_pr_value("100 = ", 100, 10);
 		jwp_pr_value("0x1234 = ", 0x1234, 16);
 
-		println("please input command");
-
-		while (1)
-		{
-			char buff[1024];
-
-#if TEST_JWP_DEBUG
-			if (JWP_QUEUE_COUNT > 0)
-			{
-				struct jwp_queue *p, *p_end;
-
-				for (p = jwp.queues, p_end = p + JWP_QUEUE_COUNT; p < p_end; p++)
-				{
-					println("%d. fill = %d, free = %d", p - jwp.queues,
-							jwp_queue_get_used_size(p), jwp_queue_get_free_size(p));
-				}
-			}
-#endif
-
-			if (scanf("%s", buff) != 1)
-			{
-				pr_error_info("scanf");
-				continue;
-			}
-
-#if 0
-			println("send data %s", buff);
-			if (jwp_send_data(jwp, buff, strlen(buff)), buff)
-			{
-				pr_green_info("send data %s complete", buff);
-			}
-			else
-			{
-				pr_red_info("Failed to jwp_send_data");
-			}
-#endif
-
-			println("send command %s", buff);
-			if (jwp_send_command(jwp, buff, strlen(buff)))
-			{
-				pr_green_info("send command %s complete", buff);
-			}
-			else
-			{
-				pr_red_info("Failed to jwp_send_command");
-			}
-		}
+		test_jwp_cmdline(&comm.jwp);
 	}
 
 	return 0;
@@ -524,32 +476,35 @@ static int do_test_queue(int argc, char *arv[])
 	return 0;
 }
 
-static int do_test_comm(int argc, char *argv[])
+static int do_test_jwp_comm(int argc, char *argv[])
 {
 	int ret;
+	struct jwp_comm_desc comm;
+	struct network_url url;
 	struct network_client client;
-	struct jwp_comm_desc jwp_comm;
 
-	ret = network_client_open2(&client, "unix-tcp:///tmp/COM1", 0);
+	network_url_init(&url, "unix-tcp", NULL, 0, argc > 1 ? argv[1] : "/tmp/COM1");
+
+	ret = network_client_open(&client, &url, 0);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open2");
 		return ret;
 	}
 
-	ret = jwp_comm_init(&jwp_comm, client.sockfd);
-	if (ret < 0)
+	if (!jwp_comm_init(&comm, client.sockfd, NULL))
 	{
 		pr_red_info("jwp_comm_init");
 		goto out_network_client_close;
 	}
 
-	while (1)
+	if (!jwp_comm_start(&comm))
 	{
-		pr_pos_info();
-
-		msleep(2000);
+		pr_red_info("jwp_comm_start");
+		goto out_network_client_close;
 	}
+
+	test_jwp_cmdline(&comm.jwp);
 
 out_network_client_close:
 	network_client_close(&client);
@@ -557,8 +512,48 @@ out_network_client_close:
 	return 0;
 }
 
+static int do_test_jwp_udp(int argc, char *argv[])
+{
+	u16 port;
+	const char *hostname;
+	struct jwp_udp_desc udp;
+
+	if (argc > 2)
+	{
+		hostname = argv[1];
+		port = text2value_unsigned(argv[2], NULL, 10);
+	}
+	else if (argc > 1)
+	{
+		hostname = NULL;
+		port = text2value_unsigned(argv[1], NULL, 10);
+	}
+	else
+	{
+		pr_red_info("too a few argment");
+		return -EFAULT;
+	}
+
+	if (!jwp_udp_init(&udp, hostname, port, NULL))
+	{
+		pr_red_info("jwp_udp_init");
+		return -EFAULT;
+	}
+
+	if (!jwp_udp_start(&udp))
+	{
+		pr_red_info("jwp_udp_start");
+		return -EFAULT;
+	}
+
+	test_jwp_cmdline(&udp.jwp);
+
+	return 0;
+}
+
 CAVAN_COMMAND_MAP_START
-{ "jwp", do_test_jwp },
 { "queue", do_test_queue },
-{ "comm", do_test_comm }
+{ "jwp", do_test_jwp },
+{ "comm", do_test_jwp_comm },
+{ "udp", do_test_jwp_udp },
 CAVAN_COMMAND_MAP_END

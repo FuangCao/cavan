@@ -23,8 +23,8 @@
 
 #define JWP_ARCH_NAME				"linux"
 
-#define JWP_DEBUG					1
-#define JWP_DEBUG_MEMBER			1
+#define JWP_DEBUG					0
+#define JWP_DEBUG_MEMBER			0
 #define JWP_SHOW_ERROR				1
 #define JWP_PRINTF_ENABLE			1
 #define JWP_WRITE_LOG_ENABLE		1
@@ -33,17 +33,17 @@
 #define JWP_SLEEP_ENABLE			1
 #define JWP_CHECKSUM_ENABLE			1
 
-#define JWP_QUEUE_ENABLE			0
-#define JWP_TX_QUEUE_ENABLE			0
-#define JWP_RX_QUEUE_ENABLE			0
-#define JWP_TX_DATA_QUEUE_ENABLE	0
-#define JWP_RX_DATA_QUEUE_ENABLE	0
+#define JWP_QUEUE_ENABLE			1
+#define JWP_TX_QUEUE_ENABLE			1
+#define JWP_RX_QUEUE_ENABLE			1
+#define JWP_TX_DATA_QUEUE_ENABLE	1
+#define JWP_RX_DATA_QUEUE_ENABLE	1
 
 #define JWP_TIMER_ENABLE			1
 #define JWP_TX_TIMER_ENABLE			1
-#define JWP_TX_DATA_TIMER_ENABLE	0
-#define JWP_TX_PKG_TIMER_ENABLE		0
-#define JWP_RX_PKG_TIMER_ENABLE		0
+#define JWP_TX_DATA_TIMER_ENABLE	1
+#define JWP_TX_PKG_TIMER_ENABLE		1
+#define JWP_RX_PKG_TIMER_ENABLE		1
 
 #define JWP_TX_LOOP_ENABLE			0
 #define JWP_RX_LOOP_ENABLE			1
@@ -58,7 +58,7 @@
 #define JWP_MTU						0xFF
 #define JWP_POLL_TIME				10
 #define JWP_TX_LATENCY				200
-#define JWP_TX_RETRY				10
+#define JWP_TX_RETRY_COUNT			20
 #define JWP_TX_TIMEOUT				2000
 #define JWP_QUEUE_SIZE				(JWP_MTU * 3)
 

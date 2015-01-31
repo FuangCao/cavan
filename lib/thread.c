@@ -298,7 +298,7 @@ int cavan_thread_start(struct cavan_thread *thread)
 		}
 		else
 		{
-			thread->state = CAVAN_THREAD_STATE_IDEL;
+			thread->state = CAVAN_THREAD_STATE_IDLE;
 		}
 	}
 	else
@@ -430,6 +430,7 @@ void cavan_thread_resume(struct cavan_thread *thread)
 		pthread_cond_signal(&thread->cond);
 	case CAVAN_THREAD_STATE_RUNNING:
 		thread->wake_handker(thread, thread->private_data);
+	case CAVAN_THREAD_STATE_IDLE:
 		break;
 
 	default:

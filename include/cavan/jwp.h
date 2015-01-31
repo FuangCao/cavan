@@ -225,6 +225,10 @@ struct jwp_desc
 {
 	jwp_u8 tx_index;
 	jwp_u8 rx_index;
+#if JWP_TX_TIMER_ENABLE
+	jwp_u8 send_retry;
+#endif
+
 	void *private_data;
 
 #if JWP_DEBUG_MEMBER
@@ -271,6 +275,7 @@ struct jwp_desc
 	jwp_size_t (*hw_read)(struct jwp_desc *jwp, void *buff, jwp_size_t size);
 	jwp_size_t (*hw_write)(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 	void (*send_complete)(struct jwp_desc *jwp);
+	void (*remote_not_response)(struct jwp_desc *jwp);
 	void (*data_received)(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 	void (*command_received)(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 	void (*package_received)(struct jwp_desc *jwp, const struct jwp_header *hdr);
@@ -332,7 +337,7 @@ static inline jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size
 jwp_bool jwp_init(struct jwp_desc *jwp, void *data);
 jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool sync);
 void jwp_send_empty_package(struct jwp_desc *jwp, jwp_u8 type, jwp_u8 index);
-void jwp_sync(struct jwp_desc *jwp);
+void jwp_send_sync(struct jwp_desc *jwp);
 jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 jwp_size_t jwp_recv_data(struct jwp_desc *jwp, void *buff, jwp_size_t size);
 jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t size);

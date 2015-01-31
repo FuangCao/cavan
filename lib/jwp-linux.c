@@ -20,7 +20,7 @@
 #include <cavan.h>
 #include <cavan/jwp-linux.h>
 
-#define JWP_LINUX_DEBUG			1
+#define JWP_LINUX_DEBUG			0
 
 const char *jwp_device_to_string(jwp_device_t device)
 {
@@ -111,7 +111,14 @@ static jwp_size_t jwp_linux_hw_read(struct jwp_desc *jwp, void *buff, jwp_size_t
 
 static void jwp_linux_send_complete(struct jwp_desc *jwp)
 {
-	pr_pos_info();
+#if JWP_LINUX_DEBUG
+	pr_green_pos();
+#endif
+}
+
+static void jwp_linux_remote_not_response(struct jwp_desc *jwp)
+{
+	pr_red_pos();
 }
 
 static void jwp_linux_data_received(struct jwp_desc *jwp, const void *data, jwp_size_t size)
@@ -135,7 +142,7 @@ static void jwp_linux_package_received(struct jwp_desc *jwp, const struct jwp_he
 
 static void jwp_linux_log_received(struct jwp_desc *jwp, jwp_device_t device, const char *log, jwp_size_t size)
 {
-	println("%s: %s", jwp_device_to_string(device), log);
+	print("%s: %s", jwp_device_to_string(device), log);
 }
 
 // ============================================================
@@ -224,8 +231,16 @@ jwp_bool jwp_linux_start(struct jwp_linux_desc *jwp_linux)
 		jwp->send_complete = jwp_linux_send_complete;
 	}
 
+	if (jwp->remote_not_response == NULL)
+	{
+		jwp->remote_not_response = jwp_linux_remote_not_response;
+	}
+
 #if JWP_WRITE_LOG_ENABLE
-	jwp->log_received = jwp_linux_log_received;
+	if (jwp->log_received == NULL)
+	{
+		jwp->log_received = jwp_linux_log_received;
+	}
 #endif
 
 #if JWP_TIMER_ENABLE
