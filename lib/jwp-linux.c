@@ -123,7 +123,7 @@ static void jwp_linux_remote_not_response(struct jwp_desc *jwp)
 
 static void jwp_linux_data_received(struct jwp_desc *jwp, const void *data, jwp_size_t size)
 {
-	println("data received: size = %d", size);
+	println("%s: size = %d", __FUNCTION__, size);
 
 #if JWP_RX_DATA_QUEUE_ENABLE
 	jwp_queue_clear(jwp_get_queue(jwp, JWP_QUEUE_RX_DATA));
@@ -134,7 +134,7 @@ static void jwp_linux_command_received(struct jwp_desc *jwp, const void *command
 {
 	((char *) command)[size] = 0;
 
-	pr_green_info("command = %s", (char *) command);
+	pr_green_info("%s: %s", __FUNCTION__, (char *) command);
 }
 
 static void jwp_linux_package_received(struct jwp_desc *jwp, const struct jwp_header *hdr)

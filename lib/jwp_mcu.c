@@ -25,19 +25,40 @@
 static void jwp_mcu_proccess_package(struct jwp_mcu_header *hdr)
 {
 #if JWP_MCU_DEBUG
-	jwp_printf("jwp_mcu_header: type = %d\n", hdr->type);
+	jwp_printf("%s: type = %d, data = %s\n", __FUNCTION__, hdr->type, hdr->payload);
 #endif
 }
 
 #if JWP_RX_DATA_QUEUE_ENABLE == 0
 static void jwp_mcu_rx_package_init(struct jwp_mcu_rx_package *pkg)
 {
-	pkg->remain = JWP_MCU_MTU;
 	pkg->head = pkg->body;
 }
 
 static jwp_size_t jwp_mcu_rx_package_fill(struct jwp_mcu_rx_package *pkg, const jwp_u8 *buff, jwp_size_t size)
 {
+	if (pkg->head < pkg->body + 2)
+	{
+		if (pkg->head > pkg->body)
+		{
+			if (*buff == JWP_MCU_MAGIC_HIGH)
+			{
+				pkg->head = pkg->body + 2;
+				pkg->remain = JWP_MCU_MTU - 2;
+			}
+			else
+			{
+				pkg->head = pkg->body;
+			}
+		}
+		else if (buff[0] == JWP_MCU_MAGIC_LOW)
+		{
+			pkg->head = pkg->body + 1;
+		}
+
+		return 1;
+	}
+
 	if (size < pkg->remain)
 	{
 		jwp_memcpy(pkg->head, buff, size);
@@ -50,8 +71,8 @@ static jwp_size_t jwp_mcu_rx_package_fill(struct jwp_mcu_rx_package *pkg, const 
 		size = pkg->remain;
 		jwp_memcpy(pkg->head, buff, size);
 
-		jwp_mcu_proccess_rx_package(&pkg->header);
-		jwp_mcu_rx_package_init(pkg);
+		jwp_mcu_proccess_package(&pkg->header);
+		pkg->head = pkg->body;
 	}
 
 	return size;
@@ -81,17 +102,21 @@ static void jwp_mcu_data_received(struct jwp_desc *jwp, const void *buff, jwp_si
 #else
 	struct jwp_mcu_desc *mcu = jwp_get_private_data(jwp);
 
+#if JWP_MCU_DEBUG
+	jwp_printf("%s: size = %d\n", __FUNCTION__, size);
+#endif
+
 	while (1)
 	{
-		jwp_size wrlen;
+		jwp_size_t wrlen;
 
 		wrlen = jwp_mcu_rx_package_fill(&mcu->rx_pkg, buff, size);
-		if (wrlen == size)
+		if (wrlen >= size)
 		{
 			break;
 		}
 
-		buff += wrlen;
+		buff = (jwp_u8 *) buff + wrlen;
 		size -= wrlen;
 	}
 #endif
@@ -110,13 +135,20 @@ jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp)
 	return true;
 }
 
-jwp_bool jwp_mcu_send_package(struct jwp_mcu_desc *mcu, jwp_u8 type, struct jwp_mcu_package *pkg)
+jwp_bool jwp_mcu_send_package(struct jwp_mcu_desc *mcu, jwp_u8 type, const void *data, jwp_size_t size)
 {
-	struct jwp_mcu_header *hdr = &pkg->header;
+	struct jwp_mcu_package pkg;
+	struct jwp_mcu_header *hdr = &pkg.header;
+
+	if (size > sizeof(pkg.payload))
+	{
+		return false;
+	}
 
 	hdr->magic_low = JWP_MCU_MAGIC_LOW;
 	hdr->magic_high = JWP_MCU_MAGIC_HIGH;
 	hdr->type = type;
+	memcpy(pkg.payload, data, size);
 
-	return jwp_send_data_all(mcu->jwp, (jwp_u8 *) pkg, sizeof(struct jwp_mcu_package));
+	return jwp_send_data_all(mcu->jwp, (jwp_u8 *) &pkg, sizeof(pkg));
 }

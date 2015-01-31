@@ -562,15 +562,17 @@ static int do_test_jwp_udp(int argc, char *argv[])
 		while (1)
 		{
 			int ret;
-			struct jwp_mcu_package pkg;
+			char buff[1024];
 
-			ret = scanf("%s", pkg.payload);
+			ret = scanf("%s", buff);
 			if (ret < 1)
 			{
 				continue;
 			}
 
-			if (jwp_mcu_send_package(&mcu, 0, &pkg))
+			jwp_send_data(&udp.jwp, "123456789", 9);
+
+			if (jwp_mcu_send_package(&mcu, 0, buff, strlen(buff) + 1))
 			{
 				pr_green_info("OK");
 			}
