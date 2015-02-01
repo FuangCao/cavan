@@ -173,8 +173,13 @@ struct jwp_rx_package
 	};
 
 	jwp_u8 *head;
-	jwp_u8 header_remain;
-	jwp_u8 data_remain;
+
+#if JWP_RX_QUEUE_ENABLE == 0
+	jwp_u8 *header_start;
+#endif
+
+	jwp_u8 *data_start;
+	jwp_u8 *data_end;
 };
 
 struct jwp_queue

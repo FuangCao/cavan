@@ -22,8 +22,9 @@
 #include <cavan.h>
 #include <cavan/jwp-linux.h>
 
-#define JWP_MCU_MTU				20
+#define JWP_MCU_MTU				0xFF
 
+#define JWP_MCU_MAGIC_SIZE		2
 #define JWP_MCU_MAGIC_HIGH		0x12
 #define JWP_MCU_MAGIC_LOW		0x34
 #define JWP_MCU_MAGIC			(JWP_MCU_MAGIC_HIGH << 8 | JWP_MCU_MAGIC_LOW)
@@ -33,7 +34,7 @@
 typedef enum
 {
 	/* command */
-	MCU_REQ_IDENTIFY_REQ = 1,
+	MCU_REQ_IDENTIFY = 1,
 	MCU_REQ_ADD_OWNER = 2,
 	MCU_REQ_REMOVE_OWNER = 3,
 	MCU_REQ_OWNER_IN = 4,
@@ -126,6 +127,7 @@ struct jwp_mcu_header
 	};
 
 	jwp_u8 type;
+	jwp_u8 length;
 	jwp_u8 payload[0];
 };
 
@@ -426,15 +428,19 @@ struct jwp_mcu_rx_package
 	};
 
 	jwp_u8 *head;
-	jwp_u8 remain;
+
+#if JWP_RX_DATA_QUEUE_ENABLE == 0
+	jwp_u8 *header_start;
+#endif
+
+	jwp_u8 *data_start;
+	jwp_u8 *data_end;
 };
 
 struct jwp_mcu_desc
 {
 	struct jwp_desc *jwp;
-#if JWP_RX_DATA_QUEUE_ENABLE == 0
 	struct jwp_mcu_rx_package rx_pkg;
-#endif
 };
 
 jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp);

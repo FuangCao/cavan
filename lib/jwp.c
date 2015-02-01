@@ -291,8 +291,14 @@ void jwp_package_dump(const struct jwp_package *pkg)
 
 static void jwp_rx_package_init(struct jwp_rx_package *pkg)
 {
+	pkg->header.magic_low = JWP_MAGIC_LOW;
+	pkg->header.magic_high = JWP_MAGIC_HIGH;
+
 	pkg->head = pkg->body;
-	pkg->header_remain = sizeof(pkg->header);
+#if JWP_RX_QUEUE_ENABLE == 0
+	pkg->header_start = pkg->body + JWP_MAGIC_SIZE;
+#endif
+	pkg->data_start = pkg->body + sizeof(pkg->header);
 }
 
 static void jwp_hw_write(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t size)
@@ -804,10 +810,11 @@ static jwp_bool jwp_data_inqueue(struct jwp_desc *jwp)
 static jwp_bool jwp_queue_fill_package(struct jwp_desc *jwp)
 {
 	jwp_size_t rdlen;
+	jwp_size_t remain;
 	struct jwp_rx_package *pkg = &jwp->rx_pkg;
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX);
 
-	if (pkg->header_remain)
+	if (pkg->head < pkg->data_start)
 	{
 		if (pkg->head == pkg->body)
 		{
@@ -830,100 +837,92 @@ static jwp_bool jwp_queue_fill_package(struct jwp_desc *jwp)
 			jwp_queue_dequeue_commit(queue);
 
 			pkg->head = pkg->body + JWP_MAGIC_SIZE;
-			pkg->header_remain = sizeof(pkg->header) - JWP_MAGIC_SIZE;
 		}
 
-		rdlen = jwp_queue_dequeue(queue, pkg->head, pkg->header_remain);
-		if (rdlen < pkg->header_remain)
+		remain = pkg->data_start - pkg->head;
+		rdlen = jwp_queue_dequeue(queue, pkg->head, remain);
+		if (rdlen < remain)
 		{
 			pkg->head += rdlen;
-			pkg->header_remain -= (jwp_u8) rdlen;
 			return false;
 		}
-		else
-		{
-			pkg->header_remain = 0;
-			pkg->data_remain = pkg->header.length;
-			pkg->head = pkg->payload;
-		}
+
+		pkg->head = pkg->data_start;
+		pkg->data_end = pkg->head + pkg->header.length;
 	}
 
-	rdlen = jwp_queue_dequeue(queue, pkg->head, pkg->data_remain);
-	if (rdlen == pkg->data_remain)
+	remain = pkg->data_end - pkg->head;
+	rdlen = jwp_queue_dequeue(queue, pkg->head, remain);
+	if (rdlen < remain)
 	{
-		return true;
+		pkg->head += rdlen;
+		return false;
 	}
 
-	pkg->head += rdlen;
-	pkg->data_remain -= (jwp_u8) rdlen;
-
-	return false;
+	return true;
 }
 #else
 static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_rx_package *pkg, const jwp_u8 *buff, jwp_size_t size)
 {
-	jwp_size_t size_bak = size;
+	jwp_size_t remain;
 
-	if (pkg->header_remain)
+	if (pkg->head < pkg->data_start)
 	{
-		if (pkg->head < pkg->body + JWP_MAGIC_SIZE)
+		if (pkg->head < pkg->header_start)
 		{
-#if 0
-			if (size == 0)
+			if (pkg->head == pkg->body)
 			{
-				return 0;
-			}
-#endif
-
-			if (pkg->head > pkg->body)
-			{
-				if (buff[0] == JWP_MAGIC_HIGH)
+				if (buff[0] == JWP_MAGIC_LOW)
 				{
-					pkg->head = pkg->body + JWP_MAGIC_SIZE;
-					pkg->header_remain = sizeof(pkg->header) - JWP_MAGIC_SIZE;
-				}
-				else
-				{
-					pkg->head = pkg->body;
+					pkg->head++;
 				}
 			}
-			else if (buff[0] == JWP_MAGIC_LOW)
+			else if (buff[0] == JWP_MAGIC_HIGH)
 			{
-				pkg->head = pkg->body + 1;
+				pkg->head++;
+			}
+			else
+			{
+				pkg->head = pkg->body;
 			}
 
 			return 1;
 		}
 
-		if (size < pkg->header_remain)
+		remain = pkg->data_start - pkg->head;
+		if (size < remain)
 		{
 			jwp_memcpy(pkg->head, buff, size);
 			pkg->head += size;
-			pkg->header_remain -= (jwp_u8) size;
 
 			return size;
 		}
 
-		jwp_memcpy(pkg->head, buff, pkg->header_remain);
-		buff += pkg->header_remain;
-		size -= pkg->header_remain;
+		jwp_memcpy(pkg->head, buff, remain);
 
-		pkg->header_remain = 0;
-		pkg->data_remain = pkg->header.length;
-		pkg->head = pkg->payload;
+		if (pkg->header.length == 0)
+		{
+			goto label_proccess_package;
+		}
+
+		pkg->head = pkg->data_start;
+		pkg->data_end = pkg->head + pkg->header.length;
+
+		return remain;
 	}
 
-	if (size < pkg->data_remain)
+	remain = pkg->data_end - pkg->head;
+	if (size < remain)
 	{
 		jwp_memcpy(pkg->head, buff, size);
 		pkg->head += size;
-		pkg->data_remain -= (jwp_u8) size;
 
-		return size_bak;
+		return size;
 	}
 
-	jwp_memcpy(pkg->head, buff, pkg->data_remain);
+	jwp_memcpy(pkg->head, buff, remain);
 
+label_proccess_package:
 	jwp_process_rx_package(jwp);
 
 #if JWP_RX_DATA_QUEUE_ENABLE
@@ -933,22 +932,16 @@ static jwp_size_t jwp_package_write_data(struct jwp_desc *jwp, struct jwp_rx_pac
 	}
 #endif
 
-	return size_bak - (size - pkg->data_remain);
+	return remain;
 }
 
 static void jwp_fill_package(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t size)
 {
 	struct jwp_rx_package *pkg = &jwp->rx_pkg;
 
-	while (1)
+	while (size > 0)
 	{
-		jwp_size_t wrlen;
-
-		wrlen = jwp_package_write_data(jwp, pkg, buff, size);
-		if (wrlen >= size)
-		{
-			break;
-		}
+		jwp_size_t wrlen = jwp_package_write_data(jwp, pkg, buff, size);
 
 		buff += wrlen;
 		size -= wrlen;
@@ -1019,14 +1012,11 @@ static void jwp_timer_delete(struct jwp_timer *timer)
 
 void jwp_timer_run(struct jwp_timer *timer)
 {
-	jwp_bool active;
-
 	jwp_lock_acquire(timer->lock);
 	timer->active = false;
 	jwp_lock_release(timer->lock);
 
-	active = timer->handler(timer);
-	if (active)
+	if (timer->handler(timer))
 	{
 		jwp_timer_create(timer, timer->msec);
 	}
@@ -1039,6 +1029,14 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 	struct jwp_desc *jwp = timer->jwp;
 	struct jwp_header *hdr = &jwp->tx_pkg.header;
 
+	jwp_lock_acquire(jwp->lock);
+
+	if (!jwp->send_pendding)
+	{
+		jwp_lock_release(jwp->lock);
+		return false;
+	}
+
 #if JWP_SHOW_ERROR
 	if (timer->msec >= JWP_TX_TIMEOUT)
 	{
@@ -1046,24 +1044,20 @@ static jwp_bool jwp_tx_timer_handler(struct jwp_timer *timer)
 	}
 #endif
 
-	jwp_lock_acquire(jwp->lock);
-
 	if (jwp->send_retry > 0)
 	{
 		jwp->send_retry--;
-		jwp_lock_release(jwp->lock);
 	}
 	else
 	{
-		jwp->send_retry = JWP_TX_RETRY_COUNT;
 		jwp_lock_release(jwp->lock);
 		jwp->remote_not_response(jwp);
+		jwp_lock_acquire(jwp->lock);
+
+		jwp->send_retry = JWP_TX_RETRY_COUNT;
 	}
 
-	if (jwp->tx_index == hdr->index)
-	{
-		return false;
-	}
+	jwp_lock_release(jwp->lock);
 
 	jwp_hw_write_package(jwp, hdr);
 	timer->msec = JWP_TX_TIMEOUT;
@@ -1337,7 +1331,7 @@ static void jwp_process_rx_package(struct jwp_desc *jwp)
 	struct jwp_rx_package *pkg = &jwp->rx_pkg;
 	struct jwp_header *hdr = &pkg->header;
 
-	jwp_rx_package_init(pkg);
+	pkg->head = pkg->body;
 
 #if JWP_DEBUG
 	jwp_header_dump(hdr);

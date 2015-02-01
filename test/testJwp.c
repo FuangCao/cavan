@@ -151,6 +151,8 @@ static void *test_jwp_watch_thread(void *data)
 		println("jwp->line = %d", jwp->line);
 #endif
 
+		println("jwp->send_pendding = %d", jwp->send_pendding);
+
 #if JWP_QUEUE_ENABLE
 		for (i = 0; i < NELEM(jwp->queues); i++)
 		{
@@ -293,7 +295,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 #endif
 
 #if TEST_JWP_SERVER_WATCH
-		pthread_create(&td, NULL, test_jwp_watch_thread, &jwp_linux);
+		pthread_create(&td, NULL, test_jwp_watch_thread, &comm.jwp_linux);
 #endif
 
 		data_fd = open(pathname, O_WRONLY | O_CREAT | O_TRUNC, 0777);
@@ -318,7 +320,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 		char buff[1024];
 
 #if TEST_JWP_CLIENT_WATCH
-		pthread_create(&td, NULL, test_jwp_watch_thread, &jwp_linux);
+		pthread_create(&td, NULL, test_jwp_watch_thread, &comm.jwp_linux);
 #endif
 
 		data.data_fd = 0;
@@ -559,32 +561,6 @@ static int do_test_jwp_udp(int argc, char *argv[])
 
 	if (is_mcu)
 	{
-		if (hostname)
-		{
-			jwp_u8 type;
-			struct jwp_mcu_package pkg;
-			struct jwp_mcu_header *hdr = &pkg.header;
-
-			hdr->magic_low = JWP_MCU_MAGIC_LOW;
-			hdr->magic_high = JWP_MCU_MAGIC_HIGH;
-
-			for (type = 0; type <= 38; type++)
-			{
-				hdr->type = type;
-
-				if (jwp_send_data(mcu.jwp, hdr, sizeof(pkg)))
-				{
-					pr_green_info("OK");
-				}
-				else
-				{
-					pr_red_info("Failed");
-				}
-
-				msleep(200);
-			}
-		}
-
 		while (1)
 		{
 			int ret;
