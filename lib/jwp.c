@@ -951,6 +951,101 @@ static void jwp_fill_package(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_
 
 // ============================================================
 
+void jwp_package_receiver_init(struct jwp_package_receiver *receiver, void *package, jwp_size_t magic_size, jwp_size_t header_size)
+{
+	jwp_lock_init(receiver->lock);
+
+	receiver->head = receiver->package = package;
+	receiver->header_start = receiver->package + magic_size;
+	receiver->data_start = receiver->package + header_size;
+}
+
+static jwp_size_t jwp_package_receiver_write_locked(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size)
+{
+	jwp_size_t remain;
+
+	if (receiver->head < receiver->data_start)
+	{
+		jwp_size_t length;
+
+		if (receiver->head < receiver->header_start)
+		{
+			if (*buff == *receiver->head)
+			{
+				receiver->head++;
+			}
+			else
+			{
+				receiver->head = receiver->package;
+			}
+
+			return 1;
+		}
+
+		remain = receiver->data_start - receiver->head;
+		if (size < remain)
+		{
+			jwp_memcpy(receiver->head, buff, size);
+			receiver->head += size;
+			return size;
+		}
+
+		jwp_memcpy(receiver->head, buff, remain);
+
+		length = receiver->get_data_length(receiver);
+		if (length == 0)
+		{
+			goto out_process_package;
+		}
+
+		receiver->head = receiver->data_start;
+		receiver->data_end = receiver->head + length;
+
+		return remain;
+	}
+
+	remain = receiver->data_end - receiver->data_start;
+	if (size < remain)
+	{
+		jwp_memcpy(receiver->head, buff, size);
+		receiver->head += size;
+		return size;
+	}
+
+	jwp_memcpy(receiver->head, buff, remain);
+
+out_process_package:
+	receiver->process_package(receiver);
+	receiver->head = receiver->package;
+	return remain;
+}
+
+jwp_size_t jwp_package_receiver_write(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size)
+{
+	jwp_lock_acquire(receiver->lock);
+	size = jwp_package_receiver_write_locked(receiver, buff, size);
+	jwp_lock_release(receiver->lock);
+
+	return size;
+}
+
+void jwp_package_receiver_fill(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size)
+{
+	jwp_lock_acquire(receiver->lock);
+
+	while (size > 0)
+	{
+		jwp_size_t wrlen = jwp_package_receiver_write_locked(receiver, buff, size);
+
+		buff += wrlen;
+		size -= wrlen;
+	}
+
+	jwp_lock_release(receiver->lock);
+}
+
+// ============================================================
+
 #if JWP_TIMER_ENABLE
 static void jwp_timer_init(struct jwp_timer *timer, struct jwp_desc *jwp)
 {

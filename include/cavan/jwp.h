@@ -226,6 +226,21 @@ struct jwp_timer
 	jwp_bool (*handler)(struct jwp_timer *timer);
 };
 
+struct jwp_package_receiver
+{
+	jwp_u8 *package;
+	jwp_u8 *head;
+	jwp_u8 *header_start;
+	jwp_u8 *data_start;
+	jwp_u8 *data_end;
+
+	void *private_data;
+	jwp_lock_t lock;
+
+	jwp_size_t (*get_data_length)(struct jwp_package_receiver *receiver);
+	void (*process_package)(struct jwp_package_receiver *receiver);
+};
+
 struct jwp_desc
 {
 	jwp_u8 tx_index;
@@ -336,6 +351,22 @@ static inline jwp_size_t jwp_queue_seek(struct jwp_queue *queue, jwp_size_t size
 static inline jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size)
 {
 	return jwp_queue_dequeue(queue, NULL, size);
+}
+
+// ============================================================
+
+void jwp_package_receiver_init(struct jwp_package_receiver *receiver, void *package, jwp_size_t magic_size, jwp_size_t header_size);
+jwp_size_t jwp_package_receiver_write(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
+void jwp_package_receiver_fill(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
+
+static inline void jwp_package_receiver_set_private_data(struct jwp_package_receiver *receiver, void *data)
+{
+	receiver->private_data = data;
+}
+
+static inline void *jwp_package_receiver_get_private_data(struct jwp_package_receiver *receiver)
+{
+	return receiver->private_data;
 }
 
 // ============================================================
