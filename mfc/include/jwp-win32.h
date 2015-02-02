@@ -19,6 +19,8 @@
  *
  */
 
+#define JWP_ARCH_NAME				"win32"
+
 #define JWP_DEBUG					1
 #define JWP_DEBUG_MEMBER			1
 #define JWP_SHOW_ERROR				1
@@ -54,7 +56,7 @@
 #define JWP_MTU						0xFF
 #define JWP_POLL_TIME				100
 #define JWP_TX_LATENCY				200
-#define JWP_TX_RETRY				10
+#define JWP_TX_RETRY_COUNT			20
 #define JWP_TX_TIMEOUT				2000
 #define JWP_QUEUE_SIZE				(JWP_MTU * 3)
 
@@ -115,3 +117,5 @@ typedef struct
 	HANDLE handle;
 	jwp_bool waitting;
 } jwp_signal_t;
+
+#include "jwp.h"

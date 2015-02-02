@@ -19,15 +19,9 @@
  *
  */
 
-#ifdef _WIN32
-#include "jwp-win32.h"
-#elif defined(CSR101x)
-#include "jwp-csr101x.h"
-#else
-#include <cavan/jwp-linux.h>
+#ifndef JWP_ARCH_NAME
+#error "don't include this file immediately, you must include jwp-*.h"
 #endif
-
-// ============================================================
 
 #define jwp_signal_wait(signal, lock) \
 	do { \
@@ -166,23 +160,6 @@ struct jwp_package
 	};
 };
 
-struct jwp_rx_package
-{
-	union
-	{
-		struct
-		{
-			struct jwp_header header;
-			jwp_u8 payload[JWP_MTU - JWP_HEADER_SIZE];
-		};
-		jwp_u8 body[JWP_MTU];
-	};
-
-	jwp_u8 *head;
-	jwp_u8 header_remain;
-	jwp_u8 data_remain;
-};
-
 struct jwp_queue
 {
 	jwp_u8 buff[JWP_QUEUE_SIZE];
@@ -227,10 +204,29 @@ struct jwp_timer
 	jwp_bool (*handler)(struct jwp_timer *timer);
 };
 
+struct jwp_package_receiver
+{
+	jwp_u8 *body;
+	jwp_u8 *head;
+	jwp_u8 *header_start;
+	jwp_u8 *payload_start;
+	jwp_u8 *payload_end;
+
+	void *private_data;
+	jwp_lock_t lock;
+
+	jwp_size_t (*get_payload_length)(struct jwp_package_receiver *receiver);
+	void (*process_package)(struct jwp_package_receiver *receiver);
+};
+
 struct jwp_desc
 {
 	jwp_u8 tx_index;
 	jwp_u8 rx_index;
+#if JWP_TX_TIMER_ENABLE
+	jwp_u8 send_retry;
+#endif
+
 	void *private_data;
 
 #if JWP_DEBUG_MEMBER
@@ -254,7 +250,8 @@ struct jwp_desc
 	jwp_u8 data_remain;
 #endif
 
-	struct jwp_rx_package rx_pkg;
+	struct jwp_package rx_pkg;
+	struct jwp_package_receiver receiver;
 
 #if JWP_TX_TIMER_ENABLE || JWP_TX_LOOP_ENABLE
 	struct jwp_package tx_pkg;
@@ -277,6 +274,7 @@ struct jwp_desc
 	jwp_size_t (*hw_read)(struct jwp_desc *jwp, void *buff, jwp_size_t size);
 	jwp_size_t (*hw_write)(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 	void (*send_complete)(struct jwp_desc *jwp);
+	void (*remote_not_response)(struct jwp_desc *jwp);
 	void (*data_received)(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 	void (*command_received)(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 	void (*package_received)(struct jwp_desc *jwp, const struct jwp_header *hdr);
@@ -293,7 +291,13 @@ struct jwp_desc
 
 // ============================================================
 
+char *jwp_strcpy(char *dest, const char *src);
+jwp_size_t jwp_strlen(const char *text);
+char *jwp_value2str10(jwp_u32 value, char *buff, jwp_size_t size);
+char *jwp_value2str16(jwp_u32 value, char *buff, jwp_size_t size);
+void jwp_pr_value(const char *prompt, jwp_u32 value, jwp_u8 base);
 void jwp_printf(const char *fmt, ...);
+
 void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);
 jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size);
@@ -301,6 +305,7 @@ jwp_u8 jwp_package_checksum(struct jwp_header *hdr);
 
 // ============================================================
 
+void jwp_queue_clear(struct jwp_queue *queue);
 void jwp_queue_init(struct jwp_queue *queue);
 jwp_size_t jwp_queue_inqueue_peek(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 void jwp_queue_inqueue_commit(struct jwp_queue *queue);
@@ -329,14 +334,42 @@ static inline jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size
 
 // ============================================================
 
+void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_u8 *body, jwp_size_t magic_size, jwp_size_t header_size);
+jwp_size_t jwp_package_receiver_write(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
+void jwp_package_receiver_fill(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
+jwp_bool jwp_package_receiver_fill_by_queue(struct jwp_package_receiver *receiver, struct jwp_queue *queue);
+
+static inline void jwp_package_receiver_set_private_data(struct jwp_package_receiver *receiver, void *data)
+{
+	receiver->private_data = data;
+}
+
+static inline void *jwp_package_receiver_get_private_data(struct jwp_package_receiver *receiver)
+{
+	return receiver->private_data;
+}
+
+// ============================================================
+
 jwp_bool jwp_init(struct jwp_desc *jwp, void *data);
 jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool sync);
-void jwp_send_ack_package(struct jwp_desc *jwp, jwp_u8 index);
-void jwp_send_sync_package(struct jwp_desc *jwp);
+void jwp_send_empty_package(struct jwp_desc *jwp, jwp_u8 type, jwp_u8 index);
+void jwp_send_sync(struct jwp_desc *jwp);
 jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 jwp_size_t jwp_recv_data(struct jwp_desc *jwp, void *buff, jwp_size_t size);
+jwp_bool jwp_send_data_all(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t size);
 jwp_bool jwp_send_command(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 void jwp_send_log(struct jwp_desc *jwp, const char *log, jwp_size_t size);
+
+static inline void jwp_send_ack_package(struct jwp_desc *jwp, jwp_u8 index)
+{
+	jwp_send_empty_package(jwp, JWP_PKG_ACK, index);
+}
+
+static inline void jwp_send_sync_package(struct jwp_desc *jwp)
+{
+	jwp_send_empty_package(jwp, JWP_PKG_SYNC, 0);
+}
 
 // ============================================================
 

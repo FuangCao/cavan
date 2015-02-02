@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jwp.h"
+#include "jwp-win32.h"
 
 class JwpCore : public jwp_desc
 {

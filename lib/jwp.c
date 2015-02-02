@@ -167,7 +167,7 @@ char *jwp_value2str10(jwp_u32 value, char *buff, jwp_size_t size)
 
 	while (value && p < buff_end)
 	{
-		*p++ = jwp_value_to_char(value % 10);
+		*p++ = jwp_value_to_char((jwp_u8) (value % 10));
 		value /= 10;
 	}
 
@@ -206,7 +206,7 @@ char *jwp_value2str16(jwp_u32 value, char *buff, jwp_size_t size)
 
 	for (i = sizeof(value) * 8 - 4; i >= 0 && p < buff_end; i -= 4, p++)
 	{
-		*p = jwp_value_to_char((value >> i) & 0x0F);
+		*p = jwp_value_to_char((jwp_u8) ((value >> i) & 0x0F));
 	}
 
 	*p = 0;
@@ -805,7 +805,7 @@ void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_u8 *bo
 	receiver->payload_start = receiver->body + header_size;
 }
 
-#if JWP_RX_QUEUE_ENABLE == 0 && JWP_RX_DATA_QUEUE_ENABLE == 0
+#if JWP_RX_QUEUE_ENABLE == 0 || JWP_RX_DATA_QUEUE_ENABLE == 0
 static jwp_size_t jwp_package_receiver_write_locked(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size)
 {
 	jwp_size_t remain;
@@ -1343,7 +1343,7 @@ static void jwp_process_package(struct jwp_package_receiver *receiver)
 {
 	struct jwp_package *pkg = (struct jwp_package *) receiver->body;
 	struct jwp_header *hdr = &pkg->header;
-	struct jwp_desc *jwp = jwp_package_receiver_get_private_data(receiver);
+	struct jwp_desc *jwp = (struct jwp_desc *) jwp_package_receiver_get_private_data(receiver);
 
 #if JWP_DEBUG
 	jwp_header_dump(hdr);
