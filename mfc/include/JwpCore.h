@@ -18,11 +18,14 @@ protected:
 private:
 	static jwp_size_t HwReadHandler(struct jwp_desc *jwp, void *buff, jwp_size_t size);
 	static jwp_size_t HwWriteHandler(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
+
 	static void OnSendCompleteHandler(struct jwp_desc *jwp);
 	static void OnDataReceivedHandler(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
 	static void OnCommandReceivedHandler(struct jwp_desc *jwp, const void *command, jwp_size_t size);
 	static void OnPackageReceivedHandler(struct jwp_desc *jwp, const struct jwp_header *hdr);
 	static void OnLogReceivedHandler(struct jwp_desc *jwp, jwp_device_t device, const char *log, jwp_size_t size);
+	static void OnRemoteNotResponseHandler(struct jwp_desc *jwp);
+
 	static void TxThreadHandler(void *data);
 	static void RxThreadHandler(void *data);
 	static void RxPackageThreadHandler(void *data);
@@ -54,6 +57,11 @@ protected:
 	virtual void OnPackageReceived(const struct jwp_header *hdr)
 	{
 		println("OnPackageReceived: index = %d, type = %d, length = %d", hdr->index, hdr->type, hdr->length);
+	}
+
+	virtual void OnRemoteNotResponse(void)
+	{
+		println("OnRemoteNotResponse");
 	}
 
 public:

@@ -69,6 +69,13 @@ void JwpCore::OnLogReceivedHandler(struct jwp_desc *jwp, jwp_device_t device, co
 	jwp_core->OnLogReceived(device, log, size);
 }
 
+void JwpCore::OnRemoteNotResponseHandler(struct jwp_desc *jwp)
+{
+	JwpCore *jwp_core = (JwpCore *) jwp;
+
+	jwp_core->OnRemoteNotResponse();
+}
+
 // ======================================================
 
 void JwpCore::TxThreadHandler(void *data)
@@ -123,6 +130,7 @@ JwpCore::JwpCore(void) : mLogIndex(0)
 #if JWP_WRITE_LOG_ENABLE
 	log_received = OnLogReceivedHandler;
 #endif
+	remote_not_response = OnRemoteNotResponseHandler;
 
 	mFileLog.Open("jwp-core-log.txt", CFile::modeWrite | CFile::modeCreate | CFile::shareDenyWrite, NULL);
 }
