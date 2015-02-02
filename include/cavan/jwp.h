@@ -228,7 +228,7 @@ struct jwp_timer
 
 struct jwp_package_receiver
 {
-	jwp_u8 *package;
+	jwp_u8 *body;
 	jwp_u8 *head;
 	jwp_u8 *header_start;
 	jwp_u8 *data_start;
@@ -355,9 +355,10 @@ static inline jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size
 
 // ============================================================
 
-void jwp_package_receiver_init(struct jwp_package_receiver *receiver, void *package, jwp_size_t magic_size, jwp_size_t header_size);
+void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_u8 *body, jwp_size_t magic_size, jwp_size_t header_size);
 jwp_size_t jwp_package_receiver_write(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
 void jwp_package_receiver_fill(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
+jwp_bool jwp_package_receiver_fill_by_queue(struct jwp_package_receiver *receiver, struct jwp_queue *queue);
 
 static inline void jwp_package_receiver_set_private_data(struct jwp_package_receiver *receiver, void *data)
 {
