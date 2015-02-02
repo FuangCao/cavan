@@ -271,7 +271,6 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 #endif
 		jwp->data_received = NULL;
 		jwp->command_received = NULL;
-
 	}
 
 	println("hw_fd = %d, service = %d, pathname = %s", hw_fd, service, pathname);
@@ -485,6 +484,7 @@ static int do_test_jwp_comm(int argc, char *argv[])
 	struct jwp_comm_desc comm;
 	struct network_url url;
 	struct network_client client;
+	struct jwp_desc *jwp = &comm.jwp;
 
 	network_url_init(&url, "unix-tcp", NULL, 0, argc > 1 ? argv[1] : "/tmp/COM1");
 
@@ -494,6 +494,13 @@ static int do_test_jwp_comm(int argc, char *argv[])
 		pr_red_info("network_client_open2");
 		return ret;
 	}
+
+	jwp->send_complete = NULL;
+	jwp->package_received = NULL;
+	jwp->log_received = NULL;
+	jwp->remote_not_response = NULL;
+	jwp->data_received = NULL;
+	jwp->command_received = NULL;
 
 	if (!jwp_comm_init(&comm, client.sockfd, NULL))
 	{

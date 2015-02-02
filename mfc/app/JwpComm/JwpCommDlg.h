@@ -11,7 +11,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "JwpCsrDesc.h"
+#include "JwpMcu.h"
 #include "JwpCommDesc.h"
 
 typedef enum
@@ -23,7 +23,7 @@ typedef enum
 /////////////////////////////////////////////////////////////////////////////
 // CJwpCommDlg dialog
 
-class CJwpCommDlg : public CDialog, JwpCsrDesc
+class CJwpCommDlg : public CDialog, JwpMcu
 {
 // Construction
 public:

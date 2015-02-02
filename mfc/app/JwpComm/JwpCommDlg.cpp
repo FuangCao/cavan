@@ -264,7 +264,7 @@ void CJwpCommDlg::OnLogReceived(jwp_device_t device, const char *log, jwp_size_t
 
 LRESULT CJwpCommDlg::OnBtStateChanged(WPARAM wParam, LPARAM lParam)
 {
-	m_StateValue = GetCsrStateString();
+	m_StateValue = JwpMcu::GetCsrStateString();
 	
 	UpdateData(false);
 
@@ -346,6 +346,7 @@ void CJwpCommDlg::OnButtonSendData()
 
 void CJwpCommDlg::OnButtonBtAdvert() 
 {
+	println("%s +%d", __FILE__, __LINE__);
 	CsrStartAdvert();
 }
 
@@ -361,7 +362,7 @@ void CJwpCommDlg::OnButtonBtIdle()
 
 void CJwpCommDlg::OnButtonBtRmPair() 
 {
-	CsrPairingRemoval();
+	CsrRemovePair();
 }
 
 void CJwpCommDlg::OnButtonClear() 

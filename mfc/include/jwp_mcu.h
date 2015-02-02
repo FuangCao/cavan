@@ -27,14 +27,54 @@
 #include <cavan/jwp-linux.h>
 #endif
 
-#define JWP_MCU_MTU				0xFF
+#define JWP_MCU_MTU					0xFF
 
-#define JWP_MCU_MAGIC_SIZE		2
-#define JWP_MCU_MAGIC_HIGH		0x12
-#define JWP_MCU_MAGIC_LOW		0x34
-#define JWP_MCU_MAGIC			(JWP_MCU_MAGIC_HIGH << 8 | JWP_MCU_MAGIC_LOW)
-#define JWP_MCU_HEADER_SIZE		sizeof(struct jwp_mcu_header)
-#define JWP_MCU_MAX_PAYLOAD		(JWP_MCU_MTU - JWP_MCU_HEADER_SIZE)
+#define JWP_MCU_MAGIC_SIZE			2
+#define JWP_MCU_MAGIC_HIGH			0x12
+#define JWP_MCU_MAGIC_LOW			0x34
+#define JWP_MCU_MAGIC				(JWP_MCU_MAGIC_HIGH << 8 | JWP_MCU_MAGIC_LOW)
+#define JWP_MCU_HEADER_SIZE			sizeof(struct jwp_mcu_header)
+#define JWP_MCU_MAX_PAYLOAD			(JWP_MCU_MTU - JWP_MCU_HEADER_SIZE)
+#define JWP_MCU_GET_PAYLOAD(hdr)	(((jwp_u8 *) hdr) + JWP_HEADER_SIZE)
+
+typedef enum
+{
+    /* Application initial state */
+    app_state_init = 0,
+
+    /* Application is performing fast undirected advertisements */
+    app_state_fast_advertising,
+
+    /* Application is performing slow undirected advertisements */
+    app_state_slow_advertising,
+
+    /* Application is performing directed advertisements */
+    app_state_directed_advertising,
+
+    /* Connection has been established with the host */
+    app_state_connected,
+
+    /* Disconnection initiated by the application */
+    app_state_disconnecting,
+
+    /* Application is neither advertising nor connected to a host */
+    app_state_idle
+
+} app_state;
+
+typedef enum
+{
+	JWP_CSR_CMD_SET_STATE,
+	JWP_CSR_CMD_SET_FACTORY_SCAN,
+	JWP_CSR_CMD_SET_WHITE_LIST,
+	JWP_CSR_CMD_SET_WHITE_LIST_ENABLE,
+	JWP_CSR_CMD_GET_STATE,
+	JWP_CSR_CMD_GET_FIRMWARE_INFO,
+	JWP_CSR_CMD_RM_PAIR,
+	JWP_CSR_RESPONSE,
+	JWP_CSR_EVENT_STATE,
+	JWP_CSR_EVENT_FIRMWARE_INFO,
+} jwp_csr_command_t;
 
 typedef enum
 {
@@ -133,7 +173,10 @@ struct jwp_mcu_header
 
 	jwp_u8 type;
 	jwp_u8 length;
+
+#ifndef _WIN32
 	jwp_u8 payload[0];
+#endif
 };
 
 struct jwp_mcu_package
@@ -370,7 +413,10 @@ struct jwp_mcu_request_file_transfer
 	jwp_u8 index;
 	jwp_u8 total;
 	jwp_u8 length;
+
+#ifndef _WIN32
 	jwp_u8 data[0];
+#endif
 };
 
 struct jwp_mcu_response_read_recent_record
@@ -421,6 +467,56 @@ struct jwp_mcu_event_hbt_data
 {
 	jwp_u8 heart_rate;
 };
+
+struct jwp_csr_header
+{
+	jwp_u8 type;
+};
+
+struct jwp_csr_command_set_state
+{
+	struct jwp_csr_header header;
+	jwp_u8 state;
+};
+
+struct jwp_csr_command_set_white_list
+{
+	struct jwp_csr_header header;
+	jwp_u8 addr_list[5][6];
+};
+
+struct jwp_csr_command_set_white_list_enable
+{
+	struct jwp_csr_header header;
+	jwp_u8 enable;
+};
+
+struct jwp_csr_command_set_factory_scan
+{
+	struct jwp_csr_header header;
+	jwp_u8 mac_addr[6];
+};
+
+struct jwp_csr_response_package
+{
+	struct jwp_csr_header header;
+	jwp_u8 code;
+};
+
+struct jwp_csr_event_state
+{
+	struct jwp_csr_header header;
+	jwp_u8 state;
+	jwp_u8 bonded;
+	jwp_u8 bonded_addr[6];
+};
+
+struct jwp_csr_event_firmware_info
+{
+	struct jwp_csr_header header;
+	jwp_u8 firmware_version;
+	jwp_u8 mac_addr[6];
+};
 #pragma pack()
 
 struct jwp_mcu_desc
@@ -428,10 +524,32 @@ struct jwp_mcu_desc
 	struct jwp_desc *jwp;
 	struct jwp_mcu_package rx_pkg;
 	struct jwp_package_receiver receiver;
+	app_state csr_state;
+	jwp_u8 csr_bonded;
+
+	void *private_data;
+
+	void (*csr_state_changed)(struct jwp_mcu_desc *mcu, const struct jwp_csr_event_state *event);
 };
 
 jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp);
 jwp_bool jwp_mcu_send_package(struct jwp_mcu_desc *mcu, jwp_u8 type, const void *buff, jwp_size_t size);
+
+jwp_bool jwp_csr_set_state(struct jwp_mcu_desc *mcu, app_state state);
+jwp_bool jwp_csr_set_white_list(struct jwp_mcu_desc *mcu, jwp_u8 white_list[5][6]);
+jwp_bool jwp_csr_set_white_list_enable(struct jwp_mcu_desc *mcu, jwp_u8 enable);
+jwp_bool jwp_csr_set_factory_scan(struct jwp_mcu_desc *mcu, jwp_u8 addr[6]);
+jwp_bool jwp_csr_remove_pair(struct jwp_mcu_desc *mcu);
+
+static inline void jwp_mcu_set_private_data(struct jwp_mcu_desc *mcu, void *data)
+{
+	mcu->private_data = data;
+}
+
+static inline void *jwp_mcu_get_private_data(struct jwp_mcu_desc *mcu)
+{
+	return mcu->private_data;
+}
 
 static inline jwp_bool jwp_mcu_send_ok_package(struct jwp_mcu_desc *mcu)
 {
@@ -441,4 +559,44 @@ static inline jwp_bool jwp_mcu_send_ok_package(struct jwp_mcu_desc *mcu)
 static inline jwp_bool jwp_mcu_send_error_package(struct jwp_mcu_desc *mcu, jwp_u8 code)
 {
 	return jwp_mcu_send_package(mcu, MCU_RSP_ERROR, &code, 1);
+}
+
+static inline jwp_bool jwp_csr_send_command(struct jwp_mcu_desc *mcu, const void *command, jwp_size_t size)
+{
+	return jwp_send_command(mcu->jwp, command, size);
+}
+
+static inline jwp_bool jwp_csr_send_empty_command(struct jwp_mcu_desc *mcu, jwp_u8 type)
+{
+	return jwp_csr_send_command(mcu, &type, 1);
+}
+
+static inline jwp_bool jwp_csr_remove_pair(struct jwp_mcu_desc *mcu)
+{
+	return jwp_csr_send_empty_command(mcu, JWP_CSR_CMD_RM_PAIR);
+}
+
+static inline jwp_bool jwp_csr_get_state(struct jwp_mcu_desc *mcu)
+{
+	return jwp_csr_send_empty_command(mcu, JWP_CSR_CMD_GET_STATE);
+}
+
+static inline jwp_bool jwp_csr_get_firmware_info(struct jwp_mcu_desc *mcu)
+{
+	return jwp_csr_send_empty_command(mcu, JWP_CSR_CMD_GET_FIRMWARE_INFO);
+}
+
+static inline jwp_bool jwp_csr_start_advert(struct jwp_mcu_desc *mcu)
+{
+	return jwp_csr_set_state(mcu, app_state_fast_advertising);
+}
+
+static inline jwp_bool jwp_csr_disconnect(struct jwp_mcu_desc *mcu)
+{
+	return jwp_csr_set_state(mcu, app_state_disconnecting);
+}
+
+static inline jwp_bool jwp_csr_set_idle(struct jwp_mcu_desc *mcu)
+{
+	return jwp_csr_set_state(mcu, app_state_idle);
 }

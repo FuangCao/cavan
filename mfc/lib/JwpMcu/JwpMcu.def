@@ -1,0 +1,7 @@
+; JwpMcu.def : Declares the module parameters for the DLL.
+
+LIBRARY      "JwpMcu"
+DESCRIPTION  'JwpMcu Windows Dynamic Link Library'
+
+EXPORTS
+    ; Explicit exports can go here

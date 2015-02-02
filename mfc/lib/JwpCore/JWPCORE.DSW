@@ -27,6 +27,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "JwpMcu"=..\JwpMcu\JwpMcu.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "JwpUdp"=..\..\app\JwpUdp\JwpUdp.dsp - Package Owner=<4>
 
 Package=<5>
