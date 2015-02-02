@@ -408,6 +408,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 
 		jwp_pr_value("100 = ", 100, 10);
 		jwp_pr_value("0x1234 = ", 0x1234, 16);
+		println("sizeof(struct jwp_desc) = %d", (int) sizeof(struct jwp_desc));
 
 		test_jwp_cmdline(&comm.jwp);
 	}

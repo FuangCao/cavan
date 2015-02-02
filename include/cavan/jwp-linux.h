@@ -34,20 +34,20 @@
 #define JWP_CHECKSUM_ENABLE			1
 
 #define JWP_QUEUE_ENABLE			1
-#define JWP_TX_QUEUE_ENABLE			0
+#define JWP_TX_QUEUE_ENABLE			1
 #define JWP_RX_QUEUE_ENABLE			1
-#define JWP_TX_DATA_QUEUE_ENABLE	0
-#define JWP_RX_DATA_QUEUE_ENABLE	0
+#define JWP_TX_DATA_QUEUE_ENABLE	1
+#define JWP_RX_DATA_QUEUE_ENABLE	1
 
 #define JWP_TIMER_ENABLE			1
 #define JWP_TX_TIMER_ENABLE			1
-#define JWP_TX_DATA_TIMER_ENABLE	0
-#define JWP_TX_PKG_TIMER_ENABLE		0
-#define JWP_RX_PKG_TIMER_ENABLE		0
+#define JWP_TX_DATA_TIMER_ENABLE	1
+#define JWP_TX_PKG_TIMER_ENABLE		1
+#define JWP_RX_PKG_TIMER_ENABLE		1
 
 #define JWP_TX_LOOP_ENABLE			0
 #define JWP_RX_LOOP_ENABLE			1
-#define JWP_RX_PKG_LOOP_ENABLE		1
+#define JWP_RX_PKG_LOOP_ENABLE		0
 #define JWP_TX_DATA_LOOP_ENABLE		0
 
 #define JWP_TX_NOTIFY_ENABLE		1
@@ -55,12 +55,12 @@
 #define JWP_RX_DATA_NOTIFY_ENABLE	1
 #define JWP_QUEUE_NOTIFY_ENABLE		1
 
-#define JWP_MTU						128
+#define JWP_MTU						64
 #define JWP_POLL_TIME				10
 #define JWP_TX_LATENCY				200
 #define JWP_TX_RETRY_COUNT			20
 #define JWP_TX_TIMEOUT				2000
-#define JWP_QUEUE_SIZE				(JWP_MTU * 3)
+#define JWP_QUEUE_SIZE				(JWP_MTU * 2)
 
 // ============================================================
 
