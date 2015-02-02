@@ -61,3 +61,15 @@ jwp_bool JwpMcu::JwpInit(void)
 
 	return mInitiated;
 }
+
+jwp_bool JwpMcu::JwpStart(jwp_bool useRxThread)
+{
+	if (!JwpCore::JwpStart(useRxThread))
+	{
+		return false;
+	}
+
+	CsrSendGetStateCommand();
+
+	return true;
+}

@@ -563,6 +563,7 @@ static void jwp_mcu_command_received(struct jwp_desc *jwp, const void *command, 
 	}
 
 	hdr = (struct jwp_csr_header *) command;
+	jwp_printf("csr type = %d\n", hdr->type);
 	switch (hdr->type)
 	{
 	case JWP_CSR_EVENT_STATE:
@@ -572,6 +573,14 @@ static void jwp_mcu_command_received(struct jwp_desc *jwp, const void *command, 
 			mcu->csr_state = (app_state) event->state;
 			mcu->csr_bonded = event->bonded;
 			mcu->csr_state_changed(mcu, event);
+		}
+		break;
+
+	case JWP_CSR_RESPONSE:
+		{
+			struct jwp_csr_response_package *rsp = (struct jwp_csr_response_package *) command;
+
+			jwp_printf("csr response %s", rsp->success > 0 ? "true" : "false");
 		}
 		break;
 

@@ -76,6 +76,8 @@ protected:
 	afx_msg LRESULT OnUpdateData(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnButtonBtRmPair();
 	afx_msg void OnButtonClear();
+	afx_msg void OnButtonBtState();
+	afx_msg void OnButtonDirectedAdvert();
 	DECLARE_EVENTSINK_MAP()
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
@@ -91,7 +93,7 @@ protected:
 
 	virtual void OnDataReceived(const void *buff, jwp_size_t size);
 	virtual void OnLogReceived(jwp_device_t device, const char *log, jwp_size_t size);
-	virtual void OnCsrStateChanged(app_state state);
+	virtual void OnCsrStateChanged(const struct jwp_csr_event_state *event);
 
 public:
 	void WriteRxData(void)

@@ -109,6 +109,8 @@ BEGIN_MESSAGE_MAP(CJwpCommDlg, CDialog)
 	ON_MESSAGE(JWP_COMM_MSG_UPDATE_DATA, OnUpdateData)
 	ON_BN_CLICKED(IDC_BUTTON_BT_RM_PAIR, OnButtonBtRmPair)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR, OnButtonClear)
+	ON_BN_CLICKED(IDC_BUTTON_BT_STATE, OnButtonBtState)
+	ON_BN_CLICKED(IDC_BUTTON_DIRECTED_ADVERT, OnButtonDirectedAdvert)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -264,7 +266,7 @@ void CJwpCommDlg::OnLogReceived(jwp_device_t device, const char *log, jwp_size_t
 
 LRESULT CJwpCommDlg::OnBtStateChanged(WPARAM wParam, LPARAM lParam)
 {
-	m_StateValue = JwpMcu::GetCsrStateString();
+	m_StateValue.Format("%s - %s", GetCsrStateString(), GetBonded() ? "ÒÑ°ó¶¨" : "Î´°ó¶¨");
 	
 	UpdateData(false);
 
@@ -278,7 +280,7 @@ LRESULT CJwpCommDlg::OnUpdateData(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-void CJwpCommDlg::OnCsrStateChanged(app_state state)
+void CJwpCommDlg::OnCsrStateChanged(const struct jwp_csr_event_state *event)
 {
 	PostMessage(JWP_COMM_MSG_BT_STATE_CHANGED);
 }
@@ -369,4 +371,14 @@ void CJwpCommDlg::OnButtonClear()
 	m_EditLog.Empty();
 
 	UpdateData(false);
+}
+
+void CJwpCommDlg::OnButtonBtState() 
+{
+	CsrSendGetStateCommand();
+}
+
+void CJwpCommDlg::OnButtonDirectedAdvert() 
+{
+	CsrDirectedAdvert();
 }

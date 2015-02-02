@@ -163,6 +163,10 @@ SOURCE=.\JwpCsrDesc.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\include\JwpMcu.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\mscomm.h
 # End Source File
 # Begin Source File

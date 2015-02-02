@@ -17,7 +17,7 @@
  *
  */
 
-#include "stdafx.h"
+// #include "stdafx.h"
 
 #ifdef _WIN32
 #include "jwp-win32.h"
@@ -26,9 +26,6 @@
 #else
 #include <cavan/jwp-linux.h>
 #endif
-
-// ============================================================
-
 
 // ============================================================
 
@@ -1438,8 +1435,8 @@ static void jwp_process_package(struct jwp_package_receiver *receiver)
 			jwp_lock_release(jwp->lock);
 #if JWP_SHOW_ERROR
 #ifdef CSR101x
-			jwp_print_value("throw ack package = ", hdr->index);
-			jwp_print_value("tx_index = ", jwp->tx_index);
+			jwp_pr_value("throw ack package = ", hdr->index, 10);
+			jwp_pr_value("tx_index = ", jwp->tx_index, 10);
 #else
 			jwp_printf("throw ack package %d, need %d\n", hdr->index, jwp->tx_index + 1);
 #endif

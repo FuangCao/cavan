@@ -500,7 +500,7 @@ struct jwp_csr_command_set_factory_scan
 struct jwp_csr_response_package
 {
 	struct jwp_csr_header header;
-	jwp_u8 code;
+	jwp_u8 success;
 };
 
 struct jwp_csr_event_state
@@ -588,6 +588,11 @@ static inline jwp_bool jwp_csr_get_firmware_info(struct jwp_mcu_desc *mcu)
 static inline jwp_bool jwp_csr_start_advert(struct jwp_mcu_desc *mcu)
 {
 	return jwp_csr_set_state(mcu, app_state_fast_advertising);
+}
+
+static inline jwp_bool jwp_csr_directed_advert(struct jwp_mcu_desc *mcu)
+{
+	return jwp_csr_set_state(mcu, app_state_directed_advertising);
 }
 
 static inline jwp_bool jwp_csr_disconnect(struct jwp_mcu_desc *mcu)

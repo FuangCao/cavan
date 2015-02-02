@@ -55,7 +55,7 @@
 #define JWP_RX_DATA_NOTIFY_ENABLE	1
 #define JWP_QUEUE_NOTIFY_ENABLE		1
 
-#define JWP_MTU						0xFF
+#define JWP_MTU						128
 #define JWP_POLL_TIME				10
 #define JWP_TX_LATENCY				200
 #define JWP_TX_RETRY_COUNT			20

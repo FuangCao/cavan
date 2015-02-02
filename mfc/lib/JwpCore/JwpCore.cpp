@@ -191,6 +191,8 @@ jwp_bool JwpCore::JwpStart(jwp_bool useRxThread)
 	_beginthread(TxDataThreadHandler, 0, this);
 #endif
 
+	JwpSync();
+
 	mRunning = true;
 
 	return true;

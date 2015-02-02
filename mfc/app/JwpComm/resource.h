@@ -22,6 +22,8 @@
 #define IDC_BUTTON_BT_IDLE              1011
 #define IDC_BUTTON_BT_RM_PAIR           1012
 #define IDC_BUTTON_CLEAR                1013
+#define IDC_BUTTON_BT_STATE             1014
+#define IDC_BUTTON_DIRECTED_ADVERT      1015
 
 // Next default values for new objects
 // 
@@ -29,7 +31,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1014
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

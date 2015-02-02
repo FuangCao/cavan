@@ -89,4 +89,9 @@ public:
 	{
 		jwp_send_log(this, log, size);
 	}
+
+	void JwpSync(void)
+	{
+		jwp_send_sync(this);
+	}
 };

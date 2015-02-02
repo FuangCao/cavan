@@ -12,17 +12,23 @@ private:
 protected:
 	virtual void OnCsrStateChanged(const struct jwp_csr_event_state *event) {}
 	virtual jwp_bool JwpInit(void);
+	virtual jwp_bool JwpStart(jwp_bool useRxThread = true);
 
 public:
 	static const char *JwpMcu::CsrStateToString(jwp_u8 state);
-	app_state JwpMcu::GetCsrState(void)
+	bool GetBonded(void)
+	{
+		return csr_bonded > 0;
+	}
+
+	app_state GetCsrState(void)
 	{
 		return csr_state;
 	}
 
-	const char *JwpMcu::GetCsrStateString(void)
+	const char *GetCsrStateString(void)
 	{
-		return CsrStateToString(state);
+		return CsrStateToString(csr_state);
 	}
 
 public:
@@ -56,6 +62,11 @@ public:
 	jwp_bool CsrStartAdvert(void)
 	{
 		return jwp_csr_start_advert(this);
+	}
+
+	jwp_bool CsrDirectedAdvert(void)
+	{
+		return jwp_csr_directed_advert(this);
 	}
 
 	jwp_bool CsrDisconnect(void)

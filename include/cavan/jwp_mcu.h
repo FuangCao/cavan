@@ -500,7 +500,7 @@ struct jwp_csr_command_set_factory_scan
 struct jwp_csr_response_package
 {
 	struct jwp_csr_header header;
-	jwp_u8 code;
+	jwp_u8 success;
 };
 
 struct jwp_csr_event_state
