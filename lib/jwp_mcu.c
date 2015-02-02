@@ -22,13 +22,12 @@
 
 #define JWP_MCU_DEBUG		1
 
-static jwp_bool jwp_mcu_proccess_package(struct jwp_mcu_desc *mcu)
+static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 {
 	jwp_size_t rsplen;
-	struct jwp_mcu_rx_package *pkg = &mcu->rx_pkg;
+	struct jwp_mcu_package *pkg = (struct jwp_mcu_package *) receiver->body;
 	struct jwp_mcu_header *hdr = &pkg->header;
-
-	pkg->head = pkg->body;
+	struct jwp_mcu_desc *mcu = jwp_package_receiver_get_private_data(receiver);
 
 #if JWP_MCU_DEBUG
 	jwp_printf("%s: type = %d, length = %d\n", __FUNCTION__, hdr->type, hdr->length);
@@ -527,7 +526,7 @@ static jwp_bool jwp_mcu_proccess_package(struct jwp_mcu_desc *mcu)
 			hdr->type = MCU_RSP_ERROR;
 			hdr->payload[0] = MCU_ERROR_INVALID;
 #else
-			return false;
+			return;
 #endif
 		}
 		break;
@@ -535,172 +534,28 @@ static jwp_bool jwp_mcu_proccess_package(struct jwp_mcu_desc *mcu)
 
 	hdr->length = rsplen;
 
-	return jwp_send_data_all(mcu->jwp, (jwp_u8 *) hdr, JWP_MCU_HEADER_SIZE + rsplen);
+	jwp_send_data_all(mcu->jwp, (jwp_u8 *) hdr, JWP_MCU_HEADER_SIZE + rsplen);
 }
-
-static void jwp_mcu_rx_package_init(struct jwp_mcu_rx_package *pkg)
-{
-	pkg->header.magic_low = JWP_MCU_MAGIC_LOW;
-	pkg->header.magic_high = JWP_MCU_MAGIC_HIGH;
-
-	pkg->head = pkg->body;
-#if JWP_RX_DATA_QUEUE_ENABLE == 0
-	pkg->header_start = pkg->body + JWP_MCU_MAGIC_SIZE;
-#endif
-	pkg->data_start = pkg->body + sizeof(pkg->header);
-}
-
-#if JWP_RX_DATA_QUEUE_ENABLE
-static jwp_bool jwp_mcu_rx_package_fill(struct jwp_mcu_desc *mcu)
-{
-	jwp_size_t rdlen;
-	jwp_size_t remain;
-	struct jwp_mcu_rx_package *pkg = &mcu->rx_pkg;
-	struct jwp_queue *queue = jwp_get_queue(mcu->jwp, JWP_QUEUE_RX_DATA);
-
-	if (pkg->head < pkg->data_start)
-	{
-		if (pkg->head == pkg->body)
-		{
-			while (1)
-			{
-				rdlen = jwp_queue_dequeue_peek(queue, pkg->head, JWP_MCU_MAGIC_SIZE);
-				if (rdlen < JWP_MCU_MAGIC_SIZE)
-				{
-					return false;
-				}
-
-				if (pkg->head[0] == JWP_MCU_MAGIC_LOW && pkg->head[1] == JWP_MCU_MAGIC_HIGH)
-				{
-					break;
-				}
-
-				jwp_queue_skip(queue, 1);
-			}
-
-			jwp_queue_dequeue_commit(queue);
-
-			pkg->head = pkg->body + JWP_MCU_MAGIC_SIZE;
-		}
-
-		remain = pkg->data_start - pkg->head;
-		rdlen = jwp_queue_dequeue(queue, pkg->head, remain);
-		if (rdlen < remain)
-		{
-			pkg->head += rdlen;
-			return false;
-		}
-
-		pkg->head = pkg->data_start;
-		pkg->data_end = pkg->head + pkg->header.length;
-	}
-
-	remain = pkg->data_end - pkg->head;
-	rdlen = jwp_queue_dequeue(queue, pkg->head, remain);
-	if (rdlen < remain)
-	{
-		pkg->head += rdlen;
-		return false;
-	}
-
-	jwp_mcu_proccess_package(mcu);
-
-	return true;
-
-}
-#else
-static jwp_size_t jwp_mcu_rx_package_fill(struct jwp_mcu_desc *mcu, const jwp_u8 *buff, jwp_size_t size)
-{
-	jwp_size_t remain;
-	struct jwp_mcu_rx_package *pkg = &mcu->rx_pkg;
-
-	if (pkg->head < pkg->data_start)
-	{
-		if (pkg->head < pkg->header_start)
-		{
-			if (pkg->head == pkg->body)
-			{
-				if (*buff == JWP_MCU_MAGIC_LOW)
-				{
-					pkg->head++;
-				}
-			}
-			else if (*buff == JWP_MCU_MAGIC_HIGH)
-			{
-				pkg->head++;
-			}
-			else
-			{
-				pkg->head = pkg->body;
-			}
-
-			return 1;
-		}
-
-		remain = pkg->data_start - pkg->header_start;
-		if (size < remain)
-		{
-			jwp_memcpy(pkg->head, buff, size);
-			pkg->head += size;
-
-			return size;
-		}
-
-		jwp_memcpy(pkg->head, buff, remain);
-
-		if (pkg->header.length == 0)
-		{
-			goto label_process_package;
-		}
-
-		pkg->head = pkg->data_start;
-		pkg->data_end = pkg->head + pkg->header.length;
-
-		return remain;
-	}
-
-	remain = pkg->data_end - pkg->data_start;
-	if (size < remain)
-	{
-		jwp_memcpy(pkg->head, buff, size);
-		pkg->head += size;
-
-		return size;
-	}
-
-	jwp_memcpy(pkg->head, buff, remain);
-
-label_process_package:
-	jwp_mcu_proccess_package(mcu);
-
-	return remain;
-}
-#endif
 
 static void jwp_mcu_data_received(struct jwp_desc *jwp, const void *buff, jwp_size_t size)
 {
 	struct jwp_mcu_desc *mcu = jwp_get_private_data(jwp);
 #if JWP_RX_DATA_QUEUE_ENABLE
-	while (jwp_mcu_rx_package_fill(mcu));
+	while (jwp_package_receiver_fill_by_queue(&mcu->receiver, jwp_get_queue(jwp, JWP_QUEUE_RX_DATA)));
 #else
 #if JWP_MCU_DEBUG
 	jwp_printf("%s: size = %d\n", __FUNCTION__, size);
 #endif
 
-	while (1)
-	{
-		jwp_size_t wrlen;
-
-		wrlen = jwp_mcu_rx_package_fill(mcu, buff, size);
-		if (wrlen >= size)
-		{
-			break;
-		}
-
-		buff = (jwp_u8 *) buff + wrlen;
-		size -= wrlen;
-	}
+	jwp_package_receiver_fill(&mcu->receiver, buff, size);
 #endif
+}
+
+static jwp_size_t jwp_mcu_package_get_payload_length(struct jwp_package_receiver *receiver)
+{
+	struct jwp_mcu_header *hdr = (struct jwp_mcu_header *) receiver->body;
+
+	return hdr->length;
 }
 
 jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp)
@@ -709,7 +564,12 @@ jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp)
 	jwp_set_private_data(jwp, mcu);
 	jwp->data_received = jwp_mcu_data_received;
 
-	jwp_mcu_rx_package_init(&mcu->rx_pkg);
+	mcu->rx_pkg.header.magic_low = JWP_MCU_MAGIC_LOW;
+	mcu->rx_pkg.header.magic_high = JWP_MCU_MAGIC_HIGH;
+	mcu->receiver.get_payload_length = jwp_mcu_package_get_payload_length;
+	mcu->receiver.process_package = jwp_mcu_proccess_package;
+	jwp_package_receiver_init(&mcu->receiver, mcu->rx_pkg.body, JWP_MCU_MAGIC_SIZE, JWP_MCU_HEADER_SIZE);
+	jwp_package_receiver_set_private_data(&mcu->receiver, mcu);
 
 	return true;
 }

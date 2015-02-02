@@ -160,28 +160,6 @@ struct jwp_package
 	};
 };
 
-struct jwp_rx_package
-{
-	union
-	{
-		struct
-		{
-			struct jwp_header header;
-			jwp_u8 payload[JWP_MTU - JWP_HEADER_SIZE];
-		};
-		jwp_u8 body[JWP_MTU];
-	};
-
-	jwp_u8 *head;
-
-#if JWP_RX_QUEUE_ENABLE == 0
-	jwp_u8 *header_start;
-#endif
-
-	jwp_u8 *data_start;
-	jwp_u8 *data_end;
-};
-
 struct jwp_queue
 {
 	jwp_u8 buff[JWP_QUEUE_SIZE];
@@ -231,13 +209,13 @@ struct jwp_package_receiver
 	jwp_u8 *body;
 	jwp_u8 *head;
 	jwp_u8 *header_start;
-	jwp_u8 *data_start;
-	jwp_u8 *data_end;
+	jwp_u8 *payload_start;
+	jwp_u8 *payload_end;
 
 	void *private_data;
 	jwp_lock_t lock;
 
-	jwp_size_t (*get_data_length)(struct jwp_package_receiver *receiver);
+	jwp_size_t (*get_payload_length)(struct jwp_package_receiver *receiver);
 	void (*process_package)(struct jwp_package_receiver *receiver);
 };
 
@@ -272,7 +250,8 @@ struct jwp_desc
 	jwp_u8 data_remain;
 #endif
 
-	struct jwp_rx_package rx_pkg;
+	struct jwp_package rx_pkg;
+	struct jwp_package_receiver receiver;
 
 #if JWP_TX_TIMER_ENABLE || JWP_TX_LOOP_ENABLE
 	struct jwp_package tx_pkg;

@@ -418,29 +418,11 @@ struct jwp_mcu_event_hbt_data
 };
 #pragma pack()
 
-struct jwp_mcu_rx_package
-{
-	union
-	{
-		struct jwp_mcu_header header;
-		struct jwp_mcu_package package;
-		jwp_u8 body[JWP_MCU_MTU];
-	};
-
-	jwp_u8 *head;
-
-#if JWP_RX_DATA_QUEUE_ENABLE == 0
-	jwp_u8 *header_start;
-#endif
-
-	jwp_u8 *data_start;
-	jwp_u8 *data_end;
-};
-
 struct jwp_mcu_desc
 {
 	struct jwp_desc *jwp;
-	struct jwp_mcu_rx_package rx_pkg;
+	struct jwp_mcu_package rx_pkg;
+	struct jwp_package_receiver receiver;
 };
 
 jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp);
