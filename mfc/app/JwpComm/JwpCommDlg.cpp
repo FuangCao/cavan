@@ -297,7 +297,7 @@ void CJwpCommDlg::OnButtonConnect()
 	if (m_Comm.GetPortOpen())
 	{
 		m_Comm.SetOutBufferCount(0);
-		StartJwp(false);
+		JwpStart(false);
 	}
 
 	UpdateUiState();
@@ -346,7 +346,6 @@ void CJwpCommDlg::OnButtonSendData()
 
 void CJwpCommDlg::OnButtonBtAdvert() 
 {
-	println("%s +%d", __FILE__, __LINE__);
 	CsrStartAdvert();
 }
 

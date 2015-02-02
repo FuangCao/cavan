@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "JwpCsrDesc.h"
 
-jwp_bool JwpCsrDesc::StartJwp(jwp_bool useRxThread )
+jwp_bool JwpCsrDesc::JwpStart(jwp_bool useRxThread )
 {
-	if (!JwpCore::StartJwp(useRxThread))
+	if (!JwpCore::JwpStart(useRxThread))
 	{
 		return false;
 	}

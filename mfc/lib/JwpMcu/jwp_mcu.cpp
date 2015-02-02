@@ -542,14 +542,11 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 static void jwp_mcu_data_received(struct jwp_desc *jwp, const void *buff, jwp_size_t size)
 {
 	struct jwp_mcu_desc *mcu = (struct jwp_mcu_desc *) jwp_get_private_data(jwp);
+
 #if JWP_RX_DATA_QUEUE_ENABLE
 	while (jwp_package_receiver_fill_by_queue(&mcu->receiver, jwp_get_queue(jwp, JWP_QUEUE_RX_DATA)));
 #else
-#if JWP_MCU_DEBUG
-	jwp_printf("%s: size = %d\n", __FUNCTION__, size);
-#endif
-
-	jwp_package_receiver_fill(&mcu->receiver, buff, size);
+	jwp_package_receiver_fill(&mcu->receiver, (const jwp_u8 *) buff, size);
 #endif
 }
 
@@ -635,6 +632,7 @@ static jwp_size_t jwp_mcu_package_get_payload_length(struct jwp_package_receiver
 jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp)
 {
 	mcu->jwp = jwp;
+	jwp_set_private_data(jwp, mcu);
 	jwp->data_received = jwp_mcu_data_received;
 	jwp->command_received = jwp_mcu_command_received;
 

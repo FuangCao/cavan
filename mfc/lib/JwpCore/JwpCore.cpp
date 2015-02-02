@@ -112,6 +112,7 @@ void JwpCore::TxDataThreadHandler(void *data)
 JwpCore::JwpCore(void) : mLogIndex(0)
 {
 	mInitiated = false;
+	mRunning = false;
 
 	hw_read = HwReadHandler;
 	hw_write = HwWriteHandler;
@@ -147,7 +148,7 @@ void JwpCore::println(const char *fmt, ...)
 	mFileLog.Write(buff, size);
 }
 
-jwp_bool JwpCore::StartJwp(jwp_bool useRxThread)
+jwp_bool JwpCore::JwpInit(void)
 {
 	if (mInitiated)
 	{
@@ -155,7 +156,18 @@ jwp_bool JwpCore::StartJwp(jwp_bool useRxThread)
 	}
 
 	mInitiated = jwp_init(this, this);
-	if (!mInitiated)
+
+	return mInitiated;
+}
+
+jwp_bool JwpCore::JwpStart(jwp_bool useRxThread)
+{
+	if (mRunning)
+	{
+		return true;
+	}
+
+	if (!JwpInit())
 	{
 		return false;
 	}
@@ -179,10 +191,12 @@ jwp_bool JwpCore::StartJwp(jwp_bool useRxThread)
 	_beginthread(TxDataThreadHandler, 0, this);
 #endif
 
+	mRunning = true;
+
 	return true;
 }
 
-void JwpCore::StopJwp(void)
+void JwpCore::JwpStop(void)
 {
 }
 

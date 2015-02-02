@@ -244,6 +244,34 @@ static void test_jwp_cmdline(struct jwp_desc *jwp)
 	}
 }
 
+static void test_jwp_mcu_cmdline(struct jwp_mcu_desc *mcu)
+{
+	while (1)
+	{
+		int ret;
+		int type;
+		char buff[1024];
+
+		ret = scanf("%d %s", &type, buff);
+		if (ret < 2)
+		{
+			pr_error_info("scanf");
+			continue;
+		}
+
+		println("type = %d, buff = %s", type, buff);
+
+		if (jwp_mcu_send_package(mcu, type, buff, strlen(buff) + 1))
+		{
+			pr_green_info("OK");
+		}
+		else
+		{
+			pr_red_info("Failed");
+		}
+	}
+}
+
 static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 {
 	int data_fd;
@@ -481,6 +509,8 @@ static int do_test_queue(int argc, char *arv[])
 static int do_test_jwp_comm(int argc, char *argv[])
 {
 	int ret;
+	bool is_mcu;
+	struct jwp_mcu_desc mcu;
 	struct jwp_comm_desc comm;
 	struct network_url url;
 	struct network_client client;
@@ -508,13 +538,28 @@ static int do_test_jwp_comm(int argc, char *argv[])
 		goto out_network_client_close;
 	}
 
+	is_mcu = (strcmp(argv[0], "comm-mcu") == 0);
+
+	if (is_mcu && !jwp_mcu_init(&mcu, jwp))
+	{
+		pr_red_info("jwp_mcu_init");
+		return -EFAULT;
+	}
+
 	if (!jwp_comm_start(&comm))
 	{
 		pr_red_info("jwp_comm_start");
 		goto out_network_client_close;
 	}
 
-	test_jwp_cmdline(&comm.jwp);
+	if (is_mcu)
+	{
+		test_jwp_mcu_cmdline(&mcu);
+	}
+	else
+	{
+		test_jwp_cmdline(jwp);
+	}
 
 out_network_client_close:
 	network_client_close(&client);
@@ -552,7 +597,7 @@ static int do_test_jwp_udp(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-	is_mcu = (strcmp(argv[0], "mcu") == 0);
+	is_mcu = (strcmp(argv[0], "udp-mcu") == 0);
 
 	if (is_mcu && !jwp_mcu_init(&mcu, &udp.jwp))
 	{
@@ -568,30 +613,7 @@ static int do_test_jwp_udp(int argc, char *argv[])
 
 	if (is_mcu)
 	{
-		while (1)
-		{
-			int ret;
-			int type;
-			char buff[1024];
-
-			ret = scanf("%d %s", &type, buff);
-			if (ret < 2)
-			{
-				pr_error_info("scanf");
-				continue;
-			}
-
-			println("type = %d, buff = %s", type, buff);
-
-			if (jwp_mcu_send_package(&mcu, type, buff, strlen(buff) + 1))
-			{
-				pr_green_info("OK");
-			}
-			else
-			{
-				pr_red_info("Failed");
-			}
-		}
+		test_jwp_mcu_cmdline(&mcu);
 	}
 	else
 	{
@@ -605,6 +627,7 @@ CAVAN_COMMAND_MAP_START
 { "queue", do_test_queue },
 { "jwp", do_test_jwp },
 { "comm", do_test_jwp_comm },
+{ "comm-mcu", do_test_jwp_comm },
 { "udp", do_test_jwp_udp },
-{ "mcu", do_test_jwp_udp },
+{ "udp-mcu", do_test_jwp_udp },
 CAVAN_COMMAND_MAP_END

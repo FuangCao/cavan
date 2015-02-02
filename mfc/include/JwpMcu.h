@@ -6,10 +6,12 @@
 class JwpMcu : public JwpCore, jwp_mcu_desc
 {
 private:
+	jwp_bool mInitiated;
 	static void CsrStateChangedHandler(struct jwp_mcu_desc *mcu, const struct jwp_csr_event_state *event);
 
 protected:
 	virtual void OnCsrStateChanged(const struct jwp_csr_event_state *event) {}
+	virtual jwp_bool JwpInit(void);
 
 public:
 	static const char *JwpMcu::CsrStateToString(jwp_u8 state);
@@ -25,7 +27,6 @@ public:
 
 public:
 	JwpMcu(void);
-	jwp_bool StartJwp(jwp_bool useRxThread);
 
 	jwp_bool CsrSendCommand(const void *command, jwp_size_t size)
 	{

@@ -4,9 +4,12 @@
 
 class JwpCore : public jwp_desc
 {
+private:
+	jwp_bool mInitiated;
+	jwp_bool mRunning;
+
 protected:
 	int mLogIndex;
-	jwp_bool mInitiated;
 	CFile mFileLog;
 
 	JwpCore(void);
@@ -26,8 +29,9 @@ private:
 	static void TxDataThreadHandler(void *data);
 
 protected:
-	jwp_bool StartJwp(jwp_bool useRxThread = true);
-	void StopJwp(void);
+	virtual jwp_bool JwpInit(void);
+	virtual jwp_bool JwpStart(jwp_bool useRxThread = true);
+	virtual void JwpStop(void);
 	virtual int HwRead(void *buff, jwp_size_t size);
 	virtual int HwWrite(const void *buff, jwp_size_t size) = 0;
 	virtual void OnLogReceived(jwp_device_t device, const char *log, jwp_size_t size);

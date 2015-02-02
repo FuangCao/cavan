@@ -19,10 +19,13 @@
  *
  */
 
+#define JWP_ARCH_NAME				"win32"
+
 #define JWP_DEBUG					1
 #define JWP_DEBUG_MEMBER			1
 #define JWP_SHOW_ERROR				1
 #define JWP_PRINTF_ENABLE			1
+#define JWP_WRITE_LOG_ENABLE		1
 
 #define JWP_POLL_ENABLE				0
 #define JWP_SLEEP_ENABLE			1
@@ -45,15 +48,15 @@
 #define JWP_RX_PKG_LOOP_ENABLE		1
 #define JWP_TX_DATA_LOOP_ENABLE		1
 
-#define JWP_TX_NOTIFY_ENABLE		0
-#define JWP_RX_CMD_NOTIFY_ENABLE	0
-#define JWP_RX_DATA_NOTIFY_ENABLE	0
-#define JWP_QUEUE_NOTIFY_ENABLE		0
+#define JWP_TX_NOTIFY_ENABLE		1
+#define JWP_RX_CMD_NOTIFY_ENABLE	1
+#define JWP_RX_DATA_NOTIFY_ENABLE	1
+#define JWP_QUEUE_NOTIFY_ENABLE		1
 
 #define JWP_MTU						0xFF
 #define JWP_POLL_TIME				100
 #define JWP_TX_LATENCY				200
-#define JWP_TX_RETRY				10
+#define JWP_TX_RETRY_COUNT			20
 #define JWP_TX_TIMEOUT				2000
 #define JWP_QUEUE_SIZE				(JWP_MTU * 3)
 
@@ -76,13 +79,14 @@
 #define jwp_lock_release(lock) \
 	ReleaseMutex(lock)
 
-#define jwp_signal_init(signal) \
-	jwp_lock_init((signal).handle)
+#define jwp_signal_init(signal, available) \
+	do { \
+		(signal).handle = CreateSemaphore(NULL, available ? 1 : 0, 1, NULL); \
+	} while (0)
 
 #define jwp_signal_timedwait_locked(signal, lock, msec) \
 	do { \
 		(signal).waitting = true; \
-		jwp_lock_acquire((signal).handle); \
 		jwp_lock_release(lock); \
 		WaitForSingleObject((signal).handle, msec); \
 		jwp_lock_acquire(lock); \
@@ -95,7 +99,7 @@
 #define jwp_signal_notify_locked(signal, lock) \
 	do { \
 		if ((signal).waitting) { \
-			jwp_lock_release((signal).handle); \
+			ReleaseSemaphore((signal).handle, 1, NULL); \
 		} \
 	} while (0)
 
@@ -113,3 +117,5 @@ typedef struct
 	HANDLE handle;
 	jwp_bool waitting;
 } jwp_signal_t;
+
+#include "jwp.h"

@@ -40,20 +40,24 @@ const char *JwpMcu::CsrStateToString(jwp_u8 state)
 
 JwpMcu::JwpMcu(void) : JwpCore()
 {
+	mInitiated = false;
+
 	csr_state_changed = CsrStateChangedHandler;
 }
 
-jwp_bool JwpMcu::StartJwp(jwp_bool useRxThread)
+jwp_bool JwpMcu::JwpInit(void)
 {
 	if (mInitiated)
 	{
 		return true;
 	}
 
-	if (!jwp_mcu_init(this, this))
+	if (!JwpCore::JwpInit())
 	{
 		return false;
 	}
 
-	return JwpCore::StartJwp(useRxThread);
+	mInitiated = jwp_mcu_init(this, this);
+
+	return mInitiated;
 }

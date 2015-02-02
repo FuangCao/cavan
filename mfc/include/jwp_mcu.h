@@ -539,7 +539,6 @@ jwp_bool jwp_csr_set_state(struct jwp_mcu_desc *mcu, app_state state);
 jwp_bool jwp_csr_set_white_list(struct jwp_mcu_desc *mcu, jwp_u8 white_list[5][6]);
 jwp_bool jwp_csr_set_white_list_enable(struct jwp_mcu_desc *mcu, jwp_u8 enable);
 jwp_bool jwp_csr_set_factory_scan(struct jwp_mcu_desc *mcu, jwp_u8 addr[6]);
-jwp_bool jwp_csr_remove_pair(struct jwp_mcu_desc *mcu);
 
 static inline void jwp_mcu_set_private_data(struct jwp_mcu_desc *mcu, void *data)
 {

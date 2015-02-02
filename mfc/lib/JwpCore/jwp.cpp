@@ -1816,7 +1816,7 @@ void jwp_rx_package_loop(struct jwp_desc *jwp)
 
 	while (1)
 	{
-		while (!jwp_package_receiver_fill_by_queue(&jwp->receiver, queue));
+		while (!jwp_package_receiver_fill_by_queue(&jwp->receiver, queue))
 		{
 			jwp_queue_wait_data(queue);
 		}

@@ -51,7 +51,7 @@ public:
 
 	const char *CsrStateToString(jwp_u8 state);
 	jwp_bool SendCsrCommand(jwp_u8 type, jwp_u8 code);
-	jwp_bool StartJwp(jwp_bool useRxThread = false);
+	jwp_bool JwpStart(jwp_bool useRxThread = false);
 
 	jwp_size_t SendData(const void *buff, jwp_size_t size)
 	{
