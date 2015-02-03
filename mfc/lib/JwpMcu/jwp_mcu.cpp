@@ -38,7 +38,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 	switch (hdr->type)
 	{
 	case MCU_REQ_IDENTIFY:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_IDENTIFY\n");
+#endif
 		{
 			struct jwp_mcu_response_identify *rsp = (struct jwp_mcu_response_identify *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -53,11 +55,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_ADD_OWNER:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_ADD_OWNER\n");
+#endif
 		{
 			struct jwp_mcu_request_add_owner *rsp = (struct jwp_mcu_request_add_owner *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("security_code = 0x%08x, owner = 0x%08x\n", rsp->security_code, rsp->owner);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -65,11 +71,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_REMOVE_OWNER:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_REMOVE_OWNER\n");
+#endif
 		{
 			struct jwp_mcu_request_remove_owner *rsp = (struct jwp_mcu_request_remove_owner *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("owner = 0x%08x\n", rsp->owner);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -77,12 +87,16 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_OWNER_IN:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_OWNER_IN\n");
+#endif
 		{
 			struct jwp_mcu_request_owner_login *req = (struct jwp_mcu_request_owner_login *) JWP_MCU_GET_PAYLOAD(hdr);
 			struct jwp_mcu_response_owner_login *rsp = (struct jwp_mcu_response_owner_login *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("security_code = 0x%08x, owner = 0x%08x\n", req->security_code, req->owner);
+#endif
 
 			rsplen = sizeof(*rsp);
 			hdr->type = MCU_RSP_OWNER_IN;
@@ -92,7 +106,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_OWNER_OUT:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_OWNER_OUT\n");
+#endif
 		{
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -100,7 +116,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_OWNER_LIST:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_OWNER_LIST\n");
+#endif
 		{
 			struct jwp_mcu_response_owner_list *rsp = (struct jwp_mcu_response_owner_list *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -116,7 +134,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_BATT_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_BATT_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_battery_info *rsp = (struct jwp_mcu_response_battery_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -130,7 +150,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_GSM_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_GSM_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_gsm_info *rsp = (struct jwp_mcu_response_gsm_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -144,7 +166,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_GPS_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_GPS_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_gps_info *rsp = (struct jwp_mcu_response_gps_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -157,7 +181,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_RIDE_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_RIDE_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_ride_info *rsp = (struct jwp_mcu_response_ride_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -175,7 +201,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_HBT_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_HBT_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_hbt_info *rsp = (struct jwp_mcu_response_hbt_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -187,7 +215,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_ALARM_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_ALARM_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_alarm_info *rsp = (struct jwp_mcu_response_alarm_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -200,11 +230,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_ALARM_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_ALARM_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_alarm_set *req = (struct jwp_mcu_request_alarm_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("state = %d\n", req->state);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -212,7 +246,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_SOS_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_SOS_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_sos_info *rsp = (struct jwp_mcu_response_sos_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -226,11 +262,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_SOS_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_SOS_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_sos_set *req = (struct jwp_mcu_request_sos_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("enable = %d, delay = %d\n", req->enable, req->delay);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -238,7 +278,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_LIGHT_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_LIGHT_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_light_info *rsp = (struct jwp_mcu_response_light_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -250,11 +292,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_LIGHT_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_LIGHT_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_light_set *req = (struct jwp_mcu_request_light_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("enable = %d\n", req->enable);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -262,7 +308,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_TARGET_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_TARGET_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_target_info *rsp = (struct jwp_mcu_response_target_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -277,11 +325,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_TARGET_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_TARGET_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_target_set *req = (struct jwp_mcu_request_target_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("mileage_target = %d, time_target = %d\n", req->mileage_target, req->time_target);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -289,7 +341,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_PRACTICE_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_PRACTICE_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_practice_info *rsp = (struct jwp_mcu_response_practice_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -301,11 +355,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_PRACTICE_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_PRACTICE_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_practice_set *req = (struct jwp_mcu_request_practice_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("enable = %d\n", req->enable);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -313,7 +371,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_VIBRATE_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_VIBRATE_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_vibrate_info *rsp = (struct jwp_mcu_response_vibrate_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -325,11 +385,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_VIBRATE_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_VIBRATE_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_vibrate_set *req = (struct jwp_mcu_request_vibrate_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("enable = %d\n", req->enable);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -337,7 +401,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_CALL_IN:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_CALL_IN\n");
+#endif
 		{
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -345,11 +411,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_TIME_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_TIME_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_time_set *req = (struct jwp_mcu_request_time_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("time = 0x%08x\n", req->time);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -357,11 +427,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_WEATHER_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_WEATHER_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_weather_set *req = (struct jwp_mcu_request_weather_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("type = %d, temperature_min = %d, temperature_max = %d\n", req->type, req->temperature_min, req->temperature_max);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -369,11 +443,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_PHONE_BATT:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_PHONE_BATT\n");
+#endif
 		{
 			struct jwp_mcu_request_phone_battery_set *req = (struct jwp_mcu_request_phone_battery_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("charge_state = %d, capacity_level = %d\n", req->charge_state, req->capacity_level);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -381,7 +459,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_TRACK_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_TRACK_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_track_info *rsp = (struct jwp_mcu_response_track_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -393,11 +473,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_TRACK_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_TRACK_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_track_set *req = (struct jwp_mcu_request_track_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("enable = %d\n", req->enable);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -405,11 +489,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_GSM_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_GSM_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_gsm_set *req = (struct jwp_mcu_request_gsm_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("enabel = %d, conn_enable = %d, airplane_mode = %d\n", req->enable, req->conn_enable, req->airplane_mode);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -417,11 +505,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_GPS_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_GPS_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_gps_set *req = (struct jwp_mcu_request_gps_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("enable = %d\n", req->enable);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -429,7 +521,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_SIM_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_SIM_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_sim_info *rsp = (struct jwp_mcu_response_sim_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -443,7 +537,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_KEYLOCK_INFO:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_KEYLOCK_INFO\n");
+#endif
 		{
 			struct jwp_mcu_response_keylock_info *rsp = (struct jwp_mcu_response_keylock_info *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -456,11 +552,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_KEYLOCK_SET:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_KEYLOCK_SET\n");
+#endif
 		{
 			struct jwp_mcu_request_keylock_set *req = (struct jwp_mcu_request_keylock_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("enable = %d, password = %s\n", req->enable, req->password);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -468,11 +568,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_NAVI_NOTIFY:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_NAVI_NOTIFY\n");
+#endif
 		{
 			struct jwp_mcu_request_navi_notify_set *req = (struct jwp_mcu_request_navi_notify_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("direction = %d, distance = %d\n", req->direction, req->distance);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -480,11 +584,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_BAD_RIDE:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_BAD_RIDE\n");
+#endif
 		{
 			struct jwp_mcu_request_bad_navi_notify_set *req = (struct jwp_mcu_request_bad_navi_notify_set *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("direction = %d, distance = %d\n", req->direction, req->distance);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -492,11 +600,15 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_FILE_SEND:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_FILE_SEND\n");
+#endif
 		{
 			struct jwp_mcu_request_file_transfer *req = (struct jwp_mcu_request_file_transfer *) JWP_MCU_GET_PAYLOAD(hdr);
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("type = %d, index = %d, total = %d, length = %d\n", req->type, req->index, req->total, req->length);
+#endif
 
 			rsplen = 0;
 			hdr->type = MCU_RSP_OK;
@@ -504,7 +616,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	case MCU_REQ_READ_RECENT_RECORD:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_READ_RECENT_RECORD\n");
+#endif
 		{
 			struct jwp_mcu_response_read_recent_record *rsp = (struct jwp_mcu_response_read_recent_record *) JWP_MCU_GET_PAYLOAD(hdr);
 
@@ -521,7 +635,9 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		break;
 
 	default:
+#if JWP_PRINTF_ENABLE
 		jwp_printf("Invalid request = %d\n", hdr->type);
+#endif
 		{
 #if 0
 			rsplen = 1;
@@ -543,6 +659,11 @@ static void jwp_mcu_data_received(struct jwp_desc *jwp, const void *buff, jwp_si
 {
 	struct jwp_mcu_desc *mcu = (struct jwp_mcu_desc *) jwp_get_private_data(jwp);
 
+#if JWP_PRINTF_ENABLE
+	jwp_printf("mcu data received: size = %d", size);
+	jwp_dump_mem((const jwp_u8 *) buff, size);
+#endif
+
 #if JWP_RX_DATA_QUEUE_ENABLE
 	while (jwp_package_receiver_fill_by_queue(&mcu->receiver, jwp_get_queue(jwp, JWP_QUEUE_RX_DATA)));
 #else
@@ -563,7 +684,9 @@ static void jwp_mcu_command_received(struct jwp_desc *jwp, const void *command, 
 	}
 
 	hdr = (struct jwp_csr_header *) command;
-	jwp_printf("csr type = %d\n", hdr->type);
+#if JWP_PRINTF_ENABLE
+	jwp_printf("csr event type = %d\n", hdr->type);
+#endif
 	switch (hdr->type)
 	{
 	case JWP_CSR_EVENT_STATE:
@@ -580,12 +703,17 @@ static void jwp_mcu_command_received(struct jwp_desc *jwp, const void *command, 
 		{
 			struct jwp_csr_response_package *rsp = (struct jwp_csr_response_package *) command;
 
+#if JWP_PRINTF_ENABLE
 			jwp_printf("csr response %s", rsp->success > 0 ? "true" : "false");
+#endif
 		}
 		break;
 
 	default:
+#if JWP_SHOW_ERROR
 		jwp_printf("Invalid csr package %d\n", hdr->type);
+#endif
+		break;
 	}
 }
 

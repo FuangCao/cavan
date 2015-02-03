@@ -22,7 +22,7 @@
 #define JWP_ARCH_NAME				"win32"
 
 #define JWP_DEBUG					1
-#define JWP_DEBUG_MEMBER			0
+#define JWP_DEBUG_MEMBER			1
 #define JWP_SHOW_ERROR				1
 #define JWP_PRINTF_ENABLE			1
 #define JWP_WRITE_LOG_ENABLE		1
@@ -53,12 +53,12 @@
 #define JWP_RX_DATA_NOTIFY_ENABLE	1
 #define JWP_QUEUE_NOTIFY_ENABLE		1
 
-#define JWP_MTU						128
+#define JWP_MTU						64
 #define JWP_POLL_TIME				100
 #define JWP_TX_LATENCY				200
 #define JWP_TX_RETRY_COUNT			20
 #define JWP_TX_TIMEOUT				2000
-#define JWP_QUEUE_SIZE				(JWP_MTU * 3)
+#define JWP_QUEUE_SIZE				(JWP_MTU * 2)
 
 // ============================================================
 

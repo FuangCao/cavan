@@ -76,6 +76,8 @@ void CJwpCommDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CJwpCommDlg)
+	DDX_Control(pDX, IDC_BUTTON_DIRECTED_ADVERT, m_ButtonDirectedAdvert);
+	DDX_Control(pDX, IDC_BUTTON_BT_STATE, m_ButtonBtState);
 	DDX_Control(pDX, IDC_BUTTON_BT_RM_PAIR, m_ButtonBtRmPair);
 	DDX_Control(pDX, IDC_BUTTON_BT_IDLE, m_ButtonBtIdle);
 	DDX_Control(pDX, IDC_EDIT_COM, m_EditComCtrl);
@@ -204,36 +206,67 @@ HCURSOR CJwpCommDlg::OnQueryDragIcon()
 
 void CJwpCommDlg::UpdateUiState(void)
 {
+	int i;
+	int openEnables[] =
+	{
+		IDC_BUTTON_DISCONNECT,
+		IDC_BUTTON_BT_ADVERT,
+		IDC_BUTTON_DIRECTED_ADVERT,
+		IDC_BUTTON_BT_DISCONNECT,
+		IDC_BUTTON_BT_IDLE,
+		IDC_BUTTON_BT_RM_PAIR,
+		IDC_BUTTON_BT_STATE,
+		IDC_BUTTON_SEND_COMMAND,
+		IDC_BUTTON_SEND_DATA,
+	};
+	int openDisables[] =
+	{
+		IDC_BUTTON_CONNECT,
+		IDC_EDIT_COM,
+	};
+
 	if (m_Comm.GetPortOpen())
 	{
-		m_ButtonDisconnect.EnableWindow(true);
-		m_ButtonConnect.EnableWindow(false);
-		m_EditComCtrl.EnableWindow(false);
+		for (i = 0; i < JWP_NELEM(openEnables); i++)
+		{
+			CWnd *win = GetDlgItem(openEnables[i]);
+			if (win)
+			{
+				win->EnableWindow(true);
+			}
+		}
 
-		m_ButtonBtDisconnect.EnableWindow(true);
-		m_ButtunBtAdvert.EnableWindow(true);
-		m_ButtonBtIdle.EnableWindow(true);
-		m_ButtonBtRmPair.EnableWindow(true);
-
-		m_ButtonSendCommand.EnableWindow(true);
-		m_ButtonSendData.EnableWindow(true);
+		for (i = 0; i < JWP_NELEM(openDisables); i++)
+		{
+			CWnd *win = GetDlgItem(openDisables[i]);
+			if (win)
+			{
+				win->EnableWindow(false);
+			}
+		}
 
 		m_StateValue = "串口已连接";
 	}
 	else
 	{
-		m_ButtonDisconnect.EnableWindow(false);
-		m_ButtonConnect.EnableWindow(true);
-		m_EditComCtrl.EnableWindow(true);
+		for (int i = 0; i < JWP_NELEM(openEnables); i++)
+		{
+			CWnd *win = GetDlgItem(openEnables[i]);
+			if (win)
+			{
+				win->EnableWindow(false);
+			}
+		}
 
-		m_ButtonBtDisconnect.EnableWindow(false);
-		m_ButtunBtAdvert.EnableWindow(false);
-		m_ButtonBtIdle.EnableWindow(false);
-		m_ButtonBtRmPair.EnableWindow(false);
+		for (i = 0; i < JWP_NELEM(openDisables); i++)
+		{
+			CWnd *win = GetDlgItem(openDisables[i]);
+			if (win)
+			{
+				win->EnableWindow(true);
+			}
+		}
 
-		m_ButtonSendCommand.EnableWindow(false);
-		m_ButtonSendData.EnableWindow(false);
-		
 		m_StateValue = "串口已断开";
 	}
 
@@ -267,7 +300,7 @@ void CJwpCommDlg::OnLogReceived(jwp_device_t device, const char *log, jwp_size_t
 LRESULT CJwpCommDlg::OnBtStateChanged(WPARAM wParam, LPARAM lParam)
 {
 	m_StateValue.Format("%s - %s", GetCsrStateString(), GetBonded() ? "已绑定" : "未绑定");
-	
+
 	UpdateData(false);
 
 	return 0;

@@ -19,11 +19,10 @@
  *
  */
 
-#include <cavan.h>
-
 #ifdef _WIN32
 #include "jwp-win32.h"
 #else
+#include <cavan.h>
 #include <cavan/jwp-linux.h>
 #endif
 

@@ -56,6 +56,7 @@
 #define JWP_MAGIC_HIGH			0x12
 #define JWP_MAGIC_LOW			0x34
 #define JWP_MAGIC				(JWP_MAGIC_HIGH << 8 | JWP_MAGIC_LOW)
+#define JWP_NELEM(a)			((int) (sizeof(a) / sizeof((a)[0])))
 
 // ============================================================
 
@@ -296,7 +297,10 @@ jwp_size_t jwp_strlen(const char *text);
 char *jwp_value2str10(jwp_u32 value, char *buff, jwp_size_t size);
 char *jwp_value2str16(jwp_u32 value, char *buff, jwp_size_t size);
 void jwp_pr_value(const char *prompt, jwp_u32 value, jwp_u8 base);
+char *jwp_mem_to_string(const jwp_u8 *mem, jwp_size_t mem_size, char *buff, jwp_size_t buff_size);
+void jwp_dump_mem(const jwp_u8 *mem, jwp_size_t mem_size);
 void jwp_printf(const char *fmt, ...);
+
 
 void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);

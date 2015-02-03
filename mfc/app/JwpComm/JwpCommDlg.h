@@ -32,6 +32,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CJwpCommDlg)
 	enum { IDD = IDD_JWPCOMM_DIALOG };
+	CButton	m_ButtonDirectedAdvert;
+	CButton	m_ButtonBtState;
 	CButton	m_ButtonBtRmPair;
 	CButton	m_ButtonBtIdle;
 	CEdit	m_EditComCtrl;
@@ -88,6 +90,11 @@ private:
 protected:
 	virtual int HwWrite(const void *buff, jwp_size_t size)
 	{
+		while (!m_Comm.GetPortOpen())
+		{
+			jwp_msleep(JWP_POLL_TIME);
+		}
+
 		return m_Comm.HwWrite(buff, size);
 	}
 
