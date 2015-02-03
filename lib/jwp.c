@@ -240,6 +240,35 @@ void jwp_pr_value(const char *prompt, jwp_u32 value, jwp_u8 base)
 	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, buff, p - buff);
 }
 
+char *jwp_mem_to_string(const jwp_u8 *mem, jwp_size_t mem_size, char *buff, jwp_size_t buff_size)
+{
+	const jwp_u8 *mem_end;
+	char *buff_end = buff + buff_size - 2;
+
+	for (mem_end = mem + mem_size; mem < mem_end && buff < buff_end; mem++, buff += 2)
+	{
+		jwp_u8 value = *mem;
+
+		buff[0] = jwp_value_to_char((value >> 4) & 0x0F);
+		buff[1] = jwp_value_to_char(value & 0x0F);
+	}
+
+	*buff = 0;
+
+	return buff;
+}
+
+void jwp_dump_mem(const jwp_u8 *mem, jwp_size_t mem_size)
+{
+	char buff[1024], *p;
+
+	p = jwp_mem_to_string(mem, mem_size, buff, sizeof(buff));
+	*p++ = '\n';
+	*p = 0;
+
+	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, buff, p - buff);
+}
+
 #ifdef CSR101x
 void jwp_printf(const char *fmt, ...)
 {
