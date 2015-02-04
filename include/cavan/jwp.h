@@ -170,6 +170,8 @@ struct jwp_queue
 	jwp_u8 *head_peek;
 	jwp_u8 *tail_peek;
 
+	jwp_bool hardware;
+
 #if JWP_DEBUG_MEMBER
 	const char *name;
 #endif
@@ -290,6 +292,8 @@ struct jwp_desc
 #endif
 };
 
+extern struct jwp_desc *jwp_global;
+
 // ============================================================
 
 char *jwp_strcpy(char *dest, const char *src);
@@ -313,11 +317,13 @@ void jwp_queue_clear(struct jwp_queue *queue);
 void jwp_queue_init(struct jwp_queue *queue);
 jwp_size_t jwp_queue_inqueue_peek(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 void jwp_queue_inqueue_commit(struct jwp_queue *queue);
+jwp_size_t jwp_queue_inqueue_locked(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_inqueue(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 jwp_bool jwp_queue_try_inqueue(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 void jwp_queue_inqueue_all(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_dequeue_peek(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 void jwp_queue_dequeue_commit(struct jwp_queue *queue);
+jwp_size_t jwp_queue_dequeue_locked(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_dequeue(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_get_free_size(const struct jwp_queue *queue);
 jwp_size_t jwp_queue_get_used_size(const struct jwp_queue *queue);
@@ -334,6 +340,11 @@ static inline jwp_size_t jwp_queue_seek(struct jwp_queue *queue, jwp_size_t size
 static inline jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size)
 {
 	return jwp_queue_dequeue(queue, NULL, size);
+}
+
+static inline void jwp_queue_set_hardware(struct jwp_queue *queue, jwp_bool hardware)
+{
+	queue->hardware = hardware;
 }
 
 // ============================================================

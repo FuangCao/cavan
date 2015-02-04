@@ -99,6 +99,10 @@
 #define jwp_signal_notify_locked(signal, lock) \
 	pthread_cond_signal(&signal)
 
+#define jwp_irq_enable()
+
+#define jwp_irq_disable()
+
 // ============================================================
 
 typedef u8 jwp_u8;
