@@ -35,6 +35,8 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 	struct jwp_mcu_header *hdr = &pkg->header;
 	struct jwp_mcu_desc *mcu = (struct jwp_mcu_desc *) jwp_package_receiver_get_private_data(receiver);
 
+	jwp_printf("%s: type = %d, length = %d\n", __FUNCTION__, hdr->type, hdr->length);
+
 	switch (hdr->type)
 	{
 	case MCU_REQ_IDENTIFY:

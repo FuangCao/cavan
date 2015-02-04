@@ -253,9 +253,9 @@ struct jwp_mcu_response_gps_info
 
 struct jwp_mcu_response_ride_info
 {
-	jwp_u8 speed;
-	jwp_u8 speed_max;
-	jwp_u8 speed_avg;
+	jwp_u16 speed;
+	jwp_u16 speed_max;
+	jwp_u16 speed_avg;
 	jwp_u32 time;
 	jwp_u32 mileage;
 	jwp_u32 mileage_total;
@@ -264,7 +264,7 @@ struct jwp_mcu_response_ride_info
 
 struct jwp_mcu_response_hbt_info
 {
-	jwp_u8 heart_rate;
+	jwp_u16 heart_rate;
 };
 
 struct jwp_mcu_response_alarm_info
@@ -423,9 +423,9 @@ struct jwp_mcu_response_read_recent_record
 	jwp_u32 time_start;
 	jwp_u32 time_end;
 	jwp_u32 mileage;
-	jwp_u8 speed_max;
-	jwp_u8 heart_rate_avg;
-	jwp_u8 heart_rate_max;
+	jwp_u16 speed_max;
+	jwp_u16 heart_rate_avg;
+	jwp_u16 heart_rate_max;
 };
 
 struct jwp_mcu_event_battery_info
@@ -447,9 +447,9 @@ struct jwp_mcu_event_sos
 
 struct jwp_mcu_event_ride_data
 {
-	jwp_u8 speed;
-	jwp_u8 speed_max;
-	jwp_u8 speed_avg;
+	jwp_u16 speed;
+	jwp_u16 speed_max;
+	jwp_u16 speed_avg;
 	jwp_u32 time;
 	jwp_u32 mileage;
 	jwp_u32 mileage_total;
@@ -464,7 +464,7 @@ struct jwp_mcu_event_target_reach
 
 struct jwp_mcu_event_hbt_data
 {
-	jwp_u8 heart_rate;
+	jwp_u16 heart_rate;
 };
 
 struct jwp_csr_header

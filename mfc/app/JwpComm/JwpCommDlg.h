@@ -90,12 +90,12 @@ private:
 protected:
 	virtual int HwWrite(const void *buff, jwp_size_t size)
 	{
-		while (!m_Comm.GetPortOpen())
+		if (m_Comm.GetPortOpen())
 		{
-			jwp_msleep(JWP_POLL_TIME);
+			return m_Comm.HwWrite(buff, size);
 		}
 
-		return m_Comm.HwWrite(buff, size);
+		return size;
 	}
 
 	virtual void OnDataReceived(const void *buff, jwp_size_t size);

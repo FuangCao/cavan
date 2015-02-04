@@ -19,11 +19,10 @@
  *
  */
 
-#include <cavan.h>
-
 #ifdef _WIN32
 #include "jwp-win32.h"
 #else
+#include <cavan.h>
 #include <cavan/jwp-linux.h>
 #endif
 
@@ -254,9 +253,9 @@ struct jwp_mcu_response_gps_info
 
 struct jwp_mcu_response_ride_info
 {
-	jwp_u8 speed;
-	jwp_u8 speed_max;
-	jwp_u8 speed_avg;
+	jwp_u16 speed;
+	jwp_u16 speed_max;
+	jwp_u16 speed_avg;
 	jwp_u32 time;
 	jwp_u32 mileage;
 	jwp_u32 mileage_total;
@@ -265,7 +264,7 @@ struct jwp_mcu_response_ride_info
 
 struct jwp_mcu_response_hbt_info
 {
-	jwp_u8 heart_rate;
+	jwp_u16 heart_rate;
 };
 
 struct jwp_mcu_response_alarm_info
@@ -424,9 +423,9 @@ struct jwp_mcu_response_read_recent_record
 	jwp_u32 time_start;
 	jwp_u32 time_end;
 	jwp_u32 mileage;
-	jwp_u8 speed_max;
-	jwp_u8 heart_rate_avg;
-	jwp_u8 heart_rate_max;
+	jwp_u16 speed_max;
+	jwp_u16 heart_rate_avg;
+	jwp_u16 heart_rate_max;
 };
 
 struct jwp_mcu_event_battery_info
@@ -448,9 +447,9 @@ struct jwp_mcu_event_sos
 
 struct jwp_mcu_event_ride_data
 {
-	jwp_u8 speed;
-	jwp_u8 speed_max;
-	jwp_u8 speed_avg;
+	jwp_u16 speed;
+	jwp_u16 speed_max;
+	jwp_u16 speed_avg;
 	jwp_u32 time;
 	jwp_u32 mileage;
 	jwp_u32 mileage_total;
@@ -465,7 +464,7 @@ struct jwp_mcu_event_target_reach
 
 struct jwp_mcu_event_hbt_data
 {
-	jwp_u8 heart_rate;
+	jwp_u16 heart_rate;
 };
 
 struct jwp_csr_header
@@ -588,6 +587,11 @@ static inline jwp_bool jwp_csr_get_firmware_info(struct jwp_mcu_desc *mcu)
 static inline jwp_bool jwp_csr_start_advert(struct jwp_mcu_desc *mcu)
 {
 	return jwp_csr_set_state(mcu, app_state_fast_advertising);
+}
+
+static inline jwp_bool jwp_csr_directed_advert(struct jwp_mcu_desc *mcu)
+{
+	return jwp_csr_set_state(mcu, app_state_directed_advertising);
 }
 
 static inline jwp_bool jwp_csr_disconnect(struct jwp_mcu_desc *mcu)
