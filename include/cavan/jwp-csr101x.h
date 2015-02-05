@@ -27,21 +27,23 @@
 
 #define JWP_DEBUG					0
 #define JWP_DEBUG_MEMBER			0
-#define JWP_SHOW_ERROR				1
-#define JWP_PRINTF_ENABLE			1
-#define JWP_WRITE_LOG_ENABLE		1
+#define JWP_SHOW_ERROR				0
+#define JWP_PRINTF_ENABLE			0
+#define JWP_WRITE_LOG_ENABLE		0
 
 #define JWP_POLL_ENABLE				0
 #define JWP_SLEEP_ENABLE			0
 #define JWP_CHECKSUM_ENABLE			1
 
-#define JWP_QUEUE_ENABLE			1
+#define JWP_TX_INTERRUPT_ENABLE		0
+#define JWP_RX_INTERRUPT_ENABLE		0
+
+#define JWP_TX_HW_QUEUE_ENABLE		0
 #define JWP_TX_QUEUE_ENABLE			1
 #define JWP_RX_QUEUE_ENABLE			1
 #define JWP_TX_DATA_QUEUE_ENABLE	1
 #define JWP_RX_DATA_QUEUE_ENABLE	1
 
-#define JWP_TIMER_ENABLE			1
 #define JWP_TX_TIMER_ENABLE			1
 #define JWP_TX_DATA_TIMER_ENABLE	1
 #define JWP_TX_PKG_TIMER_ENABLE		1
@@ -57,12 +59,12 @@
 #define JWP_RX_DATA_NOTIFY_ENABLE	0
 #define JWP_QUEUE_NOTIFY_ENABLE		0
 
-#define JWP_MTU						128
+#define JWP_MTU						64
 #define JWP_POLL_TIME				10
 #define JWP_TX_LATENCY				200
 #define JWP_TX_RETRY_COUNT			10
 #define JWP_TX_TIMEOUT				2000
-#define JWP_QUEUE_SIZE				(JWP_MTU + 1)
+#define JWP_QUEUE_SIZE				(JWP_MTU * 2)
 
 // ============================================================
 
@@ -84,6 +86,10 @@
 #define jwp_signal_timedwait_locked(signal, lock, msec)
 
 #define jwp_signal_notify_locked(signal, lock)
+
+#define jwp_irq_enable()
+
+#define jwp_irq_disable()
 
 // ============================================================
 
