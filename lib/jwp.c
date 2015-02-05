@@ -23,8 +23,10 @@
 #include "jwp-win32.h"
 #elif defined(CSR101x)
 #include "jwp-csr101x.h"
-#else
+#elif defined(CAVAN_ARCH)
 #include <cavan/jwp-linux.h>
+#else
+#include "jwp-kl2x.h"
 #endif
 
 // ============================================================
@@ -248,12 +250,7 @@ void jwp_dump_mem(const jwp_u8 *mem, jwp_size_t mem_size)
 	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, jwp_log_buff, p - jwp_log_buff);
 }
 
-#ifdef CSR101x
-void jwp_printf(const char *fmt, ...)
-{
-	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, fmt, jwp_strlen(fmt));
-}
-#else
+#if defined(CAVAN_ARCH) || defined(_WIN32)
 void jwp_printf(const char *fmt, ...)
 {
 	va_list ap;
@@ -275,6 +272,11 @@ void jwp_printf(const char *fmt, ...)
 	va_end(ap);
 
 	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, jwp_log_buff, size);
+}
+#else
+void jwp_printf(const char *fmt, ...)
+{
+	jwp_global->log_received(jwp_global, JWP_DEVICE_LOCAL, fmt, jwp_strlen(fmt));
 }
 #endif
 
@@ -850,13 +852,14 @@ static jwp_bool jwp_data_inqueue(struct jwp_desc *jwp)
 
 // ============================================================
 
-void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_u8 *body, jwp_size_t magic_size, jwp_size_t header_size)
+void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_u8 *body, jwp_size_t magic_size, jwp_size_t header_size, jwp_size_t size)
 {
 	jwp_lock_init(receiver->lock);
 
 	receiver->head = receiver->body = body;
 	receiver->header_start = receiver->body + magic_size;
 	receiver->payload_start = receiver->body + header_size;
+	receiver->payload_max = size - header_size;
 }
 
 #if JWP_RX_QUEUE_ENABLE == 0 || JWP_RX_DATA_QUEUE_ENABLE == 0
@@ -898,6 +901,11 @@ static jwp_size_t jwp_package_receiver_write_locked(struct jwp_package_receiver 
 			goto out_process_package;
 		}
 
+		if (length > receiver->payload_max)
+		{
+			goto out_reinit;
+		}
+
 		receiver->head = receiver->payload_start;
 		receiver->payload_end = receiver->head + length;
 
@@ -916,6 +924,7 @@ static jwp_size_t jwp_package_receiver_write_locked(struct jwp_package_receiver 
 
 out_process_package:
 	receiver->process_package(receiver);
+out_reinit:
 	receiver->head = receiver->body;
 	return remain;
 }
@@ -953,6 +962,8 @@ static jwp_bool jwp_package_receiver_fill_by_queue_locked(struct jwp_package_rec
 
 	if (receiver->head < receiver->payload_start)
 	{
+		jwp_size_t length;
+
 		while (receiver->head < receiver->header_start)
 		{
 			jwp_u8 data;
@@ -981,8 +992,15 @@ static jwp_bool jwp_package_receiver_fill_by_queue_locked(struct jwp_package_rec
 			return false;
 		}
 
+		length = receiver->get_payload_length(receiver);
+		if (length > receiver->payload_max)
+		{
+			receiver->head = receiver->body;
+			return false;
+		}
+
 		receiver->head = receiver->payload_start;
-		receiver->payload_end = receiver->head + receiver->get_payload_length(receiver);
+		receiver->payload_end = receiver->head + length;
 	}
 
 	remain = receiver->payload_end - receiver->head;
@@ -1254,7 +1272,7 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 	jwp->rx_pkg.header.magic_high = JWP_MAGIC_HIGH;
 	jwp->receiver.get_payload_length = jwp_package_get_payload_length;
 	jwp->receiver.process_package = jwp_process_package;
-	jwp_package_receiver_init(&jwp->receiver, jwp->rx_pkg.body, JWP_MAGIC_SIZE, JWP_HEADER_SIZE);
+	jwp_package_receiver_init(&jwp->receiver, jwp->rx_pkg.body, JWP_MAGIC_SIZE, JWP_HEADER_SIZE, sizeof(jwp->rx_pkg));
 	jwp_package_receiver_set_private_data(&jwp->receiver, jwp);
 
 #if JWP_QUEUE_ENABLE
@@ -1563,7 +1581,7 @@ jwp_size_t jwp_write_rx_data(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_
 	return size;
 }
 
-jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool sync)
+jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, jwp_bool sync)
 {
 	hdr->magic_high = JWP_MAGIC_HIGH;
 	hdr->magic_low = JWP_MAGIC_LOW;

@@ -21,9 +21,11 @@
 
 #ifdef _WIN32
 #include "jwp-win32.h"
-#else
+#elif defined(CAVAN_ARCH)
 #include <cavan.h>
 #include <cavan/jwp-linux.h>
+#else
+#include "jwp-kl2x.h"
 #endif
 
 #define JWP_MCU_MTU					0xFF
@@ -116,6 +118,7 @@ typedef enum
 	MCU_REQ_BAD_RIDE = 36,
 	MCU_REQ_FILE_SEND = 37,
 	MCU_REQ_READ_RECENT_RECORD = 38,
+	MCU_REQ_READ_PROTOCOL = 39,
 	/* response */
 	MCU_RSP_OK = 200,
 	MCU_RSP_ERROR = 201,
@@ -137,6 +140,7 @@ typedef enum
 	MCU_RSP_SIM_INFO = 132,
 	MCU_RSP_KEYLOCK_INFO = 133,
 	MCU_RSP_READ_RECENT_RECORD = 138,
+	MCU_RSP_READ_PROTOCOL = 139,
 	/* event */
 	MCU_EVT_BATT_INFO = 220,
 	MCU_EVT_DEVICE_FAULT = 221,
@@ -148,13 +152,13 @@ typedef enum
 
 typedef enum
 {
-	MCU_ERROR_INVALID = 1,		/* 指令不支持 */
-	MCU_ERROR_FORMAT_FAULT,		/* 指令格式错误 */
-	MCU_ERROR_NO_ARG,			/* 指令缺乏必要参数 */
-	MCU_ERROR_NO_PERMISSION,	/* 执行权限不足 */
-	MCU_ERROR_TIMEOUT,			/* 操作超时 */
-	MCU_ERROR_OWNER_FULL,		/* 主人数已满 */
-	MCU_ERROR_NO_NUMBER,		/* 无此号码 */
+	MCU_ERROR_INVALID = 1,
+	MCU_ERROR_FORMAT_FAULT,
+	MCU_ERROR_NO_ARG,
+	MCU_ERROR_NO_PERMISSION,
+	MCU_ERROR_TIMEOUT,
+	MCU_ERROR_OWNER_FULL,
+	MCU_ERROR_NO_NUMBER,
 } jwp_mcu_error_t;
 
 #pragma pack(1)
@@ -426,6 +430,11 @@ struct jwp_mcu_response_read_recent_record
 	jwp_u16 speed_max;
 	jwp_u16 heart_rate_avg;
 	jwp_u16 heart_rate_max;
+};
+
+struct jwp_mcu_response_read_protocol
+{
+	jwp_u8 version;
 };
 
 struct jwp_mcu_event_battery_info

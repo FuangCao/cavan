@@ -31,13 +31,14 @@
 #define JWP_SLEEP_ENABLE			1
 #define JWP_CHECKSUM_ENABLE			1
 
-#define JWP_QUEUE_ENABLE			1
+#define JWP_TX_INTERRUPT_ENABLE		0
+#define JWP_RX_INTERRUPT_ENABLE		0
+
 #define JWP_TX_QUEUE_ENABLE			1
 #define JWP_RX_QUEUE_ENABLE			1
 #define JWP_TX_DATA_QUEUE_ENABLE	1
 #define JWP_RX_DATA_QUEUE_ENABLE	1
 
-#define JWP_TIMER_ENABLE			0
 #define JWP_TX_TIMER_ENABLE			0
 #define JWP_TX_DATA_TIMER_ENABLE	0
 #define JWP_TX_PKG_TIMER_ENABLE		0
@@ -81,7 +82,8 @@
 
 #define jwp_signal_init(signal, available) \
 	do { \
-		(signal).handle = CreateSemaphore(NULL, available ? 1 : 0, 1, NULL); \
+		(signal).waitting = !(available); \
+		(signal).handle = CreateSemaphore(NULL, !!(available), 1, NULL); \
 	} while (0)
 
 #define jwp_signal_timedwait_locked(signal, lock, msec) \
@@ -102,6 +104,10 @@
 			ReleaseSemaphore((signal).handle, 1, NULL); \
 		} \
 	} while (0)
+
+#define jwp_irq_enable()
+
+#define jwp_irq_disable()
 
 // ============================================================
 

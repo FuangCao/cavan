@@ -221,6 +221,7 @@ struct jwp_package_receiver
 	jwp_u8 *header_start;
 	jwp_u8 *payload_start;
 	jwp_u8 *payload_end;
+	jwp_size_t payload_max;
 
 	void *private_data;
 	jwp_lock_t lock;
@@ -312,7 +313,6 @@ char *jwp_mem_to_string(const jwp_u8 *mem, jwp_size_t mem_size, char *buff, jwp_
 void jwp_dump_mem(const jwp_u8 *mem, jwp_size_t mem_size);
 void jwp_printf(const char *fmt, ...);
 
-
 void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);
 jwp_u8 jwp_checksum(const jwp_u8 *buff, jwp_size_t size);
@@ -356,7 +356,7 @@ static inline void jwp_queue_set_hardware(struct jwp_queue *queue, jwp_bool hard
 
 // ============================================================
 
-void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_u8 *body, jwp_size_t magic_size, jwp_size_t header_size);
+void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_u8 *body, jwp_size_t magic_size, jwp_size_t header_size, jwp_size_t size);
 jwp_size_t jwp_package_receiver_write(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
 void jwp_package_receiver_fill(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
 jwp_bool jwp_package_receiver_fill_by_queue(struct jwp_package_receiver *receiver, struct jwp_queue *queue);
@@ -374,7 +374,7 @@ static inline void *jwp_package_receiver_get_private_data(struct jwp_package_rec
 // ============================================================
 
 jwp_bool jwp_init(struct jwp_desc *jwp, void *data);
-jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool sync);
+jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, jwp_bool sync);
 void jwp_send_empty_package(struct jwp_desc *jwp, jwp_u8 type, jwp_u8 index);
 void jwp_send_sync(struct jwp_desc *jwp);
 jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size);

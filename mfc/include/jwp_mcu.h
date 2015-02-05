@@ -21,9 +21,11 @@
 
 #ifdef _WIN32
 #include "jwp-win32.h"
-#else
+#elif defined(CAVAN_ARCH)
 #include <cavan.h>
 #include <cavan/jwp-linux.h>
+#else
+#include "jwp-kl2x.h"
 #endif
 
 #define JWP_MCU_MTU					0xFF
@@ -150,13 +152,13 @@ typedef enum
 
 typedef enum
 {
-	MCU_ERROR_INVALID = 1,		/* 指令不支持 */
-	MCU_ERROR_FORMAT_FAULT,		/* 指令格式错误 */
-	MCU_ERROR_NO_ARG,			/* 指令缺乏必要参数 */
-	MCU_ERROR_NO_PERMISSION,	/* 执行权限不足 */
-	MCU_ERROR_TIMEOUT,			/* 操作超时 */
-	MCU_ERROR_OWNER_FULL,		/* 主人数已满 */
-	MCU_ERROR_NO_NUMBER,		/* 无此号码 */
+	MCU_ERROR_INVALID = 1,
+	MCU_ERROR_FORMAT_FAULT,
+	MCU_ERROR_NO_ARG,
+	MCU_ERROR_NO_PERMISSION,
+	MCU_ERROR_TIMEOUT,
+	MCU_ERROR_OWNER_FULL,
+	MCU_ERROR_NO_NUMBER,
 } jwp_mcu_error_t;
 
 #pragma pack(1)

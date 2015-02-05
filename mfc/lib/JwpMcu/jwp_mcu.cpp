@@ -19,11 +19,11 @@
 
 #include "stdafx.h"
 
-#ifdef _WIN32
-#include "jwp_mcu.h"
-#else
+#ifdef CAVAN_ARCH
 #include <cavan.h>
 #include <cavan/jwp_mcu.h>
+#else
+#include "jwp_mcu.h"
 #endif
 
 #define JWP_MCU_DEBUG		1
@@ -791,7 +791,7 @@ jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp)
 	mcu->rx_pkg.header.magic_high = JWP_MCU_MAGIC_HIGH;
 	mcu->receiver.get_payload_length = jwp_mcu_package_get_payload_length;
 	mcu->receiver.process_package = jwp_mcu_proccess_package;
-	jwp_package_receiver_init(&mcu->receiver, mcu->rx_pkg.body, JWP_MCU_MAGIC_SIZE, JWP_MCU_HEADER_SIZE);
+	jwp_package_receiver_init(&mcu->receiver, mcu->rx_pkg.body, JWP_MCU_MAGIC_SIZE, JWP_MCU_HEADER_SIZE, sizeof(mcu->rx_pkg));
 	jwp_package_receiver_set_private_data(&mcu->receiver, mcu);
 
 	return true;

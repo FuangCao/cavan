@@ -23,6 +23,10 @@
 #error "don't include this file immediately, you must include jwp-*.h"
 #endif
 
+#define JWP_QUEUE_ENABLE	(JWP_TX_HW_QUEUE_ENABLE || JWP_TX_QUEUE_ENABLE || JWP_RX_QUEUE_ENABLE || JWP_TX_DATA_QUEUE_ENABLE || JWP_RX_DATA_QUEUE_ENABLE)
+#define JWP_TIMER_ENABLE	(JWP_TX_TIMER_ENABLE || JWP_TX_DATA_TIMER_ENABLE || JWP_TX_PKG_TIMER_ENABLE || JWP_RX_PKG_TIMER_ENABLE)
+#define JWP_LOOP_ENABLE		(JWP_TX_LOOP_ENABLE || JWP_RX_LOOP_ENABLE || JWP_RX_PKG_LOOP_ENABLE || JWP_TX_DATA_LOOP_ENABLE)
+
 #define jwp_signal_wait(signal, lock) \
 	do { \
 		jwp_lock_acquire(lock); \
@@ -79,6 +83,9 @@ typedef enum
 
 typedef enum
 {
+#if JWP_TX_HW_QUEUE_ENABLE
+	JWP_QUEUE_TX_HW,
+#endif
 #if JWP_TX_QUEUE_ENABLE
 	JWP_QUEUE_TX,
 #endif
@@ -170,6 +177,8 @@ struct jwp_queue
 	jwp_u8 *head_peek;
 	jwp_u8 *tail_peek;
 
+	jwp_bool hardware;
+
 #if JWP_DEBUG_MEMBER
 	const char *name;
 #endif
@@ -212,6 +221,7 @@ struct jwp_package_receiver
 	jwp_u8 *header_start;
 	jwp_u8 *payload_start;
 	jwp_u8 *payload_end;
+	jwp_size_t payload_max;
 
 	void *private_data;
 	jwp_lock_t lock;
@@ -290,6 +300,8 @@ struct jwp_desc
 #endif
 };
 
+extern struct jwp_desc *jwp_global;
+
 // ============================================================
 
 char *jwp_strcpy(char *dest, const char *src);
@@ -300,7 +312,6 @@ void jwp_pr_value(const char *prompt, jwp_u32 value, jwp_u8 base);
 char *jwp_mem_to_string(const jwp_u8 *mem, jwp_size_t mem_size, char *buff, jwp_size_t buff_size);
 void jwp_dump_mem(const jwp_u8 *mem, jwp_size_t mem_size);
 void jwp_printf(const char *fmt, ...);
-
 
 void jwp_header_dump(const struct jwp_header *hdr);
 void jwp_package_dump(const struct jwp_package *pkg);
@@ -313,11 +324,13 @@ void jwp_queue_clear(struct jwp_queue *queue);
 void jwp_queue_init(struct jwp_queue *queue);
 jwp_size_t jwp_queue_inqueue_peek(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 void jwp_queue_inqueue_commit(struct jwp_queue *queue);
+jwp_size_t jwp_queue_inqueue_locked(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_inqueue(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 jwp_bool jwp_queue_try_inqueue(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 void jwp_queue_inqueue_all(struct jwp_queue *queue, const jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_dequeue_peek(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 void jwp_queue_dequeue_commit(struct jwp_queue *queue);
+jwp_size_t jwp_queue_dequeue_locked(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_dequeue(struct jwp_queue *queue, jwp_u8 *buff, jwp_size_t size);
 jwp_size_t jwp_queue_get_free_size(const struct jwp_queue *queue);
 jwp_size_t jwp_queue_get_used_size(const struct jwp_queue *queue);
@@ -336,9 +349,14 @@ static inline jwp_size_t jwp_queue_skip(struct jwp_queue *queue, jwp_size_t size
 	return jwp_queue_dequeue(queue, NULL, size);
 }
 
+static inline void jwp_queue_set_hardware(struct jwp_queue *queue, jwp_bool hardware)
+{
+	queue->hardware = hardware;
+}
+
 // ============================================================
 
-void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_u8 *body, jwp_size_t magic_size, jwp_size_t header_size);
+void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_u8 *body, jwp_size_t magic_size, jwp_size_t header_size, jwp_size_t size);
 jwp_size_t jwp_package_receiver_write(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
 void jwp_package_receiver_fill(struct jwp_package_receiver *receiver, const jwp_u8 *buff, jwp_size_t size);
 jwp_bool jwp_package_receiver_fill_by_queue(struct jwp_package_receiver *receiver, struct jwp_queue *queue);
@@ -356,7 +374,7 @@ static inline void *jwp_package_receiver_get_private_data(struct jwp_package_rec
 // ============================================================
 
 jwp_bool jwp_init(struct jwp_desc *jwp, void *data);
-jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool sync);
+jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, jwp_bool sync);
 void jwp_send_empty_package(struct jwp_desc *jwp, jwp_u8 type, jwp_u8 index);
 void jwp_send_sync(struct jwp_desc *jwp);
 jwp_size_t jwp_send_data(struct jwp_desc *jwp, const void *buff, jwp_size_t size);
