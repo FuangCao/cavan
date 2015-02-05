@@ -201,7 +201,9 @@ jwp_bool jwp_linux_init(struct jwp_linux_desc *jwp_linux, void *data)
 
 jwp_bool jwp_linux_start(struct jwp_linux_desc *jwp_linux)
 {
+#if JWP_LOOP_ENABLE
 	pthread_t td;
+#endif
 	struct jwp_desc *jwp = &jwp_linux->jwp;
 
 	if (jwp->hw_write == NULL)

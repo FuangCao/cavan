@@ -23,6 +23,10 @@
 #error "don't include this file immediately, you must include jwp-*.h"
 #endif
 
+#define JWP_QUEUE_ENABLE	(JWP_TX_HW_QUEUE_ENABLE || JWP_TX_QUEUE_ENABLE || JWP_RX_QUEUE_ENABLE || JWP_TX_DATA_QUEUE_ENABLE || JWP_RX_DATA_QUEUE_ENABLE)
+#define JWP_TIMER_ENABLE	(JWP_TX_TIMER_ENABLE || JWP_TX_DATA_TIMER_ENABLE || JWP_TX_PKG_TIMER_ENABLE || JWP_RX_PKG_TIMER_ENABLE)
+#define JWP_LOOP_ENABLE		(JWP_TX_LOOP_ENABLE || JWP_RX_LOOP_ENABLE || JWP_RX_PKG_LOOP_ENABLE || JWP_TX_DATA_LOOP_ENABLE)
+
 #define jwp_signal_wait(signal, lock) \
 	do { \
 		jwp_lock_acquire(lock); \
@@ -79,6 +83,9 @@ typedef enum
 
 typedef enum
 {
+#if JWP_TX_HW_QUEUE_ENABLE
+	JWP_QUEUE_TX_HW,
+#endif
 #if JWP_TX_QUEUE_ENABLE
 	JWP_QUEUE_TX,
 #endif

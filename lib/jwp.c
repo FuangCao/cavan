@@ -29,52 +29,12 @@
 
 // ============================================================
 
-#if JWP_QUEUE_ENABLE == 0
-#if JWP_TX_QUEUE_ENABLE
-#error "must enable queue when use tx queue"
-#endif
-
-#if JWP_RX_QUEUE_ENABLE
-#error "must enable queue when use rx queue"
-#endif
-
-#if JWP_TX_DATA_QUEUE_ENABLE
-#error "must enable queue when use tx data queue"
-#endif
-
-#if JWP_RX_DATA_QUEUE_ENABLE
-#error "must enable queue when use tx data queue"
-#endif
-#endif
-
-#if JWP_TIMER_ENABLE == 0
-#if JWP_TX_TIMER_ENABLE
-#error "must enable timer when use tx timer"
-#endif
-
-#if JWP_TX_DATA_TIMER_ENABLE
-#error "must enable timer when use tx data timer"
-#endif
-
-#if JWP_TX_PKG_TIMER_ENABLE
-#error "must enable timer when use tx package timer"
-#endif
-
-#if JWP_RX_PKG_TIMER_ENABLE
-#error "must enable timer when use rx package timer"
-#endif
-#endif
-
 #if JWP_TX_DATA_TIMER_ENABLE && JWP_TX_DATA_QUEUE_ENABLE == 0
 #error "must enable tx data queue when use tx data timer"
 #endif
 
 #if JWP_TX_PKG_TIMER_ENABLE && (JWP_TX_TIMER_ENABLE == 0 || JWP_TX_QUEUE_ENABLE == 0)
 #error "must enable tx timer and tx queue when use tx package timer"
-#endif
-
-#if JWP_TX_PKG_TIMER_ENABLE && JWP_TX_LOOP_ENABLE
-#error "don't enable tx package timer and tx loop at the same time"
 #endif
 
 #if JWP_RX_PKG_TIMER_ENABLE && JWP_RX_PKG_LOOP_ENABLE
@@ -97,6 +57,10 @@
 #error "must enable tx queue when use tx loop"
 #endif
 
+#if JWP_TX_LOOP_ENABLE && (JWP_TX_PKG_TIMER_ENABLE || JWP_TX_TIMER_ENABLE)
+#error "don't enable tx package timer or tx timer and tx loop at the same time"
+#endif
+
 #if JWP_RX_PKG_LOOP_ENABLE && JWP_RX_QUEUE_ENABLE == 0
 #error "must enable rx queue when use rx package loop"
 #endif
@@ -115,6 +79,20 @@
 #if JWP_PRINTF_ENABLE
 #error "must enable write log when use printf"
 #endif
+#endif
+
+#if JWP_RX_INTERRUPT_ENABLE
+#if JWP_RX_QUEUE_ENABLE == 0
+#error "must enable rx queue when use rx interrupt"
+#endif
+
+#if JWP_RX_LOOP_ENABLE
+#error "don't enable rx interrupt and rx loop at the same time"
+#endif
+#endif
+
+#if JWP_TX_INTERRUPT_ENABLE != JWP_TX_HW_QUEUE_ENABLE
+#error "must enable tx hardware and tx interrupt as the same time"
 #endif
 
 // ============================================================
@@ -313,13 +291,23 @@ void jwp_package_dump(const struct jwp_package *pkg)
 
 static void jwp_hw_write(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t size)
 {
+#if JWP_TX_HW_QUEUE_ENABLE
+	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_TX_HW);
+#endif
+
 	jwp_lock_acquire(jwp->lock);
 
 	while (size > 0)
 	{
 		jwp_size_t wrlen;
 
+#if JWP_TX_HW_QUEUE_ENABLE
+		wrlen = jwp_queue_inqueue(queue, buff, size);
+		jwp->hw_write(jwp, buff, wrlen);
+#else
 		wrlen = jwp->hw_write(jwp, buff, size);
+#endif
+
 		buff += wrlen;
 		size -= wrlen;
 	}
@@ -1036,11 +1024,9 @@ static void jwp_timer_init(struct jwp_timer *timer, struct jwp_desc *jwp)
 	timer->handler = NULL;
 }
 
-static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
+static void jwp_timer_create_locked(struct jwp_timer *timer, jwp_u32 msec)
 {
 	struct jwp_desc *jwp = timer->jwp;
-
-	jwp_lock_acquire(timer->lock);
 
 	if (timer->active)
 	{
@@ -1050,7 +1036,6 @@ static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 		}
 		else
 		{
-			jwp_lock_release(timer->lock);
 			return;
 		}
 	}
@@ -1066,7 +1051,12 @@ static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
 	}
 
 	timer->active = true;
+}
 
+static void jwp_timer_create(struct jwp_timer *timer, jwp_u32 msec)
+{
+	jwp_lock_acquire(timer->lock);
+	jwp_timer_create_locked(timer, msec);
 	jwp_lock_release(timer->lock);
 }
 
@@ -1272,6 +1262,14 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 	{
 		jwp_queue_init(jwp->queues + i);
 	}
+
+#if JWP_RX_INTERRUPT_ENABLE
+	jwp_queue_set_hardware(jwp->queues + JWP_QUEUE_RX, true);
+#endif
+
+#if JWP_TX_HW_QUEUE_ENABLE
+	jwp_queue_set_hardware(jwp->queues + JWP_QUEUE_TX_HW, true);
+#endif
 #endif
 
 #if JWP_TIMER_ENABLE
@@ -1543,10 +1541,18 @@ jwp_size_t jwp_write_rx_data(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_
 #if JWP_RX_QUEUE_ENABLE
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX);
 
+#if JWP_RX_INTERRUPT_ENABLE
+	size = jwp_queue_inqueue_locked(queue, buff, size);
+#else
 	size = jwp_queue_inqueue(queue, buff, size);
+#endif
 
 #if JWP_RX_PKG_TIMER_ENABLE
+#if JWP_RX_INTERRUPT_ENABLE
+	jwp_timer_create_locked(jwp_get_timer(jwp, JWP_TIMER_RX_PKG), 0);
+#else
 	jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_RX_PKG), 0);
+#endif
 #elif JWP_RX_PKG_LOOP_ENABLE == 0
 #error "must enable rx package loop or tx package timer when use rx queue"
 #endif
@@ -1570,6 +1576,8 @@ jwp_bool jwp_send_package(struct jwp_desc *jwp, struct jwp_header *hdr, bool syn
 
 #if JWP_TX_PKG_TIMER_ENABLE
 		jwp_timer_create(jwp_get_timer(jwp, JWP_TIMER_TX_PKG), 0);
+#elif JWP_TX_LOOP_ENABLE == 0
+#error "must enable tx loop when tx package timer disabled"
 #endif
 		return res;
 #else
