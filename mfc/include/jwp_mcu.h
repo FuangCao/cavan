@@ -116,6 +116,7 @@ typedef enum
 	MCU_REQ_BAD_RIDE = 36,
 	MCU_REQ_FILE_SEND = 37,
 	MCU_REQ_READ_RECENT_RECORD = 38,
+	MCU_REQ_READ_PROTOCOL = 39,
 	/* response */
 	MCU_RSP_OK = 200,
 	MCU_RSP_ERROR = 201,
@@ -137,6 +138,7 @@ typedef enum
 	MCU_RSP_SIM_INFO = 132,
 	MCU_RSP_KEYLOCK_INFO = 133,
 	MCU_RSP_READ_RECENT_RECORD = 138,
+	MCU_RSP_READ_PROTOCOL = 39,
 	/* event */
 	MCU_EVT_BATT_INFO = 220,
 	MCU_EVT_DEVICE_FAULT = 221,
@@ -426,6 +428,11 @@ struct jwp_mcu_response_read_recent_record
 	jwp_u16 speed_max;
 	jwp_u16 heart_rate_avg;
 	jwp_u16 heart_rate_max;
+};
+
+struct jwp_mcu_response_read_protocol
+{
+	jwp_u8 version;
 };
 
 struct jwp_mcu_event_battery_info

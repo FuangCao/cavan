@@ -1373,7 +1373,7 @@ static void jwp_process_package(struct jwp_package_receiver *receiver)
 
 #if JWP_DEBUG
 	jwp_header_dump(hdr);
-	jwp_dump_mem((const jwp_u8 *) hdr, JWP_HEADER_SIZE + hdr->length);
+	// jwp_dump_mem((const jwp_u8 *) hdr, JWP_HEADER_SIZE + hdr->length);
 #endif
 
 #if JWP_CHECKSUM_ENABLE

@@ -634,6 +634,20 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 		}
 		break;
 
+	case MCU_REQ_READ_PROTOCOL:
+#if JWP_PRINTF_ENABLE
+		jwp_printf("MCU_REQ_READ_PROTOCOL\n");
+#endif
+		{
+			struct jwp_mcu_response_read_protocol *rsp = (struct jwp_mcu_response_read_protocol *) JWP_MCU_GET_PAYLOAD(hdr);
+
+			rsplen = sizeof(*rsp);
+			hdr->type = MCU_RSP_READ_PROTOCOL;
+
+			rsp->version = 1 * 10 + 1;
+		}
+		break;
+
 	default:
 #if JWP_PRINTF_ENABLE
 		jwp_printf("Invalid request = %d\n", hdr->type);
@@ -661,7 +675,7 @@ static void jwp_mcu_data_received(struct jwp_desc *jwp, const void *buff, jwp_si
 
 #if JWP_PRINTF_ENABLE
 	jwp_printf("mcu data received: size = %d", size);
-	jwp_dump_mem((const jwp_u8 *) buff, size);
+	// jwp_dump_mem((const jwp_u8 *) buff, size);
 #endif
 
 #if JWP_RX_DATA_QUEUE_ENABLE
