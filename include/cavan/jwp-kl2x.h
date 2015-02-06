@@ -39,20 +39,20 @@
 #define JWP_RX_IMTERRUPT_ENABLE		1
 
 #define JWP_TX_HW_QUEUE_ENABLE		1
-#define JWP_TX_QUEUE_ENABLE			1
+#define JWP_TX_QUEUE_ENABLE			0
 #define JWP_RX_QUEUE_ENABLE			1
-#define JWP_TX_DATA_QUEUE_ENABLE	1
-#define JWP_RX_DATA_QUEUE_ENABLE	1
+#define JWP_TX_DATA_QUEUE_ENABLE	0
+#define JWP_RX_DATA_QUEUE_ENABLE	0
 
 #define JWP_TX_TIMER_ENABLE			0
 #define JWP_TX_DATA_TIMER_ENABLE	0
 #define JWP_TX_PKG_TIMER_ENABLE		0
 #define JWP_RX_PKG_TIMER_ENABLE		0
 
-#define JWP_TX_LOOP_ENABLE			1
+#define JWP_TX_LOOP_ENABLE			0
 #define JWP_RX_LOOP_ENABLE			0
 #define JWP_RX_PKG_LOOP_ENABLE		1
-#define JWP_TX_DATA_LOOP_ENABLE		1
+#define JWP_TX_DATA_LOOP_ENABLE		0
 
 #define JWP_TX_NOTIFY_ENABLE		1
 #define JWP_RX_CMD_NOTIFY_ENABLE	1
@@ -75,37 +75,25 @@
 	memcpy(dest, src, size)
 
 #define jwp_lock_init(lock) \
-	_lwsem_create(&lock, 1)
+	_lwsem_create(&(lock), 1)
 
 #define jwp_lock_acquire(lock) \
-	_lwsem_wait(&lock)
+	_lwsem_wait(&(lock))
 
 #define jwp_lock_release(lock) \
-	_lwsem_post(&lock)
+	_lwsem_post(&(lock))
 
 #define jwp_signal_init(signal, available) \
 	do { \
-		(signal).waitting = !(available); \
+		(signal).waitting = false; \
 		_lwsem_create(&(signal).sem, !!(available)); \
 	} while (0)
 
 #define jwp_signal_wait_locked(signal, lock) \
-	do { \
-		(signal).waitting = true; \
-		jwp_lock_release(lock); \
-		_lwsem_wait(&(signal).sem); \
-		jwp_lock_acquire(lock); \
-		(signal).waitting = false; \
-	} while (0)
+	jwp_kl2x_signal_timedwait(&(signal), &(lock), 0)
 
 #define jwp_signal_timedwait_locked(signal, lock, msec) \
-	do { \
-		(signal).waitting = true; \
-		jwp_lock_release(lock); \
-		_lwsem_wait_ticks(&(signal).sem, msec); \
-		jwp_lock_acquire(lock); \
-		(signal).waitting = false; \
-	} while (0)
+	jwp_kl2x_signal_timedwait(&(signal), &(lock), msec)
 
 #define jwp_signal_notify_locked(signal, lock) \
 	do { \
@@ -140,7 +128,13 @@ typedef struct
 	LWSEM_STRUCT sem;
 } jwp_signal_t;
 
+void jwp_kl2x_signal_timedwait(jwp_signal_t *signal, jwp_lock_t *lock, jwp_u32 msec);
+
 #include "jwp.h"
+
+// ============================================================
+
+#define BT_UART_NUM				2
 
 extern struct jwp_mcu_desc kl2x_jwp_mcu;
 

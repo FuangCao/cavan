@@ -82,7 +82,7 @@
 
 #define jwp_signal_init(signal, available) \
 	do { \
-		(signal).waitting = !(available); \
+		(signal).waitting = false; \
 		(signal).handle = CreateSemaphore(NULL, !!(available), 1, NULL); \
 	} while (0)
 

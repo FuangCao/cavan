@@ -305,9 +305,20 @@ static void jwp_hw_write(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t si
 
 #if JWP_TX_HW_QUEUE_ENABLE
 		wrlen = jwp_queue_inqueue(queue, buff, size);
+		if (wrlen == 0)
+		{
+			jwp_queue_wait_space(queue);
+			continue;
+		}
+
 		jwp->hw_write(jwp, buff, wrlen);
 #else
 		wrlen = jwp->hw_write(jwp, buff, size);
+		if (wrlen == 0)
+		{
+			jwp_msleep(JWP_POLL_TIME);
+			continue;
+		}
 #endif
 
 		buff += wrlen;
