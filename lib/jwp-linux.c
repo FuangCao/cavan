@@ -144,10 +144,12 @@ static void jwp_linux_package_received(struct jwp_desc *jwp, const struct jwp_he
 	jwp_header_dump(hdr);
 }
 
+#if JWP_WRITE_LOG_ENABLE
 static void jwp_linux_log_received(struct jwp_desc *jwp, jwp_device_t device, const char *log, jwp_size_t size)
 {
 	print("%s: %s", jwp_device_to_string(device), log);
 }
+#endif
 
 // ============================================================
 

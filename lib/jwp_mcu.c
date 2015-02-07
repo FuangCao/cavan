@@ -672,7 +672,7 @@ static void jwp_mcu_data_received(struct jwp_desc *jwp, const void *buff, jwp_si
 	struct jwp_mcu_desc *mcu = (struct jwp_mcu_desc *) jwp_get_private_data(jwp);
 
 #if JWP_PRINTF_ENABLE
-	jwp_printf("mcu data received: size = %d", size);
+	jwp_printf("mcu data received: size = %d\n", size);
 	// jwp_dump_mem((const jwp_u8 *) buff, size);
 #endif
 

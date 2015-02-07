@@ -297,7 +297,7 @@ static void jwp_hw_write(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t si
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_TX_HW);
 #endif
 
-	jwp_lock_acquire(jwp->lock);
+	jwp_lock_acquire(jwp->write_lock);
 
 	while (size > 0)
 	{
@@ -325,7 +325,7 @@ static void jwp_hw_write(struct jwp_desc *jwp, const jwp_u8 *buff, jwp_size_t si
 		size -= wrlen;
 	}
 
-	jwp_lock_release(jwp->lock);
+	jwp_lock_release(jwp->write_lock);
 }
 
 static inline void jwp_hw_write_package(struct jwp_desc *jwp, struct jwp_header *hdr)
@@ -1022,8 +1022,11 @@ static jwp_bool jwp_package_receiver_fill_by_queue_locked(struct jwp_package_rec
 		return false;
 	}
 
-	receiver->process_package(receiver);
 	receiver->head = receiver->body;
+
+	jwp_lock_release(receiver->lock);
+	receiver->process_package(receiver);
+	jwp_lock_acquire(receiver->lock);
 
 	return true;
 }
@@ -1261,6 +1264,7 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 #endif
 
 	jwp_lock_init(jwp->lock);
+	jwp_lock_init(jwp->write_lock);
 
 #if JWP_TX_NOTIFY_ENABLE
 	jwp_signal_init(jwp->tx_signal, false);
@@ -1459,13 +1463,26 @@ static void jwp_process_package(struct jwp_package_receiver *receiver)
 	{
 	case JWP_PKG_CMD:
 	case JWP_PKG_DATA:
-		jwp_send_ack_package(jwp, hdr->index);
 		jwp_lock_acquire(jwp->lock);
-#if 0
-		if (hdr->index == (jwp_u8) (jwp->rx_index + 1))
-#else
-		if (hdr->index != jwp->rx_index)
+
+#if JWP_RX_WHEN_TX
+		if (jwp->send_pendding)
+		{
+			jwp_lock_release(jwp->lock);
+			break;
+		}
 #endif
+
+		jwp_send_ack_package(jwp, hdr->index);
+
+		if (hdr->index == jwp->rx_index)
+		{
+			jwp_lock_release(jwp->lock);
+#if JWP_SHOW_ERROR
+			jwp_printf("throw data package %d, need %d\n", hdr->index, jwp->rx_index + 1);
+#endif
+		}
+		else
 		{
 			jwp->rx_index = hdr->index;
 
@@ -1492,13 +1509,6 @@ static void jwp_process_package(struct jwp_package_receiver *receiver)
 				jwp_signal_notify(jwp->command_rx_signal, jwp->lock);
 #endif
 			}
-		}
-		else
-		{
-			jwp_lock_release(jwp->lock);
-#if JWP_SHOW_ERROR
-			jwp_printf("throw data package %d, need %d\n", hdr->index, jwp->rx_index + 1);
-#endif
 		}
 		break;
 
@@ -1776,7 +1786,7 @@ void jwp_send_log(struct jwp_desc *jwp, const char *log, jwp_size_t size)
 
 jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 {
-#if JWP_TX_NOTIFY_ENABLE
+#if JWP_TX_NOTIFY_ENABLE && JWP_RX_WHEN_TX == 0
 	jwp_bool res;
 
 	jwp_lock_acquire(jwp->lock);
@@ -1808,7 +1818,12 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 		}
 
 		jwp_lock_release(jwp->lock);
+
 		jwp_msleep(JWP_POLL_TIME);
+
+#if JWP_RX_WHEN_TX
+		jwp_package_receiver_fill_by_queue(&jwp->receiver, jwp_get_queue(jwp, JWP_QUEUE_RX));
+#endif
 	}
 
 	return false;

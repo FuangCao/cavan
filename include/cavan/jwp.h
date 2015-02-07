@@ -26,6 +26,7 @@
 #define JWP_QUEUE_ENABLE	(JWP_TX_HW_QUEUE_ENABLE || JWP_TX_QUEUE_ENABLE || JWP_RX_QUEUE_ENABLE || JWP_TX_DATA_QUEUE_ENABLE || JWP_RX_DATA_QUEUE_ENABLE)
 #define JWP_TIMER_ENABLE	(JWP_TX_TIMER_ENABLE || JWP_TX_DATA_TIMER_ENABLE || JWP_TX_PKG_TIMER_ENABLE || JWP_RX_PKG_TIMER_ENABLE)
 #define JWP_LOOP_ENABLE		(JWP_TX_LOOP_ENABLE || JWP_RX_LOOP_ENABLE || JWP_RX_PKG_LOOP_ENABLE || JWP_TX_DATA_LOOP_ENABLE)
+#define JWP_RX_WHEN_TX		(JWP_RX_QUEUE_ENABLE && JWP_TX_QUEUE_ENABLE == 0)
 
 #define jwp_signal_wait(signal, lock) \
 	do { \
@@ -269,6 +270,7 @@ struct jwp_desc
 #endif
 
 	jwp_lock_t lock;
+	jwp_lock_t write_lock;
 
 #if JWP_TX_NOTIFY_ENABLE
 	jwp_signal_t tx_signal;
