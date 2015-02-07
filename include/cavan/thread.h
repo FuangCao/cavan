@@ -49,6 +49,12 @@ struct cavan_thread
 	int (*handler)(struct cavan_thread *thread, void *data);
 };
 
+struct cavan_lock
+{
+	pthread_t owner;
+	pthread_mutex_t mutex;
+};
+
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
 int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event);
 int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 msec);
@@ -63,6 +69,11 @@ void cavan_thread_suspend(struct cavan_thread *thread);
 void cavan_thread_resume(struct cavan_thread *thread);
 int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time);
 int cavan_thread_msleep(struct cavan_thread *thread, u32 msec);
+
+void cavan_lock_init(struct cavan_lock *lock, bool acquire);
+void cavan_lock_deinit(struct cavan_lock *lock);
+void cavan_lock_acquire(struct cavan_lock *lock);
+void cavan_lock_release(struct cavan_lock *lock);
 
 static inline int cavan_thread_join(struct cavan_thread *thread)
 {

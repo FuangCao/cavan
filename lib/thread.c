@@ -440,3 +440,40 @@ void cavan_thread_resume(struct cavan_thread *thread)
 
 	pthread_mutex_unlock(&thread->lock);
 }
+
+void cavan_lock_init(struct cavan_lock *lock, bool acquire)
+{
+	pthread_mutex_init(&lock->mutex, NULL);
+
+	if (acquire)
+	{
+		pthread_mutex_lock(&lock->mutex);
+		lock->owner = pthread_self();
+	}
+	else
+	{
+		lock->owner = 0;
+	}
+}
+
+void cavan_lock_deinit(struct cavan_lock *lock)
+{
+	pthread_mutex_destroy(&lock->mutex);
+}
+
+void cavan_lock_acquire(struct cavan_lock *lock)
+{
+	pthread_t owner = pthread_self();
+
+	if (!pthread_equal(owner, lock->owner))
+	{
+		pthread_mutex_lock(&lock->mutex);
+		lock->owner = owner;
+	}
+}
+
+void cavan_lock_release(struct cavan_lock *lock)
+{
+	lock->owner = 0;
+	pthread_mutex_unlock(&lock->mutex);
+}
