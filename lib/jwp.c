@@ -914,16 +914,18 @@ static jwp_size_t jwp_package_receiver_write_locked(struct jwp_package_receiver 
 
 		if (length > receiver->payload_max)
 		{
-			goto out_reinit;
+			receiver->head = receiver->body;
 		}
-
-		receiver->head = receiver->payload_start;
-		receiver->payload_end = receiver->head + length;
+		else
+		{
+			receiver->head = receiver->payload_start;
+			receiver->payload_end = receiver->head + length;
+		}
 
 		return remain;
 	}
 
-	remain = receiver->payload_end - receiver->payload_start;
+	remain = receiver->payload_end - receiver->head;
 	if (size < remain)
 	{
 		jwp_memcpy(receiver->head, buff, size);
@@ -933,10 +935,12 @@ static jwp_size_t jwp_package_receiver_write_locked(struct jwp_package_receiver 
 
 	jwp_memcpy(receiver->head, buff, remain);
 
-out_process_package:
-	receiver->process_package(receiver);
-out_reinit:
 	receiver->head = receiver->body;
+
+out_process_package:
+	jwp_lock_release(receiver->lock);
+	receiver->process_package(receiver);
+	jwp_lock_acquire(receiver->lock);
 	return remain;
 }
 
@@ -1468,6 +1472,9 @@ static void jwp_process_package(struct jwp_package_receiver *receiver)
 #if JWP_RX_WHEN_TX
 		if (jwp->send_pendding)
 		{
+#if JWP_SHOW_ERROR
+			jwp_printf("throw data package %d, because send pendding\n", hdr->index);
+#endif
 			jwp_lock_release(jwp->lock);
 			break;
 		}

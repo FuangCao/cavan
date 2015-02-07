@@ -799,6 +799,14 @@ jwp_bool jwp_mcu_send_package(struct jwp_mcu_desc *mcu, jwp_u8 type, const void 
 {
 	struct jwp_mcu_header hdr;
 
+	if (size > JWP_MCU_MAX_PAYLOAD)
+	{
+#if JWP_SHOW_ERROR
+		jwp_printf("package too large!");
+#endif
+		return false;
+	}
+
 	hdr.magic_low = JWP_MCU_MAGIC_LOW;
 	hdr.magic_high = JWP_MCU_MAGIC_HIGH;
 	hdr.type = type;
