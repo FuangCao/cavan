@@ -817,50 +817,6 @@ static jwp_bool jwp_queue_dequeue_package(struct jwp_queue *queue, struct jwp_he
 #endif
 #endif
 
-#if JWP_RX_DATA_QUEUE_ENABLE
-static jwp_bool jwp_data_inqueue(struct jwp_desc *jwp)
-{
-	jwp_lock_acquire(jwp->lock);
-
-	if (jwp->payload_remain > 0)
-	{
-		jwp_size_t wrlen;
-		struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX_DATA);
-
-		jwp_lock_release(jwp->lock);
-
-		wrlen = jwp_queue_inqueue(queue, jwp->data_head, jwp->payload_remain);
-		if (wrlen > 0)
-		{
-			jwp->data_received(jwp, jwp->data_head, wrlen);
-#if JWP_RX_DATA_NOTIFY_ENABLE
-			jwp_signal_notify(jwp->data_rx_signal, jwp->lock);
-#endif
-
-			jwp_lock_acquire(jwp->lock);
-
-			if (wrlen < jwp->payload_remain)
-			{
-				jwp->payload_remain -= (jwp_u8) wrlen;
-				jwp->data_head += wrlen;
-
-				jwp_lock_release(jwp->lock);
-				return false;
-			}
-
-			jwp->payload_remain = 0;
-			jwp_lock_release(jwp->lock);
-		}
-	}
-	else
-	{
-		jwp_lock_release(jwp->lock);
-	}
-
-	return true;
-}
-#endif
-
 // ============================================================
 
 void jwp_package_receiver_init(struct jwp_package_receiver *receiver, jwp_size_t magic_size, jwp_size_t header_size, jwp_size_t size)
@@ -1458,10 +1414,6 @@ jwp_bool jwp_init(struct jwp_desc *jwp, void *data)
 	jwp->state = JWP_STATE_READY;
 #endif
 
-#if JWP_RX_DATA_QUEUE_ENABLE
-	jwp->payload_remain = 0;
-#endif
-
 	return true;
 }
 
@@ -1869,7 +1821,7 @@ void jwp_send_log(struct jwp_desc *jwp, const char *log, jwp_size_t size)
 
 jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 {
-#if JWP_TX_NOTIFY_ENABLE && JWP_RX_WHEN_TX == 0
+#if JWP_TX_NOTIFY_ENABLE && JWP_RX_QUEUE_ENABLE == 0
 	jwp_bool res;
 
 	jwp_lock_acquire(jwp->lock);
@@ -1904,7 +1856,7 @@ jwp_bool jwp_wait_tx_complete(struct jwp_desc *jwp)
 
 		jwp_msleep(JWP_POLL_TIME);
 
-#if JWP_RX_WHEN_TX
+#if JWP_RX_QUEUE_ENABLE
 		jwp_package_receiver_fill_by_queue(&jwp->receiver, jwp_get_queue(jwp, JWP_QUEUE_RX));
 #endif
 	}
@@ -2021,7 +1973,7 @@ void jwp_rx_package_loop(struct jwp_desc *jwp)
 		}
 
 #if JWP_RX_DATA_QUEUE_ENABLE
-		if (jwp->receiver.payload_remain > 0)
+		if (jwp->receiver.data_remain > 0)
 		{
 			jwp_queue_wait_space(data_queue);
 		}

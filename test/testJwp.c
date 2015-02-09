@@ -618,7 +618,7 @@ static int do_test_jwp_udp(int argc, char *argv[])
 		{
 			while (1)
 			{
-#if 0
+#if 1
 				const char *text =
 					"11111111111111111111"
 					"22222222222222222222"
