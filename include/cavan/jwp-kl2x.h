@@ -42,7 +42,7 @@
 #define JWP_TX_QUEUE_ENABLE			0
 #define JWP_RX_QUEUE_ENABLE			1
 #define JWP_TX_DATA_QUEUE_ENABLE	0
-#define JWP_RX_DATA_QUEUE_ENABLE	0
+#define JWP_RX_DATA_QUEUE_ENABLE	1
 
 #define JWP_TX_TIMER_ENABLE			0
 #define JWP_TX_DATA_TIMER_ENABLE	0
@@ -63,7 +63,7 @@
 #define JWP_POLL_TIME				2
 #define JWP_TX_LATENCY				50
 #define JWP_TX_RETRY_COUNT			20
-#define JWP_TX_TIMEOUT				500
+#define JWP_TX_TIMEOUT				200
 #define JWP_QUEUE_SIZE				(JWP_MTU * 2)
 
 // ============================================================
@@ -85,8 +85,8 @@
 
 #define jwp_signal_init(signal, available) \
 	do { \
-		(signal).waitting = false; \
-		_lwsem_create(&(signal).sem, !!(available)); \
+		(signal).wait_count = 0; \
+		_lwsem_create(&(signal).sem, 0); \
 	} while (0)
 
 #define jwp_signal_wait_locked(signal, lock) \
@@ -97,7 +97,7 @@
 
 #define jwp_signal_notify_locked(signal, lock) \
 	do { \
-		if ((signal).waitting) { \
+		if ((signal).wait_count > 0) { \
 			_lwsem_post(&(signal).sem); \
 		} \
 	} while (0)
@@ -124,8 +124,8 @@ typedef enum
 
 typedef struct
 {
-	jwp_bool waitting;
 	LWSEM_STRUCT sem;
+	jwp_u32 wait_count;
 } jwp_signal_t;
 
 void jwp_kl2x_signal_timedwait(jwp_signal_t *signal, jwp_lock_t *lock, jwp_u32 msec);
