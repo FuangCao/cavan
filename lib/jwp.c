@@ -881,6 +881,7 @@ jwp_bool jwp_package_receiver_copy_data(struct jwp_package_receiver *receiver, c
 {
 	jwp_lock_acquire(receiver->lock);
 
+#if 0
 	if (size + receiver->data_remain > receiver->data_max)
 	{
 		jwp_lock_release(receiver->lock);
@@ -891,6 +892,16 @@ jwp_bool jwp_package_receiver_copy_data(struct jwp_package_receiver *receiver, c
 	jwp_memcpy(receiver->data + receiver->data_remain, buff, size);
 	receiver->data_head = receiver->data;
 	receiver->data_remain += size;
+#else
+	if (receiver->data_remain > 0)
+	{
+		return false;
+	}
+
+	jwp_memcpy(receiver->data, buff, size);
+	receiver->data_head = receiver->data;
+	receiver->data_remain = size;
+#endif
 
 	jwp_lock_release(receiver->lock);
 

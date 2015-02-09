@@ -265,7 +265,7 @@ struct jwp_desc
 	jwp_bool send_pendding;
 
 	struct jwp_package rx_pkg;
-	jwp_u8 rx_data[JWP_QUEUE_SIZE];
+	jwp_u8 rx_data[JWP_MAX_PAYLOAD];
 	struct jwp_package_receiver receiver;
 
 #if JWP_TX_TIMER_ENABLE || JWP_TX_LOOP_ENABLE

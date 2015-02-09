@@ -618,6 +618,7 @@ static int do_test_jwp_udp(int argc, char *argv[])
 		{
 			while (1)
 			{
+#if 0
 				const char *text =
 					"11111111111111111111"
 					"22222222222222222222"
@@ -630,6 +631,13 @@ static int do_test_jwp_udp(int argc, char *argv[])
 					"99999999999999999999";
 
 				jwp_mcu_send_package(&mcu, 1, text, strlen(text));
+#else
+				const char *text =
+					"11111111111111111111"
+					"22222222222222222222";
+
+				jwp_send_command(mcu.jwp, text, strlen(text));
+#endif
 			}
 
 		}
