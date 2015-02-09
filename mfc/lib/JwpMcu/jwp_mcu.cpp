@@ -28,6 +28,11 @@
 
 #define JWP_MCU_DEBUG		1
 
+static jwp_size_t jwp_mcu_process_data(struct jwp_package_receiver *receiver, const jwp_u8 *data, jwp_size_t size)
+{
+	return size;
+}
+
 static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 {
 	jwp_u8 rsplen;
@@ -674,7 +679,7 @@ static void jwp_mcu_data_received(struct jwp_desc *jwp, const void *buff, jwp_si
 	struct jwp_mcu_desc *mcu = (struct jwp_mcu_desc *) jwp_get_private_data(jwp);
 
 #if JWP_PRINTF_ENABLE
-	jwp_printf("mcu data received: size = %d", size);
+	jwp_printf("mcu data received: size = %d\n", size);
 	// jwp_dump_mem((const jwp_u8 *) buff, size);
 #endif
 
@@ -782,6 +787,8 @@ static jwp_size_t jwp_mcu_package_get_payload_length(struct jwp_package_receiver
 
 jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp)
 {
+	struct jwp_package_receiver *receiver;
+
 	mcu->jwp = jwp;
 	jwp_set_private_data(jwp, mcu);
 	jwp->data_received = jwp_mcu_data_received;
@@ -789,9 +796,15 @@ jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp)
 
 	mcu->rx_pkg.header.magic_low = JWP_MCU_MAGIC_LOW;
 	mcu->rx_pkg.header.magic_high = JWP_MCU_MAGIC_HIGH;
-	mcu->receiver.get_payload_length = jwp_mcu_package_get_payload_length;
-	mcu->receiver.process_package = jwp_mcu_proccess_package;
-	jwp_package_receiver_init(&mcu->receiver, mcu->rx_pkg.body, JWP_MCU_MAGIC_SIZE, JWP_MCU_HEADER_SIZE, sizeof(mcu->rx_pkg));
+
+	receiver = &mcu->receiver;
+	receiver->get_payload_length = jwp_mcu_package_get_payload_length;
+	receiver->process_package = jwp_mcu_proccess_package;
+	receiver->process_data = jwp_mcu_process_data;
+	receiver->body = mcu->rx_pkg.body;
+	receiver->data = NULL;
+	receiver->data_max = 0;
+	jwp_package_receiver_init(&mcu->receiver, JWP_MCU_MAGIC_SIZE, JWP_MCU_HEADER_SIZE, sizeof(mcu->rx_pkg));
 	jwp_package_receiver_set_private_data(&mcu->receiver, mcu);
 
 	return true;
@@ -800,6 +813,14 @@ jwp_bool jwp_mcu_init(struct jwp_mcu_desc *mcu, struct jwp_desc *jwp)
 jwp_bool jwp_mcu_send_package(struct jwp_mcu_desc *mcu, jwp_u8 type, const void *data, jwp_size_t size)
 {
 	struct jwp_mcu_header hdr;
+
+	if (size > JWP_MCU_MAX_PAYLOAD)
+	{
+#if JWP_SHOW_ERROR
+		jwp_printf("package too large!");
+#endif
+		return false;
+	}
 
 	hdr.magic_low = JWP_MCU_MAGIC_LOW;
 	hdr.magic_high = JWP_MCU_MAGIC_HIGH;

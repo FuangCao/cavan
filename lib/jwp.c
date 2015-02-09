@@ -17,7 +17,7 @@
  *
  */
 
-// #include "stdafx.h"
+#include "stdafx.h"
 
 #ifdef _WIN32
 #include "jwp-win32.h"
@@ -1273,7 +1273,7 @@ static jwp_size_t jwp_package_get_payload_length(struct jwp_package_receiver *re
 
 static jwp_size_t jwp_process_data(struct jwp_package_receiver *receiver, const jwp_u8 *data, jwp_size_t size)
 {
-	struct jwp_desc *jwp = jwp_package_receiver_get_private_data(receiver);
+	struct jwp_desc *jwp = (struct jwp_desc *) jwp_package_receiver_get_private_data(receiver);
 
 #if JWP_RX_DATA_QUEUE_ENABLE
 	struct jwp_queue *queue = jwp_get_queue(jwp, JWP_QUEUE_RX_DATA);

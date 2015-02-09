@@ -82,17 +82,17 @@
 
 #define jwp_signal_init(signal, available) \
 	do { \
-		(signal).waitting = false; \
-		(signal).handle = CreateSemaphore(NULL, !!(available), 1, NULL); \
+		(signal).wait_count = 0; \
+		(signal).handle = CreateSemaphore(NULL, 0, 1, NULL); \
 	} while (0)
 
 #define jwp_signal_timedwait_locked(signal, lock, msec) \
 	do { \
-		(signal).waitting = true; \
+		(signal).wait_count++; \
 		jwp_lock_release(lock); \
 		WaitForSingleObject((signal).handle, msec); \
 		jwp_lock_acquire(lock); \
-		(signal).waitting = false; \
+		(signal).wait_count--; \
 	} while (0)
 
 #define jwp_signal_wait_locked(signal, lock) \
@@ -100,7 +100,7 @@
 
 #define jwp_signal_notify_locked(signal, lock) \
 	do { \
-		if ((signal).waitting) { \
+		if ((signal).wait_count > 0) { \
 			ReleaseSemaphore((signal).handle, 1, NULL); \
 		} \
 	} while (0)
@@ -121,7 +121,7 @@ typedef HANDLE jwp_lock_t;
 typedef struct
 {
 	HANDLE handle;
-	jwp_bool waitting;
+	jwp_u32 wait_count;
 } jwp_signal_t;
 
 #include "jwp.h"
