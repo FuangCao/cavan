@@ -851,6 +851,7 @@ jwp_bool jwp_package_receiver_copy_data(struct jwp_package_receiver *receiver, c
 #else
 	if (receiver->data_remain > 0)
 	{
+		jwp_lock_release(receiver->lock);
 		return false;
 	}
 
