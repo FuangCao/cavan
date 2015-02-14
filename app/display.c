@@ -100,7 +100,6 @@ static int cavan_display_wave_main(int argc, char *argv[])
 	int x, y;
 	int x_old, y_old;
 	int width, height;
-	int skip;
 	u32 point = 0;
 	u32 point_max;
 	int point_skip;
@@ -113,7 +112,7 @@ static int cavan_display_wave_main(int argc, char *argv[])
 
 	if (argc < 2)
 	{
-		println("Usage: %s <filename> [bits] [skip] [zoom]", argv[0]);
+		println("Usage: %s <filename> [bits] [skip] [zoom] [offset]", argv[0]);
 		return -EINVAL;
 	}
 
@@ -169,6 +168,18 @@ static int cavan_display_wave_main(int argc, char *argv[])
 		zoom = 1;
 	}
 
+	if (argc > 5)
+	{
+		u32 offset = text2value_unsigned(argv[5], NULL, 10) * point_size;
+
+		if (point_skip > 0)
+		{
+			offset *= point_skip;
+		}
+
+		lseek(fd, offset, SEEK_SET);
+	}
+
 	x_old = 0;
 	y_old = 0;
 	width = display->xres;
@@ -195,7 +206,6 @@ static int cavan_display_wave_main(int argc, char *argv[])
 	}
 
 	x = 0;
-	skip = 0;
 
 	while (x < width)
 	{
@@ -207,13 +217,11 @@ static int cavan_display_wave_main(int argc, char *argv[])
 			break;
 		}
 
-		if (skip > 0)
+		if (point_skip > 0)
 		{
-			skip--;
-			continue;
+			lseek(fd, point_size * point_skip, SEEK_CUR);
 		}
 
-		skip = point_skip;
 		y = height - ((u64) point * height) / point_max;
 
 		if (draw_point)
