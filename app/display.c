@@ -100,6 +100,7 @@ static int cavan_display_wave_main(int argc, char *argv[])
 	int x, y;
 	int x_old, y_old;
 	int width, height;
+	u32 min, max;
 	u32 point = 0;
 	u32 point_max;
 	int point_skip;
@@ -168,6 +169,31 @@ static int cavan_display_wave_main(int argc, char *argv[])
 		zoom = 1;
 	}
 
+	max = 0;
+	min = (((u64) 1) << (point_size << 3)) - 1;
+
+	while (1)
+	{
+		ssize_t rdlen;
+
+		rdlen = read(fd, &point, point_size);
+		if (rdlen < point_size)
+		{
+			break;
+		}
+
+		if (point > max)
+		{
+			max = point;
+		}
+		else if (point < min)
+		{
+			min = point;
+		}
+	}
+
+	point_max = max + min;
+
 	if (argc > 5)
 	{
 		u32 offset = text2value_unsigned(argv[5], NULL, 10) * point_size;
@@ -179,12 +205,15 @@ static int cavan_display_wave_main(int argc, char *argv[])
 
 		lseek(fd, offset, SEEK_SET);
 	}
+	else
+	{
+		lseek(fd, 0, SEEK_SET);
+	}
 
 	x_old = 0;
 	y_old = 0;
 	width = display->xres;
 	height = display->yres;
-	point_max = (((u64) 1) << (point_size * 8)) - 1;
 
 	color_line = display->build_color(display, 1.0, 0.0, 0.0, 1.0);
 	color_point = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
