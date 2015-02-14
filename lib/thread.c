@@ -404,6 +404,8 @@ void cavan_thread_suspend(struct cavan_thread *thread)
 	case CAVAN_THREAD_STATE_SLEEP:
 		thread->state = CAVAN_THREAD_STATE_SUSPEND;
 	case CAVAN_THREAD_STATE_SUSPEND:
+	case CAVAN_THREAD_STATE_STOPPPING:
+	case CAVAN_THREAD_STATE_STOPPED:
 		break;
 
 	default:
@@ -431,6 +433,8 @@ void cavan_thread_resume(struct cavan_thread *thread)
 	case CAVAN_THREAD_STATE_RUNNING:
 		thread->wake_handker(thread, thread->private_data);
 	case CAVAN_THREAD_STATE_IDLE:
+	case CAVAN_THREAD_STATE_STOPPPING:
+	case CAVAN_THREAD_STATE_STOPPED:
 		break;
 
 	default:

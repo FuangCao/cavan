@@ -92,10 +92,168 @@ static int cavan_display_test_main(int argc, char *argv[])
 	return 0;
 }
 
+static int cavan_display_wave_main(int argc, char *argv[])
+{
+	int fd;
+	int ret;
+	int zoom;
+	int x, y;
+	int x_old, y_old;
+	int width, height;
+	int skip;
+	u32 point = 0;
+	u32 point_max;
+	int point_skip;
+	int point_size;
+	const char *filename;
+	cavan_display_color_t color_line;
+	cavan_display_color_t color_point;
+	struct cavan_display_device *display;
+	bool draw_line, draw_point;
+
+	if (argc < 2)
+	{
+		println("Usage: %s <filename> [bits] [skip] [zoom]", argv[0]);
+		return -EINVAL;
+	}
+
+	filename = argv[1];
+	fd = open(filename, O_RDONLY);
+	if (fd < 0)
+	{
+		pr_error_info("open file %s", filename);
+		return fd;
+	}
+
+	display = cavan_fb_display_start();
+	if (display == NULL)
+	{
+		pr_red_info("cavan_fb_display_start");
+
+		ret = -EFAULT;
+		goto out_close_fd;
+	}
+
+	if (argc > 2)
+	{
+		point_size = text2value_unsigned(argv[2], NULL, 10);
+		if (point_size > 4)
+		{
+			point_size >>= 3;
+		}
+	}
+	else
+	{
+		point_size = 2;
+	}
+
+	if (argc > 3)
+	{
+		point_skip = text2value_unsigned(argv[3], NULL, 10);
+	}
+	else
+	{
+		point_skip = 0;
+	}
+
+	if (argc > 4)
+	{
+		zoom = text2value_unsigned(argv[4], NULL, 10);
+		if (zoom < 1)
+		{
+			zoom = 1;
+		}
+	}
+	else
+	{
+		zoom = 1;
+	}
+
+	x_old = 0;
+	y_old = 0;
+	width = display->xres;
+	height = display->yres;
+	point_max = (((u64) 1) << (point_size * 8)) - 1;
+
+	color_line = display->build_color(display, 1.0, 0.0, 0.0, 1.0);
+	color_point = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
+
+	if (strcmp(argv[0], "wave_line") == 0)
+	{
+		draw_line = true;
+		draw_point = false;
+	}
+	else if (strcmp(argv[0], "wave_point") == 0)
+	{
+		draw_line = false;
+		draw_point = true;
+	}
+	else
+	{
+		draw_line = true;
+		draw_point = true;
+	}
+
+	x = 0;
+	skip = 0;
+
+	while (x < width)
+	{
+		ssize_t rdlen;
+
+		rdlen = read(fd, &point, point_size);
+		if (rdlen < point_size)
+		{
+			break;
+		}
+
+		if (skip > 0)
+		{
+			skip--;
+			continue;
+		}
+
+		skip = point_skip;
+		y = height - ((u64) point * height) / point_max;
+
+		if (draw_point)
+		{
+			display->fill_rect(display, x, y, 2, 2, color_point);
+		}
+
+		if (draw_line && x > 0)
+		{
+			display->draw_line(display, x_old, y_old, x, y, color_line);
+		}
+
+		x_old = x;
+		y_old = y;
+
+		x += zoom;
+	}
+
+	cavan_display_refresh(display);
+
+	while (1)
+	{
+		msleep(5000);
+	}
+
+	cavan_display_stop(display);
+	display->destroy(display);
+
+out_close_fd:
+	close(fd);
+	return ret;
+}
+
 static struct cavan_command_map cmd_map[] =
 {
 	{"draw_rect", cavan_display_rect_main},
 	{"fill_rect", cavan_display_rect_main},
+	{"wave", cavan_display_wave_main},
+	{"wave_line", cavan_display_wave_main},
+	{"wave_point", cavan_display_wave_main},
 	{"test", cavan_display_test_main}
 };
 
