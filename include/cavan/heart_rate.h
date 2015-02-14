@@ -21,7 +21,12 @@
 
 #include <cavan.h>
 
-#define HEART_RATE_DECODE_PREPARE_COUNT		2000
+#define HEART_RATE_DECODE_MINUTE				60000
+#define HEART_RATE_DECODE_SECOND				(HEART_RATE_DECODE_MINUTE / 60)
+#define HEART_RATE_DECODE_PREPARE_COUNT			(HEART_RATE_DECODE_SECOND * 2)
+#define HEART_RATE_DECODE_RATE_MIN				(HEART_RATE_DECODE_SECOND / 3)
+#define HEART_RATE_DECODE_RATE_MAX				(HEART_RATE_DECODE_SECOND * 2)
+#define HEART_RATE_DECODE_RATE_SAMPLE_COUNT		5
 
 typedef enum {
 	HEART_RATE_DECODE_STATE_INIT,
@@ -39,19 +44,19 @@ struct heart_rate_decode
 
 	void *private_data;
 
-	u16 base_line;
 	u16 p, v, r, s;
 	u16 p_avg, v_avg;
 
-	u32 r_r, s_s;
-	u32 r_start, s_start;
-
-	u32 p_v, v_p;
 	u32 time_avg;
 	u32 time_max;
+	u32 r_time, s_time;
 	u32 v_time, p_time;
 
-	void (*handler)(struct heart_rate_decode *decode);
+	u32 rate_avg;
+	int rate_count;
+	u32 rate_list[HEART_RATE_DECODE_RATE_SAMPLE_COUNT];
+
+	void (*handler)(struct heart_rate_decode *decode, int rate);
 };
 
 void heart_rate_decode_post(struct heart_rate_decode *decode, u16 value);

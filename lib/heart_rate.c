@@ -20,7 +20,7 @@
 #include <cavan.h>
 #include <cavan/heart_rate.h>
 
-static void heart_rate_decode_time_init(struct heart_rate_decode *decode, u32 time)
+static void heart_rate_decode_init_time(struct heart_rate_decode *decode, u32 time)
 {
 	if (decode->time_avg > 0)
 	{
@@ -37,7 +37,7 @@ static void heart_rate_decode_time_init(struct heart_rate_decode *decode, u32 ti
 	}
 }
 
-static bool heart_rate_decode_time_update(struct heart_rate_decode *decode, u32 time)
+static bool heart_rate_decode_update_time(struct heart_rate_decode *decode, u32 time)
 {
 	u32 diff = decode->time_max - decode->time_avg;
 
@@ -50,6 +50,76 @@ static bool heart_rate_decode_time_update(struct heart_rate_decode *decode, u32 
 	{
 		decode->time_avg = (decode->time_avg * 3 + time) >> 2;
 		return false;
+	}
+}
+
+static void heart_rate_decode_init_value(struct heart_rate_decode *decode)
+{
+	decode->p_avg = decode->r;
+	decode->v_avg = decode->s;
+	decode->r_time = 0;
+	decode->s_time = 0;
+}
+
+static bool heart_rate_decode_update_value_r(struct heart_rate_decode *decode, u16 value)
+{
+	u16 diff = decode->r - decode->p_avg;
+
+	if (value > decode->p_avg + ((diff * 3) >> 2))
+	{
+		decode->r = ((u32) decode->r + value) >> 1;
+		return true;
+	}
+	else
+	{
+		decode->p_avg = ((u32) decode->p_avg * 3 + value) >> 2;
+		return false;
+	}
+}
+
+static bool heart_rate_decode_update_value_s(struct heart_rate_decode *decode, u16 value)
+{
+	u16 diff = decode->v_avg - decode->s;
+
+	if (value < decode->v_avg - ((diff * 3) >> 2))
+	{
+		decode->s = ((u32) decode->s + value) >> 1;
+		return true;
+	}
+	else
+	{
+		decode->v_avg = ((u32) decode->v_avg * 3 + value) >> 2;
+		return false;
+	}
+}
+
+static void heart_rate_decode_update_rate(struct heart_rate_decode *decode, u32 rate)
+{
+	u32 *p, *q;
+
+	for (p = decode->rate_list, q = p + decode->rate_count; p < q && *p > rate; p++);
+
+	while (q-- > p)
+	{
+		q[1] = q[0];
+	}
+
+	*p = rate;
+
+	if (++decode->rate_count >= NELEM(decode->rate_list))
+	{
+		rate = decode->rate_list[NELEM(decode->rate_list) >> 1];
+		if (decode->rate_avg > 0)
+		{
+			decode->rate_avg = (decode->rate_avg * 3 + rate) >> 2;
+		}
+		else
+		{
+			decode->rate_avg = rate;
+		}
+
+		decode->handler(decode, HEART_RATE_DECODE_MINUTE / decode->rate_avg);
+		decode->rate_count = 0;
 	}
 }
 
@@ -67,6 +137,8 @@ void heart_rate_decode_post(struct heart_rate_decode *decode, u16 value)
 		decode->p_time = 0;
 		decode->time_avg = 0;
 		decode->time_max = 0;
+		decode->rate_avg = 0;
+		decode->rate_count = 0;
 
 		decode->p = decode->v = value;
 		decode->state = HEART_RATE_DECODE_STATE_PREPARE;
@@ -99,13 +171,14 @@ void heart_rate_decode_post(struct heart_rate_decode *decode, u16 value)
 			{
 				if (decode->v_time > 0)
 				{
-					heart_rate_decode_time_init(decode, decode->p_time - decode->v_time);
+					heart_rate_decode_init_time(decode, decode->p_time - decode->v_time);
 				}
 
 				decode->state = HEART_RATE_DECODE_STATE_INIT_V;
 			}
 			else
 			{
+				heart_rate_decode_init_value(decode);
 				decode->state = HEART_RATE_DECODE_STATE_FIND_V;
 			}
 
@@ -131,13 +204,14 @@ void heart_rate_decode_post(struct heart_rate_decode *decode, u16 value)
 			{
 				if (decode->p_time > 0)
 				{
-					heart_rate_decode_time_init(decode, decode->v_time - decode->p_time);
+					heart_rate_decode_init_time(decode, decode->v_time - decode->p_time);
 				}
 
 				decode->state = HEART_RATE_DECODE_STATE_INIT_P;
 			}
 			else
 			{
+				heart_rate_decode_init_value(decode);
 				decode->state = HEART_RATE_DECODE_STATE_FIND_P;
 			}
 
@@ -152,11 +226,33 @@ void heart_rate_decode_post(struct heart_rate_decode *decode, u16 value)
 	case HEART_RATE_DECODE_STATE_FIND_P:
 		if (value < decode->p)
 		{
-			u32 time;
+			if (value < decode->v_avg)
+			{
+				break;
+			}
 
 			decode->p_time = decode->count;
-			time = decode->p_time - decode->v_time;
-			heart_rate_decode_time_update(decode, time);
+			if (heart_rate_decode_update_time(decode, decode->p_time - decode->v_time)
+				| heart_rate_decode_update_value_r(decode, decode->p))
+			{
+				if (decode->r_time > 0)
+				{
+					u32 rate = decode->count - decode->r_time;
+
+					if (rate > HEART_RATE_DECODE_RATE_MIN)
+					{
+						decode->r_time = decode->count;
+						if (rate < HEART_RATE_DECODE_RATE_MAX)
+						{
+							heart_rate_decode_update_rate(decode, rate);
+						}
+					}
+				}
+				else
+				{
+					decode->r_time = decode->count;
+				}
+			}
 
 			decode->state = HEART_RATE_DECODE_STATE_FIND_V;
 			decode->v = value;
@@ -170,11 +266,34 @@ void heart_rate_decode_post(struct heart_rate_decode *decode, u16 value)
 	case HEART_RATE_DECODE_STATE_FIND_V:
 		if (value > decode->v)
 		{
-			u32 time;
+			if (value > decode->p_avg)
+			{
+				break;
+			}
 
 			decode->v_time = decode->count;
-			time = decode->v_time - decode->p_time;
-			heart_rate_decode_time_update(decode, time);
+
+			if (heart_rate_decode_update_time(decode, decode->v_time - decode->p_time)
+				| heart_rate_decode_update_value_s(decode, decode->v))
+			{
+				if (decode->s_time > 0)
+				{
+					u32 rate = decode->count - decode->s_time;
+
+					if (rate > HEART_RATE_DECODE_RATE_MIN)
+					{
+						decode->s_time = decode->count;
+						if (rate < HEART_RATE_DECODE_RATE_MAX)
+						{
+							heart_rate_decode_update_rate(decode, rate);
+						}
+					}
+				}
+				else
+				{
+					decode->s_time = decode->count;
+				}
+			}
 
 			decode->state = HEART_RATE_DECODE_STATE_FIND_P;
 			decode->p = value;

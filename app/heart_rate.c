@@ -20,9 +20,9 @@
 #include <cavan.h>
 #include <cavan/heart_rate.h>
 
-static void heart_rate_decode_handler(struct heart_rate_decode *decode)
+static void heart_rate_decode_handler(struct heart_rate_decode *decode, int rate)
 {
-	pr_pos_info();
+	pr_green_info("rate = %d", rate);
 }
 
 int main(int argc, char *argv[])
