@@ -36,7 +36,7 @@
 #define JWP_MCU_MAGIC				(JWP_MCU_MAGIC_HIGH << 8 | JWP_MCU_MAGIC_LOW)
 #define JWP_MCU_HEADER_SIZE			sizeof(struct jwp_mcu_header)
 #define JWP_MCU_MAX_PAYLOAD			(JWP_MCU_MTU - JWP_MCU_HEADER_SIZE)
-#define JWP_MCU_GET_PAYLOAD(hdr)	(((jwp_u8 *) hdr) + JWP_HEADER_SIZE)
+#define JWP_MCU_GET_PAYLOAD(hdr)	(((jwp_u8 *) hdr) + JWP_MCU_HEADER_SIZE)
 
 typedef enum
 {
