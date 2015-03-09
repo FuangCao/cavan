@@ -947,9 +947,9 @@ static jwp_size_t jwp_package_receiver_write_locked(struct jwp_package_receiver 
 
 	jwp_memcpy(receiver->head, buff, remain);
 
+out_process_package:
 	receiver->head = receiver->body;
 
-out_process_package:
 	jwp_lock_release(receiver->lock);
 	receiver->process_package(receiver);
 	jwp_lock_acquire(receiver->lock);
