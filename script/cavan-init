@@ -228,10 +228,13 @@ function config_single_home()
 {
 	cd $1 || return 1
 
-	for dir in Desktop Documents Downloads Music Pictures .stardict .VirtualBox VirtualBox\ VMs
+	for dir in Desktop Documents Downloads Music Pictures .stardict .VirtualBox "VirtualBox VMs"
 	do
 		cavan-symlink "${UBUNTU_HOME}/${dir}" "${dir}" || return 1
 	done
+
+	cavan-symlink "${CAVAN_HOME}" "cavan" || return 1
+	cavan-symlink "cavan/script/configs/netrc" ".netrc" || return 1
 }
 
 function config_home()

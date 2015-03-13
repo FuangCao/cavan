@@ -1,0 +1,7 @@
+machine 192.168.1.220
+login cavan
+password 123456
+
+machine github.com
+login FuangCao
+password CaoFuAng8888
