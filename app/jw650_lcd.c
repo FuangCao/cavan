@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 {
 	int i, j;
 	const char *weights[] = { "CGB-DEFA", "AFEDBGC-" };
-	const char *encoded[10 + 26] = { "ABCDEF", "BC", "ABGED", "ABGCD", "FGBC", "AFGCD", "AFEDCG", "ABC", "ABCDEFG", "ABCDFG", "EFABCG", "ABCDEFG", "AFED", "ABCDEF", "AFEDG", "AFEG", "AFEDGC", "FEGBC", "FE", "BCD", "FEGD", "FED", "-", "EFABC", "ABCDEF", "FEABG", "ABCFG", "ABCFEG", "AFGCD", "-", "BCDEF", "-", "-", "-", "BCFG", "-" };
+	const char *encoded[] = { "ABCDEF", "BC", "ABGED", "ABGCD", "FGBC", "AFGCD", "AFEDCG", "ABC", "ABCDEFG", "ABCDFG", "EFABCG", "ABCDEFG", "AFED", "ABCDEF", "AFEDG", "AFEG", "AFEDGC", "FEGBC", "FE", "BCD", "FEGD", "FED", "-", "EFABC", "ABCDEF", "FEABG", "ABCFG", "ABCFEG", "AFGCD", "-", "BCDEF", "-", "-", "-", "BCFG", "-", "G", "GD"};
 
 	for (i = 0; i < NELEM(weights); i++)
 	{
