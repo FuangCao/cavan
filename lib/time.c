@@ -79,7 +79,7 @@ void cavan_time_parse(unsigned long timestap, struct cavan_time *time)
 
 	yday = cavan_time_mon_yday[cavan_time_year_is_leap(year)];
 	days -= cavan_time_get_days_of_year(year, 1, 1);
-	for (p = yday + 11; p >= yday && *p > days; p--);
+	for (p = yday + 11; *p > days; p--);
 
 	time->year = year;
 	time->month = p - yday + 1;
