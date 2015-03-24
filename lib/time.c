@@ -48,7 +48,7 @@ u32 cavan_time_get_days_of_year(u32 year, u8 month, u8 day)
 		yday = cavan_time_mon_yday[0];
 	}
 
-	return yday[month - 1] + days - 1;
+	return yday[month] + days - 1;
 }
 
 u32 cavan_time_get_seconds_of_day(u8 hour, u8 min, u8 sec)
@@ -58,7 +58,7 @@ u32 cavan_time_get_seconds_of_day(u8 hour, u8 min, u8 sec)
 
 unsigned long cavan_time_build(const struct cavan_time *time)
 {
-	return ((unsigned long) cavan_time_get_days_of_year(time->year, time->month, time->day) - CAVAN_TIME_DAYS_BASE) * CAVAN_TIME_SECONDS_PER_DAY + cavan_time_get_seconds_of_day(time->hour, time->minute, time->second);
+	return ((unsigned long) cavan_time_get_days_of_year(time->year, time->month, time->mday) - CAVAN_TIME_DAYS_BUILD_BASE) * CAVAN_TIME_SECONDS_PER_DAY + cavan_time_get_seconds_of_day(time->hour, time->minute, time->second);
 }
 
 void cavan_time_parse(unsigned long timestap, struct cavan_time *time)
@@ -68,22 +68,22 @@ void cavan_time_parse(unsigned long timestap, struct cavan_time *time)
 	unsigned long days;
 	const u16 *p, *yday;
 
-	days = timestap / CAVAN_TIME_SECONDS_PER_DAY + CAVAN_TIME_DAYS_BASE;
+	days = timestap / CAVAN_TIME_SECONDS_PER_DAY + CAVAN_TIME_DAYS_PARSE_BASE;
 	time->wday = days % 7;
 	year = days / 366;
 
-	while (cavan_time_get_days_of_year(year + 1, 1, 1) <= days)
+	while (cavan_time_get_days_of_year(year + 1, 0, 1) <= days)
 	{
 		year++;
 	}
 
 	yday = cavan_time_mon_yday[cavan_time_year_is_leap(year)];
-	days -= cavan_time_get_days_of_year(year, 1, 1);
+	days -= cavan_time_get_days_of_year(year, 0, 1);
 	for (p = yday + 11; *p > days; p--);
 
 	time->year = year;
-	time->month = p - yday + 1;
-	time->day = days - *p + 1;
+	time->month = p - yday;
+	time->mday = days - *p + 1;
 	time->yday = days;
 
 	remain = timestap % CAVAN_TIME_SECONDS_PER_DAY;

@@ -8,18 +8,19 @@
 
 #define CAVAN_TIME_DAYS_1970				719527
 #define CAVAN_TIME_DAYS_2000				730484
-#define CAVAN_TIME_DAYS_BASE				CAVAN_TIME_DAYS_1970
+#define CAVAN_TIME_DAYS_BUILD_BASE			CAVAN_TIME_DAYS_1970
+#define CAVAN_TIME_DAYS_PARSE_BASE			CAVAN_TIME_DAYS_1970
 
 struct cavan_time
 {
 	u32 year;
-	u8 month;
-	u8 day;
-	u8 hour;
-	u8 minute;
-	u8 second;
-	u8 yday;
-	u8 wday;
+	u8 month;	// 0 ~ 11
+	u8 hour;	// 0 ~ 23
+	u8 minute;	// 0 ~ 59
+	u8 second;	// 0 ~ 59
+	u8 mday;	// 1 ~ 31
+	u8 yday;	// 0 ~ 365
+	u8 wday;	// 0 ~ 6
 };
 
 bool cavan_time_year_is_leap(u32 year);
