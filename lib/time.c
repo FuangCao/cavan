@@ -35,20 +35,15 @@ bool cavan_time_year_is_leap(u32 year)
 
 u32 cavan_time_get_days_of_year(u32 year, u8 month, u8 day)
 {
-	const u16 *yday;
-	u32 days = year / 4 - year / 100 + year / 400 + year * 365 + day;
+	u32 days = year * 365 + day;
+	const u16 *yday = cavan_time_mon_yday[cavan_time_year_is_leap(year)];
 
-	if (cavan_time_year_is_leap(year))
+	if (year > 0)
 	{
-		yday = cavan_time_mon_yday[1];
-		days--;
-	}
-	else
-	{
-		yday = cavan_time_mon_yday[0];
+		year--;
 	}
 
-	return yday[month] + days - 1;
+	return year / 4 - year / 100 + year / 400 + yday[month] + days - 1;
 }
 
 u32 cavan_time_get_seconds_of_day(u8 hour, u8 min, u8 sec)
@@ -56,19 +51,19 @@ u32 cavan_time_get_seconds_of_day(u8 hour, u8 min, u8 sec)
 	return (((u32) hour) * 60 + min) * 60 + sec;
 }
 
-unsigned long cavan_time_build(const struct cavan_time *time)
+unsigned long cavan_time_build(const struct cavan_time *time, u32 base_days)
 {
-	return ((unsigned long) cavan_time_get_days_of_year(time->year, time->month, time->mday) - CAVAN_TIME_DAYS_BUILD_BASE) * CAVAN_TIME_SECONDS_PER_DAY + cavan_time_get_seconds_of_day(time->hour, time->minute, time->second);
+	return ((unsigned long) cavan_time_get_days_of_year(time->year, time->month, time->mday) - base_days) * CAVAN_TIME_SECONDS_PER_DAY + cavan_time_get_seconds_of_day(time->hour, time->minute, time->second);
 }
 
-void cavan_time_parse(unsigned long timestap, struct cavan_time *time)
+void cavan_time_parse(unsigned long timestamp, struct cavan_time *time, u32 base_days)
 {
 	u32 year;
 	u32 remain;
 	unsigned long days;
 	const u16 *p, *yday;
 
-	days = timestap / CAVAN_TIME_SECONDS_PER_DAY + CAVAN_TIME_DAYS_PARSE_BASE;
+	days = timestamp / CAVAN_TIME_SECONDS_PER_DAY + base_days;
 	time->wday = days % 7;
 	year = days / 366;
 
@@ -86,8 +81,8 @@ void cavan_time_parse(unsigned long timestap, struct cavan_time *time)
 	time->mday = days - *p + 1;
 	time->yday = days;
 
-	remain = timestap % CAVAN_TIME_SECONDS_PER_DAY;
+	remain = timestamp % CAVAN_TIME_SECONDS_PER_DAY;
 	time->hour = remain / CAVAN_TIME_SECONDS_PER_HOUR;
 	time->minute = remain % CAVAN_TIME_SECONDS_PER_HOUR / CAVAN_TIME_SECONDS_PER_MIN;
-	time->second = timestap % CAVAN_TIME_SECONDS_PER_MIN;
+	time->second = timestamp % CAVAN_TIME_SECONDS_PER_MIN;
 }

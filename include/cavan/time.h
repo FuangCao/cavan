@@ -2,14 +2,12 @@
 
 #include <cavan.h>
 
-#define CAVAN_TIME_SECONDS_PER_MIN			60
-#define CAVAN_TIME_SECONDS_PER_HOUR			(CAVAN_TIME_SECONDS_PER_MIN * 60)
-#define CAVAN_TIME_SECONDS_PER_DAY			(CAVAN_TIME_SECONDS_PER_HOUR * 24)
+#define CAVAN_TIME_SECONDS_PER_MIN			60UL
+#define CAVAN_TIME_SECONDS_PER_HOUR			(60 * CAVAN_TIME_SECONDS_PER_MIN)
+#define CAVAN_TIME_SECONDS_PER_DAY			(24 * CAVAN_TIME_SECONDS_PER_HOUR)
 
-#define CAVAN_TIME_DAYS_1970				719527
-#define CAVAN_TIME_DAYS_2000				730484
-#define CAVAN_TIME_DAYS_BUILD_BASE			CAVAN_TIME_DAYS_1970
-#define CAVAN_TIME_DAYS_PARSE_BASE			CAVAN_TIME_DAYS_1970
+#define CAVAN_TIME_BASE_DAYS_1970			719527UL
+#define CAVAN_TIME_BASE_DAYS_2000			730484UL
 
 struct cavan_time
 {
@@ -26,5 +24,25 @@ struct cavan_time
 bool cavan_time_year_is_leap(u32 year);
 u32 cavan_time_get_days_of_year(u32 year, u8 month, u8 day);
 u32 cavan_time_get_seconds_of_day(u8 hour, u8 min, u8 sec);
-unsigned long cavan_time_build(const struct cavan_time *time);
-void cavan_time_parse(unsigned long timestap, struct cavan_time *time);
+unsigned long cavan_time_build(const struct cavan_time *time, u32 base_days);
+void cavan_time_parse(unsigned long timestamp, struct cavan_time *time, u32 base_days);
+
+static inline unsigned long cavan_time_build_1970(const struct cavan_time *time)
+{
+	return cavan_time_build(time, CAVAN_TIME_BASE_DAYS_1970);
+}
+
+static inline void cavan_time_parse_1970(unsigned long timestamp, struct cavan_time *time)
+{
+	cavan_time_parse(timestamp, time, CAVAN_TIME_BASE_DAYS_1970);
+}
+
+static inline unsigned long cavan_time_build_2000(const struct cavan_time *time)
+{
+	return cavan_time_build(time, CAVAN_TIME_BASE_DAYS_2000);
+}
+
+static inline void cavan_time_parse_2000(unsigned long timestamp, struct cavan_time *time)
+{
+	cavan_time_parse(timestamp, time, CAVAN_TIME_BASE_DAYS_2000);
+}
