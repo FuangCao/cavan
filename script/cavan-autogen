@@ -4,7 +4,7 @@ MAKEFILE_AM="Makefile.am"
 CAVAN_NAME="cavan"
 AUTOMAKE_OPTIONS="foreign subdir-objects"
 ACLOCAL_AMFLAGS="-I m4"
-AM_CFLAGS="-I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h"
+AM_CFLAGS="-I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h -DCAVAN"
 
 function gen_makefile_am_header()
 {
