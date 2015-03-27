@@ -125,18 +125,19 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libcavan_la_LIBADD =
 am_libcavan_la_OBJECTS = adb.lo alarm.lo bmp.lo bootimg.lo cache.lo \
-	calculator.lo cftp.lo command.lo copy.lo ctype.lo dd.lo \
+	calculator.lo cftp.lo command.lo copy.lo crc.lo ctype.lo dd.lo \
 	debug.lo device.lo display.lo ecc.lo environment.lo event.lo \
 	ext2.lo ext4.lo fb.lo file.lo font.lo ftp.lo gsensor.lo \
-	image.lo inotify.lo input.lo keypad.lo list.lo malloc.lo \
+	heart_rate.lo image.lo inotify.lo input.lo jwp.lo jwp_comm.lo \
+	jwp-linux.lo jwp_mcu.lo jwp_udp.lo keypad.lo list.lo malloc.lo \
 	math.lo memory.lo mouse.lo mtd.lo net_bridge.lo network.lo \
 	parser.lo permission.lo pool.lo process.lo progress.lo \
 	queue.lo rle.lo screen_mirror.lo service.lo sha.lo sort.lo \
 	speed_detector.lo sprd_diag.lo stack.lo stdio.lo swan_dev.lo \
 	swan_mac.lo swan_pkg.lo swan_ts.lo swan_upgrade.lo swan_vk.lo \
-	tcp_dd.lo tcp_proxy.lo text.lo tftp.lo thread.lo timer.lo \
-	touchpad.lo touchscreen.lo tree.lo uevent.lo usb.lo vfat.lo \
-	web_proxy.lo window.lo xml.lo
+	tcp_dd.lo tcp_proxy.lo text.lo tftp.lo thread.lo time.lo \
+	timer.lo touchpad.lo touchscreen.lo tree.lo uevent.lo usb.lo \
+	vfat.lo watchdog.lo web_proxy.lo window.lo xml.lo
 libcavan_la_OBJECTS = $(am_libcavan_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -323,7 +324,7 @@ MAINTAINERCLEANFILES = Makefile.am Makefile.in
 ACLOCAL_AMFLAGS = -I m4
 AM_CFLAGS = -I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h -fPIC
 lib_LTLIBRARIES = libcavan.la
-libcavan_la_SOURCES = adb.c alarm.c bmp.c bootimg.c cache.c calculator.c cftp.c command.c copy.c ctype.c dd.c debug.c device.c display.c ecc.c environment.c event.c ext2.c ext4.c fb.c file.c font.c ftp.c gsensor.c image.c inotify.c input.c keypad.c list.c malloc.c math.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c pool.c process.c progress.c queue.c rle.c screen_mirror.c service.c sha.c sort.c speed_detector.c sprd_diag.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c tcp_proxy.c text.c tftp.c thread.c timer.c touchpad.c touchscreen.c tree.c uevent.c usb.c vfat.c web_proxy.c window.c xml.c
+libcavan_la_SOURCES = adb.c alarm.c bmp.c bootimg.c cache.c calculator.c cftp.c command.c copy.c crc.c ctype.c dd.c debug.c device.c display.c ecc.c environment.c event.c ext2.c ext4.c fb.c file.c font.c ftp.c gsensor.c heart_rate.c image.c inotify.c input.c jwp.c jwp_comm.c jwp-linux.c jwp_mcu.c jwp_udp.c keypad.c list.c malloc.c math.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c pool.c process.c progress.c queue.c rle.c screen_mirror.c service.c sha.c sort.c speed_detector.c sprd_diag.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c tcp_proxy.c text.c tftp.c thread.c time.c timer.c touchpad.c touchscreen.c tree.c uevent.c usb.c vfat.c watchdog.c web_proxy.c window.c xml.c
 all: all-am
 
 .SUFFIXES:
@@ -412,6 +413,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cftp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/command.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/copy.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctype.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Plo@am__quote@
@@ -427,9 +429,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/font.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ftp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gsensor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heart_rate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inotify.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/input.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jwp-linux.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jwp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jwp_comm.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jwp_mcu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jwp_udp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keypad.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/malloc.Plo@am__quote@
@@ -465,6 +473,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/text.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tftp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/time.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/touchpad.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/touchscreen.Plo@am__quote@
@@ -472,6 +481,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uevent.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vfat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/watchdog.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/web_proxy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml.Plo@am__quote@

@@ -127,6 +127,8 @@ int main(int argc, char *argv[])
 		char buff_out[1024];
 		struct alc5671_pll_config config;
 
+		memset(&config, 0x00, sizeof(config));
+
 		MCLK = text2frequency(argv[1], NULL, NULL);
 		OUT = text2frequency(argv[2], NULL, NULL);
 		println("%s => %s", frequency_tostring(MCLK, buff_in, sizeof(buff_in), NULL), frequency_tostring(OUT, buff_out, sizeof(buff_out), NULL));

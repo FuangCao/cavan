@@ -19,7 +19,7 @@
 
 // #include "stdafx.h"
 
-#ifdef CAVAN_ARCH
+#ifdef CAVAN
 #include <cavan.h>
 #include <cavan/jwp_mcu.h>
 #else

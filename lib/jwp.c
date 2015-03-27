@@ -23,7 +23,7 @@
 #include "jwp-win32.h"
 #elif defined(CSR101x)
 #include "jwp-csr101x.h"
-#elif defined(CAVAN_ARCH)
+#elif defined(CAVAN)
 #include <cavan/jwp-linux.h>
 #else
 #include "jwp-kl2x.h"

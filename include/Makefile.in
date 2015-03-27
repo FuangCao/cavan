@@ -323,7 +323,7 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 SUBDIRS = cavan
 cavanincdir = $(includedir)
-cavaninc_HEADERS = cavan.h
+cavaninc_HEADERS = cavan.h stdafx.h
 all: all-recursive
 
 .SUFFIXES:

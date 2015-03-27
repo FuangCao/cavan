@@ -21,7 +21,7 @@
 
 #ifdef _WIN32
 #include "jwp-win32.h"
-#elif defined(CAVAN_ARCH)
+#elif defined(CAVAN)
 #include <cavan.h>
 #include <cavan/jwp-linux.h>
 #else

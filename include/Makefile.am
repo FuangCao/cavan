@@ -8,4 +8,4 @@ SUBDIRS = cavan
 
 cavanincdir = $(includedir)
 
-cavaninc_HEADERS = cavan.h
+cavaninc_HEADERS = cavan.h stdafx.h

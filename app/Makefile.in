@@ -97,29 +97,31 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) auto_dd.$(OBJEXT) \
-	auto_input.$(OBJEXT) auto_mount.$(OBJEXT) battery.$(OBJEXT) \
-	battery_level.$(OBJEXT) bdata.$(OBJEXT) bkernel.$(OBJEXT) \
-	bmp_view.$(OBJEXT) bootimg.$(OBJEXT) bramdisk.$(OBJEXT) \
-	brecovery.$(OBJEXT) bsystem.$(OBJEXT) buboot.$(OBJEXT) \
-	calculator.$(OBJEXT) chroot.$(OBJEXT) chtty.$(OBJEXT) \
-	copy.$(OBJEXT) dd.$(OBJEXT) df.$(OBJEXT) display.$(OBJEXT) \
-	dos2unix.$(OBJEXT) eavoo_sell_statistic.$(OBJEXT) \
-	ecc.$(OBJEXT) event_repeater.$(OBJEXT) ext2.$(OBJEXT) \
-	fdisk.$(OBJEXT) file_crc32.$(OBJEXT) file_join.$(OBJEXT) \
-	file_loop.$(OBJEXT) file_split.$(OBJEXT) ftp.$(OBJEXT) \
-	ftp_server.$(OBJEXT) git_daemon.$(OBJEXT) image_dd.$(OBJEXT) \
-	inotify.$(OBJEXT) lm49350_clock.$(OBJEXT) loop_run.$(OBJEXT) \
-	md5sum.$(OBJEXT) mkdir.$(OBJEXT) mknp.$(OBJEXT) \
-	mksdcard.$(OBJEXT) modem_upgrade.$(OBJEXT) mount.$(OBJEXT) \
-	move.$(OBJEXT) mtd.$(OBJEXT) net_monitor.$(OBJEXT) \
-	part_probe.$(OBJEXT) part_show.$(OBJEXT) part_table.$(OBJEXT) \
-	ping.$(OBJEXT) poll_event.$(OBJEXT) poll_input.$(OBJEXT) \
-	ramdisk.$(OBJEXT) remove.$(OBJEXT) resize.$(OBJEXT) \
-	rle.$(OBJEXT) screen_mirror.$(OBJEXT) service.$(OBJEXT) \
-	sha1sum.$(OBJEXT) show_file.$(OBJEXT) shrink.$(OBJEXT) \
-	sprd_at.$(OBJEXT) sprd_write_imei.$(OBJEXT) su.$(OBJEXT) \
-	sudo.$(OBJEXT) super_upgrade.$(OBJEXT) swan_check.$(OBJEXT) \
+am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) \
+	alc5671_clock.$(OBJEXT) auto_dd.$(OBJEXT) auto_input.$(OBJEXT) \
+	auto_mount.$(OBJEXT) battery.$(OBJEXT) battery_level.$(OBJEXT) \
+	bdata.$(OBJEXT) bkernel.$(OBJEXT) bmp_view.$(OBJEXT) \
+	bootimg.$(OBJEXT) bramdisk.$(OBJEXT) brecovery.$(OBJEXT) \
+	bsystem.$(OBJEXT) buboot.$(OBJEXT) calculator.$(OBJEXT) \
+	chroot.$(OBJEXT) chtty.$(OBJEXT) copy.$(OBJEXT) dd.$(OBJEXT) \
+	df.$(OBJEXT) display.$(OBJEXT) dos2unix.$(OBJEXT) \
+	eavoo_sell_statistic.$(OBJEXT) ecc.$(OBJEXT) \
+	event_repeater.$(OBJEXT) ext2.$(OBJEXT) fdisk.$(OBJEXT) \
+	file_crc32.$(OBJEXT) file_join.$(OBJEXT) file_loop.$(OBJEXT) \
+	file_split.$(OBJEXT) ftp.$(OBJEXT) ftp_server.$(OBJEXT) \
+	git_daemon.$(OBJEXT) heart_rate.$(OBJEXT) image_dd.$(OBJEXT) \
+	inotify.$(OBJEXT) jw650_lcd.$(OBJEXT) jwp_udp.$(OBJEXT) \
+	lm49350_clock.$(OBJEXT) loop_run.$(OBJEXT) md5sum.$(OBJEXT) \
+	mkdir.$(OBJEXT) mknp.$(OBJEXT) mksdcard.$(OBJEXT) \
+	modem_upgrade.$(OBJEXT) mount.$(OBJEXT) move.$(OBJEXT) \
+	mtd.$(OBJEXT) net_monitor.$(OBJEXT) part_probe.$(OBJEXT) \
+	part_show.$(OBJEXT) part_table.$(OBJEXT) ping.$(OBJEXT) \
+	poll_event.$(OBJEXT) poll_input.$(OBJEXT) ramdisk.$(OBJEXT) \
+	remove.$(OBJEXT) resize.$(OBJEXT) rle.$(OBJEXT) \
+	screen_mirror.$(OBJEXT) service.$(OBJEXT) sha1sum.$(OBJEXT) \
+	show_file.$(OBJEXT) shrink.$(OBJEXT) sprd_at.$(OBJEXT) \
+	sprd_write_imei.$(OBJEXT) su.$(OBJEXT) sudo.$(OBJEXT) \
+	super_upgrade.$(OBJEXT) swan_check.$(OBJEXT) \
 	swan_emmc.$(OBJEXT) swan_fac.$(OBJEXT) swan_ipu.$(OBJEXT) \
 	swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) swan_mkfs.$(OBJEXT) \
 	swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) swan_upgrade.$(OBJEXT) \
@@ -317,15 +319,16 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
-APP_SRC_FILES = abspath.c alarm.c auto_dd.c auto_input.c auto_mount.c \
-	battery.c battery_level.c bdata.c bkernel.c bmp_view.c \
-	bootimg.c bramdisk.c brecovery.c bsystem.c buboot.c \
-	calculator.c chroot.c chtty.c copy.c dd.c df.c display.c \
-	dos2unix.c eavoo_sell_statistic.c ecc.c event_repeater.c \
-	ext2.c fdisk.c file_crc32.c file_join.c file_loop.c \
-	file_split.c ftp.c ftp_server.c git_daemon.c image_dd.c \
-	inotify.c lm49350_clock.c loop_run.c md5sum.c mkdir.c mknp.c \
-	mksdcard.c modem_upgrade.c mount.c move.c mtd.c net_monitor.c \
+APP_SRC_FILES = abspath.c alarm.c alc5671_clock.c auto_dd.c \
+	auto_input.c auto_mount.c battery.c battery_level.c bdata.c \
+	bkernel.c bmp_view.c bootimg.c bramdisk.c brecovery.c \
+	bsystem.c buboot.c calculator.c chroot.c chtty.c copy.c dd.c \
+	df.c display.c dos2unix.c eavoo_sell_statistic.c ecc.c \
+	event_repeater.c ext2.c fdisk.c file_crc32.c file_join.c \
+	file_loop.c file_split.c ftp.c ftp_server.c git_daemon.c \
+	heart_rate.c image_dd.c inotify.c jw650_lcd.c jwp_udp.c \
+	lm49350_clock.c loop_run.c md5sum.c mkdir.c mknp.c mksdcard.c \
+	modem_upgrade.c mount.c move.c mtd.c net_monitor.c \
 	part_probe.c part_show.c part_table.c ping.c poll_event.c \
 	poll_input.c ramdisk.c remove.c resize.c rle.c screen_mirror.c \
 	service.c sha1sum.c show_file.c shrink.c sprd_at.c \
@@ -452,6 +455,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/abspath.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alarm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alc5671_clock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auto_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auto_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auto_mount.Po@am__quote@
@@ -485,8 +489,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ftp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ftp_server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/git_daemon.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heart_rate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/image_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inotify.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jw650_lcd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jwp_udp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lm49350_clock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loop_run.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5sum.Po@am__quote@
