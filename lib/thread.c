@@ -94,6 +94,7 @@ int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time
 
 	if (thread->pending)
 	{
+		thread->pending = false;
 		pthread_mutex_unlock(&thread->lock);
 		return 0;
 	}

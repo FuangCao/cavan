@@ -50,6 +50,29 @@ struct cavan_cursor
 	void (*set_visual)(struct cavan_cursor *cursor, bool enable, void *data);
 };
 
+struct cavan_flasher_node
+{
+	const char *name;
+
+	u32 delay;
+	u32 count;
+	u32 count_max;
+	bool bright;
+	bool enable;
+
+	struct cavan_flasher_node *next;
+
+	void (*handler)(struct cavan_flasher_node *node);
+};
+
+struct cavan_flasher
+{
+	struct cavan_thread thread;
+	struct cavan_lock lock;
+	u32 delay;
+	struct cavan_flasher_node *head;
+};
+
 u64 clock_gettime_ns(clockid_t clk);
 u64 clock_gettime_us(clockid_t clk);
 u64 clock_gettime_ms(clockid_t clk);
@@ -68,6 +91,10 @@ int cavan_timer_service_start(struct cavan_timer_service *service);
 int cavan_timer_service_stop(struct cavan_timer_service *service);
 
 int cavan_cursor_init(struct cavan_cursor *cursor, struct cavan_timer_service *service);
+
+void cavan_flasher_update_delay(struct cavan_flasher *flasher);
+void cavan_flasher_add_node(struct cavan_flasher *flasher, struct cavan_flasher_node *node);
+int cavan_flasher_run(struct cavan_flasher *flasher);
 
 static inline void cavan_timer_init(struct cavan_timer *timer, void *data)
 {

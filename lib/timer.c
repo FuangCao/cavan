@@ -5,6 +5,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/math.h>
 #include <cavan/timer.h>
 
 u64 clock_gettime_ns(clockid_t clk)
@@ -103,16 +104,17 @@ s64 cavan_real_timespec_diff(const struct timespec *time)
 
 void cavan_timer_timespec_add(struct timespec *time, u32 timeout)
 {
-	long tmp;
+	long msec;
 
-	tmp = time->tv_nsec / 1000000 + timeout;
-	time->tv_sec += tmp / 1000;
-	time->tv_nsec = (tmp % 1000) * 1000000;
+	msec = time->tv_nsec / 1000000UL + timeout;
+	time->tv_sec += msec / 1000UL;
+	time->tv_nsec = (msec % 1000UL) * 1000000UL;
 }
 
 void cavan_timer_set_timespec(struct timespec *time, u32 timeout)
 {
 	clock_gettime(CLOCK_REALTIME, time);
+
 	cavan_timer_timespec_add(time, timeout);
 }
 
@@ -307,4 +309,140 @@ int cavan_cursor_init(struct cavan_cursor *cursor, struct cavan_timer_service *s
 	cursor->set_visual = NULL;
 
 	return 0;
+}
+
+// ============================================================
+
+void cavan_flasher_update_delay(struct cavan_flasher *flasher)
+{
+	u32 delay = 0;
+	struct cavan_flasher_node *node;
+
+	cavan_lock_acquire(&flasher->lock);
+
+	for (node = flasher->head; node; node = node->next)
+	{
+		if (!node->enable)
+		{
+			continue;
+		}
+
+		if (delay > 0)
+		{
+			delay = math_get_greatest_common_divisor_single(delay, node->delay);
+		}
+		else
+		{
+			delay = node->delay;
+		}
+	}
+
+	if (delay > 0)
+	{
+		for (node = flasher->head; node; node = node->next)
+		{
+			u32 max;
+
+			if (!node->enable)
+			{
+				continue;
+			}
+
+			max = node->count_max;
+			node->count_max = node->delay / delay;
+
+			if (max > 0)
+			{
+				node->count = node->count * node->count_max / max;
+			}
+			else
+			{
+				node->count = 0;
+			}
+		}
+	}
+
+	flasher->delay = delay;
+
+	cavan_lock_release(&flasher->lock);
+
+	cavan_thread_resume(&flasher->thread);
+}
+
+void cavan_flasher_add_node(struct cavan_flasher *flasher, struct cavan_flasher_node *node)
+{
+	struct cavan_flasher_node **prev;
+
+	node->count = 0;
+	node->count_max = 0;
+	node->bright = false;
+	node->next = NULL;
+
+	cavan_lock_acquire(&flasher->lock);
+
+	for (prev = &flasher->head; *prev; prev = &(*prev)->next);
+
+	*prev = node;
+
+	cavan_lock_release(&flasher->lock);
+
+	cavan_flasher_update_delay(flasher);
+}
+
+static int cavan_flasher_thread_handler(struct cavan_thread *thread, void *data)
+{
+	struct cavan_flasher *flasher = data;
+
+	if (flasher->delay > 0)
+	{
+		struct cavan_flasher_node *node;
+
+		if (cavan_thread_msleep(thread, flasher->delay) == 0)
+		{
+			return 0;
+		}
+
+		cavan_lock_acquire(&flasher->lock);
+
+		for (node = flasher->head; node; node = node->next)
+		{
+			if (node->enable)
+			{
+				if (node->count > 1)
+				{
+					node->count--;
+				}
+				else
+				{
+					node->count = node->count_max;
+					node->bright = !node->bright;
+					node->handler(node);
+				}
+			}
+		}
+
+		cavan_lock_release(&flasher->lock);
+	}
+	else
+	{
+		cavan_thread_suspend(thread);
+	}
+
+	return 0;
+}
+
+int cavan_flasher_run(struct cavan_flasher *flasher)
+{
+	struct cavan_thread *thread = &flasher->thread;
+
+	cavan_lock_init(&flasher->lock, FALSE);
+
+	flasher->head = NULL;
+	flasher->delay = 0;
+
+	thread->name = "FLASHER";
+	thread->handler = cavan_flasher_thread_handler;
+	thread->wake_handker = NULL;
+
+	return cavan_thread_run(thread, flasher);
 }
