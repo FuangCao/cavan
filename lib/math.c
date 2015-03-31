@@ -1549,3 +1549,109 @@ int math_find_last_non_zero_bit64(u64 value)
 
 	return math_find_last_non_zero_bit32(value);
 }
+
+ulong math_get_greatest_common_divisor_single(ulong a, ulong b)
+{
+#if 0
+	ulong value;
+
+	value = MIN(a, b);
+	if (value < 2)
+	{
+		return 1;
+	}
+
+	if (value > 9)
+	{
+		value = 9;
+	}
+
+	while (value > 1)
+	{
+		if (a % value == 0 && b % value == 0)
+		{
+			return value * math_get_greatest_common_divisor_single(a / value, b / value);
+		}
+
+		value--;
+	}
+
+	return 1;
+#elif 0
+	ulong value;
+
+	if (a > b)
+	{
+		value = b;
+		b = a;
+		a = value;
+	}
+
+	while (1)
+	{
+		value = b % a;
+		if (value == 0)
+		{
+			return a;
+		}
+
+		b = a;
+		a = value;
+	}
+#else
+	while (a != b)
+	{
+		if (a > b)
+		{
+			a = a - b;
+		}
+		else
+		{
+			b = b - a;
+		}
+	}
+
+	return a;
+#endif
+}
+
+ulong math_get_greatest_common_divisor(const ulong *data, size_t count)
+{
+	ulong value;
+	const ulong *data_end;
+
+	data_end = data + count;
+
+	for (value = *data++; data < data_end; data++)
+	{
+		value = math_get_greatest_common_divisor_single(value, *data);
+		if (value < 2)
+		{
+			return 1;
+		}
+	}
+
+	return value;
+}
+
+ulong math_get_lowest_common_multiple_single(ulong a, ulong b)
+{
+	ulong div = math_get_greatest_common_divisor_single(a, b);
+
+	return a / div * b;
+}
+
+ulong math_get_lowest_common_multiple(const ulong *data, size_t count)
+{
+	ulong value;
+	const ulong *data_end;
+
+	data_end = data + count;
+
+	for (value = *data++; data < data_end; data++)
+	{
+		value = math_get_lowest_common_multiple_single(value, *data);
+	}
+
+	return value;
+}

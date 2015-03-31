@@ -135,6 +135,11 @@ int math_find_last_non_zero_bit16(u16 value);
 int math_find_last_non_zero_bit32(u32 value);
 int math_find_last_non_zero_bit64(u64 value);
 
+ulong math_get_greatest_common_divisor_single(ulong a, ulong b);
+ulong math_get_greatest_common_divisor(const ulong *data, size_t count);
+ulong math_get_lowest_common_multiple_single(ulong a, ulong b);
+ulong math_get_lowest_common_multiple(const ulong *data, size_t count);
+
 static inline bool math_memory_is_negative(const byte *mem, size_t size)
 {
 	return mem[size - 1] & (1 << 7);
