@@ -36,6 +36,7 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 	int c;
 	int option_index;
 	bool dt_support = false;
+	const char *command = argv[0];
 	struct option long_option[] =
 	{
 		{
@@ -75,7 +76,7 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 		case 'h':
 		case 'H':
 		case CAVAN_COMMAND_OPTION_HELP:
-			show_usage_unpack(argv[0]);
+			show_usage_unpack(command);
 			return 0;
 
 		case 'd':
@@ -84,7 +85,7 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 			break;
 
 		default:
-			show_usage_unpack(argv[0]);
+			show_usage_unpack(command);
 			return -EINVAL;
 		}
 	}
@@ -94,7 +95,7 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 
 	if (argc < 1)
 	{
-		show_usage_unpack(argv[0]);
+		show_usage_unpack(command);
 		return -EINVAL;
 	}
 

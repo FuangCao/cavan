@@ -318,7 +318,7 @@ void cavan_thread_stop(struct cavan_thread *thread)
 
 	pthread_mutex_lock(&thread->lock);
 
-	for (i = 1;i < 200; i++)
+	for (i = 1; i < 200; i++)
 	{
 		switch (thread->state)
 		{
