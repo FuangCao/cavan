@@ -3013,7 +3013,7 @@ int cavan_temp_file_open(char *pathname, size_t size, const char *filename)
 {
 	int fd;
 
-	text_path_cat(pathname, size, CAVAN_TEMP_PATH, filename);
+	cavan_build_temp_path(filename, pathname, size);
 
 	fd = mkstemp(pathname);
 	if (fd < 0)

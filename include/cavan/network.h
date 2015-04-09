@@ -36,8 +36,6 @@
 #define CAVAN_DEFAULT_PROTOCOL	"tcp"
 #define CAVAN_IP_ENV_NAME		"CAVAN_SERVER_IP"
 #define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
-#define CAVAN_NETWORK_TEMP_PATH	CAVAN_TEMP_PATH "/cavan/network"
-#define CAVAN_NETWORK_SOCKET	CAVAN_NETWORK_TEMP_PATH "/socket-service"
 
 #define CAVAN_NET_UDP_RETRY			10
 #define CAVAN_NET_UDP_TIMEOUT		200
@@ -325,6 +323,7 @@ struct network_protocol_desc
 
 extern int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port);
 
+const char *network_get_socket_pathname(void);
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
 ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);
 

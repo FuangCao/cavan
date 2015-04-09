@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 	image_mask = NULL;
 	file_req.src_file[0] = file_req.dest_file[0] = 0;
 
-	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, CAVAN_NETWORK_SOCKET);
+	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
 	while ((c = getopt_long(argc, argv, "vVhHi:p:P:wWsSrRaAlLu:U:k:b:I", command_long_option, &option_index)) != EOF)
 	{

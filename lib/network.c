@@ -8,6 +8,18 @@
 
 #define CAVAN_NETWORK_DEBUG		0
 
+const char *network_get_socket_pathname(void)
+{
+	static char pathname[1024];
+
+	if (pathname[0])
+	{
+		return pathname;
+	}
+
+	return cavan_build_temp_path("cavan/network/socket", pathname, sizeof(pathname));
+}
+
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr)
 {
 	while (retry--)
@@ -1972,7 +1984,7 @@ static int network_client_unix_tcp_open(struct network_client *client, const str
 	sockfd = unix_create_tcp_link(url->pathname, 0);
 	if (sockfd < 0)
 	{
-		pr_error_info("unix_socket");
+		pr_error_info("unix_socket %s", url->pathname);
 		return sockfd;
 	}
 
@@ -3056,7 +3068,7 @@ void network_service_close(struct network_service *service)
 
 	if (service->type == NETWORK_PROTOCOL_UNIX_TCP || service->type == NETWORK_PROTOCOL_UNIX_UDP)
 	{
-		remove_directory(CAVAN_NETWORK_TEMP_PATH);
+		remove_directory(network_get_socket_pathname());
 	}
 }
 

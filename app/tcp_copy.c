@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	struct network_file_request file_req;
 	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
 
-	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, CAVAN_NETWORK_SOCKET);
+	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
 	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRAalLu:U:", long_option, &option_index)) != EOF)
 	{

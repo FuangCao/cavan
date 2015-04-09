@@ -291,7 +291,7 @@ static int web_proxy_open_html_file(const char *title, char *pathname)
 		pathname = buff;
 	}
 
-	text_copy(pathname, CAVAN_TEMP_PATH "/cavan-XXXXXX");
+	cavan_build_temp_path("cavan-XXXXXX", pathname, sizeof(buff));
 	fd = mkstemp(pathname);
 	if (fd < 0)
 	{

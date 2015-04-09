@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 
 	repeat = 0;
 	localtime_r(&curr_time, &date);
-	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, CAVAN_NETWORK_SOCKET);
+	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
 	while ((c = getopt_long(argc, argv, "vVhHlLaAr:R:d:D:t:T:i:I:p:P:u:U:", long_option, &option_index)) != EOF)
 	{

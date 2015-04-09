@@ -682,15 +682,25 @@ bool cavan_get_choose_yesno(const char *prompt, bool def_choose, int timeout_ms)
 const char *cavan_get_temp_path(void)
 {
 	int i;
-	const char *paths[] = { CAVAN_TEMP_PATH_PC, CAVAN_TEMP_PATH_ANDROID, "/data", "/cache" };
+	const char *paths[] = { "/tmp", "/data/local/tmp", "/dev", "/data", "/cache" };
 
 	for (i = 0; i < NELEM(paths); i++)
 	{
-		if (file_access_w(paths[i]))
+		if (file_access_e(paths[i]))
 		{
 			return paths[i];
 		}
 	}
 
 	return paths[0];
+}
+
+const char *cavan_build_temp_path(const char *filename, char *buff, size_t size)
+{
+	const char *temp;
+
+	temp = cavan_get_temp_path();
+	text_path_cat(buff, size, temp, filename);
+
+	return buff;
 }

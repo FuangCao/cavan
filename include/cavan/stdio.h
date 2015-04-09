@@ -3,15 +3,6 @@
 #include <cavan.h>
 #include <stdarg.h>
 
-#define CAVAN_TEMP_PATH_PC		"/tmp"
-#define CAVAN_TEMP_PATH_ANDROID	"/data/local/tmp"
-
-#ifdef CAVAN_ARCH_ARM
-#define CAVAN_TEMP_PATH			CAVAN_TEMP_PATH_ANDROID
-#else
-#define CAVAN_TEMP_PATH			CAVAN_TEMP_PATH_PC
-#endif
-
 #ifdef CONFIG_BUILD_FOR_ANDROID
 #include <utils/Log.h>
 #ifndef LOGD
@@ -308,6 +299,7 @@ __printf_format_12__ void print_error_base(const char *fmt, ...);
 
 extern char *size2text(u64 size);
 const char *cavan_get_temp_path(void);
+const char *cavan_build_temp_path(const char *filename, char *buff, size_t size);
 bool cavan_get_choose_yesno(const char *prompt, bool def_value, int timeout_ms);
 
 // ============================================================

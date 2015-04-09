@@ -259,8 +259,8 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 		ret = tty_get_win_size(ttyfd, &pkg.exec_req.lines, &pkg.exec_req.columns);
 		if (ret < 0)
 		{
-			pr_red_info("tty_get_win_size");
-			return ret;
+			// pr_red_info("tty_get_win_size");
+			pkg.exec_req.lines = pkg.exec_req.columns = 0;
 		}
 
 		if (pkg.exec_req.lines == 0)
@@ -729,7 +729,7 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	ret = client->recv(client, &pkg, sizeof(pkg));
 	if (ret < (int) sizeof(pkg.type))
 	{
-		pr_error_info("client->recv");
+		pr_error_info("client->recv %d", ret);
 		return ret < 0 ? ret : -EFAULT;
 	}
 

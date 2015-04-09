@@ -185,8 +185,8 @@ int main(int argc, char *argv[])
 
 	proxy = cavan_dynamic_service_get_data(service);
 
-	network_url_init(&proxy->url, "tcp", "any", CAVAN_TCP_PROXY_PORT, CAVAN_NETWORK_SOCKET);
-	network_url_init(&proxy->url_proxy, "tcp", NULL, TCP_DD_DEFAULT_PORT, CAVAN_NETWORK_SOCKET);
+	network_url_init(&proxy->url, "tcp", "any", CAVAN_TCP_PROXY_PORT, network_get_socket_pathname());
+	network_url_init(&proxy->url_proxy, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
 	while ((c = getopt_long(argc, argv, "vVhH:i:I:p:P:c:C:m:M:dDaAl:L:u:U:", long_option, &option_index)) != EOF)
 	{

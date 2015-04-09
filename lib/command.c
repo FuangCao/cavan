@@ -586,7 +586,7 @@ int tty_get_win_size(int tty, u16 *lines, u16 *columns)
 	ret = ioctl(tty, TIOCGWINSZ, &wsize);
 	if (ret < 0)
 	{
-		pr_error_info("ioctl TIOCGWINSZ");
+		// pr_error_info("ioctl TIOCGWINSZ");
 		return ret;
 	}
 
