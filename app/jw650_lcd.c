@@ -43,11 +43,50 @@ int main(int argc, char *argv[])
 {
 	int i, j;
 	const char *weights[] = { "CGB-DEFA", "AFEDBGC-" };
-	const char *encoded[] = { "ABCDEF", "BC", "ABGED", "ABGCD", "FGBC", "AFGCD", "AFEDCG", "ABC", "ABCDEFG", "ABCDFG", "EFABCG", "ABCDEFG", "AFED", "ABCDEF", "AFEDG", "AFEG", "AFEDGC", "FEGBC", "FE", "BCD", "FEGD", "FED", "-", "EFABC", "ABCDEF", "FEABG", "ABCFG", "ABCFEG", "AFGCD", "-", "BCDEF", "-", "-", "-", "BCFG", "-", "G", "GD"};
+	const char *encoded[] = { "ABCDEF", "BC", "ABGED", "ABGCD", "FGBC", "AFGCD", "AFEDCG", "ABC", "ABCDEFG", "ABCDFG", "EFABCG", "ABCDEFG", "AFED", "ABCDEF", "AFEDG", "AFEG", "AFEDGC", "FEGBC", "FE", "BCD", "FEGD", "FED", "-", "EFABC", "ABCDEF", "FEABG", "ABCFG", "ABCFEG", "AFGCD", "FEDG", "BCDEF", "-", "-", "-", "BCFG", "-", "G", "GD", ""};
+
+	for (j = 0; j < NELEM(encoded); j++)
+	{
+		if (j < 10)
+		{
+			print("%02d'%d' ", j, j);
+		}
+		else if (j < 10 + 26)
+		{
+			print("%02d'%c' ", j, j - 10 + 'A');
+		}
+		else
+		{
+			char c;
+
+			switch (j)
+			{
+			case 36:
+				c = '-';
+				break;
+
+			case 37:
+				c = '=';
+				break;
+
+			case 38:
+				c = ' ';
+				break;
+
+			default:
+				c = '-';
+				break;
+			}
+
+			print("%02d'%c' ", j, c);
+		}
+	}
 
 	for (i = 0; i < NELEM(weights); i++)
 	{
 		const char *weight = weights[i];
+
+		print_char('\n');
 
 		for (j = 0; j < NELEM(encoded); j++)
 		{
@@ -61,8 +100,6 @@ int main(int argc, char *argv[])
 
 			print("0x%02x, ", value);
 		}
-
-		println("\n=========================================\n");
 	}
 
 	return 0;
