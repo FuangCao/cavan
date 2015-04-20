@@ -43,9 +43,12 @@ int main(int argc, char *argv[])
 {
 	int i, j;
 	const char *weights[] = { "CGB-DEFA", "AFEDBGC-" };
-	const char *encoded[] = { "ABCDEF", "BC", "ABGED", "ABGCD", "FGBC", "AFGCD", "AFEDCG", "ABC", "ABCDEFG", "ABCDFG", "EFABCG", "ABCDEFG", "AFED", "ABCDEF", "AFEDG", "AFEG", "AFEDGC", "FEGBC", "FE", "BCD", "FEGD", "FED", "-", "EFABC", "ABCDEF", "FEABG", "ABCFG", "ABCFEG", "AFGCD", "FEDG", "BCDEF", "-", "-", "-", "BCFG", "-", "G", "GD", ""};
+							// 0         1     2        3        4       5        6         7      8          9         A         B        C       D         E        F       G         H        I     J      K       L      M    N        O         P        Q        R         S        T       U        V    W    X    Y       Z    -    =    ' '   
+	const char *encoded[] = { "ABCDEF", "BC", "ABGED", "ABGCD", "FGBC", "AFGCD", "AFEDCG", "ABC", "ABCDEFG", "ABCDFG", "EFABCG", "FEGCD", "AFED", "ABCDEF", "AFEDG", "AFEG", "AFEDGC", "FEGBC", "FE", "BCD", "FEGD", "FED", "-", "EFABC", "ABCDEF", "FEABG", "ABCFG", "ABCFEG", "AFGCD", "FEDG", "BCDEF", "-", "-", "-", "BCFG", "-", "G", "GD", ""};
 
-	for (j = 0; j < NELEM(encoded); j++)
+	print("// ");
+
+	for (j = 0; ; j++)
 	{
 		if (j < 10)
 		{
@@ -78,7 +81,15 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			print("%02d'%c' ", j, c);
+			if (j < NELEM(encoded) - 1)
+			{
+				print("%02d'%c' ", j, c);
+			}
+			else
+			{
+				print("%02d'%c'", j, c);
+				break;
+			}
 		}
 	}
 
@@ -86,9 +97,9 @@ int main(int argc, char *argv[])
 	{
 		const char *weight = weights[i];
 
-		print_char('\n');
+		print("\n{  ");
 
-		for (j = 0; j < NELEM(encoded); j++)
+		for (j = 0; ; j++)
 		{
 			const char *p;
 			int value = 0;
@@ -98,8 +109,18 @@ int main(int argc, char *argv[])
 				value |= 1 << get_char_value(*p, weight);
 			}
 
-			print("0x%02x, ", value);
+			if (j < NELEM(encoded) - 1)
+			{
+				print("0x%02x, ", value);
+			}
+			else
+			{
+				print("0x%02x", value);
+				break;
+			}
 		}
+
+		print(" },");
 	}
 
 	return 0;
