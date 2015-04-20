@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
 {
 	int i, j;
 	const char *weights[] = { "CGB-DEFA", "AFEDBGC-" };
-							// 0         1     2        3        4       5        6         7      8          9         A         B        C       D         E        F       G         H        I     J      K       L      M    N        O         P        Q        R         S        T       U        V    W    X    Y       Z    -    =    ' '   
-	const char *encoded[] = { "ABCDEF", "BC", "ABGED", "ABGCD", "FGBC", "AFGCD", "AFEDCG", "ABC", "ABCDEFG", "ABCDFG", "EFABCG", "FEGCD", "AFED", "ABCDEF", "AFEDG", "AFEG", "AFEDGC", "FEGBC", "FE", "BCD", "FEGD", "FED", "-", "EFABC", "ABCDEF", "FEABG", "ABCFG", "ABCFEG", "AFGCD", "FEDG", "BCDEF", "-", "-", "-", "BCFG", "-", "G", "GD", ""};
+							// 0         1     2        3        4       5        6         7      8          9         A         B        C       D        E        F       G         H        I     J      K       L      M    N        O         P        Q        R         S        T       U        V    W    X    Y       Z    -    =    ' '
+	const char *encoded[] = { "ABCDEF", "BC", "ABGED", "ABGCD", "FGBC", "AFGCD", "AFEDCG", "ABC", "ABCDEFG", "ABCDFG", "EFABCG", "FEGCD", "AFED", "BCDEG", "AFEDG", "AFEG", "AFEDGC", "FEGBC", "FE", "BCD", "FEGD", "FED", "-", "EFABC", "ABCDEF", "FEABG", "ABCFG", "ABCFEG", "AFGCD", "FEDG", "BCDEF", "-", "-", "-", "BCFG", "-", "G", "GD", ""};
 
 	print("// ");
 
