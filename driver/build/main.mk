@@ -2,7 +2,6 @@ ARCH ?= arm
 
 ifeq "$(ARCH)" "arm"
 KERNEL_PATH = $(OUT)/obj/KERNEL_OBJ
-[ -d "$(KERNEL_PATH)" ] || KERNEL_PATH = "$(HOME)/kernel"
 CROSS_COMPILE = arm-cavan-linux-gnueabi-
 else
 KERNEL_PATH = /lib/modules/$(shell uname -r)/build

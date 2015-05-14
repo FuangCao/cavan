@@ -424,7 +424,7 @@ static struct platform_device swan_virtual_ethernet_device =
 	.name = SWAN_VN_DEVICE_NAME,
 };
 
-static __devinit int swan_vitual_ethernet_init(void)
+static __init int swan_vitual_ethernet_init(void)
 {
 	int ret;
 
@@ -452,7 +452,7 @@ out_unregister_device:
 	return ret;
 }
 
-static __devexit void swan_virtual_ethernet_exit(void)
+static __exit void swan_virtual_ethernet_exit(void)
 {
 	pr_pos_info();
 
