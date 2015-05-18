@@ -14,16 +14,18 @@
 #define TCP_DD_DEFAULT_PORT		8888
 #define TCP_DD_DAEMON_COUNT		10
 #define TCP_DD_TIMEOUT			5000
+#define TCP_KEYPAD_DEVICE		"/dev/tcp_keypad"
 
 enum tcp_dd_package_type
 {
+	TCP_DD_RESPONSE,
 	TCP_DD_WRITE,
 	TCP_DD_READ,
 	TCP_DD_EXEC,
 	TCP_ALARM_ADD,
 	TCP_ALARM_REMOVE,
 	TCP_ALARM_LIST,
-	TCP_DD_RESPONSE,
+	TCP_KEYPAD_EVENT,
 	TCP_DD_PACKAGE_COUNT
 };
 
@@ -82,6 +84,8 @@ struct cavan_tcp_dd_service
 	struct network_url url;
 	char *filename;
 	char pathname[1024];
+	int tcp_keypad_fd;
+	const char *tcp_keypad_ko;
 };
 
 int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size);
@@ -90,6 +94,7 @@ int tcp_dd_service_run(struct cavan_dynamic_service *service);
 int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req);
 int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req);
 int tcp_dd_exec_command(struct network_url *url, const char *command);
+int tcp_dd_keypad_run(struct network_url *url);
 
 int tcp_alarm_add(struct network_url *url, const char *command, time_t time, time_t repeat);
 int tcp_alarm_remove(struct network_url *url, int index);

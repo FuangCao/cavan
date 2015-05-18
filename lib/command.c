@@ -53,6 +53,7 @@ const char *cavan_help_message_uboot = "R/W uboot partition";
 const char *cavan_help_message_resource = "R/W resource partition";
 const char *cavan_help_message_rw_image = "R/W partition by image short name";
 const char *cavan_help_message_rw_image_auto = "R/W partition auto";
+const char *cavan_help_message_driver = "driver module path";
 
 int print_command_table(const struct cavan_command_map *p, const struct cavan_command_map *p_end)
 {
@@ -628,4 +629,23 @@ int tty_set_win_size(int tty, u16 lines, u16 columns)
 	putenv(buff);
 
 	return 0;
+}
+
+int cavan_system(const char *command)
+{
+	pid_t pid = fork();
+
+	return pid == 0 ? cavan_exec_command(command) : cavan_exec_waitpid(pid);
+}
+
+int cavan_system2(const char *command, ...)
+{
+	va_list ap;
+	char buff[1024];
+
+	va_start(ap, command);
+	vsnprintf(buff, sizeof(buff), command, ap);
+	va_end(ap);
+
+	return cavan_system(buff);
 }

@@ -16,7 +16,7 @@ static void show_usage(const char *command)
 	println("Usage: %s [OPTION] [PORT]", command);
 	println("-H, -h, --help\t\t\t\t%s", cavan_help_message_help);
 	println("-S, -s, --super\t\t\t\t%s", cavan_help_message_super);
-	println("-D, -d, --daemon\t\t\t%s", cavan_help_message_daemon);
+	println("-d, --daemon\t\t\t\t%s", cavan_help_message_daemon);
 	println("-m, -c, --min\t\t\t\t%s", cavan_help_message_daemon_min);
 	println("-M, -C, --max\t\t\t\t%s", cavan_help_message_daemon_max);
 	println("-V, -v, --verbose\t\t\t%s", cavan_help_message_verbose);
@@ -27,6 +27,7 @@ static void show_usage(const char *command)
 	println("-U, -u, --unix, --unix-tcp [PATHNAME]\t%s", cavan_help_message_unix_tcp);
 	println("--unix-udp [PATHNAME]\t\t\t%s", cavan_help_message_unix_udp);
 	println("-P, --pt, --protocol PROTOCOL\t\t%s", cavan_help_message_protocol);
+	println("-D, -k, --driver, --ko PATHNAME\t\t%s", cavan_help_message_driver);
 }
 
 int main(int argc, char *argv[])
@@ -133,6 +134,18 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
 		},
 		{
+			.name = "driver",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DRIVER,
+		},
+		{
+			.name = "ko",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DRIVER,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
@@ -152,10 +165,12 @@ int main(int argc, char *argv[])
 	service->super_permission = 1;
 
 	dd_service = cavan_dynamic_service_get_data(service);
+	dd_service->tcp_keypad_ko = NULL;
+	dd_service->tcp_keypad_fd = -1;
 	url = &dd_service->url;
 	network_url_init(url, "tcp", "any", TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
-	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:m:M:l:L:u::U::", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "hHvVdp:P:s:S:c:C:m:M:l:L:u::U::D:k:", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -179,7 +194,6 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'd':
-		case 'D':
 		case CAVAN_COMMAND_OPTION_DAEMON:
 			service->as_daemon = true;
 			break;
@@ -248,6 +262,12 @@ int main(int argc, char *argv[])
 		case 'P':
 		case CAVAN_COMMAND_OPTION_PROTOCOL:
 			url->protocol = optarg;
+			break;
+
+		case 'k':
+		case 'D':
+		case CAVAN_COMMAND_OPTION_DRIVER:
+			dd_service->tcp_keypad_ko = optarg;
 			break;
 
 		default:

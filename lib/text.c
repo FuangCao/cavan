@@ -2009,7 +2009,7 @@ int system_command_simple(const char *command)
 {
 	int ret;
 
-	println("excute command \"%s\"", command);
+	println("excute command `%s'", command);
 	ret = system(command);
 	if (ret == 0)
 	{
@@ -2017,7 +2017,7 @@ int system_command_simple(const char *command)
 	}
 	else
 	{
-		println("\"%s\" faild", command);
+		println("`%s' faild", command);
 	}
 
 	return ret;

@@ -6,10 +6,12 @@
 
 #include <cavan.h>
 #include <cavan/file.h>
+#include <cavan/event.h>
 #include <cavan/tcp_dd.h>
 #include <cavan/service.h>
 #include <cavan/device.h>
 #include <cavan/command.h>
+#include <cavan/swan_vk.h>
 
 static char *tcp_dd_find_platform_by_name_path(char *pathname, char *filename, size_t size)
 {
@@ -305,6 +307,23 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 
 	ret = p - (char *) &pkg;
 	client->send(client, (char *) &pkg, ret + 1);
+	if (ret < 0)
+	{
+		pr_red_info("inet_send");
+		return ret;
+	}
+
+	return tcp_dd_recv_response(client);
+}
+
+static int tcp_dd_send_keypad_request(struct network_client *client)
+{
+	int ret;
+	struct tcp_dd_package pkg;
+
+	pkg.type = TCP_KEYPAD_EVENT;
+
+	ret = client->send(client, (char *) &pkg, sizeof(pkg.type));
 	if (ret < 0)
 	{
 		pr_red_info("inet_send");
@@ -656,6 +675,54 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 	return 0;
 }
 
+static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *service, struct network_client *client)
+{
+	int ret;
+
+	if (service->tcp_keypad_fd < 0)
+	{
+		if (service->tcp_keypad_ko)
+		{
+			cavan_system2("insmod \"%s\"", service->tcp_keypad_ko);
+		}
+
+		service->tcp_keypad_fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
+		if (service->tcp_keypad_fd < 0)
+		{
+			tcp_dd_send_response(client, service->tcp_keypad_fd, "[Server] Failed to open device `%s'", TCP_KEYPAD_DEVICE);
+			return service->tcp_keypad_fd;
+		}
+	}
+
+	ret = tcp_dd_send_response(client, 0, "[Server] Start recv and write event");
+	if (ret < 0)
+	{
+		pr_red_info("tcp_dd_send_response");
+		return ret;
+	}
+
+	while (1)
+	{
+		ssize_t rdlen, wrlen;
+		struct cavan_input_event events[32];
+
+		rdlen = client->recv(client, events, sizeof(events));
+		if (rdlen < (int) sizeof(struct cavan_input_event))
+		{
+			break;
+		}
+
+		wrlen = write(service->tcp_keypad_fd, events, rdlen);
+		if (wrlen < rdlen)
+		{
+			pr_error_info("write events");
+			return -EFAULT;
+		}
+	}
+
+	return 0;
+}
+
 static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
@@ -768,6 +835,11 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	case TCP_ALARM_LIST:
 		pr_bold_info("TCP_ALARM_LIST");
 		ret = tcp_dd_handle_alarm_list_request(client, &dd_service->alarm, &pkg.alarm_query);
+		break;
+
+	case TCP_KEYPAD_EVENT:
+		pr_bold_info("TCP_KEYPAD_EVENT");
+		ret = tcp_dd_handle_tcp_keypad_event_request(dd_service, client);
 		break;
 
 	default:
@@ -1016,6 +1088,57 @@ out_client_close:
 	client.close(&client);
 	return ret;
 }
+
+static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct input_event *_event, void *data)
+{
+	struct network_client *client = data;
+	struct cavan_input_event *event = (struct cavan_input_event *) &_event->type;
+
+	client->send(client, event, sizeof(struct cavan_input_event));
+
+	return true;
+}
+
+int tcp_dd_keypad_run(struct network_url *url)
+{
+	int ret;
+	struct network_client client;
+	struct cavan_event_service service;
+
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	if (ret < 0)
+	{
+		pr_red_info("network_client_open2");
+		return ret;
+	}
+
+	ret = tcp_dd_send_keypad_request(&client);
+	if (ret < 0)
+	{
+		pr_red_info("tcp_dd_send_exec_request");
+		goto out_client_close;
+	}
+
+	cavan_event_service_init(&service, NULL);
+	service.event_handler = tcp_dd_keypad_event_handler;
+
+	ret = cavan_event_service_start(&service, &client);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_event_service_start");
+		goto out_client_close;
+	}
+
+	while (1)
+	{
+		msleep(2000);
+	}
+
+out_client_close:
+	client.close(&client);
+	return ret;
+}
+
 
 int tcp_alarm_add(struct network_url *url, const char *command, time_t time, time_t repeat)
 {

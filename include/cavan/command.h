@@ -44,6 +44,7 @@ typedef enum
 	CAVAN_COMMAND_OPTION_DAEMON_MIN,
 	CAVAN_COMMAND_OPTION_DATE,
 	CAVAN_COMMAND_OPTION_DEVICE,
+	CAVAN_COMMAND_OPTION_DRIVER,
 	CAVAN_COMMAND_OPTION_ERASE,
 	CAVAN_COMMAND_OPTION_EXEC,
 	CAVAN_COMMAND_OPTION_HELP,
@@ -173,6 +174,7 @@ extern const char *cavan_help_message_uboot;
 extern const char *cavan_help_message_resource;
 extern const char *cavan_help_message_rw_image;
 extern const char *cavan_help_message_rw_image_auto;
+extern const char *cavan_help_message_driver;
 
 // ============================================================
 
@@ -188,6 +190,8 @@ int cavan_exec_redirect_stdio_base(int ttyfd, const char *command, int flags);
 int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command, int flags);
 int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid, int flags);
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
+int cavan_system(const char *command);
+int cavan_system2(const char *command, ...);
 
 int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout);
 int cavan_tty_redirect_base(int ttyfd);
