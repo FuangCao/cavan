@@ -54,6 +54,13 @@ enum swan_vk_link_type
 	SWAN_VK_LINK_INVALID
 };
 
+struct cavan_input_event
+{
+	u16 type;
+	u16 code;
+	s32 value;
+};
+
 struct swan_vk_command_option
 {
 	enum swan_vk_link_type link_type;

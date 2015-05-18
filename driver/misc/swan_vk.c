@@ -29,6 +29,13 @@
 #define pr_pos_info() \
 	pr_green_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
 
+struct cavan_input_event
+{
+	__u16 type;
+	__u16 code;
+	__s32 value;
+};
+
 struct swan_virtual_key
 {
 	char *name;
@@ -259,9 +266,9 @@ static ssize_t swan_vk_misc_read(struct file *file, char __user *buff, size_t si
 
 static ssize_t swan_vk_misc_write(struct file *file, const char __user *buff, size_t size, loff_t *offset)
 {
-	struct input_event *p, *end_p;
+	struct cavan_input_event *p, *end_p;
 
-	for (p = (struct input_event *)buff, end_p = p + (size / sizeof(*p)); p < end_p; p++)
+	for (p = (struct cavan_input_event *)buff, end_p = p + (size / sizeof(*p)); p < end_p; p++)
 	{
 		input_event(vk_input, p->type, p->code, p->value);
 	}

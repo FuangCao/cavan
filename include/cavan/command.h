@@ -14,7 +14,7 @@
 	{ \
 		if (argc > 1) \
 		{ \
-			return find_and_exec_command(map, ARRAY_SIZE(map), argc, argv); \
+			return find_and_exec_command(map, ARRAY_SIZE(map), argc - 1, argv + 1); \
 		} \
 		return print_command_table(map, map + ARRAY_SIZE(map)); \
 	}

@@ -230,7 +230,7 @@ static int swan_vk_link_server(struct swan_vk_command_option *opt)
 
 static ssize_t swan_vk_send_touch_point(int fd, int x, int y)
 {
-	struct input_event events[] =
+	struct cavan_input_event events[] =
 	{
 		{
 			.type = EV_ABS,
@@ -271,7 +271,7 @@ static ssize_t swan_vk_send_touch_point(int fd, int x, int y)
 
 static ssize_t swan_vk_send_touch_up(int fd)
 {
-	struct input_event events[] =
+	struct cavan_input_event events[] =
 	{
 		{
 			.type = EV_SYN,
@@ -516,7 +516,7 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 {
 	int ret;
 	int fd_tty, fd_data;
-	struct input_event events[32];
+	struct cavan_input_event events[32];
 	ssize_t rdlen, wrlen;
 
 	pr_bold_pos();
@@ -581,7 +581,7 @@ out_close_tty:
 
 // ================================================================================
 
-static void swan_vk_map_key(int fd, struct input_event *ep)
+static void swan_vk_map_key(int fd, struct cavan_input_event *ep)
 {
 	switch (ep->code)
 	{
@@ -639,7 +639,7 @@ static void swan_vk_map_key(int fd, struct input_event *ep)
 	}
 }
 
-static void swan_vk_map_abs(struct input_event *ep)
+static void swan_vk_map_abs(struct cavan_input_event *ep)
 {
 	switch (ep->code)
 	{
@@ -667,7 +667,7 @@ static int swan_vk_release_all_key(int sockfd)
 {
 	u16 code;
 	ssize_t wrlen;
-	struct input_event events[2] =
+	struct cavan_input_event events[2] =
 	{
 		{
 			.type = EV_KEY,
@@ -693,10 +693,11 @@ static int swan_vk_release_all_key(int sockfd)
 	return 0;
 }
 
-static bool swan_vk_event_handler(struct cavan_event_device *dev, struct input_event *event, void *data)
+static bool swan_vk_event_handler(struct cavan_event_device *dev, struct input_event *_event, void *data)
 {
-	struct swan_vk_clien_descriptor *desc = data;
 	ssize_t wrlen;
+	struct swan_vk_clien_descriptor *desc = data;
+	struct cavan_input_event *event = (struct cavan_input_event *) &_event->type;
 
 	switch (event->type)
 	{
@@ -709,7 +710,7 @@ static bool swan_vk_event_handler(struct cavan_event_device *dev, struct input_e
 		break;
 	}
 
-	wrlen = write(desc->fd, event, sizeof(*event));
+	wrlen = write(desc->fd, event, sizeof(struct cavan_input_event));
 	if (wrlen < 0)
 	{
 		pr_error_info("write");
@@ -793,7 +794,7 @@ static int swan_vk_server_handler(struct cavan_service_description *service, int
 	struct sockaddr_in addr;
 	socklen_t addrlen;
 	int sockfd_client;
-	struct input_event events[32];
+	struct cavan_input_event events[32];
 	ssize_t rdlen, wrlen;
 
 	sockfd_client = inet_accept(sockfd, &addr, &addrlen);
