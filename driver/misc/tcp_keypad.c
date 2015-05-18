@@ -35,17 +35,23 @@ static void tcp_keypad_setup_events(struct input_dev *vk_input)
 {
 	int i;
 
-	__set_bit(EV_KEY, vk_input->evbit);
+
+	vk_input->evbit[0] = BIT_MASK(EV_KEY) | BIT_MASK(EV_REP) | BIT_MASK(EV_MSC) | BIT_MASK(EV_REL) | BIT_MASK(EV_LED);
 
 	for (i = 1; i < KEY_CNT; i++)
 	{
 		__set_bit(i, vk_input->keybit);
 	}
 
-	__set_bit(EV_REL, vk_input->evbit);
 	__set_bit(REL_X, vk_input->relbit);
 	__set_bit(REL_Y, vk_input->relbit);
 	__set_bit(REL_WHEEL, vk_input->relbit);
+
+	vk_input->ledbit[0] = BIT_MASK(LED_NUML) | BIT_MASK(LED_CAPSL) |
+		BIT_MASK(LED_SCROLLL) | BIT_MASK(LED_COMPOSE) | BIT_MASK(LED_SUSPEND) |
+		BIT_MASK(LED_SLEEP) | BIT_MASK(LED_MUTE) | BIT_MASK(LED_MISC);
+
+	vk_input->mscbit[0] = BIT_MASK(MSC_RAW) | BIT_MASK(MSC_SCAN);
 }
 
 static int tcp_keypad_misc_open(struct inode *inode, struct file *file)

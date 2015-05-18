@@ -678,12 +678,15 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *service, struct network_client *client)
 {
 	int ret;
+	int code;
+	struct cavan_input_event events[32];
 
 	if (service->tcp_keypad_fd < 0)
 	{
 		if (service->tcp_keypad_ko)
 		{
 			cavan_system2("insmod \"%s\"", service->tcp_keypad_ko);
+			msleep(200);
 		}
 
 		service->tcp_keypad_fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
@@ -704,7 +707,6 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	while (1)
 	{
 		ssize_t rdlen, wrlen;
-		struct cavan_input_event events[32];
 
 		rdlen = client->recv(client, events, sizeof(events));
 		if (rdlen < (int) sizeof(struct cavan_input_event))
@@ -719,6 +721,19 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 			return -EFAULT;
 		}
 	}
+
+	events[0].type = EV_KEY;
+	events[0].value = 0;
+
+	for (code = 1; code < KEY_CNT; code++)
+	{
+		events[0].code = code;
+		write(service->tcp_keypad_fd, events, sizeof(events[0]));
+	}
+
+	events[0].type = EV_SYN;
+	events[0].code = SYN_REPORT;
+	write(service->tcp_keypad_fd, events, sizeof(events[0]));
 
 	return 0;
 }
