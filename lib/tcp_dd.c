@@ -679,6 +679,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 {
 	int ret;
 	int code;
+	ssize_t rdlen, wrlen;
 	struct cavan_input_event events[32];
 
 	if (service->tcp_keypad_fd < 0)
@@ -706,8 +707,6 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 	while (1)
 	{
-		ssize_t rdlen, wrlen;
-
 		rdlen = client->recv(client, events, sizeof(events));
 		if (rdlen < (int) sizeof(struct cavan_input_event))
 		{
@@ -728,12 +727,20 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	for (code = 1; code < KEY_CNT; code++)
 	{
 		events[0].code = code;
-		write(service->tcp_keypad_fd, events, sizeof(events[0]));
+		wrlen = write(service->tcp_keypad_fd, events, sizeof(events[0]));
+		if (wrlen < 0)
+		{
+			return wrlen;
+		}
 	}
 
 	events[0].type = EV_SYN;
 	events[0].code = SYN_REPORT;
-	write(service->tcp_keypad_fd, events, sizeof(events[0]));
+	wrlen = write(service->tcp_keypad_fd, events, sizeof(events[0]));
+	if (wrlen < 0)
+	{
+		return wrlen;
+	}
 
 	return 0;
 }
