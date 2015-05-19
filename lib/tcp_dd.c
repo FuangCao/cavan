@@ -789,6 +789,8 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		pr_green_info("pathname = %s", dd_service->pathname);
 	}
 
+	dd_service->tcp_keypad_fd = -1;
+
 	return 0;
 
 out_cavan_alarm_thread_deinit:
@@ -1121,7 +1123,7 @@ static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct i
 	return true;
 }
 
-int tcp_dd_keypad_run(struct network_url *url)
+int tcp_dd_keypad_client_run(struct network_url *url)
 {
 	int ret;
 	struct network_client client;
@@ -1151,10 +1153,7 @@ int tcp_dd_keypad_run(struct network_url *url)
 		goto out_client_close;
 	}
 
-	while (1)
-	{
-		msleep(2000);
-	}
+	cavan_event_service_join(&service);
 
 out_client_close:
 	client.close(&client);

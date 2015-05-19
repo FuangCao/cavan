@@ -5,7 +5,8 @@
 #include <linux/platform_device.h>
 #include <linux/miscdevice.h>
 
-#define TCP_KEYPAD_DEVICE_NAME "tcp_keypad"
+#define TCP_KEYPAD_DEVICE_NAME	"tcp_keypad"
+#define TCP_KEYPAD_INPUT_NAME	"FuangCao TCP Keypad"
 
 #define pr_red_info(fmt, args ...) \
 	printk(KERN_INFO "\033[31m" fmt "\033[0m\n", ##args)
@@ -116,7 +117,7 @@ static int tcp_keypad_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
-	vk_input->name = TCP_KEYPAD_DEVICE_NAME;
+	vk_input->name = TCP_KEYPAD_INPUT_NAME;
 	tcp_keypad_setup_events(vk_input);
 
 	ret = input_register_device(vk_input);

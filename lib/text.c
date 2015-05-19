@@ -843,7 +843,7 @@ u64 text2value_unsigned(const char *text, const char **last, int base)
 	for (value = 0; *text; text++)
 	{
 		tmp = char2value(*text);
-		if (tmp < 0 || tmp > base)
+		if (tmp < 0 || tmp >= base)
 		{
 			break;
 		}

@@ -94,7 +94,7 @@ int tcp_dd_service_run(struct cavan_dynamic_service *service);
 int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req);
 int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req);
 int tcp_dd_exec_command(struct network_url *url, const char *command);
-int tcp_dd_keypad_run(struct network_url *url);
+int tcp_dd_keypad_client_run(struct network_url *url);
 
 int tcp_alarm_add(struct network_url *url, const char *command, time_t time, time_t repeat);
 int tcp_alarm_remove(struct network_url *url, int index);

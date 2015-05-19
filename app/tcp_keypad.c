@@ -217,5 +217,5 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	return tcp_dd_keypad_run(&url);
+	return tcp_dd_keypad_client_run(&url);
 }
