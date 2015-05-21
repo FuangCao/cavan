@@ -1096,7 +1096,14 @@ char *cavan_event_tostring(struct cavan_event_device *dev, struct input_event *e
 		}
 		break;
 	case EV_KEY:
-		event_code = cavan_event_find_key_name(dev, event->code);
+		event_code = cavan_event_find_key_name_by_keylayout(dev, event->code);
+		if (event_code)
+		{
+			sprintf(text, "KEY_%s[%d] = %d", event_code, event->code, event->value);
+			return text;
+		}
+
+		event_code = cavan_event_key_code_tostring(event->code);
 		if (event_code == NULL)
 		{
 			sprintf(text, "EV_KEY[%d] = %d", event->code, event->value);
@@ -1407,9 +1414,8 @@ static char *cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, 
 	return NULL;
 }
 
-const char *cavan_event_find_key_name_base(struct single_link *link, int code)
+const char *cavan_event_find_key_name_by_keylayout_base(struct single_link *link, int code)
 {
-	const char *name;
 	struct cavan_keylayout_node *key;
 
 	single_link_foreach(link, key)
@@ -1421,13 +1427,28 @@ const char *cavan_event_find_key_name_base(struct single_link *link, int code)
 	}
 	end_link_foreach(link);
 
-	name = cavan_event_key_code_tostring(code);
-	if (name)
+	return NULL;
+}
+
+const char *cavan_event_find_key_name_base(struct single_link *link, int code)
+{
+	const char *name;
+
+	name = cavan_event_find_key_name_by_keylayout_base(link, code);
+	if (name == NULL)
 	{
-		return name + 4;
+		name = cavan_event_key_code_tostring(code);
+		if (name)
+		{
+			name += 4;
+		}
+		else
+		{
+			name = "NONE";
+		}
 	}
 
-	return "NONE";
+	return name;
 }
 
 static void cavan_event_virtual_key_set_name(struct single_link *vk_link, struct single_link *kl_link)
