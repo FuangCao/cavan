@@ -1069,7 +1069,7 @@ const char *cavan_event_key_code_tostring(int code)
 	}
 }
 
-char *cavan_event_tostring(struct input_event *event, char *text)
+char *cavan_event_tostring(struct cavan_event_device *dev, struct input_event *event, char *text)
 {
 	const char *event_code = "UNKNOWN";
 
@@ -1096,7 +1096,7 @@ char *cavan_event_tostring(struct input_event *event, char *text)
 		}
 		break;
 	case EV_KEY:
-		event_code = cavan_event_key_code_tostring(event->code);
+		event_code = cavan_event_find_key_name(dev, event->code);
 		if (event_code == NULL)
 		{
 			sprintf(text, "EV_KEY[%d] = %d", event->code, event->value);
@@ -1767,7 +1767,7 @@ static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 			{
 				char print_buff[1024];
 
-				pr_red_info("%s", cavan_event_tostring(ep, print_buff));
+				pr_red_info("%s", cavan_event_tostring(pdev, ep, print_buff));
 			}
 		}
 	}
@@ -1805,7 +1805,7 @@ static bool cavan_event_handler_dummy(struct cavan_event_device *dev, struct inp
 {
 	char buff[1024];
 
-	print_string(cavan_event_tostring(event, buff));
+	print_string(cavan_event_tostring(dev, event, buff));
 
 	return true;
 }
