@@ -327,12 +327,12 @@ static u32 Get_CRC(u32 text,u32 prevCRC)
 	return ulCRC ;
 }
 
-static void _HalTscrHWReset(struct hua_input_chip *chip)
+static void _HalTscrHWReset(struct cavan_input_chip *chip)
 {
-	hua_io_reset_gpio_set_value(chip, 1);	
-	hua_io_reset_gpio_set_value(chip, 0);
+	cavan_io_reset_gpio_set_value(chip, 1);	
+	cavan_io_reset_gpio_set_value(chip, 0);
     mdelay(20);  /* Note that the RST must be in LOW 10ms at least */
-	hua_io_reset_gpio_set_value(chip, 1);
+	cavan_io_reset_gpio_set_value(chip, 1);
     /* Enable the interrupt service thread/routine for INT after 50ms */
     mdelay(350);
 }
@@ -609,12 +609,12 @@ static void drvISP_Verify(U16 k, U8* pDataToVerify)
 }
 
 
-static void _HalTscrHWReset(struct hua_input_chip *chip)
+static void _HalTscrHWReset(struct cavan_input_chip *chip)
 {
-	hua_io_reset_gpio_set_value(chip, 1);
-	hua_io_reset_gpio_set_value(chip, 0);
+	cavan_io_reset_gpio_set_value(chip, 1);
+	cavan_io_reset_gpio_set_value(chip, 0);
     mdelay(10);  /* Note that the RST must be in LOW 10ms at least */
-	hua_io_reset_gpio_set_value(chip, 1);
+	cavan_io_reset_gpio_set_value(chip, 1);
     /* Enable the interrupt service thread/routine for INT after 50ms */
     mdelay(50);
 }
@@ -622,7 +622,7 @@ static void _HalTscrHWReset(struct hua_input_chip *chip)
 
 #ifdef __FIRMWARE_UPDATE__
 #ifdef __AUTO_UPDATE__
-static int firmware_auto_update_c33(struct hua_input_chip *chip, EMEM_TYPE_t emem_type)
+static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t emem_type)
 {
     u8  life_counter[2];
     u32 i, j;
@@ -854,7 +854,7 @@ static int firmware_auto_update_c33(struct hua_input_chip *chip, EMEM_TYPE_t eme
     return ( 1 );
 }
 
-static int firmware_auto_update(struct hua_input_chip *chip)
+static int firmware_auto_update(struct cavan_input_chip *chip)
 {
    u8 dbbus_tx_data[4];
     unsigned char dbbus_rx_data[2] = {0};

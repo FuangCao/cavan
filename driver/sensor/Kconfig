@@ -1,6 +1,6 @@
-menu "Huamobile sensor driver config"
+menu "Cavan sensor driver config"
 
-config HUAMOBILE_GSENSOR_EXCHANGE_XY
+config CAVAN_GSENSOR_EXCHANGE_XY
     bool "Exchange x and y axis"
     default n
     help
@@ -8,29 +8,29 @@ config HUAMOBILE_GSENSOR_EXCHANGE_XY
 
       If unsure, say N.
 
-config HUAMOBILE_GSENSOR_SIGN_X
+config CAVAN_GSENSOR_SIGN_X
     int "Sign of x axis"
     default 1
     range -1 1
     help
       This option config sign of x axis.
 
-config HUAMOBILE_GSENSOR_SIGN_Y
+config CAVAN_GSENSOR_SIGN_Y
     int "Sign of y axis"
     default 1
     range -1 1
     help
       This option config sign of y axis.
 
-config HUAMOBILE_GSENSOR_SIGN_Z
+config CAVAN_GSENSOR_SIGN_Z
     int "Sign of z axis"
     default 1
     range -1 1
     help
       This option config sign of z axis.
 
-config HUAMOBILE_GSENSOR_ADXL34X
-    tristate "Huamobile adxl346 g-sensor"
+config CAVAN_GSENSOR_ADXL34X
+    tristate "Cavan adxl346 g-sensor"
     default n
     help
       Say Y here if you have a adxl346 g-sendor connected to
@@ -39,10 +39,10 @@ config HUAMOBILE_GSENSOR_ADXL34X
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_adxl34x.
+      module will be called cavan_adxl34x.
 
-config HUAMOBILE_GSENSOR_KIONIX
-    tristate "Huamobile kxcjk kxtik g-sensor"
+config CAVAN_GSENSOR_KIONIX
+    tristate "Cavan kxcjk kxtik g-sensor"
     default n
     help
       Say Y here if you have a kionix kxcjk kxtik g-sendor connected to
@@ -51,10 +51,10 @@ config HUAMOBILE_GSENSOR_KIONIX
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_kionix.
+      module will be called cavan_kionix.
 
-config HUAMOBILE_GSENSOR_LIS3DH
-    tristate "Huamobile lis3dh lis3de g-sensor"
+config CAVAN_GSENSOR_LIS3DH
+    tristate "Cavan lis3dh lis3de g-sensor"
     default n
     help
       Say Y here if you have lis3dh or lis3de g-sendor connected to
@@ -63,10 +63,10 @@ config HUAMOBILE_GSENSOR_LIS3DH
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_lis3dh.
+      module will be called cavan_lis3dh.
 
-config HUAMOBILE_GSENSOR_MMA845X
-    tristate "Huamobile mma845x g-sensor"
+config CAVAN_GSENSOR_MMA845X
+    tristate "Cavan mma845x g-sensor"
     default n
     help
       Say Y here if you have a mma845x g-sendor connected to
@@ -75,10 +75,10 @@ config HUAMOBILE_GSENSOR_MMA845X
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_mma845x.
+      module will be called cavan_mma845x.
 
-config HUAMOBILE_GSENSOR_MXC6225
-    tristate "Huamobile mxc6225-xc mxc6225-xu g-sensor"
+config CAVAN_GSENSOR_MXC6225
+    tristate "Cavan mxc6225-xc mxc6225-xu g-sensor"
     default n
     help
       Say Y here if you have a mxc6225-xc or mxc6225-xu g-sendor connected to
@@ -87,10 +87,10 @@ config HUAMOBILE_GSENSOR_MXC6225
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_mxc6225.
+      module will be called cavan_mxc6225.
 
-config HUAMOBILE_GSENSOR_STK8313
-    tristate "Huamobile stk8313 g-sensor"
+config CAVAN_GSENSOR_STK8313
+    tristate "Cavan stk8313 g-sensor"
     default n
     help
       Say Y here if you have a stk8313 g-sendor connected to
@@ -99,10 +99,10 @@ config HUAMOBILE_GSENSOR_STK8313
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_stk8313.
+      module will be called cavan_stk8313.
 
-config HUAMOBILE_GSENSOR_BMA2XX
-    tristate "Huamobile bma2xx g-sensor"
+config CAVAN_GSENSOR_BMA2XX
+    tristate "Cavan bma2xx g-sensor"
     default n
     help
       Say Y here if you have a bma2xx g-sendor connected to
@@ -111,10 +111,10 @@ config HUAMOBILE_GSENSOR_BMA2XX
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_bma2xx.
+      module will be called cavan_bma2xx.
 
-config HUAMOBILE_GSENSOR_MC3XXX
-    tristate "Huamobile mc3xxx g-sensor"
+config CAVAN_GSENSOR_MC3XXX
+    tristate "Cavan mc3xxx g-sensor"
     default n
     help
       Say Y here if you have a mc3xxx g-sendor connected to
@@ -123,10 +123,10 @@ config HUAMOBILE_GSENSOR_MC3XXX
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_mc3xxx.
+      module will be called cavan_mc3xxx.
 
-config HUAMOBILE_LPSENSOR_APDS99XX
-    tristate "Huamobile apds99xx l-sensor and p-sensor"
+config CAVAN_LPSENSOR_APDS99XX
+    tristate "Cavan apds99xx l-sensor and p-sensor"
     default n
     help
       Say Y here if you have a apds99xx light or proximity sendor connected to
@@ -135,10 +135,10 @@ config HUAMOBILE_LPSENSOR_APDS99XX
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_apds99xx.
+      module will be called cavan_apds99xx.
 
-config HUAMOBILE_LPSENSOR_EPL2182
-    tristate "Huamobile epl2182 l-sensor and p-sensor"
+config CAVAN_LPSENSOR_EPL2182
+    tristate "Cavan epl2182 l-sensor and p-sensor"
     default n
     help
       Say Y here if you have a epl2182 light or proximity sendor connected to
@@ -147,6 +147,6 @@ config HUAMOBILE_LPSENSOR_EPL2182
       If unsure, say Y.
 
       To compile this driver as a module, choose M here: the
-      module will be called hua_epl2182.
+      module will be called cavan_epl2182.
 
 endmenu

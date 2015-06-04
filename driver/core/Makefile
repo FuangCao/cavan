@@ -1,2 +1,2 @@
-obj-$(CONFIG_HUAMOBILE_INPUT_CORE) += hua_input.o
-hua_input-objs += hua_input_core.o hua_sensor_core.o hua_ts_core.o hua_i2c.o hua_sysfs.o hua_thread.o hua_firmware.o hua_io.o
+obj-$(CONFIG_CAVAN_INPUT_CORE) += cavan_input.o
+cavan_input-objs += cavan_input_core.o cavan_sensor_core.o cavan_ts_core.o cavan_i2c.o cavan_sysfs.o cavan_thread.o cavan_firmware.o cavan_io.o
