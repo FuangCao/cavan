@@ -10,7 +10,7 @@
 #include <linux/sysfs.h>
 #include <linux/init.h>
 #include <linux/mutex.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include <linux/spinlock.h>
 #include <linux/delay.h>
 #include <linux/slab.h>

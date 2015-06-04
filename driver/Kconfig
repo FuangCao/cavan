@@ -27,15 +27,15 @@ config CAVAN_USB_RNDIS_PRODUCT_ID
 
 config CAVAN_USB_SIMPLE_NAME
     string "Cavan USB simple name"
-    default "Haipai"
+    default "Cavan"
 
 config CAVAN_USB_MANUFACTURER_NAME
     string "Cavan USB manufacturer name"
-    default "Haipai"
+    default "Cavan"
 
 config CAVAN_USB_PRODUCT_NAME
     string "Cavan USB product name"
-    default "Haipai"
+    default "Cavan"
 
 config CAVAN_USB_SERIAL_NUMBER
     string "Cavan USB serial number"
@@ -114,7 +114,7 @@ config USE_EXTERNAL_POWER_AMPLIFIER
 
 config MMC_DEV_TROUT
 	bool "Mmc device for trout"
-	default y
+	default n
 	help
 	  Select if use trout wifi.
 
@@ -133,7 +133,7 @@ config CAVAN_CAMERA_ROTATION
 
 config CAVAN_SUPPORT_BACK_CAMERA
 	bool "Support back camera"
-	default y
+	default n
 	help
 	  Select if has a back camera.
 
