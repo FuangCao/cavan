@@ -267,17 +267,22 @@ static int cavan_sensor_device_probe(struct cavan_sensor_device *sensor, struct 
 	hal_sensor->handle = handle;
 	hal_sensor->minDelay = min_delay;
 
-	if (hal_sensor->type == SENSOR_TYPE_ACCELEROMETER)
+	switch (hal_sensor->type)
 	{
+	case SENSOR_TYPE_ACCELEROMETER:
 		hal_sensor->maxRange = max_range * GRAVITY_EARTH;
-	}
-	else
-	{
+		break;
+
+	case SENSOR_TYPE_GYROSCOPE:
+		hal_sensor->maxRange = max_range * PI / 180;
+		break;
+
+	default:
 		hal_sensor->maxRange = max_range;
 	}
 
 	hal_sensor->resolution = hal_sensor->maxRange / resolution;
-	hal_sensor->power = ((float)power_consume) / 1000;
+	hal_sensor->power = ((float) power_consume) / 1000;
 
 	event->sensor = handle;
 	event->acceleration.status = SENSOR_STATUS_ACCURACY_HIGH;

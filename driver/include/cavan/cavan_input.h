@@ -24,7 +24,7 @@
 #include <cavan/cavan_thread.h>
 #include <cavan/cavan_firmware.h>
 
-#define CAVAN_INPUT_DEBUG					0
+#define CAVAN_INPUT_DEBUG					1
 
 #define CAVAN_INPUT_MAJOR					280
 #define CAVAN_INPUT_MINORS				32
@@ -239,6 +239,7 @@ struct cavan_input_chip
 	u32 devid;
 	u32 devmask;
 	unsigned long flags;
+	u32 i2c_rate;
 
 	int irq;
 	u32 irq_state;

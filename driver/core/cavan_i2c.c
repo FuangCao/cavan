@@ -10,13 +10,19 @@ ssize_t cavan_input_read_data_i2c(struct cavan_input_chip *chip, u8 addr, void *
 			.addr = client->addr,
 			.flags = client->flags & I2C_M_TEN,
 			.len = 1,
-			.buf = (__u8 *)&addr
+			.buf = (__u8 *) &addr,
+#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+			.scl_rate = chip->i2c_rate,
+#endif
 		},
 		{
 			.addr = client->addr,
 			.flags = (client->flags & I2C_M_TEN) | I2C_M_RD,
 			.len = size,
-			.buf = (__u8 *)buff
+			.buf = (__u8 *) buff,
+#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+			.scl_rate = chip->i2c_rate,
+#endif
 		}
 	};
 
@@ -41,13 +47,19 @@ ssize_t cavan_input_write_data_i2c(struct cavan_input_chip *chip, u8 addr, const
 			.addr = client->addr,
 			.flags = client->flags & I2C_M_TEN,
 			.len = 1,
-			.buf = (__u8 *)&addr
+			.buf = (__u8 *) &addr,
+#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+			.scl_rate = chip->i2c_rate,
+#endif
 		},
 		{
 			.addr = client->addr,
 			.flags = client->flags & I2C_M_TEN,
 			.len = size,
-			.buf = (__u8 *)buff
+			.buf = (__u8 *) buff,
+#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+			.scl_rate = chip->i2c_rate,
+#endif
 		}
 	};
 
@@ -132,7 +144,10 @@ int cavan_input_master_recv_from_i2c(struct i2c_client *client, short addr, void
 		.addr = addr,
 		.flags = (client->flags & I2C_M_TEN) | I2C_M_RD,
 		.len = size,
-		.buf = buff
+		.buf = buff,
+#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+		.scl_rate = CAVAN_INPUT_I2C_RATE,
+#endif
 	};
 
 	ret = i2c_transfer(client->adapter, &msg, 1);
@@ -163,7 +178,10 @@ int cavan_input_master_send_to_i2c(struct i2c_client *client, short addr, const 
 		.addr = addr,
 		.flags = client->flags & I2C_M_TEN,
 		.len = size,
-		.buf = (__u8 *)buff
+		.buf = (__u8 *) buff,
+#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+		.scl_rate = CAVAN_INPUT_I2C_RATE,
+#endif
 	};
 
 	ret = i2c_transfer(client->adapter, &msg, 1);
@@ -193,7 +211,10 @@ int cavan_input_test_i2c(struct i2c_client *client)
 		.addr = client->addr,
 		.flags = (client->flags & I2C_M_TEN) | I2C_M_RD,
 		.len = 0,
-		.buf = NULL
+		.buf = NULL,
+#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+		.scl_rate = CAVAN_INPUT_I2C_RATE,
+#endif
 	};
 
 	if (i2c_transfer(client->adapter, &msg, 1) == 1)
@@ -213,7 +234,10 @@ int cavan_input_detect_i2c(struct i2c_client *client, u8 start, u8 end)
 	{
 		.flags = (client->flags & I2C_M_TEN) | I2C_M_RD,
 		.len = 0,
-		.buf = NULL
+		.buf = NULL,
+#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+		.scl_rate = CAVAN_INPUT_I2C_RATE,
+#endif
 	};
 
 	if (start == 0)

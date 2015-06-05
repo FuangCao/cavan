@@ -650,7 +650,7 @@ static int cavan_input_chip_update_delay(struct cavan_input_chip *chip)
 		}
 	}
 
-	pr_green_info("haumobile input chip poll count = %d, delay = %d(ms)", count, delay);
+	pr_green_info("cavan input chip poll count = %d, delay = %d(ms)", count, delay);
 
 	list_for_each_entry(dev, head, node)
 	{
@@ -1580,6 +1580,10 @@ static int cavan_input_chip_init(struct cavan_input_core *core, struct cavan_inp
 	if (chip->set_power == NULL)
 	{
 		chip->set_power = cavan_input_chip_set_power_dummy;
+	}
+
+	if (chip->i2c_rate == 0) {
+		chip->i2c_rate = CAVAN_INPUT_I2C_RATE;
 	}
 
 	chip->core = core;

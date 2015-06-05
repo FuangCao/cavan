@@ -35,6 +35,8 @@
 #include <utils/Timers.h>
 #include <hardware/sensors.h>
 
+#define PI (3.141593f)
+
 #define CAVAN_INPUT_IOC_LENGTH_TO_MASK(len) \
 	((1 << (len)) - 1)
 

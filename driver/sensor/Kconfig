@@ -29,7 +29,7 @@ config CAVAN_GSENSOR_SIGN_Z
     help
       This option config sign of z axis.
 
-config CAVAN_GSENSOR_ADXL34X
+config CAVAN_SENSOR_ADXL34X
     tristate "Cavan adxl346 g-sensor"
     default n
     help
@@ -41,7 +41,7 @@ config CAVAN_GSENSOR_ADXL34X
       To compile this driver as a module, choose M here: the
       module will be called cavan_adxl34x.
 
-config CAVAN_GSENSOR_KIONIX
+config CAVAN_SENSOR_KIONIX
     tristate "Cavan kxcjk kxtik g-sensor"
     default n
     help
@@ -53,7 +53,7 @@ config CAVAN_GSENSOR_KIONIX
       To compile this driver as a module, choose M here: the
       module will be called cavan_kionix.
 
-config CAVAN_GSENSOR_LIS3DH
+config CAVAN_SENSOR_LIS3DH
     tristate "Cavan lis3dh lis3de g-sensor"
     default n
     help
@@ -65,7 +65,7 @@ config CAVAN_GSENSOR_LIS3DH
       To compile this driver as a module, choose M here: the
       module will be called cavan_lis3dh.
 
-config CAVAN_GSENSOR_MMA845X
+config CAVAN_SENSOR_MMA845X
     tristate "Cavan mma845x g-sensor"
     default n
     help
@@ -77,7 +77,7 @@ config CAVAN_GSENSOR_MMA845X
       To compile this driver as a module, choose M here: the
       module will be called cavan_mma845x.
 
-config CAVAN_GSENSOR_MXC6225
+config CAVAN_SENSOR_MXC6225
     tristate "Cavan mxc6225-xc mxc6225-xu g-sensor"
     default n
     help
@@ -89,7 +89,7 @@ config CAVAN_GSENSOR_MXC6225
       To compile this driver as a module, choose M here: the
       module will be called cavan_mxc6225.
 
-config CAVAN_GSENSOR_STK8313
+config CAVAN_SENSOR_STK8313
     tristate "Cavan stk8313 g-sensor"
     default n
     help
@@ -101,7 +101,7 @@ config CAVAN_GSENSOR_STK8313
       To compile this driver as a module, choose M here: the
       module will be called cavan_stk8313.
 
-config CAVAN_GSENSOR_BMA2XX
+config CAVAN_SENSOR_BMA2XX
     tristate "Cavan bma2xx g-sensor"
     default n
     help
@@ -113,7 +113,7 @@ config CAVAN_GSENSOR_BMA2XX
       To compile this driver as a module, choose M here: the
       module will be called cavan_bma2xx.
 
-config CAVAN_GSENSOR_MC3XXX
+config CAVAN_SENSOR_MC3XXX
     tristate "Cavan mc3xxx g-sensor"
     default n
     help
@@ -125,7 +125,7 @@ config CAVAN_GSENSOR_MC3XXX
       To compile this driver as a module, choose M here: the
       module will be called cavan_mc3xxx.
 
-config CAVAN_LPSENSOR_APDS99XX
+config CAVAN_SENSOR_APDS99XX
     tristate "Cavan apds99xx l-sensor and p-sensor"
     default n
     help
@@ -137,7 +137,7 @@ config CAVAN_LPSENSOR_APDS99XX
       To compile this driver as a module, choose M here: the
       module will be called cavan_apds99xx.
 
-config CAVAN_LPSENSOR_EPL2182
+config CAVAN_SENSOR_EPL2182
     tristate "Cavan epl2182 l-sensor and p-sensor"
     default n
     help
@@ -148,5 +148,17 @@ config CAVAN_LPSENSOR_EPL2182
 
       To compile this driver as a module, choose M here: the
       module will be called cavan_epl2182.
+
+config CAVAN_SENSOR_BMI160
+    tristate "Cavan BMI160 acceleration and gyroscope sensor support"
+    default n
+    help
+      Say Y here if you have Bosch Sensortec's BMI160
+      acceleration and gyroscope sensor hooked to an I2C bus.
+
+      If unsure, say Y.
+
+      To compile this driver as a module, choose M here: the
+      module will be called cavan_bmi160.
 
 endmenu
