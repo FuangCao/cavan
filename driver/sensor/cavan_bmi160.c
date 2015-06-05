@@ -6,8 +6,8 @@
 #define BMI160_DEVICE_NAME			"bmi160"
 
 #define BMI160_RESOLUTION			0xFFFF
-#define BMI160_ACC_FUZZ				20
-#define BMI160_GYR_FUZZ				20
+#define BMI160_ACC_FUZZ				30
+#define BMI160_GYR_FUZZ				30
 #define BMI160_ACC_RANGE			4
 #define BMI160_GYR_RANGE			4000
 
@@ -138,16 +138,21 @@ struct bmi160_chip
 static int bmi160_sensor_chip_readid(struct cavan_input_chip *chip)
 {
 	int ret;
-	u8 value;
+	u8 chip_id;
 
-	ret = chip->read_register(chip, REG_CHIP_ID, &value);
+	ret = chip->read_register(chip, REG_CHIP_ID, &chip_id);
 	if (ret < 0)
 	{
 		pr_red_info("read_register REG_CHIP_ID");
 		return ret;
 	}
 
-	pr_bold_info("REG_CHIP_ID = 0x%02x", value);
+	pr_bold_info("REG_CHIP_ID = 0x%02x", chip_id);
+
+	if (chip_id != 0xD1) {
+		pr_red_info("Chip ID Invalid!");
+		return -EINVAL;
+	}
 
 	return 0;
 }
