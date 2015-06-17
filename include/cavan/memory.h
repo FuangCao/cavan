@@ -102,6 +102,7 @@ u8 mem_checksum8_simple(const u8 *mem, size_t count);
 
 char *mem_size_tostring(double value, char *buff, size_t size);
 char *mem_speed_tostring(double value, char *buff, size_t size);
+char *mem_time_tostring(double time, char *buff, size_t size);
 
 static inline char *mem_trans(char *text, size_t size)
 {

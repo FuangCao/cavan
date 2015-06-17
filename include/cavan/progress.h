@@ -2,11 +2,18 @@
 
 #include <cavan.h>
 
-#define BAR_CONTENT_MIN		23 // sizeof("[ 100% ] 1024.00 Byte/s")
+#define BAR_SHOW_TIME		1
+
 #define BAR_DEF_HALF_LEN	30
 #define BAR_MAX_HALF_LEN	50
 #define BAR_FREE_CHAR		'='
 #define BAR_FULL_CHAR		'H'
+
+#if BAR_SHOW_TIME
+#define BAR_CONTENT_MIN		sizeof("[ 100% ] (9999s ~ 9999s) 1024.00 Byte/s")
+#else
+#define BAR_CONTENT_MIN		sizeof("[ 100% ] 1024.00 Byte/s")
+#endif
 
 struct progress_bar
 {

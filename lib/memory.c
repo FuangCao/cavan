@@ -608,3 +608,19 @@ char *mem_speed_tostring(double value, char *buff, size_t size)
 
 	return text_ncopy(p, "/s", size - (p - buff));
 }
+
+char *mem_time_tostring(double time, char *buff, size_t size)
+{
+	if (time >= 3600)
+	{
+		return buff + snprintf(buff, size, "%0.2lfH", time / 3600);
+	}
+	else if (time >= 60)
+	{
+		return buff + snprintf(buff, size, "%0.2lfM", time / 60);
+	}
+	else
+	{
+		return buff + snprintf(buff, size, "%0.2lfs", time);
+	}
+}

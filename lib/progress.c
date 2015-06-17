@@ -3,7 +3,7 @@
 #include <cavan/command.h>
 #include <cavan/progress.h>
 
-#define SPEED_INTERVAL_MS	1000
+#define SPEED_INTERVAL_MS		1000UL
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -21,6 +21,9 @@ static void progress_bar_fflush(struct progress_bar *bar)
 	int length;
 	char buff[1024];
 	char *p = buff, *p_end = p + sizeof(buff);
+#if BAR_SHOW_TIME
+	u32 used, remain;
+#endif
 
 	*p++ = '[';
 
@@ -52,8 +55,31 @@ static void progress_bar_fflush(struct progress_bar *bar)
 	p += bar->half_length;
 	*p++ = ']';
 
+#if BAR_SHOW_TIME
+	used = progress_bar_get_time_consume_ns(bar) / 1000000000UL;
+
+	if (bar->speed > 0)
+	{
+		remain = (bar->total - bar->current) / bar->speed;
+	}
+	else
+	{
+		remain = 0;
+	}
+
+	if (remain > 0)
+	{
+		p += snprintf(p, p_end - p, " (%ds ~ %ds)", used, remain);
+	}
+	else if (used > 0)
+	{
+		p += snprintf(p, p_end - p, " (%ds)", used);
+	}
+#endif
+
 	if (bar->speed >= 0)
 	{
+
 		*p++ = ' ';
 		p = mem_speed_tostring(bar->speed, p, p_end - p - 2);
 	}
@@ -113,14 +139,14 @@ static bool update_speed(struct progress_bar *bar)
 	clock_gettime_mono(&time_now);
 
 	interval = cavan_timespec_sub_ns(&time_now, &bar->time_prev);
-	if (interval < SPEED_INTERVAL_MS * 1000000)
+	if (interval < (s64) (SPEED_INTERVAL_MS * 1000000UL))
 	{
 		return false;
 	}
 
 	if (bar->current > bar->last)
 	{
-		speed = (bar->current - bar->last) * 1000000000 / interval;
+		speed = (bar->current - bar->last) * 1000000000UL / interval;
 	}
 	else
 	{
@@ -211,13 +237,13 @@ void progress_bar_finish(struct progress_bar *bar)
 	print_char('\n');
 
 	time = progress_bar_get_time_consume_ns(bar);
-	if (time > 1000)
+	if (time > 1000UL)
 	{
 		char size_buff[32];
 		char speed_buff[32];
 
 		mem_size_tostring(bar->total, size_buff, sizeof(size_buff));
-		mem_speed_tostring(bar->total * 1000000000 / time, speed_buff, sizeof(speed_buff));
-		println("%s (%s in %lf ms)", speed_buff, size_buff, time / 1000000);
+		mem_speed_tostring(bar->total * 1000000000UL / time, speed_buff, sizeof(speed_buff));
+		println("%s (%s in %lf ms)", speed_buff, size_buff, time / 1000000UL);
 	}
 }
