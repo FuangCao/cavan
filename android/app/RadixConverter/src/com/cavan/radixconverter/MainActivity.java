@@ -3,24 +3,14 @@ package com.cavan.radixconverter;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.GridView;
-import android.widget.ListAdapter;
-import android.widget.Spinner;
-import android.widget.TableRow;
-import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
@@ -29,7 +19,6 @@ public class MainActivity extends Activity {
 	private static final int MAX_COUNT_DEC = 10;
 	private static final int MAX_COUNT_OCT = 10;
 
-	private long mValue = 100;
 	private GridView mGridViewBin;
 	private GridView mGridViewHex;
 	private GridView mGridViewOct;
@@ -42,11 +31,34 @@ public class MainActivity extends Activity {
 	private BitAdapter mAdapterOct;
 	private KeypadAdapter mAdapterKeypad;
 
-	private BitButton mButtonCurr;
+	private BitButton mCurrButton;
 	private List<BitAdapter> mAdapters = new ArrayList<BitAdapter>();
 
-	private void alogd(String msg) {
-		Log.e("Cavan", msg);
+	private void setCurrButton(BitButton button) {
+		if (mCurrButton != null) {
+			mCurrButton.setActive(false);
+		}
+
+		if (button != null) {
+			button.setActive(true);
+
+			if (mCurrButton == null || button.getAdapter() != mCurrButton.getAdapter()) {
+				mAdapterKeypad.setKeyCount(button.getAdapter().getBase());
+			}
+		}
+
+		mCurrButton = button;
+	}
+
+	private void updateValue(BitAdapter adapter) {
+
+		long value = adapter.getValue();
+
+		for (BitAdapter adp : mAdapters) {
+			if (adp != adapter) {
+				adp.setValue(value);
+			}
+		}
 	}
 
 	private OnClickListener mBitClickListener = new OnClickListener() {
@@ -55,18 +67,12 @@ public class MainActivity extends Activity {
 		public void onClick(View v) {
 			BitButton button = (BitButton) v;
 
-			if (button == mButtonCurr) {
-				return;
+			if (button == mCurrButton) {
+				button.add(1);
+				updateValue(button.getAdapter());
+			} else {
+				setCurrButton((BitButton) v);
 			}
-
-			if (mButtonCurr != null) {
-				mButtonCurr.setActive(false);
-			}
-
-			mButtonCurr = button;
-			button.setActive(true);
-
-			mAdapterKeypad.setKeyCount(mButtonCurr.getAdapter().getBase());
 		}
 	};
 
@@ -74,23 +80,17 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			if (mButtonCurr == null) {
+			if (mCurrButton == null) {
 				return;
 			}
 
 			Button button = (Button) v;
-			if (button.getText().equals(mButtonCurr.getText())) {
-				return;
+			if (!button.getText().equals(mCurrButton.getText())) {
+				mCurrButton.setText(button.getText());
+				updateValue(mCurrButton.getAdapter());
 			}
 
-			mButtonCurr.setText(button.getText());
-			long value = mButtonCurr.getAdapter().getValue();
-
-			for (BitAdapter adapter : mAdapters) {
-				if (adapter != mButtonCurr.getAdapter()) {
-					adapter.setValue(value);
-				}
-			}
+			setCurrButton(mCurrButton.getNextButton());
 		}
 	};
 
