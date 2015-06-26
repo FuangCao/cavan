@@ -1,0 +1,92 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:overScrollMode="always"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.cavan.radixconverter.MainActivity" >
+
+    <TextView
+        android:id="@+id/textViewBin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="@+string/radix_bin" />
+
+    <GridView
+        android:id="@+id/gridViewBin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewBin"
+        android:numColumns="8" >
+    </GridView>
+
+	<TextView
+        android:id="@+id/textViewHex"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/gridViewBin"
+        android:text="@+string/radix_hex" />
+
+    <GridView
+        android:id="@+id/gridViewHex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewHex"
+        android:numColumns="8" >
+    </GridView>
+
+	<TextView
+        android:id="@+id/textViewOct"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/gridViewHex"
+        android:text="@+string/radix_oct" />
+
+    <GridView
+        android:id="@+id/gridViewOct"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewOct"
+        android:numColumns="10" >
+    </GridView>
+
+	<TextView
+        android:id="@+id/textViewDec"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/gridViewOct"
+        android:text="@+string/radix_dec" />
+
+    <GridView
+        android:id="@+id/gridViewDec"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewDec"
+        android:numColumns="10" >
+    </GridView>
+
+	<TextView
+        android:id="@+id/textViewKeypad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/gridViewDec"
+        android:text="@+string/keypad_text" />
+
+    <GridView
+        android:id="@+id/gridViewKeypad"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewKeypad"
+        android:numColumns="8" >
+    </GridView>
+
+</RelativeLayout>
