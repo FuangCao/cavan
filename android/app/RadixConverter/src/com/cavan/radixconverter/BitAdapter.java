@@ -1,6 +1,7 @@
 package com.cavan.radixconverter;
 
 import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.BaseAdapter;
 public class BitAdapter extends BaseAdapter {
 
 	private Context mContext;
+	private LayoutInflater mInflater;
 	private OnClickListener mListener;
 
 	private int mCount;
@@ -19,6 +21,7 @@ public class BitAdapter extends BaseAdapter {
 		super();
 
 		mContext = context;
+		mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		mListener = listener;
 
 		mCount = count;
@@ -41,18 +44,21 @@ public class BitAdapter extends BaseAdapter {
 		return 0;
 	}
 
+	public LayoutInflater getLayoutInflater() {
+		return mInflater;
+	}
+
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		int offset = mCount - position - 1;
 
-		BitView button = mViews[offset];
-		if (button == null) {
-			mViews[offset] = button = new BitView(mContext, this, offset);
-			button.setText("0");
-			button.setOnClickListener(mListener);
+		BitView view = mViews[offset];
+		if (view == null) {
+			mViews[offset] = view = (BitView) mInflater.inflate(R.layout.bit_view, parent, false);
+			view.setup(this, offset, mListener);
 		}
 
-		return button;
+		return view;
 	}
 
 	public int getBase() {

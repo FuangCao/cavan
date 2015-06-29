@@ -17,7 +17,7 @@ public class MainActivity extends Activity {
 	private static final int MAX_COUNT_BIN = 32;
 	private static final int MAX_COUNT_HEX = 8;
 	private static final int MAX_COUNT_DEC = 10;
-	private static final int MAX_COUNT_OCT = 10;
+	private static final int MAX_COUNT_OCT = 11;
 
 	private GridView mGridViewBin;
 	private GridView mGridViewHex;
@@ -65,11 +65,11 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			BitView button = (BitView) v;
+			BitView view = (BitView) v;
 
-			if (button == mCurrBitView) {
-				button.add(1);
-				updateValue(button.getAdapter());
+			if (view == mCurrBitView) {
+				view.add(1);
+				updateValue(view.getAdapter());
 			} else {
 				setCurrBit((BitView) v);
 			}

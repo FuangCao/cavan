@@ -22,7 +22,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewBin"
+        android:horizontalSpacing="1dp"
+        android:verticalSpacing="5dp"
         android:numColumns="8" >
+
     </GridView>
 
 	<TextView
@@ -38,6 +41,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewHex"
+        android:horizontalSpacing="1dp"
         android:numColumns="8" >
     </GridView>
 
@@ -54,7 +58,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewOct"
-        android:numColumns="10" >
+        android:horizontalSpacing="1dp"
+        android:numColumns="11" >
     </GridView>
 
 	<TextView
@@ -70,6 +75,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewDec"
+        android:horizontalSpacing="1dp"
         android:numColumns="10" >
     </GridView>
 

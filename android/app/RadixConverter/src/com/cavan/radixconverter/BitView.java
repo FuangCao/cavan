@@ -2,18 +2,50 @@ package com.cavan.radixconverter;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.widget.Button;
+import android.util.AttributeSet;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
-public class BitView extends Button {
+public class BitView extends RelativeLayout {
 
 	private int mIndex;
 	private BitAdapter mAdapter;
 
-	public BitView(Context context, BitAdapter adapter, int index) {
-		super(context);
+	private TextView mTextViewIndex;
+	private TextView mTextViewTitle;
 
+	public BitView(Context context, AttributeSet attrs, int defStyle) {
+		super(context, attrs, defStyle);
+	}
+
+	public BitView(Context context, AttributeSet attrs) {
+		super(context, attrs);
+	}
+
+	public BitView(Context context) {
+		super(context);
+	}
+
+	@Override
+	protected void onFinishInflate() {
+		mTextViewIndex = (TextView) findViewById(R.id.textViewIndex);
+		mTextViewIndex.setText("0");
+		mTextViewIndex.setTextColor(Color.BLACK);
+
+		mTextViewTitle = (TextView) findViewById(R.id.textViewTitle);
+		mTextViewTitle.setText("0");
+
+		setActive(false);
+
+		super.onFinishInflate();
+	}
+
+	public void setup(BitAdapter adapter, int index, OnClickListener listener) {
 		mAdapter = adapter;
 		mIndex = index;
+
+		mTextViewIndex.setText(Integer.toString(index));
+		setOnClickListener(listener);
 	}
 
 	public BitAdapter getAdapter() {
@@ -25,7 +57,13 @@ public class BitView extends Button {
 	}
 
 	public void setActive(boolean active) {
-		setTextColor(active ? Color.RED : Color.WHITE);
+		if (active) {
+			mTextViewIndex.setBackgroundColor(Color.RED);
+			mTextViewTitle.setBackgroundColor(Color.BLUE);
+		} else {
+			mTextViewIndex.setBackgroundColor(Color.MAGENTA);
+			mTextViewTitle.setBackgroundColor(Color.BLACK);
+		}
 	}
 
 	public BitView getNextView() {
@@ -50,14 +88,22 @@ public class BitView extends Button {
 	}
 
 	public int getValue() {
-		return parseText(getText());
+		return parseText(mTextViewTitle.getText());
 	}
 
 	public void setValue(int value) {
-		setText(KeypadAdapter.VALUE_TEXT_MAP[value]);
+		mTextViewTitle.setText(KeypadAdapter.VALUE_TEXT_MAP[value]);
 	}
 
 	public void add(int value) {
 		setValue((getValue() + value) % mAdapter.getBase());
+	}
+
+	public void setText(CharSequence text) {
+		mTextViewTitle.setText(text);
+	}
+
+	public CharSequence getText() {
+		return mTextViewTitle.getText();
 	}
 }
