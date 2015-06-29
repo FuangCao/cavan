@@ -4,12 +4,12 @@ import android.content.Context;
 import android.graphics.Color;
 import android.widget.Button;
 
-public class BitButton extends Button {
+public class BitView extends Button {
 
 	private int mIndex;
 	private BitAdapter mAdapter;
 
-	public BitButton(Context context, BitAdapter adapter, int index) {
+	public BitView(Context context, BitAdapter adapter, int index) {
 		super(context);
 
 		mAdapter = adapter;
@@ -28,7 +28,7 @@ public class BitButton extends Button {
 		setTextColor(active ? Color.RED : Color.WHITE);
 	}
 
-	public BitButton getNextButton() {
+	public BitView getNextView() {
 		if (mIndex > 0) {
 			return mAdapter.getButton(mIndex - 1);
 		} else {

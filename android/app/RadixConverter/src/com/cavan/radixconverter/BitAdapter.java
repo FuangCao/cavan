@@ -13,7 +13,7 @@ public class BitAdapter extends BaseAdapter {
 
 	private int mCount;
 	private int mBase;
-	private BitButton mButtons[];
+	private BitView mViews[];
 
 	public BitAdapter(Context context, OnClickListener listener, int count, int base) {
 		super();
@@ -23,7 +23,7 @@ public class BitAdapter extends BaseAdapter {
 
 		mCount = count;
 		mBase = base;
-		mButtons = new BitButton[mCount];
+		mViews = new BitView[mCount];
 	}
 
 	@Override
@@ -45,9 +45,9 @@ public class BitAdapter extends BaseAdapter {
 	public View getView(int position, View convertView, ViewGroup parent) {
 		int offset = mCount - position - 1;
 
-		BitButton button = mButtons[offset];
+		BitView button = mViews[offset];
 		if (button == null) {
-			mButtons[offset] = button = new BitButton(mContext, this, offset);
+			mViews[offset] = button = new BitView(mContext, this, offset);
 			button.setText("0");
 			button.setOnClickListener(mListener);
 		}
@@ -59,18 +59,18 @@ public class BitAdapter extends BaseAdapter {
 		return mBase;
 	}
 
-	public BitButton[] getButtons() {
-		return mButtons;
+	public BitView[] getViews() {
+		return mViews;
 	}
 
-	public BitButton getButton(int index) {
-		return mButtons[index];
+	public BitView getButton(int index) {
+		return mViews[index];
 	}
 
 	public void setValue(long value) {
 		for (int i = 0; i < mCount; i++, value /= mBase) {
-			if (mButtons[i] != null) {
-				mButtons[i].setValue((int) (value % mBase));
+			if (mViews[i] != null) {
+				mViews[i].setValue((int) (value % mBase));
 			}
 		}
 	}
@@ -79,7 +79,7 @@ public class BitAdapter extends BaseAdapter {
 		long value = 0;
 
 		for (int i = mCount - 1; i >= 0; i--) {
-			value = value * mBase + mButtons[i].getValue();
+			value = value * mBase + mViews[i].getValue();
 		}
 
 		return value;

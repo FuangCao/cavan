@@ -31,23 +31,23 @@ public class MainActivity extends Activity {
 	private BitAdapter mAdapterOct;
 	private KeypadAdapter mAdapterKeypad;
 
-	private BitButton mCurrButton;
+	private BitView mCurrBitView;
 	private List<BitAdapter> mAdapters = new ArrayList<BitAdapter>();
 
-	private void setCurrButton(BitButton button) {
-		if (mCurrButton != null) {
-			mCurrButton.setActive(false);
+	private void setCurrBit(BitView button) {
+		if (mCurrBitView != null) {
+			mCurrBitView.setActive(false);
 		}
 
 		if (button != null) {
 			button.setActive(true);
 
-			if (mCurrButton == null || button.getAdapter() != mCurrButton.getAdapter()) {
+			if (mCurrBitView == null || button.getAdapter() != mCurrBitView.getAdapter()) {
 				mAdapterKeypad.setKeyCount(button.getAdapter().getBase());
 			}
 		}
 
-		mCurrButton = button;
+		mCurrBitView = button;
 	}
 
 	private void updateValue(BitAdapter adapter) {
@@ -65,13 +65,13 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			BitButton button = (BitButton) v;
+			BitView button = (BitView) v;
 
-			if (button == mCurrButton) {
+			if (button == mCurrBitView) {
 				button.add(1);
 				updateValue(button.getAdapter());
 			} else {
-				setCurrButton((BitButton) v);
+				setCurrBit((BitView) v);
 			}
 		}
 	};
@@ -80,17 +80,17 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			if (mCurrButton == null) {
+			if (mCurrBitView == null) {
 				return;
 			}
 
 			Button button = (Button) v;
-			if (!button.getText().equals(mCurrButton.getText())) {
-				mCurrButton.setText(button.getText());
-				updateValue(mCurrButton.getAdapter());
+			if (!button.getText().equals(mCurrBitView.getText())) {
+				mCurrBitView.setText(button.getText());
+				updateValue(mCurrBitView.getAdapter());
 			}
 
-			setCurrButton(mCurrButton.getNextButton());
+			setCurrBit(mCurrBitView.getNextView());
 		}
 	};
 
