@@ -34,24 +34,24 @@ public class MainActivity extends Activity {
 	private BitView mCurrBitView;
 	private List<BitAdapter> mAdapters = new ArrayList<BitAdapter>();
 
-	private void setCurrBit(BitView button) {
+	private void setCurrBit(BitView view) {
 		if (mCurrBitView != null) {
 			mCurrBitView.setActive(false);
 		}
 
-		if (button != null) {
-			if (mCurrBitView == null || button.getAdapter() != mCurrBitView.getAdapter()) {
-				mAdapterKeypad.setKeyCount(button.getAdapter().getBase());
+		if (view != null) {
+			if (mCurrBitView == null || view.getAdapter() != mCurrBitView.getAdapter()) {
+				mAdapterKeypad.setKeyCount(view.getAdapter().getBase());
 			}
 
-			BitAdapter adapter = button.getAdapter();
+			BitAdapter adapter = view.getAdapter();
 			switch (adapter.getBase()) {
 			case 8:
-				mAdapterBin.setActiveViews(button.getIndex() * 3, 3);
+				mAdapterBin.setActiveViews(view.getIndex() * 3, 3);
 				break;
 
 			case 16:
-				mAdapterBin.setActiveViews(button.getIndex() * 4, 4);
+				mAdapterBin.setActiveViews(view.getIndex() * 4, 4);
 				break;
 
 			default:
@@ -61,12 +61,12 @@ public class MainActivity extends Activity {
 				break;
 			}
 
-			button.setActive(true);
+			view.setActive(true);
 		} else {
 			mAdapterBin.setActiveViews(0, 0);
 		}
 
-		mCurrBitView = button;
+		mCurrBitView = view;
 	}
 
 	private void updateValue(BitAdapter adapter) {

@@ -30,7 +30,6 @@ public class BitView extends RelativeLayout {
 	protected void onFinishInflate() {
 		mTextViewIndex = (TextView) findViewById(R.id.textViewIndex);
 		mTextViewIndex.setText("0");
-		mTextViewIndex.setTextColor(Color.BLACK);
 
 		mTextViewTitle = (TextView) findViewById(R.id.textViewTitle);
 		mTextViewTitle.setText("0");
