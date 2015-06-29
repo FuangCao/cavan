@@ -40,11 +40,30 @@ public class MainActivity extends Activity {
 		}
 
 		if (button != null) {
-			button.setActive(true);
-
 			if (mCurrBitView == null || button.getAdapter() != mCurrBitView.getAdapter()) {
 				mAdapterKeypad.setKeyCount(button.getAdapter().getBase());
 			}
+
+			BitAdapter adapter = button.getAdapter();
+			switch (adapter.getBase()) {
+			case 8:
+				mAdapterBin.setActiveViews(button.getIndex() * 3, 3);
+				break;
+
+			case 16:
+				mAdapterBin.setActiveViews(button.getIndex() * 4, 4);
+				break;
+
+			default:
+				if (mCurrBitView != null && mCurrBitView.getAdapter() != adapter) {
+					mAdapterBin.setActiveViews(0, 0);
+				}
+				break;
+			}
+
+			button.setActive(true);
+		} else {
+			mAdapterBin.setActiveViews(0, 0);
 		}
 
 		mCurrBitView = button;

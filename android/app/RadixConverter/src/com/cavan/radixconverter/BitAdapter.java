@@ -90,4 +90,25 @@ public class BitAdapter extends BaseAdapter {
 
 		return value;
 	}
+
+	public void setActiveViews(int index, int count) {
+		int i = 0;
+
+		while (i < index) {
+			mViews[i++].setActive(false);
+		}
+
+		index += count;
+		if (index > mCount) {
+			index = mCount;
+		}
+
+		while (i < index) {
+			mViews[i++].setActive(true);
+		}
+
+		while (i < mCount) {
+			mViews[i++].setActive(false);
+		}
+	}
 }
