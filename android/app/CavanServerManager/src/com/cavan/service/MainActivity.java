@@ -170,7 +170,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceEnableTcpDd.setOnPreferenceChangeListener(this);
 		mPreferenceTcpDdPort = (EditTextPreference) findPreference(KEY_TCP_DD_PORT);
 		mPreferenceTcpDdPort.setOnPreferenceChangeListener(this);
-		
+
 		mPreferenceEnableFtp = (CheckBoxPreference) findPreference(KEY_ENABLE_FTP);
 		mPreferenceEnableFtp.setOnPreferenceChangeListener(this);
 		mPreferenceFtpPort = (EditTextPreference) findPreference(KEY_FTP_PORT);

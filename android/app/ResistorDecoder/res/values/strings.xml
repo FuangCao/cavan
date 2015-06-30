@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">电阻解码器</string>
+    <string name="action_settings">设置</string>
+    <string name="name_resistor4">四环电阻：</string>
+    <string name="name_resistor5">五环电阻：</string>
+
+</resources>

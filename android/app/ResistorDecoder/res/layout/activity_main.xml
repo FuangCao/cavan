@@ -1,0 +1,38 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="1dp"
+    android:paddingRight="1dp"
+    tools:context="com.cavan.resistordecoder.MainActivity" >
+
+	<TextView
+        android:id="@+id/textViewResistor4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/name_resistor4" />
+
+    <GridView
+        android:id="@+id/gridViewResistor4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:numColumns="4" >
+
+    </GridView>
+
+    <TextView
+        android:id="@+id/textViewResistor5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/name_resistor5" />
+
+    <GridView
+        android:id="@+id/gridViewResistor5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:numColumns="5" >
+
+    </GridView>
+
+</LinearLayout>

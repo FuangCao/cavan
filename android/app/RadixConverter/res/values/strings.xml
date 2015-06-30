@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">RadixConverter</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="app_name">进制转换器</string>
+    <string name="action_settings">设置</string>
     <string name="radix_bin">二进制：</string>
     <string name="radix_oct">八进制：</string>
     <string name="radix_dec">十进制：</string>

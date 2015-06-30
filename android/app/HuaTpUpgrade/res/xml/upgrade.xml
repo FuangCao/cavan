@@ -18,7 +18,7 @@
 		android:key="fw_id"
 		android:title="@string/fw_id"
 		android:persistent="false"/>
-	
+
 	<PreferenceScreen
 		android:key="vendor_name"
 		android:title="@string/vendor_name"
