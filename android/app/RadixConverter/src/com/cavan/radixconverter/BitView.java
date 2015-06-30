@@ -58,10 +58,10 @@ public class BitView extends RelativeLayout {
 	public void setActive(boolean active) {
 		if (active) {
 			mTextViewIndex.setBackgroundColor(Color.RED);
-			mTextViewTitle.setBackgroundColor(Color.BLUE);
+			mTextViewTitle.setBackgroundColor(Color.MAGENTA);
 		} else {
-			mTextViewIndex.setBackgroundColor(Color.MAGENTA);
-			mTextViewTitle.setBackgroundColor(Color.BLACK);
+			mTextViewIndex.setBackgroundColor(Color.BLACK);
+			mTextViewTitle.setBackgroundColor(Color.GRAY);
 		}
 	}
 
