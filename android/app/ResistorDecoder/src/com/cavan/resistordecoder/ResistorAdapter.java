@@ -44,4 +44,23 @@ public class ResistorAdapter extends BaseAdapter {
 
 		return view;
 	}
+
+	double getValue() {
+		int i = 0;
+		long value = 0;
+
+		while (i < mCount - 2) {
+			value = value * 10 + mViews[i++].getValue();
+		}
+
+		return value * Math.pow(10, mViews[i++].getValue());
+	}
+
+	void setValue(double value) {
+		if (value < 1) {
+
+		} else {
+
+		}
+	}
 }

@@ -5,5 +5,24 @@
     <string name="action_settings">设置</string>
     <string name="name_resistor4">四环电阻：</string>
     <string name="name_resistor5">五环电阻：</string>
+    <string name="resistor_value">阻值：</string>
+	<string name="color_black">黑</string>
+	<string name="color_brown">棕</string>
+	<string name="color_red">红</string>
+	<string name="color_orange">橙</string>
+	<string name="color_yellow">黄</string>
+	<string name="color_green">绿</string>
+	<string name="color_blue">蓝</string>
+	<string name="color_purple">紫</string>
+	<string name="color_gray">灰</string>
+	<string name="color_white">白</string>
+	<string name="color_gold">金</string>
+	<string name="color_silver">银</string>
+
+	<string-array name="resistence_unit">
+		<item >Ω</item>
+		<item >KΩ</item>
+		<item >MΩ</item>
+	</string-array>
 
 </resources>

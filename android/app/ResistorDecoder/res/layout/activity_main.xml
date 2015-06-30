@@ -17,9 +17,8 @@
         android:id="@+id/gridViewResistor4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:numColumns="4" >
-
-    </GridView>
+        android:horizontalSpacing="1dp"
+        android:numColumns="4" />
 
     <TextView
         android:id="@+id/textViewResistor5"
@@ -31,8 +30,31 @@
         android:id="@+id/gridViewResistor5"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:numColumns="5" >
+        android:horizontalSpacing="1dp"
+        android:numColumns="5" />
 
-    </GridView>
+    <TextView
+        android:id="@+id/textViewResistorValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/resistor_value" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <EditText
+	        android:id="@+id/editTextResistence"
+	        android:layout_width="200dp"
+	        android:layout_height="wrap_content"
+	        android:inputType="numberDecimal"
+	        android:digits="0123456789." />
+
+        <Spinner
+	        android:id="@+id/spinnerResistenceUnit"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" />
+    </LinearLayout>
 
 </LinearLayout>
