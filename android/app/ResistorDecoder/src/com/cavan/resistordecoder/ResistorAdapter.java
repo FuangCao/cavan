@@ -8,9 +8,15 @@ import android.widget.BaseAdapter;
 public class ResistorAdapter extends BaseAdapter {
 
 	private Context mContext;
-
 	private ColorView mViews[];
 	private int mCount;
+	private int mSignificantDigitBits;
+	private long mSignificantDigitMax;
+	private OnResistenceChangedListener mListener;
+
+	interface OnResistenceChangedListener {
+		void onResistenceChanged(ResistorAdapter adapter);
+	}
 
 	public ResistorAdapter(Context context, int count) {
 		super();
@@ -18,6 +24,9 @@ public class ResistorAdapter extends BaseAdapter {
 		mContext = context;
 		mCount = count;
 		mViews = new ColorView[mCount];
+
+		mSignificantDigitBits = mCount - 2;
+		mSignificantDigitMax = ((long) Math.pow(10, mSignificantDigitBits)) - 1;
 	}
 
 	@Override
@@ -39,28 +48,55 @@ public class ResistorAdapter extends BaseAdapter {
 	public View getView(int position, View convertView, ViewGroup parent) {
 		ColorView view = mViews[position];
 		if (view == null) {
-			mViews[position] = view = new ColorView(mContext);
+			mViews[position] = view = new ColorView(mContext, this);
 		}
 
 		return view;
 	}
 
-	double getValue() {
+	double getResistence() {
 		int i = 0;
 		long value = 0;
 
-		while (i < mCount - 2) {
+		while (i < mSignificantDigitBits) {
 			value = value * 10 + mViews[i++].getValue();
 		}
 
 		return value * Math.pow(10, mViews[i++].getValue());
 	}
 
-	void setValue(double value) {
-		if (value < 1) {
+	void setResistence(double resistence) {
+		int pow = 0;
 
-		} else {
-
+		while (resistence > (long) resistence && pow > -2) {
+			resistence *= 10;
+			pow--;
 		}
+
+		while (resistence > mSignificantDigitMax && pow < 9) {
+			resistence /= 10;
+			pow++;
+		}
+
+		long iResistence = (long) resistence;
+		if (iResistence > mSignificantDigitMax) {
+			iResistence = mSignificantDigitMax;
+		}
+
+		for (int i = mSignificantDigitBits - 1; i >= 0; i--, iResistence /= 10) {
+			mViews[i].setValue((int) (iResistence % 10));
+		}
+
+		mViews[mSignificantDigitBits].setValue(pow);
+	}
+
+	void updateResistence() {
+		if (mListener != null) {
+			mListener.onResistenceChanged(this);
+		}
+	}
+
+	public void setOnResistenceChangedListener(OnResistenceChangedListener listener) {
+		mListener = listener;
 	}
 }

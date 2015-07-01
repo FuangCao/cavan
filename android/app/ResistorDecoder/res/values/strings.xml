@@ -16,13 +16,26 @@
 	<string name="color_purple">紫</string>
 	<string name="color_gray">灰</string>
 	<string name="color_white">白</string>
+	<string name="color_none">无</string>
 	<string name="color_gold">金</string>
 	<string name="color_silver">银</string>
 
 	<string-array name="resistence_unit">
 		<item >Ω</item>
-		<item >KΩ</item>
+		<item >kΩ</item>
 		<item >MΩ</item>
+	</string-array>
+
+	<string-array name="resistence_mistake">
+		<item >±1%</item>
+		<item >±2%</item>
+		<item >±0.5%</item>
+		<item >±0.25%</item>
+		<item >±0.1%</item>
+		<item >±0.05%</item>
+		<item >±20%</item>
+		<item >±10%</item>
+		<item >±5%</item>
 	</string-array>
 
 </resources>

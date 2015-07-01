@@ -14,7 +14,7 @@ import android.widget.TextView;
 
 public class ColorView extends Spinner implements OnItemSelectedListener {
 
-	private static int[] sColorNameList = { R.string.color_black, R.string.color_brown, R.string.color_red, R.string.color_orange, R.string.color_yellow, R.string.color_green, R.string.color_blue, R.string.color_purple, R.string.color_gray, R.string.color_white, R.string.color_gold, R.string.color_silver };
+	private static int[] sColorNameList = { R.string.color_black, R.string.color_brown, R.string.color_red, R.string.color_orange, R.string.color_yellow, R.string.color_green, R.string.color_blue, R.string.color_purple, R.string.color_gray, R.string.color_white, R.string.color_gold, R.string.color_silver, R.string.color_none };
 	private static SparseIntArray sHashMapColor = new SparseIntArray();
 
 	static {
@@ -30,7 +30,10 @@ public class ColorView extends Spinner implements OnItemSelectedListener {
 		sHashMapColor.put(R.string.color_silver, 0xFFC0C0C0);
 		sHashMapColor.put(R.string.color_white, 0xFFFFFFFF);
 		sHashMapColor.put(R.string.color_yellow, 0xFFFFFF00);
+		sHashMapColor.put(R.string.color_none, 0xFFFFFFFF);
 	}
+
+	private ResistorAdapter mAdapter;
 
 	class ColorViewItem extends TextView {
 
@@ -70,7 +73,7 @@ public class ColorView extends Spinner implements OnItemSelectedListener {
 		}
 	}
 
-	private BaseAdapter mAdapter = new BaseAdapter() {
+	private BaseAdapter mAdapterItem = new BaseAdapter() {
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
@@ -93,10 +96,12 @@ public class ColorView extends Spinner implements OnItemSelectedListener {
 		}
 	};
 
-	public ColorView(Context context) {
+	public ColorView(Context context, ResistorAdapter adapter) {
 		super(context);
 
-		setAdapter(mAdapter);
+		mAdapter = adapter;
+
+		setAdapter(mAdapterItem);
 		setOnItemSelectedListener(this);
 		setGravity(Gravity.CENTER);
 		setBackgroundColor(Color.TRANSPARENT);
@@ -125,6 +130,7 @@ public class ColorView extends Spinner implements OnItemSelectedListener {
 	public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
 		ColorViewItem item = (ColorViewItem) arg1;
 		setBackgroundColor(item.getColor());
+		mAdapter.updateResistence();
 	}
 
 	@Override
