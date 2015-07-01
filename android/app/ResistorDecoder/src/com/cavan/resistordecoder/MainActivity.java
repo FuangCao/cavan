@@ -21,13 +21,18 @@ import com.cavan.resistordecoder.ResistorAdapter.OnResistenceChangedListener;
 public class MainActivity extends ActionBarActivity implements TextWatcher, OnItemSelectedListener, OnResistenceChangedListener {
 
 	private GridView mGridViewResistor4;
+	private ResistorAdapter mAdapterResistor4;
+
 	private GridView mGridViewResistor5;
+	private ResistorAdapter mAdapterResistor5;
+
+	private GridView mGridViewResistor6;
+	private ResistorAdapter mAdapterResistor6;
+
 	private EditText mEditTextResistence;
 	private Spinner mSpinnerResistenceUnit;
 	private Spinner mSpinnerResistenceMistake;
-
-	private ResistorAdapter mAdapterResistor4;
-	private ResistorAdapter mAdapterResistor5;
+	private Spinner mSpinnerTempCofficient;
 
 	private static boolean mBusy;
 
@@ -55,6 +60,11 @@ public class MainActivity extends ActionBarActivity implements TextWatcher, OnIt
         mGridViewResistor5.setAdapter(mAdapterResistor5);
         mAdapterResistor5.setOnResistenceChangedListener(this);
 
+        mGridViewResistor6 = (GridView) findViewById(R.id.gridViewResistor6);
+        mAdapterResistor6 = new ResistorAdapter(this, 6);
+        mGridViewResistor6.setAdapter(mAdapterResistor6);
+        mAdapterResistor6.setOnResistenceChangedListener(this);
+
         mEditTextResistence = (EditText) findViewById(R.id.editTextResistence);
         mEditTextResistence.addTextChangedListener(this);
 
@@ -64,11 +74,17 @@ public class MainActivity extends ActionBarActivity implements TextWatcher, OnIt
         mSpinnerResistenceUnit.setAdapter(unitAdapter);
         mSpinnerResistenceUnit.setOnItemSelectedListener(this);
 
-        mSpinnerResistenceMistake = (Spinner) findViewById(R.id.spinnerResistenceMitake);
+        mSpinnerResistenceMistake = (Spinner) findViewById(R.id.spinnerResistenceMistake);
         String[] mistakeList = getResources().getStringArray(R.array.resistence_mistake);
         ArrayAdapter<String> mistakeAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mistakeList);
         mSpinnerResistenceMistake.setAdapter(mistakeAdapter);
         mSpinnerResistenceMistake.setOnItemSelectedListener(this);
+
+        mSpinnerTempCofficient = (Spinner) findViewById(R.id.spinnerTempCofficient);
+        String[] tempCofficient = getResources().getStringArray(R.array.temperature_coefficient);
+        ArrayAdapter<String> tempCofficientAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, tempCofficient);
+        mSpinnerTempCofficient.setAdapter(tempCofficientAdapter);
+        mSpinnerTempCofficient.setOnItemSelectedListener(this);
     }
 
     @Override
@@ -94,9 +110,12 @@ public class MainActivity extends ActionBarActivity implements TextWatcher, OnIt
 		try {
 			double unit = Math.pow(1000, mSpinnerResistenceUnit.getSelectedItemPosition());
 			double resistence = Double.parseDouble(mEditTextResistence.getText().toString()) * unit;
+			int mistake = mSpinnerResistenceMistake.getSelectedItemPosition();
+			int tempCofficient = mSpinnerTempCofficient.getSelectedItemPosition();
 
-			mAdapterResistor4.setResistence(resistence);
-			mAdapterResistor5.setResistence(resistence);
+			mAdapterResistor4.setResistence(resistence, mistake, tempCofficient);
+			mAdapterResistor5.setResistence(resistence, mistake, tempCofficient);
+			mAdapterResistor6.setResistence(resistence, mistake, tempCofficient);
 		} catch (Exception e) {
 		}
     }
@@ -150,10 +169,19 @@ public class MainActivity extends ActionBarActivity implements TextWatcher, OnIt
 		}
 
 		double resistence = adapter.getResistence();
-		if (adapter == mAdapterResistor4) {
-			mAdapterResistor5.setResistence(resistence);
-		} else {
-			mAdapterResistor4.setResistence(resistence);
+		int mistake = adapter.getMistake();
+		int tempCofficient = adapter.getTempCofficient();
+
+		if (adapter != mAdapterResistor4) {
+			mAdapterResistor4.setResistence(resistence, mistake, tempCofficient);
+		}
+
+		if (adapter != mAdapterResistor5) {
+			mAdapterResistor5.setResistence(resistence, mistake, tempCofficient);
+		}
+
+		if (adapter != mAdapterResistor6) {
+			mAdapterResistor6.setResistence(resistence, mistake, tempCofficient);
 		}
 
 		if (resistence > 1000000) {
@@ -167,6 +195,8 @@ public class MainActivity extends ActionBarActivity implements TextWatcher, OnIt
 		}
 
 		mEditTextResistence.setText(Double.toString(resistence));
+		mSpinnerResistenceMistake.setSelection(adapter.getMistake());
+		mSpinnerTempCofficient.setSelection(adapter.getTempCofficient());
 
 		setBusy(false);
 	}

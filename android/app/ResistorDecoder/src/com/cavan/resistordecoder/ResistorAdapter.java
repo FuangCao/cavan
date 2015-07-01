@@ -8,8 +8,11 @@ import android.widget.BaseAdapter;
 public class ResistorAdapter extends BaseAdapter {
 
 	private Context mContext;
-	private ColorView mViews[];
+	private ColorLoopView mViews[];
 	private int mCount;
+	private int mMistakeBit;
+	private int mMagnitudeBit;
+	private int mTempCofficientBit;
 	private int mSignificantDigitBits;
 	private long mSignificantDigitMax;
 	private OnResistenceChangedListener mListener;
@@ -23,10 +26,21 @@ public class ResistorAdapter extends BaseAdapter {
 
 		mContext = context;
 		mCount = count;
-		mViews = new ColorView[mCount];
+		mViews = new ColorLoopView[mCount];
 
 		mSignificantDigitBits = mCount - 2;
+		if (mSignificantDigitBits > 3) {
+			mSignificantDigitBits = 3;
+		}
+
 		mSignificantDigitMax = ((long) Math.pow(10, mSignificantDigitBits)) - 1;
+
+		mMagnitudeBit = mSignificantDigitBits;
+		mMistakeBit = mMagnitudeBit + 1;
+		mTempCofficientBit = mMistakeBit + 1;
+		if (mTempCofficientBit >= mCount) {
+			mTempCofficientBit = -1;
+		}
 	}
 
 	@Override
@@ -44,11 +58,23 @@ public class ResistorAdapter extends BaseAdapter {
 		return 0;
 	}
 
+	private int getColorLoopType(int index) {
+		if (index < mSignificantDigitBits) {
+			return ColorLoopView.COLOR_LOOP_TYPE_SIGNIFICANCE_DIGIT;
+		} else if (index == mMagnitudeBit) {
+			return ColorLoopView.COLOR_LOOP_TYPE_MAGNITUDE;
+		} else if (index == mMistakeBit) {
+			return ColorLoopView.COLOR_LOOP_TYPE_MISTAKE;
+		} else {
+			return ColorLoopView.COLOR_LOOP_TYPE_TEMPERATUE_COEFFICIENT;
+		}
+	}
+
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
-		ColorView view = mViews[position];
+		ColorLoopView view = mViews[position];
 		if (view == null) {
-			mViews[position] = view = new ColorView(mContext, this);
+			mViews[position] = view = new ColorLoopView(mContext, this, getColorLoopType(position));
 		}
 
 		return view;
@@ -65,7 +91,7 @@ public class ResistorAdapter extends BaseAdapter {
 		return value * Math.pow(10, mViews[i++].getValue());
 	}
 
-	void setResistence(double resistence) {
+	void setResistence(double resistence, int mistake, int tempCofficient) {
 		int pow = 0;
 
 		while (resistence > (long) resistence && pow > -2) {
@@ -88,6 +114,31 @@ public class ResistorAdapter extends BaseAdapter {
 		}
 
 		mViews[mSignificantDigitBits].setValue(pow);
+
+		setMistake(mistake);
+		setTempCofficient(tempCofficient);
+	}
+
+	public void setMistake(int value) {
+		mViews[mMistakeBit].setValue(value);
+	}
+
+	public int getMistake() {
+		return mViews[mMistakeBit].getValue();
+	}
+
+	public void setTempCofficient(int value) {
+		if (mTempCofficientBit >= 0) {
+			mViews[mTempCofficientBit].setValue(value);
+		}
+	}
+
+	public int getTempCofficient() {
+		if (mTempCofficientBit < 0) {
+			return 0;
+		}
+
+		return mViews[mTempCofficientBit].getValue();
 	}
 
 	void updateResistence() {

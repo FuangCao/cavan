@@ -12,9 +12,31 @@ import android.widget.BaseAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-public class ColorView extends Spinner implements OnItemSelectedListener {
+public class ColorLoopView extends Spinner implements OnItemSelectedListener {
 
-	private static int[] sColorNameList = { R.string.color_black, R.string.color_brown, R.string.color_red, R.string.color_orange, R.string.color_yellow, R.string.color_green, R.string.color_blue, R.string.color_purple, R.string.color_gray, R.string.color_white, R.string.color_gold, R.string.color_silver, R.string.color_none };
+	public static final int COLOR_LOOP_TYPE_SIGNIFICANCE_DIGIT = 1;
+	public static final int COLOR_LOOP_TYPE_MAGNITUDE = 2;
+	public static final int COLOR_LOOP_TYPE_MISTAKE = 3;
+	public static final int COLOR_LOOP_TYPE_TEMPERATUE_COEFFICIENT = 4;
+
+	private static int[] sSignificanceDigitList = {
+		R.string.color_black, R.string.color_brown, R.string.color_red, R.string.color_orange, R.string.color_yellow,
+		R.string.color_green, R.string.color_blue, R.string.color_purple, R.string.color_gray, R.string.color_white
+	};
+	private static int[] sMagnitudeList = {
+		R.string.color_black, R.string.color_brown, R.string.color_red, R.string.color_orange, R.string.color_yellow,
+		R.string.color_green, R.string.color_blue, R.string.color_purple, R.string.color_gray, R.string.color_white,
+		R.string.color_gold, R.string.color_silver
+	};
+	private static int[] sMistakeList = {
+		R.string.color_brown, R.string.color_red, R.string.color_green, R.string.color_blue, R.string.color_purple,
+		R.string.color_gray, R.string.color_gold, R.string.color_silver, R.string.color_none
+	};
+	private static int[] sTemperatueCoefficientList = {
+		R.string.color_brown, R.string.color_red, R.string.color_orange, R.string.color_yellow, R.string.color_blue,
+		R.string.color_purple, R.string.color_white
+	};
+
 	private static SparseIntArray sHashMapColor = new SparseIntArray();
 
 	static {
@@ -34,24 +56,26 @@ public class ColorView extends Spinner implements OnItemSelectedListener {
 	}
 
 	private ResistorAdapter mAdapter;
+	private int mType;
+	private int[] mColorList;
 
-	class ColorViewItem extends TextView {
+	class ColorView extends TextView {
 
-		private int mNameId;
+		private int mColorId;
 		private int mColor;
 		private int mBright;
 		private int mIndex;
 
-		public ColorViewItem(Context context, int index) {
+		public ColorView(Context context, int index) {
 			super(context);
 
 			mIndex = index;
 
-			mNameId = sColorNameList[mIndex];
-			setText(mNameId);
+			mColorId = mColorList[mIndex];
+			setText(mColorId);
 			setGravity(Gravity.CENTER);
 
-			mColor = sHashMapColor.get(mNameId);
+			mColor = sHashMapColor.get(mColorId);
 			setBackgroundColor(mColor);
 
 			mBright = (int) (0.299 * ((mColor >> 16) & 0xFF) + 0.587 * ((mColor >> 8) & 0xFF) + 0.114 * (mColor & 0xFF));
@@ -68,8 +92,8 @@ public class ColorView extends Spinner implements OnItemSelectedListener {
 			return mIndex;
 		}
 
-		public int getNameId() {
-			return mNameId;
+		public int getColorId() {
+			return mColorId;
 		}
 	}
 
@@ -77,7 +101,7 @@ public class ColorView extends Spinner implements OnItemSelectedListener {
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			return new ColorViewItem(getContext(), position);
+			return new ColorView(getContext(), position);
 		}
 
 		@Override
@@ -92,12 +116,31 @@ public class ColorView extends Spinner implements OnItemSelectedListener {
 
 		@Override
 		public int getCount() {
-			return sColorNameList.length;
+			return mColorList.length;
 		}
 	};
 
-	public ColorView(Context context, ResistorAdapter adapter) {
+	public ColorLoopView(Context context, ResistorAdapter adapter, int type) {
 		super(context);
+
+		mType = type;
+		switch (mType) {
+		case COLOR_LOOP_TYPE_MAGNITUDE:
+			mColorList = sMagnitudeList;
+			break;
+
+		case COLOR_LOOP_TYPE_MISTAKE:
+			mColorList = sMistakeList;
+			break;
+
+		case COLOR_LOOP_TYPE_TEMPERATUE_COEFFICIENT:
+			mColorList = sTemperatueCoefficientList;
+			break;
+
+		default:
+			mColorList = sSignificanceDigitList;
+			break;
+		}
 
 		mAdapter = adapter;
 
@@ -128,7 +171,7 @@ public class ColorView extends Spinner implements OnItemSelectedListener {
 
 	@Override
 	public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		ColorViewItem item = (ColorViewItem) arg1;
+		ColorView item = (ColorView) arg1;
 		setBackgroundColor(item.getColor());
 		mAdapter.updateResistence();
 	}
