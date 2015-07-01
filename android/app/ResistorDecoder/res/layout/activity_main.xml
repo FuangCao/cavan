@@ -46,7 +46,7 @@
 			android:layout_width="180dp"
 			android:layout_height="wrap_content"
 			android:inputType="numberDecimal"
-			android:digits="0123456789R" />
+			android:digits="0123456789KR" />
 
 		<Spinner
 			android:id="@+id/spinnerTempCofficient"

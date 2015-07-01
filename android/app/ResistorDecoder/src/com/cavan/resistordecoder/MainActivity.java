@@ -35,16 +35,8 @@ public class MainActivity extends ActionBarActivity implements OnItemSelectedLis
 	private Spinner mSpinnerResistenceMistake;
 	private Spinner mSpinnerTempCofficient;
 
-	private static boolean mBusy;
-
-	private static Handler mHandlerBusy = new Handler() {
-
-		@Override
-		public void handleMessage(Message msg) {
-			mBusy = false;
-			super.handleMessage(msg);
-		}
-	};
+	private boolean mBusy;
+	private UpdateHandler mHandler = new UpdateHandler(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,115 +130,141 @@ public class MainActivity extends ActionBarActivity implements OnItemSelectedLis
         return super.onOptionsItemSelected(item);
     }
 
-    private void showResistence(Object object) {
-		if (!setBusy(true)) {
-			return;
-		}
+    public void showResistenceSafe(Object obj) throws Exception {
+		double resistence;
+		int mistake;
+		int tempCofficient;
 
-		try {
-			double resistence;
-			int mistake;
-			int tempCofficient;
+		if (obj instanceof ResistorAdapter) {
+			ResistorAdapter adapter = (ResistorAdapter) obj;
+			resistence = adapter.getResistence();
+			mistake = adapter.getMistake();
+			tempCofficient = adapter.getTempCofficient();
 
-			if (object instanceof ResistorAdapter) {
-				ResistorAdapter adapter = (ResistorAdapter) object;
-				resistence = adapter.getResistence();
-				mistake = adapter.getMistake();
-				tempCofficient = adapter.getTempCofficient();
+			mSpinnerResistenceMistake.setSelection(adapter.getMistake());
+			mSpinnerTempCofficient.setSelection(adapter.getTempCofficient());
+		} else {
+			if (obj == mEditTextResistence1) {
+				double unit = Math.pow(1000, mSpinnerResistenceUnit.getSelectedItemPosition());
 
-				mSpinnerResistenceMistake.setSelection(adapter.getMistake());
-				mSpinnerTempCofficient.setSelection(adapter.getTempCofficient());
+				resistence = Double.parseDouble(mEditTextResistence1.getText().toString()) * unit;
+				mistake = mSpinnerResistenceMistake.getSelectedItemPosition();
 			} else {
-				if (object == mEditTextResistence1) {
-					double unit = Math.pow(1000, mSpinnerResistenceUnit.getSelectedItemPosition());
+				String text = mEditTextResistence2.getText().toString();
 
-					resistence = Double.parseDouble(mEditTextResistence1.getText().toString()) * unit;
-					mistake = mSpinnerResistenceMistake.getSelectedItemPosition();
-				} else {
-					String text = mEditTextResistence2.getText().toString();
+				mistake = text.length() < 4 ? 6 : 0;
 
-					mistake = text.length() < 4 ? 6 : 0;
+				int kIndex = text.indexOf('K');
+				int rIndex = text.indexOf('R');
 
-					int index = text.indexOf('R');
-					if (index < 0) {
+				if (kIndex >= 0 || rIndex < 0) {
+					if (kIndex < 0) {
 						long value = Long.parseLong(text);
 						resistence = (value / 10) * Math.pow(10, value % 10);
 					} else {
-						if (index == 0) {
-							text = "0." + text.substring(1);
-						} else {
-							text = text.replace('R', '.');
+						if (rIndex > 0) {
+							text = text.substring(0, rIndex - 1);
 						}
 
-						resistence = Double.parseDouble(text);
+						text = text.replace('K', '.');
+						resistence = Double.parseDouble(text) * 1000;
+					}
+				} else {
+					if (rIndex == 0) {
+						text = "0." + text.substring(1);
+					} else {
+						text = text.substring(0, text.length() - 1);
 					}
 
-					mSpinnerResistenceMistake.setSelection(mistake);
+					resistence = Double.parseDouble(text);
 				}
 
-				tempCofficient = mSpinnerTempCofficient.getSelectedItemPosition();
+				mSpinnerResistenceMistake.setSelection(mistake);
 			}
 
-			if (object != mAdapterResistor4) {
-				mAdapterResistor4.setResistence(resistence, mistake, tempCofficient);
+			tempCofficient = mSpinnerTempCofficient.getSelectedItemPosition();
+		}
+
+		if (obj != mAdapterResistor4) {
+			mAdapterResistor4.setResistence(resistence, mistake, tempCofficient);
+		}
+
+		if (obj != mAdapterResistor5) {
+			mAdapterResistor5.setResistence(resistence, mistake, tempCofficient);
+		}
+
+		if (obj != mAdapterResistor6) {
+			mAdapterResistor6.setResistence(resistence, mistake, tempCofficient);
+		}
+
+		if (obj != mEditTextResistence1) {
+			double value = resistence;
+
+			if (value >= 1000000) {
+				value /= 1000000;
+				mSpinnerResistenceUnit.setSelection(2);
+			} else if (value >= 1000) {
+				value /= 1000;
+				mSpinnerResistenceUnit.setSelection(1);
+			} else {
+				mSpinnerResistenceUnit.setSelection(0);
 			}
 
-			if (object != mAdapterResistor5) {
-				mAdapterResistor5.setResistence(resistence, mistake, tempCofficient);
-			}
+			mEditTextResistence1.setText(Double.toString(value));
+		}
 
-			if (object != mAdapterResistor6) {
-				mAdapterResistor6.setResistence(resistence, mistake, tempCofficient);
-			}
+		if (obj != mEditTextResistence2) {
+			double value = resistence;
 
-			if (object != mEditTextResistence1) {
-				double value = resistence;
-
-				if (value >= 1000000) {
-					value /= 1000000;
-					mSpinnerResistenceUnit.setSelection(2);
-				} else if (value >= 1000) {
-					value /= 1000;
-					mSpinnerResistenceUnit.setSelection(1);
-				} else {
-					mSpinnerResistenceUnit.setSelection(0);
-				}
-
-				mEditTextResistence1.setText(Double.toString(value));
-			}
-
-			if (object != mEditTextResistence2) {
-				int pow;
-				double value = resistence;
-
+			if (mistake < 6) {
 				if (value < 1) {
 					mEditTextResistence2.setText(String.format("R%03d", (int) (value * 1000)));
 				} else if (value < 10) {
+					mEditTextResistence2.setText(String.format("%dR%02d", ((int) value) % 10, ((int) (value * 100)) % 100));
+				} else {
+					int pow;
+					for (pow = 0, value = resistence; value > 999 && pow < 9; value /= 10, pow++);
+
+					if (value > 999) {
+						value = 999;
+					}
+
+					mEditTextResistence2.setText(String.format("%04d", ((int) value) * 10 + pow));
+				}
+			} else {
+				if (value < 1) {
+					mEditTextResistence2.setText(String.format("R%02d", (int) (value * 100)));
+				} else if (value < 10) {
 					mEditTextResistence2.setText(String.format("%dR%d", ((int) value) % 10, ((int) (value * 10)) % 10));
 				} else {
+					int pow;
 					for (pow = 0, value = resistence; value > 99 && pow < 9; value /= 10, pow++);
+
+					if (value > 99) {
+						value = 99;
+					}
 
 					mEditTextResistence2.setText(String.format("%03d", ((int) value) * 10 + pow));
 				}
 			}
-		} catch (Exception e) {
-		} finally {
-			setBusy(false);
 		}
-    }
+	}
 
-	private boolean setBusy(boolean busy) {
+	public boolean setBusy(boolean busy) {
 		if (mBusy == busy) {
 			return false;
 		}
 
-		if (busy) {
-			mBusy = true;
-		} else {
-			mHandlerBusy.sendEmptyMessageDelayed(0, 100);
-		}
+		mBusy = busy;
 
 		return true;
+	}
+
+	private void showResistence(Object obj) {
+		if (setBusy(true)) {
+			Message message = mHandler.obtainMessage(0, obj);
+			mHandler.sendMessage(message);
+		}
 	}
 
 	@Override
@@ -261,5 +279,29 @@ public class MainActivity extends ActionBarActivity implements OnItemSelectedLis
 	@Override
 	public void onResistenceChanged(ResistorAdapter adapter) {
 		showResistence(adapter);
+	}
+}
+
+class UpdateHandler extends Handler {
+
+	MainActivity mActivity;
+
+	public UpdateHandler(MainActivity activity) {
+		super();
+		mActivity = activity;
+	}
+
+	@Override
+	public void handleMessage(Message msg) {
+		if (msg.what == 0) {
+			try {
+				mActivity.showResistenceSafe(msg.obj);
+			} catch (Exception e) {
+			}
+
+			sendEmptyMessageDelayed(1, 200);
+		} else {
+			mActivity.setBusy(false);
+		}
 	}
 }
