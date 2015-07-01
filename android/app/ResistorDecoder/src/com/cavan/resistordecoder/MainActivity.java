@@ -101,16 +101,19 @@ public class MainActivity extends ActionBarActivity implements TextWatcher, OnIt
 		}
     }
 
-private boolean setBusy() {
-	if (mBusy) {
-		return false;
+	private boolean setBusy(boolean busy) {
+		if (mBusy == busy) {
+			return false;
+		}
+
+		if (busy) {
+			mBusy = true;
+		} else {
+			mHandlerBusy.sendEmptyMessageDelayed(0, 100);
+		}
+
+		return true;
 	}
-
-	mBusy = true;
-	mHandlerBusy.sendEmptyMessageDelayed(0, 100);
-
-	return true;
-}
 
 	@Override
 	public void afterTextChanged(Editable s) {
@@ -122,15 +125,17 @@ private boolean setBusy() {
 
 	@Override
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		if (setBusy()) {
+		if (setBusy(true)) {
 			showResistence();
+			setBusy(false);
 		}
 	}
 
 	@Override
 	public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		if (setBusy()) {
+		if (setBusy(true)) {
 			showResistence();
+			setBusy(false);
 		}
 	}
 
@@ -140,7 +145,7 @@ private boolean setBusy() {
 
 	@Override
 	public void onResistenceChanged(ResistorAdapter adapter) {
-		if (!setBusy()) {
+		if (!setBusy(true)) {
 			return;
 		}
 
@@ -162,5 +167,7 @@ private boolean setBusy() {
 		}
 
 		mEditTextResistence.setText(Double.toString(resistence));
+
+		setBusy(false);
 	}
 }
