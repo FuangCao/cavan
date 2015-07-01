@@ -7,11 +7,33 @@
     android:paddingRight="1dp"
     tools:context="com.cavan.radixconverter.MainActivity" >
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Spinner
+	        android:id="@+id/spinnerPrefix"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" />
+
+	    <EditText
+	        android:id="@+id/editTextNumber"
+	        android:layout_weight="1"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:digits="0123456789abcdefABCDEF"
+	        android:inputType="numberDecimal" />
+
+	</LinearLayout>
+
+    <!--
     <TextView
         android:id="@+id/textViewBin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@+string/radix_bin" />
+    -->
 
     <GridView
         android:id="@+id/gridViewBin"

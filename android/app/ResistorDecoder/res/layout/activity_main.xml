@@ -19,7 +19,8 @@
 
         <EditText
 	        android:id="@+id/editTextResistence1"
-	        android:layout_width="180dp"
+	        android:layout_weight="1"
+	        android:layout_width="0dp"
 	        android:layout_height="wrap_content"
 	        android:inputType="numberDecimal"
 	        android:digits="0123456789." />
@@ -28,11 +29,6 @@
 	        android:id="@+id/spinnerResistenceUnit"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content" />
-
-		<Spinner
-			android:id="@+id/spinnerResistenceMistake"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content" />
 
     </LinearLayout>
 
@@ -43,10 +39,16 @@
 
 		<EditText
 			android:id="@+id/editTextResistence2"
-			android:layout_width="180dp"
+			android:layout_weight="1"
+			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:inputType="numberDecimal"
 			android:digits="0123456789KR" />
+
+		<Spinner
+			android:id="@+id/spinnerResistenceMistake"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" />
 
 		<Spinner
 			android:id="@+id/spinnerTempCofficient"
