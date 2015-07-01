@@ -173,7 +173,7 @@ public class MainActivity extends ActionBarActivity implements OnItemSelectedLis
 					if (rIndex == 0) {
 						text = "0." + text.substring(1);
 					} else {
-						text = text.substring(0, text.length() - 1);
+						text = text.replace('R', '.');
 					}
 
 					resistence = Double.parseDouble(text);
