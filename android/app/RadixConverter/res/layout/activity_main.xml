@@ -13,7 +13,7 @@
         android:layout_height="wrap_content" >
 
         <Spinner
-	        android:id="@+id/spinnerPrefix"
+	        android:id="@+id/spinnerRadix"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content" />
 
@@ -22,18 +22,19 @@
 	        android:layout_weight="1"
 	        android:layout_width="0dp"
 	        android:layout_height="wrap_content"
+	        android:textIsSelectable="true"
 	        android:digits="0123456789abcdefABCDEF"
 	        android:inputType="numberDecimal" />
 
 	</LinearLayout>
 
-    <!--
+	<!--
     <TextView
         android:id="@+id/textViewBin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@+string/radix_bin" />
-    -->
+	-->
 
     <GridView
         android:id="@+id/gridViewBin"
@@ -41,7 +42,7 @@
         android:layout_height="wrap_content"
         android:horizontalSpacing="1dp"
         android:numColumns="8"
-        android:verticalSpacing="10dp" >
+        android:verticalSpacing="1dp" >
     </GridView>
 
 	<TextView
@@ -86,11 +87,13 @@
         android:numColumns="10" >
     </GridView>
 
+	<!--
 	<TextView
         android:id="@+id/textViewKeypad"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@+string/keypad_text" />
+	-->
 
     <GridView
         android:id="@+id/gridViewKeypad"

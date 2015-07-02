@@ -1,32 +1,41 @@
 package com.cavan.radixconverter;
 
-import android.content.Context;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.GridView;
 
 public class KeypadAdapter extends BaseAdapter {
 
-	public static final String VALUE_TEXT_MAP[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
+	public static final String NUM_KEY_LIST[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
+	public static final String CTRL_KEY_LIST[] = { "◁", "○", "▷", "~", "◀" };
 
-	private Context mContext;
-	private OnClickListener mListener;
+	private GridView mGridView;
+	private OnClickListener mClickListenerNum;
+	private OnClickListener mClickListenerCtrl;
+	private OnLongClickListener mLongClickListenerCtrl;
 
-	private int mCount = VALUE_TEXT_MAP.length;
-	private Button mButtons[] = new Button[VALUE_TEXT_MAP.length];
+	private int mNumKeyCount = NUM_KEY_LIST.length;
+	private int mCtrlKeyCount = CTRL_KEY_LIST.length;
+	private Button[] mButtons;
 
-	public KeypadAdapter(Context context, OnClickListener listener) {
+	public KeypadAdapter(GridView view, OnClickListener clickListenerNum, OnClickListener clickListenerCtrl, OnLongClickListener longClickListenerCtrl) {
 		super();
 
-		mContext = context;
-		mListener = listener;
+		mGridView = view;
+		mClickListenerNum = clickListenerNum;
+		mClickListenerCtrl = clickListenerCtrl;
+		mLongClickListenerCtrl = longClickListenerCtrl;
+
+		updateKeys();
 	}
 
 	@Override
 	public int getCount() {
-		return mCount;
+		return mButtons.length;
 	}
 
 	@Override
@@ -41,32 +50,68 @@ public class KeypadAdapter extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
-		Button button = mButtons[position];
-		if (button == null) {
-			mButtons[position] = button = new Button(mContext);
-			button.setText(VALUE_TEXT_MAP[position]);
-			button.setOnClickListener(mListener);
-		}
+		return mButtons[position];
+	}
+
+	private Button createButton(int id, String text, OnClickListener clickListener, OnLongClickListener longClickListener) {
+		Button button = new Button(mGridView.getContext());
+
+		button.setId(id);
+		button.setText(text);
+		button.setOnClickListener(clickListener);
+		button.setOnLongClickListener(longClickListener);
 
 		return button;
 	}
 
-	public void setKeyCount(int count) {
-		if (count > VALUE_TEXT_MAP.length) {
-			count = VALUE_TEXT_MAP.length;
+	private void updateKeys() {
+		mGridView.setAdapter(null);
+
+		mButtons = new Button[mNumKeyCount + mCtrlKeyCount];
+
+		int index = 0;
+
+		for (int i = 0; i < mNumKeyCount; i++, index++) {
+			mButtons[index] = createButton(i, NUM_KEY_LIST[i], mClickListenerNum, null);
 		}
 
-		for (int i = 0; i < count; i++) {
-			if (mButtons[i] != null) {
-				mButtons[i].setVisibility(View.VISIBLE);
-			}
+		for (int i = 0; i < mCtrlKeyCount; i++, index++) {
+			mButtons[index] = createButton(i, CTRL_KEY_LIST[i], mClickListenerCtrl, mLongClickListenerCtrl);
 		}
 
-		for (int i = count; i < VALUE_TEXT_MAP.length; i++) {
-			if (mButtons[i] != null) {
-				mButtons[i].setVisibility(View.INVISIBLE);
-			}
+		int columns;
+
+		if (mButtons.length <= 8) {
+			columns = mButtons.length;
+		} else if (mButtons.length <= 16) {
+			columns = (mButtons.length + 1) / 2;
+		} else {
+			columns = (mButtons.length + 2) / 3;
+		}
+
+		mGridView.setNumColumns(columns);
+		mGridView.setAdapter(this);
+	}
+
+	public void setNumKeyCount(int count) {
+		if (count > NUM_KEY_LIST.length) {
+			count = NUM_KEY_LIST.length;
+		}
+
+		if (count != mNumKeyCount) {
+			mNumKeyCount = count;
+			updateKeys();
 		}
 	}
 
+	public void setCtrlKeyCount(int count) {
+		if (count > CTRL_KEY_LIST.length) {
+			count = CTRL_KEY_LIST.length;
+		}
+
+		if (count != mCtrlKeyCount) {
+			mCtrlKeyCount = count;
+			updateKeys();
+		}
+	}
 }

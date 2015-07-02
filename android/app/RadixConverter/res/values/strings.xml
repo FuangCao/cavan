@@ -8,11 +8,11 @@
     <string name="radix_dec">十进制：</string>
     <string name="radix_hex">十六进制：</string>
     <string name="keypad_text">键盘：</string>
-    <string-array name="num_prefix">
-        <item >0D</item>
-        <item >0X</item>
-        <item >0B</item>
-        <item >0</item>
+    <string-array name="radix_names">
+        <item >十进制</item>
+        <item >十六进制</item>
+        <item >二进制</item>
+        <item >八进制</item>
     </string-array>
 
 </resources>

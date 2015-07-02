@@ -9,6 +9,8 @@ import android.widget.TextView;
 public class BitView extends RelativeLayout {
 
 	private int mIndex;
+	private int mOffset;
+	private long mMask;
 	private BitAdapter mAdapter;
 
 	private TextView mTextViewIndex;
@@ -30,21 +32,27 @@ public class BitView extends RelativeLayout {
 	protected void onFinishInflate() {
 		mTextViewIndex = (TextView) findViewById(R.id.textViewIndex);
 		mTextViewIndex.setText("0");
+		mTextViewIndex.setTextColor(Color.WHITE);
 
 		mTextViewTitle = (TextView) findViewById(R.id.textViewTitle);
 		mTextViewTitle.setText("0");
+		mTextViewTitle.setTextColor(Color.BLACK);
 
 		setActive(false);
 
 		super.onFinishInflate();
 	}
 
-	public void setup(BitAdapter adapter, int index, OnClickListener listener) {
+	public void setup(BitAdapter adapter, int index, OnClickListener clickListener, OnLongClickListener longClickListener) {
 		mAdapter = adapter;
 		mIndex = index;
 
+		mOffset = mIndex * mAdapter.getBitWidth();
+		mMask = mAdapter.getMask() << mOffset;
+
 		mTextViewIndex.setText(Integer.toString(index));
-		setOnClickListener(listener);
+		setOnClickListener(clickListener);
+		setOnLongClickListener(longClickListener);
 	}
 
 	public BitAdapter getAdapter() {
@@ -53,6 +61,22 @@ public class BitView extends RelativeLayout {
 
 	public int getIndex() {
 		return mIndex;
+	}
+
+	public int getBitWidth() {
+		return mAdapter.getBitWidth();
+	}
+
+	public int getOffset() {
+		return mOffset;
+	}
+
+	public long getMask() {
+		return mMask;
+	}
+
+	public int getBase() {
+		return mAdapter.getBase();
 	}
 
 	public void setActive(boolean active) {
@@ -66,11 +90,11 @@ public class BitView extends RelativeLayout {
 	}
 
 	public BitView getNextView() {
-		if (mIndex > 0) {
-			return mAdapter.getButton(mIndex - 1);
-		} else {
-			return null;
-		}
+		return mAdapter.getView(mIndex - 1);
+	}
+
+	public BitView getPrevView() {
+		return mAdapter.getView(mIndex + 1);
 	}
 
 	public int parseText(CharSequence charSequence) {
@@ -91,7 +115,7 @@ public class BitView extends RelativeLayout {
 	}
 
 	public void setValue(int value) {
-		mTextViewTitle.setText(KeypadAdapter.VALUE_TEXT_MAP[value]);
+		mTextViewTitle.setText(KeypadAdapter.NUM_KEY_LIST[value]);
 	}
 
 	public void add(int value) {

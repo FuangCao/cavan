@@ -4,29 +4,66 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.GridView;
 
 public class BitAdapter extends BaseAdapter {
 
-	private Context mContext;
+	private GridView mGridView;
 	private LayoutInflater mInflater;
-	private OnClickListener mListener;
+	private OnClickListener mClickListener;
+	private OnLongClickListener mLongClickListener;
 
 	private int mCount;
 	private int mBase;
+	private long mMask;
+	private int mBitWidth;
 	private BitView mViews[];
 
-	public BitAdapter(Context context, OnClickListener listener, int count, int base) {
+	public BitAdapter(GridView view, OnClickListener clickListener, OnLongClickListener longClickListener, int count, int base) {
 		super();
 
-		mContext = context;
-		mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		mListener = listener;
+		mGridView = view;
+		mInflater = (LayoutInflater) mGridView.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+		mClickListener = clickListener;
+		mLongClickListener = longClickListener;
 
 		mCount = count;
 		mBase = base;
+
+		switch (mBase) {
+		case 2:
+			mBitWidth = 1;
+			break;
+		case 4:
+			mBitWidth = 2;
+			break;
+		case 8:
+			mBitWidth = 3;
+			break;
+		case 16:
+			mBitWidth = 4;
+			break;
+		default:
+			mBitWidth = 0;
+		}
+
+		if (mBitWidth > 0) {
+			mMask = (1 << mBitWidth) - 1;
+		} else {
+			mMask = 0;
+		}
+
 		mViews = new BitView[mCount];
+		for (int i = 0; i < mCount; i++) {
+			mViews[i] = (BitView) mInflater.inflate(R.layout.bit_view, mGridView, false);
+			mViews[i].setup(this, i, mClickListener, mLongClickListener);
+		}
+
+		mGridView.setAdapter(this);
 	}
 
 	@Override
@@ -52,13 +89,7 @@ public class BitAdapter extends BaseAdapter {
 	public View getView(int position, View convertView, ViewGroup parent) {
 		int offset = mCount - position - 1;
 
-		BitView view = mViews[offset];
-		if (view == null) {
-			mViews[offset] = view = (BitView) mInflater.inflate(R.layout.bit_view, parent, false);
-			view.setup(this, offset, mListener);
-		}
-
-		return view;
+		return mViews[offset];
 	}
 
 	public int getBase() {
@@ -69,8 +100,28 @@ public class BitAdapter extends BaseAdapter {
 		return mViews;
 	}
 
-	public BitView getButton(int index) {
+	public BitView getView(int index) {
+		if (index < 0 || index >= mCount) {
+			return null;
+		}
+
 		return mViews[index];
+	}
+
+	public BitView getFirstView() {
+		return mViews[0];
+	}
+
+	public BitView getLastView() {
+		return mViews[mCount - 1];
+	}
+
+	public int getBitWidth() {
+		return mBitWidth;
+	}
+
+	public long getMask() {
+		return mMask;
 	}
 
 	public void setValue(long value) {

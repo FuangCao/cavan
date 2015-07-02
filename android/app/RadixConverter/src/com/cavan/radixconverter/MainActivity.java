@@ -2,7 +2,7 @@ package com.cavan.radixconverter;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -19,12 +20,14 @@ import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Spinner;
 
-public class MainActivity extends Activity implements TextWatcher, OnItemSelectedListener {
+@SuppressLint("DefaultLocale")
+public class MainActivity extends Activity implements TextWatcher, OnItemSelectedListener, OnClickListener {
 
 	private static final int MAX_COUNT_BIN = 32;
 	private static final int MAX_COUNT_HEX = 8;
 	private static final int MAX_COUNT_DEC = 10;
 	private static final int MAX_COUNT_OCT = 11;
+	private static final long VALUE_MASK = (((long) 1) << MAX_COUNT_BIN) - 1;
 
 	private static final int[] PREFIX_BASE_MAP = { 10, 16, 2, 8 };
 
@@ -34,7 +37,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 	private GridView mGridViewDec;
 	private GridView mGridViewKeypad;
 	private EditText mEditTextNum;
-	private Spinner mSpinnerPrefix;
+	private Spinner mSpinnerRadix;
 
 	private BitAdapter mAdapterBin;
 	private BitAdapter mAdapterHex;
@@ -47,30 +50,29 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 	private List<BitAdapter> mAdapters = new ArrayList<BitAdapter>();
 
 	private void setCurrBit(BitView view) {
+		BitAdapter currAdapter;
+
 		if (mCurrBitView != null) {
+			currAdapter = mCurrBitView.getAdapter();
 			mCurrBitView.setActive(false);
+		} else {
+			currAdapter = null;
 		}
 
 		if (view != null) {
-			if (mCurrBitView == null || view.getAdapter() != mCurrBitView.getAdapter()) {
-				mAdapterKeypad.setKeyCount(view.getAdapter().getBase());
+			BitAdapter adapter = view.getAdapter();
+
+			if (adapter != currAdapter) {
+				mAdapterKeypad.setNumKeyCount(view.getAdapter().getBase());
 			}
 
-			BitAdapter adapter = view.getAdapter();
-			switch (adapter.getBase()) {
-			case 8:
-				mAdapterBin.setActiveViews(view.getIndex() * 3, 3);
-				break;
-
-			case 16:
-				mAdapterBin.setActiveViews(view.getIndex() * 4, 4);
-				break;
-
-			default:
-				if (mCurrBitView != null && mCurrBitView.getAdapter() != adapter) {
+			int width = view.getBitWidth();
+			if (width < 0) {
+				if (adapter != currAdapter) {
 					mAdapterBin.setActiveViews(0, 0);
 				}
-				break;
+			} else {
+				mAdapterBin.setActiveViews(view.getOffset(), width);
 			}
 
 			view.setActive(true);
@@ -80,31 +82,84 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 		}
 
 		mCurrBitView = view;
+		updateSelection();
+	}
+
+	private void updateSelection() {
+		if (mCurrBitView == null) {
+			return;
+		}
+
+		int position;
+		Editable text = mEditTextNum.getText();
+		int length = text.length();
+
+		if (mCurrBitView.getIndex() < length) {
+			position = length - mCurrBitView.getIndex();
+		} else {
+			position = 0;
+		}
+
+		mEditTextNum.setSelection(position);
 	}
 
 	private void updateValue(long value, int base) {
-		setBase(base);
-		mEditTextNum.setText(Long.toString(value, base));
+		if (base > 0) {
+			setBase(base);
+		} else {
+			base = getBase();
+		}
+
+		if (value > 0) {
+			mEditTextNum.setText(Long.toString(value, base).toUpperCase());
+		} else {
+			mEditTextNum.getText().clear();
+		}
+
+		updateSelection();
 	}
 
-	private void updateValue(BitAdapter adapter, long value) {
+	private void updateValue(Object obj, long value) {
 
-		if (adapter != null) {
-			value = adapter.getValue();
-			updateValue(value, adapter.getBase());
+		int base;
+
+		if (obj != null) {
+			if (obj instanceof BitAdapter) {
+				BitAdapter adapter = (BitAdapter) obj;
+				value = adapter.getValue();
+				base = adapter.getBase();
+			} else {
+				base = getBase();
+				try {
+					Editable editable = mEditTextNum.getText();
+					if (editable.length() > 0) {
+						value = Long.parseLong(editable.toString(), base);
+					} else {
+						value = 0;
+					}
+				} catch (Exception e) {
+					return;
+				}
+			}
+		} else {
+			base = -1;
 		}
 
 		if (value == mValue) {
 			return;
 		}
 
-		for (BitAdapter adp : mAdapters) {
-			if (adp != adapter) {
-				adp.setValue(value);
-			}
+		mValue = value & VALUE_MASK;
+
+		if (obj != mEditTextNum) {
+			updateValue(mValue, base);
 		}
 
-		mValue = value;
+		for (BitAdapter adp : mAdapters) {
+			if (adp != obj) {
+				adp.setValue(mValue);
+			}
+		}
 	}
 
 	private OnClickListener mBitClickListener = new OnClickListener() {
@@ -122,21 +177,155 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 		}
 	};
 
-	private OnClickListener mKeypadClickListener = new OnClickListener() {
+	private OnLongClickListener mBitLongClickListener = new OnLongClickListener() {
+
+		@Override
+		public boolean onLongClick(View v) {
+			BitView view = (BitView) v;
+			if (view != mCurrBitView) {
+				return false;
+			}
+
+			view.setValue(0);
+			updateValue(view.getAdapter(), 0);
+
+			return true;
+		}
+	};
+
+	private OnClickListener mKeypadNumClickListener = new OnClickListener() {
 
 		@Override
 		public void onClick(View v) {
+			Button button = (Button) v;
+
 			if (mCurrBitView == null) {
+				Editable text = mEditTextNum.getEditableText();
+				text.insert(mEditTextNum.getSelectionStart(), button.getText());
+				updateValue(mEditTextNum, 0);
+			} else {
+				if (!button.getText().equals(mCurrBitView.getText())) {
+					mCurrBitView.setText(button.getText());
+					updateValue(mCurrBitView.getAdapter(), 0);
+				}
+			}
+		}
+	};
+
+	private OnClickListener mKeypadCtrlClickListener = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+
+			long value = mValue;
+			Object obj = null;
+
+			Button button = (Button) v;
+			switch (button.getId()) {
+			case 0:
+				if (mCurrBitView == null) {
+					int position = mEditTextNum.getSelectionStart();
+					if (position > 0) {
+						mEditTextNum.setSelection(position - 1);
+					}
+					return;
+				} else if (mCurrBitView.getBitWidth() > 0) {
+					value <<= mCurrBitView.getBitWidth();
+					setCurrBit(mCurrBitView.getPrevView());
+				} else {
+					value <<= 1;
+				}
+				break;
+
+			case 2:
+				if (mCurrBitView == null) {
+					int position = mEditTextNum.getSelectionStart() + 1;
+					if (position <= mEditTextNum.getText().length()) {
+						mEditTextNum.setSelection(position);
+					}
+					return;
+				} else if (mCurrBitView.getBitWidth() > 0) {
+					value >>= mCurrBitView.getBitWidth();
+					setCurrBit(mCurrBitView.getNextView());
+				} else {
+					value >>= 1;
+				}
+				break;
+
+			case 1:
+				setCurrBit(null);
+				return;
+
+			case 3:
+				if (mCurrBitView != null && mCurrBitView.getMask() > 0) {
+					value ^= mCurrBitView.getMask();
+				} else {
+					value = ~value;
+				}
+				break;
+
+			case 4:
+				Editable editable = mEditTextNum.getEditableText();
+				int start = mEditTextNum.getSelectionStart();
+				int end = mEditTextNum.getSelectionEnd();
+				if (end <= start && start > 0) {
+					start--;
+				}
+				editable.delete(start, end);
+				obj = mEditTextNum;
+				setCurrBit(null);
+				break;
+
+			default:
 				return;
 			}
 
+			updateValue(obj, value);
+		}
+	};
+
+	private OnLongClickListener mKeypadCtrlLongClickListener = new OnLongClickListener() {
+
+		@Override
+		public boolean onLongClick(View v) {
+			long value = mValue;
+			Object obj = null;
+
 			Button button = (Button) v;
-			if (!button.getText().equals(mCurrBitView.getText())) {
-				mCurrBitView.setText(button.getText());
-				updateValue(mCurrBitView.getAdapter(), 0);
+			switch (button.getId()) {
+			case 0:
+				if (mCurrBitView == null || mCurrBitView.getBitWidth() < 1) {
+					return false;
+				}
+				value <<= (MAX_COUNT_BIN - mCurrBitView.getOffset() - mCurrBitView.getBitWidth());
+				setCurrBit(mCurrBitView.getAdapter().getLastView());
+				break;
+
+			case 2:
+				if (mCurrBitView == null || mCurrBitView.getBitWidth() < 1) {
+					return false;
+				}
+				value >>= mCurrBitView.getOffset();
+				setCurrBit(mCurrBitView.getAdapter().getFirstView());
+				break;
+
+			case 3:
+				value = ~value;
+				break;
+
+			case 4:
+				mEditTextNum.getText().clear();
+				obj = mEditTextNum;
+				setCurrBit(null);
+				break;
+
+			default:
+				return false;
 			}
 
-			setCurrBit(mCurrBitView.getNextView());
+			updateValue(obj, value);
+
+			return true;
 		}
 	};
 
@@ -146,37 +335,33 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 		setContentView(R.layout.activity_main);
 
 		mGridViewBin = (GridView) findViewById(R.id.gridViewBin);
-		mAdapterBin = new BitAdapter(getApplicationContext(), mBitClickListener, MAX_COUNT_BIN, 2);
+		mAdapterBin = new BitAdapter(mGridViewBin, mBitClickListener, mBitLongClickListener, MAX_COUNT_BIN, 2);
 		mAdapters.add(mAdapterBin);
-		mGridViewBin.setAdapter(mAdapterBin);
 
 		mGridViewHex = (GridView) findViewById(R.id.gridViewHex);
-		mAdapterHex = new BitAdapter(getApplicationContext(), mBitClickListener, MAX_COUNT_HEX, 16);
+		mAdapterHex = new BitAdapter(mGridViewHex, mBitClickListener, mBitLongClickListener, MAX_COUNT_HEX, 16);
 		mAdapters.add(mAdapterHex);
-		mGridViewHex.setAdapter(mAdapterHex);
 
 		mGridViewDec = (GridView) findViewById(R.id.gridViewDec);
-		mAdapterDec = new BitAdapter(getApplicationContext(), mBitClickListener, MAX_COUNT_DEC, 10);
+		mAdapterDec = new BitAdapter(mGridViewDec, mBitClickListener, mBitLongClickListener, MAX_COUNT_DEC, 10);
 		mAdapters.add(mAdapterDec);
-		mGridViewDec.setAdapter(mAdapterDec);
 
 		mGridViewOct = (GridView) findViewById(R.id.gridViewOct);
-		mAdapterOct = new BitAdapter(getApplicationContext(), mBitClickListener, MAX_COUNT_OCT, 8);
+		mAdapterOct = new BitAdapter(mGridViewOct, mBitClickListener, mBitLongClickListener, MAX_COUNT_OCT, 8);
 		mAdapters.add(mAdapterOct);
-		mGridViewOct.setAdapter(mAdapterOct);
 
 		mGridViewKeypad = (GridView) findViewById(R.id.gridViewKeypad);
-		mAdapterKeypad = new KeypadAdapter(getApplicationContext(), mKeypadClickListener);
-		mGridViewKeypad.setAdapter(mAdapterKeypad);
+		mAdapterKeypad = new KeypadAdapter(mGridViewKeypad, mKeypadNumClickListener, mKeypadCtrlClickListener, mKeypadCtrlLongClickListener);
 
 		mEditTextNum = (EditText) findViewById(R.id.editTextNumber);
 		mEditTextNum.addTextChangedListener(this);
+		mEditTextNum.setOnClickListener(this);
 
-		mSpinnerPrefix = (Spinner) findViewById(R.id.spinnerPrefix);
-		String[] prefixList = getResources().getStringArray(R.array.num_prefix);
-		ArrayAdapter<String> prefixAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, prefixList);
-		mSpinnerPrefix.setAdapter(prefixAdapter);
-		mSpinnerPrefix.setOnItemSelectedListener(this);
+		mSpinnerRadix = (Spinner) findViewById(R.id.spinnerRadix);
+		String[] radixList = getResources().getStringArray(R.array.radix_names);
+		ArrayAdapter<String> radixAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, radixList);
+		mSpinnerRadix.setAdapter(radixAdapter);
+		mSpinnerRadix.setOnItemSelectedListener(this);
 	}
 
 	@Override
@@ -199,14 +384,14 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 	}
 
 	private int getBase() {
-		int index = mSpinnerPrefix.getSelectedItemPosition();
+		int index = mSpinnerRadix.getSelectedItemPosition();
 		return PREFIX_BASE_MAP[index];
 	}
 
 	private void setBase(int base) {
 		for (int i = 0; i < PREFIX_BASE_MAP.length; i++) {
 			if (PREFIX_BASE_MAP[i] == base) {
-				mSpinnerPrefix.setSelection(i);
+				mSpinnerRadix.setSelection(i);
 			}
 		}
 	}
@@ -222,18 +407,26 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 	@Override
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
 		try {
-			long value = Long.parseLong(mEditTextNum.getText().toString(), getBase());
-			updateValue(null, value);
+			updateValue(mEditTextNum, 0);
 		} catch (Exception e) {
 		}
 	}
 
 	@Override
 	public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		updateValue(mValue, getBase());
+		updateValue(mValue, -1);
+		if (mCurrBitView == null) {
+			mAdapterKeypad.setNumKeyCount(getBase());
+		}
 	}
 
 	@Override
 	public void onNothingSelected(AdapterView<?> arg0) {
+	}
+
+	@Override
+	public void onClick(View v) {
+		mAdapterKeypad.setNumKeyCount(getBase());
+		setCurrBit(null);
 	}
 }
