@@ -2,6 +2,7 @@ package com.cavan.radixconverter;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.Bundle;
@@ -49,7 +50,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 	private BitView mCurrBitView;
 	private List<BitAdapter> mAdapters = new ArrayList<BitAdapter>();
 
-	private void setCurrBit(BitView view) {
+	private void setCurrBitView(BitView view) {
 		BitAdapter currAdapter;
 
 		if (mCurrBitView != null) {
@@ -172,7 +173,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 				view.add(1);
 				updateValue(view.getAdapter(), 0);
 			} else {
-				setCurrBit((BitView) v);
+				setCurrBitView((BitView) v);
 			}
 		}
 	};
@@ -231,7 +232,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 					return;
 				} else if (mCurrBitView.getBitWidth() > 0) {
 					value <<= mCurrBitView.getBitWidth();
-					setCurrBit(mCurrBitView.getPrevView());
+					setCurrBitView(mCurrBitView.getPrevView());
 				} else {
 					value <<= 1;
 				}
@@ -246,14 +247,14 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 					return;
 				} else if (mCurrBitView.getBitWidth() > 0) {
 					value >>= mCurrBitView.getBitWidth();
-					setCurrBit(mCurrBitView.getNextView());
+					setCurrBitView(mCurrBitView.getNextView());
 				} else {
 					value >>= 1;
 				}
 				break;
 
 			case 1:
-				setCurrBit(null);
+				setCurrBitView(null);
 				return;
 
 			case 3:
@@ -273,7 +274,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 				}
 				editable.delete(start, end);
 				obj = mEditTextNum;
-				setCurrBit(null);
+				setCurrBitView(null);
 				break;
 
 			default:
@@ -298,7 +299,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 					return false;
 				}
 				value <<= (MAX_COUNT_BIN - mCurrBitView.getOffset() - mCurrBitView.getBitWidth());
-				setCurrBit(mCurrBitView.getAdapter().getLastView());
+				setCurrBitView(mCurrBitView.getAdapter().getLastView());
 				break;
 
 			case 2:
@@ -306,7 +307,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 					return false;
 				}
 				value >>= mCurrBitView.getOffset();
-				setCurrBit(mCurrBitView.getAdapter().getFirstView());
+				setCurrBitView(mCurrBitView.getAdapter().getFirstView());
 				break;
 
 			case 3:
@@ -316,7 +317,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 			case 4:
 				mEditTextNum.getText().clear();
 				obj = mEditTextNum;
-				setCurrBit(null);
+				setCurrBitView(null);
 				break;
 
 			default:
@@ -392,6 +393,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 		for (int i = 0; i < PREFIX_BASE_MAP.length; i++) {
 			if (PREFIX_BASE_MAP[i] == base) {
 				mSpinnerRadix.setSelection(i);
+				break;
 			}
 		}
 	}
@@ -426,7 +428,7 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 
 	@Override
 	public void onClick(View v) {
+		setCurrBitView(null);
 		mAdapterKeypad.setNumKeyCount(getBase());
-		setCurrBit(null);
 	}
 }
