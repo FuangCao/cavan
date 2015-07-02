@@ -209,6 +209,8 @@ public class MainActivity extends Activity implements TextWatcher, OnItemSelecte
 					mCurrBitView.setText(button.getText());
 					updateValue(mCurrBitView.getAdapter(), 0);
 				}
+
+				setCurrBitView(mCurrBitView.getNextView());
 			}
 		}
 	};
