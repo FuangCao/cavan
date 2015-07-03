@@ -127,12 +127,13 @@ am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) \
 	swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) swan_upgrade.$(OBJEXT) \
 	swan_vk.$(OBJEXT) swan_vn.$(OBJEXT) system_init.$(OBJEXT) \
 	tcp_copy.$(OBJEXT) tcp_dd.$(OBJEXT) tcp_dd_server.$(OBJEXT) \
-	tcp_exec.$(OBJEXT) tcp_proxy.$(OBJEXT) textlen.$(OBJEXT) \
-	tftp_auto_dd.$(OBJEXT) tftp_command.$(OBJEXT) \
-	tftp_copy.$(OBJEXT) tftp_dd.$(OBJEXT) tftp_dd_server.$(OBJEXT) \
-	touch.$(OBJEXT) tty_mode.$(OBJEXT) umount.$(OBJEXT) \
-	usb.$(OBJEXT) usb_copy.$(OBJEXT) usb_dd.$(OBJEXT) \
-	usb_dd_server.$(OBJEXT) vfat.$(OBJEXT) web_proxy.$(OBJEXT)
+	tcp_exec.$(OBJEXT) tcp_keypad.$(OBJEXT) tcp_proxy.$(OBJEXT) \
+	textlen.$(OBJEXT) tftp_auto_dd.$(OBJEXT) \
+	tftp_command.$(OBJEXT) tftp_copy.$(OBJEXT) tftp_dd.$(OBJEXT) \
+	tftp_dd_server.$(OBJEXT) touch.$(OBJEXT) tty_mode.$(OBJEXT) \
+	umount.$(OBJEXT) usb.$(OBJEXT) usb_copy.$(OBJEXT) \
+	usb_dd.$(OBJEXT) usb_dd_server.$(OBJEXT) vfat.$(OBJEXT) \
+	web_proxy.$(OBJEXT)
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_2 = core/cavan_main.$(OBJEXT)
 am_cavan_main_OBJECTS = $(am__objects_1) $(am__objects_2)
@@ -336,10 +337,10 @@ APP_SRC_FILES = abspath.c alarm.c alc5671_clock.c auto_dd.c \
 	swan_emmc.c swan_fac.c swan_ipu.c swan_mac.c swan_md5.c \
 	swan_mkfs.c swan_sfdisk.c swan_ts.c swan_upgrade.c swan_vk.c \
 	swan_vn.c system_init.c tcp_copy.c tcp_dd.c tcp_dd_server.c \
-	tcp_exec.c tcp_proxy.c textlen.c tftp_auto_dd.c tftp_command.c \
-	tftp_copy.c tftp_dd.c tftp_dd_server.c touch.c tty_mode.c \
-	umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c vfat.c \
-	web_proxy.c
+	tcp_exec.c tcp_keypad.c tcp_proxy.c textlen.c tftp_auto_dd.c \
+	tftp_command.c tftp_copy.c tftp_dd.c tftp_dd_server.c touch.c \
+	tty_mode.c umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c \
+	vfat.c web_proxy.c
 APP_CORE_SRC_FILES = core/cavan_main.c
 LIB_OBJ_FILES = $(wildcard @top_builddir@/lib/*.o)
 APP_CORE_DEPDIR = core/@DEPDIR@
@@ -542,6 +543,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_dd_server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_exec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_keypad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_proxy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/textlen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tftp_auto_dd.Po@am__quote@
