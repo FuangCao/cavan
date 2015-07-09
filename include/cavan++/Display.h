@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * File:		display.h
+ * File:		Display.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2013-07-23 14:51:40
  *

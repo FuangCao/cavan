@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * File:		window.h
+ * File:		Window.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2013-07-21 20:12:00
  *

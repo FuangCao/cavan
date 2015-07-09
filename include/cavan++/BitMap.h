@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * File:		bitmap.h
+ * File:		BitMap.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2013-07-21 20:42:04
  *

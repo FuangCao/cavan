@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * File:		link.h
+ * File:		Link.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2013-07-24 19:06:36
  *

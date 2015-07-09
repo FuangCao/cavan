@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * File:		thread.h
+ * File:		Thread.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2013-07-23 14:51:57
  *
@@ -101,5 +101,25 @@ public:
 	int msleep(u32 msec)
 	{
 		return cavan_thread_msleep(&mThread, msec);
+	}
+
+	void setState(cavan_thread_state_t state)
+	{
+		cavan_thread_set_state(&mThread, state);
+	}
+
+	void shouldStop(void)
+	{
+		cavan_thread_should_stop(&mThread);
+	}
+
+	int join(void)
+	{
+		return cavan_thread_join(&mThread);
+	}
+
+	int wakeup(void)
+	{
+		return cavan_thread_wakeup(&mThread);
 	}
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * File:		framebuffer.h
+ * File:		Framebuffer.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2013-07-30 09:52:25
  *

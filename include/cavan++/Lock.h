@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * File:		lock.h
+ * File:		Lock.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2013-07-23 14:51:20
  *

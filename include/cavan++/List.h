@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * File:		list.h
+ * File:		List.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2013-07-24 19:05:22
  *

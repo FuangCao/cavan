@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * File:		pool.h
+ * File:		Pool.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2013-07-29 11:51:01
  *
