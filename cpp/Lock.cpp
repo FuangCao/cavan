@@ -18,4 +18,44 @@
  */
 
 #include <cavan.h>
-#include <cavan++/lock.h>
+#include <cavan++/Lock.h>
+
+ThreadLock::ThreadLock(bool acquire)
+{
+	if (acquire && MutexLock::acquire() == 0) {
+		mOwner = pthread_self();
+	} else {
+		mOwner = 0;
+	}
+}
+
+int ThreadLock::acquire(bool trylock)
+{
+	int ret;
+	pthread_t owner;
+
+	owner = pthread_self();
+	if (isHeldBy(owner))
+	{
+		return 0;
+	}
+
+	ret = trylock ? MutexLock::tryLock() : MutexLock::acquire();
+	if (ret == 0) {
+		mOwner = owner;
+	}
+
+	return ret;
+}
+
+int ThreadLock::release(void)
+{
+	if (isHeld())
+	{
+		mOwner = 0;
+
+		return MutexLock::release();
+	}
+
+	return 0;
+}

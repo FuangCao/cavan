@@ -18,7 +18,7 @@
  */
 
 #include <cavan.h>
-#include <cavan++/window.h>
+#include <cavan++/Window.h>
 
 static void WindowPaintAllHandler(DoubleLinkNode *node, void *data)
 {

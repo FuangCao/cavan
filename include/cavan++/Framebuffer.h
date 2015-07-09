@@ -1,7 +1,9 @@
+#pragma once
+
 /*
- * File:		Stack.cpp
+ * File:		framebuffer.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2013-07-24 19:05:01
+ * Created:		2013-07-30 09:52:25
  *
  * Copyright (c) 2013 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -18,4 +20,21 @@
  */
 
 #include <cavan.h>
-#include <cavan++/Stack.h>
+#include <cavan++/Display.h>
+
+class Framebuffer : public DisplayDevice
+{
+private:
+	int mFd;
+	void *mMem;
+
+public:
+	Framebuffer(void) {}
+	~Framebuffer(void) {}
+
+	bool open(void);
+	void close(void);
+
+	virtual void drawPoint(int x, int y);
+	virtual void refresh(void);
+};

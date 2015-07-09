@@ -1,9 +1,9 @@
 #pragma once
 
 /*
- * File:		framebuffer.h
+ * File:		bitmap.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2013-07-30 09:52:25
+ * Created:		2013-07-21 20:42:04
  *
  * Copyright (c) 2013 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -20,21 +20,10 @@
  */
 
 #include <cavan.h>
-#include <cavan++/display.h>
+#include <cavan++/Window.h>
 
-class Framebuffer : public DisplayDevice
+class BitMap : public CavanRect
 {
 private:
-	int mFd;
-	void *mMem;
-
-public:
-	Framebuffer(void) {}
-	~Framebuffer(void) {}
-
-	bool open(void);
-	void close(void);
-
-	virtual void drawPoint(int x, int y);
-	virtual void refresh(void);
+	void *mem;
 };

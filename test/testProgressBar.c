@@ -1,11 +1,9 @@
-#pragma once
-
 /*
- * File:		bitmap.h
+ * File:		testProgressBar.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2013-07-21 20:42:04
+ * Created:		2015-06-17 14:49:28
  *
- * Copyright (c) 2013 Fuang.Cao <cavan.cfa@gmail.com>
+ * Copyright (c) 2015 Fuang.Cao <cavan.cfa@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +18,30 @@
  */
 
 #include <cavan.h>
-#include <cavan++/window.h>
+#include <cavan/progress.h>
 
-class BitMap : public CavanRect
+int main(int argc, char *argv[])
 {
-private:
-	void *mem;
-};
+	int i;
+	struct progress_bar bar;
+
+	println("%ld", sizeof("123456789"));
+
+	progress_bar_init(&bar, MB(100));
+
+	for (i = 0; i < 100; i++)
+	{
+		progress_bar_add(&bar, MB(1));
+		msleep(500);
+		progress_bar_add(&bar, 0);
+		msleep(500);
+		progress_bar_add(&bar, 0);
+		msleep(500);
+		progress_bar_add(&bar, 0);
+		msleep(500);
+	}
+
+	progress_bar_finish(&bar);
+
+	return 0;
+}

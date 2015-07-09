@@ -1,10 +1,10 @@
 #include <stdio.h>
-#include <cavan++/thread.h>
+#include <cavan++/Thread.h>
 
-class MyThread : public Thread
+class MyThread : public CavanThread
 {
 public:
-	MyThread(const char *name) : Thread(name) {}
+	MyThread(const char *name) : CavanThread(name) {}
 	int run(void)
 	{
 		pr_pos_info();
@@ -14,7 +14,7 @@ public:
 	}
 };
 
-static int handler(Thread *thread)
+static int handler(CavanThread *CavanThread)
 {
 	pr_pos_info();
 	msleep(200);
@@ -24,16 +24,16 @@ static int handler(Thread *thread)
 
 int main(int argc, char *argv[])
 {
-	Thread thread("Test", handler);
+	CavanThread CavanThread("Test", handler);
 
-	thread.start();
-	// thread.join();
+	CavanThread.start();
+	// CavanThread.join();
 	msleep(2000);
-	thread.suspend();
+	CavanThread.suspend();
 	msleep(2000);
-	thread.resume();
+	CavanThread.resume();
 	msleep(2000);
-	thread.stop();
+	CavanThread.stop();
 
 	MyThread thread2("Test2");
 	thread2.start();

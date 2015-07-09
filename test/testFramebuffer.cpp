@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <cavan++/framebuffer.h>
+#include <cavan++/Framebuffer.h>
 
 int main(int argc, char *argv[])
 {

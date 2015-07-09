@@ -18,7 +18,7 @@
  */
 
 #include <cavan.h>
-#include <cavan++/framebuffer.h>
+#include <cavan++/Framebuffer.h>
 
 bool Framebuffer::open(void)
 {

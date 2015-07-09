@@ -20,7 +20,7 @@
  */
 
 #include <cavan.h>
-#include <cavan++/lock.h>
+#include <cavan++/Lock.h>
 
 struct LinkNode
 {

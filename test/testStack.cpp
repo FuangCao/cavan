@@ -18,7 +18,7 @@
  */
 
 #include <cavan.h>
-#include <cavan++/stack.h>
+#include <cavan++/Stack.h>
 
 int main(int argc, char *argv[])
 {

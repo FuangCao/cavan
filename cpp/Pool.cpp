@@ -18,4 +18,4 @@
  */
 
 #include <cavan.h>
-#include <cavan++/pool.h>
+#include <cavan++/Pool.h>

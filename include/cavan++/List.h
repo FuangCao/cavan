@@ -20,7 +20,7 @@
  */
 
 #include <cavan.h>
-#include <cavan++/link.h>
+#include <cavan++/Link.h>
 
 template <typename T>
 class List

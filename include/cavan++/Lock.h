@@ -86,6 +86,21 @@ public:
 	}
 };
 
+class ThreadLock : public MutexLock
+{
+private:
+	pthread_t mOwner;
+
+public:
+	ThreadLock(bool acquire = false);
+	bool isHeldBy(pthread_t owner) { return pthread_equal(owner, mOwner); }
+	bool isHeld(void) { return isHeldBy(pthread_self()); }
+	int acquire(bool trylock);
+	virtual int acquire(void) { return acquire(false); }
+	virtual int tryLock(void) { return acquire(true); }
+	virtual int release(void);
+};
+
 class AutoLock
 {
 private:

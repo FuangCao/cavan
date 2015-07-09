@@ -18,7 +18,7 @@
  */
 
 #include <cavan.h>
-#include <cavan++/link.h>
+#include <cavan++/Link.h>
 
 LinkNode *Link::getLastNode(void)
 {

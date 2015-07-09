@@ -18,4 +18,4 @@
  */
 
 #include <cavan.h>
-#include <cavan++/bitmap.h>
+#include <cavan++/BitMap.h>

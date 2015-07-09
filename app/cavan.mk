@@ -25,6 +25,6 @@ ifeq ($(BUILD_OTHERS),true)
 LOCAL_SOURCE := $(LOCAL_SOURCE) $(call search_all_files,others/*.cc others/*.cpp others/*.cxx)
 endif
 
-LOCAL_LIBRARY += libcavan++
+LOCAL_LIBRARY := libcavan++ $(LOCAL_LIBRARY)
 $(foreach fn,$(LOCAL_SOURCE),$(eval $(call build_as_execute,$(fn))))
 endif

@@ -18,7 +18,7 @@
  */
 
 #include <cavan.h>
-#include <cavan++/display.h>
+#include <cavan++/Display.h>
 
 void DisplayDevice::drawLineVertical(int y1, int y2, int x)
 {
