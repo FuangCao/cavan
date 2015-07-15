@@ -1,9 +1,9 @@
 /*
- * File:		testStack.cpp
+ * File:		testMath.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2013-07-25 14:25:30
+ * Created:		2015-07-15 11:33:46
  *
- * Copyright (c) 2013 Fuang.Cao <cavan.cfa@gmail.com>
+ * Copyright (c) 2015 Fuang.Cao <cavan.cfa@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,22 @@
  */
 
 #include <cavan.h>
-#include <cavan++/Stack.h>
+#include <cavan++/Math.h>
 
 int main(int argc, char *argv[])
 {
-	Stack<int> stack1(10);
+	Calculator calculator;
 
-	for (int i = 0; i < 10; i++)
+	assert(argc > 1);
+
+	double result;
+	if (!calculator.execute(argv[1], result))
 	{
-		stack1.push(i);
+		pr_red_info("Failed to calculator.execute: %s", calculator.getErrMsg());
 	}
-
-	for (int i = 0; i < 10; i++)
+	else
 	{
-		int data;
-
-		if (stack1.pop(data))
-		{
-			cout << "data = " << data << endl;
-		}
+		println("result = %lf", result);
 	}
 
 	return 0;

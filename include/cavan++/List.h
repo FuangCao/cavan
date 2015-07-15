@@ -30,6 +30,7 @@ private:
 	T *mTail;
 	T *mLast;
 	T *mData;
+	T *mCurr;
 	int mSize;
 
 public:
@@ -67,31 +68,31 @@ public:
 		return p + 1;
 	}
 
-	int append(T &data)
+	bool append(T data)
 	{
 		T *next = getNext(mTail);
 		if (next == mHead)
 		{
-			return -1;
+			return false;
 		}
 
 		*mTail = data;
 		mTail = next;
 
-		return 0;
+		return true;
 	}
 
-	int pop(T &data)
+	bool pop(T &data)
 	{
 		if (isEmpty())
 		{
-			return -1;
+			return false;
 		}
 
 		data = *mHead;
 		mHead = getNext(mHead);
 
-		return 0;
+		return true;
 	}
 
 	int getUsedCount(void)
@@ -122,6 +123,75 @@ public:
 	bool isEmpty(void)
 	{
 		return mHead == mTail;
+	}
+
+	static void sort(T *start, T *end, int (*compare)(T left, T right))
+	{
+		T *p = start;
+		T *q = end;
+		T middle = *p;
+
+		while (p < q)
+		{
+			for (; compare(*q, middle) >= 0; q--)
+			{
+				if (q <= p)
+				{
+					goto label_found;
+				}
+			}
+
+			*p = *q;
+
+			for (; compare(*p, middle) <= 0; p++)
+			{
+				if (q <= p)
+				{
+					goto label_found;
+				}
+			}
+
+			*q = *p;
+		}
+
+label_found:
+		*p = middle;
+
+		if (p - start > 1)
+		{
+			sort(start, p - 1, compare);
+		}
+
+		if (end - q > 1)
+		{
+			sort(q + 1, end, compare);
+		}
+	}
+
+	void sort(int (*compare)(T left, T right))
+	{
+		if (mTail > mHead)
+		{
+			sort(mHead, mTail - 1, compare);
+		}
+	}
+
+	void start(void)
+	{
+		mCurr = mHead;
+	}
+
+	T *next(void)
+	{
+		if (mCurr == mTail)
+		{
+			return NULL;
+		}
+
+		T *data = mCurr;
+		mCurr = getNext(data);
+
+		return data;
 	}
 };
 

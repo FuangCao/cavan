@@ -39,8 +39,8 @@ public:
 			size = 0;
 		}
 
-		mTop = mData;
-		mLast = mTop + size - 1;
+		mLast = mData + size - 1;
+		clear();
 	}
 
 	~Stack(void)
@@ -48,28 +48,40 @@ public:
 		delete []mData;
 	}
 
-	int push(T &data)
+	bool push(T data)
 	{
 		if (isFull())
 		{
-			return -1;
+			return false;
 		}
 
 		*mTop++ = data;
 
-		return 0;
+		return true;
 	}
 
-	int pop(T &data)
+	bool pop(T &data)
 	{
 		if (isEmpty())
 		{
-			return -1;
+			return false;
 		}
 
 		data = *--mTop;
 
-		return 0;
+		return true;
+	}
+
+	bool top(T &data)
+	{
+		if (isEmpty())
+		{
+			return false;
+		}
+
+		data = *(mTop - 1);
+
+		return true;
 	}
 
 	bool isEmpty(void)
@@ -80,6 +92,16 @@ public:
 	bool isFull(void)
 	{
 		return mTop > mLast;
+	}
+
+	bool hasData(void)
+	{
+		return mTop > mData;
+	}
+
+	void clear(void)
+	{
+		mTop = mData;
 	}
 };
 

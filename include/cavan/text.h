@@ -3,6 +3,10 @@
 #include <cavan.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define PRINT_BUFFER_LEN	KB(10)
 #define TEXT_FLAG_SIGNED	(1 << 9)
 #define TEXT_FLAG_PREFIX	(1 << 10)
@@ -321,3 +325,7 @@ static inline char *text_substring(const char *text, char *sub, int start, int c
 
 	return sub;
 }
+
+#ifdef __cplusplus
+}
+#endif

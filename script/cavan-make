@@ -81,7 +81,8 @@ EOF
 				SOURCE_FILE_NAME="$2.c"
 			fi
 
-			HEADER_FILE_REL_PATH=$(echo ${HEADER_FILE_REL_PATH} | tr [:upper:] [:lower:])
+			# HEADER_FILE_REL_PATH=$(echo ${HEADER_FILE_REL_PATH} | tr [:upper:] [:lower:])
+			HEADER_FILE_REL_PATH="${HEADER_FILE_REL_PATH}"
 			HEADER_FILE_PATH="${CAVAN_HOME_ABS}/include/${HEADER_FILE_REL_PATH}"
 			cat > "${HEADER_FILE_PATH}" << EOF
 #pragma once

@@ -16,6 +16,8 @@
 #ifdef __cplusplus
 #include <iostream>
 using namespace std;
+
+extern "C" {
 #endif
 
 #ifdef LOG_TAG
@@ -358,3 +360,7 @@ static inline int restore_tty_attr(int fd, struct termios *attr)
 {
 	return set_tty_attr(fd, TCSADRAIN, attr);
 }
+
+#ifdef __cplusplus
+}
+#endif
