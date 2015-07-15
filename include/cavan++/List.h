@@ -46,8 +46,9 @@ public:
 			mSize = size;
 		}
 
-		mHead = mTail = mData;
 		mLast = mData + mSize - 1;
+
+		clear();
 	}
 
 	~List(void)
@@ -56,6 +57,11 @@ public:
 		{
 			delete []mData;
 		}
+	}
+
+	void clear(void)
+	{
+		mHead = mTail = mData;
 	}
 
 	T *getNext(T *p)
@@ -103,6 +109,11 @@ public:
 		}
 
 		return mTail - mHead;
+	}
+
+	int count(void)
+	{
+		return getUsedCount();
 	}
 
 	int getFreeCount(void)

@@ -18,6 +18,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/calculator.h>
 #include <cavan++/Math.h>
 #include <math.h>
 
@@ -61,7 +62,13 @@ bool UnaryOperator::execute(Stack<double> &stack)
 		return false;
 	}
 
-	return stack.push(value);
+	if (!stack.push(value))
+	{
+		setErrMsg("Operand stack full");
+		return false;
+	}
+
+	return true;
 }
 
 // ================================================================================
@@ -85,7 +92,13 @@ bool BinaryOperator::execute(Stack<double> &stack)
 	println("%lf %s %lf = %lf", left, getSymbol(), right, result);
 #endif
 
-	return stack.push(result);
+	if (!stack.push(result))
+	{
+		setErrMsg("Operand stack full");
+		return false;
+	}
+
+	return true;
 }
 
 bool OperatorAdd::execute(double left, double right, double &result)
@@ -151,35 +164,40 @@ bool OperatorXor::execute(double left, double right, double &result)
 
 // ================================================================================
 
-Calculator::Calculator() : mStackOperand(100), mStackOperator(100), mListOperator(100)
-{
-	mListOperator.append(new OperatorAdd());
-	mListOperator.append(new OperatorAdd("add"));
-	mListOperator.append(new OperatorSub());
-	mListOperator.append(new OperatorSub("sub"));
-	mListOperator.append(new OperatorMul());
-	mListOperator.append(new OperatorMul("mul"));
-	mListOperator.append(new OperatorMul("x"));
-	mListOperator.append(new OperatorDiv());
-	mListOperator.append(new OperatorDiv("div"));
-	mListOperator.append(new OperatorMod());
-	mListOperator.append(new OperatorMod("mod"));
-	mListOperator.append(new OperatorAnd());
-	mListOperator.append(new OperatorAnd("and"));
-	mListOperator.append(new OperatorOr());
-	mListOperator.append(new OperatorOr("or"));
-	mListOperator.append(new OperatorXor());
-	mListOperator.append(new OperatorXor("xor"));
+List<Operator *> Calculator::sListOperator(100);
 
-	mListOperator.sort(Operator::compare);
+Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
+{
+	if (sListOperator.isEmpty())
+	{
+		sListOperator.append(new OperatorAdd());
+		sListOperator.append(new OperatorAdd("add"));
+		sListOperator.append(new OperatorSub());
+		sListOperator.append(new OperatorSub("sub"));
+		sListOperator.append(new OperatorMul());
+		sListOperator.append(new OperatorMul("mul"));
+		sListOperator.append(new OperatorMul("x"));
+		sListOperator.append(new OperatorDiv());
+		sListOperator.append(new OperatorDiv("div"));
+		sListOperator.append(new OperatorMod());
+		sListOperator.append(new OperatorMod("mod"));
+		sListOperator.append(new OperatorAnd());
+		sListOperator.append(new OperatorAnd("and"));
+		sListOperator.append(new OperatorOr());
+		sListOperator.append(new OperatorOr("or"));
+		sListOperator.append(new OperatorXor());
+		sListOperator.append(new OperatorXor("xor"));
+
+		sListOperator.sort(Operator::compare);
+	}
 }
 
 Operator *Calculator::matchOperator(const char *formula)
 {
 	Operator **p;
 
-	mListOperator.start();
-	while ((p = mListOperator.next()))
+	sListOperator.start();
+	while ((p = sListOperator.next()))
 	{
 		if ((*p)->match(formula))
 		{
@@ -219,10 +237,18 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 
 			if (mStackOperand.isEmpty())
 			{
-				mStackOperand.push(0);
+				if (!mStackOperand.push(0))
+				{
+					setErrMsg("Operand stack full");
+					return false;
+				}
 			}
 
-			mStackOperator.push(op);
+			if (!mStackOperator.push(op))
+			{
+				setErrMsg("Operator stack full");
+				return false;
+			}
 
 			formula += op->getSymLen();
 		}
@@ -240,13 +266,40 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 
 			case '0' ... '9':
 				value = text2double_unsigned(formula, formula_end, &formula, 10);
-				mStackOperand.push(value);
+				if (!mStackOperand.push(value))
+				{
+					setErrMsg("Operand stack full");
+					return false;
+				}
 				break;
 
 			case '(':
 			case '[':
 			case '{':
+			{
+				const char *p = get_bracket_pair(formula, formula_end);
+				if (p == NULL)
+				{
+					setErrMsg("No matching brackets");
+					return false;
+				}
+
+				Calculator calculator;
+				if (!calculator.execute(formula + 1, p, value))
+				{
+					setErrMsg(calculator.getErrMsg());
+					return false;
+				}
+
+				if (!mStackOperand.push(value))
+				{
+					setErrMsg("Operand stack full");
+					return false;
+				}
+
+				formula = p + 1;
 				break;
+			}
 
 			default:
 				setErrMsg("Invalid symbol");
@@ -287,5 +340,13 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 
 bool Calculator::execute(const char *formula, double &result)
 {
-	return execute(formula, formula + strlen(formula), result);
+	const char *formula_end = formula + strlen(formula);
+
+	if (check_bracket_match_pair(formula, formula_end) < 0)
+	{
+		setErrMsg("No matching brackets");
+		return false;
+	}
+
+	return execute(formula, formula_end, result);
 }

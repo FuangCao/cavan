@@ -149,9 +149,10 @@ public:
 class Calculator
 {
 private:
+	static List<Operator *> sListOperator;
+
 	Stack<double> mStackOperand;
 	Stack<Operator *> mStackOperator;
-	List<Operator *> mListOperator;
 	const char *mErrMsg;
 
 public:
