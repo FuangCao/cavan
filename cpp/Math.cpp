@@ -262,10 +262,12 @@ Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
 		sListOperator.append(new OperatorFactorial());
 		sListOperator.append(new OperatorNegation());
 		sListOperator.append(new OperatorNegation("neg"));
-		sListOperator.append(new OperatorAvg("avg"));
-		sListOperator.append(new OperatorSum("sum"));
-		sListOperator.append(new OperatorMax("max"));
-		sListOperator.append(new OperatorMin("min"));
+		sListOperator.append(new OperatorAvg());
+		sListOperator.append(new OperatorSum());
+		sListOperator.append(new OperatorMax());
+		sListOperator.append(new OperatorMin());
+		sListOperator.append(new OperatorPI());
+		sListOperator.append(new OperatorE());
 
 		sListOperator.sort(Operator::compare);
 	}
@@ -349,6 +351,7 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				formula += op->getLength();
 				break;
 
+			case OPERATOR_TYPE_CONSTANT:
 			case OPERATOR_TYPE1_LEFT:
 				if (!op->execute(mStackOperand))
 				{

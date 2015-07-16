@@ -258,6 +258,30 @@ public:
 
 // ================================================================================
 
+class OperatorE : public Operator
+{
+public:
+	OperatorE(const char *symbol = "E") : Operator(symbol, 0, OPERATOR_TYPE_CONSTANT) {}
+	virtual bool execute(Stack<double> &stack, double &result)
+	{
+		result = 2.71828182845904523536;
+		return true;
+	}
+};
+
+class OperatorPI : public Operator
+{
+public:
+	OperatorPI(const char *symbol = "PI") : Operator(symbol, 0, OPERATOR_TYPE_CONSTANT) {}
+	virtual bool execute(Stack<double> &stack, double &result)
+	{
+		result = 3.14159265358979323846;
+		return true;
+	}
+};
+
+// ================================================================================
+
 class Calculator
 {
 private:
