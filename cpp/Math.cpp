@@ -22,7 +22,7 @@
 #include <cavan/calculator.h>
 #include <cavan++/Math.h>
 
-#define CAVAN_MATH_DEBUG	1
+#define CAVAN_MATH_DEBUG	0
 
 void Operator::setSymbol(const char *symbol)
 {
