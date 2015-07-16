@@ -103,6 +103,31 @@ public:
 	{
 		mTop = mData;
 	}
+
+	int getUsedCount(void)
+	{
+		return mTop - mData;
+	}
+
+	int getFreeCount(void)
+	{
+		return mLast - mTop;
+	}
+
+	int count(void)
+	{
+		return getUsedCount();
+	}
+
+	int available(void)
+	{
+		return getFreeCount();
+	}
+
+	T *getArray(void)
+	{
+		return mData;
+	}
 };
 
 template <typename T>

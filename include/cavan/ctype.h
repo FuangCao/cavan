@@ -21,6 +21,10 @@
 
 #include <cavan.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum
 {
 	CT_NONE = 0,
@@ -35,6 +39,9 @@ enum
 	CT_O = BIT(8), /* octal digit */
 	CT_LF = BIT(9), /* \n \r digit */
 	CT_NM = BIT(10), /* nameable */
+	CT_B = BIT(11), /* bracket */
+	CT_BL = BIT(12), /* left bracket */
+	CT_BR = BIT(13), /* right bracket */
 };
 
 extern const u16 cavan_ctype[];
@@ -114,6 +121,21 @@ static inline bool cavan_isnameable(u8 c)
 	return (cavan_ctype_get(c) & (CT_NM)) != 0;
 }
 
+static inline bool cavan_isbracket(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_B)) != 0;
+}
+
+static inline bool cavan_isbracket_left(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_BL)) != 0;
+}
+
+static inline bool cavan_isbracket_right(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_BR)) != 0;
+}
+
 static inline char cavan_tolower(char c)
 {
 	if (cavan_isupper(c))
@@ -141,3 +163,7 @@ static inline char cavan_toupper(char c)
 
 	return c;
 }
+
+#ifdef __cplusplus
+}
+#endif

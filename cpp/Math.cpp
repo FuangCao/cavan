@@ -18,6 +18,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/ctype.h>
 #include <cavan/calculator.h>
 #include <cavan++/Math.h>
 #include <math.h>
@@ -45,30 +46,35 @@ int Operator::compare(Operator *left, Operator *right)
 	return right->mLength - left->mLength;
 }
 
+bool Operator::execute(Stack<double> &stackData, Stack<double> &stackResult)
+{
+	double result;
+
+	if (!execute(stackData, result))
+	{
+		return false;
+	}
+
+	if (!stackResult.push(result))
+	{
+		setErrMsg("Data stack overfrow");
+		return false;
+	}
+
+	return true;
+}
+
 // ================================================================================
 
-bool OperatorF1::execute(Stack<double> &stack)
+bool OperatorF1::execute(Stack<double> &stack, double &result)
 {
-	double value;
-
-	if (!stack.pop(value))
+	if (!stack.pop(result))
 	{
 		setErrMsg("Missing operand");
 		return false;
 	}
 
-	if (!execute(value))
-	{
-		return false;
-	}
-
-	if (!stack.push(value))
-	{
-		setErrMsg("Operand stack full");
-		return false;
-	}
-
-	return true;
+	return execute(result);
 }
 
 bool OperatorN1::execute(double &value)
@@ -103,9 +109,9 @@ bool OperatorFactorial::execute(ulong &value)
 
 // ================================================================================
 
-bool OperatorF2::execute(Stack<double> &stack)
+bool OperatorF2::execute(Stack<double> &stack, double &result)
 {
-	double left, right, result;
+	double left, right;
 
 	if (!(stack.pop(right) && stack.pop(left)))
 	{
@@ -113,22 +119,7 @@ bool OperatorF2::execute(Stack<double> &stack)
 		return false;
 	}
 
-	if (!execute(left, right, result))
-	{
-		return false;
-	}
-
-#if CAVAN_MATH_DEBUG
-	println("%lf %s %lf = %lf", left, getSymbol(), right, result);
-#endif
-
-	if (!stack.push(result))
-	{
-		setErrMsg("Operand stack full");
-		return false;
-	}
-
-	return true;
+	return execute(left, right, result);
 }
 
 bool OperatorN2::execute(double left, double right, double &result)
@@ -150,24 +141,6 @@ bool OperatorN2::execute(double left, double right, double &result)
 	}
 
 	return res;
-}
-
-bool OperatorAdd::execute(double left, double right, double &result)
-{
-	result = left + right;
-	return true;
-}
-
-bool OperatorSub::execute(double left, double right, double &result)
-{
-	result = left - right;
-	return true;
-}
-
-bool OperatorMul::execute(double left, double right, double &result)
-{
-	result = left * right;
-	return true;
 }
 
 bool OperatorDiv::execute(double left, double right, double &result)
@@ -194,21 +167,70 @@ bool OperatorMod::execute(double left, double right, double &result)
 	return true;
 }
 
-bool OperatorAnd::execute(ulong left, ulong right, ulong &result)
+// ================================================================================
+
+bool OperatorAvg::execute(Stack<double> &stack, double &result)
 {
-	result = left & right;
+	OperatorSum sum;
+	int count = stack.count();
+
+	if (!sum.execute(stack, result))
+	{
+		setErrMsg(sum.getErrMsg());
+		return false;
+	}
+
+	result /= count;
+
 	return true;
 }
 
-bool OperatorOr::execute(ulong left, ulong right, ulong &result)
+bool OperatorSum::execute(Stack<double> &stack, double &result)
 {
-	result = left | right;
+	double value;
+
+	for (result = 0; stack.pop(value); result += value);
+
 	return true;
 }
 
-bool OperatorXor::execute(ulong left, ulong right, ulong &result)
+bool OperatorMin::execute(Stack<double> &stack, double &result)
 {
-	result = left ^ right;
+	if (!stack.pop(result))
+	{
+		return false;
+	}
+
+	double value;
+
+	while (stack.pop(value))
+	{
+		if (value < result)
+		{
+			result = value;
+		}
+	}
+
+	return true;
+}
+
+bool OperatorMax::execute(Stack<double> &stack, double &result)
+{
+	if (!stack.pop(result))
+	{
+		return false;
+	}
+
+	double value;
+
+	while (stack.pop(value))
+	{
+		if (value > result)
+		{
+			result = value;
+		}
+	}
+
 	return true;
 }
 
@@ -240,6 +262,10 @@ Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
 		sListOperator.append(new OperatorFactorial());
 		sListOperator.append(new OperatorNegation());
 		sListOperator.append(new OperatorNegation("neg"));
+		sListOperator.append(new OperatorAvg("avg"));
+		sListOperator.append(new OperatorSum("sum"));
+		sListOperator.append(new OperatorMax("max"));
+		sListOperator.append(new OperatorMin("min"));
 
 		sListOperator.sort(Operator::compare);
 	}
@@ -264,6 +290,10 @@ Operator *Calculator::matchOperator(const char *formula)
 bool Calculator::execute(const char *formula, const char *formula_end, double &result)
 {
 	double value;
+
+#if CAVAN_MATH_DEBUG
+	println("formula = %s", text_header(formula, formula_end - formula));
+#endif
 
 	mStackOperand.clear();
 	mStackOperator.clear();
@@ -295,24 +325,28 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				{
 					if (!mStackOperand.push(0))
 					{
-						setErrMsg("Operand stack full");
+						setErrMsg("Operand stack overfrow");
 						return false;
 					}
 				}
 
 				if (!mStackOperator.push(op))
 				{
-					setErrMsg("Operator stack full");
+					setErrMsg("Operator stack overfrow");
 					return false;
 				}
+
+				formula += op->getLength();
 				break;
 
 			case OPERATOR_TYPE1_RIGHT:
 				if (!mStackOperator.push(op))
 				{
-					setErrMsg("Operator stack full");
+					setErrMsg("Operator stack overfrow");
 					return false;
 				}
+
+				formula += op->getLength();
 				break;
 
 			case OPERATOR_TYPE1_LEFT:
@@ -321,14 +355,30 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 					setErrMsg(op->getErrMsg());
 					return false;
 				}
+
+				formula += op->getLength();
 				break;
+
+			case OPERATOR_TYPE_LIST:
+			{
+				Stack<double> stack(200);
+				if (!parseDataList(formula + op->getLength(), formula_end, &formula, stack))
+				{
+					return false;
+				}
+
+				if (!op->execute(stack, mStackOperand))
+				{
+					setErrMsg(op->getErrMsg());
+					return false;
+				}
+				break;
+			}
 
 			default:
 				setErrMsg("Invalid operator");
 				return false;
 			}
-
-			formula += op->getLength();
 		}
 		else
 		{
@@ -347,7 +397,7 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				value = text2double_unsigned(formula, formula_end, &formula, 10);
 				if (!mStackOperand.push(value))
 				{
-					setErrMsg("Operand stack full");
+					setErrMsg("Operand stack overfrow");
 					return false;
 				}
 				break;
@@ -372,7 +422,7 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 
 				if (!mStackOperand.push(value))
 				{
-					setErrMsg("Operand stack full");
+					setErrMsg("Operand stack overfrow");
 					return false;
 				}
 
@@ -428,4 +478,85 @@ bool Calculator::execute(const char *formula, double &result)
 	}
 
 	return execute(formula, formula_end, result);
+}
+
+bool Calculator::parseDataList(const char *formula, const char *formula_end, const char **last, Stack<double> &stack)
+{
+	while (formula < formula_end && cavan_isspace(*formula))
+	{
+		formula++;
+	}
+
+	if (!cavan_isbracket_left(*formula))
+	{
+		setErrMsg("Need a bracket");
+		return false;
+	}
+
+	formula_end = get_bracket_pair(formula, formula_end);
+	if (formula_end == NULL)
+	{
+		setErrMsg("Bracket not pair");
+		return false;
+	}
+
+	int bracket = 0;
+	const char *formula_tail = ++formula;
+
+	while (1)
+	{
+		if (formula_tail >= formula_end || (*formula_tail == ',' && bracket == 0))
+		{
+			double value;
+			Calculator calculator;
+
+			if (formula == formula_tail)
+			{
+				value = 0;
+			}
+			else if (!calculator.execute(formula, formula_tail, value))
+			{
+				setErrMsg(calculator.getErrMsg());
+				return false;
+			}
+
+			if (!stack.push(value))
+			{
+				setErrMsg("Data stack overfrow");
+				return false;
+			}
+
+			if (formula_tail >= formula_end)
+			{
+				break;
+			}
+
+			formula = ++formula_tail;
+		}
+		else
+		{
+			if (cavan_isbracket(*formula_tail))
+			{
+				if (cavan_isbracket_left(*formula_tail))
+				{
+					bracket++;
+				}
+				else if (bracket > 0)
+				{
+					bracket--;
+				}
+				else
+				{
+					setErrMsg("Bracket is not pair");
+					return false;
+				}
+			}
+
+			formula_tail++;
+		}
+	}
+
+	*last = formula_end + 1;
+
+	return true;
 }

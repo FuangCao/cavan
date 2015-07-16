@@ -62,8 +62,8 @@ const u16 cavan_ctype[] =
 	CT_P, /* % */
 	CT_P, /* & */
 	CT_P, /* ' */ /* 39 */
-	CT_P, /* ( */
-	CT_P, /* ) */
+	CT_P | CT_B | CT_BL, /* ( */
+	CT_P | CT_B | CT_BR, /* ) */
 	CT_P, /* * */
 	CT_P, /* + */
 	CT_P, /* , */
@@ -113,9 +113,9 @@ const u16 cavan_ctype[] =
 	CT_U | CT_NM, /* X */
 	CT_U | CT_NM, /* Y */ /* 89 */
 	CT_U | CT_NM, /* Z */
-	CT_P, /* [ */
+	CT_P | CT_B | CT_BL, /* [ */
 	CT_P, /* \ */
-	CT_P, /* ] */
+	CT_P | CT_B | CT_BR, /* ] */
 	CT_P, /* ^ */
 	CT_P | CT_NM, /* _ */
 	CT_P, /* ` */
@@ -145,9 +145,9 @@ const u16 cavan_ctype[] =
 	CT_L | CT_NM, /* x */
 	CT_L | CT_NM, /* y */
 	CT_L | CT_NM, /* z */
-	CT_P, /* { */
+	CT_P | CT_B | CT_BL, /* { */
 	CT_P, /* | */
-	CT_P, /* } */
+	CT_P | CT_B | CT_BR, /* } */
 	CT_P, /* ~ */
 	CT_C,
 	CT_NONE,

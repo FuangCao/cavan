@@ -111,11 +111,6 @@ public:
 		return mTail - mHead;
 	}
 
-	int count(void)
-	{
-		return getUsedCount();
-	}
-
 	int getFreeCount(void)
 	{
 		if (mHead > mTail)
@@ -124,6 +119,16 @@ public:
 		}
 
 		return (mHead - mData) + (mLast - mTail);
+	}
+
+	int count(void)
+	{
+		return getUsedCount();
+	}
+
+	int available(void)
+	{
+		return getFreeCount();
 	}
 
 	bool isFull(void)
