@@ -132,7 +132,6 @@ int main(int argc, char *argv[])
 	assert(argc > optind);
 
 	text_cat2(buff, argv + optind, argc - optind);
-	text2lowercase(buff);
 
 	double result;
 	Calculator calculator;
