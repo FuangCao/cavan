@@ -351,12 +351,22 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				formula += op->getLength();
 				break;
 
-			case OPERATOR_TYPE_CONSTANT:
 			case OPERATOR_TYPE1_LEFT:
+			case OPERATOR_TYPE_CONSTANT:
 				if (!op->execute(mStackOperand))
 				{
 					setErrMsg(op->getErrMsg());
 					return false;
+				}
+
+				if (op->getType() == OPERATOR_TYPE_CONSTANT && mLastFieldType != FIELD_TYPE_OPERATOR && mStackOperand.count() > 1)
+				{
+					OperatorMul mul;
+					if (!((Operator *) &mul)->execute(mStackOperand))
+					{
+						setErrMsg(mul.getErrMsg());
+						return false;
+					}
 				}
 
 				formula += op->getLength();
@@ -382,6 +392,8 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				setErrMsg("Invalid operator");
 				return false;
 			}
+
+			mLastFieldType = FIELD_TYPE_OPERATOR;
 		}
 		else
 		{
@@ -403,6 +415,7 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 					setErrMsg("Operand stack overfrow");
 					return false;
 				}
+				mLastFieldType = FIELD_TYPE_VALUE;
 				break;
 
 			case '(':
@@ -430,6 +443,7 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				}
 
 				formula = p + 1;
+				mLastFieldType = FIELD_TYPE_BRACKET;
 				break;
 			}
 

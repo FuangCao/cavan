@@ -32,6 +32,13 @@ typedef enum
 	OPERATOR_TYPE_CONSTANT,
 } operator_type_t;
 
+typedef enum
+{
+	FIELD_TYPE_OPERATOR,
+	FIELD_TYPE_VALUE,
+	FIELD_TYPE_BRACKET,
+} field_type_t;
+
 class Operator
 {
 private:
@@ -290,6 +297,7 @@ private:
 	Stack<double> mStackOperand;
 	Stack<Operator *> mStackOperator;
 	const char *mErrMsg;
+	int mLastFieldType;
 
 public:
 	Calculator(void);
