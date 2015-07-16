@@ -275,6 +275,7 @@ Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
 		sListOperator.append(new OperatorFloor());
 		sListOperator.append(new OperatorCeil());
 		sListOperator.append(new OperatorRound());
+		sListOperator.append(new OperatorReci());
 		sListOperator.append(new OperatorAvg());
 		sListOperator.append(new OperatorSum());
 		sListOperator.append(new OperatorMax());
@@ -396,7 +397,6 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 			switch (*formula)
 			{
 			case ' ':
-			case ',':
 			case '\r':
 			case '\n':
 			case '\t':

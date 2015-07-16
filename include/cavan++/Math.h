@@ -181,6 +181,17 @@ public:
 	}
 };
 
+class OperatorReci : public OperatorF1
+{
+public:
+	OperatorReci(const char *symbol = "reci") : OperatorF1(symbol) {}
+	virtual bool execute(double &value)
+	{
+		value = 1 / value;
+		return true;
+	}
+};
+
 // ================================================================================
 
 class OperatorF2 : public Operator
@@ -384,6 +395,12 @@ public:
 	OperatorSqrt(const char *symbol = "sqrt") : OperatorF2(symbol, 0, OPERATOR_TYPE_LIST) {}
 	virtual bool execute(double left, double right, double &result)
 	{
+		if (left == 0)
+		{
+			setErrMsg("Sqrt by zero");
+			return false;
+		}
+
 		result = pow(right, 1 / left);
 		return true;
 	}
