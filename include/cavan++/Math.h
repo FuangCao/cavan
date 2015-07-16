@@ -34,6 +34,7 @@ typedef enum
 
 typedef enum
 {
+	FIELD_TYPE_NONE,
 	FIELD_TYPE_OPERATOR,
 	FIELD_TYPE_VALUE,
 	FIELD_TYPE_BRACKET,
@@ -200,6 +201,72 @@ public:
 	virtual bool execute(double left, double right, double &result);
 };
 
+class OperatorGreaterThan : public OperatorF2
+{
+public:
+	OperatorGreaterThan(const char *symbol = ">") : OperatorF2(symbol, 6) {}
+	virtual bool execute(double left, double right, double &result)
+	{
+		result = left > right;
+		return true;
+	}
+};
+
+class OperatorLessThan : public OperatorF2
+{
+public:
+	OperatorLessThan(const char *symbol = "<") : OperatorF2(symbol, 6) {}
+	virtual bool execute(double left, double right, double &result)
+	{
+		result = left < right;
+		return true;
+	}
+};
+
+class OperatorEqual : public OperatorF2
+{
+public:
+	OperatorEqual(const char *symbol = "==") : OperatorF2(symbol, 7) {}
+	virtual bool execute(double left, double right, double &result)
+	{
+		result = left == right;
+		return true;
+	}
+};
+
+class OperatorNotEqual : public OperatorF2
+{
+public:
+	OperatorNotEqual(const char *symbol = "!=") : OperatorF2(symbol, 7) {}
+	virtual bool execute(double left, double right, double &result)
+	{
+		result = left != right;
+		return true;
+	}
+};
+
+class OperatorGreaterThanOrEqual : public OperatorF2
+{
+public:
+	OperatorGreaterThanOrEqual(const char *symbol = ">=") : OperatorF2(symbol, 6) {}
+	virtual bool execute(double left, double right, double &result)
+	{
+		result = left >= right;
+		return true;
+	}
+};
+
+class OperatorLessThanOrEqual : public OperatorF2
+{
+public:
+	OperatorLessThanOrEqual(const char *symbol = "<=") : OperatorF2(symbol, 6) {}
+	virtual bool execute(double left, double right, double &result)
+	{
+		result = left <= right;
+		return true;
+	}
+};
+
 class OperatorAnd : public OperatorN2
 {
 public:
@@ -229,6 +296,28 @@ public:
 	virtual bool execute(ulong left, ulong right, ulong &result)
 	{
 		result = left ^ right;
+		return true;
+	}
+};
+
+class OperatorShiftL : public OperatorN2
+{
+public:
+	OperatorShiftL(const char *symbol = "<<") : OperatorN2(symbol, 5) {}
+	virtual bool execute(ulong left, ulong right, ulong &result)
+	{
+		result = left << right;
+		return true;
+	}
+};
+
+class OperatorShiftR : public OperatorN2
+{
+public:
+	OperatorShiftR(const char *symbol = ">>") : OperatorN2(symbol, 5) {}
+	virtual bool execute(ulong left, ulong right, ulong &result)
+	{
+		result = left >> right;
 		return true;
 	}
 };

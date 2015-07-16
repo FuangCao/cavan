@@ -253,12 +253,20 @@ Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
 		sListOperator.append(new OperatorDiv("div"));
 		sListOperator.append(new OperatorMod());
 		sListOperator.append(new OperatorMod("mod"));
+		sListOperator.append(new OperatorGreaterThan());
+		sListOperator.append(new OperatorLessThan());
+		sListOperator.append(new OperatorEqual());
+		sListOperator.append(new OperatorNotEqual());
+		sListOperator.append(new OperatorGreaterThanOrEqual());
+		sListOperator.append(new OperatorLessThanOrEqual());
 		sListOperator.append(new OperatorAnd());
 		sListOperator.append(new OperatorAnd("and"));
 		sListOperator.append(new OperatorOr());
 		sListOperator.append(new OperatorOr("or"));
 		sListOperator.append(new OperatorXor());
 		sListOperator.append(new OperatorXor("xor"));
+		sListOperator.append(new OperatorShiftL());
+		sListOperator.append(new OperatorShiftR());
 		sListOperator.append(new OperatorFactorial());
 		sListOperator.append(new OperatorNegation());
 		sListOperator.append(new OperatorNegation("neg"));
@@ -299,6 +307,7 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 
 	mStackOperand.clear();
 	mStackOperator.clear();
+	mLastFieldType = FIELD_TYPE_NONE;
 
 	while (formula < formula_end)
 	{
@@ -323,24 +332,6 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 			switch (op->getType())
 			{
 			case OPERATOR_TYPE2:
-				if (mStackOperand.isEmpty())
-				{
-					if (!mStackOperand.push(0))
-					{
-						setErrMsg("Operand stack overfrow");
-						return false;
-					}
-				}
-
-				if (!mStackOperator.push(op))
-				{
-					setErrMsg("Operator stack overfrow");
-					return false;
-				}
-
-				formula += op->getLength();
-				break;
-
 			case OPERATOR_TYPE1_RIGHT:
 				if (!mStackOperator.push(op))
 				{
@@ -410,6 +401,16 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 
 			case '0' ... '9':
 				value = text2double_unsigned(formula, formula_end, &formula, 10);
+				if (mLastFieldType == FIELD_TYPE_OPERATOR && mStackOperator.count() == 1 && mStackOperand.isEmpty())
+				{
+					Operator *op;
+					if (mStackOperator.top(op) && strcmp(op->getSymbol(), "-") == 0)
+					{
+						value = -value;
+						mStackOperator.pop(op);
+					}
+				}
+
 				if (!mStackOperand.push(value))
 				{
 					setErrMsg("Operand stack overfrow");
