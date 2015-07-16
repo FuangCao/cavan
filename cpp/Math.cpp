@@ -21,7 +21,6 @@
 #include <cavan/ctype.h>
 #include <cavan/calculator.h>
 #include <cavan++/Math.h>
-#include <math.h>
 
 #define CAVAN_MATH_DEBUG	1
 
@@ -267,9 +266,15 @@ Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
 		sListOperator.append(new OperatorXor("xor"));
 		sListOperator.append(new OperatorShiftL());
 		sListOperator.append(new OperatorShiftR());
+		sListOperator.append(new OperatorPow());
+		sListOperator.append(new OperatorSqrt());
 		sListOperator.append(new OperatorFactorial());
 		sListOperator.append(new OperatorNegation());
 		sListOperator.append(new OperatorNegation("neg"));
+		sListOperator.append(new OperatorAbs());
+		sListOperator.append(new OperatorFloor());
+		sListOperator.append(new OperatorCeil());
+		sListOperator.append(new OperatorRound());
 		sListOperator.append(new OperatorAvg());
 		sListOperator.append(new OperatorSum());
 		sListOperator.append(new OperatorMax());

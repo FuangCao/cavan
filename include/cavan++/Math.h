@@ -19,6 +19,7 @@
  *
  */
 
+#include <math.h>
 #include <cavan.h>
 #include <cavan++/List.h>
 #include <cavan++/Stack.h>
@@ -105,7 +106,7 @@ public:
 class OperatorF1 : public Operator
 {
 public:
-	OperatorF1(const char *symbol, int priority, int type = OPERATOR_TYPE1_RIGHT) : Operator(symbol, priority, type) {}
+	OperatorF1(const char *symbol, int type = OPERATOR_TYPE1_RIGHT) : Operator(symbol, 0, type) {}
 	virtual bool execute(Stack<double> &stack, double &result);
 	virtual bool execute(double &value) = 0;
 };
@@ -113,7 +114,7 @@ public:
 class OperatorN1 : public OperatorF1
 {
 public:
-	OperatorN1(const char *symbol, int priority, int type = OPERATOR_TYPE1_RIGHT) : OperatorF1(symbol, priority, type) {}
+	OperatorN1(const char *symbol, int type = OPERATOR_TYPE1_RIGHT) : OperatorF1(symbol, type) {}
 	virtual bool execute(double &value);
 	virtual bool execute(ulong &value) = 0;
 };
@@ -121,17 +122,61 @@ public:
 class OperatorFactorial : public OperatorN1
 {
 public:
-	OperatorFactorial(const char *symbol = "!") : OperatorN1(symbol, 0, OPERATOR_TYPE1_LEFT) {}
+	OperatorFactorial(const char *symbol = "!") : OperatorN1(symbol, OPERATOR_TYPE1_LEFT) {}
 	virtual bool execute(ulong &value);
 };
 
 class OperatorNegation : public OperatorN1
 {
 public:
-	OperatorNegation(const char *symbol = "~") : OperatorN1(symbol, 0, OPERATOR_TYPE1_RIGHT) {}
+	OperatorNegation(const char *symbol = "~") : OperatorN1(symbol) {}
 	virtual bool execute(ulong &value)
 	{
 		value = ~value;
+		return true;
+	}
+};
+
+class OperatorAbs : public OperatorF1
+{
+public:
+	OperatorAbs(const char *symbol = "abs") : OperatorF1(symbol) {}
+	virtual bool execute(double &value)
+	{
+		value = fabs(value);
+		return true;
+	}
+};
+
+class OperatorFloor : public OperatorF1
+{
+public:
+	OperatorFloor(const char *symbol = "floor") : OperatorF1(symbol) {}
+	virtual bool execute(double &value)
+	{
+		value = floor(value);
+		return true;
+	}
+};
+
+class OperatorCeil : public OperatorF1
+{
+public:
+	OperatorCeil(const char *symbol = "ceil") : OperatorF1(symbol) {}
+	virtual bool execute(double &value)
+	{
+		value = ceil(value);
+		return true;
+	}
+};
+
+class OperatorRound : public OperatorF1
+{
+public:
+	OperatorRound(const char *symbol = "round") : OperatorF1(symbol) {}
+	virtual bool execute(double &value)
+	{
+		value = round(value);
 		return true;
 	}
 };
@@ -141,7 +186,7 @@ public:
 class OperatorF2 : public Operator
 {
 public:
-	OperatorF2(const char *symbol, int priority) : Operator(symbol, priority, OPERATOR_TYPE2) {}
+	OperatorF2(const char *symbol, int priority, int type = OPERATOR_TYPE2) : Operator(symbol, priority, type) {}
 	virtual bool execute(Stack<double> &stack, double &result);
 	virtual bool execute(double left, double right, double &result) = 0;
 };
@@ -318,6 +363,28 @@ public:
 	virtual bool execute(ulong left, ulong right, ulong &result)
 	{
 		result = left >> right;
+		return true;
+	}
+};
+
+class OperatorPow : public OperatorF2
+{
+public:
+	OperatorPow(const char *symbol = "pow") : OperatorF2(symbol, 0, OPERATOR_TYPE_LIST) {}
+	virtual bool execute(double left, double right, double &result)
+	{
+		result = pow(left, right);
+		return true;
+	}
+};
+
+class OperatorSqrt : public OperatorF2
+{
+public:
+	OperatorSqrt(const char *symbol = "sqrt") : OperatorF2(symbol, 0, OPERATOR_TYPE_LIST) {}
+	virtual bool execute(double left, double right, double &result)
+	{
+		result = pow(right, 1 / left);
 		return true;
 	}
 };
