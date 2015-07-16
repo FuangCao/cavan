@@ -23,29 +23,44 @@
 #include <cavan++/List.h>
 #include <cavan++/Stack.h>
 
+typedef enum
+{
+	OPERATOR_TYPE_CONSTANT,
+	OPERATOR_TYPE1_LEFT,
+	OPERATOR_TYPE1_RIGHT,
+	OPERATOR_TYPE2,
+} operator_type_t;
+
 class Operator
 {
 private:
+	int mType;
 	int mPriority;
-	int mSymLen;
+	int mLength;
 	const char *mSymbol;
 	const char *mErrMsg;
 
 public:
-	Operator(const char *symbol, int priority)
+	Operator(const char *symbol, int priority, int type)
 	{
 		setSymbol(symbol);
 		mPriority = priority;
+		mType = type;
 	}
 
-	int getSymLen(void)
+	int getLength(void)
 	{
-		return mSymLen;
+		return mLength;
 	}
 
 	int getPriority(void)
 	{
 		return mPriority;
+	}
+
+	int getType(void)
+	{
+		return mType;
 	}
 
 	const char *getSymbol(void)
@@ -72,78 +87,112 @@ public:
 
 // ================================================================================
 
-class UnaryOperator : public Operator
+class OperatorF1 : public Operator
 {
 public:
-	UnaryOperator(const char *symbol, int priority) : Operator(symbol, priority) {}
+	OperatorF1(const char *symbol, int priority, int type = OPERATOR_TYPE1_RIGHT) : Operator(symbol, priority, type) {}
 	virtual bool execute(Stack<double> &stack);
 	virtual bool execute(double &value) = 0;
 };
 
-// ================================================================================
-
-class BinaryOperator : public Operator
+class OperatorN1 : public OperatorF1
 {
 public:
-	BinaryOperator(const char *symbol, int priority) : Operator(symbol, priority) {}
+	OperatorN1(const char *symbol, int priority, int type = OPERATOR_TYPE1_RIGHT) : OperatorF1(symbol, priority, type) {}
+	virtual bool execute(double &value);
+	virtual bool execute(ulong &value) = 0;
+};
+
+class OperatorFactorial : public OperatorN1
+{
+public:
+	OperatorFactorial(const char *symbol = "!") : OperatorN1(symbol, 0, OPERATOR_TYPE1_LEFT) {}
+	virtual bool execute(ulong &value);
+};
+
+class OperatorNegation : public OperatorN1
+{
+public:
+	OperatorNegation(const char *symbol = "~") : OperatorN1(symbol, 0, OPERATOR_TYPE1_RIGHT) {}
+	virtual bool execute(ulong &value)
+	{
+		value = ~value;
+		return true;
+	}
+};
+
+// ================================================================================
+
+class OperatorF2 : public Operator
+{
+public:
+	OperatorF2(const char *symbol, int priority) : Operator(symbol, priority, OPERATOR_TYPE2) {}
 	virtual bool execute(Stack<double> &stack);
 	virtual bool execute(double left, double right, double &result) = 0;
 };
 
-class OperatorAdd : public BinaryOperator
+class OperatorN2 : public OperatorF2
 {
 public:
-	OperatorAdd(const char *symbol = "+") : BinaryOperator(symbol, 4) {}
+	OperatorN2(const char *symbol, int priority) : OperatorF2(symbol, priority) {}
+	virtual bool execute(double left, double right, double &result);
+	virtual bool execute(ulong left, ulong right, ulong &result) = 0;
+};
+
+class OperatorAdd : public OperatorF2
+{
+public:
+	OperatorAdd(const char *symbol = "+") : OperatorF2(symbol, 4) {}
 	virtual bool execute(double left, double right, double &result);
 };
 
-class OperatorSub : public BinaryOperator
+class OperatorSub : public OperatorF2
 {
 public:
-	OperatorSub(const char *symbol = "-") : BinaryOperator(symbol, 4) {}
+	OperatorSub(const char *symbol = "-") : OperatorF2(symbol, 4) {}
 	virtual bool execute(double left, double right, double &result);
 };
 
-class OperatorMul : public BinaryOperator
+class OperatorMul : public OperatorF2
 {
 public:
-	OperatorMul(const char *symbol = "*") : BinaryOperator(symbol, 3) {}
+	OperatorMul(const char *symbol = "*") : OperatorF2(symbol, 3) {}
 	virtual bool execute(double left, double right, double &result);
 };
 
-class OperatorDiv : public BinaryOperator
+class OperatorDiv : public OperatorF2
 {
 public:
-	OperatorDiv(const char *symbol = "/") : BinaryOperator(symbol, 3) {}
+	OperatorDiv(const char *symbol = "/") : OperatorF2(symbol, 3) {}
 	virtual bool execute(double left, double right, double &result);
 };
 
-class OperatorMod : public BinaryOperator
+class OperatorMod : public OperatorF2
 {
 public:
-	OperatorMod(const char *symbol = "%") : BinaryOperator(symbol, 3) {}
+	OperatorMod(const char *symbol = "%") : OperatorF2(symbol, 3) {}
 	virtual bool execute(double left, double right, double &result);
 };
 
-class OperatorAnd : public BinaryOperator
+class OperatorAnd : public OperatorN2
 {
 public:
-	OperatorAnd(const char *symbol = "&") : BinaryOperator(symbol, 8) {}
-	virtual bool execute(double left, double right, double &result);
+	OperatorAnd(const char *symbol = "&") : OperatorN2(symbol, 8) {}
+	virtual bool execute(ulong left, ulong right, ulong &result);
 };
 
-class OperatorOr : public BinaryOperator
+class OperatorOr : public OperatorN2
 {
 public:
-	OperatorOr(const char *symbol = "|") : BinaryOperator(symbol, 10) {}
-	virtual bool execute(double left, double right, double &result);
+	OperatorOr(const char *symbol = "|") : OperatorN2(symbol, 10) {}
+	virtual bool execute(ulong left, ulong right, ulong &result);
 };
 
-class OperatorXor : public BinaryOperator
+class OperatorXor : public OperatorN2
 {
 public:
-	OperatorXor(const char *symbol = "^") : BinaryOperator(symbol, 9) {}
-	virtual bool execute(double left, double right, double &result);
+	OperatorXor(const char *symbol = "^") : OperatorN2(symbol, 9) {}
+	virtual bool execute(ulong left, ulong right, ulong &result);
 };
 
 class Calculator

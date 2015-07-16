@@ -27,27 +27,27 @@
 void Operator::setSymbol(const char *symbol)
 {
 	mSymbol = symbol;
-	mSymLen = strlen(symbol);
+	mLength = strlen(symbol);
 }
 
 bool Operator::match(const char *name)
 {
-	return strncmp(name, mSymbol, mSymLen) == 0;
+	return strncmp(name, mSymbol, mLength) == 0;
 }
 
 int Operator::compare(Operator *left, Operator *right)
 {
-	if (left->mSymLen == right->mSymLen)
+	if (left->mLength == right->mLength)
 	{
 		return strcmp(left->mSymbol, right->mSymbol);
 	}
 
-	return right->mSymLen - left->mSymLen;
+	return right->mLength - left->mLength;
 }
 
 // ================================================================================
 
-bool UnaryOperator::execute(Stack<double> &stack)
+bool OperatorF1::execute(Stack<double> &stack)
 {
 	double value;
 
@@ -71,9 +71,39 @@ bool UnaryOperator::execute(Stack<double> &stack)
 	return true;
 }
 
+bool OperatorN1::execute(double &value)
+{
+	ulong nValue = value;
+	if (nValue != value)
+	{
+		setErrMsg("Need a integer");
+		return false;
+	}
+
+	bool res = execute(nValue);
+	if (res)
+	{
+		value = nValue;
+	}
+
+	return res;
+}
+
+bool OperatorFactorial::execute(ulong &value)
+{
+	ulong step;
+
+	for (step = value, value = 1; step > 1; step--)
+	{
+		value *= step;
+	}
+
+	return true;
+}
+
 // ================================================================================
 
-bool BinaryOperator::execute(Stack<double> &stack)
+bool OperatorF2::execute(Stack<double> &stack)
 {
 	double left, right, result;
 
@@ -99,6 +129,27 @@ bool BinaryOperator::execute(Stack<double> &stack)
 	}
 
 	return true;
+}
+
+bool OperatorN2::execute(double left, double right, double &result)
+{
+	ulong nResult;
+	ulong nLeft = left;
+	ulong nRight = right;
+
+	if (nLeft != left || nRight != right)
+	{
+		setErrMsg("Need a integer");
+		return false;
+	}
+
+	bool res = execute(nLeft, nRight, nResult);
+	if (res)
+	{
+		result = nResult;
+	}
+
+	return res;
 }
 
 bool OperatorAdd::execute(double left, double right, double &result)
@@ -140,25 +191,24 @@ bool OperatorMod::execute(double left, double right, double &result)
 	}
 
 	result = fmod(left, right);
-
 	return true;
 }
 
-bool OperatorAnd::execute(double left, double right, double &result)
+bool OperatorAnd::execute(ulong left, ulong right, ulong &result)
 {
-	result = ((u64) left) & ((u64) right);
+	result = left & right;
 	return true;
 }
 
-bool OperatorOr::execute(double left, double right, double &result)
+bool OperatorOr::execute(ulong left, ulong right, ulong &result)
 {
-	result = ((u64) left) | ((u64) right);
+	result = left | right;
 	return true;
 }
 
-bool OperatorXor::execute(double left, double right, double &result)
+bool OperatorXor::execute(ulong left, ulong right, ulong &result)
 {
-	result = ((u64) left) ^ ((u64) right);
+	result = left ^ right;
 	return true;
 }
 
@@ -187,6 +237,9 @@ Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
 		sListOperator.append(new OperatorOr("or"));
 		sListOperator.append(new OperatorXor());
 		sListOperator.append(new OperatorXor("xor"));
+		sListOperator.append(new OperatorFactorial());
+		sListOperator.append(new OperatorNegation());
+		sListOperator.append(new OperatorNegation("neg"));
 
 		sListOperator.sort(Operator::compare);
 	}
@@ -235,28 +288,54 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				}
 			}
 
-			if (mStackOperand.isEmpty())
+			switch (op->getType())
 			{
-				if (!mStackOperand.push(0))
+			case OPERATOR_TYPE2:
+				if (mStackOperand.isEmpty())
 				{
-					setErrMsg("Operand stack full");
+					if (!mStackOperand.push(0))
+					{
+						setErrMsg("Operand stack full");
+						return false;
+					}
+				}
+
+				if (!mStackOperator.push(op))
+				{
+					setErrMsg("Operator stack full");
 					return false;
 				}
-			}
+				break;
 
-			if (!mStackOperator.push(op))
-			{
-				setErrMsg("Operator stack full");
+			case OPERATOR_TYPE1_RIGHT:
+				if (!mStackOperator.push(op))
+				{
+					setErrMsg("Operator stack full");
+					return false;
+				}
+				break;
+
+			case OPERATOR_TYPE1_LEFT:
+				if (!op->execute(mStackOperand))
+				{
+					setErrMsg(op->getErrMsg());
+					return false;
+				}
+				break;
+
+			default:
+				setErrMsg("Invalid operator");
 				return false;
 			}
 
-			formula += op->getSymLen();
+			formula += op->getLength();
 		}
 		else
 		{
 			switch (*formula)
 			{
 			case ' ':
+			case ',':
 			case '\r':
 			case '\n':
 			case '\t':
