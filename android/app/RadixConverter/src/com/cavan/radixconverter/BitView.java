@@ -3,6 +3,9 @@ package com.cavan.radixconverter;
 import android.content.Context;
 import android.graphics.Color;
 import android.util.AttributeSet;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
+import android.view.animation.ScaleAnimation;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -83,6 +86,15 @@ public class BitView extends RelativeLayout {
 		if (active) {
 			mTextViewIndex.setBackgroundColor(Color.RED);
 			mTextViewTitle.setBackgroundColor(Color.MAGENTA);
+
+			Animation animation;
+			animation = new ScaleAnimation(0.0f, 1.0f, 0.0f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+			animation.setDuration(200);
+			mTextViewIndex.startAnimation(animation);
+
+			animation = new RotateAnimation(0.0f, 360.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+			animation.setDuration(500);
+			mTextViewTitle.startAnimation(animation);
 		} else {
 			mTextViewIndex.setBackgroundColor(Color.BLACK);
 			mTextViewTitle.setBackgroundColor(Color.GRAY);
