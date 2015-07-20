@@ -275,7 +275,7 @@ bool OperatorTrigonometricArc::executeAngle(double &value)
 
 List<Operator *> Calculator::sListOperator(100);
 
-Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
+Calculator::Calculator() : mStackOperand(100), mStackOperator(100), mErrMsg("unknown")
 {
 	if (sListOperator.isEmpty())
 	{
@@ -381,6 +381,15 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				}
 			}
 
+			if (op->getOmitMul() && mLastFieldType == FIELD_TYPE_VALUE && mStackOperand.hasData())
+			{
+				Operator *mul = matchOperator("*");
+				if (mul)
+				{
+					mStackOperator.push(mul);
+				}
+			}
+
 			switch (op->getType())
 			{
 			case OPERATOR_TYPE2:
@@ -400,16 +409,6 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				{
 					setErrMsg(op->getErrMsg());
 					return false;
-				}
-
-				if (op->getType() == OPERATOR_TYPE_CONSTANT && mLastFieldType != FIELD_TYPE_OPERATOR && mStackOperand.count() > 1)
-				{
-					OperatorMul mul;
-					if (mul.execute(mStackOperand))
-					{
-						setErrMsg(mul.getErrMsg());
-						return false;
-					}
 				}
 
 				formula += op->getLength();

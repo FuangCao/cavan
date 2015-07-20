@@ -48,15 +48,18 @@ private:
 	int mType;
 	int mPriority;
 	int mLength;
+	bool mOmitMul;
 	const char *mSymbol;
 	const char *mErrMsg;
 
 public:
-	Operator(const char *symbol, int priority, int type)
+	Operator(const char *symbol, int priority, int type, bool omit = false)
 	{
 		setSymbol(symbol);
 		mPriority = priority;
 		mType = type;
+		mOmitMul = omit;
+		mErrMsg = "unknown";
 	}
 
 	int getLength(void)
@@ -74,6 +77,16 @@ public:
 		return mType;
 	}
 
+	void setOmitMul(int omit)
+	{
+		mOmitMul = omit;
+	}
+
+	bool getOmitMul(void)
+	{
+		return mOmitMul;
+	}
+
 	const char *getSymbol(void)
 	{
 		return mSymbol;
@@ -86,7 +99,10 @@ public:
 
 	void setErrMsg(const char *msg)
 	{
-		mErrMsg = msg;
+		if (msg)
+		{
+			mErrMsg = msg;
+		}
 	}
 
 	void setSymbol(const char *symbol);
@@ -107,7 +123,7 @@ public:
 class OperatorF1 : public Operator
 {
 public:
-	OperatorF1(const char *symbol, int type = OPERATOR_TYPE1_RIGHT) : Operator(symbol, 0, type) {}
+	OperatorF1(const char *symbol, int type, bool omit = false) : Operator(symbol, 0, type, omit) {}
 	virtual bool execute(Stack<double> &stack, double &result);
 	virtual bool execute(double &value) = 0;
 };
@@ -141,7 +157,7 @@ public:
 class OperatorAbs : public OperatorF1
 {
 public:
-	OperatorAbs(const char *symbol = "abs") : OperatorF1(symbol) {}
+	OperatorAbs(const char *symbol = "abs") : OperatorF1(symbol, OPERATOR_TYPE1_RIGHT, true) {}
 	virtual bool execute(double &value)
 	{
 		value = fabs(value);
@@ -152,7 +168,7 @@ public:
 class OperatorFloor : public OperatorF1
 {
 public:
-	OperatorFloor(const char *symbol = "floor") : OperatorF1(symbol) {}
+	OperatorFloor(const char *symbol = "floor") : OperatorF1(symbol, OPERATOR_TYPE1_RIGHT, true) {}
 	virtual bool execute(double &value)
 	{
 		value = floor(value);
@@ -163,7 +179,7 @@ public:
 class OperatorCeil : public OperatorF1
 {
 public:
-	OperatorCeil(const char *symbol = "ceil") : OperatorF1(symbol) {}
+	OperatorCeil(const char *symbol = "ceil") : OperatorF1(symbol, OPERATOR_TYPE1_RIGHT, true) {}
 	virtual bool execute(double &value)
 	{
 		value = ceil(value);
@@ -174,7 +190,7 @@ public:
 class OperatorRound : public OperatorF1
 {
 public:
-	OperatorRound(const char *symbol = "round") : OperatorF1(symbol) {}
+	OperatorRound(const char *symbol = "round") : OperatorF1(symbol, OPERATOR_TYPE1_RIGHT, true) {}
 	virtual bool execute(double &value)
 	{
 		value = round(value);
@@ -185,7 +201,7 @@ public:
 class OperatorReci : public OperatorF1
 {
 public:
-	OperatorReci(const char *symbol = "reci") : OperatorF1(symbol) {}
+	OperatorReci(const char *symbol = "reci") : OperatorF1(symbol, OPERATOR_TYPE1_RIGHT, true) {}
 	virtual bool execute(double &value)
 	{
 		value = 1 / value;
@@ -198,7 +214,7 @@ public:
 class OperatorF2 : public Operator
 {
 public:
-	OperatorF2(const char *symbol, int priority, int type = OPERATOR_TYPE2) : Operator(symbol, priority, type) {}
+	OperatorF2(const char *symbol, int priority, int type = OPERATOR_TYPE2, bool omit = false) : Operator(symbol, priority, type, omit) {}
 	virtual bool execute(Stack<double> &stack, double &result);
 	virtual bool execute(double left, double right, double &result) = 0;
 };
@@ -387,7 +403,7 @@ public:
 class OperatorPow : public OperatorF2
 {
 public:
-	OperatorPow(const char *symbol = "pow") : OperatorF2(symbol, 0, OPERATOR_TYPE_LIST) {}
+	OperatorPow(const char *symbol = "pow") : OperatorF2(symbol, 0, OPERATOR_TYPE_LIST, true) {}
 	virtual bool execute(double left, double right, double &result)
 	{
 		result = pow(left, right);
@@ -398,7 +414,7 @@ public:
 class OperatorSqrt : public OperatorF2
 {
 public:
-	OperatorSqrt(const char *symbol = "sqrt") : OperatorF2(symbol, 0, OPERATOR_TYPE_LIST) {}
+	OperatorSqrt(const char *symbol = "sqrt") : OperatorF2(symbol, 0, OPERATOR_TYPE_LIST, true) {}
 	virtual bool execute(double left, double right, double &result)
 	{
 		if (left == 0)
@@ -417,28 +433,28 @@ public:
 class OperatorAvg : public Operator
 {
 public:
-	OperatorAvg(const char *symbol = "avg") : Operator(symbol, 0, OPERATOR_TYPE_LIST) {}
+	OperatorAvg(const char *symbol = "avg") : Operator(symbol, 0, OPERATOR_TYPE_LIST, true) {}
 	virtual bool execute(Stack<double> &stack, double &result);
 };
 
 class OperatorSum : public Operator
 {
 public:
-	OperatorSum(const char *symbol = "sum") : Operator(symbol, 0, OPERATOR_TYPE_LIST) {}
+	OperatorSum(const char *symbol = "sum") : Operator(symbol, 0, OPERATOR_TYPE_LIST, true) {}
 	virtual bool execute(Stack<double> &stack, double &result);
 };
 
 class OperatorMin : public Operator
 {
 public:
-	OperatorMin(const char *symbol = "min") : Operator(symbol, 0, OPERATOR_TYPE_LIST) {}
+	OperatorMin(const char *symbol = "min") : Operator(symbol, 0, OPERATOR_TYPE_LIST, true) {}
 	virtual bool execute(Stack<double> &stack, double &result);
 };
 
 class OperatorMax : public Operator
 {
 public:
-	OperatorMax(const char *symbol = "max") : Operator(symbol, 0, OPERATOR_TYPE_LIST) {}
+	OperatorMax(const char *symbol = "max") : Operator(symbol, 0, OPERATOR_TYPE_LIST, true) {}
 	virtual bool execute(Stack<double> &stack, double &result);
 };
 
@@ -447,7 +463,7 @@ public:
 class OperatorE : public Operator
 {
 public:
-	OperatorE(const char *symbol = "E") : Operator(symbol, 0, OPERATOR_TYPE_CONSTANT) {}
+	OperatorE(const char *symbol = "E") : Operator(symbol, 0, OPERATOR_TYPE_CONSTANT, true) {}
 	virtual bool execute(Stack<double> &stack, double &result)
 	{
 		result = 2.71828182845904523536;
@@ -458,7 +474,7 @@ public:
 class OperatorPI : public Operator
 {
 public:
-	OperatorPI(const char *symbol = "PI") : Operator(symbol, 0, OPERATOR_TYPE_CONSTANT) {}
+	OperatorPI(const char *symbol = "PI") : Operator(symbol, 0, OPERATOR_TYPE_CONSTANT, true) {}
 	virtual bool execute(Stack<double> &stack, double &result)
 	{
 		result = 3.14159265358979323846;
@@ -474,7 +490,7 @@ private:
 	double mPeriod;
 
 public:
-	OperatorTrigonometricBase(const char *symbol, int period) : OperatorF1(symbol), mPeriod(period) {}
+	OperatorTrigonometricBase(const char *symbol, int period) : OperatorF1(symbol, OPERATOR_TYPE1_RIGHT, true), mPeriod(period) {}
 	double getPeriod(void)
 	{
 		return mPeriod;
@@ -651,7 +667,10 @@ public:
 
 	void setErrMsg(const char *msg)
 	{
-		mErrMsg = msg;
+		if (msg)
+		{
+			mErrMsg = msg;
+		}
 	}
 
 	Operator *matchOperator(const char *formula);
