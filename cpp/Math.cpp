@@ -19,7 +19,6 @@
 
 #include <cavan.h>
 #include <cavan/ctype.h>
-#include <cavan/calculator.h>
 #include <cavan++/Math.h>
 
 #define CAVAN_MATH_DEBUG	0
@@ -235,6 +234,45 @@ bool OperatorMax::execute(Stack<double> &stack, double &result)
 
 // ================================================================================
 
+bool OperatorTrigonometric::executeAngle(double &value)
+{
+	value = angleAdjust(value);
+	if (!checkAngle(value))
+	{
+		setErrMsg("Invalid trigonometric angle");
+		return false;
+	}
+
+	value = angle2radian(value);
+
+	return executeRadian(value);
+}
+
+bool OperatorTrigonometricArc::executeAngle(double &value)
+{
+	if (!checkValue(value))
+	{
+		setErrMsg("Invalid arc trigonometric value");
+		return false;
+	}
+
+	if (!executeRadian(value))
+	{
+		return false;
+	}
+
+	value = radian2angle(value);
+	if (!checkAngle(value))
+	{
+		setErrMsg("Invalid trigonometric angle");
+		return false;
+	}
+
+	return true;
+}
+
+// ================================================================================
+
 List<Operator *> Calculator::sListOperator(100);
 
 Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
@@ -282,6 +320,14 @@ Calculator::Calculator() : mStackOperand(100), mStackOperator(100)
 		sListOperator.append(new OperatorMin());
 		sListOperator.append(new OperatorPI());
 		sListOperator.append(new OperatorE());
+		sListOperator.append(new OperatorSin());
+		sListOperator.append(new OperatorCos());
+		sListOperator.append(new OperatorTan());
+		sListOperator.append(new OperatorCot());
+		sListOperator.append(new OperatorAsin());
+		sListOperator.append(new OperatorAcos());
+		sListOperator.append(new OperatorAtan());
+		sListOperator.append(new OperatorAcot());
 
 		sListOperator.sort(Operator::compare);
 	}
@@ -359,7 +405,7 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				if (op->getType() == OPERATOR_TYPE_CONSTANT && mLastFieldType != FIELD_TYPE_OPERATOR && mStackOperand.count() > 1)
 				{
 					OperatorMul mul;
-					if (!((Operator *) &mul)->execute(mStackOperand))
+					if (mul.execute(mStackOperand))
 					{
 						setErrMsg(mul.getErrMsg());
 						return false;

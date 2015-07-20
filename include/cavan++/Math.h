@@ -21,6 +21,7 @@
 
 #include <math.h>
 #include <cavan.h>
+#include <cavan/calculator.h>
 #include <cavan++/List.h>
 #include <cavan++/Stack.h>
 
@@ -236,6 +237,11 @@ class OperatorMul : public OperatorF2
 {
 public:
 	OperatorMul(const char *symbol = "*") : OperatorF2(symbol, 3) {}
+	bool execute(Stack<double> &stack)
+	{
+		return Operator::execute(stack);
+	}
+
 	virtual bool execute(double left, double right, double &result)
 	{
 		result = left * right;
@@ -456,6 +462,169 @@ public:
 	virtual bool execute(Stack<double> &stack, double &result)
 	{
 		result = 3.14159265358979323846;
+		return true;
+	}
+};
+
+// ================================================================================
+
+class OperatorTrigonometricBase : public OperatorF1
+{
+private:
+	double mPeriod;
+
+public:
+	OperatorTrigonometricBase(const char *symbol, int period) : OperatorF1(symbol), mPeriod(period) {}
+	double getPeriod(void)
+	{
+		return mPeriod;
+	}
+
+	double angleAdjust(double angle, double max = 180)
+	{
+		return angle_adjust(angle, 0, max, mPeriod);
+	}
+
+	virtual bool checkAngle(double &value)
+	{
+		return true;
+	}
+
+	virtual bool checkValue(double &value)
+	{
+		return true;
+	}
+
+	virtual bool execute(double &value)
+	{
+		return executeAngle(value);
+	}
+
+	virtual bool executeAngle(double &value) = 0;
+	virtual bool executeRadian(double &value) = 0;
+};
+
+class OperatorTrigonometric : public OperatorTrigonometricBase
+{
+public:
+	OperatorTrigonometric(const char *symbol, int period) : OperatorTrigonometricBase(symbol, period) {}
+	virtual bool executeAngle(double &value);
+	virtual bool executeRadian(double &value) = 0;
+};
+
+class OperatorTrigonometricArc : public OperatorTrigonometricBase
+{
+public:
+	OperatorTrigonometricArc(const char *symbol, int period) : OperatorTrigonometricBase(symbol, period) {}
+	virtual bool executeAngle(double &value);
+	virtual bool executeRadian(double &value) = 0;
+};
+
+class OperatorSin : public OperatorTrigonometric
+{
+public:
+	OperatorSin(const char *symbol = "sin") : OperatorTrigonometric(symbol, 360) {}
+	virtual bool executeRadian(double &value)
+	{
+		value = sin(value);
+		return true;
+	}
+};
+
+class OperatorCos : public OperatorSin
+{
+public:
+	OperatorCos(const char *symbol = "cos") : OperatorSin(symbol) {}
+	virtual bool executeRadian(double &value)
+	{
+		value = cos(value);
+		return true;
+	}
+};
+
+class OperatorTan : public OperatorTrigonometric
+{
+public:
+	OperatorTan(const char *symbol = "tan") : OperatorTrigonometric(symbol, 180) {}
+
+	virtual bool checkAngle(double &value)
+	{
+		if (value == 90)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	virtual bool executeRadian(double &value)
+	{
+		value = tan(value);
+		return true;
+	}
+};
+
+class OperatorCot : public OperatorTan
+{
+public:
+	OperatorCot(const char *symbol = "cot") : OperatorTan(symbol) {}
+
+	virtual bool checkAngle(double &value)
+	{
+		value = 90 - value;
+		return OperatorTan::checkAngle(value);
+	}
+};
+
+class OperatorAsin : public OperatorTrigonometricArc
+{
+public:
+	OperatorAsin(const char *symbol = "asin") : OperatorTrigonometricArc(symbol, 360) {}
+
+	virtual bool checkValue(double &value)
+	{
+		return value >= -1 && value <= 1;
+	}
+
+	virtual bool executeRadian(double &value)
+	{
+		value = asin(value);
+		return true;
+	}
+};
+
+class OperatorAcos : public OperatorAsin
+{
+public:
+	OperatorAcos(const char *symbol = "acos") : OperatorAsin(symbol) {}
+
+	virtual bool executeRadian(double &value)
+	{
+		value = acos(value);
+		return true;
+	}
+};
+
+class OperatorAtan : public OperatorTrigonometricArc
+{
+public:
+	OperatorAtan(const char *symbol = "atan") : OperatorTrigonometricArc(symbol, 360) {}
+
+	virtual bool executeRadian(double &value)
+	{
+		value = atan(value);
+		return true;
+	}
+};
+
+class OperatorAcot : public OperatorAtan
+{
+public:
+	OperatorAcot(const char *symbol = "acot") : OperatorAtan(symbol) {}
+
+	virtual bool checkAngle(double &value)
+	{
+		value = 90 - value;
 		return true;
 	}
 };
