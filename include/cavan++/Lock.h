@@ -25,6 +25,7 @@
 class ILock
 {
 public:
+	virtual ~ILock(void) {}
 	virtual int acquire(void) = 0;
 	virtual int release(void) = 0;
 

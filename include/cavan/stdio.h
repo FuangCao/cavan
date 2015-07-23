@@ -14,7 +14,9 @@
 #endif
 
 #ifdef __cplusplus
+#ifndef CONFIG_BUILD_FOR_ANDROID
 #include <iostream>
+#endif
 using namespace std;
 
 extern "C" {

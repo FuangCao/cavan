@@ -34,7 +34,7 @@ static void show_usage(const char *command)
 	println("--mask, -m, -M\t\tshow bit location");
 }
 
-int main(int argc, char *argv[])
+extern "C" int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
@@ -109,6 +109,13 @@ int main(int argc, char *argv[])
 		case 'B':
 		case CAVAN_COMMAND_OPTION_BASE:
 			base = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'l':
+		case 'L':
+		case CAVAN_COMMAND_OPTION_LENGTH:
+			length[0] = text2value_unsigned(optarg, (const char **) &optarg, 10);
+			length[1] = text2value_unsigned(optarg + 1, NULL, 10);
 			break;
 
 		case 'p':

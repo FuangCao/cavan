@@ -5,7 +5,9 @@ $(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/$1))
 endef
 
 CAVAN_LIB_SRC_FILES := $(call cavan-all-files-under,lib/*.c)
+CAVAN_LIB_SRC_FILES += $(call cavan-all-files-under,cpp/*.cpp)
 CAVAN_APP_SRC_FILES := $(call cavan-all-files-under,app/*.c)
+CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,app/*.cpp)
 CAVAN_APP_CORE_SRC_FILES := $(call cavan-all-files-under,app/core/*.c)
 
 CAVAN_C_INCLUDES := $(LOCAL_PATH)/include
@@ -55,7 +57,7 @@ $(CAVAN_MAP_H): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) | $(CAVAN_OUT
 $(CAVAN_MAP_C): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) | $(CAVAN_OUT_PATH)
 	$(hide) for app in $(basename $(notdir $^)); \
 	do \
-		echo "{\"$${app}\", do_cavan_$${app}},"; \
+		echo "{ \"$${app}\", do_cavan_$${app} },"; \
 	done > $@
 
 $(CAVAN_OUT_PATH):

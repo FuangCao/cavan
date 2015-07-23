@@ -95,6 +95,7 @@ protected:
 	void (*onKey)(CavanWindow *win, int code, int value, const char *name);
 
 public:
+	virtual ~CavanWindow(void) {}
 	CavanWindow(int id, const char *text) : mLock(), mChildLink()
 	{
 		this->id = id;

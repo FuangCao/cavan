@@ -53,6 +53,7 @@ private:
 	const char *mErrMsg;
 
 public:
+	virtual ~Operator(void) {}
 	Operator(const char *symbol, int priority, int type, bool omit = false)
 	{
 		setSymbol(symbol);

@@ -6,6 +6,10 @@
 #include <sys/file.h>
 #include <poll.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAX_BUFFER_LEN				MB(1)
 
 #ifndef O_BINARY
@@ -496,3 +500,7 @@ static inline bool file_throw_all(int fd)
 {
 	return file_discard_all(fd);
 }
+
+#ifdef __cplusplus
+}
+#endif

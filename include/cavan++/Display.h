@@ -96,7 +96,7 @@ private:
 
 public:
 	DisplayDevice(void) {}
-	~DisplayDevice(void) {}
+	virtual ~DisplayDevice(void) {}
 
 	int getWidth(void)
 	{

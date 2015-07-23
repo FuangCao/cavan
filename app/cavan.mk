@@ -7,7 +7,7 @@ ifeq ($(BUILD_OTHERS),true)
 LOCAL_SOURCE := $(LOCAL_SOURCE) $(call search_all_files,others/*.c others/*.cc others/*.cpp others/*.cxx)
 endif
 
-$(if $(filter %.cc %.cpp %.cxx,$(LOCAL_SOURCE)),$(eval LOCAL_LIBRARY += libcavan++))
+$(if $(filter %.cc %.cpp %.cxx,$(LOCAL_SOURCE)),$(eval LOCAL_LIBRARY := libcavan++ $(LOCAL_LIBRARY)))
 LOCAL_MODULE := main
 
 include $(BUILD_EXEC_PKG)

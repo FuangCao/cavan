@@ -41,7 +41,7 @@ protected:
 
 public:
 	CavanThread(const char *name, cavan_thread_handler_t handler = NULL);
-	~CavanThread(void);
+	virtual ~CavanThread(void);
 
 	void *getData(void)
 	{

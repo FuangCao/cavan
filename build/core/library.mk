@@ -1,6 +1,7 @@
 include $(DEFINES_MAKEFILE)
 
 CFLAGS += -fPIC
+CPPFLAGS += -fPIC
 
 LIB_OBJECT = $(call source_to_object,$(OUT_LIB),$(LIB_SOURCE))
 
