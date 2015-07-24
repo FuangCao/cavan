@@ -183,6 +183,12 @@ struct cavan_input_init_data
 	u32 delay;
 };
 
+struct cavan_input_rate_map
+{
+	u32 delay;
+	u8 value;
+};
+
 struct cavan_misc_device
 {
 	void *private_data;
@@ -349,6 +355,7 @@ void cavan_input_chip_recovery(struct cavan_input_chip *chip, bool force);
 ssize_t cavan_input_chip_write_online(const char *chip_name, bool online);
 ssize_t cavan_input_chip_read_online(const char *chip_name);
 int cavan_input_chip_firmware_upgrade(struct cavan_input_chip *chip, void *buff, size_t size, int flags);
+const struct cavan_input_rate_map *cavan_input_find_rate_map(const struct cavan_input_rate_map *map, size_t count, unsigned int delay);
 int cavan_input_device_set_enable_lock(struct cavan_input_device *dev, bool enable);
 int cavan_input_device_set_enable_no_sync(struct cavan_input_device *dev, bool enable);
 int cavan_input_device_calibration(struct cavan_input_device *dev, struct cavan_input_chip *chip, char *buff, size_t size, bool write);

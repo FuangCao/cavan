@@ -161,4 +161,16 @@ config CAVAN_SENSOR_BMI160
       To compile this driver as a module, choose M here: the
       module will be called cavan_bmi160.
 
+config CAVAN_SENSOR_BMM150
+    tristate "Cavan BMM150 geomagnetic sensor support"
+    default n
+    help
+      Say Y here if you have Bosch Sensortec's BMM150
+      acceleration and gyroscope sensor hooked to an I2C bus.
+
+      If unsure, say Y.
+
+      To compile this driver as a module, choose M here: the
+      module will be called cavan_bmm150.
+
 endmenu

@@ -709,6 +709,30 @@ static int cavan_input_chip_update_thread_state(struct cavan_input_chip *chip)
 	return 0;
 }
 
+const struct cavan_input_rate_map *cavan_input_find_rate_map(const struct cavan_input_rate_map *map, size_t count, unsigned int delay)
+{
+	const struct cavan_input_rate_map *p, *map_end;
+
+	if (map == NULL || count == 0)
+	{
+		return NULL;
+	}
+
+	for (p = map, map_end = map + count, map++; map < map_end; map++)
+	{
+		if (map->delay <= delay && (p->delay > delay || map->delay > p->delay))
+		{
+			p = map;
+		}
+	}
+
+	pr_bold_info("delay = %d, real delay = %d, value = 0x%02x", delay, p->delay, p->value);
+
+	return p;
+}
+
+EXPORT_SYMBOL_GPL(cavan_input_find_rate_map);
+
 static int cavan_input_device_set_delay(struct cavan_input_device *dev, struct cavan_input_chip *chip, unsigned int delay)
 {
 	int ret;

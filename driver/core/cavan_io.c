@@ -13,6 +13,10 @@ int cavan_io_write_register_masked(struct cavan_input_chip *chip, u8 addr, u8 va
 	}
 
 	value |= old_value & (~mask);
+	if (value == old_value)
+	{
+		return 0;
+	}
 
 	pr_bold_info("addr = 0x%02x, value = (0x%02x -> 0x%02x)", addr, old_value, value);
 
@@ -35,6 +39,10 @@ int cavan_io_write_register16_masked(struct cavan_input_chip *chip, u8 addr, u16
 
 
 	value |= old_value & (~mask);
+	if (value == old_value)
+	{
+		return 0;
+	}
 
 	pr_bold_info("addr = 0x%02x, value = (0x%02x -> 0x%02x)", addr, old_value, value);
 
