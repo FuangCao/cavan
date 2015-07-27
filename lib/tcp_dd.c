@@ -684,13 +684,14 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 	if (service->tcp_keypad_fd < 0)
 	{
-		if (service->tcp_keypad_ko)
+		service->tcp_keypad_fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
+		if (service->tcp_keypad_fd < 0 && service->tcp_keypad_ko)
 		{
 			cavan_system2("insmod \"%s\"", service->tcp_keypad_ko);
 			msleep(200);
+			service->tcp_keypad_fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
 		}
 
-		service->tcp_keypad_fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
 		if (service->tcp_keypad_fd < 0)
 		{
 			tcp_dd_send_response(client, service->tcp_keypad_fd, "[Server] Failed to open device `%s'", TCP_KEYPAD_DEVICE);

@@ -8,7 +8,7 @@ KERNEL_PATH = /lib/modules/$(shell uname -r)/build
 CROSS_COMPILE =
 endif
 
-CFLAGS = -Wall -Werror -I$(PWD)/include
+CFLAGS = -Wall -Werror -I$(PWD)/include/ -I$(KERNEL_PATH)/drivers/spi/
 
 all:
 	+make ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL_PATH) M=$(PWD) EXTRA_CFLAGS="$(CFLAGS)"

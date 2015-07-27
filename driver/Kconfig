@@ -159,5 +159,6 @@ source "drivers/cavan/touchscreen/Kconfig"
 endif
 
 source "drivers/cavan/flash/Kconfig"
+source "drivers/cavan/misc/Kconfig"
 
 endmenu

@@ -1,0 +1,36 @@
+menu "Cavan misc driver config"
+
+config CAVAN_MISC_SWAN_VK
+    tristate "Cavan swan virtual keypad support"
+    default n
+    help
+      Say Y here if you need swan virtual keypad support.
+
+      If unsure, say N.
+
+      To compile this driver as a module, choose M here: the
+      module will be called swan_vk.
+
+config CAVAN_MISC_SWAN_VN
+    tristate "Cavan swan virtual network card support"
+    default n
+    help
+      Say Y here if you need swan virtual network card support.
+
+      If unsure, say N.
+
+      To compile this driver as a module, choose M here: the
+      module will be called swan_vn.
+
+config CAVAN_MISC_TCP_KEYPAD
+    tristate "Cavan tcp keypad support"
+    default n
+    help
+      Say Y here if you need tcp virtual keypad support.
+
+      If unsure, say N.
+
+      To compile this driver as a module, choose M here: the
+      module will be called tcp_keypad.
+
+endmenu
