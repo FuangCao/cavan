@@ -1,0 +1,15 @@
+menu "Cavan flash driver config"
+
+config CAVAN_FLASH_W25Q32FW
+    tristate "Cavan w25q32fw spi flash support"
+    default n
+    help
+      Say Y here if you have Winbond's w25qxx falsh hooked
+      to an SPI bus.
+
+      If unsure, say N.
+
+      To compile this driver as a module, choose M here: the
+      module will be called spi-w25q32fw.
+
+endmenu

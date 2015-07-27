@@ -2,7 +2,7 @@ ROOT_PATH = $(shell pwd)
 BUILD_PATH = $(ROOT_PATH)/build
 MAKEFILE_PATH = $(BUILD_PATH)/main.mk
 
-obj-m := core/ misc/ touchscreen/ sensor/
+obj-y := core/ misc/ touchscreen/ sensor/ flash/
 
 all:
 	+make ARCH=arm -f $(MAKEFILE_PATH)
