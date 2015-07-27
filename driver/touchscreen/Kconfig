@@ -1,4 +1,4 @@
-menu "Cavan touchscreen driver config"
+menu "Touchscreen driver config"
 
 config CAVAN_USE_FB_NOTIFILER
     bool "Use fb notifiter control touchscreen power"
@@ -9,7 +9,7 @@ config CAVAN_USE_FB_NOTIFILER
       If unsure, say N.
 
 config CAVAN_TOUCHSCREEN_BL86X8
-    tristate "Cavan bl86x8 touchscreen"
+    tristate "bl86x8 touchscreen support"
     default n
     help
       Say Y here if you have a bl86x8 touchscreen connected to
@@ -21,7 +21,7 @@ config CAVAN_TOUCHSCREEN_BL86X8
       module will be called hampshire.
 
 config CAVAN_TOUCHSCREEN_CY8C242
-    tristate "Cavan cy8c242 touchscreen"
+    tristate "cy8c242 touchscreen support"
     default n
     help
       Say Y here if you have a cy8c242 touchscreen connected to
@@ -33,7 +33,7 @@ config CAVAN_TOUCHSCREEN_CY8C242
       module will be called hampshire.
 
 config CAVAN_TOUCHSCREEN_FT5216
-    tristate "Cavan ft5216 ft6306 touchscreen"
+    tristate "ft5216 ft6306 touchscreen support"
     default n
     help
       Say Y here if you have a ft5216 touchscreen connected to
@@ -45,7 +45,7 @@ config CAVAN_TOUCHSCREEN_FT5216
       module will be called hampshire.
 
 config CAVAN_TOUCHSCREEN_MSG21XX
-    tristate "Cavan msg21xx touchscreen"
+    tristate "msg21xx touchscreen support"
     default n
     help
       Say Y here if you have a msg21xx touchscreen connected to

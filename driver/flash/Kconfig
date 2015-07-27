@@ -1,7 +1,7 @@
-menu "Cavan flash driver config"
+menu "Flash driver config"
 
 config CAVAN_FLASH_W25Q32FW
-    tristate "Cavan w25q32fw spi flash support"
+    tristate "w25q32fw spi flash support"
     default n
     help
       Say Y here if you have Winbond's w25qxx falsh hooked

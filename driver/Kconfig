@@ -1,7 +1,7 @@
 menu "Cavan driver config"
 
 choice
-    prompt "Cavan phone type"
+    prompt "Phone type"
     default CAVAN_ZTE_HS8801
     depends on MACH_SP8810 || MACH_SP8810G_BRCM
     help
@@ -15,56 +15,56 @@ config CAVAN_ZTE_HS8801
 endchoice
 
 config CAVAN_USB_VENDOR_ID
-    hex "Cavan USB vendor id"
+    hex "USB vendor id"
     default 0x1782
 
 config CAVAN_USB_PRODUCT_ID
-    hex "Cavan USB product id"
+    hex "USB product id"
     default 0x5D00
 
 config CAVAN_USB_RNDIS_PRODUCT_ID
-    hex "Cavan USB rndis product id"
+    hex "USB rndis product id"
     default 0x5D20
 
 config CAVAN_USB_SIMPLE_NAME
-    string "Cavan USB simple name"
+    string "USB simple name"
     default "Cavan"
 
 config CAVAN_USB_MANUFACTURER_NAME
-    string "Cavan USB manufacturer name"
+    string "USB manufacturer name"
     default "Cavan"
 
 config CAVAN_USB_PRODUCT_NAME
-    string "Cavan USB product name"
+    string "USB product name"
     default "Cavan"
 
 config CAVAN_USB_SERIAL_NUMBER
-    string "Cavan USB serial number"
+    string "USB serial number"
     default "19761202"
 
 config CAVAN_LCD_WIDTH
-    int "Cavan lcd width"
+    int "LCD width"
     range 0 4096
 	default 480
     help
       This option config lcd horizontal resolution.
 
 config CAVAN_LCD_HEIGHT
-    int "Cavan lcd height"
+    int "LCD height"
     range 0 4096
 	default 800
     help
       This option config lcd vertical resolution.
 
 config CAVAN_LCD_BUS_WIDTH
-    int "Cavan lcd bus width"
+    int "LCD bus width"
     range 0 32
 	default 24
     help
       This option config lcd bus width.
 
 choice
-    prompt "Cavan lcd backlight type"
+    prompt "LCD backlight type"
     default CAVAN_LCD_BACKLIGHT_GPIO
     help
       Choice cavan lcd lcd backlight type
@@ -86,14 +86,14 @@ config CAVAN_LCD_BACKLIGHT_PWM
 endchoice
 
 config CAVAN_LCD_BACKLIGHT_MAX_BRIGHTNESS
-    int "Cavan lcd backlight max brightness"
+    int "LCD backlight max brightness"
     range 0 255
 	default 255
     help
       This option config lcd backlight max brightness.
 
 config CAVAN_LCD_SUPPORT_VENDOR_ID
-    bool "Cavan lcd support vendor id"
+    bool "LCD support vendor id"
 	default n
     help
       Say Y here if your lcd support vendor id
@@ -101,7 +101,7 @@ config CAVAN_LCD_SUPPORT_VENDOR_ID
       If unsure, say N.
 
 config CAVAN_BUTTON_BACKLIGHT_MAX_BRIGHTNESS
-    int "Cavan button backlight max brightness"
+    int "Button backlight max brightness"
     range 0 255
 	default 255
     help
@@ -126,7 +126,7 @@ config EXCHANGE_VOLUME_KEY
 	  Select if need exchange volume key.
 
 config CAVAN_CAMERA_ROTATION
-	int "Cavan camera rotation degree"
+	int "Camera rotation degree"
 	range 0 270
 	default 0
 	help
@@ -145,7 +145,7 @@ config CAVAN_SUPPORT_FRONT_CAMERA
 	  Select if has a front camera.
 
 menuconfig CAVAN_INPUT_CORE
-    tristate "Cavan input subsystem"
+    tristate "Input subsystem"
     default n
     depends on INPUT
     help

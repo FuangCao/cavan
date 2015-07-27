@@ -1,4 +1,4 @@
-menu "Cavan sensor driver config"
+menu "Sensor driver config"
 
 config CAVAN_GSENSOR_EXCHANGE_XY
     bool "Exchange x and y axis"
@@ -30,7 +30,7 @@ config CAVAN_GSENSOR_SIGN_Z
       This option config sign of z axis.
 
 config CAVAN_SENSOR_ADXL34X
-    tristate "Cavan adxl346 g-sensor"
+    tristate "adxl346 g-sensor support"
     default n
     help
       Say Y here if you have a adxl346 g-sendor connected to
@@ -42,7 +42,7 @@ config CAVAN_SENSOR_ADXL34X
       module will be called cavan_adxl34x.
 
 config CAVAN_SENSOR_KIONIX
-    tristate "Cavan kxcjk kxtik g-sensor"
+    tristate "kxcjk kxtik g-sensor support"
     default n
     help
       Say Y here if you have a kionix kxcjk kxtik g-sendor connected to
@@ -54,7 +54,7 @@ config CAVAN_SENSOR_KIONIX
       module will be called cavan_kionix.
 
 config CAVAN_SENSOR_LIS3DH
-    tristate "Cavan lis3dh lis3de g-sensor"
+    tristate "lis3dh lis3de g-sensor support"
     default n
     help
       Say Y here if you have lis3dh or lis3de g-sendor connected to
@@ -66,7 +66,7 @@ config CAVAN_SENSOR_LIS3DH
       module will be called cavan_lis3dh.
 
 config CAVAN_SENSOR_MMA845X
-    tristate "Cavan mma845x g-sensor"
+    tristate "mma845x g-sensor support"
     default n
     help
       Say Y here if you have a mma845x g-sendor connected to
@@ -78,7 +78,7 @@ config CAVAN_SENSOR_MMA845X
       module will be called cavan_mma845x.
 
 config CAVAN_SENSOR_MXC6225
-    tristate "Cavan mxc6225-xc mxc6225-xu g-sensor"
+    tristate "mxc6225-xc mxc6225-xu g-sensor support"
     default n
     help
       Say Y here if you have a mxc6225-xc or mxc6225-xu g-sendor connected to
@@ -90,7 +90,7 @@ config CAVAN_SENSOR_MXC6225
       module will be called cavan_mxc6225.
 
 config CAVAN_SENSOR_STK8313
-    tristate "Cavan stk8313 g-sensor"
+    tristate "stk8313 g-sensor support"
     default n
     help
       Say Y here if you have a stk8313 g-sendor connected to
@@ -102,7 +102,7 @@ config CAVAN_SENSOR_STK8313
       module will be called cavan_stk8313.
 
 config CAVAN_SENSOR_BMA2XX
-    tristate "Cavan bma2xx g-sensor"
+    tristate "bma2xx g-sensor support"
     default n
     help
       Say Y here if you have a bma2xx g-sendor connected to
@@ -114,7 +114,7 @@ config CAVAN_SENSOR_BMA2XX
       module will be called cavan_bma2xx.
 
 config CAVAN_SENSOR_MC3XXX
-    tristate "Cavan mc3xxx g-sensor"
+    tristate "mc3xxx g-sensor support"
     default n
     help
       Say Y here if you have a mc3xxx g-sendor connected to
@@ -126,7 +126,7 @@ config CAVAN_SENSOR_MC3XXX
       module will be called cavan_mc3xxx.
 
 config CAVAN_SENSOR_APDS99XX
-    tristate "Cavan apds99xx l-sensor and p-sensor"
+    tristate "apds99xx l-sensor and p-sensor support"
     default n
     help
       Say Y here if you have a apds99xx light or proximity sendor connected to
@@ -138,7 +138,7 @@ config CAVAN_SENSOR_APDS99XX
       module will be called cavan_apds99xx.
 
 config CAVAN_SENSOR_EPL2182
-    tristate "Cavan epl2182 l-sensor and p-sensor"
+    tristate "epl2182 l-sensor and p-sensor support"
     default n
     help
       Say Y here if you have a epl2182 light or proximity sendor connected to
@@ -150,7 +150,7 @@ config CAVAN_SENSOR_EPL2182
       module will be called cavan_epl2182.
 
 config CAVAN_SENSOR_BMI160
-    tristate "Cavan BMI160 acceleration and gyroscope sensor support"
+    tristate "bmi160 acceleration and gyroscope sensor support"
     default n
     help
       Say Y here if you have Bosch Sensortec's BMI160
@@ -162,7 +162,7 @@ config CAVAN_SENSOR_BMI160
       module will be called cavan_bmi160.
 
 config CAVAN_SENSOR_BMM150
-    tristate "Cavan BMM150 geomagnetic sensor support"
+    tristate "bmm150 geomagnetic sensor support"
     default n
     help
       Say Y here if you have Bosch Sensortec's BMM150
