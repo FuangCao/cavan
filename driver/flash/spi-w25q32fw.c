@@ -453,18 +453,16 @@ static int w25q32fw_set_enable(struct w25q32fw_device *w25q32fw, bool enable)
 
 	if (enable) {
 		if (gpio_is_valid(w25q32fw->gpio_pwr)) {
-			gpio_direction_output(w25q32fw->gpio_rst, 1);
-			gpio_set_value(w25q32fw->gpio_rst, 1);
+			gpio_direction_output(w25q32fw->gpio_pwr, 1);
+			gpio_set_value(w25q32fw->gpio_pwr, 1);
+			msleep(100);
 		}
-
-		msleep(100);
 
 		if (gpio_is_valid(w25q32fw->gpio_rst)) {
 			gpio_direction_output(w25q32fw->gpio_rst, 0);
 			gpio_set_value(w25q32fw->gpio_rst, 0);
+			msleep(100);
 		}
-
-		msleep(100);
 
 		ret = w25q32fw_read_id(w25q32fw);
 		if (ret < 0) {
@@ -475,7 +473,8 @@ static int w25q32fw_set_enable(struct w25q32fw_device *w25q32fw, bool enable)
 
 	if (enable == false) {
 		if (gpio_is_valid(w25q32fw->gpio_rst)) {
-			gpio_direction_input(w25q32fw->gpio_rst);
+			gpio_direction_output(w25q32fw->gpio_rst, 1);
+			gpio_set_value(w25q32fw->gpio_rst, 1);
 		}
 	}
 
@@ -618,6 +617,9 @@ static int w25q32fw_spi_parse_dt(struct w25q32fw_device *w25q32fw)
 		if (gpio_request(w25q32fw->gpio_pwr, "W25Q32FW-PWR") < 0) {
 			dev_err(&spi->dev, "Failed to gpio_request %d", w25q32fw->gpio_pwr);
 		}
+
+		gpio_direction_output(w25q32fw->gpio_pwr, 1);
+		gpio_set_value(w25q32fw->gpio_pwr, 1);
 	}
 
 	dev_info(&spi->dev, "gpio_rst = %d\n", w25q32fw->gpio_rst);
