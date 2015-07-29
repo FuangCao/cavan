@@ -23,9 +23,8 @@
 static int cavan_mux_recv_thread_handler(struct cavan_thread *thread, void *data)
 {
 	ssize_t rdlen;
-	char buff[4096];
 	struct cavan_mux *mux = data;
-	struct cavan_mux_package *package;
+	char buff[CAVAN_MUX_MUTT + sizeof(struct cavan_mux_package)];
 
 	rdlen = mux->recv(mux, buff, sizeof(buff));
 	if (rdlen < 0)
@@ -34,25 +33,30 @@ static int cavan_mux_recv_thread_handler(struct cavan_thread *thread, void *data
 		return rdlen;
 	}
 
-	package = (struct cavan_mux_package *) buff;
-	if ((size_t) rdlen != cavan_mux_package_get_whole_length(package))
-	{
-		pr_red_info("invalid length");
-		return -EINVAL;
-	}
-
-	cavan_mux_recv_package(mux, package);
-
-	return 0;
+	return cavan_mux_write_recv_data(mux, buff, rdlen);
 }
 
-int cavan_mux_init(struct cavan_mux *mux)
+int cavan_mux_init(struct cavan_mux *mux, void *data)
 {
+	int i;
 	int ret;
 	struct cavan_thread *thread;
 
+	if (mux->send == NULL || mux->recv == NULL)
+	{
+		pr_red_info("mux->send = %p, mux->recv = %p", mux->send, mux->recv);
+		return -EINVAL;
+	}
+
 	cavan_lock_init(&mux->lock, false);
+	mux->private_data = data;
 	mux->packages = NULL;
+	mux->port_max = 0;
+
+	for (i = 0; i < NELEM(mux->links); i++)
+	{
+		mux->links[i] = NULL;
+	}
 
 	thread = &mux->recv_thread;
 	thread->name = "MUX RECEIVE";
@@ -199,23 +203,31 @@ ssize_t cavan_mux_link_send_data(struct cavan_mux_link *link, const void *buff, 
 	return wrlen;
 }
 
-int cavan_mux_add_link(struct cavan_mux *mux, struct cavan_mux_link *link)
+int cavan_mux_add_link(struct cavan_mux *mux, struct cavan_mux_link *link, u16 port)
 {
-	struct cavan_mux_link **head = mux->links + (link->local_port & CAVAN_MUX_LINK_TABLE_MASK);
+	struct cavan_mux_link **head = mux->links + (cavan_mux_link_head_index(port));
 
-	while ((*head) && (*head)->local_port < link->local_port)
+	while ((*head) && (*head)->local_port < port)
 	{
 		head = &(*head)->next;
 	}
 
-	if ((*head) && (*head)->local_port == link->local_port)
+	if ((*head) && (*head)->local_port == port)
 	{
-		pr_red_info("port %d already exists!", link->local_port);
+		pr_red_info("port %d already exists!", port);
 		return -EINVAL;
 	}
 
+	link->local_port = port;
+	link->mux = mux;
+
 	link->next = *head;
 	*head = link;
+
+	if (link->local_port > mux->port_max)
+	{
+		mux->port_max = link->local_port;
+	}
 
 	return 0;
 }
@@ -224,14 +236,17 @@ struct cavan_mux_link *cavan_mux_find_link(struct cavan_mux *mux, u16 port)
 {
 	struct cavan_mux_link *link;
 
-	for (link = mux->links[port & CAVAN_MUX_LINK_TABLE_MASK]; link && link->local_port != port; link = link->next);
+	for (link = mux->links[cavan_mux_link_head_index(port)]; link && link->local_port != port; link = link->next)
+	{
+		println("local_port = %d", link->local_port);
+	}
 
 	return link;
 }
 
 void cavan_mux_remove_link(struct cavan_mux *mux, struct cavan_mux_link *link)
 {
-	struct cavan_mux_link **head = mux->links + (link->local_port & CAVAN_MUX_LINK_TABLE_MASK);
+	struct cavan_mux_link **head = mux->links + (cavan_mux_link_head_index(link->local_port));
 
 	if (link == *head)
 	{
@@ -250,12 +265,21 @@ void cavan_mux_remove_link(struct cavan_mux *mux, struct cavan_mux_link *link)
 	}
 }
 
-u16 cavan_mux_alloc_port(struct cavan_mux *mux)
+int cavan_mux_bind(struct cavan_mux *mux, struct cavan_mux_link *link, u16 port)
 {
-	return 0;
+	if (port == 0)
+	{
+		for (port = mux->port_max + 1; cavan_mux_add_link(mux, link, port) < 0; port++);
+
+		return 0;
+	}
+	else
+	{
+		return cavan_mux_add_link(mux, link, port);
+	}
 }
 
-int cavan_mux_recv_package(struct cavan_mux *mux, const struct cavan_mux_package *package)
+int cavan_mux_write_recv_package(struct cavan_mux *mux, const struct cavan_mux_package *package)
 {
 	struct cavan_mux_link *link;
 
@@ -269,4 +293,17 @@ int cavan_mux_recv_package(struct cavan_mux *mux, const struct cavan_mux_package
 	link->remote_port = package->src_port;
 
 	return link->on_received(link, package->data, package->length);
+}
+
+int cavan_mux_write_recv_data(struct cavan_mux *mux, const void *buff, size_t size)
+{
+	const struct cavan_mux_package *package = buff;
+
+	if (size != cavan_mux_package_get_whole_length(package))
+	{
+		pr_red_info("invalid length");
+		return -EINVAL;
+	}
+
+	return cavan_mux_write_recv_package(mux, package);
 }
