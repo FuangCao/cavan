@@ -20,11 +20,15 @@
  */
 
 #include <cavan.h>
+#include <cavan/queue.h>
 #include <cavan/thread.h>
 
 #define CAVAN_MUX_LINK_TABLE_MASK		0xFF
 #define CAVAN_MUX_MUTT					1024
 #define CAVAN_MUX_MAGIC					0x1234
+
+#define CAVAN_MUX_PACKAGE_GET_RAW(package) \
+	MEMBER_TO_STRUCT(package, struct cavan_mux_package_raw, package)
 
 struct cavan_mux_link;
 
@@ -51,7 +55,12 @@ struct cavan_mux
 
 	u16 port_max;
 	void *private_data;
+	struct cavan_thread send_thread;
+	struct cavan_mux_package_raw *package_head;
+	struct cavan_mux_package_raw **package_tail;
+
 	struct cavan_thread recv_thread;
+	struct cavan_mem_queue recv_queue;
 	struct cavan_mux_link *links[CAVAN_MUX_LINK_TABLE_MASK + 1];
 
 	ssize_t (*send)(struct cavan_mux *mux, const void *buff, size_t size);
@@ -67,7 +76,11 @@ struct cavan_mux_link
 	struct cavan_mux *mux;
 	struct cavan_mux_link *next;
 
-	int (*on_received)(struct cavan_mux_link *link, const void *buff, size_t size);
+	size_t hole_size;
+	struct cavan_mux_package_raw *package_head;
+	struct cavan_mux_package_raw **package_tail;
+
+	void (*on_received)(struct cavan_mux_link *link);
 };
 
 int cavan_mux_init(struct cavan_mux *mux, void *data);
@@ -77,14 +90,20 @@ struct cavan_mux_package_raw *cavan_mux_dequeue_package(struct cavan_mux *mux, s
 void cavan_mux_show_packages(struct cavan_mux *mux);
 struct cavan_mux_package *cavan_mux_package_alloc(struct cavan_mux *mux, size_t length);
 void cavan_mux_package_free(struct cavan_mux *mux, struct cavan_mux_package *package);
-ssize_t cavan_mux_link_send_data(struct cavan_mux_link *link, const void *buff, size_t size);
 int cavan_mux_add_link(struct cavan_mux *mux, struct cavan_mux_link *link, u16 port);
 struct cavan_mux_link *cavan_mux_find_link(struct cavan_mux *mux, u16 port);
 void cavan_mux_remove_link(struct cavan_mux *mux, struct cavan_mux_link *link);
 int cavan_mux_bind(struct cavan_mux *mux, struct cavan_mux_link *link, u16 port);
 u16 cavan_mux_alloc_port(struct cavan_mux *mux);
-int cavan_mux_write_recv_package(struct cavan_mux *mux, const struct cavan_mux_package *package);
-int cavan_mux_write_recv_data(struct cavan_mux *mux, const void *buff, size_t size);
+int cavan_mux_append_receive_package(struct cavan_mux *mux, struct cavan_mux_package *package);
+ssize_t cavan_mux_append_receive_data(struct cavan_mux *mux, const void *buff, size_t size);
+void cavan_mux_append_send_package(struct cavan_mux *mux, struct cavan_mux_package *package);
+
+void cavan_mux_link_init(struct cavan_mux_link *link, struct cavan_mux *mux);
+void cavan_mux_link_deinit(struct cavan_mux_link *link);
+int cavan_mux_link_append_receive_package(struct cavan_mux_link *link, struct cavan_mux_package *package);
+ssize_t cavan_mux_link_recv(struct cavan_mux_link *link, void *buff, size_t size);
+ssize_t cavan_mux_link_send(struct cavan_mux_link *link, const void *buff, size_t size);
 
 static inline size_t cavan_mux_package_get_whole_length(const struct cavan_mux_package *package)
 {

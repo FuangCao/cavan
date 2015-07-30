@@ -33,7 +33,50 @@ static int cavan_mux_recv_thread_handler(struct cavan_thread *thread, void *data
 		return rdlen;
 	}
 
-	return cavan_mux_write_recv_data(mux, buff, rdlen);
+	return cavan_mux_append_receive_data(mux, buff, rdlen);
+}
+
+static int cavan_mux_send_thread_handler(struct cavan_thread *thread, void *data)
+{
+	struct cavan_mux *mux = data;
+	struct cavan_mux_package_raw *package_raw;
+
+	package_raw = mux->package_head;
+	if (package_raw == NULL)
+	{
+		cavan_thread_suspend(thread);
+	}
+	else
+	{
+		struct cavan_mux_package *package = &package_raw->package;
+		char *data = (char *) package;
+		size_t length = cavan_mux_package_get_whole_length(package);
+
+		while (length)
+		{
+			ssize_t wrlen;
+
+			wrlen = mux->send(mux, data, length);
+			if (wrlen < 0)
+			{
+				pr_red_info("mux->send");
+				return wrlen;
+			}
+
+			data += wrlen;
+			length -= wrlen;
+		}
+
+		mux->package_head = package_raw->next;
+		if (mux->package_head == NULL)
+		{
+			mux->package_tail = &mux->package_head;
+		}
+
+		cavan_mux_package_free(mux, package);
+	}
+
+	return 0;
 }
 
 int cavan_mux_init(struct cavan_mux *mux, void *data)
@@ -49,9 +92,20 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 	}
 
 	cavan_lock_init(&mux->lock, false);
+
+	ret = cavan_mem_queue_init(&mux->recv_queue, CAVAN_MUX_MUTT);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_mem_queue_init: %d", ret);
+		goto out_cavan_lock_deinit;
+	}
+
 	mux->private_data = data;
 	mux->packages = NULL;
 	mux->port_max = 0;
+
+	mux->package_head = NULL;
+	mux->package_tail = &mux->package_head;
 
 	for (i = 0; i < NELEM(mux->links); i++)
 	{
@@ -66,11 +120,26 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 	if (ret < 0)
 	{
 		pr_red_info("cavan_thread_run");
-		goto out_cavan_lock_deinit;
+		goto out_cavan_mem_queue_deinit;
+	}
+
+	thread = &mux->send_thread;
+	thread->name = "MUX SEND";
+	thread->handler = cavan_mux_send_thread_handler;
+	thread->wake_handker = NULL;
+	ret = cavan_thread_run(thread, mux);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_thread_run");
+		goto out_cavan_thread_stop_recv;
 	}
 
 	return 0;
 
+out_cavan_thread_stop_recv:
+	cavan_thread_stop(&mux->recv_thread);
+out_cavan_mem_queue_deinit:
+	cavan_mem_queue_deinit(&mux->recv_queue);
 out_cavan_lock_deinit:
 	cavan_lock_deinit(&mux->lock);
 	return ret;
@@ -167,7 +236,6 @@ struct cavan_mux_package *cavan_mux_package_alloc(struct cavan_mux *mux, size_t 
 		}
 
 		package_raw->length = length;
-		package_raw->package.magic = CAVAN_MUX_MAGIC;
 	}
 
 	package = &package_raw->package;
@@ -178,30 +246,7 @@ struct cavan_mux_package *cavan_mux_package_alloc(struct cavan_mux *mux, size_t 
 
 void cavan_mux_package_free(struct cavan_mux *mux, struct cavan_mux_package *package)
 {
-	cavan_mux_append_package(mux, MEMBER_TO_STRUCT(package, struct cavan_mux_package_raw, package));
-}
-
-ssize_t cavan_mux_link_send_data(struct cavan_mux_link *link, const void *buff, size_t size)
-{
-	ssize_t wrlen;
-	struct cavan_mux_package *package;
-	struct cavan_mux *mux = link->mux;
-
-	package = cavan_mux_package_alloc(mux, size);
-	if (package == NULL)
-	{
-		pr_red_info("cavan_mux_package_alloc");
-		return -ENOMEM;
-	}
-
-	package->src_port = link->local_port;
-	package->dest_port = link->remote_port;
-	memcpy(package->data, buff, size);
-	wrlen = mux->send(mux, package, cavan_mux_package_get_whole_length(package));
-
-	cavan_mux_package_free(mux, package);
-
-	return wrlen;
+	cavan_mux_append_package(mux, CAVAN_MUX_PACKAGE_GET_RAW(package));
 }
 
 int cavan_mux_add_link(struct cavan_mux *mux, struct cavan_mux_link *link, u16 port)
@@ -220,7 +265,6 @@ int cavan_mux_add_link(struct cavan_mux *mux, struct cavan_mux_link *link, u16 p
 	}
 
 	link->local_port = port;
-	link->mux = mux;
 
 	link->next = *head;
 	*head = link;
@@ -280,7 +324,7 @@ int cavan_mux_bind(struct cavan_mux *mux, struct cavan_mux_link *link, u16 port)
 	}
 }
 
-int cavan_mux_write_recv_package(struct cavan_mux *mux, const struct cavan_mux_package *package)
+int cavan_mux_append_receive_package(struct cavan_mux *mux, struct cavan_mux_package *package)
 {
 	struct cavan_mux_link *link;
 
@@ -291,26 +335,157 @@ int cavan_mux_write_recv_package(struct cavan_mux *mux, const struct cavan_mux_p
 		return -EINVAL;
 	}
 
-	link->remote_port = package->src_port;
-
-	return link->on_received(link, package->data, package->length);
+	return cavan_mux_link_append_receive_package(link, package);
 }
 
-int cavan_mux_write_recv_data(struct cavan_mux *mux, const void *buff, size_t size)
+ssize_t cavan_mux_append_receive_data(struct cavan_mux *mux, const void *buff, size_t size)
 {
-	const struct cavan_mux_package *package = buff;
+	int ret;
+	size_t wrlen, rdlen;
+	struct cavan_mux_package package;
+	struct cavan_mux_package *ppackage;
 
-	if (package->magic != CAVAN_MUX_MAGIC)
+	wrlen = cavan_mem_queue_inqueue(&mux->recv_queue, buff, size);
+
+	while (1)
 	{
-		pr_red_info("invalid magic: 0x%04x", package->magic);
-		return -EINVAL;
+		rdlen = cavan_mem_queue_dequeue_peek(&mux->recv_queue, &package, sizeof(package));
+		if (rdlen < sizeof(package))
+		{
+			return wrlen;
+		}
+
+		if (package.magic == CAVAN_MUX_MAGIC)
+		{
+			break;
+		}
+
+		cavan_mem_queue_dequeue(&mux->recv_queue, NULL, 1);
 	}
 
-	if (size < cavan_mux_package_get_whole_length(package))
+	size = cavan_mux_package_get_whole_length(&package);
+	if (cavan_mem_queue_get_used_size(&mux->recv_queue) < size)
 	{
-		pr_red_info("invalid length");
-		return -EINVAL;
+		return wrlen;
 	}
 
-	return cavan_mux_write_recv_package(mux, package);
+	ppackage = cavan_mux_package_alloc(mux, package.length);
+	if (ppackage == NULL)
+	{
+		pr_red_info("cavan_mux_package_alloc");
+		return -ENOMEM;
+	}
+
+	if (cavan_mem_queue_dequeue(&mux->recv_queue, ppackage, size) != size)
+	{
+		pr_red_info("cavan_mem_queue_dequeue");
+		return -EFAULT;
+	}
+
+	ret = cavan_mux_append_receive_package(mux, ppackage);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_mux_write_recv_package: %d", ret);
+		cavan_mux_package_free(mux, ppackage);
+	}
+
+	return wrlen;
+}
+
+void cavan_mux_append_send_package(struct cavan_mux *mux, struct cavan_mux_package *package)
+{
+	struct cavan_mux_package_raw *package_raw = CAVAN_MUX_PACKAGE_GET_RAW(package);
+
+	package->magic = CAVAN_MUX_MAGIC;
+
+	*mux->package_tail = package_raw;
+	package_raw->next = NULL;
+	mux->package_tail = &package_raw->next;
+	cavan_thread_resume(&mux->send_thread);
+}
+
+// ================================================================================
+
+void cavan_mux_link_init(struct cavan_mux_link *link, struct cavan_mux *mux)
+{
+	link->mux = mux;
+	link->hole_size = 0;
+	link->package_head = NULL;
+	link->package_tail = &link->package_head;
+}
+
+void cavan_mux_link_deinit(struct cavan_mux_link *link)
+{
+}
+
+int cavan_mux_link_append_receive_package(struct cavan_mux_link *link, struct cavan_mux_package *package)
+{
+	struct cavan_mux_package_raw *package_raw = CAVAN_MUX_PACKAGE_GET_RAW(package);
+
+	*link->package_tail = package_raw;
+	package_raw->next = NULL;
+	link->package_tail = &package_raw->next;
+
+	link->remote_port = package->src_port;
+
+	if (link->on_received)
+	{
+		link->on_received(link);
+	}
+
+	return 0;
+}
+
+ssize_t cavan_mux_link_recv(struct cavan_mux_link *link, void *buff, size_t size)
+{
+	size_t length;
+	const char *data;
+	struct cavan_mux_package *package;
+	struct cavan_mux_package_raw *package_raw = link->package_head;
+
+	if (package_raw == NULL)
+	{
+		return 0;
+	}
+
+	package = &package_raw->package;
+	data = package->data + link->hole_size;
+	length = package->length - link->hole_size;
+	if (size < length)
+	{
+		memcpy(buff, data, size);
+
+		link->hole_size += size;
+	}
+	else
+	{
+		size = length;
+		memcpy(buff, data, size);
+
+		cavan_mux_package_free(link->mux, package);
+		link->hole_size = 0;
+	}
+
+	return size;
+}
+
+ssize_t cavan_mux_link_send(struct cavan_mux_link *link, const void *buff, size_t size)
+{
+	struct cavan_mux_package *package;
+	struct cavan_mux *mux = link->mux;
+
+	package = cavan_mux_package_alloc(mux, size);
+	if (package == NULL)
+	{
+		pr_red_info("cavan_mux_package_alloc");
+		return -ENOMEM;
+	}
+
+	package->src_port = link->local_port;
+	package->dest_port = link->remote_port;
+	memcpy(package->data, buff, size);
+
+	cavan_mux_append_send_package(mux, package);
+
+	return size;
 }

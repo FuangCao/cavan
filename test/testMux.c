@@ -24,6 +24,8 @@ static ssize_t test_mux_send(struct cavan_mux *mux, const void *buff, size_t siz
 {
 	int *pipefd = mux->private_data;
 
+	println("send: size = %ld", size);
+
 	return write(pipefd[1], buff, size);
 }
 
@@ -31,14 +33,21 @@ static ssize_t test_mux_recv(struct cavan_mux *mux, void *buff, size_t size)
 {
 	int *pipefd = mux->private_data;
 
+	println("recv: buff size = %ld", size);
+
 	return read(pipefd[0], buff, size);
 }
 
-static int test_mux_on_received(struct cavan_mux_link *link, const void *buff, size_t size)
+static void test_mux_on_received(struct cavan_mux_link *link)
 {
-	println("%s: port = %d, size = %ld, buff = %s", (char *) link->private_data, link->local_port, size, (char *) buff);
+	ssize_t rdlen;
+	char buff[1024];
 
-	return 0;
+	pr_func_info("link = %s", (char *) link->private_data);
+
+	rdlen = cavan_mux_link_recv(link, buff, sizeof(buff));
+	buff[rdlen] = 0;
+	println("buff[%ld] = %s", rdlen, buff);
 }
 
 int main(int argc, char *argv[])
@@ -65,6 +74,9 @@ int main(int argc, char *argv[])
 		pr_red_info("cavan_mux_init");
 		return ret;
 	}
+
+	cavan_mux_link_init(&link1, &mux);
+	cavan_mux_link_init(&link2, &mux);
 
 	cavan_mux_show_packages(&mux);
 
@@ -108,19 +120,19 @@ int main(int argc, char *argv[])
 
 	println("port1 = %d, port2 = %d", link1.local_port, link2.local_port);
 	link1.remote_port = link2.local_port;
-	ret = cavan_mux_link_send_data(&link1, "1234567890", 10);
+	ret = cavan_mux_link_send(&link1, "1234567890", 10);
 	if (ret < 0)
 	{
-		pr_red_info("cavan_mux_link_send_data");
+		pr_red_info("cavan_mux_link_send");
 	}
 
 	msleep(100);
 
 	link2.remote_port = link1.local_port;
-	ret = cavan_mux_link_send_data(&link2, "ABCDEFGHIJKL", 10);
+	ret = cavan_mux_link_send(&link2, "ABCDEFGHIJKL", 10);
 	if (ret < 0)
 	{
-		pr_red_info("cavan_mux_link_send_data");
+		pr_red_info("cavan_mux_link_send");
 	}
 
 	msleep(5000);
