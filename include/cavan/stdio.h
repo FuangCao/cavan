@@ -159,8 +159,14 @@ extern "C" {
 		pr_red_info(fmt, ##args); \
 	}
 
+#define pr_err_info(fmt, args ...) \
+	pr_error_info(fmt, ##args)
+
 #define pr_warning_info(fmt, args ...) \
 	pr_color_info(CAVAN_COLOR_MAGENTA, "%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+
+#define pr_warn_info(fmt, args ...) \
+	pr_warning_info(fmt, ##args)
 
 #define pr_green_info(fmt, args ...) \
 	pr_color_info(CAVAN_COLOR_GREEN, fmt, ##args)

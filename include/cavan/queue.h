@@ -24,6 +24,15 @@ struct cavan_data_queue
 	void (*handler)(void *addr, void *data);
 };
 
+struct cavan_mem_queue
+{
+	char *mem, *last;
+	char *head, *head_peek;
+	char *tail, *tail_peek;
+
+	struct cavan_lock lock;
+};
+
 int list_queue_init(struct list_queue *queue, int count);
 void list_queue_free(struct list_queue *queue);
 int list_queue_insert(struct list_queue *queue, void *data);
@@ -33,6 +42,19 @@ void *list_queue_get_tail_data(struct list_queue *queue);
 
 int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t node_size, int pool_size, void *data);
 void cavan_data_queue_deinit(struct cavan_data_queue *queue);
+
+int cavan_mem_queue_init(struct cavan_mem_queue *queue, size_t size);
+void cavan_mem_queue_deinit(struct cavan_mem_queue *queue);
+size_t cavan_mem_queue_inqueue_peek(struct cavan_mem_queue *queue, const void *buff, size_t size);
+void cavan_mem_queue_inqueue_commit(struct cavan_mem_queue *queue);
+size_t cavan_mem_queue_inqueue(struct cavan_mem_queue *queue, const void *buff, size_t size);
+size_t cavan_mem_queue_dequeue_peek(struct cavan_mem_queue *queue, void *buff, size_t size);
+void cavan_mem_queue_dequeue_commit(struct cavan_mem_queue *queue);
+size_t cavan_mem_queue_dequeue(struct cavan_mem_queue *queue, void *buff, size_t size);
+size_t cavan_mem_queue_get_used_size(struct cavan_mem_queue *queue);
+size_t cavan_mem_queue_get_free_size(struct cavan_mem_queue *queue);
+bool cavan_mem_queue_is_empty(struct cavan_mem_queue *queue);
+bool cavan_mem_queue_has_data(struct cavan_mem_queue *queue);
 
 static inline int list_queue_empty(struct list_queue *queue)
 {

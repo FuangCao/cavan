@@ -148,3 +148,224 @@ void cavan_data_queue_deinit(struct cavan_data_queue *queue)
 	cavan_thread_deinit(&queue->thread);
 	double_link_deinit(&queue->link);
 }
+
+// ================================================================================
+
+int cavan_mem_queue_init(struct cavan_mem_queue *queue, size_t size)
+{
+	queue->mem = malloc(size + 1);
+	if (queue->mem == NULL)
+	{
+		pr_error_info("malloc");
+		return -ENOMEM;
+	}
+
+	cavan_lock_init(&queue->lock, false);
+
+	queue->head = queue->tail = queue->mem;
+	queue->last = queue->mem + size;
+
+	return 0;
+}
+
+void cavan_mem_queue_deinit(struct cavan_mem_queue *queue)
+{
+	if (queue->mem)
+	{
+		free(queue->mem);
+		queue->mem = NULL;
+	}
+
+	cavan_lock_deinit(&queue->lock);
+}
+
+size_t cavan_mem_queue_inqueue_peek(struct cavan_mem_queue *queue, const void *buff, size_t size)
+{
+	size_t rlen, length;
+
+	cavan_lock_acquire(&queue->lock);
+
+	if (queue->tail < queue->head)
+	{
+		length = rlen = queue->head - queue->tail - 1;
+	}
+	else
+	{
+		if (queue->head > queue->mem)
+		{
+			rlen = queue->last - queue->tail + 1;
+			length = rlen + (queue->head - queue->mem - 1);
+		}
+		else
+		{
+			length = rlen = queue->last - queue->tail;
+		}
+	}
+
+	if (length > size)
+	{
+		length = size;
+	}
+
+	if (length > rlen)
+	{
+		size_t llen = length - rlen;
+
+		memcpy(queue->tail, buff, rlen);
+		memcpy(queue->mem, ADDR_ADD(buff, rlen), llen);
+		queue->tail_peek = queue->mem + llen;
+	}
+	else
+	{
+		memcpy(queue->tail, buff, length);
+		queue->tail_peek = queue->tail + length;
+		if (queue->tail_peek > queue->last)
+		{
+			queue->tail_peek = queue->mem;
+		}
+	}
+
+	cavan_lock_release(&queue->lock);
+
+	return length;
+}
+
+void cavan_mem_queue_inqueue_commit(struct cavan_mem_queue *queue)
+{
+	cavan_lock_acquire(&queue->lock);
+	queue->tail = queue->tail_peek;
+	cavan_lock_release(&queue->lock);
+}
+
+size_t cavan_mem_queue_inqueue(struct cavan_mem_queue *queue, const void *buff, size_t size)
+{
+	size_t length;
+
+	cavan_lock_acquire(&queue->lock);
+	length = cavan_mem_queue_inqueue_peek(queue, buff, size);
+	cavan_mem_queue_inqueue_commit(queue);
+	cavan_lock_release(&queue->lock);
+
+	return length;
+}
+
+size_t cavan_mem_queue_dequeue_peek(struct cavan_mem_queue *queue, void *buff, size_t size)
+{
+	size_t rlen, length;
+
+	cavan_lock_acquire(&queue->lock);
+
+	if (queue->head > queue->tail)
+	{
+		rlen = queue->last - queue->head + 1;
+		length = rlen + (queue->tail - queue->mem);
+	}
+	else
+	{
+		length = rlen = queue->tail - queue->head;
+	}
+
+	if (length > size)
+	{
+		length = size;
+	}
+
+	if (length > rlen)
+	{
+		size_t llen = length - rlen;
+
+		memcpy(buff, queue->head, rlen);
+		memcpy(ADDR_ADD(buff, rlen), queue->mem, llen);
+		queue->head_peek = queue->mem + llen;
+	}
+	else
+	{
+		memcpy(buff, queue->head, length);
+		queue->head_peek = queue->head + length;
+		if (queue->head_peek > queue->last)
+		{
+			queue->head_peek = queue->mem;
+		}
+	}
+
+	cavan_lock_release(&queue->lock);
+
+	return length;
+}
+
+void cavan_mem_queue_dequeue_commit(struct cavan_mem_queue *queue)
+{
+	cavan_lock_acquire(&queue->lock);
+	queue->head = queue->head_peek;
+	cavan_lock_release(&queue->lock);
+}
+
+size_t cavan_mem_queue_dequeue(struct cavan_mem_queue *queue, void *buff, size_t size)
+{
+	size_t length;
+
+	cavan_lock_acquire(&queue->lock);
+	length = cavan_mem_queue_dequeue_peek(queue, buff, size);
+	cavan_mem_queue_dequeue_commit(queue);
+	cavan_lock_release(&queue->lock);
+
+	return length;
+}
+
+size_t cavan_mem_queue_get_used_size(struct cavan_mem_queue *queue)
+{
+	size_t length;
+
+	cavan_lock_acquire(&queue->lock);
+
+	if (queue->head > queue->tail)
+	{
+		length = (queue->last - queue->head) + (queue->tail - queue->mem) + 1;
+	}
+	else
+	{
+		length = queue->tail - queue->head;
+	}
+
+	cavan_lock_release(&queue->lock);
+
+	return length;
+}
+
+size_t cavan_mem_queue_get_free_size(struct cavan_mem_queue *queue)
+{
+	size_t length;
+
+	if (queue->tail < queue->head)
+	{
+		length = queue->head - queue->tail - 1;
+	}
+	else
+	{
+		length = (queue->last - queue->tail) + (queue->head - queue->mem);
+	}
+
+	return length;
+}
+
+bool cavan_mem_queue_is_empty(struct cavan_mem_queue *queue)
+{
+	bool res;
+
+	cavan_lock_acquire(&queue->lock);
+	res = (queue->head == queue->tail);
+	cavan_lock_release(&queue->lock);
+
+	return res;
+}
+
+bool cavan_mem_queue_has_data(struct cavan_mem_queue *queue)
+{
+	bool res;
+
+	cavan_lock_acquire(&queue->lock);
+	res = (queue->head != queue->tail);
+	cavan_lock_release(&queue->lock);
+
+	return res;
+}

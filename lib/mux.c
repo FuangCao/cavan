@@ -167,6 +167,7 @@ struct cavan_mux_package *cavan_mux_package_alloc(struct cavan_mux *mux, size_t 
 		}
 
 		package_raw->length = length;
+		package_raw->package.magic = CAVAN_MUX_MAGIC;
 	}
 
 	package = &package_raw->package;
@@ -299,7 +300,13 @@ int cavan_mux_write_recv_data(struct cavan_mux *mux, const void *buff, size_t si
 {
 	const struct cavan_mux_package *package = buff;
 
-	if (size != cavan_mux_package_get_whole_length(package))
+	if (package->magic != CAVAN_MUX_MAGIC)
+	{
+		pr_red_info("invalid magic: 0x%04x", package->magic);
+		return -EINVAL;
+	}
+
+	if (size < cavan_mux_package_get_whole_length(package))
 	{
 		pr_red_info("invalid length");
 		return -EINVAL;

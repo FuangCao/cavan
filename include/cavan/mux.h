@@ -24,11 +24,13 @@
 
 #define CAVAN_MUX_LINK_TABLE_MASK		0xFF
 #define CAVAN_MUX_MUTT					1024
+#define CAVAN_MUX_MAGIC					0x1234
 
 struct cavan_mux_link;
 
 struct cavan_mux_package
 {
+	u16 magic;
 	u16 src_port;
 	u16 dest_port;
 	u16 length;
