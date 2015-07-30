@@ -28,12 +28,17 @@ static int TestLockThreadHandler(CavanThread *thread)
 	lock->acquire();
 	pr_pos_info();
 	msleep(500);
-	
+
 	pr_pos_info();
 	lock->acquire();
 	pr_pos_info();
 	msleep(500);
-	
+
+	pr_pos_info();
+	lock->release();
+	pr_pos_info();
+	msleep(500);
+
 	pr_pos_info();
 	lock->release();
 	pr_pos_info();
@@ -58,6 +63,11 @@ int main(int argc, char *argv[])
 
 		pr_pos_info();
 		lock.acquire();
+		pr_pos_info();
+		msleep(500);
+
+		pr_pos_info();
+		lock.release();
 		pr_pos_info();
 		msleep(500);
 

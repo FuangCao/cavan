@@ -454,10 +454,12 @@ void cavan_lock_init(struct cavan_lock *lock, bool acquire)
 	{
 		pthread_mutex_lock(&lock->mutex);
 		lock->owner = pthread_self();
+		lock->held_count = 1;
 	}
 	else
 	{
 		lock->owner = 0;
+		lock->held_count = 0;
 	}
 }
 
@@ -470,15 +472,33 @@ void cavan_lock_acquire(struct cavan_lock *lock)
 {
 	pthread_t owner = pthread_self();
 
-	if (!pthread_equal(owner, lock->owner))
+	if (pthread_equal(owner, lock->owner))
+	{
+		lock->held_count++;
+	}
+	else
 	{
 		pthread_mutex_lock(&lock->mutex);
 		lock->owner = owner;
+		lock->held_count = 1;
 	}
 }
 
 void cavan_lock_release(struct cavan_lock *lock)
 {
+	pthread_t owner = pthread_self();
+
+	if (!pthread_equal(owner, lock->owner) || --lock->held_count > 0)
+	{
+		return;
+	}
+
+	if (lock->held_count < 0)
+	{
+		pr_red_info("unbalanced %s %d", __FUNCTION__, lock->held_count);
+		lock->held_count = 0;
+	}
+
 	lock->owner = 0;
 	pthread_mutex_unlock(&lock->mutex);
 }

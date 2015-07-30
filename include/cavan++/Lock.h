@@ -90,6 +90,7 @@ public:
 class ThreadLock : public MutexLock
 {
 private:
+	int mHeldCount;
 	pthread_t mOwner;
 
 public:

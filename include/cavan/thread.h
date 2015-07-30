@@ -55,6 +55,7 @@ struct cavan_thread
 
 struct cavan_lock
 {
+	int held_count;
 	pthread_t owner;
 	pthread_mutex_t mutex;
 };

@@ -24,38 +24,51 @@ ThreadLock::ThreadLock(bool acquire)
 {
 	if (acquire && MutexLock::acquire() == 0) {
 		mOwner = pthread_self();
+		mHeldCount = 1;
 	} else {
 		mOwner = 0;
+		mHeldCount = 0;
 	}
 }
 
 int ThreadLock::acquire(bool trylock)
 {
-	int ret;
 	pthread_t owner;
 
 	owner = pthread_self();
 	if (isHeldBy(owner))
 	{
-		return 0;
+		mHeldCount++;
 	}
+	else
+	{
+		int ret = trylock ? MutexLock::tryLock() : MutexLock::acquire();
 
-	ret = trylock ? MutexLock::tryLock() : MutexLock::acquire();
-	if (ret == 0) {
+		if (ret < 0) {
+			return ret;
+		}
+
 		mOwner = owner;
+		mHeldCount = 1;
 	}
 
-	return ret;
+	return 0;
 }
 
 int ThreadLock::release(void)
 {
-	if (isHeld())
+	if (!isHeld() || --mHeldCount > 0)
 	{
-		mOwner = 0;
-
-		return MutexLock::release();
+		return 0;
 	}
 
-	return 0;
+	if (mHeldCount < 0)
+	{
+		pr_red_info("unbalanced %s %d", __FUNCTION__, mHeldCount);
+		mHeldCount = 0;
+	}
+
+	mOwner = 0;
+
+	return MutexLock::release();
 }

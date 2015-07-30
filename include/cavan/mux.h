@@ -74,6 +74,7 @@ struct cavan_mux_link
 
 	void *private_data;
 	struct cavan_mux *mux;
+	struct cavan_lock lock;
 	struct cavan_mux_link *next;
 
 	size_t hole_size;
