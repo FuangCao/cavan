@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
 {
 	int i;
 	int ret;
+	int count;
 	struct cavan_mux mux;
 	struct cavan_mux_link link1, link2;
 	struct cavan_mux_package *package, *packages[10];
@@ -105,14 +106,14 @@ int main(int argc, char *argv[])
 	link1.on_received = link2.on_received = test_mux_on_received;
 
 	link1.private_data = "Link1";
-	ret = cavan_mux_bind(&mux, &link1, 0);
+	ret = cavan_mux_bind(&mux, &link1, 2000);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_mux_bind");
 	}
 
 	link2.private_data = "Link2";
-	ret = cavan_mux_bind(&mux, &link2, 0);
+	ret = cavan_mux_bind(&mux, &link2, 12345);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_mux_bind");
@@ -133,6 +134,28 @@ int main(int argc, char *argv[])
 	if (ret < 0)
 	{
 		pr_red_info("cavan_mux_link_send");
+	}
+
+	count = 0;
+
+	while (1)
+	{
+		struct cavan_mux_link *link = malloc(sizeof(struct cavan_mux_link));
+		ret = cavan_mux_bind(&mux, link, 0);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_mux_bind");
+			break;
+		}
+
+		if (link->local_port == link1.local_port || link->local_port == link2.local_port)
+		{
+			pr_red_info("invalid port %d", link->local_port);
+		}
+
+		count++;
+
+		println("port = %d, count = %d", link->local_port, count);
 	}
 
 	msleep(5000);

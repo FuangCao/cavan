@@ -102,7 +102,6 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 
 	mux->private_data = data;
 	mux->packages = NULL;
-	mux->port_max = 0;
 
 	mux->package_head = NULL;
 	mux->package_tail = &mux->package_head;
@@ -273,11 +272,6 @@ int cavan_mux_add_link(struct cavan_mux *mux, struct cavan_mux_link *link, u16 p
 	link->next = *head;
 	*head = link;
 
-	if (link->local_port > mux->port_max)
-	{
-		mux->port_max = link->local_port;
-	}
-
 	cavan_lock_release(&mux->lock);
 
 	return 0;
@@ -296,7 +290,7 @@ struct cavan_mux_link *cavan_mux_find_link(struct cavan_mux *mux, u16 port)
 	return link;
 }
 
-void cavan_mux_remove_link(struct cavan_mux *mux, struct cavan_mux_link *link)
+void cavan_mux_unbind(struct cavan_mux *mux, struct cavan_mux_link *link)
 {
 	struct cavan_mux_link **head;
 
@@ -322,6 +316,40 @@ void cavan_mux_remove_link(struct cavan_mux *mux, struct cavan_mux_link *link)
 	cavan_lock_release(&mux->lock);
 }
 
+int cavan_mux_find_free_port(struct cavan_mux *mux, u16 *pport)
+{
+	int i, j;
+	int ret = 0;
+
+	cavan_lock_acquire(&mux->lock);
+
+	for (i = 0; i < NELEM(mux->links); i++)
+	{
+		struct cavan_mux_link *head = mux->links[i];
+
+		for (j = 0; j < (1 << (sizeof(u16) << 3)) / NELEM(mux->links); j++)
+		{
+			u16 port = j * NELEM(mux->links) + i;
+
+			if (head && head->local_port == port)
+			{
+				head = head->next;
+			}
+			else if (port != 0)
+			{
+				*pport = port;
+				goto label_found;
+			}
+		}
+	}
+
+	ret = -EBUSY;
+
+label_found:
+	cavan_lock_release(&mux->lock);
+	return ret;
+}
+
 int cavan_mux_bind(struct cavan_mux *mux, struct cavan_mux_link *link, u16 port)
 {
 	int ret;
@@ -330,14 +358,15 @@ int cavan_mux_bind(struct cavan_mux *mux, struct cavan_mux_link *link, u16 port)
 
 	if (port == 0)
 	{
-		for (port = mux->port_max + 1; cavan_mux_add_link(mux, link, port) < 0; port++);
+		ret = cavan_mux_find_free_port(mux, &port);
+		if (ret < 0)
+		{
+			cavan_lock_release(&mux->lock);
+			return ret;
+		}
+	}
 
-		ret = 0;
-	}
-	else
-	{
-		ret = cavan_mux_add_link(mux, link, port);
-	}
+	ret = cavan_mux_add_link(mux, link, port);
 
 	cavan_lock_release(&mux->lock);
 
