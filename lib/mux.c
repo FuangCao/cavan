@@ -22,9 +22,10 @@
 
 static int cavan_mux_recv_thread_handler(struct cavan_thread *thread, void *data)
 {
-	ssize_t rdlen;
+	char *p;
+	ssize_t rdlen, wrlen;
 	struct cavan_mux *mux = data;
-	char buff[CAVAN_MUX_MUTT + sizeof(struct cavan_mux_package)];
+	char buff[CAVAN_MUX_MTU + sizeof(struct cavan_mux_package)];
 
 	rdlen = mux->recv(mux, buff, sizeof(buff));
 	if (rdlen < 0)
@@ -33,7 +34,22 @@ static int cavan_mux_recv_thread_handler(struct cavan_thread *thread, void *data
 		return rdlen;
 	}
 
-	return cavan_mux_append_receive_data(mux, buff, rdlen);
+	p = buff;
+
+	while (rdlen > 0)
+	{
+		wrlen = cavan_mux_append_receive_data(mux, p, rdlen);
+		if (wrlen < 0)
+		{
+			pr_red_info("cavan_mux_append_receive_data");
+			return wrlen;
+		}
+
+		p += wrlen;
+		rdlen -= wrlen;
+	}
+
+	return 0;
 }
 
 static int cavan_mux_send_thread_handler(struct cavan_thread *thread, void *data)
@@ -93,7 +109,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 
 	cavan_lock_init(&mux->lock, false);
 
-	ret = cavan_mem_queue_init(&mux->recv_queue, CAVAN_MUX_MUTT);
+	ret = cavan_mem_queue_init(&mux->recv_queue, CAVAN_MUX_MTU);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_mem_queue_init: %d", ret);

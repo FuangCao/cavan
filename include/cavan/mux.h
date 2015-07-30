@@ -24,7 +24,7 @@
 #include <cavan/thread.h>
 
 #define CAVAN_MUX_LINK_TABLE_MASK		0xFF
-#define CAVAN_MUX_MUTT					1024
+#define CAVAN_MUX_MTU					2048
 #define CAVAN_MUX_MAGIC					0x1234
 
 #define CAVAN_MUX_PACKAGE_GET_RAW(package) \
