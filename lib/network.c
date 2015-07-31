@@ -2030,6 +2030,19 @@ static int network_client_adb_open(struct network_client *client, const struct n
 {
 	int sockfd;
 
+	if (flags & CAVAN_NET_FLAG_WAIT)
+	{
+		print("Waiting for adb device to connect ... ");
+
+		if (cavan_system("adb wait-for-device"))
+		{
+			println("Failed!");
+			return -EFAULT;
+		}
+
+		println("OK");
+	}
+
 	sockfd = adb_create_tcp_link(url->hostname, 0, port);
 	if (sockfd < 0)
 	{

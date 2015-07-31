@@ -92,7 +92,7 @@ static int tcp_proxy_service_run_handler(struct cavan_dynamic_service *service, 
 	struct network_client client_proxy;
 	struct tcp_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
-	ret = network_client_open(&client_proxy, &proxy->url_proxy, 0);
+	ret = network_client_open(&client_proxy, &proxy->url_proxy, CAVAN_NET_FLAG_WAIT);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open");

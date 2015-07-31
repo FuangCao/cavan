@@ -42,6 +42,7 @@
 #define CAVAN_NET_UDP_ACTIVE_TIME	(1000 * 60 * 20)
 #define CAVAN_NET_FLAG_TALK			(1 << 0)
 #define CAVAN_NET_FLAG_SYNC			(1 << 1)
+#define CAVAN_NET_FLAG_WAIT			(1 << 2)
 
 #pragma pack(1)
 struct mac_header

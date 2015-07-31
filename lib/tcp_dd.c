@@ -970,7 +970,7 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 
 	file_req->size -= file_req->src_offset;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open2");
@@ -1025,7 +1025,7 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 		umount_partition(dest_file, MNT_DETACH);
 	}
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0)
 	{
 		pr_red_info("inet_create_tcp_link2");
@@ -1086,7 +1086,7 @@ int tcp_dd_exec_command(struct network_url *url, const char *command)
 	struct termios tty_attr;
 	struct network_client client;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open2");
@@ -1130,7 +1130,7 @@ int tcp_dd_keypad_client_run(struct network_url *url)
 	struct network_client client;
 	struct cavan_event_service service;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open2");
@@ -1167,7 +1167,7 @@ int tcp_alarm_add(struct network_url *url, const char *command, time_t time, tim
 	int ret;
 	struct network_client client;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open2");
@@ -1189,7 +1189,7 @@ int tcp_alarm_remove(struct network_url *url, int index)
 	int ret;
 	struct network_client client;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open2");
@@ -1208,7 +1208,7 @@ int tcp_alarm_list(struct network_url *url, int index)
 	struct network_client client;
 	struct tcp_alarm_add_request alarm;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0)
 	{
 		pr_red_info("network_client_open2");

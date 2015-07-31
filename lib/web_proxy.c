@@ -778,7 +778,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		{
 			web_proxy_close_proxy_client(&client_proxy, ftp_login);
 
-			ret = network_client_open(&client_proxy, url, 0);
+			ret = network_client_open(&client_proxy, url, CAVAN_NET_FLAG_WAIT);
 			if (ret < 0)
 			{
 				pr_red_info("network_client_open");
