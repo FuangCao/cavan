@@ -59,6 +59,7 @@ AC_CONFIG_FILES([Makefile
                  app/Makefile
                  include/Makefile
                  include/cavan/Makefile
+                 include/cavan++/Makefile
                  cpp/Makefile
                  lib/Makefile])
 AC_OUTPUT

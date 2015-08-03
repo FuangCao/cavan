@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 
-SUBDIRS = cavan
+SUBDIRS = cavan cavan++
 
 cavanincdir = $(includedir)
 

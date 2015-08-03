@@ -89,12 +89,12 @@ EOF
 
 function gen_include_sub_makefile_am()
 {
-	cd $1 || return 1
+	cd $1/$2 || return 1
 
 	gen_makefile_am_header
 
 	cat >> ${MAKEFILE_AM} << EOF
-cavanincdir = \$(includedir)/cavan
+cavanincdir = \$(includedir)/$2
 
 EOF
 	echo cavaninc_HEADERS = *.h >> ${MAKEFILE_AM}
@@ -109,14 +109,15 @@ function gen_include_makefile_am()
 	gen_makefile_am_header
 
 	cat >> ${MAKEFILE_AM} << EOF
-SUBDIRS = cavan
+SUBDIRS = cavan cavan++
 
 cavanincdir = \$(includedir)
 
 EOF
 	echo cavaninc_HEADERS = *.h >> ${MAKEFILE_AM}
 
-	gen_include_sub_makefile_am $1/cavan || exit 1
+	gen_include_sub_makefile_am $1 cavan || exit 1
+	gen_include_sub_makefile_am $1 cavan++ || exit 1
 
 	return 0
 }
