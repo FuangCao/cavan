@@ -8,6 +8,8 @@
 *.files
 *.log
 *.diff
+*.lo
+*.la
 /libtool
 /config.*
 /*.patch

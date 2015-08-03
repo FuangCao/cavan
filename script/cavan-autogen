@@ -2,6 +2,7 @@
 
 MAKEFILE_AM="Makefile.am"
 CAVAN_NAME="cavan"
+CAVAN_CPP_NAME="${CAVAN_NAME}xx"
 AUTOMAKE_OPTIONS="foreign subdir-objects"
 ACLOCAL_AMFLAGS="-I m4"
 AM_CFLAGS="-I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h -DCAVAN"
@@ -24,16 +25,17 @@ function gen_app_makefile_am()
 
 	gen_makefile_am_header
 
-	echo APP_SRC_FILES = *.c >> ${MAKEFILE_AM}
+	echo APP_SRC_FILES = $(ls *.c *.cpp 2>/dev/null) >> ${MAKEFILE_AM}
 	echo APP_CORE_SRC_FILES = core/*.c >> ${MAKEFILE_AM}
 
 	cat >> ${MAKEFILE_AM} << EOF
-LIB_OBJ_FILES = \$(wildcard @top_builddir@/lib/*.o)
+LIB_OBJ_FILES = \$(wildcard @top_builddir@/lib/*.o) \$(wildcard @top_builddir@/cpp/*.o)
 APP_CORE_DEPDIR = core/@DEPDIR@
 FILE_CAVAN_MAP_C = \$(APP_CORE_DEPDIR)/cavan_map.c
 FILE_CAVAN_MAP_H = \$(APP_CORE_DEPDIR)/cavan_map.h
 
 AM_CFLAGS = ${AM_CFLAGS}
+AM_CPPFLAGS = \$(AM_CFLAGS)
 AM_LDFLAGS = -lpthread -lm -lrt
 
 ${CAVAN_NAME}_main_SOURCES = \$(APP_SRC_FILES) \$(APP_CORE_SRC_FILES)
@@ -76,10 +78,11 @@ function gen_lib_makefile_am()
 ACLOCAL_AMFLAGS = ${ACLOCAL_AMFLAGS}
 
 AM_CFLAGS = ${AM_CFLAGS} -fPIC
+AM_CPPFLAGS = \$(AM_CFLAGS)
 
-lib_LTLIBRARIES = lib${CAVAN_NAME}.la
+lib_LTLIBRARIES = lib${2}.la
 EOF
-	echo lib${CAVAN_NAME}_la_SOURCES = *.c >> ${MAKEFILE_AM}
+	echo lib${2}_la_SOURCES = $(ls *.c *.cpp 2>/dev/null) >> ${MAKEFILE_AM}
 
 	return 0
 }
@@ -134,7 +137,8 @@ CMD_ABS_DIR="$(get_abs_directory $0)"
 CAVAN_ROOT="$(dirname ${CMD_ABS_DIR})"
 
 gen_app_makefile_am ${CAVAN_ROOT}/app || exit 1
-gen_lib_makefile_am ${CAVAN_ROOT}/lib || exit 1
+gen_lib_makefile_am ${CAVAN_ROOT}/lib ${CAVAN_NAME} || exit 1
+gen_lib_makefile_am ${CAVAN_ROOT}/cpp ${CAVAN_CPP_NAME} || exit 1
 gen_include_makefile_am ${CAVAN_ROOT}/include || exit 1
 
 visual_commond cd ${CAVAN_ROOT}

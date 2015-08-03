@@ -10,6 +10,7 @@ AM_INIT_AUTOMAKE
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AM_PROG_LIBTOOL
 
 # Checks for libraries.
@@ -58,5 +59,6 @@ AC_CONFIG_FILES([Makefile
                  app/Makefile
                  include/Makefile
                  include/cavan/Makefile
+                 cpp/Makefile
                  lib/Makefile])
 AC_OUTPUT

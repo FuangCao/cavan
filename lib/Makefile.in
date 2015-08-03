@@ -130,14 +130,14 @@ am_libcavan_la_OBJECTS = adb.lo alarm.lo bmp.lo bootimg.lo cache.lo \
 	ext2.lo ext4.lo fb.lo file.lo font.lo ftp.lo gsensor.lo \
 	heart_rate.lo image.lo inotify.lo input.lo jwp.lo jwp_comm.lo \
 	jwp-linux.lo jwp_mcu.lo jwp_udp.lo keypad.lo list.lo malloc.lo \
-	math.lo memory.lo mouse.lo mtd.lo net_bridge.lo network.lo \
-	parser.lo permission.lo pool.lo process.lo progress.lo \
-	queue.lo rle.lo screen_mirror.lo service.lo sha.lo sort.lo \
-	speed_detector.lo sprd_diag.lo stack.lo stdio.lo swan_dev.lo \
-	swan_mac.lo swan_pkg.lo swan_ts.lo swan_upgrade.lo swan_vk.lo \
-	tcp_dd.lo tcp_proxy.lo text.lo tftp.lo thread.lo time.lo \
-	timer.lo touchpad.lo touchscreen.lo tree.lo uevent.lo usb.lo \
-	vfat.lo watchdog.lo web_proxy.lo window.lo xml.lo
+	math.lo memory.lo mouse.lo mtd.lo mux.lo net_bridge.lo \
+	network.lo parser.lo permission.lo pool.lo process.lo \
+	progress.lo queue.lo rle.lo screen_mirror.lo service.lo sha.lo \
+	sort.lo speed_detector.lo sprd_diag.lo stack.lo stdio.lo \
+	swan_dev.lo swan_mac.lo swan_pkg.lo swan_ts.lo swan_upgrade.lo \
+	swan_vk.lo tcp_dd.lo tcp_proxy.lo text.lo tftp.lo thread.lo \
+	time.lo timer.lo touchpad.lo touchscreen.lo tree.lo uevent.lo \
+	usb.lo vfat.lo watchdog.lo web_proxy.lo window.lo xml.lo
 libcavan_la_OBJECTS = $(am_libcavan_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -218,6 +218,10 @@ CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CXX = @CXX@
+CXXCPP = @CXXCPP@
+CXXDEPMODE = @CXXDEPMODE@
+CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -273,6 +277,7 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
@@ -323,8 +328,9 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 ACLOCAL_AMFLAGS = -I m4
 AM_CFLAGS = -I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h -DCAVAN -fPIC
+AM_CPPFLAGS = $(AM_CFLAGS)
 lib_LTLIBRARIES = libcavan.la
-libcavan_la_SOURCES = adb.c alarm.c bmp.c bootimg.c cache.c calculator.c cftp.c command.c copy.c crc.c ctype.c dd.c debug.c device.c display.c ecc.c environment.c event.c ext2.c ext4.c fb.c file.c font.c ftp.c gsensor.c heart_rate.c image.c inotify.c input.c jwp.c jwp_comm.c jwp-linux.c jwp_mcu.c jwp_udp.c keypad.c list.c malloc.c math.c memory.c mouse.c mtd.c net_bridge.c network.c parser.c permission.c pool.c process.c progress.c queue.c rle.c screen_mirror.c service.c sha.c sort.c speed_detector.c sprd_diag.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c tcp_proxy.c text.c tftp.c thread.c time.c timer.c touchpad.c touchscreen.c tree.c uevent.c usb.c vfat.c watchdog.c web_proxy.c window.c xml.c
+libcavan_la_SOURCES = adb.c alarm.c bmp.c bootimg.c cache.c calculator.c cftp.c command.c copy.c crc.c ctype.c dd.c debug.c device.c display.c ecc.c environment.c event.c ext2.c ext4.c fb.c file.c font.c ftp.c gsensor.c heart_rate.c image.c inotify.c input.c jwp.c jwp_comm.c jwp-linux.c jwp_mcu.c jwp_udp.c keypad.c list.c malloc.c math.c memory.c mouse.c mtd.c mux.c net_bridge.c network.c parser.c permission.c pool.c process.c progress.c queue.c rle.c screen_mirror.c service.c sha.c sort.c speed_detector.c sprd_diag.c stack.c stdio.c swan_dev.c swan_mac.c swan_pkg.c swan_ts.c swan_upgrade.c swan_vk.c tcp_dd.c tcp_proxy.c text.c tftp.c thread.c time.c timer.c touchpad.c touchscreen.c tree.c uevent.c usb.c vfat.c watchdog.c web_proxy.c window.c xml.c
 all: all-am
 
 .SUFFIXES:
@@ -445,6 +451,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mouse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mtd.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mux.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net_bridge.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/network.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Plo@am__quote@
