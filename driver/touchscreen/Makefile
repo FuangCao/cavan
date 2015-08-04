@@ -1,4 +1,4 @@
-EXTRA_CFLAGS += -I drivers/cavan/include/
+EXTRA_CFLAGS += -Idrivers/cavan/include/
 obj-$(CONFIG_CAVAN_TOUCHSCREEN_BL86X8) += cavan_bl86x8.o
 obj-$(CONFIG_CAVAN_TOUCHSCREEN_CY8C242) += cavan_cy8c242.o
 obj-$(CONFIG_CAVAN_TOUCHSCREEN_FT5216) += cavan_ft5216.o
