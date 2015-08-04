@@ -104,20 +104,35 @@ EOF
 
 function gen_include_makefile_am()
 {
+	local sub_dirs
+
 	cd $1 || return 1
+
+	for fn in *
+	do
+		[ -d "${fn}" ] || continue
+		if [ "${sub_dirs}" ]
+		then
+			sub_dirs="${sub_dirs} ${fn}"
+		else
+			sub_dirs="${fn}"
+		fi
+	done
 
 	gen_makefile_am_header
 
 	cat >> ${MAKEFILE_AM} << EOF
-SUBDIRS = cavan cavan++
+SUBDIRS = ${sub_dirs}
 
 cavanincdir = \$(includedir)
 
 EOF
 	echo cavaninc_HEADERS = *.h >> ${MAKEFILE_AM}
 
-	gen_include_sub_makefile_am $1 cavan || exit 1
-	gen_include_sub_makefile_am $1 cavan++ || exit 1
+	for dir in ${sub_dirs}
+	do
+		(gen_include_sub_makefile_am "$1" "${dir}") || exit 1
+	done
 
 	return 0
 }
