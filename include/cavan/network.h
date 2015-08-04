@@ -224,6 +224,7 @@ typedef enum
 	NETWORK_PROTOCOL_MAC,
 	NETWORK_PROTOCOL_UNIX_TCP,
 	NETWORK_PROTOCOL_UNIX_UDP,
+	NETWORK_PROTOCOL_UEVENT,
 } network_protocol_t;
 
 struct network_url
@@ -396,6 +397,7 @@ const struct network_protocol_desc *network_get_protocol_by_port(u16 port);
 int network_get_port_by_url(const struct network_url *url, const struct network_protocol_desc *protocol);
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2);
 int network_create_socket_mac(const char *if_name, int protocol);
+int network_create_socket_uevent(void);
 
 network_protocol_t network_protocol_parse(const char *name);
 const char *network_protocol_tostring(network_protocol_t type);

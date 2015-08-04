@@ -4,49 +4,20 @@
 #include <cavan/uevent.h>
 #include <cavan/text.h>
 #include <cavan/parser.h>
+#include <cavan/network.h>
 
 int uevent_init(struct uevent_desc *desc)
 {
-	int ret;
-	int buffsize;
-	int sockfd;
-	struct sockaddr_nl addr;
-
-	sockfd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
+	int sockfd = network_create_socket_uevent();
 	if (sockfd < 0)
 	{
-		print_error("socket");
+		pr_red_info("network_create_socket_uevent: %d", sockfd);
 		return sockfd;
-	}
-
-	buffsize = KB(64);
-	ret = setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffsize, sizeof(buffsize));
-	if (ret < 0)
-	{
-		print_error("setsockopt");
-		goto out_close_sockfd;
-	}
-
-	addr.nl_family = AF_NETLINK;
-	addr.nl_pid = getpid();
-	addr.nl_groups = 0xFFFFFFFF;
-	addr.nl_pad = 0;
-
-	ret = bind(sockfd, (struct sockaddr *) &addr, sizeof(addr));
-	if (ret < 0)
-	{
-		print_error("bind");
-		goto out_close_sockfd;
 	}
 
 	desc->sockfd = sockfd;
 
 	return 0;
-
-out_close_sockfd:
-	close(sockfd);
-
-	return ret;
 }
 
 void uevent_deinit(struct uevent_desc *desc)

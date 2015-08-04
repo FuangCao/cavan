@@ -1457,6 +1457,47 @@ out_close_socket:
 	return ret;
 }
 
+int network_create_socket_uevent(void)
+{
+	int ret;
+	int buffsize;
+	int sockfd;
+	struct sockaddr_nl addr;
+
+	sockfd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
+	if (sockfd < 0)
+	{
+		pr_err_info("socket");
+		return sockfd;
+	}
+
+	buffsize = KB(64);
+	ret = setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffsize, sizeof(buffsize));
+	if (ret < 0)
+	{
+		pr_err_info("setsockopt");
+		goto out_close_sockfd;
+	}
+
+	addr.nl_family = AF_NETLINK;
+	addr.nl_pid = getpid();
+	addr.nl_groups = 0xFFFFFFFF;
+	addr.nl_pad = 0;
+
+	ret = bind(sockfd, (struct sockaddr *) &addr, sizeof(addr));
+	if (ret < 0)
+	{
+		pr_err_info("bind");
+		goto out_close_sockfd;
+	}
+
+	return sockfd;
+
+out_close_sockfd:
+	close(sockfd);
+	return ret;
+}
+
 // ============================================================
 
 static ssize_t network_client_send_sync(struct network_client *client, const void *buff, size_t size)
@@ -2137,6 +2178,28 @@ static int network_client_mac_open(struct network_client *client, const struct n
 	return 0;
 }
 
+static int network_client_uevent_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
+{
+	int sockfd;
+
+	sockfd = network_create_socket_uevent();
+	if (sockfd < 0)
+	{
+		pr_red_info("network_create_socket_uevent");
+		return sockfd;
+	}
+
+	client->sockfd = sockfd;
+	client->addrlen = sizeof(struct sockaddr_nl);
+	client->close = network_client_tcp_close;
+	client->send = network_client_tcp_send;
+	client->recv = network_client_tcp_recv;
+
+	return 0;
+}
+
+// ================================================================================
+
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size)
 {
 	ssize_t rdlen;
@@ -2763,6 +2826,13 @@ static const struct network_protocol_desc protocol_descs[] =
 		.open_service = network_service_unix_udp_open,
 		.open_client = network_client_unix_udp_open,
 	},
+	[NETWORK_PROTOCOL_UEVENT] =
+	{
+		.name = "uevent",
+		.type = NETWORK_PROTOCOL_UEVENT,
+		.open_service = network_service_open_dummy,
+		.open_client = network_client_uevent_open,
+	},
 };
 
 network_protocol_t network_protocol_parse(const char *name)
@@ -2782,6 +2852,10 @@ network_protocol_t network_protocol_parse(const char *name)
 		if (text_cmp(name + 1, "dp") == 0)
 		{
 			return NETWORK_PROTOCOL_UDP;
+		}
+		else if (text_cmp(name + 1, "event") == 0)
+		{
+			return NETWORK_PROTOCOL_UEVENT;
 		}
 		else if (text_lhcmp("nix", name + 1) == 0)
 		{
