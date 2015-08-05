@@ -1,0 +1,15 @@
+menu "Gpio driver config"
+
+config CAVAN_GPIO_TCA9535
+    tristate "tca9535 gpio support"
+    default n
+    help
+      Say Y here if you have TI's tca9535 gpio controller hooked
+      to an I2C bus.
+
+      If unsure, say N.
+
+      To compile this driver as a module, choose M here: the
+      module will be called gpio-tca9535.
+
+endmenu
