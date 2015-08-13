@@ -91,11 +91,14 @@ endfunction
 
 if has("autocmd")
 	autocmd FileType c		call s:set_keymap_c()
+	autocmd FileType dts	call s:set_keymap_c()
+	autocmd FileType dtsi	call s:set_keymap_c()
 	autocmd FileType cpp	call s:set_keymap_cpp()
 	autocmd FileType java	call s:set_keymap_java()
 	autocmd FileType asm	call s:set_keymap_asm()
 	autocmd FileType vim	call s:set_keymap_vim()
 	autocmd FileType sh		call s:set_keymap_sh()
+	autocmd FileType txt	call s:set_keymap_sh()
 	autocmd FileType make	call s:set_keymap_make()
 	autocmd FileType python	call s:set_keymap_python()
 endif
