@@ -55,34 +55,21 @@ static void progress_bar_fflush(struct progress_bar *bar)
 	p += bar->half_length;
 	*p++ = ']';
 
-#if BAR_SHOW_TIME
-	used = progress_bar_get_time_consume_ns(bar) / 1000000000UL;
-
-	if (bar->speed > 0)
-	{
-		remain = (bar->total - bar->current) / bar->speed;
-	}
-	else
-	{
-		remain = 0;
-	}
-
-	if (remain > 0)
-	{
-		p += snprintf(p, p_end - p, " (%ds ~ %ds)", used, remain);
-	}
-	else if (used > 0)
-	{
-		p += snprintf(p, p_end - p, " (%ds)", used);
-	}
-#endif
-
 	if (bar->speed >= 0)
 	{
 
 		*p++ = ' ';
 		p = mem_speed_tostring(bar->speed, p, p_end - p - 2);
 	}
+
+#if BAR_SHOW_TIME
+	if (bar->speed > 0)
+	{
+		used = progress_bar_get_time_consume_ns(bar) / 1000000000UL;
+		remain = (bar->total - bar->current) / bar->speed;
+		p += snprintf(p, p_end - p, " (%d/%d)", remain, used + remain);
+	}
+#endif
 
 	length = p - buff;
 	if (length < bar->content_length)
