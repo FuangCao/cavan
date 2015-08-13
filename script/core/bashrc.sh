@@ -57,3 +57,5 @@ do
 	[ -f "${fn}" ] || fn="${CAVAN_HOME}/script/core/${fn}"
 	[ -f "${fn}" ] && source ${fn}
 done
+
+unset JAVA_TOOL_OPTIONS
