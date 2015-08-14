@@ -74,6 +74,10 @@ ifeq ($(Q),@)
 MAKEFLAGS += --no-print-directory
 endif
 
+GCC_COLORS = error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01
+
+export GCC_COLORS
+
 include $(BUILD_CORE_PATH)/defines3.mk
 
 $(foreach path,$(OUT_LIB) $(OUT_BIN),$(shell [ -d $(path) ] || $(MKDIR) $(path)))

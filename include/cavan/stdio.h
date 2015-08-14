@@ -109,7 +109,7 @@ extern "C" {
 #define PRINT_FORMAT_OFF				"Ld"
 #endif
 
-#ifdef CONFIG_BUILD_FOR_ANDROID
+#if defined(CONFIG_BUILD_FOR_ANDROID) && ANDROID_VERSION < 5
 #define PRINT_FORMAT_UID				"ld"
 #else
 #define PRINT_FORMAT_UID				"d"

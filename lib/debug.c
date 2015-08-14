@@ -23,6 +23,7 @@
 static const char *build_time_string = __DATE__ " " __TIME__;
 
 #ifdef CONFIG_BUILD_FOR_ANDROID
+#if ANDROID_VERSION < 5
 #include <corkscrew/backtrace.h>
 
 char *dump_backtrace(char *buff, size_t size)
@@ -66,6 +67,19 @@ char *address_to_symbol(const void *addr, char *buff, size_t size)
 
 	return buff;
 }
+#else
+char *dump_backtrace(char *buff, size_t size)
+{
+	return text_ncopy(buff, "unknown", size);
+}
+
+char *address_to_symbol(const void *addr, char *buff, size_t size)
+{
+	text_ncopy(buff, "unknown", size);
+
+	return buff;
+}
+#endif
 #else
 #include <execinfo.h>
 

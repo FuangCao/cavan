@@ -373,7 +373,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 	int ret;
 	pid_t pid;
 	int ttyfd;
-	char pathname[32];
+	char pathname[1024];
 
 	if (lines == 0xFFFF && columns == 0xFFFF)
 	{
@@ -409,7 +409,6 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 	}
 	else
 	{
-		const char *ptspath;
 		const char *ptmpath = "/dev/ptmx";
 
 		ttyfd = open(ptmpath, O_RDWR);
@@ -440,11 +439,10 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 			goto out_close_ttyfd;
 		}
 
-		ptspath = ptsname(ttyfd);
-		if (ptspath == NULL)
+		ret = ptsname_r(ttyfd, pathname, sizeof(pathname));
+		if (ret < 0)
 		{
 			pr_error_info("ptsname");
-			ret = -EFAULT;
 			goto out_close_ttyfd;
 		}
 
@@ -460,7 +458,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		{
 			close(ttyfd);
 
-			return cavan_exec_redirect_stdio(ptspath, lines, columns, command, flags);
+			return cavan_exec_redirect_stdio(pathname, lines, columns, command, flags);
 		}
 	}
 

@@ -10,9 +10,14 @@ CAVAN_APP_SRC_FILES := $(call cavan-all-files-under,app/*.c)
 CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,app/*.cpp)
 CAVAN_APP_CORE_SRC_FILES := $(call cavan-all-files-under,app/core/*.c)
 
+CAVAN_ANDROID_VERSION := $(firstword $(subst ., ,$(PLATFORM_VERSION)))
 CAVAN_C_INCLUDES := $(LOCAL_PATH)/include
-CAVAN_SHARED_LIBRARIES := libutils liblog libcorkscrew
-CAVAN_CFLAGS := -DCONFIG_BUILD_FOR_ANDROID=1 -DCAVAN_ARCH_ARM -DCAVAN -Werror -include $(LOCAL_PATH)/include/cavan/config.h
+CAVAN_SHARED_LIBRARIES := libutils liblog
+CAVAN_CFLAGS := -DCONFIG_BUILD_FOR_ANDROID=1 -DANDROID_VERSION=$(CAVAN_ANDROID_VERSION) -DCAVAN_ARCH_ARM -DCAVAN -Werror -Wno-unused-parameter -include $(LOCAL_PATH)/include/cavan/config.h
+
+ifneq ($(filter 1 2 3 4,$(CAVAN_ANDROID_VERSION)),)
+CAVAN_SHARED_LIBRARIES += libcorkscrew
+endif
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcavan
