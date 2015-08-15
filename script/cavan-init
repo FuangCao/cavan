@@ -420,7 +420,9 @@ function config_grub()
 function config_gitweb()
 {
 	cd /etc/apache2/mods-enabled || return 1
-	ln -vsf ../mods-available/cgid.* . || return 1
+	ln -vsf ../mods-available/{cgid.*,ssl.*,*shmcb*,dav*} . || return 1
+	cd /etc/apache2/sites-enabled || return 1
+	ln -vsf ../sites-available/* . || return 1
 	sed -i 's/^\s*\(\$projectroot\)\s*=.*$/\1 = "\/git";/g' /etc/gitweb.conf || return 1
 	cp -av ${LOCAL_CONFIG_PATH}/gitweb/* /usr/share/gitweb/static || return 1
 	ln -vsf ${CAVAN_HOME}/config/git/git.conf /etc/apache2/conf-enabled/ || return 1
