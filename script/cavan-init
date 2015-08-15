@@ -423,6 +423,7 @@ function config_gitweb()
 	ln -vsf ../mods-available/cgid.* . || return 1
 	sed -i 's/^\s*\(\$projectroot\)\s*=.*$/\1 = "\/git";/g' /etc/gitweb.conf || return 1
 	cp -av ${LOCAL_CONFIG_PATH}/gitweb/* /usr/share/gitweb/static || return 1
+	ln -vsf ${CAVAN_HOME}/config/git/git.conf /etc/apache2/conf-enabled/ || return 1
 
 	service apache2 restart
 
