@@ -45,6 +45,8 @@ CMD_ABS_DIR="$(file_asb_directory $0)"
 CMD_ABS_PATH="${CMD_ABS_DIR}/$(basename $0)"
 CORE_PATH="${CMD_ABS_DIR}/core"
 FILE_APP_CONFIG="${CORE_PATH}/applications.cfg"
+LOCAL_CAVAN_ROOT="$(dirname ${CMD_ABS_DIR})"
+LOCAL_CONFIG_PATH="${LOCAL_CAVAN_ROOT}/config"
 
 source /etc/lsb-release
 source ${CORE_PATH}/file.sh
@@ -415,6 +417,18 @@ function config_grub()
 	return 0
 }
 
+function config_gitweb()
+{
+	cd /etc/apache2/mods-enabled || return 1
+	ln -vsf ../mods-available/cgid.* . || return 1
+	sed -i 's/^\s*\(\$projectroot\)\s*=.*$/\1 = "\/git";/g' /etc/gitweb.conf || return 1
+	cp -av ${LOCAL_CONFIG_PATH}/gitweb/* /usr/share/gitweb/static || return 1
+
+	service apache2 restart
+
+	return 0
+}
+
 function config_others()
 {
 	ln -sf /tools/eclipse /usr/bin || return 1
@@ -434,7 +448,7 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 for func in mount_disk create_mount_points create_symlinks config_bashrc \
 	swap_init config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_vimrc config_group \
-	config_service config_grub config_stardict config_others
+	config_service config_grub config_stardict config_gitweb config_others
 do
 	if cavan-has_mark ${func}
 	then
