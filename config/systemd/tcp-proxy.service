@@ -1,0 +1,11 @@
+[Unit]
+Description=cavan tcp proxy daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/cavan/out/host/debug/cavan-tcp_proxy --host mirrors.ustc.edu.cn --pport 80 --port 6666
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

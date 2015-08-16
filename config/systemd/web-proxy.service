@@ -1,0 +1,11 @@
+[Unit]
+Description=cavan web proxy daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/cavan/out/host/debug/cavan-web_proxy -p 9090 --host mirrors.ustc.edu.cn
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

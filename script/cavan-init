@@ -14,6 +14,7 @@ FILE_GIT_DAEMON_CONF="/etc/init/git-daemon.conf"
 FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
 FILE_GRUB_LINUX="/etc/grub.d/10_linux"
 FILE_APP_FEILED="/tmp/cavan-app-failed.txt"
+DIR_SYSTEMD_CONFIG="/etc/systemd/system/multi-user.target.wants"
 
 CAVAN_HOME="/cavan"
 
@@ -432,6 +433,25 @@ function config_gitweb()
 	return 0
 }
 
+function config_systemd()
+{
+	local target_path
+
+	cd "${LOCAL_CONFIG_PATH}/systemd" || return 1
+
+	for fn in *.service
+	do
+		target_path="${DIR_SYSTEMD_CONFIG}/$fn"
+		rm "${target_path}"
+		cp -av "$fn" "${target_path}" || return 1
+		chmod -v 0644 "${target_path}" || return 1
+	done
+
+	systemctl daemon-reload
+
+	return 0
+}
+
 function config_others()
 {
 	ln -sf /tools/eclipse /usr/bin || return 1
@@ -451,7 +471,7 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 for func in mount_disk create_mount_points create_symlinks config_bashrc \
 	swap_init config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_vimrc config_group \
-	config_service config_grub config_stardict config_gitweb config_others
+	config_service config_grub config_stardict config_gitweb config_systemd config_others
 do
 	if cavan-has_mark ${func}
 	then

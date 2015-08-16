@@ -1,0 +1,11 @@
+[Unit]
+Description=git daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/git-core/git-daemon --verbose --export-all --enable=receive-pack --enable=upload-pack --enable=upload-archive --base-path=/git
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

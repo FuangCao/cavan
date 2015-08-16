@@ -1,0 +1,11 @@
+[Unit]
+Description=cavan tcp dd unix daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/cavan/out/host/debug/cavan-tcp_dd_server --unix
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

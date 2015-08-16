@@ -1,0 +1,11 @@
+[Unit]
+Description=cavan adb proxy daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/cavan/out/host/debug/cavan-tcp_proxy -ap 9999
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
