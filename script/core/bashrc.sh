@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PATH_BAK="${PATH}"
+[ "${PATH_BAK}" ] || PATH_BAK="${PATH}"
 
 KERNEL_HOME="${PROJECT_HOME}/kernel"
 UBOOT_HOME="${PROJECT_HOME}/u-boot"
