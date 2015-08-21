@@ -153,3 +153,22 @@ function cavan-android-buildenv()
 
 	echo "HOST_TOOLCHAIN_PREFIX = ${HOST_TOOLCHAIN_PREFIX}"
 }
+
+function cavan-set-jdk-version()
+{
+	[ "$1" ] || return 1
+	[ "${PATH_BAK}" ] && PATH="${PATH_BAK}"
+
+	JDK_VERSION="jdk$1"
+
+	[ -d "/tools/${JDK_VERSION}" ] || for fn in /tools/jdk$1*
+	do
+		[ -d "${fn}" ] && JDK_VERSION="$(basename ${fn})"
+	done
+
+	[ -d "/tools/${JDK_VERSION}" ] || return 1
+
+	echo "JDK_VERSION = ${JDK_VERSION}"
+
+	source ${CAVAN_HOME}/script/core/bashrc.sh
+}
