@@ -17,10 +17,11 @@
 #ifndef CONFIG_BUILD_FOR_ANDROID
 #include <iostream>
 #endif
-using namespace std;
 
-extern "C" {
+using namespace std;
 #endif
+
+__BEGIN_DECLS
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -369,6 +370,4 @@ static inline int restore_tty_attr(int fd, struct termios *attr)
 	return set_tty_attr(fd, TCSADRAIN, attr);
 }
 
-#ifdef __cplusplus
-}
-#endif
+__END_DECLS

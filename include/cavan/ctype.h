@@ -21,9 +21,7 @@
 
 #include <cavan.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 enum
 {
@@ -164,6 +162,4 @@ static inline char cavan_toupper(char c)
 	return c;
 }
 
-#ifdef __cplusplus
-}
-#endif
+__END_DECLS

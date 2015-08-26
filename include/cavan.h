@@ -18,11 +18,13 @@
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/cdefs.h>
 #include <poll.h>
 #include <pthread.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+#include <features.h>
 
 #ifdef __GNUC__
 #define GCC_VERSION				(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
@@ -89,17 +91,25 @@
 #define likely(exp)				__predict_true(exp)
 #define unlikely(exp)			__predict_false(exp)
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 #define	__BEGIN_DECLS			extern "C" {
 #define	__END_DECLS				}
-#define	__static_cast(x, y)		static_cast<x>(y)
 #else
 #define	__BEGIN_DECLS
 #define	__END_DECLS
-#define	__static_cast(x, y)		((x) (y))
 #endif
 
+#ifndef __static_cast
+#ifdef __cplusplus
+#define	__static_cast(x, y)		static_cast<x>(y)
+#else
+#define	__static_cast(x, y)		((x) (y))
+#endif
+#endif
+
+#ifndef __UNCONST
 #define __UNCONST(a)			((void *)(unsigned long)(const void *) (a))
+#endif
 
 static inline void msleep(useconds_t msec)
 {

@@ -8,9 +8,7 @@
 
 #include <cavan.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 typedef enum cavan_thread_state
 {
@@ -130,6 +128,4 @@ static inline void cavan_thread_exit(struct cavan_thread *thread)
 	cavan_thread_deinit(thread);
 }
 
-#ifdef __cplusplus
-}
-#endif
+__END_DECLS

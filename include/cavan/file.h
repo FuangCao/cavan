@@ -6,9 +6,7 @@
 #include <sys/file.h>
 #include <poll.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 #define MAX_BUFFER_LEN				MB(1)
 
@@ -501,6 +499,4 @@ static inline bool file_throw_all(int fd)
 	return file_discard_all(fd);
 }
 
-#ifdef __cplusplus
-}
-#endif
+__END_DECLS
