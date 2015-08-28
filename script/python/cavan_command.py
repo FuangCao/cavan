@@ -318,6 +318,22 @@ class CavanCommandBase:
 	def doRaise(self, message):
 		raise Exception(message)
 
+	def doSymlink(self, target, pathname = None):
+		if not pathname:
+			pathname = os.path.basename(target)
+		elif os.path.isdir(pathname):
+			pathname = os.path.join(pathname, os.path.basename(target))
+
+		if os.path.exists(pathname):
+			os.unlink(pathname)
+
+		try:
+			os.symlink(target, pathname)
+		except:
+			return False
+
+		return True
+
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		print popen_tostring(sys.argv[1])
