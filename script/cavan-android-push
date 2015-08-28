@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import sys
+from python import cavan_android
+from python import cavan_stdio
+
+if __name__ == "__main__":
+	if len(sys.argv) > 1:
+		manager = cavan_android.AndroidManager()
+		if manager.push(sys.argv[1:]):
+			cavan_stdio.pr_green_info("OK")
+			sys.exit(0)
+
+	cavan_stdio.pr_red_info("Failed")
+	sys.exit(-1)

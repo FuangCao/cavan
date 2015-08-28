@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys, os, subprocess, errno
 
@@ -311,6 +311,12 @@ class CavanCommandBase:
 				return True
 			elif choice in ["no", "n"]:
 				return False
+
+	def getEnv(self, key, default = None):
+		return os.getenv(key, default)
+
+	def doRaise(self, message):
+		raise Exception(message)
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1:

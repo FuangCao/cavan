@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys, os, threading, errno
 from git_manager import CavanGitManager

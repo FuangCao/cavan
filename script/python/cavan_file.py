@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 def file_read_line(filename):
 	fp = open(filename, "r")

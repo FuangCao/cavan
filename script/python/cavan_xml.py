@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys, xml.dom.minidom
 from cavan_file import file_write_line
