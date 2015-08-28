@@ -334,6 +334,18 @@ class CavanCommandBase:
 
 		return True
 
+	def doFindFile(self, dirname, filename):
+		result = []
+
+		for fn in os.listdir(dirname):
+			pathname = os.path.join(dirname, fn)
+			if os.path.isdir(pathname):
+				result.extend(self.doFindFile(pathname, filename))
+			elif fn == filename:
+				result.append(pathname)
+
+		return result
+
 if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		print popen_tostring(sys.argv[1])

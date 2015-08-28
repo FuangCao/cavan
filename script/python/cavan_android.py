@@ -13,6 +13,7 @@ class AndroidManager(AdbManager):
 		self.mBuildTop = os.path.realpath(buildTop)
 		self.mProductOut = os.path.realpath(productOut)
 		self.mProductOutLen = len(self.mProductOut)
+		self.mPathSystem = os.path.join(self.mProductOut, "system")
 
 		AdbManager.__init__(self, self.mBuildTop, verbose)
 
@@ -21,13 +22,34 @@ class AndroidManager(AdbManager):
 			self.prStdInfo("mProductOut = " + self.mProductOut)
 
 	def getHostPath(self, pathname):
-		if not os.path.exists(pathname) and not os.path.isabs(pathname):
-			if pathname.startswith("out"):
-				dirname = self.mBuildTop
+		if not os.path.exists(pathname):
+			if os.path.isabs(pathname):
+				self.doRaise("file %s is not exists" % pathname)
 			else:
-				dirname = self.mProductOut
+				if pathname.startswith("out"):
+					dirname = self.mBuildTop
+				else:
+					dirname = self.mProductOut
 
-			pathname = os.path.join(dirname, pathname)
+				newPath = os.path.join(dirname, pathname)
+
+				if os.path.exists(newPath):
+					pathname = newPath
+				elif not os.path.dirname(pathname):
+					if self.mVerbose:
+						self.prStdInfo("Try find from: ", self.mPathSystem)
+
+					files = self.doFindFile(self.mPathSystem, pathname)
+					if not files:
+						self.doRaise("file %s is not exists" % pathname)
+					elif len(files) > 1:
+						for fn in files:
+							self.prRedInfo("pathname = " + fn)
+						self.doRaise("too much file named %s" % pathname)
+					else:
+						pathname = files[0]
+				else:
+					self.doRaise("file %s is not exists" % pathname)
 
 		return os.path.realpath(pathname)
 
