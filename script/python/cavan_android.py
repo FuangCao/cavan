@@ -41,11 +41,18 @@ class AndroidManager(AdbManager):
 		if not self.doRemount():
 			return False
 
+		lastDir = None
+
 		for pathname in listFile:
 			hostPath = self.getHostPath(pathname)
+			if not os.path.exists(hostPath) and lastDir != None:
+				hostPath = os.path.join(lastDir, pathname)
+
 			devPath = self.getDevicePath(hostPath)
 
 			if not self.doPush(hostPath, devPath):
 				return False
+
+			lastDir = os.path.dirname(hostPath)
 
 		return True
