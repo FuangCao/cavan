@@ -199,3 +199,19 @@ function _cavan_config()
 }
 
 complete -F _cavan_config cavan-config-sh
+
+function _cavan_set_jdk_version()
+{
+	local jdks
+
+	cd /tools && for fn in jdk*
+	do
+		[ -d "${fn}" ] || continue
+		[ "${fn}" = "jdk" ] && continue
+		jdks="$fn ${jdks}"
+	done
+
+	_build_completion "${jdks}"
+}
+
+complete -F _cavan_set_jdk_version cavan-set-jdk-version

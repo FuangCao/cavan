@@ -157,11 +157,15 @@ function cavan-android-buildenv()
 function cavan-set-jdk-version()
 {
 	[ "$1" ] || return 1
-	[ "${PATH_BAK}" ] && PATH="${PATH_BAK}"
 
-	JDK_VERSION="jdk$1"
+	if [[ $1 = jdk* ]]
+	then
+		JDK_VERSION="$1"
+	else
+		JDK_VERSION="jdk$1"
+	fi
 
-	[ -d "/tools/${JDK_VERSION}" ] || for fn in /tools/jdk$1*
+	[ -d "/tools/${JDK_VERSION}" ] || for fn in /tools/${JDK_VERSION}*
 	do
 		[ -d "${fn}" ] && JDK_VERSION="$(basename ${fn})"
 	done
@@ -169,6 +173,8 @@ function cavan-set-jdk-version()
 	[ -d "/tools/${JDK_VERSION}" ] || return 1
 
 	echo "JDK_VERSION = ${JDK_VERSION}"
+
+	[ "${PATH_BAK}" ] && PATH="${PATH_BAK}"
 
 	source ${CAVAN_HOME}/script/core/bashrc.sh
 }
