@@ -701,7 +701,7 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 			break;
 		}
 
-		ret = write(1, buff, rdlen) | write(fd, buff, rdlen);
+		ret = write(fd, buff, rdlen) | write(1, buff, rdlen);
 		if (ret < 0)
 		{
 			pr_err_info("write");
