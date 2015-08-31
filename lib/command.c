@@ -655,10 +655,17 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 	int fd;
 	int ret = 0;
 	pid_t pid = 0;
+	bool need_close;
 
 	if (filename == NULL)
 	{
 		fd = 2;
+		need_close = false;
+	}
+	else if (strcmp(filename, "-") == 0)
+	{
+		fd = 1;
+		need_close = false;
 	}
 	else if (command)
 	{
@@ -668,10 +675,8 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 			pr_red_info("cavan_exec_redirect_stdio_popen");
 			return fd;
 		}
-	}
-	else if (strcmp(filename, "-"))
-	{
-		fd = 1;
+
+		need_close = true;
 	}
 	else
 	{
@@ -681,6 +686,8 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 			pr_err_info("oped file %s", filename);
 			return fd;
 		}
+
+		need_close = true;
 	}
 
 	while (1)
@@ -710,7 +717,7 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 		msleep(1);
 	}
 
-	if (filename)
+	if (need_close)
 	{
 		close(fd);
 	}
