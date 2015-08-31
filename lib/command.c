@@ -652,39 +652,40 @@ int cavan_system2(const char *command, ...)
 
 int cavan_tee_main(const char *filename, bool append, bool command)
 {
-	int fd;
+	FILE *fp;
 	int ret = 0;
-	pid_t pid = 0;
 	bool need_close;
 
 	if (filename == NULL)
 	{
-		fd = 2;
+		fp = stderr;
 		need_close = false;
 	}
 	else if (strcmp(filename, "-") == 0)
 	{
-		fd = 1;
+		fp = stdout;
 		need_close = false;
 	}
 	else if (command)
 	{
-		fd = cavan_exec_redirect_stdio_popen(filename, 0, 0, &pid, 0x01);
-		if (fd < 0)
+		fp = popen(filename, "w");
+		if (fp == NULL)
 		{
-			pr_red_info("cavan_exec_redirect_stdio_popen");
-			return fd;
+			pr_err_info("popen %s", filename);
+			return -EFAULT;
 		}
+
+		setvbuf(fp, NULL, _IONBF, 0);
 
 		need_close = true;
 	}
 	else
 	{
-		fd = open(filename, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC), 0777);
-		if (fd < 0)
+		fp = fopen(filename, append ? "a+" : "w+");
+		if (fp == NULL)
 		{
-			pr_err_info("oped file %s", filename);
-			return fd;
+			pr_err_info("fopen %s", filename);
+			return -EFAULT;
 		}
 
 		need_close = true;
@@ -701,7 +702,7 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 			break;
 		}
 
-		ret = write(fd, buff, rdlen) | write(1, buff, rdlen);
+		ret = fwrite(buff, rdlen, 1, fp) | fwrite(buff, rdlen, 1, stdout);
 		if (ret < 0)
 		{
 			pr_err_info("write");
@@ -709,17 +710,16 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 		}
 	}
 
-	if (pid > 0)
-	{
-		fsync(fd);
-		msleep(100);
-		kill(pid, SIGTERM);
-		msleep(1);
-	}
-
 	if (need_close)
 	{
-		close(fd);
+		if (command)
+		{
+			pclose(fp);
+		}
+		else
+		{
+			fclose(fp);
+		}
 	}
 
 	return ret;
