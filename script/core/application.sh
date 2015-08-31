@@ -178,3 +178,8 @@ function cavan-set-jdk-version()
 
 	source ${CAVAN_HOME}/script/core/bashrc.sh
 }
+
+function cavan-mm-push()
+{
+	cavan-android-push $(mm $@ | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g')
+}
