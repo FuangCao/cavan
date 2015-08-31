@@ -31,6 +31,7 @@ typedef enum
 {
 	CAVAN_COMMAND_OPTION_ADB = 0x256,
 	CAVAN_COMMAND_OPTION_AUTO,
+	CAVAN_COMMAND_OPTION_APPEND,
 	CAVAN_COMMAND_OPTION_BASE,
 	CAVAN_COMMAND_OPTION_BOARD,
 	CAVAN_COMMAND_OPTION_BT_MAC,
@@ -192,6 +193,8 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
 int cavan_system(const char *command);
 int cavan_system2(const char *command, ...);
+int cavan_tty_tee_loop(int ttyfd, int ttyin, int ttyout);
+int cavan_tee_main(const char *filename, bool append, bool command);
 
 int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout);
 int cavan_tty_redirect_base(int ttyfd);

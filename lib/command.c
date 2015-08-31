@@ -411,19 +411,21 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 	{
 		const char *ptmpath = "/dev/ptmx";
 
-		ttyfd = open(ptmpath, O_RDWR);
+		ttyfd = open(ptmpath, O_RDWR | O_CLOEXEC);
 		if (ttyfd < 0)
 		{
 			pr_error_info("open %s", ptmpath);
 			return ttyfd;
 		}
 
+#if 0
 		ret = fcntl(ttyfd, F_SETFD, FD_CLOEXEC);
 		if (ret < 0)
 		{
 			pr_error_info("fcntl");
 			goto out_close_ttyfd;
 		}
+#endif
 
 		ret = grantpt(ttyfd);
 		if (ret < 0)
@@ -646,4 +648,72 @@ int cavan_system2(const char *command, ...)
 	va_end(ap);
 
 	return cavan_system(buff);
+}
+
+int cavan_tee_main(const char *filename, bool append, bool command)
+{
+	int fd;
+	int ret = 0;
+	pid_t pid = 0;
+
+	if (filename == NULL)
+	{
+		fd = 2;
+	}
+	else if (command)
+	{
+		fd = cavan_exec_redirect_stdio_popen(filename, 0, 0, &pid, 0x01);
+		if (fd < 0)
+		{
+			pr_red_info("cavan_exec_redirect_stdio_popen");
+			return fd;
+		}
+	}
+	else if (strcmp(filename, "-"))
+	{
+		fd = 1;
+	}
+	else
+	{
+		fd = open(filename, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC), 0777);
+		if (fd < 0)
+		{
+			pr_err_info("oped file %s", filename);
+			return fd;
+		}
+	}
+
+	while (1)
+	{
+		ssize_t rdlen;
+		char buff[1024];
+
+		rdlen = read(0, buff, sizeof(buff));
+		if (rdlen <= 0)
+		{
+			break;
+		}
+
+		ret = write(1, buff, rdlen) | write(fd, buff, rdlen);
+		if (ret < 0)
+		{
+			pr_err_info("write");
+			break;
+		}
+	}
+
+	if (pid > 0)
+	{
+		fsync(fd);
+		msleep(100);
+		kill(pid, SIGTERM);
+		msleep(1);
+	}
+
+	if (filename)
+	{
+		close(fd);
+	}
+
+	return ret;
 }
