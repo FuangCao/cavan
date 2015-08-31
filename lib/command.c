@@ -654,17 +654,14 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 {
 	FILE *fp;
 	int ret = 0;
-	bool need_close;
 
 	if (filename == NULL)
 	{
 		fp = stderr;
-		need_close = false;
 	}
 	else if (strcmp(filename, "-") == 0)
 	{
 		fp = stdout;
-		need_close = false;
 	}
 	else if (command)
 	{
@@ -676,8 +673,6 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 		}
 
 		setvbuf(fp, NULL, _IONBF, 0);
-
-		need_close = true;
 	}
 	else
 	{
@@ -687,8 +682,6 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 			pr_err_info("fopen %s", filename);
 			return -EFAULT;
 		}
-
-		need_close = true;
 	}
 
 	while (1)
@@ -710,7 +703,7 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 		}
 	}
 
-	if (need_close)
+	if (fp != stderr && fp != stdout)
 	{
 		if (command)
 		{
