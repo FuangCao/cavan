@@ -181,5 +181,10 @@ function cavan-set-jdk-version()
 
 function cavan-mm-push()
 {
-	cavan-android-push $(mm $@ | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g')
+	cavan-android-push $(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g')
+}
+
+function cavan-mm-push-reboot()
+{
+	cavan-mm-push && adb reboot
 }
