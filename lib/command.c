@@ -654,6 +654,7 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 {
 	FILE *fp;
 	int ret = 0;
+	size_t total = 0;
 
 	if (filename == NULL)
 	{
@@ -701,6 +702,8 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 			pr_err_info("write");
 			break;
 		}
+
+		total += rdlen;
 	}
 
 	if (fp != stderr && fp != stdout)
@@ -715,5 +718,15 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 		}
 	}
 
-	return ret;
+	if (ret < 0)
+	{
+		return ret;
+	}
+
+	if (total > 0)
+	{
+		return 0;
+	}
+
+	return -ENODATA;
 }
