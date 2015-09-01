@@ -181,10 +181,25 @@ function cavan-set-jdk-version()
 
 function cavan-mm-push()
 {
-	cavan-android-push $(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g')
+	local project_name
+
+	project_name=$(basename ${PWD})
+
+	echo "project_name = $project_name"
+
+	if [ -d "arch/arm" -a "$project_name" = "kernel" ]
+	then
+		make ${1-jw100.img} -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
+	else
+		cavan-android-push $(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g') || return 1
+	fi
+
+	return 0;
 }
 
 function cavan-mm-push-reboot()
 {
-	cavan-mm-push && adb reboot
+	cavan-mm-push && adb reboot && return 0
+
+	return 1
 }
