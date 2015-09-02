@@ -305,6 +305,7 @@ Calculator::Calculator() : mStackOperand(100), mStackOperator(100), mErrMsg("unk
 		sListOperator.append(new OperatorShiftL());
 		sListOperator.append(new OperatorShiftR());
 		sListOperator.append(new OperatorPow());
+		sListOperator.append(new OperatorPow("**", OPERATOR_TYPE2, false));
 		sListOperator.append(new OperatorSqrt());
 		sListOperator.append(new OperatorFactorial());
 		sListOperator.append(new OperatorNegation());

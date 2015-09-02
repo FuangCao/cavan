@@ -404,7 +404,7 @@ public:
 class OperatorPow : public OperatorF2
 {
 public:
-	OperatorPow(const char *symbol = "pow") : OperatorF2(symbol, 0, OPERATOR_TYPE_LIST, true) {}
+	OperatorPow(const char *symbol = "pow", int type = OPERATOR_TYPE_LIST, bool omit = true) : OperatorF2(symbol, 0, type, omit) {}
 	virtual bool execute(double left, double right, double &result)
 	{
 		result = pow(left, right);
