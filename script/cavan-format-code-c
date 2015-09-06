@@ -47,38 +47,38 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 	print "pathname = $pathname\n";
 
 	open(FILE, "<", $pathname) or die "Failed to open file $pathname: $!";
-	my $lines = join '', <FILE>;
+	$_ = join '', <FILE>;
 
-	$lines =~ s/[\t ]+$//mg;
+	s/[\t ]+$//mg;
 
 	if ($single_line) {
-		$lines =~ s/^([\t ]+.*\))[\t ]*\n[\t ]+\{/$1 \{/mg;
-		$lines =~ s/^([\t ]+\})[\t ]*\n?[\t ]+(\w+)[\t ]*\n?[\t ]+\{/$1 $2 \{/mg;
-		$lines =~ s/^([\t ]+\})[\t ]*\n[\t ]+(else[\t ]+if)/$1 $2/mg;
-		$lines =~ s/^([\t ]+case.*:)[\t ]*\n[\t ]+{/$1 \{/mg;
+		s/^([\t ]+.*\))[\t ]*\n[\t ]+\{/$1 \{/mg;
+		s/^([\t ]+\})[\t ]*\n?[\t ]+(\w+)[\t ]*\n?[\t ]+\{/$1 $2 \{/mg;
+		s/^([\t ]+\})[\t ]*\n[\t ]+(else[\t ]+if)/$1 $2/mg;
+		s/^([\t ]+case.*:)[\t ]*\n[\t ]+{/$1 \{/mg;
 
-		$lines =~ s/(.*=)[\t ]*\n[\t ]*\{/$1 \{/mg;
-		$lines =~ s/^([\t ]+\})[\t ]*,[\t ]*\n[\t ]+\{/$1, \{/mg;
+		s/(.*=)[\t ]*\n[\t ]*\{/$1 \{/mg;
+		s/^([\t ]+\})[\t ]*,[\t ]*\n[\t ]+\{/$1, \{/mg;
 
-		$lines =~ s/^([\t ]*(?:struct|class)[\t ]+\w+)[\t ]*\n\{/$1 \{/mg;
+		s/^([\t ]*(?:struct|class)[\t ]+\w+)[\t ]*\n\{/$1 \{/mg;
 	} else {
-		$lines =~ s/^([\t ]*)\}[\t ]*(\S.*\S)[\t ]*\{[\t ]*$/$1\}\n$1$2\n$1\{/mg;
-		$lines =~ s/^([\t ]*)(\S.*\S)[\t ]*\{[\t ]*$/$1$2\n$1\{/mg;
-		$lines =~ s/^([\t ]*)(.*=)[\t ]*\{[^\}\n]*$/$1$2\n$1\{/mg;
-		$lines =~ s/^([\t ]*)}[\t ]*,[\t ]*{/$1\},\n$1\{/mg;
-		$lines =~ s/^([\t ]*)(.+:)[\t ]*\{/$1$2\n$1\t\{/mg;
+		s/^([\t ]*)\}[\t ]*(\S.*\S)[\t ]*\{[\t ]*$/$1\}\n$1$2\n$1\{/mg;
+		s/^([\t ]*)(\S.*\S)[\t ]*\{[\t ]*$/$1$2\n$1\{/mg;
+		s/^([\t ]*)(.*=)[\t ]*\{[^\}\n]*$/$1$2\n$1\{/mg;
+		s/^([\t ]*)}[\t ]*,[\t ]*{/$1\},\n$1\{/mg;
+		s/^([\t ]*)(.+:)[\t ]*\{/$1$2\n$1\t\{/mg;
 	}
 
-	$lines =~ s/^([\t ]+.*\))[\t ]*\\[\t ]*\n[\t ]+\{/$1 \{/mg;
-	$lines =~ s/^([\t ]+do)[\t\\ ]*\n[\t ]+{/$1 \{/mg;
-	$lines =~ s/=[\t ]*\{(\S.*\S)\}/= \{ $1 \}/mg;
-	$lines =~ s/extern[\t ]+\"[Cc]\"[\t ]*\n[\t ]*{/extern "C" \{/mg;
-	$lines =~ s/^[\t ]*(typedef[\w\t ]+)\b[\t ]*\n[\t ]*\{/$1 \{/mg;
+	s/^([\t ]+.*\))[\t ]*\\[\t ]*\n[\t ]+\{/$1 \{/mg;
+	s/^([\t ]+do)[\t\\ ]*\n[\t ]+{/$1 \{/mg;
+	s/=[\t ]*\{(\S.*\S)\}/= \{ $1 \}/mg;
+	s/extern[\t ]+\"[Cc]\"[\t ]*\n[\t ]*{/extern "C" \{/mg;
+	s/^[\t ]*(typedef[\w\t ]+)\b[\t ]*\n[\t ]*\{/$1 \{/mg;
 
 	for (1..10) {
-		$lines =~ s/(\([^\*\(\)]+\*?[\t ]*\))([\w\(\&])/$1 $2/mg or last;
+		s/(\([^\*\(\)]+\*?[\t ]*\))([\w\(\&])/$1 $2/mg or last;
 	}
 
 	open(FILE, ">", "$pathname") or die "Failed to open file $pathname: $!";
-	print FILE $lines;
+	print FILE $_;
 }
