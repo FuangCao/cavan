@@ -72,12 +72,15 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 	s/^([\t ]+.*\))[\t ]*\\[\t ]*\n[\t ]+\{/$1 \{/mg;
 	s/^([\t ]+do)[\t\\ ]*\n[\t ]+{/$1 \{/mg;
 	s/=[\t ]*\{(\S.*\S)\}/= \{ $1 \}/mg;
-	s/extern[\t ]+\"[Cc]\"[\t ]*\n[\t ]*{/extern "C" \{/mg;
 	s/^[\t ]*(typedef[\w\t ]+)\b[\t ]*\n[\t ]*\{/$1 \{/mg;
 
-	for (1..10) {
+	for my $i (1..10) {
 		s/(\([^\*\(\)]+\*?[\t ]*\))([\w\(\&])/$1 $2/mg or last;
 	}
+
+	s/^[\t ]*#if(def\s*__cplusplus|[\t ]+defined[\t ]*\([\t ]*__cplusplus[\t ]*\))\s*extern\s*\"[Cc]\"\s*{\s*#endif/__BEGIN_DECLS/mg;
+	s/^[\t ]*#if(def\s*__cplusplus|[\t ]+defined[\t ]*\([\t ]*__cplusplus[\t ]*\))\s*\}\s*#endif/__END_DECLS/mg;
+	s/extern[\t ]+\"[Cc]\"[\t ]*\n[\t ]*{/extern "C" \{/mg;
 
 	open(FILE, ">", "$pathname") or die "Failed to open file $pathname: $!";
 	print FILE $_;
