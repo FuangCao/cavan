@@ -21,7 +21,7 @@ sub find_soruce_files
 			}
 
 			closedir $fd;
-		} elsif (/\.(c|h|cpp)$/) {
+		} elsif ($dirname =~ /\.(c|h|cpp)$/) {
 			push @filelist, $dirname;
 		}
 	}
@@ -74,6 +74,10 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 	$lines =~ s/=[\t ]*\{(\S.*\S)\}/= \{ $1 \}/mg;
 	$lines =~ s/extern[\t ]+\"[Cc]\"[\t ]*\n[\t ]*{/extern "C" \{/mg;
 	$lines =~ s/^[\t ]*(typedef[\w\t ]+)\b[\t ]*\n[\t ]*\{/$1 \{/mg;
+
+	for (1..10) {
+		$lines =~ s/(\([^\*\(\)]+\*?[\t ]*\))([\w\(\&])/$1 $2/mg or last;
+	}
 
 	open(FILE, ">", "$pathname") or die "Failed to open file $pathname: $!";
 	print FILE $lines;

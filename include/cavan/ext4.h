@@ -554,7 +554,7 @@ struct ext2_inode_large
 #if (__GNUC__ >= 4)
 #define ext4_offsetof(TYPE,MEMBER) __builtin_offsetof(TYPE,MEMBER)
 #else
-#define ext4_offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+#define ext4_offsetof(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
 #endif
 
 /*

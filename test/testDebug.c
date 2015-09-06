@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	}
 
 	catch_sigsegv();
-	*(int *)0 = 100;
+	*(int *) 0 = 100;
 
 	return 0;
 }

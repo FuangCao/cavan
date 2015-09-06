@@ -1228,7 +1228,7 @@ char *value2bitlist(u64 value, char *buff, size_t size, const char *sep)
 
 	for (i = sizeof(value) * 8 - 1, count = 0; i >= 0 && buff < buff_end; i--)
 	{
-		if ((value & (((u64)1) << i)) == 0)
+		if ((value & (((u64) 1) << i)) == 0)
 		{
 			continue;
 		}
