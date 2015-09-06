@@ -29,7 +29,7 @@ char *cavan_ext4_uuid_tostring(const u8 uuid[16], char *buff, size_t size)
 	int i = 0;
 	char *buff_bak = buff;
 	char *buff_end = buff + size;
-	int steps[] = {4, 2, 2, 2, 6};
+	int steps[] = { 4, 2, 2, 2, 6 };
 
 	while (buff < buff_end)
 	{
@@ -794,7 +794,7 @@ static int cavan_ext4_traversal_indirect(struct cavan_ext4_walker *walker, u32 *
 static int cavan_ext4_traversal_direct_indirect(struct cavan_ext4_walker *walker, u32 *blocks)
 {
 	int i;
-	static const char steps[] = {12, 1, 1, 1};
+	static const char steps[] = { 12, 1, 1, 1 };
 
 	for (i = 0; i < NELEM(steps); i++)
 	{

@@ -3,29 +3,42 @@
 use warnings;
 use strict;
 
+use File::Spec::Functions;
+
 sub find_soruce_files
 {
 	my @filelist;
 
 	foreach my $dirname (@_) {
-		opendir(DIR, $dirname) or die "Failed to opendir: $!";
+		if (-d $dirname) {
+			opendir(my $fd, $dirname) or die "Failed to opendir $dirname: $!";
 
-		while (readdir DIR) {
-			next if /^\./;
+			while (readdir $fd) {
+				next if /^\./;
 
-			my $pathname = "$dirname/$_";
-			if (-d $pathname) {
+				my $pathname = catfile($dirname, $_);
 				push @filelist, &find_soruce_files($pathname);
-			} elsif (/\.(c|h|cpp)$/) {
-				push @filelist, $pathname;
 			}
+
+			closedir $fd;
+		} elsif (/\.(c|h|cpp)$/) {
+			push @filelist, $dirname;
 		}
 	}
 
 	@filelist;
 }
 
+my $command = shift @ARGV;
+my $single_line = 1;
+if ($command eq 'm') {
+	$single_line = 0;
+} elsif ($command ne 's') {
+	die "usage: <s|m> [PATH]\n";
+}
+
 my @dirlist = @ARGV;
+
 if (@dirlist <= 0) {
 	push @dirlist, ".";
 }
@@ -36,19 +49,31 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 	open(FILE, "<", $pathname) or die "Failed to open file $pathname: $!";
 	my $lines = join '', <FILE>;
 
-	$lines =~ s/^(\s+.*\))[\s\\]*\n\s+\{/$1 {/mg;
-	$lines =~ s/^(\s+\})[\s\\]*\n?\s+(\w+)[\s\\]*\n?\s+\{/$1 $2 {/mg;
-	$lines =~ s/^(\s+\})[\s\\]*\n\s+(else\s+if)/$1 $2/mg;
-	$lines =~ s/^(\s+do)[\s\\]*\n\s+{/$1 {/mg;
-	$lines =~ s/^(\s+case.*:)[\s\\]*\n\s+{/$1 {/mg;
+	$lines =~ s/[\t ]+$//mg;
 
-	$lines =~ s/(.*=)[\s\\]*\n\s*\{/$1 {/mg;
-	$lines =~ s/^(\s+\})\s*,[\s\\]*\n\s+\{/$1, {/mg;
-	$lines =~ s/=\s*\{(\S.*\S)\}/= { $1 }/mg;
+	if ($single_line) {
+		$lines =~ s/^([\t ]+.*\))[\t ]*\n[\t ]+\{/$1 \{/mg;
+		$lines =~ s/^([\t ]+\})[\t ]*\n?[\t ]+(\w+)[\t ]*\n?[\t ]+\{/$1 $2 \{/mg;
+		$lines =~ s/^([\t ]+\})[\t ]*\n[\t ]+(else[\t ]+if)/$1 $2/mg;
+		$lines =~ s/^([\t ]+case.*:)[\t ]*\n[\t ]+{/$1 \{/mg;
 
-	$lines =~ s/^(\s*(?:struct|class)\s+\w+)\s*\n{/$1 {/mg;
+		$lines =~ s/(.*=)[\t ]*\n[\t ]*\{/$1 \{/mg;
+		$lines =~ s/^([\t ]+\})[\t ]*,[\t ]*\n[\t ]+\{/$1, \{/mg;
 
-	$lines =~ s/\s+\Z//g;
+		$lines =~ s/^([\t ]*(?:struct|class)[\t ]+\w+)[\t ]*\n\{/$1 \{/mg;
+	} else {
+		$lines =~ s/^([\t ]*)\}[\t ]*(\S.*\S)[\t ]*\{[\t ]*$/$1\}\n$1$2\n$1\{/mg;
+		$lines =~ s/^([\t ]*)(\S.*\S)[\t ]*\{[\t ]*$/$1$2\n$1\{/mg;
+		$lines =~ s/^([\t ]*)(.*=)[\t ]*\{[^\}\n]*$/$1$2\n$1\{/mg;
+		$lines =~ s/^([\t ]*)}[\t ]*,[\t ]*{/$1\},\n$1\{/mg;
+		$lines =~ s/^([\t ]*)(.+:)[\t ]*\{/$1$2\n$1\t\{/mg;
+	}
+
+	$lines =~ s/^([\t ]+.*\))[\t ]*\\[\t ]*\n[\t ]+\{/$1 \{/mg;
+	$lines =~ s/^([\t ]+do)[\t\\ ]*\n[\t ]+{/$1 \{/mg;
+	$lines =~ s/=[\t ]*\{(\S.*\S)\}/= \{ $1 \}/mg;
+	$lines =~ s/extern[\t ]+\"[Cc]\"[\t ]*\n[\t ]*{/extern "C" \{/mg;
+	$lines =~ s/^[\t ]*(typedef[\w\t ]+)\b[\t ]*\n[\t ]*\{/$1 \{/mg;
 
 	open(FILE, ">", "$pathname") or die "Failed to open file $pathname: $!";
 	print FILE $lines;

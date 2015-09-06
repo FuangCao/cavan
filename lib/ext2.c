@@ -375,7 +375,7 @@ static int ext2_read_directory_entry(struct ext2_desc *desc, off_t offset, struc
 
 const char *ext2_filetype_to_text(int type)
 {
-	const char *ext2_filetypes[] = {"Unknown", "Regular", "Directory", "Char_dev", "Block_dev", "Pipe", "Socket", "Symlink"};
+	const char *ext2_filetypes[] = { "Unknown", "Regular", "Directory", "Char_dev", "Block_dev", "Pipe", "Socket", "Symlink" };
 
 	if (type < 0 || (size_t) type >= ARRAY_SIZE(ext2_filetypes))
 	{

@@ -89,6 +89,31 @@ function s:set_keymap_python()
 	call s:set_keymap_sh()
 endfunction
 
+function s:set_keymap_perl()
+	map \\			:'<,'>s/^\(\s*\)#\+\s*/\1/g<CR>:set nohls<CR>
+	vmap /			:s/^\(\s*\)\(.\+\)/\1# \2/g<CR>:set nohls<CR>
+	vmap \\			:s/^\(\s*\)#\+\s*/\1/g<CR>:set nohls<CR>
+
+	imap (<Tab>			() {<CR>}<Esc>k$hhi
+	imap {<Tab>			{<CR>}<Esc>k$a<CR>
+	imap {}				{<Tab>
+
+	nmap <Tab>f			k$a<CR>for (my $i = 0; $i < ; $i++) {<CR>}<Esc>kk$hhhhhi
+	nmap f<Tab>			<Tab>f
+	nmap <Tab>w			k$a<CR>while (<Tab>
+	nmap <Tab>ii		k$a<CR>if (<Tab>
+	nmap <Tab>ee		k$a else {<Tab>
+	nmap e<Tab>			<Tab>ee
+	nmap <Tab>ei		k$a elsif (<Tab>
+	nmap ei<Tab>		<Tab>ei
+	nmap <Tab>r			k$a<CR>return ;<Left>
+	nmap r<Tab>			<Tab>r
+	nmap <Tab>b			k$a<CR>last;
+	nmap b<Tab>			<Tab>b
+	nmap <Tab>cc		k$a<CR>next;
+	nmap c<Tab>			<Tab>cc
+endfunction
+
 if has("autocmd")
 	autocmd FileType c		call s:set_keymap_c()
 	autocmd FileType dts	call s:set_keymap_c()
@@ -99,7 +124,7 @@ if has("autocmd")
 	autocmd FileType vim	call s:set_keymap_vim()
 	autocmd FileType sh		call s:set_keymap_sh()
 	autocmd FileType txt	call s:set_keymap_sh()
-	autocmd FileType perl	call s:set_keymap_sh()
 	autocmd FileType make	call s:set_keymap_make()
 	autocmd FileType python	call s:set_keymap_python()
+	autocmd FileType perl	call s:set_keymap_perl()
 endif

@@ -210,8 +210,7 @@ struct inet_file_request
 	void (*close_connect)(int sockfd);
 };
 
-typedef enum
-{
+typedef enum {
 	NETWORK_PROTOCOL_INVALID = -1,
 	NETWORK_PROTOCOL_FTP,
 	NETWORK_PROTOCOL_HTTP,
@@ -242,8 +241,7 @@ struct inet_connect
 	struct sockaddr_in addr;
 };
 
-typedef enum
-{
+typedef enum {
 	CAVAN_SYNC_TYPE_ACK,
 	CAVAN_SYNC_TYPE_DATA,
 } cavan_sync_type_t;

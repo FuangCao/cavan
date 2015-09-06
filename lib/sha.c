@@ -25,8 +25,7 @@
 	(ROL(A, 5) + (V))
 
 #define SHA1_FUNC2_BASE(B, E, V) \
-	do \
-	{ \
+	do { \
 		(E) += (V); \
 		(B) = ROR(B, 2); \
 	} while (0)
@@ -58,8 +57,7 @@
 #define SHA1_TRANSFROM(A, B, C, D, E, W, F) \
 	do { \
 		register const u32 *p, *ep; \
-		for (p = W, ep = p + 20; p < ep; p += 5) \
-		{ \
+		for (p = W, ep = p + 20; p < ep; p += 5) { \
 			SHA1_FUNC2##F(A, B, C, D, E, p[0]); \
 			SHA1_FUNC2##F(E, A, B, C, D, p[1]); \
 			SHA1_FUNC2##F(D, E, A, B, C, p[2]); \

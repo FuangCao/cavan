@@ -10,8 +10,7 @@
 
 __BEGIN_DECLS
 
-typedef enum cavan_thread_state
-{
+typedef enum cavan_thread_state {
 	CAVAN_THREAD_STATE_NONE,
 	CAVAN_THREAD_STATE_IDLE,
 	CAVAN_THREAD_STATE_RUNNING,

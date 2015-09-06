@@ -156,7 +156,7 @@ static void swan_keypad_handler(cavan_input_message_t *message, void *data)
 static void swan_show_picture(const char *state, int reset)
 {
 	unsigned int i;
-	const char *fb_devices[] = {"/dev/fb0", "/dev/graphice/fb0", "/dev/fb1", "/dev/graphice/fb1"};
+	const char *fb_devices[] = { "/dev/fb0", "/dev/graphice/fb0", "/dev/fb1", "/dev/graphice/fb1" };
 	struct cavan_input_service service;
 
 	close_console();
@@ -805,7 +805,7 @@ int fupgrade_simple(int pkg_fd)
 	int ret;
 	struct swan_package_info pkg_info;
 	struct swan_file_info file_info;
-	enum swan_image_type skip_imgs[] = {SWAN_IMAGE_RECOVERY};
+	enum swan_image_type skip_imgs[] = { SWAN_IMAGE_RECOVERY };
 	struct partition_desc part_descs[] =
 	{
 		{

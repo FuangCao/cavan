@@ -2377,7 +2377,7 @@ char *file_permition_tostring(mode_t mode, char *buff, char *buff_end)
 
 const char *month_tostring(int month)
 {
-	const char *month_table[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+	const char *month_table[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 	if (month >= 0 && month < (int) ARRAY_SIZE(month_table))
 	{
@@ -2389,7 +2389,7 @@ const char *month_tostring(int month)
 
 const char *week_tostring(int week)
 {
-	const char *week_table[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+	const char *week_table[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
 	if (week >= 0 && week < (int) ARRAY_SIZE(week_table))
 	{

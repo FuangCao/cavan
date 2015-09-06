@@ -59,7 +59,7 @@ char *dump_backtrace(char *buff, size_t size)
 char *address_to_symbol(const void *addr, char *buff, size_t size)
 {
 	backtrace_symbol_t symbol;
-	backtrace_frame_t stack = {(uintptr_t) addr, 0, 0};
+	backtrace_frame_t stack = { (uintptr_t) addr, 0, 0 };
 
 	get_backtrace_symbols(&stack, 1, &symbol);
 	format_backtrace_line(0, &stack, &symbol, buff, size);
@@ -113,7 +113,7 @@ char *dump_backtrace(char *buff, size_t size)
 char *address_to_symbol(const void *addr, char *buff, size_t size)
 {
 	char **strings;
-	void *ptrs[] = {(void *) addr};
+	void *ptrs[] = { (void *) addr };
 
 	strings = backtrace_symbols(ptrs, 1);
 	if (strings == NULL)
@@ -146,7 +146,7 @@ int dump_stack(void)
 
 static void sigsegv_handler(int signum, siginfo_t *info, void *ptr)
 {
-	static const char *si_codes[] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
+	static const char *si_codes[] = { "", "SEGV_MAPERR", "SEGV_ACCERR" };
 
 	printf("Segmentation Fault Trace:\n");
 	printf("info.si_signo = %d\n", signum);

@@ -24,8 +24,7 @@
 
 #define CAVAN_WEB_PROXY_PORT	9090
 
-typedef enum
-{
+typedef enum {
 	HTTP_REQ_CONNECT,
 	HTTP_REQ_DELETE,
 	HTTP_REQ_GET,

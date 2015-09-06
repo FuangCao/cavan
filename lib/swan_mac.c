@@ -118,7 +118,7 @@ static int read_oem_info(const char *emmc_dev, struct oem_info *oem_info)
 static char *get_bt_mac_file(const char *system_mnt_point, char *pathname, size_t size)
 {
 	unsigned int i;
-	const char *bt_mac_files[] = {I600_BT_MAC_FILE, I200_BT_MAC_FILE};
+	const char *bt_mac_files[] = { I600_BT_MAC_FILE, I200_BT_MAC_FILE };
 	char *name_p;
 
 	name_p = text_path_cat(pathname, size, system_mnt_point, NULL);

@@ -593,7 +593,7 @@ int libc_mount_auto(const char *source, const char *target, unsigned long flags,
 {
 	unsigned int i;
 	int ret;
-	const char *fstypes[] = {"ext4", "vfat", "fuseblk", "ext3", "ext2"};
+	const char *fstypes[] = { "ext4", "vfat", "fuseblk", "ext3", "ext2" };
 
 	for (i = 0; i < ARRAY_SIZE(fstypes); i++)
 	{
@@ -1387,7 +1387,7 @@ ssize_t partition_read_label(struct partition_desc *part_desc)
 ssize_t partition_read_label_auto(const char *dev_path, char *buff, size_t buff_len)
 {
 	unsigned int i;
-	const char *label_cmds[] = {"e2label", "dosfslabel", "ntfslabel"};
+	const char *label_cmds[] = { "e2label", "dosfslabel", "ntfslabel" };
 
 	for (i = 0; i < ARRAY_SIZE(label_cmds); i++)
 	{
@@ -1894,7 +1894,7 @@ int system_init(const char *path, char *argv[])
 {
 	int ret;
 	unsigned int i;
-	const char *init_paths[] = {"/sbin/init", "/bin/init", "/init", "/bin/sh", "/bin/bash"};
+	const char *init_paths[] = { "/sbin/init", "/bin/init", "/init", "/bin/sh", "/bin/bash" };
 
 	ret = mount_system_devices();
 	if (ret < 0)

@@ -10,8 +10,7 @@
 #include <cavan/font.h>
 #include <cavan/thread.h>
 
-typedef union
-{
+typedef union {
 	struct
 	{
 		u8 red;
@@ -23,8 +22,7 @@ typedef union
 	u32 value;
 } cavan_display_color_t;
 
-typedef struct
-{
+typedef struct {
 	u16 x;
 	u16 y;
 } cavan_display_point_t;

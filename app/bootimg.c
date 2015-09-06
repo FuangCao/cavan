@@ -379,7 +379,7 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		.ramdisk_addr = 0,
 		.second_addr = 0,
 		.tags_addr = 0,
-		.unused = {0, 0},
+		.unused = { 0, 0 },
 		.check_all = false
 	};
 

@@ -658,7 +658,7 @@ struct cavan_xml_document *cavan_xml_document_alloc(void)
 void cavan_xml_document_free(struct cavan_xml_document *doc)
 {
 	int i;
-	struct cavan_xml_tag *tags[] = {doc->attr, doc->tag};
+	struct cavan_xml_tag *tags[] = { doc->attr, doc->tag };
 
 	for (i = 0; i < NELEM(tags); i++)
 	{

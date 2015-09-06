@@ -38,8 +38,7 @@
 #define JWP_MCU_MAX_PAYLOAD			(JWP_MCU_MTU - JWP_MCU_HEADER_SIZE)
 #define JWP_MCU_GET_PAYLOAD(hdr)	(((jwp_u8 *) hdr) + JWP_MCU_HEADER_SIZE)
 
-typedef enum
-{
+typedef enum {
     /* Application initial state */
     app_state_init = 0,
 
@@ -63,8 +62,7 @@ typedef enum
 
 } app_state;
 
-typedef enum
-{
+typedef enum {
 	JWP_CSR_CMD_SET_STATE,
 	JWP_CSR_CMD_SET_FACTORY_SCAN,
 	JWP_CSR_CMD_SET_WHITE_LIST,
@@ -77,8 +75,7 @@ typedef enum
 	JWP_CSR_EVENT_FIRMWARE_INFO,
 } jwp_csr_command_t;
 
-typedef enum
-{
+typedef enum {
 	/* command */
 	MCU_REQ_IDENTIFY = 1,
 	MCU_REQ_ADD_OWNER = 2,
@@ -150,8 +147,7 @@ typedef enum
 	MCU_EVT_HBT_DATA = 225,
 } jwp_mcu_type_t;
 
-typedef enum
-{
+typedef enum {
 	MCU_ERROR_INVALID = 1,
 	MCU_ERROR_FORMAT_FAULT,
 	MCU_ERROR_NO_ARG,

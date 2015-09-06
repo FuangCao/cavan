@@ -110,8 +110,7 @@
 #define BTN_DPAD_RIGHT		0x223
 #endif
 
-typedef enum cavan_input_message_type
-{
+typedef enum cavan_input_message_type {
 	CAVAN_INPUT_MESSAGE_KEY,
 	CAVAN_INPUT_MESSAGE_MOVE,
 	CAVAN_INPUT_MESSAGE_TOUCH,
@@ -154,8 +153,7 @@ struct cavan_input_message_vector
 	int z;
 };
 
-typedef struct cavan_input_message
-{
+typedef struct cavan_input_message {
 	cavan_input_message_type_t type;
 
 	union

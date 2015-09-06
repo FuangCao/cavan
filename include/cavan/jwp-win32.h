@@ -118,8 +118,7 @@ typedef DWORD jwp_size_t;
 typedef bool jwp_bool;
 typedef HANDLE jwp_lock_t;
 
-typedef struct
-{
+typedef struct {
 	HANDLE handle;
 	jwp_u32 wait_count;
 } jwp_signal_t;

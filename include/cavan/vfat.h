@@ -40,8 +40,7 @@
 #define VFAT_BUILD_START_CLUSTER(entry) \
 	WORDS_DWORD((entry)->first_cluster_hi, (entry)->first_cluster_lo)
 
-typedef enum
-{
+typedef enum {
 	FAT12,
 	FAT16,
 	FAT32,

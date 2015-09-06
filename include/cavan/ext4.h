@@ -211,7 +211,8 @@ struct ext4_group_desc
  * zero.  Therefore, the hash version mod 4 should never be 0.
  * Sincerely, the paranoia department.
  */
-struct ext2_dx_root_info {
+struct ext2_dx_root_info
+{
 	u32 reserved_zero;
 	u8 hash_version; /* 0 now, 1 at release */
 	u8 info_length; /* 8 */
@@ -228,12 +229,14 @@ struct ext2_dx_root_info {
 
 #define EXT2_HASH_FLAG_INCOMPAT	0x1
 
-struct ext2_dx_entry {
+struct ext2_dx_entry
+{
 	u32 hash;
 	u32 block;
 };
 
-struct ext2_dx_countlimit {
+struct ext2_dx_countlimit
+{
 	u16 limit;
 	u16 count;
 };
@@ -318,7 +321,8 @@ struct ext2_dx_countlimit {
  */
 
 /* Used for online resize */
-struct ext2_new_group_input {
+struct ext2_new_group_input
+{
 	u32 group;		/* Group number for this data */
 	u32 block_bitmap;	/* Absolute block number of block bitmap */
 	u32 inode_bitmap;	/* Absolute block number of inode bitmap */
@@ -328,7 +332,8 @@ struct ext2_new_group_input {
 	u16 unused;		/* Number of reserved GDT blocks in group */
 };
 
-struct ext4_new_group_input {
+struct ext4_new_group_input
+{
 	u32 group;		/* Group number for this data */
 	u64 block_bitmap;	/* Absolute block number of block bitmap */
 	u64 inode_bitmap;	/* Absolute block number of inode bitmap */
@@ -356,7 +361,8 @@ struct ext4_new_group_input {
 /*
  * Structure of an inode on the disk
  */
-struct ext2_inode {
+struct ext2_inode
+{
 	u16	i_mode;		/* File mode */
 	u16	i_uid;		/* Low 16 bits of Owner Uid */
 	u32	i_size;		/* Size in bytes */
@@ -368,11 +374,14 @@ struct ext2_inode {
 	u16	i_links_count;	/* Links count */
 	u32	i_blocks;	/* Blocks count */
 	u32	i_flags;	/* File flags */
-	union {
-		struct {
+	union
+	{
+		struct
+		{
 			u32	l_i_version; /* was l_i_reserved1 */
 		} linux1;
-		struct {
+		struct
+		{
 			u32  h_i_translator;
 		} hurd1;
 	} osd1;				/* OS dependent 1 */
@@ -381,8 +390,10 @@ struct ext2_inode {
 	u32	i_file_acl;	/* File ACL */
 	u32	i_size_high;	/* Formerly i_dir_acl, directory ACL */
 	u32	i_faddr;	/* Fragment address */
-	union {
-		struct {
+	union
+	{
+		struct
+		{
 			u16	l_i_blocks_hi;
 			u16	l_i_file_acl_high;
 			u16	l_i_uid_high;	/* these 2 fields    */
@@ -390,7 +401,8 @@ struct ext2_inode {
 			u16	l_i_checksum_lo; /* crc32c(uuid+inum+inode) */
 			u16	l_i_reserved;
 		} linux2;
-		struct {
+		struct
+		{
 			u8	h_i_frag;	/* Fragment number */
 			u8	h_i_fsize;	/* Fragment size */
 			u16	h_i_mode_high;
@@ -404,7 +416,8 @@ struct ext2_inode {
 /*
  * Permanent part of an large inode on the disk
  */
-struct ext2_inode_large {
+struct ext2_inode_large
+{
 	u16	i_mode;		/* File mode */
 	u16	i_uid;		/* Low 16 bits of Owner Uid */
 	u32	i_size;		/* Size in bytes */
@@ -416,11 +429,14 @@ struct ext2_inode_large {
 	u16	i_links_count;	/* Links count */
 	u32	i_blocks;	/* Blocks count */
 	u32	i_flags;	/* File flags */
-	union {
-		struct {
+	union
+	{
+		struct
+		{
 			u32	l_i_version; /* was l_i_reserved1 */
 		} linux1;
-		struct {
+		struct
+		{
 			u32  h_i_translator;
 		} hurd1;
 	} osd1;				/* OS dependent 1 */
@@ -429,8 +445,10 @@ struct ext2_inode_large {
 	u32	i_file_acl;	/* File ACL */
 	u32	i_size_high;	/* Formerly i_dir_acl, directory ACL */
 	u32	i_faddr;	/* Fragment address */
-	union {
-		struct {
+	union
+	{
+		struct
+		{
 			u16	l_i_blocks_hi;
 			u16	l_i_file_acl_high;
 			u16	l_i_uid_high;	/* these 2 fields    */
@@ -438,7 +456,8 @@ struct ext2_inode_large {
 			u16	l_i_checksum_lo; /* crc32c(uuid+inum+inode) */
 			u16	l_i_reserved;
 		} linux2;
-		struct {
+		struct
+		{
 			u8	h_i_frag;	/* Fragment number */
 			u8	h_i_fsize;	/* Fragment size */
 			u16	h_i_mode_high;
@@ -541,7 +560,8 @@ struct ext2_inode_large {
 /*
  * Structure of the super block
  */
-struct ext2_super_block {
+struct ext2_super_block
+{
 	u32	s_inodes_count;		/* Inodes count */
 	u32	s_blocks_count;		/* Blocks count */
 	u32	s_r_blocks_count;	/* Reserved blocks count */
@@ -767,7 +787,8 @@ struct ext2_super_block {
  */
 #define EXT2_NAME_LEN 255
 
-struct ext2_dir_entry {
+struct ext2_dir_entry
+{
 	u32	inode;			/* Inode number */
 	u16	rec_len;		/* Directory entry length */
 	u16	name_len;		/* Name length */
@@ -780,7 +801,8 @@ struct ext2_dir_entry {
  * bigger than 255 chars, it's safe to reclaim the extra byte for the
  * file_type field.
  */
-struct ext2_dir_entry_2 {
+struct ext2_dir_entry_2
+{
 	u32	inode;			/* Inode number */
 	u16	rec_len;		/* Directory entry length */
 	u8	name_len;		/* Name length */
@@ -836,7 +858,8 @@ struct ext2_dir_entry_2 {
 #define EXT4_MMP_SEQ_FSCK  0xE24D4D50U /* mmp_seq value when being fscked */
 #define EXT4_MMP_SEQ_MAX   0xE24D4D4FU /* maximum valid mmp_seq value */
 
-struct mmp_struct {
+struct mmp_struct
+{
 	u32	mmp_magic;		/* Magic number for MMP */
 	u32	mmp_seq;		/* Sequence no. updated periodically */
 	u64	mmp_time;		/* Time last updated */

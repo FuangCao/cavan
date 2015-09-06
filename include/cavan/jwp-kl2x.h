@@ -116,14 +116,12 @@ typedef unsigned long jwp_u32;
 typedef jwp_u32 jwp_size_t;
 typedef LWSEM_STRUCT jwp_lock_t;
 
-typedef enum
-{
+typedef enum {
 	false = 0,
 	true = 1,
 } jwp_bool;
 
-typedef struct
-{
+typedef struct {
 	LWSEM_STRUCT sem;
 	jwp_u32 wait_count;
 } jwp_signal_t;

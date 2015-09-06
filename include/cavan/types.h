@@ -46,35 +46,30 @@ typedef signed char schar;
 typedef char * pchar, text;
 
 #ifndef __cplusplus
-typedef enum
-{
+typedef enum {
 	false,
 	true
 } bool;
 #endif
 
-typedef enum
-{
+typedef enum {
 	False,
 	True,
 } Bool;
 
-typedef enum
-{
+typedef enum {
 	FALSE,
 	TRUE,
 } BOOL;
 
-typedef enum
-{
+typedef enum {
 	WALKER_ACTION_CONTINUE,
 	WALKER_ACTION_COMPLETE,
 	WALKER_ACTION_EOF,
 	WALKER_ACTION_STOP
 } walker_action_t;
 
-typedef union
-{
+typedef union {
 	void *type_void;
 
 	char type_char;
@@ -88,8 +83,7 @@ typedef union
 	unsigned long type_ulong;
 } cavan_shared_data_t;
 
-typedef struct
-{
+typedef struct {
 	int x;
 	int y;
 } cavan_point_t;

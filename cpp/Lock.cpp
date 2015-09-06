@@ -22,10 +22,13 @@
 
 ThreadLock::ThreadLock(bool acquire)
 {
-	if (acquire && MutexLock::acquire() == 0) {
+	if (acquire && MutexLock::acquire() == 0)
+	{
 		mOwner = pthread_self();
 		mHeldCount = 1;
-	} else {
+	}
+	else
+	{
 		mOwner = 0;
 		mHeldCount = 0;
 	}
@@ -44,7 +47,8 @@ int ThreadLock::acquire(bool trylock)
 	{
 		int ret = trylock ? MutexLock::tryLock() : MutexLock::acquire();
 
-		if (ret < 0) {
+		if (ret < 0)
+		{
 			return ret;
 		}
 

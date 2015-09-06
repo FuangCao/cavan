@@ -10,10 +10,8 @@
 #include <sys/wait.h>
 
 #define FIND_EXEC_COMMAND_MAIN(map) \
-	int main(int argc, char *argv[]) \
-	{ \
-		if (argc > 1) \
-		{ \
+	int main(int argc, char *argv[]) { \
+		if (argc > 1) { \
 			return find_and_exec_command(map, ARRAY_SIZE(map), argc - 1, argv + 1); \
 		} \
 		return print_command_table(map, map + ARRAY_SIZE(map)); \
@@ -27,8 +25,7 @@
 	}; \
 	FIND_EXEC_COMMAND_MAIN(__local_cmd_map);
 
-typedef enum
-{
+typedef enum {
 	CAVAN_COMMAND_OPTION_ADB = 0x256,
 	CAVAN_COMMAND_OPTION_AUTO,
 	CAVAN_COMMAND_OPTION_APPEND,

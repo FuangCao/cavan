@@ -4,47 +4,38 @@
 #include <cavan/memory.h>
 
 #define MEM_COPY_FUNC(name, bits) \
-	u##bits *name##bits(u##bits *dest, const u##bits *src, size_t count) \
-	{ \
+	u##bits *name##bits(u##bits *dest, const u##bits *src, size_t count) { \
 		const u##bits *end; \
-		for (end = src + count; src < end; src++, dest++) \
-		{ \
+		for (end = src + count; src < end; src++, dest++) { \
 			*dest = *src; \
 		} \
 		return dest; \
 	} \
-	u##bits *name##_invert##bits(u##bits *dest, const u##bits *src, size_t count) \
-	{ \
+	u##bits *name##_invert##bits(u##bits *dest, const u##bits *src, size_t count) { \
 		const u##bits *last; \
-		for (last = src + count - 1; last >= src; dest++, last--) \
-		{ \
+		for (last = src + count - 1; last >= src; dest++, last--) { \
 			*dest = *last; \
 		} \
 		return dest; \
 	} \
-	u##bits *name##_decrease##bits(u##bits *dest, const u##bits *src, size_t count) \
-	{ \
+	u##bits *name##_decrease##bits(u##bits *dest, const u##bits *src, size_t count) { \
 		const u##bits *start; \
-		for (start = src - count; src > start; src--, dest--) \
-		{ \
+		for (start = src - count; src > start; src--, dest--) { \
 			*dest = *src; \
 		} \
 		return ADDR_ADD(dest, ((bits) >> 3) - 1); \
 	}
 
 #define MEM_SET_FUNC(name, bits) \
-	void name##bits(u##bits *mem, u##bits value, size_t count) \
-	{ \
+	void name##bits(u##bits *mem, u##bits value, size_t count) { \
 		u##bits *mem_end; \
-		for (mem_end = mem + count; mem < mem_end; mem++) \
-		{ \
+		for (mem_end = mem + count; mem < mem_end; mem++) { \
 			*mem = value; \
 		} \
 	}
 
 #define NUMBER_SWAP_FUNC(name, bits) \
-	void name##bits(u##bits *num1, u##bits *num2) \
-	{ \
+	void name##bits(u##bits *num1, u##bits *num2) { \
 		u##bits temp; \
 		temp = *num1; \
 		*num1 = *num2; \
@@ -52,11 +43,9 @@
 	}
 
 #define MEM_SWAP_FUNC(bits) \
-	void mem_swap##bits(u##bits *dest, const u##bits *src, size_t count) \
-	{ \
+	void mem_swap##bits(u##bits *dest, const u##bits *src, size_t count) { \
 		const u##bits *src_end; \
-		for (src_end = src + count; src < src_end; dest++, src++) \
-		{ \
+		for (src_end = src + count; src < src_end; dest++, src++) { \
 			*dest = SWAP##bits(*src); \
 		} \
 	}

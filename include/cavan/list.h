@@ -10,8 +10,7 @@
 		struct single_link_node *__node, *__next; \
 		struct single_link *__link = link; \
 		pthread_mutex_lock(&__link->lock); \
-		for (__node = __link->head_node.next; __node; __node = __next) \
-		{ \
+		for (__node = __link->head_node.next; __node; __node = __next) { \
 			__next = __node->next; \
 			entry = single_link_get_container(__link, __node);
 
@@ -31,8 +30,7 @@
 		struct single_link_node *__head, *__node, *__next; \
 		struct circle_link *__link = link; \
 		pthread_mutex_lock(&__link->lock); \
-		for (__head = &link->head_node, __node = __head->next; __node != __head; __node = __next) \
-		{ \
+		for (__head = &link->head_node, __node = __head->next; __node != __head; __node = __next) { \
 			__next = __node->next; \
 			entry = circle_link_get_container(__link, __node);
 
@@ -41,8 +39,7 @@
 		struct double_link_node *__head, *__node, *__next; \
 		struct double_link *__link = link; \
 		pthread_mutex_lock(&__link->lock); \
-		for (__head = &__link->head_node, __node = __head->next; __node != __head; __node = __next) \
-		{ \
+		for (__head = &__link->head_node, __node = __head->next; __node != __head; __node = __next) { \
 			__next = __node->next; \
 			entry = double_link_get_container(__link, __node);
 

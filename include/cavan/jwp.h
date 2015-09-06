@@ -64,8 +64,7 @@
 
 // ============================================================
 
-typedef enum
-{
+typedef enum {
 	JWP_PKG_ACK,
 	JWP_PKG_CMD,
 	JWP_PKG_SYNC,
@@ -74,15 +73,13 @@ typedef enum
 	JWP_PKG_COUNT
 } jwp_package_t;
 
-typedef enum
-{
+typedef enum {
 	JWP_STATE_INIT,
 	JWP_STATE_READY,
 	JWP_STATE_FAULT
 } jwp_state_t;
 
-typedef enum
-{
+typedef enum {
 #if JWP_TX_HW_QUEUE_ENABLE
 	JWP_QUEUE_TX_HW,
 #endif
@@ -101,8 +98,7 @@ typedef enum
 	JWP_QUEUE_COUNT
 } jwp_queue_t;
 
-typedef enum
-{
+typedef enum {
 #if JWP_TX_TIMER_ENABLE
 	JWP_TIMER_TX,
 #endif
@@ -118,8 +114,7 @@ typedef enum
 	JWP_TIMER_COUNT
 } jwp_timer_t;
 
-typedef enum
-{
+typedef enum {
 	JWP_DEVICE_LOCAL,
 	JWP_DEVICE_REMOTE,
 	JWP_DEVICE_COUNT

@@ -25,8 +25,7 @@
 #include <cavan++/List.h>
 #include <cavan++/Stack.h>
 
-typedef enum
-{
+typedef enum {
 	OPERATOR_TYPE1_LEFT,
 	OPERATOR_TYPE1_RIGHT,
 	OPERATOR_TYPE2,
@@ -34,8 +33,7 @@ typedef enum
 	OPERATOR_TYPE_CONSTANT,
 } operator_type_t;
 
-typedef enum
-{
+typedef enum {
 	FIELD_TYPE_NONE,
 	FIELD_TYPE_OPERATOR,
 	FIELD_TYPE_VALUE,

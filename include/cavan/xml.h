@@ -18,8 +18,7 @@
 #define pr_parser_error_info(lineno, fmt, args ...) \
 	pr_red_info("(" fmt ") at line[%d]", ##args, lineno)
 
-typedef enum cavan_xml_token
-{
+typedef enum cavan_xml_token {
 	CAVAN_XML_TOKEN_NONE,
 	CAVAN_XML_TOKEN_TAG_ATTR,
 	CAVAN_XML_TOKEN_TAG_SINGLE,

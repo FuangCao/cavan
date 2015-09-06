@@ -87,7 +87,7 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 {
 	int sockfd;
 	unsigned int i;
-	u16 ports[] = {port, ADB_PORT1, ADB_PORT2};
+	u16 ports[] = { port, ADB_PORT1, ADB_PORT2 };
 	struct sockaddr_in addr;
 
 	sockfd = inet_socket(SOCK_STREAM);

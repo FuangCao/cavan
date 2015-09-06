@@ -21,8 +21,7 @@
 
 #include <cavan.h>
 
-typedef enum cavan_font_type
-{
+typedef enum cavan_font_type {
 	CAVAN_FONT_10X18,
 	CAVAN_FONT_12X22,
 	CAVAN_FONT_18X32,

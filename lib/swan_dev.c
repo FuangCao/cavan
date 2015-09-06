@@ -221,7 +221,7 @@ int swan_copy(const char *cache_file)
 {
 	unsigned int i;
 	int ret;
-	const char *dev_list[] = {SDCARD_DEVICE "p1", SDCARD_DEVICE, EMMC_DEVICE "p1", EMMC_DEVICE};
+	const char *dev_list[] = { SDCARD_DEVICE "p1", SDCARD_DEVICE, EMMC_DEVICE "p1", EMMC_DEVICE };
 
 	for (i = 0; i < ARRAY_SIZE(dev_list); i++)
 	{
@@ -264,7 +264,7 @@ int swan_find_upgrade_file(const char *tmp_file)
 {
 	unsigned int i;
 	int ret;
-	const char *dev_list[] = {SDCARD_DEVICE "p1", SDCARD_DEVICE, EMMC_DEVICE "p1", EMMC_DEVICE};
+	const char *dev_list[] = { SDCARD_DEVICE "p1", SDCARD_DEVICE, EMMC_DEVICE "p1", EMMC_DEVICE };
 
 	system_command("rm /tmp/* %s -rf", tmp_file);
 

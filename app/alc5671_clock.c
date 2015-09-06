@@ -23,7 +23,8 @@
 #define ALC5671_PLL_N_MAX	0x1FF
 #define ALC5671_PLL_M_MAX	0x0F
 
-struct alc5671_pll_config {
+struct alc5671_pll_config
+{
 	bool bypass;
 	u16 M, N, K;
 };

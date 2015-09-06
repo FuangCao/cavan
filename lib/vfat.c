@@ -346,7 +346,7 @@ static char *cavan_vfat_build_short_name(const u8 name[11], char *buff, size_t s
 {
 	int i;
 	char *buff_end = buff + size;
-	static const int size_array[] = {8, 3};
+	static const int size_array[] = { 8, 3 };
 
 	for (i = 0; i < 2; i++)
 	{

@@ -213,8 +213,7 @@ __BEGIN_DECLS
 
 #define show_valueh(val) \
 	do { \
-		switch (sizeof(val)) \
-		{ \
+		switch (sizeof(val)) { \
 		case 8: \
 			show_value_base(val, "16"); \
 			break; \
@@ -231,8 +230,7 @@ __BEGIN_DECLS
 
 #define print_array(a) \
 	do { \
-		switch (sizeof(a[0])) \
-		{ \
+		switch (sizeof(a[0])) { \
 		case 8: \
 			text_show64((const u64 *) a, ARRAY_SIZE(a)); \
 			break; \

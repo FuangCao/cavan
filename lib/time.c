@@ -21,7 +21,8 @@
 #include <cavan/time.h>
 
 /* How many days come before each month (0-12). */
-static const u16 cavan_time_mon_yday[2][12] = {
+static const u16 cavan_time_mon_yday[2][12] =
+{
 	/* Normal years. */
 	{ 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 },
 	/* Leap years. */

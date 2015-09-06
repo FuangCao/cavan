@@ -133,7 +133,7 @@ int mtd_open_char_device(int index, int flags)
 	unsigned int i;
 	int fd;
 	char buff[1024];
-	const char *mtd_char_dirs[] = {"/dev", "/dev/mtd"};
+	const char *mtd_char_dirs[] = { "/dev", "/dev/mtd" };
 
 	for (i = 0; i < NELEM(mtd_char_dirs); i++)
 	{

@@ -9,8 +9,7 @@
 #include <cavan.h>
 #include <cavan/list.h>
 
-typedef enum cavan_service_state
-{
+typedef enum cavan_service_state {
 	CAVAN_SERVICE_STATE_RUNNING,
 	CAVAN_SERVICE_STATE_STOPPED,
 	CAVAN_SERVICE_STATE_STOPPING,
