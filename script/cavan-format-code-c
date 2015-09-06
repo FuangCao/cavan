@@ -1,0 +1,55 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+sub find_soruce_files
+{
+	my @filelist;
+
+	foreach my $dirname (@_) {
+		opendir(DIR, $dirname) or die "Failed to opendir: $!";
+
+		while (readdir DIR) {
+			next if /^\./;
+
+			my $pathname = "$dirname/$_";
+			if (-d $pathname) {
+				push @filelist, &find_soruce_files($pathname);
+			} elsif (/\.(c|h|cpp)$/) {
+				push @filelist, $pathname;
+			}
+		}
+	}
+
+	@filelist;
+}
+
+my @dirlist = @ARGV;
+if (@dirlist <= 0) {
+	push @dirlist, ".";
+}
+
+foreach my $pathname (&find_soruce_files(@dirlist)) {
+	print "pathname = $pathname\n";
+
+	open(FILE, "<", $pathname) or die "Failed to open file $pathname: $!";
+	my $lines = join '', <FILE>;
+
+	$lines =~ s/^(\s+.*\))[\s\\]*\n\s+\{/$1 {/mg;
+	$lines =~ s/^(\s+\})[\s\\]*\n?\s+(\w+)[\s\\]*\n?\s+\{/$1 $2 {/mg;
+	$lines =~ s/^(\s+\})[\s\\]*\n\s+(else\s+if)/$1 $2/mg;
+	$lines =~ s/^(\s+do)[\s\\]*\n\s+{/$1 {/mg;
+	$lines =~ s/^(\s+case.*:)[\s\\]*\n\s+{/$1 {/mg;
+
+	$lines =~ s/(.*=)[\s\\]*\n\s*\{/$1 {/mg;
+	$lines =~ s/^(\s+\})\s*,[\s\\]*\n\s+\{/$1, {/mg;
+	$lines =~ s/=\s*\{(\S.*\S)\}/= { $1 }/mg;
+
+	$lines =~ s/^(\s*(?:struct|class)\s+\w+)\s*\n{/$1 {/mg;
+
+	$lines =~ s/\s+\Z//g;
+
+	open(FILE, ">", "$pathname") or die "Failed to open file $pathname: $!";
+	print FILE $lines;
+}

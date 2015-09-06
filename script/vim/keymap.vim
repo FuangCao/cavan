@@ -99,6 +99,7 @@ if has("autocmd")
 	autocmd FileType vim	call s:set_keymap_vim()
 	autocmd FileType sh		call s:set_keymap_sh()
 	autocmd FileType txt	call s:set_keymap_sh()
+	autocmd FileType perl	call s:set_keymap_sh()
 	autocmd FileType make	call s:set_keymap_make()
 	autocmd FileType python	call s:set_keymap_python()
 endif
