@@ -6,8 +6,7 @@ from python import cavan_stdio
 
 if __name__ == "__main__":
 	if len(sys.argv) < 2:
-		cavan_stdio.pr_warn_info("%s: Too a few argument" % sys.argv[0])
-		sys.exit(-1)
+		sys.exit(0)
 
 	manager = cavan_android.AndroidManager()
 	if manager.push(sys.argv[1:]):

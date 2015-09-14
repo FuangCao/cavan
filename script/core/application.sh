@@ -179,23 +179,52 @@ function cavan-set-jdk-version()
 	source ${CAVAN_HOME}/script/core/bashrc.sh
 }
 
+function cavan-chdir-by-file()
+{
+	local target_file
+
+	target_file=$1
+	[ "${target_file}" ] || return 1
+
+	while :;
+	do
+		[ -f "${target_file}" ] &&
+		{
+			return 0
+		}
+
+		cd .. || break
+		[ "${PWD}" = "/" ] && break
+	done
+
+	return 1
+}
+
+function cavan-get-root-by-file()
+{
+	(cavan-chdir-by-file $1 && pwd)
+}
+
 function cavan-mm-push()
 {
-	local project_name file_list
+	local kernel_root file_list
 
-	project_name=$(basename ${PWD})
+	kernel_root=$(cavan-get-root-by-file "include/linux/kernel.h")
 
-	echo "project_name = $project_name"
-
-	if [ -d "arch/arm" -a "$project_name" = "kernel" ]
+	if [ "${kernel_root}" ]
 	then
-		make ${1-jw100.img} -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
+		echo "kernel_root = ${kernel_root}"
+		(
+			cd "${kernel_root}" || return 1
+			[ -e ".config" ] || make ${1-jw100}_defconfig || return 1
+			make ${1-jw100.img} -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
+		) || return 1
 	else
 		file_list=$(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g'; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
 		cavan-android-push ${file_list} || return 1
 	fi
 
-	return 0;
+	return 0
 }
 
 function cavan-mm-push-reboot()
