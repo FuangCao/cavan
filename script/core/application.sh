@@ -181,7 +181,7 @@ function cavan-set-jdk-version()
 
 function cavan-mm-push()
 {
-	local project_name
+	local project_name file_list
 
 	project_name=$(basename ${PWD})
 
@@ -191,7 +191,8 @@ function cavan-mm-push()
 	then
 		make ${1-jw100.img} -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
 	else
-		cavan-android-push $(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g') || return 1
+		file_list=$(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g'; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
+		cavan-android-push ${file_list} || return 1
 	fi
 
 	return 0;
