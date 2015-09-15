@@ -7,6 +7,7 @@
  */
 
 #include <cavan.h>
+#include <sys/epoll.h>
 
 __BEGIN_DECLS
 
@@ -38,7 +39,7 @@ struct cavan_thread
 		};
 	};
 
-	struct pollfd pfd;
+	int epoll_fd;
 
 	pthread_cond_t cond;
 	pthread_mutex_t lock;
@@ -71,6 +72,12 @@ void cavan_thread_suspend(struct cavan_thread *thread);
 void cavan_thread_resume(struct cavan_thread *thread);
 int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time);
 int cavan_thread_msleep(struct cavan_thread *thread, u32 msec);
+
+int cavan_thread_epoll_add(struct cavan_thread *thread, int fd, u32 events);
+int cavan_thread_epoll_remove(struct cavan_thread *thread, int fd);
+int cavan_thread_epoll_modify(struct cavan_thread *thread, int fd, u32 events);
+int cavan_thread_epoll_wait(struct cavan_thread *thread, struct epoll_event *events, int count, int timeout);
+int cavan_thread_epoll_wait_event(struct cavan_thread *thread, int timeout);
 
 void cavan_lock_init(struct cavan_lock *lock, bool acquire);
 void cavan_lock_deinit(struct cavan_lock *lock);

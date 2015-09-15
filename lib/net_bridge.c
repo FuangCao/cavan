@@ -178,8 +178,12 @@ static int cavan_net_bridge_thread_handler(struct cavan_thread *thread, void *da
 	}
 
 	pfd = pfds;
-	*pfd++ = thread->pfd;
+	pfd->fd = thread->rd_event_fd;
+	pfd->events = POLLIN;
+	pfd->revents = 0;
+
 	port = bridge->head;
+	pfd++;
 
 	while (1)
 	{

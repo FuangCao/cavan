@@ -8,6 +8,8 @@
 #include <cavan/timer.h>
 #include <cavan/thread.h>
 
+#define THREAD_EPOLL_SIZE	8
+
 #ifndef CAVAN_THREAD_DEBUG
 #define CAVAN_THREAD_DEBUG	0
 #endif
@@ -43,7 +45,7 @@ int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32
 {
 	int ret;
 
-	ret = poll(&thread->pfd, 1, msec);
+	ret = cavan_thread_epoll_wait_event(thread, msec);
 	if (ret < 0)
 	{
 		pr_error_info("poll");
@@ -73,7 +75,7 @@ int cavan_thread_wait_event(struct cavan_thread *thread, u32 msec)
 	thread->state = CAVAN_THREAD_STATE_WAIT_EVENT;
 
 	pthread_mutex_unlock(&thread->lock);
-	ret = poll(&thread->pfd, 1, msec);
+	ret = cavan_thread_epoll_wait_event(thread, msec);
 	pthread_mutex_lock(&thread->lock);
 
 	if (thread->state == CAVAN_THREAD_STATE_WAIT_EVENT)
@@ -121,10 +123,105 @@ int cavan_thread_msleep(struct cavan_thread *thread, u32 msec)
 	return cavan_thread_msleep_until(thread, &time);
 }
 
+int cavan_thread_epoll_add(struct cavan_thread *thread, int fd, u32 events)
+{
+	int ret;
+    struct epoll_event event =
+    {
+		.events = events,
+		.data.fd = fd
+    };
+
+	ret = epoll_ctl(thread->epoll_fd, EPOLL_CTL_ADD, fd, &event);
+	if (ret < 0)
+	{
+		pr_err_info("epoll_ctl EPOLL_CTL_ADD");
+		return ret;
+	}
+
+	return 0;
+}
+
+int cavan_thread_epoll_remove(struct cavan_thread *thread, int fd)
+{
+	int ret;
+
+	ret = epoll_ctl(thread->epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+	if (ret < 0)
+	{
+		pr_err_info("epoll_ctl EPOLL_CTL_DEL");
+		return ret;
+	}
+
+	return 0;
+}
+
+int cavan_thread_epoll_modify(struct cavan_thread *thread, int fd, u32 events)
+{
+	int ret;
+    struct epoll_event event =
+    {
+		.events = events,
+		.data.fd = fd
+    };
+
+	ret = epoll_ctl(thread->epoll_fd, EPOLL_CTL_MOD, fd, &event);
+	if (ret < 0)
+	{
+		pr_err_info("epoll_ctl EPOLL_CTL_MOD");
+		return ret;
+	}
+
+	return 0;
+}
+
+int cavan_thread_epoll_wait(struct cavan_thread *thread, struct epoll_event *events, int count, int timeout)
+{
+	int ret;
+
+	ret = epoll_wait(thread->epoll_fd, events, count, timeout);
+	if (ret < 0)
+	{
+		pr_err_info("epoll_wait");
+		return ret;
+	}
+
+	return 0;
+}
+
+int cavan_thread_epoll_wait_event(struct cavan_thread *thread, int timeout)
+{
+	while (1)
+	{
+		int ret;
+		struct epoll_event *p, *p_end, events[10];
+
+		ret = cavan_thread_epoll_wait(thread, events, NELEM(events), timeout);
+		if (ret <= 0)
+		{
+			if (ret < 0)
+			{
+				pr_red_info("cavan_thread_epoll_wait");
+			}
+
+			return ret;
+		}
+
+		for (p = events, p_end = p + ret; p < p_end; p++)
+		{
+			if (p->data.fd == thread->rd_event_fd)
+			{
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
 int cavan_thread_init(struct cavan_thread *thread, void *data)
 {
 	int ret;
-	struct pollfd *pfd;
 
 	if (thread->handler == NULL)
 	{
@@ -153,10 +250,34 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 		goto out_pthread_cond_destroy;
 	}
 
-	pfd = &thread->pfd;
-	pfd->fd = thread->pipefd[0];
-	pfd->events = POLLIN;
-	pfd->revents = 0;
+	ret = fcntl(thread->pipefd[0], F_SETFL, O_NONBLOCK);
+	if (ret < 0)
+	{
+		pr_err_info("fcntl");
+		goto out_close_pipe;
+	}
+
+	ret = fcntl(thread->pipefd[1], F_SETFL, O_NONBLOCK);
+	if (ret < 0)
+	{
+		pr_err_info("fcntl");
+		goto out_close_pipe;
+	}
+
+	thread->epoll_fd = epoll_create(THREAD_EPOLL_SIZE);
+	if (thread->epoll_fd < 0)
+	{
+		pr_err_info("epoll_create");
+		ret = thread->epoll_fd;
+		goto out_close_pipe;
+	}
+
+	ret = cavan_thread_epoll_add(thread, thread->pipefd[0], EPOLLIN);
+	if (ret < 0)
+	{
+		pr_err_info("cavan_thread_epoll_add");
+		goto out_close_epoll;
+	}
 
 	thread->state = CAVAN_THREAD_STATE_NONE;
 	thread->private_data = data;
@@ -168,6 +289,11 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 
 	return 0;
 
+out_close_epoll:
+	close(thread->epoll_fd);
+out_close_pipe:
+	close(thread->pipefd[0]);
+	close(thread->pipefd[1]);
 out_pthread_cond_destroy:
 	pthread_cond_destroy(&thread->cond);
 out_pthread_mutex_destroy:
@@ -177,6 +303,8 @@ out_pthread_mutex_destroy:
 
 void cavan_thread_deinit(struct cavan_thread *thread)
 {
+	close(thread->epoll_fd);
+
 	close(thread->pipefd[0]);
 	close(thread->pipefd[1]);
 

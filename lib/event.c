@@ -1899,7 +1899,10 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 
 	service->pfds = pfd;
 
-	*pfd = service->thread.pfd;
+	pfd->fd = service->thread.rd_event_fd;
+	pfd->events = POLLIN;
+	pfd->revents = 0;
+
 	link = &service->link;
 
 	pthread_mutex_lock(&link->lock);
