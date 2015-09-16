@@ -207,6 +207,9 @@ int cavan_temp_file_open(char *pathname, size_t size, const char *filename);
 off_t cavan_file_seek_next_page(int fd, size_t page_size);
 off_t cavan_file_seek_page_align(int fd, off_t offset, size_t page_size);
 
+struct dirent *cavan_readdir_skip_dot(DIR *dp);
+struct dirent *cavan_readdir_skip_hidden(DIR *dp);
+
 // ============================================================
 
 static inline int file_open_ro(const char *file_path)

@@ -12,18 +12,37 @@ static void show_usage(void)
 	println("inotify -c command pathnames");
 }
 
-static int cavan_inotify_event_handle(const char *pathname, struct inotify_event *event, void *data)
+static int cavan_inotify_event_handle(struct cavan_inotify_descriptor *desc, struct cavan_inotify_watch *watch, struct inotify_event *event)
 {
-	char command[1024];
+	char buff[1024];
+	const char *pathname;
+	const char *command = desc->private_data;
 
-	text_replace_text(data, command, "{}", pathname);
-
-	if (system(command) == 0)
+	if (event->len > 0)
 	{
-		return 0;
+		pathname = buff;
+		text_path_cat(buff, sizeof(buff), watch->pathname, event->name);
+	}
+	else
+	{
+		pathname = watch->pathname;
 	}
 
-	return -1;
+	if (command && command[0])
+	{
+		setenv("CAVAN_INOTIFY_PATH", pathname, 1);
+
+		if (system(command) != 0)
+		{
+			return -EFAULT;
+		}
+	}
+	else
+	{
+		puts(pathname);
+	}
+
+	return 0;
 }
 
 int main(int argc, char *argv[])
@@ -55,10 +74,8 @@ int main(int argc, char *argv[])
 		},
 	};
 	int ret;
-	char command[1024];
+	const char *command = NULL;
 	struct cavan_inotify_descriptor desc;
-
-	command[0] = 0;
 
 	while ((c = getopt_long(argc, argv, "vVhHc:C:", long_option, &option_index)) != EOF)
 	{
@@ -80,20 +97,13 @@ int main(int argc, char *argv[])
 		case 'c':
 		case 'C':
 		case CAVAN_COMMAND_OPTION_COMMAND:
-			text_copy(command, optarg);
+			command = optarg;
 			break;
 
 		default:
 			show_usage();
 			return -EINVAL;
 		}
-	}
-
-	if (command[0] == 0)
-	{
-		pr_red_info("Please give a command");
-		show_usage();
-		return -EINVAL;
 	}
 
 	if (optind >= argc)
@@ -103,7 +113,9 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	ret = cavan_inotify_init(&desc);
+	desc.handle = cavan_inotify_event_handle;
+
+	ret = cavan_inotify_init(&desc, __UNCONST(command));
 	if (ret < 0)
 	{
 		error_msg("cavan_inotify_init");
@@ -112,7 +124,7 @@ int main(int argc, char *argv[])
 
 	while (optind < argc)
 	{
-		ret = cavan_inotify_register_watch(&desc, argv[optind], IN_CLOSE_WRITE, command);
+		ret = cavan_inotify_register_watch(&desc, argv[optind], IN_CLOSE_WRITE);
 		if (ret < 0)
 		{
 			error_msg("cavan_inotify_register_watch");
@@ -122,7 +134,7 @@ int main(int argc, char *argv[])
 		optind++;
 	}
 
-	ret = cavan_inotify_event_loop(&desc, cavan_inotify_event_handle);
+	ret = cavan_inotify_event_loop(&desc);
 
 out_inotify_deinit:
 	cavan_inotify_deinit(&desc);
