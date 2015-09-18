@@ -233,3 +233,44 @@ function cavan-mm-push-reboot()
 
 	return 1
 }
+
+function cavan-android-auto-push()
+{
+	local system_path src_path dest_path
+
+	if [ "$1" ]
+	then
+		system_path=$1
+	elif [ "${ANDROID_PRODUCT_OUT}" ]
+	then
+		system_path="${ANDROID_PRODUCT_OUT}/system"
+	else
+		system_path="."
+	fi
+
+	echo "system_path = ${system_path}"
+
+	adb start-server || return 1
+
+	(
+		cd "${system_path}" || return 1
+
+		[ -f "build.prop" -a -f "lib/libandroid_runtime.so" ] ||
+		{
+			echo "This path is not system"
+			return 1
+		}
+
+		cavan-inotify . | while read line
+		do
+			adb wait-for-device && adb root || continue
+			adb wait-for-device && adb remount || continue
+
+			src_path="${line:2}"
+			dest_path="/system/${src_path}"
+
+			echo "push: ${src_path} => ${dest_path}"
+			adb push "${src_path}" "${dest_path}"
+		done
+	)
+}

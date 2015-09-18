@@ -39,7 +39,7 @@ static int cavan_inotify_event_handle(struct cavan_inotify_descriptor *desc, str
 	}
 	else
 	{
-		puts(pathname);
+		println("%s", pathname);
 	}
 
 	return 0;
