@@ -17,8 +17,6 @@
  *
  */
 
-#define LOG_TAG		"Cavan"
-
 #include "ISuService.h"
 
 namespace android {
@@ -30,19 +28,45 @@ class BpSuService: public BpInterface<ISuService>
 public:
 	BpSuService(const sp<IBinder> &impl) : BpInterface<ISuService>(impl) {}
 
-	virtual status_t runCommand(const char *command)
-	{
+	virtual int system(const char *command) {
         Parcel data, reply;
 
         data.writeInterfaceToken(ISuService::getInterfaceDescriptor());
 		data.writeString8(String8(command));
 
-        status_t status = remote()->transact(RUN_COMMAND, data, &reply);
-		if (status == NO_ERROR) {
-			status = reply.readInt32();
+        status_t status = remote()->transact(CMD_SYSTEM, data, &reply);
+		if (status != NO_ERROR) {
+			return -EFAULT;
 		}
 
-		return status;
+		int ret = reply.readInt32();
+		if (ret < 0) {
+			return ret;
+		}
+
+		return 0;
+	}
+
+	virtual int popen(const char *command, char *pathname, size_t size) {
+        Parcel data, reply;
+
+        data.writeInterfaceToken(ISuService::getInterfaceDescriptor());
+		data.writeString8(String8(command));
+
+        status_t status = remote()->transact(CMD_POPEN, data, &reply);
+		if (status != NO_ERROR) {
+			return -EFAULT;
+		}
+
+		int ret = reply.readInt32();
+		if (ret < 0) {
+			return ret;
+		}
+
+		String8 strPath = reply.readString8();
+		strncpy(pathname, strPath, size);
+
+		return 0;
 	}
 };
 
@@ -53,11 +77,24 @@ status_t BnSuService::onTransact(uint32_t code, const Parcel &data, Parcel *repl
 	ALOGE("code = %d, flags = 0x%08x", code, flags);
 
     switch (code) {
-	case RUN_COMMAND: {
+	case CMD_SYSTEM: {
 			CHECK_INTERFACE(IAudioFlinger, data, reply);
 			String8 command = data.readString8();
-			status_t status = runCommand(command.string());
-			reply->writeInt32(status);
+			int ret = system(command.string());
+			reply->writeInt32(ret);
+		}
+		break;
+
+	case CMD_POPEN: {
+			char pathname[1024];
+
+			CHECK_INTERFACE(IAudioFlinger, data, reply);
+			String8 command = data.readString8();
+			int ret = popen(command.string(), pathname, sizeof(pathname));
+			reply->writeInt32(ret);
+			if (ret == 0) {
+				reply->writeString8(String8(pathname));
+			}
 		}
 		break;
 

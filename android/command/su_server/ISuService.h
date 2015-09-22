@@ -25,11 +25,31 @@
 #include <binder/Parcel.h>
 #include <binder/IServiceManager.h>
 
+#ifndef NELEM
+#define NELEM(a) \
+	(sizeof(a) / sizeof((a)[0]))
+#endif
+
+#ifdef LOG_TAG
+#undef LOG_TAG
+#define LOG_TAG "Cavan"
+#endif
+
+#define pr_error_info(format, args ...) \
+	fprintf(stderr, format "\n", ##args)
+
+#define pr_red_info(format, args ...) \
+	fprintf(stderr, format "\n", ##args)
+
+#define pr_pos_info() \
+	ALOGE("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__);
+
 namespace android {
 
 enum {
 	CREATE = IBinder::FIRST_CALL_TRANSACTION,
-	RUN_COMMAND,
+	CMD_SYSTEM,
+	CMD_POPEN,
 };
 
 class ISuService : public IInterface
@@ -40,8 +60,7 @@ public:
 public:
 	DECLARE_META_INTERFACE(SuService);
 
-	static sp<ISuService> getService(void)
-	{
+	static sp<ISuService> getService(void) {
 		sp<IBinder> binder = defaultServiceManager()->checkService(mServiceName);
 		if (binder == NULL) {
 			return NULL;
@@ -50,7 +69,8 @@ public:
 		return interface_cast<ISuService>(binder);
 	}
 
-	virtual status_t runCommand(const char *command) = 0;
+	virtual int system(const char *command) = 0;
+	virtual int popen(const char *command, char *pathname, size_t size) = 0;
 };
 
 class BnSuService: public BnInterface<ISuService>

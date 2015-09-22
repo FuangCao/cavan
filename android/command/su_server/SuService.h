@@ -29,12 +29,12 @@ namespace android {
 class SuService : public BinderService<SuService>, public BnSuService
 {
 public:
-	static const String16 &getServiceName(void)
-	{
+	static const String16 &getServiceName(void) {
 		return mServiceName;
 	}
 
-	virtual int runCommand(const char *command);
+	virtual int system(const char *command);
+	virtual int popen(const char *command, char *pathname, size_t size);
 };
 
 };

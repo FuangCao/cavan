@@ -17,6 +17,13 @@
  *
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <termios.h>
+#include <unistd.h>
+
 #include "ISuService.h"
 
 using namespace android;
@@ -34,8 +41,35 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-	status_t status = su->runCommand(argv[1]);
-	printf("status = %d\n", status);
+	char pathname[1024];
+
+	int ret = su->popen(argv[1], pathname, sizeof(pathname));
+	if (ret < 0) {
+		fprintf(stderr, "Failed to popen: %d\n", ret);
+		return ret;
+	}
+
+	int fd = open(pathname, O_RDONLY);
+	if (fd < 0) {
+		fprintf(stderr, "Failed to open file %s: %s\n", pathname, strerror(errno));
+		return fd;
+	}
+
+	while (1) {
+		ssize_t rdlen;
+		char buff[1024];
+
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen <= 0) {
+			break;
+		}
+
+		if (fwrite(buff, 1, rdlen, stdout) < (size_t) rdlen) {
+			break;
+		}
+	}
+
+	close(fd);
 
 	return 0;
 }

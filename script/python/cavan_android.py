@@ -75,7 +75,7 @@ class AndroidManager(AdbManager):
 			if not self.doPush(hostPath, devPath):
 				return False
 
-			self.doSymlink(hostPath)
+			# self.doSymlink(hostPath)
 
 			lastDir = os.path.dirname(hostPath)
 
