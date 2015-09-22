@@ -182,7 +182,8 @@ void print_maybe_command(const struct cavan_command_map *p, const struct cavan_c
 const struct cavan_command_map *match_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname);
 int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[]);
 
-int cavan_redirect_stdio_base(int ttyfd, int flags);
+int cavan_redirect_stdio_base(int ttyfds[3]);
+int cavan_redirect_stdio_base2(int fd, int flags);
 int cavan_redirect_stdio(const char *pathname, int flags);
 int cavan_exec_redirect_stdio_base(int ttyfd, const char *command, int flags);
 int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command, int flags);
@@ -193,7 +194,7 @@ int cavan_system2(const char *command, ...);
 int cavan_tty_tee_loop(int ttyfd, int ttyin, int ttyout);
 int cavan_tee_main(const char *filename, bool append, bool command);
 
-int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout);
+int cavan_tty_redirect_loop(int tty1[2], int tty2[2]);
 int cavan_tty_redirect_base(int ttyfd);
 int cavan_tty_redirect(const char *ttypath);
 

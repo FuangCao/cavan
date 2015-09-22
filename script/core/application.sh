@@ -274,3 +274,39 @@ function cavan-android-auto-push()
 		done
 	)
 }
+
+function make()
+{
+    local start_time=$(date +"%s")
+    command make "$@"
+    local result=$?
+    local end_time=$(date +"%s")
+    local time_diff=$(($end_time - $start_time))
+    local hours=$(($time_diff / 3600 ))
+    local mins=$((($time_diff % 3600) / 60))
+    local secs=$(($time_diff % 60))
+
+    echo
+
+    if [ $result -eq 0 ]
+	then
+        echo -n -e "#### make completed successfully "
+    else
+        echo -n -e "#### make failed to build some targets "
+    fi
+
+    if [ $hours -gt 0 ]
+	then
+        printf "(%02g:%02g:%02g (hh:mm:ss))" $hours $mins $secs
+    elif [ $mins -gt 0 ]
+	then
+        printf "(%02g:%02g (mm:ss))" $mins $secs
+    elif [ $secs -gt 0 ]
+	then
+        printf "(%s seconds)" $secs
+    fi
+
+    echo -e " ####"
+
+    return $result
+}

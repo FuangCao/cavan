@@ -200,26 +200,55 @@ label_start_match:
 	return -1;
 }
 
-int cavan_redirect_stdio_base(int ttyfd, int flags)
+int cavan_redirect_stdio_base(int ttyfds[3])
 {
 	int i;
+	int ret;
+
+	for (i = 0; i < 3; i++)
+	{
+		if (ttyfds[i] < 0)
+		{
+			continue;
+		}
+
+		ret = dup2(ttyfds[i], i);
+		if (ret < 0)
+		{
+			pr_error_info("dup2 stdio %d", i);
+			return ret;
+		}
+	}
+
+	for (i = 0; i < 3; i++)
+	{
+		if (ttyfds[i] >= 0)
+		{
+			close(ttyfds[i]);
+		}
+	}
+
+	return 0;
+}
+
+int cavan_redirect_stdio_base2(int fd, int flags)
+{
+	int i;
+	int ttyfds[3];
 
 	for (i = 0; i < 3; i++)
 	{
 		if (flags & (1 << i))
 		{
-			int ret;
-
-			ret = dup2(ttyfd, i);
-			if (ret < 0)
-			{
-				pr_error_info("dup2 stdio %d", i);
-				return ret;
-			}
+			ttyfds[i] = fd;
+		}
+		else
+		{
+			ttyfds[i] = -1;
 		}
 	}
 
-	return 0;
+	return cavan_redirect_stdio_base(ttyfds);
 }
 
 int cavan_redirect_stdio(const char *pathname, int flags)
@@ -253,7 +282,7 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 		return fd;
 	}
 
-	ret = cavan_redirect_stdio_base(fd, flags);
+	ret = cavan_redirect_stdio_base2(fd, flags);
 
 	close(fd);
 
@@ -278,7 +307,7 @@ int cavan_exec_redirect_stdio_base(int ttyfd, const char *command, int flags)
 {
 	int ret;
 
-	ret = cavan_redirect_stdio_base(ttyfd, flags);
+	ret = cavan_redirect_stdio_base2(ttyfd, flags);
 	if (ret < 0)
 	{
 		pr_error_info("cavan_redirect_stdio_base");
@@ -323,7 +352,7 @@ int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const
 	return ret;
 }
 
-int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout)
+int cavan_tty_redirect_loop(int tty1[2], int tty2[2])
 {
 	int ret;
 	ssize_t rdlen;
@@ -331,10 +360,10 @@ int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout)
 	struct pollfd pfds[2];
 
 	pfds[0].events = POLLIN;
-	pfds[0].fd = ttyin;
+	pfds[0].fd = tty1[0];
 
 	pfds[1].events = POLLIN;
-	pfds[1].fd = ttyfd;
+	pfds[1].fd = tty2[0];
 
 	while (1)
 	{
@@ -346,8 +375,8 @@ int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout)
 
 		if (pfds[0].revents)
 		{
-			rdlen = read(ttyin, buff, sizeof(buff));
-			if (rdlen <= 0 || write(ttyfd, buff, rdlen) < rdlen)
+			rdlen = read(tty1[0], buff, sizeof(buff));
+			if (rdlen <= 0 || write(tty2[1], buff, rdlen) < rdlen)
 			{
 				break;
 			}
@@ -355,13 +384,11 @@ int cavan_tty_redirect_loop(int ttyfd, int ttyin, int ttyout)
 
 		if (pfds[1].revents)
 		{
-			rdlen = read(ttyfd, buff, sizeof(buff));
-			if (rdlen <= 0 || write(ttyout, buff, rdlen) < rdlen)
+			rdlen = read(tty2[0], buff, sizeof(buff));
+			if (rdlen <= 0 || write(tty1[1], buff, rdlen) < rdlen)
 			{
 				break;
 			}
-
-			fsync(ttyout);
 		}
 	}
 
@@ -484,6 +511,8 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 	int ret;
 	int ttyfd;
 	pid_t pid;
+	int ttyfds[2];
+	int stdfds[2];
 
 	ttyfd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid, 0x07);
 	if (ttyfd < 0)
@@ -492,17 +521,11 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 		return ttyfd;
 	}
 
-	if (ttyin < 0)
-	{
-		ttyin = fileno(stdin);
-	}
+	ttyfds[0] = ttyfds[1] = ttyfd;
+	stdfds[0] = ttyin < 0 ? fileno(stdin) : ttyin;
+	stdfds[1] = ttyout < 0 ? fileno(stdout) : ttyout;
 
-	if (ttyout < 0)
-	{
-		ttyout = fileno(stdout);
-	}
-
-	ret = cavan_tty_redirect_loop(ttyfd, ttyin, ttyout);
+	ret = cavan_tty_redirect_loop(ttyfds, stdfds);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_tty_redirect_loop");
@@ -520,6 +543,8 @@ int cavan_tty_redirect_base(int ttyfd)
 {
 	int ret;
 	struct termios tty_attr;
+	int ttyfds[] = { ttyfd, ttyfd };
+	int stdfds[] = { fileno(stdin), fileno(stdout) };
 
 	ret = set_tty_mode(fileno(stdin), 5, &tty_attr);
 	if (ret < 0)
@@ -528,7 +553,7 @@ int cavan_tty_redirect_base(int ttyfd)
 		return ret;
 	}
 
-	ret = cavan_tty_redirect_loop(ttyfd, fileno(stdin), fileno(stdout));
+	ret = cavan_tty_redirect_loop(ttyfds, stdfds);
 	restore_tty_attr(fileno(stdin), &tty_attr);
 
 	return ret;
