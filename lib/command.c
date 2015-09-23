@@ -9,6 +9,7 @@
 #include <cavan/device.h>
 #include <cavan/command.h>
 
+#define CAVAN_COMMAND_DEBUG				0
 #define CAVAN_TEE_USE_SYSTEM_POPEN		0
 
 const char *cavan_help_message_help = "display this information";
@@ -334,7 +335,9 @@ static int cavan_exec_command(const char *command)
 	const char *shell = cavan_get_shell_path();
 	const char *name = text_basename_simple(shell);
 
-	// println("shell = %s, name = %s, command = %s", shell, name, command);
+#if CAVAN_COMMAND_DEBUG
+	println("shell = %s, name = %s, command = %s", shell, name, command);
+#endif
 
 	if (command && command[0] && text_cmp("shell", command))
 	{
@@ -490,6 +493,10 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		{
 			int pipefd[2];
 
+#if CAVAN_COMMAND_DEBUG
+			println("create pipe");
+#endif
+
 			ret = pipe(pipefd);
 			if (ret < 0)
 			{
@@ -510,6 +517,10 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		}
 		else
 		{
+#if CAVAN_COMMAND_DEBUG
+			println("create socketpair");
+#endif
+
 			ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
 			if (ret < 0)
 			{
@@ -542,6 +553,10 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 	else
 	{
 		const char *ptmpath = "/dev/ptmx";
+
+#if CAVAN_COMMAND_DEBUG
+		println("create pseudo terminal");
+#endif
 
 		ttyfd = open(ptmpath, O_RDWR | O_CLOEXEC);
 		if (ttyfd < 0)
@@ -1053,7 +1068,7 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 
 		setvbuf(fp, NULL, _IONBF, 0);
 #else
-		fd = cavan_exec_redirect_stdio_popen(filename, -1, -1, NULL, 0x03);
+		fd = cavan_exec_redirect_stdio_popen(filename, -1, -1, NULL, 0x01);
 		if (fd < 0)
 		{
 			pr_red_info("cavan_exec_redirect_stdio_popen: %d", fd);
