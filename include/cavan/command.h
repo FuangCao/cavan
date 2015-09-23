@@ -212,8 +212,8 @@ u32 cavan_getenv_u32(const char *name, u32 default_value);
 int tty_get_win_size(int tty, u16 *lines, u16 *columns);
 int tty_set_win_size(int tty, u16 lines, u16 columns);
 
-int cavan_create_temp_pipe(char *pathname, size_t size, const char *prefix);
-int cavan_open_pipe_once(const char *pathname, int flags);
+int cavan_exec_make_temp_pipe(char *pathname, size_t size, const char *prefix);
+int cavan_exec_set_oom_adj(int pid, int value);
 
 static inline int cavan_exec_waitpid(pid_t pid)
 {

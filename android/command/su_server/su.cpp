@@ -23,6 +23,7 @@
 #include <poll.h>
 #include <termios.h>
 #include <unistd.h>
+#include <cavan.h>
 
 #include "ISuService.h"
 
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
+#if 1
 	char pathname[1024];
 
 	int ret = su->popen(argv[1], pathname, sizeof(pathname));
@@ -70,6 +72,13 @@ int main(int argc, char *argv[])
 	}
 
 	close(fd);
+#else
+	int ret = su->system(argv[1]);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to system: %d\n", ret);
+		return ret;
+	}
+#endif
 
 	return 0;
 }

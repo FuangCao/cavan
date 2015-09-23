@@ -95,11 +95,11 @@ char *reverse_value2text_base8(u64 value, char *buff, size_t size);
 char *reverse_value2text_base16(u64 value, char *buff, size_t size);
 char *reverse_value2text_base32(u64 value, char *buff, size_t size);
 char *reverse_value2text_all(u64 value, char *buff, size_t size, int base);
-char *simple_value2text_reverse(u64 value, char *buff, size_t size, int base);
-char *simple_value2text_unsigned(u64 value, char *buff, size_t size, int base);
-char *simple_value2text(s64 value, char *buff, size_t size, int base);
+char *value2text_reverse_simple(u64 value, char *buff, size_t size, int base);
+char *value2text_unsigned_simple(u64 value, char *buff, size_t size, int base);
+char *value2text_simple(s64 value, char *buff, size_t size, int base);
 
-char *value2text_base(s64 value, char *text, int size, char fill, int flags);
+char *value2text_base(s64 value, char *text, int length, char fill, int flags);
 char *value2text(u64 value, int flags);
 char *value2bitlist(u64 value, char *buff, size_t size, const char *sep);
 
@@ -116,6 +116,7 @@ int text2date(const char *text, struct tm *date, ...);
 
 int text_match(const char *text1, const char *text2);
 
+const char *text_basename_simple(const char *pathname);
 char *text_basename_base(char *buff, const char *path);
 char *text_basename(const char *path);
 

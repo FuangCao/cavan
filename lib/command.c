@@ -223,10 +223,22 @@ int cavan_redirect_stdio_base(int ttyfds[3])
 
 	for (i = 0; i < 3; i++)
 	{
-		if (ttyfds[i] >= 0)
+		int j;
+
+		if (ttyfds[i] < 0)
 		{
-			close(ttyfds[i]);
+			continue;
 		}
+
+		j = i;
+
+		do {
+			if (--j < 0)
+			{
+				close(ttyfds[i]);
+				break;
+			}
+		} while (ttyfds[i] != ttyfds[j]);
 	}
 
 	return 0;
@@ -314,16 +326,17 @@ static const char *cavan_get_shell_path(void)
 static int cavan_exec_command(const char *command)
 {
 	const char *shell = cavan_get_shell_path();
+	const char *name = text_basename_simple(shell);
 
-	// println("shell = %s, command = %s", shell, command);
+	// println("shell = %s, name = %s, command = %s", shell, name, command);
 
 	if (command && command[0] && text_cmp("shell", command))
 	{
-		return execlp(shell, shell, "-c", command, NULL);
+		return execlp(shell, name, "-c", command, NULL);
 	}
 	else
 	{
-		return execlp(shell, shell, "-", NULL);
+		return execlp(shell, name, "-", NULL);
 	}
 }
 
@@ -477,6 +490,17 @@ int cavan_tty_redirect_loop(int tty1[2], int tty2[2])
 	return 0;
 }
 
+int cavan_exec_set_oom_adj(int pid, int value)
+{
+	char buff[32], *p;
+	char pathname[1024];
+
+	snprintf(pathname, sizeof(pathname), "/proc/%d/oom_adj", pid);
+	p = value2text_simple(value, buff, sizeof(buff), 10);
+
+	return file_write(pathname, buff, p - buff);
+}
+
 int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid, int flags)
 {
 	int ret;
@@ -573,8 +597,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		}
 	}
 
-	snprintf(pathname, sizeof(pathname), "/proc/%d/oom_adj", pid);
-	file_write(pathname, "0", 1);
+	cavan_exec_set_oom_adj(pid, 0);
 
 	if (ppid)
 	{
@@ -588,18 +611,20 @@ out_close_ttyfd:
 	return ret;
 }
 
-int cavan_create_temp_pipe(char *pathname, size_t size, const char *prefix)
+int cavan_exec_make_temp_pipe(char *pathname, size_t size, const char *prefix)
 {
-	int ret;
+	int fd;
 
 	snprintf(pathname, size, "/dev/%sXXXXXX", prefix);
 
-	ret = mkstemp(pathname);
-	if (ret < 0)
+	fd = mkstemp(pathname);
+	if (fd < 0)
 	{
 		pr_err_info("mkstemp %s", pathname);
-		return ret;
+		return fd;
 	}
+
+	close(fd);
 
 	return remkfifo(pathname, 0777);
 }
@@ -613,7 +638,7 @@ int cavan_exec_redirect_stdio_popen2(const char *command, char *ttypath[3], size
 
 	for (i = 0; i < 3; i++)
 	{
-		if (ttypath[i] && (ret = cavan_create_temp_pipe(ttypath[i], size, tty_prefix[i])) < 0)
+		if (ttypath[i] && (ret = cavan_exec_make_temp_pipe(ttypath[i], size, tty_prefix[i])) < 0)
 		{
 			pr_red_info("cavan_create_temp_pipe %s", ttypath[i]);
 
@@ -642,6 +667,8 @@ int cavan_exec_redirect_stdio_popen2(const char *command, char *ttypath[3], size
 	{
 		return cavan_exec_redirect_stdio(ttypath, command, CAVAN_EXECF_DEL_TTY | CAVAN_EXECF_ERR_TO_OUT);
 	}
+
+	cavan_exec_set_oom_adj(pid, 0);
 
 	if (ppid)
 	{

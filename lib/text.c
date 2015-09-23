@@ -1043,7 +1043,7 @@ char *reverse_value2text_all(u64 value, char *buff, size_t size, int base)
 	return buff;
 }
 
-char *simple_value2text_reverse(u64 value, char *buff, size_t size, int base)
+char *value2text_reverse_simple(u64 value, char *buff, size_t size, int base)
 {
 	if (value == 0)
 	{
@@ -1073,25 +1073,25 @@ char *simple_value2text_reverse(u64 value, char *buff, size_t size, int base)
 	}
 }
 
-char *simple_value2text_unsigned(u64 value, char *buff, size_t size, int base)
+char *value2text_unsigned_simple(u64 value, char *buff, size_t size, int base)
 {
 	char *tail;
 
-	tail = simple_value2text_reverse(value, buff, size, base);
+	tail = value2text_reverse_simple(value, buff, size, base);
 	mem_reverse_simple((byte *) buff, (byte *) tail - 1);
 
 	return tail;
 }
 
-char *simple_value2text(s64 value, char *buff, size_t size, int base)
+char *value2text_simple(s64 value, char *buff, size_t size, int base)
 {
 	if (value < 0 && base == 10)
 	{
 		*buff = '-';
-		return simple_value2text_unsigned(-value, buff + 1, size - 1, 10);
+		return value2text_unsigned_simple(-value, buff + 1, size - 1, 10);
 	}
 
-	return simple_value2text_unsigned(value, buff, size, base);
+	return value2text_unsigned_simple(value, buff, size, base);
 }
 
 char *base2prefix(int base, char *prefix)
@@ -1162,7 +1162,7 @@ char *base2prefix_reverse(char *text, size_t size, int base)
 	return text;
 }
 
-char *value2text_base(s64 value, char *text, int size, char fill, int flags)
+char *value2text_base(s64 value, char *text, int length, char fill, int flags)
 {
 	char buff[128], *tail;
 	int base;
@@ -1171,11 +1171,11 @@ char *value2text_base(s64 value, char *text, int size, char fill, int flags)
 	if (base == 10 && value < 0 && (flags & TEXT_FLAG_SIGNED))
 	{
 		*text++ = '-';
-		tail = simple_value2text_reverse(-value, buff, sizeof(buff), 10);
+		tail = value2text_reverse_simple(-value, buff, sizeof(buff), 10);
 	}
 	else
 	{
-		tail = simple_value2text_reverse(value, buff, sizeof(buff), base);
+		tail = value2text_reverse_simple(value, buff, sizeof(buff), base);
 	}
 
 	if (flags & TEXT_FLAG_PREFIX)
@@ -1183,8 +1183,8 @@ char *value2text_base(s64 value, char *text, int size, char fill, int flags)
 		text = base2prefix(base, text);
 	}
 
-	size -= (tail - buff);
-	if (size > 0)
+	length -= (tail - buff);
+	if (length > 0)
 	{
 		char *text_end;
 
@@ -1193,7 +1193,7 @@ char *value2text_base(s64 value, char *text, int size, char fill, int flags)
 			fill = '0';
 		}
 
-		for (text_end = text + size; text < text_end; text++)
+		for (text_end = text + length; text < text_end; text++)
 		{
 			*text = fill;
 		}
@@ -1354,35 +1354,35 @@ char *size2text_base(u64 size, char *buff, size_t buff_len)
 	tmp = (size >> 40) & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, buff_len, 10);
+		buff = value2text_simple(tmp, buff, buff_len, 10);
 		*buff++ = 'T';
 	}
 
 	tmp = (size >> 30) & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, buff_len, 10);
+		buff = value2text_simple(tmp, buff, buff_len, 10);
 		*buff++ = 'G';
 	}
 
 	tmp = (size >> 20) & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, buff_len, 10);
+		buff = value2text_simple(tmp, buff, buff_len, 10);
 		*buff++ = 'M';
 	}
 
 	tmp = (size >> 10) & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, buff_len, 10);
+		buff = value2text_simple(tmp, buff, buff_len, 10);
 		*buff++ = 'k';
 	}
 
 	tmp = size & 0x3FF;
 	if (tmp)
 	{
-		buff = simple_value2text(tmp, buff, buff_len, 10);
+		buff = value2text_simple(tmp, buff, buff_len, 10);
 	}
 
 out_return:
@@ -1676,6 +1676,21 @@ char *format_text(const char *fmt, ...)
 	va_end(ap);
 
 	return buff;
+}
+
+const char *text_basename_simple(const char *pathname)
+{
+	const char *basename;
+
+	for (basename = pathname; *pathname; pathname++)
+	{
+		if (*pathname == '/')
+		{
+			basename = pathname + 1;
+		}
+	}
+
+	return basename;
 }
 
 char *text_basename_base(char *buff, const char *path)

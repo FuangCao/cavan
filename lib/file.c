@@ -2252,7 +2252,7 @@ int file_find_and_open(const char *prefix, char *last_path, int start, int end, 
 
 	while (start <= end)
 	{
-		simple_value2text_unsigned(start, p, sizeof(tmp_path), 10);
+		value2text_unsigned_simple(start, p, sizeof(tmp_path), 10);
 
 		fd = open(p_bak, flags | O_NONBLOCK);
 		if (fd >= 0)
