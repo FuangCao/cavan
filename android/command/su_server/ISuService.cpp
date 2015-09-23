@@ -47,11 +47,12 @@ public:
 		return 0;
 	}
 
-	virtual int popen(const char *command, char *pathname, size_t size) {
+	virtual int popen(const char *command, pid_t *ppid, int flags) {
         Parcel data, reply;
 
         data.writeInterfaceToken(ISuService::getInterfaceDescriptor());
 		data.writeString8(String8(command));
+		data.writeInt32(flags);
 
         status_t status = remote()->transact(CMD_POPEN, data, &reply);
 		if (status != NO_ERROR) {
@@ -63,8 +64,7 @@ public:
 			return ret;
 		}
 
-		String8 strPath = reply.readString8();
-		strncpy(pathname, strPath, size);
+		reply.readInt32(ppid);
 
 		return 0;
 	}
@@ -86,15 +86,16 @@ status_t BnSuService::onTransact(uint32_t code, const Parcel &data, Parcel *repl
 		break;
 
 	case CMD_POPEN: {
-			char pathname[1024];
-
 			CHECK_INTERFACE(IAudioFlinger, data, reply);
 			String8 command = data.readString8();
-			int ret = popen(command.string(), pathname, sizeof(pathname));
+			int flags = data.readInt32();
+			pid_t pid;
+			int ret = popen(command.string(), &pid, flags);
 			reply->writeInt32(ret);
-			if (ret == 0) {
-				reply->writeString8(String8(pathname));
+			if (ret < 0) {
+				return ret;
 			}
+			reply->writeInt32(pid);
 		}
 		break;
 

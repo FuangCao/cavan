@@ -34,7 +34,7 @@ public:
 	}
 
 	virtual int system(const char *command);
-	virtual int popen(const char *command, char *pathname, size_t size);
+	virtual int popen(const char *command, pid_t *ppid, int flags);
 };
 
 };

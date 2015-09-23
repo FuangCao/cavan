@@ -20,8 +20,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <cavan.h>
-#include <cavan/command.h>
 
 #include "SuService.h"
 
@@ -38,14 +36,13 @@ int SuService::system(const char *command)
 	return 0;
 }
 
-int SuService::popen(const char *command, char *pathname, size_t size)
+int SuService::popen(const char *command, pid_t *ppid, int flags)
 {
 	int ret;
-	char *ttypath[3] = { NULL, pathname, NULL };
 
-	ALOGE("%s[%d]: command = %s", __FUNCTION__, __LINE__, command);
+	ALOGE("%s[%d]: command = %s, flags = 0x%08x", __FUNCTION__, __LINE__, command, flags);
 
-	ret = cavan_exec_redirect_stdio_popen2(command, ttypath, size, NULL);
+	ret = cavan_exec_redirect_stdio_popen2(command, ppid, flags);
 	if (ret < 0) {
 		return ret;
 	}

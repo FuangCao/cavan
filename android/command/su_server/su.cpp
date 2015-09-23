@@ -23,7 +23,6 @@
 #include <poll.h>
 #include <termios.h>
 #include <unistd.h>
-#include <cavan.h>
 
 #include "ISuService.h"
 
@@ -43,35 +42,36 @@ int main(int argc, char *argv[])
 	}
 
 #if 1
-	char pathname[1024];
+	int ret;
+	pid_t pid;
+	int ttyfds[3];
+	int flags = 1 << 1;
 
-	int ret = su->popen(argv[1], pathname, sizeof(pathname));
+	ret = su->popen(argv[1], &pid, flags);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to popen: %d\n", ret);
 		return ret;
 	}
 
-	int fd = open(pathname, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, "Failed to open file %s: %s\n", pathname, strerror(errno));
-		return fd;
+	ret = cavan_exec_open_temp_pipe_client(ttyfds, pid, flags);
+	if (ret < 0) {
+		pr_red_info("cavan_exec_open_temp_pipe_client: %d", ret);
+		return ret;
 	}
 
 	while (1) {
 		ssize_t rdlen;
 		char buff[1024];
 
-		rdlen = read(fd, buff, sizeof(buff));
+		rdlen = read(ttyfds[1], buff, sizeof(buff));
 		if (rdlen <= 0) {
 			break;
 		}
 
-		if (fwrite(buff, 1, rdlen, stdout) < (size_t) rdlen) {
+		if (write(1, buff, rdlen) != rdlen) {
 			break;
 		}
 	}
-
-	close(fd);
 #else
 	int ret = su->system(argv[1]);
 	if (ret < 0) {

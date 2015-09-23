@@ -24,6 +24,7 @@
 #include <binder/IInterface.h>
 #include <binder/Parcel.h>
 #include <binder/IServiceManager.h>
+#include <cavan/command.h>
 
 namespace android {
 
@@ -51,7 +52,7 @@ public:
 	}
 
 	virtual int system(const char *command) = 0;
-	virtual int popen(const char *command, char *pathname, size_t size) = 0;
+	virtual int popen(const char *command, pid_t *ppid, int flags) = 0;
 };
 
 class BnSuService: public BnInterface<ISuService>
