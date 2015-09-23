@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	fd = cavan_exec_redirect_stdio_popen(argv[1], 0xFFFF, 0xFFFFF, &pid, 0x01);
+	fd = cavan_exec_redirect_stdio_popen(argv[1], -1, -1, &pid, 0x01);
 	if (fd < 0)
 	{
 		pr_red_info("cavan_exec_redirect_stdio_popen");

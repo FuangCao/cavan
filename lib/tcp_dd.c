@@ -542,6 +542,7 @@ out_close_fd:
 static int tcp_dd_handle_exec_request(struct network_client *client, struct tcp_dd_exec_request *req)
 {
 	int ret;
+	int lines, columns;
 
 	pd_info("command = `%s'", req->command);
 
@@ -570,7 +571,19 @@ static int tcp_dd_handle_exec_request(struct network_client *client, struct tcp_
 		}
 	}
 
-	return network_client_exec_main(client, req->command, req->lines, req->columns);
+	lines = req->lines;
+	if (lines == 0xFFFF)
+	{
+		lines = -1;
+	}
+
+	columns = req->columns;
+	if (columns == 0xFFFF)
+	{
+		columns = -1;
+	}
+
+	return network_client_exec_main(client, req->command, lines, columns);
 }
 
 static void tcp_dd_alarm_handler(struct cavan_alarm_node *alarm, struct cavan_alarm_thread *thread, void *data)

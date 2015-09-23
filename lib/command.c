@@ -9,6 +9,8 @@
 #include <cavan/device.h>
 #include <cavan/command.h>
 
+#define CAVAN_TEE_USE_SYSTEM_POPEN		0
+
 const char *cavan_help_message_help = "display this information";
 const char *cavan_help_message_version = "display command version information";
 const char *cavan_help_message_ip = "set service ip address to IP";
@@ -55,6 +57,16 @@ const char *cavan_help_message_resource = "R/W resource partition";
 const char *cavan_help_message_rw_image = "R/W partition by image short name";
 const char *cavan_help_message_rw_image_auto = "R/W partition auto";
 const char *cavan_help_message_driver = "driver module path";
+
+static const char *const cavan_exec_tty_prefix[3] = { "stdin", "stdout", "stderr" };
+static const int cavan_exec_tty_flags[3] = { O_RDONLY, O_WRONLY, O_WRONLY };
+static const int cavan_exec_tty_flags_client[3] = { O_WRONLY, O_RDONLY, O_RDONLY };
+static const char *const cavan_exec_shell_list[] =
+{
+	"/bin/bash",
+	"/bin/sh",
+	"/system/bin/sh",
+};
 
 int print_command_table(const struct cavan_command_map *p, const struct cavan_command_map *p_end)
 {
@@ -305,18 +317,12 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 static const char *cavan_get_shell_path(void)
 {
 	int i;
-	static const char *shell_list[] =
-	{
-		"/bin/bash",
-		"/bin/sh",
-		"/system/bin/sh",
-	};
 
-	for (i = 0; i < NELEM(shell_list); i++)
+	for (i = 0; i < NELEM(cavan_exec_shell_list); i++)
 	{
-		if (file_access_e(shell_list[i]))
+		if (file_access_e(cavan_exec_shell_list[i]))
 		{
-			return shell_list[i];
+			return cavan_exec_shell_list[i];
 		}
 	}
 
@@ -370,46 +376,14 @@ int cavan_exec_redirect_stdio_base2(int ttyfd, const char *command, int flags)
 
 int cavan_exec_redirect_stdio(char *const ttypath[3], const char *command, int flags)
 {
-	int i;
-	int ttyfds[3];
-	static const int tty_flags[3] = { O_RDONLY, O_WRONLY, O_WRONLY };
+	int ret;
+	int ttyfds [3];
 
-	for (i = 0; i < 3; i++)
+	ret = cavan_exec_open_temp_pipe(ttyfds, ttypath, flags);
+	if (ret < 0)
 	{
-		if (ttypath[i])
-		{
-			int fd = open(ttypath[i], tty_flags[i]);
-			if (fd < 0)
-			{
-				pr_red_info("cavan_open_pipe_once %s", ttypath[i]);
-
-				while (--i >= 0)
-				{
-					if (ttyfds[i] >= 0)
-					{
-						close(ttyfds[i]);
-					}
-				}
-
-				return fd;
-			}
-
-			ttyfds[i] = fd;
-
-			if (flags & CAVAN_EXECF_DEL_TTY)
-			{
-				unlink(ttypath[i]);
-			}
-		}
-		else
-		{
-			ttyfds[i] = -1;
-		}
-	}
-
-	if (flags & (CAVAN_EXECF_ERR_TO_OUT) && ttyfds[2] < 0)
-	{
-		ttyfds[2] = ttyfds[1];
+		pr_red_info("cavan_exec_open_temp_pipe: %d", ret);
+		return ret;
 	}
 
 	return cavan_exec_redirect_stdio_base(ttyfds, command);
@@ -508,15 +482,40 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 	int ttyfd;
 	char pathname[1024];
 
-	if (lines == 0xFFFF && columns == 0xFFFF)
+	if (lines < 0 || columns < 0)
 	{
 		int pair[2];
 
-		ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
-		if (ret < 0)
+		if ((flags & 0x01) == 0 || (flags & 0x06) == 0)
 		{
-			pr_error_info("socketpair");
-			return ret;
+			int pipefd[2];
+
+			ret = pipe(pipefd);
+			if (ret < 0)
+			{
+				pr_err_info("pipe");
+				return ret;
+			}
+
+			if (flags & 0x01)
+			{
+				pair[0] = pipefd[0];
+				pair[1] = pipefd[1];
+			}
+			else
+			{
+				pair[0] = pipefd[1];
+				pair[1] = pipefd[0];
+			}
+		}
+		else
+		{
+			ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
+			if (ret < 0)
+			{
+				pr_error_info("socketpair");
+				return ret;
+			}
 		}
 
 		pid = fork();
@@ -611,11 +610,14 @@ out_close_ttyfd:
 	return ret;
 }
 
-int cavan_exec_make_temp_pipe(char *pathname, size_t size, const char *prefix)
+int cavan_exec_get_temp_pipe_pathname(char *pathname, size_t size, int type)
 {
+	int ret;
+
+#if 0
 	int fd;
 
-	snprintf(pathname, size, "/dev/%sXXXXXX", prefix);
+	snprintf(pathname, size, "/dev/%sXXXXXX", tty_prefix[type]);
 
 	fd = mkstemp(pathname);
 	if (fd < 0)
@@ -625,20 +627,41 @@ int cavan_exec_make_temp_pipe(char *pathname, size_t size, const char *prefix)
 	}
 
 	close(fd);
+#else
+	ret = snprintf(pathname, size, "/dev/%s-%d", cavan_exec_tty_prefix[type], getpid());
+#endif
 
-	return remkfifo(pathname, 0777);
+	return ret;
 }
 
-int cavan_exec_redirect_stdio_popen2(const char *command, char *ttypath[3], size_t size, pid_t *ppid)
+int cavan_exec_make_temp_pipe(char *pathname, size_t size, int type)
+{
+	int ret = cavan_exec_get_temp_pipe_pathname(pathname, size, type);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_exec_get_temp_pipe_pathname: %d", ret);
+		return ret;
+	}
+
+	ret = remkfifo(pathname, 0777);
+	if (ret < 0)
+	{
+		pr_err_info("remkfifo %s", pathname);
+		return ret;
+	}
+
+	return 0;
+}
+
+int cavan_exec_make_temp_pipe2(char *ttypath[3], size_t size)
 {
 	int i;
-	int ret;
-	pid_t pid;
-	static const char *tty_prefix[3] = { "stdin-", "stdout-", "stderr-" };
 
 	for (i = 0; i < 3; i++)
 	{
-		if (ttypath[i] && (ret = cavan_exec_make_temp_pipe(ttypath[i], size, tty_prefix[i])) < 0)
+		int ret;
+
+		if (ttypath[i] && (ret = cavan_exec_make_temp_pipe(ttypath[i], size, i)) < 0)
 		{
 			pr_red_info("cavan_create_temp_pipe %s", ttypath[i]);
 
@@ -654,13 +677,137 @@ int cavan_exec_redirect_stdio_popen2(const char *command, char *ttypath[3], size
 		}
 	}
 
+	return 0;
+}
+
+void cavan_exec_unlink_temp_pipe(char *ttypath[3])
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+		if (ttypath[i])
+		{
+			unlink(ttypath[i]);
+		}
+	}
+}
+
+int cavan_exec_open_temp_pipe(int ttyfds[3], char *const ttypath[3], int flags)
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+		if (ttypath[i])
+		{
+			int fd = open(ttypath[i], cavan_exec_tty_flags[i]);
+			if (fd < 0)
+			{
+				pr_red_info("cavan_open_pipe_once %s", ttypath[i]);
+
+				if (flags & CAVAN_EXECF_DEL_TTY)
+				{
+					int j;
+
+					for (j = i; j < 3; j++)
+					{
+						unlink(ttypath[j]);
+					}
+				}
+
+				while (--i >= 0)
+				{
+					if (ttyfds[i] >= 0)
+					{
+						close(ttyfds[i]);
+					}
+				}
+
+				return fd;
+			}
+
+			ttyfds[i] = fd;
+
+			if (flags & CAVAN_EXECF_DEL_TTY)
+			{
+				unlink(ttypath[i]);
+			}
+		}
+		else
+		{
+			ttyfds[i] = -1;
+		}
+	}
+
+	if (flags & (CAVAN_EXECF_ERR_TO_OUT) && ttyfds[2] < 0)
+	{
+		ttyfds[2] = ttyfds[1];
+	}
+
+	return 0;
+}
+
+int cavan_exec_open_temp_pipe_client(int ttyfds[3], pid_t pid, int flags)
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+		int fd;
+		int ret;
+		char pathname[1024];
+
+		if ((flags & (1 << i)) == 0)
+		{
+			continue;
+		}
+
+		ret = cavan_exec_get_temp_pipe_pathname(pathname, sizeof(pathname), i);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_exec_get_temp_pipe_pathname: %d", ret);
+			return ret;
+		}
+
+		fd = open(pathname, cavan_exec_tty_flags_client[i]);
+		if (fd < 0)
+		{
+			pr_err_info("open %s", pathname);
+
+			while (--i >= 0)
+			{
+				close(ttyfds[i]);
+			}
+
+			return fd;
+		}
+
+		ttyfds[i] = fd;
+	}
+
+	return 0;
+}
+
+int cavan_exec_redirect_stdio_popen2(const char *command, char *ttypath[3], size_t size, pid_t *ppid)
+{
+	int ret;
+	pid_t pid;
+
+	ret = cavan_exec_make_temp_pipe2(ttypath, size);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_exec_make_temp_pipe2: %d", ret);
+		return ret;
+	}
+
 	pid = fork();
 	if (pid < 0)
 	{
 		pr_err_info("fork");
 
-		ret = pid;
-		goto out_unlink_ttypath;
+		cavan_exec_unlink_temp_pipe(ttypath);
+		return pid;
 	}
 
 	if (pid == 0)
@@ -676,17 +823,27 @@ int cavan_exec_redirect_stdio_popen2(const char *command, char *ttypath[3], size
 	}
 
 	return 0;
+}
 
-out_unlink_ttypath:
+int cavan_exec_redirect_stdio_popen3(const char *command, pid_t *ppid, int flags)
+{
+	int i;
+	char *ttypath[3];
+	char ttypath_buff[3][1024];
+
 	for (i = 0; i < 3; i++)
 	{
-		if (ttypath[i])
+		if (flags & (1 << i))
 		{
-			unlink(ttypath[i]);
+			ttypath[i] = ttypath_buff[i];
+		}
+		else
+		{
+			ttypath[i] = NULL;
 		}
 	}
 
-	return ret;
+	return cavan_exec_redirect_stdio_popen2(command, ttypath, sizeof(ttypath_buff[0]), ppid);
 }
 
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int ttyin, int ttyout)
@@ -860,20 +1017,33 @@ int cavan_system2(const char *command, ...)
 
 int cavan_tee_main(const char *filename, bool append, bool command)
 {
+#if CAVAN_TEE_USE_SYSTEM_POPEN
 	FILE *fp;
+#else
+	int fd;
+#endif
 	int ret = 0;
 	size_t total = 0;
 
 	if (filename == NULL)
 	{
+#if CAVAN_TEE_USE_SYSTEM_POPEN
 		fp = stderr;
+#else
+		fd = 2;
+#endif
 	}
 	else if (strcmp(filename, "-") == 0)
 	{
+#if CAVAN_TEE_USE_SYSTEM_POPEN
 		fp = stdout;
+#else
+		fd = 1;
+#endif
 	}
 	else if (command)
 	{
+#if CAVAN_TEE_USE_SYSTEM_POPEN
 		fp = popen(filename, "w");
 		if (fp == NULL)
 		{
@@ -882,20 +1052,38 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 		}
 
 		setvbuf(fp, NULL, _IONBF, 0);
+#else
+		fd = cavan_exec_redirect_stdio_popen(filename, -1, -1, NULL, 0x03);
+		if (fd < 0)
+		{
+			pr_red_info("cavan_exec_redirect_stdio_popen: %d", fd);
+			return fd;
+		}
+#endif
 	}
 	else
 	{
+#if CAVAN_TEE_USE_SYSTEM_POPEN
 		fp = fopen(filename, append ? "a+" : "w+");
 		if (fp == NULL)
 		{
 			pr_err_info("fopen %s", filename);
 			return -EFAULT;
 		}
+#else
+		fd = open(filename, (append ? O_APPEND : O_TRUNC) | O_WRONLY | O_CREAT, 0777);
+		if (fd < 0)
+		{
+			pr_err_info("open %s", filename);
+			return fd;
+		}
+#endif
 	}
 
 	while (1)
 	{
 		ssize_t rdlen;
+		ssize_t wrlen;
 		char buff[1024];
 
 		rdlen = read(0, buff, sizeof(buff));
@@ -904,16 +1092,21 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 			break;
 		}
 
-		ret = fwrite(buff, rdlen, 1, fp) | fwrite(buff, rdlen, 1, stdout);
-		if (ret < 0)
+#if CAVAN_TEE_USE_SYSTEM_POPEN
+		wrlen = fwrite(buff, rdlen, 1, fp) | fwrite(buff, rdlen, 1, stdout);
+#else
+		wrlen = write(1, buff, rdlen) | write(fd, buff, rdlen);
+#endif
+		if (wrlen != rdlen)
 		{
-			pr_err_info("write");
+			// pr_err_info("write");
 			break;
 		}
 
 		total += rdlen;
 	}
 
+#if CAVAN_TEE_USE_SYSTEM_POPEN
 	if (fp != stderr && fp != stdout)
 	{
 		if (command)
@@ -925,6 +1118,12 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 			fclose(fp);
 		}
 	}
+#else
+	if (fd != 1 && fd != 2)
+	{
+		close(fd);
+	}
+#endif
 
 	if (ret < 0)
 	{
