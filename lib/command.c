@@ -289,17 +289,40 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 	return ret;
 }
 
+static const char *cavan_get_shell_path(void)
+{
+	int i;
+	static const char *shell_list[] =
+	{
+		"/bin/bash",
+		"/bin/sh",
+		"/system/bin/sh",
+	};
+
+	for (i = 0; i < NELEM(shell_list); i++)
+	{
+		if (file_access_e(shell_list[i]))
+		{
+			return shell_list[i];
+		}
+	}
+
+	return "sh";
+}
+
 static int cavan_exec_command(const char *command)
 {
-	const char *shell_command = "sh";
+	const char *shell = cavan_get_shell_path();
+
+	// println("shell = %s, command = %s", shell, command);
 
 	if (command && command[0] && text_cmp("shell", command))
 	{
-		return execlp(shell_command, shell_command, "-c", command, NULL);
+		return execlp(shell, shell, "-c", command, NULL);
 	}
 	else
 	{
-		return execlp(shell_command, shell_command, "-", NULL);
+		return execlp(shell, shell, "-", NULL);
 	}
 }
 
@@ -346,10 +369,7 @@ int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const
 		}
 	}
 
-	ret = cavan_exec_redirect_stdio_base(ttyfd, command, flags);
-	close(ttyfd);
-
-	return ret;
+	return cavan_exec_redirect_stdio_base(ttyfd, command, flags);
 }
 
 int cavan_tty_redirect_loop(int tty1[2], int tty2[2])
