@@ -240,14 +240,14 @@ static inline u32 calculate_partition_size(u32 start_sec, u32 sec_count, struct 
 
 static inline int remknod(const char *path, mode_t mode, dev_t dev)
 {
-	remove(path);
+	unlink(path);
 
 	return mknod(path, S_IFBLK | mode, dev);
 }
 
 static inline int remkfifo(const char *path, mode_t mode)
 {
-	remove(path);
+	unlink(path);
 
 	return mkfifo(path, S_IFIFO | mode);
 }

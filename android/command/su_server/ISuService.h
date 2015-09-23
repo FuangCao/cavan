@@ -25,25 +25,6 @@
 #include <binder/Parcel.h>
 #include <binder/IServiceManager.h>
 
-#ifndef NELEM
-#define NELEM(a) \
-	(sizeof(a) / sizeof((a)[0]))
-#endif
-
-#ifdef LOG_TAG
-#undef LOG_TAG
-#define LOG_TAG "Cavan"
-#endif
-
-#define pr_error_info(format, args ...) \
-	fprintf(stderr, format "\n", ##args)
-
-#define pr_red_info(format, args ...) \
-	fprintf(stderr, format "\n", ##args)
-
-#define pr_pos_info() \
-	ALOGE("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__);
-
 namespace android {
 
 enum {

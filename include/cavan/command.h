@@ -9,6 +9,8 @@
 #include <cavan.h>
 #include <sys/wait.h>
 
+__BEGIN_DECLS
+
 #define FIND_EXEC_COMMAND_MAIN(map) \
 	int main(int argc, char *argv[]) { \
 		if (argc > 1) { \
@@ -24,6 +26,9 @@
 #define CAVAN_COMMAND_MAP_END \
 	}; \
 	FIND_EXEC_COMMAND_MAIN(__local_cmd_map);
+
+#define CAVAN_EXECF_DEL_TTY			(1 << 0)
+#define CAVAN_EXECF_ERR_TO_OUT		(1 << 1)
 
 typedef enum {
 	CAVAN_COMMAND_OPTION_ADB = 0x256,
@@ -185,9 +190,12 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 int cavan_redirect_stdio_base(int ttyfds[3]);
 int cavan_redirect_stdio_base2(int fd, int flags);
 int cavan_redirect_stdio(const char *pathname, int flags);
-int cavan_exec_redirect_stdio_base(int ttyfd, const char *command, int flags);
-int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command, int flags);
+int cavan_exec_redirect_stdio_base(int ttyfds[3], const char *command);
+int cavan_exec_redirect_stdio_base2(int ttyfd, const char *command, int flags);
+int cavan_exec_redirect_stdio(char *const ttypath[3], const char *command, int flags);
+int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, const char *command, int flags);
 int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid, int flags);
+int cavan_exec_redirect_stdio_popen2(const char *command, char *ttypath[3], size_t size, pid_t *ppid);
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
 int cavan_system(const char *command);
 int cavan_system2(const char *command, ...);
@@ -204,6 +212,9 @@ u32 cavan_getenv_u32(const char *name, u32 default_value);
 int tty_get_win_size(int tty, u16 *lines, u16 *columns);
 int tty_set_win_size(int tty, u16 lines, u16 columns);
 
+int cavan_create_temp_pipe(char *pathname, size_t size, const char *prefix);
+int cavan_open_pipe_once(const char *pathname, int flags);
+
 static inline int cavan_exec_waitpid(pid_t pid)
 {
 	int status;
@@ -215,3 +226,5 @@ static inline int cavan_exec_waitpid(pid_t pid)
 
 	return 0;
 }
+
+__END_DECLS

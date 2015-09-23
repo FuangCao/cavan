@@ -3,6 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SHARED_LIBRARIES := \
+	libcavan \
 	libutils \
 	libcutils \
 	liblog \
@@ -11,6 +12,8 @@ LOCAL_SHARED_LIBRARIES := \
 LOCAL_SRC_FILES := \
 	SuService.cpp \
 	ISuService.cpp
+
+LOCAL_C_INCLUDES := cavan/include
 
 LOCAL_MODULE := libcavan_su
 LOCAL_MODULE_TAGS := optional

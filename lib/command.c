@@ -6,6 +6,7 @@
 
 #include <cavan.h>
 #include <sys/socket.h>
+#include <cavan/device.h>
 #include <cavan/command.h>
 
 const char *cavan_help_message_help = "display this information";
@@ -326,7 +327,21 @@ static int cavan_exec_command(const char *command)
 	}
 }
 
-int cavan_exec_redirect_stdio_base(int ttyfd, const char *command, int flags)
+int cavan_exec_redirect_stdio_base(int ttyfds[3], const char *command)
+{
+	int ret;
+
+	ret = cavan_redirect_stdio_base(ttyfds);
+	if (ret < 0)
+	{
+		pr_error_info("cavan_redirect_stdio_base");
+		return ret;
+	}
+
+	return cavan_exec_command(command);
+}
+
+int cavan_exec_redirect_stdio_base2(int ttyfd, const char *command, int flags)
 {
 	int ret;
 
@@ -340,7 +355,54 @@ int cavan_exec_redirect_stdio_base(int ttyfd, const char *command, int flags)
 	return cavan_exec_command(command);
 }
 
-int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const char *command, int flags)
+int cavan_exec_redirect_stdio(char *const ttypath[3], const char *command, int flags)
+{
+	int i;
+	int ttyfds[3];
+	static const int tty_flags[3] = { O_RDONLY, O_WRONLY, O_WRONLY };
+
+	for (i = 0; i < 3; i++)
+	{
+		if (ttypath[i])
+		{
+			int fd = open(ttypath[i], tty_flags[i]);
+			if (fd < 0)
+			{
+				pr_red_info("cavan_open_pipe_once %s", ttypath[i]);
+
+				while (--i >= 0)
+				{
+					if (ttyfds[i] >= 0)
+					{
+						close(ttyfds[i]);
+					}
+				}
+
+				return fd;
+			}
+
+			ttyfds[i] = fd;
+
+			if (flags & CAVAN_EXECF_DEL_TTY)
+			{
+				unlink(ttypath[i]);
+			}
+		}
+		else
+		{
+			ttyfds[i] = -1;
+		}
+	}
+
+	if (flags & (CAVAN_EXECF_ERR_TO_OUT) && ttyfds[2] < 0)
+	{
+		ttyfds[2] = ttyfds[1];
+	}
+
+	return cavan_exec_redirect_stdio_base(ttyfds, command);
+}
+
+int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, const char *command, int flags)
 {
 	int ret;
 	int ttyfd;
@@ -369,7 +431,7 @@ int cavan_exec_redirect_stdio(const char *ttypath, int lines, int columns, const
 		}
 	}
 
-	return cavan_exec_redirect_stdio_base(ttyfd, command, flags);
+	return cavan_exec_redirect_stdio_base2(ttyfd, command, flags);
 }
 
 int cavan_tty_redirect_loop(int tty1[2], int tty2[2])
@@ -448,7 +510,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		{
 			close(pair[1]);
 
-			return cavan_exec_redirect_stdio_base(pair[0], command, flags);
+			return cavan_exec_redirect_stdio_base2(pair[0], command, flags);
 		}
 
 		close(pair[0]);
@@ -507,7 +569,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		{
 			close(ttyfd);
 
-			return cavan_exec_redirect_stdio(pathname, lines, columns, command, flags);
+			return cavan_exec_redirect_stdio2(pathname, lines, columns, command, flags);
 		}
 	}
 
@@ -523,6 +585,80 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 
 out_close_ttyfd:
 	close(ttyfd);
+	return ret;
+}
+
+int cavan_create_temp_pipe(char *pathname, size_t size, const char *prefix)
+{
+	int ret;
+
+	snprintf(pathname, size, "/dev/%sXXXXXX", prefix);
+
+	ret = mkstemp(pathname);
+	if (ret < 0)
+	{
+		pr_err_info("mkstemp %s", pathname);
+		return ret;
+	}
+
+	return remkfifo(pathname, 0777);
+}
+
+int cavan_exec_redirect_stdio_popen2(const char *command, char *ttypath[3], size_t size, pid_t *ppid)
+{
+	int i;
+	int ret;
+	pid_t pid;
+	static const char *tty_prefix[3] = { "stdin-", "stdout-", "stderr-" };
+
+	for (i = 0; i < 3; i++)
+	{
+		if (ttypath[i] && (ret = cavan_create_temp_pipe(ttypath[i], size, tty_prefix[i])) < 0)
+		{
+			pr_red_info("cavan_create_temp_pipe %s", ttypath[i]);
+
+			while (--i >= 0)
+			{
+				if (ttypath[i])
+				{
+					unlink(ttypath[i]);
+				}
+			}
+
+			return ret;
+		}
+	}
+
+	pid = fork();
+	if (pid < 0)
+	{
+		pr_err_info("fork");
+
+		ret = pid;
+		goto out_unlink_ttypath;
+	}
+
+	if (pid == 0)
+	{
+		return cavan_exec_redirect_stdio(ttypath, command, CAVAN_EXECF_DEL_TTY | CAVAN_EXECF_ERR_TO_OUT);
+	}
+
+	if (ppid)
+	{
+		*ppid = pid;
+	}
+
+	return 0;
+
+out_unlink_ttypath:
+	for (i = 0; i < 3; i++)
+	{
+		if (ttypath[i])
+		{
+			unlink(ttypath[i]);
+		}
+	}
+
 	return ret;
 }
 
