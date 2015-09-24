@@ -46,29 +46,11 @@ int main(int argc, char *argv[])
 	pid_t pid;
 	int ttyfds[3];
 	int flags = 1 << 1;
-	int lines, columns;
+	int size[2];
 
-	if (isatty(0))
-	{
-		u16 size[2];
+	tty_get_win_size(0, size);
 
-		ret = tty_get_win_size(0, size);
-		if (ret < 0)
-		{
-			lines = columns = 0;
-		}
-		else
-		{
-			lines = size[0];
-			columns = size[1];
-		}
-	}
-	else
-	{
-		lines = columns = -1;
-	}
-
-	ret = su->popen(argv[1], lines, columns, &pid, flags);
+	ret = su->popen(argv[1], size[0], size[1], &pid, flags);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to popen: %d\n", ret);
 		return ret;
