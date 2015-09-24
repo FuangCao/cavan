@@ -203,6 +203,7 @@ void print_maybe_command(const struct cavan_command_map *p, const struct cavan_c
 const struct cavan_command_map *match_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname);
 int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[]);
 
+int cavan_exec_waitpid(pid_t pid);
 int cavan_redirect_stdio_base(int ttyfds[3]);
 int cavan_redirect_stdio_base2(int fd, int flags);
 int cavan_redirect_stdio(const char *pathname, int flags);
@@ -247,18 +248,6 @@ int cavan_tty_loop_main(struct cavan_tty_loop_desc *desc);
 int cavan_tty_redirect_loop(int ttyfds[][2], int count);
 int cavan_tty_redirect_loop2(const int *ttyin, const int *ttyout, int count);
 int cavan_tty_redirect_loop3(int in, int out, int err, int ttyin, int ttyout, int ttyerr);
-
-static inline int cavan_exec_waitpid(pid_t pid)
-{
-	int status;
-
-	if (waitpid(pid, &status, 0) == pid)
-	{
-		return WEXITSTATUS(status);
-	}
-
-	return 0;
-}
 
 static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
 {

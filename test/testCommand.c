@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
 
 	assert(argc > 1);
 
-#if 1
 	ret = cavan_exec_redirect_stdio_popen2(argv[1], 0, 0, &pid, flags);
 	if (ret < 0)
 	{
@@ -43,16 +42,6 @@ int main(int argc, char *argv[])
 		pr_red_info("cavan_exec_open_temp_pipe_client: %d", ret);
 		return ret;
 	}
-#else
-	ret = cavan_exec_redirect_stdio_popen(argv[1], -1, -1, &pid, flags);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_exec_redirect_stdio_popen2");
-		return ret;
-	}
-
-	ttyfds[1] = ret;
-#endif
 
 	cavan_tty_redirect(ttyfds[0], ttyfds[1], ttyfds[2]);
 

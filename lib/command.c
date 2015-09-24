@@ -215,6 +215,48 @@ label_start_match:
 	return -1;
 }
 
+int cavan_exec_waitpid(pid_t pid)
+{
+	int status;
+
+#if 0
+	while (1)
+	{
+		if (waitpid(pid, &status, WUNTRACED | WCONTINUED) < 0)
+		{
+			return 0;
+		}
+
+		if (WIFEXITED(status))
+		{
+			break;
+		}
+
+		if (WIFSIGNALED(status))
+		{
+			printf("killed by signal %d\n", WTERMSIG(status));
+			return -EFAULT;
+		}
+
+		if (WIFSTOPPED(status))
+		{
+			printf("stopped by signal %d\n", WSTOPSIG(status));
+		}
+		else if (WIFCONTINUED(status))
+		{
+			printf("continued\n");
+		}
+	}
+#else
+	if (waitpid(pid, &status, 0) != pid)
+	{
+		return 0;
+	}
+#endif
+
+	return WEXITSTATUS(status);
+}
+
 int cavan_redirect_stdio_base(int ttyfds[3])
 {
 	int i;
@@ -611,6 +653,8 @@ int cavan_exec_make_temp_pipe(char *pathname, size_t size, pid_t pid, int type)
 int cavan_exec_make_temp_pipe2(pid_t pid, int flags)
 {
 	int i;
+
+	umask(0);
 
 	for (i = 0; i < 3; i++)
 	{
