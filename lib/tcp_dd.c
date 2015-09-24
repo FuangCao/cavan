@@ -256,40 +256,7 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 	char *p;
 	struct tcp_dd_package pkg;
 
-	if (isatty(ttyfd))
-	{
-		ret = tty_get_win_size2(ttyfd, &pkg.exec_req.lines, &pkg.exec_req.columns);
-		if (ret < 0)
-		{
-			// pr_red_info("tty_get_win_size");
-			pkg.exec_req.lines = pkg.exec_req.columns = 0;
-		}
-
-		if (pkg.exec_req.lines == 0)
-		{
-			p = getenv("LINES");
-			if (p)
-			{
-				pkg.exec_req.lines = text2value_unsigned(p, NULL, 10);
-			}
-		}
-
-		if (pkg.exec_req.columns == 0)
-		{
-			p = getenv("COLUMNS");
-			if (p)
-			{
-				pkg.exec_req.columns = text2value_unsigned(p, NULL, 10);
-			}
-		}
-	}
-	else
-	{
-		pd_info("output tty is not a terminal");
-
-		pkg.exec_req.lines = 0xFFFF;
-		pkg.exec_req.columns = 0xFFFF;
-	}
+	tty_get_win_size3(ttyfd, &pkg.exec_req.lines, &pkg.exec_req.columns);
 
 	pd_info("terminal size = %d x %d", pkg.exec_req.lines, pkg.exec_req.columns);
 

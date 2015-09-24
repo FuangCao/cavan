@@ -24,12 +24,15 @@ int main(int argc, char *argv[])
 {
 	int ret;
 	pid_t pid;
+	int size[2];
 	int ttyfds[3];
 	int flags = CAVAN_EXECF_STDIN | CAVAN_EXECF_STDOUT | CAVAN_EXECF_STDERR;
 
 	assert(argc > 1);
 
-	ret = cavan_exec_redirect_stdio_popen2(argv[1], 0, 0, &pid, flags);
+	tty_get_win_size(0, size);
+
+	ret = cavan_exec_redirect_stdio_popen2(argv[1], size[0], size[1], &pid, flags);
 	if (ret < 0)
 	{
 		pr_red_info("cavan_exec_redirect_stdio_popen2");
@@ -44,6 +47,8 @@ int main(int argc, char *argv[])
 	}
 
 	cavan_tty_redirect(ttyfds[0], ttyfds[1], ttyfds[2]);
+
+	cavan_exec_close_temp_pipe(ttyfds);
 
 	return cavan_exec_waitpid(pid);
 }

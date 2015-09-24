@@ -225,8 +225,9 @@ int cavan_tty_redirect3(const char *ttypath);
 const char *cavan_getenv(const char *name, const char *default_value);
 u32 cavan_getenv_u32(const char *name, u32 default_value);
 
-int tty_get_win_size(int tty, u16 size[2]);
-int tty_get_win_size2(int tty, u16 *lines, u16 *columns);
+int tty_get_win_size(int tty, int size[2]);
+int tty_get_win_size2(int tty, int *lines, int *columns);
+int tty_get_win_size3(int tty, u16 *lines, u16 *columns);
 int tty_set_win_size(int tty, u16 lines, u16 columns);
 int cavan_exec_set_oom_adj(int pid, int value);
 
@@ -236,6 +237,7 @@ int cavan_exec_make_temp_pipe2(pid_t pid, int flags);
 void cavan_exec_unlink_temp_pipe(char *ttypath[3], pid_t pid, int flags);
 int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_t pid, int flags);
 int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags);
+void cavan_exec_close_temp_pipe(int ttyfds[3]);
 
 int cavan_tty_loop_add(struct cavan_tty_loop_desc *desc, const int ttyfds[2]);
 int cavan_tty_loop_del(struct cavan_tty_loop_desc *desc, const int ttyfds[2]);

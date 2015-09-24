@@ -485,6 +485,10 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 	int ttyfd;
 	char pathname[1024];
 
+#if CAVAN_COMMAND_DEBUG
+	println("%s: command = %s, lines = %d, columns = %d", __FUNCTION__, command, lines, columns);
+#endif
+
 	if (lines < 0 || columns < 0)
 	{
 		int pair[2];
@@ -861,6 +865,19 @@ int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags)
 	return 0;
 }
 
+void cavan_exec_close_temp_pipe(int ttyfds[3])
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+		if (ttyfds[i] >= 0)
+		{
+			close(ttyfds[i]);
+		}
+	}
+}
+
 static void *cavan_exec_pipe_thread_handler(void *_data)
 {
 	struct cavan_exec_pipe_thread_data *data = _data;
@@ -884,9 +901,7 @@ static void *cavan_exec_pipe_thread_handler(void *_data)
 		cavan_tty_redirect_loop3(data->fd, data->fd, -1, ttyfds[0], ttyfds[1], ttyfds[2]);
 
 		close(data->fd);
-		close(ttyfds[0]);
-		close(ttyfds[1]);
-		close(ttyfds[2]);
+		cavan_exec_close_temp_pipe(ttyfds);
 	}
 
 	cavan_exec_waitpid(data->pid);
@@ -902,6 +917,10 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	pid_t pid;
 	pthread_t thread;
 	struct cavan_exec_pipe_thread_data *data;
+
+#if CAVAN_COMMAND_DEBUG
+	println("%s: command = %s, lines = %d, columns = %d", __FUNCTION__, command, lines, columns);
+#endif
 
 	flags |= CAVAN_EXECF_DEL_TTY | CAVAN_EXECF_ERR_TO_OUT;
 
@@ -1033,6 +1052,7 @@ int cavan_tty_redirect(int ttyin, int ttyout, int ttyerr)
 	}
 
 	ret = cavan_tty_redirect_loop4(ttyin, ttyout, ttyerr);
+
 	restore_tty_attr(stdin_fd, &tty_attr);
 
 	return ret;
@@ -1083,7 +1103,7 @@ u32 cavan_getenv_u32(const char *name, u32 default_value)
 	return text2value_unsigned(value, NULL, 10);
 }
 
-int tty_get_win_size(int tty, u16 size[2])
+int tty_get_win_size(int tty, int size[2])
 {
 	int ret;
 	struct winsize wsize;
@@ -1091,26 +1111,44 @@ int tty_get_win_size(int tty, u16 size[2])
 	ret = ioctl(tty, TIOCGWINSZ, &wsize);
 	if (ret < 0)
 	{
-		// pr_error_info("ioctl TIOCGWINSZ");
-		return ret;
+		if (isatty(tty))
+		{
+			const char *env;
+
+			size[0] = size[1] = 0;
+
+			env = getenv("LINES");
+			if (env)
+			{
+				size[0] = text2value_unsigned(env, NULL, 10);
+			}
+
+			env = getenv("COLUMNS");
+			if (env)
+			{
+				size[1] = text2value_unsigned(env, NULL, 10);
+			}
+		}
+		else
+		{
+			size[0] = size[1] = -1;
+		}
+	}
+	else
+	{
+		size[0] = wsize.ws_row;
+		size[1] = wsize.ws_col;
 	}
 
-	size[0] = wsize.ws_row;
-	size[1] = wsize.ws_col;
-
-	return 0;
+	return ret;
 }
 
-int tty_get_win_size2(int tty, u16 *lines, u16 *columns)
+int tty_get_win_size2(int tty, int *lines, int *columns)
 {
 	int ret;
-	u16 size[2];
+	int size[2];
 
 	ret = tty_get_win_size(tty, size);
-	if (ret < 0)
-	{
-		return ret;
-	}
 
 	if (lines)
 	{
@@ -1122,7 +1160,27 @@ int tty_get_win_size2(int tty, u16 *lines, u16 *columns)
 		*columns = size[1];
 	}
 
-	return 0;
+	return ret;
+}
+
+int tty_get_win_size3(int tty, u16 *lines, u16 *columns)
+{
+	int ret;
+	int size[2];
+
+	ret = tty_get_win_size(tty, size);
+
+	if (lines)
+	{
+		*lines = size[0] < 0 ? 0xFFFF : size[0];
+	}
+
+	if (columns)
+	{
+		*columns = size[1] < 0 ? 0xFFFF : size[1];
+	}
+
+	return ret;
 }
 
 int tty_set_win_size(int tty, u16 lines, u16 columns)
@@ -1305,6 +1363,10 @@ int cavan_tty_loop_add(struct cavan_tty_loop_desc *desc, const int ttyfds[2])
 		.data.ptr = __UNCONST(ttyfds),
 	};
 
+#if CAVAN_COMMAND_DEBUG
+	println("%s: epoll = %d, %d => %d", __FUNCTION__, desc->epoll_fd, ttyfds[0], ttyfds[1]);
+#endif
+
 	ret = epoll_ctl(desc->epoll_fd, EPOLL_CTL_ADD, ttyfds[0], &event);
 	if (ret < 0)
 	{
@@ -1412,6 +1474,7 @@ void cavan_tty_loop_deinit(struct cavan_tty_loop_desc *desc)
 int cavan_tty_loop_main(struct cavan_tty_loop_desc *desc)
 {
 	int ret;
+	int msec = -1;
 	int epoll_fd = desc->epoll_fd;
 	int pipefd[2] = { desc->pipefd[0], 2 };
 
@@ -1427,10 +1490,14 @@ int cavan_tty_loop_main(struct cavan_tty_loop_desc *desc)
 		struct epoll_event events[10];
 		const struct epoll_event *p, *p_end;
 
-		ret = epoll_wait(epoll_fd, events, NELEM(events), -1);
+		ret = epoll_wait(epoll_fd, events, NELEM(events), msec);
 		if (ret <= 0)
 		{
-			pr_err_info("epoll_wait: %d", ret);
+			if (ret < 0)
+			{
+				pr_err_info("epoll_wait: %d", ret);
+			}
+
 			return ret;
 		}
 
@@ -1438,18 +1505,29 @@ int cavan_tty_loop_main(struct cavan_tty_loop_desc *desc)
 		{
 			ssize_t rdlen;
 			char buff[1024];
-			int *ttyfd = p->data.ptr;
+			int *ttyfds = p->data.ptr;
 
-			rdlen = read(ttyfd[0], buff, sizeof(buff));
+			rdlen = read(ttyfds[0], buff, sizeof(buff));
 			if (rdlen <= 0)
 			{
+				if (ttyfds[0] == 0)
+				{
+					cavan_tty_loop_del(desc, ttyfds);
+					msec = 500;
+					continue;
+				}
+
 				return 0;
 			}
 
-			if (write(ttyfd[1], buff, rdlen) != rdlen)
+			if (write(ttyfds[1], buff, rdlen) != rdlen)
 			{
 				return 0;
 			}
+
+#if CAVAN_COMMAND_DEBUG
+			println("%d => %d, length = %ld", ttyfds[0], ttyfds[1], rdlen);
+#endif
 		}
 	}
 

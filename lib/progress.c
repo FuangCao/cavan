@@ -168,7 +168,7 @@ void progress_bar_update(struct progress_bar *bar)
 
 void progress_bar_init(struct progress_bar *bar, double total)
 {
-	u16 columns;
+	int columns;
 
 	bar->total = total == 0 ? 1 : total;
 	bar->current = bar->last = 0;
@@ -176,11 +176,11 @@ void progress_bar_init(struct progress_bar *bar, double total)
 	bar->fill = 0;
 	bar->content_length = 0;
 
-	if (tty_get_win_size2(stdout_fd, NULL, &columns) < 0 || columns == 0)
+	if (tty_get_win_size2(stdout_fd, NULL, &columns) < 0 || columns <= 0)
 	{
 		bar->half_length = BAR_DEF_HALF_LEN;
 	}
-	else if (columns < BAR_CONTENT_MIN)
+	else if (columns < (int) BAR_CONTENT_MIN)
 	{
 		bar->half_length = 0;
 	}
