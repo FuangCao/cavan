@@ -27,6 +27,9 @@ __BEGIN_DECLS
 	}; \
 	FIND_EXEC_COMMAND_MAIN(__local_cmd_map);
 
+#define CAVAN_EXECF_STDIN			(1 << 0)
+#define CAVAN_EXECF_STDOUT			(1 << 1)
+#define CAVAN_EXECF_STDERR			(1 << 2)
 #define CAVAN_EXECF_DEL_TTY			(1 << 3)
 #define CAVAN_EXECF_ERR_TO_OUT		(1 << 4)
 
@@ -130,6 +133,19 @@ struct cavan_command_map
 	int (*main_func)(int argc, char *argv[]);
 };
 
+struct cavan_tty_loop_desc
+{
+	int epoll_fd;
+	int pipefd[2];
+};
+
+struct cavan_exec_pipe_thread_data
+{
+	int fd;
+	int flags;
+	pid_t pid;
+};
+
 // ============================================================
 
 extern const char *cavan_help_message_help;
@@ -195,30 +211,42 @@ int cavan_exec_redirect_stdio_base2(int ttyfd, const char *command, int flags);
 int cavan_exec_redirect_stdio(char *const ttypath[3], const char *command, int flags);
 int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, const char *command, int flags);
 int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid, int flags);
-int cavan_exec_redirect_stdio_popen2(const char *command, pid_t *ppid, int flags);
+int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns, pid_t *ppid, int flags);
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
 int cavan_system(const char *command);
 int cavan_system2(const char *command, ...);
 int cavan_tty_tee_loop(int ttyfd, int ttyin, int ttyout);
 int cavan_tee_main(const char *filename, bool append, bool command);
 
-int cavan_tty_redirect_loop(int tty1[2], int tty2[2]);
-int cavan_tty_redirect_base(int ttyfd);
-int cavan_tty_redirect(const char *ttypath);
+int cavan_tty_redirect(int ttyin, int ttyout, int ttyerr);
+int cavan_tty_redirect3(const char *ttypath);
 
 const char *cavan_getenv(const char *name, const char *default_value);
 u32 cavan_getenv_u32(const char *name, u32 default_value);
 
-int tty_get_win_size(int tty, u16 *lines, u16 *columns);
+int tty_get_win_size(int tty, u16 size[2]);
+int tty_get_win_size2(int tty, u16 *lines, u16 *columns);
 int tty_set_win_size(int tty, u16 lines, u16 columns);
 int cavan_exec_set_oom_adj(int pid, int value);
 
 int cavan_exec_get_temp_pipe_pathname(char *pathname, size_t size, pid_t pid, int type);
 int cavan_exec_make_temp_pipe(char *pathname, size_t size, pid_t pid, int type);
 int cavan_exec_make_temp_pipe2(pid_t pid, int flags);
-void cavan_exec_unlink_temp_pipe(char *ttypath[3]);
-int cavan_exec_open_temp_pipe(int ttyfds[3], char *const ttypath[3], int flags);
-int cavan_exec_open_temp_pipe_client(int ttyfds[3], pid_t pid, int flags);
+void cavan_exec_unlink_temp_pipe(char *ttypath[3], pid_t pid, int flags);
+int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_t pid, int flags);
+int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags);
+
+int cavan_tty_loop_add(struct cavan_tty_loop_desc *desc, const int ttyfds[2]);
+int cavan_tty_loop_del(struct cavan_tty_loop_desc *desc, const int ttyfds[2]);
+int cavan_tty_loop_del_array(struct cavan_tty_loop_desc *desc, int ttyfds[][2], int count);
+int cavan_tty_loop_add_array(struct cavan_tty_loop_desc *desc, int ttyfds[][2], int count);
+int cavan_tty_loop_init(struct cavan_tty_loop_desc *desc);
+void cavan_tty_loop_deinit(struct cavan_tty_loop_desc *desc);
+int cavan_tty_loop_main(struct cavan_tty_loop_desc *desc);
+
+int cavan_tty_redirect_loop(int ttyfds[][2], int count);
+int cavan_tty_redirect_loop2(const int *ttyin, const int *ttyout, int count);
+int cavan_tty_redirect_loop3(int in, int out, int err, int ttyin, int ttyout, int ttyerr);
 
 static inline int cavan_exec_waitpid(pid_t pid)
 {
@@ -230,6 +258,16 @@ static inline int cavan_exec_waitpid(pid_t pid)
 	}
 
 	return 0;
+}
+
+static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
+{
+	return cavan_tty_redirect_loop3(ttyin, ttyout, ttyerr, stdin_fd, stdout_fd, stderr_fd);
+}
+
+static inline int cavan_tty_redirect2(int ttyfd)
+{
+	return cavan_tty_redirect(ttyfd, ttyfd, -1);
 }
 
 __END_DECLS

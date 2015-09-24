@@ -11,6 +11,11 @@ int set_tty_attr(int fd, int action, struct termios *attr)
 {
 	int ret;
 
+	if (!isatty(fd))
+	{
+		return 0;
+	}
+
 	ret = tcsetattr(fd, action, attr);
 	if (ret < 0)
 	{
@@ -32,7 +37,7 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 	int ret;
 	struct termios attr;
 
-	if (isatty(fd) != 1)
+	if (!isatty(fd))
 	{
 		return 0;
 	}
@@ -636,11 +641,11 @@ bool cavan_get_choose_yesno(const char *prompt, bool def_choose, int timeout_ms)
 
 		if (timeout_ms > 0)
 		{
-			rdlen = file_read_timeout(fileno(stdin), buff, sizeof(buff), timeout_ms);
+			rdlen = file_read_timeout(stdin_fd, buff, sizeof(buff), timeout_ms);
 		}
 		else
 		{
-			rdlen = read(fileno(stdin), buff, sizeof(buff));
+			rdlen = read(stdin_fd, buff, sizeof(buff));
 		}
 
 		if (rdlen <= 0)

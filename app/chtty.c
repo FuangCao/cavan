@@ -11,5 +11,5 @@ int main(int argc, char *argv[])
 {
 	assert(argc == 2);
 
-	return cavan_tty_redirect(argv[1]);
+	return cavan_tty_redirect3(argv[1]);
 }

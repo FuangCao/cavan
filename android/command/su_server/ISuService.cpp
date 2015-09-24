@@ -47,11 +47,13 @@ public:
 		return 0;
 	}
 
-	virtual int popen(const char *command, pid_t *ppid, int flags) {
+	virtual int popen(const char *command, int lines, int columns, pid_t *ppid, int flags) {
         Parcel data, reply;
 
         data.writeInterfaceToken(ISuService::getInterfaceDescriptor());
 		data.writeString8(String8(command));
+		data.writeInt32(lines);
+		data.writeInt32(columns);
 		data.writeInt32(flags);
 
         status_t status = remote()->transact(CMD_POPEN, data, &reply);
@@ -88,9 +90,11 @@ status_t BnSuService::onTransact(uint32_t code, const Parcel &data, Parcel *repl
 	case CMD_POPEN: {
 			CHECK_INTERFACE(IAudioFlinger, data, reply);
 			String8 command = data.readString8();
+			int lines = data.readInt32();
+			int columns = data.readInt32();
 			int flags = data.readInt32();
 			pid_t pid;
-			int ret = popen(command.string(), &pid, flags);
+			int ret = popen(command.string(), lines, columns, &pid, flags);
 			reply->writeInt32(ret);
 			if (ret < 0) {
 				return ret;

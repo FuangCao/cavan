@@ -46,32 +46,43 @@ int main(int argc, char *argv[])
 	pid_t pid;
 	int ttyfds[3];
 	int flags = 1 << 1;
+	int lines, columns;
 
-	ret = su->popen(argv[1], &pid, flags);
+	if (isatty(0))
+	{
+		u16 size[2];
+
+		ret = tty_get_win_size(0, size);
+		if (ret < 0)
+		{
+			lines = columns = 0;
+		}
+		else
+		{
+			lines = size[0];
+			columns = size[1];
+		}
+	}
+	else
+	{
+		lines = columns = -1;
+	}
+
+	ret = su->popen(argv[1], lines, columns, &pid, flags);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to popen: %d\n", ret);
 		return ret;
 	}
 
-	ret = cavan_exec_open_temp_pipe_client(ttyfds, pid, flags);
+	ret = cavan_exec_open_temp_pipe_slave(ttyfds, pid, flags);
 	if (ret < 0) {
 		pr_red_info("cavan_exec_open_temp_pipe_client: %d", ret);
 		return ret;
 	}
 
-	while (1) {
-		ssize_t rdlen;
-		char buff[1024];
+	cavan_tty_redirect(ttyfds[0], ttyfds[1], ttyfds[2]);
 
-		rdlen = read(ttyfds[1], buff, sizeof(buff));
-		if (rdlen <= 0) {
-			break;
-		}
-
-		if (write(1, buff, rdlen) != rdlen) {
-			break;
-		}
-	}
+	return cavan_exec_waitpid(pid);
 #else
 	int ret = su->system(argv[1]);
 	if (ret < 0) {

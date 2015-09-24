@@ -243,6 +243,7 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 		goto out_pthread_mutex_destroy;
 	}
 
+#if 0
 	ret = pipe(thread->pipefd);
 	if (ret < 0)
 	{
@@ -263,6 +264,14 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 		pr_err_info("fcntl");
 		goto out_close_pipe;
 	}
+#else
+	ret = pipe2(thread->pipefd, O_CLOEXEC | O_NONBLOCK);
+	if (ret < 0)
+	{
+		pr_red_info("pipe");
+		goto out_pthread_cond_destroy;
+	}
+#endif
 
 	thread->epoll_fd = epoll_create(THREAD_EPOLL_SIZE);
 	if (thread->epoll_fd < 0)

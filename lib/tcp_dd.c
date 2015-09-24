@@ -258,7 +258,7 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 
 	if (isatty(ttyfd))
 	{
-		ret = tty_get_win_size(ttyfd, &pkg.exec_req.lines, &pkg.exec_req.columns);
+		ret = tty_get_win_size2(ttyfd, &pkg.exec_req.lines, &pkg.exec_req.columns);
 		if (ret < 0)
 		{
 			// pr_red_info("tty_get_win_size");
@@ -1106,22 +1106,22 @@ int tcp_dd_exec_command(struct network_url *url, const char *command)
 		return ret;
 	}
 
-	ret = tcp_dd_send_exec_request(&client, fileno(stdout), command);
+	ret = tcp_dd_send_exec_request(&client, stdout_fd, command);
 	if (ret < 0)
 	{
 		pr_red_info("tcp_dd_send_exec_request");
 		goto out_client_close;
 	}
 
-	ret = set_tty_mode(fileno(stdin), 5, &tty_attr);
+	ret = set_tty_mode(stdin_fd, 5, &tty_attr);
 	if (ret < 0)
 	{
 		pr_red_info("set_tty_mode");
 		goto out_client_close;
 	}
 
-	ret = network_client_exec_redirect(&client, fileno(stdin), fileno(stdout));
-	restore_tty_attr(fileno(stdin), &tty_attr);
+	ret = network_client_exec_redirect(&client, stdin_fd, stdout_fd);
+	restore_tty_attr(stdin_fd, &tty_attr);
 out_client_close:
 	client.close(&client);
 	return ret;

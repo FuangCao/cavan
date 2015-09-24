@@ -52,7 +52,7 @@ public:
 	}
 
 	virtual int system(const char *command) = 0;
-	virtual int popen(const char *command, pid_t *ppid, int flags) = 0;
+	virtual int popen(const char *command, int lines, int cloumns, pid_t *ppid, int flags) = 0;
 };
 
 class BnSuService: public BnInterface<ISuService>

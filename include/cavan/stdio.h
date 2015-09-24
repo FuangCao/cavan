@@ -116,6 +116,10 @@ __BEGIN_DECLS
 #define PRINT_FORMAT_UID				"d"
 #endif
 
+#define stdin_fd						fileno(stdin)
+#define stdout_fd						fileno(stdout)
+#define stderr_fd						fileno(stderr)
+
 // ============================================================
 
 #define pd_color_info(color, fmt, args ...) \
