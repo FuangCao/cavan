@@ -486,8 +486,13 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 	char pathname[1024];
 
 #if CAVAN_COMMAND_DEBUG
-	println("%s: command = %s, lines = %d, columns = %d", __FUNCTION__, command, lines, columns);
+	println("%s: command = %s, lines = %d, columns = %d, flags = 0x%08x", __FUNCTION__, command, lines, columns, flags);
 #endif
+
+	if ((flags & CAVAN_EXECF_ERR_TO_OUT) && (flags & CAVAN_EXECF_STDOUT))
+	{
+		flags |= CAVAN_EXECF_STDERR;
+	}
 
 	if (lines < 0 || columns < 0)
 	{
@@ -919,7 +924,7 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	struct cavan_exec_pipe_thread_data *data;
 
 #if CAVAN_COMMAND_DEBUG
-	println("%s: command = %s, lines = %d, columns = %d", __FUNCTION__, command, lines, columns);
+	println("%s: command = %s, lines = %d, columns = %d, flags = 0x%08x", __FUNCTION__, command, lines, columns, flags);
 #endif
 
 	flags |= CAVAN_EXECF_DEL_TTY | CAVAN_EXECF_ERR_TO_OUT;
@@ -1526,7 +1531,7 @@ int cavan_tty_loop_main(struct cavan_tty_loop_desc *desc)
 			}
 
 #if CAVAN_COMMAND_DEBUG
-			println("%d => %d, length = %ld", ttyfds[0], ttyfds[1], rdlen);
+			println("%d => %d, length = %" PRINT_FORMAT_SIZE, ttyfds[0], ttyfds[1], rdlen);
 #endif
 		}
 	}

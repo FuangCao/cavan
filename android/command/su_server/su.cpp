@@ -28,11 +28,105 @@
 
 using namespace android;
 
+static void show_usage(const char *command)
+{
+	println("Usage: %s [option] [username]", command);
+	println("--help, -h\t\t\t\t%s", cavan_help_message_help);
+	println("--version, -V, -v\t\t\t%s", cavan_help_message_version);
+	println("-c, --command COMMAND\t\t\t%s", cavan_help_message_command);
+	println("-l, --login\t\t\t\t%s", cavan_help_message_login);
+	println("-m, -p, --preserve-environment\t\t%s", cavan_help_message_preserve_environment);
+	println("-s, --shell SHELL\t\t\t%s", cavan_help_message_shell);
+}
+
 int main(int argc, char *argv[])
 {
-	if (argc < 2) {
-		fprintf(stderr, "Too a few argument!\n");
-		return -EINVAL;
+	int c;
+	int option_index;
+	struct option long_option[] =
+	{
+		{
+			.name = "help",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_HELP,
+		},
+		{
+			.name = "version",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_VERSION,
+		},
+		{
+			.name = "command",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_COMMAND,
+		},
+		{
+			.name = "login",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_LOGIN,
+		},
+		{
+			.name = "preserve-environment",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_RESET,
+		},
+		{
+			.name = "shell",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_SHELL,
+		},
+		{
+			0, 0, 0, 0
+		},
+	};
+	const char *command = NULL;
+
+	while ((c = getopt_long(argc, argv, "vVhH:c:lmps:i:I:P:LaA", long_option, &option_index)) != EOF)
+	{
+		switch (c)
+		{
+		case 'v':
+		case 'V':
+		case CAVAN_COMMAND_OPTION_VERSION:
+			show_author_info();
+			return 0;
+
+		case 'h':
+		case CAVAN_COMMAND_OPTION_HELP:
+			show_usage(argv[0]);
+			return 0;
+
+		case 'c':
+		case CAVAN_COMMAND_OPTION_COMMAND:
+			command = optarg;
+			break;
+
+		case 'l':
+		case CAVAN_COMMAND_OPTION_LOGIN:
+			pr_pos_info();
+			break;
+
+		case 'm':
+		case 'p':
+		case CAVAN_COMMAND_OPTION_RESET:
+			pr_pos_info();
+			break;
+
+		case 's':
+		case CAVAN_COMMAND_OPTION_SHELL:
+			pr_pos_info();
+			break;
+
+		default:
+			show_usage(argv[0]);
+			return -EINVAL;
+		}
 	}
 
 	sp<ISuService> su = ISuService::getService();
@@ -41,18 +135,17 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-#if 1
 	int ret;
 	pid_t pid;
 	int ttyfds[3];
-	int flags = 1 << 1;
 	int size[2];
+	int flags = CAVAN_EXECF_STDIN | CAVAN_EXECF_STDOUT | CAVAN_EXECF_STDERR;
 
 	tty_get_win_size(0, size);
 
-	ret = su->popen(argv[1], size[0], size[1], &pid, flags);
+	ret = su->popen(command, size[0], size[1], &pid, flags);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to popen: %d\n", ret);
+		pr_red_info("su->popen: %d\n", ret);
 		return ret;
 	}
 
@@ -65,13 +158,4 @@ int main(int argc, char *argv[])
 	cavan_tty_redirect(ttyfds[0], ttyfds[1], ttyfds[2]);
 
 	return cavan_exec_waitpid(pid);
-#else
-	int ret = su->system(argv[1]);
-	if (ret < 0) {
-		fprintf(stderr, "Failed to system: %d\n", ret);
-		return ret;
-	}
-#endif
-
-	return 0;
 }

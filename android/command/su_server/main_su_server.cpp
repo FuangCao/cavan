@@ -30,5 +30,6 @@ using namespace android;
 
 int main(int, char **)
 {
+	ProcessState::self()->setThreadPoolMaxThreadCount(0);
 	SuService::publishAndJoinThreadPool();
 }

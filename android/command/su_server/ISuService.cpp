@@ -51,7 +51,7 @@ public:
         Parcel data, reply;
 
         data.writeInterfaceToken(ISuService::getInterfaceDescriptor());
-		data.writeString8(String8(command));
+		data.writeString8(String8(command ? command : ""));
 		data.writeInt32(lines);
 		data.writeInt32(columns);
 		data.writeInt32(flags);
