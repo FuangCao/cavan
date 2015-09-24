@@ -10,6 +10,7 @@
 
 const char *network_get_socket_pathname(void)
 {
+#if 0
 	static char pathname[1024];
 
 	if (pathname[0])
@@ -18,6 +19,9 @@ const char *network_get_socket_pathname(void)
 	}
 
 	return cavan_build_temp_path("cavan/network/socket", pathname, sizeof(pathname));
+#else
+	return "/dev/cavan/network/socket";
+#endif
 }
 
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr)
