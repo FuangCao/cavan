@@ -863,24 +863,33 @@ int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags)
 
 static void *cavan_exec_pipe_thread_handler(void *_data)
 {
-	int ret;
-	int ttyfds[3];
 	struct cavan_exec_pipe_thread_data *data = _data;
 
-	ret = cavan_exec_open_temp_pipe_master(ttyfds, NULL, data->pid, data->flags);
-	if (ret < 0)
+#if CAVAN_COMMAND_DEBUG
+	println("fd = %d, pid = %d", data->fd, data->pid);
+#endif
+
+	if (data->fd >= 0)
 	{
-		pr_red_info("cavan_exec_open_temp_pipe: %d", ret);
-		return NULL;
+		int ret;
+		int ttyfds[3];
+
+		ret = cavan_exec_open_temp_pipe_master(ttyfds, NULL, data->pid, data->flags);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_exec_open_temp_pipe: %d", ret);
+			return NULL;
+		}
+
+		cavan_tty_redirect_loop3(data->fd, data->fd, -1, ttyfds[0], ttyfds[1], ttyfds[2]);
+
+		close(data->fd);
+		close(ttyfds[0]);
+		close(ttyfds[1]);
+		close(ttyfds[2]);
 	}
 
-	cavan_tty_redirect_loop3(data->fd, data->fd, -1, ttyfds[0], ttyfds[1], ttyfds[2]);
-
-	close(data->fd);
-	close(ttyfds[0]);
-	close(ttyfds[1]);
-	close(ttyfds[2]);
-
+	cavan_exec_waitpid(data->pid);
 	free(data);
 
 	return NULL;
@@ -888,8 +897,13 @@ static void *cavan_exec_pipe_thread_handler(void *_data)
 
 int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns, pid_t *ppid, int flags)
 {
+	int fd;
 	int ret;
 	pid_t pid;
+	pthread_t thread;
+	struct cavan_exec_pipe_thread_data *data;
+
+	flags |= CAVAN_EXECF_DEL_TTY | CAVAN_EXECF_ERR_TO_OUT;
 
 	if (lines < 0 || columns < 0)
 	{
@@ -911,17 +925,15 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 		}
 		else
 		{
-			return cavan_exec_redirect_stdio(NULL, command, flags | CAVAN_EXECF_DEL_TTY | CAVAN_EXECF_ERR_TO_OUT);
+			return cavan_exec_redirect_stdio(NULL, command, flags);
 		}
 
 		cavan_exec_set_oom_adj(pid, 0);
+
+		fd = -1;
 	}
 	else
 	{
-		int fd;
-		pthread_t thread;
-		struct cavan_exec_pipe_thread_data *data;
-
 		fd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid, flags);
 		if (fd < 0)
 		{
@@ -933,25 +945,26 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 		if (ret < 0)
 		{
 			pr_red_info("cavan_exec_make_temp_pipe2: %d", ret);
-			close(fd);
-			return ret;
+			goto out_close_fd;
 		}
-
-		data = malloc(sizeof(struct cavan_exec_pipe_thread_data));
-		if (data == NULL)
-		{
-			pr_err_info("malloc");
-			close(fd);
-			cavan_exec_unlink_temp_pipe(NULL, pid, flags);
-			return -ENOMEM;
-		}
-
-		data->fd = fd;
-		data->flags = flags | CAVAN_EXECF_DEL_TTY | CAVAN_EXECF_ERR_TO_OUT;
-		data->pid = pid;
-
-		pthread_create(&thread, NULL, cavan_exec_pipe_thread_handler, data);
 	}
+
+	data = malloc(sizeof(struct cavan_exec_pipe_thread_data));
+	if (data == NULL)
+	{
+		pr_err_info("malloc");
+		ret = -ENOMEM;
+		goto out_cavan_exec_unlink_temp_pipe;
+	}
+
+#if CAVAN_COMMAND_DEBUG
+	println("pid = %d", pid);
+#endif
+
+	data->fd = fd;
+	data->pid = pid;
+	data->flags = flags;
+	pthread_create(&thread, NULL, cavan_exec_pipe_thread_handler, data);
 
 	if (ppid)
 	{
@@ -959,6 +972,15 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	}
 
 	return 0;
+
+out_cavan_exec_unlink_temp_pipe:
+	cavan_exec_unlink_temp_pipe(NULL, pid, flags);
+out_close_fd:
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	return ret;
 }
 
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int ttyin, int ttyout)
