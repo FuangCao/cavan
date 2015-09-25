@@ -36,14 +36,17 @@ enum {
 
 class ISuService : public IInterface
 {
+protected:
+	pid_t mPid;
+
 public:
-	static const String16 mServiceName;
+	static const String16 sServiceName;
 
 public:
 	DECLARE_META_INTERFACE(SuService);
 
 	static sp<ISuService> getService(void) {
-		sp<IBinder> binder = defaultServiceManager()->checkService(mServiceName);
+		sp<IBinder> binder = defaultServiceManager()->checkService(sServiceName);
 		if (binder == NULL) {
 			return NULL;
 		}
@@ -51,12 +54,29 @@ public:
 		return interface_cast<ISuService>(binder);
 	}
 
+	pid_t getPid(void) {
+		return mPid;
+	}
+
+	virtual int openPipeSlave(int ttyfds[3]) {
+		(void) ttyfds;
+		return -1;
+	}
+
+	virtual int redirectSlaveStdio(void) {
+		return -1;
+	}
+
 	virtual int system(const char *command) = 0;
-	virtual int popen(const char *command, int lines, int cloumns, pid_t *ppid, int flags) = 0;
+	virtual int popen(const char *command, int flags) = 0;
 };
 
 class BnSuService: public BnInterface<ISuService>
 {
+protected:
+	int mLines;
+	int mColumns;
+
 public:
 	virtual status_t onTransact( uint32_t code, const Parcel &data, Parcel* reply, uint32_t flags = 0);
 };

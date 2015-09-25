@@ -30,11 +30,11 @@ class SuService : public BinderService<SuService>, public BnSuService
 {
 public:
 	static const String16 &getServiceName(void) {
-		return mServiceName;
+		return sServiceName;
 	}
 
 	virtual int system(const char *command);
-	virtual int popen(const char *command, int lines, int cloumns, pid_t *ppid, int flags);
+	virtual int popen(const char *command, int flags);
 };
 
 };

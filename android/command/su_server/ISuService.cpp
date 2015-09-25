@@ -21,10 +21,13 @@
 
 namespace android {
 
-const String16 ISuService::mServiceName("cavan.su");
+const String16 ISuService::sServiceName("cavan.su");
 
 class BpSuService: public BpInterface<ISuService>
 {
+private:
+	int mFlags;
+
 public:
 	BpSuService(const sp<IBinder> &impl) : BpInterface<ISuService>(impl) {}
 
@@ -47,26 +50,27 @@ public:
 		return 0;
 	}
 
-	virtual int popen(const char *command, int lines, int columns, pid_t *ppid, int flags) {
+	virtual int popen(const char *command, int flags) {
         Parcel data, reply;
 
 		if (command == NULL) {
 			command = "";
 		}
 
-		if (lines == 0 && columns == 0) {
-			tty_get_win_size2(0, &lines, &columns);
+		if ((flags & 0x07) == 0) {
+			mFlags = CAVAN_EXECF_STDIN | CAVAN_EXECF_STDOUT | CAVAN_EXECF_ERR_TO_OUT;
+		} else {
+			mFlags = flags;
 		}
 
-		if ((flags & 0x07) == 0) {
-			flags = CAVAN_EXECF_STDIN | CAVAN_EXECF_STDOUT | CAVAN_EXECF_ERR_TO_OUT;
-		}
+		int size[2];
+		tty_get_win_size(0, size);
 
         data.writeInterfaceToken(ISuService::getInterfaceDescriptor());
-		data.writeString8(String8(command ? command : ""));
-		data.writeInt32(lines);
-		data.writeInt32(columns);
-		data.writeInt32(flags);
+		data.writeString8(String8(command));
+		data.writeInt32(size[0]);
+		data.writeInt32(size[1]);
+		data.writeInt32(mFlags);
 
         status_t status = remote()->transact(CMD_POPEN, data, &reply);
 		if (status != NO_ERROR) {
@@ -78,9 +82,30 @@ public:
 			return ret;
 		}
 
-		reply.readInt32(ppid);
+		reply.readInt32(&mPid);
 
 		return 0;
+	}
+
+	int openPipeSlave(int ttyfds[3])
+	{
+		return cavan_exec_open_temp_pipe_slave(ttyfds, mPid, mFlags);
+	}
+
+	int redirectSlaveStdio(void)
+	{
+		int ret;
+		int ttyfds[3];
+
+		ret = openPipeSlave(ttyfds);
+		if (ret < 0) {
+			ALOGE("Failed to openPipeSlave: %d", ret);
+			return ret;
+		}
+
+		cavan_tty_redirect(ttyfds[0], ttyfds[1], ttyfds[2]);
+
+		return cavan_exec_waitpid(mPid);
 	}
 };
 
@@ -102,16 +127,15 @@ status_t BnSuService::onTransact(uint32_t code, const Parcel &data, Parcel *repl
 	case CMD_POPEN: {
 			CHECK_INTERFACE(IAudioFlinger, data, reply);
 			String8 command = data.readString8();
-			int lines = data.readInt32();
-			int columns = data.readInt32();
+			mLines = data.readInt32();
+			mColumns = data.readInt32();
 			int flags = data.readInt32();
-			pid_t pid;
-			int ret = popen(command.string(), lines, columns, &pid, flags);
+			int ret = popen(command.string(), flags);
 			reply->writeInt32(ret);
 			if (ret < 0) {
 				return ret;
 			}
-			reply->writeInt32(pid);
+			reply->writeInt32(mPid);
 		}
 		break;
 

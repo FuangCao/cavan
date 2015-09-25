@@ -17,6 +17,7 @@
  *
  */
 
+#include <binder/ProcessState.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -24,7 +25,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "ISuService.h"
+#include "SuService.h"
 
 using namespace android;
 
@@ -37,6 +38,7 @@ static void show_usage(const char *command)
 	println("-l, --login\t\t\t\t%s", cavan_help_message_login);
 	println("-m, -p, --preserve-environment\t\t%s", cavan_help_message_preserve_environment);
 	println("-s, --shell SHELL\t\t\t%s", cavan_help_message_shell);
+	println("-d, --daemon, --service\t\t\t%s", cavan_help_message_daemon);
 }
 
 int main(int argc, char *argv[])
@@ -82,12 +84,25 @@ int main(int argc, char *argv[])
 			.val = CAVAN_COMMAND_OPTION_SHELL,
 		},
 		{
+			.name = "daemon",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DAEMON,
+		},
+		{
+			.name = "service",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DAEMON,
+		},
+		{
 			0, 0, 0, 0
 		},
 	};
+	bool daemon = false;
 	const char *command = NULL;
 
-	while ((c = getopt_long(argc, argv, "vVhH:c:lmps:i:I:P:LaA", long_option, &option_index)) != EOF)
+	while ((c = getopt_long(argc, argv, "vVhH:c:lmps:i:I:P:LaAd", long_option, &option_index)) != EOF)
 	{
 		switch (c)
 		{
@@ -123,10 +138,23 @@ int main(int argc, char *argv[])
 			pr_pos_info();
 			break;
 
+		case 'd':
+		case CAVAN_COMMAND_OPTION_DAEMON:
+			daemon = true;
+			break;
+
 		default:
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
+	}
+
+	if (daemon)
+	{
+		ProcessState::self()->setThreadPoolMaxThreadCount(0);
+		SuService::publishAndJoinThreadPool();
+
+		return 0;
 	}
 
 	sp<ISuService> su = ISuService::getService();
@@ -135,23 +163,11 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-	int ret;
-	pid_t pid;
-	int ttyfds[3];
-
-	ret = su->popen(command, 0, 0, &pid, 0);
+	int ret = su->popen(command, 0);
 	if (ret < 0) {
 		pr_red_info("su->popen: %d\n", ret);
 		return ret;
 	}
 
-	ret = cavan_exec_open_temp_pipe_slave(ttyfds, pid, CAVAN_EXECF_AUTO_OPEN);
-	if (ret < 0) {
-		pr_red_info("cavan_exec_open_temp_pipe_client: %d", ret);
-		return ret;
-	}
-
-	cavan_tty_redirect(ttyfds[0], ttyfds[1], ttyfds[2]);
-
-	return cavan_exec_waitpid(pid);
+	return su->redirectSlaveStdio();
 }

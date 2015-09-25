@@ -36,13 +36,13 @@ int SuService::system(const char *command)
 	return 0;
 }
 
-int SuService::popen(const char *command, int lines, int columns, pid_t *ppid, int flags)
+int SuService::popen(const char *command, int flags)
 {
 	int ret;
 
-	ALOGE("%s[%d]: command = %s, lines = %d, columns = %d, flags = 0x%08x", __FUNCTION__, __LINE__, command, lines, columns, flags);
+	ALOGE("%s[%d]: command = %s, lines = %d, columns = %d, flags = 0x%08x", __FUNCTION__, __LINE__, command, mLines, mColumns, flags);
 
-	ret = cavan_exec_redirect_stdio_popen2(command, lines, columns, ppid, flags);
+	ret = cavan_exec_redirect_stdio_popen2(command, mLines, mColumns, &mPid, flags);
 	if (ret < 0) {
 		return ret;
 	}

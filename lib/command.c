@@ -58,6 +58,8 @@ const char *cavan_help_message_resource = "R/W resource partition";
 const char *cavan_help_message_rw_image = "R/W partition by image short name";
 const char *cavan_help_message_rw_image_auto = "R/W partition auto";
 const char *cavan_help_message_driver = "driver module path";
+const char *cavan_help_message_service = "run as service";
+const char *cavan_help_message_server = "run as server";
 
 static const char *const cavan_exec_tty_prefix[3] = { "stdin", "stdout", "stderr" };
 static const int cavan_exec_tty_master_open_flags[3] = { O_RDONLY, O_WRONLY, O_WRONLY };
@@ -378,7 +380,7 @@ static int cavan_exec_command(const char *command)
 	const char *name = text_basename_simple(shell);
 
 #if CAVAN_COMMAND_DEBUG
-	println("shell = %s, name = %s, command = %s", shell, name, command);
+	pr_func_info("shell = %s, name = %s, command = `%s'", shell, name, command);
 #endif
 
 	if (command && command[0] && text_cmp("shell", command))
@@ -485,7 +487,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 	char pathname[1024];
 
 #if CAVAN_COMMAND_DEBUG
-	pr_func_info("%s: command = %s, lines = %d, columns = %d, flags = 0x%08x", command, lines, columns, flags);
+	pr_func_info("command = `%s', lines = %d, columns = %d, flags = 0x%08x", command, lines, columns, flags);
 #endif
 
 	if ((flags & CAVAN_EXECF_ERR_TO_OUT) && (flags & CAVAN_EXECF_STDOUT))
@@ -502,7 +504,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 			int pipefd[2];
 
 #if CAVAN_COMMAND_DEBUG
-			println("create pipe");
+			pr_func_info("create pipe");
 #endif
 
 			ret = pipe(pipefd);
@@ -526,7 +528,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		else
 		{
 #if CAVAN_COMMAND_DEBUG
-			println("create socketpair");
+			pr_func_info("create socketpair");
 #endif
 
 			ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
@@ -563,7 +565,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		const char *ptmpath = "/dev/ptmx";
 
 #if CAVAN_COMMAND_DEBUG
-		println("create pseudo terminal");
+		pr_func_info("create pseudo terminal");
 #endif
 
 		ttyfd = open(ptmpath, O_RDWR | O_CLOEXEC);
@@ -602,6 +604,10 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 			pr_error_info("ptsname");
 			goto out_close_ttyfd;
 		}
+
+#if CAVAN_COMMAND_DEBUG
+		pr_func_info("ptsname = `%s'", pathname);
+#endif
 
 		pid = fork();
 		if (pid < 0)
@@ -644,14 +650,21 @@ int cavan_exec_make_temp_pipe(char *pathname, size_t size, pid_t pid, int type)
 
 	cavan_exec_get_temp_pipe_pathname(pathname, size, pid, type);
 
+	if (file_is_fifo(pathname))
+	{
+		return 0;
+	}
+
 #if CAVAN_COMMAND_DEBUG
-	println("create pipe %s", pathname);
+	pr_func_info("create pipe `%s'", pathname);
 #endif
 
+	unlink(pathname);
+
 	ret = mkfifo(pathname, 0777 | S_IFIFO);
-	if (ret < 0 && errno != EEXIST)
+	if (ret < 0)
 	{
-		pr_err_info("mkfifo %s", pathname);
+		pr_err_info("mkfifo `%s'", pathname);
 		return ret;
 	}
 
@@ -798,7 +811,7 @@ int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_
 			}
 
 #if CAVAN_COMMAND_DEBUG
-			println("master open %s, fd = %d", pathname, fd);
+			pr_func_info("pathname = `%s', fd = %d", pathname, fd);
 #endif
 
 			ttyfds[i] = fd;
@@ -819,6 +832,10 @@ int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_
 		ttyfds[2] = ttyfds[1];
 	}
 
+#if CAVAN_COMMAND_DEBUG
+	pr_func_info("ttyfds = [%d, %d, %d]", ttyfds[0], ttyfds[1], ttyfds[2]);
+#endif
+
 	return 0;
 }
 
@@ -836,34 +853,41 @@ int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags)
 	for (i = 0; i < 3; i++)
 	{
 		int fd;
-		char pathname[1024];
 
-		if ((flags & (1 << i)) == 0)
+		if (flags & (1 << i))
 		{
-			continue;
-		}
+			char pathname[1024];
 
-		cavan_exec_get_temp_pipe_pathname(pathname, sizeof(pathname), pid, i);
+			cavan_exec_get_temp_pipe_pathname(pathname, sizeof(pathname), pid, i);
 
-		fd = open(pathname, cavan_exec_tty_slave_open_flags[i]);
-		if (fd < 0 && (auto_open == 0 || errno != ENOENT))
-		{
-			pr_err_info("open %s", pathname);
-
-			while (--i >= 0)
+			fd = open(pathname, cavan_exec_tty_slave_open_flags[i]);
+			if (fd < 0 && (auto_open == 0 || errno != ENOENT))
 			{
-				close(ttyfds[i]);
+				pr_err_info("open %s", pathname);
+
+				while (--i >= 0)
+				{
+					close(ttyfds[i]);
+				}
+
+				return fd;
 			}
 
-			return fd;
-		}
-
 #if CAVAN_COMMAND_DEBUG
-		println("slave open %s, fd = %d", pathname, fd);
+			pr_func_info("pathname = `%s', fd = %d", pathname, fd);
 #endif
+		}
+		else
+		{
+			fd = -1;
+		}
 
 		ttyfds[i] = fd;
 	}
+
+#if CAVAN_COMMAND_DEBUG
+	pr_func_info("ttyfds = [%d, %d, %d]", ttyfds[0], ttyfds[1], ttyfds[2]);
+#endif
 
 	return 0;
 }
@@ -886,7 +910,7 @@ static void *cavan_exec_pipe_thread_handler(void *_data)
 	struct cavan_exec_pipe_thread_data *data = _data;
 
 #if CAVAN_COMMAND_DEBUG
-	println("fd = %d, pid = %d", data->fd, data->pid);
+	pr_func_info("fd = %d, pid = %d", data->fd, data->pid);
 #endif
 
 	if (data->fd >= 0)
@@ -922,7 +946,7 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	struct cavan_exec_pipe_thread_data *data;
 
 #if CAVAN_COMMAND_DEBUG
-	pr_func_info("command = %s, lines = %d, columns = %d, flags = 0x%08x", command, lines, columns, flags);
+	pr_func_info("command = `%s', lines = %d, columns = %d, flags = 0x%08x", command, lines, columns, flags);
 #endif
 
 	umask(0);
@@ -982,7 +1006,7 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	}
 
 #if CAVAN_COMMAND_DEBUG
-	println("pid = %d", pid);
+	pr_func_info("pid = %d", pid);
 #endif
 
 	data->fd = fd;

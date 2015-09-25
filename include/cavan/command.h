@@ -85,6 +85,8 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_REPEAT,
 	CAVAN_COMMAND_OPTION_RESET,
 	CAVAN_COMMAND_OPTION_ROOT,
+	CAVAN_COMMAND_OPTION_SERVER,
+	CAVAN_COMMAND_OPTION_SERVICE,
 	CAVAN_COMMAND_OPTION_SHELL,
 	CAVAN_COMMAND_OPTION_SIZE,
 	CAVAN_COMMAND_OPTION_START,
@@ -189,6 +191,8 @@ extern const char *cavan_help_message_resource;
 extern const char *cavan_help_message_rw_image;
 extern const char *cavan_help_message_rw_image_auto;
 extern const char *cavan_help_message_driver;
+extern const char *cavan_help_message_server;
+extern const char *cavan_help_message_service;
 
 // ============================================================
 

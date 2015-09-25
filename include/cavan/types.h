@@ -168,80 +168,80 @@ typedef struct {
 #define rmb()	mb()
 #define wmb() 	mb()
 
-#define atomic_get(addr) \
+#define cavan_atomic_get(addr) \
 	({ __sync_synchronize(); *(addr); })
 
-#define atomic_set(addr, value) \
+#define cavan_atomic_set(addr, value) \
 	({ *(addr) = (value); __sync_synchronize(); })
 
-#define atomic_cmpxchg(addr, oldval, newval) \
+#define cavan_atomic_cmpxchg(addr, oldval, newval) \
 	__sync_val_compare_and_swap((addr), (oldval), (newval))
 
-#define atomic_cmpxchg_bool(addr, oldval, newval) \
+#define cavan_atomic_cmpxchg_bool(addr, oldval, newval) \
 	__sync_bool_compare_and_swap((addr), (oldval), (newval))
 
-#define atomic_add(addr, value) \
+#define cavan_atomic_add(addr, value) \
 	__sync_add_and_fetch((addr), (value))
 
-#define atomic_sub(addr, value) \
+#define cavan_atomic_sub(addr, value) \
 	__sync_sub_and_fetch((addr), (value))
 
-#define atomic_and(addr, value) \
+#define cavan_atomic_and(addr, value) \
 	__sync_and_and_fetch((addr), (value))
 
-#define atomic_or(addr, value) \
+#define cavan_atomic_or(addr, value) \
 	__sync_or_and_fetch((addr), (value))
 
-#define atomic_xor(addr, value) \
+#define cavan_atomic_xor(addr, value) \
 	__sync_xor_and_fetch((addr), (value))
 
-#define atomic_inc(addr) \
-	atomic_add((addr), 1)
+#define cavan_atomic_inc(addr) \
+	cavan_atomic_add((addr), 1)
 
-#define atomic_dec(addr) \
-	atomic_sub((addr), 1)
+#define cavan_atomic_dec(addr) \
+	cavan_atomic_sub((addr), 1)
 
-#define atomic_lock_fetch_set(addr, value) \
+#define cavan_atomic_lock_fetch_set(addr, value) \
 	__sync_lock_test_and_set((addr), (value))
 
-#define atomic_lock_release(addr) \
+#define cavan_atomic_lock_release(addr) \
 	__sync_lock_release(addr)
 
 // ================================================================================
 
-#define atomic_fetch_set(addr, value) \
+#define cavan_atomic_fetch_set(addr, value) \
 	__sync_lock_test_and_set((addr), (value))
 
-#define atomic_fetch_add(addr, value) \
+#define cavan_atomic_fetch_add(addr, value) \
 	__sync_fetch_and_add((addr), (value))
 
-#define atomic_fetch_sub(addr, value) \
+#define cavan_atomic_fetch_sub(addr, value) \
 	__sync_fetch_and_sub((addr), (value))
 
-#define atomic_fetch_and(addr, value) \
+#define cavan_atomic_fetch_and(addr, value) \
 	__sync_fetch_and_and((addr), (value))
 
-#define atomic_fetch_or(addr, value) \
+#define cavan_atomic_fetch_or(addr, value) \
 	__sync_fetch_and_or((addr), (value))
 
-#define atomic_fetch_xor(addr, value) \
+#define cavan_atomic_fetch_xor(addr, value) \
 	__sync_fetch_and_xor((addr), (value))
 
-#define atomic_fetch_inc(addr) \
-	atomic_fetch_add((addr), 1)
+#define cavan_atomic_fetch_inc(addr) \
+	cavan_atomic_fetch_add((addr), 1)
 
-#define atomic_fetch_dec(addr) \
-	atomic_fetch_sub((addr), 1)
+#define cavan_atomic_fetch_dec(addr) \
+	cavan_atomic_fetch_sub((addr), 1)
 
 typedef volatile uint32_t spinlock_t;
 
 #define spinlock_lock(lock) \
-	while(atomic_lock_fetch_set(lock, 1)) { \
+	while(cavan_atomic_lock_fetch_set(lock, 1)) { \
 		sched_yield(); \
 	}
 
 #define spinlock_unlock(lock) \
-	atomic_set(lock, 0)
+	cavan_atomic_set(lock, 0)
 
 static inline u64 SWAP64(u64 value)
 {

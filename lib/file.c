@@ -10,7 +10,7 @@
 #include <cavan/memory.h>
 
 #define CAVAN_FILE_DEBUG				0
-#define CAVAN_FILE_PROXY_DEBUG			1
+#define CAVAN_FILE_PROXY_DEBUG			0
 
 #define MAX_BUFF_LEN					KB(4)
 #define MIN_FILE_SIZE					MB(1)
@@ -3109,9 +3109,10 @@ int cavan_file_proxy_add(struct cavan_file_proxy_desc *desc, const int fds[2])
 		return ret;
 	}
 
-	atomic_inc(&desc->count);
+	cavan_atomic_inc(&desc->count);
+
 #if CAVAN_FILE_PROXY_DEBUG
-	pr_func_info("epoll = %d, count = %d, fds = [%d -> %d]", desc->epoll_fd, atomic_get(&desc->count), fds[0], fds[1]);
+	pr_func_info("epoll = %d, count = %d, fds = [%d -> %d]", desc->epoll_fd, cavan_atomic_get(&desc->count), fds[0], fds[1]);
 #endif
 
 	return 0;
@@ -3128,9 +3129,10 @@ int cavan_file_proxy_del(struct cavan_file_proxy_desc *desc, const int fds[2])
 		return ret;
 	}
 
-	atomic_dec(&desc->count);
+	cavan_atomic_dec(&desc->count);
+
 #if CAVAN_FILE_PROXY_DEBUG
-	pr_func_info("epoll = %d, count = %d, fds = [%d -> %d]", desc->epoll_fd, atomic_get(&desc->count), fds[0], fds[1]);
+	pr_func_info("epoll = %d, count = %d, fds = [%d -> %d]", desc->epoll_fd, cavan_atomic_get(&desc->count), fds[0], fds[1]);
 #endif
 
 	return 0;
@@ -3241,7 +3243,7 @@ int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc)
 	}
 #endif
 
-	while (atomic_get(&desc->count))
+	while (cavan_atomic_get(&desc->count))
 	{
 		struct epoll_event events[10];
 		const struct epoll_event *p, *p_end;
