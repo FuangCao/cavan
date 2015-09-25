@@ -9,6 +9,8 @@
 #include <cavan.h>
 #include <sys/wait.h>
 
+#define CAVAN_EXEC_PIPE_PATH	"/dev/cavan/pipe"
+
 #define FIND_EXEC_COMMAND_MAIN(map) \
 	int main(int argc, char *argv[]) { \
 		if (argc > 1) { \
@@ -233,10 +235,10 @@ int cavan_exec_set_oom_adj(int pid, int value);
 int cavan_exec_get_temp_pipe_pathname(char *pathname, size_t size, pid_t pid, int type);
 int cavan_exec_make_temp_pipe(char *pathname, size_t size, pid_t pid, int type);
 int cavan_exec_make_temp_pipe2(pid_t pid, int flags);
-void cavan_exec_unlink_temp_pipe(char *ttypath[3], pid_t pid, int flags);
+void cavan_exec_unlink_temp_pipe(char *const ttypath[3], pid_t pid, int count, int flags);
 int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_t pid, int flags);
 int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags);
-void cavan_exec_close_temp_pipe(int ttyfds[3]);
+void cavan_exec_close_temp_pipe(int ttyfds[3], int count);
 
 int cavan_tty_redirect_loop(int ttyfds[][2], int count);
 int cavan_tty_redirect_loop2(const int *ttyin, const int *ttyout, int count);

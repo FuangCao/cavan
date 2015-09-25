@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
 	cavan_tty_redirect(ttyfds[0], ttyfds[1], ttyfds[2]);
 
-	cavan_exec_close_temp_pipe(ttyfds);
+	cavan_exec_close_temp_pipe(ttyfds, -1);
 
 	return cavan_exec_waitpid(pid);
 }

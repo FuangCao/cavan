@@ -641,32 +641,52 @@ out_close_ttyfd:
 
 int cavan_exec_get_temp_pipe_pathname(char *pathname, size_t size, pid_t pid, int type)
 {
-	return snprintf(pathname, size, "/dev/%s-%d", cavan_exec_tty_prefix[type], pid);
+	return snprintf(pathname, size, CAVAN_EXEC_PIPE_PATH "/%s-%d", cavan_exec_tty_prefix[type], pid);
 }
 
 int cavan_exec_make_temp_pipe(char *pathname, size_t size, pid_t pid, int type)
 {
 	int ret;
+	bool retry = true;
 
 	cavan_exec_get_temp_pipe_pathname(pathname, size, pid, type);
 
-	if (file_is_fifo(pathname))
+do_mkfifo:
+	ret = mkfifo(pathname, 0777 | S_IFIFO);
+	if (ret < 0)
 	{
-		return 0;
+		if (retry)
+		{
+			retry = false;
+
+			switch (errno)
+			{
+			case EEXIST:
+				if (likely(file_is_fifo(pathname)))
+				{
+					return 0;
+				}
+
+				unlink(pathname);
+				goto do_mkfifo;
+
+			case ENOTDIR:
+				unlink(CAVAN_EXEC_PIPE_PATH);
+			case ENOENT:
+				ret = mkdir_hierarchy(CAVAN_EXEC_PIPE_PATH, 0777);
+				if (ret == 0) {
+					goto do_mkfifo;
+				}
+			}
+		}
+
+		pr_err_info("mkfifo `%s'", pathname);
+		return ret;
 	}
 
 #if CAVAN_COMMAND_DEBUG
 	pr_func_info("create pipe `%s'", pathname);
 #endif
-
-	unlink(pathname);
-
-	ret = mkfifo(pathname, 0777 | S_IFIFO);
-	if (ret < 0)
-	{
-		pr_err_info("mkfifo `%s'", pathname);
-		return ret;
-	}
 
 	return 0;
 }
@@ -708,13 +728,18 @@ int cavan_exec_make_temp_pipe2(pid_t pid, int flags)
 	return 0;
 }
 
-void cavan_exec_unlink_temp_pipe(char *ttypath[3], pid_t pid, int flags)
+void cavan_exec_unlink_temp_pipe(char *const ttypath[3], pid_t pid, int count, int flags)
 {
 	int i;
 
+	if (count < 0 || count > 3)
+	{
+		count = 3;
+	}
+
 	if (ttypath)
 	{
-		for (i = 0; i < 3; i++)
+		for (i = 0; i < count; i++)
 		{
 			if (ttypath[i])
 			{
@@ -724,7 +749,7 @@ void cavan_exec_unlink_temp_pipe(char *ttypath[3], pid_t pid, int flags)
 	}
 	else
 	{
-		for (i = 0; i < 3; i++)
+		for (i = 0; i < count; i++)
 		{
 			char pathname[1024];
 
@@ -737,6 +762,7 @@ void cavan_exec_unlink_temp_pipe(char *ttypath[3], pid_t pid, int flags)
 int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_t pid, int flags)
 {
 	int i;
+	int ret;
 
 	for (i = 0; i < 3; i++)
 	{
@@ -749,7 +775,13 @@ int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_
 		}
 		else if (flags & (1 << i))
 		{
-			cavan_exec_make_temp_pipe(buff, sizeof(buff), pid, i);
+			ret = cavan_exec_make_temp_pipe(buff, sizeof(buff), pid, i);
+			if (ret < 0)
+			{
+				pr_red_info("cavan_exec_make_temp_pipe: %d", ret);
+				goto out_unlink_pipe;
+			}
+
 			pathname = buff;
 		}
 		else
@@ -765,49 +797,8 @@ int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_
 			if (fd < 0)
 			{
 				pr_red_info("cavan_open_pipe_once %s", pathname);
-
-				if (flags & CAVAN_EXECF_DEL_TTY)
-				{
-					int j = i + 1;
-
-					unlink(pathname);
-
-					if (ttypath)
-					{
-						while (j < 3)
-						{
-							if (ttypath[j])
-							{
-								unlink(ttypath[j]);
-							}
-
-							j++;
-						}
-					}
-					else
-					{
-						while (j < 3)
-						{
-							if (flags & (1 << i))
-							{
-								cavan_exec_get_temp_pipe_pathname(buff, sizeof(buff), pid, j);
-								unlink(buff);
-							}
-
-							j++;
-						}
-					}
-				}
-
-				while (--i >= 0)
-				{
-					if (ttyfds[i] >= 0)
-					{
-						close(ttyfds[i]);
-					}
-				}
-
-				return fd;
+				ret = fd;
+				goto out_unlink_pipe;
 			}
 
 #if CAVAN_COMMAND_DEBUG
@@ -837,6 +828,15 @@ int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_
 #endif
 
 	return 0;
+
+out_unlink_pipe:
+	if (flags & CAVAN_EXECF_DEL_TTY)
+	{
+		cavan_exec_unlink_temp_pipe(ttypath, pid, i + 1, flags);
+	}
+
+	cavan_exec_close_temp_pipe(ttyfds, i);
+	return ret;
 }
 
 int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags)
@@ -892,11 +892,16 @@ int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags)
 	return 0;
 }
 
-void cavan_exec_close_temp_pipe(int ttyfds[3])
+void cavan_exec_close_temp_pipe(int ttyfds[3], int count)
 {
 	int i;
 
-	for (i = 0; i < 3; i++)
+	if (count < 0 || count > 3)
+	{
+		count = 3;
+	}
+
+	for (i = 0; i < count; i++)
 	{
 		if (ttyfds[i] >= 0)
 		{
@@ -928,7 +933,7 @@ static void *cavan_exec_pipe_thread_handler(void *_data)
 		cavan_tty_redirect_loop3(data->fd, data->fd, -1, ttyfds[0], ttyfds[1], ttyfds[2]);
 
 		close(data->fd);
-		cavan_exec_close_temp_pipe(ttyfds);
+		cavan_exec_close_temp_pipe(ttyfds, -1);
 	}
 
 	cavan_exec_waitpid(data->pid);
@@ -1022,7 +1027,7 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	return 0;
 
 out_cavan_exec_unlink_temp_pipe:
-	cavan_exec_unlink_temp_pipe(NULL, pid, flags);
+	cavan_exec_unlink_temp_pipe(NULL, pid, -1, flags);
 out_close_fd:
 	if (fd >= 0)
 	{
