@@ -6,6 +6,7 @@
 
 #include <cavan.h>
 #include <sys/socket.h>
+#include <cavan/thread.h>
 #include <cavan/device.h>
 #include <cavan/command.h>
 
@@ -947,7 +948,6 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	int fd;
 	int ret;
 	pid_t pid;
-	pthread_t thread;
 	struct cavan_exec_pipe_thread_data *data;
 
 #if CAVAN_COMMAND_DEBUG
@@ -1007,7 +1007,7 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	{
 		pr_err_info("malloc");
 		ret = -ENOMEM;
-		goto out_cavan_exec_unlink_temp_pipe;
+		goto out_kill_pid;
 	}
 
 #if CAVAN_COMMAND_DEBUG
@@ -1017,7 +1017,13 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	data->fd = fd;
 	data->pid = pid;
 	data->flags = flags;
-	pthread_create(&thread, NULL, cavan_exec_pipe_thread_handler, data);
+
+	ret = cavan_pthread_create(NULL, cavan_exec_pipe_thread_handler, data);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_pthread_create: %d", ret);
+		goto out_free_data;
+	}
 
 	if (ppid)
 	{
@@ -1026,6 +1032,10 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 
 	return 0;
 
+out_free_data:
+	free(data);
+out_kill_pid:
+	kill(pid, SIGKILL);
 out_cavan_exec_unlink_temp_pipe:
 	cavan_exec_unlink_temp_pipe(NULL, pid, -1, flags);
 out_close_fd:
