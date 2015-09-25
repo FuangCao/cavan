@@ -146,7 +146,7 @@ __BEGIN_DECLS
 // ============================================================
 
 #define pr_info(fmt, args ...) \
-	printf(fmt "\n", ##args)
+	println(fmt, ##args)
 
 #define pr_func_info(fmt, args ...) \
 	pr_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)

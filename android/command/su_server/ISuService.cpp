@@ -50,6 +50,18 @@ public:
 	virtual int popen(const char *command, int lines, int columns, pid_t *ppid, int flags) {
         Parcel data, reply;
 
+		if (command == NULL) {
+			command = "";
+		}
+
+		if (lines == 0 && columns == 0) {
+			tty_get_win_size2(0, &lines, &columns);
+		}
+
+		if ((flags & 0x07) == 0) {
+			flags = CAVAN_EXECF_STDIN | CAVAN_EXECF_STDOUT | CAVAN_EXECF_ERR_TO_OUT;
+		}
+
         data.writeInterfaceToken(ISuService::getInterfaceDescriptor());
 		data.writeString8(String8(command ? command : ""));
 		data.writeInt32(lines);

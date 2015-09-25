@@ -9,8 +9,6 @@
 #include <cavan.h>
 #include <sys/wait.h>
 
-__BEGIN_DECLS
-
 #define FIND_EXEC_COMMAND_MAIN(map) \
 	int main(int argc, char *argv[]) { \
 		if (argc > 1) { \
@@ -32,6 +30,9 @@ __BEGIN_DECLS
 #define CAVAN_EXECF_STDERR			(1 << 2)
 #define CAVAN_EXECF_DEL_TTY			(1 << 3)
 #define CAVAN_EXECF_ERR_TO_OUT		(1 << 4)
+#define CAVAN_EXECF_AUTO_OPEN		(1 << 5)
+
+__BEGIN_DECLS
 
 typedef enum {
 	CAVAN_COMMAND_OPTION_ADB = 0x256,
@@ -133,12 +134,6 @@ struct cavan_command_map
 	int (*main_func)(int argc, char *argv[]);
 };
 
-struct cavan_tty_loop_desc
-{
-	int epoll_fd;
-	int pipefd[2];
-};
-
 struct cavan_exec_pipe_thread_data
 {
 	int fd;
@@ -238,14 +233,6 @@ void cavan_exec_unlink_temp_pipe(char *ttypath[3], pid_t pid, int flags);
 int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_t pid, int flags);
 int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags);
 void cavan_exec_close_temp_pipe(int ttyfds[3]);
-
-int cavan_tty_loop_add(struct cavan_tty_loop_desc *desc, const int ttyfds[2]);
-int cavan_tty_loop_del(struct cavan_tty_loop_desc *desc, const int ttyfds[2]);
-int cavan_tty_loop_del_array(struct cavan_tty_loop_desc *desc, int ttyfds[][2], int count);
-int cavan_tty_loop_add_array(struct cavan_tty_loop_desc *desc, int ttyfds[][2], int count);
-int cavan_tty_loop_init(struct cavan_tty_loop_desc *desc);
-void cavan_tty_loop_deinit(struct cavan_tty_loop_desc *desc);
-int cavan_tty_loop_main(struct cavan_tty_loop_desc *desc);
 
 int cavan_tty_redirect_loop(int ttyfds[][2], int count);
 int cavan_tty_redirect_loop2(const int *ttyin, const int *ttyout, int count);

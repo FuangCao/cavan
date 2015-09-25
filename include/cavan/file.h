@@ -6,7 +6,7 @@
 #include <sys/file.h>
 #include <poll.h>
 
-__BEGIN_DECLS
+#define CAVAN_FILE_PROXY_WAKEUP_ENABLE	0
 
 #define MAX_BUFFER_LEN				MB(1)
 
@@ -42,11 +42,23 @@ __BEGIN_DECLS
 #define FILE_PROC_FILESYSTEMS_SIZE	MB(1)
 #define FILE_CPUINFO_SIZE			MB(1)
 
+__BEGIN_DECLS
+
 struct cavan_mkdir_command_option
 {
 	mode_t mode;
 	bool verbose;
 	bool parents;
+};
+
+struct cavan_file_proxy_desc
+{
+	int epoll_fd;
+	int count;
+
+#if CAVAN_FILE_PROXY_WAKEUP_ENABLE
+	int pipefd[2];
+#endif
 };
 
 int file_open_rw_ro(const char *pathname, int flags);
@@ -209,6 +221,14 @@ off_t cavan_file_seek_page_align(int fd, off_t offset, size_t page_size);
 
 struct dirent *cavan_readdir_skip_dot(DIR *dp);
 struct dirent *cavan_readdir_skip_hidden(DIR *dp);
+
+int cavan_file_proxy_add(struct cavan_file_proxy_desc *desc, const int fds[2]);
+int cavan_file_proxy_del(struct cavan_file_proxy_desc *desc, const int fds[2]);
+int cavan_file_proxy_del_array(struct cavan_file_proxy_desc *desc, int fds[][2], int count);
+int cavan_file_proxy_add_array(struct cavan_file_proxy_desc *desc, int fds[][2], int count);
+int cavan_file_proxy_init(struct cavan_file_proxy_desc *desc);
+void cavan_file_proxy_deinit(struct cavan_file_proxy_desc *desc);
+int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc);
 
 // ============================================================
 

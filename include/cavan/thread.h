@@ -134,4 +134,16 @@ static inline void cavan_thread_exit(struct cavan_thread *thread)
 	cavan_thread_deinit(thread);
 }
 
+static inline int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data)
+{
+	pthread_t thread;
+
+	if (pthread == NULL)
+	{
+		pthread = &thread;
+	}
+
+	return pthread_create(pthread, NULL, handler, data);
+}
+
 __END_DECLS

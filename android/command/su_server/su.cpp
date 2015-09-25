@@ -138,18 +138,14 @@ int main(int argc, char *argv[])
 	int ret;
 	pid_t pid;
 	int ttyfds[3];
-	int size[2];
-	int flags = CAVAN_EXECF_STDIN | CAVAN_EXECF_STDOUT | CAVAN_EXECF_STDERR;
 
-	tty_get_win_size(0, size);
-
-	ret = su->popen(command, size[0], size[1], &pid, flags);
+	ret = su->popen(command, 0, 0, &pid, 0);
 	if (ret < 0) {
 		pr_red_info("su->popen: %d\n", ret);
 		return ret;
 	}
 
-	ret = cavan_exec_open_temp_pipe_slave(ttyfds, pid, flags);
+	ret = cavan_exec_open_temp_pipe_slave(ttyfds, pid, CAVAN_EXECF_AUTO_OPEN);
 	if (ret < 0) {
 		pr_red_info("cavan_exec_open_temp_pipe_client: %d", ret);
 		return ret;

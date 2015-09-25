@@ -9,11 +9,12 @@
 #include <cavan/device.h>
 #include <cavan/memory.h>
 
-#define CAVAN_FILE_DEBUG	0
+#define CAVAN_FILE_DEBUG				0
+#define CAVAN_FILE_PROXY_DEBUG			1
 
-#define MAX_BUFF_LEN	KB(4)
-#define MIN_FILE_SIZE	MB(1)
-#define CONFIG_ERROR_IF_COPY_REMAIN	0
+#define MAX_BUFF_LEN					KB(4)
+#define MIN_FILE_SIZE					MB(1)
+#define CONFIG_ERROR_IF_COPY_REMAIN		0
 
 int file_join(const char *dest_file, char *src_files[], int count)
 {
@@ -3088,4 +3089,203 @@ struct dirent *cavan_readdir_skip_hidden(DIR *dp)
 	while ((dt = readdir(dp)) && dt->d_name[0] == '.');
 
 	return dt;
+}
+
+// ================================================================================
+
+int cavan_file_proxy_add(struct cavan_file_proxy_desc *desc, const int fds[2])
+{
+	int ret;
+	struct epoll_event event =
+	{
+		.events = EPOLLIN,
+		.data.ptr = __UNCONST(fds),
+	};
+
+	ret = epoll_ctl(desc->epoll_fd, EPOLL_CTL_ADD, fds[0], &event);
+	if (ret < 0)
+	{
+		pr_err_info("epoll_ctl EPOLL_CTL_ADD %d: %d", fds[0], ret);
+		return ret;
+	}
+
+	atomic_inc(&desc->count);
+#if CAVAN_FILE_PROXY_DEBUG
+	pr_func_info("epoll = %d, count = %d, fds = [%d -> %d]", desc->epoll_fd, atomic_get(&desc->count), fds[0], fds[1]);
+#endif
+
+	return 0;
+}
+
+int cavan_file_proxy_del(struct cavan_file_proxy_desc *desc, const int fds[2])
+{
+	int ret;
+
+	ret = epoll_ctl(desc->epoll_fd, EPOLL_CTL_DEL, fds[0], NULL);
+	if (ret < 0)
+	{
+		pr_err_info("epoll_ctl EPOLL_CTL_ADD: %d", ret);
+		return ret;
+	}
+
+	atomic_dec(&desc->count);
+#if CAVAN_FILE_PROXY_DEBUG
+	pr_func_info("epoll = %d, count = %d, fds = [%d -> %d]", desc->epoll_fd, atomic_get(&desc->count), fds[0], fds[1]);
+#endif
+
+	return 0;
+}
+
+int cavan_file_proxy_del_array(struct cavan_file_proxy_desc *desc, int fds[][2], int count)
+{
+	int i;
+
+	for (i = 0; i < count; i++)
+	{
+		int ret = cavan_file_proxy_del(desc, fds[i]);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_file_proxy_del: %d", ret);
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+int cavan_file_proxy_add_array(struct cavan_file_proxy_desc *desc, int fds[][2], int count)
+{
+	int i;
+
+	for (i = 0; i < count; i++)
+	{
+		int ret;
+		const int *proxy = fds[i];
+
+		if (proxy[0] < 0 || proxy[1] < 0)
+		{
+			continue;
+		}
+
+		ret = cavan_file_proxy_add(desc, proxy);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_file_proxy_add: %d", ret);
+
+			cavan_file_proxy_del_array(desc, fds, i);
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+int cavan_file_proxy_init(struct cavan_file_proxy_desc *desc)
+{
+	int fd;
+#if CAVAN_FILE_PROXY_WAKEUP_ENABLE
+	int ret;
+#endif
+
+	fd = epoll_create(10);
+	if (fd < 0)
+	{
+		pr_err_info("epoll_create: %d", fd);
+		return fd;
+	}
+
+	desc->epoll_fd = fd;
+	desc->count = 0;
+
+#if CAVAN_FILE_PROXY_WAKEUP_ENABLE
+	ret = pipe2(desc->pipefd, O_CLOEXEC | O_NONBLOCK);
+	if (ret < 0)
+	{
+		pr_err_info("pipe: %d", ret);
+		goto out_close_epoll;
+	}
+#endif
+
+	return 0;
+
+#if CAVAN_FILE_PROXY_WAKEUP_ENABLE
+out_close_epoll:
+	close(desc->epoll_fd);
+	return ret;
+#endif
+}
+
+void cavan_file_proxy_deinit(struct cavan_file_proxy_desc *desc)
+{
+#if CAVAN_FILE_PROXY_WAKEUP_ENABLE
+	close(desc->pipefd[0]);
+	close(desc->pipefd[1]);
+#endif
+
+	close(desc->epoll_fd);
+}
+
+int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc)
+{
+	int ret;
+	int msec = -1;
+	int epoll_fd = desc->epoll_fd;
+#if CAVAN_FILE_PROXY_WAKEUP_ENABLE
+	int pipefd[2] = { desc->pipefd[0], 2 };
+
+	ret = cavan_file_proxy_add(desc, pipefd);
+	if (ret < 0)
+	{
+		pr_red_info("cavan_file_proxy_add: %d", ret);
+		return ret;
+	}
+#endif
+
+	while (atomic_get(&desc->count))
+	{
+		struct epoll_event events[10];
+		const struct epoll_event *p, *p_end;
+
+		ret = epoll_wait(epoll_fd, events, NELEM(events), msec);
+		if (ret <= 0)
+		{
+			if (ret < 0)
+			{
+				pr_err_info("epoll_wait: %d", ret);
+			}
+
+			return ret;
+		}
+
+		for (p = events, p_end = p + ret; p < p_end; p++)
+		{
+			ssize_t rdlen;
+			char buff[1024];
+			int *fds = p->data.ptr;
+
+			rdlen = read(fds[0], buff, sizeof(buff));
+			if (rdlen <= 0)
+			{
+				if (fds[0] == 0)
+				{
+					cavan_file_proxy_del(desc, fds);
+					msec = 500;
+					continue;
+				}
+
+				return 0;
+			}
+
+			if (write(fds[1], buff, rdlen) != rdlen)
+			{
+				return 0;
+			}
+
+#if CAVAN_FILE_PROXY_DEBUG
+			println("%d => %d, length = %" PRINT_FORMAT_SIZE, fds[0], fds[1], rdlen);
+#endif
+		}
+	}
+
+	return 0;
 }

@@ -429,10 +429,10 @@ int cavan_thread_start(struct cavan_thread *thread)
 
 	if (thread->state == CAVAN_THREAD_STATE_NONE)
 	{
-		ret = pthread_create(&thread->id, NULL, cavan_thread_main_loop, thread);
+		ret = cavan_pthread_create(&thread->id, cavan_thread_main_loop, thread);
 		if (ret < 0)
 		{
-			pr_red_info("pthread_create");
+			pr_red_info("cavan_pthread_create: %d", ret);
 		}
 		else
 		{
