@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 	int i;
 	struct progress_bar bar;
 
-	println("%ld", sizeof("123456789"));
+	println("%" PRINT_FORMAT_SIZE, sizeof("123456789"));
 
 	progress_bar_init(&bar, MB(100));
 

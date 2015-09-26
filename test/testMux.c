@@ -24,7 +24,7 @@ static ssize_t test_mux_send(struct cavan_mux *mux, const void *buff, size_t siz
 {
 	int *pipefd = mux->private_data;
 
-	println("send: size = %ld", size);
+	println("send: size = %" PRINT_FORMAT_SIZE, size);
 
 	return write(pipefd[1], buff, size);
 }
@@ -33,7 +33,7 @@ static ssize_t test_mux_recv(struct cavan_mux *mux, void *buff, size_t size)
 {
 	int *pipefd = mux->private_data;
 
-	println("recv: buff size = %ld", size);
+	println("recv: buff size = %" PRINT_FORMAT_SIZE, size);
 
 	return read(pipefd[0], buff, size);
 }
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 
 	rdlen = cavan_mux_link_recv(&link1, buff, sizeof(buff));
 	buff[rdlen] = 0;
-	println("link1: buff[%ld] = %s", rdlen, buff);
+	println("link1: buff[%" PRINT_FORMAT_SIZE "] = %s", rdlen, buff);
 
 	cavan_mux_show_packages(&mux);
 
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
 
 	rdlen = cavan_mux_link_recv(&link2, buff, sizeof(buff));
 	buff[rdlen] = 0;
-	println("link2: buff[%ld] = %s", rdlen, buff);
+	println("link2: buff[%" PRINT_FORMAT_SIZE "] = %s", rdlen, buff);
 
 	cavan_mux_show_packages(&mux);
 

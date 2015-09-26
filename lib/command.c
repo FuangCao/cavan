@@ -1036,7 +1036,7 @@ out_free_data:
 	free(data);
 out_kill_pid:
 	kill(pid, SIGKILL);
-out_cavan_exec_unlink_temp_pipe:
+// out_cavan_exec_unlink_temp_pipe:
 	cavan_exec_unlink_temp_pipe(NULL, pid, -1, flags);
 out_close_fd:
 	if (fd >= 0)

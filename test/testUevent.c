@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 		}
 
 		buff[rdlen] = 0;
-		println("buff[%ld] = %s", rdlen, buff);
+		println("buff[%" PRINT_FORMAT_SIZE "] = %s", rdlen, buff);
 	}
 
 	network_client_close(&client);

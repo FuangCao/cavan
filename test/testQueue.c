@@ -34,8 +34,8 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	println("%d. used_size = %ld", __LINE__, cavan_mem_queue_get_used_size(&queue));
-	println("%d. free_size = %ld", __LINE__, cavan_mem_queue_get_free_size(&queue));
+	println("%d. used_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_used_size(&queue));
+	println("%d. free_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_free_size(&queue));
 
 	for (i = 0; i < 10; i++)
 	{
@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
 		cavan_mem_queue_inqueue(&queue, &c, 1);
 	}
 
-	println("%d. used_size = %ld", __LINE__, cavan_mem_queue_get_used_size(&queue));
-	println("%d. free_size = %ld", __LINE__, cavan_mem_queue_get_free_size(&queue));
+	println("%d. used_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_used_size(&queue));
+	println("%d. free_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_free_size(&queue));
 
 	ret = cavan_mem_queue_dequeue(&queue, buff, sizeof(buff));
 	buff[ret] = 0;
@@ -60,8 +60,8 @@ int main(int argc, char *argv[])
 		buff[ret] = 0;
 		println("buff[%d] = %s", ret, buff);
 
-		println("%d. used_size = %ld", __LINE__, cavan_mem_queue_get_used_size(&queue));
-		println("%d. free_size = %ld", __LINE__, cavan_mem_queue_get_free_size(&queue));
+		println("%d. used_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_used_size(&queue));
+		println("%d. free_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_free_size(&queue));
 	}
 
 	for (i = 0; i < 26; i += 2)
@@ -73,16 +73,16 @@ int main(int argc, char *argv[])
 		buff[ret] = 0;
 		println("buff[%d] = %s", ret, buff);
 
-		println("%d. used_size = %ld", __LINE__, cavan_mem_queue_get_used_size(&queue));
-		println("%d. free_size = %ld", __LINE__, cavan_mem_queue_get_free_size(&queue));
+		println("%d. used_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_used_size(&queue));
+		println("%d. free_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_free_size(&queue));
 	}
 
 	ret = cavan_mem_queue_dequeue(&queue, buff, sizeof(buff));
 	buff[ret] = 0;
 	println("buff[%d] = %s", ret, buff);
 
-	println("%d. used_size = %ld", __LINE__, cavan_mem_queue_get_used_size(&queue));
-	println("%d. free_size = %ld", __LINE__, cavan_mem_queue_get_free_size(&queue));
+	println("%d. used_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_used_size(&queue));
+	println("%d. free_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_free_size(&queue));
 
 	cavan_mem_queue_deinit(&queue);
 
