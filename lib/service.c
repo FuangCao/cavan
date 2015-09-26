@@ -135,10 +135,10 @@ int cavan_service_start(struct cavan_service_description *desc)
 
 	for (i = 0; i < count; i++)
 	{
-		ret = pthread_create(threads + i, NULL, cavan_service_handler, desc);
+		ret = cavan_pthread_create(threads + i, cavan_service_handler, desc);
 		if (ret < 0)
 		{
-			pr_red_info("pthread_create");
+			pr_red_info("cavan_pthread_create");
 
 			while (i-- > 0)
 			{
@@ -394,7 +394,6 @@ static void *cavan_dynamic_service_handler(void *data)
 	int ret;
 	u32 index;
 	void *conn;
-	pthread_t thread;
 	struct cavan_dynamic_service *service = data;
 
 	while (1)
@@ -439,7 +438,7 @@ static void *cavan_dynamic_service_handler(void *data)
 			{
 				int ret;
 
-				ret = pthread_create(&thread, NULL, cavan_dynamic_service_handler, service);
+				ret = cavan_pthread_create(NULL, cavan_dynamic_service_handler, service);
 				if (ret < 0)
 				{
 					pd_red_info("create daemon faild");
@@ -620,12 +619,11 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	else
 	{
 		int i;
-		pthread_t thread;
 
-		ret = pthread_create(&thread, NULL, cavan_dynamic_service_handler, service);
+		ret = cavan_pthread_create(NULL, cavan_dynamic_service_handler, service);
 		if (ret < 0)
 		{
-			pr_error_info("pthread_create");
+			pr_error_info("cavan_pthread_create");
 			goto out_service_stop;
 		}
 

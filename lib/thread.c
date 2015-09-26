@@ -14,6 +14,34 @@
 #define CAVAN_THREAD_DEBUG	0
 #endif
 
+int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data)
+{
+	pthread_t thread;
+
+	while (pthread_create(&thread, NULL, handler, data))
+	{
+		if (errno != EAGAIN)
+		{
+			pr_err_info("pthread_create");
+			return -EFAULT;
+		}
+
+		pr_warn_info("Failed to pthread_create, try again");
+		msleep(200);
+	}
+
+	if (pthread)
+	{
+		*pthread = thread;
+	}
+	else
+	{
+		pthread_detach(thread);
+	}
+
+	return 0;
+}
+
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event)
 {
 #if CAVAN_THREAD_DEBUG

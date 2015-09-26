@@ -32,23 +32,26 @@ int main(int argc, char *argv[])
 
 	tty_get_win_size(0, size);
 
-	ret = cavan_exec_redirect_stdio_popen2(argv[1], size[0], size[1], &pid, flags);
-	if (ret < 0)
+	while (1)
 	{
-		pr_red_info("cavan_exec_redirect_stdio_popen2");
-		return ret;
+		ret = cavan_exec_redirect_stdio_popen2(argv[1], size[0], size[1], &pid, flags);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_exec_redirect_stdio_popen2");
+			return ret;
+		}
+
+		ret = cavan_exec_open_temp_pipe_slave(ttyfds, pid, flags);
+		if (ret < 0)
+		{
+			pr_red_info("cavan_exec_open_temp_pipe_client: %d", ret);
+			return ret;
+		}
+
+		cavan_tty_redirect(ttyfds[0], ttyfds[1], ttyfds[2]);
+
+		cavan_exec_close_temp_pipe(ttyfds, -1);
 	}
 
-	ret = cavan_exec_open_temp_pipe_slave(ttyfds, pid, flags);
-	if (ret < 0)
-	{
-		pr_red_info("cavan_exec_open_temp_pipe_client: %d", ret);
-		return ret;
-	}
-
-	cavan_tty_redirect(ttyfds[0], ttyfds[1], ttyfds[2]);
-
-	cavan_exec_close_temp_pipe(ttyfds, -1);
-
-	return cavan_exec_waitpid(pid);
+	return 0;
 }

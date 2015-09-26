@@ -3251,6 +3251,11 @@ int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc)
 		ret = epoll_wait(epoll_fd, events, NELEM(events), msec);
 		if (ret <= 0)
 		{
+			if (errno == EINTR)
+			{
+				continue;
+			}
+
 			if (ret < 0)
 			{
 				pr_err_info("epoll_wait: %d", ret);

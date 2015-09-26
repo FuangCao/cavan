@@ -58,6 +58,7 @@ struct cavan_lock
 	pthread_mutex_t mutex;
 };
 
+int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data);
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
 int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event);
 int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 msec);
@@ -132,18 +133,6 @@ static inline void cavan_thread_exit(struct cavan_thread *thread)
 {
 	cavan_thread_stop(thread);
 	cavan_thread_deinit(thread);
-}
-
-static inline int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data)
-{
-	pthread_t thread;
-
-	if (pthread == NULL)
-	{
-		pthread = &thread;
-	}
-
-	return pthread_create(pthread, NULL, handler, data);
 }
 
 __END_DECLS
