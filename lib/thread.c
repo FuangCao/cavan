@@ -18,8 +18,17 @@ int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *dat
 {
 	int ret;
 	pthread_t thread;
+	pthread_attr_t attr;
 
-	while ((ret = pthread_create(&thread, NULL, handler, data)))
+	if (pthread == NULL)
+	{
+		joinable = false;
+	}
+
+	pthread_attr_init (&attr);
+	pthread_attr_setdetachstate (&attr, joinable ? PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED);
+
+	while ((ret = pthread_create(&thread, &attr, handler, data)))
 	{
 		if (ret != EAGAIN)
 		{
@@ -34,15 +43,6 @@ int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *dat
 	if (pthread)
 	{
 		*pthread = thread;
-	}
-	else
-	{
-		joinable = false;
-	}
-
-	if (joinable == false)
-	{
-		pthread_detach(thread);
 	}
 
 	return 0;

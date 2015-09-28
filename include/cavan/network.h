@@ -321,8 +321,6 @@ struct network_protocol_desc
 	int (*open_service)(struct network_service *service, const struct network_url *url, u16 port, int flags);
 };
 
-extern int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port);
-
 const char *network_get_socket_pathname(void);
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
 ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);

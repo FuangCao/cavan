@@ -7,6 +7,16 @@
 #include <cavan.h>
 #include <cavan/adb.h>
 
+bool adb_is_client(void)
+{
+	return file_access_e("/dev/usb-ffs/adb") || file_access_e("/dev/android_adb");
+}
+
+bool adb_is_host(void)
+{
+	return !adb_is_client();
+}
+
 int adb_read_status(int sockfd, char *buff, size_t size)
 {
 	int ret;
@@ -154,7 +164,7 @@ int adb_connect_service(const char *ip, u16 port, const char *service)
 		return sockfd;
 	}
 
-	if (file_access_e("/sbin/adbd") == false && (ret = adb_send_command(sockfd, "host:transport-any")) < 0)
+	if (adb_is_host() && (ret = adb_send_command(sockfd, "host:transport-any")) < 0)
 	{
 		pr_red_info("adb_send_command");
 		close(sockfd);
@@ -172,9 +182,22 @@ int adb_connect_service(const char *ip, u16 port, const char *service)
 	return sockfd;
 }
 
-int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port)
+int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port, bool wait_device)
 {
 	char service[32];
+
+	if (wait_device && adb_is_host())
+	{
+		print("Waiting for adb device to connect ... ");
+
+		if (cavan_system("adb wait-for-device"))
+		{
+			println("Failed!");
+			return -EFAULT;
+		}
+
+		println("OK");
+	}
 
 	sprintf(service, "tcp:%04d", tcp_port);
 

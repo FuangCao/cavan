@@ -34,11 +34,13 @@ struct eavoo_short_message
 	char body[1024];
 };
 
+bool adb_is_client(void);
+bool adb_is_host(void);
 int adb_read_status(int sockfd, char *buff, size_t size);
 int adb_send_text(int sockfd, const char *text);
 int adb_connect_service_base(const char *ip, u16 port, int retry);
 int adb_connect_service(const char *ip, u16 port, const char *service);
-int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port);
+int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port, bool wait_device);
 int frecv_text_and_write(int sockfd, int fd);
 int recv_text_and_write(int sockfd, const char *filename);
 
@@ -56,7 +58,7 @@ ssize_t sms_send_response(int sockfd, u8 type);
 
 static inline int adb_create_tcp_link2(const char *ip, u16 port)
 {
-	return adb_create_tcp_link(ip, 0, port);
+	return adb_create_tcp_link(ip, 0, port, false);
 }
 
 static inline int adb_send_command(int sockfd, const char *command)

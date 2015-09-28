@@ -1,6 +1,7 @@
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Apr 21 10:08:25 CST 2011
 
 #include <cavan.h>
+#include <cavan/adb.h>
 #include <cavan/file.h>
 #include <cavan/command.h>
 #include <cavan/network.h>
@@ -2075,20 +2076,7 @@ static int network_client_adb_open(struct network_client *client, const struct n
 {
 	int sockfd;
 
-	if (flags & CAVAN_NET_FLAG_WAIT)
-	{
-		print("Waiting for adb device to connect ... ");
-
-		if (cavan_system("adb wait-for-device"))
-		{
-			println("Failed!");
-			return -EFAULT;
-		}
-
-		println("OK");
-	}
-
-	sockfd = adb_create_tcp_link(url->hostname, 0, port);
+	sockfd = adb_create_tcp_link(url->hostname, 0, port, (flags & CAVAN_NET_FLAG_WAIT) != 0);
 	if (sockfd < 0)
 	{
 		pr_red_info("adb_create_tcp_link");

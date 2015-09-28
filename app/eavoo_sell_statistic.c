@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	sockfd = adb_create_tcp_link(ip[0] == 0 ? NULL : ip, 0, port);
+	sockfd = adb_create_tcp_link(ip[0] == 0 ? NULL : ip, 0, port, false);
 	if (sockfd < 0)
 	{
 		pr_red_info("adb_connect_service2");
