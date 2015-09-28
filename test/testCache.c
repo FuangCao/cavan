@@ -19,6 +19,7 @@
 
 #include <cavan.h>
 #include <cavan/cache.h>
+#include <cavan/thread.h>
 
 static void *read_thread_handler(void *data)
 {
@@ -76,7 +77,7 @@ int main(int argc, char *argv[])
 
 	cavan_cache_open(cache);
 
-	pthread_create(&rdthread, NULL, read_thread_handler, cache);
+	cavan_pthread_create(&rdthread, read_thread_handler, cache, true);
 
 	while (1)
 	{

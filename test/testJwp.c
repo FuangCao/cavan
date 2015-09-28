@@ -322,7 +322,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 #endif
 
 #if TEST_JWP_SERVER_WATCH
-		pthread_create(&td, NULL, test_jwp_watch_thread, &comm.jwp_linux);
+		cavan_pthread_create(&td, NULL, test_jwp_watch_thread, &comm.jwp_linux);
 #endif
 
 		data_fd = open(pathname, O_WRONLY | O_CREAT | O_TRUNC, 0777);
@@ -347,7 +347,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 		char buff[1024];
 
 #if TEST_JWP_CLIENT_WATCH
-		pthread_create(&td, NULL, test_jwp_watch_thread, &comm.jwp_linux);
+		cavan_pthread_create(&td, NULL, test_jwp_watch_thread, &comm.jwp_linux);
 #endif
 
 		data.data_fd = 0;

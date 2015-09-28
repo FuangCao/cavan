@@ -203,9 +203,6 @@ jwp_bool jwp_linux_init(struct jwp_linux_desc *jwp_linux, void *data)
 
 jwp_bool jwp_linux_start(struct jwp_linux_desc *jwp_linux)
 {
-#if JWP_LOOP_ENABLE
-	pthread_t td;
-#endif
 	struct jwp_desc *jwp = &jwp_linux->jwp;
 
 	if (jwp->hw_write == NULL)
@@ -260,19 +257,19 @@ jwp_bool jwp_linux_start(struct jwp_linux_desc *jwp_linux)
 #endif
 
 #if JWP_TX_DATA_LOOP_ENABLE
-	pthread_create(&td, NULL, jwp_linux_tx_data_loop_thread, jwp_linux);
+	cavan_pthread_create(NULL, jwp_linux_tx_data_loop_thread, jwp_linux, false);
 #endif
 
 #if JWP_TX_LOOP_ENABLE
-	pthread_create(&td, NULL, jwp_linux_tx_loop_thread, jwp_linux);
+	cavan_pthread_create(NULL, jwp_linux_tx_loop_thread, jwp_linux, false);
 #endif
 
 #if JWP_RX_PKG_LOOP_ENABLE
-	pthread_create(&td, NULL, jwp_linux_rx_package_loop_thread, jwp_linux);
+	cavan_pthread_create(NULL, jwp_linux_rx_package_loop_thread, jwp_linux, false);
 #endif
 
 #if JWP_RX_LOOP_ENABLE
-	pthread_create(&td, NULL, jwp_linux_rx_loop_thread, jwp_linux);
+	cavan_pthread_create(NULL, jwp_linux_rx_loop_thread, jwp_linux, false);
 #endif
 
 	return true;

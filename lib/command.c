@@ -1026,7 +1026,7 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 		data->pid = pid;
 		data->flags = flags;
 
-		ret = cavan_pthread_create(NULL, cavan_exec_redirect_thread_handler, data);
+		ret = cavan_pthread_run(cavan_exec_redirect_thread_handler, data);
 		if (ret < 0)
 		{
 			pr_red_info("cavan_pthread_create: %d", ret);

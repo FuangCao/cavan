@@ -58,7 +58,7 @@ struct cavan_lock
 	pthread_mutex_t mutex;
 };
 
-int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data);
+int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data, bool joinable);
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
 int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event);
 int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 msec);
@@ -84,6 +84,11 @@ void cavan_lock_init(struct cavan_lock *lock, bool acquire);
 void cavan_lock_deinit(struct cavan_lock *lock);
 void cavan_lock_acquire(struct cavan_lock *lock);
 void cavan_lock_release(struct cavan_lock *lock);
+
+static inline int cavan_pthread_run(void *(handler)(void *), void *data)
+{
+	return cavan_pthread_create(NULL, handler, data, false);
+}
 
 static inline int cavan_thread_join(struct cavan_thread *thread)
 {

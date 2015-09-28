@@ -2,6 +2,7 @@
 
 #include <cavan.h>
 #include <cavan/usb.h>
+#include <cavan/thread.h>
 #include <dirent.h>
 
 int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *desc, size_t length)
@@ -402,10 +403,10 @@ int cavan_usb_init(const char *dev_path, struct cavan_usb_descriptor *desc)
 	pthread_cond_init(&desc->notify_read, 0);
 	pthread_cond_init(&desc->notify_write, 0);
 
-	ret = pthread_create(&desc->thread_notify, NULL, cavan_usb_notify_handle, desc);
+	ret = cavan_pthread_create(&desc->thread_notify, cavan_usb_notify_handle, desc, false);
 	if (ret < 0)
 	{
-		print_error("pthread_create");
+		print_error("cavan_pthread_create");
 		goto out_close_fd;
 	}
 

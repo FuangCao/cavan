@@ -135,7 +135,7 @@ int cavan_service_start(struct cavan_service_description *desc)
 
 	for (i = 0; i < count; i++)
 	{
-		ret = cavan_pthread_create(threads + i, cavan_service_handler, desc);
+		ret = cavan_pthread_create(threads + i, cavan_service_handler, desc, true);
 		if (ret < 0)
 		{
 			pr_red_info("cavan_pthread_create");
@@ -438,7 +438,7 @@ static void *cavan_dynamic_service_handler(void *data)
 			{
 				int ret;
 
-				ret = cavan_pthread_create(NULL, cavan_dynamic_service_handler, service);
+				ret = cavan_pthread_run(cavan_dynamic_service_handler, service);
 				if (ret < 0)
 				{
 					pd_red_info("create daemon faild");
@@ -620,7 +620,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	{
 		int i;
 
-		ret = cavan_pthread_create(NULL, cavan_dynamic_service_handler, service);
+		ret = cavan_pthread_run(cavan_dynamic_service_handler, service);
 		if (ret < 0)
 		{
 			pr_error_info("cavan_pthread_create");

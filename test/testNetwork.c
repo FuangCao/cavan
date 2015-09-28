@@ -20,6 +20,7 @@
 #include <cavan.h>
 #include <cavan/tcp_proxy.h>
 #include <cavan/network.h>
+#include <cavan/thread.h>
 
 static void *network_client_recv_handler(void *data)
 {
@@ -51,7 +52,7 @@ static int network_client_test_base(struct network_client *client)
 	u32 value;
 	pthread_t thread_recv;
 
-	pthread_create(&thread_recv, NULL, network_client_recv_handler, client);
+	cavan_pthread_create(&thread_recv, network_client_recv_handler, client, true);
 
 	for (value = 0; value < 2000; value++)
 	{

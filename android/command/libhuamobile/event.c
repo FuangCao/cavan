@@ -476,10 +476,10 @@ int huamobile_event_start_poll_thread(struct huamobile_event_service *service)
 		return ret;
 	}
 
-	ret = pthread_create(&service->thread, NULL, huamobile_event_service_handler, service);
+	ret = cavan_pthread_create(&service->thread, NULL, huamobile_event_service_handler, service);
 	if (ret < 0)
 	{
-		pr_red_info("pthread_create");
+		pr_red_info("cavan_pthread_create");
 		close(service->pipefd[0]);
 		close(service->pipefd[1]);
 		pthread_mutex_unlock(&service->lock);

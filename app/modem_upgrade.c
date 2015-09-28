@@ -4,6 +4,7 @@
 #include <cavan/device.h>
 #include <sys/wait.h>
 #include <cavan/file.h>
+#include <cavan/thread.h>
 #include <cavan/swan_upgrade.h>
 #include <pthread.h>
 
@@ -309,7 +310,6 @@ static int upgrade_modem(const char *resource)
 	int ret;
 	char update_wizard[1024];
 	pid_t pid;
-	pthread_t usb_thread;
 
 	text_path_cat(update_wizard, sizeof(update_wizard), resource, UPDATE_WIZARD_NAME);
 
@@ -347,7 +347,7 @@ static int upgrade_modem(const char *resource)
 		}
 	}
 
-	pthread_create(&usb_thread, NULL, set_usb_power_handle, NULL);
+	cavan_pthread_run(set_usb_power_handle, NULL);
 
 	waitpid(pid, &ret, 0);
 	if (!WIFEXITED(ret) || WEXITSTATUS(ret) != 0)

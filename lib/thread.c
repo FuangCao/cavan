@@ -14,19 +14,20 @@
 #define CAVAN_THREAD_DEBUG	0
 #endif
 
-int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data)
+int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data, bool joinable)
 {
+	int ret;
 	pthread_t thread;
 
-	while (pthread_create(&thread, NULL, handler, data))
+	while ((ret = pthread_create(&thread, NULL, handler, data)))
 	{
-		if (errno != EAGAIN)
+		if (ret != EAGAIN)
 		{
-			pr_err_info("pthread_create");
+			pr_err_info("cavan_pthread_create");
 			return -EFAULT;
 		}
 
-		pr_warn_info("Failed to pthread_create, try again");
+		pr_warn_info("Failed to cavan_pthread_create, try again");
 		msleep(200);
 	}
 
@@ -35,6 +36,11 @@ int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *dat
 		*pthread = thread;
 	}
 	else
+	{
+		joinable = false;
+	}
+
+	if (joinable == false)
 	{
 		pthread_detach(thread);
 	}
@@ -446,6 +452,8 @@ out_thread_exit:
 
 	pthread_mutex_unlock(&thread->lock);
 
+	pthread_detach(pthread_self());
+
 	return NULL;
 }
 
@@ -457,7 +465,7 @@ int cavan_thread_start(struct cavan_thread *thread)
 
 	if (thread->state == CAVAN_THREAD_STATE_NONE)
 	{
-		ret = cavan_pthread_create(&thread->id, cavan_thread_main_loop, thread);
+		ret = cavan_pthread_create(&thread->id, cavan_thread_main_loop, thread, true);
 		if (ret < 0)
 		{
 			pr_red_info("cavan_pthread_create: %d", ret);

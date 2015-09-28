@@ -84,7 +84,6 @@ int main(int argc, char *argv[])
 {
 	int ret;
 	u16 seq;
-	pthread_t thread_recv;
 	struct network_url url;
 	struct network_client client;
 	struct ping_send_package pkg;
@@ -105,7 +104,7 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	pthread_create(&thread_recv, NULL, ping_recv_thread, &client);
+	cavan_pthread_run(ping_recv_thread, &client);
 
 	ping->id = getpid();
 	icmp->type = 8;
