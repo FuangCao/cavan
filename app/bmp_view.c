@@ -7,12 +7,9 @@ int main(int argc, char *argv[])
 
 	assert(argc > 1);
 
-	if (argc == 2)
-	{
+	if (argc == 2) {
 		fb_dev = "/dev/fb0";
-	}
-	else
-	{
+	} else {
 		fb_dev = argv[2];
 	}
 

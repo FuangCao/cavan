@@ -22,73 +22,60 @@
 #include <cavan.h>
 #include <cavan/timer.h>
 
-class ILock
-{
+class ILock {
 public:
 	virtual ~ILock(void) {}
 	virtual int acquire(void) = 0;
 	virtual int release(void) = 0;
 
-	virtual int tryLock(void)
-	{
+	virtual int tryLock(void) {
 		return -ENOENT;
 	}
 
-	int get(void)
-	{
+	int get(void) {
 		return acquire();
 	}
 
-	int put(void)
-	{
+	int put(void) {
 		return release();
 	}
 
-	int lock(void)
-	{
+	int lock(void) {
 		return acquire();
 	}
 
-	int unlock(void)
-	{
+	int unlock(void) {
 		return release();
 	}
 };
 
-class MutexLock : public ILock
-{
+class MutexLock : public ILock {
 private:
 	pthread_mutex_t mLock;
 
 public:
-	MutexLock(const pthread_mutexattr_t *attr = NULL)
-	{
+	MutexLock(const pthread_mutexattr_t *attr = NULL) {
 		pthread_mutex_init(&mLock, attr);
 	}
 
-	~MutexLock(void)
-	{
+	~MutexLock(void) {
 		pthread_mutex_destroy(&mLock);
 	}
 
-	virtual int acquire(void)
-	{
+	virtual int acquire(void) {
 		return pthread_mutex_lock(&mLock);
 	}
 
-	virtual int release(void)
-	{
+	virtual int release(void) {
 		return pthread_mutex_unlock(&mLock);
 	}
 
-	virtual int tryLock()
-	{
+	virtual int tryLock() {
 		return pthread_mutex_trylock(&mLock);
 	}
 };
 
-class ThreadLock : public MutexLock
-{
+class ThreadLock : public MutexLock {
 private:
 	int mHeldCount;
 	pthread_t mOwner;
@@ -103,64 +90,53 @@ public:
 	virtual int release(void);
 };
 
-class AutoLock
-{
+class AutoLock {
 private:
 	ILock &mLock;
 
 public:
-	AutoLock(ILock &lock) : mLock(lock)
-	{
+	AutoLock(ILock &lock) : mLock(lock) {
 		mLock.acquire();
 	}
 
-	~AutoLock()
-	{
+	~AutoLock() {
 		mLock.release();
 	}
 };
 
-class Condition
-{
+class Condition {
 private:
 	pthread_mutex_t mLock;
 	pthread_cond_t mCond;
 
 public:
-	Condition(const pthread_condattr_t *attr = NULL)
-	{
+	Condition(const pthread_condattr_t *attr = NULL) {
 		pthread_mutex_init(&mLock, NULL);
 		pthread_cond_init(&mCond, attr);
 	}
 
-	~Condition(void)
-	{
+	~Condition(void) {
 		pthread_cond_destroy(&mCond);
 		pthread_mutex_destroy(&mLock);
 	}
 
-	int signal(void)
-	{
+	int signal(void) {
 		return pthread_cond_signal(&mCond);
 	}
 
-	int broadcast(void)
-	{
+	int broadcast(void) {
 		return pthread_cond_broadcast(&mCond);
 	}
 
-	int notify(void)
-	{
+	int notify(void) {
 		return signal();
 	}
 
-	int notifyAll(void)
-	{
+	int notifyAll(void) {
 		return broadcast();
 	}
 
-	int wait(void)
-	{
+	int wait(void) {
 		pthread_mutex_lock(&mLock);
 		int ret = pthread_cond_wait(&mCond, &mLock);
 		pthread_mutex_unlock(&mLock);
@@ -168,8 +144,7 @@ public:
 		return ret;
 	}
 
-	int wait(const struct timespec *abstime)
-	{
+	int wait(const struct timespec *abstime) {
 		pthread_mutex_lock(&mLock);
 		int ret = pthread_cond_timedwait(&mCond, &mLock, abstime);
 		pthread_mutex_unlock(&mLock);
@@ -177,8 +152,7 @@ public:
 		return ret;
 	}
 
-	int wait(u32 ms)
-	{
+	int wait(u32 ms) {
 		struct timespec abstime;
 
 		cavan_timer_set_timespec(&abstime, ms);

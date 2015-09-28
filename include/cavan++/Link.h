@@ -22,14 +22,12 @@
 #include <cavan.h>
 #include <cavan++/Lock.h>
 
-struct LinkNode
-{
+struct LinkNode {
 	LinkNode *next;
 };
 
 template <typename T>
-struct LinkNodeT : public LinkNode
-{
+struct LinkNodeT : public LinkNode {
 	T data;
 
 	LinkNodeT(void) {}
@@ -38,14 +36,12 @@ struct LinkNodeT : public LinkNode
 
 // ================================================================================
 
-struct DoubleLinkNode
-{
+struct DoubleLinkNode {
 	DoubleLinkNode *prev, *next;
 };
 
 template <typename T>
-struct DoubleLinkNodeT : public DoubleLinkNode
-{
+struct DoubleLinkNodeT : public DoubleLinkNode {
 	T data;
 
 	DoubleLinkNodeT(void) {}
@@ -54,8 +50,7 @@ struct DoubleLinkNodeT : public DoubleLinkNode
 
 // ================================================================================
 
-class Link
-{
+class Link {
 protected:
 	LinkNode *mHead;
 	MutexLock mLock;
@@ -75,15 +70,13 @@ public:
 	void traversal(void (*handler)(LinkNode *node, void *data), void *data);
 	LinkNode *find(bool (*matcher)(LinkNode *node, void *data), void *data);
 
-	bool isEmpty(void)
-	{
+	bool isEmpty(void) {
 		AutoLock lock(mLock);
 
 		return mHead == NULL;
 	}
 
-	bool hasNode(void)
-	{
+	bool hasNode(void) {
 		AutoLock lock(mLock);
 
 		return mHead != NULL;
@@ -92,8 +85,7 @@ public:
 
 // ================================================================================
 
-class DoubleLink
-{
+class DoubleLink {
 private:
 	DoubleLinkNode *mHead;
 	MutexLock mLock;
@@ -114,8 +106,7 @@ public:
 
 // ================================================================================
 
-class LoopLink
-{
+class LoopLink {
 private:
 	LinkNode *mTail;
 	MutexLock mLock;
@@ -143,8 +134,7 @@ public:
 
 // ================================================================================
 
-class DoubleLoopLink
-{
+class DoubleLoopLink {
 private:
 	DoubleLinkNode *mHead;
 	MutexLock mLock;
@@ -175,13 +165,11 @@ public:
 	void moveToTop(DoubleLinkNode *node);
 	void moveToTail(DoubleLinkNode *node);
 
-	DoubleLinkNode *getTop(void)
-	{
+	DoubleLinkNode *getTop(void) {
 		return getHeadNode();
 	}
 
-	DoubleLinkNode *getTail(void)
-	{
+	DoubleLinkNode *getTail(void) {
 		return getTailNode();
 	}
 };

@@ -29,17 +29,13 @@ int main(int argc, char *argv[])
 
 	cavan_sha1_context_init(&context);
 
-	for (i = 1; i < argc; i++)
-	{
+	for (i = 1; i < argc; i++) {
 		int ret;
 
 		ret = cavan_file_shasum(&context, argv[i], digest);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_file_sha1sum %s", argv[i]);
-		}
-		else
-		{
+		} else {
 			println("%s  %s", cavan_shasum_tostring(digest, sizeof(digest), buff, sizeof(buff)), argv[i]);
 		}
 	}

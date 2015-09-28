@@ -31,8 +31,7 @@ int main(int argc, char *argv[])
 	const char *filename;
 	struct heart_rate_decode decode;
 
-	if (argc < 2)
-	{
+	if (argc < 2) {
 		println("Usage: %s <filename>", argv[0]);
 		return -EINVAL;
 	}
@@ -43,20 +42,17 @@ int main(int argc, char *argv[])
 	heart_rate_decode_init(&decode, NULL);
 
 	fd = open(filename, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file %s", filename);
 		return fd;
 	}
 
-	while (1)
-	{
+	while (1) {
 		u16 value;
 		ssize_t rdlen;
 
 		rdlen = read(fd, &value, sizeof(value));
-		if (rdlen < (int) sizeof(value))
-		{
+		if (rdlen < (int) sizeof(value)) {
 			break;
 		}
 

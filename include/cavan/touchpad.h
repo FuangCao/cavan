@@ -29,8 +29,7 @@ enum cavan_touchpad_mode
 	CAVAN_TOUCHPAD_MODE_HWHEEL
 };
 
-struct cavan_touchpad_device
-{
+struct cavan_touchpad_device {
 	struct cavan_input_device input_dev;
 	struct cavan_timer timer;
 

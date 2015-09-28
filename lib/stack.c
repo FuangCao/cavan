@@ -6,8 +6,7 @@
 static int general_stack_init(struct general_stack *stack, int count)
 {
 	stack->buffer = malloc(sizeof(stack->buffer[0]) * count);
-	if (stack->buffer == NULL)
-	{
+	if (stack->buffer == NULL) {
 		return -ENOMEM;
 	}
 
@@ -21,8 +20,7 @@ int general_stack_init_fr(struct general_stack *stack, int count)
 	int ret;
 
 	ret = general_stack_init(stack, count);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -36,8 +34,7 @@ int general_stack_init_er(struct general_stack *stack, int count)
 	int ret;
 
 	ret = general_stack_init(stack, count);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -51,8 +48,7 @@ int general_stack_init_fd(struct general_stack *stack, int count)
 	int ret;
 
 	ret = general_stack_init(stack, count);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -66,8 +62,7 @@ int general_stack_init_ed(struct general_stack *stack, int count)
 	int ret;
 
 	ret = general_stack_init(stack, count);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -84,8 +79,7 @@ void general_stack_free(struct general_stack *stack)
 
 int general_stack_push_fr(struct general_stack *stack, void *data)
 {
-	if (general_stack_full_fr(stack))
-	{
+	if (general_stack_full_fr(stack)) {
 		return -ENOMEM;
 	}
 
@@ -96,8 +90,7 @@ int general_stack_push_fr(struct general_stack *stack, void *data)
 
 int general_stack_push_er(struct general_stack *stack, void *data)
 {
-	if (general_stack_full_er(stack))
-	{
+	if (general_stack_full_er(stack)) {
 		return -ENOMEM;
 	}
 
@@ -108,8 +101,7 @@ int general_stack_push_er(struct general_stack *stack, void *data)
 
 int general_stack_push_fd(struct general_stack *stack, void *data)
 {
-	if (general_stack_full_fd(stack))
-	{
+	if (general_stack_full_fd(stack)) {
 		return -ENOMEM;
 	}
 
@@ -120,8 +112,7 @@ int general_stack_push_fd(struct general_stack *stack, void *data)
 
 int general_stack_push_ed(struct general_stack *stack, void *data)
 {
-	if (general_stack_full_ed(stack))
-	{
+	if (general_stack_full_ed(stack)) {
 		return -ENOMEM;
 	}
 
@@ -132,8 +123,7 @@ int general_stack_push_ed(struct general_stack *stack, void *data)
 
 void *general_stack_pop_fr(struct general_stack *stack)
 {
-	if (general_stack_empty_fr(stack))
-	{
+	if (general_stack_empty_fr(stack)) {
 		return NULL;
 	}
 
@@ -142,8 +132,7 @@ void *general_stack_pop_fr(struct general_stack *stack)
 
 void *general_stack_pop_er(struct general_stack *stack)
 {
-	if (general_stack_empty_er(stack))
-	{
+	if (general_stack_empty_er(stack)) {
 		return NULL;
 	}
 
@@ -152,8 +141,7 @@ void *general_stack_pop_er(struct general_stack *stack)
 
 void *general_stack_pop_fd(struct general_stack *stack)
 {
-	if (general_stack_empty_fd(stack))
-	{
+	if (general_stack_empty_fd(stack)) {
 		return NULL;
 	}
 
@@ -162,8 +150,7 @@ void *general_stack_pop_fd(struct general_stack *stack)
 
 void *general_stack_pop_ed(struct general_stack *stack)
 {
-	if (general_stack_empty_ed(stack))
-	{
+	if (general_stack_empty_ed(stack)) {
 		return NULL;
 	}
 
@@ -172,8 +159,7 @@ void *general_stack_pop_ed(struct general_stack *stack)
 
 void *general_stack_get_top_fr(struct general_stack *stack)
 {
-	if (general_stack_empty_fr(stack))
-	{
+	if (general_stack_empty_fr(stack)) {
 		return NULL;
 	}
 
@@ -182,8 +168,7 @@ void *general_stack_get_top_fr(struct general_stack *stack)
 
 void *general_stack_get_top_er(struct general_stack *stack)
 {
-	if (general_stack_empty_er(stack))
-	{
+	if (general_stack_empty_er(stack)) {
 		return NULL;
 	}
 
@@ -192,8 +177,7 @@ void *general_stack_get_top_er(struct general_stack *stack)
 
 void *general_stack_get_top_fd(struct general_stack *stack)
 {
-	if (general_stack_empty_fd(stack))
-	{
+	if (general_stack_empty_fd(stack)) {
 		return NULL;
 	}
 
@@ -202,8 +186,7 @@ void *general_stack_get_top_fd(struct general_stack *stack)
 
 void *general_stack_get_top_ed(struct general_stack *stack)
 {
-	if (general_stack_empty_ed(stack))
-	{
+	if (general_stack_empty_ed(stack)) {
 		return NULL;
 	}
 
@@ -215,8 +198,7 @@ void *general_stack_get_top_ed(struct general_stack *stack)
 int letter_stack_init(struct letter_stack *stack, int count)
 {
 	stack->buffer = malloc(sizeof(stack->buffer[0]) * count);
-	if (stack->buffer == NULL)
-	{
+	if (stack->buffer == NULL) {
 		return -ENOMEM;
 	}
 
@@ -228,16 +210,14 @@ int letter_stack_init(struct letter_stack *stack, int count)
 
 void letter_stack_free(struct letter_stack *stack)
 {
-	if (stack && stack->buffer)
-	{
+	if (stack && stack->buffer) {
 		free(stack->buffer);
 	}
 }
 
 int letter_stack_push(struct letter_stack *stack, char data)
 {
-	if (letter_stack_is_full(stack))
-	{
+	if (letter_stack_is_full(stack)) {
 		return -ENOMEM;
 	}
 
@@ -248,8 +228,7 @@ int letter_stack_push(struct letter_stack *stack, char data)
 
 int letter_stack_pop(struct letter_stack *stack, char *data)
 {
-	if (letter_stack_is_empty(stack))
-	{
+	if (letter_stack_is_empty(stack)) {
 		return -ENOMEM;
 	}
 
@@ -260,8 +239,7 @@ int letter_stack_pop(struct letter_stack *stack, char *data)
 
 int letter_stack_get_top(struct letter_stack *stack, char *data)
 {
-	if (letter_stack_is_empty(stack))
-	{
+	if (letter_stack_is_empty(stack)) {
 		return -ENOMEM;
 	}
 
@@ -275,8 +253,7 @@ int letter_stack_get_top(struct letter_stack *stack, char *data)
 int double_stack_init(struct double_stack *stack, int count)
 {
 	stack->buffer = malloc(sizeof(stack->buffer[0]) * count);
-	if (stack->buffer == NULL)
-	{
+	if (stack->buffer == NULL) {
 		return -ENOMEM;
 	}
 
@@ -288,16 +265,14 @@ int double_stack_init(struct double_stack *stack, int count)
 
 void double_stack_free(struct double_stack *stack)
 {
-	if (stack && stack->buffer)
-	{
+	if (stack && stack->buffer) {
 		free(stack->buffer);
 	}
 }
 
 int double_stack_push(struct double_stack *stack, double data)
 {
-	if (double_stack_is_full(stack))
-	{
+	if (double_stack_is_full(stack)) {
 		return -ENOMEM;
 	}
 
@@ -308,8 +283,7 @@ int double_stack_push(struct double_stack *stack, double data)
 
 int double_stack_pop(struct double_stack *stack, double *data)
 {
-	if (double_stack_is_empty(stack))
-	{
+	if (double_stack_is_empty(stack)) {
 		return -ENOMEM;
 	}
 
@@ -320,8 +294,7 @@ int double_stack_pop(struct double_stack *stack, double *data)
 
 int double_stack_get_top(struct double_stack *stack, double *data)
 {
-	if (double_stack_is_empty(stack))
-	{
+	if (double_stack_is_empty(stack)) {
 		return -ENOMEM;
 	}
 
@@ -334,19 +307,15 @@ int double_stack_get_top(struct double_stack *stack, double *data)
 
 static int memory_stack_node_init(struct memory_stack_node *node, void *mem, size_t size)
 {
-	if (size)
-	{
+	if (size) {
 		node->space = malloc(size);
-		if (node->space == NULL)
-		{
+		if (node->space == NULL) {
 			return -ENOMEM;
 		}
 
 		mem_copy(node->space, mem, size);
 		node->size = size;
-	}
-	else
-	{
+	} else {
 		node->space = mem;
 		node->size = 0;
 	}
@@ -356,17 +325,13 @@ static int memory_stack_node_init(struct memory_stack_node *node, void *mem, siz
 
 static void *memory_stack_node_get(struct memory_stack_node *node, void *mem, size_t *size)
 {
-	if (node->size)
-	{
+	if (node->size) {
 		mem_copy(mem, node->space, node->size);
-	}
-	else
-	{
+	} else {
 		mem = node->space;
 	}
 
-	if (size)
-	{
+	if (size) {
 		*size = node->size;
 	}
 
@@ -375,18 +340,14 @@ static void *memory_stack_node_get(struct memory_stack_node *node, void *mem, si
 
 static void *memory_stack_node_free(struct memory_stack_node *node, void *mem, size_t *size)
 {
-	if (node->size)
-	{
+	if (node->size) {
 		mem_copy(mem, node->space, node->size);
 		free(node->space);
-	}
-	else
-	{
+	} else {
 		mem = node->space;
 	}
 
-	if (size)
-	{
+	if (size) {
 		*size = node->size;
 	}
 
@@ -396,8 +357,7 @@ static void *memory_stack_node_free(struct memory_stack_node *node, void *mem, s
 int memory_stack_init(struct memory_stack *stack, int count)
 {
 	stack->buffer = malloc(sizeof(stack->buffer[0]) * count);
-	if (stack->buffer == NULL)
-	{
+	if (stack->buffer == NULL) {
 		return -ENOMEM;
 	}
 
@@ -411,15 +371,12 @@ void memory_stack_free(struct memory_stack *stack)
 {
 	struct memory_stack_node *node, *node_end;
 
-	if (stack == NULL)
-	{
+	if (stack == NULL) {
 		return;
 	}
 
-	for (node = stack->buffer, node_end = node + stack->top; node < node_end; node++)
-	{
-		if (node->size)
-		{
+	for (node = stack->buffer, node_end = node + stack->top; node < node_end; node++) {
+		if (node->size) {
 			free(node->space);
 		}
 	}
@@ -431,14 +388,12 @@ int memory_stack_push(struct memory_stack *stack, void *mem, size_t size)
 {
 	int ret;
 
-	if (memory_stack_is_full(stack))
-	{
+	if (memory_stack_is_full(stack)) {
 		return -ENOMEM;
 	}
 
 	ret = memory_stack_node_init(stack->buffer + stack->top, mem, size);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -449,8 +404,7 @@ int memory_stack_push(struct memory_stack *stack, void *mem, size_t size)
 
 void *memory_stack_pop(struct memory_stack *stack, void *mem, size_t *size)
 {
-	if (memory_stack_is_empty(stack))
-	{
+	if (memory_stack_is_empty(stack)) {
 		return NULL;
 	}
 
@@ -461,8 +415,7 @@ void *memory_stack_pop(struct memory_stack *stack, void *mem, size_t *size)
 
 void *memory_stack_get_top(struct memory_stack *stack, void *mem, size_t *size)
 {
-	if (memory_stack_is_empty(stack))
-	{
+	if (memory_stack_is_empty(stack)) {
 		return NULL;
 	}
 

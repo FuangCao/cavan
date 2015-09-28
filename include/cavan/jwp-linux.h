@@ -118,8 +118,7 @@ typedef pthread_mutex_t jwp_lock_t;
 #include <cavan/jwp.h>
 #include <cavan/timer.h>
 
-struct jwp_linux_desc
-{
+struct jwp_linux_desc {
 	struct jwp_desc jwp;
 
 #if JWP_TIMER_ENABLE

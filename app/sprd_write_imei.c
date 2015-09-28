@@ -29,81 +29,68 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "imei",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_IMEI1,
-		},
-		{
+		}, {
 			.name = "imei1",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_IMEI1,
-		},
-		{
+		}, {
 			.name = "imei2",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_IMEI2,
-		},
-		{
+		}, {
 			.name = "imei3",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_IMEI3,
-		},
-		{
+		}, {
 			.name = "imei4",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_IMEI4,
-		},
-		{
+		}, {
 			.name = "wifi",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_WIFI_MAC,
-		},
-		{
+		}, {
 			.name = "wifi-mac",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_WIFI_MAC,
-		},
-		{
+		}, {
 			.name = "bt",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_BT_MAC,
-		},
-		{
+		}, {
 			.name = "bt-mac",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_BT_MAC,
-		},
-		{
+		}, {
 			.name = "dev",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DEVICE,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -113,10 +100,8 @@ int main(int argc, char *argv[])
 	char devpath[1024] = "/dev/vbpipe0";
 	struct sprd_diag_imei_data imei;
 
-	while ((c = getopt_long(argc, argv, "vVhHd:D:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHd:D:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -172,38 +157,29 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind < argc)
-	{
+	if (optind < argc) {
 		text_copy(devpath, argv[optind]);
 	}
 
 	fd = open(devpath, O_RDWR | O_SYNC);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open %s", devpath);
 		return fd;
 	}
 
-	if (mask)
-	{
+	if (mask) {
 		println("mask = 0x%02x", mask);
 		sprd_diag_show_imei(&imei);
 
 		ret = sprd_diag_write_imei(fd, &imei, mask);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("sprd_diag_write_imei");
 		}
-	}
-	else
-	{
+	} else {
 		ret = sprd_diag_read_imei(fd, &imei, 0xFF);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("sprd_diag_read_imei");
-		}
-		else
-		{
+		} else {
 			sprd_diag_show_imei(&imei);
 		}
 	}

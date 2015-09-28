@@ -29,33 +29,28 @@ int main(int argc, char *argv[])
 	const char *hostname;
 	u16 port = 0;
 	int option_index;
-	struct option long_options[] =
-	{
+	struct option long_options[] = {
 		{
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 0,
-		},
-		{
+		}, {
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 1,
-		},
-		{
+		}, {
 			.name = "delay",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 2,
-		},
-		{
+		}, {
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -67,10 +62,8 @@ int main(int argc, char *argv[])
 	p = descs;
 	delay = 0;
 
-	while ((c = getopt_long(argc, argv, "U:u:K:k:R:r:S:s:C:c:D:d:hH", long_options, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "U:u:K:k:R:r:S:s:C:c:D:d:hH", long_options, &option_index)) != EOF) {
+		switch (c) {
 			case 0:
 				hostname = optarg;
 				break;
@@ -162,43 +155,36 @@ int main(int argc, char *argv[])
 
 	end_p = p;
 
-	if (hostname == NULL)
-	{
+	if (hostname == NULL) {
 		hostname = cavan_get_server_hostname();
 	}
 
-	if (port == 0)
-	{
+	if (port == 0) {
 		port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
 	println("ip address = %s, port = %d, image count = %" PRINT_FORMAT_SIZE, hostname, port, end_p - descs);
 
 	ret = uevent_init(&udesc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("uevent_init");
 		return ret;
 	}
 
-	while (1)
-	{
+	while (1) {
 		char devpath[1024];
 
 		ret = get_disk_add_uevent(&udesc);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("get_disk_add_uevent");
 			break;
 		}
 
-		if (uevent_get_propery_devname(&udesc, devpath) == NULL)
-		{
+		if (uevent_get_propery_devname(&udesc, devpath) == NULL) {
 			continue;
 		}
 
-		if (file_test(devpath, "b") < 0)
-		{
+		if (file_test(devpath, "b") < 0) {
 			continue;
 		}
 
@@ -208,12 +194,10 @@ int main(int argc, char *argv[])
 
 		ret = 0;
 
-		for (p = descs; p < end_p; p++)
-		{
+		for (p = descs; p < end_p; p++) {
 			mem_copy(p->out + 5, devpath + 5, 3);
 
-			if (file_test(p->out, "b") < 0)
-			{
+			if (file_test(p->out, "b") < 0) {
 				ret = -ENODEV;
 				error_msg("\"%s\" is not a block device", p->out);
 				break;
@@ -226,12 +210,9 @@ int main(int argc, char *argv[])
 
 		umount_device(devpath, MNT_DETACH);
 
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			println_red("Failed");
-		}
-		else
-		{
+		} else {
 			println_green("Burn success, you can remove the disk now");
 		}
 	}

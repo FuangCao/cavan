@@ -45,8 +45,7 @@
 #define CAVAN_NET_FLAG_WAIT			(1 << 2)
 
 #pragma pack(1)
-struct mac_header
-{
+struct mac_header {
 	u8 dest_mac[6];
 	u8 src_mac[6];
 	u16 protocol_type;
@@ -54,8 +53,7 @@ struct mac_header
 	u8 data[0];
 };
 
-struct ip_header
-{
+struct ip_header {
 	u8 version			:4;
 	u8 header_length	:4;
 	u8 service_type;
@@ -74,8 +72,7 @@ struct ip_header
 	u8 data[0];
 };
 
-struct udp_header
-{
+struct udp_header {
 	u16 src_port;
 	u16 dest_port;
 
@@ -85,8 +82,7 @@ struct udp_header
 	u8 data[0];
 };
 
-struct tcp_header
-{
+struct tcp_header {
 	u16 src_port;
 	u16 dest_port;
 
@@ -109,8 +105,7 @@ struct tcp_header
 	u8 data[0];
 };
 
-struct arp_header
-{
+struct arp_header {
 	u16 hardware_type;
 	u16 protocol_type;
 	u8 hardware_addrlen;
@@ -122,8 +117,7 @@ struct arp_header
 	u32 dest_ip;
 };
 
-struct icmp_header
-{
+struct icmp_header {
 	u8 type;
 	u8 code;
 	u16 checksum;
@@ -131,16 +125,14 @@ struct icmp_header
 	u8 data[0];
 };
 
-struct ping_header
-{
+struct ping_header {
 	u16 id;
 	u16 seq;
 
 	u8 data[0];
 };
 
-struct dhcp_header
-{
+struct dhcp_header {
 	u8 opcode;
 	u8 htype;
 	u8 hlen;
@@ -163,8 +155,7 @@ struct dhcp_header
 	u8 options[0];
 };
 
-struct udp_pseudo_header
-{
+struct udp_pseudo_header {
 	u32 src_ip;
 	u32 dest_ip;
 
@@ -174,28 +165,23 @@ struct udp_pseudo_header
 };
 #pragma pack()
 
-struct cavan_route_node
-{
+struct cavan_route_node {
 	void *data;
 	u8 mac_addr[MAC_ADDRESS_LEN];
 	u32 ip_addr;
 };
 
-struct cavan_route_table
-{
+struct cavan_route_table {
 	struct cavan_route_node **route_table;
 	int table_size;
 };
 
-struct inet_file_request
-{
+struct inet_file_request {
 	const char *hostname;
 	u16 port;
 
-	union
-	{
-		struct
-		{
+	union {
+		struct {
 			char src_file[1024];
 			char dest_file[1024];
 			off_t src_offset;
@@ -226,8 +212,7 @@ typedef enum {
 	NETWORK_PROTOCOL_UEVENT,
 } network_protocol_t;
 
-struct network_url
-{
+struct network_url {
 	u16 port;
 	const char *protocol;
 	const char *hostname;
@@ -235,8 +220,7 @@ struct network_url
 	char memory[128];
 };
 
-struct inet_connect
-{
+struct inet_connect {
 	int sockfd;
 	struct sockaddr_in addr;
 };
@@ -246,16 +230,14 @@ typedef enum {
 	CAVAN_SYNC_TYPE_DATA,
 } cavan_sync_type_t;
 
-struct cavan_sync_package
-{
+struct cavan_sync_package {
 	u8 type;
 	u8 index;
 	u16 length;
 	char data[0];
 };
 
-struct network_client
-{
+struct network_client {
 	int sockfd;
 	socklen_t addrlen;
 	void *private_data;
@@ -266,8 +248,7 @@ struct network_client
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
 };
 
-struct network_client_sync_data
-{
+struct network_client_sync_data {
 	pthread_mutex_t lock;
 	u8 send_index, recv_index;
 	u8 send_pending, recv_pending;
@@ -278,21 +259,18 @@ struct network_client_sync_data
 };
 
 #if 0
-struct network_client_inet
-{
+struct network_client_inet {
 	struct network_client client;
 	struct sockaddr_in addr;
 };
 
-struct network_client_unix
-{
+struct network_client_unix {
 	struct network_client client;
 	struct sockaddr_un addr;
 };
 #endif
 
-struct network_service
-{
+struct network_service {
 	int sockfd;
 	socklen_t addrlen;
 	void *private_data;
@@ -302,8 +280,7 @@ struct network_service
 	void (*close)(struct network_service *service);
 };
 
-struct network_file_request
-{
+struct network_file_request {
 	char src_file[1024];
 	char dest_file[1024];
 	off_t src_offset;
@@ -311,8 +288,7 @@ struct network_file_request
 	off_t size;
 };
 
-struct network_protocol_desc
-{
+struct network_protocol_desc {
 	const char *name;
 	u16 port;
 	network_protocol_t type;
@@ -508,8 +484,7 @@ static inline ssize_t inet_recv2(int sockfd, void *buff, size_t size)
 
 static inline ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int timeout_ms)
 {
-	if (file_poll_input(sockfd, timeout_ms))
-	{
+	if (file_poll_input(sockfd, timeout_ms)) {
 		return inet_recv(sockfd, buff, size);
 	}
 
@@ -518,8 +493,7 @@ static inline ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int
 
 static inline ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen, int timeout_ms)
 {
-	if (file_poll_input(sockfd, timeout_ms))
-	{
+	if (file_poll_input(sockfd, timeout_ms)) {
 		return inet_recvfrom(sockfd, buff, size, addr, addrlen);
 	}
 

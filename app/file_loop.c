@@ -10,15 +10,12 @@ int main(int argc, char *argv[])
 	int c;
 	char loop_path[32];
 
-	while ((c = getopt(argc, argv, "C:c:D:d:")) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt(argc, argv, "C:c:D:d:")) != EOF) {
+		switch (c) {
 		case 'c':
 		case 'C':
 			ret = file_set_loop(optarg, loop_path, 0);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				error_msg("file_set_loop");
 				return ret;
 			}
@@ -28,8 +25,7 @@ int main(int argc, char *argv[])
 		case 'd':
 		case 'D':
 			ret = loop_clr_fd(optarg);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				error_msg("loop_clr_fd");
 				return ret;
 			}

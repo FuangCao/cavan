@@ -123,13 +123,10 @@ typedef enum {
 #ifndef CSR101x
 #pragma pack(1)
 #endif
-struct jwp_header
-{
-	union
-	{
+struct jwp_header {
+	union {
 		jwp_u16 magic;
-		struct
-		{
+		struct {
 			jwp_u8 magic_low;
 			jwp_u8 magic_high;
 		};
@@ -150,12 +147,9 @@ struct jwp_header
 #pragma pack()
 #endif
 
-struct jwp_package
-{
-	union
-	{
-		struct
-		{
+struct jwp_package {
+	union {
+		struct {
 			struct jwp_header header;
 			jwp_u8 payload[JWP_MTU - JWP_HEADER_SIZE];
 		};
@@ -163,8 +157,7 @@ struct jwp_package
 	};
 };
 
-struct jwp_queue
-{
+struct jwp_queue {
 	jwp_u8 buff[JWP_QUEUE_SIZE];
 	jwp_u8 *last;
 	jwp_u8 *head;
@@ -186,10 +179,8 @@ struct jwp_queue
 #endif
 };
 
-struct jwp_timer
-{
-	union
-	{
+struct jwp_timer {
+	union {
 		void *handle;
 		jwp_u8 handle_u8;
 		jwp_u16 handle_u16;
@@ -209,8 +200,7 @@ struct jwp_timer
 	jwp_bool (*handler)(struct jwp_timer *timer);
 };
 
-struct jwp_package_receiver
-{
+struct jwp_package_receiver {
 	jwp_u8 *body;
 	jwp_u8 *head;
 	jwp_u8 *header_start;
@@ -232,8 +222,7 @@ struct jwp_package_receiver
 	jwp_size_t (*process_data)(struct jwp_package_receiver *receiver, const jwp_u8 *data, jwp_size_t size);
 };
 
-struct jwp_desc
-{
+struct jwp_desc {
 	jwp_u8 tx_index;
 	jwp_u8 rx_index;
 #if JWP_TX_TIMER_ENABLE
@@ -468,8 +457,7 @@ static inline void jwp_set_package_index(struct jwp_desc *jwp, struct jwp_header
 
 static inline jwp_bool jwp_wait_and_set_send_pendding(struct jwp_desc *jwp)
 {
-	if (!jwp_wait_tx_complete(jwp))
-	{
+	if (!jwp_wait_tx_complete(jwp)) {
 		return false;
 	}
 

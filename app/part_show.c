@@ -11,8 +11,7 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	ret = read_master_boot_sector(argv[1], &mbs);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("read_master_boot_sector");
 		return ret;
 	}

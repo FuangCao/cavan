@@ -5,14 +5,12 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Fri May 13 17:54:01 CST 2011
 
-struct uevent_filter
-{
+struct uevent_filter {
 	int count;
 	char *props[100];
 };
 
-struct uevent_desc
-{
+struct uevent_desc {
 	int sockfd;
 	char buff[1024];
 	char *props[100];

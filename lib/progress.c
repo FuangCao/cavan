@@ -27,44 +27,36 @@ static void progress_bar_fflush(struct progress_bar *bar)
 
 	*p++ = '[';
 
-	if (bar->fill < bar->half_length)
-	{
+	if (bar->fill < bar->half_length) {
 		memset(p, BAR_FULL_CHAR, bar->fill);
 		memset(p + bar->fill, BAR_FREE_CHAR, bar->half_length - bar->fill);
-	}
-	else
-	{
+	} else {
 		memset(p, BAR_FULL_CHAR, bar->half_length);
 	}
 
 	p += bar->half_length;
 	p += snprintf(p, p_end - p, " %d%% ", bar->percent);
 
-	if (bar->fill > bar->half_length)
-	{
+	if (bar->fill > bar->half_length) {
 		int progress = bar->fill - bar->half_length;
 
 		memset(p, BAR_FULL_CHAR, progress);
 		memset(p + progress, BAR_FREE_CHAR, bar->half_length - progress);
-	}
-	else
-	{
+	} else {
 		memset(p, BAR_FREE_CHAR, bar->half_length);
 	}
 
 	p += bar->half_length;
 	*p++ = ']';
 
-	if (bar->speed >= 0)
-	{
+	if (bar->speed >= 0) {
 
 		*p++ = ' ';
 		p = mem_speed_tostring(bar->speed, p, p_end - p - 2);
 	}
 
 #if BAR_SHOW_TIME
-	if (bar->speed > 0)
-	{
+	if (bar->speed > 0) {
 		used = progress_bar_get_time_consume_ns(bar) / 1000000000UL;
 		remain = (bar->total - bar->current) / bar->speed;
 		p += snprintf(p, p_end - p, " (%d/%d)", remain, used + remain);
@@ -72,10 +64,8 @@ static void progress_bar_fflush(struct progress_bar *bar)
 #endif
 
 	length = p - buff;
-	if (length < bar->content_length)
-	{
-		for (p_end = buff + bar->content_length; p < p_end; p++)
-		{
+	if (length < bar->content_length) {
+		for (p_end = buff + bar->content_length; p < p_end; p++) {
 			*p = ' ';
 		}
 	}
@@ -93,8 +83,7 @@ static bool update_percent(struct progress_bar *bar)
 {
 	int percent = bar->current * 100 / bar->total;
 
-	if (percent == bar->percent)
-	{
+	if (percent == bar->percent) {
 		return false;
 	}
 
@@ -107,8 +96,7 @@ static bool update_content(struct progress_bar *bar)
 {
 	int fill = bar->current * bar->full_length / bar->total;
 
-	if (fill == bar->fill)
-	{
+	if (fill == bar->fill) {
 		return false;
 	}
 
@@ -126,25 +114,20 @@ static bool update_speed(struct progress_bar *bar)
 	clock_gettime_mono(&time_now);
 
 	interval = cavan_timespec_sub_ns(&time_now, &bar->time_prev);
-	if (interval < (s64) (SPEED_INTERVAL_MS * 1000000UL))
-	{
+	if (interval < (s64) (SPEED_INTERVAL_MS * 1000000UL)) {
 		return false;
 	}
 
-	if (bar->current > bar->last)
-	{
+	if (bar->current > bar->last) {
 		speed = (bar->current - bar->last) * 1000000000UL / interval;
-	}
-	else
-	{
+	} else {
 		speed = 0;
 	}
 
 	bar->last = bar->current;
 	bar->time_prev = time_now;
 
-	if (bar->speed == speed)
-	{
+	if (bar->speed == speed) {
 		return false;
 	}
 
@@ -155,13 +138,11 @@ static bool update_speed(struct progress_bar *bar)
 
 void progress_bar_update(struct progress_bar *bar)
 {
-	if (bar->current > bar->total)
-	{
+	if (bar->current > bar->total) {
 		return;
 	}
 
-	if (update_percent(bar) | update_content(bar) | update_speed(bar))
-	{
+	if (update_percent(bar) | update_content(bar) | update_speed(bar)) {
 		progress_bar_fflush(bar);
 	}
 }
@@ -176,19 +157,13 @@ void progress_bar_init(struct progress_bar *bar, double total)
 	bar->fill = 0;
 	bar->content_length = 0;
 
-	if (tty_get_win_size2(stdout_fd, NULL, &columns) < 0 || columns <= 0)
-	{
+	if (tty_get_win_size2(stdout_fd, NULL, &columns) < 0 || columns <= 0) {
 		bar->half_length = BAR_DEF_HALF_LEN;
-	}
-	else if (columns < (int) BAR_CONTENT_MIN)
-	{
+	} else if (columns < (int) BAR_CONTENT_MIN) {
 		bar->half_length = 0;
-	}
-	else
-	{
+	} else {
 		bar->half_length = (columns - BAR_CONTENT_MIN) / 2;
-		if (bar->half_length > BAR_MAX_HALF_LEN)
-		{
+		if (bar->half_length > BAR_MAX_HALF_LEN) {
 			bar->half_length = BAR_MAX_HALF_LEN;
 		}
 	}
@@ -224,8 +199,7 @@ void progress_bar_finish(struct progress_bar *bar)
 	print_char('\n');
 
 	time = progress_bar_get_time_consume_ns(bar);
-	if (time > 1000UL)
-	{
+	if (time > 1000UL) {
 		char size_buff[32];
 		char speed_buff[32];
 

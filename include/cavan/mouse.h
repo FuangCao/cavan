@@ -21,8 +21,7 @@
 #include <cavan/event.h>
 #include <cavan/touchscreen.h>
 
-struct cavan_mouse_device
-{
+struct cavan_mouse_device {
 	struct cavan_input_device input_dev;
 	int x, y;
 };

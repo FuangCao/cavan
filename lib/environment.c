@@ -25,8 +25,7 @@ int cavan_getenv_int(const char *name, int *value)
 	char *p;
 
 	p = getenv(name);
-	if (p == NULL)
-	{
+	if (p == NULL) {
 		pr_error_info("getenv(%s)", name);
 		return -EINVAL;
 	}

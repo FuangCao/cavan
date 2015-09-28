@@ -20,8 +20,7 @@
 
 bool cavan_multi_touch_device_match(uint8_t *abs_bitmask)
 {
-	if (test_bit(ABS_MT_POSITION_X, abs_bitmask) == 0 || test_bit(ABS_MT_POSITION_Y, abs_bitmask) == 0)
-	{
+	if (test_bit(ABS_MT_POSITION_X, abs_bitmask) == 0 || test_bit(ABS_MT_POSITION_Y, abs_bitmask) == 0) {
 		return false;
 	}
 
@@ -37,8 +36,7 @@ bool cavan_multi_touch_device_matcher(struct cavan_event_matcher *matcher, void 
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 
 	ret = cavan_event_get_abs_bitmask(matcher->fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_abs_bitmask");
 		return false;
 	}
@@ -48,8 +46,7 @@ bool cavan_multi_touch_device_matcher(struct cavan_event_matcher *matcher, void 
 
 bool cavan_single_touch_device_match(uint8_t *abs_bitmask, uint8_t *key_bitmask)
 {
-	if (test_bit(BTN_TOUCH, key_bitmask) == 0 || test_bit(ABS_X, abs_bitmask) == 0 || test_bit(ABS_Y, abs_bitmask) == 0)
-	{
+	if (test_bit(BTN_TOUCH, key_bitmask) == 0 || test_bit(ABS_X, abs_bitmask) == 0 || test_bit(ABS_Y, abs_bitmask) == 0) {
 		return false;
 	}
 
@@ -67,15 +64,13 @@ bool cavan_single_touch_device_matcher(struct cavan_event_matcher *matcher, void
 	uint8_t key_bitmask[KEY_BITMASK_SIZE];
 
 	ret = cavan_event_get_abs_bitmask(matcher->fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_abs_bitmask");
 		return false;
 	}
 
 	ret = cavan_event_get_key_bitmask(matcher->fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_key_bitmask");
 		return false;
 	}
@@ -90,21 +85,18 @@ bool cavan_touch_device_matcher(struct cavan_event_matcher *matcher, void *data)
 	uint8_t key_bitmask[KEY_BITMASK_SIZE];
 
 	ret = cavan_event_get_abs_bitmask(matcher->fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_abs_bitmask");
 		return false;
 	}
 
-	if (cavan_multi_touch_device_match(abs_bitmask))
-	{
+	if (cavan_multi_touch_device_match(abs_bitmask)) {
 		pr_green_info("Deivce %s mutil touch screen", matcher->devname);
 		return true;
 	}
 
 	ret = cavan_event_get_key_bitmask(matcher->fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_key_bitmask");
 		return false;
 	}
@@ -127,11 +119,9 @@ static int cavan_touch_device_probe(struct cavan_touch_device *dev, void *data)
 
 	pr_bold_info("LCD: width = %d, height = %d", service->lcd_width, service->lcd_height);
 
-	if (service->lcd_width > 0)
-	{
+	if (service->lcd_width > 0) {
 		ret = cavan_event_get_absinfo(fd, dev->xaxis, &min, &max);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_event_get_absinfo");
 			return ret;
 		}
@@ -140,18 +130,14 @@ static int cavan_touch_device_probe(struct cavan_touch_device *dev, void *data)
 		diff = max - min;
 		dev->xscale = ((double) service->lcd_width) / diff;
 		dev->xoffset = ((double) service->lcd_width) * min / diff;
-	}
-	else
-	{
+	} else {
 		dev->xscale = 1;
 		dev->xoffset = 0;
 	}
 
-	if (service->lcd_height > 0)
-	{
+	if (service->lcd_height > 0) {
 		ret = cavan_event_get_absinfo(fd, dev->yaxis, &min, &max);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_event_get_absinfo");
 			return ret;
 		}
@@ -160,9 +146,7 @@ static int cavan_touch_device_probe(struct cavan_touch_device *dev, void *data)
 		diff = max - min;
 		dev->yscale = ((double) service->lcd_height) / diff;
 		dev->yoffset = ((double) service->lcd_height) * min / diff;
-	}
-	else
-	{
+	} else {
 		dev->yscale = 1;
 		dev->yoffset = 0;
 	}
@@ -178,18 +162,15 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 	struct cavan_input_message_point *p, *p_end;
 	struct cavan_multi_touch_device *ts = (struct cavan_multi_touch_device *) dev;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_ABS:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case ABS_MT_WIDTH_MAJOR:
 			break;
 
 		case ABS_MT_POSITION_X:
 			p = ts->points + ts->point_count;
-			if (p->pressure <= 0)
-			{
+			if (p->pressure <= 0) {
 				p->pressure = 1;
 			}
 
@@ -198,8 +179,7 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 
 		case ABS_MT_POSITION_Y:
 			p = ts->points + ts->point_count;
-			if (p->pressure <= 0)
-			{
+			if (p->pressure <= 0) {
 				p->pressure = 1;
 			}
 
@@ -220,43 +200,34 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 		break;
 
 	case EV_SYN:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case SYN_MT_REPORT:
 			p = ts->points + ts->point_count;
-			if (p->pressure >= 0)
-			{
+			if (p->pressure >= 0) {
 				ts->point_count++;
 			}
 			break;
 
 		case SYN_REPORT:
-			if (ts->point_count)
-			{
+			if (ts->point_count) {
 				struct cavan_virtual_key *key;
 
-				for (p = ts->points, p_end = p + ts->point_count; p < p_end; p++)
-				{
+				for (p = ts->points, p_end = p + ts->point_count; p < p_end; p++) {
 					key = cavan_event_find_virtual_key(dev->event_dev, p->x, p->y);
-					if (key)
-					{
+					if (key) {
 						int value = p->pressure > 0;
 
-						if (key->value != value)
-						{
+						if (key->value != value) {
 							cavan_input_service_append_key_message(data, \
 									CAVAN_INPUT_MESSAGE_KEY, key->name, key->code, value);
 							key->value = value;
 						}
 
 						ts->point_count--;
-					}
-					else if (p->pressure > 0)
-					{
+					} else if (p->pressure > 0) {
 						cavan_touch_point_mapping(&ts->touch_dev, p);
 
-						if (p->pressed == false)
-						{
+						if (p->pressed == false) {
 							p->pressed = true;
 
 #if CAVAN_REPORT_ALL_TOUCH == 0
@@ -270,24 +241,18 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 
 						cavan_input_service_append_point_message(data, \
 								CAVAN_INPUT_MESSAGE_MOVE, p);
-					}
-					else
-					{
+					} else {
 						ts->point_count--;
 					}
 
 					p->pressure = -1;
 				}
-			}
-			else
-			{
+			} else {
 				struct cavan_virtual_key *key;
 				struct single_link *link = &dev->event_dev->vk_link;
 
-				single_link_foreach(link, key)
-				{
-					if (key->value)
-					{
+				single_link_foreach(link, key) {
+					if (key->value) {
 						cavan_input_service_append_key_message(data, \
 								CAVAN_INPUT_MESSAGE_KEY, key->name, key->code, 0);
 						key->value = 0;
@@ -302,10 +267,8 @@ static bool cavan_multi_touch_event_handler(struct cavan_input_device *dev, stru
 			if (ts->point_count == 0)
 #endif
 			{
-				for (p = ts->points + ts->point_count, p_end = p + ts->point_count_old; p < p_end; p++)
-				{
-					if (p->pressed)
-					{
+				for (p = ts->points + ts->point_count, p_end = p + ts->point_count_old; p < p_end; p++) {
+					if (p->pressed) {
 						p->pressed = false;
 						cavan_input_service_append_point_message(data, \
 								CAVAN_INPUT_MESSAGE_TOUCH, p);
@@ -336,16 +299,14 @@ static int cavan_multi_touch_device_probe(struct cavan_input_device *dev, void *
 	return cavan_touch_device_probe(&ts->touch_dev, data);
 }
 
-struct cavan_input_device *cavan_multi_touch_device_create(void)
-{
+struct cavan_input_device *cavan_multi_touch_device_create(void) {
 	struct cavan_multi_touch_device *ts;
 	struct cavan_touch_device *touch_dev;
 	struct cavan_input_device *dev;
 	struct cavan_input_message_point *p, *p_end;
 
 	ts = malloc(sizeof(*ts));
-	if (ts == NULL)
-	{
+	if (ts == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}
@@ -353,8 +314,7 @@ struct cavan_input_device *cavan_multi_touch_device_create(void)
 	ts->point_count = 0;
 	ts->point_count_old = 0;
 
-	for (p = ts->points, p_end = p + NELEM(ts->points); p < p_end; p++)
-	{
+	for (p = ts->points, p_end = p + NELEM(ts->points); p < p_end; p++) {
 		p->id = p - ts->points;
 		p->pressure = -1;
 		p->pressed = false;
@@ -379,11 +339,9 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 	struct cavan_single_touch_device *ts = (struct cavan_single_touch_device *) dev;
 	struct cavan_input_message_point *p = &ts->point;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_KEY:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case BTN_TOUCH:
 			ts->pressed = event->value;
 			break;
@@ -394,8 +352,7 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 		break;
 
 	case EV_ABS:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case ABS_X:
 			p->x = event->value;
 			break;
@@ -414,28 +371,22 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 		break;
 
 	case EV_SYN:
-		if (ts->pressed)
-		{
+		if (ts->pressed) {
 			struct cavan_virtual_key *key;
 			key = cavan_event_find_virtual_key(dev->event_dev, p->x, p->y);
-			if (key)
-			{
+			if (key) {
 				int value = p->pressure > 0;
 
-				if (key->value != value)
-				{
+				if (key->value != value) {
 					cavan_input_service_append_key_message(data, \
 							CAVAN_INPUT_MESSAGE_KEY, key->name, key->code, value);
 					key->value = value;
 				}
 
-			}
-			else
-			{
+			} else {
 				cavan_touch_point_mapping(&ts->touch_dev, p);
 
-				if (p->pressed == false)
-				{
+				if (p->pressed == false) {
 					p->pressed = true;
 					cavan_input_service_append_point_message(data, \
 							CAVAN_INPUT_MESSAGE_TOUCH, p);
@@ -444,16 +395,12 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 				cavan_input_service_append_point_message(data, \
 						CAVAN_INPUT_MESSAGE_MOVE, p);
 			}
-		}
-		else
-		{
+		} else {
 			struct cavan_virtual_key *key;
 			struct single_link *link = &dev->event_dev->vk_link;
 
-			single_link_foreach(link, key)
-			{
-				if (key->value != 0)
-				{
+			single_link_foreach(link, key) {
+				if (key->value != 0) {
 					cavan_input_service_append_key_message(data, \
 							CAVAN_INPUT_MESSAGE_KEY, key->name, key->code, 0);
 					key->value = 0;
@@ -461,8 +408,7 @@ static bool cavan_single_touch_event_handler(struct cavan_input_device *dev, str
 			}
 			end_link_foreach(link);
 
-			if (p->pressed)
-			{
+			if (p->pressed) {
 				p->pressed = false;
 				cavan_input_service_append_point_message(data, \
 						CAVAN_INPUT_MESSAGE_TOUCH, p);
@@ -484,15 +430,13 @@ static int cavan_single_touch_device_probe(struct cavan_input_device *dev, void 
 	return cavan_touch_device_probe(&ts->touch_dev, data);
 }
 
-struct cavan_input_device *cavan_single_touch_device_create(void)
-{
+struct cavan_input_device *cavan_single_touch_device_create(void) {
 	struct cavan_single_touch_device *ts;
 	struct cavan_touch_device *touch_dev;
 	struct cavan_input_device *dev;
 
 	ts = malloc(sizeof(*ts));
-	if (ts == NULL)
-	{
+	if (ts == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}

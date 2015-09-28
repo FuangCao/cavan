@@ -13,12 +13,9 @@ static int swan_ts_calication_main(int argc, char *argv[])
 	int ret;
 
 	ret = swan_ts_calibration(argc > 1 ? argv[1] : NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Failed");
-	}
-	else
-	{
+	} else {
 		pr_green_info("OK");
 	}
 
@@ -38,8 +35,7 @@ static int swan_ts_read_registers_main(int argc, char *argv[])
 	count = argc > 2 ? text2value_unsigned(argv[2], NULL, 10) : 1;
 
 	buff = malloc(count);
-	if (buff == NULL)
-	{
+	if (buff == NULL) {
 		pr_red_info("malloc");
 		return -ENOMEM;
 	}
@@ -47,8 +43,7 @@ static int swan_ts_read_registers_main(int argc, char *argv[])
 	println("offset = %d, count = %d", offset, count);
 
 	ret = swan_ts_read_registers(NULL, offset, buff, count);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("swan_ts_read_registers");
 		goto out_free_buff;
 	}
@@ -81,27 +76,23 @@ static int swan_ts_poll_registers_main(int argc, char *argv[])
 	println("offset = %d, count = %d, timeout = %d, devpath = %s", offset, count, timeout, devpath);
 
 	buff = malloc(count);
-	if (buff == NULL)
-	{
+	if (buff == NULL) {
 		pr_red_info("malloc");
 		return -ENOMEM;
 	}
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("swan_ts_open_misc_device");
 		ret = fd;
 		goto out_free_buff;
 	}
 
-	while (1)
-	{
+	while (1) {
 		msleep(timeout);
 
 		ret = swan_ts_read_registers_fd(fd, offset, buff, count);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			continue;
 		}
 
@@ -131,8 +122,7 @@ static int swan_ts_write_registers_main(int argc, char *argv[])
 
 	buff = malloc(count);
 
-	for (i = 0; i < count; i++)
-	{
+	for (i = 0; i < count; i++) {
 		buff[i] = text2value_unsigned(argv[i + 2], NULL, 10);
 	}
 
@@ -141,12 +131,9 @@ static int swan_ts_write_registers_main(int argc, char *argv[])
 	print_mem((u8 *) buff, count);
 
 	ret = swan_ts_write_registers(NULL, offset, buff, count);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Failed");
-	}
-	else
-	{
+	} else {
 		pr_green_info("OK");
 	}
 
@@ -164,8 +151,7 @@ static int swan_ts_read_data_main(int argc, char *argv[])
 	count = argc > 1 ? text2value_unsigned(argv[1], NULL, 10) : 1;
 
 	buff = malloc(count);
-	if (buff == NULL)
-	{
+	if (buff == NULL) {
 		pr_red_info("malloc");
 		return -ENOMEM;
 	}
@@ -173,8 +159,7 @@ static int swan_ts_read_data_main(int argc, char *argv[])
 	println("count = %d", count);
 
 	ret = swan_ts_read_data(NULL, buff, count);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("swan_ts_read_data");
 		goto out_free_buff;
 	}
@@ -205,27 +190,23 @@ static int swan_ts_poll_data_main(int argc, char *argv[])
 	println("count = %d, timeout = %d, devpath = %s", count, timeout, devpath);
 
 	buff = malloc(count);
-	if (buff == NULL)
-	{
+	if (buff == NULL) {
 		pr_red_info("malloc");
 		return -ENOMEM;
 	}
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("swan_ts_open_misc_device");
 		ret = fd;
 		goto out_free_buff;
 	}
 
-	while (1)
-	{
+	while (1) {
 		msleep(timeout);
 
 		ret = swan_ts_read_data_fd(fd, buff, count);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			continue;
 		}
 
@@ -253,8 +234,7 @@ static int swan_ts_write_data_main(int argc, char *argv[])
 
 	buff = malloc(count);
 
-	for (i = 0; i < count; i++)
-	{
+	for (i = 0; i < count; i++) {
 		buff[i] = text2value_unsigned(argv[i + 1], NULL, 10);
 	}
 
@@ -263,12 +243,9 @@ static int swan_ts_write_data_main(int argc, char *argv[])
 	print_mem((u8 *) buff, count);
 
 	ret = swan_ts_write_data(NULL, buff, count);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Failed");
-	}
-	else
-	{
+	} else {
 		pr_green_info("OK");
 	}
 
@@ -283,8 +260,7 @@ static int swan_ts_get_client_address_main(int argc, char *argv[])
 	u16 addr;
 
 	ret = swan_ts_get_client_address(argc > 1 ? argv[1] : NULL, &addr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("swan_ts_get_client_address");
 		return ret;
 	}
@@ -323,8 +299,7 @@ static int swan_ts_test_client_main(int argc, char *argv[])
 	int i;
 	u16 addr;
 
-	for (i = 1; i < argc; i++)
-	{
+	for (i = 1; i < argc; i++) {
 		addr = text2value_unsigned(argv[i], NULL, 10);
 
 		swan_ts_test_client(NULL, addr);
@@ -344,12 +319,9 @@ static int ft5406_firmware_upgrade_main(int argc, char *argv[])
 	devpath = argc > 2 ? argv[2] : NULL;
 
 	ret = ft5406_firmware_upgrade(devpath, cfgpath);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Failed");
-	}
-	else
-	{
+	} else {
 		pr_green_info("OK");
 	}
 

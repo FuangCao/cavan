@@ -49,8 +49,7 @@ u16 sprd_diag_crc16(u16 crc, const u8 *buff, size_t size)
 {
 	const u8 *buff_end;
 
-	for (buff_end = buff + size; buff < buff_end; buff++)
-	{
+	for (buff_end = buff + size; buff < buff_end; buff++) {
 		crc = (crc >> 8) ^ sprd_diag_crc16_table[(crc ^ buff[0]) & 0xFF];
 	}
 
@@ -62,28 +61,23 @@ void sprd_diag_show_data(const char *prompt, const char *data, size_t size)
 	const char *data_end;
 	char buff[size * 2 + 1], *p;
 
-	for (p = buff, data_end = data + size; data < data_end; data++)
-	{
+	for (p = buff, data_end = data + size; data < data_end; data++) {
 		p += sprintf(p, "%02x", *(u8 *) data);
 	}
 
 	*p = 0;
 
-	if (prompt == NULL)
-	{
+	if (prompt == NULL) {
 		prompt = 0;
 	}
 
-	if (size)
-	{
+	if (size) {
 #if __WORDSIZE == 64
 		println("%s[%ld] = 0x%s", prompt, size, buff);
 #else
 		println("%s[%d] = 0x%s", prompt, size, buff);
 #endif
-	}
-	else
-	{
+	} else {
 #if __WORDSIZE == 64
 		println("%s[%ld] = None", prompt, size);
 #else
@@ -97,14 +91,12 @@ char *sprd_diag_imei_tostring(const byte *imei, size_t isize, char *buff, size_t
 	char *buff_end;
 	const byte *imei_end;
 
-	for (buff_end = buff + size - 1, imei_end = imei + isize - 1; buff < buff_end && imei < imei_end; buff += 2, imei++)
-	{
+	for (buff_end = buff + size - 1, imei_end = imei + isize - 1; buff < buff_end && imei < imei_end; buff += 2, imei++) {
 		buff[0] = value2char((imei[0] >> 4) & 0x0F);
 		buff[1] = value2char(imei[1] & 0x0F);
 	}
 
-	if (buff < buff_end)
-	{
+	if (buff < buff_end) {
 		*buff++ = value2char((imei[0] >> 4) & 0x0F);
 	}
 
@@ -118,14 +110,12 @@ size_t sprd_diag_text2imei(const char *text, byte *imei, size_t isize)
 	byte *imei_bak = imei, *imei_end;
 	byte lsb = 0x0A;
 
-	for (imei_end = imei + isize; text[0] && text[1] && imei < imei_end; text += 2, imei++)
-	{
+	for (imei_end = imei + isize; text[0] && text[1] && imei < imei_end; text += 2, imei++) {
 		*imei = char2value(text[0]) << 4 | lsb;
 		lsb = char2value(text[1]);
 	}
 
-	if (imei < imei_end && *text)
-	{
+	if (imei < imei_end && *text) {
 		*imei++ = char2value(*text) << 4 | lsb;
 	}
 
@@ -165,15 +155,12 @@ char *sprd_diag_encode_data(const char *src, size_t srclen, char *dest, size_t d
 	const char *src_end = src + srclen;
 	char *dest_end = dest + destlen;
 
-	while (src < src_end && dest < dest_end)
-	{
-		switch (*src)
-		{
+	while (src < src_end && dest < dest_end) {
+		switch (*src) {
 		case SPRD_DIAG_FLAG_BYTE:
 		case SPRD_DIAG_ESCAPE_BYTE:
 			*dest++ = SPRD_DIAG_ESCAPE_BYTE;
-			if (dest < dest_end)
-			{
+			if (dest < dest_end) {
 				*dest++ = *src++ ^ SPRD_DIAG_COMPLEMENT_BYTE;
 			}
 			break;
@@ -204,10 +191,8 @@ char *sprd_diag_decode_data(const char *src, size_t srclen, char *dest, size_t d
 	const char *src_end = src + srclen;
 	char *dest_bak = dest, *dest_end = dest + destlen;
 
-	while (src < src_end && dest < dest_end)
-	{
-		switch (*src)
-		{
+	while (src < src_end && dest < dest_end) {
+		switch (*src) {
 		case SPRD_DIAG_ESCAPE_BYTE:
 			*dest = src[1] ^ SPRD_DIAG_COMPLEMENT_BYTE;
 			src += 2;
@@ -218,8 +203,7 @@ char *sprd_diag_decode_data(const char *src, size_t srclen, char *dest, size_t d
 		}
 	}
 
-	if (reslen)
-	{
+	if (reslen) {
 		*reslen = dest - dest_bak;
 	}
 
@@ -238,27 +222,21 @@ ssize_t sprd_diag_read_reply(int fd, struct sprd_diag_command_desc *command)
 	pos = useful;
 	pos_end = pos + sizeof(useful);
 
-	while (pos < pos_end && found < 2)
-	{
+	while (pos < pos_end && found < 2) {
 		rdlen = file_read_timeout(fd, buff, sizeof(buff), 500);
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_error_info("file_read_timeout");
 			return rdlen;
 		}
 
-		for (p = buff, p_end = buff + rdlen; p < p_end; p++)
-		{
-			if (*p == SPRD_DIAG_FLAG_BYTE)
-			{
+		for (p = buff, p_end = buff + rdlen; p < p_end; p++) {
+			if (*p == SPRD_DIAG_FLAG_BYTE) {
 				break;
 			}
 		}
 
-		if (p < p_end)
-		{
-			if (found)
-			{
+		if (p < p_end) {
+			if (found) {
 				p_end = p;
 				p = buff;
 			}
@@ -267,15 +245,12 @@ label_found_one:
 			{
 				char *q;
 
-				while (*p == SPRD_DIAG_FLAG_BYTE)
-				{
+				while (*p == SPRD_DIAG_FLAG_BYTE) {
 					p++;
 				}
 
-				for (q = p; q < p_end; q++)
-				{
-					if (*q == SPRD_DIAG_FLAG_BYTE)
-					{
+				for (q = p; q < p_end; q++) {
+					if (*q == SPRD_DIAG_FLAG_BYTE) {
 						p_end = q;
 						found++;
 						break;
@@ -284,36 +259,28 @@ label_found_one:
 			}
 
 			found++;
-		}
-		else if (found)
-		{
+		} else if (found) {
 			p = buff;
-		}
-		else
-		{
+		} else {
 			continue;
 		}
 
-		while (pos < pos_end && p < p_end)
-		{
+		while (pos < pos_end && p < p_end) {
 			*pos++ = *p++;
 		}
 	}
 
 	reslen = pos - useful;
-	if (reslen >= sizeof(message) + 2)
-	{
+	if (reslen >= sizeof(message) + 2) {
 		pos_end = pos;
 		pos = sprd_diag_decode_data(useful, reslen, (char *) &message, sizeof(message), NULL);
 
-		if (message.type == command->reply_type && message.subtype == command->reply_subtype && message.seq_num == command->seq_num)
-		{
+		if (message.type == command->reply_type && message.subtype == command->reply_subtype && message.seq_num == command->seq_num) {
 			goto label_decode_data;
 		}
 	}
 
-	if (p == NULL)
-	{
+	if (p == NULL) {
 		ERROR_RETURN(EINVAL);
 	}
 
@@ -326,8 +293,7 @@ label_decode_data:
 	sprd_diag_decode_data(pos, pos_end - pos, command->reply, command->reply_len, &reslen);
 
 	rdlen = message.length - sizeof(message);
-	if (reslen != (size_t) rdlen)
-	{
+	if (reslen != (size_t) rdlen) {
 		pr_red_info("reslen(%" PRINT_FORMAT_SIZE ") != rdlen(%" PRINT_FORMAT_SIZE ")", reslen, rdlen);
 		return -EINVAL;
 	}
@@ -342,8 +308,7 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 	ssize_t rwlen;
 	size_t cmdlen;
 	static unsigned int cmd_seq_num = 0;
-	struct sprd_diag_message_desc message =
-	{
+	struct sprd_diag_message_desc message = {
 		.seq_num = ++cmd_seq_num,
 		.length = sizeof(message) + command->command_len,
 		.type = command->cmd_type,
@@ -354,10 +319,8 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 	cmdlen = sprd_diag_encode_message(&message, command->command, command->command_len, buff, sizeof(buff));
 	command->seq_num = message.seq_num;
 
-	while (1)
-	{
-		if (--retry < 0)
-		{
+	while (1) {
+		if (--retry < 0) {
 			ERROR_RETURN(ETIMEDOUT);
 		}
 
@@ -366,29 +329,25 @@ int sprd_diag_send_command(int fd, struct sprd_diag_command_desc *command, int r
 		file_discard_all(fd);
 
 		rwlen = write(fd, buff, cmdlen);
-		if (rwlen < 0)
-		{
+		if (rwlen < 0) {
 			pr_error_info("write");
 			return rwlen;
 		}
 
 		fsync(fd);
 
-		if (command->reply == NULL || command->reply_len == 0)
-		{
+		if (command->reply == NULL || command->reply_len == 0) {
 			command->reply_len = 0;
 			break;
 		}
 
 		rwlen = sprd_diag_read_reply(fd, command);
-		if (rwlen < 0 && errno != ETIMEDOUT)
-		{
+		if (rwlen < 0 && errno != ETIMEDOUT) {
 			pr_red_info("sprd_diag_read_reply");
 			return rwlen;
 		}
 
-		if (rwlen > 0)
-		{
+		if (rwlen > 0) {
 			command->reply_len = rwlen;
 			break;
 		}
@@ -402,8 +361,7 @@ int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 	int ret;
 	u16 crc;
 	u16 data = 0;
-	struct sprd_diag_command_desc command =
-	{
+	struct sprd_diag_command_desc command = {
 		.cmd_type = SPRD_DIAG_DIRECT_NV,
 		.cmd_subtype = mask | 1 << 7,
 		.reply_type = SPRD_DIAG_DIRECT_NV,
@@ -414,24 +372,20 @@ int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 		.reply_len = sizeof(*imei)
 	};
 
-	while (1)
-	{
+	while (1) {
 		ret = sprd_diag_send_command(fd, &command, 10);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("sprd_diag_send_command");
 			return ret;
 		}
 
-		if (command.reply_len != sizeof(*imei))
-		{
+		if (command.reply_len != sizeof(*imei)) {
 			continue;
 		}
 
 		crc = sprd_diag_crc16(0, (u8 *) imei, sizeof(*imei) - sizeof(imei->crc16));
 		println("CRC16 = 0x%04x = 0x%04x", imei->crc16, crc);
-		if (crc == imei->crc16)
-		{
+		if (crc == imei->crc16) {
 			break;
 		}
 	}
@@ -442,8 +396,7 @@ int sprd_diag_read_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 int sprd_diag_write_imei(int fd, struct sprd_diag_imei_data *imei, u8 mask)
 {
 	char reply[1024];
-	struct sprd_diag_command_desc command =
-	{
+	struct sprd_diag_command_desc command = {
 		.cmd_type = SPRD_DIAG_DIRECT_NV,
 		.cmd_subtype = mask,
 		.reply_type = SPRD_DIAG_DIRECT_NV,
@@ -470,20 +423,17 @@ ssize_t sprd_modem_send_at_command(int fd, char *reply, size_t size, const char 
 	va_end(ap);
 
 	rwlen = write(fd, buff, rwlen);
-	if (rwlen < 0)
-	{
+	if (rwlen < 0) {
 		pr_error_info("write");
 		return rwlen;
 	}
 
-	if (reply == NULL || size == 0)
-	{
+	if (reply == NULL || size == 0) {
 		return 0;
 	}
 
 	rwlen = file_read_timeout(fd, reply, size, 5000);
-	if (rwlen < 0)
-	{
+	if (rwlen < 0) {
 		pr_error_info("file_read_timeout");
 		return rwlen;
 	}

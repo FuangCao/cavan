@@ -7,15 +7,13 @@
 #include <cavan/pool.h>
 #include <cavan/thread.h>
 
-struct list_queue
-{
+struct list_queue {
 	void **buffer;
 	int head, tail;
 	int max_count;
 };
 
-struct cavan_data_queue
-{
+struct cavan_data_queue {
 	void *private_data;
 	struct double_link link;
 	struct cavan_thread thread;
@@ -24,8 +22,7 @@ struct cavan_data_queue
 	void (*handler)(void *addr, void *data);
 };
 
-struct cavan_mem_queue
-{
+struct cavan_mem_queue {
 	char *mem, *last;
 	char *head, *head_peek;
 	char *tail, *tail_peek;
@@ -81,8 +78,7 @@ static inline int cavan_data_queue_run(struct cavan_data_queue *queue, int offse
 	int ret;
 
 	ret = cavan_data_queue_init(queue, offset, node_size, pool_size, data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 

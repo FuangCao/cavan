@@ -11,34 +11,26 @@ int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *des
 	struct usb_config_descriptor *cfg_desc, *cfg_desc_end;
 	const char *end_buff;
 
-	if (length < USB_DT_DEVICE_SIZE + USB_DT_CONFIG_SIZE)
-	{
+	if (length < USB_DT_DEVICE_SIZE + USB_DT_CONFIG_SIZE) {
 		pr_red_info("length is invalid");
 		return -EINVAL;
 	}
 
 	dev_desc = &desc->dev_desc;
 
-	if (is_usb_device_descriptor((struct usb_device_descriptor *) buff))
-	{
+	if (is_usb_device_descriptor((struct usb_device_descriptor *) buff)) {
 		memcpy(dev_desc, buff, USB_DT_DEVICE_SIZE);
 		buff += USB_DT_DEVICE_SIZE;
-	}
-	else
-	{
+	} else {
 		pr_red_info("invalid usb device descriptor");
 		return -EINVAL;
 	}
 
-	for (cfg_desc = desc->cfg_descs, cfg_desc_end = cfg_desc + dev_desc->bNumConfigurations; cfg_desc < cfg_desc_end; cfg_desc++)
-	{
-		if (is_usb_config_descriptor((struct usb_config_descriptor *) buff))
-		{
+	for (cfg_desc = desc->cfg_descs, cfg_desc_end = cfg_desc + dev_desc->bNumConfigurations; cfg_desc < cfg_desc_end; cfg_desc++) {
+		if (is_usb_config_descriptor((struct usb_config_descriptor *) buff)) {
 			memcpy(cfg_desc, buff, USB_DT_CONFIG_SIZE);
 			buff += USB_DT_CONFIG_SIZE;
-		}
-		else
-		{
+		} else {
 			pr_red_info("invalid usb config descriptor");
 			return -EINVAL;
 		}
@@ -47,8 +39,7 @@ int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *des
 	desc->if_count = 0;
 	end_buff = buff + length - USB_DT_INTERFACE_SIZE;
 
-	while (buff <= end_buff && is_usb_interface_descriptor((struct usb_interface_descriptor *) buff))
-	{
+	while (buff <= end_buff && is_usb_interface_descriptor((struct usb_interface_descriptor *) buff)) {
 		struct usb_interface_descriptor *if_desc;
 		struct cavan_usb_interface_descriptor *cavan_if_desc;
 		struct usb_endpoint_descriptor *ep, *ep_end;
@@ -59,8 +50,7 @@ int dump_cavan_usb_descriptor(const char *buff, struct cavan_usb_descriptor *des
 		memcpy(if_desc, buff, USB_DT_INTERFACE_SIZE);
 		buff += USB_DT_INTERFACE_SIZE;
 
-		for (ep = cavan_if_desc->ep_descs, ep_end = ep + if_desc->bNumEndpoints; ep < ep_end; ep++)
-		{
+		for (ep = cavan_if_desc->ep_descs, ep_end = ep + if_desc->bNumEndpoints; ep < ep_end; ep++) {
 			memcpy(ep, buff, USB_DT_ENDPOINT_SIZE);
 			buff += USB_DT_ENDPOINT_SIZE;
 		}
@@ -80,8 +70,7 @@ static int usb_clam_interface(int fd, int if_num, int serial_num, char *serial)
 	int language_count;
 
 	ret = ioctl(fd, USBDEVFS_CLAIMINTERFACE, &if_num);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -94,13 +83,11 @@ static int usb_clam_interface(int fd, int if_num, int serial_num, char *serial)
 	ctrl.data = languages;
 
 	ret = ioctl(fd, USBDEVFS_CONTROL, &ctrl);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	if (ret < 2)
-	{
+	if (ret < 2) {
 		return 0;
 	}
 
@@ -109,18 +96,15 @@ static int usb_clam_interface(int fd, int if_num, int serial_num, char *serial)
 	ctrl.wLength = sizeof(buff);
 	ctrl.data = buff;
 
-	for (i = 1; i <= language_count; i++)
-	{
+	for (i = 1; i <= language_count; i++) {
 		ctrl.wValue = (USB_DT_STRING << 8) | serial_num;
 		ctrl.wIndex = languages[i];
 
 		ret = ioctl(fd, USBDEVFS_CONTROL, &ctrl);
-		if (ret > 0)
-		{
+		if (ret > 0) {
 			u16 *p = buff + 1, *end_p = buff + (ret >> 1);
 
-			while (p < end_p)
-			{
+			while (p < end_p) {
 				*serial++ = *p++;
 			}
 
@@ -139,8 +123,7 @@ int fusb_read_cavan_descriptor(int fd, struct cavan_usb_descriptor *desc)
 	char buff[512];
 
 	readlen = read(fd, buff, sizeof(buff));
-	if (readlen < 0)
-	{
+	if (readlen < 0) {
 		error_msg("read");
 		return readlen;
 	}
@@ -154,8 +137,7 @@ int usb_read_cavan_descriptor(const char *dev_path, struct cavan_usb_descriptor 
 	int fd;
 
 	fd = open(dev_path, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		error_msg("open device \"%s\" failed", dev_path);
 		return fd;
 	}
@@ -169,8 +151,7 @@ int usb_read_cavan_descriptor(const char *dev_path, struct cavan_usb_descriptor 
 
 const char *usb_endpoint_xfertype_tostring(const struct usb_endpoint_descriptor *desc)
 {
-	switch (desc->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
-	{
+	switch (desc->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) {
 	case USB_ENDPOINT_XFER_CONTROL:
 		return "control";
 
@@ -254,8 +235,7 @@ void show_cavan_usb_descriptor(const struct cavan_usb_descriptor *desc)
 	show_usb_device_descriptor(&desc->dev_desc);
 	print_sep(60);
 
-	for (i = 0, count = desc->dev_desc.bNumConfigurations; i < count; i++)
-	{
+	for (i = 0, count = desc->dev_desc.bNumConfigurations; i < count; i++) {
 		pr_bold_info("usb config descriptor[%d]:", i);
 		show_usb_config_descriptor(desc->cfg_descs + i);
 	}
@@ -264,13 +244,11 @@ void show_cavan_usb_descriptor(const struct cavan_usb_descriptor *desc)
 
 	pr_bold_info("interface descriptor count = %d", desc->if_count);
 
-	for (i = 0, count = desc->if_count; i < count; i++)
-	{
+	for (i = 0, count = desc->if_count; i < count; i++) {
 		pr_bold_info("usb interface descriptor[%d]:", i);
 		show_usb_interface_descriptor(&desc->if_descs[i].if_desc);
 
-		for (j = 0; j < desc->if_descs[i].if_desc.bNumEndpoints; j++)
-		{
+		for (j = 0; j < desc->if_descs[i].if_desc.bNumEndpoints; j++) {
 			pr_bold_info("usb endpoint[%d]:", j);
 			show_usb_endpoint_descriptor(desc->if_descs[i].ep_descs + j);
 		}
@@ -295,36 +273,25 @@ static void *cavan_usb_notify_handle(void *data)
 	notify_read = &desc->notify_read;
 	notify_write = &desc->notify_write;
 
-	while (1)
-	{
-		while (1)
-		{
+	while (1) {
+		while (1) {
 			ret = ioctl(desc->fd, USBDEVFS_REAPURB, &urb_out);
-			if (ret < 0 && errno == EINTR)
-			{
+			if (ret < 0 && errno == EINTR) {
 				msleep(100);
-			}
-			else
-			{
+			} else {
 				break;
 			}
 		}
 
-		if (ret < 0 && errno == ENOENT)
-		{
+		if (ret < 0 && errno == ENOENT) {
 			break;
 		}
 
-		if (urb_out == urb_read)
-		{
+		if (urb_out == urb_read) {
 			cavan_cond_signal(notify_read, lock);
-		}
-		else if (urb_out == urb_write)
-		{
+		} else if (urb_out == urb_write) {
 			cavan_cond_signal(notify_write, lock);
-		}
-		else
-		{
+		} else {
 			pr_red_info("invalid urb");
 		}
 	}
@@ -341,15 +308,13 @@ int cavan_usb_init(const char *dev_path, struct cavan_usb_descriptor *desc)
 	int ret;
 
 	fd = open(dev_path, O_RDWR);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		error_msg("open device \"%s\" failed", dev_path);
 		return fd;
 	}
 
 	ret = fusb_read_cavan_descriptor(fd, desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("fusb_read_cavan_descriptor");
 		goto out_close_fd;
 	}
@@ -358,36 +323,28 @@ int cavan_usb_init(const char *dev_path, struct cavan_usb_descriptor *desc)
 	show_cavan_usb_descriptor(desc);
 #endif
 
-	for (i = desc->if_count - 1; i >= 0; i--)
-	{
-		if (usb_clam_interface(fd, desc->if_descs[i].if_desc.bInterfaceNumber, desc->dev_desc.iSerialNumber, desc->serial) < 0)
-		{
+	for (i = desc->if_count - 1; i >= 0; i--) {
+		if (usb_clam_interface(fd, desc->if_descs[i].if_desc.bInterfaceNumber, desc->dev_desc.iSerialNumber, desc->serial) < 0) {
 			continue;
 		}
 
 		desc->epin_curr = -1;
 		desc->epout_curr = -1;
 
-		for (j = desc->if_descs[i].if_desc.bNumEndpoints - 1; j >= 0; j--)
-		{
-			if (desc->if_descs[i].ep_descs[j].bEndpointAddress & USB_ENDPOINT_DIR_MASK)
-			{
+		for (j = desc->if_descs[i].if_desc.bNumEndpoints - 1; j >= 0; j--) {
+			if (desc->if_descs[i].ep_descs[j].bEndpointAddress & USB_ENDPOINT_DIR_MASK) {
 				desc->epin_curr = desc->if_descs[i].ep_descs[j].bEndpointAddress;
-			}
-			else
-			{
+			} else {
 				desc->epout_curr = desc->if_descs[i].ep_descs[j].bEndpointAddress;
 			}
 		}
 
-		if (desc->epin_curr > 0 && desc->epout_curr > 0)
-		{
+		if (desc->epin_curr > 0 && desc->epout_curr > 0) {
 			break;
 		}
 	}
 
-	if (i < 0)
-	{
+	if (i < 0) {
 		return -ENOENT;
 	}
 
@@ -404,8 +361,7 @@ int cavan_usb_init(const char *dev_path, struct cavan_usb_descriptor *desc)
 	pthread_cond_init(&desc->notify_write, 0);
 
 	ret = cavan_pthread_create(&desc->thread_notify, cavan_usb_notify_handle, desc, false);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("cavan_pthread_create");
 		goto out_close_fd;
 	}
@@ -435,13 +391,10 @@ int cavan_usb_bluk_rw(struct cavan_usb_descriptor *desc, void *buff, size_t leng
 	int fd = desc->fd;
 	pthread_mutex_t *lock = &desc->lock;
 
-	if (read)
-	{
+	if (read) {
 		urb = &desc->urb_read;
 		notify = &desc->notify_read;
-	}
-	else
-	{
+	} else {
 		urb = &desc->urb_write;
 		notify = &desc->notify_write;
 	}
@@ -452,23 +405,18 @@ int cavan_usb_bluk_rw(struct cavan_usb_descriptor *desc, void *buff, size_t leng
 
 	pthread_mutex_lock(lock);
 
-	while (1)
-	{
+	while (1) {
 		ret = ioctl(fd, USBDEVFS_SUBMITURB, urb);
-		if (ret < 0 && errno == EINTR)
-		{
+		if (ret < 0 && errno == EINTR) {
 			msleep(100);
-		}
-		else
-		{
+		} else {
 			break;
 		}
 	}
 
 	pthread_mutex_unlock(lock);
 
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("ioctl");
 		return ret;
 	}
@@ -480,8 +428,7 @@ int cavan_usb_bluk_rw(struct cavan_usb_descriptor *desc, void *buff, size_t leng
 
 int cavan_usb_bluk_read(struct cavan_usb_descriptor *desc, void *buff, size_t length)
 {
-	if (desc == NULL || desc->epin_curr < 0)
-	{
+	if (desc == NULL || desc->epin_curr < 0) {
 		return -EINVAL;
 	}
 
@@ -490,8 +437,7 @@ int cavan_usb_bluk_read(struct cavan_usb_descriptor *desc, void *buff, size_t le
 
 int cavan_usb_bluk_write(struct cavan_usb_descriptor *desc, const void *buff, size_t length)
 {
-	if (desc == NULL || desc->epout_curr < 0)
-	{
+	if (desc == NULL || desc->epout_curr < 0) {
 		return -EINVAL;
 	}
 
@@ -501,8 +447,7 @@ int cavan_usb_bluk_write(struct cavan_usb_descriptor *desc, const void *buff, si
 int cavan_usb_bluk_xfer(struct cavan_usb_descriptor *desc, void *buff, size_t length, int ep)
 {
 	int fd = desc->fd;
-	struct usbdevfs_bulktransfer bulk =
-	{
+	struct usbdevfs_bulktransfer bulk = {
 		.ep = ep,
 		.len = length,
 		.timeout = 0,
@@ -514,8 +459,7 @@ int cavan_usb_bluk_xfer(struct cavan_usb_descriptor *desc, void *buff, size_t le
 
 int cavan_usb_bluk_read2(struct cavan_usb_descriptor *desc, void *buff, size_t length)
 {
-	if (desc == NULL || desc->epin_curr < 0)
-	{
+	if (desc == NULL || desc->epin_curr < 0) {
 		return -EINVAL;
 	}
 
@@ -524,8 +468,7 @@ int cavan_usb_bluk_read2(struct cavan_usb_descriptor *desc, void *buff, size_t l
 
 int cavan_usb_bluk_write2(struct cavan_usb_descriptor *desc, const void *buff, size_t length)
 {
-	if (desc == NULL || desc->epout_curr < 0)
-	{
+	if (desc == NULL || desc->epout_curr < 0) {
 		return -EINVAL;
 	}
 
@@ -540,50 +483,42 @@ int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *des
 	char tmp_path[1024];
 	struct dirent *dt;
 
-	if (dev_path && cavan_usb_init(dev_path, desc) >= 0)
-	{
+	if (dev_path && cavan_usb_init(dev_path, desc) >= 0) {
 		return 0;
 	}
 
 	p1 = text_path_cat(tmp_path, sizeof(tmp_path), USB_DEVICE_DIR, NULL);
 
 	dir1 = opendir(tmp_path);
-	if (dir1 == NULL)
-	{
+	if (dir1 == NULL) {
 		print_error("open directory \"%s\" failed", tmp_path);
 		return -ENOENT;
 	}
 
-	while ((dt = readdir(dir1)))
-	{
-		if (text_is_dot_name(dt->d_name))
-		{
+	while ((dt = readdir(dir1))) {
+		if (text_is_dot_name(dt->d_name)) {
 			continue;
 		}
 
 		p2 = text_copy(p1, dt->d_name);
 
 		dir2 = opendir(tmp_path);
-		if (dir2 == NULL)
-		{
+		if (dir2 == NULL) {
 			warning_msg("open directory \"%s\" failed", tmp_path);
 			continue;
 		}
 
 		p2 = text_copy(p2, "/");
 
-		while ((dt = readdir(dir2)))
-		{
-			if (text_is_dot_name(dt->d_name))
-			{
+		while ((dt = readdir(dir2))) {
+			if (text_is_dot_name(dt->d_name)) {
 				continue;
 			}
 
 			text_copy(p2, dt->d_name);
 
 			ret = cavan_usb_init(tmp_path, desc);
-			if (ret >= 0)
-			{
+			if (ret >= 0) {
 				goto out_close_dir2;
 			}
 		}
@@ -608,14 +543,12 @@ ssize_t cavan_usb_read_data(struct cavan_usb_descriptor *desc, void *buff, size_
 	struct cavan_usb_data_header hdr;
 
 	readlen = cavan_usb_bluk_read(desc, &hdr, sizeof(hdr));
-	if (readlen < (ssize_t) sizeof(hdr))
-	{
+	if (readlen < (ssize_t) sizeof(hdr)) {
 		pr_red_pos();
 		return readlen < 0 ? readlen : -ENOMEDIUM;
 	}
 
-	if ((hdr.data_length ^ hdr.data_check) != 0xFFFF)
-	{
+	if ((hdr.data_length ^ hdr.data_check) != 0xFFFF) {
 		pr_bold_pos();
 		return -EINVAL;
 	}
@@ -626,15 +559,13 @@ ssize_t cavan_usb_read_data(struct cavan_usb_descriptor *desc, void *buff, size_
 ssize_t cavan_usb_write_data(struct cavan_usb_descriptor *desc, const void *buff, size_t size)
 {
 	ssize_t writelen;
-	struct cavan_usb_data_header hdr =
-	{
+	struct cavan_usb_data_header hdr = {
 		.data_length = size,
 		.data_check = ~size
 	};
 
 	writelen = cavan_usb_bluk_write(desc, &hdr, sizeof(hdr));
-	if (writelen < (ssize_t) sizeof(hdr))
-	{
+	if (writelen < (ssize_t) sizeof(hdr)) {
 		pr_red_pos();
 		return writelen < 0 ? writelen : -ENOMEDIUM;
 	}
@@ -648,14 +579,12 @@ ssize_t cavan_adb_read_data(int fd_adb, void *buff, size_t size)
 	struct cavan_usb_data_header hdr;
 
 	readlen = read(fd_adb, &hdr, sizeof(hdr));
-	if (readlen < (ssize_t) sizeof(hdr))
-	{
+	if (readlen < (ssize_t) sizeof(hdr)) {
 		pr_red_pos();
 		return readlen < 0 ? readlen : -ENOMEDIUM;
 	}
 
-	if ((hdr.data_length ^ hdr.data_check) != 0xFFFF)
-	{
+	if ((hdr.data_length ^ hdr.data_check) != 0xFFFF) {
 		pr_red_pos();
 		return -EINVAL;
 	}
@@ -666,15 +595,13 @@ ssize_t cavan_adb_read_data(int fd_adb, void *buff, size_t size)
 ssize_t cavan_adb_write_data(int fd_adb, const void *buff, size_t size)
 {
 	ssize_t writelen;
-	struct cavan_usb_data_header hdr =
-	{
+	struct cavan_usb_data_header hdr = {
 		.data_length = size,
 		.data_check = ~size
 	};
 
 	writelen = write(fd_adb, &hdr, sizeof(hdr));
-	if (writelen < (ssize_t) sizeof(hdr))
-	{
+	if (writelen < (ssize_t) sizeof(hdr)) {
 		print_error("write");
 		return writelen < 0 ? writelen : -ENOMEDIUM;
 	}

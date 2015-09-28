@@ -28,19 +28,16 @@ static int cavan_mux_recv_thread_handler(struct cavan_thread *thread, void *data
 	char buff[CAVAN_MUX_MTU + sizeof(struct cavan_mux_package)];
 
 	rdlen = mux->recv(mux, buff, sizeof(buff));
-	if (rdlen < 0)
-	{
+	if (rdlen < 0) {
 		pr_red_info("mux->recv");
 		return rdlen;
 	}
 
 	p = buff;
 
-	while (rdlen > 0)
-	{
+	while (rdlen > 0) {
 		wrlen = cavan_mux_append_receive_data(mux, p, rdlen);
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			pr_red_info("cavan_mux_append_receive_data");
 			return wrlen;
 		}
@@ -58,23 +55,18 @@ static int cavan_mux_send_thread_handler(struct cavan_thread *thread, void *data
 	struct cavan_mux_package_raw *package_raw;
 
 	package_raw = mux->package_head;
-	if (package_raw == NULL)
-	{
+	if (package_raw == NULL) {
 		cavan_thread_suspend(thread);
-	}
-	else
-	{
+	} else {
 		struct cavan_mux_package *package = &package_raw->package;
 		char *data = (char *) package;
 		size_t length = cavan_mux_package_get_whole_length(package);
 
-		while (length)
-		{
+		while (length) {
 			ssize_t wrlen;
 
 			wrlen = mux->send(mux, data, length);
-			if (wrlen < 0)
-			{
+			if (wrlen < 0) {
 				pr_red_info("mux->send");
 				return wrlen;
 			}
@@ -84,8 +76,7 @@ static int cavan_mux_send_thread_handler(struct cavan_thread *thread, void *data
 		}
 
 		mux->package_head = package_raw->next;
-		if (mux->package_head == NULL)
-		{
+		if (mux->package_head == NULL) {
 			mux->package_tail = &mux->package_head;
 		}
 
@@ -101,8 +92,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 	int ret;
 	struct cavan_thread *thread;
 
-	if (mux->send == NULL || mux->recv == NULL)
-	{
+	if (mux->send == NULL || mux->recv == NULL) {
 		pr_red_info("mux->send = %p, mux->recv = %p", mux->send, mux->recv);
 		return -EINVAL;
 	}
@@ -110,8 +100,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 	cavan_lock_init(&mux->lock, false);
 
 	ret = cavan_mem_queue_init(&mux->recv_queue, CAVAN_MUX_MTU);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_mem_queue_init: %d", ret);
 		goto out_cavan_lock_deinit;
 	}
@@ -122,8 +111,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 	mux->package_head = NULL;
 	mux->package_tail = &mux->package_head;
 
-	for (i = 0; i < NELEM(mux->links); i++)
-	{
+	for (i = 0; i < NELEM(mux->links); i++) {
 		mux->links[i] = NULL;
 	}
 
@@ -132,8 +120,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 	thread->handler = cavan_mux_recv_thread_handler;
 	thread->wake_handker = NULL;
 	ret = cavan_thread_run(thread, mux);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_run");
 		goto out_cavan_mem_queue_deinit;
 	}
@@ -143,8 +130,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 	thread->handler = cavan_mux_send_thread_handler;
 	thread->wake_handker = NULL;
 	ret = cavan_thread_run(thread, mux);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_run");
 		goto out_cavan_thread_stop_recv;
 	}
@@ -169,8 +155,7 @@ void cavan_mux_deinit(struct cavan_mux *mux)
 	cavan_lock_acquire(&mux->lock);
 
 	head = mux->packages;
-	while (head)
-	{
+	while (head) {
 		struct cavan_mux_package_raw *next = head->next;
 
 		free(head);
@@ -196,8 +181,7 @@ void cavan_mux_append_package(struct cavan_mux *mux, struct cavan_mux_package_ra
 	cavan_lock_release(&mux->lock);
 }
 
-struct cavan_mux_package_raw *cavan_mux_dequeue_package(struct cavan_mux *mux, size_t length)
-{
+struct cavan_mux_package_raw *cavan_mux_dequeue_package(struct cavan_mux *mux, size_t length) {
 	struct cavan_mux_package_raw **head;
 	struct cavan_mux_package_raw *package;
 
@@ -205,14 +189,12 @@ struct cavan_mux_package_raw *cavan_mux_dequeue_package(struct cavan_mux *mux, s
 
 	head = &mux->packages;
 
-	while (*head && (*head)->length < length)
-	{
+	while (*head && (*head)->length < length) {
 		head = &(*head)->next;
 	}
 
 	package = *head;
-	if (package)
-	{
+	if (package) {
 		*head = package->next;
 	}
 
@@ -227,25 +209,21 @@ void cavan_mux_show_packages(struct cavan_mux *mux)
 
 	cavan_lock_acquire(&mux->lock);
 
-	for (package = mux->packages; package; package = package->next)
-	{
+	for (package = mux->packages; package; package = package->next) {
 		println("length = %d", package->length);
 	}
 
 	cavan_lock_release(&mux->lock);
 }
 
-struct cavan_mux_package *cavan_mux_package_alloc(struct cavan_mux *mux, size_t length)
-{
+struct cavan_mux_package *cavan_mux_package_alloc(struct cavan_mux *mux, size_t length) {
 	struct cavan_mux_package *package;
 	struct cavan_mux_package_raw *package_raw;
 
 	package_raw = cavan_mux_dequeue_package(mux, length);
-	if (package_raw == NULL)
-	{
+	if (package_raw == NULL) {
 		package_raw = malloc(sizeof(struct cavan_mux_package_raw) + length);
-		if (package_raw == NULL)
-		{
+		if (package_raw == NULL) {
 			pr_error_info("malloc");
 			return NULL;
 		}
@@ -271,13 +249,11 @@ int cavan_mux_add_link(struct cavan_mux *mux, struct cavan_mux_link *link, u16 p
 	cavan_lock_acquire(&mux->lock);
 
 	head = mux->links + (cavan_mux_link_head_index(port));
-	while ((*head) && (*head)->local_port < port)
-	{
+	while ((*head) && (*head)->local_port < port) {
 		head = &(*head)->next;
 	}
 
-	if ((*head) && (*head)->local_port == port)
-	{
+	if ((*head) && (*head)->local_port == port) {
 		pr_red_info("port %d already exists!", port);
 		cavan_lock_release(&mux->lock);
 		return -EINVAL;
@@ -293,8 +269,7 @@ int cavan_mux_add_link(struct cavan_mux *mux, struct cavan_mux_link *link, u16 p
 	return 0;
 }
 
-struct cavan_mux_link *cavan_mux_find_link(struct cavan_mux *mux, u16 port)
-{
+struct cavan_mux_link *cavan_mux_find_link(struct cavan_mux *mux, u16 port) {
 	struct cavan_mux_link *link;
 
 	cavan_lock_acquire(&mux->lock);
@@ -313,18 +288,14 @@ void cavan_mux_unbind(struct cavan_mux *mux, struct cavan_mux_link *link)
 	cavan_lock_acquire(&mux->lock);
 
 	head = mux->links + (cavan_mux_link_head_index(link->local_port));
-	if (link == *head)
-	{
+	if (link == *head) {
 		*head = link->next;
-	}
-	else
-	{
+	} else {
 		struct cavan_mux_link *prev;
 
 		for (prev = *head; prev && prev->next != link; prev = prev->next);
 
-		if (prev)
-		{
+		if (prev) {
 			prev->next = link->next;
 		}
 	}
@@ -339,20 +310,15 @@ int cavan_mux_find_free_port(struct cavan_mux *mux, u16 *pport)
 
 	cavan_lock_acquire(&mux->lock);
 
-	for (i = 0; i < NELEM(mux->links); i++)
-	{
+	for (i = 0; i < NELEM(mux->links); i++) {
 		struct cavan_mux_link *head = mux->links[i];
 
-		for (j = 0; j < (1 << (sizeof(u16) << 3)) / NELEM(mux->links); j++)
-		{
+		for (j = 0; j < (1 << (sizeof(u16) << 3)) / NELEM(mux->links); j++) {
 			u16 port = j * NELEM(mux->links) + i;
 
-			if (head && head->local_port == port)
-			{
+			if (head && head->local_port == port) {
 				head = head->next;
-			}
-			else if (port != 0)
-			{
+			} else if (port != 0) {
 				*pport = port;
 				goto label_found;
 			}
@@ -372,11 +338,9 @@ int cavan_mux_bind(struct cavan_mux *mux, struct cavan_mux_link *link, u16 port)
 
 	cavan_lock_acquire(&mux->lock);
 
-	if (port == 0)
-	{
+	if (port == 0) {
 		ret = cavan_mux_find_free_port(mux, &port);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			cavan_lock_release(&mux->lock);
 			return ret;
 		}
@@ -397,13 +361,10 @@ int cavan_mux_append_receive_package(struct cavan_mux *mux, struct cavan_mux_pac
 	cavan_lock_acquire(&mux->lock);
 
 	link = cavan_mux_find_link(mux, package->dest_port);
-	if (link == NULL)
-	{
+	if (link == NULL) {
 		pr_red_info("invalid port %d", package->dest_port);
 		ret = -EINVAL;
-	}
-	else
-	{
+	} else {
 		ret = cavan_mux_link_append_receive_package(link, package);;
 	}
 
@@ -423,16 +384,13 @@ ssize_t cavan_mux_append_receive_data(struct cavan_mux *mux, const void *buff, s
 
 	wrlen = cavan_mem_queue_inqueue(&mux->recv_queue, buff, size);
 
-	while (1)
-	{
+	while (1) {
 		rdlen = cavan_mem_queue_dequeue_peek(&mux->recv_queue, &package, sizeof(package));
-		if (rdlen < sizeof(package))
-		{
+		if (rdlen < sizeof(package)) {
 			goto out_success;
 		}
 
-		if (package.magic == CAVAN_MUX_MAGIC)
-		{
+		if (package.magic == CAVAN_MUX_MAGIC) {
 			break;
 		}
 
@@ -440,29 +398,25 @@ ssize_t cavan_mux_append_receive_data(struct cavan_mux *mux, const void *buff, s
 	}
 
 	size = cavan_mux_package_get_whole_length(&package);
-	if (cavan_mem_queue_get_used_size(&mux->recv_queue) < size)
-	{
+	if (cavan_mem_queue_get_used_size(&mux->recv_queue) < size) {
 		goto out_success;
 	}
 
 	ppackage = cavan_mux_package_alloc(mux, package.length);
-	if (ppackage == NULL)
-	{
+	if (ppackage == NULL) {
 		pr_red_info("cavan_mux_package_alloc");
 		ret = -ENOMEM;
 		goto out_cavan_lock_release;
 	}
 
-	if (cavan_mem_queue_dequeue(&mux->recv_queue, ppackage, size) != size)
-	{
+	if (cavan_mem_queue_dequeue(&mux->recv_queue, ppackage, size) != size) {
 		pr_red_info("cavan_mem_queue_dequeue");
 		ret = -EFAULT;
 		goto out_cavan_lock_release;
 	}
 
 	ret = cavan_mux_append_receive_package(mux, ppackage);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_mux_write_recv_package: %d", ret);
 		cavan_mux_package_free(mux, ppackage);
 	}
@@ -519,8 +473,7 @@ int cavan_mux_link_append_receive_package(struct cavan_mux_link *link, struct ca
 
 	link->remote_port = package->src_port;
 
-	if (link->on_received)
-	{
+	if (link->on_received) {
 		link->on_received(link);
 	}
 
@@ -539,8 +492,7 @@ ssize_t cavan_mux_link_recv(struct cavan_mux_link *link, void *buff, size_t size
 	cavan_lock_acquire(&link->lock);
 
 	package_raw = link->package_head;
-	if (package_raw == NULL)
-	{
+	if (package_raw == NULL) {
 		cavan_lock_release(&link->lock);
 		return 0;
 	}
@@ -548,14 +500,11 @@ ssize_t cavan_mux_link_recv(struct cavan_mux_link *link, void *buff, size_t size
 	package = &package_raw->package;
 	data = package->data + link->hole_size;
 	length = package->length - link->hole_size;
-	if (size < length)
-	{
+	if (size < length) {
 		memcpy(buff, data, size);
 
 		link->hole_size += size;
-	}
-	else
-	{
+	} else {
 		size = length;
 		memcpy(buff, data, size);
 
@@ -574,8 +523,7 @@ ssize_t cavan_mux_link_send(struct cavan_mux_link *link, const void *buff, size_
 	struct cavan_mux *mux = link->mux;
 
 	package = cavan_mux_package_alloc(mux, size);
-	if (package == NULL)
-	{
+	if (package == NULL) {
 		pr_red_info("cavan_mux_package_alloc");
 		return -ENOMEM;
 	}

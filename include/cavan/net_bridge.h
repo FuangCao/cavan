@@ -10,15 +10,13 @@
 
 #define NET_BRIDGE_ADDR_TIMEOUT		(5 * 60)
 
-struct cavan_net_bridge_addr
-{
+struct cavan_net_bridge_addr {
 	time_t time;
 	u8 addr[MAC_ADDRESS_LEN];
 	struct cavan_data_pool_node node;
 };
 
-struct cavan_net_bridge_port
-{
+struct cavan_net_bridge_port {
 	struct pollfd *pfd;
 	struct network_client client;
 	struct double_link addr_list;
@@ -28,8 +26,7 @@ struct cavan_net_bridge_port
 	struct cavan_net_bridge_port *prev;
 };
 
-struct cavan_net_bridge
-{
+struct cavan_net_bridge {
 	struct cavan_thread thread;
 	pthread_mutex_t lock;
 	bool port_changed;

@@ -30,26 +30,22 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	fd = open(argv[1], O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file %s", argv[1]);
 		return fd;
 	}
 
 	ret = cavan_fifo_init(&fifo, sizeof(buff), &fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_fifo_init");
 		goto out_close_fd;
 	}
 
 	fifo.read = file_fifo_read;
 
-	while (1)
-	{
+	while (1) {
 		int ret = cavan_fifo_read_line(&fifo, buff, sizeof(buff));
-		if (ret <= 0)
-		{
+		if (ret <= 0) {
 			break;
 		}
 

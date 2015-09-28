@@ -158,13 +158,10 @@ typedef enum {
 } jwp_mcu_error_t;
 
 #pragma pack(1)
-struct jwp_mcu_header
-{
-	union
-	{
+struct jwp_mcu_header {
+	union {
 		jwp_u16 magic;
-		struct
-		{
+		struct {
 			jwp_u8 magic_low;
 			jwp_u8 magic_high;
 		};
@@ -178,12 +175,9 @@ struct jwp_mcu_header
 #endif
 };
 
-struct jwp_mcu_package
-{
-	union
-	{
-		struct
-		{
+struct jwp_mcu_package {
+	union {
+		struct {
 			struct jwp_mcu_header header;
 			jwp_u8 payload[JWP_MCU_MAX_PAYLOAD];
 		};
@@ -192,38 +186,32 @@ struct jwp_mcu_package
 	};
 };
 
-struct jwp_mcu_response_identify
-{
+struct jwp_mcu_response_identify {
 	jwp_u8 product_model;
 	jwp_u8 firmware_version;
 	jwp_u32 firmware_date;
 	jwp_u32 device_sn;
 };
 
-struct jwp_mcu_request_add_owner
-{
+struct jwp_mcu_request_add_owner {
 	jwp_u32 security_code;
 	jwp_u32 owner;
 };
 
-struct jwp_mcu_request_remove_owner
-{
+struct jwp_mcu_request_remove_owner {
 	jwp_u32 owner;
 };
 
-struct jwp_mcu_request_owner_login
-{
+struct jwp_mcu_request_owner_login {
 	jwp_u32 owner;
 	jwp_u32 security_code;
 };
 
-struct jwp_mcu_response_owner_login
-{
+struct jwp_mcu_response_owner_login {
 	jwp_u32 device_sn;
 };
 
-struct jwp_mcu_response_owner_list
-{
+struct jwp_mcu_response_owner_list {
 	jwp_u32 owner1;
 	jwp_u32 owner2;
 	jwp_u32 owner3;
@@ -231,28 +219,24 @@ struct jwp_mcu_response_owner_list
 	jwp_u32 owner5;
 };
 
-struct jwp_mcu_response_battery_info
-{
+struct jwp_mcu_response_battery_info {
 	jwp_u8 state;
 	jwp_u8 capacity_level;
 	jwp_u8 capacity_percent;
 };
 
-struct jwp_mcu_response_gsm_info
-{
+struct jwp_mcu_response_gsm_info {
 	jwp_u8 register_state;
 	jwp_u8 signal_level;
 	jwp_u8 conn_state;
 };
 
-struct jwp_mcu_response_gps_info
-{
+struct jwp_mcu_response_gps_info {
 	jwp_u8 state;
 	jwp_u8 mode;
 };
 
-struct jwp_mcu_response_ride_info
-{
+struct jwp_mcu_response_ride_info {
 	jwp_u16 speed;
 	jwp_u16 speed_max;
 	jwp_u16 speed_avg;
@@ -262,152 +246,126 @@ struct jwp_mcu_response_ride_info
 	jwp_u32 time_total;
 };
 
-struct jwp_mcu_response_hbt_info
-{
+struct jwp_mcu_response_hbt_info {
 	jwp_u16 heart_rate;
 };
 
-struct jwp_mcu_response_alarm_info
-{
+struct jwp_mcu_response_alarm_info {
 	jwp_u8 state;
 	jwp_u8 mode;
 };
 
-struct jwp_mcu_request_alarm_set
-{
+struct jwp_mcu_request_alarm_set {
 	jwp_u8 state;
 };
 
-struct jwp_mcu_response_sos_info
-{
+struct jwp_mcu_response_sos_info {
 	jwp_u8 trigger;
 	jwp_u8 enable;
 	jwp_u8 delay;
 };
 
-struct jwp_mcu_request_sos_set
-{
+struct jwp_mcu_request_sos_set {
 	jwp_u8 enable;
 	jwp_u8 delay;
 };
 
-struct jwp_mcu_response_light_info
-{
+struct jwp_mcu_response_light_info {
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_request_light_set
-{
+struct jwp_mcu_request_light_set {
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_response_target_info
-{
+struct jwp_mcu_response_target_info {
 	jwp_u32 mileage_target;
 	jwp_u32 mileage_now;
 	jwp_u32 time_target;
 	jwp_u32 time_now;
 };
 
-struct jwp_mcu_request_target_set
-{
+struct jwp_mcu_request_target_set {
 	jwp_u32 mileage_target;
 	jwp_u32 time_target;
 };
 
-struct jwp_mcu_response_practice_info
-{
+struct jwp_mcu_response_practice_info {
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_request_practice_set
-{
+struct jwp_mcu_request_practice_set {
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_response_vibrate_info
-{
+struct jwp_mcu_response_vibrate_info {
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_request_vibrate_set
-{
+struct jwp_mcu_request_vibrate_set {
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_request_time_set
-{
+struct jwp_mcu_request_time_set {
 	jwp_u32 time;
 };
 
-struct jwp_mcu_request_weather_set
-{
+struct jwp_mcu_request_weather_set {
 	jwp_u8 type;
 	jwp_u8 temperature_min;
 	jwp_u8 temperature_max;
 };
 
-struct jwp_mcu_request_phone_battery_set
-{
+struct jwp_mcu_request_phone_battery_set {
 	jwp_u8 charge_state;
 	jwp_u8 capacity_level;
 };
 
-struct jwp_mcu_response_track_info
-{
+struct jwp_mcu_response_track_info {
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_request_track_set
-{
+struct jwp_mcu_request_track_set {
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_request_gsm_set
-{
+struct jwp_mcu_request_gsm_set {
 	jwp_u8 enable;
 	jwp_u8 conn_enable;
 	jwp_u8 airplane_mode;
 };
 
-struct jwp_mcu_request_gps_set
-{
+struct jwp_mcu_request_gps_set {
 	jwp_u8 enable;
 };
 
-struct jwp_mcu_response_sim_info
-{
+struct jwp_mcu_response_sim_info {
 	jwp_u8 present;
 	jwp_u8 service_state;
 	jwp_u8 imsi[15];
 };
 
-struct jwp_mcu_response_keylock_info
-{
+struct jwp_mcu_response_keylock_info {
 	jwp_u8 enable;
 	jwp_u8 password[6];
 };
 
-struct jwp_mcu_request_keylock_set
-{
+struct jwp_mcu_request_keylock_set {
 	jwp_u8 enable;
 	jwp_u8 password[6];
 };
 
-struct jwp_mcu_request_navi_notify_set
-{
+struct jwp_mcu_request_navi_notify_set {
 	jwp_u8 direction;
 	jwp_u32 distance;
 };
 
-struct jwp_mcu_request_bad_navi_notify_set
-{
+struct jwp_mcu_request_bad_navi_notify_set {
 	jwp_u8 direction;
 	jwp_u32 distance;
 };
 
-struct jwp_mcu_request_file_transfer
-{
+struct jwp_mcu_request_file_transfer {
 	jwp_u8 type;
 	jwp_u8 index;
 	jwp_u8 total;
@@ -418,8 +376,7 @@ struct jwp_mcu_request_file_transfer
 #endif
 };
 
-struct jwp_mcu_response_read_recent_record
-{
+struct jwp_mcu_response_read_recent_record {
 	jwp_u32 time_start;
 	jwp_u32 time_end;
 	jwp_u32 mileage;
@@ -428,30 +385,25 @@ struct jwp_mcu_response_read_recent_record
 	jwp_u16 heart_rate_max;
 };
 
-struct jwp_mcu_response_read_protocol
-{
+struct jwp_mcu_response_read_protocol {
 	jwp_u8 version;
 };
 
-struct jwp_mcu_event_battery_info
-{
+struct jwp_mcu_event_battery_info {
 	jwp_u8 state;
 	jwp_u8 capacity_level;
 	jwp_u8 capacity_percent;
 };
 
-struct jwp_mcu_event_device_fault
-{
+struct jwp_mcu_event_device_fault {
 	jwp_u8 code;
 };
 
-struct jwp_mcu_event_sos
-{
+struct jwp_mcu_event_sos {
 	jwp_u8 state;
 };
 
-struct jwp_mcu_event_ride_data
-{
+struct jwp_mcu_event_ride_data {
 	jwp_u16 speed;
 	jwp_u16 speed_max;
 	jwp_u16 speed_avg;
@@ -461,70 +413,59 @@ struct jwp_mcu_event_ride_data
 	jwp_u32 time_total;
 };
 
-struct jwp_mcu_event_target_reach
-{
+struct jwp_mcu_event_target_reach {
 	jwp_u8 type;
 	jwp_u32 value;
 };
 
-struct jwp_mcu_event_hbt_data
-{
+struct jwp_mcu_event_hbt_data {
 	jwp_u16 heart_rate;
 };
 
-struct jwp_csr_header
-{
+struct jwp_csr_header {
 	jwp_u8 type;
 };
 
-struct jwp_csr_command_set_state
-{
+struct jwp_csr_command_set_state {
 	struct jwp_csr_header header;
 	jwp_u8 state;
 };
 
-struct jwp_csr_command_set_white_list
-{
+struct jwp_csr_command_set_white_list {
 	struct jwp_csr_header header;
 	jwp_u8 addr_list[5][6];
 };
 
-struct jwp_csr_command_set_white_list_enable
-{
+struct jwp_csr_command_set_white_list_enable {
 	struct jwp_csr_header header;
 	jwp_u8 enable;
 };
 
-struct jwp_csr_command_set_factory_scan
-{
+struct jwp_csr_command_set_factory_scan {
 	struct jwp_csr_header header;
 	jwp_u8 mac_addr[6];
 };
 
-struct jwp_csr_response_package
-{
+struct jwp_csr_response_package {
 	struct jwp_csr_header header;
 	jwp_u8 success;
 };
 
-struct jwp_csr_event_state
-{
+struct jwp_csr_event_state {
 	struct jwp_csr_header header;
 	jwp_u8 state;
 	jwp_u8 bonded;
 	jwp_u8 bonded_addr[6];
 };
 
-struct jwp_csr_event_firmware_info
-{
+struct jwp_csr_event_firmware_info {
 	struct jwp_csr_header header;
 	jwp_u8 firmware_version;
 	jwp_u8 mac_addr[6];
 };
 #pragma pack()
 
-struct jwp_mcu_desc
-{
+struct jwp_mcu_desc {
 	struct jwp_desc *jwp;
 	struct jwp_mcu_package rx_pkg;
 	struct jwp_package_receiver receiver;

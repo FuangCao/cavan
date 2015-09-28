@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <cavan++/Thread.h>
 
-class MyThread : public CavanThread
-{
+class MyThread : public CavanThread {
 public:
 	MyThread(const char *name) : CavanThread(name) {}
-	int run(void)
-	{
+	int run(void) {
 		pr_pos_info();
 		msleep(200);
 

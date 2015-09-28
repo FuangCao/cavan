@@ -35,15 +35,13 @@ char *dump_backtrace(char *buff, size_t size)
 	count = unwind_backtrace(stack, 2, NELEM(stack));
 	buff += snprintf(buff, buff_end - buff, "backtrace() returned %" PRINT_FORMAT_SIZE " addresses\n", count);
 
-	if (count > 0)
-	{
+	if (count > 0) {
 		int i;
 		backtrace_symbol_t symbols[count];
 
 		get_backtrace_symbols(stack, count, symbols);
 
-		for (i = 0; i < count; i++)
-		{
+		for (i = 0; i < count; i++) {
 			char line[1024];
 
 			format_backtrace_line(i, stack + i, &symbols[i], line, sizeof(line));
@@ -92,16 +90,14 @@ char *dump_backtrace(char *buff, size_t size)
 
 	nptrs = backtrace(ptrs, NELEM(ptrs));
 	strings = backtrace_symbols(ptrs, nptrs);
-	if (strings == NULL)
-	{
+	if (strings == NULL) {
 		pr_error_info("backtrace_symbols");
 		return NULL;
 	}
 
 	buff += snprintf(buff, buff_end - buff, "backtrace() returned %d addresses\n", nptrs);
 
-	for (i = 0; i < nptrs && buff < buff_end; i++)
-	{
+	for (i = 0; i < nptrs && buff < buff_end; i++) {
 		buff += snprintf(buff, buff_end - buff, "%s\n", strings[i]);
 	}
 
@@ -116,8 +112,7 @@ char *address_to_symbol(const void *addr, char *buff, size_t size)
 	void *ptrs[] = { (void *) addr };
 
 	strings = backtrace_symbols(ptrs, 1);
-	if (strings == NULL)
-	{
+	if (strings == NULL) {
 		pr_error_info("backtrace_symbols");
 		return NULL;
 	}
@@ -134,8 +129,7 @@ int dump_stack(void)
 {
 	char buff[4096];
 
-	if (dump_backtrace(buff, sizeof(buff))== NULL)
-	{
+	if (dump_backtrace(buff, sizeof(buff))== NULL) {
 		return -EFAULT;
 	}
 
@@ -181,8 +175,7 @@ const char *cavan_get_build_time_string(void)
 	struct tm time;
 	static char buff[24];
 
-	if (cavan_get_build_time(&time) < 0)
-	{
+	if (cavan_get_build_time(&time) < 0) {
 		return build_time_string;
 	}
 

@@ -11,20 +11,15 @@ int main(int argc, char *argv[])
 
 	crc = 0;
 
-	if (argc == 2)
-	{
+	if (argc == 2) {
 		ret = file_crc32(argv[1], &crc);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("file_crc32");
 			return -1;
 		}
-	}
-	else
-	{
+	} else {
 		ret = file_ncrc32(argv[1], text2size(argv[2], NULL), &crc);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("file_ncrc32");
 			return -1;
 		}

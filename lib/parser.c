@@ -7,10 +7,8 @@ char para_value[128];
 
 char *get_parameter(char *argument, char *parameter)
 {
-	while (1)
-	{
-		switch (argument[0])
-		{
+	while (1) {
+		switch (argument[0]) {
 		case ' ':
 		case '\0':
 		case '\t':
@@ -30,10 +28,8 @@ void parse_parameter_base(const char *parameter, char *option, char *value)
 {
 	value[0] = '\0';
 
-	while (1)
-	{
-		switch (parameter[0])
-		{
+	while (1) {
+		switch (parameter[0]) {
 		case '=':
 			option[0] = '\0';
 			option = value;
@@ -54,13 +50,11 @@ void parse_parameter_base(const char *parameter, char *option, char *value)
 	}
 }
 
-struct buffer *malloc_buffer(int size)
-{
+struct buffer *malloc_buffer(int size) {
 	struct buffer *buff;
 
 	buff = malloc(sizeof(*buff) + size);
-	if (buff == NULL)
-	{
+	if (buff == NULL) {
 		return NULL;
 	}
 
@@ -75,37 +69,32 @@ void free_buffer(struct buffer *buff)
 	free(buff);
 }
 
-struct buffer *read_lines(const char *file_path)
-{
+struct buffer *read_lines(const char *file_path) {
 	struct stat st;
 	struct buffer *buff;
 	int ret;
 	int fd;
 
 	fd = open(file_path, O_RDONLY | O_BINARY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		perror("open");
 		return NULL;
 	}
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		perror("fstat");
 		goto out_close_file;
 	}
 
 	buff = malloc_buffer(st.st_size);
-	if (buff == NULL)
-	{
+	if (buff == NULL) {
 		perror("malloc_buffer");
 		goto out_close_file;
 	}
 
 	ret = ffile_read(fd, buff->space, buff->size);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		perror("ffile_read");
 		goto out_free_buff;
 	}
@@ -133,12 +122,9 @@ char *find_next_line(struct buffer *buff, char *line)
 
 	while (line < end_line && *line++ != '\n');
 
-	if (line < end_line)
-	{
+	if (line < end_line) {
 		return line;
-	}
-	else
-	{
+	} else {
 		return NULL;
 	}
 }
@@ -148,16 +134,14 @@ int get_next_line(struct buffer *buff, char *line)
 	char *p, *end_p;
 	int count;
 
-	if (buff->cursor >= buff->size)
-	{
+	if (buff->cursor >= buff->size) {
 		return -1;
 	}
 
 	p = buff->space + buff->cursor;
 	end_p = buff->space + buff->size;
 
-	while (p < end_p && *p != '\n')
-	{
+	while (p < end_p && *p != '\n') {
 		*line++ = *p++;
 	}
 
@@ -177,18 +161,15 @@ int get_index_line(struct buffer *buff, int index, char *line)
 
 	index--;
 
-	while (p < end_p && index > 0)
-	{
-		if (*p == '\n')
-		{
+	while (p < end_p && index > 0) {
+		if (*p == '\n') {
 			index--;
 		}
 
 		p++;
 	}
 
-	while (p < end_p && *p != '\n')
-	{
+	while (p < end_p && *p != '\n') {
 		*q++ = *p++;
 
 	}
@@ -202,36 +183,30 @@ char *find_prefix_line(struct buffer *buff, const char *prefix, int prefix_size)
 	char *p = buff->space;
 	char *end_p = p + buff->size;
 
-	while (is_empty_character(*prefix) && prefix_size)
-	{
+	while (is_empty_character(*prefix) && prefix_size) {
 		prefix++;
 		prefix_size--;
 	}
 
-	if (prefix_size == 0)
-	{
+	if (prefix_size == 0) {
 		return NULL;
 	}
 
 	end_p -= prefix_size;
 
-	while (1)
-	{
+	while (1) {
 		for (count = 0; p < end_p && is_empty_character(*p); p++, count++);
 
-		if (p >= end_p)
-		{
+		if (p >= end_p) {
 			return NULL;
 		}
 
-		if (memcmp(p, prefix, prefix_size) == 0)
-		{
+		if (memcmp(p, prefix, prefix_size) == 0) {
 			return p - count;
 		}
 
 		p = find_next_line(buff, p);
-		if (p == NULL)
-		{
+		if (p == NULL) {
 			return NULL;
 		}
 	}
@@ -244,16 +219,14 @@ int get_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, ch
 	char *p, *end_p, *q;
 
 	p = find_prefix_line(buff, prefix, prefix_size);
-	if (p == NULL)
-	{
+	if (p == NULL) {
 		return -1;
 	}
 
 	end_p = buff->space + buff->size;
 	q = line;
 
-	while (p < end_p && *p != '\n')
-	{
+	while (p < end_p && *p != '\n') {
 		*q++ = *p++;
 	}
 
@@ -262,44 +235,36 @@ int get_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, ch
 
 char *mem_area_copy(char *dest, const char *src, const char *src_end)
 {
-	while (src <= src_end)
-	{
+	while (src <= src_end) {
 		*(char *) dest++ = *(char *) src++;
 	}
 
 	return dest;
 }
 
-struct buffer *replace_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, const char *new_line, int new_line_size)
-{
+struct buffer *replace_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, const char *new_line, int new_line_size) {
 	char *p, *end_p, *q;
 	struct buffer *new_buff;
 
 	p = find_prefix_line(buff, prefix, prefix_size);
-	if (p == NULL)
-	{
+	if (p == NULL) {
 		return NULL;
 	}
 
 	end_p = find_next_line(buff, p);
-	if (end_p == NULL)
-	{
+	if (end_p == NULL) {
 		new_buff = malloc_buffer(buff->size + new_line_size + 1);
-	}
-	else
-	{
+	} else {
 		new_buff = malloc_buffer(buff->size - (end_p - p) + new_line_size + 1);
 	}
 
-	if (new_buff == NULL)
-	{
+	if (new_buff == NULL) {
 		return NULL;
 	}
 
 	q = mem_area_copy(mem_area_copy(new_buff->space, buff->space, p - 1), new_line, new_line + new_line_size - 1);
 
-	if (end_p == NULL)
-	{
+	if (end_p == NULL) {
 		return new_buff;
 	}
 
@@ -313,8 +278,7 @@ ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, int (*hand
 {
 	const char *buff_tmp, *buff_end = buff + bufflen;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		int ret;
 		char key[64];
 		char value[4096];
@@ -322,31 +286,26 @@ ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, int (*hand
 
 		buff_tmp = buff;
 
-		while (buff_tmp < buff_end && *buff_tmp != '\n')
-		{
+		while (buff_tmp < buff_end && *buff_tmp != '\n') {
 			buff_tmp++;
 		}
 
-		while (buff < buff_tmp && byte_is_space_or_lf(*buff))
-		{
+		while (buff < buff_tmp && byte_is_space_or_lf(*buff)) {
 			buff++;
 		}
 
-		if (*buff == '#')
-		{
+		if (*buff == '#') {
 			goto label_goto_next_line;
 		}
 
 		p_bak = p = key;
 		p_end = p + sizeof(key) - 1;
 
-		while (buff < buff_tmp && *buff != sep && p < p_end)
-		{
+		while (buff < buff_tmp && *buff != sep && p < p_end) {
 			*p++ = *buff++;
 		}
 
-		if (p == p_bak)
-		{
+		if (p == p_bak) {
 			goto label_goto_next_line;
 		}
 
@@ -355,21 +314,18 @@ ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, int (*hand
 		p[1] = 0;
 		buff++;
 
-		while (buff < buff_tmp && byte_is_space_or_lf(*buff))
-		{
+		while (buff < buff_tmp && byte_is_space_or_lf(*buff)) {
 			buff++;
 		}
 
 		p_bak = p = value;
 		p_end = p + sizeof(value) - 1;
 
-		while (buff < buff_tmp && *buff != '\n')
-		{
+		while (buff < buff_tmp && *buff != '\n') {
 			*p++ = *buff++;
 		}
 
-		if (p == p_bak)
-		{
+		if (p == p_bak) {
 			goto label_goto_next_line;
 		}
 
@@ -378,10 +334,8 @@ ssize_t parse_config_file(const char *buff, size_t bufflen, char sep, int (*hand
 		p[1] = 0;
 
 		ret = handler(key, value, data);
-		if (ret <= 0)
-		{
-			if (ret < 0)
-			{
+		if (ret <= 0) {
+			if (ret < 0) {
 				return ret;
 			}
 
@@ -402,8 +356,7 @@ ssize_t parse_config_file2(const char *pathname, char sep, int (*handler)(char *
 	char *content;
 
 	content = file_read_all_text(pathname, &size);
-	if (content == NULL)
-	{
+	if (content == NULL) {
 		pr_red_info("file_read_all_text");
 		return -EFAULT;
 	}
@@ -414,8 +367,7 @@ ssize_t parse_config_file2(const char *pathname, char sep, int (*handler)(char *
 	return ret;
 }
 
-struct parse_config_file_simple_context
-{
+struct parse_config_file_simple_context {
 	struct equation *lines;
 	size_t size;
 	size_t count;
@@ -425,8 +377,7 @@ static int parse_config_file_simple_handler(char *key, char *value, void *data)
 {
 	struct parse_config_file_simple_context *context = data;
 
-	if (context->count < context->size)
-	{
+	if (context->count < context->size) {
 		struct equation *line = context->lines + context->count;
 
 		strncpy(line->option, key, sizeof(line->option));
@@ -442,16 +393,14 @@ static int parse_config_file_simple_handler(char *key, char *value, void *data)
 ssize_t parse_config_file_simple(const char *pathname, char sep, struct equation *lines, size_t size)
 {
 	ssize_t ret;
-	struct parse_config_file_simple_context context =
-	{
+	struct parse_config_file_simple_context context = {
 		.count = 0,
 		.size = size,
 		.lines = lines,
 	};
 
 	ret = parse_config_file2(pathname, sep, parse_config_file_simple_handler, &context);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 

@@ -37,8 +37,7 @@ typedef enum {
 	HEART_RATE_DECODE_STATE_FIND_V,
 } heart_rate_decode_state_t;
 
-struct heart_rate_decode
-{
+struct heart_rate_decode {
 	u32 count;
 	heart_rate_decode_state_t state;
 

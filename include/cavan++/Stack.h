@@ -23,19 +23,16 @@
 #include <cavan++/Link.h>
 
 template <typename T>
-class Stack
-{
+class Stack {
 private:
 	T *mTop;
 	T *mLast;
 	T *mData;
 
 public:
-	Stack(int size)
-	{
+	Stack(int size) {
 		mData = new T[size];
-		if (mData == NULL)
-		{
+		if (mData == NULL) {
 			size = 0;
 		}
 
@@ -43,15 +40,12 @@ public:
 		clear();
 	}
 
-	~Stack(void)
-	{
+	~Stack(void) {
 		delete []mData;
 	}
 
-	bool push(T data)
-	{
-		if (isFull())
-		{
+	bool push(T data) {
+		if (isFull()) {
 			return false;
 		}
 
@@ -60,10 +54,8 @@ public:
 		return true;
 	}
 
-	bool pop(T &data)
-	{
-		if (isEmpty())
-		{
+	bool pop(T &data) {
+		if (isEmpty()) {
 			return false;
 		}
 
@@ -72,10 +64,8 @@ public:
 		return true;
 	}
 
-	bool top(T &data)
-	{
-		if (isEmpty())
-		{
+	bool top(T &data) {
+		if (isEmpty()) {
 			return false;
 		}
 
@@ -84,75 +74,61 @@ public:
 		return true;
 	}
 
-	bool isEmpty(void)
-	{
+	bool isEmpty(void) {
 		return mTop <= mData;
 	}
 
-	bool isFull(void)
-	{
+	bool isFull(void) {
 		return mTop > mLast;
 	}
 
-	bool hasData(void)
-	{
+	bool hasData(void) {
 		return mTop > mData;
 	}
 
-	void clear(void)
-	{
+	void clear(void) {
 		mTop = mData;
 	}
 
-	int getUsedCount(void)
-	{
+	int getUsedCount(void) {
 		return mTop - mData;
 	}
 
-	int getFreeCount(void)
-	{
+	int getFreeCount(void) {
 		return mLast - mTop;
 	}
 
-	int count(void)
-	{
+	int count(void) {
 		return getUsedCount();
 	}
 
-	int available(void)
-	{
+	int available(void) {
 		return getFreeCount();
 	}
 
-	T *getArray(void)
-	{
+	T *getArray(void) {
 		return mData;
 	}
 };
 
 template <typename T>
-class LinkStack
-{
+class LinkStack {
 private:
 	LinkNodeT<T> *mTop;
 
 public:
 	LinkStack(void) : mTop(NULL) {}
-	~LinkStack(void)
-	{
-		while (mTop)
-		{
+	~LinkStack(void) {
+		while (mTop) {
 			LinkNodeT<T> *next = mTop->next;
 			delete mTop;
 			mTop = next;
 		}
 	}
 
-	int push(T &data)
-	{
+	int push(T &data) {
 		LinkNodeT<T> *node = new LinkNodeT<T>(data, mTop);
-		if (node == NULL)
-		{
+		if (node == NULL) {
 			return -1;
 		}
 
@@ -161,10 +137,8 @@ public:
 		return 0;
 	}
 
-	int pop(T &data)
-	{
-		if (isEmpty())
-		{
+	int pop(T &data) {
+		if (isEmpty()) {
 			return -1;
 		}
 
@@ -177,8 +151,7 @@ public:
 		return 0;
 	}
 
-	bool isEmpty(void)
-	{
+	bool isEmpty(void) {
 		return mTop == NULL;
 	}
 };

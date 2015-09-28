@@ -25,43 +25,36 @@ int file_join(const char *dest_file, char *src_files[], int count)
 	struct progress_bar bar;
 
 	dest_fd = open(dest_file, O_WRONLY | O_CREAT | O_SYNC | O_TRUNC | O_BINARY, 0777);
-	if (dest_fd < 0)
-	{
+	if (dest_fd < 0) {
 		pr_error_info("open \"%s\"", dest_file);
 		return -1;
 	}
 
-	for (i = 0; i < count; i++)
-	{
+	for (i = 0; i < count; i++) {
 		println("\"%s\" [join]-> \"%s\"", src_files[i], dest_file);
 
 		src_fd = open(src_files[i], O_RDONLY | O_BINARY);
-		if (src_fd < 0)
-		{
+		if (src_fd < 0) {
 			ret = -1;
 			pr_error_info("open \"%s\"", src_files[i]);
 			goto out_close_dest;
 		}
 
 		ret = fstat(src_fd, &st);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("fstat \"%s\"", src_files[i]);
 			goto out_close_src;
 		}
 
 		progress_bar_init(&bar, st.st_size);
 
-		while (1)
-		{
+		while (1) {
 			ssize_t rdlen, wrlen;
 			char buff[MAX_BUFF_LEN];
 
 			rdlen = read(src_fd, buff, sizeof(buff));
-			if (rdlen <= 0)
-			{
-				if (rdlen == 0)
-				{
+			if (rdlen <= 0) {
+				if (rdlen == 0) {
 					break;
 				}
 
@@ -71,8 +64,7 @@ int file_join(const char *dest_file, char *src_files[], int count)
 			}
 
 			wrlen = ffile_write(dest_fd, buff, rdlen);
-			if (wrlen != rdlen)
-			{
+			if (wrlen != rdlen) {
 				ret = wrlen < 0 ? wrlen : -EFAULT;
 				pr_error_info("ffile_write \"%s\"", dest_file);
 				goto out_close_src;
@@ -106,40 +98,34 @@ int file_split(const char *file_name, const char *dest_dir, size_t size, int cou
 	struct stat st;
 	char dest_pathname[1024], *dest_filename;
 
-	if (size == 0 && count == 0)
-	{
+	if (size == 0 && count == 0) {
 		pr_red_info("Please give the size or count");
 		ERROR_RETURN(EINVAL);
 	}
 
 	ret = mkdir_hierarchy(dest_dir, 0777);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("Create directory `%s' failed", dest_dir);
 		return ret;
 	}
 
 	src_fd = open(file_name, O_RDONLY | O_BINARY);
-	if (src_fd < 0)
-	{
+	if (src_fd < 0) {
 		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
 	ret = fstat(src_fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("fstat \"%s\"", file_name);
 		goto out_close_src;
 	}
 
 	remain_size = st.st_size;
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		size = (remain_size + count - 1) / count;
-		if (size == 0)
-		{
+		if (size == 0) {
 			ret = -EINVAL;
 			pr_red_info("count to large");
 			goto out_close_src;
@@ -148,24 +134,21 @@ int file_split(const char *file_name, const char *dest_dir, size_t size, int cou
 
 	dest_filename = text_path_cat(dest_pathname, sizeof(dest_pathname), dest_dir, text_basename(file_name));
 
-	for (i = 1; remain_size; i++)
-	{
+	for (i = 1; remain_size; i++) {
 		ssize_t cpylen;
 
 		sprintf(dest_filename, "-part%02d", i);
 		pr_info("%s => %s", file_name, dest_pathname);
 
 		dest_fd = open(dest_pathname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0777);
-		if (dest_fd < 0)
-		{
+		if (dest_fd < 0) {
 			pr_error_info("open file `%s' failed", dest_pathname);
 			goto out_close_src;
 		}
 
 		cpylen = ffile_ncopy(src_fd, dest_fd, remain_size > size ? size : remain_size);
 		close(dest_fd);
-		if (cpylen < 0)
-		{
+		if (cpylen < 0) {
 			ret = cpylen;
 			pr_red_info("ffile_ncopy");
 			goto out_close_src;
@@ -186,16 +169,13 @@ ssize_t ffile_copy_simple(int src_fd, int dest_fd)
 {
 	ssize_t cpylen = 0;
 
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(src_fd, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -204,8 +184,7 @@ ssize_t ffile_copy_simple(int src_fd, int dest_fd)
 		}
 
 		wrlen = ffile_write(dest_fd, buff, rdlen);
-		if (wrlen != rdlen)
-		{
+		if (wrlen != rdlen) {
 			pr_error_info("ffile_write");
 			return wrlen < 0 ? wrlen : -EFAULT;
 		}
@@ -224,23 +203,19 @@ ssize_t ffile_copy(int src_fd, int dest_fd)
 	struct progress_bar bar;
 
 	ret = fstat(src_fd, &st);
-	if (ret < 0 || st.st_size < MIN_FILE_SIZE)
-	{
+	if (ret < 0 || st.st_size < MIN_FILE_SIZE) {
 		return ffile_copy_simple(src_fd, dest_fd);
 	}
 
 	progress_bar_init(&bar, st.st_size);
 
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(src_fd, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -249,8 +224,7 @@ ssize_t ffile_copy(int src_fd, int dest_fd)
 		}
 
 		wrlen = ffile_write(dest_fd, buff, rdlen);
-		if (wrlen != rdlen)
-		{
+		if (wrlen != rdlen) {
 			pr_error_info("ffile_write");
 			return wrlen < 0 ? wrlen : -EFAULT;
 		}
@@ -270,15 +244,13 @@ ssize_t file_append(const char *file_src, const char *file_dest)
 	int fd_src, fd_dest;
 
 	fd_src = open(file_src, READ_FLAGS);
-	if (fd_src < 0)
-	{
+	if (fd_src < 0) {
 		pr_error_info("open \"%s\"", file_src);
 		return fd_src;
 	}
 
 	fd_dest = open(file_dest, WRITE_FLAGS | O_APPEND, 0777);
-	if (fd_dest < 0)
-	{
+	if (fd_dest < 0) {
 		res = fd_dest;
 		pr_error_info("open \"%s\"", file_dest);
 		goto out_close_fd_src;
@@ -298,8 +270,7 @@ int file_open_rw_ro(const char *pathname, int flags)
 	int fd;
 
 	fd = open(pathname, O_RDWR | O_BINARY | flags);
-	if (fd >= 0)
-	{
+	if (fd >= 0) {
 		return fd;
 	}
 
@@ -310,8 +281,7 @@ int file_open_rw_ro(const char *pathname, int flags)
 	fd = open(pathname, O_RDONLY | flags);
 
 #if CAVAN_FILE_DEBUG
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file \"%s\"", pathname);
 	}
 #endif
@@ -325,22 +295,19 @@ static int open_files(const char *src_file, const char *dest_file, int *src_fd, 
 	struct stat st;
 
 	*src_fd = open(src_file, O_RDONLY);
-	if (*src_fd < 0)
-	{
+	if (*src_fd < 0) {
 		pr_error_info("open \"%s\"", src_file);
 		return *src_fd;
 	}
 
 	ret = fstat(*src_fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("fstat \"%s\"", src_file);
 		goto out_close_src_fd;
 	}
 
 	*dest_fd = open(dest_file, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY | flags, st.st_mode);
-	if (*dest_fd < 0)
-	{
+	if (*dest_fd < 0) {
 		ret = *dest_fd;
 		pr_error_info("open \"%s\"", dest_file);
 		goto out_close_src_fd;
@@ -361,8 +328,7 @@ ssize_t file_copy(const char *src_file, const char *dest_file, int flags)
 	int src_fd, dest_fd;
 
 	ret = open_files(src_file, dest_file, &src_fd, &dest_fd, flags);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("open_files");
 		return ret;
 	}
@@ -381,8 +347,7 @@ ssize_t file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode)
 	ssize_t cpylen;
 
 	dest_fd = open(dest_file, flags, mode);
-	if (dest_fd < 0)
-	{
+	if (dest_fd < 0) {
 		pr_error_info("open file `%s'", dest_file);
 		return dest_fd;
 	}
@@ -400,8 +365,7 @@ ssize_t file_copy3(const char *src_file, int dest_fd)
 	ssize_t cpylen;
 
 	src_fd = open(src_file, O_RDONLY);
-	if (src_fd < 0)
-	{
+	if (src_fd < 0) {
 		pr_error_info("open file `%s'", src_file);
 		return src_fd;
 	}
@@ -419,8 +383,7 @@ off_t ffile_get_size(int fd)
 	struct stat st;
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("fstat");
 		return 0;
 	}
@@ -434,8 +397,7 @@ off_t file_get_size(const char *filepath)
 	struct stat st;
 
 	ret = file_stat2(filepath, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("file_stat \"%s\"", filepath);
 		return 0;
 	}
@@ -448,15 +410,13 @@ int mkdir_all(const char *pathname)
 	int ret;
 	char dir_name[512];
 
-	if (file_test(pathname, "d") == 0)
-	{
+	if (file_test(pathname, "d") == 0) {
 		return 0;
 	}
 
 	text_dirname_base(dir_name, pathname);
 	ret = mkdir_all(dir_name);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("create directory \"%s\" failed", dir_name);
 		return ret;
 	}
@@ -469,40 +429,33 @@ int mkdir_hierarchy_length(const char *pathname, size_t length, mode_t mode)
 	const char *end = pathname + length;
 	char pathname_rw[length], *p = pathname_rw;
 
-	if (pathname < end && *pathname == '/')
-	{
+	if (pathname < end && *pathname == '/') {
 		*p++ = '/';
 	}
 
-	while (1)
-	{
+	while (1) {
 		int ret;
 
-		while (1)
-		{
-			if (pathname >= end)
-			{
+		while (1) {
+			if (pathname >= end) {
 				return 0;
 			}
 
-			if (*pathname != '/')
-			{
+			if (*pathname != '/') {
 				break;
 			}
 
 			pathname++;
 		}
 
-		while (pathname < end && *pathname != '/')
-		{
+		while (pathname < end && *pathname != '/') {
 			*p++ = *pathname++;
 		}
 
 		*p = 0;
 
 		ret = mkdir(pathname_rw, mode);
-		if (ret < 0 && errno != EEXIST)
-		{
+		if (ret < 0 && errno != EEXIST) {
 			return ret;
 		}
 
@@ -516,18 +469,15 @@ int mkdir_parent_hierarchy(const char *pathname, mode_t mode)
 {
 	const char *p = pathname + strlen(pathname) - 1;
 
-	while (p > pathname && *p == '/')
-	{
+	while (p > pathname && *p == '/') {
 		p--;
 	}
 
-	while (p > pathname && *p != '/')
-	{
+	while (p > pathname && *p != '/') {
 		p--;
 	}
 
-	if (p == pathname)
-	{
+	if (p == pathname) {
 		return 0;
 	}
 
@@ -538,23 +488,19 @@ int mkdir_hierarchy2(char *pathname, mode_t mode)
 {
 	char *p = pathname;
 
-	while (1)
-	{
+	while (1) {
 		char c;
 		int ret;
 
-		while (*p == '/')
-		{
+		while (*p == '/') {
 			p++;
 		}
 
-		if (*p == 0)
-		{
+		if (*p == 0) {
 			break;
 		}
 
-		while (*p && *p != '/')
-		{
+		while (*p && *p != '/') {
 			p++;
 		}
 
@@ -562,8 +508,7 @@ int mkdir_hierarchy2(char *pathname, mode_t mode)
 		*p = 0;
 
 		ret = mkdir(pathname, mode);
-		if (ret < 0 && errno != EEXIST)
-		{
+		if (ret < 0 && errno != EEXIST) {
 			return ret;
 		}
 
@@ -578,18 +523,15 @@ int mkdir_parent_hierarchy2(char *pathname, mode_t mode)
 	int ret;
 	char *p = pathname + strlen(pathname) - 1;
 
-	while (p > pathname && *p == '/')
-	{
+	while (p > pathname && *p == '/') {
 		p--;
 	}
 
-	while (p > pathname && *p != '/')
-	{
+	while (p > pathname && *p != '/') {
 		p--;
 	}
 
-	if (p == pathname)
-	{
+	if (p == pathname) {
 		return 0;
 	}
 
@@ -605,14 +547,12 @@ int file_create_open(const char *pathname, int flags, mode_t mode)
 	int ret;
 
 	ret = open(pathname, O_CREAT | O_BINARY | flags, mode);
-	if (ret >= 0)
-	{
+	if (ret >= 0) {
 		return ret;
 	}
 
 	ret = mkdir_hierarchy(text_dirname(pathname), mode);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -623,16 +563,13 @@ ssize_t ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 {
 	size_t size_bak = size;
 
-	while (size)
-	{
+	while (size) {
 		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(src_fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -641,8 +578,7 @@ ssize_t ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 		}
 
 		wrlen = ffile_write(dest_fd, buff, rdlen);
-		if (wrlen != rdlen)
-		{
+		if (wrlen != rdlen) {
 			pr_error_info("ffile_write");
 			return wrlen < 0 ? wrlen : -EFAULT;
 		}
@@ -651,8 +587,7 @@ ssize_t ffile_ncopy_simple(int src_fd, int dest_fd, size_t size)
 	}
 
 #if CONFIG_ERROR_IF_COPY_REMAIN
-	if (size)
-	{
+	if (size) {
 #if __WORDSIZE == 64
 		pr_red_info("size = %ld != 0", size);
 #else
@@ -673,24 +608,20 @@ ssize_t ffile_ncopy(int src_fd, int dest_fd, size_t size)
 	size_t size_bak;
 	struct progress_bar bar;
 
-	if (size < MIN_FILE_SIZE)
-	{
+	if (size < MIN_FILE_SIZE) {
 		return ffile_ncopy_simple(src_fd, dest_fd, size);
 	}
 
 	size_bak = size;
 	progress_bar_init(&bar, size);
 
-	while (size)
-	{
+	while (size) {
 		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(src_fd, buff, size < sizeof(buff) ? size : sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -699,8 +630,7 @@ ssize_t ffile_ncopy(int src_fd, int dest_fd, size_t size)
 		}
 
 		wrlen = ffile_write(dest_fd, buff, rdlen);
-		if (wrlen != rdlen)
-		{
+		if (wrlen != rdlen) {
 			pr_error_info("ffile_write");
 			return wrlen < 0 ? wrlen : -EFAULT;
 		}
@@ -712,8 +642,7 @@ ssize_t ffile_ncopy(int src_fd, int dest_fd, size_t size)
 	progress_bar_finish(&bar);
 
 #if CONFIG_ERROR_IF_COPY_REMAIN
-	if (size)
-	{
+	if (size) {
 #if __WORDSIZE == 64
 		pr_red_info("size = %ld != 0", size);
 #else
@@ -736,8 +665,7 @@ ssize_t file_ncopy(const char *src_file, const char *dest_file, size_t size, int
 	int src_fd, dest_fd;
 
 	ret = open_files(src_file, dest_file, &src_fd, &dest_fd, flags);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("open_files");
 		return ret;
 	}
@@ -756,8 +684,7 @@ ssize_t file_ncopy2(int src_fd, const char *dest_file, size_t size, int flags, m
 	ssize_t cpylen;
 
 	dest_fd = open(dest_file, flags, mode);
-	if (dest_fd < 0)
-	{
+	if (dest_fd < 0) {
 		pr_error_info("open file `%s'", dest_file);
 		return dest_fd;
 	}
@@ -771,22 +698,19 @@ ssize_t file_ncopy2(int src_fd, const char *dest_file, size_t size, int flags, m
 
 int vtry_to_open(int flags, va_list ap)
 {
-	while (1)
-	{
+	while (1) {
 		int fd;
 		const char *filename;
 
 		filename = va_arg(ap, const char *);
-		if (filename == NULL)
-		{
+		if (filename == NULL) {
 			return -ENOENT;
 		}
 
 		println("open file \"%s\"", filename);
 
 		fd = open(filename, flags);
-		if (fd >= 0)
-		{
+		if (fd >= 0) {
 			return fd;
 		}
 	}
@@ -810,14 +734,11 @@ ssize_t ffile_read(int fd, void *buff, size_t size)
 {
 	void *buff_bak = buff, *buff_end = (char *) buff + size;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		ssize_t rdlen = read(fd, buff, (char *) buff_end - (char *) buff);
 
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -834,18 +755,15 @@ ssize_t ffile_write(int fd, const void *buff, size_t size)
 {
 	const void *buff_bak = buff, *buff_end = (char *) buff + size;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		ssize_t wrlen = write(fd, buff, (char *) buff_end - (char *) buff);
 
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			return wrlen;
 		}
 
 #if 0
-		if (wrlen == 0)
-		{
+		if (wrlen == 0) {
 			break;
 		}
 #endif
@@ -858,8 +776,7 @@ ssize_t ffile_write(int fd, const void *buff, size_t size)
 
 ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
 {
-	if (lseek(fd, offset, SEEK_SET) != offset)
-	{
+	if (lseek(fd, offset, SEEK_SET) != offset) {
 #if CAVAN_FILE_DEBUG
 		pr_error_info("lseek");
 #endif
@@ -881,8 +798,7 @@ ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t
 #endif
 
 	fd = file_create_open(file_name, O_WRONLY | O_SYNC | flags, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 #if CAVAN_FILE_DEBUG
 		pr_error_info("open \"%s\"", file_name);
 #endif
@@ -898,8 +814,7 @@ ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t
 
 ssize_t ffile_readfrom(int fd, void *buff, size_t size, off_t offset)
 {
-	if (lseek(fd, offset, SEEK_SET) != offset)
-	{
+	if (lseek(fd, offset, SEEK_SET) != offset) {
 		pr_error_info("lseek");
 		return -EFAULT;
 	}
@@ -919,8 +834,7 @@ ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offs
 #endif
 
 	fd = open(file_name, O_RDONLY | O_BINARY | flags);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 #if CAVAN_FILE_DEBUG
 		pr_error_info("open \"%s\"", file_name);
 #endif
@@ -943,16 +857,13 @@ int file_test_read(const char *filename)
 
 int ffile_show(int fd)
 {
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen;
 		char buff[16];
 
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -970,21 +881,17 @@ int ffile_show(int fd)
 
 int ffile_nshow(int fd, size_t size)
 {
-	if (size == 0)
-	{
+	if (size == 0) {
 		return ffile_show(fd);
 	}
 
-	while (size)
-	{
+	while (size) {
 		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -1008,8 +915,7 @@ int file_operation_ro(const char *filename, int (*handle)(int fd))
 	int ret;
 
 	fd = file_open_ro(filename);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -1026,8 +932,7 @@ int file_noperation_ro(const char *filename, size_t size, int (*handle)(int fd, 
 	int ret;
 
 	fd = file_open_ro(filename);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file %s", filename);
 		return fd;
 	}
@@ -1045,8 +950,7 @@ int file_operation_wo(const char *filename, int (*handle)(int fd))
 	int ret;
 
 	fd = file_open_wo(filename);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -1063,8 +967,7 @@ int file_noperation_wo(const char *filename, size_t size, int (*handle)(int fd, 
 	int ret;
 
 	fd = file_open_wo(filename);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -1081,8 +984,7 @@ int file_operation_rw(const char *filename, int (*handle)(int fd))
 	int ret;
 
 	fd = file_open_ro(filename);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -1099,8 +1001,7 @@ int file_noperation_rw(const char *filename, size_t size, int (*handle)(int fd, 
 	int ret;
 
 	fd = file_open_ro(filename);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -1113,16 +1014,13 @@ int file_noperation_rw(const char *filename, size_t size, int (*handle)(int fd, 
 
 int ffile_cat(int fd)
 {
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen;
 		char buff[MAX_BUFFER_LEN];
 
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -1140,21 +1038,17 @@ int ffile_cat(int fd)
 
 int ffile_ncat(int fd, size_t size)
 {
-	if (size == 0)
-	{
+	if (size == 0) {
 		return ffile_cat(fd);
 	}
 
-	while (size)
-	{
+	while (size) {
 		ssize_t rdlen;
 		char buff[MAX_BUFFER_LEN];
 
 		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -1173,22 +1067,18 @@ int ffile_ncat(int fd, size_t size)
 
 int ffile_cmp(int fd1, int fd2, size_t size)
 {
-	if (ffile_get_size(fd1) != ffile_get_size(fd2))
-	{
+	if (ffile_get_size(fd1) != ffile_get_size(fd2)) {
 		return 1;
 	}
 
-	while (size)
-	{
+	while (size) {
 		ssize_t rdlen;
 		char buff1[MAX_BUFF_LEN];
 		char buff2[MAX_BUFF_LEN];
 
 		rdlen = read(fd1, buff1, size > sizeof(buff1) ? sizeof(buff1) : size);
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -1197,14 +1087,12 @@ int ffile_cmp(int fd1, int fd2, size_t size)
 		}
 
 		rdlen = read(fd2, buff2, rdlen);
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_error_info("read");
 			return rdlen;
 		}
 
-		if (memcmp(buff1, buff2, rdlen) != 0)
-		{
+		if (memcmp(buff1, buff2, rdlen) != 0) {
 			return 1;
 		}
 
@@ -1220,23 +1108,20 @@ int file_cmp(const char *file1, const char *file2, size_t size)
 	int fd1, fd2;
 
 	fd1 = open(file1, READ_FLAGS);
-	if (fd1 < 0)
-	{
+	if (fd1 < 0) {
 		pr_error_info("open \"%s\"", file1);
 		return -1;
 	}
 
 	fd2 = open(file2, READ_FLAGS);
-	if (fd2 < 0)
-	{
+	if (fd2 < 0) {
 		ret = -1;
 		pr_error_info("open \"%s\"", file2);
 		goto out_close_file1;
 	}
 
 	ret = ffile_cmp(fd1, fd2, size);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("ffile_cmp");
 	}
 
@@ -1251,16 +1136,13 @@ int ffile_crc32(int fd, u32 *crc)
 {
 	print("check file crc32 checksum ...");
 
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -1284,15 +1166,13 @@ int file_crc32(const char *file_name, u32 *crc)
 	int ret;
 
 	fd = open(file_name, READ_FLAGS);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
 	ret = ffile_crc32(fd, crc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("ffile_crc32");
 	}
 
@@ -1307,16 +1187,13 @@ int ffile_ncrc32(int fd, size_t size, u32 *crc)
 
 	progress_bar_init(&bar, size);
 
-	while (size)
-	{
+	while (size) {
 		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
 		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -1340,15 +1217,13 @@ int file_ncrc32(const char *file_name, size_t size, u32 *crc)
 	int ret;
 
 	fd = open(file_name, READ_FLAGS);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
 	ret = ffile_ncrc32(fd, size, crc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("ffile_ncrc32");
 	}
 
@@ -1363,21 +1238,18 @@ int ffile_crc32_seek(int fd, off_t offset, int whence, u32 *crc)
 	s64 offset_bak;
 
 	offset_bak = lseek(fd, offset, whence);
-	if (offset_bak != offset)
-	{
+	if (offset_bak != offset) {
 		pr_error_info("lseek");
 		return -EFAULT;
 	}
 
 	ret = ffile_crc32(fd, crc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("ffile_crc32");
 		return ret;
 	}
 
-	if (lseek(fd, offset_bak, SEEK_SET) != offset_bak)
-	{
+	if (lseek(fd, offset_bak, SEEK_SET) != offset_bak) {
 		pr_error_info("lseek");
 		return -EFAULT;
 	}
@@ -1391,15 +1263,13 @@ int file_crc32_seek(const char *file_name, off_t offset, int whence, u32 *crc)
 	int ret;
 
 	fd = open(file_name, READ_FLAGS);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
 	ret = ffile_crc32_seek(fd, offset, whence, crc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("ffile_crc32_seek");
 	}
 
@@ -1414,21 +1284,18 @@ int ffile_ncrc32_seek(int fd, off_t offset, int whence, size_t size, u32 *crc)
 	s64 offset_bak;
 
 	offset_bak = lseek(fd, offset, whence);
-	if (offset_bak != offset_bak)
-	{
+	if (offset_bak != offset_bak) {
 		pr_error_info("lseek");
 		return -EFAULT;
 	}
 
 	ret = ffile_ncrc32(fd, size, crc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("ffile_crc32");
 		return ret;
 	}
 
-	if (lseek(fd, offset_bak, SEEK_SET) != offset_bak)
-	{
+	if (lseek(fd, offset_bak, SEEK_SET) != offset_bak) {
 		pr_error_info("lseek");
 		return -EFAULT;
 	}
@@ -1442,15 +1309,13 @@ int file_ncrc32_seek(const char *file_name, off_t offset, int whence, size_t siz
 	int ret;
 
 	fd = open(file_name, READ_FLAGS);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open \"%s\"", file_name);
 		return -1;
 	}
 
 	ret = ffile_ncrc32_seek(fd, offset, whence, size, crc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("ffile_ncrc32_seek");
 	}
 
@@ -1465,8 +1330,7 @@ int file_stat(const char *file_name, struct stat *st)
 	int fd;
 
 	fd = open(file_name, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -1479,53 +1343,44 @@ int file_stat(const char *file_name, struct stat *st)
 
 int mode_test(mode_t mode, char type)
 {
-	switch (mode & S_IFMT)
-	{
+	switch (mode & S_IFMT) {
 	case S_IFBLK:
-		if (type == 'b' || type == 'B')
-		{
+		if (type == 'b' || type == 'B') {
 			return 0;
 		}
 		break;
 	case S_IFCHR:
-		if (type == 'c' || type == 'C')
-		{
+		if (type == 'c' || type == 'C') {
 			return 0;
 		}
 		break;
 	case S_IFDIR:
-		if (type == 'd' || type == 'D')
-		{
+		if (type == 'd' || type == 'D') {
 			return 0;
 		}
 		break;
 	case S_IFIFO:
-		if (type == 'p' || type == 'P')
-		{
+		if (type == 'p' || type == 'P') {
 			return 0;
 		}
 		break;
 	case S_IFLNK:
-		if (type == 'l' || type == 'L')
-		{
+		if (type == 'l' || type == 'L') {
 			return 0;
 		}
 		break;
 	case S_IFREG:
-		if (type == 'f' || type == 'F')
-		{
+		if (type == 'f' || type == 'F') {
 			return 0;
 		}
 		break;
 	case S_IFSOCK:
-		if (type == 's' || type == 'S')
-		{
+		if (type == 's' || type == 'S') {
 			return 0;
 		}
 		break;
 	default:
-		if (type == 'e' || type == 'E')
-		{
+		if (type == 'e' || type == 'E') {
 			return 0;
 		}
 		warning_msg("unknown file type");
@@ -1540,8 +1395,7 @@ mode_t ffile_get_mode(int fd)
 	struct stat st;
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return 0;
 	}
 
@@ -1556,14 +1410,12 @@ mode_t file_get_mode(const char *pathname)
 	mode_t mode;
 
 	ret = stat(pathname, &st);
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		return st.st_mode;
 	}
 
 	fd = open(pathname, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return 0;
 	}
 
@@ -1580,8 +1432,7 @@ mode_t file_get_lmode(const char *pathname)
 	struct stat st;
 
 	ret = lstat(pathname, &st);
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		return st.st_mode;
 	}
 
@@ -1595,10 +1446,8 @@ int file_test(const char *file_name, const char *types)
 	int access_mode = 0;
 	mode_t st_mode;
 
-	while (1)
-	{
-		switch (*types)
-		{
+	while (1) {
+		switch (*types) {
 		case 'w':
 		case 'W':
 			access_mode |= W_OK;
@@ -1631,22 +1480,18 @@ int file_test(const char *file_name, const char *types)
 
 label_access:
 	ret = access(file_name, access_mode);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	if (p == buff)
-	{
+	if (p == buff) {
 		return 0;
 	}
 
 	st_mode = file_get_lmode(file_name);
 
-	for (*p = 0, p = buff; *p; p++)
-	{
-		if (mode_test(st_mode, *p) == 0)
-		{
+	for (*p = 0, p = buff; *p; p++) {
+		if (mode_test(st_mode, *p) == 0) {
 			return 0;
 		}
 	}
@@ -1660,8 +1505,7 @@ int ffile_test(int fd, char type)
 	struct stat st;
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -1670,8 +1514,7 @@ int ffile_test(int fd, char type)
 
 int file_wait(const char *filepath, const char *types, u32 sec)
 {
-	while (sec && file_test(filepath, types) < 0)
-	{
+	while (sec && file_test(filepath, types) < 0) {
 		print("Wait remain time %d(s)  \r", sec);
 		sleep(1);
 		sec--;
@@ -1686,8 +1529,7 @@ int file_resize(const char *file_path, off_t length)
 	int fd;
 
 	fd = open(file_path, O_CREAT | O_WRONLY | O_BINARY, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file \"%s\"", file_path);
 		return fd;
 	}
@@ -1704,8 +1546,7 @@ int get_file_pointer(int fd, off_t *fpointer)
 	off_t ret;
 
 	ret = lseek(fd, 0, SEEK_CUR);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("lseek");
 		return ret;
 	}
@@ -1721,8 +1562,7 @@ int calculate_file_md5sum(const char *file_path, char *md5sum)
 	int ret;
 
 	ret = system_command("md5sum -b %s > " MD5SUM_FILE_PATH, file_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("system_command");
 		return ret;
 	}
@@ -1743,8 +1583,7 @@ int check_file_md5sum(const char *file_path, char *md5sum)
 	strcpy(buff + MD5SUM_LEN + 2, file_path);
 
 	ret = file_writeto(MD5SUM_FILE_PATH, buff, strlen(buff), 0, O_TRUNC);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("write_to");
 		return ret;
 	}
@@ -1758,14 +1597,12 @@ int file_replace_line_simple(const char *file_path, const char *prefix, off_t pr
 	struct buffer *old_buff, *new_buff;
 
 	old_buff = read_lines(file_path);
-	if (old_buff == NULL)
-	{
+	if (old_buff == NULL) {
 		return -1;
 	}
 
 	new_buff = replace_prefix_line(old_buff, prefix, prefix_size, new_line, new_line_size);
-	if (new_buff == NULL)
-	{
+	if (new_buff == NULL) {
 		ret = -1;
 		goto out_free_old_buff;
 	}
@@ -1798,13 +1635,11 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 	struct progress_bar bar;
 	u64 checksum = 0;
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		ssize_t tmp;
 
 		tmp = ffile_get_size(fd);
-		if (tmp < 0)
-		{
+		if (tmp < 0) {
 			error_msg("get file size failed");
 			return tmp;
 		}
@@ -1812,15 +1647,12 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 		size = tmp;
 	}
 
-	if ((size_t) offset >= size)
-	{
+	if ((size_t) offset >= size) {
 		return -EINVAL;
 	}
 
-	if (offset > 0)
-	{
-		if (lseek(fd, offset, SEEK_SET) != offset)
-		{
+	if (offset > 0) {
+		if (lseek(fd, offset, SEEK_SET) != offset) {
 			return -EFAULT;
 		}
 
@@ -1829,16 +1661,13 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 
 	progress_bar_init(&bar, size);
 
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen;
 		u8 buff[MAX_BUFF_LEN];
 
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -1881,8 +1710,7 @@ u32 file_checksum32(const char *filename, off_t offset, size_t size)
 	u32 checksum;
 
 	fd = file_open_ro(filename);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file \"%s\"", filename);
 		return 0;
 	}
@@ -1900,8 +1728,7 @@ u16 file_checksum16(const char *filename, off_t offset, size_t size)
 	u16 checksum;
 
 	fd = file_open_ro(filename);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file \"%s\"", filename);
 		return 0;
 	}
@@ -1919,8 +1746,7 @@ u8 file_checksum8(const char *filename, off_t offset, size_t size)
 	u8 checksum;
 
 	fd = file_open_ro(filename);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file \"%s\"", filename);
 		return 0;
 	}
@@ -1986,37 +1812,32 @@ int file_set_loop(const char *filename, char *loop_path, u64 offset)
 	struct loop_info64 loopinfo;
 
 	fd = file_open_rw_ro(filename, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
 	loop_fd = loop_get_fd(filename, loop_path, offset);
-	if (loop_fd < 0)
-	{
+	if (loop_fd < 0) {
 		ret = loop_fd;
 		error_msg("loop_get_fd");
 		goto out_close_file;
 	}
 
 	ret = ioctl(loop_fd, LOOP_SET_FD, fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("LOOP_SET_FD");
 		goto out_close_loop;
 	}
 
 	mem_set8((u8 *) &loopinfo, 0, sizeof(loopinfo));
-	if (to_abs_path2_base(filename, (char *) loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL)
-	{
+	if (to_abs_path2_base(filename, (char *) loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL) {
 		ret = -ENOENT;
 		goto out_close_loop;
 	}
 	loopinfo.lo_offset = offset;
 
 	ret = ioctl(loop_fd, LOOP_SET_STATUS64, &loopinfo);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("LOOP_SET_STATUS64");
 		goto out_clr_fd;
 	}
@@ -2039,8 +1860,7 @@ int file_mount_to(const char *source, const char *target, const char *fs_type, u
 	char loop_path[64];
 
 	ret = file_set_loop(source, loop_path, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 #if CAVAN_FILE_DEBUG
 		error_msg("file set loop");
 #endif
@@ -2048,8 +1868,7 @@ int file_mount_to(const char *source, const char *target, const char *fs_type, u
 	}
 
 	ret = libc_mount_to(loop_path, target, fs_type, flags, data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 #if CAVAN_FILE_DEBUG
 		pr_error_info("libc_mount_to");
 #endif
@@ -2064,13 +1883,11 @@ int ffile_newly_cmp(int fd1, int fd2)
 {
 	struct stat st1, st2;
 
-	if (fstat(fd1, &st1) < 0)
-	{
+	if (fstat(fd1, &st1) < 0) {
 		return -1;
 	}
 
-	if (fstat(fd2, &st2) < 0)
-	{
+	if (fstat(fd2, &st2) < 0) {
 		return 1;
 	}
 
@@ -2081,13 +1898,11 @@ int file_newly_cmp(const char *file1, const char *file2)
 {
 	struct stat st1, st2;
 
-	if (file_stat2(file1, &st1) < 0)
-	{
+	if (file_stat2(file1, &st1) < 0) {
 		return -1;
 	}
 
-	if (file_stat2(file2, &st2) < 0)
-	{
+	if (file_stat2(file2, &st2) < 0) {
 		return 1;
 	}
 
@@ -2098,20 +1913,15 @@ int chdir_backup(const char *dirname)
 {
 	static char dir_bak[1024];
 
-	if (dirname == NULL)
-	{
-		if (dir_bak[0])
-		{
+	if (dirname == NULL) {
+		if (dir_bak[0]) {
 			return chdir(dir_bak);
-		}
-		else
-		{
+		} else {
 			return -ENOENT;
 		}
 	}
 
-	if (getcwd(dir_bak, sizeof(dir_bak)) == NULL)
-	{
+	if (getcwd(dir_bak, sizeof(dir_bak)) == NULL) {
 		dir_bak[0] = 0;
 	}
 
@@ -2120,16 +1930,13 @@ int chdir_backup(const char *dirname)
 
 int ffile_delete_char(int fd_in, int fd_out, char c)
 {
-	while (1)
-	{
+	while (1) {
 		char buff[MAX_BUFFER_LEN];
 		ssize_t rdlen, wrlen;
 
 		rdlen = read(fd_in, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
-			if (rdlen == 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
 				break;
 			}
 
@@ -2139,11 +1946,9 @@ int ffile_delete_char(int fd_in, int fd_out, char c)
 
 		rdlen = mem_delete_char(buff, rdlen, c);
 		wrlen = ffile_write(fd_out, buff, rdlen);
-		if (wrlen != rdlen)
-		{
+		if (wrlen != rdlen) {
 			pr_error_info("ffile_write");
-			if (wrlen < 0)
-			{
+			if (wrlen < 0) {
 				return wrlen;
 			}
 
@@ -2160,15 +1965,13 @@ int file_delete_char(const char *file_in, const char *file_out, char c)
 	int fd_in, fd_out;
 
 	fd_in = open(file_in, O_RDONLY | O_BINARY);
-	if (fd_in < 0)
-	{
+	if (fd_in < 0) {
 		pr_error_info("open input file \"%s\"", file_in);
 		return fd_in;
 	}
 
 	fd_out = open(file_out, O_WRONLY | O_CREAT | O_SYNC | O_TRUNC | O_BINARY, 0777);
-	if (fd_out < 0)
-	{
+	if (fd_out < 0) {
 		ret = fd_out;
 		pr_error_info("open output file \"%s\"", file_out);
 		goto out_close_fd_in;
@@ -2190,8 +1993,7 @@ int file_hardlink(const char *from, const char *to)
 	remove(from);
 
 	ret = mkdir_hierarchy(text_dirname(from), 0777);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -2203,11 +2005,9 @@ int vfile_try_open(int flags, mode_t mode, va_list ap)
 	int fd;
 	const char *filename;
 
-	while ((filename = va_arg(ap, const char *)))
-	{
+	while ((filename = va_arg(ap, const char *))) {
 		fd = open(filename, flags, mode);
-		if (fd >= 0)
-		{
+		if (fd >= 0) {
 			println("filename = %s", filename);
 			return fd;
 		}
@@ -2233,17 +2033,13 @@ int file_find_and_open(const char *prefix, char *last_path, int start, int end, 
 	int fd;
 	char tmp_path[1024], *p, *p_bak;
 
-	if (start > end)
-	{
+	if (start > end) {
 		NUMBER_SWAP(start, end);
 	}
 
-	if (last_path)
-	{
+	if (last_path) {
 		p = last_path;
-	}
-	else
-	{
+	} else {
 		p = tmp_path;
 	}
 
@@ -2251,13 +2047,11 @@ int file_find_and_open(const char *prefix, char *last_path, int start, int end, 
 
 	p = text_copy(p, prefix);
 
-	while (start <= end)
-	{
+	while (start <= end) {
 		value2text_unsigned_simple(start, p, sizeof(tmp_path), 10);
 
 		fd = open(p_bak, flags | O_NONBLOCK);
-		if (fd >= 0)
-		{
+		if (fd >= 0) {
 			return fd;
 		}
 
@@ -2270,15 +2064,13 @@ int file_find_and_open(const char *prefix, char *last_path, int start, int end, 
 bool file_poll(int fd, short events, int timeout_ms)
 {
 	int ret;
-	struct pollfd pfd =
-	{
+	struct pollfd pfd = {
 		.fd = fd,
 		.events = events,
 	};
 
 	ret = poll(&pfd, 1, timeout_ms);
-	if (ret < 1)
-	{
+	if (ret < 1) {
 		return false;
 	}
 
@@ -2290,35 +2082,29 @@ bool file_discard_all(int fd)
 	int ret;
 	ssize_t rdlen;
 	char buff[1024];
-	struct pollfd pfd =
-	{
+	struct pollfd pfd = {
 		.fd = fd,
 		.events = POLLIN,
 	};
 
-	while (1)
-	{
+	while (1) {
 		ret = poll(&pfd, 1, 0);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("poll");
 			return false;
 		}
 
-		if (ret < 1)
-		{
+		if (ret < 1) {
 			break;
 		}
 
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_error_info("read");
 			return false;
 		}
 
-		if (rdlen < (ssize_t) sizeof(buff))
-		{
+		if (rdlen < (ssize_t) sizeof(buff)) {
 			break;
 		}
 	}
@@ -2328,8 +2114,7 @@ bool file_discard_all(int fd)
 
 char file_type_to_char(mode_t mode)
 {
-	switch (mode & S_IFMT)
-	{
+	switch (mode & S_IFMT) {
 	case S_IFBLK:
 		return 'b';
 
@@ -2358,16 +2143,11 @@ char *file_permition_tostring(mode_t mode, char *buff, char *buff_end)
 
 	shift = 1 << 8;
 
-	while (shift)
-	{
-		for (i = 0; i < 3 && buff < buff_end; i++, shift >>= 1, buff++)
-		{
-			if (mode & shift)
-			{
+	while (shift) {
+		for (i = 0; i < 3 && buff < buff_end; i++, shift >>= 1, buff++) {
+			if (mode & shift) {
 				*buff = permition_table[i];
-			}
-			else
-			{
+			} else {
 				*buff = '-';
 			}
 		}
@@ -2380,8 +2160,7 @@ const char *month_tostring(int month)
 {
 	const char *month_table[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
-	if (month >= 0 && month < (int) ARRAY_SIZE(month_table))
-	{
+	if (month >= 0 && month < (int) ARRAY_SIZE(month_table)) {
 		return month_table[month];
 	}
 
@@ -2392,8 +2171,7 @@ const char *week_tostring(int week)
 {
 	const char *week_table[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
-	if (week >= 0 && week < (int) ARRAY_SIZE(week_table))
-	{
+	if (week >= 0 && week < (int) ARRAY_SIZE(week_table)) {
 		return week_table[week];
 	}
 
@@ -2408,35 +2186,28 @@ int remove_directory(const char *pathname)
 	struct dirent *en;
 
 	dp = opendir(pathname);
-	if (dp == NULL)
-	{
+	if (dp == NULL) {
 		pr_error_info("opendir %s failed", pathname);
 		return -ENOENT;
 	}
 
 	name_p = text_path_cat(tmppath, sizeof(tmppath), pathname, NULL);
 
-	while ((en = readdir(dp)))
-	{
-		if (text_is_dot_name(en->d_name))
-		{
+	while ((en = readdir(dp))) {
+		if (text_is_dot_name(en->d_name)) {
 			continue;
 		}
 
 		text_copy(name_p, en->d_name);
 
-		if (en->d_type == DT_DIR)
-		{
+		if (en->d_type == DT_DIR) {
 			ret = remove_directory(tmppath);
-		}
-		else
-		{
+		} else {
 			println("remove file \"%s\"", tmppath);
 			ret = remove(tmppath);
 		}
 
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("delete %s failed", tmppath);
 			goto out_close_dp;
 		}
@@ -2457,8 +2228,7 @@ int remove_auto(const char *pathname)
 	struct stat st;
 
 	ret = lstat(pathname, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("get file %s stat failed", pathname);
 		return ret;
 	}
@@ -2472,8 +2242,7 @@ int file_type_test(const char *pathname, mode_t type)
 	struct stat st;
 
 	ret = file_lstat(pathname, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return 0;
 	}
 
@@ -2486,8 +2255,7 @@ int fd_type_test(int fd, mode_t type)
 	struct stat st;
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return 0;
 	}
 
@@ -2502,10 +2270,8 @@ size_t fscan_directory1(DIR *dp, void *buff, size_t size)
 	buff_end = (char *) buff + size;
 	size = 0;
 
-	while (buff < buff_end && (en = readdir(dp)))
-	{
-		if (text_is_dot_name(en->d_name))
-		{
+	while (buff < buff_end && (en = readdir(dp))) {
+		if (text_is_dot_name(en->d_name)) {
 			continue;
 		}
 
@@ -2524,10 +2290,8 @@ size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2)
 	buff_end = (char *) buff + (size1 * size2);
 	size1 = 0;
 
-	while (buff < buff_end && (en = readdir(dp)))
-	{
-		if (text_is_dot_name(en->d_name))
-		{
+	while (buff < buff_end && (en = readdir(dp))) {
+		if (text_is_dot_name(en->d_name)) {
 			continue;
 		}
 
@@ -2545,8 +2309,7 @@ int scan_directory(const char *dirpath, void *buff, size_t size1, size_t size2)
 	DIR *dp;
 
 	dp = opendir(dirpath);
-	if (dp == NULL)
-	{
+	if (dp == NULL) {
 		pr_error_info("opendir %s failed", dirpath);
 		return -1;
 	}
@@ -2569,8 +2332,7 @@ int file_open_format(int flags, mode_t mode, const char *fmt, ...)
 	va_end(ap);
 
 	fd = open(buff, flags, mode);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("Open file `%s' failed", buff);
 	}
 
@@ -2583,34 +2345,28 @@ size_t ffile_line_count(int fd)
 	ssize_t rdlen;
 	size_t count;
 
-	if (lseek(fd, 0, SEEK_SET) < 0)
-	{
+	if (lseek(fd, 0, SEEK_SET) < 0) {
 		pr_error_info("lseek");
 		return 0;
 	}
 
 	count = 0;
 
-	while (1)
-	{
+	while (1) {
 		rdlen = read(fd, buff, sizeof(buff));
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_error_info("read");
 			return 0;
 		}
 
-		if (rdlen)
-		{
+		if (rdlen) {
 			count += mem_byte_count(buff, '\n', rdlen);
 #if __WORDSIZE == 64
 			println("count = %ld", count);
 #else
 			println("count = %d", count);
 #endif
-		}
-		else
-		{
+		} else {
 			break;
 		}
 	}
@@ -2624,8 +2380,7 @@ size_t file_line_count(const char *filename)
 	size_t count;
 
 	fd = open(filename, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("Open file `%s' failed", filename);
 		return 0;
 	}
@@ -2643,60 +2398,46 @@ int file_mmap(const char *pathname, void **addr, size_t *size, int flags)
 	struct stat st;
 	void *mem;
 
-	if (flags & O_WRONLY)
-	{
+	if (flags & O_WRONLY) {
 		flags = (flags & (~O_WRONLY)) | O_RDWR;
 	}
 
 	fd = open(pathname, flags, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
 	ret = flock(fd, LOCK_SH);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("flock");
 		goto out_close_fd;
 	}
 
-	if (flags & O_RDWR)
-	{
+	if (flags & O_RDWR) {
 		flags = PROT_READ | PROT_WRITE;
-	}
-	else if (flags & O_WRONLY)
-	{
+	} else if (flags & O_WRONLY) {
 		flags = PROT_WRITE;
-	}
-	else
-	{
+	} else {
 		flags = PROT_READ;
 	}
 
-	if (flags & PROT_WRITE)
-	{
+	if (flags & PROT_WRITE) {
 		st.st_size = *size;
 		ret = ftruncate(fd, st.st_size);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("ftruncate");
 			goto out_unlock_fd;
 		}
-	}
-	else
-	{
+	} else {
 		ret = fstat(fd, &st);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("fstat");
 			goto out_unlock_fd;
 		}
 	}
 
 	mem = mmap(NULL, st.st_size, flags, MAP_SHARED, fd, 0);
-	if (mem == NULL || mem == MAP_FAILED)
-	{
+	if (mem == NULL || mem == MAP_FAILED) {
 		ret = -EFAULT;
 		// pr_error_info("mmap");
 		goto out_unlock_fd;
@@ -2728,38 +2469,30 @@ void *file_read_all(const char *pathname, size_t extra, size_t *size)
 	off_t last;
 
 	fd = open(pathname, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file `%s' failed", pathname);
 		return NULL;
 	}
 
 	last = lseek(fd, 0, SEEK_END);
-	if (last == (off_t) -1)
-	{
+	if (last == (off_t) -1) {
 		last = KB(100);
-	}
-	else
-	{
+	} else {
 		lseek(fd, 0, SEEK_SET);
 	}
 
 	mem = malloc(last + extra);
-	if (mem == NULL)
-	{
+	if (mem == NULL) {
 		pr_error_info("malloc");
 		goto out_close_fd;
 	}
 
 	rdlen = ffile_read(fd, mem, last);
-	if (rdlen < 0)
-	{
+	if (rdlen < 0) {
 		pr_error_info("read");
 		free(mem);
 		mem = NULL;
-	}
-	else if (size)
-	{
+	} else if (size) {
 		*size = rdlen;
 	}
 
@@ -2773,15 +2506,13 @@ char *file_read_all_text(const char *pathname, size_t *size)
 	size_t file_size;
 
 	char *file_mem = (char *) file_read_all(pathname, 1, &file_size);
-	if (file_mem == NULL)
-	{
+	if (file_mem == NULL) {
 		return NULL;
 	}
 
 	file_mem[file_size] = 0;
 
-	if (size)
-	{
+	if (size) {
 		*size = file_size;
 	}
 
@@ -2793,8 +2524,7 @@ mode_t file_mode2value(const char *text)
 	int count, index;
 	mode_t mode, temp_mode;
 
-	if (text_is_number(text))
-	{
+	if (text_is_number(text)) {
 		return text2value_unsigned(text, NULL, 8);
 	}
 
@@ -2803,10 +2533,8 @@ mode_t file_mode2value(const char *text)
 	count = 0;
 	index = 6;
 
-	while (1)
-	{
-		switch (*text)
-		{
+	while (1) {
+		switch (*text) {
 		case 0:
 			return mode | temp_mode << index;
 
@@ -2832,20 +2560,14 @@ mode_t file_mode2value(const char *text)
 			pr_red_info("Invalid mode char %c", *text);
 		}
 
-		if (count < 2)
-		{
+		if (count < 2) {
 			count++;
-		}
-		else
-		{
+		} else {
 			mode |= temp_mode << index;
 
-			if (index > 0)
-			{
+			if (index > 0) {
 				index -= 3;
-			}
-			else
-			{
+			} else {
 				break;
 			}
 
@@ -2864,25 +2586,21 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 	int ret;
 	char buff[1024], *filename;
 
-	if (option->verbose)
-	{
+	if (option->verbose) {
 		pr_info("create directory `%s'", pathname);
 	}
 
 	ret = mkdir(pathname, option->mode);
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		return 0;
 	}
 
-	if (errno != EEXIST)
-	{
+	if (errno != EEXIST) {
 		pr_error_info("create directory `%s'", pathname);
 		return ret;
 	}
 
-	if (file_access_e(pathname))
-	{
+	if (file_access_e(pathname)) {
 		return 0;
 	}
 
@@ -2890,8 +2608,7 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 	*filename = '/';
 	text_copy(filename + 1, CAVAN_TEMP_FILENAME);
 
-	if (mkdtemp(buff) == NULL)
-	{
+	if (mkdtemp(buff) == NULL) {
 		pr_error_info("mkdtemp `%s'", buff);
 		return -EFAULT;
 	}
@@ -2899,15 +2616,13 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 	pr_warning_info("rename %s => %s", buff, pathname);
 
 	ret = rename(buff, pathname);
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		return 0;
 	}
 
 	rmdir(buff);
 
-	if (file_access_e(pathname))
-	{
+	if (file_access_e(pathname)) {
 		return 0;
 	}
 
@@ -2921,33 +2636,27 @@ int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option 
 	int ret;
 	char buff[1024], *p, *name;
 
-	if (pathname == NULL || *pathname == 0)
-	{
+	if (pathname == NULL || *pathname == 0) {
 		pr_red_info("pathname is empty");
 		ERROR_RETURN(EINVAL);
 	}
 
 	p = text_copy(buff, pathname) - 1;
 
-	while (1)
-	{
-		if (p == buff)
-		{
+	while (1) {
+		if (p == buff) {
 			return 0;
 		}
 
-		if (*p != '/')
-		{
+		if (*p != '/') {
 			break;
 		}
 
 		*p-- = 0;
 	}
 
-	for (name = p; name > buff; name--)
-	{
-		if (*name == '/')
-		{
+	for (name = p; name > buff; name--) {
+		if (*name == '/') {
 			name++;
 			break;
 		}
@@ -2955,22 +2664,17 @@ int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option 
 
 	for (p = buff; p < name && *p == '/'; p++);
 
-	while (p < name)
-	{
-		if (*p == '/')
-		{
+	while (p < name) {
+		if (*p == '/') {
 			*p = 0;
 
 			ret = cavan_mkdir_simple(buff, option);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				return ret;
 			}
 
 			for (*p++ = '/'; p < name && *p == '/'; p++);
-		}
-		else
-		{
+		} else {
 			p++;
 		}
 	}
@@ -2982,8 +2686,7 @@ int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *op
 {
 	umask(0);
 
-	if (option->parents)
-	{
+	if (option->parents) {
 		return cavan_mkdir_parents(pathname, option);
 	}
 
@@ -2997,8 +2700,7 @@ int cavan_file_dump(const char *pathname, size_t width, const char *sep, const c
 	size_t size;
 
 	fd = file_mmap(pathname, &addr, &size, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("file_mmap");
 		return fd;
 	}
@@ -3017,8 +2719,7 @@ int cavan_temp_file_open(char *pathname, size_t size, const char *filename)
 	cavan_build_temp_path(filename, pathname, size);
 
 	fd = mkstemp(pathname);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("mkstemp `%s'", pathname);
 		return fd;
 	}
@@ -3035,8 +2736,7 @@ off_t cavan_file_seek_next_page(int fd, size_t page_size)
 	off_t page_mask = page_size - 1;
 	off_t offset = lseek(fd, 0, SEEK_CUR);
 
-	if ((offset & page_mask) == 0)
-	{
+	if ((offset & page_mask) == 0) {
 		return offset;
 	}
 
@@ -3047,31 +2747,25 @@ off_t cavan_file_seek_page_align(int fd, off_t offset, size_t page_size)
 {
 	off_t page_mask = page_size - 1;
 
-	if (offset & page_mask)
-	{
+	if (offset & page_mask) {
 		offset = (offset & page_mask) + page_size;
 	}
 
 	return lseek(fd, offset, SEEK_SET);
 }
 
-struct dirent *cavan_readdir_skip_dot(DIR *dp)
-{
+struct dirent *cavan_readdir_skip_dot(DIR *dp) {
 	struct dirent *dt;
 
-	while ((dt = readdir(dp)))
-	{
+	while ((dt = readdir(dp))) {
 		const char *name = dt->d_name;
 
-		if (name[0] == '.')
-		{
-			if (name[1] == 0)
-			{
+		if (name[0] == '.') {
+			if (name[1] == 0) {
 				continue;
 			}
 
-			if (name[1] == '.' && name[2] == 0)
-			{
+			if (name[1] == '.' && name[2] == 0) {
 				continue;
 			}
 		}
@@ -3082,8 +2776,7 @@ struct dirent *cavan_readdir_skip_dot(DIR *dp)
 	return NULL;
 }
 
-struct dirent *cavan_readdir_skip_hidden(DIR *dp)
-{
+struct dirent *cavan_readdir_skip_hidden(DIR *dp) {
 	struct dirent *dt;
 
 	while ((dt = readdir(dp)) && dt->d_name[0] == '.');
@@ -3096,15 +2789,13 @@ struct dirent *cavan_readdir_skip_hidden(DIR *dp)
 int cavan_file_proxy_add(struct cavan_file_proxy_desc *desc, const int fds[2])
 {
 	int ret;
-	struct epoll_event event =
-	{
+	struct epoll_event event = {
 		.events = EPOLLIN,
 		.data.ptr = __UNCONST(fds),
 	};
 
 	ret = epoll_ctl(desc->epoll_fd, EPOLL_CTL_ADD, fds[0], &event);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_err_info("epoll_ctl EPOLL_CTL_ADD %d: %d", fds[0], ret);
 		return ret;
 	}
@@ -3123,8 +2814,7 @@ int cavan_file_proxy_del(struct cavan_file_proxy_desc *desc, const int fds[2])
 	int ret;
 
 	ret = epoll_ctl(desc->epoll_fd, EPOLL_CTL_DEL, fds[0], NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_err_info("epoll_ctl EPOLL_CTL_ADD: %d", ret);
 		return ret;
 	}
@@ -3142,11 +2832,9 @@ int cavan_file_proxy_del_array(struct cavan_file_proxy_desc *desc, int fds[][2],
 {
 	int i;
 
-	for (i = 0; i < count; i++)
-	{
+	for (i = 0; i < count; i++) {
 		int ret = cavan_file_proxy_del(desc, fds[i]);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_file_proxy_del: %d", ret);
 			return ret;
 		}
@@ -3159,19 +2847,16 @@ int cavan_file_proxy_add_array(struct cavan_file_proxy_desc *desc, int fds[][2],
 {
 	int i;
 
-	for (i = 0; i < count; i++)
-	{
+	for (i = 0; i < count; i++) {
 		int ret;
 		const int *proxy = fds[i];
 
-		if (proxy[0] < 0 || proxy[1] < 0)
-		{
+		if (proxy[0] < 0 || proxy[1] < 0) {
 			continue;
 		}
 
 		ret = cavan_file_proxy_add(desc, proxy);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_file_proxy_add: %d", ret);
 
 			cavan_file_proxy_del_array(desc, fds, i);
@@ -3190,8 +2875,7 @@ int cavan_file_proxy_init(struct cavan_file_proxy_desc *desc)
 #endif
 
 	fd = epoll_create(10);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_err_info("epoll_create: %d", fd);
 		return fd;
 	}
@@ -3201,8 +2885,7 @@ int cavan_file_proxy_init(struct cavan_file_proxy_desc *desc)
 
 #if CAVAN_FILE_PROXY_WAKEUP_ENABLE
 	ret = pipe2(desc->pipefd, O_CLOEXEC | O_NONBLOCK);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_err_info("pipe: %d", ret);
 		goto out_close_epoll;
 	}
@@ -3236,45 +2919,37 @@ int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc)
 	int pipefd[2] = { desc->pipefd[0], 2 };
 
 	ret = cavan_file_proxy_add(desc, pipefd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_file_proxy_add: %d", ret);
 		return ret;
 	}
 #endif
 
-	while (cavan_atomic_get(&desc->count))
-	{
+	while (cavan_atomic_get(&desc->count)) {
 		struct epoll_event events[10];
 		const struct epoll_event *p, *p_end;
 
 		ret = epoll_wait(epoll_fd, events, NELEM(events), msec);
-		if (ret <= 0)
-		{
-			if (errno == EINTR)
-			{
+		if (ret <= 0) {
+			if (errno == EINTR) {
 				continue;
 			}
 
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_err_info("epoll_wait: %d", ret);
 			}
 
 			return ret;
 		}
 
-		for (p = events, p_end = p + ret; p < p_end; p++)
-		{
+		for (p = events, p_end = p + ret; p < p_end; p++) {
 			ssize_t rdlen;
 			char buff[1024];
 			int *fds = p->data.ptr;
 
 			rdlen = read(fds[0], buff, sizeof(buff));
-			if (rdlen <= 0)
-			{
-				if (fds[0] == 0)
-				{
+			if (rdlen <= 0) {
+				if (fds[0] == 0) {
 					cavan_file_proxy_del(desc, fds);
 					msec = 500;
 					continue;
@@ -3283,8 +2958,7 @@ int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc)
 				return 0;
 			}
 
-			if (write(fds[1], buff, rdlen) != rdlen)
-			{
+			if (write(fds[1], buff, rdlen) != rdlen) {
 				return 0;
 			}
 

@@ -9,8 +9,7 @@
 
 const char *image_type_to_text(enum image_type type)
 {
-	switch (type)
-	{
+	switch (type) {
 	case IMAGE_UBOOT_BIN:
 		return "u-boot.bin";
 
@@ -81,8 +80,7 @@ const char *image_type_to_text(enum image_type type)
 
 const char *image_type_to_part_name(enum image_type type)
 {
-	switch (type)
-	{
+	switch (type) {
 	case IMAGE_UBOOT_BIN:
 		return "@UBOOT@";
 
@@ -122,129 +120,107 @@ const char *image_type_to_part_name(enum image_type type)
 
 enum image_type image_name_to_type(const char *name)
 {
-	switch (name[0])
-	{
+	switch (name[0]) {
 		case 'b':
-			if (text_cmp(name, "boot.img") == 0)
-			{
+			if (text_cmp(name, "boot.img") == 0) {
 				return IMAGE_BOOT_IMG;
 			}
 
-			if (text_cmp(name, "busybox.img") == 0)
-			{
+			if (text_cmp(name, "busybox.img") == 0) {
 				return IMAGE_BUSYBOX_IMG;
 			}
 			break;
 
 		case 'c':
-			if (text_cmp(name, "cache.img") == 0)
-			{
+			if (text_cmp(name, "cache.img") == 0) {
 				return IMAGE_CACHE_IMG;
 			}
 
-			if (text_cmp(name, "charge.bmps") == 0)
-			{
+			if (text_cmp(name, "charge.bmps") == 0) {
 				return IMAGE_CARTOON;
 			}
 			break;
 
 		case 'd':
-			if (text_cmp(name, "dt.bin") == 0)
-			{
+			if (text_cmp(name, "dt.bin") == 0) {
 				return IMAGE_DT_BIN;
 			}
 
-			if (text_cmp(name, "dt.img") == 0)
-			{
+			if (text_cmp(name, "dt.img") == 0) {
 				return IMAGE_DT_IMG;
 			}
 			break;
 
 		case 'k':
-			if (text_cmp(name, "kernel.bin") == 0)
-			{
+			if (text_cmp(name, "kernel.bin") == 0) {
 				return IMAGE_KERNEL_BIN;
 			}
 
-			if (text_cmp(name, "kernel.img") == 0)
-			{
+			if (text_cmp(name, "kernel.img") == 0) {
 				return IMAGE_KERNEL_IMG;
 			}
 			break;
 
 		case 'l':
-			if (text_cmp(name, "logo.bmp") == 0)
-			{
+			if (text_cmp(name, "logo.bmp") == 0) {
 				return IMAGE_LOGO;
 			}
 			break;
 
 		case 'm':
-			if (text_cmp(name, "misc.img") == 0)
-			{
+			if (text_cmp(name, "misc.img") == 0) {
 				return IMAGE_MISC_IMG;
 			}
 			break;
 
 		case 'r':
-			if (text_cmp(name, "ramdisk.img") == 0)
-			{
+			if (text_cmp(name, "ramdisk.img") == 0) {
 				return IMAGE_RAMDISK_IMG;
 			}
 
-			if (text_cmp(name, "recovery.img") == 0)
-			{
+			if (text_cmp(name, "recovery.img") == 0) {
 				return IMAGE_RECOVERY_IMG;
 			}
 
-			if (text_cmp(name, "resource.img") == 0)
-			{
+			if (text_cmp(name, "resource.img") == 0) {
 				return IMAGE_RESOURCE_IMG;
 			}
 
-			if (text_cmp(name, "resource.bin") == 0)
-			{
+			if (text_cmp(name, "resource.bin") == 0) {
 				return IMAGE_RESOURCE_BIN;
 			}
 			break;
 
 		case 's':
-			if (text_cmp(name, "system.img") == 0)
-			{
+			if (text_cmp(name, "system.img") == 0) {
 				return IMAGE_SYSTEM_IMG;
 			}
 			break;
 
 		case 'u':
-			if (text_cmp(name, "uImage") == 0)
-			{
+			if (text_cmp(name, "uImage") == 0) {
 				return IMAGE_UIMAGE;
 			}
 
-			if (text_cmp(name, "userdata.img") == 0)
-			{
+			if (text_cmp(name, "userdata.img") == 0) {
 				return IMAGE_USERDATA_IMG;
 			}
 
-			if (text_cmp(name, "u-boot.bin") == 0)
-			{
+			if (text_cmp(name, "u-boot.bin") == 0) {
 				return IMAGE_UBOOT_BIN;
 			}
 
-			if (text_cmp(name, "uramdisk.img") == 0)
-			{
+			if (text_cmp(name, "uramdisk.img") == 0) {
 				return IMAGE_URAMDISK_IMG;
 			}
 
-			if (text_cmp(name, "u-boot-no-padding.bin") == 0)
-			{
+			if (text_cmp(name, "u-boot-no-padding.bin") == 0) {
 				return IMAGE_UBOOT_NO_PADDING_BIN;
 			}
 			break;
 
 		case 'z':
-			if (text_cmp(name, "zImage") == 0)
-			{
+			if (text_cmp(name, "zImage") == 0) {
 				return IMAGE_ZIMAGE;
 			}
 			break;
@@ -267,17 +243,14 @@ const char *image_name_to_part_name(const char *name)
 	const char *part;
 
 	part = image_type_to_part_name(image_name_to_type(name));
-	if (part == NULL)
-	{
+	if (part == NULL) {
 		char *p, *p_end;
 		static char part_buff[64];
 
 		part_buff[0] = '@';
 
-		for (p = part_buff + 1, p_end = p + sizeof(part_buff) - 2; p < p_end; p++, name++)
-		{
-			switch (*name)
-			{
+		for (p = part_buff + 1, p_end = p + sizeof(part_buff) - 2; p < p_end; p++, name++) {
+			switch (*name) {
 			case 0:
 			case '.':
 				*p++ = '@';
@@ -310,8 +283,7 @@ const char *image_path_to_part_name(const char *pathname)
 
 int image_type_to_device_index(enum image_type type)
 {
-	switch (type)
-	{
+	switch (type) {
 	case IMAGE_UBOOT_BIN:
 	case IMAGE_UBOOT_NO_PADDING_BIN:
 	case IMAGE_UIMAGE:
@@ -341,17 +313,14 @@ int image_type_to_partition_path(enum image_type type, const char *dev_path, cha
 	char *p;
 
 	part_index = image_type_to_device_index(type);
-	if (part_index < 0)
-	{
+	if (part_index < 0) {
 		return part_index;
 	}
 
 	p = text_copy(part_path, dev_path);
 
-	if (part_index)
-	{
-		if (device_is_mmc(dev_path))
-		{
+	if (part_index) {
+		if (device_is_mmc(dev_path)) {
 			*p++ = 'p';
 		}
 
@@ -365,8 +334,7 @@ int image_type_to_partition_path(enum image_type type, const char *dev_path, cha
 
 int image_type_to_dd_desc(enum image_type type, struct dd_desc *desc)
 {
-	switch (type)
-	{
+	switch (type) {
 	case IMAGE_UBOOT_BIN:
 		desc->bs = 1;
 		desc->seek = UBOOT_OFFSET;
@@ -449,15 +417,13 @@ int uramdisk2ramdisk(const char *uramdisk_path, const char *ramdisk_path)
 	int ret;
 
 	ret = system_command("rm %s -rfv", ramdisk_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("system_command");
 		return ret;
 	}
 
 	ret = cavan_dd(uramdisk_path, ramdisk_path, UIMAGE_HEADER_SIZE, 0, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("cavan_dd");
 		return ret;
 	}
@@ -479,22 +445,19 @@ int dump_ramdisk(const char *ramdisk_path, const char *ramdisk_dir)
 	to_abs_path_base(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
 
 	ret = system_command("rm %s -rfv && mkdir %s", ramdisk_dir, ramdisk_dir);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("system_command");
 		return ret;
 	}
 
 	ret = chdir_backup(ramdisk_dir);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("chdir");
 		return ret;
 	}
 
 	ret = system_command("cat %s | gzip -d | cpio -i", abs_ramdisk_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("system_command");
 	}
 
@@ -508,8 +471,7 @@ int dump_uramdisk(const char *uramdisk_path, const char *ramdisk_dir)
 	int ret;
 
 	ret = uramdisk2ramdisk(uramdisk_path, TEMP_RAMDISK_PATH);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -522,8 +484,7 @@ int create_ramdisk(const char *ramdisk_dir, const char *ramdisk_path)
 	char abs_ramdisk_path[1024];
 
 	ret = system_command("rm %s -rfv", ramdisk_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("system_command");
 		return ret;
 	}
@@ -531,18 +492,15 @@ int create_ramdisk(const char *ramdisk_dir, const char *ramdisk_path)
 	to_abs_path_base(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
 
 	ret = chdir_backup(ramdisk_dir);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("chdir");
 		return ret;
 	}
 
 	ret = system_command("mkbootfs . | minigzip > %s", abs_ramdisk_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		ret = system_command("find | cpio -o -H newc | gzip > %s", abs_ramdisk_path);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("system_command");
 		}
 	}
@@ -560,15 +518,13 @@ int create_uramdisk(const char *ramdisk_dir, const char *uramdisk_path)
 	to_abs_path_base(uramdisk_path, abs_uramdisk_path, sizeof(abs_uramdisk_path));
 
 	ret = create_ramdisk(ramdisk_dir, TEMP_RAMDISK_PATH);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("create_ramdisk");
 		return ret;
 	}
 
 	ret = ramdisk2uramdisk(TEMP_RAMDISK_PATH, abs_uramdisk_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("ramdisk2uramdisk");
 		return ret;
 	}
@@ -578,8 +534,7 @@ int create_uramdisk(const char *ramdisk_dir, const char *uramdisk_path)
 
 int image_is(const char *img_path, const char *type)
 {
-	if (text_kmp_find(text_basename(img_path), type) == NULL)
-	{
+	if (text_kmp_find(text_basename(img_path), type) == NULL) {
 		return 0;
 	}
 
@@ -632,8 +587,7 @@ int burn_zImage(const char *zImage_path, const char *dev_path)
 	int ret;
 
 	ret = zImage2uImage(zImage_path, TEMP_UIMAGE_PATH);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("Convert zImage to uImage failed");
 		return ret;
 	}
@@ -645,12 +599,9 @@ int burn_uramdisk(const char *uramdisk_path, const char *dev_path, int busybox)
 {
 	umount_device(dev_path, MNT_DETACH);
 
-	if (busybox)
-	{
+	if (busybox) {
 		return cavan_dd(uramdisk_path, dev_path, 0, BUSYBOX_OFFSET, 0);
-	}
-	else
-	{
+	} else {
 		return cavan_dd(uramdisk_path, dev_path, 0, RAMDISK_OFFSET, 0);
 	}
 }
@@ -660,8 +611,7 @@ int burn_ramdisk(const char *ramdisk_path, const char *dev_path, int busybox)
 	int ret;
 
 	ret = ramdisk2uramdisk(ramdisk_path, TEMP_URAMDISK_PATH);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("Conver ramdisk to uramdisk failed");
 		return ret;
 	}
@@ -674,8 +624,7 @@ int burn_directory(const char *dir_path, const char *dev_path, int busybox)
 	int ret;
 
 	ret = create_ramdisk(dir_path, TEMP_RAMDISK_PATH);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("Create ramdisk.img failed");
 		return ret;
 	}
@@ -690,15 +639,13 @@ int image_extend(const char *img_path)
 	system_sync();
 
 	ret = system_command_retry(5, "e2fsck -fy %s", img_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("e2fsck failed");
 		return ret;
 	}
 
 	ret = system_command("resize2fs -fp %s", img_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return system_command_retry(5, "e2fsck -fy %s", img_path);
 	}
 
@@ -712,8 +659,7 @@ int image_resize(const char *img_path, u64 size)
 	system_sync();
 
 	ret = system_command_retry(5, "e2fsck -fy %s", img_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("e2fsck failed");
 		return ret;
 	}
@@ -723,8 +669,7 @@ int image_resize(const char *img_path, u64 size)
 #else
 	ret = system_command("resize2fs -fp %s %LdK", img_path, size >> 10);
 #endif
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return system_command_retry(5, "e2fsck -fy %s", img_path);
 	}
 
@@ -739,8 +684,7 @@ int image_shrink(const char *img_path)
 
 #if 0
 	ret = file_test(img_path, "f");
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -748,15 +692,13 @@ int image_shrink(const char *img_path)
 #endif
 
 	ret = system_command_retry(5, "e2fsck -fy %s", img_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("e2fsck failed");
 		return ret;
 	}
 
 	ret = system_command("resize2fs -fpM %s", img_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return system_command_retry(5, "e2fsck -fy %s", img_path);
 	}
 
@@ -772,8 +714,7 @@ int burn_normal_image(const char *img_path, const char *dev_path)
 	image_shrink(img_path);
 
 	ret = cavan_dd(img_path, dev_path, 0, 0, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("Burn image \"%s\" to device \"%s\" failed", img_path, dev_path);
 		return ret;
 	}
@@ -787,8 +728,7 @@ void adjust_image_device(const char **img_path, const char **dev_path)
 {
 	const char *tmp_path;
 
-	if (file_test(*dev_path, "b") >= 0)
-	{
+	if (file_test(*dev_path, "b") >= 0) {
 		return;
 	}
 
@@ -804,12 +744,9 @@ int image_is_uramdisk(const char *img_path)
 
 int get_uramdisk(const char *dev_path, const char *file_path, int busybox)
 {
-	if (busybox)
-	{
+	if (busybox) {
 		return cavan_dd_base(dev_path, file_path, BUSYBOX_OFFSET, 0, BUSYBOX_MAX_SIZE, O_TRUNC);
-	}
-	else
-	{
+	} else {
 		return cavan_dd_base(dev_path, file_path, RAMDISK_OFFSET, 0, RAMDISK_MAX_SIZE, O_TRUNC);
 	}
 }
@@ -819,8 +756,7 @@ int get_dump_uramdisk(const char *dev_path, const char *ramdisk_dir, int busybox
 	int ret;
 
 	ret = get_uramdisk(dev_path, TEMP_URAMDISK_PATH, busybox);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("Get uramdisk from device \"%s\"", dev_path);
 		return ret;
 	}
@@ -833,8 +769,7 @@ int get_ramdisk(const char *dev_path, const char *file_path, int busybox)
 	int ret;
 
 	ret = get_uramdisk(dev_path, TEMP_URAMDISK_PATH, busybox);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("Get ramdisk from device \"%s\"", dev_path);
 		return ret;
 	}
@@ -846,8 +781,7 @@ int burn_swan_image_directory(const char *dirname, const char *dest_dev)
 {
 	int ret;
 	unsigned int i;
-	struct dd_desc descs[] =
-	{
+	struct dd_desc descs[] = {
 		{
 			.in = "system.img",
 			.out = "/dev/sdb2",
@@ -855,72 +789,63 @@ int burn_swan_image_directory(const char *dirname, const char *dest_dev)
 			.seek = 0,
 			.skip = 0,
 			.count = 0,
-		},
-		{
+		}, {
 			.in = "recovery.img",
 			.out = "/dev/sdb4",
 			.bs = 0,
 			.seek = 0,
 			.skip = 0,
 			.count = 0,
-		},
-		{
+		}, {
 			.in = "userdata.img",
 			.out = "/dev/sdb5",
 			.bs = 0,
 			.seek = 0,
 			.skip = 0,
 			.count = 0,
-		},
-		{
+		}, {
 			.in = "u-boot.bin",
 			.out = "/dev/sdb",
 			.bs = 1,
 			.seek = UBOOT_OFFSET,
 			.skip = UBOOT_PADDING_SIZE,
 			.count = 0,
-		},
-		{
+		}, {
 			.in = "u-boot-no-padding.bin",
 			.out = "/dev/sdb",
 			.bs = 1,
 			.seek = UBOOT_OFFSET,
 			.skip = 0,
 			.count = 0,
-		},
-		{
+		}, {
 			.in = "uImage",
 			.out = "/dev/sdb",
 			.bs = 1,
 			.seek = UIMAGE_OFFSET,
 			.skip = 0,
 			.count = 0,
-		},
-		{
+		}, {
 			.in = "uramdisk.img",
 			.out = "/dev/sdb",
 			.bs = 1,
 			.seek = RAMDISK_OFFSET,
 			.skip = 0,
 			.count = 0,
-		},
-		{
+		}, {
 			.in = "logo.bmp",
 			.out = "/dev/sdb",
 			.bs = 1,
 			.seek = LOGO_OFFSET,
 			.skip = 0,
 			.count = 0,
-		},
-		{
+		}, {
 			.in = "busybox.img",
 			.out = "/dev/sdb",
 			.bs = 1,
 			.seek = BUSYBOX_OFFSET,
 			.skip = 0,
 			.count = 0,
-		},
-		{
+		}, {
 			.in = "charge.bmps",
 			.out = "/dev/sdb",
 			.bs = 1,
@@ -931,64 +856,51 @@ int burn_swan_image_directory(const char *dirname, const char *dest_dev)
 	};
 
 	ret = chdir_backup(dirname);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("chdir");
 		return ret;
 	}
 
-	if (file_test("ramdisk", "d") == 0)
-	{
+	if (file_test("ramdisk", "d") == 0) {
 		ret = create_uramdisk("ramdisk", "uramdisk.img");
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("create_uramdisk");
 			goto out_chdir_backup;
 		}
-	}
-	else if (file_test("ramdisk.img", "r") == 0)
-	{
+	} else if (file_test("ramdisk.img", "r") == 0) {
 		ret = ramdisk2uramdisk("ramdisk.img", "uramdisk.img");
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("ramdisk2uramdisk");
 			goto out_chdir_backup;
 		}
 	}
 
-	if (dest_dev && dest_dev[0])
-	{
+	if (dest_dev && dest_dev[0]) {
 		char tmp_path[1024];
 
 		get_device_real_path(tmp_path, dest_dev);
 
-		for (i = 0; i < ARRAY_SIZE(descs); i++)
-		{
+		for (i = 0; i < ARRAY_SIZE(descs); i++) {
 			text_copy(descs[i].out, tmp_path);
 		}
 	}
 
-	for (i = 0; i < ARRAY_SIZE(descs); i++)
-	{
-		if (file_test(descs[i].in, "w") < 0)
-		{
+	for (i = 0; i < ARRAY_SIZE(descs); i++) {
+		if (file_test(descs[i].in, "w") < 0) {
 			continue;
 		}
 
 		umount_partition(descs[i].out, MNT_DETACH);
 
 		ret = cavan_dd2(descs + i);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("burn image \"%s\"", descs[i].in);
 			goto out_chdir_backup;
 		}
 
-		if (i < 3)
-		{
+		if (i < 3) {
 			ret = image_extend(descs[i].out);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				error_msg("image_extend");
 				goto out_chdir_backup;
 			}
@@ -1013,32 +925,25 @@ int burn_swan_image_auto(const char *img_path, const char *dest_dev)
 	desc.in[0] = 0;
 
 	type = image_path_to_type(img_path);
-	if (type == IMAGE_UNKNOWN)
-	{
-		if (file_test(img_path, "d") == 0)
-		{
+	if (type == IMAGE_UNKNOWN) {
+		if (file_test(img_path, "d") == 0) {
 			text_copy(desc.in, TEMP_UIMAGE_PATH);
 			ret = create_uramdisk(img_path, desc.in);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				return ret;
 			}
 
 			type = IMAGE_URAMDISK_IMG;
-		}
-		else
-		{
+		} else {
 			ERROR_RETURN(EINVAL);
 		}
 	}
 
-	switch (type)
-	{
+	switch (type) {
 	case IMAGE_ZIMAGE:
 		text_copy(desc.in, TEMP_UIMAGE_PATH);
 		ret = zImage2uImage(img_path, desc.in);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 		type = IMAGE_UIMAGE;
@@ -1048,8 +953,7 @@ int burn_swan_image_auto(const char *img_path, const char *dest_dev)
 	case IMAGE_RAMDISK_IMG:
 		text_copy(desc.in, TEMP_URAMDISK_PATH);
 		ret = ramdisk2uramdisk(img_path, desc.in);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 		type = IMAGE_URAMDISK_IMG;
@@ -1066,35 +970,30 @@ int burn_swan_image_auto(const char *img_path, const char *dest_dev)
 		need_extern = 0;
 	}
 
-	if (desc.in[0] == 0)
-	{
+	if (desc.in[0] == 0) {
 		text_copy(desc.in, img_path);
 	}
 
 	ret = image_type_to_dd_desc(type, &desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
 	get_device_real_path(tmp_path, dest_dev);
 
 	ret = image_type_to_partition_path(type, tmp_path, desc.out);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
 	umount_device(tmp_path, MNT_DETACH);
 
 	ret = cavan_dd2(&desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	if (need_extern)
-	{
+	if (need_extern) {
 		return image_extend(desc.out);
 	}
 

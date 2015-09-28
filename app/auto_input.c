@@ -27,30 +27,25 @@ int main(int argc, char *argv[])
 	int ret;
 	pid_t pid;
 
-	if (argc < 2)
-	{
+	if (argc < 2) {
 		println("Usage: %s [command] <options ...>", argv[0]);
 		return -EINVAL;
 	}
 
 	fd = cavan_exec_redirect_stdio_popen(argv[1], -1, -1, &pid, 0x01);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("cavan_exec_redirect_stdio_popen");
 		return fd;
 	}
 
-	for (i = 2; i < argc; i++)
-	{
+	for (i = 2; i < argc; i++) {
 		ret = write(fd, argv[i], strlen(argv[i]));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			goto out_close_fd;
 		}
 
 		ret = write(fd, "\n", 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			goto out_close_fd;
 		}
 	}

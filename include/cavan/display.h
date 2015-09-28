@@ -11,8 +11,7 @@
 #include <cavan/thread.h>
 
 typedef union {
-	struct
-	{
+	struct {
 		u8 red;
 		u8 green;
 		u8 blue;
@@ -27,8 +26,7 @@ typedef struct {
 	u16 y;
 } cavan_display_point_t;
 
-struct cavan_display_memory
-{
+struct cavan_display_memory {
 	int x, y;
 	int width, height;
 	int width_max, height_max;
@@ -36,14 +34,12 @@ struct cavan_display_memory
 	byte data[0];
 };
 
-struct cavan_display_rect
-{
+struct cavan_display_rect {
 	int x, y;
 	int width, height;
 };
 
-struct cavan_display_memory_rect
-{
+struct cavan_display_memory_rect {
 	int x, y;
 	int border_width;
 	int width, height;
@@ -51,8 +47,7 @@ struct cavan_display_memory_rect
 	struct cavan_display_memory *mems[4];
 };
 
-struct cavan_display_device
-{
+struct cavan_display_device {
 	int xres;
 	int yres;
 	int bpp_byte;
@@ -154,16 +149,14 @@ int cavan_display_printf(struct cavan_display_device *display, const char *fmt, 
 
 static inline void cavan_display_memory_free(struct cavan_display_memory *mem)
 {
-	if (mem)
-	{
+	if (mem) {
 		free(mem);
 	}
 }
 
 static inline void cavan_display_memory_rect_free(struct cavan_display_memory_rect *mem_rect)
 {
-	if (mem_rect)
-	{
+	if (mem_rect) {
 		free(mem_rect);
 	}
 }

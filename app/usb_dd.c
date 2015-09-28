@@ -17,21 +17,18 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -46,10 +43,8 @@ int main(int argc, char *argv[])
 
 	cftp_client_handle = NULL;
 
-	while ((c = getopt_long(argc, argv, "rRgGsSpPwWvVhH", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "rRgGsSpPwWvVhH", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 			show_author_info();
@@ -83,8 +78,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (cftp_client_handle == NULL)
-	{
+	if (cftp_client_handle == NULL) {
 		error_msg("Please input transfer direction");
 		show_usage();
 		return -EINVAL;
@@ -94,8 +88,7 @@ int main(int argc, char *argv[])
 	seek = skip = count = 0;
 	input_file[0] = output_file[0] = 0;
 
-	for (i = optind; i < argc; i++)
-	{
+	for (i = optind; i < argc; i++) {
 		char *p;
 
 		parse_parameter(argv[i]);
@@ -103,59 +96,41 @@ int main(int argc, char *argv[])
 		c = para_option[0];
 		p = para_option + 1;
 
-		switch (c)
-		{
+		switch (c) {
 		case 'i':
-			if (strcmp(p, "f") == 0)
-			{
+			if (strcmp(p, "f") == 0) {
 				strcpy(input_file, para_value);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
 		case 'o':
-			if (strcmp(p, "f") == 0)
-			{
+			if (strcmp(p, "f") == 0) {
 				strcpy(output_file, para_value);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
 		case 'b':
-			if (strcmp(p, "s") == 0)
-			{
+			if (strcmp(p, "s") == 0) {
 				bs = text2size(para_value, NULL);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
 		case 's':
-			if (strcmp(p, "kip") == 0)
-			{
+			if (strcmp(p, "kip") == 0) {
 				skip = text2size(para_value, NULL);
-			}
-			else if (strcmp(p, "eek") == 0)
-			{
+			} else if (strcmp(p, "eek") == 0) {
 				seek = text2size(para_value, NULL);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
 		case 'c':
-			if (strcmp(p, "ount") == 0)
-			{
+			if (strcmp(p, "ount") == 0) {
 				count = text2size(para_value, NULL);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
@@ -164,8 +139,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (input_file[0] == 0 || output_file[0] == 0)
-	{
+	if (input_file[0] == 0 || output_file[0] == 0) {
 		error_msg("must specify if and of option");
 		return -EINVAL;
 	}
@@ -173,8 +147,7 @@ int main(int argc, char *argv[])
 	system_command("killall adb");
 
 	ret = cavan_find_usb_device(NULL, &usb_desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("cavan_find_usb_device");
 		return ret;
 	}
@@ -186,8 +159,7 @@ int main(int argc, char *argv[])
 	cftp_desc.max_xfer_length = CAVAN_USB_MAX_XFER_SIZE;
 
 	ret = cftp_client_handle(&cftp_desc, input_file, skip * bs, output_file, seek * bs, count * bs);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cftp_client_send_file failed");
 	}
 

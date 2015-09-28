@@ -25,8 +25,7 @@ static struct cavan_alarm_thread *global_alarm_thread;
 
 void cavan_show_date(struct tm *date, const char *prompt)
 {
-	if (prompt == NULL)
-	{
+	if (prompt == NULL) {
 		prompt = "";
 	}
 
@@ -47,63 +46,51 @@ void cavan_show_date2(const time_t time, const char *prompt)
 
 int cavan_date_cmp(struct tm *d1, struct tm *d2)
 {
-	if (d1->tm_year > d2->tm_year)
-	{
+	if (d1->tm_year > d2->tm_year) {
 		return 1;
 	}
 
-	if (d1->tm_year < d2->tm_year)
-	{
+	if (d1->tm_year < d2->tm_year) {
 		return -1;
 	}
 
-	if (d1->tm_mon > d2->tm_mon)
-	{
+	if (d1->tm_mon > d2->tm_mon) {
 		return 1;
 	}
 
-	if (d1->tm_mon < d2->tm_mon)
-	{
+	if (d1->tm_mon < d2->tm_mon) {
 		return -1;
 	}
 
-	if (d1->tm_mday > d2->tm_mday)
-	{
+	if (d1->tm_mday > d2->tm_mday) {
 		return 1;
 	}
 
-	if (d1->tm_mday < d2->tm_mday)
-	{
+	if (d1->tm_mday < d2->tm_mday) {
 		return -1;
 	}
 
-	if (d1->tm_hour > d2->tm_hour)
-	{
+	if (d1->tm_hour > d2->tm_hour) {
 		return 1;
 	}
 
-	if (d1->tm_hour < d2->tm_hour)
-	{
+	if (d1->tm_hour < d2->tm_hour) {
 		return -1;
 	}
 
-	if (d1->tm_min > d2->tm_min)
-	{
+	if (d1->tm_min > d2->tm_min) {
 		return 1;
 	}
 
-	if (d1->tm_min < d2->tm_min)
-	{
+	if (d1->tm_min < d2->tm_min) {
 		return -1;
 	}
 
-	if (d1->tm_sec > d2->tm_sec)
-	{
+	if (d1->tm_sec > d2->tm_sec) {
 		return 1;
 	}
 
-	if (d1->tm_sec < d2->tm_sec)
-	{
+	if (d1->tm_sec < d2->tm_sec) {
 		return -1;
 	}
 
@@ -114,12 +101,9 @@ long cavan_date_diff(struct tm *d1, struct tm *d2)
 {
 	long diff = d1->tm_year - d2->tm_year;
 
-	if (diff > 1)
-	{
+	if (diff > 1) {
 		diff = 1;
-	}
-	else if (diff < -1)
-	{
+	} else if (diff < -1) {
 		diff = -1;
 	}
 
@@ -151,19 +135,15 @@ static int cavan_alarm_thread_handler(struct cavan_thread *thread, void *data)
 	pthread_mutex_lock(&alarm_thread->lock);
 
 	node = double_link_get_first_node(&alarm_thread->link);
-	if (node == NULL)
-	{
+	if (node == NULL) {
 		alarm(0);
 		cavan_thread_suspend(thread);
-	}
-	else
-	{
+	} else {
 		struct cavan_alarm_node *alarm_node = double_link_get_container(&alarm_thread->link, node);
 		time_t curr_time;
 
 		curr_time = time(NULL);
-		if (curr_time < 0)
-		{
+		if (curr_time < 0) {
 			pr_error_info("get current time");
 			pthread_mutex_unlock(&thread->lock);
 			return curr_time;
@@ -172,23 +152,17 @@ static int cavan_alarm_thread_handler(struct cavan_thread *thread, void *data)
 		cavan_show_date2(curr_time, "curr_time = ");
 		cavan_show_date2(alarm_node->time, "alarm_time = ");
 
-		if (curr_time < alarm_node->time)
-		{
+		if (curr_time < alarm_node->time) {
 			alarm(alarm_node->time - curr_time);
 			cavan_thread_suspend(thread);
-		}
-		else
-		{
+		} else {
 			double_link_remove(&alarm_thread->link, node);
 			alarm_node->handler(alarm_node, alarm_thread, alarm_node->private_data);
 
-			if (alarm_node->repeat)
-			{
+			if (alarm_node->repeat) {
 				alarm_node->time += alarm_node->repeat;
 				cavan_alarm_insert_node_base(alarm_thread, alarm_node);
-			}
-			else if (alarm_node->destroy)
-			{
+			} else if (alarm_node->destroy) {
 				alarm_node->destroy(alarm_node, alarm_node->private_data);
 			}
 		}
@@ -201,8 +175,7 @@ static int cavan_alarm_thread_handler(struct cavan_thread *thread, void *data)
 
 static void cavan_alarm_sighandler(int signum)
 {
-	if (signum == SIGALRM && global_alarm_thread)
-	{
+	if (signum == SIGALRM && global_alarm_thread) {
 		cavan_thread_resume(&global_alarm_thread->thread);
 	}
 }
@@ -213,15 +186,13 @@ int cavan_alarm_thread_init(struct cavan_alarm_thread *alarm_thread)
 	struct cavan_thread *thread;
 
 	ret = pthread_mutex_init(&alarm_thread->lock, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pthread_mutex_init");
 		return ret;
 	}
 
 	ret = double_link_init(&alarm_thread->link, MOFS(struct cavan_alarm_node, node));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("double_link_init");
 		goto out_pthread_mutex_destroy;
 	}
@@ -232,8 +203,7 @@ int cavan_alarm_thread_init(struct cavan_alarm_thread *alarm_thread)
 	thread->handler = cavan_alarm_thread_handler;
 
 	ret = cavan_thread_init(thread, alarm_thread);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_double_link_deinit;
 	}
@@ -273,23 +243,19 @@ int cavan_alarm_insert_node(struct cavan_alarm_thread *thread, struct cavan_alar
 {
 	time_t curr_time;
 
-	if (node->handler == NULL)
-	{
+	if (node->handler == NULL) {
 		pr_red_info("node->handler == NULL");
 		return -EINVAL;
 	}
 
-	if (date)
-	{
+	if (date) {
 		node->time = mktime(date);
 	}
 
 	curr_time = time(NULL);
-	if (node->time < curr_time)
-	{
+	if (node->time < curr_time) {
 		node->time += TIME_DAY(1);
-		if (node->time < curr_time)
-		{
+		if (node->time < curr_time) {
 			pr_red_info("Date too old");
 			return -EINVAL;
 		}
@@ -310,8 +276,7 @@ int cavan_alarm_insert_node(struct cavan_alarm_thread *thread, struct cavan_alar
 
 int cavan_alarm_insert_node2(struct cavan_alarm_thread *thread, struct cavan_alarm_node *node, int year, int mon, int day, int hour, int min, int sec)
 {
-	struct tm time =
-	{
+	struct tm time = {
 		.tm_sec = sec,
 		.tm_min = min,
 		.tm_hour = hour,
@@ -331,8 +296,7 @@ void cavan_alarm_delete_node(struct cavan_alarm_thread *thread, struct cavan_ala
 	pthread_mutex_lock(&thread->lock);
 
 	double_link_remove(&thread->link, &node->node);
-	if (node->destroy)
-	{
+	if (node->destroy) {
 		node->destroy(node, node->private_data);
 	}
 

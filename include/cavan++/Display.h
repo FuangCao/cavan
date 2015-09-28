@@ -21,64 +21,54 @@
 
 #include <cavan.h>
 
-struct ColorComponent
-{
+struct ColorComponent {
 	int max;
 	int bits;
 	int offset;
 	u32 mask;
 
-	void config(int bits, int offset)
-	{
+	void config(int bits, int offset) {
 		this->bits = bits;
 		this->offset = offset;
 		this->max = (1 << bits) - 1;
 		this->mask = this->max << offset;
 	}
 
-	u8 get(u32 color)
-	{
+	u8 get(u32 color) {
 		return (color & mask) >> offset;
 	}
 
-	void set(u32 &color, float value)
-	{
+	void set(u32 &color, float value) {
 		color &= ~mask;
 		color |= build(value);
 	}
 
-	u32 build(float value)
-	{
+	u32 build(float value) {
 		return ((u32) (value * max)) << offset;
 	}
 };
 
-class LineEquation
-{
+class LineEquation {
 private:
 	double a;
 	double b;
 
 public:
-	LineEquation(int x1, int y1, int x2, int y2)
-	{
+	LineEquation(int x1, int y1, int x2, int y2) {
 		a = (x1 == x2) ? 1 : ((double) (y2 - y1)) / ((double) (x2 - x1));
 		b = y1 - x1 * a;
 	}
 
-	int getY(int x)
-	{
+	int getY(int x) {
 		return a * x + b;
 	}
 
-	int getX(int y)
-	{
+	int getX(int y) {
 		return ((double) (y - b)) / a;
 	}
 };
 
-class DisplayDevice
-{
+class DisplayDevice {
 protected:
 	int mWidth;
 	int mHeight;
@@ -98,33 +88,27 @@ public:
 	DisplayDevice(void) {}
 	virtual ~DisplayDevice(void) {}
 
-	int getWidth(void)
-	{
+	int getWidth(void) {
 		return mWidth;
 	}
 
-	int getHeight(void)
-	{
+	int getHeight(void) {
 		return mHeight;
 	}
 
-	virtual u32 getColor(void)
-	{
+	virtual u32 getColor(void) {
 		return mColor;
 	}
 
-	virtual void setColor(u32 color)
-	{
+	virtual void setColor(u32 color) {
 		mColor = color;
 	}
 
-	u32 buildColor(float red, float green, float blue, float transp)
-	{
+	u32 buildColor(float red, float green, float blue, float transp) {
 		return mRedComponent.build(red) | mGreenComponent.build(green) | mBlueComponent.build(blue) | mTranspComponent.build(transp);
 	}
 
-	u32 buildColor(float red, float green, float blue)
-	{
+	u32 buildColor(float red, float green, float blue) {
 		return buildColor(red, green, blue, 1.0);
 	}
 

@@ -30,8 +30,7 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	ret = text_split_by_space(argv[1], texts, NELEM(texts));
-	for (i = 0; i < ret; i++)
-	{
+	for (i = 0; i < ret; i++) {
 		println("text[%d] = %s", i, texts[i]);
 	}
 #elif 0
@@ -40,14 +39,12 @@ int main(int argc, char *argv[])
 
 	println("buff = %p", buff);
 
-	for (i = 5; i < 288 + 5; i++)
-	{
+	for (i = 5; i < 288 + 5; i++) {
 		buff[i] = '8';
 	}
 
 	mem_move(buff + 8, buff + 4, 288);
-	for (i = 0; i < 8; i++)
-	{
+	for (i = 0; i < 8; i++) {
 		buff[i] = '0';
 	}
 	println("buff = %s", buff);

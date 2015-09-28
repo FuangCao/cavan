@@ -12,8 +12,7 @@
 
 #define CAVAN_TCP_PROXY_PORT		9099
 
-struct tcp_proxy_service
-{
+struct tcp_proxy_service {
 	struct network_service service;
 	struct network_url url;
 	struct network_url url_proxy;

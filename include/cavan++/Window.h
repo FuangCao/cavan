@@ -22,8 +22,7 @@
 #include <cavan.h>
 #include <cavan++/Link.h>
 
-class CavanRect
-{
+class CavanRect {
 protected:
 	int x;
 	int y;
@@ -31,55 +30,45 @@ protected:
 	int height;
 
 public:
-	int getX(void)
-	{
+	int getX(void) {
 		return x;
 	}
 
-	void setX(int x)
-	{
+	void setX(int x) {
 		this->x = x;
 	}
 
-	int getY(void)
-	{
+	int getY(void) {
 		return y;
 	}
 
-	void setY(int y)
-	{
+	void setY(int y) {
 		this->y = y;
 	}
 
-	void setXY(int x, int y)
-	{
+	void setXY(int x, int y) {
 		this->x = x;
 		this->y = y;
 	}
 
-	int getWidth(void)
-	{
+	int getWidth(void) {
 		return width;
 	}
 
-	void setWidth(int width)
-	{
+	void setWidth(int width) {
 		this->width = width;
 	}
 
-	int getHeight(void)
-	{
+	int getHeight(void) {
 		return height;
 	}
 
-	void setHeight(int height)
-	{
+	void setHeight(int height) {
 		this->height = height;
 	}
 };
 
-class CavanWindow : public DoubleLinkNode, CavanRect
-{
+class CavanWindow : public DoubleLinkNode, CavanRect {
 protected:
 	int id;
 	const char *text;
@@ -96,44 +85,38 @@ protected:
 
 public:
 	virtual ~CavanWindow(void) {}
-	CavanWindow(int id, const char *text) : mLock(), mChildLink()
-	{
+	CavanWindow(int id, const char *text) : mLock(), mChildLink() {
 		this->id = id;
 		this->text = text;
 	}
 
 	void PaintAll(void);
 
-	void setOnPaint(void (*handler)(CavanWindow *win))
-	{
+	void setOnPaint(void (*handler)(CavanWindow *win)) {
 		AutoLock lock(mLock);
 
 		onPaint = handler;
 	}
 
-	int getId(void)
-	{
+	int getId(void) {
 		AutoLock lock(mLock);
 
 		return id;
 	}
 
-	void setId(int id)
-	{
+	void setId(int id) {
 		AutoLock lock(mLock);
 
 		this->id = id;
 	}
 
-	void setParent(CavanWindow *parent)
-	{
+	void setParent(CavanWindow *parent) {
 		AutoLock lock(mLock);
 
 		mParent = parent;
 	}
 
-	void addChild(CavanWindow *win)
-	{
+	void addChild(CavanWindow *win) {
 		AutoLock lock(mLock);
 
 		win->setParent(this);
@@ -142,15 +125,13 @@ public:
 
 	virtual void Paint(void);
 
-	virtual const char *getText(void)
-	{
+	virtual const char *getText(void) {
 		AutoLock lock(mLock);
 
 		return text;
 	}
 
-	virtual void setText(const char *text)
-	{
+	virtual void setText(const char *text) {
 		AutoLock lock(mLock);
 
 		this->text = text;

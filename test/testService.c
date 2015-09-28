@@ -20,8 +20,7 @@
 #include <cavan.h>
 #include <cavan/service.h>
 
-struct test_service_data
-{
+struct test_service_data {
 	int data;
 };
 
@@ -64,8 +63,7 @@ int main(int argc, char *argv[])
 	struct cavan_dynamic_service *service;
 
 	service = cavan_dynamic_service_create(0);
-	if (service == NULL)
-	{
+	if (service == NULL) {
 		pr_red_info("cavan_dynamic_service_create");
 		return -EFAULT;
 	}
@@ -81,12 +79,9 @@ int main(int argc, char *argv[])
 	service->run = test_service_handler;
 
 	ret = cavan_dynamic_service_start(service, false);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_dynamic_service_run");
-	}
-	else
-	{
+	} else {
 		msleep(5000);
 		cavan_dynamic_service_stop(service);
 		cavan_dynamic_service_join(service);

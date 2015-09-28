@@ -9,8 +9,7 @@
 int uevent_init(struct uevent_desc *desc)
 {
 	int sockfd = network_create_socket_uevent();
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("network_create_socket_uevent: %d", sockfd);
 		return sockfd;
 	}
@@ -30,10 +29,8 @@ size_t uevent_split_base(const char *event, size_t event_len, char *props[], siz
 	size_t count = 0;
 	const char *event_end = event + event_len;
 
-	while (event < event_end && count < size)
-	{
-		if (IS_LETTER(*event))
-		{
+	while (event < event_end && count < size) {
+		if (IS_LETTER(*event)) {
 			props[count++] = (char *) event;
 		}
 
@@ -45,10 +42,8 @@ size_t uevent_split_base(const char *event, size_t event_len, char *props[], siz
 
 char *uevent_get_property_base(char *props[], int prop_count, const char *prefix, char *buff)
 {
-	for (prop_count--; prop_count >= 0; prop_count--)
-	{
-		if (text_lhcmp(prefix, props[prop_count]) == 0)
-		{
+	for (prop_count--; prop_count >= 0; prop_count--) {
+		if (text_lhcmp(prefix, props[prop_count]) == 0) {
 			text_copy(buff, props[prop_count] + text_len(prefix));
 
 			return buff;
@@ -62,12 +57,9 @@ int uevent_match_base(char *props[], int prop_count, struct uevent_filter *filte
 {
 	int count;
 
-	for (prop_count--, count = filter->count; prop_count >= 0; prop_count--)
-	{
-		if (text_array_find(props[prop_count], filter->props, filter->count) >= 0)
-		{
-			if (--count == 0)
-			{
+	for (prop_count--, count = filter->count; prop_count >= 0; prop_count--) {
+		if (text_array_find(props[prop_count], filter->props, filter->count) >= 0) {
+			if (--count == 0) {
 				return 0;
 			}
 		}
@@ -84,11 +76,9 @@ int get_device_uevent(struct uevent_desc *desc, struct uevent_filter *filters, s
 
 	p_end = filters + size;
 
-	while (1)
-	{
+	while (1) {
 		ret = recv(sockfd, desc->buff, sizeof(desc->buff), 0);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("recv");
 			return ret;
 		}
@@ -96,10 +86,8 @@ int get_device_uevent(struct uevent_desc *desc, struct uevent_filter *filters, s
 		desc->buff[ret] = 0;
 		desc->prop_count = uevent_split_base(desc->buff, ret, desc->props, NELEM(desc->props));
 
-		for (p = filters; p < p_end; p++)
-		{
-			if (uevent_match_base(desc->props, desc->prop_count, p) == 0)
-			{
+		for (p = filters; p < p_end; p++) {
+			if (uevent_match_base(desc->props, desc->prop_count, p) == 0) {
 				return 0;
 			}
 		}
@@ -110,10 +98,8 @@ int get_device_uevent(struct uevent_desc *desc, struct uevent_filter *filters, s
 
 int get_disk_add_uevent(struct uevent_desc *desc)
 {
-	struct uevent_filter filter =
-	{
-		.props =
-		{
+	struct uevent_filter filter = {
+		.props = {
 			"ACTION=add",
 			"DEVTYPE=disk",
 		},
@@ -125,10 +111,8 @@ int get_disk_add_uevent(struct uevent_desc *desc)
 
 int get_partition_add_uevent(struct uevent_desc *desc)
 {
-	struct uevent_filter filter =
-	{
-		.props =
-		{
+	struct uevent_filter filter = {
+		.props = {
 			"ACTION=add",
 			"DEVTYPE=partition",
 		},
@@ -140,10 +124,8 @@ int get_partition_add_uevent(struct uevent_desc *desc)
 
 int get_block_device_remove_uevent(struct uevent_desc *desc)
 {
-	struct uevent_filter filter =
-	{
-		.props =
-		{
+	struct uevent_filter filter = {
+		.props = {
 			"ACTION=remove",
 			"SUBSYSTEM=block",
 		},

@@ -27,12 +27,9 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	double result;
-	if (!calculator.execute(argv[1], result))
-	{
+	if (!calculator.execute(argv[1], result)) {
 		pr_red_info("Failed to calculator.execute: %s", calculator.getErrMsg());
-	}
-	else
-	{
+	} else {
 		println("result = %lf", result);
 	}
 

@@ -54,15 +54,13 @@ enum swan_vk_link_type
 	SWAN_VK_LINK_INVALID
 };
 
-struct cavan_input_event
-{
+struct cavan_input_event {
 	u16 type;
 	u16 code;
 	s32 value;
 };
 
-struct swan_vk_command_option
-{
+struct swan_vk_command_option {
 	enum swan_vk_link_type link_type;
 	u16 port;
 	char ip[32];
@@ -70,20 +68,17 @@ struct swan_vk_command_option
 	bool as_daemon;
 };
 
-struct swan_vk_descriptor
-{
+struct swan_vk_descriptor {
 	char *name;
 	unsigned int code;
 };
 
-struct swan_vk_clien_descriptor
-{
+struct swan_vk_clien_descriptor {
 	int fd;
 	int pipefd[2];
 };
 
-struct swan_vk_service_descriptor
-{
+struct swan_vk_service_descriptor {
 	int sockfd;
 	int datafd;
 	pthread_mutex_t mutex_lock;

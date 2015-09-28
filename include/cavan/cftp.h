@@ -11,8 +11,7 @@
 #define CFTP_RETRY_COUNT			5
 
 #pragma pack(1)
-struct cftp_file_request
-{
+struct cftp_file_request {
 	u16 type;
 	u32 size;
 	u32 offset;
@@ -21,36 +20,31 @@ struct cftp_file_request
 	char filename[0];
 };
 
-struct cftp_data_package
-{
+struct cftp_data_package {
 	u16 type;
 	u16 blk_num;
 	u8 data[0];
 };
 
-struct cftp_ack_message
-{
+struct cftp_ack_message {
 	u16 type;
 	u16 blk_num;
 };
 
-struct cftp_error_message
-{
+struct cftp_error_message {
 	u16 type;
 	u16 err_code;
 	char message[0];
 };
 
-struct cftp_command_request
-{
+struct cftp_command_request {
 	u16 type;
 	char command[0];
 };
 
 union cftp_message
 {
-	struct
-	{
+	struct {
 		u16 type;
 		u8 data[CFTP_MIN_PACKAGE_LENGTH - 2];
 	};
@@ -73,8 +67,7 @@ enum cftp_package_type
 	CFTP_PACKAGE_ERROR,
 };
 
-struct cftp_descriptor
-{
+struct cftp_descriptor {
 	cavan_shared_data_t data;
 	int fd;
 	size_t max_xfer_length;
@@ -90,8 +83,7 @@ struct cftp_descriptor
 	bool (*can_receive)(cavan_shared_data_t data, int timeout_ms);
 };
 
-struct cftp_udp_link_descriptor
-{
+struct cftp_udp_link_descriptor {
 	int sockfd;
 	struct sockaddr_in client_addr;
 	socklen_t addrlen;

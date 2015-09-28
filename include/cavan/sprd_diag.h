@@ -26,16 +26,14 @@
 #define SPRD_DEFAULT_AT_DEVICE		"/dev/CHNPTY12"
 
 #pragma pack(1)
-struct sprd_diag_message_desc
-{
+struct sprd_diag_message_desc {
 	u32 seq_num;
 	u16 length;
 	u8 type;
 	u8 subtype;
 };
 
-struct sprd_diag_imei_data
-{
+struct sprd_diag_imei_data {
 	byte imei1[8];
 	byte imei2[8];
 	byte bt_mac[6];
@@ -49,8 +47,7 @@ struct sprd_diag_imei_data
 };
 #pragma pack(0)
 
-struct sprd_diag_command_desc
-{
+struct sprd_diag_command_desc {
 	u32 seq_num;
 	u8 cmd_type, cmd_subtype;
 	u8 reply_type, reply_subtype;

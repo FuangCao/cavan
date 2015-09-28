@@ -116,8 +116,7 @@ u16 cavan_crc16(u16 crc, const char *buff, size_t size)
 {
 	const char *buff_end = buff + size;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		crc = cavan_crc16_table[((crc >> 8) ^ (*buff++)) & 0xFF] ^ (crc << 8);
 	}
 
@@ -130,8 +129,7 @@ u32 cavan_crc32(u32 crc, const char *buff, size_t size)
 
 	crc ^= 0xFFFFFFFFL;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		crc = cavan_crc32_table[(crc ^ (*buff++)) & 0xFF] ^ (crc >> 8);
 	}
 

@@ -19,27 +19,23 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_IP,
-		},
-		{
+		}, {
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
@@ -54,10 +50,8 @@ int main(int argc, char *argv[])
 	ip[0] = 0;
 	port = ADB_SMS_TRANSLATOR_PORT;
 
-	while ((c = getopt_long(argc, argv, "a:A:p:P:vVhH", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "a:A:p:P:vVhH", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -89,15 +83,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind >= argc)
-	{
+	if (optind >= argc) {
 		pr_red_info("Please give a filename");
 		return -EINVAL;
 	}
 
 	sockfd = adb_create_tcp_link(ip[0] == 0 ? NULL : ip, 0, port, false);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("adb_connect_service2");
 		return sockfd;
 	}

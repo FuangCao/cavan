@@ -12,27 +12,20 @@ int main(int argc, char *argv[])
 
 	assert(argc < 3);
 
-	if (argc > 1)
-	{
-		if (file_test(argv[1], "c") < 0 && text_is_number(argv[1]))
-		{
+	if (argc > 1) {
+		if (file_test(argv[1], "c") < 0 && text_is_number(argv[1])) {
 			sprintf(name, "/dev/input/event%s", argv[1]);
 			dev_path = name;
-		}
-		else
-		{
+		} else {
 			dev_path = argv[1];
 		}
-	}
-	else
-	{
+	} else {
 		dev_path = NULL;
 	}
 
 	cavan_event_service_init(&service, cavan_event_simple_matcher);
 	ret = cavan_event_service_start(&service, (void *) dev_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_event_service_start");
 		return ret;
 	}

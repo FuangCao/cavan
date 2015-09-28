@@ -26,16 +26,14 @@ static void *network_client_recv_handler(void *data)
 {
 	struct network_client *client = data;
 
-	while (1)
-	{
+	while (1) {
 		u32 value;
 		ssize_t rdlen;
 
 		println("client recv -");
 
 		rdlen = client->recv(client, &value, sizeof(value));
-		if (rdlen != sizeof(value))
-		{
+		if (rdlen != sizeof(value)) {
 			pr_red_info("client->recv");
 			break;
 		}
@@ -54,13 +52,11 @@ static int network_client_test_base(struct network_client *client)
 
 	cavan_pthread_create(&thread_recv, network_client_recv_handler, client, true);
 
-	for (value = 0; value < 2000; value++)
-	{
+	for (value = 0; value < 2000; value++) {
 		println("client send %d", value);
 
 		ret = client->send(client, &value, sizeof(value));
-		if (ret != sizeof(value))
-		{
+		if (ret != sizeof(value)) {
 			pr_red_info("client->send");
 			goto out_network_client_close;
 		}
@@ -84,8 +80,7 @@ static int network_client_test(const char *url)
 	struct network_client client;
 
 	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return -EFAULT;
 	}
@@ -100,15 +95,13 @@ static int network_service_test(const char *url)
 	struct network_service service;
 
 	ret = network_service_open2(&service, url, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_service_open");
 		return ret;
 	}
 
 	ret = service.accept(&service, &client);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("service.accept");
 		goto out_network_service_close;
 	}
@@ -124,12 +117,9 @@ static int network_url_test(const char *_url)
 {
 	struct network_url url;
 
-	if (network_url_parse(&url, _url) == NULL)
-	{
+	if (network_url_parse(&url, _url) == NULL) {
 		pr_red_info("web_proxy_parse_url");
-	}
-	else
-	{
+	} else {
 		println("protocol = %s", url.protocol);
 		println("hostname = %s", url.hostname);
 		println("port = %d", url.port);
@@ -147,28 +137,23 @@ static int network_dump_data(const char *url)
 	struct network_service service;
 
 	ret = network_service_open2(&service, url, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_service_open2");
 		return ret;
 	}
 
-	while (1)
-	{
+	while (1) {
 		ret = network_service_accept(&service, &client);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("network_service_accept");
 			goto out_network_service_close;
 		}
 
-		while (1)
-		{
+		while (1) {
 			char buff[1024];
 
 			ret = client.recv(&client, buff, sizeof(buff));
-			if (ret <= 0)
-			{
+			if (ret <= 0) {
 				pr_red_info("client->recv");
 				break;
 			}
@@ -190,28 +175,21 @@ static int network_test_send(const char *url, const char *pathname)
 	struct network_client client;
 
 	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return -EFAULT;
 	}
 
 	ret = network_client_send_file2(&client, pathname, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_send_file2");
-	}
-	else
-	{
+	} else {
 		char buff[1024];
 
 		ret = client.recv(&client, buff, sizeof(buff));
-		if (ret > 0)
-		{
+		if (ret > 0) {
 			print_ntext(buff, ret);
-		}
-		else
-		{
+		} else {
 			pr_red_info("client.recv");
 		}
 	}
@@ -225,30 +203,19 @@ int main(int argc, char *argv[])
 {
 	assert(argc > 2);
 
-	if (strcmp(argv[1], "client") == 0)
-	{
+	if (strcmp(argv[1], "client") == 0) {
 		return network_client_test(argv[2]);
-	}
-	else if (strcmp(argv[1], "service") == 0)
-	{
+	} else if (strcmp(argv[1], "service") == 0) {
 		while (network_service_test(argv[2]) >= 0);
-	}
-	else if (strcmp(argv[1], "url") == 0)
-	{
+	} else if (strcmp(argv[1], "url") == 0) {
 		return network_url_test(argv[2]);
-	}
-	else if (strcmp(argv[1], "dump") == 0)
-	{
+	} else if (strcmp(argv[1], "dump") == 0) {
 		return network_dump_data(argv[2]);
-	}
-	else if (strcmp(argv[1], "send") == 0)
-	{
+	} else if (strcmp(argv[1], "send") == 0) {
 		assert(argc > 3);
 
 		return network_test_send(argv[2], argv[3]);
-	}
-	else
-	{
+	} else {
 		pr_red_info("unknown command %s", argv[1]);
 	}
 

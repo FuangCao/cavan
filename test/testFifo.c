@@ -46,8 +46,7 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	ret = cavan_fifo_init(&fifo, 20, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_fifo_init");
 		return ret;
 	}
@@ -55,17 +54,13 @@ int main(int argc, char *argv[])
 	fifo.read = test_fifo_read;
 	fifo.write = test_fifo_write;
 
-	if (strcmp(argv[1], "write") == 0)
-	{
-		for (c = 'A'; c <= 'Z'; c++)
-		{
+	if (strcmp(argv[1], "write") == 0) {
+		for (c = 'A'; c <= 'Z'; c++) {
 			cavan_fifo_write(&fifo, &c, 1);
 		}
 
 		cavan_fifo_fflush(&fifo);
-	}
-	else if (strcmp(argv[1], "read") == 0)
-	{
+	} else if (strcmp(argv[1], "read") == 0) {
 		int  i;
 		char buff[100];
 
@@ -74,9 +69,7 @@ int main(int argc, char *argv[])
 		buff[i] = 0;
 
 		println("buff[%d] = %s", i, buff);
-	}
-	else
-	{
+	} else {
 		pr_red_info("inlivad action %s", argv[1]);
 	}
 

@@ -18,28 +18,23 @@ static char *tcp_dd_find_platform_by_name_path(char *pathname, char *filename, s
 	DIR *dp;
 	struct dirent *entry;
 
-	if (filename == NULL)
-	{
+	if (filename == NULL) {
 		filename = text_ncopy(pathname, "/dev/block/platform/", size);
 	}
 
 	dp = opendir(pathname);
-	if (dp == NULL)
-	{
+	if (dp == NULL) {
 		return NULL;
 	}
 
-	while ((entry = readdir(dp)))
-	{
+	while ((entry = readdir(dp))) {
 		char *filename_next;
 
-		if (entry->d_type != DT_DIR)
-		{
+		if (entry->d_type != DT_DIR) {
 			continue;
 		}
 
-		if (text_is_dot_name(entry->d_name))
-		{
+		if (text_is_dot_name(entry->d_name)) {
 			continue;
 		}
 
@@ -47,15 +42,13 @@ static char *tcp_dd_find_platform_by_name_path(char *pathname, char *filename, s
 		*filename_next++ = '/';
 		*filename_next = 0;
 
-		if (strcmp(entry->d_name, "by-name") == 0)
-		{
+		if (strcmp(entry->d_name, "by-name") == 0) {
 			filename = filename_next;
 			goto out_closedir;
 		}
 
 		filename_next = tcp_dd_find_platform_by_name_path(pathname, filename_next, size);
-		if (filename_next)
-		{
+		if (filename_next) {
 			filename = filename_next;
 			goto out_closedir;
 		}
@@ -73,38 +66,30 @@ int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size)
 	char *buff_end;
 	const char *last;
 
-	if (name[0] != '@')
-	{
+	if (name[0] != '@') {
 		return 0;
 	}
 
 	for (last = ++name; *last; last++);
 
-	if (last - name < 1)
-	{
+	if (last - name < 1) {
 		return 0;
 	}
 
-	if (*--last != '@')
-	{
+	if (*--last != '@') {
 		return 0;
 	}
 
-	if (buff == NULL)
-	{
+	if (buff == NULL) {
 		return -EFAULT;
 	}
 
-	for (buff_end = buff + size - 1; name < last && buff < buff_end; name++, buff++)
-	{
+	for (buff_end = buff + size - 1; name < last && buff < buff_end; name++, buff++) {
 		char c = *name;
 
-		if (c >= 'A' && c <= 'Z')
-		{
+		if (c >= 'A' && c <= 'Z') {
 			*buff = c + ('a' - 'A');
-		}
-		else
-		{
+		} else {
 			*buff = c;
 		}
 	}
@@ -116,24 +101,17 @@ int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size)
 
 static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
-	if (res->message[0] == 0)
-	{
+	if (res->message[0] == 0) {
 		return;
 	}
 
-	if ((int) res->code < 0)
-	{
-		if (res->number)
-		{
+	if ((int) res->code < 0) {
+		if (res->number) {
 			pd_red_info("%s [%s]", res->message, strerror(res->number));
-		}
-		else
-		{
+		} else {
 			pd_red_info("%s", res->message);
 		}
-	}
-	else
-	{
+	} else {
 		pd_green_info("%s", res->message);
 	}
 }
@@ -147,21 +125,17 @@ static int __printf_format_34__ tcp_dd_send_response(struct network_client *clie
 	pkg.res_pkg.code = code;
 	pkg.res_pkg.number = errno;
 
-	if (fmt == NULL)
-	{
+	if (fmt == NULL) {
 		pkg.res_pkg.message[0] = 0;
 		ret = 1;
-	}
-	else
-	{
+	} else {
 		va_list ap;
 
 		va_start(ap, fmt);
 		ret = vsprintf(pkg.res_pkg.message, fmt, ap) + 1;
 		va_end(ap);
 
-		if (code < 0)
-		{
+		if (code < 0) {
 			pr_error_info("%s", pkg.res_pkg.message);
 		}
 	}
@@ -175,14 +149,12 @@ static int tcp_dd_recv_response(struct network_client *client)
 	struct tcp_dd_package pkg;
 
 	rdlen = client->recv(client, &pkg, sizeof(pkg));
-	if (rdlen < (ssize_t) sizeof(pkg.type))
-	{
+	if (rdlen < (ssize_t) sizeof(pkg.type)) {
 		pr_red_info("inet_recv");
 		return -EFAULT;
 	}
 
-	if (pkg.type != TCP_DD_RESPONSE)
-	{
+	if (pkg.type != TCP_DD_RESPONSE) {
 		pr_red_info("pkg.type = %d", pkg.type);
 		return -EINVAL;
 	}
@@ -202,21 +174,18 @@ static int tcp_dd_send_read_request(struct network_client *client, const char *f
 	ret = text_copy(pkg->file_req.filename, filename) - (char *) &pkg + 1;
 
 	ret = client->send(client, (char *) pkg, ret);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("inet_send");
 		return ret;
 	}
 
 	ret = client->recv(client, pkg, sizeof(*pkg));
-	if (ret < (int) sizeof(pkg->type))
-	{
+	if (ret < (int) sizeof(pkg->type)) {
 		pr_red_info("inet_recv");
 		return ret;
 	}
 
-	switch (pkg->type)
-	{
+	switch (pkg->type) {
 	case TCP_DD_RESPONSE:
 		tcp_dd_show_response(&pkg->res_pkg);
 		return pkg->res_pkg.code;
@@ -241,8 +210,7 @@ static int tcp_dd_send_write_request(struct network_client *client, const char *
 
 	ret = text_copy(pkg.file_req.filename, filename) - (char *) &pkg + 1;
 	ret = client->send(client, (char *) &pkg, ret);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("inet_send");
 		return ret;
 	}
@@ -262,20 +230,16 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 
 	pkg.type = TCP_DD_EXEC;
 
-	if (command)
-	{
+	if (command) {
 		p = text_copy(pkg.exec_req.command, command);
-	}
-	else
-	{
+	} else {
 		p = pkg.exec_req.command;
 		*p = 0;
 	}
 
 	ret = p - (char *) &pkg;
 	client->send(client, (char *) &pkg, ret + 1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("inet_send");
 		return ret;
 	}
@@ -291,8 +255,7 @@ static int tcp_dd_send_keypad_request(struct network_client *client)
 	pkg.type = TCP_KEYPAD_EVENT;
 
 	ret = client->send(client, (char *) &pkg, sizeof(pkg.type));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("inet_send");
 		return ret;
 	}
@@ -313,8 +276,7 @@ static int tcp_dd_send_alarm_add_request(struct network_client *client, time_t t
 
 	ret = p - (char *) &pkg;
 	ret = client->send(client, (char *) &pkg, ret + 1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("inet_send");
 		return ret;
 	}
@@ -332,8 +294,7 @@ static int tcp_dd_send_alarm_query_request(struct network_client *client, int ty
 
 	ret = sizeof(pkg.alarm_query) + MOFS(struct tcp_dd_package, alarm_query);
 	ret = client->send(client, (char *) &pkg, ret);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("inet_send");
 		return ret;
 	}
@@ -350,47 +311,37 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 	const char *pathname;
 
 	ret = tcp_dd_get_partition_filename(req->filename, service->filename, sizeof(service->pathname));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		tcp_dd_send_response(client, ret, "[Server] `%s' is not a partition", req->filename);
 		return ret;
 	}
 
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		pathname = req->filename;
-	}
-	else
-	{
+	} else {
 		pathname = service->pathname;
 	}
 
 	fd = open(pathname, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", pathname);
 		return fd;
 	}
 
-	if (req->size == 0)
-	{
+	if (req->size == 0) {
 		size = ffile_get_size(fd);
-	}
-	else
-	{
+	} else {
 		size = req->size;
 	}
 
-	if (size < (off_t) req->offset)
-	{
+	if (size < (off_t) req->offset) {
 		ret = -EINVAL;
 		tcp_dd_send_response(client, ret, "[Server] No data to be sent");
 		goto out_close_fd;
 	}
 
 	ret = lseek(fd, req->offset, SEEK_SET);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		tcp_dd_send_response(client, ret, "[Server] Seek file `%s' failed", pathname);
 		goto out_close_fd;
 	}
@@ -398,16 +349,14 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 	size -= req->offset;
 
 	mode = ffile_get_mode(fd);
-	if (mode == 0)
-	{
+	if (mode == 0) {
 		ret = -EFAULT;
 		tcp_dd_send_response(client, ret, "[Server] Get file `%s' mode failed", pathname);
 		goto out_close_fd;
 	}
 
 	ret = tcp_dd_send_write_request(client, pathname, req->offset, size, mode);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_write_request");
 		return ret;
 	}
@@ -432,19 +381,16 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 	const char *pathname;
 
 	ret = tcp_dd_get_partition_filename(req->filename, service->filename, sizeof(service->pathname));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		tcp_dd_send_response(client, ret, "[Server] `%s' is not a partition", req->filename);
 		return ret;
 	}
 
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		pathname = req->filename;
 
 		mode = file_get_mode(pathname);
-		switch (mode & S_IFMT)
-		{
+		switch (mode & S_IFMT) {
 		case S_IFREG:
 			pr_info("remove regular file %s", pathname);
 			unlink(pathname);
@@ -455,14 +401,11 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 			umount_device(pathname, MNT_DETACH);
 			break;
 		}
-	}
-	else
-	{
+	} else {
 		pathname = service->pathname;
 
 		mode = file_get_mode(pathname);
-		if (mode == 0 || (mode & S_IFMT) != S_IFBLK)
-		{
+		if (mode == 0 || (mode & S_IFMT) != S_IFBLK) {
 			ret = -ENOTBLK;
 
 			tcp_dd_send_response(client, ret, "[Server] `%s' is not a block device", pathname);
@@ -474,22 +417,19 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 	}
 
 	fd = open(pathname, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, req->mode);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", pathname);
 		return fd;
 	}
 
 	ret = lseek(fd, req->offset, SEEK_SET);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		tcp_dd_send_response(client, ret, "[Server] Seek file failed");
 		goto out_close_fd;
 	}
 
 	ret = tcp_dd_send_response(client, 0, "[Server] Start receive file");
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_response");
 		return ret;
 	}
@@ -514,39 +454,33 @@ static int tcp_dd_handle_exec_request(struct network_client *client, struct tcp_
 	pd_info("command = `%s'", req->command);
 
 #ifndef CAVAN_ARCH_ARM
-	if (text_lhcmp("reboot", req->command) == 0 || text_lhcmp("halt", req->command) == 0)
-	{
+	if (text_lhcmp("reboot", req->command) == 0 || text_lhcmp("halt", req->command) == 0) {
 		tcp_dd_send_response(client, -EPERM, "[Server] Don't allow to execute command %s", req->command);
 		ERROR_RETURN(EPERM);
 	}
 #endif
 
 	ret = tcp_dd_send_response(client, 0, "[Server] start execute command");
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_response");
 		return ret;
 	}
 
-	if (client->type == NETWORK_PROTOCOL_TCP || client->type == NETWORK_PROTOCOL_UDP)
-	{
+	if (client->type == NETWORK_PROTOCOL_TCP || client->type == NETWORK_PROTOCOL_UDP) {
 		struct sockaddr_in addr;
 
-		if (inet_getpeername(client->sockfd, &addr) == 0)
-		{
+		if (inet_getpeername(client->sockfd, &addr) == 0) {
 			setenv(CAVAN_IP_ENV_NAME, inet_ntoa(addr.sin_addr), 1);
 		}
 	}
 
 	lines = req->lines;
-	if (lines == 0xFFFF)
-	{
+	if (lines == 0xFFFF) {
 		lines = -1;
 	}
 
 	columns = req->columns;
-	if (columns == 0xFFFF)
-	{
+	if (columns == 0xFFFF) {
 		columns = -1;
 	}
 
@@ -558,8 +492,7 @@ static void tcp_dd_alarm_handler(struct cavan_alarm_node *alarm, struct cavan_al
 	pid_t pid;
 
 	pid = fork();
-	if (pid == 0)
-	{
+	if (pid == 0) {
 		const char *shell_command = "sh";
 
 		execlp(shell_command, shell_command, "-c", data, NULL);
@@ -578,8 +511,7 @@ static int tcp_dd_handle_alarm_add_request(struct network_client *client, struct
 	struct cavan_alarm_node *node;
 
 	node = malloc(sizeof(*node) + text_len(req->command) + 1);
-	if (node == NULL)
-	{
+	if (node == NULL) {
 		pr_error_info("malloc");
 		return -ENOMEM;
 	}
@@ -593,8 +525,7 @@ static int tcp_dd_handle_alarm_add_request(struct network_client *client, struct
 	node->destroy = tcp_dd_alarm_destroy;
 
 	ret = cavan_alarm_insert_node(alarm, node, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		tcp_dd_send_response(client, ret, "[Server] cavan_alarm_insert_node");
 		goto out_free_node;
 	}
@@ -611,8 +542,7 @@ static int tcp_dd_handle_alarm_remove_request(struct network_client *client, str
 	struct double_link_node *node;
 
 	node = double_link_get_node(&alarm->link, req->index);
-	if (node == NULL)
-	{
+	if (node == NULL) {
 		tcp_dd_send_response(client, -ENOENT, "[Server] alarm not found");
 		return -ENOENT;
 	}
@@ -629,14 +559,12 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 	struct tcp_alarm_add_request item;
 
 	ret = tcp_dd_send_response(client, 0, "[Server] start send alarm list");
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_response");
 		return ret;
 	}
 
-	double_link_foreach(&alarm->link, node)
-	{
+	double_link_foreach(&alarm->link, node) {
 		msleep(1);
 
 		item.time = node->time;
@@ -644,8 +572,7 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 		text_copy(item.command, node->private_data);
 
 		ret = client->send(client, (char *) &item, MOFS(struct tcp_alarm_add_request, command) + text_len(item.command) + 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("inet_send");
 			link_foreach_return(&alarm->link, ret);
 		}
@@ -662,41 +589,34 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	ssize_t rdlen, wrlen;
 	struct cavan_input_event events[32];
 
-	if (service->tcp_keypad_fd < 0)
-	{
+	if (service->tcp_keypad_fd < 0) {
 		service->tcp_keypad_fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
-		if (service->tcp_keypad_fd < 0 && service->tcp_keypad_ko)
-		{
+		if (service->tcp_keypad_fd < 0 && service->tcp_keypad_ko) {
 			cavan_system2("insmod \"%s\"", service->tcp_keypad_ko);
 			msleep(200);
 			service->tcp_keypad_fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
 		}
 
-		if (service->tcp_keypad_fd < 0)
-		{
+		if (service->tcp_keypad_fd < 0) {
 			tcp_dd_send_response(client, service->tcp_keypad_fd, "[Server] Failed to open device `%s'", TCP_KEYPAD_DEVICE);
 			return service->tcp_keypad_fd;
 		}
 	}
 
 	ret = tcp_dd_send_response(client, 0, "[Server] Start recv and write event");
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_response");
 		return ret;
 	}
 
-	while (1)
-	{
+	while (1) {
 		rdlen = client->recv(client, events, sizeof(events));
-		if (rdlen < (int) sizeof(struct cavan_input_event))
-		{
+		if (rdlen < (int) sizeof(struct cavan_input_event)) {
 			break;
 		}
 
 		wrlen = write(service->tcp_keypad_fd, events, rdlen);
-		if (wrlen < rdlen)
-		{
+		if (wrlen < rdlen) {
 			pr_error_info("write events");
 			return -EFAULT;
 		}
@@ -705,12 +625,10 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	events[0].type = EV_KEY;
 	events[0].value = 0;
 
-	for (code = 1; code < KEY_CNT; code++)
-	{
+	for (code = 1; code < KEY_CNT; code++) {
 		events[0].code = code;
 		wrlen = write(service->tcp_keypad_fd, events, sizeof(events[0]));
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			return wrlen;
 		}
 	}
@@ -718,8 +636,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	events[0].type = EV_SYN;
 	events[0].code = SYN_REPORT;
 	wrlen = write(service->tcp_keypad_fd, events, sizeof(events[0]));
-	if (wrlen < 0)
-	{
+	if (wrlen < 0) {
 		return wrlen;
 	}
 
@@ -744,29 +661,25 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
 	ret = network_service_open(&dd_service->service, &dd_service->url, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_service_open2");
 		return ret;
 	}
 
 	ret = cavan_alarm_thread_init(&dd_service->alarm);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_alarm_thread_init");
 		goto out_network_service_close;
 	}
 
 	ret = cavan_alarm_thread_start(&dd_service->alarm);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_alarm_thread_start");
 		goto out_cavan_alarm_thread_deinit;
 	}
 
 	dd_service->filename = tcp_dd_find_platform_by_name_path(dd_service->pathname, NULL, sizeof(dd_service->pathname));
-	if (dd_service->filename)
-	{
+	if (dd_service->filename) {
 		pr_green_info("pathname = %s", dd_service->pathname);
 	}
 
@@ -799,16 +712,14 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
 	ret = client->recv(client, &pkg, sizeof(pkg));
-	if (ret < (int) sizeof(pkg.type))
-	{
+	if (ret < (int) sizeof(pkg.type)) {
 		pr_error_info("client->recv %d", ret);
 		return ret < 0 ? ret : -EFAULT;
 	}
 
 	need_response = false;
 
-	switch (pkg.type)
-	{
+	switch (pkg.type) {
 	case TCP_DD_READ:
 		pr_bold_info("TCP_DD_READ");
 		ret = tcp_dd_handle_read_request(dd_service, client, &pkg.file_req);
@@ -852,8 +763,7 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 		return -EINVAL;
 	}
 
-	if (need_response && ret >= 0)
-	{
+	if (need_response && ret >= 0) {
 		tcp_dd_send_response(client, ret, NULL);
 	}
 
@@ -878,22 +788,16 @@ int tcp_dd_service_run(struct cavan_dynamic_service *service)
 
 static int tcp_dd_check_file_request(struct network_file_request *file_req, const char **src_file, const char **dest_file)
 {
-	if (file_req->src_file[0] == 0 && file_req->dest_file[0] == 0)
-	{
+	if (file_req->src_file[0] == 0 && file_req->dest_file[0] == 0) {
 		pr_red_info("src_file == NULL && dest_file == NULL");
 		ERROR_RETURN(EINVAL);
 	}
 
-	if (file_req->src_file[0] == 0)
-	{
+	if (file_req->src_file[0] == 0) {
 		*src_file = *dest_file = file_req->dest_file;
-	}
-	else if (file_req->dest_file[0] == 0)
-	{
+	} else if (file_req->dest_file[0] == 0) {
 		*src_file = *dest_file = file_req->src_file;
-	}
-	else
-	{
+	} else {
 		*src_file = file_req->src_file;
 		*dest_file = file_req->dest_file;
 	}
@@ -911,39 +815,33 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 	struct network_client client;
 
 	ret = tcp_dd_check_file_request(file_req, &src_file, &dest_file);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
 	fd = open(src_file, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("Open file `%s' failed", src_file);
 		return fd;
 	}
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("Get file `%s' stat failed", src_file);
 		goto out_close_fd;
 	}
 
-	if (file_req->size == 0)
-	{
+	if (file_req->size == 0) {
 		file_req->size = st.st_size;
 	}
 
-	if (file_req->size < file_req->src_offset)
-	{
+	if (file_req->size < file_req->src_offset) {
 		pr_red_info("No data to sent");
 		return -EINVAL;
 	}
 
 	ret = lseek(fd, file_req->src_offset, SEEK_SET);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("Seek file `%s' failed", src_file);
 		goto out_close_fd;
 	}
@@ -951,15 +849,13 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 	file_req->size -= file_req->src_offset;
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		goto out_close_fd;
 	}
 
 	ret = tcp_dd_send_write_request(&client, dest_file, file_req->dest_offset, file_req->size, st.st_mode);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_write_request2");
 		goto out_client_close;
 	}
@@ -969,8 +865,7 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 	println("size = %s", size2text(file_req->size));
 
 	ret = network_client_send_file(&client, fd, file_req->size);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_send_file");
 		goto out_close_fd;
 	}
@@ -995,53 +890,45 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 	struct network_client client;
 
 	ret = tcp_dd_check_file_request(file_req, &src_file, &dest_file);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	if (file_test(dest_file, "b") == 0)
-	{
+	if (file_test(dest_file, "b") == 0) {
 		umount_partition(dest_file, MNT_DETACH);
 	}
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("inet_create_tcp_link2");
 		return ret;
 	}
 
 	ret = tcp_dd_send_read_request(&client, src_file, file_req->src_offset, file_req->size, &pkg);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_read_request");
 		goto out_client_close;
 	}
 
 	fd = open(dest_file, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, pkg.file_req.mode);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		ret = fd;
 		tcp_dd_send_response(&client, fd, "[Client] Open file `%s' failed", dest_file);
 		goto out_client_close;
 	}
 
-	if (file_req->size == 0)
-	{
+	if (file_req->size == 0) {
 		file_req->size = pkg.file_req.size;
 	}
 
 	ret = lseek(fd, file_req->dest_offset, SEEK_SET);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		tcp_dd_send_response(&client, ret, "[Client] Seek file `%s' failed", dest_file);
 		goto out_close_fd;
 	}
 
 	ret = tcp_dd_send_response(&client, 0, "[Client] Start receive file");
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_response");
 		goto out_close_fd;
 	}
@@ -1067,22 +954,19 @@ int tcp_dd_exec_command(struct network_url *url, const char *command)
 	struct network_client client;
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
 	}
 
 	ret = tcp_dd_send_exec_request(&client, stdout_fd, command);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_exec_request");
 		goto out_client_close;
 	}
 
 	ret = set_tty_mode(stdin_fd, 5, &tty_attr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("set_tty_mode");
 		goto out_client_close;
 	}
@@ -1111,15 +995,13 @@ int tcp_dd_keypad_client_run(struct network_url *url)
 	struct cavan_event_service service;
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
 	}
 
 	ret = tcp_dd_send_keypad_request(&client);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_exec_request");
 		goto out_client_close;
 	}
@@ -1128,8 +1010,7 @@ int tcp_dd_keypad_client_run(struct network_url *url)
 	service.event_handler = tcp_dd_keypad_event_handler;
 
 	ret = cavan_event_service_start(&service, &client);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_event_service_start");
 		goto out_client_close;
 	}
@@ -1148,8 +1029,7 @@ int tcp_alarm_add(struct network_url *url, const char *command, time_t time, tim
 	struct network_client client;
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
 	}
@@ -1170,8 +1050,7 @@ int tcp_alarm_remove(struct network_url *url, int index)
 	struct network_client client;
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
 	}
@@ -1189,28 +1068,24 @@ int tcp_alarm_list(struct network_url *url, int index)
 	struct tcp_alarm_add_request alarm;
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
 	}
 
 	ret = tcp_dd_send_alarm_query_request(&client, TCP_ALARM_LIST, index);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_send_alarm_query_request");
 		goto out_client_close;
 	}
 
 	index = 0;
 
-	while (1)
-	{
+	while (1) {
 		char prompt[1024];
 
 		ret = client.recv(&client, &alarm, sizeof(alarm));
-		if (ret <= 0)
-		{
+		if (ret <= 0) {
 			break;
 		}
 

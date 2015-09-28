@@ -10,8 +10,7 @@ size_t text_len(const char *text)
 {
 	const char *last = text;
 
-	while (*last)
-	{
+	while (*last) {
 		last++;
 	}
 
@@ -20,10 +19,8 @@ size_t text_len(const char *text)
 
 char *text_find(const char *text, char c)
 {
-	while (text[0])
-	{
-		if (text[0] == c)
-		{
+	while (text[0]) {
+		if (text[0] == c) {
 			return (char *) text;
 		}
 
@@ -35,16 +32,11 @@ char *text_find(const char *text, char c)
 
 char *text_nfind(const char *text, char c, size_t count)
 {
-	while (text[0])
-	{
-		if (text[0] == c)
-		{
-			if (count > 0)
-			{
+	while (text[0]) {
+		if (text[0] == c) {
+			if (count > 0) {
 				count--;
-			}
-			else
-			{
+			} else {
 				return (char *) text;
 			}
 		}
@@ -57,16 +49,11 @@ char *text_nfind(const char *text, char c, size_t count)
 
 char *text_nfind2(const char *text, const char *end, char c, size_t count)
 {
-	while (text < end)
-	{
-		if (*text == c)
-		{
-			if (count > 0)
-			{
+	while (text < end) {
+		if (*text == c) {
+			if (count > 0) {
 				count--;
-			}
-			else
-			{
+			} else {
 				return (char *) text;
 			}
 		}
@@ -81,10 +68,8 @@ char *text_find_tail(const char *text, char c)
 {
 	const char *tmp = NULL;
 
-	while (text[0])
-	{
-		if (text[0] == c)
-		{
+	while (text[0]) {
+		if (text[0] == c) {
 			tmp = text;
 		}
 
@@ -100,8 +85,7 @@ char *text_ntrans(char *text, size_t size)
 	char *last;
 	char *text_bak = text;
 
-	for (last = text + size - 1; last > text; text++, last--)
-	{
+	for (last = text + size - 1; last > text; text++, last--) {
 		temp = *text;
 		*text = *last;
 		*last = temp;
@@ -112,8 +96,7 @@ char *text_ntrans(char *text, size_t size)
 
 char *text_cat(char *dest, const char *src)
 {
-	while (*dest)
-	{
+	while (*dest) {
 		dest++;
 	}
 
@@ -124,12 +107,10 @@ char *text_cat2(char *dest, char *srcs[], size_t count)
 {
 	char **src_end = srcs + count;
 
-	while (srcs < src_end)
-	{
+	while (srcs < src_end) {
 		const char *p = *srcs++;
 
-		while (*p)
-		{
+		while (*p) {
 			*dest++ = *p++;
 		}
 	}
@@ -141,12 +122,10 @@ char *text_cat2(char *dest, char *srcs[], size_t count)
 
 char *text_vcat3(char *dest, size_t count, va_list ap)
 {
-	while (count--)
-	{
+	while (count--) {
 		const char *p = va_arg(ap, const char *);
 
-		while (*p)
-		{
+		while (*p) {
 			*dest++ = *p++;
 		}
 	}
@@ -169,12 +148,10 @@ char *text_cat3(char *dest, size_t count, ...)
 
 char *text_cat4(char *dest, char *srcs[])
 {
-	while (srcs)
-	{
+	while (srcs) {
 		const char *p = *srcs++;
 
-		while (*p)
-		{
+		while (*p) {
 			*dest++ = *p++;
 		}
 	}
@@ -186,17 +163,14 @@ char *text_cat4(char *dest, char *srcs[])
 
 char *text_vcat5(char *dest, va_list ap)
 {
-	while (1)
-	{
+	while (1) {
 		const char *p = va_arg(ap, const char *);
 
-		if (p == NULL)
-		{
+		if (p == NULL) {
 			break;
 		}
 
-		while (*p)
-		{
+		while (*p) {
 			*dest++ = *p++;
 		}
 	}
@@ -221,10 +195,8 @@ char *text2lowercase(char *text)
 {
 	char *text_bak = text;
 
-	while (1)
-	{
-		switch (*text)
-		{
+	while (1) {
+		switch (*text) {
 		case 0:
 			return text_bak;
 		case 'A' ... 'Z':
@@ -240,10 +212,8 @@ char *text2uppercase(char *text)
 {
 	char *text_bak = text;
 
-	while (1)
-	{
-		switch (*text)
-		{
+	while (1) {
+		switch (*text) {
 		case 0:
 			return text_bak;
 		case 'a' ... 'z':
@@ -257,8 +227,7 @@ char *text2uppercase(char *text)
 
 char *text_copy(char *dest, const char *src)
 {
-	while ((*dest = *src))
-	{
+	while ((*dest = *src)) {
 		dest++;
 		src++;
 	}
@@ -268,10 +237,8 @@ char *text_copy(char *dest, const char *src)
 
 char *text_copy_lowercase(char *dest, const char *src)
 {
-	while (1)
-	{
-		switch (*src)
-		{
+	while (1) {
+		switch (*src) {
 		case 0:
 			return dest;
 		case 'A' ... 'Z':
@@ -288,10 +255,8 @@ char *text_copy_lowercase(char *dest, const char *src)
 
 char *text_copy_uppercase(char *dest, const char *src)
 {
-	while (1)
-	{
-		switch (*src)
-		{
+	while (1) {
+		switch (*src) {
 		case 0:
 			return dest;
 		case 'a' ... 'z':
@@ -310,8 +275,7 @@ char *text_ncopy(char *dest, const char *src, size_t size)
 {
 	const char *end_src;
 
-	for (end_src = src + size - 1; src < end_src && *src; src++, dest++)
-	{
+	for (end_src = src + size - 1; src < end_src && *src; src++, dest++) {
 		*dest = *src;
 	}
 
@@ -324,8 +288,7 @@ u16 *text_copy16(u16 *dest, const u16 *src, size_t count)
 {
 	const u16 *end_src = src + count;
 
-	while (src < end_src)
-	{
+	while (src < end_src) {
 		*dest++ = *src++;
 	}
 
@@ -336,8 +299,7 @@ u32 *text_copy32(u32 *dest, const u32 *src, size_t count)
 {
 	const u32 *end_src = src + count;
 
-	while (src < end_src)
-	{
+	while (src < end_src) {
 		*dest++ = *src++;
 	}
 
@@ -348,8 +310,7 @@ u64 *text_copy64(u64 *dest, const u64 *src, size_t count)
 {
 	const u64 *end_src = src + count;
 
-	while (src < end_src)
-	{
+	while (src < end_src) {
 		*dest++ = *src++;
 	}
 
@@ -358,8 +319,7 @@ u64 *text_copy64(u64 *dest, const u64 *src, size_t count)
 
 int text_cmp(const char *text1, const char *text2)
 {
-	while (*text1 && *text1 == *text2)
-	{
+	while (*text1 && *text1 == *text2) {
 		text1++;
 		text2++;
 	}
@@ -371,8 +331,7 @@ int text_ncmp(const char *text1, const char *text2, size_t size)
 {
 	const char *end_text1;
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		return 0;
 	}
 
@@ -383,8 +342,7 @@ int text_ncmp(const char *text1, const char *text2, size_t size)
 
 int text_hcmp(const char *text1, const char *text2)
 {
-	while (*text1 && *text1 == *text2)
-	{
+	while (*text1 && *text1 == *text2) {
 		text1++;
 		text2++;
 	}
@@ -394,10 +352,8 @@ int text_hcmp(const char *text1, const char *text2)
 
 int text_lhcmp(const char *text1, const char *text2)
 {
-	while (*text1)
-	{
-		if (*text1 != *text2)
-		{
+	while (*text1) {
+		if (*text1 != *text2) {
 			return *text1 - *text2;
 		}
 
@@ -410,10 +366,8 @@ int text_lhcmp(const char *text1, const char *text2)
 
 int text_rhcmp(const char *text1, const char *text2)
 {
-	while (*text2)
-	{
-		if (*text1 != *text2)
-		{
+	while (*text2) {
+		if (*text1 != *text2) {
 			return *text1 - *text2;
 		}
 
@@ -428,46 +382,32 @@ int text_tcmp(const char *text1, const char *text2)
 {
 	const char *text_start1 = text1, *text_start2 = text2;
 
-	while (*text1)
-	{
+	while (*text1) {
 		text1++;
 	}
 
-	while (*text2)
-	{
+	while (*text2) {
 		text2++;
 	}
 
-	while (text1 >= text_start1 && text2 >= text_start2 && *text1 == *text2)
-	{
+	while (text1 >= text_start1 && text2 >= text_start2 && *text1 == *text2) {
 		text1--;
 		text2--;
 	}
 
-	if (text1 < text_start1)
-	{
-		if (text2 < text_start2)
-		{
+	if (text1 < text_start1) {
+		if (text2 < text_start2) {
 			return 0;
-		}
-		else
-		{
+		} else {
 			return -1;
 		}
-	}
-	else if (text2 < text_start2)
-	{
-		if (text1 < text_start1)
-		{
+	} else if (text2 < text_start2) {
+		if (text1 < text_start1) {
 			return 0;
-		}
-		else
-		{
+		} else {
 			return 1;
 		}
-	}
-	else
-	{
+	} else {
 		return *text1 - *text2;
 	}
 }
@@ -476,39 +416,28 @@ int text_ltcmp(const char *text1, const char *text2)
 {
 	const char *text_start1 = text1, *text_start2 = text2;
 
-	while (*text1)
-	{
+	while (*text1) {
 		text1++;
 	}
 
-	while (*text2)
-	{
+	while (*text2) {
 		text2++;
 	}
 
-	while (text1 >= text_start1 && text2 >= text_start2 && *text1 == *text2)
-	{
+	while (text1 >= text_start1 && text2 >= text_start2 && *text1 == *text2) {
 		text1--;
 		text2--;
 	}
 
-	if (text1 < text_start1)
-	{
+	if (text1 < text_start1) {
 		return 0;
-	}
-	else if (text2 < text_start2)
-	{
-		if (text1 < text_start1)
-		{
+	} else if (text2 < text_start2) {
+		if (text1 < text_start1) {
 			return 0;
-		}
-		else
-		{
+		} else {
 			return 1;
 		}
-	}
-	else
-	{
+	} else {
 		return *text1 - *text2;
 	}
 }
@@ -517,39 +446,28 @@ int text_rtcmp(const char *text1, const char *text2)
 {
 	const char *text_start1 = text1, *text_start2 = text2;
 
-	while (*text1)
-	{
+	while (*text1) {
 		text1++;
 	}
 
-	while (*text2)
-	{
+	while (*text2) {
 		text2++;
 	}
 
-	while (text1 >= text_start1 && text2 >= text_start2 && *text1 == *text2)
-	{
+	while (text1 >= text_start1 && text2 >= text_start2 && *text1 == *text2) {
 		text1--;
 		text2--;
 	}
 
-	if (text1 < text_start1)
-	{
-		if (text2 < text_start2)
-		{
+	if (text1 < text_start1) {
+		if (text2 < text_start2) {
 			return 0;
-		}
-		else
-		{
+		} else {
 			return -1;
 		}
-	}
-	else if (text2 < text_start2)
-	{
+	} else if (text2 < text_start2) {
 		return 0;
-	}
-	else
-	{
+	} else {
 		return *text1 - *text2;
 	}
 }
@@ -558,14 +476,12 @@ void text_show(const char *text, size_t size)
 {
 	const char *end_text;
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		println("Empty");
 		return;
 	}
 
-	for (end_text = text + size - 1; text < end_text; text++)
-	{
+	for (end_text = text + size - 1; text < end_text; text++) {
 		print("%02x ", *(u8 *) text);
 	}
 
@@ -576,14 +492,12 @@ void text_show16(const u16 *text, size_t count)
 {
 	const u16 *end_text;
 
-	if (count == 0)
-	{
+	if (count == 0) {
 		println("Empty");
 		return;
 	}
 
-	for (end_text = text + count - 1; text < end_text; text++)
-	{
+	for (end_text = text + count - 1; text < end_text; text++) {
 		print("%04x ", *text);
 	}
 
@@ -594,14 +508,12 @@ void text_show32(const u32 *text, size_t count)
 {
 	const u32 *end_text;
 
-	if (count == 0)
-	{
+	if (count == 0) {
 		println("Empty");
 		return;
 	}
 
-	for (end_text = text + count - 1; text < end_text; text++)
-	{
+	for (end_text = text + count - 1; text < end_text; text++) {
 		print("%08x ", *text);
 	}
 
@@ -612,14 +524,12 @@ void text_show64(const u64 *text, size_t count)
 {
 	const u64 *end_text = text + count;
 
-	if (count == 0)
-	{
+	if (count == 0) {
 		println("Empty");
 		return;
 	}
 
-	for (end_text = text + count - 1; text < end_text; text++)
-	{
+	for (end_text = text + count - 1; text < end_text; text++) {
 #if __WORDSIZE == 64
 		print("%016lx ", *text);
 #else
@@ -638,8 +548,7 @@ void *text_set8(u8 *text, u8 value, size_t count)
 {
 	u8 *end_text = text + count;
 
-	while (text < end_text)
-	{
+	while (text < end_text) {
 		*text++ = value;
 	}
 
@@ -650,8 +559,7 @@ void *text_set16(u16 *text, u16 value, size_t count)
 {
 	u16 *end_text = text + count;
 
-	while (text < end_text)
-	{
+	while (text < end_text) {
 		*text++ = value;
 	}
 
@@ -662,8 +570,7 @@ void *text_set32(u32 *text, u32 value, size_t count)
 {
 	u32 *end_text = text + count;
 
-	while (text < end_text)
-	{
+	while (text < end_text) {
 		*text++ = value;
 	}
 
@@ -674,8 +581,7 @@ void *text_set64(u64 *text, u64 value, size_t count)
 {
 	u64 *end_text = text + count;
 
-	while (text < end_text)
-	{
+	while (text < end_text) {
 		*text++ = value;
 	}
 
@@ -687,8 +593,7 @@ char *text_ndup(const char *text, size_t size)
 	char *text_new;
 
 	text_new = malloc(size);
-	if (text_new == NULL)
-	{
+	if (text_new == NULL) {
 		return NULL;
 	}
 
@@ -704,8 +609,7 @@ char *text_dup(const char *text)
 
 	size = text_len(text) + 1;
 	text_new = malloc(size);
-	if (text_new == NULL)
-	{
+	if (text_new == NULL) {
 		return NULL;
 	}
 
@@ -719,20 +623,15 @@ char *text_tok(char *text, const char *delim)
 	char *temp;
 	static char *text_bak;
 
-	if (text)
-	{
+	if (text) {
 		text_bak = text;
-	}
-	else if (text_bak == NULL)
-	{
+	} else if (text_bak == NULL) {
 		return NULL;
 	}
 
 	temp = text_bak;
-	while (*text_bak)
-	{
-		if (text_find(delim, *text_bak))
-		{
+	while (*text_bak) {
+		if (text_find(delim, *text_bak)) {
 			*text_bak++ = 0;
 			return temp;
 		}
@@ -745,8 +644,7 @@ char *text_tok(char *text, const char *delim)
 
 int char2value(char c)
 {
-	switch (c)
-	{
+	switch (c) {
 	case '0' ... '9':
 		return c - '0';
 
@@ -763,10 +661,8 @@ int char2value(char c)
 
 int prefix2base(const char *prefix, const char *prefix_end, const char **last, int base)
 {
-	if ((prefix_end && prefix + 1 >= prefix_end) || *prefix != '0')
-	{
-		if (base < 2)
-		{
+	if ((prefix_end && prefix + 1 >= prefix_end) || *prefix != '0') {
+		if (base < 2) {
 			base = 10;
 		}
 
@@ -775,8 +671,7 @@ int prefix2base(const char *prefix, const char *prefix_end, const char **last, i
 
 	prefix++;
 
-	switch (*prefix)
-	{
+	switch (*prefix) {
 	case 'b':
 	case 'B':
 		prefix++;
@@ -814,8 +709,7 @@ int prefix2base(const char *prefix, const char *prefix_end, const char **last, i
 	}
 
 out_return:
-	if (last)
-	{
+	if (last) {
 		*last = prefix;
 	}
 
@@ -827,24 +721,20 @@ u64 text2value_unsigned(const char *text, const char **last, int base)
 	u64 value;
 	int tmp;
 
-	if (text == NULL)
-	{
+	if (text == NULL) {
 		return 0;
 	}
 
 	base = prefix2base2(text, &text, base);
-	if (base < 0)
-	{
+	if (base < 0) {
 		value = 0;
 		pr_red_info("prefix2base");
 		goto out_return;
 	}
 
-	for (value = 0; *text; text++)
-	{
+	for (value = 0; *text; text++) {
 		tmp = char2value(*text);
-		if (tmp < 0 || tmp >= base)
-		{
+		if (tmp < 0 || tmp >= base) {
 			break;
 		}
 
@@ -852,8 +742,7 @@ u64 text2value_unsigned(const char *text, const char **last, int base)
 	}
 
 out_return:
-	if (last)
-	{
+	if (last) {
 		*last = text;
 	}
 
@@ -862,17 +751,14 @@ out_return:
 
 s64 text2value(const char *text, const char **last, int base)
 {
-	if (text == NULL)
-	{
-		if (last)
-		{
+	if (text == NULL) {
+		if (last) {
 			*last = NULL;
 		}
 		return 0;
 	}
 
-	if (*text == '-')
-	{
+	if (*text == '-') {
 		return -text2value_unsigned(text + 1, last, base);
 	}
 
@@ -884,45 +770,37 @@ double text2double_unsigned(const char *text, const char *text_end, const char *
 	int value;
 	double result, weight;
 
-	if (text_end == NULL)
-	{
+	if (text_end == NULL) {
 		text_end = text + text_len(text);
 	}
 
-	if (text >= text_end)
-	{
+	if (text >= text_end) {
 		result = 0;
 		goto out_return;
 	}
 
 	value = prefix2base(text, text_end, &text, base);
-	if (value > 1)
-	{
+	if (value > 1) {
 		base = value;
 	}
 
-	for (result = 0; text < text_end; text++)
-	{
-		if (*text == '.')
-		{
+	for (result = 0; text < text_end; text++) {
+		if (*text == '.') {
 			text++;
 			break;
 		}
 
 		value = char2value(*text);
-		if (value < 0 || value >= base)
-		{
+		if (value < 0 || value >= base) {
 			goto out_return;
 		}
 
 		result = result * base + value;
 	}
 
-	for (weight = 1.0 / base; text < text_end; text++)
-	{
+	for (weight = 1.0 / base; text < text_end; text++) {
 		value = char2value(*text);
-		if (value < 0 || value >= base)
-		{
+		if (value < 0 || value >= base) {
 			break;
 		}
 
@@ -931,8 +809,7 @@ double text2double_unsigned(const char *text, const char *text_end, const char *
 	}
 
 out_return:
-	if (last)
-	{
+	if (last) {
 		*last = text;
 	}
 
@@ -941,18 +818,15 @@ out_return:
 
 double text2double(const char *text, const char *text_end, const char **last, int base)
 {
-	if (text == NULL)
-	{
-		if (last)
-		{
+	if (text == NULL) {
+		if (last) {
 			*last = NULL;
 		}
 
 		return 0;
 	}
 
-	if (*text == '-')
-	{
+	if (*text == '-') {
 		return -text2double_unsigned(text, text_end, last, base);
 	}
 
@@ -963,8 +837,7 @@ char *reverse_value2text_base2(u64 value, char *buff, size_t size)
 {
 	char *buff_end;
 
-	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 1)
-	{
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 1) {
 		*buff = (value & 0x01) + '0';
 	}
 
@@ -977,8 +850,7 @@ char *reverse_value2text_base4(u64 value, char *buff, size_t size)
 {
 	char *buff_end;
 
-	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 2)
-	{
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 2) {
 		*buff = (value & 0x03) + '0';
 	}
 
@@ -991,8 +863,7 @@ char *reverse_value2text_base8(u64 value, char *buff, size_t size)
 {
 	char *buff_end;
 
-	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 3)
-	{
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 3) {
 		*buff = (value & 0x07) + '0';
 	}
 
@@ -1005,8 +876,7 @@ char *reverse_value2text_base16(u64 value, char *buff, size_t size)
 {
 	char *buff_end;
 
-	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 4)
-	{
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 4) {
 		*buff = value2char(value & 0x0F);
 	}
 
@@ -1019,8 +889,7 @@ char *reverse_value2text_base32(u64 value, char *buff, size_t size)
 {
 	char *buff_end;
 
-	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 5)
-	{
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 5) {
 		*buff = value2char(value & 0x1F);
 	}
 
@@ -1033,8 +902,7 @@ char *reverse_value2text_all(u64 value, char *buff, size_t size, int base)
 {
 	char *buff_end;
 
-	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value /= base)
-	{
+	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value /= base) {
 		*buff = value2char(value % base);
 	}
 
@@ -1045,14 +913,12 @@ char *reverse_value2text_all(u64 value, char *buff, size_t size, int base)
 
 char *value2text_reverse_simple(u64 value, char *buff, size_t size, int base)
 {
-	if (value == 0)
-	{
+	if (value == 0) {
 		*(u16 *) buff = 0x0030;
 		return buff + 1;
 	}
 
-	switch (base)
-	{
+	switch (base) {
 	case 2:
 		return reverse_value2text_base2(value, buff, size);
 
@@ -1085,8 +951,7 @@ char *value2text_unsigned_simple(u64 value, char *buff, size_t size, int base)
 
 char *value2text_simple(s64 value, char *buff, size_t size, int base)
 {
-	if (value < 0 && base == 10)
-	{
+	if (value < 0 && base == 10) {
 		*buff = '-';
 		return value2text_unsigned_simple(-value, buff + 1, size - 1, 10);
 	}
@@ -1096,8 +961,7 @@ char *value2text_simple(s64 value, char *buff, size_t size, int base)
 
 char *base2prefix(int base, char *prefix)
 {
-	switch (base)
-	{
+	switch (base) {
 	case 2:
 		*(u16 *) prefix = 0x4230;
 		prefix += 2;
@@ -1125,18 +989,15 @@ char *base2prefix(int base, char *prefix)
 
 char *base2prefix_reverse(char *text, size_t size, int base)
 {
-	if (size < 2)
-	{
-		if (size)
-		{
+	if (size < 2) {
+		if (size) {
 			*text = 0;
 		}
 
 		return text;
 	}
 
-	switch (base)
-	{
+	switch (base) {
 	case 2:
 		*(u16 *) text = 0x3042;
 		text += 2;
@@ -1168,39 +1029,31 @@ char *value2text_base(s64 value, char *text, int length, char fill, int flags)
 	int base;
 
 	base = flags & 0xFF;
-	if (base == 10 && value < 0 && (flags & TEXT_FLAG_SIGNED))
-	{
+	if (base == 10 && value < 0 && (flags & TEXT_FLAG_SIGNED)) {
 		*text++ = '-';
 		tail = value2text_reverse_simple(-value, buff, sizeof(buff), 10);
-	}
-	else
-	{
+	} else {
 		tail = value2text_reverse_simple(value, buff, sizeof(buff), base);
 	}
 
-	if (flags & TEXT_FLAG_PREFIX)
-	{
+	if (flags & TEXT_FLAG_PREFIX) {
 		text = base2prefix(base, text);
 	}
 
 	length -= (tail - buff);
-	if (length > 0)
-	{
+	if (length > 0) {
 		char *text_end;
 
-		if (fill == 0)
-		{
+		if (fill == 0) {
 			fill = '0';
 		}
 
-		for (text_end = text + length; text < text_end; text++)
-		{
+		for (text_end = text + length; text < text_end; text++) {
 			*text = fill;
 		}
 	}
 
-	for (tail--; tail >= buff; text++, tail--)
-	{
+	for (tail--; tail >= buff; text++, tail--) {
 		*text = *tail;
 	}
 
@@ -1226,19 +1079,14 @@ char *value2bitlist(u64 value, char *buff, size_t size, const char *sep)
 
 	buff = text_ncopy(buff, "[ ", buff_end - buff);
 
-	for (i = sizeof(value) * 8 - 1, count = 0; i >= 0 && buff < buff_end; i--)
-	{
-		if ((value & (((u64) 1) << i)) == 0)
-		{
+	for (i = sizeof(value) * 8 - 1, count = 0; i >= 0 && buff < buff_end; i--) {
+		if ((value & (((u64) 1) << i)) == 0) {
 			continue;
 		}
 
-		if (count > 0)
-		{
+		if (count > 0) {
 			buff += snprintf(buff, buff_end - buff, "%s%d", sep, i);
-		}
-		else
-		{
+		} else {
 			buff += snprintf(buff, buff_end - buff, "%d", i);
 		}
 
@@ -1256,8 +1104,7 @@ double text2size_single(const char *text, const char **last)
 
 	size = text2double_unsigned(text, NULL, &text, 10);
 
-	switch (*text)
-	{
+	switch (*text) {
 	case 't':
 	case 'T':
 		size *= 1LL << 40;
@@ -1287,13 +1134,11 @@ double text2size_single(const char *text, const char **last)
 		error_msg("illegal character \'%c\'", *text);
 	}
 
-	if (*text)
-	{
+	if (*text) {
 		text++;
 	}
 
-	if (last)
-	{
+	if (last) {
 		*last = text;
 	}
 
@@ -1304,20 +1149,17 @@ double text2size(const char *text, const char **last)
 {
 	double size;
 
-	if (text == NULL)
-	{
+	if (text == NULL) {
 		return 0;
 	}
 
 	size = 0;
 
-	while (*text)
-	{
+	while (*text) {
 		size += text2size_single(text, &text);
 	}
 
-	if (last)
-	{
+	if (last) {
 		*last = text;
 	}
 
@@ -1326,17 +1168,13 @@ double text2size(const char *text, const char **last)
 
 double text2size_mb(const char *text)
 {
-	if (text == NULL)
-	{
+	if (text == NULL) {
 		return 0;
 	}
 
-	if (text_is_float(text))
-	{
+	if (text_is_float(text)) {
 		return text2double_unsigned(text, NULL, NULL, 10);
-	}
-	else
-	{
+	} else {
 		return text2size(text, NULL) / (1 << 20);
 	}
 }
@@ -1345,43 +1183,37 @@ char *size2text_base(u64 size, char *buff, size_t buff_len)
 {
 	u64 tmp;
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		*buff++ = '0';
 		goto out_return;
 	}
 
 	tmp = (size >> 40) & 0x3FF;
-	if (tmp)
-	{
+	if (tmp) {
 		buff = value2text_simple(tmp, buff, buff_len, 10);
 		*buff++ = 'T';
 	}
 
 	tmp = (size >> 30) & 0x3FF;
-	if (tmp)
-	{
+	if (tmp) {
 		buff = value2text_simple(tmp, buff, buff_len, 10);
 		*buff++ = 'G';
 	}
 
 	tmp = (size >> 20) & 0x3FF;
-	if (tmp)
-	{
+	if (tmp) {
 		buff = value2text_simple(tmp, buff, buff_len, 10);
 		*buff++ = 'M';
 	}
 
 	tmp = (size >> 10) & 0x3FF;
-	if (tmp)
-	{
+	if (tmp) {
 		buff = value2text_simple(tmp, buff, buff_len, 10);
 		*buff++ = 'k';
 	}
 
 	tmp = size & 0x3FF;
-	if (tmp)
-	{
+	if (tmp) {
 		buff = value2text_simple(tmp, buff, buff_len, 10);
 	}
 
@@ -1407,8 +1239,7 @@ double text2time_single(const char *text, const char **last)
 
 	time = text2double_unsigned(text, NULL, &text, 10);
 
-	switch (*text)
-	{
+	switch (*text) {
 	case 'y':
 	case 'Y':
 		time = TIME_YEAR(time);
@@ -1444,13 +1275,11 @@ double text2time_single(const char *text, const char **last)
 		error_msg("illegal character \'%c\'", *text);
 	}
 
-	if (*text)
-	{
+	if (*text) {
 		text++;
 	}
 
-	if (last)
-	{
+	if (last) {
 		*last = text;
 	}
 
@@ -1461,20 +1290,17 @@ double text2time(const char *text, const char **last)
 {
 	double time;
 
-	if (text == NULL)
-	{
+	if (text == NULL) {
 		return 0;
 	}
 
 	time = 0;
 
-	while (*text)
-	{
+	while (*text) {
 		time += text2time_single(text, &text);
 	}
 
-	if (last)
-	{
+	if (last) {
 		*last = text;
 	}
 
@@ -1487,21 +1313,18 @@ int text2date(const char *text, struct tm *date, ...)
 
 	va_start(ap, date);
 
-	while (1)
-	{
+	while (1) {
 		const char *format;
 		struct tm date_bak;
 
 		format = va_arg(ap, const char *);
-		if (format == NULL)
-		{
+		if (format == NULL) {
 			return -EINVAL;
 		}
 
 		date_bak = *date;
 
-		if (strptime(text, format, date))
-		{
+		if (strptime(text, format, date)) {
 			pr_bold_info("Date Format = %s", format);
 			break;
 		}
@@ -1517,8 +1340,7 @@ static u64 get_argument(char *args, int size)
 {
 	u64 value;
 
-	switch (size)
-	{
+	switch (size) {
 	case 1:
 		value = *(u8 *) args;
 		break;
@@ -1549,10 +1371,8 @@ char *vformat_text(char *buff, const char *fmt, va_list args)
 	int symbol;
 	char fill;
 
-	while (1)
-	{
-		switch(fmt[0])
-		{
+	while (1) {
+		switch(fmt[0]) {
 		case 0:
 			goto out_return;
 
@@ -1563,14 +1383,12 @@ char *vformat_text(char *buff, const char *fmt, va_list args)
 			symbol = 1;
 			fill = ' ';
 start_parse:
-			switch (fmt[0])
-			{
+			switch (fmt[0]) {
 			case '0':
 				fill = '0';
 				fmt++;
 			case '1' ... '9':
-				while (fmt[0] >= '0' && fmt[0] <= '9')
-				{
+				while (fmt[0] >= '0' && fmt[0] <= '9') {
 					text_len = text_len * 10 + fmt[0] - '0';
 					fmt++;
 				}
@@ -1682,10 +1500,8 @@ const char *text_basename_simple(const char *pathname)
 {
 	const char *basename;
 
-	for (basename = pathname; *pathname; pathname++)
-	{
-		if (*pathname == '/')
-		{
+	for (basename = pathname; *pathname; pathname++) {
+		if (*pathname == '/') {
 			basename = pathname + 1;
 		}
 	}
@@ -1699,24 +1515,20 @@ char *text_basename_base(char *buff, const char *path)
 
 	last = path;
 
-	while (last[0])
-	{
+	while (last[0]) {
 		last++;
 	}
 
 	last--;
 
-	while (last[0] == '/')
-	{
+	while (last[0] == '/') {
 		last--;
 	}
 
 	first = last;
 
-	while (first >= path)
-	{
-		if (first[0] == '/')
-		{
+	while (first >= path) {
+		if (first[0] == '/') {
 			break;
 		}
 
@@ -1725,8 +1537,7 @@ char *text_basename_base(char *buff, const char *path)
 
 	first++;
 
-	while (first <= last)
-	{
+	while (first <= last) {
 		*buff++ = *first++;
 	}
 
@@ -1749,26 +1560,22 @@ char *text_dirname_base(char *buff, const char *path)
 	const char *last;
 
 	last = path;
-	while (*last)
-	{
+	while (*last) {
 		last++;
 	}
 
 	while (--last > path && *last == '/');
 	while (last > path && *last-- != '/');
-	while (last > path && *last == '/')
-	{
+	while (last > path && *last == '/') {
 		last--;
 	}
 
-	if (path == last && *path != '/')
-	{
+	if (path == last && *path != '/') {
 		*buff++ = '.';
 		goto out_buff_end;
 	}
 
-	while (path <= last)
-	{
+	while (path <= last) {
 		*buff++ = *path++;
 	}
 
@@ -1795,8 +1602,7 @@ static int symbol_match_base(char c1, char c2)
 
 static int symbol_match(char c1, char c2)
 {
-	if (c1 == c2)
-	{
+	if (c1 == c2) {
 		return 1;
 	}
 
@@ -1806,17 +1612,14 @@ static int symbol_match(char c1, char c2)
 
 int text_match(const char *text1, const char *text2)
 {
-	while (text1[0] && text2[0])
-	{
-		switch (text1[0])
-		{
+	while (text1[0] && text2[0]) {
+		switch (text1[0]) {
 		case '\\':
 			break;
 		case '*':
 			break;
 		default:
-			if (text1[0] != text2[0])
-			{
+			if (text1[0] != text2[0]) {
 				return text1[0] - text2[0];
 			}
 		}
@@ -1835,8 +1638,7 @@ char *get_ntext_base(const char *src, char *dest, int start, int count)
 	src += start;
 	src_end = src + count;
 
-	while (src < src_end)
-	{
+	while (src < src_end) {
 		*dest++ = *src++;
 	}
 
@@ -1877,12 +1679,9 @@ FILE *vpipe_command(const char *command, va_list ap)
 	println("excute command \"%s\" with pipe", buff);
 
 	ftemp = popen(buff, "r");
-	if (ftemp)
-	{
+	if (ftemp) {
 		// system_sync();
-	}
-	else
-	{
+	} else {
 		println("\"%s\" faild", buff);
 	}
 
@@ -1910,12 +1709,9 @@ FILE *vpipe_command_verbose(const char *command, va_list ap)
 	println("excute command \"%s\" with pipe", buff);
 
 	ftemp = popen(buff, "r");
-	if (ftemp)
-	{
+	if (ftemp) {
 		// system_sync();
-	}
-	else
-	{
+	} else {
 		println("\"%s\" faild", buff);
 	}
 
@@ -1955,8 +1751,7 @@ ssize_t vbuff_command(char *buff, size_t bufflen, const char *command, va_list a
 	ssize_t readlen;
 
 	fpipe = vpipe_command(command, ap);
-	if (fpipe == NULL)
-	{
+	if (fpipe == NULL) {
 		return -1;
 	}
 
@@ -2026,12 +1821,9 @@ int system_command_simple(const char *command)
 
 	println("excute command `%s'", command);
 	ret = system(command);
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		// system_sync();
-	}
-	else
-	{
+	} else {
 		println("`%s' faild", command);
 	}
 
@@ -2045,32 +1837,27 @@ int vsystem_command(const char *command, va_list ap)
 
 	vsprintf(buff, command, ap);
 	ret = system_command_simple(buff);
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		return 0;
 	}
 
-	if (WEXITSTATUS(ret) != 127)
-	{
+	if (WEXITSTATUS(ret) != 127) {
 		return -1;
 	}
 
 	vsprintf(text_copy(buff, "PATH=" DEFAULT_PATH_VALUE ":${PATH}; "), command, ap);
 	ret = system_command_simple(buff);
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		return 0;
 	}
 
-	if (WEXITSTATUS(ret) != 127)
-	{
+	if (WEXITSTATUS(ret) != 127) {
 		return -1;
 	}
 
 	vsprintf(text_copy(buff, "/bin/busybox "), command, ap);
 	ret = system_command_simple(buff);
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		return 0;
 	}
 
@@ -2124,8 +1911,7 @@ char *mem2text_base(const void *mem, size_t mem_size, char *buff, int size)
 	ep = p + mem_size;
 	buff_end = buff + size - 2;
 
-	while (p < ep && buff < buff_end)
-	{
+	while (p < ep && buff < buff_end) {
 		buff = value2text_base(*p++, buff, 2, 0, 16);
 	}
 
@@ -2152,9 +1938,7 @@ void system_sync(void)
 	if (system("PATH=" DEFAULT_PATH_VALUE ":${PATH}; sync") == 0)
 	{
 		println("OK");
-	}
-	else
-	{
+	} else {
 		println("Failed");
 	}
 }
@@ -2180,13 +1964,11 @@ char *to_abs_path_directory_base(const char *rel_path, char *abs_path, size_t si
 	int ret;
 
 	ret = chdir_backup(rel_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return NULL;
 	}
 
-	if (getcwd(abs_path, size) == NULL)
-	{
+	if (getcwd(abs_path, size) == NULL) {
 		abs_path = NULL;
 	}
 
@@ -2199,8 +1981,7 @@ char *to_abs_directory(const char *rel_path)
 {
 	static char buff[1024];
 
-	if (to_abs_path_directory_base(rel_path, buff, sizeof(buff)) == NULL)
-	{
+	if (to_abs_path_directory_base(rel_path, buff, sizeof(buff)) == NULL) {
 		buff[0] = 0;
 	}
 
@@ -2212,15 +1993,13 @@ char *to_abs_path2_base(const char *rel_path, char *abs_path, size_t size)
 	char *p;
 	char dir_path[1024];
 
-	if (file_test(rel_path, "d") == 0)
-	{
+	if (file_test(rel_path, "d") == 0) {
 		return to_abs_path_directory_base(rel_path, abs_path, size);
 	}
 
 	text_dirname_base(dir_path, rel_path);
 
-	if (to_abs_path_directory_base(dir_path, abs_path, size) == NULL)
-	{
+	if (to_abs_path_directory_base(dir_path, abs_path, size) == NULL) {
 		return NULL;
 	}
 
@@ -2237,8 +2016,7 @@ char *to_abs_path2(const char *rel_path)
 {
 	static char buff[1024];
 
-	if (to_abs_path2_base(rel_path, buff, sizeof(buff)) == NULL)
-	{
+	if (to_abs_path2_base(rel_path, buff, sizeof(buff)) == NULL) {
 		buff[0] = 0;
 	}
 
@@ -2254,30 +2032,24 @@ char *prettify_pathname_base(const char *src_path, char *dest_path, size_t size)
 	src_path = temp_path;
 	dest_bak = dest_path;
 
-	if (*src_path != '/')
-	{
-		if (getcwd(dest_path, size) == NULL)
-		{
+	if (*src_path != '/') {
+		if (getcwd(dest_path, size) == NULL) {
 			return NULL;
 		}
 
-		while (*dest_path)
-		{
+		while (*dest_path) {
 			dest_path++;
 		}
 	}
 
-	while (src_path < src_end)
-	{
-		while (*src_path == '/')
-		{
+	while (src_path < src_end) {
+		while (*src_path == '/') {
 			src_path++;
 		}
 
 		src_temp = (char *) src_path;
 
-		while (*src_temp && *src_temp != '/')
-		{
+		while (*src_temp && *src_temp != '/') {
 			src_temp++;
 		}
 
@@ -2285,22 +2057,16 @@ char *prettify_pathname_base(const char *src_path, char *dest_path, size_t size)
 
 		// println("src_path = %s", src_path);
 
-		if (text_cmp(src_path, "..") == 0)
-		{
-			while (dest_path > dest_bak)
-			{
-				if (*--dest_path == '/')
-				{
+		if (text_cmp(src_path, "..") == 0) {
+			while (dest_path > dest_bak) {
+				if (*--dest_path == '/') {
 					break;
 				}
 			}
-		}
-		else if (*src_path && text_cmp(src_path, "."))
-		{
+		} else if (*src_path && text_cmp(src_path, ".")) {
 			*dest_path++ = '/';
 
-			while (src_path < src_temp)
-			{
+			while (src_path < src_temp) {
 				*dest_path++ = *src_path++;
 			}
 		}
@@ -2308,8 +2074,7 @@ char *prettify_pathname_base(const char *src_path, char *dest_path, size_t size)
 		src_path = src_temp + 1;
 	}
 
-	if (dest_path <= dest_bak)
-	{
+	if (dest_path <= dest_bak) {
 		*dest_bak = '/';
 		dest_path = dest_bak + 1;
 	}
@@ -2330,11 +2095,9 @@ char *prettify_pathname(const char *src_path)
 
 char *text_path_cat(char *pathname, size_t size, const char *dirname, const char *basename)
 {
-	if (dirname)
-	{
+	if (dirname) {
 		pathname = text_ncopy(pathname, dirname, size) - 1;
-		while (*pathname == '/')
-		{
+		while (*pathname == '/') {
 			pathname--;
 		}
 
@@ -2343,8 +2106,7 @@ char *text_path_cat(char *pathname, size_t size, const char *dirname, const char
 
 	*pathname++ = '/';
 
-	if (basename)
-	{
+	if (basename) {
 		return text_ncopy(pathname, text_skip_char(basename, '/'), size);
 	}
 
@@ -2359,10 +2121,8 @@ char *text_delete_char_base(const char *text_in, char *text_out, char c)
 
 	text_bak = text_out;
 
-	while (*text_in)
-	{
-		if (*text_in == c)
-		{
+	while (*text_in) {
+		if (*text_in == c) {
 			text_in++;
 			continue;
 		}
@@ -2383,26 +2143,22 @@ char *text_delete_sub_base(const char *text_in, char *text_out, const char *sub,
 	text_bak = text_out;
 	mem_build_kmp_array(sub, step, sublen);
 
-	while (*text_in)
-	{
+	while (*text_in) {
 		char *text_tmp;
 
 		text_tmp = mem_kmp_find_base(text_in, text_in + text_len(text_in), sub, sublen, step);
-		if (text_tmp == NULL)
-		{
+		if (text_tmp == NULL) {
 			break;
 		}
 
-		while (text_in < text_tmp)
-		{
+		while (text_in < text_tmp) {
 			*text_out++ = *text_in++;
 		}
 
 		text_in += sublen;
 	}
 
-	while (*text_in)
-	{
+	while (*text_in) {
 		*text_out++ = *text_in++;
 	}
 
@@ -2414,8 +2170,7 @@ char *text_delete_sub_base(const char *text_in, char *text_out, const char *sub,
 char *text_find_next_line(const char *text)
 {
 	do {
-		if (*text == 0)
-		{
+		if (*text == 0) {
 			return NULL;
 		}
 	} while (*text++ != '\n');
@@ -2425,11 +2180,9 @@ char *text_find_next_line(const char *text)
 
 char *text_find_line(const char *text, int index)
 {
-	while (index > 0)
-	{
+	while (index > 0) {
 		text = text_find_next_line(text);
-		if (text == NULL)
-		{
+		if (text == NULL) {
 			return NULL;
 		}
 
@@ -2442,18 +2195,15 @@ char *text_find_line(const char *text, int index)
 char *text_get_line(const char *text, char *buff, int index)
 {
 	text = text_find_line(text, index);
-	if (text == NULL)
-	{
+	if (text == NULL) {
 		return NULL;
 	}
 
-	while (*text == '\r')
-	{
+	while (*text == '\r') {
 		text++;
 	}
 
-	while (*text && *text != '\n' && *text != '\r')
-	{
+	while (*text && *text != '\n' && *text != '\r') {
 		*buff++ = *text++;
 	}
 
@@ -2466,25 +2216,21 @@ int text_version_cmp(const char *v1, const char *v2, char sep)
 {
 	int result;
 
-	while (*v1 == *v2 && *v1)
-	{
+	while (*v1 == *v2 && *v1) {
 		v1++, v2++;
 	}
 
 	result = *v1 - *v2;
 
-	while (*v1 && *v2 && *v1 != sep && *v2 != sep)
-	{
+	while (*v1 && *v2 && *v1 != sep && *v2 != sep) {
 		v1++, v2++;
 	}
 
-	if ((*v1 == sep && *v2 == sep) || (*v1 == 0 && *v2 == 0))
-	{
+	if ((*v1 == sep && *v2 == sep) || (*v1 == 0 && *v2 == 0)) {
 		return result;
 	}
 
-	if (*v1 == sep || *v1 == 0)
-	{
+	if (*v1 == sep || *v1 == 0) {
 		return -1;
 	}
 
@@ -2493,10 +2239,8 @@ int text_version_cmp(const char *v1, const char *v2, char sep)
 
 int text_has_char(const char *text, char c)
 {
-	while (*text)
-	{
-		if (*text == c)
-		{
+	while (*text) {
+		if (*text == c) {
 			return 1;
 		}
 
@@ -2508,8 +2252,7 @@ int text_has_char(const char *text, char c)
 
 char *text_skip_char(const char *text, char c)
 {
-	while (*text == c)
-	{
+	while (*text == c) {
 		text++;
 	}
 
@@ -2518,8 +2261,7 @@ char *text_skip_char(const char *text, char c)
 
 char *text_skip_chars(const char *text, const char *chars)
 {
-	while (text_has_char(chars, *text))
-	{
+	while (text_has_char(chars, *text)) {
 		text++;
 	}
 
@@ -2528,8 +2270,7 @@ char *text_skip_chars(const char *text, const char *chars)
 
 char *text_to_uppercase(const char *src, char *dest)
 {
-	while ((*dest = char2uppercase(*src)))
-	{
+	while ((*dest = char2uppercase(*src))) {
 		dest++;
 		src++;
 	}
@@ -2539,8 +2280,7 @@ char *text_to_uppercase(const char *src, char *dest)
 
 char *text_to_lowercase(const char *src, char *dest)
 {
-	while ((*dest = char2lowercase(*src)))
-	{
+	while ((*dest = char2lowercase(*src))) {
 		dest++;
 		src++;
 	}
@@ -2568,8 +2308,7 @@ char *text_to_nlowercase(const char *src, char *dest, size_t size)
 
 int text_cmp_nocase(const char *text1, const char *text2)
 {
-	while (*text1 && char2lowercase(*text1) == char2lowercase(*text2))
-	{
+	while (*text1 && char2lowercase(*text1) == char2lowercase(*text2)) {
 		text1++;
 		text2++;
 	}
@@ -2581,8 +2320,7 @@ int text_ncmp_nocase(const char *text1, const char *text2, size_t size)
 {
 	const char *end_text1;
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		return 0;
 	}
 
@@ -2593,21 +2331,17 @@ int text_ncmp_nocase(const char *text1, const char *text2, size_t size)
 
 int text_bool_value(const char *text)
 {
-	const char *true_texts[] =
-	{
+	const char *true_texts[] = {
 		"1", "y", "yes", "true",
 	};
 	unsigned int i;
 
-	if (text == NULL)
-	{
+	if (text == NULL) {
 		return 1;
 	}
 
-	for (i = 0; i < ARRAY_SIZE(true_texts); i++)
-	{
-		if (text_cmp_nocase(true_texts[i], text) == 0)
-		{
+	for (i = 0; i < ARRAY_SIZE(true_texts); i++) {
+		if (text_cmp_nocase(true_texts[i], text) == 0) {
 			return 1;
 		}
 	}
@@ -2620,8 +2354,7 @@ char *mac_address_tostring_base(const char *mac, size_t maclen, char *buff)
 	char *p;
 	const char *mac_end;
 
-	for (mac_end = mac + maclen - 1, p = buff; mac < mac_end; mac++)
-	{
+	for (mac_end = mac + maclen - 1, p = buff; mac < mac_end; mac++) {
 		p += sprintf(p, "%02x:", *(u8 *) mac);
 	}
 
@@ -2639,8 +2372,7 @@ char *mac_address_tostring(const char *mac, size_t maclen)
 
 int text_is_number(const char *text)
 {
-	while (IS_NUMBER(*text))
-	{
+	while (IS_NUMBER(*text)) {
 		text++;
 	}
 
@@ -2649,8 +2381,7 @@ int text_is_number(const char *text)
 
 int text_is_float(const char *text)
 {
-	while (IS_FLOAT(*text))
-	{
+	while (IS_FLOAT(*text)) {
 		text++;
 	}
 
@@ -2659,8 +2390,7 @@ int text_is_float(const char *text)
 
 int text_is_uppercase(const char *text)
 {
-	while (IS_UPPERCASE(*text))
-	{
+	while (IS_UPPERCASE(*text)) {
 		text++;
 	}
 
@@ -2669,8 +2399,7 @@ int text_is_uppercase(const char *text)
 
 int text_is_lowercase(const char *text)
 {
-	while (IS_LOWERCASE(*text))
-	{
+	while (IS_LOWERCASE(*text)) {
 		text++;
 	}
 
@@ -2679,8 +2408,7 @@ int text_is_lowercase(const char *text)
 
 int text_is_letter(const char *text)
 {
-	while (IS_LETTER(*text))
-	{
+	while (IS_LETTER(*text)) {
 		text++;
 	}
 
@@ -2691,10 +2419,8 @@ char *text_replace_char(char *text, char c_src, char c_dest)
 {
 	char *text_bak;
 
-	for (text_bak = text; *text; text++)
-	{
-		if (*text == c_src)
-		{
+	for (text_bak = text; *text; text++) {
+		if (*text == c_src) {
 			*text = c_dest;
 		}
 	}
@@ -2704,8 +2430,7 @@ char *text_replace_char(char *text, char c_src, char c_dest)
 
 char *text_replace_char2(const char *src, char *dest, char c_src, char c_dest)
 {
-	while (*src)
-	{
+	while (*src) {
 
 		*dest = (*src == c_src) ? c_dest : *src;
 
@@ -2726,16 +2451,12 @@ char *text_replace_text_base(const char *text_old, char *text_new, const char *s
 	mem_build_kmp_array(src, steps, srclen);
 	old_end = text_old + text_len(text_old);
 
-	while (text_old < old_end)
-	{
+	while (text_old < old_end) {
 		p = mem_kmp_find_base(text_old, old_end, src, srclen, steps);
-		if (p == NULL)
-		{
+		if (p == NULL) {
 			text_new = mem_copy(text_new, text_old, old_end - text_old);
 			break;
-		}
-		else
-		{
+		} else {
 			text_new = mem_copy(text_new, text_old, p - text_old);
 			text_new = text_copy(text_new, dest);
 			text_old = p + srclen;
@@ -2749,15 +2470,13 @@ char *text_replace_text_base(const char *text_old, char *text_new, const char *s
 
 int text_is_dot_name(const char *filename)
 {
-	if (*filename != '.')
-	{
+	if (*filename != '.') {
 		return 0;
 	}
 
 	filename++;
 
-	if (*filename == 0)
-	{
+	if (*filename == 0) {
 		return 1;
 	}
 
@@ -2766,15 +2485,13 @@ int text_is_dot_name(const char *filename)
 
 int text_isnot_dot_name(const char *filename)
 {
-	if (*filename != '.')
-	{
+	if (*filename != '.') {
 		return 1;
 	}
 
 	filename++;
 
-	if (*filename == 0)
-	{
+	if (*filename == 0) {
 		return 0;
 	}
 
@@ -2786,17 +2503,13 @@ size_t text_split_by_char(const char *text, char sep, char *buff, size_t size1, 
 	char *buff_end;
 	char *p;
 
-	for (p = buff, buff_end = buff + (size1 * size2), size1 = 1; *text && buff < buff_end; text++)
-	{
-		if (*text == sep)
-		{
+	for (p = buff, buff_end = buff + (size1 * size2), size1 = 1; *text && buff < buff_end; text++) {
+		if (*text == sep) {
 			*p = 0;
 			buff += size2;
 			p = buff;
 			size1++;
-		}
-		else
-		{
+		} else {
 			*p++ = *text;
 		}
 	}
@@ -2810,18 +2523,15 @@ int text_split_by_space(char *text, char *texts[], int size)
 {
 	int index;
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		return 0;
 	}
 
 	index = 0;
 	texts[0] = text;
 
-	while (1)
-	{
-		switch (*text)
-		{
+	while (1) {
+		switch (*text) {
 		case 0:
 			return texts[index] < text ? index + 1 : index;
 
@@ -2830,22 +2540,16 @@ int text_split_by_space(char *text, char *texts[], int size)
 		case '\f':
 		case '\r':
 		case '\n':
-			if (texts[index] < text)
-			{
+			if (texts[index] < text) {
 				*text = 0;
 				index++;
 
-				if (index < size)
-				{
+				if (index < size) {
 					texts[index] = text + 1;
-				}
-				else
-				{
+				} else {
 					return index + 1;
 				}
-			}
-			else
-			{
+			} else {
 				texts[index] = text + 1;
 			}
 
@@ -2863,14 +2567,12 @@ char *text_join_by_char(char *text[], size_t size1, char sep, char *buff, size_t
 	char *buff_end;
 	char **text_end;
 
-	for (buff_end = buff + size2, text_end = text + size1; buff < buff_end && text < text_end; text++, buff++)
-	{
+	for (buff_end = buff + size2, text_end = text + size1; buff < buff_end && text < text_end; text++, buff++) {
 		buff = text_copy(buff, *text);
 		*buff = sep;
 	}
 
-	if (size1)
-	{
+	if (size1) {
 		buff--;
 	}
 
@@ -2889,11 +2591,9 @@ size_t text_split_by_text(const char *text, const char *sep, char *buff, size_t 
 	sep_len = text_len(sep);
 	text_end = text + text_len(text);
 
-	for (buff_end = buff + (size1 * size2), size1 = 0; buff < buff_end && text < text_end; size1++)
-	{
+	for (buff_end = buff + (size1 * size2), size1 = 0; buff < buff_end && text < text_end; size1++) {
 		p = mem_kmp_find(text, sep, text_end - text, sep_len);
-		if (p == NULL)
-		{
+		if (p == NULL) {
 			break;
 		}
 
@@ -2902,8 +2602,7 @@ size_t text_split_by_text(const char *text, const char *sep, char *buff, size_t 
 		text = p + sep_len;
 	}
 
-	if (text < text_end)
-	{
+	if (text < text_end) {
 		text_copy(buff, text);
 		return size1 + 1;
 	}
@@ -2916,16 +2615,12 @@ char *text_join_by_text(char *text[], size_t size1, const char *sep, char *buff,
 	char *buff_end;
 	char **text_last;
 
-	for (buff_end = buff + size2, text_last = text + (size1 - 1); buff < buff_end; text++)
-	{
+	for (buff_end = buff + size2, text_last = text + (size1 - 1); buff < buff_end; text++) {
 		buff = text_copy(buff, *text);
 
-		if (text < text_last)
-		{
+		if (text < text_last) {
 			buff = text_copy(buff, sep);
-		}
-		else
-		{
+		} else {
 			break;
 		}
 	}
@@ -2935,10 +2630,8 @@ char *text_join_by_text(char *text[], size_t size1, const char *sep, char *buff,
 
 int text_array_find(const char *text, char *buff[], int size)
 {
-	for (size--; size >= 0; size--)
-	{
-		if (text_cmp(text, buff[size]) == 0)
-		{
+	for (size--; size >= 0; size--) {
+		if (text_cmp(text, buff[size]) == 0) {
 			return size;
 		}
 	}
@@ -2948,8 +2641,7 @@ int text_array_find(const char *text, char *buff[], int size)
 
 char *text_skip_space(const char *text, const char *text_end)
 {
-	while (text < text_end && byte_is_space(*text))
-	{
+	while (text < text_end && byte_is_space(*text)) {
 		text++;
 	}
 
@@ -2958,8 +2650,7 @@ char *text_skip_space(const char *text, const char *text_end)
 
 char *text_skip_space_invert(const char *text, const char *head)
 {
-	while (text >= head && byte_is_space(*text))
-	{
+	while (text >= head && byte_is_space(*text)) {
 		text--;
 	}
 
@@ -2968,8 +2659,7 @@ char *text_skip_space_invert(const char *text, const char *head)
 
 char *text_skip_lf(const char *text, const char *text_end)
 {
-	while (text < text_end && byte_is_lf(*text))
-	{
+	while (text < text_end && byte_is_lf(*text)) {
 		text++;
 	}
 
@@ -2978,8 +2668,7 @@ char *text_skip_lf(const char *text, const char *text_end)
 
 char *text_skip_lf_invert(const char *text, const char *head)
 {
-	while (text >= head && byte_is_lf(*text))
-	{
+	while (text >= head && byte_is_lf(*text)) {
 		text--;
 	}
 
@@ -2988,8 +2677,7 @@ char *text_skip_lf_invert(const char *text, const char *head)
 
 char *text_skip_space_and_lf(const char *text, const char *text_end)
 {
-	while (text < text_end && byte_is_space_or_lf(*text))
-	{
+	while (text < text_end && byte_is_space_or_lf(*text)) {
 		text++;
 	}
 
@@ -2998,8 +2686,7 @@ char *text_skip_space_and_lf(const char *text, const char *text_end)
 
 char *text_skip_space_and_lf_invert(const char *text, const char *head)
 {
-	while (text >= head && byte_is_space_or_lf(*text))
-	{
+	while (text >= head && byte_is_space_or_lf(*text)) {
 		text--;
 	}
 
@@ -3008,8 +2695,7 @@ char *text_skip_space_and_lf_invert(const char *text, const char *head)
 
 char *text_skip_name(const char *text, const char *text_end)
 {
-	while (text < text_end && byte_is_named(*text))
-	{
+	while (text < text_end && byte_is_named(*text)) {
 		text++;
 	}
 
@@ -3018,8 +2704,7 @@ char *text_skip_name(const char *text, const char *text_end)
 
 char *text_skip_name_invert(const char *text, const char *head)
 {
-	while (text >= head && byte_is_named(*text))
-	{
+	while (text >= head && byte_is_named(*text)) {
 		text--;
 	}
 
@@ -3028,10 +2713,8 @@ char *text_skip_name_invert(const char *text, const char *head)
 
 char *text_find_space(const char *text, const char *text_end)
 {
-	while (text < text_end)
-	{
-		if (byte_is_space(*text))
-		{
+	while (text < text_end) {
+		if (byte_is_space(*text)) {
 			return (char *) text;
 		}
 
@@ -3043,10 +2726,8 @@ char *text_find_space(const char *text, const char *text_end)
 
 char *text_find_space_invert(const char *text, const char *head)
 {
-	while (text >= head)
-	{
-		if (byte_is_space(*text))
-		{
+	while (text >= head) {
+		if (byte_is_space(*text)) {
 			return (char *) text;
 		}
 
@@ -3058,10 +2739,8 @@ char *text_find_space_invert(const char *text, const char *head)
 
 char *text_find_lf(const char *text, const char *text_end)
 {
-	while (text < text_end)
-	{
-		if (byte_is_lf(*text))
-		{
+	while (text < text_end) {
+		if (byte_is_lf(*text)) {
 			return (char *) text;
 		}
 
@@ -3073,10 +2752,8 @@ char *text_find_lf(const char *text, const char *text_end)
 
 char *text_find_lf_invert(const char *text, const char *head)
 {
-	while (text >= head)
-	{
-		if (byte_is_lf(*text))
-		{
+	while (text >= head) {
+		if (byte_is_lf(*text)) {
 			return (char *) text;
 		}
 
@@ -3088,10 +2765,8 @@ char *text_find_lf_invert(const char *text, const char *head)
 
 char *text_find_space_or_lf(const char *text, const char *text_end)
 {
-	while (text < text_end)
-	{
-		if (byte_is_space_or_lf(*text))
-		{
+	while (text < text_end) {
+		if (byte_is_space_or_lf(*text)) {
 			return (char *) text;
 		}
 
@@ -3103,10 +2778,8 @@ char *text_find_space_or_lf(const char *text, const char *text_end)
 
 char *text_find_space_or_lf_invert(const char *text, const char *head)
 {
-	while (text >= head)
-	{
-		if (byte_is_space_or_lf(*text))
-		{
+	while (text >= head) {
+		if (byte_is_space_or_lf(*text)) {
 			return (char *) text;
 		}
 
@@ -3118,10 +2791,8 @@ char *text_find_space_or_lf_invert(const char *text, const char *head)
 
 char *text_find_name(const char *text, const char *text_end)
 {
-	while (text < text_end)
-	{
-		if (byte_is_named(*text))
-		{
+	while (text < text_end) {
+		if (byte_is_named(*text)) {
 			return (char *) text;
 		}
 
@@ -3133,10 +2804,8 @@ char *text_find_name(const char *text, const char *text_end)
 
 char *text_find_name_invert(const char *text, const char *head)
 {
-	while (text >= head)
-	{
-		if (byte_is_named(*text))
-		{
+	while (text >= head) {
+		if (byte_is_named(*text)) {
 			return (char *) text;
 		}
 
@@ -3148,10 +2817,8 @@ char *text_find_name_invert(const char *text, const char *head)
 
 char text_get_char(const char *text, int index)
 {
-	if (index < 0)
-	{
-		while (*text)
-		{
+	if (index < 0) {
+		while (*text) {
 			text++;
 		}
 	}
@@ -3161,8 +2828,7 @@ char text_get_char(const char *text, int index)
 
 char text_get_escope_letter(char c)
 {
-	switch (c)
-	{
+	switch (c) {
 	case 't':
 		return '\t';
 
@@ -3187,14 +2853,11 @@ int text2array(char *text, u32 *array, size_t size, char sep)
 {
 	u32 *ap, *ap_end;
 
-	for (ap = array, ap_end = ap + size; ap < ap_end; ap++)
-	{
+	for (ap = array, ap_end = ap + size; ap < ap_end; ap++) {
 		char *p;
 
-		for (p = text; *p != sep; p++)
-		{
-			if (*p == 0)
-			{
+		for (p = text; *p != sep; p++) {
+			if (*p == 0) {
 				*ap = text2value_unsigned(text, NULL, 10);
 
 				return ap - array + 1;
@@ -3211,25 +2874,17 @@ int text2array(char *text, u32 *array, size_t size, char sep)
 
 char *frequency_tostring(double freq, char *buff, size_t size, char **last)
 {
-	if (freq < 1000)
-	{
+	if (freq < 1000) {
 		size = snprintf(buff, size, "%lf Hz", freq);
-	}
-	else if (freq < 1000000)
-	{
+	} else if (freq < 1000000) {
 		size = snprintf(buff, size, "%lf kHz", freq / 1000);
-	}
-	else if (freq < 1000000000)
-	{
+	} else if (freq < 1000000000) {
 		size = snprintf(buff, size, "%lf MHz", freq / 1000000);
-	}
-	else
-	{
+	} else {
 		size = snprintf(buff, size, "%lf GHz", freq / 1000000000);
 	}
 
-	if (last)
-	{
+	if (last) {
 		*last = buff + size;
 	}
 
@@ -3240,15 +2895,13 @@ u32 frequency_unit2value(const char *text, const char *text_end)
 {
 	u32 freq;
 
-	if (text_end == NULL)
-	{
+	if (text_end == NULL) {
 		text_end = text + strlen(text);
 	}
 
 	text = text_skip_space(text, text_end);
 
-	switch (text[0])
-	{
+	switch (text[0]) {
 	case 'k':
 	case 'K':
 		freq = 1000;
@@ -3271,8 +2924,7 @@ u32 frequency_unit2value(const char *text, const char *text_end)
 		freq = 1;
 	}
 
-	if (*text == 0 || strcmp(text, "Hz") == 0)
-	{
+	if (*text == 0 || strcmp(text, "Hz") == 0) {
 		return freq;
 	}
 
@@ -3283,8 +2935,7 @@ u32 frequency_unit2value(const char *text, const char *text_end)
 
 double text2frequency(const char *text, const char *text_end, const char **last)
 {
-	if (text_end == NULL)
-	{
+	if (text_end == NULL) {
 		text_end = text + strlen(text);
 	}
 

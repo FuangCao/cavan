@@ -7,16 +7,14 @@
 #define DEFAULT_BLOCK_SIZE		512
 #define DEFAULT_CACHE_BLOCKS	128
 
-struct mem_cache
-{
+struct mem_cache {
 	char *buff, *end;
 	size_t size, free_size;
 	char *head;
 	const char *tail;
 };
 
-struct file_cache
-{
+struct file_cache {
 	int fd;
 	char pathname[1024];
 
@@ -31,8 +29,7 @@ struct file_cache
 	ssize_t (*write_blocks)(struct file_cache *cache, const void *buff, size_t count);
 };
 
-struct cavan_cache
-{
+struct cavan_cache {
 	char *head;
 	char *tail;
 
@@ -47,8 +44,7 @@ struct cavan_cache
 	pthread_cond_t wrcond;
 };
 
-struct cavan_fifo
-{
+struct cavan_fifo {
 	char *mem;
 	char *mem_end;
 	char *data;

@@ -26,10 +26,8 @@ static int speed_detector_handler(struct cavan_thread *thread, void *data)
 	u32 count;
 	struct speed_detector *detector = data;
 
-	for (count = detector->interval; count; count--)
-	{
-		if (thread->state != CAVAN_THREAD_STATE_RUNNING)
-		{
+	for (count = detector->interval; count; count--) {
+		if (thread->state != CAVAN_THREAD_STATE_RUNNING) {
 			return 0;
 		}
 
@@ -40,8 +38,7 @@ static int speed_detector_handler(struct cavan_thread *thread, void *data)
 	detector->speed_count = 0;
 	detector->loop_count++;
 
-	if (detector->notify)
-	{
+	if (detector->notify) {
 		detector->notify(detector, detector->speed);
 	}
 

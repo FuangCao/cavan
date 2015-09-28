@@ -27,8 +27,7 @@ enum
 	SMS_TYPE_BODY
 };
 
-struct eavoo_short_message
-{
+struct eavoo_short_message {
 	u32 date;
 	char address[32];
 	char body[1024];

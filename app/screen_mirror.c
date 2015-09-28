@@ -33,8 +33,7 @@ static struct cavan_command_map map[] =
 	{
 		.name = "service",
 		.main_func = screen_mirror_service_main
-	},
-	{
+	}, {
 		.name = "client",
 		.main_func = screen_mirror_client_main
 	}

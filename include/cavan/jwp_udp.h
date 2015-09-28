@@ -24,10 +24,8 @@
 #include <cavan/network.h>
 #include <cavan/jwp-linux.h>
 
-struct jwp_udp_desc
-{
-	union
-	{
+struct jwp_udp_desc {
+	union {
 		struct jwp_desc jwp;
 		struct jwp_linux_desc jwp_linux;
 	};

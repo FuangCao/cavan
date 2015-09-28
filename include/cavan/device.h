@@ -31,16 +31,14 @@
 typedef struct loop_info64	cavan_loop_info_t;
 
 #pragma pack(1)
-struct disk_address
-{
+struct disk_address {
 	u8	header_number;
 	u8	sector_number		:6;
 	u8	cylinder_number_hsb	:2;
 	u8	cylinder_number_lsb;
 };
 
-struct disk_partition_table
-{
+struct disk_partition_table {
 	u8 active_mark;
 	struct disk_address start_addr;
 	u8 file_system_mark;
@@ -49,8 +47,7 @@ struct disk_partition_table
 	u32 total_sector_count;
 };
 
-struct master_boot_sector
-{
+struct master_boot_sector {
 	u8 master_boot_record[218];
 	u8 idlesse_space[228];
 	struct disk_partition_table disk_part_tables[4];
@@ -63,8 +60,7 @@ enum filesystem_type
 	FS_START, FS_EXT2, FS_EXT3, FS_EXT4, FS_VFAT, FS_NTFS, FS_FUSE, FS_SYS, FS_PROC, FS_TMP, FS_END
 };
 
-struct filesystem_desc
-{
+struct filesystem_desc {
 	enum filesystem_type type;
 	char name[64];
 	char mkfs_cmd[64];
@@ -72,8 +68,7 @@ struct filesystem_desc
 	char mkfs_label_opt;
 };
 
-struct partition_desc
-{
+struct partition_desc {
 	int major;
 	int minor;
 	u32 flags;
@@ -82,22 +77,19 @@ struct partition_desc
 	enum filesystem_type type;
 };
 
-struct mount_table
-{
+struct mount_table {
 	char source[128];
 	char target[128];
 	char fstype[64];
 	char option[256];
 };
 
-struct mtd_descriptor
-{
+struct mtd_descriptor {
 	int fd;
 	size_t erase_size;
 };
 
-struct cavan_block_device
-{
+struct cavan_block_device {
 	void *context;
 	int block_shift;
 	u16 block_size;

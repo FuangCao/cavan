@@ -38,45 +38,38 @@ extern "C" int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "base",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_BASE,
-		},
-		{
+		}, {
 			.name = "length",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LENGTH,
-		},
-		{
+		}, {
 			.name = "prefix",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PREFIX,
-		},
-		{
+		}, {
 			.name = "mask",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_MASK,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -89,10 +82,8 @@ extern "C" int main(int argc, char *argv[])
 
 	length[0] = length[1] = 0;
 
-	while ((c = getopt_long(argc, argv, "vVhHb:B:l:L:pPmM", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHb:B:l:L:pPmM", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -142,34 +133,26 @@ extern "C" int main(int argc, char *argv[])
 
 	double result;
 	Calculator calculator;
-	if (!calculator.execute(buff, result))
-	{
+	if (!calculator.execute(buff, result)) {
 		pr_red_info("%s", calculator.getErrMsg());
 		return ret;
 	}
 
-	if (base < 2 || base == 10)
-	{
-		if (length[0] || length[1])
-		{
+	if (base < 2 || base == 10) {
+		if (length[0] || length[1]) {
 			char format[64];
 
 			sprintf(format, "%%0%d.%dlf", length[0], length[1]);
 			println(format, result);
-		}
-		else
-		{
+		} else {
 			println("%lf", result);
 		}
-	}
-	else
-	{
+	} else {
 		double2text(&result, buff, length[0], 0, base | flags);
 		println("%s", buff);
 	}
 
-	if (show_bitmask)
-	{
+	if (show_bitmask) {
 		value2bitlist((u64) result, buff, sizeof(buff), " | ");
 
 		println("%s", buff);

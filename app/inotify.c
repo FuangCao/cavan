@@ -18,27 +18,20 @@ static int cavan_inotify_event_handle(struct cavan_inotify_descriptor *desc, str
 	const char *pathname;
 	const char *command = desc->private_data;
 
-	if (event->len > 0)
-	{
+	if (event->len > 0) {
 		pathname = buff;
 		text_path_cat(buff, sizeof(buff), watch->pathname, event->name);
-	}
-	else
-	{
+	} else {
 		pathname = watch->pathname;
 	}
 
-	if (command && command[0])
-	{
+	if (command && command[0]) {
 		setenv("CAVAN_INOTIFY_PATH", pathname, 1);
 
-		if (system(command) != 0)
-		{
+		if (system(command) != 0) {
 			return -EFAULT;
 		}
-	}
-	else
-	{
+	} else {
 		println("%s", pathname);
 	}
 
@@ -49,27 +42,23 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "command",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_COMMAND,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -77,10 +66,8 @@ int main(int argc, char *argv[])
 	const char *command = NULL;
 	struct cavan_inotify_descriptor desc;
 
-	while ((c = getopt_long(argc, argv, "vVhHc:C:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHc:C:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -106,8 +93,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind >= argc)
-	{
+	if (optind >= argc) {
 		pr_red_info("Please give some to listen");
 		show_usage();
 		return -EINVAL;
@@ -116,17 +102,14 @@ int main(int argc, char *argv[])
 	desc.handle = cavan_inotify_event_handle;
 
 	ret = cavan_inotify_init(&desc, __UNCONST(command));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("cavan_inotify_init");
 		return ret;
 	}
 
-	while (optind < argc)
-	{
+	while (optind < argc) {
 		ret = cavan_inotify_register_watch(&desc, argv[optind], IN_CLOSE_WRITE);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("cavan_inotify_register_watch");
 			goto out_inotify_deinit;
 		}

@@ -23,15 +23,12 @@ static int get_char_value(char c, const char *weight)
 {
 	const char *p;
 
-	if (c == '-')
-	{
+	if (c == '-') {
 		c = 'G';
 	}
 
-	for (p = weight; *p; p++)
-	{
-		if (c == *p)
-		{
+	for (p = weight; *p; p++) {
+		if (c == *p) {
 			return p - weight;
 		}
 	}
@@ -48,22 +45,15 @@ int main(int argc, char *argv[])
 
 	print("// ");
 
-	for (j = 0; ; j++)
-	{
-		if (j < 10)
-		{
+	for (j = 0; ; j++) {
+		if (j < 10) {
 			print("%02d'%d' ", j, j);
-		}
-		else if (j < 10 + 26)
-		{
+		} else if (j < 10 + 26) {
 			print("%02d'%c' ", j, j - 10 + 'A');
-		}
-		else
-		{
+		} else {
 			char c;
 
-			switch (j)
-			{
+			switch (j) {
 			case 36:
 				c = '-';
 				break;
@@ -81,40 +71,31 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			if (j < NELEM(encoded) - 1)
-			{
+			if (j < NELEM(encoded) - 1) {
 				print("%02d'%c' ", j, c);
-			}
-			else
-			{
+			} else {
 				print("%02d'%c'", j, c);
 				break;
 			}
 		}
 	}
 
-	for (i = 0; i < NELEM(weights); i++)
-	{
+	for (i = 0; i < NELEM(weights); i++) {
 		const char *weight = weights[i];
 
 		print("\n{  ");
 
-		for (j = 0; ; j++)
-		{
+		for (j = 0; ; j++) {
 			const char *p;
 			int value = 0;
 
-			for (p = encoded[j]; *p; p++)
-			{
+			for (p = encoded[j]; *p; p++) {
 				value |= 1 << get_char_value(*p, weight);
 			}
 
-			if (j < NELEM(encoded) - 1)
-			{
+			if (j < NELEM(encoded) - 1) {
 				print("0x%02x, ", value);
-			}
-			else
-			{
+			} else {
 				print("0x%02x", value);
 				break;
 			}

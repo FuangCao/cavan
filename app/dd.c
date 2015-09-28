@@ -13,8 +13,7 @@ int main(int argc, char *argv[])
 
 	assert(argc >= 3);
 
-	for (i = 1; i < argc; i++)
-	{
+	for (i = 1; i < argc; i++) {
 		char c, *p;
 
 		parse_parameter(argv[i]);
@@ -22,59 +21,41 @@ int main(int argc, char *argv[])
 		c = para_option[0];
 		p = para_option + 1;
 
-		switch (c)
-		{
+		switch (c) {
 		case 'i':
-			if (strcmp(p, "f") == 0)
-			{
+			if (strcmp(p, "f") == 0) {
 				strcpy(input_file, para_value);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
 		case 'o':
-			if (strcmp(p, "f") == 0)
-			{
+			if (strcmp(p, "f") == 0) {
 				strcpy(output_file, para_value);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
 		case 'b':
-			if (strcmp(p, "s") == 0)
-			{
+			if (strcmp(p, "s") == 0) {
 				bs = text2size(para_value, NULL);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
 		case 's':
-			if (strcmp(p, "kip") == 0)
-			{
+			if (strcmp(p, "kip") == 0) {
 				skip = text2size(para_value, NULL);
-			}
-			else if (strcmp(p, "eek") == 0)
-			{
+			} else if (strcmp(p, "eek") == 0) {
 				seek = text2size(para_value, NULL);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
 		case 'c':
-			if (strcmp(p, "ount") == 0)
-			{
+			if (strcmp(p, "ount") == 0) {
 				count = text2size(para_value, NULL);
-			}
-			else
-			{
+			} else {
 				goto out_unknown_option;
 			}
 			break;
@@ -84,8 +65,7 @@ int main(int argc, char *argv[])
 	}
 
 	ret = cavan_dd(input_file, output_file, skip * bs, seek * bs, count * bs);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("cavan_dd");
 		return ret;
 	}

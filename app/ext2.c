@@ -52,8 +52,7 @@ static void ext2_app_device_list_dir_handler(struct ext2_dir_entry_2 *entry, voi
 {
 	print_ntext(entry->name, entry->name_len);
 
-	if (entry->file_type == EXT2_FT_DIR)
-	{
+	if (entry->file_type == EXT2_FT_DIR) {
 		print_char('/');
 	}
 
@@ -66,8 +65,7 @@ int main(int argc, char *argv[])
 	int ret;
 	char *content = NULL;
 	struct cavan_ext4_fs fs;
-	struct cavan_block_device bdev =
-	{
+	struct cavan_block_device bdev = {
 		.block_shift = 0,
 		.block_size = EXT2_APP_DEVICE_BLOCK_SIZE,
 		.block_mask = 0,
@@ -80,87 +78,69 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	fd = open(argv[1], O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open");
 		return fd;
 	}
 
 	ret = cavan_block_device_init(&bdev, &fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_block_device_init");
 		goto out_close_fd;
 	}
 
 	ret = cavan_ext4_init(&fs, &bdev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_ext4_init");
 		goto out_cavan_block_device_deinit;
 	}
 
-	if (argc > 2)
-	{
+	if (argc > 2) {
 		struct cavan_ext4_file *fp;
 
 		fp = cavan_ext4_open_file(&fs, argv[2]);
-		if (fp == NULL)
-		{
+		if (fp == NULL) {
 			ret = -EFAULT;
 			pr_red_info("cavan_ext4_open_file");
 			goto out_cavan_ext4_deinit;
 		}
 
-		if (S_ISDIR(fp->inode.i_mode))
-		{
+		if (S_ISDIR(fp->inode.i_mode)) {
 			ret = cavan_ext4_list_dir(fp, ext2_app_device_list_dir_handler, fp);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("cavan_ext4_list_dir");
 				goto out_cavan_ext4_deinit;
 			}
-		}
-		else
-		{
+		} else {
 			ssize_t rdlen;
 
-			if (argc > 3)
-			{
+			if (argc > 3) {
 				char path_buff[1024];
 				const char *pathname;
 
-				if (file_type_test(argv[3], S_IFDIR))
-				{
+				if (file_type_test(argv[3], S_IFDIR)) {
 					text_basename_base(text_path_cat(path_buff, sizeof(path_buff), argv[3], NULL), argv[2]);
 					pathname = path_buff;
-				}
-				else
-				{
+				} else {
 					pathname = argv[3];
 				}
 
 				println("%s@%s => %s", argv[1], argv[2], pathname);
 
 				rdlen = cavan_ext4_read_file3(fp, 0, pathname, O_TRUNC);
-				if (rdlen < 0)
-				{
+				if (rdlen < 0) {
 					pr_red_info("cavan_ext4_read_file3");
 					goto out_cavan_ext4_deinit;
 				}
-			}
-			else
-			{
+			} else {
 				content = malloc(fp->inode.i_size);
-				if (content == NULL)
-				{
+				if (content == NULL) {
 					pr_error_info("malloc");
 					goto out_cavan_ext4_deinit;
 				}
 
 				rdlen = cavan_ext4_read_file(fp, 0, content, fp->inode.i_size);
-				if (rdlen < 0)
-				{
+				if (rdlen < 0) {
 					pr_red_info("cavan_ext4_read_file");
 					goto out_free_content;
 				}
@@ -174,8 +154,7 @@ int main(int argc, char *argv[])
 	}
 
 out_free_content:
-	if (content)
-	{
+	if (content) {
 		free(content);
 	}
 out_cavan_ext4_deinit:

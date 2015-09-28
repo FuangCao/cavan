@@ -46,8 +46,7 @@
 #define FILE_CONFIG_TXT					"config.txt"
 #define FILE_CMDLINE_TXT				"cmdline.txt"
 
-struct bootimg_header
-{
+struct bootimg_header {
     unsigned char magic[BOOT_MAGIC_SIZE];
 
     unsigned kernel_size;  /* size in bytes */
@@ -62,8 +61,7 @@ struct bootimg_header
     unsigned tags_addr;    /* physical addr for kernel tags */
     unsigned page_size;    /* flash page size we assume */
 
-    union
-    {
+    union {
         unsigned dt_size;	   /* device tree in bytes */
         unsigned unused[2];       /* future expansion: should be 0 */
     };
@@ -79,15 +77,13 @@ struct bootimg_header
     unsigned char extra_cmdline[BOOT_EXTRA_ARGS_SIZE];
 };
 
-struct bootimg_image
-{
+struct bootimg_image {
 	unsigned size;
 	const char *name;
 	unsigned *size_addr;
 };
 
-struct bootimg_pack_option
-{
+struct bootimg_pack_option {
 	const char *kernel;
 	const char *ramdisk;
 	const char *second;

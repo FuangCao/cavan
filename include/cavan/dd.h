@@ -2,8 +2,7 @@
 
 #include <cavan.h>
 
-struct dd_desc
-{
+struct dd_desc {
 	char in[1024];
 	char out[1024];
 	off_t seek;

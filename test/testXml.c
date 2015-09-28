@@ -28,14 +28,12 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	doc = cavan_xml_document_parse(argv[1]);
-	if (doc == NULL)
-	{
+	if (doc == NULL) {
 		pr_red_info("cavan_xml_parse");
 		return -EFAULT;
 	}
 
-	if (argc > 2)
-	{
+	if (argc > 2) {
 		cavan_xml_tag_remove_all_by_name(&doc->tag, argv[2], true);
 	}
 

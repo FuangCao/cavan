@@ -14,8 +14,7 @@
 #define FILE_CREATE_DATE		"2012-01-14 14:09:55"
 #define TCP_DD_MAX_IMAGE_COUNT	10
 
-struct cavan_tcp_dd_image
-{
+struct cavan_tcp_dd_image {
 	const char *name;
 	const char *pathname;
 };
@@ -27,152 +26,127 @@ static const struct option command_long_option[] =
 		.has_arg = no_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_HELP,
-	},
-	{
+	}, {
 		.name = "version",
 		.has_arg = no_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_VERSION,
-	},
-	{
+	}, {
 		.name = "ip",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_IP,
-	},
-	{
+	}, {
 		.name = "port",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_PORT,
-	},
-	{
+	}, {
 		.name = "url",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_URL,
-	},
-	{
+	}, {
 		.name = "adb",
 		.has_arg = no_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_ADB,
-	},
-	{
+	}, {
 		.name = "udp",
 		.has_arg = no_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_UDP,
-	},
-	{
+	}, {
 		.name = "local",
 		.has_arg = no_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_LOCAL,
-	},
-	{
+	}, {
 		.name = "host",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_HOST,
-	},
-	{
+	}, {
 		.name = "unix",
 		.has_arg = optional_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_UNIX,
-	},
-	{
+	}, {
 		.name = "unix-tcp",
 		.has_arg = optional_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_UNIX_TCP,
-	},
-	{
+	}, {
 		.name = "unix-udp",
 		.has_arg = optional_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
-	},
-	{
+	}, {
 		.name = "protocol",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_PROTOCOL,
-	},
-	{
+	}, {
 		.name = "pt",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_PROTOCOL,
-	},
-	{
+	}, {
 		.name = "system",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_SYSTEM,
-	},
-	{
+	}, {
 		.name = "userdata",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_USERDATA,
-	},
-	{
+	}, {
 		.name = "data",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_USERDATA,
-	},
-	{
+	}, {
 		.name = "recovery",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_RECOVERY,
-	},
-	{
+	}, {
 		.name = "misc",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_MISC,
-	},
-	{
+	}, {
 		.name = "boot",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_BOOT,
-	},
-	{
+	}, {
 		.name = "kernel",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_KERNEL,
-	},
-	{
+	}, {
 		.name = "uboot",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_UBOOT,
-	},
-	{
+	}, {
 		.name = "resource",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_RESOURCE,
-	},
-	{
+	}, {
 		.name = "image",
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_IMAGE,
-	},
-	{
+	}, {
 		.name = "auto",
 		.has_arg = no_argument,
 		.flag = NULL,
 		.val = CAVAN_COMMAND_OPTION_AUTO,
-	},
-	{
+	}, {
 		0, 0, 0, 0
 	},
 };
@@ -231,10 +205,8 @@ int main(int argc, char *argv[])
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
-	while ((c = getopt_long(argc, argv, "vVhHi:p:P:wWsSrRaAlLu:U:k:b:I", command_long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHi:p:P:wWsSrRaAlLu:U:k:b:I", command_long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -274,8 +246,7 @@ int main(int argc, char *argv[])
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_URL:
-			if (network_url_parse(&url, optarg) == NULL)
-			{
+			if (network_url_parse(&url, optarg) == NULL) {
 				pr_red_info("invalid url %s", optarg);
 				return -EINVAL;
 			}
@@ -284,16 +255,14 @@ int main(int argc, char *argv[])
 		case CAVAN_COMMAND_OPTION_UNIX:
 		case CAVAN_COMMAND_OPTION_UNIX_TCP:
 			url.protocol = "unix-tcp";
-			if (optarg)
-			{
+			if (optarg) {
 				url.pathname = optarg;
 			}
 			break;
 
 		case CAVAN_COMMAND_OPTION_UNIX_UDP:
 			url.protocol = "unix-udp";
-			if (optarg)
-			{
+			if (optarg) {
 				url.pathname = optarg;
 			}
 			break;
@@ -318,13 +287,10 @@ int main(int argc, char *argv[])
 		case CAVAN_COMMAND_OPTION_SYSTEM:
 			part_name = "@SYSTEM@";
 label_add_image:
-			if (image_count < NELEM(images))
-			{
+			if (image_count < NELEM(images)) {
 				images[image_count].name = part_name;
 				images[image_count].pathname = optarg;
-			}
-			else
-			{
+			} else {
 				pr_red_info("Too much image");
 				return -ENOMEM;
 			}
@@ -377,14 +343,12 @@ label_add_image:
 		}
 	}
 
-	if (handler == NULL)
-	{
+	if (handler == NULL) {
 		pr_red_info("Please select action type");
 		return -EINVAL;
 	}
 
-	for (bs = 1, count = seek = skip = 0; optind < argc; optind++)
-	{
+	for (bs = 1, count = seek = skip = 0; optind < argc; optind++) {
 		char c, *p;
 
 		parse_parameter(argv[optind]);
@@ -392,65 +356,50 @@ label_add_image:
 		c = para_option[0];
 		p = para_option + 1;
 
-		switch (c)
-		{
+		switch (c) {
 		case 'i':
-			if (text_cmp(p, "f") == 0)
-			{
+			if (text_cmp(p, "f") == 0) {
 				text_copy(file_req.src_file, para_value);
-			}
-			else if (text_cmp(p, "p") == 0)
-			{
+			} else if (text_cmp(p, "p") == 0) {
 				url.hostname = strdup(para_value);
-			}
-			else
-			{
+			} else {
 				goto label_parse_complete;
 			}
 			break;
 
 		case 'o':
-			if (text_cmp(p, "f") == 0)
-			{
+			if (text_cmp(p, "f") == 0) {
 				text_copy(file_req.dest_file, para_value);
 				break;
 			}
 			goto label_parse_complete;
 
 		case 'b':
-			if (text_cmp(p, "s") == 0)
-			{
+			if (text_cmp(p, "s") == 0) {
 				bs = text2size(para_value, NULL);
 				break;
 			}
 			goto label_parse_complete;
 
 		case 's':
-			if (text_cmp(p, "kip") == 0)
-			{
+			if (text_cmp(p, "kip") == 0) {
 				skip = text2size(para_value, NULL);
-			}
-			else if (text_cmp(p, "eek") == 0)
-			{
+			} else if (text_cmp(p, "eek") == 0) {
 				seek = text2size(para_value, NULL);
-			}
-			else
-			{
+			} else {
 				goto label_parse_complete;
 			}
 			break;
 
 		case 'c':
-			if (text_cmp(p, "ount") == 0)
-			{
+			if (text_cmp(p, "ount") == 0) {
 				count = text2size(para_value, NULL);
 				break;
 			}
 			goto label_parse_complete;
 
 		case 'p':
-			if (text_cmp(p, "ort") == 0)
-			{
+			if (text_cmp(p, "ort") == 0) {
 				url.port = text2value_unsigned(para_value, NULL, 10);
 				break;
 			}
@@ -462,35 +411,27 @@ label_add_image:
 	}
 
 label_parse_complete:
-	if (image_mask)
-	{
+	if (image_mask) {
 
-		if (argc - optind < 1)
-		{
+		if (argc - optind < 1) {
 			pr_red_info("Too a few argument!");
 			return -EINVAL;
 		}
 
-		if (image_mask[0] == '-')
-		{
-			while (optind < argc)
-			{
+		if (image_mask[0] == '-') {
+			while (optind < argc) {
 				const char *pathname = argv[optind];
 
 				part_name = image_path_to_part_name(pathname);
-				if (part_name == NULL)
-				{
+				if (part_name == NULL) {
 					pr_red_info("unknown image %s", pathname);
 					return -EINVAL;
 				}
 
-				if (handler == tcp_dd_send_file)
-				{
+				if (handler == tcp_dd_send_file) {
 					strcpy(file_req.src_file, pathname);
 					strcpy(file_req.dest_file, part_name);
-				}
-				else
-				{
+				} else {
 					strcpy(file_req.src_file, part_name);
 					strcpy(file_req.dest_file, pathname);
 				}
@@ -499,27 +440,22 @@ label_parse_complete:
 				file_req.dest_offset = file_req.src_offset = 0;
 
 				ret = handler(&url, &file_req);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					return ret;
 				}
 
 				optind++;
 			}
-		}
-		else
-		{
+		} else {
 			const char *dirname;
 			const char *image_name;
 
 			dirname = argv[optind++];
 
-			while (*image_mask)
-			{
+			while (*image_mask) {
 				c = *image_mask;
 
-				switch (c)
-				{
+				switch (c) {
 				case 's':
 					part_name = "@SYSTEM@";
 					image_name = "system.img";
@@ -565,13 +501,10 @@ label_parse_complete:
 					return -EINVAL;
 				}
 
-				if (handler == tcp_dd_send_file)
-				{
+				if (handler == tcp_dd_send_file) {
 					text_path_cat(file_req.src_file, sizeof(file_req.src_file), dirname, image_name);
 					strcpy(file_req.dest_file, part_name);
-				}
-				else
-				{
+				} else {
 					strcpy(file_req.src_file, part_name);
 					text_path_cat(file_req.dest_file, sizeof(file_req.src_file), dirname, image_name);
 				}
@@ -580,19 +513,15 @@ label_parse_complete:
 				file_req.dest_offset = file_req.src_offset = 0;
 
 				ret = handler(&url, &file_req);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					return ret;
 				}
 
 				image_mask++;
 			}
 		}
-	}
-	else
-	{
-		switch (argc - optind)
-		{
+	} else {
+		switch (argc - optind) {
 		case 2:
 			text_copy(file_req.src_file, argv[optind++]);
 		case 1:
@@ -605,43 +534,33 @@ label_parse_complete:
 			return -EINVAL;
 		}
 
-		if (file_req.src_file[0] && file_req.dest_file[0])
-		{
+		if (file_req.src_file[0] && file_req.dest_file[0]) {
 			file_req.src_offset = skip * bs;
 			file_req.dest_offset = seek * bs;
 			file_req.size = count * bs;
 
 			ret = handler(&url, &file_req);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				return ret;
 			}
-		}
-		else if (image_count == 0)
-		{
+		} else if (image_count == 0) {
 			pr_red_info("Please input src_file and dest_file");
 			return -EINVAL;
 		}
 	}
 
-	if (image_count > 0)
-	{
+	if (image_count > 0) {
 		struct cavan_tcp_dd_image *p, *p_end;
 
-		for (p = images, p_end = p + image_count; p < p_end; p++)
-		{
-			if (handler == tcp_dd_send_file)
-			{
+		for (p = images, p_end = p + image_count; p < p_end; p++) {
+			if (handler == tcp_dd_send_file) {
 				strcpy(file_req.src_file, p->pathname);
 				strcpy(file_req.dest_file, p->name);
-			}
-			else
-			{
+			} else {
 				strcpy(file_req.src_file, p->name);
 				strcpy(file_req.dest_file, p->pathname);
 
-				if (file_is_directory(p->pathname))
-				{
+				if (file_is_directory(p->pathname)) {
 					char *filename;
 
 					for (filename = file_req.dest_file; *filename; filename++);
@@ -649,14 +568,12 @@ label_parse_complete:
 					*filename++ = '/';
 
 					ret = tcp_dd_get_partition_filename(p->name, filename, sizeof(file_req.dest_file));
-					if (ret <= 0)
-					{
+					if (ret <= 0) {
 						pr_red_info("tcp_dd_get_partition_filename %s", p->name);
 						return -EINVAL;
 					}
 
-					while (*filename)
-					{
+					while (*filename) {
 						filename++;
 					}
 
@@ -668,8 +585,7 @@ label_parse_complete:
 			file_req.dest_offset = file_req.src_offset = 0;
 
 			ret = handler(&url, &file_req);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				return ret;
 			}
 		}

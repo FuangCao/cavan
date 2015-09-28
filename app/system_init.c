@@ -10,8 +10,7 @@ int main(int argc, char *argv[])
 	assert(argc >= 2);
 
 	ret = system_init(argv[1], argv + 2);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("system_init");
 		return ret;
 	}

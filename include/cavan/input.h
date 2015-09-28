@@ -130,15 +130,13 @@ typedef enum cavan_input_message_type {
 	CAVAN_INPUT_MESSAGE_ROTATION_VECTOR
 } cavan_input_message_type_t;
 
-struct cavan_input_message_key
-{
+struct cavan_input_message_key {
 	const char *name;
 	int code;
 	int value;
 };
 
-struct cavan_input_message_point
-{
+struct cavan_input_message_point {
 	int id;
 	int x;
 	int y;
@@ -146,8 +144,7 @@ struct cavan_input_message_point
 	bool pressed;
 };
 
-struct cavan_input_message_vector
-{
+struct cavan_input_message_vector {
 	int x;
 	int y;
 	int z;
@@ -156,8 +153,7 @@ struct cavan_input_message_vector
 typedef struct cavan_input_message {
 	cavan_input_message_type_t type;
 
-	union
-	{
+	union {
 		int value;
 		struct cavan_input_message_key key;
 		struct cavan_input_message_point point;
@@ -167,16 +163,14 @@ typedef struct cavan_input_message {
 	struct cavan_data_pool_node node;
 } cavan_input_message_t;
 
-struct cavan_input_message_queue
-{
+struct cavan_input_message_queue {
 	void *private_data;
 	struct cavan_data_queue queue;
 
 	void (*handler)(struct cavan_input_message_queue *queue, cavan_input_message_t *message, void *data);
 };
 
-struct cavan_input_device
-{
+struct cavan_input_device {
 	struct cavan_event_device *event_dev;
 	struct cavan_input_device *next;
 
@@ -185,8 +179,7 @@ struct cavan_input_device
 	bool (*event_handler)(struct cavan_input_device *dev, struct input_event *event, void *data);
 };
 
-struct cavan_input_service
-{
+struct cavan_input_service {
 	struct cavan_data_queue queue;
 	struct cavan_event_service event_service;
 	struct cavan_timer_service timer_service;
@@ -223,8 +216,7 @@ static inline cavan_input_message_t *cavan_input_service_get_message(struct cava
 	cavan_input_message_t *message;
 
 	message = cavan_data_queue_get_node(&service->queue);
-	if (message)
-	{
+	if (message) {
 		message->type = type;
 	}
 

@@ -9,21 +9,18 @@
 
 int check_super_permission(bool def_choose, int timeout_ms)
 {
-	if (user_is_super())
-	{
+	if (user_is_super()) {
 		return 0;
 	}
 
-	if (setuid(0) == 0 && setgid(0) == 0)
-	{
+	if (setuid(0) == 0 && setgid(0) == 0) {
 		pr_green_info("Change to super user successfull");
 		return 0;
 	}
 
 	pr_red_info("Require super user permission");
 
-	if (cavan_get_choose_yesno("Do you want to run as general user", def_choose, timeout_ms))
-	{
+	if (cavan_get_choose_yesno("Do you want to run as general user", def_choose, timeout_ms)) {
 		return 0;
 	}
 
@@ -33,20 +30,17 @@ int check_super_permission(bool def_choose, int timeout_ms)
 int cavan_permission_set(u32 permission)
 {
 	int ret;
-	struct __user_cap_data_struct data =
-	{
+	struct __user_cap_data_struct data = {
 		.permitted = permission,
 		.effective = permission
 	};
-	struct __user_cap_header_struct header =
-	{
+	struct __user_cap_header_struct header = {
 		.pid = 0,
 		.version = _LINUX_CAPABILITY_VERSION,
 	};
 
 	ret = capset(&header, &data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("capset");
 		return ret;
 	}
@@ -58,15 +52,13 @@ int cavan_permission_clear(u32 permission)
 {
 	int ret;
 	struct __user_cap_data_struct data;
-	struct __user_cap_header_struct header =
-	{
+	struct __user_cap_header_struct header = {
 		.pid = 0,
 		.version = _LINUX_CAPABILITY_VERSION,
 	};
 
 	ret = capget(&header, &data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("capget");
 		return ret;
 	}
@@ -77,8 +69,7 @@ int cavan_permission_clear(u32 permission)
 	data.effective = data.permitted;
 
 	ret = capset(&header, &data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("capset");
 		return ret;
 	}

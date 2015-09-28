@@ -28,8 +28,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	u32 src_ip, dest_ip;
 
 	sockfd = network_create_socket_mac(net_dev, 0);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("cavan_create_socket_raw");
 		return sockfd;
 	}
@@ -40,32 +39,26 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	println("src_ip = %s", inet_ntoa(*(struct in_addr *) &src_ip));
 	println("dest_ip = %s", inet_ntoa(*(struct in_addr *) &dest_ip));
 
-	while (1)
-	{
+	while (1) {
 		ret = recv(sockfd, buff, sizeof(buff), 0);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("recvfrom");
 			break;
 		}
 
-		switch (ntohs(mac_hdr->protocol_type))
-		{
+		switch (ntohs(mac_hdr->protocol_type)) {
 		case ETH_P_IP:
-			if (src_ip && dest_ip && ip_hdr->src_ip != src_ip && ip_hdr->dest_ip != dest_ip)
-			{
+			if (src_ip && dest_ip && ip_hdr->src_ip != src_ip && ip_hdr->dest_ip != dest_ip) {
 				continue;
 			}
 
 			show_mac_header(mac_hdr);
 			show_ip_header(ip_hdr, 0);
 
-			switch (ip_hdr->protocol_type)
-			{
+			switch (ip_hdr->protocol_type) {
 			case IPPROTO_UDP:
 				show_udp_header(udp_hdr);
-				if (udp_hdr->src_port == htons(67) || udp_hdr->src_port == htons(68))
-				{
+				if (udp_hdr->src_port == htons(67) || udp_hdr->src_port == htons(68)) {
 					show_dhcp_header(dhcp_hdr);
 				}
 				break;
@@ -83,8 +76,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 				checksum = mem_checksum16(icmp_hdr, ret);
 				println("icmp checksum = 0x%04x", checksum);
 
-				switch (icmp_hdr->type)
-				{
+				switch (icmp_hdr->type) {
 				case 8:
 				case 0:
 					show_ping_header(ping_hdr);
@@ -96,8 +88,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 
 		case ETH_P_ARP:
 		case ETH_P_RARP:
-			if (src_ip && dest_ip && arp_hdr->src_ip != src_ip && arp_hdr->dest_ip != dest_ip)
-			{
+			if (src_ip && dest_ip && arp_hdr->src_ip != src_ip && arp_hdr->dest_ip != dest_ip) {
 				continue;
 			}
 			show_mac_header(mac_hdr);
@@ -120,29 +111,24 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 			show_author_info();
@@ -160,8 +146,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	switch (argc - optind)
-	{
+	switch (argc - optind) {
 	case 0:
 		return net_monitor_run(NULL, "0.0.0.0", "0.0.0.0");
 

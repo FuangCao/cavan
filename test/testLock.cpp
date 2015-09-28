@@ -55,8 +55,7 @@ int main(int argc, char *argv[])
 	thread.setData(&lock);
 	thread.start();
 
-	while (1)
-	{
+	while (1) {
 		lock.acquire();
 		pr_pos_info();
 		msleep(500);

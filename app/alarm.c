@@ -47,75 +47,63 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "date",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DATE,
-		},
-		{
+		}, {
 			.name = "time",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_TIME,
-		},
-		{
+		}, {
 			.name = "repeat",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_REPEAT,
-		},
-		{
+		}, {
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_IP,
-		},
-		{
+		}, {
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PORT,
-		},
-		{
+		}, {
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_ADB,
-		},
-		{
+		}, {
 			.name = "udp",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UDP,
-		},
-		{
+		}, {
 			.name = "url",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_URL,
-		},
-		{
+		}, {
 			.name = "local",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LOCAL,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -126,8 +114,7 @@ int main(int argc, char *argv[])
 	struct network_url url;
 
 	curr_time = time(NULL);
-	if (curr_time == ((time_t)-1))
-	{
+	if (curr_time == ((time_t)-1)) {
 		pr_error_info("time");
 		return -EFAULT;
 	}
@@ -136,10 +123,8 @@ int main(int argc, char *argv[])
 	localtime_r(&curr_time, &date);
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
-	while ((c = getopt_long(argc, argv, "vVhHlLaAr:R:d:D:t:T:i:I:p:P:u:U:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHlLaAr:R:d:D:t:T:i:I:p:P:u:U:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -157,8 +142,7 @@ int main(int argc, char *argv[])
 		case 'D':
 		case CAVAN_COMMAND_OPTION_DATE:
 			ret = text2date(optarg, &date, "%Y-%m-%d", "%m-%d", NULL);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("cavan_text2date");
 				return -EINVAL;
 			}
@@ -169,8 +153,7 @@ int main(int argc, char *argv[])
 		case CAVAN_COMMAND_OPTION_TIME:
 			date.tm_sec = 0;
 			ret = text2date(optarg, &date, "%H:%M:%S", "%H:%M", NULL);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("cavan_text2date");
 				return -EINVAL;
 			}
@@ -209,8 +192,7 @@ int main(int argc, char *argv[])
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_URL:
-			if (network_url_parse(&url, optarg) == NULL)
-			{
+			if (network_url_parse(&url, optarg) == NULL) {
 				pr_red_info("invalid url %s", optarg);
 				return -EINVAL;
 			}
@@ -222,8 +204,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind >= argc)
-	{
+	if (optind >= argc) {
 		pr_red_info("Please give a subcmd");
 		show_usage(argv[0]);
 		return -EINVAL;
@@ -231,57 +212,40 @@ int main(int argc, char *argv[])
 
 	subcmd = argv[optind++];
 
-	if (strcmp(subcmd, "add") == 0)
-	{
-		if (optind < argc)
-		{
+	if (strcmp(subcmd, "add") == 0) {
+		if (optind < argc) {
 			char command[1024];
 
 			text_join_by_char(argv + optind, argc - optind, ' ', command, sizeof(command));
 			ret = tcp_alarm_add(&url, command, mktime(&date), repeat);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("cavan_tcp_alarm_add");
 			}
-		}
-		else
-		{
+		} else {
 			pr_red_info("Please give a command");
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
-	}
-	else if (strcmp(subcmd, "remove") == 0)
-	{
-		if (optind < argc && text_is_number(argv[optind]))
-		{
+	} else if (strcmp(subcmd, "remove") == 0) {
+		if (optind < argc && text_is_number(argv[optind])) {
 			int index = text2value_unsigned(argv[optind], NULL, 10);
 
 			ret = tcp_alarm_remove(&url, index);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("cavan_tcp_alarm_remove");
 			}
-		}
-		else
-		{
+		} else {
 			pr_red_info("Please give a command");
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
-	}
-	else if (strcmp(subcmd, "list") == 0)
-	{
+	} else if (strcmp(subcmd, "list") == 0) {
 		int index = -1;
 
-		if (optind < argc)
-		{
-			if (text_is_number(argv[optind]))
-			{
+		if (optind < argc) {
+			if (text_is_number(argv[optind])) {
 				index = text2value_unsigned(argv[optind], NULL, 10);
-			}
-			else
-			{
+			} else {
 				pr_red_info("The alarm index is not a number");
 				show_usage(argv[0]);
 				return -EINVAL;
@@ -289,13 +253,10 @@ int main(int argc, char *argv[])
 		}
 
 		ret = tcp_alarm_list(&url, index);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_tcp_alarm_list");
 		}
-	}
-	else
-	{
+	} else {
 		pr_red_info("Invalid subcmd `%s'", subcmd);
 		show_usage(argv[0]);
 		return -EINVAL;

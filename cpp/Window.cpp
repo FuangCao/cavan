@@ -39,8 +39,7 @@ void CavanWindow::Paint()
 {
 	AutoLock lock(mLock);
 
-	if (onPaint)
-	{
+	if (onPaint) {
 		onPaint(this);
 	}
 }

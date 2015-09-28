@@ -30,57 +30,48 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "start",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_START,
-		},
-		{
+		}, {
 			.name = "stop",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_STOP,
-		},
-		{
+		}, {
 			.name = "exec",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_EXEC,
-		},
-		{
+		}, {
 			.name = "pidfile",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PIDFILE,
-		},
-		{
+		}, {
 			.name = "logfile",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LOGFILE,
-		},
-		{
+		}, {
 			.name = "super",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SUPER,
-		},
-		{
+		}, {
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -90,8 +81,7 @@ int main(int argc, char *argv[])
 	int ret;
 	char command[1024];
 	int (*handler)(struct cavan_daemon_description *);
-	struct cavan_daemon_description desc =
-	{
+	struct cavan_daemon_description desc = {
 		.verbose = 0,
 		.as_daemon = 1,
 		.super_permission = 1,
@@ -102,10 +92,8 @@ int main(int argc, char *argv[])
 
 	handler = cavan_daemon_run;
 
-	while ((c = getopt_long(argc, argv, "vVhHe:E:p:P:s:S:l:L:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHe:E:p:P:s:S:l:L:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			println(FILE_CREATE_DATE);
@@ -161,15 +149,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (argc > optind && desc.command == NULL)
-	{
+	if (argc > optind && desc.command == NULL) {
 		text_join_by_char(argv + optind, argc - optind, ' ', command, sizeof(command));
 		desc.command = command;
 	}
 
 	ret = handler(&desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Failed");
 		return ret;
 	}

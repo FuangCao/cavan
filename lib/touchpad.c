@@ -13,8 +13,7 @@ bool cavan_touchpad_device_match(uint8_t *key_bitmask, uint8_t *abs_bitmask)
 		test_bit(BTN_RIGHT, key_bitmask) == 0 || \
 		test_bit(BTN_TOUCH, key_bitmask) == 0 || \
 		test_bit(ABS_X, abs_bitmask) == 0 || \
-		test_bit(ABS_Y, abs_bitmask) == 0)
-	{
+		test_bit(ABS_Y, abs_bitmask) == 0) {
 		return false;
 	}
 
@@ -35,15 +34,13 @@ bool cavan_touchpad_device_matcher(struct cavan_event_matcher *matcher, void *da
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 
 	ret = cavan_event_get_abs_bitmask(matcher->fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_abs_bitmask");
 		return ret;
 	}
 
 	ret = cavan_event_get_key_bitmask(matcher->fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_key_bitmask");
 		return ret;
 	}
@@ -53,14 +50,10 @@ bool cavan_touchpad_device_matcher(struct cavan_event_matcher *matcher, void *da
 
 static void cavan_touchpad_touch(struct cavan_touchpad_device *touchpad, struct cavan_input_service *service, int value)
 {
-	if (value > 0)
-	{
-		if (touchpad->x > touchpad->right && touchpad->y > touchpad->bottom)
-		{
+	if (value > 0) {
+		if (touchpad->x > touchpad->right && touchpad->y > touchpad->bottom) {
 			touchpad->btn_code = BTN_RIGHT;
-		}
-		else
-		{
+		} else {
 			touchpad->btn_code = BTN_LEFT;
 		}
 	}
@@ -73,16 +66,11 @@ static int cavan_touchpad_timer_handler_down(struct cavan_timer *timer, void *da
 {
 	struct cavan_touchpad_device *touchpad = MEMBER_TO_STRUCT(timer, struct cavan_touchpad_device, timer);
 
-	if (touchpad->x > touchpad->right)
-	{
+	if (touchpad->x > touchpad->right) {
 		touchpad->mode = CAVAN_TOUCHPAD_MODE_WHEEL;
-	}
-	else if (touchpad->y > touchpad->bottom)
-	{
+	} else if (touchpad->y > touchpad->bottom) {
 		touchpad->mode = CAVAN_TOUCHPAD_MODE_HWHEEL;
-	}
-	else
-	{
+	} else {
 		touchpad->mode = CAVAN_TOUCHPAD_MODE_MOVE;
 	}
 
@@ -111,17 +99,13 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 	struct cavan_input_service *service = data;
 	struct cavan_touchpad_device *touchpad = (struct cavan_touchpad_device *) dev;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_KEY:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case BTN_TOUCH:
-			switch (touchpad->state)
-			{
+			switch (touchpad->state) {
 			case CAVAN_TOUCHPAD_STATE_DOWN1:
-				if (touchpad->mode == CAVAN_TOUCHPAD_MODE_NONE)
-				{
+				if (touchpad->mode == CAVAN_TOUCHPAD_MODE_NONE) {
 					touchpad->state = CAVAN_TOUCHPAD_STATE_UP1;
 					cavan_timer_remove(&service->timer_service, &touchpad->timer);
 					cavan_touchpad_touch(touchpad, service, 1);
@@ -129,9 +113,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 					touchpad->timer.private_data = service;
 					touchpad->timer.handler = cavan_touchpad_timer_handler_up;
 					cavan_timer_insert(&service->timer_service, &touchpad->timer, 200);
-				}
-				else
-				{
+				} else {
 					touchpad->state = CAVAN_TOUCHPAD_STATE_IDLE;
 					touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
 				}
@@ -148,17 +130,14 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 
 			case CAVAN_TOUCHPAD_STATE_DOWN2:
 				cavan_touchpad_touch(touchpad, service, 0);
-				if (touchpad->mode == CAVAN_TOUCHPAD_MODE_NONE)
-				{
+				if (touchpad->mode == CAVAN_TOUCHPAD_MODE_NONE) {
 					touchpad->state = CAVAN_TOUCHPAD_STATE_UP2;
 					cavan_touchpad_touch(touchpad, service, 1);
 
 					touchpad->timer.private_data = service;
 					touchpad->timer.handler = cavan_touchpad_timer_handler_up;
 					cavan_timer_insert(&service->timer_service, &touchpad->timer, 200);
-				}
-				else
-				{
+				} else {
 					touchpad->state = CAVAN_TOUCHPAD_STATE_IDLE;
 					touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
 				}
@@ -168,16 +147,13 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 				cavan_timer_remove(&service->timer_service, &touchpad->timer);
 				cavan_touchpad_touch(touchpad, service, 0);
 			case CAVAN_TOUCHPAD_STATE_IDLE:
-				if (event->value)
-				{
+				if (event->value) {
 					touchpad->state = CAVAN_TOUCHPAD_STATE_DOWN1;
 
 					touchpad->timer.private_data = service;
 					touchpad->timer.handler = cavan_touchpad_timer_handler_down;
 					cavan_timer_insert(&service->timer_service, &touchpad->timer, 100);
-				}
-				else
-				{
+				} else {
 					touchpad->state = CAVAN_TOUCHPAD_STATE_IDLE;
 					touchpad->mode = CAVAN_TOUCHPAD_MODE_NONE;
 				}
@@ -200,8 +176,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 		break;
 
 	case EV_ABS:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case ABS_X:
 			touchpad->x = event->value;
 			break;
@@ -220,12 +195,10 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 		break;
 
 	case EV_SYN:
-		switch (touchpad->mode)
-		{
+		switch (touchpad->mode) {
 		case CAVAN_TOUCHPAD_MODE_WHEEL:
 			ydiff = (touchpad->yold - touchpad->y) * touchpad->yspeed;
-			if (ydiff)
-			{
+			if (ydiff) {
 				cavan_input_service_append_key_message(data, \
 						CAVAN_INPUT_MESSAGE_WHEEL, NULL, REL_HWHEEL, ydiff > 0 ? 1 : -1);
 				touchpad->yold = touchpad->y;
@@ -234,8 +207,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 
 		case CAVAN_TOUCHPAD_MODE_HWHEEL:
 			xdiff = (touchpad->xold - touchpad->x) * touchpad->xspeed;
-			if (xdiff)
-			{
+			if (xdiff) {
 				cavan_input_service_append_key_message(data, \
 						CAVAN_INPUT_MESSAGE_WHEEL, NULL, REL_WHEEL, xdiff > 0 ? 1 : -1);
 				touchpad->xold = touchpad->x;
@@ -246,8 +218,7 @@ static bool cavan_touchpad_event_handler(struct cavan_input_device *dev, struct 
 			xdiff = (touchpad->x - touchpad->xold) * touchpad->xspeed;
 			ydiff = (touchpad->y - touchpad->yold) * touchpad->yspeed;
 
-			if (xdiff || ydiff)
-			{
+			if (xdiff || ydiff) {
 				cavan_input_service_append_vector_message(data, \
 						CAVAN_INPUT_MESSAGE_MOUSE_MOVE, xdiff, ydiff, 0);
 
@@ -280,8 +251,7 @@ static int cavan_touchpad_probe(struct cavan_input_device *dev, void *data)
 	pr_bold_info("LCD: width = %d, height = %d", service->lcd_width, service->lcd_height);
 
 	ret = cavan_event_get_absinfo(fd, ABS_X, &min, &max);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_event_get_absinfo");
 		return ret;
 	}
@@ -295,8 +265,7 @@ static int cavan_touchpad_probe(struct cavan_input_device *dev, void *data)
 	pr_bold_info("xspeed = %lf, right = %d", touchpad->xspeed, touchpad->right);
 
 	ret = cavan_event_get_absinfo(fd, ABS_Y, &min, &max);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_event_get_absinfo");
 		return ret;
 	}
@@ -312,14 +281,12 @@ static int cavan_touchpad_probe(struct cavan_input_device *dev, void *data)
 	return 0;
 }
 
-struct cavan_input_device *cavan_touchpad_device_create(void)
-{
+struct cavan_input_device *cavan_touchpad_device_create(void) {
 	struct cavan_touchpad_device *touchpad;
 	struct cavan_input_device *dev;
 
 	touchpad = malloc(sizeof(*touchpad));
-	if (touchpad == NULL)
-	{
+	if (touchpad == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}

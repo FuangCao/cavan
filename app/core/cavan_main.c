@@ -35,8 +35,7 @@ int main(int argc, char *argv[])
 
 static int cavan_main(int argc, char *argv[])
 {
-	if (argc > 1)
-	{
+	if (argc > 1) {
 		return main(argc - 1, argv + 1);
 	}
 

@@ -30,8 +30,7 @@ enum cavan_window_text_align
 	CAVAN_WIN_TEXT_ALIGN_RIGHT
 };
 
-struct cavan_window
-{
+struct cavan_window {
 	int id;
 
 	int x, y;
@@ -78,16 +77,14 @@ struct cavan_window
 	bool (*on_focuse)(struct cavan_window *win, bool focuse, void *data);
 };
 
-struct cavan_label
-{
+struct cavan_label {
 	struct cavan_window window;
 
 	const char *text;
 	enum cavan_window_text_align align;
 };
 
-struct cavan_button
-{
+struct cavan_button {
 	struct cavan_label label;
 
 	cavan_display_color_t border_color_backup;
@@ -95,8 +92,7 @@ struct cavan_button
 	cavan_display_color_t fore_color_backup;
 };
 
-struct cavan_textview
-{
+struct cavan_textview {
 	struct cavan_label label;
 
 	char text[1024];
@@ -108,8 +104,7 @@ struct cavan_textview
 	char *cursor;
 };
 
-struct cavan_progress_bar
-{
+struct cavan_progress_bar {
 	struct cavan_window window;
 
 	double pos;
@@ -117,8 +112,7 @@ struct cavan_progress_bar
 	cavan_display_color_t complete_color;
 };
 
-struct cavan_dialog
-{
+struct cavan_dialog {
 	struct cavan_window window;
 	struct cavan_label title;
 	struct cavan_window body;
@@ -130,15 +124,13 @@ struct cavan_dialog
 	struct cavan_display_memory_rect *backup;
 };
 
-struct cavan_window_alias
-{
+struct cavan_window_alias {
 	struct cavan_window *win;
 
 	struct cavan_data_pool_node node;
 };
 
-struct cavan_application_context
-{
+struct cavan_application_context {
 	void *private_data;
 	struct cavan_thread thread;
 	struct cavan_display_device *display;

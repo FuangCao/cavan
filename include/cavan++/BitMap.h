@@ -22,8 +22,7 @@
 #include <cavan.h>
 #include <cavan++/Window.h>
 
-class BitMap : public CavanRect
-{
+class BitMap : public CavanRect {
 private:
 	void *mem;
 };

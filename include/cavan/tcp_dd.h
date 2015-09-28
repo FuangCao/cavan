@@ -29,46 +29,39 @@ enum tcp_dd_package_type
 	TCP_DD_PACKAGE_COUNT
 };
 
-struct tcp_dd_response_package
-{
+struct tcp_dd_response_package {
 	u32 code;
 	u32 number;
 	char message[1024];
 };
 
-struct tcp_dd_file_request
-{
+struct tcp_dd_file_request {
 	u32 offset;
 	u32 size;
 	u32 mode;
 	char filename[1024];
 };
 
-struct tcp_dd_exec_request
-{
+struct tcp_dd_exec_request {
 	u16 lines;
 	u16 columns;
 	char command[1024];
 };
 
-struct tcp_alarm_add_request
-{
+struct tcp_alarm_add_request {
 	u32 time;
 	u32 repeat;
 	char command[1024];
 };
 
-struct tcp_alarm_query_request
-{
+struct tcp_alarm_query_request {
 	int index;
 };
 
-struct tcp_dd_package
-{
+struct tcp_dd_package {
 	u32 type;
 
-	union
-	{
+	union {
 		struct tcp_dd_response_package res_pkg;
 		struct tcp_dd_file_request file_req;
 		struct tcp_dd_exec_request exec_req;
@@ -77,8 +70,7 @@ struct tcp_dd_package
 	};
 };
 
-struct cavan_tcp_dd_service
-{
+struct cavan_tcp_dd_service {
 	struct network_service service;
 	struct cavan_alarm_thread alarm;
 	struct network_url url;

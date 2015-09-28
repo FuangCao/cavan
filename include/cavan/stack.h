@@ -4,35 +4,30 @@
 
 #include <cavan.h>
 
-struct general_stack
-{
+struct general_stack {
 	void **buffer;
 	int top;
 	int max_count;
 };
 
-struct letter_stack
-{
+struct letter_stack {
 	char *buffer;
 	int top;
 	int max_count;
 };
 
-struct double_stack
-{
+struct double_stack {
 	double *buffer;
 	int top;
 	int max_count;
 };
 
-struct memory_stack_node
-{
+struct memory_stack_node {
 	void *space;
 	size_t size;
 };
 
-struct memory_stack
-{
+struct memory_stack {
 	struct memory_stack_node *buffer;
 	int top;
 	int max_count;

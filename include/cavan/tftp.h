@@ -27,71 +27,61 @@
 #define TFTP_DD_DEFAULT_PORT	8888
 
 #pragma pack(1)
-struct tftp_request_pkg
-{
+struct tftp_request_pkg {
 	u16 op_code;
 	char filename[TFTP_PKG_MAX_LEN - 2];
 };
 
-struct tftp_dd_request_pkg
-{
+struct tftp_dd_request_pkg {
 	u16 op_code;
 	u32 offset;
 	u32 size;
 	char filename[TFTP_PKG_MAX_LEN - 10];
 };
 
-struct tftp_data_pkg
-{
+struct tftp_data_pkg {
 	u16 op_code;
 	u16 blk_num;
 	char data[TFTP_PKG_MAX_LEN - 4];
 };
 
-struct tftp_ack_pkg
-{
+struct tftp_ack_pkg {
 	u16 op_code;
 	u16 blk_num;
 };
 
-struct tftp_error_pkg
-{
+struct tftp_error_pkg {
 	u16 op_code;
 	u16 err_code;
 	char err_msg[TFTP_PKG_MAX_LEN - 4];
 };
 
-struct tftp_mkdir_pkg
-{
+struct tftp_mkdir_pkg {
 	u16 op_code;
 	mode_t mode;
 	char pathname[TFTP_PKG_MAX_LEN - 6];
 };
 
-struct tftp_mknode_pkg
-{
+struct tftp_mknode_pkg {
 	u16 op_code;
 	mode_t mode;
 	dev_t dev;
 	char pathname[TFTP_PKG_MAX_LEN - 10];
 };
 
-struct tftp_symlink_pkg
-{
+struct tftp_symlink_pkg {
 	u16 op_code;
 	char pathname[TFTP_PKG_MAX_LEN - 2];
 };
 
-struct tftp_command_pkg
-{
+struct tftp_command_pkg {
 	u16 op_code;
 	char command[TFTP_PKG_MAX_LEN - 2];
 };
 
 union tftp_pkg
 {
-	struct
-	{
+	struct {
 		u16 op_code;
 		char buffer[TFTP_PKG_MAX_LEN - 2];
 	};
@@ -107,8 +97,7 @@ union tftp_pkg
 };
 #pragma pack()
 
-struct tftp_request
-{
+struct tftp_request {
 	struct sockaddr_in client_addr;
 	char filename[512];
 	char file_mode[512];

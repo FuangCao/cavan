@@ -41,16 +41,14 @@
 #define TIME_YEAR(time) \
 	TIME_DAY(365 * (time))
 
-struct cavan_alarm_thread
-{
+struct cavan_alarm_thread {
 	struct cavan_thread thread;
 
 	pthread_mutex_t lock;
 	struct double_link link;
 };
 
-struct cavan_alarm_node
-{
+struct cavan_alarm_node {
 	struct double_link_node node;
 
 	time_t time;

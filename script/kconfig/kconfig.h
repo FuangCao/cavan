@@ -15,10 +15,10 @@
 	(sizeof(a) / sizeof((a)[0]))
 
 #define STRUCT_MEMBER_OFFSET(type, member) \
-	((void *)&((type *)0)->member)
+	((void *) &((type *) 0)->member)
 
 #define GET_STRUCT_POINTER(type, member, addr) \
-	((type *)((void *)(addr) - STRUCT_MEMBER_OFFSET(type, member)))
+	((type *) ((void *) (addr) - STRUCT_MEMBER_OFFSET(type, member)))
 
 #define NELEM		ARRAY_SIZE
 #define KEY_ESC		27
@@ -45,8 +45,7 @@ enum kconfig_state
 	KCONFIG_STATE_SELECTED,
 };
 
-struct kconfig_menu_item
-{
+struct kconfig_menu_item {
 	int x, y;
 	int width;
 	int level;
@@ -57,8 +56,7 @@ struct kconfig_menu_item
 	struct kconfig_menu_item *parent;
 };
 
-struct kconfig_menu_descriptor
-{
+struct kconfig_menu_descriptor {
 	int x, y;
 	int width, height;
 	char title[1024];

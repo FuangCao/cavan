@@ -136,8 +136,7 @@ static inline bool cavan_isbracket_right(u8 c)
 
 static inline char cavan_tolower(char c)
 {
-	if (cavan_isupper(c))
-	{
+	if (cavan_isupper(c)) {
 #if 0
 		return c - 'A' + 'a';
 #else
@@ -150,8 +149,7 @@ static inline char cavan_tolower(char c)
 
 static inline char cavan_toupper(char c)
 {
-	if (cavan_islower(c))
-	{
+	if (cavan_islower(c)) {
 #if 0
 		return c - 'a' + 'A';
 #else

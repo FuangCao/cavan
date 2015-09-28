@@ -16,21 +16,18 @@ int main(int argc, char *argv[])
 	const char *hostname;
 	int (*tftp_handle)(const char *, u16, const char *, const char *);
 	int option_index;
-	struct option long_options[] =
-	{
+	struct option long_options[] = {
 		{
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 0,
-		},
-		{
+		}, {
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 1,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -39,10 +36,8 @@ int main(int argc, char *argv[])
 	hostname = NULL;
 	tftp_handle = NULL;
 
-	while ((c = getopt_long(argc, argv, "rRgGwWsSpP", long_options, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "rRgGwWsSpP", long_options, &option_index)) != EOF) {
+		switch (c) {
 		case 0:
 			hostname = optarg;
 			break;
@@ -75,27 +70,23 @@ int main(int argc, char *argv[])
 
 	assert(argc - optind >= 2 && tftp_handle != NULL);
 
-	if (hostname == NULL)
-	{
+	if (hostname == NULL) {
 		hostname = cavan_get_server_hostname();
 	}
 
-	if (port == 0)
-	{
+	if (port == 0) {
 		port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
 	p_name = text_path_cat(temp_name, sizeof(temp_name), argv[--argc], NULL);
 
-	for (i = optind; i < argc; i++)
-	{
+	for (i = optind; i < argc; i++) {
 		int ret;
 
 		text_basename_base(p_name, argv[i]);
 
 		ret = tftp_handle(hostname, port, argv[i], temp_name);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("tftp send or receive file \"%s\" failed", argv[i]);
 			return ret;
 		}

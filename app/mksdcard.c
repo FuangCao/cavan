@@ -11,8 +11,7 @@ static int mksdcard(const char *sd_device)
 	umount_device(sd_device, MNT_DETACH);
 
 	ret = system_command("sfdisk %s -uM << EOF\n64,,L\nEOF", sd_device);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("system_command");
 		return ret;
 	}
@@ -20,8 +19,7 @@ static int mksdcard(const char *sd_device)
 	sleep(1);
 
 	ret = system_command("mkfs.vfat %s1 -n sdcard", sd_device);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("system_command");
 		return ret;
 	}
@@ -33,12 +31,9 @@ static int mksdcard(const char *sd_device)
 
 int main(int argc, char *argv[])
 {
-	if (argc > 1)
-	{
+	if (argc > 1) {
 		return mksdcard(argv[1]);
-	}
-	else
-	{
+	} else {
 		return mksdcard(SDCARD_DEFAULE_DEVICE);
 	}
 }

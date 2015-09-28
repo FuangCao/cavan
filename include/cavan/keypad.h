@@ -22,8 +22,7 @@
 
 #define CONFIG_CAVAN_KEYPAD_DROP_REPORT	1
 
-struct cavan_keypad_device
-{
+struct cavan_keypad_device {
 	struct cavan_input_device input_dev;
 
 #if CONFIG_CAVAN_KEYPAD_DROP_REPORT

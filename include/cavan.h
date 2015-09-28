@@ -116,16 +116,14 @@
 
 static inline void msleep(useconds_t msec)
 {
-	while (msec--)
-	{
+	while (msec--) {
 		usleep(1000);
 	}
 }
 
 static inline void ssleep(useconds_t sec)
 {
-	while (sec--)
-	{
+	while (sec--) {
 		msleep(1000);
 	}
 }

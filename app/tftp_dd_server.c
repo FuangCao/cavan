@@ -16,12 +16,9 @@ static int handle_read_request(struct tftp_request *req_p)
 	int ret;
 
 	ret = tftp_service_send_data(req_p->filename, req_p->offset, req_p->size, req_p->file_mode, &req_p->client_addr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		println("Send file \"%s\" failed", req_p->filename);
-	}
-	else
-	{
+	} else {
 		println("Send file \"%s\" success", req_p->filename);
 	}
 
@@ -33,12 +30,9 @@ static int handle_write_request(struct tftp_request *req_p)
 	int ret;
 
 	ret = tftp_service_receive_data(req_p->filename, req_p->offset, req_p->file_mode, &req_p->client_addr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		println("Receive file \"%s\" failed", req_p->filename);
-	}
-	else
-	{
+	} else {
 		println("Receive file \"%s\" success", req_p->filename);
 	}
 
@@ -56,8 +50,7 @@ static int service_handle(struct cavan_service_description *service, int index, 
 	socklen_t addr_len = sizeof(struct sockaddr_in);
 
 	ret = inet_recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), &req.client_addr, &addr_len);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("Receive request failed");
 		return ret;
 	}
@@ -66,8 +59,7 @@ static int service_handle(struct cavan_service_description *service, int index, 
 		inet_ntoa(req.client_addr.sin_addr), ntohs(req.client_addr.sin_port));
 	println("Service index = %d", index);
 
-	switch (ntohs(req_pkg_p->op_code))
-	{
+	switch (ntohs(req_pkg_p->op_code)) {
 	case TFTP_RRQ:
 		println("=> General read request");
 		strcpy(req.filename, req_pkg_p->filename);
@@ -137,40 +129,34 @@ int main(int argc, char *argv[])
 	int ret;
 	int sockfd;
 	u16 server_port = 0;
-	struct option long_options[] =
-	{
+	struct option long_options[] = {
 		{
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'p',
-		},
-		{
+		}, {
 			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'd',
-		},
-		{
+		}, {
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			.name = "super",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 's',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	int c;
 	int option_index;
-	struct cavan_service_description desc =
-	{
+	struct cavan_service_description desc = {
 		.name = "TFTP_DD",
 		.daemon_count = TFTP_MAX_LINK_COUNT,
 		.as_daemon = 0,
@@ -179,10 +165,8 @@ int main(int argc, char *argv[])
 		.handler = service_handle
 	};
 
-	while ((c = getopt_long(argc, argv, "p:P:dDvVs:S:", long_options, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "p:P:dDvVs:S:", long_options, &option_index)) != EOF) {
+		switch (c) {
 		case 'p':
 		case 'P':
 			server_port = text2value(optarg, NULL, 10);
@@ -209,14 +193,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (server_port == 0)
-	{
+	if (server_port == 0) {
 		server_port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
 	sockfd = inet_create_udp_service(server_port);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("create socket failed");
 		return sockfd;
 	}

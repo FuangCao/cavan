@@ -27,39 +27,33 @@
 static struct cavan_input_device *cavan_input_device_create(uint8_t *key_bitmask, uint8_t *abs_bitmask, uint8_t *rel_bitmask)
 {
 #if CAVAN_INPUT_SUPPORT_GSENSOR
-	if (cavan_gsensor_device_match(abs_bitmask))
-	{
+	if (cavan_gsensor_device_match(abs_bitmask)) {
 		pr_green_info("G-Sensor Matched");
 		return cavan_gsensor_create();
 	}
 #endif
 
-	if (cavan_touchpad_device_match(key_bitmask, abs_bitmask))
-	{
+	if (cavan_touchpad_device_match(key_bitmask, abs_bitmask)) {
 		pr_green_info("Touch Pad Matched");
 		return cavan_touchpad_device_create();
 	}
 
-	if (cavan_multi_touch_device_match(abs_bitmask))
-	{
+	if (cavan_multi_touch_device_match(abs_bitmask)) {
 		pr_green_info("Muti Touch Panel Matched");
 		return cavan_multi_touch_device_create();
 	}
 
-	if (cavan_single_touch_device_match(abs_bitmask, key_bitmask))
-	{
+	if (cavan_single_touch_device_match(abs_bitmask, key_bitmask)) {
 		pr_green_info("Single Touch Panel Matched");
 		return cavan_single_touch_device_create();
 	}
 
-	if (cavan_mouse_device_match(key_bitmask, rel_bitmask))
-	{
+	if (cavan_mouse_device_match(key_bitmask, rel_bitmask)) {
 		pr_green_info("Mouse Matched");
 		return cavan_mouse_create();
 	}
 
-	if (cavan_keypad_device_match(key_bitmask))
-	{
+	if (cavan_keypad_device_match(key_bitmask)) {
 		pr_green_info("Keypad Matched");
 		return cavan_keypad_create();
 	}
@@ -77,57 +71,47 @@ static int cavan_input_device_probe(struct cavan_event_device *event_dev, void *
 	struct cavan_input_device *dev, *head, *tail;
 
 	ret = cavan_event_get_abs_bitmask(fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_abs_bitmask");
 		return ret;
 	}
 
 	ret = cavan_event_get_key_bitmask(fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_key_bitmask");
 		return ret;
 	}
 
 	ret = cavan_event_get_rel_bitmask(fd, rel_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_rel_bitmask");
 		return ret;
 	}
 
 	head = tail = NULL;
 
-	while (1)
-	{
+	while (1) {
 		dev = cavan_input_device_create(key_bitmask, abs_bitmask, rel_bitmask);
-		if (dev == NULL)
-		{
+		if (dev == NULL) {
 			break;
 		}
 
 		dev->event_dev = event_dev;
 
-		if (dev->probe && dev->probe(dev, data) < 0)
-		{
+		if (dev->probe && dev->probe(dev, data) < 0) {
 			free(dev);
 			continue;
 		}
 
-		if (head)
-		{
+		if (head) {
 			tail->next = dev;
 			tail = dev;
-		}
-		else
-		{
+		} else {
 			head = tail = dev;
 		}
 	}
 
-	if (head == NULL)
-	{
+	if (head == NULL) {
 		pr_red_info("can't recognize device");
 		return -EINVAL;
 	}
@@ -142,10 +126,8 @@ static void cavan_input_device_remove(struct cavan_event_device *event_dev, void
 {
 	struct cavan_input_device *dev = event_dev->private_data, *next;
 
-	while (dev)
-	{
-		if (dev->remove)
-		{
+	while (dev) {
+		if (dev->remove) {
 			dev->remove(dev, data);
 		}
 
@@ -159,11 +141,9 @@ static bool cavan_input_device_event_handler(struct cavan_event_device *event_de
 {
 	struct cavan_input_device *dev = event_dev->private_data;
 
-	switch(event->type)
-	{
+	switch(event->type) {
 	case EV_SYN:
-		while (dev)
-		{
+		while (dev) {
 			dev->event_handler(dev, event, data);
 			dev = dev->next;
 		}
@@ -173,10 +153,8 @@ static bool cavan_input_device_event_handler(struct cavan_event_device *event_de
 		return true;
 
 	default:
-		while (dev)
-		{
-			if (dev->event_handler(dev, event, data))
-			{
+		while (dev) {
+			if (dev->event_handler(dev, event, data)) {
 				return true;
 			}
 
@@ -191,8 +169,7 @@ static bool cavan_input_device_matcher(struct cavan_event_matcher *matcher, void
 {
 	struct cavan_input_service *service = data;
 
-	if (service->matcher)
-	{
+	if (service->matcher) {
 		return service->matcher(matcher, service->private_data);
 	}
 
@@ -223,8 +200,7 @@ int cavan_input_message_tostring(cavan_input_message_t *message, char *buff, siz
 	struct cavan_input_message_point *point;
 	struct cavan_input_message_vector *vector;
 
-	switch (message->type)
-	{
+	switch (message->type) {
 	case CAVAN_INPUT_MESSAGE_KEY:
 		key = &message->key;
 		return snprintf(buff, size, "key: name = %s, code = %d, value = %d", key->name, key->code, key->value);
@@ -300,8 +276,7 @@ static void cavan_input_message_queue_handler_dummy(void *addr, void *data)
 	char buff[1024];
 
 	length = cavan_input_message_tostring(addr, buff, sizeof(buff));
-	if (length < (int) sizeof(buff))
-	{
+	if (length < (int) sizeof(buff)) {
 		buff[length++] = '\n';
 	}
 
@@ -313,8 +288,7 @@ int cavan_input_service_start(struct cavan_input_service *service, void *data)
 	int ret;
 	struct cavan_event_service *event_service;
 
-	if (service == NULL)
-	{
+	if (service == NULL) {
 		pr_red_info("service == NULL");
 		ERROR_RETURN(EINVAL);
 	}
@@ -322,19 +296,15 @@ int cavan_input_service_start(struct cavan_input_service *service, void *data)
 	pthread_mutex_init(&service->lock, NULL);
 	service->private_data = data;
 
-	if (service->handler)
-	{
+	if (service->handler) {
 		service->queue.handler = cavan_input_message_queue_handler;
-	}
-	else
-	{
+	} else {
 		service->queue.handler = cavan_input_message_queue_handler_dummy;
 	}
 
 	ret = cavan_data_queue_run(&service->queue, MOFS(cavan_input_message_t, node), \
 			sizeof(cavan_input_message_t), CAVAN_INPUT_MESSAGE_POOL_SIZE, service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_data_queue_run");
 		return ret;
 	}
@@ -346,15 +316,13 @@ int cavan_input_service_start(struct cavan_input_service *service, void *data)
 	event_service->event_handler = cavan_input_device_event_handler;
 
 	ret = cavan_timer_service_start(&service->timer_service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_timer_service_start");
 		goto out_cavan_data_queue_stop;
 	}
 
 	ret = cavan_event_service_start(event_service, service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_event_service_start");
 		goto out_timer_service_stop;
 	}
@@ -384,8 +352,7 @@ bool cavan_input_service_append_key_message(struct cavan_input_service *service,
 	struct cavan_input_message_key *key;
 
 	message = cavan_input_service_get_message(service, type);
-	if (message == NULL)
-	{
+	if (message == NULL) {
 		return false;
 	}
 
@@ -405,8 +372,7 @@ bool cavan_input_service_append_vector_message(struct cavan_input_service *servi
 	struct cavan_input_message_vector *vector;
 
 	message = cavan_input_service_get_message(service, type);
-	if (message == NULL)
-	{
+	if (message == NULL) {
 		return false;
 	}
 
@@ -425,8 +391,7 @@ bool cavan_input_service_append_point_message(struct cavan_input_service *servic
 	cavan_input_message_t *message;
 
 	message = cavan_input_service_get_message(service, type);
-	if (message == NULL)
-	{
+	if (message == NULL) {
 		return false;
 	}
 
@@ -449,8 +414,7 @@ char cavan_keycode2ascii(int code, bool shift_down)
 		"ASDFGHJKL:\"~*|"
 		"ZXCVBNM<>?*** ";
 
-	if (code < 0 || code > KEY_SPACE)
-	{
+	if (code < 0 || code > KEY_SPACE) {
 		return '*';
 	}
 

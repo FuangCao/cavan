@@ -35,30 +35,25 @@ int main(int argc, char *argv[])
 	int c;
 	int ret;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	struct cavan_net_bridge bridge;
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -79,14 +74,12 @@ int main(int argc, char *argv[])
 	}
 
 	ret = cavan_net_bridge_init(&bridge);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_net_bridge_init");
 		return ret;
 	}
 
-	while (optind < argc)
-	{
+	while (optind < argc) {
 		cavan_net_bridge_register_port(&bridge, argv[optind]);
 		optind++;
 	}

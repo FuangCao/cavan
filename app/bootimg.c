@@ -37,35 +37,29 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 	int option_index;
 	bool dt_support = false;
 	const char *command = argv[0];
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "dt",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DT,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhHd", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHd", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -93,8 +87,7 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 	argv += optind;
 	argc -= optind;
 
-	if (argc < 1)
-	{
+	if (argc < 1) {
 		show_usage_unpack(command);
 		return -EINVAL;
 	}
@@ -144,224 +137,187 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "kernel",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_KERNEL,
-		},
-		{
+		}, {
 			.name = "kernel_offset",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_KERNEL_OFFSET,
-		},
-		{
+		}, {
 			.name = "ko",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_KERNEL_OFFSET,
-		},
-		{
+		}, {
 			.name = "ramdisk",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_RAMDISK,
-		},
-		{
+		}, {
 			.name = "ramdisk_offset",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_RAMDISK_OFFSET,
-		},
-		{
+		}, {
 			.name = "ro",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_RAMDISK_OFFSET,
-		},
-		{
+		}, {
 			.name = "second",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SECOND,
-		},
-		{
+		}, {
 			.name = "second_offset",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SECOND_OFFSET,
-		},
-		{
+		}, {
 			.name = "so",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SECOND_OFFSET,
-		},
-		{
+		}, {
 			.name = "tags_offset",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_TAGS_OFFSET,
-		},
-		{
+		}, {
 			.name = "to",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_TAGS_OFFSET,
-		},
-		{
+		}, {
 			.name = "kernel_addr",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_KERNEL_ADDR,
-		},
-		{
+		}, {
 			.name = "ka",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_KERNEL_ADDR,
-		},
-		{
+		}, {
 			.name = "ramdisk_addr",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_RAMDISK_ADDR,
-		},
-		{
+		}, {
 			.name = "ra",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_RAMDISK_ADDR,
-		},
-		{
+		}, {
 			.name = "second_addr",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SECOND_ADDR,
-		},
-		{
+		}, {
 			.name = "sa",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SECOND_ADDR,
-		},
-		{
+		}, {
 			.name = "tags_addr",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_TAGS_ADDR,
-		},
-		{
+		}, {
 			.name = "ta",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_TAGS_ADDR,
-		},
-		{
+		}, {
 			.name = "dt",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DT,
-		},
-		{
+		}, {
 			.name = "base",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_BASE,
-		},
-		{
+		}, {
 			.name = "cmdline",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_CMDLINE,
-		},
-		{
+		}, {
 			.name = "name",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_NAME,
-		},
-		{
+		}, {
 			.name = "board",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_BOARD,
-		},
-		{
+		}, {
 			.name = "page_size",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PAGE_SIZE,
-		},
-		{
+		}, {
 			.name = "pagesize",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PAGE_SIZE,
-		},
-		{
+		}, {
 			.name = "ps",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PAGE_SIZE,
-		},
-		{
+		}, {
 			.name = "unused",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UNUSED,
-		},
-		{
+		}, {
 			.name = "remain",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_REMAIN,
-		},
-		{
+		}, {
 			.name = "config",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_CONFIG,
-		},
-		{
+		}, {
 			.name = "check_all",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_CHECK_ALL,
-		},
-		{
+		}, {
 			.name = "check-all",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_CHECK_ALL,
-		},
-		{
+		}, {
 			.name = "ca",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_CHECK_ALL,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
-	struct bootimg_pack_option option =
-	{
+	struct bootimg_pack_option option = {
 		.kernel = NULL,
 		.ramdisk = NULL,
 		.second = NULL,
@@ -383,10 +339,8 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		.check_all = false
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhHn:c:k:r:s:d:u:p:b:a", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHn:c:k:r:s:d:u:p:b:a", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -497,45 +451,35 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		}
 	}
 
-	if (option.kernel == NULL && option.ramdisk == NULL)
-	{
-		if (file_access_e(FILE_KERNEL_NAME))
-		{
+	if (option.kernel == NULL && option.ramdisk == NULL) {
+		if (file_access_e(FILE_KERNEL_NAME)) {
 			option.kernel = FILE_KERNEL_NAME;
 		}
 
-		if (file_access_e(FILE_RAMDISK_NAME))
-		{
+		if (file_access_e(FILE_RAMDISK_NAME)) {
 			option.ramdisk = FILE_RAMDISK_NAME;
 		}
 
-		if (option.second == NULL && file_access_e(FILE_SECOND_NAME))
-		{
+		if (option.second == NULL && file_access_e(FILE_SECOND_NAME)) {
 			option.second = FILE_SECOND_NAME;
 		}
 
-		if (option.dt == NULL && file_access_e(FILE_DT_NAME))
-		{
+		if (option.dt == NULL && file_access_e(FILE_DT_NAME)) {
 			option.dt = FILE_DT_NAME;
 		}
 
-		if (option.remain == NULL && file_access_e(FILE_REMAIN_NAME))
-		{
+		if (option.remain == NULL && file_access_e(FILE_REMAIN_NAME)) {
 			option.remain = FILE_REMAIN_NAME;
 		}
 
-		if (option.config == NULL && file_access_e(FILE_CONFIG_TXT))
-		{
+		if (option.config == NULL && file_access_e(FILE_CONFIG_TXT)) {
 			option.config = FILE_CONFIG_TXT;
 		}
 	}
 
-	if (optind < argc)
-	{
+	if (optind < argc) {
 		option.output = argv[optind++];
-	}
-	else
-	{
+	} else {
 		option.output = FILE_BOOTIMG_NAME;
 	}
 
@@ -550,18 +494,14 @@ static int cavan_bootimg_info(int argc, char *argv[])
 	const char *pathname;
 	struct bootimg_header hdr;
 
-	if (argc > 1)
-	{
+	if (argc > 1) {
 		pathname = argv[1];
-	}
-	else
-	{
+	} else {
 		pathname = "boot.img";
 	}
 
 	ret = file_read(pathname, &hdr, sizeof(hdr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("read file %s", pathname);
 		return ret;
 	}

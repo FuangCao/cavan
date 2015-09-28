@@ -69,34 +69,26 @@ void *mem_copy(void *dest, const void *src, size_t size)
 {
 	size_t count;
 
-	if (dest == src)
-	{
+	if (dest == src) {
 		return ((u8 *) dest) + size;
 	}
 
-	if (ADDR_IS_ALIGN(src, 8) && ADDR_IS_ALIGN(dest, 8))
-	{
+	if (ADDR_IS_ALIGN(src, 8) && ADDR_IS_ALIGN(dest, 8)) {
 		count = size >> 3;
 		dest = mem_copy64(dest, src, count);
 		src = ((const u64 *) src) + count;
 		count = size & 0x07;
-	}
-	else if (ADDR_IS_ALIGN(src, 4) && ADDR_IS_ALIGN(dest, 4))
-	{
+	} else if (ADDR_IS_ALIGN(src, 4) && ADDR_IS_ALIGN(dest, 4)) {
 		count = size >> 2;
 		dest = mem_copy32(dest, src, count);
 		src = ((const u32 *) src) + count;
 		count = size & 0x03;
-	}
-	else if (ADDR_IS_ALIGN(src, 2) && ADDR_IS_ALIGN(dest, 2))
-	{
+	} else if (ADDR_IS_ALIGN(src, 2) && ADDR_IS_ALIGN(dest, 2)) {
 		count = size >> 1;
 		dest = mem_copy16(dest, src, count);
 		src = ((const u16 *) src) + count;
 		count = size & 0x01;
-	}
-	else
-	{
+	} else {
 		count = size;
 	}
 
@@ -107,34 +99,26 @@ void *mem_copy_decrease(void *dest, const void *src, size_t size)
 {
 	size_t count;
 
-	if (dest == src)
-	{
+	if (dest == src) {
 		return ((u8 *) dest) + size;
 	}
 
-	if (size >= 8 && ADDR_IS_LEFT_ALIGN(src, 8) && ADDR_IS_LEFT_ALIGN(dest, 8))
-	{
+	if (size >= 8 && ADDR_IS_LEFT_ALIGN(src, 8) && ADDR_IS_LEFT_ALIGN(dest, 8)) {
 		count = size >> 3;
 		dest = mem_copy_decrease64(ADDR_SUB(dest, 7), ADDR_SUB(src, 7), count);
 		src = ADDR_SUB(src, count << 3);
 		count = size & 0x07;
-	}
-	else if (size >= 4 && ADDR_IS_LEFT_ALIGN(src, 4) && ADDR_IS_LEFT_ALIGN(dest, 4))
-	{
+	} else if (size >= 4 && ADDR_IS_LEFT_ALIGN(src, 4) && ADDR_IS_LEFT_ALIGN(dest, 4)) {
 		count = size >> 2;
 		dest = mem_copy_decrease32(ADDR_SUB(dest, 3), ADDR_SUB(src, 3), count);
 		src = ADDR_SUB(src, count << 2);
 		count = size & 0x03;
-	}
-	else if (size >= 2 && ADDR_IS_LEFT_ALIGN(src, 2) && ADDR_IS_LEFT_ALIGN(dest, 2))
-	{
+	} else if (size >= 2 && ADDR_IS_LEFT_ALIGN(src, 2) && ADDR_IS_LEFT_ALIGN(dest, 2)) {
 		count = size >> 1;
 		dest = mem_copy_decrease16(ADDR_SUB(dest, 1), ADDR_SUB(src, 1), count);
 		src = ADDR_SUB(src, count << 1);
 		count = size & 0x01;
-	}
-	else
-	{
+	} else {
 		count = size;
 	}
 
@@ -144,8 +128,7 @@ void *mem_copy_decrease(void *dest, const void *src, size_t size)
 
 void *mem_move(void *dest, const void *src, size_t size)
 {
-	if (dest < src)
-	{
+	if (dest < src) {
 		return mem_copy(dest, src, size);
 	}
 
@@ -161,8 +144,7 @@ void mem_set(void *mem, int value, size_t size)
 {
 	size_t count;
 
-	if (((long) mem & 0x07) == 0)
-	{
+	if (((long) mem & 0x07) == 0) {
 		u64 value64;
 
 		value64 = value;
@@ -175,9 +157,7 @@ void mem_set(void *mem, int value, size_t size)
 
 		mem = (u8 *) mem + (count << 3);
 		count = size & 0x07;
-	}
-	else if (((long) mem & 0x03) == 0)
-	{
+	} else if (((long) mem & 0x03) == 0) {
 		u32 value32;
 
 		value32 = value;
@@ -189,9 +169,7 @@ void mem_set(void *mem, int value, size_t size)
 
 		mem = (u8 *) mem + (count << 2);
 		count = size & 0x03;
-	}
-	else if (((long) mem & 0x01) == 0)
-	{
+	} else if (((long) mem & 0x01) == 0) {
 		u16 value16;
 
 		value16 = value;
@@ -202,14 +180,11 @@ void mem_set(void *mem, int value, size_t size)
 
 		mem = (u8 *) mem + (count << 1);
 		count = size & 0x01;
-	}
-	else
-	{
+	} else {
 		count = size;
 	}
 
-	if (count)
-	{
+	if (count) {
 		mem_set8(mem, value, count);
 	}
 }
@@ -220,8 +195,7 @@ void bits_set(char *mem, int start, int end, u32 value)
 {
 	int i;
 
-	for (i = end; i >= start; i--)
-	{
+	for (i = end; i >= start; i--) {
 		int offset;
 		char *mem8;
 
@@ -241,35 +215,25 @@ void mem_build_kmp_array(const char *sub, int *steps, size_t size)
 {
 	unsigned int i, j, k;
 
-	for (i = 1, steps[0] = -1; i < size; i++)
-	{
+	for (i = 1, steps[0] = -1; i < size; i++) {
 		j = 1;
 		k = 0;
 
-		while (j < i)
-		{
-			if (((char *) sub)[j] == ((char *) sub)[k])
-			{
+		while (j < i) {
+			if (((char *) sub)[j] == ((char *) sub)[k]) {
 				j++;
 				k++;
-			}
-			else if (steps[k] == -1)
-			{
+			} else if (steps[k] == -1) {
 				j++;
 				k = 0;
-			}
-			else
-			{
+			} else {
 				k = steps[k];
 			}
 		}
 
-		if (((char *) sub)[k] == ((char *) sub)[i])
-		{
+		if (((char *) sub)[k] == ((char *) sub)[i]) {
 			steps[i] = steps[k];
-		}
-		else
-		{
+		} else {
 			steps[i] = k;
 		}
 	}
@@ -279,26 +243,19 @@ char *mem_kmp_find_base(const char *mem, const char *mem_end, const char *sub, s
 {
 	unsigned int i = 0;
 
-	while (mem < mem_end && i < sublen)
-	{
-		if (*(char *) mem == ((char *) sub)[i])
-		{
+	while (mem < mem_end && i < sublen) {
+		if (*(char *) mem == ((char *) sub)[i]) {
 			mem++;
 			i++;
-		}
-		else if (steps[i] == -1)
-		{
+		} else if (steps[i] == -1) {
 			mem++;
 			i = 0;
-		}
-		else
-		{
+		} else {
 			i = steps[i];
 		}
 	}
 
-	if (i < sublen)
-	{
+	if (i < sublen) {
 		return NULL;
 	}
 
@@ -325,11 +282,9 @@ int mem_kmp_find_all(const char *mem, const char *sub, size_t memlen, size_t sub
 	result_end = results + size;
 	mem_end = mem + memlen;
 
-	while (results < result_end)
-	{
+	while (results < result_end) {
 		mem = mem_kmp_find_base(mem, mem_end, sub, sublen, steps);
-		if (mem == NULL)
-		{
+		if (mem == NULL) {
 			break;
 		}
 
@@ -349,10 +304,8 @@ size_t mem_delete_char_base(const char *mem_in, char *mem_out, const size_t size
 	mem_bak = mem_out;
 	mem_end = mem_in + size;
 
-	while (mem_in < mem_end)
-	{
-		if (*(const char *) mem_in == c)
-		{
+	while (mem_in < mem_end) {
+		if (*(const char *) mem_in == c) {
 			mem_in++;
 			continue;
 		}
@@ -386,8 +339,7 @@ u32 mem_checksum32_simple(const u8 *mem, size_t count)
 	const u8 *mem_end = mem + count;
 	u64 checksum = 0;
 
-	while (mem < mem_end)
-	{
+	while (mem < mem_end) {
 		checksum += *mem++;
 	}
 
@@ -401,13 +353,11 @@ u16 mem_checksum16_simple(const u16 *mem, size_t size)
 	u32 checksum = 0;
 	const u16 *mem_end;
 
-	for (mem_end = mem + (size >> 1); mem < mem_end; mem++)
-	{
+	for (mem_end = mem + (size >> 1); mem < mem_end; mem++) {
 		checksum += *mem;
 	}
 
-	if (size & 1)
-	{
+	if (size & 1) {
 		checksum += *(u8 *) mem;
 	}
 
@@ -421,8 +371,7 @@ u8 mem_checksum8_simple(const u8 *mem, size_t size)
 	u16 checksum = 0;
 	const u8 *mem_end;
 
-	for (mem_end = mem + size; mem < mem_end; mem++)
-	{
+	for (mem_end = mem + size; mem < mem_end; mem++) {
 		checksum += *mem;
 	}
 
@@ -436,10 +385,8 @@ size_t mem_byte_count(const char *mem, byte c, size_t size)
 	const char *mem_end;
 	size_t count;
 
-	for (mem_end = mem + size, count = 0; mem < mem_end; mem++)
-	{
-		if ((*(byte *) mem) == c)
-		{
+	for (mem_end = mem + size, count = 0; mem < mem_end; mem++) {
+		if ((*(byte *) mem) == c) {
 			count++;
 		}
 	}
@@ -451,8 +398,7 @@ void mem_reverse_simple(byte *start, byte *end)
 {
 	byte tmp;
 
-	while (start < end)
-	{
+	while (start < end) {
 		tmp = *start;
 		*start = *end;
 		*end = tmp;
@@ -464,20 +410,16 @@ void mem_reverse_simple(byte *start, byte *end)
 
 void mem_reverse(byte *start, byte *end)
 {
-	if (start < end)
-	{
+	if (start < end) {
 		mem_reverse_simple(start, end);
-	}
-	else if (start > end)
-	{
+	} else if (start > end) {
 		mem_reverse_simple(end, start);
 	}
 }
 
 bool byte_is_space(byte b)
 {
-	switch (b)
-	{
+	switch (b) {
 	case ' ':
 	case '\t':
 	case '\f':
@@ -490,8 +432,7 @@ bool byte_is_space(byte b)
 
 bool byte_is_lf(byte b)
 {
-	switch (b)
-	{
+	switch (b) {
 	case '\r':
 	case '\n':
 		return true;
@@ -503,8 +444,7 @@ bool byte_is_lf(byte b)
 
 bool byte_is_space_or_lf(byte b)
 {
-	switch (b)
-	{
+	switch (b) {
 	case ' ':
 	case '\t':
 	case '\f':
@@ -519,8 +459,7 @@ bool byte_is_space_or_lf(byte b)
 
 bool byte_is_named(byte b)
 {
-	switch (b)
-	{
+	switch (b) {
 	case '-':
 	case '_':
 	case '0' ... '9':
@@ -537,33 +476,27 @@ void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep,
 {
 	const byte *mem_end;
 
-	if (sep == NULL)
-	{
+	if (sep == NULL) {
 		sep = " ";
 	}
 
-	if (new_line == NULL)
-	{
+	if (new_line == NULL) {
 		new_line = "\n";
 	}
 
-	if (width < 1)
-	{
+	if (width < 1) {
 		width = 10;
 	}
 
 	mem_end = mem + size;
 
-	while (mem < mem_end)
-	{
+	while (mem < mem_end) {
 		const byte *line_end = mem + width - 1;
-		if (line_end >= mem_end)
-		{
+		if (line_end >= mem_end) {
 			line_end = mem_end - 1;
 		}
 
-		while (mem < line_end)
-		{
+		while (mem < line_end) {
 			printf("0x%02x%s", *mem++, sep);
 		}
 
@@ -573,20 +506,13 @@ void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep,
 
 char *mem_size_tostring(double value, char *buff, size_t size)
 {
-	if (value >= GB(1UL))
-	{
+	if (value >= GB(1UL)) {
 		return buff + snprintf(buff, size, "%0.2lf GiB", value / GB(1UL));
-	}
-	else if (value >= MB(1UL))
-	{
+	} else if (value >= MB(1UL)) {
 		return buff + snprintf(buff, size, "%0.2lf MiB", value / MB(1UL));
-	}
-	else if (value >= KB(1UL))
-	{
+	} else if (value >= KB(1UL)) {
 		return buff + snprintf(buff, size, "%0.2lf KiB", value / KB(1UL));
-	}
-	else
-	{
+	} else {
 		return buff + snprintf(buff, size, "%0.2lf Byte", value);
 	}
 }
@@ -600,16 +526,11 @@ char *mem_speed_tostring(double value, char *buff, size_t size)
 
 char *mem_time_tostring(double time, char *buff, size_t size)
 {
-	if (time >= 3600)
-	{
+	if (time >= 3600) {
 		return buff + snprintf(buff, size, "%0.2lfH", time / 3600);
-	}
-	else if (time >= 60)
-	{
+	} else if (time >= 60) {
 		return buff + snprintf(buff, size, "%0.2lfM", time / 60);
-	}
-	else
-	{
+	} else {
 		return buff + snprintf(buff, size, "%0.2lfs", time);
 	}
 }

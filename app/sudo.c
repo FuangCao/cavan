@@ -26,30 +26,25 @@ int main(int argc, char *argv[])
 	const char *shell_command = "sh";
 
 	ret = setuid(0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("Set user to super failed");
 		return ret;
 	}
 
 	ret = setgid(0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("Set group to super failed");
 		return ret;
 	}
 
 	cavan_permission_set(0xFFFFFFFF);
 
-	if (argc > 1)
-	{
+	if (argc > 1) {
 		char command[1024];
 
 		text_join_by_char(argv + 1, argc - 1, ' ', command, sizeof(command));
 		ret = execlp(shell_command, shell_command, "-c", command, NULL);
-	}
-	else
-	{
+	} else {
 		ret = execlp(shell_command, shell_command, "-", NULL);
 	}
 

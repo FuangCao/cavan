@@ -26,14 +26,12 @@ enum swan_board_type
 	SWAN_BOARD_I700,
 };
 
-struct swan_machine
-{
+struct swan_machine {
 	enum swan_board_type type;
 	char name[1024];
 };
 
-struct swan_emmc_partition_table
-{
+struct swan_emmc_partition_table {
 	u32 system_size;
 	u32 recovery_size;
 	u32 userdata_size;

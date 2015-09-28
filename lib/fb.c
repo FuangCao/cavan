@@ -6,8 +6,7 @@
 void show_fb_bitfield(struct fb_bitfield *field, const char *msg)
 {
 	print_sep(60);
-	if (msg)
-	{
+	if (msg) {
 		print_string(msg);
 	}
 	println("field->offset = %d", field->offset);
@@ -92,16 +91,14 @@ int cavan_fb_refresh(struct cavan_fb_device *dev)
 
 	mem_copy((byte *) dev->fb_base + dev->fb_size * index, dev->fb_cache, dev->fb_size);
 
-	if (dev->fb_active == index)
-	{
+	if (dev->fb_active == index) {
 		return 0;
 	}
 
 	var->yoffset = index * dev->yres;
 
 	ret = ioctl(dev->fb, FBIOPUT_VSCREENINFO, var);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("ioctl FBIOPUT_VSCREENINFO");
 		return ret;
 	}
@@ -118,17 +115,13 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	struct fb_fix_screeninfo *fix = &dev->fix_info;
 	struct fb_var_screeninfo *var = &dev->var_info;
 
-	if (fbpath)
-	{
+	if (fbpath) {
 		fb = try_to_open(O_RDWR, fbpath, "/dev/fb0", "/dev/graphics/fb0", "/dev/fb1", "/dev/graphics/fb1", NULL);
-	}
-	else
-	{
+	} else {
 		fb = try_to_open(O_RDWR, "/dev/fb0", "/dev/graphics/fb0", "/dev/fb1", "/dev/graphics/fb1", NULL);
 	}
 
-	if (fb < 0)
-	{
+	if (fb < 0) {
 		print_error("open fb device failed");
 		return fb;
 	}
@@ -136,8 +129,7 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	dev->fb = fb;
 
 	ret = ioctl(fb, FBIOGET_VSCREENINFO, var);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("get screen var info failed");
 		goto out_close_fb;
 	}
@@ -147,8 +139,7 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	dev->xres = var->xres;
 	dev->yres = var->yres;
 
-	switch (var->bits_per_pixel)
-	{
+	switch (var->bits_per_pixel) {
 	case 8:
 		dev->bpp_byte = 1;
 		dev->draw_point = cavan_fb_draw_point8;
@@ -177,31 +168,27 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	dev->fb_active = var->yoffset / var->yres;
 
 	ret = ioctl(fb, FBIOGET_FSCREENINFO, fix);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("get screen fix info failed");
 		goto out_close_fb;
 	}
 
 	show_fb_fix_info(fix);
 
-	if (fix->smem_len == 0)
-	{
+	if (fix->smem_len == 0) {
 		pr_red_info("fix->smem_len is zero");
 		goto out_close_fb;
 	}
 
 	dev->fb_base = mmap(NULL, fix->smem_len, PROT_WRITE | PROT_READ, MAP_SHARED, fb, 0);
-	if (dev->fb_base == NULL || dev->fb_base == MAP_FAILED)
-	{
+	if (dev->fb_base == NULL || dev->fb_base == MAP_FAILED) {
 		print_error("map framebuffer failed");
 		ret = -1;
 		goto out_close_fb;
 	}
 
 	dev->fb_cache = malloc(dev->fb_size);
-	if (dev->fb_cache == NULL)
-	{
+	if (dev->fb_cache == NULL) {
 		pr_error_info("malloc");
 		goto out_munmap;
 	}
@@ -255,26 +242,22 @@ static bool cavan_fb_display_scroll_screen_handler(struct cavan_display_device *
 	byte *py, *py_end;
 	struct cavan_fb_device *dev;
 
-	if (width < 0 || height < 0)
-	{
+	if (width < 0 || height < 0) {
 		return false;
 	}
 
 	dev = display->private_data;
 	width_byte = width * dev->bpp_byte;
 
-	for (py = dev->fb_cache, py_end = py + (dev->yres - height) * dev->line_size; py < py_end; py += dev->line_size)
-	{
+	for (py = dev->fb_cache, py_end = py + (dev->yres - height) * dev->line_size; py < py_end; py += dev->line_size) {
 		mem_copy(py, py + height * dev->line_size + width_byte, dev->line_size - width_byte);
 	}
 
-	if (width > 0)
-	{
+	if (width > 0) {
 		display->fill_rect(display, display->xres - width, 0, width, display->yres, color);
 	}
 
-	if (height > 0)
-	{
+	if (height > 0) {
 		display->fill_rect(display, 0, display->yres - height, display->xres - width, height, color);
 	}
 
@@ -298,8 +281,7 @@ int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_
 	int ret;
 
 	ret = cavan_fb_init(fb_dev, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_fb_init");
 		return ret;
 	}
@@ -322,23 +304,20 @@ int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_
 	return 0;
 }
 
-struct cavan_display_device *cavan_fb_display_create(void)
-{
+struct cavan_display_device *cavan_fb_display_create(void) {
 	int ret;
 	struct cavan_display_device *display;
 	struct cavan_fb_device *fb_dev;
 
 	display = malloc(sizeof(*display) + sizeof(*fb_dev));
-	if (display == NULL)
-	{
+	if (display == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}
 
 	fb_dev = (struct cavan_fb_device *) (display + 1);
 	ret = cavan_fb_display_init(display, fb_dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_fb_display_init");
 		free(display);
 		return NULL;
@@ -349,21 +328,18 @@ struct cavan_display_device *cavan_fb_display_create(void)
 	return display;
 }
 
-struct cavan_display_device *cavan_fb_display_start(void)
-{
+struct cavan_display_device *cavan_fb_display_start(void) {
 	int ret;
 	struct cavan_display_device *display;
 
 	display = cavan_fb_display_create();
-	if (display == NULL)
-	{
+	if (display == NULL) {
 		pr_red_info("cavan_fb_display_create");
 		return NULL;
 	}
 
 	ret = cavan_display_start(display);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_display_check");
 		display->destroy(display);
 		return NULL;

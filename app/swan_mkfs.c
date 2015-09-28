@@ -11,8 +11,7 @@ static void show_usage(void)
 
 int main(int argc, char *argv[])
 {
-	struct partition_desc part_descs[] =
-	{
+	struct partition_desc part_descs[] = {
 		{
 			.major = 179,
 			.minor = FIRST_MINOR + 1,
@@ -20,16 +19,14 @@ int main(int argc, char *argv[])
 			.path = EMMC_DEVICE "p1",
 			.label = EMMC_VFAT_DEFAULT_LABEL,
 			.type = FS_VFAT,
-		},
-		{
+		}, {
 			.major = 179,
 			.minor = FIRST_MINOR + 5,
 			.flags = 0,
 			.path = EMMC_DEVICE "p5",
 			.label = "data",
 			.type = FS_EXT3,
-		},
-		{
+		}, {
 			.major = 179,
 			.minor = FIRST_MINOR + 6,
 			.flags = 0,
@@ -38,43 +35,36 @@ int main(int argc, char *argv[])
 			.type = FS_EXT3,
 		},
 	};
-	struct partition_desc emmc_desc =
-	{
+	struct partition_desc emmc_desc = {
 		.major = 179,
 		.minor = 0,
 		.path = EMMC_DEVICE,
 	};
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "force-format",
 			.has_arg = 0,
 			.flag = NULL,
 			.val = 0,
-		},
-		{
+		}, {
 			.name = "label",
 			.has_arg = 1,
 			.flag = NULL,
 			.val = 1,
-		},
-		{
+		}, {
 			.name = "volume",
 			.has_arg = 1,
 			.flag = NULL,
 			.val = 1,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	int c;
 	int option_index;
 
-	while ((c = getopt_long(argc, argv, "", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 0:
 			part_descs[0].flags &= ~MKFS_FLAG_TEST;
 			break;
@@ -91,8 +81,7 @@ int main(int argc, char *argv[])
 
 	assert(argc > optind);
 
-	if (argv[optind][0] >= '0' && argv[optind][0] <= '9')
-	{
+	if (argv[optind][0] >= '0' && argv[optind][0] <= '9') {
 		emmc_desc.path[text_len(emmc_desc.path) - 1] = argv[1][0];
 		return swan_mkfs(&emmc_desc, part_descs, ARRAY_SIZE(part_descs));
 	}

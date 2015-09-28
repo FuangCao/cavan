@@ -24,8 +24,7 @@
 
 const char *jwp_device_to_string(jwp_device_t device)
 {
-	switch (device)
-	{
+	switch (device) {
 	case JWP_DEVICE_LOCAL:
 		return "Local";
 
@@ -60,11 +59,9 @@ static jwp_bool jwp_linux_create_timer(struct jwp_timer *timer)
 	println("create timer %s, msec = %d", timer->name, timer->msec);
 #endif
 
-	if (timer->handle == NULL)
-	{
+	if (timer->handle == NULL) {
 		cavan_timer = malloc(sizeof(struct cavan_timer));
-		if (cavan_timer == NULL)
-		{
+		if (cavan_timer == NULL) {
 			return false;
 		}
 
@@ -72,9 +69,7 @@ static jwp_bool jwp_linux_create_timer(struct jwp_timer *timer)
 		cavan_timer->handler = jwp_linux_timer_handler;
 
 		timer->handle = cavan_timer;
-	}
-	else
-	{
+	} else {
 		cavan_timer = timer->handle;
 	}
 
@@ -89,8 +84,7 @@ static void jwp_linux_delete_timer(struct jwp_timer *timer)
 	println("delete timer %s, msec = %d", timer->name, timer->msec);
 #endif
 
-	if (timer->handle != NULL)
-	{
+	if (timer->handle != NULL) {
 		struct jwp_linux_desc *jwp_linux = (struct jwp_linux_desc *) timer->jwp;
 
 		cavan_timer_remove(&jwp_linux->timer_service, timer->handle);
@@ -205,52 +199,43 @@ jwp_bool jwp_linux_start(struct jwp_linux_desc *jwp_linux)
 {
 	struct jwp_desc *jwp = &jwp_linux->jwp;
 
-	if (jwp->hw_write == NULL)
-	{
+	if (jwp->hw_write == NULL) {
 		pr_red_info("jwp->hw_write == NULL\n");
 		return false;
 	}
 
-	if (jwp->hw_read == NULL)
-	{
+	if (jwp->hw_read == NULL) {
 		jwp->hw_read = jwp_linux_hw_read;
 	}
 
-	if (jwp->data_received == NULL)
-	{
+	if (jwp->data_received == NULL) {
 		jwp->data_received = jwp_linux_data_received;
 	}
 
-	if (jwp->command_received == NULL)
-	{
+	if (jwp->command_received == NULL) {
 		jwp->command_received = jwp_linux_command_received;
 	}
 
-	if (jwp->package_received == NULL)
-	{
+	if (jwp->package_received == NULL) {
 		jwp->package_received = jwp_linux_package_received;
 	}
 
-	if (jwp->send_complete == NULL)
-	{
+	if (jwp->send_complete == NULL) {
 		jwp->send_complete = jwp_linux_send_complete;
 	}
 
-	if (jwp->remote_not_response == NULL)
-	{
+	if (jwp->remote_not_response == NULL) {
 		jwp->remote_not_response = jwp_linux_remote_not_response;
 	}
 
 #if JWP_WRITE_LOG_ENABLE
-	if (jwp->log_received == NULL)
-	{
+	if (jwp->log_received == NULL) {
 		jwp->log_received = jwp_linux_log_received;
 	}
 #endif
 
 #if JWP_TIMER_ENABLE
-	if (cavan_timer_service_start(&jwp_linux->timer_service) < 0)
-	{
+	if (cavan_timer_service_start(&jwp_linux->timer_service) < 0) {
 		pr_red_info("cavan_timer_service_start");
 		return false;
 	}

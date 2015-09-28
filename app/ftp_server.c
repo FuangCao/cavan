@@ -26,87 +26,73 @@ int main(int argc, char *argv[])
 	int c;
 	int ret;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "root",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_ROOT,
-		},
-		{
+		}, {
 			.name = "super",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SUPER,
-		},
-		{
+		}, {
 			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON,
-		},
-		{
+		}, {
 			.name = "min",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON_MIN,
-		},
-		{
+		}, {
 			.name = "max",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON_MAX,
-		},
-		{
+		}, {
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERBOSE,
-		},
-		{
+		}, {
 			.name = "super",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SUPER,
-		},
-		{
+		}, {
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PORT,
-		},
-		{
+		}, {
 			.name = "log",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LOGFILE,
-		},
-		{
+		}, {
 			.name = "url",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_URL,
-		},
-		{
+		}, {
 			.name = "protocol",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
-		},
-		{
+		}, {
 			.name = "pt",
 			.has_arg = required_argument,
 			.flag = NULL,
@@ -119,8 +105,7 @@ int main(int argc, char *argv[])
 	struct cavan_dynamic_service *service;
 
 	service = cavan_dynamic_service_create(sizeof(struct cavan_ftp_service));
-	if (service == NULL)
-	{
+	if (service == NULL) {
 		pr_red_info("cavan_dynamic_service_create");
 		return -ENOMEM;
 	}
@@ -131,10 +116,8 @@ int main(int argc, char *argv[])
 	network_url_init(url, "ftp", NULL, FTP_CTRL_PORT, NULL);
 	text_copy(ftp->home, "/");
 
-	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:m:M:l:L:r:R:s:S:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "hHvVdDp:P:s:S:c:C:m:M:l:L:r:R:s:S:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'h':
 		case 'H':
 		case CAVAN_COMMAND_OPTION_HELP:
@@ -191,8 +174,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case CAVAN_COMMAND_OPTION_URL:
-			if (network_url_parse(url, optarg) == NULL)
-			{
+			if (network_url_parse(url, optarg) == NULL) {
 				pr_red_info("invalid url %s", optarg);
 				return -EINVAL;
 			}
@@ -207,8 +189,7 @@ int main(int argc, char *argv[])
 		case 'r':
 		case 'R':
 		case CAVAN_COMMAND_OPTION_ROOT:
-			if (realpath(optarg, ftp->home) == NULL)
-			{
+			if (realpath(optarg, ftp->home) == NULL) {
 				pr_error_info("Get directory `%s' realpath failed", optarg);
 				return -ENOENT;
 			}
@@ -221,8 +202,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (argc > optind && realpath(argv[optind], ftp->home) == NULL)
-	{
+	if (argc > optind && realpath(argv[optind], ftp->home) == NULL) {
 		pr_error_info("realpath");
 		ret = -EFAULT;
 		goto out_cavan_dynamic_service_destroy;

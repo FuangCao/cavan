@@ -9,8 +9,7 @@ int main(int argc, char *argv[])
 
 	assert(argc > 2 && argv[1][0] == '-');
 
-	switch (argv[1][1])
-	{
+	switch (argv[1][1]) {
 	case 'b':
 	case 'B':
 	case 's':

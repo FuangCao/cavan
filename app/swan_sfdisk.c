@@ -13,56 +13,47 @@ int main(int argc, char *argv[])
 	int ret;
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "part-system",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 's',
-		},
-		{
+		}, {
 			.name = "part-recovery",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'r',
-		},
-		{
+		}, {
 			.name = "part-userdata",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'u',
-		},
-		{
+		}, {
 			.name = "part-data",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'd',
-		},
-		{
+		}, {
 			.name = "part-cache",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'c',
-		},
-		{
+		}, {
 			.name = "part-vendor",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
-	struct partition_desc emmc_desc =
-	{
+	struct partition_desc emmc_desc = {
 		.major = 179,
 		.minor = FIRST_MINOR,
 		.path = EMMC_DEVICE,
@@ -70,8 +61,7 @@ int main(int argc, char *argv[])
 		.type = -1,
 		.flags = 0,
 	};
-	struct swan_emmc_partition_table part_table =
-	{
+	struct swan_emmc_partition_table part_table = {
 		.system_size = SYSTEM_SIZE,
 		.recovery_size = RECOVERY_SIZE,
 		.userdata_size = USERDATA_SIZE,
@@ -79,10 +69,8 @@ int main(int argc, char *argv[])
 		.vendor_size = 0,
 	};
 
-	while ((c = getopt_long(argc, argv, "hH2:s:S:4:r:R:5:u:U:d:D:6:c:C:7:v:V:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "hH2:s:S:4:r:R:5:u:U:d:D:6:c:C:7:v:V:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'h':
 		case 'H':
 			show_usage();
@@ -128,28 +116,22 @@ int main(int argc, char *argv[])
 
 	assert(optind < argc);
 
-	if (text_is_number(argv[optind]))
-	{
+	if (text_is_number(argv[optind])) {
 		text_copy(emmc_desc.path + text_len(emmc_desc.path) - 1, argv[optind]);
-	}
-	else
-	{
+	} else {
 		text_copy(emmc_desc.path, argv[optind]);
 	}
 
 	optind++;
 
-	if (optind < argc)
-	{
+	if (optind < argc) {
 		ret = sscanf(argv[optind], "%d,%d,%d,%d,%d", &part_table.system_size, &part_table.recovery_size, &part_table.userdata_size, &part_table.cache_size, &part_table.vendor_size);
-		if (ret < 4 || ret > 5)
-		{
+		if (ret < 4 || ret > 5) {
 			error_msg("argument fault %d", ret);
 			return -EINVAL;
 		}
 
-		if (ret == 4)
-		{
+		if (ret == 4) {
 			part_table.vendor_size = 0;
 		}
 	}

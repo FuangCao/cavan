@@ -125,51 +125,43 @@ typedef enum
 	JWP_CSR_EVENT_FIRMWARE_INFO,
 } jwp_csr_command_t;
 
-struct jwp_csr_header
-{
+struct jwp_csr_header {
 	jwp_u8 type;
 };
 
-struct jwp_csr_command_set_state
-{
+struct jwp_csr_command_set_state {
 	struct jwp_csr_header header;
 	jwp_u8 state;
 };
 
-struct jwp_csr_command_set_white_list
-{
+struct jwp_csr_command_set_white_list {
 	struct jwp_csr_header header;
 	jwp_u8 addr_list[5][6];
 };
 
-struct jwp_csr_command_set_white_list_enable
-{
+struct jwp_csr_command_set_white_list_enable {
 	struct jwp_csr_header header;
 	jwp_u8 enable;
 };
 
-struct jwp_csr_command_set_factory_scan
-{
+struct jwp_csr_command_set_factory_scan {
 	struct jwp_csr_header header;
 	jwp_u8 mac_addr[6];
 };
 
-struct jwp_csr_response_package
-{
+struct jwp_csr_response_package {
 	struct jwp_csr_header header;
 	jwp_u8 success;
 };
 
-struct jwp_csr_event_state
-{
+struct jwp_csr_event_state {
 	struct jwp_csr_header header;
 	jwp_u8 state;
 	jwp_u8 bonded;
 	jwp_u8 bonded_addr[6];
 };
 
-struct jwp_csr_event_firmware_info
-{
+struct jwp_csr_event_firmware_info {
 	struct jwp_csr_header header;
 	jwp_u8 firmware_version;
 	jwp_u8 mac_addr[6];

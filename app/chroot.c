@@ -10,18 +10,14 @@ int main(int argc, char *argv[])
 	assert(argc >= 2);
 
 	ret = chroot(argv[1]);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("chroot to %s", argv[1]);
 		return ret;
 	}
 
-	if (argc == 2)
-	{
+	if (argc == 2) {
 		system_init(NULL, argv + 2);
-	}
-	else
-	{
+	} else {
 		system_init(argv[2], argv + 3);
 	}
 

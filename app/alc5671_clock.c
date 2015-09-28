@@ -23,8 +23,7 @@
 #define ALC5671_PLL_N_MAX	0x1FF
 #define ALC5671_PLL_M_MAX	0x0F
 
-struct alc5671_pll_config
-{
+struct alc5671_pll_config {
 	bool bypass;
 	u16 M, N, K;
 };
@@ -48,49 +47,39 @@ static u32 alc5671_pll_find_config(u32 MCLK, u32 OUT, struct alc5671_pll_config 
 	int M1, N1, K1;
 	u32 diff_min = OUT;
 
-	for (K1 = 2; K1 <= ALC5671_PLL_K_MAX + 2; K1++)
-	{
+	for (K1 = 2; K1 <= ALC5671_PLL_K_MAX + 2; K1++) {
 		N1 = OUT * K1 / MCLK;
-		if (N1 < 2)
-		{
+		if (N1 < 2) {
 			N1 = 2;
 		}
 
-		for (; N1 <= ALC5671_PLL_N_MAX + 2; N1++)
-		{
+		for (; N1 <= ALC5671_PLL_N_MAX + 2; N1++) {
 			u32 diff;
 			u32 O1 = MCLK * N1 / K1;
 
 			M1 = O1 / OUT;
-			if (M1 < 1 || M1 > ALC5671_PLL_M_MAX + 2)
-			{
+			if (M1 < 1 || M1 > ALC5671_PLL_M_MAX + 2) {
 				continue;
 			}
 
 			O1 /= M1;
 
 			diff = O1 > OUT ? O1 - OUT : OUT - O1;
-			if (diff <= diff_min)
-			{
+			if (diff <= diff_min) {
 				println("M1 = %d, N1 = %d, K1 = %d, diff = %d", M1, N1, K1, diff);
 
-				if (diff < diff_min)
-				{
+				if (diff < diff_min) {
 					config->N = N1 - 2;
 					config->K = K1 - 2;
-					if (M1 < 2)
-					{
+					if (M1 < 2) {
 						config->bypass = true;
 						config->M = 0;
-					}
-					else
-					{
+					} else {
 						config->bypass = false;
 						config->M = M1 - 2;
 					}
 
-					if (diff == 0)
-					{
+					if (diff == 0) {
 						return 0;
 					}
 
@@ -108,8 +97,7 @@ int main(int argc, char *argv[])
 	double MCLK, OUT;
 	int M, N, K;
 
-	if (argc > 3)
-	{
+	if (argc > 3) {
 		char buff_in[1024];
 		char buff_out[1024];
 
@@ -120,9 +108,7 @@ int main(int argc, char *argv[])
 
 		OUT = alc5671_pll_cal(MCLK, M, N, K);
 		println("%s => %s", frequency_tostring(MCLK, buff_in, sizeof(buff_in), NULL), frequency_tostring(OUT, buff_out, sizeof(buff_out), NULL));
-	}
-	else if (argc > 2)
-	{
+	} else if (argc > 2) {
 		double OUT;
 		char buff_in[1024];
 		char buff_out[1024];
@@ -136,9 +122,7 @@ int main(int argc, char *argv[])
 
 		alc5671_pll_find_config(MCLK, OUT, &config);
 		println("M = %d, N = %d, K = %d, bypass = %d", config.M, config.N, config.K, config.bypass);
-	}
-	else
-	{
+	} else {
 		show_usage(argv[0]);
 		return -EINVAL;
 	}

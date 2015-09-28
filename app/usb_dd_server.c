@@ -15,21 +15,18 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -43,10 +40,8 @@ int main(int argc, char *argv[])
 	adb_dev_enable_path = DEVICE_ADB_ENABLE_PATH;
 	adb_dev_path = DEVICE_ADB_PATH;
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 			show_author_info();
@@ -65,14 +60,12 @@ int main(int argc, char *argv[])
 	}
 
 	pid = fork();
-	if (pid == 0)
-	{
+	if (pid == 0) {
 		execl("/system/bin/setprop", "setprop", "persist.service.adb.enable", "0", NULL);
 	}
 
 	waitpid(pid, &status, 0);
-	if (WIFEXITED(status) == 0 || WEXITSTATUS(status) != 0)
-	{
+	if (WIFEXITED(status) == 0 || WEXITSTATUS(status) != 0) {
 		error_msg("close adb server failed");
 		return -1;
 	}
@@ -80,8 +73,7 @@ int main(int argc, char *argv[])
 	sleep(1);
 
 	fd_adb_en = open(adb_dev_enable_path, O_RDWR);
-	if (fd_adb_en < 0)
-	{
+	if (fd_adb_en < 0) {
 		print_error("open device \"%s\" failed", adb_dev_enable_path);
 		return fd_adb_en;
 	}
@@ -93,11 +85,9 @@ int main(int argc, char *argv[])
 	cftp_desc.receive = cftp_adb_receive_data;
 	cftp_desc.max_xfer_length = CAVAN_USB_MAX_XFER_SIZE;
 
-	while (1)
-	{
+	while (1) {
 		fd_adb = open(adb_dev_path, O_RDWR);
-		if (fd_adb < 0)
-		{
+		if (fd_adb < 0) {
 			print_error("open device \"%s\" failed", adb_dev_path);
 			break;
 		}

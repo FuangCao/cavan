@@ -13,45 +13,36 @@ int tcp_proxy_main_loop(struct network_client *client_local, struct network_clie
 	int ret;
 	ssize_t rwlen;
 	char buff[2048];
-	struct pollfd pfds[2] =
-	{
+	struct pollfd pfds[2] = {
 		{
 			.fd = client_local->sockfd,
 			.events = POLLIN
-		},
-		{
+		}, {
 			.fd = client_remote->sockfd,
 			.events = POLLIN
 		}
 	};
 
-	while (1)
-	{
+	while (1) {
 		ret = poll(pfds, NELEM(pfds), -1);
-		if (ret <= 0)
-		{
-			if (ret < 0)
-			{
+		if (ret <= 0) {
+			if (ret < 0) {
 				return ret;
 			}
 
 			return -ETIMEDOUT;
 		}
 
-		if (pfds[0].revents)
-		{
+		if (pfds[0].revents) {
 			rwlen = client_local->recv(client_local, buff, sizeof(buff));
-			if (rwlen <= 0 || client_remote->send(client_remote, buff, rwlen) < rwlen)
-			{
+			if (rwlen <= 0 || client_remote->send(client_remote, buff, rwlen) < rwlen) {
 				break;
 			}
 		}
 
-		if (pfds[1].revents)
-		{
+		if (pfds[1].revents) {
 			rwlen = client_remote->recv(client_remote, buff, sizeof(buff));
-			if (rwlen <= 0 || client_local->send(client_local, buff, rwlen) < rwlen)
-			{
+			if (rwlen <= 0 || client_local->send(client_local, buff, rwlen) < rwlen) {
 				break;
 			}
 		}
@@ -93,8 +84,7 @@ static int tcp_proxy_service_run_handler(struct cavan_dynamic_service *service, 
 	struct tcp_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
 	ret = network_client_open(&client_proxy, &proxy->url_proxy, CAVAN_NET_FLAG_WAIT);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return ret;
 	}

@@ -25,8 +25,7 @@
 
 #define FILE_CREATE_DATE "2014-01-14 14:04:48"
 
-struct event_repeater_data
-{
+struct event_repeater_data {
 	u16 port;
 	const char *addr;
 	int sockfd;
@@ -51,8 +50,7 @@ static void event_repeater_input_handler(cavan_input_message_t *message, void *d
 
 	p = mem_write8(buff, message->type);
 
-	switch (message->type)
-	{
+	switch (message->type) {
 	case CAVAN_INPUT_MESSAGE_KEY:
 	case CAVAN_INPUT_MESSAGE_MOUSE_TOUCH:
 		p = mem_write16(p, message->key.code);
@@ -78,8 +76,7 @@ static int event_repeater_run(struct event_repeater_data *data)
 	struct cavan_input_service service;
 
 	sockfd = data->open_connect(data->addr, data->port);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("open_connect");
 		return sockfd;
 	}
@@ -89,8 +86,7 @@ static int event_repeater_run(struct event_repeater_data *data)
 	service.handler = event_repeater_input_handler;
 	data->sockfd = sockfd;
 	ret = cavan_input_service_start(&service, data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_service_start");
 		goto out_close_connect;
 	}
@@ -109,54 +105,45 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_IP,
-		},
-		{
+		}, {
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PORT,
-		},
-		{
+		}, {
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_ADB,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
-	struct event_repeater_data data =
-	{
+	struct event_repeater_data data = {
 		.addr = "127.0.0.1",
 		.port = 3333,
 		.open_connect = inet_create_tcp_link2,
 		.close_connect = inet_close_tcp_socket
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:

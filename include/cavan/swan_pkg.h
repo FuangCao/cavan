@@ -35,8 +35,7 @@ enum swan_image_type
 };
 
 #pragma pack(1)
-struct swan_image_info
-{
+struct swan_image_info {
 	u32 major;
 	u32 minor;
 	u32 crc32;
@@ -48,8 +47,7 @@ struct swan_image_info
 	char reserved[127];
 };
 
-struct swan_package_info
-{
+struct swan_package_info {
 	u32 image_count;
 	u32 crc32;
 	u32 resource_size;
@@ -61,8 +59,7 @@ struct swan_package_info
 	char reserved[80];
 };
 
-struct swan_file_info
-{
+struct swan_file_info {
 	u32 version;
 	u32 header_size;
 	char md5sum[36];

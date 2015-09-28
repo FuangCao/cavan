@@ -7,22 +7,19 @@
 #define TREE_MAX_DEPTH		100
 #define TREE_BUFFER_SIZE	100
 
-struct binary_tree_node
-{
+struct binary_tree_node {
 	void *data;
 
 	struct binary_tree_node *left;
 	struct binary_tree_node *right;
 };
 
-struct binary_tree_cache
-{
+struct binary_tree_cache {
 	struct binary_tree_node node;
 	int flags;
 };
 
-struct binary_tree_descriptor
-{
+struct binary_tree_descriptor {
 	struct binary_tree_node *root;
 	struct binary_tree_cache buff[TREE_BUFFER_SIZE], *buff_end;
 	size_t count;

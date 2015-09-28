@@ -8,15 +8,13 @@ int main(int argc, char *argv[])
 	const char *system_mnt_point = SYSTEM_MNT_POINT;
 
 	ret = mount_to(EMMC_DEVICE "p2", system_mnt_point, "ext4", NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("mount system device");
 		return ret;
 	}
 
 	ret = write_mac_address(EMMC_DEVICE, system_mnt_point);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("write mac address failed");
 	}
 

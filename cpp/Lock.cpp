@@ -22,13 +22,10 @@
 
 ThreadLock::ThreadLock(bool acquire)
 {
-	if (acquire && MutexLock::acquire() == 0)
-	{
+	if (acquire && MutexLock::acquire() == 0) {
 		mOwner = pthread_self();
 		mHeldCount = 1;
-	}
-	else
-	{
+	} else {
 		mOwner = 0;
 		mHeldCount = 0;
 	}
@@ -39,16 +36,12 @@ int ThreadLock::acquire(bool trylock)
 	pthread_t owner;
 
 	owner = pthread_self();
-	if (isHeldBy(owner))
-	{
+	if (isHeldBy(owner)) {
 		mHeldCount++;
-	}
-	else
-	{
+	} else {
 		int ret = trylock ? MutexLock::tryLock() : MutexLock::acquire();
 
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 
@@ -61,13 +54,11 @@ int ThreadLock::acquire(bool trylock)
 
 int ThreadLock::release(void)
 {
-	if (!isHeld() || --mHeldCount > 0)
-	{
+	if (!isHeld() || --mHeldCount > 0) {
 		return 0;
 	}
 
-	if (mHeldCount < 0)
-	{
+	if (mHeldCount < 0) {
 		pr_red_info("unbalanced %s %d", __FUNCTION__, mHeldCount);
 		mHeldCount = 0;
 	}

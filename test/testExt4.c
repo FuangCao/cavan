@@ -23,8 +23,7 @@
 #define TEST_EXT4_DEBUG					0
 #define TEST_EXT4_DEVICE_BLOCK_SIZE		512
 
-struct test_ext4_device_context
-{
+struct test_ext4_device_context {
 	int fd;
 };
 
@@ -56,8 +55,7 @@ static void test_ext4_device_list_dir_handler(struct ext2_dir_entry_2 *entry, vo
 {
 	print_ntext(entry->name, entry->name_len);
 
-	if (entry->file_type == EXT2_FT_DIR)
-	{
+	if (entry->file_type == EXT2_FT_DIR) {
 		print_char('/');
 	}
 
@@ -70,8 +68,7 @@ int main(int argc, char *argv[])
 	int ret;
 	struct cavan_ext4_fs fs;
 	struct test_ext4_device_context context;
-	struct cavan_block_device bdev =
-	{
+	struct cavan_block_device bdev = {
 		.block_shift = 0,
 		.block_size = TEST_EXT4_DEVICE_BLOCK_SIZE,
 		.block_mask = 0,
@@ -84,8 +81,7 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	fd = open(argv[1], O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open");
 		return fd;
 	}
@@ -93,50 +89,37 @@ int main(int argc, char *argv[])
 	context.fd = fd;
 
 	ret = cavan_block_device_init(&bdev, &context);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_block_device_init");
 		goto out_close_fd;
 	}
 
 	ret = cavan_ext4_init(&fs, &bdev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_ext4_init");
 		goto out_cavan_block_device_deinit;
 	}
 
-	if (argc > 2)
-	{
+	if (argc > 2) {
 		struct cavan_ext4_file *fp;
 
 		fp = cavan_ext4_open_file(&fs, argv[2]);
-		if (fp == NULL)
-		{
+		if (fp == NULL) {
 			pr_red_info("cavan_ext4_open_file");
-		}
-		else
-		{
-			if (S_ISDIR(fp->inode.i_mode))
-			{
+		} else {
+			if (S_ISDIR(fp->inode.i_mode)) {
 				ret = cavan_ext4_list_dir(fp, test_ext4_device_list_dir_handler, fp);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					pr_red_info("cavan_ext4_list_dir");
 				}
-			}
-			else
-			{
+			} else {
 				ssize_t rdlen;
 				char buff[fp->inode.i_size];
 
 				rdlen = cavan_ext4_read_file(fp, 10, buff, sizeof(buff));
-				if (rdlen < 0)
-				{
+				if (rdlen < 0) {
 					pr_red_info("cavan_ext4_read_file");
-				}
-				else
-				{
+				} else {
 #if TEST_EXT4_DEBUG
 					println("rdlen = " PRINT_FORMAT_SIZE, rdlen);
 #endif

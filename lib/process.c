@@ -32,22 +32,17 @@ char *process_get_cmdline_base(const char *filename, char *buff, size_t size)
 	char *p, *p_end, *buff_end;
 
 	readlen = file_read(filename, readbuff, sizeof(readbuff));
-	if (readlen < 0)
-	{
+	if (readlen < 0) {
 		pr_red_info("read file %s failed", filename);
 		return NULL;
 	}
 
 	for (p_end = readbuff + readlen - 1; *p_end == 0 && p_end > readbuff; p_end--);
 
-	for (buff_end = buff + size - 1, p = readbuff; p <= p_end && buff < buff_end; buff++, p++)
-	{
-		if (*p == 0)
-		{
+	for (buff_end = buff + size - 1, p = readbuff; p <= p_end && buff < buff_end; buff++, p++) {
+		if (*p == 0) {
 			*buff = ' ';
-		}
-		else
-		{
+		} else {
 			*buff = *p;
 		}
 	}
@@ -82,14 +77,12 @@ pid_t process_find_by_cmdline(const char *proc_path, const char *cmdline)
 	struct dirent *en;
 	char pathname[64], *p_name;
 
-	if (proc_path == NULL)
-	{
+	if (proc_path == NULL) {
 		proc_path = "/proc";
 	}
 
 	dir_proc = opendir(proc_path);
-	if (dir_proc == NULL)
-	{
+	if (dir_proc == NULL) {
 		print_error("Open directroy %s failed", proc_path);
 		return -EFAULT;
 	}
@@ -97,28 +90,24 @@ pid_t process_find_by_cmdline(const char *proc_path, const char *cmdline)
 	pid = -1;
 	p_name = text_path_cat(pathname, sizeof(pathname), proc_path, NULL);
 
-	while ((en = readdir(dir_proc)))
-	{
+	while ((en = readdir(dir_proc))) {
 		char buff[1024];
 		ssize_t readlen;
 
-		if (text_is_number(en->d_name) == 0)
-		{
+		if (text_is_number(en->d_name) == 0) {
 			continue;
 		}
 
 		sprintf(p_name, "%s/cmdline", en->d_name);
 
 		readlen = file_read(pathname, buff, sizeof(buff));
-		if (readlen < 0)
-		{
+		if (readlen < 0) {
 			continue;
 		}
 
 		buff[readlen] = 0;
 
-		if (text_lhcmp(cmdline, buff) == 0)
-		{
+		if (text_lhcmp(cmdline, buff) == 0) {
 			pid = text2value_unsigned(en->d_name, NULL, 10);
 			break;
 		}

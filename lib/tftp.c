@@ -23,8 +23,7 @@ static ssize_t send_error_pkg(int sockfd, int err_code, const char *err_msg, con
 
 static void show_error_msg_pkg(const struct tftp_error_pkg *err_pkg_p)
 {
-	if (ntohs(err_pkg_p->op_code) != TFTP_ERROR)
-	{
+	if (ntohs(err_pkg_p->op_code) != TFTP_ERROR) {
 		error_msg("this package is not a tftp error package");
 		return;
 	}
@@ -40,11 +39,9 @@ static ssize_t send_ack_pkg(int sockfd, u16 blk_num, const struct sockaddr_in *r
 	ack_pkg.op_code = htons(TFTP_ACK);
 	ack_pkg.blk_num = htons(blk_num);
 
-	while (times--)
-	{
+	while (times--) {
 		ret = inet_sendto(sockfd, &ack_pkg, sizeof(ack_pkg), remote_addr);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 	}
@@ -58,8 +55,7 @@ static ssize_t send_ack_nosocket(u16 blk_num, const struct sockaddr_in *remote_a
 	ssize_t sendlen;
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("create socket failed");
 		return sockfd;
 	}
@@ -117,14 +113,12 @@ static ssize_t send_dd_request(int sockfd, const char *filename, const char *mod
 
 static int check_ack(const struct tftp_ack_pkg *ack_pkg_p, u16 blk_num)
 {
-	if (ntohs(ack_pkg_p->op_code) != TFTP_ACK)
-	{
+	if (ntohs(ack_pkg_p->op_code) != TFTP_ACK) {
 		error_msg("ack operation code error");
 		return -EINVAL;
 	}
 
-	if (ntohs(ack_pkg_p->blk_num) != blk_num)
-	{
+	if (ntohs(ack_pkg_p->blk_num) != blk_num) {
 		error_msg("block number error");
 		return -EINVAL;
 	}
@@ -142,8 +136,7 @@ int send_mkdir_request(const char *ip, u16 port, const char *pathname, mode_t mo
 	socklen_t remote_addr_len;
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("create socket failed");
 		return sockfd;
 	}
@@ -155,8 +148,7 @@ int send_mkdir_request(const char *ip, u16 port, const char *pathname, mode_t mo
 	inet_sockaddr_init(&remote_addr, ip, port);
 
 	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pathname) + 1 + MEMBER_OFFSET(struct tftp_mkdir_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
-	if (recvlen < 0)
-	{
+	if (recvlen < 0) {
 		ret = recvlen;
 		goto out_close_socket;
 	}
@@ -179,8 +171,7 @@ int vsend_command_request(const char *ip, u16 port, const char *command, va_list
 	socklen_t remote_addr_len;
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("create socket failed");
 		return sockfd;
 	}
@@ -193,21 +184,18 @@ int vsend_command_request(const char *ip, u16 port, const char *command, va_list
 	println("Send command \"%s\"", pkg.command.command);
 
 	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pkg.command.command) + 1 + MEMBER_OFFSET(struct tftp_command_pkg, command), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
-	if (recvlen < 0)
-	{
+	if (recvlen < 0) {
 		ret = recvlen;
 		goto out_close_socket;
 	}
 
 	ret = check_ack(&pkg.ack, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		goto out_close_socket;
 	}
 
 	ret = inet_recvfrom_timeout(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len, TFTP_COMMAND_EXEC_TIME);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		goto out_close_socket;
 	}
 
@@ -242,15 +230,13 @@ int send_command_request_show(const char *ip, u16 port, const char *command, ...
 	va_end(ap);
 
 	ret = tftp_client_receive_all(ip, port, log_path, log_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("receive command response failed");
 		return ret;
 	}
 
 	ret = cat_file(log_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("cat file \"%s\" failed", log_path);
 		return ret;
 	}
@@ -268,8 +254,7 @@ int send_mknode_request(const char *ip, u16 port, const char *pathname, mode_t m
 	socklen_t remote_addr_len;
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("create socket failed");
 		return sockfd;
 	}
@@ -284,8 +269,7 @@ int send_mknode_request(const char *ip, u16 port, const char *pathname, mode_t m
 	println("Request mknode %s", pathname);
 
 	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pathname) + 1 + MEMBER_OFFSET(struct tftp_mknode_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
-	if (recvlen < 0)
-	{
+	if (recvlen < 0) {
 		ret = recvlen;
 		goto out_close_socket;
 	}
@@ -313,8 +297,7 @@ int send_symlink_request(const char *ip, u16 port, const char *file_in, const ch
 	link = pkg.symlink.pathname + oldpath_len + 1;
 
 	newpath_len = readlink(file_in, link, sizeof(pkg) - MEMBER_OFFSET(struct tftp_symlink_pkg, pathname) - oldpath_len - 1);
-	if (newpath_len < 0)
-	{
+	if (newpath_len < 0) {
 		print_error("readlink \"%s\" failed", file_in);
 		return newpath_len;
 	}
@@ -323,8 +306,7 @@ int send_symlink_request(const char *ip, u16 port, const char *file_in, const ch
 	println("symlink = %s, newpath_len = %d", pkg.symlink.pathname + oldpath_len + 1, newpath_len);
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("create socket failed");
 		return sockfd;
 	}
@@ -335,8 +317,7 @@ int send_symlink_request(const char *ip, u16 port, const char *file_in, const ch
 	inet_sockaddr_init(&remote_addr, ip, port);
 
 	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, oldpath_len + newpath_len + 2 + MEMBER_OFFSET(struct tftp_symlink_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
-	if (recvlen < 0)
-	{
+	if (recvlen < 0) {
 		ret = recvlen;
 		goto out_close_socket;
 	}
@@ -360,25 +341,21 @@ int tftp_client_receive_file(const char *ip, u16 port, const char *file_in, cons
 	u16 blk_num;
 
 	fd = open(file_out, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("open file \"%s\" failed", file_out);
 		return fd;
 	}
 
-	if (offset_out)
-	{
+	if (offset_out) {
 		ret = lseek(fd, offset_out, SEEK_SET);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("seek file \"%s\" failed", file_out);
 			goto out_close_fd;
 		}
 	}
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("Can't create socket");
 		ret = sockfd;
 		goto out_close_fd;
@@ -386,17 +363,13 @@ int tftp_client_receive_file(const char *ip, u16 port, const char *file_in, cons
 
 	inet_sockaddr_init(&remote_addr, ip, port);
 
-	if (offset_in || size)
-	{
+	if (offset_in || size) {
 		sendlen = send_dd_request(sockfd, file_in, "octet", TFTP_RETRY_COUNT, offset_in, size, &remote_addr, 1);
-	}
-	else
-	{
+	} else {
 		sendlen = send_request(sockfd, file_in, "octet", TFTP_RETRY_COUNT, &remote_addr, 1);
 	}
 
-	if (sendlen < 0)
-	{
+	if (sendlen < 0) {
 		error_msg("send read request failed");
 		ret = sendlen;
 		goto out_close_socket;
@@ -409,28 +382,23 @@ int tftp_client_receive_file(const char *ip, u16 port, const char *file_in, cons
 
 	blk_num = 1;
 
-	while (1)
-	{
+	while (1) {
 		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
-		if (recvlen < 0)
-		{
+		if (recvlen < 0) {
 			print_error("receive data timeout");
 			ret = recvlen;
 			goto out_close_socket;
 		}
 
-		switch (ntohs(pkg.op_code))
-		{
+		switch (ntohs(pkg.op_code)) {
 		case TFTP_DATA:
-			if (ntohs(pkg.data.blk_num) != blk_num)
-			{
+			if (ntohs(pkg.data.blk_num) != blk_num) {
 				warning_msg("blk_num != %d", blk_num);
 				goto lable_send_ack;
 			}
 
 			writelen = write(fd, pkg.data.data, recvlen - 4);
-			if (writelen < 0)
-			{
+			if (writelen < 0) {
 				print_error("write data failed");
 				ret = writelen;
 				send_error_pkg(sockfd, 0, "write data failed", &remote_addr);
@@ -441,8 +409,7 @@ int tftp_client_receive_file(const char *ip, u16 port, const char *file_in, cons
 
 			blk_num++;
 
-			if (writelen < TFTP_DATA_LEN)
-			{
+			if (writelen < TFTP_DATA_LEN) {
 				println(" Receive data complete");
 				send_ack_pkg(sockfd, blk_num, &remote_addr, TFTP_LAST_ACK_TIMES);
 				ret = 0;
@@ -451,8 +418,7 @@ int tftp_client_receive_file(const char *ip, u16 port, const char *file_in, cons
 
 lable_send_ack:
 			sendlen = send_ack_select(sockfd, TFTP_RETRY_COUNT, blk_num, &remote_addr);
-			if (sendlen < 0)
-			{
+			if (sendlen < 0) {
 				error_msg("send ack failed");
 				ret = sendlen;
 				goto out_close_socket;
@@ -487,8 +453,7 @@ int tftp_client_receive_all(const char *ip, u16 port, const char *file_in, const
 {
 	char temp_name[512];
 
-	if (file_test(file_out, "d") == 0)
-	{
+	if (file_test(file_out, "d") == 0) {
 		sprintf(temp_name, "%s/%s", file_out, text_basename(file_in));
 		file_out = temp_name;
 	}
@@ -510,35 +475,29 @@ int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const c
 	struct stat st;
 
 	fd = open(file_in, O_RDONLY | O_BINARY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("open file \"%s\" failed", file_in);
 		return fd;
 	}
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("fstat failed");
 		goto out_close_fd;
 
 	}
 
-	if (offset_in)
-	{
+	if (offset_in) {
 		ret = lseek(fd, offset_in, SEEK_SET);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("seek file \"%s\" failed", file_in);
 			goto out_close_fd;
 		}
 	}
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		size = st.st_size;
-		if (size <= offset_in)
-		{
+		if (size <= offset_in) {
 			warning_msg("no data to send");
 			ret = 0;
 			goto out_close_fd;
@@ -547,8 +506,7 @@ int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const c
 	}
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("Can't create socket");
 		ret = sockfd;
 		goto out_close_fd;
@@ -556,17 +514,13 @@ int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const c
 
 	inet_sockaddr_init(&remote_addr, ip, port);
 
-	if (offset_out || size)
-	{
+	if (offset_out || size) {
 		sendlen = send_dd_request(sockfd, file_out, "octet", TFTP_RETRY_COUNT, offset_out, size, &remote_addr, 0);
-	}
-	else
-	{
+	} else {
 		sendlen = send_request(sockfd, file_out, "octet", TFTP_RETRY_COUNT, &remote_addr, 0);
 	}
 
-	if (sendlen < 0)
-	{
+	if (sendlen < 0) {
 		error_msg("send write request failed");
 		ret = sendlen;
 		goto out_close_socket;
@@ -582,35 +536,29 @@ int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const c
 	remote_addr_len = sizeof(remote_addr);
 	progress_bar_init(&bar, size);
 
-	while (1)
-	{
+	while (1) {
 		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
-		if (recvlen < 0)
-		{
+		if (recvlen < 0) {
 			print_error("receive data failed");
 			ret = recvlen;
 			break;
 		}
 
-		switch (ntohs(pkg.op_code))
-		{
+		switch (ntohs(pkg.op_code)) {
 		case TFTP_ACK:
-			if (ntohs(pkg.ack.blk_num) != blk_num)
-			{
+			if (ntohs(pkg.ack.blk_num) != blk_num) {
 				warning_msg("blk_num != %d", blk_num);
 				goto lable_send_data;
 			}
 
-			if (readlen < TFTP_DATA_LEN)
-			{
+			if (readlen < TFTP_DATA_LEN) {
 				progress_bar_finish(&bar);
 				println("Send data complete");
 				goto out_success;
 			}
 
 			readlen = read(fd, data_pkg.data, size > TFTP_DATA_LEN ? TFTP_DATA_LEN : size);
-			if (readlen < 0)
-			{
+			if (readlen < 0) {
 				print_error("read data failed");
 				ret = readlen;
 				send_error_pkg(sockfd, 0, "read data failed", &remote_addr);
@@ -626,8 +574,7 @@ int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const c
 
 lable_send_data:
 			sendlen = sendto_select(sockfd, TFTP_RETRY_COUNT, &data_pkg, readlen + 4, &remote_addr);
-			if (sendlen < 0)
-			{
+			if (sendlen < 0) {
 				error_msg("Send data timeout");
 				ret = sendlen;
 				goto out_close_socket;
@@ -667,15 +614,13 @@ int tftp_client_send_directory(const char *ip, u16 port, const char *dir_in, con
 	char *p_in, *p_out;
 
 	src_dir = opendir(dir_in);
-	if (src_dir == NULL)
-	{
+	if (src_dir == NULL) {
 		print_error("open directory \"%s\" failed", dir_in);
 		return -1;
 	}
 
 	ret = send_mkdir_request(ip, port, dir_out, 0777);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("send directory request failed");
 		goto out_close_dir;
 	}
@@ -683,25 +628,20 @@ int tftp_client_send_directory(const char *ip, u16 port, const char *dir_in, con
 	p_in = text_path_cat(temp_name_in, sizeof(temp_name_in), dir_in, NULL);
 	p_out = text_path_cat(temp_name_out, sizeof(temp_name_out), dir_out, NULL);
 
-	while (1)
-	{
+	while (1) {
 		dt = readdir(src_dir);
-		if (dt == NULL)
-		{
+		if (dt == NULL) {
 			break;
 		}
 
 		println("filename = %s", dt->d_name);
 
-		if (dt->d_name[0] == '.')
-		{
-			if (dt->d_name[1] == 0)
-			{
+		if (dt->d_name[0] == '.') {
+			if (dt->d_name[1] == 0) {
 				continue;
 			}
 
-			if (dt->d_name[1] == '.' && dt->d_name[2] == 0)
-			{
+			if (dt->d_name[1] == '.' && dt->d_name[2] == 0) {
 				continue;
 			}
 		}
@@ -710,8 +650,7 @@ int tftp_client_send_directory(const char *ip, u16 port, const char *dir_in, con
 		text_copy(p_out, dt->d_name);
 
 		ret = tftp_client_send_all(ip, port, temp_name_in, temp_name_out);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("tftp_client_send_all failed");
 			return ret;
 		}
@@ -732,14 +671,12 @@ int tftp_client_send_all(const char *ip, u16 port, const char *file_in, const ch
 	struct stat st;
 
 	ret = file_lstat(file_in, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("get file \"%s\" size failed", file_in);
 		return ret;;
 	}
 
-	switch (st.st_mode & S_IFMT)
-	{
+	switch (st.st_mode & S_IFMT) {
 	case S_IFBLK:
 	case S_IFCHR:
 		return send_mknode_request(ip, port, file_out, st.st_mode, st.st_rdev);
@@ -772,26 +709,22 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 	println("Handle write request filename = %s, mode = %s", file_out, file_mode);
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("create socket failed");
 		return sockfd;
 	}
 
 	fd = open(file_out, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("open file \"%s\" failed", file_out);
 		send_error_pkg(sockfd, 0, "open file failed", remote_addr);
 		ret = fd;
 		goto out_close_socket;
 	}
 
-	if (offset_out)
-	{
+	if (offset_out) {
 		ret = lseek(fd, offset_out, SEEK_SET);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("seek file \"%s\" failed", file_out);
 			send_error_pkg(sockfd, 0, "seek file failed", remote_addr);
 			goto out_close_fd;
@@ -801,8 +734,7 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 	println("offset = %s", size2text(offset_out));
 	println("%s @ %d => %s", inet_ntoa(remote_addr->sin_addr), ntohs(remote_addr->sin_port), file_out);
 
-	if (file_test(file_out, "b") == 0)
-	{
+	if (file_test(file_out, "b") == 0) {
 		umount_device(file_out, MNT_DETACH);
 	}
 
@@ -810,10 +742,8 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 	remote_addr_len = sizeof(*remote_addr);
 	goto lable_send_ack;
 
-	while (1)
-	{
-		if (writelen < TFTP_DATA_LEN)
-		{
+	while (1) {
+		if (writelen < TFTP_DATA_LEN) {
 			send_ack_pkg(sockfd, blk_num, remote_addr, TFTP_LAST_ACK_TIMES);
 			println(" Receive data complete");
 			ret = 0;
@@ -822,33 +752,28 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 
 lable_send_ack:
 		sendlen = send_ack_select(sockfd, TFTP_RETRY_COUNT, blk_num, remote_addr);
-		if (sendlen < 0)
-		{
+		if (sendlen < 0) {
 			error_msg("send ACK failed");
 			ret = sendlen;
 			goto out_close_fd;
 		}
 
 		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), remote_addr, &remote_addr_len);
-		if (recvlen < 0)
-		{
+		if (recvlen < 0) {
 			print_error("receive data failed");
 			ret = recvlen;
 			break;
 		}
 
-		switch (ntohs(pkg.op_code))
-		{
+		switch (ntohs(pkg.op_code)) {
 		case TFTP_DATA:
-			if ((int) ntohs(pkg.data.blk_num) != blk_num + 1)
-			{
+			if ((int) ntohs(pkg.data.blk_num) != blk_num + 1) {
 				warning_msg("data blk_num != %d", blk_num + 1);
 				goto lable_send_ack;
 			}
 
 			writelen = write(fd, pkg.data.data, recvlen - 4);
-			if (writelen < 0)
-			{
+			if (writelen < 0) {
 				print_error("write data failed");
 				send_error_pkg(sockfd, 0, "write data failed", remote_addr);
 				ret = writelen;
@@ -897,15 +822,13 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 	println("Handle read request filename = %s, mode = %s", file_in, file_mode);
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("create socket failed");
 		return sockfd;
 	}
 
 	fd = open(file_in, O_RDONLY | O_BINARY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("open file \"%s\" failed", file_in);
 		send_error_pkg(sockfd, 0, "open file failed", remote_addr);
 		ret = fd;
@@ -913,8 +836,7 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 	}
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("get file \"%s\" stat failed", file_in);
 		send_error_pkg(sockfd, 0, "open file failed", remote_addr);
 		goto out_close_socket;
@@ -923,22 +845,18 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 	println("offset = %s", size2text(offset_in));
 	println("%s => %s @ %d", file_in, inet_ntoa(remote_addr->sin_addr), ntohs(remote_addr->sin_port));
 
-	if (offset_in)
-	{
+	if (offset_in) {
 		ret = lseek(fd, offset_in, SEEK_SET);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("seek file failed");
 			send_error_pkg(sockfd, 0, "seek file failed", remote_addr);
 			goto out_close_fd;
 		}
 	}
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		size = st.st_size;
-		if (size < offset_in)
-		{
+		if (size < offset_in) {
 			warning_msg("no data to send");
 			ret = 0;
 			goto out_close_fd;
@@ -952,11 +870,9 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 	remote_addr_len = sizeof(*remote_addr);
 	progress_bar_init(&bar, size);
 
-	while (1)
-	{
+	while (1) {
 		readlen = read(fd, data_pkg.data, size > TFTP_DATA_LEN ? TFTP_DATA_LEN : size);
-		if (readlen < 0)
-		{
+		if (readlen < 0) {
 			print_error("read data failed");
 			send_error_pkg(sockfd, 0, "open file failed", remote_addr);
 			ret = readlen;
@@ -968,26 +884,22 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 
 lable_send_data:
 		recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 5, &data_pkg, readlen + 4, &pkg, sizeof(pkg), remote_addr, &remote_addr_len);
-		if (recvlen < 0)
-		{
+		if (recvlen < 0) {
 			error_msg("timeout_senddata falied");
 			ret = recvlen;
 			goto out_close_fd;
 		}
 
-		switch (ntohs(pkg.op_code))
-		{
+		switch (ntohs(pkg.op_code)) {
 		case TFTP_ACK:
-			if ((int) ntohs(pkg.ack.blk_num) != blk_num + 1)
-			{
+			if ((int) ntohs(pkg.ack.blk_num) != blk_num + 1) {
 				warning_msg("blk_num %d != %d", ntohs(pkg.ack.blk_num), blk_num + 1);
 				goto lable_send_data;
 			}
 
 			progress_bar_add(&bar, readlen);
 
-			if (readlen < TFTP_DATA_LEN)
-			{
+			if (readlen < TFTP_DATA_LEN) {
 				progress_bar_finish(&bar);
 				println("Send data complete");
 				ret = 0;
@@ -1026,8 +938,7 @@ int tftp_mkdir(struct tftp_mkdir_pkg *mkdir_pkg_p, const struct sockaddr_in *rem
 	println("Create directory %s", mkdir_pkg_p->pathname);
 
 	ret = mkdir(mkdir_pkg_p->pathname, mkdir_pkg_p->mode);
-	if (ret < 0 && errno != EEXIST)
-	{
+	if (ret < 0 && errno != EEXIST) {
 		print_error("create directory failed");
 		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return ret;
@@ -1047,35 +958,28 @@ static int write_response_to(FILE *fp, const char *file_out)
 	char buff[MAX_BUFF_LEN];
 
 	fd_out = open(file_out, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-	if (fd_out < 0)
-	{
+	if (fd_out < 0) {
 		print_error("open file \"%s\" failed", file_out);
 		return fd_out;
 	}
 
-	while (1)
-	{
+	while (1) {
 		readlen = fread(buff, 1, sizeof(buff), fp);
-		if (readlen == 0)
-		{
+		if (readlen == 0) {
 			break;
 		}
 
 		writelen = write(fd_out, buff, readlen);
-		if (writelen < 0)
-		{
+		if (writelen < 0) {
 			print_error("write");
 			ret = writelen;
 			goto out_close_out_file;
 		}
 	}
 
-	if (ferror(fp))
-	{
+	if (ferror(fp)) {
 		ret = -1;
-	}
-	else
-	{
+	} else {
 		ret = 0;
 	}
 
@@ -1092,8 +996,7 @@ int tftp_command(struct tftp_command_pkg *command_pkg_p, const struct sockaddr_i
 	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
 	ret = system_command("%s | tee %s", command_pkg_p->command, TFTP_COMMAND_LOG_FILE);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("Excute command \"%s\" failed", command_pkg_p->command);
 		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return -1;
@@ -1111,8 +1014,7 @@ int tftp_command_pipe(struct tftp_command_pkg *command_pkg_p, const struct socka
 	send_ack_nosocket(0, remote_addr, TFTP_LAST_ACK_TIMES);
 
 	fp = pipe_command_verbose("%s", command_pkg_p->command);
-	if (fp == NULL || write_response_to(fp, TFTP_COMMAND_LOG_FILE) < 0)
-	{
+	if (fp == NULL || write_response_to(fp, TFTP_COMMAND_LOG_FILE) < 0) {
 		print_error("Excute command \"%s\" failed", command_pkg_p->command);
 		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return -1;
@@ -1142,8 +1044,7 @@ int tftp_mknode(struct tftp_mknode_pkg *mknode_pkg_p, const struct sockaddr_in *
 	remove(mknode_pkg_p->pathname);
 
 	ret = remknod(mknode_pkg_p->pathname, mknode_pkg_p->mode, mknode_pkg_p->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("create mknode failed");
 		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return ret;
@@ -1163,8 +1064,7 @@ int tftp_symlink(struct tftp_symlink_pkg *symlink_pkg_p, const struct sockaddr_i
 	remove(symlink_pkg_p->pathname);
 
 	ret = symlink(symlink_pkg_p->pathname + strlen(symlink_pkg_p->pathname) + 1, symlink_pkg_p->pathname);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("create symlink failed");
 		send_ack_nosocket(1, remote_addr, TFTP_LAST_ACK_TIMES);
 		return ret;

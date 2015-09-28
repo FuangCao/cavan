@@ -23,14 +23,12 @@
 #define DEVICE_ADB_ENABLE_PATH	"/dev/android_adb_enable"
 #define DEVICE_ADB_PATH			"/dev/android_adb"
 
-struct cavan_usb_interface_descriptor
-{
+struct cavan_usb_interface_descriptor {
 	struct usb_interface_descriptor if_desc;
 	struct usb_endpoint_descriptor ep_descs[USB_MAXENDPOINTS];
 };
 
-struct cavan_usb_descriptor
-{
+struct cavan_usb_descriptor {
 	int fd;
 	int if_count, if_curr;
 	int epin_curr, epout_curr;
@@ -47,8 +45,7 @@ struct cavan_usb_descriptor
 	struct cavan_usb_interface_descriptor if_descs[10];
 };
 
-struct swan_adb_client_descriptor
-{
+struct swan_adb_client_descriptor {
 	int pipefd[2];
 	struct cavan_usb_descriptor *usb_desc;
 };
@@ -64,45 +61,38 @@ enum cavan_usb_package_type
 };
 
 #pragma pack(1)
-struct cavan_usb_data_header
-{
+struct cavan_usb_data_header {
 	u16 data_length;
 	u16 data_check;
 };
 
 #if 0
-struct cavan_usb_data_option
-{
+struct cavan_usb_data_option {
 	u32 blk_num;
 	u32 data_length;
 	u32 data_check;
 };
 
-struct cavan_usb_ack_option
-{
+struct cavan_usb_ack_option {
 	u32 blk_num;
 };
 
-struct cavan_usb_error_option
-{
+struct cavan_usb_error_option {
 	u32 err_no;
 };
 
-struct cavan_usb_message
-{
+struct cavan_usb_message {
 	u32 op_code;
 	u32 op_check;
 
-	union
-	{
+	union {
 		struct cavan_usb_data_option data_opt;
 		struct cavan_usb_ack_option ack_opt;
 		struct cavan_usb_error_option err_opt;
 	};
 };
 
-struct cavan_usb_file_descriptor
-{
+struct cavan_usb_file_descriptor {
 	u32 bs;
 	u32 seek;
 	u32 count;
@@ -110,12 +100,10 @@ struct cavan_usb_file_descriptor
 	u8 pathname[1024];
 };
 
-struct cavan_usb_package
-{
+struct cavan_usb_package {
 	struct cavan_usb_message msg;
 
-	union
-	{
+	union {
 		struct cavan_usb_file_descriptor file_desc;
 		u8 data[CAVAN_USB_MAX_DATA_LENGTH];
 	};

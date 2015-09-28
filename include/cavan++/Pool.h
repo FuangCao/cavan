@@ -30,8 +30,7 @@ union PoolNode
 };
 
 template <typename T>
-class DataPool : public DoubleLinkNode
-{
+class DataPool : public DoubleLinkNode {
 private:
 	int mFree;
 	int mSize;
@@ -41,76 +40,62 @@ private:
 	PoolNode<T> *mNodes;
 
 public:
-	DataPool(int size) : mLink(), mLock()
-	{
+	DataPool(int size) : mLink(), mLock() {
 		mNodes = new PoolNode<T>[size];
-		if (mNodes)
-		{
+		if (mNodes) {
 			mSize = size;
-		}
-		else
-		{
+		} else {
 			mSize = 0;
 		}
 
-		for (PoolNode<T> *node = mNodes + mSize - 1; node >= mNodes; node--)
-		{
+		for (PoolNode<T> *node = mNodes + mSize - 1; node >= mNodes; node--) {
 			mLink.push((LinkNode *) node);
 		}
 
 		mFree = mSize;
 	}
 
-	~DataPool()
-	{
-		if (mNodes)
-		{
+	~DataPool() {
+		if (mNodes) {
 			delete[] mNodes;
 		}
 	}
 
-	void setData(void *data)
-	{
+	void setData(void *data) {
 		AutoLock lock(mLock);
 
 		mData = data;
 	}
 
-	void *getData(void)
-	{
+	void *getData(void) {
 		AutoLock lock(mLock);
 
 		return mData;
 	}
 
-	int getFree(void)
-	{
+	int getFree(void) {
 		AutoLock lock(mLock);
 
 		return mFree;
 	}
 
-	int getSize(void)
-	{
+	int getSize(void) {
 		AutoLock lock(mLock);
 
 		return mSize;
 	}
 
-	int getUsed(void)
-	{
+	int getUsed(void) {
 		AutoLock lock(mLock);
 
 		return mSize - mFree;
 	}
 
-	T *getNode(void)
-	{
+	T *getNode(void) {
 		AutoLock lock(mLock);
 
 		T *data = (T *) mLink.pop();
-		if (data == NULL)
-		{
+		if (data == NULL) {
 			return NULL;
 		}
 
@@ -119,8 +104,7 @@ public:
 		return data;
 	}
 
-	void putNode(T *data)
-	{
+	void putNode(T *data) {
 		AutoLock lock(mLock);
 
 		mLink.push((LinkNode *) data);
@@ -129,15 +113,13 @@ public:
 };
 
 template <typename T>
-struct LinkPoolNode
-{
+struct LinkPoolNode {
 	T data;
 	DataPool<LinkPoolNode<T> > *pool;
 };
 
 template <typename T>
-class LinkPool
-{
+class LinkPool {
 private:
 	int mStep;
 	int mNumStep;
@@ -145,11 +127,9 @@ private:
 	DoubleLoopLink mFreeLink;
 	DoubleLoopLink mFullLink;
 
-	DataPool<LinkPoolNode<T> > *createPool(void)
-	{
+	DataPool<LinkPoolNode<T> > *createPool(void) {
 		DataPool<LinkPoolNode<T> > *pool = new DataPool<LinkPoolNode<T> >(mNumStep * mStep);
-		if (pool == NULL)
-		{
+		if (pool == NULL) {
 			return NULL;
 		}
 
@@ -159,64 +139,51 @@ private:
 		return pool;
 	}
 
-	void deletePool(DataPool<LinkPoolNode<T> > *pool)
-	{
+	void deletePool(DataPool<LinkPoolNode<T> > *pool) {
 		mFreeLink.remove(pool);
 		delete pool;
 		mNumStep--;
 	}
 
 public:
-	LinkPool(int step = 10) : mLock(), mFreeLink(), mFullLink()
-	{
-		if (step > 2)
-		{
+	LinkPool(int step = 10) : mLock(), mFreeLink(), mFullLink() {
+		if (step > 2) {
 			mStep = step;
-		}
-		else
-		{
+		} else {
 			mStep = 2;
 		}
 
 		mNumStep = 1;
 	}
 
-	~LinkPool(void)
-	{
+	~LinkPool(void) {
 		DataPool<LinkPoolNode<T> > *pool;
 
-		while ((pool = static_cast<DataPool<LinkPoolNode<T> > *>(mFreeLink.pop())))
-		{
+		while ((pool = static_cast<DataPool<LinkPoolNode<T> > *>(mFreeLink.pop()))) {
 			delete pool;
 		}
 
-		while ((pool = static_cast<DataPool<LinkPoolNode<T> > *>(mFullLink.pop())))
-		{
+		while ((pool = static_cast<DataPool<LinkPoolNode<T> > *>(mFullLink.pop()))) {
 			delete pool;
 		}
 	}
 
-	T *getNode(void)
-	{
+	T *getNode(void) {
 		AutoLock lock(mLock);
 
-		while (1)
-		{
+		while (1) {
 			DataPool<LinkPoolNode<T> > *pool = static_cast<DataPool<LinkPoolNode<T> > *>(mFreeLink.getTop());
-			if (pool == NULL)
-			{
+			if (pool == NULL) {
 				pool = createPool();
 			}
 
 			LinkPoolNode<T> *node = pool->getNode();
-			if (node == NULL)
-			{
+			if (node == NULL) {
 				mFullLink.push(pool);
 				continue;
 			}
 
-			if (pool->getFree() == 0)
-			{
+			if (pool->getFree() == 0) {
 				mFreeLink.remove(pool);
 				mFullLink.push(pool);
 			}
@@ -228,20 +195,16 @@ public:
 		return NULL;
 	}
 
-	void putNode(T *data)
-	{
+	void putNode(T *data) {
 		AutoLock lock(mLock);
 
 		LinkPoolNode<T> *node = (LinkPoolNode<T> *) data;
 		DataPool<LinkPoolNode<T> > *pool = node->pool;
 		pool->putNode(node);
-		if (pool->getFree() == 1)
-		{
+		if (pool->getFree() == 1) {
 			mFullLink.remove(pool);
 			mFreeLink.push(pool);
-		}
-		else if (pool->getUsed() == 0 && pool->getSize() > mStep)
-		{
+		} else if (pool->getUsed() == 0 && pool->getSize() > mStep) {
 			deletePool(pool);
 		}
 	}

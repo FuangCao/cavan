@@ -11,14 +11,12 @@ int set_tty_attr(int fd, int action, struct termios *attr)
 {
 	int ret;
 
-	if (!isatty(fd))
-	{
+	if (!isatty(fd)) {
 		return 0;
 	}
 
 	ret = tcsetattr(fd, action, attr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -37,22 +35,19 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 	int ret;
 	struct termios attr;
 
-	if (!isatty(fd))
-	{
+	if (!isatty(fd)) {
 		return 0;
 	}
 
 	ret = get_tty_attr(fd, attr_bak);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("get_tty_attr");
 		return ret;
 	}
 
 	attr = *attr_bak;
 
-	switch (mode)
-	{
+	switch (mode) {
 	case 2:
 		attr.c_iflag = BRKINT | IXON;
 		attr.c_oflag = 0;
@@ -68,8 +63,7 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 	case 1:
 	case 3:
 		attr.c_iflag = IGNBRK;
-		if (mode == 3)
-		{
+		if (mode == 3) {
 			attr.c_iflag |= IXOFF;
 		}
 
@@ -118,8 +112,7 @@ int has_char(long sec, long usec)
 
 int timeout_getchar(long sec, long usec)
 {
-	if (has_char(sec, usec))
-	{
+	if (has_char(sec, usec)) {
 		return getchar();
 	}
 
@@ -165,8 +158,7 @@ void print_ntext(const char *text, size_t size)
 #else
 void print_ntext(const char *text, size_t size)
 {
-	if (console_fp)
-	{
+	if (console_fp) {
 		fwrite(text, 1, size, console_fp);
 		fflush(console_fp);
 	}
@@ -326,23 +318,20 @@ int show_file(const char *dev_name, u64 start, u64 size)
 #endif
 
 	fd = open(dev_name, O_RDONLY | O_BINARY);
-	if (fd == -1)
-	{
+	if (fd == -1) {
 		print_error("open");
 		ret = -1;
 		goto out_return;
 	}
 
 	ret = lseek(fd, start, SEEK_SET);
-	if (ret == -1)
-	{
+	if (ret == -1) {
 		print_error("lseek");
 		goto out_close_file;
 	}
 
 	ret = read(fd, buff, size);
-	if (ret == -1)
-	{
+	if (ret == -1) {
 		print_error("read");
 		goto out_close_file;
 	}
@@ -363,26 +352,22 @@ int cat_file(const char *filename)
 	char buff[MAX_BUFF_LEN];
 
 	fd = open(filename, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		error_msg("open file \"%s\"", filename);
 		return fd;
 	}
 
-	while (1)
-	{
+	while (1) {
 		ssize_t readlen;
 
 		readlen = read(fd, buff, sizeof(buff));
-		if (readlen < 0)
-		{
+		if (readlen < 0) {
 			print_error("read");
 			ret = readlen;
 			goto out_close_fd;
 		}
 
-		if (readlen == 0)
-		{
+		if (readlen == 0) {
 			break;
 		}
 
@@ -401,22 +386,19 @@ void print_title(const char *title, char sep, size_t size)
 {
 	size_t i;
 
-	for (i = 0; i < size; i++)
-	{
+	for (i = 0; i < size; i++) {
 		print_char(sep);
 	}
 
 	print_char(' ');
 
-	while (title[0])
-	{
+	while (title[0]) {
 		print_char(*title++);
 	}
 
 	print_char(' ');
 
-	for (i = 0; i < size; i++)
-	{
+	for (i = 0; i < size; i++) {
 		print_char(sep);
 	}
 
@@ -428,8 +410,7 @@ void print_mem(const u8 *mem, size_t size)
 	char buff[size * 2 + 1], *p;
 	const u8 *mem_end;
 
-	for (mem_end = mem + size, p = buff; mem < mem_end; mem++)
-	{
+	for (mem_end = mem + size, p = buff; mem < mem_end; mem++) {
 		*p++ = value2char((*mem) >> 4);
 		*p++ = value2char((*mem) & 0x0F);
 	}
@@ -448,12 +429,9 @@ void print_error_base(const char *fmt, ...)
 	vformat_text(buff, sizeof(buff), fmt, ap);
 	va_end(ap);
 
-	if (errno == 0)
-	{
+	if (errno == 0) {
 		print_string(buff);
-	}
-	else
-	{
+	} else {
 		println("%s: %s[%d]", buff, strerror(errno), errno);
 	}
 }
@@ -462,20 +440,17 @@ int open_console(const char *dev_path)
 {
 	FILE *fp;
 
-	if (dev_path == NULL || dev_path[0] == 0)
-	{
+	if (dev_path == NULL || dev_path[0] == 0) {
 		dev_path = DEFAULT_CONSOLE_DEVICE;
 	}
 
 	fp = fopen(dev_path, "w");
-	if (fp == NULL)
-	{
+	if (fp == NULL) {
 		print_error("fopen");
 		return -1;
 	}
 
-	if (console_fp)
-	{
+	if (console_fp) {
 		close_console();
 	}
 
@@ -489,8 +464,7 @@ int open_console(const char *dev_path)
 
 void close_console(void)
 {
-	if (console_fp == NULL)
-	{
+	if (console_fp == NULL) {
 		return;
 	}
 
@@ -504,8 +478,7 @@ void close_console(void)
 
 void fflush_console(void)
 {
-	if (console_fp)
-	{
+	if (console_fp) {
 		fflush(console_fp);
 	}
 
@@ -518,8 +491,7 @@ void show_menu(int x, int y, const char *menu[], int count, int select)
 
 	set_console_row(y);
 
-	for (i = 0; i < select; i++)
-	{
+	for (i = 0; i < select; i++) {
 		print_string_to_col(x, menu[i]);
 	}
 
@@ -529,8 +501,7 @@ void show_menu(int x, int y, const char *menu[], int count, int select)
 	set_default_font();
 	print_char('\n');
 
-	for (i++; i < count; i++)
-	{
+	for (i++; i < count; i++) {
 		print_string_to_col(x, menu[i]);
 	}
 }
@@ -541,16 +512,14 @@ int get_menu_select(const char *input_dev_path, const char *menu[], int count)
 	int select;
 
 	fd = open(input_dev_path, O_RDONLY | O_BINARY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("open");
 		return -1;
 	}
 
 	select = 0;
 
-	while (1)
-	{
+	while (1) {
 		show_menu(10, 10, menu, count, select);
 	}
 
@@ -568,15 +537,13 @@ int switch2text_mode(const char *tty_path)
 	int tty_fd;
 
 	tty_fd = open(tty_path, 0);
-	if (tty_fd < 0)
-	{
+	if (tty_fd < 0) {
 		print_error("open tty device \"%s\" failed", tty_path);
 		return -1;
 	}
 
 	ret = fswitch2text_mode(tty_fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("switch to text mode failed");
 	}
 
@@ -596,15 +563,13 @@ int switch2graph_mode(const char *tty_path)
 	int tty_fd;
 
 	tty_fd = open(tty_path, 0);
-	if (tty_fd < 0)
-	{
+	if (tty_fd < 0) {
 		print_error("open tty device \"%s\" failed", tty_path);
 		return -1;
 	}
 
 	ret = fswitch2graph_mode(tty_fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("switch to graph mode failed");
 	}
 
@@ -628,30 +593,23 @@ bool cavan_get_choose_yesno(const char *prompt, bool def_choose, int timeout_ms)
 	ssize_t rdlen;
 	const char *option;
 
-	if (prompt == NULL || timeout_ms == 0)
-	{
+	if (prompt == NULL || timeout_ms == 0) {
 		return def_choose;
 	}
 
 	option = def_choose ? "Y/n" : "y/N";
 
-	while (1)
-	{
+	while (1) {
 		print("%s [%s]: ", prompt, option);
 
-		if (timeout_ms > 0)
-		{
+		if (timeout_ms > 0) {
 			rdlen = file_read_timeout(stdin_fd, buff, sizeof(buff), timeout_ms);
-		}
-		else
-		{
+		} else {
 			rdlen = read(stdin_fd, buff, sizeof(buff));
 		}
 
-		if (rdlen <= 0)
-		{
-			if (def_choose)
-			{
+		if (rdlen <= 0) {
+			if (def_choose) {
 				println("Y");
 				return true;
 			}
@@ -660,22 +618,19 @@ bool cavan_get_choose_yesno(const char *prompt, bool def_choose, int timeout_ms)
 			return false;
 		}
 
-		switch (buff[0])
-		{
+		switch (buff[0]) {
 		case '\n':
 			return def_choose;
 
 		case 'y':
 		case 'Y':
-			if (rdlen == 1 || buff[1] == '\n')
-			{
+			if (rdlen == 1 || buff[1] == '\n') {
 				return true;
 			}
 
 		case 'n':
 		case 'N':
-			if (rdlen == 1 || buff[1] == '\n')
-			{
+			if (rdlen == 1 || buff[1] == '\n') {
 				return false;
 			}
 		}
@@ -689,10 +644,8 @@ const char *cavan_get_temp_path(void)
 	int i;
 	const char *paths[] = { "/tmp", "/data/local/tmp", "/dev", "/data", "/cache" };
 
-	for (i = 0; i < NELEM(paths); i++)
-	{
-		if (file_access_e(paths[i]))
-		{
+	for (i = 0; i < NELEM(paths); i++) {
+		if (file_access_e(paths[i])) {
 			return paths[i];
 		}
 	}

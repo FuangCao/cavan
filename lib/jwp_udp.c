@@ -27,8 +27,7 @@ static jwp_size_t jwp_udp_hw_read(struct jwp_desc *jwp, void *buff, jwp_size_t s
 	struct jwp_udp_desc *udp = (struct jwp_udp_desc *) jwp;
 
 	rdlen = inet_recvfrom(udp->sockfd, buff, size, &udp->addr, &udp->addrlen);
-	if (rdlen < 0)
-	{
+	if (rdlen < 0) {
 		pr_error_info("network_client_recv");
 		return 0;
 	}
@@ -42,8 +41,7 @@ static jwp_size_t jwp_udp_hw_write(struct jwp_desc *jwp, const void *buff, jwp_s
 	struct jwp_udp_desc *udp = (struct jwp_udp_desc *) jwp;
 
 	wrlen = inet_sendto(udp->sockfd, buff, size, &udp->addr);
-	if (wrlen < 0)
-	{
+	if (wrlen < 0) {
 		pr_error_info("write");
 		return 0;
 	}
@@ -56,18 +54,14 @@ jwp_bool jwp_udp_init(struct jwp_udp_desc *udp, const char *hostname, u16 port, 
 	int sockfd;
 	struct jwp_desc *jwp = &udp->jwp;
 
-	if (hostname)
-	{
+	if (hostname) {
 		sockfd = inet_create_udp_service(0);
 		inet_sockaddr_init(&udp->addr, hostname, port);
-	}
-	else
-	{
+	} else {
 		sockfd = inet_create_udp_service(port);
 	}
 
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("inet_create_udp_service");
 		return false;
 	}
@@ -85,8 +79,7 @@ jwp_bool jwp_udp_init(struct jwp_udp_desc *udp, const char *hostname, u16 port, 
 	jwp->log_received = NULL;
 #endif
 
-	if (!jwp_linux_init(&udp->jwp_linux, data))
-	{
+	if (!jwp_linux_init(&udp->jwp_linux, data)) {
 		pr_red_info("jwp_linux_init");
 		goto out_close_sockfd;
 	}

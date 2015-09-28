@@ -17,8 +17,7 @@ static void show_usage(const char *command)
 
 int main(int argc, char *argv[])
 {
-	if (argc > 1)
-	{
+	if (argc > 1) {
 		return cavan_wav_playback(argv[1]);
 	}
 

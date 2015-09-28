@@ -26,16 +26,14 @@
 #define SHA1_DIGEST_SIZE	20
 #define MD5_DIGEST_SIZE		16
 
-struct cavan_sha_context
-{
+struct cavan_sha_context {
 	u64 count;
 	int flags;
 	u32 digest[8];
 	size_t remain;
 	size_t digest_size;
 
-	union
-	{
+	union {
 		u8 buff[64];
 		u16 wbuff[32];
 		u32 dwbuff[16];

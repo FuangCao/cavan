@@ -22,8 +22,7 @@
 #include <cavan.h>
 #include <cavan/thread.h>
 
-struct speed_detector
-{
+struct speed_detector {
 	struct cavan_thread thread;
 	u32 speed;
 	u32 speed_count;

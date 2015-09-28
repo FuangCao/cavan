@@ -12,17 +12,13 @@ int swan_ts_open_misc_device(const char *devpath, int flags)
 {
 	int fd;
 
-	if (devpath)
-	{
+	if (devpath) {
 		fd = try_to_open(flags, devpath, SWAN_TS_MISC_DEVICE, SWAN_TS_PROC_DEVICE, NULL);
-	}
-	else
-	{
+	} else {
 		fd = try_to_open(flags, SWAN_TS_MISC_DEVICE, SWAN_TS_PROC_DEVICE, NULL);
 	}
 
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("Open misc device failed");
 	}
 
@@ -42,8 +38,7 @@ static int swan_ts_match_handler(struct cavan_event_matcher *matcher, void *data
 	pr_bold_info("Calibration, don't touch the screen");
 
 	ret = ioctl(matcher->fd, SWAN_TS_INPUT_IOCTL_CALIBRATION);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("ioctl SWAN_TS_INPUT_IOCTL_CALIBRATION");
 		return ret;
 	}
@@ -56,20 +51,17 @@ static int swan_ts_match_handler(struct cavan_event_matcher *matcher, void *data
 int swan_ts_input_calibration(const char *devname)
 {
 	ssize_t count;
-	struct cavan_event_matcher matcher =
-	{
+	struct cavan_event_matcher matcher = {
 		.match = swan_ts_match,
 		.handler = swan_ts_match_handler
 	};
 
-	if (devname == NULL)
-	{
+	if (devname == NULL) {
 		devname = SWAN_TS_DEVICE_NAME;
 	}
 
 	count = cavan_event_scan_devices(&matcher, (void *) devname);
-	if (count <= 0)
-	{
+	if (count <= 0) {
 		pr_red_info("cavan_event_scan_devices");
 		return -EFAULT;
 	}
@@ -83,8 +75,7 @@ int swan_ts_calibration(const char *devpath)
 	int ret;
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_bold_info("Retry use input calibration");
 		return swan_ts_input_calibration(devpath);
 	}
@@ -98,8 +89,7 @@ int swan_ts_calibration(const char *devpath)
 
 int swan_ts_read_registers_fd(int fd, u16 addr, void *buff, size_t size)
 {
-	struct swan_ts_i2c_request req =
-	{
+	struct swan_ts_i2c_request req = {
 		.offset = addr,
 		.size = size,
 		.data = buff
@@ -114,8 +104,7 @@ int swan_ts_read_registers(const char *devpath, u16 addr, void *buff, size_t siz
 	int ret;
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -128,8 +117,7 @@ int swan_ts_read_registers(const char *devpath, u16 addr, void *buff, size_t siz
 
 int swan_ts_read_data_fd(int fd, void *buff, size_t size)
 {
-	struct swan_ts_i2c_request req =
-	{
+	struct swan_ts_i2c_request req = {
 		.offset = 0,
 		.size = size,
 		.data = buff
@@ -144,8 +132,7 @@ int swan_ts_read_data(const char *devpath, void *buff, size_t size)
 	int ret;
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -158,8 +145,7 @@ int swan_ts_read_data(const char *devpath, void *buff, size_t size)
 
 int swan_ts_write_registers_fd(int fd, u16 addr, const void *buff, size_t size)
 {
-	struct swan_ts_i2c_request req =
-	{
+	struct swan_ts_i2c_request req = {
 		.offset = addr,
 		.size = size,
 		.data = (void *) buff
@@ -174,8 +160,7 @@ int swan_ts_write_registers(const char *devpath, u16 addr, const void *buff, siz
 	int ret;
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -188,8 +173,7 @@ int swan_ts_write_registers(const char *devpath, u16 addr, const void *buff, siz
 
 int swan_ts_write_data_fd(int fd, const void *buff, size_t size)
 {
-	struct swan_ts_i2c_request req =
-	{
+	struct swan_ts_i2c_request req = {
 		.offset = 0,
 		.size = size,
 		.data = (void *) buff
@@ -204,8 +188,7 @@ int swan_ts_write_data(const char *devpath, const void *buff, size_t size)
 	int ret;
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -221,8 +204,7 @@ int swan_ts_get_client_address(const char *devpath, u16 *addr)
 	int fd;
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -234,8 +216,7 @@ int swan_ts_set_client_address(const char *devpath, u16 addr)
 	int fd;
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -246,8 +227,7 @@ int swan_ts_detect_clients_fd(int fd, u16 start, u16 end)
 {
 	u32 args;
 
-	if (start > end)
-	{
+	if (start > end) {
 		u16 temp;
 
 		temp = start;
@@ -267,8 +247,7 @@ int swan_ts_detect_clients(const char *devpath, u16 start, u16 end)
 	int fd;
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -286,12 +265,9 @@ int swan_ts_test_client_fd(int fd, u16 addr)
 	println("Test client %d = 0x%04x", addr, addr);
 
 	ret = ioctl(fd, SWAN_TS_IOCTL_TEST_CLIENT, &addr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Failed");
-	}
-	else
-	{
+	} else {
 		pr_green_info("OK");
 	}
 
@@ -304,8 +280,7 @@ int swan_ts_test_client(const char *devpath, u16 addr)
 	int fd;
 
 	fd = swan_ts_open_misc_device(devpath, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -324,22 +299,19 @@ ssize_t ft5406_read_firmware_data1(const char *cfgpath, char *buff, size_t size)
 	u8 value;
 
 	readlen = file_get_size(cfgpath);
-	if (readlen < 0)
-	{
+	if (readlen < 0) {
 		pr_red_info("file_get_size %s", cfgpath);
 		return readlen;
 	}
 
 	text_buff = malloc(readlen);
-	if (text_buff == NULL)
-	{
+	if (text_buff == NULL) {
 		pr_red_info("malloc");
 		return -ENOMEM;
 	}
 
 	readlen = file_read(cfgpath, text_buff, readlen);
-	if (readlen < 0)
-	{
+	if (readlen < 0) {
 		pr_red_info("file_read %s", cfgpath);
 		free(text_buff);
 		return readlen;
@@ -348,32 +320,25 @@ ssize_t ft5406_read_firmware_data1(const char *cfgpath, char *buff, size_t size)
 	buff_bak = buff;
 	buff_end = buff + size;
 
-	for (p = text_buff, p_end = p + readlen; p < p_end; p++)
-	{
-		if (*p != 'x' && *p != 'X')
-		{
+	for (p = text_buff, p_end = p + readlen; p < p_end; p++) {
+		if (*p != 'x' && *p != 'X') {
 			continue;
 		}
 
-		for (value = 0, p++; p < p_end; p++)
-		{
+		for (value = 0, p++; p < p_end; p++) {
 			int temp;
 
 			temp = char2value(*p);
-			if (temp > 15 || temp < 0)
-			{
+			if (temp > 15 || temp < 0) {
 				break;
 			}
 
 			value = value << 4 | temp;
 		}
 
-		if (buff < buff_end)
-		{
+		if (buff < buff_end) {
 			*buff++ = value;
-		}
-		else
-		{
+		} else {
 			break;
 		}
 	}
@@ -390,16 +355,13 @@ ssize_t ft5406_read_firmware_data2(const char *cfgpath, char *buff, size_t size)
 	u32 value;
 
 	file = fopen(cfgpath, "r");
-	if (file == NULL)
-	{
+	if (file == NULL) {
 		print_error("Faild to open file %s", cfgpath);
 		return -ENOENT;
 	}
 
-	for (buff_bak = buff, buff_end = buff + size; buff < buff_end; buff++)
-	{
-		if (fscanf(file, "0x%02x, ", &value) < 1)
-		{
+	for (buff_bak = buff, buff_end = buff + size; buff < buff_end; buff++) {
+		if (fscanf(file, "0x%02x, ", &value) < 1) {
 			break;
 		}
 
@@ -420,81 +382,62 @@ ssize_t ft5406_read_firmware_data3(const char *cfgpath, char *buff, size_t size)
 	char readval;
 
 	fd = open(cfgpath, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("Failed to open file %s", cfgpath);
 		return fd;
 	}
 
-	for (buff_bak = buff, buff_end = buff + size; buff < buff_end; buff++)
-	{
+	for (buff_bak = buff, buff_end = buff + size; buff < buff_end; buff++) {
 		u8 value;
 
-		while (1)
-		{
+		while (1) {
 			readlen = file_read_byte(fd, &readval);
-			if (readlen < 0)
-			{
+			if (readlen < 0) {
 				goto out_close_fd;
 			}
 
-			if (readlen < 1)
-			{
+			if (readlen < 1) {
 				goto out_cal_len;
 			}
 
-			if (readval != '0')
-			{
+			if (readval != '0') {
 				continue;
 			}
 
 			readlen = file_read_byte(fd, &readval);
-			if (readlen < 0)
-			{
+			if (readlen < 0) {
 				goto out_close_fd;
 			}
 
-			if (readlen < 1)
-			{
+			if (readlen < 1) {
 				goto out_cal_len;
 			}
 
-			if (readval == 'x' || readval == 'X')
-			{
+			if (readval == 'x' || readval == 'X') {
 				break;
 			}
 		}
 
 		value = 0;
 
-		while (1)
-		{
+		while (1) {
 			readlen = file_read_byte(fd, &readval);
-			if (readlen < 0)
-			{
+			if (readlen < 0) {
 				goto out_close_fd;
 			}
 
-			if (readlen < 1)
-			{
+			if (readlen < 1) {
 				*buff = value;
 				goto out_cal_len;
 			}
 
-			if (readval >= '0' && readval <= '9')
-			{
+			if (readval >= '0' && readval <= '9') {
 				value = (value << 4) + readval - '0';
-			}
-			else if (readval >= 'a' && readval <= 'z')
-			{
+			} else if (readval >= 'a' && readval <= 'z') {
 				value = (value << 4) + readval - 'a' + 10;
-			}
-			else if (readval >= 'A' && readval <= 'Z')
-			{
+			} else if (readval >= 'A' && readval <= 'Z') {
 				value = (value << 4) + readval - 'A' + 10;
-			}
-			else
-			{
+			} else {
 				*buff = value;
 				break;
 			}
@@ -514,8 +457,7 @@ u8 ft5406_calculate_checksum(const char *buff, size_t size)
 	const char *buff_end;
 	u8 checksum;
 
-	for (buff_end = buff + size, checksum = 0; buff < buff_end; buff++)
-	{
+	for (buff_end = buff + size, checksum = 0; buff < buff_end; buff++) {
 		checksum ^= *(u8 *) buff;
 	}
 
@@ -524,8 +466,7 @@ u8 ft5406_calculate_checksum(const char *buff, size_t size)
 
 int ft5406_firmware_write_last_data(int fd, const void *buff, size_t size)
 {
-	struct ft5406_firmware_data_package pkg =
-	{
+	struct ft5406_firmware_data_package pkg = {
 		.size = size,
 		.data = (void *) buff
 	};
@@ -541,8 +482,7 @@ int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
 	u8 checksum[2];
 
 	bufflen = ft5406_read_firmware_data3(cfgpath, buff, sizeof(buff)) - 2;
-	if (bufflen < 6)
-	{
+	if (bufflen < 6) {
 		pr_red_info("ft5406_parse_app_file");
 		return bufflen;
 	}
@@ -550,36 +490,31 @@ int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
 	println("bufflen = %" PRINT_FORMAT_SIZE, bufflen);
 
 	ret = ft5406_upgrade_enter(dev_fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5406_upgrade_start");
 		return ret;
 	}
 
 	ret = ft5406_erase_app(dev_fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5406_erase_app");
 		return ret;
 	}
 
 	writelen = write(dev_fd, buff, bufflen - 6);
-	if (writelen < 0)
-	{
+	if (writelen < 0) {
 		pr_red_info("write");
 		return writelen;
 	}
 
 	writelen = ft5406_firmware_write_last_data(dev_fd, buff + writelen, 6);
-	if (writelen < 0)
-	{
+	if (writelen < 0) {
 		pr_red_info("ft5406_firmware_write_last_data");
 		return writelen;
 	}
 
 	ret = ft5406_read_checksum(dev_fd, checksum);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5406_read_checksum");
 		return ret;
 	}
@@ -588,8 +523,7 @@ int ft5406_firmware_upgrade_fd(int dev_fd, const char *cfgpath)
 
 	pr_bold_info("Source checksum = 0x%02x, Dest checksum = 0x%02x", checksum[1], checksum[0]);
 
-	if (checksum[0] != checksum[1])
-	{
+	if (checksum[0] != checksum[1]) {
 		pr_red_info("Checksum do't match");
 		return -EFAULT;
 	}
@@ -603,8 +537,7 @@ int ft5406_firmware_upgrade(const char *devpath, const char *cfgpath)
 	int ret;
 
 	dev_fd = swan_ts_open_misc_device(devpath, O_WRONLY);
-	if (dev_fd < 0)
-	{
+	if (dev_fd < 0) {
 		return dev_fd;
 	}
 

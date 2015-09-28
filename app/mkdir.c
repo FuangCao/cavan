@@ -38,59 +38,49 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERBOSE,
-		},
-		{
+		}, {
 			.name = "parents",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PARENTS,
-		},
-		{
+		}, {
 			.name = "mode",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERBOSE,
-		},
-		{
+		}, {
 			.name = "context",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_CONTEXT,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
-	struct cavan_mkdir_command_option option =
-	{
+	struct cavan_mkdir_command_option option = {
 		.mode = 0777,
 		.verbose = false,
 		.parents = false
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhHm:pZ:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHm:pZ:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
@@ -128,17 +118,14 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind >= argc)
-	{
+	if (optind >= argc) {
 		pr_red_info("Please give least one pathname");
 		return -EINVAL;
 	}
 
-	while (optind < argc)
-	{
+	while (optind < argc) {
 		int ret = cavan_mkdir_main(argv[optind], &option);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 

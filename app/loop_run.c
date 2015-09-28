@@ -22,33 +22,28 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "sleep",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 's',
-		},
-		{
+		}, {
 			.name = "delay",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'd',
-		},
-		{
+		}, {
 			.name = "wait",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -64,10 +59,8 @@ int main(int argc, char *argv[])
 	delay = 1;
 	wait_for_devices = false;
 
-	while ((c = getopt_long(argc, argv, "vVhHswW:S:d:D:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHswW:S:d:D:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -99,57 +92,44 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind < argc)
-	{
+	if (optind < argc) {
 		char *p = command;
 
-		while (1)
-		{
+		while (1) {
 			p = text_copy(p, argv[optind++]);
-			if (optind < argc)
-			{
+			if (optind < argc) {
 				*p++ = ' ';
-			}
-			else
-			{
+			} else {
 				break;
 			}
 		}
 
 		*p = 0;
-	}
-	else
-	{
+	} else {
 		pr_red_info("Please give a command");
 		show_usage(argv[0]);
 		return -EINVAL;
 	}
 
-	while (1)
-	{
-		if (wait_for_devices)
-		{
+	while (1) {
+		if (wait_for_devices) {
 			// pr_bold_info("Adb Wait For Devices");
-			if (system("adb wait-for-devices"))
-			{
+			if (system("adb wait-for-devices")) {
 				break;
 			}
 		}
 
 		// println("%s", command);
 		ret = system(command);
-		if (ret)
-		{
+		if (ret) {
 			pr_red_info("Failed");
 
-			if (WIFSIGNALED(ret))
-			{
+			if (WIFSIGNALED(ret)) {
 				break;
 			}
 		}
 
-		if (delay)
-		{
+		if (delay) {
 			sleep(delay);
 		}
 	}

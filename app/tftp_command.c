@@ -21,21 +21,18 @@ int main(int argc, char *argv[])
 		u16 port = 0;
 		const char *hostname;
 		char command[1024], *p;
-		struct option long_options[] =
-		{
+		struct option long_options[] = {
 			{
 				.name = "ip",
 				.has_arg = required_argument,
 				.flag = NULL,
 				.val = 0,
-			},
-			{
+			}, {
 				.name = "port",
 				.has_arg = required_argument,
 				.flag = NULL,
 				.val = 1,
-			},
-			{
+			}, {
 				0, 0, 0, 0
 			},
 		};
@@ -44,10 +41,8 @@ int main(int argc, char *argv[])
 
 		hostname = NULL;
 
-		while ((c = getopt_long(argc, argv, "hH", long_options, &option_index)) != EOF)
-		{
-			switch (c)
-			{
+		while ((c = getopt_long(argc, argv, "hH", long_options, &option_index)) != EOF) {
+			switch (c) {
 				case 0:
 					hostname = optarg;
 					break;
@@ -70,49 +65,40 @@ int main(int argc, char *argv[])
 
 		assert(argc > optind);
 
-		if (hostname == NULL)
-		{
+		if (hostname == NULL) {
 			hostname = cavan_get_server_hostname();
 		}
 
-		if (port == 0)
-		{
+		if (port == 0) {
 			port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 		}
 
 		p = command;
 		i = optind;
 
-		while (1)
-		{
+		while (1) {
 			char *argv_p = argv[i++];
 
-			while (*argv_p)
-			{
+			while (*argv_p) {
 				*p++ = *argv_p++;
 			}
 
-			if (i < argc)
-			{
+			if (i < argc) {
 				*p++ = ' ';
-			}
-			else
-			{
+			} else {
 				break;
 			}
 		}
 
 		*p = 0;
 
-		if (command[0] == 0)
-		{
+		if (command[0] == 0) {
 			error_msg("please input a command");
 			return -EINVAL;
 		}
 
 		ret = send_command_request_show(hostname, port, command);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("Send command request failed");
 			return ret;
 		}

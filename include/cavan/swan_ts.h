@@ -13,8 +13,7 @@
 #define SWAN_TS_PROC_DEVICE			"/proc/swan_touchscreen"
 #define SWAN_TS_DEFAULT_DEVICE		SWAN_TS_MISC_DEVICE
 
-struct swan_ts_i2c_request
-{
+struct swan_ts_i2c_request {
 	u16 offset;
 	u16 size;
 	void *data;
@@ -27,8 +26,7 @@ enum swan_ts_ioctl_type
 	SWAN_TS_IOCTL_TYPE_OTHER
 };
 
-struct ft5406_firmware_data_package
-{
+struct ft5406_firmware_data_package {
 	u32 size;
 	void *data;
 };

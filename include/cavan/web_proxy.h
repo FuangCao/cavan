@@ -35,8 +35,7 @@ typedef enum {
 	HTTP_REQ_TRACE,
 } http_request_type_t;
 
-struct web_proxy_service
-{
+struct web_proxy_service {
 	struct network_service service;
 	struct network_url url;
 	struct network_url url_proxy;

@@ -46,8 +46,7 @@ CavanThread::~CavanThread(void)
 
 int CavanThread::run(void)
 {
-	if (mHandler)
-	{
+	if (mHandler) {
 		return mHandler(this);
 	}
 

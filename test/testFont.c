@@ -40,23 +40,19 @@ int main(int argc, char *argv[])
 	struct cavan_display_device *display;
 
 	display = cavan_fb_display_start();
-	if (display == NULL)
-	{
+	if (display == NULL) {
 		pr_red_info("cavan_display_init");
 		return -EFAULT;
 	}
 
-	if (argc > 1)
-	{
+	if (argc > 1) {
 #if SAVE_FONT
 		cavan_font_save_bmp(display->font, argv[1], 16);
 #else
-		if (cavan_font_load_bmp(&font, argv[1], 1) == 0)
-		{
+		if (cavan_font_load_bmp(&font, argv[1], 1) == 0) {
 			cavan_display_set_font(display, &font);
 
-			if (argc > 2)
-			{
+			if (argc > 2) {
 				cavan_font_save_bmp(display->font, argv[2], 16);
 			}
 		}
@@ -78,8 +74,7 @@ int main(int argc, char *argv[])
 	display->draw_rect(display, 200, 200, 300, 300, display->pen_color);
 
 #if 1
-	for (i = 32; i < 127; i++)
-	{
+	for (i = 32; i < 127; i++) {
 		cavan_display_printf(display, "i = %d = %c\n", i, i);
 		cavan_display_flush(display);
 		msleep(100);
@@ -89,8 +84,7 @@ int main(int argc, char *argv[])
 #else
 	x = y = 300;
 
-	while (1)
-	{
+	while (1) {
 		display->draw_char(display, getchar(), display->pen_color);
 		x += display->font->cwidth;
 		cavan_display_flush(display);

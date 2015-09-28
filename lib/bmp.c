@@ -33,14 +33,12 @@ int bmp_read_file_header(int fd, struct bmp_file_header *file_hdr)
 	int ret;
 
 	ret = ffile_read(fd, file_hdr, sizeof(*file_hdr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("read");
 		return ret;
 	}
 
-	if (file_hdr->type[0] != 'B' || file_hdr->type[1] != 'M')
-	{
+	if (file_hdr->type[0] != 'B' || file_hdr->type[1] != 'M') {
 		error_msg("This File Is Not A BMP File");
 		return -1;
 	}
@@ -55,8 +53,7 @@ int bmp_read_info_header(int fd, struct bmp_info_header *info_hdr)
 	int ret;
 
 	ret = ffile_read(fd, info_hdr, sizeof(*info_hdr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("read");
 		return ret;
 	}
@@ -74,17 +71,14 @@ static int bmp_555_565(int fd, struct pixel565 *fb, int width, int height, int x
 	struct pixel555 buff[width];
 
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			tmp_fb = fb + i * xres + j;
 
 			tmp_fb->red = buff[j].red;
@@ -105,17 +99,14 @@ static int bmp_555_888(int fd, struct pixel888 *fb, int width, int height, int x
 	struct pixel555 buff[width];
 
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			tmp_fb = fb + i * xres + j;
 
 			tmp_fb->red = buff[j].red;
@@ -137,17 +128,14 @@ static int bmp_555_8888(int fd, struct pixel8888 *fb, int width, int height, int
 	struct pixel8888 *tmp_fb;
 	struct pixel555 buff[width];
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			tmp_fb = fb + i * xres + j;
 
 			tmp_fb->red = buff[j].red;
@@ -169,17 +157,14 @@ static int bmp_565_565(int fd, struct pixel565 *fb, int width, int height, int x
 	int i, j;
 	struct pixel565 buff[width];
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			(fb + i * xres)[j] = buff[j];
 		}
 	}
@@ -195,17 +180,14 @@ static int bmp_565_888(int fd, struct pixel888 *fb, int width, int height, int x
 	struct pixel565 buff[width];
 
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			tmp_fb = fb + i * xres + j;
 
 			tmp_fb->red = buff[j].red;
@@ -228,17 +210,14 @@ static int bmp_565_8888(int fd, struct pixel8888 *fb, int width, int height, int
 	struct pixel565 buff[width];
 
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			tmp_fb = fb + i * xres + j;
 
 			tmp_fb->red = buff[j].red;
@@ -262,17 +241,14 @@ static int bmp_888_565(int fd, struct pixel565 *fb, int width, int height, int x
 	struct pixel888 buff[width];
 
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			tmp_fb = fb + i * xres + j;
 
 			tmp_fb->red = buff[j].red >> 3;
@@ -290,17 +266,14 @@ static int bmp_888_888(int fd, struct pixel888 *fb, int width, int height, int x
 	int i, j;
 	struct pixel888 buff[width];
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			(fb + i * xres)[j] = buff[j];
 		}
 	}
@@ -316,17 +289,14 @@ static int bmp_888_8888(int fd, struct pixel8888 *fb, int width, int height, int
 	struct pixel888 buff[width];
 
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			tmp_fb = fb + i * xres + j;
 
 			tmp_fb->red = buff[j].red;
@@ -347,17 +317,14 @@ static int bmp_8888_565(int fd, struct pixel565 *fb, int width, int height, int 
 	struct pixel8888 buff[width];
 
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			tmp_fb = fb + i * xres + j;
 
 			tmp_fb->red = buff[j].red >> 3;
@@ -377,17 +344,14 @@ static int bmp_8888_888(int fd, struct pixel888 *fb, int width, int height, int 
 	struct pixel8888 buff[width];
 
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			tmp_fb = fb + i * xres + j;
 
 			tmp_fb->red = buff[j].red;
@@ -405,17 +369,14 @@ static int bmp_8888_8888(int fd, struct pixel8888 *fb, int width, int height, in
 	int i, j;
 	struct pixel8888 buff[width];
 
-	for (i = height - 1; i >= 0; i--)
-	{
+	for (i = height - 1; i >= 0; i--) {
 		ret = read(fd, &buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("read");
 			return ret;
 		}
 
-		for (j = 0; j < width; j++)
-		{
+		for (j = 0; j < width; j++) {
 			(fb + i * xres)[j] = buff[j];
 		}
 	}
@@ -436,36 +397,31 @@ int bmp_view(const char *file_name, const char *fb_name)
 	println("file_name = %s", file_name);
 
 	fd = open(file_name, O_RDONLY | O_BINARY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("open");
 		return -1;
 	}
 
 	ret = bmp_read_file_header(fd, &file_hdr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("read_file_header");
 		goto out_close_fd;
 	}
 
 	ret = bmp_read_info_header(fd, &info_hdr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("read_info_header");
 		goto out_close_fd;
 	}
 
 	ret = lseek(fd, file_hdr.offset, SEEK_SET);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("lseek");
 		goto out_close_fd;
 	}
 
 	fb = open(fb_name, O_RDWR | O_BINARY);
-	if (fb < 0)
-	{
+	if (fb < 0) {
 		print_error("Fail to open fb");
 		return fb;
 	}
@@ -478,14 +434,11 @@ int bmp_view(const char *file_name, const char *fb_name)
 
 	screen = mmap(NULL, fix.smem_len, PROT_WRITE | PROT_READ, MAP_SHARED, fb, 0);
 
-	switch (info_hdr.bit_count)
-	{
+	switch (info_hdr.bit_count) {
 	case 16:
-		if (info_hdr.compress)
-		{
+		if (info_hdr.compress) {
 			println("picture format is: RGB565");
-			switch (var.bits_per_pixel)
-			{
+			switch (var.bits_per_pixel) {
 			case 16:
 				bmp_565_565(fd, screen, info_hdr.width, info_hdr.height, var.xres, var.yres);
 				break;
@@ -498,12 +451,9 @@ int bmp_view(const char *file_name, const char *fb_name)
 			default:
 				error_msg("Unknown bits_per_pixel");
 			}
-		}
-		else
-		{
+		} else {
 			println("picture format is: RGB555");
-			switch (var.bits_per_pixel)
-			{
+			switch (var.bits_per_pixel) {
 			case 16:
 				bmp_555_565(fd, screen, info_hdr.width, info_hdr.height, var.xres, var.yres);
 				break;
@@ -520,8 +470,7 @@ int bmp_view(const char *file_name, const char *fb_name)
 		break;
 	case 24:
 		println("picture format is: RGB888");
-		switch (var.bits_per_pixel)
-		{
+		switch (var.bits_per_pixel) {
 		case 16:
 			bmp_888_565(fd, screen, info_hdr.width, info_hdr.height, var.xres, var.yres);
 			break;
@@ -537,8 +486,7 @@ int bmp_view(const char *file_name, const char *fb_name)
 		break;
 	case 32:
 		println("picture format is: RGB8888");
-		switch (var.bits_per_pixel)
-		{
+		switch (var.bits_per_pixel) {
 		case 16:
 			bmp_8888_565(fd, screen, info_hdr.width, info_hdr.height, var.xres, var.yres);
 			break;
@@ -565,8 +513,7 @@ out_close_fd:
 
 size_t bmp_get_color_table_size(int bit_count)
 {
-	if (bit_count > 8)
-	{
+	if (bit_count > 8) {
 		return 0;
 	}
 

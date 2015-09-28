@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <cavan++/Pool.h>
 
-struct AA
-{
+struct AA {
 	int a;
 	int b;
 	int c;
@@ -15,17 +14,14 @@ int main(int argc, char *argv[])
 	LinkPool<AA> pool(5);
 	AA *data[20];
 
-	for (int i = 0; i < 2; i++)
-	{
-		for (int i = 0; i < NELEM(data); i++)
-		{
+	for (int i = 0; i < 2; i++) {
+		for (int i = 0; i < NELEM(data); i++) {
 			cout << "getNode: i = " << i << endl;
 			data[i] = pool.getNode();
 			memset(data[i], 0, sizeof(AA));
 		}
 
-		for (int i = 0; i < NELEM(data); i++)
-		{
+		for (int i = 0; i < NELEM(data); i++) {
 			cout << "putNode: i = " << i << endl;
 			pool.putNode(data[i]);
 		}

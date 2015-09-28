@@ -22,15 +22,13 @@
 #include <cavan/network.h>
 
 #pragma pack(1)
-struct ping_send_package
-{
+struct ping_send_package {
 	struct icmp_header icmp;
 	struct ping_header ping;
 	u64 time;
 };
 
-struct ping_recv_package
-{
+struct ping_recv_package {
 	struct ip_header ip;
 	struct ping_send_package pkg;
 };
@@ -45,29 +43,24 @@ static void *ping_recv_thread(void *data)
 	struct icmp_header *icmp = &pkg.pkg.icmp;
 	struct ping_header *ping = &pkg.pkg.ping;
 
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen;
 
 		rdlen = client->recv(client, &pkg, sizeof(pkg));
-		if (rdlen < 1)
-		{
+		if (rdlen < 1) {
 			pr_red_info("client->recv");
 			break;
 		}
 
-		if (rdlen != sizeof(pkg))
-		{
+		if (rdlen != sizeof(pkg)) {
 			continue;
 		}
 
-		if (ip->protocol_type != IPPROTO_ICMP || icmp->type != 0)
-		{
+		if (ip->protocol_type != IPPROTO_ICMP || icmp->type != 0) {
 			continue;
 		}
 
-		if (ping->seq <= seq)
-		{
+		if (ping->seq <= seq) {
 			continue;
 		}
 
@@ -98,8 +91,7 @@ int main(int argc, char *argv[])
 	url.pathname = NULL;
 
 	ret = network_client_open(&client, &url, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return ret;
 	}
@@ -110,8 +102,7 @@ int main(int argc, char *argv[])
 	icmp->type = 8;
 	icmp->code = 0;
 
-	for (seq = 1; ; seq++)
-	{
+	for (seq = 1; ; seq++) {
 		ssize_t wrlen;
 
 		ping->seq = seq;
@@ -120,8 +111,7 @@ int main(int argc, char *argv[])
 		icmp->checksum = mem_checksum16(&pkg, sizeof(pkg));
 
 		wrlen = client.send(&client, &pkg, sizeof(pkg));
-		if (wrlen != sizeof(pkg))
-		{
+		if (wrlen != sizeof(pkg)) {
 			pr_red_info("client.send");
 			break;
 		}

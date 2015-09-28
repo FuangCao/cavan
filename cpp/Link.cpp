@@ -22,8 +22,7 @@
 
 LinkNode *Link::getLastNode(void)
 {
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		return NULL;
 	}
 
@@ -63,12 +62,9 @@ void Link::append(LinkNode *node)
 	AutoLock lock(mLock);
 
 	LinkNode *prev = getLastNode();
-	if (prev == NULL)
-	{
+	if (prev == NULL) {
 		mHead = node;
-	}
-	else
-	{
+	} else {
 		prev->next = node;
 	}
 }
@@ -92,15 +88,11 @@ void Link::remove(LinkNode *node)
 {
 	AutoLock lock(mLock);
 
-	if (node == mHead)
-	{
+	if (node == mHead) {
 		mHead = mHead->next;
-	}
-	else
-	{
+	} else {
 		LinkNode *prev = findPrevNode(node);
-		if (prev)
-		{
+		if (prev) {
 			prev->next = node->next;
 		}
 	}
@@ -110,8 +102,7 @@ LinkNode *Link::pop(void)
 {
 	AutoLock lock(mLock);
 
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		return NULL;
 	}
 
@@ -125,8 +116,7 @@ void Link::traversal(void (*handler)(LinkNode *node, void *data), void *data)
 {
 	AutoLock lock(mLock);
 
-	for (LinkNode *node = mHead; node; node = node->next)
-	{
+	for (LinkNode *node = mHead; node; node = node->next) {
 		handler(node, data);
 	}
 }
@@ -135,10 +125,8 @@ LinkNode *Link::find(bool (*matcher)(LinkNode *node, void *data), void *data)
 {
 	AutoLock lock(mLock);
 
-	for (LinkNode *node = mHead; node; node = node->next)
-	{
-		if (matcher(node, data))
-		{
+	for (LinkNode *node = mHead; node; node = node->next) {
+		if (matcher(node, data)) {
 			return node;
 		}
 	}
@@ -153,21 +141,18 @@ void DoubleLink::insertBase(DoubleLinkNode *prev, DoubleLinkNode *next, DoubleLi
 	node->prev = prev;
 	node->next = next;
 
-	if (prev)
-	{
+	if (prev) {
 		prev->next = node;
 	}
 
-	if (next)
-	{
+	if (next) {
 		next->prev = node;
 	}
 }
 
 DoubleLinkNode *DoubleLink::getLastNode(void)
 {
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		return NULL;
 	}
 
@@ -201,8 +186,7 @@ void DoubleLink::append(DoubleLinkNode *node)
 	DoubleLinkNode *prev = getLastNode();
 	insertBase(prev, NULL, node);
 
-	if (prev == NULL)
-	{
+	if (prev == NULL) {
 		mHead = node;
 	}
 }
@@ -226,8 +210,7 @@ void DoubleLink::traversal(void (*handler)(DoubleLinkNode *node, void *data), vo
 {
 	AutoLock lock(mLock);
 
-	for (DoubleLinkNode *node = mHead; node; node = node->next)
-	{
+	for (DoubleLinkNode *node = mHead; node; node = node->next) {
 		handler(node, data);
 	}
 }
@@ -236,10 +219,8 @@ DoubleLinkNode *DoubleLink::find(bool (*matcher)(DoubleLinkNode *node, void *dat
 {
 	AutoLock lock(mLock);
 
-	for (DoubleLinkNode *node = mHead; node; node = node->next)
-	{
-		if (matcher(node, data))
-		{
+	for (DoubleLinkNode *node = mHead; node; node = node->next) {
+		if (matcher(node, data)) {
 			return node;
 		}
 	}
@@ -251,13 +232,10 @@ DoubleLinkNode *DoubleLink::find(bool (*matcher)(DoubleLinkNode *node, void *dat
 
 void LoopLink::insertBase(LinkNode *prev, LinkNode *node)
 {
-	if (mTail == NULL)
-	{
+	if (mTail == NULL) {
 		node->next = node;
 		mTail = node;
-	}
-	else
-	{
+	} else {
 		node->next = prev->next;
 		prev->next = node;
 	}
@@ -265,14 +243,10 @@ void LoopLink::insertBase(LinkNode *prev, LinkNode *node)
 
 void LoopLink::removeBase(LinkNode *prev, LinkNode *node)
 {
-	if (node == mTail)
-	{
-		if (prev == node)
-		{
+	if (node == mTail) {
+		if (prev == node) {
 			mTail = NULL;
-		}
-		else
-		{
+		} else {
 			mTail = prev;
 		}
 	}
@@ -285,10 +259,8 @@ LinkNode *LoopLink::findPrevNode(LinkNode *node)
 {
 	LinkNode *prev;
 
-	for (prev = node->next; prev->next != node; prev = prev->next)
-	{
-		if (prev == node)
-		{
+	for (prev = node->next; prev->next != node; prev = prev->next) {
+		if (prev == node) {
 			return NULL;
 		}
 	}
@@ -315,8 +287,7 @@ void LoopLink::remove(LinkNode *node)
 	AutoLock lock(mLock);
 
 	LinkNode *prev = findPrevNode(node);
-	if (prev)
-	{
+	if (prev) {
 		removeBase(prev, node);
 	}
 }
@@ -340,8 +311,7 @@ LinkNode *LoopLink::pop(void)
 {
 	AutoLock lock(mLock);
 
-	if (mTail == NULL)
-	{
+	if (mTail == NULL) {
 		return NULL;
 	}
 
@@ -355,8 +325,7 @@ LinkNode *LoopLink::getTopNode(void)
 {
 	AutoLock lock(mLock);
 
-	if (mTail == NULL)
-	{
+	if (mTail == NULL) {
 		return NULL;
 	}
 
@@ -388,20 +357,16 @@ bool LoopLink::hasNode(LinkNode *node)
 {
 	AutoLock lock(mLock);
 
-	if (mTail == NULL)
-	{
+	if (mTail == NULL) {
 		return false;
 	}
 
-	for (LinkNode *head = mTail->next;; head = head->next)
-	{
-		if (head == node)
-		{
+	for (LinkNode *head = mTail->next;; head = head->next) {
+		if (head == node) {
 			return true;
 		}
 
-		if (head == mTail)
-		{
+		if (head == mTail) {
 			break;
 		}
 	}
@@ -413,17 +378,14 @@ void LoopLink::traversal(void (*handler)(LinkNode *node, void *data), void *data
 {
 	AutoLock lock(mLock);
 
-	if (mTail == NULL)
-	{
+	if (mTail == NULL) {
 		return;
 	}
 
-	for (LinkNode *node = mTail->next;; node = node->next)
-	{
+	for (LinkNode *node = mTail->next;; node = node->next) {
 		handler(node, data);
 
-		if (node == mTail)
-		{
+		if (node == mTail) {
 			break;
 		}
 	}
@@ -433,20 +395,16 @@ LinkNode *LoopLink::find(bool (*matcher)(LinkNode *node, void *data), void *data
 {
 	AutoLock lock(mLock);
 
-	if (mTail == NULL)
-	{
+	if (mTail == NULL) {
 		return NULL;
 	}
 
-	for (LinkNode *node = mTail->next;; node = node->next)
-	{
-		if (matcher(node, data))
-		{
+	for (LinkNode *node = mTail->next;; node = node->next) {
+		if (matcher(node, data)) {
 			return node;
 		}
 
-		if (node == mTail)
-		{
+		if (node == mTail) {
 			break;
 		}
 	}
@@ -467,13 +425,10 @@ void DoubleLoopLink::insertOnly(DoubleLinkNode *prev, DoubleLinkNode *next, Doub
 
 void DoubleLoopLink::insertBase(DoubleLinkNode *prev, DoubleLinkNode *next, DoubleLinkNode *node)
 {
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		node->prev = node->next = node;
 		mHead = node;
-	}
-	else
-	{
+	} else {
 		insertOnly(prev, next, node);
 	}
 }
@@ -489,14 +444,10 @@ void DoubleLoopLink::removeBase(DoubleLinkNode *prev, DoubleLinkNode *next, Doub
 	removeOnly(prev, next);
 	node->next = node->prev = node;
 
-	if (mHead == node)
-	{
-		if (node == next)
-		{
+	if (mHead == node) {
+		if (node == next) {
 			mHead = NULL;
-		}
-		else
-		{
+		} else {
 			mHead = next;
 		}
 	}
@@ -531,12 +482,9 @@ void DoubleLoopLink::append(DoubleLinkNode *node)
 {
 	AutoLock lock(mLock);
 
-	if (mHead)
-	{
+	if (mHead) {
 		insertBase(mHead->prev, mHead, node);
-	}
-	else
-	{
+	} else {
 		insertBase(NULL, NULL, node);
 	}
 }
@@ -545,13 +493,10 @@ void DoubleLoopLink::push(DoubleLinkNode *node)
 {
 	AutoLock lock(mLock);
 
-	if (mHead)
-	{
+	if (mHead) {
 		insertBase(mHead->prev, mHead, node);
 		mHead = node;
-	}
-	else
-	{
+	} else {
 		insertBase(NULL, NULL, node);
 	}
 }
@@ -560,8 +505,7 @@ DoubleLinkNode *DoubleLoopLink::pop(void)
 {
 	AutoLock lock(mLock);
 
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		return NULL;
 	}
 
@@ -575,8 +519,7 @@ DoubleLinkNode *DoubleLoopLink::delTail(void)
 {
 	AutoLock lock(mLock);
 
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		return NULL;
 	}
 
@@ -597,8 +540,7 @@ DoubleLinkNode *DoubleLoopLink::getTailNode(void)
 {
 	AutoLock lock(mLock);
 
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		return NULL;
 	}
 
@@ -609,17 +551,14 @@ void DoubleLoopLink::traversal(void (*handler)(DoubleLinkNode *node, void *data)
 {
 	AutoLock lock(mLock);
 
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		return;
 	}
 
-	for (DoubleLinkNode *node = mHead, *tail = node->prev;; node = node->next)
-	{
+	for (DoubleLinkNode *node = mHead, *tail = node->prev;; node = node->next) {
 		handler(node, data);
 
-		if (node == tail)
-		{
+		if (node == tail) {
 			break;
 		}
 	}
@@ -629,20 +568,16 @@ DoubleLinkNode *DoubleLoopLink::find(bool (*matcher)(DoubleLinkNode *node, void 
 {
 	AutoLock lock(mLock);
 
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		return NULL;
 	}
 
-	for (DoubleLinkNode *node = mHead, *tail = node->prev;; node = node->next)
-	{
-		if (matcher(node, data))
-		{
+	for (DoubleLinkNode *node = mHead, *tail = node->prev;; node = node->next) {
+		if (matcher(node, data)) {
 			return node;
 		}
 
-		if (node == tail)
-		{
+		if (node == tail) {
 			break;
 		}
 	}
@@ -654,19 +589,16 @@ int DoubleLoopLink::getCount(void)
 {
 	AutoLock lock(mLock);
 
-	if (mHead == NULL)
-	{
+	if (mHead == NULL) {
 		return 0;
 	}
 
 	int count = 0;
 
-	for (DoubleLinkNode *node = mHead, *tail = node->prev;; node = node->next)
-	{
+	for (DoubleLinkNode *node = mHead, *tail = node->prev;; node = node->next) {
 		count++;
 
-		if (node == tail)
-		{
+		if (node == tail) {
 			break;
 		}
 	}
@@ -692,10 +624,8 @@ void DoubleLoopLink::moveToTop(DoubleLinkNode *node)
 {
 	AutoLock lock(mLock);
 
-	if (mHead && node != mHead)
-	{
-		if (mHead->prev != node)
-		{
+	if (mHead && node != mHead) {
+		if (mHead->prev != node) {
 			moveBase(mHead->prev, mHead, node);
 		}
 
@@ -707,14 +637,10 @@ void DoubleLoopLink::moveToTail(DoubleLinkNode *node)
 {
 	AutoLock lock(mLock);
 
-	if (mHead && node != mHead->prev)
-	{
-		if (node == mHead)
-		{
+	if (mHead && node != mHead->prev) {
+		if (node == mHead) {
 			mHead = node->next;
-		}
-		else
-		{
+		} else {
 			moveBase(mHead->prev, mHead, node);
 		}
 	}

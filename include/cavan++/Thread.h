@@ -27,8 +27,7 @@ class CavanThread;
 
 typedef int (*cavan_thread_handler_t)(CavanThread *thread);
 
-class CavanThread
-{
+class CavanThread {
 private:
 	void *mData;
 	cavan_thread_handler_t mHandler;
@@ -43,83 +42,67 @@ public:
 	CavanThread(const char *name, cavan_thread_handler_t handler = NULL);
 	virtual ~CavanThread(void);
 
-	void *getData(void)
-	{
+	void *getData(void) {
 		return mData;
 	}
 
-	void setData(void *data)
-	{
+	void setData(void *data) {
 		mData = data;
 	}
 
-	int sendEvent(u32 event)
-	{
+	int sendEvent(u32 event) {
 		return cavan_thread_send_event(&mThread, event);
 	}
 
-	int recvEvent(u32 *event)
-	{
+	int recvEvent(u32 *event) {
 		return cavan_thread_recv_event(&mThread, event);
 	}
 
-	int recvEventTimeout(u32 *event, u32 msec)
-	{
+	int recvEventTimeout(u32 *event, u32 msec) {
 		return cavan_thread_recv_event_timeout(&mThread, event, msec);
 	}
 
-	int waitEvent(u32 msec)
-	{
+	int waitEvent(u32 msec) {
 		return cavan_thread_wait_event(&mThread, msec);
 	}
 
-	int start(void)
-	{
+	int start(void) {
 		return cavan_thread_start(&mThread);
 	}
 
-	void stop(void)
-	{
+	void stop(void) {
 		cavan_thread_stop(&mThread);
 	}
 
-	void suspend(void)
-	{
+	void suspend(void) {
 		cavan_thread_suspend(&mThread);
 	}
 
-	void resume(void)
-	{
+	void resume(void) {
 		cavan_thread_resume(&mThread);
 	}
 
-	int msleepUntil(struct timespec *time)
-	{
+	int msleepUntil(struct timespec *time) {
 		return cavan_thread_msleep_until(&mThread, time);
 	}
 
-	int msleep(u32 msec)
-	{
+	int msleep(u32 msec) {
 		return cavan_thread_msleep(&mThread, msec);
 	}
 
-	void setState(cavan_thread_state_t state)
-	{
+	void setState(cavan_thread_state_t state) {
 		cavan_thread_set_state(&mThread, state);
 	}
 
-	void shouldStop(void)
-	{
+	void shouldStop(void) {
 		cavan_thread_should_stop(&mThread);
 	}
 
-	int join(void)
-	{
+	int join(void) {
 		return cavan_thread_join(&mThread);
 	}
 
-	int wakeup(void)
-	{
+	int wakeup(void) {
 		return cavan_thread_wakeup(&mThread);
 	}
 };

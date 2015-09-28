@@ -20,8 +20,7 @@ static int screen_mirror_service_handler(struct cavan_service_description *servi
 	int sockfd = data.type_int;
 
 	client_sockfd = inet_accept(sockfd, &client_addr, &client_addrlen);
-	if (client_sockfd < 0)
-	{
+	if (client_sockfd < 0) {
 		pr_red_info("inet_accept");
 		return client_sockfd;
 	}
@@ -29,8 +28,7 @@ static int screen_mirror_service_handler(struct cavan_service_description *servi
 	inet_show_sockaddr(&client_addr);
 
 	ret = inet_recv(client_sockfd, buff, sizeof(buff));
-	if (ret > 0)
-	{
+	if (ret > 0) {
 		buff[ret] = 0;
 		println("buff = %s", buff);
 	}
@@ -45,8 +43,7 @@ int screen_mirror_service_run(struct screen_mirror_service *service)
 	int sockfd;
 
 	sockfd = inet_create_tcp_service(6789);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("inet_create_tcp_service");
 
 		return sockfd;
@@ -64,8 +61,7 @@ int screen_mirror_client(const char *buff, size_t size)
 	int sockfd;
 
 	sockfd = adb_create_tcp_link2("127.0.0.1", 6789);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("adb_create_tcp_link2");
 		return sockfd;
 	}

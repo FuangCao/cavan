@@ -44,15 +44,13 @@
 
 __BEGIN_DECLS
 
-struct cavan_mkdir_command_option
-{
+struct cavan_mkdir_command_option {
 	mode_t mode;
 	bool verbose;
 	bool parents;
 };
 
-struct cavan_file_proxy_desc
-{
+struct cavan_file_proxy_desc {
 	int epoll_fd;
 	int count;
 
@@ -359,8 +357,7 @@ static inline int file_dos2unix(const char *filename)
 	int ret;
 
 	ret = file_delete_char(filename, TEMP_DOS2UNIX_FILE, '\r');
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -409,8 +406,7 @@ static inline bool file_poll_output(int fd, int timeout_ms)
 
 static inline ssize_t file_read_timeout(int fd, void *buff, size_t size, int timeout_ms)
 {
-	if (file_poll_input(fd, timeout_ms))
-	{
+	if (file_poll_input(fd, timeout_ms)) {
 		return read(fd, buff, size);
 	}
 

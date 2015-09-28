@@ -50,57 +50,48 @@ static int swan_vk_parse_option(struct swan_vk_command_option *opt, int argc, ch
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "serial",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 's',
-		},
-		{
+		}, {
 			.name = "usb",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'u',
-		},
-		{
+		}, {
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'u',
-		},
-		{
+		}, {
 			.name = "tcp",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 't',
-		},
-		{
+		}, {
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'i',
-		},
-		{
+		}, {
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'p',
-		},
-		{
+		}, {
 			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'd',
-		},
-		{
+		}, {
 			.name = "local",
 			.has_arg = optional_argument,
 			.flag = NULL,
 			.val = 'l',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -110,10 +101,8 @@ static int swan_vk_parse_option(struct swan_vk_command_option *opt, int argc, ch
 	opt->port = SWAN_VK_TCP_PORT;
 	opt->as_daemon = false;
 
-	while ((c = getopt_long(argc, argv, "S:s:UuTtP:p:I:i:DdL::l::", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "S:s:UuTtP:p:I:i:DdL::l::", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 's':
 		case 'S':
 			text_copy(opt->devpath, optarg);
@@ -148,8 +137,7 @@ static int swan_vk_parse_option(struct swan_vk_command_option *opt, int argc, ch
 		case 'l':
 		case 'L':
 			opt->link_type = SWAN_VK_LINK_LOCAL;
-			if (optarg == NULL)
-			{
+			if (optarg == NULL) {
 				optarg = DEVICE_SWAN_VK_DATA;
 			}
 
@@ -162,8 +150,7 @@ static int swan_vk_parse_option(struct swan_vk_command_option *opt, int argc, ch
 		}
 	}
 
-	if (opt->ip[0] == 0)
-	{
+	if (opt->ip[0] == 0) {
 		text_copy(opt->ip, "127.0.0.1");
 	}
 
@@ -174,48 +161,41 @@ static int swan_vk_link_server(struct swan_vk_command_option *opt)
 {
 	int fd;
 
-	switch (opt->link_type)
-	{
+	switch (opt->link_type) {
 	case SWAN_VK_LINK_ADB:
 		fd = adb_create_tcp_link2(opt->ip, opt->port);
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			pr_red_info("adb_create_tcp_link2");
 		}
 		break;
 
 	case SWAN_VK_LINK_LOCAL:
-		if (opt->devpath[0] == 0)
-		{
+		if (opt->devpath[0] == 0) {
 			pr_red_info("Please input device path");
 			return -EINVAL;
 		}
 
 		fd = open(opt->devpath, O_WRONLY);
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			print_error("open file `%s'", opt->devpath);
 		}
 		break;
 
 	case SWAN_VK_LINK_SERIAL:
-		if (opt->devpath[0] == 0)
-		{
+		if (opt->devpath[0] == 0) {
 			pr_red_info("Please input device path");
 			return -EINVAL;
 		}
 
 		fd = open(opt->devpath, O_WRONLY | O_SYNC | O_NOCTTY);
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			print_error("open file `%s'", opt->devpath);
 		}
 		break;
 
 	case SWAN_VK_LINK_TCP:
 		fd = inet_create_tcp_link2(opt->ip, opt->port);
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			pr_red_info("inet_create_tcp_link2");
 		}
 		break;
@@ -230,34 +210,28 @@ static int swan_vk_link_server(struct swan_vk_command_option *opt)
 
 static ssize_t swan_vk_send_touch_point(int fd, int x, int y)
 {
-	struct cavan_input_event events[] =
-	{
+	struct cavan_input_event events[] = {
 		{
 			.type = EV_ABS,
 			.code = ABS_MT_POSITION_X,
 			.value = x
-		},
-		{
+		}, {
 			.type = EV_ABS,
 			.code = ABS_MT_POSITION_Y,
 			.value = y
-		},
-		{
+		}, {
 			.type = EV_ABS,
 			.code = ABS_MT_TOUCH_MAJOR,
 			.value = 1
-		},
-		{
+		}, {
 			.type = EV_ABS,
 			.code = ABS_MT_WIDTH_MAJOR,
 			.value = 1
-		},
-		{
+		}, {
 			.type = EV_SYN,
 			.code = SYN_MT_REPORT,
 			.value = 0
-		},
-		{
+		}, {
 			.type = EV_SYN,
 			.code = SYN_REPORT,
 			.value = 0
@@ -271,14 +245,12 @@ static ssize_t swan_vk_send_touch_point(int fd, int x, int y)
 
 static ssize_t swan_vk_send_touch_up(int fd)
 {
-	struct cavan_input_event events[] =
-	{
+	struct cavan_input_event events[] = {
 		{
 			.type = EV_SYN,
 			.code = SYN_MT_REPORT,
 			.value = 0
-		},
-		{
+		}, {
 			.type = EV_SYN,
 			.code = SYN_REPORT,
 			.value = 0
@@ -293,28 +265,20 @@ static int swan_vk_send_line_horizon(int fd, int x0, int y0, int x1, int y1)
 	ssize_t wrlen;
 	double a, b;
 
-	if (x0 == x1)
-	{
-		if (y0 < y1)
-		{
-			while (y0 <= y1)
-			{
+	if (x0 == x1) {
+		if (y0 < y1) {
+			while (y0 <= y1) {
 				wrlen = swan_vk_send_touch_point(fd, x0, y0);
-				if (wrlen < 0)
-				{
+				if (wrlen < 0) {
 					return wrlen;
 				}
 
 				y0++;
 			}
-		}
-		else
-		{
-			while (y0 >= y1)
-			{
+		} else {
+			while (y0 >= y1) {
 				wrlen = swan_vk_send_touch_point(fd, x0, y0);
-				if (wrlen < 0)
-				{
+				if (wrlen < 0) {
 					return wrlen;
 				}
 
@@ -327,26 +291,19 @@ static int swan_vk_send_line_horizon(int fd, int x0, int y0, int x1, int y1)
 
 	cavan_build_line_equation(x0, y0, x1, y1, &a, &b);
 
-	if (x0 < x1)
-	{
-		while (x0 <= x1)
-		{
+	if (x0 < x1) {
+		while (x0 <= x1) {
 			wrlen = swan_vk_send_touch_point(fd, x0, a * x0 + b);
-			if (wrlen < 0)
-			{
+			if (wrlen < 0) {
 				return wrlen;
 			}
 
 			x0++;
 		}
-	}
-	else
-	{
-		while (x0 >= x1)
-		{
+	} else {
+		while (x0 >= x1) {
 			wrlen = swan_vk_send_touch_point(fd, x0, a * x0 + b);
-			if (wrlen < 0)
-			{
+			if (wrlen < 0) {
 				return wrlen;
 			}
 
@@ -362,28 +319,20 @@ static int swan_vk_send_line_vertical(int fd, int x0, int y0, int x1, int y1)
 	ssize_t wrlen;
 	double a, b;
 
-	if (y0 == y1)
-	{
-		if (x0 < x1)
-		{
-			while (x0 <= x1)
-			{
+	if (y0 == y1) {
+		if (x0 < x1) {
+			while (x0 <= x1) {
 				wrlen = swan_vk_send_touch_point(fd, x0, y0);
-				if (wrlen < 0)
-				{
+				if (wrlen < 0) {
 					return wrlen;
 				}
 
 				x0++;
 			}
-		}
-		else
-		{
-			while (x0 >= x1)
-			{
+		} else {
+			while (x0 >= x1) {
 				wrlen = swan_vk_send_touch_point(fd, x0, y0);
-				if (wrlen < 0)
-				{
+				if (wrlen < 0) {
 					return wrlen;
 				}
 
@@ -396,26 +345,19 @@ static int swan_vk_send_line_vertical(int fd, int x0, int y0, int x1, int y1)
 
 	cavan_build_line_equation(y0, x0, y1, x1, &a, &b);
 
-	if (y0 < y1)
-	{
-		while (y0 <= y1)
-		{
+	if (y0 < y1) {
+		while (y0 <= y1) {
 			wrlen = swan_vk_send_touch_point(fd, a * y0 + b, y0);
-			if (wrlen < 0)
-			{
+			if (wrlen < 0) {
 				return wrlen;
 			}
 
 			y0++;
 		}
-	}
-	else
-	{
-		while (y0 >= y1)
-		{
+	} else {
+		while (y0 >= y1) {
 			wrlen = swan_vk_send_touch_point(fd, a * y0 + b, y0);
-			if (wrlen < 0)
-			{
+			if (wrlen < 0) {
 				return wrlen;
 			}
 
@@ -433,18 +375,14 @@ static int swan_vk_send_line_base(int fd, int x0, int y0, int x1, int y1)
 
 	pr_bold_info("%s: [%d, %d] => [%d, %d]", __FUNCTION__, x0, y0, x1, y1);
 
-	if (((u32) x0) >= 100 || ((u32) x1) >= 100 || ((u32) y0) >= 100 || ((u32) y1) >= 100)
-	{
+	if (((u32) x0) >= 100 || ((u32) x1) >= 100 || ((u32) y0) >= 100 || ((u32) y1) >= 100) {
 		pr_red_info("some axis is wrong");
 		return -EINVAL;
 	}
 
-	if (ABS_VALUE(x1 - x0) > ABS_VALUE(y1 - y0))
-	{
+	if (ABS_VALUE(x1 - x0) > ABS_VALUE(y1 - y0)) {
 		send_line = swan_vk_send_line_horizon;
-	}
-	else
-	{
+	} else {
 		send_line = swan_vk_send_line_vertical;
 	}
 
@@ -459,8 +397,7 @@ static int swan_vk_send_line_base(int fd, int x0, int y0, int x1, int y1)
 #endif
 
 	ret = send_line(fd, x0, y0, x1, y1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("send_line");
 		return ret;
 	}
@@ -474,14 +411,12 @@ static int swan_vk_send_line(struct swan_vk_command_option *opt, int x0, int y0,
 	int fd;
 
 	fd = swan_vk_link_server(opt);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
 	ret = swan_vk_send_line_base(fd, x0, y0, x1, y1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("swan_vk_send_line");
 	}
 
@@ -497,8 +432,7 @@ static void swan_vk_client_stop_handle(int signum)
 	pr_bold_pos();
 
 	wrlen = write(ctrl_fd, &signum, sizeof(signum));
-	if (wrlen < 0)
-	{
+	if (wrlen < 0) {
 		pr_error_info("write");
 		exit(-1);
 	}
@@ -522,15 +456,13 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 	pr_bold_pos();
 
 	fd_tty = open(tty_path, O_RDONLY | O_NOCTTY);
-	if (fd_tty < 0)
-	{
+	if (fd_tty < 0) {
 		print_error("open tty device \"%s\" failed", tty_path);
 		return fd_tty;
 	}
 
 	ret = set_tty_mode(fd_tty, 3, &swan_vk_tty_attr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("set_tty_mode");
 		goto out_close_tty;
 	}
@@ -540,29 +472,24 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 	signal(SIGKILL, swan_vk_serial_server_stop_handle);
 
 	fd_data = open(data_path, O_WRONLY);
-	if (fd_data < 0)
-	{
+	if (fd_data < 0) {
 		print_error("open data device \"%s\" failed", data_path);
 		goto out_close_tty;
 	}
 
-	while (1)
-	{
+	while (1) {
 		rdlen = read(fd_tty, events, sizeof(events));
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			print_error("read");
 			break;
 		}
 
-		if (*(u32 *) events == SWAN_VK_STOP_VALUE)
-		{
+		if (*(u32 *) events == SWAN_VK_STOP_VALUE) {
 			break;
 		}
 
 		wrlen = ffile_write(fd_data, events, rdlen);
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			print_error("write");
 			break;
 		}
@@ -583,8 +510,7 @@ out_close_tty:
 
 static void swan_vk_map_key(int fd, struct cavan_input_event *ep)
 {
-	switch (ep->code)
-	{
+	switch (ep->code) {
 	case KEY_F9:
 	case KEY_ESC:
 		ep->code = SWAN_VKEY_BACK;
@@ -631,8 +557,7 @@ static void swan_vk_map_key(int fd, struct cavan_input_event *ep)
 
 	case KEY_LEFTMETA:
 	case KEY_RIGHTMETA:
-		if (ep->value)
-		{
+		if (ep->value) {
 			swan_vk_send_line_base(fd, SWAN_VK_UNLOCK_X0, SWAN_VK_UNLOCK_Y, SWAN_VK_UNLOCK_X1, SWAN_VK_UNLOCK_Y);
 		}
 		break;
@@ -641,8 +566,7 @@ static void swan_vk_map_key(int fd, struct cavan_input_event *ep)
 
 static void swan_vk_map_abs(struct cavan_input_event *ep)
 {
-	switch (ep->code)
-	{
+	switch (ep->code) {
 	case ABS_X:
 	case ABS_MT_POSITION_X:
 		ep->value = SWAN_VK_AXIS_CAL(ep->value, X_AXIS_MAX);
@@ -667,25 +591,21 @@ static int swan_vk_release_all_key(int sockfd)
 {
 	u16 code;
 	ssize_t wrlen;
-	struct cavan_input_event events[2] =
-	{
+	struct cavan_input_event events[2] = {
 		{
 			.type = EV_KEY,
 			.value = 0
-		},
-		{
+		}, {
 			.type = EV_SYN,
 			.code = SYN_REPORT,
 			.value = 0
 		}
 	};
 
-	for (code = 0; code < KEY_MAX; code++)
-	{
+	for (code = 0; code < KEY_MAX; code++) {
 		events[0].code = code;
 		wrlen = inet_send(sockfd, (char *) events, sizeof(events));
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			return wrlen;
 		}
 	}
@@ -699,8 +619,7 @@ static bool swan_vk_event_handler(struct cavan_event_device *dev, struct input_e
 	struct swan_vk_clien_descriptor *desc = data;
 	struct cavan_input_event *event = (struct cavan_input_event *) &_event->type;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_KEY:
 		swan_vk_map_key(desc->fd, event);
 		break;
@@ -711,13 +630,11 @@ static bool swan_vk_event_handler(struct cavan_event_device *dev, struct input_e
 	}
 
 	wrlen = write(desc->fd, event, sizeof(struct cavan_input_event));
-	if (wrlen < 0)
-	{
+	if (wrlen < 0) {
 		pr_error_info("write");
 
 		wrlen = write(desc->pipefd[1], &wrlen, sizeof(wrlen));
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			pr_error_info("write pipe");
 			exit(-1);
 		}
@@ -737,15 +654,13 @@ static int swan_vk_client(struct swan_vk_command_option *opt)
 	pr_bold_pos();
 
 	fd = swan_vk_link_server(opt);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("adb_create_tcp_link");
 		return fd;
 	}
 
 	ret = pipe(desc.pipefd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pipe");
 		goto out_close_fd;
 	}
@@ -755,8 +670,7 @@ static int swan_vk_client(struct swan_vk_command_option *opt)
 
 	desc.fd = fd;
 	ret = cavan_event_service_start(&service, &desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_event_service_start");
 		goto out_close_pipe;
 	}
@@ -765,12 +679,9 @@ static int swan_vk_client(struct swan_vk_command_option *opt)
 	signal(SIGINT, swan_vk_client_stop_handle);
 
 	ret = read(desc.pipefd[0], &result, sizeof(result));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("read");
-	}
-	else
-	{
+	} else {
 		pr_green_info("result = %d", result);
 	}
 
@@ -798,19 +709,16 @@ static int swan_vk_server_handler(struct cavan_service_description *service, int
 	ssize_t rdlen, wrlen;
 
 	sockfd_client = inet_accept(sockfd, &addr, &addrlen);
-	if (sockfd_client < 0)
-	{
+	if (sockfd_client < 0) {
 		pr_red_info("inet_accept");
 		return -1;
 	}
 
 	pr_bold_info("IP = %s, port = %d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
-	while (1)
-	{
+	while (1) {
 		rdlen = recv(sockfd_client, events, sizeof(events), 0);
-		if (rdlen < (ssize_t) sizeof(events[0]))
-		{
+		if (rdlen < (ssize_t) sizeof(events[0])) {
 			pr_red_info("inet_recv");
 			return rdlen;
 		}
@@ -818,8 +726,7 @@ static int swan_vk_server_handler(struct cavan_service_description *service, int
 		pthread_mutex_lock(mutex_lock);
 		wrlen = ffile_write(datafd, events, rdlen);
 		pthread_mutex_unlock(mutex_lock);
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			pr_red_info("ffile_write");
 			return wrlen;
 		}
@@ -835,22 +742,19 @@ int swan_vk_adb_server(struct cavan_service_description *desc, const char *data_
 	struct swan_vk_service_descriptor vk_desc;
 
 	ret = pthread_mutex_init(&vk_desc.mutex_lock, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("pthread_mutex_init");
 		return ret;
 	}
 
 	datafd = open(data_path, O_WRONLY);
-	if (datafd < 0)
-	{
+	if (datafd < 0) {
 		pr_red_info("open file `%s' failed", data_path);
 		return datafd;
 	}
 
 	sockfd = inet_create_tcp_service(port);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("inet_create_tcp_service");
 		close(datafd);
 		return sockfd;
@@ -874,8 +778,7 @@ static void swan_vk_show_key_table(const struct swan_vk_descriptor *descs, size_
 {
 	const struct swan_vk_descriptor *desc_end;
 
-	for (desc_end = descs + size; descs < desc_end; descs++)
-	{
+	for (desc_end = descs + size; descs < desc_end; descs++) {
 		println("%s = %d", descs->name, descs->code);
 	}
 }
@@ -886,8 +789,7 @@ static const struct swan_vk_descriptor *swan_vk_match_key(const char *keyname, c
 
 	for (desc_end = descs + size; descs < desc_end && text_lhcmp(keyname, descs->name); descs++);
 
-	if (descs < desc_end)
-	{
+	if (descs < desc_end) {
 		return descs;
 	}
 
@@ -902,30 +804,26 @@ int swan_vk_commandline(const char *data_path)
 	ssize_t wrlen;
 
 	fd_data = open(data_path, O_WRONLY);
-	if (fd_data < 0)
-	{
+	if (fd_data < 0) {
 		print_error("open file \"%s\" failed", data_path);
 		return fd_data;
 	}
 
 	old_p = swan_vk_table;
 
-	while (1)
-	{
+	while (1) {
 		print("\033[01;32m" SWAN_VK_PROMPT "\033[0m# ");
 
 		for (name_p = name; is_empty_character((*name_p = getchar())) == 0; name_p++);
 
-		if (name_p == name)
-		{
+		if (name_p == name) {
 			goto label_repo_key;
 		}
 
 		*name_p = 0;
 
 		p = swan_vk_match_key(name, swan_vk_table, ARRAY_SIZE(swan_vk_table));
-		if (p == NULL)
-		{
+		if (p == NULL) {
 			swan_vk_show_key_table(swan_vk_table, ARRAY_SIZE(swan_vk_table));
 			continue;
 		}
@@ -936,8 +834,7 @@ label_repo_key:
 		pr_bold_info("repo key = %s = %d", old_p->name, old_p->code);
 
 		wrlen = write(fd_data, (void *) &old_p->code, sizeof(old_p->code));
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			print_error("write");
 			break;
 		}
@@ -953,8 +850,7 @@ label_repo_key:
 int swan_vk_server_main(int argc, char *argv[])
 {
 	int ret;
-	struct cavan_service_description desc =
-	{
+	struct cavan_service_description desc = {
 		.name = "SWAN_VK",
 		.as_daemon = 0,
 		.daemon_count = 5,
@@ -962,18 +858,14 @@ int swan_vk_server_main(int argc, char *argv[])
 	struct swan_vk_command_option opt;
 
 	ret = swan_vk_parse_option(&opt, argc, argv);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("swan_vk_parse_option");
 		return ret;
 	}
 
-	if (opt.link_type == SWAN_VK_LINK_SERIAL)
-	{
+	if (opt.link_type == SWAN_VK_LINK_SERIAL) {
 		return swan_vk_serial_server(opt.devpath, DEVICE_SWAN_VK_DATA);
-	}
-	else
-	{
+	} else {
 		return swan_vk_adb_server(&desc, DEVICE_SWAN_VK_DATA, opt.port);
 	}
 }
@@ -984,8 +876,7 @@ int swan_vk_client_main(int argc, char *argv[])
 	struct swan_vk_command_option opt;
 
 	ret = swan_vk_parse_option(&opt, argc, argv);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -994,12 +885,9 @@ int swan_vk_client_main(int argc, char *argv[])
 
 int swan_vk_cmdline_main(int argc, char *argv[])
 {
-	if (argc > 1)
-	{
+	if (argc > 1) {
 		return swan_vk_commandline(argv[1]);
-	}
-	else
-	{
+	} else {
 		return swan_vk_commandline(DEVICE_SWAN_VK_VALUE);
 	}
 }
@@ -1011,13 +899,11 @@ int swan_vk_line_main(int argc, char *argv[])
 	struct swan_vk_command_option opt;
 
 	ret = swan_vk_parse_option(&opt, argc, argv);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	if (ret + 4 > argc)
-	{
+	if (ret + 4 > argc) {
 		pr_red_info("Too a few argument");
 		return -EINVAL;
 	}
@@ -1029,8 +915,7 @@ int swan_vk_line_main(int argc, char *argv[])
 	y1 = text2value_unsigned(argv[3], NULL, 10);
 
 	ret = swan_vk_send_line(&opt, x0, y0, x1, y1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("swan_vk_send_line");
 	}
 
@@ -1044,23 +929,18 @@ int swan_vk_unlock_main(int argc, char *argv[])
 	struct swan_vk_command_option opt;
 
 	ret = swan_vk_parse_option(&opt, argc, argv);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	if (ret < argc)
-	{
+	if (ret < argc) {
 		y = text2value_unsigned(argv[ret], NULL, 10);
-	}
-	else
-	{
+	} else {
 		y = 75;
 	}
 
 	ret = swan_vk_send_line(&opt, 10, y, 90, y);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("swan_vk_send_line");
 	}
 

@@ -19,34 +19,28 @@ int main(int argc, char *argv[])
 	int opt_index;
 	struct filesystem_desc *fs_desc = NULL;
 	off_t length = 0;
-	struct option long_opts[] =
-	{
+	struct option long_opts[] = {
 		{
 			.name = "fs",
 			.has_arg = required_argument,
 			.val = 't',
-		},
-		{
+		}, {
 			.name = "fs_type",
 			.has_arg = required_argument,
 			.val = 't',
-		},
-		{
+		}, {
 			.name = "label",
 			.has_arg = required_argument,
 			.val = 'l',
-		},
-		{
+		}, {
 			.name = "volume",
 			.has_arg = required_argument,
 			.val = 'l',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
-	struct partition_desc part_desc =
-	{
+	struct partition_desc part_desc = {
 		.major = 0,
 		.minor = 0,
 		.flags = 0,
@@ -55,10 +49,8 @@ int main(int argc, char *argv[])
 		.type = -1,
 	};
 
-	while ((c = getopt_long(argc, argv, "s:S:l:L:t:T:", long_opts, &opt_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "s:S:l:L:t:T:", long_opts, &opt_index)) != EOF) {
+		switch (c) {
 		case 't':
 		case 'T':
 			fs_desc = get_fsdesc_by_name(optarg);
@@ -80,28 +72,24 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind >= argc)
-	{
+	if (optind >= argc) {
 		show_usage();
 		return -EINVAL;
 	}
 
-	if (length == 0)
-	{
+	if (length == 0) {
 		return utime(argv[optind], NULL);
 	}
 
 	text_copy(part_desc.path, argv[optind]);
 
 	ret = file_resize(part_desc.path, length);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("file_resize");
 		return ret;
 	}
 
-	if (fs_desc == NULL)
-	{
+	if (fs_desc == NULL) {
 		return 0;
 	}
 

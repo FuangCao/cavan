@@ -23,8 +23,7 @@ bool cavan_mouse_device_match(uint8_t *key_bitmask, uint8_t *rel_bitmask)
 	if (test_bit(BTN_LEFT, key_bitmask) == 0 || \
 		test_bit(BTN_RIGHT, key_bitmask) == 0 || \
 		test_bit(REL_X, rel_bitmask) == 0 || \
-		test_bit(REL_Y, rel_bitmask) == 0)
-	{
+		test_bit(REL_Y, rel_bitmask) == 0) {
 		return false;
 	}
 
@@ -44,15 +43,13 @@ bool cavan_mouse_device_matcher(struct cavan_event_matcher *matcher, void *data)
 	uint8_t rel_bitmask[REL_BITMASK_SIZE];
 
 	ret = cavan_event_get_rel_bitmask(matcher->fd, rel_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_rel_bitmask");
 		return ret;
 	}
 
 	ret = cavan_event_get_key_bitmask(matcher->fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_key_bitmask");
 		return ret;
 	}
@@ -64,11 +61,9 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 {
 	struct cavan_mouse_device *mouse = (struct cavan_mouse_device *) dev;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_KEY:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case BTN_LEFT:
 		case BTN_RIGHT:
 		case BTN_MIDDLE:
@@ -82,8 +77,7 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 		break;
 
 	case EV_REL:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case REL_X:
 			mouse->x = event->value;
 			break;
@@ -103,11 +97,9 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 		break;
 
 	case EV_SYN:
-		if (mouse->x || mouse->y)
-		{
+		if (mouse->x || mouse->y) {
 			if (cavan_input_service_append_vector_message(data, \
-					CAVAN_INPUT_MESSAGE_MOUSE_MOVE, mouse->x, mouse->y, 0))
-			{
+					CAVAN_INPUT_MESSAGE_MOUSE_MOVE, mouse->x, mouse->y, 0)) {
 				mouse->x = mouse->y = 0;
 			}
 		}
@@ -120,14 +112,12 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 	return true;
 }
 
-struct cavan_input_device *cavan_mouse_create(void)
-{
+struct cavan_input_device *cavan_mouse_create(void) {
 	struct cavan_mouse_device *mouse;
 	struct cavan_input_device *dev;
 
 	mouse = malloc(sizeof(*mouse));
-	if (mouse == NULL)
-	{
+	if (mouse == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}

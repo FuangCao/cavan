@@ -12,14 +12,12 @@
 
 #define CAVAN_SCREEN_MIRROR_PORT	1234
 
-struct screen_mirror_info
-{
+struct screen_mirror_info {
 	u32 xres, yres;
 	u32 bytes_per_pixel;
 };
 
-struct screen_mirror_service
-{
+struct screen_mirror_service {
 	struct cavan_service_description service;
 	struct cavan_display_device display;
 	struct screen_mirror_info info;

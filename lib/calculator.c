@@ -11,8 +11,7 @@ u64 double_integer_part_value_base(u64 value)
 	int offset;
 
 	exponent = double_exponent_part_value_base(value);
-	if (exponent < 0)
-	{
+	if (exponent < 0) {
 		return 0;
 	}
 
@@ -27,8 +26,7 @@ u64 double_fractional_part_value_base(u64 value)
 
 	exponent = double_exponent_part_value_base(value);
 	println("exponent = %d", exponent);
-	if (exponent < 0)
-	{
+	if (exponent < 0) {
 		return GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), DOUBLE_CONTENT_SIZE + 1, DOUBLE_CONTENT_OFFSET);
 	}
 
@@ -37,13 +35,11 @@ u64 double_fractional_part_value_base(u64 value)
 
 double angle_adjust(double angle, double min_value, double max_value, double period)
 {
-	while (angle >= max_value)
-	{
+	while (angle >= max_value) {
 		angle -= period;
 	}
 
-	while (angle < min_value)
-	{
+	while (angle < min_value) {
 		angle += period;
 	}
 
@@ -56,8 +52,7 @@ char *get_bracket_pair(const char *formula, const char *formula_end)
 	char left_bracket;
 	char right_bracket;
 
-	switch ((left_bracket = *formula++))
-	{
+	switch ((left_bracket = *formula++)) {
 	case '(':
 		right_bracket = ')';
 		break;
@@ -72,16 +67,11 @@ char *get_bracket_pair(const char *formula, const char *formula_end)
 		return NULL;
 	}
 
-	for (counter = 1; formula < formula_end; formula++)
-	{
-		if (*formula == left_bracket)
-		{
+	for (counter = 1; formula < formula_end; formula++) {
+		if (*formula == left_bracket) {
 			counter++;
-		}
-		else if (*formula == right_bracket)
-		{
-			if (counter <= 1)
-			{
+		} else if (*formula == right_bracket) {
+			if (counter <= 1) {
 				return (char *) formula;
 			}
 
@@ -99,30 +89,25 @@ int check_bracket_match_pair(const char *formula, const char *formula_end)
 	char tmp;
 
 	ret = letter_stack_init(&stack, 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("letter_stack_init");
 		return ret;
 	}
 
-	while (formula < formula_end)
-	{
-		switch (*formula)
-		{
+	while (formula < formula_end) {
+		switch (*formula) {
 		case '(':
 		case '[':
 		case '{':
 			ret = letter_stack_push(&stack, *formula);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("Letter stack overflow");
 				goto out_free_stack;
 			}
 			break;
 
 		case ')':
-			if (letter_stack_pop(&stack, &tmp) < 0 || tmp != '(')
-			{
+			if (letter_stack_pop(&stack, &tmp) < 0 || tmp != '(') {
 				pr_red_info("`%c' is not match", *formula);
 				ret = -EFAULT;
 				goto out_free_stack;
@@ -130,8 +115,7 @@ int check_bracket_match_pair(const char *formula, const char *formula_end)
 			break;
 
 		case ']':
-			if (letter_stack_pop(&stack, &tmp) < 0 || tmp != '[')
-			{
+			if (letter_stack_pop(&stack, &tmp) < 0 || tmp != '[') {
 				pr_red_info("`%c' is not match", *formula);
 				ret = -EFAULT;
 				goto out_free_stack;
@@ -151,12 +135,9 @@ int check_bracket_match_pair(const char *formula, const char *formula_end)
 		formula++;
 	}
 
-	if (letter_stack_is_empty(&stack))
-	{
+	if (letter_stack_is_empty(&stack)) {
 		ret = 0;
-	}
-	else
-	{
+	} else {
 		pr_red_info("Too much left brackets");
 		ret = -EFAULT;
 	}
@@ -169,8 +150,7 @@ out_free_stack:
 
 static int get_operator_priority(char op)
 {
-	switch (op)
-	{
+	switch (op) {
 	case '+':
 	case '-':
 		return 0;
@@ -192,21 +172,18 @@ static int simple_operation2(struct double_stack *stack, char op)
 	double operand1, operand2, result;
 
 	ret = double_stack_pop(stack, &operand2);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("double_stack_pop");
 		return ret;
 	}
 
 	ret = double_stack_pop(stack, &operand1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("double_stack_pop");
 		return ret;
 	}
 
-	switch (op)
-	{
+	switch (op) {
 	case '+':
 		result = operand1 + operand2;
 		break;
@@ -243,36 +220,27 @@ char *double2text_base(u64 value, char *text, int size, char fill, int flags)
 
 	exponent = double_exponent_part_value_base(value);
 	mask = (1LL << (DOUBLE_CONTENT_SIZE - exponent)) - 1;
-	if (exponent < 0)
-	{
+	if (exponent < 0) {
 		integer_value = 0;
 		frational_value = GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), DOUBLE_CONTENT_SIZE + 1, DOUBLE_CONTENT_OFFSET);
-	}
-	else if (exponent < DOUBLE_CONTENT_SIZE)
-	{
+	} else if (exponent < DOUBLE_CONTENT_SIZE) {
 		offset = DOUBLE_CONTENT_SIZE - exponent + DOUBLE_CONTENT_OFFSET;
 		integer_value = GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), exponent + 1, offset);
 		frational_value = value & mask;
-	}
-	else
-	{
+	} else {
 		integer_value = GET_PART_VALUE_LL(value | 1LL << (DOUBLE_CONTENT_OFFSET + DOUBLE_CONTENT_SIZE), DOUBLE_CONTENT_SIZE + 1, DOUBLE_CONTENT_OFFSET) << (exponent - DOUBLE_CONTENT_SIZE);
 		frational_value = 0;
 	}
 
 	frational_value = (frational_value >> DOUBLE_CONTENT_OFFSET) & mask;
 
-	if (value & DOUBLE_SIGN_MASK)
-	{
+	if (value & DOUBLE_SIGN_MASK) {
 		text = value2text_base(-integer_value, text, size, fill, flags);
-	}
-	else
-	{
+	} else {
 		text = value2text_base(integer_value, text, size, fill, flags);
 	}
 
-	if (frational_value == 0)
-	{
+	if (frational_value == 0) {
 		return text;
 	}
 
@@ -281,8 +249,7 @@ char *double2text_base(u64 value, char *text, int size, char fill, int flags)
 
 	*text++ = '.';
 
-	for (i = 0; i < 32 && frational_value; i++)
-	{
+	for (i = 0; i < 32 && frational_value; i++) {
 		frational_value *= base;
 		*text++ = value2char(frational_value >> offset);
 		frational_value &= mask;
@@ -304,54 +271,45 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 	int priority_tmp;
 
 	ret = letter_stack_init(&operator_stack, 100);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("letter_stack_init");
 		return ret;
 	}
 
 	ret = double_stack_init(&data_stack, 100);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("double_stack_init");
 		goto out_free_operator_stack;
 	}
 
-	if (*formula == '+' || *formula == '-')
-	{
+	if (*formula == '+' || *formula == '-') {
 		ret = double_stack_push(&data_stack, 0);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("double_stack_push");
 			goto out_free_data_stack;
 		}
 	}
 
-	while (formula < formula_end)
-	{
-		switch (*formula)
-		{
+	while (formula < formula_end) {
+		switch (*formula) {
 		case '(':
 		case '[':
 		case '{':
 			formula_last = get_bracket_pair(formula, formula_end);
-			if (formula_last == NULL)
-			{
+			if (formula_last == NULL) {
 				print_error("Bracket do't pair");
 				ret = -EINVAL;
 				goto out_free_data_stack;
 			}
 
 			ret = simple_calculation_base(formula + 1, formula_last, &result_tmp);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				error_msg("simple_calculation_base");
 				goto out_free_data_stack;
 			}
 
 			ret = double_stack_push(&data_stack, result_tmp);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				error_msg("double_stack_push");
 				goto out_free_data_stack;
 			}
@@ -362,8 +320,7 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 		case '0' ... '9':
 			result_tmp = text2double_unsigned(formula, formula_end, &formula, 10);
 			ret = double_stack_push(&data_stack, result_tmp);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				error_msg("double_stack_push");
 				goto out_free_data_stack;
 			}
@@ -375,11 +332,9 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 		case '/':
 		case '%':
 			priority_tmp = get_operator_priority(*formula);
-			while (letter_stack_get_top(&operator_stack, &operator_tmp) >= 0 && get_operator_priority(operator_tmp) >= priority_tmp)
-			{
+			while (letter_stack_get_top(&operator_stack, &operator_tmp) >= 0 && get_operator_priority(operator_tmp) >= priority_tmp) {
 				ret = simple_operation2(&data_stack, operator_tmp);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					error_msg("simple_operation2");
 					goto out_free_data_stack;
 				}
@@ -388,8 +343,7 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 			}
 
 			ret = letter_stack_push(&operator_stack, *formula);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				error_msg("letter_stack_push");
 				goto out_free_data_stack;
 			}
@@ -413,29 +367,23 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 	}
 
 label_complete_calculte:
-	while (letter_stack_pop(&operator_stack, &operator_tmp) >= 0)
-	{
+	while (letter_stack_pop(&operator_stack, &operator_tmp) >= 0) {
 		ret = simple_operation2(&data_stack, operator_tmp);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("simple_operation2");
 			return ret;
 		}
 	}
 
 	ret = double_stack_pop(&data_stack, result_last);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("double_stack_pop");
 		goto out_free_data_stack;
 	}
 
-	if (double_stack_is_empty(&data_stack))
-	{
+	if (double_stack_is_empty(&data_stack)) {
 		ret = 0;
-	}
-	else
-	{
+	} else {
 		error_msg("data stack is not empty");
 		ret = -EFAULT;
 	}
@@ -456,15 +404,13 @@ int simple_calculation(const char *formula, double *result_last)
 	// println("formula = %s", formula);
 
 	ret = check_bracket_match_pair(formula, formula_end);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("check_bracket_match_pair");
 		return ret;
 	}
 
 	ret = simple_calculation_base(formula, formula_end, result_last);
-	if(ret < 0)
-	{
+	if(ret < 0) {
 		error_msg("simple_calculator_base");
 		return ret;
 	}
@@ -482,21 +428,18 @@ static int complete_operation2(const struct calculator_operator_descriptor *desc
 	double result;
 
 	ret = double_stack_pop(stack_operand, &right_operand);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Too a few operand");
 		return ret;
 	}
 
 	ret = double_stack_pop(stack_operand, &left_operand);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Too a few operand");
 		return ret;
 	}
 
-	switch (desc->id)
-	{
+	switch (desc->id) {
 	case OPERATOR_ADD_ID:
 		result = left_operand + right_operand;
 		break;
@@ -507,16 +450,14 @@ static int complete_operation2(const struct calculator_operator_descriptor *desc
 		result = left_operand * right_operand;
 		break;
 	case OPERATOR_DIV_ID:
-		if (right_operand == 0)
-		{
+		if (right_operand == 0) {
 			pr_red_info("divide zero");
 			return -EINVAL;
 		}
 		result = left_operand / right_operand;
 		break;
 	case OPERATOR_MOD_ID:
-		if (right_operand == 0)
-		{
+		if (right_operand == 0) {
 			pr_red_info("divide zero");
 			return -EINVAL;
 		}
@@ -532,18 +473,13 @@ static int complete_operation2(const struct calculator_operator_descriptor *desc
 		result = ((u32) left_operand) ^ ((u32) right_operand);
 		break;
 	case OPERATOR_LEFT_ID:
-		if (right_operand > 0)
-		{
-			while (right_operand > 0)
-			{
+		if (right_operand > 0) {
+			while (right_operand > 0) {
 				left_operand *= 2;
 				right_operand--;
 			}
-		}
-		else
-		{
-			while (right_operand < 0)
-			{
+		} else {
+			while (right_operand < 0) {
 				left_operand /= 2;
 				right_operand++;
 			}
@@ -551,18 +487,13 @@ static int complete_operation2(const struct calculator_operator_descriptor *desc
 		result = left_operand;
 		break;
 	case OPERATOR_RIGHT_ID:
-		if (right_operand > 0)
-		{
-			while (right_operand > 0)
-			{
+		if (right_operand > 0) {
+			while (right_operand > 0) {
 				left_operand /= 2;
 				right_operand--;
 			}
-		}
-		else
-		{
-			while (right_operand < 0)
-			{
+		} else {
+			while (right_operand < 0) {
 				left_operand *= 2;
 				right_operand++;
 			}
@@ -573,8 +504,7 @@ static int complete_operation2(const struct calculator_operator_descriptor *desc
 		result = pow(left_operand, right_operand);
 		break;
 	case OPERATOR_SQRT_ID:
-		if (left_operand == 0)
-		{
+		if (left_operand == 0) {
 			pr_red_info("Can't sqrt by 0");
 			return -EINVAL;
 		}
@@ -595,14 +525,12 @@ static int complete_operation1_left(const struct calculator_operator_descriptor 
 	double result;
 
 	ret = double_stack_pop(stack_operand, &operand);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Too a few operand");
 		return ret;
 	}
 
-	switch (desc->id)
-	{
+	switch (desc->id) {
 	case OPERATOR_NEG_ID:
 		result = ~((u32) operand);
 		break;
@@ -616,8 +544,7 @@ static int complete_operation1_left(const struct calculator_operator_descriptor 
 		break;
 	case OPERATOR_TAN_ID:
 		operand = angle_adjust(operand, 0, 180, 180);
-		if (operand == 90)
-		{
+		if (operand == 90) {
 			pr_red_info("angle = %lf", operand);
 			return -EINVAL;
 		}
@@ -625,24 +552,21 @@ static int complete_operation1_left(const struct calculator_operator_descriptor 
 		break;
 	case OPERATOR_COT_ID:
 		operand = angle_adjust(90 - operand, 0, 180, 180);
-		if (operand == 90)
-		{
+		if (operand == 90) {
 			pr_red_info("angle = %lf", operand);
 			return -EINVAL;
 		}
 		result = tan(angle2radian(operand));
 		break;
 	case OPERATOR_ASIN_ID:
-		if (operand > 1 || operand < -1)
-		{
+		if (operand > 1 || operand < -1) {
 			pr_red_info("asin operand = %lf", operand);
 			return -EINVAL;
 		}
 		result = radian2angle(asin(operand));
 		break;
 	case OPERATOR_ACOS_ID:
-		if (operand > 1 || operand < -1)
-		{
+		if (operand > 1 || operand < -1) {
 			pr_red_info("acos operand = %lf", operand);
 			return -EINVAL;
 		}
@@ -658,8 +582,7 @@ static int complete_operation1_left(const struct calculator_operator_descriptor 
 		result = fabs(operand);
 		break;
 	case OPERATOR_RECI_ID:
-		if (operand == 0)
-		{
+		if (operand == 0) {
 			pr_red_info("Can't calculation reciprocal of 0");
 			return -EINVAL;
 		}
@@ -679,17 +602,14 @@ static int complete_operation1_right(const struct calculator_operator_descriptor
 	double operand, result;
 
 	ret = double_stack_pop(stack_operand, &operand);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Too a few operand");
 		return ret;
 	}
 
-	switch (desc->id)
-	{
+	switch (desc->id) {
 	case OPERATOR_FACT_ID:
-		for (result = 1; operand > 1; operand--)
-		{
+		for (result = 1; operand > 1; operand--) {
 			result *= operand;
 		}
 		break;
@@ -705,8 +625,7 @@ static int complete_operation_const(const struct calculator_operator_descriptor 
 {
 	double result;
 
-	switch (desc->id)
-	{
+	switch (desc->id) {
 	case OPERATOR_PI_ID:
 		result = PI;
 		break;
@@ -726,176 +645,151 @@ static const struct calculator_operator_descriptor operator_descs[] =
 		.priority = OPERATOR_PRIORITY_ADD,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "-", "sub", NULL },
 		.id = OPERATOR_SUB_ID,
 		.priority = OPERATOR_PRIORITY_SUB,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "*", "x", "mul", NULL },
 		.id = OPERATOR_MUL_ID,
 		.priority = OPERATOR_PRIORITY_MUL,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "/", "div", NULL },
 		.id = OPERATOR_DIV_ID,
 		.priority = OPERATOR_PRIORITY_DIV,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "%", "mod", NULL },
 		.id = OPERATOR_MOD_ID,
 		.priority = OPERATOR_PRIORITY_MOD,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "&", "and", NULL },
 		.id = OPERATOR_AND_ID,
 		.priority = OPERATOR_PRIORITY_AND,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "|", "or", NULL },
 		.id = OPERATOR_OR_ID,
 		.priority = OPERATOR_PRIORITY_OR,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "~", "neg", NULL },
 		.id = OPERATOR_NEG_ID,
 		.priority = OPERATOR_PRIORITY_NEG,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "xor", NULL },
 		.id = OPERATOR_XOR_ID,
 		.priority = OPERATOR_PRIORITY_XOR,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "<<", "left", NULL },
 		.id = OPERATOR_LEFT_ID,
 		.priority = OPERATOR_PRIORITY_LEFT,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { ">>", "right", NULL },
 		.id = OPERATOR_RIGHT_ID,
 		.priority = OPERATOR_PRIORITY_RIGHT,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "sin", NULL },
 		.id = OPERATOR_SIN_ID,
 		.priority = OPERATOR_PRIORITY_SIN,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "cos", NULL },
 		.id = OPERATOR_COS_ID,
 		.priority = OPERATOR_PRIORITY_COS,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "tan", NULL },
 		.id = OPERATOR_TAN_ID,
 		.priority = OPERATOR_PRIORITY_TAN,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "cot", NULL },
 		.id = OPERATOR_COT_ID,
 		.priority = OPERATOR_PRIORITY_COT,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "asin", NULL },
 		.id = OPERATOR_ASIN_ID,
 		.priority = OPERATOR_PRIORITY_ASIN,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "acos", NULL },
 		.id = OPERATOR_ACOS_ID,
 		.priority = OPERATOR_PRIORITY_ACOS,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "atan", NULL },
 		.id = OPERATOR_ATAN_ID,
 		.priority = OPERATOR_PRIORITY_ATAN,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "acot", NULL },
 		.id = OPERATOR_ACOT_ID,
 		.priority = OPERATOR_PRIORITY_ACOT,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "^", "**", "pow", NULL },
 		.id = OPERATOR_POW_ID,
 		.priority = OPERATOR_PRIORITY_POW,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "sqrt", NULL },
 		.id = OPERATOR_SQRT_ID,
 		.priority = OPERATOR_PRIORITY_SQRT,
 		.need_push = true,
 		.calculation = complete_operation2,
-	},
-	{
+	}, {
 		.symbols = { "abs", NULL },
 		.id = OPERATOR_ABS_ID,
 		.priority = OPERATOR_PRIORITY_ABS,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "reci", NULL },
 		.id = OPERATOR_RECI_ID,
 		.priority = OPERATOR_PRIORITY_RECI,
 		.need_push = true,
 		.calculation = complete_operation1_left,
-	},
-	{
+	}, {
 		.symbols = { "!", "fact", NULL },
 		.id = OPERATOR_FACT_ID,
 		.priority = OPERATOR_PRIORITY_FACT,
 		.need_push = false,
 		.calculation = complete_operation1_right,
-	},
-	{
+	}, {
 		.symbols = { "@", "base", NULL },
 		.id = OPERATOR_BASE_ID,
 		.priority = OPERATOR_PRIORITY_BASE,
 		.need_push = false,
 		.calculation = NULL,
-	},
-	{
+	}, {
 		.symbols = { "pi", NULL },
 		.id = OPERATOR_PI_ID,
 		.priority = OPERATOR_PRIORITY_PI,
@@ -908,14 +802,11 @@ const struct calculator_operator_descriptor *get_formula_operator(const char *fo
 {
 	const struct calculator_operator_descriptor *p;
 
-	for (p = operator_descs + NELEM(operator_descs) - 1; p >= operator_descs; p--)
-	{
+	for (p = operator_descs + NELEM(operator_descs) - 1; p >= operator_descs; p--) {
 		int i;
 
-		for (i = 0; p->symbols[i]; i++)
-		{
-			if (text_lhcmp(p->symbols[i], formula) == 0)
-			{
+		for (i = 0; p->symbols[i]; i++) {
+			if (text_lhcmp(p->symbols[i], formula) == 0) {
 				*formula_last = formula + text_len(p->symbols[i]);
 				return p;
 			}
@@ -934,28 +825,23 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 	struct double_stack stack_operand;
 
 	ret = general_stack_init_fd(&stack_operator, 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("general_stack_init_fd");
 		return ret;
 	}
 
 	ret = double_stack_init(&stack_operand, 20);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("double_stack_init");
 		goto out_operator_stack_free;
 	}
 
-	if (*formula == '+' || *formula == '-')
-	{
+	if (*formula == '+' || *formula == '-') {
 		double_stack_push(&stack_operand, 0);
 	}
 
-	while (formula < formula_end)
-	{
-		switch (*formula)
-		{
+	while (formula < formula_end) {
+		switch (*formula) {
 		case ' ':
 		case '\t':
 		case '\r':
@@ -966,22 +852,19 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 		case '[':
 		case '{':
 			formula_last = get_bracket_pair(formula, formula_end);
-			if (formula_last == NULL)
-			{
+			if (formula_last == NULL) {
 				print_error("Bracket do't pair");
 				ret = -EINVAL;
 				goto out_operand_stack_free;
 			}
 
 			ret = complete_calculation_base(formula + 1, formula_last, result_last);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				goto out_operand_stack_free;
 			}
 
 			ret = double_stack_push(&stack_operand, *result_last);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("Operand stack overflow");
 				goto out_operand_stack_free;
 			}
@@ -992,8 +875,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 		case '0' ... '9':
 			*result_last = text2double_unsigned(formula, formula_end, &formula, 10);
 			ret = double_stack_push(&stack_operand, *result_last);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("Operand stack overflow");
 				goto out_operand_stack_free;
 			}
@@ -1001,45 +883,38 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 
 		default:
 			desc = get_formula_operator(formula, &formula_last);
-			if (desc == NULL)
-			{
+			if (desc == NULL) {
 				pr_red_info("invalid formula `%s'", formula);
 				ret = -EINVAL;
 				goto out_operand_stack_free;
 			}
 
-			if (desc->calculation == NULL)
-			{
+			if (desc->calculation == NULL) {
 				double operand, result;
 
-				switch (desc->id)
-				{
+				switch (desc->id) {
 				case OPERATOR_BASE_ID:
 					ret = double_stack_pop(&stack_operand, &operand);
-					if (ret < 0)
-					{
+					if (ret < 0) {
 						pr_red_info("Too much operator");
 						ret = -EINVAL;
 						goto out_operand_stack_free;
 					}
 
-					if (operand < 2)
-					{
+					if (operand < 2) {
 						pr_red_info("invalid base value `%lf'", operand);
 						ret = -EINVAL;
 						goto out_operand_stack_free;
 					}
 
-					if (formula_last >= formula_end)
-					{
+					if (formula_last >= formula_end) {
 						pr_red_info("Too a few operand");
 						ret = -EINVAL;
 						goto out_operand_stack_free;
 					}
 
 					ret = char2value(*formula_last);
-					if (ret < 0 || ret >= operand)
-					{
+					if (ret < 0 || ret >= operand) {
 						pr_red_info("invalid formula `%s'", formula_last);
 						ret = -EINVAL;
 						goto out_operand_stack_free;
@@ -1055,36 +930,28 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 				}
 			}
 
-			while (1)
-			{
+			while (1) {
 				operator_top = general_stack_get_top_fd(&stack_operator);
-				if (operator_top == NULL || operator_top->priority < desc->priority)
-				{
+				if (operator_top == NULL || operator_top->priority < desc->priority) {
 					break;
 				}
 
 				general_stack_pop_fd(&stack_operator);
 
 				ret = operator_top->calculation(operator_top, &stack_operand);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					goto out_operand_stack_free;
 				}
 			}
 
-			if (desc->need_push == false)
-			{
+			if (desc->need_push == false) {
 				ret = desc->calculation(desc, &stack_operand);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					goto out_operand_stack_free;
 				}
-			}
-			else
-			{
+			} else {
 				ret = general_stack_push_fd(&stack_operator, (void *) desc);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					pr_red_info("Operator stack overflow");
 					goto out_operand_stack_free;
 				}
@@ -1095,34 +962,27 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 		formula++;
 	}
 
-	while (1)
-	{
+	while (1) {
 		operator_top = general_stack_pop_fd(&stack_operator);
-		if (operator_top == NULL)
-		{
+		if (operator_top == NULL) {
 			break;
 		}
 
 		ret = operator_top->calculation(operator_top, &stack_operand);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			goto out_operand_stack_free;
 		}
 	}
 
 	ret = double_stack_pop(&stack_operand, result_last);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("Too a few operand");
 		goto out_operand_stack_free;
 	}
 
-	if (double_stack_is_empty(&stack_operand))
-	{
+	if (double_stack_is_empty(&stack_operand)) {
 		ret = 0;
-	}
-	else
-	{
+	} else {
 		pr_red_info("Too much operand");
 		ret = -EINVAL;
 	}
@@ -1143,8 +1003,7 @@ int complete_calculation(const char *formula, double *result_last)
 	// println("formula = %s", formula);
 
 	ret = check_bracket_match_pair(formula, formula_end);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 

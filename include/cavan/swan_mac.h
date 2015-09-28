@@ -12,8 +12,7 @@
 #define I600_BT_MAC_FILE		"etc/bluetooth/BC6888.psr"
 #define I200_BT_MAC_FILE		"etc/bluetooth/BC6QFN.psr"
 
-struct oem_info
-{
+struct oem_info {
 	u8 flags;
 	char sn[MAX_SN_LEN];
 	char wifi_mac[WIFI_MAC_LEN];

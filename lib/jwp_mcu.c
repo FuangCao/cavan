@@ -40,8 +40,7 @@ static void jwp_mcu_proccess_package(struct jwp_package_receiver *receiver)
 	struct jwp_mcu_header *hdr = &pkg->header;
 	struct jwp_mcu_desc *mcu = (struct jwp_mcu_desc *) jwp_package_receiver_get_private_data(receiver);
 
-	switch (hdr->type)
-	{
+	switch (hdr->type) {
 	case MCU_REQ_IDENTIFY:
 #if JWP_PRINTF_ENABLE
 		jwp_printf("MCU_REQ_IDENTIFY\n");
@@ -697,8 +696,7 @@ static void jwp_mcu_command_received(struct jwp_desc *jwp, const void *command, 
 	struct jwp_mcu_desc *mcu = (struct jwp_mcu_desc *) jwp_get_private_data(jwp);
 	struct jwp_csr_header *hdr;
 
-	if (size < sizeof(struct jwp_csr_header))
-	{
+	if (size < sizeof(struct jwp_csr_header)) {
 		return;
 	}
 
@@ -706,10 +704,8 @@ static void jwp_mcu_command_received(struct jwp_desc *jwp, const void *command, 
 #if JWP_PRINTF_ENABLE
 	jwp_printf("csr event type = %d\n", hdr->type);
 #endif
-	switch (hdr->type)
-	{
-	case JWP_CSR_EVENT_STATE:
-		{
+	switch (hdr->type) {
+	case JWP_CSR_EVENT_STATE: {
 			struct jwp_csr_event_state *event = (struct jwp_csr_event_state *) command;
 
 			mcu->csr_state = (app_state) event->state;
@@ -718,8 +714,7 @@ static void jwp_mcu_command_received(struct jwp_desc *jwp, const void *command, 
 		}
 		break;
 
-	case JWP_CSR_RESPONSE:
-		{
+	case JWP_CSR_RESPONSE: {
 			struct jwp_csr_response_package *rsp = (struct jwp_csr_response_package *) command;
 
 #if JWP_PRINTF_ENABLE
@@ -814,8 +809,7 @@ jwp_bool jwp_mcu_send_package(struct jwp_mcu_desc *mcu, jwp_u8 type, const void 
 {
 	struct jwp_mcu_header hdr;
 
-	if (size > JWP_MCU_MAX_PAYLOAD)
-	{
+	if (size > JWP_MCU_MAX_PAYLOAD) {
 #if JWP_SHOW_ERROR
 		jwp_printf("package too large!");
 #endif
@@ -827,13 +821,11 @@ jwp_bool jwp_mcu_send_package(struct jwp_mcu_desc *mcu, jwp_u8 type, const void 
 	hdr.type = type;
 	hdr.length = (jwp_u8) size;
 
-	if (!jwp_send_data_all(mcu->jwp, (jwp_u8 *) &hdr, sizeof(hdr)))
-	{
+	if (!jwp_send_data_all(mcu->jwp, (jwp_u8 *) &hdr, sizeof(hdr))) {
 		return false;
 	}
 
-	if (size > 0)
-	{
+	if (size > 0) {
 		return jwp_send_data_all(mcu->jwp, (jwp_u8 *) data, size);
 	}
 

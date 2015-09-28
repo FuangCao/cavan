@@ -7,15 +7,13 @@
 
 #define INOTIFY_MAX_WATCH_COUNT 1024
 
-struct cavan_inotify_watch
-{
+struct cavan_inotify_watch {
 	int wd;
 	void *data;
 	char pathname[256];
 };
 
-struct cavan_inotify_descriptor
-{
+struct cavan_inotify_descriptor {
 	int fd;
 	void *private_data;
 	size_t watch_count;

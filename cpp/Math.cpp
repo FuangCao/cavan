@@ -36,8 +36,7 @@ bool Operator::match(const char *name)
 
 int Operator::compare(Operator *left, Operator *right)
 {
-	if (left->mLength == right->mLength)
-	{
+	if (left->mLength == right->mLength) {
 		return strcmp(left->mSymbol, right->mSymbol);
 	}
 
@@ -48,13 +47,11 @@ bool Operator::execute(Stack<double> &stackData, Stack<double> &stackResult)
 {
 	double result;
 
-	if (!execute(stackData, result))
-	{
+	if (!execute(stackData, result)) {
 		return false;
 	}
 
-	if (!stackResult.push(result))
-	{
+	if (!stackResult.push(result)) {
 		setErrMsg("Data stack overfrow");
 		return false;
 	}
@@ -66,8 +63,7 @@ bool Operator::execute(Stack<double> &stackData, Stack<double> &stackResult)
 
 bool OperatorF1::execute(Stack<double> &stack, double &result)
 {
-	if (!stack.pop(result))
-	{
+	if (!stack.pop(result)) {
 		setErrMsg("Missing operand");
 		return false;
 	}
@@ -78,15 +74,13 @@ bool OperatorF1::execute(Stack<double> &stack, double &result)
 bool OperatorN1::execute(double &value)
 {
 	ulong nValue = value;
-	if (nValue != value)
-	{
+	if (nValue != value) {
 		setErrMsg("Need a integer");
 		return false;
 	}
 
 	bool res = execute(nValue);
-	if (res)
-	{
+	if (res) {
 		value = nValue;
 	}
 
@@ -97,8 +91,7 @@ bool OperatorFactorial::execute(ulong &value)
 {
 	ulong step;
 
-	for (step = value, value = 1; step > 1; step--)
-	{
+	for (step = value, value = 1; step > 1; step--) {
 		value *= step;
 	}
 
@@ -111,8 +104,7 @@ bool OperatorF2::execute(Stack<double> &stack, double &result)
 {
 	double left, right;
 
-	if (!(stack.pop(right) && stack.pop(left)))
-	{
+	if (!(stack.pop(right) && stack.pop(left))) {
 		setErrMsg("Missing operand");
 		return false;
 	}
@@ -126,15 +118,13 @@ bool OperatorN2::execute(double left, double right, double &result)
 	ulong nLeft = left;
 	ulong nRight = right;
 
-	if (nLeft != left || nRight != right)
-	{
+	if (nLeft != left || nRight != right) {
 		setErrMsg("Need a integer");
 		return false;
 	}
 
 	bool res = execute(nLeft, nRight, nResult);
-	if (res)
-	{
+	if (res) {
 		result = nResult;
 	}
 
@@ -143,8 +133,7 @@ bool OperatorN2::execute(double left, double right, double &result)
 
 bool OperatorDiv::execute(double left, double right, double &result)
 {
-	if (right == 0)
-	{
+	if (right == 0) {
 		setErrMsg("Divide by zero");
 		return false;
 	}
@@ -155,8 +144,7 @@ bool OperatorDiv::execute(double left, double right, double &result)
 
 bool OperatorMod::execute(double left, double right, double &result)
 {
-	if (right == 0)
-	{
+	if (right == 0) {
 		setErrMsg("Divide by zero");
 		return false;
 	}
@@ -172,8 +160,7 @@ bool OperatorAvg::execute(Stack<double> &stack, double &result)
 	OperatorSum sum;
 	int count = stack.count();
 
-	if (!sum.execute(stack, result))
-	{
+	if (!sum.execute(stack, result)) {
 		setErrMsg(sum.getErrMsg());
 		return false;
 	}
@@ -194,17 +181,14 @@ bool OperatorSum::execute(Stack<double> &stack, double &result)
 
 bool OperatorMin::execute(Stack<double> &stack, double &result)
 {
-	if (!stack.pop(result))
-	{
+	if (!stack.pop(result)) {
 		return false;
 	}
 
 	double value;
 
-	while (stack.pop(value))
-	{
-		if (value < result)
-		{
+	while (stack.pop(value)) {
+		if (value < result) {
 			result = value;
 		}
 	}
@@ -214,17 +198,14 @@ bool OperatorMin::execute(Stack<double> &stack, double &result)
 
 bool OperatorMax::execute(Stack<double> &stack, double &result)
 {
-	if (!stack.pop(result))
-	{
+	if (!stack.pop(result)) {
 		return false;
 	}
 
 	double value;
 
-	while (stack.pop(value))
-	{
-		if (value > result)
-		{
+	while (stack.pop(value)) {
+		if (value > result) {
 			result = value;
 		}
 	}
@@ -237,8 +218,7 @@ bool OperatorMax::execute(Stack<double> &stack, double &result)
 bool OperatorTrigonometric::executeAngle(double &value)
 {
 	value = angleAdjust(value);
-	if (!checkAngle(value))
-	{
+	if (!checkAngle(value)) {
 		setErrMsg("Invalid trigonometric angle");
 		return false;
 	}
@@ -250,20 +230,17 @@ bool OperatorTrigonometric::executeAngle(double &value)
 
 bool OperatorTrigonometricArc::executeAngle(double &value)
 {
-	if (!checkValue(value))
-	{
+	if (!checkValue(value)) {
 		setErrMsg("Invalid arc trigonometric value");
 		return false;
 	}
 
-	if (!executeRadian(value))
-	{
+	if (!executeRadian(value)) {
 		return false;
 	}
 
 	value = radian2angle(value);
-	if (!checkAngle(value))
-	{
+	if (!checkAngle(value)) {
 		setErrMsg("Invalid trigonometric angle");
 		return false;
 	}
@@ -277,8 +254,7 @@ List<Operator *> Calculator::sListOperator(100);
 
 Calculator::Calculator() : mStackOperand(100), mStackOperator(100), mErrMsg("unknown")
 {
-	if (sListOperator.isEmpty())
-	{
+	if (sListOperator.isEmpty()) {
 		sListOperator.append(new OperatorAdd());
 		sListOperator.append(new OperatorAdd("add"));
 		sListOperator.append(new OperatorSub());
@@ -339,10 +315,8 @@ Operator *Calculator::matchOperator(const char *formula)
 	Operator **p;
 
 	sListOperator.start();
-	while ((p = sListOperator.next()))
-	{
-		if ((*p)->match(formula))
-		{
+	while ((p = sListOperator.next())) {
+		if ((*p)->match(formula)) {
 			return *p;
 		}
 	}
@@ -362,18 +336,13 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 	mStackOperator.clear();
 	mLastFieldType = FIELD_TYPE_NONE;
 
-	while (formula < formula_end)
-	{
+	while (formula < formula_end) {
 		Operator *op = matchOperator(formula);
-		if (op)
-		{
+		if (op) {
 			Operator *top;
-			if (mStackOperator.top(top))
-			{
-				if (top->getPriority() <= op->getPriority())
-				{
-					if (!top->execute(mStackOperand))
-					{
+			if (mStackOperator.top(top)) {
+				if (top->getPriority() <= op->getPriority()) {
+					if (!top->execute(mStackOperand)) {
 						setErrMsg(top->getErrMsg());
 						return false;
 					}
@@ -382,21 +351,17 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				}
 			}
 
-			if (op->getOmitMul() && mLastFieldType == FIELD_TYPE_VALUE && mStackOperand.hasData())
-			{
+			if (op->getOmitMul() && mLastFieldType == FIELD_TYPE_VALUE && mStackOperand.hasData()) {
 				Operator *mul = matchOperator("*");
-				if (mul)
-				{
+				if (mul) {
 					mStackOperator.push(mul);
 				}
 			}
 
-			switch (op->getType())
-			{
+			switch (op->getType()) {
 			case OPERATOR_TYPE2:
 			case OPERATOR_TYPE1_RIGHT:
-				if (!mStackOperator.push(op))
-				{
+				if (!mStackOperator.push(op)) {
 					setErrMsg("Operator stack overfrow");
 					return false;
 				}
@@ -406,8 +371,7 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 
 			case OPERATOR_TYPE1_LEFT:
 			case OPERATOR_TYPE_CONSTANT:
-				if (!op->execute(mStackOperand))
-				{
+				if (!op->execute(mStackOperand)) {
 					setErrMsg(op->getErrMsg());
 					return false;
 				}
@@ -415,16 +379,13 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 				formula += op->getLength();
 				break;
 
-			case OPERATOR_TYPE_LIST:
-			{
+			case OPERATOR_TYPE_LIST: {
 				Stack<double> stack(200);
-				if (!parseDataList(formula + op->getLength(), formula_end, &formula, stack))
-				{
+				if (!parseDataList(formula + op->getLength(), formula_end, &formula, stack)) {
 					return false;
 				}
 
-				if (!op->execute(stack, mStackOperand))
-				{
+				if (!op->execute(stack, mStackOperand)) {
 					setErrMsg(op->getErrMsg());
 					return false;
 				}
@@ -437,11 +398,8 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 			}
 
 			mLastFieldType = FIELD_TYPE_OPERATOR;
-		}
-		else
-		{
-			switch (*formula)
-			{
+		} else {
+			switch (*formula) {
 			case ' ':
 			case '\r':
 			case '\n':
@@ -452,18 +410,15 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 
 			case '0' ... '9':
 				value = text2double_unsigned(formula, formula_end, &formula, 10);
-				if (mLastFieldType == FIELD_TYPE_OPERATOR && mStackOperator.count() == 1 && mStackOperand.isEmpty())
-				{
+				if (mLastFieldType == FIELD_TYPE_OPERATOR && mStackOperator.count() == 1 && mStackOperand.isEmpty()) {
 					Operator *op;
-					if (mStackOperator.top(op) && strcmp(op->getSymbol(), "-") == 0)
-					{
+					if (mStackOperator.top(op) && strcmp(op->getSymbol(), "-") == 0) {
 						value = -value;
 						mStackOperator.pop(op);
 					}
 				}
 
-				if (!mStackOperand.push(value))
-				{
+				if (!mStackOperand.push(value)) {
 					setErrMsg("Operand stack overfrow");
 					return false;
 				}
@@ -475,21 +430,18 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 			case '{':
 			{
 				const char *p = get_bracket_pair(formula, formula_end);
-				if (p == NULL)
-				{
+				if (p == NULL) {
 					setErrMsg("No matching brackets");
 					return false;
 				}
 
 				Calculator calculator;
-				if (!calculator.execute(formula + 1, p, value))
-				{
+				if (!calculator.execute(formula + 1, p, value)) {
 					setErrMsg(calculator.getErrMsg());
 					return false;
 				}
 
-				if (!mStackOperand.push(value))
-				{
+				if (!mStackOperand.push(value)) {
 					setErrMsg("Operand stack overfrow");
 					return false;
 				}
@@ -506,29 +458,24 @@ bool Calculator::execute(const char *formula, const char *formula_end, double &r
 		}
 	}
 
-	while (1)
-	{
+	while (1) {
 		Operator *op;
-		if (!mStackOperator.pop(op))
-		{
+		if (!mStackOperator.pop(op)) {
 			break;
 		}
 
-		if (!op->execute(mStackOperand))
-		{
+		if (!op->execute(mStackOperand)) {
 			setErrMsg(op->getErrMsg());
 			return false;
 		}
 	}
 
-	if (!mStackOperand.pop(result))
-	{
+	if (!mStackOperand.pop(result)) {
 		setErrMsg("Missing operand");
 		return false;
 	}
 
-	if (mStackOperand.hasData())
-	{
+	if (mStackOperand.hasData()) {
 		setErrMsg("Too much operand");
 		return false;
 	}
@@ -540,8 +487,7 @@ bool Calculator::execute(const char *formula, double &result)
 {
 	const char *formula_end = formula + strlen(formula);
 
-	if (check_bracket_match_pair(formula, formula_end) < 0)
-	{
+	if (check_bracket_match_pair(formula, formula_end) < 0) {
 		setErrMsg("No matching brackets");
 		return false;
 	}
@@ -551,20 +497,17 @@ bool Calculator::execute(const char *formula, double &result)
 
 bool Calculator::parseDataList(const char *formula, const char *formula_end, const char **last, Stack<double> &stack)
 {
-	while (formula < formula_end && cavan_isspace(*formula))
-	{
+	while (formula < formula_end && cavan_isspace(*formula)) {
 		formula++;
 	}
 
-	if (!cavan_isbracket_left(*formula))
-	{
+	if (!cavan_isbracket_left(*formula)) {
 		setErrMsg("Need a bracket");
 		return false;
 	}
 
 	formula_end = get_bracket_pair(formula, formula_end);
-	if (formula_end == NULL)
-	{
+	if (formula_end == NULL) {
 		setErrMsg("Bracket not pair");
 		return false;
 	}
@@ -572,50 +515,35 @@ bool Calculator::parseDataList(const char *formula, const char *formula_end, con
 	int bracket = 0;
 	const char *formula_tail = ++formula;
 
-	while (1)
-	{
-		if (formula_tail >= formula_end || (*formula_tail == ',' && bracket == 0))
-		{
+	while (1) {
+		if (formula_tail >= formula_end || (*formula_tail == ',' && bracket == 0)) {
 			double value;
 			Calculator calculator;
 
-			if (formula == formula_tail)
-			{
+			if (formula == formula_tail) {
 				value = 0;
-			}
-			else if (!calculator.execute(formula, formula_tail, value))
-			{
+			} else if (!calculator.execute(formula, formula_tail, value)) {
 				setErrMsg(calculator.getErrMsg());
 				return false;
 			}
 
-			if (!stack.push(value))
-			{
+			if (!stack.push(value)) {
 				setErrMsg("Data stack overfrow");
 				return false;
 			}
 
-			if (formula_tail >= formula_end)
-			{
+			if (formula_tail >= formula_end) {
 				break;
 			}
 
 			formula = ++formula_tail;
-		}
-		else
-		{
-			if (cavan_isbracket(*formula_tail))
-			{
-				if (cavan_isbracket_left(*formula_tail))
-				{
+		} else {
+			if (cavan_isbracket(*formula_tail)) {
+				if (cavan_isbracket_left(*formula_tail)) {
 					bracket++;
-				}
-				else if (bracket > 0)
-				{
+				} else if (bracket > 0) {
 					bracket--;
-				}
-				else
-				{
+				} else {
 					setErrMsg("Bracket is not pair");
 					return false;
 				}

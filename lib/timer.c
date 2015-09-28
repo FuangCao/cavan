@@ -14,8 +14,7 @@ u64 clock_gettime_ns(clockid_t clk)
 	struct timespec time;
 
 	ret = clock_gettime(clk, &time);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("clock_gettime");
 		return ret;
 	}
@@ -29,8 +28,7 @@ u64 clock_gettime_us(clockid_t clk)
 	struct timespec time;
 
 	ret = clock_gettime(clk, &time);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("clock_gettime");
 		return ret;
 	}
@@ -44,8 +42,7 @@ u64 clock_gettime_ms(clockid_t clk)
 	struct timespec time;
 
 	ret = clock_gettime(clk, &time);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("clock_gettime");
 		return ret;
 	}
@@ -55,23 +52,19 @@ u64 clock_gettime_ms(clockid_t clk)
 
 int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2)
 {
-	if (t1->tv_sec > t2->tv_sec)
-	{
+	if (t1->tv_sec > t2->tv_sec) {
 		return 1;
 	}
 
-	if (t1->tv_sec < t2->tv_sec)
-	{
+	if (t1->tv_sec < t2->tv_sec) {
 		return -1;
 	}
 
-	if (t1->tv_nsec > t2->tv_nsec)
-	{
+	if (t1->tv_nsec > t2->tv_nsec) {
 		return 1;
 	}
 
-	if (t1->tv_nsec < t2->tv_nsec)
-	{
+	if (t1->tv_nsec < t2->tv_nsec) {
 		return -1;
 	}
 
@@ -137,8 +130,7 @@ static int cavan_timer_insert_base(struct cavan_timer_service *service, struct c
 
 int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *timer, u32 timeout)
 {
-	if (timer->handler == NULL)
-	{
+	if (timer->handler == NULL) {
 		pr_red_info("timer->handler == NULL");
 
 		return -EINVAL;
@@ -173,14 +165,12 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, void *data)
 	pthread_mutex_lock(&service->lock);
 
 	node = double_link_get_first_node(link);
-	if (node)
-	{
+	if (node) {
 		int delay;
 		struct cavan_timer *timer = double_link_get_container(link, node);
 
 		delay = cavan_real_timespec_diff(&timer->time);
-		if (delay > 0)
-		{
+		if (delay > 0) {
 			service->timer_waiting = timer;
 
 			pthread_mutex_unlock(&service->lock);
@@ -189,9 +179,7 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, void *data)
 
 			service->timer_waiting = NULL;
 			pthread_mutex_unlock(&service->lock);
-		}
-		else
-		{
+		} else {
 			double_link_remove(link, node);
 			service->timer_running = timer;
 
@@ -203,16 +191,13 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, void *data)
 			service->timer_running = NULL;
 			service->timer_last_run = timer;
 
-			if (delay > 0)
-			{
+			if (delay > 0) {
 				cavan_timer_insert_base(service, timer, delay);
 			}
 
 			pthread_mutex_unlock(&service->lock);
 		}
-	}
-	else
-	{
+	} else {
 		cavan_thread_suspend(thread);
 
 		pthread_mutex_unlock(&service->lock);
@@ -231,15 +216,13 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 	thread->handler = cavan_timer_service_handler;
 
 	ret = pthread_mutex_init(&service->lock, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pthread_mutex_init");
 		return ret;
 	}
 
 	ret = cavan_thread_init(thread, service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_pthread_mutex_destroy;
 	}
@@ -250,15 +233,13 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 	service->timer_last_run = NULL;
 
 	ret = double_link_init(&service->link, MEMBER_OFFSET(struct cavan_timer, node));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("double_link_init");
 		goto out_cavan_thread_deinit;
 	}
 
 	ret = cavan_thread_start(thread);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_start");
 		goto out_double_link_deinit;
 	}
@@ -320,43 +301,32 @@ void cavan_flasher_update_delay(struct cavan_flasher *flasher)
 
 	cavan_lock_acquire(&flasher->lock);
 
-	for (node = flasher->head; node; node = node->next)
-	{
-		if (!node->enable)
-		{
+	for (node = flasher->head; node; node = node->next) {
+		if (!node->enable) {
 			continue;
 		}
 
-		if (delay > 0)
-		{
+		if (delay > 0) {
 			delay = math_get_greatest_common_divisor_single(delay, node->delay);
-		}
-		else
-		{
+		} else {
 			delay = node->delay;
 		}
 	}
 
-	if (delay > 0)
-	{
-		for (node = flasher->head; node; node = node->next)
-		{
+	if (delay > 0) {
+		for (node = flasher->head; node; node = node->next) {
 			u32 max;
 
-			if (!node->enable)
-			{
+			if (!node->enable) {
 				continue;
 			}
 
 			max = node->count_max;
 			node->count_max = node->delay / delay;
 
-			if (max > 0)
-			{
+			if (max > 0) {
 				node->count = node->count * node->count_max / max;
-			}
-			else
-			{
+			} else {
 				node->count = 0;
 			}
 		}
@@ -393,27 +363,20 @@ static int cavan_flasher_thread_handler(struct cavan_thread *thread, void *data)
 {
 	struct cavan_flasher *flasher = data;
 
-	if (flasher->delay > 0)
-	{
+	if (flasher->delay > 0) {
 		struct cavan_flasher_node *node;
 
-		if (cavan_thread_msleep(thread, flasher->delay) == 0)
-		{
+		if (cavan_thread_msleep(thread, flasher->delay) == 0) {
 			return 0;
 		}
 
 		cavan_lock_acquire(&flasher->lock);
 
-		for (node = flasher->head; node; node = node->next)
-		{
-			if (node->enable)
-			{
-				if (node->count > 1)
-				{
+		for (node = flasher->head; node; node = node->next) {
+			if (node->enable) {
+				if (node->count > 1) {
 					node->count--;
-				}
-				else
-				{
+				} else {
 					node->count = node->count_max;
 					node->bright = !node->bright;
 					node->handler(node);
@@ -422,9 +385,7 @@ static int cavan_flasher_thread_handler(struct cavan_thread *thread, void *data)
 		}
 
 		cavan_lock_release(&flasher->lock);
-	}
-	else
-	{
+	} else {
 		cavan_thread_suspend(thread);
 	}
 

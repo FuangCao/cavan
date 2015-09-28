@@ -26,20 +26,17 @@ int main(int argc, char *argv[])
 	struct network_client client;
 
 	ret = network_client_open2(&client, "uevent:", 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
 	}
 
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen;
 		char buff[1024];
 
 		rdlen = client.recv(&client, buff, sizeof(buff));
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_red_info("client.recv");
 			break;
 		}

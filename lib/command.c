@@ -74,15 +74,13 @@ static const char *const cavan_exec_shell_list[] =
 
 int print_command_table(const struct cavan_command_map *p, const struct cavan_command_map *p_end)
 {
-	if (p >= p_end)
-	{
+	if (p >= p_end) {
 		return 0;
 	}
 
 	print("Available command is:\n%s", p++->name);
 
-	while (p < p_end)
-	{
+	while (p < p_end) {
 		print(", %s", p++->name);
 	}
 
@@ -93,10 +91,8 @@ int print_command_table(const struct cavan_command_map *p, const struct cavan_co
 
 const struct cavan_command_map *find_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname, size_t size)
 {
-	while (p < p_end)
-	{
-		if (text_ncmp(cmdname, p->name, size) == 0)
-		{
+	while (p < p_end) {
+		if (text_ncmp(cmdname, p->name, size) == 0) {
 			return p;
 		}
 
@@ -113,44 +109,36 @@ void print_maybe_command(const struct cavan_command_map *p, const struct cavan_c
 
 	for (size = text_len(cmdname); size && ((q = find_command_by_name(p, p_end, cmdname, size))) == NULL; size--);
 
-	if (size)
-	{
+	if (size) {
 		int i;
 		int count;
 		const struct cavan_command_map *matchs[100];
 
 		pr_bold_info("This command maybe:");
 
-		for (count = 0, p = q; count < NELEM(matchs); count++)
-		{
+		for (count = 0, p = q; count < NELEM(matchs); count++) {
 			matchs[count] = p;
 
 			p = find_command_by_name(p + 1, p_end, cmdname, size);
-			if (p == NULL)
-			{
+			if (p == NULL) {
 				break;
 			}
 		}
 
-		for (i = 0; i < count; i++)
-		{
+		for (i = 0; i < count; i++) {
 			print("%s, ", matchs[i]->name);
 		}
 
 		print_string(matchs[i]->name);
-	}
-	else
-	{
+	} else {
 		print_command_table(p, p_end);
 	}
 }
 
 const struct cavan_command_map *match_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname)
 {
-	while (p < p_end)
-	{
-		if (text_cmp(cmdname, p->name) == 0)
-		{
+	while (p < p_end) {
+		if (text_cmp(cmdname, p->name) == 0) {
 			return p;
 		}
 
@@ -165,25 +153,19 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 	const struct cavan_command_map *p;
 	const char *pcmd;
 
-	if (argc > 1 && argv[1][0] == '@')
-	{
+	if (argc > 1 && argv[1][0] == '@') {
 		pcmd = argv[1] + 1;
 		argc--;
 		argv++;
-	}
-	else
-	{
+	} else {
 		const char *q = pcmd = argv[0];
 
-		while (1)
-		{
-			switch (*q)
-			{
+		while (1) {
+			switch (*q) {
 			case '/':
 				while (*++q == '/');
 
-				if (*q)
-				{
+				if (*q) {
 					pcmd = q;
 					break;
 				}
@@ -198,8 +180,7 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 
 label_start_match:
 	p = match_command_by_name(map, map + count, pcmd);
-	if (p == NULL && argc > 1 && file_test(argv[0], "l") < 0)
-	{
+	if (p == NULL && argc > 1 && file_test(argv[0], "l") < 0) {
 		pcmd = argv[1];
 		argc--;
 		argv++;
@@ -207,8 +188,7 @@ label_start_match:
 		p = match_command_by_name(map, map + count, pcmd);
 	}
 
-	if (p)
-	{
+	if (p) {
 		return p->main_func(argc, argv);
 	}
 
@@ -222,36 +202,28 @@ int cavan_exec_waitpid(pid_t pid)
 	int status;
 
 #if 0
-	while (1)
-	{
-		if (waitpid(pid, &status, WUNTRACED | WCONTINUED) < 0)
-		{
+	while (1) {
+		if (waitpid(pid, &status, WUNTRACED | WCONTINUED) < 0) {
 			return 0;
 		}
 
-		if (WIFEXITED(status))
-		{
+		if (WIFEXITED(status)) {
 			break;
 		}
 
-		if (WIFSIGNALED(status))
-		{
+		if (WIFSIGNALED(status)) {
 			printf("killed by signal %d\n", WTERMSIG(status));
 			return -EFAULT;
 		}
 
-		if (WIFSTOPPED(status))
-		{
+		if (WIFSTOPPED(status)) {
 			printf("stopped by signal %d\n", WSTOPSIG(status));
-		}
-		else if (WIFCONTINUED(status))
-		{
+		} else if (WIFCONTINUED(status)) {
 			printf("continued\n");
 		}
 	}
 #else
-	if (waitpid(pid, &status, 0) != pid)
-	{
+	if (waitpid(pid, &status, 0) != pid) {
 		return 0;
 	}
 #endif
@@ -264,35 +236,29 @@ int cavan_redirect_stdio_base(int ttyfds[3])
 	int i;
 	int ret;
 
-	for (i = 0; i < 3; i++)
-	{
-		if (ttyfds[i] < 0)
-		{
+	for (i = 0; i < 3; i++) {
+		if (ttyfds[i] < 0) {
 			continue;
 		}
 
 		ret = dup2(ttyfds[i], i);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("dup2 stdio %d", i);
 			return ret;
 		}
 	}
 
-	for (i = 0; i < 3; i++)
-	{
+	for (i = 0; i < 3; i++) {
 		int j;
 
-		if (ttyfds[i] < 0)
-		{
+		if (ttyfds[i] < 0) {
 			continue;
 		}
 
 		j = i;
 
 		do {
-			if (--j < 0)
-			{
+			if (--j < 0) {
 				close(ttyfds[i]);
 				break;
 			}
@@ -307,14 +273,10 @@ int cavan_redirect_stdio_base2(int fd, int flags)
 	int i;
 	int ttyfds[3];
 
-	for (i = 0; i < 3; i++)
-	{
-		if (flags & (1 << i))
-		{
+	for (i = 0; i < 3; i++) {
+		if (flags & (1 << i)) {
 			ttyfds[i] = fd;
-		}
-		else
-		{
+		} else {
 			ttyfds[i] = -1;
 		}
 	}
@@ -330,25 +292,18 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 
 	pr_bold_info("pathname = %s, flags = 0x%02x", pathname, flags);
 
-	if ((flags & 0x01))
-	{
-		if ((flags & 0x06))
-		{
+	if ((flags & 0x01)) {
+		if ((flags & 0x06)) {
 			open_flags = O_RDWR;
-		}
-		else
-		{
+		} else {
 			open_flags = O_RDONLY;
 		}
-	}
-	else
-	{
+	} else {
 		open_flags = O_WRONLY;
 	}
 
 	fd = open(pathname, open_flags | O_CREAT | O_TRUNC, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file `%s' failed", pathname);
 		return fd;
 	}
@@ -364,10 +319,8 @@ static const char *cavan_get_shell_path(void)
 {
 	int i;
 
-	for (i = 0; i < NELEM(cavan_exec_shell_list); i++)
-	{
-		if (file_access_e(cavan_exec_shell_list[i]))
-		{
+	for (i = 0; i < NELEM(cavan_exec_shell_list); i++) {
+		if (file_access_e(cavan_exec_shell_list[i])) {
 			return cavan_exec_shell_list[i];
 		}
 	}
@@ -384,12 +337,9 @@ static int cavan_exec_command(const char *command)
 	pr_func_info("shell = %s, name = %s, command = `%s'", shell, name, command);
 #endif
 
-	if (command && command[0] && text_cmp("shell", command))
-	{
+	if (command && command[0] && text_cmp("shell", command)) {
 		return execlp(shell, name, "-c", command, NULL);
-	}
-	else
-	{
+	} else {
 		return execlp(shell, name, "-", NULL);
 	}
 }
@@ -399,8 +349,7 @@ int cavan_exec_redirect_stdio_base(int ttyfds[3], const char *command)
 	int ret;
 
 	ret = cavan_redirect_stdio_base(ttyfds);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_redirect_stdio_base");
 		return ret;
 	}
@@ -413,8 +362,7 @@ int cavan_exec_redirect_stdio_base2(int ttyfd, const char *command, int flags)
 	int ret;
 
 	ret = cavan_redirect_stdio_base2(ttyfd, flags);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_redirect_stdio_base");
 		return ret;
 	}
@@ -428,8 +376,7 @@ int cavan_exec_redirect_stdio(char *const ttypath[3], const char *command, int f
 	int ttyfds[3];
 
 	ret = cavan_exec_open_temp_pipe_master(ttyfds, ttypath, getpid(), flags);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_exec_open_temp_pipe: %d", ret);
 		return ret;
 	}
@@ -443,24 +390,20 @@ int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, cons
 	int ttyfd;
 
 	ret = setsid();
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("setsid");
 		return ret;
 	}
 
 	ttyfd = open(ttypath, O_RDWR);
-	if (ttyfd < 0)
-	{
+	if (ttyfd < 0) {
 		pr_error_info("open file %s", ttypath);
 		return ttyfd;
 	}
 
-	if (isatty(ttyfd) && lines > 0 && columns > 0)
-	{
+	if (isatty(ttyfd) && lines > 0 && columns > 0) {
 		ret = tty_set_win_size(ttyfd, lines, columns);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("tty_set_win_size");
 			return ret;
 		}
@@ -491,17 +434,14 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 	pr_func_info("command = `%s', lines = %d, columns = %d, flags = 0x%08x", command, lines, columns, flags);
 #endif
 
-	if ((flags & CAVAN_EXECF_ERR_TO_OUT) && (flags & CAVAN_EXECF_STDOUT))
-	{
+	if ((flags & CAVAN_EXECF_ERR_TO_OUT) && (flags & CAVAN_EXECF_STDOUT)) {
 		flags |= CAVAN_EXECF_STDERR;
 	}
 
-	if (lines < 0 || columns < 0)
-	{
+	if (lines < 0 || columns < 0) {
 		int pair[2];
 
-		if ((flags & 0x01) == 0 || (flags & 0x06) == 0)
-		{
+		if ((flags & 0x01) == 0 || (flags & 0x06) == 0) {
 			int pipefd[2];
 
 #if CAVAN_COMMAND_DEBUG
@@ -509,40 +449,32 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 #endif
 
 			ret = pipe(pipefd);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_err_info("pipe");
 				return ret;
 			}
 
-			if (flags & 0x01)
-			{
+			if (flags & 0x01) {
 				pair[0] = pipefd[0];
 				pair[1] = pipefd[1];
-			}
-			else
-			{
+			} else {
 				pair[0] = pipefd[1];
 				pair[1] = pipefd[0];
 			}
-		}
-		else
-		{
+		} else {
 #if CAVAN_COMMAND_DEBUG
 			pr_func_info("create socketpair");
 #endif
 
 			ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_error_info("socketpair");
 				return ret;
 			}
 		}
 
 		pid = fork();
-		if (pid < 0)
-		{
+		if (pid < 0) {
 			pr_error_info("fork");
 
 			close(pair[0]);
@@ -551,8 +483,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 			return pid;
 		}
 
-		if (pid == 0)
-		{
+		if (pid == 0) {
 			close(pair[1]);
 
 			return cavan_exec_redirect_stdio_base2(pair[0], command, flags);
@@ -560,9 +491,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 
 		close(pair[0]);
 		ttyfd = pair[1];
-	}
-	else
-	{
+	} else {
 		const char *ptmpath = "/dev/ptmx";
 
 #if CAVAN_COMMAND_DEBUG
@@ -570,38 +499,33 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 #endif
 
 		ttyfd = open(ptmpath, O_RDWR | O_CLOEXEC);
-		if (ttyfd < 0)
-		{
+		if (ttyfd < 0) {
 			pr_error_info("open %s", ptmpath);
 			return ttyfd;
 		}
 
 #if 0
 		ret = fcntl(ttyfd, F_SETFD, FD_CLOEXEC);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("fcntl");
 			goto out_close_ttyfd;
 		}
 #endif
 
 		ret = grantpt(ttyfd);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("grantpt");
 			goto out_close_ttyfd;
 		}
 
 		ret = unlockpt(ttyfd);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("unlockpt");
 			goto out_close_ttyfd;
 		}
 
 		ret = ptsname_r(ttyfd, pathname, sizeof(pathname));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("ptsname");
 			goto out_close_ttyfd;
 		}
@@ -611,15 +535,13 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 #endif
 
 		pid = fork();
-		if (pid < 0)
-		{
+		if (pid < 0) {
 			pr_error_info("fork");
 			ret = pid;
 			goto out_close_ttyfd;
 		}
 
-		if (pid == 0)
-		{
+		if (pid == 0) {
 			close(ttyfd);
 
 			return cavan_exec_redirect_stdio2(pathname, lines, columns, command, flags);
@@ -628,8 +550,7 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 
 	cavan_exec_set_oom_adj(pid, 0);
 
-	if (ppid)
-	{
+	if (ppid) {
 		*ppid = pid;
 	}
 
@@ -654,17 +575,13 @@ int cavan_exec_make_temp_pipe(char *pathname, size_t size, pid_t pid, int type)
 
 do_mkfifo:
 	ret = mkfifo(pathname, 0777 | S_IFIFO);
-	if (ret < 0)
-	{
-		if (retry)
-		{
+	if (ret < 0) {
+		if (retry) {
 			retry = false;
 
-			switch (errno)
-			{
+			switch (errno) {
 			case EEXIST:
-				if (likely(file_is_fifo(pathname)))
-				{
+				if (likely(file_is_fifo(pathname))) {
 					return 0;
 				}
 
@@ -696,25 +613,20 @@ int cavan_exec_make_temp_pipe2(pid_t pid, int flags)
 {
 	int i;
 
-	for (i = 0; i < 3; i++)
-	{
+	for (i = 0; i < 3; i++) {
 		int ret;
 		char pathname[1024];
 
-		if ((flags & (1 << i)) == 0)
-		{
+		if ((flags & (1 << i)) == 0) {
 			continue;
 		}
 
 		ret = cavan_exec_make_temp_pipe(pathname, sizeof(pathname), pid, i);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_create_temp_pipe %s", pathname);
 
-			while (--i >= 0)
-			{
-				if ((flags & (1 << i)) == 0)
-				{
+			while (--i >= 0) {
+				if ((flags & (1 << i)) == 0) {
 					continue;
 				}
 
@@ -733,25 +645,18 @@ void cavan_exec_unlink_temp_pipe(char *const ttypath[3], pid_t pid, int count, i
 {
 	int i;
 
-	if (count < 0 || count > 3)
-	{
+	if (count < 0 || count > 3) {
 		count = 3;
 	}
 
-	if (ttypath)
-	{
-		for (i = 0; i < count; i++)
-		{
-			if (ttypath[i])
-			{
+	if (ttypath) {
+		for (i = 0; i < count; i++) {
+			if (ttypath[i]) {
 				unlink(ttypath[i]);
 			}
 		}
-	}
-	else
-	{
-		for (i = 0; i < count; i++)
-		{
+	} else {
+		for (i = 0; i < count; i++) {
 			char pathname[1024];
 
 			cavan_exec_get_temp_pipe_pathname(pathname, sizeof(pathname), pid, i);
@@ -765,33 +670,25 @@ int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_
 	int i;
 	int ret;
 
-	for (i = 0; i < 3; i++)
-	{
+	for (i = 0; i < 3; i++) {
 		char buff[1024];
 		const char *pathname;
 
-		if (ttypath)
-		{
+		if (ttypath) {
 			pathname = ttypath[i];
-		}
-		else if (flags & (1 << i))
-		{
+		} else if (flags & (1 << i)) {
 			ret = cavan_exec_make_temp_pipe(buff, sizeof(buff), pid, i);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("cavan_exec_make_temp_pipe: %d", ret);
 				goto out_unlink_pipe;
 			}
 
 			pathname = buff;
-		}
-		else
-		{
+		} else {
 			pathname = NULL;
 		}
 
-		if (pathname)
-		{
+		if (pathname) {
 			int fd;
 
 #if CAVAN_COMMAND_DEBUG
@@ -799,8 +696,7 @@ int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_
 #endif
 
 			fd = open(pathname, cavan_exec_tty_master_open_flags[i]);
-			if (fd < 0)
-			{
+			if (fd < 0) {
 				pr_red_info("cavan_open_pipe_once %s", pathname);
 				ret = fd;
 				goto out_unlink_pipe;
@@ -812,19 +708,15 @@ int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_
 
 			ttyfds[i] = fd;
 
-			if (flags & CAVAN_EXECF_DEL_TTY)
-			{
+			if (flags & CAVAN_EXECF_DEL_TTY) {
 				unlink(pathname);
 			}
-		}
-		else
-		{
+		} else {
 			ttyfds[i] = -1;
 		}
 	}
 
-	if (flags & (CAVAN_EXECF_ERR_TO_OUT) && ttyfds[2] < 0)
-	{
+	if (flags & (CAVAN_EXECF_ERR_TO_OUT) && ttyfds[2] < 0) {
 		ttyfds[2] = ttyfds[1];
 	}
 
@@ -835,8 +727,7 @@ int cavan_exec_open_temp_pipe_master(int ttyfds[3], char *const ttypath[3], pid_
 	return 0;
 
 out_unlink_pipe:
-	if (flags & CAVAN_EXECF_DEL_TTY)
-	{
+	if (flags & CAVAN_EXECF_DEL_TTY) {
 		cavan_exec_unlink_temp_pipe(ttypath, pid, i + 1, flags);
 	}
 
@@ -850,17 +741,14 @@ int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags)
 	int auto_open;
 
 	auto_open = flags & CAVAN_EXECF_AUTO_OPEN;
-	if (auto_open)
-	{
+	if (auto_open) {
 		flags |= 0x07;
 	}
 
-	for (i = 0; i < 3; i++)
-	{
+	for (i = 0; i < 3; i++) {
 		int fd;
 
-		if (flags & (1 << i))
-		{
+		if (flags & (1 << i)) {
 			char pathname[1024];
 
 			cavan_exec_get_temp_pipe_pathname(pathname, sizeof(pathname), pid, i);
@@ -871,18 +759,15 @@ int cavan_exec_open_temp_pipe_slave(int ttyfds[3], pid_t pid, int flags)
 
 do_open:
 			fd = open(pathname, cavan_exec_tty_slave_open_flags[i]);
-			if (fd < 0 && (auto_open == 0 || errno != ENOENT))
-			{
-				if (errno == EINTR)
-				{
+			if (fd < 0 && (auto_open == 0 || errno != ENOENT)) {
+				if (errno == EINTR) {
 					msleep(100);
 					goto do_open;
 				}
 
 				pr_err_info("open %s", pathname);
 
-				while (--i >= 0)
-				{
+				while (--i >= 0) {
 					close(ttyfds[i]);
 				}
 
@@ -892,9 +777,7 @@ do_open:
 #if CAVAN_COMMAND_DEBUG
 			pr_func_info("pathname = `%s', fd = %d", pathname, fd);
 #endif
-		}
-		else
-		{
+		} else {
 			fd = -1;
 		}
 
@@ -912,15 +795,12 @@ void cavan_exec_close_temp_pipe(int ttyfds[3], int count)
 {
 	int i;
 
-	if (count < 0 || count > 3)
-	{
+	if (count < 0 || count > 3) {
 		count = 3;
 	}
 
-	for (i = 0; i < count; i++)
-	{
-		if (ttyfds[i] >= 0)
-		{
+	for (i = 0; i < count; i++) {
+		if (ttyfds[i] >= 0) {
 			close(ttyfds[i]);
 		}
 	}
@@ -937,8 +817,7 @@ static void *cavan_exec_redirect_thread_handler(void *_data)
 #endif
 
 	ret = cavan_exec_open_temp_pipe_master(ttyfds, NULL, data->pid, data->flags);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_exec_open_temp_pipe: %d", ret);
 		return NULL;
 	}
@@ -969,50 +848,39 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 
 	flags |= CAVAN_EXECF_DEL_TTY | CAVAN_EXECF_ERR_TO_OUT;
 
-	if (lines < 0 || columns < 0)
-	{
+	if (lines < 0 || columns < 0) {
 		pid = fork();
-		if (pid < 0)
-		{
+		if (pid < 0) {
 			pr_err_info("fork");
 			return pid;
 		}
 
-		if (pid > 0)
-		{
+		if (pid > 0) {
 			ret = cavan_exec_make_temp_pipe2(pid, flags);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("cavan_exec_make_temp_pipe2: %d", ret);
 				return ret;
 			}
-		}
-		else
-		{
+		} else {
 			return cavan_exec_redirect_stdio(NULL, command, flags);
 		}
 
 		cavan_exec_set_oom_adj(pid, 0);
-	}
-	else
-	{
+	} else {
 		fd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid, flags);
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			pr_red_info("cavan_exec_redirect_stdio_popen: %d", fd);
 			return fd;
 		}
 
 		ret = cavan_exec_make_temp_pipe2(pid, flags);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_exec_make_temp_pipe2: %d", ret);
 			goto out_close_fd;
 		}
 
 		data = malloc(sizeof(struct cavan_exec_pipe_thread_data));
-		if (data == NULL)
-		{
+		if (data == NULL) {
 			pr_err_info("malloc");
 			ret = -ENOMEM;
 			goto out_kill_pid;
@@ -1027,15 +895,13 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 		data->flags = flags;
 
 		ret = cavan_pthread_run(cavan_exec_redirect_thread_handler, data);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_pthread_create: %d", ret);
 			goto out_free_data;
 		}
 	}
 
-	if (ppid)
-	{
+	if (ppid) {
 		*ppid = pid;
 	}
 
@@ -1047,8 +913,7 @@ out_kill_pid:
 	kill(pid, SIGKILL);
 	cavan_exec_unlink_temp_pipe(NULL, pid, -1, flags);
 out_close_fd:
-	if (fd >= 0)
-	{
+	if (fd >= 0) {
 		close(fd);
 	}
 	return ret;
@@ -1061,25 +926,21 @@ int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, 
 	pid_t pid;
 
 	ttyfd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid, 0x07);
-	if (ttyfd < 0)
-	{
+	if (ttyfd < 0) {
 		pr_red_info("cavan_exec_redirect_stdio_popen");
 		return ttyfd;
 	}
 
-	if (ttyin < 0)
-	{
+	if (ttyin < 0) {
 		ttyin = stdin_fd;
 	}
 
-	if (ttyout < 0)
-	{
+	if (ttyout < 0) {
 		ttyout = stdout_fd;
 	}
 
 	ret = cavan_tty_redirect_loop3(ttyfd, ttyfd, -1, ttyin, ttyout, stderr_fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_tty_redirect_loop");
 		goto out_close_ttyfd;
 	}
@@ -1097,8 +958,7 @@ int cavan_tty_redirect(int ttyin, int ttyout, int ttyerr)
 	struct termios tty_attr;
 
 	ret = set_tty_mode(stdin_fd, 5, &tty_attr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("set_tty_mode");
 		return ret;
 	}
@@ -1116,8 +976,7 @@ int cavan_tty_redirect3(const char *ttypath)
 	int fd;
 
 	fd = open(ttypath, O_RDWR);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open tty device %s", ttypath);
 		return fd;
 	}
@@ -1134,8 +993,7 @@ const char *cavan_getenv(const char *name, const char *default_value)
 	const char *value;
 
 	value = getenv(name);
-	if (value)
-	{
+	if (value) {
 		return value;
 	}
 
@@ -1147,8 +1005,7 @@ u32 cavan_getenv_u32(const char *name, u32 default_value)
 	const char *value;
 
 	value = cavan_getenv(name, NULL);
-	if (value == NULL)
-	{
+	if (value == NULL) {
 		return default_value;
 	}
 
@@ -1161,20 +1018,14 @@ int tty_get_win_size(int tty, int size[2])
 	struct winsize wsize;
 
 	ret = ioctl(tty, TIOCGWINSZ, &wsize);
-	if (ret < 0)
-	{
-		if (isatty(tty))
-		{
+	if (ret < 0) {
+		if (isatty(tty)) {
 			size[0] = cavan_getenv_u32("LINES", 0);
 			size[1] = cavan_getenv_u32("COLUMNS", 0);
-		}
-		else
-		{
+		} else {
 			size[0] = size[1] = -1;
 		}
-	}
-	else
-	{
+	} else {
 		size[0] = wsize.ws_row;
 		size[1] = wsize.ws_col;
 	}
@@ -1189,13 +1040,11 @@ int tty_get_win_size2(int tty, int *lines, int *columns)
 
 	ret = tty_get_win_size(tty, size);
 
-	if (lines)
-	{
+	if (lines) {
 		*lines = size[0];
 	}
 
-	if (columns)
-	{
+	if (columns) {
 		*columns = size[1];
 	}
 
@@ -1209,13 +1058,11 @@ int tty_get_win_size3(int tty, u16 *lines, u16 *columns)
 
 	ret = tty_get_win_size(tty, size);
 
-	if (lines)
-	{
+	if (lines) {
 		*lines = size[0] < 0 ? 0xFFFF : size[0];
 	}
 
-	if (columns)
-	{
+	if (columns) {
 		*columns = size[1] < 0 ? 0xFFFF : size[1];
 	}
 
@@ -1226,8 +1073,7 @@ int tty_set_win_size(int tty, u16 lines, u16 columns)
 {
 	int ret;
 	char buff[64];
-	struct winsize wsize =
-	{
+	struct winsize wsize = {
 		.ws_row = lines,
 		.ws_col = columns,
 		.ws_xpixel = 0,
@@ -1235,8 +1081,7 @@ int tty_set_win_size(int tty, u16 lines, u16 columns)
 	};
 
 	ret = ioctl(tty, TIOCSWINSZ, &wsize);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("ioctl TIOCSWINSZ");
 		return ret;
 	}
@@ -1278,28 +1123,22 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 	int ret = 0;
 	size_t total = 0;
 
-	if (filename == NULL)
-	{
+	if (filename == NULL) {
 #if CAVAN_TEE_USE_SYSTEM_POPEN
 		fp = stderr;
 #else
 		fd = 2;
 #endif
-	}
-	else if (strcmp(filename, "-") == 0)
-	{
+	} else if (strcmp(filename, "-") == 0) {
 #if CAVAN_TEE_USE_SYSTEM_POPEN
 		fp = stdout;
 #else
 		fd = 1;
 #endif
-	}
-	else if (command)
-	{
+	} else if (command) {
 #if CAVAN_TEE_USE_SYSTEM_POPEN
 		fp = popen(filename, "w");
-		if (fp == NULL)
-		{
+		if (fp == NULL) {
 			pr_err_info("popen %s", filename);
 			return -EFAULT;
 		}
@@ -1307,41 +1146,34 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 		setvbuf(fp, NULL, _IONBF, 0);
 #else
 		fd = cavan_exec_redirect_stdio_popen(filename, -1, -1, NULL, 0x01);
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			pr_red_info("cavan_exec_redirect_stdio_popen: %d", fd);
 			return fd;
 		}
 #endif
-	}
-	else
-	{
+	} else {
 #if CAVAN_TEE_USE_SYSTEM_POPEN
 		fp = fopen(filename, append ? "a+" : "w+");
-		if (fp == NULL)
-		{
+		if (fp == NULL) {
 			pr_err_info("fopen %s", filename);
 			return -EFAULT;
 		}
 #else
 		fd = open(filename, (append ? O_APPEND : O_TRUNC) | O_WRONLY | O_CREAT, 0777);
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			pr_err_info("open %s", filename);
 			return fd;
 		}
 #endif
 	}
 
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen;
 		ssize_t wrlen;
 		char buff[1024];
 
 		rdlen = read(0, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
+		if (rdlen <= 0) {
 			break;
 		}
 
@@ -1350,8 +1182,7 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 #else
 		wrlen = write(1, buff, rdlen) | write(fd, buff, rdlen);
 #endif
-		if (wrlen != rdlen)
-		{
+		if (wrlen != rdlen) {
 			// pr_err_info("write");
 			break;
 		}
@@ -1360,31 +1191,24 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 	}
 
 #if CAVAN_TEE_USE_SYSTEM_POPEN
-	if (fp != stderr && fp != stdout)
-	{
-		if (command)
-		{
+	if (fp != stderr && fp != stdout) {
+		if (command) {
 			pclose(fp);
-		}
-		else
-		{
+		} else {
 			fclose(fp);
 		}
 	}
 #else
-	if (fd != 1 && fd != 2)
-	{
+	if (fd != 1 && fd != 2) {
 		close(fd);
 	}
 #endif
 
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	if (total > 0)
-	{
+	if (total > 0) {
 		return 0;
 	}
 
@@ -1399,15 +1223,13 @@ int cavan_tty_redirect_loop(int ttyfds[][2], int count)
 	struct cavan_file_proxy_desc desc;
 
 	ret = cavan_file_proxy_init(&desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_file_proxy_init: %d", ret);
 		return ret;
 	}
 
 	ret = cavan_file_proxy_add_array(&desc, ttyfds, count);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_file_proxy_add_array: %d", ret);
 		goto out_cavan_file_proxy_deinit;
 	}
@@ -1424,8 +1246,7 @@ int cavan_tty_redirect_loop2(const int *ttyin, const int *ttyout, int count)
 	int i;
 	int ttyfds[count][2];
 
-	for (i = 0; i < count; i++)
-	{
+	for (i = 0; i < count; i++) {
 		ttyfds[i][0] = ttyin[i];
 		ttyfds[i][1] = ttyout[i];
 	}
@@ -1435,8 +1256,7 @@ int cavan_tty_redirect_loop2(const int *ttyin, const int *ttyout, int count)
 
 int cavan_tty_redirect_loop3(int in, int out, int err, int ttyin, int ttyout, int ttyerr)
 {
-	int ttyfds[][2] =
-	{
+	int ttyfds[][2] = {
 		{ ttyin, in },
 		{ out, ttyout },
 		{ err, ttyerr },

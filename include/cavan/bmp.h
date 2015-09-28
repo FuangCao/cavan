@@ -4,16 +4,14 @@
 #include <linux/fb.h>
 
 #pragma pack(1)
-struct bmp_file_header
-{
+struct bmp_file_header {
 	u8 type[2];
 	u32 size;
 	u8 reserved[4];
 	u32 offset;
 };
 
-struct bmp_info_header
-{
+struct bmp_info_header {
 	u32 size;
 	u32 width;
 	u32 height;
@@ -27,44 +25,38 @@ struct bmp_info_header
 	u32 clr_important;
 };
 
-struct bmp_color_table_entry
-{
+struct bmp_color_table_entry {
 	u8 blue;
 	u8 green;
 	u8 red;
 	u8 reserved;
 };
 
-struct bmp_header
-{
+struct bmp_header {
 	struct bmp_file_header file_hdr;
 	struct bmp_info_header info_hdr;
 	struct bmp_color_table_entry color_table[0];
 };
 
-struct pixel555
-{
+struct pixel555 {
 	u16 red		:5;
 	u16 green	:5;
 	u16 blue	:5;
 };
 
-struct pixel565
-{
+struct pixel565 {
 	u16 red		:5;
 	u16 green	:6;
 	u16 blue	:5;
 };
 
-struct pixel888
-{
+struct pixel888 {
 	u32 red		:8;
 	u32 green	:8;
 	u32 blue	:8;
 };
 
-struct pixel8888
-{
+struct pixel8888 {
 	u32 red		:8;
 	u32 green	:8;
 	u32 blue	:8;

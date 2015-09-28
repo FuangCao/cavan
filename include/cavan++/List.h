@@ -23,8 +23,7 @@
 #include <cavan++/Link.h>
 
 template <typename T>
-class List
-{
+class List {
 private:
 	T *mHead;
 	T *mTail;
@@ -34,15 +33,11 @@ private:
 	int mSize;
 
 public:
-	List(int size)
-	{
+	List(int size) {
 		mData = new T[size];
-		if (mData == NULL)
-		{
+		if (mData == NULL) {
 			mSize = 0;
-		}
-		else
-		{
+		} else {
 			mSize = size;
 		}
 
@@ -51,34 +46,27 @@ public:
 		clear();
 	}
 
-	~List(void)
-	{
-		if (mData)
-		{
+	~List(void) {
+		if (mData) {
 			delete []mData;
 		}
 	}
 
-	void clear(void)
-	{
+	void clear(void) {
 		mHead = mTail = mData;
 	}
 
-	T *getNext(T *p)
-	{
-		if (p == mLast)
-		{
+	T *getNext(T *p) {
+		if (p == mLast) {
 			return mData;
 		}
 
 		return p + 1;
 	}
 
-	bool append(T data)
-	{
+	bool append(T data) {
 		T *next = getNext(mTail);
-		if (next == mHead)
-		{
+		if (next == mHead) {
 			return false;
 		}
 
@@ -88,10 +76,8 @@ public:
 		return true;
 	}
 
-	bool pop(T &data)
-	{
-		if (isEmpty())
-		{
+	bool pop(T &data) {
+		if (isEmpty()) {
 			return false;
 		}
 
@@ -101,68 +87,54 @@ public:
 		return true;
 	}
 
-	int getUsedCount(void)
-	{
-		if (mHead > mTail)
-		{
+	int getUsedCount(void) {
+		if (mHead > mTail) {
 			return (mTail - mData) + (mLast - mHead + 1);
 		}
 
 		return mTail - mHead;
 	}
 
-	int getFreeCount(void)
-	{
-		if (mHead > mTail)
-		{
+	int getFreeCount(void) {
+		if (mHead > mTail) {
 			return mHead - mTail;
 		}
 
 		return (mHead - mData) + (mLast - mTail);
 	}
 
-	int count(void)
-	{
+	int count(void) {
 		return getUsedCount();
 	}
 
-	int available(void)
-	{
+	int available(void) {
 		return getFreeCount();
 	}
 
-	bool isFull(void)
-	{
+	bool isFull(void) {
 		return getNext(mTail) == mHead;
 	}
 
-	bool isEmpty(void)
-	{
+	bool isEmpty(void) {
 		return mHead == mTail;
 	}
 
-	static void sort(T *start, T *end, int (*compare)(T left, T right))
-	{
+	static void sort(T *start, T *end, int (*compare)(T left, T right)) {
 		T *p = start;
 		T *q = end;
 		T middle = *p;
 
-		while (p < q)
-		{
-			for (; compare(*q, middle) >= 0; q--)
-			{
-				if (q <= p)
-				{
+		while (p < q) {
+			for (; compare(*q, middle) >= 0; q--) {
+				if (q <= p) {
 					goto label_found;
 				}
 			}
 
 			*p = *q;
 
-			for (; compare(*p, middle) <= 0; p++)
-			{
-				if (q <= p)
-				{
+			for (; compare(*p, middle) <= 0; p++) {
+				if (q <= p) {
 					goto label_found;
 				}
 			}
@@ -173,34 +145,27 @@ public:
 label_found:
 		*p = middle;
 
-		if (p - start > 1)
-		{
+		if (p - start > 1) {
 			sort(start, p - 1, compare);
 		}
 
-		if (end - q > 1)
-		{
+		if (end - q > 1) {
 			sort(q + 1, end, compare);
 		}
 	}
 
-	void sort(int (*compare)(T left, T right))
-	{
-		if (mTail > mHead)
-		{
+	void sort(int (*compare)(T left, T right)) {
+		if (mTail > mHead) {
 			sort(mHead, mTail - 1, compare);
 		}
 	}
 
-	void start(void)
-	{
+	void start(void) {
 		mCurr = mHead;
 	}
 
-	T *next(void)
-	{
-		if (mCurr == mTail)
-		{
+	T *next(void) {
+		if (mCurr == mTail) {
 			return NULL;
 		}
 
@@ -212,32 +177,25 @@ label_found:
 };
 
 template <typename T>
-class LinkList
-{
+class LinkList {
 private:
 	LinkNodeT<T> *mHead;
 	LinkNodeT<T> *mTail;
 
 public:
-	LinkList(void)
-	{
+	LinkList(void) {
 		mHead = mTail = NULL;
 	}
 
-	int append(T &data)
-	{
+	int append(T &data) {
 		LinkNodeT<T> *node = new LinkNodeT<T>(data);
-		if (node == NULL)
-		{
+		if (node == NULL) {
 			return -1;
 		}
 
-		if (mTail)
-		{
+		if (mTail) {
 			mTail->next = node;
-		}
-		else
-		{
+		} else {
 			mHead = node;
 		}
 
@@ -246,10 +204,8 @@ public:
 		return 0;
 	}
 
-	int pop(T &data)
-	{
-		if (isEmpty())
-		{
+	int pop(T &data) {
+		if (isEmpty()) {
 			return -1;
 		}
 
@@ -262,8 +218,7 @@ public:
 		return 0;
 	}
 
-	bool isEmpty(void)
-	{
+	bool isEmpty(void) {
 		return mHead == NULL;
 	}
 };

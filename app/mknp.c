@@ -13,27 +13,20 @@ int main(int argc, char *argv[])
 	const char *uboot_path;
 	const char *uboot_np_path;
 
-	if (argc < 2)
-	{
+	if (argc < 2) {
 		uboot_path = DEFAULT_UBOOT_PATH;
-	}
-	else
-	{
+	} else {
 		uboot_path = argv[1];
 	}
 
-	if (argc < 3)
-	{
+	if (argc < 3) {
 		uboot_np_path = TEMP_UBOOT_NOPADDING_PATH;
-	}
-	else
-	{
+	} else {
 		uboot_np_path = argv[2];
 	}
 
 	ret = uboot2uboot_np(uboot_path, uboot_np_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("uboot2uboot_np");
 		return ret;
 	}

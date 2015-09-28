@@ -19,15 +19,13 @@ int main(int argc, char *argv[])
 	int c;
 	int ret;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -41,10 +39,8 @@ int main(int argc, char *argv[])
 	dest_dev[0] = 0;
 	burn_image_dir = 0;
 
-	while ((c = getopt_long(argc, argv, "vVhHo:O:aA", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHo:O:aA", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'o':
 		case 'O':
 			text_copy(dest_dev, optarg);
@@ -72,26 +68,20 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (argc == optind)
-	{
+	if (argc == optind) {
 		show_usage();
 		ERROR_RETURN(EINVAL);
 	}
 
-	if (burn_image_dir && file_test(argv[optind], "d") == 0)
-	{
+	if (burn_image_dir && file_test(argv[optind], "d") == 0) {
 		ret = burn_swan_image_directory(argv[optind], dest_dev);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("burn_swan_images");
 			return ret;
 		}
-	}
-	else
-	{
+	} else {
 		ret = burn_swan_image_auto(argv[optind], dest_dev);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("burn_swan_image_auto");
 			return ret;
 		}

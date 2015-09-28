@@ -13,26 +13,18 @@ int main(int argc, char *argv[])
 	const char *img_path;
 	const char *dev_path;
 
-	if (argc < 2)
-	{
+	if (argc < 2) {
 		img_path = DEFAULT_RECOVERY_IMAGE;
 		dev_path = DEFAULT_DEVICE_PATH;
-	}
-	else if (argc < 3)
-	{
-		if (file_test(argv[1], "b") >= 0)
-		{
+	} else if (argc < 3) {
+		if (file_test(argv[1], "b") >= 0) {
 			img_path = DEFAULT_RECOVERY_IMAGE;
 			dev_path = argv[1];
-		}
-		else
-		{
+		} else {
 			img_path = argv[1];
 			dev_path = DEFAULT_DEVICE_PATH;
 		}
-	}
-	else
-	{
+	} else {
 		img_path = argv[1];
 		dev_path = argv[2];
 
@@ -40,8 +32,7 @@ int main(int argc, char *argv[])
 	}
 
 	ret = burn_normal_image(img_path, dev_path);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("Burn image \"%s\" to \"%s\" failed", img_path, dev_path);
 	}
 

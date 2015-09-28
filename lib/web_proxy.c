@@ -27,57 +27,47 @@
 
 int web_proxy_get_request_type(const char *req, size_t length)
 {
-	switch (req[0])
-	{
+	switch (req[0]) {
 	case 'C':
-		if (length == 7 && text_lhcmp("ONNECT", req + 1) == 0)
-		{
+		if (length == 7 && text_lhcmp("ONNECT", req + 1) == 0) {
 			return HTTP_REQ_CONNECT;
 		}
 		break;
 
 	case 'D':
-		if (length == 6 && text_lhcmp("ELETE", req + 1) == 0)
-		{
+		if (length == 6 && text_lhcmp("ELETE", req + 1) == 0) {
 			return HTTP_REQ_DELETE;
 		}
 		break;
 
 	case 'G':
-		if (length == 3 && text_lhcmp("ET", req + 1) == 0)
-		{
+		if (length == 3 && text_lhcmp("ET", req + 1) == 0) {
 			return HTTP_REQ_GET;
 		}
 		break;
 
 	case 'H':
-		if (length == 4 && text_lhcmp("EAD", req + 1) == 0)
-		{
+		if (length == 4 && text_lhcmp("EAD", req + 1) == 0) {
 			return HTTP_REQ_HEAD;
 		}
 		break;
 
 	case 'O':
-		if (length == 7 && text_lhcmp("PTIONS", req + 1) == 0)
-		{
+		if (length == 7 && text_lhcmp("PTIONS", req + 1) == 0) {
 			return HTTP_REQ_OPTIONS;
 		}
 		break;
 
 	case 'P':
-		if (length == 3 && text_lhcmp("UT", req + 1) == 0)
-		{
+		if (length == 3 && text_lhcmp("UT", req + 1) == 0) {
 			return HTTP_REQ_PUT;
-		}
-		else if (length == 4 && text_lhcmp("OST", req + 1) == 0)
-		{
+		} else if (length == 4 && text_lhcmp("OST", req + 1) == 0) {
 			return HTTP_REQ_POST;
 		}
 		break;
 
 	case 'T':
-		if (length == 5 && text_lhcmp("RACE", req + 1) == 0)
-		{
+		if (length == 5 && text_lhcmp("RACE", req + 1) == 0) {
 			return HTTP_REQ_TRACE;
 		}
 		break;
@@ -88,8 +78,7 @@ int web_proxy_get_request_type(const char *req, size_t length)
 
 const char *web_proxy_request_type_tostring(int type)
 {
-	switch (type)
-	{
+	switch (type) {
 	case HTTP_REQ_CONNECT:
 		return "CONNECT";
 	case HTTP_REQ_DELETE:
@@ -116,42 +105,34 @@ static int web_proxy_main_loop(struct network_client *client_src, struct network
 	int ret;
 	ssize_t rwlen;
 	char buff[2048];
-	struct pollfd pfds[2] =
-	{
+	struct pollfd pfds[2] = {
 		{
 			.fd = client_src->sockfd,
 			.events = POLLIN
-		},
-		{
+		}, {
 			.fd = client_dest->sockfd,
 			.events = POLLIN
 		}
 	};
 
-	while (1)
-	{
+	while (1) {
 		ret = poll(pfds, NELEM(pfds), timeout);
-		if (ret <= 0)
-		{
-			if (ret < 0)
-			{
+		if (ret <= 0) {
+			if (ret < 0) {
 				return ret;
 			}
 
 			return -ETIMEDOUT;
 		}
 
-		if (pfds[0].revents)
-		{
+		if (pfds[0].revents) {
 			rwlen = client_src->recv(client_src, buff, sizeof(buff));
-			if (rwlen <= 0 || client_dest->send(client_dest, buff, rwlen) < rwlen)
-			{
+			if (rwlen <= 0 || client_dest->send(client_dest, buff, rwlen) < rwlen) {
 				return -EIO;
 			}
 		}
 
-		if (pfds[1].revents)
-		{
+		if (pfds[1].revents) {
 			break;
 		}
 	}
@@ -169,8 +150,7 @@ static int web_proxy_ftp_send_http_reply(struct network_client *client, const ch
 		"X-Cache: MISS from server\r\n"
 		"Via: 1.1 server (cavan-web_proxy)\r\n");
 
-	if (filetype == NULL)
-	{
+	if (filetype == NULL) {
 		filetype = "text/html";
 	}
 
@@ -182,8 +162,7 @@ static int web_proxy_ftp_send_http_reply(struct network_client *client, const ch
 	p += sprintf(p, "Content-Length: %d\r\n", length) - 1;
 #endif
 
-	if (time)
-	{
+	if (time) {
 		p += sprintf(p, "Last-Modified: %s\r\n", asctime(time)) - 1;
 	}
 
@@ -202,10 +181,8 @@ static int web_proxy_ftp_read_file(struct network_client *client, struct network
 	struct network_client client_data;
 
 	ret = ftp_client_send_command2(client_proxy, buff, sizeof(buff), "MDTM %s\r\n", filename);
-	if (ret != 213)
-	{
-		if (ret == 550)
-		{
+	if (ret != 213) {
+		if (ret == 550) {
 			errno = EISDIR;
 		}
 
@@ -213,15 +190,13 @@ static int web_proxy_ftp_read_file(struct network_client *client, struct network
 		return -EFAULT;
 	}
 
-	if (strptime(buff, "%Y%m%d%H%M%S", &time) == NULL)
-	{
+	if (strptime(buff, "%Y%m%d%H%M%S", &time) == NULL) {
 		pr_red_info("invalid response %s", buff);
 		return -EFAULT;
 	}
 
 	ret = ftp_client_send_command2(client_proxy, buff, sizeof(buff), "SIZE %s\r\n", filename);
-	if (ret != 213)
-	{
+	if (ret != 213) {
 		pr_red_info("ftp_client_send_command2 SIZE");
 		return -EFAULT;
 	}
@@ -229,39 +204,33 @@ static int web_proxy_ftp_read_file(struct network_client *client, struct network
 	size = text2value_unsigned(buff, NULL, 10);
 
 	ret = ftp_client_create_pasv_link(client_proxy, &client_data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ftp_client_create_pasv_link");
 		return ret;
 	}
 
 	ret = ftp_client_send_command2(client_proxy, NULL, 0, "RETR %s\r\n", filename);
-	if (ret != 125 && ret != 150)
-	{
+	if (ret != 125 && ret != 150) {
 		ret = -EIO;
 		pr_red_info("ftp_client_send_command2");
 		goto out_close_sockfd;
 	}
 
 	ret = web_proxy_ftp_send_http_reply(client, "text/plain", size, &time);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("web_proxy_ftp_send_http_reply");
 		goto out_close_sockfd;
 	}
 
-	while (size)
-	{
+	while (size) {
 		rdlen = client_data.recv(&client_data, buff, size < sizeof(buff) ? size : sizeof(buff));
-		if (rdlen <= 0)
-		{
+		if (rdlen <= 0) {
 			ret = -EIO;
 			goto out_close_sockfd;
 		}
 
 		wrlen = client->send(client, buff, rdlen);
-		if (wrlen < rdlen)
-		{
+		if (wrlen < rdlen) {
 			ret = -EIO;
 			goto out_close_sockfd;
 		}
@@ -270,8 +239,7 @@ static int web_proxy_ftp_read_file(struct network_client *client, struct network
 	}
 
 	ret = ftp_client_read_response(client_proxy, NULL, 0);
-	if (ret != 226)
-	{
+	if (ret != 226) {
 		ret = -EFAULT;
 		pr_red_info("ftp_client_read_response");
 	}
@@ -286,15 +254,13 @@ static int web_proxy_open_html_file(const char *title, char *pathname)
 	int fd;
 	char buff[1024];
 
-	if (pathname == NULL)
-	{
+	if (pathname == NULL) {
 		pathname = buff;
 	}
 
 	cavan_build_temp_path("cavan-XXXXXX", pathname, sizeof(buff));
 	fd = mkstemp(pathname);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("mkstemp `%s'", pathname);
 		return fd;
 	}
@@ -314,8 +280,7 @@ static int web_proxy_flush_html_file(int fd)
 	int ret;
 
 	ret = ffile_puts(fd, "\t</body>\r\n</html>");
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ffile_puts");
 		return ret;
 	}
@@ -328,22 +293,19 @@ static int web_proxy_send_file(struct network_client *client, int fd, const char
 	int ret;
 	struct stat st;
 
-	if (lseek(fd, 0, SEEK_SET) != 0)
-	{
+	if (lseek(fd, 0, SEEK_SET) != 0) {
 		pr_error_info("lseek");
 		return -EFAULT;
 	}
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("stat");
 		return ret;
 	}
 
 	ret = web_proxy_ftp_send_http_reply(client, filetype, st.st_size, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("web_proxy_ftp_send_http_reply");
 		return ret;
 	}
@@ -360,15 +322,13 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	struct network_client client_data;
 
 	ret = ftp_client_create_pasv_link(client_proxy, &client_data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ftp_client_create_pasv_link");
 		return ret;
 	}
 
 	ret = ftp_client_send_command2(client_proxy, NULL, 0, "LIST\r\n");
-	if (ret != 150)
-	{
+	if (ret != 150) {
 		ret = -EFAULT;
 		pr_red_info("ftp_client_send_command2 LIST");
 		goto out_close_data_sockfd;
@@ -377,8 +337,7 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	network_url_tostring(url, buff, sizeof(buff), NULL);
 
 	fd = web_proxy_open_html_file(buff, NULL);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		ret = fd;
 		pr_red_info("web_proxy_open_html_file");
 		goto out_close_data_sockfd;
@@ -388,8 +347,7 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	ffile_printf(fd, "\t\t<h2>Directory: <a href=\"%s/\">%s</a></h2>\r\n", buff, buff);
 
 	p = text_dirname_base(buff, url->pathname);
-	if (p == buff || p[-1] != '/')
-	{
+	if (p == buff || p[-1] != '/') {
 		*p++ = '/';
 		*p = 0;
 	}
@@ -399,42 +357,36 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
 
 	ret = cavan_fifo_init(&fifo, sizeof(buff), &client_data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_fifo_init");
 		goto out_close_fd;
 	}
 
 	fifo.read = network_client_fifo_read;
 
-	while (1)
-	{
+	while (1) {
 		int count;
 		char *texts[16];
 
 		ret = cavan_fifo_read_line(&fifo, buff, sizeof(buff));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("file_read_line");
 			goto out_cavan_fifo_deinit;
 		}
 
-		if (ret == 0)
-		{
+		if (ret == 0) {
 			break;
 		}
 
 		count = text_split_by_space(buff, texts, NELEM(texts));
-		if (count < 9)
-		{
+		if (count < 9) {
 			pr_red_info("invalid line %s", buff);
 			continue;
 		}
 
 		ffile_puts(fd, "\t\t\t<tr class=\"entry\">");
 
-		switch (texts[0][0])
-		{
+		switch (texts[0][0]) {
 			case 'l':
 				p = "LINK";
 				break;
@@ -461,17 +413,13 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 
 		ffile_printf(fd, "<td class=\"type\">[%s]</td><td class=\"filename\">", p);
 
-		if (texts[0][0] == 'd')
-		{
+		if (texts[0][0] == 'd') {
 			ffile_printf(fd, "<a href=\"%s/\">%s</a>", texts[8], texts[8]);
-		}
-		else
-		{
+		} else {
 			ffile_printf(fd, "<a href=\"%s\">%s</a>", texts[8], texts[8]);
 		}
 
-		if (texts[0][0] == 'l' && count > 10)
-		{
+		if (texts[0][0] == 'l' && count > 10) {
 			ffile_printf(fd, " -> <a href=\"%s\">%s</a>", texts[10], texts[10]);
 		}
 
@@ -484,16 +432,14 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	web_proxy_flush_html_file(fd);
 
 	ret = ftp_client_read_response(client_proxy, NULL, 0);
-	if (ret != 226)
-	{
+	if (ret != 226) {
 		ret = -EFAULT;
 		pr_red_info("ftp_client_read_response");
 		goto out_cavan_fifo_deinit;
 	}
 
 	ret = web_proxy_send_file(client, fd, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("stat");
 	}
 
@@ -513,8 +459,7 @@ static int web_proxy_send_connect_failed(struct network_client *client, struct n
 	char buff[1024];
 
 	fd = web_proxy_open_html_file("connection failure", NULL);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("web_proxy_open_html_file");
 		return fd;
 	}
@@ -529,8 +474,7 @@ static int web_proxy_send_connect_failed(struct network_client *client, struct n
 	ffile_puts(fd, "\t\t</table>\r\n");
 
 	ret = web_proxy_flush_html_file(fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("web_proxy_flush_html_file");
 		goto out_close_fd;
 	}
@@ -570,22 +514,18 @@ static void web_proxy_stop_handler(struct cavan_dynamic_service *service)
 
 char *web_proxy_find_http_prop(const char *req, const char *req_end, const char *name, size_t namelen)
 {
-	while ((size_t) (req_end - req) > namelen)
-	{
-		if (text_ncmp(req, name, namelen) == 0)
-		{
+	while ((size_t) (req_end - req) > namelen) {
+		if (text_ncmp(req, name, namelen) == 0) {
 			for (req += namelen; req < req_end && byte_is_space(*req); req++);
 
-			if (*req == ':')
-			{
+			if (*req == ':') {
 				while (byte_is_space(*++req));
 
 				return (char *) req;
 			}
 		}
 
-		if (byte_is_lf(*req))
-		{
+		if (byte_is_lf(*req)) {
 			break;
 		}
 
@@ -602,16 +542,14 @@ char *web_proxy_set_http_prop(char *req, char *req_end, const char *name, int na
 	char *prop_end;
 
 	prop = web_proxy_find_http_prop(req, req_end, name, namelen);
-	if (prop == NULL)
-	{
+	if (prop == NULL) {
 		return req_end;
 	}
 
 	for (prop_end = prop; prop_end < req_end && *prop_end != '\n'; prop_end++);
 
 	proplen = prop_end - prop;
-	if (proplen != valuelen)
-	{
+	if (proplen != valuelen) {
 		mem_move(prop + valuelen, prop_end, req_end - prop_end);
 	}
 
@@ -626,27 +564,22 @@ ssize_t web_proxy_read_http_request(struct network_client *client, char *buff, s
 	char *buff_bak = buff;
 	char *buff_end = buff + size;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		char *p;
 		ssize_t rdlen;
 
 		rdlen = client->recv(client, buff, buff_end - buff);
-		if (rdlen <= 0)
-		{
+		if (rdlen <= 0) {
 			return rdlen;
 		}
 
 		p = buff;
 		buff += rdlen;
 
-		while (p < buff)
-		{
-			switch (*p)
-			{
+		while (p < buff) {
+			switch (*p) {
 			case '\n':
-				if (count > 0)
-				{
+				if (count > 0) {
 					goto out_return;
 				}
 				count++;
@@ -667,13 +600,11 @@ out_return:
 
 static void web_proxy_close_proxy_client(struct network_client *client, bool ftp_login)
 {
-	if (client->sockfd < 0)
-	{
+	if (client->sockfd < 0) {
 		return;
 	}
 
-	if (ftp_login)
-	{
+	if (ftp_login) {
 		ftp_client_send_command2(client, NULL, 0, "QUIT\r\n");
 	}
 
@@ -699,13 +630,11 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 	ftp_login = false;
 	client_proxy.sockfd = -1;
 
-	while (1)
-	{
+	while (1) {
 		bool tcp_proxy;
 
 		ret = web_proxy_read_http_request(client, buff, sizeof(buff) - proxy->proxy_hostlen - 1);
-		if (ret <= 0)
-		{
+		if (ret <= 0) {
 			goto out_network_client_close_proxy;
 		}
 
@@ -720,19 +649,16 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 
 		cmdlen = url_text++ - buff;
 		type = web_proxy_get_request_type(buff, cmdlen);
-		if (type < 0)
-		{
+		if (type < 0) {
 			pr_red_info("invalid request[%" PRINT_FORMAT_SIZE "] `%s'", cmdlen, buff);
 
-			if (client_proxy.sockfd < 0)
-			{
+			if (client_proxy.sockfd < 0) {
 				ret = -EINVAL;
 				goto out_return;
 			}
 
 			ret = network_client_send(&client_proxy, buff, buff_end - buff);
-			if (ret <= 0)
-			{
+			if (ret <= 0) {
 				pr_red_info("network_client_send");
 				goto out_network_client_close_proxy;
 			}
@@ -744,19 +670,15 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		url = (url == urls) ? urls + 1 : urls;
 
 		req = network_url_parse(url, url_text);
-		if (req == NULL)
-		{
+		if (req == NULL) {
 			pr_red_info("web_proxy_parse_url:\n%s", url_text);
 			ret = -EINVAL;
 			goto out_network_client_close_proxy;
 		}
 
-		if (url->hostname[0])
-		{
-			if (url->protocol[0] == 0)
-			{
-				if (url->port == NETWORK_PORT_INVALID)
-				{
+		if (url->hostname[0]) {
+			if (url->protocol[0] == 0) {
+				if (url->port == NETWORK_PORT_INVALID) {
 					pr_red_info("invalid url %s", network_url_tostring(url, NULL, 0, NULL));
 					ret = -EINVAL;
 					goto label_web_proxy_main_loop;
@@ -767,20 +689,16 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 
 			tcp_proxy = false;
 			pr_info("%s[%d](%d)", web_proxy_request_type_tostring(type), type, count);
-		}
-		else
-		{
+		} else {
 			tcp_proxy = true;
 			url = &proxy->url_proxy;
 		}
 
-		if (url_prev == NULL || network_url_equals(url_prev, url) == false)
-		{
+		if (url_prev == NULL || network_url_equals(url_prev, url) == false) {
 			web_proxy_close_proxy_client(&client_proxy, ftp_login);
 
 			ret = network_client_open(&client_proxy, url, CAVAN_NET_FLAG_WAIT);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("network_client_open");
 				web_proxy_send_connect_failed(client, url);
 				goto out_return;
@@ -788,23 +706,18 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 
 			count = 0;
 			ftp_login = false;
-		}
-		else
-		{
+		} else {
 			count++;
 			pr_green_info("Don't need connect %d", count);
 		}
 
-		switch (client_proxy.type)
-		{
+		switch (client_proxy.type) {
 		case NETWORK_PROTOCOL_HTTP:
 		case NETWORK_PROTOCOL_HTTPS:
-			switch (type)
-			{
+			switch (type) {
 			case HTTP_REQ_CONNECT:
 				ret = network_client_send_text(client, "HTTP/1.1 200 Connection established\r\n\r\n");
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					pr_error_info("network_client_send_text");
 					goto out_network_client_close_proxy;
 				}
@@ -813,16 +726,13 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 				goto out_network_client_close_proxy;
 
 			default:
-				if (tcp_proxy)
-				{
+				if (tcp_proxy) {
 					buff_end = web_proxy_set_http_prop(buff, buff_end, "Host", 4, proxy->url_proxy.hostname, proxy->proxy_hostlen);
 #if WEB_PROXY_DEBUG
 					*buff_end = 0;
 #endif
 					req = buff;
-				}
-				else
-				{
+				} else {
 					req -= cmdlen + 1;
 					memcpy(req, buff, cmdlen);
 					req[cmdlen] = ' ';
@@ -833,35 +743,28 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 #endif
 
 				ret = network_client_send(&client_proxy, req, buff_end - req);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					pr_error_info("network_client_send");
 					goto out_network_client_close_proxy;
 				}
 
 label_web_proxy_main_loop:
-				if (web_proxy_main_loop(client, &client_proxy, 60 * 1000) < 0)
-				{
+				if (web_proxy_main_loop(client, &client_proxy, 60 * 1000) < 0) {
 					goto out_network_client_close_proxy;
 				}
 
-				if (web_proxy_main_loop(&client_proxy, client, 60 * 1000) < 0)
-				{
+				if (web_proxy_main_loop(&client_proxy, client, 60 * 1000) < 0) {
 					goto out_network_client_close_proxy;
 				}
 			}
 			break;
 
 		case NETWORK_PROTOCOL_FTP:
-			if (ftp_login)
-			{
+			if (ftp_login) {
 				pr_green_info("Don't need login");
-			}
-			else
-			{
+			} else {
 				ret = ftp_client_login(&client_proxy, NULL, NULL);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					pr_red_info("ftp_client_login");
 					goto out_network_client_close_proxy;
 				}
@@ -870,8 +773,7 @@ label_web_proxy_main_loop:
 			}
 
 			ret = ftp_client_send_command2(&client_proxy, NULL, 0, "TYPE I\r\n");
-			if (ret != 200)
-			{
+			if (ret != 200) {
 				pr_red_info("ftp_client_send_command2 TYPE A");
 				ret = -EFAULT;
 				goto out_network_client_close_proxy;
@@ -888,25 +790,20 @@ label_change_dir:
 #endif
 
 			ret = ftp_client_send_command2(&client_proxy, NULL, 0, "CWD %s\r\n", req[0] ? req : "/");
-			if (ret != 250)
-			{
+			if (ret != 250) {
 				pr_red_info("ftp_client_send_command2 CWD");
 				ret = -EFAULT;
 				goto out_network_client_close_proxy;
 			}
 
-			switch (type)
-			{
+			switch (type) {
 			case HTTP_REQ_GET:
-				if (filename && filename[0])
-				{
+				if (filename && filename[0]) {
 					ret = web_proxy_ftp_read_file(client, &client_proxy, filename);
-					if (ret < 0)
-					{
+					if (ret < 0) {
 						pr_red_info("web_proxy_ftp_read_file `%s'", filename);
 
-						if (errno == EISDIR)
-						{
+						if (errno == EISDIR) {
 							filename[-1] = '/';
 							filename = NULL;
 							goto label_change_dir;
@@ -914,12 +811,9 @@ label_change_dir:
 
 						goto out_network_client_close_proxy;
 					}
-				}
-				else
-				{
+				} else {
 					ret = web_proxy_ftp_list_directory(client, &client_proxy, url);
-					if (ret < 0)
-					{
+					if (ret < 0) {
 						pr_red_info("web_proxy_ftp_list_directory `%s'", req);
 						goto out_network_client_close_proxy;
 					}

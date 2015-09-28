@@ -25,16 +25,14 @@
 #define CAVAN_DATA_POOL_INIT(pool, type, name, count) \
 	cavan_data_pool_init(pool, MOFS(type, name), sizeof(type), count)
 
-struct cavan_data_pool_node
-{
+struct cavan_data_pool_node {
 	void *private_data;
 	struct double_link_node node;
 
 	void (*destroy)(struct cavan_data_pool_node *node, void *addr);
 };
 
-struct cavan_data_pool
-{
+struct cavan_data_pool {
 	void *buff;
 	int offset;
 	size_t node_size;

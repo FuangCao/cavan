@@ -15,8 +15,7 @@
 #define BAR_CONTENT_MIN		sizeof("[ 100% ] 1024.00 Byte/s")
 #endif
 
-struct progress_bar
-{
+struct progress_bar {
 	struct timespec time_prev;
 	struct timespec time_start;
 

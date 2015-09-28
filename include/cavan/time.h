@@ -9,8 +9,7 @@
 #define CAVAN_TIME_BASE_DAYS_1970			719527UL
 #define CAVAN_TIME_BASE_DAYS_2000			730484UL
 
-struct cavan_time
-{
+struct cavan_time {
 	u32 year;
 	u8 month;	// 0 ~ 11
 	u8 hour;	// 0 ~ 23

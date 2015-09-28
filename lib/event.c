@@ -6,8 +6,7 @@
 
 const char *cavan_event_key_code_tostring(int code)
 {
-	switch (code)
-	{
+	switch (code) {
 	case KEY_ESC:
 		return "KEY_ESC";
 	case KEY_1:
@@ -1073,11 +1072,9 @@ char *cavan_event_tostring(struct cavan_event_device *dev, struct input_event *e
 {
 	const char *event_code = "UNKNOWN";
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_SYN:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case SYN_REPORT:
 			text_copy(text, "SYN_REPORT");
 			return text;
@@ -1097,22 +1094,19 @@ char *cavan_event_tostring(struct cavan_event_device *dev, struct input_event *e
 		break;
 	case EV_KEY:
 		event_code = cavan_event_find_key_name_by_keylayout(dev, event->code);
-		if (event_code)
-		{
+		if (event_code) {
 			sprintf(text, "KEY_%s[%d] = %d", event_code, event->code, event->value);
 			return text;
 		}
 
 		event_code = cavan_event_key_code_tostring(event->code);
-		if (event_code == NULL)
-		{
+		if (event_code == NULL) {
 			sprintf(text, "EV_KEY[%d] = %d", event->code, event->value);
 			return text;
 		}
 		break;
 	case EV_REL:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case REL_X:
 			event_code = "REL_X";
 			break;
@@ -1152,8 +1146,7 @@ char *cavan_event_tostring(struct cavan_event_device *dev, struct input_event *e
 		}
 		break;
 	case EV_ABS:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case ABS_X:
 			event_code = "ABS_X";
 			break;
@@ -1324,8 +1317,7 @@ static void cavan_event_virtual_build_bitmask(struct single_link *link, uint8_t 
 {
 	struct cavan_virtual_key *key;
 
-	single_link_foreach(link, key)
-	{
+	single_link_foreach(link, key) {
 		set_bit(key->code, bitmask);
 	}
 	end_link_foreach(link);
@@ -1341,8 +1333,7 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 
 	sprintf(pathname, "/sys/board_properties/virtualkeys.%s", dev->name);
 	mem = file_read_all(pathname, 0, &size);
-	if (mem == NULL)
-	{
+	if (mem == NULL) {
 		// pr_red_info("file_read_all %s", pathname);
 		return -ENOMEM;
 	}
@@ -1352,17 +1343,14 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 	file_end = mem + size;
 	p = text_skip_space(mem, file_end);
 
-	while (p < file_end)
-	{
-		if (text_lhcmp("0x01", p) || sscanf(p, "0x01:%d:%d:%d:%d:%d", &code, &x, &y, &width, &height) != 5)
-		{
+	while (p < file_end) {
+		if (text_lhcmp("0x01", p) || sscanf(p, "0x01:%d:%d:%d:%d:%d", &code, &x, &y, &width, &height) != 5) {
 			p++;
 			continue;
 		}
 
 		key = malloc(sizeof(*key));
-		if (key == NULL)
-		{
+		if (key == NULL) {
 			pr_error_info("malloc");
 			goto out_free_mem;
 		}
@@ -1402,11 +1390,9 @@ static char *cavan_event_get_keylayout_pathname(struct cavan_event_device *dev, 
 	text_replace_char2(dev->name, dev_name[1], ' ', '-');
 
 	filename = text_copy(pathname, "/system/usr/keylayout/");
-	for (i = 0; i < (int) NELEM(filenames); i++)
-	{
+	for (i = 0; i < (int) NELEM(filenames); i++) {
 		sprintf(filename, "%s.kl", filenames[i]);
-		if (access(pathname, R_OK) == 0)
-		{
+		if (access(pathname, R_OK) == 0) {
 			return pathname;
 		}
 	}
@@ -1418,10 +1404,8 @@ const char *cavan_event_find_key_name_by_keylayout_base(struct single_link *link
 {
 	struct cavan_keylayout_node *key;
 
-	single_link_foreach(link, key)
-	{
-		if (key->code == code)
-		{
+	single_link_foreach(link, key) {
+		if (key->code == code) {
 			link_foreach_return(link, key->name);
 		}
 	}
@@ -1435,15 +1419,11 @@ const char *cavan_event_find_key_name_base(struct single_link *link, int code)
 	const char *name;
 
 	name = cavan_event_find_key_name_by_keylayout_base(link, code);
-	if (name == NULL)
-	{
+	if (name == NULL) {
 		name = cavan_event_key_code_tostring(code);
-		if (name)
-		{
+		if (name) {
 			name += 4;
-		}
-		else
-		{
+		} else {
 			name = "NONE";
 		}
 	}
@@ -1455,8 +1435,7 @@ static void cavan_event_virtual_key_set_name(struct single_link *vk_link, struct
 {
 	struct cavan_virtual_key *key;
 
-	single_link_foreach(vk_link, key)
-	{
+	single_link_foreach(vk_link, key) {
 		key->name = cavan_event_find_key_name_base(kl_link, key->code);
 	}
 	end_link_foreach(vk_link);
@@ -1472,23 +1451,20 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 	const char *p, *line_end, *file_end;
 	struct cavan_keylayout_node *node;
 
-	if (cavan_event_get_keylayout_pathname(dev, pathname) == NULL)
-	{
+	if (cavan_event_get_keylayout_pathname(dev, pathname) == NULL) {
 		return -ENOENT;
 	}
 
 	memset(key_bitmask, 0, sizeof(key_bitmask));
 
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("ioctl EVIOCGBIT EV_KEY");
 		return ret;
 	}
 
 	mem = file_read_all(pathname, 1, &size);
-	if (mem == NULL)
-	{
+	if (mem == NULL) {
 		pr_red_info("file_read_all %s", pathname);
 		return -EFAULT;
 	}
@@ -1501,31 +1477,26 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 	file_end = p + size;
 
 	node = malloc(sizeof(*node));
-	if (node == NULL)
-	{
+	if (node == NULL) {
 		pr_error_info("malloc");
 		goto out_free_memory;
 	}
 
 	cavan_event_virtual_build_bitmask(&dev->vk_link, key_bitmask);
 
-	while (p < file_end)
-	{
+	while (p < file_end) {
 		line_end = text_find_lf(p, file_end);
-		if (line_end == NULL)
-		{
+		if (line_end == NULL) {
 			line_end = file_end;
 		}
 
 		p = text_skip_space(p, line_end);
-		if (p == line_end || *p == '#')
-		{
+		if (p == line_end || *p == '#') {
 			goto label_goto_next_line;
 		}
 
 		ret = sscanf(p, "key %d %s", &node->code, node->name);
-		if (ret != 2 || test_bit(node->code, key_bitmask) == 0)
-		{
+		if (ret != 2 || test_bit(node->code, key_bitmask) == 0) {
 			goto label_goto_next_line;
 		}
 
@@ -1534,8 +1505,7 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 		single_link_push(&dev->kl_link, &node->node);
 
 		node = malloc(sizeof(*node));
-		if (node == NULL)
-		{
+		if (node == NULL) {
 			pr_error_info("malloc");
 			goto label_goto_next_line;
 		}
@@ -1559,8 +1529,7 @@ static void cavan_event_close_device_handler(struct double_link *link, struct do
 	struct cavan_event_service *service = data;
 	struct cavan_event_device *dev = double_link_get_container(link, node);
 
-	if (service->remove)
-	{
+	if (service->remove) {
 		service->remove(dev, service->private_data);
 	}
 
@@ -1588,26 +1557,22 @@ ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data
 	char *filename;
 	size_t count;
 
-	if (matcher == NULL || matcher->handler == NULL)
-	{
+	if (matcher == NULL || matcher->handler == NULL) {
 		pr_red_info("matcher == NULL || matcher->handler == NULL");
 		return -EINVAL;
 	}
 
 	filename = text_copy(matcher->pathname, "/dev/input/");
 	dp = opendir(matcher->pathname);
-	if (dp == NULL)
-	{
+	if (dp == NULL) {
 		pr_error_info("open directory `%s'", matcher->pathname);
 		return -ENOENT;
 	}
 
 	count = 0;
 
-	while ((entry = readdir(dp)))
-	{
-		if (text_lhcmp("event", entry->d_name))
-		{
+	while ((entry = readdir(dp))) {
+		if (text_lhcmp("event", entry->d_name)) {
 			continue;
 		}
 
@@ -1615,31 +1580,27 @@ ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data
 
 		text_copy(filename, entry->d_name);
 		fd = open(matcher->pathname, O_RDONLY);
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			pr_error_info("open file `%s'", matcher->pathname);
 			continue;
 		}
 
 		ret = cavan_event_get_devname(fd, matcher->devname, sizeof(matcher->devname));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("cavan_event_get_devname");
 			close(fd);
 			continue;
 		}
 
 		matcher->fd = fd;
-		if (matcher->match && matcher->match(matcher, data) == false)
-		{
+		if (matcher->match && matcher->match(matcher, data) == false) {
 			pr_red_info("Can't match device `%s', path = %s", matcher->devname, matcher->pathname);
 			close(fd);
 			continue;
 		}
 
 		ret = matcher->handler(matcher, data);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("Handler device `%s', path = %s", matcher->devname, matcher->pathname);
 			close(fd);
 			continue;
@@ -1657,8 +1618,7 @@ static bool cavan_event_service_match(struct cavan_event_matcher *matcher, void 
 {
 	struct cavan_event_service *service = data;
 
-	if (service->matcher)
-	{
+	if (service->matcher) {
 		return service->matcher(matcher, service->private_data);
 	}
 
@@ -1672,22 +1632,19 @@ static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher
 	struct cavan_event_service *service = data;
 
 	dev = malloc(sizeof(*dev));
-	if (dev == NULL)
-	{
+	if (dev == NULL) {
 		pr_error_info("malloc");
 		return -ENOMEM;
 	}
 
 	ret = single_link_init(&dev->vk_link, MOFS(struct cavan_virtual_key, node));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("single_link_init");
 		goto out_free_dev;
 	}
 
 	ret = single_link_init(&dev->kl_link, MOFS(struct cavan_keylayout_node, node));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("single_link_init");
 		goto out_single_link_deinit_vk;
 	}
@@ -1696,8 +1653,7 @@ static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher
 	text_ncopy(dev->name, matcher->devname, sizeof(dev->name));
 	text_ncopy(dev->pathname, matcher->pathname, sizeof(dev->pathname));
 
-	if (service->probe && service->probe(dev, service->private_data) < 0)
-	{
+	if (service->probe && service->probe(dev, service->private_data) < 0) {
 		ret = -EFAULT;
 		pr_red_info("Faile to probe device %s, name = %s", matcher->pathname, matcher->devname);
 		goto out_single_link_deinit_kl;
@@ -1724,15 +1680,13 @@ out_free_dev:
 static int cavan_event_open_devices(struct cavan_event_service *service)
 {
 	ssize_t count;
-	struct cavan_event_matcher matcher =
-	{
+	struct cavan_event_matcher matcher = {
 		.match = cavan_event_service_match,
 		.handler = cavan_event_service_match_handler
 	};
 
 	count = cavan_event_scan_devices(&matcher, service);
-	if (count < 0)
-	{
+	if (count < 0) {
 		pr_red_info("cavan_event_scan_devices");
 	}
 
@@ -1751,14 +1705,12 @@ static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 	struct input_event events[32], *ep, *ep_end;
 
 	ret = poll(pfds, service->pfd_count, -1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("poll");
 		return ret;
 	}
 
-	if (pfds[0].revents)
-	{
+	if (pfds[0].revents) {
 		return 0;
 	}
 
@@ -1766,26 +1718,21 @@ static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 
 	pthread_mutex_lock(&link->lock);
 
-	for (head = &link->head_node, node = head->next; node != head; node = node->next)
-	{
+	for (head = &link->head_node, node = head->next; node != head; node = node->next) {
 		pdev = double_link_get_container(link, node);
-		if (pdev->pfd->revents == 0)
-		{
+		if (pdev->pfd->revents == 0) {
 			continue;
 		}
 
 		rdlen = read(pdev->fd, events, sizeof(events));
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_error_info("read");
 			pthread_mutex_unlock(&link->lock);
 			return rdlen;
 		}
 
-		for (ep = events, ep_end = ep + (rdlen / sizeof(events[0])); ep < ep_end; ep++)
-		{
-			if (service->event_handler(pdev, ep, service->private_data) == false)
-			{
+		for (ep = events, ep_end = ep + (rdlen / sizeof(events[0])); ep < ep_end; ep++) {
+			if (service->event_handler(pdev, ep, service->private_data) == false) {
 				char print_buff[1024];
 
 				pr_red_info("%s", cavan_event_tostring(pdev, ep, print_buff));
@@ -1798,14 +1745,11 @@ static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 	return 0;
 }
 
-struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device *dev, int x, int y)
-{
+struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device *dev, int x, int y) {
 	struct cavan_virtual_key *key;
 
-	single_link_foreach(&dev->vk_link, key)
-	{
-		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right)
-		{
+	single_link_foreach(&dev->vk_link, key) {
+		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right) {
 			link_foreach_return(&dev->vk_link, key);
 		}
 	}
@@ -1841,14 +1785,12 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	struct pollfd *pfd, *pfd_end;
 	struct cavan_thread *thread;
 
-	if (service == NULL)
-	{
+	if (service == NULL) {
 		pr_red_info("service == NULL");
 		return -EINVAL;
 	}
 
-	if (service->event_handler == NULL)
-	{
+	if (service->event_handler == NULL) {
 		service->event_handler = cavan_event_handler_dummy;
 	}
 
@@ -1856,22 +1798,19 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	pthread_mutex_init(&service->lock, NULL);
 
 	ret = double_link_init(&service->link, MOFS(struct cavan_event_device, node));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("double_link_init");
 		return ret;
 	}
 
 	count = cavan_event_open_devices(service);
-	if (count < 0)
-	{
+	if (count < 0) {
 		ret = count;
 		pr_red_info("cavan_event_open_devices");
 		goto out_double_link_deinit;
 	}
 
-	if (count == 0)
-	{
+	if (count == 0) {
 		ret = -ENOENT;
 		pr_red_info("No input device found!");
 		goto out_double_link_deinit;
@@ -1882,16 +1821,14 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	thread->wake_handker = NULL;
 	thread->handler = cavan_event_service_handler;
 	ret = cavan_thread_init(thread, service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_cavan_event_close_devices;
 	}
 
 	service->pfd_count = count + 1;
 	pfd = malloc(service->pfd_count * sizeof(*pfd));
-	if (pfd == NULL)
-	{
+	if (pfd == NULL) {
 		ret = -ENOMEM;
 		pr_error_info("malloc");
 		goto out_cavan_thread_deinit;
@@ -1907,8 +1844,7 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 
 	pthread_mutex_lock(&link->lock);
 
-	for (pfd++, pfd_end = pfd + count, node = link->head_node.next; pfd < pfd_end; pfd++, node = node->next)
-	{
+	for (pfd++, pfd_end = pfd + count, node = link->head_node.next; pfd < pfd_end; pfd++, node = node->next) {
 		dev = double_link_get_container(link, node);
 
 		dev->pfd = pfd;
@@ -1920,8 +1856,7 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	pthread_mutex_unlock(&link->lock);
 
 	ret = cavan_event_start_poll_thread(service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_event_start_poll_thread");
 		goto out_free_pfd;
 	}
@@ -1950,8 +1885,7 @@ void cavan_event_service_stop(struct cavan_event_service *service)
 
 bool cavan_event_simple_matcher(struct cavan_event_matcher *matcher, void *data)
 {
-	if (data)
-	{
+	if (data) {
 		return text_cmp(matcher->devname, data) == 0 || text_cmp(matcher->pathname, data) == 0;
 	}
 
@@ -1965,16 +1899,13 @@ bool cavan_event_name_matcher(const char *devname, ...)
 
 	va_start(ap, devname);
 
-	while (1)
-	{
+	while (1) {
 		name = va_arg(ap, const char *);
-		if (name == NULL)
-		{
+		if (name == NULL) {
 			break;
 		}
 
-		if (strcmp(devname, name) == 0)
-		{
+		if (strcmp(devname, name) == 0) {
 			break;
 		}
 	}
@@ -1990,8 +1921,7 @@ int cavan_event_get_absinfo(int fd, int axis, int *min, int *max)
 	struct input_absinfo info;
 
 	ret = ioctl(fd, EVIOCGABS(axis), &info);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("ioctl EVIOCGABS");
 		return ret;
 	}

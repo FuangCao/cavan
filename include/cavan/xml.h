@@ -29,16 +29,14 @@ typedef enum cavan_xml_token {
 	CAVAN_XML_TOKEN_EOF,
 } cavan_xml_token_t;
 
-struct cavan_xml_attribute
-{
+struct cavan_xml_attribute {
 	int flags;
 	const char *name;
 	const char *value;
 	struct cavan_xml_attribute *next;
 };
 
-struct cavan_xml_tag
-{
+struct cavan_xml_tag {
 	int flags;
 	const char *name;
 	const char *content;
@@ -47,8 +45,7 @@ struct cavan_xml_tag
 	struct cavan_xml_tag *child;
 };
 
-struct cavan_xml_document
-{
+struct cavan_xml_document {
 	char *content;
 	const char *newline;
 	const char *line_prefix;
@@ -57,8 +54,7 @@ struct cavan_xml_document
 	struct cavan_xml_tag *tag;
 };
 
-struct cavan_xml_parser
-{
+struct cavan_xml_parser {
 	int lineno;
 	char *pos;
 	char *pos_end;

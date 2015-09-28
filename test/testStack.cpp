@@ -24,17 +24,14 @@ int main(int argc, char *argv[])
 {
 	Stack<int> stack1(10);
 
-	for (int i = 0; i < 10; i++)
-	{
+	for (int i = 0; i < 10; i++) {
 		stack1.push(i);
 	}
 
-	for (int i = 0; i < 10; i++)
-	{
+	for (int i = 0; i < 10; i++) {
 		int data;
 
-		if (stack1.pop(data))
-		{
+		if (stack1.pop(data)) {
 			cout << "data = " << data << endl;
 		}
 	}

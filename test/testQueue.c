@@ -28,8 +28,7 @@ int main(int argc, char *argv[])
 	struct cavan_mem_queue queue;
 
 	ret = cavan_mem_queue_init(&queue, 16);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_mem_queue_init: %d", ret);
 		return ret;
 	}
@@ -37,8 +36,7 @@ int main(int argc, char *argv[])
 	println("%d. used_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_used_size(&queue));
 	println("%d. free_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_free_size(&queue));
 
-	for (i = 0; i < 10; i++)
-	{
+	for (i = 0; i < 10; i++) {
 		char c = '0' + i;
 
 		cavan_mem_queue_inqueue(&queue, &c, 1);
@@ -51,8 +49,7 @@ int main(int argc, char *argv[])
 	buff[ret] = 0;
 	println("buff[%d] = %s", ret, buff);
 
-	for (i = 0; i < 26; i++)
-	{
+	for (i = 0; i < 26; i++) {
 		char c = 'A' + i;
 
 		cavan_mem_queue_inqueue(&queue, &c, 1);
@@ -64,8 +61,7 @@ int main(int argc, char *argv[])
 		println("%d. free_size = %" PRINT_FORMAT_SIZE, __LINE__, cavan_mem_queue_get_free_size(&queue));
 	}
 
-	for (i = 0; i < 26; i += 2)
-	{
+	for (i = 0; i < 26; i += 2) {
 		char chars[2] = { 'A' + i, 'A' + i + 1 };
 
 		cavan_mem_queue_inqueue(&queue, &chars, 2);

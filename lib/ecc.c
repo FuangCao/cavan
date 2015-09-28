@@ -38,10 +38,8 @@ int cavan_ecc_polarity_row(u8 data)
 	int count;
 	u8 shift;
 
-	for (shift = 1, count = 0; shift; shift <<= 1)
-	{
-		if (data & shift)
-		{
+	for (shift = 1, count = 0; shift; shift <<= 1) {
+		if (data & shift) {
 			count++;
 		}
 	}
@@ -53,15 +51,12 @@ u8 cavan_ecc_polarity_column(u8 data)
 {
 	unsigned int i;
 	u8 cp;
-	static const u8 cp_table[] =
-	{
+	static const u8 cp_table[] = {
 		0x55, 0xaa, 0x33, 0xCC, 0x0F, 0xF0
 	};
 
-	for (cp = 0, i = 0; i < NELEM(cp_table); i++)
-	{
-		if (cavan_ecc_polarity_row(data & cp_table[i]))
-		{
+	for (cp = 0, i = 0; i < NELEM(cp_table); i++) {
+		if (cavan_ecc_polarity_row(data & cp_table[i])) {
 			cp |= 1 << i;
 		}
 	}
@@ -73,8 +68,7 @@ void cavan_ecc_show_ecc_table(const u8 *table, size_t count)
 {
 	const u8 *table_end;
 
-	for (table_end = table + count; table < table_end; table++)
-	{
+	for (table_end = table + count; table < table_end; table++) {
 		print("0x%02x ", *table);
 	}
 
@@ -86,11 +80,9 @@ u8 *cavan_ecc_build_ecc_table(u8 *table, size_t count)
 	unsigned int i;
 	u8 ecc;
 
-	for (i = 0; i < count; i++)
-	{
+	for (i = 0; i < count; i++) {
 		ecc = cavan_ecc_polarity_column(i);
-		if (cavan_ecc_polarity_row(i))
-		{
+		if (cavan_ecc_polarity_row(i)) {
 			ecc |= 1 << 6;
 		}
 
@@ -105,8 +97,7 @@ static u16 cavan_ecc_check_row(u8 *buff)
 	u16 ecc;
 	u8 ecc_rows[256], *p, *p_end;
 
-	for (p = ecc_rows, p_end = p + 256; p < p_end; p++, buff++)
-	{
+	for (p = ecc_rows, p_end = p + 256; p < p_end; p++, buff++) {
 		*p =  cavan_ecc_table[*buff] & (1 << 6);
 	}
 
@@ -122,8 +113,7 @@ static u8 cavan_ecc_check_column(u8 *buff)
 
 	ecc = *buff;
 
-	for (buff_end = buff + 256, buff++; buff < buff_end; buff++)
-	{
+	for (buff_end = buff + 256, buff++; buff < buff_end; buff++) {
 		ecc ^= *buff;
 	}
 
@@ -132,8 +122,7 @@ static u8 cavan_ecc_check_column(u8 *buff)
 
 u32 cavan_ecc_check(void *buff, size_t size)
 {
-	if (size != 256)
-	{
+	if (size != 256) {
 		error_msg("buff size != 256");
 		return 0;
 	}

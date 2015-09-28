@@ -40,8 +40,7 @@ int cavan_data_pool_init(struct cavan_data_pool *pool, int offset, size_t node_s
 	struct double_link *link = &pool->link;
 
 	ret = cavan_data_pool_link_init(link, offset);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_data_link_init");
 		return ret;
 	}
@@ -49,8 +48,7 @@ int cavan_data_pool_init(struct cavan_data_pool *pool, int offset, size_t node_s
 	size = node_size * count;
 
 	buff = malloc(size);
-	if (buff == NULL)
-	{
+	if (buff == NULL) {
 		pr_error_info("malloc");
 		goto out_double_link_deinit;
 	}
@@ -59,8 +57,7 @@ int cavan_data_pool_init(struct cavan_data_pool *pool, int offset, size_t node_s
 	pool->offset = offset;
 	pool->node_size = node_size;
 
-	for (buff_end = buff + size; buff < buff_end; buff += node_size)
-	{
+	for (buff_end = buff + size; buff < buff_end; buff += node_size) {
 		struct cavan_data_pool_node *data = cavan_data_pool_to_node(pool, buff);
 
 		data->private_data = pool;
@@ -89,14 +86,12 @@ void *cavan_data_pool_alloc(struct cavan_data_pool *pool)
 	struct cavan_data_pool_node *pool_node;
 
 	node = double_link_pop(&pool->link);
-	if (node)
-	{
+	if (node) {
 		return double_link_get_container(&pool->link, node);
 	}
 
 	data = malloc(pool->node_size);
-	if (data == NULL)
-	{
+	if (data == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}

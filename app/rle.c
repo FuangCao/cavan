@@ -10,20 +10,17 @@ int main(int argc, char *argv[])
 
 	assert(argc == 4 && argv[1][0] == '-');
 
-	switch (argv[1][1])
-	{
+	switch (argv[1][1]) {
 	case 'x':
 		ret = unrle_to(argv[2], argv[3]);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("inrle_to");
 			return ret;
 		}
 		break;
 	case 'c':
 		ret = rle_to(argv[2], argv[3]);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("rle_to");
 			return ret;
 		}

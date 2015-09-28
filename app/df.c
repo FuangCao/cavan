@@ -15,31 +15,26 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	int ret;
 	struct statfs stfs;
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 			show_author_info();
@@ -60,8 +55,7 @@ int main(int argc, char *argv[])
 	assert(optind < argc);
 
 	ret = get_device_statfs(argv[optind], NULL, &stfs);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("get_device_statfs");
 		return ret;
 	}

@@ -58,17 +58,13 @@ static double lm49350_cal_freq(double MCLK, int M, int N, int N_MOD, int P, int 
 	P1 = ((double) P + 1) / 2;
 
 	DIV1 = ((double) DIV + 1) / 2;
-	if (DIV1 < 1.00)
-	{
+	if (DIV1 < 1.00) {
 		DIV1 = 1.00;
 	}
 
-	if (N < 10)
-	{
+	if (N < 10) {
 		N = 10;
-	}
-	else if (N > 250)
-	{
+	} else if (N > 250) {
 		N = 250;
 	}
 
@@ -76,8 +72,7 @@ static double lm49350_cal_freq(double MCLK, int M, int N, int N_MOD, int P, int 
 
 	OUT = MCLK * N1 / (M1 * P1) / DIV1;
 
-	if (verbose)
-	{
+	if (verbose) {
 		char buff_in[64];
 		char buff_out[64];
 
@@ -96,28 +91,22 @@ static double lm49350_find_pll_config(double MCLK, double OUT, int *M_BEST, int 
 	int M, N, N_MOD, P, DIV;
 	double diff_min_best = -1;
 
-	for (DIV = DIV_MIN, count = 0; DIV <= DIV_MAX && count < 10; DIV++)
-	{
+	for (DIV = DIV_MIN, count = 0; DIV <= DIV_MAX && count < 10; DIV++) {
 		double diff_min = -1;
 		int M_MIN = PLL_M_MAX;
 		int N_MIN = PLL_N_MAX;
 		int P_MIN = PLL_P_MAX;
 		int N_MOD_MIN = PLL_N_MOD_MAX;
 
-		for (M = PLL_M_MIN; M <= PLL_M_MAX; M++)
-		{
-			for (N = PLL_N_MIN; N <= PLL_M_MAX; N++)
-			{
-				for (N_MOD = PLL_N_MOD_MIN; N_MOD <= PLL_N_MOD_MAX; N_MOD++)
-				{
-					for (P = PLL_P_MIN; P <= PLL_P_MAX; P++)
-					{
+		for (M = PLL_M_MIN; M <= PLL_M_MAX; M++) {
+			for (N = PLL_N_MIN; N <= PLL_M_MAX; N++) {
+				for (N_MOD = PLL_N_MOD_MIN; N_MOD <= PLL_N_MOD_MAX; N_MOD++) {
+					for (P = PLL_P_MIN; P <= PLL_P_MAX; P++) {
 						double diff;
 						double freq = lm49350_cal_freq(MCLK, M, N, N_MOD, P, DIV, false);
 
 						diff = freq > OUT ? freq - OUT : OUT - freq;
-						if (fastmode && diff == 0.00 && (P & 0xFF00) == 0)
-						{
+						if (fastmode && diff == 0.00 && (P & 0xFF00) == 0) {
 							*M_BEST = M;
 							*N_BEST = N;
 							*N_MOD_BEST = N_MOD;
@@ -127,8 +116,7 @@ static double lm49350_find_pll_config(double MCLK, double OUT, int *M_BEST, int 
 							return 0.00;
 						}
 
-						if (diff < diff_min || diff_min < 0 || (diff == 0.00 && (P_MIN & 0xFF00) && (P & 0xFF00) == 0))
-						{
+						if (diff < diff_min || diff_min < 0 || (diff == 0.00 && (P_MIN & 0xFF00) && (P & 0xFF00) == 0)) {
 							diff_min = diff;
 
 							M_MIN = M;
@@ -137,8 +125,7 @@ static double lm49350_find_pll_config(double MCLK, double OUT, int *M_BEST, int 
 							P_MIN = P;
 						}
 
-						if (verbose && diff == diff_min)
-						{
+						if (verbose && diff == diff_min) {
 							println("M = 0x%02x, N = 0x%02x, N_MOD = 0x%02x, P = 0x%02x, DIV = 0x%02x, diff = %lf", M, N, N_MOD, P, DIV, diff);
 						}
 					}
@@ -146,8 +133,7 @@ static double lm49350_find_pll_config(double MCLK, double OUT, int *M_BEST, int 
 			}
 		}
 
-		if (diff_min < diff_min_best || diff_min_best < 0)
-		{
+		if (diff_min < diff_min_best || diff_min_best < 0) {
 			*M_BEST = M_MIN;
 			*N_BEST = N_MIN;
 			*N_MOD_BEST = N_MOD_MIN;
@@ -157,13 +143,11 @@ static double lm49350_find_pll_config(double MCLK, double OUT, int *M_BEST, int 
 			diff_min_best = diff_min;
 		}
 
-		if (diff_min_best == 0.00)
-		{
+		if (diff_min_best == 0.00) {
 			return 0.00;
 		}
 
-		if (diff_min > diff_min_best)
-		{
+		if (diff_min > diff_min_best) {
 			count++;
 		}
 
@@ -179,12 +163,9 @@ static size_t lm49350_clock_table_insert(double table[], size_t count, double fr
 {
 	double *p, *q;
 
-	for (p = table, q = p + count; p < q; p++)
-	{
-		if (freq <= *p)
-		{
-			if (freq == *p)
-			{
+	for (p = table, q = p + count; p < q; p++) {
+		if (freq <= *p) {
+			if (freq == *p) {
 				return count;
 			}
 
@@ -192,8 +173,7 @@ static size_t lm49350_clock_table_insert(double table[], size_t count, double fr
 		}
 	}
 
-	while (q > p)
-	{
+	while (q > p) {
 		*q = *(q - 1);
 		q--;
 	}
@@ -207,19 +187,16 @@ int main(int argc, char *argv[])
 {
 	double MCLK;
 
-	if (argc > 5)
-	{
+	if (argc > 5) {
 		int M, N, N_MOD, P, DIV;
 
-		if (argc > 7)
-		{
+		if (argc > 7) {
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
 
 		MCLK = text2frequency(argv[1], NULL, NULL);
-		if (MCLK == 0.00)
-		{
+		if (MCLK == 0.00) {
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
@@ -229,27 +206,21 @@ int main(int argc, char *argv[])
 		N_MOD = text2value_unsigned(argv[4], NULL, 10);
 		P = text2value_unsigned(argv[5], NULL, 10);
 
-		if (argc > 6)
-		{
+		if (argc > 6) {
 			DIV = text2value_unsigned(argv[6], NULL, 10);
-		}
-		else
-		{
+		} else {
 			DIV = 0x00;
 		}
 
 		lm49350_cal_freq(MCLK, M, N, N_MOD, P, DIV, true);
-	}
-	else if (argc > 2)
-	{
+	} else if (argc > 2) {
 		int ret;
 		double OUT;
 		char buff_in[64];
 		char buff_out[64];
 		int M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST;
 
-		if (argc > 4)
-		{
+		if (argc > 4) {
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
@@ -257,14 +228,12 @@ int main(int argc, char *argv[])
 		MCLK = text2frequency(argv[1], NULL, NULL);
 		OUT = text2frequency(argv[2], NULL, NULL);
 
-		if (MCLK == 0.00 || OUT == 0.00)
-		{
+		if (MCLK == 0.00 || OUT == 0.00) {
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
 
-		if (argc > 3)
-		{
+		if (argc > 3) {
 			int osr = text2value_unsigned(argv[3], NULL, 10);
 
 			println("FPS = %s, OSR = %d", frequency_tostring(OUT, buff_out, sizeof(buff_out), NULL), osr);
@@ -274,90 +243,72 @@ int main(int argc, char *argv[])
 
 		println("%s => %s", frequency_tostring(MCLK, buff_in, sizeof(buff_in), NULL), frequency_tostring(OUT, buff_out, sizeof(buff_out), NULL));
 
-		if (lm49350_find_pll_config(MCLK, OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, true, false) != 0.00)
-		{
+		if (lm49350_find_pll_config(MCLK, OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, true, false) != 0.00) {
 			pr_red_info("Not found!");
 			return ret;
 		}
 
 		lm49350_cal_freq(MCLK, M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST, true);
-	}
-	else if (argc > 1)
-	{
+	} else if (argc > 1) {
 		int i, j;
 		char buff[64];
 
 		MCLK = text2frequency(argv[1], NULL, NULL);
-		if (MCLK == 0.00)
-		{
+		if (MCLK == 0.00) {
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
 
-		for (i = 0; i < NELEM(lm49350_osr_table); i++)
-		{
+		for (i = 0; i < NELEM(lm49350_osr_table); i++) {
 			int osr = lm49350_osr_table[i];
 
 			println("/* MCLK = %s, OSR = %d */", frequency_tostring(MCLK, buff, sizeof(buff), NULL), osr);
 			println("{");
 
-			for (j = 0; j < NELEM(lm49350_fps_table); j++)
-			{
+			for (j = 0; j < NELEM(lm49350_fps_table); j++) {
 				u32 fps = lm49350_fps_table[j];
 				double OUT = fps * osr * 2;
 				int M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST;
 
-				if (lm49350_find_pll_config(MCLK, OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, false, true) != 0.00)
-				{
+				if (lm49350_find_pll_config(MCLK, OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, false, true) != 0.00) {
 					println("\t/* Fixme: %d not found! */", fps);
-				}
-				else
-				{
+				} else {
 					println("\t{ %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x }, /* %s */", fps, M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST, frequency_tostring(OUT, buff, sizeof(buff), NULL));
 				}
 			}
 
 			println("};");
 		}
-	}
-	else
-	{
+	} else {
 		int i;
 		size_t count;
 		double clock_table[NELEM(lm49350_osr_table) * NELEM(lm49350_fps_table)];
 
-		for (count = 0, i = 0; i < NELEM(lm49350_osr_table); i++)
-		{
+		for (count = 0, i = 0; i < NELEM(lm49350_osr_table); i++) {
 			int j;
 			int osr = lm49350_osr_table[i];
 
-			for (j = 0; j < NELEM(lm49350_fps_table); j++)
-			{
+			for (j = 0; j < NELEM(lm49350_fps_table); j++) {
 				count = lm49350_clock_table_insert(clock_table, count, lm49350_fps_table[j] * osr * 2);
 			}
 		}
 
 		println("{");
 
-		for (i = 0; i < NELEM(lm49350_mclk_table); i++)
-		{
+		for (i = 0; i < NELEM(lm49350_mclk_table); i++) {
 			char buff[64];
 			double *p, *p_end;
 			double MCLK = lm49350_mclk_table[i] * 1000000;
 
 			println("\t/* MCLK = %s */", frequency_tostring(MCLK, buff, sizeof(buff), NULL));
 
-			for (p = clock_table, p_end = p + count; p < p_end; p++)
-			{
+			for (p = clock_table, p_end = p + count; p < p_end; p++) {
 				double OUT = *p;
 				int M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST;
 
-				if (lm49350_find_pll_config(MCLK, OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, false, true) != 0.00)
-				{
+				if (lm49350_find_pll_config(MCLK, OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, false, true) != 0.00) {
 					println("\t/* Fixme: %s not found! */", frequency_tostring(OUT, buff, sizeof(buff), NULL));
-				}
-				else
-				{
+				} else {
 					println("\t{ %d, %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x }, /* %s */", (u32) MCLK, (u32) OUT, M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST, frequency_tostring(OUT, buff, sizeof(buff), NULL));
 				}
 			}

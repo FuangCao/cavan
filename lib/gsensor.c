@@ -22,8 +22,7 @@ bool cavan_gsensor_device_match(uint8_t *abs_bitmask)
 {
 	if (test_bit(ABS_X, abs_bitmask) == 0 || \
 		test_bit(ABS_Y, abs_bitmask) == 0 || \
-		test_bit(ABS_Z, abs_bitmask) == 0)
-	{
+		test_bit(ABS_Z, abs_bitmask) == 0) {
 		return false;
 	}
 
@@ -40,8 +39,7 @@ bool cavan_gsensor_device_matcher(struct cavan_event_matcher *matcher, void *dat
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
 
 	ret = cavan_event_get_abs_bitmask(matcher->fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("cavan_event_get_abs_bitmask");
 		return ret;
 	}
@@ -55,11 +53,9 @@ static bool cavan_gsensor_event_handler(struct cavan_input_device *dev, struct i
 	struct cavan_input_service *service = data;
 	struct cavan_gsensor_device *sensor = (struct cavan_gsensor_device *) dev;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_ABS:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case ABS_X:
 			sensor->vector.x = event->value;
 			break;
@@ -79,8 +75,7 @@ static bool cavan_gsensor_event_handler(struct cavan_input_device *dev, struct i
 
 	case EV_SYN:
 		message = cavan_data_queue_get_node(&service->queue);
-		if (message)
-		{
+		if (message) {
 			message->type = CAVAN_INPUT_MESSAGE_ACCELEROMETER;
 			message->vector = sensor->vector;
 			cavan_data_queue_append(&service->queue, &message->node);
@@ -94,15 +89,13 @@ static bool cavan_gsensor_event_handler(struct cavan_input_device *dev, struct i
 	return true;
 }
 
-struct cavan_input_device *cavan_gsensor_create(void)
-{
+struct cavan_input_device *cavan_gsensor_create(void) {
 	struct cavan_gsensor_device *sensor;
 	struct cavan_input_device *dev;
 	struct cavan_input_message_vector *vector;
 
 	sensor = malloc(sizeof(*sensor));
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}

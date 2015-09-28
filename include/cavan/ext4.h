@@ -127,16 +127,14 @@
 /*
  * ACL structures
  */
-struct ext2_acl_header	/* Header of Access Control Lists */
-{
+struct ext2_acl_header	/* Header of Access Control Lists */ {
 	u32	aclh_size;
 	u32	aclh_file_count;
 	u32	aclh_acle_count;
 	u32	aclh_first_acle;
 };
 
-struct ext2_acl_entry	/* Access Control List Entry */
-{
+struct ext2_acl_entry	/* Access Control List Entry */ {
 	u32	acle_size;
 	u16	acle_perms;	/* Access permissions */
 	u16	acle_type;	/* Type of entry */
@@ -149,8 +147,7 @@ struct ext2_acl_entry	/* Access Control List Entry */
 /*
  * Structure of a blocks group descriptor
  */
-struct ext2_group_desc
-{
+struct ext2_group_desc {
 	u32	bg_block_bitmap;	/* Blocks bitmap block */
 	u32	bg_inode_bitmap;	/* Inodes bitmap block */
 	u32	bg_inode_table;		/* Inodes table block */
@@ -168,8 +165,7 @@ struct ext2_group_desc
 /*
  * Structure of a blocks group descriptor
  */
-struct ext4_group_desc
-{
+struct ext4_group_desc {
 	u32	bg_block_bitmap;	/* Blocks bitmap block */
 	u32	bg_inode_bitmap;	/* Inodes bitmap block */
 	u32	bg_inode_table;		/* Inodes table block */
@@ -211,8 +207,7 @@ struct ext4_group_desc
  * zero.  Therefore, the hash version mod 4 should never be 0.
  * Sincerely, the paranoia department.
  */
-struct ext2_dx_root_info
-{
+struct ext2_dx_root_info {
 	u32 reserved_zero;
 	u8 hash_version; /* 0 now, 1 at release */
 	u8 info_length; /* 8 */
@@ -229,14 +224,12 @@ struct ext2_dx_root_info
 
 #define EXT2_HASH_FLAG_INCOMPAT	0x1
 
-struct ext2_dx_entry
-{
+struct ext2_dx_entry {
 	u32 hash;
 	u32 block;
 };
 
-struct ext2_dx_countlimit
-{
+struct ext2_dx_countlimit {
 	u16 limit;
 	u16 count;
 };
@@ -321,8 +314,7 @@ struct ext2_dx_countlimit
  */
 
 /* Used for online resize */
-struct ext2_new_group_input
-{
+struct ext2_new_group_input {
 	u32 group;		/* Group number for this data */
 	u32 block_bitmap;	/* Absolute block number of block bitmap */
 	u32 inode_bitmap;	/* Absolute block number of inode bitmap */
@@ -332,8 +324,7 @@ struct ext2_new_group_input
 	u16 unused;		/* Number of reserved GDT blocks in group */
 };
 
-struct ext4_new_group_input
-{
+struct ext4_new_group_input {
 	u32 group;		/* Group number for this data */
 	u64 block_bitmap;	/* Absolute block number of block bitmap */
 	u64 inode_bitmap;	/* Absolute block number of inode bitmap */
@@ -361,8 +352,7 @@ struct ext4_new_group_input
 /*
  * Structure of an inode on the disk
  */
-struct ext2_inode
-{
+struct ext2_inode {
 	u16	i_mode;		/* File mode */
 	u16	i_uid;		/* Low 16 bits of Owner Uid */
 	u32	i_size;		/* Size in bytes */
@@ -374,14 +364,11 @@ struct ext2_inode
 	u16	i_links_count;	/* Links count */
 	u32	i_blocks;	/* Blocks count */
 	u32	i_flags;	/* File flags */
-	union
-	{
-		struct
-		{
+	union {
+		struct {
 			u32	l_i_version; /* was l_i_reserved1 */
 		} linux1;
-		struct
-		{
+		struct {
 			u32  h_i_translator;
 		} hurd1;
 	} osd1;				/* OS dependent 1 */
@@ -390,10 +377,8 @@ struct ext2_inode
 	u32	i_file_acl;	/* File ACL */
 	u32	i_size_high;	/* Formerly i_dir_acl, directory ACL */
 	u32	i_faddr;	/* Fragment address */
-	union
-	{
-		struct
-		{
+	union {
+		struct {
 			u16	l_i_blocks_hi;
 			u16	l_i_file_acl_high;
 			u16	l_i_uid_high;	/* these 2 fields    */
@@ -401,8 +386,7 @@ struct ext2_inode
 			u16	l_i_checksum_lo; /* crc32c(uuid+inum+inode) */
 			u16	l_i_reserved;
 		} linux2;
-		struct
-		{
+		struct {
 			u8	h_i_frag;	/* Fragment number */
 			u8	h_i_fsize;	/* Fragment size */
 			u16	h_i_mode_high;
@@ -416,8 +400,7 @@ struct ext2_inode
 /*
  * Permanent part of an large inode on the disk
  */
-struct ext2_inode_large
-{
+struct ext2_inode_large {
 	u16	i_mode;		/* File mode */
 	u16	i_uid;		/* Low 16 bits of Owner Uid */
 	u32	i_size;		/* Size in bytes */
@@ -429,14 +412,11 @@ struct ext2_inode_large
 	u16	i_links_count;	/* Links count */
 	u32	i_blocks;	/* Blocks count */
 	u32	i_flags;	/* File flags */
-	union
-	{
-		struct
-		{
+	union {
+		struct {
 			u32	l_i_version; /* was l_i_reserved1 */
 		} linux1;
-		struct
-		{
+		struct {
 			u32  h_i_translator;
 		} hurd1;
 	} osd1;				/* OS dependent 1 */
@@ -445,10 +425,8 @@ struct ext2_inode_large
 	u32	i_file_acl;	/* File ACL */
 	u32	i_size_high;	/* Formerly i_dir_acl, directory ACL */
 	u32	i_faddr;	/* Fragment address */
-	union
-	{
-		struct
-		{
+	union {
+		struct {
 			u16	l_i_blocks_hi;
 			u16	l_i_file_acl_high;
 			u16	l_i_uid_high;	/* these 2 fields    */
@@ -456,8 +434,7 @@ struct ext2_inode_large
 			u16	l_i_checksum_lo; /* crc32c(uuid+inum+inode) */
 			u16	l_i_reserved;
 		} linux2;
-		struct
-		{
+		struct {
 			u8	h_i_frag;	/* Fragment number */
 			u8	h_i_fsize;	/* Fragment size */
 			u16	h_i_mode_high;
@@ -560,8 +537,7 @@ struct ext2_inode_large
 /*
  * Structure of the super block
  */
-struct ext2_super_block
-{
+struct ext2_super_block {
 	u32	s_inodes_count;		/* Inodes count */
 	u32	s_blocks_count;		/* Blocks count */
 	u32	s_r_blocks_count;	/* Reserved blocks count */
@@ -787,8 +763,7 @@ struct ext2_super_block
  */
 #define EXT2_NAME_LEN 255
 
-struct ext2_dir_entry
-{
+struct ext2_dir_entry {
 	u32	inode;			/* Inode number */
 	u16	rec_len;		/* Directory entry length */
 	u16	name_len;		/* Name length */
@@ -801,8 +776,7 @@ struct ext2_dir_entry
  * bigger than 255 chars, it's safe to reclaim the extra byte for the
  * file_type field.
  */
-struct ext2_dir_entry_2
-{
+struct ext2_dir_entry_2 {
 	u32	inode;			/* Inode number */
 	u16	rec_len;		/* Directory entry length */
 	u8	name_len;		/* Name length */
@@ -858,8 +832,7 @@ struct ext2_dir_entry_2
 #define EXT4_MMP_SEQ_FSCK  0xE24D4D50U /* mmp_seq value when being fscked */
 #define EXT4_MMP_SEQ_MAX   0xE24D4D4FU /* maximum valid mmp_seq value */
 
-struct mmp_struct
-{
+struct mmp_struct {
 	u32	mmp_magic;		/* Magic number for MMP */
 	u32	mmp_seq;		/* Sequence no. updated periodically */
 	u64	mmp_time;		/* Time last updated */
@@ -887,8 +860,7 @@ struct mmp_struct
 
 // ================================================================================
 
-struct ext4_extent_header
-{
+struct ext4_extent_header {
 	u16 magic;
 	u16 entries;
 	u16 max_entries;
@@ -896,24 +868,21 @@ struct ext4_extent_header
 	u32 generations;
 };
 
-struct ext4_extent_index
-{
+struct ext4_extent_index {
 	u32 block;
 	u32 leaf_lo;
 	u16 leaf_hi;
 	u16 unused;
 };
 
-struct ext4_extent_leaf
-{
+struct ext4_extent_leaf {
 	u32 block;
 	u16 length;
 	u16 start_hi;
 	u32 start_lo;
 };
 
-struct cavan_ext4_fs
-{
+struct cavan_ext4_fs {
 	int block_shift;
 	u16 block_size;
 	u32 block_mask;
@@ -935,21 +904,18 @@ struct cavan_ext4_fs
 	struct cavan_block_device *bdev;
 };
 
-struct cavan_ext4_file
-{
+struct cavan_ext4_file {
 	struct cavan_ext4_fs *fs;
 	const char *pathname;
 
-	union
-	{
+	union {
 		char inode_data[256];
 		struct ext2_inode inode;
 		struct ext2_inode_large inode_large;
 	};
 };
 
-struct cavan_ext4_walker
-{
+struct cavan_ext4_walker {
 	void *context;
 	u64 skip;
 	u64 remain;
@@ -960,15 +926,13 @@ struct cavan_ext4_walker
 	int (*write_byte)(struct cavan_ext4_walker *walker, void *buff, size_t size);
 };
 
-struct cavan_ext4_find_file_context
-{
+struct cavan_ext4_find_file_context {
 	u32 inode;
 	u16 name_len;
 	const char *filename;
 };
 
-struct cavan_ext4_read_inode_data_context
-{
+struct cavan_ext4_read_inode_data_context {
 	void *data;
 	struct ext2_inode *inode;
 
@@ -979,8 +943,7 @@ struct cavan_ext4_read_inode_data_context
 	int (*handler)(struct cavan_ext4_read_inode_data_context *context, void *buff, off_t offset, size_t size);
 };
 
-struct cavan_ext4_list_dir_context
-{
+struct cavan_ext4_list_dir_context {
 	void *data;
 	struct cavan_ext4_file *file;
 

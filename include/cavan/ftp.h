@@ -22,8 +22,7 @@ enum cavan_ftp_state
 	FTP_STATE_PORT_RECVED,
 };
 
-struct cavan_ftp_service
-{
+struct cavan_ftp_service {
 	struct network_service service;
 	struct network_url url;
 	char home[1024];

@@ -27,21 +27,15 @@ static void *read_thread_handler(void *data)
 	char buff[1024];
 	struct cavan_cache *cache = data;
 
-	while (1)
-	{
+	while (1) {
 		rdlen = cavan_cache_read_line(cache, buff, sizeof(buff), 0, 20000);
-		if (rdlen <= 0)
-		{
-			if (rdlen < 0)
-			{
+		if (rdlen <= 0) {
+			if (rdlen < 0) {
 				pr_red_info("cavan_cache_read");
 				break;
-			}
-			else
-			{
+			} else {
 				rdlen = cavan_cache_read(cache, buff, sizeof(buff) - 1, 0, 0);
-				if (rdlen <= 0)
-				{
+				if (rdlen <= 0) {
 					break;
 				}
 			}
@@ -69,8 +63,7 @@ int main(int argc, char *argv[])
 	pthread_t rdthread;
 
 	cache = cavan_cache_create(10);
-	if (cache == NULL)
-	{
+	if (cache == NULL) {
 		pr_red_info("cavan_cache_create");
 		return -1;
 	}
@@ -79,27 +72,23 @@ int main(int argc, char *argv[])
 
 	cavan_pthread_create(&rdthread, read_thread_handler, cache, true);
 
-	while (1)
-	{
+	while (1) {
 		ssize_t wrlen;
 		char buff[1024];
 
 		ret = scanf("%s", buff);
-		if (ret != 1 || strcmp(buff, "exit") == 0)
-		{
+		if (ret != 1 || strcmp(buff, "exit") == 0) {
 			break;
 		}
 
 		wrlen = cavan_cache_write(cache, buff, strlen(buff));
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			pr_red_info("cavan_cache_write");
 			break;
 		}
 
 		wrlen = cavan_cache_write(cache, "\n", 1);
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			pr_red_info("cavan_cache_write");
 			break;
 		}

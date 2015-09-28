@@ -15,8 +15,7 @@ int symlink_copy(const char *src, const char *dest)
 	char buff[MAX_PATH_LEN];
 
 	ret = readlink(src, buff, MAX_PATH_LEN);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("readlink");
 		return ret;
 	}
@@ -24,8 +23,7 @@ int symlink_copy(const char *src, const char *dest)
 	buff[ret] = 0;
 
 	ret = symlink(buff, dest);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("symlink");
 	}
 
@@ -38,16 +36,14 @@ int file_copy_main(const char *src, const char *dest)
 	struct stat st;
 
 	ret = file_lstat(src, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("file_lstat");
 		return ret;
 	}
 
 	umask(0);
 
-	switch (st.st_mode & S_IFMT)
-	{
+	switch (st.st_mode & S_IFMT) {
 	case S_IFCHR:
 	case S_IFBLK:
 		println("Device: %s [copy]-> %s", src, dest);
@@ -83,14 +79,12 @@ int directory_copy_only(const char *src, const char *dest)
 	struct stat st;
 
 	ret = file_stat2(src, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
 	ret = mkdir(dest, st.st_mode);
-	if (ret == 0 || errno == EEXIST)
-	{
+	if (ret == 0 || errno == EEXIST) {
 		return 0;
 	}
 
@@ -106,15 +100,13 @@ int directory_copy_main(const char *src, const char *dest)
 	char tmp_dirname_dest[1024], *dest_p;
 
 	ret = directory_copy_only(src, dest);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("create directory failed");
 		return ret;
 	}
 
 	src_dir = opendir(src);
-	if (src_dir == NULL)
-	{
+	if (src_dir == NULL) {
 		print_error("opendir");
 		return -1;
 	}
@@ -122,11 +114,9 @@ int directory_copy_main(const char *src, const char *dest)
 	src_p = text_path_cat(tmp_dirname_src, sizeof(tmp_dirname_src), src, NULL);
 	dest_p = text_path_cat(tmp_dirname_dest, sizeof(tmp_dirname_dest), dest, NULL);
 
-	while (1)
-	{
+	while (1) {
 		dt = readdir(src_dir);
-		if (dt == NULL)
-		{
+		if (dt == NULL) {
 			break;
 		}
 
@@ -134,15 +124,12 @@ int directory_copy_main(const char *src, const char *dest)
 		println("filename = %s", dt->d_name);
 #endif
 
-		if (dt->d_name[0] == '.')
-		{
-			if (dt->d_name[1] == 0)
-			{
+		if (dt->d_name[0] == '.') {
+			if (dt->d_name[1] == 0) {
 				continue;
 			}
 
-			if (dt->d_name[1] == '.' && dt->d_name[2] == 0)
-			{
+			if (dt->d_name[1] == '.' && dt->d_name[2] == 0) {
 				continue;
 			}
 		}
@@ -150,20 +137,15 @@ int directory_copy_main(const char *src, const char *dest)
 		text_copy(src_p, dt->d_name);
 		text_copy(dest_p, dt->d_name);
 
-		if (dt->d_type == DT_DIR)
-		{
+		if (dt->d_type == DT_DIR) {
 			ret = directory_copy_main(tmp_dirname_src, tmp_dirname_dest);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("directory_copy_main");
 				goto out_close_dir;
 			}
-		}
-		else
-		{
+		} else {
 			ret = file_copy_main(tmp_dirname_src, tmp_dirname_dest);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("file_copy_main");
 				goto out_close_dir;
 			}
@@ -181,18 +163,14 @@ int copy_main(const char *src, const char *dest)
 {
 	char dest_path[1024];
 
-	if (strcmp(src, dest) == 0)
-	{
+	if (strcmp(src, dest) == 0) {
 		println("source file \"%s\" and dest file \"%s\" arm same files", src, dest);
 		return 0;
 	}
 
-	if (S_ISDIR(file_get_mode(dest)))
-	{
+	if (S_ISDIR(file_get_mode(dest))) {
 		text_path_cat(dest_path, sizeof(dest_path), dest, text_basename(src));
-	}
-	else
-	{
+	} else {
 		text_copy(dest_path, dest);
 	}
 
@@ -206,13 +184,11 @@ int move_auto(const char *srcpath, const char *destpath)
 	struct stat st;
 
 	ret = file_stat(destpath, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		goto label_start_move;
 	}
 
-	switch (st.st_mode & S_IFMT)
-	{
+	switch (st.st_mode & S_IFMT) {
 	case S_IFDIR:
 		p = text_path_cat(tmppath, sizeof(tmppath), destpath, NULL);
 		text_basename_base(p, srcpath);
@@ -221,8 +197,7 @@ int move_auto(const char *srcpath, const char *destpath)
 
 	default:
 		ret = remove(destpath);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			print_error("remove %s failed", destpath);
 			return ret;
 		}
@@ -231,14 +206,12 @@ int move_auto(const char *srcpath, const char *destpath)
 label_start_move:
 	println("Move %s => %s", srcpath, destpath);
 
-	if (rename(srcpath, destpath) == 0)
-	{
+	if (rename(srcpath, destpath) == 0) {
 		return 0;
 	}
 
 	ret = file_copy_main(srcpath, destpath);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 

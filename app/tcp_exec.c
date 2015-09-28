@@ -32,93 +32,78 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_IP,
-		},
-		{
+		}, {
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PORT,
-		},
-		{
+		}, {
 			.name = "adb",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_ADB,
-		},
-		{
+		}, {
 			.name = "udp",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UDP,
-		},
-		{
+		}, {
 			.name = "url",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_URL,
-		},
-		{
+		}, {
 			.name = "local",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LOCAL,
-		},
-		{
+		}, {
 			.name = "host",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HOST,
-		},
-		{
+		}, {
 			.name = "unix",
 			.has_arg = optional_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UNIX,
-		},
-		{
+		}, {
 			.name = "unix-tcp",
 			.has_arg = optional_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UNIX_TCP,
-		},
-		{
+		}, {
 			.name = "unix-udp",
 			.has_arg = optional_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
-		},
-		{
+		}, {
 			.name = "protocol",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
-		},
-		{
+		}, {
 			.name = "pt",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -127,10 +112,8 @@ int main(int argc, char *argv[])
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
-	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -171,8 +154,7 @@ int main(int argc, char *argv[])
 		case 'u':
 		case 'U':
 		case CAVAN_COMMAND_OPTION_URL:
-			if (network_url_parse(&url, optarg) == NULL)
-			{
+			if (network_url_parse(&url, optarg) == NULL) {
 				pr_red_info("invalid url %s", optarg);
 				return -EINVAL;
 			}
@@ -181,16 +163,14 @@ int main(int argc, char *argv[])
 		case CAVAN_COMMAND_OPTION_UNIX:
 		case CAVAN_COMMAND_OPTION_UNIX_TCP:
 			url.protocol = "unix-tcp";
-			if (optarg)
-			{
+			if (optarg) {
 				url.pathname = optarg;
 			}
 			break;
 
 		case CAVAN_COMMAND_OPTION_UNIX_UDP:
 			url.protocol = "unix-udp";
-			if (optarg)
-			{
+			if (optarg) {
 				url.pathname = optarg;
 			}
 			break;

@@ -23,8 +23,7 @@ int adb_read_status(int sockfd, char *buff, size_t size)
 	ssize_t recvlen;
 
 	recvlen = inet_recv(sockfd, buff, size > 8 ? 8 : size - 1);
-	if (recvlen < 0)
-	{
+	if (recvlen < 0) {
 		text_copy(buff, "protocol fault (no status)");
 		return recvlen;
 	}
@@ -32,19 +31,16 @@ int adb_read_status(int sockfd, char *buff, size_t size)
 	buff[recvlen] = 0;
 	ret = text_lhcmp("OKAY", buff) ? -EFAULT : 0;
 
-	if (recvlen == 8)
-	{
+	if (recvlen == 8) {
 		size_t length;
 
 		length = text2value_unsigned(buff + 4, NULL, 16);
-		if (length >= size)
-		{
+		if (length >= size) {
 			length = size - 1;
 		}
 
 		recvlen = inet_recv(sockfd, buff, length);
-		if (recvlen < 0)
-		{
+		if (recvlen < 0) {
 			return recvlen;
 		}
 
@@ -71,21 +67,18 @@ int adb_send_text(int sockfd, const char *text)
 #endif
 
 	sendlen = inet_send(sockfd, buff, 4);
-	if (sendlen < 0)
-	{
+	if (sendlen < 0) {
 		pr_red_info("inet_send");
 		return sendlen;
 	}
 
 	sendlen = inet_send(sockfd, text, length);
-	if (sendlen < 0)
-	{
+	if (sendlen < 0) {
 		return sendlen;
 	}
 
 	ret = adb_read_status(sockfd, status, sizeof(status));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("status = %s", status);
 		return ret;
 	}
@@ -101,14 +94,12 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 	struct sockaddr_in addr;
 
 	sockfd = inet_socket(SOCK_STREAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("socket");
 		return sockfd;
 	}
 
-	if (ip == NULL)
-	{
+	if (ip == NULL) {
 		ip = LOCAL_HOST_IP;
 	}
 
@@ -117,31 +108,25 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr(ip);
 
-	while (1)
-	{
-		for (i = 0; i < NELEM(ports); i++)
-		{
-			if (ports[i] == 0)
-			{
+	while (1) {
+		for (i = 0; i < NELEM(ports); i++) {
+			if (ports[i] == 0) {
 				continue;
 			}
 
 			pr_info("Try port %04d", ports[i]);
 			addr.sin_port = htons(ports[i]);
 
-			if (inet_connect(sockfd, &addr) >= 0)
-			{
+			if (inet_connect(sockfd, &addr) >= 0) {
 				return sockfd;
 			}
 		}
 
-		if (--retry < 0)
-		{
+		if (--retry < 0) {
 			break;
 		}
 
-		if (system("adb start-server"))
-		{
+		if (system("adb start-server")) {
 			pr_error_info("Start adb service failed");
 			break;
 		}
@@ -158,22 +143,19 @@ int adb_connect_service(const char *ip, u16 port, const char *service)
 	int sockfd;
 
 	sockfd = adb_connect_service_base(ip, port, 1);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("adb_create_link");
 		return sockfd;
 	}
 
-	if (adb_is_host() && (ret = adb_send_command(sockfd, "host:transport-any")) < 0)
-	{
+	if (adb_is_host() && (ret = adb_send_command(sockfd, "host:transport-any")) < 0) {
 		pr_red_info("adb_send_command");
 		close(sockfd);
 		return ret;
 	}
 
 	ret = adb_send_command(sockfd, service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("adb_connect_service");
 		close(sockfd);
 		return ret;
@@ -186,12 +168,10 @@ int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port, bool wait_device
 {
 	char service[32];
 
-	if (wait_device && adb_is_host())
-	{
+	if (wait_device && adb_is_host()) {
 		print("Waiting for adb device to connect ... ");
 
-		if (cavan_system("adb wait-for-device"))
-		{
+		if (cavan_system("adb wait-for-device")) {
 			println("Failed!");
 			return -EFAULT;
 		}
@@ -210,17 +190,13 @@ char *adb_parse_sms_single(const char *buff, const char *end, char *segments[], 
 	char *p;
 
 	end = text_find_lf(buff, end);
-	if (end == NULL)
-	{
+	if (end == NULL) {
 		return NULL;
 	}
 
-	for (i = 0, size--; i < size; i++)
-	{
-		for (p = segments[i]; buff < end; p++, buff++)
-		{
-			if (*buff == ',')
-			{
+	for (i = 0, size--; i < size; i++) {
+		for (p = segments[i]; buff < end; p++, buff++) {
+			if (*buff == ',') {
 				break;
 			}
 
@@ -231,8 +207,7 @@ char *adb_parse_sms_single(const char *buff, const char *end, char *segments[], 
 		*p = 0;
 	}
 
-	for (p = segments[i]; buff < end; buff++, p++)
-	{
+	for (p = segments[i]; buff < end; buff++, p++) {
 		*p = *buff;
 	}
 
@@ -246,16 +221,13 @@ char *adb_parse_sms_multi(const char *buff, const char *end)
 	char mobile[32];
 	char time[32];
 	char content[1024];
-	char *segments[] =
-	{
+	char *segments[] = {
 		mobile, time, content
 	};
 
-	while (1)
-	{
+	while (1) {
 		const char *temp = adb_parse_sms_single(buff, end, segments, NELEM(segments));
-		if (temp == NULL)
-		{
+		if (temp == NULL) {
 			break;
 		}
 
@@ -273,8 +245,7 @@ char *adb_parse_sms_main(char *buff, char *end)
 {
 	char *p = adb_parse_sms_multi(buff, end);
 
-	while (p < end)
-	{
+	while (p < end) {
 		*buff++ = *p++;
 	}
 
@@ -290,11 +261,9 @@ int frecv_text_and_write(int sockfd, int fd)
 	p = buff;
 	p_end = buff + sizeof(buff);
 
-	while (1)
-	{
+	while (1) {
 		recvlen = recv(sockfd, p, p_end - p, 0);
-		if (recvlen <= 0)
-		{
+		if (recvlen <= 0) {
 			pr_red_info("inet_recv");
 			return recvlen;
 		}
@@ -303,8 +272,7 @@ int frecv_text_and_write(int sockfd, int fd)
 		p = adb_parse_sms_main(buff, p + recvlen);
 
 		writelen = ffile_write(fd, buff, p - buff);
-		if (writelen < 0)
-		{
+		if (writelen < 0) {
 			pr_red_info("ffile_write");
 			return writelen;
 		}
@@ -319,8 +287,7 @@ int recv_text_and_write(int sockfd, const char *filename)
 	int fd;
 
 	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("Failed to open file `%s'", filename);
 		return fd;
 	}
@@ -341,8 +308,7 @@ ssize_t sms_receive_text(int sockfd, char *buff)
 {
 	u32 length;
 
-	if (sms_receive_value(sockfd, &length, sizeof(length)) < 0 || sms_receive_value(sockfd, buff, length) < 0)
-	{
+	if (sms_receive_value(sockfd, &length, sizeof(length)) < 0 || sms_receive_value(sockfd, buff, length) < 0) {
 		return -1;
 	}
 
@@ -364,33 +330,27 @@ int sms_receive_message(int sockfd, struct eavoo_short_message *message)
 	message->address[0] = 0;
 	message->body[0] = 0;
 
-	while (1)
-	{
-		if (sms_receive_value(sockfd, &type, sizeof(type)) < 0)
-		{
+	while (1) {
+		if (sms_receive_value(sockfd, &type, sizeof(type)) < 0) {
 			print_error("recv");
 			return -1;
 		}
 
-		switch (type)
-		{
+		switch (type) {
 		case SMS_TYPE_DATE:
-			if (sms_receive_value(sockfd, &message->date, sizeof(message->date)) < 0)
-			{
+			if (sms_receive_value(sockfd, &message->date, sizeof(message->date)) < 0) {
 				return -1;
 			}
 			break;
 
 		case SMS_TYPE_ADDRESS:
-			if (sms_receive_text(sockfd, message->address) < 0)
-			{
+			if (sms_receive_text(sockfd, message->address) < 0) {
 				return -1;
 			}
 			break;
 
 		case SMS_TYPE_BODY:
-			if (sms_receive_text(sockfd, message->body) < 0)
-			{
+			if (sms_receive_text(sockfd, message->body) < 0) {
 				return -1;
 			}
 			break;
@@ -402,8 +362,7 @@ int sms_receive_message(int sockfd, struct eavoo_short_message *message)
 #if ADB_DEBUG
 			println("SMS_TYPE_TEST");
 #endif
-			if (sms_send_response(sockfd, SMS_TYPE_ACK) < 0)
-			{
+			if (sms_send_response(sockfd, SMS_TYPE_ACK) < 0) {
 				print_error("send");
 				return -1;
 			}
@@ -433,11 +392,9 @@ int fsms_receive_and_write(int sockfd, int fd)
 	int ret;
 	struct eavoo_short_message message;
 
-	while (1)
-	{
+	while (1) {
 		ret = sms_receive_message(sockfd, &message);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 
@@ -453,8 +410,7 @@ int sms_receive_and_write(int sockfd, const char *filename)
 	int fd;
 
 	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("Failed to open file `%s'", filename);
 		return fd;
 	}

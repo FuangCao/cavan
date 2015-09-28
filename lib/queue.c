@@ -6,8 +6,7 @@
 int list_queue_init(struct list_queue *queue, int count)
 {
 	queue->buffer = malloc(sizeof(void *) * count);
-	if (queue->buffer == NULL)
-	{
+	if (queue->buffer == NULL) {
 		return -ENOMEM;
 	}
 
@@ -25,8 +24,7 @@ void list_queue_free(struct list_queue *queue)
 
 int list_queue_insert(struct list_queue *queue, void *data)
 {
-	if (list_queue_full(queue))
-	{
+	if (list_queue_full(queue)) {
 		return -ENOMEM;
 	}
 
@@ -40,8 +38,7 @@ void *list_queue_remove(struct list_queue *queue)
 {
 	void *data;
 
-	if (list_queue_empty(queue))
-	{
+	if (list_queue_empty(queue)) {
 		return NULL;
 	}
 
@@ -54,8 +51,7 @@ void *list_queue_remove(struct list_queue *queue)
 
 void *list_queue_get_head_data(struct list_queue *queue)
 {
-	if (list_queue_empty(queue))
-	{
+	if (list_queue_empty(queue)) {
 		return NULL;
 	}
 
@@ -64,8 +60,7 @@ void *list_queue_get_head_data(struct list_queue *queue)
 
 void *list_queue_get_tail_data(struct list_queue *queue)
 {
-	if (list_queue_empty(queue))
-	{
+	if (list_queue_empty(queue)) {
 		return NULL;
 	}
 
@@ -80,14 +75,11 @@ static int cavan_data_queue_thread_handler(struct cavan_thread *thread, void *da
 	struct cavan_data_queue *queue = data;
 
 	node = double_link_pop(&queue->link);
-	if (node)
-	{
+	if (node) {
 		data = double_link_get_container(&queue->link, node);
 		queue->handler(data, queue->private_data);
 		cavan_data_pool_node_free(&queue->pool, data);
-	}
-	else
-	{
+	} else {
 		cavan_thread_suspend(thread);
 	}
 
@@ -99,15 +91,13 @@ int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t nod
 	int ret;
 	struct cavan_thread *thread;
 
-	if (queue->handler == NULL)
-	{
+	if (queue->handler == NULL) {
 		pr_red_info("queue->handler == NULL");
 		ERROR_RETURN(EINVAL);
 	}
 
 	ret = cavan_data_pool_link_init(&queue->link, offset);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("double_link_init");
 		return ret;
 	}
@@ -118,15 +108,13 @@ int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t nod
 	thread->handler = cavan_data_queue_thread_handler;
 
 	ret = cavan_thread_init(thread, queue);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_double_link_deinit;
 	}
 
 	ret = cavan_data_pool_init(&queue->pool, offset, node_size, pool_size);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_data_pool_init");
 		goto out_cavan_thread_deinit;
 	}
@@ -154,8 +142,7 @@ void cavan_data_queue_deinit(struct cavan_data_queue *queue)
 int cavan_mem_queue_init(struct cavan_mem_queue *queue, size_t size)
 {
 	queue->mem = malloc(size + 1);
-	if (queue->mem == NULL)
-	{
+	if (queue->mem == NULL) {
 		pr_error_info("malloc");
 		return -ENOMEM;
 	}
@@ -170,8 +157,7 @@ int cavan_mem_queue_init(struct cavan_mem_queue *queue, size_t size)
 
 void cavan_mem_queue_deinit(struct cavan_mem_queue *queue)
 {
-	if (queue->mem)
-	{
+	if (queue->mem) {
 		free(queue->mem);
 		queue->mem = NULL;
 	}
@@ -185,50 +171,37 @@ size_t cavan_mem_queue_inqueue_peek(struct cavan_mem_queue *queue, const void *b
 
 	cavan_lock_acquire(&queue->lock);
 
-	if (queue->tail < queue->head)
-	{
+	if (queue->tail < queue->head) {
 		length = rlen = queue->head - queue->tail - 1;
-	}
-	else
-	{
-		if (queue->head > queue->mem)
-		{
+	} else {
+		if (queue->head > queue->mem) {
 			rlen = queue->last - queue->tail + 1;
 			length = rlen + (queue->head - queue->mem - 1);
-		}
-		else
-		{
+		} else {
 			length = rlen = queue->last - queue->tail;
 		}
 	}
 
-	if (length > size)
-	{
+	if (length > size) {
 		length = size;
 	}
 
-	if (length > rlen)
-	{
+	if (length > rlen) {
 		size_t llen = length - rlen;
 
-		if (buff)
-		{
+		if (buff) {
 			memcpy(queue->tail, buff, rlen);
 			memcpy(queue->mem, ADDR_ADD(buff, rlen), llen);
 		}
 
 		queue->tail_peek = queue->mem + llen;
-	}
-	else
-	{
-		if (buff)
-		{
+	} else {
+		if (buff) {
 			memcpy(queue->tail, buff, length);
 		}
 
 		queue->tail_peek = queue->tail + length;
-		if (queue->tail_peek > queue->last)
-		{
+		if (queue->tail_peek > queue->last) {
 			queue->tail_peek = queue->mem;
 		}
 	}
@@ -263,43 +236,33 @@ size_t cavan_mem_queue_dequeue_peek(struct cavan_mem_queue *queue, void *buff, s
 
 	cavan_lock_acquire(&queue->lock);
 
-	if (queue->head > queue->tail)
-	{
+	if (queue->head > queue->tail) {
 		rlen = queue->last - queue->head + 1;
 		length = rlen + (queue->tail - queue->mem);
-	}
-	else
-	{
+	} else {
 		length = rlen = queue->tail - queue->head;
 	}
 
-	if (length > size)
-	{
+	if (length > size) {
 		length = size;
 	}
 
-	if (length > rlen)
-	{
+	if (length > rlen) {
 		size_t llen = length - rlen;
 
-		if (buff)
-		{
+		if (buff) {
 			memcpy(buff, queue->head, rlen);
 			memcpy(ADDR_ADD(buff, rlen), queue->mem, llen);
 		}
 
 		queue->head_peek = queue->mem + llen;
-	}
-	else
-	{
-		if (buff)
-		{
+	} else {
+		if (buff) {
 			memcpy(buff, queue->head, length);
 		}
 
 		queue->head_peek = queue->head + length;
-		if (queue->head_peek > queue->last)
-		{
+		if (queue->head_peek > queue->last) {
 			queue->head_peek = queue->mem;
 		}
 	}
@@ -334,12 +297,9 @@ size_t cavan_mem_queue_get_used_size(struct cavan_mem_queue *queue)
 
 	cavan_lock_acquire(&queue->lock);
 
-	if (queue->head > queue->tail)
-	{
+	if (queue->head > queue->tail) {
 		length = (queue->last - queue->head) + (queue->tail - queue->mem) + 1;
-	}
-	else
-	{
+	} else {
 		length = queue->tail - queue->head;
 	}
 
@@ -354,12 +314,9 @@ size_t cavan_mem_queue_get_free_size(struct cavan_mem_queue *queue)
 
 	cavan_lock_acquire(&queue->lock);
 
-	if (queue->tail < queue->head)
-	{
+	if (queue->tail < queue->head) {
 		length = queue->head - queue->tail - 1;
-	}
-	else
-	{
+	} else {
 		length = (queue->last - queue->tail) + (queue->head - queue->mem);
 	}
 

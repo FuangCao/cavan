@@ -11,13 +11,11 @@ int main(int argc, char *argv[])
 
 	sprintf(command, DEFAULT_GIT_ARGUMENT " --base-path=%s", argc > 2 ? argv[2] : "/git");
 
-	if (argc > 1 && argv[1][0] != '-')
-	{
+	if (argc > 1 && argv[1][0] != '-') {
 		sprintf(command + strlen(command), " --port=%s", argv[1]);
 	}
 
-	if (fork() == 0)
-	{
+	if (fork() == 0) {
 		return system(command);
 	}
 

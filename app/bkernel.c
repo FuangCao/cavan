@@ -17,46 +17,33 @@ int main(int argc, char *argv[])
 	const char *dev_path;
 	const char *img_path;
 
-	if (argc < 2)
-	{
+	if (argc < 2) {
 		img_path = DEFAULT_ZIMGE_PATH;
 		dev_path = DEFAULT_SD_DEVICE;
-	}
-	else if (argc < 3)
-	{
-		if (file_test(argv[1], "b") >= 0)
-		{
+	} else if (argc < 3) {
+		if (file_test(argv[1], "b") >= 0) {
 			img_path = DEFAULT_ZIMGE_PATH;
 			dev_path = argv[1];
-		}
-		else
-		{
+		} else {
 			img_path = argv[1];
 			dev_path = DEFAULT_SD_DEVICE;
 		}
-	}
-	else
-	{
+	} else {
 		img_path = argv[1];
 		dev_path = argv[2];
 
 		adjust_image_device(&img_path, &dev_path);
 	}
 
-	if (image_is(img_path, "zImage"))
-	{
+	if (image_is(img_path, "zImage")) {
 		ret = burn_zImage(img_path, dev_path);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("burn_zImage");
 			return ret;
 		}
-	}
-	else
-	{
+	} else {
 		ret = burn_uImage(img_path, dev_path);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("burn_uImage");
 			return ret;
 		}

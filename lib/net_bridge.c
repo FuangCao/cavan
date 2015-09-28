@@ -10,17 +10,14 @@ static struct cavan_net_bridge_addr *cavan_net_bridge_port_addr_get(struct cavan
 
 	second = time(NULL);
 
-	double_link_foreach(&port->addr_list, node)
-	{
-		if (auto_remove && second - node->time > NET_BRIDGE_ADDR_TIMEOUT)
-		{
+	double_link_foreach(&port->addr_list, node) {
+		if (auto_remove && second - node->time > NET_BRIDGE_ADDR_TIMEOUT) {
 			pr_bold_info("[REMOVE] %s => %d", mac_address_tostring((char *) node->addr, MAC_ADDRESS_LEN), port->client.sockfd);
 			double_link_remove_base(&node->node.node);
 			cavan_data_pool_node_free(&port->addr_pool, node);
 		}
 
-		if (memcmp(node->addr, addr, MAC_ADDRESS_LEN) == 0)
-		{
+		if (memcmp(node->addr, addr, MAC_ADDRESS_LEN) == 0) {
 			link_foreach_return(&port->addr_list, node);
 		}
 	}
@@ -34,11 +31,9 @@ static int cavan_net_bridge_port_addr_put(struct cavan_net_bridge_port *port, co
 	struct cavan_net_bridge_addr *node;
 
 	node = cavan_net_bridge_port_addr_get(port, addr, false);
-	if (node == NULL)
-	{
+	if (node == NULL) {
 		node = cavan_data_pool_alloc(&port->addr_pool);
-		if (node == NULL)
-		{
+		if (node == NULL) {
 			pr_red_info("cavan_data_pool_alloc");
 			return -ENOMEM;
 		}
@@ -58,8 +53,7 @@ static void cavan_net_bridge_port_addr_free_all(struct cavan_net_bridge_port *po
 {
 	struct cavan_net_bridge_addr *node;
 
-	double_link_foreach(&port->addr_list, node)
-	{
+	double_link_foreach(&port->addr_list, node) {
 		cavan_data_pool_node_free(&port->addr_pool, node);
 	}
 	double_link_foreach_end(&port->addr_list);
@@ -70,22 +64,19 @@ int cavan_net_bridge_port_init(struct cavan_net_bridge_port *port, const char *u
 	int ret;
 
 	ret = network_client_open2(&port->client, url, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open3");
 		return ret;
 	}
 
 	ret = CAVAN_DATA_POOL_INIT(&port->addr_pool, struct cavan_net_bridge_addr, node, 50);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("CAVAN_DATA_POOL_INIT");
 		goto out_network_client_close;
 	}
 
 	ret = DOUBLE_LINK_INIT(&port->addr_list, struct cavan_net_bridge_addr, node.node);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("DOUBLE_LINK_INIT");
 		goto out_cavan_data_pool_deinit;
 	}
@@ -117,8 +108,7 @@ static int cavan_net_bridge_transfer(struct cavan_net_bridge_port *port)
 	struct cavan_net_bridge_port *head;
 
 	rdlen = port->client.recv(&port->client, buff, sizeof(buff));
-	if (rdlen < 0)
-	{
+	if (rdlen < 0) {
 		pr_red_info("port->client.recv");
 		return rdlen;
 	}
@@ -126,24 +116,20 @@ static int cavan_net_bridge_transfer(struct cavan_net_bridge_port *port)
 	mac = (struct mac_header *) buff;
 	cavan_net_bridge_port_addr_put(port, mac->src_mac);
 
-	if (cavan_net_bridge_port_addr_get(port, mac->dest_mac, true))
-	{
+	if (cavan_net_bridge_port_addr_get(port, mac->dest_mac, true)) {
 		return 0;
 	}
 
 	head = port;
 
-	for (port = head->next; port != head; port = port->next)
-	{
-		if (cavan_net_bridge_port_addr_get(port, mac->dest_mac, true))
-		{
+	for (port = head->next; port != head; port = port->next) {
+		if (cavan_net_bridge_port_addr_get(port, mac->dest_mac, true)) {
 			port->client.send(&port->client, buff, rdlen);
 			return 0;
 		}
 	}
 
-	for (port = head->next; port != head; port = port->next)
-	{
+	for (port = head->next; port != head; port = port->next) {
 		port->client.send(&port->client, buff, rdlen);
 	}
 
@@ -159,8 +145,7 @@ static int cavan_net_bridge_thread_handler(struct cavan_thread *thread, void *da
 
 	cavan_net_bridge_lock(bridge);
 
-	if (bridge->head == NULL)
-	{
+	if (bridge->head == NULL) {
 		pr_red_info("bridge->head == NULL");
 		cavan_thread_suspend(thread);
 		goto out_cavan_net_bridge_unlock;
@@ -171,8 +156,7 @@ static int cavan_net_bridge_thread_handler(struct cavan_thread *thread, void *da
 	println("count = %d", count);
 
 	pfds = alloca(sizeof(*pfds) * count);
-	if (pfds == NULL)
-	{
+	if (pfds == NULL) {
 		pr_error_info("alloca");
 		goto out_cavan_net_bridge_unlock;
 	}
@@ -185,59 +169,50 @@ static int cavan_net_bridge_thread_handler(struct cavan_thread *thread, void *da
 	port = bridge->head;
 	pfd++;
 
-	while (1)
-	{
+	while (1) {
 		port->pfd = pfd;
 		pfd->fd = port->client.sockfd;
 		pfd->events = POLLIN;
 		pfd->revents = 0;
 
 		port = port->next;
-		if (port == bridge->head)
-		{
+		if (port == bridge->head) {
 			break;
 		}
 
 		pfd++;
 	}
 
-	while (1)
-	{
+	while (1) {
 		int ret;
 
 		cavan_net_bridge_unlock(bridge);
 		ret = poll(pfds, count, -1);
 		cavan_net_bridge_lock(bridge);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("poll");
 			return ret;
 		}
 
-		if (pfds[0].revents)
-		{
+		if (pfds[0].revents) {
 			u32 event;
 			cavan_thread_recv_event(thread, &event);
 			bridge->port_changed = true;
 		}
 
-		if (bridge->port_changed)
-		{
+		if (bridge->port_changed) {
 			bridge->port_changed = false;
 			break;
 		}
 
 		port = bridge->head;
 
-		while (1)
-		{
-			if (port->pfd->revents)
-			{
+		while (1) {
+			if (port->pfd->revents) {
 				cavan_net_bridge_transfer(port);
 			}
 
-			if (port->next == bridge->head)
-			{
+			if (port->next == bridge->head) {
 				break;
 			}
 
@@ -256,8 +231,7 @@ int cavan_net_bridge_init(struct cavan_net_bridge *bridge)
 	struct cavan_thread *thread;
 
 	ret = pthread_mutex_init(&bridge->lock, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pthead_mutex_init");
 		return ret;
 	}
@@ -268,8 +242,7 @@ int cavan_net_bridge_init(struct cavan_net_bridge *bridge)
 	thread->handler = cavan_net_bridge_thread_handler;
 
 	ret = cavan_thread_init(&bridge->thread, bridge);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_pthread_mutex_destroy;
 	}
@@ -278,8 +251,7 @@ int cavan_net_bridge_init(struct cavan_net_bridge *bridge)
 	bridge->port_changed = false;
 
 	ret = cavan_thread_start(thread);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_start");
 		goto out_cavan_thread_deinit;
 	}
@@ -298,18 +270,15 @@ void cavan_net_bridge_deinit(struct cavan_net_bridge *bridge)
 	struct cavan_net_bridge_port *port, *head;
 
 	head = bridge->head;
-	if (head)
-	{
+	if (head) {
 		port = head;
 
-		while (1)
-		{
+		while (1) {
 			struct cavan_net_bridge_port *next = port->next;
 
 			free(port);
 
-			if (next == head)
-			{
+			if (next == head) {
 				break;
 			}
 
@@ -327,32 +296,27 @@ int cavan_net_bridge_register_port(struct cavan_net_bridge *bridge, const char *
 	struct cavan_net_bridge_port *port;
 
 	port = malloc(sizeof(*port));
-	if (port == NULL)
-	{
+	if (port == NULL) {
 		pr_error_info("malloc");
 		return -ENOMEM;
 	}
 
 	ret = cavan_net_bridge_port_init(port, url);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_net_bridge_port_init");
 		goto out_free_port;
 	}
 
 	cavan_net_bridge_lock(bridge);
 
-	if (bridge->head)
-	{
+	if (bridge->head) {
 		struct cavan_net_bridge_port *head = bridge->head;
 
 		port->next = head;
 		port->prev = head->prev;
 		head->prev->next = port;
 		head->prev = port;
-	}
-	else
-	{
+	} else {
 		bridge->head = port;
 	}
 

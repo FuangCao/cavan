@@ -8,20 +8,17 @@
 
 int mem_cache_init(struct mem_cache *cache, size_t size)
 {
-	if(cache == NULL)
-	{
+	if(cache == NULL) {
 		return -EINVAL;
 	}
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		cache->buff = NULL;
 		return 0;
 	}
 
 	cache->buff = malloc(size);
-	if (cache->buff == NULL)
-	{
+	if (cache->buff == NULL) {
 		return -ENOMEM;
 	}
 
@@ -34,8 +31,7 @@ int mem_cache_init(struct mem_cache *cache, size_t size)
 
 void mem_cache_deinit(struct mem_cache *cache)
 {
-	if (cache == NULL || cache->buff == NULL)
-	{
+	if (cache == NULL || cache->buff == NULL) {
 		return;
 	}
 
@@ -50,18 +46,15 @@ size_t mem_cache_write(struct mem_cache *cache, const char *buff, size_t size)
 
 	size_bak = size = size <= cache->free_size ? size : cache->free_size;
 
-	for (head = cache->head, end = cache->end; size && head < end; size--)
-	{
+	for (head = cache->head, end = cache->end; size && head < end; size--) {
 		*head++ = *buff++;
 	}
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		goto out_return;
 	}
 
-	for (head = cache->buff, end = cache->tail; size && head < end; size--)
-	{
+	for (head = cache->buff, end = cache->tail; size && head < end; size--) {
 		*head++ = *buff++;
 	}
 
@@ -80,18 +73,15 @@ size_t mem_cache_read(struct mem_cache *cache, char *buff, size_t size)
 	size_bak = cache->size - cache->free_size;
 	size_bak = size = size <= size_bak ? size : size_bak;
 
-	for (tail = cache->tail, end = cache->end; size && tail < end; size--)
-	{
+	for (tail = cache->tail, end = cache->end; size && tail < end; size--) {
 		*buff++ = *tail++;
 	}
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		goto out_return;
 	}
 
-	for (tail = cache->buff, end = cache->head; size && tail < end; size--)
-	{
+	for (tail = cache->buff, end = cache->head; size && tail < end; size--) {
 		*buff++ = *tail++;
 	}
 
@@ -113,21 +103,16 @@ size_t mem_cache_discard(struct mem_cache *cache, size_t size)
 	size_t used_size;
 
 	used_size = cache->size - cache->free_size;
-	if (size >= used_size)
-	{
+	if (size >= used_size) {
 		mem_cache_reinit(cache);
 		return used_size;
 	}
 
-	if (cache->head > cache->tail)
-	{
+	if (cache->head > cache->tail) {
 		cache->tail += size;
-	}
-	else
-	{
+	} else {
 		cache->tail += size;
-		if (cache->tail >= cache->end)
-		{
+		if (cache->tail >= cache->end) {
 			cache->tail = cache->buff + (size - (cache->end - cache->tail));
 		}
 	}
@@ -144,18 +129,15 @@ size_t mem_cache_clean(struct mem_cache *cache, char *buff)
 
 	size = size_bak = cache->size - cache->free_size;
 
-	for (tail = cache->tail, end = cache->end; size && tail < end; size--)
-	{
+	for (tail = cache->tail, end = cache->end; size && tail < end; size--) {
 		*buff++ = *tail++;
 	}
 
-	if (size == 0)
-	{
+	if (size == 0) {
 		goto out_return;
 	}
 
-	for (tail = cache->buff, end = cache->head; size && tail < end; size--)
-	{
+	for (tail = cache->buff, end = cache->head; size && tail < end; size--) {
 		*buff++ = *tail++;
 	}
 
@@ -171,20 +153,17 @@ int ffile_cache_init(struct file_cache *cache, size_t read_size, size_t write_si
 {
 	int ret;
 
-	if (cache == NULL)
-	{
+	if (cache == NULL) {
 		return -EINVAL;
 	}
 
 	ret = mem_cache_init(&cache->read_cache, read_size);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
 	ret = mem_cache_init(&cache->write_cache, write_size);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		goto out_read_cache_deinit;
 	}
 
@@ -201,30 +180,25 @@ int file_cache_init(struct file_cache *cache, const char *pathname, int flags, m
 	int ret;
 	int fd;
 
-	if (cache == NULL)
-	{
+	if (cache == NULL) {
 		return -EINVAL;
 	}
 
 	fd = open(pathname, flags, mode);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
-	if (cache->cache_blocks == 0)
-	{
+	if (cache->cache_blocks == 0) {
 		cache->cache_blocks = DEFAULT_CACHE_BLOCKS;
 	}
 
-	if (cache->block_size == 0)
-	{
+	if (cache->block_size == 0) {
 		cache->block_size = DEFAULT_BLOCK_SIZE;
 	}
 
 	ret = ffile_cache_init(cache, cache->cache_blocks * cache->block_size, cache->cache_blocks * cache->block_size);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		goto out_close_fd;
 	}
 
@@ -243,8 +217,7 @@ out_close_fd:
 
 void file_cache_deinit(struct file_cache *cache)
 {
-	if (cache == NULL)
-	{
+	if (cache == NULL) {
 		return;
 	}
 
@@ -259,15 +232,13 @@ static ssize_t file_cache_fill(struct file_cache *cache)
 	struct mem_cache *read_cache;
 	ssize_t readblk;
 
-	if (cache->read_blocks == NULL)
-	{
+	if (cache->read_blocks == NULL) {
 		return -EINVAL;
 	}
 
 	read_cache = &cache->read_cache;
 	readblk = cache->read_blocks(cache, read_cache->buff, cache->cache_blocks);
-	if (readblk < 0)
-	{
+	if (readblk < 0) {
 		return readblk;
 	}
 
@@ -287,23 +258,19 @@ ssize_t file_cache_read(struct file_cache *cache, void *buff, size_t size)
 
 	total_read = 0;
 
-	for (read_cache = &cache->read_cache; size; size -= mem_cache_readlen)
-	{
+	for (read_cache = &cache->read_cache; size; size -= mem_cache_readlen) {
 		mem_cache_readlen = mem_cache_read(read_cache, buff, size);
 		total_read += mem_cache_readlen;
-		if (mem_cache_readlen == size)
-		{
+		if (mem_cache_readlen == size) {
 			break;
 		}
 
 		readlen = file_cache_fill(cache);
-		if (readlen < 0)
-		{
+		if (readlen < 0) {
 			return readlen;
 		}
 
-		if (readlen == 0)
-		{
+		if (readlen == 0) {
 			break;
 		}
 	}
@@ -317,20 +284,17 @@ ssize_t file_cache_fflush(struct file_cache *cache)
 	char buff[write_cache->size];
 	ssize_t writelen;
 
-	if (cache->write_blocks == NULL)
-	{
+	if (cache->write_blocks == NULL) {
 		return -EINVAL;
 	}
 
 	writelen = mem_cache_clean(write_cache, buff);
-	if (writelen == 0)
-	{
+	if (writelen == 0) {
 		return 0;
 	}
 
 	writelen = cache->write_blocks(cache, buff, (writelen + (cache->block_size - 1)) / cache->block_size);
-	if (writelen < 0)
-	{
+	if (writelen < 0) {
 		return writelen;
 	}
 
@@ -344,15 +308,13 @@ ssize_t file_cache_clean(struct file_cache *cache)
 	struct mem_cache *write_cache = &cache->write_cache;
 	ssize_t writelen = write_cache->size;
 
-	if (cache->write_blocks == NULL)
-	{
+	if (cache->write_blocks == NULL) {
 		return -EINVAL;
 	}
 
 	write_cache = &cache->write_cache;
 	writelen = cache->write_blocks(cache, write_cache->buff, cache->cache_blocks);
-	if (writelen < 0)
-	{
+	if (writelen < 0) {
 		return writelen;
 	}
 
@@ -371,17 +333,14 @@ ssize_t file_cache_write(struct file_cache *cache, const void *buff, size_t size
 
 	size_bak = size;
 
-	for (write_cache = &cache->write_cache; size; size -= mem_cache_writelen)
-	{
+	for (write_cache = &cache->write_cache; size; size -= mem_cache_writelen) {
 		mem_cache_writelen = mem_cache_write(write_cache, buff, size);
-		if (mem_cache_writelen == size)
-		{
+		if (mem_cache_writelen == size) {
 			break;
 		}
 
 		writelen = file_cache_clean(cache);
-		if (writelen < 0)
-		{
+		if (writelen < 0) {
 			return writelen;
 		}
 	}
@@ -400,8 +359,7 @@ off_t file_cache_seek(struct file_cache *cache, off_t offset)
 	write_cache = &cache->write_cache;
 
 	readblk = cache->read_blocks(cache, read_cache->buff, cache->cache_blocks);
-	if (readblk < 0)
-	{
+	if (readblk < 0) {
 		return readblk;
 	}
 
@@ -427,22 +385,19 @@ int cavan_cache_init(struct cavan_cache *cache, void *mem, size_t size)
 	int ret;
 
 	ret = pthread_mutex_init(&cache->lock, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pthread_mutex_init");
 		return ret;
 	}
 
 	ret = pthread_cond_init(&cache->rdcond, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pthread_cond_init");
 		goto out_pthread_mutex_destroy_lock;
 	}
 
 	ret = pthread_cond_init(&cache->wrcond, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pthread_cond_init");
 		goto out_pthread_cond_destroy_rdcond;
 	}
@@ -468,19 +423,16 @@ void cavan_cache_deinit(struct cavan_cache *cache)
 	pthread_mutex_destroy(&cache->lock);
 }
 
-struct cavan_cache *cavan_cache_create(size_t size)
-{
+struct cavan_cache *cavan_cache_create(size_t size) {
 	struct cavan_cache *cache;
 
 	cache = malloc(sizeof(struct cavan_cache) + size);
-	if (cache == NULL)
-	{
+	if (cache == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}
 
-	if (cavan_cache_init(cache, (void *) (cache + 1), size) < 0)
-	{
+	if (cavan_cache_init(cache, (void *) (cache + 1), size) < 0) {
 		pr_red_info("cavan_cache_init");
 		free(cache);
 		return NULL;
@@ -515,24 +467,18 @@ void cavan_cache_close(struct cavan_cache *cache)
 
 ssize_t cavan_cache_free_space(struct cavan_cache *cache)
 {
-	if (cache->tail < cache->head)
-	{
+	if (cache->tail < cache->head) {
 		return cache->head - cache->tail - 1;
-	}
-	else
-	{
+	} else {
 		return (cache->mem_end - cache->tail) + (cache->head - cache->mem) - 1;
 	}
 }
 
 ssize_t cavan_cache_used_space(struct cavan_cache *cache)
 {
-	if (cache->head > cache->tail)
-	{
+	if (cache->head > cache->tail) {
 		return (cache->mem_end - cache->head) + (cache->tail - cache->mem);
-	}
-	else
-	{
+	} else {
 		return cache->tail - cache->head;
 	}
 }
@@ -541,8 +487,7 @@ char *cavan_cache_pointer_add(struct cavan_cache *cache, char *pointer, off_t of
 {
 	pointer += offset;
 
-	while (pointer >= cache->mem_end)
-	{
+	while (pointer >= cache->mem_end) {
 		pointer -= cache->size;
 	}
 
@@ -556,25 +501,19 @@ ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t si
 
 	pthread_mutex_lock(&cache->lock);
 
-	while (1)
-	{
+	while (1) {
 		size_t length, rcount;
 		size_t remain;
 
 		remain = buff_end - buff;
-		if (remain == 0)
-		{
+		if (remain == 0) {
 			break;
 		}
 
-		while (1)
-		{
-			if (cache->tail < cache->head)
-			{
+		while (1) {
+			if (cache->tail < cache->head) {
 				length = rcount = cache->head - cache->tail - 1;
-			}
-			else
-			{
+			} else {
 				rcount = cache->mem_end - cache->tail;
 				length = rcount + (cache->head - cache->mem) - 1;
 			}
@@ -584,13 +523,11 @@ ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t si
 				cache->head, cache->tail, rcount, length, cavan_cache_free_space(cache));
 #endif
 
-			if (length > 0)
-			{
+			if (length > 0) {
 				break;
 			}
 
-			if (cache->closed)
-			{
+			if (cache->closed) {
 				size = buff - buff_bak;
 				goto out_pthread_mutex_unlock;
 			}
@@ -598,26 +535,21 @@ ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t si
 			pthread_cond_wait(&cache->wrcond, &cache->lock);
 		}
 
-		if (length > remain)
-		{
+		if (length > remain) {
 			length = remain;
 		}
 
-		if (length > rcount)
-		{
+		if (length > rcount) {
 			size_t lcount = length - rcount;
 
 			memcpy(cache->tail, buff, rcount);
 			memcpy(cache->mem, buff + rcount, lcount);
 			cache->tail = cache->mem + lcount;
-		}
-		else
-		{
+		} else {
 			memcpy(cache->tail, buff, length);
 
 			cache->tail += length;
-			if (cache->tail >= cache->mem_end)
-			{
+			if (cache->tail >= cache->mem_end) {
 				cache->tail = cache->mem;
 			}
 		}
@@ -638,15 +570,11 @@ ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, siz
 
 	pthread_mutex_lock(&cache->lock);
 
-	while (1)
-	{
-		if (cache->head > cache->tail)
-		{
+	while (1) {
+		if (cache->head > cache->tail) {
 			rcount = cache->mem_end - cache->head;
 			length = rcount + (cache->tail - cache->mem);
-		}
-		else
-		{
+		} else {
 			length = rcount = cache->tail - cache->head;
 		}
 
@@ -655,59 +583,48 @@ ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, siz
 			cache->head, cache->tail, rcount, length, cavan_cache_used_space(cache));
 #endif
 
-		if ((size_t) length > reserved)
-		{
+		if ((size_t) length > reserved) {
 			length -= reserved;
 			break;
 		}
 
-		if (cache->closed)
-		{
+		if (cache->closed) {
 			length = 0;
 			goto out_pthread_mutex_unlock;
 		}
 
-		if (timeout > 0)
-		{
+		if (timeout > 0) {
 			int ret;
 			struct timespec abstime;
 
 			cavan_timer_set_timespec(&abstime, timeout);
 
 			ret = pthread_cond_timedwait(&cache->rdcond, &cache->lock, &abstime);
-			if (ret != 0)
-			{
+			if (ret != 0) {
 				length = -ETIMEDOUT;
 				pr_red_info("pthread_cond_timedwait");
 				goto out_pthread_mutex_unlock;
 			}
-		}
-		else
-		{
+		} else {
 			pthread_cond_wait(&cache->rdcond, &cache->lock);
 		}
 	}
 
-	if ((size_t) length > size)
-	{
+	if ((size_t) length > size) {
 		length = size;
 	}
 
-	if (length > rcount)
-	{
+	if (length > rcount) {
 		size_t lcount = length - rcount;
 
 		memcpy(buff, cache->head, rcount);
 		memcpy(buff + rcount, cache->mem, lcount);
 		cache->head = cache->mem + lcount;
-	}
-	else
-	{
+	} else {
 		memcpy(buff, cache->head, length);
 
 		cache->head += length;
-		if (cache->head >= cache->mem_end)
-		{
+		if (cache->head >= cache->mem_end) {
 			cache->head = cache->mem;
 		}
 	}
@@ -724,17 +641,14 @@ ssize_t cavan_cache_fill(struct cavan_cache *cache, char *buff, size_t size, siz
 	char *buff_bak = buff;
 	char *buff_end = buff + size;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		ssize_t rdlen = cavan_cache_read(cache, buff, buff_end - buff, reserved, timeout);
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_red_info("cavan_cache_read");
 			return rdlen;
 		}
 
-		if (rdlen == 0)
-		{
+		if (rdlen == 0) {
 			size = buff - buff_bak;
 			break;
 		}
@@ -750,28 +664,23 @@ ssize_t cavan_cache_read_line(struct cavan_cache *cache, char *buff, size_t size
 	char *buff_bak = buff;
 	char *buff_end = buff + size - 1;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		char c;
 		ssize_t rdlen;
 
 		rdlen = cavan_cache_read(cache, &c, 1, reserved, timeout);
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_red_info("cavan_cache_read");
 			return rdlen;
 		}
 
-		if (rdlen == 0)
-		{
+		if (rdlen == 0) {
 			break;
 		}
 
-		switch (c)
-		{
+		switch (c) {
 		case '\n':
-			if (buff > buff_bak)
-			{
+			if (buff > buff_bak) {
 				goto out_return;
 			}
 		case '\r':
@@ -808,15 +717,13 @@ int cavan_fifo_init(struct cavan_fifo *fifo, size_t size, void *data)
 	int ret;
 
 	ret = pthread_mutex_init(&fifo->lock, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pthread_mutex_init");
 		return ret;
 	}
 
 	fifo->mem = malloc(size);
-	if (fifo->mem == NULL)
-	{
+	if (fifo->mem == NULL) {
 		pr_error_info("malloc");
 		ret = -ENOMEM;
 		goto out_pthread_mutex_destroy;
@@ -849,8 +756,7 @@ static ssize_t cavan_fifo_read_cache_raw(struct cavan_fifo *fifo, void *buff, si
 	size_t rdlen;
 
 	rdlen = fifo->data_end - fifo->data;
-	if (rdlen > size)
-	{
+	if (rdlen > size) {
 		rdlen = size;
 	}
 
@@ -875,15 +781,11 @@ static ssize_t cavan_fifo_read_raw(struct cavan_fifo *fifo, void *buff, size_t s
 {
 	ssize_t rdlen;
 
-	if (fifo->data < fifo->data_end)
-	{
+	if (fifo->data < fifo->data_end) {
 		rdlen = fifo->data_end - fifo->data;
-	}
-	else
-	{
+	} else {
 		rdlen = fifo->read(fifo, fifo->mem, fifo->size);
-		if (rdlen <= 0)
-		{
+		if (rdlen <= 0) {
 			return rdlen;
 		}
 
@@ -891,8 +793,7 @@ static ssize_t cavan_fifo_read_raw(struct cavan_fifo *fifo, void *buff, size_t s
 		fifo->data_end = fifo->data + rdlen;
 	}
 
-	if (rdlen > (ssize_t) size)
-	{
+	if (rdlen > (ssize_t) size) {
 		rdlen = size;
 	}
 
@@ -918,26 +819,21 @@ static ssize_t cavan_fifo_read_line_raw(struct cavan_fifo *fifo, char *buff, siz
 	char *buff_bak = buff;
 	char *buff_end = buff + size - 1;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		ssize_t rdlen;
 
 		rdlen = cavan_fifo_read_raw(fifo, buff, 1);
-		if (rdlen < 1)
-		{
-			if (rdlen < 0)
-			{
+		if (rdlen < 1) {
+			if (rdlen < 0) {
 				return rdlen;
 			}
 
 			goto out_found;
 		}
 
-		switch (*buff)
-		{
+		switch (*buff) {
 		case '\n':
-			if (buff > buff_bak)
-			{
+			if (buff > buff_bak) {
 				goto out_found;
 			}
 		case '\r':
@@ -968,13 +864,11 @@ static ssize_t cavan_fifo_fill_raw(struct cavan_fifo *fifo, char *buff, size_t s
 {
 	char *buff_end = buff + size;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		ssize_t rdlen;
 
 		rdlen = cavan_fifo_read_raw(fifo, buff, buff_end - buff);
-		if (rdlen <= 0)
-		{
+		if (rdlen <= 0) {
 			return -EFAULT;
 		}
 
@@ -999,18 +893,13 @@ static ssize_t cavan_fifo_write_raw(struct cavan_fifo *fifo, const char *buff, s
 {
 	size_t size_bak = size;
 
-	while (size)
-	{
+	while (size) {
 		ssize_t wrlen;
 
-		if (fifo->data_end < fifo->mem_end)
-		{
+		if (fifo->data_end < fifo->mem_end) {
 			wrlen = fifo->mem_end - fifo->data_end;
-		}
-		else
-		{
-			if (fifo->write(fifo, fifo->mem, fifo->size) != (ssize_t) fifo->size)
-			{
+		} else {
+			if (fifo->write(fifo, fifo->mem, fifo->size) != (ssize_t) fifo->size) {
 				return -EFAULT;
 			}
 
@@ -1018,12 +907,9 @@ static ssize_t cavan_fifo_write_raw(struct cavan_fifo *fifo, const char *buff, s
 			fifo->data_end = fifo->mem;
 		}
 
-		if (fifo->data_end == fifo->mem)
-		{
-			while (size >= fifo->size)
-			{
-				if (fifo->write(fifo, buff, fifo->size) != (ssize_t) fifo->size)
-				{
+		if (fifo->data_end == fifo->mem) {
+			while (size >= fifo->size) {
+				if (fifo->write(fifo, buff, fifo->size) != (ssize_t) fifo->size) {
 					return -EFAULT;
 				}
 
@@ -1032,8 +918,7 @@ static ssize_t cavan_fifo_write_raw(struct cavan_fifo *fifo, const char *buff, s
 			}
 		}
 
-		if (wrlen > (ssize_t) size)
-		{
+		if (wrlen > (ssize_t) size) {
 			wrlen = size;
 		}
 
@@ -1060,13 +945,11 @@ ssize_t cavan_fifo_write(struct cavan_fifo *fifo, const void *buff, size_t size)
 
 static ssize_t cavan_fifo_fflush_raw(struct cavan_fifo *fifo)
 {
-	if (fifo->data_end > fifo->mem)
-	{
+	if (fifo->data_end > fifo->mem) {
 		ssize_t wrlen;
 
 		wrlen = fifo->data_end - fifo->mem;
-		if (fifo->write(fifo, fifo->mem, wrlen) != wrlen)
-		{
+		if (fifo->write(fifo, fifo->mem, wrlen) != wrlen) {
 			return -EFAULT;
 		}
 

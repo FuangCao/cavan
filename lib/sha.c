@@ -89,14 +89,12 @@
 
 int cavan_sha_init(struct cavan_sha_context *context)
 {
-	if (context->init == NULL)
-	{
+	if (context->init == NULL) {
 		pr_red_info("context->init == NULL");
 		ERROR_RETURN(EINVAL);
 	}
 
-	if (context->transform == NULL)
-	{
+	if (context->transform == NULL) {
 		pr_red_info("context->transform == NULL");
 		ERROR_RETURN(EINVAL);
 	}
@@ -113,13 +111,11 @@ void cavan_sha_update(struct cavan_sha_context *context, const void *buff, size_
 	size_t remain;
 	const void *buff_end = ADDR_ADD(buff, size);
 
-	if (context->remain > 0)
-	{
+	if (context->remain > 0) {
 		size_t padding;
 
 		padding = sizeof(context->buff) - context->remain;
-		if (padding <= size)
-		{
+		if (padding <= size) {
 			mem_copy(context->buff + context->remain, buff, padding);
 			context->transform(context->digest, context->dwbuff);
 			buff = ADDR_ADD(buff, padding);
@@ -127,11 +123,9 @@ void cavan_sha_update(struct cavan_sha_context *context, const void *buff, size_
 		}
 	}
 
-	while (1)
-	{
+	while (1) {
 		remain = ADDR_SUB2(buff_end, buff);
-		if (remain < sizeof(context->buff))
-		{
+		if (remain < sizeof(context->buff)) {
 			break;
 		}
 
@@ -139,8 +133,7 @@ void cavan_sha_update(struct cavan_sha_context *context, const void *buff, size_
 		buff = ADDR_ADD(buff, sizeof(context->buff));
 	}
 
-	if (remain)
-	{
+	if (remain) {
 		mem_copy(context->buff + context->remain, buff, remain);
 		context->remain += remain;
 	}
@@ -150,14 +143,12 @@ void cavan_sha_update(struct cavan_sha_context *context, const void *buff, size_
 
 int cavan_sha_update2(struct cavan_sha_context *context, int fd)
 {
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen;
 		char buff[4096];
 
 		rdlen = ffile_read(fd, buff, sizeof(buff));
-		if (rdlen <= 0)
-		{
+		if (rdlen <= 0) {
 			return rdlen;
 		}
 
@@ -173,8 +164,7 @@ int cavan_sha_update3(struct cavan_sha_context *context, const char *pathname)
 	int ret;
 
 	fd = open(pathname, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file %s", pathname);
 		return fd;
 	}
@@ -192,34 +182,25 @@ void cavan_sha_finish(struct cavan_sha_context *context, u8 *digest)
 
 	cavan_sha_update(context, "\x80", 1);
 
-	if (context->remain > sizeof(context->buff) - sizeof(bits))
-	{
+	if (context->remain > sizeof(context->buff) - sizeof(bits)) {
 		mem_set(context->buff + context->remain, 0, sizeof(context->buff) - context->remain);
 		context->transform(context->digest, context->dwbuff);
 		mem_set(context->buff, 0, context->remain);
-	}
-	else
-	{
+	} else {
 		mem_set(context->buff + context->remain, 0, sizeof(context->buff) - context->remain - sizeof(bits));
 	}
 
-	if (context->flags & SHA_FLAG_SWAP)
-	{
+	if (context->flags & SHA_FLAG_SWAP) {
 		mem_copy_invert8(context->buff + sizeof(context->buff) - sizeof(bits), (void *) &bits, sizeof(bits));
-	}
-	else
-	{
+	} else {
 		mem_copy(context->buff + sizeof(context->buff) - sizeof(bits), (void *) &bits, sizeof(bits));
 	}
 
 	context->transform(context->digest, context->dwbuff);
 
-	if (context->flags & SHA_FLAG_SWAP)
-	{
+	if (context->flags & SHA_FLAG_SWAP) {
 		mem_swap32((u32 *) digest, context->digest, context->digest_size >> 2);
-	}
-	else
-	{
+	} else {
 		mem_copy(digest, context->digest, context->digest_size);
 	}
 }
@@ -229,8 +210,7 @@ int cavan_shasum(struct cavan_sha_context *context, const void *buff, size_t siz
 	int ret;
 
 	ret = cavan_sha_init(context);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sha_init");
 		return ret;
 	}
@@ -249,8 +229,7 @@ int cavan_file_shasum_mmap(struct cavan_sha_context *context, const char *pathna
 	size_t size;
 
 	fd = file_mmap(pathname, &addr, &size, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return fd;
 	}
 
@@ -265,21 +244,18 @@ int cavan_file_shasum(struct cavan_sha_context *context, const char *pathname, u
 	int ret;
 
 	ret = cavan_file_shasum_mmap(context, pathname, digest);
-	if (ret >= 0)
-	{
+	if (ret >= 0) {
 		return ret;
 	}
 
 	ret = cavan_sha_init(context);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sha_init");
 		return ret;
 	}
 
 	ret = cavan_sha_update3(context, pathname);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sha_update2");
 		return ret;
 	}
@@ -433,8 +409,7 @@ static void cavan_sha1_transform(u32 digest[5], const u32 *buff)
 
 	mem_swap32(W, buff, 16);
 
-	for(i = 16; i < 80; i++)
-	{
+	for(i = 16; i < 80; i++) {
 		W[i] = ROL(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
 	}
 

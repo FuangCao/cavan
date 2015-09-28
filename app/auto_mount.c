@@ -11,30 +11,25 @@ int main(int argc, char *argv[])
 	struct uevent_desc udesc;
 
 	ret = uevent_init(&udesc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("uevent_init");
 		return ret;
 	}
 
-	while (1)
-	{
+	while (1) {
 		char devpath[1024];
 
 		ret = get_partition_add_uevent(&udesc);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("get_partition_add_uevent");
 			break;
 		}
 
-		if (uevent_get_propery_devname(&udesc, devpath) == NULL)
-		{
+		if (uevent_get_propery_devname(&udesc, devpath) == NULL) {
 			continue;
 		}
 
-		if (file_test(devpath, "b") < 0)
-		{
+		if (file_test(devpath, "b") < 0) {
 			continue;
 		}
 

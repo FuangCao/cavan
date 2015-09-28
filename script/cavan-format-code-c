@@ -40,7 +40,11 @@ if ($command eq 'm') {
 my @dirlist = @ARGV;
 
 if (@dirlist <= 0) {
-	push @dirlist, ".";
+	if (-f "build/core/cavan_main.mk") {
+		push @dirlist, ("lib", "include", "app", "cpp", "test", "script");
+	} else {
+		push @dirlist, ".";
+	}
 }
 
 foreach my $pathname (&find_soruce_files(@dirlist)) {
@@ -50,33 +54,32 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 	$_ = join '', <FILE>;
 
 	s/[\t ]+$//mg;
+	s/\r\n/\n/mg;
 
 	if ($single_line) {
-		s/^([\t ]+.*\))[\t ]*\n[\t ]+\{/$1 \{/mg;
-		s/^([\t ]+\})[\t ]*\n?[\t ]+(\w+)[\t ]*\n?[\t ]+\{/$1 $2 \{/mg;
-		s/^([\t ]+\})[\t ]*\n[\t ]+(else[\t ]+if)/$1 $2/mg;
-		s/^([\t ]+case.*:)[\t ]*\n[\t ]+{/$1 \{/mg;
-
-		s/(.*=)[\t ]*\n[\t ]*\{/$1 \{/mg;
-		s/^([\t ]+\})[\t ]*,[\t ]*\n[\t ]+\{/$1, \{/mg;
-
-		s/^([\t ]*(?:struct|class)[\t ]+\w+)[\t ]*\n\{/$1 \{/mg;
+		s/\}\s*else\s*\{/\} else \{/mg;
+		s/\}\s*else\s+(if.*\S)\s*\{/\} else $1 \{/mg;
+		s/^(([\t ]+|[\t ]*(class|struct))[^\{\n]+\S)\s*\{[\t ]*$/$1 \{/mg;
+		s/^(([\t ]+).*\{)\s*\{/$1\n$2\t\{/mg;
 	} else {
-		s/^([\t ]*)\}[\t ]*(\S.*\S)[\t ]*\{[\t ]*$/$1\}\n$1$2\n$1\{/mg;
-		s/^([\t ]*)(\S.*\S)[\t ]*\{[\t ]*$/$1$2\n$1\{/mg;
-		s/^([\t ]*)(.*=)[\t ]*\{[^\}\n]*$/$1$2\n$1\{/mg;
-		s/^([\t ]*)}[\t ]*,[\t ]*{/$1\},\n$1\{/mg;
-		s/^([\t ]*)(.+:)[\t ]*\{/$1$2\n$1\t\{/mg;
+		s/^([\t ]*)\}\s*else\s*\{/$1\}\n$1else\n$1\{/mg;
+		s/^([\t ]*)\}\s*else\s+(if.*\S)\s*\{/$1\}\n$1else $2\n$1\{/mg;
+		s/^(([\t ]*)\S.*\S)[\t ]*\{[\t ]*$/$1\n$2\{/mg;
+		# s/^(([\t ]+)case.*:)\s*\{/$1\n$2\t\{/mg;
 	}
 
-	s/^([\t ]+.*\))[\t ]*\\[\t ]*\n[\t ]+\{/$1 \{/mg;
-	s/^([\t ]+do)[\t\\ ]*\n[\t ]+{/$1 \{/mg;
-	s/=[\t ]*\{(\S.*\S)\}/= \{ $1 \}/mg;
-	s/^[\t ]*(typedef[\w\t ]+)\b[\t ]*\n[\t ]*\{/$1 \{/mg;
+	s/\}\s*else\s*\{[\t ]*\\\s*$/\} else \{ \\/mg;
+	s/\}\s*else\s+(if.*\S)\s*\{[\t ]*\\\s*$/\} else $1 \{ \\/mg;
+	s/\s*\{[\t ]*\\\s*$/ \{ \\/mg;
+	s/do\s*\{/do \{/mg;
+	s/\s*\\\s*\{/ \{/mg;
 
 	for my $i (1..10) {
 		s/(\([^\*\(\)]+\*?[\t ]*\))([\w\(\&])/$1 $2/mg or last;
 	}
+
+	s/(\([^\(\)]+\))[\t ]+Z\b/$1Z/mg;
+	s/\(\s*\{/\(\{/mg;
 
 	s/^[\t ]*#if(def\s*__cplusplus|[\t ]+defined[\t ]*\([\t ]*__cplusplus[\t ]*\))\s*extern\s*\"[Cc]\"\s*{\s*#endif/__BEGIN_DECLS/mg;
 	s/^[\t ]*#if(def\s*__cplusplus|[\t ]+defined[\t ]*\([\t ]*__cplusplus[\t ]*\))\s*\}\s*#endif/__END_DECLS/mg;

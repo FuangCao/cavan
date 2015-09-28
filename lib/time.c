@@ -39,8 +39,7 @@ u32 cavan_time_get_days_of_year(u32 year, u8 month, u8 day)
 	u32 days = year * 365 + day;
 	const u16 *yday = cavan_time_mon_yday[cavan_time_year_is_leap(year)];
 
-	if (year > 0)
-	{
+	if (year > 0) {
 		year--;
 	}
 
@@ -68,8 +67,7 @@ void cavan_time_parse(unsigned long timestamp, struct cavan_time *time, u32 base
 	time->wday = days % 7;
 	year = days / 366;
 
-	while (cavan_time_get_days_of_year(year + 1, 0, 1) <= days)
-	{
+	while (cavan_time_get_days_of_year(year + 1, 0, 1) <= days) {
 		year++;
 	}
 

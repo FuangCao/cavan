@@ -32,8 +32,7 @@
 
 struct cavan_mux_link;
 
-struct cavan_mux_package
-{
+struct cavan_mux_package {
 	u16 magic;
 	u16 src_port;
 	u16 dest_port;
@@ -41,15 +40,13 @@ struct cavan_mux_package
 	char data[0];
 };
 
-struct cavan_mux_package_raw
-{
+struct cavan_mux_package_raw {
 	u16 length;
 	struct cavan_mux_package_raw *next;
 	struct cavan_mux_package package;
 };
 
-struct cavan_mux
-{
+struct cavan_mux {
 	struct cavan_lock lock;
 	struct cavan_mux_package_raw *packages;
 
@@ -66,8 +63,7 @@ struct cavan_mux
 	ssize_t (*recv)(struct cavan_mux *mux, void *buff, size_t size);
 };
 
-struct cavan_mux_link
-{
+struct cavan_mux_link {
 	u16 local_port;
 	u16 remote_port;
 

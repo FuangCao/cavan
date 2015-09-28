@@ -2,15 +2,13 @@
 
 #include <cavan.h>
 
-struct buffer
-{
+struct buffer {
 	int size;
 	int cursor;
 	char space[0];
 };
 
-struct equation
-{
+struct equation {
 	char option[64];
 	char value[1024];
 };

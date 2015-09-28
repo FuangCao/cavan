@@ -6,12 +6,9 @@ int main(int argc, char *argv[])
 {
 	assert(argc == 3);
 
-	if (argv[2][0] == '0')
-	{
+	if (argv[2][0] == '0') {
 		return switch2graph_mode(argv[1]);
-	}
-	else
-	{
+	} else {
 		return switch2text_mode(argv[1]);
 	}
 }

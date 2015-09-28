@@ -13,8 +13,7 @@
 
 __BEGIN_DECLS
 
-struct cavan_timer
-{
+struct cavan_timer {
 	struct timespec time;
 	void *private_data;
 
@@ -23,8 +22,7 @@ struct cavan_timer
 	int (*handler)(struct cavan_timer *timer, void *data);
 };
 
-struct cavan_timer_service
-{
+struct cavan_timer_service {
 	struct cavan_thread thread;
 
 	u32 run_count;
@@ -36,8 +34,7 @@ struct cavan_timer_service
 	struct double_link link;
 };
 
-struct cavan_cursor
-{
+struct cavan_cursor {
 	struct cavan_timer timer;
 
 	int period;
@@ -48,8 +45,7 @@ struct cavan_cursor
 	void (*set_visual)(struct cavan_cursor *cursor, bool enable, void *data);
 };
 
-struct cavan_flasher_node
-{
+struct cavan_flasher_node {
 	const char *name;
 
 	u32 delay;
@@ -63,8 +59,7 @@ struct cavan_flasher_node
 	void (*handler)(struct cavan_flasher_node *node);
 };
 
-struct cavan_flasher
-{
+struct cavan_flasher {
 	struct cavan_thread thread;
 	struct cavan_lock lock;
 	u32 delay;
@@ -103,15 +98,13 @@ static inline void cavan_timer_init(struct cavan_timer *timer, void *data)
 
 static inline int cavan_cursor_start(struct cavan_cursor *cursor, void *data)
 {
-	if (cursor->set_visual == NULL)
-	{
+	if (cursor->set_visual == NULL) {
 		return -EINVAL;
 	}
 
 	cursor->visual = false;
 
-	if (data)
-	{
+	if (data) {
 		cursor->private_data = data;
 	}
 
@@ -122,8 +115,7 @@ static inline void cavan_cursor_stop(struct cavan_cursor *cursor)
 {
 	cavan_timer_remove(cursor->service, &cursor->timer);
 
-	if (cursor->set_visual)
-	{
+	if (cursor->set_visual) {
 		cursor->set_visual(cursor, false, cursor->private_data);
 	}
 }

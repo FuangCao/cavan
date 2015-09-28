@@ -20,8 +20,7 @@
 	}
 
 #define CAVAN_COMMAND_MAP_START \
-	static struct cavan_command_map __local_cmd_map[] = \
-	{
+	static struct cavan_command_map __local_cmd_map[] = {
 
 #define CAVAN_COMMAND_MAP_END \
 	}; \
@@ -132,14 +131,12 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_RESOURCE
 } cavan_command_option_t;
 
-struct cavan_command_map
-{
+struct cavan_command_map {
 	const char *name;
 	int (*main_func)(int argc, char *argv[]);
 };
 
-struct cavan_exec_pipe_thread_data
-{
+struct cavan_exec_pipe_thread_data {
 	int fd;
 	int flags;
 	pid_t pid;

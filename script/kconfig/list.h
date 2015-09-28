@@ -6,8 +6,7 @@
  * Date: Tue Jan  3 15:37:38 CST 2012
  */
 
-struct cavan_list_node
-{
+struct cavan_list_node {
 	struct cavan_list_node *prev;
 	struct cavan_list_node *next;
 };

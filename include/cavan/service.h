@@ -15,8 +15,7 @@ typedef enum cavan_service_state {
 	CAVAN_SERVICE_STATE_STOPPING,
 } cavan_service_state_t;
 
-struct cavan_service_description
-{
+struct cavan_service_description {
 	const char *name;
 	int used_count;
 	int daemon_count;
@@ -29,8 +28,7 @@ struct cavan_service_description
 	int (*handler)(struct cavan_service_description *service, int index, cavan_shared_data_t data);
 };
 
-struct cavan_daemon_description
-{
+struct cavan_daemon_description {
 	const char *pidfile;
 	const char *logfile;
 	const char *command;
@@ -39,8 +37,7 @@ struct cavan_daemon_description
 	int super_permission;
 };
 
-struct cavan_dynamic_service
-{
+struct cavan_dynamic_service {
 	const char *name;
 	u32 index;
 	u32 min, max;

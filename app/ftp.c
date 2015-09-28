@@ -14,45 +14,38 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			.name = "user",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'u',
-		},
-		{
+		}, {
 			.name = "username",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'u',
-		},
-		{
+		}, {
 			.name = "pass",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'p',
-		},
-		{
+		}, {
 			.name = "password",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'p',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -60,10 +53,8 @@ int main(int argc, char *argv[])
 	const char *username = NULL;
 	const char *password = NULL;
 
-	while ((c = getopt_long(argc, argv, "vVhHu:U:p:P:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHu:U:p:P:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 			show_author_info();
@@ -93,8 +84,7 @@ int main(int argc, char *argv[])
 
 	argv += optind;
 
-	switch (argc - optind)
-	{
+	switch (argc - optind) {
 	case 0:
 		url.hostname = "127.0.0.1";
 		url.port = FTP_CTRL_PORT;

@@ -22,18 +22,15 @@ typedef enum cavan_thread_state {
 	CAVAN_THREAD_STATE_STOPPED
 } cavan_thread_state_t;
 
-struct cavan_thread
-{
+struct cavan_thread {
 	const char *name;
 
 	bool pending;
 	pthread_t id;
 
-	union
-	{
+	union {
 		int pipefd[2];
-		struct
-		{
+		struct {
 			int rd_event_fd;
 			int wr_event_fd;
 		};
@@ -51,8 +48,7 @@ struct cavan_thread
 	int (*handler)(struct cavan_thread *thread, void *data);
 };
 
-struct cavan_lock
-{
+struct cavan_lock {
 	int held_count;
 	pthread_t owner;
 	pthread_mutex_t mutex;
@@ -85,7 +81,7 @@ void cavan_lock_deinit(struct cavan_lock *lock);
 void cavan_lock_acquire(struct cavan_lock *lock);
 void cavan_lock_release(struct cavan_lock *lock);
 
-static inline int cavan_pthread_run(void *(handler)(void *), void *data)
+static inline int cavan_pthread_run(void *(handler) (void *), void *data)
 {
 	return cavan_pthread_create(NULL, handler, data, false);
 }

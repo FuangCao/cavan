@@ -45,14 +45,12 @@ int cavan_font_init(struct cavan_font *font)
 {
 	byte *body;
 
-	if (font->body)
-	{
+	if (font->body) {
 		return 0;
 	}
 
 	body = malloc(font->width * font->height);
-	if (body == NULL)
-	{
+	if (body == NULL) {
 		pr_error_info("malloc");
 		return -ENOMEM;
 	}
@@ -60,12 +58,10 @@ int cavan_font_init(struct cavan_font *font)
 	font->body = body;
 	font->stride = font->width * font->cheight;
 
-	if (font->rundata && font->rundata_size > 0)
-	{
+	if (font->rundata && font->rundata_size > 0) {
 		const byte *rundata, *rundata_end;
 
-		for (rundata = font->rundata, rundata_end = rundata + font->rundata_size; rundata < rundata_end; rundata++)
-		{
+		for (rundata = font->rundata, rundata_end = rundata + font->rundata_size; rundata < rundata_end; rundata++) {
 			int count = (*rundata) & 0x7F;
 
 			mem_set(body, ((*rundata) & (1 << 7)) ? 0xFF : 0, count);
@@ -78,25 +74,21 @@ int cavan_font_init(struct cavan_font *font)
 
 void cavan_font_deinit(struct cavan_font *font)
 {
-	if (font->body)
-	{
+	if (font->body) {
 		free(font->body);
 		font->body = NULL;
 	}
 }
 
-struct cavan_font *cavan_font_get(int type)
-{
+struct cavan_font *cavan_font_get(int type) {
 	int ret;
 	struct cavan_font *font;
 
-	if (type < 0)
-	{
+	if (type < 0) {
 		type = CAVAN_DEFAULT_FONT;
 	}
 
-	switch (type)
-	{
+	switch (type) {
 	case CAVAN_FONT_10X18:
 		font = &cavan_font_10x18;
 		break;
@@ -119,8 +111,7 @@ struct cavan_font *cavan_font_get(int type)
 	}
 
 	ret = cavan_font_init(font);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_font_init");
 		return NULL;
 	}
@@ -143,8 +134,7 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 	struct bmp_header *header;
 
 	fd = file_mmap(bmp, (void **) &header, &size, 0);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("file_mmap");
 		return fd;
 	}
@@ -166,16 +156,13 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 	font->body = NULL;
 
 	ret = cavan_font_init(font);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_font_init");
 		goto out_file_unmap;
 	}
 
-	switch (info_hdr->bit_count)
-	{
-	case 8:
-		{
+	switch (info_hdr->bit_count) {
+	case 8: {
 			const u8 *p, *file_end;
 			byte *body = font->body + font->width * font->height;
 			struct bmp_color_table_entry *colors = (struct bmp_color_table_entry *) (header + 1);
@@ -183,26 +170,20 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 			p = ((u8 *) header) + file_hdr->offset;
 			file_end = p + font->width * font->height;
 
-			while (1)
-			{
+			while (1) {
 				const u8 *line_end = p + font->width;
-				if (line_end > file_end)
-				{
+				if (line_end > file_end) {
 					break;
 				}
 
 				body -= font->width;
 
-				while (p < line_end)
-				{
+				while (p < line_end) {
 					struct bmp_color_table_entry *color = colors + (*p);
 
-					if (color->red > 128 && color->green > 128 && color->blue > 128)
-					{
+					if (color->red > 128 && color->green > 128 && color->blue > 128) {
 						*body = 0xFF;
-					}
-					else
-					{
+					} else {
 						*body = 0;
 					}
 
@@ -215,32 +196,25 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 		}
 		break;
 
-	case 16:
-		{
+	case 16: {
 			const u16 *p, *file_end;
 			byte *body = font->body + font->width * font->height;
 
 			p = (u16 *) (((byte *) header) + file_hdr->offset);
 			file_end = p + font->width * font->height;
 
-			while (1)
-			{
+			while (1) {
 				const u16 *line_end = p + font->width;
-				if (line_end > file_end)
-				{
+				if (line_end > file_end) {
 					break;
 				}
 
 				body -= font->width;
 
-				while (p < line_end)
-				{
-					if (*p)
-					{
+				while (p < line_end) {
+					if (*p) {
 						*body = 0xFF;
-					}
-					else
-					{
+					} else {
 						*body = 0;
 					}
 
@@ -253,35 +227,28 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 		}
 		break;
 
-	case 24:
-		{
+	case 24: {
 			const u8 *p, *file_end;
 			byte *body = font->body + font->width * font->height;
 
 			p = (u8 *) (((byte *) header) + file_hdr->offset);
 			file_end = p + font->width * font->height * 3;
 
-			while (1)
-			{
+			while (1) {
 				const u8 *line_end = p + font->width * 3;
-				if (line_end > file_end)
-				{
+				if (line_end > file_end) {
 					break;
 				}
 
 				body -= font->width;
 
-				while (p < line_end)
-				{
+				while (p < line_end) {
 					int brightness;
 
 					brightness = cavan_display_cal_brightness(p[0], p[1], p[2]);
-					if (brightness > 64)
-					{
+					if (brightness > 64) {
 						*body = 0xFF;
-					}
-					else
-					{
+					} else {
 						*body = 0;
 					}
 
@@ -294,32 +261,25 @@ int cavan_font_load_bmp(struct cavan_font *font, const char *bmp, int lines)
 		}
 		break;
 
-	case 32:
-		{
+	case 32: {
 			const u8 *p, *file_end;
 			byte *body = font->body + font->width * font->height;
 
 			p = (u8 *) (((byte *) header) + file_hdr->offset);
 			file_end = p + font->width * font->height * 4;
 
-			while (1)
-			{
+			while (1) {
 				const u8 *line_end = p + font->width * 4;
-				if (line_end > file_end)
-				{
+				if (line_end > file_end) {
 					break;
 				}
 
 				body -= font->width;
 
-				while (p < line_end)
-				{
-					if (p[0] > 128 && p[1] > 128 && p[2] > 128)
-					{
+				while (p < line_end) {
+					if (p[0] > 128 && p[1] > 128 && p[2] > 128) {
 						*body = 0xFF;
-					}
-					else
-					{
+					} else {
 						*body = 0;
 					}
 
@@ -361,18 +321,15 @@ int cavan_font_save_bmp(struct cavan_font *font, const char *pathname, int bit_c
 	size = sizeof(*header) + font->width * font->height * bit_count / 8;
 	size += color_table_size * sizeof(struct bmp_color_table_entry);
 	fd = file_mmap(pathname, (void **) &header, &size, O_RDWR | O_CREAT | O_TRUNC);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("file_mmap");
 		return fd;
 	}
 
 	bmp_header_init(header, font->width, font->height, bit_count);
 
-	switch (bit_count)
-	{
-	case 8:
-		{
+	switch (bit_count) {
+	case 8: {
 			u8 *pixel;
 			const byte *body;
 			struct bmp_color_table_entry *colors = (struct bmp_color_table_entry *) (header + 1);
@@ -383,63 +340,52 @@ int cavan_font_save_bmp(struct cavan_font *font, const char *pathname, int bit_c
 
 			pixel = (u8 *) (colors + color_table_size);
 
-			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2)
-			{
+			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2) {
 				const byte *body_end;
 
-				for (body_end = body + font->width; body < body_end; body++, pixel++)
-				{
+				for (body_end = body + font->width; body < body_end; body++, pixel++) {
 					*pixel = (*body) == 0 ? 0 : 1;
 				}
 			}
 		}
 		break;
 
-	case 16:
-		{
+	case 16: {
 			u16 *pixel = (u16 *) (header + 1);
 			const byte *body;
 
-			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2)
-			{
+			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2) {
 				const byte *body_end;
 
-				for (body_end = body + font->width; body < body_end; body++, pixel++)
-				{
+				for (body_end = body + font->width; body < body_end; body++, pixel++) {
 					*pixel = (*body) == 0 ? 0x0000 : 0xFFFF;
 				}
 			}
 		}
 		break;
 
-	case 24:
-		{
+	case 24: {
 			byte *pixel = (byte *) (header + 1);
 			const byte *body;
 
-			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2)
-			{
+			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2) {
 				const byte *body_end;
 
-				for (body_end = body + font->width; body < body_end; body++, pixel += 3)
-				{
+				for (body_end = body + font->width; body < body_end; body++, pixel += 3) {
 					pixel[0] = pixel[1] = pixel[2] = (*body) == 0 ? 0x00 : 0xFF;
 				}
 			}
 		}
 		break;
 
-	case 32:
-		{
+	case 32: {
 			u32 *pixel = (u32 *) (header + 1);
 			const byte *body;
 
-			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2)
-			{
+			for (body = font->body + font->width * (font->height - 1); body >= font->body; body -= font->width * 2) {
 				const byte *body_end;
 
-				for (body_end = body + font->width; body < body_end; body++, pixel++)
-				{
+				for (body_end = body + font->width; body < body_end; body++, pixel++) {
 					*pixel = (*body) == 0 ? 0x00000000 : 0xFFFFFFFF;
 				}
 			}
@@ -463,8 +409,7 @@ ssize_t cavan_font_comp(struct cavan_font *font, byte *buff, size_t size)
 	byte *buff_bak, *buff_end;
 	const byte *body, *body_end;
 
-	if (font == NULL)
-	{
+	if (font == NULL) {
 		pr_red_info("font == NULL");
 		return -EINVAL;
 	}
@@ -477,34 +422,27 @@ ssize_t cavan_font_comp(struct cavan_font *font, byte *buff, size_t size)
 	body_end = body + font->width * font->height;
 #endif
 
-	for (buff_bak = buff, buff_end = buff + size; body < body_end && buff < buff_end; buff++)
-	{
+	for (buff_bak = buff, buff_end = buff + size; body < body_end && buff < buff_end; buff++) {
 		int value;
 		const byte *body_bak, *body_last;
 
 		body_last = body + 0x7F;
-		if (body_last > body_end)
-		{
+		if (body_last > body_end) {
 			body_last = body_end;
 		}
 
 		body_bak = body++;
 
-		if (*body_bak)
-		{
+		if (*body_bak) {
 			value = 1;
 
-			while (body < body_last && *body)
-			{
+			while (body < body_last && *body) {
 				body++;
 			}
-		}
-		else
-		{
+		} else {
 			value = 0;
 
-			while (body < body_last && *body == 0)
-			{
+			while (body < body_last && *body == 0) {
 				body++;
 			}
 		}

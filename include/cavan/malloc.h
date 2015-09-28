@@ -65,16 +65,14 @@
 #define CAVAN_NODE_GET_REAL_SIZE(size) \
 	((size) & (~(typeof(size)) CAVAN_NODE_ALLOCATED_MASK))
 
-struct cavan_malloc_node
-{
+struct cavan_malloc_node {
 	u32 size;
 	u32 prev_size;
 
 	struct double_link_node node;
 };
 
-struct cavan_malloc_info
-{
+struct cavan_malloc_info {
 	void *buff;
 	size_t size;
 	struct double_link link;
@@ -108,8 +106,7 @@ static inline struct double_link_node *cavan_malloc_get_prev_near(struct cavan_m
 
 static inline size_t cavan_malloc_get_available_size(struct double_link *link, size_t size)
 {
-	if (size < sizeof(struct cavan_malloc_node))
-	{
+	if (size < sizeof(struct cavan_malloc_node)) {
 		return 0;
 	}
 

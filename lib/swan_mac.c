@@ -21,12 +21,10 @@ static void check_bt_mac(char *bt_mac)
 	u32 bt_mac_value[4];
 
 	readlen = file_read_urandom(bt_mac_value, sizeof(bt_mac_value));
-	if (readlen < 0)
-	{
+	if (readlen < 0) {
 		unsigned int i;
 
-		for (i = 0; i < ARRAY_SIZE(bt_mac_value); i++)
-		{
+		for (i = 0; i < ARRAY_SIZE(bt_mac_value); i++) {
 			bt_mac_value[i] = random();
 		}
 	}
@@ -43,10 +41,8 @@ static void gen_wifi_mac(u8 *wifi_mac_value)
 
 	do {
 		readlen = file_read_urandom(wifi_mac_value + 3, 3);
-		if (readlen < 0)
-		{
-			for (i = 3; i < 6; i++)
-			{
+		if (readlen < 0) {
+			for (i = 3; i < 6; i++) {
 				wifi_mac_value[i] = random();
 			}
 		}
@@ -70,16 +66,14 @@ static void check_wifi_mac(char *wifi_mac)
 	ret = sscanf(wifi_mac, "%x:%x:%x:%x:%x:%x",
 		wifi_mac_value32 + 5, wifi_mac_value32 + 4, wifi_mac_value32 + 3,
 		wifi_mac_value32 + 2, wifi_mac_value32 + 1, wifi_mac_value32);
-	if (ret == 6)
-	{
+	if (ret == 6) {
 		goto out_copy_mac;
 	}
 
 	ret = sscanf(wifi_mac, "%x-%x-%x-%x-%x-%x",
 		wifi_mac_value32 + 5, wifi_mac_value32 + 4, wifi_mac_value32 + 3,
 		wifi_mac_value32 + 2, wifi_mac_value32 + 1, wifi_mac_value32);
-	if (ret == 6)
-	{
+	if (ret == 6) {
 		goto out_copy_mac;
 	}
 
@@ -87,8 +81,7 @@ static void check_wifi_mac(char *wifi_mac)
 	goto out_set_mac;
 
 out_copy_mac:
-	for (i = 0; i < 6; i++)
-	{
+	for (i = 0; i < 6; i++) {
 		wifi_mac_value[i] = wifi_mac_value32[i] & 0xFF;
 	}
 out_set_mac:
@@ -102,8 +95,7 @@ static int read_oem_info(const char *emmc_dev, struct oem_info *oem_info)
 	int ret;
 
 	ret = file_readfrom(emmc_dev, oem_info, sizeof(*oem_info), SN_OFFSET, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("read oem info");
 		return ret;
 	}
@@ -123,12 +115,10 @@ static char *get_bt_mac_file(const char *system_mnt_point, char *pathname, size_
 
 	name_p = text_path_cat(pathname, size, system_mnt_point, NULL);
 
-	for (i = 0; i < ARRAY_SIZE(bt_mac_files); i++)
-	{
+	for (i = 0; i < ARRAY_SIZE(bt_mac_files); i++) {
 		text_copy(name_p, bt_mac_files[i]);
 
-		if (access(pathname, W_OK) == 0)
-		{
+		if (access(pathname, W_OK) == 0) {
 			return pathname;
 		}
 	}
@@ -140,15 +130,13 @@ static ssize_t write_bt_mac(const char *system_mnt_point, char *mac, size_t size
 {
 	char bt_mac_file[1024];
 
-	if (get_bt_mac_file(system_mnt_point, bt_mac_file, sizeof(bt_mac_file)) == NULL)
-	{
+	if (get_bt_mac_file(system_mnt_point, bt_mac_file, sizeof(bt_mac_file)) == NULL) {
 		ERROR_RETURN(ENOENT);
 	}
 
 	println("BT-MAC file is: %s", bt_mac_file);
 
-	if (file_replace_line_simple(bt_mac_file, "&0001", 5, mac, size) < 0)
-	{
+	if (file_replace_line_simple(bt_mac_file, "&0001", 5, mac, size) < 0) {
 		char buff[size + 1];
 
 		buff[0] = '\n';
@@ -169,8 +157,7 @@ static ssize_t write_wifi_mac(const char *system_mnt_point, char *mac, size_t si
 	text_path_cat(i200_wifi_mac, sizeof(i200_wifi_mac), system_mnt_point, I200_WIFI_MAC_FILE);
 
 	ret = file_writeto(i200_wifi_mac, mac, size, 0, O_TRUNC);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("file_writeto");
 		return ret;
 	}
@@ -186,21 +173,18 @@ int write_mac_address(const char *emmc_dev, const char *system_mnt_point)
 	struct oem_info oem_info;
 
 	ret = read_oem_info(emmc_dev, &oem_info);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("read oem info");
 		return ret;
 	}
 
 	ret = write_wifi_mac(system_mnt_point, oem_info.wifi_mac, WIFI_MAC_LEN - 1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("write wifi mac address");
 	}
 
 	ret = write_bt_mac(system_mnt_point, oem_info.bt_mac, BT_MAC_LEN);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("write bluetooth mac address");
 	}
 

@@ -31,8 +31,7 @@
 #define TEST_JWP_CLIENT_WATCH		0
 #define TEST_JWP_SERVER_WATCH		0
 
-struct jwp_test_data
-{
+struct jwp_test_data {
 	int data_fd;
 	const char *pathname;
 };
@@ -43,13 +42,11 @@ static void test_jwp_data_received(struct jwp_desc *jwp, const void *data, jwp_s
 
 #if JWP_RX_DATA_QUEUE_ENABLE
 #if 1
-	while (1)
-	{
+	while (1) {
 		ssize_t rdlen, wrlen;
 		char buff[JWP_MTU + 1];
 		rdlen = jwp_recv_data(jwp, buff, sizeof(buff));
-		if (rdlen == 0)
-		{
+		if (rdlen == 0) {
 			break;
 		}
 
@@ -58,8 +55,7 @@ static void test_jwp_data_received(struct jwp_desc *jwp, const void *data, jwp_s
 #endif
 
 		wrlen = write(test_data->data_fd, buff, rdlen);
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			pr_error_info("write");
 		}
 	}
@@ -69,13 +65,11 @@ static void test_jwp_data_received(struct jwp_desc *jwp, const void *data, jwp_s
 	ssize_t wrlen;
 
 	rdlen = jwp_recv_data(jwp, &value, 1);
-	if (rdlen > 0)
-	{
+	if (rdlen > 0) {
 		print_ntext(&value, 1);
 
 		wrlen = write(test_data->data_fd, &value, 1);
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			pr_error_info("write");
 		}
 	}
@@ -90,8 +84,7 @@ static void test_jwp_data_received(struct jwp_desc *jwp, const void *data, jwp_s
 #endif
 
 	wrlen = write(test_data->data_fd, data, size);
-	if (wrlen < 0)
-	{
+	if (wrlen < 0) {
 		pr_error_info("write");
 	}
 #endif
@@ -123,8 +116,7 @@ static void *test_jwp_watch_thread(void *data)
 	struct cavan_timer_service *timer_service = &jwp_linux->timer_service;
 #endif
 
-	while (1)
-	{
+	while (1) {
 #if JWP_QUEUE_ENABLE
 		int i;
 		const struct jwp_queue *p;
@@ -135,12 +127,9 @@ static void *test_jwp_watch_thread(void *data)
 #if JWP_TIMER_ENABLE
 		timer_fault = (run_count == timer_service->run_count);
 		run_count = timer_service->run_count;
-		if (timer_fault)
-		{
+		if (timer_fault) {
 			fault_count++;
-		}
-		else
-		{
+		} else {
 			fault_count = 0;
 		}
 
@@ -154,8 +143,7 @@ static void *test_jwp_watch_thread(void *data)
 		println("jwp->send_pendding = %d", jwp->send_pendding);
 
 #if JWP_QUEUE_ENABLE
-		for (i = 0; i < NELEM(jwp->queues); i++)
-		{
+		for (i = 0; i < NELEM(jwp->queues); i++) {
 			p = jwp->queues + i;
 
 #if JWP_DEBUG_MEMBER
@@ -167,8 +155,7 @@ static void *test_jwp_watch_thread(void *data)
 #endif
 
 #if JWP_TIMER_ENABLE
-		if (timer_fault)
-		{
+		if (timer_fault) {
 #if JWP_DEBUG_MEMBER
 			struct cavan_timer *timer;
 			struct jwp_timer *jwp_timer;
@@ -176,8 +163,7 @@ static void *test_jwp_watch_thread(void *data)
 			struct double_link *link = &timer_service->link;
 
 			node = double_link_get_first_node(link);
-			if (node)
-			{
+			if (node) {
 				timer = double_link_get_container(link, node);
 				jwp_timer = timer->private_data;
 
@@ -185,24 +171,21 @@ static void *test_jwp_watch_thread(void *data)
 			}
 
 			timer = timer_service->timer_last_run;
-			if (timer)
-			{
+			if (timer) {
 				jwp_timer = timer->private_data;
 
 				println("timer_last_run = %s, msec = %d", jwp_timer->name, jwp_timer->msec);
 			}
 
 			timer = timer_service->timer_running;
-			if (timer)
-			{
+			if (timer) {
 				jwp_timer = timer->private_data;
 
 				println("timer_running = %s, msec = %d", jwp_timer->name, jwp_timer->msec);
 			}
 
 			timer = timer_service->timer_waiting;
-			if (timer)
-			{
+			if (timer) {
 				jwp_timer = timer->private_data;
 
 				println("timer_waiting = %s, msec = %d", jwp_timer->name, jwp_timer->msec);
@@ -220,25 +203,20 @@ static void *test_jwp_watch_thread(void *data)
 
 static void test_jwp_cmdline(struct jwp_desc *jwp)
 {
-	while (1)
-	{
+	while (1) {
 		int ret;
 		char buff[1024];
 
 		ret = scanf("%s", buff);
-		if (ret < 1)
-		{
+		if (ret < 1) {
 			continue;
 		}
 
 		println("send command = %s", buff);
 
-		if (jwp_send_command(jwp, buff, strlen(buff)))
-		{
+		if (jwp_send_command(jwp, buff, strlen(buff))) {
 			pr_green_info("OK");
-		}
-		else
-		{
+		} else {
 			pr_red_info("Failed");
 		}
 	}
@@ -246,27 +224,22 @@ static void test_jwp_cmdline(struct jwp_desc *jwp)
 
 static void test_jwp_mcu_cmdline(struct jwp_mcu_desc *mcu)
 {
-	while (1)
-	{
+	while (1) {
 		int ret;
 		int type;
 		char buff[1024];
 
 		ret = scanf("%d %s", &type, buff);
-		if (ret < 2)
-		{
+		if (ret < 2) {
 			pr_error_info("scanf");
 			continue;
 		}
 
 		println("type = %d, buff = %s", type, buff);
 
-		if (jwp_mcu_send_package(mcu, type, buff, strlen(buff) + 1))
-		{
+		if (jwp_mcu_send_package(mcu, type, buff, strlen(buff) + 1)) {
 			pr_green_info("OK");
-		}
-		else
-		{
+		} else {
 			pr_red_info("Failed");
 		}
 	}
@@ -284,16 +257,13 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 	jwp->log_received = NULL;
 	jwp->remote_not_response = NULL;
 
-	if (service)
-	{
+	if (service) {
 #if JWP_DEBUG_MEMBER
 		jwp->name = "server";
 #endif
 		jwp->data_received = test_jwp_data_received;
 		jwp->command_received = test_jwp_command_received;
-	}
-	else
-	{
+	} else {
 #if JWP_DEBUG_MEMBER
 		jwp->name = "client";
 #endif
@@ -303,20 +273,17 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 
 	println("hw_fd = %d, service = %d, pathname = %s", hw_fd, service, pathname);
 
-	if (!jwp_comm_init(&comm, hw_fd, &data))
-	{
+	if (!jwp_comm_init(&comm, hw_fd, &data)) {
 		pr_red_info("jwp_init");
 		return -EFAULT;
 	}
 
-	if (!jwp_comm_start(&comm))
-	{
+	if (!jwp_comm_start(&comm)) {
 		pr_red_info("jwp_linux_start");
 		return -EFAULT;
 	}
 
-	if (service)
-	{
+	if (service) {
 #if TEST_JWP_SERVER_WATCH
 		pthread_t td;
 #endif
@@ -326,21 +293,17 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 #endif
 
 		data_fd = open(pathname, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-		if (data_fd < 0)
-		{
+		if (data_fd < 0) {
 			pr_error_info("open file %s", pathname);
 			return data_fd;
 		}
 
 		data.data_fd = data_fd;
 
-		while (1)
-		{
+		while (1) {
 			msleep(2000);
 		}
-	}
-	else
-	{
+	} else {
 #if TEST_JWP_CLIENT_WATCH
 		pthread_t td;
 #endif
@@ -352,29 +315,24 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 
 		data.data_fd = 0;
 
-		if (pathname)
-		{
+		if (pathname) {
 			int i;
 
 			data_fd = open(pathname, O_RDONLY);
-			if (data_fd < 0)
-			{
+			if (data_fd < 0) {
 				pr_error_info("open file %s", pathname);
 				return data_fd;
 			}
 
 			msleep(200);
 
-			while (1)
-			{
+			while (1) {
 				ssize_t rdlen;
 				char *p, *p_end;
 
 				rdlen = read(data_fd, buff, sizeof(buff));
-				if (rdlen <= 0)
-				{
-					if (rdlen < 0)
-					{
+				if (rdlen <= 0) {
+					if (rdlen < 0) {
 						pr_error_info("read")
 					}
 
@@ -384,10 +342,8 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 #if 1
 				for (p = buff, p_end = p + rdlen; p < p_end; p += jwp_send_data(jwp, p, p_end - p));
 #else
-				for (p = buff, p_end = p + rdlen; p < p_end; p++)
-				{
-					while (jwp_send_data(&jwp, p, 1) != 1)
-					{
+				for (p = buff, p_end = p + rdlen; p < p_end; p++) {
+					while (jwp_send_data(&jwp, p, 1) != 1) {
 #if TEST_JWP_DEBUG
 						pr_red_info("jwp_send_data");
 #endif
@@ -399,8 +355,7 @@ static int test_jwp_run(int hw_fd, const char *pathname, bool service)
 
 			close(data_fd);
 
-			for (i = 0; i < 10; i++)
-			{
+			for (i = 0; i < 10; i++) {
 				pr_green_info("send file complete");
 				msleep(10);
 			}
@@ -423,28 +378,23 @@ static int do_test_jwp(int argc, char *argv[])
 	int pair[2];
 
 	ret = socketpair(AF_UNIX, SOCK_STREAM, 0, pair);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("socketpair");
 		return ret;
 	}
 
 	pid = fork();
-	if (pid == 0)
-	{
+	if (pid == 0) {
 		close(pair[1]);
 
 		test_jwp_run(pair[0], argc > 1 ? argv[1] : NULL, false);
-	}
-	else
-	{
+	} else {
 		close(pair[0]);
 
 #if 1
 		test_jwp_run(pair[1], argc > 2 ? argv[2] : "/tmp/jwp.txt", true);
 #else
-		while (1)
-		{
+		while (1) {
 			pr_pos_info();
 
 			msleep(2000);
@@ -466,8 +416,7 @@ static int do_test_queue(int argc, char *arv[])
 
 	jwp_queue_init(&queue);
 
-	for (i = 'A'; i < 'Z' - 3; i += 5)
-	{
+	for (i = 'A'; i < 'Z' - 3; i += 5) {
 		u8 data[] = { i, i + 1, i + 2, i + 3, i + 4, 0 };
 
 		length = jwp_queue_inqueue(&queue, data, sizeof(data) - 1);
@@ -520,8 +469,7 @@ static int do_test_jwp_comm(int argc, char *argv[])
 	network_url_init(&url, "unix-tcp", NULL, 0, argc > 1 ? argv[1] : "/tmp/COM1");
 
 	ret = network_client_open(&client, &url, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
 	}
@@ -533,32 +481,26 @@ static int do_test_jwp_comm(int argc, char *argv[])
 	jwp->data_received = NULL;
 	jwp->command_received = NULL;
 
-	if (!jwp_comm_init(&comm, client.sockfd, NULL))
-	{
+	if (!jwp_comm_init(&comm, client.sockfd, NULL)) {
 		pr_red_info("jwp_comm_init");
 		goto out_network_client_close;
 	}
 
 	is_mcu = (strcmp(argv[0], "comm-mcu") == 0);
 
-	if (is_mcu && !jwp_mcu_init(&mcu, jwp))
-	{
+	if (is_mcu && !jwp_mcu_init(&mcu, jwp)) {
 		pr_red_info("jwp_mcu_init");
 		return -EFAULT;
 	}
 
-	if (!jwp_comm_start(&comm))
-	{
+	if (!jwp_comm_start(&comm)) {
 		pr_red_info("jwp_comm_start");
 		goto out_network_client_close;
 	}
 
-	if (is_mcu)
-	{
+	if (is_mcu) {
 		test_jwp_mcu_cmdline(&mcu);
-	}
-	else
-	{
+	} else {
 		test_jwp_cmdline(jwp);
 	}
 
@@ -576,48 +518,37 @@ static int do_test_jwp_udp(int argc, char *argv[])
 	struct jwp_udp_desc udp;
 	struct jwp_mcu_desc mcu;
 
-	if (argc > 2)
-	{
+	if (argc > 2) {
 		hostname = argv[1];
 		port = text2value_unsigned(argv[2], NULL, 10);
-	}
-	else if (argc > 1)
-	{
+	} else if (argc > 1) {
 		hostname = NULL;
 		port = text2value_unsigned(argv[1], NULL, 10);
-	}
-	else
-	{
+	} else {
 		pr_red_info("too a few argment");
 		return -EFAULT;
 	}
 
-	if (!jwp_udp_init(&udp, hostname, port, NULL))
-	{
+	if (!jwp_udp_init(&udp, hostname, port, NULL)) {
 		pr_red_info("jwp_udp_init");
 		return -EFAULT;
 	}
 
 	is_mcu = (strcmp(argv[0], "udp-mcu") == 0);
 
-	if (is_mcu && !jwp_mcu_init(&mcu, &udp.jwp))
-	{
+	if (is_mcu && !jwp_mcu_init(&mcu, &udp.jwp)) {
 		pr_red_info("jwp_mcu_init");
 		return -EFAULT;
 	}
 
-	if (!jwp_udp_start(&udp))
-	{
+	if (!jwp_udp_start(&udp)) {
 		pr_red_info("jwp_udp_start");
 		return -EFAULT;
 	}
 
-	if (is_mcu)
-	{
-		if (hostname)
-		{
-			while (1)
-			{
+	if (is_mcu) {
+		if (hostname) {
+			while (1) {
 #if 1
 				const char *text =
 					"11111111111111111111"
@@ -643,9 +574,7 @@ static int do_test_jwp_udp(int argc, char *argv[])
 		}
 
 		test_jwp_mcu_cmdline(&mcu);
-	}
-	else
-	{
+	} else {
 		test_jwp_cmdline(&udp.jwp);
 	}
 

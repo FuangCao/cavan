@@ -13,8 +13,7 @@ static int swan_init(const char *mnt_point)
 {
 	int ret;
 	unsigned int i;
-	const char *sd_devices[] =
-	{
+	const char *sd_devices[] = {
 		"/dev/block/mmcblk1p1",
 		"/dev/mmcblk1p1",
 		"/dev/block/mmcblk1",
@@ -26,20 +25,16 @@ static int swan_init(const char *mnt_point)
 	};
 
 	ret = cavan_mkdir(mnt_point);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	if (file_access_e(SIDELOAD_PACKAGE_PATH) == false)
-	{
+	if (file_access_e(SIDELOAD_PACKAGE_PATH) == false) {
 		goto out_mount_tmp;
 	}
 
-	for (i = 0; i < ARRAY_SIZE(sd_devices); i++)
-	{
-		if (libc_mount(sd_devices[i], mnt_point, "vfat", 0, NULL) >= 0)
-		{
+	for (i = 0; i < ARRAY_SIZE(sd_devices); i++) {
+		if (libc_mount(sd_devices[i], mnt_point, "vfat", 0, NULL) >= 0) {
 			return 0;
 		}
 	}
@@ -65,8 +60,7 @@ static int swan_install(const char *dirpath)
 	text_path_cat(busybox_path, sizeof(busybox_path), dirpath, "busybox.ext4");
 
 	ret = file_mount_to(busybox_path, BUSYBOX_MOUNT_POINT, "ext4", 0, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("mount file \"%s\"", busybox_path);
 		return ret;
 	}
@@ -74,23 +68,20 @@ static int swan_install(const char *dirpath)
 	text_path_cat(pkg_path, sizeof(pkg_path), dirpath, "upgrade.swan");
 
 	fd = open(pkg_path, O_RDWR);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		ret = fd;
 		print_error("open upgrade file \"%s\" failed", pkg_path);
 		goto out_umount_busybox;
 	}
 
 	ret = chroot(BUSYBOX_MOUNT_POINT);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("chroot to " BUSYBOX_MOUNT_POINT " failed");
 		goto out_close_fd;
 	}
 
 	ret = setenv("PATH", DEFAULT_PATH_VALUE, 1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("setenv PATH failes");
 		goto out_close_fd;
 	}
@@ -115,36 +106,30 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "init",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'i',
-		},
-		{
+		}, {
 			.name = "setup",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'i',
-		},
-		{
+		}, {
 			.name = "deinit",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'u',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	int (*action)(const char *) = swan_install;
 
-	while ((c = getopt_long(argc, argv, "iIsSuU", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "iIsSuU", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'i':
 		case 'I':
 		case 's':

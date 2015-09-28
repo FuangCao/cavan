@@ -28,15 +28,13 @@
 	print_error(fmt ": %s", ##args, snd_strerror(err))
 
 #pragma pack(1)
-struct wav_riff_chunk
-{
+struct wav_riff_chunk {
 	u32 id;		// "RIFF"
 	u32 file_length;
 	u32 type;	// "WAVE"
 };
 
-struct wav_format_chunk
-{
+struct wav_format_chunk {
 	u32 id;		// "fmt"
 	u32 size;
 	u16 format;
@@ -48,29 +46,25 @@ struct wav_format_chunk
 	u16 addition;
 };
 
-struct wav_fact_chunk
-{
+struct wav_fact_chunk {
 	u32 id;		// "fact"
 	u32 size;
 	u32 data;
 };
 
-struct wav_data_chunk
-{
+struct wav_data_chunk {
 	u32 id;		// "data"
 	u32 data_length;
 };
 
-struct wav_file_header
-{
+struct wav_file_header {
 	struct wav_riff_chunk riff;
 	struct wav_format_chunk format;
 	struct wav_data_chunk data;
 };
 #pragma pack()
 
-struct cavan_wav_player
-{
+struct cavan_wav_player {
 	int fd;
 	u32 bytes_per_sample;
 	u32 bytes_per_frame;

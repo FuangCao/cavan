@@ -22,8 +22,7 @@
 #include <cavan.h>
 #include <cavan++/Display.h>
 
-class Framebuffer : public DisplayDevice
-{
+class Framebuffer : public DisplayDevice {
 private:
 	int mFd;
 	void *mMem;

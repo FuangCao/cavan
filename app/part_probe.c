@@ -10,8 +10,7 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	ret = reread_part_table(argv[1]);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("reread_part_table");
 		return ret;
 	}

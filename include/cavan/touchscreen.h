@@ -23,8 +23,7 @@
 #define CAVAN_TOUCH_POINT_MAX	5
 #define CAVAN_REPORT_ALL_TOUCH	0
 
-struct cavan_touch_device
-{
+struct cavan_touch_device {
 	struct cavan_input_device input_dev;
 
 	int xaxis, yaxis;
@@ -33,16 +32,14 @@ struct cavan_touch_device
 	double xoffset, yoffset;
 };
 
-struct cavan_multi_touch_device
-{
+struct cavan_multi_touch_device {
 	struct cavan_touch_device touch_dev;
 	struct cavan_input_message_point points[CAVAN_TOUCH_POINT_MAX];
 	int point_count;
 	int point_count_old;
 };
 
-struct cavan_single_touch_device
-{
+struct cavan_single_touch_device {
 	struct cavan_touch_device touch_dev;
 	int pressed;
 	struct cavan_input_message_point point;

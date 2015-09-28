@@ -14,8 +14,7 @@ const char *network_get_socket_pathname(void)
 #if 0
 	static char pathname[1024];
 
-	if (pathname[0])
-	{
+	if (pathname[0]) {
 		return pathname;
 	}
 
@@ -27,19 +26,16 @@ const char *network_get_socket_pathname(void)
 
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr)
 {
-	while (retry--)
-	{
+	while (retry--) {
 		ssize_t sendlen;
 
 		sendlen = inet_sendto(sockfd, buff, len, remote_addr);
-		if (sendlen < 0)
-		{
+		if (sendlen < 0) {
 			print_error("send data failed");
 			return sendlen;
 		}
 
-		if (file_poll_input(sockfd, NETWORK_TIMEOUT_VALUE))
-		{
+		if (file_poll_input(sockfd, NETWORK_TIMEOUT_VALUE)) {
 			return sendlen;
 		}
 
@@ -52,8 +48,7 @@ ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const
 ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len)
 {
 	sendlen = sendto_select(sockfd, retry, send_buff, sendlen, remote_addr);
-	if (sendlen < 0)
-	{
+	if (sendlen < 0) {
 		error_msg("send data timeout");
 		return sendlen;
 	}
@@ -63,8 +58,7 @@ ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buf
 
 const char *mac_protocol_type_tostring(int type)
 {
-	switch (type)
-	{
+	switch (type) {
 	case ETH_P_LOOP:
 		return "ETH_P_LOOP";
 	case ETH_P_PUP:
@@ -156,8 +150,7 @@ const char *mac_protocol_type_tostring(int type)
 
 const char *ip_protocol_type_tostring(int type)
 {
-	switch (type)
-	{
+	switch (type) {
 	case IPPROTO_IP:
 		return "IPPROTO_IP";
 	case IPPROTO_ICMP:
@@ -219,8 +212,7 @@ void show_ip_header(struct ip_header *hdr, int simple)
 {
 	pr_bold_info("IP Header:");
 
-	if (simple == 0)
-	{
+	if (simple == 0) {
 		println("version = %d", hdr->version);
 		println("header_length = %d", hdr->header_length);
 		println("service_type = %d", hdr->service_type);
@@ -268,8 +260,7 @@ void show_arp_header(struct arp_header *hdr, int simple)
 {
 	pr_bold_info("ARP Header:");
 
-	if (simple == 0)
-	{
+	if (simple == 0) {
 		println("hardware_type = %d", ntohs(hdr->hardware_type));
 		println("protocol_type = %d", ntohs(hdr->protocol_type));
 		println("hardware_addrlen = %d", hdr->hardware_addrlen);
@@ -323,12 +314,9 @@ void inet_show_sockaddr(const struct sockaddr_in *addr)
 {
 	u16 port = ntohs(addr->sin_port);
 
-	if (port && port != NETWORK_PORT_INVALID)
-	{
+	if (port && port != NETWORK_PORT_INVALID) {
 		println("IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), port);
-	}
-	else
-	{
+	} else {
 		println("IP = %s", inet_ntoa(addr->sin_addr));
 	}
 }
@@ -338,15 +326,13 @@ int cavan_route_table_init(struct cavan_route_table *table, size_t table_size)
 	struct cavan_route_node **pp, **pp_end;
 
 	pp = malloc(table_size * sizeof(void *));
-	if (pp == NULL)
-	{
+	if (pp == NULL) {
 		return -ENOMEM;
 	}
 
 	table->route_table = pp;
 
-	for (pp_end = pp + table_size; pp < pp_end; pp++)
-	{
+	for (pp_end = pp + table_size; pp < pp_end; pp++) {
 		*pp = NULL;
 	}
 
@@ -357,8 +343,7 @@ int cavan_route_table_init(struct cavan_route_table *table, size_t table_size)
 
 void cavan_route_table_deinit(struct cavan_route_table *table)
 {
-	if (table)
-	{
+	if (table) {
 		free(table->route_table);
 		table->table_size = 0;
 	}
@@ -370,8 +355,7 @@ int cavan_route_table_insert_node(struct cavan_route_table *table, struct cavan_
 
 	for (pp = table->route_table, pp_end = pp + table->table_size; pp < pp_end && *pp; pp++);
 
-	if (pp < pp_end)
-	{
+	if (pp < pp_end) {
 		*pp = node;
 		return 0;
 	}
@@ -379,16 +363,13 @@ int cavan_route_table_insert_node(struct cavan_route_table *table, struct cavan_
 	return -ENOMEM;
 }
 
-struct cavan_route_node **cavan_find_route_by_mac(struct cavan_route_table *table, u8 *mac)
-{
+struct cavan_route_node **cavan_find_route_by_mac(struct cavan_route_table *table, u8 *mac) {
 	struct cavan_route_node *p, **pp, **pp_end;
 
-	for (pp = table->route_table, pp_end = pp + table->table_size; pp < pp_end; pp++)
-	{
+	for (pp = table->route_table, pp_end = pp + table->table_size; pp < pp_end; pp++) {
 		p = *pp;
 
-		if (p && memcmp(mac, p->mac_addr, sizeof(p->mac_addr)))
-		{
+		if (p && memcmp(mac, p->mac_addr, sizeof(p->mac_addr))) {
 			return pp;
 		}
 	}
@@ -396,16 +377,13 @@ struct cavan_route_node **cavan_find_route_by_mac(struct cavan_route_table *tabl
 	return NULL;
 }
 
-struct cavan_route_node **cavan_find_route_by_ip(struct cavan_route_table *table, u32 ip)
-{
+struct cavan_route_node **cavan_find_route_by_ip(struct cavan_route_table *table, u32 ip) {
 	struct cavan_route_node *p, **pp, **pp_end;
 
-	for (pp = table->route_table, pp_end = pp + table->table_size; pp < pp_end; pp++)
-	{
+	for (pp = table->route_table, pp_end = pp + table->table_size; pp < pp_end; pp++) {
 		p = *pp;
 
-		if (p && p->ip_addr == ip)
-		{
+		if (p && p->ip_addr == ip) {
 			return pp;
 		}
 	}
@@ -419,8 +397,7 @@ int cavan_route_table_delete_node(struct cavan_route_table *table, struct cavan_
 
 	for (pp = table->route_table, pp_end = pp + table->table_size; pp < pp_end && *pp != node; pp++);
 
-	if (pp < pp_end)
-	{
+	if (pp < pp_end) {
 		*pp = NULL;
 		return 0;
 	}
@@ -433,8 +410,7 @@ int cavan_route_table_delete_by_mac(struct cavan_route_table *table, u8 *mac)
 	struct cavan_route_node **pp;
 
 	pp = cavan_find_route_by_mac(table, mac);
-	if (pp)
-	{
+	if (pp) {
 		*pp = NULL;
 		return 0;
 	}
@@ -447,8 +423,7 @@ int cavan_route_table_delete_by_ip(struct cavan_route_table *table, u32 ip)
 	struct cavan_route_node **pp;
 
 	pp = cavan_find_route_by_ip(table, ip);
-	if (pp)
-	{
+	if (pp) {
 		*pp = NULL;
 		return 0;
 	}
@@ -500,15 +475,13 @@ int inet_create_tcp_link1(const struct sockaddr_in *addr)
 	int sockfd;
 
 	sockfd = inet_socket(SOCK_STREAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("socket");
 		return sockfd;
 	}
 
 	ret = inet_connect(sockfd, addr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("inet_connect");
 		close(sockfd);
 		return ret;
@@ -524,8 +497,7 @@ int unix_create_tcp_link(const char *hostname, u16 port)
 	struct sockaddr_un addr;
 
 	sockfd = unix_socket(SOCK_STREAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_error_info("socket");
 		return sockfd;
 	}
@@ -533,8 +505,7 @@ int unix_create_tcp_link(const char *hostname, u16 port)
 	unix_sockaddr_init(&addr, hostname);
 
 	ret = unix_connect(sockfd, &addr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("inet_connect");
 		close(sockfd);
 		return ret;
@@ -548,23 +519,18 @@ int inet_create_tcp_link_by_addrinfo(struct addrinfo *info, u16 port, struct soc
 	int sockfd;
 
 	sockfd = inet_socket(SOCK_STREAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_error_info("inet_socket");
 		return sockfd;
 	}
 
-	while (info)
-	{
-		if (info->ai_family == AF_INET)
-		{
+	while (info) {
+		if (info->ai_family == AF_INET) {
 			struct sockaddr_in *p = (struct sockaddr_in *) info->ai_addr;
 
 			p->sin_port = htons(port);
-			if (inet_connect(sockfd, p) == 0)
-			{
-				if (addr)
-				{
+			if (inet_connect(sockfd, p) == 0) {
+				if (addr) {
 					addr->sin_addr.s_addr = p->sin_addr.s_addr;
 				}
 
@@ -586,19 +552,15 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 	int sockfd;
 	struct sockaddr_in addr;
 
-	if (hostname == NULL || hostname[0] == 0 || text_cmp(hostname, "localhost") == 0)
-	{
+	if (hostname == NULL || hostname[0] == 0 || text_cmp(hostname, "localhost") == 0) {
 		hostname = "127.0.0.1";
 	}
 
-	if (inet_aton(hostname, &addr.sin_addr))
-	{
+	if (inet_aton(hostname, &addr.sin_addr)) {
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(port);
 		sockfd = inet_create_tcp_link1(&addr);
-	}
-	else
-	{
+	} else {
 		struct addrinfo *info;
 		struct addrinfo hints;
 
@@ -607,8 +569,7 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_flags = 0;
 		ret = getaddrinfo(hostname, NULL, &hints, &info);
-		if (ret < 0 || info == NULL)
-		{
+		if (ret < 0 || info == NULL) {
 			pr_error_info("getaddrinfo");
 			return -ENOENT;
 		}
@@ -617,8 +578,7 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 		freeaddrinfo(info);
 	}
 
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		return sockfd;
 	}
 
@@ -634,8 +594,7 @@ int inet_create_service(int type, u16 port)
 	struct sockaddr_in addr;
 
 	sockfd = inet_socket(type);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("socket");
 		return sockfd;
 	}
@@ -643,8 +602,7 @@ int inet_create_service(int type, u16 port)
 	inet_sockaddr_init(&addr, NULL, port);
 
 	ret = inet_bind(sockfd, &addr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("bind to port %d failed", port);
 		close(sockfd);
 		return ret;
@@ -661,23 +619,17 @@ int unix_create_service(int type, const char *pathname)
 	struct sockaddr_un addr;
 
 	sockfd = unix_socket(type);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		print_error("socket");
 		return sockfd;
 	}
 
-	if (pathname && pathname[0])
-	{
-		if (file_access_e(pathname))
-		{
+	if (pathname && pathname[0]) {
+		if (file_access_e(pathname)) {
 			unlink(pathname);
-		}
-		else
-		{
+		} else {
 			ret = mkdir_parent_hierarchy(pathname, 0777);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("mkdir_hierarchy");
 				goto out_close_sockfd;
 			}
@@ -685,16 +637,13 @@ int unix_create_service(int type, const char *pathname)
 
 		unix_sockaddr_init(&addr, pathname);
 		addrlen = sizeof(struct sockaddr_un);
-	}
-	else
-	{
+	} else {
 		addr.sun_family = AF_UNIX;
 		addrlen = sizeof(addr.sun_family);
 	}
 
 	ret = bind(sockfd, (struct sockaddr *) &addr, addrlen);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("bind");
 		goto out_close_sockfd;
 	}
@@ -712,14 +661,12 @@ int inet_create_tcp_service(u16 port)
 	int sockfd;
 
 	sockfd = inet_create_service(SOCK_STREAM, port);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		return sockfd;
 	}
 
 	ret = inet_listen(sockfd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("listen to port %d failed", port);
 		close(sockfd);
 		return ret;
@@ -734,14 +681,12 @@ int unix_create_tcp_service(const char *pathname)
 	int sockfd;
 
 	sockfd = unix_create_service(SOCK_STREAM, pathname);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		return sockfd;
 	}
 
 	ret = inet_listen(sockfd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("listen to socket %s failed", pathname);
 		close(sockfd);
 		return ret;
@@ -756,8 +701,7 @@ ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size)
 	ssize_t sendlen;
 
 	sockfd = inet_create_tcp_link1(addr);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		error_msg("inet_create_tcp_link1");
 		return sockfd;
 	}
@@ -773,8 +717,7 @@ u32 get_rand_value(void)
 {
 	static int seeded;
 
-	if (seeded == 0)
-	{
+	if (seeded == 0) {
 		struct timeval tv;
 
 		gettimeofday(&tv, NULL);
@@ -796,18 +739,15 @@ int inet_bind_rand(int sockfd, int retry)
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 #if 0
-	while (1)
-	{
+	while (1) {
 		addr.sin_port = get_rand_value() & 0xFFFF;
 
 		ret = bind(sockfd, (struct sockaddr *) &addr, addrlen);
-		if (ret == 0)
-		{
+		if (ret == 0) {
 			break;
 		}
 
-		if (retry < 1)
-		{
+		if (retry < 1) {
 			return ret;
 		}
 
@@ -817,15 +757,13 @@ int inet_bind_rand(int sockfd, int retry)
 	addr.sin_port = 0;
 
 	ret = bind(sockfd, (struct sockaddr *) &addr, addrlen);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("inet_bind");
 		return ret;
 	}
 
 	ret = getsockname(sockfd, (struct sockaddr *) &addr, &addrlen);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("inet_getsockname");
 		return ret;
 	}
@@ -841,11 +779,9 @@ ssize_t inet_send(int sockfd, const char *buff, size_t size)
 	ssize_t wrlen;
 	const char *buff_end;
 
-	for (buff_end = buff + size; buff < buff_end; buff += wrlen)
-	{
+	for (buff_end = buff + size; buff < buff_end; buff += wrlen) {
 		wrlen = send(sockfd, buff, buff_end - buff, MSG_NOSIGNAL);
-		if (wrlen <= 0)
-		{
+		if (wrlen <= 0) {
 			return wrlen;
 		}
 	}
@@ -858,23 +794,19 @@ int inet_tcp_send_file1(int sockfd, int fd)
 	ssize_t readlen, sendlen;
 	char buff[1024];
 
-	while (1)
-	{
+	while (1) {
 		readlen = read(fd, buff, sizeof(buff));
-		if (readlen < 0)
-		{
+		if (readlen < 0) {
 			print_error("read");
 			return readlen;
 		}
 
-		if (readlen == 0)
-		{
+		if (readlen == 0) {
 			break;
 		}
 
 		sendlen = inet_send(sockfd, buff, readlen);
-		if (sendlen < 0)
-		{
+		if (sendlen < 0) {
 			print_error("inet_send");
 			return sendlen;
 		}
@@ -889,8 +821,7 @@ int inet_tcp_send_file2(int sockfd, const char *filename)
 	int fd;
 
 	fd = open(filename, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("open file %s failed", filename);
 		return fd;
 	}
@@ -907,23 +838,19 @@ int inet_tcp_receive_file1(int sockfd, int fd)
 	ssize_t recvlen, writelen;
 	char buff[1024];
 
-	while (1)
-	{
+	while (1) {
 		recvlen = inet_recv(sockfd, buff, sizeof(buff));
-		if (recvlen < 0)
-		{
+		if (recvlen < 0) {
 			print_error("inet_recv");
 			return recvlen;
 		}
 
-		if (recvlen == 0)
-		{
+		if (recvlen == 0) {
 			break;
 		}
 
 		writelen = write(fd, buff, recvlen);
-		if (writelen < 0)
-		{
+		if (writelen < 0) {
 			print_error("write");
 			return writelen;
 		}
@@ -938,8 +865,7 @@ int inet_tcp_receive_file2(int sockfd, const char *filename)
 	int fd;
 
 	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("open file %s failed", filename);
 		return fd;
 	}
@@ -957,8 +883,7 @@ int inet_tcp_transfer(int src_sockfd, int dest_sockfd, size_t size)
 	char buff[size];
 
 	rdlen = inet_recv(src_sockfd, buff, sizeof(buff));
-	if (rdlen <= 0)
-	{
+	if (rdlen <= 0) {
 		return rdlen;
 	}
 
@@ -973,8 +898,7 @@ int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_a
 	text_copy(ifr.ifr_ifrn.ifrn_name, devname);
 
 	ret = ioctl(sockfd, SIOCGIFADDR, &ifr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("get deivce %s sockaddr", devname);
 		return ret;
 	}
@@ -991,8 +915,7 @@ int inet_get_devname(int sockfd, int index, char *devname)
 
 	req.ifr_ifru.ifru_ivalue = index;
 	ret = ioctl(sockfd, SIOCGIFNAME, &req);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("get devices name");
 		return ret;
 	}
@@ -1007,17 +930,14 @@ int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd)
 	char buff[1024];
 	ssize_t rwlen;
 
-	while (1)
-	{
+	while (1) {
 		rwlen = inet_recv(src_sockfd, buff, sizeof(buff));
-		if (rwlen < 0)
-		{
+		if (rwlen < 0) {
 			pr_red_info("inet_recv");
 			return rwlen;
 		}
 
-		if (rwlen == 0)
-		{
+		if (rwlen == 0) {
 			break;
 		}
 
@@ -1025,8 +945,7 @@ int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd)
 		println("buff = %s", buff);
 
 		rwlen = inet_send(dest_sockfd, buff, rwlen);
-		if (rwlen < 0)
-		{
+		if (rwlen < 0) {
 			pr_red_info("inet_send");
 			return rwlen;
 		}
@@ -1043,13 +962,11 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 
 	addr->sin_family = AF_INET;
 
-	if (hostname == NULL || hostname[0] == 0)
-	{
+	if (hostname == NULL || hostname[0] == 0) {
 		hostname = "127.0.0.1";
 	}
 
-	if (inet_aton(hostname, &addr->sin_addr))
-	{
+	if (inet_aton(hostname, &addr->sin_addr)) {
 		return 0;
 	}
 
@@ -1058,22 +975,18 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = 0;
 	ret = getaddrinfo(hostname, NULL, &hints, &res);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("getaddrinfo");
 		return ret;
 	}
 
-	if (res == NULL)
-	{
+	if (res == NULL) {
 		pr_red_info("res == NULL");
 		return -ENOENT;
 	}
 
-	for (p = res; p; p = p->ai_next)
-	{
-		if (p->ai_family == AF_INET)
-		{
+	for (p = res; p; p = p->ai_next) {
+		if (p->ai_family == AF_INET) {
 			res = p;
 			break;
 		}
@@ -1093,15 +1006,13 @@ int inet_create_link(const struct sockaddr_in *addr, int socktype, int protocol)
 	int sockfd;
 
 	sockfd = socket(PF_INET, socktype, protocol);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_error_info("socket");
 		return sockfd;
 	}
 
 	ret = inet_connect(sockfd, addr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("inet_connect");
 		close(sockfd);
 		return ret;
@@ -1117,8 +1028,7 @@ int network_create_link(const char *hostname, u16 port, int socktype, int protoc
 	struct addrinfo hints;
 	struct addrinfo *res, *p;
 
-	if (hostname == NULL || hostname[0] == 0)
-	{
+	if (hostname == NULL || hostname[0] == 0) {
 		hostname = "127.0.0.1";
 	}
 
@@ -1128,13 +1038,11 @@ int network_create_link(const char *hostname, u16 port, int socktype, int protoc
 	hints.ai_protocol = protocol;
 
 	ret = getaddrinfo(hostname, NULL, &hints, &res);
-	if (ret < 0 || res == NULL)
-	{
+	if (ret < 0 || res == NULL) {
 		struct sockaddr_in addr;
 
 		ret = inet_aton(hostname, &addr.sin_addr);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("inet_aton");
 			return ret;
 		}
@@ -1144,28 +1052,22 @@ int network_create_link(const char *hostname, u16 port, int socktype, int protoc
 		return inet_create_link(&addr, socktype, protocol);
 	}
 
-	for (p = res; p; p = p->ai_next)
-	{
+	for (p = res; p; p = p->ai_next) {
 		sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-		if (sockfd < 0)
-		{
+		if (sockfd < 0) {
 			continue;
 		}
 
-		if (p->ai_family == AF_INET && port != NETWORK_PORT_INVALID)
-		{
+		if (p->ai_family == AF_INET && port != NETWORK_PORT_INVALID) {
 			struct sockaddr_in *addr = (struct sockaddr_in *) p->ai_addr;
 
 			addr->sin_port = htons(port);
 		}
 
 		ret = connect(sockfd, p->ai_addr, p->ai_addrlen);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			close(sockfd);
-		}
-		else
-		{
+		} else {
 			pr_info("HOST = %s, %s", hostname, network_sockaddr_tostring(p->ai_addr, NULL, 0));
 			goto out_freeaddrinfo;
 		}
@@ -1182,12 +1084,9 @@ static int network_sockaddr_in_tostring(const struct sockaddr_in *addr, char *bu
 {
 	u16 port = ntohs(addr->sin_port);
 
-	if (port && port != NETWORK_PORT_INVALID)
-	{
+	if (port && port != NETWORK_PORT_INVALID) {
 		return snprintf(buff, size, "IP = %s, PORT = %d", inet_ntoa(addr->sin_addr), port);
-	}
-	else
-	{
+	} else {
 		return snprintf(buff, size, "IP = %s", inet_ntoa(addr->sin_addr));
 	}
 }
@@ -1199,16 +1098,14 @@ static int network_sockaddr_un_tostring(const struct sockaddr_un *addr, char *bu
 
 char *network_sockaddr_tostring(const struct sockaddr *addr, char *buff, size_t size)
 {
-	if (buff == NULL || size == 0)
-	{
+	if (buff == NULL || size == 0) {
 		static char static_buff[128];
 
 		buff = static_buff;
 		size = sizeof(static_buff);
 	}
 
-	switch (addr->sa_family)
-	{
+	switch (addr->sa_family) {
 	case AF_INET:
 		network_sockaddr_in_tostring((const struct sockaddr_in *) addr, buff, size);
 		break;
@@ -1237,10 +1134,8 @@ char *network_url_get_pathname(const struct network_url *url, char *buff, size_t
 	const char *p;
 	char *buff_end = buff + size;
 
-	for (p = url->pathname; buff < buff_end; p++, buff++)
-	{
-		switch (*p)
-		{
+	for (p = url->pathname; buff < buff_end; p++, buff++) {
+		switch (*p) {
 		case '\0':
 		case '\r':
 		case '\n':
@@ -1261,8 +1156,7 @@ char *network_url_tostring(const struct network_url *url, char *buff, size_t siz
 {
 	char *buff_bak, *buff_end;
 
-	if (buff == NULL || size == 0)
-	{
+	if (buff == NULL || size == 0) {
 		static char static_buff[1024];
 
 		buff = static_buff;
@@ -1272,28 +1166,23 @@ char *network_url_tostring(const struct network_url *url, char *buff, size_t siz
 	buff_bak = buff;
 	buff_end = buff + size;
 
-	if (url->protocol && url->protocol[0])
-	{
+	if (url->protocol && url->protocol[0]) {
 		buff += snprintf(buff, buff_end - buff, "%s:", url->protocol);
 	}
 
-	if (url->hostname && url->hostname[0])
-	{
+	if (url->hostname && url->hostname[0]) {
 		buff += snprintf(buff, buff_end - buff, "//%s", url->hostname);
 	}
 
-	if (url->port != NETWORK_PORT_INVALID)
-	{
+	if (url->port != NETWORK_PORT_INVALID) {
 		buff += snprintf(buff, buff_end - buff, ":%d", url->port);
 	}
 
-	if (url->pathname && url->pathname[0])
-	{
+	if (url->pathname && url->pathname[0]) {
 		buff = network_url_get_pathname(url, buff, buff_end - buff);
 	}
 
-	if (tail)
-	{
+	if (tail) {
 		*tail = buff;
 	}
 
@@ -1311,16 +1200,12 @@ char *network_url_parse(struct network_url *url, const char *text)
 	url->hostname = p;
 	url->protocol = NULL;
 
-	while (p < p_end)
-	{
-		switch (*text)
-		{
+	while (p < p_end) {
+		switch (*text) {
 		case '/':
 			slash++;
-			if (text[1] == '/' && slash == 1 && port == NULL)
-			{
-				if (p > url->memory && url->protocol == NULL)
-				{
+			if (text[1] == '/' && slash == 1 && port == NULL) {
+				if (p > url->memory && url->protocol == NULL) {
 					pr_red_info("Invalid `/' at %s", text);
 					return NULL;
 				}
@@ -1333,8 +1218,7 @@ char *network_url_parse(struct network_url *url, const char *text)
 		case ' ':
 			*p = 0;
 
-			if (slash == 0 && colon == 1 && url->protocol && p > url->hostname)
-			{
+			if (slash == 0 && colon == 1 && url->protocol && p > url->hostname) {
 				port = url->hostname;
 				url->hostname = url->protocol;
 				url->protocol = NULL;
@@ -1342,8 +1226,7 @@ char *network_url_parse(struct network_url *url, const char *text)
 
 			url->port = port ? text2value_unsigned(port, NULL, 10) : NETWORK_PORT_INVALID;
 
-			if (url->protocol == NULL)
-			{
+			if (url->protocol == NULL) {
 				url->protocol = p;
 			}
 
@@ -1353,8 +1236,7 @@ char *network_url_parse(struct network_url *url, const char *text)
 
 		case ':':
 			colon++;
-			if (colon > 2)
-			{
+			if (colon > 2) {
 				pr_red_info("Too much `:' at %s", text);
 				return NULL;
 			}
@@ -1362,20 +1244,15 @@ char *network_url_parse(struct network_url *url, const char *text)
 			text++;
 			*p = 0;
 
-			if (colon == 1 && slash == 0 && url->protocol == NULL && url->hostname < p)
-			{
+			if (colon == 1 && slash == 0 && url->protocol == NULL && url->hostname < p) {
 				url->protocol = url->hostname;
 				url->hostname = ++p;
-			}
-			else
-			{
-				for (port = ++p; p < p_end && IS_NUMBER(*text); p++, text++)
-				{
+			} else {
+				for (port = ++p; p < p_end && IS_NUMBER(*text); p++, text++) {
 					*p = *text;
 				}
 
-				if (p == port)
-				{
+				if (p == port) {
 					pr_red_info("Please give the port");
 					return NULL;
 				}
@@ -1393,23 +1270,19 @@ char *network_url_parse(struct network_url *url, const char *text)
 
 bool network_url_equals(const struct network_url *url1, const struct network_url *url2)
 {
-	if (url1 == url2)
-	{
+	if (url1 == url2) {
 		return true;
 	}
 
-	if (url1->port != url2->port)
-	{
+	if (url1->port != url2->port) {
 		return false;
 	}
 
-	if (text_cmp(url1->hostname, url2->hostname))
-	{
+	if (text_cmp(url1->hostname, url2->hostname)) {
 		return false;
 	}
 
-	if (text_cmp(url1->protocol, url2->protocol))
-	{
+	if (text_cmp(url1->protocol, url2->protocol)) {
 		return false;
 	}
 
@@ -1424,22 +1297,19 @@ int network_create_socket_mac(const char *if_name, int protocol)
 	struct sockaddr_ll bind_addr;
 
 	sockfd = socket(PF_PACKET, SOCK_RAW, htons(protocol ? protocol : ETH_P_ALL));
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_error_info("socket PF_PACKET SOCK_RAW");
 		return sockfd;
 	}
 
-	if (if_name == NULL || if_name[0] == 0)
-	{
+	if (if_name == NULL || if_name[0] == 0) {
 		return sockfd;
 	}
 
 	strcpy(req.ifr_name, if_name);
 
 	ret = ioctl(sockfd, SIOCGIFINDEX, &req);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("ioctl SIOCGIFINDEX");
 		goto out_close_socket;
 	}
@@ -1449,8 +1319,7 @@ int network_create_socket_mac(const char *if_name, int protocol)
 	bind_addr.sll_protocol = htons(ETH_P_ALL);
 
 	ret = bind(sockfd, (struct sockaddr *) &bind_addr, sizeof(bind_addr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("bind");
 		goto out_close_socket;
 	}
@@ -1470,16 +1339,14 @@ int network_create_socket_uevent(void)
 	struct sockaddr_nl addr;
 
 	sockfd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_err_info("socket");
 		return sockfd;
 	}
 
 	buffsize = KB(64);
 	ret = setsockopt(sockfd, SOL_SOCKET, SO_RCVBUFFORCE, &buffsize, sizeof(buffsize));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_err_info("setsockopt");
 		goto out_close_sockfd;
 	}
@@ -1490,8 +1357,7 @@ int network_create_socket_uevent(void)
 	addr.nl_pad = 0;
 
 	ret = bind(sockfd, (struct sockaddr *) &addr, sizeof(addr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_err_info("bind");
 		goto out_close_sockfd;
 	}
@@ -1510,18 +1376,15 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 	ssize_t length;
 	const void *buff_end = ADDR_ADD(buff, size);
 	struct network_client_sync_data *data = network_client_get_data(client);
-	struct pollfd pfd =
-	{
+	struct pollfd pfd = {
 		.fd = client->sockfd,
 		.events = POLLIN,
 	};
 
-	while (1)
-	{
+	while (1) {
 		pthread_mutex_lock(&data->lock);
 
-		if (data->send_pending == 0)
-		{
+		if (data->send_pending == 0) {
 			break;
 		}
 
@@ -1532,21 +1395,18 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 
 	data->send_pending++;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		struct cavan_sync_package *package;
 		size_t datalen = ADDR_SUB2(buff_end, buff);
 
 		package = alloca(datalen + sizeof(struct cavan_sync_package));
-		if (package == NULL)
-		{
+		if (package == NULL) {
 			pr_error_info("alloca");
 			length = -ENOMEM;
 			goto out_clean_pending;
 		}
 
-		while (1)
-		{
+		while (1) {
 			int retry;
 			ssize_t rdlen, wrlen;
 
@@ -1555,28 +1415,24 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 			package->length = datalen;
 			mem_copy(package->data, buff, datalen);
 
-			for (retry = CAVAN_NET_UDP_RETRY; ; retry--)
-			{
+			for (retry = CAVAN_NET_UDP_RETRY; ; retry--) {
 				int ret;
 
 				wrlen = data->send(client, package, datalen + sizeof(struct cavan_sync_package));
-				if (wrlen < (ssize_t) sizeof(struct cavan_sync_package))
-				{
+				if (wrlen < (ssize_t) sizeof(struct cavan_sync_package)) {
 					pr_red_info("data->send");
 					length = -EFAULT;
 					goto out_clean_pending;
 				}
 
 				ret = poll(&pfd, 1, CAVAN_NET_UDP_TIMEOUT);
-				if (ret > 0)
-				{
+				if (ret > 0) {
 					break;
 				}
 
 				pr_red_info("retry = %d", retry);
 
-				if (ret < 0 || retry < 1)
-				{
+				if (ret < 0 || retry < 1) {
 					length = -ETIMEDOUT;
 					goto out_clean_pending;
 				}
@@ -1584,38 +1440,31 @@ static ssize_t network_client_send_sync(struct network_client *client, const voi
 
 label_recv_ack:
 			rdlen = data->recv(client, package, sizeof(struct cavan_sync_package));
-			if (rdlen != sizeof(struct cavan_sync_package))
-			{
+			if (rdlen != sizeof(struct cavan_sync_package)) {
 				length = -EFAULT;
 				goto out_clean_pending;
 			}
 
-			if (package->type == CAVAN_SYNC_TYPE_ACK)
-			{
-				if (package->index == data->send_index)
-				{
+			if (package->type == CAVAN_SYNC_TYPE_ACK) {
+				if (package->index == data->send_index) {
 					data->send_index++;
 					break;
 				}
 
-				if (poll(&pfd, 1, CAVAN_NET_UDP_TIMEOUT) > 0)
-				{
+				if (poll(&pfd, 1, CAVAN_NET_UDP_TIMEOUT) > 0) {
 #if CAVAN_NETWORK_DEBUG
 					pr_red_info("retry receive ack");
 #endif
 					goto label_recv_ack;
 				}
-			}
-			else if (package->type == CAVAN_SYNC_TYPE_DATA)
-			{
+			} else if (package->type == CAVAN_SYNC_TYPE_DATA) {
 				u8 send_index = data->send_index;
 
 				pthread_mutex_unlock(&data->lock);
 				usleep(1);
 				pthread_mutex_lock(&data->lock);
 
-				if (send_index != data->send_index)
-				{
+				if (send_index != data->send_index) {
 #if CAVAN_NETWORK_DEBUG
 					pr_green_info("send_index = %d, index = %d", data->send_index, send_index); msleep(500);
 #endif
@@ -1645,15 +1494,13 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 	ssize_t length;
 	struct cavan_sync_package *package;
 	struct network_client_sync_data *data = network_client_get_data(client);
-	struct pollfd pfd =
-	{
+	struct pollfd pfd = {
 		.fd = client->sockfd,
 		.events = POLLIN,
 	};
 
 	package = alloca(size + sizeof(struct cavan_sync_package));
-	if (package == NULL)
-	{
+	if (package == NULL) {
 		pr_error_info("alloca");
 		return -ENOMEM;
 	}
@@ -1662,60 +1509,49 @@ static ssize_t network_client_recv_sync(struct network_client *client, void *buf
 
 	data->recv_pending++;
 
-	while (1)
-	{
+	while (1) {
 		int ret;
 		ssize_t rdlen, wrlen;
 
 		pthread_mutex_unlock(&data->lock);
 		ret = poll(&pfd, 1, CAVAN_NET_UDP_ACTIVE_TIME);
 		pthread_mutex_lock(&data->lock);
-		if (ret < 1)
-		{
+		if (ret < 1) {
 			pr_red_info("file_poll_input");
 			length = -ETIMEDOUT;
 			goto out_clean_pending;
 		}
 
-		if (poll(&pfd, 1, 0) < 1)
-		{
+		if (poll(&pfd, 1, 0) < 1) {
 			continue;
 		}
 
 		rdlen = data->recv(client, package, size + sizeof(struct cavan_sync_package));
-		if (rdlen < (ssize_t) sizeof(struct cavan_sync_package))
-		{
+		if (rdlen < (ssize_t) sizeof(struct cavan_sync_package)) {
 			length = -EFAULT;
 			goto out_clean_pending;
 		}
 
 		length = package->length;
 
-		if (package->type == CAVAN_SYNC_TYPE_DATA)
-		{
-			if ((size_t) rdlen == length + sizeof(struct cavan_sync_package))
-			{
+		if (package->type == CAVAN_SYNC_TYPE_DATA) {
+			if ((size_t) rdlen == length + sizeof(struct cavan_sync_package)) {
 				package->length = 0;
 				package->type = CAVAN_SYNC_TYPE_ACK;
 
 				wrlen = data->send(client, package, sizeof(struct cavan_sync_package));
-				if (wrlen != sizeof(struct cavan_sync_package))
-				{
+				if (wrlen != sizeof(struct cavan_sync_package)) {
 					pr_red_info("data->send");
 					length = -EFAULT;
 					goto out_clean_pending;
 				}
 
-				if (package->index == data->recv_index)
-				{
+				if (package->index == data->recv_index) {
 					break;
 				}
 			}
-		}
-		else if (package->type == CAVAN_SYNC_TYPE_ACK)
-		{
-			if (package->index == data->send_index)
-			{
+		} else if (package->type == CAVAN_SYNC_TYPE_ACK) {
+			if (package->index == data->send_index) {
 				data->send_index++;
 			}
 		}
@@ -1740,8 +1576,7 @@ static void network_client_close_sync(struct network_client *client)
 	int i;
 	struct network_client_sync_data *data = network_client_get_data(client);
 
-	if (data == NULL)
-	{
+	if (data == NULL) {
 		return;
 	}
 
@@ -1749,22 +1584,19 @@ static void network_client_close_sync(struct network_client *client)
 	client->recv = data->recv;
 	client->close = data->close;
 
-	for (i = 0; i < 10; i++)
-	{
+	for (i = 0; i < 10; i++) {
 		client->send(client, "E", 1);
 		fsync(client->sockfd);
 	}
 
 	client->close(client);
 
-	for (i = 0; i < 100; i++)
-	{
+	for (i = 0; i < 100; i++) {
 		bool ready;
 
 		usleep(100);
 
-		if (pthread_mutex_trylock(&data->lock) < 0)
-		{
+		if (pthread_mutex_trylock(&data->lock) < 0) {
 			continue;
 		}
 
@@ -1772,8 +1604,7 @@ static void network_client_close_sync(struct network_client *client)
 
 		pthread_mutex_unlock(&data->lock);
 
-		if (ready)
-		{
+		if (ready) {
 			break;
 		}
 
@@ -1794,15 +1625,13 @@ static int network_client_set_sync(struct network_client *client)
 	struct network_client_sync_data *data;
 
 	data = malloc(sizeof(*data));
-	if (data == NULL)
-	{
+	if (data == NULL) {
 		pr_error_info("malloc");
 		return -ENOMEM;
 	}
 
 	ret = pthread_mutex_init(&data->lock, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pthread_mutex_init");
 		free(data);
 		return ret;
@@ -1869,27 +1698,23 @@ static int network_client_udp_talk(struct network_client *client, struct sockadd
 
 	magic = CAVAN_NETWORK_MAGIC;
 	ret = sendto(client->sockfd, &magic, sizeof(magic), 0, addr, client->addrlen);
-	if (ret < (ssize_t) sizeof(magic))
-	{
+	if (ret < (ssize_t) sizeof(magic)) {
 		pr_error_info("sendto");
 		return -EFAULT;
 	}
 
-	if (file_poll_input(client->sockfd, CAVAN_NET_UDP_TIMEOUT) == false)
-	{
+	if (file_poll_input(client->sockfd, CAVAN_NET_UDP_TIMEOUT) == false) {
 		pr_red_info("file_poll_input");
 		return -EFAULT;
 	}
 
 	ret = recvfrom(client->sockfd, &magic, sizeof(magic), 0, addr, &client->addrlen);
-	if (ret < (ssize_t) sizeof(magic))
-	{
+	if (ret < (ssize_t) sizeof(magic)) {
 		pr_red_info("recvfrom");
 		return -EFAULT;
 	}
 
-	if (magic != CAVAN_NETWORK_MAGIC)
-	{
+	if (magic != CAVAN_NETWORK_MAGIC) {
 		pr_red_info("invalid magic = 0x%08x", magic);
 		return -EINVAL;
 	}
@@ -1901,18 +1726,15 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 {
 	int ret;
 
-	if (addr && (flags & CAVAN_NET_FLAG_TALK))
-	{
+	if (addr && (flags & CAVAN_NET_FLAG_TALK)) {
 		ret = network_client_udp_talk(client, addr);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("network_client_udp_talk");
 			return ret;
 		}
 
 		ret = connect(client->sockfd, addr, client->addrlen);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("connect");
 			return ret;
 		}
@@ -1922,11 +1744,9 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 	client->recv = network_client_tcp_recv;
 	client->close = network_client_tcp_close;
 
-	if (flags & CAVAN_NET_FLAG_SYNC)
-	{
+	if (flags & CAVAN_NET_FLAG_SYNC) {
 		ret = network_client_set_sync(client);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("network_client_set_sync");
 			return ret;
 		}
@@ -1942,26 +1762,22 @@ static int network_client_udp_open(struct network_client *client, const struct n
 	struct sockaddr_in addr;
 
 	ret = inet_hostname2sockaddr(url->hostname, &addr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("inet_hostname2sockaddr");
 		return ret;
 	}
 
 	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_error_info("inet_socket");
 		return sockfd;
 	}
 
-	if ((ntohl(addr.sin_addr.s_addr) & 0xFF) == 0xFF)
-	{
+	if ((ntohl(addr.sin_addr.s_addr) & 0xFF) == 0xFF) {
 		int broadcast = 1;
 
 		ret = setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("setsockopt SO_BROADCAST");
 			goto out_close_sockfd;
 		}
@@ -1974,8 +1790,7 @@ static int network_client_udp_open(struct network_client *client, const struct n
 	addr.sin_port = htons(port);
 
 	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, flags);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_udp_common_open");
 		goto out_close_sockfd;
 	}
@@ -1992,8 +1807,7 @@ static int network_client_tcp_open(struct network_client *client, const struct n
 	int sockfd;
 
 	sockfd = network_create_link(url->hostname, port, SOCK_STREAM, 0);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("inet_socket");
 		return sockfd;
 	}
@@ -2012,8 +1826,7 @@ static int network_create_unix_udp_client(struct network_client *client)
 	int sockfd;
 
 	sockfd = unix_create_service(SOCK_DGRAM, NULL);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("unix_create_service");
 		return sockfd;
 	}
@@ -2028,8 +1841,7 @@ static int network_client_unix_tcp_open(struct network_client *client, const str
 	int sockfd;
 
 	sockfd = unix_create_tcp_link(url->pathname, 0);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_error_info("unix_socket %s", url->pathname);
 		return sockfd;
 	}
@@ -2049,8 +1861,7 @@ static int network_client_unix_udp_open(struct network_client *client, const str
 	struct sockaddr_un addr;
 
 	ret = network_create_unix_udp_client(client);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("inet_socket");
 		return ret;
 	}
@@ -2059,8 +1870,7 @@ static int network_client_unix_udp_open(struct network_client *client, const str
 	client->addrlen = sizeof(struct sockaddr_un);
 
 	ret = network_client_udp_common_open(client, (struct sockaddr *) &addr, flags);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_udp_common_open");
 		goto out_close_sockfd;
 	}
@@ -2077,8 +1887,7 @@ static int network_client_adb_open(struct network_client *client, const struct n
 	int sockfd;
 
 	sockfd = adb_create_tcp_link(url->hostname, 0, port, (flags & CAVAN_NET_FLAG_WAIT) != 0);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("adb_create_tcp_link");
 		return sockfd;
 	}
@@ -2098,8 +1907,7 @@ static int network_client_icmp_open(struct network_client *client, const struct 
 	int sockfd;
 
 	sockfd = network_create_link(url->hostname, port, SOCK_RAW, IPPROTO_ICMP);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_error_info("inet_socket");
 		return sockfd;
 	}
@@ -2108,8 +1916,7 @@ static int network_client_icmp_open(struct network_client *client, const struct 
 	client->addrlen = sizeof(struct sockaddr_in);
 
 	ret = network_client_udp_common_open(client, NULL, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_udp_common_open");
 		goto out_close_sockfd;
 	}
@@ -2127,8 +1934,7 @@ static int network_client_ip_open(struct network_client *client, const struct ne
 	int sockfd;
 
 	sockfd = network_create_link(url->hostname, port, SOCK_RAW, IPPROTO_ICMP);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_error_info("inet_socket");
 		return sockfd;
 	}
@@ -2137,8 +1943,7 @@ static int network_client_ip_open(struct network_client *client, const struct ne
 	client->addrlen = sizeof(struct sockaddr_in);
 
 	ret = network_client_udp_common_open(client, NULL, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_udp_common_open");
 		goto out_close_sockfd;
 	}
@@ -2155,8 +1960,7 @@ static int network_client_mac_open(struct network_client *client, const struct n
 	int sockfd;
 
 	sockfd = network_create_socket_mac(url->hostname, 0);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("inet_socket");
 		return sockfd;
 	}
@@ -2175,8 +1979,7 @@ static int network_client_uevent_open(struct network_client *client, const struc
 	int sockfd;
 
 	sockfd = network_create_socket_uevent();
-	if (sockfd < 0)
-	{
+	if (sockfd < 0) {
 		pr_red_info("network_create_socket_uevent");
 		return sockfd;
 	}
@@ -2197,11 +2000,9 @@ ssize_t network_client_fill_buff(struct network_client *client, char *buff, size
 	ssize_t rdlen;
 	const char *buff_end = buff + size;
 
-	for (buff_end = buff + size; buff < buff_end; buff += rdlen)
-	{
+	for (buff_end = buff + size; buff < buff_end; buff += rdlen) {
 		rdlen = client->recv(client, buff, buff_end - buff);
-		if (rdlen <= 0)
-		{
+		if (rdlen <= 0) {
 			return -EFAULT;
 		}
 	}
@@ -2214,42 +2015,33 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 	ssize_t rdlen;
 	char buff[2048];
 
-	if (size == 0)
-	{
-		while (1)
-		{
+	if (size == 0) {
+		while (1) {
 			rdlen = client->recv(client, buff, sizeof(buff));
-			if (rdlen <= 0)
-			{
-				if (rdlen < 0)
-				{
+			if (rdlen <= 0) {
+				if (rdlen < 0) {
 					return rdlen;
 				}
 
 				return size;
 			}
 
-			if (ffile_write(fd, buff, rdlen) < rdlen)
-			{
+			if (ffile_write(fd, buff, rdlen) < rdlen) {
 				return -EIO;
 			}
 
 			size += rdlen;
 		}
-	}
-	else
-	{
+	} else {
 		size_t size_bak = size;
 		struct progress_bar bar;
 
 		progress_bar_init(&bar, size);
 
-		while (size)
-		{
+		while (size) {
 
 			rdlen = client->recv(client, buff, sizeof(buff));
-			if (rdlen <= 0 || ffile_write(fd, buff, rdlen) < rdlen)
-			{
+			if (rdlen <= 0 || ffile_write(fd, buff, rdlen) < rdlen) {
 				return -EIO;
 			}
 
@@ -2269,15 +2061,13 @@ ssize_t network_client_recv_file2(struct network_client *client, const char *pat
 	ssize_t rdlen;
 
 	fd = open(pathname, flags | O_WRONLY | O_CREAT, 0777);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open `%s'", pathname);
 		return fd;
 	}
 
 	rdlen = network_client_recv_file(client, fd, size);
-	if (rdlen < 0)
-	{
+	if (rdlen < 0) {
 		pr_red_info("network_client_recv_file");
 	}
 
@@ -2291,41 +2081,32 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 	ssize_t rdlen;
 	char buff[2048];
 
-	if (size == 0)
-	{
-		while (1)
-		{
+	if (size == 0) {
+		while (1) {
 			rdlen = ffile_read(fd, buff, sizeof(buff));
-			if (rdlen <= 0)
-			{
-				if (rdlen < 0)
-				{
+			if (rdlen <= 0) {
+				if (rdlen < 0) {
 					return rdlen;
 				}
 
 				return size;
 			}
 
-			if (client->send(client, buff, rdlen) < rdlen)
-			{
+			if (client->send(client, buff, rdlen) < rdlen) {
 				return -EIO;
 			}
 
 			size += rdlen;
 		}
-	}
-	else
-	{
+	} else {
 		size_t size_bak = size;
 		struct progress_bar bar;
 
 		progress_bar_init(&bar, size);
 
-		while (size)
-		{
+		while (size) {
 			rdlen = ffile_read(fd, buff, sizeof(buff));
-			if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen)
-			{
+			if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen) {
 				return -EFAULT;
 			}
 
@@ -2345,15 +2126,13 @@ ssize_t network_client_send_file2(struct network_client *client, const char *pat
 	ssize_t wrlen;
 
 	fd = open(pathname, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open `%s'", pathname);
 		return fd;
 	}
 
 	wrlen = network_client_send_file(client, fd, size);
-	if (wrlen < 0)
-	{
+	if (wrlen < 0) {
 		pr_red_info("network_client_send_file");
 	}
 
@@ -2364,8 +2143,7 @@ ssize_t network_client_send_file2(struct network_client *client, const char *pat
 
 ssize_t network_client_timed_recv(struct network_client *client, void *buff, size_t size, int timeout)
 {
-	if (file_poll_input(client->sockfd, timeout))
-	{
+	if (file_poll_input(client->sockfd, timeout)) {
 		return client->recv(client, buff, size);
 	}
 
@@ -2377,35 +2155,29 @@ bool network_client_discard_all(struct network_client *client)
 	int ret;
 	ssize_t rdlen;
 	char buff[1024];
-	struct pollfd pfd =
-	{
+	struct pollfd pfd = {
 		.fd = client->sockfd,
 		.events = POLLIN,
 	};
 
-	while (1)
-	{
+	while (1) {
 		ret = poll(&pfd, 1, 0);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("poll");
 			return false;
 		}
 
-		if (ret < 1)
-		{
+		if (ret < 1) {
 			break;
 		}
 
 		rdlen = client->recv(client, buff, sizeof(buff));
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_error_info("read");
 			return false;
 		}
 
-		if (rdlen < (ssize_t) sizeof(buff))
-		{
+		if (rdlen < (ssize_t) sizeof(buff)) {
 			break;
 		}
 	}
@@ -2449,34 +2221,28 @@ int network_client_exec_redirect(struct network_client *client, int ttyin, int t
 	pfds[1].events = POLLIN;
 	pfds[1].fd = ttyin;
 
-	while (1)
-	{
+	while (1) {
 		int ret;
 		ssize_t rdlen;
 		char buff[1024];
 
 		ret = poll(pfds, NELEM(pfds), -1);
-		if (ret <= 0)
-		{
+		if (ret <= 0) {
 			return -ETIMEDOUT;
 		}
 
-		if (pfds[0].revents)
-		{
+		if (pfds[0].revents) {
 			rdlen = client->recv(client, buff, sizeof(buff));
-			if (rdlen <= 0 || write(ttyout, buff, rdlen) < rdlen)
-			{
+			if (rdlen <= 0 || write(ttyout, buff, rdlen) < rdlen) {
 				break;
 			}
 
 			fsync(ttyout);
 		}
 
-		if (pfds[1].revents)
-		{
+		if (pfds[1].revents) {
 			rdlen = read(ttyin, buff, sizeof(buff));
-			if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen)
-			{
+			if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen) {
 				break;
 			}
 
@@ -2494,15 +2260,13 @@ int network_client_exec_main(struct network_client *client, const char *command,
 	pid_t pid;
 
 	ttyfd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid, 0x07);
-	if (ttyfd < 0)
-	{
+	if (ttyfd < 0) {
 		pr_red_info("cavan_exec_redirect_stdio_popen");
 		return ttyfd;
 	}
 
 	ret = network_client_exec_redirect(client, ttyfd, ttyfd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("tcp_dd_exec_redirect_loop");
 		goto out_close_ttyfd;
 	}
@@ -2535,16 +2299,14 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 	struct sockaddr *addr;
 
 	addr = alloca(service->addrlen);
-	if (addr == NULL)
-	{
+	if (addr == NULL) {
 		pr_error_info("alloca");
 		return -ENOMEM;
 	}
 
 	client->addrlen = service->addrlen;
 	ret = recvfrom(service->sockfd, &magic, sizeof(magic), 0, addr, &client->addrlen);
-	if (ret < (ssize_t) sizeof(magic))
-	{
+	if (ret < (ssize_t) sizeof(magic)) {
 		pr_error_info("recvfrom");
 		return -EFAULT;
 	}
@@ -2552,40 +2314,32 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 	pd_info("%s", network_sockaddr_tostring(addr, NULL, 0));
 	pd_bold_info("magic = 0x%08x, type = %d", magic, service->type);
 
-	if (magic != CAVAN_NETWORK_MAGIC)
-	{
+	if (magic != CAVAN_NETWORK_MAGIC) {
 		pr_red_info("invalid magic = 0x%08x", magic);
 		return -EINVAL;
 	}
 
-	if (service->type == NETWORK_PROTOCOL_UNIX_UDP)
-	{
+	if (service->type == NETWORK_PROTOCOL_UNIX_UDP) {
 		int ret;
 
 		ret = network_create_unix_udp_client(client);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("network_create_unix_udp_client");
 			return ret;
 		}
-	}
-	else
-	{
+	} else {
 		client->sockfd = inet_socket(SOCK_DGRAM);
-		if (client->sockfd < 0)
-		{
+		if (client->sockfd < 0) {
 			pr_error_info("inet_socket");
 			return client->sockfd;
 		}
 	}
 
 	ret = sendto(client->sockfd, &magic, sizeof(magic), 0, addr, client->addrlen);
-	if (ret < (ssize_t) sizeof(magic))
-	{
+	if (ret < (ssize_t) sizeof(magic)) {
 		pr_error_info("network_client_send_message");
 
-		if (ret >= 0)
-		{
+		if (ret >= 0) {
 			ret = -EFAULT;
 		}
 
@@ -2593,8 +2347,7 @@ static int network_service_udp_talk(struct network_service *service, struct netw
 	}
 
 	ret = connect(client->sockfd, addr, client->addrlen);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("connect");
 		goto out_client_close;
 	}
@@ -2615,16 +2368,14 @@ static int network_service_udp_accept(struct network_service *service, struct ne
 	int ret;
 
 	ret = network_service_udp_talk(service, client);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_service_udp_talk");
 		return ret;
 	}
 
 #if 0
 	ret = network_client_set_sync(client);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("network_client_set_sync");
 		return ret;
 	}
@@ -2636,8 +2387,7 @@ static int network_service_udp_accept(struct network_service *service, struct ne
 static int network_service_udp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	service->sockfd = inet_create_udp_service(port);
-	if (service->sockfd < 0)
-	{
+	if (service->sockfd < 0) {
 		pr_red_info("inet_create_udp_service");
 		return service->sockfd;
 	}
@@ -2660,16 +2410,14 @@ static int network_service_tcp_accept(struct network_service *service, struct ne
 	struct sockaddr *addr;
 
 	addr = alloca(service->addrlen);
-	if (addr == NULL)
-	{
+	if (addr == NULL) {
 		pr_error_info("alloca");
 		return -ENOMEM;
 	}
 
 	client->addrlen = service->addrlen;
 	client->sockfd = accept(service->sockfd, addr, &client->addrlen);
-	if (client->sockfd < 0)
-	{
+	if (client->sockfd < 0) {
 		pr_error_info("accept");
 		return client->sockfd;
 	}
@@ -2686,8 +2434,7 @@ static int network_service_tcp_accept(struct network_service *service, struct ne
 static int network_service_tcp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	service->sockfd = inet_create_tcp_service(port);
-	if (service->sockfd < 0)
-	{
+	if (service->sockfd < 0) {
 		pr_red_info("inet_create_tcp_service");
 		return service->sockfd;
 	}
@@ -2703,8 +2450,7 @@ static int network_service_tcp_open(struct network_service *service, const struc
 static int network_service_unix_tcp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	service->sockfd = unix_create_tcp_service(url->pathname);
-	if (service->sockfd < 0)
-	{
+	if (service->sockfd < 0) {
 		pr_red_info("inet_create_tcp_service");
 		return service->sockfd;
 	}
@@ -2720,8 +2466,7 @@ static int network_service_unix_tcp_open(struct network_service *service, const 
 static int network_service_unix_udp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	service->sockfd = unix_create_udp_service(url->pathname);
-	if (service->sockfd < 0)
-	{
+	if (service->sockfd < 0) {
 		pr_red_info("inet_create_tcp_service");
 		return service->sockfd;
 	}
@@ -2738,88 +2483,76 @@ static int network_service_unix_udp_open(struct network_service *service, const 
 
 static const struct network_protocol_desc protocol_descs[] =
 {
-	[NETWORK_PROTOCOL_FTP] =
-	{
+	[NETWORK_PROTOCOL_FTP] = {
 		.name = "ftp",
 		.port = NETWORK_PORT_FTP,
 		.type = NETWORK_PROTOCOL_FTP,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_tcp_open,
 	},
-	[NETWORK_PROTOCOL_HTTP] =
-	{
+	[NETWORK_PROTOCOL_HTTP] = {
 		.name = "http",
 		.port = NETWORK_PORT_HTTP,
 		.type = NETWORK_PROTOCOL_HTTP,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_tcp_open,
 	},
-	[NETWORK_PROTOCOL_HTTPS] =
-	{
+	[NETWORK_PROTOCOL_HTTPS] = {
 		.name = "https",
 		.port = NETWORK_PORT_HTTPS,
 		.type = NETWORK_PROTOCOL_HTTPS,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_tcp_open,
 	},
-	[NETWORK_PROTOCOL_TCP] =
-	{
+	[NETWORK_PROTOCOL_TCP] = {
 		.name = "tcp",
 		.type = NETWORK_PROTOCOL_TCP,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_tcp_open,
 	},
-	[NETWORK_PROTOCOL_UDP] =
-	{
+	[NETWORK_PROTOCOL_UDP] = {
 		.name = "udp",
 		.type = NETWORK_PROTOCOL_UDP,
 		.open_service = network_service_udp_open,
 		.open_client = network_client_udp_open,
 	},
-	[NETWORK_PROTOCOL_ADB] =
-	{
+	[NETWORK_PROTOCOL_ADB] = {
 		.name = "adb",
 		.type = NETWORK_PROTOCOL_ADB,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_adb_open,
 	},
-	[NETWORK_PROTOCOL_ICMP] =
-	{
+	[NETWORK_PROTOCOL_ICMP] = {
 		.name = "icmp",
 		.type = NETWORK_PROTOCOL_ICMP,
 		.open_service = network_service_open_dummy,
 		.open_client = network_client_icmp_open,
 	},
-	[NETWORK_PROTOCOL_IP] =
-	{
+	[NETWORK_PROTOCOL_IP] = {
 		.name = "ip",
 		.type = NETWORK_PROTOCOL_IP,
 		.open_service = network_service_open_dummy,
 		.open_client = network_client_ip_open,
 	},
-	[NETWORK_PROTOCOL_MAC] =
-	{
+	[NETWORK_PROTOCOL_MAC] = {
 		.name = "mac",
 		.type = NETWORK_PROTOCOL_MAC,
 		.open_service = network_service_open_dummy,
 		.open_client = network_client_mac_open,
 	},
-	[NETWORK_PROTOCOL_UNIX_TCP] =
-	{
+	[NETWORK_PROTOCOL_UNIX_TCP] = {
 		.name = "unix-tcp",
 		.type = NETWORK_PROTOCOL_UNIX_TCP,
 		.open_service = network_service_unix_tcp_open,
 		.open_client = network_client_unix_tcp_open,
 	},
-	[NETWORK_PROTOCOL_UNIX_UDP] =
-	{
+	[NETWORK_PROTOCOL_UNIX_UDP] = {
 		.name = "unix-udp",
 		.type = NETWORK_PROTOCOL_UNIX_UDP,
 		.open_service = network_service_unix_udp_open,
 		.open_client = network_client_unix_udp_open,
 	},
-	[NETWORK_PROTOCOL_UEVENT] =
-	{
+	[NETWORK_PROTOCOL_UEVENT] = {
 		.name = "uevent",
 		.type = NETWORK_PROTOCOL_UEVENT,
 		.open_service = network_service_open_dummy,
@@ -2831,93 +2564,70 @@ network_protocol_t network_protocol_parse(const char *name)
 {
 	const struct network_protocol_desc *p, *p_end;
 
-	switch (name[0])
-	{
+	switch (name[0]) {
 	case 't':
-		if (text_cmp(name + 1, "cp") == 0)
-		{
+		if (text_cmp(name + 1, "cp") == 0) {
 			return NETWORK_PROTOCOL_TCP;
 		}
 		break;
 
 	case 'u':
-		if (text_cmp(name + 1, "dp") == 0)
-		{
+		if (text_cmp(name + 1, "dp") == 0) {
 			return NETWORK_PROTOCOL_UDP;
-		}
-		else if (text_cmp(name + 1, "event") == 0)
-		{
+		} else if (text_cmp(name + 1, "event") == 0) {
 			return NETWORK_PROTOCOL_UEVENT;
-		}
-		else if (text_lhcmp("nix", name + 1) == 0)
-		{
-			if (name[4] != '-')
-			{
+		} else if (text_lhcmp("nix", name + 1) == 0) {
+			if (name[4] != '-') {
 				break;
 			}
 
-			if (text_cmp(name + 5, "tcp") == 0)
-			{
+			if (text_cmp(name + 5, "tcp") == 0) {
 				return NETWORK_PROTOCOL_UNIX_TCP;
-			}
-			else if (text_cmp(name + 5, "udp") == 0)
-			{
+			} else if (text_cmp(name + 5, "udp") == 0) {
 				return NETWORK_PROTOCOL_UNIX_UDP;
 			}
 		}
 		break;
 
 	case 'a':
-		if (text_cmp(name + 1, "db") == 0)
-		{
+		if (text_cmp(name + 1, "db") == 0) {
 			return NETWORK_PROTOCOL_ADB;
 		}
 		break;
 
 	case 'i':
-		if (text_cmp(name + 1, "p") == 0)
-		{
+		if (text_cmp(name + 1, "p") == 0) {
 			return NETWORK_PROTOCOL_IP;
-		}
-		else if (text_cmp(name + 1, "cmp") == 0)
-		{
+		} else if (text_cmp(name + 1, "cmp") == 0) {
 			return NETWORK_PROTOCOL_ICMP;
 		}
 		break;
 
 	case 'm':
-		if (text_cmp(name + 1, "ac") == 0)
-		{
+		if (text_cmp(name + 1, "ac") == 0) {
 			return NETWORK_PROTOCOL_MAC;
 		}
 		break;
 
 	case 'f':
-		if (text_cmp(name + 1, "tp") == 0)
-		{
+		if (text_cmp(name + 1, "tp") == 0) {
 			return NETWORK_PROTOCOL_FTP;
 		}
 		break;
 
 	case 'h':
-		if (text_lhcmp("ttp", name + 1) == 0)
-		{
-			if (name[4] == 0)
-			{
+		if (text_lhcmp("ttp", name + 1) == 0) {
+			if (name[4] == 0) {
 				return NETWORK_PROTOCOL_HTTP;
-			}
-			else if (name[4] == 's' && name[5] == 0)
-			{
+			} else if (name[4] == 's' && name[5] == 0) {
 				return NETWORK_PROTOCOL_HTTPS;
 			}
 		}
 		break;
 	}
 
-	for (p = protocol_descs, p_end = p + NELEM(protocol_descs); p < p_end; p++)
-	{
-		if (strcmp(name, p->name) == 0)
-		{
+	for (p = protocol_descs, p_end = p + NELEM(protocol_descs); p < p_end; p++) {
+		if (strcmp(name, p->name) == 0) {
 			return p->type;
 		}
 	}
@@ -2930,8 +2640,7 @@ const char *network_protocol_tostring(network_protocol_t type)
 	const struct network_protocol_desc *desc;
 
 	desc = network_get_protocol_by_type(type);
-	if (desc == NULL)
-	{
+	if (desc == NULL) {
 		return "unknown";
 	}
 
@@ -2943,8 +2652,7 @@ const struct network_protocol_desc *network_get_protocol_by_name(const char *nam
 	network_protocol_t type;
 
 	type = network_protocol_parse(name);
-	if (type == NETWORK_PROTOCOL_INVALID)
-	{
+	if (type == NETWORK_PROTOCOL_INVALID) {
 		return NULL;
 	}
 
@@ -2953,8 +2661,7 @@ const struct network_protocol_desc *network_get_protocol_by_name(const char *nam
 
 const struct network_protocol_desc *network_get_protocol_by_type(network_protocol_t type)
 {
-	if (type < 0 || type >= NELEM(protocol_descs))
-	{
+	if (type < 0 || type >= NELEM(protocol_descs)) {
 		return NULL;
 	}
 
@@ -2965,10 +2672,8 @@ const struct network_protocol_desc *network_get_protocol_by_port(u16 port)
 {
 	const struct network_protocol_desc *p, *p_end;
 
-	for (p = protocol_descs, p_end = p + NELEM(protocol_descs); p < p_end; p++)
-	{
-		if (p->port == port)
-		{
+	for (p = protocol_descs, p_end = p + NELEM(protocol_descs); p < p_end; p++) {
+		if (p->port == port) {
 			return p;
 		}
 	}
@@ -2978,19 +2683,13 @@ const struct network_protocol_desc *network_get_protocol_by_port(u16 port)
 
 int network_get_port_by_url(const struct network_url *url, const struct network_protocol_desc *protocol)
 {
-	if (url->port != NETWORK_PORT_INVALID)
-	{
+	if (url->port != NETWORK_PORT_INVALID) {
 		return url->port;
-	}
-	else if (protocol)
-	{
+	} else if (protocol) {
 		return protocol->port;
-	}
-	else if (url->protocol[0])
-	{
+	} else if (url->protocol[0]) {
 		protocol = network_get_protocol_by_name(url->protocol);
-		if (protocol)
-		{
+		if (protocol) {
 			return protocol->port;
 		}
 
@@ -3007,8 +2706,7 @@ int network_client_open(struct network_client *client, const struct network_url 
 	pd_bold_info("URL = %s", network_url_tostring(url, NULL, 0, NULL));
 
 	desc = network_get_protocol_by_name(url->protocol);
-	if (desc == NULL)
-	{
+	if (desc == NULL) {
 		pr_red_info("network_get_protocol_by_name");
 		return -EINVAL;
 	}
@@ -3020,8 +2718,7 @@ int network_client_open2(struct network_client *client, const char *url_text, in
 {
 	struct network_url url;
 
-	if (url_text == NULL || network_url_parse(&url, url_text) == NULL)
-	{
+	if (url_text == NULL || network_url_parse(&url, url_text) == NULL) {
 		pr_red_info("network_parse_url");
 		return -EINVAL;
 	}
@@ -3031,12 +2728,9 @@ int network_client_open2(struct network_client *client, const char *url_text, in
 
 void network_client_close(struct network_client *client)
 {
-	if (client->close)
-	{
+	if (client->close) {
 		client->close(client);
-	}
-	else
-	{
+	} else {
 		close(client->sockfd);
 	}
 
@@ -3049,8 +2743,7 @@ int network_client_get_local_port(struct network_client *client)
 	struct sockaddr_in addr;
 
 	ret = network_client_get_local_addr(client, (struct sockaddr *) &addr, sizeof(addr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -3063,8 +2756,7 @@ int network_client_get_remote_port(struct network_client *client)
 	struct sockaddr_in addr;
 
 	ret = network_client_get_remote_addr(client, (struct sockaddr *) &addr, sizeof(addr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -3077,8 +2769,7 @@ int network_client_get_local_ip(struct network_client *client, struct in_addr *s
 	struct sockaddr_in addr;
 
 	ret = network_client_get_local_addr(client, (struct sockaddr *) &addr, sizeof(addr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -3093,8 +2784,7 @@ int network_client_get_remote_ip(struct network_client *client, struct in_addr *
 	struct sockaddr_in addr;
 
 	ret = network_client_get_remote_addr(client, (struct sockaddr *) &addr, sizeof(addr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -3110,8 +2800,7 @@ int network_service_open(struct network_service *service, const struct network_u
 	pd_bold_info("URL = %s", network_url_tostring(url, NULL, 0, NULL));
 
 	desc = network_get_protocol_by_name(url->protocol);
-	if (desc == NULL)
-	{
+	if (desc == NULL) {
 		pr_red_info("network_get_protocol_by_name");
 		return -EINVAL;
 	}
@@ -3123,8 +2812,7 @@ int network_service_open2(struct network_service *service, const char *url_text,
 {
 	struct network_url url;
 
-	if (url_text == NULL || network_url_parse(&url, url_text) == NULL)
-	{
+	if (url_text == NULL || network_url_parse(&url, url_text) == NULL) {
 		pr_red_info("network_parse_url");
 		return -EFAULT;
 	}
@@ -3134,19 +2822,15 @@ int network_service_open2(struct network_service *service, const char *url_text,
 
 void network_service_close(struct network_service *service)
 {
-	if (service->close)
-	{
+	if (service->close) {
 		service->close(service);
-	}
-	else
-	{
+	} else {
 		close(service->sockfd);
 	}
 
 	service->sockfd = -1;
 
-	if (service->type == NETWORK_PROTOCOL_UNIX_TCP || service->type == NETWORK_PROTOCOL_UNIX_UDP)
-	{
+	if (service->type == NETWORK_PROTOCOL_UNIX_TCP || service->type == NETWORK_PROTOCOL_UNIX_UDP) {
 		remove_directory(network_get_socket_pathname());
 	}
 }
@@ -3157,8 +2841,7 @@ int network_service_get_local_port(struct network_service *service)
 	struct sockaddr_in addr;
 
 	ret = network_service_get_local_addr(service, (struct sockaddr *) &addr, sizeof(addr));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 

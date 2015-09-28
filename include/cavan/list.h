@@ -61,37 +61,32 @@
 #define DOUBLE_LINK_INIT(link, type, name) \
 	double_link_init(link, MOFS(type, name))
 
-struct single_link_node
-{
+struct single_link_node {
 	struct single_link_node *next;
 
 	void (*destroy)(void *addr);
 };
 
-struct single_link
-{
+struct single_link {
 	int offset;
 	pthread_mutex_t lock;
 
 	struct single_link_node head_node;
 };
 
-struct circle_link
-{
+struct circle_link {
 	int offset;
 	pthread_mutex_t lock;
 
 	struct single_link_node head_node;
 };
 
-struct double_link_node
-{
+struct double_link_node {
 	struct double_link_node *prev;
 	struct double_link_node *next;
 };
 
-struct double_link
-{
+struct double_link {
 	int offset;
 	pthread_mutex_t lock;
 

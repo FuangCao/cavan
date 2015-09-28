@@ -37,41 +37,34 @@ int main(int argc, char *argv[])
 	int option_index;
 	size_t size = 0;
 	int count = 0;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "count",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_COUNT,
-		},
-		{
+		}, {
 			.name = "size",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_COUNT,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhHc:C:s:S:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHc:C:s:S:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -103,8 +96,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind + 2 > argc)
-	{
+	if (optind + 2 > argc) {
 		pr_red_info("Please give input_file and output_directory");
 		show_usage(argv[0]);
 		return -EINVAL;

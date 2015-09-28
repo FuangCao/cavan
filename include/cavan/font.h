@@ -29,8 +29,7 @@ typedef enum cavan_font_type {
 	CAVAN_FONT_COUNT
 } cavan_font_type_t;
 
-struct cavan_font
-{
+struct cavan_font {
 	const char *name;
 	int lines;
 	int width;

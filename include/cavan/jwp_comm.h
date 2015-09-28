@@ -22,10 +22,8 @@
 #include <cavan.h>
 #include <cavan/jwp-linux.h>
 
-struct jwp_comm_desc
-{
-	union
-	{
+struct jwp_comm_desc {
+	union {
 		struct jwp_desc jwp;
 		struct jwp_linux_desc jwp_linux;
 	};

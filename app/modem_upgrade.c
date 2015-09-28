@@ -25,8 +25,7 @@
 
 #define MODEM_ATCMD_READ_VERSION	"AT+CGMR"
 
-struct modem_prop
-{
+struct modem_prop {
 	char name[64];
 	char value[1024];
 };
@@ -41,8 +40,7 @@ static ssize_t parse_string_list(const char *dirname, struct modem_prop *props, 
 	text_path_cat(pathname, sizeof(pathname), dirname, STRING_LIST_NAME);
 
 	readlen = file_read(pathname, buff, sizeof(buff));
-	if (readlen < 0)
-	{
+	if (readlen < 0) {
 		error_msg("file_read \"%s\" failed", pathname);
 		return readlen;
 	}
@@ -51,25 +49,21 @@ static ssize_t parse_string_list(const char *dirname, struct modem_prop *props, 
 	p = buff;
 	end_p = buff + readlen;
 
-	while (p < end_p && prop_count < size)
-	{
+	while (p < end_p && prop_count < size) {
 		int i;
 		char *tmp_text;
 
-		for (i = 0, tmp_text = props[prop_count].name; i < 2; i++, p++)
-		{
+		for (i = 0, tmp_text = props[prop_count].name; i < 2; i++, p++) {
 
 			do {
-				if (p >= end_p)
-				{
+				if (p >= end_p) {
 					return prop_count;
 				}
 			} while (*p++ != '"');
 
 
 			do {
-				if (p >= end_p)
-				{
+				if (p >= end_p) {
 					return prop_count;
 				}
 
@@ -96,10 +90,8 @@ static struct modem_prop *modem_find_prop(struct modem_prop *props, size_t size,
 {
 	struct modem_prop *prop_end;
 
-	for (prop_end = props + size; props < prop_end; props++)
-	{
-		if (text_cmp(prop_name, props->name) == 0)
-		{
+	for (prop_end = props + size; props < prop_end; props++) {
+		if (text_cmp(prop_name, props->name) == 0) {
 			return props;
 		}
 	}
@@ -114,15 +106,13 @@ static char *modem_read_new_version(const char *dirname, char *version, size_t s
 	struct modem_prop *prop_tmp;
 
 	prop_count = parse_string_list(dirname, props, ARRAY_SIZE(props));
-	if (prop_count < 0)
-	{
+	if (prop_count < 0) {
 		error_msg("parse_string_list");
 		return NULL;
 	}
 
 	prop_tmp = modem_find_prop(props, prop_count, MODEM_VERSION_PROP_NAME);
-	if (prop_tmp == NULL)
-	{
+	if (prop_tmp == NULL) {
 		return NULL;
 	}
 
@@ -133,8 +123,7 @@ static char *modem_read_new_version(const char *dirname, char *version, size_t s
 
 static int file_puts_retry(const char *pathname, const char *value, int retry)
 {
-	while (retry-- && file_puts(pathname, value) < 0)
-	{
+	while (retry-- && file_puts(pathname, value) < 0) {
 		sleep(2);
 	}
 
@@ -146,8 +135,7 @@ static int set_usb_power(void)
 	int ret;
 
 	ret = file_puts_retry(USB_POWER_CONTROL_PATH, "on", 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 #ifdef CAVAN_DEBUG
 		warning_msg("write file \"%s\"", USB_POWER_CONTROL_PATH);
 #endif
@@ -155,8 +143,7 @@ static int set_usb_power(void)
 	}
 
 	ret = file_puts_retry(USB_POWER_WAKEUP_PATH, "disabled", 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 #ifdef CAVAN_DEBUG
 		warning_msg("write file \"%s\"", USB_POWER_WAKEUP_PATH);
 #endif
@@ -171,8 +158,7 @@ static int modem_power_enable(void)
 	int ret;
 
 	ret = file_write(MODEM_POWER_PATH, "off", 3);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 #ifdef CAVAN_DEBUG
 		error_msg("write file \"%s\"", MODEM_POWER_PATH);
 #endif
@@ -182,8 +168,7 @@ static int modem_power_enable(void)
 	visual_ssleep(5);
 
 	ret = file_write(MODEM_POWER_PATH, "on", 2);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 #ifdef CAVAN_DEBUG
 		error_msg("write file \"%s\"", MODEM_POWER_PATH);
 #endif
@@ -193,8 +178,7 @@ static int modem_power_enable(void)
 	visual_ssleep(5);
 
 	ret = file_wait(MODEM_TTY_DEVICE, "c", 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 #ifdef CAVAN_DEBUG
 		error_msg("modem power enable failed");
 #endif
@@ -215,15 +199,13 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 	struct termios attr;
 
 	fd = open(MODEM_TTY_DEVICE, O_RDWR | O_SYNC | O_TRUNC | O_NOCTTY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		print_error("open device \"%s\" failed", MODEM_TTY_DEVICE);
 		return fd;
 	}
 
 	ret = set_tty_mode(fd, 4, &attr);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("set_tty_mode");
 		goto out_close_fd;
 	}
@@ -231,8 +213,7 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 	p = text_cat3(buff, 2, command, "\r\n");
 
 	rwlen = write(fd, buff, p - buff - 1);
-	if (rwlen < 0)
-	{
+	if (rwlen < 0) {
 		print_error("write command \"%s\" failed", command);
 		ret = rwlen;
 		goto out_restore_tty;
@@ -254,8 +235,7 @@ static char *modem_read_old_version(char *version, size_t size)
 	char buff[1024];
 
 	readlen = modem_send_at_command(MODEM_ATCMD_READ_VERSION, buff, sizeof(buff));
-	if (readlen < 0)
-	{
+	if (readlen < 0) {
 		print_error("modem_send_at_command");
 		return NULL;
 	}
@@ -270,8 +250,7 @@ static int modem_if_need_upgrade(const char *dirname, int retry)
 {
 	char new_version[512], old_version[512];
 
-	if (modem_read_new_version(dirname, new_version, sizeof(new_version)) == NULL)
-	{
+	if (modem_read_new_version(dirname, new_version, sizeof(new_version)) == NULL) {
 		error_msg("modem_read_new_version");
 		return -EFAULT;
 	}
@@ -279,8 +258,7 @@ static int modem_if_need_upgrade(const char *dirname, int retry)
 	println("new version = %s", new_version);
 
 	while (retry-- && modem_read_old_version(old_version, sizeof(old_version)) == NULL);
-	if (retry < 0)
-	{
+	if (retry < 0) {
 		error_msg("modem_read_old_version");
 		return -EFAULT;
 	}
@@ -296,8 +274,7 @@ static int modem_if_need_upgrade(const char *dirname, int retry)
 
 static void *set_usb_power_handle(void *data)
 {
-	while (1)
-	{
+	while (1) {
 		set_usb_power();
 		sleep(2);
 	}
@@ -314,32 +291,25 @@ static int upgrade_modem(const char *resource)
 	text_path_cat(update_wizard, sizeof(update_wizard), resource, UPDATE_WIZARD_NAME);
 
 	ret = chmod(update_wizard, 0777);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		print_error("chmod \"%s\"", update_wizard);
 		return ret;
 	}
 
 	pid = fork();
-	if (pid < 0)
-	{
+	if (pid < 0) {
 		print_error("fork");
 		return pid;
 	}
 
-	if (pid == 0)
-	{
-		if (file_test("/bin/sh", "x") == 0)
-		{
+	if (pid == 0) {
+		if (file_test("/bin/sh", "x") == 0) {
 			ret = system_command("%s %s | tee %s", update_wizard, resource, SWAN_CONSOLE_DEVICE);
 
 			exit(ret);
-		}
-		else
-		{
+		} else {
 			ret = execl(update_wizard, update_wizard, resource, NULL);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				error_msg("execl");
 			}
 
@@ -350,8 +320,7 @@ static int upgrade_modem(const char *resource)
 	cavan_pthread_run(set_usb_power_handle, NULL);
 
 	waitpid(pid, &ret, 0);
-	if (!WIFEXITED(ret) || WEXITSTATUS(ret) != 0)
-	{
+	if (!WIFEXITED(ret) || WEXITSTATUS(ret) != 0) {
 		error_msg("upgrade modem failed");
 		return -1;
 	}
@@ -371,49 +340,40 @@ int main(int argc, char *argv[])
 	int ret;
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'p',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	char resource_path[1024];
 
-	while ((c = getopt_long(argc, argv, "vVhHpP", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhHpP", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
-		case 'V':
-			{
+		case 'V': {
 				char version[512];
 
-				if (modem_power_enable() < 0)
-				{
+				if (modem_power_enable() < 0) {
 					error_msg("can't open modem power");
 					return -EFAULT;
 				}
 
-				if (modem_read_old_version(version, sizeof(version)) == NULL)
-				{
+				if (modem_read_old_version(version, sizeof(version)) == NULL) {
 					error_msg("modem_read_old_version");
 					return -EFAULT;
 				}
@@ -440,8 +400,7 @@ int main(int argc, char *argv[])
 
 	assert(argc > optind);
 
-	if (modem_power_enable() < 0)
-	{
+	if (modem_power_enable() < 0) {
 		error_msg("can't open modem power");
 		return -EFAULT;
 	}
@@ -449,14 +408,12 @@ int main(int argc, char *argv[])
 	text_path_cat(resource_path, sizeof(resource_path), argv[optind], NULL);
 
 	ret = modem_if_need_upgrade(resource_path, 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("modem_if_need_upgrade");
 		return ret;
 	}
 
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		right_msg("current version is newest, don't need upgrade");
 		return 0;
 	}

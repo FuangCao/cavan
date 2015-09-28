@@ -29,8 +29,7 @@ static int cavan_watchdog_thread_handler(struct cavan_thread *thread, void *data
 
 	ret = cavan_thread_msleep(thread, watchdog->msec);
 
-	if (ret == ETIMEDOUT && watchdog->count == 0)
-	{
+	if (ret == ETIMEDOUT && watchdog->count == 0) {
 		watchdog->handler(watchdog);
 	}
 
@@ -47,8 +46,7 @@ int cavan_watchdog_init(struct cavan_watchdog *watchdog, u32 msec, void *data)
 	thread->handler = cavan_watchdog_thread_handler;
 
 	ret = cavan_thread_init(thread, watchdog);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		return ret;
 	}
@@ -73,8 +71,7 @@ static void cavan_watchdog_handler_dummy(struct cavan_watchdog *watchdog)
 
 int cavan_watchdog_start(struct cavan_watchdog *watchdog)
 {
-	if (watchdog->handler == NULL)
-	{
+	if (watchdog->handler == NULL) {
 		watchdog->handler = cavan_watchdog_handler_dummy;
 	}
 
@@ -86,8 +83,7 @@ int cavan_watchdog_run(struct cavan_watchdog *watchdog, u32 msec, void *data)
 	int ret;
 
 	ret = cavan_watchdog_init(watchdog, msec, data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_watchdog_init");
 		return ret;
 	}

@@ -274,8 +274,7 @@ static inline char *text_delete_sub(char *text, const char *sub)
 
 static inline char value2char(int index)
 {
-	if (index < 10)
-	{
+	if (index < 10) {
 		return index + '0';
 	}
 

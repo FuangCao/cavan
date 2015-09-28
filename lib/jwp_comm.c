@@ -26,8 +26,7 @@ static jwp_size_t jwp_comm_hw_read(struct jwp_desc *jwp, void *buff, jwp_size_t 
 	struct jwp_comm_desc *comm = (struct jwp_comm_desc *) jwp;
 
 	rdlen = read(comm->fd, buff, size);
-	if (rdlen < 0)
-	{
+	if (rdlen < 0) {
 		pr_error_info("read");
 		return 0;
 	}
@@ -41,8 +40,7 @@ static jwp_size_t jwp_comm_hw_write(struct jwp_desc *jwp, const void *buff, jwp_
 	struct jwp_comm_desc *comm = (struct jwp_comm_desc *) jwp;
 
 	wrlen = write(comm->fd, buff, size);
-	if (wrlen < 0)
-	{
+	if (wrlen < 0) {
 		pr_error_info("write");
 		return 0;
 	}
@@ -66,8 +64,7 @@ jwp_bool jwp_comm_init2(struct jwp_comm_desc *comm, const char *pathname, void *
 	int fd;
 
 	fd = open(pathname, O_RDWR);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open %s", pathname);
 		return fd;
 	}
@@ -77,8 +74,7 @@ jwp_bool jwp_comm_init2(struct jwp_comm_desc *comm, const char *pathname, void *
 
 jwp_bool jwp_comm_start(struct jwp_comm_desc *comm)
 {
-	if (!jwp_linux_start(&comm->jwp_linux))
-	{
+	if (!jwp_linux_start(&comm->jwp_linux)) {
 		return false;
 	}
 

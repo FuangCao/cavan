@@ -9,8 +9,7 @@
 int main(int argc, char *argv[])
 {
 	int ret;
-	struct kconfig_menu_descriptor desc =
-	{
+	struct kconfig_menu_descriptor desc = {
 		.title = "Cavan Configure",
 		.prompt =	"Arrow keys navigate the menu. <Enter> selects submenus --->. "
 					"Highlighted letters are hotkeys.  Pressing <Y> includes, <N> excludes, <M> modularizes features.  "
@@ -18,86 +17,69 @@ int main(int argc, char *argv[])
 					"Legend: [*] built-in  [ ] excluded  <M> module  < > module capable",
 	};
 	int i;
-	struct kconfig_menu_item arch_item =
-	{
+	struct kconfig_menu_item arch_item = {
 		.state = KCONFIG_STATE_SELECTED,
 		.text = "Architecture",
 	};
-	struct kconfig_menu_item arch_items[] =
-	{
+	struct kconfig_menu_item arch_items[] = {
 		{
 			.state = KCONFIG_STATE_SELECTED,
 			.text = "host",
-		},
-		{
+		}, {
 			.state = KCONFIG_STATE_DESELED,
 			.text = "arm",
-		},
-		{
+		}, {
 			.state = KCONFIG_STATE_DESELED,
 			.text = "x86",
 		},
 	};
-	struct kconfig_menu_item toolchian_item =
-	{
+	struct kconfig_menu_item toolchian_item = {
 		.state = KCONFIG_STATE_SELECTED,
 		.text = "Toolchian",
 	};
-	struct kconfig_menu_item toolchian_items[] =
-	{
+	struct kconfig_menu_item toolchian_items[] = {
 		{
 			.state = KCONFIG_STATE_SELECTED,
 			.text = "none",
-		},
-		{
+		}, {
 			.state = KCONFIG_STATE_DESELED,
 			.text = "arm-linux",
-		},
-		{
+		}, {
 			.state = KCONFIG_STATE_DESELED,
 			.text = "arm-cavan-linux-gnueabi",
-		},
-		{
+		}, {
 			.state = KCONFIG_STATE_DESELED,
 			.text = "arm-none-linux-gnueabi",
 		},
 	};
-	struct kconfig_menu_item type_item =
-	{
+	struct kconfig_menu_item type_item = {
 		.state = KCONFIG_STATE_SELECTED,
 		.text = "Build type",
 	};
-	struct kconfig_menu_item type_items[] =
-	{
+	struct kconfig_menu_item type_items[] = {
 		{
 			.state = KCONFIG_STATE_SELECTED,
 			.text = "debug",
-		},
-		{
+		}, {
 			.state = KCONFIG_STATE_DESELED,
 			.text = "release",
-		},
-		{
+		}, {
 			.state = KCONFIG_STATE_DESELED,
 			.text = "static",
 		},
 	};
-	struct kconfig_menu_item entry_item =
-	{
+	struct kconfig_menu_item entry_item = {
 		.state = KCONFIG_STATE_SELECTED,
 		.text = "Build entry",
 	};
-	struct kconfig_menu_item entry_items[] =
-	{
+	struct kconfig_menu_item entry_items[] = {
 		{
 			.state = KCONFIG_STATE_SELECTED,
 			.text = "application",
-		},
-		{
+		}, {
 			.state = KCONFIG_STATE_DESELED,
 			.text = "library",
-		},
-		{
+		}, {
 			.state = KCONFIG_STATE_DESELED,
 			.text = "cavan",
 		},
@@ -109,23 +91,19 @@ int main(int argc, char *argv[])
 	kconfig_menu_add_item(&desc, &type_item);
 	kconfig_menu_add_item(&desc, &entry_item);
 
-	for (i = 0; i < NELEM(arch_items); i++)
-	{
+	for (i = 0; i < NELEM(arch_items); i++) {
 		kconfig_menu_add_child(&arch_item, arch_items + i);
 	}
 
-	for (i = 0; i < NELEM(toolchian_items); i++)
-	{
+	for (i = 0; i < NELEM(toolchian_items); i++) {
 		kconfig_menu_add_child(&toolchian_item, toolchian_items + i);
 	}
 
-	for (i = 0; i < NELEM(type_items); i++)
-	{
+	for (i = 0; i < NELEM(type_items); i++) {
 		kconfig_menu_add_child(&type_item, type_items + i);
 	}
 
-	for (i = 0; i < NELEM(entry_items); i++)
-	{
+	for (i = 0; i < NELEM(entry_items); i++) {
 		kconfig_menu_add_child(&entry_item, entry_items + i);
 	}
 

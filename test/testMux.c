@@ -68,8 +68,7 @@ int main(int argc, char *argv[])
 	int pipefd[2];
 
 	ret = pipe(pipefd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pipe");
 		return ret;
 	}
@@ -77,8 +76,7 @@ int main(int argc, char *argv[])
 	mux.send = test_mux_send;
 	mux.recv = test_mux_recv;
 	ret = cavan_mux_init(&mux, pipefd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_mux_init");
 		return ret;
 	}
@@ -88,15 +86,13 @@ int main(int argc, char *argv[])
 
 	cavan_mux_show_packages(&mux);
 
-	for (i = 0; i < NELEM(packages); i++)
-	{
+	for (i = 0; i < NELEM(packages); i++) {
 		packages[i] = cavan_mux_package_alloc(&mux, (i + 1) * 100);
 	}
 
 	cavan_mux_show_packages(&mux);
 
-	for (i = NELEM(packages) - 1; i >= 0; i--)
-	{
+	for (i = NELEM(packages) - 1; i >= 0; i--) {
 		cavan_mux_package_free(&mux, packages[i]);
 	}
 
@@ -106,8 +102,7 @@ int main(int argc, char *argv[])
 
 #if 0
 	package = cavan_mux_package_alloc(&mux, 560);
-	if (package)
-	{
+	if (package) {
 		println("alloc length = %d", package->length);
 	}
 
@@ -118,23 +113,20 @@ int main(int argc, char *argv[])
 
 	link1.private_data = "Link1";
 	ret = cavan_mux_bind(&mux, &link1, 2000);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_mux_bind");
 	}
 
 	link2.private_data = "Link2";
 	ret = cavan_mux_bind(&mux, &link2, 12345);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_mux_bind");
 	}
 
 	println("port1 = %d, port2 = %d", link1.local_port, link2.local_port);
 	link1.remote_port = link2.local_port;
 	ret = cavan_mux_link_send(&link1, "1234567890", 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_mux_link_send");
 	}
 
@@ -142,8 +134,7 @@ int main(int argc, char *argv[])
 
 	link2.remote_port = link1.local_port;
 	ret = cavan_mux_link_send(&link2, "ABCDEFGHIJKL", 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_mux_link_send");
 	}
 
@@ -154,18 +145,15 @@ int main(int argc, char *argv[])
 #if 0
 	count = 0;
 
-	while (1)
-	{
+	while (1) {
 		struct cavan_mux_link *link = malloc(sizeof(struct cavan_mux_link));
 		ret = cavan_mux_bind(&mux, link, 0);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_mux_bind");
 			break;
 		}
 
-		if (link->local_port == link1.local_port || link->local_port == link2.local_port)
-		{
+		if (link->local_port == link1.local_port || link->local_port == link2.local_port) {
 			pr_red_info("invalid port %d", link->local_port);
 		}
 

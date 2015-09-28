@@ -21,21 +21,18 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -45,10 +42,8 @@ int main(int argc, char *argv[])
 	char reply[1024];
 	const char *devpath = SPRD_DEFAULT_AT_DEVICE;
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -68,36 +63,29 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind + 1 < argc)
-	{
+	if (optind + 1 < argc) {
 		devpath = argv[optind++];
-	}
-	else if (optind >= argc)
-	{
+	} else if (optind >= argc) {
 		show_usage(argv[0]);
 		return -EINVAL;
 	}
 
 	fd = open(devpath, O_RDWR | O_SYNC);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open %s", devpath);
 		return fd;
 	}
 
 	rwlen = sprd_modem_send_at_command(fd, reply, sizeof(reply), "%s\r", argv[optind++]);
-	if (rwlen < 0)
-	{
+	if (rwlen < 0) {
 		ret = rwlen;
 		pr_red_info("sprd_modem_send_at_command");
 		goto out_close_fd;
 	}
 
-	if (optind < argc)
-	{
+	if (optind < argc) {
 		rwlen = sprd_modem_send_at_command(fd, reply, sizeof(reply), "%s\032", argv[optind++]);
-		if (rwlen < 0)
-		{
+		if (rwlen < 0) {
 			ret = rwlen;
 			pr_red_info("sprd_modem_send_at_command");
 			goto out_close_fd;

@@ -6,16 +6,14 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-11-16 15:48:51
 
-struct cavan_fb_color_element
-{
+struct cavan_fb_color_element {
 	u32 offset;
 	u32 mask;
 	u16 max;
 	u16 index;
 };
 
-struct cavan_fb_device
-{
+struct cavan_fb_device {
 	int fb;
 	int fb_count;
 	int fb_active;

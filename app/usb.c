@@ -25,14 +25,12 @@ static int swan_adb_server(void)
 	pr_bold_pos();
 
 	pid = fork();
-	if (pid == 0)
-	{
+	if (pid == 0) {
 		execl("/system/bin/setprop", "setprop", "persist.service.adb.enable", "0", NULL);
 	}
 
 	waitpid(pid, &status, 0);
-	if (WIFEXITED(status) == 0 || WEXITSTATUS(status) != 0)
-	{
+	if (WIFEXITED(status) == 0 || WEXITSTATUS(status) != 0) {
 		error_msg("close adb server failed");
 		return -1;
 	}
@@ -40,15 +38,13 @@ static int swan_adb_server(void)
 	sleep(1);
 
 	fd_data = open(DEVICE_SWAN_VK_DATA, O_WRONLY);
-	if (fd_data < 0)
-	{
+	if (fd_data < 0) {
 		print_error("open device \"%s\" failed", DEVICE_ADB_ENABLE_PATH);
 		return fd_data;
 	}
 
 	fd_adb_en = open(DEVICE_ADB_ENABLE_PATH, O_RDWR);
-	if (fd_adb_en < 0)
-	{
+	if (fd_adb_en < 0) {
 		print_error("open device \"%s\" failed", DEVICE_ADB_ENABLE_PATH);
 		goto out_close_data;
 	}
@@ -57,27 +53,23 @@ static int swan_adb_server(void)
 
 label_open_adb:
 	fd_adb = open(DEVICE_ADB_PATH, O_RDONLY);
-	if (fd_adb < 0)
-	{
+	if (fd_adb < 0) {
 		print_error("open device \"%s\" failed", DEVICE_ADB_PATH);
 		goto out_close_adb_en;
 	}
 
 	fcntl(fd_adb, F_SETFD, FD_CLOEXEC);
 
-	while (1)
-	{
+	while (1) {
 		readlen = cavan_adb_read_data(fd_adb, buff, sizeof(buff));
-		if (readlen < 0)
-		{
+		if (readlen < 0) {
 			print_error("read");
 			close(fd_adb);
 			goto label_open_adb;
 		}
 
 		writelen = write(fd_data, buff,  readlen);
-		if (writelen < 0)
-		{
+		if (writelen < 0) {
 			print_error("write");
 			break;
 		}
@@ -98,13 +90,11 @@ static bool swan_adb_event_handler(struct cavan_event_device *dev, struct input_
 	struct swan_adb_client_descriptor *desc = data;
 
 	wrlen = cavan_usb_write_data(desc->usb_desc, event, sizeof(*event));
-	if (wrlen < 0)
-	{
+	if (wrlen < 0) {
 		print_error("cavan_usb_bluk_write");
 
 		wrlen = write(desc->pipefd[1], &wrlen, sizeof(wrlen));
-		if (wrlen < 0)
-		{
+		if (wrlen < 0) {
 			pr_error_info("write");
 			exit(-1);
 		}
@@ -126,8 +116,7 @@ static int swan_adb_client(const char *dev_path)
 	system_command("killall adb");
 
 	ret = cavan_find_usb_device(dev_path, &usb_desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("cavan_find_usb_device failed");
 		return ret;
 	}
@@ -138,8 +127,7 @@ static int swan_adb_client(const char *dev_path)
 	pr_bold_info("idVendor = 0x%04x", usb_desc.dev_desc.idVendor);
 
 	ret = pipe(desc.pipefd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pipe");
 		goto out_usb_deinit;
 	}
@@ -149,19 +137,15 @@ static int swan_adb_client(const char *dev_path)
 	cavan_event_service_init(&service, NULL);
 	service.event_handler = swan_adb_event_handler;
 	ret = cavan_event_service_start(&service, &desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_event_service_start");
 		goto out_close_pipe;
 	}
 
 	rdlen = read(desc.pipefd[0], &ret, sizeof(ret));
-	if (rdlen < 0)
-	{
+	if (rdlen < 0) {
 		pr_error_info("read");
-	}
-	else
-	{
+	} else {
 		pr_green_info("ret = %d", ret);
 	}
 
@@ -179,29 +163,24 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 			show_author_info();
@@ -219,12 +198,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (access(DEVICE_ADB_ENABLE_PATH, F_OK) < 0)
-	{
+	if (access(DEVICE_ADB_ENABLE_PATH, F_OK) < 0) {
 		return swan_adb_client(argc > optind ? argv[optind] : NULL);
-	}
-	else
-	{
+	} else {
 		return swan_adb_server();
 	}
 

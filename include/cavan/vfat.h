@@ -47,8 +47,7 @@ typedef enum {
 } fat_type_t;
 
 #pragma pack(1)
-struct fat16_dbr
-{
+struct fat16_dbr {
 	u8 drive_number;
 	u8 reserved1;
 	u8 boot_signature;
@@ -57,8 +56,7 @@ struct fat16_dbr
 	u8 fs_type[8];
 };
 
-struct fat32_dbr
-{
+struct fat32_dbr {
 	u32 fat_size32;
 	u16 extern_flags;
 	u16 fs_version;
@@ -70,8 +68,7 @@ struct fat32_dbr
 	u8 reserved3[420];
 };
 
-struct fat_dbr
-{
+struct fat_dbr {
 	u8 jmp_boot[3];
 	u8 oem_name[8];
 	u16 bytes_per_sector;
@@ -87,8 +84,7 @@ struct fat_dbr
 	u32 hidden_sectors;
 	u32 total_sectors32;
 
-	union
-	{
+	union {
 		struct fat16_dbr dbr16;
 		struct fat32_dbr dbr32;
 	};
@@ -96,8 +92,7 @@ struct fat_dbr
 	u16 boot_flags;
 };
 
-struct fat32_fsinfo
-{
+struct fat32_fsinfo {
 	u32 lead_signal;
 	u8 reserved1[480];
 	u32 struct_signal;
@@ -107,8 +102,7 @@ struct fat32_fsinfo
 	u32 trail_signal;
 };
 
-struct vfat_dir_entry
-{
+struct vfat_dir_entry {
 	u8 name[11];
 	u8 attribute;
 	u8 nt_reserved;
@@ -123,8 +117,7 @@ struct vfat_dir_entry
 	u32 file_size;
 };
 
-struct vfat_dir_entry_long
-{
+struct vfat_dir_entry_long {
 	u8 order;
 	u16 name1[5];
 	u8 attribute;
@@ -136,8 +129,7 @@ struct vfat_dir_entry_long
 };
 #pragma pack()
 
-struct cavan_vfat_fs
-{
+struct cavan_vfat_fs {
 	struct cavan_block_device *bdev;
 	struct fat_dbr dbr;
 	u8 *fat_table;
@@ -171,15 +163,13 @@ struct cavan_vfat_fs
 	u32 (*get_next_cluster)(const struct cavan_vfat_fs *fs, u32 cluster);
 };
 
-struct cavan_vfat_file
-{
+struct cavan_vfat_file {
 	const char *pathname;
 	struct cavan_vfat_fs *fs;
 	struct vfat_dir_entry entry;
 };
 
-struct cavan_vfat_scan_dir_walker
-{
+struct cavan_vfat_scan_dir_walker {
 	char buff[256];
 	char *tail;
 	char *filename;
@@ -189,21 +179,18 @@ struct cavan_vfat_scan_dir_walker
 	int (*entry_handler)(struct cavan_vfat_scan_dir_walker *walker, const struct vfat_dir_entry *entry, const char *filename);
 };
 
-struct cavan_vfat_find_file_context
-{
+struct cavan_vfat_find_file_context {
 	const char *filename;
 	size_t namelen;
 	struct vfat_dir_entry *entry;
 };
 
-struct cavan_vfat_list_dir_context
-{
+struct cavan_vfat_list_dir_context {
 	void *private_data;
 	void (*handler)(const struct vfat_dir_entry *entry, const char *filename, void *data);
 };
 
-struct cavan_vfat_read_file_context
-{
+struct cavan_vfat_read_file_context {
 	void *buff;
 	size_t size;
 };

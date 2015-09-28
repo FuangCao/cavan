@@ -11,8 +11,7 @@
 #define SUPPORT_MTD_WRITE_VERIFY	0
 
 struct cavan_mtd_descriptor;
-struct mtd_partition_info
-{
+struct mtd_partition_info {
 	int index;
 	char name[MAX_MTD_NAME_LENGHT];
 	u32 size;
@@ -21,15 +20,13 @@ struct mtd_partition_info
 	struct cavan_mtd_descriptor *dev_desc;
 };
 
-struct mtd_partition_descriptor
-{
+struct mtd_partition_descriptor {
 	int fd;
 	struct mtd_info_user user_info;
 	struct mtd_partition_info *part_info;
 };
 
-struct cavan_mtd_descriptor
-{
+struct cavan_mtd_descriptor {
 	int part_count;
 	struct mtd_partition_info part_infos[MAX_MTD_PARTITION_COUNT];
 	struct mtd_partition_descriptor part_descs[MAX_MTD_PARTITION_COUNT];

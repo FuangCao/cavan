@@ -15,21 +15,18 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'h',
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'v',
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -42,10 +39,8 @@ int main(int argc, char *argv[])
 
 	cftp_client_handle = NULL;
 
-	while ((c = getopt_long(argc, argv, "rRgGwWSspPvVhH", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "rRgGwWSspPvVhH", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 			show_author_info();
@@ -79,16 +74,14 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (cftp_client_handle == NULL)
-	{
+	if (cftp_client_handle == NULL) {
 		error_msg("Please input transfer direction");
 		show_usage();
 		return -EINVAL;
 	}
 
 	ret = cavan_find_usb_device(NULL, &usb_desc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		error_msg("cavan_find_usb_device");
 		return ret;
 	}
@@ -101,15 +94,13 @@ int main(int argc, char *argv[])
 
 	p_name = text_path_cat(temp_name, sizeof(temp_name), argv[--argc], NULL);
 
-	for (i = optind; i < argc; i++)
-	{
+	for (i = optind; i < argc; i++) {
 		int ret;
 
 		text_basename_base(p_name, argv[i]);
 
 		ret = cftp_client_handle(&cftp_desc, argv[i], 0, temp_name, 0, 0);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			error_msg("cftp send or receive file \"%s\" failed", argv[i]);
 			return ret;
 		}

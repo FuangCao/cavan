@@ -40,8 +40,7 @@ enum cavan_ext2_traversal_action
 	CAVAN_EXT2_TRAVERSAL_EOF,
 };
 
-struct ext2_super_block
-{
+struct ext2_super_block {
 	u32 inodes_count; // 索引节点的总数
 	u32 blocks_count; // 以块为单位的文件系统的大小
 	u32 reserved_blocks_count; // 保留的块数
@@ -137,8 +136,7 @@ struct ext2_super_block
 	u32	checksum;		/* crc32c(superblock) */
 };
 
-struct ext2_group_desc
-{
+struct ext2_group_desc {
 	u32 block_bitmap; // 块位图的块号
 	u32 inode_bitmap; // 索引节点位图的块号
 	u32 inode_table; // 第一个索引节点表块的块号
@@ -149,8 +147,7 @@ struct ext2_group_desc
 	u32 reserved[3]; // 用 null 填充 24 个字节
 };
 
-struct ext4_group_desc
-{
+struct ext4_group_desc {
 	u32	block_bitmap;	/* Blocks bitmap block */
 	u32	inode_bitmap;	/* Inodes bitmap block */
 	u32	inode_table;		/* Inodes table block */
@@ -176,8 +173,7 @@ struct ext4_group_desc
 	u32	reserved;
 };
 
-struct ext2_inode
-{
+struct ext2_inode {
 	u16 mode; // 文件类型和访问权限
 	u16 uid; // 拥有者标识符
 	u32 size; // 以字节为单位的文件长度
@@ -198,8 +194,7 @@ struct ext2_inode
 	u32 osd2[3]; // 特定的操作系统信息
 };
 
-struct ext2_directory_entry
-{
+struct ext2_directory_entry {
 	u32 inode; // 索引节点号
 	u16 rec_len; // 目录项长度
 	u8 name_len; // 文件名长度
@@ -207,8 +202,7 @@ struct ext2_directory_entry
 	char name[EXT2_NAME_LEN]; // name 文件名
 };
 
-struct ext2_desc
-{
+struct ext2_desc {
 	int fd;
 
 	size_t flex_count;
@@ -234,8 +228,7 @@ struct ext2_desc
 	ssize_t (*write_block)(struct ext2_desc *desc, u64 index, const void *blocks, size_t count);
 };
 
-struct ext4_extent_header
-{
+struct ext4_extent_header {
 	u16 magic;
 	u16 entries;
 	u16 max_entries;
@@ -243,43 +236,37 @@ struct ext4_extent_header
 	u32 generations;
 };
 
-struct ext4_extent_index
-{
+struct ext4_extent_index {
 	u32 block;
 	u32 leaf_lo;
 	u16 leaf_hi;
 	u16 unused;
 };
 
-struct ext4_extent_leaf
-{
+struct ext4_extent_leaf {
 	u32 block;
 	u16 length;
 	u16 start_hi;
 	u32 start_lo;
 };
 
-struct cavan_ext2_file
-{
+struct cavan_ext2_file {
 	char pathname[1024];
 	struct ext2_desc *desc;
 	struct ext2_inode inode;
 };
 
-struct cavan_ext2_traversal_option
-{
+struct cavan_ext2_traversal_option {
 	int (*func)(struct ext2_desc *desc, void *block, size_t count, struct cavan_ext2_traversal_option *option);
 };
 
-struct cavan_ext4_find_file_option
-{
+struct cavan_ext4_find_file_option {
 	struct cavan_ext2_traversal_option option;
 	const char *filename;
 	struct ext2_directory_entry *entry;
 };
 
-struct cavan_ext4_read_file_option
-{
+struct cavan_ext4_read_file_option {
 	struct cavan_ext2_traversal_option option;
 	struct cavan_ext2_file *file;
 	void *buff;

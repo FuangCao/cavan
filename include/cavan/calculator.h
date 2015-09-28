@@ -98,8 +98,7 @@ enum calculator_operator_identify
 #define OPERATOR_PRIORITY_BASE	16
 #define OPERATOR_PRIORITY_PI	16
 
-struct calculator_operator_descriptor
-{
+struct calculator_operator_descriptor {
 	const char *symbols[OPERAND_MAX_SYMBOL_COUNT];
 	enum calculator_operator_identify id;
 	int priority;

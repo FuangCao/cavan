@@ -29,8 +29,7 @@ int main(int argc, char *argv[])
 
 	progress_bar_init(&bar, MB(100));
 
-	for (i = 0; i < 100; i++)
-	{
+	for (i = 0; i < 100; i++) {
 		progress_bar_add(&bar, MB(1));
 		msleep(500);
 		progress_bar_add(&bar, 0);

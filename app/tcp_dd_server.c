@@ -35,117 +35,98 @@ int main(int argc, char *argv[])
 	int c;
 	int ret;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON,
-		},
-		{
+		}, {
 			.name = "min",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON_MIN,
-		},
-		{
+		}, {
 			.name = "max",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON_MAX,
-		},
-		{
+		}, {
 			.name = "verbose",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERBOSE,
-		},
-		{
+		}, {
 			.name = "super",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SUPER,
-		},
-		{
+		}, {
 			.name = "port",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PORT,
-		},
-		{
+		}, {
 			.name = "log",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LOGFILE,
-		},
-		{
+		}, {
 			.name = "unix",
 			.has_arg = optional_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UNIX,
-		},
-		{
+		}, {
 			.name = "unix-tcp",
 			.has_arg = optional_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UNIX_TCP,
-		},
-		{
+		}, {
 			.name = "unix-udp",
 			.has_arg = optional_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
-		},
-		{
+		}, {
 			.name = "udp",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UDP,
-		},
-		{
+		}, {
 			.name = "url",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_URL,
-		},
-		{
+		}, {
 			.name = "protocol",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
-		},
-		{
+		}, {
 			.name = "pt",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
-		},
-		{
+		}, {
 			.name = "driver",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DRIVER,
-		},
-		{
+		}, {
 			.name = "ko",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DRIVER,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -154,8 +135,7 @@ int main(int argc, char *argv[])
 	struct cavan_tcp_dd_service *dd_service;
 
 	service = cavan_dynamic_service_create(sizeof(struct cavan_tcp_dd_service));
-	if (service == NULL)
-	{
+	if (service == NULL) {
 		pr_red_info("cavan_dynamic_service_create");
 		return -ENOMEM;
 	}
@@ -169,10 +149,8 @@ int main(int argc, char *argv[])
 	url = &dd_service->url;
 	network_url_init(url, "tcp", "any", TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
-	while ((c = getopt_long(argc, argv, "hHvVdp:P:s:S:c:C:m:M:l:L:u::U::D:k:", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "hHvVdp:P:s:S:c:C:m:M:l:L:u::U::D:k:", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'h':
 		case 'H':
 		case CAVAN_COMMAND_OPTION_HELP:
@@ -232,16 +210,14 @@ int main(int argc, char *argv[])
 		case CAVAN_COMMAND_OPTION_UNIX:
 		case CAVAN_COMMAND_OPTION_UNIX_TCP:
 			url->protocol = "unix-tcp";
-			if (optarg)
-			{
+			if (optarg) {
 				url->pathname = optarg;
 			}
 			break;
 
 		case CAVAN_COMMAND_OPTION_UNIX_UDP:
 			url->protocol = "unix-udp";
-			if (optarg)
-			{
+			if (optarg) {
 				url->pathname = optarg;
 			}
 			break;
@@ -251,8 +227,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case CAVAN_COMMAND_OPTION_URL:
-			if (network_url_parse(url, optarg) == NULL)
-			{
+			if (network_url_parse(url, optarg) == NULL) {
 				pr_red_info("invalid url %s", optarg);
 				return -EINVAL;
 			}
@@ -276,11 +251,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (argc > optind)
-	{
+	if (argc > optind) {
 		url->port = text2value_unsigned(argv[optind], NULL, 10);
-		if (url->port == 0)
-		{
+		if (url->port == 0) {
 			pr_red_info("Invalid port %s", argv[optind]);
 			ret = -EINVAL;
 			goto out_cavan_dynamic_service_destroy;

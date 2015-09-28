@@ -35,16 +35,14 @@
 #define KEY_BITMASK_SIZE	sizeof_bit_array(KEY_CNT)
 #define REL_BITMASK_SIZE	sizeof_bit_array(REL_CNT)
 
-struct cavan_keylayout_node
-{
+struct cavan_keylayout_node {
 	char name[32];
 	int code;
 
 	struct single_link_node node;
 };
 
-struct cavan_virtual_key
-{
+struct cavan_virtual_key {
 	int left;
 	int right;
 	int top;
@@ -57,8 +55,7 @@ struct cavan_virtual_key
 	struct single_link_node node;
 };
 
-struct cavan_event_matcher
-{
+struct cavan_event_matcher {
 	int fd;
 	char devname[128];
 	char pathname[24];
@@ -66,8 +63,7 @@ struct cavan_event_matcher
 	int (*handler)(struct cavan_event_matcher *matcher, void *data);
 };
 
-struct cavan_event_device
-{
+struct cavan_event_device {
 	int fd;
 	char name[128];
 	char pathname[24];
@@ -79,8 +75,7 @@ struct cavan_event_device
 	struct double_link_node node;
 };
 
-struct cavan_event_service
-{
+struct cavan_event_service {
 	struct cavan_thread thread;
 	pthread_mutex_t lock;
 
