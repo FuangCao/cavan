@@ -32,3 +32,5 @@
 #define CAVAN_ARCH_ARM				1
 #endif
 #endif
+
+#define CONFIG_I2C_ROCKCHIP_COMPAT	1
