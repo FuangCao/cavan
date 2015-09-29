@@ -661,12 +661,12 @@ int char2value(char c)
 
 int prefix2base(const char *prefix, const char *prefix_end, const char **last, int base)
 {
-	if ((prefix_end && prefix + 1 >= prefix_end) || *prefix != '0') {
-		if (base < 2) {
-			base = 10;
-		}
+	if (last) {
+		*last = prefix;
+	}
 
-		goto out_return;
+	if ((prefix_end && prefix + 1 >= prefix_end) || *prefix != '0') {
+		return base > 0 ? base : 10;
 	}
 
 	prefix++;
@@ -674,19 +674,21 @@ int prefix2base(const char *prefix, const char *prefix_end, const char **last, i
 	switch (*prefix) {
 	case 'b':
 	case 'B':
+		if (base > 11) {
+			return base;
+		}
+
 		prefix++;
 		base = 2;
 		break;
 
 	case 'd':
 	case 'D':
+		if (base > 13) {
+			return base;
+		}
 		prefix++;
 	case '.':
-		base = 10;
-		break;
-
-	case 0:
-		prefix--;
 		base = 10;
 		break;
 
@@ -703,12 +705,16 @@ int prefix2base(const char *prefix, const char *prefix_end, const char **last, i
 		base = 8;
 		break;
 
+	case 0:
+		return 10;
+
 	default:
-		prefix--;
-		base = -EINVAL;
+		if (base > 0) {
+			return base;
+		}
+		return -EINVAL;
 	}
 
-out_return:
 	if (last) {
 		*last = prefix;
 	}
