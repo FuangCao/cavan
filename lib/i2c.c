@@ -20,28 +20,41 @@
 #include <cavan.h>
 #include <cavan/i2c.h>
 
-#define CAVAN_I2C_UPDATE_BITS_IMPLEMENT(bits) \
+#define CAVAN_I2C_UPDATE_BITS_IMPLEMENT(bits, format) \
 	int cavan_i2c_update_bits##bits(struct cavan_i2c_client *client, u8 addr, u##bits value, u##bits mask) { \
 		int ret; \
 		u##bits value_old; \
 		ret = cavan_i2c_read_register##bits(client, addr, &value_old); \
 		if (ret < 0) { \
-			pr_red_info("cavan_i2c_read_register" #bits ": %d", ret); \
 			return ret; \
 		} \
 		value = (value & mask) | (value_old & (~mask)); \
 		if (value == value_old) { \
 			return 0; \
 		} \
+		println("update_bits: addr = 0x%02x, value = (" format " -> "  format ")", addr, value_old, value); \
 		return cavan_i2c_write_register##bits(client, addr, value); \
 	}
 
-int cavan_i2c_init(struct cavan_i2c_client *client, int index, void *data)
+int cavan_i2c_set_address(struct cavan_i2c_client *client, u16 addr)
+{
+	int ret = ioctl(client->fd, I2C_SLAVE_FORCE, addr);
+	if (ret < 0) {
+		return ret;
+	}
+
+	client->addr = addr;
+
+	return 0;
+}
+
+int cavan_i2c_init(struct cavan_i2c_client *client, int adapter, u16 addr)
 {
 	int fd;
+	int ret;
 	char pathname[32];
 
-	snprintf(pathname, sizeof(pathname), "/dev/i2c-%d", index);
+	snprintf(pathname, sizeof(pathname), "/dev/i2c-%d", adapter);
 	println("pathname = %s", pathname);
 
 	fd = open(pathname, O_RDWR);
@@ -51,9 +64,18 @@ int cavan_i2c_init(struct cavan_i2c_client *client, int index, void *data)
 	}
 
 	client->fd = fd;
-	client->private_data = data;
+
+	ret = cavan_i2c_set_address(client, addr);
+	if (ret < 0) {
+		pr_red_info("cavan_i2c_set_address: %d", ret);
+		goto out_close_fd;
+	}
 
 	return 0;
+
+out_close_fd:
+	close(fd);
+	return ret;
 }
 
 void cavan_i2c_deinit(struct cavan_i2c_client *client)
@@ -139,6 +161,6 @@ int cavan_i2c_read_data(struct cavan_i2c_client *client, u8 addr, void *data, si
 	return -EFAULT;
 }
 
-CAVAN_I2C_UPDATE_BITS_IMPLEMENT(8);
-CAVAN_I2C_UPDATE_BITS_IMPLEMENT(16);
-CAVAN_I2C_UPDATE_BITS_IMPLEMENT(32);
+CAVAN_I2C_UPDATE_BITS_IMPLEMENT(8, "0x%02x");
+CAVAN_I2C_UPDATE_BITS_IMPLEMENT(16, "0x%04x");
+CAVAN_I2C_UPDATE_BITS_IMPLEMENT(32, "0x%08x");

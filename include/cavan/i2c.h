@@ -43,7 +43,8 @@ struct cavan_i2c_client {
 	void *private_data;
 };
 
-int cavan_i2c_init(struct cavan_i2c_client *client, int index, void *data);
+int cavan_i2c_set_address(struct cavan_i2c_client *client, u16 addr);
+int cavan_i2c_init(struct cavan_i2c_client *client, int adapter, u16 addr);
 void cavan_i2c_deinit(struct cavan_i2c_client *client);
 int cavan_i2c_transfer(struct cavan_i2c_client *client, struct cavan_i2c_msg *msgs, size_t count);
 void cavan_i2c_detect(struct cavan_i2c_client *client);
@@ -53,16 +54,14 @@ int cavan_i2c_update_bits8(struct cavan_i2c_client *client, u8 addr, u8 value, u
 int cavan_i2c_update_bits16(struct cavan_i2c_client *client, u8 addr, u16 value, u16 mask);
 int cavan_i2c_update_bits32(struct cavan_i2c_client *client, u8 addr, u32 value, u32 mask);
 
-static inline int cavan_i2c_set_address(struct cavan_i2c_client *client, u16 addr)
+static inline void cavan_i2c_set_data(struct cavan_i2c_client *client, void *data)
 {
-	int ret = ioctl(client->fd, I2C_SLAVE_FORCE, addr);
-	if (ret < 0) {
-		return ret;
-	}
+	client->private_data = data;
+}
 
-	client->addr = addr;
-
-	return 0;
+static inline void *cavan_i2c_get_data(struct cavan_i2c_client *client)
+{
+	return client->private_data;
 }
 
 static inline int cavan_i2c_set_tenbit(struct cavan_i2c_client *client, bool enable)
