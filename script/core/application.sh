@@ -217,7 +217,7 @@ function cavan-mm-push()
 		(
 			cd "${kernel_root}" || return 1
 			[ -e ".config" ] || make ${1-jw100}_defconfig || return 1
-			make ${1-jw100.img} -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
+			make ${1-jw100}.img -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
 		) || return 1
 	else
 		file_list=$(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g'; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
@@ -229,7 +229,7 @@ function cavan-mm-push()
 
 function cavan-mm-push-reboot()
 {
-	cavan-mm-push && adb reboot && return 0
+	cavan-mm-push $@ && adb reboot && return 0
 
 	return 1
 }

@@ -216,3 +216,25 @@ function _cavan_set_jdk_version()
 }
 
 complete -F _cavan_set_jdk_version cavan-set-jdk-version
+
+function _cavan_dd()
+{
+	local cur prev words cword
+	_init_completion -n = || return
+
+	case $cur in
+		if=*|of=*)
+		cur=${cur#*=}
+		_filedir
+		return 0
+		;;
+	esac
+
+	_expand || return 0
+
+	COMPREPLY=($(compgen -W '$( _parse_help "$1" )' -- "$cur") \
+	$(compgen -W 'bs count if of seek skip' -S '=' -- "$cur"))
+}
+
+complete -F _cavan_dd -o nospace cavan-dd
+complete -F _cavan_dd -o nospace cavan-tcp_dd
