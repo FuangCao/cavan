@@ -11,6 +11,7 @@ int fcavan_dd(int fd_in, int fd_out, off_t offset_in, off_t offset_out, off_t le
 {
 	int ret;
 	struct stat st;
+	bool is_file = fd_is_file(fd_in);
 
 	println("size = %s", size2text(size));
 
@@ -20,7 +21,7 @@ int fcavan_dd(int fd_in, int fd_out, off_t offset_in, off_t offset_out, off_t le
 		return ret;
 	}
 
-	if (length == 0) {
+	if (length == 0 && is_file) {
 		length = st.st_size;
 		if (length <= offset_in) {
 			warning_msg("no data to be burn");
@@ -54,9 +55,16 @@ int fcavan_dd(int fd_in, int fd_out, off_t offset_in, off_t offset_out, off_t le
 	println("seek = %s", size2text(offset_out));
 	println("length = %s", size2text(length));
 
-	ret = ffile_ncopy(fd_in, fd_out, length);
-	if (ret < 0) {
-		error_msg("file_ncopy");
+	if (is_file || length > 0) {
+		ret = ffile_ncopy(fd_in, fd_out, length);
+		if (ret < 0) {
+			pr_red_info("file_ncopy: %d", ret);
+		}
+	} else {
+		ret = ffile_copy_simple(fd_in, fd_out);
+		if (ret < 0) {
+			pr_red_info("ffile_copy_simple: %d", ret);
+		}
 	}
 
 	return ret;

@@ -233,7 +233,7 @@ function _cavan_dd()
 	_expand || return 0
 
 	COMPREPLY=($(compgen -W '$( _parse_help "$1" )' -- "$cur") \
-	$(compgen -W 'bs count if of seek skip' -S '=' -- "$cur"))
+		$(compgen -W 'bs count if of seek skip' -S '=' -- "$cur"))
 }
 
 complete -F _cavan_dd -o nospace cavan-dd
