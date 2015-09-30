@@ -504,6 +504,32 @@ void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep,
 	}
 }
 
+char *mem_tostring(const byte *mem, size_t memlen, char *buff, size_t size)
+{
+	char *p, *p_end;
+	const byte *mem_end;
+
+	if (size < 2) {
+		*buff = 0;
+		return 0;
+	}
+
+	p = buff;
+	p_end = p + size - 2;
+
+	*p++ = '[';
+
+	for (mem_end = mem + size; mem < mem_end && p < p_end; mem++) {
+		*p++ = value2char((*mem) >> 4);
+		*p++ = value2char((*mem) & 0x0F);
+	}
+
+	*p++ = ']';
+	*p = 0;
+
+	return p;
+}
+
 char *mem_size_tostring(double value, char *buff, size_t size)
 {
 	if (value >= GB(1UL)) {

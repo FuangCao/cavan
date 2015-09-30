@@ -39,20 +39,29 @@ struct cavan_i2c_msg {
 
 struct cavan_i2c_client {
 	int fd;
-	u16 addr;
+	u16 slave_addr;
+
+	int addr_bytes;
+	int value_bytes;
+	bool addr_big_endian;
+	bool value_big_endian;
+
 	void *private_data;
 };
 
-int cavan_i2c_set_address(struct cavan_i2c_client *client, u16 addr);
-int cavan_i2c_init(struct cavan_i2c_client *client, int adapter, u16 addr);
-void cavan_i2c_deinit(struct cavan_i2c_client *client);
+int cavan_i2c_set_address(struct cavan_i2c_client *client, u16 slave_addr);
+void cavan_i2c_client_init(struct cavan_i2c_client *client);
+int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slave_addr);
+int cavan_i2c_client_open2(struct cavan_i2c_client *client, const char *device);
+void cavan_i2c_client_close(struct cavan_i2c_client *client);
 int cavan_i2c_transfer(struct cavan_i2c_client *client, struct cavan_i2c_msg *msgs, size_t count);
 void cavan_i2c_detect(struct cavan_i2c_client *client);
-int cavan_i2c_write_data(struct cavan_i2c_client *client, u8 addr, const void *data, size_t size);
-int cavan_i2c_read_data(struct cavan_i2c_client *client, u8 addr, void *data, size_t size);
-int cavan_i2c_update_bits8(struct cavan_i2c_client *client, u8 addr, u8 value, u8 mask);
-int cavan_i2c_update_bits16(struct cavan_i2c_client *client, u8 addr, u16 value, u16 mask);
-int cavan_i2c_update_bits32(struct cavan_i2c_client *client, u8 addr, u32 value, u32 mask);
+int cavan_i2c_write_data(struct cavan_i2c_client *client, const void *addr, const void *data, size_t size);
+int cavan_i2c_read_data(struct cavan_i2c_client *client, const void *addr, void *data, size_t size);
+void cavan_i2c_adjust_endian(struct cavan_i2c_client *client, u8 *addr, u8 *value);
+int cavan_i2c_read_register(struct cavan_i2c_client *client, u32 addr, u32 *value);
+int cavan_i2c_write_register(struct cavan_i2c_client *client, u32 addr, u32 value);
+int cavan_i2c_update_bits(struct cavan_i2c_client *client, u32 addr, u32 value, u32 mask);
 
 static inline void cavan_i2c_set_data(struct cavan_i2c_client *client, void *data)
 {
@@ -77,34 +86,4 @@ static inline int cavan_i2c_master_send(struct cavan_i2c_client *client, const v
 static inline int cavan_i2c_master_recv(struct cavan_i2c_client *client, void *buff, size_t size)
 {
 	return read(client->fd, buff, size);
-}
-
-static inline int cavan_i2c_read_register8(struct cavan_i2c_client *client, u8 addr, u8 *value)
-{
-	return cavan_i2c_read_data(client, addr, value, sizeof(*value));
-}
-
-static inline int cavan_i2c_write_register8(struct cavan_i2c_client *client, u8 addr, const u8 value)
-{
-	return cavan_i2c_write_data(client, addr, &value, sizeof(value));
-}
-
-static inline int cavan_i2c_read_register16(struct cavan_i2c_client *client, u8 addr, u16 *value)
-{
-	return cavan_i2c_read_data(client, addr, value, sizeof(*value));
-}
-
-static inline int cavan_i2c_write_register16(struct cavan_i2c_client *client, u8 addr, const u16 value)
-{
-	return cavan_i2c_write_data(client, addr, &value, sizeof(value));
-}
-
-static inline int cavan_i2c_read_register32(struct cavan_i2c_client *client, u8 addr, u32 *value)
-{
-	return cavan_i2c_read_data(client, addr, value, sizeof(*value));
-}
-
-static inline int cavan_i2c_write_register32(struct cavan_i2c_client *client, u8 addr, const u32 value)
-{
-	return cavan_i2c_write_data(client, addr, &value, sizeof(value));
 }

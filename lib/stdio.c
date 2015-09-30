@@ -177,10 +177,11 @@ void print_buffer(const char *buff, size_t size)
 
 void vprint(const char *fmt, va_list ap)
 {
+	char *p;
 	char buff[PRINT_BUFFER_LEN];
 
-	vformat_text(buff, sizeof(buff), fmt, ap);
-	print_text(buff);
+	 p = vformat_text(buff, sizeof(buff), fmt, ap);
+	print_ntext(buff, p - buff);
 }
 
 void print(const char *fmt, ...)
@@ -405,18 +406,22 @@ void print_title(const char *title, char sep, size_t size)
 	print_char('\n');
 }
 
-void print_mem(const u8 *mem, size_t size)
+void print_mem(const char *promp, const u8 *mem, size_t size, ...)
 {
-	char buff[size * 2 + 1], *p;
-	const u8 *mem_end;
+	char *p;
+	char buff[size * 2 + 3];
 
-	for (mem_end = mem + size, p = buff; mem < mem_end; mem++) {
-		*p++ = value2char((*mem) >> 4);
-		*p++ = value2char((*mem) & 0x0F);
+	p = mem_tostring(mem, size, buff, sizeof(buff));
+
+	if (promp) {
+		va_list ap;
+
+		va_start(ap, size);
+		vprint(promp, ap);
+		va_end(ap);
 	}
 
 	*p = '\n';
-
 	print_ntext(buff, sizeof(buff));
 }
 

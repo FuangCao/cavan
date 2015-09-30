@@ -25,59 +25,47 @@
 #define CAVAN_I2C_FUNC_READ_REG_LEN		(sizeof(CAVAN_I2C_FUNC_READ_REG) - 1)
 
 #define CAVAN_I2C_FUNC_WRITE_REG		"write_reg"
-#define CAVAN_I2C_FUNC_WRITE_REG_LEN	(sizeof(CAVAN_I2C_FUNC_READ_REG) - 1)
+#define CAVAN_I2C_FUNC_WRITE_REG_LEN	(sizeof(CAVAN_I2C_FUNC_WRITE_REG) - 1)
 
 #define CAVAN_I2C_FUNC_UPDATE_BITS		"update_bits"
 #define CAVAN_I2C_FUNC_UPDATE_BITS_LEN	(sizeof(CAVAN_I2C_FUNC_UPDATE_BITS) - 1)
 
-#define CAVAN_I2C_FUNC_READ_REG_IMPLEMENT(bits, format) { \
-		u##bits value; \
-		ret = cavan_i2c_read_register##bits(&client, addr, &value); \
+#define CAVAN_I2C_FUNC_READ_REG_IMPLEMENT() { \
+		u32 value; \
+		ret = cavan_i2c_read_register(&client, addr, &value); \
 		if (ret < 0) { \
-			pr_red_info("cavan_i2c_read_register" #bits ": %d", ret); \
+			pr_red_info("cavan_i2c_read_register: %d", ret); \
 		} else { \
-			println("%s: addr = 0x%02x, value = " format, argv[0], addr, value); \
+			println("%s: addr = 0x%08x, value = 0x%08x", argv[0], addr, value); \
 		} \
 	}
 
-#define CAVAN_I2C_FUNC_WRITE_REG_IMPLEMENT(bits, format) { \
-		ret = cavan_i2c_write_register##bits(&client, addr, value); \
-		println("%s: addr = 0x%02x, value = " format, argv[0], addr, value); \
+#define CAVAN_I2C_FUNC_WRITE_REG_IMPLEMENT() { \
+		ret = cavan_i2c_write_register(&client, addr, value); \
+		println("%s: addr = 0x%08x, value = 0x%08x", argv[0], addr, value); \
 		if (ret < 0) { \
-			pr_red_info("cavan_i2c_write_register" #bits ": %d", ret); \
+			pr_red_info("cavan_i2c_write_register: %d", ret); \
 		} \
 	}
 
-#define CAVAN_I2C_FUNC_UPDATE_BITS_IMPLEMENT(bits, format) { \
-		ret = cavan_i2c_update_bits##bits(&client, addr, value, mask); \
-		println("%s: addr = 0x%02x, value = " format ", mask = " format, argv[0], addr, value, mask); \
+#define CAVAN_I2C_FUNC_UPDATE_BITS_IMPLEMENT() { \
+		ret = cavan_i2c_update_bits(&client, addr, value, mask); \
+		println("%s: addr = 0x%08x, value = 0x%08x, mask = 0x%08x", argv[0], addr, value, mask); \
 		if (ret < 0) { \
-			pr_red_info("cavan_i2c_update_bits" #bits ": %d", ret); \
+			pr_red_info("cavan_i2c_update_bits: %d", ret); \
 		} \
 	}
 
 #define CAVAN_I2C_FUNC_IMPLEMENT(func) \
-	println("adapter = %d, client = 0x%02x, bits = %d", adapter, client_addr, bits); \
-	ret = cavan_i2c_init(&client, adapter, client_addr); \
+	cavan_i2c_client_init(&client); \
+	client.value_bytes = bits >> 3; \
+	ret = cavan_i2c_client_open2(&client, argv[1]); \
 	if (ret < 0) { \
-		pr_red_info("cavan_i2c_init: %d", ret); \
+		pr_red_info("cavan_i2c_client_open2: %d", ret); \
 		return ret; \
 	} \
-	switch (bits) { \
-	case 8: \
-		func(8, "0x%02x"); \
-		break; \
-	case 16: \
-		func(16, "0x%04x"); \
-		break; \
-	case 32: \
-		func(32, "0x%08x"); \
-		break; \
-	default: \
-		pr_err_info("Invalid bits = %d", bits); \
-		ret = -EINVAL; \
-	} \
-	cavan_i2c_deinit(&client); \
+	func(); \
+	cavan_i2c_client_close(&client); \
 	return ret;
 
 static int do_detect(int argc, char *argv[])
@@ -92,16 +80,17 @@ static int do_detect(int argc, char *argv[])
 	}
 
 	index = text2value_unsigned(argv[1], NULL, 10);
-	println("index = %d", index);
 
-	ret = cavan_i2c_init(&client, index, 0x00);
+	cavan_i2c_client_init(&client);
+
+	ret = cavan_i2c_client_open(&client, index, 0x00);
 	if (ret < 0) {
-		pr_red_info("cavan_i2c_init: %d", ret);
+		pr_red_info("cavan_i2c_client_open: %d", ret);
 		return ret;
 	}
 
 	cavan_i2c_detect(&client);
-	cavan_i2c_deinit(&client);
+	cavan_i2c_client_close(&client);
 
 	return 0;
 }
@@ -110,47 +99,45 @@ static int do_master_send(int argc, char *argv[])
 {
 	int i;
 	int ret;
-	int count;
-	int adapter;
 	u8 *data, *p;
-	u16 client_addr;
 	struct cavan_i2c_client client;
 
 	if (argc <= 3) {
-		println("usage: %s <ADAPTER> <CLIENT_ADDR> <DATA> ...", argv[0]);
+		println("usage: %s <ADAPTER-SLAVE_ADDR> <DATA> ...", argv[0]);
 		return -EINVAL;
 	}
 
-	adapter = text2value_unsigned(argv[1], NULL, 10);
-	client_addr = text2value_unsigned(argv[2], NULL, 16);
+	cavan_i2c_client_init(&client);
 
-	ret = cavan_i2c_init(&client, adapter, client_addr);
+	ret = cavan_i2c_client_open2(&client, argv[1]);
 	if (ret < 0) {
-		pr_red_info("cavan_i2c_init: %d", ret);
+		pr_red_info("cavan_i2c_client_open2: %d", ret);
 		return ret;
 	}
 
-	count = argc - 3;
-	data = alloca(count);
+	argv += 2;
+	argc -= 2;
+
+	data = alloca(argc);
 	if (data == NULL) {
 		pr_err_info("alloca");
 		ret = -ENOMEM;
-		goto out_cavan_i2c_deinit;
+		goto out_cavan_i2c_client_close;
 	}
 
-	for (i = 3, p = data; i < argc; i++, p++) {
+	for (i = 0, p = data; i < argc; i++, p++) {
 		*p = text2value_unsigned(argv[i], NULL, 16);
 	}
 
-	print_mem(data, count);
+	print_mem(NULL, data, argc);
 
-	ret = cavan_i2c_master_send(&client, data, count);
+	ret = cavan_i2c_master_send(&client, data, argc);
 	if (ret < 0) {
 		pr_red_info("cavan_i2c_master_send: %d", ret);
 	}
 
-out_cavan_i2c_deinit:
-	cavan_i2c_deinit(&client);
+out_cavan_i2c_client_close:
+	cavan_i2c_client_close(&client);
 	return ret;
 }
 
@@ -159,87 +146,83 @@ static int do_master_recv(int argc, char *argv[])
 	int ret;
 	u8 *data;
 	int count;
-	int adapter;
-	u16 client_addr;
 	struct cavan_i2c_client client;
 
 	if (argc <= 3) {
-		println("usage: %s <ADAPTER> <CLIENT_ADDR> <COUNT> ...", argv[0]);
+		println("usage: %s <ADAPTER-SLAVE_ADDR> <COUNT> ...", argv[0]);
 		return -EINVAL;
 	}
 
-	adapter = text2value_unsigned(argv[1], NULL, 10);
-	client_addr = text2value_unsigned(argv[2], NULL, 16);
-	count = text2value_unsigned(argv[3], NULL, 10);
+	cavan_i2c_client_init(&client);
 
-	ret = cavan_i2c_init(&client, adapter, client_addr);
+	ret = cavan_i2c_client_open2(&client, argv[1]);
 	if (ret < 0) {
-		pr_red_info("cavan_i2c_init: %d", ret);
+		pr_red_info("cavan_i2c_client_open2: %d", ret);
 		return ret;
 	}
+
+	count = text2value_unsigned(argv[2], NULL, 10);
 
 	data = alloca(count);
 	if (data == NULL) {
 		pr_err_info("alloca");
 		ret = -ENOMEM;
-		goto out_cavan_i2c_deinit;
+		goto out_cavan_i2c_client_close;
 	}
 
 	ret = cavan_i2c_master_recv(&client, data, count);
 	if (ret < 0) {
 		pr_red_info("cavan_i2c_master_send: %d", ret);
 	} else {
-		print_mem(data, count);
+		print_mem(NULL, data, count);
 	}
 
-out_cavan_i2c_deinit:
-	cavan_i2c_deinit(&client);
+out_cavan_i2c_client_close:
+	cavan_i2c_client_close(&client);
 	return ret;
 }
 
 static int do_read_data(int argc, char *argv[])
 {
 	int ret;
-	u8 addr;
+	u32 addr;
 	u8 *data;
 	int count;
-	int adapter;
-	u16 client_addr;
 	struct cavan_i2c_client client;
 
-	if (argc <= 4) {
-		println("usage: %s <ADAPTER> <CLIENT_ADDR> <ADDR> <COUNT> ...", argv[0]);
+	if (argc != 4) {
+		println("usage: %s <ADAPTER-SLAVE_ADDR> <ADDR> <COUNT> ...", argv[0]);
 		return -EINVAL;
 	}
 
-	adapter = text2value_unsigned(argv[1], NULL, 10);
-	client_addr = text2value_unsigned(argv[2], NULL, 16);
-	addr = text2value_unsigned(argv[3], NULL, 16);
-	count = text2value_unsigned(argv[4], NULL, 10);
+	cavan_i2c_client_init(&client);
 
-	ret = cavan_i2c_init(&client, adapter, client_addr);
+	ret = cavan_i2c_client_open2(&client, argv[1]);
 	if (ret < 0) {
-		pr_red_info("cavan_i2c_init: %d", ret);
+		pr_red_info("cavan_i2c_client_open2: %d", ret);
 		return ret;
 	}
+
+	addr = text2value_unsigned(argv[2], NULL, 16);
+	count = text2value_unsigned(argv[3], NULL, 10);
 
 	data = alloca(count);
 	if (data == NULL) {
 		pr_err_info("alloca");
 		ret = -ENOMEM;
-		goto out_cavan_i2c_deinit;
+		goto out_cavan_i2c_client_close;
 	}
 
-	ret = cavan_i2c_read_data(&client, addr, data, count);
+	ret = cavan_i2c_read_data(&client, &addr, data, count);
 	if (ret < 0) {
 		pr_red_info("cavan_i2c_read_data: %d", ret);
 	} else {
 		println("add = 0x%02x", addr);
-		print_mem(data, count);
+		print_mem(NULL, data, count);
 	}
 
-out_cavan_i2c_deinit:
-	cavan_i2c_deinit(&client);
+out_cavan_i2c_client_close:
+	cavan_i2c_client_close(&client);
 	return ret;
 }
 
@@ -247,50 +230,49 @@ static int do_write_data(int argc, char *argv[])
 {
 	int i;
 	int ret;
-	u8 addr;
-	int count;
-	int adapter;
+	u32 addr;
 	u8 *data, *p;
-	u16 client_addr;
 	struct cavan_i2c_client client;
 
 	if (argc <= 4) {
-		println("usage: %s <ADAPTER> <CLIENT_ADDR> <ADDR> <DATA> ...", argv[0]);
+		println("usage: %s <ADAPTER-SLAVE_ADDR> <ADDR> <DATA> ...", argv[0]);
 		return -EINVAL;
 	}
 
-	adapter = text2value_unsigned(argv[1], NULL, 10);
-	client_addr = text2value_unsigned(argv[2], NULL, 16);
-	addr = text2value_unsigned(argv[3], NULL, 16);
+	cavan_i2c_client_init(&client);
 
-	ret = cavan_i2c_init(&client, adapter, client_addr);
+	ret = cavan_i2c_client_open2(&client, argv[1]);
 	if (ret < 0) {
-		pr_red_info("cavan_i2c_init: %d", ret);
+		pr_red_info("cavan_i2c_client_open2: %d", ret);
 		return ret;
 	}
 
-	count = argc - 4;
-	data = alloca(count);
+	addr = text2value_unsigned(argv[2], NULL, 16);
+
+	argv += 3;
+	argc -= 3;
+
+	data = alloca(argc);
 	if (data == NULL) {
 		pr_err_info("alloca");
 		ret = -ENOMEM;
-		goto out_cavan_i2c_deinit;
+		goto out_cavan_i2c_client_close;
 	}
 
-	for (i = 4, p = data; i < argc; i++, p++) {
+	for (i = 0, p = data; i < argc; i++, p++) {
 		*p = text2value_unsigned(argv[i], NULL, 16);
 	}
 
-	println("addr = 0x%02x, count = %d", addr, count);
-	print_mem(data, count);
+	println("addr = 0x%02x, count = %d", addr, argc);
+	print_mem(NULL, data, argc);
 
-	ret = cavan_i2c_write_data(&client, addr, data, count);
+	ret = cavan_i2c_write_data(&client, &addr, data, argc);
 	if (ret < 0) {
 		pr_red_info("cavan_i2c_master_send: %d", ret);
 	}
 
-out_cavan_i2c_deinit:
-	cavan_i2c_deinit(&client);
+out_cavan_i2c_client_close:
+	cavan_i2c_client_close(&client);
 	return ret;
 }
 
@@ -299,19 +281,15 @@ static int do_read_register(int argc, char *argv[])
 	int ret;
 	u8 addr;
 	int bits;
-	int adapter;
-	u16 client_addr;
 	struct cavan_i2c_client client;
 
-	if (argc <= 3) {
-		println("usage: %s <ADAPTER> <CLIENT_ADDR> <REG_ADDR>", argv[0]);
+	if (argc != 3) {
+		println("usage: %s <ADAPTER-SLAVE_ADDR> <REG_ADDR>", argv[0]);
 		return -EINVAL;
 	}
 
 	bits = text2value_unsigned(argv[0] + CAVAN_I2C_FUNC_READ_REG_LEN, NULL, 10);
-	adapter = text2value_unsigned(argv[1], NULL, 10);
-	client_addr = text2value_unsigned(argv[2], NULL, 16);
-	addr = text2value_unsigned(argv[3], NULL, 16);
+	addr = text2value_unsigned(argv[2], NULL, 16);
 
 	CAVAN_I2C_FUNC_IMPLEMENT(CAVAN_I2C_FUNC_READ_REG_IMPLEMENT);
 }
@@ -322,20 +300,16 @@ static int do_write_register(int argc, char *argv[])
 	u8 addr;
 	int bits;
 	u32 value;
-	int adapter;
-	u16 client_addr;
 	struct cavan_i2c_client client;
 
-	if (argc <= 4) {
-		println("usage: %s <ADAPTER> <CLIENT_ADDR> <REG_ADDR> <REG_VALUE>", argv[0]);
+	if (argc <= 3) {
+		println("usage: %s <ADAPTER-SLAVE_ADDR> <REG_ADDR> <REG_VALUE>", argv[0]);
 		return -EINVAL;
 	}
 
 	bits = text2value_unsigned(argv[0] + CAVAN_I2C_FUNC_WRITE_REG_LEN, NULL, 10);
-	adapter = text2value_unsigned(argv[1], NULL, 10);
-	client_addr = text2value_unsigned(argv[2], NULL, 16);
-	addr = text2value_unsigned(argv[3], NULL, 16);
-	value = text2value_unsigned(argv[4], NULL, 16);
+	addr = text2value_unsigned(argv[2], NULL, 16);
+	value = text2value_unsigned(argv[3], NULL, 16);
 
 	CAVAN_I2C_FUNC_IMPLEMENT(CAVAN_I2C_FUNC_WRITE_REG_IMPLEMENT);
 }
@@ -349,22 +323,18 @@ static int do_update_bits(int argc, char *argv[])
 	u32 value;
 	int offset;
 	int length;
-	int adapter;
-	u16 client_addr;
 	struct cavan_i2c_client client;
 
-	if (argc <= 6) {
-		println("usage: %s <ADAPTER> <CLIENT_ADDR> <REG_ADDR> <OFFSET> <BITS> <VALUE>", argv[0]);
+	if (argc != 6) {
+		println("usage: %s <ADAPTER-SLAVE_ADDR> <REG_ADDR> <OFFSET> <BITS> <VALUE>", argv[0]);
 		return -EINVAL;
 	}
 
 	bits = text2value_unsigned(argv[0] + CAVAN_I2C_FUNC_UPDATE_BITS_LEN, NULL, 10);
-	adapter = text2value_unsigned(argv[1], NULL, 10);
-	client_addr = text2value_unsigned(argv[2], NULL, 16);
-	addr = text2value_unsigned(argv[3], NULL, 16);
-	offset = text2value_unsigned(argv[4], NULL, 10);
-	length = text2value_unsigned(argv[5], NULL, 10);
-	value = text2value_unsigned(argv[6], NULL, 16);
+	addr = text2value_unsigned(argv[2], NULL, 16);
+	offset = text2value_unsigned(argv[3], NULL, 10);
+	length = text2value_unsigned(argv[4], NULL, 10);
+	value = text2value_unsigned(argv[5], NULL, 16);
 
 	println("offset = %d, length = %d", offset, length);
 
