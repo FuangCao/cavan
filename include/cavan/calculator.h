@@ -5,7 +5,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> Mon Jul  4 10:32:22 CST 2011
 
-__BEGIN_DECLS
+__BEGIN_DECLS;
 
 #define OPERAND_MAX_SYMBOL_COUNT	4
 #define ABS_VALUE(a)				((a) < 0 ? -(a) : (a))
@@ -156,4 +156,4 @@ static inline char *double2text(double *value, char *text, int size, char fill, 
 	return double2text_base(*(u64 *) value, text, size, fill, flags);
 }
 
-__END_DECLS
+__END_DECLS;

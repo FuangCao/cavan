@@ -42,7 +42,7 @@
 #define FILE_PROC_FILESYSTEMS_SIZE	MB(1)
 #define FILE_CPUINFO_SIZE			MB(1)
 
-__BEGIN_DECLS
+__BEGIN_DECLS;
 
 struct cavan_mkdir_command_option {
 	mode_t mode;
@@ -518,4 +518,4 @@ static inline bool file_throw_all(int fd)
 	return file_discard_all(fd);
 }
 
-__END_DECLS
+__END_DECLS;

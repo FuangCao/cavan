@@ -3,7 +3,7 @@
 #include <cavan.h>
 #include <stdio.h>
 
-__BEGIN_DECLS
+__BEGIN_DECLS;
 
 #define PRINT_BUFFER_LEN	KB(10)
 #define TEXT_FLAG_SIGNED	(1 << 9)
@@ -110,6 +110,7 @@ double text2size(const char *text, const char **last);
 double text2size_mb(const char *text);
 char *size2text_base(u64 size, char *buff, size_t buff_len);
 char *size2text(u64 size);
+u64 text2clock(const char *text);
 double text2time_single(const char *text, const char **last);
 double text2time(const char *text, const char **last);
 int text2date(const char *text, struct tm *date, ...);
@@ -324,4 +325,4 @@ static inline char *text_substring(const char *text, char *sub, int start, int c
 	return sub;
 }
 
-__END_DECLS
+__END_DECLS;

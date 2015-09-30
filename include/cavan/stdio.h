@@ -21,7 +21,7 @@
 using namespace std;
 #endif
 
-__BEGIN_DECLS
+__BEGIN_DECLS;
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -372,4 +372,4 @@ static inline int restore_tty_attr(int fd, struct termios *attr)
 	return set_tty_attr(fd, TCSADRAIN, attr);
 }
 
-__END_DECLS
+__END_DECLS;

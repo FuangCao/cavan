@@ -33,10 +33,16 @@
 #define CAVAN_EXECF_ERR_TO_OUT		(1 << 4)
 #define CAVAN_EXECF_AUTO_OPEN		(1 << 5)
 
-__BEGIN_DECLS
+__BEGIN_DECLS;
 
 typedef enum {
 	CAVAN_COMMAND_OPTION_ADB = 0x256,
+	CAVAN_COMMAND_OPTION_ADDR_BYTES,
+	CAVAN_COMMAND_OPTION_ADDR_BIG_ENDIAN,
+	CAVAN_COMMAND_OPTION_VALUE_BYTES,
+	CAVAN_COMMAND_OPTION_VALUE_BIG_ENDIAN,
+	CAVAN_COMMAND_OPTION_BIG_ENDIAN,
+	CAVAN_COMMAND_OPTION_LITTLE_ENDIAN,
 	CAVAN_COMMAND_OPTION_AUTO,
 	CAVAN_COMMAND_OPTION_APPEND,
 	CAVAN_COMMAND_OPTION_BASE,
@@ -107,7 +113,9 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_WRITE,
 	CAVAN_COMMAND_OPTION_SYSTEM,
 	CAVAN_COMMAND_OPTION_USERDATA,
+	CAVAN_COMMAND_OPTION_RATE,
 	CAVAN_COMMAND_OPTION_RECOVERY,
+	CAVAN_COMMAND_OPTION_ROCKCHIP,
 	CAVAN_COMMAND_OPTION_MISC,
 	CAVAN_COMMAND_OPTION_BOOT,
 	CAVAN_COMMAND_OPTION_KERNEL,
@@ -192,6 +200,10 @@ extern const char *cavan_help_message_rw_image_auto;
 extern const char *cavan_help_message_driver;
 extern const char *cavan_help_message_server;
 extern const char *cavan_help_message_service;
+extern const char *cavan_help_message_addr_bytes;
+extern const char *cavan_help_message_value_bytes;
+extern const char *cavan_help_message_big_endian;
+extern const char *cavan_help_message_little_endian;
 
 // ============================================================
 
@@ -251,4 +263,4 @@ static inline int cavan_tty_redirect2(int ttyfd)
 	return cavan_tty_redirect(ttyfd, ttyfd, -1);
 }
 
-__END_DECLS
+__END_DECLS;

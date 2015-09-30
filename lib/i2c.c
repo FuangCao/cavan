@@ -20,7 +20,7 @@
 #include <cavan.h>
 #include <cavan/i2c.h>
 
-#define CAVAN_I2C_DEBUG		1
+#define CAVAN_I2C_DEBUG		0
 
 int cavan_i2c_set_address(struct cavan_i2c_client *client, u16 slave_addr)
 {
@@ -85,18 +85,20 @@ int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slav
 		goto out_close_fd;
 	}
 
-	switch (slave_addr) {
-	case 0x1C:
-		client->value_big_endian = true;
-		break;
-	}
-
 	if (client->addr_bytes < 2) {
 		client->addr_big_endian = false;
 	}
 
 	if (client->value_bytes < 2) {
 		client->value_big_endian = false;
+	}
+
+	if (file_access_e("/sys/bus/platform/drivers/rockchip_i2c")) {
+		client->flags |= CAVAN_I2C_FLAG_ROCKCHIP;
+	}
+
+	if (client->scl_rate == 0) {
+		client->scl_rate = CAVAN_I2C_RATE_100K;
 	}
 
 	return 0;
@@ -134,14 +136,30 @@ void cavan_i2c_client_close(struct cavan_i2c_client *client)
 	close(client->fd);
 }
 
-int cavan_i2c_transfer(struct cavan_i2c_client *client, struct cavan_i2c_msg *msgs, size_t count)
+int cavan_i2c_transfer(struct cavan_i2c_client *client, struct i2c_msg *msgs, size_t count)
 {
-	struct i2c_rdwr_ioctl_data data = {
-		.msgs = (struct i2c_msg *) msgs,
-		.nmsgs = count
-	};
+	struct i2c_rdwr_ioctl_data data;
 
-	return ioctl(client->fd, I2C_RDWR, &data);
+	data.nmsgs = count;
+
+	if (client->flags & CAVAN_I2C_FLAG_ROCKCHIP) {
+		int i;
+		struct i2c_msg_rockchip rk_msgs[count];
+
+		for (i = count - 1; i >= 0; i--) {
+			rk_msgs[i].msg = msgs[i];
+			rk_msgs[i].scl_rate = client->scl_rate;
+		}
+
+		data.msgs = (struct i2c_msg *) rk_msgs;
+
+		return ioctl(client->fd, I2C_RDWR, &data);
+	} else {
+		data.msgs = msgs;
+
+		return ioctl(client->fd, I2C_RDWR, &data);
+	}
+
 }
 
 void cavan_i2c_detect(struct cavan_i2c_client *client)
@@ -195,23 +213,17 @@ int cavan_i2c_write_data(struct cavan_i2c_client *client, const void *addr, cons
 int cavan_i2c_read_data(struct cavan_i2c_client *client, const void *addr, void *data, size_t size)
 {
 	int ret;
-	struct cavan_i2c_msg msgs[] = {
+	struct i2c_msg msgs[] = {
 		{
 			.addr = client->slave_addr,
 			.flags = 0,
-			.length = client->addr_bytes,
-			.buff = __UNCONST(addr),
-#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
-			.scl_rate = CAVAN_I2C_RATE_100K
-#endif
+			.len = client->addr_bytes,
+			.buf = __UNCONST(addr),
 		}, {
 			.addr = client->slave_addr,
 			.flags = I2C_M_RD,
-			.length = size,
-			.buff = data,
-#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
-			.scl_rate = CAVAN_I2C_RATE_100K
-#endif
+			.len = size,
+			.buf = data,
 		}
 	};
 

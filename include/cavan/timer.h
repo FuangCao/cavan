@@ -11,7 +11,7 @@
 #include <cavan/thread.h>
 #include <time.h>
 
-__BEGIN_DECLS
+__BEGIN_DECLS;
 
 struct cavan_timer {
 	struct timespec time;
@@ -160,4 +160,4 @@ static inline u64 clock_gettime_ms_real(void)
 	return clock_gettime_ms(CLOCK_REALTIME);
 }
 
-__END_DECLS
+__END_DECLS;

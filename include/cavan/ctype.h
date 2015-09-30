@@ -21,7 +21,7 @@
 
 #include <cavan.h>
 
-__BEGIN_DECLS
+__BEGIN_DECLS;
 
 enum
 {
@@ -160,4 +160,4 @@ static inline char cavan_toupper(char c)
 	return c;
 }
 
-__END_DECLS
+__END_DECLS;

@@ -9,7 +9,7 @@
 #include <cavan.h>
 #include <sys/epoll.h>
 
-__BEGIN_DECLS
+__BEGIN_DECLS;
 
 typedef enum cavan_thread_state {
 	CAVAN_THREAD_STATE_NONE,
@@ -136,4 +136,4 @@ static inline void cavan_thread_exit(struct cavan_thread *thread)
 	cavan_thread_deinit(thread);
 }
 
-__END_DECLS
+__END_DECLS;

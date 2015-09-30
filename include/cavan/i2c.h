@@ -23,18 +23,15 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 
-#define CAVAN_I2C_RATE(k)		((k) * 1000)
-#define CAVAN_I2C_RATE_100K		CAVAN_I2C_RATE(100)
-#define CAVAN_I2C_RATE_400K		CAVAN_I2C_RATE(100)
+#define CAVAN_I2C_FLAG_ROCKCHIP		(1 << 0)
 
-struct cavan_i2c_msg {
-	__u16 addr;	/* slave address			*/
-	__u16 flags;
-	__u16 length;		/* msg length				*/
-	__u8 *buff;		/* pointer to msg data			*/
-#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+#define CAVAN_I2C_RATE(k)			((k) * 1000)
+#define CAVAN_I2C_RATE_100K			CAVAN_I2C_RATE(100)
+#define CAVAN_I2C_RATE_400K			CAVAN_I2C_RATE(100)
+
+struct i2c_msg_rockchip {
+	struct i2c_msg msg;
 	__u32 scl_rate;
-#endif
 };
 
 struct cavan_i2c_client {
@@ -46,6 +43,9 @@ struct cavan_i2c_client {
 	bool addr_big_endian;
 	bool value_big_endian;
 
+	int flags;
+	u32 scl_rate;
+
 	void *private_data;
 };
 
@@ -54,7 +54,7 @@ void cavan_i2c_client_init(struct cavan_i2c_client *client);
 int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slave_addr);
 int cavan_i2c_client_open2(struct cavan_i2c_client *client, const char *device);
 void cavan_i2c_client_close(struct cavan_i2c_client *client);
-int cavan_i2c_transfer(struct cavan_i2c_client *client, struct cavan_i2c_msg *msgs, size_t count);
+int cavan_i2c_transfer(struct cavan_i2c_client *client, struct i2c_msg *msgs, size_t count);
 void cavan_i2c_detect(struct cavan_i2c_client *client);
 int cavan_i2c_write_data(struct cavan_i2c_client *client, const void *addr, const void *data, size_t size);
 int cavan_i2c_read_data(struct cavan_i2c_client *client, const void *addr, void *data, size_t size);

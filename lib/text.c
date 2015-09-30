@@ -1239,6 +1239,33 @@ char *size2text(u64 size)
 	return buff;
 }
 
+u64 text2clock(const char *text)
+{
+	u64 clock;
+	const char *p;
+
+	clock = text2value_unsigned(text, &p, 10);
+
+	switch (*p) {
+	case 'g':
+	case 'G':
+		clock *= 1000000000UL;
+		break;
+
+	case 'm':
+	case 'M':
+		clock *= 1000000UL;
+		break;
+
+	case 'k':
+	case 'K':
+		clock *= 1000UL;
+		break;
+	}
+
+	return clock;
+}
+
 double text2time_single(const char *text, const char **last)
 {
 	double time;
