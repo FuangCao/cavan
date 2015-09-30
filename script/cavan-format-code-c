@@ -60,7 +60,6 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 		s/\}\s*else\s*\{/\} else \{/mg;
 		s/\}\s*else\s+(if.*\S)\s*\{/\} else $1 \{/mg;
 		s/^(([\t ]+|[\t ]*(class|struct))[^\{\n]+\S)\s*\{[\t ]*$/$1 \{/mg;
-		s/^(([\t ]+).*\{)\s*\{/$1\n$2\t\{/mg;
 	} else {
 		s/^([\t ]*)\}\s*else\s*\{/$1\}\n$1else\n$1\{/mg;
 		s/^([\t ]*)\}\s*else\s+(if.*\S)\s*\{/$1\}\n$1else $2\n$1\{/mg;
@@ -68,6 +67,7 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 		# s/^(([\t ]+)case.*:)\s*\{/$1\n$2\t\{/mg;
 	}
 
+	s/^(([\t ]*).*\{)\s*\{/$1\n$2\t\{/mg;
 	s/\}\s*else\s*\{[\t ]*\\\s*$/\} else \{ \\/mg;
 	s/\}\s*else\s+(if.*\S)\s*\{[\t ]*\\\s*$/\} else $1 \{ \\/mg;
 	s/\s*\{[\t ]*\\\s*$/ \{ \\/mg;

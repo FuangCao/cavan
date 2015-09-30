@@ -27,7 +27,7 @@
 
 #define CAVAN_I2C_RATE(k)			((k) * 1000)
 #define CAVAN_I2C_RATE_100K			CAVAN_I2C_RATE(100)
-#define CAVAN_I2C_RATE_400K			CAVAN_I2C_RATE(100)
+#define CAVAN_I2C_RATE_400K			CAVAN_I2C_RATE(400)
 
 struct i2c_msg_rockchip {
 	struct i2c_msg msg;
