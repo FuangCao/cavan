@@ -213,12 +213,26 @@ function cavan-mm-push()
 
 	if [ "${kernel_root}" ]
 	then
-		echo "kernel_root = ${kernel_root}"
+		if [ "$1" ]
+		then
+			KERNEL_CONFIG="$1"
+		elif [ -z "${KERNEL_CONFIG}" ]
+		then
+			KERNEL_CONFIG="jw100"
+		fi
+
+		KERNEL_HOME="${kernel_root}"
+
+		echo "KERNEL_HOME = ${KERNEL_HOME}"
+		echo "KERNEL_CONFIG = ${KERNEL_CONFIG}"
+
 		(
-			cd "${kernel_root}" || return 1
-			[ -e ".config" ] || make ${1-jw100}_defconfig || return 1
-			make ${1-jw100}.img -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
+			cd "${KERNEL_HOME}" || return 1
+			[ -e ".config" ] || make ${KERNEL_CONFIG}_defconfig || return 1
+			make ${KERNEL_CONFIG}.img -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
 		) || return 1
+
+		export KERNEL_HOME KERNEL_CONFIG
 	else
 		file_list=$(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g'; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
 		cavan-android-push ${file_list} || return 1
