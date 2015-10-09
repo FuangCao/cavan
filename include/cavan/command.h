@@ -253,6 +253,8 @@ int cavan_tty_redirect_loop(int ttyfds[][2], int count);
 int cavan_tty_redirect_loop2(const int *ttyin, const int *ttyout, int count);
 int cavan_tty_redirect_loop3(int in, int out, int err, int ttyin, int ttyout, int ttyerr);
 
+void cavan_set_exit_ask(void);
+
 static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
 {
 	return cavan_tty_redirect_loop3(ttyin, ttyout, ttyerr, stdin_fd, stdout_fd, stderr_fd);

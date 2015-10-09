@@ -1015,6 +1015,7 @@ int tcp_dd_keypad_client_run(struct network_url *url)
 		goto out_client_close;
 	}
 
+	cavan_set_exit_ask();
 	cavan_event_service_join(&service);
 
 out_client_close:

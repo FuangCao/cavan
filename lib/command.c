@@ -1268,3 +1268,25 @@ int cavan_tty_redirect_loop3(int in, int out, int err, int ttyin, int ttyout, in
 
 	return cavan_tty_redirect_loop(ttyfds, NELEM(ttyfds));
 }
+
+static void cavan_exit_ask_handler(int signum)
+{
+	static int count;
+
+	// println("signum = %d, count = %d", signum, count);
+
+	if (cavan_atomic_inc(&count) > 1) {
+		exit(0);
+	}
+
+	if (cavan_get_choose_yesno("Do you want to exit?", false, -1)) {
+		exit(0);
+	}
+
+	cavan_atomic_dec(&count);
+}
+
+void cavan_set_exit_ask(void)
+{
+	signal(SIGINT, cavan_exit_ask_handler);
+}
