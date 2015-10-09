@@ -6,6 +6,11 @@ CROSS_COMPILE = arm-cavan-linux-gnueabi-
 else
 KERNEL_PATH = /lib/modules/$(shell uname -r)/build
 CROSS_COMPILE =
+CONFIG_CAVAN_MISC_SWAN_VK ?= m
+CONFIG_CAVAN_MISC_SWAN_VN ?= m
+CONFIG_CAVAN_MISC_TCP_KEYPAD ?= m
+
+export CONFIG_CAVAN_MISC_SWAN_VK CONFIG_CAVAN_MISC_SWAN_VN CONFIG_CAVAN_MISC_TCP_KEYPAD
 endif
 
 CFLAGS = -Wall -Werror -I $(PWD)/include/ -I drivers/spi/
