@@ -6,16 +6,42 @@ lunch imx6ms600-user || exit 1
 ARCH="arm"
 CROSS_COMPILE="arm-eabi-"
 MAKE="make -j8"
+LOG_PATH="${ANDROID_BUILD_TOP}/log"
+FILE_ERR="${LOG_PATH}/ms600-err.txt"
+FILE_OUT="${LOG_PATH}/ms600-out.txt"
 
 export ARCH CROSS_COMPILE
 
-function build_uboot()
+function error_exit()
 {
-	cd bootable/bootloader/uboot-imx || return 1
-	${MAKE} distclean || return 1
-	${MAKE} mx6dlms600android_config || return 1
-	${MAKE} || return 1
+	cat ${FILE_ERR}
+	exit 1
 }
 
-(build_uboot) || exit 1
-${MAKE} bootimage || exit 1
+function exec_command()
+{
+	echo -e "\033[33mExecute: $1\033[0m"
+	$1 && return 0
+
+	echo -e "\033[31mFailed to execute: $1\033[0m"
+	error_exit
+}
+
+function build_uboot()
+{
+	exec_command "cd bootable/bootloader/uboot-imx"
+	exec_command "${MAKE} distclean"
+	exec_command "${MAKE} mx6dlms600android_config"
+	exec_command "${MAKE}"
+}
+
+echo "FILE_ERR = ${FILE_ERR}"
+echo "FILE_OUT = ${FILE_OUT}"
+
+exec_command "mkdir -pv ${LOG_PATH}"
+
+{
+	(build_uboot) || error_exit
+	exec_command "${MAKE} bootimage"
+	exec_command "${MAKE}"
+} 2>${FILE_ERR} | tee ${FILE_OUT}
