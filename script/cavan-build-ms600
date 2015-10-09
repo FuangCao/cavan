@@ -1,0 +1,21 @@
+#!/bin/bash
+
+source build/envsetup.sh || exit 1
+lunch imx6ms600-user || exit 1
+
+ARCH="arm"
+CROSS_COMPILE="arm-eabi-"
+MAKE="make -j8"
+
+export ARCH CROSS_COMPILE
+
+function build_uboot()
+{
+	cd bootable/bootloader/uboot-imx || return 1
+	${MAKE} distclean || return 1
+	${MAKE} mx6dlms600android_config || return 1
+	${MAKE} || return 1
+}
+
+(build_uboot) || exit 1
+${MAKE} bootimage || exit 1
