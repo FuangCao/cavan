@@ -41,7 +41,7 @@ echo "FILE_OUT = ${FILE_OUT}"
 exec_command "mkdir -pv ${LOG_PATH}"
 
 {
-	(build_uboot) || error_exit
-	exec_command "${MAKE} bootimage"
+	[ -f "${OUT}/u-boot.imx" ] || (build_uboot) || error_exit
+	[ -f "${OUT}/boot.img" ] || exec_command "${MAKE} bootimage"
 	exec_command "${MAKE}"
 } 2>${FILE_ERR} | tee ${FILE_OUT}
