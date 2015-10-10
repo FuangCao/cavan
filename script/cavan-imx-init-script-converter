@@ -5,37 +5,40 @@ use strict;
 use 5.010;
 
 my $file_cfg = $ARGV[0];
-my $file_xml = $ARGV[1];
+my $file_inc = $ARGV[1];
 
-say "file_cfg = $file_cfg, file_xml = $file_xml";
+say "file_cfg = $file_cfg, file_inc = $file_inc";
 
 open(FILE_CFG, "<", $file_cfg) or die "Failed to open file $file_cfg: $!";
-open(FILE_XML, "<", $file_xml) or die "Failed to open file $file_xml: $!";
+open(FILE_INC, "<", $file_inc) or die "Failed to open file $file_inc: $!";
 
 my @cfg_lines = <FILE_CFG>;
-my @xml_lines = <FILE_XML>;
+my @inc_lines = <FILE_INC>;
 
 sub find_new_value()
 {
-	my @values;
 	my $addr = $_[0];
+	my @inc_lines_bak = @inc_lines;
 
-	foreach (@xml_lines) {
+	while ($_ = shift @inc_lines) {
 		if (/^setmem\s*\/32\s+0x$addr\s*=\s*0x(\w+)/i) {
-			push @values, $1;
+			return "\U$1";
 		}
 	}
 
-	@values;
+	say "0x$addr is not found!";
+
+	@inc_lines = @inc_lines_bak;
+
+	return undef;
 }
 
 foreach my $line (@cfg_lines) {
 	if ($line =~ /^DATA\s+4\s*,\s*0x(02(?:0e|1b)\w+)\s*,\s*0x(\w+)/i) {
 		my $addr = "\L$1";
 		my $value_old = "\U$2";
-		my @values = &find_new_value($addr);
-		next if (@values < 1);
-		my $value_new = "\U$values[0]";
+		my $value_new = &find_new_value($addr);
+		next if (!$value_new);
 		next if ($value_old eq $value_new);
 		say "addr = 0x$addr, value: 0x$value_old => 0x$value_new";
 		$line = "DATA 4,\t0x$addr, 0x$value_new\n";
