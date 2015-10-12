@@ -233,14 +233,14 @@ typedef struct {
 #define cavan_atomic_fetch_dec(addr) \
 	cavan_atomic_fetch_sub((addr), 1)
 
-typedef volatile uint32_t spinlock_t;
+typedef volatile uint32_t cavan_spinlock_t;
 
-#define spinlock_lock(lock) \
+#define cavan_spinlock_lock(lock) \
 	while(cavan_atomic_lock_fetch_set(lock, 1)) { \
 		sched_yield(); \
 	}
 
-#define spinlock_unlock(lock) \
+#define cavan_spinlock_unlock(lock) \
 	cavan_atomic_set(lock, 0)
 
 static inline u64 SWAP64(u64 value)
