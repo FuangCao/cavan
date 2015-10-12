@@ -1,14 +1,9 @@
 #!/bin/bash
 
-source build/envsetup.sh || exit 1
-lunch imx6ms600-user || exit 1
-
 ARCH="arm"
 CROSS_COMPILE="arm-eabi-"
 MAKE="make -j8"
-LOG_PATH="${ANDROID_BUILD_TOP}/log"
-FILE_ERR="${LOG_PATH}/ms600-err.txt"
-FILE_OUT="${LOG_PATH}/ms600-out.txt"
+UBOOT_PATH="bootable/bootloader/uboot-imx"
 
 export ARCH CROSS_COMPILE
 
@@ -29,19 +24,74 @@ function exec_command()
 
 function build_uboot()
 {
-	exec_command "cd bootable/bootloader/uboot-imx"
 	exec_command "${MAKE} distclean"
-	exec_command "${MAKE} mx6dlms600android_config"
+	exec_command "${MAKE} mx6dlms600${1}_config"
 	exec_command "${MAKE}"
 }
 
-echo "FILE_ERR = ${FILE_ERR}"
-echo "FILE_OUT = ${FILE_OUT}"
+if [ -f build/envsetup.sh ]
+then
+	CONFIG_BUILD_UBOOT="true"
+	CONFIG_BUILD_KERNEL="true"
+	CONFIG_BUILD_ANDROID="false"
 
-exec_command "mkdir -pv ${LOG_PATH}"
+	[ "${TARGET_PRODUCT}" = "imx6ms600" ] ||
+	{
+		source build/envsetup.sh || exit 1
+		lunch imx6ms600-user || exit 1
+	}
 
-{
-	[ -f "${OUT}/u-boot.imx" ] || (build_uboot) || error_exit
-	[ -f "${OUT}/boot.img" ] || exec_command "${MAKE} bootimage"
-	exec_command "${MAKE}"
-} 2>${FILE_ERR} | tee ${FILE_OUT}
+	LOG_PATH="${ANDROID_BUILD_TOP}/log"
+	FILE_ERR="${LOG_PATH}/ms600-err.txt"
+	FILE_OUT="${LOG_PATH}/ms600-out.txt"
+
+	echo "FILE_ERR = ${FILE_ERR}"
+	echo "FILE_OUT = ${FILE_OUT}"
+
+	exec_command "mkdir -pv ${LOG_PATH}"
+
+	[ -f "${OUT}/u-boot.imx" ] && CONFIG_BUILD_UBOOT="false"
+	[ -f "${OUT}/boot.img" ] && CONFIG_BUILD_KERNEL="false"
+
+	case "$1" in
+		uboot|u-boot.*)
+			CONFIG_BUILD_UBOOT="true"
+			CONFIG_BUILD_KERNEL="false"
+			;;
+		kernel|boot|boot.img)
+			CONFIG_BUILD_UBOOT="false"
+			CONFIG_BUILD_KERNEL="true"
+			;;
+		android|system|system.img)
+			CONFIG_BUILD_ANDROID="true"
+			;;
+		*)
+			[ -z "$1" ] && exit 1
+			;;
+	esac
+
+	{
+		[ "${CONFIG_BUILD_UBOOT}" != "true" ] || (cd ${UBOOT_PATH} && build_uboot android) || error_exit
+		cp -av ${UBOOT_PATH}/u-boot.imx ${OUT}/u-boot.imx || error_exit
+		cp -av ${UBOOT_PATH}/u-boot.imx ${OUT}/u-boot-imx6dl.imx || error_exit
+		[ "${CONFIG_BUILD_KERNEL}" != "true" ] || exec_command "${MAKE} bootimage"
+		[ "${CONFIG_BUILD_ANDROID}" != "true" ] || exec_command "${MAKE}"
+	} 2>${FILE_ERR} | tee ${FILE_OUT}
+elif [ -f boards.cfg ]
+then
+case "$1" in
+	mfg)
+		unset UBOOT_TARGET
+		;;
+	android)
+		UBOOT_TARGET="android"
+		;;
+	*)
+		[ -z "$1" ] || exit 1
+		UBOOT_TARGET="android"
+		;;
+esac
+build_uboot ${UBOOT_TARGET}
+else
+exit 1
+fi

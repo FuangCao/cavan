@@ -289,7 +289,7 @@ function cavan-android-auto-push()
 	)
 }
 
-function make()
+function make2()
 {
     local start_time=$(date +"%s")
     command make "$@"
