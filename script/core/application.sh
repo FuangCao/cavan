@@ -186,6 +186,8 @@ function cavan-chdir-by-file()
 	target_file=$1
 	[ "${target_file}" ] || return 1
 
+	cd $(pwd -P) || return 1
+
 	while :;
 	do
 		[ -f "${target_file}" ] &&
@@ -205,11 +207,21 @@ function cavan-get-root-by-file()
 	(cavan-chdir-by-file $1 && pwd)
 }
 
+function cavan-get-android-root()
+{
+	cavan-get-root-by-file "build/envsetup.sh"
+}
+
+function cavan-get-kernel-root()
+{
+	cavan-get-root-by-file "include/linux/kernel.h"
+}
+
 function cavan-mm-push()
 {
 	local kernel_root file_list
 
-	kernel_root=$(cavan-get-root-by-file "include/linux/kernel.h")
+	kernel_root=$(cavan-get-kernel-root)
 
 	if [ "${kernel_root}" ]
 	then

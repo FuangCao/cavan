@@ -9,13 +9,21 @@ KERNEL_DEFCONFIG="imx_v7_android_defconfig"
 
 export ARCH CROSS_COMPILE
 
-BUILD_TOP="${PWD}"
+BUILD_TOP="$(pwd -P)"
 GIT_PATH="${BUILD_TOP}/.git"
 BOOT_EXTRA="${GIT_PATH}/boot"
 FILE_BOOT_RAW="${GIT_PATH}/boot-raw.img"
 FILE_BOOT_TARGET="${GIT_PATH}/boot-imx6dl.img"
 FILE_ZIMAGE="${BUILD_TOP}/arch/arm/boot/zImage"
 FILE_DTB="${BUILD_TOP}/arch/arm/boot/dts/imx6dl-ms600.dtb"
+
+[ -z "${ANDROID_BUILD_TOP}" ] && ANDROID_BUILD_TOP=$(cavan-get-android-root)
+[ -z "${ANDROID_BUILD_TOP}" ] ||
+{
+	TOOLCHIAN_PATH="${ANDROID_BUILD_TOP}/prebuilts/gcc/linux-x86/arm/arm-eabi-4.7/bin"
+	echo "TOOLCHIAN_PATH = ${TOOLCHIAN_PATH}"
+	export PATH="${TOOLCHIAN_PATH}:${PATH}"
+}
 
 function error_exit()
 {
@@ -74,7 +82,7 @@ then
 
 	exec_command "mkdir -pv ${LOG_PATH}"
 
-	[ -f "${OUT}/u-boot.imx" ] && CONFIG_BUILD_UBOOT="false"
+	[ -f "${UBOOT_PATH}/u-boot.imx" ] && CONFIG_BUILD_UBOOT="false"
 	[ -f "${OUT}/boot.img" ] && CONFIG_BUILD_KERNEL="false"
 
 	case "$1" in
@@ -89,8 +97,14 @@ then
 		android|system|system.img)
 			CONFIG_BUILD_ANDROID="true"
 			;;
+		all)
+			CONFIG_BUILD_UBOOT="true"
+			CONFIG_BUILD_KERNEL="true"
+			CONFIG_BUILD_ANDROID="true"
+			;;
 		*)
-			[ -z "$1" ] && exit 1
+			[ -z "$1" ] || exit 1
+			CONFIG_BUILD_ANDROID="true"
 			;;
 	esac
 
