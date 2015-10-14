@@ -492,6 +492,8 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		}
 
 		service->verbose = true;
+
+		println("PATH = %s", getenv("PATH"));
 	}
 
 	if (service->as_daemon) {

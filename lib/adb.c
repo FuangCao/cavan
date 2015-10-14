@@ -169,9 +169,11 @@ int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port, bool wait_device
 	char service[32];
 
 	if (wait_device && adb_is_host()) {
-		print("Waiting for adb device to connect ... ");
+		int ret;
 
-		if (cavan_system("adb wait-for-device")) {
+		print("Waiting for adb device to connect ... ");
+		ret = cavan_system("adb wait-for-device");
+		if (ret && ret != 127) {
 			println("Failed!");
 			return -EFAULT;
 		}
