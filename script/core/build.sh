@@ -56,3 +56,14 @@ function cavan-install()
 	cavan-execute-ack ${command} || return 1
 	return 0
 }
+
+function cavan-get-cpu-core-num()
+{
+	cat /proc/cpuinfo | grep "^processor\s*:" | wc -l
+}
+
+CPU_CORE_NUM="$(cavan-get-cpu-core-num)"
+
+((${CPU_CORE_NUM} > 1)) && alias make="make -j${CPU_CORE_NUM}"
+
+export CPU_CORE_NUM

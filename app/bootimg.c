@@ -34,6 +34,7 @@ static void show_usage_unpack(const char *command)
 static int cavan_bootimg_unpack(int argc, char *argv[])
 {
 	int c;
+	int ret;
 	int option_index;
 	bool dt_support = false;
 	const char *command = argv[0];
@@ -92,7 +93,13 @@ static int cavan_bootimg_unpack(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	return bootimg_unpack(argv[0], argc > 1 ? argv[1] : ".", dt_support);
+	ret = bootimg_unpack(argv[0], argc > 1 ? argv[1] : ".", dt_support);
+	if (ret < 0) {
+		pr_red_info("bootimg_unpack");
+		return ret;
+	}
+
+	return 0;
 }
 
 // ============================================================
@@ -136,6 +143,7 @@ static void show_usage_pack(const char *command)
 static int cavan_bootimg_pack(int argc, char *argv[])
 {
 	int c;
+	int ret;
 	int option_index;
 	struct option long_option[] = {
 		{
@@ -483,7 +491,13 @@ static int cavan_bootimg_pack(int argc, char *argv[])
 		option.output = FILE_BOOTIMG_NAME;
 	}
 
-	return bootimg_pack(&option);
+	ret = bootimg_pack(&option);
+	if (ret < 0) {
+		pr_red_info("bootimg_pack");
+		return ret;
+	}
+
+	return 0;
 }
 
 // ============================================================

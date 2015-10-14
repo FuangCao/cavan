@@ -56,7 +56,7 @@ export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE CAVAN_OUT_DEBUG
 export CAVAN_HOME CAVAN_SERVER_IP CAVAN_SERVER_PORT
 export CAVAN_TOOLCHIAN_NAME CAVAN_TOOLCHIAN_GNUEABI CAVAN_TOOLCHIAN_ANDROIDEABI
 
-for fn in alias.sh file.sh bash_completion application.sh ${FSLDROID_HOME}/build/envsetup.sh
+for fn in alias.sh file.sh bash_completion application.sh device.sh build.sh stdio.sh
 do
 	[ -f "${fn}" ] || fn="${CAVAN_HOME}/script/core/${fn}"
 	[ -f "${fn}" ] && source ${fn}

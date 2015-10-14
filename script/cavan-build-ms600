@@ -2,14 +2,24 @@
 
 ARCH="arm"
 CROSS_COMPILE="arm-eabi-"
-MAKE="make -j8"
+MAKE="make -j${CPU_CORE_NUM} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
+MAKE_KERNEL="${MAKE} LOADADDR=0x10008000"
 UBOOT_PATH="bootable/bootloader/uboot-imx"
+KERNEL_DEFCONFIG="imx_v7_android_defconfig"
 
 export ARCH CROSS_COMPILE
 
+BUILD_TOP="${PWD}"
+GIT_PATH="${BUILD_TOP}/.git"
+BOOT_EXTRA="${GIT_PATH}/boot"
+FILE_BOOT_RAW="${GIT_PATH}/boot-raw.img"
+FILE_BOOT_TARGET="${GIT_PATH}/boot-imx6dl.img"
+FILE_ZIMAGE="${BUILD_TOP}/arch/arm/boot/zImage"
+FILE_DTB="${BUILD_TOP}/arch/arm/boot/dts/imx6dl-ms600.dtb"
+
 function error_exit()
 {
-	cat ${FILE_ERR}
+	[ -f "${FILE_ERR}" ] && cat "${FILE_ERR}"
 	exit 1
 }
 
@@ -29,7 +39,21 @@ function build_uboot()
 	exec_command "${MAKE}"
 }
 
-if [ -f build/envsetup.sh ]
+function repack_boot()
+{
+	rm -rf "${BOOT_EXTRA}" || return 1
+	mkdir -pv "${BOOT_EXTRA}" || return 1
+	cd "${BOOT_EXTRA}" || return 1
+	cavan-bootimg unpack "${FILE_BOOT_RAW}" || return 1
+	cp -av "${FILE_ZIMAGE}" kernel.bin || return 1
+	cp -av "${FILE_DTB}" second.bin || return 1
+	cavan-bootimg pack || return 1
+	cp -av boot.img "${FILE_BOOT_TARGET}" || return 1
+
+	return 0
+}
+
+if [ -f "build/envsetup.sh" ]
 then
 	CONFIG_BUILD_UBOOT="true"
 	CONFIG_BUILD_KERNEL="true"
@@ -77,7 +101,13 @@ then
 		[ "${CONFIG_BUILD_KERNEL}" != "true" ] || exec_command "${MAKE} bootimage"
 		[ "${CONFIG_BUILD_ANDROID}" != "true" ] || exec_command "${MAKE}"
 	} 2>${FILE_ERR} | tee ${FILE_OUT}
-elif [ -f boards.cfg ]
+elif [ -f "include/linux/kernel.h" ]
+then
+[ -f ".config" ] || exec_command "${MAKE_KERNEL} ${KERNEL_DEFCONFIG}"
+exec_command "${MAKE_KERNEL} uImage"
+exec_command "${MAKE_KERNEL} dtbs"
+(repack_boot) || exit 1
+elif [ -f "boards.cfg" ]
 then
 case "$1" in
 	mfg)
