@@ -27,6 +27,7 @@
 #include <linux/of_gpio.h>
 #include <linux/miscdevice.h>
 #include <linux/platform_data/spi-rockchip.h>
+#include <linux/regulator/consumer.h>
 #include <asm/uaccess.h>
 #include "spi-rockchip-core.h"
 
@@ -58,9 +59,9 @@ struct w25q32fw_device {
 	struct miscdevice misc;
 
 	int gpio_rst;
-	int gpio_pwr;
 	bool enabled;
 	u32 capacity;
+	struct regulator *vcc;
 };
 
 struct w25q32fw_command {
@@ -452,10 +453,12 @@ static int w25q32fw_set_enable(struct w25q32fw_device *w25q32fw, bool enable)
 	}
 
 	if (enable) {
-		if (gpio_is_valid(w25q32fw->gpio_pwr)) {
-			gpio_direction_output(w25q32fw->gpio_pwr, 1);
-			gpio_set_value(w25q32fw->gpio_pwr, 1);
-			msleep(100);
+		if (w25q32fw->vcc) {
+			ret = regulator_enable(w25q32fw->vcc);
+			if (ret < 0) {
+				dev_err(&spi->dev, "Failed to regulator_enable vcc");
+				return ret;
+			}
 		}
 
 		if (gpio_is_valid(w25q32fw->gpio_rst)) {
@@ -467,18 +470,25 @@ static int w25q32fw_set_enable(struct w25q32fw_device *w25q32fw, bool enable)
 		ret = w25q32fw_read_id(w25q32fw);
 		if (ret < 0) {
 			dev_err(&spi->dev, "Failed to w25q32fw_read_id: %d\n", ret);
-			enable = false;
+			goto out_pull_gpio;
 		}
+
+		w25q32fw->enabled = true;
+
+		return 0;
 	}
 
-	if (enable == false) {
-		if (gpio_is_valid(w25q32fw->gpio_rst)) {
-			gpio_direction_output(w25q32fw->gpio_rst, 1);
-			gpio_set_value(w25q32fw->gpio_rst, 1);
-		}
+out_pull_gpio:
+	if (gpio_is_valid(w25q32fw->gpio_rst)) {
+		gpio_direction_output(w25q32fw->gpio_rst, 1);
+		gpio_set_value(w25q32fw->gpio_rst, 1);
 	}
 
-	w25q32fw->enabled = enable;
+	if (w25q32fw->vcc) {
+		regulator_disable(w25q32fw->vcc);
+	}
+
+	w25q32fw->enabled = false;
 
 	return ret;
 }
@@ -605,6 +615,12 @@ static int w25q32fw_spi_parse_dt(struct w25q32fw_device *w25q32fw)
 	dev_info(&spi->dev, "type = %d\n", chip_data->type);
 	dev_info(&spi->dev, "enable_dma = %d\n", chip_data->enable_dma);
 
+	w25q32fw->vcc = regulator_get(&spi->dev, "vcc");
+	if (IS_ERR(w25q32fw->vcc)) {
+		dev_err(&spi->dev, "Failed to regulator_get vcc\n");
+		w25q32fw->vcc = NULL;
+	}
+
 	w25q32fw->gpio_rst = of_get_gpio(np, 0);
 	if (gpio_is_valid(w25q32fw->gpio_rst)) {
 		if (gpio_request(w25q32fw->gpio_rst, "W25Q32FW-RST") < 0) {
@@ -612,18 +628,7 @@ static int w25q32fw_spi_parse_dt(struct w25q32fw_device *w25q32fw)
 		}
 	}
 
-	w25q32fw->gpio_pwr = of_get_gpio(np, 1);
-	if (gpio_is_valid(w25q32fw->gpio_pwr)) {
-		if (gpio_request(w25q32fw->gpio_pwr, "W25Q32FW-PWR") < 0) {
-			dev_err(&spi->dev, "Failed to gpio_request %d", w25q32fw->gpio_pwr);
-		}
-
-		gpio_direction_output(w25q32fw->gpio_pwr, 1);
-		gpio_set_value(w25q32fw->gpio_pwr, 1);
-	}
-
 	dev_info(&spi->dev, "gpio_rst = %d\n", w25q32fw->gpio_rst);
-	dev_info(&spi->dev, "gpio_pwr = %d\n", w25q32fw->gpio_pwr);
 
 	return 0;
 }
