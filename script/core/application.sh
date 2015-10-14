@@ -240,8 +240,17 @@ function cavan-mm-push()
 
 		(
 			cd "${KERNEL_HOME}" || return 1
-			[ -e ".config" ] || make ${KERNEL_CONFIG}_defconfig || return 1
-			make ${KERNEL_CONFIG}.img -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
+
+			case "${KERNEL_CONFIG}" in
+				ms600|imx6ms600)
+					cavan-build-ms600 || return 1
+					cavan-tcp_dd -wa --auto .git/boot.img || return 1
+					;;
+				*)
+					[ -e ".config" ] || make ${KERNEL_CONFIG}_defconfig || return 1
+					make ${KERNEL_CONFIG}.img -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
+					;;
+			esac
 		) || return 1
 
 		export KERNEL_HOME KERNEL_CONFIG
