@@ -237,4 +237,3 @@ function _cavan_dd()
 }
 
 complete -F _cavan_dd -o nospace cavan-dd
-complete -F _cavan_dd -o nospace cavan-tcp_dd

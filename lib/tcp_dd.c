@@ -99,6 +99,29 @@ int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size)
 	return 1;
 }
 
+const char *tcp_dd_get_partition_pathname(struct cavan_tcp_dd_service *service, const char *name)
+{
+	int ret;
+
+	ret = tcp_dd_get_partition_filename(name, service->filename, sizeof(service->pathname));
+	if (ret < 0) {
+		return NULL;
+	}
+
+	if (ret == 0) {
+		return name;
+	}
+
+	if (service->part_table && service->filename == service->pathname) {
+		ret = cavan_block_get_part_pathname(service->part_table, service->filename, service->pathname, sizeof(service->pathname));
+		if (ret < 0) {
+			return NULL;
+		}
+	}
+
+	return service->pathname;
+}
+
 static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
 	if (res->message[0] == 0) {
@@ -310,16 +333,11 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 	mode_t mode;
 	const char *pathname;
 
-	ret = tcp_dd_get_partition_filename(req->filename, service->filename, sizeof(service->pathname));
-	if (ret < 0) {
-		tcp_dd_send_response(client, ret, "[Server] `%s' is not a partition", req->filename);
+	pathname = tcp_dd_get_partition_pathname(service, req->filename);
+	if (pathname == NULL) {
+		ret = -ENOENT;
+		tcp_dd_send_response(client, ret, "[Server] partition `%s' not found", req->filename);
 		return ret;
-	}
-
-	if (ret == 0) {
-		pathname = req->filename;
-	} else {
-		pathname = service->pathname;
 	}
 
 	fd = open(pathname, O_RDONLY);
@@ -380,15 +398,14 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 	mode_t mode;
 	const char *pathname;
 
-	ret = tcp_dd_get_partition_filename(req->filename, service->filename, sizeof(service->pathname));
-	if (ret < 0) {
+	pathname = tcp_dd_get_partition_pathname(service, req->filename);
+	if (pathname == NULL) {
+		ret = -ENOENT;
 		tcp_dd_send_response(client, ret, "[Server] `%s' is not a partition", req->filename);
 		return ret;
 	}
 
-	if (ret == 0) {
-		pathname = req->filename;
-
+	if (pathname == req->filename) {
 		mode = file_get_mode(pathname);
 		switch (mode & S_IFMT) {
 		case S_IFREG:
@@ -402,8 +419,6 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 			break;
 		}
 	} else {
-		pathname = service->pathname;
-
 		mode = file_get_mode(pathname);
 		if (mode == 0 || (mode & S_IFMT) != S_IFBLK) {
 			ret = -ENOTBLK;
@@ -681,6 +696,13 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 	dd_service->filename = tcp_dd_find_platform_by_name_path(dd_service->pathname, NULL, sizeof(dd_service->pathname));
 	if (dd_service->filename) {
 		pr_green_info("pathname = %s", dd_service->pathname);
+	} else {
+		dd_service->filename = dd_service->pathname;
+	}
+
+	dd_service->part_table = cavan_block_get_part_table2();
+	if (dd_service->part_table != NULL) {
+		cavan_part_table_dump(dd_service->part_table);
 	}
 
 	dd_service->tcp_keypad_fd = -1;

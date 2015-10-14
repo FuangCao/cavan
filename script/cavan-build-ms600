@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ${CAVAN_HOME}/script/core/application.sh
+
 ARCH="arm"
 CROSS_COMPILE="arm-eabi-"
 MAKE="make -j${CPU_CORE_NUM} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
@@ -13,7 +15,7 @@ BUILD_TOP="$(pwd -P)"
 GIT_PATH="${BUILD_TOP}/.git"
 BOOT_EXTRA="${GIT_PATH}/boot"
 FILE_BOOT_RAW="${GIT_PATH}/boot-raw.img"
-FILE_BOOT_TARGET="${GIT_PATH}/boot-imx6dl.img"
+FILE_BOOT_TARGET="${GIT_PATH}/boot.img"
 FILE_ZIMAGE="${BUILD_TOP}/arch/arm/boot/zImage"
 FILE_DTB="${BUILD_TOP}/arch/arm/boot/dts/imx6dl-ms600.dtb"
 

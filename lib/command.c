@@ -1117,6 +1117,81 @@ int cavan_system2(const char *command, ...)
 	return cavan_system(buff);
 }
 
+int cavan_popen(const char *command, char *buff, size_t size, char **buff_ret)
+{
+	int fd;
+	pid_t pid;
+
+	fd = cavan_exec_redirect_stdio_popen(command, -1, -1, &pid, CAVAN_EXECF_STDOUT);
+	if (fd < 0) {
+		pr_red_info("cavan_exec_redirect_stdio_popen, command = %s", command);
+		return fd;
+	}
+
+	while (size > 0) {
+		ssize_t rdlen;
+
+		rdlen = read(fd, buff, size);
+		if (rdlen <= 0) {
+			break;
+		}
+
+		buff += rdlen;
+		size -= rdlen;
+	}
+
+	close(fd);
+
+	if (buff_ret) {
+		*buff_ret = buff;
+	}
+
+	return cavan_exec_waitpid(pid);
+}
+
+int cavan_popen2(const char *command, char *buff, size_t size)
+{
+	char *p;
+	int ret;
+
+	ret = cavan_popen(command, buff, size - 1, &p);
+	if (ret < 0) {
+		return ret;
+	}
+
+	*p = 0;
+
+	while (--p > buff && byte_is_space_or_lf(*p)) {
+		*p = 0;
+	}
+
+	return ret;
+}
+
+int cavan_popen3(char *buff, size_t size, char **buff_ret, const char *command, ...)
+{
+	va_list ap;
+	char command_buff[1024];
+
+	va_start(ap, command);
+	vsnprintf(command_buff, sizeof(command_buff), command, ap);
+	va_end(ap);
+
+	return cavan_popen(command_buff, buff, size, buff_ret);
+}
+
+int cavan_popen4(char *buff, size_t size, const char *command, ...)
+{
+	va_list ap;
+	char command_buff[1024];
+
+	va_start(ap, command);
+	vsnprintf(command_buff, sizeof(command_buff), command, ap);
+	va_end(ap);
+
+	return cavan_popen2(command_buff, buff, size);
+}
+
 int cavan_tee_main(const char *filename, bool append, bool command)
 {
 #if CAVAN_TEE_USE_SYSTEM_POPEN

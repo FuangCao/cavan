@@ -10,6 +10,7 @@
 #include <cavan/network.h>
 #include <cavan/service.h>
 #include <cavan/alarm.h>
+#include <cavan/block.h>
 
 #define TCP_DD_DEFAULT_PORT		8888
 #define TCP_DD_DAEMON_COUNT		10
@@ -78,9 +79,11 @@ struct cavan_tcp_dd_service {
 	char pathname[1024];
 	int tcp_keypad_fd;
 	const char *tcp_keypad_ko;
+	struct cavan_part_table *part_table;
 };
 
 int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size);
+const char *tcp_dd_get_partition_pathname(struct cavan_tcp_dd_service *service, const char *name);
 
 int tcp_dd_service_run(struct cavan_dynamic_service *service);
 int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req);

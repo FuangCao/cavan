@@ -226,6 +226,10 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
 int cavan_system(const char *command);
 int cavan_system2(const char *command, ...);
+int cavan_popen(const char *command, char *buff, size_t size, char **buff_ret);
+int cavan_popen2(const char *command, char *buff, size_t size);
+int cavan_popen3(char *buff, size_t size, char **buff_ret, const char *command, ...);
+int cavan_popen4(char *buff, size_t size, const char *command, ...);
 int cavan_tty_tee_loop(int ttyfd, int ttyin, int ttyout);
 int cavan_tee_main(const char *filename, bool append, bool command);
 
