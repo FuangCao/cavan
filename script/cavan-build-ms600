@@ -69,6 +69,8 @@ then
 	CONFIG_BUILD_KERNEL="true"
 	CONFIG_BUILD_ANDROID="false"
 
+	exec_command "cavan-set-jdk-version 1.6"
+
 	[ "${TARGET_PRODUCT}" = "imx6ms600" ] ||
 	{
 		source build/envsetup.sh || exit 1
@@ -82,6 +84,7 @@ then
 	echo "FILE_ERR = ${FILE_ERR}"
 	echo "FILE_OUT = ${FILE_OUT}"
 
+	exec_command "mkdir -pv ${OUT}"
 	exec_command "mkdir -pv ${LOG_PATH}"
 
 	[ -f "${UBOOT_PATH}/u-boot.imx" ] && CONFIG_BUILD_UBOOT="false"
