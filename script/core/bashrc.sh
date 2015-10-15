@@ -58,7 +58,7 @@ export CAVAN_TOOLCHIAN_NAME CAVAN_TOOLCHIAN_GNUEABI CAVAN_TOOLCHIAN_ANDROIDEABI
 
 for fn in alias.sh file.sh bash_completion application.sh device.sh build.sh stdio.sh
 do
-	[ -f "${fn}" ] || fn="${CAVAN_HOME}/script/core/${fn}"
+	fn="${CAVAN_HOME}/script/core/${fn}"
 	[ -f "${fn}" ] && source ${fn}
 done
 
