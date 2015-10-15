@@ -22,9 +22,17 @@ FILE_DTB="${BUILD_TOP}/arch/arm/boot/dts/imx6dl-ms600.dtb"
 [ -z "${ANDROID_BUILD_TOP}" ] && ANDROID_BUILD_TOP=$(cavan-get-android-root)
 [ -z "${ANDROID_BUILD_TOP}" ] ||
 {
-	TOOLCHIAN_PATH="${ANDROID_BUILD_TOP}/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin"
-	echo "TOOLCHIAN_PATH = ${TOOLCHIAN_PATH}"
-	export PATH="${TOOLCHIAN_PATH}:${PATH}"
+	cavan-set-jdk-version 1.6 || exit 1
+
+	cd "${ANDROID_BUILD_TOP}" || exit 1
+
+	[ "${TARGET_PRODUCT}" = "imx6ms600" ] ||
+	{
+		source build/envsetup.sh || exit 1
+		lunch imx6ms600-user || exit 1
+	}
+
+	cd -
 }
 
 function error_exit()
@@ -68,14 +76,6 @@ then
 	CONFIG_BUILD_UBOOT="true"
 	CONFIG_BUILD_KERNEL="true"
 	CONFIG_BUILD_ANDROID="false"
-
-	exec_command "cavan-set-jdk-version 1.6"
-
-	[ "${TARGET_PRODUCT}" = "imx6ms600" ] ||
-	{
-		source build/envsetup.sh || exit 1
-		lunch imx6ms600-user || exit 1
-	}
 
 	LOG_PATH="${ANDROID_BUILD_TOP}/log"
 	FILE_ERR="${LOG_PATH}/ms600-err.txt"
