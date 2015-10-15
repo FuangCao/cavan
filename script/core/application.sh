@@ -225,16 +225,24 @@ function cavan-mm-push()
 
 	if [ "${kernel_root}" ]
 	then
+		KERNEL_NAME="$(basename ${kernel_root})"
+
 		if [ "$1" ]
 		then
 			KERNEL_CONFIG="$1"
 		elif [ -z "${KERNEL_CONFIG}" ]
 		then
-			KERNEL_CONFIG="jw100"
+			if [ "${KERNEL_NAME}" = "kernel_imx" ]
+			then
+				KERNEL_CONFIG="ms600"
+			else
+				KERNEL_CONFIG="jw100"
+			fi
 		fi
 
 		KERNEL_HOME="${kernel_root}"
 
+		echo "KERNEL_NAME = ${KERNEL_NAME}"
 		echo "KERNEL_HOME = ${KERNEL_HOME}"
 		echo "KERNEL_CONFIG = ${KERNEL_CONFIG}"
 
@@ -253,7 +261,7 @@ function cavan-mm-push()
 			esac
 		) || return 1
 
-		export KERNEL_HOME KERNEL_CONFIG
+		export KERNEL_NAME KERNEL_HOME KERNEL_CONFIG
 	else
 		file_list=$(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g'; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
 		cavan-android-push ${file_list} || return 1
