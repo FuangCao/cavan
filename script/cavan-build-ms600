@@ -4,8 +4,9 @@ source ${CAVAN_HOME}/script/core/application.sh
 
 ARCH="arm"
 CROSS_COMPILE="arm-eabi-"
-MAKE="make -j${CPU_CORE_NUM} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
-MAKE_KERNEL="${MAKE} LOADADDR=0x10008000"
+MAKE="make -j${CPU_CORE_NUM}"
+MAKE_CROSS="${MAKE} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
+MAKE_KERNEL="${MAKE_CROSS} LOADADDR=0x10008000"
 UBOOT_PATH="bootable/bootloader/uboot-imx"
 KERNEL_DEFCONFIG="imx_v7_android_defconfig"
 
@@ -32,7 +33,7 @@ FILE_DTB="${BUILD_TOP}/arch/arm/boot/dts/imx6dl-ms600.dtb"
 		lunch imx6ms600-user || exit 1
 	}
 
-	cd -
+	cd - || exit 1
 }
 
 function error_exit()
@@ -52,9 +53,9 @@ function exec_command()
 
 function build_uboot()
 {
-	exec_command "${MAKE} distclean"
-	exec_command "${MAKE} mx6dlms600${1}_config"
-	exec_command "${MAKE}"
+	exec_command "${MAKE_CROSS} distclean"
+	exec_command "${MAKE_CROSS} mx6dlms600${1}_config"
+	exec_command "${MAKE_CROSS}"
 }
 
 function repack_boot()
