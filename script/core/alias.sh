@@ -213,6 +213,9 @@ function cavan-git-config()
 	${CMD_GIT_CONFIG} core.filemode false || return 1
 	${CMD_GIT_CONFIG} push.default matching || return 1
 	${CMD_GIT_CONFIG} http.sslverify false || return 1
+	# ${CMD_GIT_CONFIG} credential.helper cache
+	# ${CMD_GIT_CONFIG} credential.helper 'cache --timeout=3600'
+	${CMD_GIT_CONFIG} credential.helper store
 
 	for cmd in branch  interactive ui diff grep status
 	do
