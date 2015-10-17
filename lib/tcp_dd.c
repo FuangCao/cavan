@@ -1010,7 +1010,7 @@ static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct i
 	return true;
 }
 
-int tcp_dd_keypad_client_run(struct network_url *url)
+int tcp_dd_keypad_client_run(struct network_url *url, bool exit_ack)
 {
 	int ret;
 	struct network_client client;
@@ -1037,7 +1037,10 @@ int tcp_dd_keypad_client_run(struct network_url *url)
 		goto out_client_close;
 	}
 
-	cavan_set_exit_ask();
+	if (exit_ack) {
+		cavan_set_exit_ask();
+	}
+
 	cavan_event_service_join(&service);
 
 out_client_close:

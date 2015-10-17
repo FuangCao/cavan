@@ -23,6 +23,7 @@
 #include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2015-05-18 16:05:50"
+
 static void show_usage(const char *command)
 {
 	println("Usage: %s [option]", command);
@@ -38,6 +39,7 @@ static void show_usage(const char *command)
 	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
 	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
 	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
+	println("--na, --noack\t\t\texit don't need ack");
 }
 
 int main(int argc, char *argv[])
@@ -116,9 +118,20 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
 		}, {
+			.name = "noack",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_NOACK,
+		}, {
+			.name = "na",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_ACK,
+		}, {
 			0, 0, 0, 0
 		},
 	};
+	bool exit_ack = true;
 	struct network_url url;
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
@@ -142,6 +155,7 @@ int main(int argc, char *argv[])
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
 			url.protocol = "adb";
+			exit_ack = false;
 		case 'l':
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
@@ -191,11 +205,15 @@ int main(int argc, char *argv[])
 			url.protocol = optarg;
 			break;
 
+		case CAVAN_COMMAND_OPTION_NOACK:
+			exit_ack = false;
+			break;
+
 		default:
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}
 
-	return tcp_dd_keypad_client_run(&url);
+	return tcp_dd_keypad_client_run(&url, exit_ack);
 }
