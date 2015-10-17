@@ -24,6 +24,22 @@ const char *network_get_socket_pathname(void)
 #endif
 }
 
+const char *inet_check_hostname(const char *hostname, char *buff, size_t size)
+{
+	if (hostname == NULL || hostname[0] == 0 || strcmp(hostname, "localhost") == 0) {
+		hostname = "127.0.0.1";
+	} else if (buff && size > 0 && text_is_number(hostname)) {
+		const char *prefix = cavan_getenv("CAVAN_NET_SEG", "192.168.1");
+
+		snprintf(buff, size, "%s.%s", prefix, hostname);
+		hostname = buff;
+	}
+
+	println("hostname = %s", hostname);
+
+	return hostname;
+}
+
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr)
 {
 	while (retry--) {
@@ -550,11 +566,10 @@ int inet_create_tcp_link2(const char *hostname, u16 port)
 {
 	int ret;
 	int sockfd;
+	char buff[64];
 	struct sockaddr_in addr;
 
-	if (hostname == NULL || hostname[0] == 0 || text_cmp(hostname, "localhost") == 0) {
-		hostname = "127.0.0.1";
-	}
+	hostname = inet_check_hostname(hostname, buff, sizeof(buff));
 
 	if (inet_aton(hostname, &addr.sin_addr)) {
 		addr.sin_family = AF_INET;
@@ -957,14 +972,13 @@ int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd)
 int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 {
 	int ret;
+	char buff[64];
 	struct addrinfo *res, *p;
 	struct addrinfo hints;
 
 	addr->sin_family = AF_INET;
 
-	if (hostname == NULL || hostname[0] == 0) {
-		hostname = "127.0.0.1";
-	}
+	hostname = inet_check_hostname(hostname, buff, sizeof(buff));
 
 	if (inet_aton(hostname, &addr->sin_addr)) {
 		return 0;
@@ -1025,12 +1039,11 @@ int network_create_link(const char *hostname, u16 port, int socktype, int protoc
 {
 	int ret;
 	int sockfd;
+	char buff[64];
 	struct addrinfo hints;
 	struct addrinfo *res, *p;
 
-	if (hostname == NULL || hostname[0] == 0) {
-		hostname = "127.0.0.1";
-	}
+	hostname = inet_check_hostname(hostname, buff, sizeof(buff));
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
