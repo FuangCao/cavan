@@ -25,7 +25,7 @@ FPAN_PATH="/mnt/sda7"
 GPAN_PATH="/mnt/sda8"
 UBUNTU_PATH="${DPAN_PATH}/ubuntu"
 UBUNTU_HOME="${UBUNTU_PATH}/home"
-FILE_SWAP_IMG="${UBUNTU_PATH}/swap.img"
+FILE_SWAP_IMG="/var/swap.img"
 FILE_VIMRC_VIM="${CAVAN_HOME}/script/vim/vimrc.vim"
 
 CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
@@ -97,7 +97,7 @@ function swap_init()
 {
 	[ -f "${FILE_SWAP_IMG}" ] ||
 	{
-		dd if=/dev/zero of=${FILE_SWAP_IMG} bs=3M count=1024 || return 1
+		dd if=/dev/zero of=${FILE_SWAP_IMG} bs=4M count=1024 || return 1
 		mkswap -L CFA8888 ${FILE_SWAP_IMG} || return 1
 	}
 
