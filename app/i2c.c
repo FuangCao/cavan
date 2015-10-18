@@ -380,6 +380,42 @@ static int do_write_register(int argc, char *argv[])
 	return ret;
 }
 
+static int do_dump_register(int argc, char *argv[])
+{
+	int ret;
+	u32 addr;
+	u32 addr_last;
+	struct cavan_i2c_client client;
+
+	ret = cavan_open_client_by_args(&client, argc, argv, 2, "<ADDR> <ADDR_LAST>");
+	if (ret < 0) {
+		pr_red_info("cavan_open_client_by_args: %d", ret);
+		return ret;
+	}
+
+	addr = text2value_unsigned(argv[optind++], NULL, 16);
+	addr_last = text2value_unsigned(argv[optind++], NULL, 16);
+	println("addr = 0x%08x, addr_last = 0x%08x", addr, addr_last);
+
+	while (addr <= addr_last) {
+		u32 value;
+
+		ret = cavan_i2c_read_register(&client, addr, &value);
+		if (ret < 0) {
+			pr_red_info("cavan_i2c_read_register: %d", ret);
+			break;
+		}
+
+		println("addr = 0x%08x, value = 0x%08x", addr, value);
+
+		addr += client.addr_bytes;
+	}
+
+	cavan_i2c_client_close(&client);
+
+	return ret;
+}
+
 
 static int do_update_bits(int argc, char *argv[])
 {
@@ -424,5 +460,6 @@ CAVAN_COMMAND_MAP_START
 { "write_data", do_write_data },
 { "read_reg", do_read_register },
 { "write_reg", do_write_register },
+{ "dump_reg", do_dump_register },
 { "update_bits", do_update_bits },
 CAVAN_COMMAND_MAP_END
