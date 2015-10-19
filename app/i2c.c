@@ -29,13 +29,15 @@ static void show_usage(const char *command, const char *usage)
 		println("Usage: %s <ADAPTER-SLAVE_ADDR> ...", command);
 	}
 
-	println("-h, --help\t\t%s", cavan_help_message_help);
-	println("-v, --version\t\t%s", cavan_help_message_version);
-	println("--addr-bytes\t\t%s", cavan_help_message_addr_bytes);
-	println("--value-bytes\t\t%s", cavan_help_message_value_bytes);
-	println("--big-endian\t\t%s", cavan_help_message_big_endian);
-	println("--rk, --rockchip\tthis is rockchip i2c chip");
-	println("-r, --rate\t\tSCL clock rate");
+	println("-h, --help\t\t\t\t%s", cavan_help_message_help);
+	println("--version\t\t\t\t%s", cavan_help_message_version);
+	println("-a, --addr-bytes\t\t\t%s", cavan_help_message_addr_bytes);
+	println("-s, --step, --addr-step\t\t\taddress step length");
+	println("-v, --value-bytes\t\t\t%s", cavan_help_message_value_bytes);
+	println("-b, --big-endian\t\t\t%s", cavan_help_message_big_endian);
+	println("--rk, --rockchip\t\t\tthis is rockchip i2c chip");
+	println("-r, --rate\t\t\t\tSCL clock rate");
+	println("-d, --device, --chip <CHIPNAME>\t\tset this thip name");
 }
 
 static int cavan_open_client_by_args(struct cavan_i2c_client *client, int argc, char *argv[], int count, const char *usage)
@@ -84,16 +86,36 @@ static int cavan_open_client_by_args(struct cavan_i2c_client *client, int argc, 
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_RATE,
 		}, {
+			.name = "addr-step",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_STEP,
+		}, {
+			.name = "step",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_STEP,
+		}, {
+			.name = "device",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DEVICE,
+		}, {
+			.name = "chip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_CHIP,
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	int ret;
+	struct cavan_i2c_config *config = &client->config;
 
 	cavan_i2c_client_init(client);
 
-	while ((c = getopt_long(argc, argv, "vhbr:", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "hbr:a:v:sd:", long_option, &option_index)) != EOF) {
 		switch (c) {
-		case 'v':
 		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
 			exit(0);
@@ -103,18 +125,20 @@ static int cavan_open_client_by_args(struct cavan_i2c_client *client, int argc, 
 			show_usage(argv[0], usage);
 			exit(0);
 
+		case 'a':
 		case CAVAN_COMMAND_OPTION_ADDR_BYTES:
-			client->addr_bytes = text2value_unsigned(optarg, NULL, 10);
+			config->addr_bytes = text2value_unsigned(optarg, NULL, 10);
 			break;
 
+		case 'v':
 		case CAVAN_COMMAND_OPTION_VALUE_BYTES:
-			client->value_bytes = text2value_unsigned(optarg, NULL, 10);
+			config->value_bytes = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case 'b':
 		case CAVAN_COMMAND_OPTION_BIG_ENDIAN:
-			client->addr_big_endian = true;
-			client->value_big_endian = true;
+			config->addr_big_endian = true;
+			config->value_big_endian = true;
 			break;
 
 		case 'r':
@@ -122,6 +146,17 @@ static int cavan_open_client_by_args(struct cavan_i2c_client *client, int argc, 
 			client->scl_rate = text2clock(optarg);
 		case CAVAN_COMMAND_OPTION_ROCKCHIP:
 			client->flags |= CAVAN_I2C_FLAG_ROCKCHIP;
+			break;
+
+		case 's':
+		case CAVAN_COMMAND_OPTION_STEP:
+			config->addr_step = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'd':
+		case CAVAN_COMMAND_OPTION_DEVICE:
+		case CAVAN_COMMAND_OPTION_CHIP:
+			config->chipname = optarg;
 			break;
 
 		default:
@@ -325,14 +360,14 @@ out_cavan_i2c_client_close:
 	return ret;
 }
 
-static int do_read_register(int argc, char *argv[])
+static int do_register_rw(int argc, char *argv[])
 {
 	int ret;
 	u32 addr;
 	u32 value;
 	struct cavan_i2c_client client;
 
-	ret = cavan_open_client_by_args(&client, argc, argv, 1, "<ADDR>");
+	ret = cavan_open_client_by_args(&client, argc, argv, 1, "<ADDR> [VALUE]");
 	if (ret < 0) {
 		pr_red_info("cavan_open_client_by_args: %d", ret);
 		return ret;
@@ -340,11 +375,21 @@ static int do_read_register(int argc, char *argv[])
 
 	addr = text2value_unsigned(argv[optind++], NULL, 16);
 
-	ret = cavan_i2c_read_register(&client, addr, &value);
-	if (ret < 0) {
-		pr_red_info("cavan_i2c_read_register: %d", ret);
+	if (optind < argc) {
+		value = text2value_unsigned(argv[optind++], NULL, 16);
+		println("write: addr = 0x%08x, value = 0x%08x", addr, value);
+
+		ret = cavan_i2c_write_register(&client, addr, value);
+		if (ret < 0) {
+			pr_red_info("cavan_i2c_read_register: %d", ret);
+		}
 	} else {
-		println("addr = 0x%08x, value = 0x%08x", addr, value);
+		ret = cavan_i2c_read_register(&client, addr, &value);
+		if (ret < 0) {
+			pr_red_info("cavan_i2c_read_register: %d", ret);
+		} else {
+			println("read: addr = 0x%08x, value = 0x%08x", addr, value);
+		}
 	}
 
 	cavan_i2c_client_close(&client);
@@ -352,50 +397,32 @@ static int do_read_register(int argc, char *argv[])
 	return ret;
 }
 
-
-static int do_write_register(int argc, char *argv[])
-{
-	int ret;
-	u32 addr;
-	u32 value;
-	struct cavan_i2c_client client;
-
-	ret = cavan_open_client_by_args(&client, argc, argv, 2, "<ADDR> <VALUE>");
-	if (ret < 0) {
-		pr_red_info("cavan_open_client_by_args: %d", ret);
-		return ret;
-	}
-
-	addr = text2value_unsigned(argv[optind++], NULL, 16);
-	value = text2value_unsigned(argv[optind++], NULL, 16);
-	println("addr = 0x%08x, value = 0x%08x", addr, value);
-
-	ret = cavan_i2c_write_register(&client, addr, value);
-	if (ret < 0) {
-		pr_red_info("cavan_i2c_read_register: %d", ret);
-	}
-
-	cavan_i2c_client_close(&client);
-
-	return ret;
-}
-
-static int do_dump_register(int argc, char *argv[])
+static int do_register_dump(int argc, char *argv[])
 {
 	int ret;
 	u32 addr;
 	u32 addr_last;
 	struct cavan_i2c_client client;
+	struct cavan_i2c_config *config = &client.config;
 
-	ret = cavan_open_client_by_args(&client, argc, argv, 2, "<ADDR> <ADDR_LAST>");
+	ret = cavan_open_client_by_args(&client, argc, argv, 0, "[ADDR] [ADDR_LAST]");
 	if (ret < 0) {
 		pr_red_info("cavan_open_client_by_args: %d", ret);
 		return ret;
 	}
 
-	addr = text2value_unsigned(argv[optind++], NULL, 16);
-	addr_last = text2value_unsigned(argv[optind++], NULL, 16);
-	println("addr = 0x%08x, addr_last = 0x%08x", addr, addr_last);
+	addr = config->addr_first;
+	addr_last = config->addr_last;
+
+	if (optind < argc) {
+		addr = text2value_unsigned(argv[optind++], NULL, 16);
+	}
+
+	if (optind < argc) {
+		addr_last = text2value_unsigned(argv[optind++], NULL, 16);
+	}
+
+	// println("addr = 0x%08x, addr_last = 0x%08x", addr, addr_last);
 
 	while (addr <= addr_last) {
 		u32 value;
@@ -408,7 +435,7 @@ static int do_dump_register(int argc, char *argv[])
 
 		println("addr = 0x%08x, value = 0x%08x", addr, value);
 
-		addr += client.addr_bytes;
+		addr += client.config.addr_step;
 	}
 
 	cavan_i2c_client_close(&client);
@@ -454,12 +481,11 @@ static int do_update_bits(int argc, char *argv[])
 
 CAVAN_COMMAND_MAP_START
 { "detect", do_detect },
-{ "master_send", do_master_send },
-{ "master_recv", do_master_recv },
-{ "read_data", do_read_data },
-{ "write_data", do_write_data },
-{ "read_reg", do_read_register },
-{ "write_reg", do_write_register },
-{ "dump_reg", do_dump_register },
-{ "update_bits", do_update_bits },
+{ "master-send", do_master_send },
+{ "master-recv", do_master_recv },
+{ "read-data", do_read_data },
+{ "write-data", do_write_data },
+{ "reg-rw", do_register_rw },
+{ "reg-dump", do_register_dump },
+{ "update-bits", do_update_bits },
 CAVAN_COMMAND_MAP_END

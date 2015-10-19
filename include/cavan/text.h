@@ -325,4 +325,9 @@ static inline char *text_substring(const char *text, char *sub, int start, int c
 	return sub;
 }
 
+static inline const char *cavan_bool_tostring(bool value)
+{
+	return value ? "true" : "false";
+}
+
 __END_DECLS;

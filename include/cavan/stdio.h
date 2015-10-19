@@ -159,16 +159,16 @@ __BEGIN_DECLS;
 
 #define pr_error_info(fmt, args ...) \
 	if (errno) { \
-		pr_color_info(CAVAN_COLOR_RED, "%s[%d] (" fmt "): %s (%d)", __FUNCTION__, __LINE__, ##args, strerror(errno), errno); \
+		pr_color_info(CAVAN_COLOR_RED, "error: %s[%d] (" fmt "): %s (%d)", __FUNCTION__, __LINE__, ##args, strerror(errno), errno); \
 	} else { \
-		pr_red_info(fmt, ##args); \
+		pr_red_info("error: " fmt, ##args); \
 	}
 
 #define pr_err_info(fmt, args ...) \
 	pr_error_info(fmt, ##args)
 
 #define pr_warning_info(fmt, args ...) \
-	pr_color_info(CAVAN_COLOR_MAGENTA, "%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+	pr_color_info(CAVAN_COLOR_MAGENTA, "warning: %s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
 
 #define pr_warn_info(fmt, args ...) \
 	pr_warning_info(fmt, ##args)

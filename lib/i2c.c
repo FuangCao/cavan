@@ -22,6 +22,87 @@
 
 #define CAVAN_I2C_DEBUG		0
 
+struct cavan_i2c_config cavan_i2c_config_table[] =
+{
+	{
+		.chipname = "wm8962",
+		.addr_step = 1,
+		.addr_bytes = 2,
+		.value_bytes = 2,
+		.addr_first = 0x0000,
+		.addr_last = 0x5293,
+		.addr_big_endian = true,
+		.value_big_endian = true,
+	}, {
+		.chipname = "alc5670",
+		.addr_step = 1,
+		.addr_bytes = 1,
+		.value_bytes = 2,
+		.addr_first = 0x00,
+		.addr_last = 0xFE,
+		.addr_big_endian = true,
+		.value_big_endian = true,
+	}, {
+		.chipname = "alc5671",
+		.addr_step = 1,
+		.addr_bytes = 1,
+		.value_bytes = 2,
+		.addr_first = 0x00,
+		.addr_last = 0xFE,
+		.addr_big_endian = true,
+		.value_big_endian = true,
+	}, {
+		.chipname = "tca9535",
+		.addr_step = 2,
+		.addr_bytes = 1,
+		.value_bytes = 2,
+		.addr_first = 0x00,
+		.addr_last = 0x06,
+		.addr_big_endian = false,
+		.value_big_endian = false,
+	}, {
+		.chipname = "tc358762",
+		.addr_step = 2,
+		.addr_bytes = 2,
+		.value_bytes = 4,
+		.addr_big_endian = true,
+		.value_big_endian = true,
+	}, {
+		.chipname = "tc358768",
+		.addr_step = 2,
+		.addr_bytes = 2,
+		.value_bytes = 2,
+		.addr_big_endian = true,
+		.value_big_endian = false,
+	}
+};
+
+void cavan_i2c_config_dump(const struct cavan_i2c_config *config)
+{
+	if (config->chipname) {
+		println("chipname = %s", config->chipname);
+	}
+
+	println("addr_step = %d", config->addr_step);
+	println("addr_bytes = %d", config->addr_bytes);
+	println("value_bytes = %d", config->value_bytes);
+	println("addr_big_endian = %s", cavan_bool_tostring(config->addr_big_endian));
+	println("value_big_endian = %s", cavan_bool_tostring(config->value_big_endian));
+}
+
+struct cavan_i2c_config *cavan_i2c_find_config(const char *chipname)
+{
+	struct cavan_i2c_config *p, *p_end;
+
+	for (p = cavan_i2c_config_table, p_end = p + NELEM(cavan_i2c_config_table); p < p_end; p++) {
+		if (strcmp(p->chipname, chipname) == 0) {
+			return p;
+		}
+	}
+
+	return NULL;
+}
+
 int cavan_i2c_set_address(struct cavan_i2c_client *client, u16 slave_addr)
 {
 	int ret;
@@ -43,10 +124,13 @@ int cavan_i2c_set_address(struct cavan_i2c_client *client, u16 slave_addr)
 
 void cavan_i2c_client_init(struct cavan_i2c_client *client)
 {
+	struct cavan_i2c_config *config = &client->config;
+
 	memset(client, 0x00, sizeof(struct cavan_i2c_client));
 
-	client->addr_bytes = 1;
-	client->value_bytes = 1;
+	config->addr_step = 1;
+	config->addr_bytes = 1;
+	config->value_bytes = 1;
 }
 
 int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slave_addr)
@@ -54,15 +138,31 @@ int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slav
 	int fd;
 	int ret;
 	char pathname[32];
+	struct cavan_i2c_config *config = &client->config;
 
-	if (client->addr_bytes < 1 || client->addr_bytes > 4) {
-		pr_red_info("Invalid addr_bytes = %d", client->addr_bytes);
-		return -EINVAL;
-	}
+	if (config->chipname) {
+		config = cavan_i2c_find_config(config->chipname);
+		if (config == NULL) {
+			pr_red_info("No config found");
+			return -EINVAL;
+		}
 
-	if (client->value_bytes < 1 || client->value_bytes > 4) {
-		pr_red_info("Invalid value_bytes = %d", client->value_bytes);
-		return -EINVAL;
+		memcpy(&client->config, config, sizeof(client->config));
+	} else {
+		if (config->addr_bytes < 1 || config->addr_bytes > 4) {
+			pr_red_info("Invalid addr_bytes = %d", config->addr_bytes);
+			return -EINVAL;
+		}
+
+		if (config->value_bytes < 1 || config->value_bytes > 4) {
+			pr_red_info("Invalid value_bytes = %d", config->value_bytes);
+			return -EINVAL;
+		}
+
+		if (config->addr_step < 1 || config->addr_step > 4) {
+			pr_warn_info("Invalid addr_step = %d, set to default %d now", config->addr_step, config->addr_bytes);
+			config->addr_step = config->value_bytes;
+		}
 	}
 
 	snprintf(pathname, sizeof(pathname), "/dev/i2c-%d", adapter);
@@ -85,12 +185,12 @@ int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slav
 		goto out_close_fd;
 	}
 
-	if (client->addr_bytes < 2) {
-		client->addr_big_endian = false;
+	if (config->addr_bytes < 2) {
+		config->addr_big_endian = false;
 	}
 
-	if (client->value_bytes < 2) {
-		client->value_big_endian = false;
+	if (config->value_bytes < 2) {
+		config->value_big_endian = false;
 	}
 
 	if (file_access_e("/sys/bus/platform/drivers/rockchip_i2c")) {
@@ -100,6 +200,10 @@ int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slav
 	if (client->scl_rate == 0) {
 		client->scl_rate = CAVAN_I2C_RATE_100K;
 	}
+
+#if CAVAN_I2C_DEBUG
+	cavan_i2c_config_dump(config);
+#endif
 
 	return 0;
 
@@ -192,15 +296,15 @@ void cavan_i2c_detect(struct cavan_i2c_client *client)
 int cavan_i2c_write_data(struct cavan_i2c_client *client, const void *addr, const void *data, size_t size)
 {
 	int ret;
-	char buff[size + client->addr_bytes];
+	char buff[size + client->config.addr_bytes];
 
 #if CAVAN_I2C_DEBUG
-	print_mem("%s: addr = ", addr, client->addr_bytes, __FUNCTION__);
+	print_mem("%s: addr = ", addr, client->config.addr_bytes, __FUNCTION__);
 	print_mem("%s: data = ", data, size, __FUNCTION__);
 #endif
 
-	memcpy(buff, addr, client->addr_bytes);
-	memcpy(buff + client->addr_bytes, data, size);
+	memcpy(buff, addr, client->config.addr_bytes);
+	memcpy(buff + client->config.addr_bytes, data, size);
 
 	ret = cavan_i2c_master_send(client, buff, sizeof(buff));
 	if (ret == (int) sizeof(buff)) {
@@ -217,7 +321,7 @@ int cavan_i2c_read_data(struct cavan_i2c_client *client, const void *addr, void 
 		{
 			.addr = client->slave_addr,
 			.flags = 0,
-			.len = client->addr_bytes,
+			.len = client->config.addr_bytes,
 			.buf = __UNCONST(addr),
 		}, {
 			.addr = client->slave_addr,
@@ -233,7 +337,7 @@ int cavan_i2c_read_data(struct cavan_i2c_client *client, const void *addr, void 
 	}
 
 #if CAVAN_I2C_DEBUG
-	print_mem("%s: addr = ", addr, client->addr_bytes, __FUNCTION__);
+	print_mem("%s: addr = ", addr, client->config.addr_bytes, __FUNCTION__);
 	print_mem("%s: data = ", data, size, __FUNCTION__);
 #endif
 
@@ -247,15 +351,15 @@ int cavan_i2c_read_register(struct cavan_i2c_client *client, u32 addr, u32 *valu
 
 	*value = 0;
 
-	if (client->addr_big_endian) {
+	if (client->config.addr_big_endian) {
 		p = (u8 *) &addr;
-		mem_reverse_simple(p, p + client->addr_bytes - 1);
+		mem_reverse_simple(p, p + client->config.addr_bytes - 1);
 	}
 
-	ret = cavan_i2c_read_data(client, &addr, value, client->value_bytes);
-	if (ret == client->value_bytes && client->value_big_endian) {
+	ret = cavan_i2c_read_data(client, &addr, value, client->config.value_bytes);
+	if (ret == client->config.value_bytes && client->config.value_big_endian) {
 		p = (u8 *) value;
-		mem_reverse_simple(p, p + client->value_bytes - 1);
+		mem_reverse_simple(p, p + client->config.value_bytes - 1);
 	}
 
 	return ret;
@@ -265,17 +369,17 @@ int cavan_i2c_write_register(struct cavan_i2c_client *client, u32 addr, u32 valu
 {
 	u8 *p;
 
-	if (client->addr_big_endian) {
+	if (client->config.addr_big_endian) {
 		p = (u8 *) &addr;
-		mem_reverse_simple(p, p + client->addr_bytes - 1);
+		mem_reverse_simple(p, p + client->config.addr_bytes - 1);
 	}
 
-	if (client->value_big_endian) {
+	if (client->config.value_big_endian) {
 		p = (u8 *) &value;
-		mem_reverse_simple(p, p + client->value_bytes - 1);
+		mem_reverse_simple(p, p + client->config.value_bytes - 1);
 	}
 
-	return cavan_i2c_write_data(client, &addr, &value, client->value_bytes);
+	return cavan_i2c_write_data(client, &addr, &value, client->config.value_bytes);
 }
 
 int cavan_i2c_update_bits(struct cavan_i2c_client *client, u32 addr, u32 value, u32 mask)

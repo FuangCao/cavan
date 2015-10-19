@@ -34,21 +34,33 @@ struct i2c_msg_rockchip {
 	__u32 scl_rate;
 };
 
+struct cavan_i2c_config
+{
+	const char *chipname;
+
+	int addr_step;
+	int addr_bytes;
+	int value_bytes;
+	u32 addr_first;
+	u32 addr_last;
+	bool addr_big_endian;
+	bool value_big_endian;
+};
+
 struct cavan_i2c_client {
 	int fd;
 	u16 slave_addr;
 
-	int addr_bytes;
-	int value_bytes;
-	bool addr_big_endian;
-	bool value_big_endian;
-
 	int flags;
 	u32 scl_rate;
+
+	struct cavan_i2c_config config;
 
 	void *private_data;
 };
 
+void cavan_i2c_config_dump(const struct cavan_i2c_config *config);
+struct cavan_i2c_config *cavan_i2c_find_config(const char *chipname);
 int cavan_i2c_set_address(struct cavan_i2c_client *client, u16 slave_addr);
 void cavan_i2c_client_init(struct cavan_i2c_client *client);
 int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slave_addr);
