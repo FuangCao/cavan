@@ -297,6 +297,10 @@ struct network_protocol_desc {
 	int (*open_service)(struct network_service *service, const struct network_url *url, u16 port, int flags);
 };
 
+struct network_ifconfig {
+	char if_name[8];
+};
+
 const char *network_get_socket_pathname(void);
 const char *inet_check_hostname(const char *hostname, char *buff, size_t size);
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
@@ -398,6 +402,8 @@ int network_service_open(struct network_service *service, const struct network_u
 int network_service_open2(struct network_service *service, const char *url, int flags);
 void network_service_close(struct network_service *service);
 int network_service_get_local_port(struct network_service *service);
+
+int network_get_device_list(char buff[][8], size_t size);
 
 static inline int inet_socket(int type)
 {

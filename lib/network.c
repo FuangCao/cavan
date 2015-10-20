@@ -2860,3 +2860,40 @@ int network_service_get_local_port(struct network_service *service)
 
 	return addr.sin_port;
 }
+
+int network_get_device_list(char buff[][8], size_t size)
+{
+	int count;
+	char *mem;
+	size_t file_size;
+	char *text, *text_end;
+
+	mem = file_read_all_text("/proc/net/dev", &file_size);
+	if (mem == NULL) {
+		return -EFAULT;
+	}
+
+	text = mem;
+	text_end = text + file_size;
+
+	text = text_find_next_line(text);
+	text = text_find_next_line(text);
+
+	for (count = 0; text < text_end && count < (int) size; count++) {
+		char *p, *p_end;
+
+		text = text_skip_space_and_lf(text, text_end);
+
+		for (p = buff[count], p_end = p + 8; text < text_end && *text != ':' && p < p_end; p++, text++) {
+			*p = *text;
+		}
+
+		*p = 0;
+
+		text = text_find_next_line(text);
+	}
+
+	free(mem);
+
+	return count;
+}

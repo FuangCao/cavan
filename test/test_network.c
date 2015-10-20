@@ -199,6 +199,25 @@ static int network_test_send(const char *url, const char *pathname)
 	return ret;
 }
 
+static int network_dump_netdev(void)
+{
+	int i;
+	int count;
+	char buff[8][8];
+
+	count = network_get_device_list(buff, 8);
+	if (count < 0) {
+		pr_red_info("cavan_network_get_device_list");
+		return count;
+	}
+
+	for (i = 0; i < count; i++) {
+		println("%d. %s", i, buff[i]);
+	}
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	assert(argc > 2);
@@ -215,6 +234,8 @@ int main(int argc, char *argv[])
 		assert(argc > 3);
 
 		return network_test_send(argv[2], argv[3]);
+	} else if (strcmp(argv[1], "netdev") == 0) {
+		return network_dump_netdev();
 	} else {
 		pr_red_info("unknown command %s", argv[1]);
 	}
