@@ -2953,7 +2953,7 @@ int cavan_inet_get_route_table(struct cavan_inet_route *routes, int max_count)
 			&route->mtu, &route->window, &route->irtt);
 
 		if (ret != 11) {
-			if (ret < 0 && feof(fp)) {
+			if (feof(fp)) {
 				break;
 			}
 
@@ -2966,6 +2966,7 @@ int cavan_inet_get_route_table(struct cavan_inet_route *routes, int max_count)
 
 		route->dstaddr.sin_family = AF_INET;
 		route->gateway.sin_family = AF_INET;
+		route->netmask.sin_family = AF_INET;
 	}
 
 	ret = count;
