@@ -21,6 +21,8 @@
 #define NETWORK_PORT_FTP		21
 #define NETWORK_PORT_HTTP		80
 #define NETWORK_PORT_HTTPS		445
+#define NETWORK_IFNAME_SIZE		16
+#define NETWORK_DEV_MAX_COUNT	16
 
 #define NETWORK_TIMEOUT_VALUE	5000
 #define NETWORK_RETRY_COUNT		5
@@ -297,8 +299,28 @@ struct network_protocol_desc {
 	int (*open_service)(struct network_service *service, const struct network_url *url, u16 port, int flags);
 };
 
-struct network_ifconfig {
-	char if_name[8];
+struct cavan_inet_ifconfig {
+	char if_name[NETWORK_IFNAME_SIZE];
+	char if_hwaddr[6];
+	bool has_ip;
+	struct sockaddr_in if_addr;
+	struct sockaddr_in if_dstaddr;
+	struct sockaddr_in if_broadaddr;
+	struct sockaddr_in if_netmask;
+};
+
+struct cavan_inet_route {
+	char devname[NETWORK_IFNAME_SIZE];
+	struct sockaddr_in dstaddr;
+	struct sockaddr_in gateway;
+	struct sockaddr_in netmask;
+	unsigned int flags;
+	unsigned int ref_count;
+	unsigned int use;
+	unsigned int metric;
+	unsigned int mtu;
+	unsigned int window;
+	unsigned int irtt;
 };
 
 const char *network_get_socket_pathname(void);
@@ -403,7 +425,17 @@ int network_service_open2(struct network_service *service, const char *url, int 
 void network_service_close(struct network_service *service);
 int network_service_get_local_port(struct network_service *service);
 
-int network_get_device_list(char buff[][8], size_t size);
+int network_get_devlist(char buff[][NETWORK_IFNAME_SIZE], int max_count);
+void cavan_inet_route_dump(const struct cavan_inet_route *route);
+int cavan_inet_get_route_table(struct cavan_inet_route *routes, int max_count);
+int cavan_inet_find_default_route(struct cavan_inet_route routes[], int count);
+int cavan_inet_get_default_route(struct cavan_inet_route *route);
+void cavan_inet_ifconfig_dump(const struct cavan_inet_ifconfig *config);
+int cavan_inet_get_address(int sockfd, const char *ifname, int command, struct ifreq *ifr, struct sockaddr_in *addr);
+int cavan_inet_get_ifconfig(int sockfd, struct ifreq *ifr, struct cavan_inet_ifconfig *config);
+int cavan_inet_get_ifconfig2(int sockfd, const char *ifname, struct cavan_inet_ifconfig *config);
+int cavan_inet_get_ifconfig_list(int sockfd, struct cavan_inet_ifconfig *configs, int max_count);
+int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_count);
 
 static inline int inet_socket(int type)
 {

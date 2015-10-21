@@ -488,4 +488,4 @@ CAVAN_COMMAND_MAP_START
 { "reg-rw", do_register_rw },
 { "reg-dump", do_register_dump },
 { "update-bits", do_update_bits },
-CAVAN_COMMAND_MAP_END
+CAVAN_COMMAND_MAP_END;

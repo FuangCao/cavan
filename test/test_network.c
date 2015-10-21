@@ -74,10 +74,15 @@ out_network_client_close:
 	return ret;
 }
 
-static int network_client_test(const char *url)
+static int do_test_client(int argc, char *argv[])
 {
 	int ret;
+	const char *url;
 	struct network_client client;
+
+	assert(argc > 1);
+
+	url = argv[1];
 
 	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
 	if (ret < 0) {
@@ -88,11 +93,16 @@ static int network_client_test(const char *url)
 	return network_client_test_base(&client);
 }
 
-static int network_service_test(const char *url)
+static int do_test_service(int argc, char *argv[])
 {
 	int ret;
+	const char *url;
 	struct network_client client;
 	struct network_service service;
+
+	assert(argc > 1);
+
+	url = argv[1];
 
 	ret = network_service_open2(&service, url, 0);
 	if (ret < 0) {
@@ -113,11 +123,16 @@ out_network_service_close:
 	return ret;
 }
 
-static int network_url_test(const char *_url)
+static int do_test_url(int argc, char *argv[])
 {
+	const char *url_text;
 	struct network_url url;
 
-	if (network_url_parse(&url, _url) == NULL) {
+	assert(argc > 1);
+
+	url_text = argv[1];
+
+	if (network_url_parse(&url, url_text) == NULL) {
 		pr_red_info("web_proxy_parse_url");
 	} else {
 		println("protocol = %s", url.protocol);
@@ -130,11 +145,16 @@ static int network_url_test(const char *_url)
 	return 0;
 }
 
-static int network_dump_data(const char *url)
+static int do_test_dump(int argc, char *argv[])
 {
 	int ret;
+	const char *url;
 	struct network_client client;
 	struct network_service service;
+
+	assert(argc > 1);
+
+	url = argv[1];
 
 	ret = network_service_open2(&service, url, 0);
 	if (ret < 0) {
@@ -169,10 +189,17 @@ out_network_service_close:
 	return ret;
 }
 
-static int network_test_send(const char *url, const char *pathname)
+static int do_test_send(int argc, char *argv[])
 {
 	int ret;
+	const char *url;
+	const char *pathname;
 	struct network_client client;
+
+	assert(argc > 2);
+
+	url = argv[1];
+	pathname = argv[2];
 
 	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
 	if (ret < 0) {
@@ -199,46 +226,63 @@ static int network_test_send(const char *url, const char *pathname)
 	return ret;
 }
 
-static int network_dump_netdev(void)
+static int do_test_ifconfig(int argc, char *argv[])
 {
 	int i;
 	int count;
-	char buff[8][8];
+	struct cavan_inet_ifconfig configs[8];
 
-	count = network_get_device_list(buff, 8);
+	count = cavan_inet_get_ifconfig_list2(configs, NELEM(configs));
 	if (count < 0) {
 		pr_red_info("cavan_network_get_device_list");
 		return count;
 	}
 
 	for (i = 0; i < count; i++) {
-		println("%d. %s", i, buff[i]);
+		cavan_inet_ifconfig_dump(configs + i);
+		print_sep(60);
 	}
 
 	return 0;
 }
 
-int main(int argc, char *argv[])
+static int do_test_route(int argc, char *argv[])
 {
-	assert(argc > 2);
+	int i;
+	int ret;
+	int count;
+	struct cavan_inet_route routes[16];
+	struct cavan_inet_route def_route;
 
-	if (strcmp(argv[1], "client") == 0) {
-		return network_client_test(argv[2]);
-	} else if (strcmp(argv[1], "service") == 0) {
-		while (network_service_test(argv[2]) >= 0);
-	} else if (strcmp(argv[1], "url") == 0) {
-		return network_url_test(argv[2]);
-	} else if (strcmp(argv[1], "dump") == 0) {
-		return network_dump_data(argv[2]);
-	} else if (strcmp(argv[1], "send") == 0) {
-		assert(argc > 3);
-
-		return network_test_send(argv[2], argv[3]);
-	} else if (strcmp(argv[1], "netdev") == 0) {
-		return network_dump_netdev();
-	} else {
-		pr_red_info("unknown command %s", argv[1]);
+	count = cavan_inet_get_route_table(routes, NELEM(routes));
+	if (count < 0) {
+		pr_red_info("cavan_network_get_device_list");
+		return count;
 	}
+
+	for (i = 0; i < count; i++) {
+		cavan_inet_route_dump(routes + i);
+		print_sep(60);
+	}
+
+	ret = cavan_inet_get_default_route(&def_route);
+	if (ret < 0) {
+		pr_red_info("cavan_inet_get_default_route: %d", ret);
+		return ret;
+	}
+
+	pr_green_info("default route is:");
+	cavan_inet_route_dump(&def_route);
 
 	return 0;
 }
+
+CAVAN_COMMAND_MAP_START
+{ "client", do_test_client },
+{ "service", do_test_service },
+{ "url", do_test_url },
+{ "dump", do_test_dump },
+{ "send", do_test_send },
+{ "ifconfig", do_test_ifconfig },
+{ "route", do_test_route },
+CAVAN_COMMAND_MAP_END;

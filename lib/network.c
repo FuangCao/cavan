@@ -8,6 +8,7 @@
 #include <cavan/progress.h>
 
 #define CAVAN_NETWORK_DEBUG		0
+#define CAVAN_IFCONFIG_DEBUG	0
 
 const char *network_get_socket_pathname(void)
 {
@@ -29,9 +30,16 @@ const char *inet_check_hostname(const char *hostname, char *buff, size_t size)
 	if (hostname == NULL || hostname[0] == 0 || strcmp(hostname, "localhost") == 0) {
 		hostname = "127.0.0.1";
 	} else if (buff && size > 0 && text_is_number(hostname)) {
-		const char *prefix = cavan_getenv("CAVAN_NET_SEG", "192.168.1");
+		struct cavan_inet_route route;
 
-		snprintf(buff, size, "%s.%s", prefix, hostname);
+		if (cavan_inet_get_default_route(&route) < 0) {
+			snprintf(buff, size, "192.168.0.%s", hostname);
+		} else {
+			u8 *addr = (u8 *) &route.gateway.sin_addr.s_addr;
+
+			snprintf(buff, size, "%d.%d.%d.%s", addr[0], addr[1], addr[2], hostname);
+		}
+
 		hostname = buff;
 	}
 
@@ -2861,7 +2869,7 @@ int network_service_get_local_port(struct network_service *service)
 	return addr.sin_port;
 }
 
-int network_get_device_list(char buff[][8], size_t size)
+int network_get_devlist(char buff[][NETWORK_IFNAME_SIZE], int max_count)
 {
 	int count;
 	char *mem;
@@ -2879,7 +2887,7 @@ int network_get_device_list(char buff[][8], size_t size)
 	text = text_find_next_line(text);
 	text = text_find_next_line(text);
 
-	for (count = 0; text < text_end && count < (int) size; count++) {
+	for (count = 0; text < text_end && count < max_count; count++) {
 		char *p, *p_end;
 
 		text = text_skip_space_and_lf(text, text_end);
@@ -2896,4 +2904,237 @@ int network_get_device_list(char buff[][8], size_t size)
 	free(mem);
 
 	return count;
+}
+
+void cavan_inet_route_dump(const struct cavan_inet_route *route)
+{
+	println("devname = %s", route->devname);
+	println("dstaddr = %s", inet_ntoa(route->dstaddr.sin_addr));
+	println("gateway = %s", inet_ntoa(route->gateway.sin_addr));
+	println("netmask = %s", inet_ntoa(route->netmask.sin_addr));
+	println("flags = 0x%04x", route->flags);
+	println("ref_count = %d", route->ref_count);
+	println("use = %d", route->use);
+	println("metric = %d", route->metric);
+	println("mtu = %d", route->mtu);
+	println("window = %d", route->window);
+	println("irtt = %d", route->irtt);
+}
+
+int cavan_inet_get_route_table(struct cavan_inet_route *routes, int max_count)
+{
+	int ret;
+	int count;
+	const char *pathname = "/proc/net/route";
+
+	FILE *fp = fopen(pathname, "r");
+	if (fp == NULL) {
+		pr_err_info("fopen %s", pathname);
+		return -ENOENT;
+	}
+
+	ret = fscanf(fp, "%*[^\n]\n");
+	if (ret < 0) {
+		pr_err_info("fscanf");
+		goto out_fclose;
+	}
+
+	for (count = 0; count < max_count; count++) {
+		struct cavan_inet_route *route = routes + count;
+
+		memset(route, 0x00, sizeof(struct cavan_inet_route));
+
+		ret = fscanf(fp, "%15s%lx%lx%X%d%d%d%lx%d%d%d\n",
+			route->devname,
+			(unsigned long *) &route->dstaddr.sin_addr,
+			(unsigned long *) &route->gateway.sin_addr,
+			&route->flags, &route->ref_count, &route->use, &route->metric,
+			(unsigned long *) &route->netmask.sin_addr,
+			&route->mtu, &route->window, &route->irtt);
+
+		if (ret != 11) {
+			if (ret < 0 && feof(fp)) {
+				break;
+			}
+
+			if (ret >= 0) {
+				ret = -EFAULT;
+			}
+
+			goto out_fclose;
+		}
+
+		route->dstaddr.sin_family = AF_INET;
+		route->gateway.sin_family = AF_INET;
+	}
+
+	ret = count;
+
+out_fclose:
+	fclose(fp);
+	return ret;
+}
+
+int cavan_inet_find_default_route(struct cavan_inet_route routes[], int count)
+{
+	int i;
+
+	for (i = 0; i < count; i++) {
+		if (routes[i].dstaddr.sin_addr.s_addr == INADDR_ANY
+			&& routes[i].gateway.sin_addr.s_addr != INADDR_ANY) {
+			return i;
+		}
+	}
+
+	return -EFAULT;
+}
+
+int cavan_inet_get_default_route(struct cavan_inet_route *route)
+{
+	int ret;
+	int count;
+	struct cavan_inet_route routes[16];
+
+	count = cavan_inet_get_route_table(routes, NELEM(routes));
+	if (count < 0) {
+		pr_red_info("cavan_inet_get_route_table");
+		return count;
+	}
+
+	ret = cavan_inet_find_default_route(routes, count);
+	if (ret < 0) {
+		pr_red_info("cavan_inet_find_default_route: %d", ret);
+		return ret;
+	}
+
+	memcpy(route, routes + ret, sizeof(struct cavan_inet_route));
+
+	return 0;
+}
+
+void cavan_inet_ifconfig_dump(const struct cavan_inet_ifconfig *config)
+{
+	println("if_name = %s", config->if_name);
+	println("if_hwaddr = %s", mac_address_tostring(config->if_hwaddr, sizeof(config->if_hwaddr)));
+
+	if (config->has_ip) {
+		println("if_addr = %s", inet_ntoa(config->if_addr.sin_addr));
+		println("if_dstaddr = %s", inet_ntoa(config->if_dstaddr.sin_addr));
+		println("if_broadaddr = %s", inet_ntoa(config->if_broadaddr.sin_addr));
+		println("if_netmask = %s", inet_ntoa(config->if_netmask.sin_addr));
+	}
+}
+
+int cavan_inet_get_address(int sockfd, const char *ifname, int command, struct ifreq *ifr, struct sockaddr_in *addr)
+{
+	int ret;
+
+	strncpy(ifr->ifr_ifrn.ifrn_name, ifname, sizeof(ifr->ifr_ifrn.ifrn_name));
+
+	ifr->ifr_addr.sa_family = AF_INET;
+
+	ret = ioctl(sockfd, command, ifr);
+	if (ret < 0) {
+		memset(addr, 0x00, sizeof(struct sockaddr_in));
+	} else {
+		memcpy(addr, &ifr->ifr_addr, sizeof(struct sockaddr_in));
+	}
+
+	return ret;
+}
+
+int cavan_inet_get_ifconfig(int sockfd, struct ifreq *ifr, struct cavan_inet_ifconfig *config)
+{
+	int ret;
+
+	strncpy(config->if_name, ifr->ifr_ifrn.ifrn_name, sizeof(config->if_name));
+
+	ret = ioctl(sockfd, SIOCGIFHWADDR, ifr);
+	if (ret < 0) {
+		pr_err_info("ioctl SIOCGIFHWADDR: %d", ret);
+		return ret;
+	}
+
+	memcpy(config->if_hwaddr, ifr->ifr_hwaddr.sa_data, sizeof(config->if_hwaddr));
+
+#if CAVAN_IFCONFIG_DEBUG
+	pr_func_info("ifname = %s", config->if_name);
+#endif
+
+	ret = cavan_inet_get_address(sockfd, config->if_name, SIOCGIFADDR, ifr, &config->if_addr);
+	if (ret < 0) {
+		config->has_ip = false;
+	} else {
+		config->has_ip = true;
+
+		cavan_inet_get_address(sockfd, config->if_name, SIOCGIFDSTADDR, ifr, &config->if_dstaddr);
+		cavan_inet_get_address(sockfd, config->if_name, SIOCGIFBRDADDR, ifr, &config->if_broadaddr);
+		cavan_inet_get_address(sockfd, config->if_name, SIOCGIFNETMASK, ifr, &config->if_netmask);
+	}
+
+	return 0;
+}
+
+int cavan_inet_get_ifconfig2(int sockfd, const char *ifname, struct cavan_inet_ifconfig *config)
+{
+	struct ifreq ifr;
+
+	strcpy(ifr.ifr_ifrn.ifrn_name, ifname);
+
+	return cavan_inet_get_ifconfig(sockfd, &ifr, config);
+}
+
+int cavan_inet_get_ifconfig_list(int sockfd, struct cavan_inet_ifconfig *configs, int max_count)
+{
+	int i;
+	int ret;
+	int count;
+	struct ifconf ifc;
+	struct ifreq ifr[NETWORK_DEV_MAX_COUNT];
+
+	ifc.ifc_len = sizeof(ifr);
+	ifc.ifc_ifcu.ifcu_req = ifr;
+
+	ret = ioctl(sockfd, SIOCGIFCONF, &ifc);
+	if (ret < 0) {
+		pr_err_info("ioctl SIOCGIFCONF: %d", ret);
+		return ret;
+	}
+
+	count = ifc.ifc_len / sizeof(struct ifreq);
+
+#if CAVAN_IFCONFIG_DEBUG
+	pr_func_info("count = %d", count);
+#endif
+
+	for (i = 0; i < count; i++) {
+		ret = cavan_inet_get_ifconfig(sockfd, ifr + i, configs + i);
+		if (ret < 0) {
+			pr_red_info("inet_get_ifconfig: %d", ret);
+			return ret;
+		}
+	}
+
+	return count;
+}
+
+int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_count)
+{
+	int ret;
+	int sockfd;
+
+	sockfd = inet_socket(SOCK_DGRAM);
+	if (sockfd < 0) {
+		pr_err_info("inet_socket: %d", sockfd);
+		return sockfd;
+	}
+
+	ret = cavan_inet_get_ifconfig_list(sockfd, configs, max_count);
+	if (ret < 0) {
+		pr_red_info("inet_get_ifconfig_list: %d", ret);
+	}
+
+	close(sockfd);
+
+	return ret;
 }

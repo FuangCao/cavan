@@ -588,4 +588,4 @@ CAVAN_COMMAND_MAP_START
 { "comm-mcu", do_test_jwp_comm },
 { "udp", do_test_jwp_udp },
 { "udp-mcu", do_test_jwp_udp },
-CAVAN_COMMAND_MAP_END
+CAVAN_COMMAND_MAP_END;
