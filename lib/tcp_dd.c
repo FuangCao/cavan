@@ -427,6 +427,10 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 			return ret;
 		}
 
+		if (strcmp(req->filename, "@SYSTEM@") == 0) {
+			cavan_system("stop");
+		}
+
 		pr_info("umount block device %s", pathname);
 		umount_device(pathname, MNT_DETACH);
 	}

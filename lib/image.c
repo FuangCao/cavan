@@ -253,6 +253,7 @@ const char *image_name_to_part_name(const char *name)
 			switch (*name) {
 			case 0:
 			case '.':
+			case '-':
 				*p++ = '@';
 				*p = 0;
 				return part_buff;
