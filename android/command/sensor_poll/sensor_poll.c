@@ -377,14 +377,14 @@ int main(int argc, char *argv[])
 	ret = hw_get_module(SENSORS_HARDWARE_MODULE_ID, (const struct hw_module_t **)&sensor_module);
 	if (ret < 0)
 	{
-		pr_red_info("hw_get_module");
+		pr_red_info("hw_get_module: %d", ret);
 		return ret;
 	}
 
 	ret = sensors_open(&sensor_module->common, &sensor_device);
 	if (ret < 0)
 	{
-		pr_red_info("sensors_open");
+		pr_red_info("sensors_open: %d", ret);
 		return ret;
 	}
 

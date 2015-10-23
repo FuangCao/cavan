@@ -9,7 +9,13 @@
 
 bool adb_is_client(void)
 {
-	return file_access_e("/dev/usb-ffs/adb") || file_access_e("/dev/android_adb");
+	static int retval = -1;
+
+	if (retval < 0) {
+		retval = file_access_e("/dev/usb-ffs/adb") || file_access_e("/dev/android_adb");
+	}
+
+	return retval;
 }
 
 bool adb_is_host(void)
