@@ -125,7 +125,7 @@ elif [ -f "include/linux/kernel.h" ]
 then
 if [ -d "${ANDROID_BUILD_TOP}" ]
 then
-	(cd ${ANDROID_BUILD_TOP} && ${MAKE} boot.img) || exit 1
+	(cd ${ANDROID_BUILD_TOP} && exec_command "${MAKE} boot.img") || exit 1
 	cp -av "${OUT}/boot.img" "${FILE_BOOT_TARGET}" || exit 1
 else
 	[ -f ".config" ] || exec_command "${MAKE_KERNEL} ${KERNEL_DEFCONFIG}"

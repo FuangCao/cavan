@@ -17,3 +17,4 @@ lsof -i :8888
 netstat -anp | grep 8888
 addr2line  -f -e segment_trace 0x8974
 objdump -S -l -z  -j .text /tmp/segment_trace > /tmp/1.txt
+VBoxManage extpack install ~/Downloads/Oracle_VM_VirtualBox_Extension_Pack-5.0.8-103449.vbox-extpack
