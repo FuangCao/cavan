@@ -31,6 +31,8 @@ class CavanXmlBase:
 
 		self.mDocument = dom
 		self.mRootElement = dom.documentElement
+		self.mDoc = self.mDocument
+		self.mRoot = self.mRootElement
 
 		return True
 
@@ -114,3 +116,9 @@ class CavanXmlBase:
 
 		for node in parent.getElementsByTagName(name):
 			parent.removeChild(node)
+
+	def getChildNodes(self, parent = None):
+		if not parent:
+			parent = self.mRootElement
+
+		return parent.childNodes
