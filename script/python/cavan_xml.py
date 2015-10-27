@@ -25,8 +25,11 @@ class CavanXmlBase:
 		sys.setdefaultencoding("utf-8")
 
 	def load(self, pathname):
-		dom = xml.dom.minidom.parse(pathname)
-		if not dom:
+		try:
+			dom = xml.dom.minidom.parse(pathname)
+			if not dom:
+				return False
+		except:
 			return False
 
 		self.mDocument = dom
