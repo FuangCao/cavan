@@ -1004,10 +1004,52 @@ out_client_close:
 	return ret;
 }
 
-static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct input_event *_event, void *data)
+static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct input_event *event_raw, void *data)
 {
 	struct network_client *client = data;
-	struct cavan_input_event *event = (struct cavan_input_event *) &_event->type;
+	struct cavan_input_event *event = (struct cavan_input_event *) &event_raw->type;
+
+	if (client->type == NETWORK_PROTOCOL_ADB) {
+		switch (event->code) {
+		case KEY_F1:
+		case KEY_F5:
+		case KEY_F9:
+			event->code = KEY_BACK;
+			break;
+
+		case KEY_F2:
+			event->code = KEY_COMPOSE;
+			break;
+
+		case KEY_F6:
+		case KEY_F10:
+			event->code = KEY_MENU;
+			break;
+
+		case KEY_F3:
+		case KEY_F7:
+		case KEY_F11:
+			event->code = KEY_HOMEPAGE;
+			break;
+
+		case KEY_F4:
+			event->code = KEY_COFFEE;
+			break;
+
+		case KEY_F8:
+		case KEY_F12:
+			event->code = KEY_POWER;
+			break;
+
+		case KEY_PAGEUP:
+			event->code = KEY_VOLUMEUP;
+			break;
+
+		case KEY_PAGEDOWN:
+			event->code = KEY_VOLUMEDOWN;
+			break;
+		}
+	}
 
 	client->send(client, event, sizeof(struct cavan_input_event));
 

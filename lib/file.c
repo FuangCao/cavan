@@ -2470,7 +2470,7 @@ void *file_read_all(const char *pathname, size_t extra, size_t *size)
 
 	fd = open(pathname, O_RDONLY);
 	if (fd < 0) {
-		pr_error_info("open file `%s' failed", pathname);
+		// pr_error_info("open file `%s' failed", pathname);
 		return NULL;
 	}
 
