@@ -66,7 +66,14 @@ struct cavan_i2c_config cavan_i2c_config_table[] =
 		.addr_bytes = 2,
 		.value_bytes = 4,
 		.addr_big_endian = true,
-		.value_big_endian = true,
+		.value_big_endian = false,
+	}, {
+		.chipname = "tc358775",
+		.addr_step = 2,
+		.addr_bytes = 2,
+		.value_bytes = 4,
+		.addr_big_endian = true,
+		.value_big_endian = false,
 	}, {
 		.chipname = "tc358768",
 		.addr_step = 2,

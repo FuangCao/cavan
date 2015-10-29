@@ -37,7 +37,7 @@ static void show_usage(const char *command, const char *usage)
 	println("-b, --big-endian\t\t\t%s", cavan_help_message_big_endian);
 	println("--rk, --rockchip\t\t\tthis is rockchip i2c chip");
 	println("-r, --rate\t\t\t\tSCL clock rate");
-	println("-d, --device, --chip <CHIPNAME>\t\tset this thip name");
+	println("-d, -c, --device, --chip <CHIPNAME>\tset this thip name");
 }
 
 static int cavan_open_client_by_args(struct cavan_i2c_client *client, int argc, char *argv[], int count, const char *usage)
@@ -114,7 +114,7 @@ static int cavan_open_client_by_args(struct cavan_i2c_client *client, int argc, 
 
 	cavan_i2c_client_init(client);
 
-	while ((c = getopt_long(argc, argv, "hbr:a:v:sd:", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "hbr:a:v:sd:c:", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
@@ -154,6 +154,7 @@ static int cavan_open_client_by_args(struct cavan_i2c_client *client, int argc, 
 			break;
 
 		case 'd':
+		case 'c':
 		case CAVAN_COMMAND_OPTION_DEVICE:
 		case CAVAN_COMMAND_OPTION_CHIP:
 			config->chipname = optarg;
