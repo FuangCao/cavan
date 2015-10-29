@@ -4,11 +4,16 @@ import sys, os, re
 from cavan_file import file_read_lines, file_write_lines
 from cavan_xml import CavanXmlBase
 
+MASTER_SEND_ONLY = True
+
 CHIP_NAME = "tc3587xx"
 PREFIX = CHIP_NAME + "_init_data"
 STRUCT_NAME = PREFIX + "_node"
 ARRAY_NAME = PREFIX + "_table"
-FUNC_NAME = CHIP_NAME + "_write_init_data"
+
+FUNC_WRITE_INIT_DATA = CHIP_NAME + "_write_init_data"
+FUNC_INIT_REGISTER = CHIP_NAME + "_init_register"
+FUNC_DUMP_MEM = CHIP_NAME + "_dump_mem"
 
 class TC3587XX_DataNode():
 	def __init__(self, values, title, comment, isRead = False, count = 0):
@@ -224,6 +229,36 @@ class TC3587XX_Converter(CavanXmlBase):
 				if valLen < length:
 					valLen = length
 
+		if MASTER_SEND_ONLY and not hasMasterSend:
+			for node in self.mDataNodes:
+				values = []
+
+				text = node.mValues[0][2:]
+				while len(text) < addrLen:
+					text = "0" + text
+
+				index = addrLen - 2
+				while (index >= 0):
+					byteText = text[index:index + 2]
+					values.append("0x" + byteText)
+					index -= 2
+
+				text = node.mValues[1][2:]
+				while len(text) < valLen:
+					text = "0" + text
+
+				index = 0
+				while (index < valLen):
+					byteText = text[index:index + 2]
+					values.append("0x" + byteText)
+					index += 2
+
+				node.mValues = values
+				node.mIsMasterSend = True
+
+			hasMasterSend = True
+			valCount = (addrLen + valLen) / 2
+
 		self.mHasMasterSend = hasMasterSend
 		self.mHasRead = hasRead
 		self.mAddrLen = addrLen
@@ -257,7 +292,41 @@ class TC3587XX_Converter(CavanXmlBase):
 	def genFunctionLines(self):
 		lines = []
 
-		lines.append("static int %s(struct i2c_client *client, const struct %s *nodes, size_t count)" % (FUNC_NAME, STRUCT_NAME))
+		if self.mHasMasterSend:
+			lines.append("static void %s(struct i2c_client *client, const char *prompt, const u8 *mem, size_t size)" % FUNC_DUMP_MEM)
+			lines.append("{")
+			lines.append("\tconst u8 *mem_end;")
+			lines.append("\tchar buff[%d], *p, *p_end;" % ((self.mValCount * 3 + 4 + 3) / 4 * 4))
+			lines.append("")
+			lines.append("\tp = buff;")
+			lines.append("\tp_end = p + ARRAY_SIZE(buff) - 1;")
+			lines.append("")
+			lines.append("\tif (p < p_end) {")
+			lines.append("\t\t*p++ = '[';")
+			lines.append("\t}")
+			lines.append("")
+			lines.append("\tfor (mem_end = mem + size; mem < mem_end && p < p_end; mem++) {")
+			lines.append("\t\tp += snprintf(p, p_end - p, \" %02x\", *mem);")
+			lines.append("\t}")
+			lines.append("")
+			lines.append("\tif (p + 1 < p_end) {")
+			lines.append("\t\tp[0] = ' ';")
+			lines.append("\t\tp[1] = ']';")
+			lines.append("\t\tp += 2;")
+			lines.append("\t}")
+			lines.append("")
+			lines.append("\t*p = 0;")
+			lines.append("")
+			lines.append("\tif (prompt) {")
+			lines.append("\t\tdev_info(&client->dev, \"%s%s\\n\", prompt, buff);")
+			lines.append("\t} else {")
+			lines.append("\t\tdev_info(&client->dev, \"%s\\n\", buff);")
+			lines.append("\t}")
+			lines.append("}")
+
+
+		lines.append("")
+		lines.append("static int %s(struct i2c_client *client, const struct %s *nodes, size_t count)" % (FUNC_WRITE_INIT_DATA, STRUCT_NAME))
 		lines.append("{")
 		lines.append("\tint ret;")
 		lines.append("\tconst struct tc3587xx_init_data_node *node, *node_end;")
@@ -265,30 +334,39 @@ class TC3587XX_Converter(CavanXmlBase):
 		lines.append("\tfor (node = nodes, node_end = node + count; node < node_end; node++) {")
 
 		if self.mHasMasterSend:
-			lines.append("\t\tif (node->is_read) {")
-			lines.append("\t\t\tu8 buff[node->count]")
+			if self.mHasRead:
+				lines.append("\t\tif (node->is_read) {")
+				lines.append("\t\t\tu8 buff[node->count];")
+				lines.append("")
+				lines.append("\t\t\tdev_info(&client->dev, \"master_recv: count = %d\\n\", node->count);")
+				lines.append("")
+				lines.append("\t\t\tret = i2c_master_recv(client, buff, node->count);")
+				lines.append("\t\t\tif (ret < 0) {")
+				lines.append("\t\t\t\tdev_err(&client->dev, \"Failed to i2c_master_recv: %d\\n\", ret);")
+				lines.append("\t\t\t\treturn ret;")
+				lines.append("\t\t\t}")
+				lines.append("")
+				lines.append("\t\t\t%s(client, \"master_recv = \", buff, node->count);" % FUNC_DUMP_MEM)
+				lines.append("")
+				lines.append("\t\t\tif (strncmp(buff, node->values, node->count)) {")
+				lines.append("\t\t\t\tdev_err(&client->dev, \"i2c_master_recv data is invalid\\n\");")
+				lines.append("\t\t\t\treturn -EINVAL;")
+				lines.append("\t\t\t}")
+				lines.append("\t\t} else {")
+				prefix_space = "\t"
+			else:
+				prefix_space = ""
+
+			lines.append(prefix_space + "\t\t%s(client, \"master_send = \", node->values, node->count);" % FUNC_DUMP_MEM)
 			lines.append("")
-			lines.append("\t\t\tdev_info(&client->dev, \"master_recv: count = %d\\n\", node->count);")
-			lines.append("")
-			lines.append("\t\t\tret = i2c_master_recv(client, buff, node->count);")
-			lines.append("\t\t\tif (ret < 0) {")
-			lines.append("\t\t\t\tdev_err(&client->dev, \"Failed to i2c_master_recv: %d\\n\", ret);")
-			lines.append("\t\t\t\treturn ret;")
-			lines.append("\t\t\t}")
-			lines.append("")
-			lines.append("\t\t\tif (strncmp(buff, node->value, node->count)) {")
-			lines.append("\t\t\t\tdev_err(&client->dev, \"i2c_master_recv data is invalid\\n\");")
-			lines.append("\t\t\t\treturn -EINVAL;")
-			lines.append("\t\t\t}")
-			lines.append("\t\t} else {")
-			lines.append("\t\t\tdev_info(&client->dev, \"master_send: count = %d\\n\", node->count);")
-			lines.append("")
-			lines.append("\t\t\tret = i2c_master_send(client, node->values, node->count);")
-			lines.append("\t\t\tif (ret < 0) {")
-			lines.append("\t\t\t\tdev_err(&client->dev, \"Failed to i2c_master_send: %d\\n\", ret);")
-			lines.append("\t\t\t\treturn ret;")
-			lines.append("\t\t\t}")
-			lines.append("\t\t}")
+			lines.append(prefix_space + "\t\tret = i2c_master_send(client, node->values, node->count);")
+			lines.append(prefix_space + "\t\tif (ret < 0) {")
+			lines.append(prefix_space + "\t\t\tdev_err(&client->dev, \"Failed to i2c_master_send: %d\\n\", ret);")
+			lines.append(prefix_space + "\t\t\treturn ret;")
+			lines.append(prefix_space + "\t\t}")
+
+			if self.mHasRead:
+				lines.append("\t\t}")
 		else:
 			lines.append("\t\tdev_info(&client->dev, \"write: addr = 0x%%0%dx, value = 0x%%0%dx\\n\", node->addr, node->value);" % (self.mAddrLen, self.mValLen))
 			lines.append("")
@@ -308,13 +386,13 @@ class TC3587XX_Converter(CavanXmlBase):
 		lines.append("}")
 
 		lines.append("")
-		lines.append("static int %s_init_register(struct i2c_client *client)" % CHIP_NAME)
+		lines.append("static int %s(struct i2c_client *client)" % FUNC_INIT_REGISTER)
 		lines.append("{")
 		lines.append("\tint ret;")
 		lines.append("")
-		lines.append("\tret = %s(client, %s, ARRAY_SIZE(%s));" % (FUNC_NAME, ARRAY_NAME, ARRAY_NAME))
+		lines.append("\tret = %s(client, %s, ARRAY_SIZE(%s));" % (FUNC_WRITE_INIT_DATA, ARRAY_NAME, ARRAY_NAME))
 		lines.append("\tif (ret < 0) {")
-		lines.append("\t\tdev_err(&client->dev, \"Failed to %s: %%d\\n\", ret);" % (FUNC_NAME))
+		lines.append("\t\tdev_err(&client->dev, \"Failed to %s: %%d\\n\", ret);" % (FUNC_WRITE_INIT_DATA))
 		lines.append("\t\treturn ret;")
 		lines.append("\t}")
 		lines.append("")
@@ -324,7 +402,6 @@ class TC3587XX_Converter(CavanXmlBase):
 		lines.append("}")
 
 		return lines
-
 
 	def save(self, pathname):
 		lines = self.genStructLines()
