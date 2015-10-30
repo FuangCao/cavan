@@ -423,8 +423,8 @@ static int do_register_rw(int argc, char *argv[])
 		}
 	}
 
-out_cavan_i2c_client_close:
 	cavan_i2c_client_close(&client);
+
 	return ret;
 }
 
