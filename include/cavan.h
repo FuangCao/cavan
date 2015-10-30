@@ -114,6 +114,8 @@
 #define __UNCONST(a)			((void *) (unsigned long) (const void *) (a))
 #endif
 
+#define __read_mostly			__section(".data..read_mostly")
+
 static inline void msleep(useconds_t msec)
 {
 	while (msec--) {

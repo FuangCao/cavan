@@ -377,24 +377,54 @@ static int do_register_rw(int argc, char *argv[])
 	addr = text2value_unsigned(argv[optind++], NULL, 16);
 
 	if (optind < argc) {
-		value = text2value_unsigned(argv[optind++], NULL, 16);
-		println("write: addr = 0x%08x, value = 0x%08x", addr, value);
+		if (argc - optind > 1) {
+			int bits;
+			int offset;
+			u32 mask;
 
-		ret = cavan_i2c_write_register(&client, addr, value);
-		if (ret < 0) {
-			pr_red_info("cavan_i2c_read_register: %d", ret);
+			offset = text2value_unsigned(argv[optind++], NULL, 10);
+
+			if (argc - optind > 1) {
+				bits = text2value_unsigned(argv[optind++], NULL, 10);
+			} else {
+				bits = 1;
+			}
+
+			value = text2value_unsigned(argv[optind++], NULL, 16);
+
+			println("offset = %d, bits = %d, value = 0x%08x", offset, bits, value);
+
+			mask = ((1 << bits) - 1) << offset;
+			value <<= offset;
+
+			ret = cavan_i2c_update_bits(&client, addr, value, mask);
+			if (ret < 0) {
+				pr_red_info("cavan_i2c_read_register: %d", ret);
+			}
+		} else {
+			value = text2value_unsigned(argv[optind++], NULL, 16);
+
+			println("write: addr = 0x%08x, value = 0x%08x", addr, value);
+			print_bit_mask(value, "mask: ");
+
+			ret = cavan_i2c_write_register(&client, addr, value);
+			if (ret < 0) {
+				pr_red_info("cavan_i2c_read_register: %d", ret);
+			}
 		}
 	} else {
 		ret = cavan_i2c_read_register(&client, addr, &value);
 		if (ret < 0) {
 			pr_red_info("cavan_i2c_read_register: %d", ret);
 		} else {
+
 			println("read: addr = 0x%08x, value = 0x%08x", addr, value);
+			print_bit_mask(value, "mask: ");
 		}
 	}
 
+out_cavan_i2c_client_close:
 	cavan_i2c_client_close(&client);
-
 	return ret;
 }
 
@@ -455,7 +485,7 @@ static int do_update_bits(int argc, char *argv[])
 	u32 value;
 	struct cavan_i2c_client client;
 
-	ret = cavan_open_client_by_args(&client, argc, argv, 4, "<ADDR> <OFFSET> <BITS> <VALUE>");
+	ret = cavan_open_client_by_args(&client, argc, argv, 3, "<ADDR> <OFFSET> [BITS] <VALUE>");
 	if (ret < 0) {
 		pr_red_info("cavan_open_client_by_args: %d", ret);
 		return ret;
@@ -463,7 +493,13 @@ static int do_update_bits(int argc, char *argv[])
 
 	addr = text2value_unsigned(argv[optind++], NULL, 16);
 	offset = text2value_unsigned(argv[optind++], NULL, 10);
-	bits = text2value_unsigned(argv[optind++], NULL, 10);
+
+	if (argc - optind > 1) {
+		bits = text2value_unsigned(argv[optind++], NULL, 10);
+	} else {
+		bits = 1;
+	}
+
 	value = text2value_unsigned(argv[optind++], NULL, 16);
 	println("addr = 0x%08x, offset = %d, bits = %d, value = 0x%08x", addr, offset, bits, value);
 

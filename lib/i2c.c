@@ -75,6 +75,13 @@ struct cavan_i2c_config cavan_i2c_config_table[] =
 		.addr_big_endian = true,
 		.value_big_endian = false,
 	}, {
+		.chipname = "tc358749",
+		.addr_step = 2,
+		.addr_bytes = 2,
+		.value_bytes = 4,
+		.addr_big_endian = true,
+		.value_big_endian = false,
+	}, {
 		.chipname = "tc358768",
 		.addr_step = 2,
 		.addr_bytes = 2,
@@ -399,12 +406,15 @@ int cavan_i2c_update_bits(struct cavan_i2c_client *client, u32 addr, u32 value, 
 		return ret;
 	}
 
+	print_bit_mask(value_old, "mask: ");
+
 	value = (value & mask) | (value_old & (~mask));
 	if (value == value_old) {
 		return 0;
 	}
 
-	println("update_bits: addr = 0x%08x, value = (0x%08x -> 0x%08x)", addr, value_old, value);
+	println("update: addr = 0x%08x, value = (0x%08x -> 0x%08x)", addr, value_old, value);
+	print_bit_mask(value, "mask: ");
 
 	return cavan_i2c_write_register(client, addr, value);
 }

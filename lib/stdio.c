@@ -213,6 +213,28 @@ void println(const char *fmt, ...)
 	va_end(ap);
 }
 
+void print_bit_mask(u64 value, const char *prompt, ...)
+{
+	char buff[1024];
+	char *p, *p_end;
+
+	p = buff;
+	p_end = buff + sizeof(buff) - 1;
+
+	if (prompt) {
+		va_list ap;
+
+		va_start(ap, prompt);
+		p += vsnprintf(p, p_end - p, prompt, ap);
+		va_end(ap);
+	}
+
+	p = value2bitlist(value, p, p_end - p, " | ");
+	*p++ = '\n';
+
+	print_ntext(buff, p - buff);
+}
+
 void print_to(int x, int y, const char *fmt, ...)
 {
 	va_list ap;

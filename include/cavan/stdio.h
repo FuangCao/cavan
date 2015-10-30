@@ -300,6 +300,7 @@ __printf_format_12__ void print(const char *fmt, ...);
 __printf_format_10__ void vprint(const char *fmt, va_list ap);
 __printf_format_10__ void vprintln(const char *fmt, va_list ap);
 __printf_format_12__ void println(const char *fmt, ...);
+__printf_format_23__ void print_bit_mask(u64 value, const char *prompt, ...);
 __printf_format_34__ void print_to(int x, int y, const char *fmt, ...);
 __printf_format_23__ void print_to_row(int row, const char *fmt, ...);
 __printf_format_23__ void print_to_col(int col, const char *fmt, ...);
