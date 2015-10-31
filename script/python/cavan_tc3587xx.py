@@ -4,7 +4,9 @@ import sys, os, re
 from cavan_file import file_read_lines, file_write_lines
 from cavan_xml import CavanXmlBase
 
-MASTER_SEND_ONLY = True
+MASTER_SEND_ONLY = False
+VALUE_BIG_ENDIAN = True
+ADDR_BIG_ENDIAN = False
 
 CHIP_NAME = "tc3587xx"
 PREFIX = CHIP_NAME + "_init_data"
@@ -203,6 +205,28 @@ class TC3587XX_Converter(CavanXmlBase):
 			return None
 		return "\n".join(lines)
 
+	def valToArray(self, value, length, bigEndian = True):
+		values = []
+		text = value[2:]
+
+		while len(text) < length:
+			text = "0" + text
+
+		if not bigEndian:
+			index = 0
+			while (index < length):
+				value = text[index : index + 2]
+				values.append("0x" + value)
+				index += 2
+		else:
+			index = length - 2
+			while (index >= 0):
+				value = text[index : index + 2]
+				values.append("0x" + value)
+				index -= 2
+
+		return values
+
 	def genStructLines(self):
 		hasMasterSend = False
 		hasRead = False
@@ -232,29 +256,20 @@ class TC3587XX_Converter(CavanXmlBase):
 
 		if MASTER_SEND_ONLY and not hasMasterSend:
 			for node in self.mDataNodes:
-				values = []
+				listValue = []
 
-				text = node.mValues[0][2:]
-				while len(text) < addrLen:
-					text = "0" + text
+				values = self.valToArray(node.mValues[0], addrLen, ADDR_BIG_ENDIAN)
+				if not values:
+					return values
+				listValue.extend(values)
 
-				index = addrLen - 2
-				while (index >= 0):
-					byteText = text[index:index + 2]
-					values.append("0x" + byteText)
-					index -= 2
+				values = self.valToArray(node.mValues[1], valLen, VALUE_BIG_ENDIAN)
+				if not values:
+					return values
+				listValue.extend(values)
 
-				text = node.mValues[1][2:]
-				while len(text) < valLen:
-					text = "0" + text
+				node.mValues = listValue
 
-				index = 0
-				while (index < valLen):
-					byteText = text[index:index + 2]
-					values.append("0x" + byteText)
-					index += 2
-
-				node.mValues = values
 				node.mIsMasterSend = True
 
 			hasMasterSend = True
@@ -334,7 +349,7 @@ class TC3587XX_Converter(CavanXmlBase):
 		lines.append("")
 		lines.append("static int %s(struct i2c_client *client, const struct %s *nodes, size_t count)" % (FUNC_WRITE_INIT_DATA, STRUCT_NAME))
 		lines.append("{")
-		lines.append("\tint ret;")
+		lines.append("\tint ret = 0;")
 		lines.append("\tconst struct tc3587xx_init_data_node *node, *node_end;")
 		lines.append("")
 		lines.append("\tfor (node = nodes, node_end = node + count; node < node_end; node++) {")
