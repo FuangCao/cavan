@@ -18,6 +18,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/memory.h>
 #include <cavan++/Math.h>
 
 int main(int argc, char *argv[])
@@ -32,6 +33,14 @@ int main(int argc, char *argv[])
 	} else {
 		println("result = %lf", result);
 	}
+
+	u8 value = 1 << 0 | 1 << 3 | 1 << 4;
+
+	print_bit_mask(value, "before[0x%02x] = %8s = ", value, value2text(value, 2));
+	value = mem_lsb_msb_transfer(value);
+	print_bit_mask(value, "after [0x%02x] = %8s = ", value, value2text(value, 2));
+	value = mem_lsb_msb_transfer(value);
+	print_bit_mask(value, "after [0x%02x] = %8s = ", value, value2text(value, 2));
 
 	return 0;
 }

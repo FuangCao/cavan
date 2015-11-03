@@ -21,14 +21,12 @@
 
 #include <cavan.h>
 
-struct cavan_part
-{
+struct cavan_part {
 	const char *name;
 	const char *pathname;
 };
 
-struct cavan_part_table
-{
+struct cavan_part_table {
 	const char *name;
 	size_t part_count;
 	struct cavan_part *parts;

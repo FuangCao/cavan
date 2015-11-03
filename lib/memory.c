@@ -558,3 +558,32 @@ char *mem_time_tostring(double time, char *buff, size_t size)
 		return buff + snprintf(buff, size, "%0.2lfs", time);
 	}
 }
+
+byte mem_lsb_msb_transfer(byte value)
+{
+	int i;
+	byte result = 0;
+
+	for (i = 0; i < 8; i++) {
+		if (value & 1) {
+			result = (result << 1) | 1;
+		} else {
+			result <<= 1;
+		}
+
+		value >>= 1;
+	}
+
+	return result;
+}
+
+byte *memcpy_lsb_msb_transfer(byte *dest, const byte *src, size_t size)
+{
+	const byte *src_end;
+
+	for (src_end = src + size; src < src_end; src++, dest++) {
+		*dest = mem_lsb_msb_transfer(*src);
+	}
+
+	return dest;
+}

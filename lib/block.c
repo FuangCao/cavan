@@ -52,8 +52,7 @@ void cavan_part_table_dump(const struct cavan_part_table *table)
 	}
 }
 
-struct cavan_part_table *cavan_block_get_part_table(const char *name)
-{
+struct cavan_part_table *cavan_block_get_part_table(const char *name) {
 	struct cavan_part_table *p, *p_end;
 
 	pr_func_info("table_name = %s", name);
@@ -67,8 +66,7 @@ struct cavan_part_table *cavan_block_get_part_table(const char *name)
 	return NULL;
 }
 
-struct cavan_part_table *cavan_block_get_part_table2(void)
-{
+struct cavan_part_table *cavan_block_get_part_table2(void) {
 	int ret;
 	char name[64];
 

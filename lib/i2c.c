@@ -22,8 +22,7 @@
 
 #define CAVAN_I2C_DEBUG		0
 
-struct cavan_i2c_config cavan_i2c_config_table[] =
-{
+struct cavan_i2c_config cavan_i2c_config_table[] = {
 	{
 		.chipname = "wm8962",
 		.addr_step = 1,
@@ -111,8 +110,7 @@ void cavan_i2c_config_dump(const struct cavan_i2c_config *config)
 	println("value_big_endian = %s", cavan_bool_tostring(config->value_big_endian));
 }
 
-struct cavan_i2c_config *cavan_i2c_find_config(const char *chipname)
-{
+struct cavan_i2c_config *cavan_i2c_find_config(const char *chipname) {
 	struct cavan_i2c_config *p, *p_end;
 
 	for (p = cavan_i2c_config_table, p_end = p + NELEM(cavan_i2c_config_table); p < p_end; p++) {

@@ -35,6 +35,8 @@
 #define assign64(addr, value) \
 	assign(addr, value, u64)
 
+__BEGIN_DECLS;
+
 u8 *mem_copy8(u8 *dest, const u8 *src, size_t count);
 u16 *mem_copy16(u16 *dest, const u16 *src, size_t count);
 u32 *mem_copy32(u32 *dest, const u32 *src, size_t count);
@@ -105,6 +107,9 @@ char *mem_size_tostring(double value, char *buff, size_t size);
 char *mem_speed_tostring(double value, char *buff, size_t size);
 char *mem_time_tostring(double time, char *buff, size_t size);
 
+byte mem_lsb_msb_transfer(byte value);
+byte *memcpy_lsb_msb_transfer(byte *dest, const byte *src, size_t size);
+
 static inline char *mem_trans(char *text, size_t size)
 {
 	return text_ntrans(text, size);
@@ -155,3 +160,5 @@ static inline u32 mem_checksum32(const void *mem, size_t count)
 {
 	return ~(mem_checksum32_simple((u8 *) mem, count));
 }
+
+__END_DECLS;

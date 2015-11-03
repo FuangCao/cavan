@@ -34,8 +34,7 @@ struct i2c_msg_rockchip {
 	__u32 scl_rate;
 };
 
-struct cavan_i2c_config
-{
+struct cavan_i2c_config {
 	const char *chipname;
 
 	int addr_step;
