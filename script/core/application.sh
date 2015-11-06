@@ -219,12 +219,16 @@ function cavan-get-kernel-root()
 
 function cavan-mm-push()
 {
-	local kernel_root file_list
+	local kernel_root file_list file_config
 
 	kernel_root=$(cavan-get-kernel-root)
 
 	if [ "${kernel_root}" ]
 	then
+		file_config="${kernel_root}/.git/build.conf"
+
+		[ -f "${file_config}" ] && source "${file_config}"
+
 		KERNEL_NAME="$(basename ${kernel_root})"
 
 		if [ "$1" ]
@@ -242,9 +246,11 @@ function cavan-mm-push()
 
 		KERNEL_HOME="${kernel_root}"
 
-		echo "KERNEL_NAME = ${KERNEL_NAME}"
-		echo "KERNEL_HOME = ${KERNEL_HOME}"
-		echo "KERNEL_CONFIG = ${KERNEL_CONFIG}"
+		{
+			echo "KERNEL_NAME=\"${KERNEL_NAME}\""
+			echo "KERNEL_HOME=\"${KERNEL_HOME}\""
+			echo "KERNEL_CONFIG=\"${KERNEL_CONFIG}\""
+		} | tee "${file_config}"
 
 		(
 			cd "${KERNEL_HOME}" || return 1
