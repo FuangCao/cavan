@@ -249,7 +249,7 @@ static int tca9535_gpio_get(struct gpio_chip *chip, unsigned offset)
 	dev_info(&tca9535->client->dev, "%s: offset = %d\n", __FUNCTION__, offset);
 #endif
 
-	if (gpio_is_valid(tca9535->gpio_irq) || tca9535_read_register(tca9535, REG_INPUT_PORT, &value, true) < 0) {
+	if (/* gpio_is_valid(tca9535->gpio_irq) || */ tca9535_read_register(tca9535, REG_INPUT_PORT, &value, true) < 0) {
 		value = tca9535->cache.input_port;
 	}
 
@@ -263,7 +263,12 @@ static int tca9535_gpio_direction_output(struct gpio_chip *chip, unsigned offset
 	struct tca9535_device *tca9535 = container_of(chip, struct tca9535_device, gpio_chip);
 	struct tca9535_register_cache *cache = &tca9535->cache;
 
-	reg_value = (cache->output_port & (~(1 << offset))) | (!!value) << 1;
+	reg_value = (cache->output_port & (~(1 << offset))) | (!!value) << offset;
+
+#if TCA9535_DEBUG
+	dev_info(&tca9535->client->dev, "%s: offset = %d, value = %d, output: 0x%04x => 0x%04x\n", __FUNCTION__, offset, value, cache->output_port, reg_value);
+#endif
+
 	if (reg_value != cache->output_port) {
 		ret |= tca9535_write_register(tca9535, REG_OUTPUT_PORT, reg_value, true);
 	}
@@ -292,11 +297,12 @@ static void tca9535_gpio_set(struct gpio_chip *chip, unsigned offset, int value)
 	struct tca9535_device *tca9535 = container_of(chip, struct tca9535_device, gpio_chip);
 	struct tca9535_register_cache *cache = &tca9535->cache;
 
+	reg_value = (cache->output_port & (~(1 << offset))) | (!!value) << offset;
+
 #if TCA9535_DEBUG
-	dev_info(&tca9535->client->dev, "%s: offset = %d, value = %d\n", __FUNCTION__, offset, value);
+	dev_info(&tca9535->client->dev, "%s: offset = %d, value = %d, output: 0x%04x => 0x%04x\n", __FUNCTION__, offset, value, cache->output_port, reg_value);
 #endif
 
-	reg_value = (cache->output_port & (~(1 << offset))) | (!!value) << 1;
 	if (reg_value != cache->output_port) {
 		tca9535_write_register(tca9535, REG_OUTPUT_PORT, reg_value, true);
 	}
@@ -915,7 +921,7 @@ static void __exit tca9535_module_exit(void)
 	i2c_del_driver(&tca9535_i2c_driver);
 }
 
-subsys_initcall_sync(tca9535_module_init);
+subsys_initcall(tca9535_module_init);
 module_exit(tca9535_module_exit);
 
 MODULE_DESCRIPTION("TCA9535 GPIO Driver");

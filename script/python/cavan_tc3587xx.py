@@ -372,11 +372,6 @@ class TC3587XX_Converter(CavanXmlBase):
 				lines.append("#if %s" % MACRO_DEBUG)
 				lines.append("\t\t\t%s(client, \"master_recv = \", buff, node->count);" % FUNC_DUMP_MEM)
 				lines.append("#endif")
-				lines.append("")
-				lines.append("\t\t\tif (strncmp(buff, node->values, node->count)) {")
-				lines.append("\t\t\t\tdev_err(&client->dev, \"i2c_master_recv data is invalid\\n\");")
-				lines.append("\t\t\t\treturn -EINVAL;")
-				lines.append("\t\t\t}")
 				lines.append("\t\t} else {")
 				prefix_space = "\t"
 			else:
