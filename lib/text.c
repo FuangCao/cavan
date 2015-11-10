@@ -701,7 +701,13 @@ int prefix2base(const char *prefix, const char *prefix_end, const char **last, i
 	case 'o':
 	case 'O':
 		prefix++;
+		base = 8;
+		break;
+
 	case '0' ... '7':
+		if (base > 8) {
+			return base;
+		}
 		base = 8;
 		break;
 

@@ -21,6 +21,11 @@
 #include <cavan/i2c.h>
 #include <cavan/command.h>
 
+typedef enum {
+	CAVAN_I2C_COMMAND_OPTION_ADDR_BIG_ENDIAN = CAVAN_COMMAND_OPTION_LAST + 1,
+	CAVAN_I2C_COMMAND_OPTION_VALUE_BIG_ENDIAN,
+} cavan_i2c_command_opt_t;
+
 static void show_usage(const char *command, const char *usage)
 {
 	if (usage) {
@@ -34,7 +39,9 @@ static void show_usage(const char *command, const char *usage)
 	println("-a, --addr-bytes\t\t\t%s", cavan_help_message_addr_bytes);
 	println("-s, --step, --addr-step\t\t\taddress step length");
 	println("-v, --value-bytes\t\t\t%s", cavan_help_message_value_bytes);
-	println("-b, --big-endian\t\t\t%s", cavan_help_message_big_endian);
+	println("-b, --big-endian\t\t\taddr and value big-endian");
+	println("--ab\t\t\t\t\taddr big-endian");
+	println("--vb\t\t\t\t\tvalue big-endian");
 	println("--rk, --rockchip\t\t\tthis is rockchip i2c chip");
 	println("-r, --rate\t\t\t\tSCL clock rate");
 	println("-d, -c, --device, --chip <CHIPNAME>\tset this thip name");
@@ -70,6 +77,16 @@ static int cavan_open_client_by_args(struct cavan_i2c_client *client, int argc, 
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_BIG_ENDIAN,
+		}, {
+			.name = "ab",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_ADDR_BIG_ENDIAN,
+		}, {
+			.name = "vb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_VALUE_BIG_ENDIAN,
 		}, {
 			.name = "rockchip",
 			.has_arg = no_argument,
@@ -138,6 +155,14 @@ static int cavan_open_client_by_args(struct cavan_i2c_client *client, int argc, 
 		case 'b':
 		case CAVAN_COMMAND_OPTION_BIG_ENDIAN:
 			config->addr_big_endian = true;
+			config->value_big_endian = true;
+			break;
+
+		case CAVAN_COMMAND_OPTION_ADDR_BIG_ENDIAN:
+			config->addr_big_endian = true;
+			break;
+
+		case CAVAN_COMMAND_OPTION_VALUE_BIG_ENDIAN:
 			config->value_big_endian = true;
 			break;
 

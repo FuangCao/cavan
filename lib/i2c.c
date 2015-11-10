@@ -118,12 +118,29 @@ void cavan_i2c_config_dump(const struct cavan_i2c_config *config)
 }
 
 struct cavan_i2c_config *cavan_i2c_find_config(const char *chipname) {
+	int offset = 0;
 	struct cavan_i2c_config *p, *p_end;
 
-	for (p = cavan_i2c_config_table, p_end = p + NELEM(cavan_i2c_config_table); p < p_end; p++) {
-		if (strcmp(p->chipname, chipname) == 0) {
-			return p;
+	while (1) {
+		int count = 0;
+
+		for (p = cavan_i2c_config_table, p_end = p + NELEM(cavan_i2c_config_table); p < p_end; p++) {
+			if (strlen(p->chipname) < (size_t) offset) {
+				continue;
+			}
+
+			if (strcmp(p->chipname + offset, chipname) == 0) {
+				return p;
+			}
+
+			count++;
 		}
+
+		if (count == 0) {
+			break;
+		}
+
+		offset++;
 	}
 
 	return NULL;
@@ -173,6 +190,7 @@ int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slav
 			return -EINVAL;
 		}
 
+		println("chipname = %s", config->chipname);
 		memcpy(&client->config, config, sizeof(client->config));
 	} else {
 		if (config->addr_bytes < 1 || config->addr_bytes > 4) {
