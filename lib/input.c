@@ -443,6 +443,8 @@ int cavan_uinput_open(int flags)
 			continue;
 		}
 
+		pd_info("uinput = %s", cavan_uinput_path_list[i]);
+
 		return fd;
 	}
 
@@ -505,12 +507,12 @@ int cavan_input_event(int fd, const struct input_event *events, size_t count)
 
 int cavan_input_event2(int fd, int type, int code, int value)
 {
-    struct input_event event = {
+	struct input_event event = {
 		.time = { 0, 0 },
 		.type = type,
 		.code = code,
 		.value = value,
 	};
 
-    return cavan_input_event(fd, &event, 1);
+	return cavan_input_event(fd, &event, 1);
 }

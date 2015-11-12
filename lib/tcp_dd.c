@@ -628,6 +628,8 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 		return ret;
 	}
 
+	pd_info("uinput_fd = %d, tcp_keypad_fd = %d", service->uinput_fd, service->tcp_keypad_fd);
+
 	if (service->uinput_fd < 0) {
 		struct cavan_input_event events[32];
 
