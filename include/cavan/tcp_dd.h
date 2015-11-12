@@ -78,6 +78,7 @@ struct cavan_tcp_dd_service {
 	char *filename;
 	char pathname[1024];
 	int tcp_keypad_fd;
+	int uinput_fd;
 	const char *tcp_keypad_ko;
 	struct cavan_part_table *part_table;
 };

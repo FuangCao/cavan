@@ -22,6 +22,7 @@
 #include <cavan/timer.h>
 #include <cavan/queue.h>
 #include <linux/input.h>
+#include <linux/uinput.h>
 
 #define CAVAN_INPUT_MESSAGE_POOL_SIZE	50
 
@@ -201,6 +202,11 @@ bool cavan_input_service_append_point_message(struct cavan_input_service *servic
 char cavan_keycode2ascii(int code, bool shift_down);
 int cavan_input_message_tostring(cavan_input_message_t *message, char *buff, size_t size);
 
+int cavan_uinput_open(int flags);
+int cavan_uinput_create(const char *name, int (*init)(int fd, void *data), void *data);
+int cavan_input_event(int fd, const struct input_event *events, size_t count);
+int cavan_input_event2(int fd, int type, int code, int value);
+
 static inline int cavan_input_service_join(struct cavan_input_service *service)
 {
 	return cavan_event_service_join(&service->event_service);
@@ -226,4 +232,24 @@ static inline cavan_input_message_t *cavan_input_service_get_message(struct cava
 static inline void cavan_input_service_append_message(struct cavan_input_service *service, cavan_input_message_t *message)
 {
 	cavan_data_queue_append(&service->queue, &message->node);
+}
+
+static inline int cavan_input_report_key(int fd, int code, int value)
+{
+	return cavan_input_event2(fd, EV_KEY, code, value);
+}
+
+static inline int cavan_input_report_rel(int fd, int code, int value)
+{
+	return cavan_input_event2(fd, EV_REL, code, value);
+}
+
+static inline int cavan_input_report_abs(int fd, int code, int value)
+{
+	return cavan_input_event2(fd, EV_ABS, code, value);
+}
+
+static inline int cavan_input_sync(int fd)
+{
+	return cavan_input_event2(fd, EV_SYN, SYN_REPORT, 0);
 }

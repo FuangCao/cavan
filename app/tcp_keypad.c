@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 			.name = "na",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_ACK,
+			.val = CAVAN_COMMAND_OPTION_NOACK,
 		}, {
 			0, 0, 0, 0
 		},

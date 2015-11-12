@@ -24,6 +24,12 @@
 
 #define CAVAN_INPUT_SUPPORT_GSENSOR	0
 
+static const char *cavan_uinput_path_list[] = {
+	"/dev/uinput",
+	"/dev/input/uinput",
+	"/dev/misc/uinput"
+};
+
 static struct cavan_input_device *cavan_input_device_create(uint8_t *key_bitmask, uint8_t *abs_bitmask, uint8_t *rel_bitmask)
 {
 #if CAVAN_INPUT_SUPPORT_GSENSOR
@@ -419,4 +425,92 @@ char cavan_keycode2ascii(int code, bool shift_down)
 	}
 
 	return shift_down ? ascii_map_shift[code] : ascii_map[code];
+}
+
+int cavan_uinput_open(int flags)
+{
+	int i;
+
+	for (i = 0; i < NELEM(cavan_uinput_path_list); i++) {
+		int fd;
+
+		fd = open(cavan_uinput_path_list[i], flags);
+		if (fd < 0) {
+			if (errno != ENOENT) {
+				return fd;
+			}
+
+			continue;
+		}
+
+		return fd;
+	}
+
+	return -ENOENT;
+}
+
+int cavan_uinput_create(const char *name, int (*init)(int fd, void *data), void *data)
+{
+	int fd;
+	int ret;
+	struct uinput_user_dev dev;
+
+	fd = cavan_uinput_open(O_RDWR);
+	if (fd < 0) {
+		pr_err_info("cavan_uinput_open: %d", fd);
+		return fd;
+	}
+
+	memset(&dev, 0, sizeof(dev));
+
+	if (name) {
+		strncpy(dev.name, name, UINPUT_MAX_NAME_SIZE);
+	}
+
+	dev.id.bustype = BUS_USB;
+	dev.id.vendor  = 0x0000;
+	dev.id.product = 0x0000;
+	dev.id.version = 0x0000;
+
+	ret = write(fd, &dev, sizeof(dev));
+	if (ret < 0) {
+		pr_err_info("write: %d", ret);
+		goto out_close_fd;
+	}
+
+	if (init) {
+		ret = init(fd, data);
+		if (ret < 0) {
+			goto out_close_fd;
+		}
+	}
+
+	ret = ioctl(fd, UI_DEV_CREATE, NULL);
+	if (ret < 0) {
+		pr_err_info("ioctl UI_DEV_CREATE: %d", ret);
+		goto out_close_fd;
+	}
+
+	return fd;
+
+out_close_fd:
+	close(fd);
+	return ret;
+}
+
+int cavan_input_event(int fd, const struct input_event *events, size_t count)
+{
+	return ffile_write(fd, events, sizeof(struct input_event) * count);
+}
+
+int cavan_input_event2(int fd, int type, int code, int value)
+{
+    struct input_event event = {
+		.time = { 0, 0 },
+		.type = type,
+		.code = code,
+		.value = value,
+	};
+
+    return cavan_input_event(fd, &event, 1);
 }

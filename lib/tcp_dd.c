@@ -7,6 +7,7 @@
 #include <cavan.h>
 #include <cavan/file.h>
 #include <cavan/event.h>
+#include <cavan/input.h>
 #include <cavan/tcp_dd.h>
 #include <cavan/service.h>
 #include <cavan/device.h>
@@ -606,9 +607,8 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	int ret;
 	int code;
 	ssize_t rdlen, wrlen;
-	struct cavan_input_event events[32];
 
-	if (service->tcp_keypad_fd < 0) {
+	if (service->uinput_fd < 0 && service->tcp_keypad_fd < 0) {
 		service->tcp_keypad_fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
 		if (service->tcp_keypad_fd < 0 && service->tcp_keypad_ko) {
 			cavan_system2("insmod \"%s\"", service->tcp_keypad_ko);
@@ -628,35 +628,72 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 		return ret;
 	}
 
-	while (1) {
-		rdlen = client->recv(client, events, sizeof(events));
-		if (rdlen < (int) sizeof(struct cavan_input_event)) {
-			break;
+	if (service->uinput_fd < 0) {
+		struct cavan_input_event events[32];
+
+		while (1) {
+			rdlen = client->recv(client, events, sizeof(events));
+			if (rdlen < (int) sizeof(struct cavan_input_event)) {
+				break;
+			}
+
+			wrlen = write(service->tcp_keypad_fd, events, rdlen);
+			if (wrlen < rdlen) {
+				pr_error_info("write events");
+				return -EFAULT;
+			}
 		}
 
-		wrlen = write(service->tcp_keypad_fd, events, rdlen);
-		if (wrlen < rdlen) {
-			pr_error_info("write events");
-			return -EFAULT;
+		events[0].type = EV_KEY;
+		events[0].value = 0;
+
+		for (code = 1; code < KEY_CNT; code++) {
+			events[0].code = code;
+			wrlen = write(service->tcp_keypad_fd, events, sizeof(events[0]));
+			if (wrlen < 0) {
+				return wrlen;
+			}
 		}
-	}
 
-	events[0].type = EV_KEY;
-	events[0].value = 0;
-
-	for (code = 1; code < KEY_CNT; code++) {
-		events[0].code = code;
+		events[0].type = EV_SYN;
+		events[0].code = SYN_REPORT;
 		wrlen = write(service->tcp_keypad_fd, events, sizeof(events[0]));
 		if (wrlen < 0) {
 			return wrlen;
 		}
-	}
+	} else {
+		struct input_event event;
 
-	events[0].type = EV_SYN;
-	events[0].code = SYN_REPORT;
-	wrlen = write(service->tcp_keypad_fd, events, sizeof(events[0]));
-	if (wrlen < 0) {
-		return wrlen;
+		memset(&event.time, 0, sizeof(event.time));
+
+		while (1) {
+			rdlen = client->recv(client, (void *) &event.type, sizeof(struct cavan_input_event));
+			if (rdlen < (int) sizeof(struct cavan_input_event)) {
+				break;
+			}
+
+			wrlen = cavan_input_event(service->uinput_fd, &event, 1);
+			if (wrlen < 0) {
+				pr_error_info("write events");
+				return -EFAULT;
+			}
+		}
+
+		event.type = EV_KEY;
+		event.value = 0;
+
+		for (code = 0; code < KEY_CNT; code++) {
+			event.code = code;
+			wrlen = cavan_input_event(service->uinput_fd, &event, sizeof(event));
+			if (wrlen < 0) {
+				return wrlen;
+			}
+		}
+
+		wrlen = cavan_input_sync(service->uinput_fd);
+		if (wrlen < 0) {
+			return wrlen;
+		}
 	}
 
 	return 0;
@@ -672,6 +709,33 @@ static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, vo
 static void tcp_dd_service_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	network_client_close(conn);
+}
+
+static int tcp_dd_uinput_init(int fd, void *data)
+{
+	int i;
+	int ret = 0;
+
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_SYN);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_KEY);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_REL);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_REP);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_MSC);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_LED);
+
+	for (i = 0; i < KEY_CNT; i++) {
+		ret |= ioctl(fd, UI_SET_KEYBIT, i);
+	}
+
+	ret |= ioctl(fd, UI_SET_RELBIT, REL_X);
+	ret |= ioctl(fd, UI_SET_RELBIT, REL_Y);
+	ret |= ioctl(fd, UI_SET_RELBIT, REL_WHEEL);
+
+	for (i = 0; i < LED_CNT; i++) {
+		ret |= ioctl(fd, UI_SET_LEDBIT, i);
+	}
+
+	return ret;
 }
 
 static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
@@ -709,6 +773,7 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		cavan_part_table_dump(dd_service->part_table);
 	}
 
+	dd_service->uinput_fd = cavan_uinput_create("TCP_KEYPAD", tcp_dd_uinput_init, dd_service);
 	dd_service->tcp_keypad_fd = -1;
 
 	return 0;
@@ -723,6 +788,16 @@ out_network_service_close:
 static void tcp_dd_service_stop_handler(struct cavan_dynamic_service *service)
 {
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
+
+	if (dd_service->tcp_keypad_fd >= 0) {
+		close(dd_service->tcp_keypad_fd);
+		dd_service->tcp_keypad_fd = -1;
+	}
+
+	if (dd_service->uinput_fd >= 0) {
+		close(dd_service->uinput_fd);
+		dd_service->uinput_fd = -1;
+	}
 
 	cavan_alarm_thread_stop(&dd_service->alarm);
 	cavan_alarm_thread_deinit(&dd_service->alarm);
