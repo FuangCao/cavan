@@ -40,6 +40,7 @@ static void show_usage(const char *command)
 	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
 	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
 	println("--na, --noack\t\t\texit don't need ack");
+	println("-c, --cmdline\t\t\t%s", cavan_help_message_cmdline);
 }
 
 int main(int argc, char *argv[])
@@ -128,15 +129,20 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_NOACK,
 		}, {
+			.name = "cmdline",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_CMDLINE,
+		}, {
 			0, 0, 0, 0
 		},
 	};
-	bool exit_ack = true;
+	int flags = TCP_KEYPADF_EXIT_ACK;
 	struct network_url url;
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
-	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:c", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
@@ -155,7 +161,7 @@ int main(int argc, char *argv[])
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
 			url.protocol = "adb";
-			exit_ack = false;
+			flags &= ~TCP_KEYPADF_EXIT_ACK;
 		case 'l':
 		case 'L':
 		case CAVAN_COMMAND_OPTION_LOCAL:
@@ -206,7 +212,12 @@ int main(int argc, char *argv[])
 			break;
 
 		case CAVAN_COMMAND_OPTION_NOACK:
-			exit_ack = false;
+			flags &= ~TCP_KEYPADF_EXIT_ACK;
+			break;
+
+		case 'c':
+		case CAVAN_COMMAND_OPTION_CMDLINE:
+			flags |= TCP_KEYPADF_CMDLINE;
 			break;
 
 		default:
@@ -215,5 +226,5 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	return tcp_dd_keypad_client_run(&url, exit_ack);
+	return tcp_dd_keypad_client_run(&url, flags);
 }

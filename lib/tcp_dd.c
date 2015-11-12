@@ -1133,11 +1133,10 @@ static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct i
 	return true;
 }
 
-int tcp_dd_keypad_client_run(struct network_url *url, bool exit_ack)
+int tcp_dd_keypad_client_run(struct network_url *url, int flags)
 {
 	int ret;
 	struct network_client client;
-	struct cavan_event_service service;
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
@@ -1151,20 +1150,76 @@ int tcp_dd_keypad_client_run(struct network_url *url, bool exit_ack)
 		goto out_client_close;
 	}
 
-	cavan_event_service_init(&service, NULL);
-	service.event_handler = tcp_dd_keypad_event_handler;
+	if (flags & TCP_KEYPADF_CMDLINE) {
+		int code = 0;
+		struct cavan_input_event events[3];
 
-	ret = cavan_event_service_start(&service, &client);
-	if (ret < 0) {
-		pr_red_info("cavan_event_service_start");
-		goto out_client_close;
+		events[0].type = events[1].type = EV_KEY;
+		events[0].value = 1;
+		events[1].value = 0;
+
+		events[2].type = EV_SYN;
+		events[2].code = SYN_REPORT;
+		events[2].value = 0;
+
+		while (1) {
+			char name[32], *p;
+
+			print("\033[01;32mTCP-KEYPAD\033[0m> ");
+
+			for (p = name; is_empty_character((*p = getchar())) == 0; p++);
+
+			if (p == name) {
+				if (code == 0) {
+					continue;
+				}
+
+				goto label_repo_key;
+			}
+
+			*p = 0;
+
+			if (text_is_number(name)) {
+				code = text2value_unsigned(name, NULL, 10);
+			} else {
+				struct cavan_input_key *key;
+
+				key = cavan_input_find_key(name);
+				if (key == NULL) {
+					pr_red_info("key %s not found", name);
+					continue;
+				}
+
+				code = key->code;
+			}
+
+label_repo_key:
+			println("keycode = %d", code);
+			events[0].code = events[1].code = code;
+
+			ret = client.send(&client, events, sizeof(events));
+			if (ret < 0) {
+				break;
+			}
+		}
+	} else {
+		struct cavan_event_service service;
+
+		cavan_event_service_init(&service, NULL);
+		service.event_handler = tcp_dd_keypad_event_handler;
+
+		ret = cavan_event_service_start(&service, &client);
+		if (ret < 0) {
+			pr_red_info("cavan_event_service_start");
+			goto out_client_close;
+		}
+
+		if (flags & TCP_KEYPADF_EXIT_ACK) {
+			cavan_set_exit_ask();
+		}
+
+		cavan_event_service_join(&service);
 	}
-
-	if (exit_ack) {
-		cavan_set_exit_ask();
-	}
-
-	cavan_event_service_join(&service);
 
 out_client_close:
 	client.close(&client);

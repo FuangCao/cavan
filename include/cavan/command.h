@@ -209,6 +209,7 @@ extern const char *cavan_help_message_addr_bytes;
 extern const char *cavan_help_message_value_bytes;
 extern const char *cavan_help_message_big_endian;
 extern const char *cavan_help_message_little_endian;
+extern const char *cavan_help_message_cmdline;
 
 // ============================================================
 

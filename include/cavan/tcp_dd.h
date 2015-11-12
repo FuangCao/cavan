@@ -17,6 +17,9 @@
 #define TCP_DD_TIMEOUT			5000
 #define TCP_KEYPAD_DEVICE		"/dev/tcp_keypad"
 
+#define TCP_KEYPADF_EXIT_ACK	(1 << 0)
+#define TCP_KEYPADF_CMDLINE		(1 << 1)
+
 enum tcp_dd_package_type
 {
 	TCP_DD_RESPONSE,
@@ -90,7 +93,7 @@ int tcp_dd_service_run(struct cavan_dynamic_service *service);
 int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req);
 int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req);
 int tcp_dd_exec_command(struct network_url *url, const char *command);
-int tcp_dd_keypad_client_run(struct network_url *url, bool exit_ack);
+int tcp_dd_keypad_client_run(struct network_url *url, int flags);
 
 int tcp_alarm_add(struct network_url *url, const char *command, time_t time, time_t repeat);
 int tcp_alarm_remove(struct network_url *url, int index);

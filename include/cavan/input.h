@@ -131,6 +131,11 @@ typedef enum cavan_input_message_type {
 	CAVAN_INPUT_MESSAGE_ROTATION_VECTOR
 } cavan_input_message_type_t;
 
+struct cavan_input_key {
+	const char *name;
+	int code;
+};
+
 struct cavan_input_message_key {
 	const char *name;
 	int code;
@@ -206,6 +211,7 @@ int cavan_uinput_open(int flags);
 int cavan_uinput_create(const char *name, int (*init)(int fd, void *data), void *data);
 int cavan_input_event(int fd, const struct input_event *events, size_t count);
 int cavan_input_event2(int fd, int type, int code, int value);
+struct cavan_input_key *cavan_input_find_key(const char *name);
 
 static inline int cavan_input_service_join(struct cavan_input_service *service)
 {
