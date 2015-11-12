@@ -2573,6 +2573,18 @@ static const struct network_protocol_desc protocol_descs[] =
 		.open_service = network_service_unix_udp_open,
 		.open_client = network_client_unix_udp_open,
 	},
+	[NETWORK_PROTOCOL_LOCAL_TCP] = {
+		.name = "local-tcp",
+		.type = NETWORK_PROTOCOL_LOCAL_TCP,
+		.open_service = network_service_unix_tcp_open,
+		.open_client = network_client_unix_tcp_open,
+	},
+	[NETWORK_PROTOCOL_LOCAL_UDP] = {
+		.name = "local-udp",
+		.type = NETWORK_PROTOCOL_LOCAL_UDP,
+		.open_service = network_service_unix_udp_open,
+		.open_client = network_client_unix_udp_open,
+	},
 	[NETWORK_PROTOCOL_UEVENT] = {
 		.name = "uevent",
 		.type = NETWORK_PROTOCOL_UEVENT,
@@ -2599,6 +2611,9 @@ network_protocol_t network_protocol_parse(const char *name)
 			return NETWORK_PROTOCOL_UEVENT;
 		} else if (text_lhcmp("nix", name + 1) == 0) {
 			if (name[4] != '-') {
+				if (name[4] == 0) {
+					return NETWORK_PROTOCOL_UNIX_TCP;
+				}
 				break;
 			}
 
@@ -2621,6 +2636,23 @@ network_protocol_t network_protocol_parse(const char *name)
 			return NETWORK_PROTOCOL_IP;
 		} else if (text_cmp(name + 1, "cmp") == 0) {
 			return NETWORK_PROTOCOL_ICMP;
+		}
+		break;
+
+	case 'l':
+		if (text_lhcmp("ocal", name + 1) == 0) {
+			if (name[5] != '-') {
+				if (name[5] == 0) {
+					return NETWORK_PROTOCOL_LOCAL_TCP;
+				}
+				break;
+			}
+
+			if (text_cmp(name + 6, "tcp") == 0) {
+				return NETWORK_PROTOCOL_LOCAL_TCP;
+			} else if (text_cmp(name + 6, "udp") == 0) {
+				return NETWORK_PROTOCOL_LOCAL_UDP;
+			}
 		}
 		break;
 
