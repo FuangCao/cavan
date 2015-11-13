@@ -715,13 +715,13 @@ int cavan_uinput_open(int flags)
 	return -ENOENT;
 }
 
-int cavan_uinput_create(const char *name, int (*init)(int fd, void *data), void *data)
+int cavan_uinput_create(const char *name, int (*init)(struct uinput_user_dev *dev, int fd, void *data), void *data)
 {
 	int fd;
 	int ret;
 	struct uinput_user_dev dev;
 
-	fd = cavan_uinput_open(O_RDWR);
+	fd = cavan_uinput_open(O_WRONLY);
 	if (fd < 0) {
 		pr_err_info("cavan_uinput_open: %d", fd);
 		return fd;
@@ -738,17 +738,17 @@ int cavan_uinput_create(const char *name, int (*init)(int fd, void *data), void 
 	dev.id.product = 0x0000;
 	dev.id.version = 0x0000;
 
+	if (init) {
+		ret = init(&dev, fd, data);
+		if (ret < 0) {
+			goto out_close_fd;
+		}
+	}
+
 	ret = write(fd, &dev, sizeof(dev));
 	if (ret < 0) {
 		pr_err_info("write: %d", ret);
 		goto out_close_fd;
-	}
-
-	if (init) {
-		ret = init(fd, data);
-		if (ret < 0) {
-			goto out_close_fd;
-		}
 	}
 
 	ret = ioctl(fd, UI_DEV_CREATE, NULL);

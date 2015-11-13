@@ -208,7 +208,7 @@ char cavan_keycode2ascii(int code, bool shift_down);
 int cavan_input_message_tostring(cavan_input_message_t *message, char *buff, size_t size);
 
 int cavan_uinput_open(int flags);
-int cavan_uinput_create(const char *name, int (*init)(int fd, void *data), void *data);
+int cavan_uinput_create(const char *name, int (*init)(struct uinput_user_dev *dev, int fd, void *data), void *data);
 int cavan_input_event(int fd, const struct input_event *events, size_t count);
 int cavan_input_event2(int fd, int type, int code, int value);
 struct cavan_input_key *cavan_input_find_key(const char *name);

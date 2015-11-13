@@ -602,7 +602,7 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 	return 0;
 }
 
-static int tcp_dd_uinput_init(int fd, void *data)
+static int tcp_dd_uinput_init(struct uinput_user_dev *dev, int fd, void *data)
 {
 	int i;
 	int ret = 0;
@@ -614,13 +614,13 @@ static int tcp_dd_uinput_init(int fd, void *data)
 	ret |= ioctl(fd, UI_SET_EVBIT, EV_MSC);
 	ret |= ioctl(fd, UI_SET_EVBIT, EV_LED);
 
-	for (i = 0; i < KEY_CNT; i++) {
-		ret |= ioctl(fd, UI_SET_KEYBIT, i);
-	}
-
 	ret |= ioctl(fd, UI_SET_RELBIT, REL_X);
 	ret |= ioctl(fd, UI_SET_RELBIT, REL_Y);
 	ret |= ioctl(fd, UI_SET_RELBIT, REL_WHEEL);
+
+	for (i = 0; i < KEY_CNT; i++) {
+		ret |= ioctl(fd, UI_SET_KEYBIT, i);
+	}
 
 	for (i = 0; i < LED_CNT; i++) {
 		ret |= ioctl(fd, UI_SET_LEDBIT, i);
