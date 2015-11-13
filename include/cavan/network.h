@@ -4,6 +4,7 @@
 
 #include <cavan.h>
 #include <cavan/cache.h>
+#include <cavan/thread.h>
 #include <cavan/command.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -279,6 +280,7 @@ struct network_service {
 	socklen_t addrlen;
 	void *private_data;
 	network_protocol_t type;
+	struct cavan_lock lock;
 
 	int (*accept)(struct network_service *service, struct network_client *conn);
 	void (*close)(struct network_service *service);
@@ -659,6 +661,16 @@ static inline int network_service_accept(struct network_service *service, struct
 static inline int network_service_get_local_addr(struct network_service *service, struct sockaddr *addr, socklen_t addrlen)
 {
 	return getsockname(service->sockfd, addr, &addrlen);
+}
+
+static inline void network_service_lock(struct network_service *service)
+{
+	cavan_lock_acquire(&service->lock);
+}
+
+static inline void network_service_unlock(struct network_service *service)
+{
+	cavan_lock_release(&service->lock);
 }
 
 static inline const char *cavan_get_server_hostname(void)

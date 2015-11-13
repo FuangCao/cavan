@@ -143,6 +143,9 @@ __BEGIN_DECLS;
 #define pd_pos_info() \
 	pd_std_pos("%s => %s[%d]")
 
+#define pd_func_info(fmt, args ...) \
+	pd_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+
 // ============================================================
 
 #define pr_info(fmt, args ...) \

@@ -2848,6 +2848,7 @@ int network_client_get_remote_ip(struct network_client *client, struct in_addr *
 
 int network_service_open(struct network_service *service, const struct network_url *url, int flags)
 {
+	int ret;
 	const struct network_protocol_desc *desc;
 
 	pd_bold_info("URL = %s", network_url_tostring(url, NULL, 0, NULL));
@@ -2858,7 +2859,14 @@ int network_service_open(struct network_service *service, const struct network_u
 		return -EINVAL;
 	}
 
-	return network_protocol_open_service(desc, service, url, flags);
+	ret = network_protocol_open_service(desc, service, url, flags);
+	if (ret < 0) {
+		return ret;
+	}
+
+	cavan_lock_init(&service->lock, false);
+
+	return 0;
 }
 
 int network_service_open2(struct network_service *service, const char *url_text, int flags)
@@ -2886,6 +2894,8 @@ void network_service_close(struct network_service *service)
 	if (service->type == NETWORK_PROTOCOL_UNIX_TCP || service->type == NETWORK_PROTOCOL_UNIX_UDP) {
 		remove_directory(network_get_socket_pathname());
 	}
+
+	cavan_lock_deinit(&service->lock);
 }
 
 int network_service_get_local_port(struct network_service *service)
