@@ -1,9 +1,8 @@
 #include <cavan.h>
+#include <cavan/time.h>
 #include <cavan/timer.h>
 #include <cavan/command.h>
 #include <cavan/progress.h>
-
-#define SPEED_INTERVAL_MS		1000UL
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -16,9 +15,28 @@ s64 progress_bar_get_time_consume_ns(struct progress_bar *bar)
 	return cavan_timespec_sub_ns(&time_now, &bar->time_start);
 }
 
-static void progress_bar_fflush(struct progress_bar *bar)
+static void progress_bar_show(struct progress_bar *bar, char *buff, char *curr, char *last)
 {
 	int length;
+
+	length = curr - buff;
+	if (length < bar->content_length) {
+		for (last = buff + bar->content_length; curr < last; curr++) {
+			*curr = ' ';
+		}
+	}
+
+	bar->content_length = length;
+
+	*curr++ = '\r';
+
+	pthread_mutex_lock(&lock);
+	print_ntext(buff, curr - buff);
+	pthread_mutex_unlock(&lock);
+}
+
+static void progress_bar_fflush(struct progress_bar *bar)
+{
 	char buff[1024];
 	char *p = buff, *p_end = p + sizeof(buff);
 #if BAR_SHOW_TIME
@@ -63,20 +81,22 @@ static void progress_bar_fflush(struct progress_bar *bar)
 	}
 #endif
 
-	length = p - buff;
-	if (length < bar->content_length) {
-		for (p_end = buff + bar->content_length; p < p_end; p++) {
-			*p = ' ';
-		}
-	}
+	progress_bar_show(bar, buff, p, p_end);
+}
 
-	bar->content_length = length;
+static void progress_bar_fflush2(struct progress_bar *bar)
+{
+	char buff[1024];
+	char *p = buff, *p_end = p + sizeof(buff);
+	double time = progress_bar_get_time_consume_ns(bar);
 
-	*p++ = '\r';
+	p = mem_speed_tostring(bar->speed, p, p_end - p);
+	*p++ = ' ';
+	*p++ = '(';
+	p = mem_size_tostring(bar->current, p, p_end - p);
+	p += snprintf(p, p_end - p, " in %lf ms)", time / 1000000UL);
 
-	pthread_mutex_lock(&lock);
-	print_ntext(buff, p - buff);
-	pthread_mutex_unlock(&lock);
+	progress_bar_show(bar, buff, p, p_end);
 }
 
 static bool update_percent(struct progress_bar *bar)
@@ -114,7 +134,7 @@ static bool update_speed(struct progress_bar *bar)
 	clock_gettime_mono(&time_now);
 
 	interval = cavan_timespec_sub_ns(&time_now, &bar->time_prev);
-	if (interval < (s64) (SPEED_INTERVAL_MS * 1000000UL)) {
+	if (interval < bar->interval) {
 		return false;
 	}
 
@@ -127,7 +147,7 @@ static bool update_speed(struct progress_bar *bar)
 	bar->last = bar->current;
 	bar->time_prev = time_now;
 
-	if (bar->speed == speed) {
+	if (bar->speed == speed && bar->total > 0) {
 		return false;
 	}
 
@@ -138,12 +158,12 @@ static bool update_speed(struct progress_bar *bar)
 
 void progress_bar_update(struct progress_bar *bar)
 {
-	if (bar->current > bar->total) {
-		return;
-	}
-
-	if (update_percent(bar) | update_content(bar) | update_speed(bar)) {
-		progress_bar_fflush(bar);
+	if (bar->total > 0) {
+		if (update_percent(bar) | update_content(bar) | update_speed(bar)) {
+			progress_bar_fflush(bar);
+		}
+	} else if (update_speed(bar)) {
+		progress_bar_fflush2(bar);
 	}
 }
 
@@ -151,11 +171,13 @@ void progress_bar_init(struct progress_bar *bar, double total)
 {
 	int columns;
 
-	bar->total = total == 0 ? 1 : total;
+	bar->total = total;
 	bar->current = bar->last = 0;
 	bar->percent = 0;
 	bar->fill = 0;
 	bar->content_length = 0;
+
+	bar->interval = MS_NS(1000);
 
 	if (tty_get_win_size2(stdout_fd, NULL, &columns) < 0 || columns <= 0) {
 		bar->half_length = BAR_DEF_HALF_LEN;
@@ -193,18 +215,24 @@ void progress_bar_finish(struct progress_bar *bar)
 {
 	double time;
 
-	bar->current = bar->total;
-	progress_bar_update(bar);
+	if (bar->total > 0) {
+		bar->current = bar->total;
+		progress_bar_update(bar);
+		print_char('\n');
+	} else {
+		char buff[bar->content_length];
 
-	print_char('\n');
+		memset(buff, ' ', sizeof(buff));
+		print_ntext(buff, sizeof(buff));
+	}
 
 	time = progress_bar_get_time_consume_ns(bar);
 	if (time > 1000UL) {
 		char size_buff[32];
 		char speed_buff[32];
 
-		mem_size_tostring(bar->total, size_buff, sizeof(size_buff));
-		mem_speed_tostring(bar->total * 1000000000UL / time, speed_buff, sizeof(speed_buff));
+		mem_size_tostring(bar->current, size_buff, sizeof(size_buff));
+		mem_speed_tostring(bar->current * 1000000000UL / time, speed_buff, sizeof(speed_buff));
 		println("%s (%s in %lf ms)", speed_buff, size_buff, time / 1000000UL);
 	}
 }

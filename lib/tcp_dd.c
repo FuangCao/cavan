@@ -353,7 +353,7 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 		size = req->size;
 	}
 
-	if (size < (off_t) req->offset) {
+	if (size > 0 && size < (off_t) req->offset) {
 		ret = -EINVAL;
 		tcp_dd_send_response(client, ret, "[Server] No data to be sent");
 		goto out_close_fd;
@@ -365,7 +365,9 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 		goto out_close_fd;
 	}
 
-	size -= req->offset;
+	if (size > 0) {
+		size -= req->offset;
+	}
 
 	mode = ffile_get_mode(fd);
 	if (mode == 0) {
@@ -999,13 +1001,17 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 		goto out_close_fd;
 	}
 
-	if (file_req->size == 0) {
-		file_req->size = st.st_size;
-	}
+	if (st.st_size > 0) {
+		if (file_req->size == 0) {
+			file_req->size = st.st_size;
+		}
 
-	if (file_req->size < file_req->src_offset) {
-		pr_red_info("No data to sent");
-		return -EINVAL;
+		if (file_req->size < file_req->src_offset) {
+			pr_red_info("No data to sent");
+			return -EINVAL;
+		}
+	} else {
+		file_req->size = 0;
 	}
 
 	ret = lseek(fd, file_req->src_offset, SEEK_SET);
@@ -1014,7 +1020,9 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 		goto out_close_fd;
 	}
 
-	file_req->size -= file_req->src_offset;
+	if (file_req->size > 0) {
+		file_req->size -= file_req->src_offset;
+	}
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
@@ -1038,7 +1046,9 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 		goto out_close_fd;
 	}
 
-	ret = tcp_dd_recv_response(&client);
+	if (file_req->size > 0) {
+		ret = tcp_dd_recv_response(&client);
+	}
 
 out_client_close:
 	msleep(100);
@@ -1052,10 +1062,13 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 {
 	int fd;
 	int ret;
+	mode_t mode;
 	struct tcp_dd_package pkg;
 	const char *src_file = NULL;
 	const char *dest_file = NULL;
 	struct network_client client;
+
+	umask(0);
 
 	ret = tcp_dd_check_file_request(file_req, &src_file, &dest_file);
 	if (ret < 0) {
@@ -1078,15 +1091,20 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 		goto out_client_close;
 	}
 
-	fd = open(dest_file, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, pkg.file_req.mode);
+	mode = pkg.file_req.mode;
+
+	if (file_req->size == 0) {
+		file_req->size = pkg.file_req.size;
+		if (file_req->size == 0) {
+			mode = 0777;
+		}
+	}
+
+	fd = open(dest_file, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, mode);
 	if (fd < 0) {
 		ret = fd;
 		tcp_dd_send_response(&client, fd, "[Client] Open file `%s' failed", dest_file);
 		goto out_client_close;
-	}
-
-	if (file_req->size == 0) {
-		file_req->size = pkg.file_req.size;
 	}
 
 	ret = lseek(fd, file_req->dest_offset, SEEK_SET);

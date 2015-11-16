@@ -9,6 +9,46 @@
 #define CAVAN_TIME_BASE_DAYS_1970			719527UL
 #define CAVAN_TIME_BASE_DAYS_2000			730484UL
 
+#define US_NS(time)							((time) * 1000UL)
+#define MS_US(time)							((time) * 1000UL)
+#define MS_NS(time)							((time) * 1000000UL)
+#define SEC_MS(time)						((time) * 1000UL)
+#define SEC_US(time)						((time) * 1000000UL)
+#define SEC_NS(time)						((time) * 1000000000UL)
+
+#define MIN_SEC(time)						((time) * 60UL)
+#define MIN_MS(time)						SEC_MS(MIN_SEC(time))
+#define MIN_US(time)						SEC_US(MIN_SEC(time))
+#define MIN_NS(time)						SEC_NS(MIN_SEC(time))
+
+#define HOUR_MIN(time)						((time) * 60UL)
+#define HOUR_SEC(time)						MIN_SEC(HOUR_MIN(time))
+#define HOUR_MS(time)						MIN_MS(HOUR_MIN(time))
+#define HOUR_US(time)						MIN_US(HOUR_MIN(time))
+#define HOUR_NS(time)						MIN_NS(HOUR_MIN(time))
+
+#define DAY_HOUR(time)						((time) * 24UL)
+#define DAY_MIN(time)						HOUR_MIN(DAY_HOUR(time))
+#define DAY_SEC(time)						HOUR_SEC(DAY_HOUR(time))
+#define DAY_MS(time)						HOUR_MS(DAY_HOUR(time))
+#define DAY_US(time)						HOUR_US(DAY_HOUR(time))
+#define DAY_NS(time)						HOUR_NS(DAY_HOUR(time))
+
+#define WEEK_DAY(time)						((time) * 7UL)
+#define WEEK_HOUR(time)						DAY_HOUR(WEEK_DAY(time))
+#define WEEK_MIN(time)						DAY_MIN(WEEK_DAY(time))
+#define WEEK_SEC(time)						DAY_SEC(WEEK_DAY(time))
+#define WEEK_MS(time)						DAY_MS(WEEK_DAY(time))
+#define WEEK_US(time)						DAY_US(WEEK_DAY(time))
+#define WEEK_NS(time)						DAY_NS(WEEK_DAY(time))
+
+#define NS_US(time)							((time) / 1000UL)
+#define NS_MS(time)							((time) / 1000000UL)
+#define NS_SEC(time)						((time) / 1000000000UL)
+#define US_MS(time)							((time) / 1000UL)
+#define US_SEC(time)						((time) / 1000000UL)
+#define MS_SEC(time)						((time) / 1000UL)
+
 struct cavan_time {
 	u32 year;
 	u8 month;	// 0 ~ 11

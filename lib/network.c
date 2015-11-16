@@ -2033,8 +2033,12 @@ ssize_t network_client_fill_buff(struct network_client *client, char *buff, size
 
 ssize_t network_client_recv_file(struct network_client *client, int fd, size_t size)
 {
+	size_t total;
 	ssize_t rdlen;
 	char buff[2048];
+	struct progress_bar bar;
+
+	progress_bar_init(&bar, size);
 
 	if (size == 0) {
 		while (1) {
@@ -2044,7 +2048,7 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 					return rdlen;
 				}
 
-				return size;
+				break;
 			}
 
 			if (ffile_write(fd, buff, rdlen) < rdlen) {
@@ -2052,12 +2056,12 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 			}
 
 			size += rdlen;
+			progress_bar_add(&bar, rdlen);
 		}
-	} else {
-		size_t size_bak = size;
-		struct progress_bar bar;
 
-		progress_bar_init(&bar, size);
+		total = size;
+	} else {
+		total = size;
 
 		while (size) {
 
@@ -2070,10 +2074,11 @@ ssize_t network_client_recv_file(struct network_client *client, int fd, size_t s
 			progress_bar_add(&bar, rdlen);
 		}
 
-		progress_bar_finish(&bar);
-
-		return size_bak;
 	}
+
+	progress_bar_finish(&bar);
+
+	return total;
 }
 
 ssize_t network_client_recv_file2(struct network_client *client, const char *pathname, size_t size, int flags)
@@ -2099,8 +2104,12 @@ ssize_t network_client_recv_file2(struct network_client *client, const char *pat
 
 ssize_t network_client_send_file(struct network_client *client, int fd, size_t size)
 {
+	size_t total;
 	ssize_t rdlen;
 	char buff[2048];
+	struct progress_bar bar;
+
+	progress_bar_init(&bar, size);
 
 	if (size == 0) {
 		while (1) {
@@ -2110,7 +2119,7 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 					return rdlen;
 				}
 
-				return size;
+				break;
 			}
 
 			if (client->send(client, buff, rdlen) < rdlen) {
@@ -2118,12 +2127,12 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 			}
 
 			size += rdlen;
+			progress_bar_add(&bar, rdlen);
 		}
-	} else {
-		size_t size_bak = size;
-		struct progress_bar bar;
 
-		progress_bar_init(&bar, size);
+		total = size;
+	} else {
+		total = size;
 
 		while (size) {
 			rdlen = ffile_read(fd, buff, sizeof(buff));
@@ -2134,11 +2143,11 @@ ssize_t network_client_send_file(struct network_client *client, int fd, size_t s
 			size -= rdlen;
 			progress_bar_add(&bar, rdlen);
 		}
-
-		progress_bar_finish(&bar);
-
-		return size_bak;
 	}
+
+	progress_bar_finish(&bar);
+
+	return total;
 }
 
 ssize_t network_client_send_file2(struct network_client *client, const char *pathname, size_t size)

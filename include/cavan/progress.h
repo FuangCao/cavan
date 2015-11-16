@@ -23,6 +23,7 @@ struct progress_bar {
 	double speed;
 	double total;
 	double current;
+	s64 interval;
 
 	int fill;
 	int half_length;

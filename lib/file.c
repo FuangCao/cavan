@@ -197,17 +197,10 @@ ssize_t ffile_copy_simple(int src_fd, int dest_fd)
 
 ssize_t ffile_copy(int src_fd, int dest_fd)
 {
-	int ret;
 	ssize_t cpylen = 0;
-	struct stat st;
 	struct progress_bar bar;
 
-	ret = fstat(src_fd, &st);
-	if (ret < 0 || st.st_size < MIN_FILE_SIZE) {
-		return ffile_copy_simple(src_fd, dest_fd);
-	}
-
-	progress_bar_init(&bar, st.st_size);
+	progress_bar_init(&bar, ffile_get_size(src_fd));
 
 	while (1) {
 		ssize_t rdlen, wrlen;
