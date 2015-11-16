@@ -4,6 +4,7 @@
 #include <cavan/command.h>
 #include <cavan/progress.h>
 
+static struct progress_bar *bar_curr;
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 s64 progress_bar_get_time_consume_ns(struct progress_bar *bar)
@@ -167,9 +168,23 @@ void progress_bar_update(struct progress_bar *bar)
 	}
 }
 
+static void progress_bar_sigint(int signum)
+{
+	struct progress_bar *bar = bar_curr;
+
+	if (bar) {
+		bar->normal = false;
+		progress_bar_finish(bar);
+	}
+
+	exit(1);
+}
+
 void progress_bar_init(struct progress_bar *bar, double total)
 {
 	int columns;
+
+	bar_curr = bar;
 
 	bar->total = total;
 	bar->current = bar->last = 0;
@@ -197,6 +212,9 @@ void progress_bar_init(struct progress_bar *bar, double total)
 	bar->time_prev = bar->time_start;
 
 	progress_bar_update(bar);
+
+	bar->normal = true;
+	signal(SIGINT, progress_bar_sigint);
 }
 
 void progress_bar_add(struct progress_bar *bar, double val)
@@ -215,14 +233,20 @@ void progress_bar_finish(struct progress_bar *bar)
 {
 	double time;
 
+	bar_curr = NULL;
+
 	if (bar->total > 0) {
-		bar->current = bar->total;
-		progress_bar_update(bar);
+		if (bar->normal) {
+			bar->current = bar->total;
+			progress_bar_update(bar);
+		}
+
 		print_char('\n');
 	} else {
-		char buff[bar->content_length];
+		char buff[bar->content_length + 1];
 
 		memset(buff, ' ', sizeof(buff));
+		buff[bar->content_length] = '\r';
 		print_ntext(buff, sizeof(buff));
 	}
 
