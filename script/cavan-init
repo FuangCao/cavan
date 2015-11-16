@@ -111,7 +111,7 @@ function create_mount_points()
 	mkdir /mnt -pv
 	cd /mnt || return 1
 
-	for index in 1 2 3 4 5 6 7 8
+	for index in $(seq 1 9)
 	do
 		mkdir upan${index} -pv
 		mkdir img${index} -pv

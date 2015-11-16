@@ -1,7 +1,25 @@
 #!/bin/bash
 
+function cavan-is_mount_point()
+{
+	local real_path
+
+	[ -d "$1" ] || return 1
+
+	real_path="$(readlink -f $1)"
+
+	for fn in $(cat /proc/mounts | awk '{ print $2 }')
+	do
+		[ "${real_path}" = "${fn}" ] && return 0
+	done
+
+	return 1
+}
+
 function cavan-symlink()
 {
+	local src_path rel_root
+
 	[ "$2" ] || return 0
 
 	mkdir $(dirname "$1") -pv || return 1
@@ -11,6 +29,12 @@ function cavan-symlink()
 		rm "$2" || return 1
 	elif [ -d "$2" ]
 	then
+		cavan-is_mount_point "$2" &&
+		{
+			echo "directory $2 is a mount point"
+			return 1
+		}
+
 		if [ -d "$1" ]
 		then
 			cp "$2"/* "$1" -anv
@@ -22,7 +46,26 @@ function cavan-symlink()
 	fi
 
 	[ -e "$1" ] || mkdir "$1" -p || return 1
-	ln -vsf "$1" "$2" || return 1
+
+	if [[ "$1" = /* ]]
+	then
+		src_path="$2"
+		rel_root=""
+
+		while :;
+		do
+			src_path=$(dirname "${src_path}")
+			[ -e "${src_path}" ] && src_path=$(readlink -f ${src_path})
+			[ "${src_path}" = "/" ] && break
+			rel_root="../${rel_root}"
+		done
+
+		src_path=${rel_root}$(echo $1 | sed 's#^/*\(.*\)$#\1#g')
+	else
+		src_path="$1"
+	fi
+
+	ln -vsf "${src_path}" "$2" || return 1
 }
 
 function get_file_abs_directory()
