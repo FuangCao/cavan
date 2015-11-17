@@ -32,7 +32,7 @@ function cavan-symlink()
 		cavan-is_mount_point "$2" &&
 		{
 			echo "directory $2 is a mount point"
-			return 1
+			return 0
 		}
 
 		if [ -d "$1" ]
