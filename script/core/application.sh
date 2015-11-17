@@ -359,3 +359,43 @@ function make2()
 
     return $result
 }
+
+function cavan-merge-checkout()
+{
+	local branch
+
+	[ "$1" ] && branch="$1"
+	[ "${branch}" ] || branch="MERGE_HEAD"
+
+	echo "branch = ${branch}"
+
+	git status . | awk -F ' *: *' '/both (added|modified):/ { print $2 }' | while read line
+	do
+		echo "checkout $line"
+		git checkout "${branch}" "$line" || return 1
+	done
+}
+
+alias cavan-merge-checkout-them='cavan-merge-checkout MERGE_HEAD'
+alias cavan-merge-checkout-mine='cavan-merge-checkout HEAD'
+
+function cavan-merge-auto-checkout()
+{
+	[ "$1" ] && CAVAN_THEM_BRANCH="$1"
+	[ "${CAVAN_THEM_BRANCH}" ] || CAVAN_THEM_BRANCH="MERGE_HEAD"
+
+	echo "CAVAN_THEM_BRANCH = ${CAVAN_THEM_BRANCH}"
+
+	git status . | awk -F ' *: *' '/both (added|modified):/ { print $2 }' | while read line
+	do
+		if git log "$line" | grep Fuang
+		then
+			echo "skipping $line"
+		else
+			echo "checkout $line"
+			git checkout "${CAVAN_THEM_BRANCH}" "$line" || return 1
+		fi
+	done
+
+	export CAVAN_THEM_BRANCH
+}

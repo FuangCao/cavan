@@ -21,6 +21,7 @@ alias mkea='make'
 alias cavan-daemon-command='cavan-service -s 0 --'
 alias git='git $([ -d .cavan-git ] && echo "--git-dir=.cavan-git --work-tree=.")'
 alias cavan-make-module='make -f ${CAVAN_HOME}/driver/build/main.mk'
+alias cavan-git-updated='git log . | grep Fuang'
 
 CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
 CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
@@ -375,4 +376,9 @@ function cavan-kernel-config()
 	cp ${KERNEL_PATH}/${SAVE_CONFIG} ${KERNEL_SOURCE}/arch/${ARCH}/configs/${DEF_CONFIG} -av && return 0
 
 	return 1
+}
+
+function vi-then-source()
+{
+	vi $@ && source $@
 }
