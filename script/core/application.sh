@@ -221,6 +221,28 @@ function cavan-mm-push()
 {
 	local kernel_root file_list file_config
 
+	file_config="${HOME}/.cavan-mm-push.conf"
+
+	[ -f "${file_config}" ] && source ${file_config}
+
+	[ "${ADB_PORT}" ] || ADB_PORT="9999"
+
+	if [ "${ADB_HOST}" ]
+	then
+		CMD_ADB_TCP_DD="cavan-tcp_dd -wi ${ADB_HOST} -p ${ADB_PORT}"
+		CMD_ADB_TCP_EXEC="cavan-tcp_exec -i ${ADB_HOST} -p ${ADB_PORT}"
+	else
+		CMD_ADB_TCP_DD="cavan-tcp_dd -wa"
+		CMD_ADB_TCP_EXEC="cavan-tcp_exec -a"
+	fi
+
+	{
+		echo "ADB_HOST=\"${ADB_HOST}\""
+		echo "ADB_PORT=\"${ADB_PORT}\""
+		echo "CMD_ADB_TCP_DD=\"${CMD_ADB_TCP_DD}\""
+		echo "CMD_ADB_TCP_EXEC=\"${CMD_ADB_TCP_EXEC}\""
+	} | tee "${file_config}"
+
 	kernel_root=$(cavan-get-kernel-root)
 
 	if [ "${kernel_root}" ]
@@ -258,11 +280,11 @@ function cavan-mm-push()
 			case "${KERNEL_CONFIG}" in
 				ms600|imx6ms600)
 					cavan-build-ms600 || return 1
-					cavan-tcp_dd -wa --auto .git/boot.img || return 1
+					${CMD_ADB_TCP_DD} --auto .git/boot.img || return 1
 					;;
 				*)
 					[ -e ".config" ] || make ${KERNEL_CONFIG}_defconfig || return 1
-					make ${KERNEL_CONFIG}.img -j8 && cavan-tcp_dd -wa --auto kernel.img resource.img || return 1
+					make ${KERNEL_CONFIG}.img -j8 && ${CMD_ADB_TCP_DD} --auto kernel.img resource.img || return 1
 					;;
 			esac
 		) || return 1
@@ -273,14 +295,18 @@ function cavan-mm-push()
 		cavan-android-push ${file_list} || return 1
 	fi
 
+	alias cavan-adb-tcp_dd="${CMD_ADB_TCP_DD}"
+	alias cavan-adb-tcp_exec="${CMD_ADB_TCP_EXEC}"
+
 	return 0
 }
 
 function cavan-mm-push-reboot()
 {
-	cavan-mm-push $@ && adb reboot && return 0
+	cavan-mm-push $@ || return 1
+	adb reboot || ${CMD_ADB_TCP_EXEC} reboot || return 1
 
-	return 1
+	return 0
 }
 
 function cavan-android-auto-push()
