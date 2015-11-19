@@ -27,8 +27,8 @@ function sprd_compile_once()
 			cavan_visual_command kheader || return 1
 		}
 
-		cavan_visual_command make update-api -j16 || return 1
-		cavan_visual_command make -j16 || return 1
+		cavan_visual_command make update-api -j${MAKE_JOBS} || return 1
+		cavan_visual_command make -j${MAKE_JOBS} || return 1
 		ln -vsf out/target/product/* .
 	fi
 

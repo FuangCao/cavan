@@ -9,7 +9,7 @@ ICU4C_OUT="${ROOT_DIR}/out/icu4c"
 DIR_ICU4C_TMP="${ICU4C_PATH}/tmp"
 
 mkdir -pv ${ICU4C_OUT} || exit 1
-(cd ${ICU4C_OUT} && ${ICU4C_RUN_CONFIG} Linux && make -j16) || exit 1
+(cd ${ICU4C_OUT} && ${ICU4C_RUN_CONFIG} Linux && make -j${MAKE_JOBS}) || exit 1
 
 for fn in ${ICU4C_OUT}/data/out/tmp/*.dat
 do

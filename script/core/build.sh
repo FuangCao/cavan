@@ -63,7 +63,11 @@ function cavan-get-cpu-core-num()
 }
 
 CPU_CORE_NUM="$(cavan-get-cpu-core-num)"
+((${CPU_CORE_NUM} > 0)) || CPU_CORE_NUM="1"
 
-((${CPU_CORE_NUM} > 1)) && alias make="make -j${CPU_CORE_NUM}"
+MAKE_JOBS="${CPU_CORE_NUM}"
+CMD_MAKE="make -j${MAKE_JOBS}"
 
-export CPU_CORE_NUM
+alias make="${CMD_MAKE}"
+
+export CPU_CORE_NUM MAKE_JOBS CMD_MAKE

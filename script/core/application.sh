@@ -299,14 +299,14 @@ function cavan-mm-push()
 					;;
 				*)
 					[ -e ".config" ] || make ${KERNEL_CONFIG}_defconfig || return 1
-					make ${KERNEL_CONFIG}.img -j8 && ${CMD_ADB_TCP_DD} --auto kernel.img resource.img || return 1
+					make ${KERNEL_CONFIG}.img -j${MAKE_JOBS} && ${CMD_ADB_TCP_DD} --auto kernel.img resource.img || return 1
 					;;
 			esac
 		) || return 1
 
 		export KERNEL_NAME KERNEL_HOME KERNEL_CONFIG
 	else
-		file_list=$(mm -j8 | cavan-tee | grep '^target Symbolic:' | sed 's/^.*(\(.*\)).*$/\1/g'; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
+		file_list=$(mm -j${MAKE_JOBS} | cavan-tee | grep '^target Symbolic:' | sed 's/^.*(\(.*\)).*$/\1/g'; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
 		cavan-android-push ${file_list} || return 1
 	fi
 
