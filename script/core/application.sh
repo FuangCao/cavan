@@ -217,31 +217,46 @@ function cavan-get-kernel-root()
 	cavan-get-root-by-file "include/linux/kernel.h"
 }
 
+function cavan-save-cavan-sh()
+{
+	echo "FILE_CAVAN_SH = ${FILE_CAVAN_SH}"
+
+	cat > "${FILE_CAVAN_SH}" << EOF
+ADB_HOST="${ADB_HOST}"
+ADB_PORT="${ADB_PORT}"
+CMD_ADB_TCP_DD="${CMD_ADB_TCP_DD}"
+CMD_ADB_TCP_COPY="${CMD_ADB_TCP_COPY}"
+CMD_ADB_TCP_EXEC="${CMD_ADB_TCP_EXEC}"
+
+alias cavan-adb-tcp_dd="\${CMD_ADB_TCP_DD}"
+alias cavan-adb-tcp_exec="\${CMD_ADB_TCP_EXEC}"
+alias cavan-adb-shell="\${CMD_ADB_TCP_EXEC}"
+alias cavan-adb-reboot="\${CMD_ADB_TCP_EXEC} reboot"
+
+export ADB_HOST ADB_PORT
+export CMD_ADB_TCP_DD CMD_ADB_TCP_COPY CMD_ADB_TCP_EXEC
+EOF
+}
+
 function cavan-mm-push()
 {
 	local kernel_root file_list file_config
 
-	file_config="${HOME}/.cavan-mm-push.conf"
-
-	[ -f "${file_config}" ] && source ${file_config}
-
+	[ -f "${FILE_CAVAN_SH}" ] && source "${FILE_CAVAN_SH}"
 	[ "${ADB_PORT}" ] || ADB_PORT="9999"
 
 	if [ "${ADB_HOST}" ]
 	then
 		CMD_ADB_TCP_DD="cavan-tcp_dd -wi ${ADB_HOST} -p ${ADB_PORT}"
+		CMD_ADB_TCP_COPY="cavan-tcp_copy -wi ${ADB_HOST} -p ${ADB_PORT}"
 		CMD_ADB_TCP_EXEC="cavan-tcp_exec -i ${ADB_HOST} -p ${ADB_PORT}"
 	else
 		CMD_ADB_TCP_DD="cavan-tcp_dd -wa"
+		CMD_ADB_TCP_COPY="cavan-tcp_copy -wa"
 		CMD_ADB_TCP_EXEC="cavan-tcp_exec -a"
 	fi
 
-	{
-		echo "ADB_HOST=\"${ADB_HOST}\""
-		echo "ADB_PORT=\"${ADB_PORT}\""
-		echo "CMD_ADB_TCP_DD=\"${CMD_ADB_TCP_DD}\""
-		echo "CMD_ADB_TCP_EXEC=\"${CMD_ADB_TCP_EXEC}\""
-	} | tee "${file_config}"
+	cavan-save-cavan-sh
 
 	kernel_root=$(cavan-get-kernel-root)
 
@@ -291,12 +306,9 @@ function cavan-mm-push()
 
 		export KERNEL_NAME KERNEL_HOME KERNEL_CONFIG
 	else
-		file_list=$(mm -j8 | cavan-tee | grep "^Install:" | sed 's/^Install:\s*//g'; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
+		file_list=$(mm -j8 | cavan-tee | grep '^target Symbolic:' | sed 's/^.*(\(.*\)).*$/\1/g'; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
 		cavan-android-push ${file_list} || return 1
 	fi
-
-	alias cavan-adb-tcp_dd="${CMD_ADB_TCP_DD}"
-	alias cavan-adb-tcp_exec="${CMD_ADB_TCP_EXEC}"
 
 	return 0
 }

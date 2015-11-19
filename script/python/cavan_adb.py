@@ -6,14 +6,28 @@ class AdbManager(CavanCommandBase):
 	def __init__(self, pathname, verbose = False):
 		CavanCommandBase.__init__(self, pathname, verbose)
 		self.setAdbDevice()
+		self.mHost = self.getEnv("ADB_HOST")
+		if not self.mHost:
+			self.mHost = None
+
+		self.mPort = self.getEnv("ADB_PORT")
+		if not self.mPort:
+			self.mPort = "9999"
 
 	def setAdbDevice(self, device = None):
 		self.mDevice = device
 
 	def doAdbCommand(self, args):
-		command = ["adb"]
-		if self.mDevice != None:
-			command.extend(["-s", self.mDevice])
+		if not self.mHost:
+			command = ["adb"]
+			if self.mDevice != None:
+				command.extend(["-s", self.mDevice])
+		else:
+			subcmd = args.pop(0)
+			if subcmd in ["push"]:
+				command = ["cavan-tcp_dd", "-wi", self.mHost, "-p", self.mPort]
+			else:
+				return True
 
 		command.extend(args)
 

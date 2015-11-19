@@ -14,6 +14,8 @@ class AndroidManager(AdbManager):
 		self.mProductOut = os.path.realpath(productOut)
 		self.mProductOutLen = len(self.mProductOut)
 		self.mPathSystem = os.path.join(self.mProductOut, "system")
+		self.mPathSymbols = os.path.join(self.mProductOut, "symbols")
+		self.mPathSymbolsLen = len(self.mPathSymbols)
 
 		AdbManager.__init__(self, self.mBuildTop, verbose)
 
@@ -55,7 +57,10 @@ class AndroidManager(AdbManager):
 
 	def getDevicePath(self, pathname):
 		if pathname.startswith(self.mProductOut):
-			return pathname[self.mProductOutLen:]
+			if pathname.startswith(self.mPathSymbols):
+				return pathname[self.mPathSymbolsLen:]
+			else:
+				return pathname[self.mProductOutLen:]
 
 		return pathname
 
