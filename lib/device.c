@@ -1954,3 +1954,70 @@ int cavan_block_device_init(struct cavan_block_device *bdev, void *context)
 void cavan_block_device_deinit(struct cavan_block_device *bdev)
 {
 }
+
+bool cavan_remount_ro_done(void)
+{
+	FILE *fp;
+	bool res = true;
+
+	fp = fopen("/proc/mounts", "r");
+	if (fp == NULL) {
+		return res;
+	}
+
+	while (1) {
+		int match;
+		int mount_freq;
+		int mount_passno;
+		char mount_dev[256];
+		char mount_dir[256];
+		char mount_type[256];
+		char mount_opts[256];
+
+		match = fscanf(fp, "%255s %255s %255s %255s %d %d\n",
+		mount_dev, mount_dir, mount_type, mount_opts, &mount_freq, &mount_passno);
+		if (match != 6) {
+			if (match == EOF) {
+				break;
+			}
+
+			continue;
+		}
+
+		mount_dev[255] = 0;
+		if (!file_is_block_dev(mount_dev)) {
+			break;
+		}
+
+		mount_opts[255] = 0;
+		if (strstr(mount_opts, "rw,")) {
+			res = false;
+			break;
+		}
+	}
+
+	fclose(fp);
+
+	return res;
+}
+
+int cavan_remount_ro(int retry)
+{
+	int ret;
+
+	ret = file_write("/proc/sysrq-trigger", "u", 1);
+	if (ret < 0) {
+		return ret;
+	}
+
+	while (retry--) {
+		if (cavan_remount_ro_done()) {
+			return 0;
+		}
+
+		pd_func_info("retry = %d", retry);
+		msleep(100);
+	}
+
+	return -ETIMEDOUT;
+}

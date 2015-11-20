@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <sys/syscall.h>
 #include <poll.h>
 #include <pthread.h>
 #include <termios.h>

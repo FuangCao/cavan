@@ -330,4 +330,9 @@ static inline const char *cavan_bool_tostring(bool value)
 	return value ? "true" : "false";
 }
 
+static inline char *text_skip_space2(const char *text)
+{
+	return text_skip_space(text, text + strlen(text));
+}
+
 __END_DECLS;

@@ -215,6 +215,9 @@ int get_device_statfs(const char *devpath, const char *fstype, struct statfs *st
 int cavan_block_device_init(struct cavan_block_device *bdev, void *context);
 void cavan_block_device_deinit(struct cavan_block_device *bdev);
 
+bool cavan_remount_ro_done(void);
+int cavan_remount_ro(int retry);
+
 static inline int parse_mount_table_simple(const char *buff, struct mount_table *mtab)
 {
 	return sscanf(buff, "%s %s %s %s", mtab->source, mtab->target, mtab->fstype, mtab->option) == 4 ? 0 : -EINVAL;

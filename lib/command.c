@@ -9,6 +9,8 @@
 #include <cavan/thread.h>
 #include <cavan/device.h>
 #include <cavan/command.h>
+#include <sys/reboot.h>
+#include <linux/reboot.h>
 
 #define CAVAN_COMMAND_DEBUG				0
 #define CAVAN_TEE_USE_SYSTEM_POPEN		0
@@ -1365,4 +1367,32 @@ static void cavan_exit_ask_handler(int signum)
 void cavan_set_exit_ask(void)
 {
 	signal(SIGINT, cavan_exit_ask_handler);
+}
+
+int cavan_reboot(bool shutdown, const char *command)
+{
+	int ret;
+
+	sync();
+
+	ret = cavan_remount_ro_done();
+	if (ret < 0) {
+		pr_err_info("cavan_remount_ro_done");
+	}
+
+	if (command && command[0]) {
+		ret = syscall(SYS_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, command);
+		if (ret < 0) {
+			pr_err_info("syscall-%d: %d", SYS_reboot, ret);
+			return ret;
+		}
+	} else {
+		ret = reboot(shutdown ? RB_POWER_OFF : RB_AUTOBOOT);
+		if (ret < 0) {
+			pr_err_info("reboot: %d", ret);
+			return ret;
+		}
+	}
+
+	return 0;
 }

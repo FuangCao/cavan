@@ -428,6 +428,21 @@ bool byte_is_space(byte b)
 	}
 }
 
+bool byte_is_space_or_tail(byte b)
+{
+	switch (b) {
+	case 0:
+	case ' ':
+	case '\t':
+	case '\f':
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+
 bool byte_is_lf(byte b)
 {
 	switch (b) {
