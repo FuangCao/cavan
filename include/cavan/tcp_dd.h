@@ -20,6 +20,8 @@
 #define TCP_KEYPADF_EXIT_ACK	(1 << 0)
 #define TCP_KEYPADF_CMDLINE		(1 << 1)
 
+#define TCP_DD_PKG_BODY_OFFSET	offsetof(struct tcp_dd_package, body)
+
 enum tcp_dd_package_type
 {
 	TCP_DD_RESPONSE,
@@ -63,9 +65,11 @@ struct tcp_alarm_query_request {
 };
 
 struct tcp_dd_package {
-	u32 type;
+	u16 type;
+	u16 type_inverse;
 
 	union {
+		u8 body[0];
 		struct tcp_dd_response_package res_pkg;
 		struct tcp_dd_file_request file_req;
 		struct tcp_dd_exec_request exec_req;
@@ -87,6 +91,11 @@ struct cavan_tcp_dd_service {
 	const char *keypad_ko;
 	struct cavan_part_table *part_table;
 };
+
+void tcp_dd_set_package_type(struct tcp_dd_package *pkg, u16 type);
+bool tcp_dd_package_is_valid(const struct tcp_dd_package *pkg);
+bool tcp_dd_package_is_invalid(const struct tcp_dd_package *pkg);
+ssize_t tcp_dd_package_recv(struct network_client *client, struct tcp_dd_package *pkg);
 
 int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size);
 const char *tcp_dd_get_partition_pathname(struct cavan_tcp_dd_service *service, const char *name);
