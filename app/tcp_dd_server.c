@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 	service->super_permission = 1;
 
 	dd_service = cavan_dynamic_service_get_data(service);
-	dd_service->tcp_keypad_ko = NULL;
+	dd_service->keypad_ko = NULL;
 	url = &dd_service->url;
 	network_url_init(url, "tcp", "any", TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
 		case 'k':
 		case 'D':
 		case CAVAN_COMMAND_OPTION_DRIVER:
-			dd_service->tcp_keypad_ko = optarg;
+			dd_service->keypad_ko = optarg;
 			break;
 
 		default:

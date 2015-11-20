@@ -637,55 +637,66 @@ static int tcp_dd_service_open_input(struct cavan_tcp_dd_service *service)
 
 	network_service_lock(&service->service);
 
-	pd_func_info("uinput_fd = %d, tcp_keypad_fd = %d, keypad_use_count = %d", service->uinput_fd, service->tcp_keypad_fd, service->keypad_use_count);
+	pd_func_info("keypad_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
+		service->keypad_fd, service->keypad_use_count,
+		cavan_bool_tostring(service->keypad_uinput),
+		cavan_bool_tostring(service->keypad_insmod));
 
-	if (service->uinput_fd >= 0) {
-		fd = service->uinput_fd;
-	} else if (service->tcp_keypad_fd >= 0) {
-		fd = service->tcp_keypad_fd;
-	} else {
-		fd = cavan_uinput_create("TCP_KEYPAD", tcp_dd_uinput_init, service);
+	fd = service->keypad_fd;
+	if (fd < 0) {
+		service->keypad_uinput = false;
+		service->keypad_insmod = false;
+
+		fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
 		if (fd < 0) {
-			fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
-			if (fd < 0 && service->tcp_keypad_ko) {
-				cavan_system2("insmod \"%s\"", service->tcp_keypad_ko);
+			fd = cavan_uinput_create("TCP_KEYPAD", tcp_dd_uinput_init, service);
+			if (fd < 0 && service->keypad_ko) {
+				cavan_system2("insmod \"%s\"", service->keypad_ko);
+				service->keypad_insmod = true;
 				msleep(200);
 				fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
+			} else {
+				service->keypad_uinput = true;
 			}
-
-			service->tcp_keypad_fd = fd;
-		} else {
-			service->uinput_fd = fd;
 		}
+
+		service->keypad_fd = fd;
+		service->keypad_use_count = 0;
 	}
 
 	if (fd >= 0) {
 		service->keypad_use_count++;
 	}
 
-	pd_func_info("uinput_fd = %d, tcp_keypad_fd = %d, keypad_use_count = %d", service->uinput_fd, service->tcp_keypad_fd, service->keypad_use_count);
+	pd_func_info("keypad_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
+		service->keypad_fd, service->keypad_use_count,
+		cavan_bool_tostring(service->keypad_uinput),
+		cavan_bool_tostring(service->keypad_insmod));
 
 	network_service_unlock(&service->service);
 
 	return fd;
 }
 
-static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service)
+static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, bool force)
 {
 	network_service_lock(&service->service);
 
-	pd_func_info("uinput_fd = %d, tcp_keypad_fd = %d, keypad_use_count = %d", service->uinput_fd, service->tcp_keypad_fd, service->keypad_use_count);
+	pd_func_info("keypad_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
+		service->keypad_fd, service->keypad_use_count,
+		cavan_bool_tostring(service->keypad_uinput),
+		cavan_bool_tostring(service->keypad_insmod));
 
-	if (--service->keypad_use_count == 0) {
-		if (service->tcp_keypad_fd >= 0) {
-			close(service->tcp_keypad_fd);
-			service->tcp_keypad_fd = -1;
-			cavan_system2("rmmod \"%s\"", service->tcp_keypad_ko);
-		}
+	if (force && service->keypad_use_count > 0) {
+		service->keypad_use_count = 1;
+	}
 
-		if (service->uinput_fd >= 0) {
-			close(service->uinput_fd);
-			service->uinput_fd = -1;
+	if (--service->keypad_use_count == 0 && service->keypad_fd >= 0) {
+		close(service->keypad_fd);
+		service->keypad_fd = -1;
+
+		if (service->keypad_insmod && service->keypad_ko) {
+			cavan_system2("rmmod \"%s\"", service->keypad_ko);
 		}
 	}
 
@@ -694,21 +705,25 @@ static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service)
 		service->keypad_use_count = 0;
 	}
 
-	pd_func_info("uinput_fd = %d, tcp_keypad_fd = %d, keypad_use_count = %d", service->uinput_fd, service->tcp_keypad_fd, service->keypad_use_count);
+	pd_func_info("keypad_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
+		service->keypad_fd, service->keypad_use_count,
+		cavan_bool_tostring(service->keypad_uinput),
+		cavan_bool_tostring(service->keypad_insmod));
 
 	network_service_unlock(&service->service);
 }
 
 static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *service, struct network_client *client)
 {
+	int fd;
 	int ret;
 	int code;
 	ssize_t rdlen;
 
-	ret = tcp_dd_service_open_input(service);
-	if (ret < 0) {
-		tcp_dd_send_response(client, ret, "[Server] Failed to open input");
-		return ret;
+	fd = tcp_dd_service_open_input(service);
+	if (fd < 0) {
+		tcp_dd_send_response(client, fd, "[Server] Failed to open input");
+		return fd;
 	}
 
 	ret = tcp_dd_send_response(client, 0, "[Server] Start recv and write event");
@@ -717,7 +732,40 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 		goto out_tcp_dd_service_close_input;
 	}
 
-	if (service->uinput_fd < 0) {
+	if (service->keypad_uinput) {
+		struct input_event event;
+
+		memset(&event.time, 0, sizeof(event.time));
+
+		while (1) {
+			rdlen = client->recv(client, (void *) &event.type, sizeof(struct cavan_input_event));
+			if (rdlen < (int) sizeof(struct cavan_input_event)) {
+				break;
+			}
+
+			ret = cavan_input_event(fd, &event, 1);
+			if (ret < 0) {
+				pr_error_info("write events");
+				goto out_tcp_dd_service_close_input;
+			}
+		}
+
+		event.type = EV_KEY;
+		event.value = 0;
+
+		for (code = 0; code < KEY_CNT; code++) {
+			event.code = code;
+			ret = cavan_input_event(fd, &event, sizeof(event));
+			if (ret < 0) {
+				goto out_tcp_dd_service_close_input;
+			}
+		}
+
+		ret = cavan_input_sync(fd);
+		if (ret < 0) {
+			goto out_tcp_dd_service_close_input;
+		}
+	} else {
 		ssize_t wrlen;
 		struct cavan_input_event events[32];
 
@@ -727,7 +775,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 				break;
 			}
 
-			wrlen = write(service->tcp_keypad_fd, events, rdlen);
+			wrlen = write(fd, events, rdlen);
 			if (wrlen < rdlen) {
 				pr_error_info("write events");
 				ret = wrlen < 0 ? wrlen : -EFAULT;
@@ -740,7 +788,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 		for (code = 1; code < KEY_CNT; code++) {
 			events[0].code = code;
-			ret = write(service->tcp_keypad_fd, events, sizeof(events[0]));
+			ret = write(fd, events, sizeof(events[0]));
 			if (ret < 0) {
 				goto out_tcp_dd_service_close_input;
 			}
@@ -748,40 +796,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 		events[0].type = EV_SYN;
 		events[0].code = SYN_REPORT;
-		ret = write(service->tcp_keypad_fd, events, sizeof(events[0]));
-		if (ret < 0) {
-			goto out_tcp_dd_service_close_input;
-		}
-	} else {
-		struct input_event event;
-
-		memset(&event.time, 0, sizeof(event.time));
-
-		while (1) {
-			rdlen = client->recv(client, (void *) &event.type, sizeof(struct cavan_input_event));
-			if (rdlen < (int) sizeof(struct cavan_input_event)) {
-				break;
-			}
-
-			ret = cavan_input_event(service->uinput_fd, &event, 1);
-			if (ret < 0) {
-				pr_error_info("write events");
-				goto out_tcp_dd_service_close_input;
-			}
-		}
-
-		event.type = EV_KEY;
-		event.value = 0;
-
-		for (code = 0; code < KEY_CNT; code++) {
-			event.code = code;
-			ret = cavan_input_event(service->uinput_fd, &event, sizeof(event));
-			if (ret < 0) {
-				goto out_tcp_dd_service_close_input;
-			}
-		}
-
-		ret = cavan_input_sync(service->uinput_fd);
+		ret = write(fd, events, sizeof(events[0]));
 		if (ret < 0) {
 			goto out_tcp_dd_service_close_input;
 		}
@@ -790,7 +805,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	ret = 0;
 
 out_tcp_dd_service_close_input:
-	tcp_dd_service_close_input(service);
+	tcp_dd_service_close_input(service, false);
 	return ret;
 }
 
@@ -841,8 +856,7 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		cavan_part_table_dump(dd_service->part_table);
 	}
 
-	dd_service->uinput_fd = -1;
-	dd_service->tcp_keypad_fd = -1;
+	dd_service->keypad_fd = -1;
 	dd_service->keypad_use_count = 0;
 
 	return 0;
@@ -858,15 +872,7 @@ static void tcp_dd_service_stop_handler(struct cavan_dynamic_service *service)
 {
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	if (dd_service->tcp_keypad_fd >= 0) {
-		close(dd_service->tcp_keypad_fd);
-		dd_service->tcp_keypad_fd = -1;
-	}
-
-	if (dd_service->uinput_fd >= 0) {
-		close(dd_service->uinput_fd);
-		dd_service->uinput_fd = -1;
-	}
+	tcp_dd_service_close_input(dd_service, true);
 
 	cavan_alarm_thread_stop(&dd_service->alarm);
 	cavan_alarm_thread_deinit(&dd_service->alarm);

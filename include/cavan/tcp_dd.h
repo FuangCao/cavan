@@ -80,10 +80,11 @@ struct cavan_tcp_dd_service {
 	struct network_url url;
 	char *filename;
 	char pathname[1024];
-	int tcp_keypad_fd;
-	int uinput_fd;
+	int keypad_fd;
 	int keypad_use_count;
-	const char *tcp_keypad_ko;
+	bool keypad_uinput;
+	bool keypad_insmod;
+	const char *keypad_ko;
 	struct cavan_part_table *part_table;
 };
 
