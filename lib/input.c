@@ -288,7 +288,9 @@ static struct cavan_input_key cavan_input_keymap[] = {
 	// { "brightness_auto", KEY_BRIGHTNESS_AUTO },
 	{ "brightness_zero", KEY_BRIGHTNESS_ZERO },
 	{ "display_off", KEY_DISPLAY_OFF },
+#ifdef KEY_WWAN
 	{ "wwan", KEY_WWAN },
+#endif
 	{ "wimax", KEY_WIMAX },
 	{ "rfkill", KEY_RFKILL },
 	{ "micmute", KEY_MICMUTE },
