@@ -97,7 +97,14 @@ BINUTILS_URL = http://mirrors.ustc.edu.cn/gnu/binutils http://ftp.gnu.org/gnu/bi
 GMP_URL = http://mirrors.ustc.edu.cn/gnu/gmp http://ftp.gnu.org/gnu/gmp
 MPFR_URL = http://mirrors.ustc.edu.cn/gnu/mpfr http://ftp.gnu.org/gnu/mpfr
 MPC_URL = http://mirrors.ustc.edu.cn/gnu/mpc http://www.multiprecision.org/mpc/download
+
+KERNEL_VERSION_MSB = $(firstword $(subst ., ,$(KERNEL_VERSION)))
+
+ifeq ($(firstword $(KERNEL_VERSION_MSB)), 3)
 KERNEL_URL = http://www.kernel.org/pub/linux/kernel/v3.0
+else
+KERNEL_URL = http://www.kernel.org/pub/linux/kernel/v4.x
+endif
 
 SYSROOT_PATH = $(TOOLCHIAN_PATH)/sysroot
 TOOLCHIAN_COMMON_CONFIG = --build=$(CAVAN_BUILD_PLAT) --host=$(CAVAN_HOST_PLAT) --target=$(CAVAN_TARGET_PLAT)
