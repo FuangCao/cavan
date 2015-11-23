@@ -29,18 +29,36 @@ const char *inet_check_hostname(const char *hostname, char *buff, size_t size)
 {
 	if (hostname == NULL || hostname[0] == 0 || strcmp(hostname, "localhost") == 0) {
 		hostname = "127.0.0.1";
-	} else if (buff && size > 0 && text_is_number(hostname)) {
-		struct cavan_inet_route route;
+	} else if (buff && size > 0) {
+		int count;
+		int values[4];
+		const char *last;
 
-		if (cavan_inet_get_default_route(&route) < 0) {
-			snprintf(buff, size, "192.168.0.%s", hostname);
-		} else {
+		count = text2value_array2(hostname, &last, '.', values, NELEM(values), 10);
+		if (*last == 0 && count < 4) {
+			int i, j;
+			struct cavan_inet_route route;
 			u8 *addr = (u8 *) &route.gateway.sin_addr.s_addr;
 
-			snprintf(buff, size, "%d.%d.%d.%s", addr[0], addr[1], addr[2], hostname);
-		}
+			if (cavan_inet_get_default_route(&route) < 0) {
+				addr[0] = 192;
+				addr[1] = 168;
+				addr[2] = 0;
+				addr[3] = 1;
+			}
 
-		hostname = buff;
+			for (i = count - 1, j = 3; i >= 0; i--, j--) {
+				values[j] = values[i];
+			}
+
+			for (i = 4 - count - 1; i >= 0; i--) {
+				values[i] = addr[i];
+			}
+
+			value2text_array2(values, NELEM(values), '.', buff, size, 10);
+
+			hostname = buff;
+		}
 	}
 
 	println("hostname = %s", hostname);

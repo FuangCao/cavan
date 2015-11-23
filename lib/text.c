@@ -777,6 +777,32 @@ s64 text2value(const char *text, const char **last, int base)
 	return text2value_unsigned(text, last, base);
 }
 
+int text2value_array(const char *text, const char *text_end, const char **last, char sep, int values[], size_t count, int base)
+{
+	int i;
+
+	if (text_end == NULL) {
+		text_end = text + strlen(text);
+	}
+
+	for (i = 0; i < (int) count && text < text_end; text++) {
+		const char *last;
+
+		text = text_skip_space(text, text_end);
+		values[i++] = text2value(text, &last, base);
+		text = text_skip_space(last, text_end);
+		if (*text != sep) {
+			break;
+		}
+	}
+
+	if (last) {
+		*last = text;
+	}
+
+	return i;
+}
+
 double text2double_unsigned(const char *text, const char *text_end, const char **last, int base)
 {
 	int value;
@@ -969,6 +995,21 @@ char *value2text_simple(s64 value, char *buff, size_t size, int base)
 	}
 
 	return value2text_unsigned_simple(value, buff, size, base);
+}
+
+char *value2text_array(int values[], size_t count, char sep, char *buff, char *buff_end, int base)
+{
+	int i;
+
+	for (i = 0; i < (int) count && buff < buff_end; i++) {
+		if (i > 0) {
+			*buff++ = sep;
+		}
+
+		buff = value2text_simple(values[i], buff, buff_end - buff, base);
+	}
+
+	return buff;
 }
 
 char *base2prefix(int base, char *prefix)

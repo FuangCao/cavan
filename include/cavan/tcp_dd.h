@@ -32,6 +32,8 @@ enum tcp_dd_package_type
 	TCP_ALARM_REMOVE,
 	TCP_ALARM_LIST,
 	TCP_KEYPAD_EVENT,
+	TCP_DD_MKDIR,
+	TCP_DD_RDDIR,
 	TCP_DD_PACKAGE_COUNT
 };
 
@@ -46,6 +48,15 @@ struct tcp_dd_file_request {
 	u32 size;
 	u32 mode;
 	char filename[1024];
+};
+
+struct tcp_dd_mkdir_request {
+	u32 mode;
+	char pathname[1024];
+};
+
+struct tcp_dd_rddir_request {
+	char pathname[1024];
 };
 
 struct tcp_dd_exec_request {
@@ -75,6 +86,8 @@ struct tcp_dd_package {
 		struct tcp_dd_exec_request exec_req;
 		struct tcp_alarm_add_request alarm_add;
 		struct tcp_alarm_query_request alarm_query;
+		struct tcp_dd_mkdir_request mkdir_pkg;
+		struct tcp_dd_rddir_request rddir_pkg;
 	};
 };
 
@@ -96,6 +109,11 @@ void tcp_dd_set_package_type(struct tcp_dd_package *pkg, u16 type);
 bool tcp_dd_package_is_valid(const struct tcp_dd_package *pkg);
 bool tcp_dd_package_is_invalid(const struct tcp_dd_package *pkg);
 ssize_t tcp_dd_package_recv(struct network_client *client, struct tcp_dd_package *pkg);
+ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length);
+int tcp_dd_send_request(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length);
+int tcp_dd_send_request2(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length);
+int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length);
+int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length);
 
 int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size);
 const char *tcp_dd_get_partition_pathname(struct cavan_tcp_dd_service *service, const char *name);
@@ -109,3 +127,5 @@ int tcp_dd_keypad_client_run(struct network_url *url, int flags);
 int tcp_alarm_add(struct network_url *url, const char *command, time_t time, time_t repeat);
 int tcp_alarm_remove(struct network_url *url, int index);
 int tcp_alarm_list(struct network_url *url, int index);
+
+int tcp_dd_mkdir(struct network_url *url, const char *pathname, mode_t mode);

@@ -14,6 +14,23 @@
 #include <cavan/command.h>
 #include <cavan/swan_vk.h>
 
+static void tcp_dd_show_response(struct tcp_dd_response_package *res)
+{
+	if (res->message[0] == 0) {
+		return;
+	}
+
+	if ((int) res->code < 0) {
+		if (res->number) {
+			pd_red_info("%s [%s]", res->message, strerror(res->number));
+		} else {
+			pd_red_info("%s", res->message);
+		}
+	} else {
+		pd_green_info("%s", res->message);
+	}
+}
+
 void tcp_dd_set_package_type(struct tcp_dd_package *pkg, u16 type)
 {
 	pkg->type = type;
@@ -35,7 +52,9 @@ ssize_t tcp_dd_package_recv(struct network_client *client, struct tcp_dd_package
 	ssize_t rdlen;
 
 	rdlen = client->recv(client, pkg, sizeof(struct tcp_dd_package));
-	if (rdlen <= (ssize_t) TCP_DD_PKG_BODY_OFFSET || tcp_dd_package_is_invalid(pkg)) {
+	if (rdlen < (ssize_t) TCP_DD_PKG_BODY_OFFSET) {
+		pr_red_info("Invalid package length %" PRINT_FORMAT_SIZE, rdlen);
+
 		if (rdlen < 0) {
 			return rdlen;
 		}
@@ -43,8 +62,93 @@ ssize_t tcp_dd_package_recv(struct network_client *client, struct tcp_dd_package
 		return -EINVAL;
 	}
 
+	if (tcp_dd_package_is_invalid(pkg)) {
+		pr_red_info("Invalid package type = 0x%04x, type_inverse = 0x%04x", pkg->type, pkg->type_inverse);
+		return -EINVAL;
+	}
+
 	return rdlen;
 }
+
+ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length)
+{
+	ssize_t wrlen;
+
+	tcp_dd_set_package_type(pkg, type);
+
+	wrlen = client->send(client, pkg, length);
+	if (wrlen < (ssize_t) length) {
+		if (wrlen < 0) {
+			return wrlen;
+		}
+
+		return -EFAULT;
+	}
+
+	return 0;
+}
+
+int tcp_dd_send_request(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length)
+{
+	int ret;
+
+	ret = tcp_dd_package_send(client, pkg, type, length);
+	if (ret < 0) {
+		pr_red_info("tcp_dd_package_send %d", ret);
+		return ret;
+	}
+
+	return tcp_dd_package_recv(client, pkg);
+}
+
+int tcp_dd_send_request2(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length)
+{
+	int ret;
+
+	ret = tcp_dd_send_request(client, pkg, type, length);
+	if (ret < 0) {
+		pr_red_info("tcp_dd_send_request %d", ret);
+		return ret;
+	}
+
+	if (pkg->type != TCP_DD_RESPONSE) {
+		pr_red_info("Invalid package type %d", pkg->type);
+		return -EINVAL;
+	}
+
+	tcp_dd_show_response(&pkg->res_pkg);
+
+	return (int) pkg->res_pkg.code;
+}
+
+int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length)
+{
+	int ret;
+	struct network_client client;
+
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	if (ret < 0) {
+		pr_red_info("network_client_open2");
+		return ret;
+	}
+
+	return tcp_dd_send_request(&client, pkg, type, length);
+}
+
+int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length)
+{
+	int ret;
+	struct network_client client;
+
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	if (ret < 0) {
+		pr_red_info("network_client_open2");
+		return ret;
+	}
+
+	return tcp_dd_send_request2(&client, pkg, type, length);
+}
+
 
 static char *tcp_dd_find_platform_by_name_path(char *pathname, char *filename, size_t size)
 {
@@ -155,41 +259,22 @@ const char *tcp_dd_get_partition_pathname(struct cavan_tcp_dd_service *service, 
 	return service->pathname;
 }
 
-static void tcp_dd_show_response(struct tcp_dd_response_package *res)
-{
-	if (res->message[0] == 0) {
-		return;
-	}
-
-	if ((int) res->code < 0) {
-		if (res->number) {
-			pd_red_info("%s [%s]", res->message, strerror(res->number));
-		} else {
-			pd_red_info("%s", res->message);
-		}
-	} else {
-		pd_green_info("%s", res->message);
-	}
-}
-
 static int __printf_format_34__ tcp_dd_send_response(struct network_client *client, int code, const char *fmt, ...)
 {
 	struct tcp_dd_package pkg;
-	int ret;
-
-	tcp_dd_set_package_type(&pkg, TCP_DD_RESPONSE);
+	size_t length = MOFS(struct tcp_dd_package, res_pkg.message);
 
 	pkg.res_pkg.code = code;
 	pkg.res_pkg.number = errno;
 
 	if (fmt == NULL) {
 		pkg.res_pkg.message[0] = 0;
-		ret = 1;
+		length += 1;
 	} else {
 		va_list ap;
 
 		va_start(ap, fmt);
-		ret = vsprintf(pkg.res_pkg.message, fmt, ap) + 1;
+		length += vsprintf(pkg.res_pkg.message, fmt, ap) + 1;
 		va_end(ap);
 
 		if (code < 0) {
@@ -197,7 +282,7 @@ static int __printf_format_34__ tcp_dd_send_response(struct network_client *clie
 		}
 	}
 
-	return client->send(client, (char *) &pkg, MOFS(struct tcp_dd_package, res_pkg.message) + ret);
+	return tcp_dd_package_send(client, &pkg, TCP_DD_RESPONSE, length);
 }
 
 static int tcp_dd_recv_response(struct network_client *client)
@@ -224,20 +309,13 @@ static int tcp_dd_recv_response(struct network_client *client)
 static int tcp_dd_send_read_request(struct network_client *client, const char *filename, off_t offset, off_t size, struct tcp_dd_package *pkg)
 {
 	int ret;
-
-	tcp_dd_set_package_type(pkg, TCP_DD_READ);
+	size_t length;
 
 	pkg->file_req.offset = offset;
 	pkg->file_req.size = size;
-	ret = text_copy(pkg->file_req.filename, filename) - (char *) &pkg + 1;
+	length = ADDR_OFFSET(text_copy(pkg->file_req.filename, filename), &pkg) + 1;
 
-	ret = client->send(client, (char *) pkg, ret);
-	if (ret < 0) {
-		pr_red_info("inet_send");
-		return ret;
-	}
-
-	ret = tcp_dd_package_recv(client, pkg);
+	ret = tcp_dd_send_request(client, pkg, TCP_DD_READ, length);
 	if (ret < 0) {
 		pr_red_info("tcp_dd_package_recv");
 		return ret;
@@ -258,36 +336,27 @@ static int tcp_dd_send_read_request(struct network_client *client, const char *f
 
 static int tcp_dd_send_write_request(struct network_client *client, const char *filename, off_t offset, off_t size, mode_t mode)
 {
-	int ret;
+	size_t length;
 	struct tcp_dd_package pkg;
-
-	tcp_dd_set_package_type(&pkg, TCP_DD_WRITE);
 
 	pkg.file_req.offset = offset;
 	pkg.file_req.size = size;
 	pkg.file_req.mode = mode;
 
-	ret = text_copy(pkg.file_req.filename, filename) - (char *) &pkg + 1;
-	ret = client->send(client, (char *) &pkg, ret);
-	if (ret < 0) {
-		pr_red_info("inet_send");
-		return ret;
-	}
+	length = ADDR_OFFSET(text_copy(pkg.file_req.filename, filename), &pkg) + 1;
 
-	return tcp_dd_recv_response(client);
+	return tcp_dd_send_request2(client, &pkg, TCP_DD_WRITE, length);
 }
 
 static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, const char *command)
 {
-	int ret;
 	char *p;
+	size_t length;
 	struct tcp_dd_package pkg;
 
 	tty_get_win_size3(ttyfd, &pkg.exec_req.lines, &pkg.exec_req.columns);
 
 	pd_info("terminal size = %d x %d", pkg.exec_req.lines, pkg.exec_req.columns);
-
-	tcp_dd_set_package_type(&pkg, TCP_DD_EXEC);
 
 	if (command) {
 		p = text_copy(pkg.exec_req.command, command);
@@ -296,71 +365,40 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 		*p = 0;
 	}
 
-	ret = p - (char *) &pkg;
-	client->send(client, (char *) &pkg, ret + 1);
-	if (ret < 0) {
-		pr_red_info("inet_send");
-		return ret;
-	}
+	length = ADDR_OFFSET(p, &pkg) + 1;
 
-	return tcp_dd_recv_response(client);
+	return tcp_dd_send_request2(client, &pkg, TCP_DD_EXEC, length);
 }
 
 static int tcp_dd_send_keypad_request(struct network_client *client)
 {
-	int ret;
 	struct tcp_dd_package pkg;
 
-	tcp_dd_set_package_type(&pkg, TCP_KEYPAD_EVENT);
-
-	ret = client->send(client, (char *) &pkg, TCP_DD_PKG_BODY_OFFSET);
-	if (ret < 0) {
-		pr_red_info("inet_send");
-		return ret;
-	}
-
-	return tcp_dd_recv_response(client);
+	return tcp_dd_send_request2(client, &pkg, TCP_KEYPAD_EVENT, TCP_DD_PKG_BODY_OFFSET);
 }
 
 static int tcp_dd_send_alarm_add_request(struct network_client *client, time_t time, time_t repeat, const char *command)
 {
-	int ret;
+	size_t length;
 	struct tcp_dd_package pkg;
-	char *p;
-
-	tcp_dd_set_package_type(&pkg, TCP_ALARM_ADD);
 
 	pkg.alarm_add.time = time;
 	pkg.alarm_add.repeat = repeat;
-	p = text_copy(pkg.alarm_add.command, command);
+	length = ADDR_OFFSET(text_copy(pkg.alarm_add.command, command), &pkg) + 1;
 
-	ret = p - (char *) &pkg;
-	ret = client->send(client, (char *) &pkg, ret + 1);
-	if (ret < 0) {
-		pr_red_info("inet_send");
-		return ret;
-	}
-
-	return tcp_dd_recv_response(client);
+	return tcp_dd_send_request2(client, &pkg, TCP_ALARM_ADD, length);
 }
 
 static int tcp_dd_send_alarm_query_request(struct network_client *client, u16 type, int index)
 {
-	int ret;
+	size_t length;
 	struct tcp_dd_package pkg;
-
-	tcp_dd_set_package_type(&pkg, type);
 
 	pkg.alarm_query.index = index;
 
-	ret = sizeof(pkg.alarm_query) + MOFS(struct tcp_dd_package, alarm_query);
-	ret = client->send(client, (char *) &pkg, ret);
-	if (ret < 0) {
-		pr_red_info("inet_send");
-		return ret;
-	}
+	length = sizeof(pkg.alarm_query) + MOFS(struct tcp_dd_package, alarm_query);
 
-	return tcp_dd_recv_response(client);
+	return tcp_dd_send_request2(client, &pkg, type, length);
 }
 
 static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, struct network_client *client, struct tcp_dd_file_request *req)
@@ -859,6 +897,46 @@ out_tcp_dd_service_close_input:
 	return ret;
 }
 
+static int tcp_dd_handle_mkdir_request(struct network_client *client, struct tcp_dd_mkdir_request *req)
+{
+	int ret;
+
+	ret = cavan_mkdir_main2(req->pathname, req->mode);
+	tcp_dd_send_response(client, ret, NULL);
+
+	return ret;
+}
+
+static int tcp_dd_handle_rddir_request(struct network_client *client, struct tcp_dd_rddir_request *req)
+{
+	DIR *dp;
+	int ret;
+	struct dirent *en;
+
+	dp = opendir(req->pathname);
+	if (dp == NULL) {
+		ret = -ENOENT;
+		tcp_dd_send_response(client, ret, "opendir");
+		return ret;
+	}
+
+	ret = tcp_dd_send_response(client, 0, NULL);
+	if (ret < 0) {
+		goto out_closedir;
+	}
+
+	while ((en = cavan_readdir_skip_dot(dp))) {
+		ret = client->send(client, en->d_name, strlen(en->d_name) + 1);
+		if (ret < 0) {
+			break;
+		}
+	}
+
+out_closedir:
+	closedir(dp);
+	return ret;
+}
+
 static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
@@ -982,6 +1060,16 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	case TCP_KEYPAD_EVENT:
 		pr_bold_info("TCP_KEYPAD_EVENT");
 		ret = tcp_dd_handle_tcp_keypad_event_request(dd_service, client);
+		break;
+
+	case TCP_DD_MKDIR:
+		pr_bold_info("TCP_DD_MKDIR");
+		ret = tcp_dd_handle_mkdir_request(client, &pkg.mkdir_pkg);
+		break;
+
+	case TCP_DD_RDDIR:
+		pr_bold_info("TCP_DD_RDDIR");
+		ret = tcp_dd_handle_rddir_request(client, &pkg.rddir_pkg);
 		break;
 
 	default:
@@ -1439,4 +1527,15 @@ int tcp_alarm_list(struct network_url *url, int index)
 out_client_close:
 	client.close(&client);
 	return ret;
+}
+
+int tcp_dd_mkdir(struct network_url *url, const char *pathname, mode_t mode)
+{
+	size_t length;
+	struct tcp_dd_package pkg;
+
+	pkg.mkdir_pkg.mode  = mode;
+	length = ADDR_OFFSET(text_ncopy(pkg.mkdir_pkg.pathname, pathname, sizeof(pkg.mkdir_pkg.pathname)), &pkg) + 1;
+
+	return tcp_dd_send_request4(url, &pkg, TCP_DD_MKDIR, length);
 }

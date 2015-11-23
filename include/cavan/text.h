@@ -86,6 +86,7 @@ int char2value(char c);
 int prefix2base(const char *prefix, const char *prefix_end, const char **last, int base);
 u64 text2value_unsigned(const char *text, const char **last, int base);
 s64 text2value(const char *text, const char **last, int base);
+int text2value_array(const char *text, const char *text_end, const char **last, char sep, int values[], size_t count, int base);
 double text2double_unsigned(const char *text, const char *text_end, const char **last, int base);
 double text2double(const char *text, const char *text_end, const char **last, int base);
 
@@ -98,6 +99,7 @@ char *reverse_value2text_all(u64 value, char *buff, size_t size, int base);
 char *value2text_reverse_simple(u64 value, char *buff, size_t size, int base);
 char *value2text_unsigned_simple(u64 value, char *buff, size_t size, int base);
 char *value2text_simple(s64 value, char *buff, size_t size, int base);
+char *value2text_array(int values[], size_t count, char sep, char *buff, char *buff_end, int base);
 
 char *value2text_base(s64 value, char *text, int length, char fill, int flags);
 char *value2text(u64 value, int flags);
@@ -280,6 +282,16 @@ static inline char value2char(int index)
 	}
 
 	return index - 10 + 'A';
+}
+
+static inline int text2value_array2(const char *text, const char **last, char sep, int values[], size_t count, int base)
+{
+	return text2value_array(text, NULL, last, sep, values, count, base);
+}
+
+static inline char *value2text_array2(int values[], size_t count, char sep, char *buff, size_t size, int base)
+{
+	return value2text_array(values, count, sep, buff, buff + size, base);
 }
 
 static inline int is_empty_character(char c)

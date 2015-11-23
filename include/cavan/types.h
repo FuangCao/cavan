@@ -128,6 +128,9 @@ typedef struct {
 #define ADDR_SUB2(addr1, addr2) \
 	((byte *) (addr1) - (byte *) (addr2))
 
+#define ADDR_OFFSET(addr1, addr2) \
+	(((byte *) (addr1) > (byte *) (addr2)) ? ADDR_SUB2(addr1, addr2) : ADDR_SUB2(addr2, addr1))
+
 #define ADDR_IS_ALIGN(addr, bits) \
 	((((long) (addr)) & ((bits) - 1)) == 0)
 

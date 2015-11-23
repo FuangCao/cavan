@@ -211,6 +211,7 @@ mode_t file_mode2value(const char *text);
 int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *option);
 int cavan_mkdir_parents(const char *pathname, struct cavan_mkdir_command_option *option);
 int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *option);
+int cavan_mkdir_main2(const char *pathname, mode_t mode);
 
 int cavan_file_dump(const char *pathname, size_t width, const char *sep, const char *new_line);
 int cavan_temp_file_open(char *pathname, size_t size, const char *filename);

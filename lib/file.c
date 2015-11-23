@@ -2686,6 +2686,17 @@ int cavan_mkdir_main(const char *pathname, struct cavan_mkdir_command_option *op
 	return cavan_mkdir_simple(pathname, option);
 }
 
+int cavan_mkdir_main2(const char *pathname, mode_t mode)
+{
+	struct cavan_mkdir_command_option option = {
+		.mode = mode,
+		.verbose = false,
+		.parents = true
+	};
+
+	return cavan_mkdir_main(pathname, &option);
+}
+
 int cavan_file_dump(const char *pathname, size_t width, const char *sep, const char *new_line)
 {
 	int fd;
