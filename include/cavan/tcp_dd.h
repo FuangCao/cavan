@@ -44,8 +44,8 @@ struct tcp_dd_response_package {
 };
 
 struct tcp_dd_file_request {
-	u32 offset;
-	u32 size;
+	u64 offset;
+	u64 size;
 	u32 mode;
 	char filename[1024];
 };
