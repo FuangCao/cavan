@@ -192,6 +192,7 @@ out_network_service_close:
 static int do_test_send(int argc, char *argv[])
 {
 	int ret;
+	ssize_t wrlen;
 	const char *url;
 	const char *pathname;
 	struct network_client client;
@@ -207,8 +208,8 @@ static int do_test_send(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-	ret = network_client_send_file2(&client, pathname, 0);
-	if (ret < 0) {
+	wrlen = network_client_send_file2(&client, pathname, 0);
+	if (wrlen < 0) {
 		pr_red_info("network_client_send_file2");
 	} else {
 		char buff[1024];

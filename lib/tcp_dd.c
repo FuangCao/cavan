@@ -406,6 +406,7 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 	int fd;
 	int ret;
 	off_t size;
+	ssize_t wrlen;
 	struct stat st;
 	const char *pathname;
 
@@ -471,7 +472,12 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 	println("offset = %s", size2text(req->offset));
 	println("size = %s", size2text(size));
 
-	ret = network_client_send_file(client, fd, size);
+	wrlen = network_client_send_file(client, fd, size);
+	if (wrlen < 0) {
+		ret = wrlen;
+	} else {
+		ret = 0;
+	}
 
 out_close_fd:
 	close(fd);
@@ -484,6 +490,7 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 	int fd;
 	int ret;
 	mode_t mode;
+	ssize_t rdlen;
 	const char *pathname;
 
 	if (S_ISDIR(req->mode)) {
@@ -550,7 +557,12 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 	println("offset = %s", size2text(req->offset));
 	println("size = %s", size2text(req->size));
 
-	ret = network_client_recv_file(client, fd, req->size);
+	rdlen = network_client_recv_file(client, fd, req->size);
+	if (rdlen < 0) {
+		ret = rdlen;
+	} else {
+		ret = 0;
+	}
 
 out_close_fd:
 	close(fd);
@@ -1235,13 +1247,16 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 
 		closedir(dp);
 	} else {
+		ssize_t wrlen;
+
 		println("%s => %s", src_file, dest_file);
 		println("offset = %s", size2text(file_req->src_offset));
 		println("size = %s", size2text(file_req->size));
 
-		ret = network_client_send_file(&client, fd, file_req->size);
-		if (ret < 0) {
+		wrlen = network_client_send_file(&client, fd, file_req->size);
+		if (wrlen < 0) {
 			pr_red_info("network_client_send_file");
+			ret = wrlen;
 			goto out_close_fd;
 		}
 
@@ -1343,6 +1358,8 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 
 		goto out_client_close;
 	} else {
+		ssize_t rdlen;
+
 		if (file_req->size == 0) {
 			file_req->size = pkg.file_req.size;
 			if (file_req->size == 0) {
@@ -1373,7 +1390,12 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 		println("offset = %s", size2text(file_req->dest_offset));
 		println("size = %s", size2text(file_req->size));
 
-		ret = network_client_recv_file(&client, fd, file_req->size);
+		rdlen = network_client_recv_file(&client, fd, file_req->size);
+		if (rdlen < 0) {
+			ret = rdlen;
+		} else {
+			ret = 0;
+		}
 	}
 
 out_close_fd:

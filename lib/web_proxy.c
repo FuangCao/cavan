@@ -291,6 +291,7 @@ static int web_proxy_flush_html_file(int fd)
 static int web_proxy_send_file(struct network_client *client, int fd, const char *filetype)
 {
 	int ret;
+	ssize_t wrlen;
 	struct stat st;
 
 	if (lseek(fd, 0, SEEK_SET) != 0) {
@@ -310,7 +311,12 @@ static int web_proxy_send_file(struct network_client *client, int fd, const char
 		return ret;
 	}
 
-	return network_client_send_file(client, fd, st.st_size);
+	wrlen = network_client_send_file(client, fd, st.st_size);
+	if (wrlen < 0) {
+		return wrlen;
+	}
+
+	return 0;
 }
 
 static int web_proxy_ftp_list_directory(struct network_client *client, struct network_client *client_proxy, const struct network_url *url)
