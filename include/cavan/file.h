@@ -220,6 +220,9 @@ off_t cavan_file_seek_page_align(int fd, off_t offset, size_t page_size);
 
 struct dirent *cavan_readdir_skip_dot(DIR *dp);
 struct dirent *cavan_readdir_skip_hidden(DIR *dp);
+int cavan_readdir_to_file(const char *dirpath, int fd);
+int cavan_readdir_to_file2(const char *dirpath, const char *filepath);
+int cavan_readdir_to_file_temp(const char *dirpath, off_t *size);
 
 int cavan_file_proxy_add(struct cavan_file_proxy_desc *desc, const int fds[2]);
 int cavan_file_proxy_del(struct cavan_file_proxy_desc *desc, const int fds[2]);

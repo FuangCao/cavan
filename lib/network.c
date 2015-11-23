@@ -2198,6 +2198,30 @@ ssize_t network_client_timed_recv(struct network_client *client, void *buff, siz
 	return -ETIMEDOUT;
 }
 
+char *network_client_recv_line(struct network_client *client, char *buff, size_t size)
+{
+	char *buff_end;
+
+	for (buff_end = buff + size; buff < buff_end; buff++) {
+		ssize_t rdlen;
+
+		rdlen = client->recv(client, buff, 1);
+		if (rdlen <= 0) {
+			if (rdlen < 0) {
+				return NULL;
+			}
+
+			break;
+		}
+
+		if (*buff == '\n') {
+			break;
+		}
+	}
+
+	return buff;
+}
+
 bool network_client_discard_all(struct network_client *client)
 {
 	int ret;

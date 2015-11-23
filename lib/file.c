@@ -2788,6 +2788,91 @@ struct dirent *cavan_readdir_skip_hidden(DIR *dp) {
 	return dt;
 }
 
+int cavan_readdir_to_file(const char *dirpath, int fd)
+{
+	DIR *dp;
+	int ret;
+	struct dirent *en;
+
+	dp = opendir(dirpath);
+	if (dp == NULL) {
+		pr_err_info("opendir %s", dirpath);
+		return -ENOENT;
+	}
+
+	while ((en = cavan_readdir_skip_dot(dp))) {
+		char *name = en->d_name;
+		int length = strlen(name);
+
+		name[length] = '\n';
+
+		ret = ffile_write(fd, name, length + 1);
+		if (ret < 0) {
+			pr_err_info("ffile_write");
+			goto out_closedir;
+		}
+	}
+
+	ret = 0;
+
+out_closedir:
+	closedir(dp);
+	return ret;
+}
+
+int cavan_readdir_to_file2(const char *dirpath, const char *filepath)
+{
+	int fd;
+	int ret;
+
+	fd = open(filepath, O_CREAT | O_WRONLY | O_TRUNC, 0777);
+	if (fd < 0) {
+		pr_err_info("open file %s", filepath);
+		return fd;
+	}
+
+	ret = cavan_readdir_to_file(dirpath, fd);
+
+	close(fd);
+
+	return ret;
+}
+
+int cavan_readdir_to_file_temp(const char *dirpath, off_t *size)
+{
+	int fd;
+	int ret;
+	char pathname[1024];
+
+	fd = cavan_temp_file_open(pathname, sizeof(pathname), "readdir-XXXXXX");
+	if (fd < 0) {
+		pr_red_info("cavan_temp_file_open");
+		return fd;
+	}
+
+	ret = cavan_readdir_to_file(dirpath, fd);
+	if (ret < 0) {
+		pr_red_info("cavan_readdir_to_file");
+		goto out_close_fd;
+	}
+
+	if (size) {
+		*size = lseek(fd, 0, SEEK_CUR);
+	}
+
+	ret = lseek(fd, 0, SEEK_SET);
+	if (ret < 0) {
+		pr_err_info("lseek");
+		goto out_close_fd;
+	}
+
+	return fd;
+
+out_close_fd:
+	close(fd);
+	return ret;
+}
+
 // ================================================================================
 
 int cavan_file_proxy_add(struct cavan_file_proxy_desc *desc, const int fds[2])
