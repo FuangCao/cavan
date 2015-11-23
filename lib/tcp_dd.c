@@ -423,42 +423,42 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 	}
 
 	if (S_ISDIR(st.st_mode)) {
-		fd = cavan_readdir_to_file_temp(pathname, &st.st_size);
+		fd = cavan_readdir_to_file_temp(pathname, &size);
 		if (fd < 0) {
 			tcp_dd_send_response(client, fd, "[Server] Read dir `%s' failed", pathname);
 			return fd;
 		}
 
 		req->offset = 0;
-		req->size = 0;
+		req->size = size;
 	} else {
 		fd = open(pathname, O_RDONLY);
 		if (fd < 0) {
 			tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", pathname);
 			return fd;
 		}
-	}
 
-	if (req->size == 0) {
-		size = st.st_size;
-	} else {
-		size = req->size;
-	}
+		if (req->size == 0) {
+			size = st.st_size;
+		} else {
+			size = req->size;
+		}
 
-	if (size > 0 && size < (off_t) req->offset) {
-		ret = -EINVAL;
-		tcp_dd_send_response(client, ret, "[Server] No data to be sent");
-		goto out_close_fd;
-	}
+		if (size > 0 && size < (off_t) req->offset) {
+			ret = -EINVAL;
+			tcp_dd_send_response(client, ret, "[Server] No data to be sent");
+			goto out_close_fd;
+		}
 
-	ret = lseek(fd, req->offset, SEEK_SET);
-	if (ret < 0) {
-		tcp_dd_send_response(client, ret, "[Server] Seek file `%s' failed", pathname);
-		goto out_close_fd;
-	}
+		ret = lseek(fd, req->offset, SEEK_SET);
+		if (ret < 0) {
+			tcp_dd_send_response(client, ret, "[Server] Seek file `%s' failed", pathname);
+			goto out_close_fd;
+		}
 
-	if (size > 0) {
-		size -= req->offset;
+		if (size > 0) {
+			size -= req->offset;
+		}
 	}
 
 	ret = tcp_dd_send_write_request(client, pathname, 0, size, st.st_mode);
