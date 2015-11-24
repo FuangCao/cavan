@@ -6,6 +6,7 @@
 
 #include <cavan.h>
 #include <cavan/adb.h>
+#include <cavan/file.h>
 #include <cavan/tcp_dd.h>
 #include <cavan/parser.h>
 #include <cavan/command.h>
@@ -111,7 +112,8 @@ int main(int argc, char *argv[])
 		},
 	};
 	int i;
-	char *pname;
+	int ret;
+	int count;
 	struct network_url url;
 	struct network_file_request file_req;
 	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
@@ -209,24 +211,44 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	assert(argc - optind > 1);
+	count = argc - optind;
+	if (count < 1) {
+		show_usage(argv[0]);
+		return -EINVAL;
+	}
 
-	pname = text_path_cat(file_req.dest_file, sizeof(file_req.dest_file), argv[--argc], NULL);
+	if (count > 1) {
+		char *pname;
 
-	for (i = optind; i < argc; i++) {
-		int ret;
+		pname = text_path_cat(file_req.dest_file, sizeof(file_req.dest_file), argv[--argc], NULL);
 
-		text_basename_base(pname, argv[i]);
-		text_copy(file_req.src_file, argv[i]);
+		for (i = optind; i < argc; i++) {
+			text_basename_base(pname, argv[i]);
+			text_copy(file_req.src_file, argv[i]);
+			file_req.src_offset = 0;
+			file_req.dest_offset = 0;
+			file_req.size = 0;
+
+			println("%s => %s", argv[i], file_req.dest_file);
+
+			ret = handler(&url, &file_req);
+			if (ret < 0) {
+				pr_red_info("Copy file %s to %s failed!", argv[i], file_req.dest_file);
+				return ret;
+			}
+		}
+	} else {
+		file_abs_path_simple(argv[optind], file_req.src_file, sizeof(file_req.src_file));
+		strncpy(file_req.dest_file, file_req.src_file, sizeof(file_req.dest_file));
 		file_req.src_offset = 0;
 		file_req.dest_offset = 0;
 		file_req.size = 0;
 
-		println("%s => %s", argv[i], file_req.dest_file);
+		println("%s => %s", file_req.src_file, file_req.dest_file);
 
 		ret = handler(&url, &file_req);
 		if (ret < 0) {
-			pr_red_info("Copy file %s to %s failed!", argv[i], file_req.dest_file);
+			pr_red_info("Copy file %s to %s failed!", file_req.src_file, file_req.dest_file);
 			return ret;
 		}
 	}

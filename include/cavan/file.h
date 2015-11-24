@@ -232,6 +232,8 @@ int cavan_file_proxy_init(struct cavan_file_proxy_desc *desc);
 void cavan_file_proxy_deinit(struct cavan_file_proxy_desc *desc);
 int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc);
 
+char *file_abs_path_simple(char *rel_path, char *buff, size_t size);
+
 // ============================================================
 
 static inline int file_open_ro(const char *file_path)
