@@ -1,0 +1,20 @@
+diff --git a/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.h b/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.h
+index 657cd85..af5be0d 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.h
++++ b/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.h
+@@ -327,9 +327,14 @@ namespace __sanitizer {
+ #endif
+ 
+ #if SANITIZER_LINUX && !SANITIZER_ANDROID
++  enum cavan_xdr_op {
++    CAVAN_XDR_ENCODE = 0,
++    CAVAN_XDR_DECODE = 1,
++    CAVAN_XDR_FREE = 2
++  };
+ 
+   struct __sanitizer_XDR {
+-    int x_op;
++    enum cavan_xdr_op x_op;
+     void *x_ops;
+     uptr x_public;
+     uptr x_private;

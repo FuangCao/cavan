@@ -56,7 +56,7 @@
 	<package name="module-init-tools"	version="3.15"					url="ftp://ftp.kernel.org/pub/linux/utils/kernel/module-init-tools"/>
 	<package name="mpg123"				version="1.13.4"				url="http://ncu.dl.sourceforge.net/project/mpg123/mpg123/$(MPG123_VERSION)"/>
 	<package name="mplayer"				version="export-snapshot"		url="http://mplayerhq.hu/MPlayer/releases"/>
-	<package name="ncurses"				version="5.9"					url="http://mirrors.ustc.edu.cn/gnu/ncurses http://ftp.gnu.org/gnu/ncurses"/>
+	<package name="ncurses"				version="6.0"					url="http://mirrors.ustc.edu.cn/gnu/ncurses http://ftp.gnu.org/gnu/ncurses"/>
 	<package name="pciids"				version="0.1"					url="http://vorner.ucw.cz/download/pciids_$(PCIIDS_VERSION).tar.bz2"/>
 	<package name="perl"				version="5.14.2"				url="http://www.cpan.org/src/5.0"/>
 	<package name="pixman"				version="0.32.6"				url="http://cairographics.org/releases"/>

@@ -43,7 +43,7 @@
 	         url="http://zlib.net">
 	</package>
 
-	<package name="ncurses" version="5.9" depend="bash"
+	<package name="ncurses" version="6.0" depend="bash"
 	         config="--prefix=/usr"
 			 url="http://mirrors.ustc.edu.cn/gnu/ncurses http://ftp.gnu.org/gnu/ncurses">
 	</package>

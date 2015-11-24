@@ -4,7 +4,7 @@
 			 url="http://zlib.net">
 	</package>
 
-	<package name="ncurses" version="5.9" depend=""
+	<package enable="false" name="ncurses" version="6.0" depend=""
 	         config=""
 			 url="http://ftp.gnu.org/gnu/ncurses">
 	</package>

@@ -59,6 +59,15 @@ def GenerateMakeFile():
 
 	for tagPackage in tagPackages[0].getElementsByTagName("package"):
 		name = tagPackage.getAttribute("name")
+
+		enable = tagPackage.getAttribute("enable")
+		if enable in ["false", "0"]:
+			continue
+
+		if not enable in ["", "true", "1"]:
+			print "Invalid attribute value : enable = %s, name = %s at %s" % (enable, name, args[0])
+			return -1
+
 		version = tagPackage.getAttribute("version")
 		prefix = name.upper() + "_"
 		lastname = prefix + "NAME"

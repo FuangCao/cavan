@@ -30,7 +30,7 @@
 			 url="http://ftp.gnu.org/gnu/gperf">
 	</package>
 
-	<package name="ncurses" version="5.9" depend="automake"
+	<package enable="false" name="ncurses" version="5.9" depend="automake"
 			 config="--enable-pc-files CFLAGS='-fPIC'"
 			 url="http://ftp.gnu.org/gnu/ncurses">
 	</package>
