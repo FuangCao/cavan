@@ -19,8 +19,7 @@ static int ctrl_fd;
 static int swan_vk_tty_fd;
 static struct termios swan_vk_tty_attr;
 
-static const struct swan_vk_descriptor swan_vk_table[] =
-{
+static const struct swan_vk_descriptor swan_vk_table[] = {
 	{"search", SWAN_VKEY_SEARCH},
 	{"back", SWAN_VKEY_BACK},
 	{"menu", SWAN_VKEY_MENU},

@@ -35,8 +35,7 @@ static int cavan_firmware_thread_handler(void *data)
 	fw->closed = 1;
 	fw->status = ret;
 
-	if (fw->wrtask)
-	{
+	if (fw->wrtask) {
 		wake_up_process(fw->wrtask);
 	}
 
@@ -59,8 +58,7 @@ static int cavan_firmware_open(struct cavan_firmware *fw, int (*upgrade)(struct 
 
 	fw->upgrade = upgrade;
 	fw->rdtask = kthread_create(cavan_firmware_thread_handler, fw, "CAVAN-FIRMWARE");
-	if (fw->rdtask == NULL)
-	{
+	if (fw->rdtask == NULL) {
 		ret = -EFAULT;
 		pr_red_info("kthread_create");
 	}
@@ -77,19 +75,15 @@ static int cavan_firmware_close(struct cavan_firmware *fw)
 
 	mutex_lock(&fw->lock);
 
-	if (fw->closed == 0)
-	{
+	if (fw->closed == 0) {
 		fw->closed = -1;
 
-		for (i = 0; i < 1000; i++)
-		{
-			if (fw->rdtask)
-			{
+		for (i = 0; i < 1000; i++) {
+			if (fw->rdtask) {
 				wake_up_process(fw->rdtask);
 			}
 
-			if (fw->wrtask)
-			{
+			if (fw->wrtask) {
 				wake_up_process(fw->wrtask);
 			}
 
@@ -97,8 +91,7 @@ static int cavan_firmware_close(struct cavan_firmware *fw)
 			msleep(200);
 			mutex_lock(&fw->lock);
 
-			if (fw->closed > 0)
-			{
+			if (fw->closed > 0) {
 				break;
 			}
 
@@ -107,16 +100,13 @@ static int cavan_firmware_close(struct cavan_firmware *fw)
 #endif
 		}
 
-		if (fw->closed < 0)
-		{
-			if (fw->rdtask)
-			{
+		if (fw->closed < 0) {
+			if (fw->rdtask) {
 				pr_red_info("kill read process");
 				send_sig(SIGKILL, fw->rdtask, 0);
 			}
 
-			if (fw->wrtask)
-			{
+			if (fw->wrtask) {
 				pr_red_info("kill write process");
 				send_sig(SIGKILL, fw->wrtask, 0);
 			}
@@ -130,31 +120,26 @@ static int cavan_firmware_close(struct cavan_firmware *fw)
 	return ret;
 }
 
-struct cavan_firmware *cavan_firmware_create(size_t size, int (*upgrade)(struct cavan_firmware *))
-{
+struct cavan_firmware *cavan_firmware_create(size_t size, int (*upgrade)(struct cavan_firmware *)) {
 	struct cavan_firmware *fw;
 
-	if (upgrade == NULL)
-	{
+	if (upgrade == NULL) {
 		pr_red_info("Please implement upgrade method");
 		return NULL;
 	}
 
 	fw = kmalloc(sizeof(struct cavan_firmware) + size, GFP_KERNEL);
-	if (fw == NULL)
-	{
+	if (fw == NULL) {
 		pr_red_info("malloc");
 		return NULL;
 	}
 
-	if (cavan_firmware_init(fw, (void *)(fw + 1), size) < 0)
-	{
+	if (cavan_firmware_init(fw, (void *) (fw + 1), size) < 0) {
 		pr_red_info("cavan_firmware_init");
 		goto out_kfree_fw;
 	}
 
-	if (cavan_firmware_open(fw, upgrade) < 0)
-	{
+	if (cavan_firmware_open(fw, upgrade) < 0) {
 		pr_red_info("cavan_firmware_open");
 		goto out_cavan_firmware_deinit;
 	}
@@ -185,12 +170,9 @@ EXPORT_SYMBOL_GPL(cavan_firmware_destroy);
 
 ssize_t cavan_firmware_free_space(struct cavan_firmware *fw)
 {
-	if (fw->tail < fw->head)
-	{
+	if (fw->tail < fw->head) {
 		return fw->head - fw->tail - 1;
-	}
-	else
-	{
+	} else {
 		return (fw->mem_end - fw->tail) + (fw->head - fw->mem) - 1;
 	}
 }
@@ -199,12 +181,9 @@ EXPORT_SYMBOL_GPL(cavan_firmware_free_space);
 
 ssize_t cavan_firmware_used_space(struct cavan_firmware *fw)
 {
-	if (fw->head > fw->tail)
-	{
+	if (fw->head > fw->tail) {
 		return (fw->mem_end - fw->head) + (fw->tail - fw->mem);
-	}
-	else
-	{
+	} else {
 		return fw->tail - fw->head;
 	}
 }
@@ -244,25 +223,19 @@ ssize_t cavan_firmware_write(struct cavan_firmware *fw, const char *buff, size_t
 
 	mutex_lock(&fw->lock);
 
-	while (1)
-	{
+	while (1) {
 		size_t length, rcount;
 		size_t remain;
 
 		remain = buff_end - buff;
-		if (remain == 0)
-		{
+		if (remain == 0) {
 			break;
 		}
 
-		while (1)
-		{
-			if (fw->tail < fw->head)
-			{
+		while (1) {
+			if (fw->tail < fw->head) {
 				length = rcount = fw->head - fw->tail - 1;
-			}
-			else
-			{
+			} else {
 				rcount = fw->mem_end - fw->tail;
 				length = rcount + (fw->head - fw->mem) - 1;
 			}
@@ -272,13 +245,11 @@ ssize_t cavan_firmware_write(struct cavan_firmware *fw, const char *buff, size_t
 				fw->head, fw->tail, rcount, length, cavan_firmware_free_space(fw));
 #endif
 
-			if (length > 0)
-			{
+			if (length > 0) {
 				break;
 			}
 
-			if (fw->closed)
-			{
+			if (fw->closed) {
 				mutex_unlock(&fw->lock);
 				return fw->status;
 			}
@@ -288,63 +259,48 @@ ssize_t cavan_firmware_write(struct cavan_firmware *fw, const char *buff, size_t
 			fw->wrtask = NULL;
 		}
 
-		if (length > remain)
-		{
+		if (length > remain) {
 			length = remain;
 		}
 
-		if (length > rcount)
-		{
+		if (length > rcount) {
 			size_t lcount = length - rcount;
 
-			if ((flags & CAVAN_FW_FLAG_USER))
-			{
-				if (copy_from_user(fw->tail, buff, rcount))
-				{
+			if ((flags & CAVAN_FW_FLAG_USER)) {
+				if (copy_from_user(fw->tail, buff, rcount)) {
 					pr_red_info("copy_from_user");
 					return -EFAULT;
 				}
 
-				if (copy_from_user(fw->mem, buff + rcount, lcount))
-				{
+				if (copy_from_user(fw->mem, buff + rcount, lcount)) {
 					pr_red_info("copy_from_user");
 					return -EFAULT;
 				}
-			}
-			else
-			{
+			} else {
 				memcpy(fw->tail, buff, rcount);
 				memcpy(fw->mem, buff + rcount, lcount);
 			}
 
 			fw->tail = fw->mem + lcount;
-		}
-		else
-		{
-			if ((flags & CAVAN_FW_FLAG_USER))
-			{
-				if (copy_from_user(fw->tail, buff, length))
-				{
+		} else {
+			if ((flags & CAVAN_FW_FLAG_USER)) {
+				if (copy_from_user(fw->tail, buff, length)) {
 					pr_red_info("copy_from_user");
 					return -EFAULT;
 				}
-			}
-			else
-			{
+			} else {
 				memcpy(fw->tail, buff, length);
 			}
 
 			fw->tail += length;
-			if (fw->tail >= fw->mem_end)
-			{
+			if (fw->tail >= fw->mem_end) {
 				fw->tail = fw->mem;
 			}
 		}
 
 		buff += length;
 
-		if (fw->rdtask)
-		{
+		if (fw->rdtask) {
 			wake_up_process(fw->rdtask);
 		}
 	}
@@ -362,15 +318,11 @@ ssize_t cavan_firmware_read(struct cavan_firmware *fw, char *buff, size_t size, 
 
 	mutex_lock(&fw->lock);
 
-	while (1)
-	{
-		if (fw->head > fw->tail)
-		{
+	while (1) {
+		if (fw->head > fw->tail) {
 			rcount = fw->mem_end - fw->head;
 			length = rcount + (fw->tail - fw->mem);
-		}
-		else
-		{
+		} else {
 			length = rcount = fw->tail - fw->head;
 		}
 
@@ -379,62 +331,50 @@ ssize_t cavan_firmware_read(struct cavan_firmware *fw, char *buff, size_t size, 
 			fw->head, fw->tail, rcount, length, cavan_firmware_used_space(fw));
 #endif
 
-		if ((size_t) length > reserved)
-		{
+		if ((size_t) length > reserved) {
 			length -= reserved;
 			break;
 		}
 
-		if (fw->closed)
-		{
+		if (fw->closed) {
 			length = 0;
 			goto out_mutex_unlock;
 		}
 
 		fw->rdtask = current;
 
-		if (timeout > 0)
-		{
-			if (cavan_firmware_timedwait(fw, timeout) == 0)
-			{
+		if (timeout > 0) {
+			if (cavan_firmware_timedwait(fw, timeout) == 0) {
 				length = -ETIMEDOUT;
 				goto out_mutex_unlock;
 			}
-		}
-		else
-		{
+		} else {
 			cavan_firmware_wait(fw);
 		}
 
 		fw->rdtask = NULL;
 	}
 
-	if ((size_t) length > size)
-	{
+	if ((size_t) length > size) {
 		length = size;
 	}
 
-	if (length > rcount)
-	{
+	if (length > rcount) {
 		size_t lcount = length - rcount;
 
 		memcpy(buff, fw->head, rcount);
 		memcpy(buff + rcount, fw->mem, lcount);
 		fw->head = fw->mem + lcount;
-	}
-	else
-	{
+	} else {
 		memcpy(buff, fw->head, length);
 
 		fw->head += length;
-		if (fw->head >= fw->mem_end)
-		{
+		if (fw->head >= fw->mem_end) {
 			fw->head = fw->mem;
 		}
 	}
 
-	if (fw->wrtask)
-	{
+	if (fw->wrtask) {
 		wake_up_process(fw->wrtask);
 	}
 
@@ -450,17 +390,14 @@ ssize_t cavan_firmware_fill(struct cavan_firmware *fw, char *buff, size_t size, 
 	char *buff_bak = buff;
 	char *buff_end = buff + size;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		ssize_t rdlen = cavan_firmware_read(fw, buff, buff_end - buff, reserved, timeout);
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_red_info("cavan_firmware_read");
 			return rdlen;
 		}
 
-		if (rdlen == 0)
-		{
+		if (rdlen == 0) {
 			size = buff - buff_bak;
 			break;
 		}
@@ -478,28 +415,23 @@ ssize_t cavan_firmware_read_line(struct cavan_firmware *fw, char *buff, size_t s
 	char *buff_bak = buff;
 	char *buff_end = buff + size - 1;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		char c;
 		ssize_t rdlen;
 
 		rdlen = cavan_firmware_read(fw, &c, 1, reserved, timeout);
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_red_info("cavan_firmware_read");
 			return rdlen;
 		}
 
-		if (rdlen == 0)
-		{
+		if (rdlen == 0) {
 			break;
 		}
 
-		switch (c)
-		{
+		switch (c) {
 		case '\n':
-			if (buff > buff_bak)
-			{
+			if (buff > buff_bak) {
 				goto out_return;
 			}
 		case '\r':

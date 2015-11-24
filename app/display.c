@@ -243,8 +243,7 @@ out_close_fd:
 	return ret;
 }
 
-static struct cavan_command_map cmd_map[] =
-{
+static struct cavan_command_map cmd_map[] = {
 	{"draw_rect", cavan_display_rect_main},
 	{"fill_rect", cavan_display_rect_main},
 	{"wave", cavan_display_wave_main},

@@ -143,15 +143,13 @@
 /* end RESUME STATE INDICES */
 
 #pragma pack(1)
-struct lis3dh_data_package
-{
+struct lis3dh_data_package {
 	s16 x;
 	s16 y;
 	s16 z;
 };
 
-struct lis3de_data_package
-{
+struct lis3de_data_package {
 	u8 not_x;
 	s8 x;
 	u8 not_y;
@@ -161,14 +159,12 @@ struct lis3de_data_package
 };
 #pragma pack()
 
-struct lis3dh_delay_map_node
-{
+struct lis3dh_delay_map_node {
 	u16 delay;
 	u8 mask;
 };
 
-const struct lis3dh_delay_map_node lis3dh_delay_map[] =
-{
+const struct lis3dh_delay_map_node lis3dh_delay_map[] = {
 	{1, ODR1250},
 	{3, ODR400},
 	{5, ODR200},
@@ -183,10 +179,8 @@ static u8 lis3dh_delay2mask(const struct lis3dh_delay_map_node *map, size_t coun
 {
 	const struct lis3dh_delay_map_node *p;
 
-	for (p = map + count - 1; p >= map; p--)
-	{
-		if (p->delay <= delay)
-		{
+	for (p = map + count - 1; p >= map; p--) {
+		if (p->delay <= delay) {
 			return p->mask;
 		}
 	}
@@ -200,16 +194,14 @@ static int lis3dh_sensor_chip_readid(struct cavan_input_chip *chip)
 	u8 id;
 
 	ret = chip->read_register(chip, WHO_AM_I, &id);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_register");
 		return ret;
 	}
 
 	pr_bold_info("Device ID = 0x%02x", id);
 
-	if (id != WHOAMI_LIS3DH_ACC)
-	{
+	if (id != WHOAMI_LIS3DH_ACC) {
 		pr_red_info("Invalid device id = 0x%02x", id);
 		return -EINVAL;
 	}
@@ -224,20 +216,16 @@ static int lis3dh_sensor_chip_set_active(struct cavan_input_chip *chip, bool ena
 	int ret;
 	u8 value;
 
-	if (enable)
-	{
+	if (enable) {
 		value = LIS3DH_ACC_ENABLE_ALL_AXES;
-	}
-	else
-	{
+	} else {
 		value = 0;
 	}
 
 	pr_func_info("value = 0x%02x", value);
 
 	ret = chip->write_register(chip, CTRL_REG1, value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_write_register");
 		return ret;
 	}
@@ -245,8 +233,7 @@ static int lis3dh_sensor_chip_set_active(struct cavan_input_chip *chip, bool ena
 	return 0;
 }
 
-static struct cavan_input_init_data lis3dh_init_data[] =
-{
+static struct cavan_input_init_data lis3dh_init_data[] = {
 	{CTRL_REG1, LIS3DH_ACC_ENABLE_ALL_AXES, 0},
 	{CTRL_REG2, 0x00, 0},
 	{CTRL_REG3, 0x00, 0},
@@ -284,8 +271,7 @@ static int lis3dh_acceleration_event_handler(struct cavan_input_chip *chip, stru
 	struct lis3dh_data_package package;
 
 	ret = chip->read_data(chip, I2C_AUTO_INCREMENT | AXISDATA_REG, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_data");
 		return ret;
 	}
@@ -301,8 +287,7 @@ static int lis3de_acceleration_event_handler(struct cavan_input_chip *chip, stru
 	struct lis3de_data_package package;
 
 	ret = chip->read_data(chip, I2C_AUTO_INCREMENT | AXISDATA_REG, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_data");
 		return ret;
 	}
@@ -321,8 +306,7 @@ static int lis3dh_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -338,16 +322,13 @@ static int lis3dh_input_chip_probe(struct cavan_input_chip *chip)
 	dev->poll_delay = 200;
 	dev->set_delay = lis3dh_acceleration_set_delay;
 
-	if (strcmp(chip->name, "LIS3DH") == 0)
-	{
+	if (strcmp(chip->name, "LIS3DH") == 0) {
 		dev->fuzz = 32;
 		dev->flat = 32;
 		sensor->max_range = 2;
 		sensor->resolution = 2048;
 		dev->event_handler = lis3dh_acceleration_event_handler;
-	}
-	else
-	{
+	} else {
 		dev->fuzz = 0;
 		dev->flat = 0;
 		sensor->max_range = 4;
@@ -356,8 +337,7 @@ static int lis3dh_input_chip_probe(struct cavan_input_chip *chip)
 	}
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -385,8 +365,7 @@ static int lis3dh_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	struct cavan_input_chip *chip;
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("sensor == NULL");
 		return -ENOMEM;
 	}
@@ -401,9 +380,7 @@ static int lis3dh_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 #endif
 	{
 		chip->name = "LIS3DH";
-	}
-	else
-	{
+	} else {
 		chip->name = "LIS3DE";
 	}
 
@@ -422,8 +399,7 @@ static int lis3dh_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->remove = lis3dh_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_sensor;
 	}
@@ -447,18 +423,15 @@ static int lis3dh_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id lis3dh_id[] =
-{
+static const struct i2c_device_id lis3dh_id[] = {
 	{"lis3dh", 0}, {"lis3de", 0}, {}
 };
 
 #ifdef CONFIG_OF
-static struct of_device_id lis3dh_match_table[] =
-{
+static struct of_device_id lis3dh_match_table[] = {
 	{
 		.compatible = "st,lis3dh"
-	},
-	{
+	}, {
 		.compatible = "st,lis3de"
 	},
 	{}
@@ -467,10 +440,8 @@ static struct of_device_id lis3dh_match_table[] =
 
 MODULE_DEVICE_TABLE(i2c, lis3dh_id);
 
-static struct i2c_driver lis3dh_driver =
-{
-	.driver =
-	{
+static struct i2c_driver lis3dh_driver = {
+	.driver = {
 		.name = "lis3dh",
 		.owner = THIS_MODULE,
 #ifdef CONFIG_OF

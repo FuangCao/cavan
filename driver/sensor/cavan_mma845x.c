@@ -11,29 +11,26 @@
 #define REG_CTRL5			0x2E
 
 #define MMA845X_BUILD_WORD(h, l) \
-	((short)((h) << 8 | (l)))
+	((short) ((h) << 8 | (l)))
 
 #ifdef CONFIG_ARCH_SC8810
 #include <mach/eic.h>
 #endif
 
 #pragma pack(1)
-struct mma845x_data_package
-{
+struct mma845x_data_package {
 	u8 xh, xl;
 	u8 yh, yl;
 	u8 zh, zl;
 };
 #pragma pack()
 
-struct mma845x_rate_map_node
-{
+struct mma845x_rate_map_node {
 	u8 value;
 	u32 delay;
 };
 
-static struct mma845x_rate_map_node mma845x_rate_map[] =
-{
+static struct mma845x_rate_map_node mma845x_rate_map[] = {
 	{0x00, 2},
 	{0x01, 3},
 	{0x02, 5},
@@ -50,8 +47,7 @@ static int mma845x_sensor_chip_readid(struct cavan_input_chip *chip)
 	u8 id;
 
 	ret = chip->read_register(chip, REG_CHIP_ID, &id);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_register");
 		return ret;
 	}
@@ -66,21 +62,18 @@ static int mma845x_sensor_chip_set_active(struct cavan_input_chip *chip, bool en
 	int ret;
 	u8 value;
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		return 0;
 	}
 
 	ret = chip->read_register(chip, REG_CTRL2, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
 
 	ret = chip->write_register(chip, REG_CTRL2, value | 1 << 6);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("write_register");
 		return ret;
 	}
@@ -97,18 +90,14 @@ static int mma845x_acceleration_set_enable(struct cavan_input_device *dev, bool 
 	struct cavan_input_chip *chip = dev->chip;
 
 	ret = chip->read_register(chip, REG_CTRL1, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
 
-	if (enable)
-	{
+	if (enable) {
 		value |= 1;
-	}
-	else
-	{
+	} else {
 		value &= ~1;
 	}
 
@@ -125,8 +114,7 @@ static int mma845x_acceleration_set_delay(struct cavan_input_device *dev, unsign
 	struct cavan_input_chip *chip = dev->chip;
 
 	ret = chip->read_register(chip, REG_CTRL1, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
@@ -153,8 +141,7 @@ static int mma845x_acceleration_event_handler(struct cavan_input_chip *chip, str
 	struct mma845x_data_package package;
 
 	ret = chip->read_data(chip, REG_DATA_START, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_data");
 		return ret;
 	}
@@ -177,8 +164,7 @@ static int mma845x_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -202,8 +188,7 @@ static int mma845x_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = mma845x_acceleration_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -225,8 +210,7 @@ static void mma845x_input_chip_remove(struct cavan_input_chip *chip)
 	kfree(sensor);
 }
 
-static struct cavan_input_init_data mma845x_init_data[] =
-{
+static struct cavan_input_init_data mma845x_init_data[] = {
 	{REG_CTRL1,	0},
 	{REG_CTRL2, 1},
 	{REG_CTRL3, 0},
@@ -243,8 +227,7 @@ static int mma845x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("sensor == NULL");
 		return -ENOMEM;
 	}
@@ -267,8 +250,7 @@ static int mma845x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->remove = mma845x_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_sensor;
 	}
@@ -293,14 +275,12 @@ static int mma845x_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id mma845x_id[] =
-{
+static const struct i2c_device_id mma845x_id[] = {
 	{"mma845x", 0}, {}
 };
 
 #ifdef CONFIG_OF
-static struct of_device_id mma845x_match_table[] =
-{
+static struct of_device_id mma845x_match_table[] = {
 	{
 		.compatible = "freescale,mma845x"
 	},
@@ -310,10 +290,8 @@ static struct of_device_id mma845x_match_table[] =
 
 MODULE_DEVICE_TABLE(i2c, mma845x_id);
 
-static struct i2c_driver mma845x_driver =
-{
-	.driver =
-	{
+static struct i2c_driver mma845x_driver = {
+	.driver = {
 		.name = "mma845x",
 		.owner = THIS_MODULE,
 #ifdef CONFIG_OF

@@ -50,10 +50,10 @@
 #define CAVAN_INPUT_CHIP_FLAG_POWERON_INIT	(1 << 1)
 
 #define BUILD_WORD(hb, lb) \
-	((short)((hb) << 8 | (lb)))
+	((short) ((hb) << 8 | (lb)))
 
 #define BUILD_DWORD(hw, lw) \
-	((int)((hw) << 16 | (lw)))
+	((int) ((hw) << 16 | (lw)))
 
 #define BYTE_IS_LF(b) \
 	((b) == '\n' || (b) == '\r')
@@ -170,27 +170,23 @@ enum cavan_input_irq_type
 	CAVAN_INPUT_IRQ_TYPE_LEVEL
 };
 
-struct cavan_input_list
-{
+struct cavan_input_list {
 	struct mutex lock;
 	struct list_head head;
 };
 
-struct cavan_input_init_data
-{
+struct cavan_input_init_data {
 	u8 addr;
 	u8 value;
 	u32 delay;
 };
 
-struct cavan_input_rate_map
-{
+struct cavan_input_rate_map {
 	u32 delay;
 	u8 value;
 };
 
-struct cavan_misc_device
-{
+struct cavan_misc_device {
 	void *private_data;
 
 	int minor;
@@ -203,8 +199,7 @@ struct cavan_misc_device
 	int (*ioctl)(struct cavan_misc_device *dev, unsigned int command, unsigned long args);
 };
 
-struct cavan_input_device
-{
+struct cavan_input_device {
 	enum cavan_input_device_type type;
 	const char *name;
 	const char *misc_name;
@@ -236,8 +231,7 @@ struct cavan_input_device
 	int (*ioctl)(struct cavan_input_device *dev, unsigned int command, unsigned long args);
 };
 
-struct cavan_input_chip
-{
+struct cavan_input_chip {
 	struct device *dev;
 	const char *vendor;
 	const char *name;
@@ -315,8 +309,7 @@ struct cavan_input_chip
 	int (*firmware_upgrade)(struct cavan_input_chip *chip, struct cavan_firmware *fw);
 };
 
-struct cavan_input_core
-{
+struct cavan_input_core {
 	const char *name;
 	const char *chip_online[CAVAN_INPUT_MINORS];
 	u32 devmask;

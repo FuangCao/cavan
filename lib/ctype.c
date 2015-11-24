@@ -20,8 +20,7 @@
 #include <cavan.h>
 #include <cavan/ctype.h>
 
-const u16 cavan_ctype[] =
-{
+const u16 cavan_ctype[] = {
 	CT_C,
 	CT_C,
 	CT_C,

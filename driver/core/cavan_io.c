@@ -6,15 +6,13 @@ int cavan_io_write_register_masked(struct cavan_input_chip *chip, u8 addr, u8 va
 	u8 old_value;
 
 	ret = chip->read_register(chip, addr, &old_value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_register");
 		return ret;
 	}
 
 	value |= old_value & (~mask);
-	if (value == old_value)
-	{
+	if (value == old_value) {
 		return 0;
 	}
 
@@ -31,16 +29,14 @@ int cavan_io_write_register16_masked(struct cavan_input_chip *chip, u8 addr, u16
 	u16 old_value;
 
 	ret = chip->read_register16(chip, addr, &old_value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_register");
 		return ret;
 	}
 
 
 	value |= old_value & (~mask);
-	if (value == old_value)
-	{
+	if (value == old_value) {
 		return 0;
 	}
 
@@ -59,10 +55,8 @@ ssize_t cavan_io_read_write_file(const char *pathname, const char *buff, size_t 
 	struct file *fp;
 
 	fp = filp_open(pathname, store ? (O_WRONLY | O_CREAT | O_TRUNC) : O_RDONLY, 0644);
-	if (IS_ERR(fp))
-	{
-		if (store)
-		{
+	if (IS_ERR(fp)) {
+		if (store) {
 			pr_red_info("write file `%s' failed", pathname);
 		}
 
@@ -86,34 +80,26 @@ EXPORT_SYMBOL_GPL(cavan_io_read_write_file);
 
 int cavan_io_gpio_set_value(int gpio, int value)
 {
-	if (gpio < 0)
-	{
+	if (gpio < 0) {
 		return -EINVAL;
 	}
 
-	if (value < 0)
-	{
+	if (value < 0) {
 		return gpio_direction_input(gpio);
-	}
-	else if (value > 0)
-	{
+	} else if (value > 0) {
 		int ret;
 
 		ret = gpio_direction_output(gpio, 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 
 		gpio_set_value(gpio, 1);
-	}
-	else
-	{
+	} else {
 		int ret;
 
 		ret = gpio_direction_output(gpio, 0);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 
@@ -136,15 +122,11 @@ EXPORT_SYMBOL_GPL(sprd_ts_power_enable);
 
 int cavan_io_set_power_regulator(struct cavan_input_chip *chip, bool enable)
 {
-	if (chip->devmask & (1 << CAVAN_INPUT_DEVICE_TYPE_TOUCHSCREEN))
-	{
-		if (enable)
-		{
+	if (chip->devmask & (1 << CAVAN_INPUT_DEVICE_TYPE_TOUCHSCREEN)) {
+		if (enable) {
 			LDO_SetVoltLevel(LDO_LDO_SIM2, LDO_VOLT_LEVEL0);
 			LDO_TurnOnLDO(LDO_LDO_SIM2);
-		}
-		else
-		{
+		} else {
 			LDO_TurnOffLDO(LDO_LDO_SIM2);
 		}
 
@@ -160,33 +142,26 @@ int cavan_io_set_power_regulator(struct cavan_input_chip *chip, bool enable)
 
 	pr_pos_info();
 
-	if (enable)
-	{
-		if (chip->vio)
-		{
-			if (chip->vio_vol_min > 0 && chip->vio_vol_max >= chip->vio_vol_min)
-			{
+	if (enable) {
+		if (chip->vio) {
+			if (chip->vio_vol_min > 0 && chip->vio_vol_max >= chip->vio_vol_min) {
 				regulator_set_voltage(chip->vio, chip->vio_vol_min, chip->vio_vol_max);
 			}
 
 			ret = regulator_enable(chip->vio);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("regulator_enable vio");
 				return ret;
 			}
 		}
 
-		if (chip->vdd)
-		{
-			if (chip->vdd_vol_min > 0 && chip->vdd_vol_max >= chip->vdd_vol_min)
-			{
+		if (chip->vdd) {
+			if (chip->vdd_vol_min > 0 && chip->vdd_vol_max >= chip->vdd_vol_min) {
 				regulator_set_voltage(chip->vdd, chip->vdd_vol_min, chip->vdd_vol_max);
 			}
 
 			ret = regulator_enable(chip->vdd);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("regulator_enable vdd");
 				goto label_regulator_disable_vio;
 			}
@@ -195,16 +170,14 @@ int cavan_io_set_power_regulator(struct cavan_input_chip *chip, bool enable)
 		return 0;
 	}
 
-	if (chip->vdd)
-	{
+	if (chip->vdd) {
 		regulator_disable(chip->vdd);
 	}
 
 	ret = 0;
 
 label_regulator_disable_vio:
-	if (chip->vio)
-	{
+	if (chip->vio) {
 		regulator_disable(chip->vio);
 	}
 
@@ -222,16 +195,14 @@ int cavan_input_chip_io_init(struct cavan_input_chip *chip)
 	struct device_node *of_node = chip->dev->of_node;
 
 	gpio = of_get_named_gpio_flags(of_node, "reset-gpio-pin", 0, NULL);
-	if (gpio >= 0)
-	{
+	if (gpio >= 0) {
 		gpio_request(gpio, "CAVAN-RESET");
 	}
 
 	chip->gpio_reset = gpio;
 
 	gpio = of_get_named_gpio_flags(of_node, "irq-gpio-pin", 0, NULL);
-	if (gpio >= 0)
-	{
+	if (gpio >= 0) {
 		gpio_request(gpio, "CAVAN-IRQ");
 		gpio_direction_input(gpio);
 	}
@@ -239,8 +210,7 @@ int cavan_input_chip_io_init(struct cavan_input_chip *chip)
 	chip->gpio_irq = gpio;
 
 	gpio = of_get_named_gpio_flags(of_node, "power-gpio-pin", 0, NULL);
-	if (gpio >= 0)
-	{
+	if (gpio >= 0) {
 		gpio_request(gpio, "CAVAN-POWER");
 	}
 
@@ -249,41 +219,30 @@ int cavan_input_chip_io_init(struct cavan_input_chip *chip)
 	pr_bold_info("%s: gpio_reset = %d, gpio_irq = %d, gpio_power = %d", chip->name, chip->gpio_reset, chip->gpio_irq, chip->gpio_power);
 
 	chip->vdd = regulator_get(chip->dev, "vdd");
-	if (IS_ERR(chip->vdd))
-	{
+	if (IS_ERR(chip->vdd)) {
 		pr_red_info("regulator_get vdd");
 		chip->vdd = NULL;
-	}
-	else if (regulator_count_voltages(chip->vdd) > 0 && of_property_read_u32_array(of_node, "vdd-voltage-level", voltag, ARRAY_SIZE(voltag)) >= 0)
-	{
+	} else if (regulator_count_voltages(chip->vdd) > 0 && of_property_read_u32_array(of_node, "vdd-voltage-level", voltag, ARRAY_SIZE(voltag)) >= 0) {
 		chip->vdd_vol_min = voltag[0];
 		chip->vdd_vol_max = voltag[1];
-	}
-	else
-	{
+	} else {
 		chip->vdd_vol_min = chip->vdd_vol_max = -1;
 	}
 
 	chip->vio = regulator_get(chip->dev, "vio");
-	if (IS_ERR(chip->vio))
-	{
+	if (IS_ERR(chip->vio)) {
 		pr_red_info("regulator_get vio");
 		chip->vio = NULL;
-	}
-	else if (regulator_count_voltages(chip->vio) > 0 && of_property_read_u32_array(of_node, "vio-voltage-level", voltag, ARRAY_SIZE(voltag)) >= 0)
-	{
+	} else if (regulator_count_voltages(chip->vio) > 0 && of_property_read_u32_array(of_node, "vio-voltage-level", voltag, ARRAY_SIZE(voltag)) >= 0) {
 		chip->vio_vol_min = voltag[0];
 		chip->vio_vol_max = voltag[1];
-	}
-	else
-	{
+	} else {
 		chip->vio_vol_min = chip->vio_vol_max = -1;
 	}
 
 	pr_bold_info("%s: vio = %p, vdd = %p", chip->name, chip->vio, chip->vdd);
 
-	if (chip->vio || chip->vdd || chip->gpio_power >= 0)
-	{
+	if (chip->vio || chip->vdd || chip->gpio_power >= 0) {
 		chip->flags |= CAVAN_INPUT_CHIP_FLAG_POWERON_INIT;
 	}
 
@@ -296,8 +255,7 @@ int cavan_input_chip_io_init(struct cavan_input_chip *chip)
 extern int sprd_3rdparty_gpio_tp_rst;
 extern int sprd_3rdparty_gpio_tp_irq;
 
-	if (chip->devmask & (1 << CAVAN_INPUT_DEVICE_TYPE_TOUCHSCREEN))
-	{
+	if (chip->devmask & (1 << CAVAN_INPUT_DEVICE_TYPE_TOUCHSCREEN)) {
 		chip->gpio_irq = sprd_3rdparty_gpio_tp_irq;
 		chip->gpio_reset = sprd_3rdparty_gpio_tp_rst;
 	}
@@ -320,28 +278,23 @@ void cavan_input_chip_io_deinit(struct cavan_input_chip *chip)
 {
 	pr_pos_info();
 
-	if (chip->vio)
-	{
+	if (chip->vio) {
 		regulator_put(chip->vio);
 	}
 
-	if (chip->vdd)
-	{
+	if (chip->vdd) {
 		regulator_put(chip->vdd);
 	}
 
-	if (chip->gpio_power >= 0)
-	{
+	if (chip->gpio_power >= 0) {
 		gpio_free(chip->gpio_power);
 	}
 
-	if (chip->gpio_reset >= 0)
-	{
+	if (chip->gpio_reset >= 0) {
 		gpio_free(chip->gpio_reset);
 	}
 
-	if (chip->gpio_irq >= 0)
-	{
+	if (chip->gpio_irq >= 0) {
 		gpio_free(chip->gpio_irq);
 	}
 }

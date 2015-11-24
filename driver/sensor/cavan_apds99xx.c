@@ -94,8 +94,7 @@ enum apds99xx_register_map
 	REG_POFFSET = 0x1E,
 };
 
-struct cavan_apds99xx_device
-{
+struct cavan_apds99xx_device {
 	u32 alpc;
 	u32 adelay;
 	bool areduce;
@@ -110,8 +109,7 @@ struct cavan_apds99xx_device
 	struct cavan_sensor_device light;
 };
 
-static struct cavan_sensor_rate_table_node apds99xx_arate_table[] =
-{
+static struct cavan_sensor_rate_table_node apds99xx_arate_table[] = {
 	{0xF6, 27200},
 	{0xED, 51680},
 	{0xDB, 100640}
@@ -123,8 +121,7 @@ static const u32 apds99xx_ares_table[] = {10240, 19456, 37888};
 
 static const char *apds99xx_get_chip_name_by_id(u8 id)
 {
-	switch (id)
-	{
+	switch (id) {
 	case APDS99XX_ID_9900:
 		return "APDS9900";
 	case APDS99XX_ID_9901:
@@ -172,22 +169,19 @@ static int apds99xx_sensor_chip_readid(struct cavan_input_chip *chip)
 	const char *name;
 
 	ret = chip->write_register(chip, REG_ENABLE, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("apds99xx_write_enable_register");
 		return ret;
 	}
 
 	ret = chip->read_register(chip, REG_ID, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_register");
 		return ret;
 	}
 
 	name = apds99xx_get_chip_name_by_id(value);
-	if (name == NULL)
-	{
+	if (name == NULL) {
 		pr_red_info("unknown chip id = 0x%02x", value);
 		return -EINVAL;
 	}
@@ -204,14 +198,12 @@ static int apds99xx_sensor_chip_set_active(struct cavan_input_chip *chip, bool e
 
 	pr_pos_info();
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		return chip->write_register(chip, REG_ENABLE, 0);
 	}
 
 	ret = cavan_io_write_register_masked(chip, REG_ENABLE, APDS99XX_ENABLE_PON, APDS99XX_ENABLE_PON);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_io_write_register_masked");
 		return ret;
 	}
@@ -227,26 +219,22 @@ static int apds99xx_proximity_set_enable(struct cavan_input_device *dev, bool en
 
 	pr_pos_info();
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		value = 0;
 	}
 #if APDS99XX_SUPPORT_IRQ
-	else if (dev->use_irq)
-	{
+	else if (dev->use_irq) {
 		value = APDS99XX_ENABLE_PEN | APDS99XX_ENABLE_PIEN;
 	}
 #endif
-	else
-	{
+	else {
 		value = APDS99XX_ENABLE_PEN;
 	}
 
 	pr_bold_info("value = 0x%02x", value);
 
 	ret = cavan_io_write_register_masked(chip, REG_ENABLE, value, APDS99XX_ENABLE_PEN | APDS99XX_ENABLE_PIEN);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_io_write_register_masked");
 		return ret;
 	}
@@ -274,27 +262,22 @@ static ssize_t apds99xx_proximity_calibration(struct cavan_input_device *dev, ch
 
 	pr_pos_info();
 
-	if (store)
-	{
+	if (store) {
 		offset = simple_strtol(buff, NULL, 10);
 
 		pr_bold_info("offset = %d", offset);
 
 		ret = chip->write_register(chip, REG_POFFSET, offset);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("chip->write_register");
 			return ret;
 		}
 
 		return size;
-	}
-	else
-	{
+	} else {
 		offset = 0;
 
-		while (1)
-		{
+		while (1) {
 			int i;
 			u8 status;
 			u16 value;
@@ -302,102 +285,71 @@ static ssize_t apds99xx_proximity_calibration(struct cavan_input_device *dev, ch
 			u32 avg_value;
 
 			ret = chip->write_register(chip, REG_POFFSET, offset);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("chip->write_register");
 				return ret;
 			}
 
-			for (i = 0, avg_value = 0; i < 5; i++)
-			{
+			for (i = 0, avg_value = 0; i < 5; i++) {
 				apds99xx_send_command(chip, APDS99XX_COMMAND_IAPCLEAR);
 
 				retry = 100;
 
-				while (1)
-				{
+				while (1) {
 					msleep(10);
 
 					ret = chip->read_register(chip, REG_STATUS, &status);
-					if (ret >= 0 && (status & APDS99XX_STATE_PVALID))
-					{
+					if (ret >= 0 && (status & APDS99XX_STATE_PVALID)) {
 						break;
 					}
 
-					if (--retry < 1)
-					{
+					if (--retry < 1) {
 						return -ETIMEDOUT;
 					}
 				}
 
 				ret = chip->read_register16(chip, REG_PDATAL, &value);
-				if (ret < 0)
-				{
+				if (ret < 0) {
 					pr_red_info("chip->read_register16");
 					return ret;
 				}
 
-				if (i == 0)
-				{
+				if (i == 0) {
 					avg_value = value;
-				}
-				else
-				{
+				} else {
 					avg_value = (avg_value + value) >> 1;
 				}
 			}
 
-			if (avg_value > 0 && avg_value < 10)
-			{
+			if (avg_value > 0 && avg_value < 10) {
 				break;
 			}
 
-			if (avg_value > 0)
-			{
-				if (offset < 0)
-				{
-					if (offset > -127)
-					{
+			if (avg_value > 0) {
+				if (offset < 0) {
+					if (offset > -127) {
 						offset--;
-					}
-					else
-					{
+					} else {
 						offset = 0;
 					}
-				}
-				else
-				{
-					if (offset < 127)
-					{
+				} else {
+					if (offset < 127) {
 						offset++;
-					}
-					else
-					{
+					} else {
 						break;
 					}
 				}
-			}
-			else
-			{
-				if (offset < 0)
-				{
-					if (offset < -1)
-					{
+			} else {
+				if (offset < 0) {
+					if (offset < -1) {
 						offset++;
-					}
-					else
-					{
+					} else {
 						break;
 					}
-				}
-				else
-				{
-					if (offset > 0)
-					{
+				} else {
+					if (offset > 0) {
 						offset--;
-					}
-					else
-					{
+					} else {
 						offset = -127;
 					}
 				}
@@ -415,15 +367,13 @@ static int apds99xx_proximity_event_handler(struct cavan_input_chip *chip, struc
 #if APDS99XX_SUPPORT_IRQ
 	int pilt, piht;
 
-	if ((chip->irq_state & APDS99XX_PINT_MASK) != APDS99XX_PINT_MASK)
-	{
+	if ((chip->irq_state & APDS99XX_PINT_MASK) != APDS99XX_PINT_MASK) {
 		return 0;
 	}
 #endif
 
 	ret = chip->read_register16(chip, REG_PDATAL, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_register16");
 		return ret;
 	}
@@ -455,8 +405,7 @@ static int apds99xx_set_again(struct cavan_apds99xx_device *apds99xx, struct cav
 	int ret;
 
 	ret = cavan_io_write_register_masked(chip, REG_CONTROL, again << APDS99XX_CONTROL_AGAIN_OFFSET, APDS99XX_CONTROL_AGAIN_MASK);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_io_write_register_masked");
 		return ret;
 	}
@@ -472,8 +421,7 @@ static int apds99xx_set_areduce(struct cavan_apds99xx_device *apds99xx, struct c
 	int ret;
 
 	ret = cavan_io_write_register_masked(chip, REG_CONFIG, reduce ? APDS99XX_CONFIG_AGL : 0, APDS99XX_CONFIG_AGL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_io_write_register_masked");
 		return ret;
 	}
@@ -494,28 +442,23 @@ static int apds99xx_light_set_enable(struct cavan_input_device *dev, bool enable
 
 	pr_pos_info();
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		value = 0;
 	}
 #if APDS99XX_SUPPORT_IRQ
-	else
-	{
-		if (dev->use_irq)
-		{
+	else {
+		if (dev->use_irq) {
 			chip->write_register16(chip, REG_AILTL, 0xFFFF);
 			chip->write_register16(chip, REG_AIHTL, 0x0000);
 
 			value = APDS99XX_ENABLE_AEN | APDS99XX_ENABLE_AIEN;
 		}
 #endif
-		else
-		{
+		else {
 			value = APDS99XX_ENABLE_AEN;
 		}
 
-		if (apds99xx->adelay == 0)
-		{
+		if (apds99xx->adelay == 0) {
 			dev->set_delay(dev, dev->poll_delay);
 		}
 
@@ -526,8 +469,7 @@ static int apds99xx_light_set_enable(struct cavan_input_device *dev, bool enable
 	pr_bold_info("value = 0x%02x", value);
 
 	ret = cavan_io_write_register_masked(chip, REG_ENABLE, value, APDS99XX_ENABLE_AEN | APDS99XX_ENABLE_AIEN);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_io_write_register_masked");
 		return ret;
 	}
@@ -543,8 +485,7 @@ static int apds99xx_light_set_delay(struct cavan_input_device *dev, unsigned int
 	const struct cavan_sensor_rate_table_node *p = cavan_sensor_find_rate_value(apds99xx_arate_table, ARRAY_SIZE(apds99xx_arate_table), delay * 1000);
 
 	ret = dev->chip->write_register(dev->chip, REG_ATIME, p->value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("dev->chip->write_register");
 		return ret;
 	}
@@ -568,17 +509,13 @@ static void apds99xx_light_report_value(struct cavan_input_device *dev, struct c
 	iac1 = ch0data * 100 - APDS99XX_LIGHT_Bx100 * ch1data;
 	iac2 = APDS99XX_LIGHT_Cx100 * ch0data - APDS99XX_LIGHT_Dx100 * ch1data;
 	iac = iac1 > iac2 ? iac1 : iac2;
-	if (iac < 0)
-	{
-		if (apds99xx->areduce == false)
-		{
+	if (iac < 0) {
+		if (apds99xx->areduce == false) {
 			return;
 		}
 
 		lux = APDS99XX_LIGHT_MAX_VALUE;
-	}
-	else
-	{
+	} else {
 		lux = ((((u32) iac) >> APDS99XX_LIGHT_SHIFT) * APDS99XX_LIGHT_GAx100 * APDS99XX_LIGHT_DF) / apds99xx->alpc;
 	}
 
@@ -605,65 +542,50 @@ static int apds99xx_light_event_handler(struct cavan_input_chip *chip, struct ca
 	struct cavan_apds99xx_device *apds99xx = cavan_input_chip_get_dev_data(chip);
 
 #if APDS99XX_SUPPORT_IRQ
-	if ((chip->irq_state & APDS99XX_AINT_MASK) != APDS99XX_AINT_MASK)
-	{
+	if ((chip->irq_state & APDS99XX_AINT_MASK) != APDS99XX_AINT_MASK) {
 		return 0;
 	}
 #endif
 
 	ret = chip->read_register16(chip, REG_CH0DATAL, &ch0data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_register16 REG_CH0DATAL");
 		return ret;
 	}
 
 	ret = chip->read_register16(chip, REG_CH1DATAL, &ch1data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_register16 REG_CH1DATAL");
 		return ret;
 	}
 
 	apds99xx_light_report_value(dev, apds99xx, ch0data, ch1data);
 
-	if (ch0data > apds99xx->adata_high)
-	{
-		if (apds99xx->again > 0)
-		{
+	if (ch0data > apds99xx->adata_high) {
+		if (apds99xx->again > 0) {
 			apds99xx_set_again(apds99xx, chip, apds99xx->again - 1);
-		}
-		else if (apds99xx->areduce == false)
-		{
+		} else if (apds99xx->areduce == false) {
 			apds99xx_set_areduce(apds99xx, chip, true);
 		}
 #if APDS99XX_SUPPORT_IRQ
-		else
-		{
+		else {
 			apds99xx_set_ait(chip, ch0data);
 		}
 #endif
-	}
-	else if (ch0data < apds99xx->adata_low)
-	{
-		if (apds99xx->areduce)
-		{
+	} else if (ch0data < apds99xx->adata_low) {
+		if (apds99xx->areduce) {
 			apds99xx_set_areduce(apds99xx, chip, false);
-		}
-		else if (apds99xx->again < ARRAY_SIZE(apds99xx_again_table) - 1)
-		{
+		} else if (apds99xx->again < ARRAY_SIZE(apds99xx_again_table) - 1) {
 			apds99xx_set_again(apds99xx, chip, apds99xx->again + 1);
 		}
 #if APDS99XX_SUPPORT_IRQ
-		else
-		{
+		else {
 			apds99xx_set_ait(chip, ch0data);
 		}
 #endif
 	}
 #if APDS99XX_SUPPORT_IRQ
-	else
-	{
+	else {
 		apds99xx_set_ait(chip, ch0data);
 	}
 #endif
@@ -677,15 +599,13 @@ static int apds99xx_chip_event_handler(struct cavan_input_chip *chip)
 	int ret;
 
 	ret = chip->read_register(chip, REG_STATUS, (u8 *) &chip->irq_state);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_register");
 		return ret;
 	}
 
 	ret = cavan_input_chip_report_events(chip, &chip->isr_list);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_report_events");
 		return ret;
 	}
@@ -706,8 +626,7 @@ static int apds99xx_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	apds99xx = kzalloc(sizeof(*apds99xx), GFP_KERNEL);
-	if (apds99xx == NULL)
-	{
+	if (apds99xx == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -741,8 +660,7 @@ static int apds99xx_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = apds99xx_proximity_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -771,8 +689,7 @@ static int apds99xx_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = apds99xx_light_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_cavan_input_device_unregister_proxi;
 	}
@@ -797,8 +714,7 @@ static void apds99xx_input_chip_remove(struct cavan_input_chip *chip)
 	kfree(apds99xx);
 }
 
-static struct cavan_input_init_data apds99xx_init_data[] =
-{
+static struct cavan_input_init_data apds99xx_init_data[] = {
 	{REG_ENABLE, 0x00},
 	{REG_WTIME, 0xFF},
 	{REG_PPCOUNT, 0x08},
@@ -815,8 +731,7 @@ static int apds99xx_i2c_probe(struct i2c_client *client, const struct i2c_device
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -855,8 +770,7 @@ static int apds99xx_i2c_probe(struct i2c_client *client, const struct i2c_device
 	chip->remove = apds99xx_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_chip;
 	}
@@ -880,25 +794,21 @@ static int apds99xx_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id apds99xx_id[] =
-{
+static const struct i2c_device_id apds99xx_id[] = {
 	{APDS99XX_DEVICE_NAME, 0}, {}
 };
 
 MODULE_DEVICE_TABLE(i2c, apds99xx_id);
 
-static struct of_device_id apds99xx_match_table[] =
-{
+static struct of_device_id apds99xx_match_table[] = {
 	{
 		.compatible = "avago," APDS99XX_DEVICE_NAME
 	},
 	{}
 };
 
-static struct i2c_driver apds99xx_driver =
-{
-	.driver =
-	{
+static struct i2c_driver apds99xx_driver = {
+	.driver = {
 		.name = APDS99XX_DEVICE_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table = apds99xx_match_table,

@@ -129,8 +129,7 @@ enum epl2182_register_map
 	REG_REVISION = 0x13,
 };
 
-struct cavan_epl2182_device
-{
+struct cavan_epl2182_device {
 	int mode;
 	unsigned long light_jiffies;
 	struct cavan_sensor_device proxi;
@@ -144,8 +143,7 @@ static ssize_t epl2182_sensor_chip_read_data(struct cavan_input_chip *chip, u8 a
 
 	addr = addr << 3 | (size - 1);
 	ret = i2c_master_send(client, &addr, 1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -184,8 +182,7 @@ static int epl2182_sensor_chip_readid(struct cavan_input_chip *chip)
 	char buff[10];
 
 	ret = chip->read_data(chip, REG_00, buff, sizeof(buff));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_data");
 	}
 
@@ -196,8 +193,7 @@ static int epl2182_sensor_chip_readid(struct cavan_input_chip *chip)
 
 static inline int epl2182_sensor_chip_set_active(struct cavan_input_chip *chip, bool enable)
 {
-	if (enable)
-	{
+	if (enable) {
 		struct cavan_epl2182_device *epl2182 = cavan_input_chip_get_dev_data(chip);
 
 		epl2182->mode = EPL2182_MODE_NONE;
@@ -215,56 +211,46 @@ static int epl2182_sensor_chip_set_mode(struct cavan_input_chip *chip, int mode)
 
 #if EPL2182_SUPPORT_IRQ
 	ret = chip->write_register(chip, REG_09, EPL_INT_DISABLE);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register REG_09");
 		return ret;
 	}
 #endif
 
-	if (mode == EPL2182_MODE_ALS)
-	{
+	if (mode == EPL2182_MODE_ALS) {
 		ret = chip->write_register(chip, REG_00, EPL_S_SENSING_MODE | EPL_SENSING_8_TIME | EPL_ALS_MODE | EPL_AUTO_GAIN);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("chip->write_register REG_00");
 			return ret;
 		}
 
 		ret = chip->write_register(chip, REG_01, ALS_INTT << 4 | EPL_PST_1_TIME | EPL_10BIT_ADC);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("chip->write_register REG_01");
 			return ret;
 		}
-	}
-	else
-	{
+	} else {
 		ret = chip->write_register(chip, REG_00, EPL_S_SENSING_MODE | EPL_SENSING_8_TIME | EPL_PS_MODE | EPL_H_GAIN);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("chip->write_register REG_00");
 			return ret;
 		}
 
 		ret = chip->write_register(chip, REG_01, PS_INTT << 4 | EPL_PST_1_TIME | EPL_10BIT_ADC);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("chip->write_register REG_01");
 			return ret;
 		}
 	}
 
 	ret = chip->write_register(chip, REG_07, EPL_C_RESET);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register REG_07");
 		return ret;
 	}
 
 	ret = chip->write_register(chip, REG_07, EPL_C_START_RUN);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register REG_07");
 		return ret;
 	}
@@ -281,23 +267,20 @@ static int epl2182_proximity_set_enable(struct cavan_input_device *dev, bool ena
 	int ret;
 	struct cavan_input_chip *chip;
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		return 0;
 	}
 
 	chip = dev->chip;
 
 	ret = chip->write_register16(chip, REG_HTHDL, P_SENSOR_HTHD);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register16 REG_HTHDL");
 		return ret;
 	}
 
 	ret = chip->write_register16(chip, REG_LTHDL, P_SENSOR_LTHD);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register16 REG_LTHDL");
 		return ret;
 	}
@@ -311,11 +294,9 @@ static int epl2182_proximity_event_handler(struct cavan_input_chip *chip, struct
 	u8 value;
 	struct cavan_epl2182_device *epl2182 = cavan_input_chip_get_dev_data(chip);
 
-	if (epl2182->mode != EPL2182_MODE_PROXI)
-	{
+	if (epl2182->mode != EPL2182_MODE_PROXI) {
 		ret = epl2182_sensor_chip_set_mode(chip, EPL2182_MODE_PROXI);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 
@@ -323,15 +304,13 @@ static int epl2182_proximity_event_handler(struct cavan_input_chip *chip, struct
 	}
 
 	ret = chip->write_register(chip, REG_07, EPL_DATA_LOCK);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register REG_07");
 		return ret;
 	}
 
 	ret = chip->read_register(chip, REG_13, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register REG_13");
 		return ret;
 	}
@@ -346,23 +325,20 @@ static int epl2182_light_set_enable(struct cavan_input_device *dev, bool enable)
 	int ret;
 	struct cavan_input_chip *chip;
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		return 0;
 	}
 
 	chip = dev->chip;
 
 	ret = chip->write_register(chip, REG_GO_MID, EPL_GO_MID);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register REG_GO_MID");
 		return ret;
 	}
 
 	ret = chip->write_register(chip, REG_GO_LOW, EPL_GO_LOW);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register REG_GO_LOW");
 		return ret;
 	}
@@ -376,16 +352,13 @@ static int epl2182_light_event_handler(struct cavan_input_chip *chip, struct cav
 	u16 ch1data;
 	struct cavan_epl2182_device *epl2182 = cavan_input_chip_get_dev_data(chip);
 
-	if (epl2182->mode != EPL2182_MODE_ALS)
-	{
-		if (jiffies - epl2182->light_jiffies < msecs_to_jiffies(dev->poll_delay))
-		{
+	if (epl2182->mode != EPL2182_MODE_ALS) {
+		if (jiffies - epl2182->light_jiffies < msecs_to_jiffies(dev->poll_delay)) {
 			return 0;
 		}
 
 		ret = epl2182_sensor_chip_set_mode(chip, EPL2182_MODE_ALS);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 
@@ -394,15 +367,13 @@ static int epl2182_light_event_handler(struct cavan_input_chip *chip, struct cav
 	}
 
 	ret = chip->write_register(chip, REG_07, EPL_DATA_LOCK);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_register REG_07");
 		return ret;
 	}
 
 	ret = chip->read_register16(chip, REG_CH1_DL, &ch1data);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_register16 REG_CH1_DL");
 		return ret;
 	}
@@ -422,8 +393,7 @@ static int epl2182_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	epl2182 = kzalloc(sizeof(*epl2182), GFP_KERNEL);
-	if (epl2182 == NULL)
-	{
+	if (epl2182 == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -455,8 +425,7 @@ static int epl2182_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = epl2182_proximity_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -484,8 +453,7 @@ static int epl2182_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = epl2182_light_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_cavan_input_device_unregister_proxi;
 	}
@@ -510,8 +478,7 @@ static void epl2182_input_chip_remove(struct cavan_input_chip *chip)
 	kfree(epl2182);
 }
 
-static struct cavan_input_init_data epl2182_init_data[] =
-{
+static struct cavan_input_init_data epl2182_init_data[] = {
 	{REG_00, EPL_S_SENSING_MODE},
 	{REG_07, EPL_C_P_DOWN},
 	{REG_09, EPL_INT_DISABLE}
@@ -525,8 +492,7 @@ static int epl2182_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -559,8 +525,7 @@ static int epl2182_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->remove = epl2182_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_chip;
 	}
@@ -584,25 +549,21 @@ static int epl2182_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id epl2182_id[] =
-{
+static const struct i2c_device_id epl2182_id[] = {
 	{EPL2182_DEVICE_NAME, 0}, {}
 };
 
 MODULE_DEVICE_TABLE(i2c, epl2182_id);
 
-static struct of_device_id epl2182_match_table[] =
-{
+static struct of_device_id epl2182_match_table[] = {
 	{
 		.compatible = "elan," EPL2182_DEVICE_NAME
 	},
 	{}
 };
 
-static struct i2c_driver epl2182_driver =
-{
-	.driver =
-	{
+static struct i2c_driver epl2182_driver = {
+	.driver = {
 		.name = EPL2182_DEVICE_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table = epl2182_match_table,

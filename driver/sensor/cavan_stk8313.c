@@ -33,22 +33,19 @@ enum stk8313_register_map
 #endif
 
 #pragma pack(1)
-struct stk8313_data_package
-{
+struct stk8313_data_package {
 	u8 xh, xl;
 	u8 yh, yl;
 	u8 zh, zl;
 };
 #pragma pack()
 
-struct stk8313_rate_map_node
-{
+struct stk8313_rate_map_node {
 	u8 value;
 	u32 delay;
 };
 
-static struct stk8313_rate_map_node stk8313_rate_map[] =
-{
+static struct stk8313_rate_map_node stk8313_rate_map[] = {
 	{0x00, 3},
 	{0x01, 5},
 	{0x02, 10},
@@ -65,8 +62,7 @@ static int stk8313_sensor_chip_readid(struct cavan_input_chip *chip)
 	u8 value;
 
 	ret = chip->read_register(chip, REG_MODE, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register REG_MODE");
 		return ret;
 	}
@@ -81,33 +77,28 @@ static int stk8313_sensor_chip_read_reg24(struct cavan_input_chip *chip, u8 *val
 	int ret;
 	u8 buff[2];
 
-	while (retry--)
-	{
+	while (retry--) {
 		ret = chip->write_register(chip, 0x3D, 0x70);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("write_register");
 			return ret;
 		}
 
 		ret = chip->write_register(chip, 0x3F, 0x02);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("write_register");
 			return ret;
 		}
 
 		ret = chip->read_data(chip, 0x3E, buff, 2);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("read_register");
 			return ret;
 		}
 
 		pr_bold_info("buff = 0x%02x 0x%02x", buff[0], buff[1]);
 
-		if (buff[1] & (1 << 7))
-		{
+		if (buff[1] & (1 << 7)) {
 			*value = buff[0];
 			break;
 		}
@@ -126,35 +117,30 @@ static int stk8313_sensor_chip_set_vd(struct cavan_input_chip *chip, int retry)
 	pr_pos_info();
 
 	ret = stk8313_sensor_chip_read_reg24(chip, &reg24, 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("stk8313_sensor_chip_read_reg24");
 		return ret;
 	}
 
-	if (reg24 == 0)
-	{
+	if (reg24 == 0) {
 		return 0;
 	}
 
 	ret = chip->write_register(chip, 0x24, reg24);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("write_register");
 		return ret;
 	}
 
 	ret = chip->read_register(chip, 0x24, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
 
 	pr_bold_info("value = 0x%02x, reg24 = 0x%02x", value, reg24);
 
-	if (value != reg24)
-	{
+	if (value != reg24) {
 		pr_red_info("value != reg24");
 		return -EINVAL;
 	}
@@ -170,30 +156,26 @@ static int stk8313_sensor_chip_set_active(struct cavan_input_chip *chip, bool en
 	pr_pos_info();
 
 	ret = chip->read_register(chip, REG_MODE, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
 
 	value &= 0xF8;
 
-	if (enable)
-	{
+	if (enable) {
 		value |= 0x01;
 	}
 
 	pr_bold_info("value = 0x%02x", value);
 
 	ret = chip->write_register(chip, REG_MODE, value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("write_register");
 		return ret;
 	}
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		return 0;
 	}
 
@@ -210,8 +192,7 @@ static int stk8313_acceleration_set_delay(struct cavan_input_device *dev, unsign
 	struct cavan_input_chip *chip = dev->chip;
 
 	ret = chip->read_register(chip, REG_SR, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
@@ -236,8 +217,7 @@ static int stk8313_acceleration_event_handler(struct cavan_input_chip *chip, str
 	struct stk8313_data_package package;
 
 	ret = chip->read_data(chip, REG_XOUT1, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_data");
 		return ret;
 	}
@@ -260,8 +240,7 @@ static int stk8313_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -284,8 +263,7 @@ static int stk8313_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = stk8313_acceleration_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -307,8 +285,7 @@ static void stk8313_input_chip_remove(struct cavan_input_chip *chip)
 	kfree(sensor);
 }
 
-static struct cavan_input_init_data stk8313_init_data[] =
-{
+static struct cavan_input_init_data stk8313_init_data[] = {
 	{REG_SWRST, 0x00, 1},
 	{REG_MODE, 0xC0},
 	{REG_SR, 0x03},
@@ -326,8 +303,7 @@ static int stk8313_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("sensor == NULL");
 		return -ENOMEM;
 	}
@@ -350,8 +326,7 @@ static int stk8313_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->remove = stk8313_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_sensor;
 	}
@@ -376,14 +351,12 @@ static int stk8313_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id stk8313_id[] =
-{
+static const struct i2c_device_id stk8313_id[] = {
 	{"stk8313", 0}, {}
 };
 
 #ifdef CONFIG_OF
-static struct of_device_id stk8313_match_table[] =
-{
+static struct of_device_id stk8313_match_table[] = {
 	{
 		.compatible = "sensortek,stk8313"
 	},
@@ -393,10 +366,8 @@ static struct of_device_id stk8313_match_table[] =
 
 MODULE_DEVICE_TABLE(i2c, stk8313_id);
 
-static struct i2c_driver stk8313_driver =
-{
-	.driver =
-	{
+static struct i2c_driver stk8313_driver = {
+	.driver = {
 		.name = "stk8313",
 		.owner = THIS_MODULE,
 #ifdef CONFIG_OF

@@ -655,7 +655,7 @@ static int w25q32fw_spi_probe(struct spi_device *spi)
 	struct w25q32fw_device *w25q32fw;
 
 	w25q32fw = (struct w25q32fw_device *) devm_kzalloc(&spi->dev, sizeof(struct w25q32fw_device), GFP_KERNEL);
-	if(w25q32fw == NULL){
+	if(w25q32fw == NULL) {
 		dev_err(&spi->dev, "Faile to devm_kzalloc\n");
 		return -ENOMEM;
 	}
@@ -673,7 +673,7 @@ static int w25q32fw_spi_probe(struct spi_device *spi)
 	spi->controller_data = &w25q32fw->chip_data;
 
 	ret = spi_setup(spi);
-	if (ret < 0){
+	if (ret < 0) {
 		dev_err(&spi->dev, "Failed to spi_setup: %d\n", ret);
 		goto out_devm_kfree;
 	}

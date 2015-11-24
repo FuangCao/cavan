@@ -11,8 +11,7 @@ enum cavan_input_thread_state
 	CAVAN_INPUT_THREAD_STATE_STOPPED
 };
 
-struct cavan_input_thread
-{
+struct cavan_input_thread {
 	const char *name;
 	void *private_data;
 	enum cavan_input_thread_state state;

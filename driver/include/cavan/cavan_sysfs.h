@@ -2,8 +2,7 @@
 
 #include <cavan/cavan_input.h>
 
-struct cavan_input_attribute
-{
+struct cavan_input_attribute {
 	struct attribute attr;
 	struct cavan_input_device *dev;
 	ssize_t (*show)(struct cavan_input_device *dev, struct cavan_input_attribute *attr, char *buff);

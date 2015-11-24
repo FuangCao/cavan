@@ -29,21 +29,15 @@ static int cavan_ts_fb_notifier_call(struct notifier_block *notifier, unsigned l
 
 	pr_bold_info("event = %ld", event);
 
-	switch (event)
-	{
+	switch (event) {
 	case FB_EVENT_BLANK:
-		if (data)
-		{
+		if (data) {
 			int *blank = ((struct fb_event *) data)->data;
 
-			if (blank)
-			{
-				if (*blank == FB_BLANK_UNBLANK)
-				{
+			if (blank) {
+				if (*blank == FB_BLANK_UNBLANK) {
 					cavan_ts_resume(ts);
-				}
-				else if (*blank == FB_BLANK_POWERDOWN)
-				{
+				} else if (*blank == FB_BLANK_POWERDOWN) {
 					cavan_ts_suspend(ts);
 				}
 			}
@@ -69,8 +63,7 @@ static int cavan_ts_pm_notifier_call(struct notifier_block *notifier, unsigned l
 
 	pr_bold_info("event = %ld", event);
 
-	switch (event)
-	{
+	switch (event) {
 	case PM_HIBERNATION_PREPARE:
 	case PM_SUSPEND_PREPARE:
 		cavan_ts_suspend(ts);
@@ -88,19 +81,16 @@ static int cavan_ts_pm_notifier_call(struct notifier_block *notifier, unsigned l
 
 static ssize_t cavan_ts_board_properties_show(struct cavan_input_device *dev, struct cavan_input_attribute *attr, char *buff)
 {
-	struct cavan_ts_device *ts = (struct cavan_ts_device *)dev;
+	struct cavan_ts_device *ts = (struct cavan_ts_device *) dev;
 	const struct cavan_ts_touch_key *key, *key_end;
 	char *p;
 
-	if (ts->keys == NULL || ts->key_count == 0)
-	{
+	if (ts->keys == NULL || ts->key_count == 0) {
 		return 0;
 	}
 
-	for (p = buff, key = ts->keys, key_end = key + ts->key_count; key < key_end; key++)
-	{
-		if (p > buff)
-		{
+	for (p = buff, key = ts->keys, key_end = key + ts->key_count; key < key_end; key++) {
+		if (p > buff) {
 			*p++ = ':';
 		}
 
@@ -110,10 +100,8 @@ static ssize_t cavan_ts_board_properties_show(struct cavan_input_device *dev, st
 	return p - buff;
 }
 
-static struct cavan_input_attribute cavan_ts_board_properties_attr =
-{
-	.attr =
-	{
+static struct cavan_input_attribute cavan_ts_board_properties_attr = {
+	.attr = {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 0, 0)
 		.owner = THIS_MODULE,
 #endif
@@ -154,13 +142,11 @@ static ssize_t cavan_ts_device_attr_keys_show(struct device *device, struct devi
 	struct cavan_misc_device *mdev = dev_get_drvdata(device);
 	struct cavan_ts_device *ts = (struct cavan_ts_device *) cavan_misc_device_get_data(mdev);
 
-	if (ts->keys == NULL || ts->key_count == 0)
-	{
+	if (ts->keys == NULL || ts->key_count == 0) {
 		return 0;
 	}
 
-	for (key = ts->keys, key_end = key + ts->key_count; key < key_end; key++)
-	{
+	for (key = ts->keys, key_end = key + ts->key_count; key < key_end; key++) {
 		buff += sprintf(buff, "x = %d, y = %d, width = %d, height = %d, code = %d\n", key->x, key->y, key->width, key->height, key->code);
 	}
 
@@ -172,8 +158,7 @@ static struct device_attribute cavan_ts_device_attr_yrange = __ATTR(yrange, S_IR
 static struct device_attribute cavan_ts_device_attr_point_count = __ATTR(point_count, S_IRUGO, cavan_ts_device_attr_point_count_show, NULL);
 static struct device_attribute cavan_ts_device_attr_keys = __ATTR(keys, S_IRUGO, cavan_ts_device_attr_keys_show, NULL);
 
-static const struct attribute *cavan_ts_device_attributes[] =
-{
+static const struct attribute *cavan_ts_device_attributes[] = {
 	&cavan_ts_device_attr_xrange.attr,
 	&cavan_ts_device_attr_yrange.attr,
 	&cavan_ts_device_attr_point_count.attr,
@@ -183,7 +168,7 @@ static const struct attribute *cavan_ts_device_attributes[] =
 
 static void cavan_ts_device_remove(struct cavan_input_device *dev)
 {
-	struct cavan_ts_device *ts = (struct cavan_ts_device *)dev;
+	struct cavan_ts_device *ts = (struct cavan_ts_device *) dev;
 	struct cavan_input_chip *chip = dev->chip;
 	struct cavan_input_core *core = chip->core;
 
@@ -209,8 +194,7 @@ static int cavan_ts_device_open(struct input_dev *dev)
 	pr_pos_info();
 
 	ret = cavan_input_device_set_enable_lock(idev, true);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_set_enable_lock");
 		return ret;
 	}
@@ -233,15 +217,13 @@ int cavan_ts_device_probe(struct cavan_input_device *dev)
 #endif
 
 	ret = cavan_input_add_kobject(&core->prop_kobj, "board_properties");
-	if (ret < 0 && ret != -EEXIST)
-	{
+	if (ret < 0 && ret != -EEXIST) {
 		pr_red_info("cavan_input_add_kobject");
 		return ret;
 	}
 
 	name = kasprintf(GFP_KERNEL, "virtualkeys.%s", input->name);
-	if (name == NULL)
-	{
+	if (name == NULL) {
 		ret = -ENOMEM;
 		pr_red_info("kasprintf");
 		goto out_cavan_input_remove_kobject;
@@ -250,15 +232,13 @@ int cavan_ts_device_probe(struct cavan_input_device *dev)
 	cavan_ts_board_properties_attr.attr.name = name;
 
 	ret = cavan_input_create_sysfs_files(dev, &core->prop_kobj, &cavan_ts_board_properties_attr, 1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_add_kobject");
 		goto out_kfree_name;
 	}
 
 	ret = sysfs_create_files(&dev->misc_dev.dev->kobj, cavan_ts_device_attributes);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("sysfs_create_files");
 		goto out_cavan_input_remove_sysfs_files;
 	}
@@ -271,15 +251,13 @@ int cavan_ts_device_probe(struct cavan_input_device *dev)
 #elif defined(CONFIG_FB) && defined(CONFIG_CAVAN_USE_FB_NOTIFILER)
 	ts->fb_notifier.notifier_call = cavan_ts_fb_notifier_call;
 	ret = fb_register_client(&ts->fb_notifier);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("fb_register_client");
 	}
 #else
 	ts->pm_notifier.notifier_call = cavan_ts_pm_notifier_call;
 	ret = register_pm_notifier(&ts->pm_notifier);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("register_pm_notifier");
 	}
 #endif
@@ -289,45 +267,38 @@ int cavan_ts_device_probe(struct cavan_input_device *dev)
 	set_bit(EV_KEY, input->evbit);
 	set_bit(BTN_TOUCH, input->keybit);
 
-	if (ts->keys && ts->key_count)
-	{
+	if (ts->keys && ts->key_count) {
 #ifdef CONFIG_OF
 		struct property *prop;
 
 		prop = of_find_property(of_node, "key-code", NULL);
-		if (prop)
-		{
+		if (prop) {
 			const __be32 *value = prop->value;
 			size_t count = prop->length / sizeof(*value);
 
-			if (count > ts->key_count)
-			{
+			if (count > ts->key_count) {
 				count = ts->key_count;
 			}
 
-			while (count > 0)
-			{
+			while (count > 0) {
 				count--;
 				ts->keys[count].code = be32_to_cpup(value + count);
 			}
 		}
 #endif
 
-		for (key = ts->keys, key_end = key + ts->key_count; key < key_end; key++)
-		{
+		for (key = ts->keys, key_end = key + ts->key_count; key < key_end; key++) {
 			set_bit(key->code, input->keybit);
 		}
 	}
 
 #ifdef CONFIG_OF
-	if (of_property_read_u32_array(of_node, "xrange", range, ARRAY_SIZE(range)) >= 0)
-	{
+	if (of_property_read_u32_array(of_node, "xrange", range, ARRAY_SIZE(range)) >= 0) {
 		ts->xmin = range[0];
 		ts->xmax = range[1];
 	}
 
-	if (of_property_read_u32_array(of_node, "yrange", range, ARRAY_SIZE(range)) >= 0)
-	{
+	if (of_property_read_u32_array(of_node, "yrange", range, ARRAY_SIZE(range)) >= 0) {
 		ts->ymin = range[0];
 		ts->ymax = range[1];
 	}

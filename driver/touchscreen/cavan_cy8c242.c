@@ -28,7 +28,7 @@
 #define CY8C242_FIRMWARE_BLOCK_SIZE	128
 
 #define CY8C242_BUILD_AXIS(h, l) \
-	(((u16)((h) & 0x0F)) << 8 | (l))
+	(((u16) ((h) & 0x0F)) << 8 | (l))
 
 #define CY8C242_EVENT_FLAG(xh) \
 	((xh) >> 4)
@@ -37,8 +37,7 @@
 	((yh) >> 4)
 
 #pragma pack(1)
-struct cy8c242_touch_point
-{
+struct cy8c242_touch_point {
 	u8 xh;
 	u8 xl;
 	u8 yh;
@@ -46,8 +45,7 @@ struct cy8c242_touch_point
 	u16 reserved;
 };
 
-struct cy8c242_data_package
-{
+struct cy8c242_data_package {
 	u8 device_mode;
 	u8 gest_id;
 	u8 td_status;
@@ -55,8 +53,7 @@ struct cy8c242_data_package
 };
 #pragma pack()
 
-struct cavan_cy8c242_device
-{
+struct cavan_cy8c242_device {
 	struct cavan_ts_device ts;
 	struct cavan_sensor_device prox;
 };
@@ -68,8 +65,7 @@ static inline ssize_t cy8c242_read_data_package(struct cavan_input_chip *chip, s
 
 static const char *cy8c242_power_mode_tostring(int mode)
 {
-	switch (mode)
-	{
+	switch (mode) {
 	case CY8C242_MODE_ACTIVE:
 		return "Active";
 	case CY8C242_MODE_MONITOR:
@@ -87,17 +83,13 @@ static int cy8c242_change_power_mode(struct cavan_input_chip *chip, u8 mode, int
 {
 	pr_bold_info("CY8C242 change power mode => %s", cy8c242_power_mode_tostring(mode));
 
-	while (chip->write_register(chip, CY8C242_REG_POWER_MODE, mode) < 0 && retry--)
-	{
+	while (chip->write_register(chip, CY8C242_REG_POWER_MODE, mode) < 0 && retry--) {
 		msleep(10);
 	}
 
-	if (retry < 0)
-	{
+	if (retry < 0) {
 		pr_red_info("Failed");
-	}
-	else
-	{
+	} else {
 		pr_green_info("OK");
 	}
 
@@ -111,21 +103,18 @@ static int cy8c242_ts_event_handler(struct cavan_input_chip *chip, struct cavan_
 	struct input_dev *input = dev->input;
 	struct cy8c242_data_package package;
 	struct cy8c242_touch_point *p, *p_end;
-	struct cavan_ts_device *ts = (struct cavan_ts_device *)dev;
+	struct cavan_ts_device *ts = (struct cavan_ts_device *) dev;
 
 	ret = cy8c242_read_data_package(chip, &package);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cy8c242_read_data_package");
 		cavan_input_chip_recovery(chip, false);
 		return ret;
 	}
 
 	count = package.td_status & 0x0F;
-	if (count == 0)
-	{
-		if (ts->touch_count)
-		{
+	if (count == 0) {
+		if (ts->touch_count) {
 			cavan_ts_mt_touch_release(input);
 			ts->touch_count = 0;
 		}
@@ -133,14 +122,12 @@ static int cy8c242_ts_event_handler(struct cavan_input_chip *chip, struct cavan_
 		return 0;
 	}
 
-	if (unlikely(count > CY8C242_POINT_COUNT))
-	{
+	if (unlikely(count > CY8C242_POINT_COUNT)) {
 		// pr_red_info("Too much points = %d", count);
 		count = CY8C242_POINT_COUNT;
 	}
 
-	for (p = package.points, p_end = p + count; p < p_end; p++)
-	{
+	for (p = package.points, p_end = p + count; p < p_end; p++) {
 		cavan_ts_report_mt_data(input, CY8C242_BUILD_AXIS(p->xh, p->xl), \
 			CY8C242_BUILD_AXIS(p->yh, p->yl));
 	}
@@ -153,8 +140,7 @@ static int cy8c242_ts_event_handler(struct cavan_input_chip *chip, struct cavan_
 
 static int cy8c242_set_power(struct cavan_input_chip *chip, bool enable)
 {
-	if (enable)
-	{
+	if (enable) {
 		cavan_io_reset_gpio_set_value(chip, 0);
 		cavan_io_set_power_regulator(chip, true);
 
@@ -165,9 +151,7 @@ static int cy8c242_set_power(struct cavan_input_chip *chip, bool enable)
 		cavan_io_reset_gpio_set_value(chip, 0);
 
 		msleep(100);
-	}
-	else
-	{
+	} else {
 		cavan_io_set_power_regulator(chip, false);
 	}
 
@@ -179,13 +163,10 @@ static int cy8c242_set_active(struct cavan_input_chip *chip, bool enable)
 	u8 mode;
 	int retry;
 
-	if (enable)
-	{
+	if (enable) {
 		mode = CY8C242_MODE_ACTIVE;
 		retry = 10;
-	}
-	else
-	{
+	} else {
 		mode = CY8C242_MODE_HIBERNATE;
 		retry = 2;
 	}
@@ -193,8 +174,7 @@ static int cy8c242_set_active(struct cavan_input_chip *chip, bool enable)
 	return cy8c242_change_power_mode(chip, mode, retry);
 }
 
-static struct cavan_ts_touch_key cy8c242_touch_keys[] =
-{
+static struct cavan_ts_touch_key cy8c242_touch_keys[] = {
 #if CONFIG_CAVAN_LCD_WIDTH == 480
 	{
 		.code = KEY_MENU,
@@ -202,15 +182,13 @@ static struct cavan_ts_touch_key cy8c242_touch_keys[] =
 		.y = 880,
 		.width = 120,
 		.height = 80,
-	},
-	{
+	}, {
 		.code = KEY_HOME,
 		.x = 240,
 		.y = 880,
 		.width = 120,
 		.height = 80,
-	},
-	{
+	}, {
 		.code = KEY_BACK,
 		.x = 410,
 		.y = 880,
@@ -224,15 +202,13 @@ static struct cavan_ts_touch_key cy8c242_touch_keys[] =
 		.y = 530,
 		.width = 60,
 		.height = 60,
-	},
-	{
+	}, {
 		.code = KEY_HOME,
 		.x = 150,
 		.y = 530,
 		.width = 90,
 		.height = 60,
-	},
-	{
+	}, {
 		.code = KEY_BACK,
 		.x = 270,
 		.y = 530,
@@ -250,8 +226,7 @@ static int cy8c242_readid(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	ret = chip->read_data(chip, 0x00, buff, sizeof(buff));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_i2c_read_data");
 		return ret;
 	}
@@ -263,8 +238,7 @@ static int cy8c242_readid(struct cavan_input_chip *chip)
 
 static int cy8c242_enter_upgrade_mode(struct cavan_input_chip *chip, int retry)
 {
-	while (retry--)
-	{
+	while (retry--) {
 		int ret;
 		u8 value;
 
@@ -276,16 +250,14 @@ static int cy8c242_enter_upgrade_mode(struct cavan_input_chip *chip, int retry)
 		cavan_io_irq_gpio_set_value(chip, -1);
 
 		ret = chip->read_register(chip, 0x01, &value);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_i2c_read_register");
 			return ret;
 		}
 
 		pr_bold_info("value = 0x%02x", value);
 
-		if (value == 0x11 || value == 0x10)
-		{
+		if (value == 0x11 || value == 0x10) {
 			return 0;
 		}
 	}
@@ -307,23 +279,20 @@ static int cy8c242_exit_upgrade_mode(struct cavan_input_chip *chip, int retry)
 
 	msleep(200);
 
-	while (retry--)
-	{
+	while (retry--) {
 		cy8c242_ts_reset(chip);
 
 		msleep(100);
 
 		ret = chip->read_register(chip, 0x01, &value);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_i2c_read_register");
 			return ret;
 		}
 
 		pr_bold_info("value = 0x%02x", value);
 
-		if (value != 0x11 && value != 0x10)
-		{
+		if (value != 0x11 && value != 0x10) {
 			return 0;
 		}
 	}
@@ -333,8 +302,7 @@ static int cy8c242_exit_upgrade_mode(struct cavan_input_chip *chip, int retry)
 
 static int cy8c242_byte2value(const char byte)
 {
-	switch (byte)
-	{
+	switch (byte) {
 	case '0' ... '9':
 		return byte - '0';
 
@@ -357,13 +325,10 @@ static int cy8c242_firmware2data(const char *p, const char *end, u8 *datas)
 	int ret;
 	int count;
 
-	for (count = 0; p < end; p++)
-	{
+	for (count = 0; p < end; p++) {
 		ret = cy8c242_byte2value(*p);
-		if (ret < 0)
-		{
-			if (ret == -2)
-			{
+		if (ret < 0) {
+			if (ret == -2) {
 				break;
 			}
 
@@ -387,36 +352,30 @@ static int cy8c242_firmware_write_data(struct cavan_input_chip *chip, struct cav
 
 	pr_pos_info();
 
-	while (1)
-	{
+	while (1) {
 		rdlen = cavan_firmware_read_line(fw, buff, sizeof(buff), 0, 5000);
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_red_info("cavan_firmware_read_line");
 			return rdlen;
 		}
 
-		if (rdlen == 0)
-		{
+		if (rdlen == 0) {
 			pr_green_info("Firmware upgrade successfully");
 			break;
 		}
 
 		for (line = buff, line_end = line + rdlen; line < line_end && BYTE_IS_SPACE(*line); line++);
 
-		if (line_end - line == 0)
-		{
+		if (line_end - line == 0) {
 			continue;
 		}
 
-		switch (line[0])
-		{
+		switch (line[0]) {
 		case 'w':
 		case 'W':
 			ret = cy8c242_firmware2data(line + 2, line_end, datas);
 			ret = chip->master_send(chip, datas + 1, ret - 1);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("master_send");
 				return ret;
 			}
@@ -425,14 +384,12 @@ static int cy8c242_firmware_write_data(struct cavan_input_chip *chip, struct cav
 		case 'r':
 		case 'R':
 			ret = chip->master_recv(chip, datas, 3);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				pr_red_info("master_recv");
 				return ret;
 			}
 
-			if (datas[2] != 0x20)
-			{
+			if (datas[2] != 0x20) {
 				pr_red_info("datas[2] = 0x%02x", datas[2]);
 				return -EFAULT;
 			}
@@ -440,12 +397,9 @@ static int cy8c242_firmware_write_data(struct cavan_input_chip *chip, struct cav
 
 		case '[':
 			ret = sscanf(line, "[delay=%d]", &delay);
-			if (ret == 1)
-			{
+			if (ret == 1) {
 				msleep(delay);
-			}
-			else
-			{
+			} else {
 				pr_bold_info("unknown delay");
 			}
 			break;
@@ -469,22 +423,19 @@ static int cy8c242_firmware_upgrade(struct cavan_input_chip *chip, struct cavan_
 	pr_pos_info();
 
 	ret = cy8c242_enter_upgrade_mode(chip, 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cy8c242_enter_upgrade_mode");
 		return ret;
 	}
 
 	ret = cy8c242_firmware_write_data(chip, fw);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cy8c242_firmware_write_data");
 		return ret;
 	}
 
 	ret = cy8c242_exit_upgrade_mode(chip, 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cy8c242_exit_upgrade_mode");
 		return ret;
 	}
@@ -504,15 +455,13 @@ ssize_t cy8c242_ts_calibration(struct cavan_input_device *dev, char *buff, size_
 
 	pr_pos_info();
 
-	for (i = 0; i < 5; i++)
-	{
+	for (i = 0; i < 5; i++) {
 		cy8c242_ts_reset(chip);
 
 		msleep(100);
 
 		ret = chip->master_send(chip, data, sizeof(data));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("master_send");
 			return ret;
 		}
@@ -520,23 +469,20 @@ ssize_t cy8c242_ts_calibration(struct cavan_input_device *dev, char *buff, size_
 		msleep(1000);
 
 		ret = chip->master_send(chip, data, 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("master_send");
 			return ret;
 		}
 
 		ret = chip->master_recv(chip, &value, 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("master_recv");
 			return ret;
 		}
 
 		pr_bold_info("value[%d] = %d", i, value);
 
-		if (value == 0)
-		{
+		if (value == 0) {
 			return snprintf(buff, size, "%s calibration complete.\n", chip->name);
 		}
 	}
@@ -550,8 +496,7 @@ static int cy8c242_proximity_event_handler(struct cavan_input_chip *chip, struct
 	u8 value;
 
 	ret = chip->read_register(chip, 0x13, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("dev->read_register");
 		cavan_input_chip_recovery(chip, false);
 		return ret;
@@ -578,15 +523,13 @@ static ssize_t cy8c242_read_firmware_id(struct cavan_input_chip *chip, char *buf
 	u8 vendor, version;
 
 	ret = chip->read_register(chip, 0x10, &vendor);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
 
 	ret = chip->read_register(chip, 0x11, &version);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
@@ -614,8 +557,7 @@ static int cy8c242_input_chip_probe(struct cavan_input_chip *chip)
 	struct cavan_sensor_device *prox;
 
 	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -640,8 +582,7 @@ static int cy8c242_input_chip_probe(struct cavan_input_chip *chip)
 	base_dev->calibration = cy8c242_ts_calibration;
 
 	ret = cavan_input_device_register(chip, base_dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_free_dev;
 	}
@@ -662,15 +603,13 @@ static int cy8c242_input_chip_probe(struct cavan_input_chip *chip)
 	base_dev->event_handler = cy8c242_proximity_event_handler;
 
 	ret = cavan_input_device_register(chip, base_dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_cavan_input_device_unregister_ts;
 	}
 
-	ret = device_create_file(&((struct i2c_client *)chip->bus_data)->dev, &dev_attr_firmware_id);
-	if (ret < 0)
-	{
+	ret = device_create_file(&((struct i2c_client *) chip->bus_data)->dev, &dev_attr_firmware_id);
+	if (ret < 0) {
 		pr_red_info("device_create_file");
 		goto out_cavan_input_device_unregister_prox;
 	}
@@ -692,7 +631,7 @@ static void cy8c242_input_chip_remove(struct cavan_input_chip *chip)
 
 	pr_pos_info();
 
-	device_remove_file(&((struct i2c_client *)chip->bus_data)->dev, &dev_attr_firmware_id);
+	device_remove_file(&((struct i2c_client *) chip->bus_data)->dev, &dev_attr_firmware_id);
 	cavan_input_device_unregister(chip, &dev->prox.dev);
 	cavan_input_device_unregister(chip, &dev->ts.dev);
 	kfree(dev);
@@ -706,8 +645,7 @@ static int cy8c242_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -734,8 +672,7 @@ static int cy8c242_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->read_firmware_id = cy8c242_read_firmware_id;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_chip;
 	}
@@ -761,14 +698,12 @@ static int cy8c242_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id cy8c242_ts_id_table[] =
-{
+static const struct i2c_device_id cy8c242_ts_id_table[] = {
 	{CY8C242_DEVICE_NAME, 0}, {}
 };
 
 #ifdef CONFIG_OF
-static struct of_device_id cy8c242_match_table[] =
-{
+static struct of_device_id cy8c242_match_table[] = {
 	{
 		.compatible = "cypress,cy8c242"
 	},
@@ -776,14 +711,12 @@ static struct of_device_id cy8c242_match_table[] =
 };
 #endif
 
-static struct i2c_driver cy8c242_ts_driver =
-{
+static struct i2c_driver cy8c242_ts_driver = {
 	.probe = cy8c242_i2c_probe,
 	.remove = cy8c242_i2c_remove,
 
 	.id_table = cy8c242_ts_id_table,
-	.driver =
-	{
+	.driver = {
 		.name = CY8C242_DEVICE_NAME,
 		.owner = THIS_MODULE,
 #ifdef CONFIG_OF

@@ -29,21 +29,18 @@
 #define pr_pos_info() \
 	pr_green_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
 
-struct cavan_input_event
-{
+struct cavan_input_event {
 	__u16 type;
 	__u16 code;
 	__s32 value;
 };
 
-struct swan_virtual_key
-{
+struct swan_virtual_key {
 	char *name;
 	unsigned int code;
 };
 
-static struct swan_virtual_key swan_vk_table[] =
-{
+static struct swan_virtual_key swan_vk_table[] = {
 	{"search", 217},
 	{"back", 158},
 	{"menu", 229},
@@ -73,10 +70,8 @@ static struct input_dev *vk_input;
 
 static int strlhcmp(const char *str1, const char *str2)
 {
-	while (*str1)
-	{
-		if (*str1 != *str2)
-		{
+	while (*str1) {
+		if (*str1 != *str2) {
 			return *str1 - *str2;
 		}
 
@@ -93,8 +88,7 @@ static void swan_virtual_keypad_setup_events(struct input_dev *vk_input)
 
 	__set_bit(EV_KEY, vk_input->evbit);
 
-	for (i = 1; i < KEY_CNT; i++)
-	{
+	for (i = 1; i < KEY_CNT; i++) {
 		__set_bit(i, vk_input->keybit);
 	}
 
@@ -131,8 +125,7 @@ static ssize_t swan_virtual_keypad_command_store(struct device *dev, struct devi
 
 	for (p = swan_vk_table, end_p = swan_vk_table + ARRAY_SIZE(swan_vk_table); p < end_p && strlhcmp(p->name, buff); p++);
 
-	if (p < end_p)
-	{
+	if (p < end_p) {
 		old_code = p->code;
 	}
 
@@ -148,8 +141,7 @@ static ssize_t swan_virtual_keypad_keycode_store(struct device *dev, struct devi
 	static unsigned old_code;
 
 	code = simple_strtoul(buff, NULL, 10);
-	if (code)
-	{
+	if (code) {
 		old_code = code;
 	}
 
@@ -162,8 +154,7 @@ static ssize_t swan_virtual_keypad_event_store(struct device *dev, struct device
 {
 	int type, code, value;
 
-	if (sscanf(buff, "%d,%d,%d", &type, &code, &value) == 3)
-	{
+	if (sscanf(buff, "%d,%d,%d", &type, &code, &value) == 3) {
 		input_event(vk_input, type, code, value);
 	}
 
@@ -174,8 +165,7 @@ static ssize_t swan_virtual_keypad_data_store(struct device *dev, struct device_
 {
 	struct input_event *p, *end_p;
 
-	for (p = (struct input_event *)buff, end_p = p + (count / sizeof(*p)); p < end_p; p++)
-	{
+	for (p = (struct input_event *) buff, end_p = p + (count / sizeof(*p)); p < end_p; p++) {
 		input_event(vk_input, p->type, p->code, p->value);
 	}
 
@@ -184,56 +174,46 @@ static ssize_t swan_virtual_keypad_data_store(struct device *dev, struct device_
 
 static ssize_t swan_virtual_keypad_value_store(struct device *dev, struct device_attribute *attr, const char *buff, size_t count)
 {
-	swan_vk_touch(vk_input, *(u32 *)buff);
+	swan_vk_touch(vk_input, *(u32 *) buff);
 
 	return count;
 }
 
-struct device_attribute vk_attrs[] =
-{
+struct device_attribute vk_attrs[] = {
 	{
-		.attr =
-		{
+		.attr = {
 			.name = "command",
 			.mode = S_IWUGO,
 		},
 
 		.show = NULL,
 		.store = swan_virtual_keypad_command_store,
-	},
-	{
-		.attr =
-		{
+	}, {
+		.attr = {
 			.name = "keycode",
 			.mode = S_IWUGO,
 		},
 
 		.show = NULL,
 		.store = swan_virtual_keypad_keycode_store,
-	},
-	{
-		.attr =
-		{
+	}, {
+		.attr = {
 			.name = "event",
 			.mode = S_IWUGO,
 		},
 
 		.show = NULL,
 		.store = swan_virtual_keypad_event_store,
-	},
-	{
-		.attr =
-		{
+	}, {
+		.attr = {
 			.name = "data",
 			.mode = S_IWUGO,
 		},
 
 		.show = NULL,
 		.store = swan_virtual_keypad_data_store,
-	},
-	{
-		.attr =
-		{
+	}, {
+		.attr = {
 			.name = "value",
 			.mode = S_IWUGO,
 		},
@@ -268,16 +248,14 @@ static ssize_t swan_vk_misc_write(struct file *file, const char __user *buff, si
 {
 	struct cavan_input_event *p, *end_p;
 
-	for (p = (struct cavan_input_event *)buff, end_p = p + (size / sizeof(*p)); p < end_p; p++)
-	{
+	for (p = (struct cavan_input_event *) buff, end_p = p + (size / sizeof(*p)); p < end_p; p++) {
 		input_event(vk_input, p->type, p->code, p->value);
 	}
 
 	return size;
 }
 
-static const struct file_operations swan_vk_misc_fops =
-{
+static const struct file_operations swan_vk_misc_fops = {
 	.owner = THIS_MODULE,
 	.open = swan_vk_misc_open,
 	.read = swan_vk_misc_read,
@@ -285,8 +263,7 @@ static const struct file_operations swan_vk_misc_fops =
 	.release = swan_vk_misc_release
 };
 
-static struct miscdevice swan_vk_misc =
-{
+static struct miscdevice swan_vk_misc = {
 	.minor	= MISC_DYNAMIC_MINOR,
 	.name	= "swan_vk",
 	.fops	= &swan_vk_misc_fops,
@@ -300,8 +277,7 @@ static int swan_virtual_keypad_probe(struct platform_device *pdev)
 	pr_pos_info();
 
 	vk_input = input_allocate_device();
-	if (vk_input == NULL)
-	{
+	if (vk_input == NULL) {
 		pr_red_info("input_allocate_device");
 		return -ENOMEM;
 	}
@@ -310,28 +286,23 @@ static int swan_virtual_keypad_probe(struct platform_device *pdev)
 	swan_virtual_keypad_setup_events(vk_input);
 
 	ret = input_register_device(vk_input);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("input_register_device");
 		goto out_input_free_device;
 	}
 
 	ret = misc_register(&swan_vk_misc);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("misc_register failed");
 		goto out_input_unregister_device;
 	}
 
-	for (p = vk_attrs + ARRAY_SIZE(vk_attrs) - 1; p >= vk_attrs; p--)
-	{
+	for (p = vk_attrs + ARRAY_SIZE(vk_attrs) - 1; p >= vk_attrs; p--) {
 		ret = device_create_file(&pdev->dev, p);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("device_create_file");
 
-			while (--p >= vk_attrs)
-			{
+			while (--p >= vk_attrs) {
 				device_remove_file(&pdev->dev, p);
 			}
 
@@ -357,8 +328,7 @@ static int swan_virtual_keypad_remove(struct platform_device *pdev)
 {
 	struct device_attribute *p;
 
-	for (p = vk_attrs + ARRAY_SIZE(vk_attrs) - 1; p >= vk_attrs; p--)
-	{
+	for (p = vk_attrs + ARRAY_SIZE(vk_attrs) - 1; p >= vk_attrs; p--) {
 		device_remove_file(&pdev->dev, p);
 	}
 
@@ -375,10 +345,8 @@ static void swan_vk_platform_device_release(struct device *dev)
 	pr_pos_info();
 }
 
-static struct platform_driver swan_virtual_keypad_driver =
-{
-	.driver =
-	{
+static struct platform_driver swan_virtual_keypad_driver = {
+	.driver = {
 		.name = SWAN_VK_DEVICE_NAME,
 	},
 
@@ -386,11 +354,9 @@ static struct platform_driver swan_virtual_keypad_driver =
 	.remove = swan_virtual_keypad_remove,
 };
 
-static struct platform_device swan_virtual_keypad_device =
-{
+static struct platform_device swan_virtual_keypad_device = {
 	.name = SWAN_VK_DEVICE_NAME,
-	.dev =
-	{
+	.dev = {
 		.release = swan_vk_platform_device_release,
 	},
 };
@@ -402,15 +368,13 @@ static int __init swan_virtual_keypad_init(void)
 	pr_pos_info();
 
 	ret = platform_device_register(&swan_virtual_keypad_device);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("platform_device_register");
 		return ret;
 	}
 
 	ret = platform_driver_register(&swan_virtual_keypad_driver);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("platform_driver_register");
 		goto out_unregister_device;
 	}

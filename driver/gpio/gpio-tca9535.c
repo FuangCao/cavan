@@ -47,16 +47,14 @@ enum tca9535_register
 	REG_CONFIGURATION = 0x06,
 };
 
-struct tca9535_register_cache
-{
+struct tca9535_register_cache {
 	u16 input_port;
 	u16 output_port;
 	u16 polarity_inversion;
 	u16 configuration;
 };
 
-struct tca9535_device
-{
+struct tca9535_device {
 	struct gpio_chip gpio_chip;
 	struct i2c_client *client;
 	struct mutex lock;

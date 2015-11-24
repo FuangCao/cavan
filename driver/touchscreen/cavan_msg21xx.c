@@ -31,10 +31,10 @@
 #define MSG21XX_DEVICE_NAME			"msg21xx_ts"
 
 #define MSG21XX_BUILD_XAXIS(h, l) \
-	(((u16)((h) & 0xF0)) << 4 | (l))
+	(((u16) ((h) & 0xF0)) << 4 | (l))
 
 #define MSG21XX_BUILD_YAXIS(h, l) \
-	(((u16)((h) & 0x0F)) << 8 | (l))
+	(((u16) ((h) & 0x0F)) << 8 | (l))
 
 #define MSG21XX_CAL_XAXIS(x) \
 	((x) * CONFIG_CAVAN_LCD_WIDTH / 2048)
@@ -43,26 +43,22 @@
 	((y) * CONFIG_CAVAN_LCD_HEIGHT / 2048)
 
 #pragma pack(1)
-struct msg21xx_touch_point_raw
-{
+struct msg21xx_touch_point_raw {
 	u8 hb;
 	u8 xl;
 	u8 yl;
 };
 
-struct msg21xx_touch_key
-{
+struct msg21xx_touch_key {
 	u8 reserved;
 	u8 code;
 };
 
-struct msg21xx_data_package
-{
+struct msg21xx_data_package {
 	u8 magic;
 	struct msg21xx_touch_point_raw point;
 
-	union
-	{
+	union {
 		struct msg21xx_touch_point_raw delta;
 		struct msg21xx_touch_key key;
 	};
@@ -71,22 +67,19 @@ struct msg21xx_data_package
 };
 #pragma pack()
 
-struct cavan_msg21xx_device
-{
+struct cavan_msg21xx_device {
 	struct cavan_ts_device ts;
 #if CAVAN_SUPPORT_PROXIMITY
 	struct cavan_sensor_device prox;
 #endif
 };
 
-struct msg21xx_touch_point
-{
+struct msg21xx_touch_point {
 	int x;
 	int y;
 };
 
-struct cavan_msg21xx_chip
-{
+struct cavan_msg21xx_chip {
 	struct cavan_input_chip chip;
 	int distance;
 	int touch_count;
@@ -112,25 +105,19 @@ static int msg21xx_ts_event_handler(struct cavan_input_chip *chip, struct cavan_
 {
 	struct msg21xx_touch_point *p, *p_end;
 	struct input_dev *input = dev->input;
-	struct cavan_ts_device *ts = (struct cavan_ts_device *)dev;
+	struct cavan_ts_device *ts = (struct cavan_ts_device *) dev;
 	struct cavan_msg21xx_chip *msg21xx = container_of(chip, struct cavan_msg21xx_chip, chip);
 
-	if (msg21xx->touch_count < 0)
-	{
+	if (msg21xx->touch_count < 0) {
 		return 0;
 	}
 
-	if (msg21xx->touch_count == 0)
-	{
-		if (ts->touch_count)
-		{
+	if (msg21xx->touch_count == 0) {
+		if (ts->touch_count) {
 			cavan_ts_mt_touch_release(input);
 		}
-	}
-	else
-	{
-		for (p = msg21xx->points, p_end = p + msg21xx->touch_count; p < p_end; p++)
-		{
+	} else {
+		for (p = msg21xx->points, p_end = p + msg21xx->touch_count; p < p_end; p++) {
 			cavan_ts_report_mt_data(input, p->x, p->y);
 		}
 
@@ -173,43 +160,36 @@ static void msg21xx_chip_reset(struct cavan_input_chip *chip)
 
 static int msg21xx_set_power(struct cavan_input_chip *chip, bool enable)
 {
-	if (enable)
-	{
+	if (enable) {
 		cavan_io_set_power_regulator(chip, true);
 		msg21xx_chip_reset(chip);
-	}
-	else
-	{
+	} else {
 		cavan_io_set_power_regulator(chip, false);
 	}
 
 	return 0;
 }
 
-static struct cavan_ts_touch_key msg21xx_touch_keys[] =
-{
+static struct cavan_ts_touch_key msg21xx_touch_keys[] = {
 	{
 		.code = KEY_MENU,
 		.x = MSG21XX_XAXIS_KEY1,
 		.y = MSG21XX_YAXIS_KEY,
 		.width = 80,
 		.height = 100,
-	},
-	{
+	}, {
 		.code = KEY_BACK,
 		.x = MSG21XX_XAXIS_KEY2,
 		.y = MSG21XX_YAXIS_KEY,
 		.width = 80,
 		.height = 100,
-	},
-	{
+	}, {
 		.code = KEY_HOMEPAGE,
 		.x = MSG21XX_XAXIS_KEY3,
 		.y = MSG21XX_YAXIS_KEY,
 		.width = 80,
 		.height = 100,
-	},
-	{
+	}, {
 		.code = KEY_SEARCH,
 		.x = MSG21XX_XAXIS_KEY4,
 		.y = MSG21XX_YAXIS_KEY,
@@ -225,15 +205,13 @@ static int msg21xx_read_firmware_id(struct cavan_input_chip *chip, char *buff, s
 	char command[] = {0x53, 0x00, 0x2A};
 
 	ret = chip->write_data(chip, FW_ADDR_MSG21XX_TP, command, sizeof(command));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->write_data");
 		return ret;
 	}
 
 	ret = chip->read_data(chip, FW_ADDR_MSG21XX_TP, version, sizeof(version));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_data");
 		return ret;
 	}
@@ -249,8 +227,7 @@ static int msg21xx_readid(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	ret = chip->read_firmware_id(chip, buff, sizeof(buff));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->read_firmware_id");
 		return ret;
 	}
@@ -282,8 +259,7 @@ static int msg21xx_input_chip_probe(struct cavan_input_chip *chip)
 #endif
 
 	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -307,8 +283,7 @@ static int msg21xx_input_chip_probe(struct cavan_input_chip *chip)
 	base_dev->event_handler = msg21xx_ts_event_handler;
 
 	ret = cavan_input_device_register(chip, base_dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_free_dev;
 	}
@@ -331,16 +306,14 @@ static int msg21xx_input_chip_probe(struct cavan_input_chip *chip)
 	base_dev->event_handler = msg21xx_proximity_event_handler;
 
 	ret = cavan_input_device_register(chip, base_dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_cavan_input_device_unregister_ts;
 	}
 #endif
 
-	ret = device_create_file(&((struct i2c_client *)chip->bus_data)->dev, &dev_attr_firmware_id);
-	if (ret < 0)
-	{
+	ret = device_create_file(&((struct i2c_client *) chip->bus_data)->dev, &dev_attr_firmware_id);
+	if (ret < 0) {
 		pr_red_info("device_create_file");
 		goto out_cavan_input_device_unregister_prox;
 	}
@@ -363,7 +336,7 @@ static inline int msg21xx_is_touch_key(u8 *buff)
 #if 0
 	return buff[1] == 0xFF && buff[2] == 0xFF && buff[3] == 0xFF && buff[4] == 0xFF && buff[6] == 0xFF;
 #else
-	return *(u32 *)(buff + 1) == 0xFFFFFFFF;
+	return *(u32 *) (buff + 1) == 0xFFFFFFFF;
 #endif
 }
 
@@ -374,8 +347,7 @@ static int msg21xx_chip_event_handler(struct cavan_input_chip *chip)
 	struct cavan_msg21xx_chip *msg21xx = container_of(chip, struct cavan_msg21xx_chip, chip);
 
 	ret = msg21xx_read_data_package(chip, &package);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("msg21xx_read_data_package");
 		cavan_input_chip_recovery(chip, false);
 		return ret;
@@ -383,17 +355,14 @@ static int msg21xx_chip_event_handler(struct cavan_input_chip *chip)
 
 	// cavan_input_print_memory(&package, sizeof(package));
 
-	if (package.magic != 0x52)
-	{
+	if (package.magic != 0x52) {
 		return 0;
 	}
 
-	if (msg21xx_is_touch_key((u8 *)&package))
-	{
+	if (msg21xx_is_touch_key((u8 *) &package)) {
 		u8 code = package.key.code;
 
-		switch (code)
-		{
+		switch (code) {
 		case 0x40:
 			msg21xx->distance = 1;
 			msg21xx->touch_count = -1;
@@ -410,19 +379,14 @@ static int msg21xx_chip_event_handler(struct cavan_input_chip *chip)
 			break;
 
 		default:
-			if ((code & 0x0F) == 0)
-			{
+			if ((code & 0x0F) == 0) {
 				msg21xx->touch_count = 0;
-			}
-			else
-			{
+			} else {
 				int i;
 				int count;
 
-				for (i = 0, count = 0; i < ARRAY_SIZE(msg21xx_touch_keys); i++)
-				{
-					if (code & (1 << i))
-					{
+				for (i = 0, count = 0; i < ARRAY_SIZE(msg21xx_touch_keys); i++) {
+					if (code & (1 << i)) {
 						msg21xx->points[count].x = msg21xx_touch_keys[i].x;
 						msg21xx->points[count].y = msg21xx_touch_keys[i].y;
 						count++;
@@ -432,9 +396,7 @@ static int msg21xx_chip_event_handler(struct cavan_input_chip *chip)
 				msg21xx->touch_count = count;
 			}
 		}
-	}
-	else
-	{
+	} else {
 		int x, y;
 		int dx, dy;
 		struct msg21xx_touch_point_raw *p;
@@ -452,15 +414,12 @@ static int msg21xx_chip_event_handler(struct cavan_input_chip *chip)
 		dx = MSG21XX_BUILD_XAXIS(p->hb, p->xl);
 		dy = MSG21XX_BUILD_YAXIS(p->hb, p->yl);
 
-		if (dx || dy)
-		{
-			if (dx > 2048)
-			{
+		if (dx || dy) {
+			if (dx > 2048) {
 				dx -= 4096;
 			}
 
-			if (dy > 2048)
-			{
+			if (dy > 2048) {
 				dy -= 4096;
 			}
 
@@ -484,7 +443,7 @@ static void msg21xx_input_chip_remove(struct cavan_input_chip *chip)
 
 	pr_pos_info();
 
-	device_remove_file(&((struct i2c_client *)chip->bus_data)->dev, &dev_attr_firmware_id);
+	device_remove_file(&((struct i2c_client *) chip->bus_data)->dev, &dev_attr_firmware_id);
 #if CAVAN_SUPPORT_PROXIMITY
 	cavan_input_device_unregister(chip, &dev->prox.dev);
 #endif
@@ -498,14 +457,12 @@ int msg21xx_chip_firmware_upgrade(struct cavan_input_chip *chip, struct cavan_fi
 	int ret;
 
 	ret = cavan_firmware_fill(fw, (char *) temp, sizeof(temp), 0, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_firmware_fill");
 		return ret;
 	}
 
-	if (firmware_auto_update(chip))
-	{
+	if (firmware_auto_update(chip)) {
 		return 0;
 	}
 #endif
@@ -523,8 +480,7 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	pr_pos_info();
 
 	msg21xx = kzalloc(sizeof(*msg21xx), GFP_KERNEL);
-	if (msg21xx == NULL)
-	{
+	if (msg21xx == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -533,8 +489,7 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	i2c_set_clientdata(client, msg21xx);
 
 	of_node = client->dev.of_node;
-	if (of_node == NULL)
-	{
+	if (of_node == NULL) {
 		ret = -EINVAL;
 		pr_red_info("of_node is null");
 		goto out_kfree_msg21xx;
@@ -569,8 +524,7 @@ static int msg21xx_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->read_firmware_id = msg21xx_read_firmware_id;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_msg21xx;
 	}
@@ -600,15 +554,13 @@ static int msg21xx_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id msg21xx_ts_id_table[] =
-{
+static const struct i2c_device_id msg21xx_ts_id_table[] = {
 	{MSG21XX_DEVICE_NAME, 0},
 	{}
 };
 
 #ifdef CONFIG_OF
-static struct of_device_id msg21xx_match_table[] =
-{
+static struct of_device_id msg21xx_match_table[] = {
 	{
 		.compatible = "mstar,msg21xx"
 	},
@@ -616,14 +568,12 @@ static struct of_device_id msg21xx_match_table[] =
 };
 #endif
 
-static struct i2c_driver msg21xx_ts_driver =
-{
+static struct i2c_driver msg21xx_ts_driver = {
 	.probe = msg21xx_i2c_probe,
 	.remove = msg21xx_i2c_remove,
 
 	.id_table = msg21xx_ts_id_table,
-	.driver =
-	{
+	.driver = {
 		.name = MSG21XX_DEVICE_NAME,
 		.owner = THIS_MODULE,
 #ifdef CONFIG_OF

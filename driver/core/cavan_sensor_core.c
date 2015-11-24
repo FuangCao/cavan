@@ -4,8 +4,7 @@ static int cavan_sensor_device_ioctl(struct cavan_input_device *dev, unsigned in
 {
 	struct cavan_sensor_device *sensor = (struct cavan_sensor_device *) dev;
 
-	switch (command)
-	{
+	switch (command) {
 	case CAVAN_INPUT_SENSOR_IOC_GET_MIN_DELAY:
 		return cavan_input_copy_to_user_uint(args, dev->min_delay);
 
@@ -66,8 +65,7 @@ static struct device_attribute cavan_sensor_device_attr_resolution = __ATTR(reso
 static struct device_attribute cavan_sensor_device_attr_power_consume = __ATTR(power_consume, S_IRUGO, cavan_sensor_device_attr_power_show, NULL);
 static struct device_attribute cavan_sensor_device_attr_axis_count = __ATTR(axis_count, S_IRUGO, cavan_sensor_device_attr_axis_count_show, NULL);
 
-static const struct attribute *cavan_sensor_device_attributes[] =
-{
+static const struct attribute *cavan_sensor_device_attributes[] = {
 	&cavan_sensor_device_attr_max_range.attr,
 	&cavan_sensor_device_attr_resolution.attr,
 	&cavan_sensor_device_attr_power_consume.attr,
@@ -88,8 +86,7 @@ int cavan_sensor_device_probe(struct cavan_input_device *dev)
 	struct input_dev *input = dev->input;
 	struct cavan_sensor_device *sensor = (struct cavan_sensor_device *) dev;
 
-	switch (dev->type)
-	{
+	switch (dev->type) {
 	case CAVAN_INPUT_DEVICE_TYPE_ACCELEROMETER:
 	case CAVAN_INPUT_DEVICE_TYPE_MAGNETIC_FIELD:
 	case CAVAN_INPUT_DEVICE_TYPE_ORIENTATION:
@@ -97,8 +94,7 @@ int cavan_sensor_device_probe(struct cavan_input_device *dev)
 	case CAVAN_INPUT_DEVICE_TYPE_GRAVITY:
 	case CAVAN_INPUT_DEVICE_TYPE_ROTATION_VECTOR:
 	case CAVAN_INPUT_DEVICE_TYPE_LINEAR_ACCELERATION:
-		if (sensor->axis_count < 2)
-		{
+		if (sensor->axis_count < 2) {
 			sensor->axis_count = 3;
 		}
 
@@ -123,8 +119,7 @@ int cavan_sensor_device_probe(struct cavan_input_device *dev)
 	set_bit(EV_ABS, input->evbit);
 
 	ret = sysfs_create_files(&dev->misc_dev.dev->kobj, cavan_sensor_device_attributes);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("sysfs_create_files");
 		return ret;
 	}

@@ -98,8 +98,7 @@ typedef unsigned long jwp_u16;
 typedef unsigned long jwp_u32;
 typedef unsigned long jwp_size_t;
 
-typedef enum
-{
+typedef enum {
     false = 0,
     true
 } jwp_bool;
@@ -111,8 +110,7 @@ typedef jwp_u8 jwp_lock_t;
 
 #define JWP_CSR_CMD_MAX_LEN			64
 
-typedef enum
-{
+typedef enum {
 	JWP_CSR_CMD_SET_STATE,
 	JWP_CSR_CMD_SET_FACTORY_SCAN,
 	JWP_CSR_CMD_SET_WHITE_LIST,

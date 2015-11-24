@@ -366,8 +366,7 @@ int display_config(int text_mode)
 	return 0;
 }
 
-static struct swan_machine swan_machine_table[] =
-{
+static struct swan_machine swan_machine_table[] = {
 	{
 		.type = SWAN_BOARD_I200,
 		.name = "I2xx Serials Boards",

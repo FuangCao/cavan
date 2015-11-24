@@ -164,8 +164,7 @@
 #define ADXL34X_INT_MASK		(DATA_READY | ACTIVITY | INACTIVITY)
 
 #pragma pack(1)
-struct adxl34x_data_package
-{
+struct adxl34x_data_package {
 	short x;
 	short y;
 	short z;
@@ -178,16 +177,14 @@ static int adxl34x_sensor_chip_readid(struct cavan_input_chip *chip)
 	u8 id;
 
 	ret = chip->read_register(chip, DEVID, &id);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_register");
 		return ret;
 	}
 
 	pr_bold_info("Device ID = 0x%02x", id);
 
-	switch (id)
-	{
+	switch (id) {
 	case ID_ADXL345:
 		chip->devid = 0x0345;
 		chip->name = "ADXL345";
@@ -213,20 +210,16 @@ static int adxl34x_sensor_chip_set_active(struct cavan_input_chip *chip, bool en
 	int ret;
 	u8 value;
 
-	if (enable)
-	{
+	if (enable) {
 		value = PCTL_AUTO_SLEEP | PCTL_LINK | PCTL_MEASURE;
-	}
-	else
-	{
+	} else {
 		value = 0;
 	}
 
 	pr_func_info("value = 0x%02x", value);
 
 	ret = chip->write_register(chip, POWER_CTL, value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("write_register POWER_CTL");
 		return ret;
 	}
@@ -240,8 +233,7 @@ static int adxl34x_sensor_chip_event_handler(struct cavan_input_chip *chip)
 	u8 irq_state;
 
 	ret = chip->read_register(chip, INT_SOURCE, &irq_state);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("sensor->read_register INT_SOURCE");
 		return ret;
 	}
@@ -258,23 +250,19 @@ static int adxl34x_acceleration_event_handler(struct cavan_input_chip *chip, str
 	u8 fifo_state;
 	struct adxl34x_data_package package;
 
-	if ((chip->irq_state & (DATA_READY | WATERMARK)) == 0)
-	{
+	if ((chip->irq_state & (DATA_READY | WATERMARK)) == 0) {
 		return 0;
 	}
 
 	ret = chip->read_register(chip, FIFO_STATUS, &fifo_state);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("sensor->read_register FIFO_STATUS");
 		return ret;
 	}
 
-	for (fifo_state = (fifo_state & 0x3F) + 1; fifo_state; fifo_state--)
-	{
+	for (fifo_state = (fifo_state & 0x3F) + 1; fifo_state; fifo_state--) {
 		ret = chip->read_data(chip, DATAX0, &package, sizeof(package));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_sensor_i2c_read_data");
 			continue;
 		}
@@ -294,8 +282,7 @@ static int adxl34x_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -317,8 +304,7 @@ static int adxl34x_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = adxl34x_acceleration_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -340,8 +326,7 @@ static void adxl34x_input_chip_remove(struct cavan_input_chip *chip)
 	kfree(sensor);
 }
 
-static struct cavan_input_init_data adxl34x_init_data[] =
-{
+static struct cavan_input_init_data adxl34x_init_data[] = {
 	{THRESH_TAP, 35, 0},
 	{OFSX, 0, 0},
 	{OFSY, 0, 0},
@@ -375,8 +360,7 @@ static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("sensor == NULL");
 		return -ENOMEM;
 	}
@@ -392,8 +376,7 @@ static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 #else
 	ret = sprd_alloc_eic_irq(ADXL346_GINT1);
 #endif
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("sprd_alloc_eic_irq");
 		goto out_kfree_sensor;
 	}
@@ -418,8 +401,7 @@ static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->remove = adxl34x_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_free_eic_irq;
 	}
@@ -427,8 +409,7 @@ static int adxl34x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	return 0;
 
 out_free_eic_irq:
-	if (chip->irq > 0)
-	{
+	if (chip->irq > 0) {
 #ifdef CONFIG_ARCH_SC8810
 		sprd_free_eic_irq(chip->irq);
 #endif
@@ -448,8 +429,7 @@ static int adxl34x_i2c_remove(struct i2c_client *client)
 
 	cavan_input_chip_unregister(chip);
 
-	if (chip->irq > 0)
-	{
+	if (chip->irq > 0) {
 #ifdef CONFIG_ARCH_SC8810
 		sprd_free_eic_irq(chip->irq);
 #endif
@@ -460,14 +440,12 @@ static int adxl34x_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id adxl34x_id[] =
-{
+static const struct i2c_device_id adxl34x_id[] = {
 	{"adxl34x", 0}, {}
 };
 
 #ifdef CONFIG_OF
-static struct of_device_id adxl34x_match_table[] =
-{
+static struct of_device_id adxl34x_match_table[] = {
 	{
 		.compatible = "analog,adxl34x"
 	},
@@ -477,10 +455,8 @@ static struct of_device_id adxl34x_match_table[] =
 
 MODULE_DEVICE_TABLE(i2c, adxl34x_id);
 
-static struct i2c_driver adxl34x_driver =
-{
-	.driver =
-	{
+static struct i2c_driver adxl34x_driver = {
+	.driver = {
 		.name = "adxl34x",
 		.owner = THIS_MODULE,
 #ifdef CONFIG_OF

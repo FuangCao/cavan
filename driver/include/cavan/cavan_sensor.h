@@ -19,8 +19,7 @@
 #define CAVAN_INPUT_SENSOR_IOC_GET_POWER_CONSUME	CAVAN_INPUT_IOC('S', 0x03, 0)
 #define CAVAN_INPUT_SENSOR_IOC_GET_AXIS_COUNT		CAVAN_INPUT_IOC('S', 0x04, 0)
 
-struct cavan_sensor_device
-{
+struct cavan_sensor_device {
 	struct cavan_input_device dev;
 
 	u32 axis_count;
@@ -29,8 +28,7 @@ struct cavan_sensor_device
 	u32 power_consume;
 };
 
-struct cavan_sensor_rate_table_node
-{
+struct cavan_sensor_rate_table_node {
 	u8 value;
 	u32 delay_ns;
 };

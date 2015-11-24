@@ -527,8 +527,7 @@ static int cavan_bootimg_info(int argc, char *argv[])
 
 // ============================================================
 
-static struct cavan_command_map cmd_map[] =
-{
+static struct cavan_command_map cmd_map[] = {
 	{"unpack", cavan_bootimg_unpack},
 	{"repack", cavan_bootimg_repack},
 	{"info", cavan_bootimg_info},

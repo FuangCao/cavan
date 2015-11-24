@@ -27,8 +27,7 @@
 #define pr_pos_info() \
 	pr_green_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
 
-struct swan_virtual_ethernet
-{
+struct swan_virtual_ethernet {
 	struct net_device *ndev;
 	struct sk_buff *skb_queue[SWAN_VN_SKB_QUEUE_SIZE];
 	int head, tail;
@@ -52,8 +51,7 @@ static inline int swan_virtual_ethernet_skb_queue_empty(struct swan_virtual_ethe
 
 static int swan_virtual_ethernet_skb_enqueue(struct swan_virtual_ethernet *vn, struct sk_buff *skb)
 {
-	if (swan_virtual_ethernet_skb_queue_full(vn))
-	{
+	if (swan_virtual_ethernet_skb_queue_full(vn)) {
 		return -ENOMEM;
 	}
 
@@ -61,8 +59,7 @@ static int swan_virtual_ethernet_skb_enqueue(struct swan_virtual_ethernet *vn, s
 
 	vn->skb_queue[vn->tail++] = skb;
 
-	if (vn->tail >= SWAN_VN_SKB_QUEUE_SIZE)
-	{
+	if (vn->tail >= SWAN_VN_SKB_QUEUE_SIZE) {
 		vn->tail = 0;
 	}
 
@@ -77,8 +74,7 @@ static struct sk_buff *swan_virtual_ethernet_skb_outqueue(struct swan_virtual_et
 {
 	struct sk_buff *skb;
 
-	if (down_interruptible(&vn->skb_queue_sem) < 0)
-	{
+	if (down_interruptible(&vn->skb_queue_sem) < 0) {
 		pr_red_info("down_interruptible");
 		return NULL;
 	}
@@ -87,8 +83,7 @@ static struct sk_buff *swan_virtual_ethernet_skb_outqueue(struct swan_virtual_et
 
 	skb = vn->skb_queue[vn->head++];
 
-	if (vn->head >= SWAN_VN_SKB_QUEUE_SIZE)
-	{
+	if (vn->head >= SWAN_VN_SKB_QUEUE_SIZE) {
 		vn->head = 0;
 	}
 
@@ -118,8 +113,7 @@ static netdev_tx_t swan_virtual_ethernet_ndo_start_xmit(struct sk_buff *skb, str
 
 	vn = netdev_priv(dev);
 
-	if (swan_virtual_ethernet_skb_enqueue(vn, skb) < 0)
-	{
+	if (swan_virtual_ethernet_skb_enqueue(vn, skb) < 0) {
 		return NETDEV_TX_BUSY;
 	}
 
@@ -128,8 +122,7 @@ static netdev_tx_t swan_virtual_ethernet_ndo_start_xmit(struct sk_buff *skb, str
 	dev->stats.tx_bytes += skb->len;
 	dev->stats.tx_packets++;
 
-	if (swan_virtual_ethernet_skb_queue_full(vn))
-	{
+	if (swan_virtual_ethernet_skb_queue_full(vn)) {
 		netif_stop_queue(dev);
 	}
 
@@ -143,8 +136,7 @@ static void swan_virtual_ethernet_ndo_tx_timeout(struct net_device *dev)
 	pr_pos_info();
 }
 
-static struct net_device_ops swan_virtual_ethernet_netdev_ops =
-{
+static struct net_device_ops swan_virtual_ethernet_netdev_ops = {
 	.ndo_open = swan_virtual_ethernet_ndo_open,
 	.ndo_stop = swan_virtual_ethernet_ndo_stop,
 	.ndo_start_xmit = swan_virtual_ethernet_ndo_start_xmit,
@@ -168,14 +160,12 @@ static ssize_t swan_virtual_ethernet_write_data(struct swan_virtual_ethernet *vn
 	unsigned long irq_flags;
 
 	skb = dev_alloc_skb(count);
-	if (skb == NULL)
-	{
+	if (skb == NULL) {
 		pr_red_info("dev_alloc_skb");
 		return -ENOMEM;
 	}
 
-	if (copy_from_user(skb_put(skb, count), buff, count))
-	{
+	if (copy_from_user(skb_put(skb, count), buff, count)) {
 		pr_red_info("copy_from_user failed");
 		dev_kfree_skb(skb);
 		return -EFAULT;
@@ -205,14 +195,12 @@ ssize_t swan_virtual_ethernet_read_data(struct swan_virtual_ethernet *vn, void *
 	unsigned long irq_flags;
 
 	skb = swan_virtual_ethernet_skb_outqueue(vn);
-	if (skb == NULL)
-	{
+	if (skb == NULL) {
 		return -ENOMEM;
 	}
 
 	readlen = skb->len;
-	if (copy_to_user(buff, skb->data, readlen))
-	{
+	if (copy_to_user(buff, skb->data, readlen)) {
 		pr_red_info("copy_from_user");
 		readlen = -1;
 	}
@@ -232,21 +220,17 @@ ssize_t swan_virtual_ethernet_data_show(struct device *dev, struct device_attrib
 	return swan_virtual_ethernet_read_data(dev_get_drvdata(dev), buff);
 }
 
-const struct device_attribute vn_attrs[] =
-{
+const struct device_attribute vn_attrs[] = {
 	{
-		.attr =
-		{
+		.attr = {
 			.name = "command",
 			.mode = S_IWUGO,
 		},
 
 		.show = NULL,
 		.store = swan_virtual_ethernet_command_store,
-	},
-	{
-		.attr =
-		{
+	}, {
+		.attr = {
 			.name = "data",
 			.mode = S_IWUGO | S_IRUGO,
 		},
@@ -270,13 +254,11 @@ static ssize_t swan_virtual_ethernet_write(struct file *file_desc, const char __
 
 static int swan_virtual_ethernet_open(struct inode *inode_desc, struct file *file_desc)
 {
-	if (global_swan_vn == NULL)
-	{
+	if (global_swan_vn == NULL) {
 		return -ENOENT;
 	}
 
-	if (atomic_inc_return(&global_swan_vn->open_excl) > 1)
-	{
+	if (atomic_inc_return(&global_swan_vn->open_excl) > 1) {
 		atomic_dec(&global_swan_vn->open_excl);
 		return -EBUSY;
 	}
@@ -291,8 +273,7 @@ static int swan_virtual_ethernet_release(struct inode *inode_desc, struct file *
 	return 0;
 }
 
-static struct file_operations swan_virtual_ethernet_ops =
-{
+static struct file_operations swan_virtual_ethernet_ops = {
 	.owner = THIS_MODULE,
 	.read = swan_virtual_ethernet_read,
 	.write = swan_virtual_ethernet_write,
@@ -300,8 +281,7 @@ static struct file_operations swan_virtual_ethernet_ops =
 	.release = swan_virtual_ethernet_release,
 };
 
-static struct miscdevice swan_virtual_ethernet_miscdev =
-{
+static struct miscdevice swan_virtual_ethernet_miscdev = {
 	.minor = MISC_DYNAMIC_MINOR,
 	.name = "swan_vn",
 	.fops = &swan_virtual_ethernet_ops,
@@ -317,8 +297,7 @@ static int swan_virtual_ethernet_probe(struct platform_device *pdev)
 	pr_pos_info();
 
 	ndev = alloc_etherdev(sizeof(struct swan_virtual_ethernet));
-	if (ndev == NULL)
-	{
+	if (ndev == NULL) {
 		pr_red_info("alloc_etherdev");
 		return -ENOMEM;
 	}
@@ -333,8 +312,7 @@ static int swan_virtual_ethernet_probe(struct platform_device *pdev)
 	ndev->dev_addr = swan_vn_mac;
 
 	ret = register_netdev(ndev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("register_netdev");
 
 		goto out_free_netdev;
@@ -343,21 +321,17 @@ static int swan_virtual_ethernet_probe(struct platform_device *pdev)
 	global_swan_vn = swan_vn;
 
 	ret = misc_register(&swan_virtual_ethernet_miscdev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("misc_register");
 		goto out_unregister_netdev;
 	}
 
-	for (p = vn_attrs, end_p = vn_attrs + ARRAY_SIZE(vn_attrs); p < end_p; p++)
-	{
+	for (p = vn_attrs, end_p = vn_attrs + ARRAY_SIZE(vn_attrs); p < end_p; p++) {
 		ret = device_create_file(&pdev->dev, p);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("device_create_file");
 
-			while (--p >= vn_attrs)
-			{
+			while (--p >= vn_attrs) {
 				device_remove_file(&pdev->dev, p);
 			}
 
@@ -396,8 +370,7 @@ static int swan_virtual_ethernet_remove(struct platform_device *pdev)
 	swan_vn = platform_get_drvdata(pdev);
 	ndev = swan_vn->ndev;
 
-	for (p = vn_attrs, end_p = vn_attrs + ARRAY_SIZE(vn_attrs); p < end_p; p++)
-	{
+	for (p = vn_attrs, end_p = vn_attrs + ARRAY_SIZE(vn_attrs); p < end_p; p++) {
 		device_remove_file(&pdev->dev, p);
 	}
 
@@ -408,10 +381,8 @@ static int swan_virtual_ethernet_remove(struct platform_device *pdev)
 	return 0;
 }
 
-static struct platform_driver swan_virtual_ethernet_driver =
-{
-	.driver =
-	{
+static struct platform_driver swan_virtual_ethernet_driver = {
+	.driver = {
 		.name = SWAN_VN_DEVICE_NAME,
 	},
 
@@ -419,8 +390,7 @@ static struct platform_driver swan_virtual_ethernet_driver =
 	.remove = swan_virtual_ethernet_remove,
 };
 
-static struct platform_device swan_virtual_ethernet_device =
-{
+static struct platform_device swan_virtual_ethernet_device = {
 	.name = SWAN_VN_DEVICE_NAME,
 };
 
@@ -431,15 +401,13 @@ static __init int swan_vitual_ethernet_init(void)
 	pr_pos_info();
 
 	ret = platform_device_register(&swan_virtual_ethernet_device);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("platform_device_register");
 		return ret;
 	}
 
 	ret = platform_driver_register(&swan_virtual_ethernet_driver);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("platform_driver_register");
 		goto out_unregister_device;
 	}

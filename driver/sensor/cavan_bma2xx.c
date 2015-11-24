@@ -65,22 +65,19 @@ enum bma2xx_register_map
 };
 
 #pragma pack(1)
-struct bma2xx_data_package
-{
+struct bma2xx_data_package {
 	s16 x;
 	s16 y;
 	s16 z;
 };
 #pragma pack()
 
-struct bma2xx_rate_map_node
-{
+struct bma2xx_rate_map_node {
 	u8 value;
 	u32 delay;
 };
 
-static struct bma2xx_rate_map_node bma2xx_rate_map[] =
-{
+static struct bma2xx_rate_map_node bma2xx_rate_map[] = {
 	{0x0F, 1},
 	{0x0E, 2},
 	{0x0D, 4},
@@ -97,8 +94,7 @@ static int bma2xx_sensor_chip_readid(struct cavan_input_chip *chip)
 	u8 value;
 
 	ret = chip->read_register(chip, REG_CHIP_ID, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register REG_MODE");
 		return ret;
 	}
@@ -116,26 +112,21 @@ static int bma2xx_sensor_chip_set_active(struct cavan_input_chip *chip, bool ena
 	pr_pos_info();
 
 	ret = chip->read_register(chip, REG_MODE_CTRL, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
 
-	if (enable)
-	{
+	if (enable) {
 		value &= ~(3 << 6);
-	}
-	else
-	{
+	} else {
 		value |= 1 << 7;
 	}
 
 	pr_bold_info("value = 0x%02x", value);
 
 	ret = chip->write_register(chip, REG_MODE_CTRL, value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("write_register");
 		return ret;
 	}
@@ -151,8 +142,7 @@ static int bma2xx_acceleration_set_delay(struct cavan_input_device *dev, unsigne
 	struct cavan_input_chip *chip = dev->chip;
 
 	ret = chip->read_register(chip, REG_BW_SEL, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
@@ -174,8 +164,7 @@ static int bma2xx_acceleration_event_handler(struct cavan_input_chip *chip, stru
 	struct bma2xx_data_package package;
 
 	ret = chip->read_data(chip, REG_X_AXIS_LSB, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_data");
 		return ret;
 	}
@@ -194,8 +183,7 @@ static int bma2xx_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -218,8 +206,7 @@ static int bma2xx_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = bma2xx_acceleration_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -241,8 +228,7 @@ static void bma2xx_input_chip_remove(struct cavan_input_chip *chip)
 	kfree(sensor);
 }
 
-static struct cavan_input_init_data bma2xx_init_data[] =
-{
+static struct cavan_input_init_data bma2xx_init_data[] = {
 	{REG_BW_SEL, 0x0C},
 	{REG_RANGE_SEL, 0x00},
 #if 0
@@ -264,8 +250,7 @@ static int bma2xx_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -288,8 +273,7 @@ static int bma2xx_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->remove = bma2xx_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_chip;
 	}
@@ -313,25 +297,21 @@ static int bma2xx_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id bma2xx_id[] =
-{
+static const struct i2c_device_id bma2xx_id[] = {
 	{BMA2XX_DEVICE_NAME, 0}, {}
 };
 
 MODULE_DEVICE_TABLE(i2c, bma2xx_id);
 
-static struct of_device_id bma2xx_match_table[] =
-{
+static struct of_device_id bma2xx_match_table[] = {
 	{
 		.compatible = "bcm," BMA2XX_DEVICE_NAME
 	},
 	{}
 };
 
-static struct i2c_driver bma2xx_driver =
-{
-	.driver =
-	{
+static struct i2c_driver bma2xx_driver = {
+	.driver = {
 		.name = BMA2XX_DEVICE_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table = bma2xx_match_table,

@@ -21,8 +21,7 @@
 
 static int cavan_main(int argc, char *argv[]);
 
-const struct cavan_command_map cmd_map_table[] =
-{
+const struct cavan_command_map cmd_map_table[] = {
 	{CONFIG_CAVAN_MAIN_NAME, cavan_main},
 
 	#include CONFIG_CAVAN_MAP_C

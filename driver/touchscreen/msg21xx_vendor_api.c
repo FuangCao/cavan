@@ -36,7 +36,7 @@ static char tmp_str[50];
 /*  Added by zengguang to add head file. 2013.5.5 end*/
 #define DEBUG
 #ifdef DEBUG
-#define TP_DEBUG(format, args...)   pr_info("TP_:%s( )_%d_: " format, \
+#define TP_DEBUG(format, args...)   pr_info("TP_:%s( ) _%d_: " format, \
 	__FUNCTION__ , __LINE__, ## args);
 #define DBG() pr_info("[%s]:%d => \n",__FUNCTION__,__LINE__)
 #else
@@ -101,8 +101,7 @@ static u8 g_dwiic_info_data[1024]={0};
 static u8 temp[33][1024];   //
 static int FwDataCnt;
 static u32 crc32_table[256];
-typedef enum
-{
+typedef enum {
 	EMEM_MAIN = 0,
 	EMEM_INFO,
 	EMEM_ALL,
@@ -160,7 +159,7 @@ static void HalTscrCDevWriteI2CSeq(u8 addr, u8* data, u16 size)
 		},
 	};
 	rc = i2c_transfer(msg21xx_i2c_client->adapter, msgs, 1);
-	if(rc < 0){
+	if(rc < 0) {
 		printk("HalTscrCDevWriteI2CSeq error %d\n", rc);
 		//printk("I2C addr= %d,size = %d,\n", addr,size);
 	}
@@ -296,8 +295,7 @@ static u32 Reflect(u32 ref, char ch)//unsigned int Reflect(unsigned int ref, cha
 	u32 value=0;
 	u32 i=0;
 
-	for(i = 1; i < (ch + 1); i++)
-	{
+	for(i = 1; i < (ch + 1); i++) {
 		if(ref & 1)
 			value |= 1 << (ch - i);
 		ref >>= 1;
@@ -309,11 +307,9 @@ static void Init_CRC32_Table(void)
 	u32 magicnumber = 0x04c11db7;
 	u32 i=0,j;
 
-	for(i = 0; i <= 0xFF; i++)
-	{
+	for(i = 0; i <= 0xFF; i++) {
 		crc32_table[i]=Reflect(i, 8) << 24;
-		for (j = 0; j < 8; j++)
-		{
+		for (j = 0; j < 8; j++) {
 			crc32_table[i] = (crc32_table[i] << 1) ^ (crc32_table[i] & (0x80000000L) ? magicnumber : 0);
 		}
 		crc32_table[i] = Reflect(crc32_table[i], 32);				
@@ -354,8 +350,7 @@ static int drvTP_erase_emem_A ( EMEM_TYPE_t emem_type )
     //proto.MstarWriteReg(F1.loopDevice, 0x1618, 0x80);
     drvDB_WriteReg8Bit ( 0x16, 0x18, 0x80 );
 
-    if ( emem_type == EMEM_ALL )
-    {
+    if ( emem_type == EMEM_ALL ) {
         drvDB_WriteReg8Bit ( 0x16, 0x08, 0x10 ); //mark
     }
 
@@ -365,12 +360,9 @@ static int drvTP_erase_emem_A ( EMEM_TYPE_t emem_type )
     drvDB_WriteReg8Bit ( 0x16, 0x18, 0x80 );
 
     // erase trigger
-    if ( emem_type == EMEM_MAIN )
-    {
+    if ( emem_type == EMEM_MAIN ) {
         drvDB_WriteReg8Bit ( 0x16, 0x0E, 0x04 ); //erase main
-    }
-    else
-    {
+    } else {
         drvDB_WriteReg8Bit ( 0x16, 0x0E, 0x08 ); //erase all block
     }
 
@@ -413,7 +405,7 @@ static int drvTP_read_info_dwiic_A ( void )
     mdelay ( 100 );
 	TP_DEBUG ( "read infor 1\n");
 	
-    do{
+    do {
         reg_data = drvDB_ReadReg ( 0x3C, 0xE4 );
     }
     while ( reg_data != 0x5B58 );
@@ -425,8 +417,7 @@ static int drvTP_read_info_dwiic_A ( void )
     dwiic_tx_data[3] = 0x00;
     dwiic_tx_data[4] = 0x80;	
 
-    for(reg_data=0;reg_data<8;reg_data++)
-    {
+    for(reg_data=0;reg_data<8;reg_data++) {
     	dwiic_tx_data[1] = 0x80+(((reg_data*128)&0xff00)>>8);
     	dwiic_tx_data[2] = (reg_data*128)&0x00ff;
     	HalTscrCDevWriteI2CSeq ( FW_ADDR_MSG20XX_TP , dwiic_tx_data, 5 );
@@ -443,8 +434,7 @@ static int drvTP_read_info_dwiic_A ( void )
 
 static void drvISP_EntryIspMode(void)
 {
-    U8 bWriteData[5] =
-    {
+    U8 bWriteData[5] = {
         0x4D, 0x53, 0x54, 0x41, 0x52
     };
 mdelay(15);
@@ -458,8 +448,7 @@ static U8 drvISP_Read(U8 n, U8* pDataToRead)    //First it needs send 0x11 to no
     U8 Read_cmd = 0x11;
     unsigned char dbbus_rx_data[2] = {0};
     HalTscrCDevWriteI2CSeq(FW_UPDATE_ADDR_MSG20XX, &Read_cmd, 1);
-    if (n == 1)
-    {
+    if (n == 1) {
         HalTscrCReadI2CSeq(FW_UPDATE_ADDR_MSG20XX, &dbbus_rx_data[0], 2);
         *pDataToRead = dbbus_rx_data[0];
     }
@@ -471,8 +460,7 @@ static U8 drvISP_Read(U8 n, U8* pDataToRead)    //First it needs send 0x11 to no
 
 static void drvISP_WriteEnable(void)
 {
-    U8 bWriteData[2] =
-    {
+    U8 bWriteData[2] = {
         0x10, 0x06
     };
     U8 bWriteData1 = 0x12;
@@ -490,8 +478,7 @@ static void drvISP_ExitIspMode(void)
 static U8 drvISP_ReadStatus(void)
 {
     U8 bReadData = 0;
-    U8 bWriteData[2] =
-    {
+    U8 bWriteData[2] = {
         0x10, 0x05
     };
     U8 bWriteData1 = 0x12;
@@ -554,15 +541,13 @@ static void drvISP_Program(U16 k, U8* pDataToWrite)
     U8 bWriteData1 = 0x12;
     U32 addr = k * 1024;
 
-    for (j = 0; j < 8; j++)   //128*8 cycle
-    {
+    for (j = 0; j < 8; j++)   //128*8 cycle {
         TX_data[0] = 0x10;
         TX_data[1] = 0x02;// Page Program CMD
         TX_data[2] = (addr + 128 * j) >> 16;
         TX_data[3] = (addr + 128 * j) >> 8;
         TX_data[4] = (addr + 128 * j);
-        for (i = 0; i < 128; i++)
-        {
+        for (i = 0; i < 128; i++) {
             TX_data[5 + i] = pDataToWrite[j * 128 + i];
         }
         while ((drvISP_ReadStatus() & 0x01) == 0x01);     //wait until not in write operation
@@ -576,32 +561,27 @@ static void drvISP_Program(U16 k, U8* pDataToWrite)
 static void drvISP_Verify(U16 k, U8* pDataToVerify)
 {
     U16 i = 0, j = 0;
-    U8 bWriteData[5] =
-    {
+    U8 bWriteData[5] = {
         0x10, 0x03, 0, 0, 0
     };
     U8 RX_data[256];
     U8 bWriteData1 = 0x12;
     U32 addr = k * 1024;
     U8 index=0;
-    for (j = 0; j < 8; j++)   //128*8 cycle
-    {
-        bWriteData[2] = (U8)((addr + j * 128) >> 16);
-        bWriteData[3] = (U8)((addr + j * 128) >> 8);
-        bWriteData[4] = (U8)(addr + j * 128);
+    for (j = 0; j < 8; j++)   //128*8 cycle {
+        bWriteData[2] = (U8) ((addr + j * 128) >> 16);
+        bWriteData[3] = (U8) ((addr + j * 128) >> 8);
+        bWriteData[4] = (U8) (addr + j * 128);
         while ((drvISP_ReadStatus() & 0x01) == 0x01);     //wait until not in write operation
         HalTscrCDevWriteI2CSeq(FW_UPDATE_ADDR_MSG20XX, bWriteData, 5);    //write read flash addr
         drvISP_Read(128, RX_data);
         HalTscrCDevWriteI2CSeq(FW_UPDATE_ADDR_MSG20XX, &bWriteData1, 1);    //cmd end
-        for (i = 0; i < 128; i++)   //log out if verify error
-        {
-        if((RX_data[i]!=0)&&index<10)
-		{
+        for (i = 0; i < 128; i++)   //log out if verify error {
+        if((RX_data[i]!=0) &&index<10) {
         TP_DEBUG("j=%d,RX_data[%d]=0x%x\n",j,i,RX_data[i]);
         index++;
 		}
-            if (RX_data[i] != pDataToVerify[128 * j + i])
-            {
+            if (RX_data[i] != pDataToVerify[128 * j + i]) {
                 TP_DEBUG("k=%d,j=%d,i=%d===============Update Firmware Error================",k,j,i);
             }
         }
@@ -638,8 +618,7 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
 	//msg21xx_i2c_client->timing = 100;
     drvTP_read_info_dwiic_A();
 	
-    if ( g_dwiic_info_data[0] == 'M' && g_dwiic_info_data[1] == 'S' && g_dwiic_info_data[2] == 'T' && g_dwiic_info_data[3] == 'A' && g_dwiic_info_data[4] == 'R' && g_dwiic_info_data[5] == 'T' && g_dwiic_info_data[6] == 'P' && g_dwiic_info_data[7] == 'C' )
-    {
+    if ( g_dwiic_info_data[0] == 'M' && g_dwiic_info_data[1] == 'S' && g_dwiic_info_data[2] == 'T' && g_dwiic_info_data[3] == 'A' && g_dwiic_info_data[4] == 'R' && g_dwiic_info_data[5] == 'T' && g_dwiic_info_data[6] == 'P' && g_dwiic_info_data[7] == 'C' ) {
         // updata FW Version
         //drvTP_info_updata_C33 ( 8, &temp[32][8], 5 );
 
@@ -660,20 +639,17 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
 
         mdelay ( 100 );
         //polling 0x3CE4 is 0x2F43
-        do
-        {
+        do {
             reg_data = drvDB_ReadReg (0x3C, 0xE4);
         }
         while ( reg_data != 0x2F43 );
 
         // transmit lk info data
-        for(i=0;i<8;i++)
-        {
+        for(i=0;i<8;i++) {
         HalTscrCDevWriteI2CSeq ( FW_ADDR_MSG20XX_TP , &g_dwiic_info_data[i*128], 128 );
         }
         //polling 0x3CE4 is 0xD0BC
-        do
-        {
+        do {
             reg_data = drvDB_ReadReg ( 0x3C, 0xE4 );
         }
         while ( reg_data != 0xD0BC );
@@ -697,17 +673,14 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
     /////////////////////////
 
     //polling 0x3CE4 is 0x1C70
-    if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) )
-    {
-        do
-        {
+    if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) ) {
+        do {
             reg_data = drvDB_ReadReg ( 0x3C, 0xE4 );
         }
         while ( reg_data != 0x1C70 );
     }
 
-    switch ( emem_type )
-    {
+    switch ( emem_type ) {
         case EMEM_ALL:
             drvDB_WriteReg ( 0x3C, 0xE4, 0xE38F );  // for all-blocks
             break;
@@ -731,8 +704,7 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
     }
 	mdelay ( 100 );
     // polling 0x3CE4 is 0x2F43
-    do
-    {
+    do {
         reg_data = drvDB_ReadReg ( 0x3C, 0xE4 );
     }
     while ( reg_data != 0x2F43 );
@@ -740,37 +712,28 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
     // calculate CRC 32
     Init_CRC32_Table ();
 
-    for ( i = 0; i < 33; i++ ) // total  33 KB : 2 byte per R/W
-    {
+    for ( i = 0; i < 33; i++ ) // total  33 KB : 2 byte per R/W {
         if ( emem_type == EMEM_INFO )
 			i = 32;
 
-        if ( i < 32 )   //emem_main
-        {
-            if ( i == 31 )
-            {
+        if ( i < 32 )   //emem_main {
+            if ( i == 31 ) {
                 temp[i][1014] = 0x5A; //Fmr_Loader[1014]=0x5A;
                 temp[i][1015] = 0xA5; //Fmr_Loader[1015]=0xA5;
 
-                for ( j = 0; j < 1016; j++ )
-                {
+                for ( j = 0; j < 1016; j++ ) {
                     //crc_main=Get_CRC(Fmr_Loader[j],crc_main,&crc_tab[0]);
                     crc_main = Get_CRC ( temp[i][j], crc_main);
                 }
-            }
-            else
-            {
-                for ( j = 0; j < 1024; j++ )
-                {
+            } else {
+                for ( j = 0; j < 1024; j++ ) {
                     //crc_main=Get_CRC(Fmr_Loader[j],crc_main,&crc_tab[0]);
                     crc_main = Get_CRC ( temp[i][j], crc_main);
                 }
             }
         }
-        else  //emem_info
-        {
-            for ( j = 0; j < 1024; j++ )
-            {
+        else  //emem_info {
+            for ( j = 0; j < 1024; j++ ) {
                 //crc_info=Get_CRC(Fmr_Loader[j],crc_info,&crc_tab[0]);
                 crc_info = Get_CRC ( g_dwiic_info_data[j], crc_info);
             }
@@ -778,14 +741,12 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
         }
 
         //drvDWIIC_MasterTransmit( DWIIC_MODE_DWIIC_ID, 1024, Fmr_Loader );
-        for(j=0;j<8;j++)
-        {
+        for(j=0;j<8;j++) {
         	HalTscrCDevWriteI2CSeq ( FW_ADDR_MSG20XX_TP, &temp[i][j*128], 128 );
         }
 		mdelay ( 100 );
         // polling 0x3CE4 is 0xD0BC
-        do
-        {
+        do {
             reg_data = drvDB_ReadReg ( 0x3C, 0xE4 );
         }
         while ( reg_data != 0xD0BC );
@@ -793,18 +754,15 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
         drvDB_WriteReg ( 0x3C, 0xE4, 0x2F43 );
     }
 
-    if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) )
-    {
+    if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) ) {
         // write file done and check crc
         drvDB_WriteReg ( 0x3C, 0xE4, 0x1380 );
     }
     mdelay ( 10 ); //MCR_CLBK_DEBUG_DELAY ( 10, MCU_LOOP_DELAY_COUNT_MS );
 
-    if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) )
-    {
+    if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) ) {
         // polling 0x3CE4 is 0x9432
-        do
-        {
+        do {
             reg_data = drvDB_ReadReg ( 0x3C, 0xE4 );
         }while ( reg_data != 0x9432 );
     }
@@ -812,8 +770,7 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
     crc_main = crc_main ^ 0xffffffff;
     crc_info = crc_info ^ 0xffffffff;
 
-    if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) )
-    {
+    if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) ) {
         // CRC Main from TP
         crc_main_tp = drvDB_ReadReg ( 0x3C, 0x80 );
         crc_main_tp = ( crc_main_tp << 16 ) | drvDB_ReadReg ( 0x3C, 0x82 );
@@ -828,8 +785,7 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
     //drvDB_ExitDBBUS();
 
     update_pass = 1;
-	if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) )
-    {
+	if ( ( emem_type == EMEM_ALL ) || ( emem_type == EMEM_MAIN ) ) {
         if ( crc_main_tp != crc_main )
             update_pass = 0;
 
@@ -837,8 +793,7 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
             update_pass = 0;
     }
 
-    if ( !update_pass )
-    {
+    if ( !update_pass ) {
         printk ( "update FAILED\n" );
 		_HalTscrHWReset(chip);
         FwDataCnt = 0;
@@ -897,8 +852,7 @@ static int firmware_auto_update(struct cavan_input_chip *chip)
     dbbus_tx_data[2] = 0xCC;
     HalTscrCDevWriteI2CSeq ( FW_ADDR_MSG20XX, dbbus_tx_data, 3 );
     HalTscrCReadI2CSeq ( FW_ADDR_MSG20XX, &dbbus_rx_data[0], 2 );
-    if ( dbbus_rx_data[0] == 2 )
-    {
+    if ( dbbus_rx_data[0] == 2 ) {
         // check version
         dbbus_tx_data[0] = 0x10;
         dbbus_tx_data[1] = 0x3C;
@@ -907,7 +861,7 @@ static int firmware_auto_update(struct cavan_input_chip *chip)
         HalTscrCReadI2CSeq ( FW_ADDR_MSG20XX, &dbbus_rx_data[0], 2 );
         TP_DEBUG ( "dbbus_rx version[0]=0x%x", dbbus_rx_data[0] );
 
-        if ( dbbus_rx_data[0] == 3 ){
+        if ( dbbus_rx_data[0] == 3 ) {
             return firmware_auto_update_c33(chip, EMEM_MAIN );
 		}
     }
@@ -975,8 +929,7 @@ static int Check_Device(void)
      
     msg21xx_i2c_client->addr = FW_ADDR_MSG20XX;
     ret = i2c_master_send(msg21xx_i2c_client, dbbus_tx_data, 3);    
-    if(ret <= 0)
-    {   
+    if(ret <= 0) {
         msg21xx_i2c_client->addr = FW_ADDR_MSG20XX_TP;
 		TP_DEBUG("Device error %d,addr = %d\n", ret,FW_ADDR_MSG20XX);
 		return -1;
@@ -984,18 +937,14 @@ static int Check_Device(void)
 	
     ret = i2c_master_recv(msg21xx_i2c_client, dbbus_rx_data, 2);
     msg21xx_i2c_client->addr = FW_ADDR_MSG20XX_TP;
-    if(ret <= 0)
-    {
+    if(ret <= 0) {
 		TP_DEBUG("Device error %d,addr = %d\n", ret,FW_ADDR_MSG20XX);
 		return -1;
 	}
 	#ifdef __FIRMWARE_UPDATE__
-    if ( dbbus_rx_data[0] == 2 )
-    {
+    if ( dbbus_rx_data[0] == 2 ) {
     	curr_ic_type = CTP_ID_MSG21XXA;
-    }
-    else
-    {
+    } else {
     	curr_ic_type = CTP_ID_MSG21XX;
     }
 	TP_DEBUG("CURR_IC_TYPE = %d \n",curr_ic_type);

@@ -35,8 +35,7 @@ enum bmm150_register_map
 };
 
 #pragma pack(1)
-struct bmm150_data_package
-{
+struct bmm150_data_package {
 	s16 x;
 	s16 y;
 	s16 z;
@@ -44,13 +43,11 @@ struct bmm150_data_package
 };
 #pragma pack()
 
-struct bmm150_chip
-{
+struct bmm150_chip {
 	struct cavan_sensor_device geomagnetic;
 };
 
-const struct cavan_input_rate_map bmm150_rate_map[] =
-{
+const struct cavan_input_rate_map bmm150_rate_map[] = {
 	{ 100, 0x00 },
 	{ 500, 0x01 },
 	{ 166, 0x02 },
@@ -67,8 +64,7 @@ static int bmm150_sensor_chip_readid(struct cavan_input_chip *chip)
 	u8 chip_id;
 
 	ret = chip->read_register(chip, REG_CHIP_ID, &chip_id);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register REG_CHIP_ID");
 		return ret;
 	}
@@ -99,8 +95,7 @@ static int bmm150_geomagnetic_set_delay(struct cavan_input_device *dev, unsigned
 	pr_pos_info();
 
 	map = cavan_input_find_rate_map(bmm150_rate_map, ARRAY_SIZE(bmm150_rate_map), delay);
-	if (map == NULL)
-	{
+	if (map == NULL) {
 		pr_red_info("cavan_input_find_rate_map");
 		return -EINVAL;
 	}
@@ -143,8 +138,7 @@ static int bmm150_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	bmm150 = kzalloc(sizeof(struct bmm150_chip), GFP_KERNEL);
-	if (bmm150 == NULL)
-	{
+	if (bmm150 == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -169,8 +163,7 @@ static int bmm150_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = bmm150_geomagnetic_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_bmm150;
 	}
@@ -192,8 +185,7 @@ static void bmm150_input_chip_remove(struct cavan_input_chip *chip)
 	kfree(bmm150);
 }
 
-static struct cavan_input_init_data bmm150_init_data[] =
-{
+static struct cavan_input_init_data bmm150_init_data[] = {
 };
 
 static int bmm150_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
@@ -204,8 +196,7 @@ static int bmm150_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -228,8 +219,7 @@ static int bmm150_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->remove = bmm150_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_chip;
 	}
@@ -253,25 +243,21 @@ static int bmm150_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id bmm150_id[] =
-{
+static const struct i2c_device_id bmm150_id[] = {
 	{ BMM150_DEVICE_NAME, 0 }, {}
 };
 
 MODULE_DEVICE_TABLE(i2c, bmm150_id);
 
-static struct of_device_id bmm150_match_table[] =
-{
+static struct of_device_id bmm150_match_table[] = {
 	{
 		.compatible = "bosch," BMM150_DEVICE_NAME
 	},
 	{}
 };
 
-static struct i2c_driver bmm150_driver =
-{
-	.driver =
-	{
+static struct i2c_driver bmm150_driver = {
+	.driver = {
 		.name = BMM150_DEVICE_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table = bmm150_match_table,

@@ -2553,8 +2553,7 @@ static int network_service_unix_udp_open(struct network_service *service, const 
 
 // ============================================================
 
-static const struct network_protocol_desc protocol_descs[] =
-{
+static const struct network_protocol_desc protocol_descs[] = {
 	[NETWORK_PROTOCOL_FTP] = {
 		.name = "ftp",
 		.port = NETWORK_PORT_FTP,

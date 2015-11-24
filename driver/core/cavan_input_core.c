@@ -7,8 +7,7 @@
 extern int cavan_ts_device_probe(struct cavan_input_device *dev);
 extern int cavan_sensor_device_probe(struct cavan_input_device *dev);
 
-static struct cavan_input_core input_core =
-{
+static struct cavan_input_core input_core = {
 	.name = "CAVAN-INPUT-CORE"
 };
 
@@ -30,28 +29,23 @@ static void cavan_input_core_write_online_work(struct work_struct *data)
 	struct cavan_input_list *list = &input_core.exclude_list;
 	struct list_head *head = &list->head;
 
-	for (i = 0, err_count = 0; i < ARRAY_SIZE(input_core.chip_online); i++)
-	{
-		if (input_core.chip_online[i] && cavan_input_chip_write_online(input_core.chip_online[i], true) < 0)
-		{
+	for (i = 0, err_count = 0; i < ARRAY_SIZE(input_core.chip_online); i++) {
+		if (input_core.chip_online[i] && cavan_input_chip_write_online(input_core.chip_online[i], true) < 0) {
 			err_count++;
 		}
 	}
 
 	mutex_lock(&list->lock);
 
-	list_for_each_entry(chip, head, node)
-	{
-		if (cavan_input_chip_write_online(chip->name, false) < 0)
-		{
+	list_for_each_entry(chip, head, node) {
+		if (cavan_input_chip_write_online(chip->name, false) < 0) {
 			err_count++;
 		}
 	}
 
 	mutex_unlock(&list->lock);
 
-	if (err_count > 0)
-	{
+	if (err_count > 0) {
 		queue_delayed_work(input_core.workqueue, &input_core.write_online_work, 10 * HZ);
 	}
 }
@@ -60,10 +54,8 @@ static int cavan_input_core_add_online_chip(const char *chip_name)
 {
 	int i;
 
-	for (i = 0; i < ARRAY_SIZE(input_core.chip_online); i++)
-	{
-		if (input_core.chip_online[i] == NULL)
-		{
+	for (i = 0; i < ARRAY_SIZE(input_core.chip_online); i++) {
+		if (input_core.chip_online[i] == NULL) {
 			input_core.chip_online[i] = chip_name;
 			queue_delayed_work(input_core.workqueue, &input_core.write_online_work, 60 * HZ);
 			return i;
@@ -118,10 +110,8 @@ static bool cavan_input_list_has_node(struct cavan_input_list *list, struct list
 
 	mutex_lock(&list->lock);
 
-	for (head = &list->head, pos = head->next; pos != head; pos = pos->next)
-	{
-		if (node == pos)
-		{
+	for (head = &list->head, pos = head->next; pos != head; pos = pos->next) {
+		if (node == pos) {
 			mutex_unlock(&list->lock);
 			return true;
 		}
@@ -139,8 +129,7 @@ int cavan_input_copy_to_user_text(unsigned int command, unsigned long args, cons
 	size_t size = CAVAN_INPUT_IOC_GET_SIZE(command);
 	size_t length = strlen(text) + 1;
 
-	if (copy_to_user((void __user *)args, text, length > size ? size : length))
-	{
+	if (copy_to_user((void __user *) args, text, length > size ? size : length)) {
 		pr_red_info("copy_to_user");
 		return -EFAULT;
 	}
@@ -152,8 +141,7 @@ EXPORT_SYMBOL_GPL(cavan_input_copy_to_user_text);
 
 int cavan_input_copy_to_user_uint(unsigned long args, unsigned int value)
 {
-	if (copy_to_user((void __user *)args, &value, sizeof(value)))
-	{
+	if (copy_to_user((void __user *) args, &value, sizeof(value))) {
 		pr_red_info("copy_to_user");
 		return -EFAULT;
 	}
@@ -172,24 +160,20 @@ static int cavan_input_chip_write_init_data(struct cavan_input_chip *chip)
 
 	pr_pos_info();
 
-	if (chip->init_data == NULL || chip->init_data_size == 0)
-	{
+	if (chip->init_data == NULL || chip->init_data_size == 0) {
 		return 0;
 	}
 
-	for (data = chip->init_data, data_end = data + chip->init_data_size; data < data_end; data++)
-	{
+	for (data = chip->init_data, data_end = data + chip->init_data_size; data < data_end; data++) {
 		pr_bold_info("Write register 0x%02x => 0x%02x", data->value, data->addr);
 
 		ret = chip->write_register(chip, data->addr, data->value);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_sensor_write_register");
 			return ret;
 		}
 
-		if (data->delay)
-		{
+		if (data->delay) {
 			msleep(data->delay);
 		}
 	}
@@ -206,8 +190,7 @@ static int cavan_misc_device_open(struct inode *inode, struct file *file)
 
 	pr_pos_info();
 
-	if (dev == NULL)
-	{
+	if (dev == NULL) {
 		return -ENOENT;
 	}
 
@@ -263,10 +246,8 @@ static int cavan_misc_find_minor(void)
 {
 	int minor;
 
-	for (minor = 0; minor < ARRAY_SIZE(cavan_misc_dev_map); minor++)
-	{
-		if (cavan_misc_dev_map[minor] == NULL)
-		{
+	for (minor = 0; minor < ARRAY_SIZE(cavan_misc_dev_map); minor++) {
+		if (cavan_misc_dev_map[minor] == NULL) {
 			return minor;
 		}
 	}
@@ -278,22 +259,19 @@ int cavan_misc_device_register(struct cavan_misc_device *dev, const char *name)
 {
 	int minor;
 
-	if (cavan_input_class == NULL)
-	{
+	if (cavan_input_class == NULL) {
 		pr_red_info("cavan_input_class is null");
 		return -EBUSY;
 	}
 
 	minor = cavan_misc_find_minor();
-	if (minor < 0)
-	{
+	if (minor < 0) {
 		pr_red_info("cavan_misc_find_minor");
 		return minor;
 	}
 
 	dev->dev = device_create(cavan_input_class, NULL, MKDEV(CAVAN_INPUT_MAJOR, minor), dev, name);
-	if (IS_ERR(dev->dev))
-	{
+	if (IS_ERR(dev->dev)) {
 		pr_red_info("device_create");
 		return PTR_ERR(dev->dev);
 	}
@@ -318,8 +296,7 @@ EXPORT_SYMBOL_GPL(cavan_misc_device_unregister);
 
 static const char *cavan_input_device_type_tostring(enum cavan_input_device_type type)
 {
-	switch (type)
-	{
+	switch (type) {
 	case CAVAN_INPUT_DEVICE_TYPE_TOUCHSCREEN:
 		return "TouchScreen";
 	case CAVAN_INPUT_DEVICE_TYPE_ACCELEROMETER:
@@ -351,8 +328,7 @@ static const char *cavan_input_device_type_tostring(enum cavan_input_device_type
 
 const char *cavan_input_irq_trigger_type_tostring(unsigned long irq_flags)
 {
-	switch (irq_flags & IRQF_TRIGGER_MASK)
-	{
+	switch (irq_flags & IRQF_TRIGGER_MASK) {
 	case IRQF_TRIGGER_FALLING:
 		return "Falling Edge";
 	case IRQF_TRIGGER_RISING:
@@ -372,7 +348,7 @@ const char *cavan_input_irq_trigger_type_tostring(unsigned long irq_flags)
 
 static irqreturn_t cavan_input_isr_edge(int irq, void *dev_id)
 {
-	struct cavan_input_chip *chip = (struct cavan_input_chip *)dev_id;
+	struct cavan_input_chip *chip = (struct cavan_input_chip *) dev_id;
 
 	complete(&chip->event_completion);
 
@@ -381,7 +357,7 @@ static irqreturn_t cavan_input_isr_edge(int irq, void *dev_id)
 
 static irqreturn_t cavan_input_isr_level(int irq, void *dev_id)
 {
-	struct cavan_input_chip *chip = (struct cavan_input_chip *)dev_id;
+	struct cavan_input_chip *chip = (struct cavan_input_chip *) dev_id;
 
 	disable_irq_nosync(irq);
 	complete(&chip->event_completion);
@@ -421,26 +397,20 @@ static int cavan_input_chip_request_irq(struct cavan_input_chip *chip)
 	int ret;
 	irq_handler_t handler;
 
-	if (chip->irq < 0)
-	{
+	if (chip->irq < 0) {
 		pr_func_info("chip %s don't have irq", chip->name);
 		return 0;
 	}
 
-	if (chip->irq_flags & (IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW))
-	{
+	if (chip->irq_flags & (IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW)) {
 		chip->irq_type = CAVAN_INPUT_IRQ_TYPE_LEVEL;
 		chip->isr_thread.wait_for_event = cavan_input_chip_wait_for_event_level;
 		handler = cavan_input_isr_level;
-	}
-	else if (chip->irq_flags & (IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING))
-	{
+	} else if (chip->irq_flags & (IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING)) {
 		chip->irq_type = CAVAN_INPUT_IRQ_TYPE_EDGE;
 		chip->isr_thread.wait_for_event = cavan_input_chip_wait_for_event_edge;
 		handler = cavan_input_isr_edge;
-	}
-	else
-	{
+	} else {
 		pr_red_info("invalid irq flag 0x%08lx", chip->irq_flags);
 		return -EINVAL;
 	}
@@ -448,8 +418,7 @@ static int cavan_input_chip_request_irq(struct cavan_input_chip *chip)
 	init_completion(&chip->event_completion);
 
 	ret = request_irq(chip->irq, handler, chip->irq_flags, chip->name, chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("request_irq %d", chip->irq);
 		return ret;
 	}
@@ -463,8 +432,7 @@ static int cavan_input_chip_request_irq(struct cavan_input_chip *chip)
 
 static inline void cavan_input_chip_free_irq(struct cavan_input_chip *chip)
 {
-	if (chip->irq >= 0)
-	{
+	if (chip->irq >= 0) {
 		free_irq(chip->irq, chip);
 	}
 }
@@ -475,14 +443,13 @@ char *cavan_input_print_memory(const void *mem, size_t size)
 
 	printk("Memory[%d] = ", size);
 
-	for (p = mem, p_end = p + size; p < p_end; p++)
-	{
+	for (p = mem, p_end = p + size; p < p_end; p++) {
 		printk("%02x", *p);
 	}
 
 	printk("\n");
 
-	return (char *)p;
+	return (char *) p;
 }
 
 EXPORT_SYMBOL_GPL(cavan_input_print_memory);
@@ -493,29 +460,24 @@ int cavan_input_chip_set_power(struct cavan_input_chip *chip, bool enable)
 {
 	int ret = 0;
 
-	if (chip->powered == enable)
-	{
+	if (chip->powered == enable) {
 		pr_func_info("Nothing to be done");
 		return 0;
 	}
 
-	if (enable)
-	{
-		if (chip->set_power && (ret = chip->set_power(chip, true)) < 0)
-		{
+	if (enable) {
+		if (chip->set_power && (ret = chip->set_power(chip, true)) < 0) {
 			pr_red_info("chip->set_power");
 			return ret;
 		}
 
-		if ((chip->flags & CAVAN_INPUT_CHIP_FLAG_POWERON_INIT) && (ret = cavan_input_chip_write_init_data(chip)) < 0)
-		{
+		if ((chip->flags & CAVAN_INPUT_CHIP_FLAG_POWERON_INIT) && (ret = cavan_input_chip_write_init_data(chip)) < 0) {
 			pr_red_info("cavan_input_chip_write_init_data");
 			enable = false;
 		}
 	}
 
-	if (enable == false && chip->set_power)
-	{
+	if (enable == false && chip->set_power) {
 		chip->set_power(chip, false);
 	}
 
@@ -546,44 +508,34 @@ int cavan_input_chip_set_active(struct cavan_input_chip *chip, bool enable)
 {
 	int ret = 0;
 
-	if (chip->actived == enable)
-	{
+	if (chip->actived == enable) {
 		pr_func_info("Nothing to be done");
 		return 0;
 	}
 
-	if (enable && (ret = cavan_input_chip_set_power(chip, true)) < 0)
-	{
+	if (enable && (ret = cavan_input_chip_set_power(chip, true)) < 0) {
 		pr_red_info("cavan_input_chip_set_power");
 		return ret;
 	}
 
-	if (chip->set_active)
-	{
+	if (chip->set_active) {
 		ret = chip->set_active(chip, enable);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("chip->set_active");
 
-			if (enable)
-			{
+			if (enable) {
 				enable = false;
-			}
-			else
-			{
+			} else {
 				ret = 0;
 			}
 
 			chip->dead = true;
-		}
-		else if (enable)
-		{
+		} else if (enable) {
 			chip->dead = false;
 		}
 	}
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		cavan_input_chip_set_power(chip, false);
 	}
 
@@ -622,8 +574,7 @@ static int cavan_input_chip_update_delay(struct cavan_input_chip *chip)
 	locked = mutex_trylock(&list->lock);
 
 	head = &list->head;
-	if (list_empty(head))
-	{
+	if (list_empty(head)) {
 		pr_func_info("Nothing to be done");
 		chip->poll_jiffies = MAX_SCHEDULE_TIMEOUT;
 		goto out_mutex_unlock;
@@ -632,36 +583,29 @@ static int cavan_input_chip_update_delay(struct cavan_input_chip *chip)
 	count = 0;
 	delay = -1;
 
-	list_for_each_entry(dev, head, node)
-	{
-		if (count == 0 || dev->poll_delay < delay)
-		{
+	list_for_each_entry(dev, head, node) {
+		if (count == 0 || dev->poll_delay < delay) {
 			delay = dev->poll_delay;
 		}
 
 		count++;
 	}
 
-	list_for_each_entry(dev, head, node)
-	{
-		if (delay < dev->min_delay)
-		{
+	list_for_each_entry(dev, head, node) {
+		if (delay < dev->min_delay) {
 			delay = dev->min_delay;
 		}
 	}
 
 	pr_green_info("cavan input chip poll count = %d, delay = %d(ms)", count, delay);
 
-	list_for_each_entry(dev, head, node)
-	{
-		if (dev->enabled == false)
-		{
+	list_for_each_entry(dev, head, node) {
+		if (dev->enabled == false) {
 			pr_red_info("device %s is not enable skipping", dev->name);
 			continue;
 		}
 
-		if (dev->set_delay && (ret = dev->set_delay(dev, delay)))
-		{
+		if (dev->set_delay && (ret = dev->set_delay(dev, delay))) {
 			pr_red_info("dev->set_delay");
 			goto out_mutex_unlock;
 		}
@@ -672,8 +616,7 @@ static int cavan_input_chip_update_delay(struct cavan_input_chip *chip)
 	pr_func_info("delay = %d(ms)", delay);
 
 out_mutex_unlock:
-	if (locked)
-	{
+	if (locked) {
 		mutex_unlock(&list->lock);
 	}
 
@@ -684,22 +627,16 @@ static int cavan_input_chip_update_thread_state(struct cavan_input_chip *chip)
 {
 	int count = 0;
 
-	if (cavan_input_list_empty(&chip->isr_list))
-	{
+	if (cavan_input_list_empty(&chip->isr_list)) {
 		cavan_input_thread_suspend(&chip->isr_thread);
-	}
-	else
-	{
+	} else {
 		cavan_input_thread_resume(&chip->isr_thread);
 		count++;
 	}
 
-	if (cavan_input_list_empty(&chip->poll_list))
-	{
+	if (cavan_input_list_empty(&chip->poll_list)) {
 		cavan_input_thread_suspend(&chip->poll_thread);
-	}
-	else
-	{
+	} else {
 		cavan_input_thread_resume(&chip->poll_thread);
 		count++;
 	}
@@ -713,15 +650,12 @@ const struct cavan_input_rate_map *cavan_input_find_rate_map(const struct cavan_
 {
 	const struct cavan_input_rate_map *p, *map_end;
 
-	if (map == NULL || count == 0)
-	{
+	if (map == NULL || count == 0) {
 		return NULL;
 	}
 
-	for (p = map, map_end = map + count, map++; map < map_end; map++)
-	{
-		if (map->delay <= delay && (p->delay > delay || map->delay > p->delay))
-		{
+	for (p = map, map_end = map + count, map++; map < map_end; map++) {
+		if (map->delay <= delay && (p->delay > delay || map->delay > p->delay)) {
 			p = map;
 		}
 	}
@@ -738,8 +672,7 @@ static int cavan_input_device_set_delay(struct cavan_input_device *dev, struct c
 	int ret;
 	unsigned int delay_bak;
 
-	if (chip->dead)
-	{
+	if (chip->dead) {
 		pr_red_info("chip %s is dead", chip->name);
 		return -EIO;
 	}
@@ -749,22 +682,17 @@ static int cavan_input_device_set_delay(struct cavan_input_device *dev, struct c
 	delay_bak = dev->poll_delay;
 	dev->poll_delay = delay;
 
-	if (dev->use_irq)
-	{
+	if (dev->use_irq) {
 		ret = (dev->set_delay && dev->enabled) ? dev->set_delay(dev, delay) : 0;
-	}
-	else
-	{
+	} else {
 		ret = cavan_input_chip_update_delay(chip);
 
-		if (dev->enabled && chip->poll_thread.task)
-		{
+		if (dev->enabled && chip->poll_thread.task) {
 			wake_up_process(chip->poll_thread.task);
 		}
 	}
 
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		dev->poll_delay = delay_bak;
 		return ret;
 	}
@@ -795,8 +723,7 @@ static int cavan_input_device_set_delay_no_sync(struct cavan_input_device *dev, 
 
 	pr_pos_info();
 
-	if (core->workqueue == NULL)
-	{
+	if (core->workqueue == NULL) {
 		return cavan_input_device_set_delay_lock(dev, delay);
 	}
 
@@ -815,58 +742,47 @@ static int cavan_input_device_set_enable(struct cavan_input_device *dev, struct 
 
 	pr_pos_info();
 
-	if (dev->enabled == enable)
-	{
+	if (dev->enabled == enable) {
 		pr_func_info("Nothing to be done");
 		return 0;
 	}
 
-	if (enable)
-	{
+	if (enable) {
 		ret = cavan_input_chip_set_active(chip, true);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_input_chip_set_active_lock");
 			return ret;
 		}
 
-		if (dev->set_enable && (ret = dev->set_enable(dev, true)) < 0)
-		{
+		if (dev->set_enable && (ret = dev->set_enable(dev, true)) < 0) {
 			pr_red_info("dev->set_enable");
 			enable = false;
 		}
 
-		if (dev->calibration)
-		{
+		if (dev->calibration) {
 			ssize_t rdlen;
 			char buff[32];
 
 			rdlen = cavan_input_device_read_write_offset(dev, buff, sizeof(buff), false);
-			if (rdlen > 0)
-			{
+			if (rdlen > 0) {
 				dev->calibration(dev, buff, ret, true);
 			}
 		}
 	}
 
-	if (dev->enabled != enable)
-	{
+	if (dev->enabled != enable) {
 		struct cavan_input_list *work_list = dev->use_irq ? &chip->isr_list : &chip->poll_list;
 
-		if (enable == false)
-		{
+		if (enable == false) {
 			cavan_input_list_del(work_list, &dev->node);
 			cavan_input_list_add(&chip->dev_list, &dev->node);
-		}
-		else
-		{
+		} else {
 			cavan_input_list_del(&chip->dev_list, &dev->node);
 			cavan_input_list_add(work_list, &dev->node);
 		}
 	}
 
-	if (enable == false && dev->set_enable)
-	{
+	if (enable == false && dev->set_enable) {
 		dev->set_enable(dev, false);
 	}
 
@@ -906,8 +822,7 @@ int cavan_input_device_set_enable_no_sync(struct cavan_input_device *dev, bool e
 
 	pr_pos_info();
 
-	if (enable && core->workqueue)
-	{
+	if (enable && core->workqueue) {
 		queue_work(core->workqueue, &dev->resume_work);
 		return 0;
 	}
@@ -921,15 +836,13 @@ int cavan_input_device_calibration(struct cavan_input_device *dev, struct cavan_
 {
 	int ret;
 
-	if (dev->calibration == NULL)
-	{
+	if (dev->calibration == NULL) {
 		pr_red_info("dev->calibration is null");
 		return -EINVAL;
 	}
 
 	ret = cavan_input_device_set_enable(dev, chip, true);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_set_enable");
 		return ret;
 	}
@@ -939,8 +852,7 @@ int cavan_input_device_calibration(struct cavan_input_device *dev, struct cavan_
 	ret = dev->calibration(dev, buff, size, store);
 	cavan_input_chip_update_thread_state(chip);
 
-	if (ret > 0)
-	{
+	if (ret > 0) {
 		cavan_input_device_read_write_offset(dev, buff, ret, true);
 	}
 
@@ -976,27 +888,23 @@ static void cavan_input_chip_recovery_devices(struct cavan_input_chip *chip, str
 
 	head = &list->head;
 
-	list_for_each_entry(dev, head, node)
-	{
+	list_for_each_entry(dev, head, node) {
 		int dev_locked;
 
 		cavan_input_chip_set_active(chip, true);
 
 		dev_locked = mutex_trylock(&dev->lock);
 
-		if (dev->set_enable)
-		{
+		if (dev->set_enable) {
 			dev->set_enable(dev, true);
 		}
 
-		if (dev_locked)
-		{
+		if (dev_locked) {
 			mutex_unlock(&dev->lock);
 		}
 	}
 
-	if (list_locked)
-	{
+	if (list_locked) {
 		mutex_unlock(&list->lock);
 	}
 }
@@ -1010,8 +918,7 @@ void cavan_input_chip_recovery(struct cavan_input_chip *chip, bool force)
 	chip->recovery_count++;
 	pr_bold_info("recovery_count = %d", chip->recovery_count);
 
-	if (force || chip->recovery_count > 5)
-	{
+	if (force || chip->recovery_count > 5) {
 		cavan_input_chip_set_active(chip, false);
 		cavan_input_chip_recovery_devices(chip, &chip->isr_list);
 		cavan_input_chip_recovery_devices(chip, &chip->poll_list);
@@ -1020,8 +927,7 @@ void cavan_input_chip_recovery(struct cavan_input_chip *chip, bool force)
 		chip->recovery_count = 0;
 	}
 
-	if (locked)
-	{
+	if (locked) {
 		mutex_unlock(&chip->lock);
 	}
 }
@@ -1047,8 +953,7 @@ ssize_t cavan_input_chip_read_online(const char *chip_name)
 
 	cavan_input_chip_get_online_pathname(chip_name, pathname, sizeof(pathname));
 	rdlen = cavan_io_read_write_file(pathname, buff, sizeof(buff), false);
-	if (rdlen < 0)
-	{
+	if (rdlen < 0) {
 		return rdlen;
 	}
 
@@ -1072,19 +977,13 @@ static int cavan_input_chip_firmware_upgrade_handler(struct cavan_firmware *fw)
 	powered = chip->powered;
 
 	ret = cavan_input_chip_set_power(chip, true);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_set_power");
-	}
-	else
-	{
+	} else {
 		ret = chip->firmware_upgrade(chip, fw);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("chip->firmware_upgrade");
-		}
-		else
-		{
+		} else {
 			pr_green_info("cavan input chip %s firmware upgrade complete", chip->name);
 		}
 	}
@@ -1104,8 +1003,7 @@ static struct cavan_firmware *cavan_input_chip_firmware_create(struct cavan_inpu
 	struct cavan_firmware *fw;
 
 	fw = cavan_firmware_create(CAVAN_INPUT_CHIP_FW_CACHE_SIZE, cavan_input_chip_firmware_upgrade_handler);
-	if (fw == NULL)
-	{
+	if (fw == NULL) {
 		pr_red_info("cavan_firmware_create");
 		return NULL;
 	}
@@ -1120,8 +1018,7 @@ int cavan_input_chip_firmware_upgrade(struct cavan_input_chip *chip, void *buff,
 	struct cavan_firmware *fw;
 
 	fw = cavan_input_chip_firmware_create(chip);
-	if (fw == NULL)
-	{
+	if (fw == NULL) {
 		pr_red_info("cavan_input_chip_firmware_create");
 		return -ENOMEM;
 	}
@@ -1138,8 +1035,7 @@ int cavan_input_chip_read_firmware_id(struct cavan_input_chip *chip, char *buff,
 	int ret;
 	bool powered;
 
-	if (chip->read_firmware_id == NULL)
-	{
+	if (chip->read_firmware_id == NULL) {
 		pr_red_info("dev->read_firmware_id is null");
 		return -EINVAL;
 	}
@@ -1147,8 +1043,7 @@ int cavan_input_chip_read_firmware_id(struct cavan_input_chip *chip, char *buff,
 	powered = chip->powered;
 
 	ret = cavan_input_chip_set_power(chip, true);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_set_power");
 		return ret;
 	}
@@ -1187,8 +1082,7 @@ static int cavan_input_chip_release(struct cavan_misc_device *dev)
 	struct cavan_input_chip *chip = cavan_misc_device_get_data(dev);
 	struct cavan_firmware *fw = cavan_input_chip_get_misc_data(chip);
 
-	if (fw)
-	{
+	if (fw) {
 		int ret;
 
 		ret = cavan_firmware_destroy(fw);
@@ -1206,18 +1100,15 @@ static ssize_t cavan_input_chip_write(struct cavan_misc_device *dev, const char 
 	struct cavan_input_chip *chip = cavan_misc_device_get_data(dev);
 	struct cavan_firmware *fw = cavan_input_chip_get_misc_data(chip);
 
-	if (chip->firmware_upgrade == NULL)
-	{
+	if (chip->firmware_upgrade == NULL) {
 		pr_red_info("Please implement firmware_upgrade method");
 		return -EINVAL;
 	}
 
 	fw = cavan_input_chip_get_misc_data(chip);
-	if (fw == NULL)
-	{
+	if (fw == NULL) {
 		fw = cavan_input_chip_firmware_create(chip);
-		if (fw == NULL)
-		{
+		if (fw == NULL) {
 			pr_red_info("cavan_input_chip_firmware_create");
 			return -ENOMEM;
 		}
@@ -1226,8 +1117,7 @@ static ssize_t cavan_input_chip_write(struct cavan_misc_device *dev, const char 
 	}
 
 	wrlen = cavan_firmware_write(fw, buff, size, CAVAN_FW_FLAG_USER);
-	if (wrlen < 0)
-	{
+	if (wrlen < 0) {
 		pr_red_info("cavan_firmware_write");
 		return wrlen;
 	}
@@ -1277,8 +1167,7 @@ static ssize_t cavan_input_chip_attr_enable_store(struct device *device, struct 
 	struct cavan_input_chip *chip = cavan_misc_device_get_data(mdev);
 
 	ret = cavan_input_chip_set_power_lock(chip, simple_strtoul(buff, NULL, 10) > 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_set_power_lock");
 		return ret;
 	}
@@ -1290,8 +1179,7 @@ static struct device_attribute cavan_input_chip_attr_firmware_id = __ATTR(firmwa
 static struct device_attribute cavan_input_chip_attr_info = __ATTR(info, S_IRUGO, cavan_input_chip_attr_info_show, NULL);
 static struct device_attribute cavan_input_chip_attr_enable = __ATTR(enable, S_IRWXU | S_IRWXG | S_IRUGO, cavan_input_chip_attr_enable_show, cavan_input_chip_attr_enable_store);
 
-static const struct attribute *cavan_input_chip_attributes[] =
-{
+static const struct attribute *cavan_input_chip_attributes[] = {
 	&cavan_input_chip_attr_firmware_id.attr,
 	&cavan_input_chip_attr_info.attr,
 	&cavan_input_chip_attr_enable.attr,
@@ -1309,25 +1197,21 @@ static int cavan_input_chip_probe(struct cavan_input_chip *chip)
 	pr_green_info("Try input chip %s", chip->name);
 
 	ret = cavan_input_chip_set_power_lock(chip, true);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_set_power");
 		return ret;
 	}
 
 	chip_name = chip->name;
 
-	if (chip->probe_count > 5)
-	{
-		if (cavan_input_chip_read_online(chip_name) > 0)
-		{
+	if (chip->probe_count > 5) {
+		if (cavan_input_chip_read_online(chip_name) > 0) {
 			pr_green_info("chip %s is online", chip_name);
 			goto label_write_init_data;
 		}
 	}
 
-	if (chip->readid && (ret = chip->readid(chip)) < 0)
-	{
+	if (chip->readid && (ret = chip->readid(chip)) < 0) {
 		pr_red_info("chip->readid");
 		goto out_power_down;
 	}
@@ -1335,15 +1219,13 @@ static int cavan_input_chip_probe(struct cavan_input_chip *chip)
 	cavan_input_core_add_online_chip(chip_name);
 
 label_write_init_data:
-	if ((chip->flags & CAVAN_INPUT_CHIP_FLAG_POWERON_INIT) == 0 && (ret = cavan_input_chip_write_init_data(chip)) < 0)
-	{
+	if ((chip->flags & CAVAN_INPUT_CHIP_FLAG_POWERON_INIT) == 0 && (ret = cavan_input_chip_write_init_data(chip)) < 0) {
 		pr_red_info("cavan_input_chip_write_init_data");
 		goto out_power_down;
 	}
 
 	ret = cavan_input_chip_request_irq(chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_request_irq");
 		goto out_power_down;
 	}
@@ -1351,15 +1233,13 @@ label_write_init_data:
 	wake_lock_init(&chip->wake_lock, WAKE_LOCK_SUSPEND, chip->name);
 
 	ret = chip->probe(chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("chip->probe");
 		goto out_wake_lock_destroy;
 	}
 
 	chip->misc_name = kasprintf(GFP_KERNEL, "CAVAN-%s", chip->name);
-	if (chip->misc_name == NULL)
-	{
+	if (chip->misc_name == NULL) {
 		pr_red_info("kasprintf");
 		goto out_chip_remove;
 	}
@@ -1371,15 +1251,13 @@ label_write_init_data:
 	mdev->write = cavan_input_chip_write;
 
 	ret = cavan_misc_device_register(mdev, chip->misc_name);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_misc_device_register");
 		goto out_kfree_chip_misc_name;
 	}
 
 	ret = sysfs_create_files(&mdev->dev->kobj, cavan_input_chip_attributes);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("sysfs_create_group");
 		goto out_cavan_misc_device_unregister;
 	}
@@ -1430,10 +1308,8 @@ int cavan_input_chip_report_events(struct cavan_input_chip *chip, struct cavan_i
 
 	head = &list->head;
 
-	list_for_each_entry(dev, head, node)
-	{
-		if (dev->event_handler(chip, dev) < 0)
-		{
+	list_for_each_entry(dev, head, node) {
+		if (dev->event_handler(chip, dev) < 0) {
 			count++;
 		}
 	}
@@ -1493,14 +1369,10 @@ static void cavan_input_chip_isr_thread_prepare(struct cavan_input_thread *threa
 {
 	struct cavan_input_chip *chip = cavan_input_thread_get_data(thread);
 
-	if (chip->irq_type == CAVAN_INPUT_IRQ_TYPE_EDGE && chip->irq > 0)
-	{
-		if (enable)
-		{
+	if (chip->irq_type == CAVAN_INPUT_IRQ_TYPE_EDGE && chip->irq > 0) {
+		if (enable) {
 			enable_irq(chip->irq);
-		}
-		else
-		{
+		} else {
 			disable_irq(chip->irq);
 		}
 	}
@@ -1510,24 +1382,20 @@ static int cavan_input_chip_set_power_dummy(struct cavan_input_chip *chip, bool 
 {
 	pr_pos_info();
 
-	if (enable)
-	{
+	if (enable) {
 		int ret;
 
 		cavan_io_gpio_set_value(chip->gpio_reset, 0);
 
 		ret = cavan_io_set_power_regulator(chip, true);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 
 		msleep(20);
 
 		cavan_io_gpio_set_value(chip->gpio_reset, 1);
-	}
-	else
-	{
+	} else {
 		return cavan_io_set_power_regulator(chip, false);
 	}
 
@@ -1541,68 +1409,56 @@ static int cavan_input_chip_init(struct cavan_input_core *core, struct cavan_inp
 
 	pr_pos_info();
 
-	if (chip->name == NULL)
-	{
+	if (chip->name == NULL) {
 		pr_red_info("chip->name == NULL");
 		return -EINVAL;
 	}
 
-	if (chip->probe == NULL || chip->remove == NULL)
-	{
+	if (chip->probe == NULL || chip->remove == NULL) {
 		pr_red_info("chip->probe == NULL || chip->remove == NULL");
 		return -EINVAL;
 	}
 
-	if (chip->read_data == NULL || chip->write_data == NULL)
-	{
+	if (chip->read_data == NULL || chip->write_data == NULL) {
 		pr_red_info("chip->read_data == NULL || chip->write_data == NULL");
 		return -EINVAL;
 	}
 
 	ret = cavan_input_chip_io_init(chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_io_init");
 		return ret;
 	}
 
-	if (chip->vendor == NULL)
-	{
+	if (chip->vendor == NULL) {
 		chip->vendor = "Cavan";
 	}
 
-	if (chip->read_register == NULL)
-	{
+	if (chip->read_register == NULL) {
 		chip->read_register = cavan_input_read_register_dummy;
 	}
 
-	if (chip->write_register == NULL)
-	{
+	if (chip->write_register == NULL) {
 		chip->write_register = cavan_input_write_register_dummy;
 	}
 
-	if (chip->read_register16 == NULL)
-	{
+	if (chip->read_register16 == NULL) {
 		chip->read_register16 = cavan_input_read_register16_dummy;
 	}
 
-	if (chip->write_register16 == NULL)
-	{
+	if (chip->write_register16 == NULL) {
 		chip->write_register16 = cavan_input_write_register16_dummy;
 	}
 
-	if (chip->master_recv == NULL)
-	{
+	if (chip->master_recv == NULL) {
 		chip->master_recv = cavan_input_master_recv_i2c;
 	}
 
-	if (chip->master_send == NULL)
-	{
+	if (chip->master_send == NULL) {
 		chip->master_send = cavan_input_master_send_i2c;
 	}
 
-	if (chip->set_power == NULL)
-	{
+	if (chip->set_power == NULL) {
 		chip->set_power = cavan_input_chip_set_power_dummy;
 	}
 
@@ -1630,18 +1486,14 @@ static int cavan_input_chip_init(struct cavan_input_core *core, struct cavan_inp
 	thread->prepare = cavan_input_chip_isr_thread_prepare;
 	thread->error_handle = cavan_input_chip_error_handler;
 	thread->wait_for_event = cavan_input_chip_wait_for_event_edge;
-	if (chip->event_handler_isr)
-	{
+	if (chip->event_handler_isr) {
 		thread->event_handle = cavan_input_chip_event_handler_user_isr;
-	}
-	else
-	{
+	} else {
 		thread->event_handle = cavan_input_chip_event_handler_isr;
 	}
 
 	ret = cavan_input_thread_init(thread, "%s-ISR", chip->name);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_thread_init");
 		goto out_cavan_input_chip_io_deinit;
 	}
@@ -1652,27 +1504,20 @@ static int cavan_input_chip_init(struct cavan_input_core *core, struct cavan_inp
 	thread->stop = NULL;
 	thread->prepare = NULL;
 	thread->error_handle = cavan_input_chip_error_handler;
-	if (chip->flags & CAVAN_INPUT_CHIP_FLAG_NO_WAIT)
-	{
+	if (chip->flags & CAVAN_INPUT_CHIP_FLAG_NO_WAIT) {
 		thread->wait_for_event = cavan_input_chip_wait_for_event_none;
-	}
-	else
-	{
+	} else {
 		thread->wait_for_event = cavan_input_chip_wait_for_event_poll;
 	}
 
-	if (chip->event_handler_poll)
-	{
+	if (chip->event_handler_poll) {
 		thread->event_handle = cavan_input_chip_event_handler_user_poll;
-	}
-	else
-	{
+	} else {
 		thread->event_handle = cavan_input_chip_event_handler_poll;
 	}
 
 	ret = cavan_input_thread_init(thread, "%s-POLL", chip->name);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_thread_init");
 		goto out_cavan_input_thread_destroy_isr;
 	}
@@ -1715,8 +1560,7 @@ static ssize_t cavan_input_device_read(struct cavan_misc_device *dev, char __use
 	char *p, *p_end;
 	struct cavan_input_device *idev;
 
-	if (*offset)
-	{
+	if (*offset) {
 		return 0;
 	}
 
@@ -1742,8 +1586,7 @@ static ssize_t cavan_input_device_write(struct cavan_misc_device *dev, const cha
 	struct cavan_input_device *idev = cavan_misc_device_get_data(dev);
 
 	ret = cavan_input_device_set_enable_no_sync(idev, size > 0 && buff[0] > '0');
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_set_enable_no_sync");
 		return ret;
 	}
@@ -1755,8 +1598,7 @@ static int cavan_input_device_ioctl(struct cavan_misc_device *dev, unsigned int 
 {
 	struct cavan_input_device *idev = cavan_misc_device_get_data(dev);
 
-	switch (CAVAN_INPUT_IOC_GET_CMD_RAW(command))
-	{
+	switch (CAVAN_INPUT_IOC_GET_CMD_RAW(command)) {
 	case CAVAN_INPUT_CHIP_IOC_GET_NAME(0):
 		return cavan_input_copy_to_user_text(command, args, idev->chip->name);
 
@@ -1777,11 +1619,10 @@ static int cavan_input_device_ioctl(struct cavan_misc_device *dev, unsigned int 
 
 	case CAVAN_INPUT_DEVICE_IOC_GET_OFFSET(0):
 	case CAVAN_INPUT_DEVICE_IOC_SET_OFFSET(0):
-		return cavan_input_device_calibration_lock(idev, (void __user *)args, CAVAN_INPUT_IOC_GET_SIZE(command), CAVAN_INPUT_IOC_GET_CMD_RAW(command) == CAVAN_INPUT_DEVICE_IOC_SET_OFFSET(0));
+		return cavan_input_device_calibration_lock(idev, (void __user *) args, CAVAN_INPUT_IOC_GET_SIZE(command), CAVAN_INPUT_IOC_GET_CMD_RAW(command) == CAVAN_INPUT_DEVICE_IOC_SET_OFFSET(0));
 
 	default:
-		if (idev->ioctl)
-		{
+		if (idev->ioctl) {
 			return idev->ioctl(idev, command, args);
 		}
 	}
@@ -1806,8 +1647,7 @@ static ssize_t cavan_input_device_attr_calibration_store(struct device *device, 
 	struct cavan_input_device *idev = cavan_misc_device_get_data(mdev);
 
 	ret = cavan_input_device_calibration_lock(idev, (char *) buff, size, true);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_calibration_lock");
 		return ret;
 	}
@@ -1846,8 +1686,7 @@ static ssize_t cavan_input_device_attr_enable_store(struct device *device, struc
 	struct cavan_input_device *idev = cavan_misc_device_get_data(mdev);
 
 	ret = cavan_input_device_set_enable_no_sync(idev, simple_strtoul(buff, NULL, 10) > 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_set_enable_no_sync");
 		return ret;
 	}
@@ -1870,8 +1709,7 @@ static ssize_t cavan_input_device_attr_delay_store(struct device *device, struct
 	struct cavan_input_device *idev = cavan_misc_device_get_data(mdev);
 
 	ret = cavan_input_device_set_delay_no_sync(idev, simple_strtoul(buff, NULL, 10));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_set_delay_no_sync");
 		return ret;
 	}
@@ -1893,8 +1731,7 @@ static struct device_attribute cavan_input_device_attr_enable = __ATTR(enable, S
 static struct device_attribute cavan_input_device_attr_delay = __ATTR(delay, S_IRWXU | S_IRWXG | S_IRUGO, cavan_input_device_attr_delay_show, cavan_input_device_attr_delay_store);
 static struct device_attribute cavan_input_device_attr_min_delay = __ATTR(min_delay, S_IRUGO, cavan_input_device_attr_min_delay_show, NULL);
 
-static const struct attribute *cavan_input_device_attributes[] =
-{
+static const struct attribute *cavan_input_device_attributes[] = {
 	&cavan_input_device_attr_calibration.attr,
 	&cavan_input_device_attr_info.attr,
 	&cavan_input_device_attr_enable.attr,
@@ -1913,22 +1750,19 @@ static int cavan_input_device_probe(struct cavan_input_chip *chip, struct cavan_
 
 	pr_pos_info();
 
-	if (chip->irq < 0 && dev->use_irq)
-	{
+	if (chip->irq < 0 && dev->use_irq) {
 		pr_red_info("chip %s don't have irq", chip->name);
 		return -EINVAL;
 	}
 
-	if (dev->event_handler == NULL)
-	{
+	if (dev->event_handler == NULL) {
 		pr_red_info("dev->event_handler == NULL");
 		return -EINVAL;
 	}
 
 	devname = cavan_input_device_type_tostring(dev->type);
 
-	if ((chip->devmask & (1 << dev->type)) == 0)
-	{
+	if ((chip->devmask & (1 << dev->type)) == 0) {
 		pr_red_info("chip %s don't support device %s", chip->name, devname);
 		return -EINVAL;
 	}
@@ -1938,22 +1772,19 @@ static int cavan_input_device_probe(struct cavan_input_chip *chip, struct cavan_
 	dev->chip = chip;
 	dev->enabled = false;
 
-	if (dev->name == NULL)
-	{
+	if (dev->name == NULL) {
 		dev->name = devname;
 	}
 
 	input = input_allocate_device();
-	if (input == NULL)
-	{
+	if (input == NULL) {
 		ret = -ENOMEM;
 		pr_red_info("input_allocate_device");
 		goto out_mutex_destroy;
 	}
 
 	dev->misc_name = kasprintf(GFP_KERNEL, "CAVAN-%s-%s", chip->name, devname);
-	if (dev->misc_name == NULL)
-	{
+	if (dev->misc_name == NULL) {
 		ret = -ENOMEM;
 		pr_red_info("asprintf");
 		goto out_input_free_device;
@@ -1970,45 +1801,37 @@ static int cavan_input_device_probe(struct cavan_input_chip *chip, struct cavan_
 	mdev->ioctl = cavan_input_device_ioctl;
 
 	ret = cavan_misc_device_register(mdev, dev->misc_name);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_misc_device_register");
 		goto out_kfree_input_name;
 	}
 
 #ifdef CONFIG_OF
-	if (of_property_read_u32_array(chip->dev->of_node, "debound", debound, ARRAY_SIZE(debound)) >= 0)
-	{
+	if (of_property_read_u32_array(chip->dev->of_node, "debound", debound, ARRAY_SIZE(debound)) >= 0) {
 		dev->fuzz = debound[0];
 		dev->flat = debound[1];
 	}
 #endif
 
-	if (dev->type == CAVAN_INPUT_DEVICE_TYPE_TOUCHSCREEN)
-	{
+	if (dev->type == CAVAN_INPUT_DEVICE_TYPE_TOUCHSCREEN) {
 		ret = cavan_ts_device_probe(dev);
-	}
-	else
-	{
+	} else {
 		ret = cavan_sensor_device_probe(dev);
 	}
 
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("probe device failed");
 		goto out_cavan_misc_device_unregister;
 	}
 
 	ret = input_register_device(input);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("input_register_device");
 		goto out_device_remove;
 	}
 
 	ret = sysfs_create_files(&dev->misc_dev.dev->kobj, cavan_input_device_attributes);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("sysfs_create_group");
 		goto out_input_unregister_device;
 	}
@@ -2020,8 +1843,7 @@ static int cavan_input_device_probe(struct cavan_input_chip *chip, struct cavan_
 out_input_unregister_device:
 	input_unregister_device(input);
 out_device_remove:
-	if (dev->remove)
-	{
+	if (dev->remove) {
 		dev->remove(dev);
 	}
 out_cavan_misc_device_unregister:
@@ -2043,8 +1865,7 @@ static void cavan_input_device_remove(struct cavan_input_chip *chip, struct cava
 	cavan_misc_device_unregister(&dev->misc_dev);
 	input_unregister_device(input);
 
-	if (dev->remove)
-	{
+	if (dev->remove) {
 		dev->remove(dev);
 	}
 
@@ -2078,8 +1899,7 @@ int cavan_input_device_register(struct cavan_input_chip *chip, struct cavan_inpu
 	cavan_input_list_add(&chip->dev_list, &dev->node);
 
 	ret = cavan_input_device_probe(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_probe");
 		goto out_list_del;
 	}
@@ -2125,8 +1945,7 @@ int cavan_input_chip_register(struct cavan_input_chip *chip, struct device *dev)
 	chip->dev = dev;
 
 	ret = cavan_input_chip_init(&input_core, chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_init");
 		goto out_list_del;
 	}
@@ -2148,8 +1967,7 @@ void cavan_input_chip_unregister(struct cavan_input_chip *chip)
 	mutex_lock(&input_core.lock);
 	mutex_lock(&chip->lock);
 
-	if (cavan_input_list_has_node(&input_core.work_list, &chip->node))
-	{
+	if (cavan_input_list_has_node(&input_core.work_list, &chip->node)) {
 		mutex_unlock(&chip->lock);
 		cavan_input_chip_remove(chip);
 		mutex_lock(&chip->lock);
@@ -2186,26 +2004,21 @@ static int cavan_input_core_event_handler(struct cavan_input_thread *thread)
 
 	mutex_lock(&list->lock);
 
-	list_for_each_entry(chip, head, node)
-	{
+	list_for_each_entry(chip, head, node) {
 		mutex_lock(&chip->lock);
 		chip->probe_count++;
 
-		if ((chip->devmask & core->devmask) || chip->probe_count > CAVAN_INPUT_CHIP_MAX_PROBE_COUNT)
-		{
+		if ((chip->devmask & core->devmask) || chip->probe_count > CAVAN_INPUT_CHIP_MAX_PROBE_COUNT) {
 			list_del(&chip->node);
 			cavan_input_list_add(&core->exclude_list, &chip->node);
 			chip->poll_jiffies = 0;
 
 			mutex_unlock(&chip->lock);
 			break;
-		}
-		else
-		{
+		} else {
 			mutex_unlock(&chip->lock);
 
-			if (cavan_input_chip_probe(chip) >= 0)
-			{
+			if (cavan_input_chip_probe(chip) >= 0) {
 				mutex_lock(&chip->lock);
 
 				list_del(&chip->node);
@@ -2221,13 +2034,10 @@ static int cavan_input_core_event_handler(struct cavan_input_thread *thread)
 
 	mutex_lock(&core->lock);
 
-	if (list_empty(head))
-	{
+	if (list_empty(head)) {
 		thread->state = CAVAN_INPUT_THREAD_STATE_SUSPEND;
 		core->poll_jiffies = 0;
-	}
-	else
-	{
+	} else {
 		core->poll_jiffies = core->poll_jiffies << 1 | 1;
 	}
 
@@ -2238,8 +2048,7 @@ static int cavan_input_core_event_handler(struct cavan_input_thread *thread)
 	return 0;
 }
 
-static const struct file_operations cavan_input_class_fops =
-{
+static const struct file_operations cavan_input_class_fops = {
 	.owner		= THIS_MODULE,
 	.open = cavan_misc_device_open,
 	.release = cavan_misc_device_release,
@@ -2274,8 +2083,7 @@ static int __init cavan_input_core_init(void)
 	mutex_init(&input_core.lock);
 
 	cavan_input_class = class_create(THIS_MODULE, CAVAN_INPUT_CLASS_NAME);
-	if (IS_ERR(cavan_input_class))
-	{
+	if (IS_ERR(cavan_input_class)) {
 		pr_red_info("class_create");
 		ret = PTR_ERR(cavan_input_class);
 		cavan_input_class = NULL;
@@ -2283,15 +2091,13 @@ static int __init cavan_input_core_init(void)
 	}
 
 	ret = register_chrdev(CAVAN_INPUT_MAJOR, CAVAN_INPUT_CLASS_NAME, &cavan_input_class_fops);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("register_chrdev");
 		goto out_class_destroy;
 	}
 
 	input_core.workqueue = create_singlethread_workqueue("cavan-input-wq");
-	if (input_core.workqueue == NULL)
-	{
+	if (input_core.workqueue == NULL) {
 		ret = -EFAULT;
 		goto out_unregister_chrdev;
 	}
@@ -2305,8 +2111,7 @@ static int __init cavan_input_core_init(void)
 	thread->event_handle = cavan_input_core_event_handler;
 	thread->wait_for_event = cavan_input_core_wait_for_event;
 	ret = cavan_input_thread_init(thread, input_core.name);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_thread_init");
 		goto out_destroy_workqueue;
 	}

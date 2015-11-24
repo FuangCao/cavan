@@ -9,14 +9,12 @@
 #define CHIP_ID_MXC6225XU	0x25
 
 #pragma pack(1)
-struct mxc6225xc_data_package
-{
+struct mxc6225xc_data_package {
 	s8 x;
 	s8 y;
 };
 
-struct mxc6225xu_data_package
-{
+struct mxc6225xu_data_package {
 	s8 y;
 	s8 x;
 };
@@ -28,8 +26,7 @@ static int mxc6225_sensor_chip_readid(struct cavan_input_chip *chip)
 	u8 id;
 
 	ret = chip->read_register(chip, REG_CHIP_ID, &id);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_register");
 		return ret;
 	}
@@ -38,8 +35,7 @@ static int mxc6225_sensor_chip_readid(struct cavan_input_chip *chip)
 
 	pr_bold_info("Device ID = 0x%02x = 0x%02x", id, chip->devid);
 
-	switch (chip->devid)
-	{
+	switch (chip->devid) {
 	case CHIP_ID_MXC6225XC:
 		chip->name = "MXC6225XC";
 		break;
@@ -62,8 +58,7 @@ static int mxc6225_sensor_chip_set_active(struct cavan_input_chip *chip, bool en
 	int ret;
 
 	ret = chip->write_register(chip, REG_DETECTION, enable ? 0x00 : 0x80);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_register");
 		return ret;
 	}
@@ -77,8 +72,7 @@ static int mxc6225xu_acceleration_event_handler(struct cavan_input_chip *chip, s
 	struct mxc6225xu_data_package package;
 
 	ret = chip->read_data(chip, 0, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_data");
 		return ret;
 	}
@@ -93,8 +87,7 @@ static int mxc6225xc_acceleration_event_handler(struct cavan_input_chip *chip, s
 	struct mxc6225xc_data_package package;
 
 	ret = chip->read_data(chip, 0, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_data");
 		return ret;
 	}
@@ -112,8 +105,7 @@ static int mxc6225_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -134,18 +126,14 @@ static int mxc6225_input_chip_probe(struct cavan_input_chip *chip)
 	sensor->max_range = 4;
 	sensor->resolution = 256;
 
-	if (chip->devid == CHIP_ID_MXC6225XC)
-	{
+	if (chip->devid == CHIP_ID_MXC6225XC) {
 		dev->event_handler = mxc6225xc_acceleration_event_handler;
-	}
-	else
-	{
+	} else {
 		dev->event_handler = mxc6225xu_acceleration_event_handler;
 	}
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -173,8 +161,7 @@ static int mxc6225_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	struct cavan_input_chip *chip;
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("sensor == NULL");
 		return -ENOMEM;
 	}
@@ -196,8 +183,7 @@ static int mxc6225_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	chip->remove = mxc6225_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_sensor;
 	}
@@ -221,14 +207,12 @@ static int mxc6225_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id mxc6225_id[] =
-{
+static const struct i2c_device_id mxc6225_id[] = {
 	{"mxc6225", 0}, {}
 };
 
 #ifdef CONFIG_OF
-static struct of_device_id mxc6225_match_table[] =
-{
+static struct of_device_id mxc6225_match_table[] = {
 	{
 		.compatible = "freescale,mxc6225"
 	},
@@ -238,10 +222,8 @@ static struct of_device_id mxc6225_match_table[] =
 
 MODULE_DEVICE_TABLE(i2c, mxc6225_id);
 
-static struct i2c_driver mxc6225_driver =
-{
-	.driver =
-	{
+static struct i2c_driver mxc6225_driver = {
+	.driver = {
 		.name = "mxc6225",
 		.owner = THIS_MODULE,
 #ifdef CONFIG_OF

@@ -12,8 +12,7 @@
 #endif
 
 #pragma pack(1)
-struct kionix_data_package
-{
+struct kionix_data_package {
 	short x;
 	short y;
 	short z;
@@ -26,8 +25,7 @@ static int kionix_sensor_chip_readid(struct cavan_input_chip *chip)
 	u8 id;
 
 	ret = chip->read_register(chip, REG_CHIP_ID, &id);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_sensor_i2c_read_register");
 		return ret;
 	}
@@ -43,14 +41,12 @@ static int kionix_acceleration_set_enable(struct cavan_input_device *dev, bool e
 	struct cavan_input_chip *chip = dev->chip;
 
 	ret = chip->write_register(chip, REG_GRP2_CTRL, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("write_register");
 		return ret;
 	}
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		return 0;
 	}
 
@@ -63,8 +59,7 @@ static int kionix_acceleration_event_handler(struct cavan_input_chip *chip, stru
 	struct kionix_data_package package;
 
 	ret = chip->read_data(chip, REG_DATA_START, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_data");
 		return ret;
 	}
@@ -83,8 +78,7 @@ static int kionix_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -107,8 +101,7 @@ static int kionix_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = kionix_acceleration_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -130,8 +123,7 @@ static void kionix_input_chip_remove(struct cavan_input_chip *chip)
 	kfree(sensor);
 }
 
-static struct cavan_input_init_data kionix_init_data[] =
-{
+static struct cavan_input_init_data kionix_init_data[] = {
 	{REG_GRP2_CTRL, 0},
 	{REG_GRP2_INT_CTRL,	0},
 	{REG_GRP2_DATA_CTRL, 6}
@@ -145,8 +137,7 @@ static int kionix_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("sensor == NULL");
 		return -ENOMEM;
 	}
@@ -163,9 +154,7 @@ static int kionix_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 #endif
 	{
 		chip->name = "KXCJK";
-	}
-	else
-	{
+	} else {
 		chip->name = "KXTIK";
 	}
 
@@ -181,8 +170,7 @@ static int kionix_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->remove = kionix_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_sensor;
 	}
@@ -207,18 +195,15 @@ static int kionix_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id kionix_id[] =
-{
+static const struct i2c_device_id kionix_id[] = {
 	{"kxtik", 0}, {"kxcjk", 0}, {}
 };
 
 #ifdef CONFIG_OF
-static struct of_device_id kionix_match_table[] =
-{
+static struct of_device_id kionix_match_table[] = {
 	{
 		.compatible = "kionix,kxtik"
-	},
-	{
+	}, {
 		.compatible = "kionix,kxcjk"
 	},
 	{}
@@ -227,10 +212,8 @@ static struct of_device_id kionix_match_table[] =
 
 MODULE_DEVICE_TABLE(i2c, kionix_id);
 
-static struct i2c_driver kionix_driver =
-{
-	.driver =
-	{
+static struct i2c_driver kionix_driver = {
+	.driver = {
 		.name = "kionix",
 		.owner = THIS_MODULE,
 #ifdef CONFIG_OF

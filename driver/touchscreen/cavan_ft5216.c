@@ -33,7 +33,7 @@
 #define FT5216_FIRMWARE_BLOCK_SIZE	128
 
 #define FT5216_BUILD_AXIS(h, l) \
-	(((u16)((h) & 0x0F)) << 8 | (l))
+	(((u16) ((h) & 0x0F)) << 8 | (l))
 
 #define FT5216_EVENT_FLAG(xh) \
 	((xh) >> 4)
@@ -44,15 +44,13 @@
 #define AUTO_UPDATA_FRIMWARE 0
 
 #if AUTO_UPDATA_FRIMWARE
-static unsigned char frimwar_data[] =
-{
+static unsigned char frimwar_data[] = {
 	#include "D58_FT6306_YESH_app.i"
 };
 #endif
 
 #pragma pack(1)
-struct ft5216_touch_point
-{
+struct ft5216_touch_point {
 	u8 xh;
 	u8 xl;
 	u8 yh;
@@ -60,16 +58,14 @@ struct ft5216_touch_point
 	u16 reserved;
 };
 
-struct ft5216_data_package
-{
+struct ft5216_data_package {
 	u8 device_mode;
 	u8 gest_id;
 	u8 td_status;
 	struct ft5216_touch_point points[FT5216_POINT_COUNT];
 };
 
-struct ft5216_firmware_block
-{
+struct ft5216_firmware_block {
 	u16 head;
 	u16 addr;
 	u16 size;
@@ -77,8 +73,7 @@ struct ft5216_firmware_block
 };
 #pragma pack()
 
-struct cavan_ft5216_driver_data
-{
+struct cavan_ft5216_driver_data {
 	struct cavan_ts_device ts;
 #if SUPPORT_PROXIMITY_SENSOR
 	struct cavan_sensor_device prox;
@@ -95,14 +90,12 @@ static int ft5216_send_command(struct cavan_input_chip *chip, u8 *command, size_
 	int ret;
 
 	ret = chip->master_send(chip, command, wrlen);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("master_send");
 		return ret;
 	}
 
-	if (rdlen > 0)
-	{
+	if (rdlen > 0) {
 		return chip->master_recv(chip, command, rdlen);
 	}
 
@@ -116,8 +109,7 @@ static int ft5216_send_command_simple(struct cavan_input_chip *chip, char comman
 
 static const char *ft5216_power_mode_tostring(int mode)
 {
-	switch (mode)
-	{
+	switch (mode) {
 	case FT5216_MODE_ACTIVE:
 		return "Active";
 	case FT5216_MODE_MONITOR:
@@ -135,17 +127,13 @@ static int ft5216_change_power_mode(struct cavan_input_chip *chip, u8 mode, int 
 {
 	pr_bold_info("Ft5216 change power mode => %s", ft5216_power_mode_tostring(mode));
 
-	while (chip->write_register(chip, FT5216_REG_POWER_MODE, mode) < 0 && retry--)
-	{
+	while (chip->write_register(chip, FT5216_REG_POWER_MODE, mode) < 0 && retry--) {
 		msleep(10);
 	}
 
-	if (retry < 0)
-	{
+	if (retry < 0) {
 		pr_red_info("Failed");
-	}
-	else
-	{
+	} else {
 		pr_green_info("OK");
 	}
 
@@ -159,21 +147,18 @@ static int ft5216_ts_event_handler(struct cavan_input_chip *chip, struct cavan_i
 	struct input_dev *input = dev->input;
 	struct ft5216_data_package package;
 	struct ft5216_touch_point *p, *p_end;
-	struct cavan_ts_device *ts = (struct cavan_ts_device *)dev;
+	struct cavan_ts_device *ts = (struct cavan_ts_device *) dev;
 
 	ret = ft5216_read_data_package(chip, &package);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_read_data_package");
 		cavan_input_chip_recovery(chip, false);
 		return ret;
 	}
 
 	count = package.td_status & 0x07;
-	if (count == 0)
-	{
-		if (ts->touch_count)
-		{
+	if (count == 0) {
+		if (ts->touch_count) {
 			cavan_ts_mt_touch_release(input);
 			ts->touch_count = 0;
 		}
@@ -181,14 +166,12 @@ static int ft5216_ts_event_handler(struct cavan_input_chip *chip, struct cavan_i
 		return 0;
 	}
 
-	if (unlikely(count > FT5216_POINT_COUNT))
-	{
+	if (unlikely(count > FT5216_POINT_COUNT)) {
 		// pr_red_info("Too much points = %d", count);
 		count = FT5216_POINT_COUNT;
 	}
 
-	for (p = package.points, p_end = p + count; p < p_end; p++)
-	{
+	for (p = package.points, p_end = p + count; p < p_end; p++) {
 		cavan_ts_report_mt_data2(input, FT5216_TOUCH_ID(p->yh), \
 			FT5216_BUILD_AXIS(p->xh, p->xl), FT5216_BUILD_AXIS(p->yh, p->yl));
 	}
@@ -206,15 +189,13 @@ static int ft5216_proximity_event_handler(struct cavan_input_chip *chip, struct 
 	u8 value;
 
 	ret = chip->read_register(chip, 0x01, &value);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("dev->read_register");
 		cavan_input_chip_recovery(chip, false);
 		return ret;
 	}
 
-	switch (value)
-	{
+	switch (value) {
 	case 0xC0:
 		cavan_sensor_report_value(dev->input, 0);
 		break;
@@ -237,8 +218,7 @@ static int ft5216_proximity_set_enable(struct cavan_input_device *dev, bool enab
 
 static int ft5216_set_power(struct cavan_input_chip *chip, bool enable)
 {
-	if (enable)
-	{
+	if (enable) {
 #if TOUCHSCREEN_CHIP_IS_FT5616
 		cavan_io_reset_gpio_set_value(chip, 0);
 		msleep(5);
@@ -253,9 +233,7 @@ static int ft5216_set_power(struct cavan_input_chip *chip, bool enable)
 		cavan_io_reset_gpio_set_value(chip, 1);
 		msleep(200);
 #endif
-	}
-	else
-	{
+	} else {
 		cavan_io_set_power_regulator(chip, false);
 	}
 
@@ -267,13 +245,10 @@ static int ft5216_set_active(struct cavan_input_chip *chip, bool enable)
 	u8 mode;
 	int retry;
 
-	if (enable)
-	{
+	if (enable) {
 		mode = FT5216_MODE_ACTIVE;
 		retry = 10;
-	}
-	else
-	{
+	} else {
 		mode = FT5216_MODE_HIBERNATE;
 		retry = 2;
 	}
@@ -290,16 +265,14 @@ static int ft5216_readid(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	ret = chip->read_data(chip, 0x22, buff, sizeof(buff));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_i2c_read_data");
 		return ret;
 	}
 
 	cavan_input_print_memory(buff, ret);
 
-	for (p = buff, p_end = p + 29; p < p_end; p++)
-	{
+	for (p = buff, p_end = p + 29; p < p_end; p++) {
 #if TOUCHSCREEN_CHIP_IS_FT5616
 		if (*p != 0)
 #else
@@ -310,10 +283,8 @@ static int ft5216_readid(struct cavan_input_chip *chip)
 		}
 	}
 
-	for (p_end = buff + sizeof(buff); p < p_end; p++)
-	{
-		if (*p != 0)
-		{
+	for (p_end = buff + sizeof(buff); p < p_end; p++) {
+		if (*p != 0) {
 			return -EINVAL;
 		}
 	}
@@ -327,8 +298,7 @@ static int ft5216_read_firmware_id(struct cavan_input_chip *chip)
 	u8 command = 0xa6;
 
 	ret = ft5216_send_command(chip, &command, 1, 1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
@@ -342,8 +312,7 @@ static int ft5216_read_vendor_id(struct cavan_input_chip *chip)
 	u8 command = 0xa8;
 
 	ret = ft5216_send_command(chip, &command, 1, 1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
@@ -369,8 +338,7 @@ static int ft5216_upgrade_prepare(struct cavan_input_chip *chip)
 	command[0] = 0xbc;
 	command[1] = 0xaa;
 	ret = ft5216_send_command(chip, command, 2, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
@@ -380,8 +348,7 @@ static int ft5216_upgrade_prepare(struct cavan_input_chip *chip)
 	command[0] = 0xbc;
 	command[1] = 0x55;
 	ret = ft5216_send_command(chip, command, 2, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
@@ -397,15 +364,11 @@ static int ft5216_enter_upgrade_mode(struct cavan_input_chip *chip, int retry)
 
 	pr_pos_info();
 
-	while (retry--)
-	{
+	while (retry--) {
 		int ret = ft5216_send_command(chip, command, sizeof(command), 0);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			msleep(5);
-		}
-		else
-		{
+		} else {
 			msleep(10);
 			return 0;
 		}
@@ -422,14 +385,12 @@ static int ft5216_check_hardware_id(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	ret = ft5216_send_command(chip, command, sizeof(command), 2);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_send_command");
 		return ret;
 	}
 
-	if (command[0] == 0x79 && command[1] == 0x08)
-	{
+	if (command[0] == 0x79 && command[1] == 0x08) {
 		return 0;
 	}
 
@@ -461,8 +422,7 @@ static int ft5216_firmware_reset(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	ret = ft5216_send_command_simple(chip, 0x07);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_send_command_simple");
 		return ret;
 	}
@@ -477,8 +437,7 @@ static u8 ft5216_firmware_calculate_ecc(u8 ecc, const u8 *buff, size_t size)
 {
 	const u8 *buff_end = buff + size;
 
-	while (buff < buff_end)
-	{
+	while (buff < buff_end) {
 		ecc ^= *buff++;
 	}
 
@@ -498,29 +457,25 @@ static int ft5216_firmware_upgrade(struct cavan_input_chip *chip, struct cavan_f
 	pr_bold_info("firmware old version = 0x%02x\n", ft5216_read_firmware_id(chip));
 
 	ret = ft5216_upgrade_prepare(chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_upgrade_prepare");
 		return ret;
 	}
 
 	ret = ft5216_enter_upgrade_mode(chip, 10);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_enter_upgrade_mode");
 		return ret;
 	}
 
 	ret = ft5216_check_hardware_id(chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_check_hardware_id");
 		return ret;
 	}
 
 	ret = ft5216_firmware_erase_app(chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_firmware_erase_app");
 		return ret;
 	}
@@ -533,23 +488,19 @@ static int ft5216_firmware_upgrade(struct cavan_input_chip *chip, struct cavan_f
 
 	pr_green_info("Start write block data");
 
-	while (1)
-    {
+	while (1) {
 		rdlen = cavan_firmware_fill(fw, block.data, sizeof(block.data), 8, 5000);
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_red_info("cavan_firmware_fill");
 			return rdlen;
 		}
 
-		if (rdlen == 0)
-		{
+		if (rdlen == 0) {
 			break;
 		}
 
 		ret = ft5216_firmware_write_block(chip, &block, addr, rdlen);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("i2c_master_recv Step 5:1");
 			return ret;
 		}
@@ -563,18 +514,15 @@ static int ft5216_firmware_upgrade(struct cavan_input_chip *chip, struct cavan_f
 	pr_green_info("Write block data complete");
 	pr_green_info("Start write last 6 byte");
 
-	for (addr = 0x6ffa; addr < 0x6ffa + 6; addr++)
-	{
+	for (addr = 0x6ffa; addr < 0x6ffa + 6; addr++) {
 		rdlen = cavan_firmware_read(fw, block.data, 1, 0, 5000);
-		if (rdlen < 1)
-		{
+		if (rdlen < 1) {
 			pr_red_info("cavan_firmware_fill");
 			return rdlen < 0 ? rdlen : -EFAULT;
 		}
 
 		ret = ft5216_firmware_write_block(chip, &block, addr, 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("ft5216_firmware_write_data");
 			return ret;
 		}
@@ -587,23 +535,20 @@ static int ft5216_firmware_upgrade(struct cavan_input_chip *chip, struct cavan_f
 	pr_green_info("Write last 6 byte complete");
 
 	ret = ft5216_firmware_read_ecc(chip, &ecc_read);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_firmware_read_ecc");
 		return ret;
 	}
 
 	pr_bold_info("ecc = 0x%02x, ecc_read = 0x%02x", ecc, ecc_read);
 
-	if (ecc != ecc_read)
-	{
+	if (ecc != ecc_read) {
 		pr_red_info("ecc not match");
 		return -EINVAL;
 	}
 
 	ret = ft5216_firmware_reset(chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("ft5216_firmware_reset");
 		return ret;
 	}
@@ -625,16 +570,14 @@ static ssize_t ft5216_ts_calibration(struct cavan_input_device *dev, char *buff,
 
 	pr_pos_info();
 
-	for (i = 0; i < 5; i++)
-	{
+	for (i = 0; i < 5; i++) {
 		ft5216_set_power(chip, false);
 		ft5216_set_power(chip, true);
 
 		msleep(100);
 
 		ret = chip->master_send(chip, data, sizeof(data));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("i2c_master_send");
 			return ret;
 		}
@@ -642,23 +585,20 @@ static ssize_t ft5216_ts_calibration(struct cavan_input_device *dev, char *buff,
 		msleep(1000);
 
 		ret = chip->master_send(chip, data, 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("i2c_master_send");
 			return ret;
 		}
 
 		ret = chip->master_recv(chip, &value, 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("i2c_master_recv");
 			return ret;
 		}
 
 		pr_bold_info("value[%d] = %d", i, value);
 
-		if (value == 0)
-		{
+		if (value == 0) {
 			return 0;
 		}
 	}
@@ -666,8 +606,7 @@ static ssize_t ft5216_ts_calibration(struct cavan_input_device *dev, char *buff,
 	return -EFAULT;
 }
 
-static struct cavan_ts_touch_key ft5216_touch_keys[] =
-{
+static struct cavan_ts_touch_key ft5216_touch_keys[] = {
 #if CONFIG_CAVAN_LCD_WIDTH == 480
 	{
 		.code = KEY_MENU,
@@ -675,15 +614,13 @@ static struct cavan_ts_touch_key ft5216_touch_keys[] =
 		.y = 900,
 		.width = 120,
 		.height = 60,
-	},
-	{
+	}, {
 		.code = KEY_HOME,
 		.x = 240,
 		.y = 900,
 		.width = 120,
 		.height = 60,
-	},
-	{
+	}, {
 		.code = KEY_BACK,
 		.x = 400,
 		.y = 900,
@@ -697,15 +634,13 @@ static struct cavan_ts_touch_key ft5216_touch_keys[] =
 		.y = 513,
 		.width = 120,
 		.height = 60,
-	},
-	{
+	}, {
 		.code = KEY_HOME,
 		.x = 170,
 		.y = 513,
 		.width = 120,
 		.height = 60,
-	},
-	{
+	}, {
 		.code = KEY_BACK,
 		.x = 290,
 		.y = 513,
@@ -721,8 +656,7 @@ static ssize_t ft5216_chip_read_firmware_id(struct cavan_input_chip *chip, char 
 	u8 vendor, version;
 
 	ret = ft5216_read_vendor_id(chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
@@ -730,8 +664,7 @@ static ssize_t ft5216_chip_read_firmware_id(struct cavan_input_chip *chip, char 
 	vendor = ret;
 
 	ret = ft5216_read_firmware_id(chip);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_register");
 		return ret;
 	}
@@ -762,8 +695,7 @@ static int ft5216_input_chip_probe(struct cavan_input_chip *chip)
 	struct cavan_input_device *dev;
 
 	data = kzalloc(sizeof(struct cavan_ft5216_driver_data), GFP_KERNEL);
-	if (data == NULL)
-	{
+	if (data == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -786,8 +718,7 @@ static int ft5216_input_chip_probe(struct cavan_input_chip *chip)
 	dev->calibration = ft5216_ts_calibration;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_data;
 	}
@@ -806,16 +737,14 @@ static int ft5216_input_chip_probe(struct cavan_input_chip *chip)
 	dev->event_handler = ft5216_proximity_event_handler;
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_cavan_input_device_unregister_ts;
 	}
 #endif
 
-	ret = device_create_file(&((struct i2c_client *)chip->bus_data)->dev, &dev_attr_firmware_id);
-	if (ret < 0)
-	{
+	ret = device_create_file(&((struct i2c_client *) chip->bus_data)->dev, &dev_attr_firmware_id);
+	if (ret < 0) {
 		pr_red_info("device_create_file");
 		goto out_cavan_input_device_unregister_proxy;
 	}
@@ -837,7 +766,7 @@ static void ft5216_input_chip_remove(struct cavan_input_chip *chip)
 {
 	struct cavan_ft5216_driver_data *data = cavan_input_chip_get_dev_data(chip);
 
-	device_remove_file(&((struct i2c_client *)chip->bus_data)->dev, &dev_attr_firmware_id);
+	device_remove_file(&((struct i2c_client *) chip->bus_data)->dev, &dev_attr_firmware_id);
 #if SUPPORT_PROXIMITY_SENSOR
 	cavan_input_device_unregister(chip, &data->prox.dev);
 #endif
@@ -853,8 +782,7 @@ static int ft5216_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(struct cavan_input_chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -886,8 +814,7 @@ static int ft5216_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->read_firmware_id = ft5216_chip_read_firmware_id;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_chip;
 	}
@@ -911,14 +838,12 @@ static int ft5216_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id ft5216_ts_id_table[] =
-{
+static const struct i2c_device_id ft5216_ts_id_table[] = {
 	{FT5216_DEVICE_NAME, 0}, {}
 };
 
 #ifdef CONFIG_OF
-static struct of_device_id ft5216_match_table[] =
-{
+static struct of_device_id ft5216_match_table[] = {
 	{
 		.compatible = "focaltech,ft5216"
 	},
@@ -926,14 +851,12 @@ static struct of_device_id ft5216_match_table[] =
 };
 #endif
 
-static struct i2c_driver ft5216_ts_driver =
-{
+static struct i2c_driver ft5216_ts_driver = {
 	.probe = ft5216_i2c_probe,
 	.remove = ft5216_i2c_remove,
 
 	.id_table = ft5216_ts_id_table,
-	.driver =
-	{
+	.driver = {
 		.name = FT5216_DEVICE_NAME,
 		.owner = THIS_MODULE,
 #ifdef CONFIG_OF

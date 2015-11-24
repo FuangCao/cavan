@@ -28,8 +28,7 @@ static int screen_mirror_client_main(int argc, char *argv[])
 	return screen_mirror_client(buff, text_len(buff));
 }
 
-static struct cavan_command_map map[] =
-{
+static struct cavan_command_map map[] = {
 	{
 		.name = "service",
 		.main_func = screen_mirror_service_main

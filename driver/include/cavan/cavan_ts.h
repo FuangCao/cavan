@@ -10,8 +10,7 @@
 #include <linux/fb.h>
 #endif
 
-struct cavan_ts_touch_key
-{
+struct cavan_ts_touch_key {
 	int code;
 	int x;
 	int y;
@@ -19,8 +18,7 @@ struct cavan_ts_touch_key
 	int height;
 };
 
-struct cavan_ts_device
-{
+struct cavan_ts_device {
 	struct cavan_input_device dev;
 
 	u32 xmax, xmin;
@@ -42,8 +40,7 @@ struct cavan_ts_device
 #endif
 };
 
-struct cavan_i2c_request
-{
+struct cavan_i2c_request {
 	int addr;
 	int read;
 	void *data;

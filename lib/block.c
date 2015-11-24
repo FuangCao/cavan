@@ -21,8 +21,7 @@
 #include <cavan/block.h>
 #include <cavan/android.h>
 
-static struct cavan_part cavan_part_imx6ms600[] =
-{
+static struct cavan_part cavan_part_imx6ms600[] = {
 	{ "boot", "/dev/block/mmcblk3p1" },
 	{ "recovery", "/dev/block/mmcblk3p2" },
 	{ "data", "/dev/block/mmcblk3p4" },
@@ -32,8 +31,7 @@ static struct cavan_part cavan_part_imx6ms600[] =
 	{ "misc", "/dev/block/mmcblk3p8" },
 };
 
-static struct cavan_part_table cavan_part_tables[] =
-{
+static struct cavan_part_table cavan_part_tables[] = {
 	{
 		.name = "imx6ms600",
 		.part_count = NELEM(cavan_part_imx6ms600),

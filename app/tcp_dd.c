@@ -19,8 +19,7 @@ struct cavan_tcp_dd_image {
 	const char *pathname;
 };
 
-static const struct option command_long_option[] =
-{
+static const struct option command_long_option[] = {
 	{
 		.name = "help",
 		.has_arg = no_argument,

@@ -637,8 +637,7 @@ static int complete_operation_const(const struct calculator_operator_descriptor 
 	return double_stack_push(stack_operand, result);
 }
 
-static const struct calculator_operator_descriptor operator_descs[] =
-{
+static const struct calculator_operator_descriptor operator_descs[] = {
 	{
 		.symbols = { "+", "add", NULL },
 		.id = OPERATOR_ADD_ID,

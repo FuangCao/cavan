@@ -10,10 +10,8 @@ static int cavan_input_thread_handler(void *data)
 
 	mutex_lock(&thread->lock);
 
-	while (1)
-	{
-		while (thread->state == CAVAN_INPUT_THREAD_STATE_SUSPEND)
-		{
+	while (1) {
+		while (thread->state == CAVAN_INPUT_THREAD_STATE_SUSPEND) {
 			pr_green_info("cavan input thread %s suspend", thread->name);
 
 			set_current_state(TASK_UNINTERRUPTIBLE);
@@ -22,44 +20,37 @@ static int cavan_input_thread_handler(void *data)
 			mutex_lock(&thread->lock);
 		}
 
-		if (thread->state == CAVAN_INPUT_THREAD_STATE_STOPPING)
-		{
+		if (thread->state == CAVAN_INPUT_THREAD_STATE_STOPPING) {
 			break;
 		}
 
 		thread->state = CAVAN_INPUT_THREAD_STATE_RUNNING;
 		pr_green_info("cavan input thread %s running", thread->name);
 
-		if (thread->prepare)
-		{
+		if (thread->prepare) {
 			thread->prepare(thread, true);
 		}
 
 		err_count = 0;
 
-		while (1)
-		{
+		while (1) {
 			mutex_unlock(&thread->lock);
 			thread->wait_for_event(thread);
 			mutex_lock(&thread->lock);
 
-			if (unlikely(thread->state != CAVAN_INPUT_THREAD_STATE_RUNNING))
-			{
+			if (unlikely(thread->state != CAVAN_INPUT_THREAD_STATE_RUNNING)) {
 				break;
 			}
 
-			if (unlikely(thread->event_handle(thread) < 0))
-			{
+			if (unlikely(thread->event_handle(thread) < 0)) {
 				err_count++;
 				pr_red_info("err_count = %d", err_count);
 
-				if (err_count < 20)
-				{
+				if (err_count < 20) {
 					continue;
 				}
 
-				if (thread->error_handle)
-				{
+				if (thread->error_handle) {
 					thread->error_handle(thread);
 				}
 
@@ -68,8 +59,7 @@ static int cavan_input_thread_handler(void *data)
 			}
 		}
 
-		if (thread->prepare)
-		{
+		if (thread->prepare) {
 			thread->prepare(thread, false);
 		}
 	}
@@ -89,20 +79,16 @@ static int cavan_input_thread_prepare(struct cavan_input_thread *thread, enum ca
 
 	mutex_lock(&thread->lock);
 
-	if (thread->task == NULL)
-	{
+	if (thread->task == NULL) {
 		thread->task = kthread_create(cavan_input_thread_handler, thread, thread->name);
-		if (thread->task == NULL)
-		{
+		if (thread->task == NULL) {
 			pr_red_info("kthread_create");
 			mutex_unlock(&thread->lock);
 			return -EFAULT;
 		}
 
-		if (thread->priority > 0)
-		{
-			struct sched_param param =
-			{
+		if (thread->priority > 0) {
+			struct sched_param param = {
 				.sched_priority = thread->priority
 			};
 
@@ -123,16 +109,13 @@ void cavan_input_thread_stop(struct cavan_input_thread *thread)
 
 	pr_pos_info();
 
-	if (thread->task && thread->state != CAVAN_INPUT_THREAD_STATE_STOPPED)
-	{
+	if (thread->task && thread->state != CAVAN_INPUT_THREAD_STATE_STOPPED) {
 		thread->state = CAVAN_INPUT_THREAD_STATE_STOPPING;
 
-		while (thread->state != CAVAN_INPUT_THREAD_STATE_STOPPED)
-		{
+		while (thread->state != CAVAN_INPUT_THREAD_STATE_STOPPED) {
 			pr_func_info("thread name = %s", thread->name);
 
-			if (thread->stop)
-			{
+			if (thread->stop) {
 				mutex_unlock(&thread->lock);
 				thread->stop(thread);
 				mutex_lock(&thread->lock);
@@ -144,9 +127,7 @@ void cavan_input_thread_stop(struct cavan_input_thread *thread)
 			msleep(1);
 			mutex_lock(&thread->lock);
 		}
-	}
-	else
-	{
+	} else {
 		thread->state = CAVAN_INPUT_THREAD_STATE_STOPPED;
 	}
 
@@ -157,27 +138,22 @@ EXPORT_SYMBOL_GPL(cavan_input_thread_stop);
 
 int cavan_input_thread_set_state(struct cavan_input_thread *thread, enum cavan_input_thread_state state)
 {
-	if (state == CAVAN_INPUT_THREAD_STATE_RUNNING)
-	{
+	if (state == CAVAN_INPUT_THREAD_STATE_RUNNING) {
 		int ret;
 
 		ret = cavan_input_thread_prepare(thread, state);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("cavan_input_thread_prepare");
 			return ret;
 		}
 
 		wake_up_process(thread->task);
-	}
-	else
-	{
+	} else {
 		int locked = mutex_trylock(&thread->lock);
 
 		thread->state = state;
 
-		if (locked)
-		{
+		if (locked) {
 			mutex_unlock(&thread->lock);
 		}
 	}
@@ -191,8 +167,7 @@ int cavan_input_thread_init(struct cavan_input_thread *thread, const char *forma
 {
 	va_list ap;
 
-	if (thread->event_handle == NULL || thread->wait_for_event == NULL)
-	{
+	if (thread->event_handle == NULL || thread->wait_for_event == NULL) {
 		pr_red_info("thread->event_handle == NULL || thread->wait_for_event == NULL");
 		return -EINVAL;
 	}
@@ -201,8 +176,7 @@ int cavan_input_thread_init(struct cavan_input_thread *thread, const char *forma
 	thread->name = kvasprintf(GFP_KERNEL, format, ap);
 	va_end(ap);
 
-	if (thread->name == NULL)
-	{
+	if (thread->name == NULL) {
 		pr_red_info("kvasprintf");
 		return -ENOMEM;
 	}

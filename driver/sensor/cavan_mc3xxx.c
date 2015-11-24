@@ -51,31 +51,27 @@ enum mc3xxx_register_map
 };
 
 #pragma pack(1)
-struct mc3xxx_data_package_low
-{
+struct mc3xxx_data_package_low {
 	s8 x;
 	s8 y;
 	s8 z;
 };
 
-struct mc3xxx_data_package_high
-{
+struct mc3xxx_data_package_high {
 	s16 x;
 	s16 y;
 	s16 z;
 };
 #pragma pack()
 
-struct mc3xxx_rate_map_node
-{
+struct mc3xxx_rate_map_node {
 	u8 value;
 	u32 delay;
 };
 
 static const char *mc3xxx_get_chip_name_by_id(u8 id)
 {
-	switch (id)
-	{
+	switch (id) {
 	case MC3XXX_PCODE_3210:
 		return "MC3210";
 	case MC3XXX_PCODE_3230:
@@ -112,27 +108,23 @@ static int mc3xxx_sensor_chip_readid(struct cavan_input_chip *chip)
 	static u8 addrs[] = {0x4C, 0x6C, 0x4E, 0x6D, 0x6E, 0x6F};
 	struct i2c_client *client = cavan_input_chip_get_bus_data(chip);
 
-	for (i = 0; i < ARRAY_SIZE(addrs); i++)
-	{
+	for (i = 0; i < ARRAY_SIZE(addrs); i++) {
 		pr_bold_info("Try i2c addr 0x%02x", addrs[i]);
 
 		value = REG_CHIP_ID;
 
 		ret = cavan_input_master_send_to_i2c(client, addrs[i], &value, 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			continue;
 		}
 
 		ret = cavan_input_master_recv_from_i2c(client, addrs[i], &value, 1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			continue;
 		}
 
 		name = mc3xxx_get_chip_name_by_id(value);
-		if (name)
-		{
+		if (name) {
 			chip->name = name;
 			chip->devid = value;
 			client->addr = addrs[i];
@@ -154,19 +146,16 @@ static int mc3xxx_sensor_chip_set_active(struct cavan_input_chip *chip, bool ena
 	u8 value;
 
 	ret = mc3xxx_sensor_chip_set_active_base(chip, false);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("mc3xxx_sensor_chip_set_active_base");
 		return ret;
 	}
 
-	if (enable == false)
-	{
+	if (enable == false) {
 		return 0;
 	}
 
-	switch (chip->devid)
-	{
+	switch (chip->devid) {
 	case MC3XXX_PCODE_3230:
 	case MC3XXX_PCODE_3430:
 	case MC3XXX_PCODE_3430N:
@@ -200,8 +189,7 @@ static int mc3xxx_acceleration_set_delay(struct cavan_input_device *dev, unsigne
 	u8 value;
 	struct cavan_input_chip *chip = dev->chip;
 
-	switch (chip->devid)
-	{
+	switch (chip->devid) {
 	case MC3XXX_PCODE_3510B:
 	case MC3XXX_PCODE_3510C:
 	case MC3XXX_PCODE_3530B:
@@ -228,8 +216,7 @@ static int mc3xxx_acceleration_event_handler_high(struct cavan_input_chip *chip,
 	struct mc3xxx_data_package_high package;
 
 	ret = chip->read_data(chip, REG_XOUT_EX_L, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_data");
 		return ret;
 	}
@@ -245,8 +232,7 @@ static int mc3xxx_acceleration_event_handler_low(struct cavan_input_chip *chip, 
 	struct mc3xxx_data_package_low package;
 
 	ret = chip->read_data(chip, REG_XOUT, &package, sizeof(package));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("read_data");
 		return ret;
 	}
@@ -265,8 +251,7 @@ static int mc3xxx_input_chip_probe(struct cavan_input_chip *chip)
 	pr_pos_info();
 
 	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -285,8 +270,7 @@ static int mc3xxx_input_chip_probe(struct cavan_input_chip *chip)
 	dev->poll_delay = 200;
 	dev->set_delay = mc3xxx_acceleration_set_delay;
 
-	switch (chip->devid)
-	{
+	switch (chip->devid) {
     case MC3XXX_PCODE_3230:
     case MC3XXX_PCODE_3430:
     case MC3XXX_PCODE_3430N:
@@ -308,8 +292,7 @@ static int mc3xxx_input_chip_probe(struct cavan_input_chip *chip)
 	}
 
 	ret = cavan_input_device_register(chip, dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_device_register");
 		goto out_kfree_sensor;
 	}
@@ -339,8 +322,7 @@ static int mc3xxx_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	pr_pos_info();
 
 	chip = kzalloc(sizeof(*chip), GFP_KERNEL);
-	if (chip == NULL)
-	{
+	if (chip == NULL) {
 		pr_red_info("kzalloc");
 		return -ENOMEM;
 	}
@@ -361,8 +343,7 @@ static int mc3xxx_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->remove = mc3xxx_input_chip_remove;
 
 	ret = cavan_input_chip_register(chip, &client->dev);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_input_chip_register");
 		goto out_kfree_chip;
 	}
@@ -386,25 +367,21 @@ static int mc3xxx_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id mc3xxx_id[] =
-{
+static const struct i2c_device_id mc3xxx_id[] = {
 	{MC3XXX_DEVICE_NAME, 0}, {}
 };
 
 MODULE_DEVICE_TABLE(i2c, mc3xxx_id);
 
-static struct of_device_id mc3xxx_match_table[] =
-{
+static struct of_device_id mc3xxx_match_table[] = {
 	{
 		.compatible = "mc," MC3XXX_DEVICE_NAME
 	},
 	{}
 };
 
-static struct i2c_driver mc3xxx_driver =
-{
-	.driver =
-	{
+static struct i2c_driver mc3xxx_driver = {
+	.driver = {
 		.name = MC3XXX_DEVICE_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table = mc3xxx_match_table,

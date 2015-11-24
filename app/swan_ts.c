@@ -328,8 +328,7 @@ static int ft5406_firmware_upgrade_main(int argc, char *argv[])
 	return ret;
 }
 
-static struct cavan_command_map cmd_map[] =
-{
+static struct cavan_command_map cmd_map[] = {
 	{"calibration",		swan_ts_calication_main},
 	{"read_registers",	swan_ts_read_registers_main},
 	{"poll_registers",	swan_ts_poll_registers_main,},

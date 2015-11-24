@@ -4,8 +4,7 @@
 
 #define CAVAN_FW_FLAG_USER	(1 << 0)
 
-struct cavan_firmware
-{
+struct cavan_firmware {
 	int closed;
 	struct mutex lock;
 	void *private_data;

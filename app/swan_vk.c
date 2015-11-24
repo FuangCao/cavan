@@ -4,8 +4,7 @@
 #include <cavan/swan_vk.h>
 #include <cavan/command.h>
 
-static const struct cavan_command_map cmd_map_table[] =
-{
+static const struct cavan_command_map cmd_map_table[] = {
 	{
 		.name = "server",
 		.main_func = swan_vk_server_main
