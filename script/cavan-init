@@ -300,34 +300,9 @@ EOF
 
 function install_applications()
 {
-	local line app_list
-
 	dpkg --configure -a || return 1
 	apt-get update --fix-missing || return 1
-
-	while read line
-	do
-		for app in ${line}
-		do
-			[[ "${app}" == *'#'* ]] && break
-			app_list="${app_list} ${app}"
-		done
-	done < ${FILE_APP_CONFIG}
-
-	: > ${FILE_APP_FEILED}
-
-	for app in ${app_list}
-	do
-		pr_title "Install application ${app}"
-		apt-get install -y ${app} ||
-		{
-			pr_red_info "Install application '${app}' failed"
-			echo ${app} >> ${FILE_APP_FEILED}
-		}
-	done
-
-	mkdir -pv /etc/cavan || return 1
-	cp ${FILE_APP_FEILED} /etc/cavan -av || return 1
+	apt-get install -fy --force-yes --show-progress $(cat "${FILE_APP_CONFIG}" | sed 's/\(.*\)#.*$/\1/g') || return 1
 }
 
 function install_debin_packages()
