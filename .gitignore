@@ -11,6 +11,7 @@
 *.lo
 *.la
 *~
+*Zone.Identifier*
 /libtool
 /config.*
 /*.patch

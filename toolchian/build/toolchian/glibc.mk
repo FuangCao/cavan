@@ -8,8 +8,9 @@ GLIBC_OPTION =	--prefix=/usr \
 				--enable-kernel=$(LOWEST_KERNEL_VERSION) \
 				--with-tls \
 				--with-__thread \
-				--with-binutils=$(TOOLCHIAN_PATH) \
 				--with-headers=$(SYSROOT_PATH)/usr/include
+
+# GLIBC_OPTION += --with-binutils=$(TOOLCHIAN_PATH)
 
 GLIBC_CONFIGPARMS = "install_root=$(SYSROOT_PATH)"
 

@@ -90,7 +90,7 @@ define apply_patchs
 	for fn in $(wildcard $(PATCH_PATH)/$1*.patch); \
 	do \
 		echo "Apply patch $${fn} => $2"; \
-		patch -p1 -i $${fn}; \
+		patch -Np1 -i $${fn}; \
 	done; \
 }
 endef
