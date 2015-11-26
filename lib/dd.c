@@ -87,7 +87,7 @@ int cavan_dd_base(const char *file_in, const char *file_out, off_t offset_in, of
 		return -1;
 	}
 
-	fd_out = open(file_out, O_WRONLY | O_CREAT | O_SYNC | O_BINARY | flags, 0777);
+	fd_out = open(file_out, O_WRONLY | O_CREAT /* | O_SYNC */ | O_BINARY | flags, 0777);
 	if (fd_out < 0) {
 		print_error("open output file");
 		ret = -1;
