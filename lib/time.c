@@ -84,3 +84,41 @@ void cavan_time_parse(unsigned long timestamp, struct cavan_time *time, u32 base
 	time->minute = remain % CAVAN_TIME_SECONDS_PER_HOUR / CAVAN_TIME_SECONDS_PER_MIN;
 	time->second = timestamp % CAVAN_TIME_SECONDS_PER_MIN;
 }
+
+void cavan_second2time_simple(ulong second, struct cavan_time_simple *time)
+{
+	time->second = second % 60;
+	second /= 60;
+	time->minute = second % 60;
+	second /= 60;
+
+	if (second < 100) {
+		time->hour = second;
+		time->day = 0;
+	} else {
+		time->hour = second % 24;
+		time->day = second / 24;
+	}
+}
+
+char *cavan_time2text_simple(struct cavan_time_simple *time, char *buff, size_t size)
+{
+	char *buff_end = buff + size;
+
+	if (time->day) {
+		buff += snprintf(buff, buff_end - buff, "%d-", time->day);
+	}
+
+	buff += snprintf(buff, buff_end - buff, "%02d:%02d:%02d", time->hour, time->minute, time->second);
+
+	return buff;
+}
+
+char *cavan_time2text_simple2(ulong second, char *buff, size_t size)
+{
+	struct cavan_time_simple time;
+
+	cavan_second2time_simple(second, &time);
+
+	return cavan_time2text_simple(&time, buff, size);
+}

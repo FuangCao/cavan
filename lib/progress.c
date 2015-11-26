@@ -41,7 +41,7 @@ static void progress_bar_fflush(struct progress_bar *bar)
 	char buff[1024];
 	char *p = buff, *p_end = p + sizeof(buff);
 #if BAR_SHOW_TIME
-	u32 used, remain;
+	u32 remain;
 #endif
 
 	*p++ = '[';
@@ -69,18 +69,17 @@ static void progress_bar_fflush(struct progress_bar *bar)
 	*p++ = ']';
 
 	if (bar->speed >= 0) {
+#if BAR_SHOW_TIME
+		if (bar->speed > 0) {
+			*p++ = ' ';
+			remain = (bar->total - bar->current) / bar->speed;
+			p = cavan_time2text_simple2(remain, p, p_end - p);
+		}
+#endif
 
 		*p++ = ' ';
 		p = mem_speed_tostring(bar->speed, p, p_end - p - 2);
 	}
-
-#if BAR_SHOW_TIME
-	if (bar->speed > 0) {
-		used = progress_bar_get_time_consume_ns(bar) / 1000000000UL;
-		remain = (bar->total - bar->current) / bar->speed;
-		p += snprintf(p, p_end - p, " (%d/%d)", remain, used + remain);
-	}
-#endif
 
 	progress_bar_show(bar, buff, p, p_end);
 }
@@ -91,11 +90,13 @@ static void progress_bar_fflush2(struct progress_bar *bar)
 	char *p = buff, *p_end = p + sizeof(buff);
 	double time = progress_bar_get_time_consume_ns(bar);
 
+	p = cavan_time2text_simple2(NS_SEC(time), p, p_end - p);
+	*p++ = ' ';
 	p = mem_speed_tostring(bar->speed, p, p_end - p);
 	*p++ = ' ';
 	*p++ = '(';
 	p = mem_size_tostring(bar->current, p, p_end - p);
-	p += snprintf(p, p_end - p, " in %lf ms)", time / 1000000UL);
+	*p++ = ')';
 
 	progress_bar_show(bar, buff, p, p_end);
 }

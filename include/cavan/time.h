@@ -60,11 +60,22 @@ struct cavan_time {
 	u8 wday;	// 0 ~ 6
 };
 
+struct cavan_time_simple {
+	u32 day;
+	u8 hour;
+	u8 minute;
+	u8 second;
+};
+
 bool cavan_time_year_is_leap(u32 year);
 u32 cavan_time_get_days_of_year(u32 year, u8 month, u8 day);
 u32 cavan_time_get_seconds_of_day(u8 hour, u8 min, u8 sec);
 unsigned long cavan_time_build(const struct cavan_time *time, u32 base_days);
-void cavan_time_parse(unsigned long timestamp, struct cavan_time *time, u32 base_days);
+void cavan_time_parse(ulong timestamp, struct cavan_time *time, u32 base_days);
+
+void cavan_second2time_simple(ulong second, struct cavan_time_simple *time);
+char *cavan_time2text_simple(struct cavan_time_simple *time, char *buff, size_t size);
+char *cavan_time2text_simple2(ulong second, char *buff, size_t size);
 
 static inline unsigned long cavan_time_build_1970(const struct cavan_time *time)
 {

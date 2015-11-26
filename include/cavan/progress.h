@@ -10,7 +10,7 @@
 #define BAR_FULL_CHAR		'H'
 
 #if BAR_SHOW_TIME
-#define BAR_CONTENT_MIN		sizeof("[ 100% ] 1024.00 Byte/s (999999/999999)")
+#define BAR_CONTENT_MIN		sizeof("[ 100% ] 00:00:00 1024.00 Byte/s")
 #else
 #define BAR_CONTENT_MIN		sizeof("[ 100% ] 1024.00 Byte/s")
 #endif
