@@ -28,8 +28,9 @@ static void show_usage(const char *command)
 	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
 	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
 	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
-	println("-w, -W, -s, -S\t\t\t%s", cavan_help_message_send_file);
+	println("-w, -W\t\t\t\t%s", cavan_help_message_send_file);
 	println("-r, -R\t\t\t\t%s", cavan_help_message_recv_file);
+	println("-s, -S, --same\t\t\t%s", "local and remote use same path");
 }
 
 int main(int argc, char *argv[])
@@ -108,12 +109,19 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
 		}, {
+			.name = "same",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_SAME,
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	int i;
 	int ret;
 	int count;
+	char *filename;
+	bool same = false;
 	struct network_url url;
 	struct network_file_request file_req;
 	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
@@ -170,8 +178,6 @@ int main(int argc, char *argv[])
 
 		case 'w':
 		case 'W':
-		case 's':
-		case 'S':
 			handler = tcp_dd_send_file;
 			break;
 
@@ -200,6 +206,12 @@ int main(int argc, char *argv[])
 			url.protocol = optarg;
 			break;
 
+		case 's':
+		case 'S':
+		case CAVAN_COMMAND_OPTION_SAME:
+			same = true;
+			break;
+
 		default:
 			show_usage(argv[0]);
 			return -EINVAL;
@@ -217,29 +229,21 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	if (count > 1) {
-		char *pname;
-
-		pname = text_path_cat(file_req.dest_file, sizeof(file_req.dest_file), argv[--argc], NULL);
-
-		for (i = optind; i < argc; i++) {
-			text_basename_base(pname, argv[i]);
-			text_copy(file_req.src_file, argv[i]);
-			file_req.src_offset = 0;
-			file_req.dest_offset = 0;
-			file_req.size = 0;
-
-			println("%s => %s", argv[i], file_req.dest_file);
-
-			ret = handler(&url, &file_req);
-			if (ret < 0) {
-				pr_red_info("Copy file %s to %s failed!", argv[i], file_req.dest_file);
-				return ret;
-			}
-		}
+	if (count == 1 || same) {
+		filename = NULL;
 	} else {
-		file_abs_path_simple(argv[optind], file_req.src_file, sizeof(file_req.src_file));
-		strncpy(file_req.dest_file, file_req.src_file, sizeof(file_req.dest_file));
+		filename = text_path_cat(file_req.dest_file, sizeof(file_req.dest_file), argv[--argc], NULL);
+	}
+
+	for (i = optind; i < argc; i++) {
+		if (filename) {
+			text_basename_base(filename, argv[i]);
+			text_copy(file_req.src_file, argv[i]);
+		} else {
+			file_abs_path_simple(argv[i], file_req.src_file, sizeof(file_req.src_file), true);
+			strncpy(file_req.dest_file, file_req.src_file, sizeof(file_req.dest_file));
+		}
+
 		file_req.src_offset = 0;
 		file_req.dest_offset = 0;
 		file_req.size = 0;
@@ -248,7 +252,7 @@ int main(int argc, char *argv[])
 
 		ret = handler(&url, &file_req);
 		if (ret < 0) {
-			pr_red_info("Copy file %s to %s failed!", file_req.src_file, file_req.dest_file);
+			pr_red_info("Failed to copy file %s to %s", file_req.src_file, file_req.dest_file);
 			return ret;
 		}
 	}

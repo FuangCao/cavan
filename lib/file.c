@@ -3060,13 +3060,22 @@ int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc)
 	return 0;
 }
 
-char *file_abs_path_simple(char *rel_path, char *buff, size_t size)
+char *file_abs_path_simple(char *rel_path, char *buff, size_t size, bool logical)
 {
 	char *buff_end = buff + size;
 
-	if (rel_path[0] != '/' && getcwd(buff, size)) {
-		println("cwd = %s", buff);
-		buff += strlen(buff);
+	if (rel_path[0] != '/') {
+		const char *pwd;
+
+		if (logical && (pwd = getenv("PWD"))) {
+			buff = text_ncopy(buff, pwd, size);
+		} else if (getcwd(buff, size)) {
+			buff += strlen(buff);
+		}
+
+		if (*buff != '/' && buff < buff_end) {
+			*buff++ = '/';
+		}
 	}
 
 	return text_ncopy(buff, rel_path, buff_end - buff);
