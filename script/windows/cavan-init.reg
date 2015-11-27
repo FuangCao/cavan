@@ -3,4 +3,8 @@ REGEDIT4
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer]
 "Link"=hex:00,00,00,00
 
-[HKEY_CLASSES_ROOT\Lnkfile] "IsShortcut"=-
+[HKEY_CLASSES_ROOT\Lnkfile]
+"IsShortcut"=-
+
+[HKEY_CLASSES_ROOT\piffile]
+"IsShortcut"=-
