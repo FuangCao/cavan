@@ -106,10 +106,12 @@ char *cavan_time2text_simple(struct cavan_time_simple *time, char *buff, size_t 
 	char *buff_end = buff + size;
 
 	if (time->day) {
-		buff += snprintf(buff, buff_end - buff, "%d-", time->day);
+		buff += snprintf(buff, buff_end - buff, "%d-%02d:%02d:%02d", time->day, time->hour, time->minute, time->second);
+	} else if (time->hour) {
+		buff += snprintf(buff, buff_end - buff, "%02d:%02d:%02d", time->hour, time->minute, time->second);
+	} else {
+		buff += snprintf(buff, buff_end - buff, "%02d:%02d", time->minute, time->second);
 	}
-
-	buff += snprintf(buff, buff_end - buff, "%02d:%02d:%02d", time->hour, time->minute, time->second);
 
 	return buff;
 }
