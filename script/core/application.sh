@@ -306,7 +306,7 @@ function cavan-mm-push()
 
 		export KERNEL_NAME KERNEL_HOME KERNEL_CONFIG
 	else
-		file_list=$(mm -j${MAKE_JOBS} | cavan-tee | awk -F ' *: *'  '/^(Install|target Symbolic):/ { print $2 }' | uniq; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
+		file_list=$(mm -j${MAKE_JOBS} | cavan-tee | awk -F ' *: *'  '/^(Install|target Symbolic):/ { print $2 }' | sed 's/.*(\(\S.*\S\)).*$/\1/g' | uniq; [ "${PIPESTATUS[0]}" = "0" ]) || return 1
 		cavan-android-push ${file_list} || return 1
 	fi
 
