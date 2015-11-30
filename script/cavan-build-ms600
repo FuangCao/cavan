@@ -20,19 +20,14 @@ FILE_BOOT_TARGET="${GIT_PATH}/boot.img"
 FILE_ZIMAGE="${BUILD_TOP}/arch/arm/boot/zImage"
 FILE_DTB="${BUILD_TOP}/arch/arm/boot/dts/imx6dl-ms600.dtb"
 
-[ -z "${ANDROID_BUILD_TOP}" ] && ANDROID_BUILD_TOP=$(cavan-get-android-root)
-[ -z "${ANDROID_BUILD_TOP}" ] ||
+CAVAN_ANDROID_ROOT=$(cavan-get-android-root) || CAVAN_ANDROID_ROOT="${ANDROID_BUILD_TOP}"
+[ "${TARGET_PRODUCT}" = "imx6ms600" ] ||
 {
 	cavan-set-jdk-version 1.6 || exit 1
 
-	cd "${ANDROID_BUILD_TOP}" || exit 1
-
-	[ "${TARGET_PRODUCT}" = "imx6ms600" ] ||
-	{
-		source build/envsetup.sh || exit 1
-		lunch imx6ms600-user || exit 1
-	}
-
+	cd "${CAVAN_ANDROID_ROOT}" || exit 1
+	source build/envsetup.sh || exit 1
+	lunch imx6ms600-user || exit 1
 	cd - || exit 1
 }
 
@@ -123,9 +118,9 @@ then
 	} 2>${FILE_ERR} | tee ${FILE_OUT}
 elif [ -f "include/linux/kernel.h" ]
 then
-if [ -d "${ANDROID_BUILD_TOP}" ]
+if [ -d "${CAVAN_ANDROID_ROOT}" ]
 then
-	(cd ${ANDROID_BUILD_TOP} && exec_command "${MAKE} boot.img") || exit 1
+	(cd ${CAVAN_ANDROID_ROOT} && exec_command "${MAKE} boot.img") || exit 1
 	cp -av "${OUT}/boot.img" "${FILE_BOOT_TARGET}" || exit 1
 else
 	[ -f ".config" ] || exec_command "${MAKE_KERNEL} ${KERNEL_DEFCONFIG}"
