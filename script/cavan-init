@@ -37,29 +37,51 @@ CMD_CAVAN_SERVICE="${CAVAN_OUT_DEBUG}/cavan-service --start -s 0 --exec"
 NFS_RW_CONFIG="*(rw,sync,no_subtree_check)"
 NFS_RO_CONFIG="*(ro,sync,no_subtree_check)"
 
-function file_asb_directory()
+function file_abs_directory()
 {
 	cd $(dirname $1) && pwd
 }
 
-CMD_ABS_DIR="$(file_asb_directory $0)"
+CMD_ABS_DIR="$(file_abs_directory $0)"
 CMD_ABS_PATH="${CMD_ABS_DIR}/$(basename $0)"
 CORE_PATH="${CMD_ABS_DIR}/core"
 FILE_APP_CONFIG="${CORE_PATH}/applications.cfg"
 LOCAL_CAVAN_ROOT="$(dirname ${CMD_ABS_DIR})"
 LOCAL_CONFIG_PATH="${LOCAL_CAVAN_ROOT}/config"
 
-source /etc/lsb-release
-source ${CORE_PATH}/file.sh
-source ${CORE_PATH}/device.sh
-source ${CORE_PATH}/stdio.sh
-source ${CORE_PATH}/alias.sh
+source "/etc/lsb-release"
+source "${CORE_PATH}/file.sh"
+source "${CORE_PATH}/device.sh"
+source "${CORE_PATH}/stdio.sh"
+source "${CORE_PATH}/alias.sh"
 
 LOCAL_UBUNTU="${UBUNTU_PATH}-${DISTRIB_RELEASE}"
+
+USER_HAS_CAVAN="false"
+
+for username in $(ls /home)
+do
+	cat /etc/group | grep "^${username}" &&
+	{
+		[ "${username}" = "cavan" ] && USER_HAS_CAVAN="true"
+
+		if [ "${USER_LIST}" ]
+		then
+			USER_LIST="${username} ${USER_LIST}"
+		else
+			USER_LIST="${username}"
+		fi
+	}
+done
+
+echo "USER_HAS_CAVAN = ${USER_HAS_CAVAN}"
+echo "USER_LIST = ${USER_LIST}"
 
 function mount_disk()
 {
 	local mount_point disk line
+
+	[ "${USER_HAS_CAVAN}" = "true" ] || return 0
 
 	cd /dev || return 1
 
@@ -121,6 +143,8 @@ function create_mount_points()
 
 function create_symlinks()
 {
+	[ "${USER_HAS_CAVAN}" = "true" ] || return 0
+
 	cavan-symlink ${CPAN_PATH} /cpan || return 1
 	cavan-symlink ${DPAN_PATH} /dpan || return 1
 	cavan-symlink ${EPAN_PATH} /epan || return 1
@@ -137,19 +161,23 @@ function create_symlinks()
 
 function config_bashrc()
 {
-	local bashrc bashrcs
+	local bashrc username found
 
-	bashrcs="$(find /home -name ".bashrc")"
-
-	[ -z "${bashrcs}" ] && return 0
-
-	for bashrc in ${bashrcs}
+	for username in ${USER_LIST}
 	do
-		cp ${bashrc} ${FILE_BASHRC} -av
-		mv ${bashrc} ${bashrc}.bak
+		bashrc="/home/${username}"
+
+		[ -f "${bashrc}" ] &&
+		{
+			cp -av "${bashrc}" "${FILE_BASHRC}" || return 1
+			mv -v "${bashrc}" "${bashrc}.bak"
+			found="true"
+		}
 	done
 
-	mv /root/.bashrc /root/.bashrc.bak
+	[ "${found}" = "true" ] || return 0
+
+	mv -v /root/.bashrc /root/.bashrc.bak
 
 	sed -i ${FILE_BASHRC} \
 		-e 's,^\s*#\s*\(force_color_prompt=yes\),\1,g'
@@ -159,15 +187,15 @@ function config_bashrc()
 # Following is Cavan's configs
 CAVAN_HOME="/cavan"
 TOOLS_HOME="/tools"
-SSH_USER="${SSH_USER-caofuang}"
-SMB_SERVER_IP="${SMB_SERVER_IP-10.1.1.153}"
-SMB_USER="${SMB_USER-caofuang}"
-SMB_PASSWORD="${SMB_PASSWORD-CFA8888}"
-SMB_ENTRY="${SMB_ENTRY-huaserver2_caofuang}"
-JDK_VERSION="${JDK_VERSION-1.6.0_45}"
+SSH_USER="${SSH_USER-jwaoo}"
+SMB_SERVER_IP="${SMB_SERVER_IP-192.168.1.250}"
+SMB_USER="${SMB_USER-jwaoo}"
+SMB_PASSWORD="${SMB_PASSWORD-server}"
+SMB_ENTRY="${SMB_ENTRY-work}"
+JDK_VERSION="${JDK_VERSION-1.7.0_76}"
 SDK_NAME="android-sdk-linux"
 NDK_NAME="android-ndk-linux"
-CAVAN_SERVER_IP="\${CAVAN_SERVER_IP-10.1.1.153}"
+CAVAN_SERVER_IP="\${CAVAN_SERVER_IP-192.168.1.250}"
 CAVAN_SERVER_PORT="\${CAVAN_SERVER_PORT-8888}"
 PROJECT_HOME="${PROJECT_HOME}"
 PRODUCT_HOME="${PRODUCT_HOME-/project/product}"
@@ -191,11 +219,17 @@ EOF
 
 function config_group()
 {
-	sed 's/\(.*:\)\s*$/\1cavan/g' ${FILE_GROUP} -i
+	local userlist
+
+	userlist=$(echo ${USER_LIST} | sed 's/\s\+/,/g')
+
+	sed -i "s/:\s*$/:${userlist}/g" ${FILE_GROUP}
 }
 
 function config_nfs()
 {
+	[ "${USER_HAS_CAVAN}" = "true" ] || return 0
+
 	for exp in /
 	do
 		echo "${exp} ${NFS_RO_CONFIG}"
@@ -230,6 +264,8 @@ EOF
 
 function config_single_home()
 {
+	[ "${USER_HAS_CAVAN}" = "true" ] || return 0
+
 	cd $1 || return 1
 
 	for dir in Desktop Documents Downloads Music Pictures .stardict .VirtualBox "VirtualBox VMs"
@@ -243,6 +279,8 @@ function config_single_home()
 
 function config_home()
 {
+	[ "${USER_HAS_CAVAN}" = "true" ] || return 0
+
 	for home in /root /home/*
 	do
 		config_single_home ${home} || return 1
@@ -252,6 +290,8 @@ function config_home()
 function config_aptget()
 {
 	local var_path etc_path
+
+	[ "${USER_HAS_CAVAN}" = "true" ] || return 0
 
 	LOCAL_UBUNTU="${UBUNTU_PATH}/${DISTRIB_RELEASE}"
 	var_path="${LOCAL_UBUNTU}/var"
@@ -443,7 +483,7 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 	exit 1
 }
 
-for func in mount_disk create_mount_points create_symlinks config_bashrc \
+[ "$1" = "all" ] && for func in mount_disk create_mount_points create_symlinks config_bashrc \
 	swap_init config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_vimrc config_group \
 	config_service config_grub config_stardict config_gitweb config_systemd config_others
