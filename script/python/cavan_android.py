@@ -64,13 +64,27 @@ class AndroidManager(AdbManager):
 
 		return pathname
 
+	def checkFileList(self, listFile):
+		if not listFile:
+			return []
+
+		dictFile = {}
+
+		for pathname in listFile:
+			filename = os.path.basename(pathname)
+			if dictFile.has_key(filename):
+				self.prBrownInfo("Override: %s <= %s" % (dictFile[filename], pathname))
+			dictFile[filename] = pathname
+
+		return dictFile.values()
+
 	def push(self, listFile):
 		if not self.doRemount():
 			return False
 
 		lastDir = None
 
-		for pathname in listFile:
+		for pathname in self.checkFileList(listFile):
 			hostPath = self.getHostPath(pathname)
 			if not os.path.exists(hostPath) and lastDir != None:
 				hostPath = os.path.join(lastDir, pathname)
