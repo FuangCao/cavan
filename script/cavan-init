@@ -165,7 +165,7 @@ function config_bashrc()
 
 	for username in ${USER_LIST}
 	do
-		bashrc="/home/${username}"
+		bashrc="/home/${username}/.bashrc"
 
 		[ -f "${bashrc}" ] &&
 		{
