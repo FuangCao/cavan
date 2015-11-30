@@ -45,7 +45,7 @@ function error_exit()
 function exec_command()
 {
 	echo -e "\033[33mExecute: $1\033[0m"
-	$1 && return 0
+	eval "$1" && return 0
 
 	echo -e "\033[31mFailed to execute: $1\033[0m"
 	error_exit

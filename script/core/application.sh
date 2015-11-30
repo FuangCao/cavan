@@ -141,13 +141,15 @@ function cavan-android-buildenv()
 		}
 	)
 
-	DIR_INCLUDE_SYS="$(find /usr/include/ -maxdepth 2 -type d -name sys)"
-	FILE_CAPABILITY_H="${DIR_INCLUDE_SYS}/capability.h"
+	for DIR_INCLUDE_SYS in $(find /usr/include/ -maxdepth 2 -type d -name sys)
+	do
+		FILE_CAPABILITY_H="${DIR_INCLUDE_SYS}/capability.h"
 
-	echo "DIR_INCLUDE_SYS = ${DIR_INCLUDE_SYS}"
-	echo "FILE_CAPABILITY_H = ${FILE_CAPABILITY_H}"
+		echo "DIR_INCLUDE_SYS = ${DIR_INCLUDE_SYS}"
+		echo "FILE_CAPABILITY_H = ${FILE_CAPABILITY_H}"
 
-	[ -f "${FILE_CAPABILITY_H}" ] || su -c "echo \"#include <sys/resource.h>\" > \"${FILE_CAPABILITY_H}\""
+		[ -f "${FILE_CAPABILITY_H}" ] || su -c "echo '#include <sys/resource.h>' > ${FILE_CAPABILITY_H}"
+	done
 
 	export HOST_TOOLCHAIN_PREFIX="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6"
 
@@ -179,25 +181,30 @@ function cavan-set-jdk-version()
 	source ${CAVAN_HOME}/script/core/bashrc.sh
 }
 
+function cavan-chdir-by-file-simple()
+{
+	[ "$1" ] || return 1
+
+	while [ "${PWD}" != "/" ]
+	do
+		[ -f "$1" ] && return 0
+		cd .. || break
+	done
+
+	return 1
+}
+
 function cavan-chdir-by-file()
 {
-	local target_file
+	local pwd_logical pwd_physical
 
-	target_file=$1
-	[ "${target_file}" ] || return 1
+	pwd_logical=$(pwd -L)
+	pwd_physical=$(pwd -P)
 
-	cd $(pwd -P) || return 1
+	cavan-chdir-by-file-simple "$1" && return 0
+	cd "${pwd_physical}" && cavan-chdir-by-file-simple "$1" && return 0
 
-	while :;
-	do
-		[ -f "${target_file}" ] &&
-		{
-			return 0
-		}
-
-		cd .. || break
-		[ "${PWD}" = "/" ] && break
-	done
+	cd "${pwd_logical}"
 
 	return 1
 }
@@ -209,12 +216,56 @@ function cavan-get-root-by-file()
 
 function cavan-get-android-root()
 {
-	cavan-get-root-by-file "build/envsetup.sh"
+	local pathname
+
+	pathname=$(cavan-get-root-by-file "build/envsetup.sh") && CAVAN_ANDROID_ROOT="${pathname}" ||
+	{
+		[ -d "${CAVAN_ANDROID_ROOT}" ] || return 1
+		pathname="${CAVAN_ANDROID_ROOT}"
+	}
+
+	export CAVAN_ANDROID_ROOT
+
+	echo "${pathname}"
+
+	return 0
 }
 
 function cavan-get-kernel-root()
 {
-	cavan-get-root-by-file "include/linux/kernel.h"
+	local pathname
+
+	pathname=$(cavan-get-root-by-file "include/linux/kernel.h") && CAVAN_KERNEL_ROOT="${pathname}" ||
+	{
+		[ -d "${CAVAN_KERNEL_ROOT}" ] || return 1
+		pathname="${CAVAN_KERNEL_ROOT}"
+	}
+
+	export CAVAN_KERNEL_ROOT
+
+	echo "${pathname}"
+
+	return 0
+}
+
+function cavan-chdir-android()
+{
+	local pathname
+
+	pathname=$(cavan-get-android-root) || return 1
+	cd "${pathname}" && return 0
+
+	return 1
+}
+
+function cavan-chdir-kernel()
+{
+	local pathname
+
+	pathname=$(cavan-get-kernel-root) || return 1
+	cd "${pathname}" && return 0
+
+	return 1
 }
 
 function cavan-save-cavan-sh()
