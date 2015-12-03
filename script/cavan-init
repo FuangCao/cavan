@@ -17,6 +17,7 @@ FILE_APP_FEILED="/tmp/cavan-app-failed.txt"
 DIR_SYSTEMD_CONFIG="/etc/systemd/system/multi-user.target.wants"
 
 CAVAN_HOME="/cavan"
+SCRIPT_PATH="${CAVAN_HOME}/script"
 
 CPAN_PATH="/mnt/sda1"
 DPAN_PATH="/mnt/sda5"
@@ -26,7 +27,7 @@ GPAN_PATH="/mnt/sda8"
 UBUNTU_PATH="${DPAN_PATH}/ubuntu"
 UBUNTU_HOME="${UBUNTU_PATH}/home"
 FILE_SWAP_IMG="/var/swap.img"
-FILE_VIMRC_VIM="${CAVAN_HOME}/script/vim/vimrc.vim"
+FILE_VIMRC_VIM="${SCRIPT_PATH}/vim/vimrc.vim"
 
 CAVAN_OUT_DEBUG="${CAVAN_HOME}/out/host/debug"
 CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
@@ -42,7 +43,13 @@ function file_abs_directory()
 	cd $(dirname $1) && pwd
 }
 
+if [ "$0" = "bash" ]
+then
+CMD_ABS_DIR="${SCRIPT_PATH}"
+else
 CMD_ABS_DIR="$(file_abs_directory $0)"
+fi
+
 CMD_ABS_PATH="${CMD_ABS_DIR}/$(basename $0)"
 CORE_PATH="${CMD_ABS_DIR}/core"
 FILE_APP_CONFIG="${CORE_PATH}/applications.cfg"
@@ -57,6 +64,7 @@ source "${CORE_PATH}/alias.sh"
 
 LOCAL_UBUNTU="${UBUNTU_PATH}-${DISTRIB_RELEASE}"
 
+USER_LIST=""
 USER_HAS_CAVAN="false"
 
 for username in $(ls /home)
@@ -204,7 +212,7 @@ PRODUCT_HOME="${PRODUCT_HOME-/project/product}"
 REMOTE_PROJECT_HOME="${REMOTE_PROJECT_HOME-\${SSH_USER}}"
 REMOTE_PRODUCT_HOME="${REMOTE_PRODUCT_HOME-/home/\${SSH_USER}/product}"
 
-source \${CAVAN_HOME}/script/core/bashrc.sh
+source ${SCRIPT_PATH}/core/bashrc.sh
 EOF
 }
 
@@ -276,7 +284,7 @@ function config_single_home()
 	done
 
 	cavan-symlink "${CAVAN_HOME}" "cavan" || return 1
-	cavan-symlink "cavan/script/configs/netrc" ".netrc" || return 1
+	cavan-symlink "{SCRIPT_PATH}/configs/netrc" ".netrc" || return 1
 }
 
 function config_home()
@@ -485,7 +493,7 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 	exit 1
 }
 
-[ "$1" = "all" ] && for func in mount_disk create_mount_points create_symlinks config_bashrc \
+[ "$0" = "bash" ] || for func in mount_disk create_mount_points create_symlinks config_bashrc \
 	swap_init config_aptget install_applications install_debin_packages \
 	config_nfs config_samba config_home config_git config_vimrc config_group \
 	config_service config_grub config_stardict config_gitweb config_systemd config_others
