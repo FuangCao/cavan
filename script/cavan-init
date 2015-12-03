@@ -79,9 +79,7 @@ echo "USER_LIST = ${USER_LIST}"
 
 function mount_disk()
 {
-	local mount_point disk line
-
-	cd /dev || return 1
+	local mount_dev mount_point disk line
 
 	if [ "$1" ]
 	then
@@ -97,16 +95,22 @@ function mount_disk()
 		[ "$3" -gt "10" ] || continue
 
 		mount_point="/mnt/$4"
+		mount_dev="/dev/$4"
+
+		[ $(grep "^\s*${mount_dev}\b" "${FILE_MOUNTS}" "${FILE_FSTAB}" | wc -l) -lt 2 ] || continue
+
+		echo "${mount_dev} => ${mount_point}"
+
 		umount_directory "${mount_point}"
 		mkdir -pv "${mount_point}"
-		umount "$4"
-		mount "$4" "${mount_point}" ||
+		umount "${mount_dev}"
+		mount "${mount_dev}" "${mount_point}" ||
 		{
 			rmdir "${mount_point}"
 			continue
 		}
 
-		grep "${mount_point}" ${FILE_FSTAB} ||
+		grep "^\s*${mount_dev}\b" "${FILE_FSTAB}" ||
 		{
 			echo "/dev/$4 ${mount_point} auto errors=remount-ro 0 0" >> ${FILE_FSTAB}
 		}
