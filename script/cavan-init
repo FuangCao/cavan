@@ -81,8 +81,6 @@ function mount_disk()
 {
 	local mount_point disk line
 
-	[ "${USER_HAS_CAVAN}" = "true" ] || return 0
-
 	cd /dev || return 1
 
 	if [ "$1" ]
@@ -99,12 +97,12 @@ function mount_disk()
 		[ "$3" -gt "10" ] || continue
 
 		mount_point="/mnt/$4"
-		umount_directory ${mount_point}
-		mkdir ${mount_point} -pv
-		umount $4
-		mount $4 ${mount_point} ||
+		umount_directory "${mount_point}"
+		mkdir -pv "${mount_point}"
+		umount "$4"
+		mount "$4" "${mount_point}" ||
 		{
-			rmdir ${mount_point}
+			rmdir "${mount_point}"
 			continue
 		}
 
