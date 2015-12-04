@@ -378,6 +378,28 @@ function cavan-kernel-config()
 	return 1
 }
 
+function cavan-kernel-menuconfig()
+{
+	local DEFCONFIG
+
+	[ "$1" ] ||
+	{
+		echo "Please give board name"
+		return 1
+	}
+
+	export ARCH="arm"
+
+	[ "${CMD_MAKE}" ] || CMD_MAKE="make"
+	DEFCONFIG="$1_defconfig"
+
+	echo "CMD_MAKE = ${CMD_MAKE}"
+	echo "DEFCONFIG = ${DEFCONFIG}"
+
+	${CMD_MAKE} ${DEFCONFIG} && ${CMD_MAKE} menuconfig && ${CMD_MAKE} savedefconfig || return 1
+	cp -av defconfig arch/arm/configs/${DEFCONFIG} || return 1
+}
+
 function vi-then-source()
 {
 	vi $@ && source $@
