@@ -57,7 +57,7 @@ class AndroidManager(AdbManager):
 
 	def getDevicePath(self, pathname):
 		if pathname.startswith(self.mProductOut):
-			pathname = pathname[self.mProductOutLen]
+			pathname = pathname[self.mProductOutLen:]
 		elif self.mTargetProduct != None:
 			index = pathname.find("/" + self.mTargetProduct + "/")
 			if (index < 0):
