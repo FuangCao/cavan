@@ -10,12 +10,12 @@ class AndroidManager(AdbManager):
 		if not buildTop or not productOut:
 			self.doRaise("please run 'source build/envsetup.sh && lunch'")
 
+		self.mTargetProduct = self.getEnv("TARGET_PRODUCT")
+
 		self.mBuildTop = os.path.realpath(buildTop)
 		self.mProductOut = os.path.realpath(productOut)
 		self.mProductOutLen = len(self.mProductOut)
 		self.mPathSystem = os.path.join(self.mProductOut, "system")
-		self.mPathSymbols = os.path.join(self.mProductOut, "symbols")
-		self.mPathSymbolsLen = len(self.mPathSymbols)
 
 		AdbManager.__init__(self, self.mBuildTop, verbose)
 
@@ -57,10 +57,18 @@ class AndroidManager(AdbManager):
 
 	def getDevicePath(self, pathname):
 		if pathname.startswith(self.mProductOut):
-			if pathname.startswith(self.mPathSymbols):
-				return pathname[self.mPathSymbolsLen:]
-			else:
-				return pathname[self.mProductOutLen:]
+			pathname = pathname[self.mProductOutLen]
+		elif not self.mTargetProduct:
+			return pathname
+		else:
+			try:
+				index = pathname.find(self.mTargetProduct) + len(self.mTargetProduct)
+				pathname = pathname[index:]
+			except:
+				return pathname
+
+		if pathname.startswith("/symbols"):
+			return pathname[8:]
 
 		return pathname
 
