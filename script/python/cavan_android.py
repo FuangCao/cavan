@@ -58,14 +58,16 @@ class AndroidManager(AdbManager):
 	def getDevicePath(self, pathname):
 		if pathname.startswith(self.mProductOut):
 			pathname = pathname[self.mProductOutLen]
-		elif not self.mTargetProduct:
-			return pathname
-		else:
-			try:
-				index = pathname.find(self.mTargetProduct) + len(self.mTargetProduct)
-				pathname = pathname[index:]
-			except:
+		elif self.mTargetProduct != None:
+			index = pathname.find("/" + self.mTargetProduct + "/")
+			if (index < 0):
 				return pathname
+			pathname = pathname[index + len(self.mTargetProduct) + 1:]
+		else:
+			index = pathname.find("/system/")
+			if index < 0:
+				return pathname
+			pathname = pathname[index:]
 
 		if pathname.startswith("/symbols"):
 			return pathname[8:]
