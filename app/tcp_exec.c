@@ -18,7 +18,7 @@ static void show_usage(const char *command)
 	println("-V, -v, --version\t\t%s", cavan_help_message_version);
 	println("-I, -i, --ip IP\t\t\t%s", cavan_help_message_ip);
 	println("--host [HOSTNAME]\t\t%s", cavan_help_message_hostname);
-	println("-L, ---locall\t\t\t%s", cavan_help_message_local);
+	println("-L, -l, ---local\t\t%s", cavan_help_message_local);
 	println("-p, --port PORT\t\t\t%s", cavan_help_message_port);
 	println("-A, -a, --adb\t\t\t%s", cavan_help_message_adb);
 	println("--udp\t\t\t\t%s", cavan_help_message_udp);
@@ -26,6 +26,7 @@ static void show_usage(const char *command)
 	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
 	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
 	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
+	println("--loop\t\t\t\tcycle to execute the command");
 }
 
 int main(int argc, char *argv[])
@@ -104,9 +105,15 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
 		}, {
+			.name = "loop",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_LOOP,
+		}, {
 			0, 0, 0, 0
 		},
 	};
+	bool loop = false;
 	char command[1024];
 	struct network_url url;
 
@@ -180,6 +187,10 @@ int main(int argc, char *argv[])
 			url.protocol = optarg;
 			break;
 
+		case CAVAN_COMMAND_OPTION_LOOP:
+			loop = true;
+			break;
+
 		default:
 			show_usage(argv[0]);
 			return -EINVAL;
@@ -188,5 +199,31 @@ int main(int argc, char *argv[])
 
 	text_join_by_char(argv + optind, argc - optind, ' ', command, sizeof(command));
 
-	return tcp_dd_exec_command(&url, command);
+	if (loop) {
+		int count = 0;
+
+		while (1) {
+			int i;
+
+			println("%d. cycle to execute the command", count);
+
+			tcp_dd_exec_command(&url, command);
+
+			for (i = 5; i > 0; i--) {
+				char key;
+
+				print("\rPress Enter key start directly %d (s)", i);
+
+				if (file_read_timeout(stdin_fd, &key, 1, 1000) > 0 && key == '\n') {
+					break;
+				}
+			}
+
+			count++;
+		}
+	} else {
+		return tcp_dd_exec_command(&url, command);
+	}
+
+	return 0;
 }
