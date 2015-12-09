@@ -61,6 +61,7 @@ struct tca9535_device {
 	struct tca9535_register_cache cache;
 
 	int gpio_irq;
+	int gpio_pwr;
 	struct pinctrl *pinctrl;
 	struct pinctrl_state *gpio_state;
 
@@ -195,10 +196,25 @@ static inline int tca9535_write_register_locked(struct tca9535_device *tca9535, 
 static int tca9535_init_register(struct tca9535_device *tca9535)
 {
 	int ret = 0;
+	struct property *prop;
+	u16 configuration = 0xFFFF;
+	struct i2c_client *client = tca9535->client;
+
+	prop = of_find_property(client->dev.of_node, "default-output", NULL);
+	if (prop && prop->value) {
+		int offset;
+		const __be32 *value = prop->value;
+		const __be32 *value_end = value + (prop->length / sizeof(__be32));
+
+		while (value < value_end) {
+			offset = be32_to_cpup(value++);
+			configuration &= ~(1 << offset);
+		}
+	}
 
 	ret |= tca9535_write_register(tca9535, REG_OUTPUT_PORT, 0x0000, true);
 	ret |= tca9535_write_register(tca9535, REG_POLARITY_INVERSION, 0x0000, true);
-	ret |= tca9535_write_register(tca9535, REG_CONFIGURATION, 0xFFFF, true);
+	ret |= tca9535_write_register(tca9535, REG_CONFIGURATION, configuration, true);
 	ret |= tca9535_read_register(tca9535, REG_INPUT_PORT, &tca9535->cache.input_port, false);
 	if (ret < 0) {
 		return ret;
@@ -748,12 +764,6 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 
 	mutex_init(&tca9535->lock);
 
-	ret = tca9535_init_register(tca9535);
-	if (ret < 0) {
-		dev_err(&client->dev, "Failed to tca9535_init_register: %d\n", ret);
-		goto out_devm_kfree;
-	}
-
 	tca9535->gpio_irq = of_get_gpio(client->dev.of_node, 0);
 	if (gpio_is_valid(tca9535->gpio_irq)) {
 		ret = gpio_request(tca9535->gpio_irq, "TCA9535-IRQ");
@@ -768,6 +778,8 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	} else {
 		client->irq = -1;
 	}
+
+	tca9535->gpio_pwr = of_get_gpio(client->dev.of_node, 1);
 
 	dev_info(&client->dev, "gpio_irq = %d\n", tca9535->gpio_irq);
 	dev_info(&client->dev, "irq = %d\n", client->irq);
@@ -786,6 +798,21 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 
 	if (tca9535->pinctrl && tca9535->gpio_state) {
 		pinctrl_select_state(tca9535->pinctrl, tca9535->gpio_state);
+	}
+
+	dev_info(&client->dev, "gpio_pwr = %d\n", tca9535->gpio_pwr);
+
+	if (gpio_is_valid(tca9535->gpio_pwr)) {
+		gpio_request(tca9535->gpio_pwr, "TCA9535-PWR");
+		gpio_direction_output(tca9535->gpio_pwr, 1);
+		gpio_free(tca9535->gpio_pwr);
+		msleep(10);
+	}
+
+	ret = tca9535_init_register(tca9535);
+	if (ret < 0) {
+		dev_err(&client->dev, "Failed to tca9535_init_register: %d\n", ret);
+		goto out_devm_kfree;
 	}
 
 	gpio_chip = &tca9535->gpio_chip;
