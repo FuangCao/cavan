@@ -488,3 +488,16 @@ function cavan-merge-auto-checkout()
 
 	export CAVAN_THEM_BRANCH
 }
+
+function cavan-tc3587xx-inotify()
+{
+	[ "$2" ] ||
+	{
+		echo "Usage: $0 <SRC_FILE> <DEST_FILE>"
+		return 1
+	}
+
+	echo "$1 => $2"
+
+	cavan-inotify $1 -c "cavan-tc3587xx-converter $1 $2"
+}
