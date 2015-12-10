@@ -205,19 +205,21 @@ int main(int argc, char *argv[])
 		while (1) {
 			int i;
 
-			println("%d. cycle to execute the command", count);
-
+			println("%d. enter command: %s", count, command);
 			tcp_dd_exec_command(&url, command);
+			println("%d. exit command: %s", count, command);
 
 			for (i = 5; i > 0; i--) {
 				char key;
 
-				print("\rPress Enter key start directly %d (s)", i);
+				print("Press Enter key start directly %d (s)\r", i);
 
 				if (file_read_timeout(stdin_fd, &key, 1, 1000) > 0 && key == '\n') {
 					break;
 				}
 			}
+
+			print_char('\n');
 
 			count++;
 		}
