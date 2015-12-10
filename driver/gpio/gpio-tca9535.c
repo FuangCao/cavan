@@ -640,7 +640,9 @@ static int tca9535_i2c_mux_select(struct i2c_adapter *adap, void *data, u32 chan
 
 	reg_value = (cache->output_port & tca9535->mux_gpio_unmask) | chan << tca9535->mux_gpio_offset;
 	if (reg_value != cache->output_port) {
-		return tca9535_write_register_locked(tca9535, REG_OUTPUT_PORT, reg_value, true);
+		int ret = tca9535_write_register_locked(tca9535, REG_OUTPUT_PORT, reg_value, true);
+		udelay(2);
+		return ret;
 	}
 
 	return 0;
@@ -916,6 +918,10 @@ static void tca9535_i2c_shutdown(struct i2c_client *client)
 
 static const struct i2c_device_id tca9535_i2c_id[] = {
 	{ "tca9535", 0 },
+	{ "tca9535-main", 0 },
+	{ "tca9535-left", 0 },
+	{ "tca9535-right", 0 },
+	{ "tca9535-handset", 0 },
 	{ }
 };
 

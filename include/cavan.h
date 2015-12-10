@@ -44,6 +44,10 @@
 #define	__unused	/* delete */
 #endif
 
+#ifndef __maybe_unused
+#define __maybe_unused			__unused
+#endif
+
 #if __GNUC_PREREQ__(3, 1)
 #define	__used					__attribute__((__used__))
 #else
