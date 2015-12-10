@@ -72,7 +72,7 @@ static void progress_bar_fflush(struct progress_bar *bar)
 #if BAR_SHOW_TIME
 		if (bar->speed > 0) {
 			*p++ = ' ';
-			remain = (bar->total - bar->current) / bar->speed;
+			remain = (bar->total - bar->current + bar->speed - 1) / bar->speed;
 			p = cavan_time2text_simple2(remain, p, p_end - p);
 		}
 #endif
