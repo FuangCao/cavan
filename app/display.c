@@ -35,7 +35,7 @@ static int cavan_display_rect_main(int argc, char *argv[])
 		ret = display->fill_rect(display, left, top, width, height, display->pen_color);
 	}
 
-	cavan_display_refresh(display);
+	cavan_display_refresh_sync(display);
 
 	cavan_display_stop(display);
 	display->destroy(display);
@@ -43,17 +43,12 @@ static int cavan_display_rect_main(int argc, char *argv[])
 	return ret;
 }
 
-static int cavan_display_test_main(int argc, char *argv[])
+static int cavan_display_test(struct cavan_display_device *display, int index)
 {
-	int i, j, width, height;
-	struct cavan_display_device *display;
+	float ratio;
+	cavan_display_color_t color;
+	int i, j, x, width, height;
 	cavan_display_color_t color_map[3][3];
-
-	display = cavan_fb_display_start();
-	if (display == NULL) {
-		pr_red_info("cavan_fb_display_start");
-		return -EFAULT;
-	}
 
 	color_map[0][0] = display->build_color(display, 1.0, 0.0, 0.0, 1.0);
 	color_map[0][1] = display->build_color(display, 0.0, 1.0, 0.0, 1.0);
@@ -67,19 +62,153 @@ static int cavan_display_test_main(int argc, char *argv[])
 	color_map[2][1] = display->build_color(display, 1.0, 0.0, 1.0, 1.0);
 	color_map[2][2] = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
 
-	width = display->xres / 3;
-	height = display->yres / 3;
+	switch (index) {
+	case 1:
+		println("Red");
+		color = display->build_color(display, 1.0, 0.0, 0.0, 1.0);
+		display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+		break;
 
-	for (i = 0; i < 3; i++) {
-		for (j = 0; j < 3; j++) {
-			display->set_color(display, color_map[i][j]);
-			display->fill_rect(display, i * width, j * height, width, height, display->pen_color);
+	case 2:
+		println("Green");
+		color = display->build_color(display, 0.0, 1.0, 0.0, 1.0);
+		display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+		break;
+
+	case 3:
+		println("Blue");
+		color = display->build_color(display, 0.0, 0.0, 1.0, 1.0);
+		display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+		break;
+
+	case 4:
+		println("Cyan");
+		color = display->build_color(display, 0.0, 1.0, 1.0, 1.0);
+		display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+		break;
+
+	case 5:
+		println("Purple");
+		color = display->build_color(display, 1.0, 0.0, 1.0, 1.0);
+		display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+		break;
+
+	case 6:
+		println("Yellow");
+		color = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
+		display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+		break;
+
+	case 7:
+		println("White");
+		color = display->build_color(display, 1.0, 1.0, 1.0, 1.0);
+		display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+		break;
+
+	case 8:
+		println("Red\t\tGreen\t\tBlue");
+
+		width = display->xres;
+		height = display->yres / 3;
+
+		for (i = 0; i < 3; i++) {
+			display->fill_rect(display, 0, i * height, width, height, color_map[0][i]);
+		}
+		break;
+
+	case 9:
+		println("Red\t\tWhite\t\tCyan");
+		println("Green\t\tBlack\t\tPurple");
+		println("Blue\t\tGray\t\tYellow");
+
+		width = display->xres / 3;
+		height = display->yres / 3;
+
+		for (i = 0; i < 3; i++) {
+			for (j = 0; j < 3; j++) {
+				display->fill_rect(display, i * width, j * height, width, height, color_map[i][j]);
+			}
+		}
+		break;
+
+	case 10:
+		width = display->xres;
+		height = display->yres / 3;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+
+			color = display->build_color(display, ratio, 0.0, 0.0, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+
+			color = display->build_color(display, 0.0, ratio, 0.0, 1.0);
+			display->fill_rect(display, x, height, 1, height, color);
+
+			color = display->build_color(display, 0.0, 0.0, ratio, 1.0);
+			display->fill_rect(display, x, height * 2, 1, height, color);
+		}
+		break;
+
+	case 11:
+		width = display->xres;
+		height = display->yres / 6;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+
+			color = display->build_color(display, ratio, 0.0, 0.0, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+
+			color = display->build_color(display, 0.0, ratio, 0.0, 1.0);
+			display->fill_rect(display, x, height * 1, 1, height, color);
+
+			color = display->build_color(display, 0.0, 0.0, ratio, 1.0);
+			display->fill_rect(display, x, height * 2, 1, height, color);
+
+			color = display->build_color(display, 0.0, ratio, ratio, 1.0);
+			display->fill_rect(display, x, height * 3, 1, height, color);
+
+			color = display->build_color(display, ratio, 0.0, ratio, 1.0);
+			display->fill_rect(display, x, height * 4, 1, height, color);
+
+			color = display->build_color(display, ratio, ratio, 0.0, 1.0);
+			display->fill_rect(display, x, height * 5, 1, height, color);
+		}
+		break;
+
+	default:
+		return -EINVAL;
+	}
+
+	cavan_display_refresh_sync(display);
+
+	return 0;
+}
+
+static int cavan_display_test_main(int argc, char *argv[])
+{
+	int index;
+	struct cavan_display_device *display;
+
+	display = cavan_fb_display_start();
+	if (display == NULL) {
+		pr_red_info("cavan_fb_display_start");
+		return -EFAULT;
+	}
+
+	if (argc > 1) {
+		index = text2value_unsigned(argv[1], NULL, 10);
+		cavan_display_test(display, index);
+	} else {
+		index = 1;
+
+		while (cavan_display_test(display, index++) == 0) {
+			getchar();
 		}
 	}
 
-	cavan_display_refresh(display);
-
 	cavan_display_stop(display);
+
 	display->destroy(display);
 
 	return 0;
@@ -229,7 +358,7 @@ static int cavan_display_wave_main(int argc, char *argv[])
 		x += zoom;
 	}
 
-	cavan_display_refresh(display);
+	cavan_display_refresh_sync(display);
 
 	while (1) {
 		msleep(5000);

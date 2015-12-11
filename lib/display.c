@@ -958,14 +958,16 @@ int cavan_display_init(struct cavan_display_device *display)
 	return 0;
 }
 
-static int cavan_display_refresh_thread_handler(struct cavan_thread *thread, void *data)
+void cavan_display_refresh_sync(struct cavan_display_device *display)
 {
-	struct cavan_display_device *display = data;
-
 	cavan_display_lock(display);
 	display->refresh(display);
 	cavan_display_unlock(display);
+}
 
+static int cavan_display_refresh_thread_handler(struct cavan_thread *thread, void *data)
+{
+	cavan_display_refresh_sync(data);
 	cavan_thread_suspend(thread);
 
 	return 0;

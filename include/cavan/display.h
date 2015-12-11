@@ -134,6 +134,7 @@ int cavan_display_init(struct cavan_display_device *display);
 void cavan_display_deinit(struct cavan_display_device *display);
 int cavan_display_start(struct cavan_display_device *display);
 void cavan_display_stop(struct cavan_display_device *display);
+void cavan_display_refresh_sync(struct cavan_display_device *display);
 
 struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height);
 struct cavan_display_memory_rect *cavan_display_memory_rect_alloc(struct cavan_display_device *display, size_t width, size_t height, int border_width);

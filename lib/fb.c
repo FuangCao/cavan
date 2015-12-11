@@ -139,6 +139,10 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	dev->xres = var->xres;
 	dev->yres = var->yres;
 
+	if (dev->xres / dev->yres >= 3) {
+		dev->xres /= 2;
+	}
+
 	switch (var->bits_per_pixel) {
 	case 8:
 		dev->bpp_byte = 1;
