@@ -56,8 +56,8 @@ static char tmp_str[50];
 #endif
 
 #ifndef CTP_PROXIMITY_FUN
-#define CTP_PROXIMITY_FUN	1 //Mstar Mark.Li Add  2013-01-10; 
-#endif 
+#define CTP_PROXIMITY_FUN	1 //Mstar Mark.Li Add  2013-01-10;
+#endif
 
 #define u8 unsigned char
 #define U8 unsigned char
@@ -90,7 +90,7 @@ static struct i2c_client *msg21xx_i2c_client;
 #define __AUTO_UPDATE__
 
 #define FW_ADDR_MSG20XX_TP   	 (0x4C>>1) //device address of msg20xx    7Bit I2C Addr == 0x26;
-#define FW_ADDR_MSG20XX      	 (0xC4>>1)  
+#define FW_ADDR_MSG20XX      	 (0xC4>>1)
 #define FW_UPDATE_ADDR_MSG20XX   (0x92>>1)
 // static  char *fw_version;
 #define DWIIC_MODE_ISP    0
@@ -125,7 +125,7 @@ static void HalTscrCReadI2CSeq(u8 addr, u8* read_data, u8 size)
 {
    //according to your platform.
    	int rc;
- 
+
 	struct i2c_msg msgs[] = {
 		{
 			.addr = addr,
@@ -134,14 +134,14 @@ static void HalTscrCReadI2CSeq(u8 addr, u8* read_data, u8 size)
 			.buf = read_data,
 		},
 	};
-	
+
 	rc = i2c_transfer(msg21xx_i2c_client->adapter, msgs, 1);
 	if (rc < 0) {
 		printk("HalTscrCReadI2CSeq error %d\n", rc);
 		//printk("I2C addr= %d,size = %d,\n", addr,size);
 	}
 
-   
+
 }
 
 static void HalTscrCDevWriteI2CSeq(u8 addr, u8* data, u16 size)
@@ -149,7 +149,7 @@ static void HalTscrCDevWriteI2CSeq(u8 addr, u8* data, u16 size)
     //according to your platform.
 
    	int rc;
- 
+
 	struct i2c_msg msgs[] = {
 		{
 			.addr = addr,
@@ -254,7 +254,7 @@ static void drvDB_WriteReg(u8 bBank, u8 bAddr, u16 bData)
     bWriteData[2] = bAddr;
     bWriteData[4] = bData>>8;
     bWriteData[3] = bData&0xFF;
-    mdelay(15);	
+    mdelay(15);
     HalTscrCDevWriteI2CSeq(FW_ADDR_MSG20XX, bWriteData, 5);
 }
 
@@ -279,10 +279,10 @@ static u16 drvDB_ReadReg(u8 bBank,u8 bAddr)
     u8 bReadData[2]={0x00,0x00};
     mdelay(15);
     HalTscrCDevWriteI2CSeq(FW_ADDR_MSG20XX, bWriteData, 3);
-    
+
     mdelay(15);
     HalTscrCReadI2CSeq(FW_ADDR_MSG20XX, &bReadData[0], 2);
-	
+
     val=(bReadData[1]<<8)|(bReadData[0]);
 
     return val;
@@ -312,20 +312,20 @@ static void Init_CRC32_Table(void)
 		for (j = 0; j < 8; j++) {
 			crc32_table[i] = (crc32_table[i] << 1) ^ (crc32_table[i] & (0x80000000L) ? magicnumber : 0);
 		}
-		crc32_table[i] = Reflect(crc32_table[i], 32);				
+		crc32_table[i] = Reflect(crc32_table[i], 32);
 	}
 }
 
 static u32 Get_CRC(u32 text,u32 prevCRC)
 {
-	u32  ulCRC = prevCRC;	
+	u32  ulCRC = prevCRC;
     	{ulCRC = (ulCRC >> 8) ^ crc32_table[(ulCRC & 0xFF) ^ text];}
 	return ulCRC ;
 }
 
 static void _HalTscrHWReset(struct cavan_input_chip *chip)
 {
-	cavan_io_reset_gpio_set_value(chip, 1);	
+	cavan_io_reset_gpio_set_value(chip, 1);
 	cavan_io_reset_gpio_set_value(chip, 0);
     mdelay(20);  /* Note that the RST must be in LOW 10ms at least */
 	cavan_io_reset_gpio_set_value(chip, 1);
@@ -391,20 +391,20 @@ static int drvTP_read_info_dwiic_A ( void )
     // TP SW reset
     drvDB_WriteReg ( 0x1E, 0x04, 0x829F );
 	mdelay (1);
-	
+
     dwiic_tx_data[0] = 0x10;
     dwiic_tx_data[1] = 0x0F;
     dwiic_tx_data[2] = 0xE6;
     dwiic_tx_data[3] = 0x00;
-    mdelay(15);	
-    HalTscrCDevWriteI2CSeq ( FW_ADDR_MSG20XX, dwiic_tx_data, 4 );	
-  
+    mdelay(15);
+    HalTscrCDevWriteI2CSeq ( FW_ADDR_MSG20XX, dwiic_tx_data, 4 );
+
         // stop mcu
   //  drvDB_WriteReg ( 0x1E, 0xE6, 0x0001 );
-	
+
     mdelay ( 100 );
 	TP_DEBUG ( "read infor 1\n");
-	
+
     do {
         reg_data = drvDB_ReadReg ( 0x3C, 0xE4 );
     }
@@ -413,15 +413,15 @@ static int drvTP_read_info_dwiic_A ( void )
     dwiic_tx_data[0] = 0x72;
 
    // dwiic_tx_data[3] = 0x04;
-  //  dwiic_tx_data[4] = 0x00;	
+  //  dwiic_tx_data[4] = 0x00;
     dwiic_tx_data[3] = 0x00;
-    dwiic_tx_data[4] = 0x80;	
+    dwiic_tx_data[4] = 0x80;
 
     for(reg_data=0;reg_data<8;reg_data++) {
     	dwiic_tx_data[1] = 0x80+(((reg_data*128)&0xff00)>>8);
     	dwiic_tx_data[2] = (reg_data*128)&0x00ff;
     	HalTscrCDevWriteI2CSeq ( FW_ADDR_MSG20XX_TP , dwiic_tx_data, 5 );
-	
+
     	mdelay (50 );
 
     // recive info data
@@ -608,16 +608,16 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
     u32 i, j;
     u32 crc_main, crc_main_tp;
     u32 crc_info, crc_info_tp;
-  
+
     int update_pass = 1;
     u16 reg_data = 0;
 
     crc_main = 0xffffffff;
     crc_info = 0xffffffff;
-	
+
 	//msg21xx_i2c_client->timing = 100;
     drvTP_read_info_dwiic_A();
-	
+
     if ( g_dwiic_info_data[0] == 'M' && g_dwiic_info_data[1] == 'S' && g_dwiic_info_data[2] == 'T' && g_dwiic_info_data[3] == 'A' && g_dwiic_info_data[4] == 'R' && g_dwiic_info_data[5] == 'T' && g_dwiic_info_data[6] == 'P' && g_dwiic_info_data[7] == 'C' ) {
         // updata FW Version
         //drvTP_info_updata_C33 ( 8, &temp[32][8], 5 );
@@ -805,7 +805,7 @@ static int firmware_auto_update_c33(struct cavan_input_chip *chip, EMEM_TYPE_t e
 	_HalTscrHWReset(chip);
     FwDataCnt = 0;
     // enable_irq(msg21xx_irq);
-	
+
     return ( 1 );
 }
 
@@ -879,7 +879,7 @@ static int firmware_auto_update(struct cavan_input_chip *chip)
 #define	CTP_ID_MSG21XXA		2
 
 #define FW_ADDR_MSG20XX_TP   	 (0x4C>>1) //device address of msg20xx    7Bit I2C Addr == 0x26;
-#define FW_ADDR_MSG20XX      	 (0xC4>>1)  
+#define FW_ADDR_MSG20XX      	 (0xC4>>1)
 // #define FW_ADDR_MSG21XX   (0xC4>>1)
 // #define FW_ADDR_MSG21XX_TP   (0x4C>>1)
 static int Check_Device(void)
@@ -888,11 +888,11 @@ static int Check_Device(void)
     u8 dbbus_tx_data[4];
     unsigned char dbbus_rx_data[2] = {0};
     u8 curr_ic_type;
-	
+
 	_HalTscrHWReset(chip);
     disable_irq(msg21xx_irq);
     mdelay ( 100 );
-    
+
     dbbusDWIICEnterSerialDebugMode();
     dbbusDWIICStopMCU();
     dbbusDWIICIICUseBus();
@@ -926,15 +926,15 @@ static int Check_Device(void)
     dbbus_tx_data[2] = 0xCC;
     //HalTscrCDevWriteI2CSeq ( FW_ADDR_MSG20XX, dbbus_tx_data, 3 );
     //HalTscrCReadI2CSeq ( FW_ADDR_MSG21XX, &dbbus_rx_data[0], 2 );
-     
+
     msg21xx_i2c_client->addr = FW_ADDR_MSG20XX;
-    ret = i2c_master_send(msg21xx_i2c_client, dbbus_tx_data, 3);    
+    ret = i2c_master_send(msg21xx_i2c_client, dbbus_tx_data, 3);
     if(ret <= 0) {
         msg21xx_i2c_client->addr = FW_ADDR_MSG20XX_TP;
 		TP_DEBUG("Device error %d,addr = %d\n", ret,FW_ADDR_MSG20XX);
 		return -1;
 	}
-	
+
     ret = i2c_master_recv(msg21xx_i2c_client, dbbus_rx_data, 2);
     msg21xx_i2c_client->addr = FW_ADDR_MSG20XX_TP;
     if(ret <= 0) {
@@ -953,7 +953,7 @@ static int Check_Device(void)
     dbbusDWIICNotStopMCU();
     dbbusDWIICExitSerialDebugMode();
     enable_irq(msg21xx_irq);
-   
+
     return 1;
 }
 #endif

@@ -133,6 +133,39 @@ static int cavan_display_test(struct cavan_display_device *display, int index)
 
 	case 10:
 		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, ratio, 0.0, 0.0, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 11:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, 0.0, ratio, 0.0, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 12:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, 0.0, 0.0, ratio, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 13:
+		width = display->xres;
 		height = display->yres / 3;
 
 		for (x = 0; x < width; x++) {
@@ -149,7 +182,7 @@ static int cavan_display_test(struct cavan_display_device *display, int index)
 		}
 		break;
 
-	case 11:
+	case 14:
 		width = display->xres;
 		height = display->yres / 6;
 
