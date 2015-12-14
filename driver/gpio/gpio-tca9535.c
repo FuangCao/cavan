@@ -725,7 +725,7 @@ static int tca9535_i2c_mux_init(struct tca9535_device *tca9535)
 
 out_i2c_del_adapter:
 	while (--i >= 0) {
-		i2c_del_adapter(tca9535->mux_adaps[i]);
+		i2c_del_mux_adapter(tca9535->mux_adaps[i]);
 	}
 
 	kfree(tca9535->mux_adaps);
@@ -741,7 +741,7 @@ static void tca9535_i2c_mux_deinit(struct tca9535_device *tca9535)
 	}
 
 	while (--i >= 0) {
-		i2c_del_adapter(tca9535->mux_adaps[i]);
+		i2c_del_mux_adapter(tca9535->mux_adaps[i]);
 	}
 
 	kfree(tca9535->mux_adaps);
