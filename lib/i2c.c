@@ -19,11 +19,30 @@
 
 #include <cavan.h>
 #include <cavan/i2c.h>
+#include <cavan/ctype.h>
 
 #define CAVAN_I2C_DEBUG		0
 
 struct cavan_i2c_config cavan_i2c_config_table[] = {
 	{
+		.chipname = "a1v1",
+		.addr_bytes = 1,
+		.value_bytes = 1,
+		.addr_big_endian = false,
+		.value_big_endian = false,
+	}, {
+		.chipname = "a1v2",
+		.addr_bytes = 1,
+		.value_bytes = 2,
+		.addr_big_endian = false,
+		.value_big_endian = false,
+	}, {
+		.chipname = "a2v2",
+		.addr_bytes = 2,
+		.value_bytes = 2,
+		.addr_big_endian = false,
+		.value_big_endian = false,
+	}, {
 		.chipname = "wm8962",
 		.addr_step = 1,
 		.addr_bytes = 2,
@@ -33,7 +52,7 @@ struct cavan_i2c_config cavan_i2c_config_table[] = {
 		.addr_big_endian = true,
 		.value_big_endian = true,
 	}, {
-		.chipname = "alc5670",
+		.chipname = "rt5670",
 		.addr_step = 1,
 		.addr_bytes = 1,
 		.value_bytes = 2,
@@ -117,14 +136,16 @@ void cavan_i2c_config_dump(const struct cavan_i2c_config *config)
 	println("value_big_endian = %s", cavan_bool_tostring(config->value_big_endian));
 }
 
-struct cavan_i2c_config *cavan_i2c_find_config(const char *chipname) {
+struct cavan_i2c_config *cavan_i2c_find_config(const char *chipname)
+{
+	int count;
 	int offset = 0;
-	struct cavan_i2c_config *p, *p_end;
+	struct cavan_i2c_config *config, *p, *p_end = cavan_i2c_config_table + NELEM(cavan_i2c_config_table);
 
 	while (1) {
-		int count = 0;
+		count = 0;
 
-		for (p = cavan_i2c_config_table, p_end = p + NELEM(cavan_i2c_config_table); p < p_end; p++) {
+		for (p = cavan_i2c_config_table; p < p_end; p++) {
 			if (strlen(p->chipname) < (size_t) offset) {
 				continue;
 			}
@@ -141,6 +162,20 @@ struct cavan_i2c_config *cavan_i2c_find_config(const char *chipname) {
 		}
 
 		offset++;
+	}
+
+	count = 0;
+	config = NULL;
+
+	for (p = cavan_i2c_config_table; p < p_end; p++) {
+		if (text_hcmp(chipname, p->chipname) == 0) {
+			config = p;
+			count++;
+		}
+	}
+
+	if (count == 1) {
+		return config;
 	}
 
 	return NULL;
@@ -181,32 +216,12 @@ int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slav
 	int fd;
 	int ret;
 	char pathname[32];
+	struct cavan_i2c_config *chip_config = NULL;
 	struct cavan_i2c_config *config = &client->config;
 
-	if (config->chipname) {
-		config = cavan_i2c_find_config(config->chipname);
-		if (config == NULL) {
-			pr_red_info("No config found");
-			return -EINVAL;
-		}
-
-		println("chipname = %s", config->chipname);
-		memcpy(&client->config, config, sizeof(client->config));
-	} else {
-		if (config->addr_bytes < 1 || config->addr_bytes > 4) {
-			pr_red_info("Invalid addr_bytes = %d", config->addr_bytes);
-			return -EINVAL;
-		}
-
-		if (config->value_bytes < 1 || config->value_bytes > 4) {
-			pr_red_info("Invalid value_bytes = %d", config->value_bytes);
-			return -EINVAL;
-		}
-
-		if (config->addr_step < 1 || config->addr_step > 4) {
-			pr_warn_info("Invalid addr_step = %d, set to default %d now", config->addr_step, config->addr_bytes);
-			config->addr_step = config->value_bytes;
-		}
+	if (config->chipname && (chip_config = cavan_i2c_find_config(config->chipname)) == NULL) {
+		pr_red_info("No config found for chip: %s", config->chipname);
+		return -EINVAL;
 	}
 
 	snprintf(pathname, sizeof(pathname), "/dev/i2c-%d", adapter);
@@ -222,11 +237,53 @@ int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slav
 	}
 
 	client->fd = fd;
+	client->adapter = adapter;
 
 	ret = cavan_i2c_set_address(client, slave_addr);
 	if (ret < 0) {
 		pr_red_info("cavan_i2c_set_address: %d", ret);
 		goto out_close_fd;
+	}
+
+	if (client->slave_addr > 0) {
+		if (cavan_i2c_sysfs_get_device_realpath(client, client->device_path, sizeof(client->device_path)) < 0) {
+			client->device_path[0] = 0;
+		} else {
+			println("device_path = %s", client->device_path);
+		}
+
+		if (cavan_i2c_sysfs_get_driver_realpath(client, client->driver_path, sizeof(client->driver_path)) < 0) {
+			client->driver_path[0] = 0;
+		} else {
+			println("driver_path = %s", client->driver_path);
+
+			if (chip_config == NULL) {
+				config->chipname = text_basename(client->driver_path);
+				chip_config = cavan_i2c_find_config(config->chipname);
+			}
+		}
+	}
+
+	if (chip_config) {
+		println("chipname = %s", chip_config->chipname);
+		memcpy(&client->config, chip_config, sizeof(client->config));
+	} else {
+		if (config->addr_bytes < 1 || config->addr_bytes > 4) {
+			pr_red_info("Invalid addr_bytes = %d", config->addr_bytes);
+			ret = -EINVAL;
+			goto out_close_fd;
+		}
+
+		if (config->value_bytes < 1 || config->value_bytes > 4) {
+			pr_red_info("Invalid value_bytes = %d", config->value_bytes);
+			ret = -EINVAL;
+			goto out_close_fd;
+		}
+
+		if (config->addr_step < 1 || config->addr_step > 4) {
+			pr_warn_info("Invalid addr_step = %d, set to default %d now", config->addr_step, config->addr_bytes);
+			config->addr_step = config->value_bytes;
+		}
 	}
 
 	if (config->addr_bytes < 2) {
@@ -447,4 +504,114 @@ int cavan_i2c_update_bits(struct cavan_i2c_client *client, u32 addr, u32 value, 
 	print_bit_mask(value, "mask: ");
 
 	return cavan_i2c_write_register(client, addr, value);
+}
+
+int cavan_i2c_sysfs_get_device_path(struct cavan_i2c_client *client, char *buff, size_t size)
+{
+	return snprintf(buff, size, "/sys/bus/i2c/devices/%d-%04x", client->adapter, client->slave_addr);
+}
+
+int cavan_i2c_sysfs_get_device_realpath(struct cavan_i2c_client *client, char *buff, size_t size)
+{
+	char pathname[1024];
+
+	cavan_i2c_sysfs_get_device_path(client, pathname, sizeof(pathname));
+
+	if (realpath(pathname, buff) == NULL) {
+#if CAVAN_I2C_DEBUG
+		pr_err_info("realpath: pathname = %s", pathname);
+#endif
+		return -ENOENT;
+	}
+
+	return 0;
+}
+
+int cavan_i2c_sysfs_get_device_name(struct cavan_i2c_client *client, char *buff, size_t size)
+{
+	int ret;
+	char *p;
+	int length;
+	ssize_t rdlen;
+	char pathname[1024];
+
+	ret = cavan_i2c_sysfs_get_device_path(client, pathname, sizeof(pathname));
+	if (ret < 0) {
+		return ret;
+	}
+
+	length = strlen(pathname);
+	strncpy(pathname + length, "/name", sizeof(pathname) - length);
+
+	rdlen = file_read(pathname, buff, size);
+	if (rdlen < 0) {
+		return rdlen;
+	}
+
+	for (p = buff + rdlen - 1; p > buff && cavan_isspace(*p); p--) {
+		*p = 0;
+	}
+
+	return p - buff;
+}
+
+int cavan_i2c_sysfs_get_driver_path(struct cavan_i2c_client *client, char *buff, size_t size)
+{
+	int ret;
+	int length;
+	ssize_t rdlen;
+	char *filename;
+
+	length = cavan_i2c_sysfs_get_device_path(client, buff, size);
+	filename = buff + length;
+	*filename++ = '/';
+	length = size - length - 1;
+	strncpy(filename, "driver", length);
+
+	rdlen = readlink(buff, filename, length);
+	if (rdlen < 0) {
+#if CAVAN_I2C_DEBUG
+		pr_err_info("readlink: pathname = %s", buff);
+#endif
+		return rdlen;
+	}
+
+	return 0;
+}
+
+int cavan_i2c_sysfs_get_driver_realpath(struct cavan_i2c_client *client, char *buff, size_t size)
+{
+	int ret;
+	char pathname[1024];
+
+	ret = cavan_i2c_sysfs_get_driver_path(client, pathname, sizeof(pathname));
+	if (ret < 0) {
+		return ret;
+	}
+
+	if (realpath(pathname, buff) == NULL) {
+#if CAVAN_I2C_DEBUG
+		pr_err_info("realpath: pathname = %s", pathname);
+#endif
+		return -ENOENT;
+	}
+
+	return 0;
+}
+
+int cavan_i2c_sysfs_get_driver_name(struct cavan_i2c_client *client, char *buff, size_t size)
+{
+	int ret;
+	char pathname[1024];
+	const char *basename;
+
+	ret = cavan_i2c_sysfs_get_driver_path(client, pathname, sizeof(pathname));
+	if (ret < 0) {
+		return ret;
+	}
+
+	basename = text_basename_simple(pathname);
+	strncpy(buff, basename, size);
+
+	return 0;
 }

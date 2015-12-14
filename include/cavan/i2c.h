@@ -48,11 +48,14 @@ struct cavan_i2c_config {
 
 struct cavan_i2c_client {
 	int fd;
+	int adapter;
 	u16 slave_addr;
 
 	int flags;
 	u32 scl_rate;
 
+	char device_path[1024];
+	char driver_path[1024];
 	struct cavan_i2c_config config;
 
 	void *private_data;
@@ -73,6 +76,13 @@ void cavan_i2c_adjust_endian(struct cavan_i2c_client *client, u8 *addr, u8 *valu
 int cavan_i2c_read_register(struct cavan_i2c_client *client, u32 addr, u32 *value);
 int cavan_i2c_write_register(struct cavan_i2c_client *client, u32 addr, u32 value);
 int cavan_i2c_update_bits(struct cavan_i2c_client *client, u32 addr, u32 value, u32 mask);
+
+int cavan_i2c_sysfs_get_device_path(struct cavan_i2c_client *client, char *buff, size_t size);
+int cavan_i2c_sysfs_get_device_realpath(struct cavan_i2c_client *client, char *buff, size_t size);
+int cavan_i2c_sysfs_get_device_name(struct cavan_i2c_client *client, char *buff, size_t size);
+int cavan_i2c_sysfs_get_driver_path(struct cavan_i2c_client *client, char *buff, size_t size);
+int cavan_i2c_sysfs_get_driver_realpath(struct cavan_i2c_client *client, char *buff, size_t size);
+int cavan_i2c_sysfs_get_driver_name(struct cavan_i2c_client *client, char *buff, size_t size);
 
 static inline void cavan_i2c_set_data(struct cavan_i2c_client *client, void *data)
 {
