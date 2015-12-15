@@ -23,13 +23,11 @@
 #include <huamobile/event.h>
 #include <huamobile.h>
 
-struct huamobile_gsensor_event
-{
+struct huamobile_gsensor_event {
 	int x, y, z;
 };
 
-struct huamobile_touch_point
-{
+struct huamobile_touch_point {
 	int id;
 	int x;
 	int y;
@@ -37,8 +35,7 @@ struct huamobile_touch_point
 	int released;
 };
 
-struct huamobile_input_device
-{
+struct huamobile_input_device {
 	struct huamobile_event_device *event_dev;
 	struct huamobile_input_device *next;
 
@@ -47,8 +44,7 @@ struct huamobile_input_device
 	bool (*event_handler)(struct huamobile_input_device *dev, struct input_event *event, void *data);
 };
 
-struct huamobile_input_service
-{
+struct huamobile_input_service {
 	struct huamobile_event_service event_service;
 
 	void *private_data;

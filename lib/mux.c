@@ -181,7 +181,8 @@ void cavan_mux_append_package(struct cavan_mux *mux, struct cavan_mux_package_ra
 	cavan_lock_release(&mux->lock);
 }
 
-struct cavan_mux_package_raw *cavan_mux_dequeue_package(struct cavan_mux *mux, size_t length) {
+struct cavan_mux_package_raw *cavan_mux_dequeue_package(struct cavan_mux *mux, size_t length)
+{
 	struct cavan_mux_package_raw **head;
 	struct cavan_mux_package_raw *package;
 
@@ -216,7 +217,8 @@ void cavan_mux_show_packages(struct cavan_mux *mux)
 	cavan_lock_release(&mux->lock);
 }
 
-struct cavan_mux_package *cavan_mux_package_alloc(struct cavan_mux *mux, size_t length) {
+struct cavan_mux_package *cavan_mux_package_alloc(struct cavan_mux *mux, size_t length)
+{
 	struct cavan_mux_package *package;
 	struct cavan_mux_package_raw *package_raw;
 
@@ -269,7 +271,8 @@ int cavan_mux_add_link(struct cavan_mux *mux, struct cavan_mux_link *link, u16 p
 	return 0;
 }
 
-struct cavan_mux_link *cavan_mux_find_link(struct cavan_mux *mux, u16 port) {
+struct cavan_mux_link *cavan_mux_find_link(struct cavan_mux *mux, u16 port)
+{
 	struct cavan_mux_link *link;
 
 	cavan_lock_acquire(&mux->lock);

@@ -783,7 +783,8 @@ int cavan_input_event2(int fd, int type, int code, int value)
 	return cavan_input_event(fd, &event, 1);
 }
 
-struct cavan_input_key *cavan_input_find_key(const char *name) {
+struct cavan_input_key *cavan_input_find_key(const char *name)
+{
 	struct cavan_input_key *p, *p_end;
 
 	for (p = cavan_input_keymap, p_end = p + NELEM(cavan_input_keymap); p < p_end; p++) {

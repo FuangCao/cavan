@@ -311,7 +311,8 @@ void cavan_dynamic_service_deinit(struct cavan_dynamic_service *service)
 	pthread_mutex_destroy(&service->lock);
 }
 
-struct cavan_dynamic_service *cavan_dynamic_service_create(size_t size) {
+struct cavan_dynamic_service *cavan_dynamic_service_create(size_t size)
+{
 	struct cavan_dynamic_service *service;
 
 	service = malloc(sizeof(*service) + size);

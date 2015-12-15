@@ -112,7 +112,8 @@ static bool cavan_mouse_event_handler(struct cavan_input_device *dev, struct inp
 	return true;
 }
 
-struct cavan_input_device *cavan_mouse_create(void) {
+struct cavan_input_device *cavan_mouse_create(void)
+{
 	struct cavan_mouse_device *mouse;
 	struct cavan_input_device *dev;
 

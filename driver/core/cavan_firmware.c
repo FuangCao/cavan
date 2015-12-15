@@ -120,7 +120,8 @@ static int cavan_firmware_close(struct cavan_firmware *fw)
 	return ret;
 }
 
-struct cavan_firmware *cavan_firmware_create(size_t size, int (*upgrade)(struct cavan_firmware *)) {
+struct cavan_firmware *cavan_firmware_create(size_t size, int (*upgrade)(struct cavan_firmware *))
+{
 	struct cavan_firmware *fw;
 
 	if (upgrade == NULL) {

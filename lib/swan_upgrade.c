@@ -944,7 +944,8 @@ enum swan_board_type get_swan_board_type_by_system_img(const char *system_img)
 	return type;
 }
 
-struct swan_image_info *get_swan_image_info_by_name(const char *filename) {
+struct swan_image_info *get_swan_image_info_by_name(const char *filename)
+{
 	struct swan_image_info *p, *end_p;
 
 	for (p = swan_images, end_p = p + ARRAY_SIZE(swan_images); p < end_p; p++) {
@@ -956,7 +957,8 @@ struct swan_image_info *get_swan_image_info_by_name(const char *filename) {
 	return NULL;
 }
 
-struct swan_image_info *get_swan_image_info_by_type(enum swan_image_type type) {
+struct swan_image_info *get_swan_image_info_by_type(enum swan_image_type type)
+{
 	struct swan_image_info *p, *end_p;
 
 	for (p = swan_images, end_p = p + ARRAY_SIZE(swan_images); p < end_p; p++) {

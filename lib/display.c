@@ -1118,7 +1118,8 @@ void cavan_display_stop(struct cavan_display_device *display)
 	cavan_thread_deinit(&display->thread);
 }
 
-struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height) {
+struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_device *display, size_t width, size_t height)
+{
 	struct cavan_display_memory *mem;
 	size_t size;
 
@@ -1136,7 +1137,8 @@ struct cavan_display_memory *cavan_display_memory_alloc(struct cavan_display_dev
 	return mem;
 }
 
-struct cavan_display_memory_rect *cavan_display_memory_rect_alloc(struct cavan_display_device *display, size_t width, size_t height, int border_width) {
+struct cavan_display_memory_rect *cavan_display_memory_rect_alloc(struct cavan_display_device *display, size_t width, size_t height, int border_width)
+{
 	struct cavan_display_memory *mem;
 	struct cavan_display_memory_rect *mem_rect;
 	size_t hsize, vsize;

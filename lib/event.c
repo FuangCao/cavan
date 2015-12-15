@@ -1745,7 +1745,8 @@ static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 	return 0;
 }
 
-struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device *dev, int x, int y) {
+struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device *dev, int x, int y)
+{
 	struct cavan_virtual_key *key;
 
 	single_link_foreach(&dev->vk_link, key) {

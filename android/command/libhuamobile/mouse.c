@@ -26,8 +26,7 @@ bool huamobile_mouse_device_match(uint8_t *key_bitmask, uint8_t *rel_bitmask)
 	if (test_bit(BTN_LEFT, key_bitmask) == 0 || \
 		test_bit(BTN_RIGHT, key_bitmask) == 0 || \
 		test_bit(REL_X, rel_bitmask) == 0 || \
-		test_bit(REL_Y, rel_bitmask) == 0)
-	{
+		test_bit(REL_Y, rel_bitmask) == 0) {
 		return false;
 	}
 
@@ -48,15 +47,13 @@ bool huamobile_mouse_device_matcher(int fd, const char *name, void *data)
 	pr_pos_info();
 
 	ret = huamobile_event_get_rel_bitmask(fd, rel_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_rel_bitmask");
 		return ret;
 	}
 
 	ret = huamobile_event_get_key_bitmask(fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_key_bitmask");
 		return ret;
 	}
@@ -67,32 +64,24 @@ bool huamobile_mouse_device_matcher(int fd, const char *name, void *data)
 static bool huamobile_mouse_event_handler(struct huamobile_input_device *dev, struct input_event *event, void *data)
 {
 	struct huamobile_input_service *service = data;
-	struct huamobile_mouse_device *mouse = (struct huamobile_mouse_device *)dev;
+	struct huamobile_mouse_device *mouse = (struct huamobile_mouse_device *) dev;
 	struct huamobile_touch_point *p = &mouse->point;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_KEY:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case BTN_LEFT:
-			if (event->value)
-			{
+			if (event->value) {
 				service->touch_handler(dev, p, service->private_data);
-			}
-			else
-			{
+			} else {
 				service->release_handler(dev, p, service->private_data);
 			}
 			break;
 
 		case BTN_RIGHT:
-			if (event->value)
-			{
+			if (event->value) {
 				service->right_touch_handler(dev, p, service->private_data);
-			}
-			else
-			{
+			} else {
 				service->right_release_handler(dev, p, service->private_data);
 			}
 			break;
@@ -103,28 +92,21 @@ static bool huamobile_mouse_event_handler(struct huamobile_input_device *dev, st
 		break;
 
 	case EV_REL:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case REL_X:
 			p->x += event->value * service->mouse_speed;
-			if (p->x < 0)
-			{
+			if (p->x < 0) {
 				p->x = 0;
-			}
-			else if (p->x > mouse->xmax)
-			{
+			} else if (p->x > mouse->xmax) {
 				p->x = mouse->xmax;
 			}
 			break;
 
 		case REL_Y:
 			p->y += event->value * service->mouse_speed;
-			if (p->y < 0)
-			{
+			if (p->y < 0) {
 				p->y = 0;
-			}
-			else if (p->y > mouse->ymax)
-			{
+			} else if (p->y > mouse->ymax) {
 				p->y = mouse->ymax;
 			}
 			break;
@@ -139,8 +121,7 @@ static bool huamobile_mouse_event_handler(struct huamobile_input_device *dev, st
 		break;
 
 	case EV_SYN:
-		if (p->x != mouse->xold || p->y != mouse->yold)
-		{
+		if (p->x != mouse->xold || p->y != mouse->yold) {
 			service->move_handler(dev, p, service->private_data);
 
 			mouse->xold = p->x;
@@ -158,12 +139,11 @@ static bool huamobile_mouse_event_handler(struct huamobile_input_device *dev, st
 static int huamobile_mouse_probe(struct huamobile_input_device *dev, void *data)
 {
 	struct huamobile_input_service *service = data;
-	struct huamobile_mouse_device *mouse = (struct huamobile_mouse_device *)dev;
+	struct huamobile_mouse_device *mouse = (struct huamobile_mouse_device *) dev;
 
 	pr_pos_info();
 
-	if (service->lcd_width <= 0 || service->lcd_height <= 0)
-	{
+	if (service->lcd_width <= 0 || service->lcd_height <= 0) {
 		pr_red_info("service->lcd_width <= 0 || service->lcd_height <= 0");
 		return -EINVAL;
 	}
@@ -183,8 +163,7 @@ struct huamobile_input_device *huamobile_mouse_create(void)
 	pr_pos_info();
 
 	mouse = malloc(sizeof(*mouse));
-	if (mouse == NULL)
-	{
+	if (mouse == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}

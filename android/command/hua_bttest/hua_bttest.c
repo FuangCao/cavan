@@ -69,8 +69,7 @@
 		pr_red_info("%s[%d]:" fmt, __FUNCTION__, __LINE__, ##args); \
 	}
 
-struct huamobile_hci_name_map
-{
+struct huamobile_hci_name_map {
 	char addr[32];
 	char name[128];
 };
@@ -90,8 +89,7 @@ static ssize_t huamobile_hci_inquiry(int hci_dev, int dev_id, struct hci_inquiry
 	pr_bold_info("Scanning ...");
 
 	ret = ioctl(hci_dev, HCIINQUIRY, req);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -107,8 +105,7 @@ static int huamobile_hci_get_pathname(int hci_dev, int dev_id, char *pathname, s
 	memset(&dev_info, 0, sizeof(struct hci_dev_info));
 	dev_info.dev_id = dev_id;
 	ret = ioctl(hci_dev, HCIGETDEVINFO, &dev_info);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("HCIGETDEVINFO");
 		return ret;
 	}
@@ -126,29 +123,25 @@ static int huamobile_mmap(const char *pathname, void **addr, size_t *size)
 	void *mem;
 
 	fd = open(pathname, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_error_info("open file `%s'", pathname);
 		return fd;
 	}
 
 	ret = flock(fd, LOCK_SH);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("flock");
 		goto out_close_fd;
 	}
 
 	ret = fstat(fd, &st);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("fstat");
 		goto out_unlock_fd;
 	}
 
 	mem = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-	if (mem == NULL || mem == MAP_FAILED)
-	{
+	if (mem == NULL || mem == MAP_FAILED) {
 		ret = -EFAULT;
 		pr_error_info("mmap");
 		goto out_unlock_fd;
@@ -177,14 +170,11 @@ static ssize_t huamobile_get_map_item(const char *start, const char *end, char *
 	size_t i;
 	char *p;
 
-	for (i = 0; i < count && start < end; i++)
-	{
+	for (i = 0; i < count && start < end; i++) {
 		p = item[i];
 
-		while (start < end)
-		{
-			if (BYTE_IS_SEP(*start))
-			{
+		while (start < end) {
+			if (BYTE_IS_SEP(*start)) {
 				break;
 			}
 
@@ -209,17 +199,13 @@ static ssize_t huamobile_load_name_map1(void *buff, size_t size, struct huamobil
 	map_bak = map;
 	end_map = map + count;
 
-	for (p = buff, end_file = p + size; p < end_file && map < end_map; p = end_line + 1)
-	{
-		while (p < end_file && BYTE_IS_SPACE(*p))
-		{
+	for (p = buff, end_file = p + size; p < end_file && map < end_map; p = end_line + 1) {
+		while (p < end_file && BYTE_IS_SPACE(*p)) {
 			p++;
 		}
 
-		for (end_line = p; end_line < end_file; end_line++)
-		{
-			if (BYTE_IS_LF(*end_line))
-			{
+		for (end_line = p; end_line < end_file; end_line++) {
+			if (BYTE_IS_LF(*end_line)) {
 				break;
 			}
 		}
@@ -227,8 +213,7 @@ static ssize_t huamobile_load_name_map1(void *buff, size_t size, struct huamobil
 		item[0] = map->addr;
 		item[1] = map->name;
 		ret = huamobile_get_map_item(p, end_line, item, 2);
-		if (ret == 2)
-		{
+		if (ret == 2) {
 			map++;
 		}
 
@@ -248,8 +233,7 @@ static ssize_t huamobile_load_name_map2(const char *pathname, struct huamobile_h
 	// pr_bold_info("pathname = %s", pathname);
 
 	fd = huamobile_mmap(pathname, &addr, &size);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("huamobile_mmap");
 		return fd;
 	}
@@ -267,8 +251,7 @@ static ssize_t huamobile_load_name_map3(int hci_dev, int dev_id, struct huamobil
 	char pathname[PATH_MAX + 1];
 
 	ret = huamobile_hci_get_pathname(hci_dev, dev_id, pathname, sizeof(pathname) - 1);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("huamobile_hci_get_pathname");
 		return ret;
 	}
@@ -280,10 +263,8 @@ static const char *huamobile_hci_get_device_name(const char *addr, const struct 
 {
 	const struct huamobile_hci_name_map *map_end;
 
-	for (map_end = map + size; map < map_end; map++)
-	{
-		if (strcmp(map->addr, addr) == 0)
-		{
+	for (map_end = map + size; map < map_end; map++) {
+		if (strcmp(map->addr, addr) == 0) {
 			return map->name;
 		}
 	}
@@ -301,18 +282,15 @@ static int huamobile_hci_show_inquiry_info(int hci_dev, int dev_id, const inquir
 	const char *devname;
 
 	map_size = huamobile_load_name_map3(hci_dev, dev_id, name_map, NELEM(name_map));
-	if (map_size < 0)
-	{
+	if (map_size < 0) {
 		pr_red_info("huamobile_load_name_map3");
 		map_size = 0;
 	}
 
-	for (info_end = info + count; info < info_end; info++)
-	{
+	for (info_end = info + count; info < info_end; info++) {
 		ba2str(&info->bdaddr, peer_addr);
 		devname = huamobile_hci_get_device_name(peer_addr, name_map, map_size);
-		if (devname == NULL)
-		{
+		if (devname == NULL) {
 			devname = "UNKNOWN";
 		}
 
@@ -332,58 +310,50 @@ int main(int argc, char *argv[])
 	ssize_t num_rsp;
 
 	ret = bt_is_enabled();
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("bt_is_enabled");
 		return ret;
 	}
 
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		ret = bt_enable();
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("bt_enable");
 			return ret;
 		}
 	}
 
 	dev_id = hci_get_route(NULL);
-	if (dev_id < 0)
-	{
+	if (dev_id < 0) {
 		ret = dev_id;
 		pr_error_info("hci_get_route");
 		goto out_bt_disable;
 	}
 
 	hci_dev = hci_open_dev(dev_id);
-	if (hci_dev < 0)
-	{
+	if (hci_dev < 0) {
 		ret = hci_dev;
 		pr_error_info("hci_open_dev");
 		goto out_bt_disable;
 	}
 
 	req = alloca(sizeof(struct hci_inquiry_req) + sizeof(inquiry_info) * HUAMOBILE_MAX_RSP_NUM);
-	if (req == NULL)
-	{
+	if (req == NULL) {
 		ret = -ENOMEM;
 		pr_error_info("alloca");
 		goto out_hci_close_dev;
 	}
 
 	num_rsp = huamobile_hci_inquiry(hci_dev, dev_id, req, HUAMOBILE_MAX_RSP_NUM);
-	if (num_rsp < 0)
-	{
+	if (num_rsp < 0) {
 		ret = num_rsp;
 		pr_error_info("huamobile_hci_inquiry");
 		goto out_hci_close_dev;
 	}
 
-	info = (inquiry_info *)(req + 1);
+	info = (inquiry_info *) (req + 1);
 	ret = huamobile_hci_show_inquiry_info(hci_dev, dev_id, info, num_rsp);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("huamobile_hci_show_inquiry_info");
 		goto out_hci_close_dev;
 	}

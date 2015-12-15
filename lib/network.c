@@ -405,7 +405,8 @@ int cavan_route_table_insert_node(struct cavan_route_table *table, struct cavan_
 	return -ENOMEM;
 }
 
-struct cavan_route_node **cavan_find_route_by_mac(struct cavan_route_table *table, u8 *mac) {
+struct cavan_route_node **cavan_find_route_by_mac(struct cavan_route_table *table, u8 *mac)
+{
 	struct cavan_route_node *p, **pp, **pp_end;
 
 	for (pp = table->route_table, pp_end = pp + table->table_size; pp < pp_end; pp++) {
@@ -419,7 +420,8 @@ struct cavan_route_node **cavan_find_route_by_mac(struct cavan_route_table *tabl
 	return NULL;
 }
 
-struct cavan_route_node **cavan_find_route_by_ip(struct cavan_route_table *table, u32 ip) {
+struct cavan_route_node **cavan_find_route_by_ip(struct cavan_route_table *table, u32 ip)
+{
 	struct cavan_route_node *p, **pp, **pp_end;
 
 	for (pp = table->route_table, pp_end = pp + table->table_size; pp < pp_end; pp++) {

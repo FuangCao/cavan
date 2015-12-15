@@ -24,8 +24,7 @@
 #include <huamobile/touchscreen.h>
 #include <huamobile.h>
 
-struct huamobile_mouse_device
-{
+struct huamobile_mouse_device {
 	struct huamobile_input_device input_dev;
 	struct huamobile_touch_point point;
 	int xold, xmax;

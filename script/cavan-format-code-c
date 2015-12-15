@@ -41,7 +41,7 @@ my @dirlist = @ARGV;
 
 if (@dirlist <= 0) {
 	if (-f "build/core/cavan_main.mk") {
-		push @dirlist, ("lib", "include", "app", "cpp", "test", "script", "driver");
+		push @dirlist, ("lib", "include", "app", "cpp", "test", "script", "driver", "android");
 	} else {
 		push @dirlist, ".";
 	}
@@ -69,6 +69,7 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 		# s/^(([\t ]+)case.*:)\s*\{/$1\n$2\t\{/mg;
 	}
 
+	s/^[\t ]*((class|struct)[^\{\n]+\([^\{\n]+\))[^\{\n]*\{[\t ]*$/$1\n\{/mg;
 	s/^(([\t ]*).*\{)\s*\{/$1\n$2\t\{/mg;
 	s/\}\s*else\s*\{[\t ]*\\\s*$/\} else \{ \\/mg;
 	s/\}\s*else\s+(if.*\S)\s*\{[\t ]*\\\s*$/\} else $1 \{ \\/mg;

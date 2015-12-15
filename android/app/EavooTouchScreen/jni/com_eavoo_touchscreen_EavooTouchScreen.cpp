@@ -14,8 +14,7 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 
-struct swan_ts_i2c_request
-{
+struct swan_ts_i2c_request {
 	u16 offset;
 	u16 size;
 	void *data;
@@ -28,8 +27,7 @@ enum swan_ts_ioctl_type
 	SWAN_TS_IOCTL_TYPE_OTHER
 };
 
-struct ft5406_firmware_data_package
-{
+struct ft5406_firmware_data_package {
 	u32 size;
 	void *data;
 };
@@ -142,81 +140,62 @@ ssize_t ft5406_read_firmware_data(const char *cfgpath, char *buff, size_t size)
 	char readval;
 
 	fd = open(cfgpath, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		LOGE("Failed to open file %s", cfgpath);
 		return fd;
 	}
 
-	for (buff_bak = buff, buff_end = buff + size; buff < buff_end; buff++)
-	{
+	for (buff_bak = buff, buff_end = buff + size; buff < buff_end; buff++) {
 		u8 value;
 
-		while (1)
-		{
+		while (1) {
 			readlen = file_read_byte(fd, &readval);
-			if (readlen < 0)
-			{
+			if (readlen < 0) {
 				goto out_close_fd;
 			}
 
-			if (readlen < 1)
-			{
+			if (readlen < 1) {
 				goto out_cal_len;
 			}
 
-			if (readval != '0')
-			{
+			if (readval != '0') {
 				continue;
 			}
 
 			readlen = file_read_byte(fd, &readval);
-			if (readlen < 0)
-			{
+			if (readlen < 0) {
 				goto out_close_fd;
 			}
 
-			if (readlen < 1)
-			{
+			if (readlen < 1) {
 				goto out_cal_len;
 			}
 
-			if (readval == 'x' || readval == 'X')
-			{
+			if (readval == 'x' || readval == 'X') {
 				break;
 			}
 		}
 
 		value = 0;
 
-		while (1)
-		{
+		while (1) {
 			readlen = file_read_byte(fd, &readval);
-			if (readlen < 0)
-			{
+			if (readlen < 0) {
 				goto out_close_fd;
 			}
 
-			if (readlen < 1)
-			{
+			if (readlen < 1) {
 				*buff = value;
 				goto out_cal_len;
 			}
 
-			if (readval >= '0' && readval <= '9')
-			{
+			if (readval >= '0' && readval <= '9') {
 				value = (value << 4) + readval - '0';
-			}
-			else if (readval >= 'a' && readval <= 'z')
-			{
+			} else if (readval >= 'a' && readval <= 'z') {
 				value = (value << 4) + readval - 'a' + 10;
-			}
-			else if (readval >= 'A' && readval <= 'Z')
-			{
+			} else if (readval >= 'A' && readval <= 'Z') {
 				value = (value << 4) + readval - 'A' + 10;
-			}
-			else
-			{
+			} else {
 				*buff = value;
 				break;
 			}
@@ -236,9 +215,8 @@ u8 ft5406_calculate_checksum(const char *buff, size_t size)
 	const char *buff_end;
 	u8 checksum;
 
-	for (buff_end = buff + size, checksum = 0; buff < buff_end; buff++)
-	{
-		checksum ^= *(u8 *)buff;
+	for (buff_end = buff + size, checksum = 0; buff < buff_end; buff++) {
+		checksum ^= *(u8 *) buff;
 	}
 
 	return checksum;
@@ -246,7 +224,7 @@ u8 ft5406_calculate_checksum(const char *buff, size_t size)
 
 int ft5406_firmware_write_last_data(int fd, const void *buff, size_t size)
 {
-	struct ft5406_firmware_data_package pkg = {size, (void *)buff};
+	struct ft5406_firmware_data_package pkg = {size, (void *) buff};
 
 	return ioctl(fd, FT5406_IOCTL_SINGLE_WRITE, &pkg);
 }
@@ -259,8 +237,7 @@ int ft5406_firmware_upgrade(int dev_fd, const char *cfgpath)
 	u8 checksum[2];
 
 	bufflen = ft5406_read_firmware_data(cfgpath, buff, sizeof(buff)) - 2;
-	if (bufflen < 6)
-	{
+	if (bufflen < 6) {
 		LOGE("ft5406_parse_app_file");
 		return bufflen;
 	}
@@ -268,36 +245,31 @@ int ft5406_firmware_upgrade(int dev_fd, const char *cfgpath)
 	LOGI("bufflen = %ld", bufflen);
 
 	ret = ft5406_upgrade_enter(dev_fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		LOGE("ft5406_upgrade_start");
 		return ret;
 	}
 
 	ret = ft5406_erase_app(dev_fd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		LOGE("ft5406_erase_app");
 		return ret;
 	}
 
 	writelen = write(dev_fd, buff, bufflen - 6);
-	if (writelen < 0)
-	{
+	if (writelen < 0) {
 		LOGE("write");
 		return writelen;
 	}
 
 	writelen = ft5406_firmware_write_last_data(dev_fd, buff + writelen, 6);
-	if (writelen < 0)
-	{
+	if (writelen < 0) {
 		LOGE("ft5406_firmware_write_last_data");
 		return writelen;
 	}
 
 	ret = ft5406_read_checksum(dev_fd, checksum);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		LOGE("ft5406_read_checksum");
 		return ret;
 	}
@@ -306,8 +278,7 @@ int ft5406_firmware_upgrade(int dev_fd, const char *cfgpath)
 
 	LOGI("Source checksum = 0x%02x, Dest checksum = 0x%02x", checksum[1], checksum[0]);
 
-	if (checksum[0] != checksum[1])
-	{
+	if (checksum[0] != checksum[1]) {
 		LOGE("Checksum do't match");
 		return -EFAULT;
 	}
@@ -327,14 +298,12 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_TouchScreen_OpenTouchscree
 	char buff[1024];
 
 	fd = env->GetIntField(obj, mFieldDeviceFd);
-	if (fd > 0)
-	{
+	if (fd > 0) {
 		close(fd);
 	}
 
-	path = (const char *)env->GetStringUTFChars(devpath, NULL);
-	if (path == NULL)
-	{
+	path = (const char *) env->GetStringUTFChars(devpath, NULL);
+	if (path == NULL) {
 		return false;
 	}
 
@@ -342,18 +311,14 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_TouchScreen_OpenTouchscree
 
 	fd = open(path, O_RDWR);
 	env->SetIntField(obj, mFieldDeviceFd, fd);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return false;
 	}
 
-	if (ioctl(fd, SWAN_TS_IOCTL_GET_NAME(sizeof(buff)), buff) < 0)
-	{
+	if (ioctl(fd, SWAN_TS_IOCTL_GET_NAME(sizeof(buff)), buff) < 0) {
 		LOGE("SWAN_TS_IOCTL_GET_NAME failed");
 		env->SetObjectField(obj, mFieldDeviceName, env->NewStringUTF("Unknown"));
-	}
-	else
-	{
+	} else {
 		LOGI("Device name = %s", buff);
 		env->SetObjectField(obj, mFieldDeviceName, env->NewStringUTF(buff));
 	}
@@ -373,8 +338,7 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_TouchScreen_CloseTouchScre
 	int fd;
 
 	fd = env->GetIntField(obj, mFieldDeviceFd);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		return false;
 	}
 
@@ -394,14 +358,12 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_TouchScreen_CalibrationNat
 	int fd;
 
 	fd = env->GetIntField(obj, mFieldDeviceFd);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		LOGI("Touchscreen device is not opened");
 		return false;
 	}
 
-	if (ioctl(fd, SWAN_TS_IOCTL_CALIBRATION) < 0)
-	{
+	if (ioctl(fd, SWAN_TS_IOCTL_CALIBRATION) < 0) {
 		LOGE("ioctl SWAN_TS_IOCTL_CALIBRATION: %s", strerror(errno));
 		return false;
 	}
@@ -421,27 +383,24 @@ JNIEXPORT jboolean JNICALL Java_com_eavoo_touchscreen_TouchScreen_UpgradeFt5406N
 	int ret;
 
 	fd = env->GetIntField(obj, mFieldDeviceFd);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		LOGI("Touchscreen device is not opened");
 		return false;
 	}
 
-	cfgpath = (const char *)env->GetStringUTFChars(pathname, NULL);
-	if (cfgpath == NULL)
-	{
+	cfgpath = (const char *) env->GetStringUTFChars(pathname, NULL);
+	if (cfgpath == NULL) {
 		return false;
 	}
 
 	return ft5406_firmware_upgrade(fd, cfgpath) < 0 ? false : true;
 }
 
-static JNINativeMethod nativeMethods[] =
-{
-	{"OpenTouchscreenDeviceNative", "(Ljava/lang/String;)Z", (void *)Java_com_eavoo_touchscreen_TouchScreen_OpenTouchscreenDeviceNative},
-	{"CloseTouchScreenDeviceNative", "()Z", (void *)Java_com_eavoo_touchscreen_TouchScreen_CloseTouchScreenDeviceNative},
-	{"CalibrationNative", "()Z", (void *)Java_com_eavoo_touchscreen_TouchScreen_CalibrationNative},
-	{"UpgradeFt5406Native", "(Ljava/lang/String;)Z", (void *)Java_com_eavoo_touchscreen_TouchScreen_UpgradeFt5406Native}
+static JNINativeMethod nativeMethods[] = {
+	{"OpenTouchscreenDeviceNative", "(Ljava/lang/String;)Z", (void *) Java_com_eavoo_touchscreen_TouchScreen_OpenTouchscreenDeviceNative},
+	{"CloseTouchScreenDeviceNative", "()Z", (void *) Java_com_eavoo_touchscreen_TouchScreen_CloseTouchScreenDeviceNative},
+	{"CalibrationNative", "()Z", (void *) Java_com_eavoo_touchscreen_TouchScreen_CalibrationNative},
+	{"UpgradeFt5406Native", "(Ljava/lang/String;)Z", (void *) Java_com_eavoo_touchscreen_TouchScreen_UpgradeFt5406Native}
 };
 
 jint JNI_OnLoad(JavaVM *jvm, void *reserved)
@@ -453,15 +412,13 @@ jint JNI_OnLoad(JavaVM *jvm, void *reserved)
 	LOGI(">>>>>>>>>> JNI_OnLoad <<<<<<<<<<");
 
 	ret = jvm->GetEnv((void **)&env, JNI_VERSION_1_6);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		LOGE("jvm->GetEnv(&env, JNI_VERSION_1_6)");
 		return ret;
 	}
 
 	clazz = env->FindClass("com/eavoo/touchscreen/TouchScreen");
-	if (clazz == NULL)
-	{
+	if (clazz == NULL) {
 		LOGE("env->FindClass(\"com/eavoo/touchscreen/TouchScreen\")");
 		return -1;
 	}
@@ -471,8 +428,7 @@ jint JNI_OnLoad(JavaVM *jvm, void *reserved)
 	mFieldDeviceName = env->GetFieldID(clazz, "mDeviceName", "Ljava/lang/String;");
 
 	ret = env->RegisterNatives(clazz, nativeMethods, NELEM(nativeMethods));
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		LOGE("env->RegisterNatives(clazz, nativeMethods, NELEM(nativeMethods))");
 		return ret;
 	}

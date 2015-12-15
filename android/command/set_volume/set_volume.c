@@ -36,14 +36,13 @@
 
 #ifndef NELEM
 #define NELEM(a) \
-	((int)(sizeof(a) / sizeof((a)[0])))
+	((int) (sizeof(a) / sizeof((a)[0])))
 #endif
 
 int setStreamVolume(int stream, float volume);
 int getStreamVolume(int stream, float *volume);
 
-static const char *stream_name_list[] =
-{
+static const char *stream_name_list[] = {
 	"voice_call",
 	"system",
 	"ring",
@@ -62,10 +61,8 @@ static int getStreamByName(const char *name)
 {
 	int i;
 
-	for (i = 0; i < NELEM(stream_name_list); i++)
-	{
-		if (strcmp(stream_name_list[i], name) == 0)
-		{
+	for (i = 0; i < NELEM(stream_name_list); i++) {
+		if (strcmp(stream_name_list[i], name) == 0) {
 			return i;
 		}
 	}
@@ -82,35 +79,25 @@ int main(int argc, char *argv[])
 	assert(argc > 1);
 
 	stream = getStreamByName(argv[1]);
-	if (stream < 0)
-	{
+	if (stream < 0) {
 		pr_red_info("getStreamByName");
 		return stream;
 	}
 
-	if (argc > 2)
-	{
+	if (argc > 2) {
 		volume = atoi(argv[2]);
 
 		ret = setStreamVolume(stream, volume / 100);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("setStreamVolume");
-		}
-		else
-		{
+		} else {
 			pr_green_info("setStreamVolume");
 		}
-	}
-	else
-	{
+	} else {
 		ret = getStreamVolume(stream, &volume);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("getStreamVolume");
-		}
-		else
-		{
+		} else {
 			pr_green_info("volume = %f", volume);
 		}
 	}

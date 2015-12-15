@@ -23,8 +23,7 @@ namespace android {
 
 const String16 ISuService::sServiceName("cavan.su");
 
-class BpSuService: public BpInterface<ISuService>
-{
+class BpSuService: public BpInterface<ISuService> {
 private:
 	int mFlags;
 
@@ -87,13 +86,11 @@ public:
 		return 0;
 	}
 
-	int openPipeSlave(int ttyfds[3])
-	{
+	int openPipeSlave(int ttyfds[3]) {
 		return cavan_exec_open_temp_pipe_slave(ttyfds, mPid, mFlags);
 	}
 
-	int redirectSlaveStdio(void)
-	{
+	int redirectSlaveStdio(void) {
 		int ret;
 		int ttyfds[3];
 

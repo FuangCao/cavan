@@ -373,7 +373,8 @@ void ncurses_draw_menu_base(WINDOW *win, struct kconfig_menu_descriptor *desc, i
 	}
 }
 
-struct kconfig_menu_item *list_node_to_menu_item(struct cavan_list_node *node) {
+struct kconfig_menu_item *list_node_to_menu_item(struct cavan_list_node *node)
+{
 	if (node == NULL) {
 		return NULL;
 	}
@@ -387,7 +388,8 @@ void ncurses_draw_menu(WINDOW *win, struct kconfig_menu_descriptor *desc)
 	ncurses_draw_menu_base(win, desc, desc->y, 0, desc->head);
 }
 
-struct kconfig_menu_item *kconfig_menu_get_next_item(struct kconfig_menu_item *curr_item) {
+struct kconfig_menu_item *kconfig_menu_get_next_item(struct kconfig_menu_item *curr_item)
+{
 	struct kconfig_menu_item *item;
 
 	if (curr_item->state != KCONFIG_STATE_DESELED && curr_item->child) {
@@ -402,7 +404,8 @@ struct kconfig_menu_item *kconfig_menu_get_next_item(struct kconfig_menu_item *c
 	return item;
 }
 
-struct kconfig_menu_item *kconfig_menu_get_prev_item(struct kconfig_menu_item *curr_item) {
+struct kconfig_menu_item *kconfig_menu_get_prev_item(struct kconfig_menu_item *curr_item)
+{
 	struct kconfig_menu_item *item;
 
 	if (curr_item->parent) {
@@ -526,7 +529,8 @@ void kconfig_menu_item_init(struct kconfig_menu_item *item, const char *text)
 	item->child = NULL;
 }
 
-struct kconfig_menu_item *kconfig_menu_new_item(const char *text) {
+struct kconfig_menu_item *kconfig_menu_new_item(const char *text)
+{
 	struct kconfig_menu_item *item;
 
 	item = malloc(sizeof(*item));

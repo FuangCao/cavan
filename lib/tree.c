@@ -23,7 +23,8 @@ int binary_tree_init(struct binary_tree_descriptor *desc)
 	return 0;
 }
 
-struct binary_tree_node *binary_tree_malloc_node(struct binary_tree_descriptor *desc, void *data, struct binary_tree_node *left, struct binary_tree_node *right) {
+struct binary_tree_node *binary_tree_malloc_node(struct binary_tree_descriptor *desc, void *data, struct binary_tree_node *left, struct binary_tree_node *right)
+{
 	struct binary_tree_node *p;
 
 	if (desc->count < ARRAY_SIZE(desc->buff)) {

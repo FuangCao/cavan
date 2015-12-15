@@ -24,11 +24,9 @@ int huamobile_msleep(useconds_t ms)
 {
 	int ret;
 
-	while (ms--)
-	{
+	while (ms--) {
 		ret = usleep(1000);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 	}
@@ -40,11 +38,9 @@ int huamobile_ssleep(useconds_t ss)
 {
 	int ret;
 
-	while (ss--)
-	{
+	while (ss--) {
 		ret = usleep(1000 * 1000);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 	}

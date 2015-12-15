@@ -34,8 +34,7 @@ enum {
 	CMD_POPEN,
 };
 
-class ISuService : public IInterface
-{
+class ISuService : public IInterface {
 protected:
 	pid_t mPid;
 
@@ -71,8 +70,7 @@ public:
 	virtual int popen(const char *command, int flags) = 0;
 };
 
-class BnSuService: public BnInterface<ISuService>
-{
+class BnSuService: public BnInterface<ISuService> {
 protected:
 	int mLines;
 	int mColumns;

@@ -23,8 +23,7 @@
 
 int huamobile_text_cmp(const char *left, const char *right)
 {
-	while (*left && *left == *right)
-	{
+	while (*left && *left == *right) {
 		left++;
 		right++;
 	}
@@ -34,10 +33,8 @@ int huamobile_text_cmp(const char *left, const char *right)
 
 int huamobile_text_lhcmp(const char *left, const char *right)
 {
-	while (*left)
-	{
-		if (*left != *right)
-		{
+	while (*left) {
+		if (*left != *right) {
 			return *left - *right;
 		}
 
@@ -50,14 +47,11 @@ int huamobile_text_lhcmp(const char *left, const char *right)
 
 char *huamobile_text_nfind(const char *text, const char *end, char c, size_t count)
 {
-	while (text < end)
-	{
-		if (*text == c)
-		{
+	while (text < end) {
+		if (*text == c) {
 			count--;
 
-			if (count == 0)
-			{
+			if (count == 0) {
 				break;
 			}
 		}
@@ -65,13 +59,12 @@ char *huamobile_text_nfind(const char *text, const char *end, char c, size_t cou
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *huamobile_text_copy(char *dest, const char *src)
 {
-	while ((*dest = *src))
-	{
+	while ((*dest = *src)) {
 		dest++;
 		src++;
 	}
@@ -83,8 +76,7 @@ char *huamobile_text_ncopy(char *dest, const char *src, size_t size)
 {
 	const char *src_end;
 
-	for (src_end = src + size - 1; src < src_end && *src; dest++, src++)
-	{
+	for (src_end = src + size - 1; src < src_end && *src; dest++, src++) {
 		*dest = *src;
 	}
 
@@ -95,45 +87,40 @@ char *huamobile_text_ncopy(char *dest, const char *src, size_t size)
 
 char *huamobile_text_skip_space_head(const char *text, const char *line_end)
 {
-	while (text < line_end && BYTE_IS_SPACE(*text))
-	{
+	while (text < line_end && BYTE_IS_SPACE(*text)) {
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *huamobile_text_skip_space_tail(const char *text, const char *line)
 {
-	while (text > line && BYTE_IS_SPACE(*text))
-	{
+	while (text > line && BYTE_IS_SPACE(*text)) {
 		text--;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *huamobile_text_find_line_end(const char *text, const char *file_end)
 {
-	while (text < file_end)
-	{
-		if (BYTE_IS_LF(*text))
-		{
+	while (text < file_end) {
+		if (BYTE_IS_LF(*text)) {
 			break;
 		}
 
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }
 
 char *huamobile_text_skip_line_end(const char *text, const char *file_end)
 {
-	while (text < file_end && BYTE_IS_LF(*text))
-	{
+	while (text < file_end && BYTE_IS_LF(*text)) {
 		text++;
 	}
 
-	return (char *)text;
+	return (char *) text;
 }

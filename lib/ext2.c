@@ -811,7 +811,8 @@ static int cavan_ext2_find_file(struct ext2_desc *desc, struct cavan_ext2_file *
 	return 0;
 }
 
-struct cavan_ext2_file *cavan_ext2_open_file(struct ext2_desc *desc, const char *pathname, int flags, mode_t mode) {
+struct cavan_ext2_file *cavan_ext2_open_file(struct ext2_desc *desc, const char *pathname, int flags, mode_t mode)
+{
 	int ret;
 	struct cavan_ext2_file *fp;
 

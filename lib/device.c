@@ -1110,7 +1110,8 @@ struct filesystem_desc fs_table[] = {
 	},
 };
 
-struct filesystem_desc *get_fsdesc_by_name(const char *name) {
+struct filesystem_desc *get_fsdesc_by_name(const char *name)
+{
 	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(fs_table); i++) {
@@ -1124,7 +1125,8 @@ struct filesystem_desc *get_fsdesc_by_name(const char *name) {
 	return NULL;
 }
 
-struct filesystem_desc *get_fsdesc_by_type(enum filesystem_type type) {
+struct filesystem_desc *get_fsdesc_by_type(enum filesystem_type type)
+{
 	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(fs_table); i++) {

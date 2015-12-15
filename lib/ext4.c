@@ -917,7 +917,8 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 	return 0;
 }
 
-struct cavan_ext4_file *cavan_ext4_open_file(struct cavan_ext4_fs *fs, const char *pathname) {
+struct cavan_ext4_file *cavan_ext4_open_file(struct cavan_ext4_fs *fs, const char *pathname)
+{
 	int ret;
 	struct cavan_ext4_file *file;
 

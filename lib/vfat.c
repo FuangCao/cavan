@@ -593,7 +593,8 @@ static int cavan_vfat_find_file(struct cavan_vfat_fs *fs, struct cavan_vfat_file
 	return 0;
 }
 
-struct cavan_vfat_file *cavan_vfat_open_file(struct cavan_vfat_fs *fs, const char *pathname) {
+struct cavan_vfat_file *cavan_vfat_open_file(struct cavan_vfat_fs *fs, const char *pathname)
+{
 	int ret;
 	struct cavan_vfat_file *file;
 

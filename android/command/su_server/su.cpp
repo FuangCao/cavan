@@ -45,67 +45,56 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "version",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
-		},
-		{
+		}, {
 			.name = "command",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_COMMAND,
-		},
-		{
+		}, {
 			.name = "login",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LOGIN,
-		},
-		{
+		}, {
 			.name = "preserve-environment",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_RESET,
-		},
-		{
+		}, {
 			.name = "shell",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SHELL,
-		},
-		{
+		}, {
 			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON,
-		},
-		{
+		}, {
 			.name = "service",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	bool daemon = false;
 	const char *command = NULL;
 
-	while ((c = getopt_long(argc, argv, "vVhH:c:lmps:i:I:P:LaAd", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "vVhH:c:lmps:i:I:P:LaAd", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
@@ -149,8 +138,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (daemon)
-	{
+	if (daemon) {
 		ProcessState::self()->setThreadPoolMaxThreadCount(0);
 		SuService::publishAndJoinThreadPool();
 

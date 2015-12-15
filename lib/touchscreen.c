@@ -299,7 +299,8 @@ static int cavan_multi_touch_device_probe(struct cavan_input_device *dev, void *
 	return cavan_touch_device_probe(&ts->touch_dev, data);
 }
 
-struct cavan_input_device *cavan_multi_touch_device_create(void) {
+struct cavan_input_device *cavan_multi_touch_device_create(void)
+{
 	struct cavan_multi_touch_device *ts;
 	struct cavan_touch_device *touch_dev;
 	struct cavan_input_device *dev;
@@ -430,7 +431,8 @@ static int cavan_single_touch_device_probe(struct cavan_input_device *dev, void 
 	return cavan_touch_device_probe(&ts->touch_dev, data);
 }
 
-struct cavan_input_device *cavan_single_touch_device_create(void) {
+struct cavan_input_device *cavan_single_touch_device_create(void)
+{
 	struct cavan_single_touch_device *ts;
 	struct cavan_touch_device *touch_dev;
 	struct cavan_input_device *dev;

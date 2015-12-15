@@ -76,7 +76,8 @@ void cavan_mtd_deinit(struct cavan_mtd_descriptor *desc)
 {
 }
 
-struct mtd_partition_info *cavan_mtd_get_partition_info_by_name(struct cavan_mtd_descriptor *desc, const char *partname) {
+struct mtd_partition_info *cavan_mtd_get_partition_info_by_name(struct cavan_mtd_descriptor *desc, const char *partname)
+{
 	struct mtd_partition_info *p, *p_end;
 
 	for (p = desc->part_infos, p_end = p + desc->part_count; p < p_end; p++) {
@@ -88,7 +89,8 @@ struct mtd_partition_info *cavan_mtd_get_partition_info_by_name(struct cavan_mtd
 	return NULL;
 }
 
-struct mtd_partition_descriptor *cavan_mtd_malloc_partition_descriptor(struct cavan_mtd_descriptor *desc) {
+struct mtd_partition_descriptor *cavan_mtd_malloc_partition_descriptor(struct cavan_mtd_descriptor *desc)
+{
 	struct mtd_partition_descriptor *p, *p_end;
 
 	for (p = desc->part_descs, p_end = p + NELEM(desc->part_descs); p < p_end; p++) {
@@ -131,7 +133,8 @@ int mtd_open_char_device(int index, int flags)
 	return -ENOENT;
 }
 
-struct mtd_partition_descriptor *cavan_mtd_open_partition(struct mtd_partition_info *info, int flags) {
+struct mtd_partition_descriptor *cavan_mtd_open_partition(struct mtd_partition_info *info, int flags)
+{
 	int fd;
 	struct mtd_partition_descriptor *desc;
 
@@ -165,7 +168,8 @@ out_close_fd:
 	return NULL;
 }
 
-struct mtd_partition_descriptor *cavan_mtd_open_partition2(struct cavan_mtd_descriptor *desc, const char *partname, int flags) {
+struct mtd_partition_descriptor *cavan_mtd_open_partition2(struct cavan_mtd_descriptor *desc, const char *partname, int flags)
+{
 	struct mtd_partition_info *info;
 
 	info = cavan_mtd_get_partition_info_by_name(desc, partname);

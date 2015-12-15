@@ -26,8 +26,7 @@ static struct huamobile_virtual_key *huamobile_event_free_virtual_keymap(struct 
 {
 	struct huamobile_virtual_key *key_next;
 
-	while (head)
-	{
+	while (head) {
 		key_next = head->next;
 		free(head);
 		head = key_next;
@@ -40,8 +39,7 @@ static struct huamobile_keylayout_node *huamobile_event_free_keylayout(struct hu
 {
 	struct huamobile_keylayout_node *node_next;
 
-	while (head)
-	{
+	while (head) {
 		node_next = head->next;
 		free(head);
 		head = node_next;
@@ -60,8 +58,7 @@ static int huamobile_event_parse_virtual_keymap(struct huamobile_event_device *d
 
 	sprintf(pathname, "/sys/board_properties/virtualkeys.%s", dev->name);
 	mem = huamobule_file_read_all(pathname, &size);
-	if (mem == NULL)
-	{
+	if (mem == NULL) {
 		pr_red_info("huamobile_file_mmap");
 		return -ENOMEM;
 	}
@@ -72,17 +69,14 @@ static int huamobile_event_parse_virtual_keymap(struct huamobile_event_device *d
 	file_end = mem + size;
 	p = huamobile_text_skip_space_head(mem, file_end);
 
-	while (p < file_end)
-	{
-		if (huamobile_text_lhcmp("0x01", p) || sscanf(p, "0x01:%d:%d:%d:%d:%d", &code, &x, &y, &width, &height) != 5)
-		{
+	while (p < file_end) {
+		if (huamobile_text_lhcmp("0x01", p) || sscanf(p, "0x01:%d:%d:%d:%d:%d", &code, &x, &y, &width, &height) != 5) {
 			p++;
 			continue;
 		}
 
 		key = malloc(sizeof(*key));
-		if (key == NULL)
-		{
+		if (key == NULL) {
 			pr_error_info("malloc");
 			goto out_free_mem;
 		}
@@ -106,7 +100,7 @@ static int huamobile_event_parse_virtual_keymap(struct huamobile_event_device *d
 	}
 
 out_free_mem:
-	free((char *)mem);
+	free((char *) mem);
 
 	return 0;
 }
@@ -119,11 +113,9 @@ static int huamobile_event_get_keylayout_pathname(struct huamobile_event_device 
 	{dev->name, "Generic", "qwerty"};
 
 	filename = huamobile_text_copy(pathname, "/system/usr/keylayout/");
-	for (i = 0; i < (int)NELEM(filenames); i++)
-	{
+	for (i = 0; i < (int) NELEM(filenames); i++) {
 		sprintf(filename, "%s.kl", filenames[i]);
-		if (access(pathname, R_OK) == 0)
-		{
+		if (access(pathname, R_OK) == 0) {
 			return 0;
 		}
 	}
@@ -143,23 +135,20 @@ static int huamobile_event_parse_keylayout(struct huamobile_event_device *dev)
 	size_t size;
 
 	ret = huamobile_event_get_keylayout_pathname(dev, pathname);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("huamobile_event_get_keylayout_pathname");
 		return ret;
 	}
 
 	memset(key_bitmask, 0, sizeof(key_bitmask));
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("ioctl EVIOCGBIT EV_KEY");
 		return ret;
 	}
 
 	fd = huamobile_file_mmap(pathname, &map, &size, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		pr_red_info("huamobile_file_mmap");
 		return fd;
 	}
@@ -171,24 +160,20 @@ static int huamobile_event_parse_keylayout(struct huamobile_event_device *dev)
 	file_end = p + size;
 
 	node = malloc(sizeof(*node));
-	if (node == NULL)
-	{
+	if (node == NULL) {
 		pr_error_info("malloc");
 		goto out_file_unmap;
 	}
 
-	while (p < file_end)
-	{
+	while (p < file_end) {
 		line_end = huamobile_text_find_line_end(p, file_end);
 		p = huamobile_text_skip_space_head(p, line_end);
-		if (p == line_end || *p == '#')
-		{
+		if (p == line_end || *p == '#') {
 			goto label_goto_next_line;
 		}
 
 		ret = sscanf(p, "key %d %s", &node->code, node->name);
-		if (ret != 2 || test_bit(node->code, key_bitmask) == 0)
-		{
+		if (ret != 2 || test_bit(node->code, key_bitmask) == 0) {
 			goto label_goto_next_line;
 		}
 
@@ -198,8 +183,7 @@ static int huamobile_event_parse_keylayout(struct huamobile_event_device *dev)
 		dev->kl_head = node;
 
 		node = malloc(sizeof(*node));
-		if (node == NULL)
-		{
+		if (node == NULL) {
 			pr_error_info("malloc");
 			goto label_goto_next_line;
 		}
@@ -225,10 +209,8 @@ static void huamobile_event_close_devices(struct huamobile_event_service *servic
 
 	pdev = service->dev_head;
 
-	while (pdev)
-	{
-		if (service->remove)
-		{
+	while (pdev) {
+		if (service->remove) {
 			service->remove(pdev, service->private_data);
 		}
 
@@ -259,44 +241,37 @@ static int huamobile_event_open_devices(struct huamobile_event_service *service)
 
 	filename = huamobile_text_copy(pathname, "/dev/input/");
 	dp = opendir(pathname);
-	if (dp == NULL)
-	{
+	if (dp == NULL) {
 		pr_error_info("open directory `%s'", pathname);
 		return -ENOENT;
 	}
 
-	while ((entry = readdir(dp)))
-	{
-		if (huamobile_text_lhcmp("event", entry->d_name))
-		{
+	while ((entry = readdir(dp))) {
+		if (huamobile_text_lhcmp("event", entry->d_name)) {
 			continue;
 		}
 
 		huamobile_text_copy(filename, entry->d_name);
 		pr_bold_info("pathname = %s", pathname);
 		fd = open(pathname, O_RDONLY);
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			pr_error_info("open file `%s'", pathname);
 			continue;
 		}
 
 		ret = huamobile_event_get_devname(fd, devname, sizeof(devname));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("huamobile_event_get_devname");
 			goto label_close_fd;
 		}
 
-		if (service->matcher && service->matcher(fd, devname, service->private_data) == false)
-		{
+		if (service->matcher && service->matcher(fd, devname, service->private_data) == false) {
 			pr_error_info("Can't match device %s, path = %s", pathname, devname);
 			goto label_close_fd;
 		}
 
 		dev = malloc(sizeof(*dev));
-		if (dev == NULL)
-		{
+		if (dev == NULL) {
 			pr_error_info("malloc");
 			goto label_close_fd;
 		}
@@ -305,8 +280,7 @@ static int huamobile_event_open_devices(struct huamobile_event_service *service)
 		huamobile_text_ncopy(dev->name, devname, sizeof(dev->name));
 		huamobile_text_ncopy(dev->pathname, pathname, sizeof(dev->pathname));
 
-		if (service->probe && service->probe(dev, service->private_data) < 0)
-		{
+		if (service->probe && service->probe(dev, service->private_data) < 0) {
 			pr_red_info("Faile to probe device %s, name = %s", pathname, devname);
 			goto label_free_dev;
 		}
@@ -337,8 +311,7 @@ static size_t huamobile_event_device_count(struct huamobile_event_device *head)
 {
 	size_t count;
 
-	for (count = 0; head; head = head->next)
-	{
+	for (count = 0; head; head = head->next) {
 		count++;
 	}
 
@@ -361,8 +334,7 @@ static void *huamobile_event_service_handler(void *data)
 	pfd->events = POLLIN;
 	pfd->revents = 0;
 
-	for (pdev = service->dev_head; pdev; pdev = pdev->next)
-	{
+	for (pdev = service->dev_head; pdev; pdev = pdev->next) {
 		pfd++;
 		pfd->fd = pdev->fd;
 		pfd->events = POLLIN;
@@ -374,39 +346,31 @@ static void *huamobile_event_service_handler(void *data)
 	service->state = HUA_INPUT_THREAD_STATE_RUNNING;
 	pthread_mutex_unlock(&service->lock);
 
-	while (1)
-	{
+	while (1) {
 		ret = poll(fds, NELEM(fds), -1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("poll");
 			break;
 		}
 
-		if (fds[0].revents)
-		{
+		if (fds[0].revents) {
 			pr_green_info("Thread should stop");
 			break;
 		}
 
-		for (pdev = service->dev_head; pdev; pdev = pdev->next)
-		{
-			if (pdev->pfd->revents == 0)
-			{
+		for (pdev = service->dev_head; pdev; pdev = pdev->next) {
+			if (pdev->pfd->revents == 0) {
 				continue;
 			}
 
 			rdlen = read(pdev->fd, events, sizeof(events));
-			if (rdlen < 0)
-			{
+			if (rdlen < 0) {
 				pr_error_info("read");
 				goto out_thread_exit;
 			}
 
-			for (ep = events, ep_end = ep + (rdlen / sizeof(events[0])); ep < ep_end; ep++)
-			{
-				if (service->event_handler(pdev, ep, service->private_data) == false)
-				{
+			for (ep = events, ep_end = ep + (rdlen / sizeof(events[0])); ep < ep_end; ep++) {
+				if (service->event_handler(pdev, ep, service->private_data) == false) {
 					pr_red_info("can't handle event: type = %d, code = %d, value = %d", \
 						ep->type, ep->code, ep->value);
 				}
@@ -428,10 +392,8 @@ struct huamobile_virtual_key *huamobile_event_find_virtual_key(struct huamobile_
 {
 	struct huamobile_virtual_key *key;
 
-	for (key = dev->vk_head; key; key = key->next)
-	{
-		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right)
-		{
+	for (key = dev->vk_head; key; key = key->next) {
+		if (y >= key->top && y <= key->bottom && x >= key->left && x <= key->right) {
 			return key;
 		}
 	}
@@ -443,10 +405,8 @@ const char *huamobile_event_find_key_name(struct huamobile_event_device *dev, in
 {
 	struct huamobile_keylayout_node *node;
 
-	for (node = dev->kl_head; node; node = node->next)
-	{
-		if (node->code == code)
-		{
+	for (node = dev->kl_head; node; node = node->next) {
+		if (node->code == code) {
 			return node->name;
 		}
 	}
@@ -462,23 +422,20 @@ int huamobile_event_start_poll_thread(struct huamobile_event_service *service)
 
 	pthread_mutex_lock(&service->lock);
 
-	if (service->state == HUA_INPUT_THREAD_STATE_RUNNING)
-	{
+	if (service->state == HUA_INPUT_THREAD_STATE_RUNNING) {
 		pthread_mutex_unlock(&service->lock);
 		return 0;
 	}
 
 	ret = pipe(service->pipefd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pipe");
 		pthread_mutex_unlock(&service->lock);
 		return ret;
 	}
 
 	ret = cavan_pthread_create(&service->thread, NULL, huamobile_event_service_handler, service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("cavan_pthread_create");
 		close(service->pipefd[0]);
 		close(service->pipefd[1]);
@@ -497,13 +454,11 @@ int huamobile_event_stop_poll_thread(struct huamobile_event_service *service)
 
 	pthread_mutex_lock(&service->lock);
 
-	while (service->state == HUA_INPUT_THREAD_STATE_RUNNING)
-	{
+	while (service->state == HUA_INPUT_THREAD_STATE_RUNNING) {
 		int ret;
 
 		ret = huamobile_event_send_command(service, HUA_INPUT_COMMAND_STOP);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("huamobile_event_send_command");
 			pthread_mutex_unlock(&service->lock);
 			return ret;
@@ -528,8 +483,7 @@ int huamobile_event_service_start(struct huamobile_event_service *service, void 
 
 	pr_pos_info();
 
-	if (service == NULL || service->event_handler == NULL)
-	{
+	if (service == NULL || service->event_handler == NULL) {
 		pr_red_info("service == NULL || service->event_handler == NULL");
 		return -EINVAL;
 	}
@@ -538,8 +492,7 @@ int huamobile_event_service_start(struct huamobile_event_service *service, void 
 	pthread_mutex_init(&service->lock, NULL);
 
 	ret = huamobile_event_open_devices(service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("huamobile_event_open_devices");
 		return -ENOENT;
 	}
@@ -547,8 +500,7 @@ int huamobile_event_service_start(struct huamobile_event_service *service, void 
 	service->state = HUA_INPUT_THREAD_STATE_STOPPED;
 
 	ret = huamobile_event_start_poll_thread(service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("huamobile_event_start_poll_thread");
 		huamobile_event_close_devices(service);
 	}
@@ -563,8 +515,7 @@ int huamobile_event_service_stop(struct huamobile_event_service *service)
 	pr_pos_info();
 
 	ret = huamobile_event_stop_poll_thread(service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("huamobile_event_stop_poll_thread");
 		return ret;
 	}
@@ -582,16 +533,13 @@ bool huamobile_event_name_matcher(const char *devname, ...)
 
 	va_start(ap, devname);
 
-	while (1)
-	{
+	while (1) {
 		name = va_arg(ap, const char *);
-		if (name == NULL)
-		{
+		if (name == NULL) {
 			break;
 		}
 
-		if (strcmp(devname, name) == 0)
-		{
+		if (strcmp(devname, name) == 0) {
 			break;
 		}
 	}
@@ -607,8 +555,7 @@ int huamobile_event_get_absinfo(int fd, int axis, int *min, int *max)
 	struct input_absinfo info;
 
 	ret = ioctl(fd, EVIOCGABS(axis), &info);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("ioctl EVIOCGABS");
 		return ret;
 	}

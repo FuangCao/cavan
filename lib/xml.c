@@ -10,7 +10,8 @@
 
 #define CONFIG_CAVAN_XML_DEBUG		0
 
-struct cavan_xml_attribute *cavan_xml_attribute_alloc(const char *name, const char *value, int flags) {
+struct cavan_xml_attribute *cavan_xml_attribute_alloc(const char *name, const char *value, int flags)
+{
 	struct cavan_xml_attribute *attr;
 
 #if CONFIG_CAVAN_XML_DEBUG
@@ -90,7 +91,8 @@ static char *cavan_xml_attribute_tostring(struct cavan_xml_attribute *attr, char
 	return buff + snprintf(buff, buff_end - buff, "%s=\"%s\"", attr->name, attr->value);
 }
 
-struct cavan_xml_attribute *cavan_xml_attribute_find(struct cavan_xml_attribute *head, const char *name) {
+struct cavan_xml_attribute *cavan_xml_attribute_find(struct cavan_xml_attribute *head, const char *name)
+{
 	while (head) {
 		if (text_cmp(head->name, name) == 0) {
 			return head;
@@ -251,7 +253,8 @@ void cavan_xml_attribute_extend(struct cavan_xml_attribute **phead, struct cavan
 
 // ============================================================
 
-struct cavan_xml_tag *cavan_xml_tag_alloc(const char *name, const char *content, int flags) {
+struct cavan_xml_tag *cavan_xml_tag_alloc(const char *name, const char *content, int flags)
+{
 	struct cavan_xml_tag *tag;
 
 #if CONFIG_CAVAN_XML_DEBUG
@@ -371,7 +374,8 @@ bool cavan_xml_tag_set_content(struct cavan_xml_tag *tag, const char *content, i
 	return true;
 }
 
-struct cavan_xml_tag *cavan_xml_tag_create(struct cavan_xml_tag **head, const char *name, int flags) {
+struct cavan_xml_tag *cavan_xml_tag_create(struct cavan_xml_tag **head, const char *name, int flags)
+{
 	struct cavan_xml_tag *tag;
 
 	if ((flags & CAVAN_XML_FLAG_UNIQUE)) {
@@ -476,7 +480,8 @@ static char *cavan_xml_tag_tostring(struct cavan_xml_document *doc, struct cavan
 	return buff;
 }
 
-struct cavan_xml_tag *cavan_xml_tag_find(struct cavan_xml_tag *head, const char *name) {
+struct cavan_xml_tag *cavan_xml_tag_find(struct cavan_xml_tag *head, const char *name)
+{
 	while (head) {
 		if (text_cmp(head->name, name) == 0) {
 			return head;
@@ -544,7 +549,8 @@ static bool cavan_xml_tag_is_content(const char *name)
 
 // ============================================================
 
-struct cavan_xml_document *cavan_xml_document_alloc(void) {
+struct cavan_xml_document *cavan_xml_document_alloc(void)
+{
 	struct cavan_xml_document *doc;
 
 	doc = malloc(sizeof(*doc));
@@ -1026,7 +1032,8 @@ out_general_stack_free:
 	return NULL;
 }
 
-struct cavan_xml_document *cavan_xml_document_parse(const char *pathname) {
+struct cavan_xml_document *cavan_xml_document_parse(const char *pathname)
+{
 	size_t size;
 	char *content;
 	struct cavan_xml_document *doc;

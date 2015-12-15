@@ -423,7 +423,8 @@ void cavan_cache_deinit(struct cavan_cache *cache)
 	pthread_mutex_destroy(&cache->lock);
 }
 
-struct cavan_cache *cavan_cache_create(size_t size) {
+struct cavan_cache *cavan_cache_create(size_t size)
+{
 	struct cavan_cache *cache;
 
 	cache = malloc(sizeof(struct cavan_cache) + size);

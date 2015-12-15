@@ -52,8 +52,7 @@
 		pr_red_info("%s[%d]:" fmt, __FUNCTION__, __LINE__, ##args); \
 	}
 
-struct brcm_fm_device
-{
+struct brcm_fm_device {
 	tCTRL_HANDLE ctrl_handle;
 	int pipefd[2];
 };
@@ -68,15 +67,12 @@ static struct brcm_fm_device fm_dev;
 
 static void brcm_fm_audio_enable(int enable)
 {
-	if(enable)
-	{
+	if(enable) {
 		system("alsa_amixer cset -c sprdphone name=\"BypassFM Playback Switch\" 1");
 		system("alsa_amixer cset -c sprdphone name=\"Headset Playback Switch\" 1");
 		system("alsa_amixer sset 'LineinFM' on");
 		system("alsa_amixer -c sprdphone cset name='Power Codec' 1");
-	}
-	else
-	{
+	} else {
 		system("alsa_amixer -c sprdphone cset name='Power Codec' 4");
 		system("alsa_amixer cset -c sprdphone name=\"BypassFM Playback Switch\" 0");
 		system("alsa_amixer cset -c sprdphone name=\"Speaker Playback Switch\" 0");
@@ -97,8 +93,7 @@ static int brcm_fm_wait_command_response(struct brcm_fm_device *dev, tBTLIF_CTRL
 	ssize_t rdlen;
 	int fd = dev->pipefd[0];
 	tBTLIF_CTRL_MSG_ID msg_id;
-	struct pollfd pfd =
-	{
+	struct pollfd pfd = {
 		.fd = fd,
 		.events = POLLIN,
 		.revents = 0
@@ -106,39 +101,33 @@ static int brcm_fm_wait_command_response(struct brcm_fm_device *dev, tBTLIF_CTRL
 
 	pr_bold_info("ID = %d, Timeout = %d(s)", id, timeout_second);
 
-	while (1)
-	{
+	while (1) {
 		ret = poll(&pfd, 1, timeout_second * 1000);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_error_info("poll");
 			return ret;
 		}
 
-		if (pfd.revents == 0)
-		{
+		if (pfd.revents == 0) {
 			pr_red_info("poll timeout");
 			return -ETIMEDOUT;
 		}
 
 		rdlen = read(fd, &msg_id, sizeof(msg_id));
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_red_info("rdlen");
 			return rdlen;
 		}
 
 		rdlen = read(fd, params, sizeof(*params));
-		if (rdlen < 0)
-		{
+		if (rdlen < 0) {
 			pr_red_info("read");
 			return rdlen;
 		}
 
 		pr_bold_info("Response ID = %d, ID = %d", msg_id, id);
 
-		if (msg_id == id)
-		{
+		if (msg_id == id) {
 			break;
 		}
 	}
@@ -150,18 +139,15 @@ static int brcm_fm_send_ctrl_command(struct brcm_fm_device *dev, int command, tB
 {
 	int ret;
 	va_list ap;
-	char *p = (char *)params;
+	char *p = (char *) params;
 
 	pr_bold_info("Command = %d, Format = %s", command, format);
 
-	if (format)
-	{
+	if (format) {
 		va_start(ap, format);
 
-		while (1)
-		{
-			switch (*format++)
-			{
+		while (1) {
+			switch (*format++) {
 			case 0:
 				goto label_va_end;
 
@@ -169,13 +155,13 @@ static int brcm_fm_send_ctrl_command(struct brcm_fm_device *dev, int command, tB
 			case 'I':
 			case 'd':
 			case 'D':
-				*(int *)p = va_arg(ap, int);
+				*(int *) p = va_arg(ap, int);
 				p += sizeof(int);
 				break;
 
 			case 'w':
 			case 'W':
-				*(UINT16 *)p = va_arg(ap, int);
+				*(UINT16 *) p = va_arg(ap, int);
 				p += sizeof(UINT16);
 				break;
 
@@ -183,7 +169,7 @@ static int brcm_fm_send_ctrl_command(struct brcm_fm_device *dev, int command, tB
 			case 'B':
 			case 'z':
 			case 'Z':
-				*(BOOLEAN *)p = va_arg(ap, int);
+				*(BOOLEAN *) p = va_arg(ap, int);
 				p += sizeof(BOOLEAN);
 				break;
 
@@ -203,15 +189,13 @@ label_va_end:
 		va_end(ap);
 	}
 
-	ret = BTL_IFC_CtrlSend(dev->ctrl_handle, SUB_FM, command, params, p - (char *)params);
-	if (ret != BTL_IF_SUCCESS)
-	{
+	ret = BTL_IFC_CtrlSend(dev->ctrl_handle, SUB_FM, command, params, p - (char *) params);
+	if (ret != BTL_IF_SUCCESS) {
 		pr_red_info("BTL_IFC_CtrlSend command = %d", command);
 		return -EFAULT;
 	}
 
-	switch (command)
-	{
+	switch (command) {
 	case BTLIF_FM_SET_VOLUME:
 		command = BTLIF_FM_SET_VOLUME_EVT;
 		break;
@@ -230,8 +214,7 @@ static int brcm_fm_ctrl_enable(struct brcm_fm_device *dev, int func_mask)
 	tBTL_PARAMS params;
 
 	ret = brcm_fm_send_ctrl_command(dev, BTLIF_FM_ENABLE, &params, 2, "I", func_mask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("brcm_fm_send_ctrl_command BTLIF_FM_TUNE");
 		return ret;
 	}
@@ -245,8 +228,7 @@ static int brcm_fm_ctrl_disable(struct brcm_fm_device *dev)
 	tBTL_PARAMS params;
 
 	ret = brcm_fm_send_ctrl_command(dev, BTLIF_FM_DISABLE, &params, 2, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("brcm_fm_send_ctrl_command BTLIF_FM_TUNE");
 		return ret;
 	}
@@ -260,8 +242,7 @@ static int brcm_fm_ctrl_tune_radio(struct brcm_fm_device *dev, int freq)
 	tBTL_PARAMS params;
 
 	ret = brcm_fm_send_ctrl_command(dev, BTLIF_FM_TUNE, &params, 2, "I", freq);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("brcm_fm_send_ctrl_command BTLIF_FM_TUNE");
 		return ret;
 	}
@@ -275,8 +256,7 @@ static int brcm_fm_ctrl_set_volume(struct brcm_fm_device *dev, int volume)
 	tBTL_PARAMS params;
 
 	ret = brcm_fm_send_ctrl_command(dev, BTLIF_FM_SET_VOLUME, &params, 2, "I", volume);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("brcm_fm_send_ctrl_command BTLIF_FM_SET_VOLUME");
 		return ret;
 	}
@@ -290,8 +270,7 @@ static int brcm_fm_ctrl_seek_station(struct brcm_fm_device *dev, int direction, 
 	tBTL_PARAMS params;
 
 	ret = brcm_fm_send_ctrl_command(dev, BTLIF_FM_SEARCH, &params, 20, "IIII", direction, BRCM_FM_SCAN_MIN_SIGNAL, 0, 0);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("brcm_fm_send_ctrl_command");
 		return ret;
 	}
@@ -314,8 +293,7 @@ static void brcm_fm_data_handler(tDATA_HANDLE handle, char *p, int len)
 
 static void brcm_fm_ctrl_handler(tCTRL_HANDLE handle, tBTLIF_CTRL_MSG_ID id, tBTL_PARAMS *params)
 {
-	switch (id)
-	{
+	switch (id) {
 	case BTLIF_FM_ENABLE:
 		pr_bold_info("BTLIF_FM_ENABLE: status = %d", params->fm_I_param.i1);
 		break;
@@ -419,46 +397,38 @@ static int brcm_fm_enable(struct brcm_fm_device *dev, int func_mask, int retry)
 {
 	int ret;
 
-	while (1)
-	{
+	while (1) {
 		fm_disable();
 		sleep(1);
 
 		ret = fm_enable();
-		if (ret >= 0)
-		{
+		if (ret >= 0) {
 			break;
 		}
 
 		pr_red_info("fm_enable retry = %d", retry);
 
-		if (retry)
-		{
+		if (retry) {
 			retry--;
-		}
-		else
-		{
+		} else {
 			return -EFAULT;
 		}
 	}
 
 	ret = pipe(dev->pipefd);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("pipe");
 		goto out_power_down;
 	}
 
 	ret = BTL_IFC_RegisterSubSystem(&dev->ctrl_handle, SUB_FM, brcm_fm_data_handler, brcm_fm_ctrl_handler);
-	if (ret != BTL_IF_SUCCESS)
-	{
+	if (ret != BTL_IF_SUCCESS) {
 		pr_red_info("BTL_IFC_RegisterSubSystem");
 		goto out_power_down;
 	}
 
 	ret = brcm_fm_ctrl_enable(dev, func_mask);
-	if (ret != 0)
-	{
+	if (ret != 0) {
 		pr_red_info("brcm_fm_send_ctrl_command");
 		goto out_power_down;
 	}
@@ -482,8 +452,7 @@ static int brcm_fm_disable(struct brcm_fm_device *dev)
 	brcm_fm_audio_enable(0);
 
 	ret = brcm_fm_ctrl_disable(dev);
-	if (ret != 0)
-	{
+	if (ret != 0) {
 		pr_red_info("brcm_fm_send_ctrl_command");
 		return -EFAULT;
 	}
@@ -508,8 +477,7 @@ int main(int argc, char *argv[])
 	int freq, rssi;
 
 	ret = brcm_fm_enable(&fm_dev, 1 << 5 | 1 << 6, 5);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("brcm_fm_enable");
 		return ret;
 	}
@@ -520,35 +488,29 @@ int main(int argc, char *argv[])
 	signal(SIGINT, brcm_fm_stop_signal_handler);
 
 	ret = brcm_fm_ctrl_set_volume(&fm_dev, 50);
-	if (ret != 0)
-	{
+	if (ret != 0) {
 		pr_red_info("brcm_fm_set_volume");
 		goto out_brcm_fm_disable;
 	}
 
 	ret = brcm_fm_ctrl_tune_radio(&fm_dev, 9140);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("brcm_fm_tune_radio");
 		goto out_brcm_fm_disable;
 	}
 
-	if (ret == 0)
-	{
+	if (ret == 0) {
 		sleep(10);
 	}
 
-	while (1)
-	{
+	while (1) {
 		ret = brcm_fm_ctrl_seek_station(&fm_dev, BRCM_FM_SCAN_DIRECTION_UP, &freq, &rssi);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("brcm_fm_seek_station");
 			goto out_brcm_fm_disable;
 		}
 
-		if (ret)
-		{
+		if (ret) {
 			continue;
 		}
 

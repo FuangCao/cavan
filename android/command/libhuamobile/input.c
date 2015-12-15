@@ -26,28 +26,23 @@
 
 static struct huamobile_input_device *huamobile_input_device_create(uint8_t *key_bitmask, uint8_t *abs_bitmask, uint8_t *rel_bitmask)
 {
-	if (huamobile_gsensor_device_match(abs_bitmask))
-	{
+	if (huamobile_gsensor_device_match(abs_bitmask)) {
 		return huamobile_gsensor_create();
 	}
 
-	if (huamobile_multi_touch_device_match(abs_bitmask))
-	{
+	if (huamobile_multi_touch_device_match(abs_bitmask)) {
 		return huamobile_multi_touch_device_create();
 	}
 
-	if (huamobile_single_touch_device_match(abs_bitmask, key_bitmask))
-	{
+	if (huamobile_single_touch_device_match(abs_bitmask, key_bitmask)) {
 		return huamobile_single_touch_device_create();
 	}
 
-	if (huamobile_mouse_device_match(key_bitmask, rel_bitmask))
-	{
+	if (huamobile_mouse_device_match(key_bitmask, rel_bitmask)) {
 		return huamobile_mouse_create();
 	}
 
-	if (huamobile_keypad_device_match(key_bitmask))
-	{
+	if (huamobile_keypad_device_match(key_bitmask)) {
 		return huamobile_keypad_create();
 	}
 
@@ -66,57 +61,47 @@ static int huamobile_input_device_probe(struct huamobile_event_device *event_dev
 	pr_pos_info();
 
 	ret = huamobile_event_get_abs_bitmask(fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_abs_bitmask");
 		return ret;
 	}
 
 	ret = huamobile_event_get_key_bitmask(fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_key_bitmask");
 		return ret;
 	}
 
 	ret = huamobile_event_get_rel_bitmask(fd, rel_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_rel_bitmask");
 		return ret;
 	}
 
 	head = tail = NULL;
 
-	while (1)
-	{
+	while (1) {
 		dev = huamobile_input_device_create(key_bitmask, abs_bitmask, rel_bitmask);
-		if (dev == NULL)
-		{
+		if (dev == NULL) {
 			break;
 		}
 
 		dev->event_dev = event_dev;
 
-		if (dev->probe && dev->probe(dev, data) < 0)
-		{
+		if (dev->probe && dev->probe(dev, data) < 0) {
 			free(dev);
 			continue;
 		}
 
-		if (head)
-		{
+		if (head) {
 			tail->next = dev;
 			tail = dev;
-		}
-		else
-		{
+		} else {
 			head = tail = dev;
 		}
 	}
 
-	if (head == NULL)
-	{
+	if (head == NULL) {
 		pr_red_info("can't recognize device");
 		return -EINVAL;
 	}
@@ -131,10 +116,8 @@ static void huamobile_input_device_remove(struct huamobile_event_device *event_d
 {
 	struct huamobile_input_device *dev = event_dev->private_data, *next;
 
-	while (dev)
-	{
-		if (dev->remove)
-		{
+	while (dev) {
+		if (dev->remove) {
 			dev->remove(dev, data);
 		}
 
@@ -148,11 +131,9 @@ static bool huamobile_input_device_event_handler(struct huamobile_event_device *
 {
 	struct huamobile_input_device *dev = event_dev->private_data;
 
-	switch(event->type)
-	{
+	switch(event->type) {
 	case EV_SYN:
-		while (dev)
-		{
+		while (dev) {
 			dev->event_handler(dev, event, data);
 			dev = dev->next;
 		}
@@ -162,10 +143,8 @@ static bool huamobile_input_device_event_handler(struct huamobile_event_device *
 		return true;
 
 	default:
-		while (dev)
-		{
-			if (dev->event_handler(dev, event, data))
-			{
+		while (dev) {
+			if (dev->event_handler(dev, event, data)) {
 				return true;
 			}
 
@@ -220,56 +199,46 @@ int huamobile_input_service_start(struct huamobile_input_service *service, void 
 {
 	struct huamobile_event_service *event_service;
 
-	if (service == NULL)
-	{
+	if (service == NULL) {
 		pr_red_info("service == NULL");
 		return -EINVAL;
 	}
 
 	pthread_mutex_init(&service->lock, NULL);
 
-	if (service->key_handler == NULL)
-	{
+	if (service->key_handler == NULL) {
 		service->key_handler = huamobile_input_key_handler_dummy;
 	}
 
-	if (service->touch_handler == NULL)
-	{
+	if (service->touch_handler == NULL) {
 		service->touch_handler = huamobile_input_touch_handler_dummy;
 	}
 
-	if (service->move_handler == NULL)
-	{
+	if (service->move_handler == NULL) {
 		service->move_handler = huamobile_input_move_handler_dummy;
 	}
 
-	if (service->release_handler == NULL)
-	{
+	if (service->release_handler == NULL) {
 		service->release_handler = huamobile_input_release_handler_dummy;
 	}
 
-	if (service->gsensor_handler == NULL)
-	{
+	if (service->gsensor_handler == NULL) {
 		service->gsensor_handler = huamobile_input_gsensor_handler_dummy;
 	}
 
-	if (service->wheel_handler == NULL)
-	{
+	if (service->wheel_handler == NULL) {
 		service->wheel_handler = huamobile_input_wheel_handler_dummy;
 	}
 
-	if (service->right_touch_handler == NULL)
-	{
+	if (service->right_touch_handler == NULL) {
 		service->right_touch_handler = huamobile_input_right_touch_handler_dummy;
 	}
 
-	if (service->right_release_handler == NULL)
-	{
+	if (service->right_release_handler == NULL) {
 		service->right_release_handler = huamobile_input_right_release_handler_dummy;
 	}
 
-	if (service->mouse_speed <= 0)
-	{
+	if (service->mouse_speed <= 0) {
 		service->mouse_speed = 1;
 	}
 

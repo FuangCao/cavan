@@ -23,8 +23,7 @@
 #include <huamobile/input.h>
 #include <huamobile.h>
 
-struct huamobile_gsensor_device
-{
+struct huamobile_gsensor_device {
 	struct huamobile_input_device input_dev;
 	struct huamobile_gsensor_event event;
 	int xmin, xmax;

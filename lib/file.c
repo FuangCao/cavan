@@ -2758,7 +2758,8 @@ off_t cavan_file_seek_page_align(int fd, off_t offset, size_t page_size)
 	return lseek(fd, offset, SEEK_SET);
 }
 
-struct dirent *cavan_readdir_skip_dot(DIR *dp) {
+struct dirent *cavan_readdir_skip_dot(DIR *dp)
+{
 	struct dirent *dt;
 
 	while ((dt = readdir(dp))) {
@@ -2780,7 +2781,8 @@ struct dirent *cavan_readdir_skip_dot(DIR *dp) {
 	return NULL;
 }
 
-struct dirent *cavan_readdir_skip_hidden(DIR *dp) {
+struct dirent *cavan_readdir_skip_hidden(DIR *dp)
+{
 	struct dirent *dt;
 
 	while ((dt = readdir(dp)) && dt->d_name[0] == '.');

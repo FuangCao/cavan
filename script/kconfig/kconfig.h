@@ -79,9 +79,11 @@ int ncurses_show_yes_no_dialog(int width, int height, const char *prompt);
 int ncurses_show_menu_box(struct kconfig_menu_descriptor *desc);
 void kconfig_menu_init(struct kconfig_menu_descriptor *desc);
 void kconfig_menu_item_init(struct kconfig_menu_item *item, const char *text);
-struct kconfig_menu_item *kconfig_menu_new_item(const char *text);
+struct kconfig_menu_item *kconfig_menu_new_item(const char *text)
+{
 void kconfig_menu_add_item(struct kconfig_menu_descriptor *desc, struct kconfig_menu_item *item);
 void kconfig_menu_add_child(struct kconfig_menu_item *item, struct kconfig_menu_item *child);
 void ncurses_draw_menu_base(WINDOW *win, struct kconfig_menu_descriptor *desc, int y, int level, struct cavan_list_node *head);
 void ncurses_draw_menu(WINDOW *win, struct kconfig_menu_descriptor *desc);
-struct kconfig_menu_item *list_node_to_menu_item(struct cavan_list_node *node);
+struct kconfig_menu_item *list_node_to_menu_item(struct cavan_list_node *node)
+{

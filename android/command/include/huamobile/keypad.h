@@ -23,8 +23,7 @@
 #include <huamobile/input.h>
 #include <huamobile.h>
 
-struct huamobile_keypad_device
-{
+struct huamobile_keypad_device {
 	struct huamobile_input_device input_dev;
 };
 

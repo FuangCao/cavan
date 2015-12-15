@@ -26,10 +26,8 @@ bool huamobile_keypad_device_match(uint8_t *key_bitmask)
 	const uint8_t *key_end;
 	bool result = false;
 
-	for (key_end = key_bitmask + KEY_BITMASK_SIZE; key_bitmask < key_end; key_bitmask++)
-	{
-		if (*key_bitmask)
-		{
+	for (key_end = key_bitmask + KEY_BITMASK_SIZE; key_bitmask < key_end; key_bitmask++) {
+		if (*key_bitmask) {
 			result = true;
 			*key_bitmask = 0;
 		}
@@ -46,8 +44,7 @@ bool huamobile_keypad_device_matcher(int fd, const char *name, void *data)
 	pr_pos_info();
 
 	ret = huamobile_event_get_key_bitmask(fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_key_bitmask");
 		return ret;
 	}
@@ -60,8 +57,7 @@ static bool huamobile_keypad_event_handler(struct huamobile_input_device *dev, s
 	struct huamobile_input_service *service = data;
 	const char *keyname;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_KEY:
 		keyname = huamobile_event_find_key_name(dev->event_dev, event->code);
 		service->key_handler(dev, keyname, event->code, event->value, service->private_data);
@@ -85,8 +81,7 @@ struct huamobile_input_device *huamobile_keypad_create(void)
 	pr_pos_info();
 
 	keypad = malloc(sizeof(*keypad));
-	if (keypad == NULL)
-	{
+	if (keypad == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}

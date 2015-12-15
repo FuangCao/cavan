@@ -281,7 +281,8 @@ static int cavan_touchpad_probe(struct cavan_input_device *dev, void *data)
 	return 0;
 }
 
-struct cavan_input_device *cavan_touchpad_device_create(void) {
+struct cavan_input_device *cavan_touchpad_device_create(void)
+{
 	struct cavan_touchpad_device *touchpad;
 	struct cavan_input_device *dev;
 

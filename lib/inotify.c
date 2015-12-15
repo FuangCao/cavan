@@ -118,7 +118,8 @@ int cavan_inotify_unregister_watch(struct cavan_inotify_descriptor *desc, const 
 	return -ENOENT;
 }
 
-struct cavan_inotify_watch *cavan_inotify_find_watch(int wd, struct cavan_inotify_watch *watchs, size_t count) {
+struct cavan_inotify_watch *cavan_inotify_find_watch(int wd, struct cavan_inotify_watch *watchs, size_t count)
+{
 	struct cavan_inotify_watch *watch_end;
 
 	for (watch_end = watchs + count; watchs < watch_end; watchs++) {

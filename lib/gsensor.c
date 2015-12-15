@@ -89,7 +89,8 @@ static bool cavan_gsensor_event_handler(struct cavan_input_device *dev, struct i
 	return true;
 }
 
-struct cavan_input_device *cavan_gsensor_create(void) {
+struct cavan_input_device *cavan_gsensor_create(void)
+{
 	struct cavan_gsensor_device *sensor;
 	struct cavan_input_device *dev;
 	struct cavan_input_message_vector *vector;

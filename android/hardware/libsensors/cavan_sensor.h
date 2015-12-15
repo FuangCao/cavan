@@ -129,14 +129,12 @@ enum cavan_input_device_type
 	CAVAN_INPUT_DEVICE_TYPE_ROTATION_VECTOR
 };
 
-typedef enum
-{
+typedef enum {
 	false = 0,
 	true
 } bool;
 
-struct cavan_sensor_device
-{
+struct cavan_sensor_device {
 	int data_fd;
 	int ctrl_fd;
 	char name[128];
@@ -154,8 +152,7 @@ struct cavan_sensor_device
 	struct cavan_sensor_device *next;
 };
 
-struct cavan_sensor_poll_device
-{
+struct cavan_sensor_poll_device {
 	struct sensors_poll_device_t device;
 
 	pthread_mutex_t lock;

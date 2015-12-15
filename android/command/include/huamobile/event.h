@@ -60,16 +60,14 @@ enum huamobile_event_service_state
 	HUA_INPUT_THREAD_STATE_STOPPED
 };
 
-struct huamobile_keylayout_node
-{
+struct huamobile_keylayout_node {
 	char name[32];
 	int code;
 
 	struct huamobile_keylayout_node *next;
 };
 
-struct huamobile_virtual_key
-{
+struct huamobile_virtual_key {
 	int left;
 	int right;
 	int top;
@@ -81,8 +79,7 @@ struct huamobile_virtual_key
 	struct huamobile_virtual_key *next;
 };
 
-struct huamobile_event_device
-{
+struct huamobile_event_device {
 	int fd;
 	char name[128];
 	char pathname[16];
@@ -94,8 +91,7 @@ struct huamobile_event_device
 	struct huamobile_event_device *next;
 };
 
-struct huamobile_event_service
-{
+struct huamobile_event_service {
 	int pipefd[2];
 	pthread_t thread;
 	pthread_mutex_t lock;

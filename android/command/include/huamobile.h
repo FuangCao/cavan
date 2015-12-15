@@ -75,8 +75,7 @@
 			pr_red_info("%s[%d]:" fmt, __FUNCTION__, __LINE__, ##args); \
 		}
 
-typedef enum
-{
+typedef enum {
 	false = 0,
 	true = 1
 } bool;

@@ -308,7 +308,8 @@ int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_
 	return 0;
 }
 
-struct cavan_display_device *cavan_fb_display_create(void) {
+struct cavan_display_device *cavan_fb_display_create(void)
+{
 	int ret;
 	struct cavan_display_device *display;
 	struct cavan_fb_device *fb_dev;
@@ -332,7 +333,8 @@ struct cavan_display_device *cavan_fb_display_create(void) {
 	return display;
 }
 
-struct cavan_display_device *cavan_fb_display_start(void) {
+struct cavan_display_device *cavan_fb_display_start(void)
+{
 	int ret;
 	struct cavan_display_device *display;
 

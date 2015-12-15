@@ -13,10 +13,8 @@ static bool huamobile_vk_matcher(int fd, const char *name, void *data)
 int main(int argc, char *argv[])
 {
 	int ret;
-	struct huamobile_input_service service =
-	{
-		.event_service =
-		{
+	struct huamobile_input_service service = {
+		.event_service = {
 			.matcher = huamobile_vk_matcher
 		},
 
@@ -31,16 +29,14 @@ int main(int argc, char *argv[])
 	};
 
 	ret = huamobile_input_service_start(&service, NULL);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("huamobile_ts_start");
 		return ret;
 	}
 
 #if 1
 	ret = huamobile_event_service_join(&service.event_service);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_input_thread_join");
 	}
 #else

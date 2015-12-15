@@ -26,8 +26,7 @@
 
 namespace android {
 
-class SuService : public BinderService<SuService>, public BnSuService
-{
+class SuService : public BinderService<SuService>, public BnSuService {
 public:
 	static const String16 &getServiceName(void) {
 		return sServiceName;

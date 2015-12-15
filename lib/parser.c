@@ -50,7 +50,8 @@ void parse_parameter_base(const char *parameter, char *option, char *value)
 	}
 }
 
-struct buffer *malloc_buffer(int size) {
+struct buffer *malloc_buffer(int size)
+{
 	struct buffer *buff;
 
 	buff = malloc(sizeof(*buff) + size);
@@ -69,7 +70,8 @@ void free_buffer(struct buffer *buff)
 	free(buff);
 }
 
-struct buffer *read_lines(const char *file_path) {
+struct buffer *read_lines(const char *file_path)
+{
 	struct stat st;
 	struct buffer *buff;
 	int ret;
@@ -242,7 +244,8 @@ char *mem_area_copy(char *dest, const char *src, const char *src_end)
 	return dest;
 }
 
-struct buffer *replace_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, const char *new_line, int new_line_size) {
+struct buffer *replace_prefix_line(struct buffer *buff, const char *prefix, int prefix_size, const char *new_line, int new_line_size)
+{
 	char *p, *end_p, *q;
 	struct buffer *new_buff;
 

@@ -97,7 +97,8 @@ static bool cavan_keypad_event_handler(struct cavan_input_device *dev, struct in
 	return true;
 }
 
-struct cavan_input_device *cavan_keypad_create(void) {
+struct cavan_input_device *cavan_keypad_create(void)
+{
 	struct cavan_keypad_device *keypad;
 	struct cavan_input_device *dev;
 

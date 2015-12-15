@@ -25,8 +25,7 @@ bool huamobile_gsensor_device_match(uint8_t *abs_bitmask)
 {
 	if (test_bit(ABS_X, abs_bitmask) == 0 || \
 		test_bit(ABS_Y, abs_bitmask) == 0 || \
-		test_bit(ABS_Z, abs_bitmask) == 0)
-	{
+		test_bit(ABS_Z, abs_bitmask) == 0) {
 		return false;
 	}
 
@@ -45,8 +44,7 @@ bool huamobile_gsensor_device_matcher(int fd, const char *name, void *data)
 	pr_pos_info();
 
 	ret = huamobile_event_get_abs_bitmask(fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_abs_bitmask");
 		return ret;
 	}
@@ -56,14 +54,12 @@ bool huamobile_gsensor_device_matcher(int fd, const char *name, void *data)
 
 static bool huamobile_gsensor_event_handler(struct huamobile_input_device *dev, struct input_event *event, void *data)
 {
-	struct huamobile_gsensor_device *sensor = (struct huamobile_gsensor_device *)dev;
+	struct huamobile_gsensor_device *sensor = (struct huamobile_gsensor_device *) dev;
 	struct huamobile_input_service *service = data;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_ABS:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case ABS_X:
 			sensor->event.x = event->value;
 			break;
@@ -92,8 +88,7 @@ static bool huamobile_gsensor_event_handler(struct huamobile_input_device *dev, 
 	return true;
 }
 
-struct huamobile_input_device *huamobile_gsensor_create()
-{
+struct huamobile_input_device *huamobile_gsensor_create() {
 	struct huamobile_gsensor_device *sensor;
 	struct huamobile_input_device *dev;
 	struct huamobile_gsensor_event *event;
@@ -101,8 +96,7 @@ struct huamobile_input_device *huamobile_gsensor_create()
 	pr_pos_info();
 
 	sensor = malloc(sizeof(*sensor));
-	if (sensor == NULL)
-	{
+	if (sensor == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}

@@ -74,8 +74,7 @@ static int sensor_poll_main_loop(struct sensors_module_t *sensor_module, struct 
 	const struct sensor_t *sensor_list, *sensor;
 
 	count = sensor_module->get_sensors_list(sensor_module, &sensor_list);
-	if (count < 0)
-	{
+	if (count < 0) {
 		pr_red_info("get_sensors_list");
 		return count;
 	}
@@ -84,19 +83,15 @@ static int sensor_poll_main_loop(struct sensors_module_t *sensor_module, struct 
 	pr_bold_info("mask = 0x%08x, delay = %d(ms)", mask, delay);
 	pr_std_info("============================================================");
 
-	for (sensor = sensor_list + count - 1, enable_count = 0; sensor >= sensor_list; sensor--)
-	{
+	for (sensor = sensor_list + count - 1, enable_count = 0; sensor >= sensor_list; sensor--) {
 		int enable = (mask >> sensor->type) & 0x01;
 
 		sensor_device->activate(sensor_device, sensor->handle, enable);
-		if (enable)
-		{
+		if (enable) {
 			pr_green_info("Enable sensor %s", sensor->name);
 			sensor_device->setDelay(sensor_device, sensor->handle, delay * 1000 * 1000);
 			enable_count++;
-		}
-		else
-		{
+		} else {
 			pr_red_info("Disable sensor %s", sensor->name);
 		}
 
@@ -109,26 +104,21 @@ static int sensor_poll_main_loop(struct sensors_module_t *sensor_module, struct 
 		pr_std_info("============================================================");
 	}
 
-	if (enable_count == 0)
-	{
+	if (enable_count == 0) {
 		pr_red_info("No sensor enabled");
 		return -1;
 	}
 
 	pr_bold_info("enable_count = %d", enable_count);
 
-	while (1)
-	{
+	while (1) {
 		ret = sensor_device->poll(sensor_device, events, NELEM(events));
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			return ret;
 		}
 
-		for (pe = events, pe_end = pe + ret; pe < pe_end; pe++)
-		{
-			switch (pe->type)
-			{
+		for (pe = events, pe_end = pe + ret; pe < pe_end; pe++) {
+			switch (pe->type) {
 			case SENSOR_TYPE_ACCELEROMETER:
 				pr_std_info("Accelerometer: [%f, %f, %f]", pe->data[0], pe->data[1], pe->data[2]);
 				break;
@@ -188,105 +178,88 @@ int main(int argc, char *argv[])
 	int option_index;
     struct sensors_module_t *sensor_module;
 	struct sensors_poll_device_t *sensor_device;
-	struct option long_option[] =
-	{
+	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_HELP,
-		},
-		{
+		}, {
 			.name = "all",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_ALL,
-		},
-		{
+		}, {
 			.name = "delay",
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = LOCAL_COMMAND_OPTION_DELAY,
-		},
-		{
+		}, {
 			.name = "acc",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_ACCELEROMETER,
-		},
-		{
+		}, {
 			.name = "gsensor",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_ACCELEROMETER,
-		},
-		{
+		}, {
 			.name = "mag",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_MAGNETIC_FIELD,
-		},
-		{
+		}, {
 			.name = "orient",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_ORIENTATION,
-		},
-		{
+		}, {
 			.name = "gyro",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_GYROSCOPE,
-		},
-		{
+		}, {
 			.name = "light",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_LIGHT,
-		},
-		{
+		}, {
 			.name = "pressure",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_PRESSURE,
-		},
-		{
+		}, {
 			.name = "temp",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_TEMPERATURE,
-		},
-		{
+		}, {
 			.name = "prox",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_PROXIMITY,
-		},
-		{
+		}, {
 			.name = "gravity",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_GRAVITY,
-		},
-		{
+		}, {
 			.name = "la",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_LINEAR_ACCELERATION,
-		},
-		{
+		}, {
 			.name = "lg",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_LINEAR_ACCELERATION,
-		},
-		{
+		}, {
 			.name = "rv",
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = SENSOR_TYPE_ROTATION_VECTOR,
-		},
-		{
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -294,10 +267,8 @@ int main(int argc, char *argv[])
 	mask = 0;
 	delay = 200;
 
-	while ((c = getopt_long(argc, argv, "HhAaD:d:GgMmLlPpTtRr", long_option, &option_index)) != EOF)
-	{
-		switch (c)
-		{
+	while ((c = getopt_long(argc, argv, "HhAaD:d:GgMmLlPpTtRr", long_option, &option_index)) != EOF) {
+		switch (c) {
 		case 'h':
 		case 'H':
 		case LOCAL_COMMAND_OPTION_HELP:
@@ -367,23 +338,20 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (mask == 0)
-	{
+	if (mask == 0) {
 		pr_red_info("Please enable some sensor");
 		show_usage(argv[0]);
 		return -EINVAL;
 	}
 
 	ret = hw_get_module(SENSORS_HARDWARE_MODULE_ID, (const struct hw_module_t **)&sensor_module);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("hw_get_module: %d", ret);
 		return ret;
 	}
 
 	ret = sensors_open(&sensor_module->common, &sensor_device);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_red_info("sensors_open: %d", ret);
 		return ret;
 	}

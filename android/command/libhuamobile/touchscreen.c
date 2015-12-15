@@ -23,8 +23,7 @@
 
 bool huamobile_multi_touch_device_match(uint8_t *abs_bitmask)
 {
-	if (test_bit(ABS_MT_POSITION_X, abs_bitmask) == 0 || test_bit(ABS_MT_POSITION_Y, abs_bitmask) == 0)
-	{
+	if (test_bit(ABS_MT_POSITION_X, abs_bitmask) == 0 || test_bit(ABS_MT_POSITION_Y, abs_bitmask) == 0) {
 		return false;
 	}
 
@@ -42,8 +41,7 @@ bool huamobile_multi_touch_device_matcher(int fd, const char *name, void *data)
 	pr_pos_info();
 
 	ret = huamobile_event_get_abs_bitmask(fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_abs_bitmask");
 		return false;
 	}
@@ -53,8 +51,7 @@ bool huamobile_multi_touch_device_matcher(int fd, const char *name, void *data)
 
 bool huamobile_single_touch_device_match(uint8_t *abs_bitmask, uint8_t *key_bitmask)
 {
-	if (test_bit(BTN_TOUCH, key_bitmask) == 0 || test_bit(ABS_X, abs_bitmask) == 0 || test_bit(ABS_Y, abs_bitmask) == 0)
-	{
+	if (test_bit(BTN_TOUCH, key_bitmask) == 0 || test_bit(ABS_X, abs_bitmask) == 0 || test_bit(ABS_Y, abs_bitmask) == 0) {
 		return false;
 	}
 
@@ -74,15 +71,13 @@ bool huamobile_single_touch_device_matcher(int fd, const char *name, void *data)
 	pr_pos_info();
 
 	ret = huamobile_event_get_abs_bitmask(fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_abs_bitmask");
 		return false;
 	}
 
 	ret = huamobile_event_get_key_bitmask(fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_key_bitmask");
 		return false;
 	}
@@ -99,21 +94,18 @@ bool huamobile_touch_device_matcher(int fd, const char *name, void *data)
 	pr_pos_info();
 
 	ret = huamobile_event_get_abs_bitmask(fd, abs_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_abs_bitmask");
 		return false;
 	}
 
-	if (huamobile_multi_touch_device_match(abs_bitmask))
-	{
+	if (huamobile_multi_touch_device_match(abs_bitmask)) {
 		pr_green_info("Deivce %s mutil touch screen", name);
 		return true;
 	}
 
 	ret = huamobile_event_get_key_bitmask(fd, key_bitmask);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		pr_error_info("huamobile_event_get_key_bitmask");
 		return false;
 	}
@@ -137,42 +129,34 @@ static int huamobile_touch_device_probe(struct huamobile_touch_device *dev, void
 	pr_pos_info();
 	pr_bold_info("lcd_width = %d, lcd_height = %d", service->lcd_width, service->lcd_height);
 
-	if (service->lcd_width > 0)
-	{
+	if (service->lcd_width > 0) {
 		ret = huamobile_event_get_absinfo(fd, dev->xaxis, &min, &max);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("huamobile_event_get_absinfo");
 			return ret;
 		}
 
 		pr_bold_info("x-min = %d, x-max = %d", min, max);
 		diff = max - min;
-		dev->xscale = ((double)service->lcd_width) / diff;
-		dev->xoffset = ((double)service->lcd_width) * min / diff;
-	}
-	else
-	{
+		dev->xscale = ((double) service->lcd_width) / diff;
+		dev->xoffset = ((double) service->lcd_width) * min / diff;
+	} else {
 		dev->xscale = 1;
 		dev->xoffset = 0;
 	}
 
-	if (service->lcd_height > 0)
-	{
+	if (service->lcd_height > 0) {
 		ret = huamobile_event_get_absinfo(fd, dev->yaxis, &min, &max);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			pr_red_info("huamobile_event_get_absinfo");
 			return ret;
 		}
 
 		pr_bold_info("y-min = %d, y-max = %d", min, max);
 		diff = max - min;
-		dev->yscale = ((double)service->lcd_height) / diff;
-		dev->yoffset = ((double)service->lcd_height) * min / diff;
-	}
-	else
-	{
+		dev->yscale = ((double) service->lcd_height) / diff;
+		dev->yoffset = ((double) service->lcd_height) * min / diff;
+	} else {
 		dev->yscale = 1;
 		dev->yoffset = 0;
 	}
@@ -185,15 +169,13 @@ static int huamobile_touch_device_probe(struct huamobile_touch_device *dev, void
 
 static bool huamobile_multi_touch_event_handler(struct huamobile_input_device *dev, struct input_event *event, void *data)
 {
-	struct huamobile_multi_touch_device *ts = (struct huamobile_multi_touch_device *)dev;
+	struct huamobile_multi_touch_device *ts = (struct huamobile_multi_touch_device *) dev;
 	struct huamobile_input_service *service = data;
 	struct huamobile_touch_point *p, *p_end;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_ABS:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case ABS_MT_WIDTH_MAJOR:
 			break;
 
@@ -219,76 +201,58 @@ static bool huamobile_multi_touch_event_handler(struct huamobile_input_device *d
 		break;
 
 	case EV_SYN:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case SYN_MT_REPORT:
 			p = ts->points + ts->point_count;
-			if (p->pressure >= 0)
-			{
+			if (p->pressure >= 0) {
 				ts->point_count++;
 			}
 			break;
 
 		case SYN_REPORT:
-			if (ts->point_count)
-			{
+			if (ts->point_count) {
 				struct huamobile_virtual_key *key;
 
-				for (p = ts->points, p_end = p + ts->point_count; p < p_end; p++)
-				{
+				for (p = ts->points, p_end = p + ts->point_count; p < p_end; p++) {
 					key = huamobile_event_find_virtual_key(dev->event_dev, p->x, p->y);
-					if (key)
-					{
+					if (key) {
 						int value = p->pressure > 0;
 
-						if (key->value != value)
-						{
+						if (key->value != value) {
 							service->key_handler(dev, key->name, key->code, value, service->private_data);
 							key->value = value;
 						}
 
 						ts->point_count--;
-					}
-					else if (p->pressure > 0)
-					{
+					} else if (p->pressure > 0) {
 						huamobile_touch_point_mapping(&ts->touch_dev, p);
 
-						if (p->released)
-						{
+						if (p->released) {
 							service->touch_handler(dev, p, service->private_data);
 							p->released = 0;
 						}
 
 						service->move_handler(dev, p, service->private_data);
-					}
-					else
-					{
+					} else {
 						ts->point_count--;
 					}
 
 					p->pressure = -1;
 				}
-			}
-			else
-			{
+			} else {
 				struct huamobile_virtual_key *key;
 
-				for (key = dev->event_dev->vk_head; key; key = key->next)
-				{
-					if (key->value)
-					{
+				for (key = dev->event_dev->vk_head; key; key = key->next) {
+					if (key->value) {
 						service->key_handler(dev, key->name, key->code, 0, service->private_data);
 						key->value = 0;
 					}
 				}
 			}
 
-			if (ts->point_count < ts->point_count_old)
-			{
-				for (p = ts->points + ts->point_count, p_end = p + ts->point_count_old; p < p_end; p++)
-				{
-					if (p->released == 0)
-					{
+			if (ts->point_count < ts->point_count_old) {
+				for (p = ts->points + ts->point_count, p_end = p + ts->point_count_old; p < p_end; p++) {
+					if (p->released == 0) {
 						service->release_handler(dev, p, service->private_data);
 						p->released = 1;
 					}
@@ -313,7 +277,7 @@ static bool huamobile_multi_touch_event_handler(struct huamobile_input_device *d
 
 static int huamobile_multi_touch_device_probe(struct huamobile_input_device *dev, void *data)
 {
-	struct huamobile_multi_touch_device *ts = (struct huamobile_multi_touch_device *)dev;
+	struct huamobile_multi_touch_device *ts = (struct huamobile_multi_touch_device *) dev;
 
 	return huamobile_touch_device_probe(&ts->touch_dev, data);
 }
@@ -328,8 +292,7 @@ struct huamobile_input_device *huamobile_multi_touch_device_create(void)
 	pr_pos_info();
 
 	ts = malloc(sizeof(*ts));
-	if (ts == NULL)
-	{
+	if (ts == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}
@@ -337,8 +300,7 @@ struct huamobile_input_device *huamobile_multi_touch_device_create(void)
 	ts->point_count = 0;
 	ts->point_count_old = 0;
 
-	for (p = ts->points, p_end = p + NELEM(ts->points); p < p_end; p++)
-	{
+	for (p = ts->points, p_end = p + NELEM(ts->points); p < p_end; p++) {
 		p->id = p - ts->points;
 		p->pressure = -1;
 		p->released = 1;
@@ -360,15 +322,13 @@ struct huamobile_input_device *huamobile_multi_touch_device_create(void)
 
 static bool huamobile_single_touch_event_handler(struct huamobile_input_device *dev, struct input_event *event, void *data)
 {
-	struct huamobile_single_touch_device *ts = (struct huamobile_single_touch_device *)dev;
+	struct huamobile_single_touch_device *ts = (struct huamobile_single_touch_device *) dev;
 	struct huamobile_input_service *service = data;
 	struct huamobile_touch_point *p = &ts->point;
 
-	switch (event->type)
-	{
+	switch (event->type) {
 	case EV_ABS:
-		switch (event->code)
-		{
+		switch (event->code) {
 		case ABS_X:
 			p->x = event->value;
 			break;
@@ -387,27 +347,21 @@ static bool huamobile_single_touch_event_handler(struct huamobile_input_device *
 		break;
 
 	case EV_SYN:
-		if (ts->pressed)
-		{
+		if (ts->pressed) {
 			struct huamobile_virtual_key *key;
 			key = huamobile_event_find_virtual_key(dev->event_dev, p->x, p->y);
-			if (key)
-			{
+			if (key) {
 				int value = p->pressure > 0;
 
-				if (key->value != value)
-				{
+				if (key->value != value) {
 					service->key_handler(dev, key->name, key->code, value, service->private_data);
 				}
 
 				key->value = value;
-			}
-			else
-			{
+			} else {
 				huamobile_touch_point_mapping(&ts->touch_dev, p);
 
-				if (p->released)
-				{
+				if (p->released) {
 					service->touch_handler(dev, p, service->private_data);
 					p->released = 0;
 				}
@@ -415,23 +369,18 @@ static bool huamobile_single_touch_event_handler(struct huamobile_input_device *
 				service->move_handler(dev, p, service->private_data);
 				p->released = 0;
 			}
-		}
-		else
-		{
+		} else {
 			struct huamobile_virtual_key *key;
 
-			for (key = dev->event_dev->vk_head; key; key = key->next)
-			{
-				if (key->value != 0)
-				{
+			for (key = dev->event_dev->vk_head; key; key = key->next) {
+				if (key->value != 0) {
 					service->key_handler(dev, key->name, key->code, 0, service->private_data);
 				}
 
 				key->value = 0;
 			}
 
-			if (p->released == 0)
-			{
+			if (p->released == 0) {
 				service->release_handler(dev, p, service->private_data);
 				p->released = 1;
 			}
@@ -447,7 +396,7 @@ static bool huamobile_single_touch_event_handler(struct huamobile_input_device *
 
 static int huamobile_single_touch_device_probe(struct huamobile_input_device *dev, void *data)
 {
-	struct huamobile_single_touch_device *ts = (struct huamobile_single_touch_device *)dev;
+	struct huamobile_single_touch_device *ts = (struct huamobile_single_touch_device *) dev;
 
 	return huamobile_touch_device_probe(&ts->touch_dev, data);
 }
@@ -461,8 +410,7 @@ struct huamobile_input_device *huamobile_single_touch_device_create(void)
 	pr_pos_info();
 
 	ts = malloc(sizeof(*ts));
-	if (ts == NULL)
-	{
+	if (ts == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}

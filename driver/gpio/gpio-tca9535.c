@@ -195,26 +195,23 @@ static inline int tca9535_write_register_locked(struct tca9535_device *tca9535, 
 
 static int tca9535_init_register(struct tca9535_device *tca9535)
 {
-	int ret = 0;
-	struct property *prop;
-	u16 configuration = 0xFFFF;
+	int ret;
+	u32 output_configs[2];
 	struct i2c_client *client = tca9535->client;
+	struct tca9535_register_cache *cache = &tca9535->cache;
 
-	prop = of_find_property(client->dev.of_node, "default-output", NULL);
-	if (prop && prop->value) {
-		int offset;
-		const __be32 *value = prop->value;
-		const __be32 *value_end = value + (prop->length / sizeof(__be32));
-
-		while (value < value_end) {
-			offset = be32_to_cpup(value++);
-			configuration &= ~(1 << offset);
-		}
+	ret = of_property_read_u32_array(client->dev.of_node, "output-config", output_configs, ARRAY_SIZE(output_configs));
+	if (ret == 0) {
+		cache->configuration = ~(output_configs[0]);
+		cache->output_port = output_configs[1];
+	} else {
+		cache->configuration = 0xFFFF;
+		cache->output_port = 0x0000;
 	}
 
-	ret |= tca9535_write_register(tca9535, REG_OUTPUT_PORT, 0x0000, true);
+	ret = tca9535_write_register(tca9535, REG_OUTPUT_PORT, cache->output_port, false);
 	ret |= tca9535_write_register(tca9535, REG_POLARITY_INVERSION, 0x0000, true);
-	ret |= tca9535_write_register(tca9535, REG_CONFIGURATION, configuration, true);
+	ret |= tca9535_write_register(tca9535, REG_CONFIGURATION, cache->configuration, false);
 	ret |= tca9535_read_register(tca9535, REG_INPUT_PORT, &tca9535->cache.input_port, false);
 	if (ret < 0) {
 		return ret;

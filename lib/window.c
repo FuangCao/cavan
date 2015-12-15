@@ -476,7 +476,8 @@ void cavan_window_set_position(struct cavan_window *win, int x, int y)
 	cavan_window_set_abs_position(win, win->xabs, win->yabs, x, y);
 }
 
-struct cavan_window *cavan_window_find_by_point(struct double_link *link, struct cavan_input_message_point *point) {
+struct cavan_window *cavan_window_find_by_point(struct double_link *link, struct cavan_input_message_point *point)
+{
 	struct double_link_node *node;
 	struct cavan_window *win, *child;
 

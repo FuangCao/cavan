@@ -80,7 +80,8 @@ void cavan_font_deinit(struct cavan_font *font)
 	}
 }
 
-struct cavan_font *cavan_font_get(int type) {
+struct cavan_font *cavan_font_get(int type)
+{
 	int ret;
 	struct cavan_font *font;
 

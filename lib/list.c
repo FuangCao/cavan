@@ -22,7 +22,8 @@ bool single_link_empty(struct single_link *link)
 	return res;
 }
 
-struct single_link_node *single_link_get_first_node(struct single_link *link) {
+struct single_link_node *single_link_get_first_node(struct single_link *link)
+{
 	struct single_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -78,7 +79,8 @@ void single_link_push(struct single_link *link, struct single_link_node *node)
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct single_link_node *single_link_pop(struct single_link *link) {
+struct single_link_node *single_link_pop(struct single_link *link)
+{
 	struct single_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -124,7 +126,8 @@ void single_link_traversal(struct single_link *link, void *data, single_link_han
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct single_link_node *single_link_find(struct single_link *link, void *data, single_link_matcher_t matcher) {
+struct single_link_node *single_link_find(struct single_link *link, void *data, single_link_matcher_t matcher)
+{
 	struct single_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -173,7 +176,8 @@ bool circle_link_empty(struct circle_link *link)
 	return res;
 }
 
-struct single_link_node *circle_link_get_first_node(struct circle_link *link) {
+struct single_link_node *circle_link_get_first_node(struct circle_link *link)
+{
 	struct single_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -234,7 +238,8 @@ void circle_link_push(struct circle_link *link, struct single_link_node *node)
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct single_link_node *circle_link_pop(struct circle_link *link) {
+struct single_link_node *circle_link_pop(struct circle_link *link)
+{
 	struct single_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -284,7 +289,8 @@ void circle_link_traversal(struct circle_link *link, void *data, circle_link_han
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct single_link_node *circle_link_find(struct circle_link *link, void *data, circle_link_matcher_t matcher) {
+struct single_link_node *circle_link_find(struct circle_link *link, void *data, circle_link_matcher_t matcher)
+{
 	struct single_link_node *head, *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -333,7 +339,8 @@ bool double_link_empty(struct double_link *link)
 	return res;
 }
 
-struct double_link_node *double_link_get_first_node(struct double_link *link) {
+struct double_link_node *double_link_get_first_node(struct double_link *link)
+{
 	struct double_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -348,7 +355,8 @@ struct double_link_node *double_link_get_first_node(struct double_link *link) {
 	return node;
 }
 
-struct double_link_node *double_link_get_last_node(struct double_link *link) {
+struct double_link_node *double_link_get_last_node(struct double_link *link)
+{
 	struct double_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -398,7 +406,8 @@ void double_link_remove(struct double_link *link, struct double_link_node *node)
 	pthread_mutex_unlock(&link->lock);
 }
 
-struct double_link_node *double_link_pop(struct double_link *link) {
+struct double_link_node *double_link_pop(struct double_link *link)
+{
 	struct double_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -473,7 +482,8 @@ static struct double_link_node *double_link_find_base(struct double_link *link, 
 	return NULL;
 }
 
-struct double_link_node *double_link_find(struct double_link *link, void *data, double_link_matcher_t matcher) {
+struct double_link_node *double_link_find(struct double_link *link, void *data, double_link_matcher_t matcher)
+{
 	struct double_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
@@ -488,7 +498,8 @@ bool double_link_has_node(struct double_link *link, struct double_link_node *nod
 	return double_link_find(link, node, double_link_node_match_equal) != NULL;
 }
 
-struct double_link_node *double_link_get_node_base(struct double_link *link, int index) {
+struct double_link_node *double_link_get_node_base(struct double_link *link, int index)
+{
 	struct double_link_node *head, *node;
 
 	for (head = &link->head_node, node = head->next; node != head; node = node->next, index--) {
@@ -500,7 +511,8 @@ struct double_link_node *double_link_get_node_base(struct double_link *link, int
 	return NULL;
 }
 
-struct double_link_node *double_link_get_node(struct double_link *link, int index) {
+struct double_link_node *double_link_get_node(struct double_link *link, int index)
+{
 	struct double_link_node *node;
 
 	pthread_mutex_lock(&link->lock);
