@@ -557,7 +557,6 @@ int cavan_i2c_sysfs_get_device_name(struct cavan_i2c_client *client, char *buff,
 
 int cavan_i2c_sysfs_get_driver_path(struct cavan_i2c_client *client, char *buff, size_t size)
 {
-	int ret;
 	int length;
 	ssize_t rdlen;
 	char *filename;

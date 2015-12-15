@@ -134,26 +134,36 @@ static inline bool cavan_isbracket_right(u8 c)
 	return (cavan_ctype_get(c) & (CT_BR)) != 0;
 }
 
-static inline char cavan_tolower(char c)
+static inline char cavan_lowercase_simple(char c)
+{
+	return c | 0x20;
+}
+
+static inline char cavan_lowercase(char c)
 {
 	if (cavan_isupper(c)) {
 #if 0
 		return c - 'A' + 'a';
 #else
-		return c | 0x20;
+		return cavan_lowercase_simple(c);
 #endif
 	}
 
 	return c;
 }
 
-static inline char cavan_toupper(char c)
+static inline char cavan_uppercase_simple(char c)
+{
+	return c & (~0x20);
+}
+
+static inline char cavan_uppercase(char c)
 {
 	if (cavan_islower(c)) {
 #if 0
 		return c - 'a' + 'A';
 #else
-		return c & (~0x20);
+		return cavan_uppercase_simple(c);
 #endif
 	}
 
