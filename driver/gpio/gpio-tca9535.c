@@ -210,10 +210,26 @@ static int tca9535_init_register(struct tca9535_device *tca9535)
 	}
 
 	ret = tca9535_write_register(tca9535, REG_OUTPUT_PORT, cache->output_port, false);
-	ret |= tca9535_write_register(tca9535, REG_POLARITY_INVERSION, 0x0000, true);
-	ret |= tca9535_write_register(tca9535, REG_CONFIGURATION, cache->configuration, false);
-	ret |= tca9535_read_register(tca9535, REG_INPUT_PORT, &tca9535->cache.input_port, false);
 	if (ret < 0) {
+		dev_err(&tca9535->client->dev, "Failed to tca9535_write_register REG_OUTPUT_PORT: %d\n", ret);
+		return ret;
+	}
+
+	ret = tca9535_write_register(tca9535, REG_POLARITY_INVERSION, 0x0000, true);
+	if (ret < 0) {
+		dev_err(&tca9535->client->dev, "Failed to tca9535_write_register REG_POLARITY_INVERSION: %d\n", ret);
+		return ret;
+	}
+
+	ret = tca9535_write_register(tca9535, REG_CONFIGURATION, cache->configuration, false);
+	if (ret < 0) {
+		dev_err(&tca9535->client->dev, "Failed to tca9535_write_register REG_CONFIGURATION: %d\n", ret);
+		return ret;
+	}
+
+	ret = tca9535_read_register(tca9535, REG_INPUT_PORT, &tca9535->cache.input_port, false);
+	if (ret < 0) {
+		dev_err(&tca9535->client->dev, "Failed to tca9535_read_register REG_INPUT_PORT: %d\n", ret);
 		return ret;
 	}
 
@@ -243,7 +259,7 @@ static int tca9535_gpio_direction_input(struct gpio_chip *chip, unsigned offset)
 	if (reg_value != cache->configuration) {
 		ret = tca9535_write_register(tca9535, REG_CONFIGURATION, reg_value, true);
 		if (ret < 0) {
-			dev_err(&tca9535->client->dev, "Failed to tca9535_write_register: %d\n", ret);
+			dev_err(&tca9535->client->dev, "Failed to tca9535_write_register REG_CONFIGURATION: %d\n", ret);
 			return ret;
 		}
 	}
@@ -269,7 +285,7 @@ static int tca9535_gpio_get(struct gpio_chip *chip, unsigned offset)
 
 static int tca9535_gpio_direction_output(struct gpio_chip *chip, unsigned offset, int value)
 {
-	int ret = 0;
+	int ret;
 	u16 reg_value;
 	struct tca9535_device *tca9535 = container_of(chip, struct tca9535_device, gpio_chip);
 	struct tca9535_register_cache *cache = &tca9535->cache;
@@ -281,7 +297,11 @@ static int tca9535_gpio_direction_output(struct gpio_chip *chip, unsigned offset
 #endif
 
 	if (reg_value != cache->output_port) {
-		ret |= tca9535_write_register(tca9535, REG_OUTPUT_PORT, reg_value, true);
+		ret = tca9535_write_register(tca9535, REG_OUTPUT_PORT, reg_value, true);
+		if (ret < 0) {
+			dev_err(&tca9535->client->dev, "Failed to tca9535_write_register REG_OUTPUT_PORT: %d\n", ret);
+			return ret;
+		}
 	}
 
 	reg_value = cache->configuration & (~(1 << offset));
@@ -291,12 +311,11 @@ static int tca9535_gpio_direction_output(struct gpio_chip *chip, unsigned offset
 #endif
 
 	if (reg_value != cache->configuration) {
-		ret |= tca9535_write_register(tca9535, REG_CONFIGURATION, reg_value, true);
-	}
-
-	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_register: %d\n", ret);
-		return ret;
+		ret = tca9535_write_register(tca9535, REG_CONFIGURATION, reg_value, true);
+		if (ret < 0) {
+			dev_err(&tca9535->client->dev, "Failed to tca9535_write_register REG_CONFIGURATION: %d\n", ret);
+			return ret;
+		}
 	}
 
 	return 0;
@@ -400,7 +419,7 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 
 	ret = tca9535_write_register(tca9535, REG_CONFIGURATION, tca9535->cache.configuration, false);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_register: %d\n", ret);
+		dev_err(&tca9535->client->dev, "Failed to tca9535_write_register REG_CONFIGURATION: %d\n", ret);
 		goto out_input_free_device;
 	}
 
@@ -710,7 +729,7 @@ static int tca9535_i2c_mux_init(struct tca9535_device *tca9535)
 	tca9535->cache.configuration &= tca9535->mux_gpio_unmask;
 	ret = tca9535_write_register(tca9535, REG_CONFIGURATION, tca9535->cache.configuration, false);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_register: %d\n", ret);
+		dev_err(&tca9535->client->dev, "Failed to tca9535_write_register REG_CONFIGURATION: %d\n", ret);
 		goto out_i2c_del_adapter;
 	}
 
