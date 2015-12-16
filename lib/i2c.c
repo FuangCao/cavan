@@ -373,8 +373,9 @@ void cavan_i2c_detect(struct cavan_i2c_client *client)
 	int count = 0;
 
 	for (addr = 0x01; addr < 0x80; addr++) {
-		char c;
 		int ret;
+		char rd_value;
+		char wr_value = 0;
 
 		ret = cavan_i2c_set_address(client, addr);
 		if (ret < 0) {
@@ -382,8 +383,7 @@ void cavan_i2c_detect(struct cavan_i2c_client *client)
 			continue;
 		}
 
-		ret = cavan_i2c_master_recv(client, &c, 1);
-		if (ret == 1) {
+		if (cavan_i2c_master_recv(client, &rd_value, 1) == 1 || cavan_i2c_master_send(client, &wr_value, 1) == 1) {
 			pr_green_info("0x%02x", addr);
 			count++;
 		}
