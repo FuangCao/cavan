@@ -36,7 +36,6 @@ class AdbManager(CavanCommandBase):
 				return True
 
 		command.extend(args)
-		print command
 
 		return self.doExecute(command)
 
