@@ -120,6 +120,15 @@ struct cavan_i2c_config cavan_i2c_config_table[] = {
 		.value_bytes = 2,
 		.addr_big_endian = true,
 		.value_big_endian = false,
+	}, {
+		.chipname = "adv7513",
+		.addr_step = 1,
+		.addr_bytes = 1,
+		.value_bytes = 1,
+		.addr_first = 0x00,
+		.addr_last = 0xFF,
+		.addr_big_endian = false,
+		.value_big_endian = false,
 	}
 };
 

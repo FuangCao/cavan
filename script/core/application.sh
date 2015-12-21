@@ -491,13 +491,27 @@ function cavan-merge-auto-checkout()
 
 function cavan-tc3587xx-inotify()
 {
-	[ "$2" ] ||
+	local src_file dest_file
+
+	[ "$1" ] ||
 	{
+		echo "Usage: $0 <DEST_FILE>"
 		echo "Usage: $0 <SRC_FILE> <DEST_FILE>"
 		return 1
 	}
 
-	echo "$1 => $2"
+	if [ "$2" ]
+	then
+		src_file="$1"
+		dest_file="$2"
+	else
+		src_file="/tmp/$(basename $1).txt"
+		dest_file="$1"
+	fi
 
-	cavan-inotify $1 -c "cavan-tc3587xx-converter $1 $2"
+	echo "${src_file} => ${dest_file}"
+
+	touch "${src_file}"
+
+	cavan-inotify ${src_file} -c "cavan-tc3587xx-converter ${src_file} ${dest_file}"
 }
