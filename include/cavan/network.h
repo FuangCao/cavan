@@ -17,6 +17,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <semaphore.h>
 
 #define NETWORK_PORT_INVALID	0
 #define NETWORK_PORT_FTP		21
@@ -215,6 +216,9 @@ typedef enum {
 	NETWORK_PROTOCOL_LOCAL_TCP,
 	NETWORK_PROTOCOL_LOCAL_UDP,
 	NETWORK_PROTOCOL_UEVENT,
+	NETWORK_PROTOCOL_FILE_RW,
+	NETWORK_PROTOCOL_FILE_RO,
+	NETWORK_PROTOCOL_FILE_WO,
 } network_protocol_t;
 
 struct network_url {
@@ -242,11 +246,14 @@ struct cavan_sync_package {
 	char data[0];
 };
 
+struct network_service;
+
 struct network_client {
 	int sockfd;
 	socklen_t addrlen;
 	void *private_data;
 	network_protocol_t type;
+	struct network_service *service;
 
 	void (*close)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
@@ -281,6 +288,7 @@ struct network_service {
 	void *private_data;
 	network_protocol_t type;
 	struct cavan_lock lock;
+	sem_t sem;
 
 	int (*accept)(struct network_service *service, struct network_client *conn);
 	void (*close)(struct network_service *service);

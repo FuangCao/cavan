@@ -1213,6 +1213,8 @@ char *network_url_tostring(const struct network_url *url, char *buff, size_t siz
 
 	if (url->hostname && url->hostname[0]) {
 		buff += snprintf(buff, buff_end - buff, "//%s", url->hostname);
+	} else {
+		buff = text_ncopy(buff, "//", buff_end - buff);
 	}
 
 	if (url->port != NETWORK_PORT_INVALID) {
@@ -2034,6 +2036,112 @@ static int network_client_uevent_open(struct network_client *client, const struc
 	return 0;
 }
 
+static int network_file_get_open_flags(network_protocol_t type)
+{
+	switch (type) {
+	case NETWORK_PROTOCOL_FILE_RO:
+		return O_RDONLY;
+
+	case NETWORK_PROTOCOL_FILE_WO:
+		return O_WRONLY;
+
+	default:
+		return O_RDWR;
+	}
+}
+
+static void network_client_file_close(struct network_client *client)
+{
+	if (client->service) {
+		sem_post(&client->service->sem);
+	} else {
+		fsync(client->sockfd);
+		close(client->sockfd);
+	}
+}
+
+static ssize_t network_client_file_send(struct network_client *client, const void *buff, size_t size)
+{
+	return write(client->sockfd, buff, size);
+}
+
+static ssize_t network_client_file_recv(struct network_client *client, void *buff, size_t size)
+{
+	return read(client->sockfd, buff, size);
+}
+
+static int network_client_file_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
+{
+	int sockfd;
+	int file_flags = network_file_get_open_flags(client->type);
+
+	sockfd = open(url->pathname, file_flags | O_CLOEXEC);
+	if (sockfd < 0) {
+		pr_red_info("open file %s", url->pathname);
+		return sockfd;
+	}
+
+	client->service = NULL;
+	client->sockfd = sockfd;
+	client->addrlen = 0;
+	client->close = network_client_file_close;
+	client->send = network_client_file_send;
+	client->recv = network_client_file_recv;
+
+	return 0;
+}
+
+static int network_service_file_accept(struct network_service *service, struct network_client *client)
+{
+	sem_wait(&service->sem);
+
+	client->service = service;
+	client->sockfd = service->sockfd;
+	client->close = network_client_file_close;
+	client->send = network_client_file_send;
+	client->recv = network_client_file_recv;
+
+	return 0;
+}
+
+static void network_service_file_close(struct network_service *service)
+{
+	fsync(service->sockfd);
+	close(service->sockfd);
+	sem_destroy(&service->sem);
+}
+
+static int network_service_file_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
+{
+	int ret;
+	int sockfd;
+	int file_flags = network_file_get_open_flags(service->type);
+
+	ret = sem_init(&service->sem, 0, 1);
+	if (ret < 0) {
+		pr_err_info("sem_init");
+		return ret;
+	}
+
+	sockfd = open(url->pathname, file_flags | O_CLOEXEC);
+	if (sockfd < 0) {
+		pr_err_info("open file %s", url->pathname);
+		ret = sockfd;
+		goto out_sem_destroy;
+	}
+
+	service->sockfd = sockfd;
+	service->addrlen = 0;
+	service->accept = network_service_file_accept;
+	service->close = network_service_file_close;
+
+	return 0;
+
+out_sem_destroy:
+	sem_destroy(&service->sem);
+	return ret;
+}
+
 // ================================================================================
 
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size)
@@ -2643,6 +2751,24 @@ static const struct network_protocol_desc protocol_descs[] = {
 		.open_service = network_service_open_dummy,
 		.open_client = network_client_uevent_open,
 	},
+	[NETWORK_PROTOCOL_FILE_RW] = {
+		.name = "file-rw",
+		.type = NETWORK_PROTOCOL_FILE_RW,
+		.open_service = network_service_file_open,
+		.open_client = network_client_file_open,
+	},
+	[NETWORK_PROTOCOL_FILE_RO] = {
+		.name = "file-ro",
+		.type = NETWORK_PROTOCOL_FILE_RO,
+		.open_service = network_service_file_open,
+		.open_client = network_client_file_open,
+	},
+	[NETWORK_PROTOCOL_FILE_WO] = {
+		.name = "file-wo",
+		.type = NETWORK_PROTOCOL_FILE_WO,
+		.open_service = network_service_file_open,
+		.open_client = network_client_file_open,
+	},
 };
 
 network_protocol_t network_protocol_parse(const char *name)
@@ -2717,6 +2843,21 @@ network_protocol_t network_protocol_parse(const char *name)
 	case 'f':
 		if (text_cmp(name + 1, "tp") == 0) {
 			return NETWORK_PROTOCOL_FTP;
+		} else if (text_lhcmp("ile", name + 1) == 0) {
+			if (name[4] != '-') {
+				if (name[4] == 0) {
+					return NETWORK_PROTOCOL_FILE_RW;
+				}
+				break;
+			}
+
+			if (text_cmp(name + 5, "rw") == 0) {
+				return NETWORK_PROTOCOL_FILE_RW;
+			} else if (text_cmp(name + 5, "ro") == 0) {
+				return NETWORK_PROTOCOL_FILE_RO;
+			} else if (text_cmp(name + 5, "wo") == 0) {
+				return NETWORK_PROTOCOL_FILE_WO;
+			}
 		}
 		break;
 
