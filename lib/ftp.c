@@ -17,7 +17,6 @@ static inline int ftp_create_data_link(struct network_client *client, const stru
 static int ftp_server_send_file1(struct network_client *client, const struct network_url *url, int fd)
 {
 	int ret;
-	ssize_t wrlen;
 
 	ret = ftp_create_data_link(client, url);
 	if (ret < 0) {
@@ -25,12 +24,7 @@ static int ftp_server_send_file1(struct network_client *client, const struct net
 		return ret;
 	}
 
-	wrlen = network_client_send_file(client, fd, 0);
-	if (wrlen < 0) {
-		ret = wrlen;
-	} else {
-		ret = 0;
-	}
+	ret = network_client_send_file(client, fd, 0);
 
 	network_client_close(client);
 
@@ -40,7 +34,6 @@ static int ftp_server_send_file1(struct network_client *client, const struct net
 static int ftp_server_receive_file1(struct network_client *client, const struct network_url *url, int fd)
 {
 	int ret;
-	ssize_t rdlen;
 
 	ret = ftp_create_data_link(client, url);
 	if (ret < 0) {
@@ -48,12 +41,7 @@ static int ftp_server_receive_file1(struct network_client *client, const struct 
 		return ret;
 	}
 
-	rdlen = network_client_recv_file(client, fd, 0);
-	if (rdlen < 0) {
-		ret = rdlen;
-	} else {
-		ret = 0;
-	}
+	ret = network_client_recv_file(client, fd, 0);
 
 	network_client_close(client);
 

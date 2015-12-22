@@ -45,6 +45,11 @@ typedef signed char schar;
 
 typedef char * pchar, text;
 
+typedef u32 size32_t;
+typedef s32 ssize32_t;
+typedef u64 size64_t;
+typedef s64 ssize64_t;
+
 #ifndef __cplusplus
 typedef enum {
 	false,
