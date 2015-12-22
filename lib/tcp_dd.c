@@ -1424,7 +1424,7 @@ int tcp_dd_exec_command(struct network_url *url, const char *command)
 		goto out_client_close;
 	}
 
-	ret = set_tty_mode(stdin_fd, 5, &tty_attr);
+	ret = set_tty_mode(stdin_fd, TTY_MODE_SSH, &tty_attr);
 	if (ret < 0) {
 		pr_red_info("set_tty_mode");
 		goto out_client_close;

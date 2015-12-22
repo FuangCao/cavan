@@ -460,7 +460,7 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 		return fd_tty;
 	}
 
-	ret = set_tty_mode(fd_tty, 3, &swan_vk_tty_attr);
+	ret = set_tty_mode(fd_tty, TTY_MODE_DATA, &swan_vk_tty_attr);
 	if (ret < 0) {
 		print_error("set_tty_mode");
 		goto out_close_tty;

@@ -120,6 +120,10 @@ __BEGIN_DECLS;
 #define stdout_fd						fileno(stdout)
 #define stderr_fd						fileno(stderr)
 
+#define TTY_MODE_DATA					3
+#define TTY_MODE_AT						4
+#define TTY_MODE_SSH					5
+
 // ============================================================
 
 #define pd_color_info(color, fmt, args ...) \
@@ -270,6 +274,7 @@ extern FILE *console_fp;
 
 int set_tty_attr(int fd, int action, struct termios *attr);
 int set_tty_mode(int fd, int mode, struct termios *attr_bak);
+int restore_tty_attr(int fd, struct termios *attr);
 
 int has_char(long sec, long usec);
 int timeout_getchar(long sec, long usec);
@@ -369,11 +374,6 @@ static inline void print_size(u64 size)
 static inline int get_tty_attr(int fd, struct termios *attr)
 {
 	return tcgetattr(fd, attr);
-}
-
-static inline int restore_tty_attr(int fd, struct termios *attr)
-{
-	return set_tty_attr(fd, TCSADRAIN, attr);
 }
 
 __END_DECLS;

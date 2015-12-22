@@ -204,7 +204,7 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 		return fd;
 	}
 
-	ret = set_tty_mode(fd, 4, &attr);
+	ret = set_tty_mode(fd, TTY_MODE_AT, &attr);
 	if (ret < 0) {
 		error_msg("set_tty_mode");
 		goto out_close_fd;

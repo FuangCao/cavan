@@ -2052,6 +2052,10 @@ static int network_file_get_open_flags(network_protocol_t type)
 
 static void network_client_file_close(struct network_client *client)
 {
+	if (isatty(client->sockfd)) {
+		restore_tty_attr(client->sockfd, NULL);
+	}
+
 	if (client->service) {
 		sem_post(&client->service->sem);
 	} else {
@@ -2070,14 +2074,30 @@ static ssize_t network_client_file_recv(struct network_client *client, void *buf
 	return read(client->sockfd, buff, size);
 }
 
+static int network_file_open(const char *pathname, int type)
+{
+	int fd;
+	int flags = network_file_get_open_flags(type);
+
+	fd = open(pathname, flags | O_CLOEXEC | O_NOCTTY);
+	if (fd < 0) {
+		pr_red_info("open file %s", pathname);
+		return fd;
+	}
+
+	if (isatty(fd)) {
+		set_tty_mode(fd, TTY_MODE_DATA, NULL);
+	}
+
+	return fd;
+}
+
 static int network_client_file_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int sockfd;
-	int file_flags = network_file_get_open_flags(client->type);
 
-	sockfd = open(url->pathname, file_flags | O_CLOEXEC);
+	sockfd = network_file_open(url->pathname, client->type);
 	if (sockfd < 0) {
-		pr_red_info("open file %s", url->pathname);
 		return sockfd;
 	}
 
@@ -2115,7 +2135,6 @@ static int network_service_file_open(struct network_service *service, const stru
 {
 	int ret;
 	int sockfd;
-	int file_flags = network_file_get_open_flags(service->type);
 
 	ret = sem_init(&service->sem, 0, 1);
 	if (ret < 0) {
@@ -2123,9 +2142,8 @@ static int network_service_file_open(struct network_service *service, const stru
 		return ret;
 	}
 
-	sockfd = open(url->pathname, file_flags | O_CLOEXEC);
+	sockfd = network_file_open(url->pathname, service->type);
 	if (sockfd < 0) {
-		pr_err_info("open file %s", url->pathname);
 		ret = sockfd;
 		goto out_sem_destroy;
 	}

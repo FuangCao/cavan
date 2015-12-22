@@ -6,6 +6,7 @@
 #define MAX_BUFF_LEN	KB(4)
 
 FILE *console_fp;
+static struct termios tty_attr;
 
 int set_tty_attr(int fd, int action, struct termios *attr)
 {
@@ -37,6 +38,10 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 
 	if (!isatty(fd)) {
 		return 0;
+	}
+
+	if (attr_bak == NULL) {
+		attr_bak = &tty_attr;
 	}
 
 	ret = get_tty_attr(fd, attr_bak);
@@ -94,6 +99,15 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 		pr_red_info("invalid mode %d", mode);
 		return -EINVAL;
 	}
+}
+
+int restore_tty_attr(int fd, struct termios *attr)
+{
+	if (attr == NULL) {
+		attr = &tty_attr;
+	}
+
+	return set_tty_attr(fd, TCSADRAIN, attr);
 }
 
 int has_char(long sec, long usec)

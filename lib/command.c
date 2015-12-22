@@ -963,7 +963,7 @@ int cavan_tty_redirect(int ttyin, int ttyout, int ttyerr)
 	int ret;
 	struct termios tty_attr;
 
-	ret = set_tty_mode(stdin_fd, 5, &tty_attr);
+	ret = set_tty_mode(stdin_fd, TTY_MODE_SSH, &tty_attr);
 	if (ret < 0) {
 		pr_red_info("set_tty_mode");
 		return ret;
