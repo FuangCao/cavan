@@ -39,11 +39,21 @@ void tcp_dd_set_package_type(struct tcp_dd_package *pkg, u16 type)
 
 bool tcp_dd_package_is_valid(const struct tcp_dd_package *pkg)
 {
+	if (pkg->version != TCP_DD_VERSION) {
+		pr_red_info("invalid protocol version 0x%08x, expect 0x%08x", pkg->version, TCP_DD_VERSION);
+		return false;
+	}
+
 	return (pkg->type ^ pkg->type_inverse) == 0xFFFF;
 }
 
 bool tcp_dd_package_is_invalid(const struct tcp_dd_package *pkg)
 {
+	if (pkg->version != TCP_DD_VERSION) {
+		pr_red_info("invalid protocol version 0x%08x, expect 0x%08x", pkg->version, TCP_DD_VERSION);
+		return true;
+	}
+
 	return (pkg->type ^ pkg->type_inverse) != 0xFFFF;
 }
 
@@ -70,9 +80,12 @@ ssize_t tcp_dd_package_recv(struct network_client *client, struct tcp_dd_package
 	return rdlen;
 }
 
-ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length)
+ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length, u32 flags)
 {
 	ssize_t wrlen;
+
+	pkg->version = TCP_DD_VERSION;
+	pkg->flags = flags;
 
 	tcp_dd_set_package_type(pkg, type);
 
@@ -92,7 +105,7 @@ int tcp_dd_send_request(struct network_client *client, struct tcp_dd_package *pk
 {
 	int ret;
 
-	ret = tcp_dd_package_send(client, pkg, type, length);
+	ret = tcp_dd_package_send(client, pkg, type, length, 0);
 	if (ret < 0) {
 		pr_red_info("tcp_dd_package_send %d", ret);
 		return ret;
@@ -282,7 +295,7 @@ static int __printf_format_34__ tcp_dd_send_response(struct network_client *clie
 		}
 	}
 
-	return tcp_dd_package_send(client, &pkg, TCP_DD_RESPONSE, length);
+	return tcp_dd_package_send(client, &pkg, TCP_DD_RESPONSE, length, 0);
 }
 
 static int tcp_dd_recv_response(struct network_client *client)

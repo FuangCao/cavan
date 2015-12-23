@@ -4,7 +4,7 @@ import sys, os
 from cavan_command import CavanCommandBase
 
 class AdbManager(CavanCommandBase):
-	def __init__(self, pathname = None, verbose = False):
+	def __init__(self, pathname = None, verbose = True):
 		CavanCommandBase.__init__(self, pathname, verbose)
 		self.setAdbDevice()
 		self.mHost = self.getEnv("ADB_HOST")
@@ -27,13 +27,20 @@ class AdbManager(CavanCommandBase):
 			if self.mDevice != None:
 				command.extend(["-s", self.mDevice])
 		else:
+			if self.mHost in ["local", "localhost"]:
+				option = ["-a"]
+			else:
+				option = ["-i", self.mHost, "-p", self.mPort]
+
 			subcmd = args.pop(0)
 			if subcmd in ["push"]:
-				command = ["cavan-tcp_dd", "-wi", self.mHost, "-p", self.mPort]
+				command = ["cavan-tcp_dd", "-w"]
 			elif subcmd in ["shell"]:
-				command = ["cavan-tcp_exec", "-i", self.mHost, "-p", self.mPort]
+				command = ["cavan-tcp_exec"]
 			else:
 				return True
+
+			command.extend(option)
 
 		command.extend(args)
 
@@ -96,6 +103,21 @@ class AdbManager(CavanCommandBase):
 			res = self.doAdbShell(["pm install -r", self.ApkTempPath])
 			self.doAdbShell(["rm -f", self.ApkTempPath])
 			if not res:
+				return False
+
+		return True
+
+	def doRemount(self, listDir = None):
+		if not self.mHost:
+			self.mHost = "localhost"
+
+		if not listDir:
+			listDir = [ "/system" ]
+		elif not isinstance(listDir, list):
+			listDir = [ listDir ]
+
+		for pathname in listDir:
+			if not self.doAdbShell("mount -o remount,rw " + pathname):
 				return False
 
 		return True

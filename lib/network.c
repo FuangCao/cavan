@@ -2200,12 +2200,10 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t siz
 				return -EIO;
 			}
 
-			size += rdlen;
 			progress_bar_add(&bar, rdlen);
 		}
 	} else {
 		while (size) {
-
 			rdlen = client->recv(client, buff, sizeof(buff));
 			if (rdlen <= 0 || ffile_write(fd, buff, rdlen) < rdlen) {
 				return -EIO;
@@ -2266,7 +2264,6 @@ int network_client_send_file(struct network_client *client, int fd, size64_t siz
 				return -EIO;
 			}
 
-			size += rdlen;
 			progress_bar_add(&bar, rdlen);
 		}
 	} else {

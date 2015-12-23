@@ -12,13 +12,17 @@
 #include <cavan/alarm.h>
 #include <cavan/block.h>
 
-#define TCP_DD_DEFAULT_PORT		8888
-#define TCP_DD_DAEMON_COUNT		10
-#define TCP_DD_TIMEOUT			5000
-#define TCP_KEYPAD_DEVICE		"/dev/tcp_keypad"
+#define TCP_DD_DEFAULT_PORT			8888
+#define TCP_DD_DAEMON_COUNT			10
+#define TCP_DD_TIMEOUT				5000
+#define TCP_DD_VERSION				0x20151223
+#define TCP_KEYPAD_DEVICE			"/dev/tcp_keypad"
 
-#define TCP_KEYPADF_EXIT_ACK	(1 << 0)
-#define TCP_KEYPADF_CMDLINE		(1 << 1)
+#define TCP_KEYPADF_EXIT_ACK		(1 << 0)
+#define TCP_KEYPADF_CMDLINE			(1 << 1)
+
+#define TCP_DDF_BREAKPOINT_RESUME	(1 << 0)
+#define TCP_DDF_SKIP_EXIST			(1 << 1)
 
 #define TCP_DD_PKG_BODY_OFFSET	offsetof(struct tcp_dd_package, body)
 
@@ -76,8 +80,10 @@ struct tcp_alarm_query_request {
 };
 
 struct tcp_dd_package {
+	u32 version;
 	u16 type;
 	u16 type_inverse;
+	u32 flags;
 
 	union {
 		u8 body[0];
@@ -109,7 +115,7 @@ void tcp_dd_set_package_type(struct tcp_dd_package *pkg, u16 type);
 bool tcp_dd_package_is_valid(const struct tcp_dd_package *pkg);
 bool tcp_dd_package_is_invalid(const struct tcp_dd_package *pkg);
 ssize_t tcp_dd_package_recv(struct network_client *client, struct tcp_dd_package *pkg);
-ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length);
+ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length, u32 flags);
 int tcp_dd_send_request(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length);
 int tcp_dd_send_request2(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length);
 int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length);
