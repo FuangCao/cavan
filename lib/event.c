@@ -1770,9 +1770,13 @@ void cavan_event_service_init(struct cavan_event_service *service, bool (*matche
 
 static bool cavan_event_handler_dummy(struct cavan_event_device *dev, struct input_event *event, void *data)
 {
+	int length;
 	char buff[1024];
 
-	print_string(cavan_event_tostring(dev, event, buff));
+	length = snprintf(buff, sizeof(buff), "\r%s: ", dev->pathname);
+	cavan_event_tostring(dev, event, buff + length);
+
+	print_string(buff);
 
 	return true;
 }
