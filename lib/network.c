@@ -2197,6 +2197,7 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t siz
 			}
 
 			if (ffile_write(fd, buff, rdlen) < rdlen) {
+				pr_err_info("ffile_write");
 				return -EIO;
 			}
 
@@ -2205,7 +2206,13 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t siz
 	} else {
 		while (size) {
 			rdlen = client->recv(client, buff, sizeof(buff));
-			if (rdlen <= 0 || ffile_write(fd, buff, rdlen) < rdlen) {
+			if (rdlen <= 0) {
+				pr_err_info("client->recv");
+				return rdlen < 0 ? rdlen : -EFAULT;
+			}
+
+			if (ffile_write(fd, buff, rdlen) < rdlen) {
+				pr_err_info("ffile_write");
 				return -EIO;
 			}
 

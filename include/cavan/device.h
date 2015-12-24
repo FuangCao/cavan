@@ -287,3 +287,7 @@ static inline char *get_partition_mount_point(const char *devpath)
 	return get_mount_target(devpath);
 }
 
+static inline int bdev_set_read_only(int fd, int enable)
+{
+	return ioctl(fd, BLKROSET, &enable);
+}

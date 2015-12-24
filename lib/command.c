@@ -420,13 +420,22 @@ int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, cons
 
 int cavan_exec_set_oom_adj(int pid, int value)
 {
-	char buff[32], *p;
+	ssize_t wrlen;
+	size_t length;
+	char buff[32];
 	char pathname[1024];
 
-	snprintf(pathname, sizeof(pathname), "/proc/%d/oom_adj", pid);
-	p = value2text_simple(value, buff, sizeof(buff), 10);
+	length = value2text_simple(value, buff, sizeof(buff), 10) - buff;
 
-	return file_write(pathname, buff, p - buff);
+	snprintf(pathname, sizeof(pathname), "/proc/%d/oom_score_adj", pid);
+	wrlen = file_write(pathname, buff, length);
+	if (wrlen > 0) {
+		return 0;
+	}
+
+	snprintf(pathname, sizeof(pathname), "/proc/%d/oom_adj", pid);
+
+	return file_write(pathname, buff, length);
 }
 
 int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid, int flags)

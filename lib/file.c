@@ -322,7 +322,9 @@ int file_copy(const char *src_file, const char *dest_file, int flags)
 
 	ret = open_files(src_file, dest_file, &src_fd, &dest_fd, flags);
 	if (ret < 0) {
+#if CAVAN_FILE_DEBUG
 		pr_error_info("open_files");
+#endif
 		return ret;
 	}
 
@@ -341,7 +343,9 @@ int file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode)
 
 	dest_fd = open(dest_file, flags, mode);
 	if (dest_fd < 0) {
+#if CAVAN_FILE_DEBUG
 		pr_error_info("open file `%s'", dest_file);
+#endif
 		return dest_fd;
 	}
 
@@ -359,7 +363,9 @@ int file_copy3(const char *src_file, int dest_fd)
 
 	src_fd = open(src_file, O_RDONLY);
 	if (src_fd < 0) {
+#if CAVAN_FILE_DEBUG
 		pr_error_info("open file `%s'", src_file);
+#endif
 		return src_fd;
 	}
 

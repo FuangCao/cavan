@@ -485,6 +485,9 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 	println("size = %s", size2text(size));
 
 	ret = network_client_send_file(client, fd, size);
+	if (ret < 0) {
+		pr_err_info("network_client_send_file: %d", ret);
+	}
 
 out_close_fd:
 	close(fd);
@@ -547,6 +550,10 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 		return fd;
 	}
 
+	if (S_ISBLK(mode)) {
+	    bdev_set_read_only(fd, 0);
+	}
+
 	ret = lseek(fd, req->offset, SEEK_SET);
 	if (ret < 0) {
 		tcp_dd_send_response(client, ret, "[Server] Seek file failed");
@@ -564,6 +571,9 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 	println("size = %s", size2text(req->size));
 
 	ret = network_client_recv_file(client, fd, req->size);
+	if (ret < 0) {
+		pr_err_info("network_client_recv_file: %d", ret);
+	}
 
 out_close_fd:
 	close(fd);
