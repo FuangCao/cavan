@@ -1440,6 +1440,7 @@ out_client_close:
 
 static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct input_event *event_raw, void *data)
 {
+	ssize_t wrlen;
 	struct network_client *client = data;
 	struct cavan_input_event *event = (struct cavan_input_event *) &event_raw->type;
 
@@ -1485,7 +1486,10 @@ static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct i
 		}
 	}
 
-	client->send(client, event, sizeof(struct cavan_input_event));
+	wrlen = client->send(client, event, sizeof(struct cavan_input_event));
+	if (wrlen < 0) {
+		cavan_event_should_stop(dev->service);
+	}
 
 	return true;
 }
@@ -1576,6 +1580,7 @@ label_repo_key:
 		}
 
 		cavan_event_service_join(&service);
+		cavan_event_service_stop(&service);
 	}
 
 out_client_close:

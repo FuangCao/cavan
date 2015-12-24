@@ -1664,6 +1664,7 @@ static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher
 	cavan_event_parse_virtual_keymap(dev);
 	cavan_event_parse_keylayout(dev);
 
+	dev->service = service;
 	double_link_append(&service->link, &dev->node);
 
 	return 0;

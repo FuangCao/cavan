@@ -35,6 +35,8 @@
 #define KEY_BITMASK_SIZE	sizeof_bit_array(KEY_CNT)
 #define REL_BITMASK_SIZE	sizeof_bit_array(REL_CNT)
 
+struct cavan_event_service;
+
 struct cavan_keylayout_node {
 	char name[32];
 	int code;
@@ -69,6 +71,7 @@ struct cavan_event_device {
 	char pathname[24];
 	struct pollfd *pfd;
 	void *private_data;
+	struct cavan_event_service *service;
 
 	struct single_link vk_link;
 	struct single_link kl_link;
@@ -168,4 +171,9 @@ static inline int cavan_event_start_poll_thread(struct cavan_event_service *serv
 static inline void cavan_event_stop_poll_thread(struct cavan_event_service *service)
 {
 	cavan_thread_stop(&service->thread);
+}
+
+static inline void cavan_event_should_stop(struct cavan_event_service *service)
+{
+	cavan_thread_should_stop(&service->thread);
 }
