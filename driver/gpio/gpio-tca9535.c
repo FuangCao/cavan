@@ -377,20 +377,20 @@ static void tca9535_keypad_timer(unsigned long data)
 static int tca9535_keypad_init(struct tca9535_device *tca9535)
 {
 	int ret;
+	int count;
 	struct input_dev *input;
 #ifdef CONFIG_OF
 	struct device_node *child_node;
 	struct device_node *node = tca9535->client->dev.of_node;
 #endif
 
-	tca9535->input = input_allocate_device();
-	if (tca9535->input == NULL) {
+	input = input_allocate_device();
+	if (input == NULL) {
 		dev_err(&tca9535->client->dev, "Failed to input_allocate_device");
 		return -ENOMEM;
 	}
 
-	input = tca9535->input;
-	input->name = "tca9535-keypad";
+	count = 0;
 
 #ifdef CONFIG_OF
 	for_each_child_of_node(node, child_node) {
@@ -414,8 +414,16 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 		tca9535->key_mask |= mask;
 
 		dev_info(&tca9535->client->dev, "mask = 0x%02x, index = %d, code = %d\n", mask, index, code);
+
+		count++;
 	}
 #endif
+
+	if (count == 0) {
+		ret = 0;
+		dev_info(&tca9535->client->dev, "No key found\n");
+		goto out_input_free_device;
+	}
 
 	ret = tca9535_write_register(tca9535, REG_CONFIGURATION, tca9535->cache.configuration, false);
 	if (ret < 0) {
@@ -423,11 +431,15 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 		goto out_input_free_device;
 	}
 
+	input->name = "tca9535-keypad";
+
 	ret = input_register_device(input);
 	if (ret < 0) {
 		dev_err(&tca9535->client->dev, "Failed to input_register_device: %d\n", ret);
 		goto out_input_free_device;
 	}
+
+	tca9535->input = input;
 
 	setup_timer(&tca9535->timer, tca9535_keypad_timer, (unsigned long) tca9535);
 
@@ -441,15 +453,17 @@ out_input_free_device:
 
 static void tca9535_keypad_deinit(struct tca9535_device *tca9535)
 {
-	del_timer_sync(&tca9535->timer);
+	if (tca9535->input) {
+		del_timer_sync(&tca9535->timer);
 
-	input_unregister_device(tca9535->input);
-	input_free_device(tca9535->input);
+		input_unregister_device(tca9535->input);
+		input_free_device(tca9535->input);
+	}
 }
 
 static void tca9535_report_keys(struct tca9535_device *tca9535, u16 mask)
 {
-	if (mask) {
+	if (tca9535->input && mask) {
 		tca9535->key_changed |= mask;
 		mod_timer(&tca9535->timer, jiffies + msecs_to_jiffies(TCA9535_KEYPAD_DEBOUNCE_MS));
 	}
