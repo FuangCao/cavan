@@ -336,8 +336,15 @@ static const char *cavan_get_shell_path(void)
 
 static int cavan_exec_command(const char *command)
 {
+	int ret;
 	const char *shell = cavan_get_shell_path();
 	const char *name = text_basename_simple(shell);
+
+	ret = setsid();
+	if (ret < 0) {
+		pr_error_info("setsid");
+		return ret;
+	}
 
 #if CAVAN_COMMAND_DEBUG
 	pr_func_info("shell = %s, name = %s, command = `%s'", shell, name, command);
@@ -394,12 +401,6 @@ int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, cons
 {
 	int ret;
 	int ttyfd;
-
-	ret = setsid();
-	if (ret < 0) {
-		pr_error_info("setsid");
-		return ret;
-	}
 
 	ttyfd = open(ttypath, O_RDWR);
 	if (ttyfd < 0) {

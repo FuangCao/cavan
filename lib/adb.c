@@ -132,8 +132,8 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 			break;
 		}
 
-		if (adb_is_host() && system("adb start-server")) {
-			pr_error_info("Start adb service failed");
+		if (adb_is_host() && cavan_system("adb start-server")) {
+			pr_error_info("adb start-server");
 			break;
 		}
 	}

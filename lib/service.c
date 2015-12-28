@@ -507,6 +507,8 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		}
 
 		sync = true;
+	} else {
+		setsid();
 	}
 
 	homepath = getenv("HOME");
