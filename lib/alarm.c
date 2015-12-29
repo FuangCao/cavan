@@ -202,7 +202,7 @@ int cavan_alarm_thread_init(struct cavan_alarm_thread *alarm_thread)
 	thread->wake_handker = NULL;
 	thread->handler = cavan_alarm_thread_handler;
 
-	ret = cavan_thread_init(thread, alarm_thread);
+	ret = cavan_thread_init(thread, alarm_thread, 0);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_double_link_deinit;

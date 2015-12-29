@@ -45,7 +45,7 @@ int cavan_watchdog_init(struct cavan_watchdog *watchdog, u32 msec, void *data)
 	thread->wake_handker = NULL;
 	thread->handler = cavan_watchdog_thread_handler;
 
-	ret = cavan_thread_init(thread, watchdog);
+	ret = cavan_thread_init(thread, watchdog, 0);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		return ret;

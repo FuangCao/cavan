@@ -1579,7 +1579,19 @@ label_repo_key:
 			cavan_set_exit_ask();
 		}
 
+#if 0
 		cavan_event_service_join(&service);
+#else
+		while (1) {
+			char buff[4];
+			ssize_t rdlen = client.recv(&client, buff, sizeof(buff));
+
+			if (rdlen <= 0) {
+				break;
+			}
+		}
+#endif
+
 		cavan_event_service_stop(&service);
 	}
 

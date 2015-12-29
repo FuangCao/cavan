@@ -241,7 +241,7 @@ int cavan_net_bridge_init(struct cavan_net_bridge *bridge)
 	thread->wake_handker = NULL;
 	thread->handler = cavan_net_bridge_thread_handler;
 
-	ret = cavan_thread_init(&bridge->thread, bridge);
+	ret = cavan_thread_init(&bridge->thread, bridge, CAVAN_THREADF_PIPE_WAKEUP);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_pthread_mutex_destroy;

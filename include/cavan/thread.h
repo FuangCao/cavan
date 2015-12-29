@@ -9,6 +9,8 @@
 #include <cavan.h>
 #include <sys/epoll.h>
 
+#define CAVAN_THREADF_PIPE_WAKEUP		(1 << 0)
+
 __BEGIN_DECLS;
 
 typedef enum cavan_thread_state {
@@ -25,6 +27,7 @@ typedef enum cavan_thread_state {
 struct cavan_thread {
 	const char *name;
 
+	int flags;
 	bool pending;
 	pthread_t id;
 
@@ -59,12 +62,12 @@ int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
 int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event);
 int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 msec);
 int cavan_thread_wait_event(struct cavan_thread *thread, u32 msec);
-int cavan_thread_init(struct cavan_thread *thread, void *data);
+int cavan_thread_init(struct cavan_thread *thread, void *data, int flags);
 void cavan_thread_deinit(struct cavan_thread *thread);
 int cavan_thread_start(struct cavan_thread *thread);
 void cavan_thread_stop(struct cavan_thread *thread);
-int cavan_thread_run(struct cavan_thread *thread, void *data);
-int cavan_thread_run_self(struct cavan_thread *thread, void *data);
+int cavan_thread_run(struct cavan_thread *thread, void *data, int flags);
+int cavan_thread_run_self(struct cavan_thread *thread, void *data, int flags);
 void cavan_thread_suspend(struct cavan_thread *thread);
 void cavan_thread_resume(struct cavan_thread *thread);
 int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time);

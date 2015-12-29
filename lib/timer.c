@@ -221,7 +221,7 @@ int cavan_timer_service_start(struct cavan_timer_service *service)
 		return ret;
 	}
 
-	ret = cavan_thread_init(thread, service);
+	ret = cavan_thread_init(thread, service, 0);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_pthread_mutex_destroy;
@@ -405,5 +405,5 @@ int cavan_flasher_run(struct cavan_flasher *flasher)
 	thread->handler = cavan_flasher_thread_handler;
 	thread->wake_handker = NULL;
 
-	return cavan_thread_run(thread, flasher);
+	return cavan_thread_run(thread, flasher, 0);
 }

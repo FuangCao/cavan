@@ -1436,7 +1436,7 @@ int cavan_application_init(struct cavan_application_context *context, struct cav
 	thread->name = "AppMain";
 	thread->wake_handker = NULL;
 	thread->handler = cavan_application_main_thread_handler;
-	ret = cavan_thread_init(thread, context);
+	ret = cavan_thread_init(thread, context, CAVAN_THREADF_PIPE_WAKEUP);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_display_memory_free;

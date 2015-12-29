@@ -1009,7 +1009,7 @@ int cavan_display_start(struct cavan_display_device *display)
 	thread->wake_handker = NULL;
 	thread->handler = cavan_display_refresh_thread_handler;
 
-	ret = cavan_thread_init(thread, display);
+	ret = cavan_thread_init(thread, display, 0);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		return ret;

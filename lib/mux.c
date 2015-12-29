@@ -119,7 +119,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 	thread->name = "MUX RECEIVE";
 	thread->handler = cavan_mux_recv_thread_handler;
 	thread->wake_handker = NULL;
-	ret = cavan_thread_run(thread, mux);
+	ret = cavan_thread_run(thread, mux, 0);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_run");
 		goto out_cavan_mem_queue_deinit;
@@ -129,7 +129,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 	thread->name = "MUX SEND";
 	thread->handler = cavan_mux_send_thread_handler;
 	thread->wake_handker = NULL;
-	ret = cavan_thread_run(thread, mux);
+	ret = cavan_thread_run(thread, mux, 0);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_run");
 		goto out_cavan_thread_stop_recv;

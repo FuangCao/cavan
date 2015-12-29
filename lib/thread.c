@@ -231,7 +231,7 @@ int cavan_thread_epoll_wait_event(struct cavan_thread *thread, int timeout)
 	return 0;
 }
 
-int cavan_thread_init(struct cavan_thread *thread, void *data)
+int cavan_thread_init(struct cavan_thread *thread, void *data, int flags)
 {
 	int ret;
 
@@ -239,6 +239,8 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 		pr_red_info("thread->handler == NULL");
 		return -EINVAL;
 	}
+
+	thread->flags = flags;
 
 	ret = pthread_mutex_init(&thread->lock, NULL);
 	if (ret < 0) {
@@ -295,7 +297,11 @@ int cavan_thread_init(struct cavan_thread *thread, void *data)
 	thread->private_data = data;
 
 	if (thread->wake_handker == NULL) {
-		thread->wake_handker = cavan_thread_wake_handler_none;
+		if (flags & CAVAN_THREADF_PIPE_WAKEUP) {
+			thread->wake_handker = cavan_thread_wake_handler_send_event;
+		} else {
+			thread->wake_handker = cavan_thread_wake_handler_none;
+		}
 	}
 
 	return 0;
@@ -487,11 +493,11 @@ out_pthread_mutex_unlock:
 	pthread_mutex_unlock(&thread->lock);
 }
 
-int cavan_thread_run(struct cavan_thread *thread, void *data)
+int cavan_thread_run(struct cavan_thread *thread, void *data, int flags)
 {
 	int ret;
 
-	ret = cavan_thread_init(thread, data);
+	ret = cavan_thread_init(thread, data, flags);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		return ret;
@@ -500,11 +506,11 @@ int cavan_thread_run(struct cavan_thread *thread, void *data)
 	return cavan_thread_start(thread);
 }
 
-int cavan_thread_run_self(struct cavan_thread *thread, void *data)
+int cavan_thread_run_self(struct cavan_thread *thread, void *data, int flags)
 {
 	int ret;
 
-	ret = cavan_thread_init(thread, data);
+	ret = cavan_thread_init(thread, data, flags);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		return ret;

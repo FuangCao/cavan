@@ -67,6 +67,10 @@ typedef enum {
 	TRUE,
 } BOOL;
 
+typedef bool boolean;
+typedef Bool Boolean;
+typedef BOOL BOOLEAN;
+
 typedef enum {
 	WALKER_ACTION_CONTINUE,
 	WALKER_ACTION_COMPLETE,

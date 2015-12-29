@@ -39,7 +39,7 @@ protected:
 	virtual int run(void);
 
 public:
-	CavanThread(const char *name, cavan_thread_handler_t handler = NULL);
+	CavanThread(const char *name, cavan_thread_handler_t handler = NULL, int flags = 0);
 	virtual ~CavanThread(void);
 
 	void *getData(void) {

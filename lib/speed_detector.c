@@ -59,7 +59,7 @@ int speed_detector_start(struct speed_detector *detector, u32 interval)
 	thread->handler = speed_detector_handler;
 	thread->wake_handker = NULL;
 
-	return cavan_thread_run(thread, detector);
+	return cavan_thread_run(thread, detector, 0);
 }
 
 s64 speed_detector_get_time_consume_ms(struct speed_detector *detector)

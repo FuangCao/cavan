@@ -41,6 +41,8 @@ static void show_usage(const char *command)
 	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
 	println("--na, --noack\t\t\texit don't need ack");
 	println("-c, --cmdline\t\t\t%s", cavan_help_message_cmdline);
+	println("--loop\t\t\t\tcycle to execute the command");
+	println("--aloop\t\t\t\tuse adb and cycle to execute the command");
 }
 
 int main(int argc, char *argv[])
@@ -134,9 +136,20 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_CMDLINE,
 		}, {
+			.name = "loop",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_LOOP,
+		}, {
+			.name = "aloop",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_ALOOP,
+		}, {
 			0, 0, 0, 0
 		},
 	};
+	boolean loop = false;
 	int flags = TCP_KEYPADF_EXIT_ACK;
 	struct network_url url;
 
@@ -157,6 +170,8 @@ int main(int argc, char *argv[])
 			show_usage(argv[0]);
 			return 0;
 
+		case CAVAN_COMMAND_OPTION_ALOOP:
+			loop = true;
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
@@ -220,11 +235,21 @@ int main(int argc, char *argv[])
 			flags |= TCP_KEYPADF_CMDLINE;
 			break;
 
+		case CAVAN_COMMAND_OPTION_LOOP:
+			loop = true;
+			break;
+
 		default:
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}
 
-	return tcp_dd_keypad_client_run(&url, flags);
+	if (loop) {
+		while (1) {
+			tcp_dd_keypad_client_run(&url, flags);
+		}
+	} else {
+		return tcp_dd_keypad_client_run(&url, flags);
+	}
 }

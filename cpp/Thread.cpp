@@ -29,13 +29,13 @@ int CavanThread::CavanThreadHandler(struct cavan_thread *_thread, void *data)
 	return thread->run();
 }
 
-CavanThread::CavanThread(const char *name, cavan_thread_handler_t handler)
+CavanThread::CavanThread(const char *name, cavan_thread_handler_t handler, int flags)
 {
 	mHandler = handler;
 	mThread.name = name;
 	mThread.wake_handker = NULL;
 	mThread.handler = CavanThreadHandler;
-	cavan_thread_init(&mThread, this);
+	cavan_thread_init(&mThread, this, flags);
 }
 
 CavanThread::~CavanThread(void)

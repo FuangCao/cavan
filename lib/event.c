@@ -1826,7 +1826,7 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	thread->name = "EVENT";
 	thread->wake_handker = NULL;
 	thread->handler = cavan_event_service_handler;
-	ret = cavan_thread_init(thread, service);
+	ret = cavan_thread_init(thread, service, CAVAN_THREADF_PIPE_WAKEUP);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_cavan_event_close_devices;

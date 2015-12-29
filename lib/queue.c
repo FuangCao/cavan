@@ -107,7 +107,7 @@ int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t nod
 	thread->wake_handker = NULL;
 	thread->handler = cavan_data_queue_thread_handler;
 
-	ret = cavan_thread_init(thread, queue);
+	ret = cavan_thread_init(thread, queue, 0);
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		goto out_double_link_deinit;

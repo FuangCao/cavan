@@ -27,6 +27,7 @@ static void show_usage(const char *command)
 	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
 	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
 	println("--loop\t\t\t\tcycle to execute the command");
+	println("--aloop\t\t\t\tuse adb and cycle to execute the command");
 }
 
 int main(int argc, char *argv[])
@@ -110,6 +111,11 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LOOP,
 		}, {
+			.name = "aloop",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_ALOOP,
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -134,6 +140,8 @@ int main(int argc, char *argv[])
 			show_usage(argv[0]);
 			return 0;
 
+		case CAVAN_COMMAND_OPTION_ALOOP:
+			loop = true;
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
@@ -203,20 +211,26 @@ int main(int argc, char *argv[])
 		int count = 0;
 
 		while (1) {
-			int i;
+			int remain = 3;
 
 			println("%d. enter command: %s", count, command);
 			tcp_dd_exec_command(&url, command);
 			println("%d. exit command: %s", count, command);
 
-			for (i = 5; i > 0; i--) {
+			while (1) {
 				char key;
 
-				print("Press Enter key start directly %d (s)\r", i);
+				print("Press Enter key start directly %d (s)\r", remain);
+
+				if (remain <= 0) {
+					break;
+				}
 
 				if (file_read_timeout(stdin_fd, &key, 1, 1000) > 0 && key == '\n') {
 					break;
 				}
+
+				remain--;
 			}
 
 			print_char('\n');
