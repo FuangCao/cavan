@@ -43,10 +43,9 @@ static int cavan_display_rect_main(int argc, char *argv[])
 	return ret;
 }
 
-static int cavan_display_test(struct cavan_display_device *display, int index)
+static int cavan_display_test(struct cavan_display_device *display, int index, cavan_display_color_t color)
 {
 	float ratio;
-	cavan_display_color_t color;
 	int i, j, x, width, height;
 	cavan_display_color_t color_map[3][3];
 
@@ -63,6 +62,11 @@ static int cavan_display_test(struct cavan_display_device *display, int index)
 	color_map[2][2] = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
 
 	switch (index) {
+	case 0:
+		println("color = 0x%08x", color.value);
+		display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+		break;
+
 	case 1:
 		println("Red");
 		color = display->build_color(display, 1.0, 0.0, 0.0, 1.0);
@@ -221,6 +225,7 @@ static int cavan_display_test(struct cavan_display_device *display, int index)
 static int cavan_display_test_main(int argc, char *argv[])
 {
 	int index;
+	cavan_display_color_t color;
 	struct cavan_display_device *display;
 
 	display = cavan_fb_display_start();
@@ -229,13 +234,20 @@ static int cavan_display_test_main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
+	color.value = 0x00000000;
+
 	if (argc > 1) {
 		index = text2value_unsigned(argv[1], NULL, 10);
-		cavan_display_test(display, index);
+
+		if (argc > 2) {
+			color.value = text2value_unsigned(argv[2], NULL, 16);
+		}
+
+		cavan_display_test(display, index, color);
 	} else {
 		index = 1;
 
-		while (cavan_display_test(display, index++) == 0) {
+		while (cavan_display_test(display, index++, color) == 0) {
 			getchar();
 		}
 	}
