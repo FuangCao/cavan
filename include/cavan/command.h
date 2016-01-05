@@ -33,6 +33,8 @@
 #define CAVAN_EXECF_ERR_TO_OUT		(1 << 4)
 #define CAVAN_EXECF_AUTO_OPEN		(1 << 5)
 
+#define CAVAN_BUILTIN_CMDF_FORCE	(1 << 0)
+
 __BEGIN_DECLS;
 
 typedef enum {
@@ -150,6 +152,12 @@ typedef enum {
 struct cavan_command_map {
 	const char *name;
 	int (*main_func)(int argc, char *argv[]);
+};
+
+struct cavan_builtin_command {
+	const char *name;
+	int (*handler)(const struct cavan_builtin_command *desc, const char *shell, const char *command);
+	int flags;
 };
 
 struct cavan_exec_pipe_thread_data {

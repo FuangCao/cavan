@@ -585,20 +585,8 @@ static int tcp_dd_handle_exec_request(struct network_client *client, struct tcp_
 {
 	int ret;
 	int lines, columns;
-	bool reboot, shutdown;
 
 	pd_info("command = `%s'", req->command);
-
-	reboot = (text_lhcmp("reboot", req->command) == 0 && byte_is_space_or_tail(req->command[6]));
-	shutdown = (text_lhcmp("halt", req->command) == 0 && byte_is_space_or_tail(req->command[4]));
-	shutdown = shutdown || (text_lhcmp("shutdown", req->command) == 0 && byte_is_space_or_tail(req->command[8]));
-
-#ifndef CAVAN_ARCH_ARM
-	if (reboot || shutdown) {
-		tcp_dd_send_response(client, -EPERM, "[Server] Don't allow to execute command %s", req->command);
-		ERROR_RETURN(EPERM);
-	}
-#endif
 
 	ret = tcp_dd_send_response(client, 0, "[Server] start execute command");
 	if (ret < 0) {
@@ -612,14 +600,6 @@ static int tcp_dd_handle_exec_request(struct network_client *client, struct tcp_
 		if (inet_getpeername(client->sockfd, &addr) == 0) {
 			setenv(CAVAN_IP_ENV_NAME, inet_ntoa(addr.sin_addr), 1);
 		}
-	}
-
-	if (reboot) {
-		char *command = text_skip_space2(req->command + 6);
-
-		return cavan_reboot(false, command);
-	} else if (shutdown) {
-		return cavan_reboot(true, NULL);
 	}
 
 	lines = req->lines;

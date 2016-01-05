@@ -21,7 +21,7 @@
 #include <cavan/ctype.h>
 
 const u16 cavan_ctype[] = {
-	CT_C,
+	CT_C | CT_ZERO,
 	CT_C,
 	CT_C,
 	CT_C,

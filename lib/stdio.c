@@ -680,6 +680,18 @@ bool cavan_get_choose_yesno(const char *prompt, bool def_choose, int timeout_ms)
 	}
 }
 
+bool cavan_get_choose_yesno_format(bool def_choose, int timeout_ms, const char *format, ...)
+{
+	va_list ap;
+	char buff[1024];
+
+	va_start(ap, format);
+	vsnprintf(buff, sizeof(buff), format, ap);
+	va_end(ap);
+
+	return cavan_get_choose_yesno(buff, def_choose, timeout_ms);
+}
+
 const char *cavan_get_temp_path(void)
 {
 	int i;

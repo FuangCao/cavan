@@ -5,10 +5,12 @@
  */
 
 #include <cavan.h>
-#include <sys/socket.h>
+#include <cavan/ctype.h>
 #include <cavan/thread.h>
 #include <cavan/device.h>
 #include <cavan/command.h>
+#include <cavan/android.h>
+#include <sys/socket.h>
 #include <sys/reboot.h>
 #include <linux/reboot.h>
 
@@ -321,6 +323,89 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 	return ret;
 }
 
+static int cavan_builtin_command_shell(const struct cavan_builtin_command *desc, const char *shell, const char *command)
+{
+	return execlp(shell, desc->name, "-", NULL);
+}
+
+static int cavan_builtin_command_reboot_base(const struct cavan_builtin_command *desc, const char *command, bool shutdown)
+{
+	if ((desc->flags & CAVAN_BUILTIN_CMDF_FORCE) == 0 && cavan_is_android() == false) {
+		if (!cavan_get_choose_yesno_format(false, 5000, "Do you want to exec command: %s", command)) {
+			exit(1);
+		}
+	}
+
+	command = text_skip_space2(command + strlen(desc->name));
+	println("command = %s", command);
+
+	exit(cavan_reboot(shutdown, command));
+}
+
+static int cavan_builtin_command_reboot(const struct cavan_builtin_command *desc, const char *shell, const char *command)
+{
+	return cavan_builtin_command_reboot_base(desc, command, false);
+}
+
+static int cavan_builtin_command_shutdown(const struct cavan_builtin_command *desc, const char *shell, const char *command)
+{
+	return cavan_builtin_command_reboot_base(desc, command, true);
+}
+
+static int cavan_builtin_command_remount(const struct cavan_builtin_command *desc, const char *shell, const char *command)
+{
+	int ret = 0;
+
+	if (cavan_is_android()) {
+		const char *mount_dir = text_skip_space2(command + strlen(desc->name));
+
+		if (mount_dir[0] == 0) {
+			mount_dir = "/system";
+		}
+
+		println("mount_dir = %s", mount_dir);
+
+		ret = bdev_remount(mount_dir, NULL);
+		if (ret < 0) {
+			pr_red_info("Failed!");
+		} else {
+			pr_green_info("OK");
+		}
+	}
+
+	exit(ret);
+}
+
+static const struct cavan_builtin_command cavan_builtin_command_list[] = {
+	{ "shell", cavan_builtin_command_shell, 0 },
+	{ "reboot", cavan_builtin_command_reboot, 0 },
+	{ "reboot-force", cavan_builtin_command_reboot, CAVAN_BUILTIN_CMDF_FORCE },
+	{ "halt", cavan_builtin_command_shutdown, 0 },
+	{ "shutdown", cavan_builtin_command_shutdown, 0 },
+	{ "halt-force", cavan_builtin_command_shutdown, CAVAN_BUILTIN_CMDF_FORCE },
+	{ "shutdown-force", cavan_builtin_command_shutdown, CAVAN_BUILTIN_CMDF_FORCE },
+	{ "remount", cavan_builtin_command_remount, 0 },
+};
+
+static const struct cavan_builtin_command *cavan_find_builtin_command(const char *command)
+{
+	int length;
+	const char *p;
+	const struct cavan_builtin_command *desc, *desc_end;
+
+	for (p = command; cavan_notspace_zero(*p); p++);
+
+	length = p - command;
+
+	for (desc = cavan_builtin_command_list, desc_end = desc+ NELEM(cavan_builtin_command_list); desc < desc_end; desc++) {
+		if (strncmp(command, desc->name, length) == 0) {
+			return desc;
+		}
+	}
+
+	return NULL;
+}
+
 static const char *cavan_get_shell_path(void)
 {
 	int i;
@@ -337,8 +422,26 @@ static const char *cavan_get_shell_path(void)
 static int cavan_exec_command(const char *command)
 {
 	int ret;
+	const struct cavan_builtin_command *desc;
 	const char *shell = cavan_get_shell_path();
 	const char *name = text_basename_simple(shell);
+
+	if (command == NULL || command[0] == 0) {
+		command = "shell";
+	}
+
+#if CAVAN_COMMAND_DEBUG
+	pr_func_info("shell = %s, name = %s, command = `%s'", shell, name, command);
+#endif
+
+	desc = cavan_find_builtin_command(command);
+	if (desc) {
+#if CAVAN_COMMAND_DEBUG
+		pr_func_info("builtin_command = %s", desc->name);
+#endif
+
+		return desc->handler(desc, shell, command);
+	}
 
 	ret = setsid();
 	if (ret < 0) {
@@ -346,15 +449,7 @@ static int cavan_exec_command(const char *command)
 		return ret;
 	}
 
-#if CAVAN_COMMAND_DEBUG
-	pr_func_info("shell = %s, name = %s, command = `%s'", shell, name, command);
-#endif
-
-	if (command && command[0] && text_cmp("shell", command)) {
-		return execlp(shell, name, "-c", command, NULL);
-	} else {
-		return execlp(shell, name, "-", NULL);
-	}
+	return execlp(shell, name, "-c", command, NULL);
 }
 
 int cavan_exec_redirect_stdio_base(int ttyfds[3], const char *command)
@@ -1389,14 +1484,20 @@ int cavan_reboot(bool shutdown, const char *command)
 		pr_err_info("cavan_remount_ro_done");
 	}
 
-	if (command && command[0]) {
+	if (shutdown) {
+		ret = reboot(RB_POWER_OFF);
+		if (ret < 0) {
+			pr_err_info("reboot: %d", ret);
+			return ret;
+		}
+	} else if (command && command[0]) {
 		ret = syscall(SYS_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, command);
 		if (ret < 0) {
 			pr_err_info("syscall-%d: %d", SYS_reboot, ret);
 			return ret;
 		}
 	} else {
-		ret = reboot(shutdown ? RB_POWER_OFF : RB_AUTOBOOT);
+		ret = reboot(RB_AUTOBOOT);
 		if (ret < 0) {
 			pr_err_info("reboot: %d", ret);
 			return ret;

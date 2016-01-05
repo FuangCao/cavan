@@ -20,5 +20,11 @@
  */
 
 #include <cavan.h>
+#include <cavan/file.h>
 
 int cavan_android_get_prop(const char *name, char *buff, size_t size);
+
+static inline bool cavan_is_android(void)
+{
+	return file_access_e("/system/framework/framework.jar") && file_access_e("/system/build.prop");
+}

@@ -170,6 +170,50 @@ static int cavan_display_test(struct cavan_display_device *display, int index, c
 
 	case 13:
 		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, 0.0, ratio, ratio, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 14:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, ratio, 0.0, ratio, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 15:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, ratio, ratio, 0.0, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 16:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, ratio, ratio, ratio, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 17:
+		width = display->xres;
 		height = display->yres / 3;
 
 		for (x = 0; x < width; x++) {
@@ -186,7 +230,7 @@ static int cavan_display_test(struct cavan_display_device *display, int index, c
 		}
 		break;
 
-	case 14:
+	case 18:
 		width = display->xres;
 		height = display->yres / 6;
 
@@ -210,6 +254,72 @@ static int cavan_display_test(struct cavan_display_device *display, int index, c
 
 			color = display->build_color(display, ratio, ratio, 0.0, 1.0);
 			display->fill_rect(display, x, height * 5, 1, height, color);
+		}
+		break;
+
+	case 19:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, ratio, 1 - ratio, 0.0, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 20:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, ratio, 0.0, 1 - ratio, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 21:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, 0.0, ratio, 1 - ratio, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 22:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, ratio, 1 - ratio, 1 - ratio, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 23:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, 1 - ratio, ratio, 1 - ratio, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
+		}
+		break;
+
+	case 24:
+		width = display->xres;
+		height = display->yres;
+
+		for (x = 0; x < width; x++) {
+			ratio = ((float) x) / width;
+			color = display->build_color(display, 1 - ratio, 1 - ratio, ratio, 1.0);
+			display->fill_rect(display, x, 0, 1, height, color);
 		}
 		break;
 

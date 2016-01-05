@@ -217,6 +217,8 @@ void cavan_block_device_deinit(struct cavan_block_device *bdev);
 
 bool cavan_remount_ro_done(void);
 int cavan_remount_ro(int retry);
+int bdev_set_read_only2(const char *pathname, int enable);
+int bdev_remount(const char *mount_dir, const void *data);
 
 static inline int parse_mount_table_simple(const char *buff, struct mount_table *mtab)
 {

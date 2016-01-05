@@ -25,7 +25,7 @@ int cavan_android_get_prop(const char *name, char *buff, size_t size)
 {
 	int ret;
 
-	ret = cavan_popen4(buff, size, "getprop %s", name);
+	ret = cavan_popen4(buff, size, "getprop %s 2>/dev/null", name);
 	if (ret != 0) {
 		return -EFAULT;
 	}

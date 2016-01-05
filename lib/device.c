@@ -2023,3 +2023,33 @@ int cavan_remount_ro(int retry)
 
 	return -ETIMEDOUT;
 }
+
+int bdev_set_read_only2(const char *pathname, int enable)
+{
+	int fd;
+	int ret;
+
+	fd = open(pathname, O_RDONLY | O_CLOEXEC);
+	if (fd < 0) {
+		return fd;
+	}
+
+	ret = bdev_set_read_only(fd, enable);
+	close(fd);
+
+	return ret;
+}
+
+int bdev_remount(const char *mount_dir, const void *data)
+{
+	const char *dev_path;
+
+	dev_path = get_mount_source(mount_dir);
+	if (dev_path) {
+		bdev_set_read_only2(dev_path, 0);
+	}
+
+	println("dev_path = %s", dev_path);
+
+	return mount(dev_path, mount_dir, "none", MS_REMOUNT, data);
+}

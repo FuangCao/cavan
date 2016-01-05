@@ -40,6 +40,7 @@ enum
 	CT_B = BIT(11), /* bracket */
 	CT_BL = BIT(12), /* left bracket */
 	CT_BR = BIT(13), /* right bracket */
+	CT_ZERO = BIT(14), /* zero */
 };
 
 extern const u16 cavan_ctype[];
@@ -92,6 +93,16 @@ static inline bool cavan_ispunct(u8 c)
 static inline bool cavan_isspace(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_S)) != 0;
+}
+
+static inline bool cavan_isspace_zero(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_S | CT_ZERO)) != 0;
+}
+
+static inline bool cavan_notspace_zero(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_S | CT_ZERO)) == 0;
 }
 
 static inline bool cavan_isupper(u8 c)

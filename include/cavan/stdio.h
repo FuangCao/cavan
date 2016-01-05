@@ -323,6 +323,7 @@ extern char *size2text(u64 size);
 const char *cavan_get_temp_path(void);
 const char *cavan_build_temp_path(const char *filename, char *buff, size_t size);
 bool cavan_get_choose_yesno(const char *prompt, bool def_value, int timeout_ms);
+__printf_format_34__ bool cavan_get_choose_yesno_format(bool def_choose, int timeout_ms, const char *format, ...);
 
 // ============================================================
 
