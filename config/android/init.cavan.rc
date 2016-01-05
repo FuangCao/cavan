@@ -1,0 +1,9 @@
+service tcp_dd /system/bin/cavan-main tcp_dd_server
+    class core
+    user root
+    group root shell log
+
+service tcp_dd_unix /system/bin/cavan-main tcp_dd_server --unix
+    class core
+    user root
+    group root shell log

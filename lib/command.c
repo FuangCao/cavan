@@ -332,14 +332,14 @@ static int cavan_builtin_command_reboot_base(const struct cavan_builtin_command 
 {
 	if ((desc->flags & CAVAN_BUILTIN_CMDF_FORCE) == 0 && cavan_is_android() == false) {
 		if (!cavan_get_choose_yesno_format(false, 5000, "Do you want to exec command: %s", command)) {
-			exit(1);
+			return -EPERM;
 		}
 	}
 
 	command = text_skip_space2(command + strlen(desc->name));
 	println("command = %s", command);
 
-	exit(cavan_reboot(shutdown, command));
+	return cavan_reboot(shutdown, command);
 }
 
 static int cavan_builtin_command_reboot(const struct cavan_builtin_command *desc, const char *shell, const char *command)
@@ -373,7 +373,7 @@ static int cavan_builtin_command_remount(const struct cavan_builtin_command *des
 		}
 	}
 
-	exit(ret);
+	return ret;
 }
 
 static const struct cavan_builtin_command cavan_builtin_command_list[] = {
@@ -440,16 +440,19 @@ static int cavan_exec_command(const char *command)
 		pr_func_info("builtin_command = %s", desc->name);
 #endif
 
-		return desc->handler(desc, shell, command);
+		ret = desc->handler(desc, shell, command);
+	} else {
+		ret = setsid();
+		if (ret < 0) {
+			pr_error_info("setsid");
+			goto out_exit;
+		}
+
+		ret = execlp(shell, name, "-c", command, NULL);
 	}
 
-	ret = setsid();
-	if (ret < 0) {
-		pr_error_info("setsid");
-		return ret;
-	}
-
-	return execlp(shell, name, "-c", command, NULL);
+out_exit:
+	exit(ret);
 }
 
 int cavan_exec_redirect_stdio_base(int ttyfds[3], const char *command)
