@@ -88,8 +88,9 @@ int cavan_fb_refresh(struct cavan_fb_device *dev)
 	int ret;
 	int index = (dev->fb_active + 1) % dev->fb_count;
 	struct fb_var_screeninfo *var = &dev->var_info;
+	byte *fb = ((byte *) dev->fb_base) + dev->fb_size * index;
 
-	mem_copy((byte *) dev->fb_base + dev->fb_size * index, dev->fb_cache, dev->fb_size);
+	mem_copy(fb, dev->fb_cache, dev->fb_size);
 
 	if (dev->fb_active == index) {
 		return 0;
@@ -136,11 +137,12 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 
 	show_fb_var_info(var);
 
-	dev->xres = var->xres;
 	dev->yres = var->yres;
 
-	if (dev->xres / dev->yres >= 3) {
-		dev->xres /= 2;
+	if (var->xres > var->yres * 3) {
+		dev->xres = var->xres >> 1;
+	} else {
+		dev->xres = var->xres;
 	}
 
 	switch (var->bits_per_pixel) {
@@ -166,16 +168,16 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 		goto out_close_fb;
 	}
 
-	dev->line_size = dev->bpp_byte * dev->xres;
-	dev->fb_size = dev->line_size * dev->yres;
-	dev->fb_count = var->yres_virtual / var->yres;
-	dev->fb_active = var->yoffset / var->yres;
-
 	ret = ioctl(fb, FBIOGET_FSCREENINFO, fix);
 	if (ret < 0) {
 		print_error("get screen fix info failed");
 		goto out_close_fb;
 	}
+
+	dev->line_size = fix->line_length;
+	dev->fb_size = dev->line_size * dev->yres;
+	dev->fb_count = var->yres_virtual / var->yres;
+	dev->fb_active = var->yoffset / var->yres;
 
 	show_fb_fix_info(fix);
 
