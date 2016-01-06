@@ -442,17 +442,14 @@ static int cavan_exec_command(const char *command)
 
 		ret = desc->handler(desc, shell, command);
 	} else {
-		ret = setsid();
-		if (ret < 0) {
-			pr_error_info("setsid");
-			goto out_exit;
-		}
-
 		ret = execlp(shell, name, "-c", command, NULL);
 	}
 
-out_exit:
-	exit(ret);
+	if (ret < 0) {
+		exit(errno ? errno : 1);
+	}
+
+	exit(0);
 }
 
 int cavan_exec_redirect_stdio_base(int ttyfds[3], const char *command)
@@ -499,6 +496,12 @@ int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, cons
 {
 	int ret;
 	int ttyfd;
+
+	ret = setsid();
+	if (ret < 0) {
+		pr_error_info("setsid");
+		return ret;
+	}
 
 	ttyfd = open(ttypath, O_RDWR);
 	if (ttyfd < 0) {
