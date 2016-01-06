@@ -21,6 +21,7 @@ struct cavan_fb_device {
 	void *fb_cache;
 
 	u16 xres, yres;
+	u16 xres_virtual;
 
 	size_t bpp_byte;
 	size_t line_size;

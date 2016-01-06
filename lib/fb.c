@@ -60,19 +60,19 @@ void cavan_fb_bitfield2element(struct fb_bitfield *field, struct cavan_fb_color_
 
 static void cavan_fb_draw_point8(struct cavan_fb_device *dev,int x, int y, u32 color)
 {
-	(((u8 *) dev->fb_cache) + y * dev->xres)[x] = color;
+	(((u8 *) dev->fb_cache) + y * dev->xres_virtual)[x] = color;
 }
 
 static void cavan_fb_draw_point16(struct cavan_fb_device *dev,int x, int y, u32 color)
 {
-	(((u16 *) dev->fb_cache) + y * dev->xres)[x] = color;
+	(((u16 *) dev->fb_cache) + y * dev->xres_virtual)[x] = color;
 }
 
 static void cavan_fb_draw_point24(struct cavan_fb_device *dev, int x, int y, u32 color)
 {
 	u8 *p;
 
-	p = ((u8 *) dev->fb_cache) + (y * dev->xres + x) * 3;
+	p = ((u8 *) dev->fb_cache) + (y * dev->xres_virtual + x) * 3;
 	p[dev->red.index] = (color & dev->red.mask) >> dev->red.offset;
 	p[dev->green.index] = (color & dev->green.mask) >> dev->green.offset;
 	p[dev->blue.index] = (color & dev->blue.mask) >> dev->blue.offset;
@@ -80,7 +80,7 @@ static void cavan_fb_draw_point24(struct cavan_fb_device *dev, int x, int y, u32
 
 static void cavan_fb_draw_point32(struct cavan_fb_device *dev, int x, int y, u32 color)
 {
-	(((u32 *) dev->fb_cache) + y * dev->xres)[x] = color;
+	(((u32 *) dev->fb_cache) + y * dev->xres_virtual)[x] = color;
 }
 
 int cavan_fb_refresh(struct cavan_fb_device *dev)
@@ -88,9 +88,8 @@ int cavan_fb_refresh(struct cavan_fb_device *dev)
 	int ret;
 	int index = (dev->fb_active + 1) % dev->fb_count;
 	struct fb_var_screeninfo *var = &dev->var_info;
-	byte *fb = ((byte *) dev->fb_base) + dev->fb_size * index;
 
-	mem_copy(fb, dev->fb_cache, dev->fb_size);
+	mem_copy(((byte *) dev->fb_base) + dev->fb_size * index, dev->fb_cache, dev->fb_size);
 
 	if (dev->fb_active == index) {
 		return 0;
@@ -174,7 +173,8 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 		goto out_close_fb;
 	}
 
-	dev->line_size = fix->line_length;
+	dev->xres_virtual = var->xres_virtual;
+	dev->line_size = dev->xres_virtual * dev->bpp_byte;
 	dev->fb_size = dev->line_size * dev->yres;
 	dev->fb_count = var->yres_virtual / var->yres;
 	dev->fb_active = var->yoffset / var->yres;

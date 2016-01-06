@@ -61,6 +61,8 @@ static int cavan_display_test(struct cavan_display_device *display, int index, c
 	color_map[2][1] = display->build_color(display, 1.0, 0.0, 1.0, 1.0);
 	color_map[2][2] = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
 
+	println("index = %d", index);
+
 	switch (index) {
 	case 0:
 		println("color = 0x%08x", color.value);
