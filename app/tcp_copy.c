@@ -123,8 +123,8 @@ int main(int argc, char *argv[])
 	char *filename;
 	bool same = false;
 	struct network_url url;
+	tcp_dd_handler_t handler = NULL;
 	struct network_file_request file_req;
-	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 

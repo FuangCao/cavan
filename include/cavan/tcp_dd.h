@@ -26,6 +26,8 @@
 
 #define TCP_DD_PKG_BODY_OFFSET	offsetof(struct tcp_dd_package, body)
 
+typedef int (*tcp_dd_handler_t)(struct network_url *, struct network_file_request *);
+
 enum tcp_dd_package_type
 {
 	TCP_DD_RESPONSE,

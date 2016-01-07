@@ -184,6 +184,61 @@ static void show_usage(const char *command)
 	println("-I, --auto <PATHNAMES>\t\t%s ", cavan_help_message_rw_image_auto);
 }
 
+static int tcp_dd_rw_image_auto(const char *pathname, struct network_url *url, tcp_dd_handler_t handler)
+{
+	const char *part_name;
+	struct network_file_request file_req;
+
+	part_name = image_path_to_part_name(pathname);
+	if (part_name == NULL) {
+		pr_red_info("unknown image %s", pathname);
+		return -EINVAL;
+	}
+
+	if (handler == tcp_dd_send_file) {
+		strcpy(file_req.src_file, pathname);
+		strcpy(file_req.dest_file, part_name);
+	} else {
+		strcpy(file_req.src_file, part_name);
+		strcpy(file_req.dest_file, pathname);
+	}
+
+	file_req.size = 0;
+	file_req.dest_offset = file_req.src_offset = 0;
+
+	return handler(url, &file_req);
+}
+
+static int tcp_dd_rw_image_directory(const char *dirname, struct network_url *url, tcp_dd_handler_t handler)
+{
+	DIR *dp;
+	struct dirent *dt;
+	char pathname[1024], *filename;
+
+	dp = opendir(dirname);
+	if (dp == NULL) {
+		pr_err_info("opendir: %s", dirname);
+		return -EFAULT;
+	}
+
+	filename = text_path_cat(pathname, sizeof(pathname), dirname, NULL);
+
+	while ((dt = cavan_readdir_skip_dot(dp))) {
+		int ret;
+
+		strcpy(filename, dt->d_name);
+
+		ret = tcp_dd_rw_image_auto(pathname, url, handler);
+		if (ret < 0) {
+			if (ret != -ENOTBLK) {
+				return ret;
+			}
+		}
+	}
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int c;
@@ -194,9 +249,9 @@ int main(int argc, char *argv[])
 	const char *image_mask;
 	struct network_url url;
 	off_t bs, seek, skip, count;
+	tcp_dd_handler_t handler = NULL;
 	struct network_file_request file_req;
 	struct cavan_tcp_dd_image images[TCP_DD_MAX_IMAGE_COUNT];
-	int (*handler)(struct network_url *, struct network_file_request *) = NULL;
 
 	image_count = 0;
 	image_mask = NULL;
@@ -411,45 +466,42 @@ label_add_image:
 
 label_parse_complete:
 	if (image_mask) {
-
-		if (argc - optind < 1) {
-			pr_red_info("Too a few argument!");
-			return -EINVAL;
-		}
-
 		if (image_mask[0] == '-') {
-			while (optind < argc) {
-				const char *pathname = argv[optind];
+			if (optind < argc) {
+				while (optind < argc) {
+					const char *pathname = argv[optind];
 
-				part_name = image_path_to_part_name(pathname);
-				if (part_name == NULL) {
-					pr_red_info("unknown image %s", pathname);
-					return -EINVAL;
+					if (file_is_directory(pathname)) {
+						ret = tcp_dd_rw_image_directory(pathname, &url, handler);
+						if (ret < 0) {
+							return ret;
+						}
+					} else {
+						ret = tcp_dd_rw_image_auto(pathname, &url, handler);
+						if (ret < 0) {
+							if (ret != -ENOTBLK) {
+								return ret;
+							}
+						}
+					}
+
+					optind++;
 				}
-
-				if (handler == tcp_dd_send_file) {
-					strcpy(file_req.src_file, pathname);
-					strcpy(file_req.dest_file, part_name);
-				} else {
-					strcpy(file_req.src_file, part_name);
-					strcpy(file_req.dest_file, pathname);
-				}
-
-				file_req.size = 0;
-				file_req.dest_offset = file_req.src_offset = 0;
-
-				ret = handler(&url, &file_req);
+			} else {
+				ret = tcp_dd_rw_image_directory(".", &url, handler);
 				if (ret < 0) {
 					return ret;
 				}
-
-				optind++;
 			}
 		} else {
 			const char *dirname;
 			const char *image_name;
 
-			dirname = argv[optind++];
+			if (optind < argc) {
+				dirname = argv[optind++];
+			} else {
+				dirname = ".";
+			}
 
 			while (*image_mask) {
 				c = *image_mask;
