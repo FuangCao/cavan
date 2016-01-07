@@ -41,6 +41,8 @@ enum tcp_dd_package_type
 	TCP_DD_PACKAGE_COUNT
 };
 
+#pragma pack(1)
+
 struct tcp_dd_response_package {
 	u32 code;
 	u32 number;
@@ -76,7 +78,7 @@ struct tcp_alarm_add_request {
 };
 
 struct tcp_alarm_query_request {
-	int index;
+	u32 index;
 };
 
 struct tcp_dd_package {
@@ -96,6 +98,8 @@ struct tcp_dd_package {
 		struct tcp_dd_rddir_request rddir_pkg;
 	};
 };
+
+#pragma pack()
 
 struct cavan_tcp_dd_service {
 	struct network_service service;
