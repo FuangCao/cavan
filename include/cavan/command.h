@@ -191,6 +191,7 @@ extern const char *cavan_help_message_output_file;
 extern const char *cavan_help_message_bs;
 extern const char *cavan_help_message_seek;
 extern const char *cavan_help_message_skip;
+extern const char *cavan_help_message_count;
 extern const char *cavan_help_message_super;
 extern const char *cavan_help_message_daemon;
 extern const char *cavan_help_message_daemon_min;

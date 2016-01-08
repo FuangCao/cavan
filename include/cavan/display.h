@@ -52,7 +52,8 @@ struct cavan_display_device {
 	int yres;
 	int bpp_byte;
 
-	void *fb_base;
+	void *fb_dequeued;
+	void *fb_acquired;
 	void *private_data;
 	struct cavan_font *font;
 	cavan_display_color_t pen_color;

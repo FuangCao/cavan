@@ -158,6 +158,7 @@ static void show_usage(const char *command)
 	println("bs=BYTES\t\t\t%s", cavan_help_message_bs);
 	println("seek=BLOCKS\t\t\t%s", cavan_help_message_seek);
 	println("skip=BLOCKS\t\t\t%s", cavan_help_message_skip);
+	println("count=BLOCKS\t\t\t%s", cavan_help_message_count);
 	println("-H, -h, --help\t\t\t%s", cavan_help_message_help);
 	println("-V, -v, --version\t\t%s", cavan_help_message_version);
 	println("-i, --ip IP\t\t\t%s", cavan_help_message_ip);

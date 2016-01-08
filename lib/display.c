@@ -831,12 +831,12 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 	width = mem->width * display->bpp_byte;
 	line_size = display->bpp_byte * display->xres;
 
-	p = (byte *) display->fb_base + mem->y * line_size + mem->x * display->bpp_byte;
-	p_end = p + mem->height * line_size;
-
 	data = mem->data;
 
 	if (read) {
+		p = (byte *) display->fb_acquired + mem->y * line_size + mem->x * display->bpp_byte;
+		p_end = p + mem->height * line_size;
+
 		while (p < p_end) {
 			mem_copy(data, p, width);
 
@@ -844,6 +844,9 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 			p += line_size;
 		}
 	} else {
+		p = (byte *) display->fb_dequeued + mem->y * line_size + mem->x * display->bpp_byte;
+		p_end = p + mem->height * line_size;
+
 		while (p < p_end) {
 			mem_copy(p, data, width);
 
@@ -999,8 +1002,8 @@ int cavan_display_start(struct cavan_display_device *display)
 		return -EINVAL;
 	}
 
-	if (display->display_memory_xfer == NULL && display->fb_base == NULL) {
-		pr_red_info("display->display_memory_xfer == NULL && display->fb_base == NULL");
+	if (display->display_memory_xfer == NULL && (display->fb_acquired == NULL || display->fb_dequeued == NULL)) {
+		pr_red_info("display->display_memory_xfer == NULL && (display->fb_acquired == NULL || display->fb_dequeued == NULL)");
 		return -EINVAL;
 	}
 

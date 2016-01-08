@@ -37,6 +37,8 @@ void show_fb_fix_info(struct fb_fix_screeninfo *fix)
 
 void show_fb_device_info(struct cavan_fb_device *dev)
 {
+	int i;
+
 	print_sep(60);
 	println("fb_count = %d", dev->fb_count);
 #if __WORDSIZE == 64
@@ -48,6 +50,10 @@ void show_fb_device_info(struct cavan_fb_device *dev)
 	println("bpp_byte = %d", dev->bpp_byte);
 	println("line_size = %d", dev->line_size);
 #endif
+
+	for (i = 0; i < dev->fb_count; i++) {
+		println("fb_array[%d] = %p", i, dev->fb_array[i]);
+	}
 }
 
 void cavan_fb_bitfield2element(struct fb_bitfield *field, struct cavan_fb_color_element *emt)
@@ -60,75 +66,84 @@ void cavan_fb_bitfield2element(struct fb_bitfield *field, struct cavan_fb_color_
 
 static void cavan_fb_draw_point8(struct cavan_fb_device *dev,int x, int y, u32 color)
 {
-	(((u8 *) dev->fb_cache) + y * dev->xres_virtual)[x] = color;
+	u8 *fb = cavan_fb_get_dequeued(dev);
+
+	(fb + y * dev->xres_virtual)[x] = color;
 }
 
 static void cavan_fb_draw_point16(struct cavan_fb_device *dev,int x, int y, u32 color)
 {
-	(((u16 *) dev->fb_cache) + y * dev->xres_virtual)[x] = color;
+	u16 *fb = cavan_fb_get_dequeued(dev);
+
+	(fb + y * dev->xres_virtual)[x] = color;
 }
 
 static void cavan_fb_draw_point24(struct cavan_fb_device *dev, int x, int y, u32 color)
 {
-	u8 *p;
+	u8 *fb = cavan_fb_get_dequeued(dev);
 
-	p = ((u8 *) dev->fb_cache) + (y * dev->xres_virtual + x) * 3;
-	p[dev->red.index] = (color & dev->red.mask) >> dev->red.offset;
-	p[dev->green.index] = (color & dev->green.mask) >> dev->green.offset;
-	p[dev->blue.index] = (color & dev->blue.mask) >> dev->blue.offset;
+	fb += (y * dev->xres_virtual + x) * 3;
+	fb[dev->red.index] = (color & dev->red.mask) >> dev->red.offset;
+	fb[dev->green.index] = (color & dev->green.mask) >> dev->green.offset;
+	fb[dev->blue.index] = (color & dev->blue.mask) >> dev->blue.offset;
 }
 
 static void cavan_fb_draw_point32(struct cavan_fb_device *dev, int x, int y, u32 color)
 {
-	(((u32 *) dev->fb_cache) + y * dev->xres_virtual)[x] = color;
+	u32 *fb = cavan_fb_get_dequeued(dev);
+
+	(fb + y * dev->xres_virtual)[x] = color;
 }
 
-int cavan_fb_refresh(struct cavan_fb_device *dev)
+static int cavan_fb_refresh_swap(struct cavan_fb_device *dev)
 {
 	int ret;
-	int index = (dev->fb_active + 1) % dev->fb_count;
+	int index = dev->fb_dequeued;
 	struct fb_var_screeninfo *var = &dev->var_info;
-
-	mem_copy(((byte *) dev->fb_base) + dev->fb_size * index, dev->fb_cache, dev->fb_size);
-
-	if (dev->fb_active == index) {
-		return 0;
-	}
 
 	var->yoffset = index * dev->yres;
 
-	ret = ioctl(dev->fb, FBIOPUT_VSCREENINFO, var);
+	ret = ioctl(dev->fd, FBIOPUT_VSCREENINFO, var);
 	if (ret < 0) {
 		pr_error_info("ioctl FBIOPUT_VSCREENINFO");
 		return ret;
 	}
 
-	dev->fb_active = index;
+	dev->fb_dequeued = dev->fb_acquired;
+	dev->fb_acquired = index;
+
+	return 0;
+}
+
+static int cavan_fb_refresh_memcpy(struct cavan_fb_device *dev)
+{
+	mem_copy(dev->fb_base, dev->fb_cache, dev->fb_size);
 
 	return 0;
 }
 
 int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 {
+	int i;
+	int fd;
 	int ret;
-	int fb;
 	struct fb_fix_screeninfo *fix = &dev->fix_info;
 	struct fb_var_screeninfo *var = &dev->var_info;
 
 	if (fbpath) {
-		fb = try_to_open(O_RDWR, fbpath, "/dev/fb0", "/dev/graphics/fb0", "/dev/fb1", "/dev/graphics/fb1", NULL);
+		fd = try_to_open(O_RDWR, fbpath, "/dev/fb0", "/dev/graphics/fb0", "/dev/fb1", "/dev/graphics/fb1", NULL);
 	} else {
-		fb = try_to_open(O_RDWR, "/dev/fb0", "/dev/graphics/fb0", "/dev/fb1", "/dev/graphics/fb1", NULL);
+		fd = try_to_open(O_RDWR, "/dev/fb0", "/dev/graphics/fb0", "/dev/fb1", "/dev/graphics/fb1", NULL);
 	}
 
-	if (fb < 0) {
+	if (fd < 0) {
 		print_error("open fb device failed");
-		return fb;
+		return fd;
 	}
 
-	dev->fb = fb;
+	dev->fd = fd;
 
-	ret = ioctl(fb, FBIOGET_VSCREENINFO, var);
+	ret = ioctl(fd, FBIOGET_VSCREENINFO, var);
 	if (ret < 0) {
 		print_error("get screen var info failed");
 		goto out_close_fb;
@@ -167,7 +182,7 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 		goto out_close_fb;
 	}
 
-	ret = ioctl(fb, FBIOGET_FSCREENINFO, fix);
+	ret = ioctl(fd, FBIOGET_FSCREENINFO, fix);
 	if (ret < 0) {
 		print_error("get screen fix info failed");
 		goto out_close_fb;
@@ -177,7 +192,10 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	dev->line_size = dev->xres_virtual * dev->bpp_byte;
 	dev->fb_size = dev->line_size * dev->yres;
 	dev->fb_count = var->yres_virtual / var->yres;
-	dev->fb_active = var->yoffset / var->yres;
+
+	if (dev->fb_count > NELEM(dev->fb_array)) {
+		dev->fb_count = NELEM(dev->fb_array);
+	}
 
 	show_fb_fix_info(fix);
 
@@ -186,17 +204,37 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 		goto out_close_fb;
 	}
 
-	dev->fb_base = mmap(NULL, fix->smem_len, PROT_WRITE | PROT_READ, MAP_SHARED, fb, 0);
+	dev->fb_base = mmap(NULL, fix->smem_len, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
 	if (dev->fb_base == NULL || dev->fb_base == MAP_FAILED) {
 		print_error("map framebuffer failed");
 		ret = -1;
 		goto out_close_fb;
 	}
 
-	dev->fb_cache = malloc(dev->fb_size);
-	if (dev->fb_cache == NULL) {
-		pr_error_info("malloc");
-		goto out_munmap;
+	if (dev->fb_count > 1) {
+		dev->fb_cache = NULL;
+		dev->fb_acquired = (var->yoffset / var->yres) % dev->fb_count;
+		dev->fb_dequeued = dev->fb_acquired == 0 ? 1 : 0;
+
+		for (i = 0; i < dev->fb_count; i++) {
+			dev->fb_array[i] = ADDR_ADD(dev->fb_base, dev->fb_size * i);
+		}
+
+		dev->refresh = cavan_fb_refresh_swap;
+	} else {
+		dev->fb_cache = malloc(dev->fb_size);
+		if (dev->fb_cache == NULL) {
+			pr_error_info("malloc");
+			goto out_munmap;
+		}
+
+		dev->fb_acquired = 0;
+		dev->fb_dequeued = 1;
+
+		dev->fb_array[dev->fb_acquired] = dev->fb_base;
+		dev->fb_array[dev->fb_dequeued] = dev->fb_cache;
+
+		dev->refresh = cavan_fb_refresh_memcpy;
 	}
 
 	cavan_fb_bitfield2element(&var->red, &dev->red);
@@ -206,23 +244,27 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 
 	show_fb_device_info(dev);
 
-	cavan_fb_refresh(dev);
+	// cavan_fb_refresh(dev);
 
 	return 0;
 
 out_munmap:
 	munmap(dev->fb_base, dev->fix_info.smem_len);
 out_close_fb:
-	close(fb);
+	close(fd);
 
 	return ret;
 }
 
 void cavan_fb_deinit(struct cavan_fb_device *dev)
 {
-	free(dev->fb_cache);
+	if (dev->fb_cache) {
+		free(dev->fb_cache);
+		dev->fb_cache = NULL;
+	}
+
 	munmap(dev->fb_base, dev->fix_info.smem_len);
-	close(dev->fb);
+	close(dev->fd);
 }
 
 // ================================================================================
@@ -234,7 +276,11 @@ static cavan_display_color_t cavan_fb_display_build_color_handler(struct cavan_d
 
 static void cavan_fb_display_refresh_handler(struct cavan_display_device *display)
 {
+	struct cavan_fb_device *dev = display->private_data;
+
 	cavan_fb_refresh(display->private_data);
+	display->fb_dequeued = cavan_fb_get_dequeued(dev);
+	display->fb_acquired = cavan_fb_get_acquired(dev);
 }
 
 static void cavan_fb_display_draw_point_handler(struct cavan_display_device *display, int x, int y, cavan_display_color_t color)
@@ -293,8 +339,8 @@ int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_
 	}
 
 	cavan_display_init(display);
-
-	display->fb_base = fb_dev->fb_cache;
+	display->fb_dequeued = cavan_fb_get_dequeued(fb_dev);
+	display->fb_acquired = cavan_fb_get_acquired(fb_dev);
 
 	display->private_data = fb_dev;
 	display->xres= fb_dev->xres;

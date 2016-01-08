@@ -40,6 +40,7 @@ const char *cavan_help_message_output_file = "output file pathname";
 const char *cavan_help_message_bs = "block size";
 const char *cavan_help_message_seek = "offset of input file";
 const char *cavan_help_message_skip = "offset of output file";
+const char *cavan_help_message_count = "block count";
 const char *cavan_help_message_super = "need super permission";
 const char *cavan_help_message_daemon = "run as a daemon";
 const char *cavan_help_message_daemon_min = "min daemon count";

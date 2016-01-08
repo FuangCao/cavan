@@ -14,11 +14,15 @@ struct cavan_fb_color_element {
 };
 
 struct cavan_fb_device {
-	int fb;
+	int fd;
+
 	int fb_count;
-	int fb_active;
+	int fb_dequeued;
+	int fb_acquired;
+
 	void *fb_base;
 	void *fb_cache;
+	void *fb_array[3];
 
 	u16 xres, yres;
 	u16 xres_virtual;
@@ -34,7 +38,8 @@ struct cavan_fb_device {
 	struct cavan_fb_color_element blue;
 	struct cavan_fb_color_element transp;
 
-	void (*draw_point)(struct cavan_fb_device *, int x, int y, u32 color);
+	void (*draw_point)(struct cavan_fb_device *dev, int x, int y, u32 color);
+	int (*refresh)(struct cavan_fb_device *dev);
 };
 
 void show_fb_bitfield(struct fb_bitfield *field, const char *msg);
@@ -42,7 +47,6 @@ void show_fb_var_info(struct fb_var_screeninfo *var);
 void show_fb_fix_info(struct fb_fix_screeninfo *fix);
 void show_fb_device_info(struct cavan_fb_device *dev);
 
-int cavan_fb_refresh(struct cavan_fb_device *dev);
 int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath);
 void cavan_fb_deinit(struct cavan_fb_device *dev);
 void cavan_fb_bitfield2element(struct fb_bitfield *field, struct cavan_fb_color_element *emt);
@@ -51,9 +55,24 @@ int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_
 struct cavan_display_device *cavan_fb_display_create(void);
 struct cavan_display_device *cavan_fb_display_start(void);
 
+static inline int cavan_fb_refresh(struct cavan_fb_device *dev)
+{
+	return dev->refresh(dev);
+}
+
 static inline void cavan_fb_draw_point(struct cavan_fb_device *dev, int x, int y, cavan_display_color_t color)
 {
 	dev->draw_point(dev, x, y, color.value);
+}
+
+static inline void *cavan_fb_get_acquired(struct cavan_fb_device *dev)
+{
+	return dev->fb_array[dev->fb_acquired];
+}
+
+static inline void *cavan_fb_get_dequeued(struct cavan_fb_device *dev)
+{
+	return dev->fb_array[dev->fb_dequeued];
 }
 
 static inline cavan_display_color_t cavan_fb_build_color(struct cavan_fb_device *dev, u32 red, u32 green, u32 blue, u32 transp)
