@@ -142,29 +142,14 @@ static void swan_keypad_handler(cavan_input_message_t *message, void *data)
 static void swan_show_picture(const char *state, int reset)
 {
 	unsigned int i;
-	const char *fb_devices[] = { "/dev/fb0", "/dev/graphice/fb0", "/dev/fb1", "/dev/graphice/fb1" };
 	struct cavan_input_service service;
 
 	close_console();
 
-	for (i = 0; i < ARRAY_SIZE(fb_devices); i++) {
-		if (access(fb_devices[i], W_OK) == 0) {
-			break;
-		}
+	if (cavan_fb_bmp_view2(format_text(BMP_PATH "/%s.bmp", state), NULL) < 0) {
+		cavan_fb_bmp_view2(format_text(BACKUP_BMP_PATH "/%s.bmp", state), NULL);
 	}
 
-	if (i >= ARRAY_SIZE(fb_devices)) {
-		error_msg("no fb device find");
-		goto out_loop;
-	}
-
-	println("fb device = %s", fb_devices[i]);
-
-	if (bmp_view(format_text(BMP_PATH "/%s.bmp", state), fb_devices[i]) < 0) {
-		bmp_view(format_text(BACKUP_BMP_PATH "/%s.bmp", state), fb_devices[i]);
-	}
-
-out_loop:
 	if (reset == 0) {
 		sleep(5);
 		return;

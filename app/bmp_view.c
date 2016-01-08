@@ -3,15 +3,7 @@
 
 int main(int argc, char *argv[])
 {
-	const char *fb_dev;
-
 	assert(argc > 1);
 
-	if (argc == 2) {
-		fb_dev = "/dev/fb0";
-	} else {
-		fb_dev = argv[2];
-	}
-
-	return bmp_view(argv[1], fb_dev);
+	return cavan_fb_bmp_view2(argv[1], argc > 2 ? argv[2] : NULL);
 }

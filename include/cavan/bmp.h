@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cavan.h>
+#include <cavan/fb.h>
 #include <linux/fb.h>
 
 #pragma pack(1)
@@ -39,35 +40,40 @@ struct bmp_header {
 };
 
 struct pixel555 {
-	u16 red		:5;
-	u16 green	:5;
 	u16 blue	:5;
+	u16 green	:5;
+	u16 red		:5;
 };
 
 struct pixel565 {
-	u16 red		:5;
-	u16 green	:6;
 	u16 blue	:5;
+	u16 green	:6;
+	u16 red		:5;
 };
 
 struct pixel888 {
-	u32 red		:8;
-	u32 green	:8;
 	u32 blue	:8;
+	u32 green	:8;
+	u32 red		:8;
 };
 
 struct pixel8888 {
-	u32 red		:8;
-	u32 green	:8;
 	u32 blue	:8;
+	u32 green	:8;
+	u32 red		:8;
 	u32 transp	:8;
 };
 #pragma pack()
 
-int bmp_view(const char *file_name, const char *fb_name);
 void bmp_show_file_header(struct bmp_file_header *file_hdr);
 void bmp_show_info_header(struct bmp_info_header *info_hdr);
 int bmp_read_file_header(int fd, struct bmp_file_header *file_hdr);
 int bmp_read_info_header(int fd, struct bmp_info_header *info_hdr);
 size_t bmp_get_color_table_size(int bit_count);
 void bmp_header_init(struct bmp_header *header, int width, int height, int bit_count);
+
+int cavan_fb_bmp_view(struct cavan_fb_device *fb_dev, const char *pathname);
+int cavan_fb_bmp_view2(const char *pathname, const char *fb_path);
+int cavan_fb_bmp_capture(struct cavan_fb_device *dev, int fd);
+int cavan_fb_bmp_capture2(struct cavan_fb_device *dev, const char *pathname);
+int cavan_fb_bmp_capture3(const char *pathname);
