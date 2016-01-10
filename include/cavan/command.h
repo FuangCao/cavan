@@ -225,7 +225,7 @@ extern const char *cavan_help_message_cmdline;
 
 // ============================================================
 
-int main(int argc, char *argv[]);
+extern int main(int argc, char *argv[]);
 
 int print_command_table(const struct cavan_command_map *p, const struct cavan_command_map *p_end);
 const struct cavan_command_map *find_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname, size_t size);
