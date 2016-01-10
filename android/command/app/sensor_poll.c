@@ -17,27 +17,13 @@
  *
  */
 
+#include <cavan.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <hardware/sensors.h>
-
-#define NELEM(a) \
-	(sizeof(a) / sizeof((a)[0]))
-
-#define pr_std_info(fmt, args ...) \
-	printf(fmt "\n", ##args)
-
-#define pr_red_info(fmt, args ...) \
-	pr_std_info("\033[31m" fmt "\033[0m", ##args);
-
-#define pr_bold_info(fmt, args ...) \
-	pr_std_info("\033[1m" fmt "\033[0m", ##args);
-
-#define pr_green_info(fmt, args ...) \
-	pr_std_info("\033[32m" fmt "\033[0m", ##args);
 
 enum
 {

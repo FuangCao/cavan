@@ -10,9 +10,14 @@ CAVAN_APP_SRC_FILES := $(call cavan-all-files-under,app/*.c)
 CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,app/*.cpp)
 CAVAN_APP_CORE_SRC_FILES := $(call cavan-all-files-under,app/core/*.c)
 
+CAVAN_LIB_SRC_FILES += $(call cavan-all-files-under,android/command/lib/*.c)
+CAVAN_LIB_SRC_FILES += $(call cavan-all-files-under,android/command/lib/*.cpp)
+CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,android/command/app/*.c)
+CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,android/command/app/*.cpp)
+
 CAVAN_ANDROID_VERSION := $(firstword $(subst ., ,$(PLATFORM_VERSION)))
-CAVAN_C_INCLUDES := $(LOCAL_PATH)/include
-CAVAN_SHARED_LIBRARIES := libutils liblog
+CAVAN_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/android/command/include
+CAVAN_SHARED_LIBRARIES := libutils liblog libhardware libbinder
 CAVAN_CFLAGS := -DCONFIG_BUILD_FOR_ANDROID=1 -DANDROID_VERSION=$(CAVAN_ANDROID_VERSION) -DCAVAN_ARCH_ARM -DCAVAN -Werror -Wno-unused-parameter -include $(LOCAL_PATH)/include/cavan/config.h
 
 ifneq ($(filter 1 2 3 4,$(CAVAN_ANDROID_VERSION)),)
@@ -54,10 +59,18 @@ CAVAN_MAP_C := $(CAVAN_OUT_PATH)/cavan_map.c
 $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_CORE_SRC_FILES)): $(CAVAN_MAP_H) $(CAVAN_MAP_C)
 
 $(CAVAN_MAP_H): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) | $(CAVAN_OUT_PATH)
-	$(hide) for app in $(basename $(notdir $^)); \
-	do \
-		echo "int do_cavan_$${app}(int argc, char *argv[]);"; \
-	done > $@
+	$(hide) { \
+		echo "#include <cavan.h>"; \
+		echo; \
+		echo "__BEGIN_DECLS"; \
+		echo; \
+		for app in $(basename $(notdir $^)); \
+		do \
+			echo "int do_cavan_$${app}(int argc, char *argv[]);"; \
+		done; \
+		echo; \
+		echo "__END_DECLS"; \
+	} > $@
 
 $(CAVAN_MAP_C): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) | $(CAVAN_OUT_PATH)
 	$(hide) for app in $(basename $(notdir $^)); \
@@ -68,5 +81,5 @@ $(CAVAN_MAP_C): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) | $(CAVAN_OUT
 $(CAVAN_OUT_PATH):
 	$(hide) mkdir -pv $@
 
-$(intermediates)/app/%.o: PRIVATE_CFLAGS += -Dmain=do_cavan_$(basename $(notdir $@))
+$(intermediates)/app/%.o $(intermediates)/android/command/app/%.o: PRIVATE_CFLAGS += -Dmain=do_cavan_$(basename $(notdir $@))
 $(intermediates)/app/core/%.o: PRIVATE_CFLAGS += -Umain -I$(CAVAN_OUT_PATH)
