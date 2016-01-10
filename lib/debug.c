@@ -133,7 +133,7 @@ int dump_stack(void)
 		return -EFAULT;
 	}
 
-	printf("%s", buff);
+	pd_info("%s", buff);
 
 	return 0;
 }

@@ -30,6 +30,12 @@
 #include <unistd.h>
 #include <features.h>
 
+#define ERROR_RETURN(en) \
+	do { \
+		errno = en; \
+		return -errno; \
+	} while (0)
+
 #ifdef __GNUC__
 #define GCC_VERSION				(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #define	__GNUC_PREREQ__(x, y)	((__GNUC__ == (x) && __GNUC_MINOR__ >= (y)) || (__GNUC__ > (x)))

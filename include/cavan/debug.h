@@ -42,12 +42,6 @@
 		set_default_font(); \
 	} while (0)
 
-#define ERROR_RETURN(en) \
-	do { \
-		errno = en; \
-		return -errno; \
-	} while (0)
-
 #define RETRY(func, ret, condition, count) \
 	do { \
 		int i = count; \

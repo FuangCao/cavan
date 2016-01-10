@@ -51,10 +51,12 @@ typedef u64 size64_t;
 typedef s64 ssize64_t;
 
 #ifndef __cplusplus
+#ifndef bool
 typedef enum {
 	false,
 	true
 } bool;
+#endif
 #endif
 
 typedef enum {
