@@ -41,11 +41,12 @@ enum
 	CT_BL = BIT(12), /* left bracket */
 	CT_BR = BIT(13), /* right bracket */
 	CT_ZERO = BIT(14), /* zero */
+	CT_DOT = BIT(15), /* zero */
 };
 
-extern const u16 cavan_ctype[];
+extern const u32 cavan_ctype[];
 
-static inline u16 cavan_ctype_get(u8 c)
+static inline u32 cavan_ctype_get(u8 c)
 {
 	return cavan_ctype[c];
 }
@@ -68,6 +69,11 @@ static inline bool cavan_iscntrl(u8 c)
 static inline bool cavan_isdigit(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_D)) != 0;
+}
+
+static inline bool cavan_isfloat(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_D | CT_DOT)) != 0;
 }
 
 static inline bool cavan_isgraph(u8 c)
@@ -108,6 +114,11 @@ static inline bool cavan_notspace_zero(u8 c)
 static inline bool cavan_isupper(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_U)) != 0;
+}
+
+static inline bool cavan_isletter(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_U | CT_L)) != 0;
 }
 
 static inline int isodigit(char c)

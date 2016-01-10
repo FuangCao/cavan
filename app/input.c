@@ -18,6 +18,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/input.h>
 #include <cavan/command.h>
 
 #define FILE_CREATE_DATE "2016-01-11 00:03:56"
@@ -48,6 +49,9 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
+	int fd;
+	int type, code, value;
+	const char *pathname;
 
 	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
 		switch (c) {
@@ -69,6 +73,31 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 	}
+
+	assert(argc > optind + 3);
+
+	pathname = argv[optind++];
+
+	if (argc > 4) {
+		type = cavan_input_type2value(argv[optind++]);
+	} else {
+		type = EV_KEY;
+	}
+
+	code = text2value_unsigned(argv[optind++], NULL, 10);
+	value = text2value_unsigned(argv[optind++], NULL, 10);
+
+	println("pathname = %s", pathname);
+	println("type = %d, code = %d, value = %d", type, code, value);
+
+	fd = open(pathname, O_WRONLY);
+	if (fd < 0) {
+		pr_err_info("open `%s': %d", pathname, fd);
+		return fd;
+	}
+
+	cavan_input_event2(fd, type, code, value);
+	cavan_input_sync(fd);
 
 	return 0;
 }

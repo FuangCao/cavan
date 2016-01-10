@@ -1,8 +1,9 @@
 #include <cavan.h>
 #include <cavan/text.h>
-#include <sys/wait.h>
 #include <cavan/file.h>
 #include <cavan/alarm.h>
+#include <cavan/ctype.h>
+#include <sys/wait.h>
 
 #define USE_SYSTEM_PRINTF	1
 
@@ -2388,12 +2389,19 @@ char *text_to_nlowercase(const char *src, char *dest, size_t size)
 
 int text_cmp_nocase(const char *text1, const char *text2)
 {
-	while (*text1 && char2lowercase(*text1) == char2lowercase(*text2)) {
+	while (1) {
+		int diff = cavan_lowercase_simple(*text1) - cavan_lowercase_simple(*text2);
+		if (diff) {
+			return diff;
+		}
+
+		if (*text1 == 0) {
+			return 0;
+		}
+
 		text1++;
 		text2++;
 	}
-
-	return char2lowercase(*text1) - char2lowercase(*text2);
 }
 
 int text_ncmp_nocase(const char *text1, const char *text2, size_t size)
@@ -2404,9 +2412,19 @@ int text_ncmp_nocase(const char *text1, const char *text2, size_t size)
 		return 0;
 	}
 
-	for (end_text1 = text1 + size - 1; text1 < end_text1 && *text1 && char2lowercase(*text1) == char2lowercase(*text2); text1++, text2++);
+	end_text1 = text1 + size - 1;
 
-	return char2lowercase(*text1) - char2lowercase(*text2);
+	while (text1 < end_text1) {
+		int diff = cavan_lowercase_simple(*text1) == cavan_lowercase_simple(*text2);
+		if (diff) {
+			return diff;
+		}
+
+		text1++;
+		text2++;
+	}
+
+	return 0;
 }
 
 int text_bool_value(const char *text)
@@ -2452,7 +2470,7 @@ char *mac_address_tostring(const char *mac, size_t maclen)
 
 int text_is_number(const char *text)
 {
-	while (IS_NUMBER(*text)) {
+	while (cavan_isdigit(*text)) {
 		text++;
 	}
 
@@ -2461,7 +2479,7 @@ int text_is_number(const char *text)
 
 int text_is_float(const char *text)
 {
-	while (IS_FLOAT(*text)) {
+	while (cavan_isfloat(*text)) {
 		text++;
 	}
 
@@ -2470,7 +2488,7 @@ int text_is_float(const char *text)
 
 int text_is_uppercase(const char *text)
 {
-	while (IS_UPPERCASE(*text)) {
+	while (cavan_isupper(*text)) {
 		text++;
 	}
 
@@ -2479,7 +2497,7 @@ int text_is_uppercase(const char *text)
 
 int text_is_lowercase(const char *text)
 {
-	while (IS_LOWERCASE(*text)) {
+	while (cavan_islower(*text)) {
 		text++;
 	}
 
@@ -2488,7 +2506,7 @@ int text_is_lowercase(const char *text)
 
 int text_is_letter(const char *text)
 {
-	while (IS_LETTER(*text)) {
+	while (cavan_isletter(*text)) {
 		text++;
 	}
 

@@ -20,7 +20,7 @@
 #include <cavan.h>
 #include <cavan/ctype.h>
 
-const u16 cavan_ctype[] = {
+const u32 cavan_ctype[] = {
 	CT_C | CT_ZERO,
 	CT_C,
 	CT_C,
@@ -67,7 +67,7 @@ const u16 cavan_ctype[] = {
 	CT_P, /* + */
 	CT_P, /* , */
 	CT_P | CT_NM, /* - */
-	CT_P, /* . */
+	CT_P | CT_DOT, /* . */
 	CT_P, /* / */
 	CT_D | CT_NM | CT_X | CT_O, /* 0 */
 	CT_D | CT_NM | CT_X | CT_O, /* 1 */ /* 49 */

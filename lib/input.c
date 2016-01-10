@@ -30,6 +30,21 @@ static const char *cavan_uinput_path_list[] = {
 	"/dev/misc/uinput"
 };
 
+static struct cavan_input_key cavan_input_type_map[] = {
+	{ "SYN", EV_SYN },
+	{ "KEY", EV_KEY },
+	{ "REL", EV_REL },
+	{ "ABS", EV_ABS },
+	{ "MSC", EV_MSC },
+	{ "SW", EV_SW },
+	{ "LED", EV_LED },
+	{ "SND", EV_SND },
+	{ "REP", EV_REP },
+	{ "FF", EV_FF },
+	{ "PWR", EV_PWR },
+	{ "FF_STATUS", EV_FF_STATUS },
+};
+
 static struct cavan_input_key cavan_input_keymap[] = {
 	{ "E", KEY_ENTER },
 	{ "L", KEY_LEFT },
@@ -794,4 +809,21 @@ struct cavan_input_key *cavan_input_find_key(const char *name)
 	}
 
 	return NULL;
+}
+
+int cavan_input_type2value(const char *name)
+{
+	struct cavan_input_key *p, *p_end;
+
+	if (text_is_number(name)) {
+		return text2value_unsigned(name, NULL, 10);
+	}
+
+	for (p = cavan_input_type_map, p_end = p + NELEM(cavan_input_type_map); p < p_end; p++) {
+		if (text_cmp_nocase(p->name, name) == 0) {
+			return p->code;
+		}
+	}
+
+	return 0;
 }
