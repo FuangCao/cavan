@@ -61,16 +61,20 @@ out_closedir:
 	return buff;
 }
 
-struct fstab *fs_load_fstab(void)
+struct fstab *fs_load_fstab(const char *fstab)
 {
 	if (android_fstab == NULL) {
 		char pathname[1024];
 
-		if (fs_get_fstab_pathname(pathname, sizeof(pathname)) == NULL) {
-			return NULL;
+		if (fstab == NULL) {
+			if (fs_get_fstab_pathname(pathname, sizeof(pathname)) == NULL) {
+				return NULL;
+			}
+
+			fstab = pathname;
 		}
 
-		println("fstab = %s", pathname);
+		println("fstab = %s", fstab);
 
 		android_fstab = fs_mgr_read_fstab(pathname);
 	}
@@ -78,7 +82,7 @@ struct fstab *fs_load_fstab(void)
 	return android_fstab;
 }
 
-Volume *fs_find_volume(const char *volume)
+Volume *fs_find_volume(const char *volume, const char *pathname)
 {
 	struct fstab *fstab;
 
@@ -86,7 +90,7 @@ Volume *fs_find_volume(const char *volume)
 		return NULL;
 	}
 
-	fstab = fs_load_fstab();
+	fstab = fs_load_fstab(pathname);
 	if (fstab == NULL) {
 		return NULL;
 	}
@@ -108,9 +112,9 @@ bool fs_volume_umount(Volume *volume, bool force)
 	return true;
 }
 
-bool fs_volume_umount2(const char *volume, bool force)
+bool fs_volume_umount2(const char *volume, const char *fstab, bool force)
 {
-	Volume *v = fs_find_volume(volume);
+	Volume *v = fs_find_volume(volume, fstab);
 
 	if (v == NULL) {
 		pr_red_info("can't find volume: %s", volume);
@@ -150,13 +154,13 @@ bool fs_volume_format(Volume *volume, const char *fs_type, bool force)
 	return true;
 }
 
-bool fs_volume_format2(const char *volume, const char *fs_type, bool force)
+bool fs_volume_format2(const char *volume, const char *fs_type, const char *fstab, bool force)
 {
 	Volume *v;
 
 	println("volume = %s", volume);
 
-	v = fs_find_volume(volume);
+	v = fs_find_volume(volume, fstab);
 	if (v == NULL) {
 		pr_red_info("can't find volume: %s", volume);
 		return false;

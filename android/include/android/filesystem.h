@@ -29,11 +29,11 @@ __BEGIN_DECLS
 extern struct fstab *android_fstab;
 
 char *fs_get_fstab_pathname(char *buff, size_t size);
-struct fstab *fs_load_fstab(void);
-Volume *fs_find_volume(const char *volume);
+struct fstab *fs_load_fstab(const char *fstab);
+Volume *fs_find_volume(const char *volume, const char *fstab);
 bool fs_volume_umount(Volume *volume, bool force);
-bool fs_volume_umount2(const char *volume, bool force);
-bool fs_volume_format(Volume *volume, const char *fs_type, bool force);
-bool fs_volume_format2(const char *volume, const char *fs_type, bool force);
+bool fs_volume_umount2(const char *volume, const char *fstab, bool force);
+bool fs_volume_format(Volume *volume, const char *fstab, bool force);
+bool fs_volume_format2(const char *volume, const char *fs_type, const char *fstab, bool force);
 
 __END_DECLS

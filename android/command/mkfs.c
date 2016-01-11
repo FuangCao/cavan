@@ -29,7 +29,8 @@ static void show_usage(const char *command)
 	println("Usage: %s <volume> [option]", command);
 	println("-h, -H, --help\t\tshow this help");
 	println("-v, -V, --version\tshow version");
-	println("-t, --type\tfilesystem type");
+	println("-t, --type <FS>\t\tfilesystem type");
+	println("--fstab <PATH>\t\tfstab path");
 }
 
 int main(int argc, char *argv[])
@@ -54,10 +55,16 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_TYPE,
 		}, {
+			.name = "fstab",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_FSTAB,
+		}, {
 			0, 0, 0, 0
 		},
 	};
 	const char *volume;
+	const char *fstab = NULL;
 	const char *fs_type = NULL;
 
 	while ((c = getopt_long(argc, argv, "vVhHt:", long_option, &option_index)) != EOF) {
@@ -80,6 +87,10 @@ int main(int argc, char *argv[])
 			fs_type = optarg;
 			break;
 
+		case CAVAN_COMMAND_OPTION_FSTAB:
+			fstab = optarg;
+			break;
+
 		default:
 			show_usage(argv[0]);
 			return -EINVAL;
@@ -89,7 +100,7 @@ int main(int argc, char *argv[])
 	android_stop_all();
 
 	while (optind < argc) {
-		if (!fs_volume_format2(argv[optind++], fs_type, true)) {
+		if (!fs_volume_format2(argv[optind++], fs_type, fstab, true)) {
 			pr_red_info("fs_volume_format2");
 			return -EFAULT;
 		}
