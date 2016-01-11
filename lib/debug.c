@@ -22,63 +22,7 @@
 
 static const char *build_time_string = __DATE__ " " __TIME__;
 
-#ifdef CONFIG_BUILD_FOR_ANDROID
-#if ANDROID_VERSION < 5
-#include <corkscrew/backtrace.h>
-
-char *dump_backtrace(char *buff, size_t size)
-{
-	ssize_t count;
-	backtrace_frame_t stack[32];
-	char *buff_end = buff + size;
-
-	count = unwind_backtrace(stack, 2, NELEM(stack));
-	buff += snprintf(buff, buff_end - buff, "backtrace() returned %" PRINT_FORMAT_SIZE " addresses\n", count);
-
-	if (count > 0) {
-		int i;
-		backtrace_symbol_t symbols[count];
-
-		get_backtrace_symbols(stack, count, symbols);
-
-		for (i = 0; i < count; i++) {
-			char line[1024];
-
-			format_backtrace_line(i, stack + i, &symbols[i], line, sizeof(line));
-			buff += snprintf(buff, buff_end - buff, "%s\n", line);
-		}
-
-		free_backtrace_symbols(symbols, count);
-	}
-
-	return buff;
-}
-
-char *address_to_symbol(const void *addr, char *buff, size_t size)
-{
-	backtrace_symbol_t symbol;
-	backtrace_frame_t stack = { (uintptr_t) addr, 0, 0 };
-
-	get_backtrace_symbols(&stack, 1, &symbol);
-	format_backtrace_line(0, &stack, &symbol, buff, size);
-	free_backtrace_symbols(&symbol, 1);
-
-	return buff;
-}
-#else
-char *dump_backtrace(char *buff, size_t size)
-{
-	return text_ncopy(buff, "unknown", size);
-}
-
-char *address_to_symbol(const void *addr, char *buff, size_t size)
-{
-	text_ncopy(buff, "unknown", size);
-
-	return buff;
-}
-#endif
-#else
+#ifndef CONFIG_BUILD_FOR_ANDROID
 #include <execinfo.h>
 
 char *dump_backtrace(char *buff, size_t size)

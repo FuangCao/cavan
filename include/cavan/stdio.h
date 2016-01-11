@@ -110,7 +110,7 @@ __BEGIN_DECLS;
 #define PRINT_FORMAT_OFF				"Ld"
 #endif
 
-#if defined(CONFIG_BUILD_FOR_ANDROID) && ANDROID_VERSION < 5
+#if defined(CONFIG_BUILD_FOR_ANDROID) && CONFIG_ANDROID_VERSION < 5
 #define PRINT_FORMAT_UID				"ld"
 #else
 #define PRINT_FORMAT_UID				"d"

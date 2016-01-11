@@ -1,10 +1,11 @@
+#pragma once
+
 /*
- * File:		keypad.h
- * Based on:
- * Author:		Fuang Cao <cavan.cfa@gmail.com>
+ * File:		android.h
+ * Author:		Fuang.Cao <cavan.cfa@gmail.com>
+ * Created:		2016-01-11 11:55:09
  *
- * Created:		2012-11-17
- * Description:	HUAMOBILE LIBRARY
+ * Copyright (c) 2015 Fuang.Cao <cavan.cfa@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +19,4 @@
  *
  */
 
-#pragma once
-
-#include <huamobile/input.h>
-#include <huamobile.h>
-
-struct huamobile_keypad_device {
-	struct huamobile_input_device input_dev;
-};
-
-bool huamobile_keypad_device_match(uint8_t *key_bitmask);
-bool huamobile_keypad_device_matcher(int fd, const char *name, void *data);
-struct huamobile_input_device *huamobile_keypad_create(void);
+#define CONFIG_BUILD_FOR_ANDROID

@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "SuService.h"
+#include <cavan/android/SuService.h>
 
 namespace android {
 
