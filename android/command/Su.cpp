@@ -25,7 +25,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <cavan/android/SuService.h>
+#include <android++/SuService.h>
 
 using namespace android;
 

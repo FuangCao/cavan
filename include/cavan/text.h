@@ -168,7 +168,7 @@ char *text_to_nuppercase(const char *src, char *dest, size_t size);
 char *text_to_nlowercase(const char *src, char *dest, size_t size);
 int text_cmp_nocase(const char *text1, const char *text2);
 int text_ncmp_nocase(const char *text1, const char *text2, size_t size);
-int text_bool_value(const char *text);
+bool text2bool(const char *text);
 
 char *text_skip_space(const char *text, const char *text_end);
 char *text_skip_space_invert(const char *text, const char *line);

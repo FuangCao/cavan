@@ -2427,24 +2427,26 @@ int text_ncmp_nocase(const char *text1, const char *text2, size_t size)
 	return 0;
 }
 
-int text_bool_value(const char *text)
+bool text2bool(const char *text)
 {
-	const char *true_texts[] = {
-		"1", "y", "yes", "true",
-	};
 	unsigned int i;
+	const char *true_texts[] = { "y", "yes", "true" };
 
 	if (text == NULL) {
-		return 1;
+		return false;
+	}
+
+	if (text_is_number(text)) {
+		return text2value_unsigned(text, NULL, 10) != 0;
 	}
 
 	for (i = 0; i < ARRAY_SIZE(true_texts); i++) {
 		if (text_cmp_nocase(true_texts[i], text) == 0) {
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }
 
 char *mac_address_tostring_base(const char *mac, size_t maclen, char *buff)

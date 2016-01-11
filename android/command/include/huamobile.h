@@ -31,7 +31,7 @@
 #include <sys/types.h>
 #include <linux/limits.h>
 
-#ifdef CONFIG_BUILD_FOR_ANDROID
+#ifdef CONFIG_ANDROID
 #include <utils/Log.h>
 #endif
 

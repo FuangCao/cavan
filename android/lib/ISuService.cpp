@@ -17,7 +17,7 @@
  *
  */
 
-#include <cavan/android/ISuService.h>
+#include <android++/ISuService.h>
 
 namespace android {
 

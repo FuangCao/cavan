@@ -350,7 +350,11 @@ static inline char *file_read_filesystems(size_t *size)
 
 static inline int update_mount_table(void)
 {
+#ifdef CONFIG_ANDROID
+	return 0;
+#else
 	return file_copy(FILE_PROC_MOUNTS, FILE_ETC_MTAB, 0);
+#endif
 }
 
 static inline ssize_t file_read_cpuinfo(void *buff, size_t size)

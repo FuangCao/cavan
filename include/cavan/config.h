@@ -23,11 +23,11 @@
 #define _GNU_SOURCE			500
 #endif
 
-#if defined(ANDROID) && !defined(CONFIG_BUILD_FOR_ANDROID)
-#define CONFIG_BUILD_FOR_ANDROID	1
+#if defined(ANDROID) && !defined(CONFIG_ANDROID)
+#define CONFIG_ANDROID	1
 #endif
 
-#if defined(CONFIG_BUILD_FOR_ANDROID) && !defined(CAVAN_ARCH_ARM)
+#if defined(CONFIG_ANDROID) && !defined(CAVAN_ARCH_ARM)
 #define CAVAN_ARCH_ARM				1
 #endif
 

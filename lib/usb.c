@@ -376,7 +376,7 @@ out_close_fd:
 
 void cavan_usb_deinit(struct cavan_usb_descriptor *desc)
 {
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#ifndef CONFIG_ANDROID
 	pthread_cancel(desc->thread_notify);
 #endif
 

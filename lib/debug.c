@@ -22,7 +22,7 @@
 
 static const char *build_time_string = __DATE__ " " __TIME__;
 
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#ifndef CONFIG_ANDROID
 #include <execinfo.h>
 
 char *dump_backtrace(char *buff, size_t size)

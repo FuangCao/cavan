@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
 		case 's':
 		case 'S':
-			desc.super_permission = text_bool_value(optarg);
+			desc.super_permission = text2bool(optarg);
 			break;
 
 		default:

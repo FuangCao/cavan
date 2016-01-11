@@ -13,6 +13,7 @@
 #include <cavan/device.h>
 #include <cavan/command.h>
 #include <cavan/swan_vk.h>
+#include <cavan/android.h>
 
 static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
@@ -537,7 +538,7 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 		}
 
 		if (strcmp(req->filename, "@SYSTEM@") == 0) {
-			cavan_system("stop");
+			android_stop_all();
 		}
 
 		pr_info("umount block device %s", pathname);

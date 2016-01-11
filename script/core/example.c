@@ -1,8 +1,8 @@
 static void show_usage(const char *command)
 {
 	println("Usage: %s [option]", command);
-	println("--help, -h, -H\t\tshow this help");
-	println("--version, -v, -V\tshow version");
+	println("-h, -H, --help\t\tshow this help");
+	println("-v, -V, --version\tshow version");
 }
 
 int main(int argc, char *argv[])

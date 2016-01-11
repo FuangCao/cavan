@@ -21,14 +21,72 @@
 #include <cavan/command.h>
 #include <cavan/android.h>
 
-int cavan_android_get_prop(const char *name, char *buff, size_t size)
+#ifndef CONFIG_ANDROID
+int android_getprop(const char *name, char *buff, size_t size)
 {
-	int ret;
+	char *env;
 
-	ret = cavan_popen4(buff, size, "getprop %s 2>/dev/null", name);
-	if (ret != 0) {
+	env = getenv(name);
+	if (env == NULL) {
 		return -EFAULT;
 	}
 
-	return 0;
+	return text_ncopy(buff, env, size) - buff;
+}
+#endif
+
+int android_getprop_int(const char *name, int def_value)
+{
+	int ret;
+	char buff[1024];
+
+	ret = android_getprop(name, buff, sizeof(buff));
+	if (ret < 0) {
+		return def_value;
+	}
+
+	return text2value_unsigned(buff, NULL, 10);
+}
+
+bool android_getprop_bool(const char *name, bool def_value)
+{
+	int ret;
+	char buff[1024];
+
+	ret = android_getprop(name, buff, sizeof(buff));
+	if (ret < 0) {
+		return def_value;
+	}
+
+	return text2bool(buff);
+}
+
+double android_getprop_double(const char *name, double def_value)
+{
+	int ret;
+	char buff[1024];
+
+	ret = android_getprop(name, buff, sizeof(buff));
+	if (ret < 0) {
+		return def_value;
+	}
+
+	return text2double(buff, NULL, NULL, 10);
+}
+
+void android_stop_all(void)
+{
+#ifdef CONFIG_ANDROID
+	int i;
+
+	print("stop android service ");
+
+	for (i = 0; i < 10; i++) {
+		cavan_system("stop");
+		print_char('.');
+		msleep(200);
+	}
+
+	println(" OK");
+#endif
 }

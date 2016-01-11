@@ -3,7 +3,7 @@
 /*
  * File:		android.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2015-10-14 16:26:11
+ * Created:		2016-01-11 11:55:09
  *
  * Copyright (c) 2015 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -19,24 +19,6 @@
  *
  */
 
-#include <cavan.h>
-#include <cavan/file.h>
+#include <cutils/properties.h>
 
-__BEGIN_DECLS
-
-int android_getprop(const char *name, char *buff, size_t size);
-int android_getprop_int(const char *name, int def_value);
-bool android_getprop_bool(const char *name, bool def_value);
-double android_getprop_double(const char *name, double def_value);
-void android_stop_all(void);
-
-static inline bool cavan_is_android(void)
-{
-#ifdef CONFIG_ANDROID
-	return true;
-#else
-	return file_access_e("/system/framework/framework.jar") && file_access_e("/system/build.prop");
-#endif
-}
-
-__END_DECLS
+typedef struct fstab_rec Volume;

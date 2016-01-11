@@ -123,7 +123,7 @@ int cavan_service_start(struct cavan_service_description *desc)
 			pr_red_info("cavan_pthread_create");
 
 			while (i-- > 0) {
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#ifndef CONFIG_ANDROID
 				pthread_cancel(threads[i]);
 #endif
 				free(threads);
@@ -182,7 +182,7 @@ int cavan_service_stop(struct cavan_service_description *desc)
 	}
 
 	for (i = desc->daemon_count - 1; i >= 0; i--) {
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#ifndef CONFIG_ANDROID
 		pthread_cancel(threads[i]);
 #endif
 		pthread_kill(threads[i], SIGUSR1);

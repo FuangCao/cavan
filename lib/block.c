@@ -70,7 +70,7 @@ struct cavan_part_table *cavan_block_get_part_table2(void)
 	int ret;
 	char name[64];
 
-	ret = cavan_android_get_prop("ro.product.name", name, sizeof(name));
+	ret = android_getprop("ro.product.name", name, sizeof(name));
 	if (ret < 0) {
 		return NULL;
 	}

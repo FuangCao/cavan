@@ -1,7 +1,5 @@
-#pragma once
-
 /*
- * File:		android.h
+ * File:		Android.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2016-01-11 11:55:09
  *
@@ -19,4 +17,24 @@
  *
  */
 
-#define CONFIG_BUILD_FOR_ANDROID
+#include <cavan.h>
+#include <cavan/android.h>
+
+int android_getprop(const char *name, char *buff, size_t size)
+{
+	int length;
+    char value[PROPERTY_VALUE_MAX];
+
+	length = property_get(name, value, NULL);
+	if (length < 0) {
+		return length;
+	}
+
+	if (length > (int) size) {
+		length = size;
+	}
+
+	strncpy(buff, value, length);
+
+	return length;
+}

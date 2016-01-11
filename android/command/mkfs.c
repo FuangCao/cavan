@@ -18,20 +18,24 @@
  */
 
 #include <cavan.h>
+#include <cavan/device.h>
 #include <cavan/command.h>
+#include <android/filesystem.h>
 
 #define FILE_CREATE_DATE "2016-01-11 11:42:13"
 
 static void show_usage(const char *command)
 {
-	println("Usage: %s [option]", command);
-	println("--help, -h, -H\t\tshow this help");
-	println("--version, -v, -V\tshow version");
+	println("Usage: %s <volume> [option]", command);
+	println("-h, -H, --help\t\tshow this help");
+	println("-v, -V, --version\tshow version");
+	println("-t, --type\tfilesystem type");
 }
 
 int main(int argc, char *argv[])
 {
 	int c;
+	int ret;
 	int option_index;
 	struct option long_option[] = {
 		{
@@ -45,11 +49,18 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_VERSION,
 		}, {
+			.name = "type",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_TYPE,
+		}, {
 			0, 0, 0, 0
 		},
 	};
+	const char *volume;
+	const char *fs_type = NULL;
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "vVhHt:", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
@@ -64,10 +75,26 @@ int main(int argc, char *argv[])
 			show_usage(argv[0]);
 			return 0;
 
+		case 't':
+		case CAVAN_COMMAND_OPTION_TYPE:
+			fs_type = optarg;
+			break;
+
 		default:
 			show_usage(argv[0]);
 			return -EINVAL;
 		}
+	}
+
+	android_stop_all();
+
+	while (optind < argc) {
+		if (!fs_volume_format2(argv[optind++], fs_type, true)) {
+			pr_red_info("fs_volume_format2");
+			return -EFAULT;
+		}
+
+		pr_green_info("OK");
 	}
 
 	return 0;

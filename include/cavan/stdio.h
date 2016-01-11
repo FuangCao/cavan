@@ -3,7 +3,7 @@
 #include <cavan.h>
 #include <stdarg.h>
 
-#ifdef CONFIG_BUILD_FOR_ANDROID
+#ifdef CONFIG_ANDROID
 #include <utils/Log.h>
 #ifndef LOGD
 #define LOGD					ALOGD
@@ -14,7 +14,7 @@
 #endif
 
 #ifdef __cplusplus
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#ifndef CONFIG_ANDROID
 #include <iostream>
 #endif
 
@@ -110,7 +110,7 @@ __BEGIN_DECLS;
 #define PRINT_FORMAT_OFF				"Ld"
 #endif
 
-#if defined(CONFIG_BUILD_FOR_ANDROID) && CONFIG_ANDROID_VERSION < 5
+#if defined(CONFIG_ANDROID) && CONFIG_ANDROID_VERSION < 5
 #define PRINT_FORMAT_UID				"ld"
 #else
 #define PRINT_FORMAT_UID				"d"

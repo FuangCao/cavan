@@ -1,9 +1,9 @@
 #pragma once
 
 /*
- * File:		android.h
+ * File:			file_system.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2015-10-14 16:26:11
+ * Created:		2016-01-11 11:55:09
  *
  * Copyright (c) 2015 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -19,24 +19,21 @@
  *
  */
 
-#include <cavan.h>
-#include <cavan/file.h>
+#include <cavan/android.h>
+
+#include <make_ext4fs.h>
+#include <fs_mgr.h>
 
 __BEGIN_DECLS
 
-int android_getprop(const char *name, char *buff, size_t size);
-int android_getprop_int(const char *name, int def_value);
-bool android_getprop_bool(const char *name, bool def_value);
-double android_getprop_double(const char *name, double def_value);
-void android_stop_all(void);
+extern struct fstab *android_fstab;
 
-static inline bool cavan_is_android(void)
-{
-#ifdef CONFIG_ANDROID
-	return true;
-#else
-	return file_access_e("/system/framework/framework.jar") && file_access_e("/system/build.prop");
-#endif
-}
+char *fs_get_fstab_pathname(char *buff, size_t size);
+struct fstab *fs_load_fstab(void);
+Volume *fs_find_volume(const char *volume);
+bool fs_volume_umount(Volume *volume, bool force);
+bool fs_volume_umount2(const char *volume, bool force);
+bool fs_volume_format(Volume *volume, const char *fs_type, bool force);
+bool fs_volume_format2(const char *volume, const char *fs_type, bool force);
 
 __END_DECLS

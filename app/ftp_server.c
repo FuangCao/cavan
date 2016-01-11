@@ -161,11 +161,10 @@ int main(int argc, char *argv[])
 			service->logfile = optarg;
 			break;
 
-
 		case 's':
 		case 'S':
 		case CAVAN_COMMAND_OPTION_SUPER:
-			service->super_permission = text_bool_value(optarg);
+			service->super_permission = text2bool(optarg);
 			break;
 
 		case 'p':

@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case SWAN_UPGRADE_OPTION_WIPE_VFAT:
-			if (text_bool_value(optarg)) {
+			if (text2bool(optarg)) {
 				println_blue("Format VFAT partition");
 				swan_mkfs_mask |= MKFS_MASK_VFAT;
 			} else {
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case SWAN_UPGRADE_OPTION_WIPE_DATA:
-			if (text_bool_value(optarg)) {
+			if (text2bool(optarg)) {
 				println_blue("Format userdata partition");
 				swan_mkfs_mask |= MKFS_MASK_USERDATA;
 			} else {
@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case SWAN_UPGRADE_OPTION_WIPE_CACHE:
-			if (text_bool_value(optarg)) {
+			if (text2bool(optarg)) {
 				println_blue("Format cache partition");
 				swan_mkfs_mask |= MKFS_MASK_CACHE;
 			} else {
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case SWAN_UPGRADE_OPTION_WIPE_VENDOR:
-			if (text_bool_value(optarg)) {
+			if (text2bool(optarg)) {
 				println_blue("Format vendor partition");
 				swan_mkfs_mask |= MKFS_MASK_VENDOR;
 			} else {
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case SWAN_UPGRADE_OPTION_CHECK_VERSION:
-			if (text_bool_value(optarg)) {
+			if (text2bool(optarg)) {
 				println_blue("Open version check");
 				swan_upgrade_flags |= UPGRADE_FLAG_CHECK_VERSION;
 			} else {
@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case SWAN_UPGRADE_OPTION_RESIZE:
-			if (text_bool_value(optarg)) {
+			if (text2bool(optarg)) {
 				println_blue("Don't shrink images when package");
 				swan_need_shrink = 1;
 			} else {

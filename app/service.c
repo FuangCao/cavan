@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 		case 's':
 		case 'S':
 		case CAVAN_COMMAND_OPTION_SUPER:
-			desc.super_permission = text_bool_value(optarg);
+			desc.super_permission = text2bool(optarg);
 			break;
 
 		case 'v':

@@ -21,7 +21,7 @@ int set_tty_attr(int fd, int action, struct termios *attr)
 		return ret;
 	}
 
-#ifndef CONFIG_BUILD_FOR_ANDROID
+#ifndef CONFIG_ANDROID
 	tcdrain(fd);
 #endif
 
@@ -159,7 +159,7 @@ char *sprintln(char *buff, size_t size, const char *fmt, ...)
 	return buff;
 }
 
-#if 0 // CONFIG_BUILD_FOR_ANDROID
+#if 0 // CONFIG_ANDROID
 void print_ntext(const char *text, size_t size)
 {
 	char buff[size + 1];
