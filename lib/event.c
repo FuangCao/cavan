@@ -1334,11 +1334,11 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 	sprintf(pathname, "/sys/board_properties/virtualkeys.%s", dev->name);
 	mem = file_read_all(pathname, 0, &size);
 	if (mem == NULL) {
-		// pd_red_info("file_read_all %s", pathname);
+		// pr_red_info("file_read_all %s", pathname);
 		return -ENOMEM;
 	}
 
-	pd_bold_info("Parse virtual key file %s", pathname);
+	pr_bold_info("Parse virtual key file %s", pathname);
 
 	file_end = mem + size;
 	p = text_skip_space(mem, file_end);
@@ -1351,11 +1351,11 @@ static int cavan_event_parse_virtual_keymap(struct cavan_event_device *dev)
 
 		key = malloc(sizeof(*key));
 		if (key == NULL) {
-			pd_error_info("malloc");
+			pr_error_info("malloc");
 			goto out_free_mem;
 		}
 
-		pd_bold_info("code = %d, x = %d, y = %d, width = %d, height = %d", code, x, y, width, height);
+		pr_bold_info("code = %d, x = %d, y = %d, width = %d, height = %d", code, x, y, width, height);
 
 		width >>= 1;
 		height >>= 1;
@@ -1459,26 +1459,26 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 
 	ret = ioctl(dev->fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
 	if (ret < 0) {
-		pd_error_info("ioctl EVIOCGBIT EV_KEY");
+		pr_error_info("ioctl EVIOCGBIT EV_KEY");
 		return ret;
 	}
 
 	mem = file_read_all(pathname, 1, &size);
 	if (mem == NULL) {
-		pd_red_info("file_read_all %s", pathname);
+		pr_red_info("file_read_all %s", pathname);
 		return -EFAULT;
 	}
 
 	mem[size] = 0;
 
-	pd_bold_info("Parse keylayout file %s", pathname);
+	pr_bold_info("Parse keylayout file %s", pathname);
 
 	p = mem;
 	file_end = p + size;
 
 	node = malloc(sizeof(*node));
 	if (node == NULL) {
-		pd_error_info("malloc");
+		pr_error_info("malloc");
 		goto out_free_memory;
 	}
 
@@ -1500,13 +1500,13 @@ static int cavan_event_parse_keylayout(struct cavan_event_device *dev)
 			goto label_goto_next_line;
 		}
 
-		pd_bold_info("name = %s, code = %d", node->name, node->code);
+		pr_bold_info("name = %s, code = %d", node->name, node->code);
 
 		single_link_push(&dev->kl_link, &node->node);
 
 		node = malloc(sizeof(*node));
 		if (node == NULL) {
-			pd_error_info("malloc");
+			pr_error_info("malloc");
 			goto label_goto_next_line;
 		}
 
@@ -1633,19 +1633,19 @@ static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher
 
 	dev = malloc(sizeof(*dev));
 	if (dev == NULL) {
-		pd_error_info("malloc");
+		pr_error_info("malloc");
 		return -ENOMEM;
 	}
 
 	ret = single_link_init(&dev->vk_link, MOFS(struct cavan_virtual_key, node));
 	if (ret < 0) {
-		pd_red_info("single_link_init");
+		pr_red_info("single_link_init");
 		goto out_free_dev;
 	}
 
 	ret = single_link_init(&dev->kl_link, MOFS(struct cavan_keylayout_node, node));
 	if (ret < 0) {
-		pd_red_info("single_link_init");
+		pr_red_info("single_link_init");
 		goto out_single_link_deinit_vk;
 	}
 
@@ -1655,11 +1655,11 @@ static int cavan_event_service_match_handler(struct cavan_event_matcher *matcher
 
 	if (service->probe && service->probe(dev, service->private_data) < 0) {
 		ret = -EFAULT;
-		pd_red_info("Faile to probe device %s, name = %s", matcher->pathname, matcher->devname);
+		pr_red_info("Faile to probe device %s, name = %s", matcher->pathname, matcher->devname);
 		goto out_single_link_deinit_kl;
 	}
 
-	pd_green_info("Add device %s, name = %s", matcher->pathname, matcher->devname);
+	pr_green_info("Add device %s, name = %s", matcher->pathname, matcher->devname);
 
 	cavan_event_parse_virtual_keymap(dev);
 	cavan_event_parse_keylayout(dev);
@@ -1688,7 +1688,7 @@ static int cavan_event_open_devices(struct cavan_event_service *service)
 
 	count = cavan_event_scan_devices(&matcher, service);
 	if (count < 0) {
-		pd_red_info("cavan_event_scan_devices");
+		pr_red_info("cavan_event_scan_devices");
 	}
 
 	return count;
@@ -1707,7 +1707,7 @@ static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 
 	ret = poll(pfds, service->pfd_count, -1);
 	if (ret < 0) {
-		pd_error_info("poll");
+		pr_error_info("poll");
 		return ret;
 	}
 
@@ -1727,7 +1727,7 @@ static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 
 		rdlen = read(pdev->fd, events, sizeof(events));
 		if (rdlen < 0) {
-			pd_error_info("read");
+			pr_error_info("read");
 			pthread_mutex_unlock(&link->lock);
 			return rdlen;
 		}
@@ -1736,7 +1736,7 @@ static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
 			if (service->event_handler(pdev, ep, service->private_data) == false) {
 				char print_buff[1024];
 
-				pd_red_info("%s", cavan_event_tostring(pdev, ep, print_buff));
+				pr_red_info("%s", cavan_event_tostring(pdev, ep, print_buff));
 			}
 		}
 	}
@@ -1792,7 +1792,7 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	struct cavan_thread *thread;
 
 	if (service == NULL) {
-		pd_red_info("service == NULL");
+		pr_red_info("service == NULL");
 		return -EINVAL;
 	}
 
@@ -1805,20 +1805,20 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 
 	ret = double_link_init(&service->link, MOFS(struct cavan_event_device, node));
 	if (ret < 0) {
-		pd_red_info("double_link_init");
+		pr_red_info("double_link_init");
 		return ret;
 	}
 
 	count = cavan_event_open_devices(service);
 	if (count < 0) {
 		ret = count;
-		pd_red_info("cavan_event_open_devices");
+		pr_red_info("cavan_event_open_devices");
 		goto out_double_link_deinit;
 	}
 
 	if (count == 0) {
 		ret = -ENOENT;
-		pd_red_info("No input device found!");
+		pr_red_info("No input device found!");
 		goto out_double_link_deinit;
 	}
 
@@ -1828,7 +1828,7 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	thread->handler = cavan_event_service_handler;
 	ret = cavan_thread_init(thread, service, CAVAN_THREADF_PIPE_WAKEUP);
 	if (ret < 0) {
-		pd_red_info("cavan_thread_init");
+		pr_red_info("cavan_thread_init");
 		goto out_cavan_event_close_devices;
 	}
 
@@ -1836,7 +1836,7 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	pfd = malloc(service->pfd_count * sizeof(*pfd));
 	if (pfd == NULL) {
 		ret = -ENOMEM;
-		pd_error_info("malloc");
+		pr_error_info("malloc");
 		goto out_cavan_thread_deinit;
 	}
 
@@ -1863,7 +1863,7 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 
 	ret = cavan_event_start_poll_thread(service);
 	if (ret < 0) {
-		pd_red_info("cavan_event_start_poll_thread");
+		pr_red_info("cavan_event_start_poll_thread");
 		goto out_free_pfd;
 	}
 
@@ -1928,7 +1928,7 @@ int cavan_event_get_absinfo(int fd, int axis, int *min, int *max)
 
 	ret = ioctl(fd, EVIOCGABS(axis), &info);
 	if (ret < 0) {
-		pd_error_info("ioctl EVIOCGABS");
+		pr_error_info("ioctl EVIOCGABS");
 		return ret;
 	}
 

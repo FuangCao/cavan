@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * File:				sensors.h
  * Author:			Fuang Cao <cavan.cfa@gmail.com>
@@ -16,12 +18,6 @@
  * GNU General Public License for more details.
  *
  */
-
-#pragma once
-
-#ifndef LOG_TAG
-#define LOG_TAG "Sensors"
-#endif
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -42,16 +38,16 @@
 	(((cmd) >> (shift)) & (mask))
 
 #define CAVAN_INPUT_IOC_TYPE_LEN		8
-#define CAVAN_INPUT_IOC_NR_LEN		8
+#define CAVAN_INPUT_IOC_NR_LEN			8
 #define CAVAN_INPUT_IOC_SIZE_LEN		16
 
 #define CAVAN_INPUT_IOC_TYPE_MASK		CAVAN_INPUT_IOC_LENGTH_TO_MASK(CAVAN_INPUT_IOC_TYPE_LEN)
-#define CAVAN_INPUT_IOC_NR_MASK		CAVAN_INPUT_IOC_LENGTH_TO_MASK(CAVAN_INPUT_IOC_NR_LEN)
+#define CAVAN_INPUT_IOC_NR_MASK			CAVAN_INPUT_IOC_LENGTH_TO_MASK(CAVAN_INPUT_IOC_NR_LEN)
 #define CAVAN_INPUT_IOC_SIZE_MASK		CAVAN_INPUT_IOC_LENGTH_TO_MASK(CAVAN_INPUT_IOC_SIZE_LEN)
 
-#define CAVAN_INPUT_IOC_TYPE_SHIFT	0
+#define CAVAN_INPUT_IOC_TYPE_SHIFT		0
 #define CAVAN_INPUT_IOC_NR_SHIFT		(CAVAN_INPUT_IOC_TYPE_SHIFT + CAVAN_INPUT_IOC_TYPE_LEN)
-#define CAVAN_INPUT_IOC_SIZE_SHIFT	(CAVAN_INPUT_IOC_NR_SHIFT + CAVAN_INPUT_IOC_NR_LEN)
+#define CAVAN_INPUT_IOC_SIZE_SHIFT		(CAVAN_INPUT_IOC_NR_SHIFT + CAVAN_INPUT_IOC_NR_LEN)
 
 #define CAVAN_INPUT_IOC_GET_TYPE(cmd) \
 	CAVAN_INPUT_IOC_GET_VALUE(cmd, CAVAN_INPUT_IOC_TYPE_SHIFT, CAVAN_INPUT_IOC_TYPE_MASK)
@@ -70,14 +66,14 @@
 	((nr) & CAVAN_INPUT_IOC_NR_MASK) << CAVAN_INPUT_IOC_NR_SHIFT | \
 	((size) & CAVAN_INPUT_IOC_SIZE_MASK) << CAVAN_INPUT_IOC_SIZE_SHIFT)
 
-#define CAVAN_INPUT_CHIP_IOC_GET_NAME(len)	CAVAN_INPUT_IOC('I', 0x00, len)
-#define CAVAN_INPUT_CHIP_IOC_GET_VENDOR(len)	CAVAN_INPUT_IOC('I', 0x01, len)
-#define CAVAN_INPUT_CHIP_IOC_SET_FW_SIZE		CAVAN_INPUT_IOC('I', 0x02, 0)
+#define CAVAN_INPUT_CHIP_IOC_GET_NAME(len)			CAVAN_INPUT_IOC('I', 0x00, len)
+#define CAVAN_INPUT_CHIP_IOC_GET_VENDOR(len)		CAVAN_INPUT_IOC('I', 0x01, len)
+#define CAVAN_INPUT_CHIP_IOC_SET_FW_SIZE			CAVAN_INPUT_IOC('I', 0x02, 0)
 
-#define CAVAN_INPUT_DEVICE_IOC_GET_TYPE		CAVAN_INPUT_IOC('I', 0x10, 0)
-#define CAVAN_INPUT_DEVICE_IOC_GET_NAME(len)	CAVAN_INPUT_IOC('I', 0x11, len)
-#define CAVAN_INPUT_DEVICE_IOC_SET_DELAY		CAVAN_INPUT_IOC('I', 0x12, 0)
-#define CAVAN_INPUT_DEVICE_IOC_SET_ENABLE		CAVAN_INPUT_IOC('I', 0x13, 0)
+#define CAVAN_INPUT_DEVICE_IOC_GET_TYPE				CAVAN_INPUT_IOC('I', 0x10, 0)
+#define CAVAN_INPUT_DEVICE_IOC_GET_NAME(len)		CAVAN_INPUT_IOC('I', 0x11, len)
+#define CAVAN_INPUT_DEVICE_IOC_SET_DELAY			CAVAN_INPUT_IOC('I', 0x12, 0)
+#define CAVAN_INPUT_DEVICE_IOC_SET_ENABLE			CAVAN_INPUT_IOC('I', 0x13, 0)
 
 #define CAVAN_INPUT_SENSOR_IOC_GET_MIN_DELAY		CAVAN_INPUT_IOC('S', 0x00, 0)
 #define CAVAN_INPUT_SENSOR_IOC_GET_MAX_RANGE		CAVAN_INPUT_IOC('S', 0x01, 0)
@@ -120,27 +116,20 @@ struct cavan_sensor_device {
 	struct cavan_sensor_device *next;
 };
 
-struct cavan_sensor_poll_device {
+struct cavan_sensor_pdev {
 	struct sensors_poll_device_t device;
 
 	pthread_mutex_t lock;
 
 	size_t sensor_count;
+	struct cavan_sensor_device *head;
+
 	struct sensor_t *sensor_list;
 	struct cavan_sensor_device **sensor_map;
 
+	int epoll_fd;
 	int pipefd[2];
-	size_t pollfd_count;
-	struct pollfd *pollfd_list;
-
-	struct cavan_sensor_device *active_head;
-	struct cavan_sensor_device *inactive_head;
 };
-
-static inline int64_t timeval2nano(struct timeval *time)
-{
-	return time->tv_sec * 1000000000LL + time->tv_usec * 1000;
-}
 
 static inline void cavan_sensor_event_init(struct sensors_event_t *event)
 {
@@ -148,7 +137,22 @@ static inline void cavan_sensor_event_init(struct sensors_event_t *event)
 	event->version = sizeof(*event);
 }
 
-static inline int cavan_input_get_devname(int fd, char *devname, size_t size)
+static void cavan_sensor_device_lock(struct cavan_sensor_device *sensor)
 {
-	return ioctl(fd, EVIOCGNAME(size), devname);
+	pthread_mutex_lock(&sensor->lock);
+}
+
+static void cavan_sensor_device_unlock(struct cavan_sensor_device *sensor)
+{
+	pthread_mutex_unlock(&sensor->lock);
+}
+
+static void cavan_sensor_pdev_lock(struct cavan_sensor_pdev *pdev)
+{
+	pthread_mutex_lock(&pdev->lock);
+}
+
+static void cavan_sensor_pdev_unlock(struct cavan_sensor_pdev *pdev)
+{
+	pthread_mutex_unlock(&pdev->lock);
 }

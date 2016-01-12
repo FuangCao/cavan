@@ -76,7 +76,6 @@ void cavan_time_parse(ulong timestamp, struct cavan_time *time, u32 base_days);
 void cavan_second2time_simple(ulong second, struct cavan_time_simple *time);
 char *cavan_time2text_simple(struct cavan_time_simple *time, char *buff, size_t size);
 char *cavan_time2text_simple2(ulong second, char *buff, size_t size);
-
 static inline unsigned long cavan_time_build_1970(const struct cavan_time *time)
 {
 	return cavan_time_build(time, CAVAN_TIME_BASE_DAYS_1970);
@@ -95,4 +94,9 @@ static inline unsigned long cavan_time_build_2000(const struct cavan_time *time)
 static inline void cavan_time_parse_2000(unsigned long timestamp, struct cavan_time *time)
 {
 	cavan_time_parse(timestamp, time, CAVAN_TIME_BASE_DAYS_2000);
+}
+
+static inline int64_t cavan_timeval2nano(struct timeval *time)
+{
+	return time->tv_sec * 1000000000LL + time->tv_usec * 1000;
 }
