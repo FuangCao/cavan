@@ -20,7 +20,7 @@ CAVAN_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/android/include
 CAVAN_C_INCLUDES += system/extras/ext4_utils system/vold system/core/fs_mgr/include
 CAVAN_SHARED_LIBRARIES := libutils libcutils liblog libhardware libbinder liblogwrap libz libselinux libext4_utils libsparse
 CAVAN_STATIC_LIBRARIES := libfs_mgr libmincrypt
-CAVAN_CFLAGS := -DCAVAN_ARCH_ARM -DCAVAN -DCONFIG_ANDROID -DCONFIG_ANDROID_VERSION=$(CAVAN_ANDROID_VERSION) -Werror -Wno-unused-parameter
+CAVAN_CFLAGS := -DCAVAN_ARCH_ARM -DCAVAN -DCONFIG_ANDROID -DCONFIG_ANDROID_VERSION=$(CAVAN_ANDROID_VERSION) -Wall -Wundef -Wextra -Wno-unused-parameter
 CAVAN_CFLAGS += -include $(LOCAL_PATH)/android/include/android.h -include $(LOCAL_PATH)/include/cavan/config.h
 
 include $(CLEAR_VARS)

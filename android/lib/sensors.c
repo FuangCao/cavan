@@ -18,6 +18,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/time.h>
 #include <cavan/text.h>
 #include <cavan/event.h>
 #include <android/sensors.h>
@@ -602,17 +603,74 @@ static int cavan_sensors_setDelay(struct sensors_poll_device_t *dev, int handle,
 	return ret;
 }
 
+static sensors_event_t *cavan_sensor_report(struct cavan_sensor_pdev *pdev, sensors_event_t *data, sensors_event_t *data_end)
+{
+	struct input_event *ep;
+	struct cavan_sensor_device *sensor = pdev->sensor_pending;
+
+	pdev->sensor_pending = NULL;
+
+	for (ep = pdev->event_pending; ep < pdev->event_end; ep++) {
+		switch (ep->type) {
+		case EV_SYN:
+			if (data >= data_end) {
+				pdev->event_pending = ep;
+				pdev->sensor_pending = sensor;
+				return data;
+			}
+
+			if (sensor->fake > 0) {
+				float *event_data = sensor->event.data;
+				float fake = powf(event_data[0], 2) + powf(event_data[1], 2);
+
+				if (sensor->fake > fake) {
+					event_data[2] = sqrtf(sensor->fake - fake);
+				} else {
+					event_data[2] = 0;
+				}
+			}
+
+			*data = sensor->event;
+			data->timestamp = cavan_timeval2nano(&ep->time);
+			// pd_std_info("%s [%f, %f, %f]", sensor->name, data->data[0], data->data[1], data->data[2]);
+			data++;
+			break;
+
+		case EV_ABS:
+			switch (ep->code) {
+			case ABS_MISC:
+			case ABS_X:
+				sensor->event.data[0] = ep->value * sensor->scale;
+				break;
+
+			case ABS_Y:
+				sensor->event.data[1] = ep->value * sensor->scale;
+				break;
+
+			case ABS_Z:
+				sensor->event.data[2] = ep->value * sensor->scale;
+				break;
+			}
+		}
+	}
+
+	return data;
+}
+
 static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t *data, int size)
 {
 	int count;
 	ssize_t rdlen;
-	int64_t timestamp;
 	bool wake_pending = false;
 	struct epoll_event events[20], *ep, *ep_end;
 	struct cavan_sensor_pdev *pdev = (struct cavan_sensor_pdev *) dev;
 	struct sensors_event_t *data_bak = data, *data_end = data + size;
 
 	cavan_sensor_pdev_lock(pdev);
+
+	if (pdev->sensor_pending) {
+		data = cavan_sensor_report(pdev, data, data_end);
+	}
 
 	while (data_bak == data) {
 		cavan_sensor_pdev_unlock(pdev);
@@ -630,18 +688,14 @@ static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t
 
 		cavan_sensor_pdev_lock(pdev);
 
-		timestamp = systemTime(SYSTEM_TIME_MONOTONIC);
-
 		for (ep = events, ep_end = ep + count; ep < ep_end && data < data_end; ep++) {
-			struct input_event ievent;
-
 			struct cavan_sensor_device *sensor = ep->data.ptr;
 			if (sensor == NULL) {
 				wake_pending = true;
 				continue;
 			}
 
-			rdlen = read(sensor->data_fd, &ievent, sizeof(ievent));
+			rdlen = read(sensor->data_fd, pdev->events, sizeof(pdev->events));
 			if (rdlen < 0) {
 				pd_error_info("read data from chip %s", sensor->name);
 				sensor->event.acceleration.status = SENSOR_STATUS_UNRELIABLE;
@@ -649,41 +703,10 @@ static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t
 				continue;
 			}
 
-			switch (ievent.type) {
-			case EV_SYN:
-				if (sensor->fake > 0) {
-					float *event_data = sensor->event.data;
-					float a = powf(event_data[0], 2) + powf(event_data[1], 2);
-
-					if (sensor->fake > a) {
-						event_data[2] = sqrtf(sensor->fake - a);
-					} else {
-						event_data[2] = 0;
-					}
-				}
-
-				*data = sensor->event;
-				data->timestamp = timestamp;
-				// pd_std_info("%s [%f, %f, %f]", sensor->name, data->data[0], data->data[1], data->data[2]);
-				data++;
-				break;
-
-			case EV_ABS:
-				switch (ievent.code) {
-				case ABS_MISC:
-				case ABS_X:
-					sensor->event.data[0] = ievent.value * sensor->scale;
-					break;
-
-				case ABS_Y:
-					sensor->event.data[1] = ievent.value * sensor->scale;
-					break;
-
-				case ABS_Z:
-					sensor->event.data[2] = ievent.value * sensor->scale;
-					break;
-				}
-			}
+			pdev->sensor_pending = sensor;
+			pdev->event_pending = pdev->events;
+			pdev->event_end = pdev->events + (rdlen / sizeof(struct input_event));
+			data = cavan_sensor_report(pdev, data, data_end);
 		}
 
 		if (wake_pending) {
