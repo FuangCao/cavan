@@ -3,7 +3,6 @@
 #include <cavan.h>
 #include <cavan/calculator.h>
 #include <cavan/stack.h>
-#include <math.h>
 
 u64 double_integer_part_value_base(u64 value)
 {

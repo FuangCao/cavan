@@ -3,16 +3,6 @@
 #include <cavan.h>
 #include <stdarg.h>
 
-#ifdef CONFIG_ANDROID
-#include <utils/Log.h>
-#ifndef LOGD
-#define LOGD					ALOGD
-#endif
-#define pd_info(fmt, args ...)	LOGD(fmt "\n", ##args)
-#else
-#define pd_info(fmt, args ...)	fprintf(stderr, fmt "\n", ##args)
-#endif
-
 #ifdef __cplusplus
 #ifndef CONFIG_ANDROID
 #include <iostream>
@@ -126,104 +116,214 @@ __BEGIN_DECLS;
 
 // ============================================================
 
-#define pd_color_info(color, fmt, args ...) \
-	pd_info(color fmt CAVAN_COLOR_STAND, ##args)
+#define cavan_std_info(func, fmt, args ...) \
+	func(fmt, ##args)
 
-#define pd_red_info(fmt, args ...) \
-	pd_color_info(CAVAN_COLOR_RED, "%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+#define cavan_func_info(func, fmt, args ...) \
+	func("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
 
-#define pd_green_info(fmt, args ...) \
-	pd_color_info(CAVAN_COLOR_GREEN, fmt, ##args)
+#define cavan_color_info(func, color, fmt, args ...) \
+	func(color fmt CAVAN_COLOR_STAND, ##args)
 
-#define pd_blue_info(fmt, args ...) \
-	pd_color_info(CAVAN_COLOR_BLUE, fmt, ##args)
+#define cavan_red_info(func, fmt, args ...) \
+	cavan_color_info(func, CAVAN_COLOR_RED, "%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
 
-#define pd_bold_info(fmt, args ...) \
-	pd_color_info(CAVAN_COLOR_BOLD, fmt, ##args)
+#define cavan_error_info(func, fmt, args ...) \
+	if (errno) { \
+		cavan_color_info(func, CAVAN_COLOR_RED, "error: %s[%d] (" fmt "): %s (%d)", __FUNCTION__, __LINE__, ##args, strerror(errno), errno); \
+	} else { \
+		cavan_red_info(func, "error: " fmt, ##args); \
+	}
 
-#define pd_std_pos(fmt) \
-	pd_info(fmt, __FILE__, __FUNCTION__, __LINE__)
+#define cavan_err_info(func, fmt, args ...) \
+	cavan_error_info(func, fmt, ##args)
 
-#define pd_pos_info() \
-	pd_std_pos("%s => %s[%d]")
+#define cavan_warning_info(func, fmt, args ...) \
+	cavan_color_info(func, CAVAN_COLOR_MAGENTA, "warning: %s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
 
-#define pd_func_info(fmt, args ...) \
-	pd_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+#define cavan_warn_info(func, fmt, args ...) \
+	cavan_warning_info(func, fmt, ##args)
+
+#define cavan_green_info(func, fmt, args ...) \
+	cavan_color_info(func, CAVAN_COLOR_GREEN, fmt, ##args)
+
+#define cavan_blue_info(func, fmt, args ...) \
+	cavan_color_info(func, CAVAN_COLOR_BLUE, fmt, ##args)
+
+#define cavan_bold_info(func, fmt, args ...) \
+	cavan_color_info(func, CAVAN_COLOR_BOLD, fmt, ##args)
+
+#define cavan_std_pos(func, fmt) \
+	func(fmt, __FILE__, __FUNCTION__, __LINE__)
+
+#define cavan_pos_info(func) \
+	cavan_std_pos(func, "%s => %s[%d]")
+
+#define cavan_color_pos(func, color) \
+	cavan_std_pos(func, color "%s => %s[%d]" CAVAN_COLOR_STAND)
+
+#define cavan_red_pos(func) \
+	cavan_color_pos(func, CAVAN_COLOR_RED);
+
+#define cavan_green_pos(func) \
+	cavan_color_pos(func, CAVAN_COLOR_GREEN);
+
+#define cavan_blue_pos(func) \
+	cavan_color_pos(func, CAVAN_COLOR_BLUE);
+
+#define cavan_bold_pos(func) \
+	cavan_color_pos(func, CAVAN_COLOR_BOLD);
+
+#define cavan_date_info(func, name) \
+	func(CAVAN_COLOR_GREEN "Cavan %s Build Date: %s %s" CAVAN_COLOR_STAND, name, __DATE__, __TIME__);
+
+#define cavan_result_info(func, ret) \
+	((ret) < 0 ? cavan_red_info(func, "Failed") : cavan_green_info(func, "OK"))
 
 // ============================================================
 
 #define pr_info(fmt, args ...) \
-	println(fmt, ##args)
+	printf(fmt "\n", ##args)
 
 #define pr_std_info(fmt, args ...) \
-	pr_info(fmt, ##args)
+	cavan_std_info(pr_info, fmt, ##args)
 
 #define pr_func_info(fmt, args ...) \
-	pr_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+	cavan_func_info(pr_info, fmt, ##args)
 
 #define pr_color_info(color, fmt, args ...) \
-	pr_info(color fmt CAVAN_COLOR_STAND, ##args)
+	cavan_color_info(pr_info, fmt, ##args)
 
 #define pr_red_info(fmt, args ...) \
-	pr_color_info(CAVAN_COLOR_RED, "%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+	cavan_red_info(pr_info, fmt, ##args)
 
 #define pr_error_info(fmt, args ...) \
-	if (errno) { \
-		pr_color_info(CAVAN_COLOR_RED, "error: %s[%d] (" fmt "): %s (%d)", __FUNCTION__, __LINE__, ##args, strerror(errno), errno); \
-	} else { \
-		pr_red_info("error: " fmt, ##args); \
-	}
+	cavan_error_info(pr_info, fmt, ##args)
 
 #define pr_err_info(fmt, args ...) \
-	pr_error_info(fmt, ##args)
+	cavan_err_info(pr_info, fmt, ##args)
 
 #define pr_warning_info(fmt, args ...) \
-	pr_color_info(CAVAN_COLOR_MAGENTA, "warning: %s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
+	cavan_warning_info(pr_info, fmt, ##args)
 
 #define pr_warn_info(fmt, args ...) \
-	pr_warning_info(fmt, ##args)
+	cavan_warn_info(pr_info, fmt, ##args)
 
 #define pr_green_info(fmt, args ...) \
-	pr_color_info(CAVAN_COLOR_GREEN, fmt, ##args)
+	cavan_green_info(pr_info, fmt, ##args)
 
 #define pr_blue_info(fmt, args ...) \
-	pr_color_info(CAVAN_COLOR_BLUE, fmt, ##args)
+	cavan_blue_info(pr_info, fmt, ##args)
 
 #define pr_bold_info(fmt, args ...) \
-	pr_color_info(CAVAN_COLOR_BOLD, fmt, ##args)
+	cavan_bold_info(pr_info, fmt, ##args)
 
 #define pr_std_pos(fmt) \
-	pr_info(fmt, __FILE__, __FUNCTION__, __LINE__)
+	cavan_std_pos(pr_info, fmt)
 
 #define pr_pos_info() \
-	pr_std_pos("%s => %s[%d]")
+	cavan_pos_info(pr_info)
 
 #define pr_color_pos(color) \
-	pr_std_pos(color "%s => %s[%d]" CAVAN_COLOR_STAND)
+	cavan_color_pos(pr_info, color)
 
 #define pr_red_pos() \
-	pr_color_pos(CAVAN_COLOR_RED);
+	cavan_red_pos(pr_info)
 
 #define pr_green_pos() \
-	pr_color_pos(CAVAN_COLOR_GREEN);
+	cavan_green_pos(pr_info)
 
 #define pr_blue_pos() \
-	pr_color_pos(CAVAN_COLOR_BLUE);
+	cavan_blue_pos(pr_info)
 
 #define pr_bold_pos() \
-	pr_color_pos(CAVAN_COLOR_BOLD);
+	cavan_bold_pos(pr_info)
 
 #define pr_date_info(name) \
-	printf(CAVAN_COLOR_GREEN "Cavan %s Build Date: %s %s" CAVAN_COLOR_STAND, name, __DATE__, __TIME__);
+	cavan_date_info(pr_info, name)
+
+#define pr_result_info(ret) \
+	cavan_result_info(pr_info, ret)
+
+// ============================================================
+
+#ifdef CONFIG_ANDROID
+#include <utils/Log.h>
+#ifndef LOGD
+#define LOGD					ALOGD
+#endif
+#define pd_info(fmt, args ...)	LOGD(fmt "\n", ##args)
+#else
+#define pd_info(fmt, args ...)	fprintf(stderr, fmt "\n", ##args)
+#endif
+
+#define pd_std_info(fmt, args ...) \
+	cavan_std_info(pd_info, fmt, ##args)
+
+#define pd_func_info(fmt, args ...) \
+	cavan_func_info(pd_info, fmt, ##args)
+
+#define pd_color_info(color, fmt, args ...) \
+	cavan_color_info(pd_info, fmt, ##args)
+
+#define pd_red_info(fmt, args ...) \
+	cavan_red_info(pd_info, fmt, ##args)
+
+#define pd_error_info(fmt, args ...) \
+	cavan_error_info(pd_info, fmt, ##args)
+
+#define pd_err_info(fmt, args ...) \
+	cavan_err_info(pd_info, fmt, ##args)
+
+#define pd_warning_info(fmt, args ...) \
+	cavan_warning_info(pd_info, fmt, ##args)
+
+#define pd_warn_info(fmt, args ...) \
+	cavan_warn_info(pd_info, fmt, ##args)
+
+#define pd_green_info(fmt, args ...) \
+	cavan_green_info(pd_info, fmt, ##args)
+
+#define pd_blue_info(fmt, args ...) \
+	cavan_blue_info(pd_info, fmt, ##args)
+
+#define pd_bold_info(fmt, args ...) \
+	cavan_bold_info(pd_info, fmt, ##args)
+
+#define pd_std_pos(fmt) \
+	cavan_std_pos(pd_info, fmt)
+
+#define pd_pos_info() \
+	cavan_pos_info(pd_info)
+
+#define pd_color_pos(color) \
+	cavan_color_pos(pd_info, color)
+
+#define pd_red_pos() \
+	cavan_red_pos(pd_info)
+
+#define pd_green_pos() \
+	cavan_green_pos(pd_info)
+
+#define pd_blue_pos() \
+	cavan_blue_pos(pd_info)
+
+#define pd_bold_pos() \
+	cavan_bold_pos(pd_info)
+
+#define pd_date_info(name) \
+	cavan_date_info(pd_info, name)
+
+#define pd_result_info(ret) \
+	cavan_result_info(pd_info, ret)
+
+// ============================================================
 
 #define show_value(val) \
 	println(#val " = %d", val)
 
 #define show_valueh_base(val, len) \
 	println(#val " = 0x%0" len "x", val)
-
-#define pr_result_info(ret) \
-	((ret) < 0 ? pr_red_info("Failed") : pr_green_info("OK"))
 
 #define show_valueh(val) \
 	do { \

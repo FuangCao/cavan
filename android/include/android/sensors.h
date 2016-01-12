@@ -1,5 +1,5 @@
 /*
- * File:			cavan_sensor.h
+ * File:				sensors.h
  * Author:			Fuang Cao <cavan.cfa@gmail.com>
  *
  * Created:			2012-12-03
@@ -34,8 +34,6 @@
 #include <utils/Atomic.h>
 #include <utils/Timers.h>
 #include <hardware/sensors.h>
-
-#define PI (3.141593f)
 
 #define CAVAN_INPUT_IOC_LENGTH_TO_MASK(len) \
 	((1 << (len)) - 1)
@@ -87,31 +85,6 @@
 #define CAVAN_INPUT_SENSOR_IOC_GET_POWER_CONSUME	CAVAN_INPUT_IOC('S', 0x03, 0)
 #define CAVAN_INPUT_SENSOR_IOC_GET_AXIS_COUNT		CAVAN_INPUT_IOC('S', 0x04, 0)
 
-#define pr_std_info(fmt, args ...) \
-	ALOGD(fmt "\n", ##args)
-
-#define pr_pos_info() \
-	pr_std_info("%s => %s[%d]", __FILE__, __FUNCTION__, __LINE__)
-
-#define pr_func_info(fmt, args ...) \
-	pr_std_info("%s[%d]: " fmt, __FUNCTION__, __LINE__, ##args)
-
-#define pr_red_info(fmt, args ...) \
-	pr_std_info("\033[31m" fmt "\033[0m", ##args)
-
-#define pr_green_info(fmt, args ...) \
-	pr_std_info("\033[32m" fmt "\033[0m", ##args)
-
-#define pr_bold_info(fmt, args ...) \
-	pr_std_info("\033[1m" fmt "\033[0m", ##args)
-
-#define pr_error_info(fmt, args ...) \
-	if (errno) { \
-		pr_red_info("%s[%d] (" fmt "): %s", __FUNCTION__, __LINE__, ##args, strerror(errno)); \
-	} else { \
-		pr_red_info("%s[%d]:" fmt, __FUNCTION__, __LINE__, ##args); \
-	}
-
 enum cavan_input_device_type
 {
 	CAVAN_INPUT_DEVICE_TYPE_NONE,
@@ -128,11 +101,6 @@ enum cavan_input_device_type
 	CAVAN_INPUT_DEVICE_TYPE_LINEAR_ACCELERATION,
 	CAVAN_INPUT_DEVICE_TYPE_ROTATION_VECTOR
 };
-
-typedef enum {
-	false = 0,
-	true
-} bool;
 
 struct cavan_sensor_device {
 	int data_fd;
@@ -168,10 +136,6 @@ struct cavan_sensor_poll_device {
 	struct cavan_sensor_device *active_head;
 	struct cavan_sensor_device *inactive_head;
 };
-
-int text_lhcmp(const char *text1, const char *text2);
-char *text_copy(char *dest, const char *src);
-char *text_ncopy(char *dest, const char *src, size_t size);
 
 static inline int64_t timeval2nano(struct timeval *time)
 {

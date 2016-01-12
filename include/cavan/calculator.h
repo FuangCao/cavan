@@ -2,6 +2,7 @@
 
 #include <cavan.h>
 #include <cavan/stack.h>
+#include <math.h>
 
 // Fuang.Cao <cavan.cfa@gmail.com> Mon Jul  4 10:32:22 CST 2011
 
