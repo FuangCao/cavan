@@ -298,37 +298,6 @@ static struct cavan_sensor_device *cavan_sensor_device_remove(struct cavan_senso
 	return next;
 }
 
-static int cavan_sensors_send_wakeup_event(struct cavan_sensor_pdev *pdev, char event)
-{
-	ssize_t wrlen;
-
-	wrlen = write(pdev->pipefd[1], &event, 1);
-	if (wrlen < 0) {
-		pd_error_info("write");
-		return wrlen;
-	}
-
-	pd_bold_info("Send wakeup event %d", event);
-
-	return 0;
-}
-
-static int cavan_sensors_recv_wakeup_event(struct cavan_sensor_pdev *pdev)
-{
-	char event;
-	ssize_t rdlen;
-
-	rdlen = read(pdev->pipefd[0], &event, 1);
-	if (rdlen < 0) {
-		pd_error_info("read");
-		return rdlen;
-	}
-
-	pd_bold_info("Receive wakeup event %d", event);
-
-	return event;
-}
-
 static int cavan_sensor_epoll_set_enable(struct cavan_sensor_pdev *pdev, int fd, void *data, bool enable)
 {
 	struct epoll_event event = {
@@ -365,7 +334,6 @@ static int cavan_sensor_device_set_enable(struct cavan_sensor_pdev *pdev, struct
 	}
 
 	sensor->enabled = enable;
-	cavan_sensors_send_wakeup_event(pdev, 0);
 
 	pd_bold_info("set sensor device %s active %s", sensor->name, enable ? "enable" : "disable");
 
@@ -402,9 +370,6 @@ static void cavan_sensors_remove(struct cavan_sensor_pdev *pdev)
 	int i;
 
 	cavan_sensor_pdev_lock(pdev);
-
-	close(pdev->pipefd[0]);
-	close(pdev->pipefd[1]);
 
 	close(pdev->epoll_fd);
 
@@ -470,27 +435,10 @@ static int cavan_sensors_probe(struct cavan_sensor_pdev *pdev)
 		goto out_free_sensor_list;
 	}
 
-	ret = pipe(pdev->pipefd);
-	if (ret < 0) {
-		pd_error_info("pipe");
-		goto out_close_epoll_fd;
-	}
-
-	ret = cavan_sensor_epoll_set_enable(pdev, pdev->pipefd[0], NULL, true);
-	if (ret < 0) {
-		pr_red_info("cavan_sensor_epoll_set_enable: %d", ret);
-		goto out_close_pipe;
-	}
-
 	cavan_sensor_pdev_unlock(pdev);
 
 	return 0;
 
-out_close_pipe:
-	close(pdev->pipefd[0]);
-	close(pdev->pipefd[1]);
-out_close_epoll_fd:
-	close(pdev->epoll_fd);
 out_free_sensor_list:
 	free(pdev->sensor_list);
 	pdev->sensor_list = NULL;
@@ -543,7 +491,6 @@ static int cavan_sensors_open(struct cavan_sensor_pdev *pdev)
 	pdev->sensor_map = NULL;
 
 	pdev->head = NULL;
-	pdev->pipefd[0] = pdev->pipefd[1] = -1;
 
 	ret = cavan_event_scan_devices(&matcher, pdev);
 	if (ret < 0) {
@@ -661,7 +608,6 @@ static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t
 {
 	int count;
 	ssize_t rdlen;
-	bool wake_pending = false;
 	struct epoll_event events[20], *ep, *ep_end;
 	struct cavan_sensor_pdev *pdev = (struct cavan_sensor_pdev *) dev;
 	struct sensors_event_t *data_bak = data, *data_end = data + size;
@@ -690,16 +636,18 @@ static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t
 
 		for (ep = events, ep_end = ep + count; ep < ep_end && data < data_end; ep++) {
 			struct cavan_sensor_device *sensor = ep->data.ptr;
-			if (sensor == NULL) {
-				wake_pending = true;
+
+#if 0
+			if (unlikely(sensor == NULL)) {
 				continue;
 			}
+#endif
 
 			rdlen = read(sensor->data_fd, pdev->events, sizeof(pdev->events));
 			if (rdlen < 0) {
 				pd_error_info("read data from chip %s", sensor->name);
 				sensor->event.acceleration.status = SENSOR_STATUS_UNRELIABLE;
-				epoll_ctl(pdev->epoll_fd, EPOLL_CTL_DEL, sensor->data_fd, ep);
+				cavan_sensor_epoll_set_enable(pdev, sensor->data_fd, sensor, false);
 				continue;
 			}
 
@@ -707,11 +655,6 @@ static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t
 			pdev->event_pending = pdev->events;
 			pdev->event_end = pdev->events + (rdlen / sizeof(struct input_event));
 			data = cavan_sensor_report(pdev, data, data_end);
-		}
-
-		if (wake_pending) {
-			cavan_sensors_recv_wakeup_event(pdev);
-			break;
 		}
 	}
 

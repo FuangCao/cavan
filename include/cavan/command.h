@@ -236,6 +236,7 @@ const struct cavan_command_map *match_command_by_name(const struct cavan_command
 int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[]);
 
 int cavan_exec_waitpid(pid_t pid);
+int cavan_exec_command(const char *command);
 int cavan_redirect_stdio_base(int ttyfds[3]);
 int cavan_redirect_stdio_base2(int fd, int flags);
 int cavan_redirect_stdio(const char *pathname, int flags);

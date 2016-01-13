@@ -252,7 +252,7 @@ int cavan_redirect_stdio_base(int ttyfds[3])
 
 		ret = dup2(ttyfds[i], i);
 		if (ret < 0) {
-			pr_error_info("dup2 stdio %d", i);
+			pd_error_info("dup2 stdio %d", i);
 			return ret;
 		}
 	}
@@ -299,7 +299,7 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 	int ret;
 	int open_flags;
 
-	pr_bold_info("pathname = %s, flags = 0x%02x", pathname, flags);
+	pd_bold_info("pathname = %s, flags = 0x%02x", pathname, flags);
 
 	if ((flags & 0x01)) {
 		if ((flags & 0x06)) {
@@ -313,7 +313,7 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 
 	fd = open(pathname, open_flags | O_CREAT | O_TRUNC, 0777);
 	if (fd < 0) {
-		pr_error_info("open file `%s' failed", pathname);
+		pd_error_info("open file `%s' failed", pathname);
 		return fd;
 	}
 
@@ -420,7 +420,7 @@ static const char *cavan_get_shell_path(void)
 	return "sh";
 }
 
-static int cavan_exec_command(const char *command)
+int cavan_exec_command(const char *command)
 {
 	int ret;
 	const struct cavan_builtin_command *desc;

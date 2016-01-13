@@ -197,7 +197,6 @@ int cavan_service_stop(struct cavan_service_description *desc)
 int cavan_daemon_run(struct cavan_daemon_description *desc)
 {
 	int ret;
-	const char *shell_command = "sh";
 
 	if (desc == NULL || desc->command == NULL) {
 		pr_red_info("desc == NULL || desc->command == NULL");
@@ -238,7 +237,7 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 		}
 	}
 
-	return execlp(shell_command, shell_command, "-c", desc->command, NULL);
+	return cavan_exec_command(desc->command);
 }
 
 int cavan_daemon_stop(struct cavan_daemon_description *desc)

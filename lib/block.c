@@ -54,7 +54,7 @@ struct cavan_part_table *cavan_block_get_part_table(const char *name)
 {
 	struct cavan_part_table *p, *p_end;
 
-	pr_func_info("table_name = %s", name);
+	pd_func_info("table_name = %s", name);
 
 	for (p = cavan_part_tables, p_end = p + NELEM(cavan_part_tables); p < p_end; p++) {
 		if (strcmp(name, p->name) == 0) {

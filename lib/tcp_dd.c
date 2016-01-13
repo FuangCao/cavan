@@ -477,7 +477,7 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 
 	ret = tcp_dd_send_write_request(client, pathname, 0, size, st.st_mode);
 	if (ret < 0) {
-		pr_red_info("tcp_dd_send_write_request");
+		pd_red_info("tcp_dd_send_write_request");
 		return ret;
 	}
 
@@ -487,7 +487,7 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 
 	ret = network_client_send_file(client, fd, size);
 	if (ret < 0) {
-		pr_err_info("network_client_send_file: %d", ret);
+		pd_err_info("network_client_send_file: %d", ret);
 	}
 
 out_close_fd:
@@ -519,12 +519,12 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 		mode = file_get_mode(pathname);
 		switch (mode & S_IFMT) {
 		case S_IFREG:
-			pr_info("remove regular file %s", pathname);
+			pd_info("remove regular file %s", pathname);
 			unlink(pathname);
 			break;
 
 		case S_IFBLK:
-			pr_info("umount block device %s", pathname);
+			pd_info("umount block device %s", pathname);
 			umount_device(pathname, MNT_DETACH);
 			break;
 		}
@@ -541,7 +541,7 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 			android_stop_all();
 		}
 
-		pr_info("umount block device %s", pathname);
+		pd_info("umount block device %s", pathname);
 		umount_device(pathname, MNT_DETACH);
 	}
 
@@ -563,7 +563,7 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 
 	ret = tcp_dd_send_response(client, 0, "[Server] Start receive file");
 	if (ret < 0) {
-		pr_red_info("tcp_dd_send_response");
+		pd_red_info("tcp_dd_send_response");
 		return ret;
 	}
 
@@ -573,7 +573,7 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 
 	ret = network_client_recv_file(client, fd, req->size);
 	if (ret < 0) {
-		pr_err_info("network_client_recv_file: %d", ret);
+		pd_err_info("network_client_recv_file: %d", ret);
 	}
 
 out_close_fd:
@@ -591,7 +591,7 @@ static int tcp_dd_handle_exec_request(struct network_client *client, struct tcp_
 
 	ret = tcp_dd_send_response(client, 0, "[Server] start execute command");
 	if (ret < 0) {
-		pr_red_info("tcp_dd_send_response");
+		pd_red_info("tcp_dd_send_response");
 		return ret;
 	}
 
@@ -622,9 +622,7 @@ static void tcp_dd_alarm_handler(struct cavan_alarm_node *alarm, struct cavan_al
 
 	pid = fork();
 	if (pid == 0) {
-		const char *shell_command = "sh";
-
-		execlp(shell_command, shell_command, "-c", data, NULL);
+		cavan_exec_command(data);
 	}
 }
 
@@ -641,7 +639,7 @@ static int tcp_dd_handle_alarm_add_request(struct network_client *client, struct
 
 	node = malloc(sizeof(*node) + text_len(req->command) + 1);
 	if (node == NULL) {
-		pr_error_info("malloc");
+		pd_error_info("malloc");
 		return -ENOMEM;
 	}
 
@@ -689,7 +687,7 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 
 	ret = tcp_dd_send_response(client, 0, "[Server] start send alarm list");
 	if (ret < 0) {
-		pr_red_info("tcp_dd_send_response");
+		pd_red_info("tcp_dd_send_response");
 		return ret;
 	}
 
@@ -702,7 +700,7 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 
 		ret = client->send(client, (char *) &item, MOFS(struct tcp_alarm_add_request, command) + text_len(item.command) + 1);
 		if (ret < 0) {
-			pr_red_info("inet_send");
+			pd_red_info("inet_send");
 			link_foreach_return(&alarm->link, ret);
 		}
 	}
@@ -808,7 +806,7 @@ static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, boo
 	}
 
 	if (service->keypad_use_count < 0) {
-		pr_red_info("unbalanced %s %d", __FUNCTION__, service->keypad_use_count);
+		pd_red_info("unbalanced %s %d", __FUNCTION__, service->keypad_use_count);
 		service->keypad_use_count = 0;
 	}
 
@@ -835,7 +833,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 	ret = tcp_dd_send_response(client, 0, "[Server] Start recv and write event");
 	if (ret < 0) {
-		pr_red_info("tcp_dd_send_response");
+		pd_red_info("tcp_dd_send_response");
 		goto out_tcp_dd_service_close_input;
 	}
 
@@ -852,7 +850,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 			ret = cavan_input_event(fd, &event, 1);
 			if (ret < 0) {
-				pr_error_info("write events");
+				pd_error_info("write events");
 				goto out_tcp_dd_service_close_input;
 			}
 		}
@@ -884,7 +882,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 			wrlen = write(fd, events, rdlen);
 			if (wrlen < rdlen) {
-				pr_error_info("write events");
+				pd_error_info("write events");
 				ret = wrlen < 0 ? wrlen : -EFAULT;
 				goto out_tcp_dd_service_close_input;
 			}
@@ -980,25 +978,25 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 
 	ret = network_service_open(&dd_service->service, &dd_service->url, 0);
 	if (ret < 0) {
-		pr_red_info("network_service_open2");
+		pd_red_info("network_service_open2");
 		return ret;
 	}
 
 	ret = cavan_alarm_thread_init(&dd_service->alarm);
 	if (ret < 0) {
-		pr_red_info("cavan_alarm_thread_init");
+		pd_red_info("cavan_alarm_thread_init");
 		goto out_network_service_close;
 	}
 
 	ret = cavan_alarm_thread_start(&dd_service->alarm);
 	if (ret < 0) {
-		pr_red_info("cavan_alarm_thread_start");
+		pd_red_info("cavan_alarm_thread_start");
 		goto out_cavan_alarm_thread_deinit;
 	}
 
 	dd_service->filename = tcp_dd_find_platform_by_name_path(dd_service->pathname, NULL, sizeof(dd_service->pathname));
 	if (dd_service->filename) {
-		pr_green_info("pathname = %s", dd_service->pathname);
+		pd_green_info("pathname = %s", dd_service->pathname);
 	} else {
 		dd_service->filename = dd_service->pathname;
 	}
@@ -1041,7 +1039,7 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 
 	ret = tcp_dd_package_recv(client, &pkg);
 	if (ret < 0) {
-		pr_error_info("tcp_dd_package_recv %d", ret);
+		pd_error_info("tcp_dd_package_recv %d", ret);
 		return ret < 0 ? ret : -EFAULT;
 	}
 
@@ -1049,55 +1047,55 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 
 	switch (pkg.type) {
 	case TCP_DD_READ:
-		pr_bold_info("TCP_DD_READ");
+		pd_bold_info("TCP_DD_READ");
 		ret = tcp_dd_handle_read_request(dd_service, client, &pkg.file_req);
 		break;
 
 	case TCP_DD_WRITE:
-		pr_bold_info("TCP_DD_WRITE");
+		pd_bold_info("TCP_DD_WRITE");
 		ret = tcp_dd_handle_write_request(dd_service, client, &pkg.file_req);
 		need_response = true;
 		break;
 
 	case TCP_DD_EXEC:
-		pr_bold_info("TCP_DD_EXEC");
+		pd_bold_info("TCP_DD_EXEC");
 		ret = tcp_dd_handle_exec_request(client, &pkg.exec_req);
 		break;
 
 	case TCP_ALARM_ADD:
-		pr_bold_info("TCP_ALARM_ADD");
+		pd_bold_info("TCP_ALARM_ADD");
 		ret = tcp_dd_handle_alarm_add_request(client, &dd_service->alarm, &pkg.alarm_add);
 		need_response = true;
 		break;
 
 	case TCP_ALARM_REMOVE:
-		pr_bold_info("TCP_ALARM_REMOVE");
+		pd_bold_info("TCP_ALARM_REMOVE");
 		ret = tcp_dd_handle_alarm_remove_request(client, &dd_service->alarm, &pkg.alarm_query);
 		need_response = true;
 		break;
 
 	case TCP_ALARM_LIST:
-		pr_bold_info("TCP_ALARM_LIST");
+		pd_bold_info("TCP_ALARM_LIST");
 		ret = tcp_dd_handle_alarm_list_request(client, &dd_service->alarm, &pkg.alarm_query);
 		break;
 
 	case TCP_KEYPAD_EVENT:
-		pr_bold_info("TCP_KEYPAD_EVENT");
+		pd_bold_info("TCP_KEYPAD_EVENT");
 		ret = tcp_dd_handle_tcp_keypad_event_request(dd_service, client);
 		break;
 
 	case TCP_DD_MKDIR:
-		pr_bold_info("TCP_DD_MKDIR");
+		pd_bold_info("TCP_DD_MKDIR");
 		ret = tcp_dd_handle_mkdir_request(client, &pkg.mkdir_pkg);
 		break;
 
 	case TCP_DD_RDDIR:
-		pr_bold_info("TCP_DD_RDDIR");
+		pd_bold_info("TCP_DD_RDDIR");
 		ret = tcp_dd_handle_rddir_request(client, &pkg.rddir_pkg);
 		break;
 
 	default:
-		pr_red_info("Unknown package type %d", pkg.type);
+		pd_red_info("Unknown package type %d", pkg.type);
 		return -EINVAL;
 	}
 
@@ -1127,7 +1125,7 @@ int tcp_dd_service_run(struct cavan_dynamic_service *service)
 static int tcp_dd_check_file_request(struct network_file_request *file_req, const char **src_file, const char **dest_file)
 {
 	if (file_req->src_file[0] == 0 && file_req->dest_file[0] == 0) {
-		pr_red_info("src_file == NULL && dest_file == NULL");
+		pd_red_info("src_file == NULL && dest_file == NULL");
 		ERROR_RETURN(EINVAL);
 	}
 

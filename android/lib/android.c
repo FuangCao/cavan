@@ -30,11 +30,7 @@ int android_getprop(const char *name, char *buff, size_t size)
 		return length;
 	}
 
-	if (length > (int) size) {
-		length = size;
-	}
-
-	strncpy(buff, value, length);
+	strncpy(buff, value, size);
 
 	return length;
 }
