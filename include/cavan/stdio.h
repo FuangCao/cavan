@@ -88,6 +88,7 @@ __BEGIN_DECLS;
 #define CAVAN_COLOR_RED					"\033[31m"
 #define CAVAN_COLOR_GREEN				"\033[32m"
 #define CAVAN_COLOR_BLUE				"\033[34m"
+#define CAVAN_COLOR_BROWN				"\033[33m"
 #define CAVAN_COLOR_MAGENTA				"\033[35m"
 
 #if __WORDSIZE == 64
@@ -153,6 +154,12 @@ __BEGIN_DECLS;
 #define cavan_bold_info(func, fmt, args ...) \
 	cavan_color_info(func, CAVAN_COLOR_BOLD, fmt, ##args)
 
+#define cavan_brown_info(func, fmt, args ...) \
+	cavan_color_info(func, CAVAN_COLOR_BROWN, fmt, ##args)
+
+#define cavan_magenta_info(func, fmt, args ...) \
+	cavan_color_info(func, CAVAN_COLOR_MAGENTA, fmt, ##args)
+
 #define cavan_std_pos(func, fmt) \
 	func(fmt, __FILE__, __FUNCTION__, __LINE__)
 
@@ -217,6 +224,12 @@ __BEGIN_DECLS;
 
 #define pr_bold_info(fmt, args ...) \
 	cavan_bold_info(pr_info, fmt, ##args)
+
+#define pr_brown_info(fmt, args ...) \
+	cavan_brown_info(pr_info, fmt, ##args)
+
+#define pr_magenta_info(fmt, args ...) \
+	cavan_magenta_info(pr_info, fmt, ##args)
 
 #define pr_std_pos(fmt) \
 	cavan_std_pos(pr_info, fmt)
@@ -289,6 +302,12 @@ __BEGIN_DECLS;
 
 #define pd_bold_info(fmt, args ...) \
 	cavan_bold_info(pd_info, fmt, ##args)
+
+#define pd_brown_info(fmt, args ...) \
+	cavan_brown_info(pd_info, fmt, ##args)
+
+#define pd_magenta_info(fmt, args ...) \
+	cavan_magenta_info(pd_info, fmt, ##args)
 
 #define pd_std_pos(fmt) \
 	cavan_std_pos(pd_info, fmt)

@@ -100,15 +100,13 @@
 #define EPL_LIGHT_MAX_VALUE \
 	EPL_CAL_LIGHT_VALUE(0xFFFF)
 
-enum epl2182_mode
-{
+enum epl2182_mode {
 	EPL2182_MODE_NONE,
 	EPL2182_MODE_ALS,
 	EPL2182_MODE_PROXI,
 };
 
-enum epl2182_register_map
-{
+enum epl2182_register_map {
 	REG_00 = 0x00,
 	REG_01,
 	REG_HTHDL,

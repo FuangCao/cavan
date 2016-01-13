@@ -44,8 +44,7 @@
 #define SWAN_VK_AXIS_CAL(value, max) \
 	((value) * (max) / 100)
 
-enum swan_vk_link_type
-{
+enum swan_vk_link_type {
 	SWAN_VK_LINK_TCP,
 	SWAN_VK_LINK_UDP,
 	SWAN_VK_LINK_SERIAL,

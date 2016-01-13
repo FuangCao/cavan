@@ -48,13 +48,11 @@
 #define KEY_BITMASK_SIZE	sizeof_bit_array(KEY_CNT)
 #define REL_BITMASK_SIZE	sizeof_bit_array(REL_CNT)
 
-enum huamobile_event_command
-{
+enum huamobile_event_command {
 	HUA_INPUT_COMMAND_STOP
 };
 
-enum huamobile_event_service_state
-{
+enum huamobile_event_service_state {
 	HUA_INPUT_THREAD_STATE_RUNNING,
 	HUA_INPUT_THREAD_STATE_STOPPING,
 	HUA_INPUT_THREAD_STATE_STOPPED

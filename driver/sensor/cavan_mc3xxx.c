@@ -17,8 +17,7 @@
 #define MC3XXX_PCODE_3510C    0x10
 #define MC3XXX_PCODE_3530C    0x60
 
-enum mc3xxx_register_map
-{
+enum mc3xxx_register_map {
 	REG_XOUT = 0x00,
 	REG_YOUT,
 	REG_ZOUT,

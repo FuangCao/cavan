@@ -59,7 +59,8 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 	if ($single_line) {
 		s/\}\s*else\s*\{/\} else \{/mg;
 		s/\}\s*else\s+(if.*\S)\s*\{/\} else $1 \{/mg;
-		s/^(([\t ]+|[\t ]*(class|struct))[^\{\n]+\S)\s*\{[\t ]*$/$1 \{/mg;
+		s/^(([\t ]+|[\t ]*(class|struct|enum))[^\{\n]+\S)\s*\{[\t ]*$/$1 \{/mg;
+		s/^([\t ]*(class|struct|enum))\s*\{[\t ]*$/$1 \{/mg;
 		s/^[\t ]*(typedef\s+[^\{\n]+\S)\s*\{[\t ]*$/$1 \{/mg;
 		s/=\s*\{[\t ]*$/= \{/mg;
 	} else {
@@ -69,7 +70,7 @@ foreach my $pathname (&find_soruce_files(@dirlist)) {
 		# s/^(([\t ]+)case.*:)\s*\{/$1\n$2\t\{/mg;
 	}
 
-	s/^[\t ]*((class|struct)[^\{\n]+\([^\{\n]+\))[^\{\n]*\{[\t ]*$/$1\n\{/mg;
+	s/^[\t ]*((class|struct|enum)[^\{\n]+\([^\{\n]+\))[^\{\n]*\{[\t ]*$/$1\n\{/mg;
 	s/^(([\t ]*).*\{)\s*\{/$1\n$2\t\{/mg;
 	s/\}\s*else\s*\{[\t ]*\\\s*$/\} else \{ \\/mg;
 	s/\}\s*else\s+(if.*\S)\s*\{[\t ]*\\\s*$/\} else $1 \{ \\/mg;

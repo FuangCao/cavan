@@ -24,8 +24,7 @@
 #define KEY_ESC		27
 #define KEY_TAB		9
 
-enum kconfig_color
-{
+enum kconfig_color {
 	KCONFIG_COLOR_UNKNOWN,
 	KCONFIG_COLOR_WHITE_WHITE,
 	KCONFIG_COLOR_WHITE_BLACK,
@@ -38,8 +37,7 @@ enum kconfig_color
 	KCONFIG_COLOR_BLACK_BLACK,
 };
 
-enum kconfig_state
-{
+enum kconfig_state {
 	KCONFIG_STATE_UNKNOWN,
 	KCONFIG_STATE_DESELED,
 	KCONFIG_STATE_SELECTED,

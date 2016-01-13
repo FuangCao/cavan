@@ -2,8 +2,7 @@
 
 #include <linux/mutex.h>
 
-enum cavan_input_thread_state
-{
+enum cavan_input_thread_state {
 	CAVAN_INPUT_THREAD_STATE_CREATED,
 	CAVAN_INPUT_THREAD_STATE_RUNNING,
 	CAVAN_INPUT_THREAD_STATE_SUSPEND,

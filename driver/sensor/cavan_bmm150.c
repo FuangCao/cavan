@@ -11,8 +11,7 @@
 #define BMM150_FUZZ					30
 #define BMM150_CHIP_ID				0x32
 
-enum bmm150_register_map
-{
+enum bmm150_register_map {
 	REG_CHIP_ID = 0x40,
 	REG_DATA = 0x42,
 	REG_DATA_X_LSB = 0x42,

@@ -42,8 +42,7 @@ __BEGIN_DECLS;
 #define DOUBLE_CONTENT_VALUE(value) \
 	GET_PART_VALUE_LL(value, DOUBLE_CONTENT_SIZE, DOUBLE_CONTENT_OFFSET)
 
-enum calculator_operator_identify
-{
+enum calculator_operator_identify {
 	OPERATOR_ADD_ID,
 	OPERATOR_SUB_ID,
 	OPERATOR_MUL_ID,

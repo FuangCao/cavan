@@ -18,8 +18,7 @@
 
 #define CPUINFO_LINE_MACHINE_NAME	"Hardware"
 
-enum swan_board_type
-{
+enum swan_board_type {
 	SWAN_BOARD_UNKNOWN,
 	SWAN_BOARD_I200,
 	SWAN_BOARD_I600,

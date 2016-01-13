@@ -50,8 +50,7 @@ struct swan_adb_client_descriptor {
 	struct cavan_usb_descriptor *usb_desc;
 };
 
-enum cavan_usb_package_type
-{
+enum cavan_usb_package_type {
 	CAVAN_UMSG_UNKNOWN,
 	CAVAN_UMSG_DATA_STREAM,
 	CAVAN_UMSG_WRITE_FILE,

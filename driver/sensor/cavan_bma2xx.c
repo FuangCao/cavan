@@ -5,8 +5,7 @@
 
 #define BMA2XX_DEVICE_NAME			"bma2xx"
 
-enum bma2xx_register_map
-{
+enum bma2xx_register_map {
 	REG_CHIP_ID = 0x00,
 	REG_VERSION,
 	REG_X_AXIS_LSB,

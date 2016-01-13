@@ -27,8 +27,7 @@
 #define TEMP_URAMDISK_PATH	"/tmp/uramdisk.img"
 #define TEMP_UIMAGE_PATH	"/tmp/uImage"
 
-enum image_type
-{
+enum image_type {
 	IMAGE_UNKNOWN,
 	IMAGE_UBOOT_BIN,
 	IMAGE_UBOOT_NO_PADDING_BIN,

@@ -55,8 +55,7 @@ struct master_boot_sector {
 };
 #pragma pack()
 
-enum filesystem_type
-{
+enum filesystem_type {
 	FS_START, FS_EXT2, FS_EXT3, FS_EXT4, FS_VFAT, FS_NTFS, FS_FUSE, FS_SYS, FS_PROC, FS_TMP, FS_END
 };
 

@@ -1,8 +1,7 @@
 #include <cavan/cavan_sensor.h>
 #include <cavan/cavan_i2c.h>
 
-enum stk8313_register_map
-{
+enum stk8313_register_map {
 	REG_XOUT1 = 0x00,
 	REG_XOUT2,
 	REG_YOUT1,

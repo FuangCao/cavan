@@ -28,8 +28,7 @@
 
 typedef int (*tcp_dd_handler_t)(struct network_url *, struct network_file_request *);
 
-enum tcp_dd_package_type
-{
+enum tcp_dd_package_type {
 	TCP_DD_RESPONSE,
 	TCP_DD_WRITE,
 	TCP_DD_READ,

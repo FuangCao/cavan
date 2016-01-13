@@ -15,8 +15,7 @@
 #define ADB_PORT2				5038
 #define ADB_SMS_TRANSLATOR_PORT	8888
 
-enum
-{
+enum {
 	SMS_TYPE_END = 0x00,
 	SMS_TYPE_TEST,
 	SMS_TYPE_ACK,

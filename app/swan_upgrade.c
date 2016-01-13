@@ -4,8 +4,7 @@
 #include <cavan/swan_pkg.h>
 #include <cavan/swan_dev.h>
 
-enum swan_upgrade_option
-{
+enum swan_upgrade_option {
 	SWAN_UPGRADE_OPTION_I200,
 	SWAN_UPGRADE_OPTION_MODEM,
 	SWAN_UPGRADE_OPTION_I600,

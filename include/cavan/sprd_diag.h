@@ -57,8 +57,7 @@ struct sprd_diag_command_desc {
 	size_t reply_len;
 };
 
-enum sprd_diag_command_type
-{
+enum sprd_diag_command_type {
 	SPRD_DIAG_SWVER_F = 0,
 	SPRD_DIAG_SOFTKEY_F,
 	SPRD_DIAG_LOG_F,

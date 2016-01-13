@@ -12,8 +12,7 @@
 
 #define CAVAN_TOUCHPAD_EDGE_SHIFT	6
 
-enum cavan_touchpad_state
-{
+enum cavan_touchpad_state {
 	CAVAN_TOUCHPAD_STATE_IDLE,
 	CAVAN_TOUCHPAD_STATE_DOWN1,
 	CAVAN_TOUCHPAD_STATE_UP1,
@@ -21,8 +20,7 @@ enum cavan_touchpad_state
 	CAVAN_TOUCHPAD_STATE_UP2
 };
 
-enum cavan_touchpad_mode
-{
+enum cavan_touchpad_mode {
 	CAVAN_TOUCHPAD_MODE_NONE,
 	CAVAN_TOUCHPAD_MODE_MOVE,
 	CAVAN_TOUCHPAD_MODE_WHEEL,

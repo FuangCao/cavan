@@ -17,14 +17,12 @@
 
 struct cavan_application_context;
 
-enum cavan_application_event
-{
+enum cavan_application_event {
 	CAVAN_APP_EVENT_STOP,
 	CAVAN_APP_EVENT_EXIT,
 };
 
-enum cavan_window_text_align
-{
+enum cavan_window_text_align {
 	CAVAN_WIN_TEXT_ALIGN_CENTER,
 	CAVAN_WIN_TEXT_ALIGN_LEFT,
 	CAVAN_WIN_TEXT_ALIGN_RIGHT

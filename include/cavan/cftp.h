@@ -56,8 +56,7 @@ union cftp_message
 };
 #pragma pack()
 
-enum cftp_package_type
-{
+enum cftp_package_type {
 	CFTP_PACKAGE_UNKNOWN,
 	CFTP_PACKAGE_FILE_READ,
 	CFTP_PACKAGE_FILE_WRITE,

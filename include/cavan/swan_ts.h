@@ -19,8 +19,7 @@ struct swan_ts_i2c_request {
 	void *data;
 };
 
-enum swan_ts_ioctl_type
-{
+enum swan_ts_ioctl_type {
 	SWAN_TS_IOCTL_TYPE_CORE,
 	SWAN_TS_IOCTL_TYPE_DEVICE,
 	SWAN_TS_IOCTL_TYPE_OTHER

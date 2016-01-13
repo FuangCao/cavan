@@ -64,8 +64,7 @@
 
 #define APDS99XX_DEVICE_NAME			"apds99xx"
 
-enum apds99xx_register_map
-{
+enum apds99xx_register_map {
 	REG_ENABLE = 0x00,
 	REG_ATIME,
 	REG_PTIME,

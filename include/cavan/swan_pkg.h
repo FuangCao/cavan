@@ -18,8 +18,7 @@
 
 #define UPGRADE_FLAG_CHECK_VERSION	(1 << 0)
 
-enum swan_image_type
-{
+enum swan_image_type {
 	SWAN_IMAGE_UNKNOWN,
 	SWAN_IMAGE_UBOOT,
 	SWAN_IMAGE_UIMAGE,

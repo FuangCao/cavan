@@ -39,8 +39,7 @@
 #define tca9535_pr_pos_info() \
 	 pr_err("%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__)
 
-enum tca9535_register
-{
+enum tca9535_register {
 	REG_INPUT_PORT = 0x00,
 	REG_OUTPUT_PORT = 0x02,
 	REG_POLARITY_INVERSION = 0x04,

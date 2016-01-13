@@ -19,8 +19,7 @@
 #define EXT2_DIR_ENTRY_HEADER_SIZE	8
 #define EXT2_INODE_FLAG_EXTENTS		(1 << 19)
 
-enum ext2_file_type
-{
+enum ext2_file_type {
 	EXT_FILE_TYPE_UNKNOWN,
 	EXT_FILE_TYPE_REDULAR,
 	EXT_FILE_TYPE_DIRECTORY,
@@ -31,8 +30,7 @@ enum ext2_file_type
 	EXT_FILE_TYPE_SYMLINK,
 };
 
-enum cavan_ext2_traversal_action
-{
+enum cavan_ext2_traversal_action {
 	CAVAN_EXT2_TRAVERSAL_COMPLETE,
 	CAVAN_EXT2_TRAVERSAL_CONTINUE,
 	CAVAN_EXT2_TRAVERSAL_FOUND,

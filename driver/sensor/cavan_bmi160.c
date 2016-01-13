@@ -11,8 +11,7 @@
 #define BMI160_ACC_RANGE			4
 #define BMI160_GYR_RANGE			4000
 
-enum bmi160_register_map
-{
+enum bmi160_register_map {
 	REG_CMD = 0x7E,
 	REG_STEP_CONF_1 = 0x7B,
 	REG_STEP_CONF_0 = 0x7A,

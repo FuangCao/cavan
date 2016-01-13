@@ -146,8 +146,7 @@ struct cavan_input_core;
 struct cavan_input_chip;
 struct cavan_input_device;
 
-enum cavan_input_device_type
-{
+enum cavan_input_device_type {
 	CAVAN_INPUT_DEVICE_TYPE_NONE,
 	CAVAN_INPUT_DEVICE_TYPE_TOUCHSCREEN,
 	CAVAN_INPUT_DEVICE_TYPE_ACCELEROMETER,
@@ -163,8 +162,7 @@ enum cavan_input_device_type
 	CAVAN_INPUT_DEVICE_TYPE_ROTATION_VECTOR
 };
 
-enum cavan_input_irq_type
-{
+enum cavan_input_irq_type {
 	CAVAN_INPUT_IRQ_TYPE_NONE,
 	CAVAN_INPUT_IRQ_TYPE_EDGE,
 	CAVAN_INPUT_IRQ_TYPE_LEVEL

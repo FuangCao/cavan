@@ -23,8 +23,7 @@
 
 __BEGIN_DECLS;
 
-enum
-{
+enum {
 	CT_NONE = 0,
 	CT_U = BIT(0), /* upper */
 	CT_L = BIT(1), /* lower */
