@@ -1,7 +1,9 @@
+#pragma once
+
 /*
- * File:			MediaPlayer.cpp
+ * File:			MediaPlayer.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2016-01-14 12:01:25
+ * Created:		2016-01-14 12:31:31
  *
  * Copyright (c) 2016 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -18,24 +20,30 @@
  */
 
 #include <cavan.h>
-#include <android++/MediaPlayer.h>
-#include <binder/IPCThreadState.h>
-#include <binder/ProcessState.h>
+#include <media/mediaplayer.h>
+#include <gui/ISurfaceComposer.h>
+#include <gui/Surface.h>
+#include <gui/SurfaceComposerClient.h>
 
-using namespace android;
+namespace android {
 
-int main(int argc, char *argv[])
-{
-	if (argc <= 1) {
-		pr_red_info("Please give a pathname");
-		return -EINVAL;
-	}
+class CavanPlayer : public MediaPlayer, public Thread {
+private:
+	int mFd;
+	off_t mSize;
+	int mWidth, mHeight;
+	const char *mPathName;
+	sp<SurfaceComposerClient> mSession;
+	sp<SurfaceControl> mFlingerSurfaceControl;
+	sp<Surface> mFlingerSurface;
 
-	sp<ProcessState> proc(ProcessState::self());
-	ProcessState::self()->startThreadPool();
+public:
+	CavanPlayer(const char *pathname);
+	~CavanPlayer(void);
 
-	sp<CavanPlayer> player = new CavanPlayer(argv[1]);
-	IPCThreadState::self()->joinThreadPool();
+	virtual void onFirstRef(void);
+	virtual status_t readyToRun(void);
+	virtual bool threadLoop(void);
+};
 
-	return 0;
 }
