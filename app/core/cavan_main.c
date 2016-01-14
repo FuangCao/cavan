@@ -21,8 +21,25 @@
 
 static int cavan_main(int argc, char *argv[]);
 
+static int do_cavan_bootanimation(int argc, char *argv[])
+{
+#ifdef CONFIG_ANDROID
+	if (argc > 1) {
+		return do_cavan_MediaPlayer(argc, argv);
+	} else {
+		char *def_argv[] = { argv[0], "/system/media/bootanimation.mp4" };
+
+		return do_cavan_MediaPlayer(2, def_argv);
+	}
+#else
+	pr_red_info("Nothing to be done");
+	return -EINVAL;
+#endif
+}
+
 const struct cavan_command_map cmd_map_table[] = {
 	{ CONFIG_CAVAN_MAIN_NAME, cavan_main },
+	{ "bootanimation",  do_cavan_bootanimation },
 
 	#include CONFIG_CAVAN_MAP_C
 };

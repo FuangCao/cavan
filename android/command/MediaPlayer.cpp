@@ -26,15 +26,20 @@ using namespace android;
 
 int main(int argc, char *argv[])
 {
-	if (argc <= 1) {
-		pr_red_info("Please give a pathname");
-		return -EINVAL;
+	const char *pathname;
+
+	if (argc > 1) {
+		pathname = argv[1];
+	} else {
+		pathname = "/data/test.mp4";
 	}
+
+	pd_func_info("pathname = %s", pathname);
 
 	sp<ProcessState> proc(ProcessState::self());
 	ProcessState::self()->startThreadPool();
 
-	sp<CavanPlayer> player = new CavanPlayer(argv[1]);
+	sp<CavanPlayer> player = new CavanPlayer(pathname, strcmp(argv[0], "bootanimation") == 0);
 	IPCThreadState::self()->joinThreadPool();
 
 	return 0;

@@ -27,10 +27,12 @@
 
 namespace android {
 
-class CavanPlayer : public MediaPlayer, public Thread {
+class CavanPlayer : public MediaPlayer, public Thread, public IBinder::DeathRecipient {
 private:
 	int mFd;
 	off_t mSize;
+	bool mShouldStop;
+	bool mBootAnimation;
 	int mWidth, mHeight;
 	const char *mPathName;
 	sp<SurfaceComposerClient> mSession;
@@ -38,9 +40,10 @@ private:
 	sp<Surface> mFlingerSurface;
 
 public:
-	CavanPlayer(const char *pathname);
+	CavanPlayer(const char *pathname, bool bootanimation = false);
 	~CavanPlayer(void);
 
+	virtual void binderDied(const wp<IBinder> &binder);
 	virtual void onFirstRef(void);
 	virtual status_t readyToRun(void);
 	virtual bool threadLoop(void);
