@@ -39,6 +39,7 @@ CavanVideoPlayer::CavanVideoPlayer(const char *pathname, bool bootanimation, con
 	mVideoPath = pathname;
 	mName = name;
 	mCommand[0] = 0;
+	mCommandLen = 0;
 	mBootAnimation = bootanimation;
     mSession = new SurfaceComposerClient();
 }
@@ -165,12 +166,17 @@ status_t CavanVideoPlayer::setVolume(int volume)
 
 void CavanVideoPlayer::doCommand(char *command, size_t length)
 {
+	bool changed = true;
 	char *last = command + length - 1;
 
 	while(1) {
 		if (last <= command) {
-			command = mCommand;
-			break;
+			if (mCommandLen > 0 && mCommand[0]) {
+				command = mCommand;
+				break;
+			} else {
+				return;
+			}
 		}
 
 		if (cavan_isspace(*last)) {
@@ -199,16 +205,24 @@ void CavanVideoPlayer::doCommand(char *command, size_t length)
 			break;
 
 		default:
-			position = text2value_unsigned(command, NULL, 10) * 1000;
+			if (command[0] == 0) {
+				position = mPosition;
+				changed = false;
+			} else {
+				position = text2value_unsigned(command, NULL, 10) * 1000;
+			}
 		}
 
-		if (position > mDuration) {
-			position = mDuration;
-		} else if (position < 0) {
-			position = 0;
+		if (changed) {
+			if (position > mDuration) {
+				position = mDuration;
+			} else if (position < 0) {
+				position = 0;
+			}
+
+			seekTo(position);
 		}
 
-		seekTo(position);
 		cavan_time2text_simple2(position / 1000, buff, sizeof(buff));
 		pr_info("position = %s", buff);
 	} else if (text_lhcmp("volume", command) == 0) {
@@ -225,23 +239,30 @@ void CavanVideoPlayer::doCommand(char *command, size_t length)
 			break;
 
 		default:
-			volume = text2value_unsigned(command, NULL, 10);
+			if (command[0] == 0) {
+				volume = mVolume;
+				changed = false;
+			} else {
+				volume = text2value_unsigned(command, NULL, 10);
+			}
 		}
 
-		setVolume(volume);
+		if (changed) {
+			setVolume(volume);
+		}
+
 		pr_info("volume = %02d%%", mVolume);
 	} else if (strcmp("stop", command) == 0) {
 		stop();
 	} else if (strcmp("exit", command) == 0) {
 		requestExit();
-	} else if (strcmp("progress", command) == 0) {
-		mShowProgress = true;
+	} else if (strcmp("progress", command) == 0 || strcmp("show", command) == 0) {
+		mHideCount = 0;
 	}
 }
 
 bool CavanVideoPlayer::threadLoop(void)
 {
-	int count;
 	status_t status;
 	struct progress_bar bar;
 
@@ -295,8 +316,7 @@ bool CavanVideoPlayer::threadLoop(void)
 		goto out_surface_clean;
 	}
 
-	count = 0;
-	mShowProgress = true;
+	mHideCount = 0;
 	getDuration(&mDuration);
 	progress_bar_init(&bar, mDuration, PROGRESS_BAR_TYPE_TIME);
 
@@ -314,24 +334,23 @@ bool CavanVideoPlayer::threadLoop(void)
 
 		rdlen = file_read_timeout(stdin_fd, command, sizeof(command), 200);
 		if (rdlen > 0) {
-			count = 50;
-			mShowProgress = false;
-
+			mHideCount = 50;
 			command[rdlen] = 0;
 			doCommand(command, rdlen);
-
-			if (mShowProgress) {
-				print_char('\r');
-			} else {
-				print("MediaPlayer> ");
-			}
-		} else if (count > 0) {
-			count--;
-		} else {
-			mShowProgress = true;
+			print("MediaPlayer> ");
 		}
 
-		if (mShowProgress) {
+		if (mHideCount > 0) {
+			mHideCount--;
+		} else {
+			if (mHideCount == 0) {
+				print_char('\r');
+				mCommand[0] = 0;
+				mCommandLen = 0;
+
+				mHideCount = -1;
+			}
+
 			getCurrentPosition(&mPosition);
 			progress_bar_set(&bar, mPosition);
 		}

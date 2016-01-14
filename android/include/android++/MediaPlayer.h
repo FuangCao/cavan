@@ -38,7 +38,7 @@ private:
 	int mVolume;
 	int mPosition;
 	int mDuration;
-	bool mShowProgress;
+	int mHideCount;
 	bool mBootAnimation;
 	int mWidth, mHeight;
 	int mCommandLen;
