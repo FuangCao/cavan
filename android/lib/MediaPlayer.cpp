@@ -77,13 +77,39 @@ void CavanPlayer::binderDied(const wp<IBinder> &binder)
 
 status_t CavanPlayer::readyToRun(void)
 {
+	status_t status;
+	DisplayInfo dinfo;
+	sp<IBinder> dtoken;
+
 	pd_pos_info();
 
-	sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain));
-	DisplayInfo dinfo;
-	status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
-	if (status) {
-		return false;
+	mFd = open(mPathName, O_RDONLY);
+	if (mFd < 0) {
+		pd_err_info("open %s", mPathName);
+		return NAME_NOT_FOUND;
+	}
+
+	mSize = lseek(mFd, 0, SEEK_END);
+	if (mSize < 0) {
+		pd_err_info("lseek %s", mPathName);
+		goto out_close_fd;
+	}
+
+	if (lseek(mFd, 0, SEEK_SET) != 0) {
+		pd_err_info("lseek %s", mPathName);
+		goto out_close_fd;
+	}
+
+	dtoken = SurfaceComposerClient::getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain);
+	if (dtoken == 0) {
+		pd_red_info("SurfaceComposerClient::getBuiltInDisplay");
+		goto out_close_fd;
+	}
+
+	status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
+	if (status != NO_ERROR) {
+		pd_red_info("SurfaceComposerClient::getDisplayInfo");
+		goto out_close_fd;
 	}
 
 	if (dinfo.w > dinfo.h * 3) {
@@ -102,66 +128,56 @@ status_t CavanPlayer::readyToRun(void)
 
 	mFlingerSurface = mFlingerSurfaceControl->getSurface();
 
+	mDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	eglInitialize(mDisplay, 0, 0);
+
 	return NO_ERROR;
+
+out_close_fd:
+	close(mFd);
+	return FDS_NOT_ALLOWED;
 }
 
 bool CavanPlayer::threadLoop(void)
 {
-	pd_pos_info();
-
-	mFd = open(mPathName, O_RDONLY);
-	if (mFd < 0) {
-		pd_err_info("open %s", mPathName);
-		return false;
-	}
-
-	mSize = lseek(mFd, 0, SEEK_END);
-	if (mSize < 0) {
-		pd_err_info("lseek %s", mPathName);
-		return false;
-	}
-
-	if (lseek(mFd, 0, SEEK_SET) != 0) {
-		pd_err_info("lseek %s", mPathName);
-		return false;
-	}
-
 	status_t status;
+
+	pd_pos_info();
 
 	status = reset();
 	if (status != NO_ERROR) {
 		pd_red_info("reset");
-		return false;
+		goto out_surface_clean;
 	}
 
 	status = setAudioStreamType(AUDIO_STREAM_MUSIC);
 	if (status != NO_ERROR) {
 		pd_red_info("setAudioStreamType");
-		return false;
+		goto out_surface_clean;
 	}
 
 	status = setDataSource(mFd, 0, mSize);
 	if (status != NO_ERROR) {
 		pd_red_info("setDataSource");
-		return false;
+		goto out_surface_clean;
 	}
 
 	status = setVideoSurfaceTexture(mFlingerSurface->getIGraphicBufferProducer());
 	if (status != NO_ERROR) {
 		pd_red_info("setVideoSurfaceTexture");
-		return false;
+		goto out_surface_clean;
 	}
 
 	status = prepare();
 	if (status != NO_ERROR) {
 		pd_red_info("prepare");
-		return false;
+		goto out_surface_clean;
 	}
 
 	status = start();
 	if (status != NO_ERROR) {
 		pd_red_info("start");
-		return false;
+		goto out_surface_clean;
 	}
 
 	mShouldStop = false;
@@ -184,6 +200,7 @@ bool CavanPlayer::threadLoop(void)
 
 	stop();
 
+out_surface_clean:
     mFlingerSurface.clear();
     mFlingerSurfaceControl.clear();
     IPCThreadState::self()->stopProcess();

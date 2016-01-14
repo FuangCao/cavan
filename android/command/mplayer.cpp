@@ -24,15 +24,21 @@
 
 using namespace android;
 
+static void show_usage(const char *command)
+{
+	println("%s <FILE>", command);
+}
+
 int main(int argc, char *argv[])
 {
 	const char *pathname;
 
-	if (argc > 1) {
-		pathname = argv[1];
-	} else {
-		pathname = "/data/test.mp4";
+	if (argc < 2) {
+		show_usage(argv[0]);
+		return -EINVAL;
 	}
+
+	pathname = argv[1];
 
 	pd_func_info("pathname = %s", pathname);
 

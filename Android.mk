@@ -5,20 +5,20 @@ $(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/$1))
 endef
 
 CAVAN_LIB_SRC_FILES := $(call cavan-all-files-under,lib/*.c)
-CAVAN_LIB_SRC_FILES += $(call cavan-all-files-under,cpp/*.cpp)
+CAVAN_LIB_SRC_FILES += $(call cavan-all-files-under,android/lib/*.c)
 CAVAN_APP_SRC_FILES := $(call cavan-all-files-under,app/*.c)
-CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,app/*.cpp)
+CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,android/command/*.c)
 CAVAN_APP_CORE_SRC_FILES := $(call cavan-all-files-under,app/core/*.c)
 
-CAVAN_LIB_SRC_FILES += $(call cavan-all-files-under,android/lib/*.c)
+CAVAN_LIB_SRC_FILES += $(call cavan-all-files-under,cpp/*.cpp)
 CAVAN_LIB_SRC_FILES += $(call cavan-all-files-under,android/lib/*.cpp)
-CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,android/command/*.c)
+CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,app/*.cpp)
 CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,android/command/*.cpp)
 
 CAVAN_ANDROID_VERSION := $(firstword $(subst ., ,$(PLATFORM_VERSION)))
 CAVAN_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/android/include
 CAVAN_C_INCLUDES += system/extras/ext4_utils system/vold system/core/fs_mgr/include frameworks/av/include
-CAVAN_SHARED_LIBRARIES := libutils libcutils liblog libhardware libbinder liblogwrap libz libselinux libext4_utils libsparse libmedia libgui
+CAVAN_SHARED_LIBRARIES := libutils libcutils liblog libhardware libbinder liblogwrap libz libselinux libext4_utils libsparse libmedia libgui libEGL
 CAVAN_STATIC_LIBRARIES := libfs_mgr libmincrypt
 CAVAN_CFLAGS := -DCAVAN_ARCH_ARM -DCAVAN -DCONFIG_ANDROID -DCONFIG_ANDROID_VERSION=$(CAVAN_ANDROID_VERSION) -Wall -Wundef -Wextra -Werror -Wno-unused-parameter
 CAVAN_CFLAGS += -include $(LOCAL_PATH)/android/include/android.h -include $(LOCAL_PATH)/include/cavan/config.h

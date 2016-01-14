@@ -21,25 +21,33 @@
 
 static int cavan_main(int argc, char *argv[]);
 
+#ifdef CONFIG_ANDROID
 static int do_cavan_bootanimation(int argc, char *argv[])
 {
-#ifdef CONFIG_ANDROID
 	if (argc > 1) {
-		return do_cavan_MediaPlayer(argc, argv);
+		return do_cavan_mplayer(argc, argv);
 	} else {
-		char *def_argv[] = { argv[0], "/system/media/bootanimation.mp4" };
+		char *argv_new[] = { argv[0], "/system/media/bootanimation.mp4", NULL };
 
-		return do_cavan_MediaPlayer(2, def_argv);
+		return do_cavan_mplayer(2, argv_new);
 	}
-#else
-	pr_red_info("Nothing to be done");
-	return -EINVAL;
-#endif
 }
+
+static int do_cavan_remount(int argc, char *argv[])
+{
+	char *argv_new[] = { argv[0], "-l", "remount", NULL };
+
+	return do_cavan_tcp_exec(3, argv_new);
+}
+#endif
 
 const struct cavan_command_map cmd_map_table[] = {
 	{ CONFIG_CAVAN_MAIN_NAME, cavan_main },
+	{ "calc", do_cavan_calculator },
+#ifdef CONFIG_ANDROID
 	{ "bootanimation",  do_cavan_bootanimation },
+	{ "remount", do_cavan_remount },
+#endif
 
 	#include CONFIG_CAVAN_MAP_C
 };

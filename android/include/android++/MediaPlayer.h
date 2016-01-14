@@ -35,6 +35,7 @@ private:
 	bool mBootAnimation;
 	int mWidth, mHeight;
 	const char *mPathName;
+	EGLDisplay mDisplay;
 	sp<SurfaceComposerClient> mSession;
 	sp<SurfaceControl> mFlingerSurfaceControl;
 	sp<Surface> mFlingerSurface;
