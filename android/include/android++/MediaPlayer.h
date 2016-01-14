@@ -29,15 +29,20 @@ namespace android {
 
 class CavanVideoPlayer : public MediaPlayer, public Thread, public IBinder::DeathRecipient {
 private:
-	bool mShouldStop;
 	const char *mName;
 
 	int mVideoFd;
 	off64_t mVideoSize;
 	const char *mVideoPath;
 
+	int mVolume;
+	int mPosition;
+	int mDuration;
+	bool mShowProgress;
 	bool mBootAnimation;
 	int mWidth, mHeight;
+	int mCommandLen;
+	char mCommand[1024];
 	sp<Surface> mFlingerSurface;
 	sp<SurfaceComposerClient> mSession;
 	sp<SurfaceControl> mFlingerSurfaceControl;
@@ -50,6 +55,9 @@ public:
 	virtual void onFirstRef(void);
 	virtual status_t readyToRun(void);
 	virtual bool threadLoop(void);
+
+	void doCommand(char *command, size_t length);
+	status_t setVolume(int volume);
 };
 
 }

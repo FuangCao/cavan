@@ -49,6 +49,8 @@
 #define US_SEC(time)						((time) / 1000000UL)
 #define MS_SEC(time)						((time) / 1000UL)
 
+__BEGIN_DECLS
+
 struct cavan_time {
 	u32 year;
 	u8 month;	// 0 ~ 11
@@ -100,3 +102,5 @@ static inline int64_t cavan_timeval2nano(struct timeval *time)
 {
 	return time->tv_sec * 1000000000LL + time->tv_usec * 1000;
 }
+
+__END_DECLS

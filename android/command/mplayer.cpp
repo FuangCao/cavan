@@ -40,8 +40,6 @@ int main(int argc, char *argv[])
 
 	pathname = argv[1];
 
-	pd_func_info("pathname = %s", pathname);
-
 	sp<ProcessState> proc(ProcessState::self());
 	ProcessState::self()->startThreadPool();
 
