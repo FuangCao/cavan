@@ -28,36 +28,37 @@
 
 namespace android {
 
-CavanPlayer::CavanPlayer(const char *pathname, bool bootanimation) : MediaPlayer(), Thread(false)
+CavanVideoPlayer::CavanVideoPlayer(const char *pathname, bool bootanimation, const char *name) : MediaPlayer(), Thread(false)
 {
 	pd_pos_info();
 
-	mFd = -1;
-	mPathName = pathname;
+	mVideoFd = -1;
+	mVideoPath = pathname;
+	mName = name;
 	mBootAnimation = bootanimation;
     mSession = new SurfaceComposerClient();
 }
 
-CavanPlayer::~CavanPlayer(void)
+CavanVideoPlayer::~CavanVideoPlayer(void)
 {
 	pd_pos_info();
 
-	if (mFd >= 0) {
-		close(mFd);
-		mFd = -1;
+	if (mVideoFd >= 0) {
+		close(mVideoFd);
+		mVideoFd = -1;
 	}
 }
 
-void CavanPlayer::onFirstRef(void)
+void CavanVideoPlayer::onFirstRef(void)
 {
 	pd_pos_info();
 
-	if (mPathName == NULL) {
+	if (mVideoPath == NULL) {
 		pd_red_info("Nothing to be done");
 		return;
 	}
 
-	pd_info("mPathName = %s", mPathName);
+	pd_info("mVideoPath = %s", mVideoPath);
 
     status_t err = mSession->linkToComposerDeath(this);
 	if (err != NO_ERROR) {
@@ -65,17 +66,17 @@ void CavanPlayer::onFirstRef(void)
 		return;
 	}
 
-	run("CavanPlayer", PRIORITY_DISPLAY);
+	run(mName, PRIORITY_DISPLAY);
 }
 
-void CavanPlayer::binderDied(const wp<IBinder> &binder)
+void CavanVideoPlayer::binderDied(const wp<IBinder> &binder)
 {
 	pd_pos_info();
 
 	mShouldStop = true;
 }
 
-status_t CavanPlayer::readyToRun(void)
+status_t CavanVideoPlayer::readyToRun(void)
 {
 	status_t status;
 	DisplayInfo dinfo;
@@ -83,20 +84,20 @@ status_t CavanPlayer::readyToRun(void)
 
 	pd_pos_info();
 
-	mFd = open(mPathName, O_RDONLY);
-	if (mFd < 0) {
-		pd_err_info("open %s", mPathName);
+	mVideoFd = open(mVideoPath, O_RDONLY);
+	if (mVideoFd < 0) {
+		pd_err_info("open %s", mVideoPath);
 		return NAME_NOT_FOUND;
 	}
 
-	mSize = lseek(mFd, 0, SEEK_END);
-	if (mSize < 0) {
-		pd_err_info("lseek %s", mPathName);
+	mVideoSize = lseek64(mVideoFd, 0, SEEK_END);
+	if (mVideoSize < 0) {
+		pd_err_info("lseek %s", mVideoPath);
 		goto out_close_fd;
 	}
 
-	if (lseek(mFd, 0, SEEK_SET) != 0) {
-		pd_err_info("lseek %s", mPathName);
+	if (lseek(mVideoFd, 0, SEEK_SET) != 0) {
+		pd_err_info("lseek %s", mVideoPath);
 		goto out_close_fd;
 	}
 
@@ -120,7 +121,7 @@ status_t CavanPlayer::readyToRun(void)
 
 	mHeight = dinfo.h;
 
-	mFlingerSurfaceControl = mSession->createSurface(String8("CavanPlayer"), mWidth, mHeight, PIXEL_FORMAT_RGB_565);
+	mFlingerSurfaceControl = mSession->createSurface(String8(mName), mWidth, mHeight, PIXEL_FORMAT_RGB_565);
 
 	SurfaceComposerClient::openGlobalTransaction();
 	mFlingerSurfaceControl->setLayer(0x40000000);
@@ -128,17 +129,14 @@ status_t CavanPlayer::readyToRun(void)
 
 	mFlingerSurface = mFlingerSurfaceControl->getSurface();
 
-	mDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-	eglInitialize(mDisplay, 0, 0);
-
 	return NO_ERROR;
 
 out_close_fd:
-	close(mFd);
+	close(mVideoFd);
 	return FDS_NOT_ALLOWED;
 }
 
-bool CavanPlayer::threadLoop(void)
+bool CavanVideoPlayer::threadLoop(void)
 {
 	status_t status;
 
@@ -150,13 +148,19 @@ bool CavanPlayer::threadLoop(void)
 		goto out_surface_clean;
 	}
 
+	status = setLooping(false);
+	if (status != NO_ERROR) {
+		pd_red_info("setLooping");
+		goto out_surface_clean;
+	}
+
 	status = setAudioStreamType(AUDIO_STREAM_MUSIC);
 	if (status != NO_ERROR) {
 		pd_red_info("setAudioStreamType");
 		goto out_surface_clean;
 	}
 
-	status = setDataSource(mFd, 0, mSize);
+	status = setDataSource(mVideoFd, 0, mVideoSize);
 	if (status != NO_ERROR) {
 		pd_red_info("setDataSource");
 		goto out_surface_clean;

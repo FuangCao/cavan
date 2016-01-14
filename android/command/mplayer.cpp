@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	sp<ProcessState> proc(ProcessState::self());
 	ProcessState::self()->startThreadPool();
 
-	sp<CavanPlayer> player = new CavanPlayer(pathname, strcmp(argv[0], "bootanimation") == 0);
+	sp<CavanVideoPlayer> player = new CavanVideoPlayer(pathname, strcmp(argv[0], "bootanimation") == 0);
 	IPCThreadState::self()->joinThreadPool();
 
 	return 0;
