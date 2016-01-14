@@ -1,5 +1,5 @@
 /*
- * File:		calculator2.cpp
+ * File:		Calculator.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2015-07-16 18:57:37
  *
@@ -34,7 +34,7 @@ static void show_usage(const char *command)
 	println("--mask, -m, -M\t\tshow bit location");
 }
 
-extern "C" int main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int c;
 	int option_index;

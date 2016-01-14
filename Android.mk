@@ -60,6 +60,7 @@ CAVAN_MAP_C := $(CAVAN_OUT_PATH)/cavan_map.c
 $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_CORE_SRC_FILES)): $(CAVAN_MAP_H) $(CAVAN_MAP_C)
 
 $(CAVAN_MAP_H): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) | $(CAVAN_OUT_PATH)
+	$(hide) echo "Automatically generate $@"
 	$(hide) { \
 		echo "#include <cavan.h>"; \
 		echo; \
@@ -74,6 +75,7 @@ $(CAVAN_MAP_H): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) | $(CAVAN_OUT
 	} > $@
 
 $(CAVAN_MAP_C): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) | $(CAVAN_OUT_PATH)
+	$(hide) echo "Automatically generate $@"
 	$(hide) for app in $(basename $(notdir $^)); \
 	do \
 		echo "{ \"$${app}\", do_cavan_$${app} },"; \

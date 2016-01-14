@@ -129,6 +129,10 @@
 #define __read_mostly			__section(".data..read_mostly")
 #endif
 
+__BEGIN_DECLS
+
+extern int main(int argc, char *argv[]);
+
 static inline void msleep(useconds_t msec)
 {
 	while (msec--) {
@@ -142,6 +146,8 @@ static inline void ssleep(useconds_t sec)
 		msleep(1000);
 	}
 }
+
+__END_DECLS
 
 #include <cavan/debug.h>
 #include <cavan/types.h>
