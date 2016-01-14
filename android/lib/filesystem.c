@@ -100,7 +100,6 @@ Volume *fs_find_volume(const char *volume, const char *pathname)
 
 bool fs_volume_umount(Volume *volume, bool force)
 {
-	char pathname[1024];
 	int flags = force ? MNT_DETACH : 0;
 
 	while (umount2(volume->mount_point, flags) == 0);

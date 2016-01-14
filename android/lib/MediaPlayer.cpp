@@ -18,6 +18,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/progress.h>
 #include <cavan/android.h>
 #include <android++/MediaPlayer.h>
 #include <ui/PixelFormat.h>
@@ -186,7 +187,16 @@ bool CavanVideoPlayer::threadLoop(void)
 
 	mShouldStop = false;
 
-	while (1) {
+	int position;
+	int duration;
+	struct progress_bar bar;
+
+	getDuration(&duration);
+	progress_bar_init(&bar, duration, PROGRESS_BAR_TYPE_TIME);
+
+	seekTo(duration - 5000);
+
+	while (isPlaying()) {
 		pd_pos_info();
 
 		if (mShouldStop) {
@@ -197,8 +207,13 @@ bool CavanVideoPlayer::threadLoop(void)
 			break;
 		}
 
+		getCurrentPosition(&position);
+		progress_bar_set(&bar, position);
+
 		msleep(200);
 	}
+
+	progress_bar_finish(&bar);
 
 	pd_pos_info();
 

@@ -36,7 +36,6 @@ static void show_usage(const char *command)
 int main(int argc, char *argv[])
 {
 	int c;
-	int ret;
 	int option_index;
 	struct option long_option[] = {
 		{
@@ -63,7 +62,6 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	const char *volume;
 	const char *fstab = NULL;
 	const char *fs_type = NULL;
 

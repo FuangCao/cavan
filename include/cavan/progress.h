@@ -15,6 +15,12 @@
 #define BAR_CONTENT_MIN		sizeof("[ 100% ] 1024.00 Byte/s")
 #endif
 
+typedef enum {
+	PROGRESS_BAR_TYPE_DATA,
+	PROGRESS_BAR_TYPE_TIME,
+	PROGRESS_BAR_TYPE_COUNT
+} progress_bar_type_t;
+
 struct progress_bar {
 	struct timespec time_prev;
 	struct timespec time_start;
@@ -32,12 +38,26 @@ struct progress_bar {
 	int full_length;
 	int content_length;
 
+	u32 time;
+	u32 time_total;
+
 	int percent;
+	progress_bar_type_t type;
+
+	void (*update)(struct progress_bar *bar);
 };
 
+__BEGIN_DECLS
+
 s64 progress_bar_get_time_consume_ns(struct progress_bar *bar);
-void progress_bar_update(struct progress_bar *bar);
-void progress_bar_init(struct progress_bar *bar, double total);
+void progress_bar_init(struct progress_bar *bar, double total, progress_bar_type_t type);
 void progress_bar_add(struct progress_bar *bar, double val);
 void progress_bar_set(struct progress_bar *bar, double val);
 void progress_bar_finish(struct progress_bar *bar);
+
+static inline void progress_bar_update(struct progress_bar *bar)
+{
+	bar->update(bar);
+}
+
+__END_DECLS

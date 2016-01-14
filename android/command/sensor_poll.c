@@ -268,7 +268,6 @@ static void *sensor_poll_thread(void *data)
 static int sensor_poll_main_loop(struct cavan_sensor_module *module, u32 mask, u32 delay)
 {
 	int i;
-	int ret;
 
 	if (mask) {
 		cavan_sensor_set_enable_mask(module, mask, delay);

@@ -367,8 +367,6 @@ static void cavan_sensors_destory(struct cavan_sensor_pdev *pdev)
 
 static void cavan_sensors_remove(struct cavan_sensor_pdev *pdev)
 {
-	int i;
-
 	cavan_sensor_pdev_lock(pdev);
 
 	close(pdev->epoll_fd);
@@ -389,7 +387,6 @@ static int cavan_sensors_probe(struct cavan_sensor_pdev *pdev)
 	int ret;
 	int count;
 	struct sensor_t *list;
-	struct epoll_event event;
 	struct cavan_sensor_device **map;
 	struct cavan_sensor_device *sensor, *sensor_next;
 

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef __WORDSIZE
+#define __WORDSIZE			32
+#endif
+
 #ifndef _LARGEFILE64_SOURCE
 #define _LARGEFILE64_SOURCE
 #endif

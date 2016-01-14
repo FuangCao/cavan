@@ -2183,7 +2183,7 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t siz
 	char buff[2048];
 	struct progress_bar bar;
 
-	progress_bar_init(&bar, size);
+	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
 
 	if (size == 0) {
 		while (1) {
@@ -2254,7 +2254,7 @@ int network_client_send_file(struct network_client *client, int fd, size64_t siz
 	char buff[2048];
 	struct progress_bar bar;
 
-	progress_bar_init(&bar, size);
+	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
 
 	if (size == 0) {
 		while (1) {
