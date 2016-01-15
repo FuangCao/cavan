@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
 	ret = chroot(argv[1]);
 	if (ret < 0) {
-		print_error("chroot to %s", argv[1]);
+		pr_err_info("chroot to %s", argv[1]);
 		return ret;
 	}
 

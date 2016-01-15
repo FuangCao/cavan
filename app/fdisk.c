@@ -21,31 +21,31 @@ int main(int argc, char *argv[])
 
 	dev_fd = open(argv[1], O_RDWR | O_BINARY);
 	if (dev_fd < 0) {
-		print_error("open device \"%s\"", argv[1]);
+		pr_err_info("open device \"%s\"", argv[1]);
 		return -1;
 	}
 
 	ret = fread_master_boot_sector(dev_fd, &mbs);
 	if (ret < 0) {
-		error_msg("fread_master_boot_sector");
+		pr_err_info("fread_master_boot_sector");
 		goto out_close_dev;
 	}
 
 	ret = fget_device_geometry(dev_fd, &geo);
 	if (ret < 0) {
-		error_msg("fget_device_geometry");
+		pr_err_info("fget_device_geometry");
 		goto out_close_dev;
 	}
 
 	ret = get_sector_size(dev_fd, &sec_size);
 	if (ret < 0) {
-		error_msg("get_sector_size");
+		pr_err_info("get_sector_size");
 		goto out_close_dev;
 	}
 
 	ret = fget_device_size(dev_fd, &total_bytes);
 	if (ret < 0) {
-		error_msg("fget_device_size");
+		pr_err_info("fget_device_size");
 		goto out_close_dev;
 	}
 
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 
 		if (start_sec + part_secs > total_secs) {
 			ret = -1;
-			error_msg("partition size is too large");
+			pr_err_info("partition size is too large");
 			goto out_close_dev;
 		}
 
@@ -93,13 +93,13 @@ int main(int argc, char *argv[])
 
 	ret = fwrite_master_boot_sector(dev_fd, &mbs);
 	if (ret < 0) {
-		error_msg("fwrite_master_boot_sector");
+		pr_err_info("fwrite_master_boot_sector");
 		goto out_close_dev;
 	}
 
 	ret = freread_part_table(dev_fd);
 	if (ret < 0) {
-		error_msg("freread_part_table_retry");
+		pr_err_info("freread_part_table_retry");
 		goto out_close_dev;
 	}
 

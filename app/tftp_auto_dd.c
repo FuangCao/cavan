@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 
 	ret = uevent_init(&udesc);
 	if (ret < 0) {
-		error_msg("uevent_init");
+		pr_err_info("uevent_init");
 		return ret;
 	}
 
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 
 		ret = get_disk_add_uevent(&udesc);
 		if (ret < 0) {
-			error_msg("get_disk_add_uevent");
+			pr_err_info("get_disk_add_uevent");
 			break;
 		}
 
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 
 			if (file_test(p->out, "b") < 0) {
 				ret = -ENODEV;
-				error_msg("\"%s\" is not a block device", p->out);
+				pr_err_info("\"%s\" is not a block device", p->out);
 				break;
 			}
 

@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 
 	fd_in = open(argv[1], O_RDONLY | O_BINARY);
 	if (fd_in < 0) {
-		print_error("open file \"%s\"", argv[1]);
+		pr_err_info("open file \"%s\"", argv[1]);
 		return -1;
 	}
 
@@ -34,19 +34,19 @@ int main(int argc, char *argv[])
 
 		fd_out = open(format_text("%s/%d.bmp", argv[2], i), O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0777);
 		if (fd_out < 0) {
-			print_error("open target file");
+			pr_err_info("open target file");
 			break;
 		}
 
 		ret = ffile_write(fd_out, &file_hdr, sizeof(file_hdr));
 		if (ret < (int) sizeof(file_hdr)) {
-			print_error("write file header");
+			pr_err_info("write file header");
 			goto out_close_out;
 		}
 
 		ret = ffile_ncopy(fd_in, fd_out, file_hdr.size - sizeof(file_hdr));
 		if (ret < 0) {
-			error_msg("write file");
+			pr_err_info("write file");
 			goto out_close_out;
 		}
 

@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
 	ret = reread_part_table(argv[1]);
 	if (ret < 0) {
-		error_msg("reread_part_table");
+		pr_err_info("reread_part_table");
 		return ret;
 	}
 

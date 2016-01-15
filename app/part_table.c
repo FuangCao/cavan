@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 		dest_file = argv[2];
 		break;
 	default:
-		error_msg("unknown option");
+		pr_err_info("unknown option");
 		return -1;
 	}
 

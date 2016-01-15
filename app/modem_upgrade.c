@@ -41,7 +41,7 @@ static ssize_t parse_string_list(const char *dirname, struct modem_prop *props, 
 
 	readlen = file_read(pathname, buff, sizeof(buff));
 	if (readlen < 0) {
-		error_msg("file_read \"%s\" failed", pathname);
+		pr_err_info("file_read \"%s\" failed", pathname);
 		return readlen;
 	}
 
@@ -107,7 +107,7 @@ static char *modem_read_new_version(const char *dirname, char *version, size_t s
 
 	prop_count = parse_string_list(dirname, props, ARRAY_SIZE(props));
 	if (prop_count < 0) {
-		error_msg("parse_string_list");
+		pr_err_info("parse_string_list");
 		return NULL;
 	}
 
@@ -137,7 +137,7 @@ static int set_usb_power(void)
 	ret = file_puts_retry(USB_POWER_CONTROL_PATH, "on", 10);
 	if (ret < 0) {
 #ifdef CAVAN_DEBUG
-		warning_msg("write file \"%s\"", USB_POWER_CONTROL_PATH);
+		pr_warn_info("write file \"%s\"", USB_POWER_CONTROL_PATH);
 #endif
 		return ret;
 	}
@@ -145,7 +145,7 @@ static int set_usb_power(void)
 	ret = file_puts_retry(USB_POWER_WAKEUP_PATH, "disabled", 10);
 	if (ret < 0) {
 #ifdef CAVAN_DEBUG
-		warning_msg("write file \"%s\"", USB_POWER_WAKEUP_PATH);
+		pr_warn_info("write file \"%s\"", USB_POWER_WAKEUP_PATH);
 #endif
 		return ret;
 	}
@@ -160,7 +160,7 @@ static int modem_power_enable(void)
 	ret = file_write(MODEM_POWER_PATH, "off", 3);
 	if (ret < 0) {
 #ifdef CAVAN_DEBUG
-		error_msg("write file \"%s\"", MODEM_POWER_PATH);
+		pr_err_info("write file \"%s\"", MODEM_POWER_PATH);
 #endif
 		return ret;
 	}
@@ -170,7 +170,7 @@ static int modem_power_enable(void)
 	ret = file_write(MODEM_POWER_PATH, "on", 2);
 	if (ret < 0) {
 #ifdef CAVAN_DEBUG
-		error_msg("write file \"%s\"", MODEM_POWER_PATH);
+		pr_err_info("write file \"%s\"", MODEM_POWER_PATH);
 #endif
 		return ret;
 	}
@@ -180,7 +180,7 @@ static int modem_power_enable(void)
 	ret = file_wait(MODEM_TTY_DEVICE, "c", 10);
 	if (ret < 0) {
 #ifdef CAVAN_DEBUG
-		error_msg("modem power enable failed");
+		pr_err_info("modem power enable failed");
 #endif
 		return ret;
 	}
@@ -200,13 +200,13 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 
 	fd = open(MODEM_TTY_DEVICE, O_RDWR | O_SYNC | O_TRUNC | O_NOCTTY);
 	if (fd < 0) {
-		print_error("open device \"%s\" failed", MODEM_TTY_DEVICE);
+		pr_err_info("open device \"%s\" failed", MODEM_TTY_DEVICE);
 		return fd;
 	}
 
-	ret = set_tty_mode(fd, TTY_MODE_AT, &attr);
+	ret = cavan_set_tty_mode(fd, CAVAN_TTY_MODE_AT, &attr);
 	if (ret < 0) {
-		error_msg("set_tty_mode");
+		pr_err_info("cavan_set_tty_mode");
 		goto out_close_fd;
 	}
 
@@ -214,7 +214,7 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 
 	rwlen = write(fd, buff, p - buff - 1);
 	if (rwlen < 0) {
-		print_error("write command \"%s\" failed", command);
+		pr_err_info("write command \"%s\" failed", command);
 		ret = rwlen;
 		goto out_restore_tty;
 	}
@@ -222,7 +222,7 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 	ret = read(fd, buff, size);
 
 out_restore_tty:
-	restore_tty_attr(fd, &attr);
+	cavan_tty_attr_restore(fd, &attr);
 out_close_fd:
 	close(fd);
 
@@ -236,7 +236,7 @@ static char *modem_read_old_version(char *version, size_t size)
 
 	readlen = modem_send_at_command(MODEM_ATCMD_READ_VERSION, buff, sizeof(buff));
 	if (readlen < 0) {
-		print_error("modem_send_at_command");
+		pr_err_info("modem_send_at_command");
 		return NULL;
 	}
 
@@ -251,7 +251,7 @@ static int modem_if_need_upgrade(const char *dirname, int retry)
 	char new_version[512], old_version[512];
 
 	if (modem_read_new_version(dirname, new_version, sizeof(new_version)) == NULL) {
-		error_msg("modem_read_new_version");
+		pr_err_info("modem_read_new_version");
 		return -EFAULT;
 	}
 
@@ -259,7 +259,7 @@ static int modem_if_need_upgrade(const char *dirname, int retry)
 
 	while (retry-- && modem_read_old_version(old_version, sizeof(old_version)) == NULL);
 	if (retry < 0) {
-		error_msg("modem_read_old_version");
+		pr_err_info("modem_read_old_version");
 		return -EFAULT;
 	}
 
@@ -292,13 +292,13 @@ static int upgrade_modem(const char *resource)
 
 	ret = chmod(update_wizard, 0777);
 	if (ret < 0) {
-		print_error("chmod \"%s\"", update_wizard);
+		pr_err_info("chmod \"%s\"", update_wizard);
 		return ret;
 	}
 
 	pid = fork();
 	if (pid < 0) {
-		print_error("fork");
+		pr_err_info("fork");
 		return pid;
 	}
 
@@ -310,7 +310,7 @@ static int upgrade_modem(const char *resource)
 		} else {
 			ret = execl(update_wizard, update_wizard, resource, NULL);
 			if (ret < 0) {
-				error_msg("execl");
+				pr_err_info("execl");
 			}
 
 			exit(-1);
@@ -321,7 +321,7 @@ static int upgrade_modem(const char *resource)
 
 	waitpid(pid, &ret, 0);
 	if (!WIFEXITED(ret) || WEXITSTATUS(ret) != 0) {
-		error_msg("upgrade modem failed");
+		pr_err_info("upgrade modem failed");
 		return -1;
 	}
 
@@ -369,12 +369,12 @@ int main(int argc, char *argv[])
 				char version[512];
 
 				if (modem_power_enable() < 0) {
-					error_msg("can't open modem power");
+					pr_err_info("can't open modem power");
 					return -EFAULT;
 				}
 
 				if (modem_read_old_version(version, sizeof(version)) == NULL) {
-					error_msg("modem_read_old_version");
+					pr_err_info("modem_read_old_version");
 					return -EFAULT;
 				}
 
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 	assert(argc > optind);
 
 	if (modem_power_enable() < 0) {
-		error_msg("can't open modem power");
+		pr_err_info("can't open modem power");
 		return -EFAULT;
 	}
 
@@ -409,12 +409,12 @@ int main(int argc, char *argv[])
 
 	ret = modem_if_need_upgrade(resource_path, 10);
 	if (ret < 0) {
-		error_msg("modem_if_need_upgrade");
+		pr_err_info("modem_if_need_upgrade");
 		return ret;
 	}
 
 	if (ret == 0) {
-		right_msg("current version is newest, don't need upgrade");
+		pr_green_info("current version is newest, don't need upgrade");
 		return 0;
 	}
 

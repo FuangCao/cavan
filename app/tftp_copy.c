@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 			break;
 
 		default:
-			error_msg("unknown operation");
+			pr_err_info("unknown operation");
 			return -EINVAL;
 		}
 	}
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
 		ret = tftp_handle(hostname, port, argv[i], temp_name);
 		if (ret < 0) {
-			error_msg("tftp send or receive file \"%s\" failed", argv[i]);
+			pr_err_info("tftp send or receive file \"%s\" failed", argv[i]);
 			return ret;
 		}
 	}

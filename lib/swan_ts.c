@@ -356,7 +356,7 @@ ssize_t ft5406_read_firmware_data2(const char *cfgpath, char *buff, size_t size)
 
 	file = fopen(cfgpath, "r");
 	if (file == NULL) {
-		print_error("Faild to open file %s", cfgpath);
+		pr_err_info("Faild to open file %s", cfgpath);
 		return -ENOENT;
 	}
 
@@ -383,7 +383,7 @@ ssize_t ft5406_read_firmware_data3(const char *cfgpath, char *buff, size_t size)
 
 	fd = open(cfgpath, O_RDONLY);
 	if (fd < 0) {
-		print_error("Failed to open file %s", cfgpath);
+		pr_err_info("Failed to open file %s", cfgpath);
 		return fd;
 	}
 

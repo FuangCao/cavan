@@ -11,7 +11,7 @@ static char *get_device(int index)
 	case 1:
 		return "/dev/mmcblk1";
 	default:
-		error_msg("Unknown Device");
+		pr_err_info("Unknown Device");
 	}
 
 	return NULL;
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 		target_device = format_text("%sp2", target_device);
 		ret = copy_to_emmc("system.img", img_path, target_device, 0);
 		if (ret < 0) {
-			error_msg("copy_to_emmc");
+			pr_err_info("copy_to_emmc");
 			return ret;
 		}
 		break;
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 		target_device = format_text("%sp5", target_device);
 		ret = copy_to_emmc("userdata.img", img_path, target_device, 0);
 		if (ret < 0) {
-			error_msg("copy_to_emmc");
+			pr_err_info("copy_to_emmc");
 			return ret;
 		}
 		break;
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 			target_device = format_text("%sp4", target_device);
 			ret = copy_to_emmc("recovery.img", img_path, target_device, 0);
 			if (ret < 0) {
-				error_msg("copy_to_emmc");
+				pr_err_info("copy_to_emmc");
 				return ret;
 			}
 			break;

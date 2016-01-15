@@ -34,12 +34,12 @@ int bmp_read_file_header(int fd, struct bmp_file_header *file_hdr)
 
 	ret = ffile_read(fd, file_hdr, sizeof(*file_hdr));
 	if (ret < 0) {
-		print_error("read");
+		pr_err_info("read");
 		return ret;
 	}
 
 	if (file_hdr->type[0] != 'B' || file_hdr->type[1] != 'M') {
-		error_msg("This File Is Not A BMP File");
+		pr_err_info("This File Is Not A BMP File");
 		return -1;
 	}
 
@@ -54,7 +54,7 @@ int bmp_read_info_header(int fd, struct bmp_info_header *info_hdr)
 
 	ret = ffile_read(fd, info_hdr, sizeof(*info_hdr));
 	if (ret < 0) {
-		print_error("read");
+		pr_err_info("read");
 		return ret;
 	}
 
@@ -71,7 +71,7 @@ int bmp_read_info_header(int fd, struct bmp_info_header *info_hdr)
 		for (y = height - 1; y >= 0; y--) { \
 			ret = read(fd, &buff, sizeof(buff)); \
 			if (ret < 0) { \
-				print_error("read"); \
+				pr_err_info("read"); \
 				return ret; \
 			} \
 			for (x = 0; x < width; x++) { \
@@ -99,25 +99,25 @@ int cavan_fb_bmp_view(struct cavan_fb_device *fb_dev, const char *pathname)
 
 	fd = open(pathname, O_RDONLY | O_BINARY);
 	if (fd < 0) {
-		print_error("open");
+		pr_err_info("open");
 		return fd;
 	}
 
 	ret = bmp_read_file_header(fd, &file_hdr);
 	if (ret < 0) {
-		error_msg("read_file_header");
+		pr_err_info("read_file_header");
 		goto out_close_fd;
 	}
 
 	ret = bmp_read_info_header(fd, &info_hdr);
 	if (ret < 0) {
-		error_msg("read_info_header");
+		pr_err_info("read_info_header");
 		goto out_close_fd;
 	}
 
 	ret = lseek(fd, file_hdr.offset, SEEK_SET);
 	if (ret < 0) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		goto out_close_fd;
 	}
 
@@ -140,7 +140,7 @@ int cavan_fb_bmp_view(struct cavan_fb_device *fb_dev, const char *pathname)
 		cavan_fb_bmp_draw8888(fb_dev, fd, info_hdr.width, info_hdr.height);
 		break;
 	default:
-		error_msg("Unknown bit_count");
+		pr_err_info("Unknown bit_count");
 	}
 
 	cavan_fb_refresh(fb_dev);

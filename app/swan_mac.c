@@ -9,13 +9,13 @@ int main(int argc, char *argv[])
 
 	ret = mount_to(EMMC_DEVICE "p2", system_mnt_point, "ext4", NULL);
 	if (ret < 0) {
-		error_msg("mount system device");
+		pr_err_info("mount system device");
 		return ret;
 	}
 
 	ret = write_mac_address(EMMC_DEVICE, system_mnt_point);
 	if (ret < 0) {
-		error_msg("write mac address failed");
+		pr_err_info("write mac address failed");
 	}
 
 	umount_directory2(system_mnt_point, MNT_DETACH);

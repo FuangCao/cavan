@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
 	ret = umount_all1(argv + optind, argc - optind, flags);
 	if (ret < 0) {
-		print_error("umount_all1");
+		pr_err_info("umount_all1");
 		return ret;
 	}
 

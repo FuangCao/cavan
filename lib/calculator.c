@@ -89,7 +89,7 @@ int check_bracket_match_pair(const char *formula, const char *formula_end)
 
 	ret = letter_stack_init(&stack, 10);
 	if (ret < 0) {
-		error_msg("letter_stack_init");
+		pr_err_info("letter_stack_init");
 		return ret;
 	}
 
@@ -160,7 +160,7 @@ static int get_operator_priority(char op)
 		return 1;
 
 	default:
-		warning_msg("unknown operator '%c'", op);
+		pr_warn_info("unknown operator '%c'", op);
 		return 0;
 	}
 }
@@ -172,13 +172,13 @@ static int simple_operation2(struct double_stack *stack, char op)
 
 	ret = double_stack_pop(stack, &operand2);
 	if (ret < 0) {
-		error_msg("double_stack_pop");
+		pr_err_info("double_stack_pop");
 		return ret;
 	}
 
 	ret = double_stack_pop(stack, &operand1);
 	if (ret < 0) {
-		error_msg("double_stack_pop");
+		pr_err_info("double_stack_pop");
 		return ret;
 	}
 
@@ -200,7 +200,7 @@ static int simple_operation2(struct double_stack *stack, char op)
 		break;
 
 	default:
-		error_msg("unknown operator '%c'", op);
+		pr_err_info("unknown operator '%c'", op);
 		return -EINVAL;
 	}
 
@@ -271,20 +271,20 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 
 	ret = letter_stack_init(&operator_stack, 100);
 	if (ret < 0) {
-		error_msg("letter_stack_init");
+		pr_err_info("letter_stack_init");
 		return ret;
 	}
 
 	ret = double_stack_init(&data_stack, 100);
 	if (ret < 0) {
-		error_msg("double_stack_init");
+		pr_err_info("double_stack_init");
 		goto out_free_operator_stack;
 	}
 
 	if (*formula == '+' || *formula == '-') {
 		ret = double_stack_push(&data_stack, 0);
 		if (ret < 0) {
-			error_msg("double_stack_push");
+			pr_err_info("double_stack_push");
 			goto out_free_data_stack;
 		}
 	}
@@ -296,20 +296,20 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 		case '{':
 			formula_last = get_bracket_pair(formula, formula_end);
 			if (formula_last == NULL) {
-				print_error("Bracket do't pair");
+				pr_err_info("Bracket do't pair");
 				ret = -EINVAL;
 				goto out_free_data_stack;
 			}
 
 			ret = simple_calculation_base(formula + 1, formula_last, &result_tmp);
 			if (ret < 0) {
-				error_msg("simple_calculation_base");
+				pr_err_info("simple_calculation_base");
 				goto out_free_data_stack;
 			}
 
 			ret = double_stack_push(&data_stack, result_tmp);
 			if (ret < 0) {
-				error_msg("double_stack_push");
+				pr_err_info("double_stack_push");
 				goto out_free_data_stack;
 			}
 
@@ -320,7 +320,7 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 			result_tmp = text2double_unsigned(formula, formula_end, &formula, 10);
 			ret = double_stack_push(&data_stack, result_tmp);
 			if (ret < 0) {
-				error_msg("double_stack_push");
+				pr_err_info("double_stack_push");
 				goto out_free_data_stack;
 			}
 			continue;
@@ -334,7 +334,7 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 			while (letter_stack_get_top(&operator_stack, &operator_tmp) >= 0 && get_operator_priority(operator_tmp) >= priority_tmp) {
 				ret = simple_operation2(&data_stack, operator_tmp);
 				if (ret < 0) {
-					error_msg("simple_operation2");
+					pr_err_info("simple_operation2");
 					goto out_free_data_stack;
 				}
 
@@ -343,7 +343,7 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 
 			ret = letter_stack_push(&operator_stack, *formula);
 			if (ret < 0) {
-				error_msg("letter_stack_push");
+				pr_err_info("letter_stack_push");
 				goto out_free_data_stack;
 			}
 			break;
@@ -359,7 +359,7 @@ int simple_calculation_base(const char *formula, const char *formula_end, double
 
 		default:
 			ret = -EINVAL;
-			error_msg("unknown char '%c'", *formula);
+			pr_err_info("unknown char '%c'", *formula);
 			goto out_free_data_stack;
 		}
 		formula++;
@@ -369,21 +369,21 @@ label_complete_calculte:
 	while (letter_stack_pop(&operator_stack, &operator_tmp) >= 0) {
 		ret = simple_operation2(&data_stack, operator_tmp);
 		if (ret < 0) {
-			error_msg("simple_operation2");
+			pr_err_info("simple_operation2");
 			return ret;
 		}
 	}
 
 	ret = double_stack_pop(&data_stack, result_last);
 	if (ret < 0) {
-		error_msg("double_stack_pop");
+		pr_err_info("double_stack_pop");
 		goto out_free_data_stack;
 	}
 
 	if (double_stack_is_empty(&data_stack)) {
 		ret = 0;
 	} else {
-		error_msg("data stack is not empty");
+		pr_err_info("data stack is not empty");
 		ret = -EFAULT;
 	}
 
@@ -404,13 +404,13 @@ int simple_calculation(const char *formula, double *result_last)
 
 	ret = check_bracket_match_pair(formula, formula_end);
 	if (ret < 0) {
-		error_msg("check_bracket_match_pair");
+		pr_err_info("check_bracket_match_pair");
 		return ret;
 	}
 
 	ret = simple_calculation_base(formula, formula_end, result_last);
 	if(ret < 0) {
-		error_msg("simple_calculator_base");
+		pr_err_info("simple_calculator_base");
 		return ret;
 	}
 
@@ -510,7 +510,7 @@ static int complete_operation2(const struct calculator_operator_descriptor *desc
 		result = pow(right_operand, 1 / left_operand);
 		break;
 	default:
-		print_error("invalid operator `%s'", desc->symbols[0]);
+		pr_err_info("invalid operator `%s'", desc->symbols[0]);
 		return -EINVAL;
 	}
 
@@ -588,7 +588,7 @@ static int complete_operation1_left(const struct calculator_operator_descriptor 
 		result = 1 / operand;
 		break;
 	default:
-		print_error("invalid operator `%s'", desc->symbols[0]);
+		pr_err_info("invalid operator `%s'", desc->symbols[0]);
 		return -EINVAL;
 	}
 
@@ -824,13 +824,13 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 
 	ret = general_stack_init_fd(&stack_operator, 10);
 	if (ret < 0) {
-		print_error("general_stack_init_fd");
+		pr_err_info("general_stack_init_fd");
 		return ret;
 	}
 
 	ret = double_stack_init(&stack_operand, 20);
 	if (ret < 0) {
-		print_error("double_stack_init");
+		pr_err_info("double_stack_init");
 		goto out_operator_stack_free;
 	}
 
@@ -851,7 +851,7 @@ int complete_calculation_base(const char *formula, const char *formula_end, doub
 		case '{':
 			formula_last = get_bracket_pair(formula, formula_end);
 			if (formula_last == NULL) {
-				print_error("Bracket do't pair");
+				pr_err_info("Bracket do't pair");
 				ret = -EINVAL;
 				goto out_operand_stack_free;
 			}

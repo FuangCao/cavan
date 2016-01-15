@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
 	ret = uboot2uboot_np(uboot_path, uboot_np_path);
 	if (ret < 0) {
-		error_msg("uboot2uboot_np");
+		pr_err_info("uboot2uboot_np");
 		return ret;
 	}
 

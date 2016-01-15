@@ -1404,14 +1404,14 @@ int tcp_dd_exec_command(struct network_url *url, const char *command)
 		goto out_client_close;
 	}
 
-	ret = set_tty_mode(stdin_fd, TTY_MODE_SSH, &tty_attr);
+	ret = cavan_set_tty_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &tty_attr);
 	if (ret < 0) {
-		pr_red_info("set_tty_mode");
+		pr_red_info("cavan_set_tty_mode");
 		goto out_client_close;
 	}
 
 	ret = network_client_exec_redirect(&client, stdin_fd, stdout_fd);
-	restore_tty_attr(stdin_fd, &tty_attr);
+	cavan_tty_attr_restore(stdin_fd, &tty_attr);
 out_client_close:
 	client.close(&client);
 	return ret;

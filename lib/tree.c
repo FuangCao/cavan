@@ -64,7 +64,7 @@ int binary_tree_insert(struct binary_tree_descriptor *desc, void *data)
 
 	compare = desc->compare;
 	if (compare == NULL) {
-		error_msg("compare function is NULL");
+		pr_err_info("compare function is NULL");
 		return -ENODATA;
 	}
 
@@ -80,7 +80,7 @@ int binary_tree_insert(struct binary_tree_descriptor *desc, void *data)
 
 	p = binary_tree_malloc_node(desc, data, NULL, NULL);
 	if (p == NULL) {
-		error_msg("binary_tree_malloc_node");
+		pr_err_info("binary_tree_malloc_node");
 		return -ENOMEM;
 	}
 

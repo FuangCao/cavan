@@ -103,14 +103,14 @@ int main(int argc, char *argv[])
 
 	ret = cavan_inotify_init(&desc, __UNCONST(command));
 	if (ret < 0) {
-		error_msg("cavan_inotify_init");
+		pr_err_info("cavan_inotify_init");
 		return ret;
 	}
 
 	while (optind < argc) {
 		ret = cavan_inotify_register_watch(&desc, argv[optind], IN_CLOSE_WRITE);
 		if (ret < 0) {
-			error_msg("cavan_inotify_register_watch");
+			pr_err_info("cavan_inotify_register_watch");
 			goto out_inotify_deinit;
 		}
 

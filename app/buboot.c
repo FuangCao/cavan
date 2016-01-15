@@ -37,13 +37,13 @@ int main(int argc, char *argv[])
 	if (image_is(uboot_path, "u-boot-no-padding")) {
 		ret = burn_uboot_np(uboot_path, dev_path);
 		if (ret < 0) {
-			error_msg("burn_uboot_np");
+			pr_err_info("burn_uboot_np");
 			return ret;
 		}
 	} else {
 		ret = burn_uboot(uboot_path, dev_path);
 		if (ret < 0) {
-			error_msg("burn_uboot");
+			pr_err_info("burn_uboot");
 			return ret;
 		}
 	}

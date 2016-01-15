@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 
 	ret = get_device_statfs(argv[optind], NULL, &stfs);
 	if (ret < 0) {
-		error_msg("get_device_statfs");
+		pr_err_info("get_device_statfs");
 		return ret;
 	}
 

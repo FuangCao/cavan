@@ -122,7 +122,7 @@ static u8 cavan_ecc_check_column(u8 *buff)
 u32 cavan_ecc_check(void *buff, size_t size)
 {
 	if (size != 256) {
-		error_msg("buff size != 256");
+		pr_err_info("buff size != 256");
 		return 0;
 	}
 

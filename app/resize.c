@@ -13,14 +13,14 @@ int main(int argc, char *argv[])
 	if (argc == 2) {
 		ret = image_shrink(argv[1]);
 		if (ret < 0) {
-			error_msg("image_shrink");
+			pr_err_info("image_shrink");
 		}
 
 		return ret;
 	}
 
 	if (stat(argv[1], &st) < 0) {
-		print_error("get file size failed");
+		pr_err_info("get file size failed");
 		return -1;
 	}
 
@@ -40,21 +40,21 @@ int main(int argc, char *argv[])
 		size = text2size(argv[2], NULL);
 		break;
 	default:
-		error_msg("argument error");
+		pr_err_info("argument error");
 		return -1;
 	}
 
 	if (size <= 0) {
-		error_msg("dest size <= 0");
+		pr_err_info("dest size <= 0");
 		return -1;
 	} else if (size == st.st_size) {
-		warning_msg("size is no change");
+		pr_warn_info("size is no change");
 		return 0;
 	}
 
 	ret = image_resize(argv[1], size);
 	if (ret < 0) {
-		error_msg("image_resize");
+		pr_err_info("image_resize");
 	}
 
 	return ret;

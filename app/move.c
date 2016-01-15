@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	while (optind < argc) {
 		ret = move_auto(argv[optind], argv[argc]);
 		if (ret < 0) {
-			error_msg("move %s => %s falied", argv[optind], argv[argc]);
+			pr_err_info("move %s => %s falied", argv[optind], argv[argc]);
 			return ret;
 		}
 

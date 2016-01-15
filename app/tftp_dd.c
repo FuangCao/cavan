@@ -83,14 +83,14 @@ int main(int argc, char *argv[])
 				return 0;
 
 			default:
-				error_msg("unknown option: %c", c);
+				pr_err_info("unknown option: %c", c);
 				show_usage();
 				return -EINVAL;
 		}
 	}
 
 	if (handle == NULL) {
-		error_msg("no function handle this action");
+		pr_err_info("no function handle this action");
 		return -EINVAL;
 	}
 
@@ -166,20 +166,20 @@ int main(int argc, char *argv[])
 	}
 
 	if (input_file[0] == 0 || output_file[0] == 0) {
-		error_msg("must specify if and of option");
+		pr_err_info("must specify if and of option");
 		return -EINVAL;
 	}
 
 	ret = handle(hostname, port, input_file, output_file, skip * bs, seek * bs, count * bs);
 	if (ret < 0) {
-		error_msg("tftp dd failed");
+		pr_err_info("tftp dd failed");
 		return ret;
 	}
 
 	return 0;
 
 out_unknown_option:
-	error_msg("unknown option \"%s\"", para_option);
+	pr_err_info("unknown option \"%s\"", para_option);
 	show_usage();
 	return -EINVAL;
 }

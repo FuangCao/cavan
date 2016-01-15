@@ -14,19 +14,19 @@ int main(int argc, char *argv[])
 	case 'x':
 		ret = unrle_to(argv[2], argv[3]);
 		if (ret < 0) {
-			error_msg("inrle_to");
+			pr_err_info("inrle_to");
 			return ret;
 		}
 		break;
 	case 'c':
 		ret = rle_to(argv[2], argv[3]);
 		if (ret < 0) {
-			error_msg("rle_to");
+			pr_err_info("rle_to");
 			return ret;
 		}
 		break;
 	default:
-		error_msg("argument error");
+		pr_err_info("argument error");
 		return -1;
 	}
 

@@ -35,7 +35,7 @@ int get_device_size(const char *dev_path, u64 *size)
 
 	dev_fd = open(dev_path, 0);
 	if (dev_fd < 0) {
-		print_error("open");
+		pr_err_info("open");
 		return -1;
 	}
 
@@ -196,7 +196,7 @@ int device_is_mounted_base(const char *dev_abs_path)
 
 	readlen = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (readlen < 0) {
-		error_msg("read mount table failed");
+		pr_err_info("read mount table failed");
 		return readlen;
 	}
 
@@ -214,7 +214,7 @@ int device_is_mounted(const char *dev_path)
 	char abs_path[1024];
 
 	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL) {
-		error_msg("path \"%s\" do't exist", dev_path);
+		pr_err_info("path \"%s\" do't exist", dev_path);
 		ERROR_RETURN(ENOENT);
 	}
 
@@ -240,7 +240,7 @@ int umount_device(const char *dev_path, int flags)
 	}
 
 	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL) {
-		error_msg("path \"%s\" do't exist", dev_path);
+		pr_err_info("path \"%s\" do't exist", dev_path);
 		ERROR_RETURN(ENOENT);
 	}
 
@@ -252,7 +252,7 @@ int umount_device(const char *dev_path, int flags)
 
 	readlen = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (readlen < 0) {
-		error_msg("read mount table failed");
+		pr_err_info("read mount table failed");
 		return readlen;
 	}
 
@@ -282,7 +282,7 @@ int umount_abs_path(const char *abs_path, int flags)
 
 	readlen = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (readlen < 0) {
-		error_msg("read mount table failed");
+		pr_err_info("read mount table failed");
 		return readlen;
 	}
 
@@ -310,7 +310,7 @@ int umount_main(const char *pathname, int flags)
 			sprintf(abs_path, "/dev/%s", pathname);
 		}
 	} else if (to_abs_path2_base(pathname, abs_path, sizeof(abs_path)) == NULL) {
-		error_msg("path \"%s\" do't exist", pathname);
+		pr_err_info("path \"%s\" do't exist", pathname);
 		ERROR_RETURN(ENOENT);
 	}
 
@@ -496,7 +496,7 @@ int mount_update_mtab(const char *source, const char *target, const char *fstype
 	ret = mount(source, target, fstype, flags, data);
 	if (ret < 0) {
 		if (errno == EBUSY && partition_is_mounted(source, target)) {
-			right_msg("partition \"%s\" is already mounted to \"%s\"", source, target);
+			pr_green_info("partition \"%s\" is already mounted to \"%s\"", source, target);
 			return 0;
 		} else {
 			return ret;
@@ -554,7 +554,7 @@ int libc_mount_to(const char *source, const char *target, const char *fstype, un
 	}
 
 #ifdef CAVAN_DEBUG
-	warning_msg("rw mount failed, retry use ro");
+	pr_warn_info("rw mount failed, retry use ro");
 #endif
 
 	return libc_mount(source, target, fstype, flags | MS_RDONLY, data);
@@ -587,7 +587,7 @@ int mount_to(const char *mnt_dev, const char *mnt_point, const char *fstype, con
 		break;
 
 	default:
-		warning_msg("unknown deivce type");
+		pr_warn_info("unknown deivce type");
 		ret = -1;
 	}
 
@@ -622,7 +622,7 @@ int mount_main(const char *mnt_dev, const char *mnt_point, const char *fstype, c
 		text_copy(source, mnt_point);
 		text_copy(target, mnt_dev);
 	} else {
-		error_msg("No mount device find");
+		pr_err_info("No mount device find");
 		ERROR_RETURN(ENODEV);
 	}
 
@@ -650,7 +650,7 @@ int simple_ioctl(const char *dev_path, int request)
 
 	fd = open(dev_path, 0);
 	if (fd < 0) {
-		print_error("open device \"%s\"", dev_path);
+		pr_err_info("open device \"%s\"", dev_path);
 		return -1;
 	}
 
@@ -670,7 +670,7 @@ int reread_part_table(const char *dev_path)
 
 	dev_fd = open(dev_path, 0);
 	if (dev_fd < 0) {
-		print_error("open device \"%s\"", dev_path);
+		pr_err_info("open device \"%s\"", dev_path);
 		return -1;
 	}
 
@@ -717,7 +717,7 @@ int reread_part_table_retry(const char *dev_path, int count)
 
 	dev_fd = open(dev_path, 0);
 	if (dev_fd < 0) {
-		print_error("open device \"%s\"", dev_path);
+		pr_err_info("open device \"%s\"", dev_path);
 		return -1;
 	}
 
@@ -764,7 +764,7 @@ void show_master_boot_sector(struct master_boot_sector *mbs_p)
 	println("magic_number = 0x%04x", mbs_p->magic_number);
 
 	if (mbs_p->magic_number != 0xAA55) {
-		error_msg("Bad Magic Number");
+		pr_err_info("Bad Magic Number");
 		return;
 	}
 
@@ -777,13 +777,13 @@ int fread_master_boot_sector(int dev_fd, struct master_boot_sector *mbs_p)
 
 	ret = lseek(dev_fd, 0, SEEK_SET);
 	if (ret < 0) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		return ret;
 	}
 
 	ret = ffile_read(dev_fd, mbs_p, sizeof(*mbs_p));
 	if (ret < 0) {
-		print_error("read master boot sector");
+		pr_err_info("read master boot sector");
 		return ret;
 	}
 
@@ -797,14 +797,14 @@ int read_master_boot_sector(const char *dev_path, struct master_boot_sector *mbs
 
 	dev_fd = open(dev_path, O_RDONLY | O_BINARY);
 	if (dev_fd < 0) {
-		print_error("open deive \"%s\"", dev_path);
+		pr_err_info("open deive \"%s\"", dev_path);
 		return -1;
 	}
 
 	ret = fread_master_boot_sector(dev_fd, mbs_p);
 	close(dev_fd);
 	if (ret < 0) {
-		error_msg("fread_master_boot_sector");
+		pr_err_info("fread_master_boot_sector");
 		return ret;
 	}
 
@@ -819,13 +819,13 @@ int fwrite_master_boot_sector(int dev_fd, struct master_boot_sector *mbs_p)
 
 	ret = lseek(dev_fd, 0, SEEK_SET);
 	if (ret < 0) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		return ret;
 	}
 
 	ret = ffile_write(dev_fd, mbs_p, sizeof(*mbs_p));
 	if (ret < (int) sizeof(*mbs_p)) {
-		print_error("ffile_write");
+		pr_err_info("ffile_write");
 		return ret;
 	}
 
@@ -839,13 +839,13 @@ int write_master_boot_sector(const char *dev_path, struct master_boot_sector *mb
 
 	dev_fd = open(dev_path, O_WRONLY | O_BINARY);
 	if (dev_fd < 0) {
-		print_error("open deivce \"%s\"", dev_path);
+		pr_err_info("open deivce \"%s\"", dev_path);
 		return -1;
 	}
 
 	ret = fwrite_master_boot_sector(dev_fd, mbs_p);
 	if (ret < 0) {
-		error_msg("fwrite_master_boot_sector");
+		pr_err_info("fwrite_master_boot_sector");
 	}
 
 	close(dev_fd);
@@ -860,7 +860,7 @@ int ioctl_get32(const char *dev_path, int request, u32 *val_p)
 
 	dev_fd = open(dev_path, 0);
 	if (dev_fd < 0) {
-		print_error("open device \"%s\"", dev_path);
+		pr_err_info("open device \"%s\"", dev_path);
 		return -1;
 	}
 
@@ -878,7 +878,7 @@ int ioctl_set32(const char *dev_path, int request, u32 val)
 
 	dev_fd = open(dev_path, 0);
 	if (dev_fd < 0) {
-		print_error("open device \"%s\"", dev_path);
+		pr_err_info("open device \"%s\"", dev_path);
 		return -1;
 	}
 
@@ -904,7 +904,7 @@ int get_device_geometry(const char *dev_path, struct hd_geometry *geo_p)
 
 	dev_fd = open(dev_path, 0);
 	if (dev_fd < 0) {
-		print_error("open deivce \"%s\"", dev_path);
+		pr_err_info("open deivce \"%s\"", dev_path);
 		return -1;
 	}
 
@@ -1120,7 +1120,7 @@ struct filesystem_desc *get_fsdesc_by_name(const char *name)
 		}
 	}
 
-	error_msg("unknown filesystem");
+	pr_err_info("unknown filesystem");
 
 	return NULL;
 }
@@ -1155,7 +1155,7 @@ int partition_mount_to(struct partition_desc *part_desc, const char *mnt_point, 
 
 	ret = libc_mount_to(part_desc->path, mnt_point, fsdesc->name, 0, data);
 	if (ret < 0) {
-		print_error("mount \"%s\" to \"%s\"", part_desc->path, mnt_point);
+		pr_err_info("mount \"%s\" to \"%s\"", part_desc->path, mnt_point);
 		return ret;
 	}
 
@@ -1192,7 +1192,7 @@ int partition_test(struct partition_desc *part_desc)
 		ERROR_RETURN(ENOENT);
 	}
 
-	warning_msg("block device \"%s\" don't exist, try to mknod", part_desc->path);
+	pr_warn_info("block device \"%s\" don't exist, try to mknod", part_desc->path);
 
 	ret = remknod(part_desc->path, 0666, makedev(part_desc->major, part_desc->minor));
 	if (ret < 0) {
@@ -1257,7 +1257,7 @@ int partition_change_label(struct partition_desc *part_desc)
 	}
 
 	if (part_desc->label[0] == 0) {
-		warning_msg("label text is empty");
+		pr_warn_info("label text is empty");
 		return 0;
 	}
 
@@ -1325,26 +1325,26 @@ int partition_mkfs(struct partition_desc *part_desc)
 
 	ret = umount_partition(part_desc->path, MNT_DETACH);
 	if (ret < 0 || ((part_desc->flags & MKFS_FLAG_TEST) && partition_test_mount(part_desc) == 0)) {
-		right_msg("partition \"%s\" is ok, try to change label", part_desc->path);
+		pr_green_info("partition \"%s\" is ok, try to change label", part_desc->path);
 
 		ret = partition_change_label(part_desc);
 		if (ret < 0) {
-			warning_msg("change label failed, mkfs now");
+			pr_warn_info("change label failed, mkfs now");
 		} else {
-			right_msg("change label is ok, don't need mkfs");
+			pr_green_info("change label is ok, don't need mkfs");
 			return 0;
 		}
 	}
 
 	if (part_desc->label[0] == 0) {
-		warning_msg("the label of partition \"%s\" is empty, read it now", part_desc->path);
+		pr_warn_info("the label of partition \"%s\" is empty, read it now", part_desc->path);
 
 		ret = partition_read_label(part_desc);
 		if (ret < 0) {
-			error_msg("read label from partition \"%s\" failed", part_desc->path);
+			pr_err_info("read label from partition \"%s\" failed", part_desc->path);
 			part_desc->label[0] = 0;
 		} else {
-			right_msg("the label of partition \"%s\" is \"%s\"", part_desc->path, part_desc->label);
+			pr_green_info("the label of partition \"%s\" is \"%s\"", part_desc->path, part_desc->label);
 		}
 	}
 
@@ -1361,25 +1361,25 @@ int mount_system_devices(void)
 
 	ret = libc_mount_to("sys", "/sys", "sysfs", 0, NULL);
 	if (ret < 0) {
-		print_error("mount sysfs");
+		pr_err_info("mount sysfs");
 		return ret;
 	}
 
 	ret = libc_mount_to("proc", "/proc", "proc", 0, NULL);
 	if (ret < 0) {
-		print_error("mount proc");
+		pr_err_info("mount proc");
 		return ret;
 	}
 
 	ret = libc_mount_to("tmpfs", "/tmp", "tmpfs", 0, NULL);
 	if (ret < 0) {
-		print_error("mount tmp");
+		pr_err_info("mount tmp");
 		return ret;
 	}
 
 	ret = libc_mount_to("tmpfs", "/dev", "tmpfs", 0, NULL);
 	if (ret < 0) {
-		print_error("mount dev");
+		pr_err_info("mount dev");
 		return ret;
 	}
 
@@ -1476,7 +1476,7 @@ int print_mount_table(void)
 
 	readlen = read_mount_table(mtab, MAX_MOUNT_COUNT);
 	if (readlen < 0) {
-		error_msg("read_mount_table failed");
+		pr_err_info("read_mount_table failed");
 		return readlen;
 	}
 
@@ -1684,13 +1684,13 @@ int system_init(const char *path, char *argv[])
 
 	ret = mount_system_devices();
 	if (ret < 0) {
-		error_msg("mount_system_devices failed");
+		pr_err_info("mount_system_devices failed");
 		return ret;
 	}
 
 	ret = setenv("PATH", DEFAULT_PATH_VALUE, 1);
 	if (ret < 0) {
-		print_error("setenv PATH");
+		pr_err_info("setenv PATH");
 		return ret;
 	}
 
@@ -1699,7 +1699,7 @@ int system_init(const char *path, char *argv[])
 	if (path) {
 		ret = execv(path, argv);
 		if (ret < 0) {
-			print_error("execv \"%s\"", path);
+			pr_err_info("execv \"%s\"", path);
 			return ret;
 		}
 	}

@@ -31,7 +31,7 @@ static int swan_adb_server(void)
 
 	waitpid(pid, &status, 0);
 	if (WIFEXITED(status) == 0 || WEXITSTATUS(status) != 0) {
-		error_msg("close adb server failed");
+		pr_err_info("close adb server failed");
 		return -1;
 	}
 
@@ -39,13 +39,13 @@ static int swan_adb_server(void)
 
 	fd_data = open(DEVICE_SWAN_VK_DATA, O_WRONLY);
 	if (fd_data < 0) {
-		print_error("open device \"%s\" failed", DEVICE_ADB_ENABLE_PATH);
+		pr_err_info("open device \"%s\" failed", DEVICE_ADB_ENABLE_PATH);
 		return fd_data;
 	}
 
 	fd_adb_en = open(DEVICE_ADB_ENABLE_PATH, O_RDWR);
 	if (fd_adb_en < 0) {
-		print_error("open device \"%s\" failed", DEVICE_ADB_ENABLE_PATH);
+		pr_err_info("open device \"%s\" failed", DEVICE_ADB_ENABLE_PATH);
 		goto out_close_data;
 	}
 
@@ -54,7 +54,7 @@ static int swan_adb_server(void)
 label_open_adb:
 	fd_adb = open(DEVICE_ADB_PATH, O_RDONLY);
 	if (fd_adb < 0) {
-		print_error("open device \"%s\" failed", DEVICE_ADB_PATH);
+		pr_err_info("open device \"%s\" failed", DEVICE_ADB_PATH);
 		goto out_close_adb_en;
 	}
 
@@ -63,14 +63,14 @@ label_open_adb:
 	while (1) {
 		readlen = cavan_adb_read_data(fd_adb, buff, sizeof(buff));
 		if (readlen < 0) {
-			print_error("read");
+			pr_err_info("read");
 			close(fd_adb);
 			goto label_open_adb;
 		}
 
 		writelen = write(fd_data, buff,  readlen);
 		if (writelen < 0) {
-			print_error("write");
+			pr_err_info("write");
 			break;
 		}
 	}
@@ -91,7 +91,7 @@ static bool swan_adb_event_handler(struct cavan_event_device *dev, struct input_
 
 	wrlen = cavan_usb_write_data(desc->usb_desc, event, sizeof(*event));
 	if (wrlen < 0) {
-		print_error("cavan_usb_bluk_write");
+		pr_err_info("cavan_usb_bluk_write");
 
 		wrlen = write(desc->pipefd[1], &wrlen, sizeof(wrlen));
 		if (wrlen < 0) {
@@ -117,7 +117,7 @@ static int swan_adb_client(const char *dev_path)
 
 	ret = cavan_find_usb_device(dev_path, &usb_desc);
 	if (ret < 0) {
-		error_msg("cavan_find_usb_device failed");
+		pr_err_info("cavan_find_usb_device failed");
 		return ret;
 	}
 

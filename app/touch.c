@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
 	ret = file_resize(part_desc.path, length);
 	if (ret < 0) {
-		print_error("file_resize");
+		pr_err_info("file_resize");
 		return ret;
 	}
 

@@ -51,7 +51,7 @@ static int service_handle(struct cavan_service_description *service, int index, 
 
 	ret = inet_recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), &req.client_addr, &addr_len);
 	if (ret < 0) {
-		print_error("Receive request failed");
+		pr_err_info("Receive request failed");
 		return ret;
 	}
 
@@ -117,7 +117,7 @@ static int service_handle(struct cavan_service_description *service, int index, 
 		break;
 
 	default:
-		warning_msg("unknown operation code");
+		pr_warn_info("unknown operation code");
 		return -EINVAL;
 	}
 
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
 			break;
 
 		default:
-			error_msg("illegal option");
+			pr_err_info("illegal option");
 			return -EINVAL;
 		}
 	}
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 
 	sockfd = inet_create_udp_service(server_port);
 	if (sockfd < 0) {
-		print_error("create socket failed");
+		pr_err_info("create socket failed");
 		return sockfd;
 	}
 

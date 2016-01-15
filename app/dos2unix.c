@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
 	ret = file_dos2unix(argv[1]);
 	if (ret < 0) {
-		print_error("file_dos2unix");
+		pr_err_info("file_dos2unix");
 		return ret;
 	}
 

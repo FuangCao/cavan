@@ -16,7 +16,7 @@ int symlink_copy(const char *src, const char *dest)
 
 	ret = readlink(src, buff, MAX_PATH_LEN);
 	if (ret < 0) {
-		print_error("readlink");
+		pr_err_info("readlink");
 		return ret;
 	}
 
@@ -24,7 +24,7 @@ int symlink_copy(const char *src, const char *dest)
 
 	ret = symlink(buff, dest);
 	if (ret < 0) {
-		print_error("symlink");
+		pr_err_info("symlink");
 	}
 
 	return ret;
@@ -107,7 +107,7 @@ int directory_copy_main(const char *src, const char *dest)
 
 	src_dir = opendir(src);
 	if (src_dir == NULL) {
-		print_error("opendir");
+		pr_err_info("opendir");
 		return -1;
 	}
 
@@ -198,7 +198,7 @@ int move_auto(const char *srcpath, const char *destpath)
 	default:
 		ret = remove(destpath);
 		if (ret < 0) {
-			print_error("remove %s failed", destpath);
+			pr_err_info("remove %s failed", destpath);
 			return ret;
 		}
 	}

@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 		case 'C':
 			ret = file_set_loop(optarg, loop_path, 0);
 			if (ret < 0) {
-				error_msg("file_set_loop");
+				pr_err_info("file_set_loop");
 				return ret;
 			}
 			println("loop device is: %s", loop_path);
@@ -26,18 +26,18 @@ int main(int argc, char *argv[])
 		case 'D':
 			ret = loop_clr_fd(optarg);
 			if (ret < 0) {
-				error_msg("loop_clr_fd");
+				pr_err_info("loop_clr_fd");
 				return ret;
 			}
 			return 0;
 
 		default:
-			error_msg("illegal option");
+			pr_err_info("illegal option");
 			return -EINVAL;
 		}
 	}
 
-	error_msg("no function handle thie action");
+	pr_err_info("no function handle thie action");
 
 	return 0;
 }

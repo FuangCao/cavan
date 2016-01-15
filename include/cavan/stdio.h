@@ -111,9 +111,9 @@ __BEGIN_DECLS;
 #define stdout_fd						fileno(stdout)
 #define stderr_fd						fileno(stderr)
 
-#define TTY_MODE_DATA					3
-#define TTY_MODE_AT						4
-#define TTY_MODE_SSH					5
+#define CAVAN_TTY_MODE_DATA				3
+#define CAVAN_TTY_MODE_AT				4
+#define CAVAN_TTY_MODE_SSH				5
 
 // ============================================================
 
@@ -394,12 +394,12 @@ __BEGIN_DECLS;
 
 extern FILE *console_fp;
 
-int set_tty_attr(int fd, int action, struct termios *attr);
-int set_tty_mode(int fd, int mode, struct termios *attr_bak);
-int restore_tty_attr(int fd, struct termios *attr);
+int cavan_tty_set_attr(int fd, int action, struct termios *attr);
+int cavan_set_tty_mode(int fd, int mode, struct termios *attr_bak);
+int cavan_tty_attr_restore(int fd, struct termios *attr);
 
-int has_char(long sec, long usec);
-int timeout_getchar(long sec, long usec);
+int cavan_has_char(long sec, long usec);
+int cavan_getchar_timed(long sec, long usec);
 
 void print_ntext(const char *text, size_t size);
 void print_buffer(const char *buff, size_t size);
@@ -494,7 +494,7 @@ static inline void print_size(u64 size)
 	print_char('\n');
 }
 
-static inline int get_tty_attr(int fd, struct termios *attr)
+static inline int cavan_tty_get_attr(int fd, struct termios *attr)
 {
 	return tcgetattr(fd, attr);
 }

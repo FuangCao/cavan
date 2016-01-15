@@ -268,7 +268,7 @@ int file_open_rw_ro(const char *pathname, int flags)
 	}
 
 #if CAVAN_FILE_DEBUG
-	warning_msg("rw open file \"%s\" faild, retry use ro", pathname);
+	pr_warn_info("rw open file \"%s\" faild, retry use ro", pathname);
 #endif
 
 	fd = open(pathname, O_RDONLY | flags);
@@ -416,7 +416,7 @@ int mkdir_all(const char *pathname)
 	text_dirname_base(dir_name, pathname);
 	ret = mkdir_all(dir_name);
 	if (ret < 0) {
-		error_msg("create directory \"%s\" failed", dir_name);
+		pr_err_info("create directory \"%s\" failed", dir_name);
 		return ret;
 	}
 
@@ -1116,7 +1116,7 @@ int file_cmp(const char *file1, const char *file2, size_t size)
 
 	ret = ffile_cmp(fd1, fd2, size);
 	if (ret < 0) {
-		error_msg("ffile_cmp");
+		pr_err_info("ffile_cmp");
 	}
 
 	close(fd2);
@@ -1167,7 +1167,7 @@ int file_crc32(const char *file_name, u32 *crc)
 
 	ret = ffile_crc32(fd, crc);
 	if (ret < 0) {
-		error_msg("ffile_crc32");
+		pr_err_info("ffile_crc32");
 	}
 
 	close(fd);
@@ -1218,7 +1218,7 @@ int file_ncrc32(const char *file_name, size_t size, u32 *crc)
 
 	ret = ffile_ncrc32(fd, size, crc);
 	if (ret < 0) {
-		error_msg("ffile_ncrc32");
+		pr_err_info("ffile_ncrc32");
 	}
 
 	close(fd);
@@ -1239,7 +1239,7 @@ int ffile_crc32_seek(int fd, off_t offset, int whence, u32 *crc)
 
 	ret = ffile_crc32(fd, crc);
 	if (ret < 0) {
-		error_msg("ffile_crc32");
+		pr_err_info("ffile_crc32");
 		return ret;
 	}
 
@@ -1264,7 +1264,7 @@ int file_crc32_seek(const char *file_name, off_t offset, int whence, u32 *crc)
 
 	ret = ffile_crc32_seek(fd, offset, whence, crc);
 	if (ret < 0) {
-		error_msg("ffile_crc32_seek");
+		pr_err_info("ffile_crc32_seek");
 	}
 
 	close(fd);
@@ -1285,7 +1285,7 @@ int ffile_ncrc32_seek(int fd, off_t offset, int whence, size_t size, u32 *crc)
 
 	ret = ffile_ncrc32(fd, size, crc);
 	if (ret < 0) {
-		error_msg("ffile_crc32");
+		pr_err_info("ffile_crc32");
 		return ret;
 	}
 
@@ -1310,7 +1310,7 @@ int file_ncrc32_seek(const char *file_name, off_t offset, int whence, size_t siz
 
 	ret = ffile_ncrc32_seek(fd, offset, whence, size, crc);
 	if (ret < 0) {
-		error_msg("ffile_ncrc32_seek");
+		pr_err_info("ffile_ncrc32_seek");
 	}
 
 	close(fd);
@@ -1377,7 +1377,7 @@ int mode_test(mode_t mode, char type)
 		if (type == 'e' || type == 'E') {
 			return 0;
 		}
-		warning_msg("unknown file type");
+		pr_warn_info("unknown file type");
 	}
 
 	return -EINVAL;
@@ -1578,7 +1578,7 @@ int check_file_md5sum(const char *file_path, char *md5sum)
 
 	ret = file_writeto(MD5SUM_FILE_PATH, buff, strlen(buff), 0, O_TRUNC);
 	if (ret < 0) {
-		error_msg("write_to");
+		pr_err_info("write_to");
 		return ret;
 	}
 
@@ -1634,7 +1634,7 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 
 		tmp = ffile_get_size(fd);
 		if (tmp < 0) {
-			error_msg("get file size failed");
+			pr_err_info("get file size failed");
 			return tmp;
 		}
 
@@ -1813,13 +1813,13 @@ int file_set_loop(const char *filename, char *loop_path, u64 offset)
 	loop_fd = loop_get_fd(filename, loop_path, offset);
 	if (loop_fd < 0) {
 		ret = loop_fd;
-		error_msg("loop_get_fd");
+		pr_err_info("loop_get_fd");
 		goto out_close_file;
 	}
 
 	ret = ioctl(loop_fd, LOOP_SET_FD, fd);
 	if (ret < 0) {
-		error_msg("LOOP_SET_FD");
+		pr_err_info("LOOP_SET_FD");
 		goto out_close_loop;
 	}
 
@@ -1832,7 +1832,7 @@ int file_set_loop(const char *filename, char *loop_path, u64 offset)
 
 	ret = ioctl(loop_fd, LOOP_SET_STATUS64, &loopinfo);
 	if (ret < 0) {
-		error_msg("LOOP_SET_STATUS64");
+		pr_err_info("LOOP_SET_STATUS64");
 		goto out_clr_fd;
 	}
 
@@ -1856,7 +1856,7 @@ int file_mount_to(const char *source, const char *target, const char *fs_type, u
 	ret = file_set_loop(source, loop_path, 0);
 	if (ret < 0) {
 #if CAVAN_FILE_DEBUG
-		error_msg("file set loop");
+		pr_err_info("file set loop");
 #endif
 		return ret;
 	}

@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
 	waitpid(pid, &status, 0);
 	if (WIFEXITED(status) == 0 || WEXITSTATUS(status) != 0) {
-		error_msg("close adb server failed");
+		pr_err_info("close adb server failed");
 		return -1;
 	}
 
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 
 	fd_adb_en = open(adb_dev_enable_path, O_RDWR);
 	if (fd_adb_en < 0) {
-		print_error("open device \"%s\" failed", adb_dev_enable_path);
+		pr_err_info("open device \"%s\" failed", adb_dev_enable_path);
 		return fd_adb_en;
 	}
 
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 	while (1) {
 		fd_adb = open(adb_dev_path, O_RDWR);
 		if (fd_adb < 0) {
-			print_error("open device \"%s\" failed", adb_dev_path);
+			pr_err_info("open device \"%s\" failed", adb_dev_path);
 			break;
 		}
 

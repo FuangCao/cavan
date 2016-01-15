@@ -48,25 +48,25 @@ int fix_emmc_partition_table(struct swan_emmc_partition_table *part_table)
 
 	if (part_table->system_size < SYSTEM_MIN_SIZE) {
 		ret++;
-		warning_msg("system partition size is too small");
+		pr_warn_info("system partition size is too small");
 		part_table->system_size = SYSTEM_MIN_SIZE;
 	}
 
 	if (part_table->recovery_size < RECOVERY_MIN_SIZE) {
 		ret++;
-		warning_msg("recovery partition size is too small");
+		pr_warn_info("recovery partition size is too small");
 		part_table->recovery_size = RECOVERY_MIN_SIZE;
 	}
 
 	if (part_table->userdata_size < USERDATA_MIN_SIZE) {
 		ret++;
-		warning_msg("userdata partition size is too small");
+		pr_warn_info("userdata partition size is too small");
 		part_table->userdata_size = USERDATA_MIN_SIZE;
 	}
 
 	if (part_table->cache_size < CACHE_MIN_SIZE) {
 		ret++;
-		warning_msg("cache partition size is too small");
+		pr_warn_info("cache partition size is too small");
 		part_table->cache_size = CACHE_MIN_SIZE;
 	}
 
@@ -88,13 +88,13 @@ int swan_sfdisk(struct partition_desc *dev_desc, struct swan_emmc_partition_tabl
 
 	ret = cavan_dd("/dev/zero", dev_desc->path, 0, 0, 512);
 	if (ret < 0) {
-		error_msg("cavan_dd");
+		pr_err_info("cavan_dd");
 		return ret;
 	}
 
 	ret = get_device_size(dev_desc->path, &total_size);
 	if (ret < 0) {
-		error_msg("get_device_size");
+		pr_err_info("get_device_size");
 		return ret;
 	}
 
@@ -104,7 +104,7 @@ int swan_sfdisk(struct partition_desc *dev_desc, struct swan_emmc_partition_tabl
 
 	ret = fix_emmc_partition_table(part_table);
 	if (ret) {
-		warning_msg("some partition size is invalid");
+		pr_warn_info("some partition size is invalid");
 	}
 
 	if (part_table->system_size + part_table->recovery_size + part_table->userdata_size + part_table->cache_size + part_table->vendor_size > total_size) {
@@ -123,20 +123,20 @@ int swan_sfdisk(struct partition_desc *dev_desc, struct swan_emmc_partition_tabl
 	}
 
 	if (ret < 0) {
-		print_error("sfdisk");
+		pr_err_info("sfdisk");
 		return ret;
 	}
 
 	ret = system_command("sfdisk %s -uM -N1 -f << EOF\n%d,%d,\nEOF\n", \
 		dev_desc->path, BOOT_SIZE, vfat_size - BOOT_SIZE);
 	if (ret < 0) {
-		print_error("sfdisk");
+		pr_err_info("sfdisk");
 		return ret;
 	}
 
 	ret = reread_part_table_retry(dev_desc->path, 100);
 	if (ret < 0) {
-		error_msg("reread_part_table_retry");
+		pr_err_info("reread_part_table_retry");
 		return ret;
 	}
 
@@ -156,7 +156,7 @@ int swan_mkfs(struct partition_desc *dev_desc, struct partition_desc *part_descs
 #if 0
 	ret = reread_part_table_retry(dev_desc->path, 100);
 	if (ret < 0) {
-		error_msg("reread_part_table_retry");
+		pr_err_info("reread_part_table_retry");
 		return ret;
 	}
 #endif
@@ -167,7 +167,7 @@ int swan_mkfs(struct partition_desc *dev_desc, struct partition_desc *part_descs
 		for (i = 5; i > 0 && partition_mkfs(p) < 0; i--);
 
 		if (i <= 0) {
-			warning_msg("format partition \"%s\" failed, try to change label", p->path);
+			pr_warn_info("format partition \"%s\" failed, try to change label", p->path);
 			partition_change_label(p);
 		}
 	}
@@ -181,13 +181,13 @@ static int swan_copy_base(const char *dev_path, const char *cache_file)
 
 	ret = mount_main(dev_path, MOUNT_POINT, "vfat", NULL);
 	if (ret < 0) {
-		error_msg("mount_main");
+		pr_err_info("mount_main");
 		return ret;
 	}
 
 	ret = file_copy(UPGRADE_FILE_PATH, cache_file, O_SYNC);
 	if (ret < 0) {
-		error_msg("file_copy");
+		pr_err_info("file_copy");
 	}
 
 	umount_directory_wait(MOUNT_POINT);
@@ -217,16 +217,16 @@ int swan_find_upgrade_file_from(const char *dev_path, const char *tmp_file)
 
 	ret = mount_main(dev_path, MOUNT_POINT, "vfat", NULL);
 	if (ret < 0) {
-		warning_msg("mount device \"%s\" failed", dev_path);
+		pr_warn_info("mount device \"%s\" failed", dev_path);
 		return ret;
 	}
 
 	ret = system_command("find %s -maxdepth 1 -name \"%s*.%s\" | tee %s", MOUNT_POINT, UPGRADE_FILE_PREFIX, UPGRADE_FILE_TYPE, tmp_file);
 	if (ret < 0) {
-		warning_msg("no upgrade package find");
+		pr_warn_info("no upgrade package find");
 		umount_directory2(MOUNT_POINT, MNT_DETACH);
 	} else {
-		right_msg("find a upgrade package from device \"%s\"", dev_path);
+		pr_green_info("find a upgrade package from device \"%s\"", dev_path);
 	}
 
 	return ret;
@@ -252,7 +252,7 @@ int swan_find_upgrade_file(const char *tmp_file)
 
 int destroy_environment(const char *dev_path)
 {
-	stand_msg("Destory Uboot Environment Variable");
+	pr_std_info("Destory Uboot Environment Variable");
 
 	return cavan_dd("/dev/zero", dev_path, 0, KB(200), KB(800));
 }
@@ -321,14 +321,14 @@ int set_brightness_shadow(int brightness, int step, u32 msec)
 
 	fd = open(BRIGHTNESS_PATH, O_RDWR | O_SYNC | O_BINARY);
 	if (fd < 0) {
-		print_error("open file \"" BRIGHTNESS_PATH "\" failed");
+		pr_err_info("open file \"" BRIGHTNESS_PATH "\" failed");
 		return fd;
 	}
 
 	readlen = read(fd, buff, sizeof(buff));
 	if (readlen < 0) {
 		ret = readlen;
-		print_error("read");
+		pr_err_info("read");
 		goto out_close_fd;
 	}
 
@@ -415,7 +415,7 @@ enum swan_board_type get_swan_board_type(void)
 
 	count = parse_config_file_simple(FILE_PROC_CPUINFO, ':', lines, ARRAY_SIZE(lines));
 	if (count < 0) {
-		error_msg("parse_config_file2");
+		pr_err_info("parse_config_file2");
 		return count;
 	}
 

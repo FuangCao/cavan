@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (to_abs_path_directory_base(argv[optind], dir_path, sizeof(dir_path)) == NULL) {
-		error_msg("directory \"%s\" do't exist", argv[1]);
+		pr_err_info("directory \"%s\" do't exist", argv[1]);
 		return -ENOENT;
 	}
 
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 
 	ret = uevent_init(&udesc);
 	if (ret < 0) {
-		error_msg("ueven_init");
+		pr_err_info("ueven_init");
 		return ret;
 	}
 
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 
 		ret = get_disk_add_uevent(&udesc);
 		if (ret < 0) {
-			error_msg("get_disk_add_uevent");
+			pr_err_info("get_disk_add_uevent");
 			break;
 		}
 
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 			mem_copy(p->out + 5, diskpath + 5, 3);
 
 			if (file_test(p->out, "b") < 0) {
-				error_msg("%s is not a block device", p->out);
+				pr_err_info("%s is not a block device", p->out);
 				ret |= -ENODEV;
 				continue;
 			}

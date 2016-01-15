@@ -42,7 +42,7 @@ static int net_monitor_run(const char *net_dev, const char *text_src_ip, const c
 	while (1) {
 		ret = recv(sockfd, buff, sizeof(buff), 0);
 		if (ret < 0) {
-			print_error("recvfrom");
+			pr_err_info("recvfrom");
 			break;
 		}
 

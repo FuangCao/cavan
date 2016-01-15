@@ -58,7 +58,7 @@ void *cavan_fb_get_acquired_sync2(struct cavan_fb_device *dev)
 
 	ret = ioctl(dev->fd, FBIOGET_VSCREENINFO, var);
 	if (ret < 0) {
-		print_error("get screen var info failed");
+		pr_err_info("get screen var info failed");
 		return NULL;
 	}
 
@@ -256,7 +256,7 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 	}
 
 	if (fd < 0) {
-		print_error("open fb device failed");
+		pr_err_info("open fb device failed");
 		return fd;
 	}
 
@@ -264,7 +264,7 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 
 	ret = ioctl(fd, FBIOGET_VSCREENINFO, var);
 	if (ret < 0) {
-		print_error("get screen var info failed");
+		pr_err_info("get screen var info failed");
 		goto out_close_fb;
 	}
 
@@ -300,14 +300,14 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 		dev->read_point = cavan_fb_read_point32;
 		break;
 	default:
-		error_msg("unsported bits_per_pixel: %d", var->bits_per_pixel);
+		pr_err_info("unsported bits_per_pixel: %d", var->bits_per_pixel);
 		ret = -EINVAL;
 		goto out_close_fb;
 	}
 
 	ret = ioctl(fd, FBIOGET_FSCREENINFO, fix);
 	if (ret < 0) {
-		print_error("get screen fix info failed");
+		pr_err_info("get screen fix info failed");
 		goto out_close_fb;
 	}
 
@@ -325,7 +325,7 @@ int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath)
 
 	dev->fb_base = mmap(NULL, fix->smem_len, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
 	if (dev->fb_base == NULL || dev->fb_base == MAP_FAILED) {
-		print_error("map framebuffer failed");
+		pr_err_info("map framebuffer failed");
 		ret = -1;
 		goto out_close_fb;
 	}

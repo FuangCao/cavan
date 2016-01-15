@@ -76,13 +76,13 @@ int main(int argc, char *argv[])
 	if (burn_image_dir && file_test(argv[optind], "d") == 0) {
 		ret = burn_swan_image_directory(argv[optind], dest_dev);
 		if (ret < 0) {
-			error_msg("burn_swan_images");
+			pr_err_info("burn_swan_images");
 			return ret;
 		}
 	} else {
 		ret = burn_swan_image_auto(argv[optind], dest_dev);
 		if (ret < 0) {
-			error_msg("burn_swan_image_auto");
+			pr_err_info("burn_swan_image_auto");
 			return ret;
 		}
 	}

@@ -176,7 +176,7 @@ static int swan_vk_link_server(struct swan_vk_command_option *opt)
 
 		fd = open(opt->devpath, O_WRONLY);
 		if (fd < 0) {
-			print_error("open file `%s'", opt->devpath);
+			pr_err_info("open file `%s'", opt->devpath);
 		}
 		break;
 
@@ -188,7 +188,7 @@ static int swan_vk_link_server(struct swan_vk_command_option *opt)
 
 		fd = open(opt->devpath, O_WRONLY | O_SYNC | O_NOCTTY);
 		if (fd < 0) {
-			print_error("open file `%s'", opt->devpath);
+			pr_err_info("open file `%s'", opt->devpath);
 		}
 		break;
 
@@ -441,7 +441,7 @@ static void swan_vk_client_stop_handle(int signum)
 
 static void swan_vk_serial_server_stop_handle(int signum)
 {
-	restore_tty_attr(swan_vk_tty_fd, &swan_vk_tty_attr);
+	cavan_tty_attr_restore(swan_vk_tty_fd, &swan_vk_tty_attr);
 	exit(0);
 }
 
@@ -456,13 +456,13 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 
 	fd_tty = open(tty_path, O_RDONLY | O_NOCTTY);
 	if (fd_tty < 0) {
-		print_error("open tty device \"%s\" failed", tty_path);
+		pr_err_info("open tty device \"%s\" failed", tty_path);
 		return fd_tty;
 	}
 
-	ret = set_tty_mode(fd_tty, TTY_MODE_DATA, &swan_vk_tty_attr);
+	ret = cavan_set_tty_mode(fd_tty, CAVAN_TTY_MODE_DATA, &swan_vk_tty_attr);
 	if (ret < 0) {
-		print_error("set_tty_mode");
+		pr_err_info("cavan_set_tty_mode");
 		goto out_close_tty;
 	}
 
@@ -472,14 +472,14 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 
 	fd_data = open(data_path, O_WRONLY);
 	if (fd_data < 0) {
-		print_error("open data device \"%s\" failed", data_path);
+		pr_err_info("open data device \"%s\" failed", data_path);
 		goto out_close_tty;
 	}
 
 	while (1) {
 		rdlen = read(fd_tty, events, sizeof(events));
 		if (rdlen < 0) {
-			print_error("read");
+			pr_err_info("read");
 			break;
 		}
 
@@ -489,12 +489,12 @@ int swan_vk_serial_server(const char *tty_path, const char *data_path)
 
 		wrlen = ffile_write(fd_data, events, rdlen);
 		if (wrlen < 0) {
-			print_error("write");
+			pr_err_info("write");
 			break;
 		}
 	}
 
-	restore_tty_attr(swan_vk_tty_fd, &swan_vk_tty_attr);
+	cavan_tty_attr_restore(swan_vk_tty_fd, &swan_vk_tty_attr);
 
 	close(fd_data);
 out_close_tty:
@@ -804,7 +804,7 @@ int swan_vk_commandline(const char *data_path)
 
 	fd_data = open(data_path, O_WRONLY);
 	if (fd_data < 0) {
-		print_error("open file \"%s\" failed", data_path);
+		pr_err_info("open file \"%s\" failed", data_path);
 		return fd_data;
 	}
 
@@ -834,7 +834,7 @@ label_repo_key:
 
 		wrlen = write(fd_data, (void *) &old_p->code, sizeof(old_p->code));
 		if (wrlen < 0) {
-			print_error("write");
+			pr_err_info("write");
 			break;
 		}
 	}

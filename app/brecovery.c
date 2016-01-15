@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
 	ret = burn_normal_image(img_path, dev_path);
 	if (ret < 0) {
-		error_msg("Burn image \"%s\" to \"%s\" failed", img_path, dev_path);
+		pr_err_info("Burn image \"%s\" to \"%s\" failed", img_path, dev_path);
 	}
 
 	return ret;

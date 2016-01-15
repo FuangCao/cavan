@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (cftp_client_handle == NULL) {
-		error_msg("Please input transfer direction");
+		pr_err_info("Please input transfer direction");
 		show_usage();
 		return -EINVAL;
 	}
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (input_file[0] == 0 || output_file[0] == 0) {
-		error_msg("must specify if and of option");
+		pr_err_info("must specify if and of option");
 		return -EINVAL;
 	}
 
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 
 	ret = cavan_find_usb_device(NULL, &usb_desc);
 	if (ret < 0) {
-		error_msg("cavan_find_usb_device");
+		pr_err_info("cavan_find_usb_device");
 		return ret;
 	}
 
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 	return ret;
 
 out_unknown_option:
-	error_msg("unknown option \"%s\"", para_option);
+	pr_err_info("unknown option \"%s\"", para_option);
 	show_usage();
 	return -EINVAL;
 }

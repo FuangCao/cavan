@@ -12,7 +12,7 @@ static int mksdcard(const char *sd_device)
 
 	ret = system_command("sfdisk %s -uM << EOF\n64,,L\nEOF", sd_device);
 	if (ret < 0) {
-		print_error("system_command");
+		pr_err_info("system_command");
 		return ret;
 	}
 
@@ -20,11 +20,11 @@ static int mksdcard(const char *sd_device)
 
 	ret = system_command("mkfs.vfat %s1 -n sdcard", sd_device);
 	if (ret < 0) {
-		print_error("system_command");
+		pr_err_info("system_command");
 		return ret;
 	}
 
-	right_msg("mksdcard Success");
+	pr_green_info("mksdcard Success");
 
 	return 0;
 }

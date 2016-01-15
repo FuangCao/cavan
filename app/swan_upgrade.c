@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
 		case SWAN_UPGRADE_OPTION_EXCLUDE:
 			swan_exclude_images[swan_exclude_image_count] = get_swan_image_type_by_name(optarg);
 			if (swan_exclude_images[swan_exclude_image_count] == SWAN_IMAGE_UNKNOWN) {
-				error_msg("Unknown image type \"%s\"", optarg);
+				pr_err_info("Unknown image type \"%s\"", optarg);
 				return -EINVAL;
 			} else {
 				swan_exclude_image_count++;
@@ -403,14 +403,14 @@ int main(int argc, char *argv[])
 			break;
 
 		default:
-			error_msg("Unknown option %c", c);
+			pr_err_info("Unknown option %c", c);
 			show_usage();
 			return -EINVAL;
 		}
 	}
 
 	if (handle == NULL) {
-		error_msg("No function handle this action");
+		pr_err_info("No function handle this action");
 		show_usage();
 		return -EINVAL;
 	}

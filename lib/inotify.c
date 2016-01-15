@@ -12,7 +12,7 @@ int cavan_inotify_init(struct cavan_inotify_descriptor *desc, void *data)
 
 	fd = inotify_init();
 	if (fd < 0) {
-		print_error("inotify_init");
+		pr_err_info("inotify_init");
 		return fd;
 	}
 
@@ -49,18 +49,18 @@ int cavan_inotify_register_watch(struct cavan_inotify_descriptor *desc, const ch
 	struct cavan_inotify_watch *p;
 
 	if (desc->watch_count >= NELEM(desc->watchs)) {
-		error_msg("Too match watch");
+		pr_err_info("Too match watch");
 		return -EFAULT;
 	}
 
 	if (pathname == NULL || *pathname == 0) {
-		error_msg("pathname == NULL || *pathname == 0");
+		pr_err_info("pathname == NULL || *pathname == 0");
 		return -EINVAL;
 	}
 
 	wd = inotify_add_watch(desc->fd, pathname, mask);
 	if (wd < 0) {
-		print_error("inotify_add_watch");
+		pr_err_info("inotify_add_watch");
 		return wd;
 	}
 
@@ -140,12 +140,12 @@ int cavan_inotify_event_loop(struct cavan_inotify_descriptor *desc)
 	char buff[(sizeof(struct inotify_event) + 256) * 10];
 
 	if (desc->handle == NULL) {
-		error_msg("desc->handle == NULL");
+		pr_err_info("desc->handle == NULL");
 		return -EINVAL;
 	}
 
 	if (desc->watch_count <= 0) {
-		error_msg("Please register some watch");
+		pr_err_info("Please register some watch");
 		return -EINVAL;
 	}
 
@@ -154,7 +154,7 @@ int cavan_inotify_event_loop(struct cavan_inotify_descriptor *desc)
 	while (1) {
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0) {
-			print_error("read");
+			pr_err_info("read");
 			return readlen;
 		}
 

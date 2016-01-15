@@ -47,18 +47,18 @@ int read_file_info(int pkg_fd, struct swan_file_info *file_p)
 
 	ret = ffile_read(pkg_fd, file_p, sizeof(*file_p));
 	if (ret < 0) {
-		print_error("read");
+		pr_err_info("read");
 		return ret;
 	}
 
 	show_file_info(file_p);
 
 	if (strncmp(file_p->check_pattern, DEFAULT_CHECK_PATTERN, sizeof(file_p->check_pattern)) != 0) {
-		error_msg("Bad Check Pattern");
+		pr_err_info("Bad Check Pattern");
 		return -1;
 	}
 
-	right_msg("Check Pattern Is OK");
+	pr_green_info("Check Pattern Is OK");
 
 	return 0;
 }
@@ -72,19 +72,19 @@ int read_upgrade_program(int pkg_fd, struct swan_file_info *file_p, const char *
 
 	prm_fd = open(prm_name, O_WRONLY | O_CREAT | O_SYNC | O_TRUNC | O_BINARY, 0777);
 	if (prm_fd < 0) {
-		print_error("open");
+		pr_err_info("open");
 		return -1;
 	}
 
 	ret = read_file_info(pkg_fd, file_p);
 	if (ret < 0) {
-		error_msg("read_file_info");
+		pr_err_info("read_file_info");
 		goto out_close_prm;
 	}
 
 	ret = ffile_ncopy(pkg_fd, prm_fd, file_p->header_size);
 	if (ret < 0) {
-		error_msg("ffile_ncopy");
+		pr_err_info("ffile_ncopy");
 	}
 
 out_close_prm:
@@ -104,7 +104,7 @@ int open_header_bin(const char *prm_name)
 		return fd;
 	}
 
-	warning_msg("Can't open file \"%s\", try to open backup file \"%s\"", \
+	pr_warn_info("Can't open file \"%s\", try to open backup file \"%s\"", \
 		prm_name, BACKUP_HEADER_BIN);
 
 	return open(BACKUP_HEADER_BIN, O_RDONLY | O_BINARY);
@@ -118,13 +118,13 @@ int write_upgrade_program(int pkg_fd, struct swan_file_info *file_p, const char 
 
 	prm_fd = open_header_bin(prm_name);
 	if (prm_fd < 0) {
-		print_error("open file \"%s\"", prm_name);
+		pr_err_info("open file \"%s\"", prm_name);
 		return -1;
 	}
 
 	ret = fstat(prm_fd, &st);
 	if (ret < 0) {
-		print_error("get file size failed");
+		pr_err_info("get file size failed");
 		goto out_close_prm;
 	}
 
@@ -134,13 +134,13 @@ int write_upgrade_program(int pkg_fd, struct swan_file_info *file_p, const char 
 
 	ret = write_file_info(pkg_fd, file_p);
 	if (ret < 0) {
-		print_error("write_file_info");
+		pr_err_info("write_file_info");
 		goto out_close_prm;
 	}
 
 	ret = ffile_copy(prm_fd, pkg_fd);
 	if (ret < 0) {
-		error_msg("ffile_copy");
+		pr_err_info("ffile_copy");
 	}
 
 out_close_prm:
@@ -156,7 +156,7 @@ int read_package_info(int pkg_fd, struct swan_package_info *pkg_p, int check_mac
 
 	ret = ffile_read(pkg_fd, pkg_p, sizeof(*pkg_p));
 	if (ret < 0) {
-		print_error("read");
+		pr_err_info("read");
 		return ret;
 	}
 
@@ -165,18 +165,18 @@ int read_package_info(int pkg_fd, struct swan_package_info *pkg_p, int check_mac
 	tmp_crc32 = 0;
 	ret = ffile_crc32_back(pkg_fd, &tmp_crc32);
 	if (ret < 0) {
-		error_msg("ffile_crc32");
+		pr_err_info("ffile_crc32");
 		return ret;
 	}
 
 	println("pkg_crc32 = 0x%08x, tmp_crc32 = 0x%08x", pkg_p->crc32, tmp_crc32);
 
 	if (pkg_p->crc32 ^ tmp_crc32) {
-		error_msg("package crc32 checksum is not match");
+		pr_err_info("package crc32 checksum is not match");
 		ERROR_RETURN(EINVAL);
 	}
 
-	right_msg("package crc32 checksum is match");
+	pr_green_info("package crc32 checksum is match");
 
 	if (check_macine == 0) {
 		return 0;
@@ -184,7 +184,7 @@ int read_package_info(int pkg_fd, struct swan_package_info *pkg_p, int check_mac
 
 	ret = swan_board_type_check(pkg_p->board_type);
 	if (ret < 0) {
-		error_msg("board type and package type not match");
+		pr_err_info("board type and package type not match");
 		return ret;
 	}
 
@@ -199,14 +199,14 @@ int read_resource_image(int pkg_fd, struct swan_package_info *pkg_p, const char 
 
 	ret = read_package_info(pkg_fd, pkg_p, check_macine);
 	if (ret < 0) {
-		error_msg("read_package_info");
+		pr_err_info("read_package_info");
 		return ret;
 	}
 
 	if (img_dir == NULL) {
 		ret = lseek(pkg_fd, pkg_p->resource_size, SEEK_CUR);
 		if (ret < 0) {
-			print_error("lseek");
+			pr_err_info("lseek");
 			return ret;
 		}
 
@@ -218,13 +218,13 @@ int read_resource_image(int pkg_fd, struct swan_package_info *pkg_p, const char 
 
 	img_fd = open(img_path, O_WRONLY | O_CREAT | O_SYNC | O_TRUNC | O_BINARY, 0777);
 	if (img_fd < 0) {
-		print_error("open file \"%s\"", img_path);
+		pr_err_info("open file \"%s\"", img_path);
 		return img_fd;
 	}
 
 	ret = ffile_ncopy(pkg_fd, img_fd, pkg_p->resource_size);
 	if (ret < 0) {
-		error_msg("ffile_ncopy");
+		pr_err_info("ffile_ncopy");
 		goto out_close_img;
 	}
 
@@ -269,13 +269,13 @@ int vwrite_resource_image(int pkg_fd, struct swan_package_info *pkg_p, const cha
 
 	ret = fstat(img_fd, &st);
 	if (ret < 0) {
-		print_error("fstat");
+		pr_err_info("fstat");
 		goto out_close_img;
 	}
 
 	ret = ffile_copy(img_fd, pkg_fd);
 	if (ret < 0) {
-		error_msg("ffile_copy");
+		pr_err_info("ffile_copy");
 		goto out_close_img;
 	}
 
@@ -305,7 +305,7 @@ int read_image_info(int pkg_fd, struct swan_image_info *img_p)
 
 	ret = ffile_read(pkg_fd, img_p, sizeof(*img_p));
 	if (ret < 0) {
-		print_error("read");
+		pr_err_info("read");
 		return ret;
 	}
 
@@ -320,13 +320,13 @@ int read_simple_image(int pkg_fd, int img_fd, off_t size, off_t offset)
 
 	ret = lseek(img_fd, offset, SEEK_SET);
 	if (ret < 0) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		return ret;
 	}
 
 	ret = ffile_ncopy(pkg_fd, img_fd, size);
 	if (ret < 0) {
-		error_msg("ffile_ncopy");
+		pr_err_info("ffile_ncopy");
 		return ret;
 	}
 
@@ -354,13 +354,13 @@ int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info 
 
 	img_fd = open(img_path, O_RDONLY | O_BINARY);
 	if (img_fd < 0) {
-		error_msg("file \"%s\" don't exist", img_path);
+		pr_err_info("file \"%s\" don't exist", img_path);
 		return img_fd;
 	}
 
 	ret = fstat(img_fd, &st);
 	if (ret < 0) {
-		print_error("fstat");
+		pr_err_info("fstat");
 		goto out_close_img;
 	}
 
@@ -379,7 +379,7 @@ int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info 
 
 	ret = ffile_crc32_back(img_fd, &img_p->crc32);
 	if (ret < 0) {
-		error_msg("ffile_crc32");
+		pr_err_info("ffile_crc32");
 		goto out_close_img;
 	}
 
@@ -387,13 +387,13 @@ int write_simple_image(int pkg_fd, const char *dir_name, struct swan_image_info 
 
 	ret = write_image_info(pkg_fd, img_p);
 	if (ret < 0) {
-		print_error("write_image_info");
+		pr_err_info("write_image_info");
 		goto out_close_img;
 	}
 
 	ret = ffile_copy(img_fd, pkg_fd);
 	if (ret < 0) {
-		error_msg("ffile_copy");
+		pr_err_info("ffile_copy");
 		goto out_close_img;
 	}
 
@@ -411,7 +411,7 @@ int swan_read_md5sum(int pkg_fd, char *md5sum)
 
 	ret = lseek(pkg_fd, MEMBER_OFFSET(struct swan_file_info, md5sum), SEEK_SET);
 	if (ret < 0) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		return ret;
 	}
 
@@ -424,13 +424,13 @@ int swan_write_md5sum(int pkg_fd, char *md5sum)
 
 	ret = lseek(pkg_fd, MEMBER_OFFSET(struct swan_file_info, md5sum), SEEK_SET);
 	if (ret < 0) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		return ret;
 	}
 
 	ret = ffile_write(pkg_fd, md5sum, MD5SUM_LEN);
 	if (ret < MD5SUM_LEN) {
-		print_error("ffile_write");
+		pr_err_info("ffile_write");
 		return ret;
 	}
 
@@ -447,13 +447,13 @@ int swan_calculate_md5sum(const char *pkg_path, int pkg_fd, char *md5sum)
 
 	ret = swan_write_md5sum(pkg_fd, md5sum);
 	if (ret < 0) {
-		error_msg("write");
+		pr_err_info("write");
 		return ret;
 	}
 
 	ret = calculate_file_md5sum(pkg_path, md5sum);
 	if (ret < 0) {
-		error_msg("calculate_file_md5sum");
+		pr_err_info("calculate_file_md5sum");
 		return ret;
 	}
 
@@ -470,19 +470,19 @@ int swan_set_md5sum(const char *pkg_path)
 
 	pkg_fd = open(pkg_path, O_WRONLY | O_BINARY);
 	if (pkg_fd < 0) {
-		print_error("open");
+		pr_err_info("open");
 		return -1;
 	}
 
 	ret = swan_calculate_md5sum(pkg_path, pkg_fd, buff);
 	if (ret < 0) {
-		error_msg("swan_calculate_md5sum");
+		pr_err_info("swan_calculate_md5sum");
 		goto out_close_pkg;
 	}
 
 	ret = swan_write_md5sum(pkg_fd, buff);
 	if (ret < 0) {
-		error_msg("swan_write_md5sum");
+		pr_err_info("swan_write_md5sum");
 	}
 
 out_close_pkg:
@@ -500,13 +500,13 @@ int swan_check_md5sum(const char *pkg_path)
 
 	pkg_fd = open(pkg_path, O_RDWR | O_BINARY);
 	if (pkg_fd < 0) {
-		print_error("open file \"%s\"", pkg_path);
+		pr_err_info("open file \"%s\"", pkg_path);
 		return -1;
 	}
 
 	ret = swan_read_md5sum(pkg_fd, md5sum);
 	if (ret < 0) {
-		error_msg("swan_read_md5sum");
+		pr_err_info("swan_read_md5sum");
 		goto out_close_pkg;
 	}
 
@@ -516,13 +516,13 @@ int swan_check_md5sum(const char *pkg_path)
 
 	ret = swan_write_md5sum(pkg_fd, buff);
 	if (ret < 0) {
-		error_msg("swan_write_md5sum");
+		pr_err_info("swan_write_md5sum");
 		goto out_close_pkg;
 	}
 
 	ret = check_file_md5sum(pkg_path, md5sum);
 	if (ret < 0) {
-		error_msg("check_file_md5sum");
+		pr_err_info("check_file_md5sum");
 	}
 
 	swan_write_md5sum(pkg_fd, md5sum);

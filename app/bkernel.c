@@ -38,13 +38,13 @@ int main(int argc, char *argv[])
 	if (image_is(img_path, "zImage")) {
 		ret = burn_zImage(img_path, dev_path);
 		if (ret < 0) {
-			error_msg("burn_zImage");
+			pr_err_info("burn_zImage");
 			return ret;
 		}
 	} else {
 		ret = burn_uImage(img_path, dev_path);
 		if (ret < 0) {
-			error_msg("burn_uImage");
+			pr_err_info("burn_uImage");
 			return ret;
 		}
 	}

@@ -91,7 +91,7 @@ int cavan_service_start(struct cavan_service_description *desc)
 		pd_blue_info("Run %s as daemon", desc->name);
 		ret = daemon(0, desc->show_verbose);
 		if (ret < 0) {
-			print_error("daemon");
+			pr_err_info("daemon");
 			return ret;
 		}
 	}

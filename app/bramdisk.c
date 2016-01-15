@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (ret < 0) {
-		error_msg("Burn ramdisk failed");
+		pr_err_info("Burn ramdisk failed");
 		return ret;
 	}
 

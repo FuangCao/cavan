@@ -73,7 +73,7 @@ ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const
 
 		sendlen = inet_sendto(sockfd, buff, len, remote_addr);
 		if (sendlen < 0) {
-			print_error("send data failed");
+			pr_err_info("send data failed");
 			return sendlen;
 		}
 
@@ -91,7 +91,7 @@ ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buf
 {
 	sendlen = sendto_select(sockfd, retry, send_buff, sendlen, remote_addr);
 	if (sendlen < 0) {
-		error_msg("send data timeout");
+		pr_err_info("send data timeout");
 		return sendlen;
 	}
 
@@ -520,13 +520,13 @@ int inet_create_tcp_link1(const struct sockaddr_in *addr)
 
 	sockfd = inet_socket(SOCK_STREAM);
 	if (sockfd < 0) {
-		print_error("socket");
+		pr_err_info("socket");
 		return sockfd;
 	}
 
 	ret = inet_connect(sockfd, addr);
 	if (ret < 0) {
-		print_error("inet_connect");
+		pr_err_info("inet_connect");
 		close(sockfd);
 		return ret;
 	}
@@ -550,7 +550,7 @@ int unix_create_tcp_link(const char *hostname, u16 port)
 
 	ret = unix_connect(sockfd, &addr);
 	if (ret < 0) {
-		print_error("inet_connect");
+		pr_err_info("inet_connect");
 		close(sockfd);
 		return ret;
 	}
@@ -638,7 +638,7 @@ int inet_create_service(int type, u16 port)
 
 	sockfd = inet_socket(type);
 	if (sockfd < 0) {
-		print_error("socket");
+		pr_err_info("socket");
 		return sockfd;
 	}
 
@@ -646,7 +646,7 @@ int inet_create_service(int type, u16 port)
 
 	ret = inet_bind(sockfd, &addr);
 	if (ret < 0) {
-		print_error("bind to port %d failed", port);
+		pr_err_info("bind to port %d failed", port);
 		close(sockfd);
 		return ret;
 	}
@@ -663,7 +663,7 @@ int unix_create_service(int type, const char *pathname)
 
 	sockfd = unix_socket(type);
 	if (sockfd < 0) {
-		print_error("socket");
+		pr_err_info("socket");
 		return sockfd;
 	}
 
@@ -687,7 +687,7 @@ int unix_create_service(int type, const char *pathname)
 
 	ret = bind(sockfd, (struct sockaddr *) &addr, addrlen);
 	if (ret < 0) {
-		print_error("bind");
+		pr_err_info("bind");
 		goto out_close_sockfd;
 	}
 
@@ -745,7 +745,7 @@ ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size)
 
 	sockfd = inet_create_tcp_link1(addr);
 	if (sockfd < 0) {
-		error_msg("inet_create_tcp_link1");
+		pr_err_info("inet_create_tcp_link1");
 		return sockfd;
 	}
 
@@ -840,7 +840,7 @@ int inet_tcp_send_file1(int sockfd, int fd)
 	while (1) {
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0) {
-			print_error("read");
+			pr_err_info("read");
 			return readlen;
 		}
 
@@ -850,7 +850,7 @@ int inet_tcp_send_file1(int sockfd, int fd)
 
 		sendlen = inet_send(sockfd, buff, readlen);
 		if (sendlen < 0) {
-			print_error("inet_send");
+			pr_err_info("inet_send");
 			return sendlen;
 		}
 	}
@@ -865,7 +865,7 @@ int inet_tcp_send_file2(int sockfd, const char *filename)
 
 	fd = open(filename, O_RDONLY);
 	if (fd < 0) {
-		print_error("open file %s failed", filename);
+		pr_err_info("open file %s failed", filename);
 		return fd;
 	}
 
@@ -884,7 +884,7 @@ int inet_tcp_receive_file1(int sockfd, int fd)
 	while (1) {
 		recvlen = inet_recv(sockfd, buff, sizeof(buff));
 		if (recvlen < 0) {
-			print_error("inet_recv");
+			pr_err_info("inet_recv");
 			return recvlen;
 		}
 
@@ -894,7 +894,7 @@ int inet_tcp_receive_file1(int sockfd, int fd)
 
 		writelen = write(fd, buff, recvlen);
 		if (writelen < 0) {
-			print_error("write");
+			pr_err_info("write");
 			return writelen;
 		}
 	}
@@ -909,7 +909,7 @@ int inet_tcp_receive_file2(int sockfd, const char *filename)
 
 	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	if (fd < 0) {
-		print_error("open file %s failed", filename);
+		pr_err_info("open file %s failed", filename);
 		return fd;
 	}
 
@@ -942,7 +942,7 @@ int inet_get_sockaddr(int sockfd, const char *devname, struct sockaddr_in *sin_a
 
 	ret = ioctl(sockfd, SIOCGIFADDR, &ifr);
 	if (ret < 0) {
-		print_error("get deivce %s sockaddr", devname);
+		pr_err_info("get deivce %s sockaddr", devname);
 		return ret;
 	}
 
@@ -959,7 +959,7 @@ int inet_get_devname(int sockfd, int index, char *devname)
 	req.ifr_ifru.ifru_ivalue = index;
 	ret = ioctl(sockfd, SIOCGIFNAME, &req);
 	if (ret < 0) {
-		print_error("get devices name");
+		pr_err_info("get devices name");
 		return ret;
 	}
 
@@ -2053,7 +2053,7 @@ static int network_file_get_open_flags(network_protocol_t type)
 static void network_client_file_close(struct network_client *client)
 {
 	if (isatty(client->sockfd)) {
-		restore_tty_attr(client->sockfd, NULL);
+		cavan_tty_attr_restore(client->sockfd, NULL);
 	}
 
 	if (client->service) {
@@ -2086,7 +2086,7 @@ static int network_file_open(const char *pathname, int type)
 	}
 
 	if (isatty(fd)) {
-		set_tty_mode(fd, TTY_MODE_DATA, NULL);
+		cavan_set_tty_mode(fd, CAVAN_TTY_MODE_DATA, NULL);
 	}
 
 	return fd;

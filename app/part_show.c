@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
 	ret = read_master_boot_sector(argv[1], &mbs);
 	if (ret < 0) {
-		error_msg("read_master_boot_sector");
+		pr_err_info("read_master_boot_sector");
 		return ret;
 	}
 

@@ -52,7 +52,7 @@ int ext2_init(struct ext2_desc *desc, const char *dev_path)
 
 	desc->fd = open(dev_path, O_RDONLY);
 	if (desc->fd < 0) {
-		print_error("open device \"%s\" failed", dev_path);
+		pr_err_info("open device \"%s\" failed", dev_path);
 		return desc->fd;
 	}
 
@@ -482,7 +482,7 @@ int ext2_find_file(struct ext2_desc *desc, const char *pathname, struct ext2_ino
 
 		rdlen = ext2_read_inode(desc, entry.inode, inode);
 		if (rdlen < 0) {
-			print_error("ext2_read_inode");
+			pr_err_info("ext2_read_inode");
 			return rdlen;
 		}
 
@@ -562,12 +562,12 @@ int ext2_list_directory(struct ext2_desc *desc, const char *pathname)
 
 	ret = ext2_find_file(desc, pathname, &inode);
 	if (ret < 0) {
-		error_msg("ext2_find_file");
+		pr_err_info("ext2_find_file");
 		return ret;
 	}
 
 	if (!S_ISDIR(inode.mode)) {
-		error_msg("%s is not a directory", pathname);
+		pr_err_info("%s is not a directory", pathname);
 		ERROR_RETURN(ENOTDIR);
 	}
 
@@ -596,14 +596,14 @@ ssize_t ext2_read_file_base(struct ext2_desc *desc, struct ext2_inode *inode, vo
 		seek_value = block_index_to_offset(desc, inode->block[i]);
 		seek_value = lseek(desc->fd, seek_value, SEEK_SET);
 		if (seek_value < 0) {
-			print_error("lseek");
+			pr_err_info("lseek");
 			return seek_value;
 		}
 
 		readlen = size > desc->block_size ? desc->block_size : size;
 		readlen = read(desc->fd, buff, readlen);
 		if (readlen < 0) {
-			print_error("read");
+			pr_err_info("read");
 			return readlen;
 		}
 
@@ -620,12 +620,12 @@ ssize_t ext2_read_file(struct ext2_desc *desc, const char *pathname, void *buff,
 
 	ret = ext2_find_file(desc, pathname, &inode);
 	if (ret < 0) {
-		error_msg("ext2_find_file");
+		pr_err_info("ext2_find_file");
 		return ret;
 	}
 
 	if (!S_ISREG(inode.mode)) {
-		error_msg("%s is not a file", pathname);
+		pr_err_info("%s is not a file", pathname);
 		ERROR_RETURN(EISDIR);
 	}
 
@@ -768,7 +768,7 @@ static int cavan_ext2_find_file(struct ext2_desc *desc, struct cavan_ext2_file *
 
 		rdlen = ext2_read_inode(desc, entry.inode, &file->inode);
 		if (rdlen < 0) {
-			print_error("ext2_read_inode");
+			pr_err_info("ext2_read_inode");
 			return rdlen;
 		}
 
@@ -895,7 +895,7 @@ ssize_t cavan_ext2_read_file(struct cavan_ext2_file *file, void *buff, size_t si
 	ssize_t rdlen;
 
 	if (!S_ISREG(file->inode.mode)) {
-		error_msg("%s is not a file", file->pathname);
+		pr_err_info("%s is not a file", file->pathname);
 		ERROR_RETURN(EISDIR);
 	}
 

@@ -96,7 +96,7 @@ static int read_oem_info(const char *emmc_dev, struct oem_info *oem_info)
 
 	ret = file_readfrom(emmc_dev, oem_info, sizeof(*oem_info), SN_OFFSET, 0);
 	if (ret < 0) {
-		error_msg("read oem info");
+		pr_err_info("read oem info");
 		return ret;
 	}
 
@@ -158,7 +158,7 @@ static ssize_t write_wifi_mac(const char *system_mnt_point, char *mac, size_t si
 
 	ret = file_writeto(i200_wifi_mac, mac, size, 0, O_TRUNC);
 	if (ret < 0) {
-		print_error("file_writeto");
+		pr_err_info("file_writeto");
 		return ret;
 	}
 
@@ -174,18 +174,18 @@ int write_mac_address(const char *emmc_dev, const char *system_mnt_point)
 
 	ret = read_oem_info(emmc_dev, &oem_info);
 	if (ret < 0) {
-		error_msg("read oem info");
+		pr_err_info("read oem info");
 		return ret;
 	}
 
 	ret = write_wifi_mac(system_mnt_point, oem_info.wifi_mac, WIFI_MAC_LEN - 1);
 	if (ret < 0) {
-		print_error("write wifi mac address");
+		pr_err_info("write wifi mac address");
 	}
 
 	ret = write_bt_mac(system_mnt_point, oem_info.bt_mac, BT_MAC_LEN);
 	if (ret < 0) {
-		print_error("write bluetooth mac address");
+		pr_err_info("write bluetooth mac address");
 	}
 
 	return 0;

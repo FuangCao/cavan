@@ -1075,15 +1075,15 @@ int cavan_tty_redirect(int ttyin, int ttyout, int ttyerr)
 	int ret;
 	struct termios tty_attr;
 
-	ret = set_tty_mode(stdin_fd, TTY_MODE_SSH, &tty_attr);
+	ret = cavan_set_tty_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &tty_attr);
 	if (ret < 0) {
-		pr_red_info("set_tty_mode");
+		pr_red_info("cavan_set_tty_mode");
 		return ret;
 	}
 
 	ret = cavan_tty_redirect_loop4(ttyin, ttyout, ttyerr);
 
-	restore_tty_attr(stdin_fd, &tty_attr);
+	cavan_tty_attr_restore(stdin_fd, &tty_attr);
 
 	return ret;
 }

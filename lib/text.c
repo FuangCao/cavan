@@ -1185,7 +1185,7 @@ double text2size_single(const char *text, const char **last)
 		break;
 
 	default:
-		error_msg("illegal character \'%c\'", *text);
+		pr_err_info("illegal character \'%c\'", *text);
 	}
 
 	if (*text) {
@@ -1353,7 +1353,7 @@ double text2time_single(const char *text, const char **last)
 		break;
 
 	default:
-		error_msg("illegal character \'%c\'", *text);
+		pr_err_info("illegal character \'%c\'", *text);
 	}
 
 	if (*text) {
@@ -1539,7 +1539,7 @@ start_parse:
 				break;
 
 			default:
-				error_msg("Unknown Formate");
+				pr_err_info("Unknown Formate");
 				return NULL;
 			}
 

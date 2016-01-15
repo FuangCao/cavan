@@ -101,7 +101,7 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 
 	sockfd = inet_socket(SOCK_STREAM);
 	if (sockfd < 0) {
-		print_error("socket");
+		pr_err_info("socket");
 		return sockfd;
 	}
 
@@ -296,7 +296,7 @@ int recv_text_and_write(int sockfd, const char *filename)
 
 	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0777);
 	if (fd < 0) {
-		print_error("Failed to open file `%s'", filename);
+		pr_err_info("Failed to open file `%s'", filename);
 		return fd;
 	}
 
@@ -340,7 +340,7 @@ int sms_receive_message(int sockfd, struct eavoo_short_message *message)
 
 	while (1) {
 		if (sms_receive_value(sockfd, &type, sizeof(type)) < 0) {
-			print_error("recv");
+			pr_err_info("recv");
 			return -1;
 		}
 
@@ -371,7 +371,7 @@ int sms_receive_message(int sockfd, struct eavoo_short_message *message)
 			println("SMS_TYPE_TEST");
 #endif
 			if (sms_send_response(sockfd, SMS_TYPE_ACK) < 0) {
-				print_error("send");
+				pr_err_info("send");
 				return -1;
 			}
 			continue;
@@ -419,7 +419,7 @@ int sms_receive_and_write(int sockfd, const char *filename)
 
 	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0777);
 	if (fd < 0) {
-		print_error("Failed to open file `%s'", filename);
+		pr_err_info("Failed to open file `%s'", filename);
 		return fd;
 	}
 

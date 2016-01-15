@@ -29,7 +29,7 @@ int cavan_load_mtd_table(struct cavan_mtd_descriptor *desc, const char *mtd_tabl
 
 	readlen = file_readfrom(mtd_table, buff, sizeof(buff) - 1, 0, 0);
 	if (readlen < 0) {
-		error_msg("read file %s failed", mtd_table);
+		pr_err_info("read file %s failed", mtd_table);
 		return readlen;
 	}
 
@@ -60,7 +60,7 @@ int cavan_mtd_init(struct cavan_mtd_descriptor *desc, const char *mtd_table)
 
 	ret = cavan_load_mtd_table(desc, mtd_table);
 	if (ret < 0) {
-		error_msg("cavan_load_mtd_table");
+		pr_err_info("cavan_load_mtd_table");
 		return ret;
 	}
 
@@ -140,18 +140,18 @@ struct mtd_partition_descriptor *cavan_mtd_open_partition(struct mtd_partition_i
 
 	fd = mtd_open_char_device(info->index, flags);
 	if (fd < 0) {
-		print_error("mtd_open_char_device");
+		pr_err_info("mtd_open_char_device");
 		return NULL;
 	}
 
 	desc = cavan_mtd_malloc_partition_descriptor(info->dev_desc);
 	if (desc == NULL) {
-		print_error("cavan_mtd_malloc_partition_descriptor");
+		pr_err_info("cavan_mtd_malloc_partition_descriptor");
 		goto out_close_fd;
 	}
 
 	if (ioctl(fd, MEMGETINFO, &desc->user_info) < 0) {
-		print_error("ioctl MEMGETINFO");
+		pr_err_info("ioctl MEMGETINFO");
 		goto out_free_desc;
 	}
 
@@ -240,7 +240,7 @@ int cavan_mtd_erase_partition(struct mtd_partition_descriptor *desc)
 
 	ret = ioctl(desc->fd, MEMERASE, &erase_info);
 	if (ret < 0) {
-		print_error("ioctl");
+		pr_err_info("ioctl");
 		return cavan_mtd_erase_blocks(desc, 0, block_count);
 	}
 
@@ -264,7 +264,7 @@ ssize_t cavan_mtd_write_block(struct mtd_partition_descriptor *desc, const void 
 
 	pos = lseek(fd, 0, SEEK_CUR);
 	if (pos < 0) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		return pos;
 	}
 
@@ -291,25 +291,25 @@ ssize_t cavan_mtd_write_block(struct mtd_partition_descriptor *desc, const void 
 
 		pos = lseek(fd, pos, SEEK_SET);
 		if (pos < 0) {
-			print_error("lseek");
+			pr_err_info("lseek");
 			return pos;
 		}
 
 		writelen = write(fd, buff, erase_size);
 		if ((size_t) writelen != erase_size) {
-			print_error("write");
+			pr_err_info("write");
 			return writelen;
 		}
 #if SUPPORT_MTD_WRITE_VERIFY
 		pos = lseek(fd, pos, SEEK_SET);
 		if (pos < 0) {
-			print_error("lseek");
+			pr_err_info("lseek");
 			return pos;
 		}
 
 		readlen = read(fd, verify, erase_size);
 		if (readlen != writelen) {
-			print_error("read");
+			pr_err_info("read");
 			return readlen;
 		}
 
@@ -333,7 +333,7 @@ int cavan_mtd_write_partition1(struct mtd_partition_descriptor *desc, int fd)
 	while (1) {
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0) {
-			print_error("read");
+			pr_err_info("read");
 			return readlen;
 		}
 
@@ -343,7 +343,7 @@ int cavan_mtd_write_partition1(struct mtd_partition_descriptor *desc, int fd)
 
 		writelen = cavan_mtd_write_block(desc, buff);
 		if (writelen < 0) {
-			error_msg("cavan_mtd_write_block");
+			pr_err_info("cavan_mtd_write_block");
 			return writelen;
 		}
 	}
@@ -358,7 +358,7 @@ int cavan_mtd_write_partition2(struct mtd_partition_descriptor *desc, const char
 
 	fd = open(filename, O_RDONLY);
 	if (fd < 0) {
-		print_error("open file %s", filename);
+		pr_err_info("open file %s", filename);
 		return fd;
 	}
 
@@ -405,7 +405,7 @@ int cavan_mtd_write_partition5(const char *partname, const char *filename)
 
 	ret = cavan_mtd_init(&desc, NULL);
 	if (ret < 0) {
-		error_msg("cavan_mtd_init");
+		pr_err_info("cavan_mtd_init");
 		return ret;
 	}
 
@@ -439,7 +439,7 @@ int cavan_mtd_write_image1(struct mtd_partition_descriptor *desc, int fd)
 	while (1) {
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0) {
-			print_error("read");
+			pr_err_info("read");
 			return readlen;
 		}
 
@@ -449,7 +449,7 @@ int cavan_mtd_write_image1(struct mtd_partition_descriptor *desc, int fd)
 
 		writelen = cavan_mtd_write_block(desc, buff);
 		if (writelen < 0) {
-			error_msg("cavan_mtd_write_block");
+			pr_err_info("cavan_mtd_write_block");
 			return writelen;
 		}
 	}
@@ -464,7 +464,7 @@ int cavan_mtd_write_image2(struct mtd_partition_descriptor *desc, const char *im
 
 	fd = open(imagename, O_RDONLY);
 	if (fd < 0) {
-		print_error("open file %s", imagename);
+		pr_err_info("open file %s", imagename);
 		return fd;
 	}
 

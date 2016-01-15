@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 
 	ret = cavan_mtd_init(&desc, NULL);
 	if (ret < 0) {
-		error_msg("cavan_mtd_init");
+		pr_err_info("cavan_mtd_init");
 		return ret;
 	}
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 
 			info = cavan_mtd_get_partition_info_by_name(&desc, argv[optind]);
 			if (info == NULL) {
-				error_msg("cavan_mtd_get_partition_info_by_name");
+				pr_err_info("cavan_mtd_get_partition_info_by_name");
 				ret = -1;
 				goto out_mtd_deinit;
 			}
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 
 	part = cavan_mtd_open_partition2(&desc, partname, O_RDWR);
 	if (part == NULL) {
-		error_msg("cavan_mtd_open_partition2");
+		pr_err_info("cavan_mtd_open_partition2");
 		ret = -1;
 		goto out_mtd_deinit;
 	}

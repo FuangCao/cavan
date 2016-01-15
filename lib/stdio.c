@@ -8,7 +8,7 @@
 FILE *console_fp;
 static struct termios tty_attr;
 
-int set_tty_attr(int fd, int action, struct termios *attr)
+int cavan_tty_set_attr(int fd, int action, struct termios *attr)
 {
 	int ret;
 
@@ -31,7 +31,7 @@ int set_tty_attr(int fd, int action, struct termios *attr)
 	return 0;
 }
 
-int set_tty_mode(int fd, int mode, struct termios *attr_bak)
+int cavan_set_tty_mode(int fd, int mode, struct termios *attr_bak)
 {
 	int ret;
 	struct termios attr;
@@ -44,9 +44,9 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 		attr_bak = &tty_attr;
 	}
 
-	ret = get_tty_attr(fd, attr_bak);
+	ret = cavan_tty_get_attr(fd, attr_bak);
 	if (ret < 0) {
-		pr_red_info("get_tty_attr");
+		pr_red_info("cavan_tty_get_attr");
 		return ret;
 	}
 
@@ -63,7 +63,7 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 		attr.c_cc[VQUIT] = _POSIX_VDISABLE;
 		attr.c_cc[VMIN] = 1;
 		attr.c_cc[VTIME] = 1;
-		return set_tty_attr(fd, TCSADRAIN, &attr);
+		return cavan_tty_set_attr(fd, TCSADRAIN, &attr);
 
 	case 1:
 	case 3:
@@ -79,7 +79,7 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 		attr.c_cflag |= CS8;
 		attr.c_cc[VMIN] = 1;
 		attr.c_cc[VTIME] = 1;
-		return set_tty_attr(fd, TCSADRAIN, &attr);
+		return cavan_tty_set_attr(fd, TCSADRAIN, &attr);
 
 	case 4:
 		attr.c_lflag &= ~(ICANON | ECHO | ISIG);
@@ -87,13 +87,13 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 		attr.c_cflag &= ~(CSTOPB | PARENB | CRTSCTS);
 		attr.c_cflag &= ~(CBAUD | CSIZE) ;
 		attr.c_cflag |= (B115200 | CS8);
-		return set_tty_attr(fd, TCSANOW, &attr);
+		return cavan_tty_set_attr(fd, TCSANOW, &attr);
 
 	case 5:
 		attr.c_lflag = 0;
 		attr.c_cc[VTIME] = 0;
 		attr.c_cc[VMIN] = 1;
-		return set_tty_attr(fd, TCSANOW, &attr);
+		return cavan_tty_set_attr(fd, TCSANOW, &attr);
 
 	default:
 		pr_red_info("invalid mode %d", mode);
@@ -101,16 +101,16 @@ int set_tty_mode(int fd, int mode, struct termios *attr_bak)
 	}
 }
 
-int restore_tty_attr(int fd, struct termios *attr)
+int cavan_tty_attr_restore(int fd, struct termios *attr)
 {
 	if (attr == NULL) {
 		attr = &tty_attr;
 	}
 
-	return set_tty_attr(fd, TCSADRAIN, attr);
+	return cavan_tty_set_attr(fd, TCSADRAIN, attr);
 }
 
-int has_char(long sec, long usec)
+int cavan_has_char(long sec, long usec)
 {
 	fd_set readset;
 	struct timeval timeout;
@@ -124,9 +124,9 @@ int has_char(long sec, long usec)
 	return select(STDIN_FILENO + 1, &readset, NULL, NULL, &timeout) > 0;
 }
 
-int timeout_getchar(long sec, long usec)
+int cavan_getchar_timed(long sec, long usec)
 {
-	if (has_char(sec, usec)) {
+	if (cavan_has_char(sec, usec)) {
 		return getchar();
 	}
 
@@ -356,20 +356,20 @@ int show_file(const char *dev_name, u64 start, u64 size)
 
 	fd = open(dev_name, O_RDONLY | O_BINARY);
 	if (fd == -1) {
-		print_error("open");
+		pr_err_info("open");
 		ret = -1;
 		goto out_return;
 	}
 
 	ret = lseek(fd, start, SEEK_SET);
 	if (ret == -1) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		goto out_close_file;
 	}
 
 	ret = read(fd, buff, size);
 	if (ret == -1) {
-		print_error("read");
+		pr_err_info("read");
 		goto out_close_file;
 	}
 
@@ -390,7 +390,7 @@ int cat_file(const char *filename)
 
 	fd = open(filename, O_RDONLY);
 	if (fd < 0) {
-		error_msg("open file \"%s\"", filename);
+		pr_err_info("open file \"%s\"", filename);
 		return fd;
 	}
 
@@ -399,7 +399,7 @@ int cat_file(const char *filename)
 
 		readlen = read(fd, buff, sizeof(buff));
 		if (readlen < 0) {
-			print_error("read");
+			pr_err_info("read");
 			ret = readlen;
 			goto out_close_fd;
 		}
@@ -487,7 +487,7 @@ int open_console(const char *dev_path)
 
 	fp = fopen(dev_path, "w");
 	if (fp == NULL) {
-		print_error("fopen");
+		pr_err_info("fopen");
 		return -1;
 	}
 
@@ -554,7 +554,7 @@ int get_menu_select(const char *input_dev_path, const char *menu[], int count)
 
 	fd = open(input_dev_path, O_RDONLY | O_BINARY);
 	if (fd < 0) {
-		print_error("open");
+		pr_err_info("open");
 		return -1;
 	}
 
@@ -579,13 +579,13 @@ int switch2text_mode(const char *tty_path)
 
 	tty_fd = open(tty_path, 0);
 	if (tty_fd < 0) {
-		print_error("open tty device \"%s\" failed", tty_path);
+		pr_err_info("open tty device \"%s\" failed", tty_path);
 		return -1;
 	}
 
 	ret = fswitch2text_mode(tty_fd);
 	if (ret < 0) {
-		error_msg("switch to text mode failed");
+		pr_err_info("switch to text mode failed");
 	}
 
 	close(tty_fd);
@@ -605,13 +605,13 @@ int switch2graph_mode(const char *tty_path)
 
 	tty_fd = open(tty_path, 0);
 	if (tty_fd < 0) {
-		print_error("open tty device \"%s\" failed", tty_path);
+		pr_err_info("open tty device \"%s\" failed", tty_path);
 		return -1;
 	}
 
 	ret = fswitch2graph_mode(tty_fd);
 	if (ret < 0) {
-		error_msg("switch to graph mode failed");
+		pr_err_info("switch to graph mode failed");
 	}
 
 	close(tty_fd);

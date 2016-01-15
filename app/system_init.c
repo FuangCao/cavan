@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
 	ret = system_init(argv[1], argv + 2);
 	if (ret < 0) {
-		error_msg("system_init");
+		pr_err_info("system_init");
 		return ret;
 	}
 

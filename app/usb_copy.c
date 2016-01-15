@@ -75,14 +75,14 @@ int main(int argc, char *argv[])
 	}
 
 	if (cftp_client_handle == NULL) {
-		error_msg("Please input transfer direction");
+		pr_err_info("Please input transfer direction");
 		show_usage();
 		return -EINVAL;
 	}
 
 	ret = cavan_find_usb_device(NULL, &usb_desc);
 	if (ret < 0) {
-		error_msg("cavan_find_usb_device");
+		pr_err_info("cavan_find_usb_device");
 		return ret;
 	}
 
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
 		ret = cftp_client_handle(&cftp_desc, argv[i], 0, temp_name, 0, 0);
 		if (ret < 0) {
-			error_msg("cftp send or receive file \"%s\" failed", argv[i]);
+			pr_err_info("cftp send or receive file \"%s\" failed", argv[i]);
 			return ret;
 		}
 	}

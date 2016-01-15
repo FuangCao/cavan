@@ -419,13 +419,13 @@ int uramdisk2ramdisk(const char *uramdisk_path, const char *ramdisk_path)
 
 	ret = system_command("rm %s -rfv", ramdisk_path);
 	if (ret < 0) {
-		print_error("system_command");
+		pr_err_info("system_command");
 		return ret;
 	}
 
 	ret = cavan_dd(uramdisk_path, ramdisk_path, UIMAGE_HEADER_SIZE, 0, 0);
 	if (ret < 0) {
-		error_msg("cavan_dd");
+		pr_err_info("cavan_dd");
 		return ret;
 	}
 
@@ -447,19 +447,19 @@ int dump_ramdisk(const char *ramdisk_path, const char *ramdisk_dir)
 
 	ret = system_command("rm %s -rfv && mkdir %s", ramdisk_dir, ramdisk_dir);
 	if (ret < 0) {
-		print_error("system_command");
+		pr_err_info("system_command");
 		return ret;
 	}
 
 	ret = chdir_backup(ramdisk_dir);
 	if (ret < 0) {
-		print_error("chdir");
+		pr_err_info("chdir");
 		return ret;
 	}
 
 	ret = system_command("cat %s | gzip -d | cpio -i", abs_ramdisk_path);
 	if (ret < 0) {
-		print_error("system_command");
+		pr_err_info("system_command");
 	}
 
 	chdir_backup(NULL);
@@ -486,7 +486,7 @@ int create_ramdisk(const char *ramdisk_dir, const char *ramdisk_path)
 
 	ret = system_command("rm %s -rfv", ramdisk_path);
 	if (ret < 0) {
-		print_error("system_command");
+		pr_err_info("system_command");
 		return ret;
 	}
 
@@ -494,7 +494,7 @@ int create_ramdisk(const char *ramdisk_dir, const char *ramdisk_path)
 
 	ret = chdir_backup(ramdisk_dir);
 	if (ret < 0) {
-		print_error("chdir");
+		pr_err_info("chdir");
 		return ret;
 	}
 
@@ -502,7 +502,7 @@ int create_ramdisk(const char *ramdisk_dir, const char *ramdisk_path)
 	if (ret < 0) {
 		ret = system_command("find | cpio -o -H newc | gzip > %s", abs_ramdisk_path);
 		if (ret < 0) {
-			print_error("system_command");
+			pr_err_info("system_command");
 		}
 	}
 
@@ -520,13 +520,13 @@ int create_uramdisk(const char *ramdisk_dir, const char *uramdisk_path)
 
 	ret = create_ramdisk(ramdisk_dir, TEMP_RAMDISK_PATH);
 	if (ret < 0) {
-		error_msg("create_ramdisk");
+		pr_err_info("create_ramdisk");
 		return ret;
 	}
 
 	ret = ramdisk2uramdisk(TEMP_RAMDISK_PATH, abs_uramdisk_path);
 	if (ret < 0) {
-		error_msg("ramdisk2uramdisk");
+		pr_err_info("ramdisk2uramdisk");
 		return ret;
 	}
 
@@ -589,7 +589,7 @@ int burn_zImage(const char *zImage_path, const char *dev_path)
 
 	ret = zImage2uImage(zImage_path, TEMP_UIMAGE_PATH);
 	if (ret < 0) {
-		error_msg("Convert zImage to uImage failed");
+		pr_err_info("Convert zImage to uImage failed");
 		return ret;
 	}
 
@@ -613,7 +613,7 @@ int burn_ramdisk(const char *ramdisk_path, const char *dev_path, int busybox)
 
 	ret = ramdisk2uramdisk(ramdisk_path, TEMP_URAMDISK_PATH);
 	if (ret < 0) {
-		error_msg("Conver ramdisk to uramdisk failed");
+		pr_err_info("Conver ramdisk to uramdisk failed");
 		return ret;
 	}
 
@@ -626,7 +626,7 @@ int burn_directory(const char *dir_path, const char *dev_path, int busybox)
 
 	ret = create_ramdisk(dir_path, TEMP_RAMDISK_PATH);
 	if (ret < 0) {
-		error_msg("Create ramdisk.img failed");
+		pr_err_info("Create ramdisk.img failed");
 		return ret;
 	}
 
@@ -641,7 +641,7 @@ int image_extend(const char *img_path)
 
 	ret = system_command_retry(5, "e2fsck -fy %s", img_path);
 	if (ret < 0) {
-		error_msg("e2fsck failed");
+		pr_err_info("e2fsck failed");
 		return ret;
 	}
 
@@ -661,7 +661,7 @@ int image_resize(const char *img_path, u64 size)
 
 	ret = system_command_retry(5, "e2fsck -fy %s", img_path);
 	if (ret < 0) {
-		error_msg("e2fsck failed");
+		pr_err_info("e2fsck failed");
 		return ret;
 	}
 
@@ -694,7 +694,7 @@ int image_shrink(const char *img_path)
 
 	ret = system_command_retry(5, "e2fsck -fy %s", img_path);
 	if (ret < 0) {
-		error_msg("e2fsck failed");
+		pr_err_info("e2fsck failed");
 		return ret;
 	}
 
@@ -716,7 +716,7 @@ int burn_normal_image(const char *img_path, const char *dev_path)
 
 	ret = cavan_dd(img_path, dev_path, 0, 0, 0);
 	if (ret < 0) {
-		error_msg("Burn image \"%s\" to device \"%s\" failed", img_path, dev_path);
+		pr_err_info("Burn image \"%s\" to device \"%s\" failed", img_path, dev_path);
 		return ret;
 	}
 
@@ -758,7 +758,7 @@ int get_dump_uramdisk(const char *dev_path, const char *ramdisk_dir, int busybox
 
 	ret = get_uramdisk(dev_path, TEMP_URAMDISK_PATH, busybox);
 	if (ret < 0) {
-		error_msg("Get uramdisk from device \"%s\"", dev_path);
+		pr_err_info("Get uramdisk from device \"%s\"", dev_path);
 		return ret;
 	}
 
@@ -771,7 +771,7 @@ int get_ramdisk(const char *dev_path, const char *file_path, int busybox)
 
 	ret = get_uramdisk(dev_path, TEMP_URAMDISK_PATH, busybox);
 	if (ret < 0) {
-		error_msg("Get ramdisk from device \"%s\"", dev_path);
+		pr_err_info("Get ramdisk from device \"%s\"", dev_path);
 		return ret;
 	}
 
@@ -858,20 +858,20 @@ int burn_swan_image_directory(const char *dirname, const char *dest_dev)
 
 	ret = chdir_backup(dirname);
 	if (ret < 0) {
-		print_error("chdir");
+		pr_err_info("chdir");
 		return ret;
 	}
 
 	if (file_test("ramdisk", "d") == 0) {
 		ret = create_uramdisk("ramdisk", "uramdisk.img");
 		if (ret < 0) {
-			error_msg("create_uramdisk");
+			pr_err_info("create_uramdisk");
 			goto out_chdir_backup;
 		}
 	} else if (file_test("ramdisk.img", "r") == 0) {
 		ret = ramdisk2uramdisk("ramdisk.img", "uramdisk.img");
 		if (ret < 0) {
-			error_msg("ramdisk2uramdisk");
+			pr_err_info("ramdisk2uramdisk");
 			goto out_chdir_backup;
 		}
 	}
@@ -895,14 +895,14 @@ int burn_swan_image_directory(const char *dirname, const char *dest_dev)
 
 		ret = cavan_dd2(descs + i);
 		if (ret < 0) {
-			error_msg("burn image \"%s\"", descs[i].in);
+			pr_err_info("burn image \"%s\"", descs[i].in);
 			goto out_chdir_backup;
 		}
 
 		if (i < 3) {
 			ret = image_extend(descs[i].out);
 			if (ret < 0) {
-				error_msg("image_extend");
+				pr_err_info("image_extend");
 				goto out_chdir_backup;
 			}
 		}

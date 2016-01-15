@@ -33,7 +33,7 @@ static int create_image(const char *img_name)
 
 	fd_out = open(img_name, WRITE_FLAGS | O_TRUNC, 0777);
 	if (fd_out < 0) {
-		print_error("open iamge");
+		pr_err_info("open iamge");
 		return -1;
 	}
 
@@ -43,13 +43,13 @@ static int create_image(const char *img_name)
 		fd_in = open(images[i].name, READ_FLAGS);
 		if (fd_in < 0) {
 			ret = -1;
-			print_error("open image");
+			pr_err_info("open image");
 			goto out_close_fd_out;
 		}
 
 		ret = fcavan_dd(fd_in, fd_out, 0, images[i].offset, 0, 0);
 		if (ret < 0) {
-			error_msg("fcavan_dd");
+			pr_err_info("fcavan_dd");
 			goto out_cloae_fd_in;
 		}
 
@@ -75,7 +75,7 @@ static int check_image_crc(const char *dev_name, const char *img_name)
 
 	ret = file_stat2(img_name, &st);
 	if (ret < 0) {
-		print_error("stat");
+		pr_err_info("stat");
 		return ret;
 	}
 
@@ -83,24 +83,24 @@ static int check_image_crc(const char *dev_name, const char *img_name)
 
 	ret = file_ncrc32(dev_name, st.st_size, &dev_crc);
 	if (ret < 0) {
-		error_msg("file_ncrc32");
+		pr_err_info("file_ncrc32");
 		return ret;
 	}
 
 	ret = file_ncrc32(img_name, st.st_size, &img_crc);
 	if (ret < 0) {
-		error_msg("file_ncrc32");
+		pr_err_info("file_ncrc32");
 		return ret;
 	}
 
 	println("device crc = 0x%08x, image crc = 0x%08x", dev_crc, img_crc);
 
 	if (dev_crc ^ img_crc) {
-		error_msg("Data CRC Is Not Match");
+		pr_err_info("Data CRC Is Not Match");
 		return -1;
 	}
 
-	right_msg("Data CRC Is Matched");
+	pr_green_info("Data CRC Is Matched");
 
 	return 0;
 }
@@ -111,7 +111,7 @@ static int burn_image(const char *dev_name)
 
 	ret = cavan_dd(IMAGE_NAME, dev_name, 0, 0, 0);
 	if (ret < 0) {
-		error_msg("cavan_dd");
+		pr_err_info("cavan_dd");
 		return ret;
 	}
 
@@ -120,7 +120,7 @@ static int burn_image(const char *dev_name)
 		return ret;
 	}
 
-	right_msg("Burn EMMC Successed\n");
+	pr_green_info("Burn EMMC Successed\n");
 
 	return 0;
 }
@@ -131,19 +131,19 @@ static int make_sd_card(const char *dev_name)
 
 	ret = system_command("sudo umount %s*", dev_name);
 	if (ret < 0) {
-		print_error("system_command");
+		pr_err_info("system_command");
 		return ret;
 	}
 
 	ret = system_command("sudo sfdisk -uM %s << EOF\n100,,L\nEOF\n", dev_name);
 	if (ret < 0) {
-		print_error("system_command");
+		pr_err_info("system_command");
 		return ret;
 	}
 
 	ret = system_command("sudo mkfs.vfat %s1", dev_name);
 	if (ret < 0) {
-		print_error("system_command");
+		pr_err_info("system_command");
 	}
 
 	return ret;
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 	case 'A':
 		return burn_image(dev_name) >= 0 && make_sd_card(dev_name) >= 0;
 	default:
-		error_msg("unknown argument");
+		pr_err_info("unknown argument");
 	}
 
 	return -1;

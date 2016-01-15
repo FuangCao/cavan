@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	while (optind < argc) {
 		ret = remove_auto(argv[optind]);
 		if (ret < 0) {
-			error_msg("remove %s failed", argv[optind]);
+			pr_err_info("remove %s failed", argv[optind]);
 			return ret;
 		}
 

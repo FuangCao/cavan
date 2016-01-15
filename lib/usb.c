@@ -124,7 +124,7 @@ int fusb_read_cavan_descriptor(int fd, struct cavan_usb_descriptor *desc)
 
 	readlen = read(fd, buff, sizeof(buff));
 	if (readlen < 0) {
-		error_msg("read");
+		pr_err_info("read");
 		return readlen;
 	}
 
@@ -138,7 +138,7 @@ int usb_read_cavan_descriptor(const char *dev_path, struct cavan_usb_descriptor 
 
 	fd = open(dev_path, O_RDONLY);
 	if (fd < 0) {
-		error_msg("open device \"%s\" failed", dev_path);
+		pr_err_info("open device \"%s\" failed", dev_path);
 		return fd;
 	}
 
@@ -309,7 +309,7 @@ int cavan_usb_init(const char *dev_path, struct cavan_usb_descriptor *desc)
 
 	fd = open(dev_path, O_RDWR);
 	if (fd < 0) {
-		error_msg("open device \"%s\" failed", dev_path);
+		pr_err_info("open device \"%s\" failed", dev_path);
 		return fd;
 	}
 
@@ -362,7 +362,7 @@ int cavan_usb_init(const char *dev_path, struct cavan_usb_descriptor *desc)
 
 	ret = cavan_pthread_create(&desc->thread_notify, cavan_usb_notify_handle, desc, false);
 	if (ret < 0) {
-		print_error("cavan_pthread_create");
+		pr_err_info("cavan_pthread_create");
 		goto out_close_fd;
 	}
 
@@ -417,7 +417,7 @@ int cavan_usb_bluk_rw(struct cavan_usb_descriptor *desc, void *buff, size_t leng
 	pthread_mutex_unlock(lock);
 
 	if (ret < 0) {
-		print_error("ioctl");
+		pr_err_info("ioctl");
 		return ret;
 	}
 
@@ -491,7 +491,7 @@ int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *des
 
 	dir1 = opendir(tmp_path);
 	if (dir1 == NULL) {
-		print_error("open directory \"%s\" failed", tmp_path);
+		pr_err_info("open directory \"%s\" failed", tmp_path);
 		return -ENOENT;
 	}
 
@@ -504,7 +504,7 @@ int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *des
 
 		dir2 = opendir(tmp_path);
 		if (dir2 == NULL) {
-			warning_msg("open directory \"%s\" failed", tmp_path);
+			pr_warn_info("open directory \"%s\" failed", tmp_path);
 			continue;
 		}
 
@@ -602,7 +602,7 @@ ssize_t cavan_adb_write_data(int fd_adb, const void *buff, size_t size)
 
 	writelen = write(fd_adb, &hdr, sizeof(hdr));
 	if (writelen < (ssize_t) sizeof(hdr)) {
-		print_error("write");
+		pr_err_info("write");
 		return writelen < 0 ? writelen : -ENOMEDIUM;
 	}
 

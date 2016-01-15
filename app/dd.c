@@ -66,13 +66,13 @@ int main(int argc, char *argv[])
 
 	ret = cavan_dd(input_file, output_file, skip * bs, seek * bs, count * bs);
 	if (ret < 0) {
-		error_msg("cavan_dd");
+		pr_err_info("cavan_dd");
 		return ret;
 	}
 
 	return 0;
 
 out_unknown_option:
-	error_msg("unknown option \"%s\"", para_option);
+	pr_err_info("unknown option \"%s\"", para_option);
 	return -EINVAL;
 }

@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 					return 0;
 
 				default:
-					error_msg("unknown option: %c", c);
+					pr_err_info("unknown option: %c", c);
 					show_usage();
 					return -EINVAL;
 			}
@@ -93,13 +93,13 @@ int main(int argc, char *argv[])
 		*p = 0;
 
 		if (command[0] == 0) {
-			error_msg("please input a command");
+			pr_err_info("please input a command");
 			return -EINVAL;
 		}
 
 		ret = send_command_request_show(hostname, port, command);
 		if (ret < 0) {
-			error_msg("Send command request failed");
+			pr_err_info("Send command request failed");
 			return ret;
 		}
 

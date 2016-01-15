@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
 	ret = uevent_init(&udesc);
 	if (ret < 0) {
-		error_msg("uevent_init");
+		pr_err_info("uevent_init");
 		return ret;
 	}
 
@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
 		ret = get_partition_add_uevent(&udesc);
 		if (ret < 0) {
-			error_msg("get_partition_add_uevent");
+			pr_err_info("get_partition_add_uevent");
 			break;
 		}
 

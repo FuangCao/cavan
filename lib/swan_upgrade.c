@@ -166,7 +166,7 @@ static void swan_show_picture(const char *state, int reset)
 
 		print("Reboot remain time %d(s)  \r", i);
 
-		c = timeout_getchar(1, 0);
+		c = cavan_getchar_timed(1, 0);
 
 		if (c == '\n') {
 			cavan_input_service_stop(&service);
@@ -202,7 +202,7 @@ int package(const char *pkg_name, const char *dir_name)
 	}
 
 	if (swan_machine_type == SWAN_BOARD_UNKNOWN) {
-		error_msg("Machine type no set");
+		pr_err_info("Machine type no set");
 	} else {
 		struct swan_image_info *img_info;
 
@@ -219,27 +219,27 @@ int package(const char *pkg_name, const char *dir_name)
 
 	pkg_fd = open(pkg_name, O_RDWR | O_CREAT | O_SYNC | O_TRUNC | O_BINARY, 0777);
 	if (pkg_fd < 0) {
-		print_error("open file \"%s\"", pkg_name);
+		pr_err_info("open file \"%s\"", pkg_name);
 		return -1;
 	}
 
 	text_copy(name_p, HEADER_BIN_NAME);
 	ret = write_upgrade_program(pkg_fd, &file_info, tmp_path);
 	if (ret < 0) {
-		error_msg("write_upgrade_program");
+		pr_err_info("write_upgrade_program");
 		goto out_close_pkg;
 	}
 
 	ret = lseek(pkg_fd, sizeof(pkg_info), SEEK_CUR);
 	if (ret < 0) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		goto out_close_pkg;
 	}
 
 	ret = write_resource_image(pkg_fd, &pkg_info, dir_name, get_resource_name_by_board_type(swan_machine_type),
 		RESOURCE_IMAGE_NAME, I600_RESOURCE_NAME, I200_RESOURCE_NAME, MODEM_RESOURCE_NAME, NULL);
 	if (ret < 0) {
-		error_msg("write_resource_image");
+		pr_err_info("write_resource_image");
 		goto out_close_pkg;
 	}
 
@@ -256,14 +256,14 @@ int package(const char *pkg_name, const char *dir_name)
 		if (swan_need_shrink && array_has_element(p->type, shrink_image_table, ARRAY_SIZE(shrink_image_table))) {
 			ret = swan_shrink_image(dir_name, p);
 			if (ret < 0) {
-				error_msg("image_shrink");
+				pr_err_info("image_shrink");
 				goto out_close_pkg;
 			}
 		}
 
 		ret = write_simple_image(pkg_fd, dir_name, p, &swan_emmc_part_table);
 		if (ret < 0) {
-			error_msg("write_image");
+			pr_err_info("write_image");
 			goto out_close_pkg;
 		}
 
@@ -273,7 +273,7 @@ int package(const char *pkg_name, const char *dir_name)
 	pkg_info.crc32 = 0;
 	ret = ffile_crc32_seek(pkg_fd, sizeof(file_info) + file_info.header_size + sizeof(pkg_info), 0, &pkg_info.crc32);
 	if (ret < 0) {
-		error_msg("ffile_crc32");
+		pr_err_info("ffile_crc32");
 		goto out_close_pkg;
 	}
 
@@ -287,19 +287,19 @@ int package(const char *pkg_name, const char *dir_name)
 
 	ret = lseek(pkg_fd, sizeof(file_info) + file_info.header_size, SEEK_SET);
 	if (ret < 0) {
-		print_error("lseek");
+		pr_err_info("lseek");
 		goto out_close_pkg;
 	}
 
 	ret = write_package_info(pkg_fd, &pkg_info);
 	if (ret < 0) {
-		print_error("write_package_info");
+		pr_err_info("write_package_info");
 		goto out_close_pkg;
 	}
 
 	ret = swan_set_md5sum(pkg_name);
 	if (ret < 0) {
-		error_msg("swan_set_md5sum");
+		pr_err_info("swan_set_md5sum");
 	}
 
 out_close_pkg:
@@ -323,56 +323,56 @@ int unpack(const char *pkg_name, const char *dir_name)
 	struct swan_image_info img_info;
 	char tmp_path[1024];
 
-	stand_msg("unpack upgrade file \"%s\" -> \"%s\"", pkg_name, dir_name);
+	pr_std_info("unpack upgrade file \"%s\" -> \"%s\"", pkg_name, dir_name);
 
 	ret = swan_check_md5sum(pkg_name);
 	if (ret < 0) {
-		error_msg("swan_check_md5sum");
+		pr_err_info("swan_check_md5sum");
 		return ret;
 	}
 
 	pkg_fd = open(pkg_name, O_RDONLY | O_BINARY);
 	if (pkg_fd < 0) {
-		print_error("open file \"%s\"", pkg_name);
+		pr_err_info("open file \"%s\"", pkg_name);
 		return -1;
 	}
 
 	ret = cavan_mkdir(dir_name);
 	if (ret < 0) {
-		error_msg("cavan_mkdir");
+		pr_err_info("cavan_mkdir");
 		goto out_close_pkg;
 	}
 
 	text_path_cat(tmp_path, sizeof(tmp_path), dir_name, HEADER_BIN_NAME);
 	ret = read_upgrade_program(pkg_fd, &file_info, tmp_path);
 	if (ret < 0) {
-		error_msg("get_upgrade_program");
+		pr_err_info("get_upgrade_program");
 		goto out_close_pkg;
 	}
 
 	ret = read_resource_image(pkg_fd, &pkg_info, dir_name, 0, 0);
 	if (ret < 0) {
-		error_msg("get_resource_image");
+		pr_err_info("get_resource_image");
 		goto out_close_pkg;
 	}
 
 	while (pkg_info.image_count) {
 		ret = read_image_info(pkg_fd, &img_info);
 		if (ret < 0) {
-			error_msg("read_image_info");
+			pr_err_info("read_image_info");
 			goto out_close_pkg;
 		}
 
 		text_path_cat(tmp_path, sizeof(tmp_path), dir_name, img_info.filename);
 		img_fd = open(tmp_path, O_WRONLY | O_CREAT | O_SYNC | O_TRUNC | O_BINARY, 0777);
 		if (img_fd < 0) {
-			print_error("open");
+			pr_err_info("open");
 			goto out_close_pkg;
 		}
 
 		ret = read_simple_image(pkg_fd, img_fd, img_info.length, 0);
 		if (ret < 0) {
-			error_msg("get_image");
+			pr_err_info("get_image");
 			goto out_close_img;
 		}
 
@@ -411,7 +411,7 @@ static int open_dest_device(struct swan_image_info *img_info)
 
 	ret = remknod(TEMP_DEVICE_PATH, 0666, makedev(img_info->major, img_info->minor));
 	if (ret < 0) {
-		print_error("remknod");
+		pr_err_info("remknod");
 		return ret;
 	}
 
@@ -430,24 +430,24 @@ static int write2emmc(int pkg_fd, int img_count, int retry_count, enum swan_imag
 
 		ret = read_image_info(pkg_fd, &img_info);
 		if (ret < 0) {
-			error_msg("read_image_info");
+			pr_err_info("read_image_info");
 			return ret;
 		}
 
 		if (array_has_element(img_info.type, (int *) skip_types, skip_img_count)) {
 			ret = lseek(pkg_fd, img_info.length, SEEK_CUR);
 			if (ret < 0) {
-				print_error("lseek");
+				pr_err_info("lseek");
 				return ret;
 			}
 
-			warning_msg("skipping image \"%s\" ...", swan_image_type_tostring(img_info.type));
+			pr_warn_info("skipping image \"%s\" ...", swan_image_type_tostring(img_info.type));
 			continue;
 		}
 
 		img_fd = open_dest_device(&img_info);
 		if (img_fd < 0) {
-			error_msg("open_dest_device");
+			pr_err_info("open_dest_device");
 			return ret;
 		}
 
@@ -458,19 +458,19 @@ static int write2emmc(int pkg_fd, int img_count, int retry_count, enum swan_imag
 
 			ret = get_file_pointer(pkg_fd, &pkg_pointer_bak);
 			if (ret < 0) {
-				error_msg("can't backup file pointer");
+				pr_err_info("can't backup file pointer");
 				goto out_close_img;
 			}
 
 			ret = read_simple_image(pkg_fd, img_fd, img_info.length, img_info.offset);
 			if (ret < 0) {
-				error_msg("get_image");
+				pr_err_info("get_image");
 				goto out_close_img;
 			}
 
 			ret = lseek(img_fd, img_info.offset, SEEK_SET);
 			if (ret < 0) {
-				print_error("lseek");
+				pr_err_info("lseek");
 				goto out_close_img;
 			}
 
@@ -482,22 +482,22 @@ static int write2emmc(int pkg_fd, int img_count, int retry_count, enum swan_imag
 
 			ret = ffile_ncrc32(img_fd, img_info.length, &tmp_crc32);
 			if (ret < 0) {
-				error_msg("ffile_ncrc32");
+				pr_err_info("ffile_ncrc32");
 				goto out_close_img;
 			}
 
 			println("img_crc32 = 0x%08x, tmp_crc32 = 0x%08x", img_info.crc32, tmp_crc32);
 
 			if (img_info.crc32 ^ tmp_crc32) {
-				error_msg("image crc32 checksum is not match, retry = %d", retry);
+				pr_err_info("image crc32 checksum is not match, retry = %d", retry);
 			} else {
-				right_msg("image crc32 checksum is match");
+				pr_green_info("image crc32 checksum is match");
 				break;
 			}
 
 			ret = lseek(pkg_fd, pkg_pointer_bak, SEEK_SET);
 			if (ret < 0) {
-				print_error("recovery package file pointer");
+				pr_err_info("recovery package file pointer");
 				goto out_close_img;
 			}
 		}
@@ -584,21 +584,21 @@ int upgrade(const char *pkg_name, const char *dir_name)
 
 	pkg_fd = open(pkg_name, O_RDONLY | O_BINARY);
 	if (pkg_fd < 0) {
-		print_error("open \"%s\"", pkg_name);
+		pr_err_info("open \"%s\"", pkg_name);
 		swan_show_picture("upgrade", 0);
 		return -1;
 	}
 
 	ret = read_upgrade_program(pkg_fd, &file_info, UPGRADE_PROGRAM_PATH ".bak");
 	if (ret < 0) {
-		error_msg("get_upgrade_program");
+		pr_err_info("get_upgrade_program");
 		swan_show_picture("upgrade", 0);
 		goto out_close_pkg;
 	}
 
 	ret = read_resource_image(pkg_fd, &pkg_info, "/tmp", 1, 1);
 	if (ret < 0) {
-		error_msg("get_resource_image");
+		pr_err_info("get_resource_image");
 		swan_show_picture("upgrade", 0);
 		goto out_close_pkg;
 	}
@@ -618,7 +618,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 
 	ret = swan_sfdisk(&emmc_dev_desc, &pkg_info.part_table);
 	if (ret < 0) {
-		error_msg("swan_sfdisk");
+		pr_err_info("swan_sfdisk");
 		swan_show_picture("sfdisk", 0);
 		goto out_close_pkg;
 	}
@@ -640,35 +640,35 @@ int upgrade(const char *pkg_name, const char *dir_name)
 	}
 
 	if (ret < 0) {
-		error_msg("swan_mkfs");
+		pr_err_info("swan_mkfs");
 		swan_show_picture("mkfs", 0);
 		goto out_close_pkg;
 	}
 
 	ret = write2emmc(pkg_fd, pkg_info.image_count, 5, NULL, 0);
 	if (ret < 0) {
-		error_msg("write2emmc");
+		pr_err_info("write2emmc");
 		swan_show_picture("upgrade", 0);
 		goto out_close_pkg;
 	}
 
 	ret = destroy_environment(EMMC_DEVICE);
 	if (ret < 0) {
-		error_msg("destroy_environment");
+		pr_err_info("destroy_environment");
 		swan_show_picture("check", 0);
 		goto out_close_pkg;
 	}
 
 	ret = swan_check(EMMC_DEVICE, "245");
 	if (ret < 0) {
-		error_msg("swan_check");
+		pr_err_info("swan_check");
 		swan_show_picture("check", 0);
 		goto out_close_pkg;
 	}
 
 	ret = swan_config_system(EMMC_DEVICE, file_info.version);
 	if (ret < 0) {
-		error_msg("swan_check");
+		pr_err_info("swan_check");
 		swan_show_picture("check", 0);
 		goto out_close_pkg;
 	}
@@ -676,7 +676,7 @@ int upgrade(const char *pkg_name, const char *dir_name)
 out_upgrade_success:
 	swan_ts_calibration(NULL);
 
-	right_msg("Upgrade Successed");
+	pr_green_info("Upgrade Successed");
 	swan_show_picture("success", 1);
 
 	ret = 0;
@@ -727,18 +727,18 @@ int fupgrade_simple(int pkg_fd)
 
 	ret = read_upgrade_program(pkg_fd, &file_info, UPGRADE_PROGRAM_PATH ".bak");
 	if (ret < 0) {
-		error_msg("get_upgrade_program");
+		pr_err_info("get_upgrade_program");
 		return ret;
 	}
 
 	ret = read_resource_image(pkg_fd, &pkg_info, NULL, 0, 1);
 	if (ret < 0) {
-		error_msg("get_resource_image");
+		pr_err_info("get_resource_image");
 		return ret;
 	}
 
 	if ((pkg_info.upgrade_flags & UPGRADE_FLAG_CHECK_VERSION) && swan_if_need_upgrade(EMMC_DEVICE "p2", file_info.version) == 0) {
-		right_msg("current version is newest, do't need upgrade");
+		pr_green_info("current version is newest, do't need upgrade");
 		goto out_upgrade_success;
 	}
 
@@ -758,25 +758,25 @@ int fupgrade_simple(int pkg_fd)
 
 	ret = swan_mkfs(&emmc_dev_desc, part_descs, ARRAY_SIZE(part_descs));
 	if (ret < 0) {
-		error_msg("swan_mkfs");
+		pr_err_info("swan_mkfs");
 		return ret;
 	}
 
 	ret = write2emmc(pkg_fd, pkg_info.image_count, 5, skip_imgs, ARRAY_SIZE(skip_imgs));
 	if (ret < 0) {
-		error_msg("write2emmc");
+		pr_err_info("write2emmc");
 		return ret;
 	}
 
 	ret = swan_check(EMMC_DEVICE, "25");
 	if (ret < 0) {
-		error_msg("swan_check");
+		pr_err_info("swan_check");
 		return ret;
 	}
 
 	ret = swan_config_system(EMMC_DEVICE, file_info.version);
 	if (ret < 0) {
-		error_msg("swan_check");
+		pr_err_info("swan_check");
 		return ret;
 	}
 
@@ -784,12 +784,12 @@ int fupgrade_simple(int pkg_fd)
 
 	ret = destroy_environment(EMMC_DEVICE);
 	if (ret < 0) {
-		error_msg("destroy_environment");
+		pr_err_info("destroy_environment");
 		return ret;
 	}
 
 out_upgrade_success:
-	right_msg("Upgrade Successed");
+	pr_green_info("Upgrade Successed");
 
 	return 0;
 }
@@ -817,7 +817,7 @@ int upgrade_simple(const char *pkg_name, const char *dir_name)
 
 	pkg_fd = open(pkg_name, O_RDONLY | O_BINARY);
 	if (pkg_fd < 0) {
-		print_error("open");
+		pr_err_info("open");
 		return -1;
 	}
 
@@ -848,11 +848,11 @@ int auto_upgrade(const char *pkg_name)
 	}
 
 	if (pkg_name == NULL || file_test(pkg_name, "f") < 0) {
-		warning_msg("Upgrade packet do't exist, find it now");
+		pr_warn_info("Upgrade packet do't exist, find it now");
 
 		ret = swan_copy(CACHE_FILE_PATH);
 		if (ret < 0) {
-			error_msg("swan_find_file");
+			pr_err_info("swan_find_file");
 			swan_show_picture("copy", 0);
 			return ret;
 		}
@@ -860,11 +860,11 @@ int auto_upgrade(const char *pkg_name)
 		pkg_name = CACHE_FILE_PATH;
 	}
 
-	stand_msg("pkg_name = %s", pkg_name);
+	pr_std_info("pkg_name = %s", pkg_name);
 
 	pkg_fd = open(pkg_name, O_RDONLY | O_BINARY);
 	if (pkg_fd < 0) {
-		print_error("open");
+		pr_err_info("open");
 		swan_show_picture("copy", 0);
 		return -1;
 	}
@@ -872,7 +872,7 @@ int auto_upgrade(const char *pkg_name)
 	ret = read_upgrade_program(pkg_fd, &file_info, UPGRADE_PROGRAM_PATH);
 	close(pkg_fd);
 	if (ret < 0) {
-		error_msg("get_upgrade_program");
+		pr_err_info("get_upgrade_program");
 		swan_show_picture("copy", 0);
 		return ret;
 	}
@@ -889,7 +889,7 @@ enum swan_board_type get_swan_board_type_by_build_prop(const char *build_prop)
 
 	count = parse_config_file_simple(build_prop, '=', lines, ARRAY_SIZE(lines));
 	if (count < 0) {
-		error_msg("parse_config_file2");
+		pr_err_info("parse_config_file2");
 		return SWAN_BOARD_UNKNOWN;
 	}
 
@@ -1016,7 +1016,7 @@ u32 swan_read_version(const char *system_dev)
 	char buff[128];
 
 	if (mount_to(system_dev, SYSTEM_MNT_POINT, "ext4", NULL) < 0) {
-		error_msg("mount deivce \"%s\"", system_dev);
+		pr_err_info("mount deivce \"%s\"", system_dev);
 		return 0;
 	}
 
@@ -1044,7 +1044,7 @@ ssize_t swan_write_version(const char *system_mnt_point, u32 version)
 	writelen = value2text_base(version, buff, 0, 0, 16) - buff;
 	writelen = file_writeto(version_file, buff, writelen, 0, O_TRUNC);
 	if (writelen < 0) {
-		error_msg("write version failed");
+		pr_err_info("write version failed");
 	}
 
 	return writelen;
@@ -1076,19 +1076,19 @@ int swan_config_system(const char *emmc_dev, u32 version)
 
 	ret = mount_to(system_dev, system_mnt_point, "ext4", NULL);
 	if (ret < 0) {
-		error_msg("mount system device failed");
+		pr_err_info("mount system device failed");
 		return ret;
 	}
 
 	ret = swan_write_version(system_mnt_point, version);
 	if (ret < 0) {
-		error_msg("swan_write_version");
+		pr_err_info("swan_write_version");
 		goto out_umount_system;
 	}
 
 	ret = write_mac_address(emmc_dev, system_mnt_point);
 	if (ret < 0) {
-		error_msg("write mac address faild");
+		pr_err_info("write mac address faild");
 	}
 
 out_umount_system:

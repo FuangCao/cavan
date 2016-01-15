@@ -79,7 +79,7 @@ int get_device_uevent(struct uevent_desc *desc, struct uevent_filter *filters, s
 	while (1) {
 		ret = recv(sockfd, desc->buff, sizeof(desc->buff), 0);
 		if (ret < 0) {
-			print_error("recv");
+			pr_err_info("recv");
 			return ret;
 		}
 

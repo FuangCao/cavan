@@ -83,7 +83,7 @@ pid_t process_find_by_cmdline(const char *proc_path, const char *cmdline)
 
 	dir_proc = opendir(proc_path);
 	if (dir_proc == NULL) {
-		print_error("Open directroy %s failed", proc_path);
+		pr_err_info("Open directroy %s failed", proc_path);
 		return -EFAULT;
 	}
 

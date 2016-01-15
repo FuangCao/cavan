@@ -28,7 +28,7 @@ char *frle_data_to(const u8 *data, ssize_t size, int fd_out)
 		if (q >= end_q) {
 			ret = ffile_writeto(fd_out, buff, q - buff, 0);
 			if (ret < 0) {
-				error_msg("write file failed");
+				pr_err_info("write file failed");
 				return NULL;
 			}
 
@@ -48,7 +48,7 @@ char *frle_data_to(const u8 *data, ssize_t size, int fd_out)
 	if (q > buff) {
 		ret = ffile_writeto(fd_out, buff, q - buff, 0);
 		if (ret < 0) {
-			error_msg("write file failed");
+			pr_err_info("write file failed");
 			return NULL;
 		}
 	}
@@ -64,13 +64,13 @@ int frle_to(int fd_in, int fd_out)
 
 	ret = fstat(fd_in, &st);
 	if (ret < 0) {
-		print_error("get input file size failed");
+		pr_err_info("get input file size failed");
 		return ret;
 	}
 
 	data_in = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd_in, 0);
 	if (data_in == MAP_FAILED) {
-		print_error("mmap input file failed");
+		pr_err_info("mmap input file failed");
 		return -1;
 	}
 
@@ -90,13 +90,13 @@ int rle_to(const char *file_in, const char *file_out)
 
 	fd_in = file_open_ro(file_in);
 	if (fd_in < 0) {
-		print_error("open input file \"%s\" failed", file_in);
+		pr_err_info("open input file \"%s\" failed", file_in);
 		return -1;
 	}
 
 	fd_out = file_open_wo(file_out);
 	if (fd_out < 0) {
-		print_error("open output file \"%s\" failed", file_out);
+		pr_err_info("open output file \"%s\" failed", file_out);
 		ret = -1;
 		goto out_close_in;
 	}
@@ -133,7 +133,7 @@ char *funrle_data_to(const u8 *data, ssize_t size, int fd_out)
 
 			ret = ffile_writeto(fd_out, buff, MAX_BUFFER_LEN, 0);
 			if (ret < 0) {
-				error_msg("write file failed");
+				pr_err_info("write file failed");
 				return NULL;
 			}
 
@@ -152,7 +152,7 @@ char *funrle_data_to(const u8 *data, ssize_t size, int fd_out)
 	if (p > buff) {
 		ret = ffile_writeto(fd_out, buff, p - buff, 0);
 		if (ret < 0) {
-			error_msg("write file failed");
+			pr_err_info("write file failed");
 			return NULL;
 		}
 	}
@@ -168,13 +168,13 @@ int funrle_to(int fd_in, int fd_out)
 
 	ret = fstat(fd_in, &st);
 	if (ret < 0) {
-		print_error("get input file size failed");
+		pr_err_info("get input file size failed");
 		return ret;
 	}
 
 	data_in = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd_in, 0);
 	if (data_in == MAP_FAILED) {
-		print_error("mmap input file failed");
+		pr_err_info("mmap input file failed");
 		return -1;
 	}
 
@@ -194,13 +194,13 @@ int unrle_to(const char *file_in, const char *file_out)
 
 	fd_in = file_open_ro(file_in);
 	if (fd_in < 0) {
-		print_error("open input file \"%s\" failed", file_in);
+		pr_err_info("open input file \"%s\" failed", file_in);
 		return -1;
 	}
 
 	fd_out = file_open_wo(file_out);
 	if (fd_out < 0) {
-		print_error("open output file \"%s\" failed", file_out);
+		pr_err_info("open output file \"%s\" failed", file_out);
 		ret = -1;
 		goto out_close_in;
 	}

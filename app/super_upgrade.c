@@ -61,7 +61,7 @@ static int swan_install(const char *dirpath)
 
 	ret = file_mount_to(busybox_path, BUSYBOX_MOUNT_POINT, "ext4", 0, NULL);
 	if (ret < 0) {
-		error_msg("mount file \"%s\"", busybox_path);
+		pr_err_info("mount file \"%s\"", busybox_path);
 		return ret;
 	}
 
@@ -70,19 +70,19 @@ static int swan_install(const char *dirpath)
 	fd = open(pkg_path, O_RDWR);
 	if (fd < 0) {
 		ret = fd;
-		print_error("open upgrade file \"%s\" failed", pkg_path);
+		pr_err_info("open upgrade file \"%s\" failed", pkg_path);
 		goto out_umount_busybox;
 	}
 
 	ret = chroot(BUSYBOX_MOUNT_POINT);
 	if (ret < 0) {
-		print_error("chroot to " BUSYBOX_MOUNT_POINT " failed");
+		pr_err_info("chroot to " BUSYBOX_MOUNT_POINT " failed");
 		goto out_close_fd;
 	}
 
 	ret = setenv("PATH", DEFAULT_PATH_VALUE, 1);
 	if (ret < 0) {
-		error_msg("setenv PATH failes");
+		pr_err_info("setenv PATH failes");
 		goto out_close_fd;
 	}
 
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 			break;
 
 		default:
-			error_msg("invalid argument");
+			pr_err_info("invalid argument");
 			return -EINVAL;
 		}
 	}

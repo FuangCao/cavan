@@ -25,7 +25,7 @@
 #define WAV_PERIOD_TIME			100000
 
 #define pr_snd_error(fmt, err, args ...) \
-	print_error(fmt ": %s", ##args, snd_strerror(err))
+	pr_err_info(fmt ": %s", ##args, snd_strerror(err))
 
 #pragma pack(1)
 struct wav_riff_chunk {

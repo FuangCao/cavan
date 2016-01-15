@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 	if (optind < argc) {
 		ret = sscanf(argv[optind], "%d,%d,%d,%d,%d", &part_table.system_size, &part_table.recovery_size, &part_table.userdata_size, &part_table.cache_size, &part_table.vendor_size);
 		if (ret < 4 || ret > 5) {
-			error_msg("argument fault %d", ret);
+			pr_err_info("argument fault %d", ret);
 			return -EINVAL;
 		}
 

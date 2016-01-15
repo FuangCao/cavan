@@ -219,14 +219,14 @@ int open_wav_file(const char *filename, struct wav_file_header *hdr, int flags)
 
 	fd = open(filename, flags, 0777);
 	if (fd < 0) {
-		print_error("open file `%s' failed", filename);
+		pr_err_info("open file `%s' failed", filename);
 		return fd;
 	}
 
 	if (flags & (O_WRONLY | O_RDWR)) {
 		rwsize = ffile_write(fd, hdr, sizeof(*hdr));
 		if (rwsize < 0) {
-			print_error("Write to file `%s' failed", filename);
+			pr_err_info("Write to file `%s' failed", filename);
 			close(fd);
 			return rwsize;
 		}
@@ -413,13 +413,13 @@ int cavan_wav_player_init(const char *filename, struct cavan_wav_player *player)
 
 	ret = cavan_wav_player_set_hwparams(player);
 	if (ret < 0) {
-		print_error("cavan_wav_player_set_hw_params");
+		pr_err_info("cavan_wav_player_set_hw_params");
 		goto out_close_pcm;
 	}
 
 	ret = cavan_wav_player_set_swparams(player, 0);
 	if (ret < 0) {
-		print_error("cavan_wav_player_set_swparams");
+		pr_err_info("cavan_wav_player_set_swparams");
 		goto out_close_pcm;
 	}
 
@@ -519,7 +519,7 @@ int cavan_wav_player_run(struct cavan_wav_player *player)
 	while (total_length) {
 		rdlen = ffile_read(fd, buff, total_length > buff_size ? buff_size : total_length);
 		if (rdlen <= 0) {
-			print_error("ffile_read");
+			pr_err_info("ffile_read");
 			return rdlen;
 		}
 
@@ -537,7 +537,7 @@ int cavan_wav_player_run(struct cavan_wav_player *player)
 
 		wrcount = cavan_wav_pcm_write(handle, bytes_per_frame, buff, rdlen);
 		if (wrcount < 0) {
-			print_error("snd_pcm_writei");
+			pr_err_info("snd_pcm_writei");
 			return wrcount;
 		}
 	}
