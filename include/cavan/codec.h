@@ -33,5 +33,11 @@ struct cavan_lz77_node {
 
 #pragma pack()
 
-int cavan_lz77_encode(const char *src_file, const char *dest_file);
+struct cavan_lz77_window {
+	u8 data[CAVAN_LZ77_WIN_SIZE];
+	int head;
+};
+
+int cavan_lz77_encode(const void *data, size_t length, const char *dest_file);
+int cavan_lz77_encode2(const char *src_file, const char *dest_file);
 int cavan_lz77_decode(const char *src_file, const char *dest_file);

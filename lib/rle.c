@@ -26,7 +26,7 @@ char *frle_data_to(const u8 *data, ssize_t size, int fd_out)
 		for (p = data, tmp = *p; tmp == *p && p < data_end; p++);
 
 		if (q >= end_q) {
-			ret = ffile_writeto(fd_out, buff, q - buff, 0);
+			ret = ffile_write(fd_out, buff, q - buff);
 			if (ret < 0) {
 				pr_err_info("write file failed");
 				return NULL;
@@ -46,7 +46,7 @@ char *frle_data_to(const u8 *data, ssize_t size, int fd_out)
 	progress_bar_finish(&prg_bar);
 
 	if (q > buff) {
-		ret = ffile_writeto(fd_out, buff, q - buff, 0);
+		ret = ffile_write(fd_out, buff, q - buff);
 		if (ret < 0) {
 			pr_err_info("write file failed");
 			return NULL;
@@ -126,12 +126,10 @@ char *funrle_data_to(const u8 *data, ssize_t size, int fd_out)
 	for (data_end = data + size; data < data_end; data += 2) {
 		tmp = *data;
 
-		println("tmp = %d", tmp);
-
 		while (p + tmp >= end_p) {
 			memset(p, data[1], end_p - p);
 
-			ret = ffile_writeto(fd_out, buff, MAX_BUFFER_LEN, 0);
+			ret = ffile_write(fd_out, buff, MAX_BUFFER_LEN);
 			if (ret < 0) {
 				pr_err_info("write file failed");
 				return NULL;
@@ -150,7 +148,7 @@ char *funrle_data_to(const u8 *data, ssize_t size, int fd_out)
 	progress_bar_finish(&prg_bar);
 
 	if (p > buff) {
-		ret = ffile_writeto(fd_out, buff, p - buff, 0);
+		ret = ffile_write(fd_out, buff, p - buff);
 		if (ret < 0) {
 			pr_err_info("write file failed");
 			return NULL;
