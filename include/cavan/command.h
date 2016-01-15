@@ -26,6 +26,18 @@
 	}; \
 	FIND_EXEC_COMMAND_MAIN(__local_cmd_map);
 
+#define CAVAN_ALIAS_DECLARE(name, command, subcmd) \
+	int cavan_alias_##name(int argc, char *argv[]) { \
+		int i; \
+		char *argv_new[argc + 1]; \
+		argv_new[0] = #command; \
+		argv_new[1] = #subcmd; \
+		for (i = 1; i < argc; i++) { \
+			argv_new[i + 1] = argv[i]; \
+		} \
+		return do_cavan_##command(NELEM(argv_new), argv_new); \
+	}
+
 #define CAVAN_EXECF_STDIN			(1 << 0)
 #define CAVAN_EXECF_STDOUT			(1 << 1)
 #define CAVAN_EXECF_STDERR			(1 << 2)

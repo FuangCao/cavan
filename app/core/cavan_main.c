@@ -27,23 +27,30 @@ static int do_cavan_bootanimation(int argc, char *argv[])
 	if (argc > 1) {
 		return do_cavan_mplayer(argc, argv);
 	} else {
-		char *argv_new[] = { argv[0], "/system/media/bootanimation.mp4", NULL };
+		char *argv_new[] = { argv[0], "/system/media/bootanimation.mp4" };
 
-		return do_cavan_mplayer(2, argv_new);
+		return do_cavan_mplayer(NELEM(argv_new), argv_new);
 	}
 }
 
 static int do_cavan_remount(int argc, char *argv[])
 {
-	char *argv_new[] = { argv[0], "-l", "remount", NULL };
+	char *argv_new[] = { argv[0], "-l", "remount" };
 
-	return do_cavan_tcp_exec(3, argv_new);
+	return do_cavan_tcp_exec(NELEM(argv_new), argv_new);
 }
 #endif
+
+static CAVAN_ALIAS_DECLARE(i2c_rw, i2c, rw);
+static CAVAN_ALIAS_DECLARE(i2c_det, i2c, det);
+static CAVAN_ALIAS_DECLARE(i2c_dump, i2c, dump);
 
 const struct cavan_command_map cmd_map_table[] = {
 	{ CONFIG_CAVAN_MAIN_NAME, cavan_main },
 	{ "calc", do_cavan_calculator },
+	{ "i2c-rw", cavan_alias_i2c_rw },
+	{ "i2c-det", cavan_alias_i2c_det },
+	{ "i2c-dump", cavan_alias_i2c_dump },
 #ifdef CONFIG_ANDROID
 	{ "bootanimation",  do_cavan_bootanimation },
 	{ "remount", do_cavan_remount },
