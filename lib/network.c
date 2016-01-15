@@ -2086,7 +2086,7 @@ static int network_file_open(const char *pathname, int type)
 	}
 
 	if (isatty(fd)) {
-		cavan_set_tty_mode(fd, CAVAN_TTY_MODE_DATA, NULL);
+		cavan_tty_set_mode(fd, CAVAN_TTY_MODE_DATA, NULL);
 	}
 
 	return fd;

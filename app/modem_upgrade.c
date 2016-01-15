@@ -204,9 +204,9 @@ static int modem_send_at_command(const char *command, char *buff, size_t size)
 		return fd;
 	}
 
-	ret = cavan_set_tty_mode(fd, CAVAN_TTY_MODE_AT, &attr);
+	ret = cavan_tty_set_mode(fd, CAVAN_TTY_MODE_AT, &attr);
 	if (ret < 0) {
-		pr_err_info("cavan_set_tty_mode");
+		pr_err_info("cavan_tty_set_mode");
 		goto out_close_fd;
 	}
 

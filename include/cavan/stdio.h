@@ -395,7 +395,7 @@ __BEGIN_DECLS;
 extern FILE *console_fp;
 
 int cavan_tty_set_attr(int fd, int action, struct termios *attr);
-int cavan_set_tty_mode(int fd, int mode, struct termios *attr_bak);
+int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak);
 int cavan_tty_attr_restore(int fd, struct termios *attr);
 
 int cavan_has_char(long sec, long usec);

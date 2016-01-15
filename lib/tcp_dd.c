@@ -1404,9 +1404,9 @@ int tcp_dd_exec_command(struct network_url *url, const char *command)
 		goto out_client_close;
 	}
 
-	ret = cavan_set_tty_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &tty_attr);
+	ret = cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &tty_attr);
 	if (ret < 0) {
-		pr_red_info("cavan_set_tty_mode");
+		pr_red_info("cavan_tty_set_mode");
 		goto out_client_close;
 	}
 

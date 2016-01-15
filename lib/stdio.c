@@ -31,7 +31,7 @@ int cavan_tty_set_attr(int fd, int action, struct termios *attr)
 	return 0;
 }
 
-int cavan_set_tty_mode(int fd, int mode, struct termios *attr_bak)
+int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak)
 {
 	int ret;
 	struct termios attr;
