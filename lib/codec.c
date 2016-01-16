@@ -20,6 +20,8 @@
 #include <cavan.h>
 #include <cavan/codec.h>
 
+#define CAVAN_HUFFMAN_DEBUG		0
+
 static void cavan_lz77_get_node(const u8 *win, const u8 *data, const u8 *data_end, struct cavan_lz77_node *node)
 {
 	const u8 *win_end, *win_bak = win;
@@ -319,7 +321,7 @@ static void cavan_huffman_tree_sort(struct cavan_huffman_tree_node *tree_pnodes[
 	}
 }
 
-static void cavan_huffman_tree_set_code(struct cavan_huffman_tree_node *root, u8 code, u8 length)
+static void cavan_huffman_tree_set_code(struct cavan_huffman_tree_node *root, u64 code, u8 length)
 {
 #if 0
 	if (root->left) {
@@ -338,10 +340,26 @@ static void cavan_huffman_tree_set_code(struct cavan_huffman_tree_node *root, u8
 	} else {
 		struct cavan_huffman_node *node = root->node;
 
+#if 1
+		int i;
+		u64 code_new = 0;
+
+		for (i = 0; i < length; i++) {
+			if (code & BIT64(i)) {
+				code_new |= BIT64(length - i - 1);
+			}
+		}
+
+		node->code = code_new;
+#else
 		node->code = code;
+#endif
+
 		node->length = length;
 
-		println("node = '%c', code = 0x%lx, length = %d", node->value, node->code, node->length);
+#if CAVAN_HUFFMAN_DEBUG
+		println("node = '%c', code = 0x%lx => 0x%lx, length = %d", node->value, code, node->code, node->length);
+#endif
 	}
 }
 
@@ -368,7 +386,9 @@ struct cavan_huffman_tree_node *cavan_huffman_build_tree(struct cavan_huffman_tr
 		tree_pnodes[i]->right = NULL;
 		tree_pnodes[i]->count = node->count;
 
+#if CAVAN_HUFFMAN_DEBUG
 		println("tree[%d] = '%c', count = %ld", i, node->value, node->count);
+#endif
 	}
 
 	root_node = tree_pnodes[index];
@@ -387,12 +407,6 @@ struct cavan_huffman_tree_node *cavan_huffman_build_tree(struct cavan_huffman_tr
 		}
 
 		tree_pnodes[i + 1] = root_node;
-	}
-
-	if (root_node->left == NULL && root_node->right == NULL) {
-		cavan_huffman_tree_set_code(root_node, 0, 1);
-	} else {
-		cavan_huffman_tree_set_code(root_node, 0, 0);
 	}
 
 	return root_node;
@@ -460,6 +474,7 @@ int cavan_huffman_encode(int fd_src, int fd_dest)
 	int ret;
 	u8 value;
 	int offset;
+	struct cavan_huffman_tree_node *root;
 	struct cavan_huffman_encoder encoder;
 
 	if (lseek(fd_src, 0, SEEK_SET) != 0) {
@@ -473,10 +488,12 @@ int cavan_huffman_encode(int fd_src, int fd_dest)
 		return ret;
 	}
 
-	cavan_huffman_build_tree(encoder.tree_nodes, encoder.nodes);
-
-	encoder.remain = 0;
-	encoder.offset = 0;
+	root = cavan_huffman_build_tree(encoder.tree_nodes, encoder.nodes);
+	if (root->left == NULL && root->right == NULL) {
+		cavan_huffman_tree_set_code(root, 0, 1);
+	} else {
+		cavan_huffman_tree_set_code(root, 0, 0);
+	}
 
 	if (lseek(fd_src, 0, SEEK_SET) != 0) {
 		pr_err_info("lseek");
@@ -540,8 +557,8 @@ int cavan_huffman_encode(int fd_src, int fd_dest)
 		}
 	}
 
-	if (encoder.length > 0) {
-		ret = ffile_write(fd_dest, &encoder.code, (encoder.length + 7) / 8);
+	if (offset) {
+		ret = ffile_write(fd_dest, &value, 1);
 		if (ret < 0) {
 			pr_err_info("ffile_write");
 			return ret;
@@ -620,16 +637,16 @@ int cavan_huffman_decode(int fd_src, int fd_dest)
 			for (offset = 0; offset < 8; offset++) {
 				struct cavan_huffman_tree_node *node;
 
-				if (value & (1 << offset)) {
+				if (value & BIT8(offset)) {
 					node = root->right;
 				} else {
 					node = root->left;
 				}
 
-				if (node) {
+				if (node->left) {
 					root = node;
 				} else {
-					ret = ffile_write(fd_dest, &root->node->value, 1);
+					ret = ffile_write(fd_dest, &node->node->value, 1);
 					if (ret < 0) {
 						pr_err_info("ffile_write");
 						return ret;

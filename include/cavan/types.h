@@ -21,6 +21,18 @@
 	(1UL << (offset))
 #endif
 
+#define BIT8(offset) \
+	(((u8) 1) << (offset))
+
+#define BIT16(offset) \
+	(((u16) 1) << (offset))
+
+#define BIT32(offset) \
+	(((u32) 1) << (offset))
+
+#define BIT64(offset) \
+	(((u64) 1) << (offset))
+
 typedef uint64_t u64, dword;
 typedef int64_t s64;
 

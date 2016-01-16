@@ -63,12 +63,6 @@ struct cavan_huffman_tree_node {
 struct cavan_huffman_encoder {
 	struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS];
 	struct cavan_huffman_tree_node tree_nodes[CAVAN_HUFFMAN_TREE_SIZE];
-
-	u8 remain;
-	int offset;
-	u64 code;
-	int length;
-	const u8 *data;
 };
 
 struct cavan_huffman_decoder {
