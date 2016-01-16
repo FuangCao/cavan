@@ -235,3 +235,439 @@ out_close_fd_src:
 	close(fd_src);
 	return ret;
 }
+
+// ================================================================================
+
+void cavan_huffman_build_freq_table(const u8 *mem, size_t size, struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS])
+{
+	int i;
+	const u8 *mem_end;
+
+	for (i = 0; i < CAVAN_HUFFMAN_SYMBOLS; i++) {
+		nodes[i].value = i;
+		nodes[i].count = 0;
+	}
+
+	for (mem_end = mem + size; mem < mem_end; mem++) {
+		nodes[*mem].count++;
+	}
+}
+
+int cavan_huffman_build_freq_table_fd(int fd, struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS])
+{
+	ssize_t rdlen;
+	u8 buff[1024];
+
+	while (1) {
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen <= 0) {
+			return rdlen;
+		}
+
+		cavan_huffman_build_freq_table(buff, rdlen, nodes);
+	}
+
+	return 0;
+}
+
+int cavan_huffman_build_freq_table_file(const char *pathname, struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS])
+{
+	int fd;
+	int ret;
+
+	fd = open(pathname, O_RDONLY);
+	if (fd < 0) {
+		pr_err_info("open file %s", pathname);
+		return fd;
+	}
+
+	ret = cavan_huffman_build_freq_table_fd(fd, nodes);
+	close(fd);
+
+	return ret;
+}
+
+static void cavan_huffman_tree_sort(struct cavan_huffman_tree_node *tree_pnodes[CAVAN_HUFFMAN_SYMBOLS], int start, int end)
+{
+	int start_bak = start, end_bak = end;
+	struct cavan_huffman_tree_node *middle = tree_pnodes[start];
+
+	while (1) {
+		for (; tree_pnodes[end]->node->count > middle->node->count && start < end; end--);
+		if (start < end) {
+			tree_pnodes[start++] = tree_pnodes[end];
+		} else {
+			break;
+		}
+
+		for (; tree_pnodes[start]->node->count < middle->node->count && start < end; start++);
+		if (start < end) {
+			tree_pnodes[end--] = tree_pnodes[start];
+		} else {
+			break;
+		}
+	}
+
+	tree_pnodes[start] = middle;
+
+	if (start - start_bak > 1) {
+		cavan_huffman_tree_sort(tree_pnodes, start_bak, start - 1);
+	}
+
+	if (end_bak - end > 1) {
+		cavan_huffman_tree_sort(tree_pnodes, end + 1, end_bak);
+	}
+}
+
+static void cavan_huffman_tree_set_code(struct cavan_huffman_tree_node *root, u8 code, u8 length)
+{
+#if 0
+	if (root->left) {
+		cavan_huffman_tree_set_code(root->left, code << 1, length + 1);
+
+		if (root->right) {
+			cavan_huffman_tree_set_code(root->right, code << 1 | 1, length + 1);
+		}
+	} else if (root->right) {
+		cavan_huffman_tree_set_code(root->right, code << 1 | 1, length + 1);
+#else
+	if (root->left) {
+		cavan_huffman_tree_set_code(root->left, code << 1, length + 1);
+		cavan_huffman_tree_set_code(root->right, code << 1 | 1, length + 1);
+#endif
+	} else {
+		struct cavan_huffman_node *node = root->node;
+
+		node->code = code;
+		node->length = length;
+
+		println("node = '%c', code = 0x%lx, length = %d", node->value, node->code, node->length);
+	}
+}
+
+struct cavan_huffman_tree_node *cavan_huffman_build_tree(struct cavan_huffman_tree_node tree_nodes[CAVAN_HUFFMAN_SYMBOLS], struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS])
+{
+	int i;
+	int index, root;
+	struct cavan_huffman_tree_node *root_node;
+	struct cavan_huffman_tree_node *tree_pnodes[CAVAN_HUFFMAN_TREE_SIZE];
+
+	for (i = 0; i < CAVAN_HUFFMAN_SYMBOLS; i++) {
+		tree_nodes[i].node = nodes + i;
+		tree_pnodes[i] = tree_nodes + i;
+	}
+
+	cavan_huffman_tree_sort(tree_pnodes, 0, CAVAN_HUFFMAN_SYMBOLS - 1);
+
+	for (index = 0; index < CAVAN_HUFFMAN_SYMBOLS && tree_pnodes[index]->node->count == 0; index++);
+
+	for (i = index; i < CAVAN_HUFFMAN_SYMBOLS; i++) {
+		struct cavan_huffman_node *node = tree_pnodes[i]->node;
+
+		tree_pnodes[i]->left = NULL;
+		tree_pnodes[i]->right = NULL;
+		tree_pnodes[i]->count = node->count;
+
+		println("tree[%d] = '%c', count = %ld", i, node->value, node->count);
+	}
+
+	root_node = tree_pnodes[index];
+
+	for (root = CAVAN_HUFFMAN_SYMBOLS, index++; index < root; index += 2, root++) {
+		struct cavan_huffman_tree_node *left = tree_pnodes[index - 1];
+		struct cavan_huffman_tree_node *right = tree_pnodes[index];
+
+		root_node = tree_nodes + root;
+		root_node->left = left;
+		root_node->right = right;
+		root_node->count = left->count + right->count;
+
+		for (i = root - 1; tree_pnodes[i]->count > root_node->count; i--) {
+			tree_pnodes[i + 1] = tree_pnodes[i];
+		}
+
+		tree_pnodes[i + 1] = root_node;
+	}
+
+	if (root_node->left == NULL && root_node->right == NULL) {
+		cavan_huffman_tree_set_code(root_node, 0, 1);
+	} else {
+		cavan_huffman_tree_set_code(root_node, 0, 0);
+	}
+
+	return root_node;
+}
+
+int cavan_huffman_write_freq_table(int fd, const struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS])
+{
+	int ret;
+	int i, count;
+	struct cavan_huffman_node_save save_nodes[CAVAN_HUFFMAN_SYMBOLS];
+
+	for (i = 0, count = 0; i < CAVAN_HUFFMAN_SYMBOLS; i++) {
+		const struct cavan_huffman_node *node = nodes + i;
+
+		if (node->count > 0) {
+			save_nodes[count].value = node->value;
+			save_nodes[count].count = node->count;
+			count++;
+		}
+	}
+
+	ret = ffile_write(fd, &count, 2);
+	if (ret < 0) {
+		pr_err_info("ffile_write: %d", ret);
+		return ret;
+	}
+
+	return ffile_write(fd, save_nodes, sizeof(struct cavan_huffman_node_save) * count);
+}
+
+int cavan_huffman_read_freq_table(int fd, struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS])
+{
+	int ret;
+	int i, count = 0;
+	struct cavan_huffman_node_save save_nodes[CAVAN_HUFFMAN_SYMBOLS];
+
+	ret = ffile_read(fd, &count, 2);
+	if (ret < 0) {
+		pr_err_info("ffile_read");
+		return ret;
+	}
+
+	ret = ffile_read(fd, save_nodes, sizeof(struct cavan_huffman_node_save) * count);
+	if (ret < 0) {
+		pr_err_info("ffile_read");
+		return ret;
+	}
+
+	for (i = 0; i < CAVAN_HUFFMAN_SYMBOLS; i++) {
+		nodes[i].count = 0;
+	}
+
+	for (i = 0; i < count; i++) {
+		struct cavan_huffman_node *node = nodes + save_nodes[i].value;
+
+		node->value = save_nodes[i].value;
+		node->count = save_nodes[i].count;
+	}
+
+	return 0;
+}
+
+int cavan_huffman_encode(int fd_src, int fd_dest)
+{
+	int ret;
+	u8 value;
+	int offset;
+	struct cavan_huffman_encoder encoder;
+
+	if (lseek(fd_src, 0, SEEK_SET) != 0) {
+		pr_err_info("lseek");
+		return -EINVAL;
+	}
+
+	ret = cavan_huffman_build_freq_table_fd(fd_src, encoder.nodes);
+	if (ret < 0) {
+		pr_red_info("cavan_huffman_build_freq_table_fd");
+		return ret;
+	}
+
+	cavan_huffman_build_tree(encoder.tree_nodes, encoder.nodes);
+
+	encoder.remain = 0;
+	encoder.offset = 0;
+
+	if (lseek(fd_src, 0, SEEK_SET) != 0) {
+		pr_err_info("lseek");
+		return -EINVAL;
+	}
+
+	ret = cavan_huffman_write_freq_table(fd_dest, encoder.nodes);
+	if (ret < 0) {
+		pr_red_info("cavan_huffman_write_freq_table: %d", ret);
+		return ret;
+	}
+
+	value = 0;
+	offset = 0;
+
+	while (1) {
+		ssize_t rdlen;
+		u8 buff[1024], *mem, *mem_end;
+
+		rdlen = ffile_read(fd_src, buff, sizeof(buff));
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
+				break;
+			}
+
+			pr_err_info("ffile_read");
+			return rdlen;
+		}
+
+		for (mem = buff, mem_end = mem + rdlen; mem < mem_end; mem++)
+		{
+			struct cavan_huffman_node *node = encoder.nodes + (*mem);
+			u64 code = node->code;
+			int length = node->length;
+
+			while (1) {
+				int remain = 8 - offset;
+
+				value |= code << offset;
+				if (remain > length) {
+					offset += length;
+					break;
+				}
+
+				ret = ffile_write(fd_dest, &value, 1);
+				if (ret < 0) {
+					pr_err_info("ffile_write");
+					return ret;
+				}
+
+				value = 0;
+				offset = 0;
+
+				if (length == remain) {
+					break;
+				}
+
+				length -= remain;
+				code >>= remain;
+			}
+		}
+	}
+
+	if (encoder.length > 0) {
+		ret = ffile_write(fd_dest, &encoder.code, (encoder.length + 7) / 8);
+		if (ret < 0) {
+			pr_err_info("ffile_write");
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+int cavan_huffman_encode_file(const char *src_file, const char *dest_file)
+{
+	int ret;
+	int fd_src, fd_dest;
+
+	println("%s => %s", src_file, dest_file);
+
+	fd_src = open(src_file, O_RDONLY);
+	if (fd_src < 0) {
+		pr_err_info("open file %s", src_file);
+		return fd_src;
+	}
+
+	fd_dest = open(dest_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	if (fd_dest < 0) {
+		pr_err_info("open file %s", dest_file);
+		ret = fd_dest;
+		goto out_close_fd_src;
+	}
+
+	ret = cavan_huffman_encode(fd_src, fd_dest);
+
+	close(fd_dest);
+out_close_fd_src:
+	close(fd_src);
+	return ret;
+}
+
+int cavan_huffman_decode(int fd_src, int fd_dest)
+{
+	int ret;
+	struct cavan_huffman_tree_node *root;
+	struct cavan_huffman_decoder decoder;
+
+	if (lseek(fd_src, 0, SEEK_SET) != 0) {
+		pr_err_info("lseek");
+		return -EINVAL;
+	}
+
+	ret = cavan_huffman_read_freq_table(fd_src, decoder.nodes);
+	if (ret < 0) {
+		pr_red_info("cavan_huffman_read_freq_table");
+		return ret;
+	}
+
+	decoder.root = cavan_huffman_build_tree(decoder.tree_nodes, decoder.nodes);
+	root = decoder.root;
+
+	while (1) {
+		ssize_t rdlen;
+		u8 buff[1024], *mem, *mem_end;
+
+		rdlen = ffile_read(fd_src, buff, sizeof(buff));
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
+				break;
+			}
+
+			pr_err_info("ffile_read");
+			return rdlen;
+		}
+
+		for (mem = buff, mem_end = mem + rdlen; mem < mem_end; mem++) {
+			int offset;
+			u8 value = *mem;
+
+			for (offset = 0; offset < 8; offset++) {
+				struct cavan_huffman_tree_node *node;
+
+				if (value & (1 << offset)) {
+					node = root->right;
+				} else {
+					node = root->left;
+				}
+
+				if (node) {
+					root = node;
+				} else {
+					ret = ffile_write(fd_dest, &root->node->value, 1);
+					if (ret < 0) {
+						pr_err_info("ffile_write");
+						return ret;
+					}
+
+					root = decoder.root;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+int cavan_huffman_decode_file(const char *src_file, const char *dest_file)
+{
+	int ret;
+	int fd_src, fd_dest;
+
+	println("%s => %s", src_file, dest_file);
+
+	fd_src = open(src_file, O_RDONLY);
+	if (fd_src < 0) {
+		pr_err_info("open file %s", src_file);
+		return fd_src;
+	}
+
+	fd_dest = open(dest_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	if (fd_dest < 0) {
+		pr_err_info("open file %s", dest_file);
+		ret = fd_dest;
+		goto out_close_fd_src;
+	}
+
+	ret = cavan_huffman_decode(fd_src, fd_dest);
+
+	close(fd_dest);
+out_close_fd_src:
+	close(fd_src);
+	return ret;
+}
