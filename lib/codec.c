@@ -240,15 +240,19 @@ out_close_fd_src:
 
 // ================================================================================
 
-void cavan_huffman_build_freq_table(const u8 *mem, size_t size, struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS])
+static void cavan_huffman_freq_table_init(struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS])
 {
 	int i;
-	const u8 *mem_end;
 
 	for (i = 0; i < CAVAN_HUFFMAN_SYMBOLS; i++) {
 		nodes[i].value = i;
 		nodes[i].count = 0;
 	}
+}
+
+void cavan_huffman_build_freq_table(const u8 *mem, size_t size, struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS])
+{
+	const u8 *mem_end;
 
 	for (mem_end = mem + size; mem < mem_end; mem++) {
 		nodes[*mem].count++;
@@ -358,7 +362,7 @@ static void cavan_huffman_tree_set_code(struct cavan_huffman_tree_node *root, u6
 		node->length = length;
 
 #if CAVAN_HUFFMAN_DEBUG
-		println("node = '%c', code = 0x%lx => 0x%lx, length = %d", node->value, code, node->code, node->length);
+		println("node[%d] = '%c', code = 0x%lx => 0x%lx, length = %d", node->value, node->value, code, node->code, node->length);
 #endif
 	}
 }
@@ -455,18 +459,18 @@ int cavan_huffman_read_freq_table(int fd, struct cavan_huffman_node nodes[CAVAN_
 		return ret;
 	}
 
-	for (i = 0; i < CAVAN_HUFFMAN_SYMBOLS; i++) {
-		nodes[i].count = 0;
-	}
-
 	for (i = 0; i < count; i++) {
 		struct cavan_huffman_node *node = nodes + save_nodes[i].value;
 
-		node->value = save_nodes[i].value;
 		node->count = save_nodes[i].count;
 	}
 
 	return 0;
+}
+
+void cavan_huffman_encoder_init(struct cavan_huffman_encoder *encoder)
+{
+	cavan_huffman_freq_table_init(encoder->nodes);
 }
 
 int cavan_huffman_encode(int fd_src, int fd_dest)
@@ -481,6 +485,8 @@ int cavan_huffman_encode(int fd_src, int fd_dest)
 		pr_err_info("lseek");
 		return -EINVAL;
 	}
+
+	cavan_huffman_encoder_init(&encoder);
 
 	ret = cavan_huffman_build_freq_table_fd(fd_src, encoder.nodes);
 	if (ret < 0) {
@@ -596,6 +602,11 @@ out_close_fd_src:
 	return ret;
 }
 
+void cavan_huffman_decoder_init(struct cavan_huffman_decoder *decoder)
+{
+	cavan_huffman_freq_table_init(decoder->nodes);
+}
+
 int cavan_huffman_decode(int fd_src, int fd_dest)
 {
 	int ret;
@@ -606,6 +617,8 @@ int cavan_huffman_decode(int fd_src, int fd_dest)
 		pr_err_info("lseek");
 		return -EINVAL;
 	}
+
+	cavan_huffman_decoder_init(&decoder);
 
 	ret = cavan_huffman_read_freq_table(fd_src, decoder.nodes);
 	if (ret < 0) {

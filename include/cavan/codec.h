@@ -81,7 +81,9 @@ int cavan_huffman_build_freq_table_file(const char *pathname, struct cavan_huffm
 struct cavan_huffman_tree_node *cavan_huffman_build_tree(struct cavan_huffman_tree_node tree_nodes[CAVAN_HUFFMAN_TREE_SIZE], struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS]);
 int cavan_huffman_write_freq_table(int fd, const struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS]);
 int cavan_huffman_read_freq_table(int fd, struct cavan_huffman_node nodes[CAVAN_HUFFMAN_SYMBOLS]);
+void cavan_huffman_encoder_init(struct cavan_huffman_encoder *encoder);
 int cavan_huffman_encode(int fd_src, int fd_dest);
 int cavan_huffman_encode_file(const char *src_file, const char *dest_file);
+void cavan_huffman_decoder_init(struct cavan_huffman_decoder *decoder);
 int cavan_huffman_decode(int fd_src, int fd_dest);
 int cavan_huffman_decode_file(const char *src_file, const char *dest_file);
