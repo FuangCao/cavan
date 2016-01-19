@@ -82,14 +82,15 @@ int umount_directory2(const char *mnt_point, int flags)
 		print_text(".");
 	}
 
-	if (count) {
+	if (errno == EINVAL || errno == ENOENT) {
 		update_mount_table();
 		print_string(" OK");
-	} else {
-		print_string(" Failed");
+		return 0;
 	}
 
-	return count ? 0 : ret;
+	print_string(" Failed");
+
+	return ret < 0 ? ret : -EBUSY;
 }
 
 int umount_partition(const char *dev_path, int flags)

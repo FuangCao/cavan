@@ -12,4 +12,15 @@ config CAVAN_GPIO_TCA9535
       To compile this driver as a module, choose M here: the
       module will be called gpio-tca9535.
 
+config CAVAN_GPIO_KEYPAD
+    tristate "gpio keypad support"
+    default n
+    help
+      Say Y here if you have need a gpio keypad.
+
+      If unsure, say N.
+
+      To compile this driver as a module, choose M here: the
+      module will be called gpio-keypad.
+
 endmenu
