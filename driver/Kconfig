@@ -144,6 +144,18 @@ config CAVAN_SUPPORT_FRONT_CAMERA
 	help
 	  Select if has a front camera.
 
+config CAVAN_DEBUG_FS
+    tristate "Debug filesystem support"
+	depends on DEBUG_FS
+    default n
+    help
+      Say Y here if you need debugfs.
+
+      If unsure, say N.
+
+      To compile this driver as a module, choose M here: the
+      module will be called cavan-debugfs.
+
 menuconfig CAVAN_INPUT_CORE
     tristate "Input subsystem"
     default n

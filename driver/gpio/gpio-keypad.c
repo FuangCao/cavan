@@ -57,7 +57,7 @@ struct gpio_keypad_device {
 	struct workqueue_struct *wq;
 };
 
-// ============================================================ 
+// ============================================================
 
 static void gpio_keypad_work(struct work_struct *work)
 {
@@ -236,7 +236,7 @@ static int gpio_keypad_platform_probe(struct platform_device *pdev)
 
 		key->mask = 1 << count;
 		keypad->keys[count] = key;
-		
+
 		dev_info(&pdev->dev, "%d. name = %s, gpio = %d, code = %d", count, key->name, key->gpio, key->code);
 
 		count++;
@@ -252,7 +252,7 @@ static int gpio_keypad_platform_probe(struct platform_device *pdev)
 
 	return 0;
 
-out_destroy_workqueue:	
+out_destroy_workqueue:
 	destroy_workqueue(keypad->wq);
 out_input_unregister_device:
 	input_unregister_device(input);
