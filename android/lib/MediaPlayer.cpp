@@ -41,7 +41,10 @@ CavanVideoPlayer::CavanVideoPlayer(const char *pathname, bool bootanimation, con
 	mCommand[0] = 0;
 	mCommandLen = 0;
 	mBootAnimation = bootanimation;
-    mSession = new SurfaceComposerClient();
+	mVolume = android_getprop_int(PROP_NAME_VOLUME, 80);
+	mSession = new SurfaceComposerClient();
+
+	pd_info("mVolume = %d", mVolume);
 }
 
 CavanVideoPlayer::~CavanVideoPlayer(void)
@@ -160,6 +163,8 @@ status_t CavanVideoPlayer::setVolume(int volume)
 	if (status == NO_ERROR) {
 		mVolume = volume;
 	}
+
+	android_setprop_int(PROP_NAME_VOLUME, volume);
 
 	return status;
 }
@@ -286,7 +291,7 @@ bool CavanVideoPlayer::threadLoop(void)
 		goto out_surface_clean;
 	}
 
-	status = setVolume(80);
+	status = setVolume(mVolume);
 	if (status != NO_ERROR) {
 		pd_red_info("setVolume");
 		goto out_surface_clean;
@@ -328,9 +333,11 @@ bool CavanVideoPlayer::threadLoop(void)
 			break;
 		}
 
+#if 0
 		if (mBootAnimation && android_getprop_int("service.bootanim.exit", 0)) {
 			break;
 		}
+#endif
 
 		rdlen = file_read_timeout(stdin_fd, command, sizeof(command), 200);
 		if (rdlen > 0) {

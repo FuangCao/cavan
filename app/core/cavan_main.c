@@ -22,15 +22,38 @@
 static int cavan_main(int argc, char *argv[]);
 
 #ifdef CONFIG_ANDROID
+static const char *cavan_get_bootanimation_path(void)
+{
+	int i;
+	const char *pathnames[] = {
+		"/data/test.mp3", "/system/media/bootanimation.mp4"
+	};
+
+	for (i = 0; i < NELEM(pathnames); i++) {
+		if (file_access_e(pathnames[i])) {
+			return pathnames[i];
+		}
+	}
+
+	return NULL;
+}
+
 static int do_cavan_bootanimation(int argc, char *argv[])
 {
+
 	if (argc > 1) {
 		return do_cavan_mplayer(argc, argv);
 	} else {
-		char *argv_new[] = { argv[0], "/system/media/bootanimation.mp4" };
+		const char *pathname = cavan_get_bootanimation_path();
 
-		return do_cavan_mplayer(NELEM(argv_new), argv_new);
+		if (pathname) {
+			char *argv_new[] = { __UNCONST("bootanimation"), __UNCONST(pathname) };
+
+			return do_cavan_mplayer(NELEM(argv_new), argv_new);
+		}
 	}
+
+	return 0;
 }
 
 static int do_cavan_remount(int argc, char *argv[])
@@ -45,7 +68,7 @@ const struct cavan_command_map cmd_map_table[] = {
 	{ CONFIG_CAVAN_MAIN_NAME, cavan_main },
 	{ "calc", do_cavan_calculator },
 #ifdef CONFIG_ANDROID
-	{ "bootani", do_cavan_bootanimation },
+	{ "bootanim", do_cavan_bootanimation },
 	{ "bootanimation", do_cavan_bootanimation },
 	{ "remount", do_cavan_remount },
 #endif

@@ -20,6 +20,7 @@
 #include <cavan.h>
 #include <cavan/command.h>
 #include <cavan/android.h>
+#include <cavan/calculator.h>
 
 #ifndef CONFIG_ANDROID
 int android_getprop(const char *name, char *buff, size_t size)
@@ -33,45 +34,74 @@ int android_getprop(const char *name, char *buff, size_t size)
 
 	return text_ncopy(buff, env, size) - buff;
 }
+
+int android_setprop(const char *name, const char *value)
+{
+	return setenv(name, value, 1);
+}
+
 #endif
 
 int android_getprop_int(const char *name, int def_value)
 {
-	int ret;
+	int length;
 	char buff[1024];
 
-	ret = android_getprop(name, buff, sizeof(buff));
-	if (ret < 0) {
-		return def_value;
+	length = android_getprop(name, buff, sizeof(buff));
+	if (length > 0) {
+		return text2value_unsigned(buff, NULL, 10);
 	}
 
-	return text2value_unsigned(buff, NULL, 10);
+	return def_value;
 }
 
 bool android_getprop_bool(const char *name, bool def_value)
 {
-	int ret;
+	int length;
 	char buff[1024];
 
-	ret = android_getprop(name, buff, sizeof(buff));
-	if (ret < 0) {
-		return def_value;
+	length = android_getprop(name, buff, sizeof(buff));
+	if (length > 0) {
+		return text2bool(buff);
 	}
 
-	return text2bool(buff);
+	return def_value;
 }
 
 double android_getprop_double(const char *name, double def_value)
 {
-	int ret;
+	int length;
 	char buff[1024];
 
-	ret = android_getprop(name, buff, sizeof(buff));
-	if (ret < 0) {
-		return def_value;
+	length = android_getprop(name, buff, sizeof(buff));
+	if (length > 0) {
+		return text2double(buff, NULL, NULL, 10);
 	}
 
-	return text2double(buff, NULL, NULL, 10);
+	return def_value;
+}
+
+int android_setprop_int(const char *name, int value)
+{
+	char buff[1024];
+
+	value2text_simple(value, buff, sizeof(buff), 10);
+
+	return android_setprop(name, buff);
+}
+
+int android_setprop_bool(const char *name, bool value)
+{
+	return android_setprop(name, value ? "1" : "0");
+}
+
+int android_setprop_double(const char *name, double value)
+{
+	char buff[1024];
+
+	double2text(&value, buff, sizeof(buff), 0, 0);
+
+	return android_setprop(name, buff);
 }
 
 void android_stop_all(void)

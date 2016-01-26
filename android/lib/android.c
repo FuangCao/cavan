@@ -34,3 +34,8 @@ int android_getprop(const char *name, char *buff, size_t size)
 
 	return length;
 }
+
+int android_setprop(const char *name, const char *value)
+{
+	return property_set(name, value);
+}

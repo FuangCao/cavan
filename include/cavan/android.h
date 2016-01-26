@@ -28,6 +28,10 @@ int android_getprop(const char *name, char *buff, size_t size);
 int android_getprop_int(const char *name, int def_value);
 bool android_getprop_bool(const char *name, bool def_value);
 double android_getprop_double(const char *name, double def_value);
+int android_setprop(const char *name, const char *value);
+int android_setprop_int(const char *name, int value);
+int android_setprop_bool(const char *name, bool value);
+int android_setprop_double(const char *name, double value);
 void android_stop_all(void);
 
 static inline bool cavan_is_android(void)

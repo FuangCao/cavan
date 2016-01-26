@@ -25,6 +25,8 @@
 #include <gui/Surface.h>
 #include <gui/SurfaceComposerClient.h>
 
+#define PROP_NAME_VOLUME	"sys.cavan.volume"
+
 namespace android {
 
 class CavanVideoPlayer : public MediaPlayer, public Thread, public IBinder::DeathRecipient {
