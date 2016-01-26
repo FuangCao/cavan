@@ -41,17 +41,11 @@ static int do_cavan_remount(int argc, char *argv[])
 }
 #endif
 
-static CAVAN_ALIAS_DECLARE(i2c_rw, i2c, rw);
-static CAVAN_ALIAS_DECLARE(i2c_det, i2c, det);
-static CAVAN_ALIAS_DECLARE(i2c_dump, i2c, dump);
-
 const struct cavan_command_map cmd_map_table[] = {
 	{ CONFIG_CAVAN_MAIN_NAME, cavan_main },
 	{ "calc", do_cavan_calculator },
-	{ "i2c-rw", cavan_alias_i2c_rw },
-	{ "i2c-det", cavan_alias_i2c_det },
-	{ "i2c-dump", cavan_alias_i2c_dump },
 #ifdef CONFIG_ANDROID
+	{ "bootani", do_cavan_bootanimation },
 	{ "bootanimation", do_cavan_bootanimation },
 	{ "remount", do_cavan_remount },
 #endif

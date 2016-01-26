@@ -12,6 +12,7 @@
 #include <cavan/android.h>
 #include <sys/socket.h>
 #include <sys/reboot.h>
+#include <sys/klog.h>
 #include <linux/reboot.h>
 
 #define CAVAN_COMMAND_DEBUG				0
@@ -377,6 +378,50 @@ static int cavan_builtin_command_remount(const struct cavan_builtin_command *des
 	return ret;
 }
 
+static int cavan_builtin_command_kmsg(const struct cavan_builtin_command *desc, const char *shell, const char *command)
+{
+#if 1
+	int fd;
+	const char *pathname = "/proc/kmsg";
+
+	fd = open(pathname, O_RDONLY);
+	if (fd < 0) {
+		pr_err_info("open %s: %d", pathname, fd);
+		return fd;
+	}
+
+	while (1) {
+		ssize_t rdlen;
+		char buff[1024];
+
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen <= 0) {
+			break;
+		}
+
+		if (write(stdout_fd, buff, rdlen) != rdlen) {
+			break;
+		}
+	}
+#else
+	while (1) {
+		int length;
+		char buff[1024];
+
+		length = klogctl(SYSLOG_ACTION_READ, buff, sizeof(buff));
+		if (length < 0) {
+			break;
+		}
+
+		if (write(stdout_fd, buff, length) != length) {
+			break;
+		}
+	}
+#endif
+
+	return 0;
+}
+
 static const struct cavan_builtin_command cavan_builtin_command_list[] = {
 	{ "shell", cavan_builtin_command_shell, 0 },
 	{ "reboot", cavan_builtin_command_reboot, 0 },
@@ -386,6 +431,7 @@ static const struct cavan_builtin_command cavan_builtin_command_list[] = {
 	{ "halt-force", cavan_builtin_command_shutdown, CAVAN_BUILTIN_CMDF_FORCE },
 	{ "shutdown-force", cavan_builtin_command_shutdown, CAVAN_BUILTIN_CMDF_FORCE },
 	{ "remount", cavan_builtin_command_remount, 0 },
+	{ "kmsg", cavan_builtin_command_kmsg, 0 }
 };
 
 static const struct cavan_builtin_command *cavan_find_builtin_command(const char *command)
