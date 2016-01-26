@@ -781,6 +781,7 @@ static void tca9535_i2c_mux_deinit(struct tca9535_device *tca9535)
 static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	int ret;
+	int remain;
 	struct gpio_chip *gpio_chip;
 	struct tca9535_device *tca9535;
 
@@ -840,10 +841,13 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		msleep(10);
 	}
 
-	ret = tca9535_init_register(tca9535);
-	if (ret < 0) {
-		dev_err(&client->dev, "Failed to tca9535_init_register: %d\n", ret);
-		goto out_devm_kfree;
+	for (remain = 10; (ret = tca9535_init_register(tca9535)) < 0; remain--) {
+		dev_err(&client->dev, "Failed to tca9535_init_register: %d, remain = %d\n", ret, remain);
+		if (remain <= 0) {
+			goto out_devm_kfree;
+		}
+
+		msleep(50);
 	}
 
 	gpio_chip = &tca9535->gpio_chip;

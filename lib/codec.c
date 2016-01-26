@@ -529,8 +529,7 @@ int cavan_huffman_encode(int fd_src, int fd_dest)
 			return rdlen;
 		}
 
-		for (mem = buff, mem_end = mem + rdlen; mem < mem_end; mem++)
-		{
+		for (mem = buff, mem_end = mem + rdlen; mem < mem_end; mem++) {
 			struct cavan_huffman_node *node = encoder.nodes + (*mem);
 			u64 code = node->code;
 			int length = node->length;
