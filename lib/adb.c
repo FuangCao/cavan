@@ -132,7 +132,7 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 			break;
 		}
 
-		if (adb_is_host() && cavan_system("adb start-server")) {
+		if (adb_is_host() && cavan_system("adb start-server", 0, NULL)) {
 			pr_error_info("adb start-server");
 			break;
 		}
@@ -178,7 +178,7 @@ int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port, bool wait_device
 		int ret;
 
 		print("waiting for adb connection ... ");
-		ret = cavan_system("adb wait-for-device");
+		ret = cavan_system("adb wait-for-device", 0, NULL);
 		if (ret && ret != 127) {
 			println("Failed!");
 			return -EFAULT;

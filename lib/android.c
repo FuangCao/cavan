@@ -112,7 +112,7 @@ void android_stop_all(void)
 	print("stop android service ");
 
 	for (i = 0; i < 10; i++) {
-		cavan_system("stop");
+		cavan_system("stop", 0, NULL);
 		print_char('.');
 		msleep(200);
 	}

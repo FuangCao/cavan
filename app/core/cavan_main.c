@@ -47,26 +47,36 @@ static int do_cavan_bootanimation(int argc, char *argv[])
 		const char *pathname = cavan_get_bootanimation_path();
 
 		if (pathname) {
-			char *argv_new[] = { __UNCONST("bootanimation"), __UNCONST(pathname) };
+			char *argv_new[] = { __UNCONST("bootanimation"), __UNCONST(pathname), NULL };
 
-			return do_cavan_mplayer(NELEM(argv_new), argv_new);
+			return do_cavan_mplayer(2, argv_new);
 		}
 	}
 
 	return 0;
 }
+#endif
 
 static int do_cavan_remount(int argc, char *argv[])
 {
-	char *argv_new[] = { argv[0], "-l", "remount" };
-
-	return do_cavan_tcp_exec(NELEM(argv_new), argv_new);
+	return cavan_exec_command("remount", argc, argv);
 }
-#endif
+
+static int do_cavan_halt(int argc, char *argv[])
+{
+	return cavan_exec_command("halt-force", argc, argv);
+}
+
+static int do_cavan_reboot(int argc, char *argv[])
+{
+	return cavan_exec_command("reboot-force", argc, argv);
+}
 
 const struct cavan_command_map cmd_map_table[] = {
 	{ CONFIG_CAVAN_MAIN_NAME, cavan_main },
 	{ "calc", do_cavan_calculator },
+	{ "halt", do_cavan_halt },
+	{ "reboot", do_cavan_reboot },
 #ifdef CONFIG_ANDROID
 	{ "bootanim", do_cavan_bootanimation },
 	{ "bootanimation", do_cavan_bootanimation },

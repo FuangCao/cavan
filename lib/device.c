@@ -2050,7 +2050,7 @@ int bdev_remount(const char *mount_dir, const void *data)
 		bdev_set_read_only2(dev_path, 0);
 	}
 
-	println("dev_path = %s", dev_path);
+	pr_func_info("dev_path = %s", dev_path);
 
 	return mount(dev_path, mount_dir, "none", MS_REMOUNT, data);
 }

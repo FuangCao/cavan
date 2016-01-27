@@ -237,7 +237,7 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 		}
 	}
 
-	return cavan_exec_command(desc->command);
+	return cavan_exec_command(desc->command, 0, NULL);
 }
 
 int cavan_daemon_stop(struct cavan_daemon_description *desc)

@@ -622,7 +622,7 @@ static void tcp_dd_alarm_handler(struct cavan_alarm_node *alarm, struct cavan_al
 
 	pid = fork();
 	if (pid == 0) {
-		cavan_exec_command(data);
+		cavan_exec_command(data, 0, NULL);
 	}
 }
 

@@ -170,7 +170,7 @@ struct cavan_command_map {
 
 struct cavan_builtin_command {
 	const char *name;
-	int (*handler)(const struct cavan_builtin_command *desc, const char *shell, const char *command);
+	int (*handler)(const struct cavan_builtin_command *desc, const char *shell, int argc, char *argv[]);
 	int flags;
 };
 
@@ -246,7 +246,7 @@ const struct cavan_command_map *match_command_by_name(const struct cavan_command
 int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[]);
 
 int cavan_exec_waitpid(pid_t pid);
-int cavan_exec_command(const char *command);
+int cavan_exec_command(const char *command, int argc, char *argv[]);
 int cavan_redirect_stdio_base(int ttyfds[3]);
 int cavan_redirect_stdio_base2(int fd, int flags);
 int cavan_redirect_stdio(const char *pathname, int flags);
@@ -257,7 +257,7 @@ int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, cons
 int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid, int flags);
 int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns, pid_t *ppid, int flags);
 int cavan_exec_redirect_stdio_main(const char *command, int lines, int columns, int in_fd, int out_fd);
-int cavan_system(const char *command);
+int cavan_system(const char *command, int argc, char *argv[]);
 int cavan_system2(const char *command, ...);
 int cavan_popen(const char *command, char *buff, size_t size, char **buff_ret);
 int cavan_popen2(const char *command, char *buff, size_t size);
