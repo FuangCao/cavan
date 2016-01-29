@@ -44,7 +44,7 @@ struct cavan_i2c_config cavan_i2c_config_table[] = {
 		.value_big_endian = false,
 	}, {
 		.chipname = "bq27320",
-		.addr_step = 1,
+		.addr_step = 2,
 		.addr_bytes = 1,
 		.value_bytes = 2,
 		.addr_first = 0x00,
@@ -53,7 +53,7 @@ struct cavan_i2c_config cavan_i2c_config_table[] = {
 		.value_big_endian = false,
 	}, {
 		.chipname = "bq27520",
-		.addr_step = 1,
+		.addr_step = 2,
 		.addr_bytes = 1,
 		.value_bytes = 2,
 		.addr_first = 0x00,

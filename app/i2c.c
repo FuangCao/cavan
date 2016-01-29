@@ -489,7 +489,7 @@ static int do_register_dump(int argc, char *argv[])
 			break;
 		}
 
-		println("addr = 0x%08x, value = 0x%08x", addr, value);
+		println("addr = 0x%08x, value = 0x%08x = %d", addr, value, value);
 
 		addr += client.config.addr_step;
 	}
