@@ -417,7 +417,7 @@ static int do_register_rw(int argc, char *argv[])
 
 			value = text2value_unsigned(argv[optind++], NULL, 16);
 
-			println("offset = %d, bits = %d, value = 0x%08x", offset, bits, value);
+			println("offset = %d, bits = %d, value = 0x%08x = %d", offset, bits, value, value);
 
 			mask = ((1 << bits) - 1) << offset;
 			value <<= offset;
@@ -429,7 +429,7 @@ static int do_register_rw(int argc, char *argv[])
 		} else {
 			value = text2value_unsigned(argv[optind++], NULL, 16);
 
-			println("write: addr = 0x%08x, value = 0x%08x", addr, value);
+			println("write: addr = 0x%08x, value = 0x%08x = %d", addr, value, value);
 			print_bit_mask(value, "mask: ");
 
 			ret = cavan_i2c_write_register(&client, addr, value);
@@ -443,7 +443,7 @@ static int do_register_rw(int argc, char *argv[])
 			pr_red_info("cavan_i2c_read_register: %d", ret);
 		} else {
 
-			println("read: addr = 0x%08x, value = 0x%08x", addr, value);
+			println("read: addr = 0x%08x, value = 0x%08x = %d", addr, value, value);
 			print_bit_mask(value, "mask: ");
 		}
 	}
