@@ -29,7 +29,7 @@
 
 #define TCA9535_DEBUG					0
 
-#define TCA9535_I2C_RATE				(100 * 1000)
+#define TCA9535_I2C_RATE				(400 * 1000)
 #define TCA9535_GPIO_COUNT				16
 #define TCA9535_KEYPAD_DEBOUNCE_MS		50
 
@@ -57,6 +57,7 @@ struct tca9535_device {
 	struct gpio_chip gpio_chip;
 	struct i2c_client *client;
 	struct mutex lock;
+	bool crashed;
 	struct tca9535_register_cache cache;
 
 	int gpio_irq;
@@ -85,6 +86,7 @@ struct tca9535_device {
 static int tca9535_read_data(struct tca9535_device *tca9535, u8 addr, void *buff, size_t size, bool cache)
 {
 	int ret;
+	int delay = 0;
 	struct i2c_client *client = tca9535->client;
 	struct i2c_msg msgs[] = {
 		{
@@ -108,24 +110,38 @@ static int tca9535_read_data(struct tca9535_device *tca9535, u8 addr, void *buff
 
 	mutex_lock(&tca9535->lock);
 
-	ret = i2c_transfer(client->adapter, msgs, ARRAY_SIZE(msgs));
-	if (unlikely(ret != ARRAY_SIZE(msgs))) {
-		dev_err(&client->dev, "Failed to i2c_transfer: %d\n", ret);
-		if (ret >= 0) {
-			ret = -EFAULT;
+	while (1) {
+		ret = i2c_transfer(client->adapter, msgs, ARRAY_SIZE(msgs));
+		if (likely(ret == ARRAY_SIZE(msgs))) {
+			tca9535->crashed = false;
+			break;
 		}
-	} else if (cache) {
+
+		dev_err(&client->dev, "Failed to i2c_transfer: %d, crashed = %d, delay = %d(ms)\n", ret, tca9535->crashed, delay);
+
+		if (tca9535->crashed || delay > 500) {
+			ret = -EFAULT;
+			tca9535->crashed = true;
+			goto out_mutex_unlock;
+		}
+
+		msleep(delay);
+		delay += 20;
+	}
+
+	if (cache) {
 		memcpy(((u8 *) &tca9535->cache) + addr, buff, size);
 	}
 
+out_mutex_unlock:
 	mutex_unlock(&tca9535->lock);
-
 	return ret;
 }
 
 static int tca9535_write_data(struct tca9535_device *tca9535, u8 addr, const void *buff, size_t size, bool cache, bool locked)
 {
 	int ret;
+	int delay = 0;
 	u8 data_buff[size + 1];
 	struct i2c_client *client = tca9535->client;
 	struct i2c_msg msg = {
@@ -143,23 +159,36 @@ static int tca9535_write_data(struct tca9535_device *tca9535, u8 addr, const voi
 
 	mutex_lock(&tca9535->lock);
 
-	if (locked) {
-		ret = __i2c_transfer(client->adapter, &msg, 1);
-	} else {
-		ret = i2c_transfer(client->adapter, &msg, 1);
+	while (1) {
+		if (locked) {
+			ret = __i2c_transfer(client->adapter, &msg, 1);
+		} else {
+			ret = i2c_transfer(client->adapter, &msg, 1);
+		}
+
+		if (likely(ret == 1)) {
+			tca9535->crashed = false;
+			break;
+		}
+
+		dev_err(&client->dev, "Failed to i2c_transfer: %d, crashed = %d, delay = %d(ms)\n", ret, tca9535->crashed, delay);
+
+		if (tca9535->crashed || delay > 500) {
+			ret = -EFAULT;
+			tca9535->crashed = true;
+			goto out_mutex_unlock;
+		}
+
+		msleep(delay);
+		delay += 20;
 	}
 
-	if (unlikely(ret != 1)) {
-		dev_err(&client->dev, "Failed to i2c_transfer: %d\n", ret);
-		if (ret >= 0) {
-			ret = -EFAULT;
-		}
-	} else if (cache) {
+	if (cache) {
 		memcpy(((u8 *) &tca9535->cache) + addr, buff, size);
 	}
 
+out_mutex_unlock:
 	mutex_unlock(&tca9535->lock);
-
 	return ret;
 }
 
@@ -670,7 +699,7 @@ static int tca9535_i2c_mux_select(struct i2c_adapter *adap, void *data, u32 chan
 	reg_value = (cache->output_port & tca9535->mux_gpio_unmask) | chan << tca9535->mux_gpio_offset;
 	if (reg_value != cache->output_port) {
 		int ret = tca9535_write_register_locked(tca9535, REG_OUTPUT_PORT, reg_value, true);
-		udelay(2);
+		// udelay(2);
 		return ret;
 	}
 
@@ -781,7 +810,6 @@ static void tca9535_i2c_mux_deinit(struct tca9535_device *tca9535)
 static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	int ret;
-	int remain;
 	struct gpio_chip *gpio_chip;
 	struct tca9535_device *tca9535;
 
@@ -841,13 +869,10 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		msleep(10);
 	}
 
-	for (remain = 10; (ret = tca9535_init_register(tca9535)) < 0; remain--) {
-		dev_err(&client->dev, "Failed to tca9535_init_register: %d, remain = %d\n", ret, remain);
-		if (remain <= 0) {
-			goto out_devm_kfree;
-		}
-
-		msleep(50);
+	ret = tca9535_init_register(tca9535);
+	if (ret < 0) {
+		dev_err(&client->dev, "Failed to tca9535_init_register: %d\n", ret);
+		goto out_gpio_free;
 	}
 
 	gpio_chip = &tca9535->gpio_chip;

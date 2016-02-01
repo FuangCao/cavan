@@ -605,7 +605,7 @@ static int cavan_input_chip_update_delay(struct cavan_input_chip *chip)
 			continue;
 		}
 
-		if (dev->set_delay && (ret = dev->set_delay(dev, delay))) {
+		if (dev->set_delay && (ret = dev->set_delay(dev, delay)) < 0) {
 			pr_red_info("dev->set_delay");
 			goto out_mutex_unlock;
 		}

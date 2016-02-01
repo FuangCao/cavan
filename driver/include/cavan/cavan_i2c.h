@@ -6,6 +6,7 @@
 
 ssize_t cavan_input_read_data_i2c(struct cavan_input_chip *chip, u8 addr, void *buff, size_t size);
 ssize_t cavan_input_write_data_i2c(struct cavan_input_chip *chip, u8 addr, const void *buff, size_t size);
+ssize_t cavan_input_write_data_i2c_single(struct cavan_input_chip *chip, u8 addr, const void *data, size_t size);
 int cavan_input_read_register_i2c_smbus(struct cavan_input_chip *chip, u8 addr, u8 *value);
 int cavan_input_write_register_i2c_smbus(struct cavan_input_chip *chip, u8 addr, u8 value);
 int cavan_input_read_register16_i2c_smbus(struct cavan_input_chip *chip, u8 addr, u16 *value);

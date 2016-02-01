@@ -30,7 +30,7 @@ struct cavan_sensor_device {
 
 struct cavan_sensor_rate_table_node {
 	u8 value;
-	u32 delay_ns;
+	u32 delay_us;
 };
 
 const struct cavan_sensor_rate_table_node *cavan_sensor_find_rate_value(const struct cavan_sensor_rate_table_node *table, size_t count, u32 delay_ns);

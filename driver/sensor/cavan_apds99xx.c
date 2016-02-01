@@ -201,9 +201,9 @@ static int apds99xx_sensor_chip_set_active(struct cavan_input_chip *chip, bool e
 		return chip->write_register(chip, REG_ENABLE, 0);
 	}
 
-	ret = cavan_io_write_register_masked(chip, REG_ENABLE, APDS99XX_ENABLE_PON, APDS99XX_ENABLE_PON);
+	ret = cavan_io_update_bits8(chip, REG_ENABLE, APDS99XX_ENABLE_PON, APDS99XX_ENABLE_PON);
 	if (ret < 0) {
-		pr_red_info("cavan_io_write_register_masked");
+		pr_red_info("cavan_io_update_bits8");
 		return ret;
 	}
 
@@ -232,9 +232,9 @@ static int apds99xx_proximity_set_enable(struct cavan_input_device *dev, bool en
 
 	pr_bold_info("value = 0x%02x", value);
 
-	ret = cavan_io_write_register_masked(chip, REG_ENABLE, value, APDS99XX_ENABLE_PEN | APDS99XX_ENABLE_PIEN);
+	ret = cavan_io_update_bits8(chip, REG_ENABLE, value, APDS99XX_ENABLE_PEN | APDS99XX_ENABLE_PIEN);
 	if (ret < 0) {
-		pr_red_info("cavan_io_write_register_masked");
+		pr_red_info("cavan_io_update_bits8");
 		return ret;
 	}
 
@@ -403,9 +403,9 @@ static int apds99xx_set_again(struct cavan_apds99xx_device *apds99xx, struct cav
 {
 	int ret;
 
-	ret = cavan_io_write_register_masked(chip, REG_CONTROL, again << APDS99XX_CONTROL_AGAIN_OFFSET, APDS99XX_CONTROL_AGAIN_MASK);
+	ret = cavan_io_update_bits8(chip, REG_CONTROL, again << APDS99XX_CONTROL_AGAIN_OFFSET, APDS99XX_CONTROL_AGAIN_MASK);
 	if (ret < 0) {
-		pr_red_info("cavan_io_write_register_masked");
+		pr_red_info("cavan_io_update_bits8");
 		return ret;
 	}
 
@@ -419,9 +419,9 @@ static int apds99xx_set_areduce(struct cavan_apds99xx_device *apds99xx, struct c
 {
 	int ret;
 
-	ret = cavan_io_write_register_masked(chip, REG_CONFIG, reduce ? APDS99XX_CONFIG_AGL : 0, APDS99XX_CONFIG_AGL);
+	ret = cavan_io_update_bits8(chip, REG_CONFIG, reduce ? APDS99XX_CONFIG_AGL : 0, APDS99XX_CONFIG_AGL);
 	if (ret < 0) {
-		pr_red_info("cavan_io_write_register_masked");
+		pr_red_info("cavan_io_update_bits8");
 		return ret;
 	}
 
@@ -467,9 +467,9 @@ static int apds99xx_light_set_enable(struct cavan_input_device *dev, bool enable
 
 	pr_bold_info("value = 0x%02x", value);
 
-	ret = cavan_io_write_register_masked(chip, REG_ENABLE, value, APDS99XX_ENABLE_AEN | APDS99XX_ENABLE_AIEN);
+	ret = cavan_io_update_bits8(chip, REG_ENABLE, value, APDS99XX_ENABLE_AEN | APDS99XX_ENABLE_AIEN);
 	if (ret < 0) {
-		pr_red_info("cavan_io_write_register_masked");
+		pr_red_info("cavan_io_update_bits8");
 		return ret;
 	}
 

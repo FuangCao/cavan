@@ -1,6 +1,6 @@
 #include <cavan/cavan_io.h>
 
-int cavan_io_write_register_masked(struct cavan_input_chip *chip, u8 addr, u8 value, u8 mask)
+int cavan_io_update_bits8(struct cavan_input_chip *chip, u8 addr, u8 value, u8 mask)
 {
 	int ret;
 	u8 old_value;
@@ -21,9 +21,9 @@ int cavan_io_write_register_masked(struct cavan_input_chip *chip, u8 addr, u8 va
 	return chip->write_register(chip, addr, value);
 }
 
-EXPORT_SYMBOL_GPL(cavan_io_write_register_masked);
+EXPORT_SYMBOL_GPL(cavan_io_update_bits8);
 
-int cavan_io_write_register16_masked(struct cavan_input_chip *chip, u8 addr, u16 value, u16 mask)
+int cavan_io_update_bits16(struct cavan_input_chip *chip, u8 addr, u16 value, u16 mask)
 {
 	int ret;
 	u16 old_value;
@@ -45,7 +45,7 @@ int cavan_io_write_register16_masked(struct cavan_input_chip *chip, u8 addr, u16
 	return chip->write_register16(chip, addr, value);
 }
 
-EXPORT_SYMBOL_GPL(cavan_io_write_register16_masked);
+EXPORT_SYMBOL_GPL(cavan_io_update_bits16);
 
 ssize_t cavan_io_read_write_file(const char *pathname, const char *buff, size_t size, bool store)
 {

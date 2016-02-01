@@ -68,6 +68,34 @@ ssize_t cavan_input_write_data_i2c(struct cavan_input_chip *chip, u8 addr, const
 
 EXPORT_SYMBOL_GPL(cavan_input_write_data_i2c);
 
+ssize_t cavan_input_write_data_i2c_single(struct cavan_input_chip *chip, u8 addr, const void *data, size_t size)
+{
+	int ret;
+	__u8 buff[size + 1];
+	struct i2c_client *client = chip->bus_data;
+	struct i2c_msg msg = {
+		.addr = client->addr,
+		.flags = client->flags & I2C_M_TEN,
+		.len = sizeof(buff),
+		.buf = buff,
+#ifdef CONFIG_I2C_ROCKCHIP_COMPAT
+		.scl_rate = chip->i2c_rate,
+#endif
+	};
+
+	buff[0] = addr;
+	memcpy(buff + 1, data, size);
+
+	ret = i2c_transfer(client->adapter, &msg, 1);
+	if (ret == 1) {
+		return size;
+	}
+
+	return likely(ret < 0) ? ret : -EFAULT;
+}
+
+EXPORT_SYMBOL_GPL(cavan_input_write_data_i2c_single);
+
 int cavan_input_read_register_i2c_smbus(struct cavan_input_chip *chip, u8 addr, u8 *value)
 {
 	int ret;

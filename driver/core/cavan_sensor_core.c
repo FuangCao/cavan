@@ -134,13 +134,13 @@ int cavan_sensor_device_probe(struct cavan_input_device *dev)
 
 EXPORT_SYMBOL_GPL(cavan_sensor_device_probe);
 
-const struct cavan_sensor_rate_table_node *cavan_sensor_find_rate_value(const struct cavan_sensor_rate_table_node *table, size_t count, u32 delay_ns)
+const struct cavan_sensor_rate_table_node *cavan_sensor_find_rate_value(const struct cavan_sensor_rate_table_node *table, size_t count, u32 delay_us)
 {
 	const struct cavan_sensor_rate_table_node *p;
 
-	for (p = table + count - 1; p > table && p->delay_ns > delay_ns; p--);
+	for (p = table + count - 1; p > table && p->delay_us > delay_us; p--);
 
-	pr_bold_info("value = 0x%02x, delay = %d, relly_delay = %d", p->value, delay_ns, p->delay_ns);
+	pr_bold_info("value = 0x%02x, delay = %d, relly_delay = %d", p->value, delay_us, p->delay_us);
 
 	return p;
 }

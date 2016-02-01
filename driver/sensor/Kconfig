@@ -30,10 +30,10 @@ config CAVAN_GSENSOR_SIGN_Z
       This option config sign of z axis.
 
 config CAVAN_SENSOR_ADXL34X
-    tristate "adxl346 g-sensor support"
+    tristate "ADXL346 g-sensor support"
     default n
     help
-      Say Y here if you have a adxl346 g-sendor connected to
+      Say Y here if you have a ADXL346 g-sendor connected to
       your system.
 
       If unsure, say Y.
@@ -42,10 +42,10 @@ config CAVAN_SENSOR_ADXL34X
       module will be called cavan_adxl34x.
 
 config CAVAN_SENSOR_KIONIX
-    tristate "kxcjk kxtik g-sensor support"
+    tristate "KXCJK KXTIK g-sensor support"
     default n
     help
-      Say Y here if you have a kionix kxcjk kxtik g-sendor connected to
+      Say Y here if you have a KIONIX KXCJK KXTIK g-sendor connected to
       your system.
 
       If unsure, say Y.
@@ -54,10 +54,10 @@ config CAVAN_SENSOR_KIONIX
       module will be called cavan_kionix.
 
 config CAVAN_SENSOR_LIS3DH
-    tristate "lis3dh lis3de g-sensor support"
+    tristate "LIS3DH LIS3DE g-sensor support"
     default n
     help
-      Say Y here if you have lis3dh or lis3de g-sendor connected to
+      Say Y here if you have LIS3DH or LIS3DE g-sendor connected to
       your system.
 
       If unsure, say Y.
@@ -66,10 +66,10 @@ config CAVAN_SENSOR_LIS3DH
       module will be called cavan_lis3dh.
 
 config CAVAN_SENSOR_MMA845X
-    tristate "mma845x g-sensor support"
+    tristate "MMA845X g-sensor support"
     default n
     help
-      Say Y here if you have a mma845x g-sendor connected to
+      Say Y here if you have a MMA845X g-sendor connected to
       your system.
 
       If unsure, say Y.
@@ -78,10 +78,10 @@ config CAVAN_SENSOR_MMA845X
       module will be called cavan_mma845x.
 
 config CAVAN_SENSOR_MXC6225
-    tristate "mxc6225-xc mxc6225-xu g-sensor support"
+    tristate "MXC6225-XC MXC6225-XU g-sensor support"
     default n
     help
-      Say Y here if you have a mxc6225-xc or mxc6225-xu g-sendor connected to
+      Say Y here if you have a MXC6225-XC or MXC6225-XU g-sendor connected to
       your system.
 
       If unsure, say Y.
@@ -90,10 +90,10 @@ config CAVAN_SENSOR_MXC6225
       module will be called cavan_mxc6225.
 
 config CAVAN_SENSOR_STK8313
-    tristate "stk8313 g-sensor support"
+    tristate "STK8313 g-sensor support"
     default n
     help
-      Say Y here if you have a stk8313 g-sendor connected to
+      Say Y here if you have a STK8313 g-sendor connected to
       your system.
 
       If unsure, say Y.
@@ -102,10 +102,10 @@ config CAVAN_SENSOR_STK8313
       module will be called cavan_stk8313.
 
 config CAVAN_SENSOR_BMA2XX
-    tristate "bma2xx g-sensor support"
+    tristate "BMA2XX g-sensor support"
     default n
     help
-      Say Y here if you have a bma2xx g-sendor connected to
+      Say Y here if you have a BMA2XX g-sendor connected to
       your system.
 
       If unsure, say Y.
@@ -114,10 +114,10 @@ config CAVAN_SENSOR_BMA2XX
       module will be called cavan_bma2xx.
 
 config CAVAN_SENSOR_MC3XXX
-    tristate "mc3xxx g-sensor support"
+    tristate "MC3XXX g-sensor support"
     default n
     help
-      Say Y here if you have a mc3xxx g-sendor connected to
+      Say Y here if you have a MC3XXX g-sendor connected to
       your system.
 
       If unsure, say Y.
@@ -126,10 +126,10 @@ config CAVAN_SENSOR_MC3XXX
       module will be called cavan_mc3xxx.
 
 config CAVAN_SENSOR_APDS99XX
-    tristate "apds99xx l-sensor and p-sensor support"
+    tristate "APDS99XX l-sensor and p-sensor support"
     default n
     help
-      Say Y here if you have a apds99xx light or proximity sendor connected to
+      Say Y here if you have a APDS99XX light or proximity sendor connected to
       your system.
 
       If unsure, say Y.
@@ -138,10 +138,10 @@ config CAVAN_SENSOR_APDS99XX
       module will be called cavan_apds99xx.
 
 config CAVAN_SENSOR_EPL2182
-    tristate "epl2182 l-sensor and p-sensor support"
+    tristate "EPL2182 l-sensor and p-sensor support"
     default n
     help
-      Say Y here if you have a epl2182 light or proximity sendor connected to
+      Say Y here if you have a EPL2182 light or proximity sendor connected to
       your system.
 
       If unsure, say Y.
@@ -150,7 +150,7 @@ config CAVAN_SENSOR_EPL2182
       module will be called cavan_epl2182.
 
 config CAVAN_SENSOR_BMI160
-    tristate "bmi160 acceleration and gyroscope sensor support"
+    tristate "BMI160 acceleration and gyroscope sensor support"
     default n
     help
       Say Y here if you have Bosch Sensortec's BMI160
@@ -162,7 +162,7 @@ config CAVAN_SENSOR_BMI160
       module will be called cavan_bmi160.
 
 config CAVAN_SENSOR_BMM150
-    tristate "bmm150 geomagnetic sensor support"
+    tristate "BMM150 geomagnetic sensor support"
     default n
     help
       Say Y here if you have Bosch Sensortec's BMM150
@@ -172,5 +172,17 @@ config CAVAN_SENSOR_BMM150
 
       To compile this driver as a module, choose M here: the
       module will be called cavan_bmm150.
+
+config CAVAN_SENSOR_LTR553
+    tristate "LTR553 l-sensor and p-sensor support"
+    default n
+    help
+      Say Y here if you have a LTR553 light or proximity sendor connected to
+      your system.
+
+      If unsure, say Y.
+
+      To compile this driver as a module, choose M here: the
+      module will be called cavan_ltr553.
 
 endmenu
