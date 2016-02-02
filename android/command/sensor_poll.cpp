@@ -316,10 +316,10 @@ out_cavan_sensor_module_close:
 
 static int sensor_event_receiver(int fd, int events, void *data)
 {
-    ssize_t count;
-    sp<SensorEventQueue> queue((SensorEventQueue *) data);
+	ssize_t count;
+	sp<SensorEventQueue> queue((SensorEventQueue *) data);
 
-    while (1) {
+	while (1) {
 		ASensorEvent buff[8];
 		ASensorEvent *p, *p_end;
 		ssize_t count = queue->read(buff, NELEM(buff));
@@ -332,7 +332,7 @@ static int sensor_event_receiver(int fd, int events, void *data)
 			break;
 		}
 
-        for (p = buff, p_end = p + count; p < p_end; p++) {
+		for (p = buff, p_end = p + count; p < p_end; p++) {
 			switch (p->type) {
 			case SENSOR_TYPE_ACCELEROMETER:
 				pr_std_info("Accelerometer: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
@@ -379,28 +379,28 @@ static int sensor_event_receiver(int fd, int events, void *data)
 				break;
 			}
 		}
-    }
+	}
 
-    return 1;
+	return 1;
 }
 
 static int sensor_service_poll_main_loop(u32 mask, u32 delay)
 {
-    ssize_t count;
-    Sensor const* const* list;
-    SensorManager &manager(SensorManager::getInstance());
+	ssize_t count;
+	Sensor const* const* list;
+	SensorManager &manager(SensorManager::getInstance());
 
 	pr_bold_info("Start poll sensor service");
 
-    count = manager.getSensorList(&list);
+	count = manager.getSensorList(&list);
 	if (count < 0) {
 		pr_red_info("getSensorList");
 		return count;
 	}
 
-    println("sensor count = %d", int(count));
+	println("sensor count = %d", int(count));
 
-    sp<SensorEventQueue> queue = manager.createEventQueue();
+	sp<SensorEventQueue> queue = manager.createEventQueue();
 
 	for (int i = 0; i < 32; i++) {
 		Sensor const* sensor = manager.getDefaultSensor(i);
@@ -409,38 +409,38 @@ static int sensor_service_poll_main_loop(u32 mask, u32 delay)
 		}
 
 		if (mask & (1 << i)) {
-			pr_green_info("Enable sensor %s", sensor->getName().string());
+			pr_green_info("Enable sensor: %s", sensor->getName().string());
 			queue->enableSensor(sensor);
 			queue->setEventRate(sensor, ms2ns(delay));
 		} else {
-			pr_brown_info("Disable sensor %s", sensor->getName().string());
+			pr_brown_info("Disable sensor: %s", sensor->getName().string());
 			queue->disableSensor(sensor);
 		}
 	}
 
-    sp<Looper> loop = new Looper(false);
-    loop->addFd(queue->getFd(), 0, ALOOPER_EVENT_INPUT, sensor_event_receiver, queue.get());
+	sp<Looper> loop = new Looper(false);
+	loop->addFd(queue->getFd(), 0, ALOOPER_EVENT_INPUT, sensor_event_receiver, queue.get());
 
-    while (1) {
-        int32_t ret = loop->pollOnce(-1);
-        switch (ret) {
-        case ALOOPER_POLL_WAKE:
-            println("ALOOPER_POLL_WAKE");
-            break;
-        case ALOOPER_POLL_CALLBACK:
-            // println("ALOOPER_POLL_CALLBACK");
-            break;
-        case ALOOPER_POLL_TIMEOUT:
-            pr_red_info("ALOOPER_POLL_TIMEOUT");
-            break;
-        case ALOOPER_POLL_ERROR:
-            pr_red_info("ALOOPER_POLL_TIMEOUT");
-            break;
-        default:
-            pr_red_info("poll returned %d", ret);
-            break;
-        }
-    }
+	while (1) {
+		int result = loop->pollOnce(-1);
+		switch (result) {
+		case ALOOPER_POLL_WAKE:
+			println("ALOOPER_POLL_WAKE");
+			break;
+		case ALOOPER_POLL_CALLBACK:
+			// println("ALOOPER_POLL_CALLBACK");
+			break;
+		case ALOOPER_POLL_TIMEOUT:
+			pr_red_info("ALOOPER_POLL_TIMEOUT");
+			break;
+		case ALOOPER_POLL_ERROR:
+			pr_red_info("ALOOPER_POLL_TIMEOUT");
+			break;
+		default:
+			pr_red_info("poll returned %d", result);
+			break;
+		}
+	}
 
 	return 0;
 }
