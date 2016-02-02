@@ -1,5 +1,5 @@
 /*
- * File:		sensor_poll.c
+ * File:		sensor_poll.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2014-11-25 11:55:09
  *
@@ -24,14 +24,15 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <pthread.h>
+#include <cavan/command.h>
 #include <hardware/sensors.h>
+#include <android/sensor.h>
+#include <gui/Sensor.h>
+#include <gui/SensorManager.h>
+#include <gui/SensorEventQueue.h>
+#include <utils/Looper.h>
 
-enum {
-	LOCAL_COMMAND_OPTION_UNKNOWN = 20,
-	LOCAL_COMMAND_OPTION_HELP,
-	LOCAL_COMMAND_OPTION_ALL,
-	LOCAL_COMMAND_OPTION_DELAY,
-};
+using namespace android;
 
 struct cavan_sensor_module {
 	struct sensors_module_t *module;
@@ -48,6 +49,7 @@ static void show_usage(const char *command)
 	pr_std_info("--help, -H, -h\t\t\tshow this help");
 	pr_std_info("--all, -A, -a\t\t\tenable all sensor");
 	pr_std_info("--delay, -D, -d\t\t\tpoll delay ms");
+	pr_std_info("--hal\t\t\t\tpoll sensor hal, default poll sensor service");
 	pr_std_info("--acc, --gsensor, -G, -g\tenable accelerometer sensor");
 	pr_std_info("--mag, -M, -m\t\t\tenable magnetic sensor");
 	pr_std_info("--orient, -O, -o\t\tenable orientation sensor");
@@ -202,8 +204,8 @@ static int cavan_sensor_set_enable_mask(struct cavan_sensor_module *module, u32 
 
 static void *sensor_poll_thread(void *data)
 {
-	sensors_event_t events[8], *pe, *pe_end;
-	struct cavan_sensor_module *module = data;
+	sensors_event_t events[8], *p, *pe_end;
+	struct cavan_sensor_module *module = (struct cavan_sensor_module *) data;
 	struct sensors_poll_device_t *sensor_device = module->device;
 
 	while (1) {
@@ -213,50 +215,50 @@ static void *sensor_poll_thread(void *data)
 			break;
 		}
 
-		for (pe = events, pe_end = pe + count; pe < pe_end; pe++) {
-			switch (pe->type) {
+		for (p = events, pe_end = p + count; p < pe_end; p++) {
+			switch (p->type) {
 			case SENSOR_TYPE_ACCELEROMETER:
-				pr_std_info("Accelerometer: [%f, %f, %f]", pe->data[0], pe->data[1], pe->data[2]);
+				pr_std_info("Accelerometer: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
 				break;
 
 			case SENSOR_TYPE_MAGNETIC_FIELD:
-				pr_std_info("Magnetic_Field: [%f, %f, %f]", pe->data[0], pe->data[1], pe->data[2]);
+				pr_std_info("Magnetic_Field: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
 				break;
 
 			case SENSOR_TYPE_ORIENTATION:
-				pr_std_info("Orientation: [%f, %f, %f]", pe->data[0], pe->data[1], pe->data[2]);
+				pr_std_info("Orientation: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
 				break;
 
 			case SENSOR_TYPE_GYROSCOPE:
-				pr_std_info("Gyroscope: [%f, %f, %f]", pe->data[0], pe->data[1], pe->data[2]);
+				pr_std_info("Gyroscope: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
 				break;
 
 			case SENSOR_TYPE_LIGHT:
-				pr_std_info("Light: [%f]", pe->data[0]);
+				pr_std_info("Light: [%f]", p->data[0]);
 				break;
 
 			case SENSOR_TYPE_PRESSURE:
-				pr_std_info("Pressure: [%f]", pe->data[0]);
+				pr_std_info("Pressure: [%f]", p->data[0]);
 				break;
 
 			case SENSOR_TYPE_TEMPERATURE:
-				pr_std_info("Temperature: [%f]", pe->data[0]);
+				pr_std_info("Temperature: [%f]", p->data[0]);
 				break;
 
 			case SENSOR_TYPE_PROXIMITY:
-				pr_std_info("Proximity: [%f]", pe->data[0]);
+				pr_std_info("Proximity: [%f]", p->data[0]);
 				break;
 
 			case SENSOR_TYPE_GRAVITY:
-				pr_std_info("Gravity: [%f, %f, %f]", pe->data[0], pe->data[1], pe->data[2]);
+				pr_std_info("Gravity: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
 				break;
 
 			case SENSOR_TYPE_LINEAR_ACCELERATION:
-				pr_std_info("Linear_Acceleration: [%f, %f, %f]", pe->data[0], pe->data[1], pe->data[2]);
+				pr_std_info("Linear_Acceleration: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
 				break;
 
 			case SENSOR_TYPE_ROTATION_VECTOR:
-				pr_std_info("Rotation_Vecto: [%f, %f, %f]", pe->data[0], pe->data[1], pe->data[2]);
+				pr_std_info("Rotation_Vecto: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
 				break;
 			}
 		}
@@ -265,28 +267,180 @@ static void *sensor_poll_thread(void *data)
 	return NULL;
 }
 
-static int sensor_poll_main_loop(struct cavan_sensor_module *module, u32 mask, u32 delay)
+static int sensor_poll_main_loop(u32 mask, u32 delay)
 {
 	int i;
+	int ret;
+	pthread_t thread;
+	struct cavan_sensor_module module;
+
+	pr_bold_info("Start poll sensor hal");
+
+	ret = cavan_sensor_module_open(&module);
+	if (ret < 0) {
+		pr_red_info("cavan_sensor_module_open");
+		return ret;
+	}
+
+	ret = pthread_create(&thread, NULL, sensor_poll_thread, &module);
+	if (ret < 0) {
+		pr_err_info("pthread_create: %d", ret);
+		goto out_cavan_sensor_module_close;
+	}
 
 	if (mask) {
-		cavan_sensor_set_enable_mask(module, mask, delay);
+		cavan_sensor_set_enable_mask(&module, mask, delay);
 	} else {
-		cavan_sensor_set_enable_mask(module, 0, delay);
+		cavan_sensor_set_enable_mask(&module, 0, delay);
 
 		while (1) {
-			for (i = 0; i < NELEM(module->list); i++) {
-				if ((module->mask & (1 << i)) == 0) {
+			for (i = 0; i < NELEM(module.list); i++) {
+				if ((module.mask & (1 << i)) == 0) {
 					continue;
 				}
 
-				cavan_sensor_set_enable(module, i, true);
+				cavan_sensor_set_enable(&module, i, true);
 				msleep(5000);
-				cavan_sensor_set_enable(module, i, false);
+				cavan_sensor_set_enable(&module, i, false);
 				msleep(5000);
 			}
 		}
 	}
+
+	pthread_join(thread, NULL);
+
+out_cavan_sensor_module_close:
+	cavan_sensor_module_close(&module);
+	return ret;
+}
+
+static int sensor_event_receiver(int fd, int events, void *data)
+{
+    ssize_t count;
+    sp<SensorEventQueue> queue((SensorEventQueue *) data);
+
+    while (1) {
+		ASensorEvent buff[8];
+		ASensorEvent *p, *p_end;
+		ssize_t count = queue->read(buff, NELEM(buff));
+
+		if (count <= 0) {
+			if (count < 0) {
+				pr_red_info("queue->read: %d", count);
+			}
+
+			break;
+		}
+
+        for (p = buff, p_end = p + count; p < p_end; p++) {
+			switch (p->type) {
+			case SENSOR_TYPE_ACCELEROMETER:
+				pr_std_info("Accelerometer: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
+				break;
+
+			case SENSOR_TYPE_MAGNETIC_FIELD:
+				pr_std_info("Magnetic_Field: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
+				break;
+
+			case SENSOR_TYPE_ORIENTATION:
+				pr_std_info("Orientation: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
+				break;
+
+			case SENSOR_TYPE_GYROSCOPE:
+				pr_std_info("Gyroscope: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
+				break;
+
+			case SENSOR_TYPE_LIGHT:
+				pr_std_info("Light: [%f]", p->data[0]);
+				break;
+
+			case SENSOR_TYPE_PRESSURE:
+				pr_std_info("Pressure: [%f]", p->data[0]);
+				break;
+
+			case SENSOR_TYPE_TEMPERATURE:
+				pr_std_info("Temperature: [%f]", p->data[0]);
+				break;
+
+			case SENSOR_TYPE_PROXIMITY:
+				pr_std_info("Proximity: [%f]", p->data[0]);
+				break;
+
+			case SENSOR_TYPE_GRAVITY:
+				pr_std_info("Gravity: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
+				break;
+
+			case SENSOR_TYPE_LINEAR_ACCELERATION:
+				pr_std_info("Linear_Acceleration: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
+				break;
+
+			case SENSOR_TYPE_ROTATION_VECTOR:
+				pr_std_info("Rotation_Vecto: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
+				break;
+			}
+		}
+    }
+
+    return 1;
+}
+
+static int sensor_service_poll_main_loop(u32 mask, u32 delay)
+{
+    ssize_t count;
+    Sensor const* const* list;
+    SensorManager &manager(SensorManager::getInstance());
+
+	pr_bold_info("Start poll sensor service");
+
+    count = manager.getSensorList(&list);
+	if (count < 0) {
+		pr_red_info("getSensorList");
+		return count;
+	}
+
+    println("sensor count = %d", int(count));
+
+    sp<SensorEventQueue> queue = manager.createEventQueue();
+
+	for (int i = 0; i < 32; i++) {
+		Sensor const* sensor = manager.getDefaultSensor(i);
+		if (sensor == NULL) {
+			continue;
+		}
+
+		if (mask & (1 << i)) {
+			pr_green_info("Enable sensor %s", sensor->getName().string());
+			queue->enableSensor(sensor);
+			queue->setEventRate(sensor, ms2ns(delay));
+		} else {
+			pr_brown_info("Disable sensor %s", sensor->getName().string());
+			queue->disableSensor(sensor);
+		}
+	}
+
+    sp<Looper> loop = new Looper(false);
+    loop->addFd(queue->getFd(), 0, ALOOPER_EVENT_INPUT, sensor_event_receiver, queue.get());
+
+    while (1) {
+        int32_t ret = loop->pollOnce(-1);
+        switch (ret) {
+        case ALOOPER_POLL_WAKE:
+            println("ALOOPER_POLL_WAKE");
+            break;
+        case ALOOPER_POLL_CALLBACK:
+            // println("ALOOPER_POLL_CALLBACK");
+            break;
+        case ALOOPER_POLL_TIMEOUT:
+            pr_red_info("ALOOPER_POLL_TIMEOUT");
+            break;
+        case ALOOPER_POLL_ERROR:
+            pr_red_info("ALOOPER_POLL_TIMEOUT");
+            break;
+        default:
+            pr_red_info("poll returned %d", ret);
+            break;
+        }
+    }
 
 	return 0;
 }
@@ -294,28 +448,31 @@ static int sensor_poll_main_loop(struct cavan_sensor_module *module, u32 mask, u
 int main(int argc, char *argv[])
 {
 	int c;
-	int ret;
 	u32 mask;
 	u32 delay;
-	pthread_t thread;
 	int option_index;
-	struct cavan_sensor_module module;
+	bool test_hal = false;
 	struct option long_option[] = {
 		{
 			.name = "help",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_HELP,
+			.val = CAVAN_COMMAND_OPTION_HELP,
 		}, {
 			.name = "all",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_ALL,
+			.val = CAVAN_COMMAND_OPTION_ALL,
 		}, {
 			.name = "delay",
 			.has_arg = required_argument,
 			.flag = NULL,
-			.val = LOCAL_COMMAND_OPTION_DELAY,
+			.val = CAVAN_COMMAND_OPTION_DELAY,
+		}, {
+			.name = "hal",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_HAL,
 		}, {
 			.name = "acc",
 			.has_arg = no_argument,
@@ -393,20 +550,24 @@ int main(int argc, char *argv[])
 		switch (c) {
 		case 'h':
 		case 'H':
-		case LOCAL_COMMAND_OPTION_HELP:
+		case CAVAN_COMMAND_OPTION_HELP:
 			show_usage(argv[0]);
 			return 0;
 
 		case 'a':
 		case 'A':
-		case LOCAL_COMMAND_OPTION_ALL:
+		case CAVAN_COMMAND_OPTION_ALL:
 			mask = -1;
 			break;
 
 		case 'd':
 		case 'D':
-		case LOCAL_COMMAND_OPTION_DELAY:
+		case CAVAN_COMMAND_OPTION_DELAY:
 			delay = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case CAVAN_COMMAND_OPTION_HAL:
+			test_hal = true;
 			break;
 
 		case 'g':
@@ -460,22 +621,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	ret = cavan_sensor_module_open(&module);
-	if (ret < 0) {
-		pr_red_info("cavan_sensor_module_open");
-		return ret;
+	if (test_hal) {
+		return sensor_poll_main_loop(mask, delay);
+	} else {
+		return sensor_service_poll_main_loop(mask, delay);
 	}
-
-	ret = pthread_create(&thread, NULL, sensor_poll_thread, &module);
-	if (ret < 0) {
-		pr_err_info("pthread_create: %d", ret);
-		return ret;
-	}
-
-	ret = sensor_poll_main_loop(&module, mask, delay);
-	pthread_join(thread, NULL);
-
-	cavan_sensor_module_close(&module);
-
-	return ret;
 }

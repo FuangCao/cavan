@@ -1,5 +1,5 @@
 /*
- * File:		su_server.cpp
+ * File:		su_main.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
  * Created:		2015-09-18 11:55:09
  *
