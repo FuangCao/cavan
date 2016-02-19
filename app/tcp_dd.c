@@ -207,7 +207,7 @@ static int tcp_dd_rw_image_auto(const char *pathname, struct network_url *url, t
 	file_req.size = 0;
 	file_req.dest_offset = file_req.src_offset = 0;
 
-	return handler(url, &file_req);
+	return handler(url, &file_req, 0);
 }
 
 static int tcp_dd_rw_image_directory(const char *dirname, struct network_url *url, tcp_dd_handler_t handler)
@@ -564,7 +564,7 @@ label_parse_complete:
 				file_req.size = 0;
 				file_req.dest_offset = file_req.src_offset = 0;
 
-				ret = handler(&url, &file_req);
+				ret = handler(&url, &file_req, 0);
 				if (ret < 0) {
 					return ret;
 				}
@@ -591,7 +591,7 @@ label_parse_complete:
 			file_req.dest_offset = seek * bs;
 			file_req.size = count * bs;
 
-			ret = handler(&url, &file_req);
+			ret = handler(&url, &file_req, 0);
 			if (ret < 0) {
 				return ret;
 			}
@@ -636,7 +636,7 @@ label_parse_complete:
 			file_req.size = 0;
 			file_req.dest_offset = file_req.src_offset = 0;
 
-			ret = handler(&url, &file_req);
+			ret = handler(&url, &file_req, 0);
 			if (ret < 0) {
 				return ret;
 			}

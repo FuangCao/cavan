@@ -24,7 +24,7 @@ static int ftp_server_send_file1(struct network_client *client, const struct net
 		return ret;
 	}
 
-	ret = network_client_send_file(client, fd, 0);
+	ret = network_client_send_file(client, fd, 0, 0);
 
 	network_client_close(client);
 
@@ -41,7 +41,7 @@ static int ftp_server_receive_file1(struct network_client *client, const struct 
 		return ret;
 	}
 
-	ret = network_client_recv_file(client, fd, 0);
+	ret = network_client_recv_file(client, fd, 0, 0);
 
 	network_client_close(client);
 

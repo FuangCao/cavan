@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 
 		println("%s => %s", file_req.src_file, file_req.dest_file);
 
-		ret = handler(&url, &file_req);
+		ret = handler(&url, &file_req, TCP_DDF_BREAKPOINT_RESUME);
 		if (ret < 0) {
 			pr_red_info("Failed to copy file %s to %s", file_req.src_file, file_req.dest_file);
 			return ret;

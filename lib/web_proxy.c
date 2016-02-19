@@ -310,7 +310,7 @@ static int web_proxy_send_file(struct network_client *client, int fd, const char
 		return ret;
 	}
 
-	return network_client_send_file(client, fd, st.st_size);
+	return network_client_send_file(client, fd, 0, st.st_size);
 }
 
 static int web_proxy_ftp_list_directory(struct network_client *client, struct network_client *client_proxy, const struct network_url *url)

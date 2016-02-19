@@ -2177,13 +2177,14 @@ ssize_t network_client_fill_buff(struct network_client *client, char *buff, size
 	return size;
 }
 
-int network_client_recv_file(struct network_client *client, int fd, size64_t size)
+int network_client_recv_file(struct network_client *client, int fd, size64_t skip, size64_t size)
 {
 	ssize_t rdlen;
 	char buff[2048];
 	struct progress_bar bar;
 
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size + skip, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_set(&bar, skip);
 
 	if (size == 0) {
 		while (1) {
@@ -2205,7 +2206,11 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t siz
 		}
 	} else {
 		while (size) {
+#if 0
+			rdlen = client->recv(client, buff, size < sizeof(buff) ? size : sizeof(buff));
+#else
 			rdlen = client->recv(client, buff, sizeof(buff));
+#endif
 			if (rdlen <= 0) {
 				pr_err_info("client->recv");
 				return rdlen < 0 ? rdlen : -EFAULT;
@@ -2238,7 +2243,7 @@ int network_client_recv_file2(struct network_client *client, const char *pathnam
 		return fd;
 	}
 
-	ret = network_client_recv_file(client, fd, size);
+	ret = network_client_recv_file(client, fd, 0, size);
 	if (ret < 0) {
 		pr_red_info("network_client_recv_file");
 	}
@@ -2248,13 +2253,14 @@ int network_client_recv_file2(struct network_client *client, const char *pathnam
 	return ret;
 }
 
-int network_client_send_file(struct network_client *client, int fd, size64_t size)
+int network_client_send_file(struct network_client *client, int fd, size64_t skip, size64_t size)
 {
 	ssize_t rdlen;
 	char buff[2048];
 	struct progress_bar bar;
 
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size + skip, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_set(&bar, skip);
 
 	if (size == 0) {
 		while (1) {
@@ -2275,7 +2281,11 @@ int network_client_send_file(struct network_client *client, int fd, size64_t siz
 		}
 	} else {
 		while (size) {
+#if 0
+			rdlen = ffile_read(fd, buff, size < sizeof(buff) ? size : sizeof(buff));
+#else
 			rdlen = ffile_read(fd, buff, sizeof(buff));
+#endif
 			if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen) {
 				return -EFAULT;
 			}
@@ -2301,7 +2311,7 @@ int network_client_send_file2(struct network_client *client, const char *pathnam
 		return fd;
 	}
 
-	ret = network_client_send_file(client, fd, size);
+	ret = network_client_send_file(client, fd, 0, size);
 	if (ret < 0) {
 		pr_red_info("network_client_send_file");
 	}

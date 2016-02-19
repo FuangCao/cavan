@@ -86,7 +86,10 @@ static char *progress_bar_fflush_base(struct progress_bar *bar, char *p, char *p
 		int progress = bar->fill - bar->half_length;
 
 		memset(p, BAR_FULL_CHAR, progress);
-		memset(p + progress, BAR_FREE_CHAR, bar->half_length - progress);
+
+		if (progress < bar->half_length) {
+			memset(p + progress, BAR_FREE_CHAR, bar->half_length - progress);
+		}
 	} else {
 		memset(p, BAR_FREE_CHAR, bar->half_length);
 	}

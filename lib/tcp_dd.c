@@ -102,40 +102,45 @@ ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package
 	return 0;
 }
 
-int tcp_dd_send_request(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length)
+int tcp_dd_send_request(struct network_client *client, struct tcp_dd_package *pkg, struct tcp_dd_package *response, u16 type, size_t length, u32 flags)
 {
 	int ret;
 
-	ret = tcp_dd_package_send(client, pkg, type, length, 0);
+	ret = tcp_dd_package_send(client, pkg, type, length, flags);
 	if (ret < 0) {
 		pr_red_info("tcp_dd_package_send %d", ret);
 		return ret;
 	}
 
-	return tcp_dd_package_recv(client, pkg);
+	if (response) {
+		return tcp_dd_package_recv(client, response);
+	}
+
+	return 0;
 }
 
-int tcp_dd_send_request2(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length)
+int tcp_dd_send_request2(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length, u32 flags)
 {
 	int ret;
+	struct tcp_dd_package response;
 
-	ret = tcp_dd_send_request(client, pkg, type, length);
+	ret = tcp_dd_send_request(client, pkg, &response, type, length, flags);
 	if (ret < 0) {
 		pr_red_info("tcp_dd_send_request %d", ret);
 		return ret;
 	}
 
-	if (pkg->type != TCP_DD_RESPONSE) {
-		pr_red_info("Invalid package type %d", pkg->type);
+	if (response.type != TCP_DD_RESPONSE) {
+		pr_red_info("Invalid package type %d", response.type);
 		return -EINVAL;
 	}
 
-	tcp_dd_show_response(&pkg->res_pkg);
+	tcp_dd_show_response(&response.res_pkg);
 
-	return (int) pkg->res_pkg.code;
+	return (int) response.res_pkg.code;
 }
 
-int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length)
+int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, struct tcp_dd_package *response, u16 type, size_t length, u32 flags)
 {
 	int ret;
 	struct network_client client;
@@ -146,10 +151,10 @@ int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, u1
 		return ret;
 	}
 
-	return tcp_dd_send_request(&client, pkg, type, length);
+	return tcp_dd_send_request(&client, pkg, response, type, length, flags);
 }
 
-int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length)
+int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length, u32 flags)
 {
 	int ret;
 	struct network_client client;
@@ -160,7 +165,7 @@ int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u1
 		return ret;
 	}
 
-	return tcp_dd_send_request2(&client, pkg, type, length);
+	return tcp_dd_send_request2(&client, pkg, type, length, flags);
 }
 
 
@@ -320,16 +325,14 @@ static int tcp_dd_recv_response(struct network_client *client)
 	return pkg.res_pkg.code;
 }
 
-static int tcp_dd_send_read_request(struct network_client *client, const char *filename, off_t offset, off_t size, struct tcp_dd_package *pkg)
+static int tcp_dd_send_file_request(struct network_client *client, struct tcp_dd_package *pkg, u16 type, const char *filename, u32 flags)
 {
 	int ret;
 	size_t length;
 
-	pkg->file_req.offset = offset;
-	pkg->file_req.size = size;
 	length = ADDR_OFFSET(text_copy(pkg->file_req.filename, filename), &pkg) + 1;
 
-	ret = tcp_dd_send_request(client, pkg, TCP_DD_READ, length);
+	ret = tcp_dd_send_request(client, pkg, pkg, type, length, flags);
 	if (ret < 0) {
 		pr_red_info("tcp_dd_package_recv");
 		return ret;
@@ -340,26 +343,23 @@ static int tcp_dd_send_read_request(struct network_client *client, const char *f
 		tcp_dd_show_response(&pkg->res_pkg);
 		return pkg->res_pkg.code;
 
+	case TCP_DD_READ:
+		if (type == TCP_DD_WRITE) {
+			return 0;
+		}
+
+		return -EINVAL;
+
 	case TCP_DD_WRITE:
-		return 0;
+		if (type == TCP_DD_READ) {
+			return 0;
+		}
+
+		return -EINVAL;
 
 	default:
 		return -EINVAL;
 	}
-}
-
-static int tcp_dd_send_write_request(struct network_client *client, const char *filename, off_t offset, off_t size, mode_t mode)
-{
-	size_t length;
-	struct tcp_dd_package pkg;
-
-	pkg.file_req.offset = offset;
-	pkg.file_req.size = size;
-	pkg.file_req.mode = mode;
-
-	length = ADDR_OFFSET(text_copy(pkg.file_req.filename, filename), &pkg) + 1;
-
-	return tcp_dd_send_request2(client, &pkg, TCP_DD_WRITE, length);
 }
 
 static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, const char *command)
@@ -381,14 +381,14 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 
 	length = ADDR_OFFSET(p, &pkg) + 1;
 
-	return tcp_dd_send_request2(client, &pkg, TCP_DD_EXEC, length);
+	return tcp_dd_send_request2(client, &pkg, TCP_DD_EXEC, length, 0);
 }
 
 static int tcp_dd_send_keypad_request(struct network_client *client)
 {
 	struct tcp_dd_package pkg;
 
-	return tcp_dd_send_request2(client, &pkg, TCP_KEYPAD_EVENT, TCP_DD_PKG_BODY_OFFSET);
+	return tcp_dd_send_request2(client, &pkg, TCP_KEYPAD_EVENT, TCP_DD_PKG_BODY_OFFSET, 0);
 }
 
 static int tcp_dd_send_alarm_add_request(struct network_client *client, time_t time, time_t repeat, const char *command)
@@ -400,7 +400,7 @@ static int tcp_dd_send_alarm_add_request(struct network_client *client, time_t t
 	pkg.alarm_add.repeat = repeat;
 	length = ADDR_OFFSET(text_copy(pkg.alarm_add.command, command), &pkg) + 1;
 
-	return tcp_dd_send_request2(client, &pkg, TCP_ALARM_ADD, length);
+	return tcp_dd_send_request2(client, &pkg, TCP_ALARM_ADD, length, 0);
 }
 
 static int tcp_dd_send_alarm_query_request(struct network_client *client, u16 type, int index)
@@ -412,16 +412,17 @@ static int tcp_dd_send_alarm_query_request(struct network_client *client, u16 ty
 
 	length = sizeof(pkg.alarm_query) + MOFS(struct tcp_dd_package, alarm_query);
 
-	return tcp_dd_send_request2(client, &pkg, type, length);
+	return tcp_dd_send_request2(client, &pkg, type, length, 0);
 }
 
-static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, struct network_client *client, struct tcp_dd_file_request *req)
+static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, struct network_client *client, struct tcp_dd_package *pkg)
 {
 	int fd;
 	int ret;
 	off_t size;
 	struct stat st;
 	const char *pathname;
+	struct tcp_dd_file_request *req = &pkg->file_req;
 
 	pathname = tcp_dd_get_partition_pathname(service, req->filename);
 	if (pathname == NULL) {
@@ -444,7 +445,6 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 		}
 
 		req->offset = 0;
-		req->size = size;
 	} else {
 		fd = open(pathname, O_RDONLY);
 		if (fd < 0) {
@@ -464,8 +464,8 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 			goto out_close_fd;
 		}
 
-		ret = lseek(fd, req->offset, SEEK_SET);
-		if (ret < 0) {
+		if (lseek(fd, req->offset, SEEK_SET) != (off_t) req->offset) {
+			ret = -EFAULT;
 			tcp_dd_send_response(client, ret, "[Server] Seek file `%s' failed", pathname);
 			goto out_close_fd;
 		}
@@ -475,17 +475,20 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 		}
 	}
 
-	ret = tcp_dd_send_write_request(client, pathname, 0, size, st.st_mode);
+	req->size = size;
+	req->mode = st.st_mode;
+
+	ret = tcp_dd_send_request2(client, pkg, TCP_DD_WRITE, ADDR_SUB2(req->filename, pkg), 0);
 	if (ret < 0) {
-		pd_red_info("tcp_dd_send_write_request");
-		return ret;
+		pd_red_info("tcp_dd_send_request2");
+		goto out_close_fd;
 	}
 
 	println("filename = %s", pathname);
 	println("offset = %s", size2text(req->offset));
 	println("size = %s", size2text(size));
 
-	ret = network_client_send_file(client, fd, size);
+	ret = network_client_send_file(client, fd, 0, size);
 	if (ret < 0) {
 		pd_err_info("network_client_send_file: %d", ret);
 	}
@@ -496,12 +499,15 @@ out_close_fd:
 	return ret;
 }
 
-static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, struct network_client *client, struct tcp_dd_file_request *req)
+static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, struct network_client *client, struct tcp_dd_package *pkg)
 {
 	int fd;
 	int ret;
 	mode_t mode;
+	size64_t skip;
+	bool isfile = false;
 	const char *pathname;
+	struct tcp_dd_file_request *req = &pkg->file_req;
 
 	if (S_ISDIR(req->mode)) {
 		ret = cavan_mkdir_main2(req->filename, req->mode);
@@ -515,12 +521,17 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 		return ret;
 	}
 
-	if (pathname == req->filename) {
-		mode = file_get_mode(pathname);
+	mode = file_get_mode(pathname);
+	if (mode == 0) {
+		isfile = true;
+	} else if (pathname == req->filename) {
 		switch (mode & S_IFMT) {
 		case S_IFREG:
-			pd_info("remove regular file %s", pathname);
-			unlink(pathname);
+			isfile = true;
+			if ((pkg->flags & TCP_DDF_BREAKPOINT_RESUME) == 0) {
+				pd_info("remove regular file %s", pathname);
+				unlink(pathname);
+			}
 			break;
 
 		case S_IFBLK:
@@ -529,7 +540,6 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 			break;
 		}
 	} else {
-		mode = file_get_mode(pathname);
 		if (mode == 0 || (mode & S_IFMT) != S_IFBLK) {
 			ret = -ENOTBLK;
 
@@ -545,33 +555,60 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 		umount_device(pathname, MNT_DETACH);
 	}
 
-	fd = open(pathname, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, req->mode);
-	if (fd < 0) {
-		tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", pathname);
-		return fd;
+	println("filename = %s", pathname);
+	println("offset = %s", size2text(req->offset));
+	println("size = %s", size2text(req->size));
+
+	if (isfile && (pkg->flags & TCP_DDF_BREAKPOINT_RESUME)) {
+		fd = open(pathname, O_CREAT | O_WRONLY | O_APPEND | O_BINARY, req->mode);
+		if (fd < 0) {
+			tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", pathname);
+			return fd;
+		}
+
+		skip = lseek(fd, 0, SEEK_END);
+		if (skip > req->size) {
+			ret = -EINVAL;
+			tcp_dd_send_response(client, ret, "[Server] Invalid skip");
+			goto out_close_fd;
+		}
+
+		req->offset = skip;
+	} else {
+		fd = open(pathname, O_CREAT | O_WRONLY | O_BINARY, req->mode);
+		if (fd < 0) {
+			tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", pathname);
+			return fd;
+		}
+
+		if (lseek(fd, req->offset, SEEK_SET) != (off_t) req->offset) {
+			ret = -EFAULT;
+			tcp_dd_send_response(client, ret, "[Server] Seek file failed");
+			goto out_close_fd;
+		}
+
+		skip = 0;
+		req->offset = 0;
+	}
+
+	println("skip = %s", size2text(skip));
+
+	ret = tcp_dd_send_request2(client, pkg, TCP_DD_READ, ADDR_SUB2(req->filename, pkg), 0);
+	if (ret < 0) {
+		pr_red_info("tcp_dd_send_request %d", ret);
+		goto out_close_fd;
+	}
+
+	if (skip && skip == req->size) {
+		ret = 0;
+		goto out_close_fd;
 	}
 
 	if (S_ISBLK(mode)) {
 	    bdev_set_read_only(fd, 0);
 	}
 
-	ret = lseek(fd, req->offset, SEEK_SET);
-	if (ret < 0) {
-		tcp_dd_send_response(client, ret, "[Server] Seek file failed");
-		goto out_close_fd;
-	}
-
-	ret = tcp_dd_send_response(client, 0, "[Server] Start receive file");
-	if (ret < 0) {
-		pd_red_info("tcp_dd_send_response");
-		return ret;
-	}
-
-	println("filename = %s", pathname);
-	println("offset = %s", size2text(req->offset));
-	println("size = %s", size2text(req->size));
-
-	ret = network_client_recv_file(client, fd, req->size);
+	ret = network_client_recv_file(client, fd, skip, req->size - skip);
 	if (ret < 0) {
 		pd_err_info("network_client_recv_file: %d", ret);
 	}
@@ -1048,12 +1085,12 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	switch (pkg.type) {
 	case TCP_DD_READ:
 		pd_bold_info("TCP_DD_READ");
-		ret = tcp_dd_handle_read_request(dd_service, client, &pkg.file_req);
+		ret = tcp_dd_handle_read_request(dd_service, client, &pkg);
 		break;
 
 	case TCP_DD_WRITE:
 		pd_bold_info("TCP_DD_WRITE");
-		ret = tcp_dd_handle_write_request(dd_service, client, &pkg.file_req);
+		ret = tcp_dd_handle_write_request(dd_service, client, &pkg);
 		need_response = true;
 		break;
 
@@ -1141,7 +1178,7 @@ static int tcp_dd_check_file_request(struct network_file_request *file_req, cons
 	return 0;
 }
 
-int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req)
+int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req, u32 flags)
 {
 	int fd;
 	int ret;
@@ -1150,6 +1187,8 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 	const char *src_file = NULL;
 	const char *dest_file = NULL;
 	struct network_client client;
+	struct tcp_dd_package pkg;
+	struct tcp_dd_file_request *req = &pkg.file_req;
 
 	ret = tcp_dd_check_file_request(file_req, &src_file, &dest_file);
 	if (ret < 0) {
@@ -1183,8 +1222,8 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 			file_req->size = 0;
 		}
 
-		ret = lseek(fd, file_req->src_offset, SEEK_SET);
-		if (ret < 0) {
+		if (lseek(fd, file_req->src_offset, SEEK_SET) != (off_t) file_req->src_offset) {
+			ret = -EFAULT;
 			pr_error_info("Seek file `%s' failed", src_file);
 			goto out_close_fd;
 		}
@@ -1200,10 +1239,20 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 		goto out_close_fd;
 	}
 
-	ret = tcp_dd_send_write_request(&client, dest_file, file_req->dest_offset, file_req->size, st.st_mode);
+	req->offset = file_req->dest_offset;
+	req->size = file_req->size;
+	req->mode = st.st_mode;
+
+	ret = tcp_dd_send_file_request(&client, &pkg, TCP_DD_WRITE, dest_file, flags);
 	if (ret < 0) {
 		pr_red_info("tcp_dd_send_write_request2");
 		goto out_client_close;
+	}
+
+	ret = tcp_dd_send_response(&client, 0, "[Client] Start send file");
+	if (ret < 0) {
+		pr_red_info("tcp_dd_send_response");
+		goto out_close_fd;
 	}
 
 	if (directory) {
@@ -1228,7 +1277,7 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 			strcpy(src_fname, en->d_name);
 			strcpy(dest_fname, en->d_name);
 
-			ret = tcp_dd_send_file(url, &sub_req);
+			ret = tcp_dd_send_file(url, &sub_req, flags);
 			if (ret < 0) {
 				pr_red_info("tcp_dd_send_file");
 				break;
@@ -1237,11 +1286,38 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 
 		closedir(dp);
 	} else {
+		size64_t skip;
+
+		if (flags & TCP_DDF_BREAKPOINT_RESUME) {
+			skip = req->offset;
+		} else {
+			skip = 0;
+		}
+
 		println("%s => %s", src_file, dest_file);
 		println("offset = %s", size2text(file_req->src_offset));
 		println("size = %s", size2text(file_req->size));
+		println("skip = %s", size2text(skip));
 
-		ret = network_client_send_file(&client, fd, file_req->size);
+		if (skip > 0) {
+			if (skip >= (size64_t) file_req->size) {
+				if (skip == (size64_t) file_req->size) {
+					ret = 0;
+				} else {
+					ret = -EINVAL;
+					pr_red_info("invalid skip");
+				}
+
+				goto out_close_fd;
+			}
+
+			if (lseek(fd, skip, SEEK_SET) != (off_t) skip) {
+				ret = -EFAULT;
+				goto out_client_close;
+			}
+		}
+
+		ret = network_client_send_file(&client, fd, skip, file_req->size - skip);
 		if (ret < 0) {
 			pr_red_info("network_client_send_file");
 			goto out_close_fd;
@@ -1260,15 +1336,16 @@ out_close_fd:
 	return ret;
 }
 
-int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req)
+int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req, u32 flags)
 {
 	int fd;
 	int ret;
 	mode_t mode;
-	struct tcp_dd_package pkg;
 	const char *src_file = NULL;
 	const char *dest_file = NULL;
 	struct network_client client;
+	struct tcp_dd_package pkg;
+	struct tcp_dd_file_request *req = &pkg.file_req;
 
 	umask(0);
 
@@ -1287,7 +1364,10 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 		return ret;
 	}
 
-	ret = tcp_dd_send_read_request(&client, src_file, file_req->src_offset, file_req->size, &pkg);
+	req->offset = file_req->src_offset;
+	req->size = file_req->size;
+
+	ret = tcp_dd_send_file_request(&client, &pkg, TCP_DD_READ, src_file, flags);
 	if (ret < 0) {
 		pr_red_info("tcp_dd_send_read_request");
 		goto out_client_close;
@@ -1336,7 +1416,7 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 			strcpy(src_fname, line);
 			sub_req.size = 0;
 
-			ret = tcp_dd_receive_file(url, &sub_req);
+			ret = tcp_dd_receive_file(url, &sub_req, flags);
 			if (ret < 0) {
 				pr_red_info("tcp_dd_receive_file");
 				goto out_client_close;
@@ -1359,8 +1439,8 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 			goto out_client_close;
 		}
 
-		ret = lseek(fd, file_req->dest_offset, SEEK_SET);
-		if (ret < 0) {
+		if (lseek(fd, file_req->dest_offset, SEEK_SET) != (off_t) file_req->dest_offset) {
+			ret = -EFAULT;
 			tcp_dd_send_response(&client, ret, "[Client] Seek file `%s' failed", dest_file);
 			goto out_close_fd;
 		}
@@ -1375,7 +1455,7 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 		println("offset = %s", size2text(file_req->dest_offset));
 		println("size = %s", size2text(file_req->size));
 
-		ret = network_client_recv_file(&client, fd, file_req->size);
+		ret = network_client_recv_file(&client, fd, 0, file_req->size);
 	}
 
 out_close_fd:
@@ -1663,5 +1743,5 @@ int tcp_dd_mkdir(struct network_url *url, const char *pathname, mode_t mode)
 	pkg.mkdir_pkg.mode  = mode;
 	length = ADDR_OFFSET(text_ncopy(pkg.mkdir_pkg.pathname, pathname, sizeof(pkg.mkdir_pkg.pathname)), &pkg) + 1;
 
-	return tcp_dd_send_request4(url, &pkg, TCP_DD_MKDIR, length);
+	return tcp_dd_send_request4(url, &pkg, TCP_DD_MKDIR, length, 0);
 }

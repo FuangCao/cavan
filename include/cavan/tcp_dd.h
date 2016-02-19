@@ -26,7 +26,7 @@
 
 #define TCP_DD_PKG_BODY_OFFSET	offsetof(struct tcp_dd_package, body)
 
-typedef int (*tcp_dd_handler_t)(struct network_url *, struct network_file_request *);
+typedef int (*tcp_dd_handler_t)(struct network_url *url, struct network_file_request *req, u32 flags);
 
 enum tcp_dd_package_type {
 	TCP_DD_RESPONSE,
@@ -121,17 +121,17 @@ bool tcp_dd_package_is_valid(const struct tcp_dd_package *pkg);
 bool tcp_dd_package_is_invalid(const struct tcp_dd_package *pkg);
 ssize_t tcp_dd_package_recv(struct network_client *client, struct tcp_dd_package *pkg);
 ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length, u32 flags);
-int tcp_dd_send_request(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length);
-int tcp_dd_send_request2(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length);
-int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length);
-int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length);
+int tcp_dd_send_request(struct network_client *client, struct tcp_dd_package *pkg, struct tcp_dd_package *response, u16 type, size_t length, u32 flags);
+int tcp_dd_send_request2(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length, u32 flags);
+int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, struct tcp_dd_package *response, u16 type, size_t length, u32 flags);
+int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length, u32 flags);
 
 int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size);
 const char *tcp_dd_get_partition_pathname(struct cavan_tcp_dd_service *service, const char *name);
 
 int tcp_dd_service_run(struct cavan_dynamic_service *service);
-int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req);
-int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req);
+int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_req, u32 flags);
+int tcp_dd_receive_file(struct network_url *url, struct network_file_request *file_req, u32 flags);
 int tcp_dd_exec_command(struct network_url *url, const char *command);
 int tcp_dd_keypad_client_run(struct network_url *url, int flags);
 
