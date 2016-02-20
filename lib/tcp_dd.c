@@ -356,6 +356,7 @@ static int tcp_dd_send_file_request(struct network_client *client, struct tcp_dd
 
 		return 0;
 
+	case TCP_DD_WRITE:
 	case TCP_DD_FILE_STAT:
 		if (type != TCP_DD_READ) {
 			return -EINVAL;
@@ -484,7 +485,7 @@ static int tcp_dd_handle_read_request(struct cavan_tcp_dd_service *service, stru
 	req->size = size;
 	req->mode = st.st_mode;
 
-	ret = tcp_dd_send_request2(client, pkg, TCP_DD_WRITE, ADDR_SUB2(req->filename, pkg), 0);
+	ret = tcp_dd_send_request2(client, pkg, TCP_DD_FILE_STAT, ADDR_SUB2(req->filename, pkg), 0);
 	if (ret < 0) {
 		pd_red_info("tcp_dd_send_request2");
 		goto out_close_fd;
