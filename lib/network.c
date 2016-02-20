@@ -2179,14 +2179,19 @@ ssize_t network_client_fill_buff(struct network_client *client, char *buff, size
 
 int network_client_recv_file(struct network_client *client, int fd, size64_t skip, size64_t size)
 {
+	off_t pos;
 	ssize_t rdlen;
 	char buff[2048];
 	struct progress_bar bar;
 
-	progress_bar_init(&bar, size + skip, PROGRESS_BAR_TYPE_DATA);
-	progress_bar_set(&bar, skip);
+	if (skip && (pos = lseek(fd, skip, SEEK_CUR)) < 0) {
+		pr_err_info("lseek");
+		return pos;
+	}
 
 	if (size == 0) {
+		progress_bar_init(&bar, 0, PROGRESS_BAR_TYPE_DATA);
+
 		while (1) {
 			rdlen = client->recv(client, buff, sizeof(buff));
 			if (rdlen <= 0) {
@@ -2205,6 +2210,9 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t ski
 			progress_bar_add(&bar, rdlen);
 		}
 	} else {
+		progress_bar_init(&bar, size + skip, PROGRESS_BAR_TYPE_DATA);
+		progress_bar_add(&bar, skip);
+
 		while (size) {
 #if 0
 			rdlen = client->recv(client, buff, size < sizeof(buff) ? size : sizeof(buff));
@@ -2224,7 +2232,6 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t ski
 			size -= rdlen;
 			progress_bar_add(&bar, rdlen);
 		}
-
 	}
 
 	progress_bar_finish(&bar);
@@ -2255,14 +2262,19 @@ int network_client_recv_file2(struct network_client *client, const char *pathnam
 
 int network_client_send_file(struct network_client *client, int fd, size64_t skip, size64_t size)
 {
+	off_t pos;
 	ssize_t rdlen;
 	char buff[2048];
 	struct progress_bar bar;
 
-	progress_bar_init(&bar, size + skip, PROGRESS_BAR_TYPE_DATA);
-	progress_bar_set(&bar, skip);
+	if (skip && (pos = lseek(fd, skip, SEEK_CUR)) < 0) {
+		pr_err_info("lseek");
+		return pos;
+	}
 
 	if (size == 0) {
+		progress_bar_init(&bar, 0, PROGRESS_BAR_TYPE_DATA);
+
 		while (1) {
 			rdlen = ffile_read(fd, buff, sizeof(buff));
 			if (rdlen <= 0) {
@@ -2280,6 +2292,9 @@ int network_client_send_file(struct network_client *client, int fd, size64_t ski
 			progress_bar_add(&bar, rdlen);
 		}
 	} else {
+		progress_bar_init(&bar, size + skip, PROGRESS_BAR_TYPE_DATA);
+		progress_bar_add(&bar, skip);
+
 		while (size) {
 #if 0
 			rdlen = ffile_read(fd, buff, size < sizeof(buff) ? size : sizeof(buff));

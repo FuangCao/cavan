@@ -334,7 +334,7 @@ static int tcp_dd_send_file_request(struct network_client *client, struct tcp_dd
 
 	ret = tcp_dd_send_request(client, pkg, pkg, type, length, flags);
 	if (ret < 0) {
-		pr_red_info("tcp_dd_package_recv");
+		pr_red_info("tcp_dd_send_request: %d", ret);
 		return ret;
 	}
 
@@ -343,19 +343,25 @@ static int tcp_dd_send_file_request(struct network_client *client, struct tcp_dd
 		tcp_dd_show_response(&pkg->res_pkg);
 		return pkg->res_pkg.code;
 
-	case TCP_DD_READ:
-		if (type == TCP_DD_WRITE) {
-			return 0;
+	case TCP_DD_BREAKPOINT:
+		if (type != TCP_DD_WRITE) {
+			return -EINVAL;
 		}
 
-		return -EINVAL;
-
-	case TCP_DD_WRITE:
-		if (type == TCP_DD_READ) {
-			return 0;
+		ret = tcp_dd_send_response(client, 0, "[Client] Start send file");
+		if (ret < 0) {
+			pr_red_info("tcp_dd_send_response: %d", ret);
+			return ret;
 		}
 
-		return -EINVAL;
+		return 0;
+
+	case TCP_DD_FILE_STAT:
+		if (type != TCP_DD_READ) {
+			return -EINVAL;
+		}
+
+		return 0;
 
 	default:
 		return -EINVAL;
@@ -504,7 +510,6 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 	int fd;
 	int ret;
 	mode_t mode;
-	size64_t skip;
 	bool isfile = false;
 	const char *pathname;
 	struct tcp_dd_file_request *req = &pkg->file_req;
@@ -555,11 +560,9 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 		umount_device(pathname, MNT_DETACH);
 	}
 
-	println("filename = %s", pathname);
-	println("offset = %s", size2text(req->offset));
-	println("size = %s", size2text(req->size));
-
 	if (isfile && (pkg->flags & TCP_DDF_BREAKPOINT_RESUME)) {
+		size64_t skip;
+
 		fd = open(pathname, O_CREAT | O_WRONLY | O_APPEND | O_BINARY, req->mode);
 		if (fd < 0) {
 			tcp_dd_send_response(client, fd, "[Server] Open file `%s' failed", pathname);
@@ -573,6 +576,7 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 			goto out_close_fd;
 		}
 
+		req->size -= skip;
 		req->offset = skip;
 	} else {
 		fd = open(pathname, O_CREAT | O_WRONLY | O_BINARY, req->mode);
@@ -587,20 +591,16 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 			goto out_close_fd;
 		}
 
-		skip = 0;
 		req->offset = 0;
 	}
 
-	println("skip = %s", size2text(skip));
+	println("filename = %s", pathname);
+	println("offset = %s", size2text(req->offset));
+	println("size = %s", size2text(req->size));
 
-	ret = tcp_dd_send_request2(client, pkg, TCP_DD_READ, ADDR_SUB2(req->filename, pkg), 0);
+	ret = tcp_dd_send_request2(client, pkg, TCP_DD_BREAKPOINT, ADDR_SUB2(req->filename, pkg), 0);
 	if (ret < 0) {
 		pr_red_info("tcp_dd_send_request %d", ret);
-		goto out_close_fd;
-	}
-
-	if (skip && skip == req->size) {
-		ret = 0;
 		goto out_close_fd;
 	}
 
@@ -608,7 +608,7 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 	    bdev_set_read_only(fd, 0);
 	}
 
-	ret = network_client_recv_file(client, fd, skip, req->size - skip);
+	ret = network_client_recv_file(client, fd, 0, req->size);
 	if (ret < 0) {
 		pd_err_info("network_client_recv_file: %d", ret);
 	}
@@ -1245,14 +1245,8 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 
 	ret = tcp_dd_send_file_request(&client, &pkg, TCP_DD_WRITE, dest_file, flags);
 	if (ret < 0) {
-		pr_red_info("tcp_dd_send_write_request2");
+		pr_red_info("tcp_dd_send_file_request: %d", ret);
 		goto out_client_close;
-	}
-
-	ret = tcp_dd_send_response(&client, 0, "[Client] Start send file");
-	if (ret < 0) {
-		pr_red_info("tcp_dd_send_response");
-		goto out_close_fd;
 	}
 
 	if (directory) {
@@ -1288,8 +1282,15 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 	} else {
 		size64_t skip;
 
-		if (flags & TCP_DDF_BREAKPOINT_RESUME) {
+		if (pkg.type == TCP_DD_BREAKPOINT) {
 			skip = req->offset;
+			if (skip > (size64_t) file_req->size) {
+				ret = -EINVAL;
+				pr_red_info("invalid skip");
+				goto out_close_fd;
+			}
+
+			file_req->size -= skip;
 		} else {
 			skip = 0;
 		}
@@ -1299,25 +1300,7 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 		println("size = %s", size2text(file_req->size));
 		println("skip = %s", size2text(skip));
 
-		if (skip > 0) {
-			if (skip >= (size64_t) file_req->size) {
-				if (skip == (size64_t) file_req->size) {
-					ret = 0;
-				} else {
-					ret = -EINVAL;
-					pr_red_info("invalid skip");
-				}
-
-				goto out_close_fd;
-			}
-
-			if (lseek(fd, skip, SEEK_SET) != (off_t) skip) {
-				ret = -EFAULT;
-				goto out_client_close;
-			}
-		}
-
-		ret = network_client_send_file(&client, fd, skip, file_req->size - skip);
+		ret = network_client_send_file(&client, fd, skip, file_req->size);
 		if (ret < 0) {
 			pr_red_info("network_client_send_file");
 			goto out_close_fd;
