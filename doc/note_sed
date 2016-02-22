@@ -1,0 +1,27 @@
+Syntax:
+# sed 'ADDRESS'd filename
+# sed /PATTERN/d filename
+
+例1: 删除第ｎ行
+# sed ‘Nd’ filename
+
+例2: 从第三行开始, 每隔一行删除
+# sed 3~2d thegeekstuff.txt
+
+例3: 删除从第４行到第８行
+# sed 4,8d thegeekstuff.txt
+
+例4: 删除最后一行
+# sed '$'d thegeekstuff.txt
+
+例5: 行匹配删除
+# sed /Sysadmin/d thegeekstuff.txt
+
+例6: 从匹配行到末尾行
+# sed '/Website Design/,$d' thegeekstuff.txt
+
+例7: 删除匹配行和之后两行
+# sed '/Storage/,+2d' thegeekstuff.txt
+
+例8: 删除空行
+# sed '/^$/d' thegeekstuff.txt
