@@ -31,6 +31,7 @@ static void show_usage(const char *command)
 	println("-w, -W\t\t\t\t%s", cavan_help_message_send_file);
 	println("-r, -R\t\t\t\t%s", cavan_help_message_recv_file);
 	println("-s, -S, --same\t\t\t%s", "local and remote use same path");
+	println("-f, -o, --force, --override\t%s", "force override");
 }
 
 int main(int argc, char *argv[])
@@ -114,6 +115,16 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_SAME,
 		}, {
+			.name = "force",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_FORCE,
+		}, {
+			.name = "override",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_OVERRIDE,
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -125,10 +136,11 @@ int main(int argc, char *argv[])
 	struct network_url url;
 	tcp_dd_handler_t handler = NULL;
 	struct network_file_request file_req;
+	u32 flags = TCP_DDF_BREAKPOINT_RESUME;
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
-	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRAalLu:U:", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "vVhHi:I:p:P:wWsSrRAalLu:U:fo", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
@@ -212,6 +224,13 @@ int main(int argc, char *argv[])
 			same = true;
 			break;
 
+		case 'f':
+		case 'o':
+		case CAVAN_COMMAND_OPTION_FORCE:
+		case CAVAN_COMMAND_OPTION_OVERRIDE:
+			flags &= ~TCP_DDF_BREAKPOINT_RESUME;
+			break;
+
 		default:
 			show_usage(argv[0]);
 			return -EINVAL;
@@ -250,7 +269,7 @@ int main(int argc, char *argv[])
 
 		println("%s => %s", file_req.src_file, file_req.dest_file);
 
-		ret = handler(&url, &file_req, TCP_DDF_BREAKPOINT_RESUME);
+		ret = handler(&url, &file_req, flags);
 		if (ret < 0) {
 			pr_red_info("Failed to copy file %s to %s", file_req.src_file, file_req.dest_file);
 			return ret;

@@ -70,6 +70,17 @@ class AdbManager(CavanCommandBase):
 
 		return self.doAdbCommand(["remount"])
 
+	def doPushOnce(self, srcFile, destFile, destDir = None):
+		if not destDir:
+			destDir = os.path.dirname(destFile)
+		else:
+			destFile = os.path.join(destDir, destFile)
+
+		if not self.doAdbCommand(["push", srcFile, destFile]) and not self.doAdbShell("mkdir -p '%s'" % destDir):
+			return False
+
+		return self.doAdbCommand(["push", srcFile, destFile])
+
 	def doPush(self, listFile, devPath = None):
 		if not listFile:
 			return True
@@ -77,14 +88,13 @@ class AdbManager(CavanCommandBase):
 		if not isinstance(listFile, list):
 			if not devPath:
 				return False
-			return self.doAdbCommand(["push", listFile, devPath])
+			return self.doPushOnce(listFile, devPath)
 
 		if not devPath:
 			devPath = listFile.pop()
 
 		for pathname in listFile:
-			target = os.path.join(devPath, os.path.basename(pathname))
-			if not self.doAdbCommand(["push", pathname, target]):
+			if not self.doPushOnce(pathname, os.path.basename(pathname), devPath):
 				return False
 
 		return True
