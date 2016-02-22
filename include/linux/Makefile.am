@@ -4,8 +4,6 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 
-SUBDIRS = cavan cavan++ linux
+cavanincdir = $(includedir)/linux
 
-cavanincdir = $(includedir)
-
-cavaninc_HEADERS = cavan.h stdafx.h
+cavaninc_HEADERS = i2c-dev.h

@@ -58,6 +58,7 @@ AC_CHECK_FUNCS([alarm clock_gettime dup2 ftruncate getcwd gettimeofday inet_ntoa
 AC_CONFIG_FILES([Makefile
                  app/Makefile
                  include/Makefile
+                 include/linux/Makefile
                  include/cavan/Makefile
                  include/cavan++/Makefile
                  cpp/Makefile

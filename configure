@@ -16975,7 +16975,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile app/Makefile include/Makefile include/cavan/Makefile include/cavan++/Makefile cpp/Makefile lib/Makefile"
+ac_config_files="$ac_config_files Makefile app/Makefile include/Makefile include/linux/Makefile include/cavan/Makefile include/cavan++/Makefile cpp/Makefile lib/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -18087,6 +18087,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "app/Makefile") CONFIG_FILES="$CONFIG_FILES app/Makefile" ;;
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
+    "include/linux/Makefile") CONFIG_FILES="$CONFIG_FILES include/linux/Makefile" ;;
     "include/cavan/Makefile") CONFIG_FILES="$CONFIG_FILES include/cavan/Makefile" ;;
     "include/cavan++/Makefile") CONFIG_FILES="$CONFIG_FILES include/cavan++/Makefile" ;;
     "cpp/Makefile") CONFIG_FILES="$CONFIG_FILES cpp/Makefile" ;;

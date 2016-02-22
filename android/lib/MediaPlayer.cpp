@@ -323,7 +323,7 @@ bool CavanVideoPlayer::threadLoop(void)
 
 	mHideCount = 0;
 	getDuration(&mDuration);
-	progress_bar_init(&bar, mDuration, PROGRESS_BAR_TYPE_TIME);
+	progress_bar_init(&bar, mDuration, 0, PROGRESS_BAR_TYPE_TIME);
 
 	while (isPlaying()) {
 		ssize_t rdlen;
