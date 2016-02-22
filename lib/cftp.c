@@ -442,7 +442,7 @@ int cftp_client_send_file(struct cftp_descriptor *desc, const char *file_in, u32
 	blk_num = 0;
 	data_msg->type = CFTP_PACKAGE_DATA;
 	max_data_length = max_xfer_length - sizeof(*data_msg);
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 	readlen = max_data_length;
 
 	while (1) {
@@ -550,7 +550,7 @@ int cftp_server_receive_file(struct cftp_descriptor *desc, const char *filename,
 	println("size = %s", size2text(size));
 
 	blk_num = 0;
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (1) {
 		sendlen = cftp_send_ack_message(desc, (struct cftp_ack_message *) msg, blk_num, desc->retry_count);
@@ -680,7 +680,7 @@ int cftp_server_send_file(struct cftp_descriptor *desc, const char *filename, u3
 
 	blk_num = 0;
 	data_pkg->type = CFTP_PACKAGE_DATA;
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (1) {
 		readlen = read(fd, data_pkg->data, max_data_length);

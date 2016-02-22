@@ -20,7 +20,7 @@ char *frle_data_to(const u8 *data, ssize_t size, int fd_out)
 	q = buff;
 	end_q = buff + sizeof(buff) - 1;
 
-	progress_bar_init(&prg_bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&prg_bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (data < data_end) {
 		for (p = data, tmp = *p; tmp == *p && p < data_end; p++);
@@ -119,7 +119,7 @@ char *funrle_data_to(const u8 *data, ssize_t size, int fd_out)
 	char *p, *end_p;
 	struct progress_bar prg_bar;
 
-	progress_bar_init(&prg_bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&prg_bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 	p = buff;
 	end_p = buff + sizeof(buff);
 

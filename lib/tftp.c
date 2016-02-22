@@ -534,7 +534,7 @@ int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const c
 	blk_num = 0;
 	readlen = TFTP_DATA_LEN;
 	remote_addr_len = sizeof(remote_addr);
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (1) {
 		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
@@ -868,7 +868,7 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 
 	blk_num = 1;
 	remote_addr_len = sizeof(*remote_addr);
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (1) {
 		readlen = read(fd, data_pkg.data, size > TFTP_DATA_LEN ? TFTP_DATA_LEN : size);

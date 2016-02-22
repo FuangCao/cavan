@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
 	println("%" PRINT_FORMAT_SIZE, sizeof("123456789"));
 
-	progress_bar_init(&bar, MB(100), PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, MB(100), 0, PROGRESS_BAR_TYPE_DATA);
 
 	for (i = 0; i < 100; i++) {
 		progress_bar_add(&bar, MB(1));

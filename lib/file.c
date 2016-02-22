@@ -46,7 +46,7 @@ int file_join(const char *dest_file, char *src_files[], int count)
 			goto out_close_src;
 		}
 
-		progress_bar_init(&bar, st.st_size, PROGRESS_BAR_TYPE_DATA);
+		progress_bar_init(&bar, st.st_size, 0, PROGRESS_BAR_TYPE_DATA);
 
 		while (1) {
 			ssize_t rdlen, wrlen;
@@ -200,7 +200,7 @@ int ffile_copy(int src_fd, int dest_fd)
 	ssize_t cpylen = 0;
 	struct progress_bar bar;
 
-	progress_bar_init(&bar, ffile_get_size(src_fd), PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, ffile_get_size(src_fd), 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (1) {
 		ssize_t rdlen, wrlen;
@@ -608,7 +608,7 @@ int ffile_ncopy(int src_fd, int dest_fd, size64_t size)
 		return ffile_ncopy_simple(src_fd, dest_fd, size);
 	}
 
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (size) {
 		ssize_t rdlen, wrlen;
@@ -1179,7 +1179,7 @@ int ffile_ncrc32(int fd, size_t size, u32 *crc)
 {
 	struct progress_bar bar;
 
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (size) {
 		ssize_t rdlen;
@@ -1653,7 +1653,7 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 		size -= offset;
 	}
 
-	progress_bar_init(&bar, size, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (1) {
 		ssize_t rdlen;

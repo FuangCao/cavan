@@ -2189,9 +2189,9 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t ski
 		return pos;
 	}
 
-	if (size == 0) {
-		progress_bar_init(&bar, 0, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, skip, PROGRESS_BAR_TYPE_DATA);
 
+	if (size == 0) {
 		while (1) {
 			rdlen = client->recv(client, buff, sizeof(buff));
 			if (rdlen <= 0) {
@@ -2210,9 +2210,6 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t ski
 			progress_bar_add(&bar, rdlen);
 		}
 	} else {
-		progress_bar_init(&bar, size + skip, PROGRESS_BAR_TYPE_DATA);
-		progress_bar_add(&bar, skip);
-
 		while (size) {
 #if 0
 			rdlen = client->recv(client, buff, size < sizeof(buff) ? size : sizeof(buff));
@@ -2272,9 +2269,9 @@ int network_client_send_file(struct network_client *client, int fd, size64_t ski
 		return pos;
 	}
 
-	if (size == 0) {
-		progress_bar_init(&bar, 0, PROGRESS_BAR_TYPE_DATA);
+	progress_bar_init(&bar, size, skip, PROGRESS_BAR_TYPE_DATA);
 
+	if (size == 0) {
 		while (1) {
 			rdlen = ffile_read(fd, buff, sizeof(buff));
 			if (rdlen <= 0) {
@@ -2292,9 +2289,6 @@ int network_client_send_file(struct network_client *client, int fd, size64_t ski
 			progress_bar_add(&bar, rdlen);
 		}
 	} else {
-		progress_bar_init(&bar, size + skip, PROGRESS_BAR_TYPE_DATA);
-		progress_bar_add(&bar, skip);
-
 		while (size) {
 #if 0
 			rdlen = ffile_read(fd, buff, size < sizeof(buff) ? size : sizeof(buff));

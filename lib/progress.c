@@ -242,14 +242,23 @@ static void progress_bar_sigint(int signum)
 	exit(1);
 }
 
-void progress_bar_init(struct progress_bar *bar, double total, progress_bar_type_t type)
+void progress_bar_init(struct progress_bar *bar, double total, double skip, progress_bar_type_t type)
 {
 	int columns;
 
+	pthread_mutex_init(&bar->lock, NULL);
+
 	bar_curr = bar;
 
-	bar->total = total;
-	bar->current = bar->last = 0;
+	bar->skip = skip;
+
+	if (total > 0) {
+		bar->total = total + skip;
+	} else {
+		bar->total = 0;
+	}
+
+	bar->current = bar->last = bar->skip;
 	bar->percent = 0;
 	bar->fill = 0;
 	bar->content_length = 0;
@@ -298,19 +307,29 @@ void progress_bar_init(struct progress_bar *bar, double total, progress_bar_type
 
 void progress_bar_add(struct progress_bar *bar, double val)
 {
+	progress_bar_lock(bar);
+
 	bar->current += val;
 	progress_bar_update(bar);
+
+	progress_bar_unlock(bar);
 }
 
 void progress_bar_set(struct progress_bar *bar, double val)
 {
+	progress_bar_lock(bar);
+
 	bar->current = val;
 	progress_bar_update(bar);
+
+	progress_bar_unlock(bar);
 }
 
 void progress_bar_finish(struct progress_bar *bar)
 {
 	double time;
+
+	progress_bar_lock(bar);
 
 	bar_curr = NULL;
 
@@ -334,10 +353,13 @@ void progress_bar_finish(struct progress_bar *bar)
 		if (time > 1000UL) {
 			char size_buff[32];
 			char speed_buff[32];
+			double size = bar->current - bar->skip;
 
-			mem_size_tostring(bar->current, size_buff, sizeof(size_buff));
-			mem_speed_tostring(bar->current * 1000000000UL / time, speed_buff, sizeof(speed_buff));
+			mem_size_tostring(size, size_buff, sizeof(size_buff));
+			mem_speed_tostring(size * 1000000000UL / time, speed_buff, sizeof(speed_buff));
 			println("%s (%s in %lf ms)", speed_buff, size_buff, time / 1000000UL);
 		}
 	}
+
+	progress_bar_unlock(bar);
 }

@@ -24,9 +24,11 @@ typedef enum {
 struct progress_bar {
 	struct timespec time_prev;
 	struct timespec time_start;
+	pthread_mutex_t lock;
 
 	double last;
 	double speed;
+	double skip;
 	double total;
 	double current;
 
@@ -50,7 +52,7 @@ struct progress_bar {
 __BEGIN_DECLS
 
 s64 progress_bar_get_time_consume_ns(struct progress_bar *bar);
-void progress_bar_init(struct progress_bar *bar, double total, progress_bar_type_t type);
+void progress_bar_init(struct progress_bar *bar, double total, double skip, progress_bar_type_t type);
 void progress_bar_add(struct progress_bar *bar, double val);
 void progress_bar_set(struct progress_bar *bar, double val);
 void progress_bar_finish(struct progress_bar *bar);
@@ -58,6 +60,16 @@ void progress_bar_finish(struct progress_bar *bar);
 static inline void progress_bar_update(struct progress_bar *bar)
 {
 	bar->update(bar);
+}
+
+static inline void progress_bar_lock(struct progress_bar *bar)
+{
+	pthread_mutex_lock(&bar->lock);
+}
+
+static inline void progress_bar_unlock(struct progress_bar *bar)
+{
+	pthread_mutex_unlock(&bar->lock);
 }
 
 __END_DECLS
