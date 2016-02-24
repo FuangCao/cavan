@@ -76,7 +76,7 @@ class AdbManager(CavanCommandBase):
 		else:
 			destFile = os.path.join(destDir, destFile)
 
-		if not self.doAdbCommand(["push", srcFile, destFile]) and not self.doAdbShell("mkdir -p '%s'" % destDir):
+		if not self.doAdbShell("mkdir -p '%s'" % destDir):
 			return False
 
 		return self.doAdbCommand(["push", srcFile, destFile])
