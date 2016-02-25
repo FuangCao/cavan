@@ -17,6 +17,8 @@ function cavan-rockchip-pack-recovery()
 	cavan-do-command "mkbootimg --kernel kernel/kernel.img --ramdisk ${IMAGE_PATH}/ramdisk-recovery.img --output ${IMAGE_PATH}/recovery.img" || return 1
 }
 
+alias cavan-rockchip-pack-recovery-push="cavan-rockchip-pack-recovery && cavan-adb-tcp_dd --auto ${IMAGE_PATH}/recovery.img"
+
 function cavan-rockchip-pack-boot()
 {
 	cavan-rockchip-buildenv || return 1
@@ -25,6 +27,8 @@ function cavan-rockchip-pack-boot()
 	cavan-do-command "truncate -s "%4" ${IMAGE_PATH}/ramdisk.img" || return 1
 	cavan-do-command "rkst/mkkrnlimg ${IMAGE_PATH}/ramdisk.img ${IMAGE_PATH}/boot.img" || return 1
 }
+
+alias cavan-rockchip-pack-boot-push="cavan-rockchip-pack-boot && cavan-adb-tcp_dd --auto ${IMAGE_PATH}/boot.img"
 
 function cavan-rockchip-pack-system()
 {
@@ -41,6 +45,8 @@ function cavan-rockchip-pack-system()
 		system_size=$((${system_size} + 5242880))
 	done
 
-	cavan-do-command "e2fsck -fyD ${IMAGE_PATH}/system.img" || return 1
+	cavan-do-command "e2fsck -fy ${IMAGE_PATH}/system.img" || return 1
 	cavan-do-command "resize2fs -fpM ${IMAGE_PATH}/system.img" || return 1
 }
+
+alias cavan-rockchip-pack-system-push="cavan-rockchip-pack-system && cavan-adb-tcp_dd --auto ${IMAGE_PATH}/system.img"
