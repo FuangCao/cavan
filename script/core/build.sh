@@ -1,3 +1,14 @@
+function cavan-do-command()
+{
+	echo "Execute: $@"
+
+	eval "$@" && return 0
+
+	echo "Failed to run command: $@"
+
+	return 1
+}
+
 function cavan-read-choise()
 {
 	local def_choise choise message

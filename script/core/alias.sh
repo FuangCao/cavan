@@ -53,7 +53,7 @@ EOF
 	return 0
 }
 
-function adb-push-directory()
+function cavan-adb-push-directory()
 {
 	local fn
 

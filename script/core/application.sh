@@ -1,34 +1,5 @@
 #!/bin/bash
 
-function cavan-read-choise()
-{
-	local def_choise choise message
-
-	if [ "$2" = "" ] || [ "$2" = "y" ] || [ "$2" = "Y" ]
-	then
-		def_choise="Y"
-		message="$1 [Y/n]? "
-	else
-		def_choise="N"
-		message="$1 [y/N]? "
-	fi
-
-	while :
-	do
-		echo -n "${message}"
-		read choise
-		[ "${choise}" ] || choise=${def_choise}
-		case ${choise} in
-			Y | y)
-				return 0 ;;
-			n | N)
-				return 1 ;;
-			*)
-				echo "Please input y/Y/n/N/Enter" ;;
-		esac
-	done
-}
-
 function cavan-cross-config()
 {
 	local command
@@ -231,6 +202,11 @@ function cavan-get-android-root()
 	return 0
 }
 
+function cavan-is-android-root()
+{
+	[ -f "build/envsetup.sh" ]
+}
+
 function cavan-get-kernel-root()
 {
 	local pathname
@@ -246,6 +222,11 @@ function cavan-get-kernel-root()
 	echo "${pathname}"
 
 	return 0
+}
+
+function cavan-is-android-root()
+{
+	[ -f "include/linux/kernel.h" ]
 }
 
 function cavan-chdir-android()

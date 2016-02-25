@@ -66,4 +66,9 @@ do
 	[ -f "${fn}" ] && source ${fn}
 done
 
+for fn in ${CAVAN_HOME}/script/app/*.sh
+do
+	[ -f "${fn}" ] && source ${fn}
+done
+
 unset JAVA_TOOL_OPTIONS
