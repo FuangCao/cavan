@@ -750,7 +750,7 @@ int cavan_uinput_create(const char *name, int (*init)(struct uinput_user_dev *de
 		strncpy(dev.name, name, UINPUT_MAX_NAME_SIZE);
 	}
 
-	dev.id.bustype = BUS_USB;
+	dev.id.bustype = BUS_HOST;
 	dev.id.vendor  = 0x0000;
 	dev.id.product = 0x0000;
 	dev.id.version = 0x0000;

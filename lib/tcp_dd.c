@@ -747,7 +747,7 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 	return 0;
 }
 
-static int tcp_dd_uinput_init(struct uinput_user_dev *dev, int fd, void *data)
+static int tcp_dd_mouse_uinput_init(struct uinput_user_dev *dev, int fd, void *data)
 {
 	int i;
 	int ret = 0;
@@ -755,13 +755,28 @@ static int tcp_dd_uinput_init(struct uinput_user_dev *dev, int fd, void *data)
 	ret |= ioctl(fd, UI_SET_EVBIT, EV_SYN);
 	ret |= ioctl(fd, UI_SET_EVBIT, EV_KEY);
 	ret |= ioctl(fd, UI_SET_EVBIT, EV_REL);
-	ret |= ioctl(fd, UI_SET_EVBIT, EV_REP);
-	ret |= ioctl(fd, UI_SET_EVBIT, EV_MSC);
-	ret |= ioctl(fd, UI_SET_EVBIT, EV_LED);
 
 	ret |= ioctl(fd, UI_SET_RELBIT, REL_X);
 	ret |= ioctl(fd, UI_SET_RELBIT, REL_Y);
 	ret |= ioctl(fd, UI_SET_RELBIT, REL_WHEEL);
+
+	ret |= ioctl(fd, UI_SET_KEYBIT, BTN_LEFT);
+	ret |= ioctl(fd, UI_SET_KEYBIT, BTN_RIGHT);
+	ret |= ioctl(fd, UI_SET_KEYBIT, BTN_MIDDLE);
+
+	return ret;
+}
+
+static int tcp_dd_keypad_uinput_init(struct uinput_user_dev *dev, int fd, void *data)
+{
+	int i;
+	int ret = 0;
+
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_SYN);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_KEY);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_REP);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_MSC);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_LED);
 
 	for (i = 0; i < KEY_CNT; i++) {
 		ret |= ioctl(fd, UI_SET_KEYBIT, i);
@@ -780,8 +795,8 @@ static int tcp_dd_service_open_input(struct cavan_tcp_dd_service *service)
 
 	network_service_lock(&service->service);
 
-	pd_func_info("keypad_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
-		service->keypad_fd, service->keypad_use_count,
+	pd_func_info("keypad_fd = %d, mouse_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
+		service->keypad_fd, service->mouse_fd, service->keypad_use_count,
 		cavan_bool_tostring(service->keypad_uinput),
 		cavan_bool_tostring(service->keypad_insmod));
 
@@ -792,7 +807,7 @@ static int tcp_dd_service_open_input(struct cavan_tcp_dd_service *service)
 
 		fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
 		if (fd < 0) {
-			fd = cavan_uinput_create("TCP_KEYPAD", tcp_dd_uinput_init, service);
+			fd = cavan_uinput_create("TCP_KEYPAD", tcp_dd_keypad_uinput_init, service);
 			if (fd < 0 && service->keypad_ko) {
 				cavan_system2("insmod \"%s\"", service->keypad_ko);
 				service->keypad_insmod = true;
@@ -800,10 +815,15 @@ static int tcp_dd_service_open_input(struct cavan_tcp_dd_service *service)
 				fd = open(TCP_KEYPAD_DEVICE, O_WRONLY);
 			} else {
 				service->keypad_uinput = true;
+				service->mouse_fd = cavan_uinput_create("TCP_MOUSE", tcp_dd_mouse_uinput_init, service);
 			}
 		}
 
 		service->keypad_fd = fd;
+		if (service->mouse_fd < 0) {
+			service->mouse_fd = fd;
+		}
+
 		service->keypad_use_count = 0;
 	}
 
@@ -811,8 +831,9 @@ static int tcp_dd_service_open_input(struct cavan_tcp_dd_service *service)
 		service->keypad_use_count++;
 	}
 
-	pd_func_info("keypad_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
-		service->keypad_fd, service->keypad_use_count,
+	pd_func_info("keypad_fd = %d, mouse_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
+		service->keypad_fd, service->mouse_fd,
+		service->keypad_use_count,
 		cavan_bool_tostring(service->keypad_uinput),
 		cavan_bool_tostring(service->keypad_insmod));
 
@@ -825,8 +846,9 @@ static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, boo
 {
 	network_service_lock(&service->service);
 
-	pd_func_info("keypad_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
-		service->keypad_fd, service->keypad_use_count,
+	pd_func_info("keypad_fd = %d, mouse_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
+		service->keypad_fd, service->mouse_fd,
+		service->keypad_use_count,
 		cavan_bool_tostring(service->keypad_uinput),
 		cavan_bool_tostring(service->keypad_insmod));
 
@@ -835,6 +857,11 @@ static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, boo
 	}
 
 	if (--service->keypad_use_count == 0 && service->keypad_fd >= 0) {
+		if (service->mouse_fd != service->keypad_fd) {
+			close(service->mouse_fd);
+			service->mouse_fd = -1;
+		}
+
 		close(service->keypad_fd);
 		service->keypad_fd = -1;
 
@@ -848,8 +875,9 @@ static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, boo
 		service->keypad_use_count = 0;
 	}
 
-	pd_func_info("keypad_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
-		service->keypad_fd, service->keypad_use_count,
+	pd_func_info("keypad_fd = %d, mouse_fd = %d, keypad_use_count = %d, keypad_uinput = %s, keypad_insmod = %s",
+		service->keypad_fd, service->mouse_fd,
+		service->keypad_use_count,
 		cavan_bool_tostring(service->keypad_uinput),
 		cavan_bool_tostring(service->keypad_insmod));
 
@@ -862,6 +890,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	int ret;
 	int code;
 	ssize_t rdlen;
+	bool android = cavan_is_android();
 
 	fd = tcp_dd_service_open_input(service);
 	if (fd < 0) {
@@ -884,6 +913,72 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 			rdlen = client->recv(client, (void *) &event.type, sizeof(struct cavan_input_event));
 			if (rdlen < (int) sizeof(struct cavan_input_event)) {
 				break;
+			}
+
+			switch (event.type) {
+			case EV_REL:
+				fd = service->mouse_fd;
+				break;
+
+			case EV_KEY:
+				switch (event.code) {
+				case BTN_LEFT:
+				case BTN_RIGHT:
+				case BTN_MIDDLE:
+					fd = service->mouse_fd;
+					break;
+
+				default:
+					fd = service->keypad_fd;
+					if (android) {
+						switch (event.code) {
+						case KEY_F1:
+						case KEY_F5:
+						case KEY_F9:
+							event.code = KEY_BACK;
+							break;
+
+						case KEY_F2:
+							event.code = KEY_COMPOSE;
+							break;
+
+						case KEY_F6:
+						case KEY_F10:
+							event.code = KEY_MENU;
+							break;
+
+						case KEY_F3:
+						case KEY_F7:
+						case KEY_F11:
+							event.code = KEY_HOMEPAGE;
+							break;
+
+						case KEY_F4:
+							event.code = KEY_COFFEE;
+							break;
+
+						case KEY_F8:
+						case KEY_F12:
+							event.code = KEY_POWER;
+							break;
+
+						case KEY_PAGEUP:
+							event.code = KEY_VOLUMEUP;
+							break;
+
+						case KEY_PAGEDOWN:
+							event.code = KEY_VOLUMEDOWN;
+							break;
+						}
+					}
+				}
+				break;
+
+			case EV_SYN:
+				break;
+
+			default:
+				fd = service->keypad_fd;
 			}
 
 			ret = cavan_input_event(fd, &event, 1);
@@ -1044,6 +1139,7 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		cavan_part_table_dump(dd_service->part_table);
 	}
 
+	dd_service->mouse_fd = -1;
 	dd_service->keypad_fd = -1;
 	dd_service->keypad_use_count = 0;
 
@@ -1487,48 +1583,6 @@ static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct i
 	struct network_client *client = data;
 	struct cavan_input_event *event = (struct cavan_input_event *) &event_raw->type;
 
-	if (client->type == NETWORK_PROTOCOL_ADB) {
-		switch (event->code) {
-		case KEY_F1:
-		case KEY_F5:
-		case KEY_F9:
-			event->code = KEY_BACK;
-			break;
-
-		case KEY_F2:
-			event->code = KEY_COMPOSE;
-			break;
-
-		case KEY_F6:
-		case KEY_F10:
-			event->code = KEY_MENU;
-			break;
-
-		case KEY_F3:
-		case KEY_F7:
-		case KEY_F11:
-			event->code = KEY_HOMEPAGE;
-			break;
-
-		case KEY_F4:
-			event->code = KEY_COFFEE;
-			break;
-
-		case KEY_F8:
-		case KEY_F12:
-			event->code = KEY_POWER;
-			break;
-
-		case KEY_PAGEUP:
-			event->code = KEY_VOLUMEUP;
-			break;
-
-		case KEY_PAGEDOWN:
-			event->code = KEY_VOLUMEDOWN;
-			break;
-		}
-	}
-
 	wrlen = client->send(client, event, sizeof(struct cavan_input_event));
 	if (wrlen < 0) {
 		cavan_event_should_stop(dev->service);
@@ -1556,15 +1610,12 @@ int tcp_dd_keypad_client_run(struct network_url *url, int flags)
 
 	if (flags & TCP_KEYPADF_CMDLINE) {
 		int code = 0;
-		struct cavan_input_event events[3];
+		struct cavan_input_event events[2];
 
-		events[0].type = events[1].type = EV_KEY;
-		events[0].value = 1;
+		events[0].type = EV_KEY;
 		events[1].value = 0;
-
-		events[2].type = EV_SYN;
-		events[2].code = SYN_REPORT;
-		events[2].value = 0;
+		events[1].type = EV_SYN;
+		events[1].code = SYN_REPORT;
 
 		while (1) {
 			char name[32], *p;
@@ -1599,9 +1650,13 @@ int tcp_dd_keypad_client_run(struct network_url *url, int flags)
 
 label_repo_key:
 			println("keycode = %d", code);
-			events[0].code = events[1].code = code;
 
-			ret = client.send(&client, events, sizeof(events));
+			events[0].code = code;
+			events[0].value = 1;
+			ret |= client.send(&client, events, sizeof(events));
+			msleep(100);
+			events[0].value = 0;
+			ret |= client.send(&client, events, sizeof(events));
 			if (ret < 0) {
 				break;
 			}
