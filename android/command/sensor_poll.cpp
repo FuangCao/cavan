@@ -316,7 +316,6 @@ out_cavan_sensor_module_close:
 
 static int sensor_event_receiver(int fd, int events, void *data)
 {
-	ssize_t count;
 	sp<SensorEventQueue> queue((SensorEventQueue *) data);
 
 	while (1) {

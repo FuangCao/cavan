@@ -749,7 +749,6 @@ static int tcp_dd_handle_alarm_list_request(struct network_client *client, struc
 
 static int tcp_dd_mouse_uinput_init(struct uinput_user_dev *dev, int fd, void *data)
 {
-	int i;
 	int ret = 0;
 
 	ret |= ioctl(fd, UI_SET_EVBIT, EV_SYN);
