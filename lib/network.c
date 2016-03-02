@@ -1851,7 +1851,7 @@ static int network_client_tcp_open(struct network_client *client, const struct n
 
 	sockfd = network_create_link(url->hostname, port, SOCK_STREAM, 0);
 	if (sockfd < 0) {
-		pr_red_info("inet_socket");
+		pr_err_info("inet_socket");
 		return sockfd;
 	}
 
