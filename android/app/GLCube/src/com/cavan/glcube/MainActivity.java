@@ -1,26 +1,33 @@
 package com.cavan.glcube;
 
-import android.support.v7.app.ActionBarActivity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.Toast;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements OnClickListener {
 
+	@SuppressWarnings("unused")
 	private final String TAG = "Cavan";
+	private final double ROTATE_STEP = 10.0;
 
-	private GLCubeRender mRender;
-	
+	private CubeGLSurfaceView mSurfaceView;
+	private Button mButtonRotateX;
+	private Button mButtonRotateY;
+	private Button mButtonRotateZ;
+
 	private SensorEventListener mSensorEventListener = new SensorEventListener() {
-		
+
 		private long mTimestamp;
-		
+
 		@Override
 		public void onSensorChanged(SensorEvent event) {
 			double time = (event.timestamp - mTimestamp) / 1000000000.0;
@@ -30,7 +37,7 @@ public class MainActivity extends ActionBarActivity {
 				double y = event.values[1] * time * 180.0 / Math.PI;
 				double z = event.values[2] * time * 180.0 / Math.PI;
 
-				mRender.addRotate(x, y, z);
+				mSurfaceView.rotateAdd(x, y, z);
 			}
 
 			mTimestamp = event.timestamp;
@@ -44,20 +51,27 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		// setContentView(R.layout.activity_main);
-        GLSurfaceView glView = new GLSurfaceView(this);
-        mRender = new GLCubeRender(getResources());
-        glView.setRenderer(mRender);
-        setContentView(glView);
+		setContentView(R.layout.activity_main);
 
-        SensorManager manager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        if (sensor != null) {
-        	Log.d(TAG, "have sensor TYPE_GYROSCOPE");
-        	manager.registerListener(mSensorEventListener, sensor, SensorManager.SENSOR_DELAY_GAME);
-        } else {
-        	Log.e(TAG, "no sensor TYPE_GYROSCOPE");
-        }
+		mSurfaceView = (CubeGLSurfaceView) findViewById(R.id.glSurfaceView);
+
+		mButtonRotateX = (Button) findViewById(R.id.buttonRotateX);
+		mButtonRotateX.setOnClickListener(this);
+
+		mButtonRotateY = (Button) findViewById(R.id.buttonRotateY);
+		mButtonRotateY.setOnClickListener(this);
+
+		mButtonRotateZ = (Button) findViewById(R.id.buttonRotateZ);
+		mButtonRotateZ.setOnClickListener(this);
+
+		SensorManager manager = (SensorManager) getSystemService(SENSOR_SERVICE);
+		Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+		if (sensor != null) {
+			Toast.makeText(this, R.string.text_sensor_open_success, Toast.LENGTH_LONG).show();
+			manager.registerListener(mSensorEventListener, sensor, SensorManager.SENSOR_DELAY_GAME);
+		} else {
+			Toast.makeText(this, R.string.text_sensor_open_failed, Toast.LENGTH_LONG).show();
+		}
 	}
 
 	@Override
@@ -77,5 +91,22 @@ public class MainActivity extends ActionBarActivity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void onClick(View v) {
+		switch (v.getId()) {
+		case R.id.buttonRotateX:
+			mSurfaceView.rotateAdd(ROTATE_STEP, 0.0, 0.0);
+			break;
+
+		case R.id.buttonRotateY:
+			mSurfaceView.rotateAdd(0.0, ROTATE_STEP, 0.0);
+			break;
+
+		case R.id.buttonRotateZ:
+			mSurfaceView.rotateAdd(0.0, 0.0, ROTATE_STEP);
+			break;
+		}
 	}
 }

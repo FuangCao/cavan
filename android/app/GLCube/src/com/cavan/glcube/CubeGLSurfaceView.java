@@ -7,13 +7,16 @@ import java.nio.IntBuffer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLUtils;
+import android.util.AttributeSet;
 
-public class GLCubeRender implements Renderer {
+public class CubeGLSurfaceView extends GLSurfaceView implements Renderer {
 
 	private static final int one = 0x10000;
 
@@ -21,6 +24,7 @@ public class GLCubeRender implements Renderer {
 	private float mRotateY;
 	private float mRotateZ;
 
+	private Context mContext;
 	private int[] mTextures;
 	private Bitmap[] mBitmaps;
 	private final int mBitmapResources[] = {
@@ -70,11 +74,26 @@ public class GLCubeRender implements Renderer {
 		return intBuffer;
 	}
 
-	public GLCubeRender(Resources resources) {
+	public CubeGLSurfaceView(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		mContext = context;
+		init();
+	}
+
+	public CubeGLSurfaceView(Context context) {
+		super(context);
+		mContext = context;
+		init();
+	}
+
+	public void init() {
+		Resources resources = mContext.getResources();
 		mBitmaps = new Bitmap[mBitmapResources.length];
 		for (int i = 0; i < mBitmaps.length; i++) {
 			mBitmaps[i] = BitmapFactory.decodeResource(resources, mBitmapResources[i]);
 		}
+
+		setRenderer(this);
 	}
 
 	@Override
@@ -155,9 +174,9 @@ public class GLCubeRender implements Renderer {
 		gl.glEnable(GL10.GL_TEXTURE_2D);
 	}
 
-	public void addRotate(double x, double y, double z) {
-		mRotateX += x;
-		mRotateY += y;
-		mRotateZ += z;
+	public void rotateAdd(double x, double y, double z) {
+		mRotateX = (float) ((mRotateX + x) % 360.0);
+		mRotateY = (float) ((mRotateY + y) % 360.0);
+		mRotateZ = (float) ((mRotateZ + z) % 360.0);
 	}
 }
