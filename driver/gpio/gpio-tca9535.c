@@ -76,6 +76,7 @@ struct tca9535_device {
 	u16 irq_mask;
 	u16 irq_trig_raise;
 	u16 irq_trig_fall;
+	u16 irq_invalid;
 
 	u32 mux_adap_count;
 	u32 mux_gpio_offset;
@@ -119,7 +120,7 @@ static int tca9535_read_data(struct tca9535_device *tca9535, u8 addr, void *buff
 
 		dev_err(&client->dev, "Failed to i2c_transfer: %d, crashed = %d, delay = %d(ms)\n", ret, tca9535->crashed, delay);
 
-		if (tca9535->crashed || delay > 500) {
+		if (tca9535->crashed || delay > 400) {
 			ret = -EFAULT;
 			tca9535->crashed = true;
 			goto out_mutex_unlock;
@@ -173,7 +174,7 @@ static int tca9535_write_data(struct tca9535_device *tca9535, u8 addr, const voi
 
 		dev_err(&client->dev, "Failed to i2c_transfer: %d, crashed = %d, delay = %d(ms)\n", ret, tca9535->crashed, delay);
 
-		if (tca9535->crashed || delay > 500) {
+		if (tca9535->crashed || delay > 400) {
 			ret = -EFAULT;
 			tca9535->crashed = true;
 			goto out_mutex_unlock;
@@ -424,6 +425,11 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 	for_each_child_of_node(node, child_node) {
 		u16 mask;
 		u32 index, code;
+		const char *label;
+
+		if (strcmp(child_node->name, "key")) {
+			continue;
+		}
 
 		if (of_property_read_u32(child_node, "index", &index) < 0 || of_property_read_u32(child_node, "code", &code) < 0) {
 			continue;
@@ -440,6 +446,12 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 		mask = 1 << index;
 		tca9535->cache.configuration |= mask;
 		tca9535->key_mask |= mask;
+
+		if (of_property_read_string(child_node, "label", &label) < 0) {
+			label = "tca9535-key";
+		}
+
+		gpio_request(tca9535->gpio_chip.base + index, label);
 
 		dev_info(&tca9535->client->dev, "mask = 0x%02x, index = %d, code = %d\n", mask, index, code);
 
@@ -650,6 +662,7 @@ static irqreturn_t tca9535_irq_handler(int irq, void *dev_id)
 	u16 mask;
 	u16 value_old, value;
 	struct tca9535_device *tca9535 = dev_id;
+	struct i2c_client *client = tca9535->client;
 
 #if TCA9535_DEBUG
 	tca9535_pr_pos_info();
@@ -659,7 +672,7 @@ static irqreturn_t tca9535_irq_handler(int irq, void *dev_id)
 
 	for (i = 10; tca9535_read_register(tca9535, REG_INPUT_PORT, &value, true) < 0; i--) {
 		if (i < 1) {
-			dev_err(&tca9535->client->dev, "Failed to tca9535_read_register\n");
+			dev_err(&client->dev, "Failed to tca9535_read_register\n");
 			return IRQ_HANDLED;
 		}
 
@@ -667,18 +680,28 @@ static irqreturn_t tca9535_irq_handler(int irq, void *dev_id)
 	}
 
 #if TCA9535_DEBUG
-	dev_info(&tca9535->client->dev, "REG_INPUT_PORT = 0x%04x => 0x%04x\n", value_old, value);
+	dev_info(&client->dev, "REG_INPUT_PORT = 0x%04x => 0x%04x\n", value_old, value);
 #endif
 
 	mask = (value_old ^ value) & tca9535->cache.configuration;
 
 #if TCA9535_DEBUG
-	dev_info(&tca9535->client->dev, "mask = 0x%04x\n", mask);
+	dev_info(&client->dev, "mask = 0x%04x\n", mask);
 #endif
 
 	if (mask) {
+		tca9535->irq_invalid = 0;
 		tca9535_report_keys(tca9535, mask & tca9535->key_mask);
 		tca9535_handle_nested_irq(tca9535, mask & tca9535->irq_mask & ((tca9535->irq_trig_raise & value) | (tca9535->irq_trig_fall & value_old)));
+	} else if (tca9535->irq_invalid < 10) {
+		tca9535->irq_invalid++;
+		dev_err(&client->dev, "%s irq_invalid = %d\n", __FUNCTION__, tca9535->irq_invalid);
+	} else {
+		dev_err(&client->dev, "%s disable_irq\n", __FUNCTION__);
+		disable_irq_nosync(irq);
+		msleep(200);
+		dev_err(&client->dev, "%s enable_irq\n", __FUNCTION__);
+		enable_irq(irq);
 	}
 
 	return IRQ_HANDLED;
@@ -746,6 +769,10 @@ static int tca9535_i2c_mux_init(struct tca9535_device *tca9535)
 
 	for_each_child_of_node(np, child) {
 		u32 chan;
+
+		if (strcmp(child->name, "i2c")) {
+			continue;
+		}
 
 		ret = of_property_read_u32(child, "reg", &chan);
 		if (ret < 0) {
@@ -913,7 +940,7 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	}
 
 	if (client->irq >= 0) {
-		ret = devm_request_threaded_irq(&client->dev, client->irq, NULL, tca9535_irq_handler, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, dev_name(&client->dev), tca9535);
+		ret = devm_request_threaded_irq(&client->dev, client->irq, NULL, tca9535_irq_handler, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "tca9535", tca9535);
 		if (ret < 0) {
 			dev_err(&client->dev, "Failed to devm_request_threaded_irq: %d\n", ret);
 			goto out_tca9535_i2c_mux_deinit;

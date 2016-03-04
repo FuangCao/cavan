@@ -4,6 +4,10 @@
 #include <linux/regulator/consumer.h>
 
 #define BMI160_DEVICE_NAME			"bmi160"
+#define BMI120_DEVICE_NAME			"bmi120"
+
+#define BMI160_CHIP_ID				0xD1
+#define BMI120_CHIP_ID				0xD3
 
 #define BMI160_RESOLUTION			0xFFFF
 #define BMI160_ACC_FUZZ				30
@@ -145,10 +149,21 @@ static int bmi160_sensor_chip_readid(struct cavan_input_chip *chip)
 
 	pr_bold_info("REG_CHIP_ID = 0x%02x", chip_id);
 
-	if (chip_id != 0xD1) {
-		pr_red_info("Chip ID Invalid!");
+	switch (chip_id) {
+	case BMI160_CHIP_ID:
+		chip->name = "BMI160";
+		break;
+
+	case BMI120_CHIP_ID:
+		chip->name = "BMI120";
+		break;
+
+	default:
+		pr_red_info("Invalid Chip ID\n");
 		return -EINVAL;
 	}
+
+	pr_bold_info("chip name = %s", chip->name);
 
 	return 0;
 }
@@ -394,9 +409,8 @@ static const struct i2c_device_id bmi160_id[] = {
 MODULE_DEVICE_TABLE(i2c, bmi160_id);
 
 static struct of_device_id bmi160_match_table[] = {
-	{
-		.compatible = "bosch," BMI160_DEVICE_NAME
-	},
+	{ .compatible = "bosch," BMI160_DEVICE_NAME },
+	{ .compatible = "bosch," BMI120_DEVICE_NAME },
 	{}
 };
 
