@@ -1,0 +1,4 @@
+dmesg | more
+getconf LONG_BIT # 查看CPU的位数
+ethtool eth0 # 采用此命令可以查看到网卡相关的技术指标
+ethtool -i eth1 # 加上-i 参数查看网卡驱动
