@@ -115,6 +115,12 @@ __BEGIN_DECLS;
 #define CAVAN_TTY_MODE_AT				4
 #define CAVAN_TTY_MODE_SSH				5
 
+#define CAVAN_TTY_SET_TITLE(fmt, args ...) \
+	do { \
+		printf("\033]0;" fmt "\007", ##args); \
+		fflush(stdout); \
+	} while (0)
+
 // ============================================================
 
 #define cavan_std_info(func, fmt, args ...) \

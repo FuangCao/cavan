@@ -7,9 +7,6 @@
 #include <cavan.h>
 #include <cavan/permission.h>
 
-#include <pwd.h>
-#include <grp.h>
-
 int check_super_permission(bool def_choose, int timeout_ms)
 {
 	if (user_is_super()) {
@@ -189,4 +186,44 @@ char *cavan_group_gid_to_name(gid_t gid, char *buff, size_t size)
 	println("group: name = %s, gid = %d", gr->gr_name, gr->gr_gid);
 
 	return text_ncopy(buff, gr->gr_name, size);
+}
+
+struct passwd *cavan_user_get_passwd(const char *name)
+{
+	struct passwd *pw;
+
+	if (name == NULL) {
+		return getpwuid(getuid());
+	}
+
+	pw = getpwnam(name);
+	if (pw) {
+		return pw;
+	}
+
+	if (cavan_isdigit_text(name)) {
+		return getpwuid(text2value_unsigned(name, NULL, 10));
+	}
+
+	return NULL;
+}
+
+struct group *cavan_group_get_group(const char *name)
+{
+	struct group *gr;
+
+	if (name == NULL) {
+		return getgrgid(getgid());
+	}
+
+	gr = getgrnam(name);
+	if (gr) {
+		return gr;
+	}
+
+	if (cavan_isdigit_text(name)) {
+		return getgrgid(text2value_unsigned(name, NULL, 10));
+	}
+
+	return NULL;
 }

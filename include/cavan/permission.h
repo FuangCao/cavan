@@ -8,6 +8,8 @@
 
 #include <cavan.h>
 #include <linux/capability.h>
+#include <pwd.h>
+#include <grp.h>
 
 #define CAVAN_UID_INVALID		((uid_t) -1)
 #define CAVAN_GID_INVALID		((gid_t) -1)
@@ -23,6 +25,8 @@ uid_t cavan_user_name_to_uid(const char *name);
 gid_t cavan_group_name_to_gid(const char *name);
 char *cavan_user_uid_to_name(uid_t uid, char *buff, size_t size);
 char *cavan_group_gid_to_name(gid_t gid, char *buff, size_t size);
+struct passwd *cavan_user_get_passwd(const char *name);
+struct group *cavan_group_get_group(const char *name);
 
 static inline bool user_id_equal(uid_t uid)
 {
