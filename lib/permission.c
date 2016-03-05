@@ -140,7 +140,7 @@ uid_t cavan_user_name_to_uid(const char *name)
 		return CAVAN_UID_INVALID;
 	}
 
-	println("user: name = %s, uid = %d", name, pw->pw_uid);
+	println("user: name = %s, uid = %d", pw->pw_name, pw->pw_uid);
 
 	return pw->pw_uid;
 }
@@ -158,7 +158,35 @@ gid_t cavan_group_name_to_gid(const char *name)
 		return CAVAN_GID_INVALID;
 	}
 
-	println("group: name = %s, gid = %d", name, gr->gr_gid);
+	println("group: name = %s, gid = %d", gr->gr_name, gr->gr_gid);
 
 	return gr->gr_gid;
+}
+
+char *cavan_user_uid_to_name(uid_t uid, char *buff, size_t size)
+{
+	struct passwd *pw;
+
+	pw = getpwuid(uid);
+	if (pw == NULL) {
+		return NULL;
+	}
+
+	println("user: name = %s, uid = %d", pw->pw_name, pw->pw_uid);
+
+	return text_ncopy(buff, pw->pw_name, size);
+}
+
+char *cavan_group_gid_to_name(gid_t gid, char *buff, size_t size)
+{
+	struct group *gr;
+
+	gr = getgrgid(gid);
+	if (gr == NULL) {
+		return NULL;
+	}
+
+	println("group: name = %s, gid = %d", gr->gr_name, gr->gr_gid);
+
+	return text_ncopy(buff, gr->gr_name, size);
 }

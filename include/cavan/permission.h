@@ -21,6 +21,8 @@ int cavan_permission_clear(u32 permission);
 void cavan_parse_user_text(char *text, const char **user, const char **group);
 uid_t cavan_user_name_to_uid(const char *name);
 gid_t cavan_group_name_to_gid(const char *name);
+char *cavan_user_uid_to_name(uid_t uid, char *buff, size_t size);
+char *cavan_group_gid_to_name(gid_t gid, char *buff, size_t size);
 
 static inline bool user_id_equal(uid_t uid)
 {

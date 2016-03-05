@@ -4,6 +4,7 @@
 
 #include <cavan.h>
 #include <cavan/command.h>
+#include <cavan/permission.h>
 
 #ifndef CONFIG_CAVAN_MAIN_NAME
 #define CONFIG_CAVAN_MAIN_NAME	"cavan-main"
@@ -57,10 +58,12 @@ static int do_cavan_bootanimation(int argc, char *argv[])
 }
 #endif
 
+#ifdef CONFIG_ANDROID
 static int do_cavan_remount(int argc, char *argv[])
 {
 	return cavan_exec_command("remount", argc, argv);
 }
+#endif
 
 static int do_cavan_halt(int argc, char *argv[])
 {
@@ -72,11 +75,95 @@ static int do_cavan_reboot(int argc, char *argv[])
 	return cavan_exec_command("reboot-force", argc, argv);
 }
 
+static int do_cavan_getuid(int argc, char *argv[])
+{
+	uid_t uid;
+
+	if (argc > 1) {
+		uid = cavan_user_name_to_uid(argv[1]);
+		if (uid == CAVAN_UID_INVALID) {
+			pr_red_info("invalid user: %s", argv[1]);
+			return -EINVAL;
+		}
+	} else {
+		uid = getuid();
+	}
+
+	println("%d", uid);
+
+	return 0;
+}
+
+static int do_cavan_getgid(int argc, char *argv[])
+{
+	gid_t gid;
+
+	if (argc > 1) {
+		gid = cavan_group_name_to_gid(argv[1]);
+		if (gid == CAVAN_UID_INVALID) {
+			pr_red_info("invalid group: %s", argv[1]);
+			return -EINVAL;
+		}
+	} else {
+		gid = getuid();
+	}
+
+	println("%d", gid);
+
+	return 0;
+}
+
+static int do_cavan_getuser(int argc, char *argv[])
+{
+	uid_t uid;
+	char buff[64];
+
+	if (argc > 1) {
+		uid = text2value_unsigned(argv[1], NULL, 10);
+	} else {
+		uid = getuid();
+	}
+
+	if (cavan_user_uid_to_name(uid, buff, sizeof(buff)) == NULL) {
+		pr_red_info("unknown uid = %d", uid);
+		return -EINVAL;
+	}
+
+	println("%s", buff);
+
+	return 0;
+}
+
+static int do_cavan_getgroup(int argc, char *argv[])
+{
+	gid_t gid;
+	char buff[64];
+
+	if (argc > 1) {
+		gid = text2value_unsigned(argv[1], NULL, 10);
+	} else {
+		gid = getuid();
+	}
+
+	if (cavan_user_uid_to_name(gid, buff, sizeof(buff)) == NULL) {
+		pr_red_info("unknown gid = %d", gid);
+		return -EINVAL;
+	}
+
+	println("%s", buff);
+
+	return 0;
+}
+
 const struct cavan_command_map cmd_map_table[] = {
 	{ CONFIG_CAVAN_MAIN_NAME, cavan_main },
 	{ "calc", do_cavan_calculator },
 	{ "halt", do_cavan_halt },
 	{ "reboot", do_cavan_reboot },
+	{ "getuid", do_cavan_getuid },
+	{ "getgid", do_cavan_getgid },
+	{ "getuser", do_cavan_getuser },
+	{ "getgroup", do_cavan_getgroup },
 #ifdef CONFIG_ANDROID
 	{ "bootanim", do_cavan_bootanimation },
 	{ "bootanimation", do_cavan_bootanimation },
