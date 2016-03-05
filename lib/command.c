@@ -72,6 +72,8 @@ const char *cavan_help_message_value_bytes = "register value bytes";
 const char *cavan_help_message_big_endian = "register big-endian";
 const char *cavan_help_message_little_endian = "register little-endian";
 const char *cavan_help_message_cmdline = "run as cmdline";
+const char *cavan_help_message_user = "set user";
+const char *cavan_help_message_group = "set group";
 
 static const char *const cavan_exec_tty_prefix[3] = { "stdin", "stdout", "stderr" };
 static const int cavan_exec_tty_master_open_flags[3] = { O_RDONLY, O_WRONLY, O_WRONLY };

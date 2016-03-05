@@ -155,3 +155,4 @@ __END_DECLS
 #include <cavan/text.h>
 #include <cavan/memory.h>
 #include <cavan/file.h>
+#include <cavan/ctype.h>

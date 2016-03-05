@@ -478,6 +478,38 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		return -EINVAL;
 	}
 
+	if (service->user) {
+		uid_t uid = cavan_user_name_to_uid(service->user);
+		if (uid == CAVAN_UID_INVALID) {
+			pr_red_info("invalid user: %s", service->user);
+			return -EINVAL;
+		}
+
+		ret = setuid(uid);
+		if (ret < 0) {
+			pr_err_info("setuid: %d", ret);
+			return ret;
+		}
+
+		service->super_permission = 0;
+	}
+
+	if (service->group) {
+		gid_t gid = cavan_group_name_to_gid(service->group);
+		if (gid == CAVAN_GID_INVALID) {
+			pr_red_info("invalid group: %s", service->group);
+			return -EINVAL;
+		}
+
+		ret = setgid(gid);
+		if (ret < 0) {
+			pr_err_info("setgid: %d", ret);
+			return ret;
+		}
+
+		service->super_permission = 0;
+	}
+
 	if (service->super_permission && (ret = check_super_permission(true, 5000)) < 0) {
 		return ret;
 	}

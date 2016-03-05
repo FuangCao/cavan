@@ -84,6 +84,7 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_EXEC,
 	CAVAN_COMMAND_OPTION_FORCE,
 	CAVAN_COMMAND_OPTION_FSTAB,
+	CAVAN_COMMAND_OPTION_GROUP,
 	CAVAN_COMMAND_OPTION_HAL,
 	CAVAN_COMMAND_OPTION_HELP,
 	CAVAN_COMMAND_OPTION_HOST,
@@ -165,6 +166,7 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_NAME,
 	CAVAN_COMMAND_OPTION_PAGE_SIZE,
 	CAVAN_COMMAND_OPTION_UNUSED,
+	CAVAN_COMMAND_OPTION_USER,
 	CAVAN_COMMAND_OPTION_REMAIN,
 	CAVAN_COMMAND_OPTION_RESOURCE,
 	CAVAN_COMMAND_OPTION_LAST = CAVAN_COMMAND_OPTION_RESOURCE
@@ -243,6 +245,8 @@ extern const char *cavan_help_message_value_bytes;
 extern const char *cavan_help_message_big_endian;
 extern const char *cavan_help_message_little_endian;
 extern const char *cavan_help_message_cmdline;
+extern const char *cavan_help_message_user;
+extern const char *cavan_help_message_group;
 
 // ============================================================
 

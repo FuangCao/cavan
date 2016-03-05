@@ -50,6 +50,7 @@ struct cavan_dynamic_service {
 	const char *logfile;
 	pthread_cond_t cond;
 	pthread_mutex_t lock;
+	const char *user, *group;
 	cavan_service_state_t state;
 
 	int (*open_connect)(struct cavan_dynamic_service *service, void *conn);

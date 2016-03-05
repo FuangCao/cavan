@@ -45,6 +45,12 @@ enum {
 
 extern const u32 cavan_ctype[];
 
+bool cavan_isdigit_text(const char *text);
+bool cavan_isfloat_text(const char *text);
+bool cavan_islower_text(const char *text);
+bool cavan_isupper_text(const char *text);
+bool cavan_isletter_text(const char *text);
+
 static inline u32 cavan_ctype_get(u8 c)
 {
 	return cavan_ctype[c];

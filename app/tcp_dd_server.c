@@ -28,6 +28,8 @@ static void show_usage(const char *command)
 	println("--unix-udp [PATHNAME]\t\t\t%s", cavan_help_message_unix_udp);
 	println("-P, --pt, --protocol PROTOCOL\t\t%s", cavan_help_message_protocol);
 	println("-D, -k, --driver, --ko PATHNAME\t\t%s", cavan_help_message_driver);
+	println("--user USERNAME\t\t\t\t%s", cavan_help_message_user);
+	println("--group GROUPNAME\t\t\t%s", cavan_help_message_group);
 }
 
 int main(int argc, char *argv[])
@@ -126,6 +128,16 @@ int main(int argc, char *argv[])
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DRIVER,
+		}, {
+			.name = "user",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_USER,
+		}, {
+			.name = "group",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_GROUP,
 		}, {
 			0, 0, 0, 0
 		},
@@ -242,6 +254,14 @@ int main(int argc, char *argv[])
 		case 'D':
 		case CAVAN_COMMAND_OPTION_DRIVER:
 			dd_service->keypad_ko = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_USER:
+			cavan_parse_user_text(optarg, &service->user, &service->group);
+			break;
+
+		case CAVAN_COMMAND_OPTION_GROUP:
+			service->group = optarg;
 			break;
 
 		default:

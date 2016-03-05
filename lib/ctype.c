@@ -20,6 +20,14 @@
 #include <cavan.h>
 #include <cavan/ctype.h>
 
+#define CAVAN_CTYPE_TEXT_TEST(name) \
+	bool cavan_is##name##_text(const char *text) { \
+		while (cavan_is##name(*text)) { \
+			text++; \
+		} \
+		return *text == 0; \
+	}
+
 const u32 cavan_ctype[] = {
 	CT_C | CT_ZERO,
 	CT_C,
@@ -278,3 +286,9 @@ const u32 cavan_ctype[] = {
 	CT_L,
 	CT_L
 };
+
+CAVAN_CTYPE_TEXT_TEST(digit);
+CAVAN_CTYPE_TEXT_TEST(float);
+CAVAN_CTYPE_TEXT_TEST(lower);
+CAVAN_CTYPE_TEXT_TEST(upper);
+CAVAN_CTYPE_TEXT_TEST(letter);
