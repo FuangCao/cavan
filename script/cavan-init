@@ -484,6 +484,12 @@ function config_others()
 	return 0
 }
 
+function config_sudo()
+{
+	cp -av "${LOCAL_CONFIG_PATH}/sudoers" "/etc/sudoers.d/cavan-sudoers"
+	chmod -v a-w /etc/sudoers.d/cavan-sudoers
+}
+
 pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 
 [ "$(id -u)" = "0" ] ||
@@ -495,7 +501,7 @@ pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
 
 [ "$0" = "bash" ] || for func in mount_disk create_mount_points create_symlinks config_bashrc \
 	swap_init config_aptget install_applications install_debin_packages \
-	config_nfs config_samba config_home config_git config_vimrc config_group \
+	config_nfs config_samba config_home config_git config_vimrc config_group config_sudo \
 	config_service config_grub config_stardict config_gitweb config_systemd config_others
 do
 	if cavan-has_mark ${func}
