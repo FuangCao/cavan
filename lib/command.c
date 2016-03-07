@@ -330,18 +330,20 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 static int cavan_builtin_command_shell(const struct cavan_builtin_command *desc, const char *shell, int argc, char *argv[])
 {
 #ifdef CONFIG_ANDROID
-	const char *username = getenv("USER");
-	const char *hostname = getenv("HOSTNAME");
+	const char *username;
+	const char *hostname;
 
+	hostname = getenv("HOSTNAME");
+	if (hostname == NULL) {
+		hostname = "ANDROID";
+	}
+
+	username = getenv("USER");
 	if (username == NULL) {
-		username = "android";
+		username = "cavan";
 	}
 
-	if (hostname) {
-		CAVAN_TTY_SET_TITLE("%s@%s", username, hostname);
-	} else {
-		CAVAN_TTY_SET_TITLE("%s", username);
-	}
+	CAVAN_TTY_SET_TITLE("%s@%s", username, hostname);
 #endif
 
 	return execlp(shell, desc->name, "-", NULL);

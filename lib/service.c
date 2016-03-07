@@ -9,6 +9,7 @@
 #include <cavan/service.h>
 #include <cavan/process.h>
 #include <cavan/command.h>
+#include <cavan/android.h>
 #include <cavan/permission.h>
 
 #define CAVAN_SERVICE_DEBUG		0
@@ -434,6 +435,7 @@ static void *cavan_dynamic_service_handler(void *data)
 int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync)
 {
 	int ret;
+	struct passwd *pw;
 	const char *homepath;
 
 	if (service == NULL) {
@@ -479,7 +481,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	}
 
 	if (service->user) {
-		struct passwd *pw = cavan_user_get_passwd(service->user);
+		pw = cavan_user_get_passwd(service->user);
 		if (pw == NULL) {
 			pr_red_info("invalid user: %s", service->user);
 			return -EINVAL;
@@ -491,17 +493,9 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 			return ret;
 		}
 
-		setenv("USER", pw->pw_name, 1);
-
-		if (pw->pw_dir) {
-			setenv("HOME", pw->pw_dir, 1);
-		}
-
-		if (pw->pw_shell) {
-			setenv("SHELL", pw->pw_shell, 1);
-		}
-
 		service->super_permission = 0;
+	} else {
+		pw = cavan_user_get_passwd(NULL);
 	}
 
 	if (service->group) {
@@ -537,6 +531,28 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 		println("PATH = %s", getenv("PATH"));
 	}
+
+	if (pw != NULL) {
+		setenv("USER", pw->pw_name, 1);
+
+		if (pw->pw_dir) {
+			setenv("HOME", pw->pw_dir, 1);
+		}
+
+		if (pw->pw_shell) {
+			setenv("SHELL", pw->pw_shell, 1);
+		}
+	}
+
+#ifdef CONFIG_ANDROID
+	{
+		char buff[64];
+
+		if (android_getprop("ro.product.name", buff, sizeof(buff)) > 0) {
+			setenv("HOSTNAME", buff, 0);
+		}
+	}
+#endif
 
 	if (service->as_daemon) {
 		pd_blue_info("Run %s as daemon", service->name);
