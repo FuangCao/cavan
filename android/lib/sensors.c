@@ -445,7 +445,7 @@ out_mutex_unlock:
 	return ret;
 }
 
-static bool cavan_sensors_match(struct cavan_event_matcher *matcher, void *data)
+static boolean cavan_sensors_match(struct cavan_event_matcher *matcher, void *data)
 {
 	return !text_lhcmp("CAVAN-", matcher->devname);
 }

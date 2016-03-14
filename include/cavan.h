@@ -30,6 +30,8 @@
 #include <unistd.h>
 #include <features.h>
 
+extern int pipe2(int *, int);
+
 #define ERROR_RETURN(en) \
 	do { \
 		errno = en; \

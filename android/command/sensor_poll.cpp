@@ -17,20 +17,20 @@
  *
  */
 
-#include <cavan.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <pthread.h>
-#include <cavan/command.h>
-#include <hardware/sensors.h>
 #include <android/sensor.h>
 #include <gui/Sensor.h>
 #include <gui/SensorManager.h>
 #include <gui/SensorEventQueue.h>
 #include <utils/Looper.h>
+#include <hardware/sensors.h>
+#include <cavan.h>
+#include <cavan/command.h>
 
 using namespace android;
 
@@ -387,7 +387,11 @@ static int sensor_service_poll_main_loop(u32 mask, u32 delay)
 {
 	ssize_t count;
 	Sensor const* const* list;
+#if CONFIG_ANDROID_VERSION < 6
 	SensorManager &manager(SensorManager::getInstance());
+#else
+	SensorManager &manager = SensorManager::getInstanceForPackage(String16());
+#endif
 
 	pr_bold_info("Start poll sensor service");
 
