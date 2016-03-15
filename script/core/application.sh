@@ -330,7 +330,7 @@ function cavan-mm-push()
 					${CMD_ADB_TCP_DD} --auto .git/boot.img || return 1
 					;;
 				*)
-					[ -e ".config" ] || make ${KERNEL_CONFIG}_defconfig || return 1
+					make ${KERNEL_CONFIG}_defconfig || return 1
 					make ${KERNEL_CONFIG}.img -j${MAKE_JOBS} && ${CMD_ADB_TCP_DD} --auto kernel.img resource.img || return 1
 					;;
 			esac
