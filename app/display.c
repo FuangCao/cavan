@@ -349,13 +349,43 @@ static int cavan_display_test_main(int argc, char *argv[])
 	color.value = 0x00000000;
 
 	if (argc > 1) {
-		index = text2value_unsigned(argv[1], NULL, 10);
+		if (strcmp("flash", argv[1]) == 0) {
 
-		if (argc > 2) {
-			color.value = text2value_unsigned(argv[2], NULL, 16);
+			index = 0;
+
+			while (1) {
+				if ((++index & 1)) {
+					color = display->build_color(display, 1.0, 1.0, 1.0, 1.0);
+				} else {
+					color = display->build_color(display, 0.0, 0.0, 0.0, 1.0);
+				}
+
+				display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+				cavan_display_refresh_sync(display);
+			}
+		} else if (strcmp("shadow", argv[1]) == 0) {
+			while (1) {
+				float red, green, blue;
+
+				for (red = 0.0; red <= 1.0; red += 0.1) {
+					for (green = 0.0; green <= 1.0; green += 0.1) {
+						for (blue = 0.0; blue <= 1.0; blue += 0.1) {
+							color = display->build_color(display, red, green, blue, 1.0);
+							display->fill_rect(display, 0, 0, display->xres, display->yres, color);
+							cavan_display_refresh_sync(display);
+						}
+					}
+				}
+			}
+		} else {
+			index = text2value_unsigned(argv[1], NULL, 10);
+
+			if (argc > 2) {
+				color.value = text2value_unsigned(argv[2], NULL, 16);
+			}
+
+			cavan_display_test(display, index, color);
 		}
-
-		cavan_display_test(display, index, color);
 	} else {
 		index = 1;
 
@@ -530,12 +560,12 @@ out_close_fd:
 }
 
 static struct cavan_command_map cmd_map[] = {
-	{"draw_rect", cavan_display_rect_main},
-	{"fill_rect", cavan_display_rect_main},
-	{"wave", cavan_display_wave_main},
-	{"wave_line", cavan_display_wave_main},
-	{"wave_point", cavan_display_wave_main},
-	{"test", cavan_display_test_main}
+	{ "draw_rect", cavan_display_rect_main },
+	{ "fill_rect", cavan_display_rect_main },
+	{ "wave", cavan_display_wave_main },
+	{ "wave_line", cavan_display_wave_main },
+	{ "wave_point", cavan_display_wave_main },
+	{ "test", cavan_display_test_main }
 };
 
 FIND_EXEC_COMMAND_MAIN(cmd_map);

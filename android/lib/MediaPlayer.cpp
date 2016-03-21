@@ -377,4 +377,166 @@ out_surface_clean:
 	return false;
 }
 
+CavanMediaPlayer::CavanMediaPlayer(void)
+{
+	sp<ProcessState> proc(ProcessState::self());
+	ProcessState::self()->startThreadPool();
+
+	mInitSuccess = false;
+}
+
+CavanMediaPlayer::~CavanMediaPlayer(void)
+{
+	if (mInitSuccess) {
+	    mSurface.clear();
+	    mSurfaceControl.clear();
+	}
+}
+
+bool CavanMediaPlayer::doInit(void)
+{
+	status_t status;
+	DisplayInfo dinfo;
+	sp<IBinder> dtoken;
+
+	if (mInitSuccess) {
+		return true;
+	}
+
+	dtoken = SurfaceComposerClient::getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain);
+	if (dtoken == 0) {
+		pd_red_info("SurfaceComposerClient::getBuiltInDisplay");
+		return false;
+	}
+
+	status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
+	if (status != NO_ERROR) {
+		pd_red_info("SurfaceComposerClient::getDisplayInfo");
+		return false;
+	}
+
+	mSession = new SurfaceComposerClient();
+	if (mSession == NULL) {
+		pd_red_info("new SurfaceComposerClient");
+		return false;
+	}
+
+	if (dinfo.w > dinfo.h * 3) {
+		mWidth = dinfo.w >> 1;
+	} else {
+		mWidth = dinfo.w;
+	}
+
+	mHeight = dinfo.h;
+
+	mSurfaceControl = mSession->createSurface(String8("JwVideo"), mWidth, mHeight, PIXEL_FORMAT_RGB_565);
+	if (mSurfaceControl == NULL) {
+		pd_red_info("mSession->createSurface");
+		return false;
+	}
+
+	SurfaceComposerClient::openGlobalTransaction();
+	mSurfaceControl->setLayer(0x40000000);
+	SurfaceComposerClient::closeGlobalTransaction();
+
+	mSurface = mSurfaceControl->getSurface();
+
+	mInitSuccess = true;
+
+	return true;
+}
+
+bool CavanMediaPlayer::doPlay(const char *pathname)
+{
+	int fd;
+	int64_t size;
+	status_t status;
+	bool success = false;
+	struct progress_bar bar;
+
+	if (!doInit()) {
+		pd_red_info("doInit");
+		return false;
+	}
+
+	fd = open(pathname, O_RDONLY);
+	if (fd < 0) {
+		pd_red_info("open file: %s", pathname);
+		return false;
+	}
+
+	size = lseek(fd, 0, SEEK_END);
+	if (size < 0) {
+		pd_red_info("lseek");
+		goto out_close_fd;
+	}
+
+	status = reset();
+	if (status != NO_ERROR) {
+		pd_red_info("reset");
+		goto out_close_fd;
+	}
+
+	status = setLooping(false);
+	if (status != NO_ERROR) {
+		pd_red_info("setLooping");
+		goto out_close_fd;
+	}
+
+	status = setAudioStreamType(AUDIO_STREAM_MUSIC);
+	if (status != NO_ERROR) {
+		pd_red_info("setAudioStreamType");
+		goto out_close_fd;
+	}
+
+	status = setVolume(100, 100);
+	if (status != NO_ERROR) {
+		pd_red_info("setVolume");
+		goto out_close_fd;
+	}
+
+	status = setDataSource(fd, 0, size);
+	if (status != NO_ERROR) {
+		pd_red_info("setDataSource");
+		goto out_close_fd;
+	}
+
+	status = setVideoSurfaceTexture(mSurface->getIGraphicBufferProducer());
+	if (status != NO_ERROR) {
+		pd_red_info("setVideoSurfaceTexture");
+		goto out_close_fd;
+	}
+
+	status = prepare();
+	if (status != NO_ERROR) {
+		pd_red_info("prepare");
+		goto out_close_fd;
+	}
+
+	status = start();
+	if (status != NO_ERROR) {
+		pd_red_info("start");
+		goto out_close_fd;
+	}
+
+	getDuration(&mDuration);
+	progress_bar_init(&bar, mDuration, 0, PROGRESS_BAR_TYPE_TIME);
+
+	while (isPlaying()) {
+		getCurrentPosition(&mPosition);
+		progress_bar_set(&bar, mPosition);
+
+		msleep(200);
+	}
+
+	progress_bar_finish(&bar);
+
+	stop();
+	success = true;
+
+out_close_fd:
+	close(fd);
+	return success;
+}
+
 }

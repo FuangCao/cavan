@@ -62,4 +62,25 @@ public:
 	status_t setVolume(int volume);
 };
 
+class CavanMediaPlayer : public MediaPlayer {
+private:
+	int mWidth;
+	int mHeight;
+	int mPosition;
+	int mDuration;
+	bool mInitSuccess;
+	sp<Surface> mSurface;
+	sp<SurfaceControl> mSurfaceControl;
+	sp<SurfaceComposerClient> mSession;
+
+private:
+	boolean doInit(void);
+
+public:
+	CavanMediaPlayer(void);
+	~CavanMediaPlayer(void);
+
+	bool doPlay(const char *pathname);
+};
+
 }

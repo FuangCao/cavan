@@ -1,7 +1,9 @@
+#pragma once
+
 /*
- * File:			MediaPlayer.cpp
+ * File:		ssh.h
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2016-01-14 12:01:25
+ * Created:		2016-03-11 10:55:33
  *
  * Copyright (c) 2016 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -18,17 +20,26 @@
  */
 
 #include <cavan.h>
-#include <android++/MediaPlayer.h>
 
-using namespace android;
+#define CAVAN_SSH_VERSION	0x20160311
 
-int main(int argc, char *argv[])
-{
-	sp<CavanMediaPlayer> player = new CavanMediaPlayer();
+typedef enum {
+	CAVAN_SSH_REQ_NOOP,
+	CAVAN_SSH_REQ_EXEC,
+	CAVAN_SSH_REQ_FILE_STAT,
+	CAVAN_SSH_REQ_FILE_READ,
+	CAVAN_SSH_REQ_FILE_WRITE,
+} cavan_ssh_req_t;
 
-	for (int i = 1; i < argc; i++) {
-		player->doPlay(argv[i]);
-	}
+#pragma pack(1)
 
-	return 0;
-}
+struct cavan_ssh_package {
+	u32 version;
+	u32 flags;
+	u8 type;
+	u8 type_invert;
+	u16 body_size;
+	u8 body[0];
+};
+
+#pragma pack()

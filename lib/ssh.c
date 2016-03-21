@@ -1,7 +1,7 @@
 /*
- * File:			MediaPlayer.cpp
+ * File:		ssh.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2016-01-14 12:01:25
+ * Created:		2016-03-11 10:55:33
  *
  * Copyright (c) 2016 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -18,17 +18,4 @@
  */
 
 #include <cavan.h>
-#include <android++/MediaPlayer.h>
-
-using namespace android;
-
-int main(int argc, char *argv[])
-{
-	sp<CavanMediaPlayer> player = new CavanMediaPlayer();
-
-	for (int i = 1; i < argc; i++) {
-		player->doPlay(argv[i]);
-	}
-
-	return 0;
-}
+#include <cavan/ssh.h>

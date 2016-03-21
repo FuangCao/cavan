@@ -1,7 +1,7 @@
 /*
- * File:			MediaPlayer.cpp
+ * File:		vplayer.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2016-01-14 12:01:25
+ * Created:		2016-03-21 15:43:19
  *
  * Copyright (c) 2016 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -19,16 +19,32 @@
 
 #include <cavan.h>
 #include <android++/MediaPlayer.h>
+#include <binder/IPCThreadState.h>
+#include <binder/ProcessState.h>
 
 using namespace android;
 
+static void show_usage(const char *command)
+{
+	println("%s <FILE>", command);
+}
+
 int main(int argc, char *argv[])
 {
-	sp<CavanMediaPlayer> player = new CavanMediaPlayer();
+	const char *pathname;
 
-	for (int i = 1; i < argc; i++) {
-		player->doPlay(argv[i]);
+	if (argc < 2) {
+		show_usage(argv[0]);
+		return -EINVAL;
 	}
+
+	pathname = argv[1];
+
+	sp<ProcessState> proc(ProcessState::self());
+	ProcessState::self()->startThreadPool();
+
+	sp<CavanVideoPlayer> player = new CavanVideoPlayer(pathname, strcmp(argv[0], "bootanimation") == 0);
+	IPCThreadState::self()->joinThreadPool();
 
 	return 0;
 }

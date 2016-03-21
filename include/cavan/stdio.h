@@ -271,7 +271,11 @@ __BEGIN_DECLS;
 #ifndef LOGD
 #define LOGD					ALOGD
 #endif
-#define pd_info(fmt, args ...)	LOGD(fmt "\n", ##args)
+#define pd_info(fmt, args ...) \
+	do { \
+		LOGD(fmt "\n", ##args); \
+		pr_info(fmt, ##args); \
+	} while (0)
 #else
 #define pd_info(fmt, args ...)	fprintf(stderr, fmt "\n", ##args)
 #endif
