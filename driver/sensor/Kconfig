@@ -1,4 +1,4 @@
-menu "Sensor driver config"
+menu "Sensor devices"
 
 config CAVAN_GSENSOR_EXCHANGE_XY
     bool "Exchange x and y axis"

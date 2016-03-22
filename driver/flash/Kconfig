@@ -1,4 +1,4 @@
-menu "Flash driver config"
+menu "Flash devices"
 
 config CAVAN_FLASH_W25Q32FW
     tristate "w25q32fw spi flash support"

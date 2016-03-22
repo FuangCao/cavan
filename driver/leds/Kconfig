@@ -1,0 +1,21 @@
+menu "LED devices"
+
+config CAVAN_LEDS_PCA9685
+    tristate "LED support for PCA9685 I2C chip"
+    default n
+    depends on LEDS_CLASS
+    depends on I2C
+    help
+      This option enables support for LEDs connected to the PCA9685
+      LED driver chip accessed via the I2C bus.
+
+config CAVAN_LEDS_AW2013
+    tristate "LED support for AW2013 I2C chip"
+    default n
+    depends on LEDS_CLASS
+    depends on I2C
+    help
+      This option enables support for LEDs connected to the AW2013
+      LED driver chip accessed via the I2C bus.
+
+endmenu

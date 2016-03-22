@@ -1,4 +1,4 @@
-menu "Touchscreen driver config"
+menu "Touchscreen devices"
 
 config CAVAN_USE_FB_NOTIFILER
     bool "Use fb notifiter control touchscreen power"

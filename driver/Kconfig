@@ -1,4 +1,4 @@
-menu "Cavan driver config"
+menu "Cavan drivers"
 
 choice
     prompt "Phone type"
@@ -172,6 +172,7 @@ endif
 
 source "drivers/cavan/flash/Kconfig"
 source "drivers/cavan/gpio/Kconfig"
+source "drivers/cavan/leds/Kconfig"
 source "drivers/cavan/misc/Kconfig"
 
 endmenu

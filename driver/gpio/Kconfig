@@ -1,4 +1,4 @@
-menu "Gpio driver config"
+menu "Gpio devices"
 
 config CAVAN_GPIO_TCA9535
     tristate "tca9535 gpio support"
