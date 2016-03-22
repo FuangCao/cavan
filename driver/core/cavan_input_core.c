@@ -940,7 +940,7 @@ ssize_t cavan_input_chip_write_online(const char *chip_name, bool online)
 
 	cavan_input_chip_get_online_pathname(chip_name, pathname, sizeof(pathname));
 
-	return cavan_io_read_write_file(pathname, online ? "1" : "0", 1, true);
+	return cavan_io_file_read_write(pathname, online ? "1" : "0", 1, true);
 }
 
 EXPORT_SYMBOL_GPL(cavan_input_chip_write_online);
@@ -952,7 +952,7 @@ ssize_t cavan_input_chip_read_online(const char *chip_name)
 	char pathname[512];
 
 	cavan_input_chip_get_online_pathname(chip_name, pathname, sizeof(pathname));
-	rdlen = cavan_io_read_write_file(pathname, buff, sizeof(buff), false);
+	rdlen = cavan_io_file_read_write(pathname, buff, sizeof(buff), false);
 	if (rdlen < 0) {
 		return rdlen;
 	}
@@ -1550,7 +1550,7 @@ ssize_t cavan_input_device_read_write_offset(struct cavan_input_device *dev, cha
 
 	cavan_input_device_get_offset_pathname(dev, pathname, sizeof(pathname));
 
-	return cavan_io_read_write_file(pathname, buff, size, store);
+	return cavan_io_file_read_write(pathname, buff, size, store);
 }
 
 EXPORT_SYMBOL_GPL(cavan_input_device_read_write_offset);

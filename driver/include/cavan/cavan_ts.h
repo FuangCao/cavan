@@ -49,7 +49,7 @@ struct cavan_i2c_request {
 
 static inline int cavan_ts_read_pending_firmware_name(char *buff, size_t size)
 {
-	return cavan_io_read_write_file("/data/property/persist.sys.tp.fw.pending", buff, size, false);
+	return cavan_io_file_read_write("/data/property/persist.sys.tp.fw.pending", buff, size, false);
 }
 
 static inline void cavan_ts_mt_touch_release(struct input_dev *input)

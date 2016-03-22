@@ -945,6 +945,8 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 			dev_err(&client->dev, "Failed to devm_request_threaded_irq: %d\n", ret);
 			goto out_tca9535_i2c_mux_deinit;
 		}
+
+		tca9535_read_register(tca9535, REG_INPUT_PORT, &tca9535->cache.input_port, false);
 	}
 
 	return 0;
@@ -1004,6 +1006,7 @@ static void tca9535_i2c_shutdown(struct i2c_client *client)
 static const struct i2c_device_id tca9535_i2c_id[] = {
 	{ "tca9535", 0 },
 	{ "tca9535-main", 0 },
+	{ "tca9535-disp", 0 },
 	{ "tca9535-left", 0 },
 	{ "tca9535-right", 0 },
 	{ "tca9535-handset", 0 },

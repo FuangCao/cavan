@@ -47,14 +47,33 @@ int cavan_io_update_bits16(struct cavan_input_chip *chip, u8 addr, u16 value, u1
 
 EXPORT_SYMBOL_GPL(cavan_io_update_bits16);
 
-ssize_t cavan_io_read_write_file(const char *pathname, const char *buff, size_t size, bool store)
+static bool cavan_io_file_need_write(struct file *fp, const char *buff, size_t size)
 {
-	loff_t pos;
+	char *data;
+	bool result;
+	ssize_t rdlen;
+
+	data = kmalloc(size, GFP_KERNEL);
+	if (data == NULL) {
+		pr_red_info("Failed to kmalloc");
+		return true;
+	}
+
+	rdlen = cavan_io_vfs_read(fp, data, size, 0);
+	result = (rdlen != size || memcmp(data, buff, size));
+
+	kfree(data);
+
+	return result;
+}
+
+ssize_t cavan_io_file_read_write(const char *pathname, char *buff, size_t size, bool store)
+{
 	ssize_t rwlen;
 	mm_segment_t fs;
 	struct file *fp;
 
-	fp = filp_open(pathname, store ? (O_WRONLY | O_CREAT | O_TRUNC) : O_RDONLY, 0644);
+	fp = filp_open(pathname, store ? (O_RDWR | O_CREAT /* | O_TRUNC */) : O_RDONLY, 0644);
 	if (IS_ERR(fp)) {
 		if (store) {
 			pr_red_info("write file `%s' failed", pathname);
@@ -63,20 +82,27 @@ ssize_t cavan_io_read_write_file(const char *pathname, const char *buff, size_t 
 		return PTR_ERR(fp);
 	}
 
-	pos = 0;
 	fs = get_fs();
 	set_fs(get_ds());
 
-	rwlen =  store ? vfs_write(fp, (char __user *) buff, size, &pos) : vfs_read(fp, (char __user *) buff, size, &pos);
+	if (store) {
+		if (cavan_io_file_need_write(fp, buff, size)) {
+			rwlen = cavan_io_vfs_write(fp, buff, size, 0);
+		} else {
+			pr_green_info("don't need write file: %s", pathname);
+			rwlen = size;
+		}
+	} else {
+		rwlen = cavan_io_vfs_read(fp, buff, size, 0);
+	}
 
 	set_fs(fs);
-
 	filp_close(fp, NULL);
 
 	return rwlen;
 }
 
-EXPORT_SYMBOL_GPL(cavan_io_read_write_file);
+EXPORT_SYMBOL_GPL(cavan_io_file_read_write);
 
 int cavan_io_gpio_set_value(int gpio, int value)
 {

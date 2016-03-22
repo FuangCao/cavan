@@ -326,7 +326,7 @@ struct cavan_input_core {
 
 extern int cavan_input_debug_enable;
 
-extern ssize_t cavan_io_read_write_file(const char *pathname, const char *buff, size_t size, bool store);
+extern ssize_t cavan_io_file_read_write(const char *pathname, char *buff, size_t size, bool store);
 extern int cavan_io_gpio_set_value(int gpio, int value);
 extern int cavan_io_set_power_regulator(struct cavan_input_chip *chip, bool enable);
 extern int cavan_input_chip_io_init(struct cavan_input_chip *chip);
