@@ -463,7 +463,7 @@ static void __exit pca9685_module_exit(void)
 	i2c_del_driver(&pca9685_i2c_driver);
 }
 
-subsys_initcall(pca9685_module_init);
+module_init(pca9685_module_init);
 module_exit(pca9685_module_exit);
 
 MODULE_DESCRIPTION("PCA9685 LED Driver");
