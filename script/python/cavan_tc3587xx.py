@@ -420,7 +420,7 @@ class TC3587XX_Converter(CavanXmlBase):
 		lines.append("\t\treturn ret;")
 		lines.append("\t}")
 		lines.append("")
-		lines.append("\tmsleep(100);")
+		lines.append("\t// msleep(100);")
 		lines.append("")
 		lines.append("\treturn 0;")
 		lines.append("}")
