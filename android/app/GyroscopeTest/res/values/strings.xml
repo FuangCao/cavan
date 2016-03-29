@@ -1,0 +1,9 @@
+<resources>
+
+    <string name="app_name">GyroscopeTest</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="gyroscope_open_success">打开陀螺仪成功</string>
+    <string name="gyroscope_open_failed">打开陀螺仪失败</string>
+
+</resources>
