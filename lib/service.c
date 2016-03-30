@@ -520,6 +520,8 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	umask(0);
 
+	cavan_redirect_stdio("/dev/null", service->verbose ? 0x01 : 0x07);
+
 	if (service->logfile) {
 		ret = cavan_redirect_stdio(service->logfile, 0x06);
 		if (ret < 0) {
