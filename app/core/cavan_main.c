@@ -63,6 +63,11 @@ static int do_cavan_remount(int argc, char *argv[])
 {
 	return cavan_exec_command("remount", argc, argv);
 }
+
+static int do_cavan_logcat(int argc, char *argv[])
+{
+	return cavan_exec_command("logcat", argc, argv);
+}
 #endif
 
 static int do_cavan_halt(int argc, char *argv[])
@@ -73,6 +78,16 @@ static int do_cavan_halt(int argc, char *argv[])
 static int do_cavan_reboot(int argc, char *argv[])
 {
 	return cavan_exec_command("reboot-force", argc, argv);
+}
+
+static int do_cavan_kmsg(int argc, char *argv[])
+{
+	return cavan_exec_command("kmsg", argc, argv);
+}
+
+static int do_cavan_exec(int argc, char *argv[])
+{
+	return cavan_exec_command(argv[1], argc - 1, argv + 1);
 }
 
 static int do_cavan_getuid(int argc, char *argv[])
@@ -164,10 +179,13 @@ const struct cavan_command_map cmd_map_table[] = {
 	{ "getgid", do_cavan_getgid },
 	{ "getuser", do_cavan_getuser },
 	{ "getgroup", do_cavan_getgroup },
+	{ "exec", do_cavan_exec },
+	{ "kmsg", do_cavan_kmsg },
 #ifdef CONFIG_ANDROID
 	{ "bootanim", do_cavan_bootanimation },
 	{ "bootanimation", do_cavan_bootanimation },
 	{ "remount", do_cavan_remount },
+	{ "logcat", do_cavan_logcat },
 #endif
 
 	#include CONFIG_CAVAN_MAP_C

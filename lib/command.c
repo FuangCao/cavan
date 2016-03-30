@@ -442,7 +442,26 @@ static int cavan_builtin_command_kmsg(const struct cavan_builtin_command *desc, 
 	return 0;
 }
 
+static int cavan_builtin_command_logcat(const struct cavan_builtin_command *desc, const char *shell, int argc, char *argv[])
+{
+	int i;
+	char *argv_new[argc + 3];
+
+	argv_new[0] = argv[0];
+	argv_new[1] = "-v";
+	argv_new[2] = "threadtime";
+
+	for (i = 1; i <= argc; i++) {
+		argv_new[i + 2] = argv[i];
+	}
+
+	return execvp("logcat", argv_new);
+}
+
 static const struct cavan_builtin_command cavan_builtin_command_list[] = {
+#ifdef CONFIG_ANDROID
+	{ "logcat", cavan_builtin_command_logcat, 0 },
+#endif
 	{ "shell", cavan_builtin_command_shell, 0 },
 	{ "reboot", cavan_builtin_command_reboot, 0 },
 	{ "reboot-force", cavan_builtin_command_reboot, CAVAN_BUILTIN_CMDF_FORCE },
