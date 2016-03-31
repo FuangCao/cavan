@@ -85,8 +85,8 @@ int file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode);
 int file_copy3(const char *src_file, int dest_fd);
 int file_append(const char *file_src, const char *file_dest);
 
-off_t ffile_get_size(int fd);
-off_t file_get_size(const char *filepath);
+size64_t ffile_get_size(int fd);
+size64_t file_get_size(const char *filepath);
 
 int ffile_ncopy(int src_fd, int dest_fd, size64_t size);
 int ffile_ncopy_simple(int src_fd, int dest_fd, size64_t size);

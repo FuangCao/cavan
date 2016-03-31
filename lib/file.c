@@ -376,7 +376,7 @@ int file_copy3(const char *src_file, int dest_fd)
 	return cpylen;
 }
 
-off_t ffile_get_size(int fd)
+size64_t ffile_get_size(int fd)
 {
 	int ret;
 	struct stat st;
@@ -390,7 +390,7 @@ off_t ffile_get_size(int fd)
 	return st.st_size;
 }
 
-off_t file_get_size(const char *filepath)
+size64_t file_get_size(const char *filepath)
 {
 	int ret;
 	struct stat st;
