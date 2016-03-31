@@ -1,20 +1,19 @@
 package com.cavan.gyroscopetest;
 
-import android.support.v7.app.ActionBarActivity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.TextView;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Toast;
 
-
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements OnClickListener {
 
 	private CubeGLSurfaceView mSurfaceView;
 	private SensorEventListener mSensorEventListener = new SensorEventListener() {
@@ -24,7 +23,7 @@ public class MainActivity extends ActionBarActivity {
 		@Override
 		public void onSensorChanged(SensorEvent event) {
 
-			setTitle(String.format("(%f, %f, %f)", event.values[0], event.values[2], event.values[2]));
+			setTitle(String.format("(%f, %f, %f)", event.values[0], event.values[1], event.values[2]));
 
 			double time = (event.timestamp - mTimestamp) / 1000000000.0;
 
@@ -33,7 +32,7 @@ public class MainActivity extends ActionBarActivity {
 				double y = event.values[1] * time * 180.0 / Math.PI;
 				double z = event.values[2] * time * 180.0 / Math.PI;
 
-				mSurfaceView.rotateAdd(x, y, z);
+				mSurfaceView.addRotate(x, y, z);
 			}
 
 			mTimestamp = event.timestamp;
@@ -52,6 +51,8 @@ public class MainActivity extends ActionBarActivity {
 
         mSurfaceView = new CubeGLSurfaceView(this);
         setContentView(mSurfaceView);
+
+        mSurfaceView.setOnClickListener(this);
 
         SensorManager manager = (SensorManager) getSystemService(SENSOR_SERVICE);
 		Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -81,4 +82,18 @@ public class MainActivity extends ActionBarActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_ENTER) {
+			mSurfaceView.resetRotate();
+		}
+
+		return super.onKeyDown(keyCode, event);
+	}
+
+	@Override
+	public void onClick(View v) {
+		mSurfaceView.resetRotate();
+	}
 }

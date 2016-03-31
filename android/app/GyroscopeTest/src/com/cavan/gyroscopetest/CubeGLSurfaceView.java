@@ -3,8 +3,10 @@ package com.cavan.gyroscopetest;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
@@ -174,9 +176,15 @@ public class CubeGLSurfaceView extends GLSurfaceView implements Renderer {
 		gl.glEnable(GL10.GL_TEXTURE_2D);
 	}
 
-	public void rotateAdd(double x, double y, double z) {
+	public void addRotate(double x, double y, double z) {
 		mRotateX = (float) ((mRotateX + x) % 360.0);
 		mRotateY = (float) ((mRotateY + y) % 360.0);
 		mRotateZ = (float) ((mRotateZ + z) % 360.0);
+	}
+
+	public void resetRotate() {
+		mRotateX = 0;
+		mRotateY = 0;
+		mRotateZ = 0;
 	}
 }

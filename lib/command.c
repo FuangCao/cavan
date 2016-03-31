@@ -442,6 +442,7 @@ static int cavan_builtin_command_kmsg(const struct cavan_builtin_command *desc, 
 	return 0;
 }
 
+#ifdef CONFIG_ANDROID
 static int cavan_builtin_command_logcat(const struct cavan_builtin_command *desc, const char *shell, int argc, char *argv[])
 {
 	int i;
@@ -457,6 +458,7 @@ static int cavan_builtin_command_logcat(const struct cavan_builtin_command *desc
 
 	return execvp("logcat", argv_new);
 }
+#endif
 
 static const struct cavan_builtin_command cavan_builtin_command_list[] = {
 #ifdef CONFIG_ANDROID

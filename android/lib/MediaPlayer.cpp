@@ -461,15 +461,22 @@ bool CavanMediaPlayer::doPlay(const char *pathname)
 
 	fd = open(pathname, O_RDONLY);
 	if (fd < 0) {
-		pd_red_info("open file: %s", pathname);
+		pd_err_info("open file: %s", pathname);
 		return false;
 	}
 
-	size = lseek(fd, 0, SEEK_END);
-	if (size < 0) {
-		pd_red_info("lseek");
-		goto out_close_fd;
+	pd_info("pathname = %s", pathname);
+
+	size = ffile_get_size(fd);
+	if (size == 0) {
+		size = lseek(fd, 0, SEEK_END);
+		if (size < 0 && errno != EOVERFLOW) {
+			pd_err_info("lseek: size = %lld", size);
+			goto out_close_fd;
+		}
 	}
+
+	pd_info("size = %s", size2text(size));
 
 	status = reset();
 	if (status != NO_ERROR) {
