@@ -82,9 +82,7 @@
 					word = *tx++; \
 				} \
 				word = device->transfer_word(device, word, bits, flags); \
-				if (rx) { \
-					*rx++ = word; \
-				} \
+				*rx++ = word; \
 				count--; \
 			} \
 		} \
@@ -1048,6 +1046,7 @@ static u32 tca9535_spi_transfer_word_be(struct tca9535_spi_device *device, u32 w
 	struct tca9535_register_cache *cache = &tca9535->cache;
 
 	for (word <<= (32 - bits); likely(bits); bits--) {
+		u8 value_input;
 		u16 value = tca9535_spi_master_set_sck_pin(master, cache->output_port, device->sck_active);
 
 		if ((flags & SPI_MASTER_NO_TX) == 0) {
@@ -1066,15 +1065,11 @@ static u32 tca9535_spi_transfer_word_be(struct tca9535_spi_device *device, u32 w
 
 		word <<= 1;
 
-		if ((flags & SPI_MASTER_NO_RX) == 0) {
-			u8 value_input;
-
-			if (tca9535_read_u8(tca9535, master->rd_addr, &value_input) < 0) {
-				return 0;
-			}
-
-			word |= tca9535_spi_master_get_miso_pin(master, value_input);
+		if (tca9535_read_u8(tca9535, master->rd_addr, &value_input) < 0) {
+			return 0;
 		}
+
+		word |= tca9535_spi_master_get_miso_pin(master, value_input);
 	}
 
 	return word;
@@ -1088,6 +1083,7 @@ static u32 tca9535_spi_transfer_word_le(struct tca9535_spi_device *device, u32 w
 	u8 bits_remain = 32 - bits;
 
 	while (likely(bits--)) {
+		u8 value_input;
 		u16 value = tca9535_spi_master_set_sck_pin(master, cache->output_port, device->sck_active);
 
 		if ((flags & SPI_MASTER_NO_TX) == 0) {
@@ -1106,15 +1102,11 @@ static u32 tca9535_spi_transfer_word_le(struct tca9535_spi_device *device, u32 w
 
 		word >>= 1;
 
-		if ((flags & SPI_MASTER_NO_RX) == 0) {
-			u8 value_input;
-
-			if (tca9535_read_u8(tca9535, master->rd_addr, &value_input) < 0) {
-				return 0;
-			}
-
-			word |= tca9535_spi_master_get_miso_pin(master, value_input) << 31;
+		if (tca9535_read_u8(tca9535, master->rd_addr, &value_input) < 0) {
+			return 0;
 		}
+
+		word |= tca9535_spi_master_get_miso_pin(master, value_input) << 31;
 	}
 
 	return word >> bits_remain;

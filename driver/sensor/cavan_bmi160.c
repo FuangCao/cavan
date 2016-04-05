@@ -368,6 +368,7 @@ static int bmi160_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	chip->devmask = 1 << CAVAN_INPUT_DEVICE_TYPE_ACCELEROMETER | 1 << CAVAN_INPUT_DEVICE_TYPE_GYROSCOPE;
 	chip->init_data = bmi160_init_data;
 	chip->init_data_size = ARRAY_SIZE(bmi160_init_data);
+	chip->i2c_rate = 400 * 1000;
 	chip->read_data = cavan_input_read_data_i2c;
 	chip->write_data = cavan_input_write_data_i2c;
 	chip->write_register = cavan_input_write_register_i2c_smbus;
