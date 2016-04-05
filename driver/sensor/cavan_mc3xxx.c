@@ -220,7 +220,7 @@ static int mc3xxx_acceleration_event_handler_high(struct cavan_input_chip *chip,
 		return ret;
 	}
 
-	cavan_sensor_report_vector(dev->input, package.x, package.y, package.z);
+	cavan_gsensor_report_vector(dev->input, package.x, package.y, package.z);
 
 	return 0;
 }
@@ -236,7 +236,7 @@ static int mc3xxx_acceleration_event_handler_low(struct cavan_input_chip *chip, 
 		return ret;
 	}
 
-	cavan_sensor_report_vector(dev->input, package.x, package.y, package.z);
+	cavan_gsensor_report_vector(dev->input, package.x, package.y, package.z);
 
 	return 0;
 }

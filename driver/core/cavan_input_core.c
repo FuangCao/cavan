@@ -1262,6 +1262,8 @@ label_write_init_data:
 		goto out_cavan_misc_device_unregister;
 	}
 
+	cavan_input_chip_set_power_lock(chip, false);
+
 	pr_green_info("cavan input chip %s probe complete", chip->name);
 
 	return 0;
@@ -1276,7 +1278,7 @@ out_wake_lock_destroy:
 	wake_lock_destroy(&chip->wake_lock);
 	cavan_input_chip_free_irq(chip);
 out_power_down:
-	cavan_input_chip_set_power(chip, false);
+	cavan_input_chip_set_power_lock(chip, false);
 	return ret;
 }
 

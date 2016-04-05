@@ -363,6 +363,9 @@ int cavan_input_chip_register(struct cavan_input_chip *chip, struct device *dev)
 void cavan_input_chip_unregister(struct cavan_input_chip *chip);
 int cavan_input_chip_report_events(struct cavan_input_chip *chip, struct cavan_input_list *list);
 
+int cavan_misc_device_register(struct cavan_misc_device *dev, const char *name);
+void cavan_misc_device_unregister(struct cavan_misc_device *dev);
+
 static inline void cavan_input_chip_set_bus_data(struct cavan_input_chip *chip, void *data)
 {
 	chip->bus_data = data;

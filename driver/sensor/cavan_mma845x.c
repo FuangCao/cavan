@@ -150,7 +150,7 @@ static int mma845x_acceleration_event_handler(struct cavan_input_chip *chip, str
 	y = MMA845X_BUILD_WORD(package.yh, package.yl) >> 4;
 	z = MMA845X_BUILD_WORD(package.zh, package.zl) >> 4;
 
-	cavan_sensor_report_vector(dev->input, y, x, z);
+	cavan_gsensor_report_vector(dev->input, y, x, z);
 
 	return 0;
 }

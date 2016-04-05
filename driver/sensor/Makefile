@@ -1,4 +1,5 @@
 EXTRA_CFLAGS += -Idrivers/cavan/include/
+obj-$(CONFIG_CAVAN_SENSOR_DUMMY) += cavan_dummy.o
 obj-$(CONFIG_CAVAN_SENSOR_ADXL34X) += cavan_adxl34x.o
 obj-$(CONFIG_CAVAN_SENSOR_KIONIX) += cavan_kionix.o
 obj-$(CONFIG_CAVAN_SENSOR_LIS3DH) += cavan_lis3dh.o

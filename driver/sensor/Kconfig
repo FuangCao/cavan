@@ -1,7 +1,7 @@
 menu "Sensor devices"
 
 config CAVAN_GSENSOR_EXCHANGE_XY
-    bool "Exchange x and y axis"
+    bool "GSensor exchange x and y axis"
     default n
     help
       Say Y if you whant to exchange x and y axis
@@ -9,25 +9,65 @@ config CAVAN_GSENSOR_EXCHANGE_XY
       If unsure, say N.
 
 config CAVAN_GSENSOR_SIGN_X
-    int "Sign of x axis"
+    int "GSensor sign of x axis"
     default 1
     range -1 1
     help
       This option config sign of x axis.
 
 config CAVAN_GSENSOR_SIGN_Y
-    int "Sign of y axis"
+    int "GSensor sign of y axis"
     default 1
     range -1 1
     help
       This option config sign of y axis.
 
 config CAVAN_GSENSOR_SIGN_Z
-    int "Sign of z axis"
+    int "GSensor sign of z axis"
     default 1
     range -1 1
     help
       This option config sign of z axis.
+
+config CAVAN_GYROSCOPE_EXCHANGE_XY
+    bool "Gyroscope exchange x and y axis"
+    default n
+    help
+      Say Y if you whant to exchange x and y axis
+
+      If unsure, say N.
+
+config CAVAN_GYROSCOPE_SIGN_X
+    int "Gyroscope sign of x axis"
+    default 1
+    range -1 1
+    help
+      This option config sign of x axis.
+
+config CAVAN_GYROSCOPE_SIGN_Y
+    int "Gyroscope sign of y axis"
+    default 1
+    range -1 1
+    help
+      This option config sign of y axis.
+
+config CAVAN_GYROSCOPE_SIGN_Z
+    int "Gyroscope sign of z axis"
+    default 1
+    range -1 1
+    help
+      This option config sign of z axis.
+
+config CAVAN_SENSOR_DUMMY
+    tristate "Dummy sensor support"
+    default n
+    help
+      Say Y here if you need a dummy sensor for test.
+
+      If unsure, say Y.
+
+      To compile this driver as a module, choose M here: the
+      module will be called cavan_dummy.
 
 config CAVAN_SENSOR_ADXL34X
     tristate "ADXL346 g-sensor support"

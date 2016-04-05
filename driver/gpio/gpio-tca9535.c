@@ -41,19 +41,36 @@
 	 pr_err("%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__)
 
 #define tca9535_spi_transfer_data_func_declarer(bits) \
-	static u32 tca9535_spi_transfer_data##bits(struct tca9535_spi_device *device, struct spi_transfer *xfer) \
+	static int tca9535_spi_transfer_data##bits(struct tca9535_spi_device *device, struct spi_transfer *xfer) \
 	{ \
-		int count = xfer->len; \
+		int count = xfer->len / sizeof(u##bits); \
 		u##bits *rx = xfer->rx_buf; \
 		const u##bits *tx = xfer->tx_buf; \
 		if (rx == NULL) { \
+			u16 *buff; \
+			size_t size; \
+			const u##bits *tx_end = tx + count; \
+			struct tca9535_device *tca9535 = device->master->tca9535; \
 			if (tx == NULL) { \
 				return -EINVAL; \
 			} \
-			while (likely(count > 0)) { \
-				device->transfer_word_wo(device, *tx++, 8, 0); \
-				count -= sizeof(u##bits); \
+			tca9535_lock(tca9535); \
+			size = (xfer->len * 8 * 2 + 1) * 2; \
+			buff = kmalloc(size, GFP_KERNEL); \
+			if (buff == NULL) { \
+				while (likely(tx < tx_end)) { \
+					device->write_word(device, *tx++, bits); \
+				} \
+			} else { \
+				u16 *data = buff; \
+				*data++ = REG_OUTPUT_PORT << 8 | REG_OUTPUT_PORT; \
+				while (likely(tx < tx_end)) { \
+					data = device->build_word(device, data, *tx++, bits); \
+				} \
+				tca9535_master_send(tca9535, ((u8 *) buff) + 1, size - 1); \
+				kfree(buff); \
 			} \
+			tca9535_unlock(tca9535); \
 		} else { \
 			u##bits word = 0; \
 			int flags = 0; \
@@ -64,14 +81,14 @@
 				if (tx) { \
 					word = *tx++; \
 				} \
-				word = device->transfer_word(device, word, 8, flags); \
+				word = device->transfer_word(device, word, bits, flags); \
 				if (rx) { \
 					*rx++ = word; \
 				} \
-				count -= sizeof(u##bits); \
+				count--; \
 			} \
 		} \
-		return xfer->len - count; \
+		return 0; \
 	}
 
 struct tca9535_device;
@@ -112,9 +129,10 @@ struct tca9535_spi_device {
 
 	struct tca9535_part_write_config wr_config;
 
+	void (*write_word)(struct tca9535_spi_device *device, u32 word, u8 bits);
+	u16 *(*build_word)(struct tca9535_spi_device *device, u16 *buff, u32 word, u8 bits);
 	u32 (*transfer_word)(struct tca9535_spi_device *device, u32 word, u8 bits, int flags);
-	u32 (*transfer_word_wo)(struct tca9535_spi_device *device, u32 word, u8 bits, int flags);
-	u32 (*transfer_data)(struct tca9535_spi_device *device, struct spi_transfer *xfer);
+	int (*transfer_data)(struct tca9535_spi_device *device, struct spi_transfer *xfer);
 };
 
 struct tca9535_spi_master {
@@ -165,10 +183,6 @@ struct tca9535_device {
 
 	struct tca9535_spi_master *spi_master_head;
 };
-
-tca9535_spi_transfer_data_func_declarer(8);
-tca9535_spi_transfer_data_func_declarer(16);
-tca9535_spi_transfer_data_func_declarer(32);
 
 static inline void tca9535_lock(struct tca9535_device *tca9535)
 {
@@ -977,6 +991,10 @@ static void tca9535_i2c_mux_deinit(struct tca9535_device *tca9535)
 
 // ============================================================
 
+tca9535_spi_transfer_data_func_declarer(8);
+tca9535_spi_transfer_data_func_declarer(16);
+tca9535_spi_transfer_data_func_declarer(32);
+
 static u16 tca9535_spi_set_bit(u16 value, u16 mask, bool enable)
 {
 	if (enable) {
@@ -1102,83 +1120,115 @@ static u32 tca9535_spi_transfer_word_le(struct tca9535_spi_device *device, u32 w
 	return word >> bits_remain;
 }
 
-static u32 tca9535_spi_transfer_word_wo_be(struct tca9535_spi_device *device, u32 word, u8 bits, int flags)
+static void tca9535_spi_write_word_be(struct tca9535_spi_device *device, u32 word, u8 bits)
 {
 	struct tca9535_spi_master *master = device->master;
 	struct tca9535_device *tca9535 = master->tca9535;
 	struct tca9535_register_cache *cache = &tca9535->cache;
-	u8 buff[bits * 4 + 1], *p, *p_end;
-	u16 value;
+	u16 buff[bits * 2 + 1], *p, *p_end;
+	u16 value = cache->output_port;
 
-	buff[0] = REG_OUTPUT_PORT;
-	p = buff + 1;
-	p_end = buff + sizeof(buff);
+	p = buff;
+	p_end = p + sizeof(buff) / 2;
+	*p++ = REG_OUTPUT_PORT << 8 | REG_OUTPUT_PORT;
 
 	word <<= (32 - bits);
-
-	tca9535_lock(tca9535);
-
-	value = cache->output_port;
 
 	while (likely(p < p_end)) {
 		value = tca9535_spi_master_set_sck_pin(master, value, device->sck_active);
 		value = tca9535_spi_master_set_mosi_pin(master, value, word & (1 << 31));
-		*(u16 *) p = value;
-		p += 2;
+		*p++ = value;
 
 		value = tca9535_spi_master_set_sck_pin(master, value, device->sck_inactive);
-		*(u16 *) p = value;
-		p += 2;
+		*p++ = value;
 
 		word <<= 1;
 	}
 
-	if (tca9535_master_send(tca9535, buff, sizeof(buff)) > 0) {
+	if (tca9535_master_send(tca9535, ((u8 *) buff) + 1, sizeof(buff) - 1) > 0) {
 		cache->output_port = value;
 	}
-
-	tca9535_unlock(tca9535);
-
-	return 0;
 }
 
-
-static u32 tca9535_spi_transfer_word_wo_le(struct tca9535_spi_device *device, u32 word, u8 bits, int flags)
+static void tca9535_spi_write_word_le(struct tca9535_spi_device *device, u32 word, u8 bits)
 {
 	struct tca9535_spi_master *master = device->master;
 	struct tca9535_device *tca9535 = master->tca9535;
 	struct tca9535_register_cache *cache = &tca9535->cache;
-	u8 buff[bits * 4 + 1], *p, *p_end;
-	u16 value;
+	u16 buff[bits * 2 + 1], *p, *p_end;
+	u16 value = cache->output_port;
 
-	buff[0] = REG_OUTPUT_PORT;
-	p = buff + 1;
-	p_end = buff + sizeof(buff);
-
-	tca9535_lock(tca9535);
-
-	value = cache->output_port;
+	p = buff;
+	p_end = p + sizeof(buff) / 2;
+	*p++ = REG_OUTPUT_PORT << 8 | REG_OUTPUT_PORT;
 
 	while (likely(p < p_end)) {
 		value = tca9535_spi_master_set_sck_pin(master, value, device->sck_active);
 		value = tca9535_spi_master_set_mosi_pin(master, value, word & 1);
-		*(u16 *) p = value;
-		p += 2;
+		*p++ = value;
 
 		value = tca9535_spi_master_set_sck_pin(master, value, device->sck_inactive);
-		*(u16 *) p = value;
-		p += 2;
+		*p++ = value;
 
 		word >>= 1;
 	}
 
-	if (tca9535_master_send(tca9535, buff, sizeof(buff)) > 0) {
+	if (tca9535_master_send(tca9535, ((u8 *) buff) + 1, sizeof(buff) - 1) > 0) {
 		cache->output_port = value;
 	}
+}
 
-	tca9535_unlock(tca9535);
+static u16 *tca9535_spi_build_word_be(struct tca9535_spi_device *device, u16 *buff, u32 word, u8 bits)
+{
+	struct tca9535_spi_master *master = device->master;
+	struct tca9535_device *tca9535 = master->tca9535;
+	struct tca9535_register_cache *cache = &tca9535->cache;
+	u16 value = cache->output_port;
+	u16 *buff_end;
 
-	return 0;
+	word <<= (32 - bits);
+	buff_end = buff + bits * 2;
+
+	while (buff < buff_end) {
+		value = tca9535_spi_master_set_sck_pin(master, value, device->sck_active);
+		value = tca9535_spi_master_set_mosi_pin(master, value, word & (1 << 31));
+		*buff++ = value;
+
+		value = tca9535_spi_master_set_sck_pin(master, value, device->sck_inactive);
+		*buff++ = value;
+
+		word <<= 1;
+	}
+
+	cache->output_port = value;
+
+	return buff;
+}
+
+static u16 *tca9535_spi_build_word_le(struct tca9535_spi_device *device, u16 *buff, u32 word, u8 bits)
+{
+	struct tca9535_spi_master *master = device->master;
+	struct tca9535_device *tca9535 = master->tca9535;
+	struct tca9535_register_cache *cache = &tca9535->cache;
+	u16 value = cache->output_port;
+	u16 *buff_end;
+
+	buff_end = buff + bits * 2;
+
+	while (buff < buff_end) {
+		value = tca9535_spi_master_set_sck_pin(master, value, device->sck_active);
+		value = tca9535_spi_master_set_mosi_pin(master, value, word & 1);
+		*buff++ = value;
+
+		value = tca9535_spi_master_set_sck_pin(master, value, device->sck_inactive);
+		*buff++ = value;
+
+		word >>= 1;
+	}
+
+	cache->output_port = value;
+
+	return buff;
 }
 
 static int tca9535_spi_setup(struct spi_device *spi)
@@ -1201,11 +1251,13 @@ static int tca9535_spi_setup(struct spi_device *spi)
 	}
 
 	if (spi->mode & SPI_LSB_FIRST) {
+		device->write_word = tca9535_spi_write_word_le;
+		device->build_word = tca9535_spi_build_word_le;
 		device->transfer_word = tca9535_spi_transfer_word_le;
-		device->transfer_word_wo = tca9535_spi_transfer_word_wo_le;
 	} else {
+		device->write_word = tca9535_spi_write_word_be;
+		device->build_word = tca9535_spi_build_word_be;
 		device->transfer_word = tca9535_spi_transfer_word_be;
-		device->transfer_word_wo = tca9535_spi_transfer_word_wo_be;
 	}
 
 	device->device = spi;

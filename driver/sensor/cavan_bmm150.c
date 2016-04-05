@@ -120,7 +120,7 @@ static int bmm150_geomagnetic_event_handler(struct cavan_input_chip *chip, struc
 		return ret;
 	}
 
-	cavan_sensor_report_vector(dev->input, pkg.x >> 3, pkg.y >> 3, pkg.z >> 1);
+	cavan_gsensor_report_vector(dev->input, pkg.x >> 3, pkg.y >> 3, pkg.z >> 1);
 
 	return 0;
 }

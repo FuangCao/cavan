@@ -212,7 +212,7 @@ static int bmi160_acceleration_event_handler(struct cavan_input_chip *chip, stru
 		return ret;
 	}
 
-	cavan_sensor_report_vector(dev->input, pkg.x, pkg.y, pkg.z);
+	cavan_gsensor_report_vector(dev->input, pkg.x, pkg.y, pkg.z);
 
 	return 0;
 }
@@ -254,7 +254,7 @@ static int bmi160_gyroscope_event_handler(struct cavan_input_chip *chip, struct 
 		return ret;
 	}
 
-	cavan_sensor_report_vector(dev->input, pkg.x, pkg.y, pkg.z);
+	cavan_gyroscope_report_vector(dev->input, pkg.x, pkg.y, pkg.z);
 
 	return 0;
 }

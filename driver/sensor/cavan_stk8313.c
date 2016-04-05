@@ -225,7 +225,7 @@ static int stk8313_acceleration_event_handler(struct cavan_input_chip *chip, str
 	y = BUILD_WORD(package.yh, package.yl) >> 4;
 	z = BUILD_WORD(package.zh, package.zl) >> 4;
 
-	cavan_sensor_report_vector(dev->input, -x, y, z);
+	cavan_gsensor_report_vector(dev->input, -x, y, z);
 
 	return 0;
 }

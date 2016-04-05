@@ -77,7 +77,7 @@ static int mxc6225xu_acceleration_event_handler(struct cavan_input_chip *chip, s
 		return ret;
 	}
 
-	cavan_sensor_report_vector(dev->input, package.y, package.x, 32);
+	cavan_gsensor_report_vector(dev->input, package.y, package.x, 32);
 	return 0;
 }
 
@@ -92,7 +92,7 @@ static int mxc6225xc_acceleration_event_handler(struct cavan_input_chip *chip, s
 		return ret;
 	}
 
-	cavan_sensor_report_vector(dev->input, -package.y, -package.x, 32);
+	cavan_gsensor_report_vector(dev->input, -package.y, -package.x, 32);
 	return 0;
 }
 

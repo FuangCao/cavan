@@ -168,7 +168,7 @@ static int bma2xx_acceleration_event_handler(struct cavan_input_chip *chip, stru
 		return ret;
 	}
 
-	cavan_sensor_report_vector(dev->input, package.x >> 6, package.y >> 6, package.z >> 6);
+	cavan_gsensor_report_vector(dev->input, package.x >> 6, package.y >> 6, package.z >> 6);
 
 	return 0;
 }

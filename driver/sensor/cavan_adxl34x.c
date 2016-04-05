@@ -267,7 +267,7 @@ static int adxl34x_acceleration_event_handler(struct cavan_input_chip *chip, str
 			continue;
 		}
 
-		cavan_sensor_report_vector(dev->input, -package.x, package.y, package.z);
+		cavan_gsensor_report_vector(dev->input, -package.x, package.y, package.z);
 	}
 
 	return 0;

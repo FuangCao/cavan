@@ -64,7 +64,7 @@ static int kionix_acceleration_event_handler(struct cavan_input_chip *chip, stru
 		return ret;
 	}
 
-	cavan_sensor_report_vector(dev->input, package.y >> 4, package.x >> 4, package.z >> 4);
+	cavan_gsensor_report_vector(dev->input, package.y >> 4, package.x >> 4, package.z >> 4);
 
 	return 0;
 }

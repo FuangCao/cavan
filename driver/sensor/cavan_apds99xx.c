@@ -490,7 +490,7 @@ static int apds99xx_light_set_delay(struct cavan_input_device *dev, unsigned int
 	}
 
 	apds99xx = cavan_input_chip_get_dev_data(dev->chip);
-	apds99xx->adelay = p->delay_ns / 10;
+	apds99xx->adelay = p->delay_us / 10;
 	apds99xx_update_alpc(apds99xx);
 
 	ares = apds99xx_ares_table[p - apds99xx_arate_table];

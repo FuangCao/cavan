@@ -3,14 +3,23 @@
 #include <cavan/cavan_input.h>
 
 #define CAVAN_SENSOR_EVENT_VALUE	ABS_MISC
-#define CAVAN_SENSOR_EVENT_Z		ABS_Z
+#define CAVAN_GSENSOR_EVENT_Z		ABS_Z
+#define CAVAN_GYROSCOPE_EVENT_Z		ABS_Z
 
-#ifndef CONFIG_CAVAN_GSENSOR_EXCHANGE_XY
-#define CAVAN_SENSOR_EVENT_X		ABS_X
-#define CAVAN_SENSOR_EVENT_Y		ABS_Y
+#ifdef CONFIG_CAVAN_GSENSOR_EXCHANGE_XY
+#define CAVAN_GSENSOR_EVENT_X		ABS_Y
+#define CAVAN_GSENSOR_EVENT_Y		ABS_X
 #else
-#define CAVAN_SENSOR_EVENT_X		ABS_Y
-#define CAVAN_SENSOR_EVENT_Y		ABS_X
+#define CAVAN_GSENSOR_EVENT_X		ABS_X
+#define CAVAN_GSENSOR_EVENT_Y		ABS_Y
+#endif
+
+#ifdef CONFIG_CAVAN_GYROSCOPE_EXCHANGE_XY
+#define CAVAN_GYROSCOPE_EVENT_X		ABS_Y
+#define CAVAN_GYROSCOPE_EVENT_Y		ABS_X
+#else
+#define CAVAN_GYROSCOPE_EVENT_X		ABS_X
+#define CAVAN_GYROSCOPE_EVENT_Y		ABS_Y
 #endif
 
 #define CAVAN_INPUT_SENSOR_IOC_GET_MIN_DELAY		CAVAN_INPUT_IOC('S', 0x00, 0)
@@ -41,28 +50,54 @@ static inline void cavan_sensor_report_value(struct input_dev *input, int value)
 	input_sync(input);
 }
 
-static inline void cavan_sensor_report_xaxis(struct input_dev *input, int x)
+static inline void cavan_gsensor_report_xaxis(struct input_dev *input, int x)
 {
-	input_report_abs(input, CAVAN_SENSOR_EVENT_X, x * CONFIG_CAVAN_GSENSOR_SIGN_X);
+	input_report_abs(input, CAVAN_GSENSOR_EVENT_X, x * CONFIG_CAVAN_GSENSOR_SIGN_X);
 	input_sync(input);
 }
 
-static inline void cavan_sensor_report_yaxis(struct input_dev *input, int y)
+static inline void cavan_gsensor_report_yaxis(struct input_dev *input, int y)
 {
-	input_report_abs(input, CAVAN_SENSOR_EVENT_Y, y * CONFIG_CAVAN_GSENSOR_SIGN_Y);
+	input_report_abs(input, CAVAN_GSENSOR_EVENT_Y, y * CONFIG_CAVAN_GSENSOR_SIGN_Y);
 	input_sync(input);
 }
 
-static inline void cavan_sensor_report_zaxis(struct input_dev *input, int z)
+static inline void cavan_gsensor_report_zaxis(struct input_dev *input, int z)
 {
-	input_report_abs(input, CAVAN_SENSOR_EVENT_Z, z * CONFIG_CAVAN_GSENSOR_SIGN_Z);
+	input_report_abs(input, CAVAN_GSENSOR_EVENT_Z, z * CONFIG_CAVAN_GSENSOR_SIGN_Z);
 	input_sync(input);
 }
 
-static inline void cavan_sensor_report_vector(struct input_dev *input, int x, int y, int z)
+static inline void cavan_gsensor_report_vector(struct input_dev *input, int x, int y, int z)
 {
-	input_report_abs(input, CAVAN_SENSOR_EVENT_X, x * CONFIG_CAVAN_GSENSOR_SIGN_X);
-	input_report_abs(input, CAVAN_SENSOR_EVENT_Y, y * CONFIG_CAVAN_GSENSOR_SIGN_Y);
-	input_report_abs(input, CAVAN_SENSOR_EVENT_Z, z * CONFIG_CAVAN_GSENSOR_SIGN_Z);
+	input_report_abs(input, CAVAN_GSENSOR_EVENT_X, x * CONFIG_CAVAN_GSENSOR_SIGN_X);
+	input_report_abs(input, CAVAN_GSENSOR_EVENT_Y, y * CONFIG_CAVAN_GSENSOR_SIGN_Y);
+	input_report_abs(input, CAVAN_GSENSOR_EVENT_Z, z * CONFIG_CAVAN_GSENSOR_SIGN_Z);
+	input_sync(input);
+}
+
+static inline void cavan_gyroscope_report_xaxis(struct input_dev *input, int x)
+{
+	input_report_abs(input, CAVAN_GYROSCOPE_EVENT_X, x * CONFIG_CAVAN_GYROSCOPE_SIGN_X);
+	input_sync(input);
+}
+
+static inline void cavan_gyroscope_report_yaxis(struct input_dev *input, int y)
+{
+	input_report_abs(input, CAVAN_GYROSCOPE_EVENT_Y, y * CONFIG_CAVAN_GYROSCOPE_SIGN_Y);
+	input_sync(input);
+}
+
+static inline void cavan_gyroscope_report_zaxis(struct input_dev *input, int z)
+{
+	input_report_abs(input, CAVAN_GYROSCOPE_EVENT_Z, z * CONFIG_CAVAN_GYROSCOPE_SIGN_Z);
+	input_sync(input);
+}
+
+static inline void cavan_gyroscope_report_vector(struct input_dev *input, int x, int y, int z)
+{
+	input_report_abs(input, CAVAN_GYROSCOPE_EVENT_X, x * CONFIG_CAVAN_GYROSCOPE_SIGN_X);
+	input_report_abs(input, CAVAN_GYROSCOPE_EVENT_Y, y * CONFIG_CAVAN_GYROSCOPE_SIGN_Y);
+	input_report_abs(input, CAVAN_GYROSCOPE_EVENT_Z, z * CONFIG_CAVAN_GYROSCOPE_SIGN_Z);
 	input_sync(input);
 }
