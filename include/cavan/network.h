@@ -40,6 +40,7 @@
 #define CAVAN_DEFAULT_PROTOCOL	"tcp"
 #define CAVAN_IP_ENV_NAME		"CAVAN_SERVER_IP"
 #define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
+#define CAVAN_DISCOVERY_COMMAND	"cavan-discovery"
 
 #define CAVAN_NET_UDP_RETRY			10
 #define CAVAN_NET_UDP_TIMEOUT		200
@@ -258,6 +259,8 @@ struct network_client {
 	void (*close)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
+	ssize_t (*sendto)(struct network_client *client, const void *buff, size_t size, const struct sockaddr *addr);
+	ssize_t (*recvfrom)(struct network_client *client, void *buff, size_t size, struct sockaddr *addr);
 };
 
 struct network_client_sync_data {
@@ -297,11 +300,10 @@ struct network_service {
 };
 
 struct network_discovery_service {
-	struct network_client client;
 	struct cavan_thread thread;
+	struct network_service service;
 	size_t command_len;
 	char command[1024];
-	u32 delay;
 	u16 port;
 };
 

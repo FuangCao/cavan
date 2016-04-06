@@ -33,8 +33,6 @@ static int test_discovery_service_main(int argc, char *argv[])
 		service.port = 8888;
 	}
 
-	service.delay = 2000;
-
 	ret = network_discovery_service_start(&service, argv[1]);
 	if (ret < 0) {
 		pr_red_info("network_discovery_service_start: %d", ret);
