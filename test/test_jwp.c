@@ -581,11 +581,11 @@ static int do_test_jwp_udp(int argc, char *argv[])
 	return 0;
 }
 
-CAVAN_COMMAND_MAP_START
-{ "queue", do_test_queue },
-{ "jwp", do_test_jwp },
-{ "comm", do_test_jwp_comm },
-{ "comm-mcu", do_test_jwp_comm },
-{ "udp", do_test_jwp_udp },
-{ "udp-mcu", do_test_jwp_udp },
-CAVAN_COMMAND_MAP_END;
+CAVAN_COMMAND_MAP_START {
+	{ "queue", do_test_queue },
+	{ "jwp", do_test_jwp },
+	{ "comm", do_test_jwp_comm },
+	{ "comm-mcu", do_test_jwp_comm },
+	{ "udp", do_test_jwp_udp },
+	{ "udp-mcu", do_test_jwp_udp },
+} CAVAN_COMMAND_MAP_END;

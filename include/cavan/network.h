@@ -290,8 +290,21 @@ struct network_service {
 	struct cavan_lock lock;
 	sem_t sem;
 
+	ssize_t (*sendto)(struct network_service *service, const void *buff, size_t size, const struct sockaddr *addr);
+	ssize_t (*recvfrom)(struct network_service *service, void *buff, size_t size, struct sockaddr *addr);
 	int (*accept)(struct network_service *service, struct network_client *conn);
 	void (*close)(struct network_service *service);
+};
+
+struct network_discovery_service {
+	struct network_client client;
+	struct cavan_thread thread;
+	size_t command_len;
+	char command[1024];
+	u32 delay;
+};
+
+struct network_discovery_client {
 };
 
 struct network_file_request {
@@ -336,6 +349,7 @@ struct cavan_inet_route {
 };
 
 const char *network_get_socket_pathname(void);
+char *network_get_hostname(char *buff, size_t size);
 const char *inet_check_hostname(const char *hostname, char *buff, size_t size);
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
 ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);
@@ -449,6 +463,10 @@ int cavan_inet_get_ifconfig(int sockfd, struct ifreq *ifr, struct cavan_inet_ifc
 int cavan_inet_get_ifconfig2(int sockfd, const char *ifname, struct cavan_inet_ifconfig *config);
 int cavan_inet_get_ifconfig_list(int sockfd, struct cavan_inet_ifconfig *configs, int max_count);
 int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_count);
+
+int network_discovery_service_start(struct network_discovery_service *service, u16 port, const char *command, ...);
+void network_discovery_service_stop(struct network_discovery_service *service);
+int network_discovery_client_run(u16 port);
 
 static inline int inet_socket(int type)
 {
@@ -581,20 +599,6 @@ static inline void unix_show_sockaddr(const struct sockaddr_un *addr)
 static inline bool inet_sockaddr_equals(const struct sockaddr_in *left, const struct sockaddr_in *right)
 {
 	return memcmp(&left->sin_addr, &right->sin_addr, sizeof(left->sin_addr)) == 0 && left->sin_port == right->sin_port;
-}
-
-static inline int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, const struct network_url *url, int flags)
-{
-	client->type = desc->type;
-
-	return desc->open_client(client, url, network_get_port_by_url(url, desc), flags);
-}
-
-static inline int network_protocol_open_service(const struct network_protocol_desc *desc, struct network_service *service, const struct network_url *url, int flags)
-{
-	service->type = desc->type;
-
-	return desc->open_service(service, url, network_get_port_by_url(url, desc), flags);
 }
 
 static inline void network_client_set_data(struct network_client *client, void *data)

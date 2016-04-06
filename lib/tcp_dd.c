@@ -1114,10 +1114,21 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		return ret;
 	}
 
+	if (dd_service->discovery_port > 0) {
+		char hostname[64];
+
+		ret = network_discovery_service_start(&dd_service->discovery, dd_service->discovery_port,
+			"TCP_DD: port = %d, hostname = %s", dd_service->url.port, network_get_hostname(hostname, sizeof(hostname)));
+		if (ret < 0) {
+			pd_red_info("network_discovery_service_start");
+			goto out_network_service_close;
+		}
+	}
+
 	ret = cavan_alarm_thread_init(&dd_service->alarm);
 	if (ret < 0) {
 		pd_red_info("cavan_alarm_thread_init");
-		goto out_network_service_close;
+		goto out_network_discovery_service_stop;
 	}
 
 	ret = cavan_alarm_thread_start(&dd_service->alarm);
@@ -1146,6 +1157,10 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 
 out_cavan_alarm_thread_deinit:
 	cavan_alarm_thread_deinit(&dd_service->alarm);
+out_network_discovery_service_stop:
+	if (dd_service->discovery_port > 0) {
+		network_discovery_service_stop(&dd_service->discovery);
+	}
 out_network_service_close:
 	network_service_close(&dd_service->service);
 	return ret;
@@ -1159,6 +1174,11 @@ static void tcp_dd_service_stop_handler(struct cavan_dynamic_service *service)
 
 	cavan_alarm_thread_stop(&dd_service->alarm);
 	cavan_alarm_thread_deinit(&dd_service->alarm);
+
+	if (dd_service->discovery_port > 0) {
+		network_discovery_service_stop(&dd_service->discovery);
+	}
+
 	network_service_close(&dd_service->service);
 }
 

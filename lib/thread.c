@@ -503,7 +503,17 @@ int cavan_thread_run(struct cavan_thread *thread, void *data, int flags)
 		return ret;
 	}
 
-	return cavan_thread_start(thread);
+	ret = cavan_thread_start(thread);
+	if (ret < 0) {
+		pr_red_info("cavan_thread_start");
+		goto out_cavan_thread_deinit;
+	}
+
+	return 0;
+
+out_cavan_thread_deinit:
+	cavan_thread_deinit(thread);
+	return ret;
 }
 
 int cavan_thread_run_self(struct cavan_thread *thread, void *data, int flags)

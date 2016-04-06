@@ -559,13 +559,11 @@ out_close_fd:
 	return ret;
 }
 
-static struct cavan_command_map cmd_map[] = {
+CAVAN_COMMAND_MAP_START {
 	{ "draw_rect", cavan_display_rect_main },
 	{ "fill_rect", cavan_display_rect_main },
 	{ "wave", cavan_display_wave_main },
 	{ "wave_line", cavan_display_wave_main },
 	{ "wave_point", cavan_display_wave_main },
 	{ "test", cavan_display_test_main }
-};
-
-FIND_EXEC_COMMAND_MAIN(cmd_map);
+} CAVAN_COMMAND_MAP_END;

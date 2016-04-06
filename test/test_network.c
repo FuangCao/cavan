@@ -277,12 +277,12 @@ static int do_test_route(int argc, char *argv[])
 	return 0;
 }
 
-CAVAN_COMMAND_MAP_START
-{ "client", do_test_client },
-{ "service", do_test_service },
-{ "url", do_test_url },
-{ "dump", do_test_dump },
-{ "send", do_test_send },
-{ "ifconfig", do_test_ifconfig },
-{ "route", do_test_route },
-CAVAN_COMMAND_MAP_END;
+CAVAN_COMMAND_MAP_START {
+	{ "client", do_test_client },
+	{ "service", do_test_service },
+	{ "url", do_test_url },
+	{ "dump", do_test_dump },
+	{ "send", do_test_send },
+	{ "ifconfig", do_test_ifconfig },
+	{ "route", do_test_route },
+} CAVAN_COMMAND_MAP_END;

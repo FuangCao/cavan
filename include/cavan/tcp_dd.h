@@ -13,6 +13,7 @@
 #include <cavan/block.h>
 
 #define TCP_DD_DEFAULT_PORT			8888
+#define TCP_DD_DISCOVERY_PORT		8888
 #define TCP_DD_DAEMON_COUNT			10
 #define TCP_DD_TIMEOUT				5000
 #define TCP_DD_VERSION				0x20151223
@@ -117,6 +118,9 @@ struct cavan_tcp_dd_service {
 	bool keypad_insmod;
 	const char *keypad_ko;
 	struct cavan_part_table *part_table;
+
+	u16 discovery_port;
+	struct network_discovery_service discovery;
 };
 
 void tcp_dd_set_package_type(struct tcp_dd_package *pkg, u16 type);

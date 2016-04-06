@@ -842,6 +842,19 @@ ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offs
 	return rdlen;
 }
 
+ssize_t file_read_text(const char *filename, char *buff, size_t size)
+{
+	ssize_t rdlen = file_read(filename, buff, size - 1);
+
+	buff[rdlen] = 0;
+
+	while (rdlen > 0 && cavan_isspace(buff[rdlen - 1])) {
+		buff[--rdlen] = 0;
+	}
+
+	return rdlen;
+}
+
 int file_test_read(const char *filename)
 {
 	char buff[1024];

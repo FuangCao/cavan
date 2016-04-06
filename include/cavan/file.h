@@ -101,6 +101,7 @@ ssize_t ffile_readfrom(int fd, void *buff, size_t size, off_t offset);
 
 ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t offset, int flags);
 ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offset, int flags);
+ssize_t file_read_text(const char *filename, char *buff, size_t size);
 
 int file_test_read(const char *filename);
 

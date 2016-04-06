@@ -30,6 +30,8 @@ static void show_usage(const char *command)
 	println("-D, -k, --driver, --ko PATHNAME\t\t%s", cavan_help_message_driver);
 	println("--user USERNAME\t\t\t\t%s", cavan_help_message_user);
 	println("--group GROUPNAME\t\t\t%s", cavan_help_message_group);
+	println("--discovery PORT\t\t\t%s", cavan_help_message_discovery);
+	println("--discovery-delay, --dd MSEC\t\t%s", cavan_help_message_discovery_delay);
 }
 
 int main(int argc, char *argv[])
@@ -139,6 +141,21 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_GROUP,
 		}, {
+			.name = "discovery",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DISCOVERY,
+		}, {
+			.name = "discovery-delay",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DISCOVERY_DELAY,
+		}, {
+			.name = "dd",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DISCOVERY_DELAY,
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -158,6 +175,9 @@ int main(int argc, char *argv[])
 
 	dd_service = cavan_dynamic_service_get_data(service);
 	dd_service->keypad_ko = NULL;
+	dd_service->discovery_port = 0;
+	dd_service->discovery.delay = 2000;
+
 	url = &dd_service->url;
 	network_url_init(url, "tcp", "any", TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
@@ -262,6 +282,21 @@ int main(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_GROUP:
 			service->group = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_DISCOVERY:
+			if (optarg) {
+				dd_service->discovery_port = text2value_unsigned(optarg, NULL, 10);
+			} else {
+				dd_service->discovery_port = TCP_DD_DISCOVERY_PORT;
+			}
+			break;
+
+		case CAVAN_COMMAND_OPTION_DISCOVERY_DELAY:
+			dd_service->discovery.delay = text2value_unsigned(optarg, NULL, 10);
+			if (dd_service->discovery_port == 0) {
+				dd_service->discovery_port = TCP_DD_DISCOVERY_PORT;
+			}
 			break;
 
 		default:

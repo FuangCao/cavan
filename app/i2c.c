@@ -541,23 +541,23 @@ static int do_update_bits(int argc, char *argv[])
 	return ret;
 }
 
-CAVAN_COMMAND_MAP_START
-{ "det", do_detect },
-{ "detect", do_detect },
-{ "ms", do_master_send },
-{ "master-send", do_master_send },
-{ "mr", do_master_recv },
-{ "master-recv", do_master_recv },
-{ "rd", do_read_data },
-{ "read-data", do_read_data },
-{ "wr", do_write_data },
-{ "write-data", do_write_data },
-{ "rw", do_register_rw },
-{ "reg", do_register_rw },
-{ "reg-rw", do_register_rw },
-{ "dump", do_register_dump },
-{ "reg-dump", do_register_dump },
-{ "up", do_update_bits },
-{ "update", do_update_bits },
-{ "update-bits", do_update_bits },
-CAVAN_COMMAND_MAP_END;
+CAVAN_COMMAND_MAP_START {
+	{ "det", do_detect },
+	{ "detect", do_detect },
+	{ "ms", do_master_send },
+	{ "master-send", do_master_send },
+	{ "mr", do_master_recv },
+	{ "master-recv", do_master_recv },
+	{ "rd", do_read_data },
+	{ "read-data", do_read_data },
+	{ "wr", do_write_data },
+	{ "write-data", do_write_data },
+	{ "rw", do_register_rw },
+	{ "reg", do_register_rw },
+	{ "reg-rw", do_register_rw },
+	{ "dump", do_register_dump },
+	{ "reg-dump", do_register_dump },
+	{ "up", do_update_bits },
+	{ "update", do_update_bits },
+	{ "update-bits", do_update_bits },
+} CAVAN_COMMAND_MAP_END;

@@ -4,6 +4,7 @@
 #include <cavan/adb.h>
 #include <cavan/file.h>
 #include <cavan/command.h>
+#include <cavan/android.h>
 #include <cavan/network.h>
 #include <cavan/progress.h>
 
@@ -23,6 +24,29 @@ const char *network_get_socket_pathname(void)
 #else
 	return "/dev/cavan/network/socket";
 #endif
+}
+
+char *network_get_hostname(char *buff, size_t size)
+{
+	const char *hostname;
+
+	hostname = getenv("HOSTNAME");
+	if (hostname != NULL) {
+		strncpy(buff, hostname, size);
+		return buff;
+	}
+
+	if (android_getprop("ro.product.name", buff, sizeof(buff)) > 0) {
+		return buff;
+	}
+
+	if (file_read_text("/proc/sys/kernel/hostname", buff, size) > 0) {
+		return buff;
+	}
+
+	strncpy(buff, "unknown", size);
+
+	return buff;
 }
 
 const char *inet_check_hostname(const char *hostname, char *buff, size_t size)
@@ -1775,12 +1799,12 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 			pr_red_info("network_client_udp_talk");
 			return ret;
 		}
+	}
 
-		ret = connect(client->sockfd, addr, client->addrlen);
-		if (ret < 0) {
-			pr_error_info("connect");
-			return ret;
-		}
+	ret = connect(client->sockfd, addr, client->addrlen);
+	if (ret < 0) {
+		pr_error_info("connect");
+		return ret;
 	}
 
 	client->send = network_client_tcp_send;
@@ -2597,6 +2621,16 @@ static int network_service_udp_accept(struct network_service *service, struct ne
 	return 0;
 }
 
+static ssize_t network_service_udp_sendto(struct network_service *service, const void *buff, size_t size, const struct sockaddr *addr)
+{
+	return sendto(service->sockfd, buff, size, 0, addr, service->addrlen);
+}
+
+static ssize_t network_service_udp_recvfrom(struct network_service *service, void *buff, size_t size, struct sockaddr *addr)
+{
+	return recvfrom(service->sockfd, buff, size, 0, addr, &service->addrlen);
+}
+
 static int network_service_udp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	service->sockfd = inet_create_udp_service(port);
@@ -2606,7 +2640,8 @@ static int network_service_udp_open(struct network_service *service, const struc
 	}
 
 	service->addrlen = sizeof(struct sockaddr_in);
-
+	service->sendto = network_service_udp_sendto;
+	service->recvfrom = network_service_udp_recvfrom;
 	service->accept = network_service_udp_accept;
 	service->close = network_service_udp_close;
 
@@ -2685,7 +2720,8 @@ static int network_service_unix_udp_open(struct network_service *service, const 
 	}
 
 	service->addrlen = sizeof(struct sockaddr_un);
-
+	service->sendto = network_service_udp_sendto;
+	service->recvfrom = network_service_udp_recvfrom;
 	service->accept = network_service_udp_accept;
 	service->close = network_service_udp_close;
 
@@ -2956,6 +2992,20 @@ const struct network_protocol_desc *network_get_protocol_by_port(u16 port)
 	}
 
 	return NULL;
+}
+
+static int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, const struct network_url *url, int flags)
+{
+	client->type = desc->type;
+
+	return desc->open_client(client, url, network_get_port_by_url(url, desc), flags);
+}
+
+static int network_protocol_open_service(const struct network_protocol_desc *desc, struct network_service *service, const struct network_url *url, int flags)
+{
+	service->type = desc->type;
+
+	return desc->open_service(service, url, network_get_port_by_url(url, desc), flags);
 }
 
 int network_get_port_by_url(const struct network_url *url, const struct network_protocol_desc *protocol)
@@ -3402,6 +3452,104 @@ int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_c
 	}
 
 	close(sockfd);
+
+	return ret;
+}
+
+static int network_discovery_service_handler(struct cavan_thread *thread, void *data)
+{
+	int ret;
+	struct network_discovery_service *service = data;
+	struct network_client *client = &service->client;
+
+	ret = network_client_send(client, service->command, service->command_len);
+	if (ret < 0) {
+		pr_err_info("network_client_send: %d", ret);
+		return ret;
+	}
+
+	cavan_thread_msleep(thread, service->delay);
+
+	return 0;
+}
+
+int network_discovery_service_start(struct network_discovery_service *service, u16 port, const char *command, ...)
+{
+	int ret;
+	va_list ap;
+	struct network_url url;
+	struct cavan_thread *thread = &service->thread;
+
+	if (service->delay < 1000) {
+		service->delay = 2000;
+	}
+
+	va_start(ap, command);
+	service->command_len = vsnprintf(service->command, sizeof(service->command), command, ap);
+	va_end(ap);
+
+	network_url_init(&url, "udp", "255", port, NULL);
+
+	ret = network_client_open(&service->client, &url, 0);
+	if (ret < 0) {
+		pr_red_info("network_client_open: %d", ret);
+		return ret;
+	}
+
+	thread->name = "UDP_DISCOVERY";
+	thread->wake_handker = NULL;
+	thread->handler = network_discovery_service_handler;
+
+	ret = cavan_thread_run(thread, service, 0);
+	if (ret < 0) {
+		pr_red_info("cavan_thread_run: %d", ret);
+		goto out_network_client_close;
+	}
+
+	return 0;
+
+out_network_client_close:
+	network_client_close(&service->client);
+	return ret;
+}
+
+void network_discovery_service_stop(struct network_discovery_service *service)
+{
+	cavan_thread_stop(&service->thread);
+	network_client_close(&service->client);
+}
+
+int network_discovery_client_run(u16 port)
+{
+	int ret;
+	struct network_url url;
+	struct network_service service;
+
+	network_url_init(&url, "udp", NULL, port, NULL);
+
+	ret = network_service_open(&service, &url, 0);
+	if (ret < 0) {
+		pr_red_info("network_client_open: %d", ret);
+		return ret;
+	}
+
+	while (1) {
+		char command[1025];
+		struct sockaddr_in addr;
+
+		ret = service.recvfrom(&service, command, sizeof(command), (struct sockaddr *) &addr);
+		if (ret < 0) {
+			pr_err_info("service->recvfrom: %d", ret);
+			break;
+		}
+
+		inet_show_sockaddr(&addr);
+
+		command[ret] = 0;
+		println("command = %s", command);
+	}
+
+	network_service_close(&service);
 
 	return ret;
 }

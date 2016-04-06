@@ -20,10 +20,10 @@
 	}
 
 #define CAVAN_COMMAND_MAP_START \
-	static struct cavan_command_map __local_cmd_map[] = {
+	static struct cavan_command_map __local_cmd_map[] =
 
 #define CAVAN_COMMAND_MAP_END \
-	}; \
+	; \
 	FIND_EXEC_COMMAND_MAIN(__local_cmd_map);
 
 #define CAVAN_ALIAS_DECLARE(name, command, subcmd) \
@@ -138,6 +138,8 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_VERSION,
 	CAVAN_COMMAND_OPTION_WIFI_MAC,
 	CAVAN_COMMAND_OPTION_WRITE,
+	CAVAN_COMMAND_OPTION_DISCOVERY,
+	CAVAN_COMMAND_OPTION_DISCOVERY_DELAY,
 	CAVAN_COMMAND_OPTION_SYSTEM,
 	CAVAN_COMMAND_OPTION_USERDATA,
 	CAVAN_COMMAND_OPTION_OVERRIDE,
@@ -247,6 +249,8 @@ extern const char *cavan_help_message_little_endian;
 extern const char *cavan_help_message_cmdline;
 extern const char *cavan_help_message_user;
 extern const char *cavan_help_message_group;
+extern const char *cavan_help_message_discovery;
+extern const char *cavan_help_message_discovery_delay;
 
 // ============================================================
 

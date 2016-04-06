@@ -328,7 +328,7 @@ static int ft5406_firmware_upgrade_main(int argc, char *argv[])
 	return ret;
 }
 
-static struct cavan_command_map cmd_map[] = {
+CAVAN_COMMAND_MAP_START {
 	{"calibration",		swan_ts_calication_main},
 	{"read_registers",	swan_ts_read_registers_main},
 	{"poll_registers",	swan_ts_poll_registers_main,},
@@ -341,6 +341,4 @@ static struct cavan_command_map cmd_map[] = {
 	{"test_client",		swan_ts_test_client_main},
 	{"detect_clients",	swan_ts_detect_clients_main},
 	{"ft5406_upgrade",	ft5406_firmware_upgrade_main}
-};
-
-FIND_EXEC_COMMAND_MAIN(cmd_map);
+} CAVAN_COMMAND_MAP_END;
