@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 
 	dd_service = cavan_dynamic_service_get_data(service);
 	dd_service->keypad_ko = NULL;
-	dd_service->discovery_port = 0;
+	dd_service->discovery.port = 0;
 	dd_service->discovery.delay = 2000;
 
 	url = &dd_service->url;
@@ -286,16 +286,16 @@ int main(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_DISCOVERY:
 			if (optarg) {
-				dd_service->discovery_port = text2value_unsigned(optarg, NULL, 10);
+				dd_service->discovery.port = text2value_unsigned(optarg, NULL, 10);
 			} else {
-				dd_service->discovery_port = TCP_DD_DISCOVERY_PORT;
+				dd_service->discovery.port = TCP_DD_DISCOVERY_PORT;
 			}
 			break;
 
 		case CAVAN_COMMAND_OPTION_DISCOVERY_DELAY:
 			dd_service->discovery.delay = text2value_unsigned(optarg, NULL, 10);
-			if (dd_service->discovery_port == 0) {
-				dd_service->discovery_port = TCP_DD_DISCOVERY_PORT;
+			if (dd_service->discovery.port == 0) {
+				dd_service->discovery.port = TCP_DD_DISCOVERY_PORT;
 			}
 			break;
 

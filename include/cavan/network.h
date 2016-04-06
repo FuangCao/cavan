@@ -302,6 +302,7 @@ struct network_discovery_service {
 	size_t command_len;
 	char command[1024];
 	u32 delay;
+	u16 port;
 };
 
 struct network_discovery_client {
@@ -464,7 +465,7 @@ int cavan_inet_get_ifconfig2(int sockfd, const char *ifname, struct cavan_inet_i
 int cavan_inet_get_ifconfig_list(int sockfd, struct cavan_inet_ifconfig *configs, int max_count);
 int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_count);
 
-int network_discovery_service_start(struct network_discovery_service *service, u16 port, const char *command, ...);
+int network_discovery_service_start(struct network_discovery_service *service, const char *command, ...);
 void network_discovery_service_stop(struct network_discovery_service *service);
 int network_discovery_client_run(u16 port);
 

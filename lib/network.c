@@ -3303,28 +3303,65 @@ int cavan_inet_find_default_route(struct cavan_inet_route routes[], int count)
 		}
 	}
 
+	for (i = 0; i < count; i++) {
+		if (routes[i].dstaddr.sin_addr.s_addr != INADDR_ANY
+			&& routes[i].gateway.sin_addr.s_addr == INADDR_ANY) {
+			return i;
+		}
+	}
+
+	for (i = 0; i < count; i++) {
+		if (routes[i].gateway.sin_addr.s_addr != INADDR_ANY) {
+			return i;
+		}
+	}
+
+	for (i = 0; i < count; i++) {
+		if (routes[i].dstaddr.sin_addr.s_addr != INADDR_ANY) {
+			return i;
+		}
+	}
+
 	return -EFAULT;
 }
 
 int cavan_inet_get_default_route(struct cavan_inet_route *route)
 {
 	int ret;
+	int index;
 	int count;
 	struct cavan_inet_route routes[16];
 
 	count = cavan_inet_get_route_table(routes, NELEM(routes));
-	if (count < 0) {
-		pr_red_info("cavan_inet_get_route_table");
-		return count;
+	if (count < 1) {
+		if (count < 0) {
+			pr_red_info("cavan_inet_get_route_table");
+			return count;
+		}
+
+		return -ENOENT;
 	}
 
-	ret = cavan_inet_find_default_route(routes, count);
-	if (ret < 0) {
-		pr_red_info("cavan_inet_find_default_route: %d", ret);
-		return ret;
+	if (count > 1) {
+		ret = cavan_inet_find_default_route(routes, count);
+		if (ret < 0) {
+#if 0
+			pr_red_info("cavan_inet_find_default_route: %d", ret);
+			return ret;
+#else
+			index = 0;
+#endif
+		}
+	} else {
+		index = 0;
 	}
 
-	memcpy(route, routes + ret, sizeof(struct cavan_inet_route));
+	memcpy(route, routes + index, sizeof(struct cavan_inet_route));
+
+	if (route->gateway.sin_addr.s_addr == INADDR_ANY) {
+		route->gateway.sin_addr.s_addr = route->dstaddr.sin_addr.s_addr;
+		route->gateway.sin_addr.s_addr |= 0xFF000000;
+	}
 
 	return 0;
 }
@@ -3459,25 +3496,34 @@ int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_c
 static int network_discovery_service_handler(struct cavan_thread *thread, void *data)
 {
 	int ret;
+	struct network_url url;
 	struct network_discovery_service *service = data;
 	struct network_client *client = &service->client;
+
+	network_url_init(&url, "udp", "255", service->port, NULL);
+
+	ret = network_client_open(&service->client, &url, 0);
+	if (ret < 0) {
+		pr_red_info("network_client_open: %d", ret);
+		goto out_cavan_thread_msleep;
+	}
 
 	ret = network_client_send(client, service->command, service->command_len);
 	if (ret < 0) {
 		pr_err_info("network_client_send: %d", ret);
-		return ret;
+		goto out_cavan_thread_msleep;
 	}
 
-	cavan_thread_msleep(thread, service->delay);
+	network_client_close(&service->client);
 
-	return 0;
+out_cavan_thread_msleep:
+	cavan_thread_msleep(thread, service->delay);
+	return ret;
 }
 
-int network_discovery_service_start(struct network_discovery_service *service, u16 port, const char *command, ...)
+int network_discovery_service_start(struct network_discovery_service *service, const char *command, ...)
 {
-	int ret;
 	va_list ap;
-	struct network_url url;
 	struct cavan_thread *thread = &service->thread;
 
 	if (service->delay < 1000) {
@@ -3488,29 +3534,11 @@ int network_discovery_service_start(struct network_discovery_service *service, u
 	service->command_len = vsnprintf(service->command, sizeof(service->command), command, ap);
 	va_end(ap);
 
-	network_url_init(&url, "udp", "255", port, NULL);
-
-	ret = network_client_open(&service->client, &url, 0);
-	if (ret < 0) {
-		pr_red_info("network_client_open: %d", ret);
-		return ret;
-	}
-
 	thread->name = "UDP_DISCOVERY";
 	thread->wake_handker = NULL;
 	thread->handler = network_discovery_service_handler;
 
-	ret = cavan_thread_run(thread, service, 0);
-	if (ret < 0) {
-		pr_red_info("cavan_thread_run: %d", ret);
-		goto out_network_client_close;
-	}
-
-	return 0;
-
-out_network_client_close:
-	network_client_close(&service->client);
-	return ret;
+	return cavan_thread_run(thread, service, 0);
 }
 
 void network_discovery_service_stop(struct network_discovery_service *service)

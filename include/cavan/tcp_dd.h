@@ -118,8 +118,6 @@ struct cavan_tcp_dd_service {
 	bool keypad_insmod;
 	const char *keypad_ko;
 	struct cavan_part_table *part_table;
-
-	u16 discovery_port;
 	struct network_discovery_service discovery;
 };
 
