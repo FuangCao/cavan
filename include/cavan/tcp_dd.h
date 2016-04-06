@@ -13,7 +13,6 @@
 #include <cavan/block.h>
 
 #define TCP_DD_DEFAULT_PORT			8888
-#define TCP_DD_DISCOVERY_PORT		8888
 #define TCP_DD_DAEMON_COUNT			10
 #define TCP_DD_TIMEOUT				5000
 #define TCP_DD_VERSION				0x20151223

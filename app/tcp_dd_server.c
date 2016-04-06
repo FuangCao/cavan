@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
 			if (optarg) {
 				dd_service->discovery.port = text2value_unsigned(optarg, NULL, 10);
 			} else {
-				dd_service->discovery.port = TCP_DD_DISCOVERY_PORT;
+				dd_service->discovery.port = CAVAN_DISCOVERY_PORT;
 			}
 			break;
 

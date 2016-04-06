@@ -54,9 +54,8 @@ static int test_discovery_client_main(int argc, char *argv[])
 		port = 8888;
 	}
 
-	return network_discovery_client_run(port);
+	return network_discovery_client_run(port, NULL, NULL);
 }
-
 
 CAVAN_COMMAND_MAP_START {
 	{ "service", test_discovery_service_main },

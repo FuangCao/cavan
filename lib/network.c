@@ -3572,9 +3572,15 @@ void network_discovery_service_stop(struct network_discovery_service *service)
 	cavan_thread_stop(&service->thread);
 }
 
-int network_discovery_client_run(u16 port)
+static void network_discovery_client_handler_dummy(int index, const char *command, struct sockaddr_in *addr, void *data)
+{
+	pr_green_info("%d. %-15s %s", index, inet_ntoa(addr->sin_addr), command);
+}
+
+int network_discovery_client_run(u16 port, void *data, void (*handler)(int index, const char *command, struct sockaddr_in *addr, void *data))
 {
 	int ret;
+	int count;
 	ssize_t wrlen;
 	struct network_url url;
 	struct sockaddr_in addr;
@@ -3602,7 +3608,11 @@ int network_discovery_client_run(u16 port)
 		goto out_network_client_close;
 	}
 
-	while (1) {
+	if (handler == NULL) {
+		handler = network_discovery_client_handler_dummy;
+	}
+
+	for (count = 0; file_poll_input(client.sockfd, 2000); count++) {
 		ssize_t rdlen;
 		char command[1024];
 
@@ -3612,11 +3622,11 @@ int network_discovery_client_run(u16 port)
 			goto out_network_client_close;
 		}
 
-		inet_show_sockaddr(&addr);
-
 		command[rdlen] = 0;
-		println("command = %s", command);
+		handler(count, command, &addr, data);
 	}
+
+	ret = count;
 
 out_network_client_close:
 	network_client_close(&client);

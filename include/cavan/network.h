@@ -40,6 +40,7 @@
 #define CAVAN_DEFAULT_PROTOCOL	"tcp"
 #define CAVAN_IP_ENV_NAME		"CAVAN_SERVER_IP"
 #define CAVAN_PORT_ENV_NAME		"CAVAN_SERVER_PORT"
+#define CAVAN_DISCOVERY_PORT	8888
 #define CAVAN_DISCOVERY_COMMAND	"cavan-discovery"
 
 #define CAVAN_NET_UDP_RETRY			10
@@ -307,9 +308,6 @@ struct network_discovery_service {
 	u16 port;
 };
 
-struct network_discovery_client {
-};
-
 struct network_file_request {
 	char src_file[1024];
 	char dest_file[1024];
@@ -469,7 +467,7 @@ int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_c
 
 int network_discovery_service_start(struct network_discovery_service *service, const char *command, ...);
 void network_discovery_service_stop(struct network_discovery_service *service);
-int network_discovery_client_run(u16 port);
+int network_discovery_client_run(u16 port, void *data, void (*handler)(int index, const char *command, struct sockaddr_in *addr, void *data));
 
 static inline int inet_socket(int type)
 {
