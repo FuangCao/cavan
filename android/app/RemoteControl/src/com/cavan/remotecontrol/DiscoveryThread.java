@@ -4,33 +4,71 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-
-import android.os.AsyncTask;
 import android.util.Log;
 
-public class DiscoveryThread extends AsyncTask {
+public class DiscoveryThread extends Thread {
 
 	private static final String TAG = "Cavan";
 
+	private int mPort;
+	InetAddress mAddress;
 	private MulticastSocket mSocket;
+	private DatagramPacket mCommand;
 
-	public DiscoveryThread() {
-		// TODO Auto-generated constructor stub
-	}
+	public DiscoveryThread(int port) {
+		mPort = port;
 
-	@Override
-	protected Object doInBackground(Object... params) {
 		try {
 			mSocket = new MulticastSocket();
-			byte[] bytes = ((String) params[0]).getBytes();
-			InetAddress address = InetAddress.getByName("192.168.1.255");
-			Log.d(TAG , "isMulticastAddress = " + address.isMulticastAddress());
-			DatagramPacket pack = new DatagramPacket(bytes, bytes.length, address, 1122);
-			mSocket.send(pack);
+
+			byte[] bytes = "cavan-discovery".getBytes();
+			mAddress = InetAddress.getByName("224.0.0.1");
+			mCommand = new DatagramPacket(bytes, bytes.length, mAddress, mPort);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public DiscoveryThread() {
+		this(8888);
+	}
+
+	public boolean startDiscovery() {
+		if (mSocket == null || mCommand == null) {
+			return false;
+		}
+
+		Log.e(TAG, "startDiscovery");
+
+		try {
+			mSocket.send(mCommand);
+			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		return null;
+		return false;
+	}
+
+	protected void onDiscovery(String text) {
+		Log.e(TAG, "text = " + text, new Throwable());
+	}
+
+	@Override
+	public void run() {
+		if (startDiscovery()) {
+			byte[] bytes = new byte[1024];
+			DatagramPacket pack = new DatagramPacket(bytes, bytes.length, mAddress, mPort);
+			while (true) {
+				try {
+					mSocket.receive(pack);
+					String text = new String(pack.getData(), 0, pack.getLength());
+					// Log.e(TAG, "text = " + text);
+					onDiscovery(text);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 }

@@ -7,23 +7,81 @@ import java.net.MulticastSocket;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
+import android.widget.SimpleAdapter;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity {
 
 	private static final String TAG = "Cavan";
 
-	private MulticastSocket mSocket;
+	private Spinner mSpinner;
+	private Adapter mAdapter = new BaseAdapter() {
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public long getItemId(int position) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public Object getItem(int position) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public int getCount() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+	};
+
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+		}
+	};
+
+	private DiscoveryThread mThread = new DiscoveryThread() {
+
+		@Override
+		public void onDiscovery(String text) {
+			Log.e(TAG, "text = " + text);
+
+			Message message = mHandler.obtainMessage(0, text);
+			message.sendToTarget();
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		DiscoveryThread thread = new DiscoveryThread();
-		thread.execute("123456");
+		mSpinner = (Spinner) findViewById(R.id.spinner1);
+		mSpinner.setAdapter((SpinnerAdapter) mAdapter);
+
+		mThread.start();
 	}
 
 	@Override
