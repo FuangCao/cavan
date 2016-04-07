@@ -351,6 +351,7 @@ struct cavan_inet_route {
 
 const char *network_get_socket_pathname(void);
 char *network_get_hostname(char *buff, size_t size);
+const char *inet_get_special_address(const char *hostname);
 const char *inet_check_hostname(const char *hostname, char *buff, size_t size);
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
 ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);

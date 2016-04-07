@@ -49,10 +49,66 @@ char *network_get_hostname(char *buff, size_t size)
 	return buff;
 }
 
+const char *inet_get_special_address(const char *hostname)
+{
+	if (hostname == NULL || hostname[0] == 0) {
+		return "127.0.0.1";
+	}
+
+	switch (*hostname++) {
+	case 'l':
+		if (strcmp(hostname, "ocalhost") == 0) {
+			return "127.0.0.1";
+		}
+
+		if (strcmp(hostname, "oopback") == 0) {
+			return "127.0.0.1";
+		}
+		break;
+
+	case 'b':
+		if (strcmp(hostname, "roadcast") == 0) {
+			return "255.255.255.255";
+		}
+		break;
+
+	case 'a':
+		if (strcmp(hostname, "ny") == 0) {
+			return "0.0.0.0";
+		}
+
+		if (text_lhcmp("ll", hostname) == 0) {
+			hostname += 2;
+			if (*hostname == '-') {
+				hostname++;
+			}
+
+			if (strcmp(hostname, "hosts") == 0) {
+				return "224.0.0.1";
+			}
+
+			if (strcmp(hostname, "rtrs") == 0) {
+				return "224.0.0.2";
+			}
+		}
+		break;
+
+	case 'u':
+		if (strcmp(hostname, "nspec") == 0) {
+			return "224.0.0.0";
+		}
+		break;
+	}
+
+	return NULL;
+}
+
 const char *inet_check_hostname(const char *hostname, char *buff, size_t size)
 {
-	if (hostname == NULL || hostname[0] == 0 || strcmp(hostname, "localhost") == 0) {
-		hostname = "127.0.0.1";
+	const char *special = inet_get_special_address(hostname);
+
+	if (special) {
+		hostname = special;
 	} else if (buff && size > 0) {
 		int count;
 		int values[4];
@@ -60,26 +116,36 @@ const char *inet_check_hostname(const char *hostname, char *buff, size_t size)
 
 		count = text2value_array2(hostname, &last, '.', values, NELEM(values), 10);
 		if (*last == 0 && count < 4) {
-			int i, j;
-			struct cavan_inet_route route;
-			u8 *addr = (u8 *) &route.gateway.sin_addr.s_addr;
+			int length = android_get_wifi_ipaddress(buff, size);
 
-			if (cavan_inet_get_default_route(&route) < 0) {
-				addr[0] = 192;
-				addr[1] = 168;
-				addr[2] = 0;
-				addr[3] = 1;
+			if (length > 0) {
+				char *last_dot;
+
+				for (last_dot = buff + length - 1; last_dot > buff && *last_dot != '.'; last_dot--);
+
+				strncpy(last_dot + 1, hostname, size - length);
+			} else {
+				int i, j;
+				struct cavan_inet_route route;
+				u8 *addr = (u8 *) &route.gateway.sin_addr.s_addr;
+
+				if (cavan_inet_get_default_route(&route) < 0) {
+					addr[0] = 192;
+					addr[1] = 168;
+					addr[2] = 0;
+					addr[3] = 1;
+				}
+
+				for (i = count - 1, j = 3; i >= 0; i--, j--) {
+					values[j] = values[i];
+				}
+
+				for (i = 4 - count - 1; i >= 0; i--) {
+					values[i] = addr[i];
+				}
+
+				value2text_array2(values, NELEM(values), '.', buff, size, 10);
 			}
-
-			for (i = count - 1, j = 3; i >= 0; i--, j--) {
-				values[j] = values[i];
-			}
-
-			for (i = 4 - count - 1; i >= 0; i--) {
-				values[i] = addr[i];
-			}
-
-			value2text_array2(values, NELEM(values), '.', buff, size, 10);
 
 			hostname = buff;
 		}
@@ -2378,6 +2444,8 @@ int network_client_send_file(struct network_client *client, int fd, size64_t ski
 	progress_bar_init(&bar, size, skip, PROGRESS_BAR_TYPE_DATA);
 
 	if (size == 0) {
+		bool no_data = true;
+
 		while (1) {
 			rdlen = ffile_read(fd, buff, sizeof(buff));
 			if (rdlen <= 0) {
@@ -2388,11 +2456,17 @@ int network_client_send_file(struct network_client *client, int fd, size64_t ski
 				break;
 			}
 
+			no_data = false;
+
 			if (client->send(client, buff, rdlen) < rdlen) {
 				return -EIO;
 			}
 
 			progress_bar_add(&bar, rdlen);
+		}
+
+		if (no_data) {
+			pr_warn_info("No data send!");
 		}
 	} else {
 		while (size) {
@@ -3586,7 +3660,7 @@ int network_discovery_client_run(u16 port, void *data, void (*handler)(int index
 	struct sockaddr_in addr;
 	struct network_client client;
 
-	network_url_init(&url, "udp", "255", port, NULL);
+	network_url_init(&url, "udp", "all-hosts", port, NULL);
 
 	ret = network_client_open(&client, &url, 0);
 	if (ret < 0) {

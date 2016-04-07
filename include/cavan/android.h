@@ -22,17 +22,26 @@
 #include <cavan.h>
 #include <cavan/file.h>
 
+#define ANDROID_CMD_GETPROP		"/system/bin/getprop"
+#define ANDROID_CMD_SETPROP		"/system/bin/setprop"
+
 __BEGIN_DECLS
 
 int android_getprop(const char *name, char *buff, size_t size);
 int android_getprop_int(const char *name, int def_value);
 bool android_getprop_bool(const char *name, bool def_value);
 double android_getprop_double(const char *name, double def_value);
+
 int android_setprop(const char *name, const char *value);
 int android_setprop_int(const char *name, int value);
 int android_setprop_bool(const char *name, bool value);
 int android_setprop_double(const char *name, double value);
 void android_stop_all(void);
+
+__printf_format_34__ int android_getprop_format(char *buff, size_t size, const char *name, ...);
+__printf_format_23__ int android_setprop_format(const char *value, const char *name, ...);
+
+int android_get_wifi_prop(const char *name, char *buff, size_t size);
 
 static inline bool cavan_is_android(void)
 {
@@ -41,6 +50,21 @@ static inline bool cavan_is_android(void)
 #else
 	return file_access_e("/system/framework/framework.jar") && file_access_e("/system/build.prop");
 #endif
+}
+
+static inline int android_get_wifi_ipaddress(char *buff, size_t size)
+{
+	return android_get_wifi_prop("ipaddress", buff, size);
+}
+
+static inline int android_get_wifi_gateway(char *buff, size_t size)
+{
+	return android_get_wifi_prop("gateway", buff, size);
+}
+
+static inline int android_get_wifi_mask(char *buff, size_t size)
+{
+	return android_get_wifi_prop("mask", buff, size);
 }
 
 __END_DECLS

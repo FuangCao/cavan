@@ -25,22 +25,71 @@
 #ifndef CONFIG_ANDROID
 int android_getprop(const char *name, char *buff, size_t size)
 {
-	char *env;
+	if (file_access_x(ANDROID_CMD_GETPROP)) {
+		int ret;
+		char *last;
+		char command[64];
 
-	env = getenv(name);
-	if (env == NULL) {
-		return -EFAULT;
+		snprintf(command, sizeof(command), ANDROID_CMD_GETPROP " \"%s\"", name);
+
+		ret = cavan_popen(command, buff, size, &last);
+		if (ret < 0) {
+			return ret;
+		}
+
+		*last = 0;
+
+		while (last > buff && cavan_isspace(*(last - 1))) {
+			*--last = 0;
+		}
+
+		return last - buff;
+	} else {
+		char *env;
+
+		env = getenv(name);
+		if (env == NULL) {
+			return -EFAULT;
+		}
+
+		return text_ncopy(buff, env, size) - buff;
 	}
-
-	return text_ncopy(buff, env, size) - buff;
 }
 
 int android_setprop(const char *name, const char *value)
 {
-	return setenv(name, value, 1);
+	if (file_access_x(ANDROID_CMD_SETPROP)) {
+		return cavan_system2(ANDROID_CMD_SETPROP " \"%s\" \"%s\"", name, value);
+	} else {
+		return setenv(name, value, 1);
+	}
 }
 
 #endif
+
+int android_getprop_format(char *buff, size_t size, const char *name, ...)
+{
+	va_list ap;
+	char name_buff[64];
+
+	va_start(ap, name);
+	vsnprintf(name_buff, sizeof(name_buff), name, ap);
+	va_end(ap);
+
+	return android_getprop(name_buff, buff, size);
+}
+
+int android_setprop_format(const char *value, const char *name, ...)
+{
+	va_list ap;
+	char name_buff[64];
+
+	va_start(ap, name);
+	vsnprintf(name_buff, sizeof(name_buff), name, ap);
+	va_end(ap);
+
+	return android_setprop(name_buff, value);
+}
 
 int android_getprop_int(const char *name, int def_value)
 {
@@ -119,4 +168,15 @@ void android_stop_all(void)
 
 	println(" OK");
 #endif
+}
+
+int android_get_wifi_prop(const char *name, char *buff, size_t size)
+{
+	char ifname[32];
+
+	if (android_getprop("wifi.interface", ifname, sizeof(ifname)) <= 0) {
+		return -ENOENT;
+	}
+
+	return android_getprop_format(buff, size, "dhcp.%s.%s", ifname, name);
 }
