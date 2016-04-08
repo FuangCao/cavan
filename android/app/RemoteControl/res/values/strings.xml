@@ -17,5 +17,6 @@
     <string name="text_volume_up">音量+</string>
     <string name="text_bright_down">亮度-</string>
     <string name="text_bright_up">亮度+</string>
+    <string name="text_power">电源</string>
 
 </resources>

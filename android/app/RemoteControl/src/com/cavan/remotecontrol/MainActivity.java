@@ -56,6 +56,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		sKeyMap.put(R.id.buttonVolumeDown, 114);
 		sKeyMap.put(R.id.buttonBrightUp, 225);
 		sKeyMap.put(R.id.buttonBrightDown, 224);
+		sKeyMap.put(R.id.buttonPower, 116);
 	}
 
 	private Socket mSocket;
