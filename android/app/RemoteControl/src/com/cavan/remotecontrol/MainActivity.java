@@ -3,12 +3,20 @@ package com.cavan.remotecontrol;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
+
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -24,9 +32,8 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
-import com.cavan.remotecontrol.DiscoveryThread.ScanResult;
 
-@SuppressLint("HandlerLeak")
+@SuppressLint({ "HandlerLeak", "UseSparseArrays" })
 public class MainActivity extends ActionBarActivity implements OnClickListener, OnItemSelectedListener {
 
 	private static final String TAG = "Cavan";
@@ -34,29 +41,51 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	private static final short TCP_DD_REQ_KEYPAD = 7;
 	private static final short EVENT_TYPE_SYNC = 0;
 	private static final short EVENT_TYPE_KEY = 1;
+	private static final HashMap<Integer, Integer> sKeyMap = new HashMap<Integer, Integer>();
 
-	private static final int[] BUTTON_IDS = {
-		R.id.buttonScan,
-		R.id.buttonBack,
-		R.id.buttonDown,
-		R.id.buttonEnter,
-		R.id.buttonHome,
-		R.id.buttonLeft,
-		R.id.buttonMenu,
-		R.id.buttonRight,
-		R.id.buttonUp,
-		R.id.buttonVolumeUp,
-		R.id.buttonVolumeDown,
-		R.id.buttonBrightUp,
-		R.id.buttonBrightDown,
-	};
+	static {
+		sKeyMap.put(R.id.buttonBack, 158);
+		sKeyMap.put(R.id.buttonDown, 108);
+		sKeyMap.put(R.id.buttonEnter, 28);
+		sKeyMap.put(R.id.buttonHome, 172);
+		sKeyMap.put(R.id.buttonLeft, 105);
+		sKeyMap.put(R.id.buttonMenu, 139);
+		sKeyMap.put(R.id.buttonRight, 106);
+		sKeyMap.put(R.id.buttonUp, 103);
+		sKeyMap.put(R.id.buttonVolumeUp, 115);
+		sKeyMap.put(R.id.buttonVolumeDown, 114);
+		sKeyMap.put(R.id.buttonBrightUp, 225);
+		sKeyMap.put(R.id.buttonBrightDown, 224);
+	}
 
 	private Socket mSocket;
 	private OutputStream mOutputStream;
+	private HashMap<Button, Integer> mButtonMap = new HashMap<Button, Integer>();
+
+	private IDiscoveryService mDiscoveryService;
+	private ServiceConnection mConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mDiscoveryService = null;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mDiscoveryService = IDiscoveryService.Stub.asInterface(service);
+
+			try {
+				mDiscoveryService.startDiscovery(0);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+	};
 
 	private Spinner mSpinner;
-	private List<ScanResult> mScanResults;
+	private Button mButtonScan;
 	private ScanResult mScanResult;
+	private List<ScanResult> mScanResults;
 	private Adapter mAdapter = new BaseAdapter() {
 
 		@Override
@@ -92,20 +121,24 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		}
 	};
 
-	private Handler mHandler = new Handler() {
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
 		@Override
-		public void handleMessage(Message msg) {
-			mSpinner.setAdapter((SpinnerAdapter) mAdapter);
-		}
-	};
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			if (action.equals(DiscoveryService.ACTION_SCAN_RESULT_CHANGED)) {
+				if (mDiscoveryService == null) {
+					return;
+				}
 
-	private DiscoveryThread mThread = new DiscoveryThread() {
-
-		@Override
-		protected void onDiscovery() {
-			mScanResults = getScanResults();
-			mHandler.sendEmptyMessageDelayed(0, 500);
+				try {
+					mSpinner.setAdapter(null);
+					mScanResults = mDiscoveryService.getScanResult();
+					mSpinner.setAdapter((SpinnerAdapter) mAdapter);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	};
 
@@ -117,14 +150,38 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		mSpinner = (Spinner) findViewById(R.id.spinner1);
 		mSpinner.setOnItemSelectedListener(this);
 
-		for (int id : BUTTON_IDS) {
+		mButtonScan = (Button) findViewById(R.id.buttonScan);
+		mButtonScan.setOnClickListener(this);
+
+		for (int id : sKeyMap.keySet()) {
 			Button button = (Button) findViewById(id);
 			if (button != null) {
 				button.setOnClickListener(this);
+				mButtonMap.put(button, sKeyMap.get(id));
 			}
 		}
 
-		mThread.start();
+		Intent service = new Intent(this, DiscoveryService.class);
+		bindService(service, mConnection, BIND_AUTO_CREATE);
+	}
+
+	@Override
+	protected void onDestroy() {
+		unbindService(mConnection);
+		super.onDestroy();
+	}
+
+	@Override
+	protected void onPause() {
+		unregisterReceiver(mReceiver);
+		super.onPause();
+	}
+
+	@Override
+	protected void onResume() {
+		IntentFilter filter = new IntentFilter(DiscoveryService.ACTION_SCAN_RESULT_CHANGED);
+		registerReceiver(mReceiver, filter );
+		super.onResume();
 	}
 
 	@Override
@@ -148,58 +205,20 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 
 	@Override
 	public void onClick(View v) {
-		switch (v.getId()) {
-		case R.id.buttonScan:
-			mThread.startDiscoveryAsync();
-			break;
-
-		case R.id.buttonBack:
-			sendKeyEvent(158);
-			break;
-
-		case R.id.buttonDown:
-			sendKeyEvent(108);
-			break;
-
-		case R.id.buttonEnter:
-			sendKeyEvent(28);
-			break;
-
-		case R.id.buttonHome:
-			sendKeyEvent(172);
-			break;
-
-		case R.id.buttonLeft:
-			sendKeyEvent(105);
-			break;
-
-		case R.id.buttonMenu:
-			sendKeyEvent(139);
-			break;
-
-		case R.id.buttonRight:
-			sendKeyEvent(106);
-			break;
-
-		case R.id.buttonUp:
-			sendKeyEvent(103);
-			break;
-
-		case R.id.buttonVolumeUp:
-			sendKeyEvent(115);
-			break;
-
-		case R.id.buttonVolumeDown:
-			sendKeyEvent(114);
-			break;
-
-		case R.id.buttonBrightUp:
-			sendKeyEvent(225);
-			break;
-
-		case R.id.buttonBrightDown:
-			sendKeyEvent(224);
-			break;
+		int id = v.getId();
+		if (id == R.id.buttonScan) {
+			try {
+				if (mDiscoveryService != null) {
+					mDiscoveryService.startDiscovery(0);
+				}
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		} else {
+			Integer keycode = sKeyMap.get(id);
+			if (keycode != null) {
+				sendKeyEvent(keycode);
+			}
 		}
 	}
 
@@ -239,6 +258,10 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	}
 
 	private boolean sendData(byte[] data) {
+		if (mOutputStream == null) {
+			return false;
+		}
+
 		try {
 			mOutputStream.write(data);
 			mOutputStream.flush();
