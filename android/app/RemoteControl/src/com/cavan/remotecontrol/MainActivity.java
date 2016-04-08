@@ -13,9 +13,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -23,20 +24,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.Adapter;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
-import android.widget.TextView;
+import android.widget.Toast;
 
-@SuppressLint({ "HandlerLeak", "UseSparseArrays" })
-public class MainActivity extends ActionBarActivity implements OnClickListener, OnItemSelectedListener {
+@SuppressLint({ "HandlerLeak", "UseSparseArrays", "NewApi" })
+public class MainActivity extends ActionBarActivity implements OnClickListener {
 
-	private static final String TAG = "Cavan";
+	public static final String TAG = "Cavan";
+
+	private static final int EVENT_LINK_CHANGED = 0;
+	private static final int EVENT_AUTO_CONNECT = 1;
+
 	private static final int TCP_DD_VERSION = 0x20151223;
 	private static final short TCP_DD_REQ_KEYPAD = 7;
 	private static final short EVENT_TYPE_SYNC = 0;
@@ -57,6 +55,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		sKeyMap.put(R.id.buttonBrightUp, 225);
 		sKeyMap.put(R.id.buttonBrightDown, 224);
 		sKeyMap.put(R.id.buttonPower, 116);
+		sKeyMap.put(R.id.buttonMute, 113);
+		sKeyMap.put(R.id.buttonDel, 14);
 	}
 
 	private Socket mSocket;
@@ -83,44 +83,9 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		}
 	};
 
-	private Spinner mSpinner;
 	private Button mButtonScan;
 	private ScanResult mScanResult;
 	private List<ScanResult> mScanResults;
-	private Adapter mAdapter = new BaseAdapter() {
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			TextView view;
-
-			if (convertView != null) {
-				view = (TextView) convertView;
-			} else {
-				view = new TextView(getApplicationContext());
-			}
-
-			view.setText(mScanResults.get(position).toShortString());
-			view.setTextSize(28);
-			view.setTextColor(Color.BLACK);
-
-			return view;
-		}
-
-		@Override
-		public long getItemId(int position) {
-			return 0;
-		}
-
-		@Override
-		public Object getItem(int position) {
-			return null;
-		}
-
-		@Override
-		public int getCount() {
-			return mScanResults.size();
-		}
-	};
 
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
@@ -133,13 +98,52 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 				}
 
 				try {
-					mSpinner.setAdapter(null);
 					mScanResults = mDiscoveryService.getScanResult();
-					mSpinner.setAdapter((SpinnerAdapter) mAdapter);
+					invalidateOptionsMenu();
+					mHandler.removeMessages(EVENT_AUTO_CONNECT);
+					mHandler.sendEmptyMessageDelayed(EVENT_AUTO_CONNECT, 2000);
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
 			}
+		}
+	};
+
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case EVENT_LINK_CHANGED:
+				ScanResult result = (ScanResult) msg.obj;
+
+				if (result != null) {
+					setTitle(result.getShortString());
+					Toast.makeText(getApplicationContext(), R.string.text_connected, Toast.LENGTH_SHORT).show();
+				} else {
+					try {
+						mDiscoveryService.startDiscovery(0);
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+
+					setTitle(R.string.text_disconnected);
+					Toast.makeText(getApplicationContext(), R.string.text_disconnected, Toast.LENGTH_SHORT).show();
+				}
+				break;
+
+			case EVENT_AUTO_CONNECT:
+				if (mOutputStream == null) {
+					if (mScanResults.size() == 1) {
+						connect(mScanResults.get(0));
+					} else {
+						setTitle(R.string.text_manul_connect);
+					}
+				}
+				break;
+			}
+
+			super.handleMessage(msg);
 		}
 	};
 
@@ -148,8 +152,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		mSpinner = (Spinner) findViewById(R.id.spinner1);
-		mSpinner.setOnItemSelectedListener(this);
+		setTitle(R.string.text_not_connect);
 
 		mButtonScan = (Button) findViewById(R.id.buttonScan);
 		mButtonScan.setOnClickListener(this);
@@ -186,22 +189,25 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		menu.clear();
+
+		if (mScanResults != null) {
+			for (int i = 0; i < mScanResults.size(); i++) {
+				ScanResult result = mScanResults.get(i);
+				menu.add(Menu.NONE, i, 0, result.getShortString());
+			}
+		}
+
+		return super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
+		ScanResult result = mScanResults.get(item.getItemId());
+		connect(result);
+
+		return true;
 	}
 
 	@Override
@@ -269,6 +275,16 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
+
+			try {
+				mOutputStream.close();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+
+			mScanResult = null;
+			mOutputStream = null;
+			mHandler.sendEmptyMessage(EVENT_LINK_CHANGED);
 		}
 
 		return false;
@@ -301,50 +317,49 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		return sendData(data);
 	}
 
-	@Override
-	public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		mScanResult = mScanResults.get(mSpinner.getSelectedItemPosition());
-		if (mScanResult == null) {
-			return;
+	private void connect(ScanResult result) {
+		if (mScanResult != null && mScanResult.equals(result)) {
+			setTitle(result.getShortString());
+		} else {
+			ConnectThread thread = new ConnectThread();
+			thread.start();
 		}
 
-		Log.d(TAG, "onItemSelected: mScanResult = " + mScanResult);
+		mScanResult = result;
+		Log.e(TAG, "mScanResult = " + mScanResult);
+	}
 
-		Thread thread = new Thread() {
+	class ConnectThread extends Thread {
 
-			@Override
-			public void run() {
-				if (mOutputStream != null) {
-					try {
-						mOutputStream.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-
-				if (mSocket != null) {
-					try {
-						mSocket.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-
+		@Override
+		public void run() {
+			if (mOutputStream != null) {
 				try {
-					mSocket = new Socket(mScanResult.getAddress(), mScanResult.getPort());
-					mSocket.setTcpNoDelay(true);
-					mOutputStream = mSocket.getOutputStream();
-					sendTcpDdPackage(TCP_DD_REQ_KEYPAD, null);
+					mOutputStream.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
-		};
 
-		thread.start();
-	}
+			if (mSocket != null) {
+				try {
+					mSocket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 
-	@Override
-	public void onNothingSelected(AdapterView<?> arg0) {
+			try {
+				mSocket = new Socket(mScanResult.getAddress(), mScanResult.getPort());
+				mSocket.setTcpNoDelay(true);
+				mOutputStream = mSocket.getOutputStream();
+				if (sendTcpDdPackage(TCP_DD_REQ_KEYPAD, null)) {
+					Message message = mHandler.obtainMessage(EVENT_LINK_CHANGED, mScanResult);
+					message.sendToTarget();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

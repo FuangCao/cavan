@@ -15,11 +15,12 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Toast;
 
 @SuppressLint("DefaultLocale")
 public class DiscoveryService extends Service {
 
-	private static final String TAG = "Cavan";
+	private static final String TAG = MainActivity.TAG;
 
 	public static final String ACTION_SCAN_RESULT_CHANGED = "cavan.discovery.intent.action.SCAN_RESULT_CHANGED";
 
@@ -67,6 +68,7 @@ public class DiscoveryService extends Service {
 
 			DiscoveryThread thread = new DiscoveryThread(port);
 			thread.start();
+			Toast.makeText(getApplicationContext(), R.string.text_scanning, Toast.LENGTH_SHORT).show();
 
 			return false;
 		}

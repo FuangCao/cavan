@@ -18,5 +18,12 @@
     <string name="text_bright_down">亮度-</string>
     <string name="text_bright_up">亮度+</string>
     <string name="text_power">电源</string>
+    <string name="text_mute">静音</string>
+    <string name="text_del">删除</string>
+    <string name="text_connected">已连接</string>
+    <string name="text_not_connect">未连接</string>
+    <string name="text_manul_connect">检测到多个设备，请手动连接</string>
+    <string name="text_disconnected">已断开连接</string>
+    <string name="text_scanning">正在扫描</string>
 
 </resources>

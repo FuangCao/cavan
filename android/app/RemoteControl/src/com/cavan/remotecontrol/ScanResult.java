@@ -1,12 +1,16 @@
 package com.cavan.remotecontrol;
 
 import java.net.InetAddress;
+
 import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 @SuppressLint("DefaultLocale")
 public class ScanResult implements Parcelable {
+	@SuppressWarnings("unused")
+	private static final String TAG = MainActivity.TAG;
+
 	private int mPort;
 	private String mHostname;
 	private InetAddress mAddress;
@@ -47,8 +51,23 @@ public class ScanResult implements Parcelable {
 		return String.format("%s:%d - %s", mAddress.getHostAddress(), mPort, mHostname);
 	}
 
-	public String toShortString() {
+	public String getShortString() {
 		return String.format("%s - %s", mAddress.getHostAddress(), mHostname);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj != null && obj instanceof ScanResult) {
+			ScanResult result = (ScanResult) obj;
+
+			if (result.getPort() != mPort) {
+				return false;
+			}
+
+			return mAddress.equals(result.getAddress());
+		}
+
+		return false;
 	}
 
 	@Override
