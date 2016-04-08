@@ -20,6 +20,7 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,28 +36,61 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 	private static final int EVENT_LINK_CHANGED = 0;
 	private static final int EVENT_AUTO_CONNECT = 1;
 
+	private static final int KEYCODE_BACK = 158;
+	private static final int KEYCODE_HOME = 172;
+	private static final int KEYCODE_MENU = 139;
+	private static final int KEYCODE_UP = 103;
+	private static final int KEYCODE_DOWN = 108;
+	private static final int KEYCODE_LEFT = 105;
+	private static final int KEYCODE_RIGHT = 106;
+	private static final int KEYCODE_ENTER = 28;
+	private static final int KEYCODE_VOLUME_MUTE = 113;
+	private static final int KEYCODE_VOLUME_UP = 115;
+	private static final int KEYCODE_VOLUME_DOWN = 114;
+	private static final int KEYCODE_BRIGHT_UP = 225;
+	private static final int KEYCODE_BRIGHT_DOWN = 224;
+	private static final int KEYCODE_POWER = 116;
+	private static final int KEYCODE_DEL = 14;
+
 	private static final int TCP_DD_VERSION = 0x20151223;
 	private static final short TCP_DD_REQ_KEYPAD = 7;
 	private static final short EVENT_TYPE_SYNC = 0;
 	private static final short EVENT_TYPE_KEY = 1;
 	private static final HashMap<Integer, Integer> sKeyMap = new HashMap<Integer, Integer>();
+	private static final HashMap<Integer, Integer> sKeyEventMap = new HashMap<Integer, Integer>();
 
 	static {
-		sKeyMap.put(R.id.buttonBack, 158);
-		sKeyMap.put(R.id.buttonDown, 108);
-		sKeyMap.put(R.id.buttonEnter, 28);
-		sKeyMap.put(R.id.buttonHome, 172);
-		sKeyMap.put(R.id.buttonLeft, 105);
-		sKeyMap.put(R.id.buttonMenu, 139);
-		sKeyMap.put(R.id.buttonRight, 106);
-		sKeyMap.put(R.id.buttonUp, 103);
-		sKeyMap.put(R.id.buttonVolumeUp, 115);
-		sKeyMap.put(R.id.buttonVolumeDown, 114);
-		sKeyMap.put(R.id.buttonBrightUp, 225);
-		sKeyMap.put(R.id.buttonBrightDown, 224);
-		sKeyMap.put(R.id.buttonPower, 116);
-		sKeyMap.put(R.id.buttonMute, 113);
-		sKeyMap.put(R.id.buttonDel, 14);
+		sKeyMap.put(R.id.buttonBack, KEYCODE_BACK);
+		sKeyMap.put(R.id.buttonHome, KEYCODE_HOME);
+		sKeyMap.put(R.id.buttonMenu, KEYCODE_MENU);
+		sKeyMap.put(R.id.buttonUp, KEYCODE_UP);
+		sKeyMap.put(R.id.buttonDown, KEYCODE_DOWN);
+		sKeyMap.put(R.id.buttonLeft, KEYCODE_LEFT);
+		sKeyMap.put(R.id.buttonRight, KEYCODE_RIGHT);
+		sKeyMap.put(R.id.buttonEnter, KEYCODE_ENTER);
+		sKeyMap.put(R.id.buttonMute, KEYCODE_VOLUME_MUTE);
+		sKeyMap.put(R.id.buttonVolumeUp, KEYCODE_VOLUME_UP);
+		sKeyMap.put(R.id.buttonVolumeDown, KEYCODE_VOLUME_DOWN);
+		sKeyMap.put(R.id.buttonBrightUp, KEYCODE_BRIGHT_UP);
+		sKeyMap.put(R.id.buttonBrightDown, KEYCODE_BRIGHT_DOWN);
+		sKeyMap.put(R.id.buttonPower, KEYCODE_POWER);
+		sKeyMap.put(R.id.buttonDel, KEYCODE_DEL);
+
+		sKeyEventMap.put(KeyEvent.KEYCODE_BACK, KEYCODE_BACK);
+		sKeyEventMap.put(KeyEvent.KEYCODE_HOME, KEYCODE_HOME);
+		sKeyEventMap.put(KeyEvent.KEYCODE_MENU, KEYCODE_MENU);
+		sKeyEventMap.put(KeyEvent.KEYCODE_DPAD_UP, KEYCODE_UP);
+		sKeyEventMap.put(KeyEvent.KEYCODE_DPAD_DOWN, KEYCODE_DOWN);
+		sKeyEventMap.put(KeyEvent.KEYCODE_DPAD_LEFT, KEYCODE_LEFT);
+		sKeyEventMap.put(KeyEvent.KEYCODE_DPAD_RIGHT, KEYCODE_RIGHT);
+		sKeyEventMap.put(KeyEvent.KEYCODE_ENTER, KEYCODE_ENTER);
+		sKeyEventMap.put(KeyEvent.KEYCODE_VOLUME_MUTE, KEYCODE_VOLUME_MUTE);
+		sKeyEventMap.put(KeyEvent.KEYCODE_VOLUME_UP, KEYCODE_VOLUME_UP);
+		sKeyEventMap.put(KeyEvent.KEYCODE_VOLUME_DOWN, KEYCODE_VOLUME_DOWN);
+		sKeyEventMap.put(KeyEvent.KEYCODE_BRIGHTNESS_UP, KEYCODE_BRIGHT_UP);
+		sKeyEventMap.put(KeyEvent.KEYCODE_BRIGHTNESS_DOWN, KEYCODE_BRIGHT_DOWN);
+		sKeyEventMap.put(KeyEvent.KEYCODE_POWER, KEYCODE_POWER);
+		sKeyEventMap.put(KeyEvent.KEYCODE_DEL, KEYCODE_DEL);
 	}
 
 	private Socket mSocket;
@@ -101,7 +135,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 					mScanResults = mDiscoveryService.getScanResult();
 					invalidateOptionsMenu();
 					mHandler.removeMessages(EVENT_AUTO_CONNECT);
-					mHandler.sendEmptyMessageDelayed(EVENT_AUTO_CONNECT, 2000);
+					mHandler.sendEmptyMessageDelayed(EVENT_AUTO_CONNECT, 1000);
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
@@ -206,6 +240,18 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		ScanResult result = mScanResults.get(item.getItemId());
 		connect(result);
+
+		return true;
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		Integer code = sKeyEventMap.get(keyCode);
+		if (code != null) {
+			keyCode = code;
+		}
+
+		sendKeyEvent(keyCode);
 
 		return true;
 	}

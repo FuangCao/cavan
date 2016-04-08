@@ -12,8 +12,9 @@
         android:id="@+id/buttonBrightDown"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/buttonScan"
         android:layout_alignParentLeft="true"
+        android:layout_marginTop="10dp"
         android:text="@string/text_bright_down"
         android:textSize="@dimen/key_text_size" />
 
@@ -21,8 +22,8 @@
         android:id="@+id/buttonScan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/buttonBrightDown"
-        android:layout_centerHorizontal="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
         android:text="@string/text_scan"
         android:textSize="@dimen/key_text_size" />
 
@@ -68,7 +69,7 @@
         android:id="@+id/buttonHome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/buttonMenu"
+        android:layout_alignBottom="@+id/buttonScan"
         android:layout_centerHorizontal="true"
         android:text="@string/text_home"
         android:textSize="@dimen/key_text_size" />
@@ -78,7 +79,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_alignBottom="@+id/buttonMenu"
+        android:layout_alignBottom="@+id/buttonScan"
         android:text="@string/text_back"
         android:textSize="@dimen/key_text_size" />
 
@@ -87,7 +88,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_alignBottom="@+id/buttonPower"
+        android:layout_alignBottom="@+id/buttonMenu"
         android:text="@string/text_up"
         android:textSize="@dimen/key_text_size" />
 
@@ -96,7 +97,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/buttonPower"
+        android:layout_below="@+id/buttonMenu"
         android:layout_marginTop="10dp"
         android:text="@string/text_left"
         android:textSize="@dimen/key_text_size" />
@@ -133,9 +134,8 @@
         android:id="@+id/buttonPower"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonMenu"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="10dp"
+        android:layout_alignBottom="@+id/buttonBrightDown"
+        android:layout_centerHorizontal="true"
         android:text="@string/text_power"
         android:textSize="@dimen/key_text_size" />
 
