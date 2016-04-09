@@ -444,7 +444,6 @@ static int cavan_builtin_command_kmsg(const struct cavan_builtin_command *desc, 
 	return 0;
 }
 
-#ifdef CONFIG_ANDROID
 static int cavan_builtin_command_logcat(const struct cavan_builtin_command *desc, const char *shell, int argc, char *argv[])
 {
 	int i;
@@ -460,12 +459,8 @@ static int cavan_builtin_command_logcat(const struct cavan_builtin_command *desc
 
 	return execvp("logcat", argv_new);
 }
-#endif
 
 static const struct cavan_builtin_command cavan_builtin_command_list[] = {
-#ifdef CONFIG_ANDROID
-	{ "logcat", cavan_builtin_command_logcat, 0 },
-#endif
 	{ "shell", cavan_builtin_command_shell, 0 },
 	{ "reboot", cavan_builtin_command_reboot, 0 },
 	{ "reboot-force", cavan_builtin_command_reboot, CAVAN_BUILTIN_CMDF_FORCE },
@@ -474,7 +469,8 @@ static const struct cavan_builtin_command cavan_builtin_command_list[] = {
 	{ "halt-force", cavan_builtin_command_shutdown, CAVAN_BUILTIN_CMDF_FORCE },
 	{ "shutdown-force", cavan_builtin_command_shutdown, CAVAN_BUILTIN_CMDF_FORCE },
 	{ "remount", cavan_builtin_command_remount, 0 },
-	{ "kmsg", cavan_builtin_command_kmsg, 0 }
+	{ "kmsg", cavan_builtin_command_kmsg, 0 },
+	{ "logcat", cavan_builtin_command_logcat, 0 },
 };
 
 static const struct cavan_builtin_command *cavan_find_builtin_command(const char *command)

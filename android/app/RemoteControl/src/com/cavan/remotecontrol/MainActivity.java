@@ -51,6 +51,9 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 	private static final int KEYCODE_BRIGHT_DOWN = 224;
 	private static final int KEYCODE_POWER = 116;
 	private static final int KEYCODE_DEL = 14;
+	private static final int KEYCODE_PLAY_PAUSE = 164;
+	private static final int KEYCODE_PLAY_PREVIOUS = 165;
+	private static final int KEYCODE_PLAY_NEXT = 163;
 
 	private static final int TCP_DD_VERSION = 0x20151223;
 	private static final short TCP_DD_REQ_KEYPAD = 7;
@@ -75,8 +78,11 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 		sKeyMap.put(R.id.buttonBrightDown, KEYCODE_BRIGHT_DOWN);
 		sKeyMap.put(R.id.buttonPower, KEYCODE_POWER);
 		sKeyMap.put(R.id.buttonDel, KEYCODE_DEL);
+		sKeyMap.put(R.id.buttonPlayPause, KEYCODE_PLAY_PAUSE);
+		sKeyMap.put(R.id.buttonPlayPrevious, KEYCODE_PLAY_PREVIOUS);
+		sKeyMap.put(R.id.buttonPlayNext, KEYCODE_PLAY_NEXT);
 
-		sKeyEventMap.put(KeyEvent.KEYCODE_BACK, KEYCODE_BACK);
+		// sKeyEventMap.put(KeyEvent.KEYCODE_BACK, KEYCODE_BACK);
 		sKeyEventMap.put(KeyEvent.KEYCODE_HOME, KEYCODE_HOME);
 		sKeyEventMap.put(KeyEvent.KEYCODE_MENU, KEYCODE_MENU);
 		sKeyEventMap.put(KeyEvent.KEYCODE_DPAD_UP, KEYCODE_UP);
@@ -91,6 +97,9 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 		sKeyEventMap.put(KeyEvent.KEYCODE_BRIGHTNESS_DOWN, KEYCODE_BRIGHT_DOWN);
 		sKeyEventMap.put(KeyEvent.KEYCODE_POWER, KEYCODE_POWER);
 		sKeyEventMap.put(KeyEvent.KEYCODE_DEL, KEYCODE_DEL);
+		sKeyEventMap.put(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KEYCODE_PLAY_PAUSE);
+		sKeyEventMap.put(KeyEvent.KEYCODE_MEDIA_PREVIOUS, KEYCODE_PLAY_PREVIOUS);
+		sKeyEventMap.put(KeyEvent.KEYCODE_MEDIA_NEXT, KEYCODE_PLAY_NEXT);
 	}
 
 	private Socket mSocket;
@@ -247,11 +256,11 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		Integer code = sKeyEventMap.get(keyCode);
-		if (code != null) {
-			keyCode = code;
+		if (code == null) {
+			return super.onKeyDown(keyCode, event);
 		}
 
-		sendKeyEvent(keyCode);
+		sendKeyEvent(code);
 
 		return true;
 	}

@@ -54,6 +54,7 @@ class MainWin:
 		combo.append_text("release")
 		combo.append_text("static")
 		combo.set_active(0)
+		combo.connect("changed", self.OnBuildTypeChanged)
 		self.mComboBuildType = combo
 		table.attach(combo, 1, 2, 2, 3, combo_style, combo_style, 5, 5)
 
@@ -198,6 +199,17 @@ class MainWin:
 			entry = "application"
 		self.SetComboActiveText(self.mComboCrossCompile, toolchian)
 		self.SetComboActiveText(self.mComboBuildType, type);
+		self.SetComboActiveText(self.mComboBuildEntry, entry);
+		self.EventLockUp()
+
+	def OnBuildTypeChanged(self, widget):
+		if self.EventLockDown() < 0:
+			return -1
+		arch = widget.get_active_text()
+		if arch == "static":
+			entry = "cavan"
+		else:
+			entry = "application"
 		self.SetComboActiveText(self.mComboBuildEntry, entry);
 		self.EventLockUp()
 

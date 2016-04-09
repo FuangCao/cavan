@@ -36,6 +36,10 @@ char *network_get_hostname(char *buff, size_t size)
 		return buff;
 	}
 
+	if (android_getprop("ro.product.device", buff, sizeof(buff)) > 0) {
+		return buff;
+	}
+
 	if (android_getprop("ro.product.name", buff, sizeof(buff)) > 0) {
 		return buff;
 	}

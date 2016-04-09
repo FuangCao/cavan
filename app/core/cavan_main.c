@@ -58,7 +58,6 @@ static int do_cavan_bootanimation(int argc, char *argv[])
 }
 #endif
 
-#ifdef CONFIG_ANDROID
 static int do_cavan_remount(int argc, char *argv[])
 {
 	return cavan_exec_command("remount", argc, argv);
@@ -68,7 +67,6 @@ static int do_cavan_logcat(int argc, char *argv[])
 {
 	return cavan_exec_command("logcat", argc, argv);
 }
-#endif
 
 static int do_cavan_halt(int argc, char *argv[])
 {
@@ -184,9 +182,9 @@ const struct cavan_command_map cmd_map_table[] = {
 #ifdef CONFIG_ANDROID
 	{ "bootanim", do_cavan_bootanimation },
 	{ "bootanimation", do_cavan_bootanimation },
+#endif
 	{ "remount", do_cavan_remount },
 	{ "logcat", do_cavan_logcat },
-#endif
 
 	#include CONFIG_CAVAN_MAP_C
 };

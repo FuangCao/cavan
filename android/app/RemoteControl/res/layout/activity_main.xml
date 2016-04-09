@@ -12,8 +12,8 @@
         android:id="@+id/buttonBrightDown"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonScan"
         android:layout_alignParentLeft="true"
+        android:layout_below="@+id/buttonScan"
         android:layout_marginTop="10dp"
         android:text="@string/text_bright_down"
         android:textSize="@dimen/key_text_size" />
@@ -31,8 +31,8 @@
         android:id="@+id/buttonBrightUp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
         android:layout_alignBottom="@+id/buttonBrightDown"
+        android:layout_alignParentRight="true"
         android:text="@string/text_bright_up"
         android:textSize="@dimen/key_text_size" />
 
@@ -56,11 +56,39 @@
         android:textSize="@dimen/key_text_size" />
 
     <Button
-        android:id="@+id/buttonMenu"
+        android:id="@+id/buttonPlayPrevious"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/buttonVolumeDown"
+        android:layout_marginTop="10dp"
+        android:text="@string/text_play_previous"
+        android:textSize="@dimen/key_text_size" />
+
+    <Button
+        android:id="@+id/buttonPlayPause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/buttonPlayPrevious"
+        android:layout_centerHorizontal="true"
+        android:text="@string/text_play_pause"
+        android:textSize="@dimen/key_text_size" />
+
+    <Button
+        android:id="@+id/buttonPlayNext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/buttonPlayPrevious"
+        android:layout_alignParentRight="true"
+        android:text="@string/text_play_next"
+        android:textSize="@dimen/key_text_size" />
+
+    <Button
+        android:id="@+id/buttonMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/buttonPlayPrevious"
         android:layout_marginTop="10dp"
         android:text="@string/text_menu"
         android:textSize="@dimen/key_text_size" />
@@ -78,8 +106,8 @@
         android:id="@+id/buttonBack"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/buttonMenu"
         android:layout_alignParentRight="true"
-        android:layout_alignBottom="@+id/buttonScan"
         android:text="@string/text_back"
         android:textSize="@dimen/key_text_size" />
 
@@ -87,8 +115,8 @@
         android:id="@+id/buttonUp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:layout_alignBottom="@+id/buttonMenu"
+        android:layout_centerHorizontal="true"
         android:text="@string/text_up"
         android:textSize="@dimen/key_text_size" />
 
@@ -115,8 +143,8 @@
         android:id="@+id/buttonRight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
         android:layout_alignBottom="@+id/buttonLeft"
+        android:layout_alignParentRight="true"
         android:text="@string/text_right"
         android:textSize="@dimen/key_text_size" />
 
@@ -124,8 +152,8 @@
         android:id="@+id/buttonDown"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:layout_below="@+id/buttonEnter"
+        android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
         android:text="@string/text_down"
         android:textSize="@dimen/key_text_size" />
@@ -152,7 +180,7 @@
         android:id="@+id/buttonDel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/buttonUp"
+        android:layout_alignBottom="@+id/buttonScan"
         android:layout_alignParentRight="true"
         android:text="@string/text_del"
         android:textSize="@dimen/key_text_size" />
