@@ -23,13 +23,15 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.Toast;
 
-@SuppressLint({ "HandlerLeak", "UseSparseArrays", "NewApi" })
-public class MainActivity extends ActionBarActivity implements OnClickListener {
+@SuppressLint({ "HandlerLeak", "UseSparseArrays", "NewApi", "ClickableViewAccessibility" })
+public class MainActivity extends ActionBarActivity implements OnClickListener, OnTouchListener {
 
 	public static final String TAG = "Cavan";
 
@@ -203,7 +205,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 		for (int id : sKeyMap.keySet()) {
 			Button button = (Button) findViewById(id);
 			if (button != null) {
-				button.setOnClickListener(this);
+				button.setOnTouchListener(this);
 				mButtonMap.put(button, sKeyMap.get(id));
 			}
 		}
@@ -267,21 +269,31 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 
 	@Override
 	public void onClick(View v) {
-		int id = v.getId();
-		if (id == R.id.buttonScan) {
-			try {
-				if (mDiscoveryService != null) {
-					mDiscoveryService.startDiscovery(0);
-				}
-			} catch (RemoteException e) {
-				e.printStackTrace();
+		try {
+			if (mDiscoveryService != null) {
+				mDiscoveryService.startDiscovery(0);
 			}
-		} else {
-			Integer keycode = sKeyMap.get(id);
-			if (keycode != null) {
-				sendKeyEvent(keycode);
-			}
+		} catch (RemoteException e) {
+			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public boolean onTouch(View arg0, MotionEvent arg1) {
+		int value = 0;
+
+		switch (arg1.getAction()) {
+		case MotionEvent.ACTION_DOWN:
+			value = 1;
+		case MotionEvent.ACTION_UP:
+			Integer keycode = sKeyMap.get(arg0.getId());
+			if (keycode != null) {
+				sendKeyEvent(keycode, value);
+			}
+			break;
+		}
+
+		return false;
 	}
 
 	private int writeValue8(byte value, byte[] buff, int offset) {
@@ -348,6 +360,12 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 	private boolean sendKeyEvent(int code) {
 		byte[] data = new byte[32];
 		writeKeyEvent(code, data, 0);
+		return sendData(data);
+	}
+
+	private boolean sendKeyEvent(int code, int value) {
+		byte[] data = new byte[16];
+		writeKeyEvent(code, value, data, 0);
 		return sendData(data);
 	}
 
