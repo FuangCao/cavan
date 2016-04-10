@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <string name="app_name">遥控器</string>
     <string name="text_scan">扫描</string>
@@ -21,6 +22,8 @@
     <string name="text_connected">已连接</string>
     <string name="text_not_connect">未连接</string>
     <string name="text_manul_connect">检测到多个设备，请手动连接</string>
+    <string name="text_scan_complete">发现 <xliff:g id="count" example="123">%1$s</xliff:g> 个设备</string>
+    <string name="text_device_not_found">没有发现设备</string>
     <string name="text_disconnected">已断开连接</string>
     <string name="text_scanning">正在扫描</string>
     <string name="text_play_previous">上一曲</string>

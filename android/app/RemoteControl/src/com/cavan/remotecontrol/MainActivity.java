@@ -179,6 +179,13 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 				break;
 
 			case EVENT_AUTO_CONNECT:
+				if (mScanResults.size() > 0) {
+					String text = getResources().getString(R.string.text_scan_complete, mScanResults.size());
+					Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(getApplicationContext(), R.string.text_device_not_found, Toast.LENGTH_SHORT).show();
+				}
+
 				if (mOutputStream == null) {
 					if (mScanResults.size() == 1) {
 						connect(mScanResults.get(0));
