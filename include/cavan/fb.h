@@ -6,6 +6,12 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-11-16 15:48:51
 
+struct cavan_fb_backlight_device_map
+{
+	const char *product;
+	const char *pathname;
+};
+
 struct cavan_fb_color_element {
 	u8 mask;
 	u8 index;
@@ -46,6 +52,9 @@ void show_fb_var_info(struct fb_var_screeninfo *var);
 void show_fb_fix_info(struct fb_fix_screeninfo *fix);
 void show_fb_device_info(struct cavan_fb_device *dev);
 
+const char *cavan_fb_get_backlight_path_by_name(void);
+const char *cavan_fb_get_backlight_path(char *buff, size_t size);
+
 int cavan_fb_init(struct cavan_fb_device *dev, const char *fbpath);
 void cavan_fb_deinit(struct cavan_fb_device *dev);
 void cavan_fb_bitfield2element(struct fb_bitfield *field, struct cavan_fb_color_element *emt);
@@ -61,6 +70,11 @@ struct cavan_display_device *cavan_fb_display_start(void);
 static inline int cavan_fb_refresh(struct cavan_fb_device *dev)
 {
 	return dev->refresh(dev);
+}
+
+static inline int cavan_fb_blank(struct cavan_fb_device *dev, bool blank)
+{
+	return ioctl(dev->fd, FBIOBLANK, blank ? FB_BLANK_POWERDOWN : FB_BLANK_UNBLANK);
 }
 
 static inline void cavan_fb_draw_point(struct cavan_fb_device *dev, int x, int y, cavan_display_color_t color)

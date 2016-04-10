@@ -68,6 +68,7 @@ struct cavan_display_device {
 
 	void (*destroy)(struct cavan_display_device *display);
 	void (*refresh)(struct cavan_display_device *display);
+	int (*blank)(struct cavan_display_device *display, bool blank);
 	cavan_display_color_t (*build_color)(struct cavan_display_device *display, float red, float green, float blue, float transp);
 	void (*set_color)(struct cavan_display_device *display, cavan_display_color_t color);
 

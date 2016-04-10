@@ -5,6 +5,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/fb.h>
 #include <cavan/file.h>
 #include <cavan/event.h>
 #include <cavan/input.h>
@@ -883,6 +884,31 @@ static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, boo
 	network_service_unlock(&service->service);
 }
 
+static int tcp_dd_display_on_off(struct cavan_tcp_dd_service *service)
+{
+	int brightness;
+
+	if (service->backlight[0] == 0) {
+		return -ENOENT;
+	}
+
+	brightness = file_read_s64(service->backlight, -1);
+	if (brightness < 0) {
+		return -EFAULT;
+	}
+
+	if (brightness > 0) {
+		service->brightness = brightness;
+		brightness = 0;
+	} else if (service->brightness > 0) {
+		brightness = service->brightness;
+	} else {
+		brightness = 255;
+	}
+
+	return file_write_u64(service->backlight, brightness);
+}
+
 static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *service, struct network_client *client)
 {
 	int fd;
@@ -968,6 +994,12 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 						case KEY_PAGEDOWN:
 							event.code = KEY_VOLUMEDOWN;
 							break;
+
+						case KEY_DISPLAYTOGGLE:
+							if (event.value > 0) {
+								tcp_dd_display_on_off(service);
+							}
+							continue;
 						}
 					}
 				}
@@ -1146,6 +1178,12 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 	dd_service->part_table = cavan_block_get_part_table2();
 	if (dd_service->part_table != NULL) {
 		cavan_part_table_dump(dd_service->part_table);
+	}
+
+	if (cavan_fb_get_backlight_path(dd_service->backlight, sizeof(dd_service->backlight)) == NULL) {
+		dd_service->backlight[0] = 0;
+	} else {
+		pd_green_info("backlight = %s", dd_service->backlight);
 	}
 
 	dd_service->mouse_fd = -1;

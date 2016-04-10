@@ -3096,3 +3096,49 @@ char *file_abs_path_simple(char *rel_path, char *buff, size_t size, bool logical
 
 	return text_ncopy(buff, rel_path, buff_end - buff);
 }
+
+int file_write_u64(const char *pathname, u64 value)
+{
+	int length;
+	char buff[64];
+
+	length = value2text_unsigned_simple(value, buff, sizeof(buff), 10) - buff;
+
+	return file_write(pathname, buff, length);
+}
+
+int file_write_s64(const char *pathname, s64 value)
+{
+	int length;
+	char buff[64];
+
+	length = value2text_simple(value, buff, sizeof(buff), 10) - buff;
+
+	return file_write(pathname, buff, length);
+}
+
+u64 file_read_u64(const char *pathname, u64 def_value)
+{
+	int ret;
+	char buff[64];
+
+	ret = file_read(pathname, buff, sizeof(buff));
+	if (ret < 0) {
+		return def_value;
+	}
+
+	return text2value_unsigned(buff, NULL, 10);
+}
+
+s64 file_read_s64(const char *pathname, s64 def_value)
+{
+	int ret;
+	char buff[64];
+
+	ret = file_read(pathname, buff, sizeof(buff));
+	if (ret < 0) {
+		return def_value;
+	}
+
+	return text2value(buff, NULL, 10);
+}

@@ -26,5 +26,6 @@
     <string name="text_play_previous">上一曲</string>
     <string name="text_play_next">下一曲</string>
     <string name="text_play_pause">播放</string>
+    <string name="text_display_on_off">关屏</string>
 
 </resources>

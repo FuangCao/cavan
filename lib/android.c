@@ -22,10 +22,25 @@
 #include <cavan/android.h>
 #include <cavan/calculator.h>
 
+bool cavan_is_android(void)
+{
+#ifdef CONFIG_ANDROID
+	return true;
+#else
+	static int is_android = -1;
+
+	if (unlikely(is_android < 0)) {
+		is_android = file_access_e("/system/framework/framework.jar") && file_access_e("/system/build.prop");
+	}
+
+	return is_android;
+#endif
+}
+
 #ifndef CONFIG_ANDROID
 int android_getprop(const char *name, char *buff, size_t size)
 {
-	if (file_access_x(ANDROID_CMD_GETPROP)) {
+	if (cavan_is_android()) {
 		int ret;
 		char *last;
 		char command[64];
@@ -44,25 +59,18 @@ int android_getprop(const char *name, char *buff, size_t size)
 		}
 
 		return last - buff;
-	} else {
-		char *env;
-
-		env = getenv(name);
-		if (env == NULL) {
-			return -EFAULT;
-		}
-
-		return text_ncopy(buff, env, size) - buff;
 	}
+
+	return -EINVAL;
 }
 
 int android_setprop(const char *name, const char *value)
 {
-	if (file_access_x(ANDROID_CMD_SETPROP)) {
+	if (cavan_is_android()) {
 		return cavan_system2(ANDROID_CMD_SETPROP " \"%s\" \"%s\"", name, value);
-	} else {
-		return setenv(name, value, 1);
 	}
+
+	return -EINVAL;
 }
 
 #endif
@@ -179,4 +187,21 @@ int android_get_wifi_prop(const char *name, char *buff, size_t size)
 	}
 
 	return android_getprop_format(buff, size, "dhcp.%s.%s", ifname, name);
+}
+
+int android_get_device_name(char *buff, size_t size)
+{
+	int length;
+
+	length = android_getprop("ro.product.device", buff, size);
+	if (length > 0) {
+		return length;
+	}
+
+	length = android_getprop("ro.product.name", buff, size);
+	if (length > 0) {
+		return length;
+	}
+
+	return -EINVAL;
 }

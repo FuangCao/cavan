@@ -27,6 +27,7 @@
 
 __BEGIN_DECLS
 
+bool cavan_is_android(void);
 int android_getprop(const char *name, char *buff, size_t size);
 int android_getprop_int(const char *name, int def_value);
 bool android_getprop_bool(const char *name, bool def_value);
@@ -42,15 +43,7 @@ __printf_format_34__ int android_getprop_format(char *buff, size_t size, const c
 __printf_format_23__ int android_setprop_format(const char *value, const char *name, ...);
 
 int android_get_wifi_prop(const char *name, char *buff, size_t size);
-
-static inline bool cavan_is_android(void)
-{
-#ifdef CONFIG_ANDROID
-	return true;
-#else
-	return file_access_e("/system/framework/framework.jar") && file_access_e("/system/build.prop");
-#endif
-}
+int android_get_device_name(char *buff, size_t size);
 
 static inline int android_get_wifi_ipaddress(char *buff, size_t size)
 {

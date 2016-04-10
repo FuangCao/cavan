@@ -234,6 +234,10 @@ void cavan_file_proxy_deinit(struct cavan_file_proxy_desc *desc);
 int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc);
 
 char *file_abs_path_simple(char *rel_path, char *buff, size_t size, bool logical);
+int file_write_u64(const char *pathname, u64 value);
+int file_write_s64(const char *pathname, s64 value);
+u64 file_read_u64(const char *pathname, u64 def_value);
+s64 file_read_s64(const char *pathname, s64 def_value);
 
 // ============================================================
 

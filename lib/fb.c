@@ -1,8 +1,13 @@
 #include <cavan.h>
 #include <cavan/fb.h>
 #include <cavan/bmp.h>
+#include <cavan/android.h>
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-11-16 15:48:51
+
+static struct cavan_fb_backlight_device_map cavan_fb_backlight_device_table[] = {
+	{ "x98air3g_c8j7", "/sys/class/backlight/intel_backlight/brightness" },
+};
 
 void show_fb_bitfield(struct fb_bitfield *field, const char *msg)
 {
@@ -49,6 +54,58 @@ void show_fb_device_info(struct cavan_fb_device *dev)
 	println("bpp_byte = %d", dev->bpp_byte);
 	println("line_size = %d", dev->line_size);
 #endif
+}
+
+const char *cavan_fb_get_backlight_path_by_name(void)
+{
+	char product_name[64];
+
+	if (android_get_device_name(product_name, sizeof(product_name)) > 0) {
+		struct cavan_fb_backlight_device_map *p, *p_end;
+
+		for (p = cavan_fb_backlight_device_table, p_end = p + NELEM(cavan_fb_backlight_device_table); p < p_end; p++) {
+			if (strcmp(product_name, p->product) == 0) {
+				return p->pathname;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+const char *cavan_fb_get_backlight_path(char *buff, size_t size)
+{
+	const char *pathname = cavan_fb_get_backlight_path_by_name();
+
+	if (pathname) {
+		strncpy(buff, pathname, size);
+		pathname = buff;
+	} else {
+		DIR *dp;
+		char *filename;
+		struct dirent *dt;
+
+		filename = text_ncopy(buff, "/sys/class/backlight", size);
+
+		dp = opendir(buff);
+		if (dp == NULL) {
+			return NULL;
+		}
+
+		size -= (filename - buff);
+
+		while ((dt = cavan_readdir_skip_dot(dp))) {
+			snprintf(filename, size, "/%s/brightness", dt->d_name);
+			if (file_access_e(buff)) {
+				pathname = buff;
+				break;
+			}
+		}
+
+		closedir(dp);
+	}
+
+	return pathname;
 }
 
 void *cavan_fb_get_acquired_sync2(struct cavan_fb_device *dev)
@@ -384,11 +441,18 @@ static cavan_display_color_t cavan_fb_display_build_color_handler(struct cavan_d
 	return cavan_fb_build_color4f(display->private_data, red, green, blue, transp);
 }
 
+static int cavan_fb_display_blank_handler(struct cavan_display_device *display, bool blank)
+{
+	struct cavan_fb_device *dev = display->private_data;
+
+	return cavan_fb_blank(dev, blank);
+}
+
 static void cavan_fb_display_refresh_handler(struct cavan_display_device *display)
 {
 	struct cavan_fb_device *dev = display->private_data;
 
-	cavan_fb_refresh(display->private_data);
+	cavan_fb_refresh(dev);
 	display->fb_dequeued = cavan_fb_get_dequeued(dev);
 	display->fb_acquired = cavan_fb_get_acquired(dev);
 }
@@ -459,6 +523,7 @@ int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_
 
 	display->destroy = cavan_fb_display_destroy_handler1;
 	display->refresh = cavan_fb_display_refresh_handler;
+	display->blank = cavan_fb_display_blank_handler;
 	display->build_color = cavan_fb_display_build_color_handler;
 	display->draw_point = cavan_fb_display_draw_point_handler;
 	display->scroll_screen = cavan_fb_display_scroll_screen_handler;

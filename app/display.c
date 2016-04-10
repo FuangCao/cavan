@@ -559,11 +559,31 @@ out_close_fd:
 	return ret;
 }
 
+static int cavan_display_blank_main(int argc, char *argv[])
+{
+	int ret;
+	bool blank;
+	struct cavan_display_device *display;
+
+	display = cavan_fb_display_create();
+	if (display == NULL) {
+		pr_red_info("cavan_fb_display_create");
+		return -EFAULT;
+	}
+
+	blank = argc < 2 || text2value_unsigned(argv[1], NULL, 10) > 0;
+	display->blank(display, blank);
+
+	display->destroy(display);
+
+	return ret;
+}
 CAVAN_COMMAND_MAP_START {
 	{ "draw_rect", cavan_display_rect_main },
 	{ "fill_rect", cavan_display_rect_main },
 	{ "wave", cavan_display_wave_main },
 	{ "wave_line", cavan_display_wave_main },
 	{ "wave_point", cavan_display_wave_main },
-	{ "test", cavan_display_test_main }
+	{ "test", cavan_display_test_main },
+	{ "blank", cavan_display_blank_main },
 } CAVAN_COMMAND_MAP_END;

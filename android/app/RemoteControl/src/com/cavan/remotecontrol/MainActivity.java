@@ -56,6 +56,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	private static final int KEYCODE_PLAY_PAUSE = 164;
 	private static final int KEYCODE_PLAY_PREVIOUS = 165;
 	private static final int KEYCODE_PLAY_NEXT = 163;
+	private static final int KEYCODE_DISPLAY_TOGGLE = 431;
 
 	private static final int TCP_DD_VERSION = 0x20151223;
 	private static final short TCP_DD_REQ_KEYPAD = 7;
@@ -79,10 +80,10 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		sKeyMap.put(R.id.buttonBrightUp, KEYCODE_BRIGHT_UP);
 		sKeyMap.put(R.id.buttonBrightDown, KEYCODE_BRIGHT_DOWN);
 		sKeyMap.put(R.id.buttonPower, KEYCODE_POWER);
-		sKeyMap.put(R.id.buttonDel, KEYCODE_DEL);
 		sKeyMap.put(R.id.buttonPlayPause, KEYCODE_PLAY_PAUSE);
-		sKeyMap.put(R.id.buttonPlayPrevious, KEYCODE_PLAY_PREVIOUS);
-		sKeyMap.put(R.id.buttonPlayNext, KEYCODE_PLAY_NEXT);
+		// sKeyMap.put(R.id.buttonPlayPrevious, KEYCODE_PLAY_PREVIOUS);
+		// sKeyMap.put(R.id.buttonPlayNext, KEYCODE_PLAY_NEXT);
+		sKeyMap.put(R.id.buttonDisplayOnOff, KEYCODE_DISPLAY_TOGGLE);
 
 		// sKeyEventMap.put(KeyEvent.KEYCODE_BACK, KEYCODE_BACK);
 		sKeyEventMap.put(KeyEvent.KEYCODE_HOME, KEYCODE_HOME);

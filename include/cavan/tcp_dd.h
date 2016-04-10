@@ -110,6 +110,8 @@ struct cavan_tcp_dd_service {
 	struct network_url url;
 	char *filename;
 	char pathname[1024];
+	int brightness;
+	char backlight[1024];
 	int mouse_fd;
 	int keypad_fd;
 	int keypad_use_count;

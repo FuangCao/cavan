@@ -942,8 +942,16 @@ void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_d
 
 void cavan_display_destroy_dummy(struct cavan_display_device *display)
 {
-	cavan_font_put(display->font);
+	if (display->font) {
+		cavan_font_put(display->font);
+	}
+
 	pthread_mutex_destroy(&display->lock);
+}
+
+static int cavan_display_blank_dummy(struct cavan_display_device *display, bool blank)
+{
+	return 0;
 }
 
 int cavan_display_init(struct cavan_display_device *display)
@@ -957,6 +965,25 @@ int cavan_display_init(struct cavan_display_device *display)
 		pr_error_info("pthread_mutex_init");
 		return ret;
 	}
+
+	display->blank = cavan_display_blank_dummy;
+	display->mesure_text = cavan_display_mesure_text_dummy;
+	display->draw_char = cavan_display_draw_char_dummy;
+	display->draw_text = cavan_display_draw_text_dummy;
+	display->draw_line = cavan_display_draw_line_dummy;
+	display->draw_rect = cavan_display_draw_rect_dummy;
+	display->fill_rect = cavan_display_fill_rect_dummy;
+	display->draw_circle = cavan_display_draw_circle_dummy;
+	display->fill_circle = cavan_display_fill_circle_dummy;
+	display->draw_ellipse = cavan_display_draw_ellipse_dummy;
+	display->fill_ellipse = cavan_display_fill_ellipse_dummy;
+	display->draw_polygon = cavan_display_draw_polygon_dummy;
+	display->fill_triangle = cavan_display_fill_triangle_dummy;
+	display->fill_polygon = cavan_display_fill_polygon_dummy;
+	display->display_memory_xfer = cavan_display_memory_xfer_dummy;
+	display->scroll_screen = cavan_display_scroll_screen_dummy;
+	display->set_color = cavan_display_set_color_dummy;
+	display->destroy = cavan_display_destroy_dummy;
 
 	return 0;
 }
@@ -1016,74 +1043,6 @@ int cavan_display_start(struct cavan_display_device *display)
 	if (ret < 0) {
 		pr_red_info("cavan_thread_init");
 		return ret;
-	}
-
-	if (display->mesure_text == NULL) {
-		display->mesure_text = cavan_display_mesure_text_dummy;
-	}
-
-	if (display->draw_char == NULL) {
-		display->draw_char = cavan_display_draw_char_dummy;
-	}
-
-	if (display->draw_text == NULL) {
-		display->draw_text = cavan_display_draw_text_dummy;
-	}
-
-	if (display->draw_line == NULL) {
-		display->draw_line = cavan_display_draw_line_dummy;
-	}
-
-	if (display->draw_rect == NULL) {
-		display->draw_rect = cavan_display_draw_rect_dummy;
-	}
-
-	if (display->fill_rect == NULL) {
-		display->fill_rect = cavan_display_fill_rect_dummy;
-	}
-
-	if (display->draw_circle == NULL) {
-		display->draw_circle = cavan_display_draw_circle_dummy;
-	}
-
-	if (display->fill_circle == NULL) {
-		display->fill_circle = cavan_display_fill_circle_dummy;
-	}
-
-	if (display->draw_ellipse == NULL) {
-		display->draw_ellipse = cavan_display_draw_ellipse_dummy;
-	}
-
-	if (display->fill_ellipse == NULL) {
-		display->fill_ellipse = cavan_display_fill_ellipse_dummy;
-	}
-
-	if (display->draw_polygon == NULL) {
-		display->draw_polygon = cavan_display_draw_polygon_dummy;
-	}
-
-	if (display->fill_triangle == NULL) {
-		display->fill_triangle = cavan_display_fill_triangle_dummy;
-	}
-
-	if (display->fill_polygon == NULL) {
-		display->fill_polygon = cavan_display_fill_polygon_dummy;
-	}
-
-	if (display->display_memory_xfer == NULL) {
-		display->display_memory_xfer = cavan_display_memory_xfer_dummy;
-	}
-
-	if (display->scroll_screen == NULL) {
-		display->scroll_screen = cavan_display_scroll_screen_dummy;
-	}
-
-	if (display->set_color == NULL) {
-		display->set_color = cavan_display_set_color_dummy;
-	}
-
-	if (display->destroy == NULL) {
-		display->destroy = cavan_display_destroy_dummy;
 	}
 
 	font = cavan_font_get(-1);
