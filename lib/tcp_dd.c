@@ -16,6 +16,8 @@
 #include <cavan/swan_vk.h>
 #include <cavan/android.h>
 
+#define TCP_DD_AUTO_CLOSE_UINPUT	0
+
 static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
 	if (res->message[0] == 0) {
@@ -857,6 +859,7 @@ static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, boo
 	}
 
 	if (--service->keypad_use_count == 0 && service->keypad_fd >= 0) {
+#if TCP_DD_AUTO_CLOSE_UINPUT
 		if (service->mouse_fd != service->keypad_fd) {
 			close(service->mouse_fd);
 			service->mouse_fd = -1;
@@ -868,6 +871,7 @@ static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, boo
 		if (service->keypad_insmod && service->keypad_ko) {
 			cavan_system2("rmmod \"%s\"", service->keypad_ko);
 		}
+#endif
 	}
 
 	if (service->keypad_use_count < 0) {
