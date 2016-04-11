@@ -41,7 +41,7 @@ CavanVideoPlayer::CavanVideoPlayer(const char *pathname, bool bootanimation, con
 	mCommand[0] = 0;
 	mCommandLen = 0;
 	mBootAnimation = bootanimation;
-	mVolume = android_getprop_int(PROP_NAME_VOLUME, 80);
+	mVolume = android_getprop_int32(PROP_NAME_VOLUME, 80);
 	mSession = new SurfaceComposerClient();
 
 	pd_info("mVolume = %d", mVolume);

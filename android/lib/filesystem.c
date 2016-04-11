@@ -23,6 +23,23 @@
 
 struct fstab *android_fstab;
 
+#ifdef CONFIG_ANDROID_NDK
+struct fstab *fs_mgr_read_fstab(const char *fstab_path)
+{
+	return NULL;
+}
+
+struct fstab_rec *fs_mgr_get_entry_for_mount_point(struct fstab *fstab, const char *path)
+{
+	return NULL;
+}
+
+int make_ext4fs(const char *filename, long long len, const char *mountpoint, struct selabel_handle *sehnd)
+{
+	return -EINVAL;
+}
+#endif
+
 char *fs_get_fstab_pathname(char *buff, size_t size)
 {
 	int ret;

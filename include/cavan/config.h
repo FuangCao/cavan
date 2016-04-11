@@ -23,8 +23,10 @@
 #define _DEFAULT_SOURCE		1
 #endif
 
+#ifndef CONFIG_ANDROID_NDK
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE			500
+#endif
 #endif
 
 #if defined(ANDROID) && !defined(CONFIG_ANDROID)

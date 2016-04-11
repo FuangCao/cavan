@@ -26,10 +26,14 @@
 #include <poll.h>
 #include <pthread.h>
 #include <linux/input.h>
-#include <utils/Log.h>
-#include <utils/Atomic.h>
-#include <utils/Timers.h>
+// #include <utils/Atomic.h>
+// #include <utils/Timers.h>
+
+#ifdef CONFIG_ANDROID_NDK
+#include <android-ndk/sensors.h>
+#else
 #include <hardware/sensors.h>
+#endif
 
 #define CAVAN_INPUT_IOC_LENGTH_TO_MASK(len) \
 	((1 << (len)) - 1)

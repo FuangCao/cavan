@@ -16,6 +16,10 @@
 #define MIN_FILE_SIZE					MB(1)
 #define CONFIG_ERROR_IF_COPY_REMAIN		0
 
+#ifdef CONFIG_ANDROID_NDK
+extern char *mkdtemp (char *__template);
+#endif
+
 int file_join(const char *dest_file, char *src_files[], int count)
 {
 	int ret;

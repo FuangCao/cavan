@@ -473,6 +473,7 @@ const char *cavan_event_key_code_tostring(int code)
 		return "KEY_SAVE";
 	case KEY_DOCUMENTS:
 		return "KEY_DOCUMENTS";
+#ifndef CONFIG_ANDROID_NDK
 	case KEY_BATTERY:
 		return "KEY_BATTERY";
 	case KEY_BLUETOOTH:
@@ -481,6 +482,7 @@ const char *cavan_event_key_code_tostring(int code)
 		return "KEY_WLAN";
 	case KEY_UWB:
 		return "KEY_UWB";
+#endif
 	case KEY_UNKNOWN:
 		return "KEY_UNKNOWN";
 	case KEY_VIDEO_NEXT:

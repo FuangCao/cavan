@@ -19,6 +19,10 @@
  *
  */
 
+#ifdef CONFIG_ANDROID_NDK
+#include <android-ndk/properties.h>
+#else
 #include <cutils/properties.h>
+#endif
 
 typedef struct fstab_rec Volume;

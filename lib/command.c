@@ -15,6 +15,10 @@
 #include <sys/klog.h>
 #include <linux/reboot.h>
 
+#ifndef SYS_reboot
+#define SYS_reboot __NR_reboot
+#endif
+
 #define CAVAN_COMMAND_DEBUG				0
 #define CAVAN_TEE_USE_SYSTEM_POPEN		0
 

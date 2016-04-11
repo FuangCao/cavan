@@ -6,8 +6,7 @@
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-11-16 15:48:51
 
-struct cavan_fb_backlight_device_map
-{
+struct cavan_fb_backlight_device_map {
 	const char *product;
 	const char *pathname;
 };

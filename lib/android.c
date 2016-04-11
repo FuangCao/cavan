@@ -37,8 +37,7 @@ bool cavan_is_android(void)
 #endif
 }
 
-#ifndef CONFIG_ANDROID
-int android_getprop(const char *name, char *buff, size_t size)
+int android_getprop_command(const char *name, char *buff, size_t size)
 {
 	if (cavan_is_android()) {
 		int ret;
@@ -64,7 +63,7 @@ int android_getprop(const char *name, char *buff, size_t size)
 	return -EINVAL;
 }
 
-int android_setprop(const char *name, const char *value)
+int android_setprop_command(const char *name, const char *value)
 {
 	if (cavan_is_android()) {
 		return cavan_system2(ANDROID_CMD_SETPROP " \"%s\" \"%s\"", name, value);
@@ -72,8 +71,6 @@ int android_setprop(const char *name, const char *value)
 
 	return -EINVAL;
 }
-
-#endif
 
 int android_getprop_format(char *buff, size_t size, const char *name, ...)
 {
@@ -99,7 +96,46 @@ int android_setprop_format(const char *value, const char *name, ...)
 	return android_setprop(name_buff, value);
 }
 
-int android_getprop_int(const char *name, int def_value)
+int32_t android_getprop_int32(const char *name, int32_t def_value)
+{
+	int length;
+	char buff[1024];
+
+	length = android_getprop(name, buff, sizeof(buff));
+	if (length > 0) {
+		return text2value(buff, NULL, 10);
+	}
+
+	return def_value;
+}
+
+int64_t android_getprop_int64(const char *name, int64_t def_value)
+{
+	int length;
+	char buff[1024];
+
+	length = android_getprop(name, buff, sizeof(buff));
+	if (length > 0) {
+		return text2value(buff, NULL, 10);
+	}
+
+	return def_value;
+}
+
+uint32_t android_getprop_uint32(const char *name, uint32_t def_value)
+{
+	int length;
+	char buff[1024];
+
+	length = android_getprop(name, buff, sizeof(buff));
+	if (length > 0) {
+		return text2value_unsigned(buff, NULL, 10);
+	}
+
+	return def_value;
+}
+
+uint64_t android_getprop_uint64(const char *name, uint64_t def_value)
 {
 	int length;
 	char buff[1024];

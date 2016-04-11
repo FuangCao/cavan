@@ -67,7 +67,7 @@ ssize_t tcp_dd_package_recv(struct network_client *client, struct tcp_dd_package
 
 	rdlen = client->recv(client, pkg, sizeof(struct tcp_dd_package));
 	if (rdlen < (ssize_t) TCP_DD_PKG_BODY_OFFSET) {
-		pr_red_info("Invalid package length %" PRINT_FORMAT_SIZE, rdlen);
+		pr_red_info("Invalid package length %" PRINT_FORMAT_SSIZE, rdlen);
 
 		if (rdlen < 0) {
 			return rdlen;
@@ -784,9 +784,11 @@ static int tcp_dd_keypad_uinput_init(struct uinput_user_dev *dev, int fd, void *
 		ret |= ioctl(fd, UI_SET_KEYBIT, i);
 	}
 
+#if 0
 	for (i = 0; i < LED_CNT; i++) {
 		ret |= ioctl(fd, UI_SET_LEDBIT, i);
 	}
+#endif
 
 	return ret;
 }

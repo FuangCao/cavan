@@ -214,7 +214,6 @@ int main(int argc, char *argv[])
 
 		lm49350_cal_freq(MCLK, M, N, N_MOD, P, DIV, true);
 	} else if (argc > 2) {
-		int ret;
 		double OUT;
 		char buff_in[64];
 		char buff_out[64];
@@ -245,7 +244,7 @@ int main(int argc, char *argv[])
 
 		if (lm49350_find_pll_config(MCLK, OUT, &M_BEST, &N_BEST, &N_MOD_BEST, &P_BEST, &DIV_BEST, true, false) != 0.00) {
 			pr_red_info("Not found!");
-			return ret;
+			return -ENOENT;
 		}
 
 		lm49350_cal_freq(MCLK, M_BEST, N_BEST, N_MOD_BEST, P_BEST, DIV_BEST, true);

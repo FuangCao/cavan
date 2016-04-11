@@ -91,6 +91,13 @@ __BEGIN_DECLS;
 #define CAVAN_COLOR_BROWN				"\033[33m"
 #define CAVAN_COLOR_MAGENTA				"\033[35m"
 
+#ifdef CONFIG_ANDROID_NDK
+#define PRINT_FORMAT_UID				"ld"
+#define PRINT_FORMAT_SIZE				"d"
+#define PRINT_FORMAT_SSIZE				"ld"
+#define PRINT_FORMAT_INT64				"Ld"
+#define PRINT_FORMAT_OFF				"Ld"
+#else
 #if __WORDSIZE == 64
 #define PRINT_FORMAT_SIZE				"ld"
 #define PRINT_FORMAT_INT64				"ld"
@@ -101,10 +108,13 @@ __BEGIN_DECLS;
 #define PRINT_FORMAT_OFF				"Ld"
 #endif
 
+#define PRINT_FORMAT_SSIZE				PRINT_FORMAT_SIZE
+
 #if defined(CONFIG_ANDROID) && CONFIG_ANDROID_VERSION < 5
 #define PRINT_FORMAT_UID				"ld"
 #else
 #define PRINT_FORMAT_UID				"d"
+#endif
 #endif
 
 #define stdin_fd						fileno(stdin)
@@ -267,7 +277,11 @@ __BEGIN_DECLS;
 // ============================================================
 
 #ifdef CONFIG_ANDROID
+#ifdef CONFIG_ANDROID_NDK
+#include <android-ndk/log.h>
+#else
 #include <utils/Log.h>
+#endif
 #ifndef LOGD
 #define LOGD					ALOGD
 #endif

@@ -41,8 +41,7 @@
 	 pr_err("%s => %s[%d]\n", __FILE__, __FUNCTION__, __LINE__)
 
 #define tca9535_spi_transfer_data_func_declarer(bits) \
-	static int tca9535_spi_transfer_data##bits(struct tca9535_spi_device *device, struct spi_transfer *xfer) \
-	{ \
+	static int tca9535_spi_transfer_data##bits(struct tca9535_spi_device *device, struct spi_transfer *xfer) { \
 		int count = xfer->len / sizeof(u##bits); \
 		u##bits *rx = xfer->rx_buf; \
 		const u##bits *tx = xfer->tx_buf; \

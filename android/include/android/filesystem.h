@@ -21,8 +21,13 @@
 
 #include <cavan/android.h>
 
+#ifdef CONFIG_ANDROID_NDK
+#include <android-ndk/make_ext4fs.h>
+#include <android-ndk/fs_mgr.h>
+#else
 #include <make_ext4fs.h>
 #include <fs_mgr.h>
+#endif
 
 __BEGIN_DECLS
 

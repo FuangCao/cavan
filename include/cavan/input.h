@@ -22,7 +22,12 @@
 #include <cavan/timer.h>
 #include <cavan/queue.h>
 #include <linux/input.h>
+
+#ifdef CONFIG_ANDROID_NDK
+#include <android-ndk/uinput.h>
+#else
 #include <linux/uinput.h>
+#endif
 
 #define CAVAN_INPUT_MESSAGE_POOL_SIZE	50
 
@@ -110,6 +115,413 @@
 #ifndef BTN_DPAD_RIGHT
 #define BTN_DPAD_RIGHT		0x223
 #endif
+
+#ifndef KEY_SCALE
+#define KEY_SCALE		120	/* AL Compiz Scale (Expose) */
+#endif
+
+#ifndef KEY_SCREENLOCK
+#define KEY_SCREENLOCK		KEY_COFFEE
+#endif
+
+#ifndef KEY_DASHBOARD
+#define KEY_DASHBOARD		204	/* AL Dashboard */
+#endif
+
+#ifndef KEY_BLUETOOTH
+#define KEY_BLUETOOTH		237
+#endif
+
+#ifndef KEY_WLAN
+#define KEY_WLAN		238
+#endif
+
+#ifndef KEY_UWB
+#define KEY_UWB			239
+#endif
+
+#ifndef KEY_VIDEO_NEXT
+#define KEY_VIDEO_NEXT		241	/* drive next video source */
+#endif
+
+#ifndef KEY_VIDEO_PREV
+#define KEY_VIDEO_PREV		242	/* drive previous video source */
+#endif
+
+#ifndef KEY_BRIGHTNESS_CYCLE
+#define KEY_BRIGHTNESS_CYCLE	243	/* brightness up, after max is min */
+#endif
+
+#ifndef KEY_BRIGHTNESS_AUTO
+#define KEY_BRIGHTNESS_AUTO	244	/* Set Auto Brightness: manual
+					  brightness control is off,
+					  rely on ambient */
+#endif
+
+#ifndef KEY_BRIGHTNESS_ZERO
+#define KEY_BRIGHTNESS_ZERO	KEY_BRIGHTNESS_AUTO
+#endif
+
+#ifndef KEY_DISPLAY_OFF
+#define KEY_DISPLAY_OFF		245	/* display device to off state */
+#endif
+
+#ifndef KEY_WWAN
+#define KEY_WWAN		246	/* Wireless WAN (LTE, UMTS, GSM, etc.) */
+#endif
+
+#ifndef KEY_WIMAX
+#define KEY_WIMAX		KEY_WWAN
+#endif
+
+#ifndef KEY_RFKILL
+#define KEY_RFKILL		247	/* Key that controls all radios */
+#endif
+
+#ifndef BTN_TOOL_QUADTAP
+#define BTN_TOOL_QUADTAP	0x14f	/* Four fingers on trackpad */
+#endif
+
+#ifndef KEY_VIDEOPHONE
+#define KEY_VIDEOPHONE		0x1a0	/* Media Select Video Phone */
+#endif
+
+#ifndef KEY_GAMES
+#define KEY_GAMES		0x1a1	/* Media Select Games */
+#endif
+
+#ifndef KEY_ZOOMIN
+#define KEY_ZOOMIN		0x1a2	/* AC Zoom In */
+#endif
+
+#ifndef KEY_ZOOMOUT
+#define KEY_ZOOMOUT		0x1a3	/* AC Zoom Out */
+#endif
+
+#ifndef KEY_ZOOMRESET
+#define KEY_ZOOMRESET		0x1a4	/* AC Zoom */
+#endif
+
+#ifndef KEY_WORDPROCESSOR
+#define KEY_WORDPROCESSOR	0x1a5	/* AL Word Processor */
+#endif
+
+#ifndef KEY_EDITOR
+#define KEY_EDITOR		0x1a6	/* AL Text Editor */
+#endif
+
+#ifndef KEY_SPREADSHEET
+#define KEY_SPREADSHEET		0x1a7	/* AL Spreadsheet */
+#endif
+
+#ifndef KEY_GRAPHICSEDITOR
+#define KEY_GRAPHICSEDITOR	0x1a8	/* AL Graphics Editor */
+#endif
+
+#ifndef KEY_PRESENTATION
+#define KEY_PRESENTATION	0x1a9	/* AL Presentation App */
+#endif
+
+#ifndef KEY_DATABASE
+#define KEY_DATABASE		0x1aa	/* AL Database App */
+#endif
+
+#ifndef KEY_NEWS
+#define KEY_NEWS		0x1ab	/* AL Newsreader */
+#endif
+
+#ifndef KEY_VOICEMAIL
+#define KEY_VOICEMAIL		0x1ac	/* AL Voicemail */
+#endif
+
+#ifndef KEY_ADDRESSBOOK
+#define KEY_ADDRESSBOOK		0x1ad	/* AL Contacts/Address Book */
+#endif
+
+#ifndef KEY_MESSENGER
+#define KEY_MESSENGER		0x1ae	/* AL Instant Messaging */
+#endif
+
+#ifndef KEY_DISPLAYTOGGLE
+#define KEY_DISPLAYTOGGLE	0x1af	/* Turn display (LCD) on and off */
+#endif
+
+#ifndef KEY_SPELLCHECK
+#define KEY_SPELLCHECK		0x1b0   /* AL Spell Check */
+#endif
+
+#ifndef KEY_LOGOFF
+#define KEY_LOGOFF		0x1b1   /* AL Logoff */
+#endif
+
+#ifndef KEY_DOLLAR
+#define KEY_DOLLAR		0x1b2
+#endif
+
+#ifndef KEY_EURO
+#define KEY_EURO		0x1b3
+#endif
+
+#ifndef KEY_FRAMEBACK
+#define KEY_FRAMEBACK		0x1b4	/* Consumer - transport controls */
+#endif
+
+#ifndef KEY_FRAMEFORWARD
+#define KEY_FRAMEFORWARD	0x1b5
+#endif
+
+#ifndef KEY_CONTEXT_MENU
+#define KEY_CONTEXT_MENU	0x1b6	/* GenDesc - system context menu */
+#endif
+
+#ifndef KEY_MEDIA_REPEAT
+#define KEY_MEDIA_REPEAT	0x1b7	/* Consumer - transport control */
+#endif
+
+#ifndef KEY_10CHANNELSUP
+#define KEY_10CHANNELSUP	0x1b8	/* 10 channels up (10+) */
+#endif
+
+#ifndef KEY_10CHANNELSDOWN
+#define KEY_10CHANNELSDOWN	0x1b9	/* 10 channels down (10-) */
+#endif
+
+#ifndef KEY_BRL_DOT9
+#define KEY_BRL_DOT9		0x1f9
+#endif
+
+#ifndef KEY_BRL_DOT10
+#define KEY_BRL_DOT10		0x1fa
+#endif
+
+#ifndef KEY_NUMERIC_0
+#define KEY_NUMERIC_0		0x200	/* used by phones, remote controls, */
+#endif
+
+#ifndef KEY_NUMERIC_1
+#define KEY_NUMERIC_1		0x201	/* and other keypads */
+#endif
+
+#ifndef KEY_NUMERIC_2
+#define KEY_NUMERIC_2		0x202
+#endif
+
+#ifndef KEY_NUMERIC_3
+#define KEY_NUMERIC_3		0x203
+#endif
+
+#ifndef KEY_NUMERIC_4
+#define KEY_NUMERIC_4		0x204
+#endif
+
+#ifndef KEY_NUMERIC_5
+#define KEY_NUMERIC_5		0x205
+#endif
+
+#ifndef KEY_NUMERIC_6
+#define KEY_NUMERIC_6		0x206
+#endif
+
+#ifndef KEY_NUMERIC_7
+#define KEY_NUMERIC_7		0x207
+#endif
+
+#ifndef KEY_NUMERIC_8
+#define KEY_NUMERIC_8		0x208
+#endif
+
+#ifndef KEY_NUMERIC_9
+#define KEY_NUMERIC_9		0x209
+#endif
+
+#ifndef KEY_NUMERIC_STAR
+#define KEY_NUMERIC_STAR	0x20a
+#endif
+
+#ifndef KEY_NUMERIC_POUND
+#define KEY_NUMERIC_POUND	0x20b
+#endif
+
+#ifndef KEY_CAMERA_FOCUS
+#define KEY_CAMERA_FOCUS	0x210
+#endif
+
+#ifndef KEY_WPS_BUTTON
+#define KEY_WPS_BUTTON		0x211	/* WiFi Protected Setup key */
+#endif
+
+#ifndef KEY_TOUCHPAD_TOGGLE
+#define KEY_TOUCHPAD_TOGGLE	0x212	/* Request switch touchpad on or off */
+#endif
+
+#ifndef KEY_TOUCHPAD_ON
+#define KEY_TOUCHPAD_ON		0x213
+#endif
+
+#ifndef KEY_TOUCHPAD_OFF
+#define KEY_TOUCHPAD_OFF	0x214
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY1
+#define BTN_TRIGGER_HAPPY1		0x2c0
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY2
+#define BTN_TRIGGER_HAPPY2		0x2c1
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY3
+#define BTN_TRIGGER_HAPPY3		0x2c2
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY4
+#define BTN_TRIGGER_HAPPY4		0x2c3
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY5
+#define BTN_TRIGGER_HAPPY5		0x2c4
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY6
+#define BTN_TRIGGER_HAPPY6		0x2c5
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY7
+#define BTN_TRIGGER_HAPPY7		0x2c6
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY8
+#define BTN_TRIGGER_HAPPY8		0x2c7
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY9
+#define BTN_TRIGGER_HAPPY9		0x2c8
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY10
+#define BTN_TRIGGER_HAPPY10		0x2c9
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY11
+#define BTN_TRIGGER_HAPPY11		0x2ca
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY12
+#define BTN_TRIGGER_HAPPY12		0x2cb
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY13
+#define BTN_TRIGGER_HAPPY13		0x2cc
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY14
+#define BTN_TRIGGER_HAPPY14		0x2cd
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY15
+#define BTN_TRIGGER_HAPPY15		0x2ce
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY16
+#define BTN_TRIGGER_HAPPY16		0x2cf
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY17
+#define BTN_TRIGGER_HAPPY17		0x2d0
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY18
+#define BTN_TRIGGER_HAPPY18		0x2d1
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY19
+#define BTN_TRIGGER_HAPPY19		0x2d2
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY20
+#define BTN_TRIGGER_HAPPY20		0x2d3
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY21
+#define BTN_TRIGGER_HAPPY21		0x2d4
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY22
+#define BTN_TRIGGER_HAPPY22		0x2d5
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY23
+#define BTN_TRIGGER_HAPPY23		0x2d6
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY24
+#define BTN_TRIGGER_HAPPY24		0x2d7
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY25
+#define BTN_TRIGGER_HAPPY25		0x2d8
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY26
+#define BTN_TRIGGER_HAPPY26		0x2d9
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY27
+#define BTN_TRIGGER_HAPPY27		0x2da
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY28
+#define BTN_TRIGGER_HAPPY28		0x2db
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY29
+#define BTN_TRIGGER_HAPPY29		0x2dc
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY30
+#define BTN_TRIGGER_HAPPY30		0x2dd
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY31
+#define BTN_TRIGGER_HAPPY31		0x2de
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY32
+#define BTN_TRIGGER_HAPPY32		0x2df
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY33
+#define BTN_TRIGGER_HAPPY33		0x2e0
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY34
+#define BTN_TRIGGER_HAPPY34		0x2e1
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY35
+#define BTN_TRIGGER_HAPPY35		0x2e2
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY36
+#define BTN_TRIGGER_HAPPY36		0x2e3
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY37
+#define BTN_TRIGGER_HAPPY37		0x2e4
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY38
+#define BTN_TRIGGER_HAPPY38		0x2e5
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY39
+#define BTN_TRIGGER_HAPPY39		0x2e6
+#endif
+
+#ifndef BTN_TRIGGER_HAPPY40
+#define BTN_TRIGGER_HAPPY40		0x2e7
+#endif
+
 
 typedef enum cavan_input_message_type {
 	CAVAN_INPUT_MESSAGE_KEY,
