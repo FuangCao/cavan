@@ -23,6 +23,7 @@
 static int cavan_main(int argc, char *argv[]);
 
 #ifdef CONFIG_ANDROID
+#ifndef CONFIG_ANDROID_NDK
 static const char *cavan_get_bootanimation_path(void)
 {
 	int i;
@@ -38,10 +39,13 @@ static const char *cavan_get_bootanimation_path(void)
 
 	return NULL;
 }
+#endif
 
 static int do_cavan_bootanimation(int argc, char *argv[])
 {
-
+#ifdef CONFIG_ANDROID_NDK
+	return -EINVAL;
+#else
 	if (argc > 1) {
 		return do_cavan_mplayer(argc, argv);
 	} else {
@@ -55,6 +59,7 @@ static int do_cavan_bootanimation(int argc, char *argv[])
 	}
 
 	return 0;
+#endif
 }
 #endif
 
