@@ -205,8 +205,54 @@ __BEGIN_DECLS;
 
 // ============================================================
 
-#define pr_info(fmt, args ...) \
+#define pr_info_base(fmt, args ...) \
 	printf(fmt "\n", ##args)
+
+#ifdef CONFIG_ANDROID
+#ifdef CONFIG_ANDROID_NDK
+#include <android-ndk/log.h>
+#else
+#include <utils/Log.h>
+#endif
+
+#ifndef LOGD
+#define LOGD					ALOGD
+#endif
+
+#ifndef LOGE
+#define LOGE					ALOGE
+#endif
+
+#define pd_info_base(fmt, args ...) \
+	LOGD(fmt "\n", ##args);
+#else
+#define pd_info_base(fmt, args ...) \
+	fprintf(stderr, fmt "\n", ##args)
+#endif
+
+#define pr_pd_info(fmt, args ...) \
+	do { \
+		pr_info_base(fmt, ##args); \
+		pd_info_base(fmt, ##args); \
+	} while (0)
+
+#ifdef CONFIG_ANDROID_NDK
+#define pr_info(fmt, args ...) \
+	pr_pd_info(fmt, ##args)
+#else
+#define pr_info(fmt, args ...) \
+	pr_info_base(fmt, ##args)
+#endif
+
+#ifdef CONFIG_ANDROID
+#define pd_info(fmt, args ...) \
+	pr_pd_info(fmt, ##args)
+#else
+#define pd_info(fmt, args ...) \
+	pd_info_base(fmt, ##args)
+#endif
+
+// ============================================================
 
 #define pr_std_info(fmt, args ...) \
 	cavan_std_info(pr_info, fmt, ##args)
@@ -275,24 +321,6 @@ __BEGIN_DECLS;
 	cavan_result_info(pr_info, ret)
 
 // ============================================================
-
-#ifdef CONFIG_ANDROID
-#ifdef CONFIG_ANDROID_NDK
-#include <android-ndk/log.h>
-#else
-#include <utils/Log.h>
-#endif
-#ifndef LOGD
-#define LOGD					ALOGD
-#endif
-#define pd_info(fmt, args ...) \
-	do { \
-		LOGD(fmt "\n", ##args); \
-		pr_info(fmt, ##args); \
-	} while (0)
-#else
-#define pd_info(fmt, args ...)	fprintf(stderr, fmt "\n", ##args)
-#endif
 
 #define pd_std_info(fmt, args ...) \
 	cavan_std_info(pd_info, fmt, ##args)

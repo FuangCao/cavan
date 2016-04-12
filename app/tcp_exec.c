@@ -123,6 +123,8 @@ int main(int argc, char *argv[])
 	char command[1024];
 	struct network_url url;
 
+	pr_pos_info();
+
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
 	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF) {

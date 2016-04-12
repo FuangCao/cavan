@@ -2,18 +2,29 @@ package com.cavan.cavanmain;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 
 public class MainActivity extends ActionBarActivity {
 
+	public static final String TAG = "Cavan";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        CavanNative.nativeTcpExec(null);
+        int ret = CavanNative.nativeSu("pwd");
+
+		Log.d(TAG, "ret = " + ret);
+
+		if (ret < 0) {
+			Log.e(TAG, "Failed");
+		} else {
+			Log.d(TAG, "OK");
+		}
     }
 
     @Override
