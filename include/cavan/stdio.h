@@ -126,10 +126,7 @@ __BEGIN_DECLS;
 #define CAVAN_TTY_MODE_SSH				5
 
 #define CAVAN_TTY_SET_TITLE(fmt, args ...) \
-	do { \
-		printf("\033]0;" fmt "\007", ##args); \
-		fflush(stdout); \
-	} while (0)
+	print("\033]0;" fmt "\007", ##args)
 
 // ============================================================
 
@@ -205,8 +202,13 @@ __BEGIN_DECLS;
 
 // ============================================================
 
+#if 1
 #define pr_info_base(fmt, args ...) \
-	printf(fmt "\n", ##args)
+	println(fmt, ##args)
+#else
+#define pr_info_base(fmt, args ...) \
+	cavan_async_printf(fmt "\n", ##args)
+#endif
 
 #ifdef CONFIG_ANDROID
 #ifdef CONFIG_ANDROID_NDK
@@ -444,8 +446,6 @@ __BEGIN_DECLS;
 #define save_console_cursor()				print_text("\033[%ds")
 #define restore_console_cursor()			print_text("\033[%du")
 
-extern FILE *console_fp;
-
 int cavan_tty_set_attr(int fd, int action, struct termios *attr);
 int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak);
 int cavan_tty_attr_restore(int fd, struct termios *attr);
@@ -453,7 +453,7 @@ int cavan_tty_attr_restore(int fd, struct termios *attr);
 int cavan_has_char(long sec, long usec);
 int cavan_getchar_timed(long sec, long usec);
 
-void print_ntext(const char *text, size_t size);
+int print_ntext(const char *text, size_t size);
 void print_buffer(const char *buff, size_t size);
 void print_title(const char *title, char sep, size_t size);
 void print_sep(size_t size);
@@ -478,10 +478,10 @@ void show_author_info(void);
 
 __printf_format_34__ char *sprint(char *buff, size_t size, const char *fmt, ...);
 __printf_format_34__ char *sprintln(char *buff, size_t size, const char *fmt, ...);
-__printf_format_12__ void print(const char *fmt, ...);
-__printf_format_10__ void vprint(const char *fmt, va_list ap);
-__printf_format_10__ void vprintln(const char *fmt, va_list ap);
-__printf_format_12__ void println(const char *fmt, ...);
+__printf_format_12__ int print(const char *fmt, ...);
+__printf_format_10__ int vprint(const char *fmt, va_list ap);
+__printf_format_10__ int vprintln(const char *fmt, va_list ap);
+__printf_format_12__ int println(const char *fmt, ...);
 __printf_format_23__ void print_bit_mask(u64 value, const char *prompt, ...);
 __printf_format_34__ void print_to(int x, int y, const char *fmt, ...);
 __printf_format_23__ void print_to_row(int row, const char *fmt, ...);
@@ -498,6 +498,10 @@ const char *cavan_get_temp_path(void);
 const char *cavan_build_temp_path(const char *filename, char *buff, size_t size);
 bool cavan_get_choose_yesno(const char *prompt, bool def_value, int timeout_ms);
 __printf_format_34__ bool cavan_get_choose_yesno_format(bool def_choose, int timeout_ms, const char *format, ...);
+
+int cavan_async_vprintf(const char *fmt, va_list ap);
+int cavan_async_printf(const char *fmt, ...);
+int cavan_async_fflush(void);
 
 // ============================================================
 

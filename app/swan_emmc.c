@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 	const char *img_path;
 
 	if (argv[1][0] != '-') {
-		printf("Unknown Option\n");
+		pr_info("Unknown Option");
 		return -1;
 	}
 
@@ -122,13 +122,13 @@ int main(int argc, char *argv[])
 			break;
 
 		default:
-			printf("Unknown Option\n");
+			pr_info("Unknown Option");
 			return -1;
 		}
 		break;
 
 	default:
-		printf("Unknown Option\n");
+		pr_info("Unknown Option");
 		return -1;
 	}
 

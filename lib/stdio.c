@@ -1,12 +1,16 @@
 #include <cavan.h>
 #include <cavan/text.h>
+#include <cavan/thread.h>
 #include <linux/kd.h>
 #include <termios.h>
 
 #define MAX_BUFF_LEN	KB(4)
 
-FILE *console_fp;
+static int console_fd = -1;
 static struct termios tty_attr;
+
+static FILE *cavan_async_stdout;
+static int cavan_async_stdout_pipefd[2];
 
 int cavan_tty_set_attr(int fd, int action, struct termios *attr)
 {
@@ -133,32 +137,6 @@ int cavan_getchar_timed(long sec, long usec)
 	return -1;
 }
 
-char *sprint(char *buff, size_t size, const char *fmt, ...)
-{
-	char *ret_buff;
-	va_list ap;
-
-	va_start(ap, fmt);
-	ret_buff = vformat_text(buff, size, fmt, ap);
-	va_end(ap);
-
-	return ret_buff;
-}
-
-char *sprintln(char *buff, size_t size, const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	buff = vformat_text(buff, size, fmt, ap);
-	va_end(ap);
-
-	*buff++ = '\n';
-	buff[0] = 0;
-
-	return buff;
-}
-
 #if 0 // CONFIG_ANDROID
 void print_ntext(const char *text, size_t size)
 {
@@ -170,17 +148,102 @@ void print_ntext(const char *text, size_t size)
 	__android_log_write(ANDROID_LOG_DEBUG, LOG_TAG, buff);
 }
 #else
-void print_ntext(const char *text, size_t size)
+int print_ntext(const char *text, size_t size)
 {
-	if (console_fp) {
-		fwrite(text, 1, size, console_fp);
-		fflush(console_fp);
+	int ret = 0;
+
+	if (console_fd >= 0) {
+		ret |= write(console_fd, text, size);
+		fsync(console_fd);
 	}
 
-	fwrite(text, 1, size, stdout);
-	fflush(stdout);
+	ret |= write(stdout_fd, text, size);
+	fsync(stdout_fd);
+
+	return ret;
 }
 #endif
+
+static void *cavan_async_stdout_thread(void *data)
+{
+	int fd = cavan_async_stdout_pipefd[0];
+
+	while (1) {
+		ssize_t rdlen;
+		char buff[1024];
+
+		rdlen = read(fd, buff, sizeof(buff));
+		if (rdlen < 0) {
+			break;
+		}
+
+		if (print_ntext(buff, rdlen) < 0) {
+			break;
+		}
+	}
+
+	fclose(cavan_async_stdout);
+	cavan_async_stdout = NULL;
+
+	close(cavan_async_stdout_pipefd[0]);
+	close(cavan_async_stdout_pipefd[1]);
+
+	return NULL;
+}
+
+int cavan_async_vprintf(const char *fmt, va_list ap)
+{
+	int ret;
+
+	if (unlikely(cavan_async_stdout == NULL)) {
+		int ret;
+		pthread_t thread;
+
+		ret = pipe(cavan_async_stdout_pipefd);
+		if (ret < 0) {
+			return ret;
+		}
+
+		ret = cavan_pthread_create(&thread, cavan_async_stdout_thread, NULL, false);
+		if (ret < 0) {
+			close(cavan_async_stdout_pipefd[0]);
+			close(cavan_async_stdout_pipefd[1]);
+			return ret;
+		}
+
+		cavan_async_stdout = fdopen(cavan_async_stdout_pipefd[1], "w");
+		if (cavan_async_stdout == NULL) {
+			cavan_pthread_kill(thread);
+			close(cavan_async_stdout_pipefd[0]);
+			close(cavan_async_stdout_pipefd[1]);
+			return -EFAULT;
+		}
+
+		setlinebuf(cavan_async_stdout);
+	}
+
+	ret = vfprintf(cavan_async_stdout, fmt, ap);
+	fflush(cavan_async_stdout);
+
+	return ret;
+}
+
+int cavan_async_printf(const char *fmt, ...)
+{
+	int ret;
+	va_list ap;
+
+	va_start(ap, fmt);
+	ret = cavan_async_vprintf(fmt, ap);
+	va_end(ap);
+
+	return ret;
+}
+
+int cavan_async_fflush(void)
+{
+	return fflush(cavan_async_stdout);
+}
 
 void print_buffer(const char *buff, size_t size)
 {
@@ -189,42 +252,57 @@ void print_buffer(const char *buff, size_t size)
 	print_char('\n');
 }
 
-void vprint(const char *fmt, va_list ap)
+int vprint(const char *fmt, va_list ap)
 {
-	char *p;
-	char buff[PRINT_BUFFER_LEN];
+	int length;
+	char *buff = alloca(PRINT_BUFFER_LEN);
 
-	 p = vformat_text(buff, sizeof(buff), fmt, ap);
-	print_ntext(buff, p - buff);
+	if (buff == NULL) {
+		return -ENOMEM;
+	}
+
+	length = vsnprintf(buff, PRINT_BUFFER_LEN, fmt, ap);
+
+	return print_ntext(buff, length);
 }
 
-void print(const char *fmt, ...)
+int print(const char *fmt, ...)
 {
+	int ret;
 	va_list ap;
 
 	va_start(ap, fmt);
-	vprint(fmt, ap);
+	ret = vprint(fmt, ap);
 	va_end(ap);
+
+	return ret;
 }
 
-void vprintln(const char *fmt, va_list ap)
+int vprintln(const char *fmt, va_list ap)
 {
-	char *tmp;
-	char buff[PRINT_BUFFER_LEN];
+	char *text, *buff = alloca(PRINT_BUFFER_LEN);
 
-	tmp = vformat_text(buff, sizeof(buff), fmt, ap);
-	*tmp++ = '\n';
-	*tmp = 0;
-	print_text(buff);
+	if (buff == NULL) {
+		return -ENOMEM;
+	}
+
+	text = buff + vsnprintf(buff, PRINT_BUFFER_LEN - 1, fmt, ap);
+	*text++ = '\n';
+	*text = 0;
+
+	return print_ntext(buff, text - buff);
 }
 
-void println(const char *fmt, ...)
+int println(const char *fmt, ...)
 {
+	int ret;
 	va_list ap;
 
 	va_start(ap, fmt);
-	vprintln(fmt, ap);
+	ret = vprintln(fmt, ap);
 	va_end(ap);
+
+	return ret;
 }
 
 void print_bit_mask(u64 value, const char *prompt, ...)
@@ -464,66 +542,66 @@ void print_mem(const char *promp, const u8 *mem, size_t size, ...)
 void print_error_base(const char *fmt, ...)
 {
 	va_list ap;
+	int length;
 	char buff[1024];
 
 	va_start(ap, fmt);
-	vformat_text(buff, sizeof(buff), fmt, ap);
+	length = vsnprintf(buff, sizeof(buff), fmt, ap);
 	va_end(ap);
 
 	if (errno == 0) {
-		print_string(buff);
+		buff[length++] = '\n';
+		buff[length] = 0;
 	} else {
-		println("%s: %s[%d]", buff, strerror(errno), errno);
+		length += snprintf(buff + length, sizeof(buff) - length, ": %s[%d]\n", strerror(errno), errno);
 	}
+
+	print_ntext(buff, length);
 }
 
 int open_console(const char *dev_path)
 {
-	FILE *fp;
+	int fd;
 
 	if (dev_path == NULL || dev_path[0] == 0) {
 		dev_path = DEFAULT_CONSOLE_DEVICE;
 	}
 
-	fp = fopen(dev_path, "w");
-	if (fp == NULL) {
-		pr_err_info("fopen");
-		return -1;
+	fd = open(dev_path, O_RDWR | O_CLOEXEC | O_CREAT | O_TRUNC, 0777);
+	if (fd < 0) {
+		pr_err_info("open %s", dev_path);
+		return fd;
 	}
 
-	if (console_fp) {
-		close_console();
-	}
-
-	console_fp = fp;
+	close_console();
+	console_fd = fd;
 
 	set_default_font();
-	fswitch2text_mode(fileno(fp));
+	fswitch2text_mode(console_fd);
 
 	return 0;
 }
 
 void close_console(void)
 {
-	if (console_fp == NULL) {
+	if (console_fd < 0) {
 		return;
 	}
 
 	set_default_font();
-	fswitch2graph_mode(fileno(console_fp));
+	fswitch2graph_mode(console_fd);
 
-	fflush(console_fp);
-	fclose(console_fp);
-	console_fp = NULL;
+	close(console_fd);
+	console_fd = -1;
 }
 
 void fflush_console(void)
 {
-	if (console_fp) {
-		fflush(console_fp);
+	if (console_fd >= 0) {
+		fsync(console_fd);
 	}
 
-	fflush(stdout);
+	fsync(stdout_fd);
 }
 
 void show_menu(int x, int y, const char *menu[], int count, int select)

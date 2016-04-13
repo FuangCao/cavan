@@ -294,7 +294,7 @@ int cavan_wav_player_set_hwparams(struct cavan_wav_player *player)
 		return err;
 	}
 
-	printf("rrate = %iHz, rate = %iHz\n", rrate, fmt_chk->sample_rate);
+	pr_info("rrate = %iHz, rate = %iHz", rrate, fmt_chk->sample_rate);
 	if (rrate != fmt_chk->sample_rate) {
 		pr_red_info("Rate doesn't match (requested %iHz, get %iHz)", fmt_chk->sample_rate, err);
 	}
@@ -315,7 +315,7 @@ int cavan_wav_player_set_hwparams(struct cavan_wav_player *player)
 	}
 	err = snd_pcm_hw_params_get_buffer_size(params, &player->buffer_size);
 	if (err < 0) {
-		printf("Unable to get buffer size for playback: %s", snd_strerror(err));
+		pr_red_info("Unable to get buffer size for playback: %s", snd_strerror(err));
 		return err;
 	}
 	/* set the period time */

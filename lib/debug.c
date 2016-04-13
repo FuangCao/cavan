@@ -86,11 +86,11 @@ static void sigsegv_handler(int signum, siginfo_t *info, void *ptr)
 {
 	static const char *si_codes[] = { "", "SEGV_MAPERR", "SEGV_ACCERR" };
 
-	printf("Segmentation Fault Trace:\n");
-	printf("info.si_signo = %d\n", signum);
-	printf("info.si_errno = %d\n", info->si_errno);
-	printf("info.si_code  = %d (%s)\n", info->si_code, si_codes[info->si_code]);
-	printf("info.si_addr  = %p\n", info->si_addr);
+	pr_info("Segmentation Fault Trace:");
+	pr_info("info.si_signo = %d", signum);
+	pr_info("info.si_errno = %d", info->si_errno);
+	pr_info("info.si_code  = %d (%s)", info->si_code, si_codes[info->si_code]);
+	pr_info("info.si_addr  = %p", info->si_addr);
 
 	dump_stack();
 

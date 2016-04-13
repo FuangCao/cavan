@@ -510,10 +510,10 @@ void cavan_mem_dump(const byte *mem, size_t size, size_t width, const char *sep,
 		}
 
 		while (mem < line_end) {
-			printf("0x%02x%s", *mem++, sep);
+			print("0x%02x%s", *mem++, sep);
 		}
 
-		printf("0x%02x%s", *mem++, new_line);
+		print("0x%02x%s", *mem++, new_line);
 	}
 }
 

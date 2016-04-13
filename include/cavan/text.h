@@ -188,7 +188,8 @@ char *text_find_space_or_lf_invert(const char *text, const char *head);
 char *text_find_name(const char *text, const char *text_end);
 char *text_find_name_invert(const char *text, const char *head);
 
-__printf_format_30__ char *vformat_text (char *buff, size_t size, const char *fmt, va_list args);
+__printf_format_40__ char *cavan_vsnprintf(char *buff, size_t size, const char *fmt, char *args);
+__printf_format_12__ char *cavan_printf(const char *fmt, ...);
 __printf_format_12__ char *format_text(const char *fmt, ...);
 
 int system_command_simple(const char *command);

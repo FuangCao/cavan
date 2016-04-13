@@ -230,14 +230,14 @@ int cavan_exec_waitpid(pid_t pid)
 		}
 
 		if (WIFSIGNALED(status)) {
-			printf("killed by signal %d\n", WTERMSIG(status));
+			pr_info("killed by signal %d", WTERMSIG(status));
 			return -EFAULT;
 		}
 
 		if (WIFSTOPPED(status)) {
-			printf("stopped by signal %d\n", WSTOPSIG(status));
+			pr_info("stopped by signal %d", WSTOPSIG(status));
 		} else if (WIFCONTINUED(status)) {
-			printf("continued\n");
+			pr_info("continued");
 		}
 	}
 #else
@@ -335,7 +335,7 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 
 static int cavan_builtin_command_shell(const struct cavan_builtin_command *desc, const char *shell, int argc, char *argv[])
 {
-#if 0 // def CONFIG_ANDROID
+#ifdef CONFIG_ANDROID
 	const char *username;
 	const char *hostname;
 

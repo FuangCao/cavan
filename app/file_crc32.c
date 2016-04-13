@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	printf("crc32 = 0x%08x\n", crc);
+	pr_info("crc32 = 0x%08x", crc);
 
 	return 0;
 }

@@ -1416,7 +1416,6 @@ int text2date(const char *text, struct tm *date, ...)
 	return 0;
 }
 
-#ifndef USE_SYSTEM_PRINTF
 static u64 get_argument(char *args, int size)
 {
 	u64 value;
@@ -1445,7 +1444,7 @@ static u64 get_argument(char *args, int size)
 	return value;
 }
 
-char *vformat_text(char *buff, const char *fmt, va_list args)
+char *cavan_vsnprintf(char *buff, size_t size, const char *fmt, char *args)
 {
 	int text_len;
 	int arg_len;
@@ -1494,29 +1493,29 @@ start_parse:
 
 			case 'b':
 			case 'B':
-				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 2 | FLAG_PREFIX);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 2 | TEXT_FLAG_PREFIX);
 				break;
 
 			case 'o':
 			case 'O':
-				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 8 | FLAG_PREFIX);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 8 | TEXT_FLAG_PREFIX);
 				break;
 
 			case 'u':
 			case 'U':
-				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 10 | FLAG_PREFIX);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 10 | TEXT_FLAG_PREFIX);
 				break;
 
 			case 'd':
 			case 'D':
 			case 'i':
 			case 'I':
-				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 10 | FLAG_SIGNED);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 10 | TEXT_FLAG_SIGNED);
 				break;
 
 			case 'p':
 			case 'P':
-				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 16 | FLAG_PREFIX);
+				buff = value2text_base(get_argument(args, arg_len), buff, text_len * symbol, fill, 16 | TEXT_FLAG_PREFIX);
 				break;
 
 			case 'x':
@@ -1558,12 +1557,17 @@ out_return:
 
 	return buff;
 }
-#else
-inline char *vformat_text(char *buff, size_t size, const char *fmt, va_list args)
+
+char *cavan_printf(const char *fmt, ...)
 {
-	return buff + vsnprintf(buff, size, fmt, args);
+	char *args;
+	static char buff[1024];
+
+	args = (char *) (((int *) &fmt) + 1);
+	cavan_vsnprintf(buff, sizeof(buff), fmt, args);
+
+	return buff;
 }
-#endif
 
 char *format_text(const char *fmt, ...)
 {
@@ -1571,7 +1575,7 @@ char *format_text(const char *fmt, ...)
 	static char buff[1024];
 
 	va_start(ap, fmt);
-	vformat_text(buff, sizeof(buff), fmt, ap);
+	vsnprintf(buff, sizeof(buff), fmt, ap);
 	va_end(ap);
 
 	return buff;
