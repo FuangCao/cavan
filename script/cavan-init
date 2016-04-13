@@ -62,7 +62,7 @@ source "${CORE_PATH}/device.sh"
 source "${CORE_PATH}/stdio.sh"
 source "${CORE_PATH}/alias.sh"
 
-LOCAL_UBUNTU="${UBUNTU_PATH}-${DISTRIB_RELEASE}"
+LOCAL_UBUNTU="${UBUNTU_PATH}/${DISTRIB_RELEASE}"
 
 USER_LIST=""
 USER_HAS_CAVAN="false"
@@ -303,12 +303,14 @@ function config_aptget()
 
 	[ "${USER_HAS_CAVAN}" = "true" ] || return 0
 
-	LOCAL_UBUNTU="${UBUNTU_PATH}/${DISTRIB_RELEASE}"
 	var_path="${LOCAL_UBUNTU}/var"
 	etc_path="${LOCAL_UBUNTU}/etc"
 
 	cavan-symlink ${etc_path}/apt /etc/apt || return 1
 	cavan-symlink ${var_path}/cache/apt /var/cache/apt || return 1
+
+	echo "deb http://download.virtualbox.org/virtualbox/debian ${DISTRIB_CODENAME} contrib" >> /etc/apt/sources.list
+	wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
 }
 
 function config_git()
@@ -357,10 +359,11 @@ function install_applications()
 
 function install_debin_packages()
 {
-	for pkg in ${LOCAL_UBUNTU}/debs/*.deb
+	for pkg in ${LOCAL_UBUNTU}/debs/*.deb ${UBUNTU_PATH}/debs/*.deb
 	do
+		[ -f "${pkg}" ] || continue
 		pr_title "Install debin package ${pkg}"
-		dpkg -i ${pkg} || return 0
+		dpkg -i ${pkg} || return 1
 	done
 }
 
