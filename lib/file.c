@@ -795,7 +795,7 @@ ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t
 	println("offset = %s", size2text(offset));
 #endif
 
-	fd = file_create_open(file_name, O_WRONLY | O_SYNC | flags, 0777);
+	fd = file_create_open(file_name, O_WRONLY | O_CLOEXEC | O_SYNC | flags, 0777);
 	if (fd < 0) {
 #if CAVAN_FILE_DEBUG
 		pr_error_info("open \"%s\"", file_name);

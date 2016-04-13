@@ -8,8 +8,9 @@
 #include <cavan/network.h>
 #include <cavan/progress.h>
 
-#define CAVAN_NETWORK_DEBUG		0
-#define CAVAN_IFCONFIG_DEBUG	0
+#define CAVAN_NETWORK_DEBUG				0
+#define CAVAN_IFCONFIG_DEBUG			0
+#define CAVAN_NETWORK_TRANSMIT_THREAD	0
 
 const char *network_get_socket_pathname(void)
 {
@@ -2604,8 +2605,54 @@ int network_client_printf(struct network_client *client, const char *format, ...
 	return ret;
 }
 
+#if CAVAN_NETWORK_TRANSMIT_THREAD
+static void *network_client_transmit_handler(void *_data)
+{
+	struct network_transmit_data *data = _data;
+	struct network_client *client = data->receiver;
+	int fd = data->sender_fd;
+
+	while (1) {
+		ssize_t rdlen;
+		char buff[2014];
+
+		rdlen = client->recv(client, buff, sizeof(buff));
+		if (rdlen <= 0 || write(fd, buff, rdlen) < rdlen) {
+			break;
+		}
+
+		fsync(fd);
+	}
+
+	return NULL;
+}
+#endif
+
 int network_client_exec_redirect(struct network_client *client, int ttyin, int ttyout)
 {
+#if CAVAN_NETWORK_TRANSMIT_THREAD
+	pthread_t thread;
+	struct network_transmit_data data;
+
+	data.receiver = client;
+	data.sender_fd = ttyout;
+
+	cavan_pthread_create(&thread, network_client_transmit_handler, &data, false);
+
+	while (1) {
+		ssize_t rdlen;
+		char buff[1024];
+
+		rdlen = read(ttyin, buff, sizeof(buff));
+		if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen) {
+			break;
+		}
+
+		fsync(client->sockfd);
+	}
+
+	cavan_pthread_kill(thread);
+#else
 	struct pollfd pfds[2];
 
 	pfds[0].events = POLLIN;
@@ -2642,6 +2689,7 @@ int network_client_exec_redirect(struct network_client *client, int ttyin, int t
 			fsync(client->sockfd);
 		}
 	}
+#endif
 
 	return 0;
 }

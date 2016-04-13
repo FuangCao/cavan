@@ -117,9 +117,9 @@ __BEGIN_DECLS;
 #endif
 #endif
 
-#define stdin_fd						fileno(stdin)
-#define stdout_fd						fileno(stdout)
-#define stderr_fd						fileno(stderr)
+#define stdin_fd						0
+#define stdout_fd						1
+#define stderr_fd						2
 
 #define CAVAN_TTY_MODE_DATA				3
 #define CAVAN_TTY_MODE_AT				4

@@ -14,11 +14,20 @@
 #define CAVAN_THREAD_DEBUG	0
 #endif
 
+static void cavan_pthread_kill_sighandler(int signum)
+{
+	pd_bold_info("signum = %d", signum);
+
+	pthread_exit(0);
+}
+
 int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data, bool joinable)
 {
 	int ret;
 	pthread_t thread;
 	pthread_attr_t attr;
+
+	signal(SIGUSR1, cavan_pthread_kill_sighandler);
 
 	if (pthread == NULL) {
 		joinable = false;

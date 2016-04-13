@@ -14,22 +14,11 @@
 
 #define CAVAN_SERVICE_DEBUG		0
 
-static void cavan_service_sighandler(int signum)
-{
-	pd_bold_info("signum = %d", signum);
-
-	if (signum == SIGUSR1) {
-		pthread_exit(0);
-	}
-}
-
 static void *cavan_service_handler(void *data)
 {
 	struct cavan_service_description *desc = data;
 	static int count = 0;
 	int index;
-
-	signal(SIGUSR1, cavan_service_sighandler);
 
 	pthread_mutex_lock(&desc->mutex_lock);
 	index = ++count;
@@ -569,6 +558,8 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	} /* else {
 		setsid();
 	} */
+
+	cavan_exec_set_oom_adj2(0, 0);
 
 	homepath = getenv("HOME");
 	if (homepath) {

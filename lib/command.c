@@ -335,7 +335,7 @@ int cavan_redirect_stdio(const char *pathname, int flags)
 
 static int cavan_builtin_command_shell(const struct cavan_builtin_command *desc, const char *shell, int argc, char *argv[])
 {
-#ifdef CONFIG_ANDROID
+#if 0 // def CONFIG_ANDROID
 	const char *username;
 	const char *hostname;
 
@@ -516,6 +516,8 @@ int cavan_exec_command(const char *command, int argc, char *argv[])
 	const char *shell = cavan_get_shell_path();
 	const char *name = text_basename_simple(shell);
 
+	cavan_exec_set_oom_adj2(0, 0);
+
 	if (command == NULL || command[0] == 0) {
 		if (argv && argc > 0 && argv[0]) {
 			command = argv[0];
@@ -639,10 +641,10 @@ int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, cons
 	ret = setsid();
 	if (ret < 0) {
 		pr_error_info("setsid");
-		return ret;
+		// return ret;
 	}
 
-	ttyfd = open(ttypath, O_RDWR);
+	ttyfd = open(ttypath, O_RDWR | O_CLOEXEC);
 	if (ttyfd < 0) {
 		pr_error_info("open file %s", ttypath);
 		return ttyfd;
@@ -656,27 +658,49 @@ int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, cons
 		}
 	}
 
-	return cavan_exec_redirect_stdio_base2(ttyfd, command, flags);
+	ret = cavan_exec_redirect_stdio_base2(ttyfd, command, flags);
+
+	close(ttyfd);
+
+	return ret;
 }
 
-int cavan_exec_set_oom_adj(int pid, int value)
+int cavan_exec_set_oom_adj(const char *dirname, int value)
 {
 	ssize_t wrlen;
 	size_t length;
 	char buff[32];
+	char *filename;
 	char pathname[1024];
 
 	length = value2text_simple(value, buff, sizeof(buff), 10) - buff;
 
-	snprintf(pathname, sizeof(pathname), "/proc/%d/oom_score_adj", pid);
+	filename = text_path_cat(pathname, sizeof(pathname), dirname, NULL);
+	strcpy(filename, "oom_score_adj");
+
 	wrlen = file_write(pathname, buff, length);
 	if (wrlen > 0) {
 		return 0;
 	}
 
-	snprintf(pathname, sizeof(pathname), "/proc/%d/oom_adj", pid);
+	strcpy(filename, "oom_adj");
 
 	return file_write(pathname, buff, length);
+}
+
+int cavan_exec_set_oom_adj2(int pid, int value)
+{
+	char buff[64];
+	const char *dirname;
+
+	if (pid == 0) {
+		dirname = "/proc/self";
+	} else {
+		snprintf(buff, sizeof(buff), "/proc/%d", pid);
+		dirname = buff;
+	}
+
+	return cavan_exec_set_oom_adj(dirname, value);
 }
 
 int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns, pid_t *ppid, int flags)
@@ -803,8 +827,6 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 			return cavan_exec_redirect_stdio2(pathname, lines, columns, command, flags);
 		}
 	}
-
-	cavan_exec_set_oom_adj(pid, 0);
 
 	if (ppid) {
 		*ppid = pid;
@@ -1120,8 +1142,6 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 		} else {
 			return cavan_exec_redirect_stdio(NULL, command, flags);
 		}
-
-		cavan_exec_set_oom_adj(pid, 0);
 	} else {
 		fd = cavan_exec_redirect_stdio_popen(command, lines, columns, &pid, flags);
 		if (fd < 0) {

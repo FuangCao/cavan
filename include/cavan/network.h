@@ -264,6 +264,13 @@ struct network_client {
 	ssize_t (*recvfrom)(struct network_client *client, void *buff, size_t size, struct sockaddr *addr);
 };
 
+struct network_transmit_data {
+	int sender_fd;
+	int receiver_fd;
+	struct network_client *sender;
+	struct network_client *receiver;
+};
+
 struct network_client_sync_data {
 	pthread_mutex_t lock;
 	u8 send_index, recv_index;

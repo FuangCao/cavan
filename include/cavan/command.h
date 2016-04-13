@@ -291,7 +291,8 @@ int tty_get_win_size(int tty, int size[2]);
 int tty_get_win_size2(int tty, int *lines, int *columns);
 int tty_get_win_size3(int tty, u16 *lines, u16 *columns);
 int tty_set_win_size(int tty, u16 lines, u16 columns);
-int cavan_exec_set_oom_adj(int pid, int value);
+int cavan_exec_set_oom_adj(const char *dirname, int value);
+int cavan_exec_set_oom_adj2(int pid, int value);
 
 int cavan_exec_get_temp_pipe_pathname(char *pathname, size_t size, pid_t pid, int type);
 int cavan_exec_make_temp_pipe(char *pathname, size_t size, pid_t pid, int type);
