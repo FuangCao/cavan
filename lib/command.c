@@ -215,6 +215,13 @@ label_start_match:
 	return -1;
 }
 
+pid_t cavan_exec_fork(void)
+{
+	cavan_stdio_fflush();
+
+	return fork();
+}
+
 int cavan_exec_waitpid(pid_t pid)
 {
 	int status;

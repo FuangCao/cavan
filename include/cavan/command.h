@@ -260,6 +260,7 @@ void print_maybe_command(const struct cavan_command_map *p, const struct cavan_c
 const struct cavan_command_map *match_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname);
 int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[]);
 
+pid_t cavan_exec_fork(void);
 int cavan_exec_waitpid(pid_t pid);
 int cavan_exec_command(const char *command, int argc, char *argv[]);
 int cavan_exec_redirect_stdio_base(int ttyfds[3], const char *command);
@@ -314,13 +315,6 @@ static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
 static inline int cavan_tty_redirect2(int ttyfd)
 {
 	return cavan_tty_redirect(ttyfd, ttyfd, -1);
-}
-
-static inline pid_t cavan_exec_fork(void)
-{
-	cavan_stdio_fflush();
-
-	return fork();
 }
 
 __END_DECLS;

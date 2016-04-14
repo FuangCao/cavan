@@ -512,6 +512,12 @@ static inline int cavan_stdio_fflush(void)
 	return fflush(stdout) | fflush(stderr);
 }
 
+static inline void cavan_stdio_setlinebuf(void)
+{
+	setlinebuf(stdout);
+	setlinebuf(stderr);
+}
+
 static inline void print_char(char c)
 {
 	print_ntext(&c, 1);

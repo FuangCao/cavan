@@ -44,6 +44,9 @@ int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak)
 		return 0;
 	}
 
+	cavan_stdio_fflush();
+	msleep(1);
+
 	if (attr_bak == NULL) {
 		attr_bak = &tty_attr;
 	}
@@ -830,6 +833,8 @@ int cavan_stdio_redirect1(int ttyfds[3])
 		} while (ttyfds[i] != ttyfds[j]);
 	}
 
+	cavan_stdio_setlinebuf();
+
 	return 0;
 }
 
@@ -852,7 +857,6 @@ int cavan_stdio_redirect2(int fd, int flags)
 int cavan_stdio_redirect3(const char *pathname, int flags)
 {
 	int fd;
-	int ret;
 	int open_flags;
 
 	pd_bold_info("pathname = %s, flags = 0x%02x", pathname, flags);
@@ -873,9 +877,5 @@ int cavan_stdio_redirect3(const char *pathname, int flags)
 		return fd;
 	}
 
-	ret = cavan_stdio_redirect2(fd, flags);
-
-	close(fd);
-
-	return ret;
+	return cavan_stdio_redirect2(fd, flags);
 }
