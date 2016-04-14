@@ -262,9 +262,6 @@ int find_and_exec_command(const struct cavan_command_map *map, size_t count, int
 
 int cavan_exec_waitpid(pid_t pid);
 int cavan_exec_command(const char *command, int argc, char *argv[]);
-int cavan_redirect_stdio_base(int ttyfds[3]);
-int cavan_redirect_stdio_base2(int fd, int flags);
-int cavan_redirect_stdio(const char *pathname, int flags);
 int cavan_exec_redirect_stdio_base(int ttyfds[3], const char *command);
 int cavan_exec_redirect_stdio_base2(int ttyfd, const char *command, int flags);
 int cavan_exec_redirect_stdio(char *const ttypath[3], const char *command, int flags);
@@ -317,6 +314,13 @@ static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
 static inline int cavan_tty_redirect2(int ttyfd)
 {
 	return cavan_tty_redirect(ttyfd, ttyfd, -1);
+}
+
+static inline pid_t cavan_exec_fork(void)
+{
+	cavan_stdio_fflush();
+
+	return fork();
 }
 
 __END_DECLS;

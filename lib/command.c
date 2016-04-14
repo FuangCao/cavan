@@ -249,90 +249,6 @@ int cavan_exec_waitpid(pid_t pid)
 	return WEXITSTATUS(status);
 }
 
-int cavan_redirect_stdio_base(int ttyfds[3])
-{
-	int i;
-	int ret;
-
-	for (i = 0; i < 3; i++) {
-		if (ttyfds[i] < 0) {
-			continue;
-		}
-
-		ret = dup2(ttyfds[i], i);
-		if (ret < 0) {
-			pd_error_info("dup2 stdio %d", i);
-			return ret;
-		}
-	}
-
-	for (i = 0; i < 3; i++) {
-		int j;
-
-		if (ttyfds[i] < 0) {
-			continue;
-		}
-
-		j = i;
-
-		do {
-			if (--j < 0) {
-				close(ttyfds[i]);
-				break;
-			}
-		} while (ttyfds[i] != ttyfds[j]);
-	}
-
-	return 0;
-}
-
-int cavan_redirect_stdio_base2(int fd, int flags)
-{
-	int i;
-	int ttyfds[3];
-
-	for (i = 0; i < 3; i++) {
-		if (flags & (1 << i)) {
-			ttyfds[i] = fd;
-		} else {
-			ttyfds[i] = -1;
-		}
-	}
-
-	return cavan_redirect_stdio_base(ttyfds);
-}
-
-int cavan_redirect_stdio(const char *pathname, int flags)
-{
-	int fd;
-	int ret;
-	int open_flags;
-
-	pd_bold_info("pathname = %s, flags = 0x%02x", pathname, flags);
-
-	if ((flags & 0x01)) {
-		if ((flags & 0x06)) {
-			open_flags = O_RDWR;
-		} else {
-			open_flags = O_RDONLY;
-		}
-	} else {
-		open_flags = O_WRONLY;
-	}
-
-	fd = open(pathname, open_flags | O_CREAT | O_TRUNC, 0777);
-	if (fd < 0) {
-		pd_error_info("open file `%s' failed", pathname);
-		return fd;
-	}
-
-	ret = cavan_redirect_stdio_base2(fd, flags);
-
-	close(fd);
-
-	return ret;
-}
-
 static int cavan_builtin_command_shell(const struct cavan_builtin_command *desc, const char *shell, int argc, char *argv[])
 {
 #ifdef CONFIG_ANDROID
@@ -597,7 +513,7 @@ int cavan_exec_redirect_stdio_base(int ttyfds[3], const char *command)
 {
 	int ret;
 
-	ret = cavan_redirect_stdio_base(ttyfds);
+	ret = cavan_stdio_redirect1(ttyfds);
 	if (ret < 0) {
 		pr_error_info("cavan_redirect_stdio_base");
 		return ret;
@@ -610,7 +526,7 @@ int cavan_exec_redirect_stdio_base2(int ttyfd, const char *command, int flags)
 {
 	int ret;
 
-	ret = cavan_redirect_stdio_base2(ttyfd, flags);
+	ret = cavan_stdio_redirect2(ttyfd, flags);
 	if (ret < 0) {
 		pr_error_info("cavan_redirect_stdio_base");
 		return ret;
@@ -753,9 +669,9 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 			}
 		}
 
-		pid = fork();
+		pid = cavan_exec_fork();
 		if (pid < 0) {
-			pr_error_info("fork");
+			pr_error_info("cavan_exec_fork");
 
 			close(pair[0]);
 			close(pair[1]);
@@ -814,9 +730,9 @@ int cavan_exec_redirect_stdio_popen(const char *command, int lines, int columns,
 		pr_func_info("ptsname = `%s'", pathname);
 #endif
 
-		pid = fork();
+		pid = cavan_exec_fork();
 		if (pid < 0) {
-			pr_error_info("fork");
+			pr_error_info("cavan_exec_fork");
 			ret = pid;
 			goto out_close_ttyfd;
 		}
@@ -1127,9 +1043,9 @@ int cavan_exec_redirect_stdio_popen2(const char *command, int lines, int columns
 	flags |= CAVAN_EXECF_DEL_TTY | CAVAN_EXECF_ERR_TO_OUT;
 
 	if (lines < 0 || columns < 0) {
-		pid = fork();
+		pid = cavan_exec_fork();
 		if (pid < 0) {
-			pr_err_info("fork");
+			pr_err_info("cavan_exec_fork");
 			return pid;
 		}
 
@@ -1372,7 +1288,7 @@ int tty_set_win_size(int tty, u16 lines, u16 columns)
 
 int cavan_system(const char *command, int argc, char *argv[])
 {
-	pid_t pid = fork();
+	pid_t pid = cavan_exec_fork();
 
 	return pid == 0 ? cavan_exec_command(command, argc, argv) : cavan_exec_waitpid(pid);
 }

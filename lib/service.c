@@ -206,7 +206,7 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 	}
 
 	if (desc->logfile) {
-		ret = cavan_redirect_stdio(desc->logfile, 0x06);
+		ret = cavan_stdio_redirect3(desc->logfile, 0x06);
 		if (ret < 0) {
 			pr_red_info("cavan_redirect_stdio");
 			return ret;
@@ -509,10 +509,10 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	umask(0);
 
-	cavan_redirect_stdio("/dev/null", service->verbose ? 0x01 : 0x07);
+	cavan_stdio_redirect3("/dev/null", service->verbose ? 0x01 : 0x07);
 
 	if (service->logfile) {
-		ret = cavan_redirect_stdio(service->logfile, 0x06);
+		ret = cavan_stdio_redirect3(service->logfile, 0x06);
 		if (ret < 0) {
 			pr_red_info("cavan_redirect_stdio");
 			return ret;

@@ -793,3 +793,89 @@ const char *cavan_build_temp_path(const char *filename, char *buff, size_t size)
 
 	return buff;
 }
+
+int cavan_stdio_redirect1(int ttyfds[3])
+{
+	int i;
+	int ret;
+
+	cavan_stdio_fflush();
+
+	for (i = 0; i < 3; i++) {
+		if (ttyfds[i] < 0) {
+			continue;
+		}
+
+		ret = dup2(ttyfds[i], i);
+		if (ret < 0) {
+			pd_error_info("dup2 stdio %d", i);
+			return ret;
+		}
+	}
+
+	for (i = 0; i < 3; i++) {
+		int j;
+
+		if (ttyfds[i] < 0) {
+			continue;
+		}
+
+		j = i;
+
+		do {
+			if (--j < 0) {
+				close(ttyfds[i]);
+				break;
+			}
+		} while (ttyfds[i] != ttyfds[j]);
+	}
+
+	return 0;
+}
+
+int cavan_stdio_redirect2(int fd, int flags)
+{
+	int i;
+	int ttyfds[3];
+
+	for (i = 0; i < 3; i++) {
+		if (flags & (1 << i)) {
+			ttyfds[i] = fd;
+		} else {
+			ttyfds[i] = -1;
+		}
+	}
+
+	return cavan_stdio_redirect1(ttyfds);
+}
+
+int cavan_stdio_redirect3(const char *pathname, int flags)
+{
+	int fd;
+	int ret;
+	int open_flags;
+
+	pd_bold_info("pathname = %s, flags = 0x%02x", pathname, flags);
+
+	if ((flags & 0x01)) {
+		if ((flags & 0x06)) {
+			open_flags = O_RDWR;
+		} else {
+			open_flags = O_RDONLY;
+		}
+	} else {
+		open_flags = O_WRONLY;
+	}
+
+	fd = open(pathname, open_flags | O_CREAT | O_TRUNC, 0777);
+	if (fd < 0) {
+		pd_error_info("open file `%s' failed", pathname);
+		return fd;
+	}
+
+	ret = cavan_stdio_redirect2(fd, flags);
+
+	close(fd);
+
+	return ret;
+}

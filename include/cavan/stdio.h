@@ -11,8 +11,6 @@
 using namespace std;
 #endif
 
-__BEGIN_DECLS;
-
 #ifdef LOG_TAG
 #undef LOG_TAG
 #endif
@@ -126,7 +124,10 @@ __BEGIN_DECLS;
 #define CAVAN_TTY_MODE_SSH				5
 
 #define CAVAN_TTY_SET_TITLE(fmt, args ...) \
-	print("\033]0;" fmt "\007", ##args)
+	do { \
+		printf("\033]0;" fmt "\007", ##args); \
+		fflush(stdout); \
+	} while (0)
 
 // ============================================================
 
@@ -202,13 +203,8 @@ __BEGIN_DECLS;
 
 // ============================================================
 
-#if 1
 #define pr_info_base(fmt, args ...) \
-	println(fmt, ##args)
-#else
-#define pr_info_base(fmt, args ...) \
-	cavan_async_printf(fmt "\n", ##args)
-#endif
+	printf(fmt "\n", ##args)
 
 #ifdef CONFIG_ANDROID
 #ifdef CONFIG_ANDROID_NDK
@@ -446,6 +442,8 @@ __BEGIN_DECLS;
 #define save_console_cursor()				print_text("\033[%ds")
 #define restore_console_cursor()			print_text("\033[%du")
 
+__BEGIN_DECLS
+
 int cavan_tty_set_attr(int fd, int action, struct termios *attr);
 int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak);
 int cavan_tty_attr_restore(int fd, struct termios *attr);
@@ -503,7 +501,16 @@ int cavan_async_vprintf(const char *fmt, va_list ap);
 int cavan_async_printf(const char *fmt, ...);
 int cavan_async_fflush(void);
 
+int cavan_stdio_redirect1(int ttyfds[3]);
+int cavan_stdio_redirect2(int fd, int flags);
+int cavan_stdio_redirect3(const char *pathname, int flags);
+
 // ============================================================
+
+static inline int cavan_stdio_fflush(void)
+{
+	return fflush(stdout) | fflush(stderr);
+}
 
 static inline void print_char(char c)
 {
