@@ -59,10 +59,18 @@ class FFMpegConvert:
 		destFilename = self.getDestFilename(filename)
 		destPath = os.path.join(destDir, destFilename + ".mp4")
 
-		if os.path.exists(destPath) and not self.mForceOverride:
-			return True
+		if os.path.exists(destPath):
+			if not self.mForceOverride:
+				return True
+			os.unlink(destPath)
 
-		destPathTemp = os.path.join(destDir, destFilename + "-temp.mp4")
+		destPathTemp = os.path.join(destDir, "." + destFilename + ".cache.mp4")
+
+		try:
+			os.unlink(destPathTemp)
+		except:
+			if os.path.exists(destPathTemp):
+				return False
 
 		pr_info("ConvertFile: %s => %s" % (srcPath, destPathTemp))
 
@@ -87,6 +95,7 @@ class FFMpegConvert:
 
 		message = "%s %s.mp4 %s\n" % (filename, destFilename, " ".join(self.mConvertParam))
 		self.mLogFp.write(message)
+		self.mLogFp.flush()
 
 		return True
 
@@ -119,7 +128,7 @@ class FFMpegConvert:
 				return False
 
 		if self.mLogFile == None:
-			self.mLogFile = os.path.join(self.mDestDir, "log.txt")
+			self.mLogFile = os.path.join(self.mDestDir, "log-%s.txt" % time.strftime("%Y%m%d%H%M%S"))
 
 		self.mLogFp = open(self.mLogFile, "a")
 		if not self.mLogFp:
