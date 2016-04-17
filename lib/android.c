@@ -241,3 +241,15 @@ int android_get_device_name(char *buff, size_t size)
 
 	return -EINVAL;
 }
+
+int android_get_hostname(char *buff, size_t size)
+{
+	int length;
+
+	length = android_getprop("net.hostname", buff, size);
+	if (length > 0) {
+		return length;
+	}
+
+	return android_get_device_name(buff, size);
+}
