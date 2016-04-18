@@ -108,7 +108,7 @@ class FFMpegConvert:
 		command.extend(self.mConvertParam)
 		command.append(destPathTemp)
 
-		print command
+		print(command)
 
 		if not REAL_CONVERT:
 			fp = open(destPath, "w")
