@@ -4,20 +4,14 @@
 import sys, os, re, time, subprocess
 from getopt import getopt
 
-REAL_CONVERT = True
-# REAL_CONVERT = False
+# REAL_CONVERT = True
+REAL_CONVERT = False
 
 def pr_info(message):
-	try:
-		sys.stdout.write(message + "\n")
-	except:
-		return None
+	sys.stdout.write(message + "\n")
 
 def pr_err_info(message):
-	try:
-		sys.stderr.write("[出错了] " + message + "\n")
-	except:
-		return None
+	sys.stderr.write(u"[出错了] " + message + "\n")
 
 class FFMpegConvert:
 	def __init__(self):
@@ -35,16 +29,16 @@ class FFMpegConvert:
 	def showUsage(self):
 		command_name = os.path.basename(sys.argv[0])
 		pr_info("Usage %s:" %  command_name)
-		pr_info("%s [options] 源文件夹 目标文件夹" % command_name)
-		pr_info("-f, --force\t\t可选项，如果目标文件夹已经有一个同名的文件，强制覆盖，如果没有选项，会跳过这个文件")
-		pr_info("-s 文件夹\t\t需要转码的视频所在的文件夹，扫描文件夹下的所有目录和子目录，找到后一个一个转或者源文件夹也可以指定一个文件进行转码")
-		pr_info("-d 文件夹\t\t转码后的文件存储位置，文件存储在dstDir/日期时间目录下，比如dstDir/20160304/")
-		pr_info("-acodec acodec\t\t指定音频的编码器，这个参数需要传给ffmpeg的 -acodec 参数")
-		pr_info("-ba abitrate\t\t指定音频编码的码率，这个参数需要传给ffmpeg的 -b:a 参数")
-		pr_info("-vcodec vcodec\t\t指定视频编码器，这里只能是libx265或libx264,这个参数需要传递给ffmpeg的 -vcodec 参数")
-		pr_info("-bv vbitrate\t\t指定视频编码器的码率，这个参数需要传递给ffmpegde的 -b:v 参数")
-		pr_info("-vp vcodecparam\t\t指定视频编码的额外的参数，这个参数直接跟在ffmpeg的-vcodec 参数后面")
-		pr_info("-l log\t\t\t生成log文件，指明从哪个文件转化，时间，转化后的大小，log的具体格式以一行为一个转换记录")
+		pr_info(u"%s [options] 源文件夹 目标文件夹" % command_name)
+		pr_info(u"-f, --force\t\t可选项，如果目标文件夹已经有一个同名的文件，强制覆盖，如果没有选项，会跳过这个文件")
+		pr_info(u"-s 文件夹\t\t需要转码的视频所在的文件夹，扫描文件夹下的所有目录和子目录，找到后一个一个转或者源文件夹也可以指定一个文件进行转码")
+		pr_info(u"-d 文件夹\t\t转码后的文件存储位置，文件存储在dstDir/日期时间目录下，比如dstDir/20160304/")
+		pr_info(u"-acodec acodec\t\t指定音频的编码器，这个参数需要传给ffmpeg的 -acodec 参数")
+		pr_info(u"-ba abitrate\t\t指定音频编码的码率，这个参数需要传给ffmpeg的 -b:a 参数")
+		pr_info(u"-vcodec vcodec\t\t指定视频编码器，这里只能是libx265或libx264,这个参数需要传递给ffmpeg的 -vcodec 参数")
+		pr_info(u"-bv vbitrate\t\t指定视频编码器的码率，这个参数需要传递给ffmpegde的 -b:v 参数")
+		pr_info(u"-vp vcodecparam\t\t指定视频编码的额外的参数，这个参数直接跟在ffmpeg的-vcodec 参数后面")
+		pr_info(u"-l log\t\t\t生成log文件，指明从哪个文件转化，时间，转化后的大小，log的具体格式以一行为一个转换记录")
 
 	def mkdirs(self, pathname):
 		try:
@@ -54,7 +48,7 @@ class FFMpegConvert:
 			if os.path.isdir(pathname):
 				return True
 
-		pr_err_info("无法创建文件夹: " + pathname)
+		pr_err_info(u"无法创建文件夹: " + pathname)
 
 		return False
 
@@ -102,7 +96,7 @@ class FFMpegConvert:
 			if os.path.exists(destPathTemp):
 				return False
 
-		pr_info("转换文件: %s => %s" % (srcPath, destPath))
+		pr_info(u"转换文件: %s => %s" % (srcPath.decode("gbk"), destPath.decode("gbk")))
 
 		command = ["ffmpeg", "-i" , srcPath]
 		command.extend(self.mConvertParam)
@@ -145,7 +139,7 @@ class FFMpegConvert:
 			return -1
 
 		srcPath = self.getSourcePath(relPath)
-		pr_info("转换文件夹: %s => %s" % (srcPath, destPath))
+		pr_info(u"转换文件夹: %s => %s" % (srcPath.decode("gbk"), destPath.decode("gbk")))
 
 		failed = 0
 
@@ -174,10 +168,10 @@ class FFMpegConvert:
 		self.mSourceDir = os.path.realpath(self.mSourceDir)
 		self.mDestDir = os.path.realpath(self.mDestDir)
 
-		pr_info("格式转换: %s => %s" % (self.mSourceDir, self.mDestDir))
+		pr_info(u"格式转换: %s => %s" % (self.mSourceDir, self.mDestDir))
 
 		if self.mDestDir.startswith(self.mSourceDir):
-			pr_err_info("目标文件不能放在源文件夹里")
+			pr_err_info(u"目标文件不能放在源文件夹里")
 			return -1
 
 		if not self.mkdirs(self.mDestDir):
@@ -188,7 +182,7 @@ class FFMpegConvert:
 
 		self.mLogFp = open(self.mLogFile, "a")
 		if not self.mLogFp:
-			pr_err_info("无法打开Log文件: " + self.mLogFile)
+			pr_err_info(u"无法打开Log文件: " + self.mLogFile)
 			return -1
 
 		self.mConvertParam.extend(["-acodec", self.mAudioCodec])
@@ -202,7 +196,7 @@ class FFMpegConvert:
 
 		if not os.path.isdir(self.mSourceDir):
 			if not os.path.exists(self.mSourceDir):
-				pr_err_info("文件或目录 \"%s\" 不存在" % self.mSourceDir)
+				pr_err_info(u"文件或目录 \"%s\" 不存在" % self.mSourceDir)
 				return -1
 			filename = os.path.basename(self.mSourceDir)
 			if not self.doConvertFile(self.mSourceDir, self.mDestDir, filename):
@@ -255,7 +249,7 @@ class FFMpegConvert:
 					self.mVideoCodec = opt[1]
 					pr_info("mVideoCodec = " + self.mVideoCodec)
 				else:
-					pr_info("不支持的视频编码: " + opt[1])
+					pr_info(u"不支持的视频编码: " + opt[1])
 					return False
 			elif opt[0] in ["-bv", "--bv"]:
 				self.mVideoBitrate = opt[1]
@@ -267,7 +261,7 @@ class FFMpegConvert:
 				self.mVideoCodecParam = opt[1]
 				pr_info("mVideoCodecParam = " + self.mVideoCodecParam)
 			else:
-				pr_err_info("无法识别命令参数 %s" % opt[0])
+				pr_err_info(u"无法识别命令参数 %s" % opt[0])
 				self.showUsage()
 				return False
 
@@ -276,7 +270,7 @@ class FFMpegConvert:
 		if not self.mSourceDir:
 			if not self.mDestDir:
 				if remain < 1:
-					pr_err_info("请提供源文件路径和目标文件路径")
+					pr_err_info(u"请提供源文件路径和目标文件路径")
 					self.showUsage()
 					return False
 
@@ -287,7 +281,7 @@ class FFMpegConvert:
 				elif remain < 3:
 					self.mDestDir = args[1]
 				else:
-					pr_err_info("存在多余的参数，请检查输入是否正确")
+					pr_err_info(u"存在多余的参数，请检查输入是否正确")
 					self.showUsage()
 					return False
 			elif remain < 1:
@@ -295,7 +289,7 @@ class FFMpegConvert:
 			elif remain < 2:
 				self.mSourceDir = args[0]
 			else:
-				pr_err_info("存在多余的参数，请检查输入是否正确")
+				pr_err_info(u"存在多余的参数，请检查输入是否正确")
 				self.showUsage()
 				return False
 		elif not self.mDestDir:
@@ -304,7 +298,7 @@ class FFMpegConvert:
 			elif remain < 2:
 				self.mDestDir = args[0]
 			else:
-				pr_err_info("存在多余的参数，请检查输入是否正确")
+				pr_err_info(u"存在多余的参数，请检查输入是否正确")
 				self.showUsage()
 				return False
 
@@ -312,17 +306,17 @@ class FFMpegConvert:
 
 		count = self.doConvert()
 		if count == 0:
-			pr_info("恭喜，转换成功");
+			pr_info(u"恭喜，转换成功");
 		else:
 			if count < 0:
-				pr_err_info("很遗憾，转换失败");
+				pr_err_info(u"很遗憾，转换失败");
 			else:
 				pr_err_info("转换失败的文件有: %d 个" % count)
 
-			pr_info("转换失败的文件放在: " + self.getSourcePath())
+			pr_info(u"转换失败的文件放在: " + self.getSourcePath())
 
-		pr_info("转换成功的文件放在: " + self.getSourceReadyPath())
-		pr_info("转换后的文件放在: " + self.getDestPath())
+		pr_info(u"转换成功的文件放在: " + self.getSourceReadyPath())
+		pr_info(u"转换后的文件放在: " + self.getDestPath())
 
 if __name__ == "__main__":
 	convert = FFMpegConvert()
