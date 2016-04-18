@@ -581,6 +581,8 @@ int cavan_exec_redirect_stdio2(const char *ttypath, int lines, int columns, cons
 		}
 	}
 
+	setenv("CAVAN_TTY", ttypath, 1);
+
 	ret = cavan_exec_redirect_stdio_base2(ttyfd, command, flags);
 
 	close(ttyfd);

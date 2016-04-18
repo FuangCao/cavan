@@ -14,6 +14,21 @@
 
 #define CAVAN_SERVICE_DEBUG		0
 
+static const char *cavan_locale_envs[] = {
+	"LC_PAPER",
+	"LC_ADDRESS",
+	"LC_MONETARY",
+	"LC_NUMERIC",
+	"LC_TELEPHONE",
+	"LC_IDENTIFICATION",
+	"LC_MEASUREMENT",
+	"LC_TIME",
+	"LC_NAME",
+	"LC_ALL",
+	"LANG",
+	"LANGUAGE",
+};
+
 static void *cavan_service_handler(void *data)
 {
 	struct cavan_service_description *desc = data;
@@ -423,6 +438,7 @@ static void *cavan_dynamic_service_handler(void *data)
 
 int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync)
 {
+	int i;
 	int ret;
 	struct passwd *pw;
 	const char *homepath;
@@ -525,6 +541,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	if (pw != NULL) {
 		setenv("USER", pw->pw_name, 1);
+		setenv("LOGNAME", pw->pw_name, 1);
 
 		if (pw->pw_dir) {
 			setenv("HOME", pw->pw_dir, 1);
@@ -539,7 +556,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	{
 		char buff[64];
 
-		if (android_getprop("ro.product.name", buff, sizeof(buff)) > 0) {
+		if (android_get_hostname(buff, sizeof(buff)) > 0) {
 			setenv("HOSTNAME", buff, 0);
 		}
 	}
@@ -569,6 +586,11 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	setenv("PS1", "\\[\\e]0;${debian_chroot:+($debian_chroot)}\\u@\\h: \\w\\a\\]$ ", 1);
 	setenv("PROMPT_COMMAND", "echo -ne \"\\033]0;${USER}@${HOSTNAME}: ${PWD/$HOME/~}\\007\"", 1);
+	setenv("TERM", "xterm-color", 1);
+
+	for (i = 0; i < NELEM(cavan_locale_envs); i++) {
+		setenv(cavan_locale_envs[i], "zh_CN.UTF-8", 1);
+	}
 
 	service->count = 0;
 	service->used = 0;

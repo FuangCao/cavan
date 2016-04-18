@@ -1,0 +1,13 @@
+#!/bin/sh
+
+CMD_START_STOP_DAEMON="start-stop-daemon --quiet --oknodo"
+CMD_TCP_DD_SERVER="/cavan/out/host/debug/cavan-tcp_dd_server"
+
+case "$1" in
+	start)
+		${CMD_START_STOP_DAEMON} --start --exec "${CMD_START_STOP_DAEMON} --daemon"
+		;;
+	stop)
+		${CMD_START_STOP_DAEMON} --stop --exec "${CMD_TCP_DD_SERVER}"
+		;;
+esac
