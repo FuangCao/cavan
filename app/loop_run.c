@@ -15,7 +15,7 @@ static void show_usage(const char *command)
 	println("Usage:");
 	println("%s [option] command", command);
 	println("delay, sleep, -d, -s: delay after command terminal");
-	println("wait, -w: exec wait-for-devices before command");
+	println("wait, -w: exec wait-for-device before command");
 }
 
 int main(int argc, char *argv[])
@@ -52,12 +52,12 @@ int main(int argc, char *argv[])
 		{0, 0, 0, 0},
 	};
 	u32 delay;
-	bool wait_for_devices;
+	bool wait_for_device;
 	char command[1024];
 	int ret;
 
 	delay = 1;
-	wait_for_devices = false;
+	wait_for_device = false;
 
 	while ((c = getopt_long(argc, argv, "vVhHswW:S:d:D:", long_option, &option_index)) != EOF) {
 		switch (c) {
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 
 		case 'w':
 		case 'W':
-			wait_for_devices = true;
+			wait_for_device = true;
 			break;
 
 		default:
@@ -112,9 +112,9 @@ int main(int argc, char *argv[])
 	}
 
 	while (1) {
-		if (wait_for_devices) {
-			// pr_bold_info("Adb Wait For Devices");
-			if (system("adb wait-for-devices")) {
+		if (wait_for_device) {
+			// pr_bold_info("Adb Wait For device");
+			if (system("adb wait-for-device")) {
 				break;
 			}
 		}

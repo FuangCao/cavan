@@ -1,17 +1,53 @@
 #!/usr/bin/python
 # coding: utf-8
 
-import sys, os, re, time, subprocess
+import sys, os, re, time
+import subprocess, chardet
 from getopt import getopt
 
 # REAL_CONVERT = True
 REAL_CONVERT = False
 
+def decodeAuto(text):
+	if isinstance(text, unicode):
+		return text
+
+	try:
+		dictEncode = chardet.detect(text)
+		if not dictEncode:
+			return text
+
+		encoding = dictEncode["encoding"]
+		if not encoding:
+			return text
+
+		return text.decode(encoding)
+	except:
+		print(u"无法识别编码方式")
+
+	for encoding in ["ascii", "utf-8", "gbk"]:
+		print(u"尝试编码方式: " + encoding)
+
+		try:
+			return text.decode(encoding)
+		except:
+			print(u"编码方式不是: " + encoding)
+
+	return text
+
 def pr_info(message):
-	sys.stdout.write(message + "\n")
+	try:
+		sys.stdout.write(message + "\n")
+	except:
+		print(u"打印Log失败")
+		return None
 
 def pr_err_info(message):
-	sys.stderr.write(u"[出错了] " + message + "\n")
+	try:
+		sys.stderr.write(u"[出错了] " + message + "\n")
+	except:
+		print(u"打印Log失败")
+		return None
 
 class FFMpegConvert:
 	def __init__(self):
@@ -39,6 +75,17 @@ class FFMpegConvert:
 		pr_info(u"-bv vbitrate\t\t指定视频编码器的码率，这个参数需要传递给ffmpegde的 -b:v 参数")
 		pr_info(u"-vp vcodecparam\t\t指定视频编码的额外的参数，这个参数直接跟在ffmpeg的-vcodec 参数后面")
 		pr_info(u"-l log\t\t\t生成log文件，指明从哪个文件转化，时间，转化后的大小，log的具体格式以一行为一个转换记录")
+
+	def isVideoFile(self, filename):
+		file_ext = os.path.splitext(filename)[1]
+		if not file_ext:
+			return False
+
+		for ext in ["mkv", "mp4", "rm", "rmvb", "avi", "mov", "flv", "wmv", "3gp", "ra", "ram", "mpg", "mpe", "mpeg", "m2v", "vob", "asf"]:
+			if re.match("." + ext, file_ext, flags = re.I) != None:
+				return True
+
+		return False
 
 	def mkdirs(self, pathname):
 		try:
@@ -80,52 +127,73 @@ class FFMpegConvert:
 		return filename
 
 	def doConvertFile(self, srcPath, destDir, filename):
-		destFilename = self.getDestFilename(filename)
-		destPath = os.path.join(destDir, destFilename + ".mp4")
-
-		if os.path.exists(destPath):
-			if not self.mForceOverride:
+		if not self.isVideoFile(filename):
+			if os.path.getsize(srcPath) > (1 << 20):
 				return True
-			os.unlink(destPath)
 
-		destPathTemp = os.path.join(destDir, "." + destFilename + ".cache.mp4")
+			destPath = os.path.join(destDir, filename)
+			pr_info(u"文件拷贝: %s => %s" % (decodeAuto(srcPath), decodeAuto(destPath)))
 
-		try:
-			os.unlink(destPathTemp)
-		except:
-			if os.path.exists(destPathTemp):
+			srcFp = open(srcPath, "rb")
+			if not srcFp:
 				return False
 
-		pr_info(u"转换文件: %s => %s" % (srcPath.decode("gbk"), destPath.decode("gbk")))
-
-		command = ["ffmpeg", "-i" , srcPath]
-		command.extend(self.mConvertParam)
-		command.append(destPathTemp)
-
-		print(command)
-
-		if not REAL_CONVERT:
-			fp = open(destPath, "w")
-			if not fp:
+			destFp = open(destPath, "wb")
+			if not destFp:
+				srcFp.close()
 				return False
-			fp.write(destPath)
-			fp.close()
+
+			destFp.write(srcFp.read())
+
+			destFp.close()
+			srcFp.close()
 		else:
-			process = subprocess.Popen(command)
-			if not process:
-				return False
+			destFilename = self.getDestFilename(filename)
+			destPath = os.path.join(destDir, destFilename + ".mp4")
 
-			if process.wait() != 0:
-				return False
+			if os.path.exists(destPath):
+				if not self.mForceOverride:
+					return True
+				os.unlink(destPath)
+
+			destPathTemp = os.path.join(destDir, "." + destFilename + ".cache.mp4")
 
 			try:
-				os.rename(destPathTemp, destPath)
+				os.unlink(destPathTemp)
 			except:
-				return False
+				if os.path.exists(destPathTemp):
+					return False
 
-		message = "%s %s.mp4 %s\n" % (filename, destFilename, " ".join(self.mConvertParam))
-		self.mLogFp.write(message)
-		self.mLogFp.flush()
+			pr_info(u"转换文件: %s => %s" % (decodeAuto(srcPath), decodeAuto(destPath)))
+
+			command = ["ffmpeg", "-i" , srcPath]
+			command.extend(self.mConvertParam)
+			command.append(destPathTemp)
+
+			print(command)
+
+			if not REAL_CONVERT:
+				fp = open(destPath, "w")
+				if not fp:
+					return False
+				fp.write(destPath)
+				fp.close()
+			else:
+				process = subprocess.Popen(command)
+				if not process:
+					return False
+
+				if process.wait() != 0:
+					return False
+
+				try:
+					os.rename(destPathTemp, destPath)
+				except:
+					return False
+
+			message = "%s %s.mp4 %s\n" % (filename, destFilename, " ".join(self.mConvertParam))
+			self.mLogFp.write(message)
+			self.mLogFp.flush()
 
 		return True
 
@@ -139,17 +207,20 @@ class FFMpegConvert:
 			return -1
 
 		srcPath = self.getSourcePath(relPath)
-		pr_info(u"转换文件夹: %s => %s" % (srcPath.decode("gbk"), destPath.decode("gbk")))
+		pr_info(u"转换文件夹: %s => %s" % (decodeAuto(srcPath), decodeAuto(destPath)))
 
 		failed = 0
 
 		for filename in os.listdir(srcPath):
 			pathname = os.path.join(srcPath, filename)
 			if not os.path.isdir(pathname):
-				if not self.doConvertFile(pathname, destPath, filename):
+				try:
+					if not self.doConvertFile(pathname, destPath, filename):
+						failed += 1
+					else:
+						os.rename(pathname, os.path.join(readyPath, filename))
+				except:
 					failed += 1
-				else:
-					os.rename(pathname, os.path.join(readyPath, filename))
 			else:
 				count = self.doConvertDir(self.joinPath(relPath, filename))
 				if count < 0:
@@ -171,8 +242,9 @@ class FFMpegConvert:
 		pr_info(u"格式转换: %s => %s" % (self.mSourceDir, self.mDestDir))
 
 		if self.mDestDir.startswith(self.mSourceDir):
-			pr_err_info(u"目标文件不能放在源文件夹里")
-			return -1
+			if self.mDestDir[len(self.mSourceDir)] in ["\0", os.path.sep]:
+				pr_err_info(u"目标文件不能放在源文件夹里")
+				return -1
 
 		if not self.mkdirs(self.mDestDir):
 			return -1
@@ -311,7 +383,7 @@ class FFMpegConvert:
 			if count < 0:
 				pr_err_info(u"很遗憾，转换失败");
 			else:
-				pr_err_info("转换失败的文件有: %d 个" % count)
+				pr_err_info(u"转换失败的文件有: %d 个" % count)
 
 			pr_info(u"转换失败的文件放在: " + self.getSourcePath())
 
