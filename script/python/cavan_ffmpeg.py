@@ -5,8 +5,8 @@ import sys, os, re, time
 import subprocess, chardet
 from getopt import getopt
 
-# REAL_CONVERT = True
-REAL_CONVERT = False
+REAL_CONVERT = True
+# REAL_CONVERT = False
 
 def decodeAuto(text):
 	if isinstance(text, unicode):
@@ -219,6 +219,8 @@ class FFMpegConvert:
 						failed += 1
 					else:
 						os.rename(pathname, os.path.join(readyPath, filename))
+				except KeyboardInterrupt:
+					return -1
 				except:
 					failed += 1
 			else:
