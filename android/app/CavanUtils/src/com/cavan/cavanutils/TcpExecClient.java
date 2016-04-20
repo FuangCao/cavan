@@ -96,7 +96,7 @@ import android.net.LocalSocketAddress;
 
 		@Override
 		public byte[] encode() {
-			return encode(8 + mCommand.length());
+			return encode(8 + mCommand.getBytes().length);
 		}
 	}
 }

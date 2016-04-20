@@ -30,6 +30,8 @@ import android.view.MenuItem;
 				SuClient client = new SuClient();
 				client.runCommand("busybox whoami");
 				client.runCommand("busybox ls -lh");
+				client.runCommand("pm install -r \"/data/当贝市场.apk\"");
+				client.runCommand("echo \"xxxx 中文测试 xxxx\"");
 				client.runCommand("echo 123456");
 			}
 		}.start();
