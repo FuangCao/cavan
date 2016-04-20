@@ -1,15 +1,10 @@
 package com.cavan.cavanutils;
 
-import java.net.Socket;
+import android.net.LocalSocketAddress;
 
-public class SuClient {
-	private Socket mSocket;
+public class SuClient extends TcpDdClient {
 
 	public SuClient() {
-		mSocket = new Socket();
-	}
-
-	public int doCommand(String... args) {
-		return 0;
+		super(new LocalSocketAddress("/dev/cavan/network/socket", LocalSocketAddress.Namespace.FILESYSTEM));
 	}
 }

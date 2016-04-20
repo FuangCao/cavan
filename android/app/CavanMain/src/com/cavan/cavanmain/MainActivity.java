@@ -1,6 +1,7 @@
 package com.cavan.cavanmain;
 
 import com.cavan.cavanutils.CavanNative;
+import com.cavan.cavanutils.SuClient;
 
 import android.support.v7.app.ActionBarActivity;
 import android.annotation.SuppressLint;
@@ -9,7 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends ActionBarActivity {
+@SuppressLint("NewApi") public class MainActivity extends ActionBarActivity {
 
 	public static final String TAG = "Cavan";
 
@@ -20,6 +21,16 @@ public class MainActivity extends ActionBarActivity {
 
 		int res = CavanNative.doSu("-c", "pwd");
 		Log.d(TAG, "res = " + res);
+
+		new Thread() {
+
+			@Override
+			public void run() {
+				SuClient client = new SuClient();
+				client.runCommand("busybox whoami");
+				client.runCommand("busybox ls -lh");
+			}
+		}.start();
 	}
 
 	@Override
