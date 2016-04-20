@@ -3,24 +3,24 @@ package com.cavan.cavanutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 
 public class CavanTcpClient extends CavanNetworkClient {
 
+	private int mPort;
 	private Socket mSocket;
-	private SocketAddress mSocketAddress;
+	private InetAddress mSocketAddress;
 
-	public CavanTcpClient(SocketAddress address) {
+	public CavanTcpClient(InetAddress address, int port) {
 		mSocketAddress = address;
+		mPort = port;
 	}
 
 	@Override
 	protected boolean openSocket() {
-		mSocket = new Socket();
-
 		try {
-			mSocket.connect(mSocketAddress);
+			mSocket = new Socket(mSocketAddress, mPort);
 			mSocket.setTcpNoDelay(true);
 			return true;
 		} catch (IOException e) {
@@ -34,6 +34,10 @@ public class CavanTcpClient extends CavanNetworkClient {
 
 	@Override
 	protected void closeSocket() {
+		if (mSocket == null) {
+			return;
+		}
+
 		try {
 			mSocket.shutdownInput();
 		} catch (IOException e) {
@@ -51,6 +55,8 @@ public class CavanTcpClient extends CavanNetworkClient {
 		} catch (IOException e) {
 			// e.printStackTrace();
 		}
+
+		mSocket = null;
 	}
 
 	@Override

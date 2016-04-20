@@ -1,8 +1,5 @@
 package com.cavan.remotecontrol;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 
@@ -29,6 +26,8 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.cavan.cavanutils.TcpKeypadClient;
 
 @SuppressWarnings("deprecation")
 @SuppressLint({ "HandlerLeak", "UseSparseArrays", "NewApi", "ClickableViewAccessibility" })
@@ -59,10 +58,6 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	private static final int KEYCODE_PLAY_NEXT = 163;
 	private static final int KEYCODE_DISPLAY_TOGGLE = 431;
 
-	private static final int TCP_DD_VERSION = 0x20151223;
-	private static final short TCP_DD_REQ_KEYPAD = 7;
-	private static final short EVENT_TYPE_SYNC = 0;
-	private static final short EVENT_TYPE_KEY = 1;
 	private static final HashMap<Integer, Integer> sKeyMap = new HashMap<Integer, Integer>();
 	private static final HashMap<Integer, Integer> sKeyEventMap = new HashMap<Integer, Integer>();
 
@@ -106,8 +101,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		sKeyEventMap.put(KeyEvent.KEYCODE_MEDIA_NEXT, KEYCODE_PLAY_NEXT);
 	}
 
-	private Socket mSocket;
-	private OutputStream mOutputStream;
+	private TcpKeypadClient mClient;
 	private HashMap<Button, Integer> mButtonMap = new HashMap<Button, Integer>();
 
 	private IDiscoveryService mDiscoveryService;
@@ -187,12 +181,14 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 					Toast.makeText(getApplicationContext(), R.string.text_device_not_found, Toast.LENGTH_SHORT).show();
 				}
 
-				if (mOutputStream == null) {
-					if (mScanResults.size() == 1) {
-						connect(mScanResults.get(0));
-					} else {
-						setTitle(R.string.text_manul_connect);
-					}
+				if (mClient != null && mClient.isConnected()) {
+					break;
+				}
+
+				if (mScanResults.size() == 1) {
+					connect(mScanResults.get(0));
+				} else {
+					setTitle(R.string.text_manul_connect);
 				}
 				break;
 			}
@@ -271,7 +267,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 			return super.onKeyDown(keyCode, event);
 		}
 
-		sendKeyEvent(code);
+		mClient.sendKeyEvent(code);
 
 		return true;
 	}
@@ -297,106 +293,12 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		case MotionEvent.ACTION_UP:
 			Integer keycode = sKeyMap.get(arg0.getId());
 			if (keycode != null) {
-				sendKeyEvent(keycode, value);
+				mClient.sendKeyEvent(keycode, value);
 			}
 			break;
 		}
 
 		return false;
-	}
-
-	private int writeValue8(byte value, byte[] buff, int offset) {
-		buff[offset] = value;
-		return offset + 1;
-	}
-
-	private int writeValue16(short value, byte[] buff, int offset) {
-		offset = writeValue8((byte) (value & 0xFF), buff, offset);
-		return writeValue8((byte) ((value >> 8) & 0xFF), buff, offset);
-	}
-
-	private int writeValue32(int value, byte[] buff, int offset) {
-		offset = writeValue16((short) (value & 0xFFFF), buff, offset);
-		return writeValue16((short) ((value >> 16) & 0xFFFF), buff, offset);
-	}
-
-	private int writeInputEvent(int type, int code, int value, byte[] buff, int offset) {
-		offset = writeValue16((short) type, buff, offset);
-		offset = writeValue16((short) code, buff, offset);
-		return writeValue32(value, buff, offset);
-	}
-
-	private int writeSyncEvent(byte[] buff, int offset) {
-		return writeInputEvent(EVENT_TYPE_SYNC, 0, 0, buff, offset);
-	}
-
-	private int writeKeyEvent(int code, int value, byte[] buff, int offset) {
-		offset = writeInputEvent(EVENT_TYPE_KEY, code, value, buff, offset);
-		return writeSyncEvent(buff, offset);
-	}
-
-	private int writeKeyEvent(int code, byte[] buff, int offset) {
-		offset = writeKeyEvent(code, 1, buff, offset);
-		return writeKeyEvent(code, 0, buff, offset);
-	}
-
-	private boolean sendData(byte[] data) {
-		if (mOutputStream == null) {
-			return false;
-		}
-
-		try {
-			mOutputStream.write(data);
-			mOutputStream.flush();
-			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-
-			try {
-				mOutputStream.close();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-
-			mScanResult = null;
-			mOutputStream = null;
-			mHandler.sendEmptyMessage(EVENT_LINK_CHANGED);
-		}
-
-		return false;
-	}
-
-	private boolean sendKeyEvent(int code) {
-		byte[] data = new byte[32];
-		writeKeyEvent(code, data, 0);
-		return sendData(data);
-	}
-
-	private boolean sendKeyEvent(int code, int value) {
-		byte[] data = new byte[16];
-		writeKeyEvent(code, value, data, 0);
-		return sendData(data);
-	}
-
-	private boolean sendTcpDdPackage(short type, byte[] body) {
-		byte[] data;
-
-		if (body == null) {
-			data = new byte[12];
-		} else {
-			data = new byte[body.length + 12];
-
-			for (int i = body.length - 1; i >= 0; i++) {
-				data[i + 12] = body[i];
-			}
-		}
-
-		int offset = writeValue32(TCP_DD_VERSION, data, 0);
-		offset = writeValue16(type, data, offset);
-		offset = writeValue16((short) ~type, data, offset);
-		offset = writeValue32(0, data, offset);
-
-		return sendData(data);
 	}
 
 	private void connect(ScanResult result) {
@@ -415,32 +317,17 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 
 		@Override
 		public void run() {
-			if (mOutputStream != null) {
-				try {
-					mOutputStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+			mClient = new TcpKeypadClient(mScanResult.getAddress(), mScanResult.getPort()) {
 
-			if (mSocket != null) {
-				try {
-					mSocket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+				@Override
+				protected void OnDisconnected() {
+					mHandler.sendEmptyMessage(EVENT_LINK_CHANGED);
 				}
-			}
+			};
 
-			try {
-				mSocket = new Socket(mScanResult.getAddress(), mScanResult.getPort());
-				mSocket.setTcpNoDelay(true);
-				mOutputStream = mSocket.getOutputStream();
-				if (sendTcpDdPackage(TCP_DD_REQ_KEYPAD, null)) {
-					Message message = mHandler.obtainMessage(EVENT_LINK_CHANGED, mScanResult);
-					message.sendToTarget();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (mClient.connect()) {
+				Message message = mHandler.obtainMessage(EVENT_LINK_CHANGED, mScanResult);
+				message.sendToTarget();
 			}
 		}
 	}

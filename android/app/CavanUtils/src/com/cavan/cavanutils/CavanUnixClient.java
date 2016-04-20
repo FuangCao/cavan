@@ -35,6 +35,10 @@ public class CavanUnixClient extends CavanNetworkClient {
 
 	@Override
 	protected void closeSocket() {
+		if (mSocket == null) {
+			return;
+		}
+
 		try {
 			mSocket.shutdownInput();
 		} catch (IOException e) {

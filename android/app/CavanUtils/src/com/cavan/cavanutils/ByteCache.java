@@ -19,6 +19,10 @@ public class ByteCache {
 		this(bytes, bytes.length);
 	}
 
+	public ByteCache(int length) {
+		this(new byte[length], length);
+	}
+
 	public byte[] getBytes() {
 		return mBytes;
 	}

@@ -70,12 +70,16 @@ public abstract class CavanNetworkClient extends CavanUtils {
 		}
 	}
 
+	protected void OnDisconnected() {
+	}
+
 	public void disconnect() {
 		closeInputStream();
 		closeOutputStream();
 		closeSocket();
 
 		mConnected = false;
+		OnDisconnected();
 	}
 
 	public boolean connect() {
@@ -85,6 +89,10 @@ public abstract class CavanNetworkClient extends CavanUtils {
 
 		mConnected = openSocket();
 
+		return mConnected;
+	}
+
+	public boolean isConnected() {
 		return mConnected;
 	}
 

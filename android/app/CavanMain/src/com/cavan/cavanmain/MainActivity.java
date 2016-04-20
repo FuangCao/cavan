@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+@SuppressWarnings("deprecation")
 @SuppressLint("NewApi") public class MainActivity extends ActionBarActivity {
 
 	public static final String TAG = "Cavan";
@@ -29,6 +30,7 @@ import android.view.MenuItem;
 				SuClient client = new SuClient();
 				client.runCommand("busybox whoami");
 				client.runCommand("busybox ls -lh");
+				client.runCommand("echo 123456");
 			}
 		}.start();
 	}
