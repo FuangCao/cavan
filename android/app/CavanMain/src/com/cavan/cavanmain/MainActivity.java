@@ -9,8 +9,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-@SuppressLint("NewApi")
-@SuppressWarnings("deprecation")
 public class MainActivity extends ActionBarActivity {
 
 	public static final String TAG = "Cavan";

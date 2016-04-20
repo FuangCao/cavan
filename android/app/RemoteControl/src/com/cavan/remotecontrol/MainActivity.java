@@ -30,6 +30,7 @@ import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.Toast;
 
+@SuppressWarnings("deprecation")
 @SuppressLint({ "HandlerLeak", "UseSparseArrays", "NewApi", "ClickableViewAccessibility" })
 public class MainActivity extends ActionBarActivity implements OnClickListener, OnTouchListener {
 
