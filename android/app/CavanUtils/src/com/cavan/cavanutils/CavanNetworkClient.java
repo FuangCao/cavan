@@ -3,6 +3,7 @@ package com.cavan.cavanutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
 import java.net.InetAddress;
 
 import android.net.LocalSocketAddress;
@@ -14,6 +15,7 @@ public class CavanNetworkClient extends CavanUtils {
 		public void closeSocket();
 		public InputStream getInputStream();
 		public OutputStream getOutputStream();
+		public DatagramPacket getPacket();
 	}
 
 	protected InputStream mInputStream;
@@ -22,26 +24,71 @@ public class CavanNetworkClient extends CavanUtils {
 	private boolean mConnected;
 	private ICavanNetworkClient mClient;
 
+	public CavanNetworkClient() {
+		super();
+	}
+
 	public CavanNetworkClient(ICavanNetworkClient client) {
-		mClient = client;
+		this();
+		setClient(client);
 	}
 
 	public CavanNetworkClient(LocalSocketAddress address) {
 		this(new CavanUnixClient(address));
 	}
 
+	public CavanNetworkClient(String pathname) {
+		this(new LocalSocketAddress(pathname, LocalSocketAddress.Namespace.FILESYSTEM));
+	}
+
 	public CavanNetworkClient(InetAddress address, int port) {
 		this(new CavanTcpClient(address, port));
 	}
 
-	public CavanNetworkClient(String pathname) {
-		this(new LocalSocketAddress(pathname, LocalSocketAddress.Namespace.FILESYSTEM));
+	public CavanNetworkClient(InetAddress address, int port, boolean udp) {
+		this();
+
+		if (udp) {
+			setClient(new CavanUdpClient(address, port));
+		} else {
+			setClient(new CavanTcpClient(address, port));
+		}
+	}
+
+	public void setClient(ICavanNetworkClient client) {
+		mClient = client;
+	}
+
+	public ICavanNetworkClient getClient() {
+		return mClient;
 	}
 
 	@Override
 	protected void finalize() throws Throwable {
 		disconnect();
 		super.finalize();
+	}
+
+	public DatagramPacket getPacket() {
+		return mClient.getPacket();
+	}
+
+	public InetAddress getRemoteAddress() {
+		DatagramPacket packet = mClient.getPacket();
+		if (packet == null) {
+			return null;
+		}
+
+		return packet.getAddress();
+	}
+
+	public int getRemotePort() {
+		DatagramPacket packet = mClient.getPacket();
+		if (packet == null) {
+			return 0;
+		}
+
+		return packet.getPort();
 	}
 
 	protected void OnDisconnected() {

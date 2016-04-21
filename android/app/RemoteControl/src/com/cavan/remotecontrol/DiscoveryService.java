@@ -1,9 +1,7 @@
 package com.cavan.remotecontrol;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -17,6 +15,8 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.cavan.cavanutils.CavanNetworkClient;
+
 @SuppressLint("DefaultLocale")
 public class DiscoveryService extends Service {
 
@@ -24,8 +24,7 @@ public class DiscoveryService extends Service {
 
 	public static final String ACTION_SCAN_RESULT_CHANGED = "cavan.discovery.intent.action.SCAN_RESULT_CHANGED";
 
-	private InetAddress mAddress;
-	private MulticastSocket mSocket;
+	private CavanNetworkClient mClient;
 	private List<ScanResult> mScanResults = new ArrayList<ScanResult>();
 	private Pattern mPattern = Pattern.compile("TCP_DD:\\s*port\\s*=\\s*([0-9]+),\\s*hostname\\s*=\\s*(.*)");
 
@@ -38,9 +37,8 @@ public class DiscoveryService extends Service {
 	public void onCreate() {
 
 		try {
-			mSocket = new MulticastSocket();
-			mAddress = InetAddress.getByName("224.0.0.1");
-		} catch (IOException e) {
+			mClient = new CavanNetworkClient(InetAddress.getByName("224.0.0.1"), 8888, true);
+		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
 
@@ -49,8 +47,8 @@ public class DiscoveryService extends Service {
 
 	@Override
 	public void onDestroy() {
-		if (mSocket != null) {
-			mSocket.close();
+		if (mClient != null) {
+			mClient.disconnect();
 		}
 
 		super.onDestroy();
@@ -60,7 +58,7 @@ public class DiscoveryService extends Service {
 
 		@Override
 		public boolean startDiscovery(int port) throws RemoteException {
-			if (mSocket == null || mAddress == null) {
+			if (mClient == null) {
 				return false;
 			}
 
@@ -111,30 +109,23 @@ public class DiscoveryService extends Service {
 
 		@Override
 		public void run() {
-			byte[] bytes = "cavan-discovery".getBytes();
-			DatagramPacket packet = new DatagramPacket(bytes, bytes.length, mAddress, mPort);
-			try {
-				mSocket.send(packet);
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			if (!mClient.sendData("cavan-discovery".getBytes())) {
 				return;
 			}
 
 			if (mThreadStopped) {
 				mThreadStopped = false;
 
-				bytes = new byte[1024];
-				packet.setData(bytes);
+				byte[] bytes = new byte[1024];
 
-				while (mSocket != null) {
-					try {
-						mSocket.receive(packet);
-						String text = new String(packet.getData(), 0, packet.getLength());
-						onDiscovery(packet.getAddress(), text);
-					} catch (IOException e) {
-						e.printStackTrace();
+				while (mClient != null) {
+					int length = mClient.recvData(bytes);
+					if (length <= 0) {
 						break;
 					}
+
+					String text = new String(bytes, 0, length);
+					onDiscovery(mClient.getRemoteAddress(), text);
 				}
 
 				mThreadStopped = true;

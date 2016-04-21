@@ -3,6 +3,7 @@ package com.cavan.cavanutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
 
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
@@ -79,6 +80,11 @@ public class CavanUnixClient implements CavanNetworkClient.ICavanNetworkClient {
 			e.printStackTrace();
 		}
 
+		return null;
+	}
+
+	@Override
+	public DatagramPacket getPacket() {
 		return null;
 	}
 }
