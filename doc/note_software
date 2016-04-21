@@ -1,2 +1,24 @@
 ndiswrapper*：	解决无线上网问题
 squid:			代理服务器，配置文件为“/etc/squid.conf”
+
+1. 查看deb包含有哪些文件(不安装)
+$ dpkg -c xxx.deb // 安装前根据deb文件查看
+$ dpkg -L debname // 安装后根据包名查看
+
+2. 安装deb包
+$ dpkg -i xxx.deb
+注意，如果提示错误，可以加参数—force-all强制安装，但不推荐这样做
+
+3. 查看某个文件属于哪个deb包
+$ dpkg -S filepath
+
+4. 移除deb包
+$ dpkg -r debname
+
+i. 释放安装内容到dirname目录中
+$ dpkg -X xxx.deb dirname
+
+ii.释放控制信息到当前目录下的DEBIAN子目录中
+$ dpkg -e xxx.deb
+
+$ dpkg -b dirname xxx_new.deb // 重新打包

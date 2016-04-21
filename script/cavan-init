@@ -15,6 +15,7 @@ FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
 FILE_GRUB_LINUX="/etc/grub.d/10_linux"
 FILE_APP_FEILED="/tmp/cavan-app-failed.txt"
 DIR_SYSTEMD_CONFIG="/etc/systemd/system/multi-user.target.wants"
+DIR_SOURCES_LIST="/etc/apt/sources.list.d"
 
 CAVAN_HOME="/cavan"
 SCRIPT_PATH="${CAVAN_HOME}/script"
@@ -306,7 +307,10 @@ function config_aptget()
 	cavan-symlink ${etc_path}/apt /etc/apt || return 1
 	cavan-symlink ${var_path}/cache/apt /var/cache/apt || return 1
 
-	echo "deb http://download.virtualbox.org/virtualbox/debian ${DISTRIB_CODENAME} contrib" >> /etc/apt/sources.list
+	mkdir -pv "${DIR_SOURCES_LIST}" || return 1
+	echo "deb http://download.virtualbox.org/virtualbox/debian ${DISTRIB_CODENAME} contrib" > "${DIR_SOURCES_LIST}/virtualbox.list"
+	echo "deb http://archive.ubuntukylin.com:10006/ubuntukylin trusty main" > "${DIR_SOURCES_LIST}/sogoupinyin.list"
+
 	wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
 }
 
