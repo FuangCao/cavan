@@ -7,7 +7,7 @@ import java.io.OutputStream;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 
-public class CavanUnixClient extends CavanNetworkClient {
+public class CavanUnixClient implements CavanNetworkClient.ICavanNetworkClient {
 
 	private LocalSocket mSocket;
 	private LocalSocketAddress mSocketAddress;
@@ -18,7 +18,7 @@ public class CavanUnixClient extends CavanNetworkClient {
 	}
 
 	@Override
-	protected boolean openSocket() {
+	public boolean openSocket() {
 		mSocket = new LocalSocket();
 
 		try {
@@ -34,7 +34,7 @@ public class CavanUnixClient extends CavanNetworkClient {
 	}
 
 	@Override
-	protected void closeSocket() {
+	public void closeSocket() {
 		if (mSocket == null) {
 			return;
 		}
@@ -61,7 +61,7 @@ public class CavanUnixClient extends CavanNetworkClient {
 	}
 
 	@Override
-	protected InputStream getInputStream() {
+	public InputStream getInputStream() {
 		try {
 			return mSocket.getInputStream();
 		} catch (IOException e) {
@@ -72,7 +72,7 @@ public class CavanUnixClient extends CavanNetworkClient {
 	}
 
 	@Override
-	protected OutputStream getOutputStream() {
+	public OutputStream getOutputStream() {
 		try {
 			return mSocket.getOutputStream();
 		} catch (IOException e) {

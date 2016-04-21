@@ -5,7 +5,7 @@ import java.net.InetAddress;
 import android.annotation.SuppressLint;
 import android.net.LocalSocketAddress;
 
-@SuppressLint("DefaultLocale") public class TcpDdClient extends CavanUtils {
+@SuppressLint("DefaultLocale") public class TcpDdClient extends CavanNetworkClient {
 
 	public static final int TCP_DD_VERSION = 0x20151223;
 	public static final int TCP_DD_HEADER_LENGTH = 12;
@@ -23,39 +23,20 @@ import android.net.LocalSocketAddress;
 	public static final short TCP_DD_FILE_STAT = 10;
 	public static final short TCP_DD_BREAKPOINT = 11;
 
-	protected CavanNetworkClient mClient;
+	public TcpDdClient(ICavanNetworkClient client) {
+		super(client);
+	}
 
 	public TcpDdClient(InetAddress address, int port) {
-		super();
-		mClient = new CavanTcpClient(address, port) {
-
-			@Override
-			protected void OnDisconnected() {
-				TcpDdClient.this.OnDisconnected();
-			}
-		};
+		super(address, port);
 	}
 
 	public TcpDdClient(LocalSocketAddress address) {
-		super();
-		mClient = new CavanUnixClient(address) {
-
-			@Override
-			protected void OnDisconnected() {
-				TcpDdClient.this.OnDisconnected();
-			}
-		};
+		super(address);
 	}
 
-	protected void OnDisconnected() {
-	}
-
-	public CavanNetworkClient getClient() {
-		return mClient;
-	}
-
-	public boolean isConnected() {
-		return mClient.isConnected();
+	public TcpDdClient(String pathname) {
+		super(pathname);
 	}
 
 	public boolean sendPackage(TcpDdPackage pkg) {
@@ -65,12 +46,12 @@ import android.net.LocalSocketAddress;
 			return false;
 		}
 
-		return mClient.sendData(bytes);
+		return sendData(bytes);
 	}
 
 	public boolean recvPackage(TcpDdPackage pkg) {
 		byte[] bytes = new byte[2048];
-		int length = mClient.recvData(bytes);
+		int length = recvData(bytes);
 		if (length < 0) {
 			logE("recvData length = " + length);
 			return false;

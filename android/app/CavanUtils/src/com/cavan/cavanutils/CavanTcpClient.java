@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
-public class CavanTcpClient extends CavanNetworkClient {
+public class CavanTcpClient implements CavanNetworkClient.ICavanNetworkClient {
 
 	private int mPort;
 	private Socket mSocket;
@@ -18,7 +18,7 @@ public class CavanTcpClient extends CavanNetworkClient {
 	}
 
 	@Override
-	protected boolean openSocket() {
+	public boolean openSocket() {
 		try {
 			mSocket = new Socket(mSocketAddress, mPort);
 			mSocket.setTcpNoDelay(true);
@@ -33,7 +33,7 @@ public class CavanTcpClient extends CavanNetworkClient {
 	}
 
 	@Override
-	protected void closeSocket() {
+	public void closeSocket() {
 		if (mSocket == null) {
 			return;
 		}
@@ -60,7 +60,7 @@ public class CavanTcpClient extends CavanNetworkClient {
 	}
 
 	@Override
-	protected InputStream getInputStream() {
+	public InputStream getInputStream() {
 		try {
 			return mSocket.getInputStream();
 		} catch (IOException e) {
@@ -71,7 +71,7 @@ public class CavanTcpClient extends CavanNetworkClient {
 	}
 
 	@Override
-	protected OutputStream getOutputStream() {
+	public OutputStream getOutputStream() {
 		try {
 			return mSocket.getOutputStream();
 		} catch (IOException e) {

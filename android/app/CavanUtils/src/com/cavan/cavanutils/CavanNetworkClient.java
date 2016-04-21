@@ -3,16 +3,40 @@ package com.cavan.cavanutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 
-public abstract class CavanNetworkClient extends CavanUtils {
+import android.net.LocalSocketAddress;
+
+public class CavanNetworkClient extends CavanUtils {
+
+	interface ICavanNetworkClient {
+		public boolean openSocket();
+		public void closeSocket();
+		public InputStream getInputStream();
+		public OutputStream getOutputStream();
+	}
+
 	protected InputStream mInputStream;
 	protected OutputStream mOutputStream;
-	private boolean mConnected;
 
-	protected abstract boolean openSocket();
-	protected abstract void closeSocket();
-	protected abstract InputStream getInputStream();
-	protected abstract OutputStream getOutputStream();
+	private boolean mConnected;
+	private ICavanNetworkClient mClient;
+
+	public CavanNetworkClient(ICavanNetworkClient client) {
+		mClient = client;
+	}
+
+	public CavanNetworkClient(LocalSocketAddress address) {
+		this(new CavanUnixClient(address));
+	}
+
+	public CavanNetworkClient(InetAddress address, int port) {
+		this(new CavanTcpClient(address, port));
+	}
+
+	public CavanNetworkClient(String pathname) {
+		this(new LocalSocketAddress(pathname, LocalSocketAddress.Namespace.FILESYSTEM));
+	}
 
 	@Override
 	protected void finalize() throws Throwable {
@@ -20,20 +44,30 @@ public abstract class CavanNetworkClient extends CavanUtils {
 		super.finalize();
 	}
 
-	private boolean openInputStream() {
+	protected void OnDisconnected() {
+	}
+
+	protected void OnConnected() {
+	}
+
+	protected boolean sendRequest() {
+		return true;
+	}
+
+	synchronized private boolean openInputStream() {
 		if (mInputStream != null) {
 			return true;
 		}
 
 		if (connect()) {
-			mInputStream = getInputStream();
+			mInputStream = mClient.getInputStream();
 			return mInputStream != null;
 		}
 
 		return false;
 	}
 
-	public void closeInputStream() {
+	synchronized public void closeInputStream() {
 		if (mInputStream != null) {
 			try {
 				mInputStream.close();
@@ -45,20 +79,20 @@ public abstract class CavanNetworkClient extends CavanUtils {
 		}
 	}
 
-	private boolean openOutputStream() {
+	synchronized private boolean openOutputStream() {
 		if (mOutputStream != null) {
 			return true;
 		}
 
 		if (connect()) {
-			mOutputStream = getOutputStream();
+			mOutputStream = mClient.getOutputStream();
 			return mOutputStream != null;
 		}
 
 		return false;
 	}
 
-	public void closeOutputStream() {
+	synchronized public void closeOutputStream() {
 		if (mOutputStream != null) {
 			try {
 				mOutputStream.close();
@@ -70,33 +104,63 @@ public abstract class CavanNetworkClient extends CavanUtils {
 		}
 	}
 
-	protected void OnDisconnected() {
-	}
+	public final void disconnect() {
+		synchronized (mClient) {
+			if (!mConnected) {
+				return;
+			}
 
-	public void disconnect() {
-		closeInputStream();
-		closeOutputStream();
-		closeSocket();
+			closeInputStream();
+			closeOutputStream();
+			mClient.closeSocket();
 
-		mConnected = false;
+			mConnected = false;
+		}
+
 		OnDisconnected();
 	}
 
-	public boolean connect() {
-		if (mConnected) {
-			return true;
+	public final boolean connect() {
+		synchronized (mClient) {
+			if (mConnected) {
+				return true;
+			}
+
+			if (!mClient.openSocket()) {
+				return false;
+			}
+
+			mConnected = true;
+
+			if (sendRequest()) {
+				OnConnected();
+				return true;
+			}
+
+			mConnected = false;
+			mClient.closeSocket();
 		}
 
-		mConnected = openSocket();
+		return false;
+	}
 
-		return mConnected;
+	public final void connectNoSync() {
+		new Thread() {
+
+			@Override
+			public void run() {
+				connect();
+			}
+		}.start();
 	}
 
 	public boolean isConnected() {
-		return mConnected;
+		synchronized (mClient) {
+			return mConnected;
+		}
 	}
 
-	public boolean sendData(byte[] data) {
+	synchronized public boolean sendData(byte[] data) {
 		if (!openOutputStream()) {
 			return false;
 		}
@@ -114,7 +178,7 @@ public abstract class CavanNetworkClient extends CavanUtils {
 		return false;
 	}
 
-	public int recvData(byte[] bytes) {
+	synchronized public int recvData(byte[] bytes) {
 		if (!openInputStream()) {
 			return -1;
 		}

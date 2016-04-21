@@ -305,19 +305,13 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		if (mScanResult != null && mScanResult.equals(result)) {
 			setTitle(result.getShortString());
 		} else {
-			ConnectThread thread = new ConnectThread();
-			thread.start();
-		}
+			mClient = new TcpKeypadClient(result.getAddress(), result.getPort()) {
 
-		mScanResult = result;
-		Log.e(TAG, "mScanResult = " + mScanResult);
-	}
-
-	class ConnectThread extends Thread {
-
-		@Override
-		public void run() {
-			mClient = new TcpKeypadClient(mScanResult.getAddress(), mScanResult.getPort()) {
+				@Override
+				protected void OnConnected() {
+					Message message = mHandler.obtainMessage(EVENT_LINK_CHANGED, mScanResult);
+					message.sendToTarget();
+				}
 
 				@Override
 				protected void OnDisconnected() {
@@ -325,10 +319,10 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 				}
 			};
 
-			if (mClient.connect()) {
-				Message message = mHandler.obtainMessage(EVENT_LINK_CHANGED, mScanResult);
-				message.sendToTarget();
-			}
+			mClient.connectNoSync();
 		}
+
+		mScanResult = result;
+		Log.e(TAG, "mScanResult = " + mScanResult);
 	}
 }

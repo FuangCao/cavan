@@ -1,6 +1,7 @@
 package com.cavan.cavanutils;
 
 import java.net.InetAddress;
+
 import android.annotation.SuppressLint;
 import android.net.LocalSocketAddress;
 
@@ -14,8 +15,16 @@ import android.net.LocalSocketAddress;
 		super(address);
 	}
 
+	public TcpExecClient(ICavanNetworkClient client) {
+		super(client);
+	}
+
+	public TcpExecClient(String pathname) {
+		super(pathname);
+	}
+
 	public boolean runCommand(String command) {
-		if (!mClient.connect()) {
+		if (!connect()) {
 			return false;
 		}
 
@@ -35,7 +44,7 @@ import android.net.LocalSocketAddress;
 
 		while (true) {
 			byte[] data = new byte[1024];
-			int length = mClient.recvData(data);
+			int length = recvData(data);
 			if (length <= 0) {
 				break;
 			}
@@ -43,7 +52,7 @@ import android.net.LocalSocketAddress;
 			logD(new String(data, 0, length));
 		}
 
-		mClient.disconnect();
+		disconnect();
 
 		return true;
 	}

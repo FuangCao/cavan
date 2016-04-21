@@ -17,6 +17,7 @@ public class TcpKeypadClient extends TcpDdClient {
 		super(address);
 	}
 
+	@Override
 	public boolean sendRequest() {
 		TcpDdPackage req = new TcpDdPackage(TCP_KEYPAD_EVENT);
 		if (!sendPackage(req)) {
@@ -36,24 +37,6 @@ public class TcpKeypadClient extends TcpDdClient {
 		}
 
 		return true;
-	}
-
-	public boolean connect() {
-		if (mClient.isConnected()) {
-			return true;
-		}
-
-		if (sendRequest()) {
-			return true;
-		}
-
-		mClient.disconnect();
-
-		return false;
-	}
-
-	public void disconnect() {
-		mClient.disconnect();
 	}
 
 	public boolean writeInputEvent(ByteCache cache, int type, int code, int value) {
@@ -94,7 +77,7 @@ public class TcpKeypadClient extends TcpDdClient {
 			return false;
 		}
 
-		return mClient.sendData(cache.getBytes());
+		return sendData(cache.getBytes());
 	}
 
 	public boolean sendKeyEvent(int code, int value) {
@@ -103,6 +86,6 @@ public class TcpKeypadClient extends TcpDdClient {
 			return false;
 		}
 
-		return mClient.sendData(cache.getBytes());
+		return sendData(cache.getBytes());
 	}
 }
