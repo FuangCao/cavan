@@ -64,7 +64,7 @@ public class DiscoveryService extends Service {
 
 			mScanResults.clear();
 
-			DiscoveryThread thread = new DiscoveryThread(port);
+			DiscoveryThread thread = new DiscoveryThread();
 			thread.start();
 			Toast.makeText(getApplicationContext(), R.string.text_scanning, Toast.LENGTH_SHORT).show();
 
@@ -97,14 +97,8 @@ public class DiscoveryService extends Service {
 
 	class DiscoveryThread extends Thread {
 
-		int mPort = 8888;
-
-		public DiscoveryThread(int port) {
+		public DiscoveryThread() {
 			super();
-
-			if (port > 0) {
-				mPort = port;
-			}
 		}
 
 		@Override

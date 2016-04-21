@@ -3,11 +3,10 @@ package com.cavan.cavanutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.Socket;
 
-public class CavanTcpClient implements CavanNetworkClient.ICavanNetworkClient {
+public class CavanTcpClient extends CavanNetworkClientImpl {
 
 	private int mPort;
 	private Socket mSocket;
@@ -79,11 +78,6 @@ public class CavanTcpClient implements CavanNetworkClient.ICavanNetworkClient {
 			e.printStackTrace();
 		}
 
-		return null;
-	}
-
-	@Override
-	public DatagramPacket getPacket() {
 		return null;
 	}
 }

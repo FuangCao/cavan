@@ -37,7 +37,7 @@ public class CavanUtils extends CavanNative {
 		return logE("Dump Stack", new Throwable());
 	}
 
-	public int ArrayCopy(byte[] src, int srcOff, byte[] dest, int destOff, int count) {
+	public static int ArrayCopy(byte[] src, int srcOff, byte[] dest, int destOff, int count) {
 		int srcEnd = srcOff + count;
 
 		while (srcOff < srcEnd) {
@@ -47,11 +47,11 @@ public class CavanUtils extends CavanNative {
 		return destOff;
 	}
 
-	public int ArrayCopy(byte[] src, byte[] dest, int count) {
+	public static int ArrayCopy(byte[] src, byte[] dest, int count) {
 		return ArrayCopy(src, 0, dest, 0, count);
 	}
 
-	public int ArrayCopy(byte[] src, byte[] dest) {
+	public static int ArrayCopy(byte[] src, byte[] dest) {
 		return ArrayCopy(src, 0, dest, 0, src.length);
 	}
 }

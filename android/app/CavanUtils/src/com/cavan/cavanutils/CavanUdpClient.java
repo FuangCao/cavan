@@ -7,7 +7,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-public class CavanUdpClient implements CavanNetworkClient.ICavanNetworkClient {
+public class CavanUdpClient extends CavanNetworkClientImpl {
 
 	private MulticastSocket mSocket;
 	private InetAddress mAddress;

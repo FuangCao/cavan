@@ -10,25 +10,17 @@ import android.net.LocalSocketAddress;
 
 public class CavanNetworkClient extends CavanUtils {
 
-	interface ICavanNetworkClient {
-		public boolean openSocket();
-		public void closeSocket();
-		public InputStream getInputStream();
-		public OutputStream getOutputStream();
-		public DatagramPacket getPacket();
-	}
-
 	protected InputStream mInputStream;
 	protected OutputStream mOutputStream;
 
 	private boolean mConnected;
-	private ICavanNetworkClient mClient;
+	private CavanNetworkClientImpl mClientImpl;
 
 	public CavanNetworkClient() {
 		super();
 	}
 
-	public CavanNetworkClient(ICavanNetworkClient client) {
+	public CavanNetworkClient(CavanNetworkClientImpl client) {
 		this();
 		setClient(client);
 	}
@@ -55,12 +47,12 @@ public class CavanNetworkClient extends CavanUtils {
 		}
 	}
 
-	public void setClient(ICavanNetworkClient client) {
-		mClient = client;
+	public void setClient(CavanNetworkClientImpl client) {
+		mClientImpl = client;
 	}
 
-	public ICavanNetworkClient getClient() {
-		return mClient;
+	public CavanNetworkClientImpl getClient() {
+		return mClientImpl;
 	}
 
 	@Override
@@ -70,11 +62,11 @@ public class CavanNetworkClient extends CavanUtils {
 	}
 
 	public DatagramPacket getPacket() {
-		return mClient.getPacket();
+		return mClientImpl.getPacket();
 	}
 
 	public InetAddress getRemoteAddress() {
-		DatagramPacket packet = mClient.getPacket();
+		DatagramPacket packet = mClientImpl.getPacket();
 		if (packet == null) {
 			return null;
 		}
@@ -83,7 +75,7 @@ public class CavanNetworkClient extends CavanUtils {
 	}
 
 	public int getRemotePort() {
-		DatagramPacket packet = mClient.getPacket();
+		DatagramPacket packet = mClientImpl.getPacket();
 		if (packet == null) {
 			return 0;
 		}
@@ -107,7 +99,7 @@ public class CavanNetworkClient extends CavanUtils {
 		}
 
 		if (connect()) {
-			mInputStream = mClient.getInputStream();
+			mInputStream = mClientImpl.getInputStream();
 			return mInputStream != null;
 		}
 
@@ -132,7 +124,7 @@ public class CavanNetworkClient extends CavanUtils {
 		}
 
 		if (connect()) {
-			mOutputStream = mClient.getOutputStream();
+			mOutputStream = mClientImpl.getOutputStream();
 			return mOutputStream != null;
 		}
 
@@ -152,14 +144,14 @@ public class CavanNetworkClient extends CavanUtils {
 	}
 
 	public final void disconnect() {
-		synchronized (mClient) {
+		synchronized (mClientImpl) {
 			if (!mConnected) {
 				return;
 			}
 
 			closeInputStream();
 			closeOutputStream();
-			mClient.closeSocket();
+			mClientImpl.closeSocket();
 
 			mConnected = false;
 		}
@@ -168,12 +160,12 @@ public class CavanNetworkClient extends CavanUtils {
 	}
 
 	public final boolean connect() {
-		synchronized (mClient) {
+		synchronized (mClientImpl) {
 			if (mConnected) {
 				return true;
 			}
 
-			if (!mClient.openSocket()) {
+			if (!mClientImpl.openSocket()) {
 				return false;
 			}
 
@@ -185,7 +177,7 @@ public class CavanNetworkClient extends CavanUtils {
 			}
 
 			mConnected = false;
-			mClient.closeSocket();
+			mClientImpl.closeSocket();
 		}
 
 		return false;
@@ -202,7 +194,7 @@ public class CavanNetworkClient extends CavanUtils {
 	}
 
 	public boolean isConnected() {
-		synchronized (mClient) {
+		synchronized (mClientImpl) {
 			return mConnected;
 		}
 	}

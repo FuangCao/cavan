@@ -15,7 +15,7 @@ import android.net.LocalSocketAddress;
 		super(address);
 	}
 
-	public TcpExecClient(ICavanNetworkClient client) {
+	public TcpExecClient(CavanNetworkClientImpl client) {
 		super(client);
 	}
 
