@@ -12,7 +12,9 @@ public class CavanUdpClient extends CavanNetworkClientImpl {
 	private MulticastSocket mSocket;
 	private InetAddress mAddress;
 	private int mPort;
-	private DatagramPacket mPacket;
+
+	private InetAddress mRemoteAddress;
+	private int mRemotePort;
 
 	public CavanUdpClient(InetAddress address, int port) {
 		mAddress = address;
@@ -50,9 +52,13 @@ public class CavanUdpClient extends CavanNetworkClientImpl {
 
 		@Override
 		public int read(byte[] bytes, int offset, int count) throws IOException {
-			mPacket = new DatagramPacket(bytes, offset, count);
-			mSocket.receive(mPacket);
-			return mPacket.getLength();
+			DatagramPacket packet = new DatagramPacket(bytes, offset, count);
+			mSocket.receive(packet);
+
+			mRemoteAddress = packet.getAddress();
+			mRemotePort = packet.getPort();
+
+			return packet.getLength();
 		}
 	}
 
@@ -81,7 +87,32 @@ public class CavanUdpClient extends CavanNetworkClientImpl {
 	}
 
 	@Override
-	public DatagramPacket getPacket() {
-		return mPacket;
+	public Object getAddress() {
+		return mAddress;
+	}
+
+	@Override
+	public int getPort() {
+		return mPort;
+	}
+
+	@Override
+	public void setAddress(Object address) {
+		mAddress = (InetAddress) address;
+	}
+
+	@Override
+	public void setPort(int port) {
+		mPort = port;
+	}
+
+	@Override
+	public Object getRemoteAddress() {
+		return mRemoteAddress;
+	}
+
+	@Override
+	public int getRemotePort() {
+		return mRemotePort;
 	}
 }

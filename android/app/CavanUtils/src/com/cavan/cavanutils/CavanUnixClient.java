@@ -81,4 +81,14 @@ public class CavanUnixClient extends CavanNetworkClientImpl {
 
 		return null;
 	}
+
+	@Override
+	public Object getAddress() {
+		return mSocketAddress;
+	}
+
+	@Override
+	public void setAddress(Object address) {
+		mSocketAddress = (LocalSocketAddress) address;
+	}
 }

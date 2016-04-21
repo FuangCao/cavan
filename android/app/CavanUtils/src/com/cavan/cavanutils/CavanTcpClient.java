@@ -80,4 +80,24 @@ public class CavanTcpClient extends CavanNetworkClientImpl {
 
 		return null;
 	}
+
+	@Override
+	public Object getAddress() {
+		return mSocketAddress;
+	}
+
+	@Override
+	public int getPort() {
+		return mPort;
+	}
+
+	@Override
+	public void setAddress(Object address) {
+		mSocketAddress = (InetAddress) address;
+	}
+
+	@Override
+	public void setPort(int port) {
+		mPort = port;
+	}
 }

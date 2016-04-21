@@ -3,7 +3,6 @@ package com.cavan.cavanutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
 
 import android.net.LocalSocketAddress;
@@ -61,32 +60,28 @@ public class CavanNetworkClient extends CavanUtils {
 		super.finalize();
 	}
 
-	public DatagramPacket getPacket() {
-		return mClientImpl.getPacket();
-	}
-
-	public InetAddress getRemoteAddress() {
-		DatagramPacket packet = mClientImpl.getPacket();
-		if (packet == null) {
-			return null;
-		}
-
-		return packet.getAddress();
+	public Object getRemoteAddress() {
+		return mClientImpl.getRemoteAddress();
 	}
 
 	public int getRemotePort() {
-		DatagramPacket packet = mClientImpl.getPacket();
-		if (packet == null) {
-			return 0;
-		}
+		return mClientImpl.getRemotePort();
+	}
 
-		return packet.getPort();
+	public void setAddress(Object address) {
+		mClientImpl.setAddress(address);
+	}
+
+	public void setPort(int port) {
+		mClientImpl.setPort(port);
 	}
 
 	protected void OnDisconnected() {
+		/* empty */
 	}
 
 	protected void OnConnected() {
+		/* empty */
 	}
 
 	protected boolean sendRequest() {

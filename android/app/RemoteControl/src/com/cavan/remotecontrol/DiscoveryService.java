@@ -64,6 +64,10 @@ public class DiscoveryService extends Service {
 
 			mScanResults.clear();
 
+			if (port > 0) {
+				mClient.setPort(port);
+			}
+
 			DiscoveryThread thread = new DiscoveryThread();
 			thread.start();
 			Toast.makeText(getApplicationContext(), R.string.text_scanning, Toast.LENGTH_SHORT).show();
@@ -118,8 +122,12 @@ public class DiscoveryService extends Service {
 						break;
 					}
 
-					String text = new String(bytes, 0, length);
-					onDiscovery(mClient.getRemoteAddress(), text);
+					InetAddress address = (InetAddress) mClient.getRemoteAddress();
+					if (address == null) {
+						break;
+					}
+
+					onDiscovery(address, new String(bytes, 0, length));
 				}
 
 				mThreadStopped = true;
