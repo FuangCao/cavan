@@ -1,6 +1,8 @@
 package com.cavan.cavanmain;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -11,11 +13,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
-import com.cavan.cavanutils.CavanNative;
 import com.cavan.cavanutils.CavanUtils;
 
-@SuppressWarnings("deprecation")
-@SuppressLint({ "NewApi", "HandlerLeak" }) public class MainActivity extends ActionBarActivity {
+@SuppressLint("HandlerLeak") @SuppressWarnings("deprecation")
+@TargetApi(Build.VERSION_CODES.HONEYCOMB) public class MainActivity extends ActionBarActivity {
 
 	public static final String TAG = "Cavan";
 
@@ -82,7 +83,8 @@ import com.cavan.cavanutils.CavanUtils;
 		public void run() {
 			CavanUtils.logD("doTcpDdServer running");
 			mHandler.sendEmptyMessage(EVENT_TCP_DD_SERVICE_STATE_CHANGED);
-			CavanNative.doTcpDdServer("-p", "9999", "-s", "0");
+			// CavanNative.doTcpDdServer("-p", "9999", "-s", "0");
+			CavanUtils.doCommand("tcp_dd_server", "-p", "9999", "-s", "0");
 			mTcpDdThread = null;
 			mHandler.sendEmptyMessage(EVENT_TCP_DD_SERVICE_STATE_CHANGED);
 			CavanUtils.logD("doTcpDdServer stopped");

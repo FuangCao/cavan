@@ -702,13 +702,6 @@ JNIEXPORT jint Java_com_cavan_cavanutils_CavanNative_doTee(JNIEnv *env, jclass c
 	return CavanMainExecute(env, args, "tee", do_cavan_tee);
 }
 
-extern int do_cavan_test(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanutils_CavanNative_doTest(JNIEnv *env, jclass clazz, jobjectArray args)
-{
-	return CavanMainExecute(env, args, "test", do_cavan_test);
-}
-
 extern int do_cavan_textlen(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanutils_CavanNative_doTextlen(JNIEnv *env, jclass clazz, jobjectArray args)

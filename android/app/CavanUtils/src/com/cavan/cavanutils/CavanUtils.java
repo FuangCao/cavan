@@ -37,6 +37,19 @@ public class CavanUtils extends CavanNative {
 		return logE("Dump Stack", new Throwable());
 	}
 
+	public static int doCommand(ICavanCommand command, String... args) {
+		return command.main(args);
+	}
+
+	public static int doCommand(String name, String... args) {
+		ICavanCommand command = sHashMap.get(name);
+		if (command != null) {
+			return doCommand(command, args);
+		}
+
+		return -1;
+	}
+
 	public static int ArrayCopy(byte[] src, int srcOff, byte[] dest, int destOff, int count) {
 		int srcEnd = srcOff + count;
 
