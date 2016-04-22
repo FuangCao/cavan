@@ -282,7 +282,7 @@ function config_single_home()
 	done
 
 	cavan-symlink "${CAVAN_HOME}" "cavan" || return 1
-	cavan-symlink "{SCRIPT_PATH}/configs/netrc" ".netrc" || return 1
+	cavan-symlink "${SCRIPT_PATH}/configs/netrc" ".netrc" || return 1
 }
 
 function config_home()
@@ -310,6 +310,7 @@ function config_aptget()
 	mkdir -pv "${DIR_SOURCES_LIST}" || return 1
 	echo "deb http://download.virtualbox.org/virtualbox/debian ${DISTRIB_CODENAME} contrib" > "${DIR_SOURCES_LIST}/virtualbox.list"
 	echo "deb http://archive.ubuntukylin.com:10006/ubuntukylin trusty main" > "${DIR_SOURCES_LIST}/sogoupinyin.list"
+	echo "deb http://ftp.de.debian.org/debian wheezy main" > "${DIR_SOURCES_LIST}/debian.list"
 
 	wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
 }
@@ -353,9 +354,14 @@ EOF
 
 function install_applications()
 {
+	apt-get clean || return 1
+	rm -rf /var/lib/apt/lists/*
+	rm -rf /var/lib/apt/lists/partial/*
+	apt-get clean || return 1
 	dpkg --configure -a || return 1
-	apt-get update --fix-missing || return 1
+	apt-get update --fix-missing # || return 1
 	apt-get install -fy --force-yes --show-progress $(cat "${FILE_APP_CONFIG}" | sed 's/#.*$//g') || return 1
+	apt-get autoremove -fy --force-yes --show-progress || return 1
 }
 
 function install_debin_packages()
