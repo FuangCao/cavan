@@ -161,19 +161,6 @@ $(CAVAN_NATIVE_JAVA): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) $(CAVAN
 			native_app=$$(echo $${app} | sed 's/\(^\|_\)\([a-z]\)/\u\2/g'); \
 			echo "\tpublic static native int do$${native_app}(String... args);"; \
 		done; \
-		echo; \
-		echo "\tpublic static int doCommand(ICavanCommand command, String... args) {"; \
-		echo "\t\treturn command.main(args);"; \
-		echo "\t}"; \
-		echo; \
-		echo "\tpublic static int doCommand(String name, String... args) {"; \
-		echo "\t\tICavanCommand command = sHashMap.get(name);"; \
-		echo "\t\tif (command != null) {"; \
-		echo "\t\t\treturn doCommand(command, args);"; \
-		echo "\t\t}"; \
-		echo; \
-		echo "\t\treturn -1;"; \
-		echo "\t}"; \
 		echo "}"; \
 	} > $@
 

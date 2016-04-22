@@ -1070,17 +1070,4 @@ public class CavanNative {
 	public static native int doWebProxy(String... args);
 	public static native int doMkfs(String... args);
 	public static native int doCalculatorCpp(String... args);
-
-	public static int doCommand(ICavanCommand command, String... args) {
-		return command.main(args);
-	}
-
-	public static int doCommand(String name, String... args) {
-		ICavanCommand command = sHashMap.get(name);
-		if (command != null) {
-			return doCommand(command, args);
-		}
-
-		return -1;
-	}
 }
