@@ -14,6 +14,9 @@
 #define FTP_BUILD_CMD(a, b, c, d) \
 	BYTES_DWORD(d, c, b, a)
 
+#define FTP_BUILD_CMD2(a) \
+	FTP_BUILD_CMD((a)[0], (a)[1], (a)[2], (a)[3])
+
 enum cavan_ftp_state {
 	FTP_STATE_READY,
 	FTP_STATE_USER_RECVED,

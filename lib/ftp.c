@@ -296,7 +296,11 @@ label_poll:
 		println("command = `%s', args = `%s'", cmd_buff, cmd_arg);
 #endif
 
+#if 0
 		command = *(u32 *) cmd_buff;
+#else
+		command = FTP_BUILD_CMD2(cmd_buff);
+#endif
 
 		switch (command) {
 		case FTP_BUILD_CMD('q', 'u', 'i', 't'):

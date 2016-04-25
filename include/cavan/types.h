@@ -172,6 +172,9 @@ typedef struct {
 #define BYTES_DWORD(b1, b2, b3, b4) \
 	WORDS_DWORD(BYTES_WORD(b1, b2), BYTES_WORD(b3, b4))
 
+#define BYTE_ARRAY_DWORD(a) \
+	BYTES_DWORD((a)[3], (a)[2], (a)[1], (a)[0])
+
 #define BUILD_U16(h, l) \
 	(((u16) (h)) << 8 | (l))
 
