@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace FFMpeg
+namespace FFMpegConvert
 {
     static class Program
     {
@@ -16,7 +16,7 @@ namespace FFMpeg
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Convert());
+            Application.Run(new FFMpegConvert());
         }
     }
 }

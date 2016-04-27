@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace FFMpeg.Properties
+namespace FFMpegConvert.Properties
 {
 
 

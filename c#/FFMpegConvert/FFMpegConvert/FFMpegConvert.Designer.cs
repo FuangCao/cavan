@@ -1,6 +1,6 @@
-﻿namespace FFMpeg
+﻿namespace FFMpegConvert
 {
-    partial class Convert
+    partial class FFMpegConvert
     {
         /// <summary>
         /// 必需的设计器变量。
