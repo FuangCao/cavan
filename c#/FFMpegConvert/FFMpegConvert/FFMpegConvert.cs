@@ -7,6 +7,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -15,7 +16,23 @@ namespace FFMpegConvert
 {
     public partial class FFMpegConvert : Form
     {
+        private static String FILENAME_BACKUP = "ffmpeg-backup";
+
+        private bool mNeedStop;
         private Thread mConvertThread;
+        private Process mConvertProcess;
+        private StreamWriter mStreamWriterLog;
+
+        private bool mOverride;
+        private String mVideoCodec;
+        private String mVideoBitRate;
+        private String mVideoCodecParam;
+        private String mAudioCodec;
+        private String mAudioBitRate;
+        private String mCommandParam;
+        private String mDirInput;
+        private String mDirOutput;
+        private String mLogFilePath;
 
         public FFMpegConvert()
         {
@@ -29,16 +46,20 @@ namespace FFMpegConvert
 
         private void textBoxInputDir_Click(object sender, EventArgs e)
         {
-            if (textBoxInputDir.Text.Length > 0)
+            if (textBoxInDir.Text.Length > 0)
             {
-                folderBrowserDialogInputDir.SelectedPath = textBoxInputDir.Text;
+                folderBrowserDialogInDir.SelectedPath = textBoxInDir.Text;
+            }
+            else
+            {
+                folderBrowserDialogInDir.SelectedPath = "D:\\test-input"; //"F:\\epan\\media";
             }
 
-            if (folderBrowserDialogInputDir.ShowDialog() == DialogResult.OK)
+            if (folderBrowserDialogInDir.ShowDialog() == DialogResult.OK)
             {
-                textBoxInputDir.Text = folderBrowserDialogInputDir.SelectedPath;
+                textBoxInDir.Text = folderBrowserDialogInDir.SelectedPath;
 
-                if (textBoxOutputDir.Text.Length > 0)
+                if (textBoxOutDir.Text.Length > 0)
                 {
                     buttonStart.Enabled = true;
                 }
@@ -47,33 +68,53 @@ namespace FFMpegConvert
 
         private void textBoxOutputDir_Click(object sender, EventArgs e)
         {
-            if (textBoxOutputDir.Text.Length > 0)
+            if (textBoxOutDir.Text.Length > 0)
             {
-                folderBrowserDialogOutputDir.SelectedPath = textBoxOutputDir.Text;
+                folderBrowserDialogOutDir.SelectedPath = textBoxOutDir.Text;
+            }
+            else
+            {
+                folderBrowserDialogOutDir.SelectedPath = "D:\\test-output";
             }
 
-            if (folderBrowserDialogOutputDir.ShowDialog() == DialogResult.OK)
+            if (folderBrowserDialogOutDir.ShowDialog() == DialogResult.OK)
             {
-                textBoxOutputDir.Text = folderBrowserDialogOutputDir.SelectedPath;
+                textBoxOutDir.Text = folderBrowserDialogOutDir.SelectedPath;
 
-                if (textBoxInputDir.Text.Length > 0)
+                if (textBoxInDir.Text.Length > 0)
                 {
                     buttonStart.Enabled = true;
                 }
             }
         }
 
-        private bool doConvert(FileInfo info)
+        private bool doConvertFile(String fileIn, String fileOut)
         {
-            Process process = null;
+            File.Delete(fileOut);
 
-            Console.WriteLine("FullName = " + info.FullName);
+            Console.WriteLine(fileIn + " => " + fileOut);
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append("-i \"");
+            builder.Append(fileIn);
+            builder.Append("\" ");
+            builder.Append(mCommandParam);
+            builder.Append(" \"");
+            builder.Append(fileOut);
+            builder.Append("\"");
+            String arguments = builder.ToString();
+
+            Console.WriteLine("argument = " + arguments);
 
             try
             {
-                process = Process.Start("ffmpeg.exe");
-                process.WaitForExit();
-                return process.ExitCode == 0;
+                mConvertProcess = Process.Start("ffmpeg.exe", arguments);
+                mConvertProcess.WaitForExit();
+
+                if (mConvertProcess.ExitCode != 0)
+                {
+                    return false;
+                }
             }
             catch (Exception)
             {
@@ -81,31 +122,121 @@ namespace FFMpegConvert
             }
             finally
             {
-                if (process != null)
+                if (mConvertProcess != null)
                 {
-                    process.Close();
+                    mConvertProcess.Close();
+                    mConvertProcess = null;
                 }
             }
+
+            mStreamWriterLog.WriteLine(fileIn + " " + fileOut + " " + mCommandParam);
+            mStreamWriterLog.Flush();
+
+            return true;
         }
 
-        private int doConvert(DirectoryInfo infoParent)
+        private String doConvertFilename(String filename)
         {
-            int count = 0;
+            filename = Path.GetFileNameWithoutExtension(filename);
 
-            foreach (FileInfo info in infoParent.GetFiles())
+            if (mVideoCodec.Equals("libx265"))
             {
-                if (!doConvert(info))
+                filename = Regex.Replace(filename, "x264", "x265", RegexOptions.IgnoreCase);
+            }
+
+            filename = Regex.Replace(filename, "dts", "AC3", RegexOptions.IgnoreCase);
+
+            return filename;
+        }
+
+        private bool doConvertFile(FileInfo fileInfo, DirectoryInfo dirInfo, String dirOut, String dirBak)
+        {
+            String fnIn = fileInfo.Name;
+            String fnOut = doConvertFilename(fnIn);
+            String fileTmp = Path.Combine(dirOut, fnOut + ".ffmpeg.cache.mp4");
+            String fileOut = Path.Combine(dirOut, fnOut + ".mp4");
+
+            if (File.Exists(fileOut))
+            {
+                if (!mOverride)
                 {
-                    count++;
+                    return true;
                 }
             }
 
-            foreach (DirectoryInfo info in infoParent.GetDirectories())
+            if (!doConvertFile(fileInfo.FullName, fileTmp))
             {
-                count += doConvert(info);
+                return false;
             }
 
-            return count;
+            File.Move(fileTmp, fileOut);
+            fileInfo.MoveTo(Path.Combine(dirBak, fnIn));
+
+            return true;
+        }
+
+        private int doConvertDir(DirectoryInfo dirInfo, String dirOut, String dirBak)
+        {
+            int failCount = 0;
+
+            if (mNeedStop)
+            {
+                return -1;
+            }
+
+            if (dirInfo.FullName.StartsWith(dirOut))
+            {
+                return 0;
+            }
+
+            Directory.CreateDirectory(dirOut);
+            Directory.CreateDirectory(dirBak);
+
+            foreach (FileInfo info in dirInfo.GetFiles())
+            {
+                if (mNeedStop)
+                {
+                    return -1;
+                }
+
+                if (!doConvertFile(info, dirInfo, dirOut, dirBak))
+                {
+                    failCount++;
+                }
+            }
+
+            foreach (DirectoryInfo info in dirInfo.GetDirectories())
+            {
+                String basename = info.Name;
+
+                if (basename.Equals(FILENAME_BACKUP))
+                {
+                    continue;
+                }
+
+                int count = doConvertDir(info, Path.Combine(dirOut, basename), Path.Combine(dirBak, basename));
+                if (count < 0)
+                {
+                    return count;
+                }
+
+                failCount += count;
+            }
+
+            return failCount;
+        }
+
+        private int doConvertDir(String dirIn, String dirOut)
+        {
+            DirectoryInfo dirInfo = new DirectoryInfo(dirIn);
+            if (dirInfo == null)
+            {
+                return -1;
+            }
+
+            String dirBack = Path.Combine(dirIn, FILENAME_BACKUP);
+
+            return doConvertDir(dirInfo, dirOut, dirBack);
         }
 
         delegate void SetConvertStateCallback(bool running);
@@ -124,40 +255,116 @@ namespace FFMpegConvert
             }
         }
 
+        private String buildCommandParam()
+        {
+            StringBuilder builder = new StringBuilder();
+
+            builder.Append("-acodec " + mAudioCodec);
+            builder.Append(" -b:a " + mAudioBitRate);
+            builder.Append(" -vcodec " + mVideoCodec);
+            builder.Append(" -b:v " + mVideoBitRate);
+
+            if (mVideoCodecParam.Length > 0)
+            {
+                builder.Append(" " + mVideoCodecParam);
+            }
+
+            return builder.ToString();
+        }
+
         private void doConvert()
         {
-            int count = -1;
-            String pathname = textBoxInputDir.Text;
+            int count;
+
+            Directory.CreateDirectory(mDirOutput);
+
+            mNeedStop = false;
+            mCommandParam = buildCommandParam();
+            mStreamWriterLog = new StreamWriter(mLogFilePath);
 
             SetConvertStateCallback callback = new SetConvertStateCallback(setConvertState);
             Invoke(callback, new object[] { true });
 
-            if (Directory.Exists(pathname))
+            if (File.Exists(mDirInput))
             {
-                count = doConvert(new DirectoryInfo(pathname));
+                if (doConvertFile(mDirInput, mDirOutput))
+                {
+                    count = 0;
+                }
+                else
+                {
+                    count = -1;
+                }
             }
-            else if (File.Exists(pathname) && doConvert(new FileInfo(pathname)))
+            else if (Directory.Exists(mDirInput))
             {
-                count = 0;
+                count = doConvertDir(mDirInput, mDirOutput);
+            }
+            else
+            {
+                count = -1;
             }
 
-            Invoke(callback, new object[] { false });
+            mStreamWriterLog.Close();
+            mStreamWriterLog = null;
 
             mConvertThread = null;
+            Invoke(callback, new object[] { false });
         }
 
         private void buttonStart_Click(object sender, EventArgs e)
         {
-            if (mConvertThread == null)
+            if (mConvertThread != null)
             {
-                mConvertThread = new Thread(new ThreadStart(doConvert));
-                mConvertThread.Start();
+                return;
             }
+
+            mDirInput = textBoxInDir.Text;
+            mVideoCodec = comboBoxVideoCodec.Text;
+            mVideoBitRate = comboBoxVideoBitRate.Text;
+            mVideoCodecParam = textBoxVidecCodecParam.Text;
+            mAudioCodec = comboBoxAudioCodec.Text;
+            mAudioBitRate = comboBoxAudioBitRate.Text;
+            mOverride = checkBoxOverride.Checked;
+
+            mDirOutput = Path.Combine(textBoxOutDir.Text, DateTime.Now.ToString("yyyyMMdd"));
+
+            mLogFilePath = textBoxLogFile.Text;
+            if (mLogFilePath.Length <= 0)
+            {
+                mLogFilePath = Path.Combine(mDirOutput, "ffmpeg-convert.log");
+                textBoxLogFile.Text = mLogFilePath;
+            }
+
+            mConvertThread = new Thread(new ThreadStart(doConvert));
+            mConvertThread.Start();
         }
 
         private void buttonStop_Click(object sender, EventArgs e)
         {
+            mNeedStop = true;
 
+            if (mConvertProcess != null)
+            {
+                mConvertProcess.Kill();
+            }
+        }
+
+        private void textBoxLogFile_Click(object sender, EventArgs e)
+        {
+            if (textBoxLogFile.Text.Length > 0)
+            {
+                saveFileDialogLogFile.FileName = textBoxLogFile.Text;
+            }
+            else if (textBoxOutDir.Text.Length > 0)
+            {
+                saveFileDialogLogFile.InitialDirectory = textBoxOutDir.Text;
+            }
+
+            if (saveFileDialogLogFile.ShowDialog() == DialogResult.OK)
+            {
+                textBoxLogFile.Text = saveFileDialogLogFile.FileName;
+            }
         }
     }
 }
