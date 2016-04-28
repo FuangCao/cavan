@@ -1,0 +1,4 @@
+msconfig	# 设置开机启动
+taskmgr		# 启动任务管理器
+tasklist	# 查看进程
+tskill		# 杀进程
