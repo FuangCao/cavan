@@ -42,7 +42,7 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 			mDevice = device;
 
 			// setTextColor(Color.BLACK);
-			setTextSize(60);
+			setTextSize(20);
 
 			mDevice.registerCallback(this);
 			setOnClickListener(this);
@@ -157,6 +157,7 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 	}
 
 	private void startScan() {
+		mLocalAdapter.enable();
 		mLocalManager.getCachedDeviceManager().clearNonBondedDevices();
 		mLocalAdapter.startScanning(true);
 	}

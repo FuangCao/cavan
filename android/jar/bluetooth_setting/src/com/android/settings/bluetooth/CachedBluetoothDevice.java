@@ -19,9 +19,9 @@ package com.android.settings.bluetooth;
 import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
-import android.bluetooth.BluetoothUuid;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.ParcelUuid;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -677,7 +677,10 @@ public final class CachedBluetoothDevice implements Comparable<CachedBluetoothDe
         } else if (permissionChoice == ACCESS_REJECTED) {
             permission = BluetoothDevice.ACCESS_REJECTED;
         }
-        mDevice.setPhonebookAccessPermission(permission);
+
+        if (Build.VERSION.SDK_INT > 20) {
+               mDevice.setPhonebookAccessPermission(permission);
+        }
     }
 
     // Migrates data from old data store (in Settings app's shared preferences) to new (in Bluetooth

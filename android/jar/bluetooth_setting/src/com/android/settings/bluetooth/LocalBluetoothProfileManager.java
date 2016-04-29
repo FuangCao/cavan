@@ -24,7 +24,6 @@ import android.bluetooth.BluetoothInputDevice;
 import android.bluetooth.BluetoothPan;
 import android.bluetooth.BluetoothPbap;
 import android.bluetooth.BluetoothProfile;
-import android.bluetooth.BluetoothUuid;
 import android.content.Context;
 import android.content.Intent;
 import android.os.ParcelUuid;
