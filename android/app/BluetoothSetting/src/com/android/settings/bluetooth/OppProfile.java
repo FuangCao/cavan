@@ -16,7 +16,6 @@
 
 package com.android.settings.bluetooth;
 
-import com.cavan.bluetoothsetting.R;
 
 import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
@@ -73,17 +72,5 @@ final class OppProfile implements LocalBluetoothProfile {
 
     public int getOrdinal() {
         return ORDINAL;
-    }
-
-    public int getNameResource(BluetoothDevice device) {
-        return R.string.bluetooth_profile_opp;
-    }
-
-    public int getSummaryResourceForDevice(BluetoothDevice device) {
-        return 0;   // OPP profile not displayed in UI
-    }
-
-    public int getDrawableResource(BluetoothClass btClass) {
-        return 0;   // no icon for OPP
     }
 }

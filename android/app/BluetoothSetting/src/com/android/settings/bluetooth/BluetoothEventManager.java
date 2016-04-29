@@ -16,7 +16,6 @@
 
 package com.android.settings.bluetooth;
 
-import com.cavan.bluetoothsetting.R;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
@@ -302,29 +301,6 @@ final class BluetoothEventManager {
          *            BluetoothDevice.UNBOND_REASON_*
          */
         private void showUnbondMessage(Context context, String name, int reason) {
-            int errorMsg;
-
-            switch(reason) {
-            case BluetoothDevice.UNBOND_REASON_AUTH_FAILED:
-                errorMsg = R.string.bluetooth_pairing_pin_error_message;
-                break;
-            case BluetoothDevice.UNBOND_REASON_AUTH_REJECTED:
-                errorMsg = R.string.bluetooth_pairing_rejected_error_message;
-                break;
-            case BluetoothDevice.UNBOND_REASON_REMOTE_DEVICE_DOWN:
-                errorMsg = R.string.bluetooth_pairing_device_down_error_message;
-                break;
-            case BluetoothDevice.UNBOND_REASON_DISCOVERY_IN_PROGRESS:
-            case BluetoothDevice.UNBOND_REASON_AUTH_TIMEOUT:
-            case BluetoothDevice.UNBOND_REASON_REPEATED_ATTEMPTS:
-            case BluetoothDevice.UNBOND_REASON_REMOTE_AUTH_CANCELED:
-                errorMsg = R.string.bluetooth_pairing_error_message;
-                break;
-            default:
-                Log.w(TAG, "showUnbondMessage: Not displaying any message for reason: " + reason);
-                return;
-            }
-            Utils.showError(context, name, errorMsg);
         }
     }
 
@@ -348,9 +324,6 @@ final class BluetoothEventManager {
                 Log.e(TAG, "ACTION_PAIRING_CANCEL with no EXTRA_DEVICE");
                 return;
             }
-            int errorMsg = R.string.bluetooth_pairing_error_message;
-            CachedBluetoothDevice cachedDevice = mDeviceManager.findDevice(device);
-            Utils.showError(context, cachedDevice.getName(), errorMsg);
         }
     }
 

@@ -24,7 +24,6 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.util.Log;
 
-import com.cavan.bluetoothsetting.R;
 
 import java.util.HashMap;
 import java.util.List;
@@ -124,36 +123,6 @@ final class PanProfile implements LocalBluetoothProfile {
 
     public int getOrdinal() {
         return ORDINAL;
-    }
-
-    public int getNameResource(BluetoothDevice device) {
-        if (isLocalRoleNap(device)) {
-            return R.string.bluetooth_profile_pan_nap;
-        } else {
-            return R.string.bluetooth_profile_pan;
-        }
-    }
-
-    public int getSummaryResourceForDevice(BluetoothDevice device) {
-        int state = getConnectionStatus(device);
-        switch (state) {
-            case BluetoothProfile.STATE_DISCONNECTED:
-                return R.string.bluetooth_pan_profile_summary_use_for;
-
-            case BluetoothProfile.STATE_CONNECTED:
-                if (isLocalRoleNap(device)) {
-                    return R.string.bluetooth_pan_nap_profile_summary_connected;
-                } else {
-                    return R.string.bluetooth_pan_user_profile_summary_connected;
-                }
-
-            default:
-                return Utils.getConnectionStateSummary(state);
-        }
-    }
-
-    public int getDrawableResource(BluetoothClass btClass) {
-        return R.drawable.ic_bt_network_pan;
     }
 
     // Tethering direction determines UI strings.

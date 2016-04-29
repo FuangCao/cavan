@@ -26,7 +26,6 @@ import android.content.Context;
 import android.os.ParcelUuid;
 import android.util.Log;
 
-import com.cavan.bluetoothsetting.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -175,28 +174,6 @@ final class A2dpProfile implements LocalBluetoothProfile {
 
     public int getOrdinal() {
         return ORDINAL;
-    }
-
-    public int getNameResource(BluetoothDevice device) {
-        return R.string.bluetooth_profile_a2dp;
-    }
-
-    public int getSummaryResourceForDevice(BluetoothDevice device) {
-        int state = getConnectionStatus(device);
-        switch (state) {
-            case BluetoothProfile.STATE_DISCONNECTED:
-                return R.string.bluetooth_a2dp_profile_summary_use_for;
-
-            case BluetoothProfile.STATE_CONNECTED:
-                return R.string.bluetooth_a2dp_profile_summary_connected;
-
-            default:
-                return Utils.getConnectionStateSummary(state);
-        }
-    }
-
-    public int getDrawableResource(BluetoothClass btClass) {
-        return R.drawable.ic_bt_headphones_a2dp;
     }
 
     protected void finalize() {

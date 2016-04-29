@@ -26,7 +26,6 @@ import android.content.Context;
 import android.os.ParcelUuid;
 import android.util.Log;
 
-import com.cavan.bluetoothsetting.R;
 
 import java.util.HashMap;
 import java.util.List;
@@ -124,18 +123,6 @@ final class PbapServerProfile implements LocalBluetoothProfile {
 
     public int getOrdinal() {
         return ORDINAL;
-    }
-
-    public int getNameResource(BluetoothDevice device) {
-        return R.string.bluetooth_profile_pbap;
-    }
-
-    public int getSummaryResourceForDevice(BluetoothDevice device) {
-        return R.string.bluetooth_profile_pbap_summary;
-    }
-
-    public int getDrawableResource(BluetoothClass btClass) {
-        return R.drawable.ic_bt_cellphone;
     }
 
     protected void finalize() {

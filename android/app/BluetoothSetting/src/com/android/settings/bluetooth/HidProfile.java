@@ -24,8 +24,6 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.util.Log;
 
-import com.cavan.bluetoothsetting.R;
-
 import java.util.List;
 
 /**
@@ -146,44 +144,6 @@ final class HidProfile implements LocalBluetoothProfile {
 
     public int getOrdinal() {
         return ORDINAL;
-    }
-
-    public int getNameResource(BluetoothDevice device) {
-        // TODO: distinguish between keyboard and mouse?
-        return R.string.bluetooth_profile_hid;
-    }
-
-    public int getSummaryResourceForDevice(BluetoothDevice device) {
-        int state = getConnectionStatus(device);
-        switch (state) {
-            case BluetoothProfile.STATE_DISCONNECTED:
-                return R.string.bluetooth_hid_profile_summary_use_for;
-
-            case BluetoothProfile.STATE_CONNECTED:
-                return R.string.bluetooth_hid_profile_summary_connected;
-
-            default:
-                return Utils.getConnectionStateSummary(state);
-        }
-    }
-
-    public int getDrawableResource(BluetoothClass btClass) {
-        if (btClass == null) {
-            return R.drawable.ic_lockscreen_ime;
-        }
-        return getHidClassDrawable(btClass);
-    }
-
-    static int getHidClassDrawable(BluetoothClass btClass) {
-        switch (btClass.getDeviceClass()) {
-            case BluetoothClass.Device.PERIPHERAL_KEYBOARD:
-            case BluetoothClass.Device.PERIPHERAL_KEYBOARD_POINTING:
-                return R.drawable.ic_lockscreen_ime;
-            case BluetoothClass.Device.PERIPHERAL_POINTING:
-                return R.drawable.ic_bt_pointing_hid;
-            default:
-                return R.drawable.ic_bt_misc_hid;
-        }
     }
 
     protected void finalize() {
