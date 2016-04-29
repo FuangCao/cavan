@@ -661,12 +661,15 @@ public final class CachedBluetoothDevice implements Comparable<CachedBluetoothDe
     }
 
     public int getPhonebookPermissionChoice() {
-        int permission = mDevice.getPhonebookAccessPermission();
-        if (permission == BluetoothDevice.ACCESS_ALLOWED) {
-            return ACCESS_ALLOWED;
-        } else if (permission == BluetoothDevice.ACCESS_REJECTED) {
-            return ACCESS_REJECTED;
+        if (Build.VERSION.SDK_INT > 20) {
+            int permission = mDevice.getPhonebookAccessPermission();
+            if (permission == BluetoothDevice.ACCESS_ALLOWED) {
+                return ACCESS_ALLOWED;
+            } else if (permission == BluetoothDevice.ACCESS_REJECTED) {
+                return ACCESS_REJECTED;
+            }
         }
+
         return ACCESS_UNKNOWN;
     }
 
@@ -692,12 +695,14 @@ public final class CachedBluetoothDevice implements Comparable<CachedBluetoothDe
             return;
         }
 
-        if (mDevice.getPhonebookAccessPermission() == BluetoothDevice.ACCESS_UNKNOWN) {
-            int oldPermission = preferences.getInt(mDevice.getAddress(), ACCESS_UNKNOWN);
-            if (oldPermission == ACCESS_ALLOWED) {
-                mDevice.setPhonebookAccessPermission(BluetoothDevice.ACCESS_ALLOWED);
-            } else if (oldPermission == ACCESS_REJECTED) {
-                mDevice.setPhonebookAccessPermission(BluetoothDevice.ACCESS_REJECTED);
+        if (Build.VERSION.SDK_INT > 20) {
+            if (mDevice.getPhonebookAccessPermission() == BluetoothDevice.ACCESS_UNKNOWN) {
+                int oldPermission = preferences.getInt(mDevice.getAddress(), ACCESS_UNKNOWN);
+                if (oldPermission == ACCESS_ALLOWED) {
+                    mDevice.setPhonebookAccessPermission(BluetoothDevice.ACCESS_ALLOWED);
+                } else if (oldPermission == ACCESS_REJECTED) {
+                    mDevice.setPhonebookAccessPermission(BluetoothDevice.ACCESS_REJECTED);
+                }
             }
         }
 

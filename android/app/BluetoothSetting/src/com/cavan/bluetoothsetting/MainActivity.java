@@ -32,7 +32,7 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 	private Button mButtonScan;
 	private ListView mListViewDevices;
 	
-	class DeviceView extends Button implements Callback, View.OnClickListener {
+	class DeviceView extends Button implements Callback {
 		
 		private CachedBluetoothDevice mDevice;
 
@@ -45,8 +45,7 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 			setTextSize(20);
 
 			mDevice.registerCallback(this);
-			setOnClickListener(this);
-			
+
 			onDeviceAttributesChanged();
 		}
 
@@ -68,37 +67,41 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 			builder.append(" - ");
 
-			switch (mDevice.getBondState()) {
-			case BluetoothDevice.BOND_BONDED:
-				builder.append("Bonded");
-				break;
-			case BluetoothDevice.BOND_BONDING:
-				builder.append("Bonding");
-				break;
-			default:
-				builder.append("NotBond");
-				break;
+			if (mDevice.isConnected()) {
+				builder.append("CONNECTED");
+			} else {
+				switch (mDevice.getBondState()) {
+				case BluetoothDevice.BOND_BONDED:
+					builder.append("BONDED");
+					break;
+				case BluetoothDevice.BOND_BONDING:
+					builder.append("BONDING");
+					break;
+				default:
+					builder.append("NOTBOND");
+					break;
+				}
 			}
 
 			setText(builder.toString());
+			setEnabled(true);
 		}
 
-		@Override
-		public void onClick(View v) {
+		public void onClick() {
 			if (mDevice.isConnected()) {
-				Toast.makeText(getApplicationContext(), "start disconnect", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "Disconnect " + mDevice.getName(), Toast.LENGTH_SHORT).show();
 				mDevice.disconnect();
 			} else if (mDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-				Toast.makeText(getApplicationContext(), "start connect", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "Connect to " + mDevice.getName(), Toast.LENGTH_SHORT).show();
 				mDevice.connect(true);
 			} else if (mDevice.getBondState() == BluetoothDevice.BOND_NONE) {
-				Toast.makeText(getApplicationContext(), "start pair", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "Pair to " + mDevice.getName(), Toast.LENGTH_SHORT).show();
 				mDevice.startPairing();
 			}
 		}
 	}
 
-	class DeviceListAdapter extends BaseAdapter {
+	class DeviceListAdapter extends BaseAdapter implements OnClickListener {
 		
 		private DeviceView[] mDevices;
 		
@@ -115,26 +118,31 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			// TODO Auto-generated method stub
-			return mDevices[position];
+			DeviceView view = mDevices[position];
+			view.setOnClickListener(this);
+			return view;
 		}
 		
 		@Override
 		public long getItemId(int position) {
-			// TODO Auto-generated method stub
 			return 0;
 		}
 		
 		@Override
 		public Object getItem(int position) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 		
 		@Override
 		public int getCount() {
-			// TODO Auto-generated method stub
 			return mDevices.length;
+		}
+
+		@Override
+		public void onClick(View v) {
+			Log.e(TAG, "onClick: view = " + v);
+			DeviceView device = (DeviceView) v;
+			device.onClick();
 		}
 	};
 
@@ -160,6 +168,9 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 		mLocalAdapter.enable();
 		mLocalManager.getCachedDeviceManager().clearNonBondedDevices();
 		mLocalAdapter.startScanning(true);
+
+		Toast.makeText(getApplicationContext(), "Scanning", Toast.LENGTH_SHORT).show();
+		updateContent(-1);
 	}
 
 	private void updateContent(int state) {
@@ -216,6 +227,7 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 	@Override
 	public void onClick(View v) {
+		Log.e(TAG, "onClick: view = " + v);
 		startScan();
 	}
 }
