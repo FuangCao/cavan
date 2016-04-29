@@ -23,7 +23,7 @@ import android.bluetooth.BluetoothDevice;
  * LocalBluetoothProfile is an interface defining the basic
  * functionality related to a Bluetooth profile.
  */
-interface LocalBluetoothProfile {
+public interface LocalBluetoothProfile {
 
     /**
      * Returns true if the user can initiate a connection, false otherwise.

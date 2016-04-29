@@ -40,7 +40,7 @@ import java.util.List;
  * functionality that can be performed on the device (connect, pair, disconnect,
  * etc.).
  */
-final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
+public final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
     private static final String TAG = "CachedBluetoothDevice";
     private static final boolean DEBUG = Utils.V;
 
@@ -122,7 +122,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         return sb.toString();
     }
 
-    void onProfileStateChanged(LocalBluetoothProfile profile, int newProfileState) {
+    public void onProfileStateChanged(LocalBluetoothProfile profile, int newProfileState) {
         if (Utils.D) {
             Log.d(TAG, "onProfileStateChanged: profile " + profile +
                     " newProfileState " + newProfileState);
@@ -158,7 +158,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         }
     }
 
-    CachedBluetoothDevice(Context context,
+    public CachedBluetoothDevice(Context context,
                           LocalBluetoothAdapter adapter,
                           LocalBluetoothProfileManager profileManager,
                           BluetoothDevice device) {
@@ -170,7 +170,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         fillData();
     }
 
-    void disconnect() {
+    public void disconnect() {
         for (LocalBluetoothProfile profile : mProfiles) {
             disconnect(profile);
         }
@@ -184,7 +184,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         }
     }
 
-    void disconnect(LocalBluetoothProfile profile) {
+    public void disconnect(LocalBluetoothProfile profile) {
         if (profile.disconnect(mDevice)) {
             if (Utils.D) {
                 Log.d(TAG, "Command sent successfully:DISCONNECT " + describe(profile));
@@ -192,7 +192,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         }
     }
 
-    void connect(boolean connectAllProfiles) {
+    public void connect(boolean connectAllProfiles) {
         if (!ensurePaired()) {
             return;
         }
@@ -201,7 +201,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         connectWithoutResettingTimer(connectAllProfiles);
     }
 
-    void onBondingDockConnect() {
+    public void onBondingDockConnect() {
         // Attempt to connect if UUIDs are available. Otherwise,
         // we will connect when the ACTION_UUID intent arrives.
         connect(false);
@@ -260,7 +260,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
      *
      * @param profile the profile to use with the remote device
      */
-    void connectProfile(LocalBluetoothProfile profile) {
+    public void connectProfile(LocalBluetoothProfile profile) {
         mConnectAttempted = SystemClock.elapsedRealtime();
         // Reset the only-show-one-error-dialog tracking variable
         mIsConnectingErrorPossible = true;
@@ -269,7 +269,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         refresh();
     }
 
-    synchronized void connectInt(LocalBluetoothProfile profile) {
+    public synchronized void connectInt(LocalBluetoothProfile profile) {
         if (!ensurePaired()) {
             return;
         }
@@ -291,7 +291,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         }
     }
 
-    boolean startPairing() {
+    public boolean startPairing() {
         // Pairing is unreliable while scanning, so cancel discovery
         if (mLocalAdapter.isDiscovering()) {
             mLocalAdapter.cancelDiscovery();
@@ -309,11 +309,11 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
      * Return true if user initiated pairing on this device. The message text is
      * slightly different for local vs. remote initiated pairing dialogs.
      */
-    boolean isUserInitiatedPairing() {
+    public boolean isUserInitiatedPairing() {
         return mConnectAfterPairing;
     }
 
-    void unpair() {
+    public void unpair() {
         int state = getBondState();
 
         if (state == BluetoothDevice.BOND_BONDING) {
@@ -336,7 +336,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         }
     }
 
-    int getProfileConnectionState(LocalBluetoothProfile profile) {
+    public int getProfileConnectionState(LocalBluetoothProfile profile) {
         if (mProfileConnectionState == null ||
                 mProfileConnectionState.get(profile) == null) {
             // If cache is empty make the binder call to get the state
@@ -369,18 +369,18 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         dispatchAttributesChanged();
     }
 
-    BluetoothDevice getDevice() {
+    public BluetoothDevice getDevice() {
         return mDevice;
     }
 
-    String getName() {
+    public String getName() {
         return mName;
     }
 
     /**
      * Populate name from BluetoothDevice.ACTION_FOUND intent
      */
-    void setNewName(String name) {
+    public void setNewName(String name) {
         if (mName == null) {
             mName = name;
             if (mName == null || TextUtils.isEmpty(mName)) {
@@ -393,7 +393,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
     /**
      * user changes the device name
      */
-    void setName(String name) {
+    public void setName(String name) {
         if (!mName.equals(name)) {
             mName = name;
             mDevice.setAlias(name);
@@ -401,7 +401,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         }
     }
 
-    void refreshName() {
+    public void refreshName() {
         fetchName();
         dispatchAttributesChanged();
     }
@@ -415,26 +415,26 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         }
     }
 
-    void refresh() {
+    public void refresh() {
         dispatchAttributesChanged();
     }
 
-    boolean isVisible() {
+    public boolean isVisible() {
         return mVisible;
     }
 
-    void setVisible(boolean visible) {
+    public void setVisible(boolean visible) {
         if (mVisible != visible) {
             mVisible = visible;
             dispatchAttributesChanged();
         }
     }
 
-    int getBondState() {
+    public int getBondState() {
         return mDevice.getBondState();
     }
 
-    void setRssi(short rssi) {
+    public void setRssi(short rssi) {
         if (mRssi != rssi) {
             mRssi = rssi;
             dispatchAttributesChanged();
@@ -446,7 +446,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
      *
      * @return Whether it is connected.
      */
-    boolean isConnected() {
+    public boolean isConnected() {
         for (LocalBluetoothProfile profile : mProfiles) {
             int status = getProfileConnectionState(profile);
             if (status == BluetoothProfile.STATE_CONNECTED) {
@@ -457,13 +457,13 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         return false;
     }
 
-    boolean isConnectedProfile(LocalBluetoothProfile profile) {
+    public boolean isConnectedProfile(LocalBluetoothProfile profile) {
         int status = getProfileConnectionState(profile);
         return status == BluetoothProfile.STATE_CONNECTED;
 
     }
 
-    boolean isBusy() {
+    public boolean isBusy() {
         for (LocalBluetoothProfile profile : mProfiles) {
             int status = getProfileConnectionState(profile);
             if (status == BluetoothProfile.STATE_CONNECTING
@@ -513,7 +513,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
      * Refreshes the UI for the BT class, including fetching the latest value
      * for the class.
      */
-    void refreshBtClass() {
+    public void refreshBtClass() {
         fetchBtClass();
         dispatchAttributesChanged();
     }
@@ -521,7 +521,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
     /**
      * Refreshes the UI when framework alerts us of a UUID change.
      */
-    void onUuidChanged() {
+    public void onUuidChanged() {
         updateProfiles();
 
         if (DEBUG) {
@@ -541,7 +541,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         dispatchAttributesChanged();
     }
 
-    void onBondingStateChanged(int bondState) {
+    public void onBondingStateChanged(int bondState) {
         if (bondState == BluetoothDevice.BOND_NONE) {
             mProfiles.clear();
             mConnectAfterPairing = false;  // cancel auto-connect
@@ -563,22 +563,22 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         }
     }
 
-    void setBtClass(BluetoothClass btClass) {
+    public void setBtClass(BluetoothClass btClass) {
         if (btClass != null && mBtClass != btClass) {
             mBtClass = btClass;
             dispatchAttributesChanged();
         }
     }
 
-    BluetoothClass getBtClass() {
+    public BluetoothClass getBtClass() {
         return mBtClass;
     }
 
-    List<LocalBluetoothProfile> getProfiles() {
+    public List<LocalBluetoothProfile> getProfiles() {
         return Collections.unmodifiableList(mProfiles);
     }
 
-    List<LocalBluetoothProfile> getConnectableProfiles() {
+    public List<LocalBluetoothProfile> getConnectableProfiles() {
         List<LocalBluetoothProfile> connectableProfiles =
                 new ArrayList<LocalBluetoothProfile>();
         for (LocalBluetoothProfile profile : mProfiles) {
@@ -589,17 +589,17 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         return connectableProfiles;
     }
 
-    List<LocalBluetoothProfile> getRemovedProfiles() {
+    public List<LocalBluetoothProfile> getRemovedProfiles() {
         return mRemovedProfiles;
     }
 
-    void registerCallback(Callback callback) {
+    public void registerCallback(Callback callback) {
         synchronized (mCallbacks) {
             mCallbacks.add(callback);
         }
     }
 
-    void unregisterCallback(Callback callback) {
+    public void unregisterCallback(Callback callback) {
         synchronized (mCallbacks) {
             mCallbacks.remove(callback);
         }
@@ -660,7 +660,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         void onDeviceAttributesChanged();
     }
 
-    int getPhonebookPermissionChoice() {
+    public int getPhonebookPermissionChoice() {
         int permission = mDevice.getPhonebookAccessPermission();
         if (permission == BluetoothDevice.ACCESS_ALLOWED) {
             return ACCESS_ALLOWED;
@@ -670,7 +670,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         return ACCESS_UNKNOWN;
     }
 
-    void setPhonebookPermissionChoice(int permissionChoice) {
+    public void setPhonebookPermissionChoice(int permissionChoice) {
         int permission = BluetoothDevice.ACCESS_UNKNOWN;
         if (permissionChoice == ACCESS_ALLOWED) {
             permission = BluetoothDevice.ACCESS_ALLOWED;
@@ -703,7 +703,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         editor.commit();
     }
 
-    int getMessagePermissionChoice() {
+    public int getMessagePermissionChoice() {
         int permission = mDevice.getMessageAccessPermission();
         if (permission == BluetoothDevice.ACCESS_ALLOWED) {
             return ACCESS_ALLOWED;
@@ -713,7 +713,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
         return ACCESS_UNKNOWN;
     }
 
-    void setMessagePermissionChoice(int permissionChoice) {
+    public void setMessagePermissionChoice(int permissionChoice) {
         int permission = BluetoothDevice.ACCESS_UNKNOWN;
         if (permissionChoice == ACCESS_ALLOWED) {
             permission = BluetoothDevice.ACCESS_ALLOWED;
@@ -749,7 +749,7 @@ final class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> {
     /**
      * @return Whether this rejection should persist.
      */
-    boolean checkAndIncreaseMessageRejectionCount() {
+    public boolean checkAndIncreaseMessageRejectionCount() {
         if (mMessageRejectionCount < MESSAGE_REJECTION_COUNT_LIMIT_TO_PERSIST) {
             mMessageRejectionCount++;
             saveMessageRejectionCount();

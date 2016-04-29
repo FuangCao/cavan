@@ -54,7 +54,7 @@ public final class LocalBluetoothAdapter {
         mAdapter = adapter;
     }
 
-    void setProfileManager(LocalBluetoothProfileManager manager) {
+    public void setProfileManager(LocalBluetoothProfileManager manager) {
         mProfileManager = manager;
     }
 
@@ -64,7 +64,7 @@ public final class LocalBluetoothAdapter {
      * prepared to handle a null return value.
      * @return the LocalBluetoothAdapter object, or null if not supported
      */
-    static synchronized LocalBluetoothAdapter getInstance() {
+    public static synchronized LocalBluetoothAdapter getInstance() {
         if (sInstance == null) {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter != null) {
@@ -77,68 +77,68 @@ public final class LocalBluetoothAdapter {
 
     // Pass-through BluetoothAdapter methods that we can intercept if necessary
 
-    void cancelDiscovery() {
+    public void cancelDiscovery() {
         mAdapter.cancelDiscovery();
     }
 
-    boolean enable() {
+    public boolean enable() {
         return mAdapter.enable();
     }
 
-    boolean disable() {
+    public boolean disable() {
         return mAdapter.disable();
     }
 
-    void getProfileProxy(Context context,
+    public void getProfileProxy(Context context,
             BluetoothProfile.ServiceListener listener, int profile) {
         mAdapter.getProfileProxy(context, listener, profile);
     }
 
-    Set<BluetoothDevice> getBondedDevices() {
+    public Set<BluetoothDevice> getBondedDevices() {
         return mAdapter.getBondedDevices();
     }
 
-    String getName() {
+    public String getName() {
         return mAdapter.getName();
     }
 
-    int getScanMode() {
+    public int getScanMode() {
         return mAdapter.getScanMode();
     }
 
-    int getState() {
+    public int getState() {
         return mAdapter.getState();
     }
 
-    ParcelUuid[] getUuids() {
+    public ParcelUuid[] getUuids() {
         return mAdapter.getUuids();
     }
 
-    boolean isDiscovering() {
+    public boolean isDiscovering() {
         return mAdapter.isDiscovering();
     }
 
-    boolean isEnabled() {
+    public boolean isEnabled() {
         return mAdapter.isEnabled();
     }
 
-    void setDiscoverableTimeout(int timeout) {
+    public void setDiscoverableTimeout(int timeout) {
         mAdapter.setDiscoverableTimeout(timeout);
     }
 
-    void setName(String name) {
+    public void setName(String name) {
         mAdapter.setName(name);
     }
 
-    void setScanMode(int mode) {
+    public void setScanMode(int mode) {
         mAdapter.setScanMode(mode);
     }
 
-    boolean setScanMode(int mode, int duration) {
+    public boolean setScanMode(int mode, int duration) {
         return mAdapter.setScanMode(mode, duration);
     }
 
-    void startScanning(boolean force) {
+    public void startScanning(boolean force) {
         // Only start if we're not already scanning
         if (!mAdapter.isDiscovering()) {
             if (!force) {
@@ -161,7 +161,7 @@ public final class LocalBluetoothAdapter {
         }
     }
 
-    void stopScanning() {
+    public void stopScanning() {
         if (mAdapter.isDiscovering()) {
             mAdapter.cancelDiscovery();
         }
@@ -173,7 +173,7 @@ public final class LocalBluetoothAdapter {
         return mState;
     }
 
-    synchronized void setBluetoothStateInt(int state) {
+    public synchronized void setBluetoothStateInt(int state) {
         mState = state;
 
         if (state == BluetoothAdapter.STATE_ON) {
@@ -186,7 +186,7 @@ public final class LocalBluetoothAdapter {
     }
 
     // Returns true if the state changed; false otherwise.
-    boolean syncBluetoothState() {
+    public boolean syncBluetoothState() {
         int currentState = mAdapter.getState();
         if (currentState != mState) {
             setBluetoothStateInt(mAdapter.getState());

@@ -31,7 +31,7 @@ import java.util.List;
 /**
  * PanProfile handles Bluetooth PAN profile (NAP and PANU).
  */
-final class PanProfile implements LocalBluetoothProfile {
+public final class PanProfile implements LocalBluetoothProfile {
     private static final String TAG = "PanProfile";
     private static boolean V = true;
 
@@ -67,7 +67,7 @@ final class PanProfile implements LocalBluetoothProfile {
         return mIsProfileReady;
     }
 
-    PanProfile(Context context) {
+    public PanProfile(Context context) {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         adapter.getProfileProxy(context, new PanServiceListener(),
                 BluetoothProfile.PAN);
@@ -126,11 +126,11 @@ final class PanProfile implements LocalBluetoothProfile {
     }
 
     // Tethering direction determines UI strings.
-    void setLocalRole(BluetoothDevice device, int role) {
+    public void setLocalRole(BluetoothDevice device, int role) {
         mDeviceRoleMap.put(device, role);
     }
 
-    boolean isLocalRoleNap(BluetoothDevice device) {
+    public boolean isLocalRoleNap(BluetoothDevice device) {
         if (mDeviceRoleMap.containsKey(device)) {
             return mDeviceRoleMap.get(device) == BluetoothPan.LOCAL_NAP_ROLE;
         } else {

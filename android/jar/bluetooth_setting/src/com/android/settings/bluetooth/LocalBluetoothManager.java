@@ -83,11 +83,11 @@ public final class LocalBluetoothManager {
         return mForegroundActivity;
     }
 
-    boolean isForegroundActivity() {
+    public boolean isForegroundActivity() {
         return mForegroundActivity != null;
     }
 
-    synchronized void setForegroundActivity(Context context) {
+    public synchronized void setForegroundActivity(Context context) {
         if (context != null) {
             Log.d(TAG, "setting foreground activity to non-null context");
             mForegroundActivity = context;
@@ -99,15 +99,15 @@ public final class LocalBluetoothManager {
         }
     }
 
-    CachedBluetoothDeviceManager getCachedDeviceManager() {
+    public CachedBluetoothDeviceManager getCachedDeviceManager() {
         return mCachedDeviceManager;
     }
 
-    BluetoothEventManager getEventManager() {
+    public BluetoothEventManager getEventManager() {
         return mEventManager;
     }
 
-    LocalBluetoothProfileManager getProfileManager() {
+    public LocalBluetoothProfileManager getProfileManager() {
         return mProfileManager;
     }
 }

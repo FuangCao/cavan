@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * HeadsetProfile handles Bluetooth HFP and Headset profiles.
  */
-final class HeadsetProfile implements LocalBluetoothProfile {
+public final class HeadsetProfile implements LocalBluetoothProfile {
     private static final String TAG = "HeadsetProfile";
     private static boolean V = true;
 
@@ -91,7 +91,7 @@ final class HeadsetProfile implements LocalBluetoothProfile {
         return mIsProfileReady;
     }
 
-    HeadsetProfile(Context context, LocalBluetoothAdapter adapter,
+    public HeadsetProfile(Context context, LocalBluetoothAdapter adapter,
             CachedBluetoothDeviceManager deviceManager,
             LocalBluetoothProfileManager profileManager) {
         mLocalAdapter = adapter;

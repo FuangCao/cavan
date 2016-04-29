@@ -24,7 +24,7 @@ import android.bluetooth.BluetoothProfile;
 /**
  * OppProfile handles Bluetooth OPP.
  */
-final class OppProfile implements LocalBluetoothProfile {
+public final class OppProfile implements LocalBluetoothProfile {
 
     static final String NAME = "OPP";
 

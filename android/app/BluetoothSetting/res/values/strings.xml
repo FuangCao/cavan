@@ -230,5 +230,6 @@
     <!-- Restrictions summary for changing bluetooth configuration [CHAR LIMIT=100] -->
     <string name="restriction_bluetooth_config_summary">Allow modification of Bluetooth pairings and settings</string>
     <string name="keywords_voice_input">recognizer input speech speak language hands-free hand free recognition offensive word audio history bluetooth headset</string>
+    <string name="text_scan">扫描</string>
 
 </resources>

@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * MapProfile handles Bluetooth MAP profile.
  */
-final class MapProfile implements LocalBluetoothProfile {
+public final class MapProfile implements LocalBluetoothProfile {
     private static final String TAG = "MapProfile";
     private static boolean V = true;
 
@@ -92,7 +92,7 @@ final class MapProfile implements LocalBluetoothProfile {
         return mIsProfileReady;
     }
 
-    MapProfile(Context context, LocalBluetoothAdapter adapter,
+    public MapProfile(Context context, LocalBluetoothAdapter adapter,
             CachedBluetoothDeviceManager deviceManager,
             LocalBluetoothProfileManager profileManager) {
         mLocalAdapter = adapter;

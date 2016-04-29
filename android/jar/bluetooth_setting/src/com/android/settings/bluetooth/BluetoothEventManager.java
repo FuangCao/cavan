@@ -38,7 +38,7 @@ import java.util.Set;
  * API and dispatches the event on the UI thread to the right class in the
  * Settings.
  */
-final class BluetoothEventManager {
+public final class BluetoothEventManager {
     private static final String TAG = "BluetoothEventManager";
 
     private final LocalBluetoothAdapter mLocalAdapter;
@@ -51,26 +51,26 @@ final class BluetoothEventManager {
     private final Collection<BluetoothCallback> mCallbacks =
             new ArrayList<BluetoothCallback>();
 
-    interface Handler {
+    public interface Handler {
         void onReceive(Context context, Intent intent, BluetoothDevice device);
     }
 
-    void addHandler(String action, Handler handler) {
+    public void addHandler(String action, Handler handler) {
         mHandlerMap.put(action, handler);
         mAdapterIntentFilter.addAction(action);
     }
 
-    void addProfileHandler(String action, Handler handler) {
+    public void addProfileHandler(String action, Handler handler) {
         mHandlerMap.put(action, handler);
         mProfileIntentFilter.addAction(action);
     }
 
     // Set profile manager after construction due to circular dependency
-    void setProfileManager(LocalBluetoothProfileManager manager) {
+    public void setProfileManager(LocalBluetoothProfileManager manager) {
         mProfileManager = manager;
     }
 
-    BluetoothEventManager(LocalBluetoothAdapter adapter,
+    public BluetoothEventManager(LocalBluetoothAdapter adapter,
             CachedBluetoothDeviceManager deviceManager, Context context) {
         mLocalAdapter = adapter;
         mDeviceManager = deviceManager;
@@ -103,19 +103,19 @@ final class BluetoothEventManager {
         mContext.registerReceiver(mBroadcastReceiver, mAdapterIntentFilter);
     }
 
-    void registerProfileIntentReceiver() {
+    public void registerProfileIntentReceiver() {
         mContext.registerReceiver(mBroadcastReceiver, mProfileIntentFilter);
     }
 
     /** Register to start receiving callbacks for Bluetooth events. */
-    void registerCallback(BluetoothCallback callback) {
+    public void registerCallback(BluetoothCallback callback) {
         synchronized (mCallbacks) {
             mCallbacks.add(callback);
         }
     }
 
     /** Unregister to stop receiving callbacks for Bluetooth events. */
-    void unregisterCallback(BluetoothCallback callback) {
+    public void unregisterCallback(BluetoothCallback callback) {
         synchronized (mCallbacks) {
             mCallbacks.remove(callback);
         }
@@ -342,7 +342,7 @@ final class BluetoothEventManager {
             }
         }
     }
-    boolean readPairedDevices() {
+    public boolean readPairedDevices() {
         Set<BluetoothDevice> bondedDevices = mLocalAdapter.getBondedDevices();
         if (bondedDevices == null) {
             return false;

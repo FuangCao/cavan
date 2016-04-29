@@ -20,7 +20,7 @@ package com.android.settings.bluetooth;
  * BluetoothCallback provides a callback interface for the settings
  * UI to receive events from {@link BluetoothEventManager}.
  */
-interface BluetoothCallback {
+public interface BluetoothCallback {
     void onBluetoothStateChanged(int bluetoothState);
     void onScanningStateChanged(boolean started);
     void onDeviceAdded(CachedBluetoothDevice cachedDevice);

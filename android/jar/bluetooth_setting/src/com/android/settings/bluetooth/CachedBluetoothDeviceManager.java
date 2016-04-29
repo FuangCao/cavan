@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * CachedBluetoothDeviceManager manages the set of remote Bluetooth devices.
  */
-final class CachedBluetoothDeviceManager {
+public final class CachedBluetoothDeviceManager {
     private static final String TAG = "CachedBluetoothDeviceManager";
     private static final boolean DEBUG = Utils.D;
 
@@ -36,7 +36,7 @@ final class CachedBluetoothDeviceManager {
     private final List<CachedBluetoothDevice> mCachedDevices =
             new ArrayList<CachedBluetoothDevice>();
 
-    CachedBluetoothDeviceManager(Context context) {
+    public CachedBluetoothDeviceManager(Context context) {
         mContext = context;
     }
 
@@ -66,7 +66,7 @@ final class CachedBluetoothDeviceManager {
      * @return the cached device object for this device, or null if it has
      *   not been previously seen
      */
-    CachedBluetoothDevice findDevice(BluetoothDevice device) {
+    public CachedBluetoothDevice findDevice(BluetoothDevice device) {
         for (CachedBluetoothDevice cachedDevice : mCachedDevices) {
             if (cachedDevice.getDevice().equals(device)) {
                 return cachedDevice;
@@ -81,7 +81,7 @@ final class CachedBluetoothDeviceManager {
      * @param device the address of the new Bluetooth device
      * @return the newly created CachedBluetoothDevice object
      */
-    CachedBluetoothDevice addDevice(LocalBluetoothAdapter adapter,
+    public CachedBluetoothDevice addDevice(LocalBluetoothAdapter adapter,
             LocalBluetoothProfileManager profileManager,
             BluetoothDevice device) {
         CachedBluetoothDevice newDevice = new CachedBluetoothDevice(mContext, adapter,

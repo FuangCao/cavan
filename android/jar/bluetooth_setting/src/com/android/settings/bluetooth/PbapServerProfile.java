@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * PBAPServer Profile
  */
-final class PbapServerProfile implements LocalBluetoothProfile {
+public final class PbapServerProfile implements LocalBluetoothProfile {
     private static final String TAG = "PbapServerProfile";
     private static boolean V = true;
 
@@ -72,7 +72,7 @@ final class PbapServerProfile implements LocalBluetoothProfile {
         return mIsProfileReady;
     }
 
-    PbapServerProfile(Context context) {
+    public PbapServerProfile(Context context) {
         BluetoothPbap pbap = new BluetoothPbap(context, new PbapServiceListener());
     }
 

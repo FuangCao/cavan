@@ -28,7 +28,7 @@ import android.widget.Toast;
  * Android resource IDs, debug logging flags, and static methods
  * for creating dialogs.
  */
-final class Utils {
+public final class Utils {
     static final boolean V = false; // verbose logging
     static final boolean D = true;  // regular logging
 
