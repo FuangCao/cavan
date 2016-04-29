@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -28,12 +29,12 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 	private LocalBluetoothAdapter mLocalAdapter;
 	private LocalBluetoothManager mLocalManager;
-	
+
 	private Button mButtonScan;
 	private ListView mListViewDevices;
-	
+
 	class DeviceView extends Button implements Callback {
-		
+
 		private CachedBluetoothDevice mDevice;
 
 		public DeviceView(Context context, CachedBluetoothDevice device) {
@@ -99,12 +100,24 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 				mDevice.startPairing();
 			}
 		}
+
+		public boolean onLongClick() {
+			if (mDevice.isConnected()) {
+				Toast.makeText(getApplicationContext(), "Disconnect " + mDevice.getName(), Toast.LENGTH_SHORT).show();
+				mDevice.disconnect();
+			} else if (mDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
+				Toast.makeText(getApplicationContext(), "Unpair " + mDevice.getName(), Toast.LENGTH_SHORT).show();
+				mDevice.unpair();
+			}
+
+			return false;
+		}
 	}
 
-	class DeviceListAdapter extends BaseAdapter implements OnClickListener {
-		
+	class DeviceListAdapter extends BaseAdapter implements OnClickListener, OnLongClickListener {
+
 		private DeviceView[] mDevices;
-		
+
 		DeviceListAdapter() {
 			Collection<CachedBluetoothDevice> devices = mLocalManager.getCachedDeviceManager().getCachedDevicesCopy();
 			if (devices != null) {
@@ -120,19 +133,20 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 		public View getView(int position, View convertView, ViewGroup parent) {
 			DeviceView view = mDevices[position];
 			view.setOnClickListener(this);
+			view.setOnLongClickListener(this);
 			return view;
 		}
-		
+
 		@Override
 		public long getItemId(int position) {
 			return 0;
 		}
-		
+
 		@Override
 		public Object getItem(int position) {
 			return null;
 		}
-		
+
 		@Override
 		public int getCount() {
 			return mDevices.length;
@@ -141,8 +155,15 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 		@Override
 		public void onClick(View v) {
 			Log.e(TAG, "onClick: view = " + v);
-			DeviceView device = (DeviceView) v;
-			device.onClick();
+
+			((DeviceView) v).onClick();
+		}
+
+		@Override
+		public boolean onLongClick(View v) {
+			Log.e(TAG, "onLongClick: view = " + v);
+
+			return ((DeviceView) v).onLongClick();
 		}
 	};
 
@@ -150,7 +171,7 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		mButtonScan = (Button) findViewById(R.id.buttonScan);
 		mButtonScan.setOnClickListener(this);
 		mListViewDevices = (ListView) findViewById(R.id.listViewDevices);
