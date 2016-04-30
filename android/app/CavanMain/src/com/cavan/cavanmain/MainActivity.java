@@ -2,10 +2,16 @@ package com.cavan.cavanmain;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,28 +22,45 @@ import android.widget.Button;
 import com.cavan.cavanutils.CavanUtils;
 
 @SuppressLint("HandlerLeak") @SuppressWarnings("deprecation")
-@TargetApi(Build.VERSION_CODES.HONEYCOMB) public class MainActivity extends ActionBarActivity {
+@TargetApi(Build.VERSION_CODES.HONEYCOMB) public class MainActivity extends ActionBarActivity implements OnClickListener {
 
 	public static final String TAG = "Cavan";
 
-	private static final int EVENT_TCP_DD_SERVICE_STATE_CHANGED = 1;
-
-	private TcpDdThread mTcpDdThread;
 	private Button mButtonTcpDdService;
 
-	private Handler mHandler = new Handler() {
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
 		@Override
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case EVENT_TCP_DD_SERVICE_STATE_CHANGED:
-				if (mTcpDdThread == null) {
-					mButtonTcpDdService.setText(R.string.text_start);
-				} else {
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			CavanUtils.logE("action = " + action);
+
+			if (action.equals(CavanService.ACTION_TCP_DD_CHANGED)) {
+				if (intent.getBooleanExtra("state", false)) {
 					mButtonTcpDdService.setText(R.string.text_stop);
+				} else {
+					mButtonTcpDdService.setText(R.string.text_start);
 				}
-				break;
+			} else if (action.equals(CavanService.ACTION_FTP_CHANGED)) {
+			} else if (action.equals(CavanService.ACTION_WEB_PROXY_CHANGED)) {
 			}
+		}
+
+	};
+
+	private ICavanService mService;
+	private ServiceConnection mConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceDisconnected(ComponentName arg0) {
+			CavanUtils.logE("onServiceDisconnected");
+			mService = null;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName arg0, IBinder arg1) {
+			CavanUtils.logE("onServiceConnected");
+			mService = ICavanService.Stub.asInterface(arg1);
 		}
 	};
 
@@ -47,16 +70,17 @@ import com.cavan.cavanutils.CavanUtils;
 		setContentView(R.layout.activity_main);
 
 		mButtonTcpDdService = (Button) findViewById(R.id.buttonTcpDdService);
-		mButtonTcpDdService.setOnClickListener(new OnClickListener() {
+		mButtonTcpDdService.setOnClickListener(this);
 
-			@Override
-			public void onClick(View v) {
-				if (mTcpDdThread == null) {
-					mTcpDdThread = new TcpDdThread();
-					mTcpDdThread.start();
-				}
-			}
-		});
+		Intent service = new Intent(this, CavanService.class);
+		startService(service);
+		bindService(service, mConnection, BIND_AUTO_CREATE);
+	}
+
+	@Override
+	protected void onDestroy() {
+		unbindService(mConnection);
+		super.onDestroy();
 	}
 
 	@Override
@@ -78,16 +102,38 @@ import com.cavan.cavanutils.CavanUtils;
 		return super.onOptionsItemSelected(item);
 	}
 
-	class TcpDdThread extends Thread {
-		@Override
-		public void run() {
-			CavanUtils.logD("doTcpDdServer running");
-			mHandler.sendEmptyMessage(EVENT_TCP_DD_SERVICE_STATE_CHANGED);
-			// CavanNative.doTcpDdServer("-p", "9999", "-s", "0");
-			CavanUtils.doCommand("tcp_dd_server", "-p", "9999", "-s", "0");
-			mTcpDdThread = null;
-			mHandler.sendEmptyMessage(EVENT_TCP_DD_SERVICE_STATE_CHANGED);
-			CavanUtils.logD("doTcpDdServer stopped");
+	@Override
+	protected void onPause() {
+		unregisterReceiver(mReceiver);
+		super.onPause();
+	}
+
+	@Override
+	protected void onResume() {
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(CavanService.ACTION_FTP_CHANGED);
+		filter.addAction(CavanService.ACTION_TCP_DD_CHANGED);
+		filter.addAction(CavanService.ACTION_WEB_PROXY_CHANGED);
+
+		registerReceiver(mReceiver, filter);
+
+		super.onResume();
+	}
+
+	@Override
+	public void onClick(View arg0) {
+		if (mService == null) {
+			return;
+		}
+
+		try {
+			switch (arg0.getId()) {
+			case R.id.buttonTcpDdService:
+				mService.startTcpDdService();
+				break;
+			}
+		} catch (RemoteException e) {
+			e.printStackTrace();
 		}
 	}
 }

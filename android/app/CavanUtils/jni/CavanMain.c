@@ -4,6 +4,8 @@ int CavanMainExecute(JNIEnv *env, jobjectArray args, const char *name, int (*mai
 {
 	int ret;
 
+	optind = 0;
+
 	if (args) {
 		int i;
 		int length = (*env)->GetArrayLength(env, args);

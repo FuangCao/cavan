@@ -1,5 +1,13 @@
 #!/bin/bash
 
+function cavan-android-croot()
+{
+	[ "${ANDROID_BUILD_TOP}" ] &&
+	{
+		cd "${ANDROID_BUILD_TOP}" && return 0
+	}
+}
+
 function cavan-android-lunch()
 {
 	source build/envsetup.sh

@@ -29,13 +29,13 @@ static void show_usage(const char *command)
 	println("Usage:");
 	println("%s [option] [PORT]", command);
 	println("-H, -h, --help\t\t\t%s", cavan_help_message_help);
-	println("-V, -v, --version\t\t%s", cavan_help_message_version);
+	println("-V, --version\t\t%s", cavan_help_message_version);
 	println("-p, --port PORT\t\t\t%s", cavan_help_message_port);
 	println("-A, -a, --adb\t\t\t%s", cavan_help_message_adb);
 	println("-D, -d, --daemon\t\t%s", cavan_help_message_daemon);
 	println("-m, -c, --min\t\t\t%s", cavan_help_message_daemon_min);
 	println("-M, -C, --max\t\t\t%s", cavan_help_message_daemon_max);
-	println("--verbose\t\t\t%s", cavan_help_message_verbose);
+	println("-v, --verbose\t\t\t%s", cavan_help_message_verbose);
 	println("-L, -l, --log\t\t\t%s", cavan_help_message_logfile);
 	println("--pip, --host HOSTNAME\t\t%s", cavan_help_message_proxy_hostname);
 	println("--pp, --pport PORT\t\t%s", cavan_help_message_proxy_port);
@@ -169,7 +169,6 @@ int main(int argc, char *argv[])
 
 	while ((c = getopt_long(argc, argv, "vVhHp:P:c:C:m:M:dDl:L:u:U:", long_option, &option_index)) != EOF) {
 		switch (c) {
-		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
@@ -207,6 +206,7 @@ int main(int argc, char *argv[])
 			service->max = text2value_unsigned(optarg, NULL, 10);
 			break;
 
+		case 'v':
 		case CAVAN_COMMAND_OPTION_VERBOSE:
 			service->verbose = true;
 			break;
