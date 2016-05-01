@@ -3,6 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
     android:key="parent">
+    <PreferenceScreen android:key="start_stop_service" android:title="@string/text_start_service" android:summary="@string/text_service_disconnected"/>
+
 	<com.cavan.cavanmain.TcpDdServicePreference
 	    android:key="tcp_dd_service"
 	    android:persistent="true"

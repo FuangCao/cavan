@@ -11,5 +11,9 @@
     <string name="text_stopped">已停止运行</string>
     <string name="text_port_setting">端口号设置</string>
     <string name="text_port">端口号</string>
+    <string name="text_start_service">启动服务</string>
+    <string name="text_close_service">关闭服务</string>
+    <string name="text_service_connected">已连接到服务</string>
+    <string name="text_service_disconnected">已断开服务</string>
 
 </resources>

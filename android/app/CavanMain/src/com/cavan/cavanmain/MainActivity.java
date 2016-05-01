@@ -10,7 +10,9 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceScreen;
 
 import com.cavan.cavanutils.CavanUtils;
 
@@ -18,10 +20,14 @@ public class MainActivity extends PreferenceActivity {
 
 	public static final String TAG = "Cavan";
 
-	private static final String[] KEY_LIST = {
+	private static final String KEY_START_STOP = "start_stop_service";
+	private static final String[] KEY_SERVICE_LIST = {
 		"ftp_service", "tcp_dd_service", "web_proxy_service"
 	};
 
+	private ICavanService mService;
+
+	private Preference mPreferenceStartStop;
 	private HashMap<String, CavanServicePreference> mHashMapPreference = new HashMap<String, CavanServicePreference>();
 
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -58,8 +64,28 @@ public class MainActivity extends PreferenceActivity {
 	};
 
 	public void setService(ICavanService service) {
+		mService = service;
+
 		for (CavanServicePreference preference : mHashMapPreference.values()) {
 			preference.setService(service);
+		}
+
+		if (service == null) {
+			mPreferenceStartStop.setTitle(R.string.text_start_service);
+			mPreferenceStartStop.setSummary(R.string.text_service_disconnected);
+		} else {
+			mPreferenceStartStop.setTitle(R.string.text_close_service);
+			mPreferenceStartStop.setSummary(R.string.text_service_connected);
+		}
+	}
+
+	private void startService(boolean enable) {
+		Intent service = new Intent(this, CavanService.class);
+		if (enable) {
+			bindService(service, mConnection, 0); // BIND_AUTO_CREATE);
+			startService(service);
+		} else {
+			stopService(service);
 		}
 	}
 
@@ -69,7 +95,7 @@ public class MainActivity extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.cavan_service);
 
-		for (String key : KEY_LIST) {
+		for (String key : KEY_SERVICE_LIST) {
 			CavanServicePreference preference = (CavanServicePreference) findPreference(key);
 			if (preference == null) {
 				continue;
@@ -80,9 +106,8 @@ public class MainActivity extends PreferenceActivity {
 			mHashMapPreference.put(key, preference);
 		}
 
-		Intent service = new Intent(this, CavanService.class);
-		startService(service);
-		bindService(service, mConnection, BIND_AUTO_CREATE);
+		mPreferenceStartStop = findPreference(KEY_START_STOP);
+		startService(true);
 	}
 
 	@Override
@@ -108,5 +133,18 @@ public class MainActivity extends PreferenceActivity {
 		registerReceiver(mReceiver, filter);
 
 		super.onResume();
+	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
+			Preference preference) {
+
+		String key = preference.getKey();
+		if (key.equals(KEY_START_STOP)) {
+			startService(mService == null);
+		}
+
+		return super.onPreferenceTreeClick(preferenceScreen, preference);
 	}
 }
