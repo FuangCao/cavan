@@ -8,22 +8,4 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.cavan.cavanmain.MainActivity" >
 
-    <TextView
-        android:id="@+id/textViewTcpDdService"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignBottom="@+id/buttonTcpDdService"
-        android:text="@string/text_tcp_dd_service"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <Button
-        android:id="@+id/buttonTcpDdService"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:text="@string/text_start"
-        android:textSize="@dimen/button_text_size" />
-
 </RelativeLayout>

@@ -24,4 +24,15 @@ public class FtpServicePreference extends CavanServicePreference {
 	protected String getAction() {
 		return CavanService.ACTION_FTP_CHANGED;
 	}
+
+	@Override
+	protected int getPort(ICavanService service) throws RemoteException {
+		return	service.getFtpServicePort();
+	}
+
+	@Override
+	protected void setPort(ICavanService service, int port)
+			throws RemoteException {
+		service.setFtpServicePort(port);
+	}
 }

@@ -24,4 +24,15 @@ public class TcpDdServicePreference extends CavanServicePreference {
 	protected String getAction() {
 		return CavanService.ACTION_TCP_DD_CHANGED;
 	}
+
+	@Override
+	protected int getPort(ICavanService service) throws RemoteException {
+		return service.getTcpDdServicePort();
+	}
+
+	@Override
+	protected void setPort(ICavanService service, int port)
+			throws RemoteException {
+		service.setTcpDdServicePort(port);
+	}
 }

@@ -10,9 +10,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceScreen;
 
 import com.cavan.cavanutils.CavanUtils;
 
@@ -110,18 +108,5 @@ public class MainActivity extends PreferenceActivity {
 		registerReceiver(mReceiver, filter);
 
 		super.onResume();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
-			Preference preference) {
-		String key = preference.getKey();
-		CavanServicePreference service = mHashMapPreference.get(key);
-		if (service != null) {
-			service.start();
-		}
-
-		return super.onPreferenceTreeClick(preferenceScreen, preference);
 	}
 }

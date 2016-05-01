@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">CavanMain</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
-    <string name="text_tcp_dd_service">TcpDdService:</string>
+    <string name="app_name">服务管理器</string>
     <string name="text_start">启动</string>
     <string name="text_stop">停止</string>
     <string name="ftp_service">FTP 服务器</string>
@@ -12,5 +9,7 @@
     <string name="web_proxy_service">Web 代理服务器</string>
     <string name="text_running">正在运行</string>
     <string name="text_stopped">已停止运行</string>
+    <string name="text_port_setting">端口号设置</string>
+    <string name="text_port">端口号</string>
 
 </resources>

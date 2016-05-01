@@ -5,17 +5,27 @@ import android.content.Intent;
 
 public abstract class CavanBaseService {
 
+	private int mPort;
 	private String mName;
 	private String mAction;
 	private Context mContext;
 	private boolean mStopped = true;
 
-	public abstract void runDeamon();
+	public abstract void runDeamon(int port);
 
-	public CavanBaseService(Context context, String name, String action) {
+	public CavanBaseService(Context context, String name, String action, int port) {
+		mPort = port;
 		mName = name;
 		mAction = action;
 		mContext = context;
+	}
+
+	public int getPort() {
+		return mPort;
+	}
+
+	public void setPort(int port) {
+		mPort = port;
 	}
 
 	class MyThread extends Thread {
@@ -26,7 +36,7 @@ public abstract class CavanBaseService {
 				CavanUtils.logE("Enter: service " + mName);
 				mStopped = false;
 				sendStateBroadcast(true);
-				runDeamon();
+				runDeamon(mPort);
 				mStopped = true;
 				sendStateBroadcast(false);
 				CavanUtils.logE("Exit: service " + mName);
