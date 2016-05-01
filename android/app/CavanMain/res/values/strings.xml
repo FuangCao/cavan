@@ -7,5 +7,10 @@
     <string name="text_tcp_dd_service">TcpDdService:</string>
     <string name="text_start">启动</string>
     <string name="text_stop">停止</string>
+    <string name="ftp_service">FTP 服务器</string>
+    <string name="tcp_dd_service">TCP_DD 服务器</string>
+    <string name="web_proxy_service">Web 代理服务器</string>
+    <string name="text_running">正在运行</string>
+    <string name="text_stopped">已停止运行</string>
 
 </resources>

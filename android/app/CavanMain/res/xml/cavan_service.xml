@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
+    android:key="parent">
+	<com.cavan.cavanmain.TcpDdServicePreference
+	    android:key="tcp_dd_service"
+	    android:persistent="false"
+	    android:title="@string/tcp_dd_service"/>
+
+	<com.cavan.cavanmain.FtpServicePreference
+	    android:key="ftp_service"
+	    android:persistent="false"
+	    android:title="@string/ftp_service"/>
+
+	<com.cavan.cavanmain.WebProxyServicePreference
+	    android:key="web_proxy_service"
+	    android:persistent="false"
+	    android:title="@string/web_proxy_service"/>
+
+</PreferenceScreen>

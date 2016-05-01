@@ -1,32 +1,30 @@
 package com.cavan.cavanmain;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
+import java.util.HashMap;
+
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.RemoteException;
-import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.preference.Preference;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceScreen;
 
 import com.cavan.cavanutils.CavanUtils;
 
-@SuppressLint("HandlerLeak") @SuppressWarnings("deprecation")
-@TargetApi(Build.VERSION_CODES.HONEYCOMB) public class MainActivity extends ActionBarActivity implements OnClickListener {
+public class MainActivity extends PreferenceActivity {
 
 	public static final String TAG = "Cavan";
 
-	private Button mButtonTcpDdService;
+	private static final String[] KEY_LIST = {
+		"ftp_service", "tcp_dd_service", "web_proxy_service"
+	};
+
+	private HashMap<String, CavanServicePreference> mHashMapPreference = new HashMap<String, CavanServicePreference>();
 
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
@@ -35,42 +33,54 @@ import com.cavan.cavanutils.CavanUtils;
 			String action = intent.getAction();
 			CavanUtils.logE("action = " + action);
 
-			if (action.equals(CavanService.ACTION_TCP_DD_CHANGED)) {
-				if (intent.getBooleanExtra("state", false)) {
-					mButtonTcpDdService.setText(R.string.text_stop);
-				} else {
-					mButtonTcpDdService.setText(R.string.text_start);
+			for (CavanServicePreference preference : mHashMapPreference.values()) {
+				if (preference.getAction().equals(action)) {
+					boolean state = intent.getBooleanExtra("state", false);
+					preference.updateSummary(state);
+					break;
 				}
-			} else if (action.equals(CavanService.ACTION_FTP_CHANGED)) {
-			} else if (action.equals(CavanService.ACTION_WEB_PROXY_CHANGED)) {
 			}
 		}
-
 	};
 
-	private ICavanService mService;
 	private ServiceConnection mConnection = new ServiceConnection() {
 
 		@Override
 		public void onServiceDisconnected(ComponentName arg0) {
 			CavanUtils.logE("onServiceDisconnected");
-			mService = null;
+			setService(null);
 		}
 
 		@Override
 		public void onServiceConnected(ComponentName arg0, IBinder arg1) {
 			CavanUtils.logE("onServiceConnected");
-			mService = ICavanService.Stub.asInterface(arg1);
+			ICavanService service = ICavanService.Stub.asInterface(arg1);
+			setService(service);
 		}
 	};
 
+	public void setService(ICavanService service) {
+		for (CavanServicePreference preference : mHashMapPreference.values()) {
+			preference.setService(service);
+		}
+	}
+
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		addPreferencesFromResource(R.xml.cavan_service);
 
-		mButtonTcpDdService = (Button) findViewById(R.id.buttonTcpDdService);
-		mButtonTcpDdService.setOnClickListener(this);
+		for (String key : KEY_LIST) {
+			CavanServicePreference preference = (CavanServicePreference) findPreference(key);
+			if (preference == null) {
+				continue;
+			}
+
+			CavanUtils.logE("key = " + key + ", preference = " + preference);
+
+			mHashMapPreference.put(key, preference);
+		}
 
 		Intent service = new Intent(this, CavanService.class);
 		startService(service);
@@ -84,25 +94,6 @@ import com.cavan.cavanutils.CavanUtils;
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
 	protected void onPause() {
 		unregisterReceiver(mReceiver);
 		super.onPause();
@@ -111,29 +102,26 @@ import com.cavan.cavanutils.CavanUtils;
 	@Override
 	protected void onResume() {
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(CavanService.ACTION_FTP_CHANGED);
-		filter.addAction(CavanService.ACTION_TCP_DD_CHANGED);
-		filter.addAction(CavanService.ACTION_WEB_PROXY_CHANGED);
+
+		for (CavanServicePreference preference : mHashMapPreference.values()) {
+			filter.addAction(preference.getAction());
+		}
 
 		registerReceiver(mReceiver, filter);
 
 		super.onResume();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
-	public void onClick(View arg0) {
-		if (mService == null) {
-			return;
+	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
+			Preference preference) {
+		String key = preference.getKey();
+		CavanServicePreference service = mHashMapPreference.get(key);
+		if (service != null) {
+			service.start();
 		}
 
-		try {
-			switch (arg0.getId()) {
-			case R.id.buttonTcpDdService:
-				mService.startTcpDdService();
-				break;
-			}
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
+		return super.onPreferenceTreeClick(preferenceScreen, preference);
 	}
 }
