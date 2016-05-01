@@ -20,7 +20,13 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 	public void setService(ICavanService service) {
 		mService = service;
-		updateState();
+
+		if (service == null) {
+			setEnabled(false);
+		} else {
+			setEnabled(true);
+			updateState();
+		}
 	}
 
 	public ICavanService getService() {
