@@ -24,7 +24,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name="CavanService"></service>
+        <service
+            android:name="com.cavan.cavanutils.FtpService"
+            android:persistent="true" />
+        <service
+            android:name="com.cavan.cavanutils.TcpDdService"
+            android:persistent="true" />
+        <service
+            android:name="com.cavan.cavanutils.WebProxyService"
+            android:persistent="true" />
     </application>
 
 </manifest>

@@ -3,19 +3,18 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
     android:key="parent">
-    <PreferenceScreen android:key="start_stop_service" android:title="@string/text_start_service" android:summary="@string/text_service_disconnected"/>
 
-	<com.cavan.cavanmain.TcpDdServicePreference
+	<com.cavan.cavanutils.CavanServicePreference
 	    android:key="tcp_dd_service"
 	    android:persistent="true"
 	    android:title="@string/tcp_dd_service"/>
 
-	<com.cavan.cavanmain.FtpServicePreference
+	<com.cavan.cavanutils.CavanServicePreference
 	    android:key="ftp_service"
 	    android:persistent="true"
 	    android:title="@string/ftp_service"/>
 
-	<com.cavan.cavanmain.WebProxyServicePreference
+	<com.cavan.cavanutils.CavanServicePreference
 	    android:key="web_proxy_service"
 	    android:persistent="true"
 	    android:title="@string/web_proxy_service"/>
