@@ -171,6 +171,12 @@ int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u1
 	return tcp_dd_send_request2(&client, pkg, type, length, flags);
 }
 
+int tcp_dd_send_empty_request(struct network_client *client, u16 type, struct tcp_dd_package *response, u32 flags)
+{
+	struct tcp_dd_package pkg;
+
+	return tcp_dd_send_request(client, &pkg, response, type, TCP_DD_PKG_HEADER_LEN, flags);
+}
 
 static char *tcp_dd_find_platform_by_name_path(char *pathname, char *filename, size_t size)
 {
@@ -1144,6 +1150,7 @@ static void tcp_dd_service_close_connect(struct cavan_dynamic_service *service, 
 static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 {
 	int ret;
+	char hostname[64];
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
 	ret = network_service_open(&dd_service->service, &dd_service->url, 0);
@@ -1152,10 +1159,12 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		return ret;
 	}
 
-	if (dd_service->discovery.port > 0) {
-		char hostname[64];
+	dd_service->discovery_message_size = snprintf(dd_service->discovery_message,
+		sizeof(dd_service->discovery_message), "TCP_DD: port = %d, hostname = %s",
+		dd_service->url.port, network_get_hostname(hostname, sizeof(hostname)));
 
-		ret = network_discovery_service_start(&dd_service->discovery, "TCP_DD: port = %d, hostname = %s", dd_service->url.port, network_get_hostname(hostname, sizeof(hostname)));
+	if (dd_service->discovery.port > 0) {
+		ret = network_discovery_service_start(&dd_service->discovery, dd_service->discovery_message);
 		if (ret < 0) {
 			pd_red_info("network_discovery_service_start");
 			goto out_network_service_close;
@@ -1289,6 +1298,9 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 		pd_bold_info("TCP_DD_RDDIR");
 		ret = tcp_dd_handle_rddir_request(client, &pkg.rddir_pkg);
 		break;
+
+	case TCP_DD_DISCOVERY:
+		return network_client_send_text(client, dd_service->discovery_message);
 
 	default:
 		pd_red_info("Unknown package type %d", pkg.type);
@@ -1845,4 +1857,100 @@ int tcp_dd_mkdir(struct network_url *url, const char *pathname, mode_t mode)
 	length = ADDR_OFFSET(text_ncopy(pkg.mkdir_pkg.pathname, pathname, sizeof(pkg.mkdir_pkg.pathname)), &pkg) + 1;
 
 	return tcp_dd_send_request4(url, &pkg, TCP_DD_MKDIR, length, 0);
+}
+
+int tcp_dd_discovery_one(struct network_url *url, char *message, size_t size)
+{
+	int ret;
+	struct network_client client;
+
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	if (ret < 0) {
+		// pr_red_info("network_client_open2");
+		return ret;
+	}
+
+	ret = tcp_dd_send_empty_request(&client, TCP_DD_DISCOVERY, NULL, 0);
+	if (ret < 0) {
+		pr_red_info("tcp_dd_send_empty_request: %d", ret);
+		goto out_client_close;
+	}
+
+	ret = network_client_recv(&client, message, size - 1);
+	if (ret > 0) {
+		message[ret] = 0;
+	}
+
+out_client_close:
+	client.close(&client);
+	return ret;
+}
+
+static void *tcp_dd_discovery_thread(void *_data)
+{
+	int length;
+	char hostname[8];
+	char message[1024];
+	struct network_url url;
+	struct cavan_tcp_dd_discovery_data *data = _data;
+
+	pthread_mutex_lock(data->lock);
+	(*data->pendding)++;
+	pthread_mutex_unlock(data->lock);
+
+	value2text_unsigned_simple(data->address, hostname, sizeof(hostname), 10);
+	network_url_init(&url, data->protocol, hostname, data->port, NULL);
+
+	length = tcp_dd_discovery_one(&url, message, sizeof(message));
+	if (length > 0) {
+		data->handler(message, data->private_data);
+	}
+
+	pthread_mutex_lock(data->lock);
+	(*data->pendding)--;
+	pthread_mutex_unlock(data->lock);
+
+	return NULL;
+}
+
+int tcp_dd_discovery(u16 port, void *data, void (*handler)(const char *message, void *data))
+{
+	int i;
+	int pendding = 0;
+	pthread_mutex_t lock;
+	struct cavan_tcp_dd_discovery_data discovery_datas[255];
+
+	pthread_mutex_init(&lock, NULL);
+
+	for (i = 0; i < NELEM(discovery_datas); i++) {
+		struct cavan_tcp_dd_discovery_data *p = discovery_datas + i;
+
+		p->port = port;
+		p->address = i;
+		p->protocol = "tcp";
+		p->private_data = data;
+		p->handler = handler;
+		p->lock = &lock;
+		p->pendding = &pendding;
+
+		cavan_pthread_create(&p->thread, tcp_dd_discovery_thread, p, false);
+	}
+
+	pthread_mutex_lock(&lock);
+
+	for (i = 0; i < 5; i++) {
+		pthread_mutex_unlock(&lock);
+		msleep(1000);
+		pthread_mutex_lock(&lock);
+
+		if (pendding == 0) {
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&lock);
+
+	pthread_mutex_destroy(&lock);
+
+	return 0;
 }

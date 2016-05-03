@@ -14,11 +14,11 @@ public abstract class CavanService extends Service {
 
 		@Override
 		public void run() {
-			CavanUtils.logE("Enter: service " + getName());
+			CavanUtils.logE("Enter: service " + getServiceName());
 			setState(true);
 			mainServiceLoop(mPort);
 			setState(false);
-			CavanUtils.logE("Exit: service " + getName());
+			CavanUtils.logE("Exit: service " + getServiceName());
 		}
 	}
 
@@ -48,16 +48,24 @@ public abstract class CavanService extends Service {
 		public String getAction() throws RemoteException {
 			return getServiceAction();
 		}
+
+		@Override
+		public boolean stop() throws RemoteException {
+			if (CavanUtils.doServiceManager("stop", getServiceName()) < 0) {
+				return false;
+			}
+
+			return true;
+		}
 	}
+
+	public abstract int getDefaultPort();
+	public abstract String getServiceName();
+	protected abstract void mainServiceLoop(int port);
 
 	public CavanService() {
 		super();
 		mPort = getDefaultPort();
-	}
-
-	@Override
-	public IBinder onBind(Intent arg0) {
-		return new MyBinder();
 	}
 
 	private void sendStateBroadcast(boolean state) {
@@ -75,7 +83,8 @@ public abstract class CavanService extends Service {
 		return "cavan.intent.action." + getServiceName();
 	}
 
-	public abstract int getDefaultPort();
-	public abstract String getServiceName();
-	protected abstract void mainServiceLoop(int port);
+	@Override
+	public IBinder onBind(Intent arg0) {
+		return new MyBinder();
+	}
 }

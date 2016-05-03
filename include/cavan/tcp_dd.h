@@ -25,6 +25,7 @@
 #define TCP_DDF_SKIP_EXIST			(1 << 1)
 
 #define TCP_DD_PKG_BODY_OFFSET	offsetof(struct tcp_dd_package, body)
+#define TCP_DD_PKG_HEADER_LEN	TCP_DD_PKG_BODY_OFFSET
 
 typedef int (*tcp_dd_handler_t)(struct network_url *url, struct network_file_request *req, u32 flags);
 
@@ -41,6 +42,7 @@ enum tcp_dd_package_type {
 	TCP_DD_RDDIR,
 	TCP_DD_FILE_STAT,
 	TCP_DD_BREAKPOINT,
+	TCP_DD_DISCOVERY,
 	TCP_DD_PACKAGE_COUNT
 };
 
@@ -120,6 +122,21 @@ struct cavan_tcp_dd_service {
 	const char *keypad_ko;
 	struct cavan_part_table *part_table;
 	struct network_discovery_service discovery;
+	char discovery_message[1024];
+	int discovery_message_size;
+};
+
+struct cavan_tcp_dd_discovery_data {
+	u16 port;
+	u8 address;
+	int *pendding;
+	const char *protocol;
+	pthread_mutex_t *lock;
+
+	pthread_t thread;
+	void *private_data;
+
+	void (*handler)(const char *message, void * data);
 };
 
 void tcp_dd_set_package_type(struct tcp_dd_package *pkg, u16 type);
@@ -131,6 +148,7 @@ int tcp_dd_send_request(struct network_client *client, struct tcp_dd_package *pk
 int tcp_dd_send_request2(struct network_client *client, struct tcp_dd_package *pkg, u16 type, size_t length, u32 flags);
 int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, struct tcp_dd_package *response, u16 type, size_t length, u32 flags);
 int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u16 type, size_t length, u32 flags);
+int tcp_dd_send_empty_request(struct network_client *client, u16 type, struct tcp_dd_package *response, u32 flags);
 
 int tcp_dd_get_partition_filename(const char *name, char *buff, size_t size);
 const char *tcp_dd_get_partition_pathname(struct cavan_tcp_dd_service *service, const char *name);
@@ -146,3 +164,5 @@ int tcp_alarm_remove(struct network_url *url, int index);
 int tcp_alarm_list(struct network_url *url, int index);
 
 int tcp_dd_mkdir(struct network_url *url, const char *pathname, mode_t mode);
+int tcp_dd_discovery_one(struct network_url *url, char *message, size_t size);
+int tcp_dd_discovery(u16 port, void *data, void (*handler)(const char *message, void *data));

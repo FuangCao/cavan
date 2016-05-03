@@ -68,3 +68,9 @@ then
 else
 	echo "Run directly in the shell"
 fi
+
+算术运算有四种方式:
+1. AA=$(expr 4 + 5)
+2. AA=$((4 + 5))
+3. AA=$[4 + 5]
+4. let AA="4+5"

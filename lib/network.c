@@ -152,7 +152,9 @@ const char *inet_check_hostname(const char *hostname, char *buff, size_t size)
 		}
 	}
 
+#if CAVAN_NETWORK_DEBUG
 	println("hostname = %s", hostname);
+#endif
 
 	return hostname;
 }
@@ -2036,7 +2038,9 @@ static int network_client_tcp_open(struct network_client *client, const struct n
 
 	sockfd = network_create_link(url->hostname, port, SOCK_STREAM, 0);
 	if (sockfd < 0) {
+#if CAVAN_NETWORK_DEBUG
 		pr_err_info("inet_socket");
+#endif
 		return sockfd;
 	}
 
@@ -3155,7 +3159,9 @@ int network_client_open(struct network_client *client, const struct network_url 
 {
 	const struct network_protocol_desc *desc;
 
+#if CAVAN_NETWORK_DEBUG
 	pr_bold_info("URL = %s", network_url_tostring(url, NULL, 0, NULL));
+#endif
 
 	desc = network_get_protocol_by_name(url->protocol);
 	if (desc == NULL) {

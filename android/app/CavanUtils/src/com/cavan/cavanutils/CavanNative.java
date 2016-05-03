@@ -484,6 +484,13 @@ class CavanCommandService implements ICavanCommand {
 	}
 }
 
+class CavanCommandServiceManager implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doServiceManager(args);
+	}
+}
+
 class CavanCommandSha1sum implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -902,6 +909,7 @@ public class CavanNative {
 		sHashMap.put("rle", new CavanCommandRle());
 		sHashMap.put("screen_mirror", new CavanCommandScreenMirror());
 		sHashMap.put("service", new CavanCommandService());
+		sHashMap.put("service_manager", new CavanCommandServiceManager());
 		sHashMap.put("sha1sum", new CavanCommandSha1sum());
 		sHashMap.put("show_file", new CavanCommandShowFile());
 		sHashMap.put("shrink", new CavanCommandShrink());
@@ -1021,6 +1029,7 @@ public class CavanNative {
 	public static native int doRle(String... args);
 	public static native int doScreenMirror(String... args);
 	public static native int doService(String... args);
+	public static native int doServiceManager(String... args);
 	public static native int doSha1sum(String... args);
 	public static native int doShowFile(String... args);
 	public static native int doShrink(String... args);

@@ -478,6 +478,13 @@ JNIEXPORT jint Java_com_cavan_cavanutils_CavanNative_doService(JNIEnv *env, jcla
 	return CavanMainExecute(env, args, "service", do_cavan_service);
 }
 
+extern int do_cavan_service_manager(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanutils_CavanNative_doServiceManager(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "service_manager", do_cavan_service_manager);
+}
+
 extern int do_cavan_sha1sum(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanutils_CavanNative_doSha1sum(JNIEnv *env, jclass clazz, jobjectArray args)

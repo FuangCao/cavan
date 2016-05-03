@@ -14,6 +14,9 @@
 
 #define CAVAN_SERVICE_DEBUG		0
 
+int cavan_dynamic_service_count;
+struct cavan_dynamic_service *cavan_dynamic_services[10];
+
 static const char *cavan_locale_envs[] = {
 	"LC_PAPER",
 	"LC_ADDRESS",
@@ -436,6 +439,22 @@ static void *cavan_dynamic_service_handler(void *data)
 	return NULL;
 }
 
+static void cavan_dynamic_service_wait_stop_complete(struct cavan_dynamic_service *service)
+{
+	int i;
+
+	pthread_mutex_lock(&service->lock);
+
+	for (i = 0; i < 20 && service->stopping; i++) {
+		service->state = CAVAN_SERVICE_STATE_STOPPED;
+		pthread_mutex_unlock(&service->lock);
+		msleep(100);
+		pthread_mutex_lock(&service->lock);
+	}
+
+	pthread_mutex_unlock(&service->lock);
+}
+
 int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync)
 {
 	int i;
@@ -595,6 +614,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	service->count = 0;
 	service->used = 0;
 	service->index = 0;
+	service->stopping = false;
 	service->state = CAVAN_SERVICE_STATE_RUNNING;
 
 	ret = service->start(service);
@@ -612,7 +632,10 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	pd_bold_info("conn_size = %" PRINT_FORMAT_SIZE, service->conn_size);
 
 	if (sync) {
+		cavan_dynamic_service_register(service);
 		cavan_dynamic_service_handler(service);
+		cavan_dynamic_service_wait_stop_complete(service);
+		cavan_dynamic_service_unregister(service);
 	} else {
 		int i;
 
@@ -637,6 +660,8 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		}
 
 		pthread_mutex_unlock(&service->lock);
+
+		cavan_dynamic_service_register(service);
 	}
 
 	return 0;
@@ -663,6 +688,9 @@ void cavan_dynamic_service_join(struct cavan_dynamic_service *service)
 
 	pthread_mutex_unlock(&service->lock);
 
+	cavan_dynamic_service_wait_stop_complete(service);
+	cavan_dynamic_service_unregister(service);
+
 	pd_bold_info("service %s stopped", service->name);
 }
 
@@ -682,6 +710,8 @@ int cavan_dynamic_service_run(struct cavan_dynamic_service *service)
 int cavan_dynamic_service_stop(struct cavan_dynamic_service *service)
 {
 	pthread_mutex_lock(&service->lock);
+
+	service->stopping = true;
 
 	if (service->state == CAVAN_SERVICE_STATE_RUNNING) {
 		int i;
@@ -703,7 +733,83 @@ int cavan_dynamic_service_stop(struct cavan_dynamic_service *service)
 		}
 	}
 
+	service->stopping = false;
+
 	pthread_mutex_unlock(&service->lock);
 
+	cavan_dynamic_service_unregister(service);
+
 	return 0;
+}
+
+bool cavan_dynamic_service_register(struct cavan_dynamic_service *service)
+{
+	int i;
+
+	for (i = 0; i < NELEM(cavan_dynamic_services); i++) {
+		if (cavan_dynamic_services[i] == NULL) {
+			cavan_dynamic_services[i] = service;
+			cavan_dynamic_service_count++;
+			return true;
+		} else if (cavan_dynamic_services[i] == service) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool cavan_dynamic_service_unregister(struct cavan_dynamic_service *service)
+{
+	int i;
+
+	for (i = 0; i < NELEM(cavan_dynamic_services); i++) {
+		if (cavan_dynamic_services[i] == service) {
+			cavan_dynamic_services[i] = NULL;
+			cavan_dynamic_service_count--;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+struct cavan_dynamic_service *cavan_dynamic_service_find(const char *name)
+{
+	int i;
+
+	for (i = 0; i < NELEM(cavan_dynamic_services); i++) {
+		struct cavan_dynamic_service *service = cavan_dynamic_services[i];
+		if (service && strcmp(service->name, name) == 0) {
+			return service;
+		}
+	}
+
+	return NULL;
+}
+
+boolean cavan_dynamic_service_stop_by_name(const char *name)
+{
+	struct cavan_dynamic_service *service;
+
+	service = cavan_dynamic_service_find(name);
+	if (service == NULL) {
+		return false;
+	}
+
+	cavan_dynamic_service_stop(service);
+
+	return true;
+}
+
+void cavan_dynamic_service_scan(void *data, void (*handler)(struct cavan_dynamic_service *service, void *data))
+{
+	int i;
+
+	for (i = 0; i < NELEM(cavan_dynamic_services); i++) {
+		struct cavan_dynamic_service *service = cavan_dynamic_services[i];
+		if (service) {
+			handler(service, data);
+		}
+	}
 }
