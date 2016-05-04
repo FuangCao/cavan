@@ -3773,6 +3773,7 @@ static void *tcp_discovery_client_thread(void *_data)
 	if (ret >= 0) {
 		pthread_mutex_lock(&discovery->lock);
 
+		data->index = discovery->count + 1;
 		if (discovery->handler(discovery, data)) {
 			discovery->count++;
 		}
@@ -3800,7 +3801,7 @@ static bool tcp_discovery_client_handler_dummy(struct tcp_discovery_client *disc
 		return false;
 	}
 
-	pr_green_info("IP = %s", inet_ntoa(addr));
+	pr_green_info("%03d. %s", data->index, inet_ntoa(addr));
 
 	return true;
 }

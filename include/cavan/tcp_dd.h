@@ -122,8 +122,6 @@ struct cavan_tcp_dd_service {
 	const char *keypad_ko;
 	struct cavan_part_table *part_table;
 	struct udp_discovery_service discovery;
-	char discovery_message[1024];
-	int discovery_message_size;
 };
 
 struct tcp_dd_discovery_client {

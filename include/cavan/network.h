@@ -319,10 +319,12 @@ struct udp_discovery_service {
 
 struct tcp_discovery_data {
 	pthread_t thread;
-	bool pendding;
 	struct network_url url;
 	struct network_client client;
 	struct tcp_discovery_client *discovery;
+
+	int index;
+	bool pendding;
 };
 
 struct tcp_discovery_client {

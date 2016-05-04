@@ -1135,6 +1135,14 @@ out_closedir:
 	return ret;
 }
 
+static int tcp_dd_handle_discovery_request(struct network_client *client)
+{
+	char hostname[64];
+
+	return network_client_printf(client, "TCP_DD: hostname = %s",
+		network_get_hostname(hostname, sizeof(hostname)));
+}
+
 static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
@@ -1150,7 +1158,6 @@ static void tcp_dd_service_close_connect(struct cavan_dynamic_service *service, 
 static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 {
 	int ret;
-	char hostname[64];
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
 	ret = network_service_open(&dd_service->service, &dd_service->url, 0);
@@ -1159,12 +1166,11 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 		return ret;
 	}
 
-	dd_service->discovery_message_size = snprintf(dd_service->discovery_message,
-		sizeof(dd_service->discovery_message), "TCP_DD: port = %d, hostname = %s",
-		dd_service->url.port, network_get_hostname(hostname, sizeof(hostname)));
-
 	if (dd_service->discovery.port > 0) {
-		ret = udp_discovery_service_start(&dd_service->discovery, dd_service->discovery_message);
+		char hostname[64];
+
+		ret = udp_discovery_service_start(&dd_service->discovery, "TCP_DD: port = %d, hostname = %s",
+		dd_service->url.port, network_get_hostname(hostname, sizeof(hostname)));
 		if (ret < 0) {
 			pd_red_info("udp_discovery_service_start");
 			goto out_network_service_close;
@@ -1300,7 +1306,9 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 		break;
 
 	case TCP_DD_DISCOVERY:
-		return network_client_send_text(client, dd_service->discovery_message);
+		pd_bold_info("TCP_DD_DISCOVERY");
+		ret = tcp_dd_handle_discovery_request(client);
+		break;
 
 	default:
 		pd_red_info("Unknown package type %d", pkg.type);
@@ -1897,7 +1905,7 @@ static bool tcp_dd_discovery_handler_dummy(struct tcp_dd_discovery_client *clien
 		return false;
 	}
 
-	pr_green_info("IP = %s, Message = %s", inet_ntoa(addr), message);
+	pr_green_info("%03d. %s\t\t%s", data->index, inet_ntoa(addr), message);
 
 	return true;
 }
