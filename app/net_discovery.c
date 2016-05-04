@@ -18,23 +18,61 @@
  */
 
 #include <cavan.h>
+#include <cavan/tcp_dd.h>
 #include <cavan/network.h>
 
-int main(int argc, char *argv[])
+static u16 net_discovery_get_port(int argc, char *argv[], u16 port_def)
 {
-	u16 port;
-	int count;
-
 	if (argc > 1) {
-		port = text2value_unsigned(argv[1], NULL, 10);
+		return text2value_unsigned(argv[1], NULL, 10);
 	} else {
-		port = CAVAN_DISCOVERY_PORT;
+		return CAVAN_DISCOVERY_PORT;
 	}
+}
 
-	count = network_discovery_client_run(port, NULL, NULL);
+static int do_discovery_udp(int argc, char *argv[])
+{
+	int count;
+	u16 port = net_discovery_get_port(argc, argv, CAVAN_DISCOVERY_PORT);
+
+	count = udp_discovery_client_run(port, NULL, NULL);
 	if (count <= 0) {
 		pr_red_info("No service found");
 	}
 
 	return 0;
 }
+
+static int do_discovery_tcp(int argc, char *argv[])
+{
+	int count;
+	struct tcp_discovery_client client;
+
+	client.handler = NULL;
+	client.port = net_discovery_get_port(argc, argv, CAVAN_DISCOVERY_PORT);
+
+	count = tcp_discovery_client_run(&client, NULL);
+	if (count <= 0) {
+		pr_red_info("No service found");
+	}
+
+	return 0;
+}
+
+static void tcp_dd_discovery_handler(const char *message, void *data)
+{
+	pr_green_info("message = %s", message);
+}
+
+static int do_discovery_tcp_dd(int argc, char *argv[])
+{
+	u16 port = net_discovery_get_port(argc, argv, TCP_DD_DEFAULT_PORT);
+
+	return tcp_dd_discovery(port, NULL, tcp_dd_discovery_handler);
+}
+
+CAVAN_COMMAND_MAP_START {
+	{ "udp", do_discovery_udp },
+	{ "tcp", do_discovery_tcp },
+	{ "tcp_dd", do_discovery_tcp_dd },
+} CAVAN_COMMAND_MAP_END;

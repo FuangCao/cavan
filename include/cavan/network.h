@@ -50,6 +50,8 @@
 #define CAVAN_NET_FLAG_SYNC			(1 << 1)
 #define CAVAN_NET_FLAG_WAIT			(1 << 2)
 
+struct tcp_discovery_client;
+
 #pragma pack(1)
 struct mac_header {
 	u8 dest_mac[6];
@@ -307,12 +309,30 @@ struct network_service {
 	void (*close)(struct network_service *service);
 };
 
-struct network_discovery_service {
+struct udp_discovery_service {
 	struct cavan_thread thread;
 	struct network_service service;
 	size_t command_len;
 	char command[1024];
 	u16 port;
+};
+
+struct tcp_discovery_data {
+	pthread_t thread;
+	bool pendding;
+	struct network_url url;
+	struct network_client client;
+	struct tcp_discovery_client *discovery;
+};
+
+struct tcp_discovery_client {
+	u16 port;
+	int count;
+	int pendding;
+	pthread_mutex_t lock;
+
+	void *private_data;
+	int (*handler)(struct tcp_discovery_client *client, struct tcp_discovery_data *data);
 };
 
 struct network_file_request {
@@ -473,9 +493,10 @@ int cavan_inet_get_ifconfig2(int sockfd, const char *ifname, struct cavan_inet_i
 int cavan_inet_get_ifconfig_list(int sockfd, struct cavan_inet_ifconfig *configs, int max_count);
 int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_count);
 
-int network_discovery_service_start(struct network_discovery_service *service, const char *command, ...);
-void network_discovery_service_stop(struct network_discovery_service *service);
-int network_discovery_client_run(u16 port, void *data, void (*handler)(int index, const char *command, struct sockaddr_in *addr, void *data));
+int udp_discovery_service_start(struct udp_discovery_service *service, const char *command, ...);
+void udp_discovery_service_stop(struct udp_discovery_service *service);
+int udp_discovery_client_run(u16 port, void *data, void (*handler)(int index, const char *command, struct sockaddr_in *addr, void *data));
+int tcp_discovery_client_run(struct tcp_discovery_client *client, void *data);
 
 static inline int inet_socket(int type)
 {

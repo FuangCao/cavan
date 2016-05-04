@@ -1202,7 +1202,9 @@ int network_create_link(const char *hostname, u16 port, int socktype, int protoc
 		if (ret < 0) {
 			close(sockfd);
 		} else {
+#if CAVAN_NETWORK_DEBUG
 			pr_info("HOST = %s, %s", hostname, network_sockaddr_tostring(p->ai_addr, NULL, 0));
+#endif
 			goto out_freeaddrinfo;
 		}
 	}
@@ -3624,13 +3626,13 @@ int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_c
 	return ret;
 }
 
-static int network_discovery_service_handler(struct cavan_thread *thread, void *data)
+static int udp_discovery_service_handler(struct cavan_thread *thread, void *data)
 {
 	ssize_t rdlen;
 	ssize_t wrlen;
 	char command[64];
 	struct sockaddr_in addr;
-	struct network_discovery_service *service = data;
+	struct udp_discovery_service *service = data;
 	struct network_service *udp_service = &service->service;
 
 	rdlen = udp_service->recvfrom(udp_service, command, sizeof(command) - 1, (struct sockaddr *) &addr);
@@ -3657,7 +3659,7 @@ static int network_discovery_service_handler(struct cavan_thread *thread, void *
 	return 0;
 }
 
-int network_discovery_service_start(struct network_discovery_service *service, const char *command, ...)
+int udp_discovery_service_start(struct udp_discovery_service *service, const char *command, ...)
 {
 	int ret;
 	va_list ap;
@@ -3679,7 +3681,7 @@ int network_discovery_service_start(struct network_discovery_service *service, c
 
 	thread->name = "UDP_DISCOVERY";
 	thread->wake_handker = NULL;
-	thread->handler = network_discovery_service_handler;
+	thread->handler = udp_discovery_service_handler;
 
 	ret = cavan_thread_run(thread, service, 0);
 	if (ret < 0) {
@@ -3694,18 +3696,18 @@ out_network_service_close:
 	return ret;
 }
 
-void network_discovery_service_stop(struct network_discovery_service *service)
+void udp_discovery_service_stop(struct udp_discovery_service *service)
 {
 	network_service_close(&service->service);
 	cavan_thread_stop(&service->thread);
 }
 
-static void network_discovery_client_handler_dummy(int index, const char *command, struct sockaddr_in *addr, void *data)
+static void udp_discovery_client_handler_dummy(int index, const char *command, struct sockaddr_in *addr, void *data)
 {
 	pr_green_info("%d. %-15s %s", index, inet_ntoa(addr->sin_addr), command);
 }
 
-int network_discovery_client_run(u16 port, void *data, void (*handler)(int index, const char *command, struct sockaddr_in *addr, void *data))
+int udp_discovery_client_run(u16 port, void *data, void (*handler)(int index, const char *command, struct sockaddr_in *addr, void *data))
 {
 	int ret;
 	int count;
@@ -3737,7 +3739,7 @@ int network_discovery_client_run(u16 port, void *data, void (*handler)(int index
 	}
 
 	if (handler == NULL) {
-		handler = network_discovery_client_handler_dummy;
+		handler = udp_discovery_client_handler_dummy;
 	}
 
 	for (count = 0; file_poll_input(client.sockfd, 2000); count++) {
@@ -3759,4 +3761,97 @@ int network_discovery_client_run(u16 port, void *data, void (*handler)(int index
 out_network_client_close:
 	network_client_close(&client);
 	return ret;
+}
+
+static void *tcp_discovery_client_thread(void *_data)
+{
+	int ret;
+	struct tcp_discovery_data *data = _data;
+	struct tcp_discovery_client *discovery = data->discovery;
+
+	ret = network_client_open(&data->client, &data->url, 0);
+	if (ret >= 0) {
+		if (discovery->handler(discovery, data) >= 0) {
+			pthread_mutex_lock(&discovery->lock);
+			discovery->count++;
+			pthread_mutex_unlock(&discovery->lock);
+		}
+
+		network_client_close(&data->client);
+	}
+
+	pthread_mutex_lock(&discovery->lock);
+	discovery->pendding--;
+	data->pendding = false;
+	pthread_mutex_unlock(&discovery->lock);
+
+	return NULL;
+}
+
+static int tcp_discovery_client_handler_dummy(struct tcp_discovery_client *discovery, struct tcp_discovery_data *data)
+{
+	int ret;
+	struct sockaddr_in addr;
+
+	ret = network_client_get_remote_addr(&data->client, (struct sockaddr *) &addr, sizeof(addr));
+	if (ret < 0) {
+		return ret;
+	}
+
+	println("IP = %s", inet_ntoa(addr.sin_addr));
+
+	return 0;
+}
+
+int tcp_discovery_client_run(struct tcp_discovery_client *client, void *data)
+{
+	int i;
+	int ret;
+	struct tcp_discovery_data datas[255];
+
+	pthread_mutex_init(&client->lock, NULL);
+
+	client->count = 0;
+	client->private_data = data;
+	client->pendding = NELEM(datas);
+
+	if (client->handler == NULL) {
+		client->handler = tcp_discovery_client_handler_dummy;
+	}
+
+	println("PORT = %d", client->port);
+
+	for (i = 0; i < NELEM(datas); i++) {
+		struct tcp_discovery_data *data = datas + i;
+
+		data->pendding = true;
+		data->discovery = client;
+		value2text_unsigned_simple(i, data->url.memory, sizeof(data->url.memory), 10);
+		network_url_init(&data->url, "tcp", data->url.memory, client->port, NULL);
+
+		ret = cavan_pthread_create(&data->thread, tcp_discovery_client_thread, data, false);
+		if (ret < 0) {
+			data->pendding = false;
+		}
+	}
+
+	pthread_mutex_lock(&client->lock);
+
+	for (i = 0; i < 5 && client->pendding; i++) {
+		pthread_mutex_unlock(&client->lock);
+		msleep(1000);
+		pthread_mutex_lock(&client->lock);
+	}
+
+	for (i = 0; i < NELEM(datas); i++) {
+		if (datas[i].pendding) {
+			cavan_pthread_kill(datas[i].thread);
+		}
+	}
+
+	pthread_mutex_unlock(&client->lock);
+
+	pthread_mutex_destroy(&client->lock);
+
+	return client->count;
 }

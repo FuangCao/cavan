@@ -23,8 +23,7 @@
 	static struct cavan_command_map __local_cmd_map[] =
 
 #define CAVAN_COMMAND_MAP_END \
-	; \
-	FIND_EXEC_COMMAND_MAIN(__local_cmd_map);
+	; FIND_EXEC_COMMAND_MAIN(__local_cmd_map)
 
 #define CAVAN_ALIAS_DECLARE(name, command, subcmd) \
 	int cavan_alias_##name(int argc, char *argv[]) { \

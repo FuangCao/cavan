@@ -23,7 +23,7 @@
 static int test_discovery_service_main(int argc, char *argv[])
 {
 	int ret;
-	struct network_discovery_service service;
+	struct udp_discovery_service service;
 
 	assert(argc > 1);
 
@@ -33,9 +33,9 @@ static int test_discovery_service_main(int argc, char *argv[])
 		service.port = 8888;
 	}
 
-	ret = network_discovery_service_start(&service, argv[1]);
+	ret = udp_discovery_service_start(&service, argv[1]);
 	if (ret < 0) {
-		pr_red_info("network_discovery_service_start: %d", ret);
+		pr_red_info("udp_discovery_service_start: %d", ret);
 		return ret;
 	}
 
@@ -54,7 +54,7 @@ static int test_discovery_client_main(int argc, char *argv[])
 		port = 8888;
 	}
 
-	return network_discovery_client_run(port, NULL, NULL);
+	return udp_discovery_client_run(port, NULL, NULL);
 }
 
 CAVAN_COMMAND_MAP_START {

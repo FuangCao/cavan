@@ -121,7 +121,7 @@ struct cavan_tcp_dd_service {
 	bool keypad_insmod;
 	const char *keypad_ko;
 	struct cavan_part_table *part_table;
-	struct network_discovery_service discovery;
+	struct udp_discovery_service discovery;
 	char discovery_message[1024];
 	int discovery_message_size;
 };

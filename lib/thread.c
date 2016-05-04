@@ -16,7 +16,9 @@
 
 static void cavan_pthread_kill_sighandler(int signum)
 {
+#if CAVAN_THREAD_DEBUG
 	pd_bold_info("signum = %d", signum);
+#endif
 
 	pthread_exit(0);
 }
