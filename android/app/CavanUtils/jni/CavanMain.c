@@ -1,6 +1,116 @@
+#include <cavan/command.h>
 #include "CavanMain.h"
 
-int CavanMainExecute(JNIEnv *env, jobjectArray args, const char *name, int (*main_func)(int argc, char *argv[]))
+static struct CavanProcessInfo sProcessInfoList[100];
+static pthread_mutex_t sProcessInfoLock = PTHREAD_MUTEX_INITIALIZER;
+
+static inline void ProcessInfoLock(void)
+{
+	pthread_mutex_lock(&sProcessInfoLock);
+}
+
+static inline void ProcessInfoUnlock(void)
+{
+	pthread_mutex_unlock(&sProcessInfoLock);
+}
+
+int CavanProcessInfoAdd(const char *name, pid_t pid)
+{
+	int i;
+
+	pd_info("Add: process = %s, pid = %d", name, pid);
+
+	ProcessInfoLock();
+
+	for (i = NELEM(sProcessInfoList) - 1; i >= 0; i--) {
+		if (sProcessInfoList[i].name) {
+			if (strcmp(name, sProcessInfoList[i].name) == 0) {
+				break;
+			}
+
+			continue;
+		}
+
+		sProcessInfoList[i].name = name;
+		sProcessInfoList[i].pid = pid;
+		break;
+	}
+
+	ProcessInfoUnlock();
+
+	return i;
+}
+
+void CavanProcessInfoRemoveLocked(int index)
+{
+	pd_info("Remove: process = %s, pid = %d", sProcessInfoList[index].name, sProcessInfoList[index].pid);
+
+	sProcessInfoList[index].name = NULL;
+	sProcessInfoList[index].pid = 0;
+}
+
+void CavanProcessInfoRemove(int index)
+{
+	ProcessInfoLock();
+	CavanProcessInfoRemoveLocked(index);
+	ProcessInfoUnlock();
+}
+
+int CavanProcessInfoFindLocked(const char *name)
+{
+	int i;
+
+	for (i = NELEM(sProcessInfoList) - 1; i >= 0; i--) {
+		if (sProcessInfoList[i].name == NULL) {
+			continue;
+		}
+
+		if (strcmp(name, sProcessInfoList[i].name) == 0) {
+			break;
+		}
+	}
+
+	return i;
+}
+
+int CavanProcessInfoFind(const char *name)
+{
+	int index;
+
+	ProcessInfoLock();
+	index = CavanProcessInfoFindLocked(name);
+	ProcessInfoUnlock();
+
+	return index;
+}
+
+bool CavanProcessKillLocked(const char *name)
+{
+	int index;
+
+	index = CavanProcessInfoFindLocked(name);
+	if (index < 0) {
+		return false;
+	}
+
+	pd_info("Kill: process = %s, pid = %d", sProcessInfoList[index].name, sProcessInfoList[index].pid);
+	kill(sProcessInfoList[index].pid, SIGTERM);
+
+	return true;
+}
+
+bool CavanProcessKill(const char *name)
+{
+	bool success;
+
+	ProcessInfoLock();
+	success = CavanProcessKillLocked(name);
+	ProcessInfoUnlock();
+
+	return success;
+}
+
+int CavanMainRun(JNIEnv *env, jobjectArray args, const char *name, int (*main_func)(int argc, char *argv[]))
 {
 	int ret;
 
@@ -32,4 +142,34 @@ int CavanMainExecute(JNIEnv *env, jobjectArray args, const char *name, int (*mai
 	}
 
 	return ret;
+}
+
+int CavanMainExecute(JNIEnv *env, jobjectArray args, const char *name, int (*main_func)(int argc, char *argv[]))
+{
+	pid_t pid;
+
+	pid = cavan_exec_fork();
+	if (pid < 0) {
+		return pid;
+	}
+
+	if (pid == 0) {
+		int ret = CavanMainRun(env, args, name, main_func);
+		exit(ret < 0 ? ret : 0);
+	} else {
+		int code;
+		int index;
+
+		index = CavanProcessInfoAdd(name, pid);
+		code = cavan_exec_waitpid(pid);
+		if (index >= 0) {
+			CavanProcessInfoRemove(index);
+		}
+
+		if (code != 0) {
+			return -code;
+		}
+	}
+
+	return 0;
 }

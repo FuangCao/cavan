@@ -18,4 +18,9 @@ public class WebProxyService extends CavanService {
 	public int getDefaultPort() {
 		return 9090;
 	}
+
+	@Override
+	public boolean stopService() {
+		return CavanUtils.kill("web_proxy");
+	}
 }

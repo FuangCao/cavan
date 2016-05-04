@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 
+@SuppressWarnings("deprecation")
 public class MainActivity extends ActionBarActivity implements OnClickListener {
 
 	private CubeGLSurfaceView mSurfaceView;

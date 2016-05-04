@@ -12,11 +12,16 @@ public class TcpDdService extends CavanService {
 
 	@Override
 	protected void mainServiceLoop(int port) {
-		CavanUtils.doTcpDdServer("-p", Integer.toString(port), "-s", "0", "--discovery");
+		CavanUtils.doTcpDdServer("-p", Integer.toString(port), "-s", "0");
 	}
 
 	@Override
 	public int getDefaultPort() {
 		return 8888;
+	}
+
+	@Override
+	public boolean stopService() {
+		return CavanUtils.kill("tcp_dd_server");
 	}
 }

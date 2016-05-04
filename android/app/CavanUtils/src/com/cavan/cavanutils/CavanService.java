@@ -51,15 +51,12 @@ public abstract class CavanService extends Service {
 
 		@Override
 		public boolean stop() throws RemoteException {
-			if (CavanUtils.doServiceManager("stop", getServiceName()) < 0) {
-				return false;
-			}
-
-			return true;
+			return stopService();
 		}
 	}
 
 	public abstract int getDefaultPort();
+	public abstract boolean stopService();
 	public abstract String getServiceName();
 	protected abstract void mainServiceLoop(int port);
 

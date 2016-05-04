@@ -18,4 +18,9 @@ public class FtpService extends CavanService {
 	public int getDefaultPort() {
 		return 2121;
 	}
+
+	@Override
+	public boolean stopService() {
+		return CavanUtils.kill("ftp_server");
+	}
 }
