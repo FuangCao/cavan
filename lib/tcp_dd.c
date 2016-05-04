@@ -1859,98 +1859,57 @@ int tcp_dd_mkdir(struct network_url *url, const char *pathname, mode_t mode)
 	return tcp_dd_send_request4(url, &pkg, TCP_DD_MKDIR, length, 0);
 }
 
-int tcp_dd_discovery_one(struct network_url *url, char *message, size_t size)
+static bool tcp_dd_discovery_handler(struct tcp_discovery_client *client, struct tcp_discovery_data *data)
 {
 	int ret;
-	struct network_client client;
-
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
-	if (ret < 0) {
-		// pr_red_info("network_client_open2");
-		return ret;
-	}
-
-	ret = tcp_dd_send_empty_request(&client, TCP_DD_DISCOVERY, NULL, 0);
-	if (ret < 0) {
-		pr_red_info("tcp_dd_send_empty_request: %d", ret);
-		goto out_client_close;
-	}
-
-	ret = network_client_recv(&client, message, size - 1);
-	if (ret > 0) {
-		message[ret] = 0;
-	}
-
-out_client_close:
-	client.close(&client);
-	return ret;
-}
-
-static void *tcp_dd_discovery_thread(void *_data)
-{
-	int length;
-	char hostname[8];
+	ssize_t rdlen;
 	char message[1024];
-	struct network_url url;
-	struct cavan_tcp_dd_discovery_data *data = _data;
+	struct tcp_dd_discovery_client *tcp_dd;
 
-	pthread_mutex_lock(data->lock);
-	(*data->pendding)++;
-	pthread_mutex_unlock(data->lock);
-
-	value2text_unsigned_simple(data->address, hostname, sizeof(hostname), 10);
-	network_url_init(&url, data->protocol, hostname, data->port, NULL);
-
-	length = tcp_dd_discovery_one(&url, message, sizeof(message));
-	if (length > 0) {
-		data->handler(message, data->private_data);
+	ret = tcp_dd_send_empty_request(&data->client, TCP_DD_DISCOVERY, NULL, 0);
+	if (ret < 0) {
+		return false;
 	}
 
-	pthread_mutex_lock(data->lock);
-	(*data->pendding)--;
-	pthread_mutex_unlock(data->lock);
+	rdlen = network_client_recv(&data->client, message, sizeof(message) - 1);
+	if (rdlen <= 0) {
+		return false;
+	}
 
-	return NULL;
+	message[rdlen] = 0;
+
+	if (text_lhcmp("TCP_DD:", message)) {
+		return false;
+	}
+
+	tcp_dd = client->private_data;
+
+	return tcp_dd->handler(tcp_dd, data, message, rdlen);
 }
 
-int tcp_dd_discovery(u16 port, void *data, void (*handler)(const char *message, void *data))
+static bool tcp_dd_discovery_handler_dummy(struct tcp_dd_discovery_client *client, struct tcp_discovery_data *data, const char *message, size_t size)
 {
-	int i;
-	int pendding = 0;
-	pthread_mutex_t lock;
-	struct cavan_tcp_dd_discovery_data discovery_datas[255];
+	int ret;
+	struct in_addr addr;
 
-	pthread_mutex_init(&lock, NULL);
-
-	for (i = 0; i < NELEM(discovery_datas); i++) {
-		struct cavan_tcp_dd_discovery_data *p = discovery_datas + i;
-
-		p->port = port;
-		p->address = i;
-		p->protocol = "tcp";
-		p->private_data = data;
-		p->handler = handler;
-		p->lock = &lock;
-		p->pendding = &pendding;
-
-		cavan_pthread_create(&p->thread, tcp_dd_discovery_thread, p, false);
+	ret = network_client_get_remote_ip(&data->client, &addr);
+	if (ret < 0) {
+		return false;
 	}
 
-	pthread_mutex_lock(&lock);
+	pr_green_info("IP = %s, Message = %s", inet_ntoa(addr), message);
 
-	for (i = 0; i < 5; i++) {
-		pthread_mutex_unlock(&lock);
-		msleep(1000);
-		pthread_mutex_lock(&lock);
+	return true;
+}
 
-		if (pendding == 0) {
-			break;
-		}
+int tcp_dd_discovery(struct tcp_dd_discovery_client *client, void *data)
+{
+	client->private_data = data;
+	client->client.handler = tcp_dd_discovery_handler;
+
+	if (client->handler == NULL) {
+		client->handler = tcp_dd_discovery_handler_dummy;
 	}
 
-	pthread_mutex_unlock(&lock);
-
-	pthread_mutex_destroy(&lock);
-
-	return 0;
+	return tcp_discovery_client_run(&client->client, client);
 }

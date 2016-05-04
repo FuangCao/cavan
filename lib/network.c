@@ -3769,13 +3769,15 @@ static void *tcp_discovery_client_thread(void *_data)
 	struct tcp_discovery_data *data = _data;
 	struct tcp_discovery_client *discovery = data->discovery;
 
-	ret = network_client_open(&data->client, &data->url, 0);
+	ret = network_client_open(&data->client, &data->url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret >= 0) {
-		if (discovery->handler(discovery, data) >= 0) {
-			pthread_mutex_lock(&discovery->lock);
+		pthread_mutex_lock(&discovery->lock);
+
+		if (discovery->handler(discovery, data)) {
 			discovery->count++;
-			pthread_mutex_unlock(&discovery->lock);
 		}
+
+		pthread_mutex_unlock(&discovery->lock);
 
 		network_client_close(&data->client);
 	}
@@ -3788,19 +3790,19 @@ static void *tcp_discovery_client_thread(void *_data)
 	return NULL;
 }
 
-static int tcp_discovery_client_handler_dummy(struct tcp_discovery_client *discovery, struct tcp_discovery_data *data)
+static bool tcp_discovery_client_handler_dummy(struct tcp_discovery_client *discovery, struct tcp_discovery_data *data)
 {
 	int ret;
-	struct sockaddr_in addr;
+	struct in_addr addr;
 
-	ret = network_client_get_remote_addr(&data->client, (struct sockaddr *) &addr, sizeof(addr));
+	ret = network_client_get_remote_ip(&data->client, &addr);
 	if (ret < 0) {
-		return ret;
+		return false;
 	}
 
-	println("IP = %s", inet_ntoa(addr.sin_addr));
+	pr_green_info("IP = %s", inet_ntoa(addr));
 
-	return 0;
+	return true;
 }
 
 int tcp_discovery_client_run(struct tcp_discovery_client *client, void *data)
@@ -3837,7 +3839,7 @@ int tcp_discovery_client_run(struct tcp_discovery_client *client, void *data)
 
 	pthread_mutex_lock(&client->lock);
 
-	for (i = 0; i < 5 && client->pendding; i++) {
+	for (i = 0; i < 3 && client->pendding; i++) {
 		pthread_mutex_unlock(&client->lock);
 		msleep(1000);
 		pthread_mutex_lock(&client->lock);

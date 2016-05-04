@@ -332,7 +332,7 @@ struct tcp_discovery_client {
 	pthread_mutex_t lock;
 
 	void *private_data;
-	int (*handler)(struct tcp_discovery_client *client, struct tcp_discovery_data *data);
+	bool (*handler)(struct tcp_discovery_client *client, struct tcp_discovery_data *data);
 };
 
 struct network_file_request {

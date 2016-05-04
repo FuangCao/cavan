@@ -126,17 +126,11 @@ struct cavan_tcp_dd_service {
 	int discovery_message_size;
 };
 
-struct cavan_tcp_dd_discovery_data {
-	u16 port;
-	u8 address;
-	int *pendding;
-	const char *protocol;
-	pthread_mutex_t *lock;
+struct tcp_dd_discovery_client {
+	struct tcp_discovery_client client;
 
-	pthread_t thread;
 	void *private_data;
-
-	void (*handler)(const char *message, void * data);
+	bool (*handler)(struct tcp_dd_discovery_client *client, struct tcp_discovery_data *data, const char *message, size_t size);
 };
 
 void tcp_dd_set_package_type(struct tcp_dd_package *pkg, u16 type);
@@ -164,5 +158,4 @@ int tcp_alarm_remove(struct network_url *url, int index);
 int tcp_alarm_list(struct network_url *url, int index);
 
 int tcp_dd_mkdir(struct network_url *url, const char *pathname, mode_t mode);
-int tcp_dd_discovery_one(struct network_url *url, char *message, size_t size);
-int tcp_dd_discovery(u16 port, void *data, void (*handler)(const char *message, void *data));
+int tcp_dd_discovery(struct tcp_dd_discovery_client *client, void *data);

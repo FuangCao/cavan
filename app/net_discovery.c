@@ -59,16 +59,20 @@ static int do_discovery_tcp(int argc, char *argv[])
 	return 0;
 }
 
-static void tcp_dd_discovery_handler(const char *message, void *data)
-{
-	pr_green_info("message = %s", message);
-}
-
 static int do_discovery_tcp_dd(int argc, char *argv[])
 {
-	u16 port = net_discovery_get_port(argc, argv, TCP_DD_DEFAULT_PORT);
+	int count;
+	struct tcp_dd_discovery_client client;
 
-	return tcp_dd_discovery(port, NULL, tcp_dd_discovery_handler);
+	client.handler = NULL;
+	client.client.port = net_discovery_get_port(argc, argv, TCP_DD_DEFAULT_PORT);
+
+	count = tcp_dd_discovery(&client, NULL);
+	if (count <= 0) {
+		pr_red_info("No service found");
+	}
+
+	return 0;
 }
 
 CAVAN_COMMAND_MAP_START {
