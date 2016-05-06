@@ -2,18 +2,50 @@
 
 #include "CavanMain.h"
 
-JNIEXPORT jboolean Java_com_cavan_cavanutils_CavanUtils_kill(JNIEnv *env, jclass clazz, jstring nameStr)
+JNIEXPORT jboolean Java_com_cavan_cavanutils_CavanUtils_kill(JNIEnv *env, jclass clazz, jstring strName)
 {
-	const char *name;
 	jboolean success;
+	const char *name;
 
-	name = (char *) (*env)->GetStringUTFChars(env, nameStr, NULL);
-	if (name == NULL) {
+	if (strName == NULL) {
 		return false;
 	}
 
-	success = CavanProcessKill(name);
-	(*env)->ReleaseStringUTFChars(env, nameStr, name);
+	name = (char *) (*env)->GetStringUTFChars(env, strName, NULL);
+	if (name) {
+		success = CavanProcessKill(name);
+		(*env)->ReleaseStringUTFChars(env, strName, name);
+	} else {
+		success = false;
+	}
+
+	return success;
+}
+
+JNIEXPORT jboolean Java_com_cavan_cavanutils_CavanUtils_setEnv(JNIEnv *env, jclass clazz, jstring strKey, jstring strValue)
+{
+	jboolean success;
+	const char *key, *value;
+
+	if (strKey == NULL || strValue == NULL) {
+		return false;
+	}
+
+	key = (char *) (*env)->GetStringUTFChars(env, strKey, NULL);
+	value = (char *) (*env)->GetStringUTFChars(env, strValue, NULL);
+	if (key && value) {
+		success = (setenv(key, value, 1) == 0);
+	} else {
+		success = false;
+	}
+
+	if (key) {
+		(*env)->ReleaseStringUTFChars(env, strKey, key);
+	}
+
+	if (value) {
+		(*env)->ReleaseStringUTFChars(env, strValue, value);
+	}
 
 	return success;
 }

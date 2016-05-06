@@ -478,6 +478,7 @@ int network_client_get_remote_port(struct network_client *client);
 int network_client_get_local_ip(struct network_client *client, struct in_addr *sin_addr);
 int network_client_get_remote_ip(struct network_client *client, struct in_addr *sin_addr);
 
+int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec);
 int network_service_open(struct network_service *service, const struct network_url *url, int flags);
 int network_service_open2(struct network_service *service, const char *url, int flags);
 void network_service_close(struct network_service *service);

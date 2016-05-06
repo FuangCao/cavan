@@ -3253,6 +3253,15 @@ int network_client_get_remote_ip(struct network_client *client, struct in_addr *
 	return 0;
 }
 
+int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec)
+{
+	if (!file_poll_input(service->sockfd, msec)) {
+		return -ETIMEDOUT;
+	}
+
+	return network_service_accept(service, client);
+}
+
 int network_service_open(struct network_service *service, const struct network_url *url, int flags)
 {
 	int ret;

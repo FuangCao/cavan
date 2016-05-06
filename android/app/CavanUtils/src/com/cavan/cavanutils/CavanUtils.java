@@ -6,6 +6,7 @@ public class CavanUtils extends CavanNative {
 	public static final String TAG = "Cavan";
 
 	public static native boolean kill(String name);
+	public static native boolean setEnv(String key, String value);
 
 	public static final int logE(String message) {
 		return Log.e(TAG, message);

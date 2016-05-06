@@ -776,11 +776,19 @@ bool cavan_get_choose_yesno_format(bool def_choose, int timeout_ms, const char *
 const char *cavan_get_temp_path(void)
 {
 	int i;
+	const char *path_envs[] = { "TMP_PATH", "CACHE_PATH", "HOME" };
 	const char *paths[] = { "/tmp", "/data/local/tmp", "/dev", "/data", "/cache" };
 
 	for (i = 0; i < NELEM(paths); i++) {
-		if (file_access_e(paths[i])) {
+		if (file_access_w(paths[i])) {
 			return paths[i];
+		}
+	}
+
+	for (i = 0; i < NELEM(path_envs); i++) {
+		const char *path = getenv(path_envs[i]);
+		if (path && file_access_w(path)) {
+			return path;
 		}
 	}
 

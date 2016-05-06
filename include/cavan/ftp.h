@@ -30,6 +30,16 @@ struct cavan_ftp_service {
 	char home[1024];
 };
 
+struct cavan_ftp_client {
+	struct network_client client;
+	struct network_url data_url;
+	struct network_client data_client;
+	struct network_service data_service;
+
+	bool port_received;
+	bool pasv_received;
+};
+
 char *ftp_file_stat_tostring(const char *filepath, char *buff, char *buff_end);
 char *ftp_list_directory(const char *dirpath, char *text);
 

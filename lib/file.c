@@ -2074,18 +2074,12 @@ int file_find_and_open(const char *prefix, char *last_path, int start, int end, 
 
 bool file_poll(int fd, short events, int timeout_ms)
 {
-	int ret;
 	struct pollfd pfd = {
 		.fd = fd,
 		.events = events,
 	};
 
-	ret = poll(&pfd, 1, timeout_ms);
-	if (ret < 1) {
-		return false;
-	}
-
-	return true;
+	return poll(&pfd, 1, timeout_ms) > 0;
 }
 
 bool file_discard_all(int fd)

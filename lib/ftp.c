@@ -5,45 +5,62 @@
 
 #define FTP_DEBUG		0
 
-static inline int ftp_create_data_link(struct network_client *client, const struct network_url *url)
+static int ftp_data_link_open(struct cavan_ftp_client *ftp)
 {
-	if (client->sockfd < 0) {
-		return network_client_open(client, url, 0);
+	if (ftp->data_client.sockfd >= 0) {
+		return 0;
 	}
 
-	return 0;
+	if (ftp->port_received) {
+		ftp->port_received = false;
+		ftp->pasv_received = false;
+		return network_client_open(&ftp->data_client, &ftp->data_url, 0);
+	} else if (ftp->pasv_received) {
+		ftp->pasv_received = false;
+		return network_service_accept_timed(&ftp->data_service, &ftp->data_client, 2000);
+	} else {
+		return -EFAULT;
+	}
 }
 
-static int ftp_server_send_file1(struct network_client *client, const struct network_url *url, int fd)
+static void ftp_data_link_close(struct cavan_ftp_client *ftp)
+{
+	if (ftp->data_client.sockfd >= 0) {
+		network_client_close(&ftp->data_client);
+	}
+
+	ftp->pasv_received = false;
+	ftp->port_received = false;
+}
+
+static int ftp_server_send_file1(struct cavan_ftp_client *ftp, int fd)
 {
 	int ret;
 
-	ret = ftp_create_data_link(client, url);
+	ret = ftp_data_link_open(ftp);
 	if (ret < 0) {
 		pr_red_info("ftp_create_data_link");
 		return ret;
 	}
 
-	ret = network_client_send_file(client, fd, 0, 0);
-
-	network_client_close(client);
+	ret = network_client_send_file(&ftp->data_client, fd, 0, 0);
+	ftp_data_link_close(ftp);
 
 	return ret;
 }
 
-static int ftp_server_receive_file1(struct network_client *client, const struct network_url *url, int fd)
+static int ftp_server_receive_file1(struct cavan_ftp_client *ftp, int fd)
 {
 	int ret;
 
-	ret = ftp_create_data_link(client, url);
+	ret = ftp_data_link_open(ftp);
 	if (ret < 0) {
 		pr_red_info("ftp_create_data_link");
 		return ret;
 	}
 
-	ret = network_client_recv_file(client, fd, 0, 0);
-
-	network_client_close(client);
+	ret = network_client_recv_file(&ftp->data_client, fd, 0, 0);
+	ftp_data_link_close(ftp);
 
 	return ret;
 }
@@ -93,7 +110,7 @@ static int ftp_list_directory1(const char *dirpath, const char *newline)
 	char *buff_end = buff + sizeof(buff);
 
 #if FTP_DEBUG
-	pr_bold_info("dirpath = `%s'", dirpath);
+	pd_bold_info("dirpath = `%s'", dirpath);
 #endif
 
 	dp = opendir(dirpath);
@@ -155,7 +172,7 @@ static char *ftp_get_abs_path(const char *curr_path, const char *path, char *abs
 	}
 
 #if FTP_DEBUG
-	println("curr_path = %s, abs_path = %s, path = %s", curr_path, abs_path, path);
+	pd_info("curr_path = %s, abs_path = %s, path = %s", curr_path, abs_path, path);
 #endif
 
 	return abs_path;
@@ -200,7 +217,7 @@ out_network_service_close:
 	return ret;
 }
 
-static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network_client *client)
+static int ftp_service_cmdline(struct cavan_ftp_service *ftp_service, struct cavan_ftp_client *ftp_client)
 {
 	int fd;
 	int ret;
@@ -208,29 +225,28 @@ static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network
 	char file_type;
 	const char *reply;
 	char rep_pasv[64];
-	struct pollfd pfds[2];
 	enum cavan_ftp_state state;
-	struct network_url data_url;
 	ssize_t wrlen, rdlen, replen;
-	struct network_client data_link;
-	struct network_service data_service;
+	char *cmd_arg, *cmd_end;
+	char cmd_buff[1024], rep_buff[1024];
 	char abs_path[1024], curr_path[1024];
-	char cmd_buff[1024], rep_buff[1024], *cmd_arg, *cmd_end;
+	struct network_client *client = &ftp_client->client;
+	struct network_url *data_url = &ftp_client->data_url;
+	struct network_client *data_client = &ftp_client->data_client;
+	struct network_service *data_service = &ftp_client->data_service;
 
 	file_type = 0;
-	data_link.sockfd = -1;
-	data_service.sockfd = -1;
-	network_url_init(&data_url, "tcp", NULL, 0, NULL);
+	data_client->sockfd = -1;
+	data_service->sockfd = -1;
+	ftp_client->port_received = false;
+	ftp_client->pasv_received = false;
+	network_url_init(data_url, "tcp", NULL, 0, NULL);
 
 	replen = 0;
 	reply = "220 Cavan ftp server ready.\r\n";
 
 	state = FTP_STATE_READY;
-	text_copy(curr_path, service->home);
-
-	pfds[0].fd = -1;
-	pfds[1].fd = client->sockfd;
-	pfds[0].events = pfds[1].events = POLLIN;
+	text_copy(curr_path, ftp_service->home);
 
 	while (1) {
 		if (replen == 0) {
@@ -238,7 +254,7 @@ static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network
 		}
 
 #if FTP_DEBUG
-		println("reply = %s", reply);
+		pd_info("reply = %s", reply);
 #endif
 
 		wrlen = client->send(client, reply, replen);
@@ -249,33 +265,6 @@ static int ftp_service_cmdline(struct cavan_ftp_service *service, struct network
 
 		replen = 0;
 		reply = rep_buff;
-
-label_poll:
-		ret = poll(pfds, NELEM(pfds), FTP_TIMEOUT_MS);
-		if (ret < 1) {
-			if (ret < 0) {
-				pr_error_info("poll");
-				goto out_close_data_link;
-			}
-
-			goto label_poll;
-		}
-
-		if (pfds[0].revents == POLLIN) {
-			if (data_link.sockfd >= 0) {
-				network_client_close(&data_link);
-			}
-
-			ret = network_service_accept(&data_service, &data_link);
-			if (ret < 0) {
-				pr_red_info("network_service_accept");
-				goto out_network_service_close;
-			}
-
-			if (pfds[1].revents != POLLIN) {
-				goto label_poll;
-			}
-		}
 
 		rdlen = client->recv(client, cmd_buff, sizeof(cmd_buff) - 1);
 		if (rdlen < 3) {
@@ -293,7 +282,7 @@ label_poll:
 		}
 
 #if FTP_DEBUG
-		println("command = `%s', args = `%s'", cmd_buff, cmd_arg);
+		pd_info("command = `%s', args = `%s'", cmd_buff, cmd_arg);
 #endif
 
 #if 0
@@ -350,10 +339,12 @@ label_poll:
 
 				ret = sscanf(cmd_arg, "%d,%d,%d,%d,%d,%d", temp, temp + 1, temp + 2, temp + 3, temp + 4, temp + 5);
 				if (ret == 6) {
-					snprintf(data_url.memory, sizeof(data_url.memory), "%d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
-					data_url.hostname = data_url.memory;
-					data_url.port = temp[4] << 8 | temp[5];
+					snprintf(data_url->memory, sizeof(data_url->memory), "%d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+					data_url->hostname = data_url->memory;
+					data_url->port = temp[4] << 8 | temp[5];
 					reply = "200 PORT command complete.\r\n";
+
+					ftp_client->port_received = true;
 				} else {
 					reply = "501 Argument error.\r\n";
 				}
@@ -397,7 +388,7 @@ label_poll:
 
 					prettify_pathname_base(abs_path, curr_path, sizeof(curr_path));
 				} else {
-					text_copy(curr_path, service->home);
+					text_copy(curr_path, ftp_service->home);
 				}
 
 				reply = "250 CWD commnd complete.\r\n";
@@ -405,11 +396,6 @@ label_poll:
 
 			case FTP_BUILD_CMD('l', 'i', 's', 't'):
 			case FTP_BUILD_CMD('L', 'I', 'S', 'T'):
-				if (data_link.sockfd < 0 && data_url.port == 0) {
-					reply = "550 Please run PORT or PASV first.\r\n";
-					break;
-				}
-
 				fd = ftp_list_directory1(curr_path, file_type == 'I' ? "\n" : "\r\n");
 				if (fd < 0) {
 					replen = snprintf(rep_buff, sizeof(rep_buff), "550 List directory failed: %s.\r\n", strerror(errno));
@@ -423,7 +409,7 @@ label_poll:
 					goto out_close_data_link;
 				}
 
-				ret = ftp_server_send_file1(&data_link, &data_url, fd);
+				ret = ftp_server_send_file1(ftp_client, fd);
 				close(fd);
 
 				if (ret < 0) {
@@ -462,7 +448,7 @@ label_poll:
 					goto out_close_data_link;
 				}
 
-				ret = ftp_server_send_file1(&data_link, &data_url, fd);
+				ret = ftp_server_send_file1(ftp_client, fd);
 				close(fd);
 
 				if (ret < 0) {
@@ -488,7 +474,7 @@ label_poll:
 					goto out_close_data_link;
 				}
 
-				ret = ftp_server_receive_file1(&data_link, &data_url, fd);
+				ret = ftp_server_receive_file1(ftp_client, fd);
 				close(fd);
 
 				if (ret < 0) {
@@ -501,18 +487,19 @@ label_poll:
 
 			case FTP_BUILD_CMD('p', 'a', 's', 'v'):
 			case FTP_BUILD_CMD('P', 'A', 'S', 'V'):
-				if (data_service.sockfd < 0) {
-					ret = ftp_data_service_open(&data_service, client, rep_pasv, sizeof(rep_pasv));
+				if (data_service->sockfd < 0) {
+					ret = ftp_data_service_open(data_service, client, rep_pasv, sizeof(rep_pasv));
 					if (ret < 0) {
 						pr_red_info("ftp_data_service_open");
 						return ret;
 					}
 
 					replen = ret;
-					pfds[0].fd = data_service.sockfd;
+					// pfds[0].fd = data_service->sockfd;
 				}
 
 				reply = rep_pasv;
+				ftp_client->pasv_received = true;
 				break;
 
 			case FTP_BUILD_CMD('d', 'e', 'l', 'e'):
@@ -627,13 +614,14 @@ label_unsupport_command:
 	}
 
 out_close_data_link:
-	if (data_link.sockfd >= 0) {
-		network_client_close(&data_link);
+	if (data_client->sockfd >= 0) {
+		network_client_close(data_client);
 	}
-out_network_service_close:
-	if (data_service.sockfd >= 0) {
-		network_service_close(&data_service);
+
+	if (data_service->sockfd >= 0) {
+		network_service_close(data_service);
 	}
+
 	return 0;
 }
 
@@ -673,7 +661,7 @@ static int ftp_service_run_handler(struct cavan_dynamic_service *service, void *
 int ftp_service_run(struct cavan_dynamic_service *service)
 {
 	service->name = "FTP";
-	service->conn_size = sizeof(struct network_client);
+	service->conn_size = sizeof(struct cavan_ftp_client);
 
 	service->start = ftp_service_start_handler;
 	service->stop = ftp_service_stop_handler;
@@ -810,7 +798,7 @@ int ftp_client_send_command(struct network_client *client, const char *command, 
 	size_t rwlen;
 
 #if FTP_DEBUG
-	println("%s", command);
+	pd_info("%s", command);
 #endif
 
 	network_client_discard_all(client);
@@ -834,7 +822,7 @@ int ftp_client_send_command2(struct network_client *client, char *response, size
 	va_end(ap);
 
 #if FTP_DEBUG
-	println("%s", buff);
+	pd_info("%s", buff);
 #endif
 
 	return ftp_client_send_command(client, buff, ret, response, repsize);

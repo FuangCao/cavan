@@ -563,7 +563,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		setenv("LOGNAME", pw->pw_name, 1);
 
 		if (pw->pw_dir) {
-			setenv("HOME", pw->pw_dir, 1);
+			setenv("HOME", pw->pw_dir, file_access_w(pw->pw_dir));
 		}
 
 		if (pw->pw_shell) {
