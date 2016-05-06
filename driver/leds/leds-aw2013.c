@@ -75,6 +75,8 @@ struct aw2013_led {
 struct aw2013_device {
 	struct i2c_client *client;
 	struct regulator *vcc;
+	u8 power_mask;
+	struct mutex lock;
 	struct aw2013_led leds[3];
 };
 
@@ -160,6 +162,16 @@ static inline int aw2013_write_register(struct i2c_client *client, u8 addr, u8 v
 
 // ============================================================
 
+static inline void aw2013_lock(struct aw2013_device *aw2013)
+{
+	mutex_lock(&aw2013->lock);
+}
+
+static inline void aw2013_unlock(struct aw2013_device *aw2013)
+{
+	mutex_unlock(&aw2013->lock);
+}
+
 static inline int aw2013_reset(struct i2c_client *client)
 {
 	return aw2013_write_register(client, REG_RSTR, 0x55);
@@ -202,9 +214,43 @@ static int aw2013_init_register(struct aw2013_device *aw2013)
 	return ret;
 }
 
+static int aw2013_set_power(struct aw2013_device *aw2013, bool enable)
+{
+	int ret;
+	struct i2c_client *client = aw2013->client;
+
+	dev_info(&client->dev, "%s %s", __FUNCTION__, enable ? "enable" : "disable");
+
+	if (enable) {
+		if (aw2013->vcc) {
+			ret = regulator_enable(aw2013->vcc);
+			if (ret < 0) {
+				dev_err(&client->dev, "Failed to regulator_enable vcc\n");
+				return ret;
+			}
+		}
+
+		ret = aw2013_init_register(aw2013);
+		if (ret < 0) {
+			dev_err(&client->dev, "Failed to aw2013_init_register\n");
+			goto out_regulator_disable;
+		}
+
+		return 0;
+	}
+
+out_regulator_disable:
+	if (aw2013->vcc) {
+		regulator_disable(aw2013->vcc);
+	}
+
+	return ret;
+}
+
 static void aw2013_brightness_set(struct led_classdev *cdev, enum led_brightness brightness)
 {
 	int ret;
+	u8 mask;
 	u8 lctr, lctr_new;
 	struct aw2013_led *led = (struct aw2013_led *) cdev;
 	struct aw2013_device *aw2013 = led->dev;
@@ -212,16 +258,44 @@ static void aw2013_brightness_set(struct led_classdev *cdev, enum led_brightness
 
 	aw2013_pr_pos_info();
 
+	aw2013_lock(aw2013);
+
+	if (brightness == LED_OFF) {
+		mask = ~(1 << led->index);
+
+		if (aw2013->power_mask) {
+			aw2013->power_mask &= mask;
+			if (aw2013->power_mask == 0) {
+				aw2013_set_power(aw2013, false);
+				goto out_aw2013_unlock;
+			}
+		} else {
+			goto out_aw2013_unlock;
+		}
+	} else {
+		mask = 1 << led->index;
+
+		if (aw2013->power_mask == 0) {
+			ret = aw2013_set_power(aw2013, true);
+			if (ret < 0) {
+				dev_err(&client->dev, "Failed to aw2013_set_power: %d\n", ret);
+				goto out_aw2013_unlock;
+			}
+		}
+
+		aw2013->power_mask |= mask;
+	}
+
 	ret = aw2013_read_register(client, REG_LCTR, &lctr);
 	if (ret < 0) {
 		dev_err(&client->dev, "Failed to aw2013_read_register: %d\n", ret);
-		return;
+		goto out_aw2013_unlock;
 	}
 
 	if (brightness == LED_OFF) {
-		lctr_new = lctr & (~(1 << led->index));
+		lctr_new = lctr & mask;
 	} else {
-		lctr_new = lctr | (1 << led->index);
+		lctr_new = lctr | mask;
 	}
 
 	if (lctr_new != lctr) {
@@ -229,6 +303,9 @@ static void aw2013_brightness_set(struct led_classdev *cdev, enum led_brightness
 	}
 
 	aw2013_write_register(client, REG_PWM0 + led->index, brightness);
+
+out_aw2013_unlock:
+	aw2013_unlock(aw2013);
 }
 
 static u8 aw2013_blink_find_value(u16 delay)
@@ -251,6 +328,13 @@ static int aw2013_blink_set(struct led_classdev *cdev, unsigned long *delay_on, 
 
 	aw2013_pr_pos_info();
 
+	aw2013_lock(aw2013);
+
+	if ((aw2013->power_mask & (1 << led->index)) == 0)
+	{
+		goto out_aw2013_unlock;
+	}
+
 	if (delay_on && *delay_on) {
 		count++;
 		value = aw2013_blink_find_value(*delay_on);
@@ -265,34 +349,38 @@ static int aw2013_blink_set(struct led_classdev *cdev, unsigned long *delay_on, 
 
 	if (ret < 0) {
 		dev_err(&client->dev, "Failed to aw2013_read_register: %d\n", ret);
-		return ret;
+		goto out_aw2013_unlock;
 	}
 
 	ret = aw2013_read_register(client, REG_LCFG0 + led->index, &value);
 	if (ret < 0) {
 		dev_err(&client->dev, "Failed to aw2013_read_register: %d\n", ret);
-		return ret;
+		goto out_aw2013_unlock;
 	}
 
 	if (count > 0) {
 		if (value & (1 << 4)) {
-			return 0;
+			goto out_success;
 		}
 
 		value |= (1 << 4);
 	} else if (value & (1 << 4)) {
 		value &= ~(1 << 4);
 	} else {
-		return 0;
+		goto out_success;
 	}
 
 	ret = aw2013_write_register(client, REG_LCFG0 + led->index, value);
 	if (ret < 0) {
 		dev_err(&client->dev, "Failed to aw2013_read_register: %d\n", ret);
-		return ret;
+		goto out_aw2013_unlock;
 	}
 
-	return 0;
+out_success:
+	ret = 0;
+out_aw2013_unlock:
+	aw2013_unlock(aw2013);
+	return ret;
 }
 
 static int aw2013_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
@@ -308,6 +396,8 @@ static int aw2013_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 		return -ENOMEM;
 	}
 
+	mutex_init(&aw2013->lock);
+
 	aw2013->client = client;
 	i2c_set_clientdata(client, aw2013);
 
@@ -315,18 +405,6 @@ static int aw2013_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	if (IS_ERR(aw2013->vcc)) {
 		dev_err(&client->dev, "Failed to regulator_get vcc\n");
 		aw2013->vcc = NULL;
-	} else {
-		ret = regulator_enable(aw2013->vcc);
-		if (ret < 0) {
-			dev_err(&client->dev, "Failed to regulator_enable: %d\n", ret);
-			goto out_devm_kfree;
-		}
-	}
-
-	ret = aw2013_init_register(aw2013);
-	if (ret < 0) {
-		dev_err(&client->dev, "Failed to aw2013_init_register: %d\n", ret);
-		goto out_devm_kfree;
 	}
 
 	default_trigger = of_get_property(client->dev.of_node, "linux,default-trigger", NULL);
@@ -353,14 +431,20 @@ static int aw2013_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 				led_classdev_unregister(&aw2013->leds[i].cdev);
 			}
 
-			goto out_devm_kfree;
+			goto out_regulator_put;
 		}
 	}
 
 	return 0;
 
-out_devm_kfree:
+out_regulator_put:
+	if (aw2013->vcc) {
+		regulator_put(aw2013->vcc);
+	}
+
+	mutex_destroy(&aw2013->lock);
 	devm_kfree(&client->dev, aw2013);
+
 	return ret;
 }
 
@@ -373,6 +457,11 @@ static int aw2013_i2c_remove(struct i2c_client *client)
 		led_classdev_unregister(&aw2013->leds[i].cdev);
 	}
 
+	if (aw2013->vcc) {
+		regulator_put(aw2013->vcc);
+	}
+
+	mutex_destroy(&aw2013->lock);
 	devm_kfree(&client->dev, aw2013);
 
 	return 0;

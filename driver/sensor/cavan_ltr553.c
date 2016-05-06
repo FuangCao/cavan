@@ -131,7 +131,7 @@ static int ltr553_proximity_event_handler(struct cavan_input_chip *chip, struct 
 		return ret;
 	}
 
-	cavan_sensor_report_value(dev->input, value > 200);
+	cavan_sensor_report_value(dev->input, value < 750);
 
 	return 0;
 }
