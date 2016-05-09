@@ -4,6 +4,11 @@
     xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
     android:key="parent">
 
+	<Preference
+	    android:key="ip_address"
+	    android:title="@string/text_ip_address"
+	    android:summary="@string/text_unknown"/>
+
 	<com.cavan.cavanutils.CavanServicePreference
 	    android:key="tcp_dd_service"
 	    android:persistent="true"

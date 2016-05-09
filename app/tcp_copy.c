@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 		file_req.dest_offset = 0;
 		file_req.size = 0;
 
-		println("%s => %s", file_req.src_file, file_req.dest_file);
+		// println("%s => %s", file_req.src_file, file_req.dest_file);
 
 		ret = handler(&url, &file_req, flags);
 		if (ret < 0) {

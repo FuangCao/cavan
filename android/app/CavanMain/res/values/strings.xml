@@ -15,5 +15,7 @@
     <string name="text_close_service">关闭服务</string>
     <string name="text_service_connected">已连接到服务</string>
     <string name="text_service_disconnected">已断开服务</string>
+    <string name="text_ip_address">本机IP地址</string>
+    <string name="text_unknown">未知</string>
 
 </resources>
