@@ -7,4 +7,7 @@ all:
 $(APP_ABI): Android.mk
 	+$(CMD_NDK_BUILD) APP_ABI="$@"
 
+clean:
+	@rm -rf ../obj
+
 .PHONY: $(APP_ABI)

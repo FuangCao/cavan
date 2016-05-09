@@ -821,9 +821,9 @@ JNIEXPORT jint Java_com_cavan_cavanutils_CavanNative_doMkfs(JNIEnv *env, jclass 
 	return CavanMainExecute(env, args, "mkfs", do_cavan_mkfs);
 }
 
-extern int do_cavan_calculator_cpp(int argc, char *argv[]);
+extern int do_cavan_cpp_calculator(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanutils_CavanNative_doCalculatorCpp(JNIEnv *env, jclass clazz, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanutils_CavanNative_doCppCalculator(JNIEnv *env, jclass clazz, jobjectArray args)
 {
-	return CavanMainExecute(env, args, "calculator_cpp", do_cavan_calculator_cpp);
+	return CavanMainExecute(env, args, "cpp_calculator", do_cavan_cpp_calculator);
 }
