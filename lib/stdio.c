@@ -6,6 +6,8 @@
 
 #define MAX_BUFF_LEN	KB(4)
 
+const char *cavan_temp_path;
+
 static int console_fd = -1;
 static struct termios tty_attr;
 
@@ -773,7 +775,7 @@ bool cavan_get_choose_yesno_format(bool def_choose, int timeout_ms, const char *
 	return cavan_get_choose_yesno(buff, def_choose, timeout_ms);
 }
 
-const char *cavan_get_temp_path(void)
+const char *cavan_get_temp_path_force(void)
 {
 	int i;
 	const char *path_envs[] = { "TMP_PATH", "CACHE_PATH", "HOME" };
@@ -793,6 +795,17 @@ const char *cavan_get_temp_path(void)
 	}
 
 	return paths[0];
+}
+
+const char *cavan_get_temp_path(void)
+{
+	if (cavan_temp_path) {
+		return cavan_temp_path;
+	}
+
+	cavan_temp_path = cavan_get_temp_path_force();
+
+	return cavan_temp_path;
 }
 
 const char *cavan_build_temp_path(const char *filename, char *buff, size_t size)

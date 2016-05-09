@@ -112,24 +112,25 @@ am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) \
 	bdata.$(OBJEXT) bkernel.$(OBJEXT) bmp_view.$(OBJEXT) \
 	bootimg.$(OBJEXT) bramdisk.$(OBJEXT) brecovery.$(OBJEXT) \
 	bsystem.$(OBJEXT) buboot.$(OBJEXT) calculator.$(OBJEXT) \
-	calculator_cpp.$(OBJEXT) chroot.$(OBJEXT) chtty.$(OBJEXT) \
-	copy.$(OBJEXT) dd.$(OBJEXT) df.$(OBJEXT) display.$(OBJEXT) \
-	dos2unix.$(OBJEXT) eavoo_sell_statistic.$(OBJEXT) \
-	ecc.$(OBJEXT) event_repeater.$(OBJEXT) ext2.$(OBJEXT) \
-	fb_capture.$(OBJEXT) fdisk.$(OBJEXT) file_crc32.$(OBJEXT) \
-	file_join.$(OBJEXT) file_loop.$(OBJEXT) file_split.$(OBJEXT) \
-	ftp.$(OBJEXT) ftp_server.$(OBJEXT) git_daemon.$(OBJEXT) \
-	heart_rate.$(OBJEXT) i2c.$(OBJEXT) image_dd.$(OBJEXT) \
-	inotify.$(OBJEXT) input.$(OBJEXT) jw650_lcd.$(OBJEXT) \
-	jwp_udp.$(OBJEXT) lm49350_clock.$(OBJEXT) loop_run.$(OBJEXT) \
-	md5sum.$(OBJEXT) mkdir.$(OBJEXT) mknp.$(OBJEXT) \
-	mksdcard.$(OBJEXT) modem_upgrade.$(OBJEXT) mount.$(OBJEXT) \
-	move.$(OBJEXT) mtd.$(OBJEXT) net_discovery.$(OBJEXT) \
-	net_monitor.$(OBJEXT) part_probe.$(OBJEXT) part_show.$(OBJEXT) \
-	part_table.$(OBJEXT) ping.$(OBJEXT) poll_event.$(OBJEXT) \
-	poll_input.$(OBJEXT) ramdisk.$(OBJEXT) remove.$(OBJEXT) \
-	resize.$(OBJEXT) rle.$(OBJEXT) screen_mirror.$(OBJEXT) \
-	service.$(OBJEXT) service_manager.$(OBJEXT) sha1sum.$(OBJEXT) \
+	chroot.$(OBJEXT) chtty.$(OBJEXT) copy.$(OBJEXT) \
+	cpp_calculator.$(OBJEXT) dd.$(OBJEXT) df.$(OBJEXT) \
+	display.$(OBJEXT) dos2unix.$(OBJEXT) \
+	eavoo_sell_statistic.$(OBJEXT) ecc.$(OBJEXT) \
+	event_repeater.$(OBJEXT) ext2.$(OBJEXT) fb_capture.$(OBJEXT) \
+	fdisk.$(OBJEXT) file_crc32.$(OBJEXT) file_join.$(OBJEXT) \
+	file_loop.$(OBJEXT) file_split.$(OBJEXT) ftp.$(OBJEXT) \
+	ftp_server.$(OBJEXT) git_daemon.$(OBJEXT) heart_rate.$(OBJEXT) \
+	i2c.$(OBJEXT) image_dd.$(OBJEXT) inotify.$(OBJEXT) \
+	input.$(OBJEXT) jw650_lcd.$(OBJEXT) jwp_udp.$(OBJEXT) \
+	lm49350_clock.$(OBJEXT) loop_run.$(OBJEXT) md5sum.$(OBJEXT) \
+	mkdir.$(OBJEXT) mknp.$(OBJEXT) mksdcard.$(OBJEXT) \
+	modem_upgrade.$(OBJEXT) mount.$(OBJEXT) move.$(OBJEXT) \
+	mtd.$(OBJEXT) net_discovery.$(OBJEXT) net_monitor.$(OBJEXT) \
+	part_probe.$(OBJEXT) part_show.$(OBJEXT) part_table.$(OBJEXT) \
+	ping.$(OBJEXT) poll_event.$(OBJEXT) poll_input.$(OBJEXT) \
+	ramdisk.$(OBJEXT) remove.$(OBJEXT) resize.$(OBJEXT) \
+	rle.$(OBJEXT) screen_mirror.$(OBJEXT) service.$(OBJEXT) \
+	service_manager.$(OBJEXT) sha1sum.$(OBJEXT) \
 	show_file.$(OBJEXT) shrink.$(OBJEXT) sprd_at.$(OBJEXT) \
 	sprd_write_imei.$(OBJEXT) ssh.$(OBJEXT) ssh_copy.$(OBJEXT) \
 	sshd.$(OBJEXT) ssh_dd.$(OBJEXT) su.$(OBJEXT) sudo.$(OBJEXT) \
@@ -361,8 +362,8 @@ MAINTAINERCLEANFILES = Makefile.am Makefile.in
 APP_SRC_FILES = abspath.c alarm.c alc5671_clock.c auto_dd.c \
 	auto_input.c auto_mount.c battery.c battery_level.c bdata.c \
 	bkernel.c bmp_view.c bootimg.c bramdisk.c brecovery.c \
-	bsystem.c buboot.c calculator.c calculator_cpp.cpp chroot.c \
-	chtty.c copy.c dd.c df.c display.c dos2unix.c \
+	bsystem.c buboot.c calculator.c chroot.c chtty.c copy.c \
+	cpp_calculator.cpp dd.c df.c display.c dos2unix.c \
 	eavoo_sell_statistic.c ecc.c event_repeater.c ext2.c \
 	fb_capture.c fdisk.c file_crc32.c file_join.c file_loop.c \
 	file_split.c ftp.c ftp_server.c git_daemon.c heart_rate.c \
@@ -511,10 +512,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsystem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/buboot.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/calculator.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/calculator_cpp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chroot.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chtty.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/copy.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpp_calculator.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/df.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/display.Po@am__quote@

@@ -444,6 +444,8 @@ using namespace std;
 
 __BEGIN_DECLS
 
+extern const char *cavan_temp_path;
+
 int cavan_tty_set_attr(int fd, int action, struct termios *attr);
 int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak);
 int cavan_tty_attr_restore(int fd, struct termios *attr);
@@ -492,6 +494,7 @@ __printf_format_23__ void print_color_text(int color, const char *fmt, ...);
 __printf_format_12__ void print_error_base(const char *fmt, ...);
 
 extern char *size2text(u64 size);
+const char *cavan_get_temp_path_force(void);
 const char *cavan_get_temp_path(void);
 const char *cavan_build_temp_path(const char *filename, char *buff, size_t size);
 bool cavan_get_choose_yesno(const char *prompt, bool def_value, int timeout_ms);

@@ -36,8 +36,19 @@ struct cavan_ftp_client {
 	struct network_client data_client;
 	struct network_service data_service;
 
+	char file_type;
 	bool port_received;
 	bool pasv_received;
+	enum cavan_ftp_state state;
+};
+
+struct ftp_command_package {
+	const char *command;
+	size_t cmdsize;
+	char *response;
+	size_t rspsize;
+	struct network_service *service;
+	struct network_client *data_client;
 };
 
 char *ftp_file_stat_tostring(const char *filepath, char *buff, char *buff_end);
@@ -46,8 +57,9 @@ char *ftp_list_directory(const char *dirpath, char *text);
 int ftp_service_run(struct cavan_dynamic_service *service);
 
 int ftp_client_read_response(struct network_client *client, char *response, size_t size);
-int ftp_client_send_command(struct network_client *client, const char *command, size_t cmdsize, char *response, size_t repsize);
-int ftp_client_send_command2(struct network_client *client, char *response, size_t repsize, const char *command, ...);
+int ftp_client_send_command_package(struct network_client *client, struct ftp_command_package *pkg);
+int ftp_client_send_command(struct network_client *client, const char *command, size_t cmdsize, char *response, size_t rspsize);
+int ftp_client_send_command2(struct network_client *client, char *response, size_t rspsize, const char *command, ...);
 int ftp_client_send_pasv_command(struct network_client *client, struct network_url *url);
 int ftp_client_create_pasv_link(struct network_client *client_ctrl, struct network_client *client_data);
 int ftp_client_login(struct network_client *client, const char *username, const char *password);
