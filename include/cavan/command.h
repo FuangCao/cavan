@@ -190,6 +190,11 @@ struct cavan_exec_pipe_thread_data {
 	pid_t pid;
 };
 
+struct cavan_pipe_command {
+	const char *name;
+	int (*handler)(int argc, char *argv[], void *data);
+};
+
 // ============================================================
 
 extern const char *cavan_help_message_help;
@@ -305,6 +310,9 @@ int cavan_tty_redirect_loop3(int in, int out, int err, int ttyin, int ttyout, in
 
 void cavan_set_exit_ask(void);
 int cavan_reboot(bool shutdown, const char *command);
+int cavan_cmdline_parse(char *cmdline, char *argv[], int size);
+struct cavan_pipe_command *cavan_pipe_cmdline_find(const char *name, struct cavan_pipe_command cmd_list[], size_t cmd_count);
+int cavan_pipe_cmdline_run(const char *pathname, struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data);
 
 static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
 {

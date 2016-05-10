@@ -8,6 +8,25 @@ public class CavanUtils extends CavanNative {
 	public static native boolean kill(String name);
 	public static native boolean setEnv(String key, String value);
 
+	public static String getEnv(String name) {
+		return System.getenv(name);
+	}
+
+	public static boolean setPathEnv(String value) {
+		return setEnv("PATH", value);
+	}
+
+	public static boolean appendPathEnv(String value) {
+		String path = getEnv("PATH");
+		if (path == null) {
+			path = value;
+		} else {
+			path += ":" + value;
+		}
+
+		return setPathEnv(path);
+	}
+
 	public static final int logE(String message) {
 		return Log.e(TAG, message);
 	}

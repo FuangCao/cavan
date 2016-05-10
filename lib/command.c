@@ -1596,3 +1596,145 @@ int cavan_reboot(bool shutdown, const char *command)
 
 	return 0;
 }
+
+int cavan_cmdline_parse(char *cmdline, char *argv[], int size)
+{
+	int argc = 0;
+	char *p = cmdline;
+
+	argv[argc] = p;
+
+	while (1) {
+		switch (*cmdline) {
+		case ' ':
+		case '\t':
+			if (p != argv[argc]) {
+				*p++ = 0;
+
+				if (++argc >= size) {
+					return argc;
+				}
+
+				argv[argc] = p;
+			}
+			break;
+
+		case '\r':
+		case '\n':
+		case '\f':
+		case '\0':
+label_parse_complete:
+			if (p != argv[argc]) {
+				*p = 0;
+				return argc + 1;
+			} else {
+				return argc;
+			}
+
+		case '\\':
+			switch (*++cmdline) {
+			case '\r':
+			case '\n':
+			case '\f':
+			case '\0':
+				goto label_parse_complete;
+			}
+		default:
+			*p++ = *cmdline;
+		}
+
+		cmdline++;
+	}
+}
+
+struct cavan_pipe_command *cavan_pipe_cmdline_find(const char *name, struct cavan_pipe_command cmd_list[], size_t cmd_count)
+{
+	struct cavan_pipe_command *cmd_end;
+
+	for (cmd_end = cmd_list + cmd_count; cmd_list < cmd_end; cmd_list++) {
+		if (strcmp(name, cmd_list->name) == 0) {
+			return cmd_list;
+		}
+	}
+
+	return NULL;
+}
+
+int cavan_pipe_cmdline_run(const char *pathname, struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data)
+{
+	int i;
+	int ret;
+	FILE *fp;
+	char command[1024];
+
+	while (1) {
+		fp = fopen(pathname, "r");
+		if (fp == 0) {
+			if (errno != ENOENT) {
+				pr_err_info("open file %s", pathname);
+				return -EFAULT;
+			}
+
+			ret = mkfifo(pathname, 0777);
+			if (ret < 0) {
+				const char *p;
+				const char *filename;
+
+				if (errno != ENOENT) {
+					pr_err_info("mkfifo %s: %d", pathname, ret);
+					return ret;
+				}
+
+				for (p = pathname, filename = p; *p; p++) {
+					if (*p == '/') {
+						filename = p + 1;
+					}
+				}
+
+				while (*filename == '/') {
+					filename--;
+				}
+
+				ret = mkdir_hierarchy_length(pathname, filename - pathname, 0777);
+				if (ret < 0) {
+					pr_err_info("mkdir_hierarchy_length: %d", ret);
+					return ret;
+				}
+			} else {
+				chmod(pathname, 0777);
+			}
+
+			continue;
+		}
+
+		while (fgets(command, sizeof(command), fp)) {
+			int argc;
+			char *argv[100];
+			struct cavan_pipe_command *cmd;
+
+			argc = cavan_cmdline_parse(command, argv, NELEM(argv));
+			if (argc < 1) {
+				pr_red_info("cavan_cmdline_parse: argc = %d", argc);
+				continue;
+			}
+
+			for (i = 0; i < argc; i++) {
+				pd_info("argv[%d] = %s", i, argv[i]);
+			}
+
+			cmd = cavan_pipe_cmdline_find(argv[0], cmd_list, cmd_count);
+			if (cmd == NULL) {
+				pr_red_info("cavan_pipe_cmdline_find");
+				continue;
+			}
+
+			ret = cmd->handler(argc, argv, data);
+			if (ret < 0) {
+				pr_red_info("cmd->handler: %d", ret);
+				continue;
+			}
+		}
+	}
+
+	return 0;
+}

@@ -20,8 +20,22 @@
 #include <cavan.h>
 #include <cavan/command.h>
 
+__maybe_unused static void test_cmdline_parse(char *cmdline)
+{
+	int i;
+	int argc;
+	char *argv[10];
+
+	argc = cavan_cmdline_parse(cmdline, argv, NELEM(argv));
+
+	for (i = 0; i < argc; i++) {
+		println("argv[%d] = %s", i, argv[i]);
+	}
+}
+
 int main(int argc, char *argv[])
 {
+#if 0
 	int ret;
 	pid_t pid;
 	int size[2];
@@ -49,6 +63,16 @@ int main(int argc, char *argv[])
 
 		cavan_exec_close_temp_pipe(ttyfds, -1);
 	}
+#else
+	assert(argc > 1);
+
+#if 0
+	test_cmdline_parse(argv[1]);
+#else
+	cavan_pipe_cmdline_run(argv[1], NULL, 0, NULL);
+#endif
+
+#endif
 
 	return 0;
 }
