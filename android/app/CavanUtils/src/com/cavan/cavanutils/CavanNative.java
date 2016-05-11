@@ -827,10 +827,10 @@ class CavanCommandMkfs implements ICavanCommand {
 	}
 }
 
-class CavanCommandCalculatorCpp implements ICavanCommand {
+class CavanCommandCppCalculator implements ICavanCommand {
 	@Override
 	public int main(String... args) {
-		return CavanNative.doCalculatorCpp(args);
+		return CavanNative.doCppCalculator(args);
 	}
 }
 
@@ -958,7 +958,7 @@ public class CavanNative {
 		sHashMap.put("vfat", new CavanCommandVfat());
 		sHashMap.put("web_proxy", new CavanCommandWebProxy());
 		sHashMap.put("mkfs", new CavanCommandMkfs());
-		sHashMap.put("calculator_cpp", new CavanCommandCalculatorCpp());
+		sHashMap.put("cpp_calculator", new CavanCommandCppCalculator());
 	}
 
 	public static native int doAbspath(String... args);
@@ -1078,5 +1078,5 @@ public class CavanNative {
 	public static native int doVfat(String... args);
 	public static native int doWebProxy(String... args);
 	public static native int doMkfs(String... args);
-	public static native int doCalculatorCpp(String... args);
+	public static native int doCppCalculator(String... args);
 }

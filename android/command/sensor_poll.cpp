@@ -386,7 +386,7 @@ static int sensor_event_receiver(int fd, int events, void *data)
 static int sensor_service_poll_main_loop(u32 mask, u32 delay)
 {
 	ssize_t count;
-	Sensor const* const* list;
+	Sensor const *const *list;
 #if CONFIG_ANDROID_VERSION < 6
 	SensorManager &manager(SensorManager::getInstance());
 #else
@@ -406,7 +406,7 @@ static int sensor_service_poll_main_loop(u32 mask, u32 delay)
 	sp<SensorEventQueue> queue = manager.createEventQueue();
 
 	for (int i = 0; i < 32; i++) {
-		Sensor const* sensor = manager.getDefaultSensor(i);
+		Sensor const *sensor = manager.getDefaultSensor(i);
 		if (sensor == NULL) {
 			continue;
 		}
