@@ -10,19 +10,19 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 
-import com.cavan.cavanutils.CavanUtils;
-
-import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
+import com.cavan.cavanutils.CavanUtils;
+
 public class MainActivity extends PreferenceActivity {
 
 	private static final String KEY_IP_ADDRESS = "ip_address";
 
+	private File mFileBin;
 	private Preference mPreferenceIpAddress;
 
 	@SuppressWarnings("deprecation")
@@ -34,75 +34,87 @@ public class MainActivity extends PreferenceActivity {
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		updateIpAddressStatus();
 
-		if (releaseCavanMain()) {
-			CavanUtils.logD("releaseCavanMain OK");
+		mFileBin = getDir("bin", 0777);
+		if (mFileBin == null) {
+			CavanUtils.logE("Failed to getDir bin");
 		} else {
-			CavanUtils.logE("releaseCavanMain Failed");
+			CavanUtils.appendPathEnv(mFileBin.getPath());
+
+			new Thread() {
+
+				@Override
+				public void run() {
+					CavanUtils.logD("releaseCavanMain " + (releaseCavanMain() ? "OK" : "Failed"));
+				}
+			}.start();
 		}
 	}
 
 	@SuppressWarnings("deprecation")
 	private boolean releaseCavanMain() {
-		File dirBin = getDir("bin", 0777);
-		if (dirBin == null) {
-			CavanUtils.logE("Failed to getDir bin");
-			return false;
-		}
-
-		CavanUtils.appendPathEnv(dirBin.getPath());
-
-		File fileCavanMain = new File(dirBin, "cavan-main");
+		File fileCavanMain = new File(mFileBin, "cavan-main");
 		if (fileCavanMain.canExecute()) {
 			return true;
 		}
 
 		for (String abi : new String[] { Build.CPU_ABI, Build.CPU_ABI2 }) {
-			InputStream inStream = null;
-			OutputStream outStream = null;
+			String filename = "cavan-main" + "." + abi;
 
-			try {
-				String filename = "cavan-main" + "." + abi;
-
-				inStream = getAssets().open(filename);
-				if (inStream == null) {
-					continue;
-				}
-
-				CavanUtils.logD(filename + " => " + fileCavanMain.getPath());
-
-				outStream = new FileOutputStream(fileCavanMain);
-
-				byte[] buff = new byte[1024];
-
-				while (true) {
-					int length = inStream.read(buff);
-					if (length < 1) {
-						break;
-					}
-
-					outStream.write(buff, 0, length);
-				}
-
-				fileCavanMain.setExecutable(true);
-
+			if (releaseAsset(filename, fileCavanMain)) {
+				fileCavanMain.setExecutable(true, false);
 				return true;
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				if (inStream != null) {
-					try {
-						inStream.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+			}
+		}
+
+		return false;
+	}
+
+	private boolean releaseAsset(InputStream inStream, OutputStream outStream) {
+		byte[] buff = new byte[1024];
+
+		try {
+			while (true) {
+				int length = inStream.read(buff);
+				if (length < 1) {
+					break;
 				}
 
-				if (outStream != null) {
-					try {
-						outStream.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+				outStream.write(buff, 0, length);
+			}
+
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	private boolean releaseAsset(String filename, File outFile) {
+		CavanUtils.logD("releaseAsset: " + filename + " => " + outFile.getPath());
+
+		InputStream inStream = null;
+		OutputStream outStream = null;
+
+		try {
+			inStream = getAssets().open(filename);
+			outStream = new FileOutputStream(outFile);
+			return releaseAsset(inStream, outStream);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (inStream != null) {
+				try {
+					inStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+
+			if (outStream != null) {
+				try {
+					outStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			}
 		}
