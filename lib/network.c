@@ -2118,7 +2118,9 @@ static int network_client_adb_open(struct network_client *client, const struct n
 
 	sockfd = adb_create_tcp_link(url->hostname, 0, port, (flags & CAVAN_NET_FLAG_WAIT) != 0);
 	if (sockfd < 0) {
+#if CAVAN_NETWORK_DEBUG
 		pr_red_info("adb_create_tcp_link");
+#endif
 		return sockfd;
 	}
 

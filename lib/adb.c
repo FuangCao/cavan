@@ -7,6 +7,9 @@
 #include <cavan.h>
 #include <cavan/adb.h>
 
+#define CAVAN_ADB_DEBUG			0
+#define CAVAN_ADB_POLL_DELAY	200
+
 bool adb_is_client(void)
 {
 	static int retval = -1;
@@ -85,7 +88,9 @@ int adb_send_text(int sockfd, const char *text)
 
 	ret = adb_read_status(sockfd, status, sizeof(status));
 	if (ret < 0) {
+#if CAVAN_ADB_DEBUG
 		pr_red_info("status = %s", status);
+#endif
 		return ret;
 	}
 
@@ -109,7 +114,9 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 		ip = LOCAL_HOST_IP;
 	}
 
+#if CAVAN_ADB_DEBUG
 	println("IP = %s", ip);
+#endif
 
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr(ip);
@@ -120,7 +127,10 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 				continue;
 			}
 
+#if CAVAN_ADB_DEBUG
 			pr_info("Try port %04d", ports[i]);
+#endif
+
 			addr.sin_port = htons(ports[i]);
 
 			if (inet_connect(sockfd, &addr) >= 0) {
@@ -132,9 +142,11 @@ int adb_connect_service_base(const char *ip, u16 port, int retry)
 			break;
 		}
 
-		if (adb_is_host() && cavan_system("adb start-server", 0, NULL)) {
-			pr_error_info("adb start-server");
-			break;
+		if (adb_is_host() && addr.sin_addr.s_addr == 0x0100007F) {
+			if (cavan_system("adb start-server", 0, NULL)) {
+				pr_error_info("adb start-server");
+				break;
+			}
 		}
 	}
 
@@ -155,33 +167,65 @@ int adb_connect_service(const char *ip, u16 port, const char *service)
 	}
 
 	if (adb_is_host() && (ret = adb_send_command(sockfd, "host:transport-any")) < 0) {
+#if CAVAN_ADB_DEBUG
 		pr_red_info("adb_send_command");
-		close(sockfd);
-		return ret;
+#endif
+		goto out_close_sockfd;
 	}
 
 	ret = adb_send_command(sockfd, service);
 	if (ret < 0) {
 		pr_red_info("adb_connect_service");
-		close(sockfd);
-		return ret;
+		goto out_close_sockfd;
 	}
 
 	return sockfd;
+
+out_close_sockfd:
+	close(sockfd);
+	return ret;
+}
+
+int adb_wait_for_device(const char *ip, u16 port, u32 msec)
+{
+	if (!adb_is_host()) {
+		return 0;
+	}
+
+	if (msec > 0) {
+		while (1) {
+			if (adb_wait_for_device_once(ip, port) >= 0) {
+				return 0;
+			}
+
+			if (msec < CAVAN_ADB_POLL_DELAY) {
+				return -ETIMEDOUT;
+			}
+
+			msleep(CAVAN_ADB_POLL_DELAY);
+			msec -= CAVAN_ADB_POLL_DELAY;
+		}
+	} else {
+		while (adb_wait_for_device_once(ip, port) < 0) {
+			msleep(500);
+		}
+
+		return 0;
+	}
 }
 
 int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port, bool wait_device)
 {
 	char service[32];
 
-	if (wait_device && adb_is_host()) {
+	if (wait_device) {
 		int ret;
 
 		print("waiting for adb connection ... ");
-		ret = cavan_system("adb wait-for-device", 0, NULL);
-		if (ret && ret != 127) {
-			println("Failed!");
-			return -EFAULT;
+
+		ret = adb_wait_for_device(ip, port, 0);
+		if (ret < 0) {
+			return ret;
 		}
 
 		println("OK");
