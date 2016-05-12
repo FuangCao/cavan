@@ -167,7 +167,6 @@ int main(int argc, char *argv[])
 
 	while ((c = getopt_long(argc, argv, "vVhH:i:I:p:P:c:C:m:M:dDaAl:L:u:U:", long_option, &option_index)) != EOF) {
 		switch (c) {
-		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
 			show_author_info();
@@ -219,6 +218,7 @@ int main(int argc, char *argv[])
 			service->max = text2value_unsigned(optarg, NULL, 10);
 			break;
 
+		case 'v':
 		case CAVAN_COMMAND_OPTION_VERBOSE:
 			service->verbose = true;
 			break;
