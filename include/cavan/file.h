@@ -194,6 +194,7 @@ int remove_directory(const char *pathname);
 int remove_auto(const char *pathname);
 
 int file_type_test(const char *pathname, mode_t type);
+int file_type_test2(const char *pathname, mode_t type);
 int fd_type_test(int fd, mode_t type);
 
 size_t fscan_directory1(DIR *dp, void *buff, size_t size);
@@ -436,6 +437,11 @@ static inline int file_is_file(const char *pathname)
 static inline int file_is_directory(const char *pathname)
 {
 	return file_type_test(pathname, S_IFDIR);
+}
+
+static inline int file_is_directory2(const char *pathname)
+{
+	return file_type_test2(pathname, S_IFDIR);
 }
 
 static inline int file_is_symlink(const char *pathname)

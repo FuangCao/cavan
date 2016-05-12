@@ -2254,6 +2254,19 @@ int file_type_test(const char *pathname, mode_t type)
 	return (st.st_mode & S_IFMT) == type;
 }
 
+int file_type_test2(const char *pathname, mode_t type)
+{
+	int ret;
+	struct stat st;
+
+	ret = file_stat2(pathname, &st);
+	if (ret < 0) {
+		return 0;
+	}
+
+	return (st.st_mode & S_IFMT) == type;
+}
+
 int fd_type_test(int fd, mode_t type)
 {
 	int ret;

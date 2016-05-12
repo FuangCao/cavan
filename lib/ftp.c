@@ -379,7 +379,7 @@ static int ftp_service_cmdline(struct cavan_ftp_service *ftp_service, struct cav
 			case FTP_BUILD_CMD('X', 'C', 'W', 'D'):
 				if (*cmd_arg) {
 					ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path));
-					if (!file_is_directory(abs_path)) {
+					if (!file_is_directory2(abs_path)) {
 						reply = "550 Failed to change directory.\r\n";
 						break;
 					}
