@@ -1,8 +1,5 @@
 package com.cavan.cavanutils;
 
-import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
@@ -24,19 +21,11 @@ import android.view.View;
 import android.widget.EditText;
 
 @SuppressLint("HandlerLeak")
-public class CavanServicePreference extends EditTextPreference {
+public abstract class CavanServicePreference extends EditTextPreference {
 
 	private static final int EVENT_START_SERVICE = 1;
 	private static final int EVENT_STOP_SERVICE = 2;
 	private static final int EVENT_RESTART_SERVICE = 3;
-
-	private static HashMap<String, Class<?>> mHashMap = new HashMap<String, Class<?>>();
-
-	static {
-		mHashMap.put("ftp_service", FtpService.class);
-		mHashMap.put("tcp_dd_service", TcpDdService.class);
-		mHashMap.put("web_proxy_service", WebProxyService.class);
-	}
 
 	private Handler mHandler = new Handler() {
 
@@ -63,19 +52,13 @@ public class CavanServicePreference extends EditTextPreference {
 	};
 
 	private boolean mNeedStop;
-	private Class<?> mServiceClass;
 	private ICavanService mService;
+	private boolean mReceiverRegisted;
 	private ServiceConnection mConnection = new ServiceConnection() {
 
 		@Override
 		public void onServiceDisconnected(ComponentName arg0) {
 			CavanUtils.logD("onServiceDisconnected: " + arg0);
-
-			try {
-				getContext().unregisterReceiver(mReceiver);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 
 			mService = null;
 
@@ -91,11 +74,14 @@ public class CavanServicePreference extends EditTextPreference {
 
 			mService = ICavanService.Stub.asInterface(arg1);
 
-			try {
-				IntentFilter filter = new IntentFilter(mService.getAction());
-				getContext().registerReceiver(mReceiver, filter);
-			} catch (RemoteException e) {
-				e.printStackTrace();
+			if (!mReceiverRegisted) {
+				try {
+					IntentFilter filter = new IntentFilter(mService.getAction());
+					getContext().registerReceiver(mReceiver, filter);
+					mReceiverRegisted = true;
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
 			}
 
 			updateSummary(getState());
@@ -107,25 +93,30 @@ public class CavanServicePreference extends EditTextPreference {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			boolean state = intent.getBooleanExtra("state", false);
-			updateSummary(state);
+			updateSummary(context, intent);
 		}
 	};
 
-	public CavanServicePreference(Context context, AttributeSet attrs) throws ExecutionException {
-		super(context, attrs);
+	public abstract Intent getServiceIntent(Context context);
 
-		mServiceClass = mHashMap.get(getKey());
-		if (mServiceClass == null) {
-			throw new ExecutionException("Invalid service: " + getKey(), new Throwable());
-		}
+	public CavanServicePreference(Context context, AttributeSet attrs) {
+		super(context, attrs);
 
 		updateSummary(false);
 		startService(context);
 	}
 
-	public Intent getServiceIntent(Context context) {
-		return new Intent(context, mServiceClass);
+	public void unbindService(Context context) {
+		context.unbindService(mConnection);
+
+		if (mReceiverRegisted) {
+			try {
+				context.unregisterReceiver(mReceiver);
+				mReceiverRegisted = false;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void startService(Context context) {
@@ -197,7 +188,7 @@ public class CavanServicePreference extends EditTextPreference {
 		return 0;
 	}
 
-	private void updateSummary(boolean state) {
+	public void updateSummary(boolean state) {
 
 		if (mService == null) {
 			setSummary(R.string.text_service_disconnected);
@@ -222,6 +213,11 @@ public class CavanServicePreference extends EditTextPreference {
 				setSummary(builder.toString());
 			}
 		}
+	}
+
+	public void updateSummary(Context context, Intent intent) {
+		boolean state = intent.getBooleanExtra("state", false);
+		updateSummary(state);
 	}
 
 	@Override

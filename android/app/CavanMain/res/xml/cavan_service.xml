@@ -9,18 +9,18 @@
 	    android:title="@string/text_ip_address"
 	    android:summary="@string/text_unknown"/>
 
-	<com.cavan.cavanutils.CavanServicePreference
-	    android:key="tcp_dd_service"
+	<com.cavan.cavanutils.TcpDdServicePreference
+	    android:key="tcp_dd"
 	    android:persistent="true"
 	    android:title="@string/tcp_dd_service"/>
 
-	<com.cavan.cavanutils.CavanServicePreference
-	    android:key="ftp_service"
+	<com.cavan.cavanutils.FtpServicePreference
+	    android:key="ftp"
 	    android:persistent="true"
 	    android:title="@string/ftp_service"/>
 
-	<com.cavan.cavanutils.CavanServicePreference
-	    android:key="web_proxy_service"
+	<com.cavan.cavanutils.WebProxyServicePreference
+	    android:key="web_proxy"
 	    android:persistent="true"
 	    android:title="@string/web_proxy_service"/>
 

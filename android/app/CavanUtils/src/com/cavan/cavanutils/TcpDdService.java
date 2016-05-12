@@ -1,6 +1,5 @@
 package com.cavan.cavanutils;
 
-
 public class TcpDdService extends CavanService {
 
 	public static final String NAME = "TCP_DD";

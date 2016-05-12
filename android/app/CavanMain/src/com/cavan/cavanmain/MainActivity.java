@@ -16,14 +16,21 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
+import com.cavan.cavanutils.CavanServicePreference;
 import com.cavan.cavanutils.CavanUtils;
 
 public class MainActivity extends PreferenceActivity {
 
 	private static final String KEY_IP_ADDRESS = "ip_address";
+	private static final String KEY_TCP_DD = "tcp_dd";
+	private static final String KEY_FTP = "ftp";
+	private static final String KEY_WEB_PROXY = "web_proxy";
 
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
+	private CavanServicePreference mPreferenceTcpDd;
+	private CavanServicePreference mPreferenceFtp;
+	private CavanServicePreference mPreferenceWebProxy;
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -32,6 +39,10 @@ public class MainActivity extends PreferenceActivity {
 		addPreferencesFromResource(R.xml.cavan_service);
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
+		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
+		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
+		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
+
 		updateIpAddressStatus();
 
 		mFileBin = getDir("bin", 0777);
@@ -48,6 +59,15 @@ public class MainActivity extends PreferenceActivity {
 				}
 			}.start();
 		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		mPreferenceTcpDd.unbindService(this);
+		mPreferenceFtp.unbindService(this);
+		mPreferenceWebProxy.unbindService(this);
+
+		super.onDestroy();
 	}
 
 	@SuppressWarnings("deprecation")
