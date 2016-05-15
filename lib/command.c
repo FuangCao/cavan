@@ -1647,9 +1647,9 @@ label_parse_complete:
 	}
 }
 
-struct cavan_pipe_command *cavan_pipe_cmdline_find(const char *name, struct cavan_pipe_command cmd_list[], size_t cmd_count)
+const struct cavan_pipe_command *cavan_pipe_cmdline_find(const char *name, const struct cavan_pipe_command cmd_list[], size_t cmd_count)
 {
-	struct cavan_pipe_command *cmd_end;
+	const struct cavan_pipe_command *cmd_end;
 
 	for (cmd_end = cmd_list + cmd_count; cmd_list < cmd_end; cmd_list++) {
 		if (strcmp(name, cmd_list->name) == 0) {
@@ -1660,16 +1660,70 @@ struct cavan_pipe_command *cavan_pipe_cmdline_find(const char *name, struct cava
 	return NULL;
 }
 
-int cavan_pipe_cmdline_run(const char *pathname, struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data)
+int cavan_pipe_cmdline_loop(FILE *fp, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data)
 {
 	int i;
 	int ret;
-	FILE *fp;
+	int argc;
+	char *argv[100];
 	char command[1024];
+	const struct cavan_pipe_command *cmd;
+
+	setlinebuf(fp);
+
+	while (fgets(command, sizeof(command), fp)) {
+		argc = cavan_cmdline_parse(command, argv, NELEM(argv));
+		if (argc < 1) {
+			pr_red_info("cavan_cmdline_parse: argc = %d", argc);
+			continue;
+		}
+
+		for (i = 0; i < argc; i++) {
+			pd_info("argv[%d] = %s", i, argv[i]);
+		}
+
+		cmd = cavan_pipe_cmdline_find(argv[0], cmd_list, cmd_count);
+		if (cmd == NULL) {
+			pr_red_info("cavan_pipe_cmdline_find");
+			continue;
+		}
+
+		ret = cmd->handler(argc, argv, data);
+		if (ret < 0) {
+			pr_red_info("cmd->handler: %d", ret);
+			continue;
+		}
+	}
+
+	return 0;
+}
+
+int cavan_pipe_cmdline_loop2(int fd, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data)
+{
+	int ret;
+	FILE *fp;
+
+	fp = fdopen(fd, "r");
+	if (fp == NULL) {
+		pr_err_info("fdopen %d", fd);
+		return -EFAULT;
+	}
+
+	ret = cavan_pipe_cmdline_loop(fp, cmd_list, cmd_count, data);
+
+	fclose(fp);
+
+	return ret;
+}
+
+int cavan_pipe_cmdline_loop3(const char *pathname, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data)
+{
+	int ret;
+	FILE *fp;
 
 	while (1) {
 		fp = fopen(pathname, "r");
-		if (fp == 0) {
+		if (fp == NULL) {
 			if (errno != ENOENT) {
 				pr_err_info("open file %s", pathname);
 				return -EFAULT;
@@ -1703,38 +1757,137 @@ int cavan_pipe_cmdline_run(const char *pathname, struct cavan_pipe_command cmd_l
 			} else {
 				chmod(pathname, 0777);
 			}
-
-			continue;
-		}
-
-		while (fgets(command, sizeof(command), fp)) {
-			int argc;
-			char *argv[100];
-			struct cavan_pipe_command *cmd;
-
-			argc = cavan_cmdline_parse(command, argv, NELEM(argv));
-			if (argc < 1) {
-				pr_red_info("cavan_cmdline_parse: argc = %d", argc);
-				continue;
-			}
-
-			for (i = 0; i < argc; i++) {
-				pd_info("argv[%d] = %s", i, argv[i]);
-			}
-
-			cmd = cavan_pipe_cmdline_find(argv[0], cmd_list, cmd_count);
-			if (cmd == NULL) {
-				pr_red_info("cavan_pipe_cmdline_find");
-				continue;
-			}
-
-			ret = cmd->handler(argc, argv, data);
-			if (ret < 0) {
-				pr_red_info("cmd->handler: %d", ret);
-				continue;
-			}
+		} else {
+			cavan_pipe_cmdline_loop(fp, cmd_list, cmd_count, data);
+			fclose(fp);
 		}
 	}
 
 	return 0;
+}
+
+static void *cavan_pipe_cmdline_thread(void *data)
+{
+	struct cavan_pipe_cmdline *cmdline = data;
+
+	cavan_pipe_cmdline_loop(cmdline->fp, cmdline->cmd_list, cmdline->cmd_count, data);
+
+	if (cmdline->need_close) {
+		fclose(cmdline->fp);
+	}
+
+	free(cmdline);
+
+	return NULL;
+}
+
+static void *cavan_pipe_cmdline_thread2(void *data)
+{
+	struct cavan_pipe_cmdline *cmdline = data;
+	bool need_close = cmdline->need_close;
+
+	cmdline->fp = fdopen(cmdline->fd, "r");
+	if (cmdline->fp == NULL) {
+		pr_err_info("fdopen");
+		return NULL;
+	}
+
+	cmdline->need_close = true;
+	cavan_pipe_cmdline_thread(data);
+
+	if (need_close) {
+		close(cmdline->fd);
+	}
+
+	return NULL;
+}
+
+static void *cavan_pipe_cmdline_thread3(void *data)
+{
+	struct cavan_pipe_cmdline *cmdline = data;
+
+	cavan_pipe_cmdline_loop3(cmdline->pathname, cmdline->cmd_list, cmdline->cmd_count, data);
+	free(cmdline);
+
+	return NULL;
+}
+
+int cavan_pipe_cmdline_run(FILE *fp, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data)
+{
+	struct cavan_pipe_cmdline *cmdline;
+
+	cmdline = malloc(sizeof(struct cavan_pipe_cmdline));
+	if (cmdline == NULL) {
+		pr_err_info("malloc");
+		return -ENOMEM;
+	}
+
+	cmdline->fp = fp;
+	cmdline->data = data;
+	cmdline->need_close = false;
+	cmdline->cmd_list = cmd_list;
+	cmdline->cmd_count = cmd_count;
+
+	return cavan_pthread_create(NULL, cavan_pipe_cmdline_thread, cmdline, false);
+}
+
+int cavan_pipe_cmdline_run2(int fd, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data)
+{
+	struct cavan_pipe_cmdline *cmdline;
+
+	cmdline = malloc(sizeof(struct cavan_pipe_cmdline));
+	if (cmdline == NULL) {
+		pr_err_info("malloc");
+		return -ENOMEM;
+	}
+
+	cmdline->fd = fd;
+	cmdline->data = data;
+	cmdline->need_close = false;
+	cmdline->cmd_list = cmd_list;
+	cmdline->cmd_count = cmd_count;
+
+	return cavan_pthread_create(NULL, cavan_pipe_cmdline_thread2, cmdline, false);
+}
+
+int cavan_pipe_cmdline_run3(const char *pathname, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data)
+{
+	struct cavan_pipe_cmdline *cmdline;
+
+	cmdline = malloc(sizeof(struct cavan_pipe_cmdline));
+	if (cmdline == NULL) {
+		pr_err_info("malloc");
+		return -ENOMEM;
+	}
+
+	cmdline->data = data;
+	cmdline->pathname = pathname;
+	cmdline->need_close = false;
+	cmdline->cmd_list = cmd_list;
+	cmdline->cmd_count = cmd_count;
+
+	return cavan_pthread_create(NULL, cavan_pipe_cmdline_thread3, cmdline, false);
+}
+
+int cavan_pipe_cmdline_run4(const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data)
+{
+	int ret;
+	int pipefd[2];
+
+	ret = pipe(pipefd);
+	if (ret < 0) {
+		pr_err_info("pipe: %d", ret);
+		return ret;
+	}
+
+	ret = cavan_pipe_cmdline_run2(pipefd[0], cmd_list, cmd_count, data);
+	if (ret < 0) {
+		close(pipefd[0]);
+		close(pipefd[1]);
+
+		pr_red_info("cavan_pipe_cmdline_run2: %d", ret);
+		return ret;
+	}
+
+	return pipefd[1];
 }

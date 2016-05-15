@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 #if 0
 	test_cmdline_parse(argv[1]);
 #else
-	cavan_pipe_cmdline_run(argv[1], NULL, 0, NULL);
+	cavan_pipe_cmdline_loop3(argv[1], NULL, 0, NULL);
 #endif
 
 #endif
