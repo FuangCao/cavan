@@ -27,6 +27,10 @@
 #include <linux/irqdomain.h>
 #include <linux/interrupt.h>
 #include <linux/spi/spi.h>
+#include <linux/regulator/driver.h>
+#include <linux/regulator/machine.h>
+#include <linux/regulator/consumer.h>
+#include <linux/regulator/of_regulator.h>
 
 #define TCA9535_DEBUG					0
 
@@ -148,15 +152,35 @@ struct tca9535_spi_master {
 	struct tca9535_spi_device devices[0];
 };
 
+struct tca9535_regulator {
+	u16 mask;
+	bool enabled;
+	bool active_low;
+	struct regulator_dev *rdev;
+	struct regulator_desc rdesc;
+	struct tca9535_device *tca9535;
+	struct tca9535_regulator *next;
+};
+
 struct tca9535_device {
 	struct gpio_chip gpio_chip;
 	struct i2c_client *client;
-	struct mutex lock;
+	struct device *dev;
 	bool crashed;
 	struct tca9535_register_cache cache;
 
+	struct mutex lock;
+	struct mutex irq_lock;
+	struct mutex power_lock;
+
 	int gpio_irq;
 	int gpio_pwr;
+	int gpio_pwr_one;
+	bool powered;
+	bool suspend;
+	bool first_poweron;
+	struct regulator *vcc;
+	struct regulator *vbus;
 	struct pinctrl *pinctrl;
 	struct pinctrl_state *gpio_state;
 
@@ -166,7 +190,6 @@ struct tca9535_device {
 	struct timer_list timer;
 	int keys[TCA9535_GPIO_COUNT];
 
-	struct mutex irq_lock;
 	struct irq_domain *domain;
 	u16 irq_mask;
 	u16 irq_trig_raise;
@@ -178,8 +201,26 @@ struct tca9535_device {
 	u16 mux_gpio_unmask;
 	struct i2c_adapter **mux_adaps;
 
-	struct tca9535_spi_master *spi_master_head;
+	struct tca9535_spi_master *spi_head;
+
+	struct regulator_desc rdesc;
+	struct regulator_dev *rdev;
+	struct tca9535_regulator *regulator_head;
 };
+
+static inline void tca9535_lock_init(struct tca9535_device *tca9535)
+{
+	mutex_init(&tca9535->lock);
+	mutex_init(&tca9535->irq_lock);
+	mutex_init(&tca9535->power_lock);
+}
+
+static inline void tca9535_lock_deinit(struct tca9535_device *tca9535)
+{
+	mutex_destroy(&tca9535->lock);
+	mutex_destroy(&tca9535->irq_lock);
+	mutex_destroy(&tca9535->power_lock);
+}
 
 static inline void tca9535_lock(struct tca9535_device *tca9535)
 {
@@ -189,6 +230,30 @@ static inline void tca9535_lock(struct tca9535_device *tca9535)
 static inline void tca9535_unlock(struct tca9535_device *tca9535)
 {
 	mutex_unlock(&tca9535->lock);
+}
+
+static inline void tca9535_power_lock(struct tca9535_device *tca9535)
+{
+	mutex_lock(&tca9535->power_lock);
+}
+
+static inline void tca9535_power_unlock(struct tca9535_device *tca9535)
+{
+	mutex_unlock(&tca9535->power_lock);
+}
+
+static u16 tca9535_set_bit(u16 value, u16 mask, bool enable)
+{
+	if (enable) {
+		return value | mask;
+	}
+
+	return value & (~mask);
+}
+
+static inline bool tca9535_get_bit(u16 value, u16 mask)
+{
+	return (value & mask) != 0;
 }
 
 static void tca9535_part_write_init(struct tca9535_part_write_config *config, u8 addr, u16 mask)
@@ -214,7 +279,7 @@ static void tca9535_part_write_init(struct tca9535_part_write_config *config, u8
 
 static int tca9535_i2c_transfer(struct tca9535_device *tca9535, struct i2c_msg *msgs, int num)
 {
-	int delay = 0;
+	int delay = 1;
 	struct i2c_client *client = tca9535->client;
 
 	while (unlikely(i2c_transfer(client->adapter, msgs, num) < num)) {
@@ -236,11 +301,11 @@ static int tca9535_i2c_transfer(struct tca9535_device *tca9535, struct i2c_msg *
 
 static int tca9535_i2c_transfer_adapter_locked(struct tca9535_device *tca9535, struct i2c_msg *msgs, int num)
 {
-	int delay = 0;
+	int delay = 1;
 	struct i2c_client *client = tca9535->client;
 
 	while (unlikely(__i2c_transfer(client->adapter, msgs, num) < num)) {
-		dev_err(&client->dev, "Failed to i2c_transfer: crashed = %d, delay = %d(ms)\n", tca9535->crashed, delay);
+		dev_err(&client->dev, "Failed to __i2c_transfer: crashed = %d, delay = %d(ms)\n", tca9535->crashed, delay);
 
 		if (tca9535->crashed || delay > 400) {
 			tca9535->crashed = true;
@@ -429,9 +494,32 @@ static int tca9535_write_u16_adapter_locked(struct tca9535_device *tca9535, u8 a
 	return ret;
 }
 
+static int tca9535_register_sync_locked(struct tca9535_device *tca9535, u8 addr)
+{
+	u16 value = *(u16 *) (tca9535->cache.bytes + addr);
+	u8 buff[] = { addr, value & 0xFF, value >> 8 };
+
+	return tca9535_master_send(tca9535, buff, sizeof(buff));
+}
+
+static int tca9535_register_sync(struct tca9535_device *tca9535)
+{
+	int ret = 0;
+
+	tca9535_lock(tca9535);
+
+	ret |= tca9535_register_sync_locked(tca9535, REG_POLARITY_INVERSION);
+	ret |= tca9535_register_sync_locked(tca9535, REG_OUTPUT_PORT);
+	ret |= tca9535_register_sync_locked(tca9535, REG_CONFIGURATION);
+
+	tca9535_unlock(tca9535);
+
+	return ret;
+}
+
 // ============================================================
 
-static int tca9535_init_register(struct tca9535_device *tca9535)
+static int tca9535_register_init(struct tca9535_device *tca9535)
 {
 	int ret;
 	u32 output_configs[2];
@@ -470,6 +558,131 @@ static int tca9535_init_register(struct tca9535_device *tca9535)
 	dev_info(&tca9535->client->dev, "REG_CONFIGURATION = 0x%04x\n", tca9535->cache.configuration);
 
 	return 0;
+}
+
+static int tca9535_set_power_locked(struct tca9535_device *tca9535, bool enable)
+{
+	int ret = 0;
+
+	if (tca9535->powered == enable) {
+		return 0;
+	}
+
+	dev_info(tca9535->dev, "%s: enable = %d\n", __FUNCTION__, enable);
+
+	if (enable) {
+		if (tca9535->vcc) {
+			ret = regulator_enable(tca9535->vcc);
+			if (ret < 0) {
+				dev_err(&tca9535->client->dev, "Failed to regulator_enable vcc: %d\n", ret);
+				return ret;
+			}
+		}
+
+		if (tca9535->vbus) {
+			ret = regulator_enable(tca9535->vbus);
+			if (ret < 0) {
+				dev_err(&tca9535->client->dev, "Failed to regulator_enable vbus: %d\n", ret);
+				goto out_regulator_disable_vcc;
+			}
+		}
+
+		if (tca9535->first_poweron) {
+			if (gpio_is_valid(tca9535->gpio_pwr)) {
+				gpio_direction_output(tca9535->gpio_pwr, !tca9535->gpio_pwr_one);
+				msleep(100);
+				gpio_set_value_cansleep(tca9535->gpio_pwr, tca9535->gpio_pwr_one);
+			}
+
+			ret = tca9535_register_init(tca9535);
+			if (ret < 0) {
+				dev_err(&tca9535->client->dev, "Failed to tca9535_register_init: %d\n", ret);
+				goto out_power_down;
+			}
+		} else {
+			if (gpio_is_valid(tca9535->gpio_pwr)) {
+				gpio_direction_output(tca9535->gpio_pwr, tca9535->gpio_pwr_one);
+				gpio_set_value_cansleep(tca9535->gpio_pwr, tca9535->gpio_pwr_one);
+			}
+
+			ret = tca9535_register_sync(tca9535);
+			if (ret < 0) {
+				dev_err(&tca9535->client->dev, "Failed to tca9535_register_sync: %d\n", ret);
+				goto out_power_down;
+			}
+		}
+
+		tca9535->powered = true;
+		tca9535->first_poweron = false;
+
+		return 0;
+	}
+
+out_power_down:
+	if (gpio_is_valid(tca9535->gpio_pwr)) {
+		gpio_set_value_cansleep(tca9535->gpio_pwr, !tca9535->gpio_pwr_one);
+	}
+
+	if (tca9535->vbus) {
+		regulator_disable(tca9535->vbus);
+	}
+
+out_regulator_disable_vcc:
+	if (tca9535->vcc) {
+		regulator_disable(tca9535->vcc);
+	}
+
+	tca9535->powered = false;
+
+	return ret;
+}
+
+static int tca9535_set_power(struct tca9535_device *tca9535, bool enable)
+{
+	int ret;
+
+	tca9535_power_lock(tca9535);
+	ret = tca9535_set_power_locked(tca9535, enable);
+	tca9535_power_unlock(tca9535);
+
+	return ret;
+}
+
+static int tca9535_set_suspend_locked(struct tca9535_device *tca9535, bool enable)
+{
+	int ret;
+	bool power_enable;
+
+	if (tca9535->suspend == enable) {
+		return 0;
+	}
+
+	if (enable) {
+		power_enable = (tca9535->rdev->use_count > 0);
+	} else {
+		power_enable = true;
+	}
+
+	ret = tca9535_set_power_locked(tca9535, power_enable);
+	if (ret < 0) {
+		dev_err(tca9535->dev, "Failed to tca9535_set_power_locked: %d\n", ret);
+		return ret;
+	}
+
+	tca9535->suspend = enable;
+
+	return 0;
+}
+
+static int tca9535_set_suspend(struct tca9535_device *tca9535, bool enable)
+{
+	int ret;
+
+	tca9535_power_lock(tca9535);
+	ret = tca9535_set_suspend_locked(tca9535, enable);
+	tca9535_power_unlock(tca9535);
+
+	return ret;
 }
 
 // ============================================================
@@ -599,7 +812,7 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 			continue;
 		}
 
-		if (index >= tca9535->gpio_chip.ngpio) {
+		if (index >= TCA9535_GPIO_COUNT) {
 			dev_err(&tca9535->client->dev, "Invalid index = %d\n", index);
 			continue;
 		}
@@ -785,8 +998,6 @@ static const struct irq_domain_ops tca9535_irq_simple_ops = {
 
 static int tca9535_irq_init(struct tca9535_device *tca9535, const struct i2c_device_id *id, int irq_base)
 {
-	mutex_init(&tca9535->irq_lock);
-
 	tca9535->domain = irq_domain_add_simple(tca9535->client->dev.of_node, tca9535->gpio_chip.ngpio, irq_base, &tca9535_irq_simple_ops, tca9535);
 	if (tca9535->domain == NULL) {
 		dev_err(&tca9535->client->dev, "Failed to irq_domain_add_simple\n");
@@ -799,7 +1010,6 @@ static int tca9535_irq_init(struct tca9535_device *tca9535, const struct i2c_dev
 static void tca9535_irq_deinit(struct tca9535_device *tca9535)
 {
 	irq_domain_remove(tca9535->domain);
-	mutex_destroy(&tca9535->irq_lock);
 }
 
 static void tca9535_handle_nested_irq(struct tca9535_device *tca9535, u16 mask)
@@ -824,6 +1034,10 @@ static irqreturn_t tca9535_irq_handler(int irq, void *dev_id)
 	u16 value_old, value;
 	struct tca9535_device *tca9535 = dev_id;
 	struct i2c_client *client = tca9535->client;
+
+	if (!tca9535->powered) {
+		return IRQ_HANDLED;
+	}
 
 #if TCA9535_DEBUG
 	tca9535_pr_pos_info();
@@ -852,7 +1066,7 @@ static irqreturn_t tca9535_irq_handler(int irq, void *dev_id)
 		tca9535_handle_nested_irq(tca9535, mask & tca9535->irq_mask & ((tca9535->irq_trig_raise & value) | (tca9535->irq_trig_fall & value_old)));
 	} else if (tca9535->irq_invalid < 10) {
 		tca9535->irq_invalid++;
-		dev_err(&client->dev, "%s irq_invalid = %d\n", __FUNCTION__, tca9535->irq_invalid);
+		// dev_err(&client->dev, "%s irq_invalid = %d\n", __FUNCTION__, tca9535->irq_invalid);
 	} else {
 		dev_err(&client->dev, "%s disable_irq\n", __FUNCTION__);
 		disable_irq_nosync(irq);
@@ -992,38 +1206,24 @@ tca9535_spi_transfer_data_func_declarer(8);
 tca9535_spi_transfer_data_func_declarer(16);
 tca9535_spi_transfer_data_func_declarer(32);
 
-static u16 tca9535_spi_set_bit(u16 value, u16 mask, bool enable)
-{
-	if (enable) {
-		return value | mask;
-	}
-
-	return value & (~mask);
-}
-
-static inline bool tca9535_spi_get_bit(u16 value, u16 mask)
-{
-	return (value & mask) != 0;
-}
-
 static inline u16 tca9535_spi_device_set_cs_pin(struct tca9535_spi_device *device, u16 value, bool enable)
 {
-	return tca9535_spi_set_bit(value, device->cs_mask, enable);
+	return tca9535_set_bit(value, device->cs_mask, enable);
 }
 
 static inline u16 tca9535_spi_master_set_sck_pin(struct tca9535_spi_master *master, u16 value, bool enable)
 {
-	return tca9535_spi_set_bit(value, master->sck_mask, enable);
+	return tca9535_set_bit(value, master->sck_mask, enable);
 }
 
 static inline u16 tca9535_spi_master_set_mosi_pin(struct tca9535_spi_master *master, u16 value, bool enable)
 {
-	return tca9535_spi_set_bit(value, master->mosi_mask, enable);
+	return tca9535_set_bit(value, master->mosi_mask, enable);
 }
 
 static inline bool tca9535_spi_master_get_miso_pin(struct tca9535_spi_master *master, u16 value)
 {
-	return tca9535_spi_get_bit(value, master->miso_mask);
+	return tca9535_get_bit(value, master->miso_mask);
 }
 
 static int tca9535_spi_set_cs(struct tca9535_spi_device *device, bool enable)
@@ -1453,8 +1653,8 @@ static int tca9535_spi_init(struct tca9535_device *tca9535)
 			goto label_kfree_master;
 		}
 
-		tca9535_master->next = tca9535->spi_master_head;
-		tca9535->spi_master_head = tca9535_master;
+		tca9535_master->next = tca9535->spi_head;
+		tca9535->spi_head = tca9535_master;
 		index++;
 		continue;
 
@@ -1469,7 +1669,7 @@ label_kfree_master:
 
 static void tca9535_spi_deinit(struct tca9535_device *tca9535)
 {
-	struct tca9535_spi_master *spi = tca9535->spi_master_head;
+	struct tca9535_spi_master *spi = tca9535->spi_head;
 
 	while (spi) {
 		struct spi_master *master = spi->master;
@@ -1483,9 +1683,273 @@ static void tca9535_spi_deinit(struct tca9535_device *tca9535)
 
 // ============================================================
 
+static int tca9535_voltage_set_voltage(struct regulator_dev *rdev, int min_uV, int max_uV, unsigned *selector)
+{
+	return 0;
+}
+
+static int tca9535_voltage_get_voltage(struct regulator_dev *rdev)
+{
+	return 0;
+}
+
+static int tca9535_voltage_main_enable(struct regulator_dev *rdev)
+{
+	int ret;
+	struct tca9535_device *tca9535 = rdev_get_drvdata(rdev);
+
+	ret = tca9535_set_power(tca9535, true);
+	if (ret < 0) {
+		dev_err(tca9535->dev, "Failed to tca9535_set_power: %d\n", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int tca9535_voltage_main_disable(struct regulator_dev *rdev)
+{
+	int ret = 0;
+	struct tca9535_device *tca9535 = rdev_get_drvdata(rdev);
+
+	tca9535_power_lock(tca9535);
+
+	if (tca9535->suspend) {
+		ret = tca9535_set_power_locked(tca9535, false);
+	}
+
+	tca9535_power_unlock(tca9535);
+
+	return ret;
+}
+
+static int tca9535_voltage_child_enable(struct regulator_dev *rdev)
+{
+	int ret;
+	struct tca9535_regulator *regulator = rdev_get_drvdata(rdev);
+	struct tca9535_device *tca9535 = regulator->tca9535;
+	u16 value = tca9535_set_bit(tca9535->cache.output_port, regulator->mask, !regulator->active_low);
+
+	ret = tca9535_set_power(tca9535, true);
+	if (ret < 0) {
+		dev_err(&rdev->dev, "Failed to tca9535_set_power: %d\n", ret);
+		return ret;
+	}
+
+	ret = tca9535_write_u16(tca9535, REG_OUTPUT_PORT, value);
+	if (ret < 0) {
+		dev_err(&rdev->dev, "Failed to tca9535_write_u16 REG_OUTPUT_PORT\n");
+		return ret;
+	}
+
+	regulator->enabled = true;
+
+	return 0;
+}
+
+static int tca9535_voltage_child_disable(struct regulator_dev *rdev)
+{
+	int ret;
+	struct tca9535_regulator *regulator = rdev_get_drvdata(rdev);
+	struct tca9535_device *tca9535 = regulator->tca9535;
+	u16 value = tca9535_set_bit(tca9535->cache.output_port, regulator->mask, regulator->active_low);
+
+	ret = tca9535_write_u16(tca9535, REG_OUTPUT_PORT, value);
+	if (ret < 0) {
+		dev_err(&rdev->dev, "Failed to tca9535_write_u16 REG_OUTPUT_PORT\n");
+		return ret;
+	}
+
+	regulator->enabled = false;
+
+	return 0;
+}
+
+static int tca9535_voltage_child_is_enabled(struct regulator_dev *rdev)
+{
+	struct tca9535_regulator *regulator = rdev_get_drvdata(rdev);
+
+	return regulator->enabled;
+}
+
+static int tca9535_voltage_main_is_enabled(struct regulator_dev *rdev)
+{
+	struct tca9535_device *tca9535 = rdev_get_drvdata(rdev);
+
+	return tca9535->powered;
+}
+
+static struct regulator_ops tca9535_voltage_main_ops = {
+	.set_voltage = tca9535_voltage_set_voltage,
+	.get_voltage = tca9535_voltage_get_voltage,
+	.enable = tca9535_voltage_main_enable,
+	.disable = tca9535_voltage_main_disable,
+	.is_enabled = tca9535_voltage_main_is_enabled,
+};
+
+static struct regulator_ops tca9535_voltage_child_ops = {
+	.set_voltage = tca9535_voltage_set_voltage,
+	.get_voltage = tca9535_voltage_get_voltage,
+	.enable = tca9535_voltage_child_enable,
+	.disable = tca9535_voltage_child_disable,
+	.is_enabled = tca9535_voltage_child_is_enabled,
+};
+
+static int tca9535_regulator_init(struct tca9535_device *tca9535)
+{
+	int ret;
+	struct regulator_desc *desc;
+	struct regulator_config config;
+	struct device_node *child_node;
+	const struct regulator_init_data *init_data;
+	u16 output_port = tca9535->cache.output_port;
+	struct device_node *node = tca9535->dev->of_node;
+	u16 configuration = tca9535->cache.configuration;
+	struct tca9535_regulator *regulator, *regulator_next;
+
+	memset(&config, 0x00, sizeof(config));
+	config.dev = tca9535->dev;
+
+	init_data = of_get_regulator_init_data(tca9535->dev, node);
+	if (init_data == NULL) {
+		dev_err(tca9535->dev, "Failed to of_get_regulator_init_data\n");
+		return -ENOMEM;
+	}
+
+	config.dev = tca9535->dev;
+	config.init_data = init_data;
+	config.driver_data = tca9535;
+	config.of_node = node;
+
+	desc = &tca9535->rdesc;
+	desc->name = init_data->constraints.name;
+	desc->type = REGULATOR_VOLTAGE;
+	desc->owner = THIS_MODULE;
+	desc->ops = &tca9535_voltage_main_ops;
+
+	tca9535->rdev = regulator_register(desc, &config);
+	if (tca9535->rdev == NULL) {
+		dev_err(tca9535->dev, "Failed to regulator_register\n");
+		return -EFAULT;
+	}
+
+	for_each_child_of_node(node, child_node) {
+		int index;
+
+		if (strcmp(child_node->name, "regulator")) {
+			continue;
+		}
+
+		if (of_property_read_u32(child_node, "reg", &index) < 0) {
+			continue;
+		}
+
+		if (index >= TCA9535_GPIO_COUNT) {
+			dev_err(&tca9535->client->dev, "Invalid index = %d\n", index);
+			continue;
+		}
+
+		init_data = of_get_regulator_init_data(tca9535->dev, child_node);
+		if (init_data == NULL) {
+			dev_err(tca9535->dev, "Failed to of_get_regulator_init_data\n");
+			goto out_regulator_unregister;
+		}
+
+		regulator = devm_kzalloc(tca9535->dev, sizeof(struct tca9535_regulator), GFP_KERNEL);
+		if (regulator == NULL) {
+			dev_err(tca9535->dev, "Failed to devm_kzalloc\n");
+			goto out_regulator_unregister;
+		}
+
+		if (of_find_property(child_node, "enable-active-high", NULL) == NULL) {
+			regulator->active_low = true;
+		}
+
+		regulator->tca9535 = tca9535;
+		regulator->mask = (1 << index);
+
+		config.init_data = init_data;
+		config.driver_data = regulator;
+		config.of_node = child_node;
+		config.dev->of_node = child_node;
+
+		desc = &regulator->rdesc;
+		desc->name = init_data->constraints.name;
+		desc->type = REGULATOR_VOLTAGE;
+		desc->owner = THIS_MODULE;
+		desc->ops = &tca9535_voltage_child_ops;
+
+		if (of_find_property(child_node, "vin-supply", NULL)) {
+			desc->supply_name = "vin";
+		}
+
+		regulator->rdev = regulator_register(&regulator->rdesc, &config);
+		if (regulator->rdev == NULL) {
+			dev_err(tca9535->dev, "Failed to regulator_register\n");
+			devm_kfree(tca9535->dev, regulator);
+			goto out_regulator_unregister;
+		}
+
+		if (init_data->constraints.boot_on) {
+			output_port = tca9535_set_bit(output_port, regulator->mask, !regulator->active_low);
+		}
+
+		configuration &= ~regulator->mask;
+		gpio_request(tca9535->gpio_chip.base + index, init_data->constraints.name);
+
+		regulator->next = tca9535->regulator_head;
+		tca9535->regulator_head = regulator;
+	}
+
+	tca9535->dev->of_node = node;
+
+	ret = tca9535_write_u16(tca9535, REG_OUTPUT_PORT, output_port);
+	if (ret < 0) {
+		dev_err(&tca9535->client->dev, "Failed to tca9535_write_u16 REG_OUTPUT_PORT: %d\n", ret);
+		goto out_regulator_unregister;
+	}
+
+	ret = tca9535_write_u16(tca9535, REG_CONFIGURATION, configuration);
+	if (ret < 0) {
+		dev_err(&tca9535->client->dev, "Failed to tca9535_write_u16 REG_CONFIGURATION: %d\n", ret);
+		goto out_regulator_unregister;
+	}
+
+	return 0;
+
+out_regulator_unregister:
+	for (regulator = tca9535->regulator_head; regulator; regulator = regulator_next) {
+		regulator_next = regulator->next;
+		regulator_unregister(regulator->rdev);
+		devm_kfree(tca9535->dev, regulator);
+	}
+
+	tca9535->regulator_head = NULL;
+
+	regulator_unregister(tca9535->rdev);
+
+	return ret;
+}
+
+static void tca9535_regulator_deinit(struct tca9535_device *tca9535)
+{
+	struct tca9535_regulator *regulator, *regulator_next;
+
+	for (regulator = tca9535->regulator_head; regulator; regulator = regulator_next) {
+		regulator_next = regulator->next;
+		regulator_unregister(regulator->rdev);
+		devm_kfree(tca9535->dev, regulator);
+	}
+
+	regulator_unregister(tca9535->rdev);
+}
+
+// ============================================================
+
 static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	int ret;
+	enum of_gpio_flags flags;
 	struct gpio_chip *gpio_chip;
 	struct tca9535_device *tca9535;
 
@@ -1496,11 +1960,13 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	}
 
 	tca9535->client = client;
+	tca9535->dev = &client->dev;
 	i2c_set_clientdata(client, tca9535);
 
-	mutex_init(&tca9535->lock);
+	tca9535_lock_init(tca9535);
+	tca9535->first_poweron = true;
 
-	tca9535->gpio_irq = of_get_gpio(client->dev.of_node, 0);
+	tca9535->gpio_irq = of_get_named_gpio(client->dev.of_node, "gpio-irq", 0);
 	if (gpio_is_valid(tca9535->gpio_irq)) {
 		ret = gpio_request(tca9535->gpio_irq, "TCA9535-IRQ");
 		if (ret < 0) {
@@ -1515,7 +1981,11 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		client->irq = -1;
 	}
 
-	tca9535->gpio_pwr = of_get_gpio(client->dev.of_node, 1);
+	tca9535->gpio_pwr = of_get_named_gpio_flags(client->dev.of_node, "gpio-pwr", 0, &flags);
+	if (gpio_is_valid(tca9535->gpio_pwr)) {
+		tca9535->gpio_pwr_one = !(flags & OF_GPIO_ACTIVE_LOW);
+		gpio_request(tca9535->gpio_pwr, "TCA9535-PWR");
+	}
 
 	dev_info(&client->dev, "gpio_irq = %d\n", tca9535->gpio_irq);
 	dev_info(&client->dev, "irq = %d\n", client->irq);
@@ -1538,17 +2008,22 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 
 	dev_info(&client->dev, "gpio_pwr = %d\n", tca9535->gpio_pwr);
 
-	if (gpio_is_valid(tca9535->gpio_pwr)) {
-		gpio_request(tca9535->gpio_pwr, "TCA9535-PWR");
-		gpio_direction_output(tca9535->gpio_pwr, 1);
-		gpio_free(tca9535->gpio_pwr);
-		msleep(10);
+	tca9535->vcc = regulator_get(&client->dev, "vcc");
+	if (IS_ERR(tca9535->vcc)) {
+		dev_err(&client->dev, "Failed to regulator_get vcc\n");
+		tca9535->vcc = NULL;
 	}
 
-	ret = tca9535_init_register(tca9535);
+	tca9535->vbus = regulator_get(&client->dev, "i2c");
+	if (IS_ERR(tca9535->vbus)) {
+		dev_err(&client->dev, "Failed to regulator_get i2c\n");
+		tca9535->vbus = NULL;
+	}
+
+	ret = tca9535_set_power(tca9535, true);
 	if (ret < 0) {
-		dev_err(&client->dev, "Failed to tca9535_init_register: %d\n", ret);
-		goto out_gpio_free;
+		dev_err(&client->dev, "Failed to tca9535_set_power: %d\n", ret);
+		goto out_regulator_put;
 	}
 
 	gpio_chip = &tca9535->gpio_chip;
@@ -1567,13 +2042,19 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	ret = gpiochip_add(gpio_chip);
 	if (ret < 0) {
 		dev_err(&client->dev, "Failed to gpiochip_add: %d\n", ret);
-		goto out_gpio_free;
+		goto out_tca9535_power_down;
+	}
+
+	ret = tca9535_regulator_init(tca9535);
+	if (ret < 0) {
+		dev_err(&client->dev, "Failed to tca9535_regulator_init: %d\n", ret);
+		goto out_gpiochip_remove;
 	}
 
 	ret = tca9535_keypad_init(tca9535);
 	if (ret < 0) {
 		dev_err(&client->dev, "Failed to tca9535_keypad_init: %d\n", ret);
-		goto out_gpiochip_remove;
+		goto out_tca9535_regulator_deinit;
 	}
 
 	ret = tca9535_irq_init(tca9535, id, 0);
@@ -1617,16 +2098,32 @@ out_tca9535_irq_deinit:
 	tca9535_irq_deinit(tca9535);
 out_tca9535_keypad_deinit:
 	tca9535_keypad_deinit(tca9535);
+out_tca9535_regulator_deinit:
+	tca9535_regulator_deinit(tca9535);
 out_gpiochip_remove:
 	if (gpiochip_remove(gpio_chip) < 0) {
 		dev_warn(&client->dev, "Failed to gpiochip_remove\n");
 	}
-out_gpio_free:
+out_tca9535_power_down:
+	tca9535_set_power(tca9535, false);
+out_regulator_put:
+	if (tca9535->vbus) {
+		regulator_put(tca9535->vbus);
+	}
+
+	if (tca9535->vcc) {
+		regulator_put(tca9535->vcc);
+	}
+
+	if (gpio_is_valid(tca9535->gpio_pwr)) {
+		gpio_free(tca9535->gpio_pwr);
+	}
+
 	if (gpio_is_valid(tca9535->gpio_irq)) {
 		gpio_free(tca9535->gpio_irq);
 	}
 out_devm_kfree:
-	mutex_destroy(&tca9535->lock);
+	tca9535_lock_deinit(tca9535);
 	devm_kfree(&client->dev, tca9535);
 	return ret;
 }
@@ -1643,17 +2140,32 @@ static int tca9535_i2c_remove(struct i2c_client *client)
 	tca9535_i2c_mux_deinit(tca9535);
 	tca9535_irq_deinit(tca9535);
 	tca9535_keypad_deinit(tca9535);
+	tca9535_regulator_deinit(tca9535);
 
 	ret = gpiochip_remove(&tca9535->gpio_chip);
 	if (ret < 0) {
 		dev_warn(&client->dev, "Failed to gpiochip_remove: %d\n", ret);
 	}
 
+	tca9535_set_power(tca9535, false);
+
+	if (tca9535->vbus) {
+		regulator_put(tca9535->vbus);
+	}
+
+	if (tca9535->vcc) {
+		regulator_put(tca9535->vcc);
+	}
+
+	if (gpio_is_valid(tca9535->gpio_pwr)) {
+		gpio_free(tca9535->gpio_pwr);
+	}
+
 	if (gpio_is_valid(tca9535->gpio_irq)) {
 		gpio_free(tca9535->gpio_irq);
 	}
 
-	mutex_destroy(&tca9535->lock);
+	tca9535_lock_deinit(tca9535);
 	devm_kfree(&client->dev, tca9535);
 
 	return 0;
@@ -1661,7 +2173,25 @@ static int tca9535_i2c_remove(struct i2c_client *client)
 
 static void tca9535_i2c_shutdown(struct i2c_client *client)
 {
+	struct tca9535_device *tca9535 = i2c_get_clientdata(client);
+
 	tca9535_pr_pos_info();
+
+	tca9535_set_power(tca9535, false);
+}
+
+static int tca9535_i2c_suspend(struct i2c_client *client, pm_message_t mesg)
+{
+	struct tca9535_device *tca9535 = i2c_get_clientdata(client);
+
+	return tca9535_set_suspend(tca9535, true);
+}
+
+static int tca9535_i2c_resume(struct i2c_client *client)
+{
+	struct tca9535_device *tca9535 = i2c_get_clientdata(client);
+
+	return tca9535_set_suspend(tca9535, false);
 }
 
 static const struct i2c_device_id tca9535_i2c_id[] = {
@@ -1684,6 +2214,8 @@ static struct i2c_driver tca9535_i2c_driver = {
 	.probe = tca9535_i2c_probe,
 	.remove   = tca9535_i2c_remove,
 	.shutdown = tca9535_i2c_shutdown,
+	.suspend = tca9535_i2c_suspend,
+	.resume = tca9535_i2c_resume,
 	.id_table = tca9535_i2c_id,
 };
 
