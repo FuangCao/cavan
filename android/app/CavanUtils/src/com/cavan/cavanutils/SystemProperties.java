@@ -108,9 +108,9 @@ public class SystemProperties {
 		set(key, Double.toString(value));
 	}
 
-    public static void addChangeCallback(Runnable callback) {
+	public static void addChangeCallback(Runnable callback) {
 		Class<?> types[] = { Runnable.class };
 		Object values[] = { callback };
 		invokeMethodTyped("addChangeCallback", types, values);
-    }
+	}
 }
