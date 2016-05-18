@@ -173,6 +173,7 @@ struct tca9535_device {
 	struct mutex irq_lock;
 	struct mutex power_lock;
 
+	int irq;
 	int gpio_irq;
 	int gpio_pwr;
 	int gpio_pwr_one;
@@ -183,6 +184,7 @@ struct tca9535_device {
 	struct regulator *vbus;
 	struct pinctrl *pinctrl;
 	struct pinctrl_state *gpio_state;
+	struct completion isr_completion;
 
 	u16 key_mask;
 	u16 key_changed;
@@ -194,7 +196,6 @@ struct tca9535_device {
 	u16 irq_mask;
 	u16 irq_trig_raise;
 	u16 irq_trig_fall;
-	u16 irq_invalid;
 
 	u32 mux_adap_count;
 	u32 mux_gpio_offset;
@@ -669,6 +670,14 @@ static int tca9535_set_suspend_locked(struct tca9535_device *tca9535, bool enabl
 		return ret;
 	}
 
+	if (tca9535->irq >= 0) {
+		if (enable) {
+			disable_irq(tca9535->irq);
+		} else {
+			complete(&tca9535->isr_completion);
+		}
+	}
+
 	tca9535->suspend = enable;
 
 	return 0;
@@ -1027,55 +1036,75 @@ static void tca9535_handle_nested_irq(struct tca9535_device *tca9535, u16 mask)
 	}
 }
 
-static irqreturn_t tca9535_irq_handler(int irq, void *dev_id)
+static irqreturn_t tca9535_isr_handler(int irq, void *dev_id)
 {
-	u16 mask;
-	u16 configuration;
-	u16 value_old, value;
 	struct tca9535_device *tca9535 = dev_id;
-	struct i2c_client *client = tca9535->client;
 
-	if (!tca9535->powered) {
-		return IRQ_HANDLED;
-	}
-
-#if TCA9535_DEBUG
-	tca9535_pr_pos_info();
-#endif
-
-	value_old = tca9535->cache.input_port;
-
-	if (tca9535_read_u16(tca9535, REG_INPUT_PORT, &value) < 0) {
-		return IRQ_HANDLED;
-	}
-
-#if TCA9535_DEBUG
-	dev_info(&client->dev, "REG_INPUT_PORT = 0x%04x => 0x%04x\n", value_old, value);
-#endif
-
-	configuration = tca9535->cache.configuration;
-	mask = (value_old ^ value) & configuration;
-
-#if TCA9535_DEBUG
-	dev_info(&client->dev, "mask = 0x%04x\n", mask);
-#endif
-
-	if (mask) {
-		tca9535->irq_invalid = 0;
-		tca9535_report_keys(tca9535, mask & tca9535->key_mask);
-		tca9535_handle_nested_irq(tca9535, mask & tca9535->irq_mask & ((tca9535->irq_trig_raise & value) | (tca9535->irq_trig_fall & value_old)));
-	} else if (tca9535->irq_invalid < 10) {
-		tca9535->irq_invalid++;
-		// dev_err(&client->dev, "%s irq_invalid = %d\n", __FUNCTION__, tca9535->irq_invalid);
-	} else {
-		dev_err(&client->dev, "%s disable_irq\n", __FUNCTION__);
-		disable_irq_nosync(irq);
-		msleep(200);
-		dev_err(&client->dev, "%s enable_irq\n", __FUNCTION__);
-		enable_irq(irq);
-	}
+	disable_irq_nosync(irq);
+	complete(&tca9535->isr_completion);
 
 	return IRQ_HANDLED;
+}
+
+static int tca9535_isr_thread(void *data)
+{
+	u16 mask;
+	int irq, irq_count;
+	u16 configuration;
+	u16 value_old, value;
+	ktime_t timestamp = ktime_get();
+	struct tca9535_device *tca9535 = data;
+	struct completion *isr_completion = &tca9535->isr_completion;
+
+	irq_count = 0;
+	irq = tca9535->irq;
+
+	while (1) {
+		while (1) {
+			if (++irq_count > 100) {
+				ktime_t start = timestamp;
+
+				timestamp = ktime_get();
+				if (ktime_us_delta(timestamp, start) < 1000000LL) {
+					dev_err(tca9535->dev, "Interrupt too frequently\n");
+					msleep(500);
+					timestamp = ktime_get();
+				}
+
+				irq_count = 0;
+			}
+
+			value_old = tca9535->cache.input_port;
+
+			while (tca9535_read_u16(tca9535, REG_INPUT_PORT, &value) < 0) {
+				dev_err(tca9535->dev, "Failed to tca9535_read_u16 REG_INPUT_PORT\n");
+				msleep(2000);
+			}
+
+#if TCA9535_DEBUG
+			dev_info(&client->dev, "REG_INPUT_PORT = 0x%04x => 0x%04x\n", value_old, value);
+#endif
+
+			configuration = tca9535->cache.configuration;
+			mask = (value_old ^ value) & configuration;
+
+#if TCA9535_DEBUG
+			dev_info(&client->dev, "mask = 0x%04x\n", mask);
+#endif
+
+			if (mask == 0) {
+				break;
+			}
+
+			tca9535_report_keys(tca9535, mask & tca9535->key_mask);
+			tca9535_handle_nested_irq(tca9535, mask & tca9535->irq_mask & ((tca9535->irq_trig_raise & value) | (tca9535->irq_trig_fall & value_old)));
+		}
+
+		enable_irq(irq);
+		wait_for_completion(isr_completion);
+	}
+
+	return 0;
 }
 
 // ============================================================
@@ -1975,10 +2004,9 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		}
 
 		gpio_direction_input(tca9535->gpio_irq);
-
-		client->irq = gpio_to_irq(tca9535->gpio_irq);
+		tca9535->irq = gpio_to_irq(tca9535->gpio_irq);
 	} else {
-		client->irq = -1;
+		tca9535->irq = -1;
 	}
 
 	tca9535->gpio_pwr = of_get_named_gpio_flags(client->dev.of_node, "gpio-pwr", 0, &flags);
@@ -1988,7 +2016,7 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	}
 
 	dev_info(&client->dev, "gpio_irq = %d\n", tca9535->gpio_irq);
-	dev_info(&client->dev, "irq = %d\n", client->irq);
+	dev_info(&client->dev, "irq = %d\n", tca9535->irq);
 
 	tca9535->pinctrl = devm_pinctrl_get(&client->dev);
 	if (IS_ERR(tca9535->pinctrl)) {
@@ -2075,17 +2103,26 @@ static int tca9535_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		goto out_tca9535_i2c_mux_deinit;
 	}
 
-	if (client->irq >= 0) {
-		u16 value;
 
-		ret = devm_request_threaded_irq(&client->dev, client->irq, NULL, tca9535_irq_handler, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "tca9535", tca9535);
+	if (tca9535->irq >= 0) {
+		unsigned long irqflags;
+
+		init_completion(&tca9535->isr_completion);
+
+		if (of_find_property(client->dev.of_node, "irq-trigger-edge", NULL)) {
+			irqflags = IRQF_TRIGGER_FALLING;
+		} else {
+			irqflags = IRQF_TRIGGER_LOW;
+		}
+
+		ret = devm_request_irq(&client->dev, tca9535->irq, tca9535_isr_handler, irqflags, "tca9535", tca9535);
 		if (ret < 0) {
 			dev_err(&client->dev, "Failed to devm_request_threaded_irq: %d\n", ret);
 			goto out_tca9535_spi_deinit;
 		}
 
-		tca9535_read_u16(tca9535, REG_INPUT_PORT, &value);
-		dev_info(&client->dev, "REG_INPUT_PORT = 0x%04x\n", value);
+		disable_irq(tca9535->irq);
+		kthread_run(tca9535_isr_thread, tca9535, "tca9535-isr");
 	}
 
 	return 0;
@@ -2132,8 +2169,8 @@ static int tca9535_i2c_remove(struct i2c_client *client)
 	int ret;
 	struct tca9535_device *tca9535 = i2c_get_clientdata(client);
 
-	if (client->irq >= 0) {
-		devm_free_irq(&client->dev, client->irq, tca9535);
+	if (tca9535->irq >= 0) {
+		devm_free_irq(&client->dev, tca9535->irq, tca9535);
 	}
 
 	tca9535_spi_deinit(tca9535);
