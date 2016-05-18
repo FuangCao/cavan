@@ -1,5 +1,8 @@
 package com.cavan.cavanutils;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import android.util.Log;
 
 public class CavanUtils extends CavanNative {
@@ -25,6 +28,70 @@ public class CavanUtils extends CavanNative {
 		}
 
 		return setPathEnv(path);
+	}
+
+	public static Object invokeMethodTyped(Class<?> cls, Object object, String name, Class<?>[] types, Object[] values) {
+		try {
+			Method method = cls.getMethod(name, types);
+			return method.invoke(object, values);
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public static Object invokeMethodTyped(String className, Object object, String name, Class<?>[] types, Object[] values) {
+		try {
+			Class<?> cls = Class.forName(className);
+			return invokeMethodTyped(cls, object, name, types, values);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public static Object invokeStaticMethodTyped(Class<?> cls, String name, Class<?>[] types, Object[] values) {
+		return invokeMethodTyped(cls, null, name, types, values);
+	}
+
+	public static Object invokeStaticMethodTyped(String className, String name, Class<?>[] types, Object[] values) {
+		return invokeMethodTyped(className, null, name, types, values);
+	}
+
+	public static Class<?>[] buildTypeArray(Object[] values) {
+		Class<?>[] types = new Class<?>[values.length];
+
+		for (int i = types.length - 1; i >= 0; i--) {
+			types[i] = values[i].getClass();
+		}
+
+		return types;
+	}
+
+	public static Object invokeMethod(Class<?> cls, Object object, String name, Object... parameters) {
+		Class<?>[] types = buildTypeArray(parameters);
+		return invokeMethodTyped(cls, object, name, types, parameters);
+	}
+
+	public static Object invokeMethod(Object object, String name, Object... parameters) {
+		return invokeMethod(object.getClass(), object, name, parameters);
+	}
+
+	public static Object invokeStaticMethod(Class<?> cls, String name, Object... parameters) {
+		return invokeMethod(cls, null, name, parameters);
+	}
+
+	public static Object invokeStaticMethod(String className, String name, Object... parameters) {
+		Class<?>[] types = buildTypeArray(parameters);
+		return invokeMethodTyped(className, null, name, types, parameters);
 	}
 
 	public static final int logE(String message) {
