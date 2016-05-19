@@ -1,6 +1,8 @@
-package com.cavan.cavanutils;
+package com.cavan.cavanjni;
 
 import java.io.File;
+
+import com.cavan.cavanutils.CavanUtils;
 
 import android.app.Service;
 import android.content.Intent;
@@ -86,8 +88,8 @@ public abstract class CavanService extends Service {
 	public void onCreate() {
 		File cache = getCacheDir();
 		if (cache != null) {
-			CavanUtils.setEnv("CACHE_PATH", cache.getPath());
-			CavanUtils.setEnv("HOME", cache.getParent());
+			CavanJni.setEnv("CACHE_PATH", cache.getPath());
+			CavanJni.setEnv("HOME", cache.getParent());
 		}
 
 		super.onCreate();

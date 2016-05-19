@@ -16,7 +16,8 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
-import com.cavan.cavanutils.CavanServicePreference;
+import com.cavan.cavanjni.CavanJni;
+import com.cavan.cavanjni.CavanServicePreference;
 import com.cavan.cavanutils.CavanUtils;
 
 public class MainActivity extends PreferenceActivity {
@@ -49,7 +50,7 @@ public class MainActivity extends PreferenceActivity {
 		if (mFileBin == null) {
 			CavanUtils.logE("Failed to getDir bin");
 		} else {
-			CavanUtils.appendPathEnv(mFileBin.getPath());
+			CavanJni.appendPathEnv(mFileBin.getPath());
 
 			new Thread() {
 

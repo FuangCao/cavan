@@ -30,7 +30,11 @@
 #endif
 
 #if defined(ANDROID) && !defined(CONFIG_ANDROID)
-#define CONFIG_ANDROID	1
+#define CONFIG_ANDROID				1
+#endif
+
+#if defined(ANDROID_NDK) && !defined(CONFIG_ANDROID_NDK)
+#define CONFIG_ANDROID_NDK			1
 #endif
 
 #if defined(CONFIG_ANDROID) && !defined(CAVAN_ARCH_ARM)

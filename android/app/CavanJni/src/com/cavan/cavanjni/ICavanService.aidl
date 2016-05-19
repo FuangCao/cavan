@@ -1,4 +1,4 @@
-package com.cavan.cavanutils;
+package com.cavan.cavanjni;
 
 interface ICavanService {
 	void start(int port);

@@ -1,4 +1,4 @@
-package com.cavan.cavanutils;
+package com.cavan.cavanjni;
 
 import android.content.Context;
 import android.content.Intent;

@@ -2,7 +2,7 @@
 
 #include "CavanMain.h"
 
-JNIEXPORT jboolean Java_com_cavan_cavanutils_CavanUtils_kill(JNIEnv *env, jclass clazz, jstring strName)
+JNIEXPORT jboolean Java_com_cavan_cavanjni_CavanJni_kill(JNIEnv *env, jclass clazz, jstring strName)
 {
 	jboolean success;
 	const char *name;
@@ -22,7 +22,7 @@ JNIEXPORT jboolean Java_com_cavan_cavanutils_CavanUtils_kill(JNIEnv *env, jclass
 	return success;
 }
 
-JNIEXPORT jboolean Java_com_cavan_cavanutils_CavanUtils_setEnv(JNIEnv *env, jclass clazz, jstring strKey, jstring strValue)
+JNIEXPORT jboolean Java_com_cavan_cavanjni_CavanJni_setEnv(JNIEnv *env, jclass clazz, jstring strKey, jstring strValue)
 {
 	jboolean success;
 	const char *key, *value;

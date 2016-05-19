@@ -1,4 +1,4 @@
-package com.cavan.cavanutils;
+package com.cavan.cavanjni;
 
 public class WebProxyService extends CavanService {
 
@@ -11,7 +11,7 @@ public class WebProxyService extends CavanService {
 
 	@Override
 	protected void mainServiceLoop(int port) {
-		CavanUtils.doWebProxy("-p", Integer.toString(port));
+		CavanJni.doWebProxy("-p", Integer.toString(port));
 	}
 
 	@Override
@@ -21,6 +21,6 @@ public class WebProxyService extends CavanService {
 
 	@Override
 	public boolean stopService() {
-		return CavanUtils.kill("web_proxy");
+		return CavanJni.kill("web_proxy");
 	}
 }

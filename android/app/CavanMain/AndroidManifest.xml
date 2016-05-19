@@ -32,13 +32,13 @@
             </intent-filter>
         </activity>
         <service
-            android:name="com.cavan.cavanutils.FtpService"
+            android:name="com.cavan.cavanjni.FtpService"
             android:persistent="true" />
         <service
-            android:name="com.cavan.cavanutils.TcpDdService"
+            android:name="com.cavan.cavanjni.TcpDdService"
             android:persistent="true" />
         <service
-            android:name="com.cavan.cavanutils.WebProxyService"
+            android:name="com.cavan.cavanjni.WebProxyService"
             android:persistent="true" />
     </application>
 

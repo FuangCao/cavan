@@ -1,4 +1,4 @@
-package com.cavan.cavanutils;
+package com.cavan.cavanjni;
 
 public class FtpService extends CavanService {
 
@@ -11,7 +11,7 @@ public class FtpService extends CavanService {
 
 	@Override
 	protected void mainServiceLoop(int port) {
-		CavanUtils.doFtpServer("-p", Integer.toString(port));
+		CavanJni.doFtpServer("-p", Integer.toString(port));
 	}
 
 	@Override
@@ -21,6 +21,6 @@ public class FtpService extends CavanService {
 
 	@Override
 	public boolean stopService() {
-		return CavanUtils.kill("ftp_server");
+		return CavanJni.kill("ftp_server");
 	}
 }

@@ -1,4 +1,6 @@
-package com.cavan.cavanutils;
+package com.cavan.cavanjni;
+
+import com.cavan.cavanutils.CavanUtils;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog.Builder;

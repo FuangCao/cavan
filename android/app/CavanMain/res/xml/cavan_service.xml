@@ -9,17 +9,17 @@
 	    android:title="@string/text_ip_address"
 	    android:summary="@string/text_unknown"/>
 
-	<com.cavan.cavanutils.TcpDdServicePreference
+	<com.cavan.cavanjni.TcpDdServicePreference
 	    android:key="tcp_dd"
 	    android:persistent="true"
 	    android:title="@string/tcp_dd_service"/>
 
-	<com.cavan.cavanutils.FtpServicePreference
+	<com.cavan.cavanjni.FtpServicePreference
 	    android:key="ftp"
 	    android:persistent="true"
 	    android:title="@string/ftp_service"/>
 
-	<com.cavan.cavanutils.WebProxyServicePreference
+	<com.cavan.cavanjni.WebProxyServicePreference
 	    android:key="web_proxy"
 	    android:persistent="true"
 	    android:title="@string/web_proxy_service"/>
