@@ -25,7 +25,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name="DiscoveryService" />
+        <service android:name="com.cavan.cavanutils.UdpDiscoveryService" />
+        <service android:name="com.cavan.cavanutils.TcpDdDiscoveryService"></service>
     </application>
 
 </manifest>

@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Enumeration;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -18,6 +15,7 @@ import android.preference.PreferenceScreen;
 
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.CavanServicePreference;
+import com.cavan.cavanutils.CavanNetworkClient;
 import com.cavan.cavanutils.CavanUtils;
 
 public class MainActivity extends PreferenceActivity {
@@ -144,41 +142,9 @@ public class MainActivity extends PreferenceActivity {
 	}
 
 	private void updateIpAddressStatus() {
-		Enumeration<NetworkInterface> enNetIf;
-		try {
-			enNetIf = NetworkInterface.getNetworkInterfaces();
-			if (enNetIf == null) {
-				return;
-			}
-		} catch (SocketException e) {
-			e.printStackTrace();
-			return;
-		}
-
-		StringBuilder builder = new StringBuilder();
-
-		while (enNetIf.hasMoreElements()) {
-			Enumeration<InetAddress> enAddr = enNetIf.nextElement().getInetAddresses();
-			while (enAddr.hasMoreElements()) {
-				InetAddress addr = enAddr.nextElement();
-				if (addr.isLoopbackAddress()) {
-					continue;
-				}
-
-				if (addr.isLinkLocalAddress()) {
-					continue;
-				}
-
-				if (builder.length() > 0) {
-					builder.append("\n");
-				}
-
-				builder.append(addr.getHostAddress());
-			}
-		}
-
-		if (builder.length() > 0) {
-			mPreferenceIpAddress.setSummary(builder.toString());
+		InetAddress address = CavanNetworkClient.getIpAddress();
+		if (address != null) {
+			mPreferenceIpAddress.setSummary(address.getHostAddress());
 		} else {
 			mPreferenceIpAddress.setSummary(R.string.text_unknown);
 		}

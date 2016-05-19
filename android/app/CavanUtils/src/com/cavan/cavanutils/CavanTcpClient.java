@@ -24,7 +24,7 @@ public class CavanTcpClient extends CavanNetworkClientImpl {
 			mSocket.setTcpNoDelay(true);
 			return true;
 		} catch (IOException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 
 		mSocket = null;

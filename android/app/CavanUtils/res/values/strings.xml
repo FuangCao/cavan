@@ -9,5 +9,6 @@
     <string name="text_service_disconnected">已断开服务</string>
     <string name="text_start">启动</string>
     <string name="text_stop">停止</string>
+    <string name="text_scanning">正在扫描</string>
 
 </resources>

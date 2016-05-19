@@ -1,4 +1,4 @@
-package com.cavan.remotecontrol;
+package com.cavan.cavanutils;
 
 import java.net.InetAddress;
 
@@ -8,9 +8,6 @@ import android.os.Parcelable;
 
 @SuppressLint("DefaultLocale")
 public class ScanResult implements Parcelable {
-	@SuppressWarnings("unused")
-	private static final String TAG = MainActivity.TAG;
-
 	private int mPort;
 	private String mHostname;
 	private InetAddress mAddress;

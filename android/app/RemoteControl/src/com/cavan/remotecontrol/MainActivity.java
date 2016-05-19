@@ -27,6 +27,10 @@ import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.cavan.cavanutils.DiscoveryService;
+import com.cavan.cavanutils.IDiscoveryService;
+import com.cavan.cavanutils.ScanResult;
+import com.cavan.cavanutils.TcpDdDiscoveryService;
 import com.cavan.cavanutils.TcpKeypadClient;
 
 @SuppressWarnings("deprecation")
@@ -117,7 +121,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 			mDiscoveryService = IDiscoveryService.Stub.asInterface(service);
 
 			try {
-				mDiscoveryService.startDiscovery(0);
+				mDiscoveryService.scan(0);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -163,7 +167,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 					Toast.makeText(getApplicationContext(), R.string.text_connected, Toast.LENGTH_SHORT).show();
 				} else {
 					try {
-						mDiscoveryService.startDiscovery(0);
+						mDiscoveryService.scan(0);
 					} catch (RemoteException e) {
 						e.printStackTrace();
 					}
@@ -215,7 +219,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 			}
 		}
 
-		Intent service = new Intent(this, DiscoveryService.class);
+		Intent service = new Intent(this, TcpDdDiscoveryService.class);
 		bindService(service, mConnection, BIND_AUTO_CREATE);
 	}
 
@@ -276,7 +280,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	public void onClick(View v) {
 		try {
 			if (mDiscoveryService != null) {
-				mDiscoveryService.startDiscovery(0);
+				mDiscoveryService.scan(0);
 			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
