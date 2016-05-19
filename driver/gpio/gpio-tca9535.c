@@ -434,7 +434,6 @@ static int tca9535_write_u16(struct tca9535_device *tca9535, u8 addr, u16 value)
 	tca9535_lock(tca9535);
 
 	if (likely(value != *cache)) {
-		int ret;
 		u8 buff[] = { addr, value & 0xFF, value >> 8 };
 
 		ret = tca9535_master_send(tca9535, buff, sizeof(buff));
@@ -456,7 +455,6 @@ static int tca9535_write_u16_part(struct tca9535_device *tca9535, struct tca9535
 	tca9535_lock(tca9535);
 
 	if (likely(value != *cache)) {
-		int ret;
 		u8 buff[config->wr_size + 1];
 
 		buff[0] = config->wr_addr;
@@ -481,7 +479,6 @@ static int tca9535_write_u16_adapter_locked(struct tca9535_device *tca9535, u8 a
 	tca9535_lock(tca9535);
 
 	if (value != *cache) {
-		int ret;
 		u8 buff[] = { addr, value & 0xFF, value >> 8 };
 
 		ret = tca9535_master_send_adapter_locked(tca9535, buff, sizeof(buff));
@@ -538,25 +535,25 @@ static int tca9535_register_init(struct tca9535_device *tca9535)
 
 	ret = tca9535_write_u16(tca9535, REG_OUTPUT_PORT, output_port);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_u16 REG_OUTPUT_PORT: %d\n", ret);
+		dev_err(tca9535->dev, "Failed to tca9535_write_u16 REG_OUTPUT_PORT: %d\n", ret);
 		return ret;
 	}
 
 	ret = tca9535_write_u16(tca9535, REG_POLARITY_INVERSION, 0x0000);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_u16 REG_POLARITY_INVERSION: %d\n", ret);
+		dev_err(tca9535->dev, "Failed to tca9535_write_u16 REG_POLARITY_INVERSION: %d\n", ret);
 		return ret;
 	}
 
 	ret = tca9535_write_u16(tca9535, REG_CONFIGURATION, configuration);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_u16 REG_CONFIGURATION: %d\n", ret);
+		dev_err(tca9535->dev, "Failed to tca9535_write_u16 REG_CONFIGURATION: %d\n", ret);
 		return ret;
 	}
 
-	dev_info(&tca9535->client->dev, "REG_OUTPUT_PORT = 0x%04x\n", tca9535->cache.output_port);
-	dev_info(&tca9535->client->dev, "REG_POLARITY_INVERSION = 0x%04x\n", tca9535->cache.polarity_inversion);
-	dev_info(&tca9535->client->dev, "REG_CONFIGURATION = 0x%04x\n", tca9535->cache.configuration);
+	dev_info(tca9535->dev, "REG_OUTPUT_PORT = 0x%04x\n", tca9535->cache.output_port);
+	dev_info(tca9535->dev, "REG_POLARITY_INVERSION = 0x%04x\n", tca9535->cache.polarity_inversion);
+	dev_info(tca9535->dev, "REG_CONFIGURATION = 0x%04x\n", tca9535->cache.configuration);
 
 	return 0;
 }
@@ -575,7 +572,7 @@ static int tca9535_set_power_locked(struct tca9535_device *tca9535, bool enable)
 		if (tca9535->vcc) {
 			ret = regulator_enable(tca9535->vcc);
 			if (ret < 0) {
-				dev_err(&tca9535->client->dev, "Failed to regulator_enable vcc: %d\n", ret);
+				dev_err(tca9535->dev, "Failed to regulator_enable vcc: %d\n", ret);
 				return ret;
 			}
 		}
@@ -583,7 +580,7 @@ static int tca9535_set_power_locked(struct tca9535_device *tca9535, bool enable)
 		if (tca9535->vbus) {
 			ret = regulator_enable(tca9535->vbus);
 			if (ret < 0) {
-				dev_err(&tca9535->client->dev, "Failed to regulator_enable vbus: %d\n", ret);
+				dev_err(tca9535->dev, "Failed to regulator_enable vbus: %d\n", ret);
 				goto out_regulator_disable_vcc;
 			}
 		}
@@ -597,7 +594,7 @@ static int tca9535_set_power_locked(struct tca9535_device *tca9535, bool enable)
 
 			ret = tca9535_register_init(tca9535);
 			if (ret < 0) {
-				dev_err(&tca9535->client->dev, "Failed to tca9535_register_init: %d\n", ret);
+				dev_err(tca9535->dev, "Failed to tca9535_register_init: %d\n", ret);
 				goto out_power_down;
 			}
 		} else {
@@ -608,7 +605,7 @@ static int tca9535_set_power_locked(struct tca9535_device *tca9535, bool enable)
 
 			ret = tca9535_register_sync(tca9535);
 			if (ret < 0) {
-				dev_err(&tca9535->client->dev, "Failed to tca9535_register_sync: %d\n", ret);
+				dev_err(tca9535->dev, "Failed to tca9535_register_sync: %d\n", ret);
 				goto out_power_down;
 			}
 		}
@@ -756,7 +753,7 @@ static int tca9535_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
 	struct tca9535_device *tca9535 = container_of(chip, struct tca9535_device, gpio_chip);
 
 #if TCA9535_DEBUG
-	dev_info(&tca9535->client->dev, "%s: offset = %d\n", __FUNCTION__, offset);
+	dev_info(tca9535->dev, "%s: offset = %d\n", __FUNCTION__, offset);
 #endif
 
 	return irq_create_mapping(tca9535->domain, offset);
@@ -800,7 +797,7 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 
 	input = input_allocate_device();
 	if (input == NULL) {
-		dev_err(&tca9535->client->dev, "Failed to input_allocate_device");
+		dev_err(tca9535->dev, "Failed to input_allocate_device");
 		return -ENOMEM;
 	}
 
@@ -822,7 +819,7 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 		}
 
 		if (index >= TCA9535_GPIO_COUNT) {
-			dev_err(&tca9535->client->dev, "Invalid index = %d\n", index);
+			dev_err(tca9535->dev, "Invalid index = %d\n", index);
 			continue;
 		}
 
@@ -839,7 +836,7 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 
 		gpio_request(tca9535->gpio_chip.base + index, label);
 
-		dev_info(&tca9535->client->dev, "mask = 0x%02x, index = %d, code = %d\n", mask, index, code);
+		dev_info(tca9535->dev, "mask = 0x%02x, index = %d, code = %d\n", mask, index, code);
 
 		count++;
 	}
@@ -847,13 +844,13 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 
 	if (count == 0) {
 		ret = 0;
-		dev_info(&tca9535->client->dev, "No key found\n");
+		dev_info(tca9535->dev, "No key found\n");
 		goto out_input_free_device;
 	}
 
 	ret = tca9535_write_u16(tca9535, REG_CONFIGURATION, configuration);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_u16 REG_CONFIGURATION: %d\n", ret);
+		dev_err(tca9535->dev, "Failed to tca9535_write_u16 REG_CONFIGURATION: %d\n", ret);
 		goto out_input_free_device;
 	}
 
@@ -861,7 +858,7 @@ static int tca9535_keypad_init(struct tca9535_device *tca9535)
 
 	ret = input_register_device(input);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to input_register_device: %d\n", ret);
+		dev_err(tca9535->dev, "Failed to input_register_device: %d\n", ret);
 		goto out_input_free_device;
 	}
 
@@ -956,7 +953,7 @@ static int tca9535_irq_set_type(struct irq_data *d, unsigned int type)
 #endif
 
 	if ((type & IRQ_TYPE_EDGE_BOTH) == 0) {
-		dev_err(&tca9535->client->dev, "irq %d: unsupported type %d\n", d->irq, type);
+		dev_err(tca9535->dev, "irq %d: unsupported type %d\n", d->irq, type);
 		return -EINVAL;
 	}
 
@@ -1009,7 +1006,7 @@ static int tca9535_irq_init(struct tca9535_device *tca9535, const struct i2c_dev
 {
 	tca9535->domain = irq_domain_add_simple(tca9535->client->dev.of_node, tca9535->gpio_chip.ngpio, irq_base, &tca9535_irq_simple_ops, tca9535);
 	if (tca9535->domain == NULL) {
-		dev_err(&tca9535->client->dev, "Failed to irq_domain_add_simple\n");
+		dev_err(tca9535->dev, "Failed to irq_domain_add_simple\n");
 		return -ENODEV;
 	}
 
@@ -1115,7 +1112,7 @@ static int tca9535_i2c_mux_select(struct i2c_adapter *adap, void *data, u32 chan
 	struct tca9535_device *tca9535 = data;
 
 #if TCA9535_DEBUG
-	dev_info(&tca9535->client->dev, "%s: chan = %d\n", __FUNCTION__, chan);
+	dev_info(tca9535->dev, "%s: chan = %d\n", __FUNCTION__, chan);
 #endif
 
 	value = tca9535->cache.output_port;
@@ -1195,7 +1192,7 @@ static int tca9535_i2c_mux_init(struct tca9535_device *tca9535)
 
 	ret = tca9535_write_u16(tca9535, REG_CONFIGURATION, configuration);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_u16 REG_CONFIGURATION: %d\n", ret);
+		dev_err(tca9535->dev, "Failed to tca9535_write_u16 REG_CONFIGURATION: %d\n", ret);
 		goto out_i2c_del_adapter;
 	}
 
@@ -1874,7 +1871,7 @@ static int tca9535_regulator_init(struct tca9535_device *tca9535)
 		}
 
 		if (index >= TCA9535_GPIO_COUNT) {
-			dev_err(&tca9535->client->dev, "Invalid index = %d\n", index);
+			dev_err(tca9535->dev, "Invalid index = %d\n", index);
 			continue;
 		}
 
@@ -1934,13 +1931,13 @@ static int tca9535_regulator_init(struct tca9535_device *tca9535)
 
 	ret = tca9535_write_u16(tca9535, REG_OUTPUT_PORT, output_port);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_u16 REG_OUTPUT_PORT: %d\n", ret);
+		dev_err(tca9535->dev, "Failed to tca9535_write_u16 REG_OUTPUT_PORT: %d\n", ret);
 		goto out_regulator_unregister;
 	}
 
 	ret = tca9535_write_u16(tca9535, REG_CONFIGURATION, configuration);
 	if (ret < 0) {
-		dev_err(&tca9535->client->dev, "Failed to tca9535_write_u16 REG_CONFIGURATION: %d\n", ret);
+		dev_err(tca9535->dev, "Failed to tca9535_write_u16 REG_CONFIGURATION: %d\n", ret);
 		goto out_regulator_unregister;
 	}
 
