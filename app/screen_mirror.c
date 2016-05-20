@@ -29,11 +29,6 @@ static int screen_mirror_client_main(int argc, char *argv[])
 }
 
 CAVAN_COMMAND_MAP_START {
-	{
-		.name = "service",
-		.main_func = screen_mirror_service_main
-	}, {
-		.name = "client",
-		.main_func = screen_mirror_client_main
-	}
+	{ "service", screen_mirror_service_main },
+	{ "client", screen_mirror_client_main },
 } CAVAN_COMMAND_MAP_END;

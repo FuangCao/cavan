@@ -20,7 +20,7 @@
 	}
 
 #define CAVAN_COMMAND_MAP_START \
-	static struct cavan_command_map __local_cmd_map[] =
+	static struct cavan_command_entry __local_cmd_map[] =
 
 #define CAVAN_COMMAND_MAP_END \
 	; FIND_EXEC_COMMAND_MAIN(__local_cmd_map)
@@ -173,9 +173,14 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_LAST = CAVAN_COMMAND_OPTION_RESOURCE
 } cavan_command_option_t;
 
-struct cavan_command_map {
+struct cavan_command_entry {
 	const char *name;
-	int (*main_func)(int argc, char *argv[]);
+	int (*handler)(int argc, char *argv[]);
+};
+
+struct cavan_command_entry2 {
+	const char *name;
+	int (*handler)(int argc, char *argv[], void *data);
 };
 
 struct cavan_builtin_command {
@@ -190,11 +195,6 @@ struct cavan_exec_pipe_thread_data {
 	pid_t pid;
 };
 
-struct cavan_pipe_command {
-	const char *name;
-	int (*handler)(int argc, char *argv[], void *data);
-};
-
 struct cavan_pipe_cmdline {
 	int fd;
 	FILE *fp;
@@ -203,7 +203,7 @@ struct cavan_pipe_cmdline {
 	void *data;
 	bool need_close;
 	size_t cmd_count;
-	const struct cavan_pipe_command *cmd_list;
+	const struct cavan_command_entry2 *cmd_list;
 };
 
 // ============================================================
@@ -269,11 +269,11 @@ extern const char *cavan_help_message_discovery_delay;
 
 // ============================================================
 
-int print_command_table(const struct cavan_command_map *p, const struct cavan_command_map *p_end);
-const struct cavan_command_map *find_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname, size_t size);
-void print_maybe_command(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname);
-const struct cavan_command_map *match_command_by_name(const struct cavan_command_map *p, const struct cavan_command_map *p_end, const char *cmdname);
-int find_and_exec_command(const struct cavan_command_map *map, size_t count, int argc, char *argv[]);
+int print_command_table(const struct cavan_command_entry *p, const struct cavan_command_entry *p_end);
+const struct cavan_command_entry *find_command_by_name(const struct cavan_command_entry *p, const struct cavan_command_entry *p_end, const char *cmdname, size_t size);
+void print_maybe_command(const struct cavan_command_entry *p, const struct cavan_command_entry *p_end, const char *cmdname);
+const struct cavan_command_entry *match_command_by_name(const struct cavan_command_entry *p, const struct cavan_command_entry *p_end, const char *cmdname);
+int find_and_exec_command(const struct cavan_command_entry *map, size_t count, int argc, char *argv[]);
 
 pid_t cavan_exec_fork(void);
 int cavan_exec_waitpid(pid_t pid);
@@ -322,14 +322,14 @@ int cavan_tty_redirect_loop3(int in, int out, int err, int ttyin, int ttyout, in
 void cavan_set_exit_ask(void);
 int cavan_reboot(bool shutdown, const char *command);
 int cavan_cmdline_parse(char *cmdline, char *argv[], int size);
-const struct cavan_pipe_command *cavan_pipe_cmdline_find(const char *name, const struct cavan_pipe_command cmd_list[], size_t cmd_count);
-int cavan_pipe_cmdline_loop(FILE *fp, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data);
-int cavan_pipe_cmdline_loop2(int fd, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data);
-int cavan_pipe_cmdline_loop3(const char *pathname, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data);
-int cavan_pipe_cmdline_run(FILE *fp, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data);
-int cavan_pipe_cmdline_run2(int fd, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data);
-int cavan_pipe_cmdline_run3(const char *pathname, const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data);
-int cavan_pipe_cmdline_run4(const struct cavan_pipe_command cmd_list[], size_t cmd_count, void *data);
+const struct cavan_command_entry2 *cavan_pipe_cmdline_find(const char *name, const struct cavan_command_entry2 cmd_list[], size_t cmd_count);
+int cavan_pipe_cmdline_loop(FILE *fp, const struct cavan_command_entry2 cmd_list[], size_t cmd_count, void *data);
+int cavan_pipe_cmdline_loop2(int fd, const struct cavan_command_entry2 cmd_list[], size_t cmd_count, void *data);
+int cavan_pipe_cmdline_loop3(const char *pathname, const struct cavan_command_entry2 cmd_list[], size_t cmd_count, void *data);
+int cavan_pipe_cmdline_run(FILE *fp, const struct cavan_command_entry2 cmd_list[], size_t cmd_count, void *data);
+int cavan_pipe_cmdline_run2(int fd, const struct cavan_command_entry2 cmd_list[], size_t cmd_count, void *data);
+int cavan_pipe_cmdline_run3(const char *pathname, const struct cavan_command_entry2 cmd_list[], size_t cmd_count, void *data);
+int cavan_pipe_cmdline_run4(const struct cavan_command_entry2 cmd_list[], size_t cmd_count, void *data);
 
 static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
 {

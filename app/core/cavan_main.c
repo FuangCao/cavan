@@ -173,7 +173,7 @@ static int do_cavan_getgroup(int argc, char *argv[])
 	return 0;
 }
 
-const struct cavan_command_map cmd_map_table[] = {
+const struct cavan_command_entry cmd_map_table[] = {
 	{ CONFIG_CAVAN_MAIN_NAME, cavan_main },
 	{ "calc", do_cavan_calculator },
 	{ "halt", do_cavan_halt },

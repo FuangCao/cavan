@@ -107,6 +107,12 @@ int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak)
 		attr.c_cc[VMIN] = 1;
 		return cavan_tty_set_attr(fd, TCSANOW, &attr);
 
+	case 6:
+		attr.c_lflag = ISIG;
+		attr.c_cc[VTIME] = 0;
+		attr.c_cc[VMIN] = 1;
+		return cavan_tty_set_attr(fd, TCSANOW, &attr);
+
 	default:
 		pr_red_info("invalid mode %d", mode);
 		return -EINVAL;
@@ -119,7 +125,7 @@ int cavan_tty_attr_restore(int fd, struct termios *attr)
 		attr = &tty_attr;
 	}
 
-	return cavan_tty_set_attr(fd, TCSADRAIN, attr);
+	return cavan_tty_set_attr(fd, TCSANOW, attr);
 }
 
 int cavan_has_char(long sec, long usec)
