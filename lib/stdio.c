@@ -14,6 +14,9 @@ static struct termios tty_attr;
 static FILE *cavan_async_stdout;
 static int cavan_async_stdout_pipefd[2];
 
+cavan_stdio_function_declarer(tty, "/dev/tty");
+cavan_stdio_function_declarer(kmsg, "/dev/kmsg");
+
 int cavan_tty_set_attr(int fd, int action, struct termios *attr)
 {
 	int ret;

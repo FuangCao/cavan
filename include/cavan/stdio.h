@@ -442,9 +442,135 @@ using namespace std;
 #define save_console_cursor()				print_text("\033[%ds")
 #define restore_console_cursor()			print_text("\033[%du")
 
+#define cavan_stdio_function_declarer(name, pathname) \
+	static FILE *cavan_stdio_fp_##name; \
+	FILE *cavan_stdio_##name##_open(void) { \
+		FILE *fp; \
+		if (likely(cavan_stdio_fp_##name)) { \
+			return cavan_stdio_fp_##name; \
+		} \
+		fp = fopen(pathname, "r+"); \
+		if (fp == NULL) { \
+			return fp; \
+		} \
+		setlinebuf(fp); \
+		cavan_stdio_fp_##name = fp; \
+		return fp; \
+	} \
+	void cavan_stdio_##name##_close(void) { \
+		if (cavan_stdio_fp_##name) { \
+			FILE *fp = cavan_stdio_fp_##name; \
+			cavan_stdio_fp_##name = NULL; \
+			fclose(fp); \
+		} \
+	} \
+	int cavan_stdio_##name##_fflush(void) { \
+		FILE *fp = cavan_stdio_##name##_open(); \
+		if (likely(fp)) { \
+			return fflush(fp); \
+		} \
+		return -EFAULT; \
+	} \
+	int cavan_stdio_##name##_putchar(int c) { \
+		FILE *fp = cavan_stdio_##name##_open(); \
+		if (likely(fp)) { \
+			return fputc(c, fp); \
+		} \
+		return -EFAULT; \
+	} \
+	int cavan_stdio_##name##_getchar(void) { \
+		FILE *fp = cavan_stdio_##name##_open(); \
+		if (likely(fp)) { \
+			return fgetc(fp); \
+		} \
+		return -EFAULT; \
+	} \
+	int cavan_stdio_##name##_puts(const char *text) { \
+		FILE *fp = cavan_stdio_##name##_open(); \
+		if (likely(fp)) { \
+			return fputs(text, fp); \
+		} \
+		return -EFAULT; \
+	} \
+	char *cavan_stdio_##name##_gets(char *buff, int size) { \
+		FILE *fp = cavan_stdio_##name##_open(); \
+		if (likely(fp)) { \
+			return fgets(buff, size, fp); \
+		} \
+		return NULL; \
+	} \
+	int cavan_stdio_##name##_vprintf(const char *format, va_list ap) { \
+		FILE *fp = cavan_stdio_##name##_open(); \
+		if (likely(fp)) { \
+			return vfprintf(fp, format, ap); \
+		} \
+		return -EFAULT; \
+	} \
+	int cavan_stdio_##name##_vprintln(const char *format, va_list ap) { \
+		FILE *fp = cavan_stdio_##name##_open(); \
+		if (likely(fp)) { \
+			return vfprintf(fp, format, ap) | fputc('\n', fp); \
+		} \
+		return -EFAULT; \
+	} \
+	int cavan_stdio_##name##_printf(const char *format, ...) { \
+		int ret; \
+		va_list ap; \
+		va_start(ap, format); \
+		ret = cavan_stdio_##name##_vprintf(format, ap); \
+		va_end(ap); \
+		return ret; \
+	} \
+	int cavan_stdio_##name##_println(const char *format, ...) { \
+		int ret; \
+		va_list ap; \
+		va_start(ap, format); \
+		ret = cavan_stdio_##name##_vprintln(format, ap); \
+		va_end(ap); \
+		return ret; \
+	} \
+	int cavan_stdio_##name##_scanf(const char *format, ...) { \
+		FILE *fp = cavan_stdio_##name##_open(); \
+		if (likely(fp)) { \
+			int ret; \
+			va_list ap; \
+			va_start(ap, format); \
+			ret = vfscanf(fp, format, ap); \
+			va_end(ap); \
+			return ret; \
+		} \
+		return -EFAULT; \
+	}
+
 __BEGIN_DECLS
 
 extern const char *cavan_temp_path;
+
+FILE *cavan_stdio_tty_open(void);
+void cavan_stdio_tty_close(void);
+int cavan_stdio_tty_getchar(void);
+int cavan_stdio_tty_putchar(int c);
+char *cavan_stdio_tty_gets(char *buff, int size);
+int cavan_stdio_tty_puts(const char *text);
+int cavan_stdio_tty_fflush(void);
+__printf_format_10__ int cavan_stdio_tty_vprintf(const char *format, va_list ap);
+__printf_format_10__ int cavan_stdio_tty_vprintln(const char *format, va_list ap);
+__printf_format_12__ int cavan_stdio_tty_printf(const char *format, ...);
+__printf_format_12__ int cavan_stdio_tty_println(const char *format, ...);
+__printf_format_12__ int cavan_stdio_tty_scanf(const char *format, ...);
+
+FILE *cavan_stdio_kmsg_open(void);
+void cavan_stdio_kmsg_close(void);
+int cavan_stdio_kmsg_getchar(void);
+int cavan_stdio_kmsg_putchar(int c);
+char *cavan_stdio_kmsg_gets(char *buff, int size);
+int cavan_stdio_kmsg_puts(const char *text);
+int cavan_stdio_kmsg_fflush(void);
+__printf_format_10__ int cavan_stdio_kmsg_vprintf(const char *format, va_list ap);
+__printf_format_10__ int cavan_stdio_kmsg_vprintln(const char *format, va_list ap);
+__printf_format_12__ int cavan_stdio_kmsg_printf(const char *format, ...);
+__printf_format_12__ int cavan_stdio_kmsg_println(const char *format, ...);
+__printf_format_12__ int cavan_stdio_kmsg_scanf(const char *format, ...);
 
 int cavan_tty_set_attr(int fd, int action, struct termios *attr);
 int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak);
