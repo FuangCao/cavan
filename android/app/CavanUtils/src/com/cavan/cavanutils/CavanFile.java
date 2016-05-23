@@ -21,6 +21,8 @@ import java.util.List;
 
 public class CavanFile extends File {
 
+	private static final long serialVersionUID = 2944296431050993672L;
+
 	public CavanFile(File dir, String name) {
 		super(dir, name);
 	}
