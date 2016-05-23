@@ -186,6 +186,18 @@ out_close_sockfd:
 	return ret;
 }
 
+bool adb_wait_for_device_once(const char *ip, u16 port)
+{
+	int sockfd = adb_connect_service(ip, port, "host:wait-for-any");
+	if (sockfd < 0) {
+		return false;
+	}
+
+	close(sockfd);
+
+	return true;
+}
+
 int adb_wait_for_device(const char *ip, u16 port, u32 msec)
 {
 	if (!adb_is_host()) {
@@ -193,11 +205,7 @@ int adb_wait_for_device(const char *ip, u16 port, u32 msec)
 	}
 
 	if (msec > 0) {
-		while (1) {
-			if (adb_wait_for_device_once(ip, port) >= 0) {
-				return 0;
-			}
-
+		while (!adb_wait_for_device_once(ip, port)) {
 			if (msec < CAVAN_ADB_POLL_DELAY) {
 				return -ETIMEDOUT;
 			}
@@ -206,12 +214,12 @@ int adb_wait_for_device(const char *ip, u16 port, u32 msec)
 			msec -= CAVAN_ADB_POLL_DELAY;
 		}
 	} else {
-		while (adb_wait_for_device_once(ip, port) < 0) {
+		while (!adb_wait_for_device_once(ip, port)) {
 			msleep(500);
 		}
-
-		return 0;
 	}
+
+	return 0;
 }
 
 int adb_create_tcp_link(const char *ip, u16 port, u16 tcp_port, bool wait_device)

@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
@@ -22,10 +21,9 @@ import com.android.settings.bluetooth.CachedBluetoothDevice;
 import com.android.settings.bluetooth.CachedBluetoothDevice.Callback;
 import com.android.settings.bluetooth.LocalBluetoothAdapter;
 import com.android.settings.bluetooth.LocalBluetoothManager;
+import com.cavan.cavanutils.CavanUtils;
 
 public class MainActivity extends Activity implements BluetoothCallback, OnClickListener {
-
-	private static String TAG = "Cavan";
 
 	private LocalBluetoothAdapter mLocalAdapter;
 	private LocalBluetoothManager mLocalManager;
@@ -52,7 +50,7 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 		@Override
 		public void onDeviceAttributesChanged() {
-			Log.e(TAG, "onDeviceAttributesChanged");
+			CavanUtils.logE("onDeviceAttributesChanged");
 
 			String name = mDevice.getDevice().getName();
 			String address = mDevice.getDevice().getAddress();
@@ -116,22 +114,27 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 	class DeviceListAdapter extends BaseAdapter implements OnClickListener, OnLongClickListener {
 
-		private DeviceView[] mDevices;
+		private CachedBluetoothDevice[] mDevices;
 
 		DeviceListAdapter() {
 			Collection<CachedBluetoothDevice> devices = mLocalManager.getCachedDeviceManager().getCachedDevicesCopy();
 			if (devices != null) {
-				mDevices = new DeviceView[devices.size()];
 				int index = 0;
+
+				mDevices = new CachedBluetoothDevice[devices.size()];
 				for (CachedBluetoothDevice device : devices) {
-					mDevices[index++] = new DeviceView(getApplication(), device);
+					mDevices[index++] = device;
 				}
 			}
 		}
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			DeviceView view = mDevices[position];
+			if (convertView != null && convertView instanceof DeviceView) {
+				return convertView;
+			}
+
+			DeviceView view = new DeviceView(getApplicationContext(), mDevices[position]);
 			view.setOnClickListener(this);
 			view.setOnLongClickListener(this);
 			return view;
@@ -154,14 +157,14 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 		@Override
 		public void onClick(View v) {
-			Log.e(TAG, "onClick: view = " + v);
+			CavanUtils.logE("onClick: view = " + v);
 
 			((DeviceView) v).onClick();
 		}
 
 		@Override
 		public boolean onLongClick(View v) {
-			Log.e(TAG, "onLongClick: view = " + v);
+			CavanUtils.logE("onLongClick: view = " + v);
 
 			return ((DeviceView) v).onLongClick();
 		}
@@ -218,37 +221,37 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 	@Override
 	public void onBluetoothStateChanged(int state) {
-		Log.e(TAG, "onBluetoothStateChanged: state = " + state);
+		CavanUtils.logE("onBluetoothStateChanged: state = " + state);
 		updateContent(state);
 	}
 
 	@Override
 	public void onDeviceAdded(CachedBluetoothDevice device) {
-		Log.e(TAG, "onDeviceAdded: device = " + device);
+		CavanUtils.logE("onDeviceAdded: device = " + device);
 		updateContent(-1);
 	}
 
 	@Override
 	public void onDeviceBondStateChanged(CachedBluetoothDevice device, int state) {
-		Log.e(TAG, "onDeviceBondStateChanged: device = " + device + ", state = " + state);
+		CavanUtils.logE("onDeviceBondStateChanged: device = " + device + ", state = " + state);
 		updateContent(-1);
 
 	}
 
 	@Override
 	public void onDeviceDeleted(CachedBluetoothDevice device) {
-		Log.e(TAG, "onDeviceDeleted: device = " + device);
+		CavanUtils.logE("onDeviceDeleted: device = " + device);
 		updateContent(-1);
 	}
 
 	@Override
 	public void onScanningStateChanged(boolean state) {
-		Log.e(TAG, "onScanningStateChanged: state = " + state);
+		CavanUtils.logE("onScanningStateChanged: state = " + state);
 	}
 
 	@Override
 	public void onClick(View v) {
-		Log.e(TAG, "onClick: view = " + v);
+		CavanUtils.logE("onClick: view = " + v);
 		startScan();
 	}
 }
