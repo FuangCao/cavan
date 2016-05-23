@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
@@ -41,7 +42,8 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 			mDevice = device;
 
 			// setTextColor(Color.BLACK);
-			setTextSize(20);
+			setTextSize(12);
+			setGravity(Gravity.CENTER_VERTICAL);
 
 			mDevice.registerCallback(this);
 
