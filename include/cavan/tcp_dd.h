@@ -43,6 +43,7 @@ enum tcp_dd_package_type {
 	TCP_DD_FILE_STAT,
 	TCP_DD_BREAKPOINT,
 	TCP_DD_DISCOVERY,
+	TCP_REMOTE_CTRL,
 	TCP_DD_PACKAGE_COUNT
 };
 
@@ -116,6 +117,7 @@ struct cavan_tcp_dd_service {
 	char backlight[1024];
 	int mouse_fd;
 	int keypad_fd;
+	int remote_ctrl_fd;
 	int keypad_use_count;
 	bool keypad_uinput;
 	bool keypad_insmod;

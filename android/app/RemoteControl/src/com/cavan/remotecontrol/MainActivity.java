@@ -29,15 +29,18 @@ import android.widget.Toast;
 
 import com.cavan.cavanutils.DiscoveryService;
 import com.cavan.cavanutils.IDiscoveryService;
+import com.cavan.cavanutils.RemoteCtrlClient;
 import com.cavan.cavanutils.ScanResult;
 import com.cavan.cavanutils.TcpDdDiscoveryService;
-import com.cavan.cavanutils.TcpKeypadClient;
+import com.cavan.cavanutils.TcpInputClient;
 
 @SuppressWarnings("deprecation")
 @SuppressLint({ "HandlerLeak", "UseSparseArrays", "NewApi", "ClickableViewAccessibility" })
 public class MainActivity extends ActionBarActivity implements OnClickListener, OnTouchListener {
 
 	public static final String TAG = "Cavan";
+
+	private static final int DEFAULT_PORT = 8888;
 
 	private static final int EVENT_LINK_CHANGED = 0;
 	private static final int EVENT_AUTO_CONNECT = 1;
@@ -105,7 +108,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		sKeyEventMap.put(KeyEvent.KEYCODE_MEDIA_NEXT, KEYCODE_PLAY_NEXT);
 	}
 
-	private TcpKeypadClient mClient;
+	private TcpInputClient mClient;
 	private HashMap<Button, Integer> mButtonMap = new HashMap<Button, Integer>();
 
 	private IDiscoveryService mDiscoveryService;
@@ -121,7 +124,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 			mDiscoveryService = IDiscoveryService.Stub.asInterface(service);
 
 			try {
-				mDiscoveryService.scan(0);
+				mDiscoveryService.scan(DEFAULT_PORT);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -167,7 +170,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 					Toast.makeText(getApplicationContext(), R.string.text_connected, Toast.LENGTH_SHORT).show();
 				} else {
 					try {
-						mDiscoveryService.scan(0);
+						mDiscoveryService.scan(DEFAULT_PORT);
 					} catch (RemoteException e) {
 						e.printStackTrace();
 					}
@@ -280,7 +283,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	public void onClick(View v) {
 		try {
 			if (mDiscoveryService != null) {
-				mDiscoveryService.scan(0);
+				mDiscoveryService.scan(DEFAULT_PORT);
 			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -309,7 +312,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		if (mScanResult != null && mScanResult.equals(result)) {
 			setTitle(result.getShortString());
 		} else {
-			mClient = new TcpKeypadClient(result.getAddress(), result.getPort()) {
+			mClient = new RemoteCtrlClient(result.getAddress(), result.getPort()) {
 
 				@Override
 				protected void OnConnected() {

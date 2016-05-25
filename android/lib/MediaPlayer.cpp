@@ -269,6 +269,7 @@ void CavanVideoPlayer::doCommand(char *command, size_t length)
 bool CavanVideoPlayer::threadLoop(void)
 {
 	status_t status;
+	struct termios attr;
 	struct progress_bar bar;
 
 	pd_pos_info();
@@ -325,8 +326,9 @@ bool CavanVideoPlayer::threadLoop(void)
 	getDuration(&mDuration);
 	progress_bar_init(&bar, mDuration, 0, PROGRESS_BAR_TYPE_TIME);
 
+	cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_CMDLINE, &attr);
+
 	while (isPlaying()) {
-		ssize_t rdlen;
 		char command[1024];
 
 		if (exitPending()) {
@@ -339,12 +341,21 @@ bool CavanVideoPlayer::threadLoop(void)
 		}
 #endif
 
-		rdlen = file_read_timeout(stdin_fd, command, sizeof(command), 200);
-		if (rdlen > 0) {
-			mHideCount = 50;
-			command[rdlen] = 0;
-			doCommand(command, rdlen);
+		if (file_poll_input(stdin_fd, 200)) {
+			cavan_tty_attr_restore(stdin_fd, &attr);
+
+			if (mHideCount < 1) {
+				print("\nMediaPlayer> ");
+			}
+
+			if (fgets(command, sizeof(command), stdin)) {
+				mHideCount = 50;
+				doCommand(command, strlen(command));
+			}
+
 			print("MediaPlayer> ");
+
+			cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_CMDLINE, &attr);
 		}
 
 		if (mHideCount > 0) {
@@ -363,6 +374,7 @@ bool CavanVideoPlayer::threadLoop(void)
 		}
 	}
 
+	cavan_tty_attr_restore(stdin_fd, &attr);
 	progress_bar_finish(&bar);
 
 	pd_pos_info();

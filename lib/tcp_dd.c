@@ -16,7 +16,16 @@
 #include <cavan/swan_vk.h>
 #include <cavan/android.h>
 
-#define TCP_DD_AUTO_CLOSE_UINPUT	0
+#define TCP_DD_AUTO_CLOSE_UINPUT	1
+
+static const u16 tcp_dd_remote_ctrl_keys[] = {
+	KEY_BACK, KEY_MENU, KEY_HOMEPAGE, KEY_SEARCH,
+	KEY_POWER, KEY_DELETE, KEY_ENTER,
+	KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT,
+	KEY_VOLUMEUP, KEY_VOLUMEDOWN, KEY_MUTE,
+	KEY_BRIGHTNESSUP, KEY_BRIGHTNESSDOWN,
+	KEY_PLAY, KEY_PLAYPAUSE, KEY_PREVIOUSSONG, KEY_NEXTSONG
+};
 
 static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
@@ -799,7 +808,7 @@ static int tcp_dd_keypad_uinput_init(struct uinput_user_dev *dev, int fd, void *
 	return ret;
 }
 
-static int tcp_dd_service_open_input(struct cavan_tcp_dd_service *service)
+static int tcp_dd_keypad_uinput_open(struct cavan_tcp_dd_service *service)
 {
 	int fd;
 
@@ -852,7 +861,7 @@ static int tcp_dd_service_open_input(struct cavan_tcp_dd_service *service)
 	return fd;
 }
 
-static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, bool force)
+static void tcp_dd_keypad_uinput_close(struct cavan_tcp_dd_service *service, bool force)
 {
 	network_service_lock(&service->service);
 
@@ -896,6 +905,53 @@ static void tcp_dd_service_close_input(struct cavan_tcp_dd_service *service, boo
 	network_service_unlock(&service->service);
 }
 
+static int tcp_dd_remote_ctrl_uinput_init(struct uinput_user_dev *dev, int fd, void *data)
+{
+	int i;
+	int code;
+	int ret = 0;
+
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_SYN);
+	ret |= ioctl(fd, UI_SET_EVBIT, EV_KEY);
+
+	for (i = 0; i < NELEM(tcp_dd_remote_ctrl_keys); i++) {
+		ret |= ioctl(fd, UI_SET_KEYBIT, tcp_dd_remote_ctrl_keys[i]);
+	}
+
+	for (code = KEY_1; code <= KEY_0; code++) {
+		ret |= ioctl(fd, UI_SET_KEYBIT, code);
+	}
+
+	return ret;
+}
+
+static int tcp_dd_remote_ctrl_uinput_open(struct cavan_tcp_dd_service *service)
+{
+	int fd;
+
+	network_service_lock(&service->service);
+
+	pd_func_info("remote_ctrl_fd = %d", service->remote_ctrl_fd);
+
+	if (service->remote_ctrl_fd < 0) {
+		service->remote_ctrl_fd = cavan_uinput_create("REMOTE_CTRL", tcp_dd_remote_ctrl_uinput_init, service);
+	}
+
+	fd = service->remote_ctrl_fd;
+
+	pd_func_info("remote_ctrl_fd = %d", service->remote_ctrl_fd);
+
+	network_service_unlock(&service->service);
+
+	return fd;
+}
+
+static void tcp_dd_remote_ctrl_uinput_close(struct cavan_tcp_dd_service *service)
+{
+	close(service->remote_ctrl_fd);
+	service->remote_ctrl_fd = -1;
+}
+
 static int tcp_dd_display_on_off(struct cavan_tcp_dd_service *service)
 {
 	int brightness;
@@ -929,7 +985,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	ssize_t rdlen;
 	bool android = cavan_is_android();
 
-	fd = tcp_dd_service_open_input(service);
+	fd = tcp_dd_keypad_uinput_open(service);
 	if (fd < 0) {
 		tcp_dd_send_response(client, fd, "[Server] Failed to open input");
 		return fd;
@@ -1036,7 +1092,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 		for (code = 0; code < KEY_CNT; code++) {
 			event.code = code;
-			ret = cavan_input_event(fd, &event, sizeof(event));
+			ret = cavan_input_event(fd, &event, 1);
 			if (ret < 0) {
 				goto out_tcp_dd_service_close_input;
 			}
@@ -1086,8 +1142,79 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 	ret = 0;
 
 out_tcp_dd_service_close_input:
-	tcp_dd_service_close_input(service, false);
+	tcp_dd_keypad_uinput_close(service, false);
 	return ret;
+}
+
+static int tcp_dd_handle_remote_ctrl_request(struct cavan_tcp_dd_service *service, struct network_client *client)
+{
+	int i;
+	int fd;
+	int ret;
+	struct input_event events[2];
+
+	fd = tcp_dd_remote_ctrl_uinput_open(service);
+	if (fd < 0) {
+		tcp_dd_send_response(client, fd, "[Server] Failed to open input");
+		return fd;
+	}
+
+	ret = tcp_dd_send_response(client, 0, "[Server] Start recv and write event");
+	if (ret < 0) {
+		pd_red_info("tcp_dd_send_response");
+		return ret;
+	}
+
+	events[0].type = EV_KEY;
+	events[1].type = EV_SYN;
+	events[1].code = SYN_REPORT;
+	events[1].value = 0;
+
+	while (1) {
+		int count;
+		ssize_t rdlen;
+		u16 buff[32];
+
+		rdlen = client->recv(client, buff, sizeof(buff));
+		if (rdlen < 2) {
+			break;
+		}
+
+		count = rdlen / 2;
+
+		for (i = 0; i < count; i++) {
+			events[0].code = buff[i] & 0x7FFF;
+			events[0].value = buff[i] >> 15;
+
+			switch (events[0].code) {
+			case KEY_DISPLAYTOGGLE:
+				if (events[0].value > 0) {
+					tcp_dd_display_on_off(service);
+				}
+				break;
+
+			default:
+				ret = cavan_input_event(fd, events, NELEM(events));
+				if (ret < 0) {
+					pd_error_info("cavan_input_event");
+					return ret;
+				}
+			}
+		}
+	}
+
+	events[0].value = 0;
+
+	for (i = 0; i < KEY_CNT; i++) {
+		events[0].code = i;
+		ret = cavan_input_event(fd, events, 1);
+		if (ret < 0) {
+			pd_error_info("cavan_input_event");
+			return ret;
+		}
+	}
+
+	return cavan_input_sync(fd);
 }
 
 static int tcp_dd_handle_mkdir_request(struct network_client *client, struct tcp_dd_mkdir_request *req)
@@ -1209,6 +1336,7 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 
 	dd_service->mouse_fd = -1;
 	dd_service->keypad_fd = -1;
+	dd_service->remote_ctrl_fd = -1;
 	dd_service->keypad_use_count = 0;
 
 	return 0;
@@ -1228,7 +1356,8 @@ static void tcp_dd_service_stop_handler(struct cavan_dynamic_service *service)
 {
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	tcp_dd_service_close_input(dd_service, true);
+	tcp_dd_keypad_uinput_close(dd_service, true);
+	tcp_dd_remote_ctrl_uinput_close(dd_service);
 
 	cavan_alarm_thread_stop(&dd_service->alarm);
 	cavan_alarm_thread_deinit(&dd_service->alarm);
@@ -1308,6 +1437,11 @@ static int tcp_dd_service_run_handler(struct cavan_dynamic_service *service, voi
 	case TCP_DD_DISCOVERY:
 		pd_bold_info("TCP_DD_DISCOVERY");
 		ret = tcp_dd_handle_discovery_request(client);
+		break;
+
+	case TCP_REMOTE_CTRL:
+		pd_bold_info("TCP_REMOTE_CTRL");
+		ret = tcp_dd_handle_remote_ctrl_request(dd_service, client);
 		break;
 
 	default:

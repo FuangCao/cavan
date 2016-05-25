@@ -4,39 +4,17 @@ import java.net.InetAddress;
 
 import android.net.LocalSocketAddress;
 
-public class TcpKeypadClient extends TcpDdClient {
+public class TcpKeypadClient extends TcpInputClient {
 
 	private static final short EVENT_TYPE_SYNC = 0;
 	private static final short EVENT_TYPE_KEY = 1;
 
 	public TcpKeypadClient(InetAddress address, int port) {
-		super(address, port);
+		super(address, port, TCP_KEYPAD_EVENT);
 	}
 
 	public TcpKeypadClient(LocalSocketAddress address) {
-		super(address);
-	}
-
-	@Override
-	public boolean sendRequest() {
-		TcpDdPackage req = new TcpDdPackage(TCP_KEYPAD_EVENT);
-		if (!sendPackage(req)) {
-			logE("Failed to sendPackage TCP_KEYPAD_EVENT");
-			return false;
-		}
-
-		TcpDdResponse response = new TcpDdResponse();
-		if (!recvPackage(response)) {
-			logE("Failed to recvPackage TcpDdResponse");
-			return false;
-		}
-
-		if (response.getCode() < 0) {
-			logE("Invalid code = " + response.getCode());
-			return false;
-		}
-
-		return true;
+		super(address, TCP_KEYPAD_EVENT);
 	}
 
 	public boolean writeInputEvent(ByteCache cache, int type, int code, int value) {
@@ -71,6 +49,7 @@ public class TcpKeypadClient extends TcpDdClient {
 		return writeKeyEvent(cache, code, 0);
 	}
 
+	@Override
 	public boolean sendKeyEvent(int code) {
 		ByteCache cache = new ByteCache(32);
 		if (!writeKeyEvent(cache, code)) {
@@ -80,6 +59,7 @@ public class TcpKeypadClient extends TcpDdClient {
 		return sendData(cache.getBytes());
 	}
 
+	@Override
 	public boolean sendKeyEvent(int code, int value) {
 		ByteCache cache = new ByteCache(16);
 		if (!writeKeyEvent(cache, code, value)) {

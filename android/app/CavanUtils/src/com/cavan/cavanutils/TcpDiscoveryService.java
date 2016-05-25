@@ -16,7 +16,7 @@ public class TcpDiscoveryService extends DiscoveryService {
 
 		byte[] bytes = address.getAddress();
 
-		for (int i = 2; i < mThreads.length; i++) {
+		for (int i = 1; i < mThreads.length; i++) {
 			if (mThreads[i] != null) {
 				continue;
 			}

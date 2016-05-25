@@ -217,6 +217,25 @@ public class CavanNetworkClient extends CavanUtils {
 		return false;
 	}
 
+	public boolean sendValue8(byte value) {
+		return sendData(new byte[] { value } );
+	}
+
+	public boolean sendValue16(short value) {
+		return sendData(new byte[] { (byte) (value & 0xFF), (byte) (value >> 8) } );
+	}
+
+	public boolean sendValue32(int value) {
+		byte[] bytes = {
+			(byte) (value & 0xFF),
+			(byte) ((value >> 8) & 0xFF),
+			(byte) ((value >> 16) & 0xFF),
+			(byte) ((value >> 24) & 0xFF)
+		};
+
+		return sendData(bytes);
+	}
+
 	synchronized public int recvData(byte[] bytes) {
 		if (!openInputStream()) {
 			return -1;

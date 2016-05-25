@@ -23,6 +23,7 @@ import android.net.LocalSocketAddress;
 	public static final short TCP_DD_FILE_STAT = 10;
 	public static final short TCP_DD_BREAKPOINT = 11;
 	public static final short TCP_DD_DISCOVERY = 12;
+	public static final short TCP_REMOTE_CTRL = 13;
 
 	public TcpDdClient(CavanNetworkClientImpl client) {
 		super(client);
