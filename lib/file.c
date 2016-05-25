@@ -2741,7 +2741,7 @@ int cavan_file_dump(const char *pathname, size_t width, const char *sep, const c
 	return 0;
 }
 
-int cavan_temp_file_open(char *pathname, size_t size, const char *filename)
+int cavan_temp_file_open(char *pathname, size_t size, const char *filename, bool remove)
 {
 	int fd;
 
@@ -2753,7 +2753,9 @@ int cavan_temp_file_open(char *pathname, size_t size, const char *filename)
 		return fd;
 	}
 
-	unlink(pathname);
+	if (remove) {
+		unlink(pathname);
+	}
 
 	println("pathname = %s", pathname);
 
@@ -2871,7 +2873,7 @@ int cavan_readdir_to_file_temp(const char *dirpath, off_t *size)
 	int ret;
 	char pathname[1024];
 
-	fd = cavan_temp_file_open(pathname, sizeof(pathname), "readdir-XXXXXX");
+	fd = cavan_temp_file_open(pathname, sizeof(pathname), "readdir-XXXXXX", true);
 	if (fd < 0) {
 		pr_red_info("cavan_temp_file_open");
 		return fd;

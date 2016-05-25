@@ -253,3 +253,21 @@ int android_get_hostname(char *buff, size_t size)
 
 	return android_get_device_name(buff, size);
 }
+
+int android_install_application(const char *pathname)
+{
+	int ret;
+
+	ret = cavan_system2("pm install -r \"%s\"", pathname);
+	if (ret == 0) {
+		unlink(pathname);
+		return 0;
+	}
+
+	ret = cavan_system2("am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d file://\"%s\"", pathname);
+	if (ret == 0) {
+		return 0;
+	}
+
+	return -EFAULT;
+}

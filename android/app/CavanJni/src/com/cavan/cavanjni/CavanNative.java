@@ -694,6 +694,13 @@ class CavanCommandTcpExec implements ICavanCommand {
 	}
 }
 
+class CavanCommandTcpInstall implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doTcpInstall(args);
+	}
+}
+
 class CavanCommandTcpKeypad implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -939,6 +946,7 @@ public class CavanNative {
 		sHashMap.put("tcp_dd", new CavanCommandTcpDd());
 		sHashMap.put("tcp_dd_server", new CavanCommandTcpDdServer());
 		sHashMap.put("tcp_exec", new CavanCommandTcpExec());
+		sHashMap.put("tcp_install", new CavanCommandTcpInstall());
 		sHashMap.put("tcp_keypad", new CavanCommandTcpKeypad());
 		sHashMap.put("tcp_proxy", new CavanCommandTcpProxy());
 		sHashMap.put("tee", new CavanCommandTee());
@@ -1059,6 +1067,7 @@ public class CavanNative {
 	public static native int doTcpDd(String... args);
 	public static native int doTcpDdServer(String... args);
 	public static native int doTcpExec(String... args);
+	public static native int doTcpInstall(String... args);
 	public static native int doTcpKeypad(String... args);
 	public static native int doTcpProxy(String... args);
 	public static native int doTee(String... args);

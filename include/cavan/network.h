@@ -728,3 +728,9 @@ static inline u16 cavan_get_server_port(u16 default_value)
 {
 	return cavan_getenv_u32(CAVAN_PORT_ENV_NAME, default_value);
 }
+
+static inline int network_client_send_file3(struct network_client *client, const char *pathname)
+{
+	size64_t size = file_get_size(pathname);
+	return network_client_send_file2(client, pathname, size);
+}

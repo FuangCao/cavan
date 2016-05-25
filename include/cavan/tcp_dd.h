@@ -44,6 +44,7 @@ enum tcp_dd_package_type {
 	TCP_DD_BREAKPOINT,
 	TCP_DD_DISCOVERY,
 	TCP_REMOTE_CTRL,
+	TCP_DD_INSTALL,
 	TCP_DD_PACKAGE_COUNT
 };
 
@@ -95,6 +96,12 @@ struct tcp_dd_package {
 
 	union {
 		u8 body[0];
+
+		u8 value8;
+		u16 value16;
+		u32 value32;
+		u64 value64;
+
 		struct tcp_dd_response_package res_pkg;
 		struct tcp_dd_file_request file_req;
 		struct tcp_dd_exec_request exec_req;
@@ -159,3 +166,4 @@ int tcp_alarm_list(struct network_url *url, int index);
 
 int tcp_dd_mkdir(struct network_url *url, const char *pathname, mode_t mode);
 int tcp_dd_discovery(struct tcp_dd_discovery_client *client, void *data);
+int tcp_dd_install(struct network_url *url, const char *pathname);

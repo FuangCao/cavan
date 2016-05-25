@@ -688,6 +688,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpExec(JNIEnv *env, jclass
 	return CavanMainExecute(env, args, "tcp_exec", do_cavan_tcp_exec);
 }
 
+extern int do_cavan_tcp_install(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpInstall(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "tcp_install", do_cavan_tcp_install);
+}
+
 extern int do_cavan_tcp_keypad(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpKeypad(JNIEnv *env, jclass clazz, jobjectArray args)

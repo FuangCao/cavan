@@ -49,6 +49,7 @@ __printf_format_23__ int android_setprop_format(const char *value, const char *n
 int android_get_wifi_prop(const char *name, char *buff, size_t size);
 int android_get_device_name(char *buff, size_t size);
 int android_get_hostname(char *buff, size_t size);
+int android_install_application(const char *pathname);
 
 static inline int android_get_wifi_ipaddress(char *buff, size_t size)
 {

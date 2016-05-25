@@ -119,7 +119,7 @@ static int ftp_list_directory1(const char *dirpath, const char *newline)
 		return -EFAULT;
 	}
 
-	fd = cavan_temp_file_open(pathname, sizeof(pathname), "cavan-ftp-XXXXXX");
+	fd = cavan_temp_file_open(pathname, sizeof(pathname), "cavan-ftp-XXXXXX", true);
 	if (fd < 0) {
 		pr_red_info("cavan_temp_file_open");
 		ret = fd;
