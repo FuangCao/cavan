@@ -17,6 +17,7 @@
 #define TCP_DD_TIMEOUT				5000
 #define TCP_DD_VERSION				0x20151223
 #define TCP_KEYPAD_DEVICE			"/dev/tcp_keypad"
+#define TCP_DD_APK_CACHE_NAME		"cavan-apk-cache"
 
 #define TCP_KEYPADF_EXIT_ACK		(1 << 0)
 #define TCP_KEYPADF_CMDLINE			(1 << 1)

@@ -90,6 +90,11 @@ int main(int argc, char *argv[])
 	println("cancel = %d", cavan_async_command_cancel(NULL, test_async_command_handler2, 0));
 
 	msleep(argc * 1000 + 2000);
+
+	for (optind = 1; optind < argc; optind++) {
+		cavan_async_command_execute(NULL, test_async_command_handler2, argv[optind], 1000);
+		msleep(2000);
+	}
 #else
 	cavan_pipe_cmdline_loop3(argv[1], NULL, 0, NULL);
 #endif

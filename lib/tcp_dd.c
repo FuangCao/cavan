@@ -1270,13 +1270,22 @@ static int tcp_dd_handle_discovery_request(struct network_client *client)
 		network_get_hostname(hostname, sizeof(hostname)));
 }
 
+static void tcp_dd_apk_clean_handler(void *data)
+{
+	char pathname[1024];
+
+	cavan_build_temp_path(TCP_DD_APK_CACHE_NAME, pathname, sizeof(pathname));
+	pd_info("remove directory: %s", pathname);
+	remove_directory(pathname);
+}
+
 static int tcp_dd_handle_install_request(struct network_client *client, size64_t size)
 {
 	int fd;
 	int ret;
 	char pathname[1024];
 
-	fd = cavan_temp_file_open(pathname, sizeof(pathname), "cavan-apk-cache/XXXXXX", false);
+	fd = cavan_temp_file_open(pathname, sizeof(pathname), TCP_DD_APK_CACHE_NAME "/XXXXXX", false);
 	if (fd < 0) {
 		pd_red_info("cavan_temp_file_open: %d", fd);
 		return fd;
@@ -1286,7 +1295,6 @@ static int tcp_dd_handle_install_request(struct network_client *client, size64_t
 
 	ret = network_client_recv_file(client, fd, 0, size);
 	close(fd);
-
 	if (ret < 0) {
 		pr_red_info("network_client_recv_file: %d", ret);
 		goto out_unlink;
@@ -1294,7 +1302,9 @@ static int tcp_dd_handle_install_request(struct network_client *client, size64_t
 
 	chmod(pathname, 0777);
 
+	cavan_async_command_cancel(NULL, tcp_dd_apk_clean_handler, 0);
 	ret = android_install_application(pathname);
+	cavan_async_command_execute(NULL, tcp_dd_apk_clean_handler, NULL, 1000 * 60 * 5);
 	if (ret < 0) {
 		pr_red_info("android_install_application");
 		goto out_unlink;
@@ -1377,6 +1387,8 @@ static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
 	dd_service->keypad_fd = -1;
 	dd_service->remote_ctrl_fd = -1;
 	dd_service->keypad_use_count = 0;
+
+	cavan_async_command_execute(NULL, tcp_dd_apk_clean_handler, NULL, 0);
 
 	return 0;
 
