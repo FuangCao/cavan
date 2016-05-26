@@ -258,14 +258,14 @@ int android_install_application(const char *pathname)
 {
 	int ret;
 
-	pd_info("install use pm: %s", pathname);
+	pd_info("pm install: %s", pathname);
 
 	ret = cavan_system2("pm install -r \"%s\"", pathname);
 	if (ret == 0) {
 		return 0;
 	}
 
-	pd_info("install use am: %s", pathname);
+	pd_info("am install: %s", pathname);
 
 	ret = cavan_system2("am start --user 0 -a android.intent.action.VIEW -t application/vnd.android.package-archive -d file://\"%s\"", pathname);
 	if (ret == 0) {

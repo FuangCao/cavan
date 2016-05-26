@@ -1272,12 +1272,21 @@ static int tcp_dd_handle_discovery_request(struct network_client *client)
 
 static int tcp_dd_handle_install_request(struct network_client *client, size64_t size)
 {
+	int fd;
 	int ret;
 	char pathname[1024];
 
-	cavan_build_temp_path("cavan-install.apk", pathname, sizeof(pathname));
+	fd = cavan_temp_file_open(pathname, sizeof(pathname), "cavan-apk-cache/XXXXXX", false);
+	if (fd < 0) {
+		pd_red_info("cavan_temp_file_open: %d", fd);
+		return fd;
+	}
 
-	ret = network_client_recv_file2(client, pathname, size, O_TRUNC);
+	pd_info("pathname = %s", pathname);
+
+	ret = network_client_recv_file(client, fd, 0, size);
+	close(fd);
+
 	if (ret < 0) {
 		pr_red_info("network_client_recv_file: %d", ret);
 		goto out_unlink;

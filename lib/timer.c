@@ -8,14 +8,23 @@
 #include <cavan/math.h>
 #include <cavan/timer.h>
 
+int clock_gettime_safe(clockid_t clk, struct timespec *spec)
+{
+	int ret;
+
+	while ((ret = clock_gettime(clk, spec)) && ERRNO_NEED_RETRY());
+
+	return ret;
+}
+
 u64 clock_gettime_ns(clockid_t clk)
 {
 	int ret;
 	struct timespec time;
 
-	ret = clock_gettime(clk, &time);
+	ret = clock_gettime_safe(clk, &time);
 	if (ret < 0) {
-		pr_error_info("clock_gettime");
+		pr_error_info("clock_gettime_safe");
 		return ret;
 	}
 
@@ -27,9 +36,9 @@ u64 clock_gettime_us(clockid_t clk)
 	int ret;
 	struct timespec time;
 
-	ret = clock_gettime(clk, &time);
+	ret = clock_gettime_safe(clk, &time);
 	if (ret < 0) {
-		pr_error_info("clock_gettime");
+		pr_error_info("clock_gettime_safe");
 		return ret;
 	}
 
@@ -41,9 +50,9 @@ u64 clock_gettime_ms(clockid_t clk)
 	int ret;
 	struct timespec time;
 
-	ret = clock_gettime(clk, &time);
+	ret = clock_gettime_safe(clk, &time);
 	if (ret < 0) {
-		pr_error_info("clock_gettime");
+		pr_error_info("clock_gettime_safe");
 		return ret;
 	}
 
@@ -90,25 +99,30 @@ s64 cavan_real_timespec_diff(const struct timespec *time)
 {
 	struct timespec curr_time;
 
-	clock_gettime(CLOCK_REALTIME, &curr_time);
+	clock_gettime_safe(CLOCK_REALTIME, &curr_time);
 
 	return cavan_timespec_sub_ms(time, &curr_time);
 }
 
-void cavan_timer_timespec_add(struct timespec *time, u32 timeout)
+void cavan_timer_timespec_add(struct timespec *time, long msec)
 {
-	long msec;
-
-	msec = time->tv_nsec / 1000000UL + timeout;
+	msec += time->tv_nsec / 1000000UL;
 	time->tv_sec += msec / 1000UL;
 	time->tv_nsec = (msec % 1000UL) * 1000000UL;
 }
 
-void cavan_timer_set_timespec(struct timespec *time, u32 timeout)
+int cavan_timer_set_timespec(struct timespec *time, long msec)
 {
-	clock_gettime(CLOCK_REALTIME, time);
+	int ret;
 
-	cavan_timer_timespec_add(time, timeout);
+	ret = clock_gettime_safe(CLOCK_REALTIME, time);
+	if (ret < 0) {
+		return ret;
+	}
+
+	cavan_timer_timespec_add(time, msec);
+
+	return 0;
 }
 
 static bool cavan_timer_match_later(struct double_link *link, struct double_link_node *node, void *data)

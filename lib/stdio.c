@@ -819,10 +819,27 @@ const char *cavan_get_temp_path(void)
 
 const char *cavan_build_temp_path(const char *filename, char *buff, size_t size)
 {
-	const char *temp;
+	const char *dirname = cavan_get_temp_path();
+	char *p = text_path_cat(buff, size, dirname, filename) - 1;
 
-	temp = cavan_get_temp_path();
-	text_path_cat(buff, size, temp, filename);
+	while (p >= buff) {
+		if (*p == '/') {
+			int ret;
+
+			*p = 0;
+
+			ret = mkdir_hierarchy_length(buff, p - buff, 0777);
+			if (ret < 0) {
+				pd_err_info("mkdir_hierarchy_length: %d", ret);
+				return NULL;
+			}
+
+			*p = '/';
+			break;
+		}
+
+		p--;
+	}
 
 	return buff;
 }

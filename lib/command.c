@@ -5,6 +5,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/timer.h>
 #include <cavan/ctype.h>
 #include <cavan/thread.h>
 #include <cavan/device.h>
@@ -21,6 +22,11 @@
 
 #define CAVAN_COMMAND_DEBUG				0
 #define CAVAN_TEE_USE_SYSTEM_POPEN		0
+
+static struct cavan_async_command_service s_async_command_service_default = {
+	.cond = PTHREAD_COND_INITIALIZER,
+	.lock = PTHREAD_MUTEX_INITIALIZER,
+};
 
 const char *cavan_help_message_help = "display this information";
 const char *cavan_help_message_version = "display command version information";
@@ -1597,6 +1603,8 @@ int cavan_reboot(bool shutdown, const char *command)
 	return 0;
 }
 
+// ================================================================================
+
 int cavan_cmdline_parse(char *cmdline, char *argv[], int size)
 {
 	int argc = 0;
@@ -1890,4 +1898,137 @@ int cavan_pipe_cmdline_run4(const struct cavan_command_entry2 cmd_list[], size_t
 	}
 
 	return pipefd[1];
+}
+
+// ================================================================================
+
+int cavan_async_command_service_init(struct cavan_async_command_service *service)
+{
+	pthread_mutex_init(&service->lock, NULL);
+	pthread_cond_init(&service->cond, NULL);
+
+	return 0;
+}
+
+void cavan_async_command_service_deinit(struct cavan_async_command_service *service)
+{
+	pthread_mutex_destroy(&service->lock);
+	pthread_cond_destroy(&service->cond);
+}
+
+static void *cavan_async_command_thread_handler(void *data)
+{
+	int ret;
+	struct cavan_async_command_service *service = data;
+
+	cavan_async_command_service_lock(service);
+
+	while (service->head) {
+		struct cavan_async_command *head = service->head;
+
+		ret = pthread_cond_timedwait(&service->cond, &service->lock, &head->spec);
+		if (ret < 0) {
+			pd_err_info("pthread_cond_timedwait: %d", ret);
+			msleep(2000);
+		} else if (ret == ETIMEDOUT && head == service->head) {
+			service->head = head->next;
+
+			cavan_async_command_service_unlock(service);
+			head->handler(head->data);
+			free(head);
+			cavan_async_command_service_lock(service);
+		}
+	}
+
+	service->running = false;
+
+	cavan_async_command_service_unlock(service);
+
+	return NULL;
+}
+
+int cavan_async_command_execute(struct cavan_async_command_service *service, void (*handler)(void *data), void *data, long msec)
+{
+	int ret;
+	struct cavan_async_command *desc;
+	struct cavan_async_command **head;
+
+	desc = malloc(sizeof(struct cavan_async_command));
+	if (desc == NULL) {
+		pd_err_info("malloc");
+		return -ENOMEM;
+	}
+
+	ret = cavan_timer_set_timespec(&desc->spec, msec);
+	if (ret < 0) {
+		pd_err_info("cavan_timer_set_timespec: %d", ret);
+		goto out_free;
+	}
+
+	if (service == NULL) {
+		service = &s_async_command_service_default;
+	}
+
+	desc->data = data;
+	desc->handler = handler;
+
+	cavan_async_command_service_lock(service);
+
+	for (head = &service->head; (*head) && cavan_timespec_cmp(&desc->spec, &(*head)->spec) >= 0; head = &(*head)->next);
+
+	desc->next = *head;
+	*head = desc;
+
+	if (service->running) {
+		if (desc == service->head) {
+			pthread_cond_signal(&service->cond);
+		}
+	} else {
+		service->running = true;
+		cavan_pthread_run(cavan_async_command_thread_handler, service);
+	}
+
+	cavan_async_command_service_unlock(service);
+
+	return 0;
+
+out_free:
+	free(desc);
+	return ret;
+}
+
+int cavan_async_command_cancel(struct cavan_async_command_service *service, void (*handler)(void *data), int max)
+{
+	int count = 0;
+	struct cavan_async_command **head;
+
+	if (service == NULL) {
+		service = &s_async_command_service_default;
+	}
+
+	cavan_async_command_service_lock(service);
+
+	head = &service->head;
+
+	while (*head)
+	{
+		if ((*head)->handler == handler) {
+			struct cavan_async_command *desc;
+
+			desc = *head;
+			*head = desc->next;
+
+			free(desc);
+
+			if (++count >= max && max > 0) {
+				break;
+			}
+		} else {
+			head = &(*head)->next;
+		}
+	}
+
+	cavan_async_command_service_unlock(service);
+
+	return count;
 }

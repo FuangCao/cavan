@@ -33,6 +33,16 @@ __maybe_unused static void test_cmdline_parse(char *cmdline)
 	}
 }
 
+__maybe_unused static void test_async_command_handler1(void *data)
+{
+	pr_func_info("data = %s", (char *) data);
+}
+
+__maybe_unused static void test_async_command_handler2(void *data)
+{
+	pr_func_info("data = %s", (char *) data);
+}
+
 int main(int argc, char *argv[])
 {
 #if 0
@@ -68,6 +78,18 @@ int main(int argc, char *argv[])
 
 #if 0
 	test_cmdline_parse(argv[1]);
+#elif 1
+	for (optind = 1; optind < argc; optind++) {
+		if (optind & 1) {
+			cavan_async_command_execute(NULL, test_async_command_handler1, argv[optind], optind * 1000);
+		} else {
+			cavan_async_command_execute(NULL, test_async_command_handler2, argv[optind], optind * 1000);
+		}
+	}
+
+	println("cancel = %d", cavan_async_command_cancel(NULL, test_async_command_handler2, 0));
+
+	msleep(argc * 1000 + 2000);
 #else
 	cavan_pipe_cmdline_loop3(argv[1], NULL, 0, NULL);
 #endif

@@ -206,6 +206,21 @@ struct cavan_pipe_cmdline {
 	const struct cavan_command_entry2 *cmd_list;
 };
 
+struct cavan_async_command {
+	void *data;
+	struct timespec spec;
+	struct cavan_async_command *next;
+
+	void (*handler)(void *data);
+};
+
+struct cavan_async_command_service {
+	bool running;
+	pthread_cond_t cond;
+	pthread_mutex_t lock;
+	struct cavan_async_command *head;
+};
+
 // ============================================================
 
 extern const char *cavan_help_message_help;
@@ -331,6 +346,11 @@ int cavan_pipe_cmdline_run2(int fd, const struct cavan_command_entry2 cmd_list[]
 int cavan_pipe_cmdline_run3(const char *pathname, const struct cavan_command_entry2 cmd_list[], size_t cmd_count, void *data);
 int cavan_pipe_cmdline_run4(const struct cavan_command_entry2 cmd_list[], size_t cmd_count, void *data);
 
+int cavan_async_command_service_init(struct cavan_async_command_service *service);
+void cavan_async_command_service_deinit(struct cavan_async_command_service *service);
+int cavan_async_command_execute(struct cavan_async_command_service *service, void (*handler)(void *data), void *data, long msec);
+int cavan_async_command_cancel(struct cavan_async_command_service *service, void (*handler)(void *data), int max);
+
 static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
 {
 	return cavan_tty_redirect_loop3(ttyin, ttyout, ttyerr, stdin_fd, stdout_fd, stderr_fd);
@@ -339,6 +359,16 @@ static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
 static inline int cavan_tty_redirect2(int ttyfd)
 {
 	return cavan_tty_redirect(ttyfd, ttyfd, -1);
+}
+
+static inline void cavan_async_command_service_lock(struct cavan_async_command_service *service)
+{
+	pthread_mutex_lock(&service->lock);
+}
+
+static inline void cavan_async_command_service_unlock(struct cavan_async_command_service *service)
+{
+	pthread_mutex_unlock(&service->lock);
 }
 
 __END_DECLS;

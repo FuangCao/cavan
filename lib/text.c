@@ -2180,24 +2180,32 @@ char *prettify_pathname(const char *src_path)
 
 char *text_path_cat(char *pathname, size_t size, const char *dirname, const char *basename)
 {
+	char *p;
+
 	if (dirname) {
-		pathname = text_ncopy(pathname, dirname, size) - 1;
-		while (*pathname == '/') {
-			pathname--;
+		p = text_ncopy(pathname, dirname, size) - 1;
+		while (p >= pathname && *p == '/') {
+			p--;
 		}
 
-		pathname++;
+		pathname = p + 1;
 	}
 
 	*pathname++ = '/';
 
 	if (basename) {
-		return text_ncopy(pathname, text_skip_char(basename, '/'), size);
+		basename = text_skip_char(basename, '/');
+		p = text_ncopy(pathname, basename, size) - 1;
+		while (p >= pathname && *p == '/') {
+			*p-- = 0;
+		}
+
+		return p + 1;
+	} else {
+		*pathname = 0;
+
+		return pathname;
 	}
-
-	*pathname = 0;
-
-	return pathname;
 }
 
 char *text_delete_char_base(const char *text_in, char *text_out, char c)
