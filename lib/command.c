@@ -343,12 +343,12 @@ static int cavan_builtin_command_kmsg(const struct cavan_builtin_command *desc, 
 		ssize_t rdlen;
 		char buff[1024];
 
-		rdlen = read(fd, buff, sizeof(buff));
+		rdlen = ffile_read(fd, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			break;
 		}
 
-		if (write(stdout_fd, buff, rdlen) != rdlen) {
+		if (ffile_write(stdout_fd, buff, rdlen) != rdlen) {
 			break;
 		}
 	}
@@ -362,7 +362,7 @@ static int cavan_builtin_command_kmsg(const struct cavan_builtin_command *desc, 
 			break;
 		}
 
-		if (write(stdout_fd, buff, length) != length) {
+		if (ffile_write(stdout_fd, buff, length) != length) {
 			break;
 		}
 	}
@@ -1328,7 +1328,7 @@ int cavan_popen(const char *command, char *buff, size_t size, char **buff_ret)
 	while (size > 0) {
 		ssize_t rdlen;
 
-		rdlen = read(fd, buff, size);
+		rdlen = ffile_read(fd, buff, size);
 		if (rdlen <= 0) {
 			break;
 		}
@@ -1448,7 +1448,7 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 		ssize_t wrlen;
 		char buff[1024];
 
-		rdlen = read(0, buff, sizeof(buff));
+		rdlen = ffile_read(0, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			break;
 		}
@@ -1456,10 +1456,10 @@ int cavan_tee_main(const char *filename, bool append, bool command)
 #if CAVAN_TEE_USE_SYSTEM_POPEN
 		wrlen = fwrite(buff, rdlen, 1, fp) | fwrite(buff, rdlen, 1, stdout);
 #else
-		wrlen = write(1, buff, rdlen) | write(fd, buff, rdlen);
+		wrlen = ffile_write(1, buff, rdlen) | ffile_write(fd, buff, rdlen);
 #endif
 		if (wrlen != rdlen) {
-			// pr_err_info("write");
+			// pr_err_info("ffile_write");
 			break;
 		}
 

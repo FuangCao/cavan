@@ -38,6 +38,12 @@ extern int pipe2(int *, int);
 		return -errno; \
 	} while (0)
 
+#define ERRNO_NEED_RETRY() \
+	(errno == EINTR || errno == EAGAIN)
+
+#define ERRNO_NOT_RETRY() \
+	(errno != EINTR && errno != EAGAIN)
+
 #ifdef __GNUC__
 #define GCC_VERSION				(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #define	__GNUC_PREREQ__(x, y)	((__GNUC__ == (x) && __GNUC_MINOR__ >= (y)) || (__GNUC__ > (x)))

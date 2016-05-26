@@ -1112,7 +1112,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 				break;
 			}
 
-			wrlen = write(fd, events, rdlen);
+			wrlen = ffile_write(fd, events, rdlen);
 			if (wrlen < rdlen) {
 				pd_error_info("write events");
 				ret = wrlen < 0 ? wrlen : -EFAULT;
@@ -1125,7 +1125,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 		for (code = 1; code < KEY_CNT; code++) {
 			events[0].code = code;
-			ret = write(fd, events, sizeof(events[0]));
+			ret = ffile_write(fd, events, sizeof(events[0]));
 			if (ret < 0) {
 				goto out_tcp_dd_service_close_input;
 			}
@@ -1133,7 +1133,7 @@ static int tcp_dd_handle_tcp_keypad_event_request(struct cavan_tcp_dd_service *s
 
 		events[0].type = EV_SYN;
 		events[0].code = SYN_REPORT;
-		ret = write(fd, events, sizeof(events[0]));
+		ret = ffile_write(fd, events, sizeof(events[0]));
 		if (ret < 0) {
 			goto out_tcp_dd_service_close_input;
 		}
@@ -1272,17 +1272,12 @@ static int tcp_dd_handle_discovery_request(struct network_client *client)
 
 static int tcp_dd_handle_install_request(struct network_client *client, size64_t size)
 {
-	int fd;
 	int ret;
 	char pathname[1024];
 
-	fd = cavan_temp_file_open(pathname, sizeof(pathname), "cavan-apk-XXXXXX", false);
-	if (fd < 0) {
-		pr_err_info("cavan_temp_file_open: %d", fd);
-		return fd;
-	}
+	cavan_build_temp_path("cavan-install.apk", pathname, sizeof(pathname));
 
-	ret = network_client_recv_file(client, fd, 0, size);
+	ret = network_client_recv_file2(client, pathname, size, O_TRUNC);
 	if (ret < 0) {
 		pr_red_info("network_client_recv_file: %d", ret);
 		goto out_unlink;

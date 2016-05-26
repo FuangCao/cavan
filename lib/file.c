@@ -56,14 +56,14 @@ int file_join(const char *dest_file, char *src_files[], int count)
 			ssize_t rdlen, wrlen;
 			char buff[MAX_BUFF_LEN];
 
-			rdlen = read(src_fd, buff, sizeof(buff));
+			rdlen = ffile_read(src_fd, buff, sizeof(buff));
 			if (rdlen <= 0) {
 				if (rdlen == 0) {
 					break;
 				}
 
 				ret = rdlen;
-				pr_error_info("read \"%s\"", src_files[i]);
+				pr_error_info("ffile_read \"%s\"", src_files[i]);
 				goto out_close_src;
 			}
 
@@ -177,13 +177,13 @@ int ffile_copy_simple(int src_fd, int dest_fd)
 		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
-		rdlen = read(src_fd, buff, sizeof(buff));
+		rdlen = ffile_read(src_fd, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -210,13 +210,13 @@ int ffile_copy(int src_fd, int dest_fd)
 		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
-		rdlen = read(src_fd, buff, sizeof(buff));
+		rdlen = ffile_read(src_fd, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -568,13 +568,13 @@ int ffile_ncopy_simple(int src_fd, int dest_fd, size64_t size)
 		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
-		rdlen = read(src_fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
+		rdlen = ffile_read(src_fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -618,13 +618,13 @@ int ffile_ncopy(int src_fd, int dest_fd, size64_t size)
 		ssize_t rdlen, wrlen;
 		char buff[MAX_BUFF_LEN];
 
-		rdlen = read(src_fd, buff, size < sizeof(buff) ? size : sizeof(buff));
+		rdlen = ffile_read(src_fd, buff, size < sizeof(buff) ? size : sizeof(buff));
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -730,6 +730,7 @@ int try_to_open(int flags, ...)
 
 ssize_t ffile_read(int fd, void *buff, size_t size)
 {
+#if 0
 	void *buff_bak = buff, *buff_end = (char *) buff + size;
 
 	while (buff < buff_end) {
@@ -747,10 +748,31 @@ ssize_t ffile_read(int fd, void *buff, size_t size)
 	}
 
 	return (char *) buff - (char *) buff_bak;
+#else
+	int retry = 0;
+
+	while (1) {
+		ssize_t rdlen;
+
+		rdlen = read(fd, buff, size);
+		if (likely(rdlen >= 0 || ERRNO_NOT_RETRY())) {
+			return rdlen;
+		}
+
+		if (++retry > 10) {
+			break;
+		}
+
+		msleep(100);
+	}
+
+	return -EFAULT;
+#endif
 }
 
 ssize_t ffile_write(int fd, const void *buff, size_t size)
 {
+#if 0
 	const void *buff_bak = buff, *buff_end = (char *) buff + size;
 
 	while (buff < buff_end) {
@@ -770,10 +792,44 @@ ssize_t ffile_write(int fd, const void *buff, size_t size)
 	}
 
 	return (char *) buff - (char *) buff_bak;
+#else
+	int retry = 0;
+	size_t size_bak = size;
+
+	while (1) {
+		ssize_t wrlen;
+
+		wrlen = write(fd, buff, size);
+		if (likely(wrlen >= (ssize_t) size)) {
+			break;
+		}
+
+		if (wrlen > 0) {
+			retry = 0;
+			size -= wrlen;
+			buff = ADDR_ADD(buff, wrlen);
+		} else {
+			if (wrlen < 0) {
+				if (ERRNO_NOT_RETRY()) {
+					return wrlen;
+				}
+
+				msleep(100);
+			}
+
+			if (++retry > 10) {
+				return -EFAULT;
+			}
+		}
+	}
+
+	return size_bak;
+#endif
 }
 
 ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
 {
+#if 0
 	if (lseek(fd, offset, SEEK_SET) != offset) {
 #if CAVAN_FILE_DEBUG
 		pr_error_info("lseek");
@@ -782,6 +838,40 @@ ssize_t ffile_writeto(int fd, const void *buff, size_t size, off_t offset)
 	}
 
 	return ffile_write(fd, buff, size);
+#else
+	int retry = 0;
+	size_t size_bak = size;
+
+	while (1) {
+		ssize_t wrlen;
+
+		wrlen = pwrite(fd, buff, size, offset);
+		if (likely(wrlen >= (ssize_t) size)) {
+			break;
+		}
+
+		if (wrlen > 0) {
+			retry = 0;
+			size -= wrlen;
+			offset += wrlen;
+			buff = ADDR_ADD(buff, wrlen);
+		} else {
+			if (wrlen < 0) {
+				if (ERRNO_NOT_RETRY()) {
+					return wrlen;
+				}
+
+				msleep(100);
+			}
+
+			if (++retry > 10) {
+				return -EFAULT;
+			}
+		}
+	}
+
+	return size_bak;
+#endif
 }
 
 ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t offset, int flags)
@@ -812,12 +902,33 @@ ssize_t file_writeto(const char *file_name, const void *buff, size_t size, off_t
 
 ssize_t ffile_readfrom(int fd, void *buff, size_t size, off_t offset)
 {
+#if 0
 	if (lseek(fd, offset, SEEK_SET) != offset) {
 		pr_error_info("lseek");
 		return -EFAULT;
 	}
 
 	return ffile_read(fd, buff, size);
+#else
+	int retry = 0;
+
+	while (1) {
+		ssize_t rdlen;
+
+		rdlen = pread(fd, buff, size, offset);
+		if (likely(rdlen >= (ssize_t) size) || ERRNO_NOT_RETRY()) {
+			return rdlen;
+		}
+
+		if (++retry > 10) {
+			break;
+		}
+
+		msleep(100);
+	}
+
+	return -EFAULT;
+#endif
 }
 
 ssize_t file_readfrom(const char *file_name, void *buff, size_t size, off_t offset, int flags)
@@ -872,13 +983,13 @@ int ffile_show(int fd)
 		ssize_t rdlen;
 		char buff[16];
 
-		rdlen = read(fd, buff, sizeof(buff));
+		rdlen = ffile_read(fd, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -900,13 +1011,13 @@ int ffile_nshow(int fd, size_t size)
 		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
-		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
+		rdlen = ffile_read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -1029,13 +1140,13 @@ int ffile_cat(int fd)
 		ssize_t rdlen;
 		char buff[MAX_BUFFER_LEN];
 
-		rdlen = read(fd, buff, sizeof(buff));
+		rdlen = ffile_read(fd, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -1057,13 +1168,13 @@ int ffile_ncat(int fd, size_t size)
 		ssize_t rdlen;
 		char buff[MAX_BUFFER_LEN];
 
-		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
+		rdlen = ffile_read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -1087,19 +1198,19 @@ int ffile_cmp(int fd1, int fd2, size_t size)
 		char buff1[MAX_BUFF_LEN];
 		char buff2[MAX_BUFF_LEN];
 
-		rdlen = read(fd1, buff1, size > sizeof(buff1) ? sizeof(buff1) : size);
+		rdlen = ffile_read(fd1, buff1, size > sizeof(buff1) ? sizeof(buff1) : size);
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
-		rdlen = read(fd2, buff2, rdlen);
+		rdlen = ffile_read(fd2, buff2, rdlen);
 		if (rdlen < 0) {
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -1151,13 +1262,13 @@ int ffile_crc32(int fd, u32 *crc)
 		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
-		rdlen = read(fd, buff, sizeof(buff));
+		rdlen = ffile_read(fd, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -1202,13 +1313,13 @@ int ffile_ncrc32(int fd, size_t size, u32 *crc)
 		ssize_t rdlen;
 		char buff[MAX_BUFF_LEN];
 
-		rdlen = read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
+		rdlen = ffile_read(fd, buff, size > sizeof(buff) ? sizeof(buff) : size);
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -1676,13 +1787,13 @@ u32 ffile_checksum32_simple(int fd, off_t offset, size_t size)
 		ssize_t rdlen;
 		u8 buff[MAX_BUFF_LEN];
 
-		rdlen = read(fd, buff, sizeof(buff));
+		rdlen = ffile_read(fd, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -1945,13 +2056,13 @@ int ffile_delete_char(int fd_in, int fd_out, char c)
 		char buff[MAX_BUFFER_LEN];
 		ssize_t rdlen, wrlen;
 
-		rdlen = read(fd_in, buff, sizeof(buff));
+		rdlen = ffile_read(fd_in, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			if (rdlen == 0) {
 				break;
 			}
 
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return rdlen;
 		}
 
@@ -2103,9 +2214,9 @@ bool file_discard_all(int fd)
 			break;
 		}
 
-		rdlen = read(fd, buff, sizeof(buff));
+		rdlen = ffile_read(fd, buff, sizeof(buff));
 		if (rdlen < 0) {
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return false;
 		}
 
@@ -2371,9 +2482,9 @@ size_t ffile_line_count(int fd)
 	count = 0;
 
 	while (1) {
-		rdlen = read(fd, buff, sizeof(buff));
+		rdlen = ffile_read(fd, buff, sizeof(buff));
 		if (rdlen < 0) {
-			pr_error_info("read");
+			pr_error_info("ffile_read");
 			return 0;
 		}
 
@@ -2507,7 +2618,7 @@ void *file_read_all(const char *pathname, size_t extra, size_t *size)
 
 	rdlen = ffile_read(fd, mem, last);
 	if (rdlen < 0) {
-		pr_error_info("read");
+		pr_error_info("ffile_read");
 		free(mem);
 		mem = NULL;
 	} else if (size) {
@@ -3065,7 +3176,7 @@ int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc)
 			char buff[1024];
 			int *fds = p->data.ptr;
 
-			rdlen = read(fds[0], buff, sizeof(buff));
+			rdlen = ffile_read(fds[0], buff, sizeof(buff));
 			if (rdlen <= 0) {
 				if (fds[0] == 0) {
 					cavan_file_proxy_del(desc, fds);
@@ -3076,7 +3187,7 @@ int cavan_file_proxy_main_loop(struct cavan_file_proxy_desc *desc)
 				return 0;
 			}
 
-			if (write(fds[1], buff, rdlen) != rdlen) {
+			if (ffile_write(fds[1], buff, rdlen) != rdlen) {
 				return 0;
 			}
 

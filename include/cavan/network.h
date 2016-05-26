@@ -426,6 +426,7 @@ u32 get_rand_value(void);
 int inet_bind_rand(int sockfd, int retry);
 
 ssize_t inet_send(int sockfd, const char *buff, size_t size);
+ssize_t inet_recv(int sockfd, char *buff, size_t size);
 int inet_tcp_send_file1(int sockfd, int fd);
 int inet_tcp_send_file2(int sockfd, const char *filename);
 int inet_tcp_receive_file1(int sockfd, int fd);
@@ -573,11 +574,6 @@ static inline ssize_t inet_send_text(int sockfd, const char *text)
 static inline ssize_t inet_send_text_to(int sockfd, const char *text, const struct sockaddr_in *addr)
 {
 	return inet_sendto(sockfd, text, text_len(text), addr);
-}
-
-static inline ssize_t inet_recv(int sockfd, void *buff, size_t size)
-{
-	return recv(sockfd, buff, size, MSG_NOSIGNAL);
 }
 
 static inline ssize_t inet_recv2(int sockfd, void *buff, size_t size)

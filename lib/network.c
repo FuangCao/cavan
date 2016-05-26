@@ -912,6 +912,7 @@ int inet_bind_rand(int sockfd, int retry)
 
 ssize_t inet_send(int sockfd, const char *buff, size_t size)
 {
+#if 0
 	ssize_t wrlen;
 	const char *buff_end;
 
@@ -923,28 +924,83 @@ ssize_t inet_send(int sockfd, const char *buff, size_t size)
 	}
 
 	return size;
+#else
+	int retry = 0;
+	size_t size_bak = size;
+
+	while (1) {
+		ssize_t wrlen;
+
+		wrlen = send(sockfd, buff, size, MSG_NOSIGNAL);
+		if (likely(wrlen >= (ssize_t) size)) {
+			break;
+		}
+
+		if (wrlen > 0) {
+			retry = 0;
+			buff += wrlen;
+			size -= wrlen;
+		} else {
+			if (wrlen < 0) {
+				if (ERRNO_NOT_RETRY()) {
+					return wrlen;
+				}
+
+				msleep(100);
+			}
+
+			if (++retry > 10) {
+				return -EFAULT;
+			}
+		}
+	}
+
+	return size_bak;
+#endif
+}
+
+ssize_t inet_recv(int sockfd, char *buff, size_t size)
+{
+	int retry = 0;
+
+	while (1) {
+		ssize_t rdlen;
+
+		rdlen = recv(sockfd, buff, size, MSG_NOSIGNAL);
+		if (rdlen >= 0 || ERRNO_NOT_RETRY()) {
+			return rdlen;
+		}
+
+		if (++retry > 10) {
+			break;
+		}
+
+		msleep(100);
+	}
+
+	return -EFAULT;
 }
 
 int inet_tcp_send_file1(int sockfd, int fd)
 {
-	ssize_t readlen, sendlen;
 	char buff[1024];
+	ssize_t rdlen, wrlen;
 
 	while (1) {
-		readlen = read(fd, buff, sizeof(buff));
-		if (readlen < 0) {
-			pr_err_info("read");
-			return readlen;
+		rdlen = ffile_read(fd, buff, sizeof(buff));
+		if (rdlen <= 0) {
+			if (rdlen == 0) {
+				break;
+			}
+
+			pr_err_info("ffile_read");
+			return rdlen;
 		}
 
-		if (readlen == 0) {
-			break;
-		}
-
-		sendlen = inet_send(sockfd, buff, readlen);
-		if (sendlen < 0) {
+		wrlen = inet_send(sockfd, buff, rdlen);
+		if (wrlen < 0) {
 			pr_err_info("inet_send");
-			return sendlen;
+			return wrlen;
 		}
 	}
 
@@ -2247,12 +2303,12 @@ static void network_client_file_close(struct network_client *client)
 
 static ssize_t network_client_file_send(struct network_client *client, const void *buff, size_t size)
 {
-	return write(client->sockfd, buff, size);
+	return ffile_write(client->sockfd, buff, size);
 }
 
 static ssize_t network_client_file_recv(struct network_client *client, void *buff, size_t size)
 {
-	return read(client->sockfd, buff, size);
+	return ffile_read(client->sockfd, buff, size);
 }
 
 static int network_file_open(const char *pathname, int type)
@@ -2575,7 +2631,7 @@ bool network_client_discard_all(struct network_client *client)
 
 		rdlen = client->recv(client, buff, sizeof(buff));
 		if (rdlen < 0) {
-			pr_error_info("read");
+			pr_error_info("recv");
 			return false;
 		}
 
@@ -2651,7 +2707,7 @@ int network_client_exec_redirect(struct network_client *client, int ttyin, int t
 		ssize_t rdlen;
 		char buff[1024];
 
-		rdlen = read(ttyin, buff, sizeof(buff));
+		rdlen = ffile_read(ttyin, buff, sizeof(buff));
 		if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen) {
 			break;
 		}
@@ -2689,7 +2745,7 @@ int network_client_exec_redirect(struct network_client *client, int ttyin, int t
 		}
 
 		if (pfds[1].revents) {
-			rdlen = read(ttyin, buff, sizeof(buff));
+			rdlen = ffile_read(ttyin, buff, sizeof(buff));
 			if (rdlen <= 0 || client->send(client, buff, rdlen) < rdlen) {
 				break;
 			}
