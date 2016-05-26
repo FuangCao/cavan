@@ -1291,22 +1291,26 @@ static int tcp_dd_handle_install_request(struct network_client *client, size64_t
 		return fd;
 	}
 
-	pd_info("pathname = %s", pathname);
-
-	ret = network_client_recv_file(client, fd, 0, size);
-	close(fd);
+	ret = tcp_dd_send_response(client, 0, "save: %s", pathname);
 	if (ret < 0) {
-		pr_red_info("network_client_recv_file: %d", ret);
-		goto out_unlink;
+		pd_red_info("cavan_temp_file_open: %d", fd);
+		goto out_close_fd;
 	}
 
+	ret = network_client_recv_file(client, fd, 0, size);
+	if (ret < 0) {
+		pr_red_info("network_client_recv_file: %d", ret);
+		goto out_close_fd;
+	}
+
+	close(fd);
 	chmod(pathname, 0777);
 
 	cavan_async_command_cancel(NULL, tcp_dd_apk_clean_handler, 0);
 	ret = android_install_application(pathname);
 	cavan_async_command_execute(NULL, tcp_dd_apk_clean_handler, NULL, 1000 * 60 * 5);
 	if (ret < 0) {
-		pr_red_info("android_install_application");
+		tcp_dd_send_response(client, ret, "android_install_application");
 		goto out_unlink;
 	}
 
@@ -1314,6 +1318,8 @@ static int tcp_dd_handle_install_request(struct network_client *client, size64_t
 
 	return 0;
 
+out_close_fd:
+	close(fd);
 out_unlink:
 	unlink(pathname);
 	return ret;
@@ -2115,8 +2121,15 @@ int tcp_dd_discovery(struct tcp_dd_discovery_client *client, void *data)
 int tcp_dd_install(struct network_url *url, const char *pathname)
 {
 	int ret;
+	size64_t size;
 	struct network_client client;
 	struct tcp_dd_package package;
+
+	size = file_get_size(pathname);
+	if (size == 0) {
+		pr_red_info("no data send: %s", pathname);
+		return -ENOENT;
+	}
 
 	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
@@ -2124,9 +2137,9 @@ int tcp_dd_install(struct network_url *url, const char *pathname)
 		return ret;
 	}
 
-	package.value64 = file_get_size(pathname);
+	package.value64 = size;
 
-	ret = tcp_dd_send_request(&client, &package, NULL, TCP_DD_INSTALL, TCP_DD_PKG_HEADER_LEN + sizeof(package.value64), 0);
+	ret = tcp_dd_send_request2(&client, &package, TCP_DD_INSTALL, TCP_DD_PKG_HEADER_LEN + sizeof(package.value64), 0);
 	if (ret < 0) {
 		pr_red_info("tcp_dd_send_request: %d", ret);
 		goto out_network_client_close;
@@ -2134,7 +2147,7 @@ int tcp_dd_install(struct network_url *url, const char *pathname)
 
 	pr_info("send: %s", pathname);
 
-	ret = network_client_send_file2(&client, pathname, package.value64);
+	ret = network_client_send_file2(&client, pathname, size);
 	if (ret < 0) {
 		pr_red_info("network_client_send_file2: %d", ret);
 		goto out_network_client_close;
