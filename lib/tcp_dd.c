@@ -2111,13 +2111,22 @@ int tcp_dd_install(struct network_url *url, const char *pathname)
 		goto out_network_client_close;
 	}
 
+	pr_info("send: %s", pathname);
+
 	ret = network_client_send_file2(&client, pathname, package.value64);
 	if (ret < 0) {
 		pr_red_info("network_client_send_file2: %d", ret);
 		goto out_network_client_close;
 	}
 
+	pr_info("install: %s", pathname);
+
 	ret = tcp_dd_recv_response(&client);
+	if (ret < 0) {
+		pr_red_info("Failed");
+	} else {
+		pr_green_info("OK");
+	}
 
 out_network_client_close:
 	network_client_close(&client);
