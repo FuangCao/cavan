@@ -259,6 +259,7 @@ struct network_client {
 	network_protocol_t type;
 	struct network_service *service;
 
+	int (*flush)(struct network_client *client);
 	void (*close)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);

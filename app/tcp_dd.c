@@ -578,7 +578,11 @@ label_parse_complete:
 			text_copy(file_req.src_file, argv[optind++]);
 		case 1:
 			text_copy(file_req.dest_file, argv[optind++]);
+			break;
+
 		case 0:
+			text_copy(file_req.src_file, "/dev/zero");
+			text_copy(file_req.dest_file, "/dev/null");
 			break;
 
 		default:

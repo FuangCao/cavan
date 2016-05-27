@@ -111,6 +111,8 @@ ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package
 		return -EFAULT;
 	}
 
+	client->flush(client);
+
 	return 0;
 }
 

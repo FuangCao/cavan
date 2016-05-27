@@ -1004,6 +1004,8 @@ int inet_tcp_send_file1(int sockfd, int fd)
 		}
 	}
 
+	fsync(sockfd);
+
 	return 0;
 }
 
@@ -1575,6 +1577,11 @@ static void network_client_tcp_close(struct network_client *client)
 	inet_close_tcp_socket(client->sockfd);
 }
 
+static int network_client_flush_dummy(struct network_client *client)
+{
+	return fsync(client->sockfd);
+}
+
 static ssize_t network_client_send_dummy(struct network_client *client, const void *buff, size_t size)
 {
 	return inet_send(client->sockfd, buff, size);
@@ -1598,6 +1605,7 @@ static ssize_t network_client_recvfrom_dummy(struct network_client *client, void
 static int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, const struct network_url *url, int flags)
 {
 	client->type = desc->type;
+	client->flush = network_client_flush_dummy;
 	client->close = network_client_close_dummy;
 	client->send = network_client_send_dummy;
 	client->recv = network_client_recv_dummy;
@@ -2548,6 +2556,8 @@ int network_client_send_file(struct network_client *client, int fd, size64_t ski
 			progress_bar_add(&bar, rdlen);
 		}
 	}
+
+	client->flush(client);
 
 	progress_bar_finish(&bar);
 
