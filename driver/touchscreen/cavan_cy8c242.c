@@ -542,7 +542,7 @@ static ssize_t cy8c242_firmware_id_show(struct device *dev, struct device_attrib
 	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
 	struct cavan_input_chip *chip = i2c_get_clientdata(client);
 
-	return cavan_input_chip_read_firmware_id_lock(chip, buff, PAGE_SIZE);
+	return cavan_input_chip_read_firmware_id(chip, buff, PAGE_SIZE);
 }
 
 static DEVICE_ATTR(firmware_id, S_IRUGO, cy8c242_firmware_id_show, NULL);

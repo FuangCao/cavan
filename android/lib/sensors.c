@@ -432,6 +432,8 @@ static int cavan_sensors_probe(struct cavan_sensor_pdev *pdev)
 		goto out_free_sensor_list;
 	}
 
+	ioctl(map[0]->ctrl_fd, CAVAN_INPUT_CORE_IOC_DISABLE_DET);
+
 	cavan_sensor_pdev_unlock(pdev);
 
 	return 0;

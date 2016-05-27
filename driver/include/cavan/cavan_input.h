@@ -12,6 +12,7 @@
 #include <linux/miscdevice.h>
 #include <linux/module.h>
 #include <linux/version.h>
+#include <linux/platform_device.h>
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(3, 8, 0)
 #include <linux/sched/rt.h>
@@ -102,15 +103,17 @@
 	((nr) & CAVAN_INPUT_IOC_NR_MASK) << CAVAN_INPUT_IOC_NR_SHIFT | \
 	((size) & CAVAN_INPUT_IOC_SIZE_MASK) << CAVAN_INPUT_IOC_SIZE_SHIFT)
 
-#define CAVAN_INPUT_CHIP_IOC_GET_NAME(len)		CAVAN_INPUT_IOC('I', 0x00, len)
+#define CAVAN_INPUT_CORE_IOC_DISABLE_DET			CAVAN_INPUT_IOC('C', 0x00, 0)
+
+#define CAVAN_INPUT_CHIP_IOC_GET_NAME(len)			CAVAN_INPUT_IOC('I', 0x00, len)
 #define CAVAN_INPUT_CHIP_IOC_GET_VENDOR(len)		CAVAN_INPUT_IOC('I', 0x01, len)
 
-#define CAVAN_INPUT_DEVICE_IOC_GET_TYPE			CAVAN_INPUT_IOC('I', 0x10, 0)
+#define CAVAN_INPUT_DEVICE_IOC_GET_TYPE				CAVAN_INPUT_IOC('I', 0x10, 0)
 #define CAVAN_INPUT_DEVICE_IOC_GET_NAME(len)		CAVAN_INPUT_IOC('I', 0x11, len)
 #define CAVAN_INPUT_DEVICE_IOC_SET_DELAY			CAVAN_INPUT_IOC('I', 0x12, 0)
 #define CAVAN_INPUT_DEVICE_IOC_SET_ENABLE			CAVAN_INPUT_IOC('I', 0x13, 0)
-#define CAVAN_INPUT_DEVICE_IOC_GET_OFFSET(len)	CAVAN_INPUT_IOC('I', 0x14, len)
-#define CAVAN_INPUT_DEVICE_IOC_SET_OFFSET(len)	CAVAN_INPUT_IOC('I', 0x15, len)
+#define CAVAN_INPUT_DEVICE_IOC_GET_OFFSET(len)		CAVAN_INPUT_IOC('I', 0x14, len)
+#define CAVAN_INPUT_DEVICE_IOC_SET_OFFSET(len)		CAVAN_INPUT_IOC('I', 0x15, len)
 
 #define pr_color_info(color, fmt, args ...) \
 	pr_info("\033[" color "m%s[%d]: " fmt "\033[0m\n", __FUNCTION__, __LINE__, ##args)
@@ -308,10 +311,11 @@ struct cavan_input_chip {
 };
 
 struct cavan_input_core {
-	const char *name;
+	struct platform_device pdev;
 	const char *chip_online[CAVAN_INPUT_MINORS];
 	u32 devmask;
 	u32 poll_jiffies;
+	bool detect_disable;
 
 	struct mutex lock;
 	struct cavan_input_thread detect_thread;
@@ -322,6 +326,9 @@ struct cavan_input_core {
 	struct cavan_input_list chip_list;
 	struct cavan_input_list work_list;
 	struct cavan_input_list exclude_list;
+
+	struct class *device_class;
+	struct cavan_misc_device *device_map[CAVAN_INPUT_MINORS];
 };
 
 extern int cavan_input_debug_enable;
@@ -338,29 +345,30 @@ const char *cavan_input_irq_trigger_type_tostring(unsigned long irq_flags);
 int cavan_input_copy_to_user_text(unsigned int command, unsigned long args, const char *text);
 int cavan_input_copy_to_user_uint(unsigned long args, unsigned int value);
 
+int cavan_input_chip_set_power_locked(struct cavan_input_chip *chip, bool enable);
 int cavan_input_chip_set_power(struct cavan_input_chip *chip, bool enable);
-int cavan_input_chip_set_power_lock(struct cavan_input_chip *chip, bool enable);
+int cavan_input_chip_set_active_locked(struct cavan_input_chip *chip, bool enable);
 int cavan_input_chip_set_active(struct cavan_input_chip *chip, bool enable);
-int cavan_input_chip_set_active_lock(struct cavan_input_chip *chip, bool enable);
 void cavan_input_chip_recovery(struct cavan_input_chip *chip, bool force);
 ssize_t cavan_input_chip_write_online(const char *chip_name, bool online);
 ssize_t cavan_input_chip_read_online(const char *chip_name);
 int cavan_input_chip_firmware_upgrade(struct cavan_input_chip *chip, void *buff, size_t size, int flags);
 const struct cavan_input_rate_map *cavan_input_find_rate_map(const struct cavan_input_rate_map *map, size_t count, unsigned int delay);
-int cavan_input_device_set_enable_lock(struct cavan_input_device *dev, bool enable);
+int cavan_input_device_set_enable(struct cavan_input_device *dev, bool enable);
 int cavan_input_device_set_enable_no_sync(struct cavan_input_device *dev, bool enable);
-int cavan_input_device_calibration(struct cavan_input_device *dev, struct cavan_input_chip *chip, char *buff, size_t size, bool write);
-int cavan_input_device_calibration_lock(struct cavan_input_device *dev, char *buff, size_t size, bool write);
+int cavan_input_device_calibration_locked(struct cavan_input_device *dev, struct cavan_input_chip *chip, char *buff, size_t size, bool write);
+int cavan_input_device_calibration(struct cavan_input_device *dev, char *buff, size_t size, bool write);
 ssize_t cavan_input_device_read_write_offset(struct cavan_input_device *dev, char *buff, size_t size, bool store);
 
 int cavan_input_device_register(struct cavan_input_chip *chip, struct cavan_input_device *dev);
 void cavan_input_device_unregister(struct cavan_input_chip *chip, struct cavan_input_device *dev);
 
+int cavan_input_chip_read_firmware_id_locked(struct cavan_input_chip *chip, char *buff, size_t size);
 int cavan_input_chip_read_firmware_id(struct cavan_input_chip *chip, char *buff, size_t size);
-int cavan_input_chip_read_firmware_id_lock(struct cavan_input_chip *chip, char *buff, size_t size);
 
 int cavan_input_chip_register(struct cavan_input_chip *chip, struct device *dev);
 void cavan_input_chip_unregister(struct cavan_input_chip *chip);
+void cavan_input_chip_shutdown(struct cavan_input_chip *chip);
 int cavan_input_chip_report_events(struct cavan_input_chip *chip, struct cavan_input_list *list);
 
 int cavan_misc_device_register(struct cavan_misc_device *dev, const char *name);

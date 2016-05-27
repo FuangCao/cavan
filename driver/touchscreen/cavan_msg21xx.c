@@ -242,7 +242,7 @@ static ssize_t msg21xx_firmware_id_show(struct device *dev, struct device_attrib
 	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
 	struct cavan_msg21xx_chip *msg21xx = i2c_get_clientdata(client);
 
-	return cavan_input_chip_read_firmware_id_lock(&msg21xx->chip, buff, PAGE_SIZE);
+	return cavan_input_chip_read_firmware_id(&msg21xx->chip, buff, PAGE_SIZE);
 }
 
 static DEVICE_ATTR(firmware_id, S_IRUGO, msg21xx_firmware_id_show, NULL);

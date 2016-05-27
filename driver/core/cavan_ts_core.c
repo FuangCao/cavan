@@ -3,13 +3,13 @@
 
 static void cavan_ts_suspend(struct cavan_ts_device *ts)
 {
-	cavan_input_device_set_enable_lock(&ts->dev, false);
+	cavan_input_device_set_enable(&ts->dev, false);
 	cavan_ts_mt_touch_release(ts->dev.input);
 }
 
 static void cavan_ts_resume(struct cavan_ts_device *ts)
 {
-	cavan_input_device_set_enable_lock(&ts->dev, true);
+	cavan_input_device_set_enable(&ts->dev, true);
 }
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -193,9 +193,9 @@ static int cavan_ts_device_open(struct input_dev *dev)
 
 	pr_pos_info();
 
-	ret = cavan_input_device_set_enable_lock(idev, true);
+	ret = cavan_input_device_set_enable(idev, true);
 	if (ret < 0) {
-		pr_red_info("cavan_input_device_set_enable_lock");
+		pr_red_info("cavan_input_device_set_enable");
 		return ret;
 	}
 

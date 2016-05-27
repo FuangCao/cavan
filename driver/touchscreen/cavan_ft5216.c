@@ -679,7 +679,7 @@ static ssize_t ft5216_firmware_id_show(struct device *dev, struct device_attribu
 	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
 	struct cavan_input_chip *chip = i2c_get_clientdata(client);
 
-	return cavan_input_chip_read_firmware_id_lock(chip, buff, PAGE_SIZE);
+	return cavan_input_chip_read_firmware_id(chip, buff, PAGE_SIZE);
 }
 
 static DEVICE_ATTR(firmware_id, 0664, ft5216_firmware_id_show, NULL);
