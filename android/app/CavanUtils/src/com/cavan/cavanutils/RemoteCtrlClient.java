@@ -1,17 +1,17 @@
 package com.cavan.cavanutils;
 
-import java.net.InetAddress;
-
-import android.net.LocalSocketAddress;
 
 public class RemoteCtrlClient extends TcpInputClient {
 
-	public RemoteCtrlClient(InetAddress address, int port) {
-		super(address, port, TCP_REMOTE_CTRL);
+	private ScanResult mScanResult;
+
+	public RemoteCtrlClient(ScanResult result) {
+		super(result.getAddress(), result.getPort(), TCP_REMOTE_CTRL);
+		mScanResult = result;
 	}
 
-	public RemoteCtrlClient(LocalSocketAddress address) {
-		super(address, TCP_REMOTE_CTRL);
+	public boolean isConnectedTo(ScanResult result) {
+		return isConnected() && mScanResult.equals(result);
 	}
 
 	@Override

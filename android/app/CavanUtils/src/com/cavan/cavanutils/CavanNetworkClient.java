@@ -85,10 +85,6 @@ public class CavanNetworkClient extends CavanUtils {
 		/* empty */
 	}
 
-	protected void OnConnected() {
-		/* empty */
-	}
-
 	protected boolean sendRequest() {
 		return true;
 	}
@@ -98,7 +94,7 @@ public class CavanNetworkClient extends CavanUtils {
 			return true;
 		}
 
-		if (connect()) {
+		if (mConnected) {
 			mInputStream = mClientImpl.getInputStream();
 			return mInputStream != null;
 		}
@@ -123,7 +119,7 @@ public class CavanNetworkClient extends CavanUtils {
 			return true;
 		}
 
-		if (connect()) {
+		if (mConnected) {
 			mOutputStream = mClientImpl.getOutputStream();
 			return mOutputStream != null;
 		}
@@ -159,7 +155,7 @@ public class CavanNetworkClient extends CavanUtils {
 		OnDisconnected();
 	}
 
-	public final boolean connect() {
+	public final boolean connectSync() {
 		synchronized (mClientImpl) {
 			if (mConnected) {
 				return true;
@@ -172,7 +168,6 @@ public class CavanNetworkClient extends CavanUtils {
 			mConnected = true;
 
 			if (sendRequest()) {
-				OnConnected();
 				return true;
 			}
 
@@ -183,14 +178,30 @@ public class CavanNetworkClient extends CavanUtils {
 		return false;
 	}
 
-	public final void connectNoSync() {
-		new Thread() {
+	public final boolean connectThreaded() {
+		synchronized (mClientImpl) {
+			if (mConnected) {
+				return true;
+			}
+		}
+
+		Thread thread = new Thread() {
 
 			@Override
 			public void run() {
-				connect();
+				connectSync();
 			}
-		}.start();
+		};
+
+		thread.start();
+
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		return mConnected;
 	}
 
 	public boolean isConnected() {

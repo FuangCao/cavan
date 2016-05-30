@@ -3,10 +3,31 @@ package com.cavan.cavanutils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 public class CavanUtils {
 	public static final String TAG = "Cavan";
+
+	public static final int EVENT_CLEAR_TOAST = 1;
+
+	private static Toast sToast;
+	private static final Object sToastLock = new Object();
+
+	private static final Handler HANDLER = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case EVENT_CLEAR_TOAST:
+				cancelToast();
+				break;
+			}
+		}
+	};
 
 	public static String getEnv(String name) {
 		return System.getenv(name);
@@ -124,5 +145,55 @@ public class CavanUtils {
 
 	public static int ArrayCopy(byte[] src, byte[] dest) {
 		return ArrayCopy(src, 0, dest, 0, src.length);
+	}
+
+	public static void cancelToastLocked() {
+		if (sToast != null) {
+			sToast.cancel();
+			sToast = null;
+		}
+
+		HANDLER.removeMessages(EVENT_CLEAR_TOAST);
+	}
+
+	public static void cancelToast() {
+		synchronized (sToastLock) {
+			cancelToastLocked();
+		}
+	}
+
+	public static void showToast(Context context, String text, int duration) {
+		Toast toast = Toast.makeText(context, text, duration);
+		synchronized (sToastLock) {
+			cancelToastLocked();
+
+			sToast = toast;
+			toast.show();
+
+			HANDLER.sendEmptyMessageDelayed(EVENT_CLEAR_TOAST, 10000);
+		}
+	}
+
+	public static void showToast(Context context, String text) {
+		showToast(context, text, Toast.LENGTH_SHORT);
+	}
+
+	public static void showToastLong(Context context, String text) {
+		showToast(context, text, Toast.LENGTH_LONG);
+	}
+
+	public static void showToast(Context context, int resId, int duration) {
+		String text = context.getResources().getString(resId);
+		if (text != null) {
+			showToast(context, text, duration);
+		}
+	}
+
+	public static void showToast(Context context, int resId) {
+		showToast(context, resId, Toast.LENGTH_SHORT);
+	}
+
+	public static void showToastLong(Context context, int resId) {
+		showToast(context, resId, Toast.LENGTH_LONG);
 	}
 }

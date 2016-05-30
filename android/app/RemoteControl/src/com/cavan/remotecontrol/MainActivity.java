@@ -16,27 +16,26 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
-import android.widget.Toast;
 
+import com.cavan.cavanutils.CavanUtils;
 import com.cavan.cavanutils.DiscoveryService;
 import com.cavan.cavanutils.IDiscoveryService;
 import com.cavan.cavanutils.RemoteCtrlClient;
 import com.cavan.cavanutils.ScanResult;
 import com.cavan.cavanutils.TcpDdDiscoveryService;
-import com.cavan.cavanutils.TcpInputClient;
 
 @SuppressWarnings("deprecation")
 @SuppressLint({ "HandlerLeak", "UseSparseArrays", "NewApi", "ClickableViewAccessibility" })
-public class MainActivity extends ActionBarActivity implements OnClickListener, OnTouchListener {
+public class MainActivity extends ActionBarActivity implements OnClickListener, OnTouchListener, OnLongClickListener {
 
 	public static final String TAG = "Cavan";
 
@@ -108,7 +107,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		sKeyEventMap.put(KeyEvent.KEYCODE_MEDIA_NEXT, KEYCODE_PLAY_NEXT);
 	}
 
-	private TcpInputClient mClient;
+	private RemoteCtrlClient mClient;
+	private boolean mAutoConnectDisable;
 	private HashMap<Button, Integer> mButtonMap = new HashMap<Button, Integer>();
 
 	private IDiscoveryService mDiscoveryService;
@@ -132,7 +132,6 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	};
 
 	private Button mButtonScan;
-	private ScanResult mScanResult;
 	private List<ScanResult> mScanResults;
 
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -167,7 +166,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 
 				if (result != null) {
 					setTitle(result.getShortString());
-					Toast.makeText(getApplicationContext(), R.string.text_connected, Toast.LENGTH_SHORT).show();
+					CavanUtils.showToast(getApplicationContext(), R.string.text_connected);
 				} else {
 					try {
 						mDiscoveryService.scan(DEFAULT_PORT);
@@ -176,16 +175,20 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 					}
 
 					setTitle(R.string.text_disconnected);
-					Toast.makeText(getApplicationContext(), R.string.text_disconnected, Toast.LENGTH_SHORT).show();
+					CavanUtils.showToast(getApplicationContext(), R.string.text_disconnected);
 				}
 				break;
 
 			case EVENT_AUTO_CONNECT:
+				if (mAutoConnectDisable) {
+					break;
+				}
+
 				if (mScanResults.size() > 0) {
 					String text = getResources().getString(R.string.text_scan_complete, mScanResults.size());
-					Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+					CavanUtils.showToast(getApplicationContext(), text);
 				} else {
-					Toast.makeText(getApplicationContext(), R.string.text_device_not_found, Toast.LENGTH_SHORT).show();
+					CavanUtils.showToast(getApplicationContext(), R.string.text_device_not_found);
 				}
 
 				if (mClient != null && mClient.isConnected()) {
@@ -213,6 +216,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 
 		mButtonScan = (Button) findViewById(R.id.buttonScan);
 		mButtonScan.setOnClickListener(this);
+		mButtonScan.setOnLongClickListener(this);
 
 		for (int id : sKeyMap.keySet()) {
 			Button button = (Button) findViewById(id);
@@ -262,7 +266,9 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		ScanResult result = mScanResults.get(item.getItemId());
-		connect(result);
+		if (result != null) {
+			connect(result);
+		}
 
 		return true;
 	}
@@ -274,7 +280,9 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 			return super.onKeyDown(keyCode, event);
 		}
 
-		mClient.sendKeyEvent(code);
+		if (mClient != null) {
+			mClient.sendKeyEvent(code);
+		}
 
 		return true;
 	}
@@ -291,6 +299,16 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 	}
 
 	@Override
+	public boolean onLongClick(View v) {
+		if (mClient != null) {
+			mAutoConnectDisable = true;
+			mClient.disconnect();
+		}
+
+		return true;
+	}
+
+	@Override
 	public boolean onTouch(View arg0, MotionEvent arg1) {
 		int value = 0;
 
@@ -299,7 +317,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 			value = 1;
 		case MotionEvent.ACTION_UP:
 			Integer keycode = sKeyMap.get(arg0.getId());
-			if (keycode != null) {
+			if (keycode != null && mClient != null) {
 				mClient.sendKeyEvent(keycode, value);
 			}
 			break;
@@ -308,28 +326,33 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		return false;
 	}
 
-	private void connect(ScanResult result) {
-		if (mScanResult != null && mScanResult.equals(result)) {
-			setTitle(result.getShortString());
-		} else {
-			mClient = new RemoteCtrlClient(result.getAddress(), result.getPort()) {
+	private boolean connect(ScanResult result) {
+		if (mClient != null) {
+			if (mClient.isConnectedTo(result)) {
+				setTitle(result.getShortString());
+				return true;
+			}
 
-				@Override
-				protected void OnConnected() {
-					Message message = mHandler.obtainMessage(EVENT_LINK_CHANGED, mScanResult);
-					message.sendToTarget();
-				}
-
-				@Override
-				protected void OnDisconnected() {
-					mHandler.sendEmptyMessage(EVENT_LINK_CHANGED);
-				}
-			};
-
-			mClient.connectNoSync();
+			mClient.disconnect();
 		}
 
-		mScanResult = result;
-		Log.e(TAG, "mScanResult = " + mScanResult);
+		mClient = new RemoteCtrlClient(result) {
+
+			@Override
+			protected void OnDisconnected() {
+				CavanUtils.logE("OnDisconnected");
+				mHandler.sendEmptyMessage(EVENT_LINK_CHANGED);
+			}
+		};
+
+		if (mClient.connectThreaded()) {
+			Message message = mHandler.obtainMessage(EVENT_LINK_CHANGED, result);
+			message.sendToTarget();
+			return true;
+		}
+
+		setTitle(R.string.text_disconnected);
+
+		return false;
 	}
 }

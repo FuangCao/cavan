@@ -24,7 +24,7 @@ import android.net.LocalSocketAddress;
 	}
 
 	public boolean runCommand(String command) {
-		if (!connect()) {
+		if (!connectSync()) {
 			return false;
 		}
 

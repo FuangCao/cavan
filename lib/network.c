@@ -1654,6 +1654,7 @@ static int network_service_accept_dummy(struct network_service *service, struct 
 	conn->close = network_client_tcp_close;
 	conn->send = network_client_send_dummy;
 	conn->recv = network_client_recv_dummy;
+	conn->flush = network_client_flush_dummy;
 	conn->sendto = network_client_sendto_dummy;
 	conn->recvfrom = network_client_recvfrom_dummy;
 

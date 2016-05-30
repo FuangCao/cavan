@@ -67,7 +67,7 @@ public class TcpDiscoveryService extends DiscoveryService {
 		@Override
 		public void run() {
 			mClient = openClient(mAddress, mPort);
-			if (mClient.connect()) {
+			if (mClient.connectSync()) {
 				addScanResult(mClient, mAddress, mPort);
 				mClient.disconnect();
 			}
