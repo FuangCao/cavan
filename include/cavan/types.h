@@ -45,15 +45,17 @@ typedef int16_t s2, s16;
 typedef uint8_t u1, u8, byte;
 typedef int8_t s1, s8;
 
-typedef unsigned long int ulong;
-typedef unsigned short int ushort;
+typedef int sint;
+typedef char schar;
+typedef short sshort;
+typedef long slong;
+typedef long long slonglong;
 
+typedef unsigned int uint;
 typedef unsigned char uchar;
-
-typedef signed long int slong;
-typedef signed short int sshort;
-typedef signed int sint;
-typedef signed char schar;
+typedef unsigned short ushort;
+typedef unsigned long ulong;
+typedef unsigned long long ulonglong;
 
 typedef char * pchar, text;
 
