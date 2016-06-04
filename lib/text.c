@@ -1416,6 +1416,7 @@ int text2date(const char *text, struct tm *date, ...)
 	return 0;
 }
 
+#if 0
 static u64 get_argument(char *args, int size)
 {
 	u64 value;
@@ -1568,6 +1569,7 @@ char *cavan_printf(const char *fmt, ...)
 
 	return buff;
 }
+#endif
 
 char *format_text(const char *fmt, ...)
 {
