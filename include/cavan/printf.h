@@ -27,6 +27,9 @@ typedef __builtin_va_list cavan_va_list;
 #define cavan_va_end(ap)					__builtin_va_end(ap)
 #define cavan_va_arg(ap, type)				__builtin_va_arg(ap, type)
 #define cavan_printf(fmt, args ...)			cavan_fdprintf(stdout_fd, fmt, ##args)
+
+#define CAVAN_PRINTF_TEN_LOWER_CASE			'a'
+#define CAVAN_PRINTF_TEN_UPPER_CASE			'A'
 #define CAVAN_PRINTF_PREFIX_ENABLE(flags)	((flags) & (CAVAN_PRINTF_PREFIX | CAVAN_PRINTF_PREFIX_FORCE))
 
 enum {
@@ -71,10 +74,10 @@ struct cavan_printf_spec {
 	int flags;
 	int qualifier;
 	int precision;
+	char ten;
 	char fill;
-	char first_letter;
-	const char *prefix;
 	char buff_prefix[4];
+	const char *prefix;
 	char *buff;
 	char *buff_end;
 };

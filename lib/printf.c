@@ -52,7 +52,7 @@ static void cavan_printf_text(struct cavan_printf_spec *spec, const char *text, 
 			*buff++ = '-';
 		}
 
-		// width--;
+		width--;
 	}
 
 	if (CAVAN_PRINTF_PREFIX_ENABLE(spec->flags) && spec->prefix) {
@@ -97,7 +97,7 @@ static char cavan_printf_place(struct cavan_printf_spec *spec, int place)
 	if (place < 10) {
 		return place + '0';
 	} else {
-		return place - 10 + spec->first_letter;
+		return place - 10 + spec->ten;
 	}
 }
 
@@ -130,7 +130,11 @@ static void cavan_printf_value(struct cavan_printf_spec *spec, ullong value)
 			break;
 
 		case 16:
-			spec->prefix = "0x";
+			if (spec->ten == CAVAN_PRINTF_TEN_UPPER_CASE) {
+				spec->prefix = "0X";
+			} else {
+				spec->prefix = "0x";
+			}
 			break;
 
 		default:
@@ -201,6 +205,9 @@ int cavan_vsnprintf(char *const buff, size_t size, const char *fmt, cavan_va_lis
 		spec.type = CAVAN_PRINTF_TYPE_NONE;
 
 		switch (type) {
+		case CAVAN_PRINTF_TYPE_NONE:
+			break;
+
 		case CAVAN_PRINTF_TYPE_WIDTH:
 			spec.width = cavan_va_arg(ap, int);
 			if (spec.width < 0) {
@@ -355,7 +362,7 @@ label_find:
 label_found:
 		spec.flags = 0;
 		spec.fill = ' ';
-		spec.first_letter = 'A';
+		spec.ten = CAVAN_PRINTF_TEN_UPPER_CASE;
 
 		while (1) {
 			switch (*fmt) {
@@ -417,10 +424,9 @@ label_qualifier:
 			if (*++fmt != 'h') {
 				spec.qualifier = 'h';
 				break;
-			} else {
-				fmt++;
 			}
 		case 'H':
+			fmt++;
 			spec.qualifier = 'H';
 			break;
 
@@ -428,22 +434,21 @@ label_qualifier:
 			if (*++fmt != 'l') {
 				spec.qualifier = 'l';
 				break;
-			} else {
-				fmt++;
 			}
 		case 'L':
+			fmt++;
 			spec.qualifier = 'L';
 			break;
 
 		case 'z':
 		case 'Z':
-			spec.qualifier = 'z';
 			fmt++;
+			spec.qualifier = 'z';
 			break;
 
 		case 't':
-			spec.qualifier = 't';
 			fmt++;
+			spec.qualifier = 't';
 			break;
 		}
 
@@ -462,7 +467,7 @@ label_qualifier:
 			continue;
 
 		case 'p':
-			spec.first_letter = 'a';
+			spec.ten = CAVAN_PRINTF_TEN_LOWER_CASE;
 		case 'P':
 			spec.fill = '0';
 			spec.base = 16;
@@ -480,7 +485,7 @@ label_qualifier:
 			continue;
 
 		case 'm':
-			spec.first_letter = 'a';
+			spec.ten = CAVAN_PRINTF_TEN_LOWER_CASE;
 		case 'M':
 			spec.type = CAVAN_PRINTF_TYPE_MEMORY;
 			continue;
@@ -495,7 +500,7 @@ label_qualifier:
 			break;
 
 		case 'x':
-			spec.first_letter = 'a';
+			spec.ten = CAVAN_PRINTF_TEN_LOWER_CASE;
 		case 'X':
 			spec.base = 16;
 			break;
@@ -572,7 +577,6 @@ label_qualifier:
 			default:
 				spec.type = CAVAN_PRINTF_TYPE_UINT;
 			}
-
 		}
 	}
 

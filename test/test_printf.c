@@ -20,21 +20,53 @@
 #include <cavan.h>
 #include <cavan/printf.h>
 
+static void test_printf(const char *fmt, ...)
+{
+	int length;
+	va_list ap;
+	cavan_va_list cavan_ap;
+	char buff[1024];
+
+	va_start(ap, fmt);
+	length = vsnprintf(buff, sizeof(buff), fmt, ap);
+	va_end(ap);
+
+	// ffile_puts(stdout_fd, "std printf:\n");
+	ffile_write(stdout_fd, buff, length);
+
+	cavan_va_start(cavan_ap, fmt);
+	length = cavan_vsnprintf(buff, sizeof(buff), fmt, cavan_ap);
+	va_end(cavan_ap);
+
+	// ffile_puts(stdout_fd, "cavan printf:\n");
+	ffile_write(stdout_fd, buff, length);
+}
+
 int main(int argc, char *argv[])
 {
 	int a = 12345678;
-	int b = 0x1122aabb;
+	int b = -100;
+	int x = 0x1122aabb;
+	int o = 011223344;
 	int c = 'z';
-	int d = -100;
+	long sl = -100;
+	ulong ul = -100;
+	sllong sll = -100;
+	ullong ull = -100;
 	const char *text = "aabbccddeeff";
 
 	println("text = %p", text);
 
-	cavan_printf("a = %d = %0*d\n", a, 10, a);
-	cavan_printf("b = %d = %#08x = %#08X, %011o\n", b, b, b, b);
-	cavan_printf("c = %c = %8c = %*c\n", c, c, 10, c);
-	cavan_printf("d = %d@2 = %08d\n", d, d);
-	cavan_printf("text = %p, %s\n", text, text);
+	test_printf("a = %d = %*d = %0*d = %10d = %010d\n", a, 10, a, 10, a, a, a);
+	test_printf("b = %d = %08d\n", b, b);
+	test_printf("x = %d = %x = %X = %#x = %#X, %8x = %08x = %#8x = %#08x\n", x, x, x, x, x, x, x, x, x);
+	test_printf("o = %d = %o = %#o = %8o = %08o = %#8o = %#08o\n", o, o, o, o, o, o, o);
+	test_printf("c = %c = %8c = %*c\n", c, c, 10, c);
+	test_printf("text = %p = %s\n", text, text);
+	test_printf("sl = %ld\n", sl);
+	test_printf("sll = %lld = %Ld\n", sll, sll);
+	test_printf("ul = %lu\n", ul);
+	test_printf("ull = %llu = %Lu\n", ull, ull);
 
 	return 0;
 }

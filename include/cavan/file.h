@@ -145,6 +145,7 @@ int calculate_file_md5sum(const char *file_path, char *md5sum);
 int check_file_md5sum(const char *file_path, char *md5sum);
 
 ssize_t ffile_read(int fd, void *buff, size_t size);
+ssize_t ffile_write(int fd, const void *buff, size_t size);
 
 int file_replace_line_simple(const char *file_path, const char *prefix, off_t prefix_size, const char *new_line, off_t new_line_size);
 int file_stat(const char *file_name, struct stat *st);
@@ -281,8 +282,6 @@ static inline ssize_t file_read(const char *filename, void *buff, size_t size)
 {
 	return file_readfrom(filename, buff, size, 0, 0);
 }
-
-ssize_t ffile_write(int fd, const void *buff, size_t size);
 
 static inline ssize_t file_write(const char *filename, const void *buff, size_t size)
 {
