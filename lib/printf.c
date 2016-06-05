@@ -41,11 +41,21 @@ static int cavan_printf_get_value(const char **text)
 	return value;
 }
 
-static char *cavan_printf_text(char *buff, char *buff_end, const char *text, int length, struct cavan_printf_spec *spec, bool reverse)
+static void cavan_printf_text(struct cavan_printf_spec *spec, const char *text, int length)
 {
 	int width = spec->width;
+	char *buff = spec->buff;
+	char *buff_end = spec->buff_end;
 
-	if ((spec->flags & CAVAN_PRINTF_PREFIX) && spec->prefix) {
+	if (spec->flags & CAVAN_PRINTF_NEGATIVE) {
+		if (buff < buff_end) {
+			*buff++ = '-';
+		}
+
+		// width--;
+	}
+
+	if (CAVAN_PRINTF_PREFIX_ENABLE(spec->flags) && spec->prefix) {
 		const char *p = spec->prefix;
 
 		while (*p && buff < buff_end) {
@@ -60,7 +70,7 @@ static char *cavan_printf_text(char *buff, char *buff_end, const char *text, int
 		}
 	}
 
-	if (reverse) {
+	if (spec->flags & CAVAN_PRINTF_REVERSE) {
 		const char *p = text + length - 1;
 
 		while (p >= text && buff < buff_end) {
@@ -79,10 +89,10 @@ static char *cavan_printf_text(char *buff, char *buff_end, const char *text, int
 		width--;
 	}
 
-	return buff;
+	spec->buff = buff;
 }
 
-static char cavan_printf_place(int place, struct cavan_printf_spec *spec)
+static char cavan_printf_place(struct cavan_printf_spec *spec, int place)
 {
 	if (place < 10) {
 		return place + '0';
@@ -91,51 +101,101 @@ static char cavan_printf_place(int place, struct cavan_printf_spec *spec)
 	}
 }
 
-static char *cavan_printf_value(char *buff, char *buff_end, struct cavan_printf_spec *spec)
+static void cavan_printf_value(struct cavan_printf_spec *spec, ullong value)
 {
-	char data[64];
+	char data[68];
 	char *p = data;
-	ulonglong value = spec->value;
+	int base = spec->base;
+
+	if (base < 2) {
+		base = 10;
+	}
+
+	if (CAVAN_PRINTF_PREFIX_ENABLE(spec->flags)) {
+		switch (base) {
+		case 2:
+			spec->prefix = "0B";
+			break;
+
+		case 8:
+			spec->prefix = "0";
+			break;
+
+		case 10:
+			if (spec->flags & CAVAN_PRINTF_PREFIX_FORCE) {
+				spec->prefix = "0D";
+			} else {
+				spec->prefix = NULL;
+			}
+			break;
+
+		case 16:
+			spec->prefix = "0x";
+			break;
+
+		default:
+			if (spec->flags & CAVAN_PRINTF_PREFIX_FORCE) {
+				cavan_snprintf(spec->buff_prefix, sizeof(spec->buff_prefix), "%d@", base);
+				spec->prefix = spec->buff_prefix;
+			} else {
+				spec->prefix = NULL;
+			}
+		}
+	}
 
 	if (value) {
+		if (base == 10 && (spec->flags & CAVAN_PRINTF_SIGN)) {
+			sllong svalue = value;
+
+			if (svalue < 0) {
+				value = -svalue;
+				spec->flags |= CAVAN_PRINTF_NEGATIVE;
+			}
+		}
+
 		while (value) {
-			*p++ = cavan_printf_place(value % spec->base, spec);
-			value /= spec->base;
+			*p++ = cavan_printf_place(spec, value % base);
+			value /= base;
 		}
 	} else {
 		*p++ = '0';
 	}
 
-	return cavan_printf_text(buff, buff_end, data, p - data, spec, true);
+	spec->flags |= CAVAN_PRINTF_REVERSE;
+
+	cavan_printf_text(spec, data, p - data);
 }
 
-static char *cavan_printf_memory(char *buff, char *buff_end, struct cavan_printf_spec *spec)
+static void cavan_printf_memory(struct cavan_printf_spec *spec, const uchar *mem)
 {
-	const uchar *mem = spec->mem;
+	char *buff = spec->buff;
+	char *buff_end = spec->buff_end - 1;
 	const uchar *mem_end = mem + spec->width;
-
-	buff_end--;
 
 	while (mem < mem_end && buff < buff_end) {
 		uchar value = *mem++;
 
-		*buff++ = cavan_printf_place((value >> 4) & 0x0F, spec);
-		*buff++ = cavan_printf_place(value & 0x0F, spec);
+		*buff++ = cavan_printf_place(spec, (value >> 4) & 0x0F);
+		*buff++ = cavan_printf_place(spec, value & 0x0F);
 	}
 
-	return buff;
+	spec->buff = buff;
 }
 
-int cavan_vsnprintf(char *buff, size_t size, const char *fmt, cavan_va_list ap)
+int cavan_vsnprintf(char *const buff, size_t size, const char *fmt, cavan_va_list ap)
 {
-	char *data, *data_end;
+	char c;
+	ullong value;
+	const uchar *mem;
+	const char *text;
 	struct cavan_printf_spec spec;
 
-	data = buff;
-	data_end = data + size - 1;
 	memset(&spec, 0x00, sizeof(spec));
 
-	while (data < data_end) {
+	spec.buff = buff;
+	spec.buff_end = buff + size - 1;
+
+	while (1) {
 		int type = spec.type;
 
 		spec.type = CAVAN_PRINTF_TYPE_NONE;
@@ -157,48 +217,52 @@ int cavan_vsnprintf(char *buff, size_t size, const char *fmt, cavan_va_list ap)
 			goto label_qualifier;
 
 		case CAVAN_PRINTF_TYPE_CHAR:
-			spec.letter = cavan_va_arg(ap, int);
-			data = cavan_printf_text(data, data_end, &spec.letter, 1, &spec, false);
+			c = cavan_va_arg(ap, int);
+			cavan_printf_text(&spec, &c, 1);
 			break;
 
 		case CAVAN_PRINTF_TYPE_STR:
-			spec.text = cavan_va_arg(ap, const char *);
-			data = cavan_printf_text(data, data_end, spec.text, strlen(spec.text), &spec, false);
+			text = cavan_va_arg(ap, const char *);
+			cavan_printf_text(&spec, text, strlen(text));
 			break;
 
 		case CAVAN_PRINTF_TYPE_PERCENT:
-			*data++ = '%';
+			if (likely(spec.buff < spec.buff_end)) {
+				*spec.buff++ = '%';
+			} else {
+				goto label_complete;
+			}
 			break;
 
 		case CAVAN_PRINTF_TYPE_MEMORY:
-			spec.mem = cavan_va_arg(ap, const uchar *);
-			data = cavan_printf_memory(data, data_end, &spec);
+			mem = cavan_va_arg(ap, const uchar *);
+			cavan_printf_memory(&spec, mem);
 			break;
 
 		case CAVAN_PRINTF_TYPE_STR_LEN:
 			switch (spec.qualifier) {
 				case 'l': {
 					long *ip = cavan_va_arg(ap, long *);
-					*ip = data - buff;
+					*ip = spec.buff - buff;
 					break;
 				}
 
 				case 'L': {
-					long long *ip = cavan_va_arg(ap, long long *);
-					*ip = data - buff;
+					sllong *ip = cavan_va_arg(ap, sllong *);
+					*ip = spec.buff - buff;
 					break;
 				}
 
 				case 'z':
 				case 'Z': {
 					size_t *ip = cavan_va_arg(ap, size_t *);
-					*ip = data - buff;
+					*ip = spec.buff - buff;
 					break;
 				}
 
 				default: {
 					int *ip = cavan_va_arg(ap, int *);
-					*ip = data - buff;
+					*ip = spec.buff - buff;
 				}
 			}
 			break;
@@ -206,86 +270,93 @@ int cavan_vsnprintf(char *buff, size_t size, const char *fmt, cavan_va_list ap)
 		default:
 			switch (type) {
 			case CAVAN_PRINTF_TYPE_PTR:
-				spec.value = (ulonglong) cavan_va_arg(ap, void *);
+				value = (ullong) cavan_va_arg(ap, void *);
 				break;
 
 			case CAVAN_PRINTF_TYPE_LONG_LONG:
-				spec.value = cavan_va_arg(ap, slonglong);
+				value = cavan_va_arg(ap, sllong);
 				break;
 
 			case CAVAN_PRINTF_TYPE_ULONG:
-				spec.value = cavan_va_arg(ap, ulong);
+				value = cavan_va_arg(ap, ulong);
 				break;
 
 			case CAVAN_PRINTF_TYPE_LONG:
-				spec.value = cavan_va_arg(ap, slong);
+				value = cavan_va_arg(ap, slong);
 				break;
 
 			case CAVAN_PRINTF_TYPE_UBYTE:
-				spec.value = (uchar) cavan_va_arg(ap, int);
+				value = (uchar) cavan_va_arg(ap, int);
 				break;
 
 			case CAVAN_PRINTF_TYPE_BYTE:
-				spec.value = (char) cavan_va_arg(ap, int);
+				value = (char) cavan_va_arg(ap, int);
 				break;
 
 			case CAVAN_PRINTF_TYPE_USHORT:
-				spec.value = (ushort) cavan_va_arg(ap, int);
+				value = (ushort) cavan_va_arg(ap, int);
 				break;
 
 			case CAVAN_PRINTF_TYPE_SHORT:
-				spec.value = (short) cavan_va_arg(ap, int);
+				value = (short) cavan_va_arg(ap, int);
 				break;
 
 			case CAVAN_PRINTF_TYPE_UINT:
-				spec.value = cavan_va_arg(ap, uint);
+				value = cavan_va_arg(ap, uint);
 				break;
 
 			case CAVAN_PRINTF_TYPE_INT:
-				spec.value = cavan_va_arg(ap, int);
+				value = cavan_va_arg(ap, int);
 				break;
 
 			case CAVAN_PRINTF_TYPE_SIZE:
-				spec.value = cavan_va_arg(ap, size_t);
+				value = cavan_va_arg(ap, size_t);
 				break;
 
 			case CAVAN_PRINTF_TYPE_SSIZE:
-				spec.value = cavan_va_arg(ap, ssize_t);
+				value = cavan_va_arg(ap, ssize_t);
 				break;
 
 			default:
-				goto label_start;
+				if (likely(spec.buff < spec.buff_end)) {
+					*spec.buff++ = '*';
+					goto label_find;
+				} else {
+					goto label_complete;
+				}
 			}
 
-			data = cavan_printf_value(data, data_end, &spec);
+			cavan_printf_value(&spec, value);
 		}
 
-label_start:
-		switch (*fmt) {
-		case 0:
-			goto out_complete;
+label_find:
+		while (1) {
+			switch (*fmt) {
+			case 0:
+				goto label_complete;
 
-		case '%':
-			fmt++;
-			break;
+			case '%':
+				fmt++;
+				goto label_found;
 
-		default:
-			if (data >= data_end) {
-				goto out_complete;
+			default:
+				if (likely(spec.buff < spec.buff_end)) {
+					*spec.buff++ = *fmt++;
+				} else {
+					goto label_complete;
+				}
 			}
-			*data++ = *fmt++;
-			continue;
 		}
 
+label_found:
 		spec.flags = 0;
 		spec.fill = ' ';
-		spec.prefix = NULL;
 		spec.first_letter = 'A';
 
 		while (1) {
 			switch (*fmt) {
 			case 0:
-				goto out_complete;
+				goto label_complete;
 
 			case '-':
 				spec.flags |= CAVAN_PRINTF_LEFT;
@@ -336,7 +407,7 @@ label_precision:
 label_qualifier:
 		switch (*fmt) {
 		case 0:
-			goto out_complete;
+			goto label_complete;
 
 		case 'h':
 			if (*++fmt != 'h') {
@@ -388,10 +459,9 @@ label_qualifier:
 		case 'P':
 			spec.fill = '0';
 			spec.base = 16;
-			spec.prefix = "0x";
-			spec.width = sizeof(void *) * 2;
-			spec.flags |= CAVAN_PRINTF_PREFIX;
+			// spec.width = sizeof(void *) * 2;
 			spec.type = CAVAN_PRINTF_TYPE_PTR;
+			spec.flags |= CAVAN_PRINTF_PREFIX_FORCE;
 			continue;
 
 		case 'n':
@@ -409,31 +479,35 @@ label_qualifier:
 			continue;
 
 		case 'b':
-			spec.base = 2;
-			spec.prefix = "0b";
-			break;
-
 		case 'B':
 			spec.base = 2;
-			spec.prefix = "0B";
 			break;
 
 		case 'o':
 			spec.base = 8;
-			spec.prefix = "0";
 			break;
 
 		case 'x':
 			spec.first_letter = 'a';
 		case 'X':
 			spec.base = 16;
-			spec.prefix = "0x";
 			break;
 
 		case 'd':
 		case 'i':
 			spec.flags |= CAVAN_PRINTF_SIGN;
 		case 'u':
+			if (*fmt == '@') {
+				int base;
+				const char *p = fmt + 1;
+
+				base = cavan_printf_get_value(&p);
+				if (base > 1 && base < 36) {
+					spec.flags |= CAVAN_PRINTF_PREFIX_FORCE;
+					spec.base = base;
+					fmt = p;
+				}
+			}
 			break;
 
 		default:
@@ -487,9 +561,9 @@ label_qualifier:
 		}
 	}
 
-out_complete:
-	*data = 0;
-	return data - buff;
+label_complete:
+	*spec.buff = 0;
+	return spec.buff - buff;
 }
 
 int cavan_snprintf(char *buff, size_t size, const char *fmt, ...)

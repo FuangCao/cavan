@@ -23,16 +23,20 @@
 
 typedef __builtin_va_list cavan_va_list;
 
-#define cavan_va_start(ap, args)		__builtin_va_start(ap, args)
-#define cavan_va_end(ap)				__builtin_va_end(ap)
-#define cavan_va_arg(ap, type)			__builtin_va_arg(ap, type)
-#define cavan_printf(fmt, args ...)		cavan_fdprintf(stdout_fd, fmt, ##args)
+#define cavan_va_start(ap, args)			__builtin_va_start(ap, args)
+#define cavan_va_end(ap)					__builtin_va_end(ap)
+#define cavan_va_arg(ap, type)				__builtin_va_arg(ap, type)
+#define cavan_printf(fmt, args ...)			cavan_fdprintf(stdout_fd, fmt, ##args)
+#define CAVAN_PRINTF_PREFIX_ENABLE(flags)	((flags) & (CAVAN_PRINTF_PREFIX | CAVAN_PRINTF_PREFIX_FORCE))
 
 enum {
 	CAVAN_PRINTF_SIGN = 1 << 0,
 	CAVAN_PRINTF_PLUS = 1 << 1,
 	CAVAN_PRINTF_LEFT = 1 << 2,
 	CAVAN_PRINTF_PREFIX = 1 << 3,
+	CAVAN_PRINTF_PREFIX_FORCE = 1 << 4,
+	CAVAN_PRINTF_REVERSE = 1 << 5,
+	CAVAN_PRINTF_NEGATIVE = 1 << 6,
 };
 
 enum {
@@ -69,15 +73,11 @@ struct cavan_printf_spec {
 	char fill;
 	char first_letter;
 	const char *prefix;
-
-	union {
-		char letter;
-		ulonglong value;
-		const uchar *mem;
-		const char *text;
-	};
+	char buff_prefix[4];
+	char *buff;
+	char *buff_end;
 };
 
-int cavan_vsnprintf(char *buff, size_t size, const char *fmt, cavan_va_list ap);
-int cavan_snprintf(char *buff, size_t size, const char *fmt, ...);
-int cavan_fdprintf(int fd, const char *fmt, ...);
+__printf_format_30__ int cavan_vsnprintf(char *buff, size_t size, const char *fmt, cavan_va_list ap);
+__printf_format_34__ int cavan_snprintf(char *buff, size_t size, const char *fmt, ...);
+__printf_format_23__ int cavan_fdprintf(int fd, const char *fmt, ...);

@@ -49,13 +49,13 @@ typedef int sint;
 typedef char schar;
 typedef short sshort;
 typedef long slong;
-typedef long long slonglong;
+typedef long long slonglong, sllong;
 
 typedef unsigned int uint;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned long ulong;
-typedef unsigned long long ulonglong;
+typedef unsigned long long ulonglong, ullong;
 
 typedef char * pchar, text;
 
