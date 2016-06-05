@@ -273,7 +273,11 @@ int cavan_vsnprintf(char *const buff, size_t size, const char *fmt, cavan_va_lis
 				value = (ullong) cavan_va_arg(ap, void *);
 				break;
 
-			case CAVAN_PRINTF_TYPE_LONG_LONG:
+			case CAVAN_PRINTF_TYPE_ULLONG:
+				value = cavan_va_arg(ap, ullong);
+				break;
+
+			case CAVAN_PRINTF_TYPE_LLONG:
 				value = cavan_va_arg(ap, sllong);
 				break;
 
@@ -446,6 +450,9 @@ label_qualifier:
 		spec.base = 10;
 
 		switch (*fmt++) {
+		case 0:
+			goto label_complete;
+
 		case 'c':
 			spec.type = CAVAN_PRINTF_TYPE_CHAR;
 			continue;
@@ -494,9 +501,6 @@ label_qualifier:
 			break;
 
 		case 'd':
-		case 'i':
-			spec.flags |= CAVAN_PRINTF_SIGN;
-		case 'u':
 			if (*fmt == '@') {
 				int base;
 				const char *p = fmt + 1;
@@ -508,6 +512,9 @@ label_qualifier:
 					fmt = p;
 				}
 			}
+		case 'i':
+			spec.flags |= CAVAN_PRINTF_SIGN;
+		case 'u':
 			break;
 
 		default:
@@ -515,49 +522,57 @@ label_qualifier:
 			continue;
 		}
 
-		switch (spec.qualifier) {
-		case 'l':
-			if (spec.flags & CAVAN_PRINTF_SIGN) {
+		if (spec.flags & CAVAN_PRINTF_SIGN) {
+			switch (spec.qualifier) {
+			case 'l':
 				spec.type = CAVAN_PRINTF_TYPE_LONG;
-			} else {
-				spec.type = CAVAN_PRINTF_TYPE_ULONG;
-			}
-			break;
+				break;
 
-		case 'L':
-			spec.type = CAVAN_PRINTF_TYPE_LONG_LONG;
-			break;
+			case 'L':
+				spec.type = CAVAN_PRINTF_TYPE_LLONG;
+				break;
 
-		case 'z':
-			if (spec.flags & CAVAN_PRINTF_SIGN) {
+			case 'z':
 				spec.type = CAVAN_PRINTF_TYPE_SSIZE;
-			} else {
-				spec.type = CAVAN_PRINTF_TYPE_SIZE;
-			}
-			break;
+				break;
 
-		case 'h':
-			if (spec.flags & CAVAN_PRINTF_SIGN) {
+			case 'h':
 				spec.type = CAVAN_PRINTF_TYPE_SHORT;
-			} else {
-				spec.type = CAVAN_PRINTF_TYPE_USHORT;
-			}
-			break;
+				break;
 
-		case 'H':
-			if (spec.flags & CAVAN_PRINTF_SIGN) {
+			case 'H':
 				spec.type = CAVAN_PRINTF_TYPE_BYTE;
-			} else {
-				spec.type = CAVAN_PRINTF_TYPE_UBYTE;
-			}
-			break;
+				break;
 
-		default:
-			if (spec.flags & CAVAN_PRINTF_SIGN) {
+			default:
 				spec.type = CAVAN_PRINTF_TYPE_INT;
-			} else {
+			}
+		} else {
+			switch (spec.qualifier) {
+			case 'l':
+				spec.type = CAVAN_PRINTF_TYPE_ULONG;
+				break;
+
+			case 'L':
+				spec.type = CAVAN_PRINTF_TYPE_ULLONG;
+				break;
+
+			case 'z':
+				spec.type = CAVAN_PRINTF_TYPE_SIZE;
+				break;
+
+			case 'h':
+				spec.type = CAVAN_PRINTF_TYPE_USHORT;
+				break;
+
+			case 'H':
+				spec.type = CAVAN_PRINTF_TYPE_UBYTE;
+				break;
+
+			default:
 				spec.type = CAVAN_PRINTF_TYPE_UINT;
 			}
+
 		}
 	}
 
