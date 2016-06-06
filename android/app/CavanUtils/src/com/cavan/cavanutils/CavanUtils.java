@@ -5,12 +5,21 @@ import java.lang.reflect.Method;
 
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
 public class CavanUtils {
 	public static final String TAG = "Cavan";
+
+	static {
+		try {
+			Looper.prepare();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public static final int EVENT_CLEAR_TOAST = 1;
 
@@ -28,6 +37,7 @@ public class CavanUtils {
 			}
 		}
 	};
+
 
 	public static String getEnv(String name) {
 		return System.getenv(name);
