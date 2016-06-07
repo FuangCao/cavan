@@ -58,13 +58,14 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 
 		@Override
 		public void handleMessage(Message msg) {
-			super.handleMessage(msg);
+			MyBluetoothDevice device = (MyBluetoothDevice) msg.obj;
+			device.updateTextSync();
 		}
 	};
 
 	class MyBluetoothDevice implements OnClickListener {
+		private int mIndex;
 		private int mRssi;
-		private Button mButton;
 		private BluetoothDevice mDevice;
 		private boolean mConnected;
 		private boolean mDiscovered;
@@ -83,6 +84,7 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 
 				case BluetoothProfile.STATE_DISCONNECTED:
 					mConnected = false;
+					closeGatt();
 					break;
 				}
 
@@ -172,40 +174,52 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			mDevice = device;
 		}
 
-		public Button createView(View convertView, Context context) {
+		public Button createView(View convertView, Context context, int index) {
+			Button button;
+
+			mIndex = index;
+
 			if (convertView != null) {
-				mButton = (Button) convertView;
+				button = (Button) convertView;
 			} else {
-				mButton = new Button(context);
+				button = new Button(context);
 			}
 
-			updateText(mButton);
-			mButton.setOnClickListener(this);
+			updateText(button);
+			button.setOnClickListener(this);
 
-			return mButton;
+			return button;
 		}
 
 		public void updateText(Button button) {
-			// CavanUtils.logE("mConnected = " + mConnected + ", mDiscovered = " + mDiscovered);
+			CavanUtils.logE("mConnected = " + mConnected + ", mDiscovered = " + mDiscovered);
+
+			int color;
 
 			if (mConnected) {
 				if (mDiscovered) {
-					button.setTextColor(Color.GREEN);
+					color = Color.GREEN;
 				} else {
-					button.setTextColor(Color.BLUE);
+					color = Color.BLUE;
 				}
 			} else {
-				button.setTextColor(Color.RED);
+				color = Color.RED;
 			}
 
+			button.setTextColor(color);
 			button.setText(toString());
 		}
 
-		public void updateText() {
-			if (mButton != null) {
-				updateText(mButton);
-				mButton.invalidate();
+		public void updateTextSync() {
+			Button button = (Button) mListViewDevices.getChildAt(mIndex);
+			if (button != null) {
+				updateText(button);
 			}
+		}
+
+		public void updateText() {
+			Message message = mHandler.obtainMessage(0, this);
+			message.sendToTarget();
 		}
 
 		public void setRssi(int rssi) {
@@ -214,6 +228,9 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 		}
 
 		public BluetoothGatt connectGatt(Context context) {
+			closeGatt();
+			setScanState(false);
+
 			return mDevice.connectGatt(context, false, mBluetoothGattCallback);
 		}
 
@@ -245,14 +262,6 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 
 		@Override
 		public void onClick(View v) {
-			setScanState(false);
-
-			if (mBluetoothGatt != null) {
-				mBluetoothGatt.disconnect();
-				mBluetoothGatt.close();
-				mBluetoothGatt = null;
-			}
-
 			mBluetoothGatt = connectGatt(MainActivity.this);
 		}
 	}
@@ -281,7 +290,7 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 				return null;
 			}
 
-			return device.createView(convertView, getApplicationContext());
+			return device.createView(convertView, getApplicationContext(), position);
 		}
 
 		public void updateDeviceList() {
@@ -310,17 +319,21 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 		mListViewDevices.setAdapter((ListAdapter) mDeviceAdapter);
 	}
 
+	public void closeGatt() {
+		if (mBluetoothGatt != null) {
+			mBluetoothGatt.disconnect();
+			mBluetoothGatt.close();
+			mBluetoothGatt = null;
+		}
+	}
+
 	@SuppressWarnings("deprecation")
 	private void setScanState(boolean enable) {
 		if (enable) {
 			mBluetoothAdapter.enable();
 			mHashMapDevices.clear();
 
-			if (mBluetoothGatt != null) {
-				mBluetoothGatt.disconnect();
-				mBluetoothGatt.close();
-				mBluetoothGatt = null;
-			}
+			closeGatt();
 
 			for (BluetoothDevice device : mBluetoothAdapter.getBondedDevices()) {
 				mHashMapDevices.put(device.getAddress(), new MyBluetoothDevice(device, 0));
