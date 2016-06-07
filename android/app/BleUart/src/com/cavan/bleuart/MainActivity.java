@@ -17,7 +17,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
-import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,7 +27,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import com.cavan.cavanutils.CavanUtils;
@@ -39,6 +37,8 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
     public static final UUID SERVICE_UUID	= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7");
     public static final UUID RX_UUID		= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cba");
     public static final UUID TX_UUID		= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb8");
+    public static final UUID OTA_UUID		= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cbb");
+    public static final UUID DESC_UUID		= UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
     public static final UUID CFG_UUID		= UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
 	private BluetoothManager mBluetoothManager;
@@ -200,7 +200,6 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			if (mConnected) {
 				if (mDiscovered) {
 					color = Color.GREEN;
-					mButtonSend.setEnabled(true);
 				} else {
 					color = Color.BLUE;
 				}
@@ -217,6 +216,8 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			if (button != null) {
 				updateText(button);
 			}
+
+			mButtonSend.setEnabled(mConnected && mDiscovered);
 		}
 
 		public void updateText() {
@@ -359,7 +360,7 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 		mButtonSend.setEnabled(false);
 
 		mListViewDevices = (ListView) findViewById(R.id.listViewDevices);
-		mListViewDevices.setAdapter((ListAdapter) mDeviceAdapter);
+		mListViewDevices.setAdapter(mDeviceAdapter);
 	}
 
 	public void closeGatt() {
@@ -368,8 +369,6 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			mBluetoothGatt.close();
 			mBluetoothGatt = null;
 		}
-
-		mButtonSend.setEnabled(false);
 	}
 
 	public boolean sendData(byte[] bytes) {
@@ -391,10 +390,6 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			mHashMapDevices.clear();
 
 			closeGatt();
-
-			for (BluetoothDevice device : mBluetoothAdapter.getBondedDevices()) {
-				mHashMapDevices.put(device.getAddress(), new MyBluetoothDevice(device, 0));
-			}
 
 			mDeviceAdapter.updateDeviceList();
 
