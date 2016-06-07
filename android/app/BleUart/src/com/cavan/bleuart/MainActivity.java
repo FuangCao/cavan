@@ -27,6 +27,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
@@ -38,6 +39,7 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
     public static final UUID SERVICE_UUID	= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7");
     public static final UUID RX_UUID		= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cba");
     public static final UUID TX_UUID		= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb8");
+    public static final UUID CFG_UUID		= UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
 	private BluetoothManager mBluetoothManager;
 	private BluetoothAdapter mBluetoothAdapter;
@@ -49,6 +51,8 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 
 	private boolean mScanning;
 	private Button mButtonScan;
+	private Button mButtonSend;
+	private EditText mEditText;
 	private ListView mListViewDevices;
 	private HashMap<String, MyBluetoothDevice> mHashMapDevices = new HashMap<String, MyBluetoothDevice>();
 	private List<MyBluetoothDevice> mListDevices = new ArrayList<MyBluetoothDevice>();
@@ -79,24 +83,19 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 				case BluetoothProfile.STATE_CONNECTED:
 					mConnected = true;
 					mDiscovered = false;
+					updateText();
 					gatt.discoverServices();
 					break;
 
 				case BluetoothProfile.STATE_DISCONNECTED:
-					mConnected = false;
-					closeGatt();
+					disconnect();
 					break;
 				}
-
-				updateText();
 			}
 
 			@Override
 			public void onServicesDiscovered(BluetoothGatt gatt, int status) {
 				CavanUtils.logE("onServicesDiscovered: status = " + status);
-
-				mDiscovered = true;
-				updateText();
 
 				int serviceIndex = 0;
 
@@ -116,11 +115,12 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 					}
 				}
 
-				mGattService = mBluetoothGatt.getService(SERVICE_UUID);
-				mCharacteristicTx = mGattService.getCharacteristic(TX_UUID);
-				mCharacteristicRx = mGattService.getCharacteristic(RX_UUID);
-
-				mBluetoothGatt.setCharacteristicNotification(mCharacteristicTx, true);
+				if (linkService()) {
+					mDiscovered = true;
+					updateText();
+				} else {
+					disconnect();
+				}
 
 				super.onServicesDiscovered(gatt, status);
 			}
@@ -140,6 +140,7 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			@Override
 			public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
 				CavanUtils.logE("onCharacteristicChanged: text = " + new String(characteristic.getValue()));
+				sendData(characteristic.getValue());
 				super.onCharacteristicChanged(gatt, characteristic);
 			}
 
@@ -174,7 +175,7 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			mDevice = device;
 		}
 
-		public Button createView(View convertView, Context context, int index) {
+		public Button createView(View convertView, int index) {
 			Button button;
 
 			mIndex = index;
@@ -182,7 +183,7 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			if (convertView != null) {
 				button = (Button) convertView;
 			} else {
-				button = new Button(context);
+				button = new Button(MainActivity.this);
 			}
 
 			updateText(button);
@@ -199,6 +200,7 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			if (mConnected) {
 				if (mDiscovered) {
 					color = Color.GREEN;
+					mButtonSend.setEnabled(true);
 				} else {
 					color = Color.BLUE;
 				}
@@ -227,11 +229,41 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			updateText();
 		}
 
-		public BluetoothGatt connectGatt(Context context) {
+		public boolean linkService() {
+			mGattService = mBluetoothGatt.getService(SERVICE_UUID);
+			if (mGattService == null) {
+				return false;
+			}
+
+			mCharacteristicTx = mGattService.getCharacteristic(TX_UUID);
+			mCharacteristicRx = mGattService.getCharacteristic(RX_UUID);
+			if (mCharacteristicTx == null || mCharacteristicRx == null) {
+				return false;
+			}
+
+			mBluetoothGatt.setCharacteristicNotification(mCharacteristicTx, true);
+
+			BluetoothGattDescriptor descriptor = mCharacteristicTx.getDescriptor(CFG_UUID);
+			if (descriptor != null) {
+				descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+				mBluetoothGatt.writeDescriptor(descriptor);
+			}
+
+			return true;
+		}
+
+		public void connect() {
 			closeGatt();
 			setScanState(false);
 
-			return mDevice.connectGatt(context, false, mBluetoothGattCallback);
+			mBluetoothGatt = mDevice.connectGatt(MainActivity.this, false, mBluetoothGattCallback);
+		}
+
+		public void disconnect() {
+			closeGatt();
+			mConnected = false;
+			mDiscovered = false;
+			updateText();
 		}
 
 		@Override
@@ -262,7 +294,13 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 
 		@Override
 		public void onClick(View v) {
-			mBluetoothGatt = connectGatt(MainActivity.this);
+			if (mConnected && mBluetoothGatt != null) {
+				closeGatt();
+				mConnected = false;
+				updateTextSync();
+			} else {
+				connect();
+			}
 		}
 	}
 
@@ -290,7 +328,7 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 				return null;
 			}
 
-			return device.createView(convertView, getApplicationContext(), position);
+			return device.createView(convertView, position);
 		}
 
 		public void updateDeviceList() {
@@ -315,6 +353,11 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 		mButtonScan = (Button) findViewById(R.id.buttonScan);
 		mButtonScan.setOnClickListener(this);
 
+		mEditText = (EditText) findViewById(R.id.editTextData);
+		mButtonSend = (Button) findViewById(R.id.buttonSend);
+		mButtonSend.setOnClickListener(this);
+		mButtonSend.setEnabled(false);
+
 		mListViewDevices = (ListView) findViewById(R.id.listViewDevices);
 		mListViewDevices.setAdapter((ListAdapter) mDeviceAdapter);
 	}
@@ -325,6 +368,20 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			mBluetoothGatt.close();
 			mBluetoothGatt = null;
 		}
+
+		mButtonSend.setEnabled(false);
+	}
+
+	public boolean sendData(byte[] bytes) {
+		if (mCharacteristicRx == null || mBluetoothGatt == null) {
+			return false;
+		}
+
+		return mCharacteristicRx.setValue(bytes) && mBluetoothGatt.writeCharacteristic(mCharacteristicRx);
+	}
+
+	public boolean sendText(String text) {
+		return sendData(text.getBytes());
 	}
 
 	@SuppressWarnings("deprecation")
@@ -365,7 +422,15 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 
 	@Override
 	public void onClick(View v) {
-		switchScanState();
+		switch (v.getId()) {
+		case R.id.buttonScan:
+			switchScanState();
+			break;
+
+		case R.id.buttonSend:
+			sendText(mEditText.getText().toString());
+			break;
+		}
 	}
 
 	@Override

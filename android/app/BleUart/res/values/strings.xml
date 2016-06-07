@@ -4,5 +4,6 @@
     <string name="app_name">蓝牙串口</string>
     <string name="text_scan_start">开始扫描</string>
     <string name="text_scan_stop">停止扫描</string>
+    <string name="text_send">发送</string>
 
 </resources>
