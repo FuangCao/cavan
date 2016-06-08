@@ -23,39 +23,45 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.cavan.cavanutils.CavanGattCharacteristic;
+import com.cavan.cavanutils.CavanHexFile;
 import com.cavan.cavanutils.CavanUtils;
 
 @SuppressLint("HandlerLeak")
-public class MainActivity extends Activity implements OnClickListener, LeScanCallback {
+public class MainActivity extends Activity implements OnClickListener, LeScanCallback, OnLongClickListener {
 
     public static final UUID SERVICE_UUID	= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7");
     public static final UUID RX_UUID		= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cba");
     public static final UUID TX_UUID		= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb8");
     public static final UUID OTA_UUID		= UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cbb");
-    public static final UUID DESC_UUID		= UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
-    public static final UUID CFG_UUID		= UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
 	private BluetoothManager mBluetoothManager;
 	private BluetoothAdapter mBluetoothAdapter;
 
 	private BluetoothGatt mBluetoothGatt;
 	private BluetoothGattService mGattService;
-	private BluetoothGattCharacteristic mCharacteristicTx;
-	private BluetoothGattCharacteristic mCharacteristicRx;
+	private CavanGattCharacteristic mCharacteristicTx = new CavanGattCharacteristic();
+	private CavanGattCharacteristic mCharacteristicRx = new CavanGattCharacteristic();
+	private CavanGattCharacteristic mCharacteristicOta = new CavanGattCharacteristic();
 
 	private boolean mScanning;
+	private boolean mConnected;
 	private Button mButtonScan;
 	private Button mButtonSend;
-	private EditText mEditText;
+	private Button mButtonUpgrade;
+	private EditText mEditTextSend;
+	private EditText mEditTextRecv;
 	private ListView mListViewDevices;
 	private HashMap<String, MyBluetoothDevice> mHashMapDevices = new HashMap<String, MyBluetoothDevice>();
 	private List<MyBluetoothDevice> mListDevices = new ArrayList<MyBluetoothDevice>();
+	private MyBluetoothDevice mDeviceCurrent;
 	private DeviceAdapter mDeviceAdapter = new DeviceAdapter();
 
 	private Handler mHandler = new Handler() {
@@ -127,32 +133,34 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 
 			@Override
 			public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-				CavanUtils.logE("onCharacteristicRead: characteristic = " + characteristic + ", status = " + status);
+				CavanUtils.logE("onCharacteristicRead: characteristic = " + characteristic.getUuid() + ", status = " + status);
 				super.onCharacteristicRead(gatt, characteristic, status);
 			}
 
 			@Override
 			public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-				CavanUtils.logE("onCharacteristicWrite: characteristic = " + characteristic + ", status = " + status);
+				CavanUtils.logE("onCharacteristicWrite: characteristic = " + characteristic.getUuid() + ", status = " + status);
+				setWriteStatus(characteristic, status);
 				super.onCharacteristicWrite(gatt, characteristic, status);
 			}
 
 			@Override
 			public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-				CavanUtils.logE("onCharacteristicChanged: text = " + new String(characteristic.getValue()));
-				sendData(characteristic.getValue());
+				String text = new String(characteristic.getValue());
+				CavanUtils.logE("onCharacteristicChanged: text = " + text);
+				mEditTextRecv.append(text);
 				super.onCharacteristicChanged(gatt, characteristic);
 			}
 
 			@Override
 			public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-				CavanUtils.logE("onDescriptorRead: descriptor = " + descriptor + ", status = " + status);
+				CavanUtils.logE("onDescriptorRead: descriptor = " + descriptor.getUuid() + ", status = " + status);
 				super.onDescriptorRead(gatt, descriptor, status);
 			}
 
 			@Override
 			public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-				CavanUtils.logE("onDescriptorWrite: descriptor = " + descriptor + ", status = " + status);
+				CavanUtils.logE("onDescriptorWrite: descriptor = " + descriptor.getUuid() + ", status = " + status);
 				super.onDescriptorWrite(gatt, descriptor, status);
 			}
 
@@ -217,7 +225,9 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 				updateText(button);
 			}
 
-			mButtonSend.setEnabled(mConnected && mDiscovered);
+			if (mDeviceCurrent == this) {
+				setConnectState(mConnected && mDiscovered);
+			}
 		}
 
 		public void updateText() {
@@ -236,19 +246,15 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 				return false;
 			}
 
-			mCharacteristicTx = mGattService.getCharacteristic(TX_UUID);
-			mCharacteristicRx = mGattService.getCharacteristic(RX_UUID);
-			if (mCharacteristicTx == null || mCharacteristicRx == null) {
+			if (!mCharacteristicTx.init(mBluetoothGatt, mGattService, TX_UUID)) {
 				return false;
 			}
 
-			mBluetoothGatt.setCharacteristicNotification(mCharacteristicTx, true);
-
-			BluetoothGattDescriptor descriptor = mCharacteristicTx.getDescriptor(CFG_UUID);
-			if (descriptor != null) {
-				descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-				mBluetoothGatt.writeDescriptor(descriptor);
+			if (!mCharacteristicRx.init(mBluetoothGatt, mGattService, RX_UUID)) {
+				return false;
 			}
+
+			mCharacteristicOta.init(mBluetoothGatt, mGattService, OTA_UUID);
 
 			return true;
 		}
@@ -295,6 +301,8 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 
 		@Override
 		public void onClick(View v) {
+			mDeviceCurrent = this;
+
 			if (mConnected && mBluetoothGatt != null) {
 				closeGatt();
 				mConnected = false;
@@ -351,13 +359,19 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 		mBluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
 		mBluetoothAdapter = mBluetoothManager.getAdapter();
 
+		mEditTextRecv = (EditText) findViewById(R.id.editTextRecv);
+		mEditTextRecv.setOnLongClickListener(this);
 		mButtonScan = (Button) findViewById(R.id.buttonScan);
 		mButtonScan.setOnClickListener(this);
 
-		mEditText = (EditText) findViewById(R.id.editTextData);
+		mEditTextSend = (EditText) findViewById(R.id.editTextSend);
 		mButtonSend = (Button) findViewById(R.id.buttonSend);
 		mButtonSend.setOnClickListener(this);
 		mButtonSend.setEnabled(false);
+
+		mButtonUpgrade = (Button) findViewById(R.id.buttonUpgrade);
+		mButtonUpgrade.setOnClickListener(this);
+		mButtonUpgrade.setEnabled(false);
 
 		mListViewDevices = (ListView) findViewById(R.id.listViewDevices);
 		mListViewDevices.setAdapter(mDeviceAdapter);
@@ -371,16 +385,20 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 		}
 	}
 
-	public boolean sendData(byte[] bytes) {
-		if (mCharacteristicRx == null || mBluetoothGatt == null) {
-			return false;
+	public boolean setWriteStatus(BluetoothGattCharacteristic characteristic, int status) {
+		if (mCharacteristicRx.setWriteStatus(characteristic, status)) {
+			return true;
 		}
 
-		return mCharacteristicRx.setValue(bytes) && mBluetoothGatt.writeCharacteristic(mCharacteristicRx);
+		if (mCharacteristicOta.setWriteStatus(characteristic, status)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean sendText(String text) {
-		return sendData(text.getBytes());
+		return mCharacteristicRx.writeData(text.getBytes(), true);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -415,6 +433,40 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 		setScanState(!mScanning);
 	}
 
+	private boolean otaUpgrade() {
+		CavanHexFile file = new CavanHexFile("/data/local/tmp/dialog.hex");
+		byte[] bytes = file.parse();
+		if (bytes == null) {
+			CavanUtils.logE("Failed to parse hex file");
+			return false;
+		}
+
+		int length = (bytes.length + 7) & (~0x07);
+		byte[] header = { 0x70, 0x50, 0x00, 0x00, 0x00, 0x00, (byte) ((length >> 8) & 0xFF), (byte) (length & 0xFF) };
+		if (!mCharacteristicOta.writeData(header, true)) {
+			return false;
+		}
+
+		return mCharacteristicOta.writeData(bytes, 128);
+	}
+
+	private void setConnectState(boolean connected) {
+		if (mConnected == connected) {
+			return;
+		}
+
+		mConnected = connected;
+
+		mHandler.post(new Runnable() {
+
+			@Override
+			public void run() {
+				mButtonSend.setEnabled(mConnected);
+				mButtonUpgrade.setEnabled(mConnected && mCharacteristicOta != null);
+			}
+		});
+	}
+
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
@@ -423,7 +475,16 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 			break;
 
 		case R.id.buttonSend:
-			sendText(mEditText.getText().toString());
+			sendText(mEditTextSend.getText().toString());
+			break;
+
+		case R.id.buttonUpgrade:
+			CavanUtils.showToast(this, R.string.text_upgrade_start);
+			if (otaUpgrade()) {
+				CavanUtils.showToast(this, R.string.text_upgrade_successfull);
+			} else {
+				CavanUtils.showToast(this, R.string.text_upgrade_failed);
+			}
 			break;
 		}
 	}
@@ -435,9 +496,27 @@ public class MainActivity extends Activity implements OnClickListener, LeScanCal
 		if (myDevice == null) {
 			myDevice = new MyBluetoothDevice(device, rssi);
 			mHashMapDevices.put(address, myDevice);
-			mDeviceAdapter.updateDeviceList();
+
+			mHandler.post(new Runnable() {
+
+				@Override
+				public void run() {
+					mDeviceAdapter.updateDeviceList();
+				}
+			});
 		} else {
 			myDevice.setRssi(rssi);
 		}
+	}
+
+	@Override
+	public boolean onLongClick(View v) {
+		switch (v.getId()) {
+		case R.id.editTextRecv:
+			mEditTextRecv.setText(new String());
+			break;
+		}
+
+		return false;
 	}
 }

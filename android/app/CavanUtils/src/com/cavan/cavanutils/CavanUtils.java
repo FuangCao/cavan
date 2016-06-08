@@ -13,31 +13,10 @@ import android.widget.Toast;
 public class CavanUtils {
 	public static final String TAG = "Cavan";
 
-	static {
-		try {
-			Looper.prepare();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	public static final int EVENT_CLEAR_TOAST = 1;
 
 	private static Toast sToast;
 	private static final Object sToastLock = new Object();
-
-	private static final Handler HANDLER = new Handler() {
-
-		@Override
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case EVENT_CLEAR_TOAST:
-				cancelToast();
-				break;
-			}
-		}
-	};
-
 
 	public static String getEnv(String name) {
 		return System.getenv(name);
@@ -135,6 +114,10 @@ public class CavanUtils {
 		return Log.d(TAG, message, throwable);
 	}
 
+	public static final int dumpstack(Throwable throwable) {
+		return logE("Dump Stack", throwable);
+	}
+
 	public static final int dumpstack() {
 		return logE("Dump Stack", new Throwable());
 	}
@@ -154,7 +137,14 @@ public class CavanUtils {
 	}
 
 	public static int ArrayCopy(byte[] src, byte[] dest) {
-		return ArrayCopy(src, 0, dest, 0, src.length);
+		int length = Math.min(src.length, dest.length);
+		return ArrayCopy(src, dest, length);
+	}
+
+	public static byte[] ArrayCopy(byte[] bytes, int start, int count) {
+		byte[] newBytes = new byte[count];
+		ArrayCopy(bytes, start, newBytes, 0, count);
+		return newBytes;
 	}
 
 	public static void cancelToastLocked() {
@@ -162,8 +152,6 @@ public class CavanUtils {
 			sToast.cancel();
 			sToast = null;
 		}
-
-		HANDLER.removeMessages(EVENT_CLEAR_TOAST);
 	}
 
 	public static void cancelToast() {
@@ -173,14 +161,14 @@ public class CavanUtils {
 	}
 
 	public static void showToast(Context context, String text, int duration) {
+		logD(text);
+
 		Toast toast = Toast.makeText(context, text, duration);
 		synchronized (sToastLock) {
 			cancelToastLocked();
 
 			sToast = toast;
 			toast.show();
-
-			HANDLER.sendEmptyMessageDelayed(EVENT_CLEAR_TOAST, 10000);
 		}
 	}
 
@@ -205,5 +193,41 @@ public class CavanUtils {
 
 	public static void showToastLong(Context context, int resId) {
 		showToast(context, resId, Toast.LENGTH_LONG);
+	}
+
+	public static int parseChar(byte c) {
+		if (c >= '0' && c <= '9') {
+			return c - '0';
+		} else if (c >= 'a' && c <= 'z') {
+			return c - 'a' + 10;
+		} else if (c >= 'A' && c <= 'Z') {
+			return c - 'A' + 10;
+		} else {
+			return 0;
+		}
+	}
+
+	public static int parseHexText(byte[] bytes, byte[] text, int start, int end) {
+		int count;
+
+		for (count = 0; start <= end; start += 2, count++) {
+			bytes[count] = (byte) (parseChar(text[start]) << 4 | parseChar(text[start + 1]));
+		}
+
+		return count;
+	}
+
+	public static byte[] parseHexText(byte[] text, int start, int count) {
+		byte[] bytes = new byte[count / 2];
+		parseHexText(bytes, text, start, count - 1);
+		return bytes;
+	}
+
+	public static byte[] parseHexText(byte[] text, int count) {
+		return parseHexText(text, 0, count);
+	}
+
+	public static byte[] parseHexText(byte[] text) {
+		return parseHexText(text, 0, text.length);
 	}
 }
