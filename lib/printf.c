@@ -277,7 +277,7 @@ int cavan_vsnprintf(char *const buff, size_t size, const char *fmt, cavan_va_lis
 		default:
 			switch (type) {
 			case CAVAN_PRINTF_TYPE_PTR:
-				value = (ullong) cavan_va_arg(ap, void *);
+				value = (ulong) cavan_va_arg(ap, void *);
 				break;
 
 			case CAVAN_PRINTF_TYPE_ULLONG:
