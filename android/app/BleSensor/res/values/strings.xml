@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">蓝牙传感器</string>
+    <string name="text_scan_start">开始扫描</string>
+    <string name="text_scan_stop">停止扫描</string>
+    <string name="text_send">发送</string>
+    <string name="text_upgrade">升级</string>
+    <string name="text_upgrade_start">开始升级</string>
+    <string name="text_upgrade_failed">升级失败</string>
+    <string name="text_upgrade_successfull">升级成功</string>
+
+</resources>

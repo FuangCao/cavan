@@ -1,12 +1,13 @@
 package com.cavan.cavanutils;
 
 import java.util.UUID;
-
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
+@SuppressLint("NewApi")
 public class CavanGattCharacteristic {
 
 	public static final UUID CFG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
@@ -100,12 +101,12 @@ public class CavanGattCharacteristic {
 		notify();
 	}
 
-	public boolean setWriteStatus(BluetoothGattCharacteristic characteristic, int status) {
-		if (mCharacteristic == null) {
-			return false;
-		}
+	public boolean match(BluetoothGattCharacteristic characteristic) {
+		return mCharacteristic != null && mCharacteristic.equals(characteristic);
+	}
 
-		if (mCharacteristic.equals(characteristic)) {
+	public boolean setWriteStatus(BluetoothGattCharacteristic characteristic, int status) {
+		if (match(characteristic)) {
 			setWriteStatus(status);
 			return true;
 		}
