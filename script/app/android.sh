@@ -138,7 +138,7 @@ function cavan-apk-encode()
 
 function cavan-apk-rename()
 {
-	local ROOT_DIR MANIFEST PACKAGE PACKAGE_NEW APK_UNSIGNED APK_SIGNED
+	local ROOT_DIR MANIFEST PACKAGE PACKAGE_NEW APK_UNSIGNED APK_SIGNED APK_TARGET
 
 	[ "$1" ] ||
 	{
@@ -176,14 +176,27 @@ function cavan-apk-rename()
 
 	sed -i "s/\(android:name=\"\)\./\1${PACKAGE}./g" "${MANIFEST}" || return 1
 	sed -i "s/\(\bpackage=\)\"${PACKAGE}\"/\1\"${PACKAGE_NEW}\"/g" "${MANIFEST}" || return 1
+	sed -i "s/\(\bandroid:authorities=\"\)${PACKAGE}/\1${PACKAGE_NEW}/g" "${MANIFEST}" || return 1
+
+	for fn in $(find "${OUT_DIR}" -name "*.smali")
+	do
+		sed -i "s#\(/data/data/\)${PACKAGE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
+	done
 
 	APK_UNSIGNED="${OUT_DIR}/cavan-unsigned.apk"
 
 	echo "encode: ${OUT_DIR} => ${APK_UNSIGNED}"
 	cavan-apk-encode "${OUT_DIR}" -o "${APK_UNSIGNED}" || return 1
 
-	APK_SIGNED="${OUT_DIR}/cavan.apk"
+	APK_SIGNED="${OUT_DIR}/cavan-signed.apk"
 
 	echo "signature: ${APK_UNSIGNED} => ${APK_SIGNED}"
 	cavan-apk-sign "${APK_UNSIGNED}" "${APK_SIGNED}" || return 1
+
+	APK_TARGET="${OUT_DIR}/cavan.apk"
+
+	echo "zipalign: ${APK_SIGNED}" "${APK_TARGET}"
+	zipalign -v 4 "${APK_SIGNED}" "${APK_TARGET}" || return 1
+
+	echo "File stored in: ${APK_TARGET}"
 }
