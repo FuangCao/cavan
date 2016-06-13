@@ -99,13 +99,91 @@ function cavan-sign-update-zip()
 	return 0
 }
 
-function cavan-sign-apk()
+function cavan-apk-sign()
 {
-	local TARGET_KEYSTORE="${CAVAN_HOME}/build/core/cavan.keystore"
+	local KEYSTORE APK_UNSIGNED APK_SIGNED
 
-	jarsigner -storepass CFA8888 -keystore ${TARGET_KEYSTORE} -signedjar ${1}-signed.apk ${1} ${TARGET_KEYSTORE}
+	[ "$1" ] || return 1
+
+	APK_UNSIGNED="$1"
+
+	if [ "$2" ]
+	then
+		APK_SIGNED="$2"
+	else
+		APK_SIGNED="${APK_UNSIGNED}-signed.apk"
+	fi
+
+	KEYSTORE="${CAVAN_HOME}/build/core/cavan.keystore"
+
+	jarsigner -digestalg "SHA1" -sigalg "MD5withRSA" -tsa "https://timestamp.geotrust.com/tsa" -storepass "CFA8888" -keystore "${KEYSTORE}" -signedjar "${APK_SIGNED}" "${APK_UNSIGNED}" "${KEYSTORE}"
 }
 
-alias cavan-apktool="java -jar ${APKTOOL_JAR}"
-alias cavan-apktool-unpack="cavan-apktool d -f"
-alias cavan-apktool-pack="cavan-apktool b -f"
+function cavan-apktool()
+{
+	java -jar "${APKTOOL_JAR}" $@
+}
+
+alias apktool="cavan-apktool"
+
+function cavan-apk-decode()
+{
+	cavan-apktool d -f $@
+}
+
+function cavan-apk-encode()
+{
+	cavan-apktool b -f $@
+}
+
+function cavan-apk-rename()
+{
+	local ROOT_DIR MANIFEST PACKAGE PACKAGE_NEW APK_UNSIGNED APK_SIGNED
+
+	[ "$1" ] ||
+	{
+		echo "cavan-apk-rename xxxx.apk NAME NAME_NEW"
+		return 1
+	}
+
+	OUT_DIR="/tmp/cavan-apk"
+	echo "OUT_DIR = ${OUT_DIR}"
+
+	rm -rf "${OUT_DIR}"
+
+	echo "decode: $1 => ${OUT_DIR}"
+	cavan-apk-decode "$1" -o "${OUT_DIR}" || return 1
+
+	MANIFEST="${OUT_DIR}/AndroidManifest.xml"
+	echo "MANIFEST = ${MANIFEST}"
+
+	if [ "$3" ]
+	then
+		PACKAGE="$2"
+		PACKAGE_NEW="$3"
+	else
+		PACKAGE=$(cat "${MANIFEST}" | grep '\bpackage="[^"]\+"' | sed 's/^.*package="\([^"]\+\)".*$/\1/g')
+
+		if [ "$2" ]
+		then
+			PACKAGE_NEW="$2"
+		else
+			PACKAGE_NEW="com.cavan.${PACKAGE}"
+		fi
+	fi
+
+	echo "rename: ${PACKAGE} => ${PACKAGE_NEW}"
+
+	sed -i "s/\(android:name=\"\)\./\1${PACKAGE}./g" "${MANIFEST}" || return 1
+	sed -i "s/\(\bpackage=\)\"${PACKAGE}\"/\1\"${PACKAGE_NEW}\"/g" "${MANIFEST}" || return 1
+
+	APK_UNSIGNED="${OUT_DIR}/cavan-unsigned.apk"
+
+	echo "encode: ${OUT_DIR} => ${APK_UNSIGNED}"
+	cavan-apk-encode "${OUT_DIR}" -o "${APK_UNSIGNED}" || return 1
+
+	APK_SIGNED="${OUT_DIR}/cavan.apk"
+
+	echo "signature: ${APK_UNSIGNED} => ${APK_SIGNED}"
+	cavan-apk-sign "${APK_UNSIGNED}" "${APK_SIGNED}" || return 1
+}
