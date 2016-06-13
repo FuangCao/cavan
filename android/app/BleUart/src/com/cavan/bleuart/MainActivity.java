@@ -11,7 +11,8 @@ import android.view.View.OnLongClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.cavan.cavanutils.BleScanner;
+import com.cavan.cavanutils.CavanBleChar;
+import com.cavan.cavanutils.CavanBleScanner;
 import com.cavan.cavanutils.CavanBleUart;
 import com.cavan.cavanutils.CavanHexFile;
 import com.cavan.cavanutils.CavanUtils;
@@ -43,7 +44,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 		mButtonUpgrade = (Button) findViewById(R.id.buttonUpgrade);
 		mButtonUpgrade.setOnClickListener(this);
 
-		doScan();
+		CavanBleScanner.show(this, BLE_SCAN_RESULT);
 	}
 
 	public boolean sendText(String text) {
@@ -96,11 +97,6 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 		return false;
 	}
 
-	private void doScan() {
-		Intent intent = new Intent(this, BleScanner.class);
-		startActivityForResult(intent, BLE_SCAN_RESULT);
-	}
-
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		CavanUtils.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
@@ -110,7 +106,18 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 				finish();
 			}
 
-			mBleUart = new CavanBleUart(device);
+			mBleUart = new CavanBleUart(device) {
+
+				@Override
+				protected void onDisconnected() {
+					CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+				}
+
+				@Override
+				protected void onDataReceived(CavanBleChar bleChar, byte[] data) {
+				}
+			};
+
 			if (!mBleUart.connect(this)) {
 				finish();
 			}

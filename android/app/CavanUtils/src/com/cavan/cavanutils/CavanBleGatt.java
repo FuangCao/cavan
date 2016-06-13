@@ -15,18 +15,18 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 
 @SuppressLint("NewApi")
-public abstract class CavanBluetoothGatt extends BluetoothGattCallback {
+public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 	private UUID mUuid;
 	private BluetoothGatt mGatt;
 	private BluetoothDevice mDevice;
 	private BluetoothGattService mService;
-	private List<CavanGattCharacteristic> mReadCharacteristics = new ArrayList<CavanGattCharacteristic>();
-	private List<CavanGattCharacteristic> mWriteCharacteristics = new ArrayList<CavanGattCharacteristic>();
+	private List<CavanBleChar> mReadChars = new ArrayList<CavanBleChar>();
+	private List<CavanBleChar> mWriteChars = new ArrayList<CavanBleChar>();
 
 	protected abstract boolean doInit();
 
-	public CavanBluetoothGatt(BluetoothDevice device, UUID uuid) {
+	public CavanBleGatt(BluetoothDevice device, UUID uuid) {
 		super();
 		mDevice = device;
 		mUuid = uuid;
@@ -40,12 +40,12 @@ public abstract class CavanBluetoothGatt extends BluetoothGattCallback {
 
 	}
 
-	protected void onDataReceived(CavanGattCharacteristic characteristic, byte[] data) {
+	protected void onDataReceived(CavanBleChar bleChar, byte[] data) {
 
 	}
 
 	private void onDataReceived(BluetoothGattCharacteristic characteristic) {
-		for (CavanGattCharacteristic myChar : mReadCharacteristics) {
+		for (CavanBleChar myChar : mReadChars) {
 			if (myChar.match(characteristic)) {
 				onDataReceived(myChar, characteristic.getValue());
 				break;
@@ -53,7 +53,7 @@ public abstract class CavanBluetoothGatt extends BluetoothGattCallback {
 		}
 	}
 
-	public boolean connect(Context context) {
+	synchronized public boolean connect(Context context) {
 		mGatt = mDevice.connectGatt(context, false, this);
 		if (mGatt == null) {
 			return false;
@@ -62,12 +62,12 @@ public abstract class CavanBluetoothGatt extends BluetoothGattCallback {
 		return true;
 	}
 
-	private CavanGattCharacteristic openCharacteristic(UUID uuid, List<CavanGattCharacteristic> list) {
+	synchronized private CavanBleChar openChar(UUID uuid, List<CavanBleChar> list) {
 		if (mGatt == null || mService == null) {
 			return null;
 		}
 
-		CavanGattCharacteristic characteristic = new CavanGattCharacteristic();
+		CavanBleChar characteristic = new CavanBleChar();
 		if (characteristic.init(mGatt, mService, uuid)) {
 			list.add(characteristic);
 			return characteristic;
@@ -76,15 +76,15 @@ public abstract class CavanBluetoothGatt extends BluetoothGattCallback {
 		return null;
 	}
 
-	public CavanGattCharacteristic openReadCharacteristic(UUID uuid) {
-		return openCharacteristic(uuid, mReadCharacteristics);
+	public CavanBleChar openReadChar(UUID uuid) {
+		return openChar(uuid, mReadChars);
 	}
 
-	public CavanGattCharacteristic openWriteCharacteristic(UUID uuid) {
-		return openCharacteristic(uuid, mWriteCharacteristics);
+	public CavanBleChar openWriteChar(UUID uuid) {
+		return openChar(uuid, mWriteChars);
 	}
 
-	public void disconnect() {
+	synchronized public void disconnect() {
 		if (mGatt == null) {
 			return;
 		}
@@ -156,8 +156,8 @@ public abstract class CavanBluetoothGatt extends BluetoothGattCallback {
 
 	@Override
 	public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-		for (CavanGattCharacteristic myChar : mWriteCharacteristics) {
-			if (myChar.setWriteStatus(characteristic, status)) {
+		for (CavanBleChar bleChar : mWriteChars) {
+			if (bleChar.setWriteStatus(characteristic, status)) {
 				break;
 			}
 		}

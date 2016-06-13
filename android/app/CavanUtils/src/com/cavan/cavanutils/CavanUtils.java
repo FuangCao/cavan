@@ -111,6 +111,60 @@ public class CavanUtils {
 		return Log.d(TAG, message, throwable);
 	}
 
+	public static final StackTraceElement[] getStackTrace() {
+		return new Throwable().getStackTrace();
+	}
+
+	private static final StackTraceElement getCurrentStackTrace(int index) {
+		StackTraceElement[] traces = getStackTrace();
+		if (traces != null && traces.length > index) {
+			return traces[index];
+		}
+
+		return null;
+	}
+
+	public static final StackTraceElement getCurrentStackTrace() {
+		return getCurrentStackTrace(3);
+	}
+
+	public static final int logP() {
+		StackTraceElement trace = getCurrentStackTrace(3);
+		if (trace == null) {
+			return -1;
+		}
+
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(trace.getClassName());
+		builder.append(".");
+		builder.append(trace.getMethodName());
+		builder.append("(");
+		builder.append(trace.getFileName());
+		builder.append(":");
+		builder.append(trace.getLineNumber());
+		builder.append(")");
+
+		return logE(builder.toString());
+	}
+
+	public static final int logP(String message) {
+		StackTraceElement trace = getCurrentStackTrace(3);
+		if (trace == null) {
+			return -1;
+		}
+
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(trace.getMethodName());
+		builder.append("[");
+		builder.append(trace.getLineNumber());
+		builder.append("]: ");
+		builder.append(message);
+
+		return logE(builder.toString());
+	}
+
 	public static final int dumpstack(Throwable throwable) {
 		return logE("Dump Stack", throwable);
 	}
@@ -118,6 +172,7 @@ public class CavanUtils {
 	public static final int dumpstack() {
 		return logE("Dump Stack", new Throwable());
 	}
+
 
 	public static int ArrayCopy(byte[] src, int srcOff, byte[] dest, int destOff, int count) {
 		int srcEnd = srcOff + count;

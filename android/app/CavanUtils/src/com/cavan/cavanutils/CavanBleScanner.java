@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
@@ -21,8 +20,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
-@SuppressLint({ "HandlerLeak", "DefaultLocale", "NewApi" })
-public class BleScanner extends Activity implements LeScanCallback {
+public class CavanBleScanner extends Activity implements LeScanCallback {
 
 	private BluetoothManager mBluetoothManager;
 	private BluetoothAdapter mBluetoothAdapter;
@@ -60,7 +58,7 @@ public class BleScanner extends Activity implements LeScanCallback {
 			if (convertView != null) {
 				button = (Button) convertView;
 			} else {
-				button = new Button(BleScanner.this);
+				button = new Button(CavanBleScanner.this);
 			}
 
 			updateText(button);
@@ -163,6 +161,17 @@ public class BleScanner extends Activity implements LeScanCallback {
 		}
 	};
 
+	public static boolean show(Activity activity, int requestCode) {
+		if (activity.isDestroyed()) {
+			return false;
+		}
+
+		Intent intent = new Intent(activity, CavanBleScanner.class);
+		activity.startActivityForResult(intent, requestCode);
+
+		return true;
+	}
+
 	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -179,6 +188,13 @@ public class BleScanner extends Activity implements LeScanCallback {
 
 		mBluetoothAdapter.enable();
 		mBluetoothAdapter.startLeScan(this);
+	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	protected void onDestroy() {
+		mBluetoothAdapter.stopLeScan(this);
+		super.onDestroy();
 	}
 
 	@Override
