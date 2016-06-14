@@ -111,6 +111,10 @@ public class MainActivity extends Activity {
 		public void setValue(float value) {
 			mValue = value;
 		}
+
+		public void addValue(float value) {
+			mValue = (mValue * 19 + value) / 20;
+		}
 	};
 
 	@Override

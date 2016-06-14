@@ -178,9 +178,16 @@ function cavan-apk-rename()
 	sed -i "s/\(\bpackage=\)\"${PACKAGE}\"/\1\"${PACKAGE_NEW}\"/g" "${MANIFEST}" || return 1
 	sed -i "s/\(\bandroid:authorities=\"\)${PACKAGE}/\1${PACKAGE_NEW}/g" "${MANIFEST}" || return 1
 
-	for fn in $(find "${OUT_DIR}" -name "*.smali")
+	for fn in $(find "${OUT_DIR}" -type f -name "*.smali")
 	do
+		echo "Modify file: ${fn}"
 		sed -i "s#\(/data/data/\)${PACKAGE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
+	done
+
+	for fn in $(find "${OUT_DIR}/res" -type f -name "*.xml")
+	do
+		echo "Modify file: ${fn}"
+		sed -i "s#\b\(xmlns:app=\"http://schemas.android.com/apk/res/\)${PACKAGE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
 	done
 
 	APK_UNSIGNED="${OUT_DIR}/cavan-unsigned.apk"

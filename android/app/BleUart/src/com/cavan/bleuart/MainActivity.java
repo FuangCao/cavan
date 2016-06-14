@@ -115,6 +115,9 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 
 				@Override
 				protected void onDataReceived(CavanBleChar bleChar, byte[] data) {
+					String text = new String(data);
+					CavanUtils.logE("onDataReceived: " + text);
+					mEditTextRecv.append(text);
 				}
 			};
 
