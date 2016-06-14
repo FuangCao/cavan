@@ -138,7 +138,8 @@ function cavan-apk-encode()
 
 function cavan-apk-rename()
 {
-	local ROOT_DIR MANIFEST PACKAGE PACKAGE_NEW APK_UNSIGNED APK_SIGNED APK_TARGET
+	local ROOT_DIR MANIFEST PACKAGE PACKAGE_RE PACKAGE_NEW APK_UNSIGNED APK_SIGNED APK_TARGET
+	local SOURCE_DIR DEST_DIR SMALI_DIR SOURCE_SMALI DEST_SMALI
 
 	[ "$1" ] ||
 	{
@@ -174,20 +175,47 @@ function cavan-apk-rename()
 
 	echo "rename: ${PACKAGE} => ${PACKAGE_NEW}"
 
-	sed -i "s/\(android:name=\"\)\./\1${PACKAGE}./g" "${MANIFEST}" || return 1
-	sed -i "s/\(\bpackage=\)\"${PACKAGE}\"/\1\"${PACKAGE_NEW}\"/g" "${MANIFEST}" || return 1
-	sed -i "s/\(\bandroid:authorities=\"\)${PACKAGE}/\1${PACKAGE_NEW}/g" "${MANIFEST}" || return 1
+	PACKAGE_RE=${PACKAGE//./\\.}
+	echo "PACKAGE_RE = ${PACKAGE_RE}"
 
-	for fn in $(find "${OUT_DIR}" -type f -name "*.smali")
+	sed -i "s/\(android:name=\"\)\./\1${PACKAGE_RE}\./g" "${MANIFEST}" || return 1
+	sed -i "s/\(\bpackage=\)\"${PACKAGE_RE}\"/\1\"${PACKAGE_NEW}\"/g" "${MANIFEST}" || return 1
+	sed -i "s/\(\bandroid:authorities=\"\)${PACKAGE_RE}/\1${PACKAGE_NEW}/g" "${MANIFEST}" || return 1
+
+	SMALI_DIR="${OUT_DIR}/smali"
+	echo "SMALI_DIR = ${SMALI_DIR}"
+
+	for fn in $(find "${SMALI_DIR}" -type f -name "*.smali")
 	do
-		echo "Modify file: ${fn}"
-		sed -i "s#\(/data/data/\)${PACKAGE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
+		# echo "Modify file: ${fn}"
+		sed -i "s#\(/data/data/\)${PACKAGE_RE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
+		sed -i "s#\"${PACKAGE_RE}\"#\"${PACKAGE_NEW}\"#g" "${fn}" || return 1
 	done
 
 	for fn in $(find "${OUT_DIR}/res" -type f -name "*.xml")
 	do
-		echo "Modify file: ${fn}"
-		sed -i "s#\b\(xmlns:app=\"http://schemas.android.com/apk/res/\)${PACKAGE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
+		# echo "Modify file: ${fn}"
+		sed -i "s#\b\(xmlns:app=\"http://schemas.android.com/apk/res/\)${PACKAGE_RE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
+	done
+
+	SOURCE_DIR=${PACKAGE//./\/}
+	echo "SOURCE_DIR = ${SOURCE_DIR}"
+
+	SOURCE_SMALI="${SMALI_DIR}/${SOURCE_DIR}"
+	echo "SOURCE_SMALI = ${SOURCE_SMALI}"
+
+	DEST_DIR=${PACKAGE_NEW//./\/}
+	echo "DEST_DIR = ${DEST_DIR}"
+
+	DEST_SMALI="${SMALI_DIR}/${DEST_DIR}"
+	echo "DEST_SMALI = ${DEST_SMALI}"
+
+	mkdir -p "${DEST_SMALI}" || return 1
+	cp -a "${SOURCE_SMALI}"/* "${DEST_SMALI}" || return 1
+
+	for fn in $(find "${DEST_SMALI}" -type f -name "*.smali")
+	do
+		sed -i "s#L${SOURCE_DIR}/#L${DEST_DIR}/#g" "${fn}" || return 1
 	done
 
 	APK_UNSIGNED="${OUT_DIR}/cavan-unsigned.apk"
