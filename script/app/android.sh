@@ -147,27 +147,34 @@ function cavan-apk-rename()
 		return 1
 	}
 
-	OUT_DIR="/tmp/cavan-apk"
-	echo "OUT_DIR = ${OUT_DIR}"
+	ROOT_DIR="/tmp/cavan-apk-rename"
+	echo "ROOT_DIR = ${ROOT_DIR}"
 
-	rm -rf "${OUT_DIR}"
+	rm -rf "${ROOT_DIR}"
 
-	echo "decode: $1 => ${OUT_DIR}"
-	cavan-apk-decode "$1" -o "${OUT_DIR}" || return 1
+	echo "decode: $1 => ${ROOT_DIR}"
+	cavan-apk-decode "$1" -o "${ROOT_DIR}" || return 1
 
-	MANIFEST="${OUT_DIR}/AndroidManifest.xml"
+	MANIFEST="${ROOT_DIR}/AndroidManifest.xml"
 	echo "MANIFEST = ${MANIFEST}"
 
-	if [ "$3" ]
+	if [ "$2" ]
 	then
-		PACKAGE="$2"
-		PACKAGE_NEW="$3"
+		APK_TARGET="$2"
+	else
+		APK_TARGET="${ROOT_DIR}/cavan.apk"
+	fi
+
+	if [ "$4" ]
+	then
+		PACKAGE="$3"
+		PACKAGE_NEW="$4"
 	else
 		PACKAGE=$(cat "${MANIFEST}" | grep '\bpackage="[^"]\+"' | sed 's/^.*package="\([^"]\+\)".*$/\1/g')
 
-		if [ "$2" ]
+		if [ "$3" ]
 		then
-			PACKAGE_NEW="$2"
+			PACKAGE_NEW="$3"
 		else
 			PACKAGE_NEW="com.cavan.${PACKAGE}"
 		fi
@@ -182,7 +189,7 @@ function cavan-apk-rename()
 	sed -i "s/\(\bpackage=\)\"${PACKAGE_RE}\"/\1\"${PACKAGE_NEW}\"/g" "${MANIFEST}" || return 1
 	sed -i "s/\(\bandroid:authorities=\"\)${PACKAGE_RE}/\1${PACKAGE_NEW}/g" "${MANIFEST}" || return 1
 
-	SMALI_DIR="${OUT_DIR}/smali"
+	SMALI_DIR="${ROOT_DIR}/smali"
 	echo "SMALI_DIR = ${SMALI_DIR}"
 
 	for fn in $(find "${SMALI_DIR}" -type f -name "*.smali")
@@ -192,10 +199,10 @@ function cavan-apk-rename()
 		sed -i "s#\"${PACKAGE_RE}\"#\"${PACKAGE_NEW}\"#g" "${fn}" || return 1
 	done
 
-	for fn in $(find "${OUT_DIR}/res" -type f -name "*.xml")
+	for fn in $(find "${ROOT_DIR}/res" -type f -name "*.xml")
 	do
 		# echo "Modify file: ${fn}"
-		sed -i "s#\b\(xmlns:app=\"http://schemas.android.com/apk/res/\)${PACKAGE_RE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
+		sed -i "s#\b\(xmlns:\w\+=\"http://schemas.android.com/apk/res/\)${PACKAGE_RE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
 	done
 
 	SOURCE_DIR=${PACKAGE//./\/}
@@ -218,20 +225,37 @@ function cavan-apk-rename()
 		sed -i "s#L${SOURCE_DIR}/#L${DEST_DIR}/#g" "${fn}" || return 1
 	done
 
-	APK_UNSIGNED="${OUT_DIR}/cavan-unsigned.apk"
+	APK_UNSIGNED="${ROOT_DIR}/cavan-unsigned.apk"
 
-	echo "encode: ${OUT_DIR} => ${APK_UNSIGNED}"
-	cavan-apk-encode "${OUT_DIR}" -o "${APK_UNSIGNED}" || return 1
+	echo "encode: ${ROOT_DIR} => ${APK_UNSIGNED}"
+	cavan-apk-encode "${ROOT_DIR}" -o "${APK_UNSIGNED}" || return 1
 
-	APK_SIGNED="${OUT_DIR}/cavan-signed.apk"
+	APK_SIGNED="${ROOT_DIR}/cavan-signed.apk"
 
 	echo "signature: ${APK_UNSIGNED} => ${APK_SIGNED}"
 	cavan-apk-sign "${APK_UNSIGNED}" "${APK_SIGNED}" || return 1
-
-	APK_TARGET="${OUT_DIR}/cavan.apk"
 
 	echo "zipalign: ${APK_SIGNED}" "${APK_TARGET}"
 	zipalign -v 4 "${APK_SIGNED}" "${APK_TARGET}" || return 1
 
 	echo "File stored in: ${APK_TARGET}"
+}
+
+function cavan-apk-rename-auto()
+{
+	local ROOT_DIR APK_DEST
+
+	ROOT_DIR="${!#}"
+	echo "ROOT_DIR = ${ROOT_DIR}"
+
+	mkdir -p "${ROOT_DIR}" || return 1
+
+	while [ $# -gt 1 ]
+	do
+		APK_DEST="${ROOT_DIR}/$(basename -s .apk $1).cavan.apk"
+		echo "auto rename: $1 => ${APK_DEST}"
+
+		cavan-apk-rename "$1" "${APK_DEST}"
+		shift
+	done
 }
