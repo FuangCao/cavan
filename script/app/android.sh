@@ -138,7 +138,8 @@ function cavan-apk-encode()
 
 function cavan-apk-rename()
 {
-	local ROOT_DIR MANIFEST PACKAGE PACKAGE_RE PACKAGE_NEW APK_UNSIGNED APK_SIGNED APK_TARGET
+	local ROOT_DIR MANIFEST SUFFIX MIME_TYPE IMAGE_PATH
+	local PACKAGE PACKAGE_RE PACKAGE_NEW APK_UNSIGNED APK_SIGNED APK_TARGET
 	local SOURCE_DIR DEST_DIR SMALI_DIR SOURCE_SMALI DEST_SMALI
 
 	[ "$1" ] ||
@@ -205,6 +206,25 @@ function cavan-apk-rename()
 		sed -i "s#\b\(xmlns:\w\+=\"http://schemas.android.com/apk/res/\)${PACKAGE_RE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
 	done
 
+	for fn in $(find "${ROOT_DIR}/res" -type f)
+	do
+		MIME_TYPE=$(file -b --mime-type "${fn}")
+
+		case "${MIME_TYPE}" in
+			image/png)
+				SUFFIX="png";;
+			image/jpeg)
+				SUFFIX="jpg";;
+			image/gif)
+				SUFFIX="gif";;
+			*)
+				continue;;
+		esac
+
+		IMAGE_PATH=$(echo "${fn}" | sed "s/\(.*\.\).*$/\1${SUFFIX}/g")
+		[ "${fn}" = "${IMAGE_PATH}" ] || mv -v "${fn}" "${IMAGE_PATH}" || return 1
+	done
+
 	SOURCE_DIR=${PACKAGE//./\/}
 	echo "SOURCE_DIR = ${SOURCE_DIR}"
 
@@ -217,13 +237,16 @@ function cavan-apk-rename()
 	DEST_SMALI="${SMALI_DIR}/${DEST_DIR}"
 	echo "DEST_SMALI = ${DEST_SMALI}"
 
-	mkdir -p "${DEST_SMALI}" || return 1
-	cp -a "${SOURCE_SMALI}"/* "${DEST_SMALI}" || return 1
+	[ -d "${SOURCE_SMALI}" ] &&
+	{
+		mkdir -p "${DEST_SMALI}" || return 1
+		cp -a "${SOURCE_SMALI}"/* "${DEST_SMALI}" || return 1
 
-	for fn in $(find "${DEST_SMALI}" -type f -name "*.smali")
-	do
-		sed -i "s#L${SOURCE_DIR}/#L${DEST_DIR}/#g" "${fn}" || return 1
-	done
+		for fn in $(find "${DEST_SMALI}" -type f -name "*.smali")
+		do
+			sed -i "s#L${SOURCE_DIR}/#L${DEST_DIR}/#g" "${fn}" || return 1
+		done
+	}
 
 	APK_UNSIGNED="${ROOT_DIR}/cavan-unsigned.apk"
 
@@ -250,12 +273,19 @@ function cavan-apk-rename-auto()
 
 	mkdir -p "${ROOT_DIR}" || return 1
 
-	while [ $# -gt 1 ]
+	while [ "$2" ]
 	do
-		APK_DEST="${ROOT_DIR}/$(basename -s .apk $1).cavan.apk"
-		echo "auto rename: $1 => ${APK_DEST}"
+		echo "================================================================================"
 
-		cavan-apk-rename "$1" "${APK_DEST}"
+		APK_DEST="${ROOT_DIR}/$(basename -s .apk $1)-cavan.apk"
+		echo "rename: $1 => ${APK_DEST}"
+
+		if [ -f "${APK_DEST}" ]
+		then
+			echo "file exist skip: ${APK_DEST}"
+		else
+			cavan-apk-rename "$1" "${APK_DEST}" || return 1
+		fi
 		shift
 	done
 }
