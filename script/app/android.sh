@@ -138,10 +138,10 @@ function cavan-apk-encode()
 
 function cavan-apk-rename()
 {
-	local ROOT_DIR MANIFEST SUFFIX MIME_TYPE IMAGE_PATH SMALI
+	local ROOT_DIR MANIFEST SUFFIX MIME_TYPE IMAGE_PATH SMALI_DIR
 	local SOURCE_PKG SOURCE_RE SOURCE_DIR SOURCE_SMALI
 	local DEST_PKG DEST_RE DEST_DIR_DIR DEST_SMALI
-	local APK_UNSIGNED APK_SIGNED APK_TARGET SMALI_LIST
+	local APK_UNSIGNED APK_SIGNED APK_TARGET
 	local fn step
 
 	[ "$1" ] ||
@@ -207,7 +207,7 @@ function cavan-apk-rename()
 	DEST_DIR=${DEST_PKG//./\/}
 	echo "DEST_DIR = ${DEST_DIR}"
 
-	DEST_SMALI="${SMALI_DIR}/${DEST_DIR}"
+	DEST_SMALI="${SMALI_DIR}_classes2/${DEST_DIR}"
 	echo "DEST_SMALI = ${DEST_SMALI}"
 
 	for fn in $(find "${ROOT_DIR}/res" -type f -name "*.xml")
@@ -235,9 +235,7 @@ function cavan-apk-rename()
 		[ "${fn}" = "${IMAGE_PATH}" ] || mv -v "${fn}" "${IMAGE_PATH}" || return 1
 	done
 
-	SMALI_LIST=$(find "${SMALI_DIR}" -type f -name "*.smali")
-
-	for fn in ${SMALI_LIST}
+	for fn in $(find "${SMALI_DIR}" -type f -name "*.smali")
 	do
 		# echo "Modify file: ${fn}"
 		sed -i "s#\(/data/data/\)${SOURCE_RE}#\1${DEST_PKG}#g" "${fn}" || return 1
@@ -249,6 +247,8 @@ function cavan-apk-rename()
 	[ -d "${SOURCE_SMALI}" ] &&
 	{
 		rm -rf "${DEST_SMALI}"
+
+		echo "copy: ${SOURCE_SMALI} => ${DEST_SMALI}"
 		cp -a "${SOURCE_SMALI}" "${DEST_SMALI}" || return 1
 
 		for fn in $(find "${DEST_SMALI}" -type f -name "*.smali")
@@ -257,45 +257,16 @@ function cavan-apk-rename()
 		done
 	}
 
+	fn="${SMALI_DIR}/com/qiyi/video/project/p.smali"
+	[ -f "${fn}" ] &&
+	{
+		sed -i "s/\"${DEST_RE}\"/\"${SOURCE_PKG}\"/g" "${fn}" || return 1
+	}
+
 	APK_UNSIGNED="${ROOT_DIR}/cavan-unsigned.apk"
 
 	echo "encode: ${ROOT_DIR} => ${APK_UNSIGNED}"
-
-	for step in 1 2 3 4 5
-	do
-		cavan-apk-encode "${ROOT_DIR}" -o "${APK_UNSIGNED}" && break
-
-		case "${step}" in
-			1)
-				[ -d "${DEST_SMALI}" ] || return 1
-
-				for fn in ${DEST_SMALI}/*
-				do
-					case "${fn}" in
-						*/R\$*.smali)
-							;;
-						*)
-							echo "delete: ${fn}"
-							rm -rf "${fn}"
-							;;
-					esac
-				done
-
-				for fn in ${SMALI_LIST}
-				do
-					sed -i "s#\"${DEST_RE}\"#\"${SOURCE_PKG}\"#g" "${fn}" || return 1
-					sed -i "s%^\(\s*\)invoke-virtual\s*{\s*[^,]\+,\s*[^,]\+,\s*[^,]\+,\s*\([^}]\+\)},\s*Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I%\1const-string/jumbo \2, \"${DEST_PKG}\"\n&%g" "${fn}" || return 1
-				done
-				;;
-			2)
-				echo "delete: ${DEST_SMALI}"
-				rm -rf "${DEST_SMALI}"
-				;;
-			*)
-				return 1
-				;;
-		esac
-	done
+	cavan-apk-encode "${ROOT_DIR}" -o "${APK_UNSIGNED}" || return 1
 
 	APK_SIGNED="${ROOT_DIR}/cavan-signed.apk"
 
