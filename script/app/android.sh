@@ -138,9 +138,11 @@ function cavan-apk-encode()
 
 function cavan-apk-rename()
 {
-	local ROOT_DIR MANIFEST SUFFIX MIME_TYPE IMAGE_PATH
-	local PACKAGE PACKAGE_RE PACKAGE_NEW APK_UNSIGNED APK_SIGNED APK_TARGET
-	local SOURCE_DIR DEST_DIR SMALI_DIR SOURCE_SMALI DEST_SMALI
+	local ROOT_DIR MANIFEST SUFFIX MIME_TYPE IMAGE_PATH SMALI
+	local SOURCE_PKG SOURCE_RE SOURCE_DIR SOURCE_SMALI
+	local DEST_PKG DEST_RE DEST_DIR_DIR DEST_SMALI
+	local APK_UNSIGNED APK_SIGNED APK_TARGET SMALI_LIST
+	local fn step
 
 	[ "$1" ] ||
 	{
@@ -168,42 +170,50 @@ function cavan-apk-rename()
 
 	if [ "$4" ]
 	then
-		PACKAGE="$3"
-		PACKAGE_NEW="$4"
+		SOURCE_PKG="$3"
+		DEST_PKG="$4"
 	else
-		PACKAGE=$(cat "${MANIFEST}" | grep '\bpackage="[^"]\+"' | sed 's/^.*package="\([^"]\+\)".*$/\1/g')
+		SOURCE_PKG=$(cat "${MANIFEST}" | grep '\bpackage="[^"]\+"' | sed 's/^.*package="\([^"]\+\)".*$/\1/g')
 
 		if [ "$3" ]
 		then
-			PACKAGE_NEW="$3"
+			DEST_PKG="$3"
 		else
-			PACKAGE_NEW="com.cavan.${PACKAGE}"
+			DEST_PKG="com.cavan.${SOURCE_PKG}"
 		fi
 	fi
 
-	echo "rename: ${PACKAGE} => ${PACKAGE_NEW}"
+	echo "rename: ${SOURCE_PKG} => ${DEST_PKG}"
 
-	PACKAGE_RE=${PACKAGE//./\\.}
-	echo "PACKAGE_RE = ${PACKAGE_RE}"
+	SOURCE_RE=${SOURCE_PKG//./\\.}
+	echo "SOURCE_RE = ${SOURCE_RE}"
 
-	sed -i "s/\(android:name=\"\)\./\1${PACKAGE_RE}\./g" "${MANIFEST}" || return 1
-	sed -i "s/\(\bpackage=\)\"${PACKAGE_RE}\"/\1\"${PACKAGE_NEW}\"/g" "${MANIFEST}" || return 1
-	sed -i "s/\(\bandroid:authorities=\"\)${PACKAGE_RE}/\1${PACKAGE_NEW}/g" "${MANIFEST}" || return 1
+	DEST_RE=${DEST_PKG//./\\.}
+	echo "DEST_RE = ${DEST_RE}"
+
+	sed -i "s/\(android:name=\"\)\./\1${SOURCE_RE}\./g" "${MANIFEST}" || return 1
+	sed -i "s/\(\bpackage=\)\"${SOURCE_RE}\"/\1\"${DEST_PKG}\"/g" "${MANIFEST}" || return 1
+	sed -i "s/\(\bandroid:authorities=\"\)${SOURCE_RE}/\1${DEST_PKG}/g" "${MANIFEST}" || return 1
 
 	SMALI_DIR="${ROOT_DIR}/smali"
 	echo "SMALI_DIR = ${SMALI_DIR}"
 
-	for fn in $(find "${SMALI_DIR}" -type f -name "*.smali")
-	do
-		# echo "Modify file: ${fn}"
-		sed -i "s#\(/data/data/\)${PACKAGE_RE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
-		sed -i "s#\"${PACKAGE_RE}\"#\"${PACKAGE_NEW}\"#g" "${fn}" || return 1
-	done
+	SOURCE_DIR=${SOURCE_PKG//./\/}
+	echo "SOURCE_DIR = ${SOURCE_DIR}"
+
+	SOURCE_SMALI="${SMALI_DIR}/${SOURCE_DIR}"
+	echo "SOURCE_SMALI = ${SOURCE_SMALI}"
+
+	DEST_DIR=${DEST_PKG//./\/}
+	echo "DEST_DIR = ${DEST_DIR}"
+
+	DEST_SMALI="${SMALI_DIR}/${DEST_DIR}"
+	echo "DEST_SMALI = ${DEST_SMALI}"
 
 	for fn in $(find "${ROOT_DIR}/res" -type f -name "*.xml")
 	do
 		# echo "Modify file: ${fn}"
-		sed -i "s#\b\(xmlns:\w\+=\"http://schemas.android.com/apk/res/\)${PACKAGE_RE}#\1${PACKAGE_NEW}#g" "${fn}" || return 1
+		sed -i "s#\b\(xmlns:\w\+=\"http://schemas.android.com/apk/res/\)${SOURCE_RE}#\1${DEST_PKG}#g" "${fn}" || return 1
 	done
 
 	for fn in $(find "${ROOT_DIR}/res" -type f)
@@ -225,22 +235,21 @@ function cavan-apk-rename()
 		[ "${fn}" = "${IMAGE_PATH}" ] || mv -v "${fn}" "${IMAGE_PATH}" || return 1
 	done
 
-	SOURCE_DIR=${PACKAGE//./\/}
-	echo "SOURCE_DIR = ${SOURCE_DIR}"
+	SMALI_LIST=$(find "${SMALI_DIR}" -type f -name "*.smali")
 
-	SOURCE_SMALI="${SMALI_DIR}/${SOURCE_DIR}"
-	echo "SOURCE_SMALI = ${SOURCE_SMALI}"
+	for fn in ${SMALI_LIST}
+	do
+		# echo "Modify file: ${fn}"
+		sed -i "s#\(/data/data/\)${SOURCE_RE}#\1${DEST_PKG}#g" "${fn}" || return 1
+		sed -i "s#\"${SOURCE_RE}\"#\"${DEST_PKG}\"#g" "${fn}" || return 1
+	done
 
-	DEST_DIR=${PACKAGE_NEW//./\/}
-	echo "DEST_DIR = ${DEST_DIR}"
-
-	DEST_SMALI="${SMALI_DIR}/${DEST_DIR}"
-	echo "DEST_SMALI = ${DEST_SMALI}"
+	mkdir -p "${DEST_SMALI}" || return 1
 
 	[ -d "${SOURCE_SMALI}" ] &&
 	{
-		mkdir -p "${DEST_SMALI}" || return 1
-		cp -a "${SOURCE_SMALI}"/* "${DEST_SMALI}" || return 1
+		rm -rf "${DEST_SMALI}"
+		cp -a "${SOURCE_SMALI}" "${DEST_SMALI}" || return 1
 
 		for fn in $(find "${DEST_SMALI}" -type f -name "*.smali")
 		do
@@ -251,7 +260,46 @@ function cavan-apk-rename()
 	APK_UNSIGNED="${ROOT_DIR}/cavan-unsigned.apk"
 
 	echo "encode: ${ROOT_DIR} => ${APK_UNSIGNED}"
-	cavan-apk-encode "${ROOT_DIR}" -o "${APK_UNSIGNED}" || return 1
+
+	for step in 1 2 3 4 5
+	do
+		for fn in ${SMALI_LIST}
+		do
+			sed -i "s%^\(\s*\)invoke-virtual\s*{\s*[^,]\+,\s*[^,]\+,\s*[^,]\+,\s*\([^}]\+\)},\s*Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I%\1const-string/jumbo \2, \"${DEST_PKG}\"\n&%g" "${fn}" || return 1
+		done
+
+		cavan-apk-encode "${ROOT_DIR}" -o "${APK_UNSIGNED}" && break
+
+		case "${step}" in
+			1)
+				[ -d "${DEST_SMALI}" ] || return 1
+
+				for fn in ${DEST_SMALI}/*
+				do
+					case "${fn}" in
+						*/R\$*.smali)
+							;;
+						*)
+							echo "delete: ${fn}"
+							rm -rf "${fn}"
+							;;
+					esac
+				done
+
+				for fn in ${SMALI_LIST}
+				do
+					sed -i "s#\"${DEST_RE}\"#\"${SOURCE_PKG}\"#g" "${fn}" || return 1
+				done
+				;;
+			2)
+				echo "delete: ${DEST_SMALI}"
+				rm -rf "${DEST_SMALI}"
+				;;
+			*)
+				return 1
+				;;
+		esac
+	done
 
 	APK_SIGNED="${ROOT_DIR}/cavan-signed.apk"
 
@@ -266,26 +314,38 @@ function cavan-apk-rename()
 
 function cavan-apk-rename-auto()
 {
-	local ROOT_DIR APK_DEST
+	local ROOT_DIR APK_DEST APK_FAILED FAILED_DIR BASE_NAME
 
 	ROOT_DIR="${!#}"
 	echo "ROOT_DIR = ${ROOT_DIR}"
 
+	FAILED_DIR="${ROOT_DIR}/failure"
+	echo "FAILED_DIR = ${FAILED_DIR}"
+
 	mkdir -p "${ROOT_DIR}" || return 1
+	mkdir -p "${FAILED_DIR}" || return 1
 
 	while [ "$2" ]
 	do
 		echo "================================================================================"
 
-		APK_DEST="${ROOT_DIR}/$(basename -s .apk $1)-cavan.apk"
+		BASE_NAME=$(basename -s .apk "$1")
+		APK_DEST="${ROOT_DIR}/${BASE_NAME}-cavan.apk"
+		APK_FAILED="${FAILED_DIR}/${BASE_NAME}.apk"
+
 		echo "rename: $1 => ${APK_DEST}"
 
 		if [ -f "${APK_DEST}" ]
 		then
-			echo "file exist skip: ${APK_DEST}"
+			echo "skip exist file: ${APK_DEST}"
+		elif cavan-apk-rename "$1" "${APK_DEST}"
+		then
+			rm "${APK_FAILED}"
 		else
-			cavan-apk-rename "$1" "${APK_DEST}" || return 1
+			cp -av "$1" "${APK_FAILED}" || return 1
+			sleep 1
 		fi
+
 		shift
 	done
 }
