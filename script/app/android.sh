@@ -263,11 +263,6 @@ function cavan-apk-rename()
 
 	for step in 1 2 3 4 5
 	do
-		for fn in ${SMALI_LIST}
-		do
-			sed -i "s%^\(\s*\)invoke-virtual\s*{\s*[^,]\+,\s*[^,]\+,\s*[^,]\+,\s*\([^}]\+\)},\s*Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I%\1const-string/jumbo \2, \"${DEST_PKG}\"\n&%g" "${fn}" || return 1
-		done
-
 		cavan-apk-encode "${ROOT_DIR}" -o "${APK_UNSIGNED}" && break
 
 		case "${step}" in
@@ -289,6 +284,7 @@ function cavan-apk-rename()
 				for fn in ${SMALI_LIST}
 				do
 					sed -i "s#\"${DEST_RE}\"#\"${SOURCE_PKG}\"#g" "${fn}" || return 1
+					sed -i "s%^\(\s*\)invoke-virtual\s*{\s*[^,]\+,\s*[^,]\+,\s*[^,]\+,\s*\([^}]\+\)},\s*Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I%\1const-string/jumbo \2, \"${DEST_PKG}\"\n&%g" "${fn}" || return 1
 				done
 				;;
 			2)
