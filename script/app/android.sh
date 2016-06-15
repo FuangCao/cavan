@@ -235,32 +235,34 @@ function cavan-apk-rename()
 		[ "${fn}" = "${IMAGE_PATH}" ] || mv -v "${fn}" "${IMAGE_PATH}" || return 1
 	done
 
-	for fn in $(find "${SMALI_DIR}" -type f -name "*.smali")
-	do
-		# echo "Modify file: ${fn}"
-		sed -i "s#\(/data/data/\)${SOURCE_RE}#\1${DEST_PKG}#g" "${fn}" || return 1
-		sed -i "s#\"${SOURCE_RE}\"#\"${DEST_PKG}\"#g" "${fn}" || return 1
-	done
-
-	mkdir -p "${DEST_SMALI}" || return 1
+	case "${SOURCE_PKG}" in
+		com.qiyi.video)
+			for fn in $(find "${SMALI_DIR}" -type f -name "*.smali")
+			do
+				sed -i "s#\(/data/data/\)${SOURCE_RE}#\1${DEST_PKG}#g" "${fn}" || return 1
+				sed -i "s%^\(\s*\)invoke-virtual\s*{\s*[^,]\+,\s*[^,]\+,\s*[^,]\+,\s*\([^}]\+\)},\s*Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I%\1const-string/jumbo \2, \"${DEST_PKG}\"\n&%g" "${fn}" || return 1
+			done
+			;;
+		*)
+			for fn in $(find "${SMALI_DIR}" -type f -name "*.smali")
+			do
+				sed -i "s#\(/data/data/\)${SOURCE_RE}#\1${DEST_PKG}#g" "${fn}" || return 1
+				sed -i "s#\"${SOURCE_RE}\"#\"${DEST_PKG}\"#g" "${fn}" || return 1
+			done
+			;;
+	esac
 
 	[ -d "${SOURCE_SMALI}" ] &&
 	{
-		rm -rf "${DEST_SMALI}"
+		mkdir -p "${DEST_SMALI}" || return 1
 
 		echo "copy: ${SOURCE_SMALI} => ${DEST_SMALI}"
-		cp -a "${SOURCE_SMALI}" "${DEST_SMALI}" || return 1
+		cp -a "${SOURCE_SMALI}"/* "${DEST_SMALI}" || return 1
 
 		for fn in $(find "${DEST_SMALI}" -type f -name "*.smali")
 		do
 			sed -i "s#L${SOURCE_DIR}/#L${DEST_DIR}/#g" "${fn}" || return 1
 		done
-	}
-
-	fn="${SMALI_DIR}/com/qiyi/video/project/p.smali"
-	[ -f "${fn}" ] &&
-	{
-		sed -i "s/\"${DEST_RE}\"/\"${SOURCE_PKG}\"/g" "${fn}" || return 1
 	}
 
 	APK_UNSIGNED="${ROOT_DIR}/cavan-unsigned.apk"
