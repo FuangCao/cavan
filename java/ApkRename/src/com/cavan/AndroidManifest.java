@@ -3,36 +3,23 @@ package com.cavan;
 import java.io.File;
 import java.io.IOException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-public class AndroidManifest {
+public class AndroidManifest extends CavanXml {
 
-	private File mFileDocument;
-	private Document mDocument;
 	private Element mManifest;
 	private Element mApplication;
 	private String mSourcePackage;
 	private String mDestPackage;
 
 	public AndroidManifest(File file) throws ParserConfigurationException, SAXException, IOException {
-		super();
+		super(file);
 
-		mFileDocument = file;
-
-		DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-		mDocument = builder.parse(mFileDocument);
 		mManifest = mDocument.getDocumentElement();
 
 		NodeList nodes = mManifest.getElementsByTagName("application");
@@ -47,11 +34,6 @@ public class AndroidManifest {
 		mSourcePackage = getPackageName();
 		mDestPackage = mSourcePackage;
 		System.out.println("mSourcePackage = " + mSourcePackage);
-	}
-
-	private void replaceAttribute(Element element, String name, String value) {
-		element.removeAttribute(name);
-		element.setAttribute(name, value);
 	}
 
 	private void renameAndroidName(Element element) {
@@ -94,22 +76,6 @@ public class AndroidManifest {
 
 	public void setPackageName(String name) {
 		replaceAttribute(mManifest, "package", name);
-	}
-
-	public boolean save(String pathname) {
-		File file = pathname != null ? new File(pathname) : mFileDocument;
-
-		try {
-			Transformer transformer = TransformerFactory.newInstance().newTransformer();
-			DOMSource source = new DOMSource(mDocument.getFirstChild());
-			StreamResult result = new StreamResult(file);
-			transformer.transform(source, result);
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return false;
 	}
 
 	public boolean doRename(String name) {

@@ -1,12 +1,24 @@
 package com.cavan;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import brut.common.BrutException;
 
@@ -15,11 +27,19 @@ public class ApkRename {
 	public static final String KEYSTORE = "/cavan/build/core/cavan.keystore";
 	public static final Path DEFAULT_WORK_PATH = Paths.get("/tmp", "cavan-apk-rename");
 
+	public static HashMap<String, String> sHashMapImage = new HashMap<String, String>();
+
 	private String mInPath;
 	private String mOutPath;
 	private String mApkSigned;
 	private String mWorkPath;
 	private String mApkUnsigned;
+
+	static {
+		sHashMapImage.put("image/png", ".png");
+		sHashMapImage.put("image/jpeg", ".jpg");
+		sHashMapImage.put("image/gif", ".gif");
+	}
 
 	public ApkRename(String workPath, String inPath, String outPath) {
 		if (workPath == null) {
@@ -48,29 +68,47 @@ public class ApkRename {
 	public static boolean runCommand(String[] command) {
 		try {
 			ProcessBuilder builder = new ProcessBuilder(command);
-			builder.redirectErrorStream();
+			builder.redirectError(new File("/dev/stderr"));
+			builder.redirectOutput(new File("/dev/stdout"));
 			Process process = builder.start();
-
-			InputStream stream = process.getInputStream();
-			if (stream != null) {
-				byte[] bytes = new byte[32];
-
-				while (true) {
-					int length = stream.read(bytes);
-					if (length < 0) {
-						break;
-					}
-
-					System.out.write(bytes, 0, length);
-				}
-			}
-
 			return process.waitFor() == 0;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		return false;
+	}
+
+	public static List<String> pipeCommand(String[] command) {
+		try {
+			ProcessBuilder builder = new ProcessBuilder(command);
+			builder.redirectError(new File("/dev/stderr"));
+			Process process = builder.start();
+
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			List<String> lines = new ArrayList<String>();
+
+			while (true) {
+				String line = reader.readLine();
+				if (line == null) {
+					break;
+				}
+
+				lines.add(line);
+			}
+
+			reader.close();
+
+			if (process.waitFor() != 0) {
+				return null;
+			}
+
+			return lines;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	public static boolean doApktool(String command, String inPath, String outPath) {
@@ -124,21 +162,76 @@ public class ApkRename {
 		return runCommand(command);
 	}
 
-	public static void renameXml() {
+	public static String getFileMimeType(String pathname) {
+		String[] command = { "file", "-b", "--mime-type", pathname };
+		List<String> lines = pipeCommand(command);
+		if (lines != null && lines.size() > 0) {
+			return lines.get(0);
+		}
 
+		return null;
+	}
+
+	public static boolean doRenameXml(File file) {
+		System.out.println("rename xml: " + file.getPath());
+		try {
+			CavanXml xml = new CavanXml(file);
+			Document document = xml.getDocument();
+			NodeList list = document.getChildNodes();
+			if (list == null) {
+				return false;
+			}
+
+			for (int i = list.getLength() - 1; i >= 0; i--) {
+				Node node = list.item(i);
+				if (node.getNodeType() != Node.ELEMENT_NODE) {
+					continue;
+				}
+
+				Element element = (Element) node;
+				System.out.println("element = " + element.getNodeName());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
 	}
 
 	public boolean doRenameResource(File dir) {
-		FilenameFilter filter = new FilenameFilter() {
+		for (File file : dir.listFiles()) {
+			if (file.isDirectory()) {
+				if (!doRenameResource(file)) {
+					return false;
+				}
+			} else {
+				String mime = getFileMimeType(file.getPath());
+				if (mime == null) {
+					continue;
+				}
 
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.endsWith(".xml");
+				if (mime.equals("application/xml")) {
+					if (!doRenameXml(file)) {
+						return false;
+					}
+				} else {
+					String image = sHashMapImage.get(mime);
+					if (image != null && file.getPath().endsWith(image) == false) {
+						String pathname = file.getPath();
+						int index = pathname.lastIndexOf('.');
+						if (index < 0) {
+							pathname = pathname + image;
+						} else {
+							pathname = pathname.substring(0, index) + image;
+						}
+
+						System.out.println("rename: " + file.getPath() + " => " + pathname);
+						if (!file.renameTo(new File(pathname))) {
+							return false;
+						}
+					}
+				}
 			}
-		};
-
-		for (File file : dir.listFiles(filter)) {
-			System.out.println("file = " + file.getPath());
 		}
 
 		return true;
@@ -166,18 +259,22 @@ public class ApkRename {
 		manifest.doRename(destPackage);
 
 		if (!doRenameResource(Paths.get(mWorkPath, "res").toFile())) {
+			System.err.println("Failed to doRenameResource");
 			return false;
 		}
 
 		if (!doApkEncode(mWorkPath, mApkUnsigned)) {
+			System.err.println("Failed to doApkEncode");
 			return false;
 		}
 
 		if (!doApkSign(mApkUnsigned, mApkSigned)) {
+			System.err.println("Failed to doApkSign");
 			return false;
 		}
 
 		if (!doApkAlign(mApkSigned, mOutPath)) {
+			System.err.println("Failed to doApkAlign");
 			return false;
 		}
 
