@@ -11,10 +11,10 @@ import android.view.View.OnLongClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.cavan.CavanHexFile;
 import com.cavan.cavanutils.CavanBleChar;
 import com.cavan.cavanutils.CavanBleScanner;
 import com.cavan.cavanutils.CavanBleUart;
-import com.cavan.cavanutils.CavanHexFile;
 import com.cavan.cavanutils.CavanUtils;
 
 @SuppressLint("HandlerLeak")

@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
+import com.cavan.CavanFile;
+
 public class PowerSupply {
 
 	private File mRootDir;
@@ -24,7 +26,7 @@ public class PowerSupply {
 
 	public List<String> readUevent() {
 		CavanFile file = new CavanFile(mRootDir, "uevent");
-		return file.readlines();
+		return file.readLines(null);
 	}
 
 	public HashMap<String, String> readProps() {

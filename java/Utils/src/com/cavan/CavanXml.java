@@ -27,8 +27,6 @@ public class CavanXml {
 
 		DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 		mDocument = builder.parse(mFileDocument);
-
-		System.out.println("mDocument = " + mDocument.getDocumentURI());
 	}
 
 	public Document getDocument() {
@@ -40,9 +38,7 @@ public class CavanXml {
 		element.setAttribute(name, value);
 	}
 
-	public boolean save(String pathname) {
-		File file = pathname != null ? new File(pathname) : mFileDocument;
-
+	public boolean save(File file) {
 		try {
 			Transformer transformer = TransformerFactory.newInstance().newTransformer();
 			DOMSource source = new DOMSource(mDocument.getFirstChild());
@@ -54,5 +50,13 @@ public class CavanXml {
 		}
 
 		return false;
+	}
+
+	public boolean save(String pathname) {
+		return save(new File(pathname));
+	}
+
+	public boolean save() {
+		return save(mFileDocument);
 	}
 }

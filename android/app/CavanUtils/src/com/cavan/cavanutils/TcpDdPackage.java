@@ -1,5 +1,7 @@
 package com.cavan.cavanutils;
 
+import com.cavan.ByteCache;
+
 import android.annotation.SuppressLint;
 
 @SuppressLint("DefaultLocale")

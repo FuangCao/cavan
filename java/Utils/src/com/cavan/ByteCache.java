@@ -1,4 +1,4 @@
-package com.cavan.cavanutils;
+package com.cavan;
 
 public class ByteCache {
 	private byte[] mBytes;

@@ -261,7 +261,7 @@ function cavan-apk-rename()
 
 		for fn in $(find "${DEST_SMALI}" -type f -name "*.smali")
 		do
-			sed -i "s#L${SOURCE_DIR}/#L${DEST_DIR}/#g" "${fn}" || return 1
+			sed -i "s#^\(\.class\s\+L\)${SOURCE_DIR}/#\1${DEST_DIR}/#g" "${fn}" || return 1
 		done
 	}
 

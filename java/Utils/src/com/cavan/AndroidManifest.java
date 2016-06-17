@@ -27,13 +27,8 @@ public class AndroidManifest extends CavanXml {
 			mApplication = (Element) nodes.item(0);
 		}
 
-		System.out.println("mDocument = " + mDocument.getDocumentURI());
-		System.out.println("mManifest = " + mManifest.getNodeName());
-		System.out.println("mApplication = " + mApplication.getNodeName());
-
 		mSourcePackage = getPackageName();
 		mDestPackage = mSourcePackage;
-		System.out.println("mSourcePackage = " + mSourcePackage);
 	}
 
 	private void renameAndroidName(Element element) {
@@ -84,6 +79,6 @@ public class AndroidManifest extends CavanXml {
 		setPackageName(name);
 		renameApplication();
 
-		return save(null);
+		return save();
 	}
 }
