@@ -73,6 +73,15 @@ public class AndroidManifest extends CavanXml {
 		replaceAttribute(mManifest, "package", name);
 	}
 
+	public String getAppName() {
+		String name = mApplication.getAttribute("android:label");
+		if (name != null && name.startsWith("@string/")) {
+			return name.substring(8);
+		}
+
+		return null;
+	}
+
 	public boolean doRename(String name) {
 		mDestPackage = name;
 

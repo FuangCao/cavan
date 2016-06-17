@@ -38,6 +38,7 @@ public class ApkRename {
 	private File mApkSigned;
 	private File mApkUnsigned;
 
+	private String mAppName;
 	private String mSourcePackage;
 	private String mDestPackage;
 	private String mSourcePackagePath;
@@ -187,6 +188,37 @@ public class ApkRename {
 							attr.setNodeValue(newValue);
 							changed = true;
 						}
+					}
+				}
+			}
+
+			if (mAppName != null && file.getName().equals("strings.xml")) {
+				list = document.getElementsByTagName("string");
+				for (int i = 0; i < list.getLength(); i++) {
+					Node node = list.item(i);
+					if (node.getNodeType() != Node.ELEMENT_NODE) {
+						continue;
+					}
+
+					Element element = (Element) node;
+					String name = element.getAttribute("name");
+					if (name.equals(mAppName)) {
+						Node valueNode = element.getFirstChild();
+						if (valueNode == null) {
+							break;
+						}
+
+						String nameValue = valueNode.getNodeValue();
+						if (nameValue == null) {
+							break;
+						}
+
+						String newName = nameValue + "-CFA";
+						CavanUtils.logD(mAppName + ": " + nameValue + " => " + newName);
+
+						valueNode.setNodeValue(newName);
+						changed = true;
+						break;
 					}
 				}
 			}
@@ -430,12 +462,14 @@ public class ApkRename {
 			return false;
 		}
 
+		mAppName = manifest.getAppName();
 		mSourcePackage = manifest.getPackageName();
 
 		if (mDestPackage == null) {
 			mDestPackage = "com.cavan." + mSourcePackage;
 		}
 
+		CavanUtils.logD("mAppName = " + mAppName);
 		CavanUtils.logD("package: " + mSourcePackage + " => " + mDestPackage);
 
 		mSourcePackagePath = mSourcePackage.replace('.', File.separatorChar);
@@ -512,6 +546,10 @@ public class ApkRename {
 		return true;
 	}
 
+	public static boolean doRenameAll(String inPath, File outDir) {
+		return doRenameAll(new File(inPath), outDir);
+	}
+
 	public static void main(String[] args) throws Exception {
 		boolean success = false;
 
@@ -521,7 +559,7 @@ public class ApkRename {
 
 			if (outDir.mkdirsSafe()) {
 				for (int i = 0; i < count; i++) {
-					success = doRenameAll(new File(args[i]), outDir);
+					success = doRenameAll(args[i], outDir);
 					if (!success) {
 						break;
 					}
@@ -531,6 +569,8 @@ public class ApkRename {
 			ApkRename rename = new ApkRename(args[0]);
 			success = rename.doRename();
 		} else {
+			ApkRename rename = new ApkRename("/epan/apk/com.baofeng.tv.apk");
+			success = rename.doRename();
 			CavanUtils.logD("apkrename <IN_APK> ... [OUT_APK]");
 		}
 
