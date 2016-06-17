@@ -469,7 +469,6 @@ public class ApkRename {
 			mDestPackage = "com.cavan." + mSourcePackage;
 		}
 
-		CavanUtils.logD("mAppName = " + mAppName);
 		CavanUtils.logD("package: " + mSourcePackage + " => " + mDestPackage);
 
 		mSourcePackagePath = mSourcePackage.replace('.', File.separatorChar);
@@ -569,8 +568,9 @@ public class ApkRename {
 			ApkRename rename = new ApkRename(args[0]);
 			success = rename.doRename();
 		} else {
-			ApkRename rename = new ApkRename("/epan/apk/com.baofeng.tv.apk");
-			success = rename.doRename();
+			// ApkRename rename = new ApkRename("/epan/apk/com.baofeng.tv.apk");
+			// success = rename.doRename();
+
 			CavanUtils.logD("apkrename <IN_APK> ... [OUT_APK]");
 		}
 
