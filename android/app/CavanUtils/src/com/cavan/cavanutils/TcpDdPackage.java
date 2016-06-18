@@ -1,10 +1,5 @@
 package com.cavan.cavanutils;
 
-import com.cavan.ByteCache;
-
-import android.annotation.SuppressLint;
-
-@SuppressLint("DefaultLocale")
 class TcpDdPackage {
 	protected short mType;
 	protected int mFlags;

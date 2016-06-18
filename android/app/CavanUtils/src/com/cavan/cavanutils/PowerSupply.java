@@ -4,8 +4,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
-import com.cavan.CavanFile;
-
 public class PowerSupply {
 
 	private File mRootDir;

@@ -1,10 +1,5 @@
 package com.cavan.cavanutils;
 
-import com.cavan.ByteCache;
-
-import android.annotation.SuppressLint;
-
-@SuppressLint("DefaultLocale")
 class TcpDdExecReq extends TcpDdPackage {
 	private short mLines;
 	private short mColumns;

@@ -1,5 +1,6 @@
 package com.cavan.cavanjni;
 
+
 public class TcpDdService extends CavanService {
 
 	public static final String NAME = "TCP_DD";
@@ -16,7 +17,7 @@ public class TcpDdService extends CavanService {
 
 	@Override
 	public int getDefaultPort() {
-		return 8888;
+		return 9898;
 	}
 
 	@Override

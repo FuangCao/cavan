@@ -2,8 +2,6 @@ package com.cavan.cavanutils;
 
 import java.net.InetAddress;
 
-import com.cavan.ByteCache;
-
 import android.net.LocalSocketAddress;
 
 public class TcpKeypadClient extends TcpInputClient {

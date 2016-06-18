@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
-public class CavanUtils extends com.cavan.CavanUtils {
+public class CavanUtils extends CavanJavaUtils {
 	public static final String TAG = "Cavan";
 
 	public static final int EVENT_CLEAR_TOAST = 1;
@@ -38,6 +38,68 @@ public class CavanUtils extends com.cavan.CavanUtils {
 
 	public static int logD(String message, Throwable throwable) {
 		return Log.d(TAG, message, throwable);
+	}
+
+	public static void logP() {
+		StackTraceElement trace = getCurrentStackTrace(3);
+		if (trace == null) {
+			return;
+		}
+
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(trace.getClassName());
+		builder.append(".");
+		builder.append(trace.getMethodName());
+		builder.append("(");
+		builder.append(trace.getFileName());
+		builder.append(":");
+		builder.append(trace.getLineNumber());
+		builder.append(")");
+
+		logE(builder.toString());
+	}
+
+	public static void logP(String message) {
+		StackTraceElement trace = getCurrentStackTrace(3);
+		if (trace == null) {
+			return;
+		}
+
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(trace.getMethodName());
+		builder.append("[");
+		builder.append(trace.getLineNumber());
+		builder.append("]: ");
+		builder.append(message);
+
+		logE(builder.toString());
+	}
+
+	public static void dumpstack(Throwable throwable) {
+		logW(throwable);
+	}
+
+	public static void dumpstack() {
+		logW(new Throwable());
+	}
+
+	public static void printSep() {
+		String text;
+		int columns = getEnvColumns();
+		if (columns > 0) {
+			char[] chars = new char[columns];
+			for (int i = 0; i < columns; i++) {
+				chars[i] = '=';
+			}
+
+			text = new String(chars);
+		} else {
+			text = "============================================================";
+		}
+
+		logD(text);
 	}
 
 	public static void cancelToastLocked() {
