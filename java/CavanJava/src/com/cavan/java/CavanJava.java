@@ -261,4 +261,18 @@ public class CavanJava {
 	public static byte[] parseHexText(byte[] text) {
 		return parseHexText(text, 0, text.length);
 	}
+
+	public static boolean isChineseChar(char c) {
+		return c >= 0x4E00 && c <= 0x9FA5;
+	}
+
+	public static boolean hasChineseChar(String text) {
+		for (int i = text.length() - 1; i >= 0; i--) {
+			if (isChineseChar(text.charAt(i))) {
+				return true;
+			}
+		}
+
+		return true;
+	}
 }

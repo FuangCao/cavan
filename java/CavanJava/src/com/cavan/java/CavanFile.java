@@ -216,6 +216,18 @@ public class CavanFile extends File {
 		return write(bytes, bytes.length);
 	}
 
+	public int writeText(String text, int offset, int count) {
+		return write(text.getBytes(), offset, count);
+	}
+
+	public int writeText(String text, int count) {
+		return write(text.getBytes(), count);
+	}
+
+	public int writeText(String text) {
+		return write(text.getBytes());
+	}
+
 	public boolean writeLines(List<String> lines, String newLine) {
 		OutputStream stream = openOutputStream();
 		if (stream == null) {

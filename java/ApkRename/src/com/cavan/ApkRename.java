@@ -43,11 +43,12 @@ public class ApkRename {
 	private File mApkSigned;
 	private File mApkUnsigned;
 
-	private String mAppName;
 	private String mSourcePackage;
 	private String mDestPackage;
 	private String mSourcePackagePath;
 	private String mDestPackagePath;
+	private String mAppNameProp;
+	private HashMap<String, String> mHashMapAppName = new HashMap<String, String>();
 
 	static {
 		sHashMapImage.put("image/png", ".png");
@@ -197,7 +198,7 @@ public class ApkRename {
 				}
 			}
 
-			if (mAppName != null && file.getName().equals("strings.xml")) {
+			if (mAppNameProp != null && file.getName().equals("strings.xml")) {
 				list = document.getElementsByTagName("string");
 				for (int i = 0; i < list.getLength(); i++) {
 					Node node = list.item(i);
@@ -207,7 +208,7 @@ public class ApkRename {
 
 					Element element = (Element) node;
 					String name = element.getAttribute("name");
-					if (name.equals(mAppName)) {
+					if (name.equals(mAppNameProp)) {
 						Node valueNode = element.getFirstChild();
 						if (valueNode == null) {
 							break;
@@ -218,8 +219,11 @@ public class ApkRename {
 							break;
 						}
 
+						String type = file.getParentFile().getName();
+						mHashMapAppName.put(type, nameValue);
+
 						String newName = nameValue + "-CFA";
-						CavanJava.logD(mAppName + ": " + nameValue + " => " + newName);
+						CavanJava.logD(type + "@" + mAppNameProp + ": " + nameValue + " => " + newName);
 
 						valueNode.setNodeValue(newName);
 						changed = true;
@@ -329,50 +333,28 @@ public class ApkRename {
 		return line;
 	}
 
-	public boolean doRenameSmaliFileNormal(File file) {
+	public boolean doRenameSmaliFile(File file) {
 		CavanFile cavanFile = new CavanFile(file.getPath());
 		return cavanFile.replaceLines(new ReplaceHandler() {
 
 			@Override
 			public String replace(String text) {
-				text = text.replace("\"" + mSourcePackage + "\"", "\"" + mDestPackage + "\"");
+				if (mSourcePackage.equals("com.qiyi.video")) {
+					text = text.replace("\"" + mSourcePackage + "\"", "\"" + mDestPackage + "\"");
+				}
+
 				return doReplaceSmaliLine(text);
 			}
 		});
 	}
 
-	public boolean doRenameSmaliNormal(File dir) {
+	public boolean doRenameSmaliDir(File dir) {
 		for (File file : dir.listFiles()) {
 			if (file.isDirectory()) {
-				if (!doRenameSmaliNormal(file)) {
+				if (!doRenameSmaliDir(file)) {
 					return false;
 				}
-			} else if (!doRenameSmaliFileNormal(file)) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	public boolean doRenameSmaliFileQiyi(File file) {
-		CavanFile cavanFile = new CavanFile(file.getPath());
-		return cavanFile.replaceLines(new ReplaceHandler() {
-
-			@Override
-			public String replace(String text) {
-				return doReplaceSmaliLine(text);
-			}
-		});
-	}
-
-	public boolean doRenameSmaliQiyi(File dir) {
-		for (File file : dir.listFiles()) {
-			if (file.isDirectory()) {
-				if (!doRenameSmaliQiyi(file)) {
-					return false;
-				}
-			} else if (!doRenameSmaliFileQiyi(file)) {
+			} else if (!doRenameSmaliFile(file)) {
 				return false;
 			}
 		}
@@ -416,32 +398,87 @@ public class ApkRename {
 		return true;
 	}
 
-	public boolean doCopySmali(File dir) {
-		CavanFile dirSource = new CavanFile(dir, mSourcePackagePath);
-		if (!dirSource.isDirectory()) {
-			return true;
+	public boolean doCopySmali(File dirTop) {
+		List<CavanFile> dirs = new ArrayList<CavanFile>();
+
+		CavanFile dir = new CavanFile(dirTop, mSourcePackagePath);
+		if (dir.isDirectory()) {
+			dirs.add(dir);
 		}
 
-		dir = new File(dir.getPath() + "_classes2");
-		CavanFile dirDest = new CavanFile(dir, mDestPackagePath);
+		int index = 2;
 
-		return doCopySmaliDir(dirSource, dirDest);
+		while (true) {
+			dir = new CavanFile(dirTop.getPath() + "_classes" + index);
+			if (!dir.isDirectory()) {
+				break;
+			}
+
+			dir = new CavanFile(dir, mSourcePackagePath);
+			if (dir.isDirectory()) {
+				dirs.add(dir);
+			}
+
+			index++;
+		}
+
+		for (CavanFile dirSource : dirs) {
+			dir = new CavanFile(dirTop.getPath() + "_classes" + index);
+			CavanFile dirDest = new CavanFile(dir, mDestPackagePath);
+
+			CavanJava.logD("copy: " + dirSource.getPath() + " => " + dirDest.getPath());
+			if (!doCopySmaliDir(dirSource, dirDest)) {
+				return false;
+			}
+
+			index++;
+		}
+
+		return true;
 	}
 
 	public boolean doRenameSmali(File dir) {
-		boolean success;
-
-		if (mSourcePackage.equals("com.qiyi.video")) {
-			success = doRenameSmaliQiyi(dir);
-		} else {
-			success = doRenameSmaliNormal(dir);
+		if (!doRenameSmaliDir(dir)) {
+			return false;
 		}
 
-		if (success) {
-			success = doCopySmali(dir);
+		return doCopySmali(dir);
+	}
+
+	public String getAppName() {
+		if (mHashMapAppName.isEmpty()) {
+			return null;
 		}
 
-		return success;
+		if (mHashMapAppName.size() > 1) {
+			String defName = mHashMapAppName.get("values");
+			if (defName != null && CavanJava.hasChineseChar(defName)) {
+				return defName;
+			}
+
+			for (String key : new String[] { "values-zh-rCN", "values-zh-rHK", "values-zh-rTW" }) {
+				String name = mHashMapAppName.get(key);
+				if (name != null) {
+					return name;
+				}
+			}
+
+			for (String key : mHashMapAppName.keySet()) {
+				if (key.startsWith("values-zh")) {
+					return mHashMapAppName.get(key);
+				}
+			}
+
+			if (defName != null) {
+				return defName;
+			}
+		}
+
+		for (String value : mHashMapAppName.values()) {
+			return value;
+		}
+
+		return null;
 	}
 
 	public boolean doRename() {
@@ -467,7 +504,7 @@ public class ApkRename {
 			return false;
 		}
 
-		mAppName = manifest.getAppName();
+		mAppNameProp = manifest.getAppName();
 		mSourcePackage = manifest.getPackageName();
 
 		if (mDestPackage == null) {
@@ -480,6 +517,8 @@ public class ApkRename {
 		mDestPackagePath = mDestPackage.replace('.', File.separatorChar);
 
 		manifest.doRename(mDestPackage);
+
+		mHashMapAppName.clear();
 
 		if (!doRenameResource(new File(mWorkFile, "res"))) {
 			CavanJava.logE("Failed to doRenameResource");
@@ -509,78 +548,5 @@ public class ApkRename {
 		CavanJava.logD("File stored in: " + mOutFile.getPath());
 
 		return true;
-	}
-
-	public static boolean doRenameAll(File inFile, File outDir) {
-		if (inFile.isDirectory()) {
-			for (File file : inFile.listFiles()) {
-				if (!doRenameAll(file, outDir)) {
-					CavanJava.logP("Failed to doRenameAll: " + file.getPath());
-					return false;
-				}
-			}
-		} else {
-			CavanJava.printSep();
-
-			String outName = inFile.getName().replaceAll("\\.apk$", "-cavan.apk");
-			CavanFile outFile = new CavanFile(outDir, outName);
-			if (outFile.exists()) {
-				CavanJava.logD("skip exists file: " + outFile.getPath());
-				return true;
-			}
-
-			ApkRename rename = new ApkRename(inFile, outFile);
-			if (!rename.doRename()) {
-				CavanJava.logP("Failed to doRename: " + inFile.getPath());
-
-				CavanFile errDir = new CavanFile(outDir, "failure");
-				if (!errDir.mkdirSafe()) {
-					CavanJava.logP("Failed to mkdirSafe: " + errDir.getPath());
-					return false;
-				}
-
-				CavanFile errFile = new CavanFile(errDir, inFile.getName());
-				if (!errFile.copyFrom(inFile)) {
-					CavanJava.logP("Failed to copy: " + errFile.getPath());
-					return false;
-				}
-			}
-		}
-
-		return true;
-	}
-
-	public static boolean doRenameAll(String inPath, File outDir) {
-		return doRenameAll(new File(inPath), outDir);
-	}
-
-	public static void main(String[] args) throws Exception {
-		boolean success = false;
-
-		if (args.length > 1) {
-			int	count = args.length - 1;
-			CavanFile outDir = new CavanFile(args[count]);
-
-			if (outDir.mkdirsSafe()) {
-				for (int i = 0; i < count; i++) {
-					success = doRenameAll(args[i], outDir);
-					if (!success) {
-						break;
-					}
-				}
-			}
-		} else if (args.length > 0) {
-			ApkRename rename = new ApkRename(args[0]);
-			success = rename.doRename();
-		} else {
-			// ApkRename rename = new ApkRename("/epan/apk/com.baofeng.tv.apk");
-			// success = rename.doRename();
-
-			CavanJava.logD("apkrename <IN_APK> ... [OUT_APK]");
-		}
-
-		if (!success) {
-			throw new Exception("Failed to ApkRename");
-		}
 	}
 }

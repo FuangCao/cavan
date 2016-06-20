@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: com.cavan.ApkRename
+Main-Class: com.cavan.ApkRenameMain
 Class-Path: lib/apktool.jar /tools/android/apktool.jar
