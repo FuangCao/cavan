@@ -13,10 +13,10 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
+import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanNetworkClient;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.CavanServicePreference;
-import com.cavan.cavanutils.CavanNetworkClient;
-import com.cavan.cavanutils.CavanUtils;
 
 public class MainActivity extends PreferenceActivity {
 
@@ -46,7 +46,7 @@ public class MainActivity extends PreferenceActivity {
 
 		mFileBin = getDir("bin", 0777);
 		if (mFileBin == null) {
-			CavanUtils.logE("Failed to getDir bin");
+			CavanAndroid.logE("Failed to getDir bin");
 		} else {
 			CavanJni.appendPathEnv(mFileBin.getPath());
 
@@ -54,7 +54,7 @@ public class MainActivity extends PreferenceActivity {
 
 				@Override
 				public void run() {
-					CavanUtils.logD("releaseCavanMain " + (releaseCavanMain() ? "OK" : "Failed"));
+					CavanAndroid.logD("releaseCavanMain " + (releaseCavanMain() ? "OK" : "Failed"));
 				}
 			}.start();
 		}
@@ -109,7 +109,7 @@ public class MainActivity extends PreferenceActivity {
 	}
 
 	private boolean releaseAsset(String filename, File outFile) {
-		CavanUtils.logD("releaseAsset: " + filename + " => " + outFile.getPath());
+		CavanAndroid.logD("releaseAsset: " + filename + " => " + outFile.getPath());
 
 		InputStream inStream = null;
 		OutputStream outStream = null;

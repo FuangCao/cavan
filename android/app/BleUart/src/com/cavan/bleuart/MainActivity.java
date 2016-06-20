@@ -1,5 +1,11 @@
 package com.cavan.bleuart;
 
+import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanBleChar;
+import com.cavan.android.CavanBleScanner;
+import com.cavan.android.CavanBleUart;
+import com.cavan.java.CavanHexFile;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
@@ -10,12 +16,6 @@ import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-
-import com.cavan.CavanHexFile;
-import com.cavan.cavanutils.CavanBleChar;
-import com.cavan.cavanutils.CavanBleScanner;
-import com.cavan.cavanutils.CavanBleUart;
-import com.cavan.cavanutils.CavanUtils;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity implements OnClickListener, OnLongClickListener {
@@ -55,7 +55,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 		CavanHexFile file = new CavanHexFile("/data/local/tmp/dialog.hex");
 		byte[] bytes = file.parse();
 		if (bytes == null) {
-			CavanUtils.logE("Failed to parse hex file");
+			CavanAndroid.logE("Failed to parse hex file");
 			return false;
 		}
 
@@ -76,11 +76,11 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 			break;
 
 		case R.id.buttonUpgrade:
-			CavanUtils.showToast(this, R.string.text_upgrade_start);
+			CavanAndroid.showToast(this, R.string.text_upgrade_start);
 			if (otaUpgrade()) {
-				CavanUtils.showToast(this, R.string.text_upgrade_successfull);
+				CavanAndroid.showToast(this, R.string.text_upgrade_successfull);
 			} else {
-				CavanUtils.showToast(this, R.string.text_upgrade_failed);
+				CavanAndroid.showToast(this, R.string.text_upgrade_failed);
 			}
 			break;
 		}
@@ -99,7 +99,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		CavanUtils.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
+		CavanAndroid.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
 		if (requestCode == BLE_SCAN_RESULT && resultCode == RESULT_OK && data != null) {
 			BluetoothDevice device = data.getParcelableExtra("device");
 			if (device == null) {
@@ -116,7 +116,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 				@Override
 				protected void onDataReceived(CavanBleChar bleChar, byte[] data) {
 					String text = new String(data);
-					CavanUtils.logE("onDataReceived: " + text);
+					CavanAndroid.logE("onDataReceived: " + text);
 					mEditTextRecv.append(text);
 				}
 			};

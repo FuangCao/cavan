@@ -5,7 +5,7 @@ import java.io.File;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 
-import com.cavan.cavanutils.PowerSupplyPreferenceCategory;
+import com.cavan.android.PowerSupplyPreferenceCategory;
 
 public class MainActivity extends PreferenceActivity {
 

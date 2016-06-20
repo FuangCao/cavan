@@ -22,7 +22,7 @@ import com.android.settings.bluetooth.CachedBluetoothDevice;
 import com.android.settings.bluetooth.CachedBluetoothDevice.Callback;
 import com.android.settings.bluetooth.LocalBluetoothAdapter;
 import com.android.settings.bluetooth.LocalBluetoothManager;
-import com.cavan.cavanutils.CavanUtils;
+import com.cavan.android.CavanAndroid;
 
 public class MainActivity extends Activity implements BluetoothCallback, OnClickListener {
 
@@ -52,7 +52,7 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 		@Override
 		public void onDeviceAttributesChanged() {
-			CavanUtils.logE("onDeviceAttributesChanged");
+			CavanAndroid.logE("onDeviceAttributesChanged");
 
 			String name = mDevice.getDevice().getName();
 			String address = mDevice.getDevice().getAddress();
@@ -159,14 +159,14 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 		@Override
 		public void onClick(View v) {
-			CavanUtils.logE("onClick: view = " + v);
+			CavanAndroid.logE("onClick: view = " + v);
 
 			((DeviceView) v).onClick();
 		}
 
 		@Override
 		public boolean onLongClick(View v) {
-			CavanUtils.logE("onLongClick: view = " + v);
+			CavanAndroid.logE("onLongClick: view = " + v);
 
 			return ((DeviceView) v).onLongClick();
 		}
@@ -223,37 +223,37 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 	@Override
 	public void onBluetoothStateChanged(int state) {
-		CavanUtils.logE("onBluetoothStateChanged: state = " + state);
+		CavanAndroid.logE("onBluetoothStateChanged: state = " + state);
 		updateContent(state);
 	}
 
 	@Override
 	public void onDeviceAdded(CachedBluetoothDevice device) {
-		CavanUtils.logE("onDeviceAdded: device = " + device);
+		CavanAndroid.logE("onDeviceAdded: device = " + device);
 		updateContent(-1);
 	}
 
 	@Override
 	public void onDeviceBondStateChanged(CachedBluetoothDevice device, int state) {
-		CavanUtils.logE("onDeviceBondStateChanged: device = " + device + ", state = " + state);
+		CavanAndroid.logE("onDeviceBondStateChanged: device = " + device + ", state = " + state);
 		updateContent(-1);
 
 	}
 
 	@Override
 	public void onDeviceDeleted(CachedBluetoothDevice device) {
-		CavanUtils.logE("onDeviceDeleted: device = " + device);
+		CavanAndroid.logE("onDeviceDeleted: device = " + device);
 		updateContent(-1);
 	}
 
 	@Override
 	public void onScanningStateChanged(boolean state) {
-		CavanUtils.logE("onScanningStateChanged: state = " + state);
+		CavanAndroid.logE("onScanningStateChanged: state = " + state);
 	}
 
 	@Override
 	public void onClick(View v) {
-		CavanUtils.logE("onClick: view = " + v);
+		CavanAndroid.logE("onClick: view = " + v);
 		startScan();
 	}
 }

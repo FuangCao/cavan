@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.cavan.cavanutils.CavanBleScanner"
+            android:name="com.cavan.android.CavanBleScanner"
             android:screenOrientation="landscape" />
     </application>
 

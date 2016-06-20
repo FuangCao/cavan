@@ -26,12 +26,12 @@ import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
 
-import com.cavan.cavanutils.CavanUtils;
-import com.cavan.cavanutils.DiscoveryService;
-import com.cavan.cavanutils.IDiscoveryService;
-import com.cavan.cavanutils.RemoteCtrlClient;
-import com.cavan.cavanutils.ScanResult;
-import com.cavan.cavanutils.TcpDdDiscoveryService;
+import com.cavan.android.CavanAndroid;
+import com.cavan.android.DiscoveryService;
+import com.cavan.android.IDiscoveryService;
+import com.cavan.android.RemoteCtrlClient;
+import com.cavan.android.ScanResult;
+import com.cavan.android.TcpDdDiscoveryService;
 
 @SuppressWarnings("deprecation")
 @SuppressLint({ "HandlerLeak", "UseSparseArrays", "NewApi", "ClickableViewAccessibility" })
@@ -166,7 +166,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 
 				if (result != null) {
 					setTitle(result.getShortString());
-					CavanUtils.showToast(getApplicationContext(), R.string.text_connected);
+					CavanAndroid.showToast(getApplicationContext(), R.string.text_connected);
 				} else {
 					try {
 						mDiscoveryService.scan(DEFAULT_PORT);
@@ -175,7 +175,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 					}
 
 					setTitle(R.string.text_disconnected);
-					CavanUtils.showToast(getApplicationContext(), R.string.text_disconnected);
+					CavanAndroid.showToast(getApplicationContext(), R.string.text_disconnected);
 				}
 				break;
 
@@ -186,9 +186,9 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 
 				if (mScanResults.size() > 0) {
 					String text = getResources().getString(R.string.text_scan_complete, mScanResults.size());
-					CavanUtils.showToast(getApplicationContext(), text);
+					CavanAndroid.showToast(getApplicationContext(), text);
 				} else {
-					CavanUtils.showToast(getApplicationContext(), R.string.text_device_not_found);
+					CavanAndroid.showToast(getApplicationContext(), R.string.text_device_not_found);
 				}
 
 				if (mClient != null && mClient.isConnected()) {
@@ -340,7 +340,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 
 			@Override
 			protected void OnDisconnected() {
-				CavanUtils.logE("OnDisconnected");
+				CavanAndroid.logE("OnDisconnected");
 				mHandler.sendEmptyMessage(EVENT_LINK_CHANGED);
 			}
 		};

@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
-import com.cavan.cavanutils.SensorPreference;
+import com.cavan.android.SensorPreference;
 
 public class MainActivity extends PreferenceActivity {
 

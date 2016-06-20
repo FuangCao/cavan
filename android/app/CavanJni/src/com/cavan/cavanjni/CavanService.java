@@ -2,7 +2,7 @@ package com.cavan.cavanjni;
 
 import java.io.File;
 
-import com.cavan.cavanutils.CavanUtils;
+import com.cavan.android.CavanAndroid;
 
 import android.app.Service;
 import android.content.Intent;
@@ -18,11 +18,11 @@ public abstract class CavanService extends Service {
 
 		@Override
 		public void run() {
-			CavanUtils.logE("Enter: service " + getServiceName());
+			CavanAndroid.logE("Enter: service " + getServiceName());
 			setState(true);
 			mainServiceLoop(mPort);
 			setState(false);
-			CavanUtils.logE("Exit: service " + getServiceName());
+			CavanAndroid.logE("Exit: service " + getServiceName());
 		}
 	}
 

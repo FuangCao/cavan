@@ -13,10 +13,10 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 
-import com.cavan.cavanutils.CavanBleChar;
-import com.cavan.cavanutils.CavanBleScanner;
-import com.cavan.cavanutils.CavanBleUart;
-import com.cavan.cavanutils.CavanUtils;
+import com.cavan.android.CavanBleChar;
+import com.cavan.android.CavanBleScanner;
+import com.cavan.android.CavanBleUart;
+import com.cavan.android.CavanAndroid;
 
 public class MainActivity extends Activity {
 
@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void surfaceCreated(SurfaceHolder holder) {
-			CavanUtils.logP();
+			CavanAndroid.logP();
 
 			mRunning = true;
 
@@ -66,12 +66,12 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-			CavanUtils.logP();
+			CavanAndroid.logP();
 		}
 
 		@Override
 		public void surfaceDestroyed(SurfaceHolder holder) {
-			CavanUtils.logP();
+			CavanAndroid.logP();
 			mRunning = false;
 		}
 
@@ -138,7 +138,7 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		CavanUtils.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
+		CavanAndroid.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
 		if (requestCode == BLE_SCAN_RESULT && resultCode == RESULT_OK && data != null) {
 			mDevice = data.getParcelableExtra("device");
 			if (mDevice == null) {
@@ -168,9 +168,9 @@ public class MainActivity extends Activity {
 								// double gyrY = ((double) (short) ((data[10] & 0xFF) << 8 | (data[11] & 0xFF))) / 131;
 								// double gyrZ = ((double) (short) ((data[12] & 0xFF) << 8 | (data[13] & 0xFF))) / 131;
 
-								// CavanUtils.logE(String.format("ACC: [%f, %f, %f]", accX, accY, accZ));
-								// CavanUtils.logE(String.format("GYR: [%f, %f, %f]", gyrX, gyrY, gyrZ));
-								// CavanUtils.logE("temp = " + temp);
+								// CavanAndroid.logE(String.format("ACC: [%f, %f, %f]", accX, accY, accZ));
+								// CavanAndroid.logE(String.format("GYR: [%f, %f, %f]", gyrX, gyrY, gyrZ));
+								// CavanAndroid.logE("temp = " + temp);
 								mSurfaceView.setValue((float) accY);;
 							}
 						}
