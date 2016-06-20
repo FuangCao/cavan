@@ -160,48 +160,62 @@ public class ApkRename {
 		return null;
 	}
 
-	public boolean doRenameXml(File file) {
-		try {
-			CavanXml xml = new CavanXml(file);
-			Document document = xml.getDocument();
-			NodeList list = document.getChildNodes();
-			if (list == null) {
-				return false;
+	public boolean doRenameXml(NodeList nodeList, int depth) {
+		boolean changed = false;
+
+		for (int i = nodeList.getLength() - 1; i >= 0; i--) {
+			Node node = nodeList.item(i);
+			if (node.getNodeType() != Node.ELEMENT_NODE) {
+				continue;
 			}
 
-			boolean changed = false;
+			Element element = (Element) node;
+			NamedNodeMap map = element.getAttributes();
+			if (map == null) {
+				continue;
+			}
 
-			for (int i = list.getLength() - 1; i >= 0; i--) {
-				Node node = list.item(i);
-				if (node.getNodeType() != Node.ELEMENT_NODE) {
-					continue;
-				}
-
-				Element element = (Element) node;
-				NamedNodeMap map = element.getAttributes();
-				if (map == null) {
-					continue;
-				}
-
-				for (int j = map.getLength() - 1; j >= 0; j--) {
-					Node attr = map.item(j);
-					String name = attr.getNodeName();
-					if (name.startsWith("xmlns:")) {
-						String value = attr.getNodeValue();
-						if (value.endsWith("/" + mSourcePackage)) {
-							String newValue = value.substring(0, value.length() - mSourcePackage.length()) + mDestPackage;
-							CavanJava.logD(name + ": " + value + " => " + newValue);
-							attr.setNodeValue(newValue);
-							changed = true;
-						}
+			for (int j = map.getLength() - 1; j >= 0; j--) {
+				Node attr = map.item(j);
+				String name = attr.getNodeName();
+				if (name.startsWith("xmlns:")) {
+					String value = attr.getNodeValue();
+					if (value.endsWith("/" + mSourcePackage)) {
+						String newValue = value.substring(0, value.length() - mSourcePackage.length()) + mDestPackage;
+						CavanJava.logD(name + ": " + value + " => " + newValue);
+						attr.setNodeValue(newValue);
+						changed = true;
 					}
 				}
 			}
 
+			if (depth > 1) {
+				NodeList childList = element.getChildNodes();
+				if (childList != null && doRenameXml(childList, depth - 1)) {
+					changed = true;
+				}
+			}
+		}
+
+		return changed;
+	}
+
+	public boolean doRenameXml(File file) {
+		try {
+			CavanXml xml = new CavanXml(file);
+			Document document = xml.getDocument();
+			NodeList nodeList = document.getChildNodes();
+
+			if (nodeList == null) {
+				return true;
+			}
+
+			boolean changed = doRenameXml(nodeList, 3);
+
 			if (mAppNameProp != null && file.getName().equals("strings.xml")) {
-				list = document.getElementsByTagName("string");
-				for (int i = 0; i < list.getLength(); i++) {
-					Node node = list.item(i);
+				nodeList = document.getElementsByTagName("string");
+				for (int i = 0; i < nodeList.getLength(); i++) {
+					Node node = nodeList.item(i);
 					if (node.getNodeType() != Node.ELEMENT_NODE) {
 						continue;
 					}
@@ -530,15 +544,21 @@ public class ApkRename {
 			return false;
 		}
 
+		mApkUnsigned.delete();
+
 		if (!doApkEncode(mWorkFile.getPath(), mApkUnsigned.getPath())) {
 			CavanJava.logE("Failed to doApkEncode");
 			return false;
 		}
 
+		mApkSigned.delete();
+
 		if (!doApkSign(mApkUnsigned.getPath(), mApkSigned.getPath())) {
 			CavanJava.logE("Failed to doApkSign");
 			return false;
 		}
+
+		mOutFile.delete();
 
 		if (!doApkAlign(mApkSigned.getPath(), mOutFile.getPath())) {
 			CavanJava.logE("Failed to doApkAlign");

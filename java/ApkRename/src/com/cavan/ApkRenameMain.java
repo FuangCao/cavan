@@ -51,10 +51,12 @@ public class ApkRenameMain {
 		if (rename.doRename()) {
 			String appName = rename.getAppName();
 			if (appName != null) {
-				String apkName = buildApkName(filename, appName);
+				String apkName = buildApkName(filename, appName.trim());
 				if (!apkName.equals(filename)) {
 					CavanFile namedFile = new CavanFile(mFileOut, apkName);
-					if (!namedFile.exists()) {
+					if (namedFile.exists()) {
+						CavanJava.logP("file exists: " + namedFile.getPath());
+					} else {
 						CavanJava.logD("move: " + outFile.getPath() + " => " + namedFile.getPath());
 						if (!outFile.renameTo(namedFile)) {
 							CavanJava.logP("Failed to renameTo: " + namedFile.getPath());
