@@ -1,26 +1,43 @@
 package com.cavan;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.cavan.java.CavanFile;
 import com.cavan.java.CavanJava;
 
 public class ApkRenameMain {
 
-	private CavanFile mFileIn;
-	private CavanFile mFileOut;
-	private CavanFile mFileFailure;
-	private CavanFile mFileSuccessfull;
+	private CavanFile mDirOut;
+	private CavanFile mDirFailure;
+	private CavanFile mDirSuccessfull;
+	private List<String> mInApks = new ArrayList<String>();
 
 	public ApkRenameMain(CavanFile inFile, CavanFile outFile) {
-		mFileIn = inFile;
-		mFileOut = outFile;
-		mFileFailure = new CavanFile(mFileOut, "failure");
-		mFileSuccessfull = new CavanFile(mFileOut, "successfull");
+		mDirOut = outFile;
+		mDirFailure = new CavanFile(mDirOut, "failure");
+		mDirSuccessfull = new CavanFile(mDirOut, "successfull");
+
+		addApk(inFile);
 	}
 
 	public ApkRenameMain(String inPath, CavanFile outFile) {
 		this(new CavanFile(inPath), outFile);
+	}
+
+	public void addApk(File file) {
+		if (file.isDirectory()) {
+			addApkDir(file);
+		} else {
+			mInApks.add(file.getPath());
+		}
+	}
+
+	private void addApkDir(File dir) {
+		for (File file : dir.listFiles()) {
+			addApk(file);
+		}
 	}
 
 	public String buildApkName(String filename, String appName) {
@@ -35,25 +52,23 @@ public class ApkRenameMain {
 	}
 
 	public boolean doRenameFile(File inFile) {
-		CavanJava.printSep();
-
 		String filename = inFile.getName();
 
-		CavanFile okFile = new CavanFile(mFileSuccessfull, filename);
+		CavanFile okFile = new CavanFile(mDirSuccessfull, filename);
 		if (okFile.exists()) {
 			CavanJava.logD("skip exists file: " + okFile.getPath());
 			return true;
 		}
 
-		CavanFile errFile = new CavanFile(mFileFailure, filename);
-		CavanFile outFile = new CavanFile(mFileOut, filename);
+		CavanFile errFile = new CavanFile(mDirFailure, filename);
+		CavanFile outFile = new CavanFile(mDirOut, filename);
 		ApkRename rename = new ApkRename(inFile, outFile);
 		if (rename.doRename()) {
 			String appName = rename.getAppName();
 			if (appName != null) {
 				String apkName = buildApkName(filename, appName.trim());
 				if (!apkName.equals(filename)) {
-					CavanFile namedFile = new CavanFile(mFileOut, apkName);
+					CavanFile namedFile = new CavanFile(mDirOut, apkName);
 					if (namedFile.exists()) {
 						CavanJava.logP("file exists: " + namedFile.getPath());
 					} else {
@@ -101,26 +116,45 @@ public class ApkRenameMain {
 	}
 
 	public boolean doRename() {
-		if (!mFileOut.mkdirsSafe()) {
-			CavanJava.logP("Failed to mkdirsSafe: " + mFileOut.getPath());
+		if (!mDirOut.mkdirsSafe()) {
+			CavanJava.logP("Failed to mkdirsSafe: " + mDirOut.getPath());
 			return false;
 		}
 
-		if (!mFileSuccessfull.mkdirsSafe()) {
-			CavanJava.logP("Failed to mkdirsSafe: " + mFileSuccessfull.getPath());
+		if (!mDirSuccessfull.mkdirsSafe()) {
+			CavanJava.logP("Failed to mkdirsSafe: " + mDirSuccessfull.getPath());
 			return false;
 		}
 
-		if (!mFileFailure.mkdirsSafe()) {
-			CavanJava.logP("Failed to mkdirsSafe: " + mFileFailure.getPath());
+		if (!mDirFailure.mkdirsSafe()) {
+			CavanJava.logP("Failed to mkdirsSafe: " + mDirFailure.getPath());
 			return false;
 		}
 
-		if (mFileIn.isDirectory()) {
-			return doRenameDir(mFileIn);
-		} else {
-			return doRenameFile(mFileIn);
+		int count = 1;
+		int error = 0;
+
+		for (String pathname : mInApks) {
+			CavanJava.logD("rename file: " + pathname + " (" + count + "/" + mInApks.size() + ")");
+
+			File file = new File(pathname);
+			if (!doRenameFile(file)) {
+				CavanJava.logE("Failed to rename file: " + file.getAbsolutePath());
+				error++;
+			}
+
+			CavanJava.printSep();
+			count++;
 		}
+
+		if (error > 0) {
+			CavanJava.logE("rename failure count = " + error);
+			return false;
+		}
+
+		CavanJava.logD("rename successfull");
+
+		return true;
 	}
 
 	public static void main(String[] args) throws Exception {

@@ -412,33 +412,44 @@ public class ApkRename {
 		return true;
 	}
 
-	public boolean doCopySmali(File dirTop) {
-		List<CavanFile> dirs = new ArrayList<CavanFile>();
-
-		CavanFile dir = new CavanFile(dirTop, mSourcePackagePath);
-		if (dir.isDirectory()) {
-			dirs.add(dir);
+	private File buildSmaliDir(File dir, int index) {
+		if (index < 2) {
+			return dir;
 		}
+
+		return new File(dir.getPath() + "_classes" + index);
+	}
+
+	public boolean doRenameSmali(File dirTop) {
+		List<File> dirs = new ArrayList<File>();
+
+		dirs.add(dirTop);
 
 		int index = 2;
 
 		while (true) {
-			dir = new CavanFile(dirTop.getPath() + "_classes" + index);
-			if (!dir.isDirectory()) {
+			File file = buildSmaliDir(dirTop, index);
+			if (file.isDirectory()) {
+				dirs.add(file);
+			} else {
 				break;
-			}
-
-			dir = new CavanFile(dir, mSourcePackagePath);
-			if (dir.isDirectory()) {
-				dirs.add(dir);
 			}
 
 			index++;
 		}
 
-		for (CavanFile dirSource : dirs) {
-			dir = new CavanFile(dirTop.getPath() + "_classes" + index);
-			CavanFile dirDest = new CavanFile(dir, mDestPackagePath);
+		for (File dir : dirs) {
+			CavanJava.logD("rename: " + dir.getPath());
+			if (!doRenameSmaliDir(dir)) {
+				return false;
+			}
+
+			CavanFile dirSource = new CavanFile(dir, mSourcePackagePath);
+			if (!dirSource.isDirectory()) {
+				continue;
+			}
+
+			CavanFile dirDest = new CavanFile(buildSmaliDir(dirTop, index), mDestPackagePath);
 
 			CavanJava.logD("copy: " + dirSource.getPath() + " => " + dirDest.getPath());
 			if (!doCopySmaliDir(dirSource, dirDest)) {
@@ -451,26 +462,19 @@ public class ApkRename {
 		return true;
 	}
 
-	public boolean doRenameSmali(File dir) {
-		if (!doRenameSmaliDir(dir)) {
-			return false;
-		}
-
-		return doCopySmali(dir);
-	}
-
 	public String getAppName() {
-		if (mHashMapAppName.isEmpty()) {
-			return null;
-		}
-
 		if (mHashMapAppName.size() > 1) {
-			String defName = mHashMapAppName.get("values");
-			if (defName != null && CavanJava.hasChineseChar(defName)) {
-				return defName;
+			String appName = mHashMapAppName.get("values-zh-rCN");
+			if (appName != null) {
+				return appName;
 			}
 
-			for (String key : new String[] { "values-zh-rCN", "values-zh-rHK", "values-zh-rTW" }) {
+			appName = mHashMapAppName.get("values");
+			if (appName != null && CavanJava.hasChineseChar(appName)) {
+				return appName;
+			}
+
+			for (String key : new String[] { "values-zh-rHK", "values-zh-rTW" }) {
 				String name = mHashMapAppName.get(key);
 				if (name != null) {
 					return name;
@@ -483,8 +487,8 @@ public class ApkRename {
 				}
 			}
 
-			if (defName != null) {
-				return defName;
+			if (appName != null) {
+				return appName;
 			}
 		}
 
