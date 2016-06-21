@@ -416,4 +416,18 @@ public class CavanFile extends File {
 	public boolean mkdirsSafe() {
 		return mkdirs() || isDirectory();
 	}
+
+	public static String getMimeType(String pathname) {
+		CavanCommand command = new CavanCommand( "file", "-b", "--mime-type", pathname );
+		List<String> lines = command.doPipe();
+		if (lines != null && lines.size() > 0) {
+			return lines.get(0);
+		}
+
+		return null;
+	}
+
+	public String getMimeType() {
+		return getMimeType(getPath());
+	}
 }

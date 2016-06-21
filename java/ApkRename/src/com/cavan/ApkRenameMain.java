@@ -1,6 +1,8 @@
 package com.cavan;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +10,8 @@ import com.cavan.java.CavanFile;
 import com.cavan.java.CavanJava;
 
 public class ApkRenameMain {
+
+	public static final Path DEFAULT_WORK_PATH = Paths.get("/tmp", "cavan-apk-rename-auto");
 
 	private CavanFile mDirOut;
 	private CavanFile mDirFailure;
@@ -62,7 +66,7 @@ public class ApkRenameMain {
 
 		CavanFile errFile = new CavanFile(mDirFailure, filename);
 		CavanFile outFile = new CavanFile(mDirOut, filename);
-		ApkRename rename = new ApkRename(inFile, outFile);
+		ApkRename rename = new ApkRename(new File(DEFAULT_WORK_PATH.toString()), inFile, outFile);
 		if (rename.doRename()) {
 			String appName = rename.getAppName();
 			if (appName != null) {

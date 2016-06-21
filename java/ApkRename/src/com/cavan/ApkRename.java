@@ -47,6 +47,8 @@ public class ApkRename {
 	private String mDestPackage;
 	private String mSourcePackagePath;
 	private String mDestPackagePath;
+	private String mSourceDataPath;
+	private String mDestDataPath;
 	private String mAppNameProp;
 	private HashMap<String, String> mHashMapAppName = new HashMap<String, String>();
 
@@ -148,16 +150,6 @@ public class ApkRename {
 		command.closeOut();
 
 		return command.doExec();
-	}
-
-	public static String getFileMimeType(String pathname) {
-		CavanCommand command = new CavanCommand( "file", "-b", "--mime-type", pathname );
-		List<String> lines = command.doPipe();
-		if (lines != null && lines.size() > 0) {
-			return lines.get(0);
-		}
-
-		return null;
 	}
 
 	public boolean doRenameXml(NodeList nodeList, int depth) {
@@ -265,7 +257,7 @@ public class ApkRename {
 					return false;
 				}
 			} else {
-				String mime = getFileMimeType(file.getPath());
+				String mime = CavanFile.getMimeType(file.getPath());
 				if (mime == null) {
 					continue;
 				}
@@ -336,7 +328,7 @@ public class ApkRename {
 	}
 
 	public String doReplaceSmaliLine(String line) {
-		line = line.replace("/data/data/" + mSourcePackage, "/data/data/" + mDestPackage);
+		line = line.replace(mSourceDataPath, mDestDataPath);
 
 		Matcher matcher = sPatternSmaliGetIdentifier.matcher(line);
 		if (matcher.find()) {
@@ -347,33 +339,34 @@ public class ApkRename {
 		return line;
 	}
 
+	public boolean doRenameSmaliDir(File dir) {
+		for (File file : dir.listFiles()) {
+			if (!doRenameSmaliFile(file)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	public boolean doRenameSmaliFile(File file) {
+		if (file.isDirectory()) {
+			return doRenameSmaliDir(file);
+		}
+
 		CavanFile cavanFile = new CavanFile(file.getPath());
+
 		return cavanFile.replaceLines(new ReplaceHandler() {
 
 			@Override
 			public String replace(String text) {
-				if (mSourcePackage.equals("com.qiyi.video")) {
+				if (!mSourcePackage.equals("com.qiyi.video")) {
 					text = text.replace("\"" + mSourcePackage + "\"", "\"" + mDestPackage + "\"");
 				}
 
 				return doReplaceSmaliLine(text);
 			}
 		});
-	}
-
-	public boolean doRenameSmaliDir(File dir) {
-		for (File file : dir.listFiles()) {
-			if (file.isDirectory()) {
-				if (!doRenameSmaliDir(file)) {
-					return false;
-				}
-			} else if (!doRenameSmaliFile(file)) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	public boolean doCopySmaliFile(CavanFile fileSource, CavanFile fileDest) {
@@ -462,6 +455,41 @@ public class ApkRename {
 		return true;
 	}
 
+	public boolean doRenameAssetsDir(File dir) {
+		for (File file : dir.listFiles()) {
+			if (!doRenameAssets(file)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public boolean doRenameAssets(File file) {
+		if (file.isDirectory()) {
+			return doRenameAssetsDir(file);
+		}
+
+		CavanFile cavanFile = new CavanFile(file.getPath());
+		String mime = cavanFile.getMimeType();
+		if (mime == null) {
+			return true;
+		}
+
+		if (mime.startsWith("text/") || mime.equals("application/xml")) {
+			CavanJava.logD("rename: " + cavanFile.getPath());
+			return cavanFile.replaceLines(new ReplaceHandler() {
+
+				@Override
+				public String replace(String text) {
+					return text.replace(mSourceDataPath, mDestDataPath);
+				}
+			});
+		}
+
+		return true;
+	}
+
 	public String getAppName() {
 		if (mHashMapAppName.size() > 1) {
 			String appName = mHashMapAppName.get("values-zh-rCN");
@@ -533,6 +561,8 @@ public class ApkRename {
 
 		mSourcePackagePath = mSourcePackage.replace('.', File.separatorChar);
 		mDestPackagePath = mDestPackage.replace('.', File.separatorChar);
+		mSourceDataPath = "/data/data/" + mSourcePackage;
+		mDestDataPath = "/data/data/" + mDestPackage;
 
 		manifest.doRename(mDestPackage);
 
@@ -545,6 +575,11 @@ public class ApkRename {
 
 		if (!doRenameSmali(new File(mWorkFile, "smali"))) {
 			CavanJava.logE("Failed to doRenameSmali");
+			return false;
+		}
+
+		if (!doRenameAssets(new File(mWorkFile, "assets"))) {
+			CavanJava.logE("Failed to doRenameAssets");
 			return false;
 		}
 
