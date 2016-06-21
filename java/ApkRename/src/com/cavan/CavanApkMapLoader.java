@@ -32,6 +32,8 @@ class CavanApkMapLoader extends CavanFile implements CavanScanHandler {
 	}
 
 	public boolean load() {
+		mHashMap.clear();
+
 		if (exists()) {
 			return scanLines(this);
 		}
@@ -49,8 +51,12 @@ class CavanApkMapLoader extends CavanFile implements CavanScanHandler {
 	}
 
 	public boolean delApk(String apk) {
-		mHashMap.remove(apk);
-		return save();
+		if (mHashMap.containsKey(apk)) {
+			mHashMap.remove(apk);
+			return save();
+		}
+
+		return true;
 	}
 
 	private String buildLine(String apk, String name) {
