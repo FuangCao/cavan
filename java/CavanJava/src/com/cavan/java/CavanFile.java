@@ -13,9 +13,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel.MapMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +26,42 @@ public class CavanFile extends File {
 
 	private static final long serialVersionUID = 2944296431050993672L;
 
-	public interface ReplaceHandler {
+	public interface CavanReplaceHandler {
 		public String replace(String text);
+	}
+
+	public interface CavanScanHandler {
+		public boolean scan(String line);
+	}
+
+	class CavanReadLinesHandler implements CavanScanHandler {
+
+		protected List<String> mLines;
+
+		public CavanReadLinesHandler(List<String> lines) {
+			mLines = lines;
+		}
+
+		@Override
+		public boolean scan(String text) {
+			mLines.add(text);
+			return true;
+		}
+	}
+
+	class CavanReplaceLinesHandler extends CavanReadLinesHandler {
+
+		protected CavanReplaceHandler mHandler;
+
+		public CavanReplaceLinesHandler(List<String> lines, CavanReplaceHandler handler) {
+			super(lines);
+			mHandler = handler;
+		}
+
+		@Override
+		public boolean scan(String text) {
+			return super.scan(mHandler.replace(text));
+		}
 	}
 
 	public CavanFile(File dir, String name) {
@@ -43,7 +80,7 @@ public class CavanFile extends File {
 		super(uri);
 	}
 
-	public InputStream openInputStream() {
+	public FileInputStream openInputStream() {
 		try {
 			return new FileInputStream(this);
 		} catch (FileNotFoundException e) {
@@ -53,7 +90,7 @@ public class CavanFile extends File {
 		return null;
 	}
 
-	public OutputStream openOutputStream() {
+	public FileOutputStream openOutputStream() {
 		try {
 			return new FileOutputStream(this);
 		} catch (FileNotFoundException e) {
@@ -91,9 +128,9 @@ public class CavanFile extends File {
 		return null;
 	}
 
-	public Writer openWriter() {
+	public FileWriter openWriter(boolean append) {
 		try {
-			return new FileWriter(this);
+			return new FileWriter(this, append);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -110,13 +147,48 @@ public class CavanFile extends File {
 		return new BufferedReader(reader);
 	}
 
-	public BufferedWriter openBufferedWriter() {
-		Writer writer = openWriter();
+	public BufferedWriter openBufferedWriter(boolean append) {
+		Writer writer = openWriter(append);
 		if (writer == null) {
 			return null;
 		}
 
 		return new BufferedWriter(writer);
+	}
+
+	public RandomAccessFile openRandomAccessFile(String mode) {
+		try {
+			return new RandomAccessFile(this, mode);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public MappedByteBuffer mmap(long position, long size, boolean readonly) {
+		RandomAccessFile access = openRandomAccessFile("rw");
+		if (access == null) {
+			return null;
+		}
+
+		try {
+			if (size < 0) {
+				size = access.length();
+			}
+
+			return access.getChannel().map(readonly ? MapMode.READ_ONLY : MapMode.READ_WRITE, position, size);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			access.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	public int read(byte[] bytes, int skip, int offset, int count) {
@@ -137,6 +209,7 @@ public class CavanFile extends File {
 			return stream.read(bytes, offset, count);
 		} catch (IOException e) {
 			e.printStackTrace();
+			return -1;
 		} finally {
 			try {
 				stream.close();
@@ -144,8 +217,6 @@ public class CavanFile extends File {
 				e.printStackTrace();
 			}
 		}
-
-		return -1;
 	}
 
 	public byte[] read(int count) {
@@ -177,7 +248,7 @@ public class CavanFile extends File {
 		return new String(bytes);
 	}
 
-	public String readText(ReplaceHandler handler) {
+	public String readText(CavanReplaceHandler handler) {
 		String text = readText();
 		if (text == null) {
 			return null;
@@ -197,15 +268,15 @@ public class CavanFile extends File {
 			return count;
 		} catch (IOException e) {
 			e.printStackTrace();
+			return -1;
 		} finally {
 			try {
 				stream.close();
 			} catch (IOException e) {
 				e.printStackTrace();
+				return -1;
 			}
 		}
-
-		return -1;
 	}
 
 	public int write(byte[] bytes, int count) {
@@ -216,28 +287,62 @@ public class CavanFile extends File {
 		return write(bytes, bytes.length);
 	}
 
+	public int writeText(String text, int offset, int count, boolean append) {
+		Writer writer = openWriter(append);
+		if (writer == null) {
+			return -1;
+		}
+
+		try {
+			writer.write(text, offset, count);
+			return count;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return -1;
+		} finally {
+			try {
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return -1;
+			}
+		}
+	}
+
 	public int writeText(String text, int offset, int count) {
-		return write(text.getBytes(), offset, count);
+		return writeText(text, offset, count, false);
 	}
 
 	public int writeText(String text, int count) {
-		return write(text.getBytes(), count);
+		return writeText(text, 0, count);
 	}
 
 	public int writeText(String text) {
-		return write(text.getBytes());
+		return writeText(text, 0, text.length());
 	}
 
-	public boolean writeLines(List<String> lines, String newLine) {
-		OutputStream stream = openOutputStream();
-		if (stream == null) {
+	public int appendText(String text, int offset, int count) {
+		return writeText(text, offset, count, true);
+	}
+
+	public int appendText(String text, int count) {
+		return appendText(text, 0, count);
+	}
+
+	public int appendText(String text) {
+		return appendText(text, 0, text.length());
+	}
+
+	public boolean writeLines(List<String> lines, String newLine, boolean append) {
+		Writer writer = openWriter(append);
+		if (writer == null) {
 			return false;
 		}
 
 		try {
 			for (String line : lines) {
-				stream.write(line.getBytes());
-				stream.write(newLine.getBytes());
+				writer.write(line);
+				writer.write(newLine);
 			}
 
 			return true;
@@ -246,7 +351,7 @@ public class CavanFile extends File {
 			return false;
 		} finally {
 			try {
-				stream.close();
+				writer.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 				return false;
@@ -254,70 +359,82 @@ public class CavanFile extends File {
 		}
 	}
 
-	public boolean writeLines(List<String> lines) {
-		return writeLines(lines, "\n");
+	public boolean writeLines(List<String> lines, boolean append) {
+		return writeLines(lines, "\n", append);
 	}
 
-	public List<String> readLines(ReplaceHandler handler) {
+	public boolean scanLines(CavanScanHandler handler) {
 		BufferedReader reader = openBufferedReader();
 		if (reader == null) {
-			return null;
+			return false;
 		}
 
-		List<String> lines = new ArrayList<String>();
-
 		try {
-			if (handler != null) {
-				while (true) {
-					String line = reader.readLine();
-					if (line == null) {
-						break;
-					}
-
-					line = handler.replace(line);
-					if (line != null) {
-						lines.add(line);
-					}
+			while (true) {
+				String line = reader.readLine();
+				if (line == null) {
+					break;
 				}
-			} else {
-				while (true) {
-					String line = reader.readLine();
-					if (line == null) {
-						break;
-					}
 
-					lines.add(line);
+				if (!handler.scan(line)) {
+					return false;
 				}
 			}
 
-			return lines;
-		} catch (Exception e) {
+			return true;
+		} catch (IOException e) {
 			e.printStackTrace();
-			return null;
+			return false;
 		} finally {
 			try {
 				reader.close();
 			} catch (IOException e) {
 				e.printStackTrace();
-				return null;
 			}
 		}
 	}
 
-	public boolean replaceLines(ReplaceHandler handler, CavanFile fileSave) {
+	public boolean readLines(List<String> lines) {
+		return scanLines(new CavanReadLinesHandler(lines));
+	}
+
+	public List<String> readLines() {
+		List<String> lines = new ArrayList<String>();
+		if (readLines(lines)) {
+			return lines;
+		}
+
+		return null;
+	}
+
+	public boolean readLines(CavanReplaceHandler handler, List<String> lines) {
+		CavanReplaceLinesHandler scanHandler = new CavanReplaceLinesHandler(lines, handler);
+		return scanLines(scanHandler);
+	}
+
+	public List<String> readLines(CavanReplaceHandler handler) {
+		List<String> lines = new ArrayList<String>();
+		if (readLines(handler, lines)) {
+			return lines;
+		}
+
+		return null;
+	}
+
+	public boolean replaceLines(CavanReplaceHandler handler, CavanFile fileSave) {
 		List<String> lines = readLines(handler);
 		if (lines == null) {
 			return false;
 		}
 
-		return fileSave.writeLines(lines);
+		return fileSave.writeLines(lines, false);
 	}
 
-	public boolean replaceLines(ReplaceHandler handler) {
+	public boolean replaceLines(CavanReplaceHandler handler) {
 		return replaceLines(handler, this);
 	}
 
-	public boolean replaceText(ReplaceHandler handler, CavanFile fileSave) {
+	public boolean replaceText(CavanReplaceHandler handler, CavanFile fileSave) {
 		String text = readText(handler);
 		if (text == null) {
 			return false;
@@ -326,7 +443,7 @@ public class CavanFile extends File {
 		return fileSave.write(text.getBytes()) > 0;
 	}
 
-	public boolean replaceText(ReplaceHandler handler) {
+	public boolean replaceText(CavanReplaceHandler handler) {
 		return replaceText(handler, this);
 	}
 
@@ -361,21 +478,31 @@ public class CavanFile extends File {
 	}
 
 	public static boolean copy(File inFile, File outFile) {
-		InputStream inStream = null;
+		FileInputStream inStream = null;
 		OutputStream outStream = null;
 
 		try {
 			inStream = new FileInputStream(inFile);
 			outStream = new FileOutputStream(outFile);
-			byte[] bytes = new byte[1024];
 
-			while (true) {
-				int length = inStream.read(bytes);
-				if (length < 0) {
-					break;
+			MappedByteBuffer buffer = inStream.getChannel().map(MapMode.READ_ONLY, 0, inStream.available());
+			if (buffer == null) {
+				byte[] bytes = new byte[1024];
+
+				while (true) {
+					int length = inStream.read(bytes);
+					if (length <= 0) {
+						if (length < 0) {
+							break;
+						}
+
+						continue;
+					}
+
+					outStream.write(bytes, 0, length);
 				}
-
-				outStream.write(bytes, 0, length);
+			} else {
+				outStream.write(buffer.array());
 			}
 
 			return true;

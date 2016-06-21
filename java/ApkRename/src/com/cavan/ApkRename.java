@@ -20,12 +20,10 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import brut.common.BrutException;
-
 import com.cavan.java.AndroidManifest;
 import com.cavan.java.CavanCommand;
 import com.cavan.java.CavanFile;
-import com.cavan.java.CavanFile.ReplaceHandler;
+import com.cavan.java.CavanFile.CavanReplaceHandler;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanXml;
 
@@ -109,11 +107,7 @@ public class ApkRename {
 		try {
 			brut.apktool.Main.main(args.toArray(new String[args.size()]));
 			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (BrutException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -356,7 +350,7 @@ public class ApkRename {
 
 		CavanFile cavanFile = new CavanFile(file.getPath());
 
-		return cavanFile.replaceLines(new ReplaceHandler() {
+		return cavanFile.replaceLines(new CavanReplaceHandler() {
 
 			@Override
 			public String replace(String text) {
@@ -370,7 +364,7 @@ public class ApkRename {
 	}
 
 	public boolean doCopySmaliFile(CavanFile fileSource, CavanFile fileDest) {
-		return fileSource.replaceLines(new ReplaceHandler() {
+		return fileSource.replaceLines(new CavanReplaceHandler() {
 
 			@Override
 			public String replace(String text) {
@@ -380,7 +374,7 @@ public class ApkRename {
 
 				return text;
 			}
-		}, fileDest);
+		});
 	}
 
 	public boolean doCopySmaliDir(CavanFile dirSource, CavanFile dirDest) {
@@ -478,7 +472,7 @@ public class ApkRename {
 
 		if (mime.startsWith("text/") || mime.equals("application/xml")) {
 			CavanJava.logD("rename: " + cavanFile.getPath());
-			return cavanFile.replaceLines(new ReplaceHandler() {
+			return cavanFile.replaceLines(new CavanReplaceHandler() {
 
 				@Override
 				public String replace(String text) {
