@@ -48,6 +48,7 @@ public class ApkRename {
 	private String mSourceDataPath;
 	private String mDestDataPath;
 	private String mAppNameProp;
+	private AndroidManifest mAndroidManifest;
 	private HashMap<String, String> mHashMapAppName = new HashMap<String, String>();
 
 	static {
@@ -546,16 +547,14 @@ public class ApkRename {
 			return false;
 		}
 
-		AndroidManifest manifest;
-
 		try {
-			manifest = new AndroidManifest(new File(mWorkFile, "AndroidManifest.xml"));
+			mAndroidManifest = new AndroidManifest(new File(mWorkFile, "AndroidManifest.xml"));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
 
-		mSourcePackage = manifest.getPackageName();
+		mSourcePackage = mAndroidManifest.getPackageName();
 
 		if (mDestPackage == null) {
 			mDestPackage = "com.cavan." + mSourcePackage;
@@ -568,25 +567,23 @@ public class ApkRename {
 		mSourceDataPath = "/data/data/" + mSourcePackage;
 		mDestDataPath = "/data/data/" + mDestPackage;
 
-		if (mSourcePackage.equals("com.starcor.mango")) {
-			manifest.setAppNameAttr("ns1:label");
-		}
-
-		mAppNameProp = manifest.getAppName();
+		mAppNameProp = mAndroidManifest.getAppName();
 		if (mAppNameProp != null) {
 			if (mAppNameProp.startsWith("@string/")) {
 				mAppNameProp = mAppNameProp.substring(8);
 			} else {
 				if (mAppNameProp.charAt(0) != '@') {
 					addAppName("default",	mAppNameProp);
-					manifest.setAppName(renameAppName(mAppNameProp));
+					mAndroidManifest.setAppName(renameAppName(mAppNameProp));
 				}
 
 				mAppNameProp = null;
 			}
+		} else {
+			mAppNameProp = "app_name";
 		}
 
-		manifest.doRename(mDestPackage);
+		mAndroidManifest.doRename(mDestPackage);
 
 		if (!doRenameResource(new File(mWorkFile, "res"))) {
 			CavanJava.logE("Failed to doRenameResource");
