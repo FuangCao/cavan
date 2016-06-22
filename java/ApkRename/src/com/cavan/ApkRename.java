@@ -374,7 +374,7 @@ public class ApkRename {
 
 				return text;
 			}
-		});
+		}, fileDest);
 	}
 
 	public boolean doCopySmaliDir(CavanFile dirSource, CavanFile dirDest) {
@@ -471,8 +471,8 @@ public class ApkRename {
 		}
 
 		if (mime.startsWith("text/") || mime.equals("application/xml")) {
-			CavanJava.logD("rename: " + cavanFile.getPath());
-			return cavanFile.replaceLines(new CavanReplaceHandler() {
+			CavanJava.logD("rename: [" + mime + "] " + cavanFile.getPath());
+			return cavanFile.replaceText(new CavanReplaceHandler() {
 
 				@Override
 				public String replace(String text) {

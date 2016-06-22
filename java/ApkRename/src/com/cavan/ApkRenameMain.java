@@ -14,18 +14,18 @@ public class ApkRenameMain {
 	public static final Path DEFAULT_WORK_PATH = Paths.get("/tmp", "cavan-apk-rename-auto");
 
 	private CavanFile mDirOut;
-	private CavanApkMapLoader mLoaderFailure;
-	private CavanApkMapLoader mLoaderSuccessfull;
+	private CavanApkMapFile mFileFailure;
+	private CavanApkMapFile mFileSuccessfull;
 	private List<String> mSourceApks = new ArrayList<String>();
 
 	public ApkRenameMain(CavanFile inFile, CavanFile outFile) {
 		mDirOut = outFile;
 
-		mLoaderFailure = new CavanApkMapLoader(mDirOut, "failure.txt");
-		mLoaderFailure.load();
+		mFileFailure = new CavanApkMapFile(mDirOut, "failure.txt");
+		mFileFailure.load();
 
-		mLoaderSuccessfull = new CavanApkMapLoader(mDirOut, "successfull.txt");
-		mLoaderSuccessfull.load();
+		mFileSuccessfull = new CavanApkMapFile(mDirOut, "successfull.txt");
+		mFileSuccessfull.load();
 
 		addApk(inFile);
 	}
@@ -61,12 +61,12 @@ public class ApkRenameMain {
 
 	public boolean doRenameFile(File inFile) {
 		String filename = inFile.getName();
-		if (mLoaderSuccessfull.hasApk(filename)) {
+		if (mFileSuccessfull.hasApk(filename)) {
 			CavanJava.logD("skip exists file: " + inFile.getPath());
 			return true;
 		}
 
-		if (mLoaderFailure.hasApk(filename)) {
+		if (mFileFailure.hasApk(filename)) {
 			CavanJava.logD("skip error file: " + inFile.getPath());
 			return true;
 		}
@@ -94,10 +94,10 @@ public class ApkRenameMain {
 				}
 			}
 
-			mLoaderSuccessfull.addApk(filename, appName);
+			mFileSuccessfull.addApk(filename, appName);
 		} else {
 			CavanJava.logP("Failed to doRename: " + inFile.getPath());
-			mLoaderFailure.addApk(filename, appName);
+			mFileFailure.addApk(filename, appName);
 		}
 
 		return true;

@@ -9,13 +9,13 @@ import java.util.Map.Entry;
 import com.cavan.java.CavanFile;
 import com.cavan.java.CavanFile.CavanScanHandler;
 
-class CavanApkMapLoader extends CavanFile implements CavanScanHandler {
+public class CavanApkMapFile extends CavanFile implements CavanScanHandler {
 
 	private static final long serialVersionUID = 9137598415443931262L;
 
 	private HashMap<String, String> mHashMap = new HashMap<String, String>();
 
-	public CavanApkMapLoader(File dir, String name) {
+	public CavanApkMapFile(File dir, String name) {
 		super(dir, name);
 	}
 
@@ -28,17 +28,13 @@ class CavanApkMapLoader extends CavanFile implements CavanScanHandler {
 			mHashMap.put(values[0], null);
 		}
 
-		return true;
+		return false;
 	}
 
 	public boolean load() {
 		mHashMap.clear();
 
-		if (exists()) {
-			return scanLines(this);
-		}
-
-		return true;
+		return scanLines(this);
 	}
 
 	public boolean hasApk(String apk) {
