@@ -673,4 +673,54 @@ public class CavanFile extends File {
 	public String getMimeType() {
 		return getMimeType(getPath());
 	}
+
+	public static boolean isDotName(String name) {
+		if (name.charAt(0) != '.') {
+			return false;
+		}
+
+		int length = name.length();
+		if (length == 1) {
+			return true;
+		}
+
+		return length == 2 && name.charAt(1) == '.';
+	}
+
+	public static String getName(String abspath) {
+		String[] paths = abspath.split(separator);
+		int index = paths.length - 1;
+
+		while (index >= 0) {
+			String name = paths[index];
+
+			if (name.equals(".")) {
+				index--;
+			} else if (name.equals("..")) {
+				index -= 2;
+			} else {
+				return name;
+			}
+		}
+
+		return "/";
+	}
+
+	@Override
+	public String getName() {
+		String name = super.getName();
+		if (isDotName(name)) {
+			try {
+				String pathname = getCanonicalPath();
+				int index = pathname.lastIndexOf(separatorChar);
+				if (index >= 0) {
+					name = pathname.substring(index + 1);
+				}
+			} catch (IOException e) {
+				name = getName(getAbsolutePath());
+			}
+		}
+
+		return name;
+	}
 }

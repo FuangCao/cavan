@@ -222,7 +222,7 @@ public class ApkRename {
 						nameValue = CavanJava.strStrip(nameValue);
 
 						String type = file.getParentFile().getName();
-						mHashMapAppName.put(type, nameValue);
+						addAppName(type, nameValue);
 
 						String newName = nameValue + "-CFA";
 						CavanJava.logD(type + "@" + mAppNameProp + ": " + nameValue + " => " + newName);
@@ -486,6 +486,11 @@ public class ApkRename {
 		return true;
 	}
 
+	public String addAppName(String type, String name) {
+		CavanJava.logD(type + ": app_name = " + name);
+		return mHashMapAppName.put(type, name);
+	}
+
 	public String getAppName() {
 		if (mHashMapAppName.size() > 1) {
 			String appName = mHashMapAppName.get("values-zh-rCN");
@@ -547,6 +552,18 @@ public class ApkRename {
 		}
 
 		mAppNameProp = manifest.getAppName();
+		if (mAppNameProp != null) {
+			if (mAppNameProp.startsWith("@string/")) {
+				mAppNameProp = mAppNameProp.substring(8);
+			} else {
+				if (mAppNameProp.charAt(0) != '@') {
+					addAppName("default",	mAppNameProp);
+				}
+
+				mAppNameProp = null;
+			}
+		}
+
 		mSourcePackage = manifest.getPackageName();
 
 		if (mDestPackage == null) {
@@ -561,8 +578,6 @@ public class ApkRename {
 		mDestDataPath = "/data/data/" + mDestPackage;
 
 		manifest.doRename(mDestPackage);
-
-		mHashMapAppName.clear();
 
 		if (!doRenameResource(new File(mWorkFile, "res"))) {
 			CavanJava.logE("Failed to doRenameResource");

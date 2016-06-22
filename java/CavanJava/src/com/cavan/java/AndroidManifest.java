@@ -75,11 +75,11 @@ public class AndroidManifest extends CavanXml {
 
 	public String getAppName() {
 		String name = mApplication.getAttribute("android:label");
-		if (name != null && name.startsWith("@string/")) {
-			return name.substring(8);
+		if (name == null || name.isEmpty()) {
+			return null;
 		}
 
-		return null;
+		return CavanJava.strStrip(name);
 	}
 
 	public boolean doRename(String name) {

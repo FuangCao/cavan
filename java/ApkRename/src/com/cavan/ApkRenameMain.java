@@ -19,7 +19,13 @@ public class ApkRenameMain {
 	private List<String> mSourceApks = new ArrayList<String>();
 
 	public ApkRenameMain(CavanFile inFile, CavanFile outFile) {
-		mDirOut = outFile;
+		if (inFile.isDirectory()) {
+			mDirOut = new CavanFile(outFile, inFile.getName());
+		} else {
+			mDirOut = outFile;
+		}
+
+		CavanJava.logD("mDirOut = " + mDirOut.getPath());
 
 		mFileFailure = new CavanApkMapFile(mDirOut, "failure.txt");
 		mFileFailure.load();
@@ -59,6 +65,20 @@ public class ApkRenameMain {
 		return appName + ".apk";
 	}
 
+	public CavanFile buildApkFile(String filename, String appName) {
+		String apkName = buildApkName(filename, appName);
+		CavanFile apkFile = new CavanFile(mDirOut, apkName);
+		if (apkFile.exists()) {
+			if (filename.equals(apkName)) {
+				return null;
+			}
+
+			return new CavanFile(mDirOut, appName + "-" + filename);
+		}
+
+		return apkFile;
+	}
+
 	public boolean doRenameFile(File inFile) {
 		String filename = inFile.getName();
 		if (mFileSuccessfull.hasApk(filename)) {
@@ -77,20 +97,15 @@ public class ApkRenameMain {
 		String appName = rename.getAppName();
 		if (success) {
 			if (appName != null) {
-				String apkName = buildApkName(filename, appName.trim());
-				if (!apkName.equals(filename)) {
-					CavanFile namedFile = new CavanFile(mDirOut, apkName);
-					if (namedFile.exists()) {
-						CavanJava.logP("file exists: " + namedFile.getPath());
-					} else {
-						CavanJava.logD("move: " + outFile.getPath() + " => " + namedFile.getPath());
-						if (!outFile.renameTo(namedFile)) {
-							CavanJava.logP("Failed to renameTo: " + namedFile.getPath());
-							return false;
-						}
-
-						outFile = namedFile;
+				CavanFile namedFile = buildApkFile(filename, appName);
+				if (namedFile != null) {
+					CavanJava.logD("move: " + outFile.getPath() + " => " + namedFile.getPath());
+					if (!outFile.renameTo(namedFile)) {
+						CavanJava.logP("Failed to renameTo: " + namedFile.getPath());
+						return false;
 					}
+
+					outFile = namedFile;
 				}
 			}
 

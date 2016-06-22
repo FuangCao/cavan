@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export FILE_APK_RENAME_JAR="${CAVAN_HOME}/java/bin/apkrename.jar"
+
 function cavan-android-get-root()
 {
 	local android_root
@@ -144,6 +146,12 @@ function cavan-apk-rename()
 	local APK_UNSIGNED APK_SIGNED APK_TARGET
 	local fn step
 
+	[ -f "${FILE_APK_RENAME_JAR}" ] &&
+	{
+		java -jar "${FILE_APK_RENAME_JAR}" $@ || return 1
+		return 0
+	}
+
 	[ "$1" ] ||
 	{
 		echo "cavan-apk-rename xxxx.apk NAME NAME_NEW"
@@ -284,6 +292,12 @@ function cavan-apk-rename()
 function cavan-apk-rename-auto()
 {
 	local ROOT_DIR APK_DEST APK_FAILED FAILED_DIR BASE_NAME
+
+	[ -f "${FILE_APK_RENAME_JAR}" ] &&
+	{
+		java -jar "${FILE_APK_RENAME_JAR}" $@ || return 1
+		return 0
+	}
 
 	ROOT_DIR="${!#}"
 	echo "ROOT_DIR = ${ROOT_DIR}"
