@@ -16,6 +16,7 @@ public class AndroidManifest extends CavanXml {
 	private Element mApplication;
 	private String mSourcePackage;
 	private String mDestPackage;
+	private String mAppNameAttr = "android:label";
 
 	public AndroidManifest(File file) throws ParserConfigurationException, SAXException, IOException {
 		super(file);
@@ -73,13 +74,21 @@ public class AndroidManifest extends CavanXml {
 		replaceAttribute(mManifest, "package", name);
 	}
 
+	public void setAppNameAttr(String attr) {
+		mAppNameAttr = attr;
+	}
+
 	public String getAppName() {
-		String name = mApplication.getAttribute("android:label");
+		String name = mApplication.getAttribute(mAppNameAttr);
 		if (name == null || name.isEmpty()) {
 			return null;
 		}
 
 		return CavanJava.strStrip(name);
+	}
+
+	public void setAppName(String name) {
+		replaceAttribute(mApplication, mAppNameAttr, name);
 	}
 
 	public boolean doRename(String name) {

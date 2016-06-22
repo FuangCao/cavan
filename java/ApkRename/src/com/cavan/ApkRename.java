@@ -224,7 +224,7 @@ public class ApkRename {
 						String type = file.getParentFile().getName();
 						addAppName(type, nameValue);
 
-						String newName = nameValue + "-CFA";
+						String newName = renameAppName(nameValue);
 						CavanJava.logD(type + "@" + mAppNameProp + ": " + nameValue + " => " + newName);
 
 						valueNode.setNodeValue(newName);
@@ -486,6 +486,10 @@ public class ApkRename {
 		return true;
 	}
 
+	public String renameAppName(String name) {
+		return name + "-CFA";
+	}
+
 	public String addAppName(String type, String name) {
 		CavanJava.logD(type + ": app_name = " + name);
 		return mHashMapAppName.put(type, name);
@@ -551,19 +555,6 @@ public class ApkRename {
 			return false;
 		}
 
-		mAppNameProp = manifest.getAppName();
-		if (mAppNameProp != null) {
-			if (mAppNameProp.startsWith("@string/")) {
-				mAppNameProp = mAppNameProp.substring(8);
-			} else {
-				if (mAppNameProp.charAt(0) != '@') {
-					addAppName("default",	mAppNameProp);
-				}
-
-				mAppNameProp = null;
-			}
-		}
-
 		mSourcePackage = manifest.getPackageName();
 
 		if (mDestPackage == null) {
@@ -576,6 +567,24 @@ public class ApkRename {
 		mDestPackagePath = mDestPackage.replace('.', File.separatorChar);
 		mSourceDataPath = "/data/data/" + mSourcePackage;
 		mDestDataPath = "/data/data/" + mDestPackage;
+
+		if (mSourcePackage.equals("com.starcor.mango")) {
+			manifest.setAppNameAttr("ns1:label");
+		}
+
+		mAppNameProp = manifest.getAppName();
+		if (mAppNameProp != null) {
+			if (mAppNameProp.startsWith("@string/")) {
+				mAppNameProp = mAppNameProp.substring(8);
+			} else {
+				if (mAppNameProp.charAt(0) != '@') {
+					addAppName("default",	mAppNameProp);
+					manifest.setAppName(renameAppName(mAppNameProp));
+				}
+
+				mAppNameProp = null;
+			}
+		}
 
 		manifest.doRename(mDestPackage);
 
