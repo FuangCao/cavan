@@ -275,4 +275,12 @@ public class CavanJava {
 
 		return false;
 	}
+
+	public static String strFixupSpace(String text) {
+		return text.replace((char) 0xA0, (char) 0x20);
+	}
+
+	public static String strStrip(String text) {
+		return strFixupSpace(text).trim();
+	}
 }

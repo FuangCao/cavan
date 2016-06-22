@@ -219,6 +219,8 @@ public class ApkRename {
 							break;
 						}
 
+						nameValue = CavanJava.strStrip(nameValue);
+
 						String type = file.getParentFile().getName();
 						mHashMapAppName.put(type, nameValue);
 
