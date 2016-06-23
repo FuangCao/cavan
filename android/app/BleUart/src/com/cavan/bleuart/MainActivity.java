@@ -1,11 +1,5 @@
 package com.cavan.bleuart;
 
-import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanBleChar;
-import com.cavan.android.CavanBleScanner;
-import com.cavan.android.CavanBleUart;
-import com.cavan.java.CavanHexFile;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
@@ -16,6 +10,12 @@ import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+
+import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanBleChar;
+import com.cavan.android.CavanBleScanner;
+import com.cavan.android.CavanBleUart;
+import com.cavan.java.CavanHexFile;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity implements OnClickListener, OnLongClickListener {

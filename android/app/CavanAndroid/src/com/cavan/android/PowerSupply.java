@@ -26,7 +26,7 @@ public class PowerSupply {
 
 	public List<String> readUevent() {
 		CavanFile file = new CavanFile(mRootDir, "uevent");
-		return file.readLines(null);
+		return file.readLines();
 	}
 
 	public HashMap<String, String> readProps() {
