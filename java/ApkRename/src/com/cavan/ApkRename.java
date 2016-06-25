@@ -32,7 +32,32 @@ public class ApkRename {
 	public static final String KEYSTORE = "/cavan/build/core/cavan.keystore";
 	public static final Path DEFAULT_WORK_PATH = Paths.get("/tmp", "cavan-apk-rename");
 
-	public static HashMap<String, String> sHashMapImage = new HashMap<String, String>();
+	private static String[] sFullRenamePackages = {
+		"com.pplive.androidxl",
+		"com.togic.livevideo",
+		"net.myvst.v2",
+		"cn.cibntv.ott",
+		"com.dianlv.tv",
+	};
+
+	private static String[] sSimpleRenamePackages = {
+		"com.qiyi.video",
+		"cn.com.wasu.main",
+		"com.elinkway.tvlive2",
+		"com.ktcp.video",
+		"com.letv.tv",
+		"com.molitv.android",
+		"com.moretv.android",
+		"com.sohuott.tv.vod",
+		"com.starcor.mango",
+		"cn.beevideo",
+		"com.sohutv.tv",
+		"com.tudou.tv.c",
+		"com.xunlei.kankan.tv",
+		"com.fanshi.tvvideo",
+	};
+
+	private static HashMap<String, String> sHashMapImage = new HashMap<String, String>();
 	private static Pattern sPatternSmaliGetIdentifier = Pattern.compile("^(\\s*)invoke-virtual\\s*\\{\\s*\\w+,\\s*\\w+,\\s*\\w+,\\s*(\\w+)\\s*\\}\\s*,\\s*Landroid/content/res/Resources;->getIdentifier\\(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;\\)I");
 
 	private File mWorkFile;
@@ -48,7 +73,7 @@ public class ApkRename {
 	private String mSourceDataPath;
 	private String mDestDataPath;
 	private String mAppNameProp;
-	private boolean mSimpleMode;
+	private boolean mFullRename;
 	private AndroidManifest mAndroidManifest;
 	private HashMap<String, String> mHashMapAppName = new HashMap<String, String>();
 
@@ -198,7 +223,7 @@ public class ApkRename {
 				return true;
 			}
 
-			boolean changed = (mSimpleMode == false && doRenameXml(nodeList, 3));
+			boolean changed = (mFullRename && doRenameXml(nodeList, 3));
 
 			if (mAppNameProp != null && file.getName().equals("strings.xml")) {
 				nodeList = document.getElementsByTagName("string");
@@ -358,10 +383,7 @@ public class ApkRename {
 
 			@Override
 			public String replace(String text) {
-				if (!mSourcePackage.equals("com.qiyi.video")) {
-					text = text.replace("\"" + mSourcePackage + "\"", "\"" + mDestPackage + "\"");
-				}
-
+				text = text.replace("\"" + mSourcePackage + "\"", "\"" + mDestPackage + "\"");
 				return doReplaceSmaliLine(text);
 			}
 		});
@@ -501,13 +523,14 @@ public class ApkRename {
 					if (key.equals("renameManifestPackage")) {
 						String value = values[1].trim();
 						if (!value.equals("null")) {
-							mSourcePackage = value;
-							mDestPackage = "com.cavan." + mSourcePackage;
+							mFullRename = false;
+							mDestPackage = "com.cavan." + value;
 						}
 
-						CavanJava.logD(mSourcePackage + " => " + mDestPackage);
-
-						text = values[0] + ": " + mDestPackage;
+						if (!mFullRename) {
+							text = values[0] + ": " + mDestPackage;
+							CavanJava.logD(mSourcePackage + " => " + mDestPackage);
+						}
 					}
 				}
 
@@ -562,9 +585,9 @@ public class ApkRename {
 		return null;
 	}
 
-	public boolean doRename(boolean simpleMode) {
+	public boolean doRename(boolean fullRename) {
 
-		mSimpleMode = simpleMode;
+		mFullRename = fullRename;
 
 		CavanJava.logD("rename: " + mInFile.getPath() + " => " + mOutFile.getPath());
 
@@ -586,6 +609,24 @@ public class ApkRename {
 		}
 
 		mSourcePackage = mAndroidManifest.getPackageName();
+
+		if (mFullRename) {
+			for (String pkgName : sSimpleRenamePackages) {
+				if (pkgName.equals(mSourcePackage)) {
+					mFullRename = false;
+					break;
+				}
+			}
+		} else {
+			for (String pkgName : sFullRenamePackages) {
+				if (pkgName.equals(mSourcePackage)) {
+					mFullRename = true;
+					break;
+				}
+			}
+		}
+
+		CavanJava.logD("mFullRename = " + mFullRename);
 
 		if (mDestPackage == null) {
 			mDestPackage = "com.cavan." + mSourcePackage;
@@ -617,31 +658,19 @@ public class ApkRename {
 			mAppNameProp = "app_name";
 		}
 
-		if (mSimpleMode) {
-			if (manifestChanged) {
-				if (!mAndroidManifest.save()) {
-					CavanJava.logE("Failed to mAndroidManifest.save");
-					return false;
-				}
-			}
+		if (!doRenameApktool(new CavanFile(mWorkFile, "apktool.yml"))) {
+			CavanJava.logE("Failed to doRenameApktool");
+			return false;
+		}
 
-			if (!doRenameApktool(new CavanFile(mWorkFile, "apktool.yml"))) {
-				CavanJava.logE("Failed to doRenameApktool");
-				return false;
-			}
+		if (!doRenameResource(new File(mWorkFile, "res"))) {
+			CavanJava.logE("Failed to doRenameResource");
+			return false;
+		}
 
-			if (!doRenameResource(new File(mWorkFile, "res"))) {
-				CavanJava.logE("Failed to doRenameResource");
-				return false;
-			}
-		} else {
+		if (mFullRename) {
 			if (!mAndroidManifest.doRename(mDestPackage)) {
 				CavanJava.logE("Failed to mAndroidManifest.doRename");
-				return false;
-			}
-
-			if (!doRenameResource(new File(mWorkFile, "res"))) {
-				CavanJava.logE("Failed to doRenameResource");
 				return false;
 			}
 
@@ -652,6 +681,11 @@ public class ApkRename {
 
 			if (!doRenameAssets(new File(mWorkFile, "assets"))) {
 				CavanJava.logE("Failed to doRenameAssets");
+				return false;
+			}
+		} else if (manifestChanged) {
+			if (!mAndroidManifest.save()) {
+				CavanJava.logE("Failed to mAndroidManifest.save");
 				return false;
 			}
 		}
